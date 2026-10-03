@@ -5,6 +5,9 @@
 #include "AnimMisc.h"
 #include "AnimUntested.h"
 #include "Skeleton.h"
+#include "../EaglGlobals.h"
+#include "../EaglOriginals.h"
+#include "../../platform/X87.h"
 #include "../../../helpers.h"
 
 #include <math.h>
@@ -32,18 +35,11 @@
 
 namespace {
 
-typedef void (*EaglFreeHook)(void *data, uint32_t size);
-#define EaglFree (*(EaglFreeHook *)0x001caf6c)
 #define TurnAlignCount I32_AT(0x00241b30)               // FnTurnBlender::AlignCycleBeginEnd's printf counter
 #define VtTurnBlender ((const void *)0x001a14b4)
 #define VtRunBlender ((const void *)0x001a1504)
 
 // The quaternion product out = a * b (Ghidra's FUN_00016820, outside EAGLAnim, not ported).
-#define QuatMultiply ((void (*)(const float *a, const float *b, float *out))0x00016820)
-
-inline int Truncate(float f) {   // CVTTSS2SI
-    return _mm_cvtt_ss2si(_mm_set_ss(f));
-}
 
 inline float* ScratchPose(int index) {
     return static_cast<float *>(ScratchBuffer_GetScratchBuffer(index)->buffer);

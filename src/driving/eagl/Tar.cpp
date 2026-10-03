@@ -1,10 +1,14 @@
 #include "Tar.h"
+#include "../platform/XboxXapi.h"
 
 #include "D3D8State.h"
+#include "EaglGlobals.h"
+#include "EaglOriginals.h"
 #include "Loader.h"
 #include "Profiler.h"
 #include "Realgraph.h"
 #include "View.h"
+#include "../platform/X87.h"
 
 #include <bit>
 #include <stddef.h>
@@ -25,7 +29,7 @@
 // reads them at draw time (5.2). Commit gives the image to D3D: see the comment above it about the in-place path.
 //
 // Everything runs in the original's order with the original's arguments; exception frames are left out (nothing
-// throws). Calls to D3D8 go to the original entry points, which our seam replaces.
+// throws). Calls to D3D8 go to the seam (../gfx/D3D8.h).
 // ---------------------------------------------------------------------------------------------------------------
 
 using EAGL::ShapeImage;
@@ -37,60 +41,20 @@ using EAGL::TARSharedData;
 
 namespace {
 
-// D3DSURFACE_DESC, D3DLOCKED_RECT and RECT as the D3D8 entry points below fill and read them
-struct SurfaceDesc {
-    uint32_t format, type, usage, size, multiSampleType, width, height;
-};
-struct LockedRect {
-    uint32_t pitch;
-    void *bits;
-};
-struct Rect {
-    int32_t left, top, right, bottom;
-};
-
-// EAGL's allocator hooks
-#define EaglMalloc (*(void *(**)(uint32_t size, const char *name))0x001caf68)
-#define EaglFree (*(void (**)(void *pointer, uint32_t size))0x001caf6c)
-
-// The allocations' names, passed as the original's strings
-#define NameTARNew ((const char *)0x0018a348)               // "EAGL::TAR new"
+// The allocations' names, passed as the original's strings (and NameTARNew, EaglGlobals.h)
 #define NameSharedDataNew ((const char *)0x001ccc70)        // "EAGL::TARPrivate::SharedData new"
 #define NameD3DTexture ((const char *)0x001ccc4c)           // "D3DTexture"
 #define NameRenderTargetShape ((const char *)0x001ccc58)    // "EGLRTShape"
 #define NameDepthSurfaceShape ((const char *)0x001ccc64)    // "EGLRTZShape"
 
-// ---- D3D8 / XGRAPHICS / D3DX / kernel entry points (the seam's), by their original addresses
-#define D3DDevice_SetPalette ((void (__stdcall *)(uint32_t stage, void *palette))0x001669e0)
-#define D3DDevice_SetRenderState_YuvEnable ((void (__stdcall *)(uint32_t enable))0x00168980)
-#define D3DDevice_SetTextureState_BumpEnv ((void (__stdcall *)(uint32_t stage, uint32_t state, uint32_t value))0x00167d50)
-#define D3DDevice_CreatePalette2 ((void *(__stdcall *)(uint32_t size))0x0016b510)
-#define D3DPalette_Lock2 ((uint32_t *(__stdcall *)(void *palette, uint32_t flags))0x0016b570)
-#define D3DResource_BlockUntilNotBusy ((void (__stdcall *)(void *resource))0x001693d0)
-#define D3DResource_Register ((void (__stdcall *)(void *resource, void *base))0x001693a0)
-#define D3DSurface_LockRect ((uint32_t (__stdcall *)(void *surface, LockedRect *locked, const Rect *rect, uint32_t flags))0x00167240)
-#define D3DSurface_GetDesc ((uint32_t (__stdcall *)(void *surface, SurfaceDesc *desc))0x00167220)
-#define D3D_Get2DSurfaceDesc ((void (__stdcall *)(void *surface, uint32_t level, SurfaceDesc *desc))0x00167320)
-#define D3DDevice_CreateTexture2 ((SurfaceTexture *(__stdcall *)(uint32_t width, uint32_t height, uint32_t depth, uint32_t levels, uint32_t usage, uint32_t format, uint32_t pool))0x00167260)
-#define D3DDevice_CreateStandAloneSurface ((SurfaceTexture *(__stdcall *)(uint32_t width, uint32_t height, uint32_t unknown, uint32_t format))0x00167100)
-#define XGSetTextureHeader ((void (__stdcall *)(uint32_t width, uint32_t height, uint32_t levels, uint32_t usage, uint32_t format, uint32_t pool, SurfaceTexture *texture, uint32_t data, uint32_t pitch))0x0017a8ac)
-#define XGBytesPerPixelFromFormat ((int32_t (__stdcall *)(uint32_t format))0x00178fb8)
-#define D3DXLoadSurfaceFromMemory ((int32_t (__stdcall *)(void *surface, const void *destPalette, const Rect *destRect, const void *source, uint32_t format, uint32_t pitch, const void *sourcePalette, const Rect *sourceRect, uint32_t filter, uint32_t colourKey))0x0015d3bd)
-#define MmFreeContiguousMemory ((void (__stdcall *)(void *base))0x0010e82c)
-#define VectorDestructorIterator ((void (__stdcall *)(void *array, uint32_t size, int32_t count, void *destructor))0x0013332e)   // ??_M
+// TARProperty::Destruct's original entry, which jumps to ours: the C runtime's vector destructor iterator calls it
+// with the element in ECX, which no C++ function pointer of ours can be passed as.
+#define TARPropertyDestructEntry ((void *)0x000ed320)
 
-#define TARPropertyDestructEntry ((void *)0x000ed320)       // TARProperty::Destruct's original entry (jumps to ours)
-#define GlobalPool ((SymbolPool *)0x0023fb8c)
-
-// ---- EAGL's state
-#define StagePalette ((void **)0x0023ffa0)                  // the palette bound per stage
+// ---- EAGL's state (the overrides, the YUV shadow and the built-in SHPX are EaglGlobals.h's)
+#define StagePalette ((D3DResource **)0x0023ffa0)           // the palette bound per stage
 #define CacheLodBias ((float *)0x0023ffc0)                  // per stage
-#define CacheYuv U8_AT(0x0023ffe0)
 #define CacheBumpEnv ((float (*)[4])0x0023ffe8)             // four per stage
-#define LodBiasOverride FLOAT_AT(0x0023ff0c)                // 0 = each TAR's own
-#define FilterOverride U32_AT(0x001cb938)                   // 0xffffffff = each TAR's own
-#define ResourceRegistered U8_AT(0x00240814)                // "a resource was registered": opcode 15 flushes the cache
-#define BuiltInShapes (*(ShapeFile *)0x001cbdd0)            // EAGL's own SHPX
 
 // What Use last sent per stage, at 0x001ccb8c: a word per stage in each array (eight slots, four stages used)
 struct StageStateCache {
@@ -135,14 +99,6 @@ void CachedStageState(uint32_t stage, uint32_t *cache, D3DTextureStateIndex stat
         cache[stage] = value;
         SetStageState(stage, state, value);
     }
-}
-
-// What FLD then FSTP does to a float: a signalling NaN comes out quiet.
-float ThroughX87(float f) {
-    uint32_t bits = std::bit_cast<uint32_t>(f);
-    if ((bits & 0x7f800000) == 0x7f800000 && (bits & 0x007fffff) != 0)
-        bits |= 0x00400000;
-    return std::bit_cast<float>(bits);
 }
 
 // A SHAPE image's pixels: at an offset when its flag says so, else straight after the 0x10-byte header - where the
@@ -244,7 +200,7 @@ void ShapeSymbol(char *name, const uint8_t *four) {
 
 uint8_t *FindShape(const char *name, DynamicLoader *loader) {
     bool found;
-    void *shape = GlobalPool->Search(name, &found);
+    void *shape = GlobalPool.Search(name, &found);
     if (!found) {
         void *out = NULL;
         loader->GetAddr("SHAPE", name, &out);
@@ -324,7 +280,7 @@ void EAGL::TARSharedData::Release() {
         return;
     }
     if (contiguous != NULL) {
-        MmFreeContiguousMemory(contiguous);
+        Xbox_MmFreeContiguousMemory(contiguous);
         contiguous = NULL;
     }
     if (texture != NULL) {
@@ -503,8 +459,8 @@ int32_t EAGL::TAR::GetRefCount() const {
 // FUNC_AT(0x000eb3f0)
 void EAGL::TAR::Use() {
     uint8_t yuv = data->yuv;
-    if (CacheYuv != yuv) {
-        CacheYuv = yuv;
+    if (YuvEnable != yuv) {
+        YuvEnable = yuv;
         D3DDevice_SetRenderState_YuvEnable(yuv);
     }
     if (ApplyCache.textureEnable != 0) {
@@ -545,7 +501,7 @@ void EAGL::TAR::Use() {
 
     if (!(LodBiasOverride == 0.0f)) {   // an override (or NaN)
         if (!(CacheLodBias[stage] == LodBiasOverride)) {
-            CacheLodBias[stage] = ThroughX87(LodBiasOverride);                                    // FLD / FSTP
+            CacheLodBias[stage] = QuietNaN(LodBiasOverride);                                      // FLD / FSTP
             SetStageState(stage, kTssMipMapLodBias, std::bit_cast<uint32_t>(LodBiasOverride));   // the raw bits (MOV)
         }
     } else if (!(CacheLodBias[stage] == lodBias)) {
@@ -602,14 +558,14 @@ void EAGL::TAR::LoadAtlas() {
         int32_t bottom = y + h;
         int32_t level = 0;
         do {
-            void *surface = D3DTexture_GetSurfaceLevel2(data->texture, level);
-            LockedRect locked;
+            D3DPixelContainer *surface = D3DTexture_GetSurfaceLevel2(data->texture, level);
+            D3DLockedRect locked;
             D3DSurface_LockRect(surface, &locked, NULL, 0x80);
             uint32_t pitch = locked.pitch;
-            SurfaceDesc desc;
+            D3DSurfaceDesc desc;
             D3DSurface_GetDesc(surface, &desc);
-            Rect sourceRect = { 0, 0, (int32_t)desc.width, (int32_t)desc.height };
-            Rect destRect = { x, y, right, bottom };
+            D3DRect sourceRect = { 0, 0, (int32_t)desc.width, (int32_t)desc.height };
+            D3DRect destRect = { x, y, right, bottom };
             if (D3DXLoadSurfaceFromMemory(surface, NULL, &destRect, data->pixels + offset, data->format, pitch, NULL,
                                           &sourceRect, 1, 0) < 0)
                 D3DResource_Release(surface);
@@ -844,10 +800,10 @@ void EAGL::TARExtension::Share(TAR *other) {
 // ---- TARs over D3D surfaces (render contexts, offscreen buffers, shadow maps)
 
 // FUNC_AT(0x000ec610)
-TAR* EAGL_TARFromSurface(void *surface) {
+TAR* EAGL_TARFromSurface(D3DPixelContainer *surface) {
     TAR *t = (TAR *)EaglMalloc(sizeof(TAR), NameTARNew);
     t = t != NULL ? t->ConstructShared() : NULL;
-    SurfaceDesc desc;
+    D3DSurfaceDesc desc;
     D3D_Get2DSurfaceDesc(surface, 0, &desc);
     t->data->shape = NULL;
     t->clut = NULL;
@@ -861,7 +817,7 @@ TAR* EAGL_TARFromSurface(void *surface) {
     t->addressU = kAddressClamp;
     t->addressV = kAddressClamp;
     t->addressW = kAddressClamp;
-    t->data->texture = (SurfaceTexture *)surface;
+    t->data->texture = static_cast<SurfaceTexture *>(surface);
     return t;
 }
 
@@ -907,7 +863,7 @@ TAR* EAGL_TARRenderTarget(int32_t width, int32_t height, int32_t depth, int32_t 
     else if (depth == 0x20)
         t->data->format = mode == 1 ? 6 : 0x12;
     TARSharedData *d = t->data;
-    d->texture = D3DDevice_CreateTexture2(d->width, d->height, 1, 1, 1, d->format, 3);
+    d->texture = static_cast<SurfaceTexture *>(D3DDevice_CreateTexture2(d->width, d->height, 1, 1, 1, d->format, 3));
     t->committed = 0;
     t->data->flags |= EAGL::kSharedOwnsShape;
     t->data->shape = SurfaceShape(t->data, width, height, depth, NameRenderTargetShape);
@@ -936,7 +892,7 @@ TAR* EAGL_TARDepthSurface(int32_t width, int32_t height, int32_t depth) {
     else if (depth == 0x20)
         t->data->format = 0x2e;   // D3DFMT_LIN_D24S8
     TARSharedData *d = t->data;
-    d->texture = D3DDevice_CreateStandAloneSurface(d->width, d->height, 2, d->format);
+    d->texture = static_cast<SurfaceTexture *>(D3D_CreateStandAloneSurface(d->width, d->height, 2, d->format));
     t->committed = 0;
     t->data->flags |= EAGL::kSharedOwnsShape;
     t->data->shape = SurfaceShape(t->data, width, height, depth, NameDepthSurfaceShape);
@@ -1080,6 +1036,6 @@ __declspec(naked) void EAGL_ShapeImageEax() {
 
 // FUNC_AT(0x000ede40)
 int EAGL_AddSymbolAnswerZero(const char *name, void *value) {
-    GlobalPool->AddSymbol(name, value);
+    GlobalPool.AddSymbol(name, value);
     return 0;
 }

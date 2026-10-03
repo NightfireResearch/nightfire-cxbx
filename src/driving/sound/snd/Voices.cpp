@@ -1,4 +1,7 @@
 #include "Voices.h"
+#include "Platform.h"
+#include "System.h"
+#include "../DirectSound.h"
 #include "SndGlobals.h"
 
 #include <stddef.h>
@@ -11,8 +14,8 @@
 // 0x1f417f in the compiler's multiply-high form, reproduced here as it computes them) - and the control API the
 // game's AVoice/AFX call, plus the azimuth -> speaker gain tables and the render-mode choice.
 //
-// Each function is the original at its address, ported from the listing. Calls into modules not ported here (the
-// platform driver, the system module) go to the originals' addresses. The library's globals stay where they are.
+// Each function is the original at its address, ported from the listing. Calls into the other modules (the
+// platform driver, the system module, DirectSound) are direct. The library's globals stay where they are.
 //
 // devtools/SndTagShadow.cpp compares the pure ones with the originals (sound.md 9.3 step 3); the stateful ones are
 // exact ports checked in game.
@@ -86,20 +89,6 @@ uint8_t Gain(int32_t g) {
     return uint8_t(uint8_t(uint32_t(g) << 1) - uint8_t(Div127(Mul(g, g))));
 }
 
-// ---- the originals called from here (other modules). Through the originals' addresses, which jump to the ports
-// in game: the shadow tests put their recording fakes there (devtools/SndSystemShadow.cpp).
-#define PlatformStop ((int (*)(int))0x0013de50)                     // SNDPLATFORM_stop
-#define PlatformSetVol ((void (*)(int))0x0013df50)                  // SNDPLATFORM_setvol
-#define PlatformSet3dPos ((void (*)(int))0x0013e0c0)                // SNDPLATFORM_set3dpos
-#define PlatformSetPitch ((int (*)(int))0x0013e320)                 // SNDPLATFORM_setpitch
-#define PlatformSetFxLevel ((int (*)(int, int))0x00140070)          // SNDPLATFORM_setfxlevel
-#define PlatformFilterAdd ((int (*)(int, int))0x001427d0)           // SNDPLATFORM_filteradd
-#define PlatformLowpass ((void (*)(int, int))0x001429f0)            // SNDPLATFORM_lowpass
-#define PlatformFxInit ((int (*)(int, int))0x00140a80)              // SNDPLATFORM_fxinit
-#define ServicePacketVoice ((void (*)(SND::BufferNode *))0x00142150)   // FUN_00142150, refills a packet voice's ring
-#define EnterCritical ((void (*)(void))0x0013b950)                  // SNDSYS_entercritical
-#define LeaveCritical ((void (*)(void))0x0013b970)                  // SNDSYS_leavecritical
-#define IDirectSoundBuffer_GetStatus ((uint32_t (__stdcall *)(void *, uint32_t *))0x0017b690)
 
 }  // namespace
 
@@ -133,7 +122,7 @@ int SNDstop(int handle) {
         int voice = -1;
         if (iSNDpatchkey(index, &voice) != 0) {
             do {
-                PlatformStop(voice);
+                SNDPLATFORM_stop(voice);
             } while (iSNDpatchkey(index, &voice) != 0);
         }
     }
@@ -149,7 +138,7 @@ int SNDfxlevel(int handle, int bus, int level) {
             do {
                 FxLevel(&VoiceArray[voice], bus) = level;
                 SNDI_calcfxlevel(bus, voice);
-                PlatformSetFxLevel(voice, bus);
+                SNDPLATFORM_setfxlevel(voice, bus);
             } while (iSNDpatchkey(index, &voice) != 0);
         }
     }
@@ -170,7 +159,7 @@ int SND3dpos(int handle, int azimuth, int elevation) {
                 SND::Voice *v = &VoiceArray[voice];
                 v->azimuth = v->builtinAzimuth + azimuth;
                 v->elevation = elevation;
-                PlatformSet3dPos(voice);
+                SNDPLATFORM_set3dpos(voice);
             } while (iSNDpatchkey(index, &voice) != 0);
         }
     }
@@ -190,7 +179,7 @@ int SNDpitchmult(int handle, int mult) {
                     return 0;
                 v->pitchMult = mult;
                 iSNDcalcpitch(voice);
-                PlatformSetPitch(voice);
+                SNDPLATFORM_setpitch(voice);
             } while (iSNDpatchkey(index, &voice) != 0);
         }
     }
@@ -213,9 +202,9 @@ int SNDvol(int handle, int vol) {
                     return 0;
                 v->fade = target;
                 iSNDcalcvol(voice);
-                PlatformSetVol(voice);
+                SNDPLATFORM_setvol(voice);
                 if (v->fxSend > 0)
-                    PlatformSetFxLevel(v->platformVoices[0], 0);
+                    SNDPLATFORM_setfxlevel(v->platformVoices[0], 0);
             } while (iSNDpatchkey(index, &voice) != 0);
         }
     }
@@ -247,12 +236,12 @@ int SNDfxmasterlevel(int bus, int level) {
         FxBusMainCpu[index].level = level;
     if ((bus & 0x180) != 0)
         FxBusHardware[index].level = level;
-    EnterCritical();
+    SNDSYS_entercritical();
     for (int i = 0; i < NumVoices; i++) {
         SND::Voice *v = &VoiceArray[i];
         SNDfxlevel(v->handle, index, FxLevel(v, index));
     }
-    LeaveCritical();
+    SNDSYS_leavecritical();
     return 0;
 }
 
@@ -280,7 +269,7 @@ int SNDfxinitbus(int bus, int level, int mode, int delay, int feedback) {
             fx->mode = mode;
             fx->delay = delay;
             fx->feedback = feedback;
-            PlatformFxInit(index, path);
+            SNDPLATFORM_fxinit(index, path);
             paths &= ~path;
         }
         path <<= 1;
@@ -320,7 +309,7 @@ int SNDCTRL_filteradd(int handle, int filter) {
         int voice = -1;
         if (iSNDpatchkey(index, &voice) != 0) {
             do {
-                PlatformFilterAdd(voice, filter);
+                SNDPLATFORM_filteradd(voice, filter);
             } while (iSNDpatchkey(index, &voice) != 0);
         }
     }
@@ -334,7 +323,7 @@ int SNDCTRL_lowpass(int handle, int cutoff) {
         int voice = -1;
         if (iSNDpatchkey(index, &voice) != 0) {
             do {
-                PlatformLowpass(voice, cutoff);
+                SNDPLATFORM_lowpass(voice, cutoff);
             } while (iSNDpatchkey(index, &voice) != 0);
         }
     }
@@ -362,12 +351,12 @@ void iSNDserve(void) {
                 if ((status & 1) == 0)
                     collected[count++] = node->platformVoice;
             } else {
-                ServicePacketVoice(node);
+                FUN_00142150(node);   // refill the packet voice's ring
             }
         }
     }
     for (int i = 0; i < count; i++)
-        PlatformStop(collected[i]);
+        SNDPLATFORM_stop(collected[i]);
 }
 
 // fade x envelope x built-in x master / 0x1f417f, then the volume LFO and the volume scaling table

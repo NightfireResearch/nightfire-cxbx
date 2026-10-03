@@ -1,9 +1,14 @@
 #include "RenderContext.h"
+#include "../platform/XboxXapi.h"
 #include "Profiler.h"
 #include "RenderMethod.h"
 #include "Tar.h"
 #include "View.h"
 #include "D3D8State.h"
+#include "EaglGlobals.h"
+#include "EaglOriginals.h"
+#include "../platform/RealPrint.h"
+#include "../platform/X87.h"
 #include "../../helpers.h"
 
 #include <bit>
@@ -15,8 +20,8 @@
 // code entry point in 0x000e6610..0x000e8900, including the getters that sit after their setters without a
 // Ghidra function and the unreferenced debug routines (the screenshot, the back-buffer read, the gamma setters).
 //
-// This code runs every frame. Each function makes the original's D3D8 calls (through the seam, by the entry
-// points' original addresses) in the original's order with the original's arguments, and writes D3D8's own
+// This code runs every frame. Each function makes the original's D3D8 calls (to the seam, ../gfx/D3D8.h) in the
+// original's order with the original's arguments, and writes D3D8's own
 // render-state table and dirty flags (D3D8State.h) where the original's inlined D3D8 code did, in the same order
 // relative to the calls (5.2, 8.1). EndFrame's re-send of ~40 states after Swap (8.2) is kept statement for
 // statement, including the redundant dirty-flag writes.
@@ -43,104 +48,15 @@ using EAGL::SurfaceTexture;
 
 // ---- globals
 
-#define EaglMalloc (*(void *(__cdecl **)(uint32_t size, const char *name))0x001caf68)   // EAGL's allocator
-#define D3DDevicePointer PTR_AT(0x0023ff18)           // D3D8's device, written by Direct3D_CreateDevice
 #define RenderTargetTexture PTR_AT(0x0023ff1c)
-#define GammaRamp ((uint8_t (*)[0x100])0x0023fc08)    // what GetGammaRamp read at start-up: GammaRamp[channel][i]
+#define GammaRamp (*(D3DGammaRamp *)0x0023fc08)       // what GetGammaRamp read at start-up
 #define SavedDither U8_AT(0x0023ff10)                 // EndFrame puts it in the specular-enable slot
 #define SavedFog U8_AT(0x0023ff11)
-#define YuvEnable U8_AT(0x0023ffe0)                   // the TAR code's YUV-enable shadow
 #define CurrentPixelShader U32_AT(0x00240474)
 #define CurrentVertexShader U32_AT(0x00240478)
-#define ConstructedMethods (*(RenderMethod **)0x0023ff20)   // the render methods, linked through next
-#define WaitingMethods (*(RenderMethod **)0x0023ff24)       // children waiting for their parent's shaders
-#define LodBiasOverride FLOAT_AT(0x0023ff0c)          // Tar.cpp: 0 = each TAR's own
-#define FilterOverride U32_AT(0x001cb938)             // Tar.cpp: -1 = each TAR's own
 #define D3DTextureNames ((const char (*)[12])0x001cb964)   // six copies of "D3DTexture", one per call site
 
-// ---- D3D8 and XGraphics entry points not in D3D8State.h
-
-#define D3DDevice_SetShaderConstantMode ((void (__stdcall *)(uint32_t))0x0016ab30)
-#define D3DDevice_Swap ((void (__stdcall *)(uint32_t))0x00169fb0)
-#define D3DDevice_SetRenderState_FogColor ((void (__stdcall *)(uint32_t))0x00167760)
-#define D3DDevice_SetRenderState_StencilEnable ((void (__stdcall *)(uint32_t))0x00168880)
-#define D3DDevice_SetRenderState_StencilFail ((void (__stdcall *)(uint32_t))0x00168910)
-#define D3DDevice_SetRenderState_ShadowFunc ((void (__stdcall *)(uint32_t))0x00167720)
-#define D3DDevice_SetRenderState_YuvEnable ((void (__stdcall *)(uint32_t))0x00168980)
-#define D3DDevice_SetRenderState_ZEnable ((void (__stdcall *)(uint32_t))0x001687f0)
-#define D3DDevice_SetRenderState_MultiSampleAntiAlias ((void (__stdcall *)(uint32_t))0x00168b70)
-#define D3DDevice_SetPixelShader ((void (__stdcall *)(uint32_t))0x0016af60)
-#define D3DDevice_SetVertexShader ((void (__stdcall *)(uint32_t))0x0016ad90)
-#define D3DDevice_PersistDisplay ((void (__stdcall *)())0x00166eb0)
-#define D3DDevice_Reset ((void (__stdcall *)(EAGL::PresentParameters *))0x00166230)
-#define D3DDevice_GetBackBuffer2 ((D3DPixelContainer *(__stdcall *)(int32_t))0x001662e0)
-#define D3DDevice_GetDepthStencilSurface2 ((D3DPixelContainer *(__stdcall *)())0x001666b0)
-#define D3DDevice_GetGammaRamp ((void (__stdcall *)(void *))0x00165e70)
-#define D3DDevice_SetGammaRamp ((void (__stdcall *)(uint32_t, const void *))0x00165de0)
-#define D3DDevice_SetScreenSpaceOffset ((void (__stdcall *)(float, float))0x00167030)
-#define D3DDevice_GetTile ((void (__stdcall *)(uint32_t, D3DTile *))0x00166060)
-#define D3DDevice_SetTile ((void (__stdcall *)(uint32_t, const D3DTile *))0x00166d00)
-#define D3DDevice_SetSoftDisplayFilter ((void (__stdcall *)(uint32_t))0x001660e0)
-#define D3DDevice_SetFlickerFilter ((void (__stdcall *)(int))0x00166090)
-#define D3DDevice_BeginVisibilityTest ((void (__stdcall *)())0x00166b40)
-#define D3DDevice_EndVisibilityTest ((void (__stdcall *)(uint32_t))0x00166be0)
-#define D3DDevice_GetVisibilityTestResult ((int32_t (__stdcall *)(uint32_t, uint32_t *, void *))0x00165fd0)
-#define D3DDevice_CreateTexture2 ((D3DPixelContainer *(__stdcall *)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t))0x00167260)
-#define D3DDevice_CopyRects ((void (__stdcall *)(void *, const D3DRect *, uint32_t, void *, const D3DPoint *))0x001663e0)
-#define D3DSurface_GetDesc ((void (__stdcall *)(D3DPixelContainer *, SurfaceDesc *))0x00167220)
-#define D3DSurface_LockRect ((void (__stdcall *)(D3DPixelContainer *, LockedRect *, const void *, uint32_t))0x00167240)
-#define D3D_SetPushBufferSize ((void (__stdcall *)(uint32_t, uint32_t))0x00169460)
-#define Direct3D_CreateDevice ((int32_t (__stdcall *)(uint32_t, uint32_t, void *, uint32_t, EAGL::PresentParameters *, void **))0x00169480)
-#define XGBytesPerPixelFromFormat ((uint32_t (__stdcall *)(uint32_t))0x00178fb8)
-#define XGSetTextureHeader ((void (__stdcall *)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, void *, uint32_t, uint32_t))0x0017a8ac)
-#define XGWriteSurfaceToFile ((void (__stdcall *)(D3DPixelContainer *, const char *))0x0017a8ee)
-#define XGetVideoFlags ((uint32_t (__stdcall *)())0x0010e02b)
-#define MEM_copy ((void (*)(void *, const void *, uint32_t))0x0010a5b0)
-
 namespace {
-
-// D3DSURFACE_DESC as the Xbox's D3D8 has it
-struct SurfaceDesc {
-    uint32_t format;              // +0x00
-    uint32_t type;                // +0x04
-    uint32_t usage;               // +0x08
-    uint32_t size;                // +0x0c
-    uint32_t multiSampleType;     // +0x10
-    uint32_t width;               // +0x14
-    uint32_t height;              // +0x18
-};
-static_assert(sizeof(SurfaceDesc) == 0x1c, "D3DSURFACE_DESC is 0x1c bytes");
-
-// D3DTILE
-struct D3DTile {
-    uint32_t flags;               // +0x00
-    void *memory;                 // +0x04
-    uint32_t size;                // +0x08
-    uint32_t pitch;               // +0x0c
-    uint32_t zStartTag;           // +0x10
-    uint32_t zOffset;             // +0x14
-};
-static_assert(sizeof(D3DTile) == 0x18, "D3DTILE is 0x18 bytes");
-
-struct D3DRect {
-    int32_t left, top, right, bottom;
-};
-
-struct D3DPoint {
-    int32_t x, y;
-};
-
-struct LockedRect {               // D3DLOCKED_RECT
-    int32_t pitch;
-    void *bits;
-};
-
-// __ftol2: truncation to 64 bits, of which the low 32 are used; what it cannot convert gives 0x80000000_00000000.
-int32_t Ftol(double v) {
-    if (!(v > -9223372036854775808.0 && v < 9223372036854775808.0))
-        return 0;
-    return (int32_t)(int64_t)v;
-}
 
 // D3DPRESENT_PARAMETERS' presentation interval for a swap interval: 1 -> 0, 2 -> 2, 3 -> 4, anything else 0.
 uint32_t PresentationInterval(int swapInterval) {
@@ -162,7 +78,7 @@ void BuildSurfaceTexture(SurfaceTexture **slot, D3DPixelContainer *surface, cons
     texture->lock = 0;
     texture->format = 0;
     texture->size = 0;
-    SurfaceDesc desc;
+    D3DSurfaceDesc desc;
     D3DSurface_GetDesc(surface, &desc);
     uint32_t format = desc.format;
     if (depth) {
@@ -438,7 +354,7 @@ uint32_t EAGL::RenderContext::SetupFrameBuffers() {
         D3DDevice_Reset(&present);
     }
 
-    D3DDevice_GetGammaRamp(GammaRamp);
+    D3DDevice_GetGammaRamp(&GammaRamp);
     D3DDevice_SetShaderConstantMode(1);
     D3DDevice_SetRenderState_CullMode(0x901);
     SendState(0x40304, kRsAlphaBlendEnable, 1);
@@ -776,23 +692,23 @@ bool EAGL::RenderContextExtension::GetStencilWriteMask(uint32_t *mask) {
 // The start-up ramp scaled per channel.
 // FUNC_AT(0x000e7740)
 bool EAGL::RenderContextExtension::SetGamma(float red, float green, float blue) {
-    uint8_t ramp[3][0x100];
+    D3DGammaRamp ramp;
     for (int i = 0; i < 0x100; i++) {
-        ramp[0][i] = ScaledGamma(GammaRamp[0][i], red);
-        ramp[1][i] = ScaledGamma(GammaRamp[1][i], green);
-        ramp[2][i] = ScaledGamma(GammaRamp[2][i], blue);
+        ramp.red[i] = ScaledGamma(GammaRamp.red[i], red);
+        ramp.green[i] = ScaledGamma(GammaRamp.green[i], green);
+        ramp.blue[i] = ScaledGamma(GammaRamp.blue[i], blue);
     }
     if (D3DDevicePointer != NULL)
-        D3DDevice_SetGammaRamp(2, ramp);
+        D3DDevice_SetGammaRamp(2, &ramp);
     return true;
 }
 
 // FUNC_AT(0x000e7820)
 bool EAGL::RenderContextExtension::SetGammaRamp(const uint8_t *source) {
-    uint8_t ramp[3][0x100];
-    memcpy(ramp, source, sizeof(ramp));
+    D3DGammaRamp ramp;
+    memcpy(&ramp, source, sizeof(ramp));
     if (D3DDevicePointer != NULL)
-        D3DDevice_SetGammaRamp(2, ramp);
+        D3DDevice_SetGammaRamp(2, &ramp);
     return true;
 }
 
@@ -1059,13 +975,13 @@ bool EAGL::RenderContextExtension::GetVisibilityTestResult(uint32_t index, uint3
 // FUNC_AT(0x000e7d00)
 bool EAGL::RenderContextExtension::ReadBackBuffer(void *destination) {
     D3DPixelContainer *surface = D3DDevice_GetBackBuffer2(-1);
-    SurfaceDesc desc;
+    D3DSurfaceDesc desc;
     D3DSurface_GetDesc(surface, &desc);
     if (desc.size != (desc.height * desc.width) << 2) {
         D3DResource_Release(surface);
         return false;
     }
-    LockedRect locked;
+    D3DLockedRect locked;
     D3DSurface_LockRect(surface, &locked, NULL, 0x40);
     MEM_copy(destination, locked.bits, desc.size);
     D3DResource_Release(surface);
@@ -1254,7 +1170,7 @@ bool EAGL::RenderContextExtension::GetPointScaleEnable(uint8_t *enable) {
 // Whether the dashboard allows PAL60 (XGetVideoFlags bit 0x40), kept for SetupFrameBuffers' refresh rate.
 // FUNC_AT(0x000e8150)
 uint8_t EAGL::RenderContextExtension::QueryPal60() {
-    context->pal60 = (XGetVideoFlags() & 0x40) != 0 ? 1 : 0;
+    context->pal60 = (Xbox_XGetVideoFlags() & 0x40) != 0 ? 1 : 0;
     return context->pal60;
 }
 
@@ -1268,14 +1184,14 @@ bool EAGL::RenderContextExtension::IsDeviceCreated(uint32_t) {
 // FUNC_AT(0x000e81a0)
 EAGL::TAR* EAGL::RenderContextExtension::CopyBackBuffer() {
     D3DPixelContainer *source = D3DDevice_GetBackBuffer2(0);
-    SurfaceDesc desc;
+    D3DSurfaceDesc desc;
     D3DSurface_GetDesc(source, &desc);
     if (context->copyTexture == NULL) {
         context->copyTexture = D3DDevice_CreateTexture2(desc.width, desc.height, 1, 1, 0, desc.format, 3);
         if (context->backTar == NULL)
             context->backTar = EAGL_TARFromSurface(context->copyTexture);
     }
-    void *destination = D3DTexture_GetSurfaceLevel2(context->copyTexture, 0);
+    D3DPixelContainer *destination = D3DTexture_GetSurfaceLevel2(context->copyTexture, 0);
     D3DRect rect = {0, 0, int32_t(desc.width), int32_t(desc.height)};
     D3DPoint point = {0, 0};
     D3DDevice_CopyRects(source, &rect, 1, destination, &point);

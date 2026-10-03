@@ -3,7 +3,9 @@
 #include "AnimMisc.h"
 #include "AnimUntested.h"
 #include "Skeleton.h"
+#include "../EaglOriginals.h"
 #include "../Transform.h"
+#include "../../platform/X87.h"
 
 #include <bit>
 #include <string.h>
@@ -35,19 +37,10 @@
 
 namespace {
 
-#define AngleBetween ((double (*)(const float *a, const float *b))0x00016530)   // atan2(|a x b|, a.b), in ST0
 
 // The original's pi (.rdata 0x001a11d0; its 180, 0.5, -1 and 0 are exact; kPhaseScale: AnimMisc.h)
 constexpr float kPi = 3.14159274f;
 static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "the original's pi");
-
-inline int Truncate(float f) {   // CVTTSS2SI
-    return _mm_cvtt_ss2si(_mm_set_ss(f));
-}
-
-inline bool InMask(const BoneMask *mask, int bone) {
-    return (mask->bits[bone >> 5] & (1u << (bone & 31))) != 0;
-}
 
 inline double Lerp(float a, float b, float t) {
     return (double(b) - a) * t + a;
@@ -88,7 +81,7 @@ inline void LerpTranslation(float t, const float *a, const float *b, float *out,
 void AnimBlendPoseQ(int count, float t, const float *a, const float *b, float *out, const BoneMask *mask) {
     EAGL_UNTESTED("AnimBlendPoseQ");
     for (int i = 0; i < count; i++)
-        if (mask == NULL || InMask(mask, i))
+        if (mask == NULL || mask->Has(i))
             SlerpBone(t, a, b, out, i);
 }
 
@@ -96,7 +89,7 @@ void AnimBlendPoseQ(int count, float t, const float *a, const float *b, float *o
 void AnimBlendPoseQT(int count, float t, const float *a, const float *b, float *out, const BoneMask *mask) {
     EAGL_UNTESTED("AnimBlendPoseQT");
     for (int i = 0; i < count; i++) {
-        if (mask != NULL && !InMask(mask, i))
+        if (mask != NULL && !mask->Has(i))
             continue;
         SlerpBone(t, a, b, out, i);
         LerpTranslation(t, a, b, out, i);
@@ -118,7 +111,7 @@ void AnimBlendPoseQMasks(int count, float t, const float *a, const BoneMask *mas
                          const BoneMask *maskB, float *out) {
     EAGL_UNTESTED("AnimBlendPoseQMasks");
     for (int i = 0; i < count; i++) {
-        bool inA = InMask(maskA, i), inB = InMask(maskB, i);
+        bool inA = maskA->Has(i), inB = maskB->Has(i);
         if (inA && inB)
             SlerpBone(t, a, b, out, i);
         else if (inA)
@@ -133,7 +126,7 @@ void AnimBlendPoseQTMasks(int count, float t, const float *a, const BoneMask *ma
                           const BoneMask *maskB, float *out) {
     EAGL_UNTESTED("AnimBlendPoseQTMasks");
     for (int i = 0; i < count; i++) {
-        bool inA = InMask(maskA, i), inB = InMask(maskB, i);
+        bool inA = maskA->Has(i), inB = maskB->Has(i);
         if (inA && inB) {
             SlerpBone(t, a, b, out, i);
             LerpTranslation(t, a, b, out, i);
@@ -282,7 +275,7 @@ bool FnPoseBlender::EvalSQT(float time, float *sqt, void *maskData) {
 
     if (bone >= 0) {
         for (int i = skeleton->count - 1; i >= 0; i--) {
-            if (!InMask(mask, i))
+            if (!mask->Has(i))
                 continue;
             if (i == bone) {
                 AlignBone(poseB + bone * 12, align);
@@ -293,7 +286,7 @@ bool FnPoseBlender::EvalSQT(float time, float *sqt, void *maskData) {
         return true;
     }
     for (int i = skeleton->count - 1; i >= 0; i--)
-        if (InMask(mask, i))
+        if (mask->Has(i))
             SlerpBone(s, poseA, poseB, sqt, i);
     if (mask->bits[0] & 1)
         LerpTranslation(s, poseA, poseB, sqt, 0);

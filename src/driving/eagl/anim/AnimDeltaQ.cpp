@@ -2,6 +2,8 @@
 #include "AnimMisc.h"
 #include "AnimUntested.h"
 #include "Skeleton.h"
+#include "../EaglGlobals.h"
+#include "../../platform/X87.h"
 #include "../../../helpers.h"
 
 #include <bit>
@@ -34,12 +36,9 @@
 
 namespace {
 
-typedef void (*EaglFreeHook)(void *data, uint32_t size);
-#define EaglFree (*(EaglFreeHook *)0x001caf6c)
 #define VtDeltaSingleQ ((const void *)0x001a1360)
 #define VtDeltaQFast ((const void *)0x001a13e0)
 #define VtDeltaQ ((const void *)0x001a1450)
-#define ReverseDeltaSumEnabled U8_AT(0x001ceb4c)            // 0: going back decodes the bin again
 #define SingleQAngleRange FLOAT_AT(0x00241ae0)              // set at run time (2 pi, presumably)
 
 // The dequantisation scales, the original's .rdata floats (1 and 0 are exact)
@@ -63,14 +62,6 @@ static_assert(std::bit_cast<uint32_t>(kOneOver127) == 0x3c010204, "the original'
 static_assert(std::bit_cast<uint32_t>(kOneOver32767) == 0x38000100, "the original's 1/32767");
 
 enum { kSlotEvalSQTMasked = 18 };    // FnDeltaSingleQ's and FnDeltaQ's extra virtual
-
-inline int Truncate(float f) {   // CVTTSS2SI
-    return _mm_cvtt_ss2si(_mm_set_ss(f));
-}
-
-inline bool InMask(const void *mask, int bone) {
-    return (static_cast<const BoneMask *>(mask)->bits[bone >> 5] & (1u << (bone & 31))) != 0;
-}
 
 // A bone's quaternion in the SQT records.
 inline float* SqtQuat(float *sqt, int bone) {
@@ -449,7 +440,7 @@ bool FnDeltaSingleQ::EvalSQTMasked(float time, void *mask, float *sqt) {
     InitBuffersAsRequired();
     DeltaSingleQData *d = SingleQData(anim);
     const uint8_t *boneIdx = d->boneIdx;
-    auto skip = [&](int i) { return mask != NULL && !InMask(mask, boneIdx[i]); };
+    auto skip = [&](int i) { return mask != NULL && !static_cast<const BoneMask *>(mask)->Has(boneIdx[i]); };
     int frame = Truncate(time);
     int k = FindKey(frame, d, prevKey);
     int shift = d->binLengthPower;
@@ -682,12 +673,12 @@ void FnDeltaQFast::UpdateNextQsMask(DeltaQFastHeader *data, int ceilKey, int flo
     if (nextBin != floorBin) {
         DeltaQFastPhysical *physical = reinterpret_cast<DeltaQFastPhysical *>(np);
         for (int i = 0; i < data->bones; i++)
-            if (InMask(mask, boneIdx[i]))
+            if (static_cast<const BoneMask *>(mask)->Has(boneIdx[i]))
                 physical[i].UnQuantize(nextQs + i * 4);
     } else {
         DeltaQFastDelta *row = reinterpret_cast<DeltaQFastDelta *>(np + (floorDelta + 2) * data->bones * 3);
         for (int i = 0; i < data->bones; i++, row++) {
-            if (!InMask(mask, boneIdx[i]))
+            if (!static_cast<const BoneMask *>(mask)->Has(boneIdx[i]))
                 continue;
             float dq[4];
             row->UnQuantize(&minRangesf[i], dq);
@@ -740,7 +731,7 @@ void FnDeltaQFast::AddDeltaMask(uint8_t *bin, DeltaQFastHeader *data, int prevDe
         return;
     for (int f = floorDelta - prevDelta; f != 0; f--)
         for (int i = 0; i < data->bones; i++, row++) {
-            if (!InMask(mask, boneIdx[i]))
+            if (!static_cast<const BoneMask *>(mask)->Has(boneIdx[i]))
                 continue;
             float dq[4];
             row->UnQuantize(&minRangesf[i], dq);
@@ -759,7 +750,7 @@ void FnDeltaQFast::SubDeltaMask(uint8_t *bin, DeltaQFastHeader *data, int prevDe
         return;
     for (int f = prevDelta - floorDelta; f != 0; f--)
         for (int i = data->bones - 1; i >= 0; i--, row--) {
-            if (!InMask(mask, boneIdx[i]))
+            if (!static_cast<const BoneMask *>(mask)->Has(boneIdx[i]))
                 continue;
             float dq[4];
             row->UnQuantize(&minRangesf[i], dq);
@@ -797,7 +788,7 @@ void FnDeltaQFast::SetAnimMemoryMap(uint8_t *data) {
 static bool QFastEval(FnDeltaQFast *self, float time, float *sqt, void *mask) {
     DeltaQFastHeader *d = QFastData(self->anim);
     const uint8_t *boneIdx = d->boneIdx;
-    auto skip = [&](int i) { return mask != NULL && !InMask(mask, boneIdx[i]); };
+    auto skip = [&](int i) { return mask != NULL && !static_cast<const BoneMask *>(mask)->Has(boneIdx[i]); };
     int n = d->bones;
     if (n != 0) {
         int frame = Truncate(time);
@@ -865,7 +856,7 @@ static bool QFastEval(FnDeltaQFast *self, float time, float *sqt, void *mask) {
     }
     for (int j = 0; j < d->constBones; j++) {
         int bone = self->constBoneIdxs[j];
-        if (mask == NULL || InMask(mask, bone))
+        if (mask == NULL || static_cast<const BoneMask *>(mask)->Has(bone))
             self->constPhysical[j].UnQuantize(SqtQuat(sqt, bone));
     }
     return true;
@@ -1052,7 +1043,7 @@ bool FnDeltaQ::EvalSQTMasked(float time, void *mask, float *sqt) {
     InitBuffersAsRequired();
     DeltaQHeader *d = QData(anim);
     const uint8_t *boneIdx = d->boneIdx;
-    auto skip = [&](int i) { return mask != NULL && !InMask(mask, boneIdx[i]); };
+    auto skip = [&](int i) { return mask != NULL && !static_cast<const BoneMask *>(mask)->Has(boneIdx[i]); };
     if (d->bones != 0) {
         int frame = Truncate(time);
         int k = FindKey(frame, d, prevKey);

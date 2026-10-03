@@ -1,5 +1,6 @@
 #include "RuntimeAlloc.h"
 
+#include "EaglGlobals.h"
 #include "GeoPrimState.h"
 #include "Loader.h"
 #include "Profiler.h"
@@ -26,13 +27,8 @@
 // sscanf) are the host's.
 // ---------------------------------------------------------------------------------------------------------------
 
-typedef void *(*EaglMallocFn)(uint32_t size, const char *name);
-typedef void (*EaglFreeFn)(void *data, uint32_t size);
-
-#define EaglMalloc (*(EaglMallocFn *)0x001caf68)
-#define EaglFree (*(EaglFreeFn *)0x001caf6c)
-#define GlobalPool (*(SymbolPool *)0x0023fb8c)
-#define BuiltInShapes ((ShapeFile *)0x001cbdd0)   // the SHPX file linked into the executable: a TAR's fallback image
+// (The allocator hooks, the global pool and BuiltInShapes - the SHPX file linked into the executable, a TAR's
+// fallback image - are EaglGlobals.h's.)
 #define TarShapeName ((char *)0x001cc980)         // "shape_" and room for four characters, filled in per use
 #define TarClutName ((char *)0x001cc998)          // the same, for CLUTNAME
 
@@ -457,7 +453,7 @@ void* RuntimeAllocTARConstructor(const char *properties, DynamicLoader *loader, 
                 loader->GetAddr("SHAPE", name, &unused);
             }
             if (image == NULL)
-                image = (uint8_t *)BuiltInShapes + BuiltInShapes->entries[0].offset;
+                image = (uint8_t *)&BuiltInShapes + BuiltInShapes.entries[0].offset;
             tars = (TARSlot *)EaglMalloc(count * sizeof(TARSlot), NULL);
             if (tars != NULL)
                 tars->tar.Construct((uint8_t *)image);

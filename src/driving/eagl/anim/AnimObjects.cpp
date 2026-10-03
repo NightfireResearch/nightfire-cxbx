@@ -6,7 +6,10 @@
 #include "AnimLocoBlend.h"
 #include "AnimMisc.h"
 #include "Skeleton.h"
+#include "../EaglGlobals.h"
+#include "../EaglOriginals.h"
 #include "../Loader.h"
+#include "../../platform/X87.h"
 #include "../../../helpers.h"
 
 #include <string.h>
@@ -33,10 +36,6 @@
 
 namespace {
 
-typedef void *(*EaglMallocHook)(uint32_t size, const char *name);
-typedef void (*EaglFreeHook)(void *data, uint32_t size);
-#define EaglMalloc (*(EaglMallocHook *)0x001caf68)
-#define EaglFree (*(EaglFreeHook *)0x001caf6c)
 
 // A free block's first word links the next.
 struct FreeBlock {
@@ -60,7 +59,6 @@ static_assert(sizeof(MemoryPool) == 0x470, "the pool's free lists run to 0x00241
 
 #define Pool (*(MemoryPool *)0x002414b0)
 #define FactoryBlock PTR_AT(0x00241b80)
-#define CtorPool ((ConstructorPool *)0x0023fbe0)
 
 // The object size of each anim type (a table only the pool reads)
 constexpr uint16_t kBlockSizes[kAnimTypeCount] = {
@@ -94,11 +92,6 @@ constexpr uint16_t kBlockSizes[kAnimTypeCount] = {
 #define VtDeltaQuat ((const void *)0x001a10a8)
 #define VtMemoryMap ((const void *)0x001a1130)
 
-#define OperatorDelete ((void (*)(void *))0x001146e0)
-
-inline int Truncate(float f) {   // CVTTSS2SI
-    return _mm_cvtt_ss2si(_mm_set_ss(f));
-}
 
 // The anim data behind each channel type
 CompoundData *Compound(uint8_t *anim) {
@@ -264,7 +257,7 @@ FnAnim* AnimPool_Construct(uint16_t type) {
 void EAGLAnim_InitInternal(uint32_t poolSize) {
     AnimPool_Init(poolSize);
     FactoryBlock = EaglMalloc(1, FactoryName);
-    CtorPool->AddType(BankTypeName, (void *)0x000f7170, (void *)0x000f71a0);
+    TheConstructorPool.AddType(BankTypeName, (void *)0x000f7170, (void *)0x000f71a0);
 }
 
 // FUNC_AT(0x000faa00)
@@ -291,7 +284,7 @@ void EAGLAnim_ResetPool() {
 
 // FUNC_AT(0x000faa50)
 void EAGLAnim_ShutDown() {
-    CtorPool->RemoveType(BankTypeName);
+    TheConstructorPool.RemoveType(BankTypeName);
     ScratchBuffer_FreeScratchBuffers();
     if (FactoryBlock != NULL)
         EaglFree(FactoryBlock, 1);
@@ -354,7 +347,7 @@ void FnAnim::Destruct() {
 FnAnim* FnAnim::ScalarDelete(unsigned flags) {
     vtable = VtFnAnim;
     if (flags & 1)
-        OperatorDelete(this);
+        BuiltinDelete(this);
     return this;
 }
 
@@ -427,7 +420,7 @@ uint16_t FnAnimMemoryMap::GetTargetCheckSum() {
 FnAnimMemoryMap* FnAnimMemoryMap::ScalarDelete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        OperatorDelete(this);
+        BuiltinDelete(this);
     return this;
 }
 

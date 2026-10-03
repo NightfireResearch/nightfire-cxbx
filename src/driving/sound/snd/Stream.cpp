@@ -1,5 +1,6 @@
 #include "Stream.h"
 #include "SndUntested.h"
+#include "System.h"
 
 #include "../../platform/FileSys.h"
 #include "../../platform/RealPrint.h"
@@ -44,8 +45,6 @@ constexpr uint32_t kSkip = 0xfffffffe;    // chunk tag: released or skipped
 #define ReadDone ((FsCallback)0x0014b660)     // FUN_0014b660
 
 #define CrtStrncpy ((char *(*)(char *, const char *, int))0x00133d60)   // the CRT's _strncpy
-#define EnterCritical ((void (*)(void))0x0013b950)                      // SNDSYS_entercritical
-#define LeaveCritical ((void (*)(void))0x0013b970)                      // SNDSYS_leavecritical
 #define MemFreeImport (*(bool (**)(void *))0x001d1878)                 // MEM_free, the pointer the original jumps through
 
 StrmInternal *Valid(StrmReader *stream) {   // the check every entry starts with
@@ -1024,8 +1023,8 @@ void STREAM_destroy(SND::StrmReader *stream) {
 // FUNC_AT(0x001503b0)
 int FUN_001503b0(void) {
     SND_UNTESTED("FUN_001503b0");
-    EnterCritical();
-    LeaveCritical();
+    SNDSYS_entercritical();
+    SNDSYS_leavecritical();
     return 0;
 }
 

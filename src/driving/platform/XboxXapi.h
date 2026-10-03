@@ -13,4 +13,14 @@ HANDLE __stdcall Xbox_CreateFileA(const char *path, DWORD access, DWORD share, S
                                   DWORD disposition, DWORD flags, HANDLE templateFile);
 BOOL __stdcall Xbox_DeleteFileA(const char *path);
 
+// Sleep (0x0010e9ab) and CreateThread (0x0010ec6a), for the ports that call them (the sound library's driver).
+void __stdcall Xbox_Sleep(DWORD milliseconds);
+HANDLE __stdcall Xbox_CreateThread(SECURITY_ATTRIBUTES *security, SIZE_T stackSize, LPTHREAD_START_ROUTINE start,
+                                   void *parameter, DWORD flags, DWORD *threadId);
+
+// MmFreeContiguousMemory (0x0010e82c), XGetVideoFlags (0x0010e02b) and OutputDebugStringA (0x0010e832), for EAGL.
+void __stdcall Xbox_MmFreeContiguousMemory(void *base);
+DWORD Xbox_XGetVideoFlags(void);
+void __stdcall Xbox_OutputDebugStringA(const char *text);
+
 #endif // DRIVING_PLATFORM_XBOXXAPI_H_

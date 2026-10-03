@@ -7,6 +7,9 @@
 
 #include "../sound/snd/Filters.h"
 #include "../sound/snd/FiltersUnused.h"
+#include "../sound/snd/Platform.h"
+#include "../sound/snd/Streams.h"
+#include "../sound/snd/System.h"
 #include "../../common/xbeOriginal.h"
 #include "../../common/xboxPath.h"
 
@@ -301,7 +304,7 @@ struct Hook {
     uint8_t saved[5];
     bool on;
 };
-Hook g_hooks[8];
+Hook g_hooks[16];
 int g_hookCount;
 
 void HookInstall(uint32_t at, const void *to) {
@@ -321,6 +324,16 @@ void HookInstall(uint32_t at, const void *to) {
     VirtualProtect((void *)(uintptr_t)at, 5, old, &old);
     FlushInstructionCache(GetCurrentProcess(), (void *)(uintptr_t)at, 5);
     h.on = true;
+}
+
+// A ported callee: the original's entry and our port's, both to the fake (our ports call each other directly, the
+// originals by address). The answer is whether the original's entry took the jump.
+bool HookBoth(uint32_t at, const void *ours, const void *to) {
+    HookInstall(at, to);
+    bool on = g_hooks[g_hookCount - 1].on;
+    if ((uint32_t)(uintptr_t)ours != at)
+        HookInstall((uint32_t)(uintptr_t)ours, to);
+    return on;
 }
 
 void HooksRemove() {
@@ -1270,13 +1283,13 @@ void SndFilterShadow_Run(void) {
     memcpy(savedKernelGlobals, (void *)(uintptr_t)kKernelGlobals, kKernelGlobalsSize);
     *(uint32_t *)0x002475f4u = P((void *)&FakeCodaNew);
     *(uint32_t *)0x002475f8u = P((void *)&FakeCodaDelete);
-    HookInstall(0x0013ee00, (void *)&FakeGetPacket);           // SNDPKTPLAYI_get
-    HookInstall(0x0013ef80, (void *)&FakeFreeFrames);          // SNDPKTPLAYI_freeframes
-    HookInstall(0x00142420, (void *)&FakeGetMasterVoice);      // SNDDRV_getmastervoice
-    HookInstall(0x001457e0, (void *)&FakeVoiceToPacketHandle); // SNDPKTPLAYI_voicetopackethandle
-    HookInstall(0x00142460, (void *)&FakeGetSampleChan);       // SNDDRV_getsamplechan
-    HookInstall(0x0013f780, (void *)&FakeSndMemAlloc);         // SNDMEMI_alloc
-    HookInstall(0x0013edc0, (void *)&FakeFramesOutstanding);   // SNDPKTPLAY_framesoutstanding
+    HookBoth(0x0013ee00, (const void *)&SNDPKTPLAYI_get, (const void *)&FakeGetPacket);
+    HookBoth(0x0013ef80, (const void *)&SNDPKTPLAYI_freeframes, (const void *)&FakeFreeFrames);
+    HookBoth(0x00142420, (const void *)&SNDDRV_getmastervoice, (const void *)&FakeGetMasterVoice);
+    HookBoth(0x001457e0, (const void *)&SNDPKTPLAYI_voicetopackethandle, (const void *)&FakeVoiceToPacketHandle);
+    HookBoth(0x00142460, (const void *)&SNDDRV_getsamplechan, (const void *)&FakeGetSampleChan);
+    HookBoth(0x0013f780, (const void *)&SNDMEMI_alloc, (const void *)&FakeSndMemAlloc);
+    HookBoth(0x0013edc0, (const void *)&SNDPKTPLAY_framesoutstanding, (const void *)&FakeFramesOutstanding);
 
     int kindCount = (int)(sizeof(g_kinds) / sizeof(g_kinds[0]));
     for (int k = 0; k < kindCount; k++) {

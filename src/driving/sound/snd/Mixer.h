@@ -6,6 +6,7 @@
 // state is one block of globals, SND::MixState below.
 
 #include "Filters.h"
+#include "FiltersUnused.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -25,11 +26,11 @@ struct MixVoice {
     SFilterNode *chain;              // +0x40 the filter chain's head (pulled by the mixer)
     SFilterGetFrame getFrame;        // +0x44 UnpackInfo::getFrame after the unpacker's init
     SFilterNode *unpacker;           // +0x48
-    SFilterNode *stretch;            // +0x4c time stretch
-    SFilterNode *resampler;          // +0x50
+    SFilterStretch *stretch;         // +0x4c time stretch
+    SFilterRSF *resampler;           // +0x50
     uint32_t unknown54;              // +0x54
-    SFilterNode *lowpass;            // +0x58
-    SFilterNode *highpass;           // +0x5c
+    SFilterLPFRC *lowpass;           // +0x58
+    SFilterFIR8 *highpass;           // +0x5c
 };
 static_assert(sizeof(MixVoice) == 0x60, "a MIX voice is 0x60 bytes");
 
@@ -123,7 +124,7 @@ struct MixState {
     float rampToZero[6];             // +0x0160 0x00245af0 per channel: gain still ramping to zero
     float fxRampToZero;              // +0x0178 0x00245b08
     SFilterNode *outputList[6];      // +0x017c 0x00245b0c per channel: the output filter list
-    SFilterNode *masterFilter[6];    // +0x0194 0x00245b24 per channel: the optional master low pass
+    SFilterLPFRC *masterFilter[6];   // +0x0194 0x00245b24 per channel: the optional master low pass
     SFilterNode outputNodes[6];      // +0x01ac 0x00245b3c the output stages, process SFILTER_ft24_32
     MixVoice *voices;                // +0x0254 0x00245be4 MixList: [counts.voices]
     MixFn mixFunc;                   // +0x0258 0x00245be8 mixc
@@ -170,8 +171,8 @@ void MIXI_interpolatemix(float from, float to, float *in, float *out);      // 0
 void SNDMIX_setmasterlowpass(float cutoff);                                 // 0x00141630
 int SNDMIXI_volramp(SND::MixVoice *voice);                                  // 0x00141710
 void MIX_destroy(void);                                                     // 0x00141880
-void MIX_playinit(int voice, int sampleRep, int kind, const void *data, int p4, int stretchData, int p6, int p7,
-                  int p8, int loop, int p10, int p11, int requester);       // 0x00141910
+void MIX_playinit(int voice, int sampleRep, int kind, const void *data, int p4, const uint8_t *stretchData, int p6,
+                  int p7, int p8, int loop, int p10, int p11, int requester);       // 0x00141910
 void MIX_play(int voice);                                                   // 0x00141ad0
 void MIX_stop(int voice);                                                   // 0x00141b20
 void SNDMIX_setdrygain(int voice, int speaker, float gain);                 // 0x00141bb0
@@ -186,6 +187,6 @@ void MIXI_initunpackxa(void);                                               // 0
 void MIXI_initunpack16(void);                                               // 0x001446a0
 void MIX_setlowpass(int voice, float cutoff);                               // 0x00144af0
 void MIX_sethighpass(int voice, int cutoff);                                // 0x001464c0
-int MIX_settimemult(int voice, int ratio);                                  // 0x00146570
+void MIX_settimemult(int voice, int ratio);                                 // 0x00146570
 
 #endif // DRIVING_SOUND_SND_MIXER_H_

@@ -1,4 +1,5 @@
 #include "d3dSeam.h"
+#include "D3D8.h"
 
 #include "../../common/gfx/d3d9Backend.h"
 #include "../../common/standalone.h"
@@ -55,7 +56,8 @@ static XbeEntrySeam g_seam = { g_entries, sizeof(g_entries) / sizeof(g_entries[0
 // ---------------------------------------------------------------------------------------------------------------
 // The entry points that do have an implementation.
 //
-// Each is a __stdcall function with the original's signature, forwarding to the backend. Where the backend
+// Each is a __stdcall function with the original's signature, forwarding to the backend, and declared in D3D8.h for
+// our own code to call directly (the same function the patched entry point jumps to). Where the backend
 // wants something in a different shape - a viewport as six numbers rather than a structure, a float where the
 // stack holds a dword - the conversion happens here, so the backend stays free of Xbox-isms it does not need.
 // ---------------------------------------------------------------------------------------------------------------
@@ -120,9 +122,9 @@ static void InitialiseD3D8State(void) {
     }
 }
 
-static uint32_t __stdcall Seam_Direct3D_CreateDevice(uint32_t adapter, uint32_t deviceType, void *focusWindow,
-                                                     uint32_t behaviourFlags, void *presentationParameters,
-                                                     void **returnedDevice) {
+int32_t __stdcall Direct3D_CreateDevice(uint32_t adapter, uint32_t deviceType, void *focusWindow,
+                                        uint32_t behaviourFlags, void *presentationParameters,
+                                        void **returnedDevice) {
     // The backend paces Present to the refresh rate in the present parameters, standing in for the vertical
     // blank an Xbox Swap would have waited for. EAGL leaves that field zero unless the game asked for a
     // particular rate, which would mean no pacing at all - so where it is zero, the video mode's own rate is
@@ -139,125 +141,112 @@ static uint32_t __stdcall Seam_Direct3D_CreateDevice(uint32_t adapter, uint32_t 
                GameTimerFrequency);
     }
 
-    uint32_t result = D3D9_CreateDevice(adapter, deviceType, focusWindow, behaviourFlags,
+    int32_t result = D3D9_CreateDevice(adapter, deviceType, focusWindow, behaviourFlags,
                                         parameters, returnedDevice);
     InitialiseD3D8State();
     return result;
 }
 
-static void __stdcall Seam_D3D_SetPushBufferSize(uint32_t pushBufferSize, uint32_t kickOffSize) {
+void __stdcall D3D_SetPushBufferSize(uint32_t pushBufferSize, uint32_t kickOffSize) {
     D3D9_SetPushBufferSize(pushBufferSize, kickOffSize);
 }
 
-static void __stdcall Seam_D3DDevice_Clear(uint32_t count, void *rects, uint32_t flags, uint32_t colour,
-                                           uint32_t z, uint32_t stencil) {
-    // Z arrives as the raw bits of a float, pushed like any other dword.
-    float depth;
-    memcpy(&depth, &z, sizeof(depth));
-    D3D9_Clear(count, rects, flags, colour, depth, stencil);
+void __stdcall D3DDevice_Clear(uint32_t count, const D3DRect *rects, uint32_t flags, uint32_t colour, float z,
+                               uint32_t stencil) {
+    D3D9_Clear(count, const_cast<D3DRect *>(rects), flags, colour, z, stencil);
 }
 
-static void __stdcall Seam_D3DDevice_Swap(uint32_t flags) {
+void __stdcall D3DDevice_Swap(uint32_t flags) {
     Profiler_Frame("the frame just presented");   // does nothing unless settings.ini says Profile=on
     D3D9_Swap(flags);
 }
 
-static uint32_t *__stdcall Seam_D3DDevice_GetBackBuffer2(int32_t index) {
-    return D3D9_GetBackBuffer2(index);
+D3DPixelContainer *__stdcall D3DDevice_GetBackBuffer2(int32_t index) {
+    return reinterpret_cast<D3DPixelContainer *>(D3D9_GetBackBuffer2(index));
 }
 
-static void *__stdcall Seam_D3DDevice_GetDepthStencilSurface2(void) {
-    return D3D9_GetDepthStencilSurface2();
+D3DPixelContainer *__stdcall D3DDevice_GetDepthStencilSurface2() {
+    return static_cast<D3DPixelContainer *>(D3D9_GetDepthStencilSurface2());
 }
 
-static void *__stdcall Seam_D3DTexture_GetSurfaceLevel2(void *texture, uint32_t level) {
-    return D3D9_GetSurfaceLevel2(texture, level);
+D3DPixelContainer *__stdcall D3DTexture_GetSurfaceLevel2(D3DPixelContainer *texture, uint32_t level) {
+    return static_cast<D3DPixelContainer *>(D3D9_GetSurfaceLevel2(texture, level));
 }
 
-static void __stdcall Seam_D3DDevice_SetShaderConstantMode(uint32_t mode) {
+void __stdcall D3DDevice_SetShaderConstantMode(uint32_t mode) {
     D3D9_SetShaderConstantMode(mode);
 }
 
-static void __stdcall Seam_D3DDevice_SetRenderState_CullMode(int cullMode) {
+void __stdcall D3DDevice_SetRenderState_CullMode(uint32_t cullMode) {
     D3D9_SetCullMode(cullMode);
 }
 
-static void __stdcall Seam_D3DDevice_SetRenderState_ZEnable(uint32_t value) {
+void __stdcall D3DDevice_SetRenderState_ZEnable(uint32_t value) {
     D3D9_SetZEnable(value);
 }
 
-static void __stdcall Seam_D3DDevice_SetRenderState_FogColor(uint32_t colour) {
+void __stdcall D3DDevice_SetRenderState_FogColor(uint32_t colour) {
     D3D9_SetFogColor(colour);
 }
 
-static void __stdcall Seam_D3DDevice_SetTexture(uint32_t stage, void *texture) {
+void __stdcall D3DDevice_SetTexture(uint32_t stage, D3DPixelContainer *texture) {
     D3D9_SetTexture(stage, texture);
 }
 
-static void __stdcall Seam_D3DResource_Register(void *resource, uint32_t data) {
-    D3D9_ResourceRegister(resource, data);
+void __stdcall D3DResource_Register(D3DResource *resource, void *base) {
+    D3D9_ResourceRegister(resource, uint32_t(uintptr_t(base)));
 }
 
-static uint32_t __stdcall Seam_D3DResource_Release(void *resource) {
+uint32_t __stdcall D3DResource_Release(D3DResource *resource) {
     return D3D9_ResourceRelease(resource);
 }
 
-static void __stdcall Seam_D3DResource_BlockUntilNotBusy(void *resource) {
+void __stdcall D3DResource_BlockUntilNotBusy(D3DResource *resource) {
     D3D9_BlockUntilNotBusy(resource);
 }
 
-static void __stdcall Seam_XGSetTextureHeader(uint32_t width, uint32_t height, uint32_t levels, uint32_t usage,
-                                              int format, uint32_t pool, void *texture, uint32_t data,
-                                              uint32_t pitch) {
-    D3D9_XGSetTextureHeader(width, height, levels, usage, format, pool, texture, data, pitch);
+void __stdcall XGSetTextureHeader(uint32_t width, uint32_t height, uint32_t levels, uint32_t usage, uint32_t format,
+                                  uint32_t pool, D3DPixelContainer *texture, uint32_t data, uint32_t pitch) {
+    D3D9_XGSetTextureHeader(width, height, levels, usage, int(format), pool, texture, data, pitch);
 }
 
-// The Xbox D3DVIEWPORT8, as the entry point receives it.
-struct XboxViewport { uint32_t X, Y, Width, Height; float MinZ, MaxZ; };
-
-static void __stdcall Seam_D3DDevice_SetViewport(const XboxViewport *viewport) {
+void __stdcall D3DDevice_SetViewport(const D3DViewport8 *viewport) {
     if (viewport == NULL)
         return;
-    D3D9_SetViewport(viewport->X, viewport->Y, viewport->Width, viewport->Height,
-                     viewport->MinZ, viewport->MaxZ);
+    D3D9_SetViewport(viewport->x, viewport->y, viewport->width, viewport->height,
+                     viewport->minZ, viewport->maxZ);
 }
 
-// The Xbox D3DSURFACE_DESC, which is not the PC one: there is no Size field between Pool and
-// MultiSampleType, so Width and Height sit at +0x14 and +0x18. Read off the original Get2DSurfaceDesc
+// The Xbox D3DSURFACE_DESC (D3D8.h), which is not the PC one: there is no Pool, so Size sits where the PC's Pool
+// does and Width and Height are at +0x14 and +0x18. Read off the original Get2DSurfaceDesc
 // (0x0016e390), which writes exactly these seven words - and getting it wrong is not academic, since the
 // first version of this file had the PC layout and EAGL built its backbuffer texture header out of the
 // wrong two words.
-struct XboxSurfaceDesc {
-    uint32_t Format, Type, Usage, Pool, MultiSampleType, Width, Height;
-};
-
 #define XBOX_MULTISAMPLE_NONE 0x11u
 
-static void FillSurfaceDesc(void *surface, XboxSurfaceDesc *desc) {
+static void FillSurfaceDesc(void *surface, D3DSurfaceDesc *desc) {
     if (desc == NULL)
         return;
     memset(desc, 0, sizeof(*desc));
-    desc->Type = 1;                              // D3DRTYPE_SURFACE
-    desc->MultiSampleType = XBOX_MULTISAMPLE_NONE;
-    D3D9_GetSurfaceDesc(surface, &desc->Format, &desc->Width, &desc->Height);
+    desc->type = 1;                              // D3DRTYPE_SURFACE
+    desc->multiSampleType = XBOX_MULTISAMPLE_NONE;
+    D3D9_GetSurfaceDesc(surface, &desc->format, &desc->width, &desc->height);
 }
 
-static void __stdcall Seam_D3DSurface_GetDesc(void *surface, XboxSurfaceDesc *desc) {
+void __stdcall D3DSurface_GetDesc(D3DPixelContainer *surface, D3DSurfaceDesc *desc) {
     FillSurfaceDesc(surface, desc);
 }
 
 // The same thing one level down, and the one the rest of EAGL calls directly. The middle argument is the mip
 // level, which only matters for textures; every caller here passes zero.
-static void __stdcall Seam_Get2DSurfaceDesc(void *surface, uint32_t level, XboxSurfaceDesc *desc) {
+void __stdcall D3D_Get2DSurfaceDesc(D3DPixelContainer *surface, uint32_t level, D3DSurfaceDesc *desc) {
     (void)level;
     FillSurfaceDesc(surface, desc);
 }
 
 // The gamma ramp the game reads at startup and puts back later. There is no Xbox ramp to read, so hand back
 // the identity - which is what is in effect anyway, since the backend does not touch the host's gamma.
-struct XboxGammaRamp { uint8_t red[256], green[256], blue[256]; };
-
-static void __stdcall Seam_D3DDevice_GetGammaRamp(XboxGammaRamp *ramp) {
+void __stdcall D3DDevice_GetGammaRamp(D3DGammaRamp *ramp) {
     if (ramp == NULL)
         return;
     for (int i = 0; i < 256; i++)
@@ -267,36 +256,34 @@ static void __stdcall Seam_D3DDevice_GetGammaRamp(XboxGammaRamp *ramp) {
 // Memory tiling. The nv2a can mark regions of memory as tiled so that framebuffer access is faster; D3D9
 // resources have no such notion, and the game only reads the tiles back in order to restore them, so
 // reporting them as unset and accepting whatever is set is both truthful and inert.
-struct XboxTile { uint32_t Flags, Size, Pitch, ZStartTag, ZOffset, ZEndTag; };
-
-static void __stdcall Seam_D3DDevice_GetTile(uint32_t index, XboxTile *tile) {
+void __stdcall D3DDevice_GetTile(uint32_t index, D3DTile *tile) {
     (void)index;
     if (tile != NULL)
         memset(tile, 0, sizeof(*tile));
 }
 
-static void __stdcall Seam_D3DDevice_SetTile(uint32_t index, const XboxTile *tile) {
+void __stdcall D3DDevice_SetTile(uint32_t index, const D3DTile *tile) {
     (void)index; (void)tile;
 }
 
 // The nv2a's screen-space offset is the sub-pixel origin of rasterisation. The backend applies the pixel
 // centre offset D3D9 needs in its own vertex path, so taking this one as well would shift everything twice.
-static void __stdcall Seam_D3DDevice_SetScreenSpaceOffset(float x, float y) {
+void __stdcall D3DDevice_SetScreenSpaceOffset(float x, float y) {
     (void)x; (void)y;
 }
 
 // Stencil, and the shadow-buffer comparison that goes with it. The backend has no stencil support yet - it
 // creates a depth-stencil buffer but never sets a stencil state - so these are accepted and dropped rather
 // than reported on every frame. They are on the list for when shadows are looked at.
-static void __stdcall Seam_D3DDevice_SetRenderState_StencilEnable(uint32_t value) {
+void __stdcall D3DDevice_SetRenderState_StencilEnable(uint32_t value) {
     (void)value;
 }
 
-static void __stdcall Seam_D3DDevice_SetRenderState_StencilFail(uint32_t value) {
+void __stdcall D3DDevice_SetRenderState_StencilFail(uint32_t value) {
     (void)value;
 }
 
-static void __stdcall Seam_D3DDevice_SetRenderState_ShadowFunc(uint32_t value) {
+void __stdcall D3DDevice_SetRenderState_ShadowFunc(uint32_t value) {
     (void)value;
 }
 
@@ -316,7 +303,7 @@ static void StoreDeferredRenderState(unsigned slot, uint32_t value) {
 }
 
 #define DEFERRED_RENDER_STATE(name, slot)                                       \
-    static void __stdcall Seam_D3DDevice_SetRenderState_##name(uint32_t value) { \
+    void __stdcall D3DDevice_SetRenderState_##name(uint32_t value) {        \
         StoreDeferredRenderState(slot, value);                                  \
     }
 DEFERRED_RENDER_STATE(PSTextureModes, 136)                  // 0x001673b0
@@ -343,16 +330,16 @@ DEFERRED_RENDER_STATE(DoNotCullUncompressed, 165)           // 0x00168ad0
 // The index buffer for indexed draws. The original records it (with a reference) and the base vertex index in
 // the device; this engine's draws are handed their index data directly (D3DDevice_DrawIndexedVertices), so the
 // backend's note of it is all that is needed.
-static void __stdcall Seam_D3DDevice_SetIndices(void *indexBuffer, uint32_t baseVertexIndex) {
+void __stdcall D3DDevice_SetIndices(D3DResource *indexBuffer, uint32_t baseVertexIndex) {
     D3D9_SetIndices(indexBuffer, baseVertexIndex);
 }
 
-static void __stdcall Seam_D3DDevice_SetGammaRamp(uint32_t flags, void *ramp) {
-    D3D9_SetGammaRamp(flags, ramp);
+void __stdcall D3DDevice_SetGammaRamp(uint32_t flags, const D3DGammaRamp *ramp) {
+    D3D9_SetGammaRamp(flags, const_cast<D3DGammaRamp *>(ramp));
 }
 
 // Whether the GPU is still using a resource: never, here - the backend copies what it reads at the draw.
-static uint32_t __stdcall Seam_D3DResource_IsBusy(void *resource) {
+uint32_t __stdcall D3DResource_IsBusy(D3DResource *resource) {
     (void)resource;
     return 0;
 }
@@ -361,21 +348,22 @@ static uint32_t __stdcall Seam_D3DResource_IsBusy(void *resource) {
 // Common = 0x01010001 (an index buffer, one reference), Data = the indices, Lock = 0. The original takes the
 // block from the XAPI heap; Release never frees an index buffer (the backend frees only the surfaces it made),
 // so neither did the original path.
-static void *__stdcall Seam_D3DDevice_CreateIndexBuffer2(uint32_t length) {
-    uint32_t *buffer = (uint32_t *)calloc(1, 12 + length);
+D3DResource *__stdcall D3DDevice_CreateIndexBuffer2(uint32_t length) {
+    D3DResource *buffer = (D3DResource *)calloc(1, sizeof(D3DResource) + length);
     if (buffer == NULL) {
         printf("[d3dSeam] out of memory for a %u-byte index buffer\n", length);
         return NULL;
     }
-    buffer[0] = 0x01010001u;
-    buffer[1] = (uint32_t)(uintptr_t)(buffer + 3);
-    buffer[2] = 0;
+    buffer->common = 0x01010001u;
+    buffer->data = (uint32_t)(uintptr_t)(buffer + 1);
+    buffer->lock = 0;
     return buffer;
 }
 
-static uint32_t __stdcall Seam_D3DDevice_CreateVertexShader(const void *declaration, const void *function,
-                                                            void **handle, uint32_t usage) {
-    return D3D9_CreateVertexShader(declaration, function, handle, usage);
+// The handle is a DWORD on the Xbox; the backend writes its own (a pointer, the same four bytes) through it.
+int32_t __stdcall D3DDevice_CreateVertexShader(const void *declaration, const void *function, uint32_t *handle,
+                                               uint32_t usage) {
+    return D3D9_CreateVertexShader(declaration, function, reinterpret_cast<void **>(handle), usage);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -398,14 +386,6 @@ static uint32_t __stdcall Seam_D3DDevice_CreateVertexShader(const void *declarat
 #define XBOX_TEXTURE_COMMON_WORD 0x01040001u   // D3DCOMMON_TYPE_TEXTURE, refcount 1
 #define XBOX_PALETTE_COMMON_WORD 0x01030001u   // D3DCOMMON_TYPE_PALETTE, refcount 1
 
-struct XboxPixelContainer {
-    uint32_t Common;
-    uint32_t Data;
-    uint32_t Lock;
-    uint32_t Format;
-    uint32_t Size;
-};
-
 // Enough of the format table to size an allocation. The backend has the same knowledge for its uploads; this
 // copy is deliberately the small half of it - how many bits a pixel takes - rather than a second opinion on
 // anything the backend decides.
@@ -424,9 +404,9 @@ static uint32_t XboxFormatBits(uint32_t format) {
     }
 }
 
-static void *__stdcall Seam_D3DDevice_CreateTexture2(uint32_t width, uint32_t height, uint32_t depth,
-                                                     uint32_t levels, uint32_t usage, uint32_t format,
-                                                     uint32_t resourceType) {
+D3DPixelContainer *__stdcall D3DDevice_CreateTexture2(uint32_t width, uint32_t height, uint32_t depth,
+                                                      uint32_t levels, uint32_t usage, uint32_t format,
+                                                      uint32_t resourceType) {
     (void)depth; (void)resourceType;
     if (width == 0 || height == 0)
         return NULL;
@@ -441,7 +421,7 @@ static void *__stdcall Seam_D3DDevice_CreateTexture2(uint32_t width, uint32_t he
     uint32_t bytes = pitch * height;
     bytes += bytes / 2;
 
-    XboxPixelContainer *texture = (XboxPixelContainer *)calloc(1, sizeof(XboxPixelContainer));
+    D3DPixelContainer *texture = (D3DPixelContainer *)calloc(1, sizeof(D3DPixelContainer));
     void *pixels = calloc(1, bytes);
     if (texture == NULL || pixels == NULL) {
         free(texture);
@@ -453,13 +433,12 @@ static void *__stdcall Seam_D3DDevice_CreateTexture2(uint32_t width, uint32_t he
     // The header the backend reads, built by the same function the game would have called itself.
     D3D9_XGSetTextureHeader(width, height, levels, usage, (int)format, 0, texture,
                             (uint32_t)(uintptr_t)pixels, 0);
-    texture->Common = XBOX_TEXTURE_COMMON_WORD;
-    texture->Data = (uint32_t)(uintptr_t)pixels;
+    texture->common = XBOX_TEXTURE_COMMON_WORD;
+    texture->data = (uint32_t)(uintptr_t)pixels;
     return texture;
 }
 
-// The locked rectangle, as both LockRect entry points fill it in: pitch first, then the pointer.
-struct XboxLockedRect { uint32_t Pitch; void *pBits; };
+// The locked rectangle (D3DLockedRect), as both LockRect entry points fill it in: pitch first, then the pointer.
 
 // Somewhere to put a lock of the backbuffer or the depth surface. Those are the backend's stand-ins: they
 // have no pixels, and their Data word is a marker rather than an address, so handing it back has the game
@@ -490,11 +469,11 @@ static void *ScratchForStandIn(const void *surface, uint32_t bytes) {
     return buffer;
 }
 
-static void LockPixels(void *container, XboxLockedRect *lockedRect) {
+static void LockPixels(D3DPixelContainer *container, D3DLockedRect *lockedRect) {
     if (lockedRect == NULL)
         return;
-    lockedRect->Pitch = 0;
-    lockedRect->pBits = NULL;
+    lockedRect->pitch = 0;
+    lockedRect->bits = NULL;
     if (container == NULL)
         return;
 
@@ -505,41 +484,41 @@ static void LockPixels(void *container, XboxLockedRect *lockedRect) {
         for (unsigned i = 0; i < seenCount; i++) if (seen[i] == container) known = true;
         if (!known && seenCount < 64) {
             seen[seenCount++] = container;
-            const XboxPixelContainer *h = (const XboxPixelContainer *)container;
-            printf("[d3dSeam] lock of %p (common %08x data %08x format %08x size %08x)%s\n", container, h->Common,
-                   h->Data, h->Format, h->Size, D3D9_IsStandInSurface(container) ? " - a stand-in" : "");
+            const D3DPixelContainer *h = container;
+            printf("[d3dSeam] lock of %p (common %08x data %08x format %08x size %08x)%s\n", container, h->common,
+                   h->data, h->format, h->size, D3D9_IsStandInSurface(container) ? " - a stand-in" : "");
         }
     }
 
     uint32_t format = 0, width = 0, height = 0;
     D3D9_GetSurfaceDesc(container, &format, &width, &height);
 
-    const XboxPixelContainer *header = (const XboxPixelContainer *)container;
-    lockedRect->Pitch = (((width * XboxFormatBits(format)) / 8) + 63) & ~63u;
+    const D3DPixelContainer *header = container;
+    lockedRect->pitch = (((width * XboxFormatBits(format)) / 8) + 63) & ~63u;
     if (D3D9_IsStandInSurface(container)) {
-        lockedRect->pBits = ScratchForStandIn(container, lockedRect->Pitch * height);
+        lockedRect->bits = ScratchForStandIn(container, lockedRect->pitch * height);
         // A lock of the backbuffer is the game about to read the scene - the pause menu copies it to blur
         // behind its panel - so the scene is fetched into the scratch first. Anything else stays zeros.
-        if (lockedRect->pBits != NULL && container == D3D9_GetBackBuffer2(0))
-            D3D9_ReadBackBuffer(lockedRect->pBits, lockedRect->Pitch, width, height);
+        if (lockedRect->bits != NULL && container == (void *)D3D9_GetBackBuffer2(0))
+            D3D9_ReadBackBuffer(lockedRect->bits, lockedRect->pitch, width, height);
         return;
     }
-    lockedRect->pBits = (void *)(uintptr_t)header->Data;
+    lockedRect->bits = (void *)(uintptr_t)header->data;
 
     // Whatever is about to be written lands in memory the backend has already uploaded from, so tell it the
     // copy it holds is stale. The re-upload happens at the next bind, which is after the write.
     D3D9_NotifyTextureModified(container);
 }
 
-static uint32_t __stdcall Seam_D3DTexture_LockRect(void *texture, uint32_t level, XboxLockedRect *lockedRect,
-                                                   const void *rect, uint32_t flags) {
+int32_t __stdcall D3DTexture_LockRect(D3DPixelContainer *texture, uint32_t level, D3DLockedRect *lockedRect,
+                                      const D3DRect *rect, uint32_t flags) {
     (void)level; (void)rect; (void)flags;   // only level 0 and whole-surface locks are asked for
     LockPixels(texture, lockedRect);
     return 0;
 }
 
-static uint32_t __stdcall Seam_D3DSurface_LockRect(void *surface, XboxLockedRect *lockedRect,
-                                                   const void *rect, uint32_t flags) {
+int32_t __stdcall D3DSurface_LockRect(D3DPixelContainer *surface, D3DLockedRect *lockedRect, const D3DRect *rect,
+                                      uint32_t flags) {
     (void)rect; (void)flags;
     LockPixels(surface, lockedRect);
     return 0;
@@ -547,12 +526,12 @@ static uint32_t __stdcall Seam_D3DSurface_LockRect(void *surface, XboxLockedRect
 
 // A palette is 32, 64, 128 or 256 four-byte entries, chosen by the size enum, and the object keeps that enum
 // in the top two bits of its Common word exactly as the original does - the game reads it back.
-static void *__stdcall Seam_D3DDevice_CreatePalette2(uint32_t size) {
+D3DResource *__stdcall D3DDevice_CreatePalette2(uint32_t size) {
     static const uint32_t entriesForSize[4] = { 256, 128, 64, 32 };
     if (size > 3)
         return NULL;
 
-    XboxPixelContainer *palette = (XboxPixelContainer *)calloc(1, sizeof(XboxPixelContainer));
+    D3DPixelContainer *palette = (D3DPixelContainer *)calloc(1, sizeof(D3DPixelContainer));
     void *entries = calloc(entriesForSize[size], sizeof(uint32_t));
     if (palette == NULL || entries == NULL) {
         free(palette);
@@ -560,20 +539,19 @@ static void *__stdcall Seam_D3DDevice_CreatePalette2(uint32_t size) {
         return NULL;
     }
 
-    palette->Common = (size << 30) | XBOX_PALETTE_COMMON_WORD;
-    palette->Data = (uint32_t)(uintptr_t)entries;
+    palette->common = (size << 30) | XBOX_PALETTE_COMMON_WORD;
+    palette->data = (uint32_t)(uintptr_t)entries;
     return palette;
 }
 
-static void *__stdcall Seam_D3DPalette_Lock2(void *palette, uint32_t flags) {
+uint32_t *__stdcall D3DPalette_Lock2(D3DResource *palette, uint32_t flags) {
     (void)flags;
-    return (palette != NULL) ? (void *)(uintptr_t)((const XboxPixelContainer *)palette)->Data : NULL;
+    return (palette != NULL) ? (uint32_t *)(uintptr_t)palette->data : NULL;
 }
 
 // Binding a palette, which the backend expands paletted textures through at upload.
-static void __stdcall Seam_D3DDevice_SetPalette(uint32_t stage, void *palette) {
-    const XboxPixelContainer *header = (const XboxPixelContainer *)palette;
-    D3D9_SetPalette(stage, (header != NULL) ? (const void *)(uintptr_t)header->Data : NULL);
+void __stdcall D3DDevice_SetPalette(uint32_t stage, D3DResource *palette) {
+    D3D9_SetPalette(stage, (palette != NULL) ? (const void *)(uintptr_t)palette->data : NULL);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -586,19 +564,19 @@ static void __stdcall Seam_D3DDevice_SetPalette(uint32_t stage, void *palette) {
 // the backend does the same at draw time.
 // ---------------------------------------------------------------------------------------------------------------
 
-static uint32_t __stdcall Seam_D3DDevice_CreatePixelShader(const void *definition, uint32_t *handleOut) {
+int32_t __stdcall D3DDevice_CreatePixelShader(const void *definition, uint32_t *handleOut) {
     return D3D9_CreatePixelShader(definition, handleOut);
 }
 
-static void __stdcall Seam_D3DDevice_SetPixelShader(uint32_t handle) {
+void __stdcall D3DDevice_SetPixelShader(uint32_t handle) {
     D3D9_SetPixelShader(handle);
 }
 
-static void __stdcall Seam_D3DDevice_SetPixelShaderConstant(uint32_t reg, const void *values, uint32_t count) {
+void __stdcall D3DDevice_SetPixelShaderConstant(uint32_t reg, const void *values, uint32_t count) {
     D3D9_SetPixelShaderConstant(reg, (const float *)values, count);
 }
 
-static void __stdcall Seam_D3DDevice_DeletePixelShader(uint32_t handle) {
+void __stdcall D3DDevice_DeletePixelShader(uint32_t handle) {
     D3D9_DeletePixelShader(handle);
 }
 
@@ -614,23 +592,23 @@ static void __stdcall Seam_D3DDevice_DeletePixelShader(uint32_t handle) {
 // SetVertexData4f differ only in how many floats follow the register number.
 // ---------------------------------------------------------------------------------------------------------------
 
-static void __stdcall Seam_D3DDevice_Begin(uint32_t primitiveType) {
+void __stdcall D3DDevice_Begin(uint32_t primitiveType) {
     D3D9_ImmediateBegin(primitiveType);
 }
 
-static void __stdcall Seam_D3DDevice_End(void) {
+void __stdcall D3DDevice_End() {
     D3D9_ImmediateEnd();
 }
 
-static void __stdcall Seam_D3DDevice_SetVertexDataColor(uint32_t reg, uint32_t colour) {
+void __stdcall D3DDevice_SetVertexDataColor(uint32_t reg, uint32_t colour) {
     D3D9_ImmediateColour(reg, colour);
 }
 
-static void __stdcall Seam_D3DDevice_SetVertexData2f(uint32_t reg, float a, float b) {
+void __stdcall D3DDevice_SetVertexData2f(uint32_t reg, float a, float b) {
     D3D9_ImmediateTexCoord(reg, a, b);
 }
 
-static void __stdcall Seam_D3DDevice_SetVertexData4f(uint32_t reg, float a, float b, float c, float d) {
+void __stdcall D3DDevice_SetVertexData4f(uint32_t reg, float a, float b, float c, float d) {
     D3D9_ImmediateVertex(reg, a, b, c, d);
 }
 
@@ -649,8 +627,8 @@ static void __stdcall Seam_D3DDevice_SetVertexData4f(uint32_t reg, float a, floa
 
 #define XBOX_STANDALONE_SURFACE_COMMON 0x81050001u   // D3DCOMMON_TYPE_SURFACE, refcount 1, not owned by a texture
 
-static void *__stdcall Seam_D3D_CreateStandAloneSurface(uint32_t width, uint32_t height, uint32_t levels,
-                                                        uint32_t format) {
+D3DPixelContainer *__stdcall D3D_CreateStandAloneSurface(uint32_t width, uint32_t height, uint32_t levels,
+                                                         uint32_t format) {
     if (width == 0 || height == 0)
         return NULL;
 
@@ -658,7 +636,7 @@ static void *__stdcall Seam_D3D_CreateStandAloneSurface(uint32_t width, uint32_t
     uint32_t pitch = (((width * bits) / 8) + 63) & ~63u;
     uint32_t bytes = pitch * height;
 
-    XboxPixelContainer *surface = (XboxPixelContainer *)calloc(1, sizeof(XboxPixelContainer) + 4);
+    D3DPixelContainer *surface = (D3DPixelContainer *)calloc(1, sizeof(D3DPixelContainer) + 4);
     void *pixels = calloc(1, bytes);
     if (surface == NULL || pixels == NULL) {
         free(surface);
@@ -669,14 +647,14 @@ static void *__stdcall Seam_D3D_CreateStandAloneSurface(uint32_t width, uint32_t
 
     D3D9_XGSetTextureHeader(width, height, levels, 0, (int)format, 0, surface,
                             (uint32_t)(uintptr_t)pixels, 0);
-    surface->Common = XBOX_STANDALONE_SURFACE_COMMON;
-    surface->Data = (uint32_t)(uintptr_t)pixels;
+    surface->common = XBOX_STANDALONE_SURFACE_COMMON;
+    surface->data = (uint32_t)(uintptr_t)pixels;
     return surface;
 }
 
 // Is this format stored in the nv2a's interleaved layout? The linear formats and the compressed ones are not;
 // everything else is. Same rule the backend applies when it uploads.
-static uint32_t __stdcall Seam_XGIsSwizzledFormat(uint32_t format) {
+uint32_t __stdcall XGIsSwizzledFormat(uint32_t format) {
     uint32_t f = format & 0xFF;
     bool linear = (f >= 0x10 && f <= 0x20) || f == 0x24 || f == 0x25 ||
                   (f >= 0x2e && f <= 0x31) || (f >= 0x35 && f <= 0x37) || f == 0x3d;
@@ -701,11 +679,10 @@ static void SwizzleMasks(uint32_t width, uint32_t height, uint32_t *maskXOut, ui
     *maskYOut = maskY;
 }
 
-// The rectangle both functions take; null means the whole surface.
-struct XboxRect { int32_t left, top, right, bottom; };
+// The rectangle both functions take (D3DRect); null means the whole surface.
 
 static void SwizzleCopy(const void *source, uint32_t width, uint32_t height, void *destination,
-                        uint32_t pitch, const XboxRect *rect, uint32_t bytesPerPixel, bool toSwizzled) {
+                        uint32_t pitch, const D3DRect *rect, uint32_t bytesPerPixel, bool toSwizzled) {
     if (source == NULL || destination == NULL || bytesPerPixel == 0)
         return;
 
@@ -753,16 +730,14 @@ static void SwizzleCopy(const void *source, uint32_t width, uint32_t height, voi
     }
 }
 
-static void __stdcall Seam_XGUnswizzleRect(const void *source, uint32_t width, uint32_t height, uint32_t depth,
-                                           void *destination, uint32_t pitch, const XboxRect *rect,
-                                           uint32_t bytesPerPixel) {
+void __stdcall XGUnswizzleRect(const void *source, uint32_t width, uint32_t height, uint32_t depth,
+                               void *destination, uint32_t pitch, const D3DRect *rect, uint32_t bytesPerPixel) {
     (void)depth;   // volume textures; nothing here asks for one
     SwizzleCopy(source, width, height, destination, pitch, rect, bytesPerPixel, false);
 }
 
-static void __stdcall Seam_XGSwizzleRect(const void *source, uint32_t pitch, const XboxRect *rect,
-                                         void *destination, uint32_t width, uint32_t height,
-                                         const XboxRect *point, uint32_t bytesPerPixel) {
+void __stdcall XGSwizzleRect(const void *source, uint32_t pitch, const D3DRect *rect, void *destination,
+                             uint32_t width, uint32_t height, const D3DPoint *point, uint32_t bytesPerPixel) {
     (void)point;   // where in the destination to put it; only the whole-surface form is used
     SwizzleCopy(source, width, height, destination, pitch, rect, bytesPerPixel, true);
 }
@@ -773,14 +748,14 @@ static void __stdcall Seam_XGSwizzleRect(const void *source, uint32_t pitch, con
 
 // 0x00169450: MOV EAX, 1 / RET 4. EAGL::Device::Init calls it with 0 and keeps the answer at 0x0023ff14. Name
 // invented: the original is a constant, so what it once asked is not recoverable from this build.
-static uint32_t __stdcall Seam_D3D_ReturnsTrue(uint32_t unused) {
+uint32_t __stdcall D3D_ReturnsTrue(uint32_t unused) {
     (void)unused;
     return 1;
 }
 
 // XGBytesPerPixelFromFormat (0x00178fb8): the original's jump table, read out of the XBE (0x00178fe2 and the
 // index bytes at 0x00178ff2). DXT3 and DXT5 count as one byte a pixel and DXT1 as none, as there.
-static uint32_t __stdcall Seam_XGBytesPerPixelFromFormat(uint32_t format) {
+uint32_t __stdcall XGBytesPerPixelFromFormat(uint32_t format) {
     switch (format) {
         case 0x06: case 0x07: case 0x12: case 0x1e: case 0x24: case 0x25: case 0x2a: case 0x2b: case 0x2e:
         case 0x2f: case 0x33: case 0x3a: case 0x3b: case 0x3c: case 0x3f: case 0x40: case 0x41:
@@ -802,37 +777,36 @@ static uint32_t __stdcall Seam_XGBytesPerPixelFromFormat(uint32_t format) {
 // clips to the smaller rectangle, so that is what this does - into the surface's swizzled layout when its
 // format is swizzled, or block rows for a compressed one. A conversion between formats of different sizes, or
 // a filter, is what the original's sixty-odd helpers did and nothing here has needed; it is reported once.
-#define D3DERR_INVALIDCALL_ 0x8876086Cu
+#define D3DERR_INVALIDCALL_ int32_t(0x8876086Cu)
 
-static uint32_t __stdcall Seam_D3DXLoadSurfaceFromMemory(void *destSurface, const void *destPalette,
-                                                         const XboxRect *destRect, const void *source,
-                                                         uint32_t sourceFormat, uint32_t sourcePitch,
-                                                         const void *sourcePalette, const XboxRect *sourceRect,
-                                                         uint32_t filter, uint32_t colorKey) {
+int32_t __stdcall D3DXLoadSurfaceFromMemory(D3DPixelContainer *destSurface, const void *destPalette,
+                                            const D3DRect *destRect, const void *source, uint32_t sourceFormat,
+                                            uint32_t sourcePitch, const void *sourcePalette,
+                                            const D3DRect *sourceRect, uint32_t filter, uint32_t colorKey) {
     (void)destPalette; (void)sourcePalette; (void)colorKey;
     if (destSurface == NULL || source == NULL || sourceRect == NULL)
         return D3DERR_INVALIDCALL_;
 
-    XboxSurfaceDesc desc;
+    D3DSurfaceDesc desc;
     FillSurfaceDesc(destSurface, &desc);
     static bool first = true;
     if (first) {
         first = false;
         printf("[d3dSeam] D3DXLoadSurfaceFromMemory: first call, format 0x%x into a %ux%u surface of format 0x%x\n",
-               sourceFormat, desc.Width, desc.Height, desc.Format);
+               sourceFormat, desc.width, desc.height, desc.format);
     }
-    uint32_t destBits = XboxFormatBits(desc.Format), sourceBits = XboxFormatBits(sourceFormat);
+    uint32_t destBits = XboxFormatBits(desc.format), sourceBits = XboxFormatBits(sourceFormat);
     if (destBits != sourceBits || (filter & 0xFF) > 1) {
         static bool said = false;
         if (!said) {
             said = true;
             printf("[d3dSeam] D3DXLoadSurfaceFromMemory: format 0x%x into 0x%x, filter 0x%x is not handled\n",
-                   sourceFormat, desc.Format, filter);
+                   sourceFormat, desc.format, filter);
         }
         return D3DERR_INVALIDCALL_;
     }
 
-    XboxRect dest = { 0, 0, (int32_t)desc.Width, (int32_t)desc.Height };
+    D3DRect dest = { 0, 0, (int32_t)desc.width, (int32_t)desc.height };
     if (destRect != NULL)
         dest = *destRect;
     uint32_t width = (uint32_t)(sourceRect->right - sourceRect->left);
@@ -840,18 +814,18 @@ static uint32_t __stdcall Seam_D3DXLoadSurfaceFromMemory(void *destSurface, cons
     if ((uint32_t)(dest.right - dest.left) < width)  width = (uint32_t)(dest.right - dest.left);
     if ((uint32_t)(dest.bottom - dest.top) < height) height = (uint32_t)(dest.bottom - dest.top);
 
-    XboxLockedRect locked;
+    D3DLockedRect locked;
     LockPixels(destSurface, &locked);
-    if (locked.pBits == NULL)
+    if (locked.bits == NULL)
         return D3DERR_INVALIDCALL_;
     const uint8_t *src = (const uint8_t *)source;
-    uint8_t *dst = (uint8_t *)locked.pBits;
-    uint32_t f = desc.Format & 0xFF;
+    uint8_t *dst = (uint8_t *)locked.bits;
+    uint32_t f = desc.format & 0xFF;
 
     if (f == 0x0c || f == 0x0e || f == 0x0f) {
         // Compressed: 4x4 blocks, 8 bytes each for DXT1 and 16 for DXT3/5, a row of blocks at a time
         uint32_t blockBytes = (f == 0x0c) ? 8 : 16;
-        uint32_t destPitch = ((desc.Width + 3) / 4) * blockBytes;
+        uint32_t destPitch = ((desc.width + 3) / 4) * blockBytes;
         for (uint32_t by = 0; by < (height + 3) / 4; by++)
             memcpy(dst + (size_t)(dest.top / 4 + by) * destPitch + (size_t)(dest.left / 4) * blockBytes,
                    src + (size_t)(sourceRect->top / 4 + by) * sourcePitch + (size_t)(sourceRect->left / 4) * blockBytes,
@@ -860,16 +834,16 @@ static uint32_t __stdcall Seam_D3DXLoadSurfaceFromMemory(void *destSurface, cons
     }
 
     uint32_t bpp = destBits / 8;
-    if (!Seam_XGIsSwizzledFormat(desc.Format)) {
+    if (!XGIsSwizzledFormat(desc.format)) {
         for (uint32_t y = 0; y < height; y++)
-            memcpy(dst + (size_t)(dest.top + y) * locked.Pitch + (size_t)dest.left * bpp,
+            memcpy(dst + (size_t)(dest.top + y) * locked.pitch + (size_t)dest.left * bpp,
                    src + (size_t)(sourceRect->top + y) * sourcePitch + (size_t)sourceRect->left * bpp,
                    (size_t)width * bpp);
         return 0;
     }
 
     uint32_t maskX = 0, maskY = 0;
-    SwizzleMasks(desc.Width, desc.Height, &maskX, &maskY);
+    SwizzleMasks(desc.width, desc.height, &maskX, &maskY);
     uint32_t yOffset = 0;
     for (int32_t y = 0; y < dest.top; y++)
         yOffset = (yOffset - maskY) & maskY;
@@ -891,40 +865,41 @@ static uint32_t __stdcall Seam_D3DXLoadSurfaceFromMemory(void *destSurface, cons
 // the four linear formats it knows (R5G6B5 0x11, A8R8G8B8 0x12, X1R5G5B5 0x1c, X8R8G8B8 0x1e), rows bottom
 // up, each pixel's bytes as it took them - and rows not padded to four bytes, nor the header's size counting
 // any padding, so a width that is not a multiple of four makes a file other programs misread, as it did.
-static uint32_t __stdcall Seam_XGWriteSurfaceToFile(void *surface, const char *xboxPath) {
-    XboxSurfaceDesc desc;
+int32_t __stdcall XGWriteSurfaceToFile(D3DPixelContainer *surface, const char *xboxPath) {
+    const int32_t kFail = int32_t(0x80004005u);   // E_FAIL
+    D3DSurfaceDesc desc;
     FillSurfaceDesc(surface, &desc);
-    uint32_t f = desc.Format;
+    uint32_t f = desc.format;
     if (f != 0x11 && f != 0x12 && f != 0x1c && f != 0x1e)
-        return 0x80004005u;   // E_FAIL
+        return kFail;
 
     char hostPath[260];
     if (xboxPath == NULL || !Xbox_ResolvePath(xboxPath, hostPath, sizeof(hostPath)))
-        return 0x80004005u;
+        return kFail;
     FILE *file = fopen(hostPath, "wb");
     if (file == NULL) {
         printf("[d3dSeam] Unable to open file %s\n", hostPath);
-        return 0x80004005u;
+        return kFail;
     }
 
-    uint32_t imageBytes = desc.Width * desc.Height * 3;
+    uint32_t imageBytes = desc.width * desc.height * 3;
     uint8_t header[0x36] = { 'B', 'M' };
     uint32_t fileSize = imageBytes + 0x36;
     memcpy(header + 2, &fileSize, 4);
     header[10] = 0x36;
     header[14] = 0x28;                                   // BITMAPINFOHEADER
-    memcpy(header + 18, &desc.Width, 4);
-    memcpy(header + 22, &desc.Height, 4);
+    memcpy(header + 18, &desc.width, 4);
+    memcpy(header + 22, &desc.height, 4);
     header[26] = 1;                                      // planes
     header[28] = 24;                                     // bits a pixel
     memcpy(header + 34, &imageBytes, 4);
     fwrite(header, 1, sizeof(header), file);
 
-    XboxLockedRect locked;
+    D3DLockedRect locked;
     LockPixels(surface, &locked);
-    for (int32_t y = (int32_t)desc.Height - 1; y >= 0 && locked.pBits != NULL; y--) {
-        const uint8_t *row = (const uint8_t *)locked.pBits + (size_t)y * locked.Pitch;
-        for (uint32_t x = 0; x < desc.Width; x++) {
+    for (int32_t y = (int32_t)desc.height - 1; y >= 0 && locked.bits != NULL; y--) {
+        const uint8_t *row = (const uint8_t *)locked.bits + (size_t)y * locked.pitch;
+        for (uint32_t x = 0; x < desc.width; x++) {
             uint8_t out[3];
             if (f == 0x11 || f == 0x1c) {
                 uint16_t p = ((const uint16_t *)row)[x];
@@ -957,15 +932,12 @@ static uint32_t __stdcall Seam_XGWriteSurfaceToFile(void *surface, const char *x
 
 #define XBOX_VERTEXBUFFER_COMMON 0x00000001u   // D3DCOMMON_TYPE_VERTEXBUFFER, refcount 1
 
-struct SeamVertexBuffer {
-    uint32_t Common;
-    uint32_t Data;
-    uint32_t Lock;
+struct SeamVertexBuffer : D3DResource {
     uint32_t reserved[2];
-    uint32_t Size;      // word 5, where the backend looks
+    uint32_t size;      // word 5, where the backend looks
 };
 
-static void *__stdcall Seam_D3DDevice_CreateVertexBuffer2(uint32_t length) {
+D3DResource *__stdcall D3DDevice_CreateVertexBuffer2(uint32_t length) {
     if (length == 0)
         return NULL;
 
@@ -978,17 +950,17 @@ static void *__stdcall Seam_D3DDevice_CreateVertexBuffer2(uint32_t length) {
         return NULL;
     }
 
-    buffer->Common = XBOX_VERTEXBUFFER_COMMON;
-    buffer->Data = (uint32_t)(uintptr_t)data;
-    buffer->Size = length;
+    buffer->common = XBOX_VERTEXBUFFER_COMMON;
+    buffer->data = (uint32_t)(uintptr_t)data;
+    buffer->size = length;
     return buffer;
 }
 
 // Locking is just asking where the memory is: there is no GPU-side copy to wait for, because the backend only
 // reads the block when something draws from it.
-static void *__stdcall Seam_D3DVertexBuffer_Lock2(SeamVertexBuffer *buffer, uint32_t flags) {
+uint8_t *__stdcall D3DVertexBuffer_Lock2(D3DResource *buffer, uint32_t flags) {
     (void)flags;
-    return (buffer != NULL) ? (void *)(uintptr_t)buffer->Data : NULL;
+    return (buffer != NULL) ? (uint8_t *)(uintptr_t)buffer->data : NULL;
 }
 
 // A vertex buffer header the game wraps around memory it already has, which the original writes as three
@@ -999,106 +971,103 @@ static void *__stdcall Seam_D3DVertexBuffer_Lock2(SeamVertexBuffer *buffer, uint
 // either way: a real alias loses it and a plain pointer gets it back. Note that the buffer this makes is
 // three words long - there is no word 5 for the backend to read a size from, and it does not need one, since
 // every draw here knows its own extent.
-static void __stdcall Seam_XGSetVertexBufferHeader(uint32_t length, uint32_t usage, uint32_t fvf, uint32_t pool,
-                                                   uint32_t *buffer, uint32_t data) {
+void __stdcall XGSetVertexBufferHeader(uint32_t length, uint32_t usage, uint32_t fvf, uint32_t pool,
+                                       D3DResource *buffer, uint32_t data) {
     (void)length; (void)usage; (void)fvf; (void)pool;
     if (buffer == NULL)
         return;
-    buffer[0] = XBOX_VERTEXBUFFER_COMMON;
-    buffer[1] = data & 0x7FFFFFFFu;
-    buffer[2] = 0;
+    buffer->common = XBOX_VERTEXBUFFER_COMMON;
+    buffer->data = data & 0x7FFFFFFFu;
+    buffer->lock = 0;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
 // Geometry submission and the rest of the state the renderer sets per draw.
 // ---------------------------------------------------------------------------------------------------------------
 
-static void __stdcall Seam_D3DDevice_SetStreamSource(uint32_t streamNumber, void *vertexBuffer,
-                                                     uint32_t stride) {
+void __stdcall D3DDevice_SetStreamSource(uint32_t streamNumber, D3DResource *vertexBuffer, uint32_t stride) {
     D3D9_SetStreamSource((int)streamNumber, vertexBuffer, (int)stride);
 }
 
-static void __stdcall Seam_D3DDevice_DrawVertices(uint32_t primitiveType, uint32_t startVertex,
-                                                  uint32_t vertexCount) {
+void __stdcall D3DDevice_DrawVertices(uint32_t primitiveType, uint32_t startVertex, uint32_t vertexCount) {
     D3D9_DrawVertices(primitiveType, startVertex, vertexCount);
 }
 
-static void __stdcall Seam_D3DDevice_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount,
-                                                         const void *indexData) {
+void __stdcall D3DDevice_DrawIndexedVertices(uint32_t primitiveType, uint32_t vertexCount,
+                                             const uint16_t *indexData) {
     D3D9_DrawIndexedVertices(primitiveType, vertexCount, indexData);
 }
 
-static void __stdcall Seam_D3DDevice_SetVertexShader(void *handle) {
-    D3D9_SetVertexShader(handle);
+// The handle is a DWORD on the Xbox and the backend's own pointer here (D3DDevice_CreateVertexShader).
+void __stdcall D3DDevice_SetVertexShader(uint32_t handle) {
+    D3D9_SetVertexShader((void *)(uintptr_t)handle);
 }
 
-static void __stdcall Seam_D3DDevice_SetRenderTarget(void *renderTarget, void *depthStencil) {
+void __stdcall D3DDevice_SetRenderTarget(D3DPixelContainer *renderTarget, D3DPixelContainer *depthStencil) {
     D3D9_SetRenderTarget(renderTarget, depthStencil);
 }
 
-static void __stdcall Seam_D3DDevice_SetRenderState_YuvEnable(uint32_t enable) {
+void __stdcall D3DDevice_SetRenderState_YuvEnable(uint32_t enable) {
     D3D9_SetYuvEnable(enable);
 }
 
-static void __stdcall Seam_D3DDevice_SetTextureState_BorderColor(uint32_t stage, uint32_t colour) {
+void __stdcall D3DDevice_SetTextureState_BorderColor(uint32_t stage, uint32_t colour) {
     D3D9_SetTextureBorderColor(stage, colour);
 }
 
 // Reference counting on the Common word's low sixteen bits, matching what the backend's release does.
-static uint32_t __stdcall Seam_D3DResource_AddRef(void *resource) {
+uint32_t __stdcall D3DResource_AddRef(D3DResource *resource) {
     if (resource == NULL)
         return 0;
-    uint32_t *common = (uint32_t *)resource;
-    *common = *common + 1;
-    return *common & 0xFFFFu;
+    resource->common = resource->common + 1;
+    return resource->common & 0xFFFFu;
 }
 
 // Fences are the game asking "has the GPU finished with this yet". Every draw here is submitted through D3D9,
 // which keeps its own ordering, and nothing the game frees is read by the GPU afterwards - the backend copies
 // into host resources - so a fence can be a number that is always already reached.
-static uint32_t __stdcall Seam_D3DDevice_InsertFence(void) {
+uint32_t __stdcall D3DDevice_InsertFence() {
     static uint32_t fence = 0;
     return ++fence;
 }
 
-static void __stdcall Seam_D3DDevice_BlockOnFence(uint32_t fence) {
+void __stdcall D3DDevice_BlockOnFence(uint32_t fence) {
     (void)fence;
 }
 
-static uint32_t __stdcall Seam_D3DDevice_IsBusy(void) {
+uint32_t __stdcall D3DDevice_IsBusy() {
     return 0;
 }
 
 // The push buffer the nv2a would have read; there is none, so there is always room in it.
-static void __stdcall Seam_D3DDevice_MakeSpace(void) {
+void __stdcall D3DDevice_MakeSpace() {
 }
 
 // Visibility tests, which gate the lens flares - the red lights on mines, projectiles and door nodes. The
 // backend answers them with occlusion queries; see the notes there. GetVisibilityTestResult's result is a
 // pointer to a UINT and the timestamp a pointer to a ULONGLONG, both optional.
-static void __stdcall Seam_D3DDevice_BeginVisibilityTest(void) {
+void __stdcall D3DDevice_BeginVisibilityTest() {
     D3D9_BeginVisibilityTest();
 }
 
-static void __stdcall Seam_D3DDevice_EndVisibilityTest(uint32_t index) {
+void __stdcall D3DDevice_EndVisibilityTest(uint32_t index) {
     D3D9_EndVisibilityTest(index);
 }
 
-static uint32_t __stdcall Seam_D3DDevice_GetVisibilityTestResult(uint32_t index, uint32_t *result,
-                                                                 uint64_t *timeStamp) {
-    return D3D9_GetVisibilityTestResult(index, result, timeStamp);
+int32_t __stdcall D3DDevice_GetVisibilityTestResult(uint32_t index, uint32_t *result, uint64_t *timeStamp) {
+    return int32_t(D3D9_GetVisibilityTestResult(index, result, timeStamp));
 }
 
 // Wireframe and point fill modes are a debug feature the game does not use in anger, and D3D9 has them
 // through a render state the backend does not expose yet. Accepting and ignoring it keeps solid fill.
-static void __stdcall Seam_D3DDevice_SetRenderState_FillMode(uint32_t fillMode) {
+void __stdcall D3DDevice_SetRenderState_FillMode(uint32_t fillMode) {
     (void)fillMode;
 }
 
 // Bump-environment matrices and luminance, for the BUMPENVMAP texture modes. The original (0x00167d50)
 // writes the value into the deferred texture state table at the type's index and pushes it; the backend
 // reads the table when it binds a translated pixel shader, so writing it is the whole job here.
-static void __stdcall Seam_D3DDevice_SetTextureState_BumpEnv(uint32_t stage, uint32_t type, uint32_t value) {
+void __stdcall D3DDevice_SetTextureState_BumpEnv(uint32_t stage, uint32_t type, uint32_t value) {
     if (g_xboxTextureStateTable == 0 || stage >= 4 || type >= TEXTURE_STAGE_WORDS)
         return;
     *(uint32_t *)(g_xboxTextureStateTable + stage * TEXTURE_STAGE_WORDS * 4 + type * 4) = value;
@@ -1156,106 +1125,221 @@ static void __declspec(naked) Seam_D3DDevice_SetRenderState_Simple(void) {
     }
 }
 
+// The four register-argument entry points for our own code to call (D3D8.h): __fastcall is exactly their
+// convention - the first two arguments in ECX and EDX, anything further on the stack and popped by the callee - so
+// each does what its adapter above does, with the compiler passing the registers.
+void __fastcall D3DDevice_SetRenderState_Simple(uint32_t method, uint32_t value) {
+    D3D9_SetRenderStateSimple(method, value);
+}
+
+void __fastcall D3DDevice_SetVertexShaderConstant1(int reg, const void *constants) {
+    D3D9_SetVertexShaderConstant1(reg, (float *)constants);
+}
+
+void __fastcall D3DDevice_SetVertexShaderConstant4(int reg, const void *constants) {
+    D3D9_SetVertexShaderConstant4(reg, (void *)constants);
+}
+
+void __fastcall D3DDevice_SetVertexShaderConstantNotInline(int reg, const void *constants, uint32_t countDwords) {
+    D3D9_SetVertexShaderConstantNotInline(reg, (void *)constants, countDwords);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Entry points our code calls that have no implementation yet. Each does what the generic stub did when it was
+// reached through the original's address (src/common/xbeEntrySeam.cpp): nothing, answering zero where the entry
+// point returns a status, counted for D3dSeam_ReportMissing and reported the first time - so they stay on the list
+// of what to implement next.
+// ---------------------------------------------------------------------------------------------------------------
+
+static void ReachedUnimplemented(const char *name) {
+    for (XbeEntry &entry : g_entries) {
+        if (strcmp(entry.name, name) != 0)
+            continue;
+        entry.calls++;
+        if (!entry.reported) {
+            entry.reported = true;
+            printf("[%s] not implemented: %s\n", g_seam.tag, name);
+            fflush(stdout);
+        }
+        return;
+    }
+}
+
+int32_t __stdcall D3DDevice_Reset(void *presentationParameters) {
+    (void)presentationParameters;
+    ReachedUnimplemented("D3DDevice_Reset");
+    return 0;
+}
+
+int32_t __stdcall D3DDevice_PersistDisplay() {
+    ReachedUnimplemented("D3DDevice_PersistDisplay");
+    return 0;
+}
+
+void __stdcall D3DDevice_SetFlickerFilter(uint32_t filter) {
+    (void)filter;
+    ReachedUnimplemented("D3DDevice_SetFlickerFilter");
+}
+
+void __stdcall D3DDevice_SetSoftDisplayFilter(uint32_t enable) {
+    (void)enable;
+    ReachedUnimplemented("D3DDevice_SetSoftDisplayFilter");
+}
+
+void __stdcall D3DDevice_CopyRects(D3DPixelContainer *source, const D3DRect *rects, uint32_t count,
+                                   D3DPixelContainer *destination, const D3DPoint *points) {
+    (void)source; (void)rects; (void)count; (void)destination; (void)points;
+    ReachedUnimplemented("D3DDevice_CopyRects");
+}
+
+void __stdcall D3DDevice_SetRenderState_TextureFactor(uint32_t value) {
+    (void)value;
+    ReachedUnimplemented("D3DDevice_SetRenderState_TextureFactor");
+}
+
+void __stdcall D3DDevice_SetRenderState_LineWidth(uint32_t value) {
+    (void)value;
+    ReachedUnimplemented("D3DDevice_SetRenderState_LineWidth");
+}
+
+void __stdcall D3DDevice_SetRenderState_Dxt1NoiseEnable(uint32_t value) {
+    (void)value;
+    ReachedUnimplemented("D3DDevice_SetRenderState_Dxt1NoiseEnable");
+}
+
+void __stdcall D3DDevice_SetTextureState_TexCoordIndex(uint32_t stage, uint32_t value) {
+    (void)stage; (void)value;
+    ReachedUnimplemented("D3DDevice_SetTextureState_TexCoordIndex");
+}
+
+void __stdcall D3DDevice_SetTextureState_ColorKeyColor(uint32_t stage, uint32_t value) {
+    (void)stage; (void)value;
+    ReachedUnimplemented("D3DDevice_SetTextureState_ColorKeyColor");
+}
+
+void __stdcall D3DDevice_DeleteVertexShader(uint32_t handle) {
+    (void)handle;
+    ReachedUnimplemented("D3DDevice_DeleteVertexShader");
+}
+
+void __stdcall D3DDevice_RunPushBuffer(D3DPushBuffer *pushBuffer, void *fixup) {
+    (void)pushBuffer; (void)fixup;
+    ReachedUnimplemented("D3DDevice_RunPushBuffer");
+}
+
 // Name, not address: the addresses live in the generated table, and a name that is not in it is a mistake
 // worth hearing about rather than a patch that silently lands nowhere.
 static const struct { const char *name; void *replacement; unsigned stackBytes; } g_replacements[] = {
-    { "Direct3D_CreateDevice",                (void *)Seam_Direct3D_CreateDevice, 24 },
-    { "D3D_SetPushBufferSize",                (void *)Seam_D3D_SetPushBufferSize, 8 },
-    { "D3DDevice_Clear",                      (void *)Seam_D3DDevice_Clear, 24 },
-    { "D3DDevice_Swap",                       (void *)Seam_D3DDevice_Swap, 4 },
-    { "D3DDevice_GetBackBuffer2",             (void *)Seam_D3DDevice_GetBackBuffer2, 4 },
-    { "D3DDevice_GetDepthStencilSurface2",    (void *)Seam_D3DDevice_GetDepthStencilSurface2, 0 },
-    { "D3DTexture_GetSurfaceLevel2",          (void *)Seam_D3DTexture_GetSurfaceLevel2, 8 },
-    { "D3DDevice_SetShaderConstantMode",      (void *)Seam_D3DDevice_SetShaderConstantMode, 4 },
-    { "D3DDevice_SetRenderState_CullMode",    (void *)Seam_D3DDevice_SetRenderState_CullMode, 4 },
-    { "D3DDevice_SetRenderState_ZEnable",     (void *)Seam_D3DDevice_SetRenderState_ZEnable, 4 },
-    { "D3DDevice_SetRenderState_FogColor",    (void *)Seam_D3DDevice_SetRenderState_FogColor, 4 },
+    { "Direct3D_CreateDevice",                (void *)Direct3D_CreateDevice, 24 },
+    { "D3D_SetPushBufferSize",                (void *)D3D_SetPushBufferSize, 8 },
+    { "D3DDevice_Clear",                      (void *)D3DDevice_Clear, 24 },
+    { "D3DDevice_Swap",                       (void *)D3DDevice_Swap, 4 },
+    { "D3DDevice_GetBackBuffer2",             (void *)D3DDevice_GetBackBuffer2, 4 },
+    { "D3DDevice_GetDepthStencilSurface2",    (void *)D3DDevice_GetDepthStencilSurface2, 0 },
+    { "D3DTexture_GetSurfaceLevel2",          (void *)D3DTexture_GetSurfaceLevel2, 8 },
+    { "D3DDevice_SetShaderConstantMode",      (void *)D3DDevice_SetShaderConstantMode, 4 },
+    { "D3DDevice_SetRenderState_CullMode",    (void *)D3DDevice_SetRenderState_CullMode, 4 },
+    { "D3DDevice_SetRenderState_ZEnable",     (void *)D3DDevice_SetRenderState_ZEnable, 4 },
+    { "D3DDevice_SetRenderState_FogColor",    (void *)D3DDevice_SetRenderState_FogColor, 4 },
     { "D3DDevice_SetRenderState_Simple",      (void *)Seam_D3DDevice_SetRenderState_Simple, 0 },
-    { "D3DDevice_SetTexture",                 (void *)Seam_D3DDevice_SetTexture, 8 },
-    { "D3DDevice_SetViewport",                (void *)Seam_D3DDevice_SetViewport, 4 },
-    { "D3DSurface_GetDesc",                   (void *)Seam_D3DSurface_GetDesc, 8 },
-    { "Get2DSurfaceDesc",                     (void *)Seam_Get2DSurfaceDesc, 12 },
-    { "D3DDevice_GetGammaRamp",               (void *)Seam_D3DDevice_GetGammaRamp, 4 },
-    { "D3DDevice_GetTile",                    (void *)Seam_D3DDevice_GetTile, 8 },
-    { "D3DDevice_SetTile",                    (void *)Seam_D3DDevice_SetTile, 8 },
-    { "D3DDevice_SetScreenSpaceOffset",       (void *)Seam_D3DDevice_SetScreenSpaceOffset, 8 },
-    { "D3DDevice_SetRenderState_StencilEnable", (void *)Seam_D3DDevice_SetRenderState_StencilEnable, 4 },
-    { "D3DDevice_SetRenderState_StencilFail", (void *)Seam_D3DDevice_SetRenderState_StencilFail, 4 },
-    { "D3DDevice_SetRenderState_ShadowFunc",  (void *)Seam_D3DDevice_SetRenderState_ShadowFunc, 4 },
-    { "D3DDevice_CreateVertexShader",         (void *)Seam_D3DDevice_CreateVertexShader, 16 },
-    { "D3DDevice_SetVertexShader",            (void *)Seam_D3DDevice_SetVertexShader, 4 },
+    { "D3DDevice_SetTexture",                 (void *)D3DDevice_SetTexture, 8 },
+    { "D3DDevice_SetViewport",                (void *)D3DDevice_SetViewport, 4 },
+    { "D3DSurface_GetDesc",                   (void *)D3DSurface_GetDesc, 8 },
+    { "Get2DSurfaceDesc",                     (void *)D3D_Get2DSurfaceDesc, 12 },
+    { "D3DDevice_GetGammaRamp",               (void *)D3DDevice_GetGammaRamp, 4 },
+    { "D3DDevice_GetTile",                    (void *)D3DDevice_GetTile, 8 },
+    { "D3DDevice_SetTile",                    (void *)D3DDevice_SetTile, 8 },
+    { "D3DDevice_SetScreenSpaceOffset",       (void *)D3DDevice_SetScreenSpaceOffset, 8 },
+    { "D3DDevice_SetRenderState_StencilEnable", (void *)D3DDevice_SetRenderState_StencilEnable, 4 },
+    { "D3DDevice_SetRenderState_StencilFail", (void *)D3DDevice_SetRenderState_StencilFail, 4 },
+    { "D3DDevice_SetRenderState_ShadowFunc",  (void *)D3DDevice_SetRenderState_ShadowFunc, 4 },
+    { "D3DDevice_CreateVertexShader",         (void *)D3DDevice_CreateVertexShader, 16 },
+    { "D3DDevice_SetVertexShader",            (void *)D3DDevice_SetVertexShader, 4 },
     { "D3DDevice_SetVertexShaderConstant1",   (void *)Seam_D3DDevice_SetVertexShaderConstant1, 0 },
     { "D3DDevice_SetVertexShaderConstant4",   (void *)Seam_D3DDevice_SetVertexShaderConstant4, 0 },
     { "D3DDevice_SetVertexShaderConstantNotInline", (void *)Seam_D3DDevice_SetVertexShaderConstantNotInline, 4 },
-    { "D3DDevice_CreateVertexBuffer2",        (void *)Seam_D3DDevice_CreateVertexBuffer2, 4 },
-    { "D3DVertexBuffer_Lock2",                (void *)Seam_D3DVertexBuffer_Lock2, 8 },
-    { "XGSetVertexBufferHeader",              (void *)Seam_XGSetVertexBufferHeader, 24 },
-    { "D3DDevice_SetStreamSource",            (void *)Seam_D3DDevice_SetStreamSource, 12 },
-    { "D3DDevice_DrawVertices",               (void *)Seam_D3DDevice_DrawVertices, 12 },
-    { "D3DDevice_DrawIndexedVertices",        (void *)Seam_D3DDevice_DrawIndexedVertices, 12 },
-    { "D3DDevice_SetRenderTarget",            (void *)Seam_D3DDevice_SetRenderTarget, 8 },
-    { "D3DDevice_SetRenderState_YuvEnable",   (void *)Seam_D3DDevice_SetRenderState_YuvEnable, 4 },
-    { "D3DDevice_SetRenderState_FillMode",    (void *)Seam_D3DDevice_SetRenderState_FillMode, 4 },
-    { "D3DDevice_SetTextureState_BorderColor", (void *)Seam_D3DDevice_SetTextureState_BorderColor, 8 },
-    { "D3DDevice_SetTextureState_BumpEnv",    (void *)Seam_D3DDevice_SetTextureState_BumpEnv, 12 },
-    { "D3DResource_AddRef",                   (void *)Seam_D3DResource_AddRef, 4 },
-    { "D3DDevice_InsertFence",                (void *)Seam_D3DDevice_InsertFence, 0 },
-    { "D3DDevice_BlockOnFence",               (void *)Seam_D3DDevice_BlockOnFence, 4 },
-    { "D3DDevice_IsBusy",                     (void *)Seam_D3DDevice_IsBusy, 0 },
-    { "D3DDevice_MakeSpace",                  (void *)Seam_D3DDevice_MakeSpace, 0 },
-    { "D3DDevice_BeginVisibilityTest",        (void *)Seam_D3DDevice_BeginVisibilityTest, 0 },
-    { "D3DDevice_EndVisibilityTest",          (void *)Seam_D3DDevice_EndVisibilityTest, 4 },
-    { "D3DDevice_GetVisibilityTestResult",    (void *)Seam_D3DDevice_GetVisibilityTestResult, 12 },
-    { "D3DDevice_CreateTexture2",             (void *)Seam_D3DDevice_CreateTexture2, 28 },
-    { "D3DTexture_LockRect",                  (void *)Seam_D3DTexture_LockRect, 20 },
-    { "D3DSurface_LockRect",                  (void *)Seam_D3DSurface_LockRect, 16 },
-    { "D3DDevice_CreatePalette2",             (void *)Seam_D3DDevice_CreatePalette2, 4 },
-    { "D3DPalette_Lock2",                     (void *)Seam_D3DPalette_Lock2, 8 },
-    { "D3DDevice_SetPalette",                 (void *)Seam_D3DDevice_SetPalette, 8 },
-    { "D3D_CreateStandAloneSurface",          (void *)Seam_D3D_CreateStandAloneSurface, 16 },
-    { "D3DDevice_Begin",                      (void *)Seam_D3DDevice_Begin, 4 },
-    { "D3DDevice_CreatePixelShader",          (void *)Seam_D3DDevice_CreatePixelShader, 8 },
-    { "D3DDevice_SetPixelShader",             (void *)Seam_D3DDevice_SetPixelShader, 4 },
-    { "D3DDevice_SetPixelShaderConstant",     (void *)Seam_D3DDevice_SetPixelShaderConstant, 12 },
-    { "D3DDevice_DeletePixelShader",          (void *)Seam_D3DDevice_DeletePixelShader, 4 },
-    { "D3DDevice_End",                        (void *)Seam_D3DDevice_End, 0 },
-    { "D3DDevice_SetVertexDataColor",         (void *)Seam_D3DDevice_SetVertexDataColor, 8 },
-    { "D3DDevice_SetVertexData2f",            (void *)Seam_D3DDevice_SetVertexData2f, 12 },
-    { "D3DDevice_SetVertexData4f",            (void *)Seam_D3DDevice_SetVertexData4f, 20 },
-    { "XGIsSwizzledFormat",                   (void *)Seam_XGIsSwizzledFormat, 4 },
-    { "XGUnswizzleRect",                      (void *)Seam_XGUnswizzleRect, 32 },
-    { "XGSwizzleRect",                        (void *)Seam_XGSwizzleRect, 32 },
-    { "D3DResource_Register",                 (void *)Seam_D3DResource_Register, 8 },
-    { "D3DResource_Release",                  (void *)Seam_D3DResource_Release, 4 },
-    { "D3DResource_BlockUntilNotBusy",        (void *)Seam_D3DResource_BlockUntilNotBusy, 4 },
-    { "XGSetTextureHeader",                   (void *)Seam_XGSetTextureHeader, 36 },
-    { "D3DDevice_SetRenderState_PSTextureModes", (void *)Seam_D3DDevice_SetRenderState_PSTextureModes, 4 },
-    { "D3DDevice_SetRenderState_VertexBlend", (void *)Seam_D3DDevice_SetRenderState_VertexBlend, 4 },
-    { "D3DDevice_SetRenderState_BackFillMode", (void *)Seam_D3DDevice_SetRenderState_BackFillMode, 4 },
-    { "D3DDevice_SetRenderState_TwoSidedLighting", (void *)Seam_D3DDevice_SetRenderState_TwoSidedLighting, 4 },
-    { "D3DDevice_SetRenderState_NormalizeNormals", (void *)Seam_D3DDevice_SetRenderState_NormalizeNormals, 4 },
-    { "D3DDevice_SetRenderState_FrontFace",   (void *)Seam_D3DDevice_SetRenderState_FrontFace, 4 },
-    { "D3DDevice_SetRenderState_ZBias",       (void *)Seam_D3DDevice_SetRenderState_ZBias, 4 },
-    { "D3DDevice_SetRenderState_LogicOp",     (void *)Seam_D3DDevice_SetRenderState_LogicOp, 4 },
-    { "D3DDevice_SetRenderState_EdgeAntiAlias", (void *)Seam_D3DDevice_SetRenderState_EdgeAntiAlias, 4 },
-    { "D3DDevice_SetRenderState_MultiSampleAntiAlias", (void *)Seam_D3DDevice_SetRenderState_MultiSampleAntiAlias, 4 },
-    { "D3DDevice_SetRenderState_MultiSampleMask", (void *)Seam_D3DDevice_SetRenderState_MultiSampleMask, 4 },
-    { "D3DDevice_SetRenderState_MultiSampleMode", (void *)Seam_D3DDevice_SetRenderState_MultiSampleMode, 4 },
-    { "D3DDevice_SetRenderState_MultiSampleRenderTargetMode", (void *)Seam_D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 4 },
-    { "D3DDevice_SetRenderState_SampleAlpha", (void *)Seam_D3DDevice_SetRenderState_SampleAlpha, 4 },
-    { "D3DDevice_SetRenderState_OcclusionCullEnable", (void *)Seam_D3DDevice_SetRenderState_OcclusionCullEnable, 4 },
-    { "D3DDevice_SetRenderState_StencilCullEnable", (void *)Seam_D3DDevice_SetRenderState_StencilCullEnable, 4 },
-    { "D3DDevice_SetRenderState_RopZCmpAlwaysRead", (void *)Seam_D3DDevice_SetRenderState_RopZCmpAlwaysRead, 4 },
-    { "D3DDevice_SetRenderState_RopZRead",    (void *)Seam_D3DDevice_SetRenderState_RopZRead, 4 },
-    { "D3DDevice_SetRenderState_DoNotCullUncompressed", (void *)Seam_D3DDevice_SetRenderState_DoNotCullUncompressed, 4 },
-    { "D3DDevice_SetIndices",                 (void *)Seam_D3DDevice_SetIndices, 8 },
-    { "D3DDevice_SetGammaRamp",               (void *)Seam_D3DDevice_SetGammaRamp, 8 },
-    { "D3DResource_IsBusy",                   (void *)Seam_D3DResource_IsBusy, 4 },
-    { "D3DDevice_CreateIndexBuffer2",         (void *)Seam_D3DDevice_CreateIndexBuffer2, 4 },
-    { "D3DXLoadSurfaceFromMemory",            (void *)Seam_D3DXLoadSurfaceFromMemory, 40 },
-    { "D3D_ReturnsTrue",                      (void *)Seam_D3D_ReturnsTrue, 4 },
-    { "XGBytesPerPixelFromFormat",            (void *)Seam_XGBytesPerPixelFromFormat, 4 },
-    { "XGWriteSurfaceToFile",                 (void *)Seam_XGWriteSurfaceToFile, 8 },
+    { "D3DDevice_CreateVertexBuffer2",        (void *)D3DDevice_CreateVertexBuffer2, 4 },
+    { "D3DVertexBuffer_Lock2",                (void *)D3DVertexBuffer_Lock2, 8 },
+    { "XGSetVertexBufferHeader",              (void *)XGSetVertexBufferHeader, 24 },
+    { "D3DDevice_SetStreamSource",            (void *)D3DDevice_SetStreamSource, 12 },
+    { "D3DDevice_DrawVertices",               (void *)D3DDevice_DrawVertices, 12 },
+    { "D3DDevice_DrawIndexedVertices",        (void *)D3DDevice_DrawIndexedVertices, 12 },
+    { "D3DDevice_SetRenderTarget",            (void *)D3DDevice_SetRenderTarget, 8 },
+    { "D3DDevice_SetRenderState_YuvEnable",   (void *)D3DDevice_SetRenderState_YuvEnable, 4 },
+    { "D3DDevice_SetRenderState_FillMode",    (void *)D3DDevice_SetRenderState_FillMode, 4 },
+    { "D3DDevice_SetTextureState_BorderColor", (void *)D3DDevice_SetTextureState_BorderColor, 8 },
+    { "D3DDevice_SetTextureState_BumpEnv",    (void *)D3DDevice_SetTextureState_BumpEnv, 12 },
+    { "D3DResource_AddRef",                   (void *)D3DResource_AddRef, 4 },
+    { "D3DDevice_InsertFence",                (void *)D3DDevice_InsertFence, 0 },
+    { "D3DDevice_BlockOnFence",               (void *)D3DDevice_BlockOnFence, 4 },
+    { "D3DDevice_IsBusy",                     (void *)D3DDevice_IsBusy, 0 },
+    { "D3DDevice_MakeSpace",                  (void *)D3DDevice_MakeSpace, 0 },
+    { "D3DDevice_BeginVisibilityTest",        (void *)D3DDevice_BeginVisibilityTest, 0 },
+    { "D3DDevice_EndVisibilityTest",          (void *)D3DDevice_EndVisibilityTest, 4 },
+    { "D3DDevice_GetVisibilityTestResult",    (void *)D3DDevice_GetVisibilityTestResult, 12 },
+    { "D3DDevice_CreateTexture2",             (void *)D3DDevice_CreateTexture2, 28 },
+    { "D3DTexture_LockRect",                  (void *)D3DTexture_LockRect, 20 },
+    { "D3DSurface_LockRect",                  (void *)D3DSurface_LockRect, 16 },
+    { "D3DDevice_CreatePalette2",             (void *)D3DDevice_CreatePalette2, 4 },
+    { "D3DPalette_Lock2",                     (void *)D3DPalette_Lock2, 8 },
+    { "D3DDevice_SetPalette",                 (void *)D3DDevice_SetPalette, 8 },
+    { "D3D_CreateStandAloneSurface",          (void *)D3D_CreateStandAloneSurface, 16 },
+    { "D3DDevice_Begin",                      (void *)D3DDevice_Begin, 4 },
+    { "D3DDevice_CreatePixelShader",          (void *)D3DDevice_CreatePixelShader, 8 },
+    { "D3DDevice_SetPixelShader",             (void *)D3DDevice_SetPixelShader, 4 },
+    { "D3DDevice_SetPixelShaderConstant",     (void *)D3DDevice_SetPixelShaderConstant, 12 },
+    { "D3DDevice_DeletePixelShader",          (void *)D3DDevice_DeletePixelShader, 4 },
+    { "D3DDevice_End",                        (void *)D3DDevice_End, 0 },
+    { "D3DDevice_SetVertexDataColor",         (void *)D3DDevice_SetVertexDataColor, 8 },
+    { "D3DDevice_SetVertexData2f",            (void *)D3DDevice_SetVertexData2f, 12 },
+    { "D3DDevice_SetVertexData4f",            (void *)D3DDevice_SetVertexData4f, 20 },
+    { "XGIsSwizzledFormat",                   (void *)XGIsSwizzledFormat, 4 },
+    { "XGUnswizzleRect",                      (void *)XGUnswizzleRect, 32 },
+    { "XGSwizzleRect",                        (void *)XGSwizzleRect, 32 },
+    { "D3DResource_Register",                 (void *)D3DResource_Register, 8 },
+    { "D3DResource_Release",                  (void *)D3DResource_Release, 4 },
+    { "D3DResource_BlockUntilNotBusy",        (void *)D3DResource_BlockUntilNotBusy, 4 },
+    { "XGSetTextureHeader",                   (void *)XGSetTextureHeader, 36 },
+    { "D3DDevice_SetRenderState_PSTextureModes", (void *)D3DDevice_SetRenderState_PSTextureModes, 4 },
+    { "D3DDevice_SetRenderState_VertexBlend", (void *)D3DDevice_SetRenderState_VertexBlend, 4 },
+    { "D3DDevice_SetRenderState_BackFillMode", (void *)D3DDevice_SetRenderState_BackFillMode, 4 },
+    { "D3DDevice_SetRenderState_TwoSidedLighting", (void *)D3DDevice_SetRenderState_TwoSidedLighting, 4 },
+    { "D3DDevice_SetRenderState_NormalizeNormals", (void *)D3DDevice_SetRenderState_NormalizeNormals, 4 },
+    { "D3DDevice_SetRenderState_FrontFace",   (void *)D3DDevice_SetRenderState_FrontFace, 4 },
+    { "D3DDevice_SetRenderState_ZBias",       (void *)D3DDevice_SetRenderState_ZBias, 4 },
+    { "D3DDevice_SetRenderState_LogicOp",     (void *)D3DDevice_SetRenderState_LogicOp, 4 },
+    { "D3DDevice_SetRenderState_EdgeAntiAlias", (void *)D3DDevice_SetRenderState_EdgeAntiAlias, 4 },
+    { "D3DDevice_SetRenderState_MultiSampleAntiAlias", (void *)D3DDevice_SetRenderState_MultiSampleAntiAlias, 4 },
+    { "D3DDevice_SetRenderState_MultiSampleMask", (void *)D3DDevice_SetRenderState_MultiSampleMask, 4 },
+    { "D3DDevice_SetRenderState_MultiSampleMode", (void *)D3DDevice_SetRenderState_MultiSampleMode, 4 },
+    { "D3DDevice_SetRenderState_MultiSampleRenderTargetMode", (void *)D3DDevice_SetRenderState_MultiSampleRenderTargetMode, 4 },
+    { "D3DDevice_SetRenderState_SampleAlpha", (void *)D3DDevice_SetRenderState_SampleAlpha, 4 },
+    { "D3DDevice_SetRenderState_OcclusionCullEnable", (void *)D3DDevice_SetRenderState_OcclusionCullEnable, 4 },
+    { "D3DDevice_SetRenderState_StencilCullEnable", (void *)D3DDevice_SetRenderState_StencilCullEnable, 4 },
+    { "D3DDevice_SetRenderState_RopZCmpAlwaysRead", (void *)D3DDevice_SetRenderState_RopZCmpAlwaysRead, 4 },
+    { "D3DDevice_SetRenderState_RopZRead",    (void *)D3DDevice_SetRenderState_RopZRead, 4 },
+    { "D3DDevice_SetRenderState_DoNotCullUncompressed", (void *)D3DDevice_SetRenderState_DoNotCullUncompressed, 4 },
+    { "D3DDevice_SetIndices",                 (void *)D3DDevice_SetIndices, 8 },
+    { "D3DDevice_SetGammaRamp",               (void *)D3DDevice_SetGammaRamp, 8 },
+    { "D3DResource_IsBusy",                   (void *)D3DResource_IsBusy, 4 },
+    { "D3DDevice_CreateIndexBuffer2",         (void *)D3DDevice_CreateIndexBuffer2, 4 },
+    { "D3DXLoadSurfaceFromMemory",            (void *)D3DXLoadSurfaceFromMemory, 40 },
+    { "D3D_ReturnsTrue",                      (void *)D3D_ReturnsTrue, 4 },
+    { "XGBytesPerPixelFromFormat",            (void *)XGBytesPerPixelFromFormat, 4 },
+    { "XGWriteSurfaceToFile",                 (void *)XGWriteSurfaceToFile, 8 },
+    // Not implemented (above): their explicit stubs, so a call by address and a direct call reach the same function.
+    { "D3DDevice_Reset",                      (void *)D3DDevice_Reset, 4 },
+    { "D3DDevice_PersistDisplay",             (void *)D3DDevice_PersistDisplay, 0 },
+    { "D3DDevice_SetFlickerFilter",           (void *)D3DDevice_SetFlickerFilter, 4 },
+    { "D3DDevice_SetSoftDisplayFilter",       (void *)D3DDevice_SetSoftDisplayFilter, 4 },
+    { "D3DDevice_CopyRects",                  (void *)D3DDevice_CopyRects, 20 },
+    { "D3DDevice_SetRenderState_TextureFactor", (void *)D3DDevice_SetRenderState_TextureFactor, 4 },
+    { "D3DDevice_SetRenderState_LineWidth",   (void *)D3DDevice_SetRenderState_LineWidth, 4 },
+    { "D3DDevice_SetRenderState_Dxt1NoiseEnable", (void *)D3DDevice_SetRenderState_Dxt1NoiseEnable, 4 },
+    { "D3DDevice_SetTextureState_TexCoordIndex", (void *)D3DDevice_SetTextureState_TexCoordIndex, 8 },
+    { "D3DDevice_SetTextureState_ColorKeyColor", (void *)D3DDevice_SetTextureState_ColorKeyColor, 8 },
+    { "D3DDevice_DeleteVertexShader",         (void *)D3DDevice_DeleteVertexShader, 4 },
+    { "D3DDevice_RunPushBuffer",              (void *)D3DDevice_RunPushBuffer, 8 },
 };
 
 // ---------------------------------------------------------------------------------------------------------------

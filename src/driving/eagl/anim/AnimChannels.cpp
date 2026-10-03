@@ -1,5 +1,6 @@
 #include "AnimChannels.h"
 #include "AnimDecode.h"
+#include "../../platform/X87.h"
 
 #include <math.h>
 #include <string.h>
@@ -19,10 +20,6 @@
 // float: the same bits), comparisons as the original's FCOMP flag tests decide them (unordered included, a negated
 // comparison where an unordered result must count as true), truncation by CVTTSS2SI.
 // ---------------------------------------------------------------------------------------------------------------
-
-static inline int Truncate(float f) {   // CVTTSS2SI
-    return _mm_cvtt_ss2si(_mm_set_ss(f));
-}
 
 // FUNC_AT(0x000fb350)
 int AnimTruncate(float value) {

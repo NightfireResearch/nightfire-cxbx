@@ -220,7 +220,7 @@ static DWORD __stdcall Xbox_GetCurrentThreadId(void) {
 // all three would need fabricated kernel objects to mean anything. The priority values are the same numbers
 // on both systems (the Xbox's own function only special-cases the two extremes, which Win32 handles), so the
 // whole thing is the Win32 function.
-static BOOL __stdcall Xbox_SetThreadPriority(HANDLE thread, int priority) {
+BOOL __stdcall Xbox_SetThreadPriority(HANDLE thread, int priority) {
     return SetThreadPriority(thread, priority);
 }
 

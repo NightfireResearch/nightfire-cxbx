@@ -5,7 +5,10 @@
 #include "SndStreamShadow.h"
 #include "FpControl.h"
 
+#include "../sound/snd/Platform.h"
+#include "../sound/snd/Stream.h"
 #include "../sound/snd/Streams.h"
+#include "../sound/snd/System.h"
 #include "../../common/xbeOriginal.h"
 #include "../../common/xboxPath.h"
 
@@ -515,26 +518,26 @@ void HooksRemove() {
 }
 
 void InstallFakes() {
-    HookInstall(0x0013b950u, (void *)&FakeEnter);             // SNDSYS_entercritical
-    HookInstall(0x0013b970u, (void *)&FakeLeave);             // SNDSYS_leavecritical
-    HookInstall(0x0013f780u, (void *)&FakeMemAlloc);          // SNDMEMI_alloc
-    HookInstall(0x0013f880u, (void *)&FakeMemFree);           // SNDMEMI_free
-    HookInstall(0x0013f900u, (void *)&FakeAddClient);         // iSNDserveraddclient
-    HookInstall(0x0013f920u, (void *)&FakeRemoveClient);      // iSNDserverremoveclient
-    HookInstall(0x0014b0c0u, (void *)&FakeStreamCreate);      // STREAM_create
-    HookInstall(0x0014b090u, (void *)&FakeStreamOverhead);    // STREAM_overhead
-    HookInstall(0x0014b3b0u, (void *)&FakeQueueFile);         // STREAM_queuefile
-    HookInstall(0x0014b470u, (void *)&FakeQueueMem);          // STREAM_queuemem
-    HookInstall(0x0014b520u, (void *)&FakeGet);               // STREAM_get
-    HookInstall(0x0014b5d0u, (void *)&FakeGetTable);          // STREAM_gettable
-    HookInstall(0x0014b5f0u, (void *)&FakeState);             // STREAM_state
-    HookInstall(0x0014b640u, (void *)&FakeBufferSize);        // STREAM_buffersize
-    HookInstall(0x0014b9a0u, (void *)&FakeSetGreedy);         // STREAM_setgreedylevel
-    HookInstall(0x0014b9f0u, (void *)&FakeRelease);           // STREAM_release
-    HookInstall(0x0014bcb0u, (void *)&FakeKill);              // STREAM_kill
-    HookInstall(0x0014be60u, (void *)&FakeDestroy);           // STREAM_destroy
-    HookInstall(0x0013d900u, (void *)&FakeGetVoiceRange);     // SNDPLATFORM_getvoicerange
-    HookInstall(0x001424c0u, (void *)&FakePacketPlay);        // SNDPLATFORM_packetplay
+    HookBoth(0x0013b950u, (const void *)&SNDSYS_entercritical, (const void *)&FakeEnter);
+    HookBoth(0x0013b970u, (const void *)&SNDSYS_leavecritical, (const void *)&FakeLeave);
+    HookBoth(0x0013f780u, (const void *)&SNDMEMI_alloc, (const void *)&FakeMemAlloc);
+    HookBoth(0x0013f880u, (const void *)&SNDMEMI_free, (const void *)&FakeMemFree);
+    HookBoth(0x0013f900u, (const void *)&iSNDserveraddclient, (const void *)&FakeAddClient);
+    HookBoth(0x0013f920u, (const void *)&iSNDserverremoveclient, (const void *)&FakeRemoveClient);
+    HookBoth(0x0014b0c0u, (const void *)&STREAM_create, (const void *)&FakeStreamCreate);
+    HookBoth(0x0014b090u, (const void *)&STREAM_overhead, (const void *)&FakeStreamOverhead);
+    HookBoth(0x0014b3b0u, (const void *)&STREAM_queuefile, (const void *)&FakeQueueFile);
+    HookBoth(0x0014b470u, (const void *)&STREAM_queuemem, (const void *)&FakeQueueMem);
+    HookBoth(0x0014b520u, (const void *)&STREAM_get, (const void *)&FakeGet);
+    HookBoth(0x0014b5d0u, (const void *)&STREAM_gettable, (const void *)&FakeGetTable);
+    HookBoth(0x0014b5f0u, (const void *)&STREAM_state, (const void *)&FakeState);
+    HookBoth(0x0014b640u, (const void *)&STREAM_buffersize, (const void *)&FakeBufferSize);
+    HookBoth(0x0014b9a0u, (const void *)&STREAM_setgreedylevel, (const void *)&FakeSetGreedy);
+    HookBoth(0x0014b9f0u, (const void *)&STREAM_release, (const void *)&FakeRelease);
+    HookBoth(0x0014bcb0u, (const void *)&STREAM_kill, (const void *)&FakeKill);
+    HookBoth(0x0014be60u, (const void *)&STREAM_destroy, (const void *)&FakeDestroy);
+    HookBoth(0x0013d900u, (const void *)&SNDPLATFORM_getvoicerange, (const void *)&FakeGetVoiceRange);
+    HookBoth(0x001424c0u, (const void *)&SNDPLATFORM_packetplay, (const void *)&FakePacketPlay);
     HookBoth(0x0013c900u, (void *)&SNDstop, (void *)&FakeStop);
     HookBoth(0x0013cb40u, (void *)&SNDvol, (void *)&FakeVol);
     HookBoth(0x0013c9f0u, (void *)&SND3dpos, (void *)&Fake3dpos);
@@ -607,7 +610,7 @@ StreamState *MakeStream(int slot, int index, int player, int requests, int activ
     PacketPlayer *p = (PacketPlayer *)(m + 0x138 + requests * 0x28);
     memset(m, 0, (size_t)(0x138 + requests * 0x28 + 0x5c + packets * 0x20));
     W->fake[slot].magic = kStrmMagic;
-    ss->stream = &W->fake[slot];
+    ss->stream = reinterpret_cast<SND::StrmReader *>(&W->fake[slot]);   // a fake STREAM
     ss->voice = Chance(70) ? (int)(Next() & 0x7fff) : -1;
     ss->player = player;
     ss->generation = (int32_t)((Next() & 0x7fff) << 8);

@@ -5,7 +5,15 @@
 #include "SndPlatformShadow.h"
 #include "FpControl.h"
 
+#include "../sound/snd/Mixer.h"
 #include "../sound/snd/Platform.h"
+#include "../platform/XboxStartup.h"
+#include "../platform/XboxXapi.h"
+#include "../sound/snd/Reverb.h"
+#include "../sound/snd/Streams.h"
+#include "../sound/snd/System.h"
+#include "../sound/DirectSound.h"
+#include "../platform/RealSystem.h"
 #include "../sound/snd/Voices.h"
 #include "../../common/xbeOriginal.h"
 
@@ -467,17 +475,17 @@ void *FakeFilterAdd(int voice, int channel, int filter) {
     return NULL;
 }
 
-// ---- five-byte jumps over the originals the fakes stand in for
+// ---- five-byte jumps over the originals the fakes stand in for, and over our ports of them
 struct Hook {
     uint32_t at;
     uint8_t saved[5];
     bool on;
 };
-Hook g_hooks[64];
+Hook g_hooks[128];
 int g_hookCount;
 
 void HookInstall(uint32_t at, const void *to) {
-    if (g_hookCount >= 64)
+    if (g_hookCount >= 128)
         return;
     Hook &h = g_hooks[g_hookCount++];
     h.at = at;
@@ -497,6 +505,16 @@ void HookInstall(uint32_t at, const void *to) {
     h.on = true;
 }
 
+// A ported callee: the original's entry and our port's, both to the fake (our ports call each other directly, the
+// originals by address). The answer is whether the original's entry took the jump.
+bool HookBoth(uint32_t at, const void *ours, const void *to) {
+    HookInstall(at, to);
+    bool on = g_hooks[g_hookCount - 1].on;
+    if ((uint32_t)(uintptr_t)ours != at)
+        HookInstall((uint32_t)(uintptr_t)ours, to);
+    return on;
+}
+
 void HooksRemove() {
     for (int i = g_hookCount; i-- > 0;) {
         Hook &h = g_hooks[i];
@@ -513,53 +531,53 @@ void HooksRemove() {
 }
 
 void HooksInstall() {
-    HookInstall(0x0017c259, (void *)&FakeDirectSoundCreate);
-    HookInstall(0x0017b59d, (void *)&FakeDownloadEffectsImage);
-    HookInstall(0x0017c2a0, (void *)&FakeCreateBuffer);
-    HookInstall(0x0017c09f, (void *)&FakeCreateSoundBuffer);
-    HookInstall(0x0017be1b, (void *)&FakeSetI3DL2Listener);
-    HookInstall(0x0017ad34, (void *)&FakeDeviceRelease);
-    HookInstall(0x0017ad4a, (void *)&FakeBufferRelease);
-    HookInstall(0x0017be3b, (void *)&FakeSetBufferData);
-    HookInstall(0x0017b670, (void *)&FakeSetLoopRegion);
-    HookInstall(0x0017b6cc, (void *)&FakeSetCurrentPosition);
-    HookInstall(0x0017b6ac, (void *)&FakeGetCurrentPosition);
-    HookInstall(0x0017b634, (void *)&FakePlay);
-    HookInstall(0x0017b658, (void *)&FakeStop);
-    HookInstall(0x0017b5c4, (void *)&FakeSetVolume);
-    HookInstall(0x0017b996, (void *)&FakeSetFrequency);
-    HookInstall(0x0017b5fc, (void *)&FakeSetMixBins);
-    HookInstall(0x0017b618, (void *)&FakeSetMixBinVolumes);
-    HookInstall(0x0017b5e0, (void *)&FakeSetFilter);
-    HookInstall(0x0013b950, (void *)&FakeEnter);              // SNDSYS_entercritical
-    HookInstall(0x0013b970, (void *)&FakeLeave);              // SNDSYS_leavecritical
-    HookInstall(0x0013e7b0, (void *)&FakeLock);               // SNDI_mutexlock
-    HookInstall(0x0013e7c0, (void *)&FakeUnlock);             // SNDI_mutexunlock
-    HookInstall(0x0013f780, (void *)&FakeAlloc);              // SNDMEMI_alloc
-    HookInstall(0x0013f880, (void *)&FakeFree);               // SNDMEMI_free
-    HookInstall(0x0013b7b0, (void *)&FakeServer);             // SNDSYSI_100hzserver
-    HookInstall(0x0013efd0, (void *)&FakeFlush);              // SNDPKTPLAYI_flushcallbackdata
-    HookInstall(0x0013ee00, (void *)&FakePacketGet);          // SNDPKTPLAYI_get
-    HookInstall(0x0013ef80, (void *)&FakeFreeFrames);         // SNDPKTPLAYI_freeframes
-    HookInstall(0x0010e1e0, (void *)&FakeTick);               // getTickCount
-    HookInstall(0x0010e9ab, (void *)&FakeSleep);              // SleepMilliseconds
-    HookInstall(0x0010ec6a, (void *)&FakeCreateThread);       // CreateThread
-    HookInstall(0x0010ea0f, (void *)&FakeSetThreadPriority);  // SetThreadPriority
-    HookInstall(0x00141c20, (void *)&FakeMixCreate);
-    HookInstall(0x00141880, (void *)&FakeMixDestroy);
-    HookInstall(0x00142050, (void *)&FakeMixAudio);
-    HookInstall(0x00141910, (void *)&FakePlayInit);
-    HookInstall(0x00141ad0, (void *)&FakeMixPlay);
-    HookInstall(0x00141b20, (void *)&FakeMixStop);
-    HookInstall(0x00141bb0, (void *)&FakeDryGain);
-    HookInstall(0x00141be0, (void *)&FakeMixFx);
-    HookInstall(0x001420c0, (void *)&FakeMixPitch);
-    HookInstall(0x00144af0, (void *)&FakeMixLowpass);
-    HookInstall(0x001464c0, (void *)&FakeMixHighpass);
-    HookInstall(0x00146570, (void *)&FakeMixTime);
-    HookInstall(0x00143510, (void *)&FakeInitReverb);
-    HookInstall(0x001434b0, (void *)&FakeRestoreReverb);
-    HookInstall(0x00144a30, (void *)&FakeFilterAdd);          // SFILTER_add
+    HookBoth(0x0017c259, (const void *)&DirectSoundCreate, (const void *)&FakeDirectSoundCreate);
+    HookBoth(0x0017b59d, (const void *)&IDirectSound_DownloadEffectsImage, (const void *)&FakeDownloadEffectsImage);
+    HookBoth(0x0017c2a0, (const void *)&DirectSoundCreateBuffer, (const void *)&FakeCreateBuffer);
+    HookBoth(0x0017c09f, (const void *)&IDirectSound_CreateSoundBuffer, (const void *)&FakeCreateSoundBuffer);
+    HookBoth(0x0017be1b, (const void *)&IDirectSound_SetI3DL2Listener, (const void *)&FakeSetI3DL2Listener);
+    HookBoth(0x0017ad34, (const void *)&IDirectSound_Release, (const void *)&FakeDeviceRelease);
+    HookBoth(0x0017ad4a, (const void *)&IDirectSoundBuffer_Release, (const void *)&FakeBufferRelease);
+    HookBoth(0x0017be3b, (const void *)&IDirectSoundBuffer_SetBufferData, (const void *)&FakeSetBufferData);
+    HookBoth(0x0017b670, (const void *)&IDirectSoundBuffer_SetLoopRegion, (const void *)&FakeSetLoopRegion);
+    HookBoth(0x0017b6cc, (const void *)&IDirectSoundBuffer_SetCurrentPosition, (const void *)&FakeSetCurrentPosition);
+    HookBoth(0x0017b6ac, (const void *)&IDirectSoundBuffer_GetCurrentPosition, (const void *)&FakeGetCurrentPosition);
+    HookBoth(0x0017b634, (const void *)&IDirectSoundBuffer_Play, (const void *)&FakePlay);
+    HookBoth(0x0017b658, (const void *)&IDirectSoundBuffer_Stop, (const void *)&FakeStop);
+    HookBoth(0x0017b5c4, (const void *)&IDirectSoundBuffer_SetVolume, (const void *)&FakeSetVolume);
+    HookBoth(0x0017b996, (const void *)&IDirectSoundBuffer_SetFrequency, (const void *)&FakeSetFrequency);
+    HookBoth(0x0017b5fc, (const void *)&IDirectSoundBuffer_SetMixBins, (const void *)&FakeSetMixBins);
+    HookBoth(0x0017b618, (const void *)&IDirectSoundBuffer_SetMixBinVolumes, (const void *)&FakeSetMixBinVolumes);
+    HookBoth(0x0017b5e0, (const void *)&IDirectSoundBuffer_SetFilter, (const void *)&FakeSetFilter);
+    HookBoth(0x0013b950, (const void *)&SNDSYS_entercritical, (const void *)&FakeEnter);
+    HookBoth(0x0013b970, (const void *)&SNDSYS_leavecritical, (const void *)&FakeLeave);
+    HookBoth(0x0013e7b0, (const void *)&SNDI_mutexlock, (const void *)&FakeLock);
+    HookBoth(0x0013e7c0, (const void *)&SNDI_mutexunlock, (const void *)&FakeUnlock);
+    HookBoth(0x0013f780, (const void *)&SNDMEMI_alloc, (const void *)&FakeAlloc);
+    HookBoth(0x0013f880, (const void *)&SNDMEMI_free, (const void *)&FakeFree);
+    HookBoth(0x0013b7b0, (const void *)&SNDSYSI_100hzserver, (const void *)&FakeServer);
+    HookBoth(0x0013efd0, (const void *)&SNDPKTPLAYI_flushcallbackdata, (const void *)&FakeFlush);
+    HookBoth(0x0013ee00, (const void *)&SNDPKTPLAYI_get, (const void *)&FakePacketGet);
+    HookBoth(0x0013ef80, (const void *)&SNDPKTPLAYI_freeframes, (const void *)&FakeFreeFrames);
+    HookBoth(0x0010e1e0, (const void *)&getTickCount, (const void *)&FakeTick);
+    HookBoth(0x0010e9ab, (const void *)&Xbox_Sleep, (const void *)&FakeSleep);                          // Sleep
+    HookBoth(0x0010ec6a, (const void *)&Xbox_CreateThread, (const void *)&FakeCreateThread);            // CreateThread
+    HookBoth(0x0010ea0f, (const void *)&Xbox_SetThreadPriority, (const void *)&FakeSetThreadPriority);  // SetThreadPriority
+    HookBoth(0x00141c20, (const void *)&MIX_create, (const void *)&FakeMixCreate);
+    HookBoth(0x00141880, (const void *)&MIX_destroy, (const void *)&FakeMixDestroy);
+    HookBoth(0x00142050, (const void *)&MIX_audio, (const void *)&FakeMixAudio);
+    HookBoth(0x00141910, (const void *)&MIX_playinit, (const void *)&FakePlayInit);
+    HookBoth(0x00141ad0, (const void *)&MIX_play, (const void *)&FakeMixPlay);
+    HookBoth(0x00141b20, (const void *)&MIX_stop, (const void *)&FakeMixStop);
+    HookBoth(0x00141bb0, (const void *)&SNDMIX_setdrygain, (const void *)&FakeDryGain);
+    HookBoth(0x00141be0, (const void *)&MIX_setfxlevel, (const void *)&FakeMixFx);
+    HookBoth(0x001420c0, (const void *)&MIX_setpitch, (const void *)&FakeMixPitch);
+    HookBoth(0x00144af0, (const void *)&MIX_setlowpass, (const void *)&FakeMixLowpass);
+    HookBoth(0x001464c0, (const void *)&MIX_sethighpass, (const void *)&FakeMixHighpass);
+    HookBoth(0x00146570, (const void *)&MIX_settimemult, (const void *)&FakeMixTime);
+    HookBoth(0x00143510, (const void *)&MIX_initreverb, (const void *)&FakeInitReverb);
+    HookBoth(0x001434b0, (const void *)&MIX_restorereverb, (const void *)&FakeRestoreReverb);
+    HookBoth(0x00144a30, (const void *)&SFILTER_add, (const void *)&FakeFilterAdd);
 }
 
 // ---- the original SNDLINKI, used to build the lists
@@ -625,7 +643,7 @@ void CommonSetup() {
         uint8_t *raw = (uint8_t *)n;
         for (int k = 0; k < (int)sizeof(BufferNode); k++)
             raw[k] = (uint8_t)Next();
-        n->buffer = &W->buffers[i];
+        n->buffer = reinterpret_cast<IDirectSoundBuffer *>(&W->buffers[i]);   // a fake: its index is its identity
         n->pool = i < 152 ? 0 : 1;
         n->platformVoice = (int16_t)Range(0, kVoices - 1);
         n->player = Chance(70) ? -1 : Range(0, 15);

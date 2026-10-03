@@ -38,16 +38,8 @@ struct ViewPortPrivate {
     void ReBegin();                                                          // 0x000e4eb0 (no callers)
 };
 
-// D3DVIEWPORT8
-struct D3DViewport8 {
-    uint32_t x;                          // +0x00
-    uint32_t y;                          // +0x04
-    uint32_t width;                      // +0x08
-    uint32_t height;                     // +0x0c
-    float minZ;                          // +0x10
-    float maxZ;                          // +0x14
-};
-static_assert(sizeof(D3DViewport8) == 0x18, "D3DVIEWPORT8 is 0x18 bytes");
+// D3DVIEWPORT8 (../gfx/D3D8.h)
+using ::D3DViewport8;
 
 struct ViewPort {                        // 0x1a0
     ViewPort *extension;                 // +0x000 ViewPortExtension: this

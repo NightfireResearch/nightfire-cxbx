@@ -1,12 +1,16 @@
 #include "Profiler.h"
+#include "../platform/XboxXapi.h"
 
 #include "EaglFont.h"
+#include "EaglGlobals.h"
+#include "EaglOriginals.h"
 #include "Model.h"
 #include "Realgraph.h"
 #include "RenderContext.h"
 #include "Transform.h"
 #include "View.h"
 #include "../platform/RealSystem.h"
+#include "../platform/X87.h"
 #include "../../helpers.h"
 
 #include <bit>
@@ -56,8 +60,6 @@ constexpr double kBarScale = 0.03125;          // bar sum to pixels (1 / 32)
 #define PrintLevel I32_AT(0x001cdcc8)                       // messages above it are dropped
 #define PrintHook (*(int (**)(const char *format, va_list arguments))0x00240268)
 #define PrintBuffer ((char *)0x00240270)                    // 0x200 bytes
-#define CrtVsnprintf ((int (*)(char *buffer, int size, const char *format, va_list arguments))0x001340f5)
-#define XapiOutputDebugStringA ((void (__stdcall *)(const char *text))0x0010e832)
 
 // The profiler's state
 #define HistoryIndex U32_AT(0x00240528)                     // the ring slot this frame writes
@@ -77,28 +79,16 @@ constexpr double kBarScale = 0.03125;          // bar sum to pixels (1 / 32)
 #define CurrentTimer (*(ProfilerTimer **)0x001ce024)
 #define SkipFrame U8_AT(0x001ce072)
 #define PageTicks U32_AT(0x00242424)                        // TIMER ticks per page (and per flash)
-#define DefaultFont (*(const uint8_t **)0x00241be0)
 
-#define EaglMalloc (*(void *(**)(uint32_t size, const char *name))0x001caf68)
 #define NameDrawGouraudNew ((const char *)0x001ce05c)       // "EAGL::DrawGouraud new"
 #define NameDynamicModelNew ((const char *)0x001ce3b0)      // "EAGL::DynamicModel new"
 
-#define D3DDevice_SetVertexDataColor ((void (__stdcall *)(int reg, uint32_t colour))0x0016b9d0)
-#define D3DDevice_SetVertexData4f ((void (__stdcall *)(int reg, float x, float y, float z, float w))0x0016b970)
-#define D3DDevice_Begin ((void (__stdcall *)(uint32_t primitiveType))0x0016ba20)
-#define D3DDevice_End ((void (__stdcall *)())0x0016ba60)
-
-enum { kVertexDiffuse = 3, kVertexPosition = -1 };   // D3DVSDE_*
+enum : uint32_t { kVertexDiffuse = 3, kVertexPosition = 0xffffffff };   // D3DVSDE_*
 enum { kLineList = 2, kQuadStrip = 6 };             // D3DPT_*
 
 // RDTSC's low half (all the profiler keeps)
 inline uint32_t Rdtsc() {
     return (uint32_t)__rdtsc();
-}
-
-// CVTSS2SI: rounded as MXCSR says (to nearest)
-inline int RoundToInt(float value) {
-    return _mm_cvtss_si32(_mm_set_ss(value));
 }
 
 void SetVertex(uint32_t colour, float x, float y) {
@@ -130,16 +120,14 @@ int EAGL::PrintMessage(int level, const char *format, ...) {
     }
     int written = CrtVsnprintf(PrintBuffer, 0x200, format, arguments);
     PrintBuffer[0x1ff] = 0;
-    XapiOutputDebugStringA(PrintBuffer);
+    Xbox_OutputDebugStringA(PrintBuffer);
     va_end(arguments);
     return written;
 }
 
 // D3DDevice_SetVertexShaderConstant with the count in EAX, the register (less 0x60) in ECX and the data in EDX,
-// the three entry points' own register convention: one and four constants go straight to their inline versions.
-static const uint32_t kSetVertexShaderConstant1 = 0x0016a790;
-static const uint32_t kSetVertexShaderConstant4 = 0x0016a7f0;
-static const uint32_t kSetVertexShaderConstantNotInline = 0x0016a980;
+// the three entry points' own register convention (the seam's __fastcall functions, ../gfx/D3D8.h): one and four
+// constants go straight to their inline versions.
 
 // FUNC_AT(0x000f4310)
 __declspec(naked) void EAGL::ProfilerSetVertexShaderConstantRegs() {
@@ -147,15 +135,15 @@ __declspec(naked) void EAGL::ProfilerSetVertexShaderConstantRegs() {
         add ecx, 0x60
         cmp eax, 1
         jne NotOne
-        jmp dword ptr [kSetVertexShaderConstant1]
+        jmp D3DDevice_SetVertexShaderConstant1
     NotOne:
         cmp eax, 4
         jne NotFour
-        jmp dword ptr [kSetVertexShaderConstant4]
+        jmp D3DDevice_SetVertexShaderConstant4
     NotFour:
         shl eax, 2
         push eax
-        call dword ptr [kSetVertexShaderConstantNotInline]
+        call D3DDevice_SetVertexShaderConstantNotInline
         ret
     }
 }

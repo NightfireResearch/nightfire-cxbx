@@ -25,6 +25,11 @@ struct BoneMask {                    // a bit per bone, 256 bones
     BoneMask* Construct(bool on);                                // 0x00106690 BoneMask(bool)
     BoneMask* Not(BoneMask *result) const;                       // 0x001066c0 operator~ (as built: a copy)
     bool GetBone(int bone) const;                                // 0x000f88a0 (inline in the PS2 build)
+
+    // The bit test the callers inline (GetBone's body)
+    bool Has(int bone) const {
+        return (bits[bone >> 5] & (1u << (bone & 31))) != 0;
+    }
 };
 static_assert(sizeof(BoneMask) == 32, "a BoneMask is 256 bits");
 

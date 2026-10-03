@@ -1,4 +1,5 @@
 #include "AnimDecode.h"
+#include "../EaglGlobals.h"
 
 #include <string.h>
 
@@ -17,10 +18,6 @@
 // current - the original's orders, kept (MW's source has another). x87 in double, a float store per store.
 // ---------------------------------------------------------------------------------------------------------------
 
-typedef void *(*EaglMallocHook)(uint32_t size, const char *name);
-typedef void (*EaglFreeHook)(void *data, uint32_t size);
-#define EaglMalloc (*(EaglMallocHook *)0x001caf68)
-#define EaglFree (*(EaglFreeHook *)0x001caf6c)
 #define ScratchBuffers ((ScratchBuffer *)0x00241ba0)       // [3]
 #define ScratchBufferName ((const char *)0x001cec80)        // "ScratchBuffer::mBuffer", the original's string
 

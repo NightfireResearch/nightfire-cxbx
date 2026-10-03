@@ -116,7 +116,7 @@ struct TAR {                         // 0x4c ("EAGL::TAR new"); arrays of them a
     uint8_t pad21[3];
     uint32_t maxAnisotropy;          // +0x24 D3DTSS_MAXANISOTROPY
     float bumpEnv[4];                // +0x28 BUMPENVMAT00, 01, 10, 11
-    void *palette;                   // +0x38 D3DPalette
+    D3DResource *palette;            // +0x38 D3DPalette
     uint8_t *clut;                   // +0x3c the clut's colours
     TARSharedData *data;             // +0x40
     TARAtlas *atlas;                 // +0x44 LoadAtlas's list
@@ -163,7 +163,7 @@ static_assert(sizeof(TARProperties) == sizeof(Properties), "the Properties itsel
 uint32_t EAGL_TextureFormatFromShape(const uint8_t *shape);                  // 0x000eb070 (invented)
 uint8_t* EAGL_FindClut(uint8_t *shape);                                      // 0x000eb200 (invented)
 EAGL::TARSharedData* EAGL_FindSharedData(uint8_t *shape);                    // 0x000ebe00 (invented)
-EAGL::TAR* EAGL_TARFromSurface(void *surface);                               // 0x000ec610 (invented)
+EAGL::TAR* EAGL_TARFromSurface(D3DPixelContainer *surface);                               // 0x000ec610 (invented)
 EAGL::TAR* EAGL_TARRenderTarget(int32_t width, int32_t height, int32_t depth, int32_t mode);  // 0x000ec6e0
 EAGL::TAR* EAGL_TARDepthSurface(int32_t width, int32_t height, int32_t depth);               // 0x000ec8a0
 void EAGL_TARConstructor(void *object, DynamicLoader *loader);               // 0x000ed070 EAGLInternal::TARConstructor

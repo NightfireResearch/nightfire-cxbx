@@ -4,7 +4,10 @@
 #include "Tar.h"
 #include "Transform.h"
 #include "D3D8State.h"
+#include "EaglGlobals.h"
+#include "EaglOriginals.h"
 #include "../platform/RealMath.h"
+#include "../platform/X87.h"
 #include "../../helpers.h"
 
 #include <bit>
@@ -18,7 +21,7 @@
 // from its listing: the x87 arithmetic in double in the original's order with a float rounding at every store
 // (SetShape's guard-band maths, IsSphereInView's plane tests - which decide culling - and the projection
 // adjustments), the frustum planes of SetPerspective in the original x87 instructions because they use FPTAN,
-// FPATAN and FSIN unrounded (8.7), and the D3D8 calls through the seam by their original addresses, in order.
+// FPATAN and FSIN unrounded (8.7), and the D3D8 calls through the seam (../gfx/D3D8.h), in order.
 //
 // Views nest: BeginView remembers the view that was current (ViewPort::previous) and ends it; EndView re-begins
 // it. The "end this view" sequence is inlined in several originals (EndViewOf below).
@@ -38,20 +41,9 @@ using EAGL::ViewPort;
 
 // ---- globals
 
-// EAGL's allocator pair: eagl_alloc / eagl_free until RRenderer overrides them (Device::SetNewOverride)
-typedef void *(__cdecl *EaglAllocator)(uint32_t size, const char *name);
-typedef void (__cdecl *EaglDeallocator)(void *pointer, uint32_t size);
-#define EaglMalloc (*(EaglAllocator *)0x001caf68)
-#define EaglFree (*(EaglDeallocator *)0x001caf6c)
-#define CurrentDevice (*(EAGL::Device **)0x0023fb60)
-#define CurrentRenderContext (*(EAGL::RenderContext **)0x0023fb64)
-#define CurrentTextureRenderContext (*(EAGL::TextureRenderContext **)0x0023fb68)
-#define RegisteredViewMatrix ((float *)0x0023f950)             // the matrices render methods read by name
-#define RegisteredProjectionMatrix ((float *)0x0023fa10)
-#define RegisteredViewProjectionMatrix ((float *)0x0023fa90)
+// (EAGL's allocator pair is eagl_alloc / eagl_free until RRenderer overrides it through Device::SetNewOverride;
+// it, the device and context pointers, the registered matrices and the pools are EaglGlobals.h's.)
 #define IdentityMatrix (*(const float **)0x001cdb70)            // -> 0x001cdb30, an identity MATRIX4
-#define TheConstructorPool (*(ConstructorPool *)0x0023fbe0)
-#define TheRuntimeAllocPool (*(RuntimeAllocConstructorPool *)0x0023fbb8)
 #define ReturnsTrueAnswer U32_AT(0x0023ff14)
 
 // The original's strings, passed by address as the original passes them
@@ -82,24 +74,12 @@ typedef void (__cdecl *EaglDeallocator)(void *pointer, uint32_t size);
 #define TarRuntimeName2 ((const char *)0x001cb098)
 #define GeoPrimStateRuntimeName2 ((const char *)0x001cb0a4)
 
-// ---- callees
-
-#define D3DDevice_SetViewport ((void (__stdcall *)(const EAGL::D3DViewport8 *))0x001666d0)
-#define D3D_ReturnsTrue ((uint32_t (__stdcall *)(uint32_t))0x00169450)   // docs 2.13
-#define CRT_malloc ((void *(__cdecl *)(uint32_t))0x001340e3)
-#define CRT_free ((void (__cdecl *)(void *))0x001331dc)
-
 namespace {
 
 constexpr float kPi = 3.14159265f;
 static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "pi as the original's float");
 constexpr float kOneOver180 = 1.0f / 180.0f;
 static_assert(std::bit_cast<uint32_t>(kOneOver180) == 0x3bb60b61, "1/180 as the original's float");
-
-// __ftol2: truncates ST0 (the full double) to 64 bits; the caller keeps EAX.
-int32_t Ftol(double d) {
-    return (int32_t)(int64_t)d;
-}
 
 // The inlined "end this view": it is no longer active, and the view it nested over is begun again.
 void EndViewOf(ViewPort *view) {
@@ -397,7 +377,7 @@ void EAGL::ViewPort::ClearViewPort(uint32_t flags) {
 // FUNC_AT(0x000e4a10)
 bool EAGL::ViewPort::IsSphereInView(const float *centre, float radius) {
     alignas(16) Transform viewMatrix;
-    viewMatrix.BuildMatrix(RegisteredViewMatrix);
+    viewMatrix.BuildMatrix(ViewMatrix);
     float p[3];
     viewMatrix.TransformPoint(centre, p);
     double r = radius;
@@ -499,7 +479,7 @@ void EAGL::ViewPort::BeginView() {
         D3DDevice_SetRenderTarget(renderContext->backBuffer, renderContext->depthSurface);
     } else {
         textureRenderContext->Private()->SetCurrentViewPort(this);
-        void *surface = D3DTexture_GetSurfaceLevel2(textureRenderContext->texture, 0);
+        D3DPixelContainer *surface = D3DTexture_GetSurfaceLevel2(textureRenderContext->texture, 0);
         D3DDevice_SetRenderTarget(surface, textureRenderContext->depthSurface);
         D3DResource_Release(surface);
     }
@@ -509,9 +489,9 @@ void EAGL::ViewPort::BeginView() {
     viewProjectionMatrix.BuildMatrix(view);
     viewProjectionMatrix.AppendMatrix(projection);
     memcpy(viewProjection, viewProjectionMatrix.m, sizeof(viewProjection));
-    memcpy(RegisteredViewMatrix, view, sizeof(view));
-    memcpy(RegisteredProjectionMatrix, projection, sizeof(projection));
-    memcpy(RegisteredViewProjectionMatrix, viewProjectionMatrix.m, sizeof(viewProjectionMatrix.m));
+    memcpy(ViewMatrix, view, sizeof(view));
+    memcpy(ProjectionMatrix, projection, sizeof(projection));
+    memcpy(ViewProjectionMatrix, viewProjectionMatrix.m, sizeof(viewProjectionMatrix.m));
 }
 
 // Projects count points (12-byte strides) to the screen with this view (D3DXVec3Project, identity world), begun
@@ -1119,12 +1099,12 @@ void EAGL::DevicePrivate::SetCurrentTextureRenderContext(TextureRenderContext *c
 
 // FUNC_AT(0x000e8a20)
 void EAGL::Device::SetNewOverride(void *allocator) {
-    EaglMalloc = reinterpret_cast<EaglAllocator>(allocator);
+    EaglMalloc = reinterpret_cast<EaglMallocFn>(allocator);
 }
 
 // FUNC_AT(0x000e8a30)
 void EAGL::Device::SetDeleteOverride(void *deallocator) {
-    EaglFree = reinterpret_cast<EaglDeallocator>(deallocator);
+    EaglFree = reinterpret_cast<EaglFreeFn>(deallocator);
 }
 
 // FUNC_AT(0x000e8a40)

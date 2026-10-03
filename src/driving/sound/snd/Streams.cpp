@@ -1,4 +1,8 @@
 #include "Streams.h"
+#include "Platform.h"
+#include "Stream.h"
+#include "System.h"
+#include "../../platform/RealPrint.h"
 #include "SndGlobals.h"
 
 #include <stddef.h>
@@ -18,12 +22,12 @@
 // (SNDPKTPLAYI_flushcallbackdata -> SNDSTRMI_releasecallback, SNDSTRMI_framescallback), which is how a request's
 // position - SNDSTRM_status/requeststatus, the game's "has this line finished" - advances.
 //
-// Each function is the original at its address, ported from the listing. Calls into the voice manager and the
-// bank module (B, C) go to our functions; into the other modules (A: lists, critical section, server clients,
-// SNDMEMI, the 64-bit sums; E: STREAM; F: the platform driver) through the originals' addresses, which jump to the
-// ports in game: devtools/SndStreamShadow.cpp puts its recording fakes there. The callbacks this module registers
-// are stored as the originals' addresses (0x0013bb20, 0x0013bb50, 0x0013bf10, 0x0013c320), as the originals store
-// them: their entries jump here, and the server client list is searched by that value.
+// Each function is the original at its address, ported from the listing. Calls into the other modules (A: lists,
+// critical section, server clients, SNDMEMI, the 64-bit sums; B, C; E: STREAM; F: the platform driver) are direct:
+// devtools/SndStreamShadow.cpp puts its recording fakes in front of our functions and the originals alike. The
+// callbacks this module registers are stored as the originals' addresses (0x0013bb20, 0x0013bb50, 0x0013bf10,
+// 0x0013c320), as the originals store them: their entries jump here, and the server client list is searched by that
+// value.
 //
 // Quirks kept: SNDSTRMI_create hands STREAM_buffersize / 3 to SNDSTRM_setgreedylevel with the STREAM pointer where
 // a stream index belongs, so the level is never set (the call answers -8); SNDPKTPLAY_stop frees the per-channel
@@ -83,37 +87,33 @@ static_assert(sizeof(SND::StreamState) == kStateSize && sizeof(SND::StreamReques
 #define ReleaseEntry ((SND::PacketReleaseFn)0x0013bb20)       // SNDSTRMI_releasecallback
 #define FramesEntry ((SND::PacketFramesFn)0x0013bb50)         // SNDSTRMI_framescallback
 
-// ---- the originals called from here (other modules), through their addresses
-#define EnterCritical ((void (*)(void))0x0013b950)                       // SNDSYS_entercritical
-#define LeaveCritical ((void (*)(void))0x0013b970)                       // SNDSYS_leavecritical
-#define LinkInit ((void (*)(SND::LinkList *))0x0013f0a0)                 // SNDLINKI_init
-#define LinkPush ((void (*)(SND::LinkList *, void *))0x0013f0b0)         // SNDLINKI_push
-#define LinkPushTail ((void (*)(SND::LinkList *, void *))0x0013f0e0)     // SNDLINKI_pushtail
-#define LinkPop ((void *(*)(SND::LinkList *))0x0013f110)                 // SNDLINKI_pop
-#define LinkRemove ((void (*)(SND::LinkList *, void *))0x0013f140)       // SNDLINKI_remove
-#define MemClear ((void (*)(void *, int))0x0013f600)                     // memclr
-#define MemFree ((void (*)(void *))0x0013f880)                           // SNDMEMI_free
-#define ServerAddClient ((void (*)(SndServerClient))0x0013f900)          // iSNDserveraddclient
-#define ServerRemoveClient ((void (*)(SndServerClient))0x0013f920)       // iSNDserverremoveclient
-#define MulU64 ((uint64_t (*)(uint32_t, uint32_t))0x0013f9e0)            // iSNDmulu64 (EDX:EAX)
-#define DivU64 ((uint32_t (*)(uint32_t, uint32_t, uint32_t))0x0013fa50)  // iSNDdivu64 (low, high, divisor)
-#define DummyGetNullValue ((int (*)(...))0x000f7330)                     // dummyGetNullValue (the stack holds what it holds)
-#define GetVoiceRange ((void (*)(int, int *, int *))0x0013d900)          // SNDPLATFORM_getvoicerange
-#define PacketPlay ((int (*)(int, int, int, int, int, int, SND::StreamFormat *, uint8_t **))0x001424c0)   // SNDPLATFORM_packetplay
+// ---- engine.core's dummyGetNullValue (not ours), at its address; the stack holds what it holds
+#define DummyGetNullValue ((int (*)(...))0x000f7330)
 
-// STREAM (module E)
-#define StreamCreate ((void *(*)(int, int, int, void *, int))0x0014b0c0)                       // STREAM_create
-#define StreamOverhead ((int (*)(int, int, int))0x0014b090)                                    // STREAM_overhead
-#define StreamQueueFile ((uint32_t (*)(void *, const void *, uint32_t, uint32_t))0x0014b3b0)   // STREAM_queuefile
-#define StreamQueueMem ((uint32_t (*)(void *, const void *, uint32_t, uint32_t))0x0014b470)    // STREAM_queuemem
-#define StreamGet ((uint32_t *(*)(void *))0x0014b520)                                          // STREAM_get
-#define StreamGetTable ((uint32_t (*)(void *))0x0014b5d0)                                      // STREAM_gettable: bytes buffered
-#define StreamGetState ((int (*)(void *))0x0014b5f0)                                           // STREAM_state
-#define StreamBufferSize ((int (*)(void *))0x0014b640)                                         // STREAM_buffersize
-#define StreamSetGreedyLevel ((int (*)(void *, int))0x0014b9a0)                                // STREAM_setgreedylevel
-#define StreamRelease ((int (*)(void *, void *))0x0014b9f0)                                    // STREAM_release
-#define StreamKill ((void (*)(void *))0x0014bcb0)                                              // STREAM_kill
-#define StreamDestroy ((void (*)(void *))0x0014be60)                                           // STREAM_destroy
+// ---- SNDLINKI on the request lists: a request's first two words are the list's links
+static_assert(offsetof(SND::StreamRequest, next) == offsetof(SND::LinkNode, next) &&
+              offsetof(SND::StreamRequest, prev) == offsetof(SND::LinkNode, prev), "a request starts with the links");
+inline SND::LinkNode *AsLinkNode(SND::StreamRequest *request) {
+    return reinterpret_cast<SND::LinkNode *>(request);
+}
+inline void LinkPush(SND::LinkList *list, SND::StreamRequest *request) {
+    SNDLINKI_push(list, AsLinkNode(request));
+}
+inline void LinkPushTail(SND::LinkList *list, SND::StreamRequest *request) {
+    SNDLINKI_pushtail(list, AsLinkNode(request));
+}
+inline SND::StreamRequest *LinkPop(SND::LinkList *list) {
+    return reinterpret_cast<SND::StreamRequest *>(SNDLINKI_pop(list));
+}
+inline void LinkRemove(SND::LinkList *list, SND::StreamRequest *request) {
+    SNDLINKI_remove(list, AsLinkNode(request));
+}
+
+// STREAM_release with the EAX it leaves: SNDSTRMI_releasecallback and SNDSTRMI_parsedata return it, as the originals'
+// tail calls do. No caller reads it (the shadow test's fake answers a value, and compares it).
+inline int StreamReleaseEax(SND::StrmReader *stream, uint32_t *chunk) {
+    return reinterpret_cast<int (*)(SND::StrmReader *, uint32_t *)>(&STREAM_release)(stream, chunk);
+}
 
 // The 31-bit frame count of a packet, sign-extended as SHL 1 / SAR 1 do
 int32_t Frames31(uint32_t frames) {
@@ -127,13 +127,13 @@ SND::StreamRequest *Oldest(SND::StreamState *ss) {
 
 // frames x 1000 / rate through the library's 64-bit helpers
 uint32_t FramesToMs(uint32_t frames, uint32_t rate) {
-    uint64_t product = MulU64(frames, 1000);
-    return DivU64(uint32_t(product), uint32_t(product >> 32), rate);
+    uint64_t product = iSNDmulu64(frames, 1000);
+    return iSNDdivu64(uint32_t(product), uint32_t(product >> 32), rate);
 }
 
 // STREAM_gettable's bytes as milliseconds at the request's rate, the byte count capped at 4,000,000
-uint32_t BufferedMs(void *stream, uint32_t rate) {
-    uint32_t bytes = StreamGetTable(stream);
+uint32_t BufferedMs(SND::StrmReader *stream, uint32_t rate) {
+    uint32_t bytes = STREAM_gettable(stream);
     if (bytes > 4000000)
         bytes = 4000000;
     return bytes * 1000 / rate;
@@ -185,31 +185,31 @@ int SNDSTRM_queuefile(int stream, int hold, const char *name, uint32_t offset) {
 // Stops the stream and drops every request (STREAM_kill empties the ring)
 // FUNC_AT(0x0013c180)
 int SNDSTRM_purge(int stream) {
-    EnterCritical();
+    SNDSYS_entercritical();
     SND::StreamState *ss;
     if (stream >= NumStreams || stream < 0 || (ss = StreamArray[stream]) == NULL) {
-        LeaveCritical();
+        SNDSYS_leavecritical();
         return -8;
     }
     if (ss->voice >= 0)
         SNDPKTPLAY_stop(ss->player);
     ss->voice = -1;
     if (ss->external == 0)
-        StreamKill(ss->stream);
+        STREAM_kill(ss->stream);
     if (ss->nextAttributes.stretchData[0] != NULL) {
         for (int i = 0; i < ss->nextFormat.channels; i++)
-            MemFree(ss->nextAttributes.stretchData[i]);
+            SNDMEMI_free(ss->nextAttributes.stretchData[i]);
     }
-    void *request;
+    SND::StreamRequest *request;
     while ((request = LinkPop(&ss->active)) != NULL)
         LinkPush(&ss->freeRequests, request);
     ss->current = NULL;
     ss->state = 0;
-    MemClear(&ss->format, sizeof(ss->format));
-    MemClear(&ss->nextFormat, sizeof(ss->nextFormat));
-    MemClear(&ss->attributes, sizeof(ss->attributes));
-    MemClear(&ss->nextAttributes, sizeof(ss->nextAttributes));
-    LeaveCritical();
+    memclr(&ss->format, sizeof(ss->format));
+    memclr(&ss->nextFormat, sizeof(ss->nextFormat));
+    memclr(&ss->attributes, sizeof(ss->attributes));
+    memclr(&ss->nextAttributes, sizeof(ss->nextAttributes));
+    SNDSYS_leavecritical();
     return 0;
 }
 
@@ -225,16 +225,16 @@ int SNDSTRM_destroy(int stream) {
             if (StreamArray[i] != NULL)
                 live++;
         if (live == 1) {   // the last one: no more servicing
-            ServerRemoveClient(ServiceEntry);
+            iSNDserverremoveclient(ServiceEntry);
             StreamExitHook = NULL;
         }
     }
     SNDPKTPLAY_destroy(ss->player);
-    void *s = ss->stream;
+    SND::StrmReader *s = ss->stream;
     uint8_t external = ss->external;
     StreamArray[stream] = NULL;
     if (external == 0)
-        StreamDestroy(s);
+        STREAM_destroy(s);
     return 0;
 }
 
@@ -246,13 +246,13 @@ int SNDSTRM_create(SND::PlayOpts *opts, int requests, int packets, void *memory,
 // FUNC_AT(0x0013c590)
 int SNDSTRM_modifyhold(int id, int hold) {
     int result = -8;
-    EnterCritical();
+    SNDSYS_entercritical();
     SND::StreamRequest *r = SNDSTRMI_getrequestptr(id);
     if (r != NULL) {
         r->hold = int16_t(hold);   // the original keeps only the low 16 bits, sign-extended
         result = 0;
     }
-    LeaveCritical();
+    SNDSYS_leavecritical();
     return result;
 }
 
@@ -269,7 +269,7 @@ int SNDSTRM_overheadtap(int requests, int packets) {
 int SNDSTRM_overhead(int requests, int packets) {
     int player = SNDPKTPLAY_overhead(packets);
     int own = player + requests * kRequestSize + kStateSize;
-    return StreamOverhead(requests + 2, 1, 1) + own;
+    return STREAM_overhead(requests + 2, 1, 1) + own;
 }
 
 // FUNC_AT(0x0013c660)
@@ -376,7 +376,7 @@ int SNDSTRM_setgreedylevel(int stream, int level) {
     SND::StreamState *ss = SNDSTRMI_getstreamptr(stream);
     if (ss == NULL)
         return -8;
-    StreamSetGreedyLevel(ss->stream, level);
+    STREAM_setgreedylevel(ss->stream, level);
     return 0;
 }
 
@@ -389,7 +389,8 @@ int SNDSTRM_queuerequestid(int stream, int hold, uint32_t request) {
 
 // A stream on the caller's STREAM (the old movie player)
 // FUNC_AT(0x00150380)
-int SNDSTRM_createtap(void *stream, SND::PlayOpts *opts, int requests, int packets, void *memory, int size) {
+int SNDSTRM_createtap(SND::StrmReader *stream, SND::PlayOpts *opts, int requests, int packets, void *memory,
+                      int size) {
     SND_UNTESTED("SNDSTRM_createtap");
     return SNDSTRMI_create(opts, requests, packets, memory, size, stream, 1);
 }
@@ -459,7 +460,7 @@ int SNDSTRMI_releasecallback(uint8_t *data, void *context) {
     (void)context;
     uint32_t *chunk = reinterpret_cast<uint32_t **>(data)[-1];
     SND::StreamState *ss = StreamArray[chunk[0] & 0xff];
-    return StreamRelease(ss->stream, chunk);
+    return StreamReleaseEax(ss->stream, chunk);
 }
 
 // The mixer consumed frames: they count against the oldest requests in turn, each finished one is removed (at
@@ -530,7 +531,7 @@ int SNDSTRMI_parseheader(int stream, uint32_t *chunk) {
             UserDataClients[i](&message);
     }
 
-    StreamRelease(ss->stream, chunk);
+    STREAM_release(ss->stream, chunk);
     r->rate = SNDSTRMI_calcdatarate(&ss->nextFormat);
 
     bool same = memcmp(&ss->format, &ss->nextFormat, sizeof(ss->format)) == 0 &&
@@ -567,7 +568,7 @@ int SNDSTRMI_parsedata(SND::StreamState *ss, uint32_t *chunk) {
         packet.channels[i] = base + data->offsets[i];
     SND::StreamRequest *r = ss->current;
     if ((packet.frames & 0x7fffffff) == 0)
-        return StreamRelease(ss->stream, chunk);
+        return StreamReleaseEax(ss->stream, chunk);
     reinterpret_cast<uint32_t **>(packet.channels[0])[-1] = chunk;   // for SNDSTRMI_releasecallback
     data->tag = r->id;
     r->outstanding += packet.frames & 0x7fffffff;
@@ -588,10 +589,10 @@ int SNDSTRMI_isheld(SND::StreamState *ss) {
         return 1;
     if (r->hold == 0)
         return 0;
-    if (BufferedMs(ss->stream, r->rate) < uint32_t(r->hold) && StreamGetState(ss->stream) != 2) {
+    if (BufferedMs(ss->stream, r->rate) < uint32_t(r->hold) && STREAM_state(ss->stream) != 2) {
         if (ss->freeRequests.count > 0)
             return 1;
-        if (StreamGetState(ss->stream) != 0)
+        if (STREAM_state(ss->stream) != 0)
             return 1;
     }
     r->hold = 0;
@@ -603,7 +604,7 @@ int SNDSTRMI_isheld(SND::StreamState *ss) {
 // read again from sndss for each chunk handed on, as the original does.
 // FUNC_AT(0x0013bf10)
 void SNDSTRMI_service(void) {
-    EnterCritical();
+    SNDSYS_entercritical();
     for (int i = 0; i < NumStreams; i++) {
         SND::StreamState *ss = StreamArray[i];
         if (ss == NULL || ss->active.count == 0)
@@ -629,7 +630,7 @@ void SNDSTRMI_service(void) {
         int got = 0;
         do {
             n--;
-            uint32_t *chunk = StreamGet(ss->stream);
+            uint32_t *chunk = STREAM_get(ss->stream);
             if (chunk == NULL) {
                 if (got == 0)
                     break;
@@ -640,12 +641,12 @@ void SNDSTRMI_service(void) {
                 SNDSTRMI_parseheader(i, chunk);
                 break;
             } else {
-                StreamRelease(StreamArray[i]->stream, chunk);
+                STREAM_release(StreamArray[i]->stream, chunk);
                 got = 1;
             }
         } while (n > 0);
     }
-    LeaveCritical();
+    SNDSYS_leavecritical();
 }
 
 // A request: type 0 a file (STREAM_queuefile), 1 memory (STREAM_queuemem), else the caller's STREAM request.
@@ -659,19 +660,19 @@ int SNDSTRMI_queue(int stream, int hold, const void *source, uint32_t arg, int t
         return -13;
     uint32_t request;
     if (type == 0) {
-        request = StreamQueueFile(ss->stream, source, arg, kChunkEnd);
+        request = STREAM_queuefile(ss->stream, static_cast<const char *>(source), int(arg), kChunkEnd);
     } else if (type == 1) {
         SND_UNTESTED("SNDSTRMI_queue (memory)");
-        request = StreamQueueMem(ss->stream, source, 0, kChunkEnd);
+        request = STREAM_queuemem(ss->stream, static_cast<const uint32_t *>(source), 0, kChunkEnd);
     } else {
         SND_UNTESTED("SNDSTRMI_queue (caller's request)");
         request = arg;
     }
     if (request == 0)
         return -1;
-    EnterCritical();
-    SND::StreamRequest *r = (SND::StreamRequest *)LinkPop(&ss->freeRequests);
-    MemClear(r, sizeof(*r));
+    SNDSYS_entercritical();
+    SND::StreamRequest *r = LinkPop(&ss->freeRequests);
+    memclr(r, sizeof(*r));
     LinkPushTail(&ss->active, r);
     r->streamRequest = request;
     ss->generation += 0x100;
@@ -680,7 +681,7 @@ int SNDSTRMI_queue(int stream, int hold, const void *source, uint32_t arg, int t
     r->id = ss->generation | stream;
     r->hold = hold;
     int id = r->id;
-    LeaveCritical();
+    SNDSYS_leavecritical();
     return id;
 }
 
@@ -695,7 +696,7 @@ int SNDSTRMI_destroyall(void) {
 // The memory is laid out as the record (0x138), the request records, the packet player, then the STREAM's ring in
 // whatever is left. Answers the stream index, -9 with no free slot or STREAM, or the packet player's error.
 // FUNC_AT(0x0013c350)
-int SNDSTRMI_create(SND::PlayOpts *opts, int requests, int packets, void *memory, int size, void *stream,
+int SNDSTRMI_create(SND::PlayOpts *opts, int requests, int packets, void *memory, int size, SND::StrmReader *stream,
                     int tap) {
     int n = NumStreams, index = 0;
     if (n <= 0)
@@ -706,15 +707,15 @@ int SNDSTRMI_create(SND::PlayOpts *opts, int requests, int packets, void *memory
             return -9;
     }
     SND::StreamState *ss = (SND::StreamState *)memory;
-    MemClear(ss, sizeof(*ss));
+    memclr(ss, sizeof(*ss));
     SND::StreamRequest *records = (SND::StreamRequest *)(ss + 1);
     uint8_t *playerMemory = (uint8_t *)(records + requests);
     int left = size + (-kStateSize - requests * kRequestSize);
     int playerSize = SNDPKTPLAY_overhead(packets);
     left -= playerSize;
     uint8_t *streamMemory = playerMemory + playerSize;
-    LinkInit(&ss->active);
-    LinkInit(&ss->freeRequests);
+    SNDLINKI_init(&ss->active);
+    SNDLINKI_init(&ss->freeRequests);
     for (int k = 0; k < requests; k++)
         LinkPush(&ss->freeRequests, &records[k]);
     ss->player = SNDPKTPLAY_create(ReleaseEntry, FramesEntry, ss, playerMemory, SNDPKTPLAY_overhead(packets));
@@ -725,14 +726,15 @@ int SNDSTRMI_create(SND::PlayOpts *opts, int requests, int packets, void *memory
         ss->stream = stream;
         ss->external = 1;
     } else {
-        void *s = StreamCreate(requests + 2, 1, 1, streamMemory, left);
+        SND::StrmReader *s =
+            STREAM_create(requests + 2, 1, 1, reinterpret_cast<SND::StrmInternal *>(streamMemory), left);
         if (s == NULL) {
             SNDPKTPLAY_destroy(ss->player);
             return -9;
         }
         ss->stream = s;
         ss->external = 0;
-        int bytes = StreamBufferSize(s);
+        int bytes = STREAM_buffersize(s);
         // the STREAM pointer where SNDSTRM_setgreedylevel wants a stream index: it answers -8 and sets nothing
         SNDSTRM_setgreedylevel(int(uintptr_t(ss->stream)), bytes / 3);
     }
@@ -745,7 +747,7 @@ int SNDSTRMI_create(SND::PlayOpts *opts, int requests, int packets, void *memory
         if (StreamArray[i] != NULL)
             live++;
     if (live == 0) {   // the first one: service streams from now on
-        ServerAddClient(ServiceEntry);
+        iSNDserveraddclient(ServiceEntry);
         StreamExitHook = DestroyAllEntry;
     }
     StreamArray[index] = ss;
@@ -780,7 +782,7 @@ int SNDPKTPLAY_overhead(int packets) {
 // FUNC_AT(0x0013e8e0)
 int SNDPKTPLAY_create(SND::PacketReleaseFn release, SND::PacketFramesFn framesDone, void *context, void *memory,
                       int size) {
-    EnterCritical();
+    SNDSYS_entercritical();
     int n = NumStreams, index = 0;
     if (n > 0) {
         while (PacketPlayers[index] != NULL) {
@@ -790,11 +792,11 @@ int SNDPKTPLAY_create(SND::PacketReleaseFn release, SND::PacketFramesFn framesDo
         }
     }
     if (index >= n) {
-        LeaveCritical();
+        SNDSYS_leavecritical();
         return -9;
     }
     if (DummyGetNullValue(index, memory) < 0) {
-        LeaveCritical();
+        SNDSYS_leavecritical();
         return -6;
     }
     SND::PacketPlayer *p = (SND::PacketPlayer *)((uint8_t *)memory + DummyGetNullValue());
@@ -806,7 +808,7 @@ int SNDPKTPLAY_create(SND::PacketReleaseFn release, SND::PacketFramesFn framesDo
     p->context = context;
     p->voice = -1;
     PacketPlayers[index] = p;
-    LeaveCritical();
+    SNDSYS_leavecritical();
     return index;
 }
 
@@ -839,7 +841,7 @@ int SNDPKTPLAY_start(int player, SND::StreamFormat *format, SND::Attributes *att
         if (mode == 0)
             break;
         int first, end, handle;
-        GetVoiceRange(mode, &first, &end);
+        SNDPLATFORM_getvoicerange(mode, &first, &end);
         int voice = SNDVOICEI_alloc(count, 0x65, &handle, first, end);
         if (voice < 0) {
             p->voice = -9;
@@ -897,8 +899,8 @@ int SNDPKTPLAY_start(int player, SND::StreamFormat *format, SND::Attributes *att
         iSNDcalcpitch(voice);
         iSNDcalcvol(voice);
         SNDI_calcfxlevel(0, voice);
-        int result = PacketPlay(player, voice, opts->timeMult, opts->distort, opts->lowpass, opts->highpass, format,
-                                attributes->stretchData);
+        int result = SNDPLATFORM_packetplay(player, voice, opts->timeMult, opts->distort, opts->lowpass,
+                                            opts->highpass, format, attributes->stretchData);
         if (result >= 0)
             break;
         for (int k = 0; k < count; k++)   // the voice array re-read for each
@@ -1023,7 +1025,7 @@ int SNDPKTPLAY_stop(int player) {
     p->voice = -1;
     for (int i = 0; i < p->format.channels; i++)
         if (p->stretchData[i] != NULL)
-            MemFree(p->stretchData[i]);
+            SNDMEMI_free(p->stretchData[i]);
     return 0;
 }
 

@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #include "GeoPrimState.h"
+#include "../gfx/D3D8.h"
 
 class DynamicLoader;
 
@@ -160,21 +161,11 @@ static_assert(sizeof(SkinVertex) == 0x10, "a skinning record is 16 bytes");
 
 // ---- D3D8 objects as EAGL sees them
 
-// The D3D8 resource header (Common, Data, Lock) every vertex, index and push buffer starts with.
-struct D3DResource {                 // 0xc
-    uint32_t common;                 // +0x00
-    uint32_t data;                   // +0x04 the data's address (an offset into the image until registered)
-    uint32_t lock;                   // +0x08
-};
-static_assert(sizeof(D3DResource) == 0xc, "a D3D8 resource header is 3 dwords");
-
-// D3DPushBuffer: the resource header, Size and AllocationSize.
-struct D3DPushBufferHeader {         // 0x14
-    D3DResource resource;            // +0x00
-    uint32_t size;                   // +0x0c
-    uint32_t allocationSize;         // +0x10
-};
-static_assert(sizeof(D3DPushBufferHeader) == 0x14, "a D3D8 push buffer header is 5 dwords");
+// The D3D8 resource header (Common, Data, Lock) every vertex, index and push buffer starts with - its data the
+// data's address, an offset into the image until registered - and D3DPushBuffer, that and Size and AllocationSize
+// (../gfx/D3D8.h).
+using ::D3DResource;
+using ::D3DPushBuffer;
 
 struct VertexShader {                // 4, "EAGL::VertexShader new"
     uint32_t handle;                 // +0x00 D3D8 vertex shader handle
@@ -301,7 +292,7 @@ static_assert(sizeof(IndexBuffer) == 0xc, "an IndexBuffer is 0xc bytes");
 struct PushBuffer {
     uint8_t notOwned;                // +0x00
     uint8_t pad01[3];
-    D3DPushBufferHeader header;      // +0x04
+    D3DPushBuffer header;            // +0x04
     uint32_t unknown18;              // +0x18 Construct's Common argument
     uint32_t unknown1c;              // +0x1c Construct's Size argument
     uint32_t unknown20;              // +0x20 Construct's AllocationSize argument

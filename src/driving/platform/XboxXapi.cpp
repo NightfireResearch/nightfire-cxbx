@@ -91,7 +91,7 @@ static void *__stdcall Xbox_XPhysicalAlloc(ULONG size, ULONG address, ULONG alig
 }
 
 // The thunks at 0x0010e82c and 0x001143e0, each a JMP through its import slot.
-static void __stdcall Xbox_MmFreeContiguousMemory(void *base) {
+void __stdcall Xbox_MmFreeContiguousMemory(void *base) {
     KernelMmFreeContiguousMemory(base);
 }
 
@@ -114,7 +114,7 @@ static DWORD Xbox_XGetAVPack(void) {
 
 // XGetVideoFlags (0x0010e02b): the dashboard's video settings (setting 8, bits 16..22 masked to 0x5f), without
 // the HD modes (480p, 720p, 1080i: 2, 4, 8) unless the console booted HD-capable on a component cable.
-static DWORD Xbox_XGetVideoFlags(void) {
+DWORD Xbox_XGetVideoFlags(void) {
     ULONG type, value;
     DWORD flags = Xbox_ExQueryNonVolatileSetting(8, &type, &value, 4, NULL) < 0 ? 0 : value >> 16 & 0x5f;
     if (*KernelHalBootSMCVideoMode != 1 || Xbox_XGetAVPack() != 3)
@@ -207,7 +207,7 @@ static DWORD __stdcall Xbox_SleepEx(DWORD milliseconds, BOOL alertable) {
     return SleepEx(milliseconds, alertable);
 }
 
-static void __stdcall Xbox_Sleep(DWORD milliseconds) {
+void __stdcall Xbox_Sleep(DWORD milliseconds) {
     Sleep(milliseconds);
 }
 
@@ -218,9 +218,9 @@ static void __stdcall Xbox_Sleep(DWORD milliseconds) {
 // already starts the thread at its own routine instead (src/loader/kernel.cpp), the XBE's TLS template is empty
 // (0x001a1ddc: no data, twelve bytes of zero fill), and nothing registers a notify routine. So this is Win32's
 // CreateThread with the same arguments, which is what a thread got before. ExitThread (0x0010eadd) likewise.
-static HANDLE __stdcall Xbox_CreateThread(SECURITY_ATTRIBUTES *security, SIZE_T stackSize,
-                                          LPTHREAD_START_ROUTINE start, void *parameter, DWORD flags,
-                                          DWORD *threadId) {
+HANDLE __stdcall Xbox_CreateThread(SECURITY_ATTRIBUTES *security, SIZE_T stackSize,
+                                   LPTHREAD_START_ROUTINE start, void *parameter, DWORD flags,
+                                   DWORD *threadId) {
     (void)security;
     return CreateThread(NULL, stackSize, start, parameter, flags & CREATE_SUSPENDED, threadId);
 }
@@ -261,7 +261,7 @@ static BOOL __stdcall Xbox_IsBadWritePtr(void *pointer, UINT_PTR bytes) {
 
 // OutputDebugStringA (0x0010e832): the original hands the string to the kernel debugger (INT 2D), which a
 // standalone run does not have; the console is where this project's logging goes.
-static void __stdcall Xbox_OutputDebugStringA(const char *text) {
+void __stdcall Xbox_OutputDebugStringA(const char *text) {
     if (text != NULL) {
         fputs(text, stdout);
         fflush(stdout);

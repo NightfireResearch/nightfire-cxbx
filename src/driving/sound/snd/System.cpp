@@ -1,5 +1,8 @@
 #include "System.h"
+#include "Platform.h"
 #include "Voices.h"
+#include "../../platform/RealPrint.h"
+#include "../../platform/RealSystem.h"
 #include "SndGlobals.h"
 
 #include <stddef.h>
@@ -18,9 +21,9 @@
 //   iSNDrandom: a six-word add-with-carry generator seeded by SNDI_randomseeed (sic) from .rdata.
 //
 // Each function is the original at its address, ported from the listing; calls to the other modules (the platform
-// driver, platform.system's SYNCTASK/REAL_addexit/memclr, engine.core's dummyNullFunction) go through their
-// originals' addresses (the shadow test's fakes are there), function addresses the library stores (the SYNCTASK,
-// the exit hook) are the originals' too, so what the rest of the program sees is unchanged. The library's globals
+// driver, platform.system's SYNCTASK/REAL_addexit/memclr) are direct, engine.core's dummyNullFunction is called at
+// its address. Function addresses the library stores (the SYNCTASK, the exit hook) are the originals', so what the
+// rest of the program sees is unchanged. The library's globals
 // stay where they are (SndGlobals.h).
 //
 // devtools/SndSystemShadow.cpp compares the pure helpers, the lists, the heap, the client list and the 100 Hz
@@ -62,17 +65,8 @@ void CopyDwords(void *to, const void *from, size_t bytes) {
         d[i] = s[i];
 }
 
-// ---- the originals called from here
-#define PlatformOutputCaps ((int (*)(void))0x0013da00)          // SNDPLATFORM_outputcaps
-#define PlatformOutputSet ((int (*)(void))0x0013dae0)           // SNDPLATFORM_outputset
-#define PlatformInit ((int (*)(void))0x0013dc50)                // SNDPLATFORM_init
-#define PlatformRestore ((int (*)(void))0x0013ddc0)             // SNDPLATFORM_restore
-#define PlatformSetVol ((void (*)(int))0x0013df50)              // SNDPLATFORM_setvol
-#define PlatformSetPitch ((int (*)(int))0x0013e320)             // SNDPLATFORM_setpitch
-#define MemClear ((void (*)(void *, int))0x0013f600)            // memclr (platform.system)
-#define DummyNull ((void (*)(void))0x000d3580)                  // dummyNullFunction (engine.core)
-#define SYNCTASK_add ((void (*)(uint32_t, int, int))0x0010aa50)
-#define REAL_addexit ((void (*)(uint32_t))0x0010b310)
+// ---- engine.core's dummyNullFunction (not ours), called at its address
+#define DummyNull ((void (*)(void))0x000d3580)
 
 // The kernel's critical-section calls, through the XBE's import table
 typedef void (__stdcall *CriticalSectionCall)(void *section);
@@ -107,7 +101,7 @@ void SNDSYSI_100hzserver(void) {
                 v->pitchLfoPos = 0;
             v->detuneLinear = 0;
             iSNDcalcpitch(voice);
-            PlatformSetPitch(voice);
+            SNDPLATFORM_setpitch(voice);
         }
         int changed = 0;
         if (v->volLfo != NULL) {
@@ -155,7 +149,7 @@ void SNDSYSI_100hzserver(void) {
         if (changed) {
             iSNDcalcvol(voice);
             if (v->handle >= 0)
-                PlatformSetVol(voice);
+                SNDPLATFORM_setvol(voice);
         }
     }
 }
@@ -206,10 +200,10 @@ int SNDSYS_vectortoreal(void) {
     uint32_t added = SysTaskAdded;
     SndOptions.vectors.functions[3] = kDummyNullAddress;   // 0x00244ddc
     if (added == 0) {
-        SYNCTASK_add(kSystemTaskAddress, 0, 1);
+        SYNCTASK_add(reinterpret_cast<SyncTaskFn>(kSystemTaskAddress), 0, 1);
         SysTaskAdded = 1;
     }
-    REAL_addexit(kExitHookAddress);
+    REAL_addexit(reinterpret_cast<ExitCallback>(kExitHookAddress));
     return 0;
 }
 
@@ -253,7 +247,7 @@ void SNDI_mutexunlock(void) {
 // FUNC_AT(0x0013d090)
 int SNDSYS_getopts(SND::SysOpts *opts) {
     if (CapsRead == 0) {
-        CapsResult = PlatformOutputCaps();
+        CapsResult = SNDPLATFORM_outputcaps();
         NumBanks = 0x10;
         SndOptions.set.heapThreshold = 0x5a;
         SndOptions.set.stealEqualPriority = 1;
@@ -270,7 +264,7 @@ int SNDSYS_getopts(SND::SysOpts *opts) {
 int SNDSYS_setops(const SND::SysOpts *opts) {
     CopyDwords(&SndOptions.set, &opts->set, sizeof(SND::SysSet));
     CopyDwords(&SndOptions.vectors, &opts->vectors, sizeof(SND::SysVectors));
-    PlatformOutputSet();
+    SNDPLATFORM_outputset();
     CopyDwords(&SndSavedSet, &SndOptions.set, sizeof(SND::SysSet));
     return 0;
 }
@@ -281,7 +275,7 @@ int SNDSYSI_init(void *memory, int size) {
     AuthorByte = 'S';
     if (SystemInited != 0)
         return 0;
-    MemClear(memory, size);
+    memclr(memory, size);
     SNDMEMI_init(memory, size);
     if (NumVoices == 0) {
         int result = SNDSYS_getopts(&SndOptions);
@@ -300,9 +294,9 @@ int SNDSYSI_init(void *memory, int size) {
     NumUserDataClients = 0;
     Num100HzClients = 0;
     NumServerClients = 0;
-    int result = PlatformInit();
+    int result = SNDPLATFORM_init();
     if (result < 0) {
-        PlatformRestore();
+        SNDPLATFORM_restore();
         DummyNull();
         return result;
     }
@@ -366,7 +360,7 @@ int SNDSYS_restore(void) {
     int (*bankExit)(int) = BankExitHook;
     if (bankExit != NULL)
         bankExit(-1);
-    PlatformRestore();
+    SNDPLATFORM_restore();
     SNDSYS_entercritical();
     SNDMEMI_free(VoiceArray);
     SNDMEMI_free(BankArray);

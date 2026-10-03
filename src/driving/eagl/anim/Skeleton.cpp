@@ -1,5 +1,6 @@
 #include "Skeleton.h"
 #include "AnimUntested.h"
+#include "../EaglOriginals.h"
 #include "../Transform.h"
 #include "../../platform/RealMath.h"
 
@@ -27,12 +28,7 @@
 typedef void (*MultiplyHook)(float *out, const float *parent, const float *child);
 #define Multiply (*(MultiplyHook *)0x001cec7c)
 
-// The engine's Transform::BuildQT (thiscall): rotation quaternion and translation
-#define Transform_BuildQT ((void (__fastcall *)(Transform *, int, float, float, float, float, float, float, float))0x000162e0)
-
-static inline bool InMask(const BoneMask *mask, int bone) {
-    return (mask->bits[bone >> 5] & (1u << (bone & 31))) != 0;
-}
+// (The engine's Transform::BuildQT, thiscall - rotation quaternion and translation - is EaglOriginals.h's.)
 
 // FUNC_AT(0x001066f0)
 void EAGLAnim_MultiplyMatrices(float *out, const float *parent, const float *child) {
@@ -44,7 +40,7 @@ void EAGLAnim_MultiplyMatrices(float *out, const float *parent, const float *chi
 // FUNC_AT(0x000f88a0)
 bool BoneMask::GetBone(int bone) const {
     EAGL_UNTESTED("BoneMask::GetBone");
-    return InMask(this, bone);
+    return Has(bone);
 }
 
 // FUNC_AT(0x00106330)
@@ -174,7 +170,7 @@ void Skeleton::BuildMirrorBoneMask(const BoneMask *source, BoneMask *destination
     BoneMask copy = *source;
     memset(destination->bits, 0, sizeof(destination->bits));
     for (int i = 0; i < count; i++)
-        if (InMask(&copy, i)) {
+        if (copy.Has(i)) {
             int m = bones[i].mirror;
             destination->bits[m >> 5] |= 1u << (m & 31);
         }
@@ -186,7 +182,7 @@ void Skeleton::BuildSymmetricBoneMask(const BoneMask *source, BoneMask *destinat
     EAGL_UNTESTED("Skeleton::BuildSymmetricBoneMask");
     if (source == destination) {
         for (int i = 0; i < count; i++)
-            if (InMask(source, i)) {
+            if (source->Has(i)) {
                 int m = bones[i].mirror;
                 destination->bits[m >> 5] |= 1u << (m & 31);
             }
@@ -194,7 +190,7 @@ void Skeleton::BuildSymmetricBoneMask(const BoneMask *source, BoneMask *destinat
     }
     memset(destination->bits, 0, sizeof(destination->bits));
     for (int i = 0; i < count; i++)
-        if (InMask(source, i)) {
+        if (source->Has(i)) {
             int m = bones[i].mirror;
             destination->bits[m >> 5] |= 1u << (m & 31);
             destination->bits[i >> 5] |= 1u << (i & 31);
@@ -291,7 +287,7 @@ static void MirrorBone(const Skeleton *s, int i, float *source, float *destinati
 void Skeleton::MirrorPose(float *source, float *destination, bool keepRoot, const BoneMask *mask) {
     EAGL_UNTESTED("Skeleton::MirrorPose");
     for (int i = 0; i < count; i++)
-        if (mask == NULL || InMask(mask, i))
+        if (mask == NULL || mask->Has(i))
             MirrorBone(this, i, source, destination);
     if (!keepRoot)
         MirrorRoot(destination);
@@ -322,7 +318,7 @@ static inline void ScaleFirstColumn(Transform *t, const float *p) {
 void Skeleton::PoseSQTToLocal(const float *pose, Transform *local, const BoneMask *mask) {
     int n = count;
     for (int i = 0; i < n; i++) {
-        if (mask != NULL && !InMask(mask, i))
+        if (mask != NULL && !mask->Has(i))
             continue;
         BuildBone(&local[i], &pose[i * 12]);
         ScaleFirstColumn(&local[i], &pose[i * 12]);
@@ -333,7 +329,7 @@ void Skeleton::PoseSQTToLocal(const float *pose, Transform *local, const BoneMas
 void Skeleton::PoseLocalToGlobal(const Transform *local, Transform *global, const BoneMask *mask) {
     int n = count;
     for (int i = 0; i < n; i++) {
-        if (mask != NULL && !InMask(mask, i))
+        if (mask != NULL && !mask->Has(i))
             continue;
         int parent = bones[i].parent;
         if (parent >= 0)
@@ -347,7 +343,7 @@ void Skeleton::PoseLocalToGlobal(const Transform *local, Transform *global, cons
 void Skeleton::PoseSQTToGlobal(const float *pose, Transform *global, const BoneMask *mask) {
     int n = count;
     for (int i = 0; i < n; i++) {
-        if (mask != NULL && !InMask(mask, i))
+        if (mask != NULL && !mask->Has(i))
             continue;
         BuildBone(&global[i], &pose[i * 12]);
         ScaleFirstColumn(&global[i], &pose[i * 12]);
@@ -361,7 +357,7 @@ void Skeleton::PoseSQTToGlobal(const float *pose, Transform *global, const BoneM
 void Skeleton::PoseGlobalToSkin(const Transform *global, Transform *skin, const BoneMask *mask) {
     int n = count;
     for (int i = 0; i < n; i++) {
-        if (mask != NULL && !InMask(mask, i))
+        if (mask != NULL && !mask->Has(i))
             continue;
         Multiply(skin[i].m, global[i].m, bones[i].inverseBind.m);
         skin[i].Transpose();
@@ -384,7 +380,7 @@ static inline void StillPose(const Skeleton *s, int i, float *p, const float *le
 void Skeleton::GetStillPose(float *pose, const BoneMask *mask) {
     int n = count;
     for (int i = 0; i < n; i++) {
-        if (mask != NULL && !InMask(mask, i))
+        if (mask != NULL && !mask->Has(i))
             continue;
         StillPose(this, i, &pose[i * 12], lengthScales != NULL ? &lengthScales[i] : NULL);
     }
@@ -464,7 +460,7 @@ void Skeleton::PoseSQTToSkin(const float *pose, Transform *skin, const BoneMask 
     int n = count;
     PoseSQTToGlobal(pose, skin, NULL);
     for (int i = 0; i < n; i++) {
-        if (mask != NULL && !InMask(mask, i))
+        if (mask != NULL && !mask->Has(i))
             continue;
         Multiply(skin[i].m, skin[i].m, bones[i].inverseBind.m);
         skin[i].Transpose();

@@ -15,6 +15,8 @@
 
 namespace SND {
 
+struct StrmReader;   // Stream.h
+
 // SNDLINKLIST (LinkList) is System.h's.
 
 // A queued request of a stream (0x28 each, after the SNDSTRMI record in the memory AStreamPriv supplies)
@@ -35,7 +37,7 @@ static_assert(sizeof(StreamRequest) == 0x28, "a stream request is 0x28 bytes");
 
 // SNDSTRMI (0x138): sndss[32] at 0x00244ba8 (NUM_STREAMS at 0x00244d0f)
 struct StreamState {
-    void *stream;                // +0x00 the STREAM (STREAM_create's, or the caller's for a tap)
+    StrmReader *stream;          // +0x00 the STREAM (STREAM_create's, or the caller's for a tap)
     int32_t voice;               // +0x04 SNDPKTPLAY_start's voice handle, -1 none
     int32_t player;              // +0x08 the packet player
     int32_t generation;          // +0x0c request id generation, += 0x100 per request
@@ -144,7 +146,7 @@ int SNDSTRM_pitchmult(int stream, int mult);                                    
 int SNDSTRM_vol(int stream, int vol);                                                        // 0x0013c8c0
 int SNDSTRM_setgreedylevel(int stream, int level);                                           // 0x0013f9b0
 int SNDSTRM_queuerequestid(int stream, int hold, uint32_t request);                          // 0x00150360 (dead)
-int SNDSTRM_createtap(void *stream, SND::PlayOpts *opts, int requests, int packets, void *memory,
+int SNDSTRM_createtap(SND::StrmReader *stream, SND::PlayOpts *opts, int requests, int packets, void *memory,
                       int size);                                                             // 0x00150380 (dead)
 
 // The stream internals
@@ -160,7 +162,7 @@ int SNDSTRMI_isheld(SND::StreamState *ss);                                      
 void SNDSTRMI_service(void);                                                                 // 0x0013bf10
 int SNDSTRMI_queue(int stream, int hold, const void *source, uint32_t arg, int type);        // 0x0013c060
 int SNDSTRMI_destroyall(void);                                                               // 0x0013c320
-int SNDSTRMI_create(SND::PlayOpts *opts, int requests, int packets, void *memory, int size, void *stream,
+int SNDSTRMI_create(SND::PlayOpts *opts, int requests, int packets, void *memory, int size, SND::StrmReader *stream,
                     int tap);                                                                // 0x0013c350
 SND::StreamRequest* SNDSTRMI_getrequestptr(int id);                                          // 0x0013f180
 

@@ -1,5 +1,6 @@
 #include "AnimShadow.h"
 
+#include "../eagl/EaglGlobals.h"
 #include "../eagl/Loader.h"
 #include "../eagl/anim/AnimObjects.h"
 #include "../platform/FileSys.h"
@@ -104,8 +105,6 @@ int ShadowPrint(const char *format, va_list args) {
     return 0;
 }
 
-#define EaglMallocHook  (*(void **)0x001caf68)
-#define EaglFreeHook    (*(void **)0x001caf6c)
 #define PrintHook       (*(void **)0x00240268)
 #define LoadedTables    (*(void **)0x0023fb88)
 #define BlockSizes      ((const uint16_t *)0x001ceab0)
@@ -482,10 +481,12 @@ void AnimShadow_Run(void) {
     memset(g_maskHalf, 0x55, sizeof(g_maskHalf));
 
     // the game's state, put back at the end: EAGL's hooks and loaded list, EAGLAnim's pool and scratch globals
-    void *savedMalloc = EaglMallocHook, *savedFree = EaglFreeHook, *savedPrint = PrintHook, *savedLoaded = LoadedTables;
+    EaglMallocFn savedMalloc = EaglMalloc;
+    EaglFreeFn savedFree = EaglFree;
+    void *savedPrint = PrintHook, *savedLoaded = LoadedTables;
     std::vector<uint8_t> savedPool((uint8_t *)0x002414b0, (uint8_t *)0x00241c00);
-    EaglMallocHook = (void *)ShadowMalloc;
-    EaglFreeHook = (void *)ShadowFree;
+    EaglMalloc = ShadowMalloc;
+    EaglFree = ShadowFree;
     PrintHook = (void *)ShadowPrint;
 
     for (const Bank &bank : banks) {
@@ -504,8 +505,8 @@ void AnimShadow_Run(void) {
         CompareBytes(what, o.image, p.image);
     }
 
-    EaglMallocHook = savedMalloc;
-    EaglFreeHook = savedFree;
+    EaglMalloc = savedMalloc;
+    EaglFree = savedFree;
     PrintHook = savedPrint;
     LoadedTables = savedLoaded;
     memcpy((uint8_t *)0x002414b0, savedPool.data(), savedPool.size());

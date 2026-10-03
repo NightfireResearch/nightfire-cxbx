@@ -1,11 +1,13 @@
 #include "EaglFont.h"
 
 #include "D3D8State.h"
+#include "EaglGlobals.h"
 #include "RenderContext.h"
 #include "RenderMethod.h"
 #include "Tar.h"
 #include "View.h"
 
+#include <bit>
 #include <stddef.h>
 #include <string.h>
 
@@ -59,17 +61,6 @@ static_assert(sizeof(DrawParameters) == 0x30, "the driver's statics run to 0x002
 #define FontVertexShaderFunction ((const void *)0x001ccfec)
 #define FontPixelShaderDefinition ((const void *)0x001cd020)
 
-#define EaglMalloc (*(void *(**)(uint32_t size, const char *name))0x001caf68)
-#define EaglFree (*(void (**)(void *pointer, uint32_t size))0x001caf6c)
-#define NameTARNew ((const char *)0x0018a348)               // "EAGL::TAR new"
-#define NameVertexShaderNew ((const char *)0x001cd144)      // "EAGL::VertexShader new"
-#define NamePixelShaderNew ((const char *)0x001cd15c)       // "EAGL::PixelShader new"
-
-#define D3DDevice_SetVertexDataColor ((void (__stdcall *)(uint32_t reg, uint32_t colour))0x0016b9d0)
-#define D3DDevice_SetVertexData2f ((void (__stdcall *)(uint32_t reg, float a, float b))0x0016b930)
-#define D3DDevice_SetVertexData4f ((void (__stdcall *)(uint32_t reg, float x, float y, uint32_t z, uint32_t w))0x0016b970)
-#define D3DDevice_Begin ((void (__stdcall *)(uint32_t primitiveType))0x0016ba20)
-
 enum { kVertexDiffuse = 3, kVertexTexCoord0 = 9, kVertexPosition = 0xffffffff };   // D3DVSDE_*
 enum { kDepthLessEqual = 0x203, kDepthAlways = 0x207, kAlphaGreaterEqual = 0x204 };   // OpenGL numbering
 enum { kQuadList = 8 };
@@ -82,9 +73,9 @@ void TexCoord(float u, float v) {
     D3DDevice_SetVertexData2f(kVertexTexCoord0, u, v);
 }
 
-// z and w go as the statics' bits
+// z and w go as the statics' bits (moved, never converted)
 void Position(float x, float y) {
-    D3DDevice_SetVertexData4f(kVertexPosition, x, y, Params.z, Params.w);
+    D3DDevice_SetVertexData4f(kVertexPosition, x, y, std::bit_cast<float>(Params.z), std::bit_cast<float>(Params.w));
 }
 
 // One glyph's quad at (x, y), as both FONTEAGL_draw and FONTEAGL_drawarray compute it.
@@ -263,9 +254,6 @@ void FONTEAGL_destroyfont(FNTXFont *font) {
 // render-state table; the deferred ones (below 0x88) only set their dirty bits (from D3D8's table) and are
 // written; the complex ones each have their entry point; anything else is ignored.
 
-#define D3DSimpleStateMethods ((const uint32_t *)0x0018e888)   // the push-buffer method per simple state
-#define D3DDeferredStateDirty ((const uint32_t *)0x0018e668)   // the dirty bits per deferred state
-
 typedef void (__stdcall *RenderStateEntry)(uint32_t value);
 
 static void EAGLFont_SetRenderState(int32_t state, uint32_t value) {
@@ -279,41 +267,41 @@ static void EAGLFont_SetRenderState(int32_t state, uint32_t value) {
         D3DRenderState[state] = value;
         return;
     }
-    uintptr_t entry;
+    RenderStateEntry entry;
     switch (state) {
-    case 0x88: entry = 0x001673b0; break;   // PSTextureModes
-    case 0x89: entry = 0x00167bf0; break;   // VertexBlend
-    case 0x8a: entry = 0x00167760; break;   // FogColor
-    case 0x8b: entry = 0x00167ad0; break;   // FillMode
-    case 0x8c: entry = 0x00167b20; break;   // BackFillMode
-    case 0x8d: entry = 0x00167b80; break;   // TwoSidedLighting
-    case 0x8e: entry = 0x00167860; break;   // NormalizeNormals
-    case 0x8f: entry = 0x001687f0; break;   // ZEnable
-    case 0x90: entry = 0x00168880; break;   // StencilEnable
-    case 0x91: entry = 0x00168910; break;   // StencilFail
-    case 0x93: entry = 0x001677b0; break;   // CullMode (tested before FrontFace, as the original)
-    case 0x92: entry = 0x00167820; break;   // FrontFace
-    case 0x94: entry = 0x001678a0; break;   // TextureFactor
-    case 0x95: entry = 0x001679f0; break;   // ZBias
-    case 0x96: entry = 0x00167a70; break;   // LogicOp
-    case 0x97: entry = 0x001676e0; break;   // EdgeAntiAlias
-    case 0x98: entry = 0x00168b70; break;   // MultiSampleAntiAlias
-    case 0x99: entry = 0x00168bf0; break;   // MultiSampleMask
-    case 0x9a: entry = 0x00168af0; break;   // MultiSampleMode
-    case 0x9b: entry = 0x00168b30; break;   // MultiSampleRenderTargetMode
-    case 0x9c: entry = 0x00167720; break;   // ShadowFunc
-    case 0x9d: entry = 0x00167900; break;   // LineWidth
-    case 0x9e: entry = 0x00168c40; break;   // SampleAlpha
-    case 0x9f: entry = 0x00167970; break;   // Dxt1NoiseEnable
-    case 0xa0: entry = 0x00168980; break;   // YuvEnable
-    case 0xa1: entry = 0x001689b0; break;   // OcclusionCullEnable
-    case 0xa2: entry = 0x00168a20; break;   // StencilCullEnable
-    case 0xa3: entry = 0x00168a90; break;   // RopZCmpAlwaysRead
-    case 0xa4: entry = 0x00168ab0; break;   // RopZRead
-    case 0xa5: entry = 0x00168ad0; break;   // DoNotCullUncompressed
+    case 0x88: entry = D3DDevice_SetRenderState_PSTextureModes; break;
+    case 0x89: entry = D3DDevice_SetRenderState_VertexBlend; break;
+    case 0x8a: entry = D3DDevice_SetRenderState_FogColor; break;
+    case 0x8b: entry = D3DDevice_SetRenderState_FillMode; break;
+    case 0x8c: entry = D3DDevice_SetRenderState_BackFillMode; break;
+    case 0x8d: entry = D3DDevice_SetRenderState_TwoSidedLighting; break;
+    case 0x8e: entry = D3DDevice_SetRenderState_NormalizeNormals; break;
+    case 0x8f: entry = D3DDevice_SetRenderState_ZEnable; break;
+    case 0x90: entry = D3DDevice_SetRenderState_StencilEnable; break;
+    case 0x91: entry = D3DDevice_SetRenderState_StencilFail; break;
+    case 0x93: entry = D3DDevice_SetRenderState_CullMode; break;   // tested before FrontFace, as the original
+    case 0x92: entry = D3DDevice_SetRenderState_FrontFace; break;
+    case 0x94: entry = D3DDevice_SetRenderState_TextureFactor; break;
+    case 0x95: entry = D3DDevice_SetRenderState_ZBias; break;
+    case 0x96: entry = D3DDevice_SetRenderState_LogicOp; break;
+    case 0x97: entry = D3DDevice_SetRenderState_EdgeAntiAlias; break;
+    case 0x98: entry = D3DDevice_SetRenderState_MultiSampleAntiAlias; break;
+    case 0x99: entry = D3DDevice_SetRenderState_MultiSampleMask; break;
+    case 0x9a: entry = D3DDevice_SetRenderState_MultiSampleMode; break;
+    case 0x9b: entry = D3DDevice_SetRenderState_MultiSampleRenderTargetMode; break;
+    case 0x9c: entry = D3DDevice_SetRenderState_ShadowFunc; break;
+    case 0x9d: entry = D3DDevice_SetRenderState_LineWidth; break;
+    case 0x9e: entry = D3DDevice_SetRenderState_SampleAlpha; break;
+    case 0x9f: entry = D3DDevice_SetRenderState_Dxt1NoiseEnable; break;
+    case 0xa0: entry = D3DDevice_SetRenderState_YuvEnable; break;
+    case 0xa1: entry = D3DDevice_SetRenderState_OcclusionCullEnable; break;
+    case 0xa2: entry = D3DDevice_SetRenderState_StencilCullEnable; break;
+    case 0xa3: entry = D3DDevice_SetRenderState_RopZCmpAlwaysRead; break;
+    case 0xa4: entry = D3DDevice_SetRenderState_RopZRead; break;
+    case 0xa5: entry = D3DDevice_SetRenderState_DoNotCullUncompressed; break;
     default: return;
     }
-    ((RenderStateEntry)entry)(value);
+    entry(value);
 }
 
 // FUNC_AT(0x000eea50)

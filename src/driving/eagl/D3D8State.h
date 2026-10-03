@@ -1,14 +1,14 @@
 #ifndef DRIVING_EAGL_D3D8STATE_H_
 #define DRIVING_EAGL_D3D8STATE_H_
 
-// D3D8's own state tables as EAGL's inlined D3D8 code writes them, the D3D8 entry points more than one EAGL file
-// calls, and EAGL's shadows of what it last sent (docs/driving/eagl.md 5.1, 5.2). The backend reads the tables back
-// at draw time, so a port writes them where the original did. Used by GeoPrimState.cpp, RenderContext.cpp and
-// View.cpp.
+// D3D8's own state tables as EAGL's inlined D3D8 code writes them, and EAGL's shadows of what it last sent
+// (docs/driving/eagl.md 5.1, 5.2). The backend reads the tables back at draw time, so a port writes them where the
+// original did. The D3D8 entry points themselves are the seam's, declared in ../gfx/D3D8.h.
 
 #include <stdint.h>
 
 #include "../../helpers.h"
+#include "../gfx/D3D8.h"
 
 // ---- D3D8's deferred state
 
@@ -31,17 +31,10 @@ enum D3DRenderStateIndex {
     kRsPresentationInterval = 127,
 };
 
-// ---- D3D8 entry points (the seam), by their original addresses
-
-// D3DDevice_SetRenderState_Simple takes the push-buffer method in ECX and the value in EDX: __fastcall's registers.
-#define D3DDevice_SetRenderState_Simple ((void (__fastcall *)(uint32_t, uint32_t))0x001673e0)
-#define D3DDevice_SetRenderState_FillMode ((void (__stdcall *)(uint32_t))0x00167ad0)
-#define D3DDevice_SetRenderState_CullMode ((void (__stdcall *)(uint32_t))0x001677b0)
-#define D3DDevice_SetTexture ((void (__stdcall *)(uint32_t, void *))0x00166830)
-#define D3DDevice_SetRenderTarget ((void (__stdcall *)(void *, void *))0x00165dc0)
-#define D3DDevice_Clear ((void (__stdcall *)(uint32_t, const void *, uint32_t, uint32_t, float, uint32_t))0x00168c90)
-#define D3DTexture_GetSurfaceLevel2 ((void *(__stdcall *)(void *, uint32_t))0x00167330)
-#define D3DResource_Release ((uint32_t (__stdcall *)(void *))0x00169230)
+// D3D8's .rdata tables behind its inlined SetRenderState / SetTextureStageState
+#define D3DSimpleStateMethods ((const uint32_t *)0x0018e888)   // the push-buffer method per simple render state
+#define D3DDeferredStateDirty ((const uint32_t *)0x0018e668)   // the dirty bits per deferred render state
+#define D3DTextureStateDirty ((const uint32_t *)0x0018e780)    // the dirty bits per texture state from 0xc
 
 // A simple render state through its push-buffer method, then into D3D8's table
 static inline void SendState(uint32_t method, D3DRenderStateIndex index, uint32_t value) {
@@ -98,6 +91,6 @@ static_assert(sizeof(ExtensionShadows) == 0x28, "the extension's shadows run to 
 
 #define Shadows (*(ExtensionShadows *)0x001cb93c)
 
-#define StageTexture ((void **)0x0023ff80)                  // the texture bound per stage (opcode 15, TAR::Use)
+#define StageTexture ((D3DPixelContainer **)0x0023ff80)     // the texture bound per stage (opcode 15, TAR::Use)
 
 #endif // DRIVING_EAGL_D3D8STATE_H_

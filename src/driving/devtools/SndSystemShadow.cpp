@@ -4,8 +4,11 @@
 
 #include "SndSystemShadow.h"
 
+#include "../sound/snd/Platform.h"
 #include "../sound/snd/System.h"
 #include "../sound/snd/Voices.h"
+#include "../platform/RealPrint.h"
+#include "../platform/RealSystem.h"
 #include "../../common/xbeOriginal.h"
 
 #include <windows.h>
@@ -228,7 +231,7 @@ struct Hook {
     uint8_t saved[5];
     bool on;
 };
-Hook g_hooks[16];
+Hook g_hooks[32];
 int g_hookCount;
 
 void HookInstall(uint32_t at, const void *to) {
@@ -248,6 +251,16 @@ void HookInstall(uint32_t at, const void *to) {
     VirtualProtect((void *)(uintptr_t)at, 5, old, &old);
     FlushInstructionCache(GetCurrentProcess(), (void *)(uintptr_t)at, 5);
     h.on = true;
+}
+
+// A ported callee: the original's entry and our port's, both to the fake (our ports call each other directly, the
+// originals by address). The answer is whether the original's entry took the jump.
+bool HookBoth(uint32_t at, const void *ours, const void *to) {
+    HookInstall(at, to);
+    bool on = g_hooks[g_hookCount - 1].on;
+    if ((uint32_t)(uintptr_t)ours != at)
+        HookInstall((uint32_t)(uintptr_t)ours, to);
+    return on;
 }
 
 void HooksRemove() {
@@ -871,18 +884,18 @@ void Fake100Hz(void) {
 }
 
 void InstallFakes() {
-    HookInstall(0x0013da00, (const void *)&FakeOutputCaps);
-    HookInstall(0x0013dae0, (const void *)&FakeOutputSet);
-    HookInstall(0x0013dc50, (const void *)&FakePlatformInit);
-    HookInstall(0x0013ddc0, (const void *)&FakePlatformRestore);
-    HookInstall(0x0013de50, (const void *)&FakeStop);
-    HookInstall(0x0013df50, (const void *)&FakeSetVol);
-    HookInstall(0x0013e320, (const void *)&FakeSetPitch);
-    HookInstall(0x00140a80, (const void *)&FakeFxInit);
-    HookInstall(0x00140070, (const void *)&FakeSetFxLevel);
-    HookInstall(0x0010aa50, (const void *)&FakeSyncTaskAdd);
-    HookInstall(0x0010b310, (const void *)&FakeAddExit);
-    g_canVector = g_hooks[g_hookCount - 1].on && g_hooks[g_hookCount - 2].on;
+    HookBoth(0x0013da00, (const void *)&SNDPLATFORM_outputcaps, (const void *)&FakeOutputCaps);
+    HookBoth(0x0013dae0, (const void *)&SNDPLATFORM_outputset, (const void *)&FakeOutputSet);
+    HookBoth(0x0013dc50, (const void *)&SNDPLATFORM_init, (const void *)&FakePlatformInit);
+    HookBoth(0x0013ddc0, (const void *)&SNDPLATFORM_restore, (const void *)&FakePlatformRestore);
+    HookBoth(0x0013de50, (const void *)&SNDPLATFORM_stop, (const void *)&FakeStop);
+    HookBoth(0x0013df50, (const void *)&SNDPLATFORM_setvol, (const void *)&FakeSetVol);
+    HookBoth(0x0013e320, (const void *)&SNDPLATFORM_setpitch, (const void *)&FakeSetPitch);
+    HookBoth(0x00140a80, (const void *)&SNDPLATFORM_fxinit, (const void *)&FakeFxInit);
+    HookBoth(0x00140070, (const void *)&SNDPLATFORM_setfxlevel, (const void *)&FakeSetFxLevel);
+    bool syncTaskAdd = HookBoth(0x0010aa50, (const void *)&SYNCTASK_add, (const void *)&FakeSyncTaskAdd);
+    bool addExit = HookBoth(0x0010b310, (const void *)&REAL_addexit, (const void *)&FakeAddExit);
+    g_canVector = syncTaskAdd && addExit;
     HookInstall(0x000d3580, (const void *)&FakeDummyNull);
     for (int i = 0; i < 3; i++)
         g_importSaved[i] = U32(kImportSlots[i]);

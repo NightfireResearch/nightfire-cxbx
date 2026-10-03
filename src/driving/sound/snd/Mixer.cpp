@@ -1,4 +1,6 @@
 #include "Mixer.h"
+#include "System.h"
+#include "../../platform/RealPrint.h"
 #include "SndGlobals.h"
 
 #include <bit>
@@ -19,7 +21,8 @@
 // the ramps to zero a stopped voice left; per playing voice ramp to changed gains over the first 16 frames, pull
 // the rest from the voice's filter chain into scratch B and mixc it into each accumulator and the FX send; run
 // the FX hook (unpackerInitFuncs[0]); then per speaker the optional master low pass and the output node into the
-// ring. The filters themselves (module H) and the decoders (I) are called at their addresses.
+// ring. The filters themselves (module H) are called directly; the unpacker inits and mixc are stored as the
+// originals' addresses, as the original stores them.
 //
 // x87 code is double arithmetic in the original's order with a float store per FSTP; a float only moved by FLD
 // and FSTP goes through double too (an SNaN comes out quiet, as on the x87), one moved by MOV is copied as bits.
@@ -63,21 +66,6 @@ static_assert(std::bit_cast<uint32_t>(kOneSeventeenth) == 0x3d70f0f1, "the origi
 #define UnpackXapfInit ((SND::SFilterUnpackInit)0x00145c10)   // SFILTER_unpackxapfinit
 #define UnpackMtfInit ((SND::SFilterUnpackInit)0x00145a70)    // SFILTER_unpackmtfinit
 #define UnpackMtpfInit ((SND::SFilterUnpackInit)0x00145970)   // SFILTER_unpackmtpfinit
-
-// The originals called from here. memclr is not ours; module H's are, but take their own node types (Filters.h),
-// so they are called at the originals' addresses, typed with the node head the mixer holds.
-#define MemClear ((void (*)(void *, int))0x0013f600)                                // memclr
-#define AddToFilterList ((int (*)(SFilterNode **, SFilterNode *))0x00144460)        // SFILTER_addtofilterlist
-#define RemoveFromFilterList ((int (*)(SFilterNode **, SFilterNode *))0x001444a0)   // SFILTER_remove
-#define CreateLPFRC ((int (*)(SFilterNode *))0x00143710)                            // SFILTER_createLPFRC
-#define ModifyLPFRC ((void (*)(SFilterNode *, int *))0x00143740)                    // SFILTER_modifyLPFRC
-#define CreateHPFFIR8 ((int (*)(SFilterNode *))0x001454d0)                          // SFILTER_createHPFFIR8
-#define ModifyHPFFIR8 ((void (*)(SFilterNode *, int *))0x001455b0)                  // SFILTER_modifyHPFFIR8
-#define RsfInit ((int (*)(SFilterNode *, int, int))0x00144920)                      // SFILTER_rsfinit
-#define RsfSetPitch ((int (*)(SFilterNode *, int))0x00144700)                       // SFILTER_rsfsetpitch
-#define TimeStretchInit ((int (*)(SFilterNode *, int, int))0x001443f0)              // SFILTER_timestretchinit
-#define TimeStretchSetRatio ((int (*)(SFilterNode *, int))0x00144300)               // SFILTER_timestretchsetratio
-#define Ft16Init ((int (*)(SFilterNode *))0x00144610)                               // SFILTER_ft16init
 
 // FLD dword / FSTP dword with nothing in between
 float ViaX87(float f) {
@@ -130,15 +118,15 @@ void SNDMIX_setmasterlowpass(float cutoff) {
     for (uint32_t i = 0; i < SndMix.counts.channels; i++) {
         if (cutoff < 1.0f) {
             if (SndMix.masterFilter[i] == NULL) {
-                SFilterNode *node = static_cast<SFilterNode *>(SNDMEMI_alloc(0x28));
+                SND::SFilterLPFRC *node = static_cast<SND::SFilterLPFRC *>(SNDMEMI_alloc(0x28));
                 SndMix.masterFilter[i] = node;
-                CreateLPFRC(node);
-                SndMix.masterFilter[i]->input = NULL;
+                SFILTER_createLPFRC(node);
+                SndMix.masterFilter[i]->node.input = NULL;
             }
             LowpassParams(params, cutoff);
-            ModifyLPFRC(SndMix.masterFilter[i], params);
+            SFILTER_modifyLPFRC(SndMix.masterFilter[i], params);
         } else {
-            SFilterNode *node = SndMix.masterFilter[i];
+            SND::SFilterLPFRC *node = SndMix.masterFilter[i];
             if (node != NULL) {
                 SNDMEMI_free(node);
                 SndMix.masterFilter[i] = NULL;
@@ -205,8 +193,8 @@ void MIX_destroy(void) {
 // A voice's chain: the unpacker for the sample representation (x bank, bank looping, packet) and, with
 // time-stretch data, the time stretch. 'kind' is 1 for a bank sample, 0 for a packet voice.
 // FUNC_AT(0x00141910)
-void MIX_playinit(int voice, int sampleRep, int kind, const void *data, int p4, int stretchData, int p6, int p7,
-                  int p8, int loop, int p10, int p11, int requester) {
+void MIX_playinit(int voice, int sampleRep, int kind, const void *data, int p4, const uint8_t *stretchData, int p6,
+                  int p7, int p8, int loop, int p10, int p11, int requester) {
     (void)p10;
     (void)p11;
     MixVoice *m = &SndMix.voices[voice];
@@ -264,18 +252,18 @@ void MIX_playinit(int voice, int sampleRep, int kind, const void *data, int p4, 
         m->unpacker->requester = uint8_t(requester);
         init(m->unpacker, &info);
         m->getFrame = info.getFrame;
-        AddToFilterList(&m->chain, m->unpacker);
+        SFILTER_addtofilterlist(&m->chain, m->unpacker);
     }
-    if (stretchData != 0) {
+    if (stretchData != NULL) {
         int owner = voice;
         if (kind != 0)
             owner = -1;
-        SFilterNode *node = static_cast<SFilterNode *>(SNDMEMI_alloc(0x1828));
+        SND::SFilterStretch *node = static_cast<SND::SFilterStretch *>(SNDMEMI_alloc(0x1828));
         m->stretch = node;
-        node->restore = NULL;
-        m->stretch->priority = 200;
-        TimeStretchInit(m->stretch, stretchData, owner);
-        AddToFilterList(&m->chain, m->stretch);
+        node->node.restore = NULL;
+        m->stretch->node.priority = 200;
+        SFILTER_timestretchinit(m->stretch, stretchData, owner);
+        SFILTER_addtofilterlist(&m->chain, &m->stretch->node);
     }
     m->state = SND::kMixVoiceInitialised;
 }
@@ -360,7 +348,7 @@ void MIX_create(const SND::MixCreateParams *params) {
         void *list = SNDMEMI_alloc(SndMix.counts.voices * int(sizeof(MixVoice)));
         int bytes = SndMix.counts.voices * int(sizeof(MixVoice));
         SndMix.voices = static_cast<MixVoice *>(list);
-        MemClear(list, bytes);
+        memclr(list, bytes);
     }
     SNDSYS_leavecritical();
     MIXI_initunpack16();
@@ -371,10 +359,10 @@ void MIX_create(const SND::MixCreateParams *params) {
     for (uint32_t i = 0; i < SndMix.counts.channels; i++) {
         SFilterNode *node = &SndMix.outputNodes[i];
         SndMix.outputList[i] = NULL;
-        Ft16Init(node);
+        SFILTER_ft16init(node);
         node->priority = 0;
-        AddToFilterList(&SndMix.outputList[i], node);
-        MemClear(SndMix.accum[i], 0x800);
+        SFILTER_addtofilterlist(&SndMix.outputList[i], node);
+        memclr(SndMix.accum[i], 0x800);
     }
 }
 
@@ -384,7 +372,7 @@ void MIX_audioslice(int16_t **outputs, int frames) {
     if (SndMix.reverbState != SND::kReverbOff && !(SndMix.fxRampToZero == 0.0f))
         MIXI_interpolateto0(&SndMix.fxRampToZero, SndMix.fxSend);
     for (uint32_t i = 0; i < SndMix.counts.channels; i++) {
-        MemClear(SndMix.accum[i], frames * 4);
+        memclr(SndMix.accum[i], frames * 4);
         if (!(SndMix.rampToZero[i] == 0.0f))
             MIXI_interpolateto0(&SndMix.rampToZero[i], SndMix.accum[i]);
     }
@@ -425,12 +413,12 @@ void MIX_audioslice(int16_t **outputs, int frames) {
     if (fxHook != NULL)
         fxHook(frames);
     for (uint32_t i = 0; i < SndMix.counts.channels; i++) {
-        SFilterNode *master = SndMix.masterFilter[i];
+        SND::SFilterLPFRC *master = SndMix.masterFilter[i];
         float *accum = SndMix.accum[i];
         SFilterNode *output = SndMix.outputList[i];
         // (the output stage, SFILTER_ft24_32, writes 16-bit samples through its float pointer)
         if (master != NULL) {
-            master->process(master, frames, accum, SndMix.scratch[0], 0);
+            master->node.process(&master->node, frames, accum, SndMix.scratch[0], 0);
             output->process(output, frames, SndMix.scratch[0], reinterpret_cast<float *>(outputs[i]), 0);
         } else {
             output->process(output, frames, accum, reinterpret_cast<float *>(outputs[i]), 0);
@@ -459,16 +447,16 @@ void MIX_setpitch(int voice, int pitch) {
         pitch = 0x40000;
     int mode = 0;
     if (m->resampler == NULL) {
-        SFilterNode *node = static_cast<SFilterNode *>(SNDMEMI_alloc(0x3c));
+        SND::SFilterRSF *node = static_cast<SND::SFilterRSF *>(SNDMEMI_alloc(0x3c));
         m->resampler = node;
         if (SndMix.resamplerMode >= 50)
             mode = 1;
-        node->restore = NULL;
-        m->resampler->priority = 0xa0;
-        RsfInit(m->resampler, MixQuality, mode);
-        AddToFilterList(&m->chain, m->resampler);
+        node->node.restore = NULL;
+        m->resampler->node.priority = 0xa0;
+        SFILTER_rsfinit(m->resampler, MixQuality, mode);
+        SFILTER_addtofilterlist(&m->chain, &m->resampler->node);
     }
-    RsfSetPitch(m->resampler, pitch);
+    SFILTER_rsfsetpitch(m->resampler, pitch);
 }
 
 // out[i] += in[i] x gain, from the end: scalar until the count is a multiple of 16 with both buffers 16-byte
@@ -557,23 +545,23 @@ void MIX_setlowpass(int voice, float cutoff) {
     MixVoice *m = &SndMix.voices[voice];
     if (!below) {
         if (m->lowpass != NULL) {
-            RemoveFromFilterList(&m->chain, m->lowpass);
+            SFILTER_remove(&m->chain, &m->lowpass->node);
             SNDMEMI_free(m->lowpass);
             m->lowpass = NULL;
         }
         return;
     }
     if (m->lowpass == NULL) {
-        SFilterNode *node = static_cast<SFilterNode *>(SNDMEMI_alloc(0x28));
+        SND::SFilterLPFRC *node = static_cast<SND::SFilterLPFRC *>(SNDMEMI_alloc(0x28));
         m->lowpass = node;
-        node->restore = NULL;
-        m->lowpass->priority = 0x28;
-        CreateLPFRC(m->lowpass);
-        AddToFilterList(&m->chain, m->lowpass);
+        node->node.restore = NULL;
+        m->lowpass->node.priority = 0x28;
+        SFILTER_createLPFRC(m->lowpass);
+        SFILTER_addtofilterlist(&m->chain, &m->lowpass->node);
     }
     int params[3];
     LowpassParams(params, cutoff);
-    ModifyLPFRC(m->lowpass, params);
+    SFILTER_modifyLPFRC(m->lowpass, params);
 }
 
 // 'cutoff' in Hz; 0 or less removes the high pass.
@@ -582,30 +570,32 @@ void MIX_sethighpass(int voice, int cutoff) {
     MixVoice *m = &SndMix.voices[voice];
     if (cutoff > 0) {
         if (m->highpass == NULL) {
-            SFilterNode *node = static_cast<SFilterNode *>(SNDMEMI_alloc(0x58));
+            SND::SFilterFIR8 *node = static_cast<SND::SFilterFIR8 *>(SNDMEMI_alloc(0x58));
             m->highpass = node;
-            node->restore = NULL;
-            m->highpass->priority = 0x50;
-            CreateHPFFIR8(m->highpass);
-            AddToFilterList(&m->chain, m->highpass);
+            node->node.restore = NULL;
+            m->highpass->node.priority = 0x50;
+            SFILTER_createHPFFIR8(m->highpass);
+            SFILTER_addtofilterlist(&m->chain, &m->highpass->node);
         }
         int params[2];
         params[1] = PlatformRate << 8;
         params[0] = cutoff << 8;
-        ModifyHPFFIR8(m->highpass, params);
+        SFILTER_modifyHPFFIR8(m->highpass, params);
         return;
     }
     if (m->highpass != NULL) {
-        RemoveFromFilterList(&m->chain, m->highpass);
+        SFILTER_remove(&m->chain, &m->highpass->node);
         SNDMEMI_free(m->highpass);
         m->highpass = NULL;
     }
 }
 
+// The original returns what EAX holds (0 with no stretch, else whatever SFILTER_timestretchsetratio, a tail call,
+// leaves there); its one caller, SNDPLATFORM_timemult, ignores it - so no value here.
 // FUNC_AT(0x00146570)
-int MIX_settimemult(int voice, int ratio) {
-    SFilterNode *stretch = SndMix.voices[voice].stretch;
+void MIX_settimemult(int voice, int ratio) {
+    SND::SFilterStretch *stretch = SndMix.voices[voice].stretch;
     if (stretch == NULL)
-        return 0;
-    return TimeStretchSetRatio(stretch, ratio);   // a tail call in the original
+        return;
+    SFILTER_timestretchsetratio(stretch, ratio);
 }

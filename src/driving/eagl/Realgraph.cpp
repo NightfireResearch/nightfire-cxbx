@@ -1,7 +1,9 @@
 #include "Realgraph.h"
 
+#include "EaglGlobals.h"
 #include "../platform/FileSys.h"
 #include "../platform/RealPrint.h"
+#include "../platform/X87.h"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -103,11 +105,9 @@ typedef void (*FontBatchExFn)(const uint8_t *font, FontBatchEntry *entries, int 
 }  // namespace
 
 #define FontDriver (*(FontDriverTable **)0x001cec98)            // FONTcurrentdriver
-#define DefaultFont (*(const uint8_t **)0x00241be0)
 #define FontBatchDraw (*(FontBatchFn *)0x00241be8)
 #define FontBatchDrawEx (*(FontBatchExFn *)0x00241bf0)
 #define BuiltInFont ((const uint8_t *)0x001ceca0)               // the font linked into the executable
-#define FontRestoreOriginal ((ExitCallback)0x00107b70)          // FONT_restore's own address, as the exit list holds it
 
 static inline const FontHeader *AsFont(const uint8_t *font) {
     return reinterpret_cast<const FontHeader *>(font);
@@ -212,19 +212,12 @@ static const uint8_t *FallbackGlyph(const uint8_t *fontData, int c) {
     return FONT_bsearch(0x7f, table, count, size);
 }
 
-// __ftol2: truncation to 64 bits, of which the low 32 are used; what it cannot convert gives 0x80000000_00000000.
-static inline int32_t Ftol(double v) {
-    if (!(v > -9223372036854775808.0 && v < 9223372036854775808.0))
-        return 0;
-    return (int32_t)(int64_t)v;
-}
-
 static inline int Advance(const FontHeader *font, const FontGlyph *glyph) {
     return (font->flags & kWideGlyphs) ? glyph->wideAdvance : glyph->advance;
 }
 
 static inline int LineHeight(const FontHeader *font, float scaleY) {
-    return Ftol(double(font->ascent + font->descent) * scaleY);
+    return Ftol(double(font->ascent + font->descent) * scaleY);   // __ftol2
 }
 
 // Draws text at (x, y): glyph by glyph through the driver, or in batches of 128 through the batch hooks when
@@ -373,7 +366,7 @@ void FONT_restore() {
     if (DefaultFont != NULL) {
         FONT_destroy(DefaultFont);
         DefaultFont = NULL;
-        REAL_removeexit(FontRestoreOriginal);
+        REAL_removeexit(FONT_restore);
     }
 }
 
@@ -382,7 +375,7 @@ void FONT_restore() {
 void FONT_init() {
     if (DefaultFont == NULL) {
         DefaultFont = FONT_create(BuiltInFont);
-        REAL_addexit(FontRestoreOriginal);
+        REAL_addexit(FONT_restore);
     }
 }
 

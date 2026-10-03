@@ -1,4 +1,7 @@
 #include "Banks.h"
+#include "Platform.h"
+#include "System.h"
+#include "../../platform/RealPrint.h"
 #include "SndGlobals.h"
 
 #include <stddef.h>
@@ -11,9 +14,9 @@
 // tied together by a key so the sound stops and frees as one) - and the PT tag stream reader (SNDI_gettag/getb),
 // the bank timbre parser SNDI_parsetimbre and the stream header parser SNDI_patchtohdr (module D's, 4.4).
 //
-// Each function is the original at its address, ported from the listing. Calls into the other modules go through
-// the originals' addresses. devtools/SndTagShadow.cpp compares the parsers with the originals on every PT header on
-// the disc and on perturbed copies (sound.md 9.3 step 1).
+// Each function is the original at its address, ported from the listing. Calls into the other modules are direct
+// (the C runtime's _memmove at its address). devtools/SndTagShadow.cpp compares the parsers with the originals on
+// every PT header on the disc and on perturbed copies (sound.md 9.3 step 1).
 //
 // What the originals leave uninitialised: the tag reader's value before the first tag of length 0..4 (both
 // parsers), SNDI_patchtohdr's azimuth offset of channel 1 without a 0x9d tag (stereo, output mode not 2), the
@@ -46,19 +49,8 @@ int32_t Div127(int32_t x) {
     return hi + int32_t(uint32_t(hi) >> 31);
 }
 
-// ---- the originals called from here (other modules), through their addresses (the shadow tests' fakes or the
-// originals are there; in game they jump to the ports)
-#define EnterCritical ((void (*)(void))0x0013b950)                  // SNDSYS_entercritical
-#define LeaveCritical ((void (*)(void))0x0013b970)                  // SNDSYS_leavecritical
-#define RandRange ((int (*)(int))0x00142ea0)                        // randrange
-#define SndRandom ((uint32_t (*)(void))0x001412e0)                  // iSNDrandom
-#define GetVoiceRange ((void (*)(int, int *, int *))0x0013d900)     // SNDPLATFORM_getvoicerange
-#define MemAlloc ((void *(*)(int32_t))0x0013f780)                   // SNDMEMI_alloc
-#define MemClear ((void (*)(void *, int))0x0013f600)                // memclr
-#define MemMove ((void *(*)(void *, const void *, int))0x00132270)  // _memmove
-// SNDPLATFORM_playtimbre(header, base (the bank: the sample offsets are from its start), voice, timeMult, distort,
-// lowpass, highpass)
-#define PlatformPlayTimbre ((int (*)(PatchHeader *, BankHeader *, int, int, int, int, int))0x00142b10)
+// ---- the C runtime's _memmove (not ours: sys.crt)
+#define MemMove ((void *(*)(void *, const void *, int))0x00132270)
 
 // SNDI_parsetimbre's frame from the reader on: the channel loop reads the azimuth offsets past six into the tag
 // tables, as the original's does.
@@ -159,7 +151,7 @@ int SNDbankremove(int bank) {
     }
     if (SNDBANKI_valid(bank) != 0)
         return -8;
-    EnterCritical();
+    SNDSYS_entercritical();
     BankHeader *header = BankArray[bank].header;
     for (int i = 0; i < NumVoices; i++) {
         Voice *v = &VoiceArray[i];
@@ -180,7 +172,7 @@ int SNDbankremove(int bank) {
     }
     BankArray[bank].header = NULL;
     BankArray[bank].flag = 0;
-    LeaveCritical();
+    SNDSYS_leavecritical();
     return 0;
 }
 
@@ -225,14 +217,14 @@ int SNDBANKI_playtimbre(int bank, int patch, SND::BankHeader *bankHeader, SND::P
             if (mode == 0)
                 return result;
             int first = 0, end = 0;
-            GetVoiceRange(mode, &first, &end);
+            SNDPLATFORM_getvoicerange(mode, &first, &end);
             index = SNDVOICEI_alloc(header->channels, header->priority, &result, first, end);
         } while (index < 0);
 
         Voice *v = &VoiceArray[index];
         int p = header->pan;
         if (header->panRandom != 0) {
-            p += RandRange(header->panRandom);
+            p += randrange(header->panRandom);
             if (p < 0)
                 p = 0;
             else if (p > 0x7f)
@@ -248,14 +240,14 @@ int SNDBANKI_playtimbre(int bank, int patch, SND::BankHeader *bankHeader, SND::P
             v->detune = detune;
         }
         if (header->tuneRandom != 0)
-            v->detune = v->detune + RandRange(int16_t(header->tuneRandom));   // the range sign-extended
+            v->detune = v->detune + randrange(int16_t(header->tuneRandom));   // the range sign-extended
         v->volTable = header->volTable;
         v->bendTable = header->bendTable;
         v->fadeStep = 0;
         v->fade = uint32_t(vol) << 16;
         int level = header->volume;
         if (header->volumeRandom != 0)
-            level += RandRange(header->volumeRandom);
+            level += randrange(header->volumeRandom);
         if (level > 0x7f)
             level = 0x7f;
         else if (level < 0)
@@ -279,11 +271,11 @@ int SNDBANKI_playtimbre(int bank, int patch, SND::BankHeader *bankHeader, SND::P
         v->pitchLfoLength = header->pitchLfoLength;
         v->pitchLfoDepth = header->pitchLfoDepth;
         if (header->volLfoRandom != 0)
-            v->volLfoPos = SndRandom() % uint32_t(header->volLfoRandom);   // the byte sign-extended
+            v->volLfoPos = iSNDrandom() % uint32_t(header->volLfoRandom);   // the byte sign-extended
         else
             v->volLfoPos = 0;
         if (header->pitchLfoRandom != 0)
-            v->pitchLfoPos = SndRandom() % header->pitchLfoLength;
+            v->pitchLfoPos = iSNDrandom() % header->pitchLfoLength;
         else
             v->pitchLfoPos = 0;
         v->timeMult = opts->timeMult;
@@ -307,8 +299,9 @@ int SNDBANKI_playtimbre(int bank, int patch, SND::BankHeader *bankHeader, SND::P
         v->fxLevel = fx;
         SNDI_calcfxlevel(0, index);
         iSNDcalcvol(index);
-        if (PlatformPlayTimbre(header, bankHeader, index, opts->timeMult, opts->distort, opts->lowpass,
-                               opts->highpass) >= 0)
+        // (the sample offsets are from the bank's start)
+        if (SNDPLATFORM_playtimbre(header, reinterpret_cast<uint8_t *>(bankHeader), index, opts->timeMult,
+                                   opts->distort, opts->lowpass, opts->highpass) >= 0)
             return result;
         for (int i = 0; i < header->channels; i++)
             SNDVOICEI_free(VoiceArray[index].platformVoices[i]);
@@ -340,7 +333,7 @@ int SNDBANKI_playpatch(SND::BankHeader *bankHeader, uint8_t *patch, int bank, in
         more = SNDI_parsetimbre(&cursor, &f.header);
         if (randomised == 0) {
             if (f.header.detuneRandom != 0)
-                detuneRandom = RandRange(int16_t(f.header.detuneRandom));
+                detuneRandom = randrange(int16_t(f.header.detuneRandom));
             randomised = 1;
         }
         if (velocity >= f.header.velocityLow && velocity <= f.header.velocityHigh && key >= f.header.keyLow &&
@@ -613,9 +606,9 @@ void SNDI_patchtohdr(int base, uint8_t *pt, SND::StreamFormat *format, SND::Attr
     int32_t azimuth[6] = { 0, 0, 0, 0, 0, 0 };   // the original leaves [1] uninitialised
     TagReader reader;
     memset(&reader, 0, sizeof(reader));
-    MemClear(format, sizeof(*format));
-    MemClear(attributes, sizeof(*attributes));
-    MemClear(layout, sizeof(*layout));
+    memclr(format, sizeof(*format));
+    memclr(attributes, sizeof(*attributes));
+    memclr(layout, sizeof(*layout));
     SND_attrsetdef(attributes);
     format->sampleRate = 24000;
     format->channels = 1;
@@ -664,7 +657,7 @@ void SNDI_patchtohdr(int base, uint8_t *pt, SND::StreamFormat *format, SND::Attr
         default: break;
         }
         if (channel >= 0) {
-            uint8_t *copy = (uint8_t *)MemAlloc(reader.length);
+            uint8_t *copy = (uint8_t *)SNDMEMI_alloc(reader.length);
             attributes->stretchData[channel] = copy;
             memcpy(copy, reader.data, uint32_t(reader.length));
             attributes->stretchDataSizes[channel] = reader.length;

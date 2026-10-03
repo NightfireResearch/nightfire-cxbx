@@ -6,6 +6,9 @@
 // mixer, the SND thread's 100 Hz loop, and the per-voice setters that turn a logical voice's volume, pitch, pan, fx
 // send and filters into DirectSound or MIX calls. See Platform.cpp.
 
+#include "Banks.h"
+#include "../DirectSound.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -41,7 +44,7 @@ static_assert(sizeof(PlatformVoice) == 0x18, "SNDPLATFORMVOICE is 0x18 bytes");
 struct BufferNode {
     BufferNode *next;            // +0x00 } SNDLINKI's (Ghidra's tail/head are the wrong way round)
     BufferNode *prev;            // +0x04 }
-    void *buffer;                // +0x08 the DirectSound buffer
+    IDirectSoundBuffer *buffer;  // +0x08 the DirectSound buffer
     int16_t platformVoice;       // +0x0c
     uint8_t pool;                // +0x0e 0 Xbox ADPCM, 1 PCM16
     uint8_t pad0f;
@@ -64,73 +67,23 @@ struct BufferList {
 };
 static_assert(sizeof(BufferList) == 0xc, "a buffer list (SNDLINKLIST) is 0xc bytes");
 
-// The Xbox DirectSound structures the driver fills
-struct DsMixBinPair {
-    uint32_t bin;
-    int32_t volume;              // hundredths of a dB
-};
-struct DsMixBins {
-    uint32_t count;
-    DsMixBinPair *pairs;
-};
-struct DsFilterDesc {
-    uint32_t mode;               // 1
-    uint32_t q;
-    uint32_t coefficients[4];
-};
-#pragma pack(push, 1)
-struct DsWaveFormat {            // WAVEFORMATEX + the ADPCM samples-per-block word (0x14 cleared)
-    uint16_t formatTag;          // +0x00 0x69 Xbox ADPCM, 1 PCM
-    uint16_t channels;           // +0x02
-    uint32_t samplesPerSec;      // +0x04
-    uint32_t avgBytesPerSec;     // +0x08
-    uint16_t blockAlign;         // +0x0c
-    uint16_t bitsPerSample;      // +0x0e
-    uint16_t cbSize;             // +0x10
-    uint16_t samplesPerBlock;    // +0x12
-};
-#pragma pack(pop)
-static_assert(sizeof(DsWaveFormat) == 0x14, "the wave format is 0x14 bytes here");
-struct DsBufferDesc {            // 0x18 cleared
-    uint32_t size;               // +0x00
-    uint32_t flags;              // +0x04
-    uint32_t bufferBytes;        // +0x08
-    DsWaveFormat *format;        // +0x0c
-    DsMixBins *mixBins;          // +0x10
-    uint32_t inputMixBin;        // +0x14
-};
-static_assert(sizeof(DsBufferDesc) == 0x18, "the buffer description is 0x18 bytes here");
+// The Xbox DirectSound structures the driver fills (DirectSound.h)
+using ::DsBufferDesc;
+using ::DsFilterDesc;
+using ::DsI3dl2Listener;
+using ::DsMixBinPair;
+using ::DsMixBins;
+using ::DsWaveFormat;
 
-// DSI3DL2LISTENER (0x30): an I3DL2 reverb's listener properties
-struct DsI3dl2Listener {
-    int32_t room;                // +0x00 hundredths of a dB
-    int32_t roomHF;              // +0x04
-    float roomRolloffFactor;     // +0x08
-    float decayTime;             // +0x0c seconds
-    float decayHFRatio;          // +0x10
-    int32_t reflections;         // +0x14
-    float reflectionsDelay;      // +0x18
-    int32_t reverb;              // +0x1c
-    float reverbDelay;           // +0x20
-    float diffusion;             // +0x24 percent
-    float density;               // +0x28 percent
-    float hfReference;           // +0x2c Hz
-};
-static_assert(sizeof(DsI3dl2Listener) == 0x30, "DSI3DL2LISTENER is 0x30 bytes");
-
-// SNDPKTPLAY_start's format (only the rate and the sample representation are read here)
-struct PacketFormat {
-    uint16_t sampleRate;         // +0x00
-    uint8_t channels;            // +0x02
-    uint8_t sampleRep;           // +0x03 20 Xbox ADPCM
-};
+// SNDPKTPLAY_start's format: the stream format (Banks.h; only the rate and the sample representation are read here)
+typedef StreamFormat PacketFormat;
 
 struct PatchHeader;
 
 }  // namespace SND
 
 // The driver's setters and queries (voice = logical voice index)
-void* dsndCreateBufferAndMixBins(int pool);                                  // 0x0013d430
+IDirectSoundBuffer* dsndCreateBufferAndMixBins(int pool);                    // 0x0013d430
 void FUN_0013d550(int pool);                                                 // 0x0013d550 borrow from the other pool
 void SNDDRV_mixvoicefree(int mixVoice);                                      // 0x0013d5c0
 void dsndMixInit(void);                                                      // 0x0013d5e0

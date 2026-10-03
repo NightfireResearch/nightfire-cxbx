@@ -1,4 +1,7 @@
 #include "AnimDeltaF.h"
+#include "Skeleton.h"
+#include "../EaglGlobals.h"
+#include "../../platform/X87.h"
 #include "../../../helpers.h"
 
 #include <bit>
@@ -24,25 +27,14 @@
 
 namespace {
 
-typedef void (*EaglFreeHook)(void *data, uint32_t size);
-#define EaglFree (*(EaglFreeHook *)0x001caf6c)
 #define VtDeltaF1 ((const void *)0x001a1270)
 #define VtDeltaF3 ((const void *)0x001a12e8)
-#define ReverseDeltaSumEnabled U8_AT(0x001ceb4c)            // 0: going back decodes the block again
 
 // The dequantisation's scales (the original's .rdata floats at 0x001a1260 / 0x001a12d8 and 0x001a1258 / 0x001a12d0)
 constexpr float kOneOver65535 = 1.0f / 65535;
 constexpr float kOneOver255 = 1.0f / 255;
 static_assert(std::bit_cast<uint32_t>(kOneOver65535) == 0x37800080, "the original's 1/65535");
 static_assert(std::bit_cast<uint32_t>(kOneOver255) == 0x3b808081, "the original's 1/255");
-
-inline int Truncate(float f) {   // CVTTSS2SI
-    return _mm_cvtt_ss2si(_mm_set_ss(f));
-}
-
-inline bool InMask(const uint32_t *mask, int bone) {
-    return (mask[bone >> 5] & (1u << (bone & 31))) != 0;
-}
 
 // Where the key blocks start: after the header and the range records.
 template <typename Range>
@@ -110,7 +102,7 @@ void WriteConstants(const DeltaFData *d, const uint8_t *blocks, int blockSize, i
         sqt[index[c]] = value[c];
 }
 
-bool EvalF1Core(FnDeltaF *self, float time, float *sqt, const uint32_t *mask) {
+bool EvalF1Core(FnDeltaF *self, float time, float *sqt, const BoneMask *mask) {
     const DeltaFData *d = reinterpret_cast<const DeltaFData *>(self->anim);
     int n = d->count;
     int shift = d->shift;
@@ -128,7 +120,7 @@ bool EvalF1Core(FnDeltaF *self, float time, float *sqt, const uint32_t *mask) {
     if (mask != NULL)
         for (int i = 0; i < n; i++)
             bone[i] = uint8_t(d->index[i] / 12);
-    auto skip = [&](int i) { return mask != NULL && !InMask(mask, bone[i]); };
+    auto skip = [&](int i) { return mask != NULL && !mask->Has(bone[i]); };
     bool restart = k < cached && ReverseDeltaSumEnabled == 0;
     if (k == self->nextKey) {
         float *t = self->values;
@@ -303,7 +295,7 @@ bool FnDeltaF::EvalSQTMaskF1(float time, float *sqt, void *m) {
         nextKey = -1;
         mask = m;
     }
-    return EvalF1Core(this, time, sqt, static_cast<const uint32_t *>(m));
+    return EvalF1Core(this, time, sqt, static_cast<const BoneMask *>(m));
 }
 
 // FUNC_AT(0x000ff210)
@@ -383,7 +375,7 @@ uint8_t* DeltaF3Header::ConstantsPointer() {
 
 namespace {
 
-bool EvalF3Core(FnDeltaF *self, float time, float *sqt, const uint32_t *mask) {
+bool EvalF3Core(FnDeltaF *self, float time, float *sqt, const BoneMask *mask) {
     const DeltaFData *d = reinterpret_cast<const DeltaFData *>(self->anim);
     int n = d->count;
     int shift = d->shift;
@@ -402,7 +394,7 @@ bool EvalF3Core(FnDeltaF *self, float time, float *sqt, const uint32_t *mask) {
     if (mask != NULL)
         for (int i = 0; i < n; i++)
             bone[i] = uint8_t(d->index[i] / 12);
-    auto skip = [&](int i) { return mask != NULL && !InMask(mask, bone[i]); };
+    auto skip = [&](int i) { return mask != NULL && !mask->Has(bone[i]); };
     bool restart = k < cached && ReverseDeltaSumEnabled == 0;
     if (k == self->nextKey) {
         float *t = self->values;
@@ -607,5 +599,5 @@ bool FnDeltaF::EvalSQTMaskF3(float time, float *sqt, void *m) {
         nextKey = -1;
         mask = m;
     }
-    return EvalF3Core(this, time, sqt, static_cast<const uint32_t *>(m));
+    return EvalF3Core(this, time, sqt, static_cast<const BoneMask *>(m));
 }

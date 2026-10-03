@@ -3,6 +3,11 @@
 #include "Decode.h"
 #include "SndUntested.h"
 
+#include "Platform.h"
+#include "Streams.h"
+#include "System.h"
+#include "../../platform/RealPrint.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -24,8 +29,8 @@
 //
 // The time stretch's four helpers take register arguments (sound.md 7.1): naked adaptors under Ghidra's names
 // (AUTOLTCG) move them into calls to the C++ cores, which the ports call directly. The decoders (module I) and
-// SNDI_getb are called directly too; the packet player and the driver through the originals' addresses, where the
-// shadow test puts its fakes.
+// SNDI_getb are called directly too, and so are the packet player and the driver (the shadow test puts its fakes
+// in front of our functions and the originals alike).
 // ---------------------------------------------------------------------------------------------------------------
 
 using namespace SND;
@@ -48,15 +53,6 @@ constexpr float kRatioScale = 1.0f / 4096;   // the time stretch's 4.12 ratio
 #define UnpackFAt ((SFilterProcess)0x001461f0)            // SFILTER_unpackf
 #define TimeStretchAt ((SFilterProcess)0x00144340)        // SFILTER_timestretch
 
-// ---- the originals called from here (other modules). Through the originals' addresses, which jump to the ports
-// in game: the shadow test puts its recording fakes there (devtools/SndFilterShadow.cpp).
-#define MemClear ((void (*)(void *, int))0x0013f600)                            // memclr
-#define GetMasterVoice ((int (*)(int))0x00142420)                               // SNDDRV_getmastervoice
-#define GetSampleChan ((int (*)(int))0x00142460)                                // SNDDRV_getsamplechan
-#define VoiceToPacketHandle ((int (*)(int))0x001457e0)                          // SNDPKTPLAYI_voicetopackethandle
-#define FreeFrames ((void (*)(int, int, int))0x0013ef80)                        // SNDPKTPLAYI_freeframes
-#define GetPacket ((const void *(*)(int player, int channel, int *frames, int *other))0x0013ee00)   // SNDPKTPLAYI_get
-#define FramesOutstanding ((int (*)(int))0x0013edc0)                            // SNDPKTPLAY_framesoutstanding
 
 // The original's REP MOVSD: count floats, front to back (a float copy keeps the bits)
 void CopyForward(float *to, const float *from, uint32_t count) {
@@ -100,7 +96,7 @@ int SFILTER_unpackxaf(SND::SFilterNode *node, int frames, float *scratch, float 
     out += got;
     if (got < frames) {
         int rest = frames - got;
-        MemClear(out, rest * 4);
+        memclr(out, rest * 4);
         got += rest;
     }
     return got;
@@ -211,7 +207,7 @@ int SFILTER_unpackmtpf(SND::SFilterNode *node, int frames, float *scratch, float
     (void)requester;
     SFilterMTPF *n = reinterpret_cast<SFilterMTPF *>(node);
     if (n->pending != 0) {
-        FreeFrames(n->packetPlayer, n->channel, n->pending);
+        SNDPKTPLAYI_freeframes(n->packetPlayer, n->channel, n->pending);
         n->pending = 0;
     }
     int remaining = frames;
@@ -221,12 +217,12 @@ int SFILTER_unpackmtpf(SND::SFilterNode *node, int frames, float *scratch, float
         if (n->taken >= n->packetFrames) {
             int other;
             const uint8_t *packet =
-                static_cast<const uint8_t *>(GetPacket(n->packetPlayer, n->channel, &n->packetFrames, &other));
+                SNDPKTPLAYI_get(n->packetPlayer, n->channel, &n->packetFrames, &other);
             n->packet = packet;
             n->taken = 0;
             if (packet == NULL) {
                 if (n->pending != 0)
-                    MemClear(out, remaining * 4);
+                    memclr(out, remaining * 4);
                 n->packetFrames = 0;
                 return n->pending;
             }
@@ -265,8 +261,8 @@ void SFILTER_unpackmtpfinit(SND::SFilterNode *node, const SND::UnpackInfo *info)
     SND_UNTESTED("SFILTER_unpackmtpfinit");
     SFilterMTPF *n = reinterpret_cast<SFilterMTPF *>(node);
     node->process = UnpackMtpfAt;
-    n->packetPlayer = VoiceToPacketHandle(GetMasterVoice(info->voice));
-    n->channel = uint8_t(GetSampleChan(info->voice));
+    n->packetPlayer = SNDPKTPLAYI_voicetopackethandle(SNDDRV_getmastervoice(info->voice));
+    n->channel = uint8_t(SNDDRV_getsamplechan(info->voice));
     n->packet = NULL;
     n->taken = 0;
     n->packetFrames = 0;
@@ -337,7 +333,7 @@ int SFILTER_unpackpf(SND::SFilterNode *node, int frames, float *scratch, float *
     (void)requester;
     SFilterPF *n = reinterpret_cast<SFilterPF *>(node);
     if (n->pending != 0) {
-        FreeFrames(n->packetPlayer, n->channel, n->pending);
+        SNDPKTPLAYI_freeframes(n->packetPlayer, n->channel, n->pending);
         n->pending = 0;
     }
     int remaining = frames;
@@ -347,11 +343,11 @@ int SFILTER_unpackpf(SND::SFilterNode *node, int frames, float *scratch, float *
         if (n->position >= n->packetFrames) {
             int packetFrames, other;
             const int16_t *packet =
-                static_cast<const int16_t *>(GetPacket(n->packetPlayer, n->channel, &packetFrames, &other));
+                reinterpret_cast<const int16_t *>(SNDPKTPLAYI_get(n->packetPlayer, n->channel, &packetFrames, &other));
             n->packet = packet;
             if (packet == NULL) {
                 if (n->pending != 0)
-                    MemClear(out, remaining * 4);
+                    memclr(out, remaining * 4);
                 return n->pending;
             }
             n->position = 0;
@@ -375,8 +371,8 @@ int SFILTER_unpackpf(SND::SFilterNode *node, int frames, float *scratch, float *
 void SFILTER_unpackpfinit(SND::SFilterPF *node, const SND::UnpackInfo *info) {
     SND_UNTESTED("SFILTER_unpackpfinit");
     node->node.process = UnpackPfAt;
-    node->packetPlayer = VoiceToPacketHandle(GetMasterVoice(info->voice));
-    node->channel = uint8_t(GetSampleChan(info->voice));
+    node->packetPlayer = SNDPKTPLAYI_voicetopackethandle(SNDDRV_getmastervoice(info->voice));
+    node->channel = uint8_t(SNDDRV_getsamplechan(info->voice));
     node->packet = NULL;
     node->packetFrames = -1;
     node->position = 0;
@@ -448,7 +444,7 @@ int SFILTER_unpackf(SND::SFilterNode *node, int frames, float *scratch, float *o
     int count = int(end - at);
     if (n->decode != 0)
         decode16x87(count, n->data + at, out);
-    MemClear(out + count, (frames - count) * 4);
+    memclr(out + count, (frames - count) * 4);
     return 1;
 }
 
@@ -652,7 +648,7 @@ int SFILTER_timestretch(SND::SFilterNode *node, int frames, float *scratch, floa
         return Pull(node, 200, out, scratch);
     int need = stretchframesneeded(n, frames);
     if (n->packetPlayer >= 0) {
-        if (need > FramesOutstanding(n->packetPlayer))
+        if (need > SNDPKTPLAY_framesoutstanding(n->packetPlayer))
             return 0;
     }
     if (need > 0) {
@@ -662,7 +658,7 @@ int SFILTER_timestretch(SND::SFilterNode *node, int frames, float *scratch, floa
     }
     int got = stretch(n, frames, scratch, out);
     if (got < frames)
-        MemClear(out + got, (frames - got) * 4);
+        memclr(out + got, (frames - got) * 4);
     return frames;
 }
 
@@ -673,7 +669,7 @@ int SFILTER_timestretchinit(SND::SFilterStretch *node, const uint8_t *blob, int 
     node->node.process = TimeStretchAt;
     node->node.restore = NULL;
     if (voice >= 0)
-        node->packetPlayer = VoiceToPacketHandle(GetMasterVoice(voice));
+        node->packetPlayer = SNDPKTPLAYI_voicetopackethandle(SNDDRV_getmastervoice(voice));
     else
         node->packetPlayer = -1;
     node->data = blob + 6;

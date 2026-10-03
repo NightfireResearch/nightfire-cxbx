@@ -1,5 +1,6 @@
 #include "GeoPrimState.h"
 #include "D3D8State.h"
+#include "EaglGlobals.h"
 #include "RenderContext.h"
 #include "../../helpers.h"
 
@@ -14,8 +15,6 @@
 //
 // Each setter answers true, the two the Xbox build does not keep (texture coordinate type, chroma colour) false.
 // ---------------------------------------------------------------------------------------------------------------
-
-#define CurrentRenderContext (*(EAGL::RenderContext **)0x0023fb64)
 
 namespace {
 

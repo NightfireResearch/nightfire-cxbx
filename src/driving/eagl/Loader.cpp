@@ -1,5 +1,6 @@
 #include "Loader.h"
 
+#include "EaglGlobals.h"
 #include "Profiler.h"
 #include "Realgraph.h"
 #include "../../helpers.h"
@@ -24,24 +25,9 @@
 // devtools/LoaderShadow.cpp loads every object on the disc with both and compares the results.
 // ---------------------------------------------------------------------------------------------------------------
 
-typedef void *(*EaglMallocFn)(uint32_t size, const char *name);
-typedef void (*EaglFreeFn)(void *data, uint32_t size);
-
-#define EaglMalloc (*(EaglMallocFn *)0x001caf68)
-#define EaglFree (*(EaglFreeFn *)0x001caf6c)
+// (The allocator hooks, the pools and EAGL::ViewPort's matrices, registered by name, are EaglGlobals.h's.)
 #define DefaultPoolSize U32_AT(0x001cdc50)                      // a new pool's table size (256)
 #define LoadedTables (*(HashTable **)0x0023fb88)
-#define GlobalPool (*(SymbolPool *)0x0023fb8c)
-#define RuntimePool (*(RuntimeAllocConstructorPool *)0x0023fbb8)
-#define CtorPool (*(ConstructorPool *)0x0023fbe0)
-
-// EAGL::ViewPort's matrices, registered by name
-#define ViewMatrix ((float *)0x0023f950)
-#define ModelViewMatrix ((float *)0x0023f990)
-#define ModelViewProjectionMatrix ((float *)0x0023f9d0)
-#define ProjectionMatrix ((float *)0x0023fa10)
-#define ModelMatrix ((float *)0x0023fa50)
-#define ViewProjectionMatrix ((float *)0x0023fa90)
 
 using EAGL::PrintMessage;
 
@@ -628,7 +614,7 @@ void DynamicLoader::Resolve() {
                     size_t prefixLength = strlen(prefix);
                     RuntimeAllocConstructor ctor = NULL;
                     if (strncmp(prefix, name, prefixLength) == 0)
-                        ctor = (RuntimeAllocConstructor)RuntimePool.FindConstructor(className);
+                        ctor = (RuntimeAllocConstructor)TheRuntimeAllocPool.FindConstructor(className);
                     if (ctor == NULL) {
                         PrintMessage(0,
                                      "ERROR: DynamicLoader::Resolve - Failed to resolve undefined relocation symbol "
@@ -655,7 +641,7 @@ void DynamicLoader::Resolve() {
                         printf("[eagl] WARNING: RUNTIME_ALLOC symbol %s - a path no shipped data reaches; its "
                                "constructors are untested\n", name);
                     }
-                    void *dtor = RuntimePool.FindDestructor(className);
+                    void *dtor = TheRuntimeAllocPool.FindDestructor(className);
                     char destroy = 0;
                     void *context;
                     address = ctor(name + prefixLength, this, &context, &destroy);
@@ -729,7 +715,7 @@ void DynamicLoader::RunConstructors() {
     LoaderSymbol s;
     for (int i = 0; i < symbols; i++) {
         GetSymbol(&s, i);
-        if ((uint8_t)s.defined != 0 && CtorPool.FindConstructor(s.className) != NULL)
+        if ((uint8_t)s.defined != 0 && TheConstructorPool.FindConstructor(s.className) != NULL)
             n++;
     }
     if (n > 0) {
@@ -739,10 +725,10 @@ void DynamicLoader::RunConstructors() {
             GetSymbol(&s, i);
             if ((uint8_t)s.defined == 0)
                 continue;
-            PoolConstructor ctor = (PoolConstructor)CtorPool.FindConstructor(s.className);
+            PoolConstructor ctor = (PoolConstructor)TheConstructorPool.FindConstructor(s.className);
             if (ctor == NULL)
                 continue;
-            void *dtor = CtorPool.FindDestructor(s.className);
+            void *dtor = TheConstructorPool.FindDestructor(s.className);
             ctor(s.address, this);
             destructors[n].destructor = (void (*)(void *))dtor;
             destructors[n].object = s.address;

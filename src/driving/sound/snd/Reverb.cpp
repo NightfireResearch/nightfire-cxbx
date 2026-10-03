@@ -1,6 +1,7 @@
 #include "Reverb.h"
 #include "Banks.h"
 #include "System.h"
+#include "../../platform/RealPrint.h"
 
 #include <bit>
 #include <stddef.h>
@@ -54,17 +55,6 @@ using SND::ReverbTap;
 #define GainProcessAt ((SND::SFilterProcess)0x001450b0)         // FUN_001450b0
 #define ResonatorProcessAt ((SND::SFilterProcess)0x00145390)    // FUN_00145390
 #define FirProcessAt ((SND::SFilterProcess)0x001455f0)          // FUN_001455f0
-
-// The originals called from here. memclr is not ours; module H's node functions are, but take their own node
-// types (Filters.h), so they are called at the originals' addresses, typed with the node head the network holds.
-#define MemClear ((void (*)(void *, int))0x0013f600)                                  // memclr
-#define CreateLPFRC ((int (*)(SFilterNode *))0x00143710)                              // SFILTER_createLPFRC
-#define ModifyLPFRC ((void (*)(SFilterNode *, int *))0x00143740)                      // SFILTER_modifyLPFRC
-#define CreateHPFFIR8 ((int (*)(SFilterNode *))0x001454d0)                            // SFILTER_createHPFFIR8
-#define ModifyHPFFIR8 ((void (*)(SFilterNode *, int *))0x001455b0)                    // SFILTER_modifyHPFFIR8
-#define CreateSource ((int (*)(SFilterNode *))0x00145700)                             // SFILTER_createSOURCE
-#define InitSource ((void (*)(SFilterNode *, float *))0x001456e0)                     // SFILTER_initSOURCE
-#define Connect ((int (*)(SFilterNode *, SFilterNode *, int, int))0x001444f0)         // SFILTER_connect
 
 constexpr float kOneOver127 = 1.0f / 127;
 constexpr float kOneOver256 = 1.0f / 256;
@@ -172,18 +162,18 @@ void SNDMIXI_initfx(int rate) {
     for (int i = 0; i < nodeCount; i++) {
         SndMix.fx2Nodes[i] = static_cast<SFilterNode *>(SNDMEMI_alloc(NodeSizes[entry[0]]));
         int params[4];
-        MemClear(params, 0x10);
+        memclr(params, 0x10);
         SFilterNode *node = SndMix.fx2Nodes[i];
         switch (entry[0]) {
         case SND::kFx2Source:
-            CreateSource(node);
+            SFILTER_createSOURCE(reinterpret_cast<SND::SFilterSource *>(node));
             break;
         case SND::kFx2LowpassRC:   // cutoff, rate, the third design word
             params[0] = SNDI_getb(entry + 4, 2) << 8;
             params[1] = rate << 8;
             params[2] = SNDI_getb(entry + 6, 2);
-            CreateLPFRC(node);
-            ModifyLPFRC(node, params);
+            SFILTER_createLPFRC(reinterpret_cast<SND::SFilterLPFRC *>(node));
+            SFILTER_modifyLPFRC(reinterpret_cast<SND::SFilterLPFRC *>(node), params);
             break;
         case SND::kFx2FirLowpass:   // corner, rate
             params[0] = SNDI_getb(entry + 2, 2) << 8;
@@ -194,14 +184,14 @@ void SNDMIXI_initfx(int rate) {
         case SND::kFx2FirHighpass:   // cutoff, rate
             params[0] = SNDI_getb(entry + 2, 2) << 8;
             params[1] = rate << 8;
-            CreateHPFFIR8(node);
-            ModifyHPFFIR8(node, params);
+            SFILTER_createHPFFIR8(reinterpret_cast<SND::SFilterFIR8 *>(node));
+            SFILTER_modifyHPFFIR8(reinterpret_cast<SND::SFilterFIR8 *>(node), params);
             break;
         case SND::kFx2FirBandpass:   // the two corners, rate
             params[0] = SNDI_getb(entry + 4, 2) << 8;
             params[1] = SNDI_getb(entry + 6, 2) << 8;
             params[2] = rate << 8;
-            CreateHPFFIR8(node);
+            SFILTER_createHPFFIR8(reinterpret_cast<SND::SFilterFIR8 *>(node));
             FUN_00145500(reinterpret_cast<SND::SFilterFIR8 *>(node), params);
             break;
         case SND::kFx2Resonator:   // frequency, rate, bandwidth, gain (x 256)
@@ -247,7 +237,7 @@ void SNDMIXI_initfx(int rate) {
         int output = connection->output;
         SFilterNode *to = SndMix.fx2Nodes[SNDI_getb(connection->to, 4)];
         SFilterNode *from = SndMix.fx2Nodes[SNDI_getb(connection->from, 4)];
-        Connect(from, to, output, input);
+        SFILTER_connect(from, to, output, input);
         connection++;
     }
 }
@@ -354,7 +344,7 @@ void MIX_initreverb(int rate, const uint8_t *description) {
             int length = findprime(rate, milliseconds);
             void *buffer = SNDMEMI_alloc(length * 4);
             t->buffer = static_cast<float *>(buffer);
-            MemClear(buffer, length * 4);
+            memclr(buffer, length * 4);
             tap++;
             t->writePos = 0;
             t->lowpass = 0.0f;
@@ -369,7 +359,7 @@ void MIX_initreverb(int rate, const uint8_t *description) {
 // FUNC_AT(0x00143780)
 void SNDMIXI_fxinit(const uint8_t *description) {
     SndMix.fxIdle = 3000;
-    MemClear(SndMix.fxSend, sizeof(SndMix.fxSend));
+    memclr(SndMix.fxSend, sizeof(SndMix.fxSend));
     if (description[2] != 10)
         return;
     // The SOURCE node's index: entries walked with a stride of 20 x the entry size, as the original does
@@ -400,7 +390,8 @@ void FUN_001437e0(int frames) {
         return;
     int nodes = SNDI_getb(SndMix.fx2Desc->nodeCounts[SndMix.fx2Config - 1], 4);
     if (nodes != 0) {
-        InitSource(SndMix.fx2Nodes[SndMix.fx2Source], SndMix.fxSend);
+        SFILTER_initSOURCE(reinterpret_cast<SND::SFilterSource *>(SndMix.fx2Nodes[SndMix.fx2Source]),
+                           SndMix.fxSend);
         for (uint32_t i = 0; i < SndMix.counts.channels; i++) {
             if (done[i] != 0)
                 continue;
@@ -421,7 +412,7 @@ void FUN_001437e0(int frames) {
             }
         }
     }
-    MemClear(SndMix.fxSend, frames * 4);
+    memclr(SndMix.fxSend, frames * 4);
 }
 
 // The standard reverb's hook: group 0 in place on sndfx; group 1 writes its first tap into fxGroup1 and runs the
@@ -491,7 +482,7 @@ void SNDMIXI_fxadd(int frames) {
             source = SndMix.fxSend;
         SndMix.mixFunc(frames, 1.0f, source, SndMix.accum[i]);
     }
-    MemClear(SndMix.fxSend, frames * 4);
+    memclr(SndMix.fxSend, frames * 4);
 }
 
 // fx2 type 9, the tee: the first reader of a slice pulls upstream (into its scratch) and gets a copy in 'out';
@@ -683,7 +674,7 @@ void FUN_00145020(SND::FxAllpassNode *node, const int *params) {
     node->memory = memory;
     float *buffer = reinterpret_cast<float *>((reinterpret_cast<uintptr_t>(memory) + 0xf) >> 4 << 4);   // 16-aligned
     node->buffer = buffer;
-    MemClear(buffer, length * 4);
+    memclr(buffer, length * 4);
     node->position = 0;
 }
 

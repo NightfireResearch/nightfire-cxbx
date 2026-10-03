@@ -1,12 +1,14 @@
 #include "Model.h"
 
 #include "D3D8State.h"
+#include "EaglGlobals.h"
 #include "Profiler.h"
 #include "Realgraph.h"
 #include "RenderMethod.h"
 #include "Transform.h"
 #include "View.h"
 #include "../platform/RealPrint.h"
+#include "../platform/X87.h"
 
 #include <intrin.h>
 #include <string.h>
@@ -39,22 +41,13 @@ using EAGL::TAR;
 
 namespace {
 
-// EAGL's allocator hooks (2.13): cdecl malloc(size, name) and free(pointer, size)
-#define EaglMalloc (*(void *(**)(uint32_t size, const char *name))0x001caf68)
-#define EaglFree (*(void (**)(void *pointer, uint32_t size))0x001caf6c)
+// (EAGL's allocator hooks (2.13), the registered view matrices and the variation render methods index their
+// parameters with are EaglGlobals.h's.)
 #define NameDrawArrayNew ((const char *)0x001cbdb4)         // "EAGL::DrawArray new"
 #define NameGeoPrimList ((const char *)0x001cbd3c)          // "Dynamic Model Geoprim list"
 #define NameDrawArrayList ((const char *)0x001cbd58)        // "Dynamic Model DrawArray list"
 #define NameGeoPrimList2 ((const char *)0x001cbd78)         // "Dynamic Model Geoprim list" (AddGeoPrim's copy)
 #define NameDrawArrayList2 ((const char *)0x001cbd94)       // "Dynamic Model Draw Array list"
-
-// The registered view matrices (2.13) and the variation render methods index their parameters with
-#define ViewMatrix ((float *)0x0023f950)                    // gpViewMatrix
-#define ModelViewMatrix ((float *)0x0023f990)               // gpModelViewMatrix
-#define ModelViewProjectionMatrix ((float *)0x0023f9d0)     // gpModelViewProjectionMatrix
-#define ModelMatrix ((float *)0x0023fa50)                   // gpModelMatrix
-#define ViewProjectionMatrix ((float *)0x0023fa90)          // gpViewProjectionMatrix
-#define CurrentVariation I32_AT(0x0023ff60)                 // EAGLInternal::CurrentVariation
 
 // REP MOVSD of 16 dwords
 inline void CopyMatrix(float *destination, const float *source) {
@@ -123,11 +116,6 @@ DrawArray *DrawArrayFor(EAGL::DynamicModel *model, int index) {
         model->drawArrays[index]->SetGeoPrim(model->geoPrims[index]);
     }
     return model->drawArrays[index];
-}
-
-// The morph adders' truncation: __ftol2, to 64 bits
-inline int64_t Truncate(double value) {
-    return (int64_t)value;
 }
 
 }  // namespace
@@ -735,12 +723,12 @@ void EAGL::ModelMorphAddBytes(uint8_t *base, const uint8_t *source, int componen
         if (components >= 4) {
             do {
                 for (int k = 0; k < 4; k++)
-                    destination[i + k] += (uint8_t)Truncate(source[i + k] * double(weight));
+                    destination[i + k] += (uint8_t)Ftol(source[i + k] * double(weight));   // __ftol2
                 i += 4;
             } while (i + 3 < components);
         }
         for (; i < components; i++)
-            destination[i] += (uint8_t)Truncate(source[i] * double(weight));
+            destination[i] += (uint8_t)Ftol(source[i] * double(weight));
         destination += baseStride;
         source += sourceStride;
     } while (--rows != 0);
@@ -760,12 +748,12 @@ void EAGL::ModelMorphAddShorts(uint8_t *base, const uint8_t *source, int compone
         if (components >= 4) {
             do {
                 for (int k = 0; k < 4; k++)
-                    d[i + k] = (int16_t)(d[i + k] + (int16_t)Truncate(src[i + k] * double(weight)));
+                    d[i + k] = (int16_t)(d[i + k] + (int16_t)Ftol(src[i + k] * double(weight)));   // __ftol2
                 i += 4;
             } while (i + 3 < components);
         }
         for (; i < components; i++)
-            d[i] = (int16_t)(d[i] + (int16_t)Truncate(src[i] * double(weight)));
+            d[i] = (int16_t)(d[i] + (int16_t)Ftol(src[i] * double(weight)));
         destination += baseStride;
         source += sourceStride;
     } while (--rows != 0);
@@ -1068,20 +1056,6 @@ uint32_t __stdcall EAGL::ModelReturnZero4(uint32_t unused) {
 // ---- Register-argument code. Each naked entry passes its registers to a cdecl body here, which, like the
 // original, clobbers only EAX, ECX and EDX. Not in an anonymous namespace: inline assembly calls them by name.
 
-#define D3DSimpleStateMethods ((const uint32_t *)0x0018e888)   // the push-buffer method per simple render state
-#define D3DDeferredStateDirty ((const uint32_t *)0x0018e668)   // the dirty bits per deferred render state
-#define D3DTextureStateDirty ((const uint32_t *)0x0018e780)    // the dirty bits per texture state from 0xc
-
-#define D3DDevice_SetTextureState_TexCoordIndex ((void (__stdcall *)(uint32_t stage, uint32_t value))0x00167c40)
-#define D3DDevice_SetTextureState_BorderColor ((void (__stdcall *)(uint32_t stage, uint32_t value))0x00167dc0)
-#define D3DDevice_SetTextureState_ColorKeyColor ((void (__stdcall *)(uint32_t stage, uint32_t value))0x00167e00)
-#define D3DDevice_SetTextureState_BumpEnv ((void (__stdcall *)(uint32_t stage, uint32_t state, uint32_t value))0x00167d50)
-#define D3DDevice_CreatePalette2 ((void *(__stdcall *)(uint32_t size))0x0016b510)
-#define D3DResource_Register ((void (__stdcall *)(void *resource, void *base))0x001693a0)
-#define D3D_Get2DSurfaceDesc ((void (__stdcall *)(void *container, uint32_t level, void *desc))0x00167320)
-#define D3DSurface_GetDesc ((void (__stdcall *)(void *surface, void *desc))0x00167220)
-#define D3DSurface_LockRect ((void (__stdcall *)(void *surface, void *locked, void *rect, uint32_t flags))0x00167240)
-
 const uint32_t kOutOfMemory = 0x8007000e;   // E_OUTOFMEMORY
 
 typedef void (__stdcall *RenderStateEntry)(uint32_t value);
@@ -1099,41 +1073,41 @@ static void ModelSetRenderStateBody(uint32_t state, uint32_t value) {
         D3DRenderState[state] = value;
         return;
     }
-    uintptr_t entry;
+    RenderStateEntry entry;
     switch (state) {
-    case 0x88: entry = 0x001673b0; break;   // PSTextureModes
-    case 0x89: entry = 0x00167bf0; break;   // VertexBlend
-    case 0x8a: entry = 0x00167760; break;   // FogColor
-    case 0x8b: entry = 0x00167ad0; break;   // FillMode
-    case 0x8c: entry = 0x00167b20; break;   // BackFillMode
-    case 0x8d: entry = 0x00167b80; break;   // TwoSidedLighting
-    case 0x8e: entry = 0x00167860; break;   // NormalizeNormals
-    case 0x8f: entry = 0x001687f0; break;   // ZEnable
-    case 0x90: entry = 0x00168880; break;   // StencilEnable
-    case 0x91: entry = 0x00168910; break;   // StencilFail
-    case 0x93: entry = 0x001677b0; break;   // CullMode
-    case 0x92: entry = 0x00167820; break;   // FrontFace
-    case 0x94: entry = 0x001678a0; break;   // TextureFactor
-    case 0x95: entry = 0x001679f0; break;   // ZBias
-    case 0x96: entry = 0x00167a70; break;   // LogicOp
-    case 0x97: entry = 0x001676e0; break;   // EdgeAntiAlias
-    case 0x98: entry = 0x00168b70; break;   // MultiSampleAntiAlias
-    case 0x99: entry = 0x00168bf0; break;   // MultiSampleMask
-    case 0x9a: entry = 0x00168af0; break;   // MultiSampleMode
-    case 0x9b: entry = 0x00168b30; break;   // MultiSampleRenderTargetMode
-    case 0x9c: entry = 0x00167720; break;   // ShadowFunc
-    case 0x9d: entry = 0x00167900; break;   // LineWidth
-    case 0x9e: entry = 0x00168c40; break;   // SampleAlpha
-    case 0x9f: entry = 0x00167970; break;   // Dxt1NoiseEnable
-    case 0xa0: entry = 0x00168980; break;   // YuvEnable
-    case 0xa1: entry = 0x001689b0; break;   // OcclusionCullEnable
-    case 0xa2: entry = 0x00168a20; break;   // StencilCullEnable
-    case 0xa3: entry = 0x00168a90; break;   // RopZCmpAlwaysRead
-    case 0xa4: entry = 0x00168ab0; break;   // RopZRead
-    case 0xa5: entry = 0x00168ad0; break;   // DoNotCullUncompressed
+    case 0x88: entry = D3DDevice_SetRenderState_PSTextureModes; break;
+    case 0x89: entry = D3DDevice_SetRenderState_VertexBlend; break;
+    case 0x8a: entry = D3DDevice_SetRenderState_FogColor; break;
+    case 0x8b: entry = D3DDevice_SetRenderState_FillMode; break;
+    case 0x8c: entry = D3DDevice_SetRenderState_BackFillMode; break;
+    case 0x8d: entry = D3DDevice_SetRenderState_TwoSidedLighting; break;
+    case 0x8e: entry = D3DDevice_SetRenderState_NormalizeNormals; break;
+    case 0x8f: entry = D3DDevice_SetRenderState_ZEnable; break;
+    case 0x90: entry = D3DDevice_SetRenderState_StencilEnable; break;
+    case 0x91: entry = D3DDevice_SetRenderState_StencilFail; break;
+    case 0x93: entry = D3DDevice_SetRenderState_CullMode; break;
+    case 0x92: entry = D3DDevice_SetRenderState_FrontFace; break;
+    case 0x94: entry = D3DDevice_SetRenderState_TextureFactor; break;
+    case 0x95: entry = D3DDevice_SetRenderState_ZBias; break;
+    case 0x96: entry = D3DDevice_SetRenderState_LogicOp; break;
+    case 0x97: entry = D3DDevice_SetRenderState_EdgeAntiAlias; break;
+    case 0x98: entry = D3DDevice_SetRenderState_MultiSampleAntiAlias; break;
+    case 0x99: entry = D3DDevice_SetRenderState_MultiSampleMask; break;
+    case 0x9a: entry = D3DDevice_SetRenderState_MultiSampleMode; break;
+    case 0x9b: entry = D3DDevice_SetRenderState_MultiSampleRenderTargetMode; break;
+    case 0x9c: entry = D3DDevice_SetRenderState_ShadowFunc; break;
+    case 0x9d: entry = D3DDevice_SetRenderState_LineWidth; break;
+    case 0x9e: entry = D3DDevice_SetRenderState_SampleAlpha; break;
+    case 0x9f: entry = D3DDevice_SetRenderState_Dxt1NoiseEnable; break;
+    case 0xa0: entry = D3DDevice_SetRenderState_YuvEnable; break;
+    case 0xa1: entry = D3DDevice_SetRenderState_OcclusionCullEnable; break;
+    case 0xa2: entry = D3DDevice_SetRenderState_StencilCullEnable; break;
+    case 0xa3: entry = D3DDevice_SetRenderState_RopZCmpAlwaysRead; break;
+    case 0xa4: entry = D3DDevice_SetRenderState_RopZRead; break;
+    case 0xa5: entry = D3DDevice_SetRenderState_DoNotCullUncompressed; break;
     default: return;
     }
-    ((RenderStateEntry)entry)(value);
+    entry(value);
 }
 
 // D3DDevice_SetTextureStageState, inlined: the deferred states into D3D8's texture-stage table with their dirty
@@ -1156,37 +1130,37 @@ static void ModelSetTextureStateBody(uint32_t state, uint32_t stage, uint32_t va
         D3DDevice_SetTextureState_BumpEnv(stage, state, value);
 }
 
-static uint32_t ModelCreatePaletteBody(uint32_t size, void **out) {
-    void *palette = D3DDevice_CreatePalette2(size);
+static uint32_t ModelCreatePaletteBody(uint32_t size, D3DResource **out) {
+    D3DResource *palette = D3DDevice_CreatePalette2(size);
     *out = palette;
     return palette != NULL ? 0 : kOutOfMemory;
 }
 
-static void ModelRegisterBody(void *resource, void *base) {
+static void ModelRegisterBody(D3DResource *resource, void *base) {
     D3DResource_Register(resource, base);
 }
 
-static uint32_t ModelGet2DSurfaceDescBody(void *container, uint32_t level, void *desc) {
+static uint32_t ModelGet2DSurfaceDescBody(D3DPixelContainer *container, uint32_t level, D3DSurfaceDesc *desc) {
     D3D_Get2DSurfaceDesc(container, level, desc);
     return 0;
 }
 
-static uint32_t ModelGetSurfaceLevelBody(void *texture, uint32_t level, void **out) {
-    void *surface = D3DTexture_GetSurfaceLevel2(texture, level);
+static uint32_t ModelGetSurfaceLevelBody(D3DPixelContainer *texture, uint32_t level, D3DPixelContainer **out) {
+    D3DPixelContainer *surface = D3DTexture_GetSurfaceLevel2(texture, level);
     *out = surface;
     return surface != NULL ? 0 : kOutOfMemory;
 }
 
-static uint32_t ModelReleaseBody(void *resource) {
+static uint32_t ModelReleaseBody(D3DResource *resource) {
     return D3DResource_Release(resource);
 }
 
-static uint32_t ModelSurfaceGetDescBody(void *surface, void *desc) {
+static uint32_t ModelSurfaceGetDescBody(D3DPixelContainer *surface, D3DSurfaceDesc *desc) {
     D3DSurface_GetDesc(surface, desc);
     return 0;
 }
 
-static uint32_t ModelLockRectBody(void *surface, void *locked, void *rect, uint32_t flags) {
+static uint32_t ModelLockRectBody(D3DPixelContainer *surface, D3DLockedRect *locked, const D3DRect *rect, uint32_t flags) {
     D3DSurface_LockRect(surface, locked, rect, flags);
     return 0;
 }

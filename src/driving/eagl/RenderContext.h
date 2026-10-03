@@ -12,6 +12,8 @@
 
 #include <stdint.h>
 
+#include "../gfx/D3D8.h"
+
 namespace EAGL {
 
 struct Device;
@@ -20,15 +22,8 @@ struct RenderContextPrivate;
 struct TAR;
 struct ViewPort;
 
-// D3D8's D3DPixelContainer: the header every D3D8 surface and texture starts with.
-struct D3DPixelContainer {               // 0x14
-    uint32_t common;                     // +0x00
-    uint32_t data;                       // +0x04 the pixels' address
-    uint32_t lock;                       // +0x08
-    uint32_t format;                     // +0x0c
-    uint32_t size;                       // +0x10
-};
-static_assert(sizeof(D3DPixelContainer) == 0x14, "a D3DPixelContainer is 0x14 bytes");
+// D3D8's D3DPixelContainer (../gfx/D3D8.h): the header every D3D8 surface and texture starts with.
+using ::D3DPixelContainer;
 
 // The 0x14-byte texture header EAGL lays over a surface ("D3DTexture"); its constructor clears it.
 struct SurfaceTexture : D3DPixelContainer {

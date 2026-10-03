@@ -1,5 +1,15 @@
 #include "Platform.h"
+#include "Filters.h"
+#include "Mixer.h"
+#include "Reverb.h"
+#include "Streams.h"
+#include "System.h"
 #include "Voices.h"
+#include "../DirectSound.h"
+#include "../../platform/RealPrint.h"
+#include "../../platform/RealSystem.h"
+#include "../../platform/XboxStartup.h"
+#include "../../platform/XboxXapi.h"
 #include "SndUntested.h"
 #include "SndGlobals.h"
 
@@ -25,11 +35,11 @@
 // write cursor. SNDDRV_thread is the SND thread: every 10 ms, under SoundMutex, the 100 Hz server, the mix and the
 // packet callbacks.
 //
-// Each function is the original at its address, ported from the listing. DirectSound is called by the original
-// entry points' addresses (our seam, src/driving/sound/dsndSeam.cpp, stdcall with the interface first), the mixer
-// (module G) and the system module (SNDLINKI, SNDMEMI, the critical section, the thread primitives) by their
-// addresses too; SFILTER_add as well, though it is ours, so that the shadow test can stand a recorder in front of
-// it. The library's globals stay where they are. x87 only in the gain and frequency products, computed in double
+// Each function is the original at its address, ported from the listing. DirectSound is our seam's API
+// (DirectSound.h, src/driving/sound/dsndSeam.cpp), the mixer (module G), the system module (SNDLINKI, SNDMEMI, the
+// critical section), SFILTER_add and platform.system's getTickCount/memclr are called directly; only XAPI's thread
+// primitives, whose replacements are private to platform/, still go through the originals' addresses. The
+// library's globals stay where they are. x87 only in the gain and frequency products, computed in double
 // in the original's order (exact here: every product is of integers and a float, and fits 53 bits) and truncated
 // as __ftol2 truncates; the low-pass ratio is a division, rounded to double as a 53-bit x87 would. The integer
 // operands are multiplied as doubles, as FILD/FIMUL do, never as ints: a zero product then keeps the sign the x87
@@ -64,8 +74,8 @@ typedef void (*FrameCallback)(void);
 #define FreeBufferLists ((BufferList *)0x00244c60)     // LList_maybeFreeDsndBuffers[pool]
 #define PoolSizes ((int32_t *)0x00244c78)              // [pool]: 152, 28
 #define PlatformVoices (*(PlatformVoice **)0x00244c80)   // [NumVoices]
-#define Device PTR_AT(0x00244c84)                      // the IDirectSound
-#define Rings ((void **)0x00244c88)                    // the mixer's six DirectSound buffers, one per speaker
+#define Device (*(IDirectSound **)0x00244c84)        // the IDirectSound
+#define Rings ((IDirectSoundBuffer **)0x00244c88)      // the mixer's six DirectSound buffers, one per speaker
 #define RingMemory ((int16_t **)0x00244ca0)            // their memory blocks
 #define RingFrames I32_AT(0x00244cb8)                  // 2400
 #define MixLead I32_AT(0x00244cbc)                     // 960
@@ -92,7 +102,7 @@ typedef void (*FrameCallback)(void);
 // default reverb description - handed over by address
 #define EffectsImage ((const void *)0x001a3e80)
 #define ListenerPresets ((const DsI3dl2Listener *)0x001d98d8)
-const uint32_t kDefaultReverb = 0x001d98c0;
+#define DefaultReverb ((const uint8_t *)0x001d98c0)
 
 // ---- constants (the original reads the floats from .rdata: the same bits)
 constexpr float kOver127 = 0x1.020408p-7f;          // 1/127 as a float
@@ -206,76 +216,31 @@ inline int32_t Ftol(double d) {
     return int32_t(int64_t(d));
 }
 
-// ---- DirectSound, the seam's entry points (stdcall, the interface first)
-#define DirectSoundCreate ((uint32_t (__stdcall *)(void *, void **, void *))0x0017c259)
-#define IDirectSound_DownloadEffectsImage ((uint32_t (__stdcall *)(void *, const void *, uint32_t, void *, void **))0x0017b59d)
-#define DirectSoundCreateBuffer ((uint32_t (__stdcall *)(const DsBufferDesc *, void **))0x0017c2a0)
-#define IDirectSound_CreateSoundBuffer ((uint32_t (__stdcall *)(void *, const DsBufferDesc *, void **, void *))0x0017c09f)
-#define IDirectSound_SetI3DL2Listener ((uint32_t (__stdcall *)(void *, const DsI3dl2Listener *, uint32_t))0x0017be1b)
-#define IDirectSound_Release ((uint32_t (__stdcall *)(void *))0x0017ad34)
-#define IDirectSoundBuffer_Release ((uint32_t (__stdcall *)(void *))0x0017ad4a)
-#define IDirectSoundBuffer_SetBufferData ((uint32_t (__stdcall *)(void *, void *, uint32_t))0x0017be3b)
-#define IDirectSoundBuffer_SetLoopRegion ((uint32_t (__stdcall *)(void *, uint32_t, uint32_t))0x0017b670)
-#define IDirectSoundBuffer_SetCurrentPosition ((uint32_t (__stdcall *)(void *, uint32_t))0x0017b6cc)
-#define IDirectSoundBuffer_GetCurrentPosition ((uint32_t (__stdcall *)(void *, uint32_t *, uint32_t *))0x0017b6ac)
-#define IDirectSoundBuffer_Play ((uint32_t (__stdcall *)(void *, uint32_t, uint32_t, uint32_t))0x0017b634)
-#define IDirectSoundBuffer_Stop ((uint32_t (__stdcall *)(void *))0x0017b658)
-#define IDirectSoundBuffer_SetVolume ((uint32_t (__stdcall *)(void *, int32_t))0x0017b5c4)
-#define IDirectSoundBuffer_SetFrequency ((uint32_t (__stdcall *)(void *, uint32_t))0x0017b996)
-#define IDirectSoundBuffer_SetMixBins ((uint32_t (__stdcall *)(void *, const DsMixBins *))0x0017b5fc)
-#define IDirectSoundBuffer_SetMixBinVolumes ((uint32_t (__stdcall *)(void *, const DsMixBins *))0x0017b618)
-#define IDirectSoundBuffer_SetFilter ((uint32_t (__stdcall *)(void *, const DsFilterDesc *))0x0017b5e0)
-
-// ---- the system module (A), the mixer (G) and SFILTER_add, by address: the shadow test stands recorders there
-// (SNDLINKI and memclr it runs for real, on its workspace)
-#define EnterCritical ((void (*)(void))0x0013b950)                   // SNDSYS_entercritical
-#define LeaveCritical ((void (*)(void))0x0013b970)                   // SNDSYS_leavecritical
-#define MutexLock ((void (*)(void))0x0013e7b0)                       // SNDI_mutexlock
-#define MutexUnlock ((void (*)(void))0x0013e7c0)                     // SNDI_mutexunlock
-#define MemAlloc ((void *(*)(int32_t))0x0013f780)                    // SNDMEMI_alloc
-#define MemFree ((void (*)(void *))0x0013f880)                       // SNDMEMI_free
-#define MemClear ((void (*)(void *, int32_t))0x0013f600)             // memclr
-#define LinkInit ((void (*)(BufferList *))0x0013f0a0)                // SNDLINKI_init
-#define LinkPush ((void (*)(BufferList *, BufferNode *))0x0013f0b0)  // SNDLINKI_push
-#define LinkPushTail ((void (*)(BufferList *, BufferNode *))0x0013f0e0)   // SNDLINKI_pushtail
-#define LinkPop ((BufferNode *(*)(BufferList *))0x0013f110)          // SNDLINKI_pop
-#define LinkRemove ((void (*)(BufferList *, BufferNode *))0x0013f140)     // SNDLINKI_remove
-#define Server100Hz ((void (*)(void))0x0013b7b0)                     // SNDSYSI_100hzserver
-#define FlushPacketCallbacks ((void (*)(void))0x0013efd0)            // SNDPKTPLAYI_flushcallbackdata
-#define PacketGet ((uint8_t *(*)(int, int, int *, int *))0x0013ee00)   // SNDPKTPLAYI_get
-#define PacketFreeFrames ((void (*)(int, int, int))0x0013ef80)       // SNDPKTPLAYI_freeframes
-#define GetTickCount32 ((uint32_t (*)(void))0x0010e1e0)              // getTickCount
-#define SleepMilliseconds ((void (__stdcall *)(uint32_t))0x0010e9ab)
-#define CreateThread ((void *(__stdcall *)(void *, uint32_t, uint32_t, void *, uint32_t, uint32_t *))0x0010ec6a)
-#define SetThreadPriority ((int (__stdcall *)(void *, int))0x0010ea0f)
-
-#define MIX_create ((void (*)(const MixParams *))0x00141c20)
-#define MIX_destroy ((void (*)(void))0x00141880)
-#define MIX_audio ((void (*)(int16_t **, int))0x00142050)
-// MIX_playinit(voice, sample rep, kind (0 packets, 1 bank sample), sample data, tag 0x1a, stretch or packet data,
-// channels, frames, loop start, loop end, 0, 0, channel)
-#define MIX_playinit ((void (*)(int, int, int, const uint8_t *, int, const uint8_t *, int, int, int, int, int, int, int))0x00141910)
-#define MIX_play ((void (*)(int))0x00141ad0)
-#define MIX_stop ((void (*)(int))0x00141b20)
-#define SNDMIX_setdrygain ((void (*)(int, int, float))0x00141bb0)
-#define MIX_setfxlevel ((void (*)(int, int, float))0x00141be0)
-#define MIX_setpitch ((void (*)(int, uint32_t))0x001420c0)
-#define MIX_setlowpass ((void (*)(int, float))0x00144af0)
-#define MIX_sethighpass ((void (*)(int, int))0x001464c0)
-#define MIX_settimemult ((void (*)(int, int))0x00146570)
-#define MIX_initreverb ((void (*)(int, uint32_t))0x00143510)
-#define MIX_restorereverb ((void (*)(void))0x001434b0)
-#define SFILTER_add ((void *(*)(int, int, int))0x00144a30)            // ours (Filters.cpp); by address, see above
-
-// MIX_create's argument as dsndMixInit builds it on the stack
-struct MixParams {
-    uint32_t rate;               // +0
-    uint8_t voices;              // +4
-    uint8_t outputs;             // +5 6
-    uint8_t zero;                // +6
-    uint8_t unset;               // +7 never written by the original (stack garbage there); 0 here
-    uint32_t voiceFree;          // +8 0x0013d5c0
-};
+// ---- SNDLINKI on the buffer lists: a BufferList is an SNDLINKLIST whose nodes are BufferNodes (the links first)
+static_assert(offsetof(BufferNode, next) == offsetof(SND::LinkNode, next) &&
+              offsetof(BufferNode, prev) == offsetof(SND::LinkNode, prev), "a buffer node starts with the links");
+static_assert(sizeof(BufferList) == sizeof(SND::LinkList), "a buffer list is an SNDLINKLIST");
+inline SND::LinkList *AsLinkList(BufferList *list) {
+    return reinterpret_cast<SND::LinkList *>(list);
+}
+inline SND::LinkNode *AsLinkNode(BufferNode *node) {
+    return reinterpret_cast<SND::LinkNode *>(node);
+}
+inline void LinkInit(BufferList *list) {
+    SNDLINKI_init(AsLinkList(list));
+}
+inline void LinkPush(BufferList *list, BufferNode *node) {
+    SNDLINKI_push(AsLinkList(list), AsLinkNode(node));
+}
+inline void LinkPushTail(BufferList *list, BufferNode *node) {
+    SNDLINKI_pushtail(AsLinkList(list), AsLinkNode(node));
+}
+inline BufferNode *LinkPop(BufferList *list) {
+    return reinterpret_cast<BufferNode *>(SNDLINKI_pop(AsLinkList(list)));
+}
+inline void LinkRemove(BufferList *list, BufferNode *node) {
+    SNDLINKI_remove(AsLinkList(list), AsLinkNode(node));
+}
 
 }  // namespace
 
@@ -286,14 +251,14 @@ struct MixParams {
 // One pooled buffer: 48 kHz mono, Xbox ADPCM (pool 0) or PCM16 (pool 1), routed FC FR BR BL FL LFE at 0 dB and the
 // first FX send at -100 dB.
 // FUNC_AT(0x0013d430)
-void* dsndCreateBufferAndMixBins(int pool) {
-    void *buffer;
+IDirectSoundBuffer* dsndCreateBufferAndMixBins(int pool) {
+    IDirectSoundBuffer *buffer;
     DsMixBins bins;
     DsWaveFormat format;
     DsBufferDesc desc;
     DsMixBinPair pairs[7];
-    MemClear(&format, sizeof(format));
-    MemClear(&desc, sizeof(desc));
+    memclr(&format, sizeof(format));
+    memclr(&desc, sizeof(desc));
     uint16_t blockAlign;
     if (pool == SND::kPoolAdpcm) {
         format.formatTag = kFormatXboxAdpcm;
@@ -369,14 +334,14 @@ void SNDDRV_mixvoicefree(int mixVoice) {
 // speaker, played looping - for good.
 // FUNC_AT(0x0013d5e0)
 void dsndMixInit(void) {
-    MixParams params;
+    SND::MixCreateParams params;  // as the original builds it on the stack
     uint32_t rate = PlatformRate;
-    params.voices = MixerVoices;
-    params.outputs = 6;
+    params.counts.voices = MixerVoices;
+    params.counts.channels = 6;
     params.rate = rate;
-    params.voiceFree = kMixVoiceFreeEntry;
-    params.zero = 0;
-    params.unset = 0;
+    params.voiceFree = reinterpret_cast<SND::MixVoiceFreeFn>(kMixVoiceFreeEntry);
+    params.counts.unknown2[0] = 0;
+    params.counts.unknown2[1] = 0;   // never written by the original (stack garbage there); 0 here
     MIX_create(&params);
 
     rate = PlatformRate;
@@ -384,7 +349,7 @@ void dsndMixInit(void) {
     MixPosition = 0;
     MixLead = lead;
     DsBufferDesc desc;
-    MemClear(&desc, sizeof(desc));
+    memclr(&desc, sizeof(desc));
     rate = PlatformRate;
     int32_t frames = (int32_t(rate * 50) / 1000) & 0xffff0;
     RingFrames = frames;
@@ -405,12 +370,12 @@ void dsndMixInit(void) {
     bins.pairs = pairs;
     for (int i = 0; i < 6; i++) {
         IDirectSound_CreateSoundBuffer(Device, &desc, &Rings[i], NULL);
-        EnterCritical();
-        RingMemory[i] = static_cast<int16_t *>(MemAlloc(bytes));
-        LeaveCritical();
+        SNDSYS_entercritical();
+        RingMemory[i] = static_cast<int16_t *>(SNDMEMI_alloc(bytes));
+        SNDSYS_leavecritical();
         IDirectSoundBuffer_SetBufferData(Rings[i], RingMemory[i], bytes);
         IDirectSoundBuffer_SetCurrentPosition(Rings[i], 0);
-        MemClear(RingMemory[i], bytes);
+        memclr(RingMemory[i], bytes);
         for (int k = 0; k < 7; k++) {
             pairs[k].bin = kRingBins[k];
             pairs[k].volume = kVolumeMin;
@@ -429,13 +394,13 @@ void dsndMixStop(void) {
     for (int i = 0; i < 6; i++) {
         IDirectSoundBuffer_Stop(Rings[i]);
         IDirectSoundBuffer_Release(Rings[i]);
-        EnterCritical();
-        MemFree(RingMemory[i]);
-        LeaveCritical();
+        SNDSYS_entercritical();
+        SNDMEMI_free(RingMemory[i]);
+        SNDSYS_leavecritical();
     }
-    EnterCritical();
+    SNDSYS_entercritical();
     MIX_destroy();
-    LeaveCritical();
+    SNDSYS_leavecritical();
 }
 
 // Mix from the last position to 20 ms past ring 0's write cursor, in two parts across the wrap.
@@ -502,24 +467,24 @@ uint32_t __stdcall SNDDRV_thread(void *parameter) {
     volatile uint8_t &keepRunning = KeepRunning;   // cleared by SNDPLATFORM_restore on another thread
     if (keepRunning != 0) {
         do {
-            MutexLock();
+            SNDI_mutexlock();
             FrameCallback pre = PreFrameCallback;
             if (pre != NULL)
                 pre();
-            Server100Hz();
+            SNDSYSI_100hzserver();
             dsndMixProcess();
-            FlushPacketCallbacks();
+            SNDPKTPLAYI_flushcallbackdata();
             FrameCallback post = PostFrameCallback;
             if (post != NULL)
                 post();
-            MutexUnlock();
-            uint32_t now = GetTickCount32();
+            SNDI_mutexunlock();
+            uint32_t now = getTickCount();
             uint32_t deadline = NextDeadline;
             int32_t wait = int32_t(deadline - now);
             NextDeadline = deadline + 10;
             if (wait < 0)
                 wait = 1;
-            SleepMilliseconds(wait);
+            Xbox_Sleep(wait);
         } while (keepRunning != 0);
     }
     static_cast<volatile uint8_t &>(IsRunning) = 0;
@@ -637,20 +602,20 @@ int SNDPLATFORM_init(void) {
     location[0] = 0;
     location[1] = 0xffffffff;
     IDirectSound_DownloadEffectsImage(Device, EffectsImage, 0x3360, location, &imageDesc);
-    EnterCritical();
-    void *voices = MemAlloc(NumVoices * int32_t(sizeof(PlatformVoice)));
+    SNDSYS_entercritical();
+    void *voices = SNDMEMI_alloc(NumVoices * int32_t(sizeof(PlatformVoice)));
     PlatformVoices = static_cast<PlatformVoice *>(voices);
-    MemClear(voices, NumVoices * int32_t(sizeof(PlatformVoice)));
+    memclr(voices, NumVoices * int32_t(sizeof(PlatformVoice)));
     PoolSizes[SND::kPoolAdpcm] = 152;
     PoolSizes[SND::kPoolPcm16] = 28;
-    BufferNodes = static_cast<BufferNode *>(MemAlloc(kBufferNodeCount * int32_t(sizeof(BufferNode))));
-    LeaveCritical();
+    BufferNodes = static_cast<BufferNode *>(SNDMEMI_alloc(kBufferNodeCount * int32_t(sizeof(BufferNode))));
+    SNDSYS_leavecritical();
     int node = 0;
     for (int pool = 0; pool < 2; pool++) {
         LinkInit(&ActiveBufferLists[pool]);
         LinkInit(&FreeBufferLists[pool]);
         for (int i = 0; i < PoolSizes[pool]; i++) {
-            void *buffer = dsndCreateBufferAndMixBins(pool);
+            IDirectSoundBuffer *buffer = dsndCreateBufferAndMixBins(pool);
             BufferNodes[node].buffer = buffer;
             LinkPush(&FreeBufferLists[pool], &BufferNodes[node]);
             node++;
@@ -659,11 +624,12 @@ int SNDPLATFORM_init(void) {
     dsndMixInit();
     IsRunning = 1;
     KeepRunning = 1;
-    uint32_t now = GetTickCount32();
+    uint32_t now = getTickCount();
     NextDeadline = now;
-    uint32_t threadId;
-    void *thread = CreateThread(NULL, 0x7d000, kThreadEntry, NULL, 0, &threadId);
-    SetThreadPriority(thread, kThreadPriorityTimeCritical);
+    DWORD threadId;
+    HANDLE thread = Xbox_CreateThread(NULL, 0x7d000, reinterpret_cast<LPTHREAD_START_ROUTINE>(kThreadEntry), NULL, 0,
+                                      &threadId);
+    Xbox_SetThreadPriority(thread, kThreadPriorityTimeCritical);
     return 0;
 }
 
@@ -672,17 +638,17 @@ int SNDPLATFORM_init(void) {
 int SNDPLATFORM_restore(void) {
     KeepRunning = 0;
     while (static_cast<volatile uint8_t &>(IsRunning) != 0)   // cleared by the thread as it ends
-        SleepMilliseconds(0);
+        Xbox_Sleep(0);
     for (int pool = 0; pool < 2; pool++) {
         BufferNode *node;
         while ((node = LinkPop(&FreeBufferLists[pool])) != NULL)
             IDirectSoundBuffer_Release(node->buffer);
     }
     dsndMixStop();
-    EnterCritical();
-    MemFree(BufferNodes);
-    MemFree(PlatformVoices);
-    LeaveCritical();
+    SNDSYS_entercritical();
+    SNDMEMI_free(BufferNodes);
+    SNDMEMI_free(PlatformVoices);
+    SNDSYS_leavecritical();
     IDirectSound_Release(Device);
     return 0;
 }
@@ -701,7 +667,7 @@ int SNDPLATFORM_stop(int voice) {
             BufferNode *node = PlatformVoices[v->platformVoices[i]].node;
             IDirectSoundBuffer_Stop(node->buffer);
             if (node->player >= 0 && i == 0)
-                MemFree(node->memory);
+                SNDMEMI_free(node->memory);
             LinkRemove(&ActiveBufferLists[node->pool], node);
             LinkPushTail(&FreeBufferLists[node->pool], node);
         }
@@ -904,18 +870,18 @@ void SNDDRV_setfx(int path) {
     }
     if ((path & SND::kRenderMainCpu) == 0)
         return;
-    EnterCritical();
+    SNDSYS_entercritical();
     uint16_t mode = FxBusMainCpu[0].mode;
     if (mode == 0) {
         MixFxInitFunc = 0;
         MixFxHook = 0;
         MIX_restorereverb();
-        LeaveCritical();
+        SNDSYS_leavecritical();
         return;
     }
-    uint32_t description = mode == 1 ? FxBusMainCpu[0].delay : kDefaultReverb;
+    const uint8_t *description = mode == 1 ? reinterpret_cast<const uint8_t *>(FxBusMainCpu[0].delay) : DefaultReverb;
     MIX_initreverb(PlatformRate, description);
-    LeaveCritical();
+    SNDSYS_leavecritical();
 }
 
 // FUNC_AT(0x00140a80)
@@ -949,7 +915,7 @@ void FUN_00142150(SND::BufferNode *node) {
     do {
         if (node->packet == NULL) {
             for (int ch = 0; ch < ChannelCount(v); ch++) {
-                uint8_t *data = PacketGet(node->player, ch, &frames, &other);
+                uint8_t *data = SNDPKTPLAYI_get(node->player, ch, &frames, &other);
                 PlatformVoices[v->platformVoices[ch]].node->packet = data;
             }
             node->packetUsed = 0;
@@ -984,9 +950,9 @@ void FUN_00142150(SND::BufferNode *node) {
                     source[ch] += part;
                     n->silence = 0;
                     int32_t consumed = node->pool == SND::kPoolAdpcm ? int32_t(uint32_t(part) << 6) / 36 : part >> 1;
-                    PacketFreeFrames(node->player, ch, consumed);
+                    SNDPKTPLAYI_freeframes(node->player, ch, consumed);
                 } else if (node->silence < node->size) {
-                    MemClear(PlatformVoices[uint16_t(node->platformVoice)].node->memory + node->writePos, part);
+                    memclr(PlatformVoices[uint16_t(node->platformVoice)].node->memory + node->writePos, part);
                     node->silence += part;
                 }
             }
@@ -1075,8 +1041,8 @@ int SNDPLATFORM_packetplay(int player, int voice, int timeMult, int distort, int
         node->packetUsed = 0;
         node->silence = 0;
         if (ch == 0) {
-            node->memory = static_cast<uint8_t *>(MemAlloc(ChannelCount(v) * bytes));
-            MemClear(node->memory, ChannelCount(v) * bytes);
+            node->memory = static_cast<uint8_t *>(SNDMEMI_alloc(ChannelCount(v) * bytes));
+            memclr(node->memory, ChannelCount(v) * bytes);
         } else {
             node->memory = self->node->memory + bytes * ch;
         }
@@ -1105,7 +1071,7 @@ int SNDPLATFORM_filteradd(int voice, int filter) {
     if ((v->renderMode & SND::kRenderMainCpu) == 0)
         return -7;
     for (int ch = 0; ch < ChannelCount(v); ch++)
-        SFILTER_add(v->platformVoices[ch], ch, filter);
+        SFILTER_add(v->platformVoices[ch], ch, reinterpret_cast<const SND::SFilterDesc *>(filter));
     return 0;
 }
 

@@ -1,5 +1,6 @@
 #include "LoaderShadow.h"
 
+#include "../eagl/EaglGlobals.h"
 #include "../eagl/Loader.h"
 #include "../platform/FileSys.h"
 #include "../platform/RefPack.h"
@@ -151,14 +152,9 @@ static int ShadowPrint(const char *format, va_list args) {
     return 0;
 }
 
-#define EaglMallocHook  (*(void **)0x001caf68u)
-#define EaglFreeHook    (*(void **)0x001caf6cu)
 #define PrintHook       (*(void **)0x00240268u)
 #define PoolSize        (*(uint32_t *)0x001cdc50u)
 #define LoadedTables    (*(void **)0x0023fb88u)
-#define GlobalPool      ((SymbolPool *)0x0023fb8cu)
-#define RuntimePool     ((RuntimeAllocConstructorPool *)0x0023fbb8u)
-#define CtorPool        ((ConstructorPool *)0x0023fbe0u)
 
 static uint32_t Hash(const char *s) {
     uint32_t h = 2166136261u;
@@ -503,15 +499,15 @@ static void ShapesScript(bool original, std::vector<Entry *> &shapes, std::strin
     g_log = log;
     ArenaReset();
     uint8_t saved[sizeof(SymbolPool)];
-    memcpy(saved, GlobalPool, sizeof(SymbolPool));
+    memcpy(saved, &GlobalPool, sizeof(SymbolPool));
     {
         Originals scope(original);
         for (Entry *e : shapes) {
             uint8_t *file = e->data.data() + kShapePad;
             if (e->size < 0x10 || memcmp(file, "SHPX", 4) != 0)
                 continue;
-            memset(GlobalPool, 0, sizeof(SymbolPool));
-            GlobalPool->Construct();
+            memset(&GlobalPool, 0, sizeof(SymbolPool));
+            GlobalPool.Construct();
             Logf("%s", e->name.c_str());
             for (int pass = 0; pass < 2; pass++) {   // the second time every name is taken
                 if (original)
@@ -519,15 +515,15 @@ static void ShapesScript(bool original, std::vector<Entry *> &shapes, std::strin
                 else
                     DynamicLoader::RegisterShapes(file);
             }
-            DumpPool(GlobalPool);
+            DumpPool(&GlobalPool);
             if (original)
                 ((ShapesFn)0x000edf50)(file);
             else
                 DynamicLoader::UnRegisterShapes(file);
-            DumpPool(GlobalPool);
+            DumpPool(&GlobalPool);
         }
     }
-    memcpy(GlobalPool, saved, sizeof(SymbolPool));
+    memcpy(&GlobalPool, saved, sizeof(SymbolPool));
     g_log = NULL;
 }
 
@@ -732,24 +728,24 @@ static void Discover(std::vector<Object> &objects, std::set<std::string> *classe
 
 static void CheckGroup(const char *label, std::vector<Object> &objects) {
     // the pools: empty for the discovery, then a recorder for every class and a third of the outside names
-    memset(GlobalPool, 0, sizeof(SymbolPool));
-    memset(RuntimePool, 0, sizeof(RuntimeAllocConstructorPool));
-    memset(CtorPool, 0, sizeof(ConstructorPool));
-    GlobalPool->Construct();
-    CtorPool->Construct();
-    ((ConstructorPool *)RuntimePool)->Construct();
+    memset(&GlobalPool, 0, sizeof(SymbolPool));
+    memset(&TheRuntimeAllocPool, 0, sizeof(RuntimeAllocConstructorPool));
+    memset(&TheConstructorPool, 0, sizeof(ConstructorPool));
+    GlobalPool.Construct();
+    TheConstructorPool.Construct();
+    ((ConstructorPool *)&TheRuntimeAllocPool)->Construct();
     std::set<std::string> classes, outside;
     Progress(label, "discovery");
     Discover(objects, &classes, &outside);
     Progress(label, "registering");
     for (const std::string &c : classes) {
-        CtorPool->AddType(c.c_str(), (void *)RecordConstructor, (void *)RecordDestructor);
-        RuntimePool->AddType(c.c_str(), (void *)RecordRuntimeConstructor, (void *)RecordRuntimeDestructor);
+        TheConstructorPool.AddType(c.c_str(), (void *)RecordConstructor, (void *)RecordDestructor);
+        TheRuntimeAllocPool.AddType(c.c_str(), (void *)RecordRuntimeConstructor, (void *)RecordRuntimeDestructor);
     }
     for (const std::string &n : outside) {
         uint32_t h = Hash(n.c_str());
         if (strncmp(n.c_str(), "RUNTIME_ALLOC::", 15) != 0 && h % 3 == 1)
-            GlobalPool->AddSymbol(n.c_str(), &g_registered[(h % 1024) * 4]);
+            GlobalPool.AddSymbol(n.c_str(), &g_registered[(h % 1024) * 4]);
     }
     Snapshot o, p;
     std::vector<DynamicLoader> loaders(objects.size());   // the same for both sides
@@ -777,9 +773,9 @@ static void CheckGroup(const char *label, std::vector<Object> &objects) {
     g_checks++;
     if (o.loadedAfter != NULL || p.loadedAfter != NULL)
         Report(label, "objects left in the loaded list");
-    CtorPool->Destruct();
-    ((ConstructorPool *)RuntimePool)->Destruct();
-    GlobalPool->Destruct();
+    TheConstructorPool.Destruct();
+    ((ConstructorPool *)&TheRuntimeAllocPool)->Destruct();
+    GlobalPool.Destruct();
 }
 
 static Object MakeObject(Entry *main, Entry *rel, size_t index) {
@@ -888,13 +884,15 @@ void LoaderShadow_Run(void) {
     g_arenaUsed = kArena;
 
     // the game's state, put back at the end
-    void *savedMalloc = EaglMallocHook, *savedFree = EaglFreeHook, *savedPrint = PrintHook, *savedLoaded = LoadedTables;
+    EaglMallocFn savedMalloc = EaglMalloc;
+    EaglFreeFn savedFree = EaglFree;
+    void *savedPrint = PrintHook, *savedLoaded = LoadedTables;
     uint8_t savedPools[0x14 + 0x28 + 0x28];
-    memcpy(savedPools, GlobalPool, 0x14);
-    memcpy(savedPools + 0x14, RuntimePool, 0x28);
-    memcpy(savedPools + 0x3c, CtorPool, 0x28);
-    EaglMallocHook = (void *)ShadowMalloc;
-    EaglFreeHook = (void *)ShadowFree;
+    memcpy(savedPools, &GlobalPool, 0x14);
+    memcpy(savedPools + 0x14, &TheRuntimeAllocPool, 0x28);
+    memcpy(savedPools + 0x3c, &TheConstructorPool, 0x28);
+    EaglMalloc = ShadowMalloc;
+    EaglFree = ShadowFree;
     PrintHook = (void *)ShadowPrint;
 
     Progress("pools", "");
@@ -942,13 +940,13 @@ void LoaderShadow_Run(void) {
         CheckArchive(archive.c_str(), entries, common, &objectCount, &groups, &shapeCount);
     }
 
-    EaglMallocHook = savedMalloc;
-    EaglFreeHook = savedFree;
+    EaglMalloc = savedMalloc;
+    EaglFree = savedFree;
     PrintHook = savedPrint;
     LoadedTables = savedLoaded;
-    memcpy(GlobalPool, savedPools, 0x14);
-    memcpy(RuntimePool, savedPools + 0x14, 0x28);
-    memcpy(CtorPool, savedPools + 0x3c, 0x28);
+    memcpy(&GlobalPool, savedPools, 0x14);
+    memcpy(&TheRuntimeAllocPool, savedPools + 0x14, 0x28);
+    memcpy(&TheConstructorPool, savedPools + 0x3c, 0x28);
     VirtualFree(g_arena, 0, MEM_RELEASE);
     printf("[ldshadow] %d objects in %d archives (%d loads: %d constructions, %d RUNTIME_ALLOC, %d resolver calls, "
            "%d messages), %d image containers, %d checks: %s\n", objectCount, groups, g_counts[4], g_counts[0],

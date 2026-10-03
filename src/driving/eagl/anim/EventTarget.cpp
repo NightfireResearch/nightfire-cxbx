@@ -1,4 +1,5 @@
 #include "EventTarget.h"
+#include "../EaglGlobals.h"
 
 #include <string.h>
 
@@ -9,10 +10,6 @@
 // function is the original at the same address, allocations through EAGL's hooks with the original's names.
 // ---------------------------------------------------------------------------------------------------------------
 
-typedef void *(*EaglMallocHook)(uint32_t size, const char *name);
-typedef void (*EaglFreeHook)(void *data, uint32_t size);
-#define EaglMalloc (*(EaglMallocHook *)0x001caf68)
-#define EaglFree (*(EaglFreeHook *)0x001caf6c)
 
 // The allocations' names: the original's strings (two copies of "eventName")
 #define AllocEventName ((const char *)0x001ceafc)     // "eventName"

@@ -29,6 +29,9 @@ int __cdecl Xbox_mtinit(void);
 
 // Installs everything above, and the instruction-level patches. Called from Inject(), and deliberately not
 // through AUTOINJECT: that patches unconditionally, and none of this may touch a CXBX-hosted run.
+// SetThreadPriority (0x0010ea0f), for the ports that call it (the sound library's driver thread).
+BOOL __stdcall Xbox_SetThreadPriority(HANDLE thread, int priority);
+
 void Inject_XboxStartup(void);
 
 #endif // DRIVING_PLATFORM_XBOXSTARTUP_H_

@@ -3,6 +3,7 @@
 #include "AnimDecode.h"
 #include "AnimUntested.h"
 #include "Skeleton.h"
+#include "../../platform/X87.h"
 
 #include <bit>
 #include <stdio.h>
@@ -35,14 +36,6 @@ constexpr float kPi = 3.14159274f;
 constexpr float kOneOver180 = 1.0f / 180;
 static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "the original's pi");
 static_assert(std::bit_cast<uint32_t>(kOneOver180) == 0x3bb60b61, "the original's 1/180");
-
-inline int Truncate(float f) {   // CVTTSS2SI
-    return _mm_cvtt_ss2si(_mm_set_ss(f));
-}
-
-inline bool InMask(const BoneMask *mask, int bone) {
-    return (mask->bits[bone >> 5] & (1u << (bone & 31))) != 0;
-}
 
 DeltaChanData *DeltaData(uint8_t *anim) {
     return reinterpret_cast<DeltaChanData *>(anim);
@@ -504,7 +497,7 @@ void RawPoseChannel::EvalFrame(int frame, float *out, void *mask) {
     }
     for (int b = 0; e < end; b++, bone += 12) {
         int n = *e++;
-        if (InMask(static_cast<const BoneMask *>(mask), b)) {
+        if (static_cast<const BoneMask *>(mask)->Has(b)) {
             for (; n > 0; n--)
                 FrameFunction(*e++)(&cursor, bone);
         } else {
@@ -561,7 +554,7 @@ void RawPoseChannel::Lerp(float t, int frame0, int frame1, float *out, void *mas
     }
     for (int b = 0; e < end; b++, bone += 12) {
         int n = *e++;
-        if (InMask(static_cast<const BoneMask *>(mask), b)) {
+        if (static_cast<const BoneMask *>(mask)->Has(b)) {
             for (; n > 0; n--)
                 LerpFunction(*e++)(t, &cursor0, &cursor1, bone);
         } else {
