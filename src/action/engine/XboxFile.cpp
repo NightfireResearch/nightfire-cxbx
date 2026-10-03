@@ -16,8 +16,7 @@
 // the archive reader) is left exactly as it is; only the bottom is swapped out.
 //
 // With these in place, every file the game opens through createFile is resolved by common/xboxPath.cpp and read with
-// real Win32 handles, so disc data comes from the DiscPath folder rather than from whatever CXBX mounted as
-// D:. The one path still going through the kernel is the async reader at FUN_0010a6b0, which calls
+// real Win32 handles, so disc data comes from the DiscPath folder. The one path still going through the kernel is the async reader at FUN_0010a6b0, which calls
 // NtCreateFile/NtReadFile directly rather than coming through here.
 //
 // Calling conventions were taken from each function's RET immediate rather than from Ghidra's prototypes,
@@ -143,8 +142,8 @@ static bool ResolveForOpen(const char *filename, char *out, size_t outSize) {
 // (flags 0x60000000 = OVERLAPPED | NO_BUFFERING), which made sense for DVD reads on the real hardware. On a
 // host filesystem it only imposes the constraint that every offset, length and buffer address be sector
 // aligned - and the very first read the game makes, FS_Init pulling the archive header into
-// FileSystem.ramCache at 0x002b0d28, is into a buffer that is not. CXBX does not honour the flag either, which
-// is why this has never mattered before now.
+// FileSystem.ramCache at 0x002b0d28, is into a buffer that is not. (CXBX never honoured the flag either, which
+// is why it did not matter while the game ran there.)
 //
 // AUTOINJECT
 HANDLE __stdcall createFile(const char *filename, uint32_t desiredAccess, uint32_t shareMode,

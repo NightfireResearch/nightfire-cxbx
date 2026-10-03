@@ -4,11 +4,9 @@
 #include "../../actionhelpers.h"
 #include "d3dhelpers.h"
 
-// "Thin seam" reimplementation of Eurocom's own small wrapper functions that sit directly on top of the
-// statically-linked D3D8 library CXBX still hooks via its own OOVPA pattern matching. See d3dSeam.cpp's
-// top-of-file comment for the full rationale - every function declared here still calls through to the
-// same, completely untouched D3D8:: functions the original did, so CXBX's own D3D8 emulation keeps working
-// exactly as it does today. This is deliberately NOT yet the full DX9 switch.
+// "Thin seam" reimplementation of Eurocom's own small wrapper functions that sat directly on top of the
+// statically-linked D3D8 library. Every D3D8 entry point they called now goes to the native D3D9 backend
+// (src/common/gfx/d3d9Backend.h) - see the dispatch notes in d3dSeam.cpp.
 
 // Every texture the game creates funnels through this one function, which creates/registers a texture
 // resource with D3D8 and returns its slot index into Gfx's 2048-entry texture table (0 on failure). "data"

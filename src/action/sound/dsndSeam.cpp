@@ -1,6 +1,5 @@
 #include "dsndSeam.h"
-#include "../engine/XboxSettings.h" // Settings_GetAudioBackend
-#include "xaudio2Backend.h"          // the native backend the entry-point wrappers can dispatch to
+#include "xaudio2Backend.h"          // the native backend the entry-point wrappers dispatch to
 
 #include <stdint.h>
 #include <string.h>
@@ -10,10 +9,9 @@
 #include <type_traits>
 
 // ---------------------------------------------------------------------------------------------------------------
-// The audio seam. See dsndSeam.h for what this is and why; docs/cxbx-removal-plan.md section 3 for where it sits
-// in the overall CXBX removal. Everything below is a reimplementation of Eurocom's own audio wrapper layer
-// (0x000e0f00-0x000e1e40), still calling the untouched DSOUND library through the entry-point macros further
-// down, so behaviour in CXBX mode is unchanged.
+// The audio seam. See dsndSeam.h for what this is and why. Everything below is a reimplementation of Eurocom's
+// own audio wrapper layer (0x000e0f00-0x000e1e40); the DSOUND entry points it calls go to the native XAudio2
+// backend through the entry-point macros further down.
 //
 // Addresses in comments are for the EU default.xbe, matching tools/functions_action.json - Ghidra names every
 // function in the range, but three are injected by address rather than by name (see the FUNC_AT comments).
@@ -21,8 +19,8 @@
 
 // ---------------------------------------------------------------------------------------------------------------
 // TEMPORARY tracing of every DSOUND entry point this seam calls - the inventory pass whose log is the spec for
-// the eventual native backend (plan step 3.3.2). Set DSNDSEAM_TRACE to 0 to compile it all out (every DSOUND
-// macro then collapses back to a plain forwarding call). Modelled directly on d3dSeam.cpp's tracing, which see.
+// the native backend. Set DSNDSEAM_TRACE to 0 to compile it all out (every DSOUND macro then collapses back to
+// a plain call of its backend function). Modelled directly on d3dSeam.cpp's tracing, which see.
 //
 // Two things are recorded, both to dsndSeam_trace.log in the working directory:
 //  - a running table per entry point: call count plus the set of distinct "key" values seen (the first argument
@@ -198,15 +196,14 @@ template<typename... A> static inline void DSoundSeamTraceCall(const char *, A..
 #endif // DSNDSEAM_TRACE
 
 // ---------------------------------------------------------------------------------------------------------------
-// Entry-point dispatch. Every DSOUND entry point the seam calls goes through one of these wrappers (via the
-// macros below): it records the call when tracing is on, then either forwards to the DSOUND library (cxbx mode)
-// or to the attached native backend function. An entry point with no backend function attached is counted as
-// missing and does nothing. Every public DSOUND entry point in this XBE is plain __stdcall (verified: each one
-// ends in a RET whose immediate matches its parameter count), so - unlike the D3D seam, which needed a
-// __fastcall variant too - one wrapper type is enough.
+// Entry-point dispatch. Every DSOUND entry point the seam calls goes through this wrapper (via the macros
+// below): it records the call when tracing is on, then calls the attached native backend function. The XBE's
+// own DSOUND function is never called - its pointer is passed only so the wrapper can take the entry point's
+// signature from it, and so each macro still names the original it stands for. An entry point with no backend
+// function attached is counted as missing and does nothing. Every public DSOUND entry point in this XBE is plain
+// __stdcall (verified: each one ends in a RET whose immediate matches its parameter count), so - unlike the D3D
+// seam, which needed a __fastcall variant too - one factory is enough.
 // ---------------------------------------------------------------------------------------------------------------
-
-int g_audioBackend = AUDIO_BACKEND_CXBX;
 
 // Backend messages go to the console and to dsnd_backend.log in the working directory.
 static void DSoundLog(const char *fmt, ...) {
@@ -248,26 +245,18 @@ static void DSoundPrintMissingSummary(void) {
 
 template<typename R, typename... A> struct DSoundSeamTracedCall {
     const char *name;
-    R(__stdcall *fn)(A...);
     R(*backend)(A...);
     R operator()(A... args) const {
         DSoundSeamTraceCall(name, args...);
-        if (g_audioBackend != AUDIO_BACKEND_CXBX) {
-            if (backend != NULL)
-                return backend(args...);
-            DSound_BackendMissing(name);
-            return R();
-        }
-        return fn(args...);
+        if (backend != NULL)
+            return backend(args...);
+        DSound_BackendMissing(name);
+        return R();
     }
 };
 template<typename R, typename... A>
-static inline DSoundSeamTracedCall<R, A...> DSoundSeamTraced(const char *name, R(__stdcall *fn)(A...)) {
-    return { name, fn, NULL };
-}
-template<typename R, typename... A>
-static inline DSoundSeamTracedCall<R, A...> DSoundSeamTraced(const char *name, R(__stdcall *fn)(A...), R(*backend)(A...)) {
-    return { name, fn, backend };
+static inline DSoundSeamTracedCall<R, A...> DSoundSeamTraced(const char *name, R(__stdcall *)(A...), R(*backend)(A...)) {
+    return { name, backend };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -601,11 +590,6 @@ void __cdecl xboxCreateSoundBuffers(void) {
 //
 // AUTOINJECT
 void xboxInitSound(void) {
-    // Decided once, before the first DSOUND entry point is touched - same place and reason as the graphics
-    // backend switch in xboxInitGraphics.
-    g_audioBackend = Settings_GetAudioBackend();
-    printf("[dsndSeam] audio backend: %s\n", g_audioBackend == AUDIO_BACKEND_XAUDIO2 ? "xaudio2 (native)" : "cxbx (DSOUND HLE)");
-
     memset(&AudioSys, 0, sizeof(AudioSys));
 
     DirectSoundCreate(NULL, &AudioSys.directSoundInst, NULL);
@@ -881,12 +865,10 @@ void __cdecl dsndWriteVoiceData(uint32_t channel, int offset, const void *src, u
     void *data = AudioSys.voices[channel].data;
     memcpy((char *)data + offset, src, length);
 
-    // A native backend has already converted this buffer's sample data into something it can play, so it has
-    // to be told when the game edits the ADPCM underneath it. Nothing here goes through DirectSound, so this
-    // is the only point at which that is visible. In cxbx mode the DSOUND buffer references the game's memory
-    // directly and there is nothing to do.
-    if (g_audioBackend != AUDIO_BACKEND_CXBX)
-        XA2_NotifyBufferDataWritten(data, (uint32_t)offset, length);
+    // The backend has already converted this buffer's sample data into something it can play, so it has to be
+    // told when the game edits the ADPCM underneath it. Nothing here goes through DirectSound, so this is the
+    // only point at which that is visible.
+    XA2_NotifyBufferDataWritten(data, (uint32_t)offset, length);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -1049,6 +1031,5 @@ void __cdecl maybeSoundShutdown(void) {
     memset(AudioSys.voices, 0, sizeof(AudioSys.voices));
 
     DSoundSeamTraceLevelReset();
-    if (g_audioBackend != AUDIO_BACKEND_CXBX)
-        DSoundPrintMissingSummary();
+    DSoundPrintMissingSummary();
 }

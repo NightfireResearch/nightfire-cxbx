@@ -1,5 +1,13 @@
 # Removing CXBX from the action engine: project plan
 
+> **Historical: this plan is complete.** CXBX-Reloaded was dropped from the project on 3 October 2026. The
+> `action_cxbx`/`driving_cxbx` launchers, the CXBX backend paths in the seams and the "is CXBX in the process"
+> checks are gone, and the loader (`action.exe`, `driving.exe`, built from `src/loader/`) is the only way the
+> game runs. What follows is kept as the record of how the engine got there and why things are shaped the way
+> they are; where it says the CXBX path "still works" or that something is conditional on CXBX, read it as
+> how things were at the time. A Cxbx-Reloaded source checkout may still sit in the tree (gitignored) as a
+> reference for XDK signatures and kernel ordinals, nothing more.
+
 Status as of September 2026, written for whoever (human or agent) picks up the next stages. Read this
 alongside `src/action/engine/Direct3D/d3dSeam.cpp` and `d3d9Backend.cpp`, which are the worked example of
 the pattern every stage below repeats.
@@ -11,10 +19,10 @@ kernel imports, loads `actioninject.dll` and runs the game in its own process - 
 Tested as far as: boots, opens its window, reaches the main menu, plays video and audio, takes controller
 input, and loads into a mission.
 
-The CXBX path still works and is still the reference. `action_cxbx.exe` launches the game under
-`cxbxr-ldr.exe` exactly as before, and everything added for the standalone loader is conditional on CXBX not
-being in the process (`Xbox_RunningStandalone()`, which tests for `cxbxr-emu.dll`), so a regression can always
-be bisected against a hosted run. Nothing in this section's original arrangement has been removed.
+At the time of writing the CXBX path still worked and was the reference: `action_cxbx.exe` launched the game
+under `cxbxr-ldr.exe`, and everything added for the standalone loader was conditional on CXBX not being in
+the process (`Xbox_RunningStandalone()`, which tested for `cxbxr-emu.dll`), so a regression could be bisected
+against a hosted run. All of that was removed on 3 October 2026.
 
 Either way, the game is the original x86 code with roughly 10% of its functions reimplemented;
 `tools/preprocess.py` turns the `AUTOINJECT`/`FUNC_AT` tags into the patch table. What has changed is who
@@ -403,10 +411,10 @@ buffer-end callback rather than on submission, because the decoder paces video a
 
 Two things worth keeping in mind for anything similar:
 
-- **The hooks are installed by hand, conditionally.** `AUTOINJECT` and `FUNC_AT` patch unconditionally, and
-  every one of these replacements would be wrong under CXBX. The same now goes for the startup work in 4.2:
-  it is all installed from `Inject_XboxStartup` behind `Xbox_RunningStandalone()`, which tests for
-  `cxbxr-emu.dll` in the process.
+- **The hooks were installed by hand, conditionally.** `AUTOINJECT` and `FUNC_AT` patch unconditionally, and
+  every one of these replacements would have been wrong under CXBX. The same went for the startup work in
+  4.2: it was all installed from `Inject_XboxStartup` behind `Xbox_RunningStandalone()`, which tested for
+  `cxbxr-emu.dll` in the process. (The condition went with CXBX on 3 October 2026.)
 - **Vtable slots need their `RET` immediates checked too.** `CDirectSoundStream_Process` ends `RET 0xc` - it
   takes three parameters and reads two. Declaring it with two cost a debugging cycle, with the decoder
   returning into a corrupted frame a long way from the call. The standing warning in section 5 is not only
@@ -431,8 +439,7 @@ standalone, and reuse the D3D9 and audio backends as libraries.
   between the two makes it fail with `IndexError: list index out of range`, several frames from anything that
   names the file. Put the explanation above the tag, not below it.
 - **Running the game**: build the `action` target, then run `Release/action.exe` with the working directory
-  set to `Release` (it looks for `../disc/default.xbe`). `action_cxbx.exe` is the old CXBX-hosted launcher,
-  kept as a reference to bisect against. It writes everything to stdout, so
+  set to `Release` (it looks for `../disc/default.xbe`). It writes everything to stdout, so
   redirecting it to a file is the easiest way to read a whole boot. An unimplemented kernel import prints its
   name and the address that called it and then exits; a fault prints the faulting address, the address it
   touched, that page's state, and a call stack walked from the frame pointers - usually enough to name the
@@ -506,7 +513,7 @@ standalone, and reuse the D3D9 and audio backends as libraries.
   debugging cycle in stage A: the symptom was a black window and the engine wandering off into the
   error/relaunch path several frames later, with nothing wrong at or near the actual call. Reading the last
   bytes of each entry point out of the image (`read_memory`, look for `c2 imm16` / `c3`) checks all of them
-  cheaply, and cross-checking `Cxbx-Reloaded/src/core/hle/` - which is checked out in this tree - gives the
+  cheaply, and cross-checking `Cxbx-Reloaded/src/core/hle/` - a reference checkout, gitignored, if you have one - gives the
   intended signature for free.
 - **XAPI looks like Win32, but its state lives in the XBE.** The Xbox's XAPI is a Win32 clone, and at the
   call site the two are often identical - `createFile` *is* `CreateFileA`, `readFromFileBlocking` *is*

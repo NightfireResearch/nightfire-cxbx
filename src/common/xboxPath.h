@@ -7,8 +7,7 @@
 // Xbox drive letters to host paths.
 //
 // The game asks for files by Xbox path - "d:\eurocom\filesys.d00", "z:\state.bin" - which on real hardware the
-// kernel resolved through its own mount table, and which under CXBX resolves through CXBX's (it mounts D: to
-// whichever directory the XBE it was handed lives in). Replacing the file I/O with Win32 calls means doing that
+// kernel resolved through its own mount table. Replacing the file I/O with Win32 calls means doing that
 // resolution ourselves, and this is the one place it happens.
 //
 //   d:\...   the game disc         -> the DiscPath setting, "../disc" from the executables' folder by default

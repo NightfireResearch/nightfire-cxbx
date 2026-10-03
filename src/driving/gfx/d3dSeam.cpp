@@ -2,7 +2,6 @@
 #include "D3D8.h"
 
 #include "../../common/gfx/d3d9Backend.h"
-#include "../../common/standalone.h"
 #include "../../common/xbeEntrySeam.h"
 #include "../../common/xbeProfiler.h"
 #include "../../common/xboxPath.h"   // XGWriteSurfaceToFile
@@ -19,8 +18,7 @@
 // WHERE THE SEAM IS, AND WHY IT IS NOT WHERE THE ACTION ENGINE'S IS.
 //
 // The action engine's seam sits above D3D8: Eurocom's own thin wrapper functions are reimplemented in C++, and
-// each D3D8 call inside them goes either to the XBE's library (under CXBX) or to the native backend. That
-// works there because those wrappers are a small, well-understood layer with good symbols.
+// each D3D8 call inside them goes to the native backend. That works there because those wrappers are a small, well-understood layer with good symbols.
 //
 // The driving engine's equivalent layer is EAGL, which is most of the binary, largely unnamed, and reaches
 // D3D8 from everywhere - 108 entry points against the action engine's 41. Reimplementing enough of EAGL to
@@ -1354,11 +1352,6 @@ void D3dSeam_ReportMissing(void) {
 }
 
 void Inject_D3dSeam(void) {
-    // Under CXBX the D3D8 library is already replaced by CXBX's HLE, which owns the device; a second backend
-    // patched over the same entry points would be two renderers fighting over one window.
-    if (!Xbox_RunningStandalone())
-        return;
-
     // Where this build's D3D8 keeps the deferred state the backend reads back at draw time. Read out of
     // D3DDevice_SetRenderStateNotInline (0x00167410) and D3DDevice_SetTextureStageStateNotInline
     // (0x00167e40), which are the functions that write them.
@@ -1368,9 +1361,6 @@ void Inject_D3dSeam(void) {
     // EAGL rewrites its vertex buffers between draws - its dynamic buffer is three Xbox buffers behind one
     // object, refilled per draw - and nothing here is told. Every draw copies what it reads, at the draw.
     g_streamsVolatile = true;
-
-    // Every D3D8 entry point is ours now, so the backend is the only implementation there is.
-    g_gfxBackend = GFX_BACKEND_D3D9;
 
     for (size_t i = 0; i < sizeof(g_replacements) / sizeof(g_replacements[0]); i++)
         XbeSeam_Replace(&g_seam, g_replacements[i].name, g_replacements[i].replacement,

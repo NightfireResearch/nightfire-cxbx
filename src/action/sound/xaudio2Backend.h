@@ -5,11 +5,9 @@
 #include "dsndSeam.h"
 
 // ---------------------------------------------------------------------------------------------------------------
-// The native XAudio2 backend for the audio seam (dsndSeam.cpp). Used whenever the game runs under the
-// standalone loader; under the CXBX launchers every DSOUND entry point goes to CXBX's HLE instead (see
-// Settings_GetAudioBackend).
+// The native XAudio2 backend for the audio seam (dsndSeam.cpp) - the only one there is.
 //
-// In xaudio2 mode the seam never calls a DSOUND library function: each entry-point macro in dsndSeam.cpp
+// The seam never calls a DSOUND library function: each entry-point macro in dsndSeam.cpp
 // dispatches to the XA2_* function attached to it here, or - for anything not implemented yet - to
 // DSound_BackendMissing, which counts the call and does nothing. Same arrangement as d3d9Backend.cpp.
 //

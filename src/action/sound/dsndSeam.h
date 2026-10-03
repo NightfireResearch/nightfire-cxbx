@@ -5,17 +5,10 @@
 
 // ---------------------------------------------------------------------------------------------------------------
 // "Thin seam" reimplementation of Eurocom's own audio wrapper layer - the dsnd*/xbox*Sound/SFX* functions at
-// 0x000e0f00-0x000e1e40 that sit directly on top of the statically linked DSOUND library CXBX still emulates.
-// This is the audio counterpart of Direct3D/d3dSeam.cpp and follows the same method (see
-// docs/cxbx-removal-plan.md, stage A): every function declared here still calls the same, completely untouched
-// DSOUND:: entry points the original did, through the DSoundSeamTraced dispatch in dsndSeam.cpp, so CXBX's own
-// DirectSound emulation keeps working exactly as it does today. This is deliberately NOT yet the switch to a
-// native audio backend.
-//
-// The point of the exercise is to make the library boundary explicit and testable: after this, the game side of
-// the audio seam is our code, and the only thing left inside CXBX is the public DSOUND entry points listed at
-// the top of dsndSeam.cpp. A native XAudio2 backend can then be attached to those, exactly as d3d9Backend.cpp is
-// attached to the D3D8 entry points.
+// 0x000e0f00-0x000e1e40 that sat directly on top of the statically linked DSOUND library. This is the audio
+// counterpart of Direct3D/d3dSeam.cpp and follows the same method: every DSOUND:: entry point the original
+// called is a macro in dsndSeam.cpp, dispatched through DSoundSeamTraced to the native XAudio2 backend
+// (xaudio2Backend.h), exactly as d3d9Backend.cpp is attached to the D3D8 entry points.
 //
 // Calling conventions here were cross-checked against raw disassembly, not just Ghidra's decompile:
 //  - no function in 0x000e0f00-0x000e1e40 ends in a "RET <imm>" (verified by an instruction search over the
@@ -90,15 +83,10 @@ struct DSI3DL2BUFFER_Xbox {
 
 #pragma pack(pop)
 
-// ---------------------------------------------------------------------------------------------------------------
-// Backend selection, by host (Settings_GetAudioBackend): under the CXBX launchers every DSOUND entry point goes
-// to CXBX's HLE; under the standalone loader, to the native XAudio2 backend. Entry points the native backend
-// does not cover yet are counted by the DSound_BackendMissing accounting.
-// ---------------------------------------------------------------------------------------------------------------
-enum { AUDIO_BACKEND_CXBX = 0, AUDIO_BACKEND_XAUDIO2 = 1 };
-extern int g_audioBackend;
+// Every DSOUND entry point goes to the native XAudio2 backend. Entry points it does not cover yet are counted by
+// the DSound_BackendMissing accounting.
 
-// Counts (and logs once) a DSOUND entry point the selected native backend does not implement yet.
+// Counts (and logs once) a DSOUND entry point the native backend does not implement yet.
 void DSound_BackendMissing(const char *entryPoint);
 
 // ---------------------------------------------------------------------------------------------------------------

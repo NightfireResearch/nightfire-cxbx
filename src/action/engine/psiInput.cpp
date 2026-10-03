@@ -9,10 +9,9 @@
 XboxInputs_struct XboxInputs;
 
 // ---------------------------------------------------------------------------------------------------------------
-// Real hardware polling - talks to the host's actual gamepads via Win32 XInput, instead of going through
-// CXBX's emulation of the original Xbox kernel's XAPILIB device layer (XInitDevices/XGetDevices/XInputOpen/
-// XGetDeviceChanges/XInputGetState/XInputSetState/XInputClose - on real hardware, all backed by IOCTLs
-// against the Xbox's USB gamepad driver). xboxInitInputDevices and psiInput_PollDevices below replace that
+// Real hardware polling - talks to the host's actual gamepads via Win32 XInput, instead of the original Xbox
+// XAPILIB device layer (XInitDevices/XGetDevices/XInputOpen/XGetDeviceChanges/XInputGetState/XInputSetState/
+// XInputClose - on real hardware, all backed by IOCTLs against the Xbox's USB gamepad driver). xboxInitInputDevices and psiInput_PollDevices below replace that
 // whole chain; everything else in this file (psiInput_GetJoystickLX and friends, psiInput_MapInputs, ...)
 // is unmodified and keeps reading/writing the same XboxInputs global exactly as before.
 //
@@ -136,15 +135,10 @@ static inline bool KeyDown(int vk) {
 }
 
 // Only feed the keyboard in when the game's own window is in front, so keys typed into another application do
-// not drive Bond around. The window belongs to the launcher process (and the render window is CXBX's child of
-// it), not to the process this DLL is injected into, so this goes via the window handle rather than the pid. If
-// the render window cannot be found at all, fail open - better to accept stray keystrokes than to leave someone
-// with no working input and no way to tell why.
+// not drive Bond around. The window is the one the loader creates. If it cannot be found at all, fail open -
+// better to accept stray keystrokes than to leave someone with no working input and no way to tell why.
 static bool KeyboardPadHasFocus(void) {
-    // Either host's window: CXBX's, or the one the loader creates when running standalone.
-    void *render = FindWindowA("CxbxRender", NULL);
-    if (render == NULL)
-        render = FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
+    void *render = FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
     if (render == NULL)
         return true;
     void *root = GetAncestor(render, GA_ROOT_);

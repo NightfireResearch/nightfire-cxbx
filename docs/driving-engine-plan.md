@@ -10,6 +10,11 @@ Revised after the action engine stopped needing CXBX at all. Section 0 is what t
 enough that the order of work at the end is different: several items in the original plan were workarounds
 for CXBX's behaviour, and are now worth skipping rather than doing.
 
+CXBX-Reloaded was dropped from the project entirely on 3 October 2026: `driving.exe` (the loader) is the only
+way the driving engine runs, and there is no CXBX-hosted launcher to compare against any more. Where the
+sections below talk about behaviour "under CXBX", it is history - useful for knowing why something was done -
+not a second way to run the game.
+
 ## 0. What the standalone loader changes
 
 The action engine now runs with no emulator in the process: `action.exe` (`src/loader/`) maps `default.xbe`
@@ -81,12 +86,10 @@ and is reusable.
   funnels every use through one helper that decides once, by probing whether the alias is mapped, whether to
   apply it; do the same here rather than scattering the decision.
 
-**Naming.** The CXBX-hosted launchers are `action_cxbx.exe` and `driving_cxbx.exe`; the standalone loader is
-`action.exe`. `driving_cxbx.exe` carries the suffix even though its standalone sibling does not exist yet,
-because the suffix is what says it still needs an emulator - a plain `driving.exe` sitting beside a
-standalone `action.exe` would quietly imply otherwise. `driving.exe` is reserved for the standalone build
-when there is one. The injected DLLs keep their plain names (`actioninject`, `drivinginject`): they are not
-specific to a host, and `actioninject.dll` is already loaded unchanged by both. (`driving.exe` now exists - see 0.1 - and is the same loader binary as `action.exe` with two default file names changed.)
+**Naming.** The loaders are `action.exe` and `driving.exe` - the same loader binary with two default file
+names changed - and the injected DLLs are `actioninject` and `drivinginject`. (When this was written the
+CXBX-hosted launchers, `action_cxbx.exe` and `driving_cxbx.exe`, sat beside them, carrying the suffix that
+said they needed an emulator; they were removed on 3 October 2026.)
 
 **And one correction to section 6.3 below:** the action-to-driving hand-off cannot become an in-process
 transition. Both XBEs are linked to base `0x10000`, and the loader gets that address by *being* the image
@@ -1090,7 +1093,6 @@ the audio seam is on the critical path either way.
 7. **Profiling** (section 4) once it runs standalone, where the numbers mean something. Under CXBX they
    mostly measured CXBX.
 
-Keeping the CXBX path working in parallel, as the action engine did, is still worth it for as long as it is
-free: it is the only way to bisect "did we break this or was it always broken". It stops being free at the
-point where a change has to be conditional on the host, which is the same judgement the action engine's
-`Xbox_RunningStandalone()` records.
+Keeping the CXBX path working in parallel, as the action engine did, was worth it for as long as it was
+free: it was the only way to bisect "did we break this or was it always broken". (It was dropped on 3 October
+2026, along with the action engine's `Xbox_RunningStandalone()`; the loader is now the only host.)

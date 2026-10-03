@@ -1,6 +1,5 @@
 #include "XboxXapi.h"
 
-#include "../../common/standalone.h"
 #include "../../common/xboxPath.h"
 
 #include <windows.h>
@@ -260,7 +259,7 @@ static BOOL __stdcall Xbox_IsBadWritePtr(void *pointer, UINT_PTR bytes) {
 }
 
 // OutputDebugStringA (0x0010e832): the original hands the string to the kernel debugger (INT 2D), which a
-// standalone run does not have; the console is where this project's logging goes.
+// run under the loader does not have; the console is where this project's logging goes.
 void __stdcall Xbox_OutputDebugStringA(const char *text) {
     if (text != NULL) {
         fputs(text, stdout);
@@ -283,10 +282,6 @@ static void WriteJump(unsigned address, const void *target) {
 }
 
 void Inject_XboxXapi(void) {
-    // Under CXBX the XBE's XAPI runs against CXBX's kernel, which is its own world; this is for standalone runs.
-    if (!Xbox_RunningStandalone())
-        return;
-
     // The files here are resolved by this DLL's copy of xboxPath.cpp, so it takes settings.ini's DiscPath as the
     // loader takes it for its own copy (ApplyDiscPathSetting in src/loader/loadermain.cpp): a ';' or '#' starts
     // a comment, trailing whitespace goes, and empty leaves the default ("../disc" beside the executables).

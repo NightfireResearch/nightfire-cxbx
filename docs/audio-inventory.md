@@ -3,6 +3,9 @@
 Stage A step 2 of `cxbx-removal-plan.md`: what the game actually asks DirectSound to do, measured rather
 than reasoned about. This is the spec the native audio backend has to satisfy.
 
+Written while the game could still run under CXBX-Reloaded, which was dropped on 3 October 2026; the
+comparisons with CXBX's DirectSound below are history, and XAudio2 under the loader is the only audio path.
+
 Captured with `DSNDSEAM_TRACE` set to 1 in `src/action/sound/dsndSeam.cpp` (it is 0 in the committed tree -
 the tracing has a real per-call cost), over a single session of about 16,500 frames / 5.5 minutes: attract
 movie, front end, two FMVs and a couple of levels, with weapons fired and music playing. The raw log lands
@@ -120,8 +123,8 @@ MCPX mixer registers at `0xfe80xxxx` and spins on them. The first FMV with an au
 is what both crashes reported against the standalone loader turned out to be - starting a mission and opening
 the codename screen both play a movie.
 
-The hooks are installed by hand rather than through `FUNC_AT`, and only when `cxbxr-emu.dll` is not in the
-process, so a CXBX-hosted run is left exactly as it was. A stream is an XAudio2 source voice; packets are
+The hooks were installed by hand rather than through `FUNC_AT`, and only when `cxbxr-emu.dll` was not in the
+process, so a CXBX-hosted run was left exactly as it was. A stream is an XAudio2 source voice; packets are
 decoded (the ADPCM path reuses `xadpcm.cpp`) and completed on XAudio2's buffer-end callback rather than
 immediately, because the decoder times video against when audio packets finish - `maybeSFXStreamCallback`
 sets its A/V sync offset from exactly that. Completing packets on submission would run every movie at whatever
@@ -189,10 +192,10 @@ Ruled out: headroom itself is not the difference between the two modes, because 
 from the distance model - CXBX's DirectSound3D against X3DAudio plus our translated curve - and close range
 is exactly where those diverge most.
 
-How to settle it: find a spot with both casings and music, play it under `action_cxbx.exe` (CXBX's
-DirectSound) and `action.exe` (XAudio2), and listen twice. (This was once a flip of the `AudioBackend` key,
-which no longer exists: the backend follows the host.) Same
-relative balance in both modes means the effect is pre-existing. If 3D is hotter under `xaudio2`, the fix
+How it would have been settled: find a spot with both casings and music, play it under `action_cxbx.exe`
+(CXBX's DirectSound) and `action.exe` (XAudio2), and listen twice. That launcher is gone since 3 October
+2026, so the comparison now needs another reference, such as a recording from real hardware. Same
+relative balance in both means the effect is pre-existing. If 3D is hotter under `xaudio2`, the fix
 belongs in the distance curve, not in an unexplainable gain trim. Note also that CXBX is not a clean
 reference - its DirectSound has at least one outright bug (see the rewinding `Stop` above) - so "different
 from CXBX" does not by itself mean "wrong".

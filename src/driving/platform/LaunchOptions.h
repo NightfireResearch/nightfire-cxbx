@@ -2,8 +2,7 @@
 #define DRIVING_PLATFORM_LAUNCHOPTIONS_H_
 
 // driving.exe's command line: which mission (or part of one) to start, at what difficulty, and the game's
-// own arguments passed through to its main. See LaunchOptions.cpp. Standalone only - under CXBX the command
-// line is CXBX's.
+// own arguments passed through to its main. See LaunchOptions.cpp.
 
 // Reads the command line and registers the launch page hook. Call once, from Inject.
 void Inject_LaunchOptions(void);

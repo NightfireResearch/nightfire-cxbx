@@ -14,14 +14,15 @@
 #include "../common/xboxPath.h"
 
 // ---------------------------------------------------------------------------------------------------------------
-// The standalone loader - stage B steps 4.2 and 4.3 of docs/cxbx-removal-plan.md, replacing cxbxr-ldr.exe.
+// The loader - the only host the game runs under (stage B steps 4.2 and 4.3 of docs/cxbx-removal-plan.md, where
+// it replaced cxbx-reloaded's cxbxr-ldr.exe).
 //
 // What it does, in order: map the XBE's sections at the base it was linked for, point the kernel import thunks
 // at our own implementations, load actioninject.dll so the existing patches go in exactly as they do today,
 // and call the entry point.
 //
-// It can reuse actioninject.dll unchanged because Inject() only writes to fixed addresses - it never assumed
-// anything about CXBX being the host. Once the image is mapped where the XBE asks, the whole existing body of
+// It can use the inject DLL as it is because Inject() only writes to fixed addresses - it assumes nothing about
+// the host. Once the image is mapped where the XBE asks, the whole existing body of
 // work (the D3D9 backend, the XAudio2 backend, the Win32 file layer, the input layer) comes along for free.
 //
 // GETTING THE ADDRESS RANGE. The XBE is linked to base 0x00010000 and is full of absolute addresses, so it has
@@ -390,9 +391,8 @@ static void ReportThreads(void) {
 // ---------------------------------------------------------------------------------------------------------------
 // The render window.
 //
-// Under CXBX the launcher owned a window and CXBX drew into a "CxbxRender" child of it, which is what the D3D9
-// backend goes looking for. Standalone, nobody provides one, so the loader does - and it is the right place
-// for it, because a window belongs to the thread that created it and has to have its messages pumped. The
+// Nobody else provides a window for the D3D9 backend to present into, so the loader does - and it is the right
+// place for it, because a window belongs to the thread that created it and has to have its messages pumped. The
 // loader's main thread has nothing else to do once the entry point has returned, whereas the game's thread
 // never pumps anything.
 //

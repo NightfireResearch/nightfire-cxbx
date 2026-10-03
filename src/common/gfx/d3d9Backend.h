@@ -4,25 +4,18 @@
 #include <stdint.h>
 
 // ---------------------------------------------------------------------------------------------------------------
-// The native Direct3D 9 backend for the D3D8 seam (d3dSeam.cpp). Used whenever the game runs under the
-// standalone loader; under the CXBX launchers every D3D8 entry point goes to CXBX's HLE instead (see
-// Settings_GetGraphicsBackend).
+// The native Direct3D 9 backend for the D3D8 seam (d3dSeam.cpp) - the only one there is.
 //
-// In d3d9 mode the seam never calls a D3D8 library function: each entry-point macro in d3dSeam.cpp dispatches
-// to the D3D9_* function attached to it here, or - for entry points this backend doesn't implement yet - to
+// The seam never calls a D3D8 library function: each entry-point macro in d3dSeam.cpp dispatches to the
+// D3D9_* function attached to it here, or - for entry points this backend doesn't implement yet - to
 // D3D9_BackendMissing, which counts the call and does nothing. The missing-call table is printed periodically
 // so the bring-up can be driven by what the game actually asks for.
 //
-// The D3D9 device is created on CXBX's own render window ("CxbxRender", the child of the launcher's window
-// that CXBX creates at startup). Because the game never calls Direct3D_CreateDevice in this mode, CXBX never
-// creates its own device, so the window is ours.
+// The D3D9 device is created on the render window the loader creates (see FindRenderWindow in d3d9Backend.cpp).
 //
 // Signatures below deliberately mirror the D3D8 entry-point typedefs in d3dSeam.cpp (same parameter types),
 // since the dispatch wrapper deduces the backend function's signature from the D3D8 one.
 // ---------------------------------------------------------------------------------------------------------------
-
-enum { GFX_BACKEND_CXBX = 0, GFX_BACKEND_D3D9 = 1 };
-extern int g_gfxBackend;
 
 // Where the XBE's statically linked D3D8 keeps the state the backend reads back at draw time: the deferred
 // texture stage states (four stages of 32 dwords) and the render states. Both addresses belong to the XBE

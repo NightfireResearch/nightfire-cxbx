@@ -101,8 +101,6 @@ static void Teleport(uint8_t *car, const Place *place) {
 static bool GameWindowHasFocus(void) {
     HWND render = FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
     if (render == NULL)
-        render = FindWindowA("CxbxRender", NULL);
-    if (render == NULL)
         return true;
     HWND foreground = GetForegroundWindow();
     return foreground != NULL && (foreground == render || foreground == GetAncestor(render, GA_ROOT_));

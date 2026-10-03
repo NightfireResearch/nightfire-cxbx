@@ -2,7 +2,6 @@
 #include "DirectSound.h"
 #include "xaudio2Driving.h"
 
-#include "../../common/standalone.h"
 #include "../../common/xbeEntrySeam.h"
 
 #include <windows.h>
@@ -408,11 +407,6 @@ void DsndSeam_ReportMissing(void) {
 }
 
 void Inject_DsndSeam(void) {
-    // Under CXBX, DirectSound is CXBX's HLE and already plays sound; patching it would silence a working
-    // path and fight whatever it has bound to.
-    if (!Xbox_RunningStandalone())
-        return;
-
     for (size_t i = 0; i < sizeof(g_replacements) / sizeof(g_replacements[0]); i++)
         XbeSeam_Replace(&g_seam, g_replacements[i].name, g_replacements[i].replacement,
                         g_replacements[i].stackBytes);

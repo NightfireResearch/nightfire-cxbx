@@ -5,7 +5,7 @@
 #include <string.h>
 
 // ---------------------------------------------------------------------------------------------------------------
-// The tick source, which standalone becomes ours - docs/driving-engine-plan.md section 2.
+// The tick source, which is ours - docs/driving-engine-plan.md section 2.
 //
 // TIMER_init (0x0010ae50) asks for a periodic callback at the video refresh rate:
 //
@@ -18,7 +18,7 @@
 // system in itself: it starts a thread (FUN_0010ece5) that initialises sixty-four kernel timer objects, waits
 // on all of them with KeWaitForMultipleObjects, and dispatches callbacks as each expires - through
 // KeInitializeTimerEx, KeSetTimerEx, KeQueryInterruptTime, KeSetEvent, NtSetEvent and NtPulseEvent. Under the
-// standalone loader every one of those is an unimplemented kernel import, and implementing them would mean
+// loader every one of those is an unimplemented kernel import, and implementing them would mean
 // reproducing the Xbox's dispatcher objects and DPC semantics so that a thread we control can wait on them -
 // to deliver a callback that Windows will deliver by itself.
 //
@@ -27,8 +27,8 @@
 // where it was ported from. TIMER_ontick even ends in "ret 0x14" - five stack arguments, the shape of an
 // LPTIMECALLBACK.
 //
-// What this changes about the plan's section 2: the jitter it blames on CXBX's timeSetEvent emulation is now
-// winmm's, with nothing in between, and timeBeginPeriod(1) is what makes that a millisecond rather than the
+// What this changes about the plan's section 2: the jitter it blames on the emulator's timeSetEvent (the plan
+// predates the loader) is now winmm's, with nothing in between, and timeBeginPeriod(1) is what makes that a millisecond rather than the
 // scheduler's 15.6 ms quantum. Whether the game's original Scheduler::Run semantics behave with a tick source
 // this even is step 4 of the plan's order of work, and is a measurement to make once the engine runs - not a
 // reason to change anything here.
@@ -69,9 +69,9 @@ unsigned __stdcall Xbox_timeSetEvent(unsigned delayMs, unsigned resolutionMs,
 // ---------------------------------------------------------------------------------------------------------------
 // The cycle counter - docs/driving-engine-plan.md section 2.1.
 //
-// An Xbox title may assume RDTSC counts at 733,333,333 Hz, the console's CPU clock, and this one does. CXBX
-// rewrote every RDTSC to count at that rate; standalone the instruction runs natively and counts at whatever
-// the host runs at. The audit of every RDTSC in the image (all eleven instructions, plus two byte matches that
+// An Xbox title may assume RDTSC counts at 733,333,333 Hz, the console's CPU clock, and this one does. The
+// emulator the project used to run on rewrote every RDTSC to count at that rate; here the instruction runs
+// natively and counts at whatever the host runs at. The audit of every RDTSC in the image (all eleven instructions, plus two byte matches that
 // are data) found that nothing the player sees depends on it:
 //
 //   0x0008bfdc  RRenderHigh::Render    frame rate as 733e6 / cycles per frame, smoothed into fgThis + 0x40.

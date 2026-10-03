@@ -17,8 +17,8 @@ static char g_discRoot[MAX_PATH];
 
 // A relative path is taken relative to the folder the executables are in, not the working directory, so the
 // disc is found however the game was started. That folder is found from the module this code is in - the
-// loader, or the inject DLL beside it - rather than from the process, because under CXBX the process is CXBX's
-// own executable, which lives somewhere else. Should that fail, the path is left relative to the working
+// loader, or the inject DLL beside it - rather than from the process, so that it does not depend on which
+// executable is hosting this code. Should that fail, the path is left relative to the working
 // directory, which is what it was before and is still right when the game is started from its own folder.
 static void ResolveAgainstOwnFolder(const char *path, char *out, size_t outSize) {
     char joined[MAX_PATH * 2];

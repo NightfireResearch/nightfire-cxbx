@@ -9,13 +9,12 @@
 //
 // There are three ways this process can be started and they need different things done:
 //
-//  - from a terminal, or double-clicked (the standalone loader is a console executable, so Windows gives it
+//  - from a terminal, or double-clicked (the loader is a console executable, so Windows gives it
 //    one): a console window already exists and stdout already points at it. Leave it alone.
 //  - with stdout redirected to a file or a pipe, which is how tools/drive_game.ps1 captures a whole boot:
 //    leave that alone too, or the output being collected would be thrown away.
-//  - with no console at all. Both CXBX launchers are GUI-subsystem executables, so a DLL injected into that
-//    world has nowhere to write; and a console executable started detached is in the same position, holding a
-//    stdout handle that is valid but that nobody can see. This is the case that needs a console made.
+//  - with no console at all: a console executable started detached holds a stdout handle that is valid but
+//    that nobody can see. This is the case that needs a console made.
 //
 // Testing the handle alone is not enough to tell the third case from the first, which is the mistake that
 // lost the output: a detached process has a perfectly valid stdout handle attached to a console window that

@@ -9,7 +9,6 @@
 #include "../src/action/engine/Direct3D/d3d9Backend.cpp"
 
 int Settings_GetFPSOverride(void) { return 0; }
-int Settings_GetGraphicsBackend(void) { return 0; }
 
 int main(int argc, char **argv) {
     if (argc < 2) { printf("usage: vsh_translate_test <dump dir>\n"); return 2; }

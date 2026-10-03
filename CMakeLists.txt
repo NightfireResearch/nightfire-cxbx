@@ -41,47 +41,9 @@ endif()
 #set(CMAKE_CXX_FLAGS_RELEASE "/MT")
 #set(CMAKE_CXX_FLAGS_DEBUG "/MTd")
 
-set(LAUNCHWRAPPER
-  # Must be kept at the top to ensure correct memory mapping
-  #src/memory.cpp
-
-  src/main.cpp
-  #src/memory.h
-  src/res/res.rc
-  src/wndproc.cpp
-  src/wndproc.h
-
-  src/cxbx/cxbxbinding.cpp
-  src/cxbx/cxbxbinding.h
-)
-
-# The CXBX-hosted launchers. Both carry the suffix, including driving_cxbx, which has no standalone
-# counterpart yet: the point of the name is to say that it still needs cxbx-reloaded, which a plain
-# "driving.exe" beside a standalone "action.exe" would quietly deny. action_cxbx is kept as the reference to
-# bisect the standalone path against; both go when CXBX does. See docs/driving-engine-plan.md.
-add_executable(action_cxbx WIN32 ${LAUNCHWRAPPER})
-add_executable(driving_cxbx WIN32 ${LAUNCHWRAPPER})
-
-target_link_libraries(action_cxbx PRIVATE
-  shlwapi
-)
-
-target_link_libraries(driving_cxbx PRIVATE
-  shlwapi
-)
-
 # The Xbox / PS2 implementations were of another era, one where memory safety was apparently a foreign concept to game developers
 # We'll use the original unsafe versions, and tell the compiler to stop nagging us, because YOLO
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-
-# We aren't currently loading the XBE on our end, so this is unnecessary
-#target_link_options(action_cxbx PRIVATE
-#  /INCREMENTAL:NO
-#  /BASE:0x10000
-#  /FIXED
-#  /DYNAMICBASE:NO
-#  /SAFESEH:NO
-#)
 
 add_library(actioninject SHARED
   src/dllmain.cpp
@@ -226,10 +188,9 @@ target_link_libraries(actioninject PRIVATE
   d3d9 d3dcompiler winmm ${XAUDIO2_LIB} xinput9_1_0 user32)
 
 
-# The standalone loader (stage B 4.2/4.3): maps the XBE itself and runs it in-process, with no emulator in
-# the process at all. This is "action.exe" - the canonical way to run the action engine - and the CXBX
-# launcher above is the one that now carries a suffix. Linked with /FIXED and no ASLR because the XBE is full
-# of absolute addresses and has to land at its own base; see src/loader/loadermain.cpp.
+# The loader: maps the XBE itself and runs it in-process. This is "action.exe", the way to run the action
+# engine. Linked with /FIXED and no ASLR because the XBE is full of absolute addresses and has to land at its
+# own base; see src/loader/loadermain.cpp.
 add_executable(action
   # reserve.cpp must stay first: its array has to be the first thing in .text so that the XBE, copied over
   # the start of the image, lands on the array rather than on the loader's own code. Xbe_Map checks this.
@@ -454,8 +415,6 @@ add_library(drivinginject SHARED
 # XAUDIO2_LIB is xaudio2 or xaudio2_9 - see actioninject above.
 target_link_libraries(drivinginject PRIVATE d3d9 d3dcompiler winmm xinput9_1_0 ${XAUDIO2_LIB} shell32)
 
-target_compile_definitions(action_cxbx PRIVATE UNICODE _UNICODE IS_ACTION)
-target_compile_definitions(driving_cxbx PRIVATE UNICODE _UNICODE IS_DRIVING)
 target_compile_definitions(actioninject PRIVATE UNICODE _UNICODE)
 target_compile_definitions(drivinginject PRIVATE UNICODE _UNICODE)
 # Experimental post-process anti-aliasing on the 3D scene, before the HUD and text, in both engines. Chosen by

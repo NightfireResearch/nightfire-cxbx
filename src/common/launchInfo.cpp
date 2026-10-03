@@ -19,8 +19,8 @@
 // own executable, inheriting its working directory and its standard handles so that one log carries on across
 // the relaunch - and exits. Two XBEs cannot share a process, because both are linked at 0x10000 and the loader
 // gets that address by being the image there, so the relaunch is the only shape this can take (see
-// docs/driving-engine-plan.md, section 0). Under the CXBX launchers there is no sibling loader to start, and the
-// process just says what was asked of it and exits, as it always did.
+// docs/driving-engine-plan.md, section 0). If the loader is not there, the process says what was asked of it and
+// exits, leaving the page in the file for whichever loader is started next.
 //
 // The file is not removed after it is read. The action engine treats its contents as the persistent PTPDATA
 // (Language_Get skips its first-run scan when there is data, see src/action/engine/XboxFile.cpp), and a stale
@@ -76,8 +76,8 @@ static HANDLE InheritableCopy(DWORD which) {
     return copy;
 }
 
-// Starts the loader for the named image, next to this process's own executable. False if there is no such
-// loader there - which is the case under the CXBX launchers, whose executable is cxbx's.
+// Starts the loader for the named image, next to this process's own executable. False if no loader is known
+// for the image or there is no such executable there.
 static bool StartLoaderFor(const char *executableName) {
     const char *slash = strrchr(executableName, '\\');
     const char *image = slash != NULL ? slash + 1 : executableName;

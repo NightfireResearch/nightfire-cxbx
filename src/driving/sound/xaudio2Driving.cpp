@@ -76,7 +76,7 @@ bool DrivingAudio_Start(void) {
     g_startAttempted = true;
     InitializeCriticalSection(&g_lock);
 
-    // XAudio2 is COM underneath; standalone, nobody has initialised it on this thread. RPC_E_CHANGED_MODE
+    // XAudio2 is COM underneath, and nobody has initialised it on this thread. RPC_E_CHANGED_MODE
     // only means it was already up in the other model, which XAudio2 does not mind.
     HRESULT com = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     if (FAILED(com) && com != RPC_E_CHANGED_MODE)

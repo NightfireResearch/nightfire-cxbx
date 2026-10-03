@@ -148,8 +148,8 @@ void xboxInitInputDevices(void);
 
 // Real signature: psiInput_PollDevices() - called once per frame by the original (untouched) Input_Update,
 // and again in a drain loop by maybeInputShutdown. Talks straight to the host's
-// real gamepads via Win32 XInputGetState/XInputSetState now, instead of going through CXBX's emulation of
-// the original Xbox kernel's XAPILIB device layer - see the block comment above its definition.
+// real gamepads via Win32 XInputGetState/XInputSetState now, instead of going through the original Xbox
+// XAPILIB device layer - see the block comment above its definition.
 void psiInput_PollDevices(void);
 
 float psiInput_GetJoystickLX(uint i);

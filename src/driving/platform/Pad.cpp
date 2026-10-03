@@ -9,8 +9,7 @@
 #define gPadInitialised (*(bool *)0x00241e90)
 static const int kPorts = 4;
 
-// XAPI, called at its entry points in the XBE: under the standalone loader those are XboxInput.cpp's
-// replacements, under CXBX the emulator's. XDEVICE_TYPE_GAMEPAD is the address of the device-type table XAPI
+// XAPI, called at its entry points in the XBE, which are XboxInput.cpp's replacements. XDEVICE_TYPE_GAMEPAD is the address of the device-type table XAPI
 // keeps in the XBE.
 #define XDEVICE_TYPE_GAMEPAD ((void *)0x00183aec)
 struct XboxGamepadState {   // XINPUT_STATE

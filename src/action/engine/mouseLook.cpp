@@ -20,8 +20,8 @@
 // slightly wrong is much better than having no mouse.
 //
 // Raw input is delivered as WM_INPUT to a window, and the window's messages are pumped by the thread that
-// created it. The game's thread pumps nothing - the render window belongs to the loader (or, under CXBX, to
-// the launcher in another process entirely), so neither is any use here. Hence the message-only window below,
+// created it. The game's thread pumps nothing, and the render window belongs to the loader's thread, so it is
+// no use here. Hence the message-only window below,
 // created on and pumped from the game thread, registered with RIDEV_INPUTSINK so that it receives movement
 // without ever being in the foreground. Whether the game should actually be listening is a separate question,
 // answered by the focus check rather than by who has the keyboard.
@@ -41,15 +41,15 @@
 // HIDING THE POINTER is done by giving the window class a fully transparent cursor, which is a roundabout way
 // of saying it and is the only one that works from here. The two direct ways both belong to a thread this code
 // is not: ShowCursor keeps its counter per thread input queue, and SetCursor is ignored unless the calling
-// thread is the one currently receiving mouse input. The window belongs to the loader's thread (under CXBX, to
-// another process entirely), and the game's thread owns nothing the pointer is ever over, so both quietly do
+// thread is the one currently receiving mouse input. The window belongs to the loader's thread, and the game's
+// thread owns nothing the pointer is ever over, so both quietly do
 // nothing. Setting the class cursor to NULL does not work either, for a different reason: DefWindowProc reads
 // that as "leave the cursor alone" rather than as "no cursor", so the arrow just stays as it was.
 //
 // A transparent cursor sidesteps all of it. SetClassLong is process-wide rather than queue-bound, and the
-// window's own thread then applies it through DefWindowProc exactly as it would any other cursor. Under CXBX
-// the window belongs to another process so the call fails, and the pointer stays visible, parked in the middle
-// of the window - which is worth a line in the log rather than silence, since it looks like a bug.
+// window's own thread then applies it through DefWindowProc exactly as it would any other cursor. If the call
+// fails the pointer stays visible, parked in the middle of the window - which is worth a line in the log rather
+// than silence, since it looks like a bug.
 // ---------------------------------------------------------------------------------------------------------------
 
 #define MOUSELOOK_MESSAGE_WINDOW_CLASS "NightfireMouseLookSink"
@@ -89,13 +89,9 @@ static int      g_wheelAccum = 0;                        // raw wheel movement n
 static int      g_wheelStep = 0;                         // -1, 0 or +1, for this frame only
 static bool     g_scoped = false;                        // as of the last Player_ViewClamping
 
-// Either host's render window: CXBX's, or the one the loader creates when running standalone. Same order as
-// psiInput.cpp's own lookup, and for the same reason - nothing changes for a CXBX-hosted run.
+// The render window the loader creates. Same lookup as psiInput.cpp's.
 static HWND FindRenderWindow(void) {
-    HWND window = FindWindowA("CxbxRender", NULL);
-    if (window == NULL)
-        window = FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
-    return window;
+    return FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
 }
 
 static bool WindowHasFocus(HWND window) {

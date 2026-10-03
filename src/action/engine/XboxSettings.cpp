@@ -1,6 +1,5 @@
 #include "XboxSettings.h"
 #include "../actionhelpers.h"
-#include "../../common/standalone.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,15 +8,13 @@
 #define SETTINGS_FILE "settings.ini"
 
 // ---------------------------------------------------------------------------------------------------------------
-// Plain host settings file, replacing CXBX's emulation of the Xbox EEPROM (region/language/display/audio/
-// parental-control settings normally configured once via the Xbox dashboard, read here by the game through
+// Plain host settings file, standing in for the Xbox EEPROM (region/language/display/audio/parental-control
+// settings normally configured once via the Xbox dashboard, read here by the game through
 // ExQueryNonVolatileSetting). GetParentalControlSettings/LanguageNVSetting/XboxGetAVRegion/GetVideoMode/
-// GetAudioMode below all originally read that EEPROM and now read this file instead, matching how
-// psiLaunch.bin/psiSaveData/direct XInput replace their own slices of CXBX elsewhere in this codebase.
+// GetAudioMode below all originally read that EEPROM and now read this file instead.
 //
 // Only region/language/widescreen/FPS are actually exposed as settings - everything else (audio mode,
-// parental controls) gets a fixed, sensible default, since nothing about them is CXBX-specific/interesting
-// to a PC player.
+// parental controls) gets a fixed, sensible default, since nothing about them is interesting to a PC player.
 //
 // Region matters beyond display timing: XboxGetAVRegion() also decides which of two English text variants
 // FUN_000e92a0 selects (English + region=NTSC selects one internal language id, English + any other region
@@ -30,13 +27,11 @@
 // Direct3D/d3dSeam.cpp, same logic) feeds
 // XboxGetAVRegion()'s result into the D3D9 device's creation flags, including FullScreen_RefreshRateInHz
 // (60Hz for NTSC, 50Hz for PAL, via the confusingly-named Gfx.IsPalI - see mainloop's own comment on that).
-// On the machine this was diagnosed on, Region=NTSC left background-movie (FMV) playback permanently black
-// (the video decoder never signalled "frame ready", no crash) while Region=PAL played correctly. That is
-// NOT evidence that NTSC/60Hz is broken in general - the actual requirement is almost certainly that this
-// setting has to agree with whatever CXBX itself is configured/emulating for video timing, and PAL simply
-// happened to match that machine's CXBX setup. If FMV breaks after switching a fresh setup to NTSC, try
-// PAL, or vice versa, and check CXBX's own video/region configuration rather than assuming one value is
-// universally correct. We haven't traced the exact mechanism inside CXBX's own FMV/timing code.
+// The default dates from when the game ran under CXBX: there, Region=NTSC left background-movie (FMV)
+// playback permanently black (the video decoder never signalled "frame ready", no crash) while Region=PAL
+// played correctly - almost certainly because the setting had to agree with CXBX's own emulated video
+// timing. That was never evidence that NTSC/60Hz is broken in itself, and it has not been rechecked under
+// the loader; the default simply stayed PAL.
 // ---------------------------------------------------------------------------------------------------------------
 
 struct Settings {
@@ -71,10 +66,7 @@ static void WriteDefaultSettingsFile() {
         "\n"
         "; NTSC or PAL - also picks which of two English text variants the game uses (a real regional\n"
         "; product tie-in: the \"Stunner\" gadget is rebranded as a Philips-brand shaver outside NTSC/US).\n"
-        "; This needs to agree with whatever CXBX itself is configured/emulating for video timing, or\n"
-        "; background-movie (FMV) playback can end up permanently black. Defaults to PAL because that's\n"
-        "; what matched this project's own CXBX setup during testing - if movies are black for you, try\n"
-        "; switching this (and check CXBX's own region/video settings too).\n"
+        "; If background movies stay black for you, try switching this.\n"
         "Region=PAL\n"
         "\n"
         "; English, Japanese, German, French, Spanish, or Italian\n"
@@ -123,7 +115,7 @@ static void TrimInPlace(char *s) {
 static void LoadSettingsFile() {
     // Defaults, used for anything the file doesn't mention (or if it can't be read/created at all)
     g_settings.widescreen = false;
-    g_settings.avRegion = 3; // PAL-I - matched this project's own CXBX setup in testing; see block comment above
+    g_settings.avRegion = 3; // PAL-I - see the block comment above for why
     g_settings.language = 1; // English
     g_settings.fpsOverride = 0;
     g_settings.reverb = true;
@@ -208,7 +200,7 @@ static Settings *GetSettings() {
 
 // AUTOINJECT
 uint32_t GetParentalControlSettings(void) {
-    return 0; // No restrictions - CXBX's EEPROM emulation had no meaningful equivalent worth preserving here
+    return 0; // No restrictions
 }
 
 // Real signature/behaviour: see the block comment above.
@@ -248,19 +240,9 @@ int Settings_GetFPSOverride(void) {
     return GetSettings()->fpsOverride;
 }
 
-// The backends are not settings: they follow the host. Under the CXBX launchers the D3D8 and DSOUND calls go to
-// CXBX's HLE, as they always did. Under the standalone loader there is no CXBX in the process to hand them to,
-// so the native backends are the only thing that can run - "cxbx" there sent every call to a kernel import the
-// loader does not have (KeInitializeDpc, ordinal 107) and the game stopped before drawing anything. These were
-// GraphicsBackend and AudioBackend in settings.ini once; a file that still has them is fine, since unknown keys
-// are ignored.
-int Settings_GetGraphicsBackend(void) {
-    return Xbox_RunningStandalone() ? 1 : 0;
-}
-
-int Settings_GetAudioBackend(void) {
-    return Xbox_RunningStandalone() ? 1 : 0;
-}
+// GraphicsBackend and AudioBackend were settings.ini keys once, when the game could also run under CXBX's HLE.
+// The native backends are the only ones now; a file that still has those keys is fine, since unknown keys are
+// ignored.
 
 bool Settings_GetReverbEnabled(void) {
     return GetSettings()->reverb;

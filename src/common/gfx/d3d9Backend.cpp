@@ -13,7 +13,7 @@
 
 // See d3d9Backend.h for the overview.
 //
-// Checkpoint 1: device creation on CXBX's render window, clear, present, viewport and gamma.
+// Checkpoint 1: device creation on the render window, clear, present, viewport and gamma.
 // Checkpoint 2 (this file now): Xbox texture headers built here instead of by XGRAPHC, host textures created
 //   lazily at bind time with unswizzling and format conversion (YUY2 movie frames included), the 11 NV2A
 //   render-state methods plus cull/fog/border colour, texture-stage state read from D3D8's own deferred state
@@ -33,8 +33,6 @@
 enum AntiAliasingMethod { AA_OFF = 0, AA_FXAA = 1, AA_SMAA = 2 };
 static int g_antiAliasing = AA_FXAA;
 #endif
-
-int g_gfxBackend = GFX_BACKEND_CXBX;
 
 // Backend messages go to the console and to d3d9_backend.log in the working directory (easier to hand over).
 static void D3D9Log(const char *fmt, ...) {
@@ -689,29 +687,9 @@ static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
 // Window and device
 // ---------------------------------------------------------------------------------------------------------------
 
-// The launcher passes its own top-level window to CXBX as "/hwnd <decimal>" on the command line, and CXBX
-// creates its "CxbxRender" child inside it. Prefer the child (it's the area CXBX itself would draw to and it
-// tracks the launcher's resizing); fall back to the parent, then to a standalone CxbxRender window.
-//
-// Under the standalone loader there is no launcher and no CXBX, so the loader creates the window itself and
-// pumps its messages - see CreateRenderWindow in src/loader/loadermain.cpp. It is looked for last, so that
-// nothing changes for a CXBX-hosted run.
+// The loader creates the render window itself and pumps its messages - see CreateRenderWindow in
+// src/loader/loadermain.cpp.
 static HWND FindRenderWindow(void) {
-    HWND parent = NULL;
-    const char *cmd = GetCommandLineA();
-    const char *p = (cmd != NULL) ? strstr(cmd, "/hwnd") : NULL;
-    if (p != NULL)
-        parent = (HWND)(uintptr_t)strtoul(p + 5, NULL, 10);
-
-    HWND child = (parent != NULL) ? FindWindowExA(parent, NULL, "CxbxRender", NULL) : NULL;
-    if (child != NULL)
-        return child;
-    if (parent != NULL)
-        return parent;
-
-    HWND cxbx = FindWindowA("CxbxRender", NULL);
-    if (cxbx != NULL)
-        return cxbx;
     return FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
 }
 
@@ -720,8 +698,7 @@ static HWND FindRenderWindow(void) {
 // The back buffer size only becomes known here, so this is where the window is given a client area to match,
 // and the rendered image is presented 1:1 instead of being scaled into the guess.
 //
-// Only our own window is touched. Under CXBX the render window belongs to the launcher, which sizes and
-// positions it for its own reasons; resizing it from in here would fight with it.
+// Only a window of our own class is touched.
 static void SizeWindowToBackBuffer(HWND window, uint32_t width, uint32_t height) {
     char className[64];
     if (GetClassNameA(window, className, sizeof(className)) == 0 ||
@@ -868,7 +845,7 @@ uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWi
 
     g_window = FindRenderWindow();
     if (g_window == NULL) {
-        D3D9Log("[d3d9] no render window found (no /hwnd on the command line and no CxbxRender window).\n");
+        D3D9Log("[d3d9] no render window found (no NightfireRender window).\n");
         return 0x8876086Cu; // D3DERR_INVALIDCALL
     }
 

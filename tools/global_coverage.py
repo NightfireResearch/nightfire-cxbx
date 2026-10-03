@@ -348,7 +348,7 @@ class CallGraph:
             for m in re.finditer(r"WriteJmpTo\(\s*(0x[0-9a-fA-F]+)", open(p, encoding="utf-8", errors="replace").read()):
                 self.replaced.add(int(m.group(1), 16))
         # The seams' own patches of XDK entry points (engine/XboxStartup.cpp, sound/dsndStream.cpp), made with a
-        # local WriteJump because they apply only when running without CXBX - which is what we are building towards
+        # local WriteJump rather than through the generated table
         for p in source_files():
             for m in re.finditer(r"WriteJump\(\s*(0x[0-9a-fA-F]+)", open(p, encoding="utf-8", errors="replace").read()):
                 self.replaced.add(int(m.group(1), 16))

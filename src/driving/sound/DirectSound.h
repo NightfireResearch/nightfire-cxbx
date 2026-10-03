@@ -5,8 +5,7 @@
 // under the XDK's names and conventions (__stdcall, the interface first), and the structures they take at the
 // layouts the game fills in. EA's platform driver (snd/Platform.cpp) and voice server (snd/Voices.cpp) call these
 // directly; the game's own calls reach the same functions through the five-byte jumps the seam writes over the
-// original entry points. Under CXBX, where the seam is not installed, each of them passes the call on to the
-// original entry point (CXBX's HLE), as a call to the original's address would.
+// original entry points.
 
 #include <stdint.h>
 

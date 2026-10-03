@@ -453,7 +453,7 @@ void GameFlow_QuickPushState(uint state) {
 // glow on pickups and usable doors, which is what led here.
 //
 // CXBX never had the problem because it rewrites every rdtsc in the image and emulates it at the Xbox's rate
-// (Cxbx-Reloaded/src/core/kernel/support/PatchRdtsc.cpp). The standalone loader executes the instruction
+// (Cxbx-Reloaded/src/core/kernel/support/PatchRdtsc.cpp). The loader executes the instruction
 // natively, so the arithmetic has to be corrected here instead.
 //
 // QueryPerformanceCounter rather than rdtsc scaled by a measured CPU frequency: it is already the fixed-rate

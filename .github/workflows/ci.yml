@@ -71,8 +71,6 @@ jobs:
             build/macos/drivinginject.dll
             build/macos/av*.dll
             build/macos/FFmpeg-*.txt
-            build/macos/action_cxbx.exe
-            build/macos/driving_cxbx.exe
 
   # The same cross build from Linux, with the distribution's mingw-w64 in place of Homebrew's. The toolchain
   # file is shared with macOS and finds the /usr sysroot by itself. Pinned to 26.04 because the build needs
@@ -112,5 +110,3 @@ jobs:
             build/linux/drivinginject.dll
             build/linux/av*.dll
             build/linux/FFmpeg-*.txt
-            build/linux/action_cxbx.exe
-            build/linux/driving_cxbx.exe

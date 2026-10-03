@@ -3,21 +3,21 @@
 #include "GraphicsSystem.h"
 #include "../../actionhelpers.h"
 #include "../XboxSettings.h" // GetVideoMode/XboxGetAVRegion, for xboxInitGraphics
-#include "../../../common/gfx/d3d9Backend.h"      // the native D3D9 backend the entry-point wrappers can dispatch to
+#include "../../../common/gfx/d3d9Backend.h"      // the native D3D9 backend the entry-point wrappers dispatch to
 
 #include <stdint.h>
 #include <string.h>
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>   // VirtualQuery, for the uncached-alias probe in D3D_UncachedAliasOf
+#include <windows.h>
 #include <math.h>
 #include <stdio.h>
 #include <type_traits>
 
 // ---------------------------------------------------------------------------------------------------------------
 // TEMPORARY tracing of every D3D8 entry point this seam calls and every D3D8-internal state slot it pokes -
-// the inventory pass for the eventual non-CXBX graphics backend. Set D3DSEAM_TRACE to 0 to compile it all out
-// (every D3D8_*/D3DDevice_* macro then collapses back to the plain pointer / U32_AT it was before).
+// the inventory pass that drove the D3D9 backend's bring-up. Set D3DSEAM_TRACE to 0 to compile it all out
+// (the entry-point wrappers then just call the backend, and D3D8_TRACED collapses to a plain U32_AT).
 //
 // Two things are recorded, both to d3dSeam_trace.log in the working directory:
 //  - a running table per entry point / state slot: call count plus the set of distinct "key" values seen
@@ -213,48 +213,40 @@ template<typename... A> static inline void D3DSeamTraceCall(const char *, A...) 
 #endif // D3DSEAM_TRACE
 
 // ---------------------------------------------------------------------------------------------------------------
-// Entry-point dispatch. Every D3D8 entry point the seam calls goes through one of these wrappers (via the
-// D3DDevice_*/D3DResource_* macros below): it records the call when tracing is on, then either forwards to
-// the D3D8 library (CXBX mode) or to the attached D3D9 backend function (d3d9 mode - see d3d9Backend.h). An
-// entry point with no backend function attached is counted as missing in d3d9 mode and does nothing. One
-// struct per calling convention, since x86 MSVC makes the convention part of the pointer type.
+// Entry-point dispatch. Every D3D8 entry point the seam calls goes through this wrapper (via the
+// D3DDevice_*/D3DResource_* macros below): it records the call when tracing is on, then calls the D3D9 backend
+// function attached to it (see d3d9Backend.h). The XBE's own D3D8 function is never called - its pointer is
+// passed only so the wrapper can take the entry point's signature from it, and so each macro still names the
+// original it stands for. An entry point with no backend function attached is counted as missing and does
+// nothing. The factory comes once per calling convention, since x86 MSVC makes the convention part of the
+// pointer type.
 // ---------------------------------------------------------------------------------------------------------------
-#define D3DSEAM_TRACED_CALL_TYPE(CONV, SUFFIX)                                                              \
-    template<typename R, typename... A> struct D3DSeamTracedCall##SUFFIX {                                  \
-        const char *name;                                                                                   \
-        R(CONV *fn)(A...);                                                                                  \
-        R(*backend)(A...);                                                                                  \
-        R operator()(A... args) const {                                                                     \
-            D3DSeamTraceCall(name, args...);                                                                \
-            if (g_gfxBackend == GFX_BACKEND_D3D9) {                                                         \
-                if (backend != NULL)                                                                        \
-                    return backend(args...);                                                                \
-                D3D9_BackendMissing(name);                                                                  \
-                return R();                                                                                 \
-            }                                                                                               \
-            return fn(args...);                                                                             \
-        }                                                                                                   \
-    };                                                                                                      \
-    template<typename R, typename... A>                                                                     \
-    static inline D3DSeamTracedCall##SUFFIX<R, A...> D3DSeamTraced(const char *name, R(CONV *fn)(A...)) {   \
-        return { name, fn, NULL };                                                                          \
-    }                                                                                                       \
-    template<typename R, typename... A>                                                                     \
-    static inline D3DSeamTracedCall##SUFFIX<R, A...> D3DSeamTraced(const char *name, R(CONV *fn)(A...),     \
-                                                                   R(*backend)(A...)) {                     \
-        return { name, fn, backend };                                                                       \
+template<typename R, typename... A> struct D3DSeamTracedCall {
+    const char *name;
+    R(*backend)(A...);
+    R operator()(A... args) const {
+        D3DSeamTraceCall(name, args...);
+        if (backend != NULL)
+            return backend(args...);
+        D3D9_BackendMissing(name);
+        return R();
     }
-D3DSEAM_TRACED_CALL_TYPE(__stdcall, Std)
-D3DSEAM_TRACED_CALL_TYPE(__fastcall, Fast)
+};
+#define D3DSEAM_TRACED_CALL_TYPE(CONV)                                                                      \
+    template<typename R, typename... A>                                                                     \
+    static inline D3DSeamTracedCall<R, A...> D3DSeamTraced(const char *name, R(CONV *)(A...),               \
+                                                           R(*backend)(A...)) {                             \
+        return { name, backend };                                                                           \
+    }
+D3DSEAM_TRACED_CALL_TYPE(__stdcall)
+D3DSEAM_TRACED_CALL_TYPE(__fastcall)
 
 // ---------------------------------------------------------------------------------------------------------------
-// "Thin seam" reimplementation. These are Eurocom's own small wrapper functions that sit directly on top of
-// the statically-linked D3D8 library CXBX still hooks via its own OOVPA pattern matching - we're reimplementing
-// THIS layer in clean, normally-compiled C++ while deliberately leaving every D3D8::/XGRAPHC:: function it
-// calls completely untouched, so CXBX's own D3D8 emulation keeps working exactly as it does today. The
-// eventual full DX9 switch (replacing those D3D8:: functions too) is a separate, later step - this is
-// groundwork for it, done first specifically so calling-convention surprises like the one below get caught
-// now, while everything is still cross-checkable against the current, still-CXBX-backed known-good baseline.
+// "Thin seam" reimplementation. These are Eurocom's own small wrapper functions that sat directly on top of
+// the statically-linked D3D8 library. Each D3D8::/XGRAPHC:: function they called is now a macro naming the
+// original's address and the D3D9 backend function that replaces it (see the dispatch wrapper above). The
+// signatures below were taken from the originals, so they still matter: the backend function's signature has
+// to match.
 //
 // Confirmed via raw disassembly (not just decompile, and not just the has_custom_variable_storage flag -
 // that flag only reflects what Ghidra's own analysis or a human has already caught, not a guarantee that
@@ -468,10 +460,6 @@ void* allocateAligned0x1000(int numBytes);
 // the stack like a normal __stdcall function; only this one, being the sole one whose method is a caller-
 // supplied runtime value rather than baked into its own bytecode, uses registers instead.
 static void D3D_SetRenderStateSimple(uint32_t method, uint32_t value) {
-    if (g_gfxBackend == GFX_BACKEND_D3D9) {
-        D3D9_SetRenderStateSimple(method, value); // hand-dispatched: the ECX/EDX convention keeps it off the wrapper
-        return;
-    }
 #if D3DSEAM_TRACE
     // Traced by hand (the ECX/EDX convention keeps it off the D3DSeamTraced path): once under the shared entry
     // point name keyed by method, and once under a per-method name keyed by value, so the summary shows both
@@ -492,12 +480,7 @@ static void D3D_SetRenderStateSimple(uint32_t method, uint32_t value) {
             D3DSeamTraceRecord(methodNames[slot], value, NULL);
     }
 #endif
-    void(*fn)() = (void(*)())D3DDevice_SetRenderState_Simple_ADDR;
-    __asm {
-        mov ecx, method
-        mov edx, value
-        call fn
-    }
+    D3D9_SetRenderStateSimple(method, value); // hand-dispatched: the ECX/EDX convention keeps it off the wrapper
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -509,37 +492,20 @@ static void D3D_SetRenderStateSimple(uint32_t method, uint32_t value) {
 // vertex/index/overlay buffer tables) can use it too.
 void D3DSeamTableExhaustedWarning(const char *tableName, const char *extraContext);
 
-// The ONE place the seam relies on Xbox memory-map semantics rather than a D3D8 entry point: on the Xbox,
+// Where the original relied on Xbox memory-map semantics rather than a D3D8 entry point: on the Xbox,
 // 0x80000000 | physicalAddress is the uncached alias of physical RAM. Every D3D resource's Data word is such a
 // physical address with the top nibble stripped (D3DResource_Register and D3DTexture_GetSurfaceLevel2 both mask
-// it), so ANY CPU access to resource pixel data has to go through this - psiBlurScreen reading the live
-// backbuffer and Texture_GetRawDataPtr handing psiDecompressWoman a texture's pixels. Under CXBX the alias is mapped to the same host memory as the contiguous
-// allocations the data lives in (which themselves sit at 0x8xxxxxxx addresses), so it simply works. A
-// non-CXBX backend replaces these uses (a GPU readback for the backbuffer, the plain pointer plus a "contents
-// changed" notification for the textures) - which is why they're all funnelled through this helper.
-// Standalone there is no alias to take. Resource memory comes from
-// MmAllocateContiguousMemoryEx, which is a plain VirtualAlloc (see src/loader/kernel.cpp), so a resource's
-// Data word is already the address the CPU should use - Nightfire's land around 0x09000000-0x0c000000, well
-// inside the low half, so the top nibble the Xbox strips was never set. OR'ing 0x80000000 into one of those
-// produces an address belonging to nothing, and the first thing to find out was the XMV decoder writing a
-// frame to 0x8b042700 when the surface it locked was at 0x0b042700.
+// it), so the game's CPU accesses to resource pixel data OR the bit back in - psiBlurScreen reading the live
+// backbuffer and Texture_GetRawDataPtr handing psiDecompressWoman a texture's pixels. Both are funnelled
+// through this helper.
 //
-// Which host we are on is worked out once, from the first address that comes through here, by asking whether
-// its alias is actually mapped. That is better than a build-time switch or a "is CXBX loaded" test, because
-// it checks the thing that actually matters rather than a proxy for it.
+// Here there is no alias to take. Resource memory comes from MmAllocateContiguousMemoryEx, which is a plain
+// VirtualAlloc (see src/loader/kernel.cpp), so a resource's Data word is already the address the CPU should
+// use. OR'ing 0x80000000 into one produces an address belonging to nothing - the first thing to find out was
+// the XMV decoder writing a frame to 0x8b042700 when the surface it locked was at 0x0b042700. (CXBX mapped the
+// alias onto the same memory, which is why the helper once probed for it.)
 static inline void *D3D_UncachedAliasOf(uint32_t address) {
-    static int aliasIsMapped = -1;
-    void *alias = (void*)(uintptr_t)(address | 0x80000000u);
-
-    if (aliasIsMapped < 0) {
-        MEMORY_BASIC_INFORMATION mbi;
-        memset(&mbi, 0, sizeof(mbi));
-        aliasIsMapped = (VirtualQuery(alias, &mbi, sizeof(mbi)) == sizeof(mbi) && mbi.State == MEM_COMMIT);
-        printf("[d3dSeam] uncached alias of resource memory: %s\n",
-               aliasIsMapped ? "mapped, using 0x8xxxxxxx as on the Xbox"
-                             : "not mapped, using resource addresses directly");
-    }
-    return aliasIsMapped ? alias : (void*)(uintptr_t)address;
+    return (void*)(uintptr_t)address;
 }
 
 // The extra-context line every table-full diagnostic prints (defined up here since RegisterTexture is the
@@ -2904,9 +2870,8 @@ void d3dSetLevelDirectionVector(float x, float y, float z) {
 // d3dGetIndexBufferData
 // ---------------------------------------------------------------------------------------------------------------
 
-// Returns the pixel-data pointer of a registered texture (its D3D header's Data field, +4) with 0x80000000
-// OR'd in - the Xbox's uncached-alias view of physical RAM (same trick psiBlurScreen relies on, see its
-// comment). Only caller is psiDecompressWoman, which writes decompressed frames straight into the texture.
+// Returns the pixel-data pointer of a registered texture (its D3D header's Data field, +4). The original OR'd
+// in 0x80000000 - the Xbox's uncached-alias view of physical RAM (see D3D_UncachedAliasOf). Only caller is psiDecompressWoman, which writes decompressed frames straight into the texture.
 // NULL for an empty slot.
 //
 // AUTOINJECT
@@ -2915,8 +2880,7 @@ void * Texture_GetRawDataPtr(int textureSlot) {
     if (texSlot->baseTexture == NULL)
         return NULL;
     uint32_t data = *(uint32_t*)((char*)texSlot->baseTexture + 4);
-    if (g_gfxBackend == GFX_BACKEND_D3D9)
-        D3D9_NotifyTextureModified(texSlot->baseTexture); // the caller is about to write pixels through this pointer
+    D3D9_NotifyTextureModified(texSlot->baseTexture); // the caller is about to write pixels through this pointer
     return D3D_UncachedAliasOf(data);
 }
 
@@ -3327,9 +3291,6 @@ void xboxInitGraphics(void) {
     g_xboxRenderStateTable = 0x001119D0u;
     g_overlayTableBase = (uint32_t)(uintptr_t)&Gfx.overlayQuads[0];
     g_overlayTableEnd = g_overlayTableBase + sizeof(Gfx.overlayQuads);
-
-    g_gfxBackend = Settings_GetGraphicsBackend(); // decided once, before the first D3D8 entry point is touched
-    printf("[d3dSeam] graphics backend: %s\n", g_gfxBackend == GFX_BACKEND_D3D9 ? "d3d9 (native)" : "cxbx (D3D8 HLE)");
 
     memset(&Gfx, 0, sizeof(Gfx));
 

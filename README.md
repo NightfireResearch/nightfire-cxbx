@@ -21,10 +21,9 @@ patched over the originals - `tools/preprocess.py` turns `AUTOINJECT`and `FUNC_A
 into a table of jumps. Everything else still runs as shipped. The proportion goes up over time; nothing has
 to be finished before the game runs.
 
-Replacing a whole library rather than one function is done with a "seam". In the action engine every entry
-point goes through a dispatcher that can send the call either to the original or to a native backend, chosen
-by a setting - which is how Direct3D 8 became Direct3D 9 and DirectSound became XAudio2, and why both hosts
-still work: the CXBX path is the reference to bisect a regression against. The driving engine's seams sit at
+Replacing a whole library rather than one function is done with a "seam". In the action engine the seam sits
+above the library, in Eurocom's own wrapper functions, which are reimplemented to call a native backend - which
+is how Direct3D 8 became Direct3D 9 and DirectSound became XAudio2. The driving engine's seams sit at
 the library boundary instead, every D3D8 and DirectSound entry point patched at its own address, because its
 engine above them is too large and too unnamed to reimplement first. Both engines share the Direct3D 9
 backend, which translates the NV2A's vertex programs and register combiners to HLSL at run time.
@@ -33,10 +32,13 @@ The pieces:
 
 | | |
 |---|---|
-| `action.exe` | The standalone loader (`src/loader/`), for the action engine. Maps the XBE at its link address, resolves its kernel imports, creates the window, runs the game. |
+| `action.exe` | The loader (`src/loader/`), for the action engine. Maps the XBE at its link address, resolves its kernel imports, creates the window, runs the game. |
 | `driving.exe` | The same loader, built for the driving engine. |
-| `actioninject.dll`, `drivinginject.dll` | The reimplemented functions and the seams, one per engine. Loaded by either host, unchanged. |
-| `action_cxbx.exe`, `driving_cxbx.exe` | The old launchers: run the game inside cxbx-reloaded and inject the same DLLs. |
+| `actioninject.dll`, `drivinginject.dll` | The reimplemented functions and the seams, one per engine, loaded by the loader. |
+
+The project began by running the game inside cxbx-reloaded and injecting those DLLs into it; the loader
+replaced it, and the CXBX launchers were removed on 3 October 2026 (`docs/cxbx-removal-plan.md` has the
+history). The loader is the only way the game runs.
 
 ## Getting started
 
@@ -51,15 +53,12 @@ You need a dump of your own Xbox disc. The game data is not in this repository a
 * For a higher resolution, set `RenderWidth` and `RenderHeight` in `settings.ini` (with `Widescreen=1` for a
   16:9 size). Both engines render their 640x480 into a backbuffer of that size; 0 turns it off.
 
-To compare against the emulator you also need cxbx-reloaded extracted somewhere, and `action_cxbx.exe` /
-`driving_cxbx.exe` will ask for its location the first time. The backends follow the host: under those
-launchers the game draws and plays through CXBX's emulation, under `action.exe` and `driving.exe` through
-Direct3D 9 and XAudio2. (`settings.ini` once had `GraphicsBackend` and `AudioBackend` keys for this; they are
-ignored now.)
+(`settings.ini` once had `GraphicsBackend` and `AudioBackend` keys, for choosing between the emulator's
+graphics and sound and the native backends; they are ignored now.)
 
 Switching between the two engines, and between the parts of a driving mission, is a process relaunch: the
 game writes its launch data to `psiLaunch.bin`, the loader starts `action.exe` or `driving.exe` from beside
-itself with the same log, and exits. Under the CXBX launchers it still stops and you start the other one.
+itself with the same log, and exits.
 
 ### Starting a driving mission directly
 
@@ -149,7 +148,7 @@ cmake -B . -A Win32
 cmake --build . --config Release --target driving drivinginject
 ```
 
-The targets are `action` and `actioninject`, `driving` and `drivinginject`, and the two `_cxbx` launchers. A
+The targets are `action` and `actioninject`, `driving` and `drivinginject`. A
 DLL is compiled with the shared backends in it, so a change under `src/common/` wants both injects rebuilt.
 `tools/preprocess.py` runs before the injected DLLs are compiled and needs a function name in
 `tools/functions_action.json` or `tools/functions_driving.json` for every `AUTOINJECT` tag, or an address via
@@ -170,7 +169,7 @@ DLL is compiled with the shared backends in it, so a change under `src/common/` 
 | `tools/alloc_sizes.py` | Finds every allocation in the driving engine with its size, name and constructor, and checks Ghidra's structure sizes against them; `--json` writes `tools/alloc_sizes_driving.json`, which pads overlay classes out to the game's real sizes. |
 | `tools/survey_xbe.py` | Prints an XBE's base, size, kernel imports and FS-segment usage - how much of the startup incompatibility applies to it. |
 | `tools/kernel_imports.py` | Which kernel imports live game code actually reaches. |
-| `tools/gen_kernel_ordinals.py` | Regenerates the loader's kernel ordinal-to-name table from Cxbx-Reloaded's thunk table. |
+| `tools/gen_kernel_ordinals.py` | Regenerates the loader's kernel ordinal-to-name table from Cxbx-Reloaded's thunk table (a reference checkout of its source, not a dependency). |
 | `tools/dsp_image_dump.py` | Extracts and identifies the audio DSP program the action engine downloads. |
 | `tools/xadpcm_test.ps1` | Checks the Xbox ADPCM decoder offline. |
 | `tools/check_loader_image.py` | Verifies a loader (`action.exe`, `driving.exe`) was linked at the XBE's base, big enough, with ASLR off, and with its own code above the XBE's end. Run by CI on every platform, because losing any of those link options fails at runtime rather than at build time. |
@@ -190,9 +189,9 @@ Conventions: rename in Ghidra, re-sync the JSON, cite addresses in comments so a
 
 ## Documentation
 
-`docs/cxbx-removal-plan.md` is the action engine's: what has been done to get it off cxbx-reloaded, what is
-left, and the method. `docs/driving-engine-plan.md` is the same for the driving engine, which is where the
-work is now; its section 0.1 is the current state and the list of what is left.
+`docs/cxbx-removal-plan.md` is the history of getting the action engine off cxbx-reloaded, which was finished
+and the emulator dropped on 3 October 2026. `docs/driving-engine-plan.md` is the driving engine's plan, which
+is where the work is now; its section 0.1 is the current state and the list of what is left.
 `docs/driving-injection-framework.md` is the design for tagging C++ replacements in the driving engine as
 easily as C ones in the action engine - overloads, `__thiscall`, class layouts - and how far it has got.
 `docs/audio-inventory.md`

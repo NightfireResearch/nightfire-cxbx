@@ -4,9 +4,8 @@
 #include <stdint.h>
 
 // These five all originally read the Xbox's EEPROM via ExQueryNonVolatileSetting - real hardware's
-// dashboard-configured region/language/display/audio/parental-control settings, backed on our end by
-// CXBX's own emulation of that EEPROM. All five are now sourced from a plain "settings.ini" in the
-// working directory instead - see the block comment above LoadSettingsFile in XboxSettings.cpp.
+// dashboard-configured region/language/display/audio/parental-control settings. All five are now
+// sourced from a plain "settings.ini" in the working directory instead - see the block comment above LoadSettingsFile in XboxSettings.cpp.
 uint32_t GetParentalControlSettings(void);
 uint32_t LanguageNVSetting(void);
 unsigned char XboxGetAVRegion(void);
@@ -17,19 +16,10 @@ uint32_t GetAudioMode(void);
 // their own region-appropriate default (mainloop does: 60 for NTSC-ish regions, 50 for PAL-I).
 int Settings_GetFPSOverride(void);
 
-// Which graphics backend runs, decided by the host rather than settings.ini: 0 = D3D8 through CXBX's HLE (under
-// the CXBX launchers), 1 = the seam's own native Direct3D 9 backend (under the standalone loader, see
-// Direct3D/d3d9Backend.h).
-int Settings_GetGraphicsBackend(void);
-
-// Which audio backend runs, decided the same way: 0 = DSOUND through CXBX's HLE, 1 = the audio seam's own
-// native XAudio2 backend (see sound/dsndSeam.h).
-int Settings_GetAudioBackend(void);
-
-// settings.ini's [Settings] Reverb key, for the xaudio2 backend only: whether to run the I3DL2 reverb
-// send on 3D voices. On by default. Worth being able to turn off, because the room it uses is an
-// approximation - the game never sets the room parameters, and CXBX never implemented reverb at all, so
-// there is nothing locally to check it against beyond listening with it on and off.
+// settings.ini's [Settings] Reverb key: whether the XAudio2 backend runs the I3DL2 reverb send on 3D
+// voices. On by default. Worth being able to turn off, because the room it uses is an approximation - the
+// game never sets the room parameters, and nothing available locally emulates the Xbox's reverb, so there is
+// nothing to check it against beyond listening with it on and off.
 bool Settings_GetReverbEnabled(void);
 
 // Whether to print the periodic frame-time and streaming-I/O summary. See PerfLog in settings.ini.

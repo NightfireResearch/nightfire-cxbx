@@ -43,7 +43,6 @@
 
 #include "common/launchInfo.h"
 
-#include "cxbx/cxbxbinding.h"
 
 void WriteMemory(size_t offset, void *data, size_t size)
 {
@@ -85,8 +84,8 @@ void Inject()
 
   // Resolution beyond the original 640x480.
   //
-  // The notes that were here described CXBX's behaviour and are no longer true. Under the standalone loader
-  // and the D3D9 backend, 1920x1080 was measured in September 2026 as running the whole way: the device is
+  // The notes that were here described the old emulator-hosted behaviour and are no longer true. Under the
+  // loader and the D3D9 backend, 1920x1080 was measured in September 2026 as running the whole way: the device is
   // created at that size, Mem_Init - which the old notes named as the crash point for anything above
   // 1024x768 - completes, levels load, shaders translate, background movies play, and the frame rate is
   // unchanged at 50 fps and about 0.9 ms of work per frame. The cost is nil because the limit here is draw

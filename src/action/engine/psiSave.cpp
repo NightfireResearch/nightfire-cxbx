@@ -31,8 +31,8 @@ static void BuildSavePath(char *out, size_t outSize, const char *profileName) {
 // (Xbox's hard drive save partition, named via FUN_000e3340 from the profileName below), creates a
 // "SaveMeta.xbx" sidecar file the Xbox dashboard needs to show save info outside the game, XOR-scrambles the
 // buffer with a timestamp-derived byte and signs it with XCalculateSignature (tamper protection), then writes
-// a custom 29-byte header + the (still scrambled) payload via the raw NT kernel file APIs - all of which goes
-// through CXBX's own emulation of the Xbox hard drive/utility-partition layer.
+// a custom 29-byte header + the (still scrambled) payload via the raw NT kernel file APIs - all of it against
+// the Xbox hard drive/utility-partition layer.
 //
 // None of that Xbox-specific plumbing serves any purpose off real hardware, so - matching how XLaunchNewImageA
 // bypasses the kernel's launch-data page entirely in favour of a plain host file (see launchInfo.cpp) - this

@@ -9,7 +9,7 @@
 #include "LaunchOptions.h"
 
 // ---------------------------------------------------------------------------------------------------------------
-// The driving engine's process startup, as run by the standalone loader - step 2 of docs/driving-engine-plan.md
+// The driving engine's process startup, as run by the loader - step 2 of docs/driving-engine-plan.md
 // section 7.
 //
 // The XBE's entry point creates a thread whose start routine is mainXapiStartup, and that function is the whole
@@ -330,10 +330,8 @@ static const unsigned char WBINVD_BYTES[2] = { 0x0f, 0x09 };
 // ---------------------------------------------------------------------------------------------------------------
 // Installing all of it.
 //
-// Deliberately not AUTOINJECT. That patches unconditionally, and every replacement here would be wrong under
-// CXBX: there the XBE's startup runs against CXBX's emulated kernel, which provides the KPCR these functions
-// are avoiding, does its own drive mounting, and expects the kernel-patching routine to have run. Patching by
-// hand keeps a CXBX-hosted run byte for byte as it was.
+// Patched by hand rather than through AUTOINJECT - a choice that dates from when the game could also run under
+// an emulator, whose kernel provided the KPCR these functions avoid - and called first thing in Inject().
 // ---------------------------------------------------------------------------------------------------------------
 
 static void WriteJump(unsigned address, void *target) {
@@ -350,9 +348,6 @@ static void WriteJump(unsigned address, void *target) {
 static void __cdecl Xbox_Entry(void);   // below, beside mainXapiStartup
 
 void Inject_XboxStartup(void) {
-    if (!Xbox_RunningStandalone())
-        return;
-
     WriteJump(0x0010e777, (void *)Xbox_Entry);               // the entry point
     WriteJump(0x0010e703, (void *)mainXapiStartup);          // the whole of process startup
     WriteJump(0x001104aa, (void *)Xbox_XapiInitProcess);     // heap and the XAPI initialiser table
@@ -481,9 +476,8 @@ DWORD WINAPI mainXapiStartup(LPVOID unused) {
     printf("[startup] calling main\n");
     fflush(stdout);
 
-    // Through preMain rather than straight to the game's main at 0x0005a1b0, so that a standalone run logs its
-    // arguments exactly as a CXBX-hosted one does - there the same call site is patched to reach it, see
-    // src/inject_driving.cpp. The game's main takes argc and argv, and does not return; they are the flags on
+    // Through preMain rather than straight to the game's main at 0x0005a1b0, so that the run logs its arguments
+    // (src/driving/main.cpp). The game's main takes argc and argv, and does not return; they are the flags on
     // driving.exe's command line that are the game's own (-pal, -T<track> and so on, see LaunchOptions.cpp).
     int argc = LaunchOptions_GameArgc();
     char **argv = BuildArgvInProcessHeap(argc, LaunchOptions_GameArgv());

@@ -1,7 +1,7 @@
 # Building the Windows binaries on macOS
 
-The whole project cross-compiles from macOS: `action.exe`, `actioninject.dll`, `drivinginject.dll` and the
-two CXBX launchers, all as 32-bit Windows PE files, with no Windows machine involved. This is what that
+The whole project cross-compiles from macOS: `action.exe`, `driving.exe`, `actioninject.dll` and
+`drivinginject.dll`, all as 32-bit Windows PE files, with no Windows machine involved. This is what that
 needs, what it is worth, and the handful of places where the result is not identical to an MSVC build.
 
 Validated 2026-09-20 on macOS 26.6.2, Apple M2 Max, with mingw-w64 13.0.0 (GCC 15.2.0 sysroot) and Apple

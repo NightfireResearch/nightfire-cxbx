@@ -163,8 +163,6 @@ static bool KeyHeld(int virtualKey) {
 static bool GameWindowHasFocus(void) {
     HWND render = FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
     if (render == NULL)
-        render = FindWindowA("CxbxRender", NULL);
-    if (render == NULL)
         return true;
     HWND root = GetAncestor(render, GA_ROOT_);
     HWND foreground = GetForegroundWindow();
@@ -387,8 +385,7 @@ static uint32_t __stdcall Xbox_XInputSetState(void *handle, XboxFeedback *feedba
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Installing them. Standalone only, as with everything else that replaces a piece of XAPI: under CXBX these
-// are already CXBX's own, talking to whatever it has bound to.
+// Installing them.
 // ---------------------------------------------------------------------------------------------------------------
 
 static void WriteJump(unsigned address, const void *target) {
@@ -403,9 +400,6 @@ static void WriteJump(unsigned address, const void *target) {
 }
 
 void Inject_XboxInput(void) {
-    if (!Xbox_RunningStandalone())
-        return;
-
     WriteJump(0x001848ad, (void *)Xbox_XInputOpen);
     WriteJump(0x00184903, (void *)Xbox_XInputClose);
     WriteJump(0x0018490f, (void *)Xbox_XInputGetCapabilities);

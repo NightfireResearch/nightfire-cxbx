@@ -1,6 +1,5 @@
 #include "LaunchOptions.h"
 #include "../../common/launchInfo.h"
-#include "../../common/standalone.h"
 
 #include <windows.h>
 #include <shellapi.h>
@@ -141,9 +140,6 @@ static char *Narrow(const wchar_t *wide) {
 void Inject_LaunchOptions(void) {
     g_gameArgv[0] = (char *)"D:\\DRIVING.XBE";
     g_gameArgc = 1;
-    if (!Xbox_RunningStandalone())
-        return;
-
     int count = 0;
     wchar_t **wide = CommandLineToArgvW(GetCommandLineW(), &count);
     if (wide == NULL)

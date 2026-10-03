@@ -146,8 +146,9 @@ closes the action engine's `AUTOLTCG` TODO.
   install compares them before patching, as `src/driving/platform/XboxTimer.cpp`'s `PatchSite` does. A stale
   `functions_*.json`, a different build of the XBE, or a wrong `FUNC_AT` is reported by name rather than
   written into the middle of an instruction.
-- **`AUTOINJECT(standalone)`**, for patches that must not apply under CXBX - the reason the startup
-  replacements in `XboxStartup.cpp` are patched by hand today.
+- ~~**`AUTOINJECT(standalone)`**, for patches that must not apply under CXBX~~ - no longer needed: CXBX was
+  dropped on 3 October 2026 and the loader is the only host. The startup replacements in `XboxStartup.cpp` are
+  still patched by hand, but only because they were written that way.
 - **Named replacements in crash reports.** The table of what has been replaced, so that `crash.log` can say
   "inside the replacement for `UFileLoader::FileLoad`" rather than an address in `drivinginject.dll`.
 
@@ -416,7 +417,7 @@ and no adaptor is needed - the pattern for most of the 37 register-argument func
 with few callers.
 
 **Checked.** Everything builds with every check passing. At the underwater fuse box the blue door lamps and the
-red laser-grid emitters glare as in the CXBX capture of that spot (`Capture-Fusebox.png`). In "Enemies
+red laser-grid emitters glare as in the CXBX-era capture of that spot (`Capture-Fusebox.png`). In "Enemies
 Vanquished", against frames dumped at the same teleports with the original code: the sun's flare (the
 `AddGlare` path) is pixel-identical in both; the street lamp's glare (the model path) is the same size and
 brightness, its spikes at a different angle because glares spin with time and the frames were taken at

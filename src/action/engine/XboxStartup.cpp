@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 // ---------------------------------------------------------------------------------------------------------------
-// The game's startup, as run by the standalone loader - stage B step 4.2 of docs/cxbx-removal-plan.md.
+// The game's startup, as run by the loader.
 //
 // The XBE's entry point creates a thread whose start routine is mainXapiStartup, and that function is the whole
 // of process startup: it patches the kernel, initialises XAPI, sets up the thread's TLS, runs the C runtime's
@@ -343,10 +343,9 @@ static void __cdecl Xbox_Entry(void) {
 // ---------------------------------------------------------------------------------------------------------------
 // Installing all of it
 //
-// Deliberately not AUTOINJECT or FUNC_AT. Those patch unconditionally, and every replacement in this file
-// would be wrong under CXBX: there the XBE's startup runs against CXBX's emulated kernel, which provides the
-// KPCR these functions were avoiding, does its own drive mounting, and expects the kernel-patching routine to
-// have run. Patching by hand here keeps a CXBX-hosted run byte for byte as it was.
+// Patched by hand rather than through AUTOINJECT or FUNC_AT. That once kept these replacements out of a
+// CXBX-hosted run, where CXBX's emulated kernel supplied the KPCR and the kernel image they avoid; it also
+// lets the instruction-level patches below check the bytes they overwrite.
 // ---------------------------------------------------------------------------------------------------------------
 
 static void WriteJump(unsigned address, void *target) {
@@ -361,9 +360,6 @@ static void WriteJump(unsigned address, void *target) {
 }
 
 void Inject_XboxStartup(void) {
-    if (!Xbox_RunningStandalone())
-        return;
-
     WriteJump(0x000eb2ac, (void *)Xbox_Entry);               // the entry point
     WriteJump(0x000eb238, (void *)mainXapiStartup);          // the whole of process startup
     WriteJump(0x000ed8ac, (void *)Xbox_XapiInitProcess);     // heap and the XAPI initialiser table
