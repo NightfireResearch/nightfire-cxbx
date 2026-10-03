@@ -365,6 +365,7 @@ add_library(drivinginject SHARED
   src/driving/devtools/FileSysShadow.cpp
   src/driving/devtools/FileSysTrace.cpp
   src/driving/devtools/MathShadow.cpp
+  src/driving/devtools/RealgraphShadow.cpp
   src/common/xbeOriginal.cpp
   src/driving/engine/UFileLoader.cpp
   src/driving/engine/PlayMPC.cpp
@@ -385,6 +386,8 @@ add_library(drivinginject SHARED
   src/driving/platform/RealMath.cpp
   src/driving/platform/VU0Math.cpp
   src/driving/platform/D3DXMath.cpp
+  src/driving/eagl/Realgraph.cpp
+  src/driving/eagl/Transform.cpp
   src/driving/platform/XboxTimer.cpp
   src/driving/platform/XboxInput.cpp
   src/driving/platform/LaunchOptions.cpp

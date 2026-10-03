@@ -1,6 +1,7 @@
 #include "MathShadow.h"
 
 #include "../platform/RealMath.h"
+#include "../eagl/Transform.h"
 #include "../../common/xbeOriginal.h"
 
 #include <windows.h>
@@ -716,6 +717,182 @@ void MathShadow_Run(void) {
         void *r = (original ? ORIG(SProject, 0x00113387) : D3DXVec3Project)(out, in->a[0], (pick & 8) ? viewport : NULL,
                                                                            proj, view, world);
         return (uint64_t)((char *)r - (char *)out);
+    });
+
+    // ---- EAGL::Transform (eagl/Transform.cpp). The originals are thiscall: called as __fastcall with nothing in EDX.
+    typedef void (__fastcall *TV)(void *, int, const void *);
+    typedef void (__fastcall *TVV)(void *, int, const void *, const void *);
+    typedef void (__fastcall *TFFF)(void *, int, float, float, float);
+    typedef void (__fastcall *TFFFF)(void *, int, float, float, float, float);
+    typedef void (__fastcall *T0)(void *, int);
+    typedef void (__fastcall *TAim)(void *, int, const void *, const void *, int, int);
+    typedef void (__fastcall *TSQT)(void *, int, float, float, float, float, float, float, float, float, float, float);
+    typedef double (*TInvert)(const float *, float *);
+    typedef double (*TDet)(const float *, int);
+    typedef double (*TMinor)(const float *, int, int, int);
+#define AS_T(p) ((Transform *)(p))
+    CASE("Transform::PostMult", MATRICES, N, 0x000f1500, {
+        memcpy(out, in->a[0], 64);
+        if (original) ORIG(TV, 0x000f1500)(out, 0, in->a[1]); else AS_T(out)->PostMult(in->a[1]);
+        return 0;
+    });
+    CASE("Transform::BuildTranslate", ANY, N, 0x000f1590, {
+        if (original) ORIG(TFFF, 0x000f1590)(out, 0, in->s[0], in->s[1], in->s[2]);
+        else AS_T(out)->BuildTranslate(in->s[0], in->s[1], in->s[2]);
+        return 0;
+    });
+    CASE("Transform::BuildRotTrans4", ANY, N, 0x000f1660, {
+        if (original) ORIG(TVV, 0x000f1660)(out, 0, in->a[0], in->a[1]); else AS_T(out)->BuildRotTrans4(in->a[0], in->a[1]);
+        return 0;
+    });
+    CASE("Transform::BuildRotTrans3", ANY, N, 0x000f16d0, {
+        if (original) ORIG(TVV, 0x000f16d0)(out, 0, in->a[0], in->a[1]); else AS_T(out)->BuildRotTrans3(in->a[0], in->a[1]);
+        return 0;
+    });
+    CASE("Transform::BuildAimedTrans", ANY, N, 0x000f1740, {
+        static const int rows[6][2] = { { 0, 4 }, { 0, 8 }, { 4, 0 }, { 4, 8 }, { 8, 0 }, { 8, 4 } };
+        const int *r = rows[in->u[0] % 6];
+        if (original) ORIG(TAim, 0x000f1740)(out, 0, in->a[0], in->a[1], r[0], r[1]);
+        else AS_T(out)->BuildAimedTrans(in->a[0], in->a[1], r[0], r[1]);
+        return 0;
+    });
+    CASE("Transform::BuildMatrix", ANY, N, 0x000f19a0, {
+        if (original) ORIG(TV, 0x000f19a0)(out, 0, in->a[0]); else AS_T(out)->BuildMatrix(in->a[0]);
+        return 0;
+    });
+    CASE("Transform::ExtractQuatTrans", MATRICES, N, 0x000f19f0, {
+        if (original) ORIG(TVV, 0x000f19f0)(in->a[0], 0, out, out + 16); else AS_T(in->a[0])->ExtractQuatTrans(out, out + 16);
+        return 0;
+    });
+    CASE("Transform::Transpose", MATRICES, N, 0x000f2270, {
+        if (original) ORIG(T0, 0x000f2270)(in->a[0], 0); else AS_T(in->a[0])->Transpose();
+        return 0;
+    });
+    CASE("Transform::Invert", MATRICES, N, 0x000f2330, {
+        return D((original ? ORIG(TInvert, 0x000f2330) : Transform::Invert)(in->a[0], out));
+    });
+    CASE("Transform::Invert in place", MATRICES, N, 0x000f2330, {
+        return D((original ? ORIG(TInvert, 0x000f2330) : Transform::Invert)(in->a[0], in->a[0]));
+    });
+    CASE("Transform::Determinant", MATRICES, N, 0x000f2790, {
+        int n = 1 + (int)(in->u[0] % 5);
+        return D((original ? ORIG(TDet, 0x000f2790) : Transform::Determinant)(in->a[0], n));
+    });
+    CASE("Transform::ElementMinor", MATRICES, N, 0x000f2f50, {
+        int n = 2 + (int)(in->u[0] % 4);
+        int r = (int)(in->u[1] % n), c = (int)(in->u[2] % n);
+        return D((original ? ORIG(TMinor, 0x000f2f50) : Transform::ElementMinor)(in->a[0], r, c, n));
+    });
+    CASE("Transform::AppendScale", MATRICES, N, 0x000f2960, {
+        memcpy(out, in->a[0], 64);
+        if (original) ORIG(TFFFF, 0x000f2960)(out, 0, in->s[0], in->s[1], in->s[2], in->s[3]);
+        else AS_T(out)->AppendScale(in->s[0], in->s[1], in->s[2], in->s[3]);
+        return 0;
+    });
+    CASE("Transform::AppendTranslate", MATRICES, N, 0x000f2a20, {
+        memcpy(out, in->a[0], 64);
+        if (original) ORIG(TFFF, 0x000f2a20)(out, 0, in->s[0], in->s[1], in->s[2]);
+        else AS_T(out)->AppendTranslate(in->s[0], in->s[1], in->s[2]);
+        return 0;
+    });
+    CASE("Transform::AppendRotTrans4", MATRICES, N, 0x000f2ae0, {
+        memcpy(out, in->a[0], 64);
+        if (original) ORIG(TVV, 0x000f2ae0)(out, 0, in->a[1], in->a[2]); else AS_T(out)->AppendRotTrans4(in->a[1], in->a[2]);
+        return 0;
+    });
+    CASE("Transform::AppendRotTrans3", MATRICES, N, 0x000f2b30, {
+        memcpy(out, in->a[0], 64);
+        if (original) ORIG(TVV, 0x000f2b30)(out, 0, in->a[1], in->a[2]); else AS_T(out)->AppendRotTrans3(in->a[1], in->a[2]);
+        return 0;
+    });
+    CASE("Transform::AppendMatrix", MATRICES, N, 0x000f2b80, {
+        memcpy(out, in->a[0], 64);
+        if (original) ORIG(TV, 0x000f2b80)(out, 0, in->a[1]); else AS_T(out)->AppendMatrix(in->a[1]);
+        return 0;
+    });
+    CASE("Transform::AppendQuatTrans", QUATS, N, 0x000f2bd0, {
+        memcpy(out, in->a[0], 64);
+        if (original) ORIG(TVV, 0x000f2bd0)(out, 0, in->a[1], in->a[2]); else AS_T(out)->AppendQuatTrans(in->a[1], in->a[2]);
+        return 0;
+    });
+    CASE("Transform::AppendAimedTrans", ANY, N, 0x000f2c30, {
+        memcpy(out, in->a[0], 64);
+        if (original) ORIG(TAim, 0x000f2c30)(out, 0, in->a[1], in->a[2], 0, 4);
+        else AS_T(out)->AppendAimedTrans(in->a[1], in->a[2], 0, 4);
+        return 0;
+    });
+    CASE("Transform::AppendRotate", MATRICES, N, 0x000f2ff0, {
+        memcpy(out, in->a[0], 64);
+        if (original) ORIG(TFFFF, 0x000f2ff0)(out, 0, in->s[0], in->s[1], in->s[2], in->s[3]);
+        else AS_T(out)->AppendRotate(in->s[0], in->s[1], in->s[2], in->s[3]);
+        return 0;
+    });
+    CASE("Transform::PrependScale", MATRICES, N, 0x000f2c80, {
+        memcpy(out, in->a[0], 64);
+        if (original) ORIG(TFFFF, 0x000f2c80)(out, 0, in->s[0], in->s[1], in->s[2], in->s[3]);
+        else AS_T(out)->PrependScale(in->s[0], in->s[1], in->s[2], in->s[3]);
+        return 0;
+    });
+    CASE("Transform::PrependTranslate", MATRICES, N, 0x000f2d40, {
+        memcpy(out, in->a[0], 64);
+        if (original) ORIG(TFFF, 0x000f2d40)(out, 0, in->s[0], in->s[1], in->s[2]);
+        else AS_T(out)->PrependTranslate(in->s[0], in->s[1], in->s[2]);
+        return 0;
+    });
+    CASE("Transform::PrependRotTrans", MATRICES, N, 0x000f2e00, {
+        memcpy(out, in->a[0], 64);
+        if (original) ORIG(TVV, 0x000f2e00)(out, 0, in->a[1], in->a[2]); else AS_T(out)->PrependRotTrans(in->a[1], in->a[2]);
+        return 0;
+    });
+    CASE("Transform::PrependMatrix", MATRICES, N, 0x000f2e50, {
+        memcpy(out, in->a[0], 64);
+        if (original) ORIG(TV, 0x000f2e50)(out, 0, in->a[1]); else AS_T(out)->PrependMatrix(in->a[1]);
+        return 0;
+    });
+    CASE("Transform::PrependQuatTrans", QUATS, N, 0x000f2ea0, {
+        memcpy(out, in->a[0], 64);
+        if (original) ORIG(TVV, 0x000f2ea0)(out, 0, in->a[1], in->a[2]); else AS_T(out)->PrependQuatTrans(in->a[1], in->a[2]);
+        return 0;
+    });
+    CASE("Transform::PrependRotate", MATRICES, N, 0x000f3040, {
+        memcpy(out, in->a[0], 64);
+        if (original) ORIG(TFFFF, 0x000f3040)(out, 0, in->s[0], in->s[1], in->s[2], in->s[3]);
+        else AS_T(out)->PrependRotate(in->s[0], in->s[1], in->s[2], in->s[3]);
+        return 0;
+    });
+    CASE("Transform::Inverse", MATRICES, N, 0x000f2f20, {
+        if (original) ORIG(T0, 0x000f2f20)(in->a[0], 0); else AS_T(in->a[0])->Inverse();
+        return 0;
+    });
+    CASE("EAGL_QuatToRotation", QUATS, N, 0x000f3090, {
+        typedef void (*Fn)(const float *, float *);
+        (original ? ORIG(Fn, 0x000f3090) : EAGL_QuatToRotation)(in->a[0], out);
+        return 0;
+    });
+    CASE("EAGL_RotationToQuat", MATRICES, N, 0x000f3160, {
+        typedef void (*Fn)(const float *, float *);
+        (original ? ORIG(Fn, 0x000f3160) : EAGL_RotationToQuat)(in->a[0], out);
+        return 0;
+    });
+    CASE("Transform::BuildRotate", ANY, N, 0x000f32e0, {
+        if (original) ORIG(TFFFF, 0x000f32e0)(out, 0, in->s[0], in->s[1], in->s[2], in->s[3]);
+        else EAGL_BuildRotate(AS_T(out), 0, in->s[0], in->s[1], in->s[2], in->s[3]);
+        return 0;
+    });
+    CASE("Transform::BuildSQT", QUATS, N, 0x000f8780, {
+        const float *s = in->s, *q = in->a[0];
+        if (original) ORIG(TSQT, 0x000f8780)(out, 0, s[0], s[1], s[2], q[0], q[1], q[2], q[3], s[3], s[4], s[5]);
+        else AS_T(out)->BuildSQT(s[0], s[1], s[2], q[0], q[1], q[2], q[3], s[3], s[4], s[5]);
+        return 0;
+    });
+    CASE("Transform::TransformPoint", MATRICES, N, 0x000160e0, {
+        if (original) ORIG(TVV, 0x000160e0)(in->a[0], 0, in->a[1], out); else AS_T(in->a[0])->TransformPoint(in->a[1], out);
+        return 0;
+    });
+    CASE("Transform::TransformPoint in place", MATRICES, N, 0x000160e0, {
+        if (original) ORIG(TVV, 0x000160e0)(in->a[0], 0, in->a[1], in->a[1]);
+        else AS_T(in->a[0])->TransformPoint(in->a[1], in->a[1]);
+        return 0;
     });
 
     printf("[mathshadow] %s\n", g_failedFunctions == 0 ? "every function the same as the original"

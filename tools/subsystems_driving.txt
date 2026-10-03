@@ -33,7 +33,7 @@
 # `python tools/function_coverage.py --driving --unclassified` lists named functions no rule matches.
 
 range 00011000 game.ai              game code (classified by class)
-range 000e4680 platform.eagl        EAGL: views, drawing, textures, EAGLAnim, FONT, SHAPE, LOCALE
+range 000e4340 platform.eagl        EAGL: views, drawing, textures, EAGLAnim, FONT, SHAPE, LOCALE
 range 00108460 platform.system      EA's system layer: PAD, MOUSE, maths, MEM, TIMER, THREAD, FILESYS, FILE...
 range 0010dfe0 sys.xapi             XAPI linked early: XQueryValue, XGetAVPack, XGetVideoFlags
 range 0010e4d2 sys.xapi             XAPI and the kernel thunks: process and thread startup, files, launch data
@@ -125,3 +125,4 @@ float ^(URefCounter|USimpleVec|USingleton|std|_Rb_tree|list|__lower_bound|__buil
 
 # ---- single functions
 func 00011930 engine.anim    VU0_quatstoangvel: a file-local copy compiled into ActActor's unit
+func 0014a370 platform.eagl    SHAPE's file loader (realgraph), linked among the sound code

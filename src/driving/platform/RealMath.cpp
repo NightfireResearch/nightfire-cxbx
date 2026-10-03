@@ -425,7 +425,8 @@ void ExtractRotTrans(const void *m, float *rot, void *t) {
 }
 
 // A rotation (3x3, stride three) to a quaternion; the original takes ECX = rotation, EDX = quaternion (0x00115440).
-static void QuatFromRot(const float *R, float *q) {
+// EAGL has the same code again, with stack arguments (0x000f3160).
+void RealQuatFromRot(const float *R, float *q) {
     double s45 = (double)R[4] + R[8];
     float tmp = (F)s45;
     double tr = s45 + R[0];
@@ -469,7 +470,7 @@ static void QuatFromRot(const float *R, float *q) {
 void ExtractQuatTrans(const void *m, void *q, void *t) {
     float rot[9];
     ExtractRotTrans(m, rot, t);
-    QuatFromRot(rot, W(q));
+    RealQuatFromRot(rot, W(q));
     W(t)[3] = 1.0f;
 }
 

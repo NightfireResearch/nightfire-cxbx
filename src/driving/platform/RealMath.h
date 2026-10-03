@@ -97,6 +97,7 @@ void BuildTranslate(void *m, float x, float y, float z);
 void BuildRotate(void *m, float degrees, float axisX, float axisY, float axisZ);
 void ExtractRotTrans(const void *m, float *rot, void *t);
 void ExtractQuatTrans(const void *m, void *q, void *t);
+void RealQuatFromRot(const float *rotation9, float *quaternion);   // 0x00115440's algorithm (register arguments)
 void MATRIX4_TransformPoint(const void *m, const void *in, void *out);
 void TransformPoint(const void *m, const void *in, void *out);
 void MATRIX4_RotateVector(const void *m, const void *in, void *out);

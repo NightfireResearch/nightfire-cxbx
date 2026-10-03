@@ -211,35 +211,35 @@ where to change it.
 | game.missions | 273 | 0 | 0 | 273 | 0% | 33 | 0% |
 | game.vehicles | 193 | 0 | 0 | 193 | 0% | 62 | 0% |
 | game.weapons | 178 | 0 | 0 | 178 | 0% | 43 | 0% |
-| **engine** | 4032 | 62 | 12 | 3958 | **2%** | 527 | 2% |
+| **engine** | 4031 | 62 | 12 | 3957 | **2%** | 527 | 2% |
 | engine.anim | 415 | 0 | 2 | 413 | 0% | 54 | 0% |
 | engine.audio | 270 | 0 | 0 | 270 | 0% | 35 | 0% |
 | engine.camera | 273 | 0 | 0 | 273 | 0% | 60 | 0% |
 | engine.core | 254 | 10 | 3 | 241 | 5% | 26 | 6% |
-| engine.data | 555 | 3 | 1 | 551 | 1% | 79 | 0% |
+| engine.data | 554 | 3 | 1 | 550 | 1% | 79 | 0% |
 | engine.input | 107 | 42 | 5 | 60 | 44% | 12 | 46% |
 | engine.physics | 156 | 0 | 0 | 156 | 0% | 33 | 0% |
 | engine.render | 760 | 7 | 1 | 752 | 1% | 114 | 3% |
 | engine.static | 798 | 0 | 0 | 798 | 0% | 26 | 0% |
 | engine.world | 444 | 0 | 0 | 444 | 0% | 89 | 0% |
-| **platform** | 1458 | 204 | 159 | 1095 | **25%** | 261 | 21% |
-| platform.eagl | 805 | 0 | 6 | 799 | 1% | 145 | 0% |
+| **platform** | 1459 | 264 | 163 | 1032 | **29%** | 262 | 25% |
+| platform.eagl | 807 | 60 | 10 | 737 | 9% | 146 | 9% |
 | platform.files | 77 | 44 | 33 | 0 | 100% | 12 | 100% |
 | platform.input | 6 | 6 | 0 | 0 | 100% | 1 | 100% |
 | platform.math | 104 | 94 | 10 | 0 | 100% | 16 | 100% |
 | platform.movie | 72 | 0 | 72 | 0 | 100% | 15 | 100% |
-| platform.sound | 306 | 0 | 10 | 296 | 3% | 64 | 1% |
+| platform.sound | 305 | 0 | 10 | 295 | 3% | 64 | 1% |
 | platform.system | 88 | 60 | 28 | 0 | 100% | 9 | 100% |
-| **sys** | 1393 | 273 | 792 | 328 | **76%** | 243 | 85% |
-| sys.crt | 373 | 4 | 41 | 328 | 12% | 43 | 15% |
+| **sys** | 1393 | 273 | 793 | 327 | **77%** | 243 | 85% |
+| sys.crt | 373 | 4 | 42 | 327 | 12% | 43 | 16% |
 | sys.d3d | 427 | 151 | 276 | 0 | 100% | 120 | 100% |
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6884 | 63 | 17 | 6804 | **1%** | 1002 | 1% |
-| **platform + system** | 2851 | 477 | 951 | 1423 | **50%** | 504 | 52% |
-| **  without the C runtime** | 2478 | 473 | 910 | 1095 | **56%** | 462 | 55% |
-| **everything** | 9735 | 540 | 968 | 8227 | **15%** | 1506 | 18% |
+| **game + engine** | 6883 | 63 | 17 | 6803 | **1%** | 1001 | 1% |
+| **platform + system** | 2852 | 537 | 956 | 1359 | **52%** | 505 | 54% |
+| **  without the C runtime** | 2479 | 533 | 914 | 1032 | **58%** | 462 | 58% |
+| **everything** | 9735 | 600 | 973 | 8162 | **16%** | 1506 | 19% |
 
 - **Almost nothing above the platform is ours yet: 1% of game and engine code.** What is replaced is the input
   layer (`engine.input`, 44%: `IOModule`, `XBoxPadDevice`, `ActionQueue`, the pad), the event and scheduler core,
@@ -259,8 +259,12 @@ where to change it.
     kernel shims hand out Win32 handles, so the two mix freely), and the startup's own entry point is ported.
     The process heap is a Win32 heap now: XAPI's five heap entry points go to `HeapCreate`/`HeapAlloc`/`HeapFree`/
     `HeapReAlloc`/`HeapSize`, so `malloc` and `free` reach Win32's heap through them.
-- **The platform tier is 25% done (21% by bytes): its system library, files, input, maths and movie player are
-  done.** What is left is EAGL (145 KB) and the sound library with its streamer (64 KB).
+- **The platform tier is 29% done (25% by bytes): its system library, files, input, maths and movie player are
+  done, and EAGL is under way (9%).** What is left is the rest of EAGL (about 137 KB) and the sound library with
+  its streamer (64 KB).
+  - *EAGL* (docs/driving/eagl.md, its plan in 9.2): realgraph FONT/SHAPE/LOCALE (`src/driving/eagl/Realgraph.cpp`)
+    and `EAGL::Transform` (`src/driving/eagl/Transform.cpp`) are ported and shadow-tested; next the loader, the
+    property parsers and EAGLAnim, then the frame-level modules together.
   - *System* (`src/driving/platform/RealSystem.cpp`, `RealPrint.cpp`, `RealMemory.cpp`): EA's portable library -
     TIMER, THREAD, SIGNAL, SYNCTASK, MUTEX, PRINT, the exit and abort handlers, the MEM_ copy and fill helpers,
     and the MEM block allocator itself (classes, first and largest fit, top allocation, resize, validation), which

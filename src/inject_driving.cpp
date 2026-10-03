@@ -10,6 +10,7 @@
 #include "driving/devtools/FileSysShadow.h"
 #include "driving/devtools/FileSysTrace.h"
 #include "driving/devtools/MathShadow.h"
+#include "driving/devtools/RealgraphShadow.h"
 #include "common/xbeOriginal.h"
 #include "driving/gfx/d3dSeam.h"
 #include "driving/platform/XboxInput.h"
@@ -187,4 +188,5 @@ void Inject()
   FileSysShadow_Run();   // NIGHTFIRE_FSSHADOW=1 only
   FileSysTrace_Install();   // NIGHTFIRE_FSTRACE=1 only
   MathShadow_Run();   // NIGHTFIRE_MATHSHADOW=1 only
+  RealgraphShadow_Run();   // NIGHTFIRE_RGSHADOW=1 only
 }
