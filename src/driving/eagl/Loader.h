@@ -24,7 +24,7 @@ public:
     uint32_t count;
     uint32_t size;
     SymbolEntry **table;
-    uint32_t unused0c;
+    uint32_t unknown0c;
     SymbolResolver *resolvers;
 
     SymbolPool *Construct();
@@ -76,12 +76,24 @@ struct LoaderSymbol {       // what GetSymbol answers
     uint32_t defined;       // low byte: the symbol was not resolved from outside
 };
 
+struct LoaderDestructor {   // a constructed symbol's destructor, called when the object is unloaded
+    void (*destructor)(void *object);
+    void *object;
+};
+
+struct RuntimeAllocRecord {   // "EAGL::DynamicLoader::RuntimeAllocDestructorEntry new" (0x10)
+    void (*destructor)(void *object, void *context);
+    void *object;
+    void *context;
+    RuntimeAllocRecord *next;
+};
+
 class DynamicLoader {       // 0x1c
 public:
     HashTable *table;       // +0x00
     int constructorCount;   // +0x04
-    void **destructors;     // +0x08 {destructor, object} pairs
-    void *runtimeAllocs;    // +0x0c RUNTIME_ALLOC destructor records
+    LoaderDestructor *destructors;      // +0x08
+    RuntimeAllocRecord *runtimeAllocs;  // +0x0c RUNTIME_ALLOC destructor records, a list
     uint8_t *elf;           // +0x10
     uint32_t elfSize;       // +0x14
     uint8_t *second;        // +0x18 the .rel half of a split object

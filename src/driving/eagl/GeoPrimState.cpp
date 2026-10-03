@@ -1,186 +1,122 @@
 #include "GeoPrimState.h"
+#include "D3D8State.h"
+#include "RenderContext.h"
+#include "../../helpers.h"
 
 #include <string.h>
 
 // ---------------------------------------------------------------------------------------------------------------
 // EAGL::GeoPrimState (docs/driving/eagl.md 2.5, 4.5): the setters and getters, both constructors, and Apply - which
-// sends what changed to the device. Apply keeps a cache of what it last sent (0x001cd18c..0x001cd1d4, invalidated
-// by RenderContext::EndFrame), sends each change through D3D8's render-state entry points, and writes D3D8's own
-// render-state table (0x001756xx) as the inlined D3D8 code did - the backend reads that table at draw time (5.2).
-// The order of the calls and writes is the original's.
+// sends what changed to the device. Apply keeps a cache of what it last sent (invalidated by
+// RenderContext::EndFrame), sends each change through D3D8's render-state entry points, and writes D3D8's own
+// render-state table as the inlined D3D8 code did - the backend reads that table at draw time (5.2). The order of
+// the calls and writes is the original's.
 //
 // Each setter answers true, the two the Xbox build does not keep (texture coordinate type, chroma colour) false.
 // ---------------------------------------------------------------------------------------------------------------
 
+#define CurrentRenderContext (*(EAGL::RenderContext **)0x0023fb64)
+
 namespace {
 
-// D3DDevice_SetRenderState_Simple takes the push-buffer method in ECX and the value in EDX: __fastcall's registers.
-inline void SetRenderStateSimple(uint32_t method, uint32_t value) {
-    ((void (__fastcall *)(uint32_t, uint32_t))0x001673e0)(method, value);
-}
-
-inline void SetTexture(uint32_t stage, void *texture) {
-    ((void (__stdcall *)(uint32_t, void *))0x00166830)(stage, texture);   // D3DDevice_SetTexture
-}
-
-inline uint32_t &U32(uint32_t address) {
-    return *(uint32_t *)(uintptr_t)address;
-}
-
-inline uint8_t &U8(uint32_t address) {
-    return *(uint8_t *)(uintptr_t)address;
-}
-
-inline float &F32(uint32_t address) {
-    return *(float *)(uintptr_t)address;
-}
-
-// Writes the value into D3D8's render-state table, where the inlined SetRenderState left it.
-inline void D3DState(uint32_t address, uint32_t value) {
-    U32(address) = value;
-}
-
-inline uint32_t Bits(float f) {
+uint32_t Bits(float f) {
     uint32_t u;
     memcpy(&u, &f, 4);
     return u;
 }
 
-// What Apply last sent
-const uint32_t kCacheShading = 0x001cd18c, kCacheCullEnable = 0x001cd190, kCacheCullDirection = 0x001cd194,
-               kCacheDepthTest = 0x001cd19c, kCacheBlendMode = 0x001cd1a0, kCacheAlphaTest = 0x001cd1a4,
-               kCacheAlphaCompare = 0x001cd1a8, kCacheAlphaMethod = 0x001cd1ac, kCacheTextureEnable = 0x001cd1b0,
-               kCacheTransparency = 0x001cd1b8, kCacheFillMode = 0x001cd1bc, kCacheBlendOperation = 0x001cd1c0,
-               kCacheBlendSource = 0x001cd1c4, kCacheBlendDestination = 0x001cd1c8, kCacheBlendColour = 0x001cd1cc,
-               kCacheZWrites = 0x001cd1d0, kCacheZSlope = 0x00240150, kCacheZOffset = 0x00240154;
-// The texture bound per stage (opcode 15 and TAR::Use keep it)
-const uint32_t kStageTexture = 0x0023ff80;
-// RenderContextExtension's shadow of the Z write state (0x001cb938.. block)
-const uint32_t kShadowZWrites = 0x001cb94c;
-
 }  // namespace
 
 // FUNC_AT(0x000ef050)
 bool EAGL::GeoPrimState::Apply() {
-    if (textureEnable == 0) {
+    if (!textureEnable) {
         for (uint32_t stage = 0; stage < 4; stage++)
-            if (U32(kStageTexture + stage * 4) != 0)
-                SetTexture(stage, NULL);
-        U32(kStageTexture + 12) = 0;
-        U32(kStageTexture + 8) = 0;
-        U32(kStageTexture + 4) = 0;
-        U32(kStageTexture) = 0;
+            if (StageTexture[stage] != NULL)
+                D3DDevice_SetTexture(stage, NULL);
+        StageTexture[3] = NULL;
+        StageTexture[2] = NULL;
+        StageTexture[1] = NULL;
+        StageTexture[0] = NULL;
     }
-    U8(kCacheTextureEnable) = textureEnable;
-    if (U32(kCacheFillMode) != fillMode) {
-        U32(kCacheFillMode) = fillMode;
-        ((void (__stdcall *)(uint32_t))0x00167ad0)(fillMode);   // D3DDevice_SetRenderState_FillMode
+    ApplyCache.textureEnable = textureEnable;
+    if (ApplyCache.fillMode != fillMode) {
+        ApplyCache.fillMode = fillMode;
+        D3DDevice_SetRenderState_FillMode(fillMode);
     }
-    if (U32(kCacheBlendOperation) != blendOperation) {
-        U32(kCacheBlendOperation) = blendOperation;
-        uint32_t v = blendOperation;
-        SetRenderStateSimple(0x40350, v);
-        D3DState(0x00175750, v);
+    if (ApplyCache.blendOperation != blendOperation) {
+        ApplyCache.blendOperation = blendOperation;
+        SendState(0x40350, kRsBlendOp, blendOperation);
     }
-    if (!(F32(kCacheZSlope) == zSlopeScale)) {   // unordered (NaN) counts as changed
-        U32(kCacheZSlope) = Bits(zSlopeScale);
-        uint32_t v = Bits(zSlopeScale);
-        SetRenderStateSimple(0x40384, v);
-        D3DState(0x0017575c, v);
+    if (!(ApplyCacheZSlopeScale == zSlopeScale)) {   // unordered (NaN) counts as changed
+        ApplyCacheZSlopeScale = zSlopeScale;
+        SendState(0x40384, kRsPolygonOffsetZSlopeScale, Bits(zSlopeScale));
     }
-    if (!(F32(kCacheZOffset) == zOffset)) {
-        U32(kCacheZOffset) = Bits(zOffset);
-        uint32_t v = Bits(zOffset);
-        SetRenderStateSimple(0x40388, v);
-        D3DState(0x00175760, v);
+    if (!(ApplyCacheZOffset == zOffset)) {
+        ApplyCacheZOffset = zOffset;
+        SendState(0x40388, kRsPolygonOffsetZOffset, Bits(zOffset));
         uint32_t on = zOffset == 0.0f ? 0 : 1;   // the three polygon offset enables
-        SetRenderStateSimple(0x40330, on);
-        D3DState(0x00175764, on);
-        SetRenderStateSimple(0x40334, on);
-        D3DState(0x00175768, on);
-        SetRenderStateSimple(0x40338, on);
-        D3DState(0x0017576c, on);
+        SendState(0x40330, kRsPointOffsetEnable, on);
+        SendState(0x40334, kRsWireFrameOffsetEnable, on);
+        SendState(0x40338, kRsSolidOffsetEnable, on);
     }
-    if ((uint32_t)U8(kShadowZWrites) != zWritesEnable) {
-        if (zWritesEnable == 0xffffffffu) {
-            // The render context's own setting, sent again (RenderContext::GetZWritesEnable / SetZWritesEnable)
-            void *context = *(void **)0x0023fb64u;
+    if (Shadows.zWritesEnable != zWritesEnable) {
+        if (zWritesEnable == 0xffffffff) {
+            // The render context's own setting, sent again
             uint8_t enable;
-            ((bool (__fastcall *)(void *, int, uint8_t *))0x000e7430)(context, 0, &enable);
-            context = *(void **)0x0023fb64u;
-            ((bool (__fastcall *)(void *, int, uint8_t))0x000e73f0)(context, 0, enable);
+            CurrentRenderContext->GetZWritesEnable(&enable);
+            CurrentRenderContext->SetZWritesEnable(enable);
         } else {
-            U32(kCacheZWrites) = zWritesEnable;
-            U8(kShadowZWrites) = (uint8_t)(zWritesEnable & 1);
-            uint32_t v = zWritesEnable;
-            SetRenderStateSimple(0x4035c, v);
-            D3DState(0x00175728, v);
+            ApplyCache.zWritesEnable = zWritesEnable;
+            Shadows.zWritesEnable = zWritesEnable & 1;
+            SendState(0x4035c, kRsZWriteEnable, zWritesEnable);
         }
     }
-    if (U32(kCacheBlendColour) != blendColour) {
-        U32(kCacheBlendColour) = blendColour;
-        uint32_t v = blendColour;
-        SetRenderStateSimple(0x4034c, v);
-        D3DState(0x00175754, v);
+    if (ApplyCache.blendColour != blendColour) {
+        ApplyCache.blendColour = blendColour;
+        SendState(0x4034c, kRsBlendColor, blendColour);
     }
-    if (U32(kCacheCullEnable) != (uint32_t)cullEnable || U32(kCacheCullDirection) != cullDirection) {
-        U32(kCacheCullEnable) = cullEnable;
-        U32(kCacheCullDirection) = cullDirection;
-        ((void (__stdcall *)(uint32_t))0x001677b0)(cullEnable != 0 ? cullDirection : 0);   // SetRenderState_CullMode
+    if (ApplyCache.cullEnable != cullEnable || ApplyCache.cullDirection != cullDirection) {
+        ApplyCache.cullEnable = cullEnable;
+        ApplyCache.cullDirection = cullDirection;
+        D3DDevice_SetRenderState_CullMode(cullEnable ? cullDirection : 0);
     }
-    if (U32(kCacheShading) != shading) {
-        U32(kCacheShading) = shading;
+    if (ApplyCache.shading != shading) {
+        ApplyCache.shading = shading;
         if (shading <= 2) {
             uint32_t mode = shading == 0 ? 0x1d00 : 0x1d01;   // D3DSHADE_FLAT, GOURAUD
-            SetRenderStateSimple(0x4037c, mode);
-            D3DState(0x00175730, mode);
-            D3DState(0x001757c4, shading == 2 ? 1 : 0);    // specular
-            U32(0x00175424) |= 0x3000;                     // D3D8's dirty flags
+            SendState(0x4037c, kRsShadeMode, mode);
+            D3DRenderState[kRsSpecularEnable] = shading == 2 ? 1 : 0;
+            D3DDirtyFlags |= 0x3000;
         }
     }
-    if (U32(kCacheDepthTest) != depthTestMethod) {
-        U32(kCacheDepthTest) = depthTestMethod;
-        uint32_t v = depthTestMethod;
-        SetRenderStateSimple(0x40354, v);
-        D3DState(0x0017570c, v);
+    if (ApplyCache.depthTestMethod != depthTestMethod) {
+        ApplyCache.depthTestMethod = depthTestMethod;
+        SendState(0x40354, kRsZFunc, depthTestMethod);
     }
-    if (U32(kCacheBlendMode) != alphaBlendMode || U32(kCacheBlendSource) != blendSource ||
-        U32(kCacheBlendDestination) != blendDestination) {
-        U32(kCacheBlendMode) = alphaBlendMode;
-        U32(kCacheBlendSource) = blendSource;
-        U32(kCacheBlendDestination) = blendDestination;
-        uint32_t v = blendSource;
-        SetRenderStateSimple(0x40344, v);
-        D3DState(0x00175720, v);
-        v = blendDestination;
-        SetRenderStateSimple(0x40348, v);
-        D3DState(0x00175724, v);
+    if (ApplyCache.alphaBlendMode != alphaBlendMode || ApplyCache.blendSource != blendSource ||
+        ApplyCache.blendDestination != blendDestination) {
+        ApplyCache.alphaBlendMode = alphaBlendMode;
+        ApplyCache.blendSource = blendSource;
+        ApplyCache.blendDestination = blendDestination;
+        SendState(0x40344, kRsSrcBlend, blendSource);
+        SendState(0x40348, kRsDestBlend, blendDestination);
     }
-    if (U32(kCacheAlphaTest) != (uint32_t)alphaTestEnable) {
-        U32(kCacheAlphaTest) = alphaTestEnable;
-        uint32_t v = alphaTestEnable;
-        SetRenderStateSimple(0x40300, v);
-        D3DState(0x00175718, v);
+    if (ApplyCache.alphaTestEnable != alphaTestEnable) {
+        ApplyCache.alphaTestEnable = alphaTestEnable;
+        SendState(0x40300, kRsAlphaTestEnable, alphaTestEnable);
     }
-    if (U32(kCacheAlphaCompare) != alphaCompareValue) {
-        U32(kCacheAlphaCompare) = alphaCompareValue;
-        uint32_t v = alphaCompareValue;
-        SetRenderStateSimple(0x40340, v);
-        D3DState(0x0017571c, v);
+    if (ApplyCache.alphaCompareValue != alphaCompareValue) {
+        ApplyCache.alphaCompareValue = alphaCompareValue;
+        SendState(0x40340, kRsAlphaRef, alphaCompareValue);
     }
-    if (U32(kCacheAlphaMethod) != alphaTestMethod) {
-        U32(kCacheAlphaMethod) = alphaTestMethod;
-        uint32_t v = alphaTestMethod;
-        SetRenderStateSimple(0x4033c, v);
-        D3DState(0x00175710, v);
+    if (ApplyCache.alphaTestMethod != alphaTestMethod) {
+        ApplyCache.alphaTestMethod = alphaTestMethod;
+        SendState(0x4033c, kRsAlphaFunc, alphaTestMethod);
     }
-    if (U32(kCacheTransparency) != transparencyMethod) {
-        U32(kCacheTransparency) = transparencyMethod;
-        if (transparencyMethod <= 1) {
-            uint32_t v = transparencyMethod;
-            SetRenderStateSimple(0x40304, v);
-            D3DState(0x00175714, v);
-        }
+    if (ApplyCache.transparencyMethod != transparencyMethod) {
+        ApplyCache.transparencyMethod = transparencyMethod;
+        if (transparencyMethod <= 1)
+            SendState(0x40304, kRsAlphaBlendEnable, transparencyMethod);
     }
     return true;
 }
@@ -205,10 +141,10 @@ EAGL::GeoPrimStateExtension* EAGL::GeoPrimStateExtension::Construct() {
     transparencyMethod = 1;
     fillMode = 0x1b02;
     blendOperation = 0x8006;
-    memset(&zSlopeScale, 0, 4);
-    memset(&zOffset, 0, 4);
+    zSlopeScale = 0.0f;
+    zOffset = 0.0f;
     blendColour = 0;
-    zWritesEnable = 0xffffffffu;
+    zWritesEnable = 0xffffffff;
     return this;
 }
 
@@ -218,7 +154,7 @@ void EAGL::GeoPrimStateExtension::DumpState() {
 
 // FUNC_AT(0x000ef480)
 EAGL::GeoPrimState* EAGL::GeoPrimState::Construct() {
-    ((GeoPrimStateExtension *)this)->Construct();
+    static_cast<GeoPrimStateExtension *>(this)->Construct();
     return this;
 }
 
@@ -228,8 +164,8 @@ void EAGL::GeoPrimState::Destruct() {
 
 // FUNC_AT(0x000ef4a0)
 EAGL::GeoPrimState* EAGL::GeoPrimState::ConstructCopy(const GeoPrimState *other) {
-    ((GeoPrimStateExtension *)this)->Construct();
-    memcpy(this, other, sizeof(GeoPrimState));
+    static_cast<GeoPrimStateExtension *>(this)->Construct();
+    *this = *other;
     return this;
 }
 
@@ -267,7 +203,7 @@ bool EAGL::GeoPrimState::SetCullEnable(bool enable) {
 
 // FUNC_AT(0x000eecc0)
 bool EAGL::GeoPrimState::GetCullEnable(bool *enable) const {
-    *(uint8_t *)enable = cullEnable;
+    *reinterpret_cast<uint8_t *>(enable) = cullEnable;   // the byte as stored, not normalised to 0/1
     return true;
 }
 
@@ -287,14 +223,16 @@ bool EAGL::GeoPrimState::GetDepthTestMethod(uint32_t *method) const {
 // Out of range: the mode is kept and nothing else changes - and the answer is still true.
 // FUNC_AT(0x000eecf0)
 bool EAGL::GeoPrimState::SetAlphaBlendMode(uint32_t mode) {
+    enum { kZero = 0, kOne = 1, kSrcAlpha = 0x302, kOneMinusSrcAlpha = 0x303, kDstColor = 0x306 };   // GL numbering
+    enum { kAdd = 0x8006, kReverseSubtract = 0x800b };
     alphaBlendMode = mode;
     switch (mode) {
-    case 0: blendSource = 1; blendDestination = 0; blendOperation = 0x8006; break;
-    case 1: blendSource = 0x302; blendDestination = 0x303; blendOperation = 0x8006; break;
-    case 2: blendSource = 0x302; blendDestination = 1; blendOperation = 0x8006; break;
-    case 3: blendSource = 1; blendDestination = 1; blendOperation = 0x800b; break;
-    case 4: blendSource = 0x302; blendDestination = 0; blendOperation = 0x8006; break;
-    case 5: blendSource = 0x306; blendDestination = 0; blendOperation = 0x8006; break;
+    case 0: blendSource = kOne; blendDestination = kZero; blendOperation = kAdd; break;
+    case 1: blendSource = kSrcAlpha; blendDestination = kOneMinusSrcAlpha; blendOperation = kAdd; break;
+    case 2: blendSource = kSrcAlpha; blendDestination = kOne; blendOperation = kAdd; break;
+    case 3: blendSource = kOne; blendDestination = kOne; blendOperation = kReverseSubtract; break;
+    case 4: blendSource = kSrcAlpha; blendDestination = kZero; blendOperation = kAdd; break;
+    case 5: blendSource = kDstColor; blendDestination = kZero; blendOperation = kAdd; break;
     }
     return true;
 }
@@ -313,7 +251,7 @@ bool EAGL::GeoPrimState::SetAlphaTestEnable(bool enable) {
 
 // FUNC_AT(0x000eedd0)
 bool EAGL::GeoPrimState::GetAlphaTestEnable(bool *enable) const {
-    *(uint8_t *)enable = alphaTestEnable;
+    *reinterpret_cast<uint8_t *>(enable) = alphaTestEnable;   // the byte as stored, not normalised to 0/1
     return true;
 }
 
@@ -349,7 +287,7 @@ bool EAGL::GeoPrimState::SetTextureEnable(bool enable) {
 
 // FUNC_AT(0x000eee30)
 bool EAGL::GeoPrimState::GetTextureEnable(bool *enable) const {
-    *(uint8_t *)enable = textureEnable;
+    *reinterpret_cast<uint8_t *>(enable) = textureEnable;   // the byte as stored, not normalised to 0/1
     return true;
 }
 
@@ -441,25 +379,25 @@ bool EAGL::GeoPrimStateExtension::GetAlphaBlend(uint32_t *source, uint32_t *dest
 
 // FUNC_AT(0x000eefc0)
 bool EAGL::GeoPrimStateExtension::SetZOffset(float offset) {
-    memcpy(&zOffset, &offset, 4);
+    zOffset = offset;
     return true;
 }
 
 // FUNC_AT(0x000eefd0)
 bool EAGL::GeoPrimStateExtension::GetZOffset(float *offset) const {
-    memcpy(offset, &zOffset, 4);
+    *offset = zOffset;
     return true;
 }
 
 // FUNC_AT(0x000eefe0)
 bool EAGL::GeoPrimStateExtension::SetZSlopeScale(float scale) {
-    memcpy(&zSlopeScale, &scale, 4);
+    zSlopeScale = scale;
     return true;
 }
 
 // FUNC_AT(0x000eeff0)
 bool EAGL::GeoPrimStateExtension::GetZSlopeScale(float *scale) const {
-    memcpy(scale, &zSlopeScale, 4);
+    *scale = zSlopeScale;
     return true;
 }
 
@@ -477,13 +415,12 @@ bool EAGL::GeoPrimStateExtension::GetBlendColour(uint32_t *colour) const {
 
 // FUNC_AT(0x000ef020)
 bool EAGL::GeoPrimStateExtension::SetZWritesEnable(bool enable) {
-    zWritesEnable = (uint8_t)enable;
+    zWritesEnable = enable;
     return true;
 }
 
 // FUNC_AT(0x000ef030)
 bool EAGL::GeoPrimStateExtension::GetZWritesEnable(bool *enable) const {
-    *(uint8_t *)enable = zWritesEnable != 0;
+    *enable = zWritesEnable != 0;
     return true;
 }
-

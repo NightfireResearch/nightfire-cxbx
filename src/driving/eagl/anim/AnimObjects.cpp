@@ -1,4 +1,13 @@
 #include "AnimObjects.h"
+#include "AnimChannels.h"
+#include "AnimDecode.h"
+#include "AnimDeltaF.h"
+#include "AnimDeltaQ.h"
+#include "AnimLocoBlend.h"
+#include "AnimMisc.h"
+#include "Skeleton.h"
+#include "../Loader.h"
+#include "../../../helpers.h"
 
 #include <string.h>
 #include <xmmintrin.h>
@@ -17,80 +26,128 @@
 // wrappers, the raw linear channel, AnimationBank, and EventTarget. Each function is the original at the same
 // address; the objects keep the game's vtables, so virtual calls go through those (AnimVCall). The x87 arithmetic
 // is done in double in the original's order, a float store where the original stores one, which at the game's
-// 53-bit precision is the same; float-to-int truncation is CVTTSS2SI, as there.
+// 53-bit precision is the same (a single operation on floats is written in float: the same bits); float-to-int
+// truncation is CVTTSS2SI, as there.
 // devtools/AnimShadow.cpp builds every anim in every bank with both and compares what they evaluate.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define EaglMalloc   (*(void *(**)(uint32_t size, const char *name))0x001caf68u)
-#define EaglFree     (*(void (**)(void *data, uint32_t size))0x001caf6cu)
+namespace {
 
-// the pool (MemoryPoolManager)
-#define FreeByType   ((void **)0x002414b0u)        // [22] free blocks per anim type
-#define FreeBySize   ((void **)0x00241520u)        // [256] free blocks per 16-byte size class
-#define PoolBase     (*(uint8_t **)0x00241510u)
-#define PoolSize     (*(uint32_t *)0x00241514u)
-#define PoolCursor   (*(uint8_t **)0x00241518u)
-#define PoolWord     (*(uint16_t *)0x0024150cu)
-#define BlockSizes   ((const uint16_t *)0x001ceab0u)   // per anim type
-#define FactoryBlock (*(void **)0x00241b80u)
+typedef void *(*EaglMallocHook)(uint32_t size, const char *name);
+typedef void (*EaglFreeHook)(void *data, uint32_t size);
+#define EaglMalloc (*(EaglMallocHook *)0x001caf68)
+#define EaglFree (*(EaglFreeHook *)0x001caf6c)
 
-#define VtFnAnim         ((const void *)0x001a0c6cu)
-#define VtCompound       ((const void *)0x001a0be8u)
-#define VtRawPose        ((const void *)0x001a0ca8u)
-#define VtRawEvent       ((const void *)0x001a0cf0u)
-#define VtRawLinear      ((const void *)0x001a0d38u)
-#define VtKeyDelta       ((const void *)0x001a0d80u)
-#define VtKeyLerp        ((const void *)0x001a0dc8u)
-#define VtKeyQuat        ((const void *)0x001a0e10u)
-#define VtDeltaChan      ((const void *)0x001a0e58u)
-#define VtGraft          ((const void *)0x001a0ea0u)
-#define VtPoseBlender    ((const void *)0x001a0edcu)
-#define VtPoseMirror     ((const void *)0x001a0f18u)
-#define VtCycle          ((const void *)0x001a0f54u)
-#define VtEventBlender   ((const void *)0x001a0f90u)
-#define VtPhase          ((const void *)0x001a0fd0u)
-#define VtRawState       ((const void *)0x001a1018u)
-#define VtDeltaLerp      ((const void *)0x001a1060u)
-#define VtDeltaQuat      ((const void *)0x001a10a8u)
-#define VtMemoryMap      ((const void *)0x001a1130u)
+// A free block's first word links the next.
+struct FreeBlock {
+    FreeBlock *next;
+};
 
-static inline int Truncate(float f) {   // CVTTSS2SI
+// MemoryPoolManager's statics, at 0x002414b0. A size-classed block has its class in the dword before it.
+struct MemoryPool {
+    FreeBlock *freeByType[kAnimTypeCount];   // +0x000 free objects per anim type
+    uint32_t unknown58;
+    uint16_t unknown5c;              // +0x5c cleared by Init
+    uint16_t unknown5e;
+    uint8_t *base;                   // +0x60
+    uint32_t size;                   // +0x64
+    uint8_t *cursor;                 // +0x68 the next new block
+    uint32_t unknown6c;
+    FreeBlock *freeBySize[256];      // +0x70 free blocks per 16-byte size class
+};
+static_assert(offsetof(MemoryPool, base) == 0x60, "the pool's base is at 0x00241510");
+static_assert(sizeof(MemoryPool) == 0x470, "the pool's free lists run to 0x00241920");
+
+#define Pool (*(MemoryPool *)0x002414b0)
+#define FactoryBlock PTR_AT(0x00241b80)
+#define CtorPool ((ConstructorPool *)0x0023fbe0)
+
+// The object size of each anim type (a table only the pool reads)
+constexpr uint16_t kBlockSizes[kAnimTypeCount] = {
+    0x14, 0x18, 0x14, 0x1c, 0x2c, 0x14, 0x80, 0x1c, 0x80, 0x5c, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x14, 0x30, 0x40,
+    0x30, 0x30, 0x30,
+};
+
+// The names the allocations and the bank type are registered under: the original's strings, the pointers kept
+#define PoolName ((const char *)0x001ceadc)                 // "EAGLAnim Memory Pool"
+#define FactoryName ((const char *)0x001ceb30)              // "EAGLAnim::FnAnimFactory new"
+#define BankTypeName ((const char *)0x001a0a04)             // "AnimationBank"
+
+// The game's vtables, which the objects keep
+#define VtFnAnim ((const void *)0x001a0c6c)
+#define VtCompound ((const void *)0x001a0be8)
+#define VtRawPose ((const void *)0x001a0ca8)
+#define VtRawEvent ((const void *)0x001a0cf0)
+#define VtRawLinear ((const void *)0x001a0d38)
+#define VtKeyDelta ((const void *)0x001a0d80)
+#define VtKeyLerp ((const void *)0x001a0dc8)
+#define VtKeyQuat ((const void *)0x001a0e10)
+#define VtDeltaChan ((const void *)0x001a0e58)
+#define VtGraft ((const void *)0x001a0ea0)
+#define VtPoseBlender ((const void *)0x001a0edc)
+#define VtPoseMirror ((const void *)0x001a0f18)
+#define VtCycle ((const void *)0x001a0f54)
+#define VtEventBlender ((const void *)0x001a0f90)
+#define VtPhase ((const void *)0x001a0fd0)
+#define VtRawState ((const void *)0x001a1018)
+#define VtDeltaLerp ((const void *)0x001a1060)
+#define VtDeltaQuat ((const void *)0x001a10a8)
+#define VtMemoryMap ((const void *)0x001a1130)
+
+#define OperatorDelete ((void (*)(void *))0x001146e0)
+
+inline int Truncate(float f) {   // CVTTSS2SI
     return _mm_cvtt_ss2si(_mm_set_ss(f));
 }
 
-// A pool block back on its size class's free list (its class is in the dword before it).
-static inline void FreeSized(void *block) {
-    uint32_t sizeClass = ((uint32_t *)block)[-1];
-    *(void **)block = FreeBySize[sizeClass];
-    FreeBySize[sizeClass] = block;
+// The anim data behind each channel type
+CompoundData *Compound(uint8_t *anim) {
+    return reinterpret_cast<CompoundData *>(anim);
 }
 
-// An anim's destructor run (scalar deleting, flags 0), and the object back on its type's free list.
-static inline void ReleaseAnim(FnAnim *anim) {
-    AnimVCall<void *>(anim, kSlotDelete, 0u);
-    uint16_t type = (uint16_t)anim->type;
-    *(void **)anim = FreeByType[type];
-    FreeByType[type] = anim;
+DeltaChanData *Delta(uint8_t *anim) {
+    return reinterpret_cast<DeltaChanData *>(anim);
 }
+
+KeyChanData *Keyed(uint8_t *anim) {
+    return reinterpret_cast<KeyChanData *>(anim);
+}
+
+}  // namespace
 
 // ---- the pool
 
+void AnimPool_FreeBlock(void *block) {
+    uint32_t sizeClass = static_cast<uint32_t *>(block)[-1];
+    FreeBlock *freed = static_cast<FreeBlock *>(block);
+    freed->next = Pool.freeBySize[sizeClass];
+    Pool.freeBySize[sizeClass] = freed;
+}
+
+void AnimPool_ReleaseFnAnim(FnAnim *anim) {
+    AnimVCall<void *>(anim, kSlotDelete, 0u);
+    uint16_t type = uint16_t(anim->type);
+    FreeBlock *freed = reinterpret_cast<FreeBlock *>(anim);
+    freed->next = Pool.freeByType[type];
+    Pool.freeByType[type] = freed;
+}
+
 // FUNC_AT(0x000141d0)
 uint16_t* AnimData::GetType(uint16_t *out) {
-    *out = *(uint16_t *)this;
+    *out = type;
     return out;
 }
 
 // FUNC_AT(0x000141e0)
 void AnimPool_DeleteFnAnim(FnAnim *anim) {
-    ReleaseAnim(anim);
+    AnimPool_ReleaseFnAnim(anim);
 }
 
 // The factory's object, and the anim data attached through slot 15 (whatever the type's vtable has there).
 // FUNC_AT(0x00014210)
 FnAnim* AnimPool_NewFnAnim(uint8_t *data) {
     uint16_t type;
-    ((AnimData *)data)->GetType(&type);
+    reinterpret_cast<AnimData *>(data)->GetType(&type);
     FnAnim *anim = AnimPool_Construct(type);
     AnimVCall<void>(anim, kSlotSetAnimMemoryMap, data);
     return anim;
@@ -98,115 +155,116 @@ FnAnim* AnimPool_NewFnAnim(uint8_t *data) {
 
 // FUNC_AT(0x000f7c40)
 void* AnimPool_NewBlockByIdx(uint16_t type) {
-    void *block = FreeByType[type];
+    FreeBlock *block = Pool.freeByType[type];
     if (block == NULL) {
-        *(void **)PoolCursor = NULL;
-        FreeByType[type] = PoolCursor;
-        PoolCursor += BlockSizes[type];
-        block = FreeByType[type];
+        FreeBlock *fresh = reinterpret_cast<FreeBlock *>(Pool.cursor);
+        fresh->next = NULL;
+        Pool.freeByType[type] = fresh;
+        Pool.cursor += kBlockSizes[type];
+        block = Pool.freeByType[type];
     }
-    FreeByType[type] = *(void **)block;
+    Pool.freeByType[type] = block->next;
     return block;
 }
 
-// A block of (size / 16) 16-byte units plus one, its class in the dword before it.
+// A block of (size / 16) 16-byte units plus one, its class in the dword before it. The class is a byte: it wraps.
 // FUNC_AT(0x000f7c90)
 void* AnimPool_NewBlock(uint32_t size) {
-    uint32_t sizeClass = (uint8_t)(size >> 4);
-    void *block = FreeBySize[sizeClass];
+    uint32_t sizeClass = uint8_t(size >> 4);
+    FreeBlock *block = Pool.freeBySize[sizeClass];
     if (block != NULL) {
-        FreeBySize[sizeClass] = *(void **)block;
+        Pool.freeBySize[sizeClass] = block->next;
         return block;
     }
-    *(uint32_t *)PoolCursor = sizeClass;
-    block = PoolCursor + 4;
-    PoolCursor += sizeClass * 16 + 0x14;
+    *reinterpret_cast<uint32_t *>(Pool.cursor) = sizeClass;
+    block = reinterpret_cast<FreeBlock *>(Pool.cursor + 4);
+    Pool.cursor += sizeClass * 16 + 0x14;
     return block;
 }
 
 // FUNC_AT(0x000f7cd0)
 void AnimPool_ResetPool() {
-    PoolCursor = PoolBase;
-    memset(FreeBySize, 0, 0x100 * 4);
-    memset(FreeByType, 0, 0x16 * 4);
+    Pool.cursor = Pool.base;
+    memset(Pool.freeBySize, 0, sizeof(Pool.freeBySize));
+    memset(Pool.freeByType, 0, sizeof(Pool.freeByType));
 }
 
 // FUNC_AT(0x000f7d00)
 void AnimPool_Init(uint32_t size) {
-    PoolSize = size;
-    PoolBase = (uint8_t *)EaglMalloc(size, (const char *)0x001ceadcu);   // "EAGLAnim Memory Pool"
-    PoolCursor = PoolBase;
-    memset(FreeBySize, 0, 0x100 * 4);
-    memset(FreeByType, 0, 0x16 * 4);
-    PoolWord = 0;
+    Pool.size = size;
+    Pool.base = static_cast<uint8_t *>(EaglMalloc(size, PoolName));
+    Pool.cursor = Pool.base;
+    memset(Pool.freeBySize, 0, sizeof(Pool.freeBySize));
+    memset(Pool.freeByType, 0, sizeof(Pool.freeByType));
+    Pool.unknown5c = 0;
 }
 
 // FUNC_AT(0x000f7d50)
 void AnimPool_Cleanup() {
-    EaglFree(PoolBase, PoolSize);
+    EaglFree(Pool.base, Pool.size);
 }
 
 // The data's one-off preparation: a raw pose decides its decoders, a compound prepares its sub-anims.
 // FUNC_AT(0x000f7d70)
 void AnimPool_InitAnimMemoryMap(uint8_t *data) {
     uint16_t type;
-    ((AnimData *)data)->GetType(&type);
+    reinterpret_cast<AnimData *>(data)->GetType(&type);
     if (type == kRawPose)
-        ((void (*)(uint8_t *))0x000fda70)(data);   // RawPoseChannel::InitAnimMemoryMap
+        RawPoseChannel_InitAnimMemoryMap(data);
     else if (type == kCompound)
-        ((void (*)(uint8_t *))0x000faf60)(data);   // CompoundChannel::InitAnimMemoryMap
+        CompoundChannel_InitAnimMemoryMap(data);
 }
 
 // FUNC_AT(0x000f7de0)
 FnAnim* AnimPool_Construct(uint16_t type) {
-    FnAnim *a = (FnAnim *)AnimPool_NewBlockByIdx(type);
+    FnAnim *a = static_cast<FnAnim *>(AnimPool_NewBlockByIdx(type));
     switch (type) {
-    case kRawPose: return ((FnRawPoseChannel *)a)->Construct();
-    case kRawEvent: return ((FnRawEventChannel *)a)->Construct();
-    case kRawLinear: return ((FnRawLinearChannel *)a)->Construct();
+    case kRawPose: return static_cast<FnRawPoseChannel *>(a)->Construct();
+    case kRawEvent: return static_cast<FnRawEventChannel *>(a)->Construct();
+    case kRawLinear: return static_cast<FnRawLinearChannel *>(a)->Construct();
     case kCycle:
         a->stat = 0;
         a->vtable = VtCycle;
-        a->type = 3;
+        a->type = kCycle;
         return a;
     case kEventBlender:
         a->stat = 0;
         a->vtable = VtEventBlender;
-        a->type = 4;
+        a->type = kEventBlender;
         return a;
     case kGraft:
         a->stat = 0;
         a->vtable = VtGraft;
-        a->type = 5;
+        a->type = kGraft;
         return a;
-    case kPoseBlender: return ((FnPoseBlender *)a)->Construct();
-    case kPoseMirror: return ((FnPoseMirror *)a)->Construct();
-    case kRunBlender: return ((FnAnim *(__fastcall *)(void *, int))0x00105000)(a, 0);    // FnRunBlender
-    case kTurnBlender: return ((FnAnim *(__fastcall *)(void *, int))0x001042d0)(a, 0);   // FnTurnBlender
-    case kDeltaLerp: return ((FnDeltaChan *)a)->ConstructLerp();
-    case kDeltaQuat: return ((FnDeltaChan *)a)->ConstructQuat();
-    case kKeyLerp: return ((FnKeyDeltaChan *)a)->ConstructLerp();
-    case kKeyQuat: return ((FnKeyDeltaChan *)a)->ConstructQuat();
-    case kPhase: return ((FnPhaseChan *)a)->Construct();
-    case kCompound: return ((FnCompoundChannel *)a)->Construct();
-    case kRawState: return ((FnRawStateChan *)a)->Construct();
-    case kDeltaQ: return ((FnAnim *(__fastcall *)(void *, int))0x001033b0)(a, 0);        // FnDeltaQ
-    case kDeltaQFast: return ((FnAnim *(__fastcall *)(void *, int))0x00101f40)(a, 0);    // FnDeltaQFast
-    case kDeltaSingleQ: return ((FnAnim *(__fastcall *)(void *, int))0x00100980)(a, 0);  // FnDeltaSingleQ
-    case kDeltaF3: return ((FnAnim *(__fastcall *)(void *, int))0x000ff280)(a, 0);       // FnDeltaF3
-    case kDeltaF1: return ((FnAnim *(__fastcall *)(void *, int))0x000fe280)(a, 0);       // FnDeltaF1
+    case kPoseBlender: return static_cast<FnPoseBlender *>(a)->Construct();
+    case kPoseMirror: return static_cast<FnPoseMirror *>(a)->Construct();
+    case kRunBlender: return static_cast<FnRunBlender *>(a)->Construct();
+    case kTurnBlender: return static_cast<FnTurnBlender *>(a)->Construct();
+    case kDeltaLerp: return static_cast<FnDeltaChan *>(a)->ConstructLerp();
+    case kDeltaQuat: return static_cast<FnDeltaChan *>(a)->ConstructQuat();
+    case kKeyLerp: return static_cast<FnKeyDeltaChan *>(a)->ConstructLerp();
+    case kKeyQuat: return static_cast<FnKeyDeltaChan *>(a)->ConstructQuat();
+    case kPhase: return static_cast<FnPhaseChan *>(a)->Construct();
+    case kCompound: return static_cast<FnCompoundChannel *>(a)->Construct();
+    case kRawState: return static_cast<FnRawStateChan *>(a)->Construct();
+    case kDeltaQ: return static_cast<FnDeltaQ *>(a)->Construct();
+    case kDeltaQFast: return static_cast<FnDeltaQFast *>(a)->Construct();
+    case kDeltaSingleQ: return static_cast<FnDeltaSingleQ *>(a)->Construct();
+    case kDeltaF3: return static_cast<FnDeltaF *>(a)->ConstructF3();
+    case kDeltaF1: return static_cast<FnDeltaF *>(a)->ConstructF1();
     }
     return a;
 }
 
 // ---- Initializer
 
+// The bank type is registered with the original entry points of its constructor and destructor (which run ours).
 // FUNC_AT(0x000fa9c0)
 void EAGLAnim_InitInternal(uint32_t poolSize) {
     AnimPool_Init(poolSize);
-    FactoryBlock = EaglMalloc(1, (const char *)0x001ceb30u);   // "EAGLAnim::FnAnimFactory new"
-    ((void (__fastcall *)(void *, int, const char *, void *, void *))0x000f3a40)(   // ConstructorPool::AddType
-        (void *)0x0023fbe0u, 0, (const char *)0x001a0a04u, (void *)0x000f7170u, (void *)0x000f71a0u);
+    FactoryBlock = EaglMalloc(1, FactoryName);
+    CtorPool->AddType(BankTypeName, (void *)0x000f7170, (void *)0x000f71a0);
 }
 
 // FUNC_AT(0x000faa00)
@@ -223,7 +281,7 @@ void EAGLAnim_Nothing2() {
 
 // FUNC_AT(0x000faa30)
 uint32_t EAGLAnim_GetMemoryUsage() {
-    return (uint32_t)(PoolCursor - PoolBase);
+    return Pool.cursor - Pool.base;
 }
 
 // FUNC_AT(0x000faa40)
@@ -233,34 +291,29 @@ void EAGLAnim_ResetPool() {
 
 // FUNC_AT(0x000faa50)
 void EAGLAnim_ShutDown() {
-    ((void (__fastcall *)(void *, int, const char *))0x000f3a20)(   // ConstructorPool::RemoveType
-        (void *)0x0023fbe0u, 0, (const char *)0x001a0a04u);
-    ((void (*)())0x00106790)();   // ScratchBuffer::FreeScratchBuffers
+    CtorPool->RemoveType(BankTypeName);
+    ScratchBuffer_FreeScratchBuffers();
     if (FactoryBlock != NULL)
         EaglFree(FactoryBlock, 1);
     AnimPool_Cleanup();
 }
 
-// ---- AnimationBank: u32, count, u32, anims[] at +0x0c, names[] at +0x10 (sorted)
+// ---- AnimationBank
 
 // The loader's constructor for AnimationBank symbols: every anim's data prepared, last first.
 // FUNC_AT(0x000f7170)
-void AnimBank_Constructor(uint8_t *bank, void *loader) {
-    (void)loader;
-    uint8_t **anims = *(uint8_t ***)(bank + 0xc);
-    for (int i = *(int32_t *)(bank + 4) - 1; i >= 0; i--)
-        AnimPool_InitAnimMemoryMap(anims[i]);
+void AnimBank_Constructor(AnimBank *bank, void *) {
+    for (int i = bank->count - 1; i >= 0; i--)
+        AnimPool_InitAnimMemoryMap(bank->anims[i]);
 }
 
 // FUNC_AT(0x000f71a0)
-void AnimBank_Destructor(uint8_t *bank) {
-    (void)bank;
+void AnimBank_Destructor(AnimBank *) {
 }
 
 // FUNC_AT(0x000f71b0)
 int AnimBank::FindAnim(const char *name) {
-    int lo = 0, hi = *(int32_t *)((uint8_t *)this + 4) - 1;
-    const char **names = *(const char ***)((uint8_t *)this + 0x10);
+    int lo = 0, hi = count - 1;
     while (lo <= hi) {
         int mid = (lo + hi) >> 1;
         int c = strcmp(name, names[mid]);
@@ -277,7 +330,7 @@ int AnimBank::FindAnim(const char *name) {
 // A compound channel around an anim's data (the anim database's).
 // FUNC_AT(0x000f7240)
 FnAnim* AnimBank_NewCompound(uint8_t *data) {
-    FnCompoundChannel *c = (FnCompoundChannel *)AnimPool_NewBlockByIdx(kCompound);
+    FnCompoundChannel *c = static_cast<FnCompoundChannel *>(AnimPool_NewBlockByIdx(kCompound));
     if (c != NULL) {
         c->FnAnimMemoryMap::Construct();
         c->vtable = VtCompound;
@@ -301,7 +354,7 @@ void FnAnim::Destruct() {
 FnAnim* FnAnim::ScalarDelete(unsigned flags) {
     vtable = VtFnAnim;
     if (flags & 1)
-        ((void (*)(void *))0x001146e0)(this);   // operator delete
+        OperatorDelete(this);
     return this;
 }
 
@@ -311,25 +364,17 @@ uint16_t FnAnim::GetTargetCheckSum() {
 }
 
 // FUNC_AT(0x000f7300)
-bool FnAnim::GetLength(float *length) {
-    (void)length;
+bool FnAnim::GetLength(float *) {
     return false;
 }
 
 // FUNC_AT(0x000f7310)
-bool FnAnim::EvalSQT(float time, float *sqt, void *mask) {
-    (void)time;
-    (void)sqt;
-    (void)mask;
+bool FnAnim::EvalSQT(float, float *, void *) {
     return false;
 }
 
 // FUNC_AT(0x000f7320)
-bool FnAnim::EvalEvent(float previous, float time, void **handlers, void *data) {
-    (void)previous;
-    (void)time;
-    (void)handlers;
-    (void)data;
+bool FnAnim::EvalEvent(float, float, void **, void *) {
     return false;
 }
 
@@ -339,9 +384,7 @@ void* FnAnim::GetAttributes() {
 }
 
 // FUNC_AT(0x000f70e0)
-bool FnAnim::NotImplemented(float a, void *b) {
-    (void)a;
-    (void)b;
+bool FnAnim::NotImplemented(float, void *) {
     return false;
 }
 
@@ -377,35 +420,31 @@ uint8_t* FnAnimMemoryMap::GetAnimMemoryMap2() {
 
 // FUNC_AT(0x000faae0)
 uint16_t FnAnimMemoryMap::GetTargetCheckSum() {
-    return *(uint16_t *)(anim + 2);
+    return reinterpret_cast<AnimData *>(anim)->checksum;
 }
 
 // FUNC_AT(0x000faaf0)
 FnAnimMemoryMap* FnAnimMemoryMap::ScalarDelete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        ((void (*)(void *))0x001146e0)(this);   // operator delete
+        OperatorDelete(this);
     return this;
 }
 
-// A byte attribute (AttributeBlock::GetAttribute writes into a dword).
+// A byte attribute (AttributeBlock::GetAttribute writes into a dword, which starts out holding the id).
 // FUNC_AT(0x000fab10)
 bool FnAnimMemoryMap::GetAttributeByte(uint16_t id, uint8_t *out) {
     void *attributes = AnimVCall<void *>(this, kSlotGetAttributes);
     if (attributes == NULL)
         return false;
     uint32_t value = id;
-    if (!((bool (__fastcall *)(void *, int, uint32_t, void *))0x00106800)(attributes, 0, id, &value))
+    if (!static_cast<AttributeBlock *>(attributes)->GetAttribute(id, &value))
         return false;
-    *out = (uint8_t)value;
+    *out = uint8_t(value);
     return true;
 }
 
-// ---- FnCompoundChannel: u16 type, u16 checksum, attributes at +4, u16 count at +8, u16 frames at +0xa,
-// sub-anim data[] at +0xc
-
-#define CompoundCount(anim) (*(uint16_t *)((anim) + 8))
-#define CompoundSubs(anim)  ((uint8_t **)((anim) + 0xc))
+// ---- FnCompoundChannel
 
 // FUNC_AT(0x000f70b0)
 FnCompoundChannel* FnCompoundChannel::Construct() {
@@ -423,9 +462,9 @@ FnCompoundChannel* FnCompoundChannel::Construct() {
 void FnCompoundChannel::Destruct() {
     vtable = VtCompound;
     if (channels != NULL) {
-        for (int i = CompoundCount(anim) - 1; i >= 0; i--)
-            ReleaseAnim(channels[i]);
-        FreeSized(channels);
+        for (int i = Compound(anim)->count - 1; i >= 0; i--)
+            AnimPool_ReleaseFnAnim(channels[i]);
+        AnimPool_FreeBlock(channels);
     }
     FnAnimMemoryMap::Destruct();
 }
@@ -434,21 +473,21 @@ void FnCompoundChannel::Destruct() {
 FnCompoundChannel* FnCompoundChannel::ScalarDelete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        EaglFree(this, 0x18);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 
 // FUNC_AT(0x000f70f0)
 uint16_t FnCompoundChannel::GetTargetCheckSum() {
-    return *(uint16_t *)(anim + 2);
+    return Compound(anim)->checksum;
 }
 
 // FUNC_AT(0x000f7100)
 bool FnCompoundChannel::GetLength(float *length) {
-    int frames = *(uint16_t *)(anim + 0xa);
-    *length = (float)frames;
+    int frames = Compound(anim)->frames;
+    *length = float(frames);
     if (useFPS)
-        *length = (float)((double)frames / (double)(int)fps);
+        *length = float(frames) / float(fps);
     return true;
 }
 
@@ -457,99 +496,97 @@ bool FnCompoundChannel::GetLength(float *length) {
 void FnCompoundChannel::SetAnimMemoryMap(uint8_t *data) {
     anim = data;
     if (channels != NULL) {
-        for (int i = CompoundCount(data) - 1; i >= 0; i--)
-            ReleaseAnim(channels[i]);
-        FreeSized(channels);
+        for (int i = Compound(data)->count - 1; i >= 0; i--)
+            AnimPool_ReleaseFnAnim(channels[i]);
+        AnimPool_FreeBlock(channels);
     }
     channels = NULL;
 }
 
 // FUNC_AT(0x000fb050)
 void FnCompoundChannel::InitSubChannels() {
-    uint8_t *data = anim;
-    channels = (FnAnim **)AnimPool_NewBlock((uint32_t)CompoundCount(data) * 4);
-    for (int i = CompoundCount(data) - 1; i >= 0; i--)
-        channels[i] = AnimPool_NewFnAnim(CompoundSubs(data)[i]);
+    CompoundData *data = Compound(anim);
+    channels = static_cast<FnAnim **>(AnimPool_NewBlock(data->count * sizeof(FnAnim *)));
+    for (int i = data->count - 1; i >= 0; i--)
+        channels[i] = AnimPool_NewFnAnim(data->subs[i]);
 }
 
 // FUNC_AT(0x000fb0a0)
 void FnCompoundChannel::Eval(float previous, float time, float *out) {
-    uint8_t *data = anim;
+    CompoundData *data = Compound(anim);
     if (channels == NULL)
         InitSubChannels();
     if (useFPS) {
-        double f = (double)(int)fps;
-        previous = (float)((double)previous * f);
-        time = (float)(f * (double)time);
+        previous *= fps;
+        time *= fps;
     }
-    for (int i = CompoundCount(data) - 1; i >= 0; i--)
+    for (int i = data->count - 1; i >= 0; i--)
         AnimVCall<void>(channels[i], kSlotEval, previous, time, out);
 }
 
 // FUNC_AT(0x000fac70)
 bool FnCompoundChannel::EvalEvent(float previous, float time, void **handlers, void *data) {
-    uint8_t *a = anim;
+    CompoundData *compound = Compound(anim);
     bool any = false;
     if (channels == NULL)
         InitSubChannels();
     if (useFPS) {
-        double f = (double)(int)fps;
-        previous = (float)((double)previous * f);
-        time = (float)(f * (double)time);
+        previous *= fps;
+        time *= fps;
     }
-    for (int i = CompoundCount(a) - 1; i >= 0; i--)
+    for (int i = compound->count - 1; i >= 0; i--)
         any |= AnimVCall<bool>(channels[i], kSlotEvalEvent, previous, time, handlers, data);
     return any;
 }
 
 // FUNC_AT(0x000facf0)
 bool FnCompoundChannel::EvalSQT(float time, float *sqt, void *mask) {
-    uint8_t *a = anim;
+    CompoundData *data = Compound(anim);
     bool any = false;
     if (channels == NULL)
         InitSubChannels();
     if (useFPS)
-        time = (float)((double)(int)fps * (double)time);
-    for (int i = CompoundCount(a) - 1; i >= 0; i--)
+        time *= fps;
+    for (int i = data->count - 1; i >= 0; i--)
         any |= AnimVCall<bool>(channels[i], kSlotEvalSQT, time, sqt, mask);
     return any;
 }
 
 // FUNC_AT(0x000fad60)
 bool FnCompoundChannel::EvalWeights(float time, float *weights) {
-    uint8_t *a = anim;
+    CompoundData *data = Compound(anim);
     bool any = false;
     if (channels == NULL)
         InitSubChannels();
     if (useFPS)
-        time = (float)((double)(int)fps * (double)time);
-    for (int i = CompoundCount(a) - 1; i >= 0; i--)
+        time *= fps;
+    for (int i = data->count - 1; i >= 0; i--)
         any |= AnimVCall<bool>(channels[i], kSlotEvalWeights, time, weights);
     return any;
 }
 
 // FUNC_AT(0x000fadc0)
 bool FnCompoundChannel::EvalVel2D(float time, float *velocity) {
-    uint8_t *a = anim;
+    CompoundData *data = Compound(anim);
     bool any = false;
     if (channels == NULL)
         InitSubChannels();
     if (useFPS)
-        time = (float)((double)(int)fps * (double)time);
-    for (int i = CompoundCount(a) - 1; i >= 0; i--)
+        time *= fps;
+    for (int i = data->count - 1; i >= 0; i--)
         any |= AnimVCall<bool>(channels[i], kSlotEvalVel2D, time, velocity);
     return any;
 }
 
 // FUNC_AT(0x000fae20)
 bool FnCompoundChannel::EvalState(float time, void *state) {
-    uint8_t *a = anim;
+    CompoundData *data = Compound(anim);
     bool any = false;
     if (channels == NULL)
         InitSubChannels();
     if (useFPS)
-        time = (float)((double)(int)fps * (double)time);
-    for (int i = CompoundCount(a) - 1; i >= 0; i--)
+        time *= fps;
+    for (int i = data->count - 1; i >= 0; i--)
         any |= AnimVCall<bool>(channels[i], kSlotEvalState, time, state);
     return any;
 }
@@ -557,13 +594,13 @@ bool FnCompoundChannel::EvalState(float time, void *state) {
 // The first sub-channel (last first) that finds the time; no sub-channels built here, as in the original.
 // FUNC_AT(0x000fae80)
 bool FnCompoundChannel::FindTime(void *test, float from, float *time) {
-    uint8_t *a = anim;
+    CompoundData *data = Compound(anim);
     if (useFPS)
-        from = (float)((double)(int)fps * (double)from);
-    for (int i = CompoundCount(a) - 1; i >= 0; i--) {
+        from *= fps;
+    for (int i = data->count - 1; i >= 0; i--) {
         if (AnimVCall<bool>(channels[i], kSlotFindTime, test, from, time)) {
             if (useFPS)
-                *time = (float)((double)*time / (double)(int)fps);
+                *time /= fps;
             return true;
         }
     }
@@ -572,21 +609,21 @@ bool FnCompoundChannel::FindTime(void *test, float from, float *time) {
 
 // FUNC_AT(0x000faf00)
 bool FnCompoundChannel::EvalPhase(float time, void *phase) {
-    uint8_t *a = anim;
+    CompoundData *data = Compound(anim);
     bool any = false;
     if (useFPS)
-        time = (float)((double)(int)fps * (double)time);
-    for (int i = CompoundCount(a) - 1; i >= 0; i--)
+        time *= fps;
+    for (int i = data->count - 1; i >= 0; i--)
         any |= AnimVCall<bool>(channels[i], kSlotEvalPhase, time, phase);
     return any;
 }
 
 // FUNC_AT(0x000faf90)
 void* FnCompoundChannel::GetPhaseChan() {
-    uint8_t *a = anim;
+    CompoundData *data = Compound(anim);
     if (channels == NULL)
         InitSubChannels();
-    for (int i = CompoundCount(a) - 1; i >= 0; i--) {
+    for (int i = data->count - 1; i >= 0; i--) {
         void *phase = AnimVCall<void *>(channels[i], kSlotGetPhaseChan);
         if (phase != NULL)
             return phase;
@@ -607,8 +644,8 @@ uint8_t FnCompoundChannel::GetFPS() {
         void *attributes = AnimVCall<void *>(this, kSlotGetAttributes);
         if (attributes != NULL) {
             uint32_t value;
-            if (((bool (__fastcall *)(void *, int, uint32_t, void *))0x00106800)(attributes, 0, 1, &value))
-                fps = (uint8_t)value;
+            if (static_cast<AttributeBlock *>(attributes)->GetAttribute(1, &value))
+                fps = uint8_t(value);
         }
     }
     return fps;
@@ -616,18 +653,17 @@ uint8_t FnCompoundChannel::GetFPS() {
 
 // FUNC_AT(0x000fb040)
 void* FnCompoundChannel::GetAttributes() {
-    return *(void **)(anim + 4);
+    return Compound(anim)->attributes;
 }
 
 // FUNC_AT(0x000faf60)
 void CompoundChannel_InitAnimMemoryMap(uint8_t *data) {
-    for (int i = CompoundCount(data) - 1; i >= 0; i--)
-        AnimPool_InitAnimMemoryMap(CompoundSubs(data)[i]);
+    CompoundData *compound = Compound(data);
+    for (int i = compound->count - 1; i >= 0; i--)
+        AnimPool_InitAnimMemoryMap(compound->subs[i]);
 }
 
-// ---- FnRawPoseChannel (its decoding, RawPoseChannel::Eval 0x000fdd40, is module L)
-
-#define RawPoseChannel_Eval ((void (__fastcall *)(uint8_t *, int, float, float *, uint32_t, void *))0x000fdd40)
+// ---- FnRawPoseChannel (its decoding is RawPoseChannel's, AnimMisc.cpp)
 
 // FUNC_AT(0x000f7360)
 FnRawPoseChannel* FnRawPoseChannel::Construct() {
@@ -648,35 +684,34 @@ void FnRawPoseChannel::Destruct() {
 FnRawPoseChannel* FnRawPoseChannel::ScalarDelete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        EaglFree(this, 0x14);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 
 // FUNC_AT(0x000f7380)
 bool FnRawPoseChannel::GetLength(float *length) {
-    *length = (float)*(int32_t *)(anim + 0xc);
+    *length = float(reinterpret_cast<RawPoseChannel *>(anim)->frames);
     return true;
 }
 
 // FUNC_AT(0x000fb120)
-void FnRawPoseChannel::Eval(float previous, float time, float *out) {
-    (void)previous;
-    RawPoseChannel_Eval(anim, 0, time, out, interpolate, NULL);
+void FnRawPoseChannel::Eval(float, float time, float *out) {
+    reinterpret_cast<RawPoseChannel *>(anim)->Eval(time, out, interpolate != 0, NULL);
 }
 
 // FUNC_AT(0x000fb140)
 bool FnRawPoseChannel::EvalSQT(float time, float *sqt, void *mask) {
-    RawPoseChannel_Eval(anim, 0, time, sqt, interpolate, mask);
+    reinterpret_cast<RawPoseChannel *>(anim)->Eval(time, sqt, interpolate != 0, mask);
     return true;
 }
 
-// ---- FnRawEventChannel (RawEventChannel::Eval 0x000fb170 is module L)
+// ---- FnRawEventChannel (RawEventData::Eval is AnimChannels.cpp's)
 
 // FUNC_AT(0x000f73e0)
 FnRawEventChannel* FnRawEventChannel::Construct() {
     FnAnimMemoryMap::Construct();
     lastIndex = 0;
-    lastTime = 0;
+    lastTime = 0.0f;
     vtable = VtRawEvent;
     type = kRawEvent;
     return this;
@@ -692,7 +727,7 @@ void FnRawEventChannel::Destruct() {
 FnRawEventChannel* FnRawEventChannel::ScalarDelete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        EaglFree(this, 0x18);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 
@@ -700,19 +735,19 @@ FnRawEventChannel* FnRawEventChannel::ScalarDelete(unsigned flags) {
 void FnRawEventChannel::SetAnimMemoryMap(uint8_t *data) {
     anim = data;
     lastIndex = 0;
-    lastTime = 0;
+    lastTime = 0.0f;
 }
 
 // FUNC_AT(0x000f7430)
 bool FnRawEventChannel::EvalEvent(float previous, float time, void **handlers, void *data) {
-    ((void (__fastcall *)(uint8_t *, int, float, float, int32_t *, float *, void **, void *))0x000fb170)(
-        anim, 0, previous, time, &lastIndex, &lastTime, handlers, data);   // RawEventChannel::Eval
+    reinterpret_cast<RawEventData *>(anim)->Eval(previous, time, &lastIndex, &lastTime, handlers, data);
     return true;
 }
 
+// Eval's output is taken as the handler table.
 // FUNC_AT(0x000f7460)
 void FnRawEventChannel::Eval(float previous, float time, float *out) {
-    AnimVCall<bool>(this, kSlotEvalEvent, previous, time, (void **)out, (void *)NULL);
+    AnimVCall<bool>(this, kSlotEvalEvent, previous, time, reinterpret_cast<void **>(out), (void *)NULL);
 }
 
 // ---- FnRawLinearChannel
@@ -736,33 +771,23 @@ void FnRawLinearChannel::Destruct() {
 FnRawLinearChannel* FnRawLinearChannel::ScalarDelete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        EaglFree(this, 0x14);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 
 // FUNC_AT(0x000f74e0)
-void FnRawLinearChannel::Eval(float previous, float time, float *out) {
-    (void)previous;
-    ((RawLinearData *)anim)->Eval(time, out, interpolate != 0);
+void FnRawLinearChannel::Eval(float, float time, float *out) {
+    reinterpret_cast<RawLinearData *>(anim)->Eval(time, out, interpolate != 0);
 }
 
 // FUNC_AT(0x000f7650)
 bool FnRawLinearChannel::GetLength(float *length) {
-    *length = (float)(int)*(uint16_t *)(anim + 6);
+    *length = float(reinterpret_cast<RawLinearData *>(anim)->frames);
     return true;
 }
 
-#define RawLinearChannels(d) (*(uint16_t *)((uint8_t *)(d) + 4))
-#define RawLinearFrames(d)   (*(uint16_t *)((uint8_t *)(d) + 6))
-#define RawLinearIndex(d)    ((uint16_t *)((uint8_t *)(d) + 8))
-
-static inline float* RawLinearFrame(void *d, int frame) {
-    int n = RawLinearChannels(d);
-    return (float *)((uint8_t *)d + (((n + 1) & ~1) + n * frame * 2 + 4) * 2);
-}
-
 // The frame below the time, or a lerp to the next one when there is a fraction and interpolation; times outside
-// the frames clamp.
+// the frames clamp. (The fraction is exact in float: a float less its truncation.)
 // FUNC_AT(0x000f7500)
 void RawLinearData::Eval(float time, float *out, bool interpolate) {
     int frame = Truncate(time);
@@ -770,14 +795,13 @@ void RawLinearData::Eval(float time, float *out, bool interpolate) {
         Copy(0, out);
         return;
     }
-    int last = RawLinearFrames(this) - 1;
+    int last = frames - 1;
     if (frame >= last) {
         Copy(last, out);
         return;
     }
-    double fraction = (double)time - (double)frame;
-    float t = (float)fraction;
-    if (!(fraction == 0.0) && interpolate) {
+    float t = time - float(frame);
+    if (t != 0.0f && interpolate) {
         Lerp(t, frame, frame + 1, out);
         return;
     }
@@ -786,39 +810,40 @@ void RawLinearData::Eval(float time, float *out, bool interpolate) {
 
 // FUNC_AT(0x000f75a0)
 void RawLinearData::Copy(int frame, float *out) {
-    float *values = RawLinearFrame(this, frame);
-    for (int i = 0; i < RawLinearChannels(this); i++)
-        out[RawLinearIndex(this)[i]] = values[i];
+    float *values = Frame(frame);
+    for (int i = 0; i < channels; i++)
+        out[index[i]] = values[i];
 }
 
 // FUNC_AT(0x000f75e0)
 void RawLinearData::Lerp(float t, int frame0, int frame1, float *out) {
-    float *a = RawLinearFrame(this, frame0);
-    float *b = RawLinearFrame(this, frame1);
-    for (int i = 0; i < RawLinearChannels(this); i++)
-        out[RawLinearIndex(this)[i]] = (float)(((double)b[i] - (double)a[i]) * (double)t + (double)a[i]);
+    float *a = Frame(frame0);
+    float *b = Frame(frame1);
+    for (int i = 0; i < channels; i++)
+        out[index[i]] = float((double(b[i]) - a[i]) * t + a[i]);
 }
 
 // ---- FnKeyDeltaChan and FnDeltaChan: decoded values in a pool block, sized by the data's value count
 
-#define DeltaInfo(anim)  (*(uint16_t **)((anim) + 4))
-#define DecompressValues ((void (__fastcall *)(uint16_t *, int, int, int, int, int, float *, float *))0x001069d0)
+namespace {
 
 // Keep the block if the new data needs no more values than the old; otherwise a new one.
-static float* ResizeValues(float *values, uint8_t *oldAnim, uint8_t *newAnim) {
+float* ResizeValues(float *values, DeltaCompressedData *oldInfo, DeltaCompressedData *newInfo) {
     if (values != NULL) {
-        if (*DeltaInfo(newAnim) < *DeltaInfo(oldAnim))
+        if (newInfo->count < oldInfo->count)
             return values;
-        FreeSized(values);
+        AnimPool_FreeBlock(values);
     }
-    return (float *)AnimPool_NewBlock((uint32_t)*DeltaInfo(newAnim) * 4);
+    return static_cast<float *>(AnimPool_NewBlock(newInfo->count * sizeof(float)));
 }
+
+}  // namespace
 
 // FUNC_AT(0x000fb890)
 void FnKeyDeltaChan::Destruct() {
     vtable = VtKeyDelta;
     if (values != NULL)
-        FreeSized(values);
+        AnimPool_FreeBlock(values);
     FnAnimMemoryMap::Destruct();
 }
 
@@ -831,7 +856,7 @@ void FnKeyDeltaChan::DestructThunk() {
 FnKeyDeltaChan* FnKeyDeltaChan::ScalarDelete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        EaglFree(this, 0x18);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 
@@ -839,7 +864,7 @@ FnKeyDeltaChan* FnKeyDeltaChan::ScalarDelete(unsigned flags) {
 FnKeyDeltaChan* FnKeyDeltaChan::ScalarDeleteLerp(unsigned flags) {
     DestructThunk();
     if (flags & 1)
-        EaglFree(this, 0x18);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 
@@ -865,19 +890,18 @@ FnKeyDeltaChan* FnKeyDeltaChan::ConstructQuat() {
 
 // FUNC_AT(0x000fb8c0)
 void FnKeyDeltaChan::SetAnimMemoryMap(uint8_t *data) {
-    if (values != NULL) {
-        values = ResizeValues(values, anim, data);
-    } else {
-        values = (float *)AnimPool_NewBlock((uint32_t)*DeltaInfo(data) * 4);
-    }
+    if (values != NULL)
+        values = ResizeValues(values, Keyed(anim)->info, Keyed(data)->info);
+    else
+        values = static_cast<float *>(AnimPool_NewBlock(Keyed(data)->info->count * sizeof(float)));
     anim = data;
     key = -1;
 }
 
 // FUNC_AT(0x000fb930)
 void FnKeyDeltaChan::EvalToPrevValues(int k) {
-    uint16_t *info = DeltaInfo(anim);
-    DecompressValues(info, 0, 0, *info, key, k, values, values);
+    DeltaCompressedData *info = Keyed(anim)->info;
+    info->DecompressValues(0, info->count, key, k, values, values);
     key = k;
 }
 
@@ -885,7 +909,7 @@ void FnKeyDeltaChan::EvalToPrevValues(int k) {
 void FnDeltaChan::Destruct() {
     vtable = VtDeltaChan;
     if (values != NULL)
-        FreeSized(values);
+        AnimPool_FreeBlock(values);
     FnAnimMemoryMap::Destruct();
 }
 
@@ -898,7 +922,7 @@ void FnDeltaChan::DestructThunk() {
 FnDeltaChan* FnDeltaChan::ScalarDelete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        EaglFree(this, 0x18);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 
@@ -906,7 +930,7 @@ FnDeltaChan* FnDeltaChan::ScalarDelete(unsigned flags) {
 FnDeltaChan* FnDeltaChan::ScalarDeleteQuat(unsigned flags) {
     DestructThunk();
     if (flags & 1)
-        EaglFree(this, 0x18);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 
@@ -932,17 +956,16 @@ FnDeltaChan* FnDeltaChan::ConstructQuat() {
 
 // FUNC_AT(0x000f7770)
 bool FnDeltaChan::GetLength(float *length) {
-    *length = (float)(int)*(uint16_t *)(anim + 8);
+    *length = float(Delta(anim)->frames);
     return true;
 }
 
 // FUNC_AT(0x000fb390)
 void FnDeltaChan::SetAnimMemoryMap(uint8_t *data) {
-    if (values != NULL) {
-        values = ResizeValues(values, anim, data);
-    } else {
-        values = (float *)AnimPool_NewBlock((uint32_t)*DeltaInfo(data) * 4);
-    }
+    if (values != NULL)
+        values = ResizeValues(values, Delta(anim)->info, Delta(data)->info);
+    else
+        values = static_cast<float *>(AnimPool_NewBlock(Delta(data)->info->count * sizeof(float)));
     anim = data;
     frame = -1;
 }
@@ -950,13 +973,13 @@ void FnDeltaChan::SetAnimMemoryMap(uint8_t *data) {
 // The frame clamped to the data's frames, decoded from the last one decoded.
 // FUNC_AT(0x000fb400)
 void FnDeltaChan::DecodeFrame(int f) {
-    uint16_t *info = DeltaInfo(anim);
-    int frames = *(uint16_t *)(anim + 8);
+    DeltaCompressedData *info = Delta(anim)->info;
+    int frames = Delta(anim)->frames;
     if (f >= frames)
         f = frames - 1;
     else if (f < 0)
         f = 0;
-    DecompressValues(info, 0, 0, *info, frame, f, values, values);
+    info->DecompressValues(0, info->count, frame, f, values, values);
     frame = f;
 }
 
@@ -966,7 +989,7 @@ void FnDeltaChan::DecodeFrame(int f) {
 FnGraft* FnGraft::ScalarDelete(unsigned flags) {
     FnAnim::Destruct();
     if (flags & 1)
-        EaglFree(this, 0x14);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 
@@ -976,59 +999,59 @@ void FnGraft::Eval(float previous, float time, float *out) {
         AnimVCall<void>(anims[i], kSlotEval, previous, time, out);
 }
 
-// Times below start wrap back from end, times past end wrap forward from start, by whole periods.
+// Times below start wrap back from end, times past end wrap forward from start, by whole periods. The remainder
+// stays on the x87 stack: rounded to float once (rf) while the division uses it unrounded.
 // FUNC_AT(0x000f79b0)
 double FnCycle::Wrap(float time) {
-    if ((double)time < (double)start) {
-        double r = (double)time - (double)start;
-        float rf = (float)r;
-        int periods = Truncate((float)(r / (double)period));
-        return (double)end - ((double)rf - (double)periods * (double)period);
+    if (time < start) {
+        double r = double(time) - start;
+        float rf = float(r);
+        int periods = Truncate(float(r / period));
+        return end - (rf - double(periods) * period);
     }
-    if (!((double)time < (double)end || (double)time == (double)end || time != time)) {
-        double r = (double)time - (double)end;
-        float rf = (float)r;
-        int periods = Truncate((float)(r / (double)period));
-        return ((double)rf - (double)periods * (double)period) + (double)start;
+    if (time > end) {
+        double r = double(time) - end;
+        float rf = float(r);
+        int periods = Truncate(float(r / period));
+        return (rf - double(periods) * period) + start;
     }
-    return (double)time;
+    return time;
 }
 
 // FUNC_AT(0x000f7970)
 void FnCycle::Eval(float previous, float time, float *out) {
-    float t = (float)Wrap(time);
-    float p = (float)Wrap(previous);
+    float t = float(Wrap(time));
+    float p = float(Wrap(previous));
     AnimVCall<void>(anim, kSlotEval, p, t, out);
 }
 
 // FUNC_AT(0x000f7a50)
 bool FnCycle::EvalEvent(float previous, float time, void **handlers, void *data) {
-    float t = (float)Wrap(time);
-    float p = (float)Wrap(previous);
+    float t = float(Wrap(time));
+    float p = float(Wrap(previous));
     return AnimVCall<bool>(anim, kSlotEvalEvent, p, t, handlers, data);
 }
 
 // FUNC_AT(0x000f7a90)
 bool FnCycle::EvalSQT(float time, float *sqt, void *mask) {
-    return AnimVCall<bool>(anim, kSlotEvalSQT, (float)Wrap(time), sqt, mask);
+    return AnimVCall<bool>(anim, kSlotEvalSQT, float(Wrap(time)), sqt, mask);
 }
 
 // FUNC_AT(0x000f7ac0)
 bool FnCycle::EvalPhase(float time, void *phase) {
-    return AnimVCall<bool>(anim, kSlotEvalPhase, (float)Wrap(time), phase);
+    return AnimVCall<bool>(anim, kSlotEvalPhase, float(Wrap(time)), phase);
 }
 
 // FUNC_AT(0x000f7810)
 FnPoseBlender* FnPoseBlender::Construct() {
-    uint8_t *p = (uint8_t *)this;
     stat = 0;
     vtable = VtPoseBlender;
-    *(uint32_t *)(p + 0xc) = 0;
-    *(int32_t *)(p + 0x28) = -1;
-    *(uint32_t *)(p + 0x14) = 0;
-    *(uint32_t *)(p + 0x10) = 0;
-    p[0x7d] = 0;
-    p[0x7c] = 0;
+    skeleton = NULL;
+    bone = -1;
+    poseB = NULL;
+    poseA = NULL;
+    stillB = 0;
+    stillA = 0;
     type = kPoseBlender;
     return this;
 }
@@ -1037,7 +1060,7 @@ FnPoseBlender* FnPoseBlender::Construct() {
 FnPoseBlender* FnPoseBlender::ScalarDelete(unsigned flags) {
     FnAnim::Destruct();
     if (flags & 1)
-        EaglFree(this, 0x80);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 
@@ -1057,11 +1080,9 @@ FnPoseMirror* FnPoseMirror::Construct() {
 FnPoseMirror* FnPoseMirror::ScalarDelete(unsigned deleteFlags) {
     FnAnim::Destruct();
     if (deleteFlags & 1)
-        EaglFree(this, 0x1c);
+        EaglFree(this, sizeof(*this));
     return this;
 }
-
-#define MirrorPose ((void (__fastcall *)(void *, int, float *, float *, uint32_t, void *))0x000f8be0)
 
 // FUNC_AT(0x000f78a0)
 void FnPoseMirror::Eval(float previous, float time, float *out) {
@@ -1070,7 +1091,7 @@ void FnPoseMirror::Eval(float previous, float time, float *out) {
         return;
     }
     AnimVCall<void>(anim, kSlotEval, previous, time, pose);
-    MirrorPose(skeleton, 0, pose, out, flags, NULL);
+    skeleton->MirrorPose(pose, out, flags != 0, NULL);
 }
 
 // FUNC_AT(0x000f78f0)
@@ -1079,7 +1100,7 @@ bool FnPoseMirror::EvalSQT(float time, float *sqt, void *mask) {
         return AnimVCall<bool>(anim, kSlotEvalSQT, time, sqt, mask);
     bool any = AnimVCall<bool>(anim, kSlotEvalSQT, time, pose, mask);
     if (any)
-        MirrorPose(skeleton, 0, pose, sqt, flags, mask);
+        skeleton->MirrorPose(pose, sqt, flags != 0, static_cast<BoneMask *>(mask));
     return any;
 }
 
@@ -1087,7 +1108,7 @@ bool FnPoseMirror::EvalSQT(float time, float *sqt, void *mask) {
 FnEventBlender* FnEventBlender::ScalarDelete(unsigned flags) {
     FnAnim::Destruct();
     if (flags & 1)
-        EaglFree(this, 0x2c);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 
@@ -1097,8 +1118,8 @@ FnEventBlender* FnEventBlender::ScalarDelete(unsigned flags) {
 FnPhaseChan* FnPhaseChan::Construct() {
     FnAnimMemoryMap::Construct();
     vtable = VtPhase;
-    *(uint16_t *)((uint8_t *)this + 0x10) = 0;
-    *((uint8_t *)this + 0x15) = 1;
+    index = 0;
+    step = 1;
     type = kPhase;
     return this;
 }
@@ -1117,7 +1138,7 @@ void FnPhaseChan::Destruct() {
 FnPhaseChan* FnPhaseChan::ScalarDelete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        EaglFree(this, 0x18);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 
@@ -1125,20 +1146,19 @@ FnPhaseChan* FnPhaseChan::ScalarDelete(unsigned flags) {
 FnRawStateChan* FnRawStateChan::Construct() {
     FnAnimMemoryMap::Construct();
     vtable = VtRawState;
-    *(uint32_t *)((uint8_t *)this + 0x10) = 0;
+    frame = 0;
     type = kRawState;
     return this;
 }
 
 // FUNC_AT(0x000f7b80)
 bool FnRawStateChan::GetLength(float *length) {
-    *length = (float)(int)*(uint16_t *)(anim + 4);
+    *length = float(reinterpret_cast<RawStateChanData *>(anim)->length);
     return true;
 }
 
 // FUNC_AT(0x000f7ba0)
-void FnRawStateChan::Eval(float previous, float time, float *out) {
-    (void)previous;
+void FnRawStateChan::Eval(float, float time, float *out) {
     AnimVCall<bool>(this, kSlotEvalState, time, (void *)out);
 }
 
@@ -1146,7 +1166,7 @@ void FnRawStateChan::Eval(float previous, float time, float *out) {
 FnRawStateChan* FnRawStateChan::ScalarDelete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        EaglFree(this, 0x14);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 

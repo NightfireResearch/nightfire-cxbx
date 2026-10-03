@@ -1,9 +1,11 @@
 #include "AnimPoseBlend.h"
 #include "AnimChannels.h"
+#include "AnimMisc.h"
 #include "AnimUntested.h"
 #include "Skeleton.h"
 #include "../Transform.h"
 
+#include <bit>
 #include <string.h>
 #include <xmmintrin.h>
 
@@ -31,32 +33,36 @@
 // unordered (NaN) outcomes.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define AngleBetween ((double (*)(const float *a, const float *b))0x00016530u)   // atan2(|a x b|, a.b), ST0
-#define Deg180       (*(const float *)0x00189f08u)   // 180.0
-#define Pi           (*(const float *)0x001a11d0u)   // 3.14159274
-#define Zero         (*(const float *)0x00189decu)   // 0.0
-#define PhaseScale   (*(const float *)0x001a120cu)   // 360/255
-#define MinusOne     (*(const float *)0x0018a134u)   // -1.0
-#define Half         (*(const float *)0x00189eb0u)   // 0.5
+namespace {
 
-static inline bool InMask(const BoneMask *mask, int bone) {
+#define AngleBetween ((double (*)(const float *a, const float *b))0x00016530)   // atan2(|a x b|, a.b), in ST0
+
+// The original's pi (.rdata 0x001a11d0; its 180, 0.5, -1 and 0 are exact; kPhaseScale: AnimMisc.h)
+constexpr float kPi = 3.14159274f;
+static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "the original's pi");
+
+inline int Truncate(float f) {   // CVTTSS2SI
+    return _mm_cvtt_ss2si(_mm_set_ss(f));
+}
+
+inline bool InMask(const BoneMask *mask, int bone) {
     return (mask->bits[bone >> 5] & (1u << (bone & 31))) != 0;
 }
 
-static inline double Lerp(float a, float b, float t) {
-    return ((double)b - (double)a) * (double)t + (double)a;
+inline double Lerp(float a, float b, float t) {
+    return (double(b) - a) * t + a;
 }
 
 // out = (b - a) * t + a on a 3-vector (0x00019870, not ours).
-static inline void Lerp3(float t, const float *a, const float *b, float *out) {
-    out[0] = (float)Lerp(a[0], b[0], t);
-    out[1] = (float)Lerp(a[1], b[1], t);
-    out[2] = (float)Lerp(a[2], b[2], t);
+inline void Lerp3(float t, const float *a, const float *b, float *out) {
+    out[0] = float(Lerp(a[0], b[0], t));
+    out[1] = float(Lerp(a[1], b[1], t));
+    out[2] = float(Lerp(a[2], b[2], t));
 }
 
 // One bone of a pose (12 floats) through the alignment: built as a matrix, post-multiplied, its quaternion and
 // translation written back (by copies, as the original's dword moves).
-static void AlignBone(float *bone, const float *align) {
+void AlignBone(float *bone, const float *align) {
     alignas(16) Transform t;
     t.BuildSQT(bone[0], bone[1], bone[2], bone[4], bone[5], bone[6], bone[7], bone[8], bone[9], bone[10]);
     t.PostMult(align);
@@ -66,13 +72,15 @@ static void AlignBone(float *bone, const float *align) {
     memcpy(bone + 8, translation, sizeof(translation));
 }
 
-static inline void SlerpBone(float t, const float *a, const float *b, float *out, int bone) {
+inline void SlerpBone(float t, const float *a, const float *b, float *out, int bone) {
     EAGL_VU0_fastqslerp(t, a + bone * 12 + 4, b + bone * 12 + 4, out + bone * 12 + 4);
 }
 
-static inline void LerpTranslation(float t, const float *a, const float *b, float *out, int bone) {
+inline void LerpTranslation(float t, const float *a, const float *b, float *out, int bone) {
     Lerp3(t, a + bone * 12 + 8, b + bone * 12 + 8, out + bone * 12 + 8);
 }
+
+}  // namespace
 
 // ---- the pose blends
 
@@ -144,14 +152,14 @@ void AnimBlendPoseQTMasks(int count, float t, const float *a, const BoneMask *ma
 void AnimXZProjectLongestAxis(const Transform *transform, float *out, int *axis) {
     EAGL_UNTESTED("AnimXZProjectLongestAxis");
     const float *m = transform->m;
-    float s0 = (float)((double)m[2] * (double)m[2] + (double)m[0] * (double)m[0]);
-    float s1 = (float)((double)m[6] * (double)m[6] + (double)m[4] * (double)m[4]);
-    float s2 = (float)((double)m[10] * (double)m[10] + (double)m[8] * (double)m[8]);
+    float s0 = float(double(m[2]) * m[2] + double(m[0]) * m[0]);
+    float s1 = float(double(m[6]) * m[6] + double(m[4]) * m[4]);
+    float s2 = float(double(m[10]) * m[10] + double(m[8]) * m[8]);
     int row;
-    if ((double)s0 >= (double)s1 && (double)s0 >= (double)s2) {   // test ah,1 / jne: on, less or unordered
+    if (s0 >= s1 && s0 >= s2) {   // test ah,1 / jne: on, less or unordered
         *axis = 0;
         row = 0;
-    } else if ((double)s1 >= (double)s0 && (double)s1 >= (double)s2) {
+    } else if (s1 >= s0 && s1 >= s2) {
         *axis = 1;
         row = 4;
     } else {
@@ -171,9 +179,9 @@ void AnimXZProjectAxis(const Transform *transform, float *out, int axis) {
     const float *m = transform->m;
     if (axis < 0 || axis > 2)
         return;
-    memcpy(&out[0], &m[axis * 4], 4);
+    out[0] = m[axis * 4];
     out[1] = 0.0f;
-    memcpy(&out[2], &m[axis * 4 + 2], 4);
+    out[2] = m[axis * 4 + 2];
     out[3] = 1.0f;
 }
 
@@ -186,12 +194,13 @@ void FnPoseBlender::XZProjectAlign(const Transform *a, const Transform *b, Trans
     int axis;
     AnimXZProjectLongestAxis(a, va, &axis);
     AnimXZProjectAxis(b, vb, axis);
+    constexpr double kRadiansToDegrees = 180.0 / kPi;   // the original's 180 / pi, in double as its x87 FDIV
     double angle = AngleBetween(vb, va);
-    float degrees = (float)(angle * ((double)Deg180 / (double)Pi));
+    float degrees = float(angle * kRadiansToDegrees);
     EAGL_BuildRotate(out, 0, degrees, 0.0f, 1.0f, 0.0f);
-    out->m[12] = (float)((double)a->m[12] - (double)b->m[12]);
+    out->m[12] = a->m[12] - b->m[12];
     out->m[13] = 0.0f;
-    out->m[14] = (float)((double)a->m[14] - (double)b->m[14]);
+    out->m[14] = a->m[14] - b->m[14];
 }
 
 // ---- FnPoseBlender
@@ -203,7 +212,7 @@ void FnPoseBlender::SetAligned(FnAnim *a, float offA, FnAnim *b, float offB, con
     EAGL_UNTESTED("FnPoseBlender::SetAligned");
     bone = alignBone;
     memcpy(align, transform, sizeof(align));
-    end = (float)((double)startTime + (double)length);
+    end = startTime + length;
     animA = a;
     animB = b;
     offsetA = offA;
@@ -218,7 +227,7 @@ void FnPoseBlender::SetUnaligned(FnAnim *a, float offA, FnAnim *b, float offB, f
     EAGL_UNTESTED("FnPoseBlender::SetUnaligned");
     animA = a;
     animB = b;
-    end = (float)((double)startTime + (double)length);
+    end = startTime + length;
     offsetA = offA;
     offsetB = offB;
     bone = -1;
@@ -229,11 +238,11 @@ void FnPoseBlender::SetUnaligned(FnAnim *a, float offA, FnAnim *b, float offB, f
 // FUNC_AT(0x000fc560)
 bool FnPoseBlender::EvalSQT(float time, float *sqt, void *maskData) {
     EAGL_UNTESTED("FnPoseBlender::EvalSQT");
-    const BoneMask *mask = (const BoneMask *)maskData;
-    if ((double)time <= (double)start)   // test ah,0x41 / jp: past start or unordered goes on
-        return AnimVCall<bool>(animA, kSlotEvalSQT, (float)((double)time - (double)offsetA), sqt, maskData);
-    if ((double)time >= (double)end) {   // test ah,1 / jne: before end or unordered blends
-        if (!AnimVCall<bool>(animB, kSlotEvalSQT, (float)((double)time - (double)offsetB), sqt, maskData))
+    const BoneMask *mask = static_cast<const BoneMask *>(maskData);
+    if (time <= start)   // test ah,0x41 / jp: past start or unordered goes on
+        return AnimVCall<bool>(animA, kSlotEvalSQT, time - offsetA, sqt, maskData);
+    if (time >= end) {   // test ah,1 / jne: before end or unordered blends
+        if (!AnimVCall<bool>(animB, kSlotEvalSQT, time - offsetB, sqt, maskData))
             return false;
         int b = bone;
         if (b < 0)
@@ -244,14 +253,14 @@ bool FnPoseBlender::EvalSQT(float time, float *sqt, void *maskData) {
         return true;
     }
 
-    float s = (float)(((double)time - (double)start) / (double)duration);
+    float s = float((double(time) - start) / duration);
     if (stillA)
         skeleton->GetStillPose(poseA, mask);
     if (stillB)
         skeleton->GetStillPose(poseB, mask);
-    if (!AnimVCall<bool>(animA, kSlotEvalSQT, (float)((double)time - (double)offsetA), poseA, maskData))
+    if (!AnimVCall<bool>(animA, kSlotEvalSQT, time - offsetA, poseA, maskData))
         return false;
-    if (!AnimVCall<bool>(animB, kSlotEvalSQT, (float)((double)time - (double)offsetB), poseB, maskData))
+    if (!AnimVCall<bool>(animB, kSlotEvalSQT, time - offsetB, poseB, maskData))
         return false;
 
     if (mask == NULL) {
@@ -294,28 +303,24 @@ bool FnPoseBlender::EvalSQT(float time, float *sqt, void *maskData) {
 // FUNC_AT(0x000fca70)
 void FnPoseBlender::Eval(float previous, float time, float *out) {
     EAGL_UNTESTED("FnPoseBlender::Eval");
-    if ((double)time <= (double)start) {
-        AnimVCall<void>(animA, kSlotEval, (float)((double)previous - (double)offsetA),
-                        (float)((double)time - (double)offsetA), out);
+    if (time <= start) {
+        AnimVCall<void>(animA, kSlotEval, previous - offsetA, time - offsetA, out);
         return;
     }
-    if ((double)time >= (double)end) {
-        AnimVCall<void>(animB, kSlotEval, (float)((double)previous - (double)offsetB),
-                        (float)((double)time - (double)offsetB), out);
+    if (time >= end) {
+        AnimVCall<void>(animB, kSlotEval, previous - offsetB, time - offsetB, out);
         if (bone >= 0)
             AlignBone(out + bone * 12, align);
         return;
     }
 
-    float s = (float)(((double)time - (double)start) / (double)duration);
+    float s = float((double(time) - start) / duration);
     if (stillA)
         skeleton->GetStillPose(poseA, NULL);
     if (stillB)
         skeleton->GetStillPose(poseB, NULL);
-    AnimVCall<void>(animA, kSlotEval, (float)((double)previous - (double)offsetA),
-                    (float)((double)time - (double)offsetA), poseA);
-    AnimVCall<void>(animB, kSlotEval, (float)((double)previous - (double)offsetB),
-                    (float)((double)time - (double)offsetB), poseB);
+    AnimVCall<void>(animA, kSlotEval, previous - offsetA, time - offsetA, poseA);
+    AnimVCall<void>(animB, kSlotEval, previous - offsetB, time - offsetB, poseB);
     if (bone >= 0) {
         for (int i = skeleton->count - 1; i >= 0; i--) {
             if (i == bone) {
@@ -337,18 +342,16 @@ void FnPoseBlender::Eval(float previous, float time, float *out) {
 void FnPoseBlender::Set(FnAnim *a, float offA, FnAnim *b, float offB, int alignBone, float previous, float startTime,
                         float length) {
     EAGL_UNTESTED("FnPoseBlender::Set");
-    AnimVCall<void>(a, kSlotEval, (float)((double)previous - (double)offA), (float)((double)startTime - (double)offA),
-                    poseA);
-    AnimVCall<void>(b, kSlotEval, (float)((double)previous - (double)offB), (float)((double)startTime - (double)offB),
-                    poseB);
+    AnimVCall<void>(a, kSlotEval, previous - offA, startTime - offA, poseA);
+    AnimVCall<void>(b, kSlotEval, previous - offB, startTime - offB, poseB);
     const float *pa = poseA + alignBone * 12;
     const float *pb = poseB + alignBone * 12;
     alignas(16) Transform ta;
     alignas(16) Transform tb;
     ta.BuildSQT(pa[0], pa[1], pa[2], pa[4], pa[5], pa[6], pa[7], pa[8], pa[9], pa[10]);
     tb.BuildSQT(pb[0], pb[1], pb[2], pb[4], pb[5], pb[6], pb[7], pb[8], pb[9], pb[10]);
-    XZProjectAlign(&ta, &tb, (Transform *)align);
-    end = (float)((double)startTime + (double)length);
+    XZProjectAlign(&ta, &tb, reinterpret_cast<Transform *>(align));
+    end = startTime + length;
     bone = alignBone;
     animB = b;
     offsetA = offA;
@@ -360,12 +363,17 @@ void FnPoseBlender::Set(FnAnim *a, float offA, FnAnim *b, float offB, int alignB
 
 // ---- FnEventBlender
 
+enum EventBlendMode {                // FnEventBlender::mode: between start and end, whose events (else both)
+    kEventsFromA = 0,
+    kEventsFromB = 1,
+};
+
 // FUNC_AT(0x000fcfa0)
 void FnEventBlender::Set(FnAnim *a, FnAnim *b, float offA, float offB, float startTime, float length, int blendMode) {
     EAGL_UNTESTED("FnEventBlender::Set");
     animA = a;
     animB = b;
-    end = (float)((double)startTime + (double)length);
+    end = startTime + length;
     offsetA = offA;
     offsetB = offB;
     start = startTime;
@@ -377,16 +385,16 @@ void FnEventBlender::Set(FnAnim *a, FnAnim *b, float offA, float offB, float sta
 void FnEventBlender::Eval(float previous, float time, float *out) {
     EAGL_UNTESTED("FnEventBlender::Eval");
     bool useA, useB;
-    if ((double)time <= (double)start) {                      // test ah,0x41 / jnp
+    if (time <= start) {                      // test ah,0x41 / jnp
         useA = true;
         useB = false;
-    } else if ((double)time >= (double)end) {                 // test ah,1 / je
+    } else if (time >= end) {                 // test ah,1 / je
         useA = false;
         useB = true;
-    } else if (mode == 0) {
+    } else if (mode == kEventsFromA) {
         useA = true;
         useB = false;
-    } else if (mode == 1) {
+    } else if (mode == kEventsFromB) {
         useA = false;
         useB = true;
     } else {
@@ -394,11 +402,9 @@ void FnEventBlender::Eval(float previous, float time, float *out) {
         useB = true;
     }
     if (useA)
-        AnimVCall<void>(animA, kSlotEval, (float)((double)previous - (double)offsetA),
-                        (float)((double)time - (double)offsetA), out);
+        AnimVCall<void>(animA, kSlotEval, previous - offsetA, time - offsetA, out);
     if (useB)
-        AnimVCall<void>(animB, kSlotEval, (float)((double)previous - (double)offsetB),
-                        (float)((double)time - (double)offsetB), out);
+        AnimVCall<void>(animB, kSlotEval, previous - offsetB, time - offsetB, out);
 }
 
 // ---- the phase data
@@ -406,77 +412,66 @@ void FnEventBlender::Eval(float previous, float time, float *out) {
 // FUNC_AT(0x000fd0b0)
 int AnimTruncateBlend(float value) {
     EAGL_UNTESTED("AnimTruncateBlend");
-    return _mm_cvtt_ss2si(_mm_set_ss(value));
-}
-
-static inline int SampleStep(uint8_t flags) {
-    if (flags & 0x08)
-        return 1;
-    if (flags & 0x10)
-        return 2;
-    if (flags & 0x20)
-        return 4;
-    return (flags & 0x40) ? 8 : 1;
+    return Truncate(value);
 }
 
 // FUNC_AT(0x000fd6d0)
-int PhaseMatchData::SampleCount() {
-    EAGL_UNTESTED("PhaseMatchData::SampleCount");
-    return ((int)frames - 1) / SampleStep(flags) + 1;
+int PhaseChanData::SampleCount() {
+    EAGL_UNTESTED("PhaseChanData::SampleCount");
+    return (numFrames - 1) / SampleStep() + 1;
 }
 
 // First pass: the first pair of samples with prev <= target <= next whose rise times phase[1] is not negative
 // answers by linear interpolation (the middle of the pair if they are equal), in frames. Otherwise the sample
 // nearest the target (first of equals). phase[2] > 0 limits the samples searched to that many frames.
 // FUNC_AT(0x000fd0c0)
-bool PhaseMatchData::FindMatchTime(const float *phase, float *time) {
-    EAGL_UNTESTED("PhaseMatchData::FindMatchTime");
+bool PhaseChanData::FindMatchTime(const float *phase, float *time) {
+    EAGL_UNTESTED("PhaseChanData::FindMatchTime");
     int count = SampleCount();
-    int step = SampleStep(flags);
+    int step = SampleStep();
     float target = phase[0];
     float direction = phase[1];
-    if ((double)phase[2] > (double)Zero &&                    // test ah,0x41 / jne: skip unless greater
-        (double)(step * count) > (double)phase[2])
-        count = _mm_cvtt_ss2si(_mm_set_ss((float)((double)phase[2] / (double)step))) + 1;
-    const uint8_t *s = samples + (first < 2 ? 2 : first);
+    if (phase[2] > 0.0f &&                                    // test ah,0x41 / jne: skip unless greater
+        double(step * count) > phase[2])
+        count = Truncate(float(double(phase[2]) / step)) + 1;
+    const uint8_t *s = Samples();
 
-    float previousValue = (float)((double)(int)s[0] * (double)PhaseScale - (double)Deg180);
+    float previousValue = float(s[0] * double(kPhaseScale) - 180.0);
     float rise = 0.0f;   // set before use
     for (int i = 1; i < count; i++) {
-        double value = (double)(int)s[i] * (double)PhaseScale - (double)Deg180;
+        double value = s[i] * double(kPhaseScale) - 180.0;
         // test ah,0x41 / jp: on only for prev <= target and target <= value (ordered)
-        if ((double)previousValue <= (double)target && (double)target <= value) {
-            double d = value - (double)previousValue;
-            rise = (float)d;
-            if (d * (double)direction >= (double)Zero) {      // test ah,1 / je: greater or equal
+        if (previousValue <= target && target <= value) {
+            double d = value - previousValue;
+            rise = float(d);
+            if (d * direction >= 0.0) {                       // test ah,1 / je: greater or equal
                 int k = i - 1;
-                if ((double)rise == (double)Zero)             // test ah,0x44 / jnp: equal only
-                    *time = (float)(((double)k + (double)Half) * (double)step);
+                if (rise == 0.0f)                             // test ah,0x44 / jnp: equal only
+                    *time = float((double(k) + 0.5) * step);
                 else
-                    *time = (float)(((((double)target - (double)previousValue) / (double)rise) + (double)k) *
-                                    (double)step);
+                    *time = float(((double(target) - previousValue) / rise + k) * step);
                 return true;
             }
         }
-        previousValue = (float)value;
+        previousValue = float(value);
     }
 
     int best = 0;
-    double nearest = (double)target - ((double)(int)s[0] * (double)PhaseScale - (double)Deg180);
-    if (nearest < (double)Zero)                               // test ah,5 / jp: negated only when less
-        nearest = nearest * (double)MinusOne;
+    double nearest = target - (s[0] * double(kPhaseScale) - 180.0);
+    if (nearest < 0.0)                                        // test ah,5 / jp: negated only when less
+        nearest = -nearest;
     for (int i = 1; i < count; i++) {
-        double t = (double)target - ((double)(int)s[i] * (double)PhaseScale - (double)Deg180);
-        float stored = (float)t;
-        if (t < (double)Zero) {
-            t = t * (double)MinusOne;
-            stored = (float)t;
+        double t = target - (s[i] * double(kPhaseScale) - 180.0);
+        float stored = float(t);
+        if (t < 0.0) {
+            t = -t;
+            stored = float(t);
         }
         if (t < nearest) {                                    // test ah,5 / jp: replaced only when less
             best = i;
-            nearest = (double)stored;                         // the replacement is the float, reloaded
+            nearest = stored;                                 // the replacement is the float, reloaded
         }
     }
-    *time = (float)(double)(best * step);
+    *time = float(best * step);
     return true;
 }

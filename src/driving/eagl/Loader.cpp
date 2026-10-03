@@ -1,6 +1,8 @@
 #include "Loader.h"
 
+#include "Profiler.h"
 #include "Realgraph.h"
+#include "../../helpers.h"
 
 #include <ctype.h>
 #include <stdint.h>
@@ -18,27 +20,37 @@
 //
 // Each function is the original at the same address, ported from it; the state stays where the original keeps it
 // (the pools at 0x0023fb8c, 0x0023fbb8 and 0x0023fbe0, the list of loaded objects at 0x0023fb88), allocations go
-// through EAGL's allocator hooks with the original's name strings, and diagnostics through the original PrintMessage.
+// through EAGL's allocator hooks under the original's allocation names, and diagnostics through PrintMessage.
 // devtools/LoaderShadow.cpp loads every object on the disc with both and compares the results.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define EaglMalloc   (*(void *(**)(uint32_t size, const char *name))0x001caf68u)
-#define EaglFree     (*(void (**)(void *data, uint32_t size))0x001caf6cu)
-#define PoolSize     (*(uint32_t *)0x001cdc50u)                  // a new pool's table size (256)
-#define LoadedTables (*(HashTable **)0x0023fb88u)
-#define GlobalPool   ((SymbolPool *)0x0023fb8cu)
-#define RuntimePool  ((RuntimeAllocConstructorPool *)0x0023fbb8u)
-#define CtorPool     ((ConstructorPool *)0x0023fbe0u)
+typedef void *(*EaglMallocFn)(uint32_t size, const char *name);
+typedef void (*EaglFreeFn)(void *data, uint32_t size);
 
-// EAGL's PrintMessage (0x000f42b0, not ours yet): level, format, arguments.
-#define PrintMessage ((int (*)(int level, const char *format, ...))0x000f42b0u)
+#define EaglMalloc (*(EaglMallocFn *)0x001caf68)
+#define EaglFree (*(EaglFreeFn *)0x001caf6c)
+#define DefaultPoolSize U32_AT(0x001cdc50)                      // a new pool's table size (256)
+#define LoadedTables (*(HashTable **)0x0023fb88)
+#define GlobalPool (*(SymbolPool *)0x0023fb8c)
+#define RuntimePool (*(RuntimeAllocConstructorPool *)0x0023fbb8)
+#define CtorPool (*(ConstructorPool *)0x0023fbe0)
+
+// EAGL::ViewPort's matrices, registered by name
+#define ViewMatrix ((float *)0x0023f950)
+#define ModelViewMatrix ((float *)0x0023f990)
+#define ModelViewProjectionMatrix ((float *)0x0023f9d0)
+#define ProjectionMatrix ((float *)0x0023fa10)
+#define ModelMatrix ((float *)0x0023fa50)
+#define ViewProjectionMatrix ((float *)0x0023fa90)
+
+using EAGL::PrintMessage;
 
 // ---- SymbolPool
 
 // FUNC_AT(0x000f3c70)
 SymbolPool* SymbolPool::Construct() {
     count = 0;
-    size = PoolSize;
+    size = DefaultPoolSize;
     table = NULL;
     resolvers = NULL;
     return this;
@@ -47,7 +59,7 @@ SymbolPool* SymbolPool::Construct() {
 static uint32_t PoolHash(const char *name) {
     uint32_t h = 0;
     for (; *name != 0; name++)
-        h ^= (h << 5) ^ (uint32_t)(int32_t)(signed char)*name;
+        h ^= (h << 5) ^ (signed char)*name;   // the character sign-extended
     return h;
 }
 
@@ -60,8 +72,8 @@ uint32_t SymbolPool::HashFunction(const char *name) {
 // AUTOINJECT
 void SymbolPool::Insert(const char *name, SymbolEntry *entry) {
     if (table == NULL) {
-        size = PoolSize;
-        table = (SymbolEntry **)EaglMalloc(PoolSize << 2, (const char *)0x001cdc54u);
+        size = DefaultPoolSize;
+        table = (SymbolEntry **)EaglMalloc(DefaultPoolSize << 2, "EAGL::SymbolPool::mpSymbolTable");
         for (uint32_t i = 0; i < size; i++)
             table[i] = NULL;
     }
@@ -75,7 +87,7 @@ void SymbolPool::Insert(const char *name, SymbolEntry *entry) {
     if (oldSize <= ++count) {
         SymbolEntry **old = table;
         size = oldSize * 2;
-        table = (SymbolEntry **)EaglMalloc(oldSize << 3, (const char *)0x001cdc74u);
+        table = (SymbolEntry **)EaglMalloc(oldSize << 3, "EAGL::SymbolPool::mpSymbolTable");
         for (uint32_t j = 0; j < size; j++)
             table[j] = NULL;
         count = 0;
@@ -90,7 +102,7 @@ void SymbolPool::Insert(const char *name, SymbolEntry *entry) {
 // AUTOINJECT
 void* SymbolPool::AddSymbol(const char *name, void *value) {
     size_t n = strlen(name);
-    SymbolEntry *entry = (SymbolEntry *)EaglMalloc((uint32_t)(n + 5), (const char *)0x001cdc94u);
+    SymbolEntry *entry = (SymbolEntry *)EaglMalloc(n + 5, "EAGL::SymbolEntry");
     entry->value = value;
     memcpy(entry->name, name, n + 1);
     Insert(name, entry);
@@ -106,7 +118,7 @@ void SymbolPool::RemoveSymbol(const char *name) {
     for (uint32_t probes = 0;; probes++) {
         SymbolEntry *e = table[i];
         if (e != NULL && strcmp(name, e->name) == 0) {
-            EaglFree(e, (uint32_t)strlen(e->name) + 5);
+            EaglFree(e, strlen(e->name) + 5);
             table[i] = NULL;
             count--;
             return;
@@ -157,7 +169,7 @@ void SymbolPool::Empty() {
         for (uint32_t i = 0; i < size; i++) {
             SymbolEntry *e = table[i];
             if (e != NULL)
-                EaglFree(e, (uint32_t)strlen(e->name) + 5);
+                EaglFree(e, strlen(e->name) + 5);
             table[i] = NULL;
         }
     }
@@ -165,7 +177,7 @@ void SymbolPool::Empty() {
     while (resolvers != NULL) {
         SymbolResolver *r = resolvers;
         resolvers = r->next;
-        EaglFree(r, 0xc);
+        EaglFree(r, sizeof(SymbolResolver));
     }
     resolvers = NULL;
 }
@@ -269,34 +281,80 @@ void RuntimeAllocConstructorPool::EmptyBoth2() {
     destructors.Empty();
 }
 
-// The matrices EAGL registers by name, for render methods to address (EAGL::ViewPort::gp*Matrix).
+// The matrices EAGL registers by name, for render methods to address.
 // FUNC_AT(0x000f39c0)
 void EAGL_SymbolInit() {
-    DynamicLoader::RegisterVar((const char *)0x001cdb74u, (void *)0x0023fa10u);
-    DynamicLoader::RegisterVar((const char *)0x001cdb98u, (void *)0x0023f950u);
-    DynamicLoader::RegisterVar((const char *)0x001cdbb8u, (void *)0x0023fa50u);
-    DynamicLoader::RegisterVar((const char *)0x001cdbd8u, (void *)0x0023f990u);
-    DynamicLoader::RegisterVar((const char *)0x001cdbfcu, (void *)0x0023fa90u);
-    DynamicLoader::RegisterVar((const char *)0x001cdc24u, (void *)0x0023f9d0u);
+    DynamicLoader::RegisterVar("EAGL::ViewPort::gpProjectionMatrix", ProjectionMatrix);
+    DynamicLoader::RegisterVar("EAGL::ViewPort::gpViewMatrix", ViewMatrix);
+    DynamicLoader::RegisterVar("EAGL::ViewPort::gpModelMatrix", ModelMatrix);
+    DynamicLoader::RegisterVar("EAGL::ViewPort::gpModelViewMatrix", ModelViewMatrix);
+    DynamicLoader::RegisterVar("EAGL::ViewPort::gpViewProjectionMatrix", ViewProjectionMatrix);
+    DynamicLoader::RegisterVar("EAGL::ViewPort::gpModelViewProjectionMatrix", ModelViewProjectionMatrix);
 }
 
 // ---- a loaded object's symbol table
+
+namespace {
+
+struct ElfHeader {          // Elf32_Ehdr
+    uint8_t ident[16];      // +0x00
+    uint16_t type;          // +0x10
+    uint16_t machine;       // +0x12
+    uint32_t version;       // +0x14
+    uint32_t entry;         // +0x18
+    uint32_t phoff;         // +0x1c
+    uint32_t shoff;         // +0x20 the section table's file offset
+    uint32_t flags;         // +0x24
+    uint16_t ehsize;        // +0x28
+    uint16_t phentsize;     // +0x2a
+    uint16_t phnum;         // +0x2c
+    uint16_t shentsize;     // +0x2e
+    uint16_t shnum;         // +0x30 sections
+    uint16_t shstrndx;      // +0x32 the section holding the section names
+};
+static_assert(sizeof(ElfHeader) == 0x34, "an ELF header is 0x34 bytes");
+
+enum ElfSectionType : uint32_t {
+    kShtNull = 0, kShtProgBits = 1, kShtSymTab = 2, kShtStrTab = 3, kShtRela = 4, kShtHash = 5, kShtDynamic = 6,
+    kShtNoBits = 8, kShtRel = 9, kShtShLib = 10, kShtDynSym = 11,
+    kShtMipsDebug = 0x70000005, kShtMipsRegInfo = 0x70000006, kShtDvpOverlayTable = 0x7ffff420,
+    kShtDvpOverlay = 0x7ffff421,
+};
+
+enum MipsRelocationType : uint8_t {
+    kRMipsNone = 0, kRMips16 = 1, kRMips32 = 2, kRMipsRel32 = 3, kRMips26 = 4, kRMipsHi16 = 5, kRMipsLo16 = 6,
+    kRMipsGpRel16 = 7, kRMipsLiteral = 8, kRMipsGot16 = 9, kRMipsGpRel32 = 12,
+};
+
+// The loader's marks in a symbol's st_other
+enum : uint8_t { kSymbolAbsolute = 1, kSymbolExternal = 2 };
+
+const char kClassMarker = 0x7f;   // "Name\0\x7fClass"
 
 struct ElfSymbol {          // Elf32_Sym
     uint32_t name;
     uint32_t value;
     uint32_t size;
-    uint8_t info;
-    uint8_t other;          // 1: value is absolute; 2: resolved from outside (the loader's marks)
+    uint8_t info;           // low four bits the type: below 4 (no type, object, function, section) understood
+    uint8_t other;          // kSymbolAbsolute: value is absolute; kSymbolExternal: resolved from outside
     uint16_t shndx;
 };
 
-struct ElfSection {         // Elf32_Shdr; offset, link and info become pointers as the loader goes
+struct ElfSection {         // Elf32_Shdr; offset, link and info become addresses as the loader goes
     uint32_t name, type, flags, addr;
     uint32_t offset;
     uint32_t size;
     uint32_t link, info, align, entsize;
 };
+
+struct ElfRel {             // Elf32_Rel
+    uint32_t offset;        // in the section relocated
+    uint32_t info;          // the symbol in bits 8..31, the MipsRelocationType in the low byte
+};
+
+}  // namespace
+
+typedef void *(*LoaderResolver)(const char *name, char *found);
 
 struct HashTable {          // 0x428, "EAGL::HashPointer new"
     HashTable *next;        // +0x000 the list of loaded objects
@@ -307,24 +365,18 @@ struct HashTable {          // 0x428, "EAGL::HashPointer new"
     int symbolCount;        // +0x010
     ElfSymbol *symbols;     // +0x014 .symtab
     ElfSection *sections;   // +0x018
-    uint8_t *header;        // +0x01c the ELF header
+    ElfHeader *header;      // +0x01c
     int32_t buckets[256];   // +0x020
     int32_t *chain;         // +0x420
-    void *(*resolver)(const char *name, char *found);   // +0x424
+    LoaderResolver resolver;   // +0x424
 };
 static_assert(sizeof(HashTable) == 0x428, "a HashTable is 0x428 bytes");
-
-template <typename T> static inline T At(const void *p, int offset) {
-    T v;
-    memcpy(&v, (const uint8_t *)p + offset, sizeof(T));
-    return v;
-}
 
 // The ELF hash of a symbol name, to 8 bits (0x000e51d0: name in EDX).
 static uint32_t ElfHash(const char *name) {
     uint32_t h = 0;
     for (; *name != 0; name++) {
-        h = h * 0x10 + (uint32_t)(int32_t)(signed char)*name;
+        h = h * 0x10 + (signed char)*name;   // the character sign-extended
         uint32_t g = h & 0xf0000000;
         if (g != 0)
             h ^= g >> 0x18;
@@ -335,6 +387,11 @@ static uint32_t ElfHash(const char *name) {
 
 static inline uint32_t SectionBase(const HashTable *t, uint32_t index) {
     return t->sections[index].offset;
+}
+
+// A symbol defined in one of the object's own sections
+static inline bool InSection(const HashTable *t, const ElfSymbol *s) {
+    return s->shndx != 0 && s->shndx < t->header->shnum;
 }
 
 // ---- DynamicLoader
@@ -377,106 +434,101 @@ void DynamicLoader::Destruct() {
 // A file offset to memory: in the first part, the second part, or (just past the end, without a second) the end.
 static inline uint32_t FileAddress(const DynamicLoader *l, uint32_t offset) {
     if (offset < l->elfSize)
-        return (uint32_t)(uintptr_t)l->elf + offset;
+        return (uint32_t)l->elf + offset;
     if (l->second != NULL)
-        return (uint32_t)(uintptr_t)l->second + (offset - l->elfSize);
+        return (uint32_t)l->second + (offset - l->elfSize);
     if (offset <= l->elfSize)
-        return (uint32_t)(uintptr_t)l->elf + offset;
+        return (uint32_t)l->elf + offset;
     return 0;
 }
 
-// Sections parsed (their offsets, links and infos made pointers in place), names rewritten, symbols hashed.
+// Sections parsed (their offsets, links and infos made addresses in place), names rewritten, symbols hashed.
 // AUTOINJECT
 void DynamicLoader::Initialize(void *resolver) {
-    HashTable t;
-    memset(&t, 0, sizeof(t));
-    t.header = elf;
-    ElfSection *sections = (ElfSection *)(uintptr_t)FileAddress(this, At<uint32_t>(elf, 0x20));
+    HashTable t = {};
+    ElfHeader *header = (ElfHeader *)elf;
+    t.header = header;
+    ElfSection *sections = (ElfSection *)FileAddress(this, header->shoff);
     t.sections = sections;
-    int sectionCount = At<uint16_t>(elf, 0x30);
+    int sectionCount = header->shnum;
     for (int i = 0; i < sectionCount; i++)
         sections[i].offset = FileAddress(this, sections[i].offset);
-    const char *sectionNames = (const char *)(uintptr_t)sections[At<uint16_t>(elf, 0x32)].offset;
+    const char *sectionNames = (const char *)sections[header->shstrndx].offset;
     for (int i = 0; i < sectionCount; i++) {
         ElfSection *s = &sections[i];
         uint32_t type = s->type;
         const char *name = sectionNames + s->name;
-        if (type < 0x70000006) {
-            if (type == 0x70000005)
-                continue;
-            switch (type) {
-            case 0: case 1:
-                break;
-            case 2:   // SHT_SYMTAB
-                s->link = SectionBase(&t, s->link);
-                if (strcmp(".symtab", name) == 0) {
-                    t.symbols = (ElfSymbol *)(uintptr_t)s->offset;
-                    t.symbolCount = (int32_t)s->size / 16;
-                }
-                break;
-            case 3:   // SHT_STRTAB: "__Class:::Name" -> "Name\0\x7fClass"
-                if (strcmp(".strtab", name) == 0) {
-                    char *p = (char *)(uintptr_t)s->offset;
-                    t.strings = p;
-                    for (int left = (int32_t)s->size; left > 0;) {
-                        size_t length = strlen(p);
-                        if (p[0] == '_' && p[1] == '_') {
-                            char *separator = strstr(p + 2, ":::");
-                            if (separator != NULL) {
-                                char className[128];
-                                *separator = 0;
-                                strcpy(className, p + 2);
-                                const char *after = separator + 3;
-                                size_t n = strlen(after) + 1;
-                                memmove(p, after, n);
-                                p[n] = 0x7f;
-                                strcpy(p + n + 1, className);
-                            }
-                        }
-                        left -= (int)length + 1;
-                        p += length + 1;
-                    }
-                }
-                break;
-            case 4:
-                if (s->size != 0)
-                    PrintMessage(0, (const char *)0x001cb590u);
-                break;
-            case 5:
-                PrintMessage(0, (const char *)0x001cb5ccu);
-                break;
-            case 6:
-                PrintMessage(0, (const char *)0x001cb5fcu);
-                break;
-            case 8:
-                if (s->size != 0)
-                    PrintMessage(0, (const char *)0x001cb62cu);
-                break;
-            case 9:   // SHT_REL: the section relocated, and the symbol table
-                s->info = SectionBase(&t, s->info);
-                s->link = SectionBase(&t, s->link);
-                break;
-            case 10:
-                PrintMessage(0, (const char *)0x001cb668u);
-                break;
-            case 11:
-                PrintMessage(0, (const char *)0x001cb698u);
-                break;
-            default:
-                PrintMessage(0, (const char *)0x001cb6d0u, type, i);
-                break;
+        switch (type) {
+        case kShtNull: case kShtProgBits:
+        case kShtMipsDebug: case kShtMipsRegInfo: case kShtDvpOverlayTable: case kShtDvpOverlay:
+            break;
+        case kShtSymTab:
+            s->link = SectionBase(&t, s->link);
+            if (strcmp(".symtab", name) == 0) {
+                t.symbols = (ElfSymbol *)s->offset;
+                t.symbolCount = (int32_t)s->size / 16;
             }
-        } else if (type != 0x70000006 && (type < 0x7ffff420 || type > 0x7ffff421)) {
-            PrintMessage(0, (const char *)0x001cb6d0u, type, i);
+            break;
+        case kShtStrTab:   // "__Class:::Name" -> "Name\0\x7fClass"
+            if (strcmp(".strtab", name) == 0) {
+                char *p = (char *)s->offset;
+                t.strings = p;
+                for (int left = (int32_t)s->size; left > 0;) {
+                    size_t length = strlen(p);
+                    if (p[0] == '_' && p[1] == '_') {
+                        char *separator = strstr(p + 2, ":::");
+                        if (separator != NULL) {
+                            char className[128];
+                            *separator = 0;
+                            strcpy(className, p + 2);
+                            const char *after = separator + 3;
+                            size_t n = strlen(after) + 1;
+                            memmove(p, after, n);
+                            p[n] = kClassMarker;
+                            strcpy(p + n + 1, className);
+                        }
+                    }
+                    left -= (int)length + 1;
+                    p += length + 1;
+                }
+            }
+            break;
+        case kShtRela:
+            if (s->size != 0)
+                PrintMessage(0, "dlopen: non empty SHT_RELA section seen. Not supported.\n");
+            break;
+        case kShtHash:
+            PrintMessage(0, "dlopen: SHT_HASH section seen. Not supported.\n");
+            break;
+        case kShtDynamic:   // the original's message says SHT_HASH here too
+            PrintMessage(0, "dlopen: SHT_HASH section seen. Not supported.\n");
+            break;
+        case kShtNoBits:
+            if (s->size != 0)
+                PrintMessage(0, "dlopen: SHT_NOBITS section with data seen. Not supported.\n");
+            break;
+        case kShtRel:   // the section relocated, and the symbol table
+            s->info = SectionBase(&t, s->info);
+            s->link = SectionBase(&t, s->link);
+            break;
+        case kShtShLib:
+            PrintMessage(0, "dlopen: SHT_SHLIB section seen. Not supported.\n");
+            break;
+        case kShtDynSym:
+            PrintMessage(0, "dlopen: SHT_DYNSYM section seen. Not supported.\n");
+            break;
+        default:
+            PrintMessage(0, "Unknown section type %d (section %d). Aborting dynamic loading.\n", type, i);
+            break;
         }
     }
     if (sectionCount == 0 || t.symbols == NULL)
-        PrintMessage(0, (const char *)0x001cb714u);
-    t.resolver = (void *(*)(const char *, char *))resolver;
+        PrintMessage(0, "dlopen: Failed to find a symbol table. Aborting\n");
+    t.resolver = (LoaderResolver)resolver;
     for (int i = 0; i < 256; i++)
         t.buckets[i] = -1;
-    t.chain = (int32_t *)EaglMalloc((uint32_t)(t.symbolCount * 4), (const char *)0x001cb748u);
-    HashTable *table = (HashTable *)EaglMalloc(0x428, (const char *)0x001cb920u);
+    t.chain = (int32_t *)EaglMalloc(t.symbolCount * 4, "EAGL::dynamic symbols");
+    HashTable *table = (HashTable *)EaglMalloc(sizeof(HashTable), "EAGL::HashPointer new");
     if (table != NULL) {   // the constructor's work, overwritten at once
         table->next = NULL;
         table->strings = NULL;
@@ -493,7 +545,7 @@ void DynamicLoader::Initialize(void *resolver) {
         t.chain[i] = t.buckets[h];
         t.buckets[h] = i;
     }
-    memcpy(table, &t, sizeof(t));
+    *table = t;
     table->next = LoadedTables;
     if (LoadedTables != NULL)
         LoadedTables->previous = table;
@@ -502,29 +554,23 @@ void DynamicLoader::Initialize(void *resolver) {
     LoadedTables = table;
 }
 
-// A symbol in another loaded object, by name, if it is defined there (0x000e5af0).
+// A symbol in another loaded object, by name, if it is defined there.
 // FUNC_AT(0x000e5af0)
 void* EAGL_LookupInObject(HashTable *t, const char *name) {
     ElfSymbol *symbols = t->symbols;
-    for (uint32_t j = (uint32_t)t->buckets[ElfHash(name)]; j != 0xffffffff; j = (uint32_t)t->chain[j]) {
+    for (uint32_t j = t->buckets[ElfHash(name)]; j != 0xffffffff; j = t->chain[j]) {
         if ((uint32_t)t->symbolCount < j)
-            PrintMessage(0, (const char *)0x001cb8b0u, j, t->symbolCount);
+            PrintMessage(0, "dlsym: Internal error. Bad j value %d (chain size %d)!\n", j, t->symbolCount);
         ElfSymbol *s = &symbols[j];
-        if (strcmp(name, t->strings + s->name) == 0 && s->shndx != 0 && s->shndx < At<uint16_t>(t->header, 0x30))
-            return (void *)(uintptr_t)(SectionBase(t, s->shndx) + symbols[j].value);
+        if (strcmp(name, t->strings + s->name) == 0 && InSection(t, s))
+            return (void *)(SectionBase(t, s->shndx) + s->value);
     }
     return NULL;
 }
 
-struct RuntimeAllocRecord {   // "EAGL::DynamicLoader::RuntimeAllocDestructorEntry new"
-    void (*destructor)(void *object, void *context);
-    void *object;
-    void *context;
-    RuntimeAllocRecord *next;
-};
-
 typedef void *(*RuntimeAllocConstructor)(const char *properties, DynamicLoader *loader, void **context,
                                          char *destroy);
+typedef void (*RuntimeAllocDestructor)(void *object, void *context);
 
 // Every relocation applied, then the constructors run. Once.
 // AUTOINJECT
@@ -533,26 +579,26 @@ void DynamicLoader::Resolve() {
     if (t == NULL || t->resolved != 0)
         return;
     ElfSection *sections = t->sections;
-    uint8_t *header = t->header;
+    const ElfHeader *header = t->header;
     t->resolved = 1;
-    for (int si = 0; si < At<uint16_t>(header, 0x30); si++) {
+    for (int si = 0; si < header->shnum; si++) {
         ElfSection *sec = &sections[si];
-        if (sec->type != 9)
+        if (sec->type != kShtRel)
             continue;
         uint32_t target = sec->info;
-        uint32_t *rel = (uint32_t *)(uintptr_t)sec->offset;
-        ElfSymbol *symbols = (ElfSymbol *)(uintptr_t)sec->link;
-        for (int count = (int32_t)sec->size / 8; count != 0; count--, rel += 2) {
-            ElfSymbol *sym = &symbols[rel[1] >> 8];
+        ElfRel *rel = (ElfRel *)sec->offset;
+        ElfSymbol *symbols = (ElfSymbol *)sec->link;
+        for (int count = (int32_t)sec->size / 8; count != 0; count--, rel++) {
+            ElfSymbol *sym = &symbols[rel->info >> 8];
             uint32_t S = 0;
             bool understood = false;
             while ((sym->info & 0xf) < 4) {
-                if (sym->shndx != 0 && sym->shndx < At<uint16_t>(header, 0x30)) {
+                if (sym->shndx != 0 && sym->shndx < header->shnum) {
                     S = SectionBase(t, sym->shndx) + sym->value;
                     understood = true;
                     break;
                 }
-                sym->other = 2;
+                sym->other = kSymbolExternal;
                 const char *name = t->strings + sym->name;
                 void *address = NULL;
                 bool resolved = false;
@@ -570,21 +616,33 @@ void DynamicLoader::Resolve() {
                     }
                     if (!resolved) {
                         bool inPool;
-                        address = GlobalPool->Search(name, &inPool);
+                        address = GlobalPool.Search(name, &inPool);
                         resolved = inPool;
                     }
                 }
                 if (!resolved) {
                     const char *className = name + strlen(name);
-                    if (className[1] == 0x7f)
+                    if (className[1] == kClassMarker)
                         className += 2;
-                    const char *prefix = (const char *)0x001a0a54u;   // "RUNTIME_ALLOC::"
+                    const char *prefix = "RUNTIME_ALLOC::";
                     size_t prefixLength = strlen(prefix);
                     RuntimeAllocConstructor ctor = NULL;
                     if (strncmp(prefix, name, prefixLength) == 0)
-                        ctor = (RuntimeAllocConstructor)RuntimePool->FindConstructor(className);
+                        ctor = (RuntimeAllocConstructor)RuntimePool.FindConstructor(className);
                     if (ctor == NULL) {
-                        PrintMessage(0, (const char *)0x001cb228u, name);
+                        PrintMessage(0,
+                                     "ERROR: DynamicLoader::Resolve - Failed to resolve undefined relocation symbol "
+                                     "%s.\n"
+                                     "Possible causes:\n"
+                                     "    - You forgot to add the symbol to the global symbol pool before loading "
+                                     "this ELF.\n"
+                                     "    - You forgot to provide an address if using an address callback "
+                                     "function.\n"
+                                     "    - You forgot to load another ELF that contains the symbol before loading "
+                                     "this ELF.\n"
+                                     "      ie. forgot to load eaglrm.o before a model ELF.\n"
+                                     "    - There is a problem with the ELF file\n",
+                                     name);
                         S = sym->value;   // unresolved: the value as it stands
                         understood = true;
                         break;
@@ -597,61 +655,65 @@ void DynamicLoader::Resolve() {
                         printf("[eagl] WARNING: RUNTIME_ALLOC symbol %s - a path no shipped data reaches; its "
                                "constructors are untested\n", name);
                     }
-                    void *dtor = RuntimePool->FindDestructor(className);
+                    void *dtor = RuntimePool.FindDestructor(className);
                     char destroy = 0;
                     void *context;
                     address = ctor(name + prefixLength, this, &context, &destroy);
                     if (destroy != 0 && address != NULL) {
-                        RuntimeAllocRecord *r = (RuntimeAllocRecord *)EaglMalloc(0x10, (const char *)0x001cb8e8u);
+                        RuntimeAllocRecord *r = (RuntimeAllocRecord *)EaglMalloc(
+                            sizeof(RuntimeAllocRecord), "EAGL::DynamicLoader::RuntimeAllocDestructorEntry new");
                         if (r != NULL) {
-                            r->destructor = (void (*)(void *, void *))dtor;
+                            r->destructor = (RuntimeAllocDestructor)dtor;
                             r->object = address;
                             r->context = context;
                             r->next = NULL;
                         }
-                        r->next = (RuntimeAllocRecord *)runtimeAllocs;
+                        r->next = runtimeAllocs;
                         runtimeAllocs = r;
                     }
                 }
                 sym->shndx = 1;
-                sym->value = (uint32_t)(uintptr_t)address - SectionBase(t, 1);
+                sym->value = (uint32_t)address - SectionBase(t, 1);
             }
             if (!understood)
-                PrintMessage(0, (const char *)0x001cb3e8u, t->strings + sym->name, sym->info & 0xf);
-            uint32_t *P = (uint32_t *)(uintptr_t)(rel[0] + target);
+                PrintMessage(0, "dlopen: Relocation to a symbol type I don't understand! (symbol %s type %d)\n",
+                             t->strings + sym->name, sym->info & 0xf);
+            uint32_t *P = (uint32_t *)(rel->offset + target);
             uint32_t A = *P;
-            switch ((uint8_t)rel[1]) {
-            case 0: case 1: case 3:
+            uint8_t type = (uint8_t)rel->info;
+            switch (type) {
+            case kRMipsNone: case kRMips16: case kRMipsRel32:
                 break;
-            case 2:   // R_MIPS_32
+            case kRMips32:
                 *P = A + S;
                 break;
-            case 4: { // R_MIPS_26
+            case kRMips26: {
                 uint32_t v = S + (A & 0x3ffffff) * 4;
-                uint32_t pc = (uint32_t)(uintptr_t)(P + 1);
+                uint32_t pc = (uint32_t)(P + 1);
                 if (((pc ^ v) & 0xfc000000) != 0)
-                    PrintMessage(0, (const char *)0x001cb438u, pc, v);
+                    PrintMessage(0, "dlopen: Result of patching jmp instruction is outside of range of possible "
+                                    "jump. (%x vs. %x) Aborting.\n", pc, v);
                 *P = *P ^ (((v >> 2) ^ *P) & 0x3ffffff);
                 break;
             }
-            case 5:   // R_MIPS_HI16 (no carry from the low half), then as LO16
+            case kRMipsHi16:   // no carry from the low half; then as LO16
                 S >>= 16;
-                *(uint16_t *)P = (uint16_t)(*(uint16_t *)P + (uint16_t)S);
+                *(uint16_t *)P += (uint16_t)S;
                 break;
-            case 6:   // R_MIPS_LO16
-                *(uint16_t *)P = (uint16_t)(*(uint16_t *)P + (uint16_t)S);
+            case kRMipsLo16:
+                *(uint16_t *)P += (uint16_t)S;
                 break;
-            case 7: case 12:
-                PrintMessage(0, (const char *)0x001cb4a0u);
+            case kRMipsGpRel16: case kRMipsGpRel32:
+                PrintMessage(0, "dlopen: Cannot deal with GP relative relocations. Aborting\n");
                 break;
-            case 8:
-                PrintMessage(0, (const char *)0x001cb4dcu);
+            case kRMipsLiteral:
+                PrintMessage(0, "dlopen: Cannot deal with MIPS_LITERAL relocation yet\n");
                 break;
-            case 9:
-                PrintMessage(0, (const char *)0x001cb514u);
+            case kRMipsGot16:
+                PrintMessage(0, "dlopen: Cannot deal with MIPS_GOT16 relocation yet\n");
                 break;
             default:
-                PrintMessage(0, (const char *)0x001cb548u, (uint32_t)(uint8_t)rel[1]);
+                PrintMessage(0, "dlopen: Cannot deal with relocation type %d yet\n", type);
                 break;
             }
         }
@@ -667,23 +729,23 @@ void DynamicLoader::RunConstructors() {
     LoaderSymbol s;
     for (int i = 0; i < symbols; i++) {
         GetSymbol(&s, i);
-        if ((uint8_t)s.defined != 0 && CtorPool->FindConstructor(s.className) != NULL)
+        if ((uint8_t)s.defined != 0 && CtorPool.FindConstructor(s.className) != NULL)
             n++;
     }
     if (n > 0) {
-        destructors = (void **)EaglMalloc((uint32_t)(n * 8), (const char *)0x001cb204u);
+        destructors = (LoaderDestructor *)EaglMalloc(n * sizeof(LoaderDestructor), "EAGL::dynamic destructor list");
         n = 0;
         for (int i = 0; i < symbols; i++) {
             GetSymbol(&s, i);
             if ((uint8_t)s.defined == 0)
                 continue;
-            PoolConstructor ctor = (PoolConstructor)CtorPool->FindConstructor(s.className);
+            PoolConstructor ctor = (PoolConstructor)CtorPool.FindConstructor(s.className);
             if (ctor == NULL)
                 continue;
-            void *dtor = CtorPool->FindDestructor(s.className);
+            void *dtor = CtorPool.FindDestructor(s.className);
             ctor(s.address, this);
-            destructors[n * 2] = dtor;
-            destructors[n * 2 + 1] = s.address;
+            destructors[n].destructor = (void (*)(void *))dtor;
+            destructors[n].object = s.address;
             n++;
         }
     }
@@ -695,15 +757,15 @@ void DynamicLoader::RunConstructors() {
 void DynamicLoader::RunDestructors() {
     if (destructors != NULL) {
         for (int i = constructorCount - 1; i >= 0; i--)
-            ((void (*)(void *))destructors[i * 2])(destructors[i * 2 + 1]);
+            destructors[i].destructor(destructors[i].object);
         EaglFree(destructors, (uint32_t)constructorCount << 3);
         destructors = NULL;
     }
-    RuntimeAllocRecord *r = (RuntimeAllocRecord *)runtimeAllocs;
+    RuntimeAllocRecord *r = runtimeAllocs;
     while (r != NULL) {
         RuntimeAllocRecord *next = r->next;
         r->destructor(r->object, r->context);
-        EaglFree(r, 0x10);
+        EaglFree(r, sizeof(RuntimeAllocRecord));
         r = next;
     }
     runtimeAllocs = NULL;
@@ -723,7 +785,7 @@ void DynamicLoader::Release() {
         t->next->previous = t->previous;
     if (t->chain != NULL)
         EaglFree(t->chain, (uint32_t)t->symbolCount << 2);
-    EaglFree(t, 0x428);
+    EaglFree(t, sizeof(HashTable));
     table = NULL;
 }
 
@@ -735,23 +797,24 @@ bool DynamicLoader::GetAddr(const char *className, const char *name, void **out)
     if (t == NULL)
         return false;
     ElfSymbol *symbols = t->symbols;
-    for (uint32_t i = (uint32_t)t->buckets[ElfHash(name)]; i != 0xffffffff; i = (uint32_t)t->chain[i]) {
+    for (uint32_t i = t->buckets[ElfHash(name)]; i != 0xffffffff; i = t->chain[i]) {
         if ((uint32_t)t->symbolCount < i) {
-            PrintMessage(0, (const char *)0x001cb860u, i, t->symbolCount);
+            PrintMessage(0, "DynamicLoader::GetAddr() -- INTERNAL ERROR: Bad i value %d (chain size %d)!\n", i,
+                         t->symbolCount);
             continue;
         }
         ElfSymbol *s = &symbols[i];
         const char *symbolName = t->strings + s->name;
         const char *symbolClass = symbolName + strlen(name) + 1;
-        symbolClass = *symbolClass == 0x7f ? symbolClass + 1 : symbolClass - 1;
+        symbolClass = *symbolClass == kClassMarker ? symbolClass + 1 : symbolClass - 1;
         if (strcmp(name, symbolName) != 0 || strcmp(className, symbolClass) != 0)
             continue;
-        if (s->other == 1) {
-            *out = (void *)(uintptr_t)symbols[i].value;
+        if (s->other == kSymbolAbsolute) {
+            *out = (void *)s->value;
             return true;
         }
-        if (s->shndx != 0 && s->shndx < At<uint16_t>(t->header, 0x30)) {
-            *out = (void *)(uintptr_t)(SectionBase(t, s->shndx) + symbols[i].value);
+        if (InSection(t, s)) {
+            *out = (void *)(SectionBase(t, s->shndx) + s->value);
             return true;
         }
     }
@@ -774,14 +837,14 @@ LoaderSymbol* DynamicLoader::GetSymbol(LoaderSymbol *out, int index) {
     const char *name = t->strings + s->name;
     const char *end = name + strlen(name);
     out->name = name;
-    out->className = end[1] == 0x7f ? end + 2 : end;
-    out->defined = s->other != 2;
+    out->className = end[1] == kClassMarker ? end + 2 : end;
+    out->defined = s->other != kSymbolExternal;
     uint32_t address = 0;
-    if (s->other == 1)
+    if (s->other == kSymbolAbsolute)
         address = s->value;
-    else if (s->shndx != 0 && s->shndx < At<uint16_t>(t->header, 0x30))
+    else if (InSection(t, s))
         address = SectionBase(t, s->shndx) + s->value;
-    out->address = (void *)(uintptr_t)address;
+    out->address = (void *)address;
     return out;
 }
 
@@ -822,28 +885,29 @@ void* DynamicLoader::GetElfData() {
 
 // AUTOINJECT
 void DynamicLoader::RegisterVar(const char *name, void *value) {
-    GlobalPool->AddSymbol(name, value);
+    GlobalPool.AddSymbol(name, value);
 }
 
 // AUTOINJECT
 void DynamicLoader::UnRegisterVar(const char *name) {
-    GlobalPool->RemoveSymbol(name);
+    GlobalPool.RemoveSymbol(name);
 }
 
 // AUTOINJECT
 void* DynamicLoader::GetRegisteredVar(const char *name, bool *found) {
-    return GlobalPool->Search(name, found);
+    return GlobalPool.Search(name, found);
 }
 
 // Every image of a SHPX file into the global pool as "shape_" + its name (its long name if that is at most four
 // characters, else its four-character directory name with trailing spaces cut), unless the name is taken.
 // AUTOINJECT
 void DynamicLoader::RegisterShapes(uint8_t *shapes) {
+    const ShapeFile *file = (const ShapeFile *)shapes;
     char name[11];
     memcpy(name, "shape_", 7);
-    int count = At<int32_t>(shapes, 8);
+    int count = file->count;
     for (int i = 0; i < count; i++) {
-        uint8_t *image = shapes + At<int32_t>(shapes, 0x14 + i * 8);
+        uint8_t *image = shapes + file->entries[i].offset;
         const char *longName = SHAPE_longname(image);
         if (longName != NULL && strlen(longName) <= 4) {
             strncpy(name + 6, longName, 4);
@@ -854,9 +918,9 @@ void DynamicLoader::RegisterShapes(uint8_t *shapes) {
         }
         name[10] = 0;
         bool found;
-        GlobalPool->Search(name, &found);
+        GlobalPool.Search(name, &found);
         if (!found)
-            GlobalPool->AddSymbol(name, image);
+            GlobalPool.AddSymbol(name, image);
     }
 }
 
@@ -864,17 +928,18 @@ void DynamicLoader::RegisterShapes(uint8_t *shapes) {
 // back out with spaces - so a name RegisterShapes took from the long name, or cut, is never found and stays.
 // AUTOINJECT
 void DynamicLoader::UnRegisterShapes(uint8_t *shapes) {
+    const ShapeFile *file = (const ShapeFile *)shapes;
     char name[16];
     memcpy(name, "shape_", 7);
-    for (int i = 0; i < At<int32_t>(shapes, 8); i++) {
+    for (int i = 0; i < file->count; i++) {
         SHAPE_name(shapes, i, (uint32_t *)(name + 6));
         name[10] = 0;
         for (char *p = name + 9; *p == 0 || isspace((unsigned char)*p); p--)
             *p = ' ';
-        int offset = At<int32_t>(shapes, 0x14 + i * 8);
+        int offset = file->entries[i].offset;
         bool found;
-        void *value = GlobalPool->Search(name, &found);
+        void *value = GlobalPool.Search(name, &found);
         if (found && value == shapes + offset)
-            GlobalPool->RemoveSymbol(name);
+            GlobalPool.RemoveSymbol(name);
     }
 }

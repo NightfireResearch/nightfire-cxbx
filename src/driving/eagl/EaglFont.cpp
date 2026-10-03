@@ -1,6 +1,10 @@
 #include "EaglFont.h"
 
+#include "D3D8State.h"
 #include "RenderContext.h"
+#include "RenderMethod.h"
+#include "Tar.h"
+#include "View.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -14,11 +18,8 @@
 // SetVertexData2f(9, u, v) and SetVertexData4f(-1, x, y, z, w), the position completing the vertex. The
 // arithmetic is the original's x87, in double in its order with its float roundings (the four corners reuse
 // rounded and unrounded intermediates exactly as the listing does). FONTEAGL_startdraw copies the font's drawing
-// parameters into globals the draw functions read:
-//   0x002400b8/bc  the render context's screen-space offset    0x002400c8/cc  texture offset (font +0x30, +0x34)
-//   0x002400d0/d4  texture scale u, v (font +0x7c, +0x78)       0x002400d8/dc  position scale (font +0x38, +0x3c)
-//   0x002400e0/e4  z and w of every vertex (font +0x28, +0x2c)  0x001cd110     the colour (font +0x20)
-// and sets up the shared GeoPrimState at 0x002400f8 (FONTEAGL_createfont gives it its fixed settings).
+// parameters into the driver's statics (DrawParameters, and the colour) the draw functions read, and sets up the
+// shared GeoPrimState at 0x002400f8 (FONTEAGL_createfont gives it its fixed settings).
 //
 // FONTEAGL_createfont's SEH frame (handler 0x00154efd, for the TAR and shader constructors) is left out.
 // ---------------------------------------------------------------------------------------------------------------
@@ -32,273 +33,253 @@
 
 namespace {
 
-inline uint32_t &U32(uint32_t address) {
-    return *(uint32_t *)(uintptr_t)address;
+// The driver's statics at 0x002400b8: what FONTEAGL_startdraw copies from the font, and the font shaders
+struct DrawParameters {
+    float offsetX;                   // +0x00 the render context's screen-space offset
+    float offsetY;                   // +0x04
+    EAGL::VertexShader *vertexShader;  // +0x08 made once, by FONTEAGL_createfont
+    EAGL::PixelShader *pixelShader;  // +0x0c
+    float texOffsetU;                // +0x10 font +0x30
+    float texOffsetV;                // +0x14 font +0x34
+    float texScaleU;                 // +0x18 font +0x7c
+    float texScaleV;                 // +0x1c font +0x78
+    float scaleX;                    // +0x20 font +0x38
+    float scaleY;                    // +0x24 font +0x3c
+    uint32_t z;                      // +0x28 font +0x28 (float bits)
+    uint32_t w;                      // +0x2c font +0x2c
+};
+static_assert(sizeof(DrawParameters) == 0x30, "the driver's statics run to 0x002400e8");
+
+#define Params (*(DrawParameters *)0x002400b8)
+#define VertexColour U32_AT(0x001cd110)                     // font +0x20
+#define FontState (*(EAGL::GeoPrimStateExtension *)0x002400f8)
+
+// The font shaders' declaration and programs, in the XBE
+#define FontShaderDeclaration ((const void *)0x001ccfd8)
+#define FontVertexShaderFunction ((const void *)0x001ccfec)
+#define FontPixelShaderDefinition ((const void *)0x001cd020)
+
+#define EaglMalloc (*(void *(**)(uint32_t size, const char *name))0x001caf68)
+#define EaglFree (*(void (**)(void *pointer, uint32_t size))0x001caf6c)
+#define NameTARNew ((const char *)0x0018a348)               // "EAGL::TAR new"
+#define NameVertexShaderNew ((const char *)0x001cd144)      // "EAGL::VertexShader new"
+#define NamePixelShaderNew ((const char *)0x001cd15c)       // "EAGL::PixelShader new"
+
+#define D3DDevice_SetVertexDataColor ((void (__stdcall *)(uint32_t reg, uint32_t colour))0x0016b9d0)
+#define D3DDevice_SetVertexData2f ((void (__stdcall *)(uint32_t reg, float a, float b))0x0016b930)
+#define D3DDevice_SetVertexData4f ((void (__stdcall *)(uint32_t reg, float x, float y, uint32_t z, uint32_t w))0x0016b970)
+#define D3DDevice_Begin ((void (__stdcall *)(uint32_t primitiveType))0x0016ba20)
+
+enum { kVertexDiffuse = 3, kVertexTexCoord0 = 9, kVertexPosition = 0xffffffff };   // D3DVSDE_*
+enum { kDepthLessEqual = 0x203, kDepthAlways = 0x207, kAlphaGreaterEqual = 0x204 };   // OpenGL numbering
+enum { kQuadList = 8 };
+
+void Colour() {
+    D3DDevice_SetVertexDataColor(kVertexDiffuse, VertexColour);
 }
 
-inline float &F32(uint32_t address) {
-    return *(float *)(uintptr_t)address;
+void TexCoord(float u, float v) {
+    D3DDevice_SetVertexData2f(kVertexTexCoord0, u, v);
 }
 
-inline double D(uint32_t address) {   // a float in memory, as FLD/FADD/FMUL read it
-    return (double)F32(address);
+// z and w go as the statics' bits
+void Position(float x, float y) {
+    D3DDevice_SetVertexData4f(kVertexPosition, x, y, Params.z, Params.w);
 }
 
-template <typename T> inline T At(const void *p, int offset) {
-    T v;
-    memcpy(&v, (const uint8_t *)p + offset, sizeof(T));
-    return v;
-}
-
-template <typename T> inline void Put(void *p, int offset, T v) {
-    memcpy((uint8_t *)p + offset, &v, sizeof(T));
-}
-
-// Constants in .rdata
-const uint32_t kHalf = 0x00189eb0, kOne = 0x00189de8, kZero = 0x00189dec;
-
-// The drawing parameters (see above)
-const uint32_t kOffsetX = 0x002400b8, kOffsetY = 0x002400bc, kVertexShader = 0x002400c0,
-               kPixelShader = 0x002400c4, kTexOffsetU = 0x002400c8, kTexOffsetV = 0x002400cc,
-               kTexScaleU = 0x002400d0, kTexScaleV = 0x002400d4, kScaleX = 0x002400d8, kScaleY = 0x002400dc,
-               kZ = 0x002400e0, kW = 0x002400e4, kColour = 0x001cd110;
-
-EAGL::GeoPrimStateExtension *const gFontState = (EAGL::GeoPrimStateExtension *)0x002400f8u;
-
-inline void *DeviceGet() {
-    return ((void *(*)())0x000e8a40)();   // EAGL::Device::Get
-}
-
-inline void *EaglMalloc(uint32_t size, const char *name) {
-    return (*(void *(**)(uint32_t, const char *))0x001caf68u)(size, name);
-}
-
-inline void EaglFree(void *p, uint32_t size) {
-    (*(void (**)(void *, uint32_t))0x001caf6cu)(p, size);
-}
-
-inline void VertexColour() {
-    ((void (__stdcall *)(uint32_t, uint32_t))0x0016b9d0)(3, U32(kColour));   // D3DDevice_SetVertexDataColor
-}
-
-inline void VertexTexCoord(float u, float v) {
-    ((void (__stdcall *)(uint32_t, float, float))0x0016b930)(9, u, v);       // D3DDevice_SetVertexData2f
-}
-
-// z and w go as the globals' bits
-inline void VertexPosition(float x, float y) {
-    uint32_t w = U32(kW), z = U32(kZ);
-    ((void (__stdcall *)(uint32_t, float, float, uint32_t, uint32_t))0x0016b970)(0xffffffffu, x, y, z, w);
-}
-
-// One glyph's quad at (x, y), as both FONTEAGL_draw and FONTEAGL_drawarray compute it. A glyph: +2/+3 width and
-// height (u8), +4/+6 position in the texture (u16), +9/+0xa x and y offset (s8).
-void DrawGlyph(const uint8_t *glyph, float x, float y) {
-    float tu = (float)((double)(int32_t)At<uint16_t>(glyph, 4) - D(kHalf));
-    float tv = (float)((double)(int32_t)At<uint16_t>(glyph, 6) - D(kHalf));
-    float xo = (float)(((double)(int32_t)(int8_t)glyph[9] + D(kOffsetX)) + D(kHalf));
-    float yo = (float)(((double)(int32_t)(int8_t)glyph[0xa] + D(kOffsetY)) + D(kHalf));
-    double width1 = (double)(int32_t)glyph[2] + D(kOne);
-    float w1 = (float)width1;
-    float h1 = (float)((double)(int32_t)glyph[3] + D(kOne));
+// One glyph's quad at (x, y), as both FONTEAGL_draw and FONTEAGL_drawarray compute it.
+void DrawGlyph(const FNTXGlyph *glyph, float x, float y) {
+    float tu = glyph->texX - 0.5f;
+    float tv = glyph->texY - 0.5f;
+    float xo = float(double(glyph->xOffset) + Params.offsetX + 0.5);
+    float yo = float(double(glyph->yOffset) + Params.offsetY + 0.5);
+    double width1 = glyph->width + 1.0;
+    float w1 = float(width1);
+    float h1 = glyph->height + 1.0f;
     // FCOMP of the unrounded width + 1 against 0.0f, TEST AH,0x44, JNP: no quad only when it is equal (ordered)
-    if (width1 == D(kZero))
+    if (width1 == 0.0)
         return;
 
     // top left
-    VertexColour();
+    Colour();
     {
-        float v = (float)((D(kTexOffsetV) + (double)tv) * D(kTexScaleV));
-        float u = (float)((D(kTexOffsetU) + (double)tu) * D(kTexScaleU));
-        VertexTexCoord(u, v);
+        float v = float((double(Params.texOffsetV) + tv) * Params.texScaleV);
+        float u = float((double(Params.texOffsetU) + tu) * Params.texScaleU);
+        TexCoord(u, v);
     }
     {
-        double py = D(kScaleY) * (double)yo + (double)y;
-        float fy = (float)py;
-        float fx = (float)(D(kScaleX) * (double)xo + (double)x);
-        VertexPosition(fx, fy);
+        float fy = float(double(Params.scaleY) * yo + y);
+        float fx = float(double(Params.scaleX) * xo + x);
+        Position(fx, fy);
     }
 
     // top right
-    VertexColour();
-    float tu2 = (float)((double)w1 + (double)tu);
+    Colour();
+    float tu2 = w1 + tu;
     {
-        float v = (float)((D(kTexOffsetV) + (double)tv) * D(kTexScaleV));
-        float u = (float)(((double)tu2 + D(kTexOffsetU)) * D(kTexScaleU));
-        VertexTexCoord(u, v);
+        float v = float((double(Params.texOffsetV) + tv) * Params.texScaleV);
+        float u = float((double(tu2) + Params.texOffsetU) * Params.texScaleU);
+        TexCoord(u, v);
     }
-    float x2 = (float)((double)w1 + (double)xo);
+    float x2 = w1 + xo;
     {
-        float fy = (float)(D(kScaleY) * (double)yo + (double)y);
-        float fx = (float)((double)x2 * D(kScaleX) + (double)x);
-        VertexPosition(fx, fy);
+        float fy = float(double(Params.scaleY) * yo + y);
+        float fx = float(double(x2) * Params.scaleX + x);
+        Position(fx, fy);
     }
 
     // bottom right
-    VertexColour();
-    double tv2Unrounded = (double)h1 + (double)tv;
-    float tv2 = (float)tv2Unrounded;
+    Colour();
+    double tv2Unrounded = double(h1) + tv;
+    float tv2 = float(tv2Unrounded);
     {
-        float v = (float)((tv2Unrounded + D(kTexOffsetV)) * D(kTexScaleV));   // the unrounded sum (FST, then FADD)
-        float u = (float)(((double)tu2 + D(kTexOffsetU)) * D(kTexScaleU));
-        VertexTexCoord(u, v);
+        float v = float((tv2Unrounded + Params.texOffsetV) * Params.texScaleV);   // the unrounded sum (FST, then FADD)
+        float u = float((double(tu2) + Params.texOffsetU) * Params.texScaleU);
+        TexCoord(u, v);
     }
-    float y2 = (float)((double)h1 + (double)yo);
+    float y2 = h1 + yo;
     {
-        float fy = (float)((double)y2 * D(kScaleY) + (double)y);
-        float fx = (float)((double)x2 * D(kScaleX) + (double)x);
-        VertexPosition(fx, fy);
+        float fy = float(double(y2) * Params.scaleY + y);
+        float fx = float(double(x2) * Params.scaleX + x);
+        Position(fx, fy);
     }
 
     // bottom left
-    VertexColour();
+    Colour();
     {
-        float v = (float)(((double)tv2 + D(kTexOffsetV)) * D(kTexScaleV));
-        float u = (float)((D(kTexOffsetU) + (double)tu) * D(kTexScaleU));
-        VertexTexCoord(u, v);
+        float v = float((double(tv2) + Params.texOffsetV) * Params.texScaleV);
+        float u = float((double(Params.texOffsetU) + tu) * Params.texScaleU);
+        TexCoord(u, v);
     }
     {
-        float fy = (float)((double)y2 * D(kScaleY) + (double)y);
-        float fx = (float)(D(kScaleX) * (double)xo + (double)x);
-        VertexPosition(fx, fy);
+        float fy = float(double(y2) * Params.scaleY + y);
+        float fx = float(double(Params.scaleX) * xo + x);
+        Position(fx, fy);
     }
 }
 
 }  // namespace
 
-// The batch hook: count records of {glyph, x, y} (12 bytes). The font is not read.
+// The batch hook: count records of {glyph, x, y}. The font is not read.
 // FUNC_AT(0x000ee190)
-void* FONTEAGL_drawarray(const uint8_t *, const uint8_t *batch, int count) {
-    DeviceGet();
+void* FONTEAGL_drawarray(const FNTXFont *, const FNTXBatchEntry *batch, int count) {
+    EAGL::Device::Get();
     if (count > 0) {
-        for (int i = count; i != 0; i--) {
-            const uint8_t *glyph = At<const uint8_t *>(batch, 0);
-            DrawGlyph(glyph, At<float>(batch, 4), At<float>(batch, 8));
-            batch += 0xc;
-        }
+        for (int i = count; i != 0; i--, batch++)
+            DrawGlyph(batch->glyph, batch->x, batch->y);
     }
-    return DeviceGet();
+    return EAGL::Device::Get();
 }
 
 // FUNC_AT(0x000ee490)
-void* FONTEAGL_draw(const uint8_t *, const uint8_t *glyph, float x, float y) {
-    DeviceGet();
+void* FONTEAGL_draw(const FNTXFont *, const FNTXGlyph *glyph, float x, float y) {
+    EAGL::Device::Get();
     DrawGlyph(glyph, x, y);
-    return DeviceGet();
+    return EAGL::Device::Get();
 }
 
-// A font's TAR over its shape (font +0x1c, an offset from the font), the texture scale (1 / the shape's size when
-// its flag 0x2000 is set, else 1), the shared GeoPrimState's fixed settings, and the font shaders (made once).
+// A font's TAR over its shape, the texture scale (1 / the shape's size when its flag 0x2000 is set, else 1), the
+// shared GeoPrimState's fixed settings, and the font shaders (made once).
 // FUNC_AT(0x000ee760)
-void FONTEAGL_createfont(uint8_t *font) {
-    uint8_t *shape = font + At<int32_t>(font, 0x1c);
-    Put<uint8_t *>(font, 0x74, shape);
-    void *tar = EaglMalloc(0x4c, (const char *)0x0018a348u);   // "EAGL::TAR new"
-    if (tar != NULL)
-        tar = ((void *(__fastcall *)(void *, int, void *))0x000eca20)(tar, 0, shape);   // EAGL::TAR::TAR
-    else
-        tar = NULL;
-    Put<void *>(font, 0x70, tar);
-    Put<uint32_t>(font, 0x30, 0);
-    Put<uint32_t>(font, 0x34, 0);
-    if ((At<uint32_t>(shape, 0xc) & 0x2000) == 0) {
-        Put<uint32_t>(font, 0x7c, 0x3f800000u);   // 1.0f
-        Put<uint32_t>(font, 0x78, 0x3f800000u);
+void FONTEAGL_createfont(FNTXFont *font) {
+    uint8_t *shape = (uint8_t *)font + font->shapeOffset;
+    font->shape = shape;
+    EAGL::TAR *tar = (EAGL::TAR *)EaglMalloc(sizeof(EAGL::TAR), NameTARNew);
+    tar = tar != NULL ? tar->Construct(shape) : NULL;
+    font->tar = tar;
+    font->texOffsetU = 0.0f;
+    font->texOffsetV = 0.0f;
+    const EAGL::ShapeImage *image = (const EAGL::ShapeImage *)shape;
+    if ((image->flags & EAGL::kShapeLinear) == 0) {
+        font->texScaleU = 1.0f;
+        font->texScaleV = 1.0f;
     } else {
-        Put<float>(font, 0x7c, (float)(D(kOne) / (double)(int32_t)At<int16_t>(shape, 4)));
-        Put<float>(font, 0x78, (float)(D(kOne) / (double)(int32_t)At<int16_t>(shape, 6)));
+        font->texScaleU = 1.0f / image->width;
+        font->texScaleV = 1.0f / image->height;
     }
-    gFontState->SetPrimitiveType(5);
-    gFontState->SetAlphaBlendMode(1);
-    gFontState->SetAlphaTestMethod(0x204);
-    gFontState->SetCullEnable(false);
-    gFontState->SetDepthTestMethod(0x203);
-    gFontState->SetShading(1);                  // 0x000eec90 (Ghidra: SetTransparencyMethod)
-    gFontState->SetTextureEnable(true);
-    gFontState->SetTextureCoordType(0xffffffffu);
-    gFontState->SetTransparencyMethod(1);
-    if (U32(kVertexShader) == 0) {
-        void *shader = EaglMalloc(4, (const char *)0x001cd144u);   // "EAGL::VertexShader new"
-        if (shader != NULL)
-            shader = ((void *(__fastcall *)(void *, int, const void *, const void *))0x000f6fa0)(
-                shader, 0, (const void *)0x001ccfd8u, (const void *)0x001ccfecu);
-        else
-            shader = NULL;
-        U32(kVertexShader) = (uint32_t)(uintptr_t)shader;
+    FontState.SetPrimitiveType(5);
+    FontState.SetAlphaBlendMode(1);
+    FontState.SetAlphaTestMethod(kAlphaGreaterEqual);
+    FontState.SetCullEnable(false);
+    FontState.SetDepthTestMethod(kDepthLessEqual);
+    FontState.SetShading(1);                  // 0x000eec90 (Ghidra: SetTransparencyMethod)
+    FontState.SetTextureEnable(true);
+    FontState.SetTextureCoordType(0xffffffff);
+    FontState.SetTransparencyMethod(1);
+    if (Params.vertexShader == NULL) {
+        EAGL::VertexShader *shader = (EAGL::VertexShader *)EaglMalloc(sizeof(EAGL::VertexShader), NameVertexShaderNew);
+        shader = shader != NULL ? shader->Construct(FontShaderDeclaration, FontVertexShaderFunction) : NULL;
+        Params.vertexShader = shader;
     }
-    if (U32(kPixelShader) == 0) {
-        void *shader = EaglMalloc(4, (const char *)0x001cd15cu);   // "EAGL::PixelShader new"
-        if (shader != NULL)
-            shader = ((void *(__fastcall *)(void *, int, const void *))0x000f6ff0)(shader, 0,
-                                                                                  (const void *)0x001cd020u);
-        else
-            shader = NULL;
-        U32(kPixelShader) = (uint32_t)(uintptr_t)shader;
+    if (Params.pixelShader == NULL) {
+        EAGL::PixelShader *shader = (EAGL::PixelShader *)EaglMalloc(sizeof(EAGL::PixelShader), NamePixelShaderNew);
+        shader = shader != NULL ? shader->Construct(FontPixelShaderDefinition) : NULL;
+        Params.pixelShader = shader;
     }
 }
 
-// The drawing parameters into the globals, the font shaders, the TAR's filter (2 when font +0x48 is 1, else 1),
-// depth (font +0x4c: 0 no writes and ALWAYS, 1 writes and LEQUAL, else left), apply, bind, and Begin(quads).
+// The drawing parameters into the statics, the font shaders, the TAR's filter, depth, apply, bind, and
+// Begin(quads).
 // FUNC_AT(0x000ee920)
-void FONTEAGL_startdraw(const uint8_t *font) {
-    void *device = DeviceGet();
-    void *context = ((void *(__fastcall *)(void *, int))0x000e89e0)(device, 0);   // Device::GetCurrentRenderContext
-    ((EAGL::RenderContextExtension *)context)->GetScreenSpaceOffset((float *)(uintptr_t)kOffsetX,
-                                                                    (float *)(uintptr_t)kOffsetY);
-    U32(kTexOffsetU) = At<uint32_t>(font, 0x30);
-    U32(kTexOffsetV) = At<uint32_t>(font, 0x34);
-    U32(kTexScaleU) = At<uint32_t>(font, 0x7c);
-    U32(kTexScaleV) = At<uint32_t>(font, 0x78);
-    U32(kColour) = At<uint32_t>(font, 0x20);
-    U32(kScaleX) = At<uint32_t>(font, 0x38);
-    U32(kScaleY) = At<uint32_t>(font, 0x3c);
-    U32(kZ) = At<uint32_t>(font, 0x28);
-    U32(kW) = At<uint32_t>(font, 0x2c);
-    ((void (*)(uint32_t))0x000f4350)(U32(kVertexShader));   // the SetVertexShader wrapper
-    ((void (*)(uint32_t))0x000f4380)(U32(kPixelShader));    // the SetPixelShader wrapper
-    uint8_t *tar = At<uint8_t *>(font, 0x70);
-    Put<uint32_t>(tar, 0x14, (At<int32_t>(font, 0x48) == 1 ? 1u : 0u) + 1);
-    int32_t depthMode = At<int32_t>(font, 0x4c);
-    if (depthMode == 0) {
-        gFontState->SetZWritesEnable(false);
-        gFontState->SetDepthTestMethod(0x207);
-    } else if (depthMode == 1) {
-        gFontState->SetZWritesEnable(true);
-        gFontState->SetDepthTestMethod(0x203);
+void FONTEAGL_startdraw(const FNTXFont *font) {
+    EAGL::RenderContext *context = EAGL::Device::Get()->GetCurrentRenderContext();
+    context->Extension()->GetScreenSpaceOffset(&Params.offsetX, &Params.offsetY);
+    Params.texOffsetU = font->texOffsetU;
+    Params.texOffsetV = font->texOffsetV;
+    Params.texScaleU = font->texScaleU;
+    Params.texScaleV = font->texScaleV;
+    VertexColour = font->colour;
+    Params.scaleX = font->scaleX;
+    Params.scaleY = font->scaleY;
+    Params.z = font->z;
+    Params.w = font->w;
+    EAGL_SetVertexShader(Params.vertexShader);
+    EAGL_SetPixelShader(Params.pixelShader);
+    font->tar->filter = (font->filterMode == 1 ? 1 : 0) + 1;
+    if (font->depthMode == 0) {
+        FontState.SetZWritesEnable(false);
+        FontState.SetDepthTestMethod(kDepthAlways);
+    } else if (font->depthMode == 1) {
+        FontState.SetZWritesEnable(true);
+        FontState.SetDepthTestMethod(kDepthLessEqual);
     }
-    gFontState->Apply();
-    ((void (__fastcall *)(void *, int))0x000eb3f0)(At<void *>(font, 0x70), 0);   // bind the TAR
-    ((void (__stdcall *)(uint32_t))0x0016ba20)(8);   // D3DDevice_Begin(D3DPT_QUADLIST)
+    FontState.Apply();
+    font->tar->Use();
+    D3DDevice_Begin(kQuadList);
 }
 
 // FUNC_AT(0x000eea20)
-void FONTEAGL_destroyfont(uint8_t *font) {
-    void *tar = At<void *>(font, 0x70);
+void FONTEAGL_destroyfont(FNTXFont *font) {
+    EAGL::TAR *tar = font->tar;
     if (tar != NULL) {
-        ((void (__fastcall *)(void *, int))0x000ecab0)(tar, 0);   // EAGL::TAR::~TAR
-        EaglFree(tar, 0x4c);
+        tar->Destruct();
+        EaglFree(tar, sizeof(EAGL::TAR));
     }
-    Put<void *>(font, 0x70, NULL);
+    font->tar = NULL;
 }
 
 // ---- 0x000eea50: D3DDevice_SetRenderState(state = ESI, value = EDI) inlined. The simple states (below 0x5c) go
-// through SetRenderState_Simple with their push-buffer method from D3D8's table at 0x0018e888 and are written into
-// the render-state table; the deferred ones (below 0x88) only set their dirty bits (table 0x0018e668) and are
+// through SetRenderState_Simple with their push-buffer method from D3D8's table and are written into the
+// render-state table; the deferred ones (below 0x88) only set their dirty bits (from D3D8's table) and are
 // written; the complex ones each have their entry point; anything else is ignored.
+
+#define D3DSimpleStateMethods ((const uint32_t *)0x0018e888)   // the push-buffer method per simple state
+#define D3DDeferredStateDirty ((const uint32_t *)0x0018e668)   // the dirty bits per deferred state
+
+typedef void (__stdcall *RenderStateEntry)(uint32_t value);
 
 static void EAGLFont_SetRenderState(int32_t state, uint32_t value) {
     if (state < 0x5c) {
-        ((void (__fastcall *)(uint32_t, uint32_t))0x001673e0)(*(const uint32_t *)(uintptr_t)(0x0018e888u + state * 4),
-                                                             value);
-        U32(0x00175628u + state * 4) = value;
+        D3DDevice_SetRenderState_Simple(D3DSimpleStateMethods[state], value);
+        D3DRenderState[state] = value;
         return;
     }
     if (state < 0x88) {
-        U32(0x00175424) = U32(0x00175424) | *(const uint32_t *)(uintptr_t)(0x0018e668u + state * 4);
-        U32(0x00175628u + state * 4) = value;
+        D3DDirtyFlags = D3DDirtyFlags | D3DDeferredStateDirty[state];
+        D3DRenderState[state] = value;
         return;
     }
-    uint32_t entry;
+    uintptr_t entry;
     switch (state) {
     case 0x88: entry = 0x001673b0; break;   // PSTextureModes
     case 0x89: entry = 0x00167bf0; break;   // VertexBlend
@@ -332,7 +313,7 @@ static void EAGLFont_SetRenderState(int32_t state, uint32_t value) {
     case 0xa5: entry = 0x00168ad0; break;   // DoNotCullUncompressed
     default: return;
     }
-    ((void (__stdcall *)(uint32_t))(uintptr_t)entry)(value);
+    ((RenderStateEntry)entry)(value);
 }
 
 // FUNC_AT(0x000eea50)
@@ -348,6 +329,6 @@ __declspec(naked) void EAGLFont_SetRenderStateEsiEdi() {
 
 // FUNC_AT(0x000eec50)
 EAGL::GeoPrimStateCopy* EAGL::GeoPrimStateCopy::Assign(const GeoPrimState *other) {
-    memcpy(this, other, 0x4c);
+    *static_cast<GeoPrimState *>(this) = *other;
     return this;
 }

@@ -1,3 +1,7 @@
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS   // as the build defines it (CMakeLists.txt)
+#endif
+
 #include "SndTagShadow.h"
 
 #include "../sound/snd/Banks.h"

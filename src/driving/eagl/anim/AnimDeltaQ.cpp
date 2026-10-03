@@ -1,7 +1,10 @@
 #include "AnimDeltaQ.h"
-
+#include "AnimMisc.h"
 #include "AnimUntested.h"
+#include "Skeleton.h"
+#include "../../../helpers.h"
 
+#include <bit>
 #include <math.h>
 #include <string.h>
 #include <xmmintrin.h>
@@ -25,82 +28,76 @@
 //  - FnDeltaQ: w recovered from xyz (and a sign bit), normalised lerp.
 // FnDeltaQ and FnDeltaQFast also write constant bones from the end of the data. The output quaternion is at +0x10
 // of each bone's 0x30-byte SQT record; a mask is a 256-bit set of bones. x87 arithmetic in double in the
-// original's order, with a float store for every store.
+// original's order, with a float store for every store (a single operation on floats written in float: the same
+// bits).
 // ---------------------------------------------------------------------------------------------------------------
 
-#define EaglFree     (*(void (**)(void *data, uint32_t size))0x001caf6cu)
-#define FreeBySize   ((void **)0x00241520u)
-#define VtDeltaSingleQ ((const void *)0x001a1360u)
-#define VtDeltaQFast   ((const void *)0x001a13e0u)
-#define VtDeltaQ       ((const void *)0x001a1450u)
-#define ReverseDeltaSumEnabled (*(uint8_t *)0x001ceb4cu)   // 0: going back decodes the bin again
-#define kOne         (*(const float *)0x00189de8u)          // 1.0
-#define kZero        (*(const float *)0x00189decu)          // 0.0
-#define SqPhysScale  (*(const float *)0x001a1348u)          // 1/255 (doubled)
-#define SqRangeScale (*(const float *)0x001a1350u)          // 1/65535 (doubled for min and range)
-#define SqDeltaScale (*(const float *)0x001a1354u)          // 1/15
-#define SqConstBase  (*(const float *)0x001a1358u)          // -pi
-#define SqAngleRange (*(const float *)0x00241ae0u)          // a global set at run time (2 pi, presumably)
-#define QfDeltaScale (*(const float *)0x001a13d4u)          // 1/63
-#define QfRangeScale (*(const float *)0x001a13d8u)          // 2/65535
-#define QfPhysScale  (*(const float *)0x001a13dcu)          // 2/4095
-#define QDeltaScaleX (*(const float *)0x001a143cu)          // 1/127
-#define QDeltaScale  (*(const float *)0x001a1440u)          // 1/255
-#define QPhysScaleX  (*(const float *)0x001a1444u)          // 1/32767 (doubled)
-#define QRangeScale  (*(const float *)0x001a1448u)          // 1/65535 (doubled)
+namespace {
+
+typedef void (*EaglFreeHook)(void *data, uint32_t size);
+#define EaglFree (*(EaglFreeHook *)0x001caf6c)
+#define VtDeltaSingleQ ((const void *)0x001a1360)
+#define VtDeltaQFast ((const void *)0x001a13e0)
+#define VtDeltaQ ((const void *)0x001a1450)
+#define ReverseDeltaSumEnabled U8_AT(0x001ceb4c)            // 0: going back decodes the bin again
+#define SingleQAngleRange FLOAT_AT(0x00241ae0)              // set at run time (2 pi, presumably)
+
+// The dequantisation scales, the original's .rdata floats (1 and 0 are exact)
+constexpr float kOneOver255 = 1.0f / 255;                   // 0x001a1348 (doubled), 0x001a1440
+constexpr float kOneOver65535 = 1.0f / 65535;               // 0x001a1350, 0x001a1448 (doubled)
+constexpr float kOneOver15 = 1.0f / 15;                     // 0x001a1354
+constexpr float kMinusPi = -3.14159274f;                    // 0x001a1358
+constexpr float kOneOver63 = 1.0f / 63;                     // 0x001a13d4
+constexpr float kTwoOver65535 = 2.0f / 65535;               // 0x001a13d8
+constexpr float kTwoOver4095 = 2.0f / 4095;                 // 0x001a13dc
+constexpr float kOneOver127 = 1.0f / 127;                   // 0x001a143c
+constexpr float kOneOver32767 = 1.0f / 32767;               // 0x001a1444 (doubled)
+static_assert(std::bit_cast<uint32_t>(kOneOver255) == 0x3b808081, "the original's 1/255");
+static_assert(std::bit_cast<uint32_t>(kOneOver65535) == 0x37800080, "the original's 1/65535");
+static_assert(std::bit_cast<uint32_t>(kOneOver15) == 0x3d888889, "the original's 1/15");
+static_assert(std::bit_cast<uint32_t>(kMinusPi) == 0xc0490fdb, "the original's -pi");
+static_assert(std::bit_cast<uint32_t>(kOneOver63) == 0x3c820821, "the original's 1/63");
+static_assert(std::bit_cast<uint32_t>(kTwoOver65535) == 0x38000080, "the original's 2/65535");
+static_assert(std::bit_cast<uint32_t>(kTwoOver4095) == 0x3a000801, "the original's 2/4095");
+static_assert(std::bit_cast<uint32_t>(kOneOver127) == 0x3c010204, "the original's 1/127");
+static_assert(std::bit_cast<uint32_t>(kOneOver32767) == 0x38000100, "the original's 1/32767");
 
 enum { kSlotEvalSQTMasked = 18 };    // FnDeltaSingleQ's and FnDeltaQ's extra virtual
 
-static inline int Truncate(float f) {
+inline int Truncate(float f) {   // CVTTSS2SI
     return _mm_cvtt_ss2si(_mm_set_ss(f));
 }
 
-static inline void FreeSized(void *block) {
-    uint32_t sizeClass = ((uint32_t *)block)[-1];
-    *(void **)block = FreeBySize[sizeClass];
-    FreeBySize[sizeClass] = block;
-}
-
-static inline bool InMask(const void *mask, int bone) {
-    return (((const uint32_t *)mask)[bone >> 5] & (1u << (bone & 31))) != 0;
+inline bool InMask(const void *mask, int bone) {
+    return (static_cast<const BoneMask *>(mask)->bits[bone >> 5] & (1u << (bone & 31))) != 0;
 }
 
 // A bone's quaternion in the SQT records.
-static inline float* SqtQuat(float *sqt, int bone) {
+inline float* SqtQuat(float *sqt, int bone) {
     return sqt + bone * 12 + 4;
 }
 
-static inline void Copy4(float *to, const float *from) {
-    memcpy(to, from, 16);
+inline void Copy4(float *to, const float *from) {
+    memcpy(to, from, sizeof(float[4]));
 }
 
-// The three data formats share the header's first 0x10 bytes: u16 type, u16 checksum, u16 keys, u8 bones, u8,
-// u16 *times (or none: a key a frame), u8 *boneIdx.
-static inline int Keys(const uint8_t *d) {
-    return *(const uint16_t *)(d + 4);
-}
-static inline const uint16_t* Times(const uint8_t *d) {
-    return *(const uint16_t *const *)(d + 8);
-}
-static inline const uint8_t* BoneIdx(const uint8_t *d) {
-    return *(const uint8_t *const *)(d + 0xc);
-}
-
-// The key below the time: from the cached key, back or forward through the key times.
-static int FindKey(int frame, const uint8_t *d, int cached) {
-    const uint16_t *times = Times(d);
-    int keys = Keys(d);
+// The key below the time: from the cached key, back or forward through the key times (the three formats share
+// keys and times).
+template <typename Data>
+int FindKey(int frame, const Data *d, int cached) {
+    const uint16_t *times = d->times;
+    int keys = d->keys;
     if (times == NULL)
         return frame < 0 ? 0 : (frame >= keys ? keys - 1 : frame);
-    if (frame < (int)times[0])
+    if (frame < times[0])
         return 0;
     int i = cached >= 1 ? cached - 1 : 0;
-    if ((int)times[i] > frame) {
-        while (i > 0 && (int)times[i] > frame)
+    if (times[i] > frame) {
+        while (i > 0 && times[i] > frame)
             i--;
     } else {
         int last = keys - 2;
-        while (i < last && (int)times[i + 1] <= frame)
+        while (i < last && times[i + 1] <= frame)
             i++;
     }
     return i + 1;
@@ -108,34 +105,50 @@ static int FindKey(int frame, const uint8_t *d, int cached) {
 
 // The fraction of the way from key k to k + 1; false when the time is exactly on key k (FCOMP, TEST AH,0x44,
 // JNP: ordered equal), so that a NaN time interpolates.
-static bool LerpFactor(float time, int frame, const uint8_t *d, int k, float *s) {
-    const uint16_t *times = Times(d);
+template <typename Data>
+bool LerpFactor(float time, int frame, const Data *d, int k, float *s) {
+    const uint16_t *times = d->times;
     if (times == NULL) {
-        double f = (double)frame;
-        if ((double)time == f)
+        double f = frame;
+        if (time == f)
             return false;
-        *s = (float)((double)time - f);
+        *s = float(time - f);
     } else if (k == 0) {
-        if ((double)time == (double)kZero)
+        if (time == 0.0f)
             return false;
-        *s = (float)((double)time / (double)(int)times[0]);
+        *s = time / times[0];
     } else {
-        double p = (double)(int)times[k - 1];
-        if ((double)time == p)
+        double p = times[k - 1];
+        if (time == p)
             return false;
-        *s = (float)(((double)time - p) / ((double)(int)times[k] - p));
+        *s = float((time - p) / (times[k] - p));
     }
     return true;
 }
 
 // The last key time plus one, or the key count (all three GetLengths).
-static bool DeltaGetLength(const uint8_t *d, float *length) {
-    const uint16_t *times = Times(d);
-    int keys = Keys(d);
-    int n = times == NULL ? keys : (int)times[keys - 2] + 1;
-    *length = (float)n;
+template <typename Data>
+bool DeltaGetLength(const Data *d, float *length) {
+    const uint16_t *times = d->times;
+    int keys = d->keys;
+    int n = times == NULL ? keys : times[keys - 2] + 1;
+    *length = float(n);
     return true;
 }
+
+DeltaSingleQData *SingleQData(uint8_t *anim) {
+    return reinterpret_cast<DeltaSingleQData *>(anim);
+}
+
+DeltaQFastHeader *QFastData(uint8_t *anim) {
+    return reinterpret_cast<DeltaQFastHeader *>(anim);
+}
+
+DeltaQHeader *QData(uint8_t *anim) {
+    return reinterpret_cast<DeltaQHeader *>(anim);
+}
+
+}  // namespace
 
 // ---- quaternion helpers
 
@@ -144,34 +157,34 @@ static bool DeltaGetLength(const uint8_t *d, float *length) {
 // FUNC_AT(0x00100ac0)
 void QuatMultXxYxZ(const float *a, const float *b, const float *c, float *out) {
     EAGL_UNTESTED("QuatMultXxYxZ");
-    double A = (double)a[0] * (double)b[3];
-    double B = (double)b[1] * (double)a[3];
-    float C = (float)-((double)b[1] * (double)a[0]);
-    float D = (float)((double)a[3] * (double)b[3]);
-    out[0] = (float)(A * (double)c[3] - B * (double)c[2]);
-    out[1] = (float)(A * (double)c[2] + B * (double)c[3]);
-    out[2] = (float)((double)D * (double)c[2] + (double)C * (double)c[3]);
-    out[3] = (float)((double)D * (double)c[3] - (double)C * (double)c[2]);
+    double A = double(a[0]) * b[3];
+    double B = double(b[1]) * a[3];
+    float C = -(b[1] * a[0]);
+    float D = a[3] * b[3];
+    out[0] = float(A * c[3] - B * c[2]);
+    out[1] = float(A * c[2] + B * c[3]);
+    out[2] = float(double(D) * c[2] + double(C) * c[3]);
+    out[3] = float(double(D) * c[3] - double(C) * c[2]);
 }
 
 // a * b for a rotation a about x (x and w only). No callers: FnDeltaSingleQ::EvalSQTMasked has it inline.
 // FUNC_AT(0x00100b40)
 void QuatMultXxQ(const float *a, const float *b, float *out) {
     EAGL_UNTESTED("QuatMultXxQ");
-    out[0] = (float)((double)a[0] * (double)b[3] + (double)a[3] * (double)b[0]);
-    out[1] = (float)((double)a[3] * (double)b[1] + (double)b[2] * (double)a[0]);
-    out[2] = (float)((double)a[3] * (double)b[2] - (double)b[1] * (double)a[0]);
-    out[3] = (float)((double)a[3] * (double)b[3] - (double)a[0] * (double)b[0]);
+    out[0] = float(double(a[0]) * b[3] + double(a[3]) * b[0]);
+    out[1] = float(double(a[3]) * b[1] + double(b[2]) * a[0]);
+    out[2] = float(double(a[3]) * b[2] - double(b[1]) * a[0]);
+    out[3] = float(double(a[3]) * b[3] - double(a[0]) * b[0]);
 }
 
 // a * b for a rotation b about z (z and w only). No callers: inline in FnDeltaSingleQ::EvalSQTMasked.
 // FUNC_AT(0x00100b90)
 void QuatMultQxZ(const float *a, const float *b, float *out) {
     EAGL_UNTESTED("QuatMultQxZ");
-    out[0] = (float)((double)a[0] * (double)b[3] - (double)b[2] * (double)a[1]);
-    out[1] = (float)((double)a[1] * (double)b[3] + (double)b[2] * (double)a[0]);
-    out[2] = (float)((double)b[2] * (double)a[3] + (double)a[2] * (double)b[3]);
-    out[3] = (float)((double)a[3] * (double)b[3] - (double)b[2] * (double)a[2]);
+    out[0] = float(double(a[0]) * b[3] - double(b[2]) * a[1]);
+    out[1] = float(double(a[1]) * b[3] + double(b[2]) * a[0]);
+    out[2] = float(double(b[2]) * a[3] + double(a[2]) * b[3]);
+    out[3] = float(double(a[3]) * b[3] - double(b[2]) * a[2]);
 }
 
 // (b - a) * t + a, normalised. z and w are stored to float first; w's square is the unrounded w times the
@@ -179,20 +192,20 @@ void QuatMultQxZ(const float *a, const float *b, float *out) {
 // FUNC_AT(0x00101e40)
 void AnimQuatNLerp(float t, const float *a, const float *b, float *out) {
     EAGL_UNTESTED("AnimQuatNLerp");
-    double x = ((double)b[0] - (double)a[0]) * (double)t + (double)a[0];
-    double y = ((double)b[1] - (double)a[1]) * (double)t + (double)a[1];
-    float z = (float)(((double)b[2] - (double)a[2]) * (double)t + (double)a[2]);
-    double w = ((double)b[3] - (double)a[3]) * (double)t + (double)a[3];
-    float wf = (float)w;
-    double ss = w * (double)wf + (double)z * (double)z;
+    double x = (double(b[0]) - a[0]) * t + a[0];
+    double y = (double(b[1]) - a[1]) * t + a[1];
+    float z = float((double(b[2]) - a[2]) * t + a[2]);
+    double w = (double(b[3]) - a[3]) * t + a[3];
+    float wf = float(w);
+    double ss = w * wf + double(z) * z;
     ss = ss + y * y;
     ss = ss + x * x;
-    double r = (double)kOne / sqrt(ss);
-    float rf = (float)r;
-    out[0] = (float)(r * x);
-    out[1] = (float)((double)rf * y);
-    out[2] = (float)((double)rf * (double)z);
-    out[3] = (float)((double)rf * (double)wf);
+    double r = 1.0 / sqrt(ss);
+    float rf = float(r);
+    out[0] = float(r * x);
+    out[1] = float(rf * y);
+    out[2] = rf * z;
+    out[3] = rf * wf;
 }
 
 // w from xyz: sqrt(1 - |xyz|^2), negated for a positive sign, or xyz normalised and w 0 when |xyz| > 1.
@@ -202,17 +215,17 @@ void DeltaQRecoverW(int sign, float *q) {
     double x = q[0], y = q[1], z = q[2];
     double ss = x * x + y * y;
     ss = ss + z * z;
-    if (ss > (double)kOne) {            // FCOM, TEST AH,0x41, JNE: below, equal and unordered take w
-        double r = (double)kOne / sqrt(ss);
+    if (ss > 1.0) {            // FCOM, TEST AH,0x41, JNE: below, equal and unordered take w
+        double r = 1.0 / sqrt(ss);
         q[3] = 0.0f;
-        q[0] = (float)(r * (double)q[0]);
-        q[1] = (float)(r * (double)q[1]);
-        q[2] = (float)(r * (double)q[2]);
+        q[0] = float(r * q[0]);
+        q[1] = float(r * q[1]);
+        q[2] = float(r * q[2]);
     } else {
-        double w = sqrt((double)kOne - ss);
-        q[3] = (float)w;
+        double w = sqrt(1.0 - ss);
+        q[3] = float(w);
         if (sign > 0)
-            q[3] = (float)-w;
+            q[3] = float(-w);
     }
 }
 
@@ -256,62 +269,57 @@ __declspec(naked) void AnimVec2LengthEax() {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// FnDeltaSingleQ. Data: the 0x10-byte header (byte 6 the bone count, byte 7 the bin length power), a 0xe-byte
-// range record per bone, then the bins: per bone a 2-byte physical value (the axis component and w, 8 bits each),
-// then a row of 1-byte deltas (4 bits each) per key. A bone's rotation is pre * q * post, where q turns about the
-// record's axis and pre/post are Euler rotations from its two constant angles.
+// FnDeltaSingleQ. Data: DeltaSingleQData, then the bins: per bone a DeltaSingleQPhysical (the axis component and
+// w, 8 bits each), then a row of DeltaSingleQDelta (4 bits each) per key. A bone's rotation is pre * q * post,
+// where q turns about the record's axis and pre/post are Euler rotations from its two constant angles.
 // ---------------------------------------------------------------------------------------------------------------
 
 // FUNC_AT(0x00101aa0)
 void DeltaSingleQMinRange::UnQuantize(DeltaSingleQMinRangef *out) {
     EAGL_UNTESTED("DeltaSingleQMinRange::UnQuantize");
-    const uint16_t *p = (const uint16_t *)this;
-    double k = (double)SqRangeScale;
-    double k2 = k + k;
-    out->min[0] = (float)((double)(int)p[2] * k2 - (double)kOne);
-    out->min[1] = (float)((double)(int)p[3] * k2 - (double)kOne);
-    out->range[0] = (float)((double)(int)p[4] * k2);
-    out->range[1] = (float)((double)(int)p[5] * k2);
-    out->index = ((const uint8_t *)this)[0xc];
-    out->const0 = (float)((double)(int)p[0] * (double)SqAngleRange * k + (double)SqConstBase);
-    out->const1 = (float)((double)(int)p[1] * (double)SqAngleRange * k + (double)SqConstBase);
+    constexpr double k2 = double(kOneOver65535) + kOneOver65535;
+    out->min[0] = float(min[0] * k2 - 1.0);
+    out->min[1] = float(min[1] * k2 - 1.0);
+    out->range[0] = float(range[0] * k2);
+    out->range[1] = float(range[1] * k2);
+    out->index = uint8_t(index);
+    out->const0 = float(const0 * double(SingleQAngleRange) * kOneOver65535 + kMinusPi);
+    out->const1 = float(const1 * double(SingleQAngleRange) * kOneOver65535 + kMinusPi);
 }
 
 // The axis component (x for index 0, y for 1, else z) and w; the other two components 0.
 // FUNC_AT(0x00101b50)
 void DeltaSingleQPhysical::UnQuantize(int index, float *q) {
     EAGL_UNTESTED("DeltaSingleQPhysical::UnQuantize");
-    const uint8_t *p = (const uint8_t *)this;
-    double k2 = (double)SqPhysScale + (double)SqPhysScale;
+    constexpr double k2 = double(kOneOver255) + kOneOver255;
     q[2] = 0.0f;
     q[1] = 0.0f;
     q[0] = 0.0f;
-    float v = (float)((double)(int)p[0] * k2 - (double)kOne);
+    float value = float(v * k2 - 1.0);
     if (index == 0)
-        q[0] = v;
+        q[0] = value;
     else if (index == 1)
-        q[1] = v;
+        q[1] = value;
     else
-        q[2] = v;
-    q[3] = (float)((double)(int)p[1] * k2 - (double)kOne);
+        q[2] = value;
+    q[3] = float(w * k2 - 1.0);
 }
 
 // FUNC_AT(0x00101be0)
 void DeltaSingleQDelta::UnQuantize(const DeltaSingleQMinRangef *range, float *q) {
     EAGL_UNTESTED("DeltaSingleQDelta::UnQuantize");
-    uint8_t b = *(const uint8_t *)this;
+    uint8_t b = vw;
     q[2] = 0.0f;
     q[1] = 0.0f;
     q[0] = 0.0f;
-    float v = (float)((double)(int)(b >> 4) * (double)range->range[0] * (double)SqDeltaScale +
-                      (double)range->min[0]);
+    float value = float((b >> 4) * double(range->range[0]) * kOneOver15 + range->min[0]);
     if (range->index == 0)
-        q[0] = v;
+        q[0] = value;
     else if (range->index == 1)
-        q[1] = v;
+        q[1] = value;
     else
-        q[2] = v;
-    q[3] = (float)((double)(int)(b & 15) * (double)range->range[1] * (double)SqDeltaScale + (double)range->min[1]);
+        q[2] = value;
+    q[3] = float((b & 15) * double(range->range[1]) * kOneOver15 + range->min[1]);
 }
 
 // The bone's pre * q * post. The original has these products inline (x and z everywhere, y in its unmasked
@@ -319,7 +327,7 @@ void DeltaSingleQDelta::UnQuantize(const DeltaSingleQMinRangef *range, float *q)
 // float-by-float products (exact in double), with the same minuend and subtrahend as the functions here, and the
 // inline y product keeps QuatMultXxYxZ's two unrounded products and two float temporaries - so bit-identical.
 static void SingleQOut(FnDeltaSingleQ *self, int i, const float *q, float *out) {
-    int index = *(const uint16_t *)(self->minRanges + i * 0xe + 0xc);
+    int index = self->minRanges[i].index;
     if (index == 0)
         QuatMultXxQ(q, self->postMultQs + i * 4, out);
     else if (index == 1)
@@ -350,9 +358,9 @@ void FnDeltaSingleQ::Destruct() {
     EAGL_UNTESTED("FnDeltaSingleQ::Destruct");
     vtable = VtDeltaSingleQ;
     if (prevQBlock != NULL) {
-        FreeSized(prevQBlock);
-        FreeSized(preMultQs);
-        FreeSized(postMultQs);
+        AnimPool_FreeBlock(prevQBlock);
+        AnimPool_FreeBlock(preMultQs);
+        AnimPool_FreeBlock(postMultQs);
     }
     FnAnimMemoryMap::Destruct();
 }
@@ -366,7 +374,7 @@ void FnDeltaSingleQ::SetAnimMemoryMap(uint8_t *data) {
 // FUNC_AT(0x00100a30)
 bool FnDeltaSingleQ::GetLength(float *length) {
     EAGL_UNTESTED("FnDeltaSingleQ::GetLength");
-    return DeltaGetLength(anim, length);
+    return DeltaGetLength(SingleQData(anim), length);
 }
 
 // FUNC_AT(0x00100a80)
@@ -388,20 +396,18 @@ bool FnDeltaSingleQ::EvalSQT(float time, float *sqt, void *mask) {
 // FUNC_AT(0x00101c90)
 void FnDeltaSingleQ::InitBuffersAsRequired() {
     EAGL_UNTESTED("FnDeltaSingleQ::InitBuffersAsRequired");
-    typedef void (*EulerToQuat)(const float *angles, float *quat);
-    const EulerToQuat eulerToQuat = (EulerToQuat)0x000fde00u;   // EAGLAnim_EulerToQuat
     if (prevQs != NULL)
         return;
-    uint8_t *d = anim;
-    bins = d + 0x10 + d[6] * 0xe;
-    binSize = (((1 << d[7]) + 1) * d[6] + 1) & ~1;
-    prevQs = prevQBlock = (float *)AnimPool_NewBlock((uint32_t)d[6] << 4);
-    minRanges = d + 0x10;
-    preMultQs = (float *)AnimPool_NewBlock((uint32_t)d[6] << 4);
-    postMultQs = (float *)AnimPool_NewBlock((uint32_t)d[6] << 4);
-    for (int i = 0; i < d[6]; i++) {
+    DeltaSingleQData *d = SingleQData(anim);
+    bins = reinterpret_cast<uint8_t *>(d->ranges + d->bones);
+    binSize = (((1 << d->binLengthPower) + 1) * d->bones + 1) & ~1;
+    prevQs = prevQBlock = static_cast<float *>(AnimPool_NewBlock(d->bones * sizeof(float[4])));
+    minRanges = d->ranges;
+    preMultQs = static_cast<float *>(AnimPool_NewBlock(d->bones * sizeof(float[4])));
+    postMultQs = static_cast<float *>(AnimPool_NewBlock(d->bones * sizeof(float[4])));
+    for (int i = 0; i < d->bones; i++) {
         DeltaSingleQMinRangef r;
-        ((DeltaSingleQMinRange *)(minRanges + i * 0xe))->UnQuantize(&r);
+        minRanges[i].UnQuantize(&r);
         float *pre = preMultQs + i * 4, *post = postMultQs + i * 4;
         float e[3];
         if (r.index == 0) {
@@ -412,21 +418,21 @@ void FnDeltaSingleQ::InitBuffersAsRequired() {
             e[0] = 0.0f;
             e[1] = r.const0;
             e[2] = r.const1;
-            eulerToQuat(e, post);
+            EAGLAnim_EulerToQuat(e, post);
         } else if (r.index == 1) {
             e[0] = r.const0;
             e[1] = 0.0f;
             e[2] = 0.0f;
-            eulerToQuat(e, pre);
+            EAGLAnim_EulerToQuat(e, pre);
             e[0] = 0.0f;
             e[1] = 0.0f;
             e[2] = r.const1;
-            eulerToQuat(e, post);
+            EAGLAnim_EulerToQuat(e, post);
         } else {
             e[0] = r.const0;
             e[1] = r.const1;
             e[2] = 0.0f;
-            eulerToQuat(e, pre);
+            EAGLAnim_EulerToQuat(e, pre);
             post[0] = 0.0f;
             post[1] = 0.0f;
             post[2] = 0.0f;
@@ -441,82 +447,83 @@ void FnDeltaSingleQ::InitBuffersAsRequired() {
 bool FnDeltaSingleQ::EvalSQTMasked(float time, void *mask, float *sqt) {
     EAGL_UNTESTED("FnDeltaSingleQ::EvalSQTMasked");
     InitBuffersAsRequired();
-    uint8_t *d = anim;
-    const uint8_t *boneIdx = BoneIdx(d);
+    DeltaSingleQData *d = SingleQData(anim);
+    const uint8_t *boneIdx = d->boneIdx;
+    auto skip = [&](int i) { return mask != NULL && !InMask(mask, boneIdx[i]); };
     int frame = Truncate(time);
     int k = FindKey(frame, d, prevKey);
-    int shift = d[7];
-    int modMask = (int)(0x7fffffffu >> (31 - shift));
+    int shift = d->binLengthPower;
+    int modMask = 0x7fffffff >> (31 - shift);
     int bin = k >> shift, offset = k & modMask;
     uint8_t *bp = bins + binSize * bin;
+    DeltaSingleQPhysical *physical = reinterpret_cast<DeltaSingleQPhysical *>(bp);
     int cached = prevKey;
-#define SKIP(i) (mask != NULL && !InMask(mask, boneIdx[i]))
     int start;
     if (cached != -1 && bin == cached >> shift && k >= cached) {
         start = cached & modMask;
     } else {
-        for (int i = 0; i < d[6]; i++) {
-            if (SKIP(i))
+        for (int i = 0; i < d->bones; i++) {
+            if (skip(i))
                 continue;
-            int index = *(const uint16_t *)(minRanges + i * 0xe + 0xc);
-            ((DeltaSingleQPhysical *)(bp + i * 2))->UnQuantize(index, prevQs + i * 4);
+            int index = minRanges[i].index;
+            physical[i].UnQuantize(index, prevQs + i * 4);
         }
         start = 0;
     }
     if (start < offset) {
-        const uint8_t *row = bp + (start + 2) * d[6];
+        DeltaSingleQDelta *row = reinterpret_cast<DeltaSingleQDelta *>(bp + (start + 2) * d->bones);
         for (int f = offset - start; f != 0; f--) {
-            for (int i = 0; i < d[6]; i++, row++) {
-                if (SKIP(i))
+            for (int i = 0; i < d->bones; i++, row++) {
+                if (skip(i))
                     continue;
                 DeltaSingleQMinRangef r;
                 float dq[4];
-                ((DeltaSingleQMinRange *)(minRanges + i * 0xe))->UnQuantize(&r);
-                ((DeltaSingleQDelta *)row)->UnQuantize(&r, dq);
+                minRanges[i].UnQuantize(&r);
+                row->UnQuantize(&r, dq);
                 float *v = prevQs + i * 4;
                 for (int c = 0; c < 4; c++)
-                    v[c] = (float)((double)dq[c] + (double)v[c]);
+                    v[c] = dq[c] + v[c];
             }
         }
     }
     prevKey = k;
 
     float s;
-    if (LerpFactor(time, frame, d, k, &s) && k < Keys(d) - 1) {
+    if (LerpFactor(time, frame, d, k, &s) && k < d->keys - 1) {
         int nextBin = (k + 1) >> shift;
         uint8_t *np = bins + binSize * nextBin;
         if (nextBin == bin) {
-            const uint8_t *row = np + (offset + 2) * d[6];
-            for (int i = 0; i < d[6]; i++) {
-                if (SKIP(i))
+            DeltaSingleQDelta *row = reinterpret_cast<DeltaSingleQDelta *>(np + (offset + 2) * d->bones);
+            for (int i = 0; i < d->bones; i++) {
+                if (skip(i))
                     continue;
                 DeltaSingleQMinRangef r;
                 float dq[4], next[4], q[4];
-                ((DeltaSingleQMinRange *)(minRanges + i * 0xe))->UnQuantize(&r);
-                ((DeltaSingleQDelta *)(row + i))->UnQuantize(&r, dq);
+                minRanges[i].UnQuantize(&r);
+                row[i].UnQuantize(&r, dq);
                 const float *v = prevQs + i * 4;
                 for (int c = 0; c < 4; c++)
-                    next[c] = (float)((double)dq[c] + (double)v[c]);
+                    next[c] = dq[c] + v[c];
                 AnimQuatNLerp(s, v, next, q);
                 SingleQOut(this, i, q, SqtQuat(sqt, boneIdx[i]));
             }
         } else {
-            for (int i = 0; i < d[6]; i++) {
-                if (SKIP(i))
+            DeltaSingleQPhysical *nextPhysical = reinterpret_cast<DeltaSingleQPhysical *>(np);
+            for (int i = 0; i < d->bones; i++) {
+                if (skip(i))
                     continue;
                 float next[4], q[4];
-                int index = *(const uint16_t *)(minRanges + i * 0xe + 0xc);
-                ((DeltaSingleQPhysical *)(np + i * 2))->UnQuantize(index, next);
+                int index = minRanges[i].index;
+                nextPhysical[i].UnQuantize(index, next);
                 AnimQuatNLerp(s, prevQs + i * 4, next, q);
                 SingleQOut(this, i, q, SqtQuat(sqt, boneIdx[i]));
             }
         }
     } else {
-        for (int i = 0; i < d[6]; i++)
-            if (!SKIP(i))
+        for (int i = 0; i < d->bones; i++)
+            if (!skip(i))
                 SingleQOut(this, i, prevQs + i * 4, SqtQuat(sqt, boneIdx[i]));
     }
-#undef SKIP
     return true;
 }
 
@@ -525,78 +532,71 @@ FnDeltaSingleQ* FnDeltaSingleQ::ScalarDelete(unsigned flags) {
     EAGL_UNTESTED("FnDeltaSingleQ::ScalarDelete");
     Destruct();
     if (flags & 1)
-        EaglFree(this, 0x30);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// FnDeltaQFast. Data: the header (byte 7 the constant bone count, byte 0x10 the bin length power), a 0x10-byte
-// range record per bone from +0x12, the bins (per bone a 6-byte physical quaternion, then a row of 3-byte deltas
-// per key), the constant bones' indexes and, on a 2-byte boundary, their physical quaternions. The ranges are
-// unquantised once when the anim is set. The next key's quaternions are kept in a second buffer that becomes the
-// first when time reaches it.
+// FnDeltaQFast. Data: DeltaQFastHeader. The ranges are unquantised once when the anim is set. The next key's
+// quaternions are kept in a second buffer that becomes the first when time reaches it.
 // ---------------------------------------------------------------------------------------------------------------
 
 // FUNC_AT(0x00102e30)
-void DeltaQFastMinRange::UnQuantize(float *out) {
+void DeltaQFastMinRange::UnQuantize(DeltaQFastMinRangef *out) {
     EAGL_UNTESTED("DeltaQFastMinRange::UnQuantize");
-    const uint16_t *p = (const uint16_t *)this;
     for (int c = 0; c < 4; c++)
-        out[c] = (float)((double)(int)p[c] * (double)QfRangeScale - (double)kOne);
-    for (int c = 4; c < 8; c++)
-        out[c] = (float)((double)(int)p[c] * (double)QfRangeScale);
+        out->min[c] = float(min[c] * double(kTwoOver65535) - 1.0);
+    for (int c = 0; c < 4; c++)
+        out->range[c] = range[c] * kTwoOver65535;
 }
 
 // FUNC_AT(0x00102f00)
 void DeltaQFastPhysical::UnQuantize(float *q) {
     EAGL_UNTESTED("DeltaQFastPhysical::UnQuantize");
-    const uint16_t *p = (const uint16_t *)this;
     for (int c = 0; c < 3; c++)
-        q[c] = (float)((double)(int)(uint16_t)(p[c] >> 4) * (double)QfPhysScale - (double)kOne);
-    int w = ((p[0] & 15) << 8) + ((p[1] & 15) << 4) + (p[2] & 15);
-    q[3] = (float)((double)w * (double)QfPhysScale - (double)kOne);
+        q[c] = float((xyz[c] >> 4) * double(kTwoOver4095) - 1.0);
+    int w = ((xyz[0] & 15) << 8) + ((xyz[1] & 15) << 4) + (xyz[2] & 15);
+    q[3] = float(w * double(kTwoOver4095) - 1.0);
 }
 
 // FUNC_AT(0x00102fb0)
-void DeltaQFastDelta::UnQuantize(const float *range, float *q) {
+void DeltaQFastDelta::UnQuantize(const DeltaQFastMinRangef *range, float *q) {
     EAGL_UNTESTED("DeltaQFastDelta::UnQuantize");
-    const uint8_t *b = (const uint8_t *)this;
     for (int c = 0; c < 3; c++)
-        q[c] = (float)((double)(int)(b[c] >> 2) * (double)range[4 + c] * (double)QfDeltaScale + (double)range[c]);
-    int w = (uint8_t)(((((b[0] & 3) << 2) + (b[1] & 3)) << 2) + (b[2] & 3));
-    q[3] = (float)((double)w * (double)range[7] * (double)QfDeltaScale + (double)range[3]);
+        q[c] = float((xyz[c] >> 2) * double(range->range[c]) * kOneOver63 + range->min[c]);
+    int w = ((((xyz[0] & 3) << 2) + (xyz[1] & 3)) << 2) + (xyz[2] & 3);
+    q[3] = float(w * double(range->range[3]) * kOneOver63 + range->min[3]);
 }
 
-// Past the bins: the constant bone indexes.
-static uint8_t* QFastConstBoneIdxs(uint8_t *d, int rangeSize) {
-    int shift = d[0x10];
-    uint32_t keys = Keys(d);
-    int n = d[6];
+// Past the bins: the constant bone indexes (both headers' layouts).
+template <typename Header>
+static uint8_t* ConstBoneIdxs(Header *d) {
+    int shift = d->binLengthPower;
+    uint32_t keys = d->keys;
+    int n = d->bones;
     uint32_t unit = 1u << shift;
     uint32_t bins = keys / unit, rem = keys % unit;
-    int binSize = (((int)unit + 1) * n * 3 + 1) & ~1;
-    uint8_t *p = d + binSize * (int)bins + n * rangeSize + 0x12;
-    if ((int)rem > 0)
-        p += ((int)rem + 1) * n * 3;
+    int binSize = ((unit + 1) * n * 3 + 1) & ~1;
+    uint8_t *p = reinterpret_cast<uint8_t *>(d->ranges + n) + binSize * bins;
+    if (int(rem) > 0)
+        p += (rem + 1) * n * 3;
     return p;
 }
 
 // FUNC_AT(0x00103060)
-uint8_t* DeltaQFastHeader::GetConstPhysical() {
+DeltaQFastPhysical* DeltaQFastHeader::GetConstPhysical() {
     EAGL_UNTESTED("DeltaQFastHeader::GetConstPhysical");
-    uint8_t *d = (uint8_t *)this;
-    uintptr_t p = (uintptr_t)QFastConstBoneIdxs(d, 0x10);
-    return (uint8_t *)((p + d[7] + 1) & ~(uintptr_t)1);
+    uintptr_t p = reinterpret_cast<uintptr_t>(ConstBoneIdxs(this));
+    return reinterpret_cast<DeltaQFastPhysical *>((p + constBones + 1) & ~uintptr_t(1));
 }
 
 // FUNC_AT(0x00103230)
-void DeltaQFastHeader::GetArrays(uint8_t **minRanges, uint8_t **bins, uint8_t **constBoneIdxs,
-                                 uint8_t **constPhysical) {
+void DeltaQFastHeader::GetArrays(DeltaQFastMinRange **minRanges, uint8_t **bins, uint8_t **constBoneIdxs,
+                                 DeltaQFastPhysical **constPhysical) {
     EAGL_UNTESTED("DeltaQFastHeader::GetArrays");
-    uint8_t *d = (uint8_t *)this;
-    *minRanges = d + 0x12;
-    *bins = d + 0x12 + d[6] * 0x10;
-    *constBoneIdxs = QFastConstBoneIdxs(d, 0x10);
+    *minRanges = ranges;
+    *bins = reinterpret_cast<uint8_t *>(ranges + bones);
+    *constBoneIdxs = ConstBoneIdxs(this);
     *constPhysical = GetConstPhysical();
 }
 
@@ -626,18 +626,18 @@ void FnDeltaQFast::Destruct() {
     EAGL_UNTESTED("FnDeltaQFast::Destruct");
     vtable = VtDeltaQFast;
     if (prevQBlock != NULL) {
-        FreeSized(prevQBlock);
-        FreeSized(minRangesf);
+        AnimPool_FreeBlock(prevQBlock);
+        AnimPool_FreeBlock(minRangesf);
     }
     if (nextQBlock != NULL)
-        FreeSized(nextQBlock);
+        AnimPool_FreeBlock(nextQBlock);
     FnAnimMemoryMap::Destruct();
 }
 
 // FUNC_AT(0x00101ff0)
 bool FnDeltaQFast::GetLength(float *length) {
     EAGL_UNTESTED("FnDeltaQFast::GetLength");
-    return DeltaGetLength(anim, length);
+    return DeltaGetLength(QFastData(anim), length);
 }
 
 // FUNC_AT(0x00102040)
@@ -649,48 +649,50 @@ void FnDeltaQFast::Eval(float previous, float time, float *out) {
 
 // The next key's quaternions: from its bin's physical values, or the current ones plus a row of deltas.
 // FUNC_AT(0x00102060)
-void FnDeltaQFast::UpdateNextQs(uint8_t *data, int ceilKey, int floorBin, int floorDelta) {
+void FnDeltaQFast::UpdateNextQs(DeltaQFastHeader *data, int ceilKey, int floorBin, int floorDelta) {
     EAGL_UNTESTED("FnDeltaQFast::UpdateNextQs");
     if (ceilKey == nextKey)
         return;
-    int nextBin = ceilKey >> data[0x10];
+    int nextBin = ceilKey >> data->binLengthPower;
     uint8_t *np = bins + binSize * nextBin;
     if (nextBin != floorBin) {
-        for (int i = 0; i < data[6]; i++)
-            ((DeltaQFastPhysical *)(np + i * 6))->UnQuantize(nextQs + i * 4);
+        DeltaQFastPhysical *physical = reinterpret_cast<DeltaQFastPhysical *>(np);
+        for (int i = 0; i < data->bones; i++)
+            physical[i].UnQuantize(nextQs + i * 4);
     } else {
-        const uint8_t *row = np + (floorDelta + 2) * data[6] * 3;
-        for (int i = 0; i < data[6]; i++, row += 3) {
+        DeltaQFastDelta *row = reinterpret_cast<DeltaQFastDelta *>(np + (floorDelta + 2) * data->bones * 3);
+        for (int i = 0; i < data->bones; i++, row++) {
             float dq[4];
-            ((DeltaQFastDelta *)row)->UnQuantize(minRangesf + i * 8, dq);
+            row->UnQuantize(&minRangesf[i], dq);
             for (int c = 0; c < 4; c++)
-                nextQs[i * 4 + c] = (float)((double)dq[c] + (double)prevQs[i * 4 + c]);
+                nextQs[i * 4 + c] = dq[c] + prevQs[i * 4 + c];
         }
     }
     nextKey = ceilKey;
 }
 
 // FUNC_AT(0x00102370)
-void FnDeltaQFast::UpdateNextQsMask(uint8_t *data, int ceilKey, int floorBin, int floorDelta, void *mask) {
+void FnDeltaQFast::UpdateNextQsMask(DeltaQFastHeader *data, int ceilKey, int floorBin, int floorDelta, void *mask) {
     EAGL_UNTESTED("FnDeltaQFast::UpdateNextQsMask");
     if (ceilKey == nextKey)
         return;
-    const uint8_t *boneIdx = BoneIdx(data);
-    int nextBin = ceilKey >> data[0x10];
+    const uint8_t *boneIdx = data->boneIdx;
+    int nextBin = ceilKey >> data->binLengthPower;
     uint8_t *np = bins + binSize * nextBin;
     if (nextBin != floorBin) {
-        for (int i = 0; i < data[6]; i++)
+        DeltaQFastPhysical *physical = reinterpret_cast<DeltaQFastPhysical *>(np);
+        for (int i = 0; i < data->bones; i++)
             if (InMask(mask, boneIdx[i]))
-                ((DeltaQFastPhysical *)(np + i * 6))->UnQuantize(nextQs + i * 4);
+                physical[i].UnQuantize(nextQs + i * 4);
     } else {
-        const uint8_t *row = np + (floorDelta + 2) * data[6] * 3;
-        for (int i = 0; i < data[6]; i++, row += 3) {
+        DeltaQFastDelta *row = reinterpret_cast<DeltaQFastDelta *>(np + (floorDelta + 2) * data->bones * 3);
+        for (int i = 0; i < data->bones; i++, row++) {
             if (!InMask(mask, boneIdx[i]))
                 continue;
             float dq[4];
-            ((DeltaQFastDelta *)row)->UnQuantize(minRangesf + i * 8, dq);
+            row->UnQuantize(&minRangesf[i], dq);
             for (int c = 0; c < 4; c++)
-                nextQs[i * 4 + c] = (float)((double)dq[c] + (double)prevQs[i * 4 + c]);
+                nextQs[i * 4 + c] = dq[c] + prevQs[i * 4 + c];
         }
     }
     nextKey = ceilKey;
@@ -698,71 +700,71 @@ void FnDeltaQFast::UpdateNextQsMask(uint8_t *data, int ceilKey, int floorBin, in
 
 // Rows prevDelta + 2 .. floorDelta + 1 of the bin added on.
 // FUNC_AT(0x001030c0)
-void FnDeltaQFast::AddDelta(uint8_t *bin, uint8_t *data, int prevDelta, int floorDelta, float *qs) {
+void FnDeltaQFast::AddDelta(uint8_t *bin, DeltaQFastHeader *data, int prevDelta, int floorDelta, float *qs) {
     EAGL_UNTESTED("FnDeltaQFast::AddDelta");
-    const uint8_t *row = bin + (prevDelta + 2) * data[6] * 3;
+    DeltaQFastDelta *row = reinterpret_cast<DeltaQFastDelta *>(bin + (prevDelta + 2) * data->bones * 3);
     if (prevDelta >= floorDelta)
         return;
     for (int f = floorDelta - prevDelta; f != 0; f--)
-        for (int i = 0; i < data[6]; i++, row += 3) {
+        for (int i = 0; i < data->bones; i++, row++) {
             float dq[4];
-            ((DeltaQFastDelta *)row)->UnQuantize(minRangesf + i * 8, dq);
+            row->UnQuantize(&minRangesf[i], dq);
             for (int c = 0; c < 4; c++)
-                qs[i * 4 + c] = (float)((double)dq[c] + (double)qs[i * 4 + c]);
+                qs[i * 4 + c] = dq[c] + qs[i * 4 + c];
         }
 }
 
 // Rows prevDelta + 1 down to floorDelta + 2 taken off, the bones last to first.
 // FUNC_AT(0x00103170)
-void FnDeltaQFast::SubDelta(uint8_t *bin, uint8_t *data, int prevDelta, int floorDelta, float *qs) {
+void FnDeltaQFast::SubDelta(uint8_t *bin, DeltaQFastHeader *data, int prevDelta, int floorDelta, float *qs) {
     EAGL_UNTESTED("FnDeltaQFast::SubDelta");
-    const uint8_t *row = bin + (prevDelta + 2) * data[6] * 3 - 3;
+    DeltaQFastDelta *row = reinterpret_cast<DeltaQFastDelta *>(bin + (prevDelta + 2) * data->bones * 3) - 1;
     if (prevDelta - 1 < floorDelta)
         return;
     for (int f = prevDelta - floorDelta; f != 0; f--)
-        for (int i = data[6] - 1; i >= 0; i--, row -= 3) {
+        for (int i = data->bones - 1; i >= 0; i--, row--) {
             float dq[4];
-            ((DeltaQFastDelta *)row)->UnQuantize(minRangesf + i * 8, dq);
+            row->UnQuantize(&minRangesf[i], dq);
             for (int c = 0; c < 4; c++)
-                qs[i * 4 + c] = (float)((double)qs[i * 4 + c] - (double)dq[c]);
+                qs[i * 4 + c] = qs[i * 4 + c] - dq[c];
         }
 }
 
 // FUNC_AT(0x001021a0)
-void FnDeltaQFast::AddDeltaMask(uint8_t *bin, uint8_t *data, int prevDelta, int floorDelta, float *qs,
+void FnDeltaQFast::AddDeltaMask(uint8_t *bin, DeltaQFastHeader *data, int prevDelta, int floorDelta, float *qs,
                                 void *mask) {
     EAGL_UNTESTED("FnDeltaQFast::AddDeltaMask");
-    const uint8_t *boneIdx = BoneIdx(data);
-    const uint8_t *row = bin + (prevDelta + 2) * data[6] * 3;
+    const uint8_t *boneIdx = data->boneIdx;
+    DeltaQFastDelta *row = reinterpret_cast<DeltaQFastDelta *>(bin + (prevDelta + 2) * data->bones * 3);
     if (prevDelta >= floorDelta)
         return;
     for (int f = floorDelta - prevDelta; f != 0; f--)
-        for (int i = 0; i < data[6]; i++, row += 3) {
+        for (int i = 0; i < data->bones; i++, row++) {
             if (!InMask(mask, boneIdx[i]))
                 continue;
             float dq[4];
-            ((DeltaQFastDelta *)row)->UnQuantize(minRangesf + i * 8, dq);
+            row->UnQuantize(&minRangesf[i], dq);
             for (int c = 0; c < 4; c++)
-                qs[i * 4 + c] = (float)((double)dq[c] + (double)qs[i * 4 + c]);
+                qs[i * 4 + c] = dq[c] + qs[i * 4 + c];
         }
 }
 
 // FUNC_AT(0x00102280)
-void FnDeltaQFast::SubDeltaMask(uint8_t *bin, uint8_t *data, int prevDelta, int floorDelta, float *qs,
+void FnDeltaQFast::SubDeltaMask(uint8_t *bin, DeltaQFastHeader *data, int prevDelta, int floorDelta, float *qs,
                                 void *mask) {
     EAGL_UNTESTED("FnDeltaQFast::SubDeltaMask");
-    const uint8_t *boneIdx = BoneIdx(data);
-    const uint8_t *row = bin + (prevDelta + 2) * data[6] * 3 - 3;
+    const uint8_t *boneIdx = data->boneIdx;
+    DeltaQFastDelta *row = reinterpret_cast<DeltaQFastDelta *>(bin + (prevDelta + 2) * data->bones * 3) - 1;
     if (prevDelta - 1 < floorDelta)
         return;
     for (int f = prevDelta - floorDelta; f != 0; f--)
-        for (int i = data[6] - 1; i >= 0; i--, row -= 3) {
+        for (int i = data->bones - 1; i >= 0; i--, row--) {
             if (!InMask(mask, boneIdx[i]))
                 continue;
             float dq[4];
-            ((DeltaQFastDelta *)row)->UnQuantize(minRangesf + i * 8, dq);
+            row->UnQuantize(&minRangesf[i], dq);
             for (int c = 0; c < 4; c++)
-                qs[i * 4 + c] = (float)((double)qs[i * 4 + c] - (double)dq[c]);
+                qs[i * 4 + c] = qs[i * 4 + c] - dq[c];
         }
 }
 
@@ -770,17 +772,17 @@ void FnDeltaQFast::SubDeltaMask(uint8_t *bin, uint8_t *data, int prevDelta, int 
 // FUNC_AT(0x001032e0)
 void FnDeltaQFast::InitBuffers() {
     EAGL_UNTESTED("FnDeltaQFast::InitBuffers");
-    uint8_t *d = anim;
-    uint8_t *minRanges;
-    ((DeltaQFastHeader *)d)->GetArrays(&minRanges, &bins, &constBoneIdxs, &constPhysical);
-    binSize = (((1 << d[0x10]) + 1) * d[6] * 3 + 1) & ~1;
-    if (d[6] == 0)
+    DeltaQFastHeader *d = QFastData(anim);
+    DeltaQFastMinRange *minRanges;
+    d->GetArrays(&minRanges, &bins, &constBoneIdxs, &constPhysical);
+    binSize = (((1 << d->binLengthPower) + 1) * d->bones * 3 + 1) & ~1;
+    if (d->bones == 0)
         return;
-    prevQs = prevQBlock = (float *)AnimPool_NewBlock((uint32_t)d[6] << 4);
-    nextQs = nextQBlock = (float *)AnimPool_NewBlock((uint32_t)d[6] << 4);
-    minRangesf = (float *)AnimPool_NewBlock((uint32_t)d[6] << 5);
-    for (int i = 0; i < d[6]; i++)
-        ((DeltaQFastMinRange *)(minRanges + i * 0x10))->UnQuantize(minRangesf + i * 8);
+    prevQs = prevQBlock = static_cast<float *>(AnimPool_NewBlock(d->bones * sizeof(float[4])));
+    nextQs = nextQBlock = static_cast<float *>(AnimPool_NewBlock(d->bones * sizeof(float[4])));
+    minRangesf = static_cast<DeltaQFastMinRangef *>(AnimPool_NewBlock(d->bones * sizeof(DeltaQFastMinRangef)));
+    for (int i = 0; i < d->bones; i++)
+        minRanges[i].UnQuantize(&minRangesf[i]);
 }
 
 // FUNC_AT(0x00102500)
@@ -793,15 +795,15 @@ void FnDeltaQFast::SetAnimMemoryMap(uint8_t *data) {
 // EvalSQT without and EvalSQTMask with a mask differ in three ways besides the mask tests: only the unmasked one
 // decodes the bin again at its first key (offset 0), and each calls its own delta and next-key helpers.
 static bool QFastEval(FnDeltaQFast *self, float time, float *sqt, void *mask) {
-    uint8_t *d = self->anim;
-    const uint8_t *boneIdx = BoneIdx(d);
-    int n = d[6];
-#define SKIP(i) (mask != NULL && !InMask(mask, boneIdx[i]))
+    DeltaQFastHeader *d = QFastData(self->anim);
+    const uint8_t *boneIdx = d->boneIdx;
+    auto skip = [&](int i) { return mask != NULL && !InMask(mask, boneIdx[i]); };
+    int n = d->bones;
     if (n != 0) {
         int frame = Truncate(time);
         int k = FindKey(frame, d, self->prevKey);
-        int shift = d[0x10];
-        int modMask = (int)(0x7fffffffu >> (31 - shift));
+        int shift = d->binLengthPower;
+        int modMask = 0x7fffffff >> (31 - shift);
         int bin = k >> shift, offset = k & modMask;
         int prevBin = self->prevKey >> shift;
         if (self->nextKey == k) {
@@ -811,7 +813,7 @@ static bool QFastEval(FnDeltaQFast *self, float time, float *sqt, void *mask) {
             self->nextKey = self->prevKey;
         } else {
             if (self->prevKey == k + 1) {
-                for (int i = 0; i < d[6]; i++)
+                for (int i = 0; i < d->bones; i++)
                     Copy4(self->nextQs + i * 4, self->prevQs + i * 4);
                 self->nextKey = self->prevKey;
             }
@@ -821,9 +823,10 @@ static bool QFastEval(FnDeltaQFast *self, float time, float *sqt, void *mask) {
             if (self->prevKey != -1 && bin == prevBin && (mask != NULL || offset != 0) && !restart) {
                 start = self->prevKey & modMask;
             } else {
-                for (int i = 0; i < d[6]; i++)
-                    if (!SKIP(i))
-                        ((DeltaQFastPhysical *)(bp + i * 6))->UnQuantize(self->prevQs + i * 4);
+                DeltaQFastPhysical *physical = reinterpret_cast<DeltaQFastPhysical *>(bp);
+                for (int i = 0; i < d->bones; i++)
+                    if (!skip(i))
+                        physical[i].UnQuantize(self->prevQs + i * 4);
                 start = 0;
             }
             if (start < offset) {
@@ -841,30 +844,29 @@ static bool QFastEval(FnDeltaQFast *self, float time, float *sqt, void *mask) {
         self->prevKey = k;
 
         float s;
-        if (LerpFactor(time, frame, d, k, &s) && k < Keys(d) - 1) {
+        if (LerpFactor(time, frame, d, k, &s) && k < d->keys - 1) {
             if (mask != NULL)
                 self->UpdateNextQsMask(d, k + 1, bin, offset, mask);
             else
                 self->UpdateNextQs(d, k + 1, bin, offset);
-            for (int i = 0; i < d[6]; i++) {
-                if (SKIP(i))
+            for (int i = 0; i < d->bones; i++) {
+                if (skip(i))
                     continue;
                 float *out = SqtQuat(sqt, boneIdx[i]);
                 const float *a = self->prevQs + i * 4, *b = self->nextQs + i * 4;
                 for (int c = 0; c < 4; c++)
-                    out[c] = (float)(((double)b[c] - (double)a[c]) * (double)s + (double)a[c]);
+                    out[c] = float((double(b[c]) - a[c]) * s + a[c]);
             }
         } else {
-            for (int i = 0; i < d[6]; i++)
-                if (!SKIP(i))
+            for (int i = 0; i < d->bones; i++)
+                if (!skip(i))
                     Copy4(SqtQuat(sqt, boneIdx[i]), self->prevQs + i * 4);
         }
     }
-#undef SKIP
-    for (int j = 0; j < d[7]; j++) {
+    for (int j = 0; j < d->constBones; j++) {
         int bone = self->constBoneIdxs[j];
         if (mask == NULL || InMask(mask, bone))
-            ((DeltaQFastPhysical *)(self->constPhysical + j * 6))->UnQuantize(SqtQuat(sqt, bone));
+            self->constPhysical[j].UnQuantize(SqtQuat(sqt, bone));
     }
     return true;
 }
@@ -899,84 +901,80 @@ FnDeltaQFast* FnDeltaQFast::ScalarDelete(unsigned flags) {
     EAGL_UNTESTED("FnDeltaQFast::ScalarDelete");
     Destruct();
     if (flags & 1)
-        EaglFree(this, 0x40);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// FnDeltaQ. Data as FnDeltaQFast's with 0xc-byte range records (min xyz, range xyz) kept quantised, physical
-// values of x (15 bits, w's sign in bit 0), y and z, and 3-byte deltas of x (7 bits, w's sign in bit 0), y and z.
-// w is recovered from xyz after the deltas are summed. With a mask the cache is dropped after every call.
+// FnDeltaQ. Data: DeltaQHeader, as FnDeltaQFast's with DeltaQMinRange records (min xyz, range xyz) kept
+// quantised, DeltaQPhysical values and DeltaQDelta rows. w is recovered from xyz after the deltas are summed. With
+// a mask the cache is dropped after every call.
 // ---------------------------------------------------------------------------------------------------------------
 
 // FUNC_AT(0x00103fa0)
-void DeltaQMinRange::UnQuantize(float *out) {
+void DeltaQMinRange::UnQuantize(DeltaQMinRangef *out) {
     EAGL_UNTESTED("DeltaQMinRange::UnQuantize");
-    const uint16_t *p = (const uint16_t *)this;
-    double k = (double)QRangeScale + (double)QRangeScale;
+    constexpr double k = double(kOneOver65535) + kOneOver65535;
     for (int c = 0; c < 3; c++)
-        out[c] = (float)((double)(int)p[c] * k - (double)kOne);
-    for (int c = 3; c < 6; c++)
-        out[c] = (float)((double)(int)p[c] * k);
+        out->min[c] = float(min[c] * k - 1.0);
+    for (int c = 0; c < 3; c++)
+        out->range[c] = float(range[c] * k);
 }
 
 // FUNC_AT(0x001040a0)
 void DeltaQPhysical::UnQuantize(float *q) {
     EAGL_UNTESTED("DeltaQPhysical::UnQuantize");
-    const uint16_t *p = (const uint16_t *)this;
-    double k = (double)QRangeScale + (double)QRangeScale;
-    double kx = (double)QPhysScaleX + (double)QPhysScaleX;
-    q[0] = (float)((double)(int)(uint16_t)(p[0] >> 1) * kx - (double)kOne);
-    q[1] = (float)((double)(int)p[1] * k - (double)kOne);
-    q[2] = (float)((double)(int)p[2] * k - (double)kOne);
-    DeltaQRecoverW(*(const uint8_t *)this & 1, q);
+    constexpr double k = double(kOneOver65535) + kOneOver65535;
+    constexpr double kx = double(kOneOver32767) + kOneOver32767;
+    q[0] = float((xyz[0] >> 1) * kx - 1.0);
+    q[1] = float(xyz[1] * k - 1.0);
+    q[2] = float(xyz[2] * k - 1.0);
+    DeltaQRecoverW(xyz[0] & 1, q);
 }
 
 // The next key's physical value, as DeltaQPhysical::UnQuantize but with its own order of the squares (x, z, y).
-static void QPhysicalInline(const uint16_t *p, float *q) {
-    double k = (double)QRangeScale + (double)QRangeScale;
-    double kx = (double)QPhysScaleX + (double)QPhysScaleX;
-    q[0] = (float)((double)(int)(uint16_t)(p[0] >> 1) * kx - (double)kOne);
-    q[1] = (float)((double)(int)p[1] * k - (double)kOne);
-    q[2] = (float)((double)(int)p[2] * k - (double)kOne);
-    double ss = (double)q[0] * (double)q[0] + (double)q[2] * (double)q[2];
-    ss = ss + (double)q[1] * (double)q[1];
-    if (ss > (double)kOne) {
-        double r = (double)kOne / sqrt(ss);
+static void QPhysicalInline(const DeltaQPhysical *p, float *q) {
+    constexpr double k = double(kOneOver65535) + kOneOver65535;
+    constexpr double kx = double(kOneOver32767) + kOneOver32767;
+    q[0] = float((p->xyz[0] >> 1) * kx - 1.0);
+    q[1] = float(p->xyz[1] * k - 1.0);
+    q[2] = float(p->xyz[2] * k - 1.0);
+    double ss = double(q[0]) * q[0] + double(q[2]) * q[2];
+    ss = ss + double(q[1]) * q[1];
+    if (ss > 1.0) {
+        double r = 1.0 / sqrt(ss);
         q[3] = 0.0f;
-        q[0] = (float)((double)q[0] * r);
-        q[1] = (float)((double)q[1] * r);
-        q[2] = (float)((double)q[2] * r);
+        q[0] = float(q[0] * r);
+        q[1] = float(q[1] * r);
+        q[2] = float(q[2] * r);
     } else {
-        q[3] = (float)sqrt((double)kOne - ss);
-        if (*(const uint8_t *)p & 1)
+        q[3] = float(sqrt(1.0 - ss));
+        if (p->xyz[0] & 1)
             q[3] = -q[3];
     }
 }
 
 // A delta's x and y (unrounded) and z (rounded to float).
-static void QDelta(const uint8_t *row, const float *range, double *dx, double *dy, float *dz) {
-    *dx = (double)(int)(row[0] >> 1) * (double)range[3] * (double)QDeltaScaleX + (double)range[0];
-    *dy = (double)(int)row[1] * (double)range[4] * (double)QDeltaScale + (double)range[1];
-    *dz = (float)((double)(int)row[2] * (double)range[5] * (double)QDeltaScale + (double)range[2]);
+static void QDelta(const DeltaQDelta *row, const DeltaQMinRangef *range, double *dx, double *dy, float *dz) {
+    *dx = (row->xyz[0] >> 1) * double(range->range[0]) * kOneOver127 + range->min[0];
+    *dy = row->xyz[1] * double(range->range[1]) * kOneOver255 + range->min[1];
+    *dz = float(row->xyz[2] * double(range->range[2]) * kOneOver255 + range->min[2]);
 }
 
 // FUNC_AT(0x00104120)
-uint8_t* DeltaQHeader::GetConstPhysical() {
+DeltaQPhysical* DeltaQHeader::GetConstPhysical() {
     EAGL_UNTESTED("DeltaQHeader::GetConstPhysical");
-    uint8_t *d = (uint8_t *)this;
-    uintptr_t p = (uintptr_t)QFastConstBoneIdxs(d, 0xc);
-    return (uint8_t *)((p + d[7] + 1) & ~(uintptr_t)1);
+    uintptr_t p = reinterpret_cast<uintptr_t>(ConstBoneIdxs(this));
+    return reinterpret_cast<DeltaQPhysical *>((p + constBones + 1) & ~uintptr_t(1));
 }
 
 // FUNC_AT(0x00104180)
-void DeltaQHeader::GetArrays(uint8_t **minRanges, uint8_t **bins, uint8_t **constBoneIdxs,
-                             uint8_t **constPhysical) {
+void DeltaQHeader::GetArrays(DeltaQMinRange **minRanges, uint8_t **bins, uint8_t **constBoneIdxs,
+                             DeltaQPhysical **constPhysical) {
     EAGL_UNTESTED("DeltaQHeader::GetArrays");
-    uint8_t *d = (uint8_t *)this;
-    *minRanges = d + 0x12;
-    *bins = d + 0x12 + d[6] * 0xc;
-    *constBoneIdxs = QFastConstBoneIdxs(d, 0xc);
+    *minRanges = ranges;
+    *bins = reinterpret_cast<uint8_t *>(ranges + bones);
+    *constBoneIdxs = ConstBoneIdxs(this);
     *constPhysical = GetConstPhysical();
 }
 
@@ -1002,7 +1000,7 @@ void FnDeltaQ::Destruct() {
     EAGL_UNTESTED("FnDeltaQ::Destruct");
     vtable = VtDeltaQ;
     if (prevQBlock != NULL)
-        FreeSized(prevQBlock);
+        AnimPool_FreeBlock(prevQBlock);
     FnAnimMemoryMap::Destruct();
 }
 
@@ -1015,7 +1013,7 @@ void FnDeltaQ::SetAnimMemoryMap(uint8_t *data) {
 // FUNC_AT(0x00103430)
 bool FnDeltaQ::GetLength(float *length) {
     EAGL_UNTESTED("FnDeltaQ::GetLength");
-    return DeltaGetLength(anim, length);
+    return DeltaGetLength(QData(anim), length);
 }
 
 // FUNC_AT(0x00103480)
@@ -1036,13 +1034,13 @@ void FnDeltaQ::InitBuffersAsRequired() {
     EAGL_UNTESTED("FnDeltaQ::InitBuffersAsRequired");
     if (bins != NULL)
         return;
-    uint8_t *d = anim;
-    uint8_t *ranges;
-    ((DeltaQHeader *)d)->GetArrays(&ranges, &bins, &constBoneIdxs, &constPhysical);
-    binSize = (((1 << d[0x10]) + 1) * d[6] * 3 + 1) & ~1;
-    if (d[6] == 0)
+    DeltaQHeader *d = QData(anim);
+    DeltaQMinRange *ranges;
+    d->GetArrays(&ranges, &bins, &constBoneIdxs, &constPhysical);
+    binSize = (((1 << d->binLengthPower) + 1) * d->bones * 3 + 1) & ~1;
+    if (d->bones == 0)
         return;
-    prevQs = prevQBlock = (float *)AnimPool_NewBlock((uint32_t)d[6] << 4);
+    prevQs = prevQBlock = static_cast<float *>(AnimPool_NewBlock(d->bones * sizeof(float[4])));
     minRanges = ranges;
 }
 
@@ -1052,14 +1050,14 @@ void FnDeltaQ::InitBuffersAsRequired() {
 bool FnDeltaQ::EvalSQTMasked(float time, void *mask, float *sqt) {
     EAGL_UNTESTED("FnDeltaQ::EvalSQTMasked");
     InitBuffersAsRequired();
-    uint8_t *d = anim;
-    const uint8_t *boneIdx = BoneIdx(d);
-#define SKIP(i) (mask != NULL && !InMask(mask, boneIdx[i]))
-    if (d[6] != 0) {
+    DeltaQHeader *d = QData(anim);
+    const uint8_t *boneIdx = d->boneIdx;
+    auto skip = [&](int i) { return mask != NULL && !InMask(mask, boneIdx[i]); };
+    if (d->bones != 0) {
         int frame = Truncate(time);
         int k = FindKey(frame, d, prevKey);
-        int shift = d[0x10];
-        int modMask = (int)(0x7fffffffu >> (31 - shift));
+        int shift = d->binLengthPower;
+        int modMask = 0x7fffffff >> (31 - shift);
         int bin = k >> shift, offset = k & modMask;
         int prevBin = prevKey >> shift;
         uint8_t *bp = bins + binSize * bin;
@@ -1068,107 +1066,109 @@ bool FnDeltaQ::EvalSQTMasked(float time, void *mask, float *sqt) {
         if (prevKey != -1 && bin == prevBin && offset != 0 && !restart) {
             start = prevKey & modMask;
         } else {
-            for (int i = 0; i < d[6]; i++)
-                if (!SKIP(i))
-                    ((DeltaQPhysical *)(bp + i * 6))->UnQuantize(prevQs + i * 4);
+            DeltaQPhysical *physical = reinterpret_cast<DeltaQPhysical *>(bp);
+            for (int i = 0; i < d->bones; i++)
+                if (!skip(i))
+                    physical[i].UnQuantize(prevQs + i * 4);
             start = 0;
         }
         if (start != offset) {
             if (start < offset) {
-                const uint8_t *row = bp + (start + 2) * d[6] * 3;
+                const DeltaQDelta *row = reinterpret_cast<const DeltaQDelta *>(bp + (start + 2) * d->bones * 3);
                 for (int f = offset - start; f != 0; f--)
-                    for (int i = 0; i < d[6]; i++, row += 3) {
-                        if (SKIP(i))
+                    for (int i = 0; i < d->bones; i++, row++) {
+                        if (skip(i))
                             continue;
-                        float range[6];
+                        DeltaQMinRangef range;
                         double dx, dy;
                         float dz;
-                        ((DeltaQMinRange *)(minRanges + i * 0xc))->UnQuantize(range);
-                        QDelta(row, range, &dx, &dy, &dz);
+                        minRanges[i].UnQuantize(&range);
+                        QDelta(row, &range, &dx, &dy, &dz);
                         float *v = prevQs + i * 4;
-                        v[0] = (float)(dx + (double)v[0]);
-                        v[1] = (float)(dy + (double)v[1]);
-                        v[2] = (float)((double)dz + (double)v[2]);
+                        v[0] = float(dx + v[0]);
+                        v[1] = float(dy + v[1]);
+                        v[2] = dz + v[2];
                     }
             } else {
-                const uint8_t *row = bp + (start + 2) * d[6] * 3 - 3;
+                const DeltaQDelta *row = reinterpret_cast<const DeltaQDelta *>(bp + (start + 2) * d->bones * 3) - 1;
                 if (start - 1 >= offset)
                     for (int f = start - offset; f != 0; f--)
-                        for (int i = d[6] - 1; i >= 0; i--, row -= 3) {
-                            if (SKIP(i))
+                        for (int i = d->bones - 1; i >= 0; i--, row--) {
+                            if (skip(i))
                                 continue;
-                            float range[6];
+                            DeltaQMinRangef range;
                             double dx, dy;
                             float dz;
-                            ((DeltaQMinRange *)(minRanges + i * 0xc))->UnQuantize(range);
-                            QDelta(row, range, &dx, &dy, &dz);
+                            minRanges[i].UnQuantize(&range);
+                            QDelta(row, &range, &dx, &dy, &dz);
                             float *v = prevQs + i * 4;
-                            v[0] = (float)((double)v[0] - dx);
-                            v[1] = (float)((double)v[1] - dy);
-                            v[2] = (float)((double)v[2] - (double)dz);
+                            v[0] = float(v[0] - dx);
+                            v[1] = float(v[1] - dy);
+                            v[2] = v[2] - dz;
                         }
             }
             // w from the summed xyz, its sign from the key's row (inline DeltaQRecoverW in the original)
-            const uint8_t *row = bp + (offset + 1) * d[6] * 3;
-            for (int i = 0; i < d[6]; i++, row += 3)
-                if (!SKIP(i))
-                    DeltaQRecoverW(row[0] & 1, prevQs + i * 4);
+            const DeltaQDelta *row = reinterpret_cast<const DeltaQDelta *>(bp + (offset + 1) * d->bones * 3);
+            for (int i = 0; i < d->bones; i++, row++)
+                if (!skip(i))
+                    DeltaQRecoverW(row->xyz[0] & 1, prevQs + i * 4);
         }
         prevKey = k;
 
         float s;
-        if (LerpFactor(time, frame, d, k, &s) && k < Keys(d) - 1) {
+        if (LerpFactor(time, frame, d, k, &s) && k < d->keys - 1) {
             int nextBin = (k + 1) >> shift;
             uint8_t *np = bins + binSize * nextBin;
             if (nextBin == bin) {
-                const uint8_t *row = np + (offset + 2) * d[6] * 3;
-                for (int i = 0; i < d[6]; i++, row += 3) {
-                    if (SKIP(i))
+                const DeltaQDelta *row = reinterpret_cast<const DeltaQDelta *>(np + (offset + 2) * d->bones * 3);
+                for (int i = 0; i < d->bones; i++, row++) {
+                    if (skip(i))
                         continue;
-                    float range[6], next[4];
+                    DeltaQMinRangef range;
+                    float next[4];
                     double dx, dy;
                     float dz;
-                    ((DeltaQMinRange *)(minRanges + i * 0xc))->UnQuantize(range);
-                    QDelta(row, range, &dx, &dy, &dz);
+                    minRanges[i].UnQuantize(&range);
+                    QDelta(row, &range, &dx, &dy, &dz);
                     const float *v = prevQs + i * 4;
-                    next[0] = (float)(dx + (double)v[0]);
-                    next[1] = (float)(dy + (double)v[1]);
-                    double z = (double)dz + (double)v[2];
-                    next[2] = (float)z;
-                    double ss = z * (double)next[2] + (double)next[1] * (double)next[1];
-                    ss = ss + (double)next[0] * (double)next[0];
-                    if (ss > (double)kOne) {
-                        double r = (double)kOne / sqrt(ss);
+                    next[0] = float(dx + v[0]);
+                    next[1] = float(dy + v[1]);
+                    double z = double(dz) + v[2];
+                    next[2] = float(z);
+                    double ss = z * next[2] + double(next[1]) * next[1];
+                    ss = ss + double(next[0]) * next[0];
+                    if (ss > 1.0) {
+                        double r = 1.0 / sqrt(ss);
                         next[3] = 0.0f;
-                        next[0] = (float)((double)next[0] * r);
-                        next[1] = (float)((double)next[1] * r);
-                        next[2] = (float)(r * (double)next[2]);
+                        next[0] = float(next[0] * r);
+                        next[1] = float(next[1] * r);
+                        next[2] = float(r * next[2]);
                     } else {
-                        next[3] = (float)sqrt((double)kOne - ss);
-                        if (row[0] & 1)
+                        next[3] = float(sqrt(1.0 - ss));
+                        if (row->xyz[0] & 1)
                             next[3] = -next[3];
                     }
                     AnimQuatNLerp(s, v, next, SqtQuat(sqt, boneIdx[i]));
                 }
             } else {
-                for (int i = 0; i < d[6]; i++) {
-                    if (SKIP(i))
+                DeltaQPhysical *physical = reinterpret_cast<DeltaQPhysical *>(np);
+                for (int i = 0; i < d->bones; i++) {
+                    if (skip(i))
                         continue;
                     float next[4];
-                    QPhysicalInline((const uint16_t *)(np + i * 6), next);
+                    QPhysicalInline(&physical[i], next);
                     AnimQuatNLerp(s, prevQs + i * 4, next, SqtQuat(sqt, boneIdx[i]));
                 }
             }
         } else {
-            for (int i = 0; i < d[6]; i++)
-                if (!SKIP(i))
+            for (int i = 0; i < d->bones; i++)
+                if (!skip(i))
                     Copy4(SqtQuat(sqt, boneIdx[i]), prevQs + i * 4);
         }
     }
-    for (int j = 0; j < d[7]; j++)
-        if (!SKIP(j))
-            ((DeltaQPhysical *)(constPhysical + j * 6))->UnQuantize(SqtQuat(sqt, constBoneIdxs[j]));
-#undef SKIP
+    for (int j = 0; j < d->constBones; j++)
+        if (!skip(j))
+            constPhysical[j].UnQuantize(SqtQuat(sqt, constBoneIdxs[j]));
     if (mask != NULL)
         prevKey = -1;
     return true;
@@ -1179,6 +1179,6 @@ FnDeltaQ* FnDeltaQ::ScalarDelete(unsigned flags) {
     EAGL_UNTESTED("FnDeltaQ::ScalarDelete");
     Destruct();
     if (flags & 1)
-        EaglFree(this, 0x30);
+        EaglFree(this, sizeof(*this));
     return this;
 }

@@ -1,11 +1,16 @@
 #include "RenderMethod.h"
 
 #include "Loader.h"
+#include "Model.h"
+#include "Tar.h"
 #include "Transform.h"
+#include "View.h"
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"
+#include "../../helpers.h"
 
 #include <emmintrin.h>
+#include <stddef.h>
 #include <string.h>
 #include <xmmintrin.h>
 
@@ -13,15 +18,15 @@
 // EAGL's render methods (docs/driving/eagl.md 2.8, 2.9, 3.3, 4.6). A RenderMethod is a packet stream - a header
 // dword (opcode << 16 | length in dwords) and operands, ended by a zero header - plus its shader variants.
 // RenderMethod::Draw runs the stream over a GeoPrim: it keeps the method, the GeoPrim's parameter cursor and the
-// packet cursor in three globals (0x002401bc, 0x002401c0, 0x002401c4) and calls each packet's handler through the
-// opcode table at 0x001ce700. The table is left as it is (it points at the originals' addresses, which jump to the
-// handlers here), so a handler stays patchable. Handlers take no arguments; most read one 8-byte parameter for the
-// current variation (packet[1] * CurrentVariation + parameter.data) and step the parameter cursor.
+// packet cursor in three globals (Interp, at 0x002401bc) and calls each packet's handler through the opcode table
+// at 0x001ce700. The table is left as it is (it points at the originals' addresses, which jump to the handlers
+// here), so a handler stays patchable. Handlers take no arguments; most read one 8-byte parameter for the current
+// variation (parameter.data + packet.variationStride * CurrentVariation) and step the parameter cursor.
 //
 // Every D3D8 call goes to the entry point's original address (our seam replaces it), with the original's
 // convention: stdcall, except SetVertexShaderConstant1/4 (ECX register, EDX data) and NotInline (the same plus the
 // dword count on the stack). The direct writes into D3D8's state are the stream source and shader caches EAGL keeps
-// itself (0x00240470..0x002404c0); this module writes none of D3D8's own tables.
+// itself (Cache, 0x00240470..0x00240508); this module writes none of D3D8's own tables.
 //
 // The originals call EAGL::Device::Get (0x000e8a40, "mov eax, [0x0023fb60]; ret") before and after most D3D calls
 // and throw the result away; those calls have no effect and are left out. Where an original tail-jumps to it, it
@@ -42,241 +47,186 @@ using namespace EAGL;
 
 namespace {
 
-inline uint32_t &U32(uint32_t address) {
-    return *(uint32_t *)(uintptr_t)address;
-}
+// ---- the interpreter's globals
 
-inline uint8_t &U8(uint32_t address) {
-    return *(uint8_t *)(uintptr_t)address;
-}
+// The interpreter's state, at 0x002401bc: Draw's method and cursors, and opcode 2's stream description
+struct InterpreterState {
+    RenderMethod *method;            // +0x00 the render method running
+    GeoPrimParam *param;             // +0x04 the parameter cursor
+    Packet *packet;                  // +0x08 the packet cursor
+    uint32_t streamVertexCount;      // +0x0c the current stream (opcode 2): vertex count
+    uint32_t streamNoCopy;           // +0x10   nonzero: opcode 11 does not copy the vertices
+    uint32_t streamUser;             // +0x14   nonzero: opcode 11 draws from the caller's memory
+};
+static_assert(sizeof(InterpreterState) == 0x18, "the interpreter's globals run to 0x002401d4");
 
-inline uint32_t Addr(const void *p) {
-    return (uint32_t)(uintptr_t)p;
-}
+// What EAGL last sent D3D8, at 0x00240470: the wrappers skip a call that would send the same again
+struct DeviceCache {
+    uint32_t primitiveType;          // +0x00 opcode 16's, for the draws
+    uint32_t pixelShader;            // +0x04 the handles in use
+    uint32_t vertexShader;           // +0x08
+    uint32_t unknown0c;              // +0x0c
+    D3DResource *streams[16];        // +0x10 the stream sources
+    uint32_t strides[16];            // +0x50 their strides
+    const uint16_t *indexData;       // +0x90 opcode 14's index data
+    uint32_t indexBase;              // +0x94
+};
+static_assert(offsetof(DeviceCache, streams) == 0x10, "the stream sources are at 0x00240480");
+static_assert(offsetof(DeviceCache, strides) == 0x50, "the strides are at 0x002404c0");
+static_assert(offsetof(DeviceCache, indexData) == 0x90, "the index data is at 0x00240500");
+static_assert(sizeof(DeviceCache) == 0x98, "the device cache runs to 0x00240508");
 
-// EAGL's allocator hooks
-inline void *EaglMalloc(uint32_t size, uint32_t name) {
-    return ((void *(*)(uint32_t, const char *))U32(0x001caf68))(size, (const char *)(uintptr_t)name);
-}
+#define Interp (*(InterpreterState *)0x002401bc)
+#define Cache (*(DeviceCache *)0x00240470)
+#define CurrentVariation U32_AT(0x0023ff60)                 // EAGLInternal::CurrentVariation
+#define MethodList (*(EAGL::RenderMethod **)0x0023ff20)    // constructed render methods (the static initialisers')
+#define ChildList (*(EAGL::RenderMethod **)0x0023ff24)     // child render methods waiting for their parent's shaders
+#define DeviceCreated U32_AT(0x0023ff18)
+#define SkinSource (*(const EAGL::SkinVertex **)0x00240804)   // opcode 31's skinning records
+#define SkinCount I32_AT(0x00240808)                        //   and their count
+#define VertexBufferRegistered U8_AT(0x00240814)            // a vertex buffer was registered since the last draw
+#define PaletteScratch ((float *)0x00240830)                // the matrix palette scratch, 16 floats a matrix
+#define D3DPushBufferCursor (*(const uint16_t **)0x00175420)   // D3D8's push-buffer pointer
 
-inline void EaglFree(void *p, uint32_t size) {
-    ((void (*)(void *, uint32_t))U32(0x001caf6c))(p, size);
-}
+// The handlers, called by opcode
+typedef void (*OpcodeHandler)();
+#define OpcodeTable ((const OpcodeHandler *)0x001ce700)
 
-inline void BuiltinDelete(void *p) {
-    ((void (*)(void *))0x001146e0)(p);   // __builtin_delete
-}
+// EAGL's allocator hooks (eagl_alloc / eagl_free until RRenderer overrides them)
+typedef void *(*EaglAllocHook)(uint32_t size, const char *name);
+typedef void (*EaglFreeHook)(void *pointer, uint32_t size);
+#define EaglAlloc (*(EaglAllocHook *)0x001caf68)
+#define EaglFree (*(EaglFreeHook *)0x001caf6c)
 
-// Allocation names and strings, the original's
-const uint32_t kNamePCode = 0x001cda70;          // "EAGL::RenderMethod(RenderMethod &parent) allocating PCode block"
-const uint32_t kNameVSArray = 0x001cdb00;        // "EAGL::VertexShader *"
-const uint32_t kNamePSArray = 0x001cdb18;        // "EAGL::PixelShader *"
-const uint32_t kNameVSNew = 0x001cd144;          // "EAGL::VertexShader new"
-const uint32_t kNamePSNew = 0x001cd15c;          // "EAGL::PixelShader new"
-const uint32_t kNameUserVar = 0x001ce3a0;        // "mUserVarData"
-const uint32_t kNameVBNew = 0x001ce798;          // "EAGL::VertexBuffer new"
-const uint32_t kNameD3DVB = 0x001ce7b0;          // "IDirect3DVertexBuffer8"
-const uint32_t kStrPreMorph = 0x001ce6f0;        // "PreMorph"
+// The original's allocation names, passed by address as it does (the allocator hook is given the pointer)
+#define NamePCode ((const char *)0x001cda70)     // "EAGL::RenderMethod(RenderMethod &parent) allocating PCode block"
+#define NameVSArray ((const char *)0x001cdb00)   // "EAGL::VertexShader *"
+#define NamePSArray ((const char *)0x001cdb18)   // "EAGL::PixelShader *"
+#define NameVSNew ((const char *)0x001cd144)     // "EAGL::VertexShader new"
+#define NamePSNew ((const char *)0x001cd15c)     // "EAGL::PixelShader new"
+#define NameUserVar ((const char *)0x001ce3a0)   // "mUserVarData"
+#define NameVBNew ((const char *)0x001ce798)     // "EAGL::VertexBuffer new"
+#define NameD3DVB ((const char *)0x001ce7b0)     // "IDirect3DVertexBuffer8"
 
-// Globals
-const uint32_t kMethodList = 0x0023ff20;   // constructed render methods (the static initialisers')
-const uint32_t kChildList = 0x0023ff24;          // child render methods waiting for their parent's shaders
-const uint32_t kDeviceCreated = 0x0023ff18;
-const uint32_t kVariation = 0x0023ff60;          // EAGLInternal::CurrentVariation
-const uint32_t kMethod = 0x002401bc;             // interpreter: render method
-const uint32_t kParams = 0x002401c0;             //              parameter cursor
-const uint32_t kPackets = 0x002401c4;            //              packet cursor
-const uint32_t kStreamCount = 0x002401c8;        // the current stream (opcode 2): vertex count
-const uint32_t kStreamNoCopy = 0x002401cc;       //   nonzero: opcode 11 does not copy the vertices
-const uint32_t kStreamUser = 0x002401d0;         //   nonzero: opcode 11 draws from the caller's memory
-const uint32_t kPrimitive = 0x00240470;
-const uint32_t kPixelShaderInUse = 0x00240474;
-const uint32_t kVertexShaderInUse = 0x00240478;
-const uint32_t kStreams = 0x00240480;            // stream sources 0..15
-const uint32_t kStrides = 0x002404c0;            // their strides
-const uint32_t kIndexData = 0x00240500;
-const uint32_t kIndexBase = 0x00240504;
-const uint32_t kSkinSource = 0x00240804;
-const uint32_t kSkinCount = 0x00240808;
-const uint32_t kRegistered = 0x00240814;         // a vertex buffer was registered since the last draw
-const uint32_t kPalette = 0x00240830;            // matrix palette scratch, 64 bytes a matrix
-const uint32_t kOpcodeTable = 0x001ce700;
+// DrawGouraud's and DrawTextured's shaders, in the original's data
+#define GouraudVSDeclaration ((const void *)0x001ce218)
+#define GouraudVSFunction ((const void *)0x001ce228)
+#define GouraudPSDefinition ((const void *)0x001ce2b0)
+#define TexturedVSDeclaration ((const void *)0x001ce078)
+#define TexturedVSFunction ((const void *)0x001ce090)
+#define TexturedPSDefinition ((const void *)0x001ce128)
 
 // ---- D3D8 entry points, by their original addresses
-inline void D3D_SetStreamSource(uint32_t stream, void *buffer, uint32_t stride) {
-    ((void (__stdcall *)(uint32_t, void *, uint32_t))0x0016a9c0)(stream, buffer, stride);
-}
-inline void D3D_BlockUntilNotBusy(void *resource) {
-    ((void (__stdcall *)(void *))0x001693d0)(resource);
-}
-inline void D3D_Register(void *resource, void *base) {
-    ((void (__stdcall *)(void *, void *))0x001693a0)(resource, base);
-}
-inline void D3D_Release(void *resource) {
-    ((uint32_t (__stdcall *)(void *))0x00169230)(resource);
-}
-inline uint32_t D3D_IsBusy(void *resource) {
-    return ((uint32_t (__stdcall *)(void *))0x00169310)(resource);
-}
-inline void D3D_RunPushBuffer(void *pushBuffer, void *fixup) {
-    ((void (__stdcall *)(void *, void *))0x0016baa0)(pushBuffer, fixup);
-}
-inline void D3D_SetVertexShader(uint32_t handle) {
-    ((void (__stdcall *)(uint32_t))0x0016ad90)(handle);
-}
-inline void D3D_SetPixelShader(uint32_t handle) {
-    ((void (__stdcall *)(uint32_t))0x0016af60)(handle);
-}
-inline void D3D_SetVertexShaderConstant1(int reg, const void *data) {
-    ((void (__fastcall *)(int, const void *))0x0016a790)(reg, data);
-}
-inline void D3D_SetVertexShaderConstant4(int reg, const void *data) {
-    ((void (__fastcall *)(int, const void *))0x0016a7f0)(reg, data);
-}
-inline void D3D_SetVertexShaderConstantNotInline(int reg, const void *data, uint32_t dwords) {
-    ((void (__fastcall *)(int, const void *, uint32_t))0x0016a980)(reg, data, dwords);
-}
-inline void D3D_SetIndices(void *indices, uint32_t baseVertex) {
-    ((void (__stdcall *)(void *, uint32_t))0x00166a70)(indices, baseVertex);
-}
-inline void D3D_SetPixelShaderConstant(uint32_t reg, const void *data, uint32_t count) {
-    ((void (__stdcall *)(uint32_t, const void *, uint32_t))0x0016b160)(reg, data, count);
-}
-inline void D3D_DrawVertices(uint32_t primitive, uint32_t start, uint32_t count) {
-    ((void (__stdcall *)(uint32_t, uint32_t, uint32_t))0x0016b620)(primitive, start, count);
-}
-inline void D3D_DrawIndexedVertices(uint32_t primitive, uint32_t count, const void *indices) {
-    ((void (__stdcall *)(uint32_t, uint32_t, const void *))0x0016b6c0)(primitive, count, indices);
-}
-inline void *D3D_CreateVertexBuffer2(uint32_t length) {
-    return ((void *(__stdcall *)(uint32_t))0x0016b470)(length);
-}
-inline void *D3D_CreateIndexBuffer2(uint32_t length) {
-    return ((void *(__stdcall *)(uint32_t))0x0016b430)(length);
-}
-inline uint8_t *D3D_VertexBufferLock2(void *buffer, uint32_t flags) {
-    return ((uint8_t *(__stdcall *)(void *, uint32_t))0x0016b4c0)(buffer, flags);
-}
-inline void XG_SetVertexBufferHeader(uint32_t length, uint32_t usage, uint32_t fvf, uint32_t pool, void *buffer,
-                                     uint32_t data) {
-    ((void (__stdcall *)(uint32_t, uint32_t, uint32_t, uint32_t, void *, uint32_t))0x0017a8d6)(
-        length, usage, fvf, pool, buffer, data);
-}
-inline void D3D_CreateVertexShader(const void *declaration, const void *function, uint32_t *handle, uint32_t usage) {
-    ((uint32_t (__stdcall *)(const void *, const void *, uint32_t *, uint32_t))0x0016a650)(declaration, function,
-                                                                                         handle, usage);
-}
-inline void D3D_DeleteVertexShader(uint32_t handle) {
-    ((void (__stdcall *)(uint32_t))0x0016ac70)(handle);
-}
-inline void D3D_CreatePixelShader(const void *definition, uint32_t *handle) {
-    ((uint32_t (__stdcall *)(const void *, uint32_t *))0x0016aef0)(definition, handle);
-}
-inline void D3D_DeletePixelShader(uint32_t handle) {
-    ((void (__stdcall *)(uint32_t))0x0016af40)(handle);
-}
-inline void D3D_Begin(uint32_t primitive) {
-    ((void (__stdcall *)(uint32_t))0x0016ba20)(primitive);
-}
-inline void D3D_End() {
-    ((void (__stdcall *)())0x0016ba60)();
-}
-inline uint32_t D3D_InsertFence() {
-    return ((uint32_t (__stdcall *)())0x00166140)();
-}
-inline void D3D_BlockOnFence(uint32_t fence) {
-    ((void (__stdcall *)(uint32_t))0x00165fc0)(fence);
-}
+#define D3DDevice_SetStreamSource ((void (__stdcall *)(uint32_t, EAGL::D3DResource *, uint32_t))0x0016a9c0)
+#define D3DResource_BlockUntilNotBusy ((void (__stdcall *)(EAGL::D3DResource *))0x001693d0)
+#define D3DResource_Register ((void (__stdcall *)(EAGL::D3DResource *, void *))0x001693a0)
+#define D3DResource_Release ((uint32_t (__stdcall *)(EAGL::D3DResource *))0x00169230)
+#define D3DResource_IsBusy ((uint32_t (__stdcall *)(EAGL::D3DResource *))0x00169310)
+#define D3DDevice_RunPushBuffer ((void (__stdcall *)(EAGL::D3DPushBufferHeader *, void *))0x0016baa0)
+#define D3DDevice_SetVertexShader ((void (__stdcall *)(uint32_t))0x0016ad90)
+#define D3DDevice_SetPixelShader ((void (__stdcall *)(uint32_t))0x0016af60)
+#define D3DDevice_SetVertexShaderConstant1 ((void (__fastcall *)(int, const void *))0x0016a790)
+#define D3DDevice_SetVertexShaderConstant4 ((void (__fastcall *)(int, const void *))0x0016a7f0)
+#define D3DDevice_SetVertexShaderConstantNotInline ((void (__fastcall *)(int, const void *, uint32_t))0x0016a980)
+#define D3DDevice_SetIndices ((void (__stdcall *)(EAGL::D3DResource *, uint32_t))0x00166a70)
+#define D3DDevice_SetPixelShaderConstant ((void (__stdcall *)(uint32_t, const void *, uint32_t))0x0016b160)
+#define D3DDevice_DrawVertices ((void (__stdcall *)(uint32_t, uint32_t, uint32_t))0x0016b620)
+#define D3DDevice_DrawIndexedVertices ((void (__stdcall *)(uint32_t, uint32_t, const uint16_t *))0x0016b6c0)
+#define D3DDevice_CreateVertexBuffer2 ((EAGL::D3DResource *(__stdcall *)(uint32_t))0x0016b470)
+#define D3DDevice_CreateIndexBuffer2 ((EAGL::D3DResource *(__stdcall *)(uint32_t))0x0016b430)
+#define D3DVertexBuffer_Lock2 ((uint8_t *(__stdcall *)(EAGL::D3DResource *, uint32_t))0x0016b4c0)
+#define XGSetVertexBufferHeader ((void (__stdcall *)(uint32_t, uint32_t, uint32_t, uint32_t, EAGL::D3DResource *, uint32_t))0x0017a8d6)
+#define D3DDevice_CreateVertexShader ((uint32_t (__stdcall *)(const void *, const void *, uint32_t *, uint32_t))0x0016a650)
+#define D3DDevice_DeleteVertexShader ((void (__stdcall *)(uint32_t))0x0016ac70)
+#define D3DDevice_CreatePixelShader ((uint32_t (__stdcall *)(const void *, uint32_t *))0x0016aef0)
+#define D3DDevice_DeletePixelShader ((void (__stdcall *)(uint32_t))0x0016af40)
+#define D3DDevice_Begin ((void (__stdcall *)(uint32_t))0x0016ba20)
+#define D3DDevice_End ((void (__stdcall *)())0x0016ba60)
+#define D3DDevice_InsertFence ((uint32_t (__stdcall *)())0x00166140)
+#define D3DDevice_BlockOnFence ((void (__stdcall *)(uint32_t))0x00165fc0)
 
 // ---- other modules' functions not ported yet
-inline void *DeviceGet() {
-    return ((void *(*)())0x000e8a40)();   // EAGL::Device::Get
-}
-inline bool TarSetStage(void *extension, uint32_t stage) {
-    return ((bool (__fastcall *)(void *, int, uint32_t))0x000ebd60)(extension, 0, stage);
-}
-inline bool TarUse(void *tar) {
-    return ((bool (__fastcall *)(void *, int))0x000eb3f0)(tar, 0);   // TAR::Use (candidate)
+#define BuiltinDelete ((void (*)(void *))0x001146e0)       // __builtin_delete
+
+// An opcode-11 packet's slots while it has no buffer: all bits set
+template <class T> T *Unset() {
+    return reinterpret_cast<T *>(0xffffffff);
 }
 
 // ---- the interpreter's state
-inline RenderMethod *CurrentMethod() {
-    return *(RenderMethod **)(uintptr_t)kMethod;
+
+template <class T> T *CurrentPacket() {
+    return static_cast<T *>(Interp.packet);
 }
-inline GeoPrimParam *&ParamCursor() {
-    return *(GeoPrimParam **)(uintptr_t)kParams;
-}
-inline uint32_t *PacketCursor() {
-    return *(uint32_t **)(uintptr_t)kPackets;
-}
-// packet[1] * CurrentVariation + parameter.data: the current parameter's data for this variation
-inline uint8_t *VariationData() {
-    return (uint8_t *)(uintptr_t)(PacketCursor()[1] * U32(kVariation) + Addr(ParamCursor()->data));
+// parameter.data + packet.variationStride * CurrentVariation: the current parameter's data for this variation
+template <class T = uint8_t> T *VariationData() {
+    const ParamPacket *packet = CurrentPacket<ParamPacket>();
+    return reinterpret_cast<T *>(Interp.param->data + packet->variationStride * CurrentVariation);
 }
 inline void NextParam() {
-    ParamCursor() = ParamCursor() + 1;
+    Interp.param++;
 }
 // The flush the draw handlers do first: WBINVD in the original (NOPed by XboxStartup.cpp), then the flag cleared.
 inline void FlushIfRegistered() {
-    if (U8(kRegistered) != 0)
-        U8(kRegistered) = 0;
+    if (VertexBufferRegistered != 0)
+        VertexBufferRegistered = 0;
 }
 
-// Opcodes 5-8: count / 4 constant registers (SAR) from the parameter at packet[2]
+// Opcodes 5-8: count >> 2 constant registers (SAR) from the parameter at packet.reg
 inline void VSConstantsOp() {
-    uint32_t *c = PacketCursor();
-    EAGL_SetVertexShaderConstant((int)c[2], VariationData(), (int)c[3] >> 2);
+    const ConstantsPacket *packet = CurrentPacket<ConstantsPacket>();
+    EAGL_SetVertexShaderConstant(packet->reg, VariationData(), packet->count >> 2);
     NextParam();
 }
 
-// Opcodes 17, 18: two constant blocks from one parameter, the second packet[3] registers on
+// Opcodes 17, 18: two constant blocks from one parameter, the second packet.count registers on
 inline void VSConstantPairOp() {
-    uint32_t *c = PacketCursor();
-    uint32_t reg1 = c[4], count1 = c[5], reg0 = c[2];
-    uint8_t *d = VariationData();
-    uint32_t count0 = c[3];
-    EAGL_SetVertexShaderConstant((int)reg0, d, (int)count0);
-    EAGL_SetVertexShaderConstant((int)reg1, d + (count0 << 4), (int)count1);
+    const ConstantsPacket *packet = CurrentPacket<ConstantsPacket>();
+    int reg1 = packet->reg1, count1 = packet->count1, reg0 = packet->reg;
+    uint8_t *data = VariationData();
+    int count0 = packet->count;
+    EAGL_SetVertexShaderConstant(reg0, data, count0);
+    EAGL_SetVertexShaderConstant(reg1, data + (count0 << 4), count1);
     NextParam();
 }
 
 // Opcodes 19, 20, 27, 28: a matrix, transposed, into 4 vertex shader constants
 inline void VSMatrixOp() {
     alignas(16) float t[16];
-    uint32_t reg = PacketCursor()[2];
+    int reg = CurrentPacket<ConstantsPacket>()->reg;
     VU0_MATRIX4_transpose(t, VariationData());
-    EAGL_SetVertexShaderConstant((int)reg, t, 4);
+    EAGL_SetVertexShaderConstant(reg, t, 4);
     NextParam();
 }
 
 // Opcodes 21, 22: the matrix palette
 inline void MatrixPaletteOp() {
-    uint32_t *c = PacketCursor();
-    EAGL_UploadMatrixPalette((int)c[2], (int)c[3], (int)c[4], (int)c[5], VariationData());
+    const ConstantsPacket *packet = CurrentPacket<ConstantsPacket>();
+    EAGL_UploadMatrixPalette(packet->reg, packet->count, packet->reg1, packet->count1, VariationData<float>());
     NextParam();
 }
 
 // Opcodes 29, 30: CPU skinning from the source opcode 31 set
 inline void SkinOp() {
-    uint32_t *c = PacketCursor();
-    EAGL_SkinAndUpload((const uint8_t *)(uintptr_t)U32(kSkinSource), (int)U32(kSkinCount), (int)c[2], (int)c[3],
-                       (int)c[4], (int)c[5], VariationData());
+    const ConstantsPacket *packet = CurrentPacket<ConstantsPacket>();
+    EAGL_SkinAndUpload(SkinSource, SkinCount, packet->reg, packet->count, packet->reg1, packet->count1,
+                       VariationData<float>());
     NextParam();
 }
 
 // Opcodes 32, 33: a matrix, transposed, into 4 pixel shader constants
 inline void PSMatrixOp() {
     alignas(16) float t[16];
-    uint32_t reg = PacketCursor()[2];
+    uint32_t reg = CurrentPacket<ConstantsPacket>()->reg;
     VU0_MATRIX4_transpose(t, VariationData());
     EAGL_SetPixelShaderConstant(reg, t, 4);
     NextParam();
 }
 
-// Opcodes 34, 35: count / 4 pixel shader constants (SAR)
+// Opcodes 34, 35: count >> 2 pixel shader constants (SAR)
 inline void PSConstantsOp() {
-    uint32_t *c = PacketCursor();
-    EAGL_SetPixelShaderConstant(c[2], VariationData(), (uint32_t)((int)c[3] >> 2));
+    const ConstantsPacket *packet = CurrentPacket<ConstantsPacket>();
+    EAGL_SetPixelShaderConstant(packet->reg, VariationData(), packet->count >> 2);
     NextParam();
 }
 
@@ -284,6 +234,16 @@ inline void PSConstantsOp() {
 inline void Identity(float *m) {
     for (int i = 0; i < 16; i++)
         m[i] = (i % 5 == 0) ? 1.0f : 0.0f;
+}
+
+// Every stream source that is this buffer unset (the destructors')
+inline void UnbindStreams(const D3DResource *buffer) {
+    for (uint32_t stream = 0; stream < 16; stream++) {
+        if (Cache.streams[stream] == buffer) {
+            Cache.streams[stream] = NULL;
+            D3DDevice_SetStreamSource(stream, NULL, 0);
+        }
+    }
 }
 
 }  // namespace
@@ -307,19 +267,19 @@ void EAGL_CopyParentPackets(EAGL::RenderMethod *method) {
     method->pixelShaders = parent->pixelShaders;
     method->name = parent->name;
     // The stream's length in dwords: the walk ends at a packet of length 0 (the zero header)
-    const uint32_t *source = parent->packets;
+    const Packet *source = parent->packets;
     uint32_t n = 0, length;
     do {
-        length = source[n] & 0xffff;
+        length = source[n].Length();
         n += length;
     } while (length != 0);
     uint32_t bytes = n * 4 + 4;
     uint32_t block = bytes + 4;
-    uint32_t *memory = (uint32_t *)EaglMalloc(block, kNamePCode);
-    method->packets = memory;
+    uint32_t *memory = static_cast<uint32_t *>(EaglAlloc(block, NamePCode));
+    method->packets = reinterpret_cast<Packet *>(memory);
     memory[0] = block;
-    method->packets = memory + 1;
-    MEM_copy(memory + 1, parent->packets, (int)bytes);
+    method->packets = reinterpret_cast<Packet *>(memory + 1);
+    MEM_copy(memory + 1, parent->packets, bytes);
 }
 
 // The loader's callback for a VertexBuffer symbol: point the D3D8 header at the data and register it against the
@@ -328,25 +288,20 @@ void EAGL_CopyParentPackets(EAGL::RenderMethod *method) {
 void EAGL_VertexBufferConstructor(EAGL::LoadedVertexBuffer *buffer, DynamicLoader *loader) {
     uint32_t offset = buffer->fileOffset;
     void *base = loader->GetElfData();
-    buffer->header[1] = offset - Addr(base);
-    D3D_Register(buffer->header, base);
-    U8(kRegistered) = 1;
+    buffer->header->data = offset - reinterpret_cast<uintptr_t>(base);
+    D3DResource_Register(buffer->header, base);
+    VertexBufferRegistered = 1;
 }
 
 // FUNC_AT(0x000f0f10)
 void EAGL_VertexBufferDestructor(EAGL::LoadedVertexBuffer *buffer) {
-    for (uint32_t stream = 0; stream < 16; stream++) {
-        if (U32(kStreams + stream * 4) == Addr(buffer->header)) {
-            U32(kStreams + stream * 4) = 0;
-            D3D_SetStreamSource(stream, NULL, 0);
-        }
-    }
-    D3D_BlockUntilNotBusy(buffer->header);
+    UnbindStreams(buffer->header);
+    D3DResource_BlockUntilNotBusy(buffer->header);
 }
 
 // The static initialisers' constructor (bondrm render methods the game builds in code)
 // FUNC_AT(0x000f0f60)
-EAGL::RenderMethod* EAGL::RenderMethod::Construct(uint32_t *packets_, int numVariants_, const void *declaration_,
+EAGL::RenderMethod* EAGL::RenderMethod::Construct(Packet *packets_, int numVariants_, const void *declaration_,
                                                   const void **vsMicrocode_, VertexShader **vertexShaders_,
                                                   const uint8_t **psDefinitions_, PixelShader **pixelShaders_,
                                                   const char **paramNames_, uint32_t variantHalf_,
@@ -363,26 +318,26 @@ EAGL::RenderMethod* EAGL::RenderMethod::Construct(uint32_t *packets_, int numVar
     cloned = 0;
     parent = NULL;
     name = name_;
-    next = *(RenderMethod **)(uintptr_t)kMethodList;
-    *(RenderMethod **)(uintptr_t)kMethodList = this;
+    next = MethodList;
+    MethodList = this;
     return this;
 }
 
 // The interpreter (3.3). The length is the header's, read before the handler runs; the cursor is re-read after.
 // FUNC_AT(0x000f0fc0)
 void EAGL::RenderMethod::Draw(GeoPrim *prim) {
-    *(RenderMethod **)(uintptr_t)kMethod = this;
-    uint32_t *cursor = packets;
-    *(uint32_t **)(uintptr_t)kPackets = cursor;
-    ParamCursor() = prim->params;
-    uint32_t header = *cursor;
+    Interp.method = this;
+    Packet *cursor = packets;
+    Interp.packet = cursor;
+    Interp.param = prim->params;
+    uint32_t header = cursor->header;
     while (header != 0) {
         uint32_t length = header & 0xffff;
         // No bounds check: an opcode above 36 calls whatever follows the table, as the original does
-        ((void (*)())(uintptr_t)U32(kOpcodeTable + (header >> 16) * 4))();
-        cursor = PacketCursor() + length;
-        *(uint32_t **)(uintptr_t)kPackets = cursor;
-        header = *cursor;
+        OpcodeTable[header >> 16]();
+        cursor = Interp.packet + length;
+        Interp.packet = cursor;
+        header = cursor->header;
     }
 }
 
@@ -405,13 +360,13 @@ void EAGL::RenderMethod::Nop1040(uint32_t) {
 // FUNC_AT(0x000f1050)
 void EAGL::RenderMethod::CreateShaders() {
     int half = variantHalf == 0 ? 1 : 0;
-    vertexShaders = (VertexShader **)EaglMalloc((uint32_t)numVariants << 2, kNameVSArray);
-    pixelShaders = (PixelShader **)EaglMalloc((uint32_t)numVariants * 4, kNamePSArray);
+    vertexShaders = static_cast<VertexShader **>(EaglAlloc(numVariants << 2, NameVSArray));
+    pixelShaders = static_cast<PixelShader **>(EaglAlloc(numVariants * 4, NamePSArray));
     for (int i = 0; i < numVariants; i++) {
-        VertexShader *vs = (VertexShader *)EaglMalloc(4, kNameVSNew);
+        VertexShader *vs = static_cast<VertexShader *>(EaglAlloc(4, NameVSNew));
         vs = vs != NULL ? vs->Construct(declaration, vsMicrocode[i]) : NULL;
         vertexShaders[i] = vs;
-        PixelShader *ps = (PixelShader *)EaglMalloc(4, kNamePSNew);
+        PixelShader *ps = static_cast<PixelShader *>(EaglAlloc(4, NamePSNew));
         ps = ps != NULL ? ps->Construct(psDefinitions[i] + half * 4) : NULL;
         pixelShaders[i] = ps;
     }
@@ -453,28 +408,30 @@ void EAGL_RenderMethodConstructor(EAGL::RenderMethod *method) {
         method->CreateShaders();
 }
 
-// Every opcode-11 packet's dynamic vertex buffer destroyed and its three words reset to -1. A packet of length 0
-// with a nonzero header would loop forever, as in the original.
+// Every opcode-11 packet's dynamic vertex buffer destroyed and its three slots reset to all ones. A packet of
+// length 0 with a nonzero header would loop forever, as in the original.
 // FUNC_AT(0x000f1210)
 void EAGL_ReleaseDynamicBuffers(EAGL::RenderMethod *method) {
-    uint32_t *p = method->packets;
-    if (*p == 0)
+    Packet *p = method->packets;
+    if (p->header == 0)
         return;
     do {
-        uint32_t header = *p;
-        uint32_t length = header & 0xffff;
-        if ((header & 0xffff0000) == 0xb0000 && p[4] != 0xffffffffu) {
-            DynamicVertexBuffer *buffer = (DynamicVertexBuffer *)(uintptr_t)p[4];
-            if (buffer != NULL) {
-                buffer->Destruct();
-                EaglFree(buffer, 0x30);
+        uint32_t length = p->Length();
+        if (p->Opcode() == kOpDynamicStream) {
+            DynamicStreamPacket *packet = static_cast<DynamicStreamPacket *>(p);
+            if (packet->buffer != Unset<DynamicVertexBuffer>()) {
+                DynamicVertexBuffer *buffer = packet->buffer;
+                if (buffer != NULL) {
+                    buffer->Destruct();
+                    EaglFree(buffer, sizeof(DynamicVertexBuffer));
+                }
+                packet->buffer = Unset<DynamicVertexBuffer>();
+                packet->capacity = -1;
+                packet->source = Unset<uint8_t>();
             }
-            p[4] = 0xffffffffu;
-            p[5] = 0xffffffffu;
-            p[6] = 0xffffffffu;
         }
         p += length;
-    } while (*p != 0);
+    } while (p->header != 0);
 }
 
 // A render method that inherits from a parent (the game's materials and effects). Until the parent has its
@@ -488,19 +445,19 @@ EAGL::RenderMethod* EAGL::RenderMethod::ConstructChild(RenderMethod *parent_) {
         EAGL_CopyParentPackets(this);
         return this;
     }
-    next = *(RenderMethod **)(uintptr_t)kChildList;
-    *(RenderMethod **)(uintptr_t)kChildList = this;
+    next = ChildList;
+    ChildList = this;
     return this;
 }
 
-// A child frees its packet copy (after its dynamic buffers); any other deletes its shader arrays with
-// __builtin_delete, though they came from EAGLMalloc (the original's mismatch, kept).
+// A child frees its packet copy (after its dynamic buffers) by the size word before it; any other deletes its
+// shader arrays with __builtin_delete, though they came from EAGLMalloc (the original's mismatch, kept).
 // FUNC_AT(0x000f12c0)
 void EAGL::RenderMethod::Destruct() {
     if (cloned != 0) {
         EAGL_ReleaseDynamicBuffers(this);
         packets = packets - 1;
-        uint32_t *block = packets;
+        uint32_t *block = &packets->header;
         EaglFree(block, *block);
         return;
     }
@@ -522,8 +479,8 @@ void EAGL::RenderMethod::DeleteShaders() {
             EaglFree(ps, 4);
         }
     }
-    EaglFree(vertexShaders, (uint32_t)numVariants << 2);
-    EaglFree(pixelShaders, (uint32_t)numVariants << 2);
+    EaglFree(vertexShaders, numVariants << 2);
+    EaglFree(pixelShaders, numVariants << 2);
     vertexShaders = NULL;
     pixelShaders = NULL;
 }
@@ -551,13 +508,14 @@ __declspec(naked) void FUN_000f13b0() {
     }
 }
 
-// a3 a4 / a6 a7 ... the 3x3 determinant of nine floats on the stack, by the first row's cofactors (x87 order)
+// a3 a4 / a6 a7 ... the 3x3 determinant of nine floats on the stack, by the first row's cofactors (x87 order, all
+// in double: each product of two floats is exact there)
 // FUNC_AT(0x000f1490)
 double EAGL_Determinant3x3(float a0, float a1, float a2, float a3, float a4, float a5, float a6, float a7,
                            float a8) {
-    double r = ((double)a3 * (double)a7 - (double)a4 * (double)a6) * (double)a2;
-    r = r + ((double)a5 * (double)a6 - (double)a3 * (double)a8) * (double)a1;
-    r = r + ((double)a4 * (double)a8 - (double)a5 * (double)a7) * (double)a0;
+    double r = (double(a3) * a7 - double(a4) * a6) * a2;
+    r = r + (double(a5) * a6 - double(a3) * a8) * a1;
+    r = r + (double(a4) * a8 - double(a5) * a7) * a0;
     return r;
 }
 
@@ -568,28 +526,28 @@ void* EAGL::RenderMatrix::MultiplyInto(const float *rhs, float *out) {
 
 // ---------------------------------------------------------------------------------------------------------------
 // The D3D8 wrappers (0x000f4340..0x000f4580). The stream source and shader wrappers skip a call when the value is
-// the one they last sent (their caches at 0x00240474..0x002404c0).
+// the one they last sent (Cache).
 // ---------------------------------------------------------------------------------------------------------------
 
 // FUNC_AT(0x000f4340)
 void EAGL_RunPushBuffer(EAGL::PushBuffer *buffer) {
-    D3D_RunPushBuffer(buffer->header, NULL);
+    D3DDevice_RunPushBuffer(&buffer->header, NULL);
 }
 
 // FUNC_AT(0x000f4350)
 void EAGL_SetVertexShader(const EAGL::VertexShader *shader) {
-    if (U32(kVertexShaderInUse) == shader->handle)
+    if (Cache.vertexShader == shader->handle)
         return;
-    U32(kVertexShaderInUse) = shader->handle;
-    D3D_SetVertexShader(shader->handle);
+    Cache.vertexShader = shader->handle;
+    D3DDevice_SetVertexShader(shader->handle);
 }
 
 // FUNC_AT(0x000f4380)
 void EAGL_SetPixelShader(const EAGL::PixelShader *shader) {
-    if (U32(kPixelShaderInUse) == shader->handle)
+    if (Cache.pixelShader == shader->handle)
         return;
-    U32(kPixelShaderInUse) = shader->handle;
-    D3D_SetPixelShader(shader->handle);
+    Cache.pixelShader = shader->handle;
+    D3DDevice_SetPixelShader(shader->handle);
 }
 
 // The register is biased by 96 as D3D8's inline functions do (constants -96..95 -> 0..191). count 1 and 4 go
@@ -597,64 +555,62 @@ void EAGL_SetPixelShader(const EAGL::PixelShader *shader) {
 // FUNC_AT(0x000f43a0)
 void EAGL_SetVertexShaderConstant(int reg, const void *data, int count) {
     if (count == 1)
-        D3D_SetVertexShaderConstant1(reg + 0x60, data);
+        D3DDevice_SetVertexShaderConstant1(reg + 0x60, data);
     else if (count == 4)
-        D3D_SetVertexShaderConstant4(reg + 0x60, data);
+        D3DDevice_SetVertexShaderConstant4(reg + 0x60, data);
     else
-        D3D_SetVertexShaderConstantNotInline(reg + 0x60, data, (uint32_t)count << 2);
+        D3DDevice_SetVertexShaderConstantNotInline(reg + 0x60, data, count << 2);
 }
 
 // FUNC_AT(0x000f43e0)
 void EAGL_SetStreamSource(uint32_t stream, const EAGL::StaticVertexBuffer *buffer) {
-    if (U32(kStreams + stream * 4) == Addr(buffer->buffer) && U32(kStrides + stream * 4) == buffer->stride)
+    if (Cache.streams[stream] == buffer->buffer && Cache.strides[stream] == buffer->stride)
         return;
-    U32(kStreams + stream * 4) = Addr(buffer->buffer);
-    U32(kStrides + stream * 4) = buffer->stride;
-    D3D_SetStreamSource(stream, buffer->buffer, buffer->stride);
+    Cache.streams[stream] = buffer->buffer;
+    Cache.strides[stream] = buffer->stride;
+    D3DDevice_SetStreamSource(stream, buffer->buffer, buffer->stride);
 }
 
 // FUNC_AT(0x000f4420)
 void EAGL_SetDynamicStreamSource(uint32_t stream, const EAGL::DynamicVertexBuffer *buffer) {
-    if (U32(kStreams + stream * 4) == Addr(buffer->current) && U32(kStrides + stream * 4) == buffer->stride)
+    if (Cache.streams[stream] == buffer->current && Cache.strides[stream] == buffer->stride)
         return;
-    U32(kStreams + stream * 4) = Addr(buffer->current);
-    U32(kStrides + stream * 4) = buffer->stride;
-    D3D_SetStreamSource(stream, buffer->current, buffer->stride);
+    Cache.streams[stream] = buffer->current;
+    Cache.strides[stream] = buffer->stride;
+    D3DDevice_SetStreamSource(stream, buffer->current, buffer->stride);
 }
 
 // FUNC_AT(0x000f4460)
 void EAGL_SetIndices(uint32_t baseVertex, const EAGL::IndexBuffer *buffer) {
-    D3D_SetIndices(buffer->buffer, baseVertex);
+    D3DDevice_SetIndices(buffer->buffer, baseVertex);
 }
 
 // Opcode 14's: the index data DrawIndexedVertices reads (no D3D call)
 // FUNC_AT(0x000f4480)
-void EAGL_SetIndexData(uint32_t base, const uint8_t *indices) {
-    U32(kIndexData) = Addr(indices);
-    U32(kIndexBase) = base;
+void EAGL_SetIndexData(uint32_t base, const void *indices) {
+    Cache.indexData = static_cast<const uint16_t *>(indices);
+    Cache.indexBase = base;
 }
 
 // FUNC_AT(0x000f44a0)
 void EAGL_SetPixelShaderConstant(uint32_t reg, const void *data, uint32_t count) {
-    D3D_SetPixelShaderConstant(reg, data, count);
+    D3DDevice_SetPixelShaderConstant(reg, data, count);
 }
 
 // FUNC_AT(0x000f44c0)
 void EAGL_DrawVertices(uint32_t start, uint32_t count) {
-    D3D_DrawVertices(U32(kPrimitive), start, count);
+    D3DDevice_DrawVertices(Cache.primitiveType, start, count);
 }
 
-// Unreferenced: indices from D3D8's push-buffer pointer (0x00175420) instead of the stored index data.
+// Unreferenced: indices from D3D8's push-buffer pointer instead of the stored index data.
 // FUNC_AT(0x000f44e0)
 void EAGL_DrawIndexedVerticesPushBuffer(uint32_t, uint32_t, uint32_t start, uint32_t count) {
-    uint32_t indices = U32(0x00175420) + start * 2;
-    D3D_DrawIndexedVertices(U32(kPrimitive), count, (const void *)(uintptr_t)indices);
+    D3DDevice_DrawIndexedVertices(Cache.primitiveType, count, D3DPushBufferCursor + start);
 }
 
 // FUNC_AT(0x000f4500)
 void EAGL_DrawIndexedVertices(uint32_t start, uint32_t count) {
-    uint32_t indices = U32(kIndexData) + start * 2;
-    D3D_DrawIndexedVertices(U32(kPrimitive), count, (const void *)(uintptr_t)indices);
+    D3DDevice_DrawIndexedVertices(Cache.primitiveType, count, Cache.indexData + start);
 }
 
 // 0x000f4520 ("rdtsc; ret") is XboxTimer.cpp's: it redirects that one already.
@@ -694,11 +650,11 @@ EAGL::PairedArrays32* EAGL::PairedArrays32::Construct() {
 // FUNC_AT(0x000f55a0)
 bool EAGL::DrawArray::SetGeoPrim(GeoPrim *prim) {
     geoPrim = prim;
-    ((bool (__fastcall *)(void *, int, GeoPrim *))0x000e9890)(model, 0, prim);   // DynamicModel::AddGeoPrim
+    model->AddGeoPrim(prim);
     paramCount = 0;
     while (geoPrim->method->paramNames[paramCount] != NULL)
         paramCount++;
-    userVars = (UserVar *)EaglMalloc((uint32_t)paramCount << 3, kNameUserVar);
+    userVars = static_cast<UserVar *>(EaglAlloc(paramCount << 3, NameUserVar));
     if (userVars == NULL)
         return false;
     for (int i = 0; i < paramCount; i++) {
@@ -726,10 +682,10 @@ bool EAGL::DrawArray::SetPrimitiveType(int type) {
     }
     if (primitiveClass == -1)
         return false;
-    unk24 = 0xffffu - (uint32_t)primitiveClass;
+    unknown24 = 0xffff - primitiveClass;
     maxVerts = 0xffff;
-    unk28 = 0xffff;
-    primitiveType = (uint32_t)type;
+    unknown28 = 0xffff;
+    primitiveType = type;
     return true;
 }
 
@@ -761,7 +717,7 @@ bool EAGL::DrawArray::SetParamName(const char *name_) {
 // count other than -1 has been given (keepCounts).
 // FUNC_AT(0x000f5770)
 bool EAGL::DrawArray::SetVar(int index, uint8_t *data, int mode, uint32_t count) {
-    if (count != 0xffffffffu)
+    if (count != 0xffffffff)
         keepCounts = 1;
     if (index == -1)
         return false;
@@ -798,7 +754,7 @@ bool EAGL::DrawArray::SetNumVerts(uint32_t count) {
 
 // FUNC_AT(0x000f5800)
 bool EAGL::DrawArray::SetLocalMatrix(const float *matrix) {
-    ((void (__fastcall *)(void *, int, const float *))0x000e9a80)(model, 0, matrix);   // DynamicModel::SetModelMatrix
+    model->SetModelMatrix(matrix);
     return true;
 }
 
@@ -811,14 +767,14 @@ void EAGL::DrawArray::SetUpGeoPrim(uint32_t) {
     for (int i = 0; i < paramCount; i++) {
         params[i].data = userVars[i].data;
         if (keepCounts == 0)
-            params[i].count = (uint32_t)verts;
+            params[i].count = verts;
     }
     if (streamParam != -1) {
-        stream[0] = (uint32_t)verts;
-        stream[1] = 0;
-        stream[2] = 0;
-        stream[3] = dirty == 0 ? 1 : 0;
-        params[streamParam].data = (uint8_t *)stream;
+        stream.vertexCount = verts;
+        stream.unknown04 = 0;
+        stream.user = 0;
+        stream.noCopy = dirty == 0 ? 1 : 0;
+        params[streamParam].data = reinterpret_cast<uint8_t *>(&stream);
         params[streamParam].count = 1;
     }
 }
@@ -828,10 +784,10 @@ void EAGL::DrawArray::Destruct() {
     if (locked != 0)
         locked = 0;
     if (userVars != NULL)
-        EaglFree(userVars, (uint32_t)paramCount << 3);
-    void *dynamicModel = model;
+        EaglFree(userVars, paramCount << 3);
+    DynamicModel *dynamicModel = model;
     if (dynamicModel != NULL) {
-        ((void (__fastcall *)(void *, int))0x000ea720)(dynamicModel, 0);   // DynamicModel::~DynamicModel
+        dynamicModel->Destruct();
         EaglFree(dynamicModel, 0x58);
     }
 }
@@ -843,12 +799,12 @@ bool EAGL::DrawArray::SetVarByName(const char *name_, uint8_t *data, int mode, u
 
 // FUNC_AT(0x000f5cb0)
 bool EAGL::DrawArray::Draw(int count) {
-    numVerts = (uint32_t)count;
+    numVerts = count;
     if (locked != 0)
         return false;
     drawVerts = count;
     SetUpGeoPrim(0);
-    ((void (__fastcall *)(void *, int))0x000e99e0)(model, 0);   // DynamicModel::Draw
+    model->Draw();
     dirty = 0;
     return true;
 }
@@ -861,11 +817,11 @@ bool EAGL::DrawArray::Draw(int count) {
 EAGL::DrawGouraud* EAGL::DrawGouraud::Construct() {
     primitiveType = 1;
     state.Construct();
-    VertexShader *vs = (VertexShader *)EaglMalloc(4, kNameVSNew);
-    vs = vs != NULL ? vs->Construct((const void *)0x001ce218u, (const void *)0x001ce228u) : NULL;
+    VertexShader *vs = static_cast<VertexShader *>(EaglAlloc(4, NameVSNew));
+    vs = vs != NULL ? vs->Construct(GouraudVSDeclaration, GouraudVSFunction) : NULL;
     vertexShader = vs;
-    PixelShader *ps = (PixelShader *)EaglMalloc(4, kNamePSNew);
-    ps = ps != NULL ? ps->Construct((const void *)0x001ce2b0u) : NULL;
+    PixelShader *ps = static_cast<PixelShader *>(EaglAlloc(4, NamePSNew));
+    ps = ps != NULL ? ps->Construct(GouraudPSDefinition) : NULL;
     pixelShader = ps;
     return this;
 }
@@ -885,8 +841,8 @@ bool EAGL::DrawGouraud::Init() {
 void EAGL::DrawGouraud::InternalFlush() {
     if (begun == 0)
         return;
-    D3D_End();
-    D3D_Begin(primitiveType);
+    D3DDevice_End();
+    D3DDevice_Begin(primitiveType);
 }
 
 // FUNC_AT(0x000f5a10)
@@ -899,15 +855,15 @@ EAGL::DrawTextured* EAGL::DrawTextured::Construct() {
 // FUNC_AT(0x000f5a30)
 bool EAGL::DrawTextured::Init() {
     state.SetTextureEnable(true);
-    state.SetTextureCoordType(0xffffffffu);
+    state.SetTextureCoordType(0xffffffff);
     state.SetShading(1);
     state.SetAlphaBlendMode(0);
     state.SetCullEnable(false);
-    VertexShader *vs = (VertexShader *)EaglMalloc(4, kNameVSNew);
-    vs = vs != NULL ? vs->Construct((const void *)0x001ce078u, (const void *)0x001ce090u) : NULL;
+    VertexShader *vs = static_cast<VertexShader *>(EaglAlloc(4, NameVSNew));
+    vs = vs != NULL ? vs->Construct(TexturedVSDeclaration, TexturedVSFunction) : NULL;
     vertexShader = vs;
-    PixelShader *ps = (PixelShader *)EaglMalloc(4, kNamePSNew);
-    ps = ps != NULL ? ps->Construct((const void *)0x001ce128u) : NULL;
+    PixelShader *ps = static_cast<PixelShader *>(EaglAlloc(4, NamePSNew));
+    ps = ps != NULL ? ps->Construct(TexturedPSDefinition) : NULL;
     pixelShader = ps;
     tar = NULL;
     begun = 0;
@@ -934,15 +890,15 @@ void EAGL::DrawTextured::Destruct() {
 void EAGL::DrawTextured::InternalFlush() {
     if (begun == 0)
         return;
-    D3D_End();
-    D3D_Begin(primitiveType);
+    D3DDevice_End();
+    D3DDevice_Begin(primitiveType);
 }
 
 // FUNC_AT(0x000f5c00)
-void EAGL::DrawTextured::SetTAR(void *tar_) {
+void EAGL::DrawTextured::SetTAR(TAR *tar_) {
     if (begun != 0) {
-        D3D_End();
-        D3D_Begin(primitiveType);
+        D3DDevice_End();
+        D3DDevice_Begin(primitiveType);
     }
     tar = tar_;
 }
@@ -973,17 +929,13 @@ void EAGL::DrawTextured::Begin(uint32_t type) {
     }
     EAGL_SetVertexShader(vertexShader);
     EAGL_SetPixelShader(pixelShader);
-    if (DeviceGet() != NULL) {
-        typedef void *(__fastcall *Getter)(void *, int);
-        void *view;
-        if (((Getter)0x000e89f0)(DeviceGet(), 0) != NULL) {   // Device::GetCurrentTextureRenderContext
-            void *context = ((Getter)0x000e89f0)(DeviceGet(), 0);
-            view = ((Getter)0x000f3520)(context, 0);            // TextureRenderContext::GetCurrentViewPort
-        } else {
-            void *context = ((Getter)0x000e89e0)(DeviceGet(), 0);   // Device::GetCurrentRenderContext
-            view = ((Getter)0x000ee080)(context, 0);                // RenderContext::GetCurrentViewPort
-        }
-        const float *viewProjection = (const float *)((Getter)0x000f39b0)(view, 0);   // view + 0xc0
+    if (Device::Get() != NULL) {
+        ViewPort *view;
+        if (Device::Get()->GetCurrentTextureRenderContext() != NULL)
+            view = Device::Get()->GetCurrentTextureRenderContext()->GetCurrentViewPort();
+        else
+            view = Device::Get()->GetCurrentRenderContext()->GetCurrentViewPort();
+        const float *viewProjection = view->GetViewProjectionMatrix();
         alignas(16) Transform t;
         t.BuildMatrix(viewProjection);
         t.PrependMatrix(matrix);
@@ -992,8 +944,8 @@ void EAGL::DrawTextured::Begin(uint32_t type) {
     }
     state.Apply();
     if (tar != NULL)
-        TarUse(tar);
-    D3D_Begin(primitiveType);
+        tar->Use();
+    D3DDevice_Begin(primitiveType);
     begun = 1;
 }
 
@@ -1005,9 +957,9 @@ void EAGL::DrawTextured::Begin(uint32_t type) {
 // It ignores its `this`, so stdcall (the same bytes popped).
 // FUNC_AT(0x000f5d70)
 void __stdcall EAGL_ModelCallFence(const char *name) {
-    if (strcmp(name, (const char *)(uintptr_t)kStrPreMorph) == 0 && U32(kDeviceCreated) != 0)
-        D3D_BlockOnFence(D3D_InsertFence());
-    U8(kRegistered) = 1;
+    if (strcmp(name, "PreMorph") == 0 && DeviceCreated != 0)
+        D3DDevice_BlockOnFence(D3DDevice_InsertFence());
+    VertexBufferRegistered = 1;
 }
 
 // FUNC_AT(0x000f5de0)
@@ -1018,16 +970,16 @@ bool __stdcall EAGL_ReturnFalse(uint32_t) {
 // Opcodes 21, 22: count0 / 4 and count1 / 4 matrices (signed division, toward zero) transposed into the palette
 // scratch, then both blocks uploaded - the second even when count1 is 0 (NotInline with 0 dwords).
 // FUNC_AT(0x000f5df0)
-void EAGL_UploadMatrixPalette(int reg0, int count0, int reg1, int count1, const uint8_t *matrices) {
+void EAGL_UploadMatrixPalette(int reg0, int count0, int reg1, int count1, const float *matrices) {
     int n0 = count0 / 4;
     int n1 = count1 / 4;
-    uint8_t *palette = (uint8_t *)(uintptr_t)kPalette;
+    float *palette = PaletteScratch;
     for (int i = 0; i < n0; i++)
-        VU0_MATRIX4_transpose(palette + i * 0x40, matrices + i * 0x40);
+        VU0_MATRIX4_transpose(palette + i * 16, matrices + i * 16);
     for (int j = 0; j < n1; j++)
-        VU0_MATRIX4_transpose(palette + (n0 + j) * 0x40, matrices + (n0 + j) * 0x40);
+        VU0_MATRIX4_transpose(palette + (n0 + j) * 16, matrices + (n0 + j) * 16);
     EAGL_SetVertexShaderConstant(reg0, palette, count0);
-    EAGL_SetVertexShaderConstant(reg1, palette + n0 * 0x40, count1);
+    EAGL_SetVertexShaderConstant(reg1, palette + n0 * 16, count1);
 }
 
 // One skinned matrix: up to three palette matrices blended by weight. A 16-byte vertex record holds three weights
@@ -1035,38 +987,36 @@ void EAGL_UploadMatrixPalette(int reg0, int count0, int reg1, int count1, const 
 // and third count only when their dword is nonzero (the third only after the second). SSE as the original: the
 // rows of the first matrix times the first weight, then each further row times its weight added, lane for lane.
 // The first weight goes through the x87 (fld/fst) before its index is taken, so a signalling NaN would be quieted
-// first; that is reproduced.
+// first; that is reproduced. The weights are loaded from their bits with MOVSS as the original does (hence the
+// float views of the integers).
 // FUNC_AT(0x000f5eb0)
-void EAGL_SkinMatrix(const uint8_t *vertices, int index, const uint8_t *palette, float *out) {
-    const uint8_t *v = vertices + (index << 4);
-    uint32_t w0, w1, w2;
-    memcpy(&w0, v, 4);
-    memcpy(&w1, v + 4, 4);
-    memcpy(&w2, v + 8, 4);
-    if ((w0 & 0x7f800000u) == 0x7f800000u && (w0 & 0x007fffffu) != 0 && (w0 & 0x00400000u) == 0)
-        w0 |= 0x00400000u;   // FLD of a signalling NaN
-    const float *m0 = (const float *)(palette + ((w0 & 0xff) << 6));
-    const float *m1 = (const float *)(palette + ((w1 & 0xff) << 6));
-    const float *m2 = (const float *)(palette + ((w2 & 0xff) << 6));
+void EAGL_SkinMatrix(const EAGL::SkinVertex *vertices, int index, const float *palette, float *out) {
+    const SkinVertex &v = vertices[index];
+    uint32_t w0 = v.weights[0], w1 = v.weights[1], w2 = v.weights[2];
+    if ((w0 & 0x7f800000) == 0x7f800000 && (w0 & 0x007fffff) != 0 && (w0 & 0x00400000) == 0)
+        w0 |= 0x00400000;   // FLD of a signalling NaN
+    const float *m0 = palette + ((w0 & 0xff) << 4);
+    const float *m1 = palette + ((w1 & 0xff) << 4);
+    const float *m2 = palette + ((w2 & 0xff) << 4);
     __m128 r0 = _mm_load_ps(m0);
     __m128 r1 = _mm_load_ps(m0 + 4);
     __m128 r2 = _mm_load_ps(m0 + 8);
     __m128 r3 = _mm_load_ps(m0 + 12);
-    __m128 s = _mm_load_ss((const float *)&w0);
+    __m128 s = _mm_load_ss(reinterpret_cast<const float *>(&w0));
     s = _mm_shuffle_ps(s, s, 0);
     r0 = _mm_mul_ps(r0, s);
     r1 = _mm_mul_ps(r1, s);
     r2 = _mm_mul_ps(r2, s);
     r3 = _mm_mul_ps(r3, s);
     if (w1 != 0) {
-        s = _mm_load_ss((const float *)&w1);
+        s = _mm_load_ss(reinterpret_cast<const float *>(&w1));
         s = _mm_shuffle_ps(s, s, 0);
         r0 = _mm_add_ps(r0, _mm_mul_ps(_mm_load_ps(m1), s));
         r1 = _mm_add_ps(r1, _mm_mul_ps(_mm_load_ps(m1 + 4), s));
         r2 = _mm_add_ps(r2, _mm_mul_ps(_mm_load_ps(m1 + 8), s));
         r3 = _mm_add_ps(r3, _mm_mul_ps(_mm_load_ps(m1 + 12), s));
         if (w2 != 0) {
-            s = _mm_load_ss((const float *)&w2);
+            s = _mm_load_ss(reinterpret_cast<const float *>(&w2));
             s = _mm_shuffle_ps(s, s, 0);
             r0 = _mm_add_ps(r0, _mm_mul_ps(_mm_load_ps(m2), s));
             r1 = _mm_add_ps(r1, _mm_mul_ps(_mm_load_ps(m2 + 4), s));
@@ -1083,12 +1033,12 @@ void EAGL_SkinMatrix(const uint8_t *vertices, int index, const uint8_t *palette,
 // The inline helpers the handlers are built from, left as functions after a RET (unreferenced)
 // FUNC_AT(0x000f5fd0)
 uint8_t* EAGL_RMParamData() {
-    return ParamCursor()->data;
+    return Interp.param->data;
 }
 
 // FUNC_AT(0x000f5fe0)
 uint32_t EAGL_RMPacketStride() {
-    return PacketCursor()[1];
+    return CurrentPacket<ParamPacket>()->variationStride;
 }
 
 // FUNC_AT(0x000f5ff0)
@@ -1099,8 +1049,8 @@ uint8_t* EAGL_RMVariationData() {
 // Opcodes 29, 30: skin count0 / 4 matrices into the palette scratch (clamped to the vertex count), and as many of
 // count1 / 4 more as still fit, then upload them (the second block only when there is one).
 // FUNC_AT(0x000f6aa0)
-void EAGL_SkinAndUpload(const uint8_t *vertices, int count, int reg0, int count0, int reg1, int count1,
-                        const uint8_t *palette) {
+void EAGL_SkinAndUpload(const EAGL::SkinVertex *vertices, int count, int reg0, int count0, int reg1, int count1,
+                        const float *palette) {
     int n0 = count0 / 4;
     int n1 = count1 / 4;
     if (n0 >= count) {
@@ -1109,7 +1059,7 @@ void EAGL_SkinAndUpload(const uint8_t *vertices, int count, int reg0, int count0
     } else if (n1 + n0 >= count) {
         n1 = count - n0;
     }
-    float *scratch = (float *)(uintptr_t)kPalette;
+    float *scratch = PaletteScratch;
     for (int i = 0; i < n0; i++)
         EAGL_SkinMatrix(vertices, i, palette, scratch + i * 16);
     for (int j = 0; j < n1; j++)
@@ -1145,21 +1095,21 @@ void EAGL_RMOp_Skip1() {
     NextParam();
 }
 
-// The stream description for the variation: vertex count (+0), the user-memory flag (+8), the no-copy flag (+0xc)
+// The stream description for the variation
 // FUNC_AT(0x000f6030)
 void EAGL_RMOp_Stream() {
-    const uint8_t *d = VariationData();
-    U32(kStreamCount) = *(const uint32_t *)d;
-    U32(kStreamNoCopy) = *(const uint32_t *)(d + 0xc);
-    U32(kStreamUser) = *(const uint32_t *)(d + 8);
+    const StreamDescription *description = VariationData<StreamDescription>();
+    Interp.streamVertexCount = description->vertexCount;
+    Interp.streamNoCopy = description->noCopy;
+    Interp.streamUser = description->user;
     NextParam();
 }
 
 // The shader variant a 16-bit index in the parameter picks
 // FUNC_AT(0x000f6090)
 void EAGL_RMOp_SelectShaders() {
-    int index = *(const int16_t *)VariationData();
-    RenderMethod *method = CurrentMethod();
+    int index = *VariationData<int16_t>();
+    RenderMethod *method = Interp.method;
     PixelShader **ps = method->pixelShaders + index;
     EAGL_SetVertexShader(method->vertexShaders[index]);
     EAGL_SetPixelShader(*ps);
@@ -1169,7 +1119,7 @@ void EAGL_RMOp_SelectShaders() {
 // Variant 0; no parameter
 // FUNC_AT(0x000f60f0)
 void EAGL_RMOp_DefaultShaders() {
-    RenderMethod *method = CurrentMethod();
+    RenderMethod *method = Interp.method;
     PixelShader **ps = method->pixelShaders;
     EAGL_SetVertexShader(method->vertexShaders[0]);
     EAGL_SetPixelShader(*ps);
@@ -1195,15 +1145,16 @@ void EAGL_RMOp_VSConstants8() {
     VSConstantsOp();
 }
 
-// A stream source described inline in the parameter data, after packet[3] * count bytes rounded up to 4, 0x10 in
+// A stream source described inline in the parameter data (read as a StaticVertexBuffer: its buffer and stride),
+// 0x10 in after packet.elementSize * count bytes rounded up to 4
 // FUNC_AT(0x000f6220)
 void EAGL_RMOp_InlineStreamSource() {
-    uint32_t *c = PacketCursor();
-    GeoPrimParam *p = ParamCursor();
-    uint32_t skip = c[3] * p->count;
-    uint32_t variation = c[1] * U32(kVariation);
-    uint32_t address = ((skip + 3) & 0xfffffffcu) + variation + Addr(p->data) + 0x10;
-    EAGL_SetStreamSource(c[2], (const StaticVertexBuffer *)(uintptr_t)address);
+    const InlineStreamPacket *packet = CurrentPacket<InlineStreamPacket>();
+    GeoPrimParam *param = Interp.param;
+    uint32_t skip = packet->elementSize * param->count;
+    uint32_t variation = packet->variationStride * CurrentVariation;
+    const uint8_t *description = param->data + (((skip + 3) & 0xfffffffc) + variation + 0x10);
+    EAGL_SetStreamSource(packet->stream, reinterpret_cast<const StaticVertexBuffer *>(description));
     NextParam();
 }
 
@@ -1213,23 +1164,23 @@ void EAGL_RMOp_IndexData() {
     NextParam();
 }
 
-// A TAR: its stage (packet[2]) set through its extension (+0x48), then bound
+// A TAR: its stage set through its extension (the TAR's +0x48 field is the extension's `this`), then bound
 // FUNC_AT(0x000f62b0)
 void EAGL_RMOp_TAR() {
     FlushIfRegistered();
-    uint32_t stage = PacketCursor()[2];
-    TarSetStage(VariationData() + 0x48, stage);
-    TarUse(VariationData());
+    uint32_t stage = CurrentPacket<StagePacket>()->stage;
+    reinterpret_cast<TARExtension *>(&VariationData<TAR>()->extension)->SetStage(stage);
+    VariationData<TAR>()->Use();
     NextParam();
 }
 
 // A GeoPrimState applied, and its primitive type noted for the draws
 // FUNC_AT(0x000f6320)
 void EAGL_RMOp_GeoPrimState() {
-    ((GeoPrimState *)VariationData())->Apply();
+    VariationData<GeoPrimState>()->Apply();
     uint32_t type;
-    ((GeoPrimState *)VariationData())->GetPrimitiveType(&type);
-    U32(kPrimitive) = type;
+    VariationData<GeoPrimState>()->GetPrimitiveType(&type);
+    Cache.primitiveType = type;
     NextParam();
 }
 
@@ -1273,19 +1224,19 @@ void EAGL_RMOp_Skip24() {
     NextParam();
 }
 
-// DrawVertices of the stream's vertex count when packet[2] is set; no parameter
+// DrawVertices of the stream's vertex count when the packet is enabled; no parameter
 // FUNC_AT(0x000f65c0)
 void EAGL_RMOp_DrawVertices() {
     FlushIfRegistered();
-    if (PacketCursor()[2] != 0)
-        EAGL_DrawVertices(0, U32(kStreamCount));
+    if (CurrentPacket<DrawPacket>()->enabled != 0)
+        EAGL_DrawVertices(0, Interp.streamVertexCount);
 }
 
 // FUNC_AT(0x000f6600)
 void EAGL_RMOp_DrawIndexedVertices() {
     FlushIfRegistered();
-    if (PacketCursor()[2] != 0)
-        EAGL_DrawIndexedVertices(0, U32(kStreamCount));
+    if (CurrentPacket<DrawPacket>()->enabled != 0)
+        EAGL_DrawIndexedVertices(0, Interp.streamVertexCount);
 }
 
 // FUNC_AT(0x000f6640)
@@ -1301,8 +1252,8 @@ void EAGL_RMOp_VSMatrix28() {
 // The skinning source: the parameter's data for the variation and its count
 // FUNC_AT(0x000f6700)
 void EAGL_RMOp_SkinSource() {
-    U32(kSkinSource) = Addr(VariationData());
-    U32(kSkinCount) = ParamCursor()->count;
+    SkinSource = VariationData<SkinVertex>();
+    SkinCount = Interp.param->count;
     NextParam();
 }
 
@@ -1326,50 +1277,51 @@ void EAGL_RMOp_PSConstants35() {
     PSConstantsOp();
 }
 
-// The push buffer at packet[2] when packet[1] is set; no parameter. Never reached on the disc (docs 8.5).
+// The packet's push buffer when the packet is enabled; no parameter. Never reached on the disc (docs 8.5).
 // FUNC_AT(0x000f6870)
 void EAGL_RMOp_RunPushBuffer() {
-    uint32_t *c = PacketCursor();
-    if (c[1] != 0)
-        EAGL_RunPushBuffer((PushBuffer *)(uintptr_t)c[2]);
+    const PushBufferPacket *packet = CurrentPacket<PushBufferPacket>();
+    if (packet->enabled != 0)
+        EAGL_RunPushBuffer(packet->pushBuffer);
 }
 
-// The CPU vertex array into the packet's dynamic vertex buffer (packet +0x10, capacity +0x14, source +0x18),
-// re-created when the count outgrows the capacity, and bound to stream packet[2]. Quirks kept: the buffer is
-// created 4 times the array's size, and the capacity is stored as count * 4 against which a count is compared.
+// The CPU vertex array into the packet's dynamic vertex buffer, re-created when the count outgrows the capacity,
+// and bound to the packet's stream. Quirks kept: the buffer is created 4 times the array's size, and the capacity
+// is stored as count * 4 against which a count is compared.
 // FUNC_AT(0x000f6890)
 void EAGL_RMOp_DynamicStream() {
-    uint32_t *c = PacketCursor();
-    uint32_t count = ParamCursor()->count;
-    uint32_t stride = c[3];
-    int32_t capacity = (int32_t)c[5];
-    uint32_t stream = c[2];
-    DynamicVertexBuffer *buffer = (DynamicVertexBuffer *)(uintptr_t)c[4];
+    DynamicStreamPacket *packet = CurrentPacket<DynamicStreamPacket>();
+    uint32_t count = Interp.param->count;
+    uint32_t stride = packet->vertexStride;
+    int32_t capacity = packet->capacity;
+    uint32_t stream = packet->stream;
+    DynamicVertexBuffer *buffer = packet->buffer;
     uint32_t bytes = count * stride;
     // The original's lock output is a stack slot that also took the allocation; with user memory Lock leaves it
     // alone, and when no buffer was made it holds whatever was there (here NULL). Only reached with flags the
     // disc does not combine (no-copy 0 and user memory set).
     void *slot = NULL;
-    if (!(capacity > (int32_t)count)) {
-        if (Addr(buffer) != 0xffffffffu && buffer != NULL) {
+    if (!(capacity > int32_t(count))) {   // a signed comparison, as the original's
+        if (buffer != Unset<DynamicVertexBuffer>() && buffer != NULL) {
             buffer->Destruct();
-            EaglFree(buffer, 0x30);
+            EaglFree(buffer, sizeof(DynamicVertexBuffer));
         }
-        if (U32(kStreamUser) != 0) {
-            slot = EaglMalloc(0x30, kNameVBNew);
+        if (Interp.streamUser != 0) {
+            slot = EaglAlloc(sizeof(DynamicVertexBuffer), NameVBNew);
             buffer = slot != NULL
-                ? ((DynamicVertexBuffer *)slot)->ConstructUser(ParamCursor()->data, bytes * 4, stride) : NULL;
+                ? static_cast<DynamicVertexBuffer *>(slot)->ConstructUser(Interp.param->data, bytes * 4, stride)
+                : NULL;
         } else {
-            slot = EaglMalloc(0x30, kNameVBNew);
-            buffer = slot != NULL ? ((DynamicVertexBuffer *)slot)->Construct(bytes * 4, stride) : NULL;
+            slot = EaglAlloc(sizeof(DynamicVertexBuffer), NameVBNew);
+            buffer = slot != NULL ? static_cast<DynamicVertexBuffer *>(slot)->Construct(bytes * 4, stride) : NULL;
         }
-        PacketCursor()[4] = Addr(buffer);
-        PacketCursor()[5] = ParamCursor()->count << 2;
-        PacketCursor()[6] = Addr(ParamCursor()->data);
+        packet->buffer = buffer;
+        packet->capacity = Interp.param->count << 2;
+        packet->source = Interp.param->data;
     }
-    if (U32(kStreamNoCopy) == 0) {
+    if (Interp.streamNoCopy == 0) {
         buffer->Lock(0, bytes, &slot);
-        MEM_copy(slot, ParamCursor()->data, (int)bytes);
+        MEM_copy(slot, Interp.param->data, bytes);
         buffer->Unlock();
     }
     EAGL_SetDynamicStreamSource(stream, buffer);
@@ -1403,37 +1355,32 @@ EAGL::StaticVertexBuffer* EAGL::StaticVertexBuffer::Construct(uint32_t size_, ui
     stride = stride_;
     size = size_;
     user = 0;
-    unk10 = 0;
-    buffer = D3D_CreateVertexBuffer2(size_);
+    unknown10 = 0;
+    buffer = D3DDevice_CreateVertexBuffer2(size_);
     return this;
 }
 
 // The user-memory form: a 0xc-byte stand-in header; the third argument is not used.
 // FUNC_AT(0x000f6be0)
-EAGL::StaticVertexBuffer* EAGL::StaticVertexBuffer::ConstructUser(uint32_t a, uint32_t b, uint32_t) {
-    size = a;
-    stride = b;
+EAGL::StaticVertexBuffer* EAGL::StaticVertexBuffer::ConstructUser(uint32_t size_, uint32_t stride_, uint32_t) {
+    size = size_;
+    stride = stride_;
     user = 1;
-    unk10 = 0;
-    buffer = EaglMalloc(0xc, kNameD3DVB);
+    unknown10 = 0;
+    buffer = static_cast<D3DResource *>(EaglAlloc(sizeof(D3DResource), NameD3DVB));
     return this;
 }
 
 // FUNC_AT(0x000f6c20)
 void EAGL::StaticVertexBuffer::Destruct() {
-    for (uint32_t stream = 0; stream < 16; stream++) {
-        if (U32(kStreams + stream * 4) == Addr(buffer)) {
-            U32(kStreams + stream * 4) = 0;
-            D3D_SetStreamSource(stream, NULL, 0);
-        }
-    }
-    D3D_BlockUntilNotBusy(buffer);
+    UnbindStreams(buffer);
+    D3DResource_BlockUntilNotBusy(buffer);
     if (user != 0) {
-        EaglFree(buffer, 0xc);
+        EaglFree(buffer, sizeof(D3DResource));
         buffer = NULL;
         return;
     }
-    D3D_Release(buffer);
+    D3DResource_Release(buffer);
     buffer = NULL;
 }
 
@@ -1453,7 +1400,7 @@ uint32_t EAGL::StaticVertexBuffer::GetStride() {
 
 // FUNC_AT(0x000f6cc0)
 void EAGL::StaticVertexBuffer::Lock(uint32_t offset, uint32_t, uint8_t **out) {
-    *out = D3D_VertexBufferLock2(buffer, 0) + offset;
+    *out = D3DVertexBuffer_Lock2(buffer, 0) + offset;
 }
 
 // FUNC_AT(0x000f6ce0)
@@ -1462,7 +1409,7 @@ void EAGL::StaticVertexBuffer::Unlock() {
 
 // FUNC_AT(0x000f6cf0)
 bool EAGL::StaticVertexBuffer::IsBusy() {
-    return D3D_IsBusy(buffer) != 0;
+    return D3DResource_IsBusy(buffer) != 0;
 }
 
 // FUNC_AT(0x000f6d00)
@@ -1470,10 +1417,10 @@ EAGL::DynamicVertexBuffer* EAGL::DynamicVertexBuffer::Construct(uint32_t size_, 
     size = size_;
     stride = stride_;
     user = 0;
-    unk2c = 0;
-    buffers[0] = D3D_CreateVertexBuffer2(size_);
-    buffers[1] = D3D_CreateVertexBuffer2(size);
-    buffers[2] = D3D_CreateVertexBuffer2(size);
+    unknown2c = 0;
+    buffers[0] = D3DDevice_CreateVertexBuffer2(size_);
+    buffers[1] = D3DDevice_CreateVertexBuffer2(size);
+    buffers[2] = D3DDevice_CreateVertexBuffer2(size);
     current = buffers[0];
     index = 0;
     return this;
@@ -1486,44 +1433,39 @@ EAGL::DynamicVertexBuffer* EAGL::DynamicVertexBuffer::ConstructUser(void *data, 
     stride = stride_;
     size = size_;
     user = 1;
-    unk2c = 0;
-    userHeader[0] = 0;
-    userHeader[1] = 0;
-    userHeader[2] = 0;
-    XG_SetVertexBufferHeader(0, 0, 0, 0, userHeader, Addr(data) + 0x80000000u);
-    current = userHeader;
+    unknown2c = 0;
+    userHeader.common = 0;
+    userHeader.data = 0;
+    userHeader.lock = 0;
+    XGSetVertexBufferHeader(0, 0, 0, 0, &userHeader, reinterpret_cast<uintptr_t>(data) + 0x80000000);
+    current = &userHeader;
     return this;
 }
 
 // FUNC_AT(0x000f6da0)
 void EAGL::DynamicVertexBuffer::Destruct() {
     if (user != 0) {
-        D3D_BlockUntilNotBusy(userHeader);
-        userHeader[0] = 0;
-        userHeader[1] = 0;
-        userHeader[2] = 0;
+        D3DResource_BlockUntilNotBusy(&userHeader);
+        userHeader.common = 0;
+        userHeader.data = 0;
+        userHeader.lock = 0;
         return;
     }
+    // One pass over the streams, each checked against the three buffers in turn
     for (uint32_t stream = 0; stream < 16; stream++) {
-        if (U32(kStreams + stream * 4) == Addr(buffers[0])) {
-            U32(kStreams + stream * 4) = 0;
-            D3D_SetStreamSource(stream, NULL, 0);
-        }
-        if (U32(kStreams + stream * 4) == Addr(buffers[1])) {
-            U32(kStreams + stream * 4) = 0;
-            D3D_SetStreamSource(stream, NULL, 0);
-        }
-        if (U32(kStreams + stream * 4) == Addr(buffers[2])) {
-            U32(kStreams + stream * 4) = 0;
-            D3D_SetStreamSource(stream, NULL, 0);
+        for (int i = 0; i < 3; i++) {
+            if (Cache.streams[stream] == buffers[i]) {
+                Cache.streams[stream] = NULL;
+                D3DDevice_SetStreamSource(stream, NULL, 0);
+            }
         }
     }
-    D3D_BlockUntilNotBusy(buffers[0]);
-    D3D_BlockUntilNotBusy(buffers[1]);
-    D3D_BlockUntilNotBusy(buffers[2]);
-    D3D_Release(buffers[0]);
-    D3D_Release(buffers[1]);
-    D3D_Release(buffers[2]);
+    D3DResource_BlockUntilNotBusy(buffers[0]);
+    D3DResource_BlockUntilNotBusy(buffers[1]);
+    D3DResource_BlockUntilNotBusy(buffers[2]);
+    D3DResource_Release(buffers[0]);
+    D3DResource_Release(buffers[1]);
+    D3DResource_Release(buffers[2]);
     current = NULL;
     buffers[0] = NULL;
     buffers[1] = NULL;
@@ -1548,7 +1490,7 @@ void EAGL::DynamicVertexBuffer::Lock(uint32_t offset, uint32_t, void **out) {
     int next = (index + 1) % 3;
     index = next;
     current = buffers[next];
-    *out = D3D_VertexBufferLock2(buffers[next], 0) + offset;
+    *out = D3DVertexBuffer_Lock2(buffers[next], 0) + offset;
 }
 
 // FUNC_AT(0x000f6ed0)
@@ -1559,14 +1501,14 @@ void EAGL::DynamicVertexBuffer::Unlock() {
 bool EAGL::DynamicVertexBuffer::IsBusy() {
     if (user != 0)
         return false;
-    return D3D_IsBusy(current) != 0;
+    return D3DResource_IsBusy(current) != 0;
 }
 
 // FUNC_AT(0x000f6f00)
 EAGL::IndexBuffer* EAGL::IndexBuffer::Construct(uint32_t size_) {
     size = size_;
     user = 0;
-    buffer = D3D_CreateIndexBuffer2(size_);
+    buffer = D3DDevice_CreateIndexBuffer2(size_);
     return this;
 }
 
@@ -1581,7 +1523,7 @@ EAGL::IndexBuffer* EAGL::IndexBuffer::ConstructUser(uint32_t size_, uint32_t) {
 // FUNC_AT(0x000f6f30)
 void EAGL::IndexBuffer::Destruct() {
     if (user == 0)
-        D3D_Release(buffer);
+        D3DResource_Release(buffer);
     buffer = NULL;
 }
 
@@ -1590,10 +1532,10 @@ uint32_t EAGL::IndexBuffer::GetSize() {
     return size;
 }
 
-// The resource's data pointer (+4) plus the offset
+// The resource's data address plus the offset
 // FUNC_AT(0x000f6f60)
 void EAGL::IndexBuffer::Lock(uint32_t offset, uint32_t, uint8_t **out) {
-    *out = (uint8_t *)(uintptr_t)(((uint32_t *)buffer)[1] + offset);
+    *out = reinterpret_cast<uint8_t *>(buffer->data + offset);
 }
 
 // FUNC_AT(0x000f6f80)
@@ -1602,62 +1544,62 @@ void EAGL::IndexBuffer::Unlock() {
 
 // FUNC_AT(0x000f6f90)
 bool EAGL::IndexBuffer::IsBusy() {
-    return D3D_IsBusy(buffer) != 0;
+    return D3DResource_IsBusy(buffer) != 0;
 }
 
 // FUNC_AT(0x000f6fa0)
 EAGL::VertexShader* EAGL::VertexShader::Construct(const void *declaration, const void *function) {
-    D3D_CreateVertexShader(declaration, function, &handle, 0);
+    D3DDevice_CreateVertexShader(declaration, function, &handle, 0);
     return this;
 }
 
 // FUNC_AT(0x000f6fc0)
 void EAGL::VertexShader::Destruct() {
-    if (U32(kVertexShaderInUse) == handle) {
-        D3D_SetVertexShader(0);
-        U32(kVertexShaderInUse) = 0;
+    if (Cache.vertexShader == handle) {
+        D3DDevice_SetVertexShader(0);
+        Cache.vertexShader = 0;
     }
-    D3D_DeleteVertexShader(handle);
+    D3DDevice_DeleteVertexShader(handle);
 }
 
 // FUNC_AT(0x000f6ff0)
 EAGL::PixelShader* EAGL::PixelShader::Construct(const void *definition) {
-    D3D_CreatePixelShader(definition, &handle);
+    D3DDevice_CreatePixelShader(definition, &handle);
     return this;
 }
 
 // FUNC_AT(0x000f7010)
 void EAGL::PixelShader::Destruct() {
-    if (U32(kPixelShaderInUse) == handle) {
-        D3D_SetPixelShader(0);
-        U32(kPixelShaderInUse) = 0;
+    if (Cache.pixelShader == handle) {
+        D3DDevice_SetPixelShader(0);
+        Cache.pixelShader = 0;
     }
-    D3D_DeletePixelShader(handle);
+    D3DDevice_DeletePixelShader(handle);
 }
 
 // A push buffer header over existing memory, registered against base and run at once (unreferenced). The header's
 // words are written as the original writes them, Common included.
 // FUNC_AT(0x000f7040)
-EAGL::PushBuffer* EAGL::PushBuffer::Construct(uint32_t a, uint32_t b, uint32_t c, uint32_t base) {
-    unk1c = a;
+EAGL::PushBuffer* EAGL::PushBuffer::Construct(uint32_t size, uint32_t allocationSize, uint32_t common, void *base) {
+    unknown1c = size;
     notOwned = 1;
-    unk20 = b;
-    unk18 = c;
-    header[0] = 0;
-    header[1] = 0;
-    header[2] = 0;
-    header[3] = 0;
-    header[4] = 0;
-    header[3] = a;
-    header[0] = c;
-    header[4] = b;
-    D3D_Register(header, (void *)(uintptr_t)base);
-    D3D_RunPushBuffer(header, NULL);
+    unknown20 = allocationSize;
+    unknown18 = common;
+    header.resource.common = 0;
+    header.resource.data = 0;
+    header.resource.lock = 0;
+    header.size = 0;
+    header.allocationSize = 0;
+    header.size = size;
+    header.resource.common = common;
+    header.allocationSize = allocationSize;
+    D3DResource_Register(&header.resource, base);
+    D3DDevice_RunPushBuffer(&header, NULL);
     return this;
 }
 
 // FUNC_AT(0x000f70a0)
 void EAGL::PushBuffer::Destruct() {
     if (notOwned == 0)
-        D3D_Release(header);
+        D3DResource_Release(&header.resource);
 }

@@ -391,7 +391,7 @@ void FillBuffers() {
 }
 
 void SetupUp(int signal, int left) {
-    W->up.node.process = P((void *)&FakeProcess);
+    W->up.node.process = &FakeProcess;
     W->up.signal = (uint32_t)signal;
     W->up.position = Next() & (kSignalLength - 1);
     W->up.left = left;
@@ -583,7 +583,7 @@ void SetupRsfNode(int i) {
     g_p.pitch2 = RandomPitch(i + 1);
     g_p.changeAt = Chance(30) ? Range(1, kBlocks - 1) : -1;
     g_p.noKernel = Chance(5);
-    ((SFilterRSF *)W->node)->kernel = 0x001462b0;
+    ((SFilterRSF *)W->node)->kernel = (RsfKernel)0x001462b0;
 }
 
 void RunRsfNode(bool original) {
@@ -723,12 +723,12 @@ void SetupAdd(int i) {
     for (int k = 0; k < 6; k++) {
         const uint32_t *init = inits[Next() % 6];
         SFilterDesc &d = W->desc[k];
-        d.init = init[0];
+        d.init = (SFilterInit)(uintptr_t)init[0];
         d.size = init[1];
         d.param = init[0] == 0x001456e0 ? P(W->src) : Next();
         d.priority = (uint16_t)Range(0, 300);
-        d.process = Next();
-        d.restore = Next();
+        d.process = (SFilterProcess)(uintptr_t)Next();   // never called: only copied into the node
+        d.restore = (SFilterRestore)(uintptr_t)Next();
         g_p.voice[k] = Range(0, 3);
         g_p.arg[k] = Chance(90) ? 0 : 1;
     }
@@ -783,7 +783,7 @@ void RunXaf(bool original) {
     SFilterXAF *node = (SFilterXAF *)W->node;
     PICK(Init2Fn, 0x00145f50, &SFILTER_unpackxafinit)(node, &W->info);
     RunBlocks(PICK(ProcessFn, 0x00145ed0, &SFILTER_unpackxaf), &node->node);
-    W->results[20] = ((IntNodeFn)(uintptr_t)W->info.getFrame)(node);
+    W->results[20] = W->info.getFrame(&node->node);
     PICK(NodeFn, 0x00145bf0, &SFILTER_unpackxapfrestore)(node);
 }
 
@@ -791,7 +791,7 @@ void RunXalf(bool original) {
     SFilterXALF *node = (SFilterXALF *)W->node;
     PICK(Init2Fn, 0x00145e40, &SFILTER_unpackxalfinit)(node, &W->info);
     RunBlocks(PICK(ProcessFn, 0x00145cc0, &SFILTER_unpackxalf), &node->node);
-    W->results[20] = ((IntNodeFn)(uintptr_t)W->info.getFrame)(node);
+    W->results[20] = W->info.getFrame(&node->node);
     PICK(NodeFn, 0x00145bf0, &SFILTER_unpackxapfrestore)(node);
 }
 
@@ -832,14 +832,14 @@ void RunLf(bool original) {
     SFilterLF *node = (SFilterLF *)W->node;
     PICK(Init2Fn, 0x001461a0, &SFILTER_unpacklfinit)(node, &W->info);
     RunBlocks(PICK(ProcessFn, 0x00146130, &SFILTER_unpacklf), &node->node);
-    W->results[20] = ((IntNodeFn)(uintptr_t)W->info.getFrame)(node);
+    W->results[20] = W->info.getFrame(&node->node);
 }
 
 void RunF(bool original) {
     SFilterF *node = (SFilterF *)W->node;
     PICK(Init2Fn, 0x00146280, &SFILTER_unpackfinit)(node, &W->info);
     RunBlocks(PICK(ProcessFn, 0x001461f0, &SFILTER_unpackf), &node->node);
-    W->results[20] = ((IntNodeFn)(uintptr_t)W->info.getFrame)(node);
+    W->results[20] = W->info.getFrame(&node->node);
 }
 
 void SetupMtpf(int i) {
@@ -866,7 +866,7 @@ void RunMtf(bool original) {
     SFilterNode *node = (SFilterNode *)W->node;
     PICK(Init2Fn, 0x00145a70, &SFILTER_unpackmtfinit)(node, &W->info);
     RunBlocks(PICK(ProcessFn, 0x001459c0, &SFILTER_unpackmtf), node);
-    W->results[20] = ((IntNodeFn)(uintptr_t)W->info.getFrame)(node);
+    W->results[20] = W->info.getFrame(node);
 }
 
 void SetupStretch(int i) {

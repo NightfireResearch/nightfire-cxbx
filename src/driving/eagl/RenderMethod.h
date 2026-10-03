@@ -18,6 +18,9 @@ namespace EAGL {
 
 struct RenderMethod;
 struct DynamicVertexBuffer;
+struct PushBuffer;
+struct DynamicModel;
+struct TAR;
 
 // One parameter of a GeoPrim: what the render method's packets read, indexed by CurrentVariation * stride.
 struct GeoPrimParam {                // 8
@@ -30,6 +33,148 @@ struct GeoPrim {
     RenderMethod *method;            // +0x00
     GeoPrimParam params[1];          // +0x04 ... as many as the method's packets read
 };
+
+// ---- the packet stream (3.3)
+
+// The opcodes: the index into the handler table at 0x001ce700. The names are the handlers'.
+enum PacketOpcode : uint32_t {
+    kOpSkip = 0,                     // also 10, 12 and 13 (the same handler)
+    kOpSkip1 = 1,
+    kOpStream = 2,
+    kOpSelectShaders = 3,
+    kOpDefaultShaders = 4,
+    kOpVSConstants5 = 5,
+    kOpVSConstants6 = 6,
+    kOpVSConstants7 = 7,
+    kOpVSConstants8 = 8,
+    kOpInlineStreamSource = 9,
+    kOpSkip10 = 10,
+    kOpDynamicStream = 11,
+    kOpSkip12 = 12,
+    kOpSkip13 = 13,
+    kOpIndexData = 14,
+    kOpTAR = 15,
+    kOpGeoPrimState = 16,
+    kOpVSConstantPair17 = 17,
+    kOpVSConstantPair18 = 18,
+    kOpVSMatrix19 = 19,
+    kOpVSMatrix20 = 20,
+    kOpMatrixPalette21 = 21,
+    kOpMatrixPalette22 = 22,
+    kOpSkip23 = 23,
+    kOpSkip24 = 24,
+    kOpDrawVertices = 25,
+    kOpDrawIndexedVertices = 26,
+    kOpVSMatrix27 = 27,
+    kOpVSMatrix28 = 28,
+    kOpSkin29 = 29,
+    kOpSkin30 = 30,
+    kOpSkinSource = 31,
+    kOpPSMatrix32 = 32,
+    kOpPSMatrix33 = 33,
+    kOpPSConstants34 = 34,
+    kOpPSConstants35 = 35,
+    kOpRunPushBuffer = 36,
+    kOpcodeCount = 37,
+};
+
+// A packet: a header dword (opcode << 16 | length in dwords, the header counted) and its operands. A zero header
+// ends the stream. A Packet is the header alone, so a Packet pointer steps in dwords: packet + Length() is the next.
+struct Packet {
+    uint32_t header;                 // +0x00
+
+    uint32_t Opcode() const { return header >> 16; }
+    uint32_t Length() const { return header & 0xffff; }
+};
+static_assert(sizeof(Packet) == 4, "a Packet pointer steps in dwords");
+
+// A packet that reads a GeoPrim parameter: the data for the current variation is data + variationStride *
+// CurrentVariation. Opcodes 0-3, 10, 12-14, 23, 24 and 31 have no more operands.
+struct ParamPacket : Packet {
+    uint32_t variationStride;        // +0x04
+};
+
+// Opcodes 5-8, 17-22, 27-30 and 32-35: shader constants.
+struct ConstantsPacket : ParamPacket {
+    int32_t reg;                     // +0x08 the (first) register; the matrix opcodes have no more
+    int32_t count;                   // +0x0c 5-8, 34, 35: count >> 2 registers; 17-22, 29, 30: registers
+    int32_t reg1;                    // +0x10 17, 18, 21, 22, 29, 30: the second block
+    int32_t count1;                  // +0x14
+};
+static_assert(sizeof(ConstantsPacket) == 0x18, "a constants packet is 6 dwords");
+
+// Opcode 9: a stream source described inline in the parameter data.
+struct InlineStreamPacket : ParamPacket {
+    uint32_t stream;                 // +0x08
+    uint32_t elementSize;            // +0x0c bytes per counted element ahead of the description
+};
+static_assert(sizeof(InlineStreamPacket) == 0x10, "an inline stream packet is 4 dwords");
+
+// Opcode 11: the CPU vertex array and the dynamic vertex buffer it is copied into, kept in the packet. The last three
+// words are all ones while there is no buffer (EAGL_ReleaseDynamicBuffers).
+struct DynamicStreamPacket : ParamPacket {
+    uint32_t stream;                 // +0x08
+    uint32_t vertexStride;           // +0x0c
+    DynamicVertexBuffer *buffer;     // +0x10
+    int32_t capacity;                // +0x14 the count * 4 the buffer was made for
+    uint8_t *source;                 // +0x18 the array the buffer was made for
+};
+static_assert(sizeof(DynamicStreamPacket) == 0x1c, "a dynamic stream packet is 7 dwords");
+
+// Opcode 15: a TAR and its texture stage.
+struct StagePacket : ParamPacket {
+    uint32_t stage;                  // +0x08
+};
+static_assert(sizeof(StagePacket) == 0xc, "a TAR packet is 3 dwords");
+
+// Opcodes 25, 26: the draws (no parameter).
+struct DrawPacket : Packet {
+    uint32_t unknown04;              // +0x04
+    uint32_t enabled;                // +0x08 0: no draw
+};
+static_assert(sizeof(DrawPacket) == 0xc, "a draw packet is 3 dwords");
+
+// Opcode 36: a push buffer run (no parameter).
+struct PushBufferPacket : Packet {
+    uint32_t enabled;                // +0x04 0: not run
+    PushBuffer *pushBuffer;          // +0x08
+};
+static_assert(sizeof(PushBufferPacket) == 0xc, "a push buffer packet is 3 dwords");
+
+// Opcode 2's parameter data, and DrawArray's own copy of one.
+struct StreamDescription {           // 0x10
+    uint32_t vertexCount;            // +0x00
+    uint32_t unknown04;              // +0x04
+    uint32_t user;                   // +0x08 nonzero: opcode 11 draws from the caller's memory
+    uint32_t noCopy;                 // +0x0c nonzero: opcode 11 does not copy the vertices
+};
+static_assert(sizeof(StreamDescription) == 0x10, "a stream description is 4 dwords");
+
+// A skinning record (opcodes 29-31): three blend weights, each a float whose bit pattern's low byte is also the
+// index of its palette matrix - kept as bits, as the code reads both.
+struct SkinVertex {                  // 0x10
+    uint32_t weights[3];             // +0x00
+    uint32_t unknown0c;              // +0x0c
+};
+static_assert(sizeof(SkinVertex) == 0x10, "a skinning record is 16 bytes");
+
+// ---- D3D8 objects as EAGL sees them
+
+// The D3D8 resource header (Common, Data, Lock) every vertex, index and push buffer starts with.
+struct D3DResource {                 // 0xc
+    uint32_t common;                 // +0x00
+    uint32_t data;                   // +0x04 the data's address (an offset into the image until registered)
+    uint32_t lock;                   // +0x08
+};
+static_assert(sizeof(D3DResource) == 0xc, "a D3D8 resource header is 3 dwords");
+
+// D3DPushBuffer: the resource header, Size and AllocationSize.
+struct D3DPushBufferHeader {         // 0x14
+    D3DResource resource;            // +0x00
+    uint32_t size;                   // +0x0c
+    uint32_t allocationSize;         // +0x10
+};
+static_assert(sizeof(D3DPushBufferHeader) == 0x14, "a D3D8 push buffer header is 5 dwords");
 
 struct VertexShader {                // 4, "EAGL::VertexShader new"
     uint32_t handle;                 // +0x00 D3D8 vertex shader handle
@@ -48,7 +193,7 @@ struct PixelShader {                 // 4, "EAGL::PixelShader new"
 static_assert(sizeof(PixelShader) == 4, "a PixelShader is a handle");
 
 struct RenderMethod {                // 0x34 (PS2: EAGL::RenderMethod)
-    uint32_t *packets;               // +0x00 packet stream; an owned copy when cloned (its size in bytes at [-1])
+    Packet *packets;                 // +0x00 packet stream; an owned copy when cloned (its size in bytes at [-1])
     int numVariants;                 // +0x04 number of shader variants
     const void *declaration;         // +0x08 vertex declaration
     const void **vsMicrocode;        // +0x0c vertex shader programs, one per variant
@@ -62,7 +207,7 @@ struct RenderMethod {                // 0x34 (PS2: EAGL::RenderMethod)
     RenderMethod *parent;            // +0x2c
     const char *name;                // +0x30
 
-    RenderMethod* Construct(uint32_t *packets, int numVariants, const void *declaration, const void **vsMicrocode,
+    RenderMethod* Construct(Packet *packets, int numVariants, const void *declaration, const void **vsMicrocode,
                             VertexShader **vertexShaders, const uint8_t **psDefinitions,
                             PixelShader **pixelShaders, const char **paramNames, uint32_t variantHalf,
                             const char *name);                                 // 0x000f0f60
@@ -83,24 +228,24 @@ static_assert(sizeof(RenderMethod) == 0x34, "a RenderMethod is 0x34 bytes");
 
 // The loader's "VertexBuffer" object.
 struct LoadedVertexBuffer {
-    uint32_t *header;                // +0x00 the D3D8 vertex buffer header (relocated pointer)
-    uint32_t pad04[3];
+    D3DResource *header;             // +0x00 the D3D8 vertex buffer header (relocated pointer)
+    uint32_t unknown04[3];           // +0x04
     uint32_t fileOffset;             // +0x10 the data's offset in the ELF image
 };
 
 // A vertex buffer the CPU fills once (0x14). Unreferenced in this game.
 struct StaticVertexBuffer {
-    void *buffer;                    // +0x00 D3D8 vertex buffer (or a 0xc-byte stand-in for user memory)
+    D3DResource *buffer;             // +0x00 D3D8 vertex buffer (or a 0xc-byte stand-in for user memory)
     uint32_t size;                   // +0x04
     uint32_t stride;                 // +0x08 read by EAGL_SetStreamSource
     uint8_t user;                    // +0x0c
     uint8_t pad0d[3];
-    uint32_t unk10;                  // +0x10
+    uint32_t unknown10;              // +0x10
 
     void Nop6b80(uint32_t unused);                                             // 0x000f6b80 (empty)
     void Nop6ba0(uint32_t unused);                                             // 0x000f6ba0 (empty)
     StaticVertexBuffer* Construct(uint32_t size, uint32_t stride);             // 0x000f6bb0
-    StaticVertexBuffer* ConstructUser(uint32_t a, uint32_t b, uint32_t unused); // 0x000f6be0
+    StaticVertexBuffer* ConstructUser(uint32_t size, uint32_t stride, uint32_t unused);  // 0x000f6be0
     void Destruct();                                                           // 0x000f6c20
     void Nop6c90(uint32_t unused);                                             // 0x000f6c90 (empty)
     uint32_t GetSize();                                                        // 0x000f6ca0
@@ -114,15 +259,15 @@ static_assert(sizeof(StaticVertexBuffer) == 0x14, "a StaticVertexBuffer is 0x14 
 // The dynamic vertex buffer (0x30, "EAGL::VertexBuffer new"): three D3D8 buffers rotated per lock, or a header over
 // the caller's memory. Opcode 11 keeps one per packet (packet +0x10).
 struct DynamicVertexBuffer {
-    void *current;                   // +0x00 the buffer in use
-    void *buffers[3];                // +0x04
-    uint32_t userHeader[3];          // +0x10 D3D8 vertex buffer header over user memory
+    D3DResource *current;            // +0x00 the buffer in use
+    D3DResource *buffers[3];         // +0x04
+    D3DResource userHeader;          // +0x10 D3D8 vertex buffer header over user memory
     int index;                       // +0x1c which of the three
     uint32_t size;                   // +0x20
     uint32_t stride;                 // +0x24 read by EAGL_SetDynamicStreamSource
     uint8_t user;                    // +0x28 1: over user memory
     uint8_t pad29[3];
-    uint32_t unk2c;                  // +0x2c
+    uint32_t unknown2c;              // +0x2c
 
     DynamicVertexBuffer* Construct(uint32_t size, uint32_t stride);            // 0x000f6d00
     DynamicVertexBuffer* ConstructUser(void *data, uint32_t size, uint32_t stride);  // 0x000f6d50
@@ -137,7 +282,7 @@ static_assert(sizeof(DynamicVertexBuffer) == 0x30, "a DynamicVertexBuffer is 0x3
 
 // An index buffer (0xc). Unreferenced in this game.
 struct IndexBuffer {
-    void *buffer;                    // +0x00 D3D8 index buffer
+    D3DResource *buffer;             // +0x00 D3D8 index buffer
     uint32_t size;                   // +0x04
     uint8_t user;                    // +0x08
     uint8_t pad09[3];
@@ -156,12 +301,12 @@ static_assert(sizeof(IndexBuffer) == 0xc, "an IndexBuffer is 0xc bytes");
 struct PushBuffer {
     uint8_t notOwned;                // +0x00
     uint8_t pad01[3];
-    uint32_t header[5];              // +0x04 D3D8 push buffer header
-    uint32_t unk18;                  // +0x18
-    uint32_t unk1c;                  // +0x1c
-    uint32_t unk20;                  // +0x20
+    D3DPushBufferHeader header;      // +0x04
+    uint32_t unknown18;              // +0x18 Construct's Common argument
+    uint32_t unknown1c;              // +0x1c Construct's Size argument
+    uint32_t unknown20;              // +0x20 Construct's AllocationSize argument
 
-    PushBuffer* Construct(uint32_t a, uint32_t b, uint32_t c, uint32_t base);  // 0x000f7040
+    PushBuffer* Construct(uint32_t size, uint32_t allocationSize, uint32_t common, void *base);  // 0x000f7040
     void Destruct();                                                           // 0x000f70a0
 };
 static_assert(sizeof(PushBuffer) == 0x24, "a PushBuffer is 0x24 bytes");
@@ -189,24 +334,24 @@ struct DrawArray {
     struct UserVar { uint8_t *data; uint32_t count; };
 
     uint32_t primitiveType;          // +0x00
-    void *model;                     // +0x04 DynamicModel*
+    DynamicModel *model;             // +0x04
     GeoPrim *geoPrim;                // +0x08
     UserVar *userVars;               // +0x0c "mUserVarData", one per parameter
     int paramCount;                  // +0x10
-    uint32_t unk14;                  // +0x14
+    uint32_t unknown14;              // +0x14
     uint8_t locked;                  // +0x18
     uint8_t pad19[3];
     int drawVerts;                   // +0x1c
     int maxVerts;                    // +0x20 0xffff
-    uint32_t unk24;                  // +0x24 0xffff - primitive class
-    uint32_t unk28;                  // +0x28 0xffff
+    uint32_t unknown24;              // +0x24 0xffff - primitive class
+    uint32_t unknown28;              // +0x28 0xffff
     int streamParam;                 // +0x2c parameter index of the stream description, -1 none
     int primitiveClass;              // +0x30 0, 1, 2; -1 unsupported
     uint8_t dirty;                   // +0x34
     uint8_t keepCounts;              // +0x35
     uint8_t pad36[2];
     uint32_t numVerts;               // +0x38
-    uint32_t stream[4];              // +0x3c the stream description the stream parameter points at
+    StreamDescription stream;        // +0x3c the stream description the stream parameter points at
 
     bool SetGeoPrim(GeoPrim *prim);                                            // 0x000f55a0
     bool SetPrimitiveType(int type);                                           // 0x000f5640
@@ -246,7 +391,7 @@ static_assert(sizeof(DrawGouraud) == 0x9c, "the fields DrawGouraud's code touche
 struct DrawTextured {
     uint32_t primitiveType;          // +0x00
     GeoPrimState state;              // +0x04
-    void *tar;                       // +0x50 TAR*
+    TAR *tar;                        // +0x50
     PixelShader *pixelShader;        // +0x54
     VertexShader *vertexShader;      // +0x58
     uint8_t begun;                   // +0x5c
@@ -257,7 +402,7 @@ struct DrawTextured {
     bool Init();                                                               // 0x000f5a30
     void Destruct();                                                           // 0x000f5b60
     void InternalFlush();                                                      // 0x000f5be0
-    void SetTAR(void *tar);                                                    // 0x000f5c00 (invented)
+    void SetTAR(TAR *tar);                                                     // 0x000f5c00 (invented)
     void Begin(uint32_t primitiveType);                                        // 0x0014cf10
 };
 static_assert(sizeof(DrawTextured) == 0xa0, "the fields DrawTextured's code touches end at 0xa0");
@@ -283,7 +428,7 @@ void EAGL_SetVertexShaderConstant(int reg, const void *data, int count);       /
 void EAGL_SetStreamSource(uint32_t stream, const EAGL::StaticVertexBuffer *buffer);      // 0x000f43e0
 void EAGL_SetDynamicStreamSource(uint32_t stream, const EAGL::DynamicVertexBuffer *buffer);  // 0x000f4420
 void EAGL_SetIndices(uint32_t baseVertex, const EAGL::IndexBuffer *buffer);    // 0x000f4460 (unreferenced)
-void EAGL_SetIndexData(uint32_t base, const uint8_t *indices);                 // 0x000f4480
+void EAGL_SetIndexData(uint32_t base, const void *indices);                    // 0x000f4480
 void EAGL_SetPixelShaderConstant(uint32_t reg, const void *data, uint32_t count);  // 0x000f44a0
 void EAGL_DrawVertices(uint32_t start, uint32_t count);                        // 0x000f44c0
 void EAGL_DrawIndexedVerticesPushBuffer(uint32_t unused0, uint32_t unused1, uint32_t start, uint32_t count);  // 0x000f44e0
@@ -294,13 +439,13 @@ void EAGL_StoreRegisterArgs();                                                 /
 // ---- helpers
 void __stdcall EAGL_ModelCallFence(const char *name);                          // 0x000f5d70 (Model::Call's)
 bool __stdcall EAGL_ReturnFalse(uint32_t unused);                              // 0x000f5de0 (unreferenced)
-void EAGL_UploadMatrixPalette(int reg0, int count0, int reg1, int count1, const uint8_t *matrices);  // 0x000f5df0
-void EAGL_SkinMatrix(const uint8_t *vertices, int index, const uint8_t *palette, float *out);        // 0x000f5eb0
+void EAGL_UploadMatrixPalette(int reg0, int count0, int reg1, int count1, const float *matrices);  // 0x000f5df0
+void EAGL_SkinMatrix(const EAGL::SkinVertex *vertices, int index, const float *palette, float *out);  // 0x000f5eb0
 uint8_t *EAGL_RMParamData();                                                   // 0x000f5fd0 (unreferenced)
 uint32_t EAGL_RMPacketStride();                                                // 0x000f5fe0 (unreferenced)
 uint8_t *EAGL_RMVariationData();                                               // 0x000f5ff0 (unreferenced)
-void EAGL_SkinAndUpload(const uint8_t *vertices, int count, int reg0, int count0, int reg1, int count1,
-                        const uint8_t *palette);                               // 0x000f6aa0
+void EAGL_SkinAndUpload(const EAGL::SkinVertex *vertices, int count, int reg0, int count0, int reg1, int count1,
+                        const float *palette);                                 // 0x000f6aa0
 void EAGL_LockRegisterArgs();                                                  // 0x000f6b90 (EAX, EDX; unreferenced)
 
 // ---- the opcode handlers (table at 0x001ce700, which still points at the originals' addresses)

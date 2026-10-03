@@ -1,13 +1,20 @@
 #include "Profiler.h"
 
+#include "EaglFont.h"
+#include "Model.h"
 #include "Realgraph.h"
+#include "RenderContext.h"
 #include "Transform.h"
+#include "View.h"
 #include "../platform/RealSystem.h"
+#include "../../helpers.h"
 
+#include <bit>
 #include <intrin.h>
-#include <xmmintrin.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <string.h>
+#include <xmmintrin.h>
 
 // ---------------------------------------------------------------------------------------------------------------
 // EAGL's PrintMessage and profiler (docs/driving/eagl.md 4.9).
@@ -30,129 +37,100 @@
 #pragma STDC FP_CONTRACT OFF
 #endif
 
+using EAGL::ProfilerRegion;
+using EAGL::ProfilerTimer;
+
 namespace {
 
-inline uint32_t &U32(uint32_t address) {
-    return *(uint32_t *)(uintptr_t)address;
-}
+// Constants the original reads from .rdata that are not exact small numbers (bit-checked against it)
+constexpr float kPercentScale = 0.00078125f;   // 1 / 1280: the bar sum (40 per frame, 32 frames) to a fraction
+constexpr float kBelowOne = 0.995f;
+constexpr float kBelowTen = 9.95f;
+static_assert(std::bit_cast<uint32_t>(kPercentScale) == 0x3a4ccccd, "the original's 0x001a0b78");
+static_assert(std::bit_cast<uint32_t>(kBelowOne) == 0x3f7eb852, "the original's 0x001a0b74");
+static_assert(std::bit_cast<uint32_t>(kBelowTen) == 0x411f3333, "the original's 0x001a0b70");
+constexpr double kBarHeight = 1280.0;          // a full frame's bar sum
+constexpr double kBarScale = 0.03125;          // bar sum to pixels (1 / 32)
 
-inline uint8_t &U8(uint32_t address) {
-    return *(uint8_t *)(uintptr_t)address;
-}
-
-inline float &F32(uint32_t address) {
-    return *(float *)(uintptr_t)address;
-}
-
-// Constants in .rdata, as the original reads them
-inline double K(uint32_t address) {
-    return *(const float *)(uintptr_t)address;
-}
-
-const uint32_t kTwo32 = 0x0018a4a8;           // 4294967296.0f
-const uint32_t kHalf = 0x00189eb0;            // 0.5f
-const uint32_t kOne = 0x00189de8;             // 1.0f
-const uint32_t kTwo = 0x00189e00;             // 2.0f
-const uint32_t kThree = 0x0018a9f4;           // 3.0f
-const uint32_t kFour = 0x00189ed4;            // 4.0f
-const uint32_t kFive = 0x00189ff4;            // 5.0f
-const uint32_t kThirtyTwo = 0x0018b8d0;       // 32.0f
-const uint32_t kThirtyFour = 0x001a0b88;      // 34.0f
-const uint32_t kForty = 0x0018a8ec;           // 40.0f
-const uint32_t kFortyThree = 0x001a0b84;      // 43.0f
-const uint32_t kFiftyTwo = 0x001904f4;        // 52.0f
-const uint32_t kHundred = 0x0018b5b4;         // 100.0f
-const uint32_t kBarHeight = 0x001a0b80;       // 1280.0f
-const uint32_t kBarScale = 0x001a0b7c;        // 0.03125f
-const uint32_t kPercentScale = 0x001a0b78;    // 0.00078125f
-const uint32_t kBelowOne = 0x001a0b74;        // 0.995f
-const uint32_t kBelowTen = 0x001a0b70;        // 9.95f
+// PrintMessage's state
+#define PrintLevel I32_AT(0x001cdcc8)                       // messages above it are dropped
+#define PrintHook (*(int (**)(const char *format, va_list arguments))0x00240268)
+#define PrintBuffer ((char *)0x00240270)                    // 0x200 bytes
+#define CrtVsnprintf ((int (*)(char *buffer, int size, const char *format, va_list arguments))0x001340f5)
+#define XapiOutputDebugStringA ((void (__stdcall *)(const char *text))0x0010e832)
 
 // The profiler's state
-const uint32_t kHistoryIndex = 0x00240528, kDrawGouraud = 0x0024052c, kPageTick = 0x00240530,
-               kPage = 0x00240534, kScreenWidth = 0x00240538, kViewPort = 0x00240540, kDrawEnabled = 0x00240544,
-               kBarMode = 0x00240545, kLastFrameTsc = 0x00240548, kRegionList = 0x0024053c;
-const uint32_t kFrameRegion = 0x00240560;     // the static region the frame mark times
-const uint32_t kPaging = 0x001ce018, kStartX = 0x001ce01c, kStartY = 0x001ce020, kCurrentTimer = 0x001ce024,
-               kSkipFrame = 0x001ce072;
-const uint32_t kPageTicks = 0x00242424;       // TIMER ticks per page (and per flash)
-const uint32_t kDefaultFont = 0x00241be0;
+#define HistoryIndex U32_AT(0x00240528)                     // the ring slot this frame writes
+#define Gouraud (*(EAGL::ProfilerDrawGouraud **)0x0024052c)
+#define PageTick U32_AT(0x00240530)
+#define Page U32_AT(0x00240534)                             // which region's label is shown
+#define ScreenWidth FLOAT_AT(0x00240538)
+#define RegionList (*(ProfilerRegion **)0x0024053c)
+#define ProfilerViewPort (*(EAGL::ViewPort **)0x00240540)
+#define DrawEnabled U8_AT(0x00240544)
+#define BarMode U8_AT(0x00240545)
+#define LastFrameTsc U32_AT(0x00240548)
+#define FrameRegion ((ProfilerRegion *)0x00240560)          // the static region the frame mark times
+#define Paging U8_AT(0x001ce018)
+#define StartX FLOAT_AT(0x001ce01c)
+#define StartY FLOAT_AT(0x001ce020)
+#define CurrentTimer (*(ProfilerTimer **)0x001ce024)
+#define SkipFrame U8_AT(0x001ce072)
+#define PageTicks U32_AT(0x00242424)                        // TIMER ticks per page (and per flash)
+#define DefaultFont (*(const uint8_t **)0x00241be0)
 
-inline EAGL::ProfilerRegion *&RegionList() {
-    return *(EAGL::ProfilerRegion **)(uintptr_t)kRegionList;
-}
+#define EaglMalloc (*(void *(**)(uint32_t size, const char *name))0x001caf68)
+#define NameDrawGouraudNew ((const char *)0x001ce05c)       // "EAGL::DrawGouraud new"
+#define NameDynamicModelNew ((const char *)0x001ce3b0)      // "EAGL::DynamicModel new"
 
-inline EAGL::ProfilerTimer *&CurrentTimer() {
-    return *(EAGL::ProfilerTimer **)(uintptr_t)kCurrentTimer;
-}
+#define D3DDevice_SetVertexDataColor ((void (__stdcall *)(int reg, uint32_t colour))0x0016b9d0)
+#define D3DDevice_SetVertexData4f ((void (__stdcall *)(int reg, float x, float y, float z, float w))0x0016b970)
+#define D3DDevice_Begin ((void (__stdcall *)(uint32_t primitiveType))0x0016ba20)
+#define D3DDevice_End ((void (__stdcall *)())0x0016ba60)
 
-inline EAGL::ProfilerDrawGouraud *DrawGouraud() {
-    return *(EAGL::ProfilerDrawGouraud **)(uintptr_t)kDrawGouraud;
-}
-
-inline const uint8_t *DefaultFont() {
-    return *(const uint8_t **)(uintptr_t)kDefaultFont;
-}
-
-inline void *ProfilerViewPort() {
-    return *(void **)(uintptr_t)kViewPort;
-}
+enum { kVertexDiffuse = 3, kVertexPosition = -1 };   // D3DVSDE_*
+enum { kLineList = 2, kQuadStrip = 6 };             // D3DPT_*
 
 // RDTSC's low half (all the profiler keeps)
 inline uint32_t Rdtsc() {
     return (uint32_t)__rdtsc();
 }
 
-inline void InternalFlush(EAGL::ProfilerDrawGouraud *drawGouraud) {
-    ((void (__fastcall *)(void *, int))0x000f59f0)(drawGouraud, 0);   // DrawGouraud::InternalFlush (module F)
+// CVTSS2SI: rounded as MXCSR says (to nearest)
+inline int RoundToInt(float value) {
+    return _mm_cvtss_si32(_mm_set_ss(value));
 }
 
-inline void SetVertexDataColor(uint32_t colour) {
-    ((void (__stdcall *)(int, uint32_t))0x0016b9d0)(3, colour);   // D3DDevice_SetVertexDataColor(D3DVSDE_DIFFUSE)
-}
-
-inline void SetVertex(float x, float y) {
-    ((void (__stdcall *)(int, float, float, float, float))0x0016b970)(-1, x, y, 0.0f, 1.0f);   // SetVertexData4f
+void SetVertex(uint32_t colour, float x, float y) {
+    D3DDevice_SetVertexDataColor(kVertexDiffuse, colour);
+    D3DDevice_SetVertexData4f(kVertexPosition, x, y, 0.0f, 1.0f);
 }
 
 // The end of each strip or list: DrawGouraud's begun flag cleared, D3DDevice_End, InternalFlush
-inline void EndPrimitive() {
-    EAGL::ProfilerDrawGouraud *drawGouraud = DrawGouraud();
+void EndPrimitive() {
+    EAGL::ProfilerDrawGouraud *drawGouraud = Gouraud;
     drawGouraud->begun = 0;
-    ((void (__stdcall *)())0x0016ba60)();   // D3DDevice_End
-    InternalFlush(drawGouraud);
-}
-
-void *DeviceGet() {
-    return ((void *(*)())0x000e8a40)();   // EAGL::Device::Get
-}
-
-void *CurrentTextureRenderContext(void *device) {
-    return ((void *(__fastcall *)(void *, int))0x000e89f0)(device, 0);
-}
-
-void *CurrentRenderContext(void *device) {
-    return ((void *(__fastcall *)(void *, int))0x000e89e0)(device, 0);
+    D3DDevice_End();
+    drawGouraud->InternalFlush();
 }
 
 }  // namespace
 
 // FUNC_AT(0x000f42b0)
 int EAGL::PrintMessage(int level, const char *format, ...) {
-    if (level > *(const int32_t *)0x001cdcc8u)
+    if (level > PrintLevel)
         return 0;
     va_list arguments;
     va_start(arguments, format);
-    int (*hook)(const char *, va_list) = *(int (**)(const char *, va_list))0x00240268u;
-    if (hook != 0) {
+    int (*hook)(const char *, va_list) = PrintHook;
+    if (hook != NULL) {
         int result = hook(format, arguments);
         va_end(arguments);
         return result;
     }
-    char *buffer = (char *)0x00240270u;
-    int written = ((int (*)(char *, int, const char *, va_list))0x001340f5)(buffer, 0x200, format, arguments);
-    buffer[0x1ff] = 0;
-    ((void (__stdcall *)(const char *))0x0010e832)(buffer);   // XAPILIB::OutputDebugStringA
+    int written = CrtVsnprintf(PrintBuffer, 0x200, format, arguments);
+    PrintBuffer[0x1ff] = 0;
+    XapiOutputDebugStringA(PrintBuffer);
     va_end(arguments);
     return written;
 }
@@ -184,43 +162,43 @@ __declspec(naked) void EAGL::ProfilerSetVertexShaderConstantRegs() {
 
 // FUNC_AT(0x000f4580)
 void EAGL::ProfilerHistory::SetHistoryValue(uint32_t cycleCount, float value, int index) {
-    cycleSum = (float)((double)cycleSum - (double)cycles[index]);
-    double c = (double)cycleCount;   // FILD, plus 2^32 when the top bit is set: exact
-    cycles[index] = (float)c;
-    cycleSum = (float)(c + (double)cycleSum);   // the unrounded count (FST keeps it on the stack)
-    valueSum = (float)((double)valueSum - (double)values[index]);
+    cycleSum = cycleSum - cycles[index];
+    double c = cycleCount;   // FILD, plus 2^32 when the top bit is set: exact
+    cycles[index] = float(c);
+    cycleSum = float(c + cycleSum);   // the unrounded count (FST keeps it on the stack)
+    valueSum = valueSum - values[index];
     values[index] = value;
-    valueSum = (float)((double)value + (double)valueSum);
+    valueSum = value + valueSum;
 }
 
 // FUNC_AT(0x000f45f0)
 void EAGL::ProfilerResetMaxima() {
-    for (ProfilerRegion *region = RegionList(); region != 0; region = region->next) {
+    for (ProfilerRegion *region = RegionList; region != NULL; region = region->next) {
         region->maxCycles = 0;
         region->maxFraction = 0.0f;
     }
 }
 
-// Turns the page of regions labelled every kPageTicks ticks while paging is on, back to the first page past the
+// Turns the page of regions labelled every PageTicks ticks while paging is on, back to the first page past the
 // last; with paging off it only keeps the tick.
 // FUNC_AT(0x000f4620)
 void EAGL::ProfilerAdvancePage(uint32_t count) {
-    if (U8(kPaging) != 0) {
-        uint32_t interval = U32(kPageTicks);
-        if ((uint32_t)TIMER_gettick() - U32(kPageTick) >= interval) {
-            U32(kPageTick) = (uint32_t)TIMER_gettick();
-            U32(kPage)++;
+    if (Paging != 0) {
+        uint32_t interval = PageTicks;
+        if (TIMER_gettick() - PageTick >= interval) {
+            PageTick = TIMER_gettick();
+            Page++;
         }
     } else {
-        U32(kPageTick) = (uint32_t)TIMER_gettick();
+        PageTick = TIMER_gettick();
     }
-    if (U32(kPage) >= count)
-        U32(kPage) = 0;
+    if (Page >= count)
+        Page = 0;
 }
 
 // FUNC_AT(0x000f4680)
 void EAGL::ProfilerClearCycles() {
-    for (ProfilerRegion *region = RegionList(); region != 0; region = region->next)
+    for (ProfilerRegion *region = RegionList; region != NULL; region = region->next)
         region->cycles = 0;
 }
 
@@ -235,11 +213,11 @@ void EAGL::ProfilerRegion::ProcessRegion(uint32_t frameCycles) {
         if (c > maxCycles)
             maxCycles = c;
         idleFrames = 0;
-        fraction = (float)((double)c / (double)frameCycles * K(kForty));
+        fraction = float(double(c) / frameCycles * 40.0);
         if (fraction > maxFraction)   // FCOMP, TEST AH,41h: kept unless greater (NaN never replaces)
             maxFraction = fraction;
     }
-    history.SetHistoryValue(c, fraction, (int)U32(kHistoryIndex));
+    history.SetHistoryValue(c, fraction, HistoryIndex);
 }
 
 // One region in one of DrawRegions' three passes: 0 the swatch and, on the labelled page, the label's backing,
@@ -251,181 +229,164 @@ void EAGL::ProfilerRegion::DrawRegion(float x, float y, int index, int pass, flo
     float xSlot = x;   // the argument's slot, rewritten as the original does ([esp+0x48])
     bool label = false;
     double px = x, py;   // the pen, kept on the x87 stack
-    double width = F32(kScreenWidth);
-    if (px > width - K(kThirtyTwo)) {   // FCOMPP, TEST AH,41h: on only when greater (ordered)
+    if (px > double(ScreenWidth) - 32.0) {   // FCOMPP, TEST AH,41h: on only when greater (ordered)
         float shapeX, shapeY, shapeW, shapeH, shapeNear, shapeFar;
-        ((void (__fastcall *)(void *, int, float *, float *, float *, float *, float *, float *))0x000e4680)(
-            ProfilerViewPort(), 0, &shapeX, &shapeY, &shapeW, &shapeH, &shapeNear, &shapeFar);   // ViewPort::GetShape
-        float limit = (float)((double)F32(kScreenWidth) - K(kThirtyTwo));
+        ProfilerViewPort->GetShape(&shapeX, &shapeY, &shapeW, &shapeH, &shapeNear, &shapeFar);
+        float limit = ScreenWidth - 32.0f;
         px = x;
         if (px > limit) {
-            xSlot = (float)((double)shapeH * K(kHalf) + (double)shapeY);   // the viewport's middle, in the x slot
-            float columnWidth = (float)((double)limit - K(kStartX));
+            xSlot = float(double(shapeH) * 0.5 + shapeY);   // the viewport's middle, in the x slot
+            float columnWidth = limit - StartX;
             py = y;
             do {
-                if (F32(kStartY) > xSlot)
-                    py = py - K(kFiftyTwo);
+                if (StartY > xSlot)
+                    py = py - 52.0;
                 else
-                    py = py + K(kFiftyTwo);
-                px = px - (double)columnWidth;
+                    py = py + 52.0;
+                px = px - columnWidth;
             } while (px > limit);
-            xSlot = (float)px;
+            xSlot = float(px);
         } else {
             py = y;
         }
     } else {
         py = y;
     }
-    float penX = (float)px;   // [esp+0xc]
-    float penY = (float)py;   // [esp+0x14]
+    float penX = float(px);   // [esp+0xc]
+    float penY = float(py);   // [esp+0x14]
     float rectX = 0.0f, rectY = 0.0f, rectW = 0.0f, rectH = 0.0f;
-    uint32_t colour;
-    if (index == (int)U32(kPage) && DefaultFont() != 0) {
-        colour = 0xff505050;
+    uint32_t swatch;
+    if (index == (int)Page && DefaultFont != NULL) {
+        swatch = 0xff505050;
         label = true;
-        FONT_getrectx_thunk(DefaultFont(), (const uint8_t *)name, &rectX, &rectY, &rectW, &rectH);
+        FONT_getrectx_thunk(DefaultFont, (const uint8_t *)name, &rectX, &rectY, &rectW, &rectH);
     } else {
-        colour = 0xff000000;
+        swatch = 0xff000000;
     }
     if (flashTick != 0) {
-        uint32_t now = (uint32_t)TIMER_gettick();
-        if (now - flashTick >= U32(kPageTicks))
+        uint32_t now = TIMER_gettick();
+        if (now - flashTick >= PageTicks)
             flashTick = 0;
         else if ((now & 8) != 0)
-            colour = 0xffaa0000;
+            swatch = 0xffaa0000;
     }
     float vertex[4];   // x, y, z, w for ProfilerVertex
     vertex[2] = 0.0f;
     vertex[3] = 1.0f;
     float scratch;     // [esp+0x34]: the swatch's right edge, a vertex colour, the graph's offset
     if (pass == 0) {
-        DrawGouraud()->Begin(6);
-        SetVertexDataColor(colour);
-        SetVertex(penX, penY);
-        double right = (double)penX + K(kThirtyTwo);
-        scratch = (float)right;
-        vertex[0] = (float)right;
-        SetVertexDataColor(colour);
-        SetVertex(vertex[0], penY);
-        vertex[1] = (float)((double)penY + K(kForty));
-        SetVertexDataColor(colour);
-        SetVertex(penX, vertex[1]);
+        Gouraud->Begin(kQuadStrip);
+        SetVertex(swatch, penX, penY);
+        scratch = penX + 32.0f;
         vertex[0] = scratch;
-        SetVertexDataColor(colour);
-        SetVertex(vertex[0], vertex[1]);
+        SetVertex(swatch, vertex[0], penY);
+        vertex[1] = penY + 40.0f;
+        SetVertex(swatch, penX, vertex[1]);
+        vertex[0] = scratch;
+        SetVertex(swatch, vertex[0], vertex[1]);
         EndPrimitive();
-        if (label && DefaultFont() != 0) {
-            if ((double)F32(kScreenWidth) * K(kHalf) < (double)penX)   // TEST AH,5 / JP: on when less (ordered)
-                penX = (float)((K(kThirtyTwo) - (double)rectW) + (double)penX);
-            DrawGouraud()->Begin(6);
+        if (label && DefaultFont != NULL) {
+            if (double(ScreenWidth) * 0.5 < penX)   // TEST AH,5 / JP: on when less (ordered)
+                penX = float(32.0 - rectW + penX);
+            Gouraud->Begin(kQuadStrip);
             uint32_t black = 0xff000000;
-            vertex[1] = (float)((double)penY + K(kFortyThree));
+            vertex[1] = penY + 43.0f;
             vertex[0] = penX;
             ProfilerVertex(vertex, &black);
-            vertex[0] = (float)((double)rectW + (double)penX);
+            vertex[0] = rectW + penX;
             ProfilerVertex(vertex, &black);
-            vertex[1] = (float)((double)vertex[1] + (double)rectH);
+            vertex[1] = vertex[1] + rectH;
             vertex[0] = penX;
             ProfilerVertex(vertex, &black);
-            vertex[0] = (float)((double)rectW + (double)penX);
+            vertex[0] = rectW + penX;
             ProfilerVertex(vertex, &black);
             EndPrimitive();
         }
-        *total = (float)((double)history.valueSum + (double)*total);
+        *total = history.valueSum + *total;
     }
-    penY = (float)((double)penY + K(kForty));
+    penY = penY + 40.0f;
     if (pass == 1) {
-        if (U8(kBarMode) != 0) {
+        if (BarMode != 0) {
             // A bar up from the pen, in the region's colour
             float bar = history.valueSum;
-            if (this == (ProfilerRegion *)(uintptr_t)kFrameRegion)
-                bar = (float)((K(kBarHeight) - (double)*total) + (double)bar);
-            DrawGouraud()->Begin(6);
-            SetVertexDataColor(this->colour);
-            SetVertex(penX, penY);
-            double right = (double)penX + K(kThirtyTwo);
-            scratch = (float)right;
-            vertex[0] = (float)right;
-            SetVertexDataColor(this->colour);
-            SetVertex(vertex[0], penY);
-            vertex[1] = (float)((double)penY - (double)bar * K(kBarScale));
-            SetVertexDataColor(this->colour);
-            SetVertex(penX, vertex[1]);
+            if (this == FrameRegion)
+                bar = float(kBarHeight - *total + bar);
+            Gouraud->Begin(kQuadStrip);
+            SetVertex(colour, penX, penY);
+            scratch = penX + 32.0f;
             vertex[0] = scratch;
-            SetVertexDataColor(this->colour);
-            SetVertex(vertex[0], vertex[1]);
+            SetVertex(colour, vertex[0], penY);
+            vertex[1] = float(penY - double(bar) * kBarScale);
+            SetVertex(colour, penX, vertex[1]);
+            vertex[0] = scratch;
+            SetVertex(colour, vertex[0], vertex[1]);
         } else {
-            // The history as vertical lines, one a frame from the oldest, a column of kOne apart
+            // The history as vertical lines, one a frame from the oldest, a pixel apart
             scratch = 0.0f;
-            if (this == (ProfilerRegion *)(uintptr_t)kFrameRegion)
-                scratch = (float)((K(kBarHeight) - (double)*total) * K(kBarScale));
-            DrawGouraud()->Begin(2);
-            uint32_t i = U32(kHistoryIndex);
+            if (this == FrameRegion)
+                scratch = float((kBarHeight - *total) * kBarScale);
+            Gouraud->Begin(kLineList);
+            uint32_t i = HistoryIndex;
             float lineY = penY;
             for (;;) {
-                SetVertexDataColor(this->colour);
-                SetVertex(penX, lineY);
-                vertex[1] = (float)((double)penY - ((double)scratch + (double)history.values[i]));
-                SetVertexDataColor(this->colour);
-                SetVertex(penX, vertex[1]);
+                SetVertex(colour, penX, lineY);
+                vertex[1] = float(penY - (double(scratch) + history.values[i]));
+                SetVertex(colour, penX, vertex[1]);
                 i++;
-                penX = (float)((double)penX + K(kOne));
+                penX = penX + 1.0f;
                 if (i >= 0x20)
                     i = 0;
-                if (i == U32(kHistoryIndex))
+                if (i == HistoryIndex)
                     break;
             }
         }
         EndPrimitive();
     }
-    InternalFlush(DrawGouraud());
+    Gouraud->InternalFlush();
     if (pass != 2)
         return;
-    const uint8_t *font = DefaultFont();
-    if (font == 0)
+    const uint8_t *font = DefaultFont;
+    if (font == NULL)
         return;
     // The figure: per cent of the frame, or what is left of it for the frame region
     double sum = history.valueSum;
-    if (this == (ProfilerRegion *)(uintptr_t)kFrameRegion)
-        sum = sum + (K(kBarHeight) - (double)*total);
-    double percent = sum * K(kHundred) * K(kPercentScale);
-    float textX = (float)((double)penX + K(kTwo));
-    float textY = (float)(((double)penY - K(kForty)) + K(kFive));
-    if (percent < K(kBelowOne)) {   // TEST AH,5 / JP: on when less (ordered)
-        float hundredths = (float)(percent * K(kHundred));
-        int value = _mm_cvtss_si32(_mm_set_ss(hundredths));   // CVTSS2SI: rounded as MXCSR says (to nearest)
-        FONT_drawtextfa(font, textX, textY, (const char *)0x001ce040u, value);   // ".%02d"
-    } else if (percent < K(kBelowTen)) {
-        FONT_drawtextfa(font, textX, textY, (const char *)0x001ce048u, percent);   // "%.1f"
+    if (this == FrameRegion)
+        sum = sum + (kBarHeight - *total);
+    double percent = sum * 100.0 * kPercentScale;
+    float textX = penX + 2.0f;
+    float textY = float(double(penY) - 40.0 + 5.0);
+    if (percent < kBelowOne) {   // TEST AH,5 / JP: on when less (ordered)
+        float hundredths = float(percent * 100.0);
+        FONT_drawtextfa(font, textX, textY, ".%02d", RoundToInt(hundredths));
+    } else if (percent < kBelowTen) {
+        FONT_drawtextfa(font, textX, textY, "%.1f", percent);
     } else {
-        FONT_drawtextfa(font, (float)((double)textX + K(kFour)), textY, (const char *)0x001ce050u,
-                        percent);   // "%.0f"
+        FONT_drawtextfa(font, textX + 4.0f, textY, "%.0f", percent);
     }
     if (!label)
         return;
-    if ((double)F32(kScreenWidth) * K(kHalf) < (double)xSlot)
-        xSlot = (float)((K(kThirtyTwo) - (double)rectW) + (double)xSlot);
-    FONT_drawtextfa(DefaultFont(), xSlot, (float)((double)penY + K(kThree)), (const char *)0x001ce058u,
-                    name);   // "%s"
+    if (double(ScreenWidth) * 0.5 < xSlot)
+        xSlot = float(32.0 - rectW + xSlot);
+    FONT_drawtextfa(DefaultFont, xSlot, penY + 3.0f, "%s", name);
 }
 
 // FUNC_AT(0x000f4e50)
 void EAGL::ProfilerRegion::Link() {
-    next = RegionList();
-    RegionList() = this;
+    next = RegionList;
+    RegionList = this;
 }
 
 // FUNC_AT(0x000f4e70)
 void EAGL::ProfilerRegion::Unlink() {
-    ProfilerRegion *p = RegionList();
+    ProfilerRegion *p = RegionList;
     if (p == this) {
-        RegionList() = next;
+        RegionList = next;
         return;
     }
     if (p->next != this) {
         for (;;) {
             ProfilerRegion *n = p->next;
-            if (n == 0)
+            if (n == NULL)
                 break;
             p = n;
             if (p->next == this)
@@ -445,7 +406,7 @@ void EAGL::ProfilerRegion::UnlinkThunk() {
 // FUNC_AT(0x000f4ec0)
 void EAGL::ProfilerTimer::Start() {
     if (running == 0) {
-        CurrentTimer() = this;
+        CurrentTimer = this;
         start = Rdtsc();   // RDTSC at 0x000f4ed2
         running = 1;
     }
@@ -468,11 +429,11 @@ void EAGL::ProfilerTimer::Destruct() {
         running = 0;
         ProfilerTimer *p = parent;
         if (p->running == 0) {
-            CurrentTimer() = p;
+            CurrentTimer = p;
             p->start = Rdtsc();   // RDTSC at 0x000f4f75
             p->running = 1;
         }
-    } else if (child != 0) {
+    } else if (child != NULL) {
         child->parent = parent;
     }
 }
@@ -492,52 +453,50 @@ EAGL::ProfilerRegion* EAGL::ProfilerRegion::Construct(const char *regionName, ui
     maxFraction = 0.0f;
     idleFrames = 0x20;
     flashTick = 0;
-    next = RegionList();
-    RegionList() = this;
+    next = RegionList;
+    RegionList = this;
     return this;
 }
 
 // FUNC_AT(0x000f5020)
 void EAGL::ProfilerRegion::DrawRegions() {
     float total = 0.0f;
-    if (ProfilerViewPort() == 0) {
-        void *context = CurrentRenderContext(DeviceGet());
-        U32(kViewPort) = (uint32_t)(uintptr_t)((void *(__fastcall *)(void *, int))0x000ee010)(context, 0);  // NewViewPort
+    if (ProfilerViewPort == NULL) {
+        RenderContext *context = Device::Get()->GetCurrentRenderContext();
+        ProfilerViewPort = context->NewViewPort();
         float width, height;
-        ((void (__fastcall *)(void *, int, float *, float *))0x000e6a80)(context, 0, &width, &height);   // GetSize
-        ((void (__fastcall *)(void *, int, float, float, float, float, float, float))0x000e4340)(
-            ProfilerViewPort(), 0, 0.0f, 0.0f, width, height, 0.0f, 1.0f);   // ViewPort::SetShape
-        ((void (__fastcall *)(void *, int, float, float))0x000e4900)(ProfilerViewPort(), 0, 0.0f, 1.0f);  // SetOrthographic
-        F32(kScreenWidth) = width;
+        context->GetSize(&width, &height);
+        ProfilerViewPort->SetShape(0.0f, 0.0f, width, height, 0.0f, 1.0f);
+        ProfilerViewPort->SetOrthographic(0.0f, 1.0f);
+        ScreenWidth = width;
     }
-    if (U32(kDrawGouraud) == 0) {
-        void *memory = (*(void *(**)(uint32_t, const char *))0x001caf68u)(0x9c, (const char *)0x001ce05cu);
-        void *drawGouraud = memory != 0 ? ((void *(__fastcall *)(void *, int))0x000f58b0)(memory, 0) : 0;
-        U32(kDrawGouraud) = (uint32_t)(uintptr_t)drawGouraud;
-        ((void (__fastcall *)(void *, int))0x000f5970)(drawGouraud, 0);   // DrawGouraud::Init
-        DrawGouraud()->state.SetDepthTestMethod(0x207);                    // GL_ALWAYS
+    if (Gouraud == NULL) {
+        void *memory = EaglMalloc(sizeof(DrawGouraud), NameDrawGouraudNew);
+        DrawGouraud *drawGouraud = memory != NULL ? static_cast<DrawGouraud *>(memory)->Construct() : NULL;
+        Gouraud = static_cast<ProfilerDrawGouraud *>(drawGouraud);
+        drawGouraud->Init();
+        Gouraud->state.SetDepthTestMethod(0x207);   // GL_ALWAYS
     }
-    ((void (__fastcall *)(void *, int))0x000e4be0)(ProfilerViewPort(), 0);   // ViewPort::BeginView
-    if (DefaultFont() != 0)
-        *(uint32_t *)(DefaultFont() + 0x20) = 0xffaaaaaa;
+    ProfilerViewPort->BeginView();
+    if (DefaultFont != NULL)
+        ((FNTXFont *)DefaultFont)->colour = 0xffaaaaaa;
     uint32_t drawn = 0;
     for (int pass = 0; pass < 3; pass++) {
-        float x = F32(kStartX);
-        float y = F32(kStartY);
+        float x = StartX;
+        float y = StartY;
         drawn = 0;
-        for (ProfilerRegion *region = RegionList(); region != 0; region = region->next) {
-            if (region->idleFrames < 0x20 &&
-                (region->flashTick == 0 || region->history.valueSum > F32(kHalf))) {
-                region->DrawRegion(x, y, (int)drawn, pass, &total);
-                x = (float)((double)x + K(kThirtyFour));
+        for (ProfilerRegion *region = RegionList; region != NULL; region = region->next) {
+            if (region->idleFrames < 0x20 && (region->flashTick == 0 || region->history.valueSum > 0.5f)) {
+                region->DrawRegion(x, y, drawn, pass, &total);
+                x = x + 34.0f;
                 drawn++;
             } else {
-                region->flashTick = (uint32_t)TIMER_gettick();
+                region->flashTick = TIMER_gettick();
             }
         }
-        InternalFlush(DrawGouraud());
+        Gouraud->InternalFlush();
     }
-    ((void (__fastcall *)(void *, int))0x000e49a0)(ProfilerViewPort(), 0);   // ViewPort::EndView
+    ProfilerViewPort->EndView();
     ProfilerAdvancePage(drawn);   // inline in the original
 }
 
@@ -556,19 +515,19 @@ EAGL::ProfilerTimer* EAGL::ProfilerTimer::ConstructMaybeStarted(ProfilerRegion *
         return this;
     }
     running = 0;
-    child = 0;
+    child = NULL;
     return this;
 }
 
 // FUNC_AT(0x000f5280)
 void EAGL::ProfilerRegion::ProcessRegions(uint32_t frameCycles) {
-    for (ProfilerRegion *region = RegionList(); region != 0; region = region->next)
+    for (ProfilerRegion *region = RegionList; region != NULL; region = region->next)
         region->ProcessRegion(frameCycles);
-    uint32_t index = U32(kHistoryIndex) + 1;
-    U32(kHistoryIndex) = index;
+    uint32_t index = HistoryIndex + 1;
+    HistoryIndex = index;
     if (index >= 0x20)
-        U32(kHistoryIndex) = 0;
-    if (U8(kDrawEnabled) != 0)
+        HistoryIndex = 0;
+    if (DrawEnabled != 0)
         DrawRegions();   // a tail jump in the original
 }
 
@@ -577,16 +536,16 @@ void EAGL::ProfilerRegion::ProcessRegions(uint32_t frameCycles) {
 // the timer with an exception frame; nothing here throws.
 // FUNC_AT(0x000f52d0)
 void EAGL::ProfilerFrameMark() {
-    uint32_t frameCycles = Rdtsc() - U32(kLastFrameTsc);   // RDTSC at 0x000f52ea
-    U32(kLastFrameTsc) = Rdtsc();                          // RDTSC at 0x000f52f4
+    uint32_t frameCycles = Rdtsc() - LastFrameTsc;   // RDTSC at 0x000f52ea
+    LastFrameTsc = Rdtsc();                          // RDTSC at 0x000f52f4
     ProfilerTimer timer;
-    timer.region = (ProfilerRegion *)(uintptr_t)kFrameRegion;
+    timer.region = FrameRegion;
     timer.Enter();
-    if (U8(kSkipFrame) != 0)
-        U8(kSkipFrame) = 0;
+    if (SkipFrame != 0)
+        SkipFrame = 0;
     else
         ProfilerRegion::ProcessRegions(frameCycles);
-    for (ProfilerRegion *region = RegionList(); region != 0; region = region->next)
+    for (ProfilerRegion *region = RegionList; region != NULL; region = region->next)
         region->cycles = 0;
     timer.Destruct();
 }
@@ -594,44 +553,43 @@ void EAGL::ProfilerFrameMark() {
 // FUNC_AT(0x000f5370)
 void EAGL::ProfilerDrawGouraud::Begin(uint32_t type) {
     if (type != primitiveType) {
-        InternalFlush(this);
+        InternalFlush();
         primitiveType = type;
         state.SetPrimitiveType(type);
     }
-    ((void (*)(void *))0x000f4350)(vertexShader);   // module F's SetVertexShader wrapper
-    ((void (*)(void *))0x000f4380)(pixelShader);    // and SetPixelShader
-    if (DeviceGet() != 0) {
-        void *viewPort;
-        if (CurrentTextureRenderContext(DeviceGet()) != 0)
-            viewPort = ((void *(__fastcall *)(void *, int))0x000f3520)(CurrentTextureRenderContext(DeviceGet()), 0);
+    EAGL_SetVertexShader(vertexShader);
+    EAGL_SetPixelShader(pixelShader);
+    if (Device::Get() != NULL) {
+        ViewPort *viewPort;
+        if (Device::Get()->GetCurrentTextureRenderContext() != NULL)
+            viewPort = Device::Get()->GetCurrentTextureRenderContext()->GetCurrentViewPort();
         else
-            viewPort = ((void *(__fastcall *)(void *, int))0x000ee080)(CurrentRenderContext(DeviceGet()), 0);
-        const float *viewProjection = ((const float *(__fastcall *)(void *, int))0x000f39b0)(viewPort, 0);
+            viewPort = Device::Get()->GetCurrentRenderContext()->GetCurrentViewPort();
         alignas(16) Transform t;
-        t.BuildMatrix(viewProjection);
+        t.BuildMatrix(viewPort->GetViewProjectionMatrix());
         t.PrependMatrix(matrix);
         t.Transpose();
-        ((void (*)(int, const float *, int))0x000f43a0)(0, t.m, 4);   // vertex shader constants c0..c3
+        EAGL_SetVertexShaderConstant(0, t.m, 4);   // c0..c3
     }
     state.Apply();
-    ((void (__stdcall *)(uint32_t))0x0016ba20)(primitiveType);   // D3DDevice_Begin
+    D3DDevice_Begin(primitiveType);
     begun = 1;
 }
 
 // FUNC_AT(0x000f5440)
 void __stdcall EAGL::ProfilerVertex(const float *vertex, const uint32_t *colour) {
-    SetVertexDataColor(*colour);
-    ((void (__stdcall *)(int, float, float, float, float))0x0016b970)(-1, vertex[0], vertex[1], vertex[2], vertex[3]);
+    D3DDevice_SetVertexDataColor(kVertexDiffuse, *colour);
+    D3DDevice_SetVertexData4f(kVertexPosition, vertex[0], vertex[1], vertex[2], vertex[3]);
 }
 
 // Starts this timer under the current one, pausing it - unless the current one times the frame region, when this
 // one is left stopped.
 // FUNC_AT(0x000f5480)
 void EAGL::ProfilerTimer::Enter() {
-    child = 0;
+    child = NULL;
     running = 0;
-    ProfilerTimer *current = CurrentTimer();
-    if (current->region == (ProfilerRegion *)(uintptr_t)kFrameRegion)
+    ProfilerTimer *current = CurrentTimer;
+    if (current->region == FrameRegion)
         return;
     parent = current;
     parent->child = this;
@@ -642,7 +600,7 @@ void EAGL::ProfilerTimer::Enter() {
         p->running = 0;
     }
     if (running == 0) {
-        CurrentTimer() = this;
+        CurrentTimer = this;
         start = Rdtsc();   // RDTSC at 0x000f54e5
         running = 1;
     }
@@ -650,28 +608,27 @@ void EAGL::ProfilerTimer::Enter() {
 
 // FUNC_AT(0x000f5500)
 EAGL::ProfilerDrawArray* EAGL::ProfilerDrawArray::Construct() {
-    field00 = 1;
-    dynamicModel = 0;
-    field08 = 0;
-    field0c = 0;
-    field10 = 0;
-    field14 = 0;
-    field18 = 0;
-    field1c = 0;
-    field20 = 0;
-    field24 = 0;
-    field28 = 0;
-    field2c = -1;
-    field30 = 0;
-    field34 = 1;
-    field35 = 0;
-    field38 = 0;
-    void *memory = (*(void *(**)(uint32_t, const char *))0x001caf68u)(0x58, (const char *)0x001ce3b0u);
-    void *model = memory != 0 ? ((void *(__fastcall *)(void *, int))0x000e9760)(memory, 0) : 0;  // DynamicModel
-    dynamicModel = model;
-    field48 = 0;
-    field44 = 0;
-    field40 = 0;
-    field3c = 0;
+    primitiveType = 1;
+    model = NULL;
+    geoPrim = NULL;
+    userVars = NULL;
+    paramCount = 0;
+    unknown14 = 0;
+    locked = 0;
+    drawVerts = 0;
+    maxVerts = 0;
+    unknown24 = 0;
+    unknown28 = 0;
+    streamParam = -1;
+    primitiveClass = 0;
+    dirty = 1;
+    keepCounts = 0;
+    numVerts = 0;
+    void *memory = EaglMalloc(sizeof(DynamicModel), NameDynamicModelNew);
+    model = memory != NULL ? static_cast<DynamicModel *>(memory)->Construct() : NULL;
+    stream.noCopy = 0;
+    stream.user = 0;
+    stream.unknown04 = 0;
+    stream.vertexCount = 0;
     return this;
 }

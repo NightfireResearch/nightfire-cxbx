@@ -6,28 +6,9 @@
 // (SND_UNTESTED). See FiltersUnused.cpp.
 
 #include "Filters.h"
+#include "DecodeUnused.h"
 
 #include <stdint.h>
-#include <stdio.h>
-
-// The warning beside a provisional port (the pattern of eagl/anim/AnimUntested.h). Guarded: other sound modules
-// may define the same macro.
-#ifndef SND_UNTESTED
-inline void SndFiltersUntested(const char *what) {
-    printf("[snd] WARNING: %s ran - a provisional port that no shipped data reaches, UNTESTED. Check what it "
-           "computes against the original.\n", what);
-    fflush(stdout);
-}
-
-#define SND_UNTESTED(what) \
-    do { \
-        static bool warned_; \
-        if (!warned_) { \
-            warned_ = true; \
-            SndFiltersUntested(what); \
-        } \
-    } while (0)
-#endif
 
 namespace SND {
 
@@ -54,8 +35,30 @@ struct SFilterXALF {                 // 0x44, SFILTER_unpackxalf: EA-XA bank sam
 };
 static_assert(sizeof(SFilterXALF) == 0x44, "SFilterXALF");
 
-// MicroTalk nodes (0xd74 and smaller): a header, the decoder's state, a 432-sample buffer whose end is at +0xd70
-// (packet variant) or +0xd68 (bank variant). Reached as bytes.
+// The MicroTalk nodes: a header, then the decoder's state, whose last 432 samples (the end of MutState::signal) are
+// the frame the node hands out.
+struct SFilterMTPF {                 // 0xd74, SFILTER_unpackmtpf: MicroTalk from stream packets
+    SFilterNode node;
+    const uint8_t *packet;           // +0x1c
+    int32_t packetFrames;            // +0x20 the frames in it
+    int32_t packetPlayer;            // +0x24 SNDPKTPLAYI handle
+    int32_t pending;                 // +0x28 frames to report with SNDPKTPLAYI_freeframes
+    uint16_t taken;                  // +0x2c frames taken from the packet
+    uint16_t left;                   // +0x2e samples of the frame not handed out yet
+    MutState mut;                    // +0x30
+    uint8_t channel;                 // +0xd70 the sample channel
+    uint8_t pad0d71[3];
+};
+static_assert(sizeof(SFilterMTPF) == 0xd74, "SFilterMTPF");
+
+struct SFilterMTF {                  // 0xd68, SFILTER_unpackmtf: MicroTalk bank sample
+    SFilterNode node;
+    uint32_t frames;                 // +0x1c
+    uint32_t position;               // +0x20
+    int32_t left;                    // +0x24 samples of the frame not handed out yet
+    MutState mut;                    // +0x28
+};
+static_assert(sizeof(SFilterMTF) == 0xd68, "SFilterMTF");
 
 struct SFilterPF {                   // 0x34, SFILTER_unpackpf: PCM16 from stream packets
     SFilterNode node;
@@ -101,7 +104,7 @@ struct SFilterStretch {              // SFILTER_timestretch: 0x1828 (MIX_playini
     int available;                   // +0x38 frames ready in the output buffer
     int readPosition;                // +0x3c the next of them
     float held[510];                 // +0x40
-    // +0x838 the output buffer (up to two windows)
+    // +0x838 the output buffer (up to two windows): the floats after the struct
 };
 // The inits' results (EAX: the decoder, Feed's answer, initmut's ...) are left out: MIX_playinit and SFILTER_add,
 // their only callers, ignore them.

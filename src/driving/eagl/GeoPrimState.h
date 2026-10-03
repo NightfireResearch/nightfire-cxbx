@@ -23,7 +23,7 @@ struct GeoPrimState {                // 0x4c; the game derives its materials fro
     uint32_t alphaTestMethod;        // +0x20
     uint8_t textureEnable;           // +0x24
     uint8_t pad25[3];
-    uint32_t transparencyMethod;     // +0x28 0 or 1: D3DRS_DITHERENABLE
+    uint32_t transparencyMethod;     // +0x28 0 or 1: alpha blending on (D3DRS_ALPHABLENDENABLE)
     uint32_t fillMode;               // +0x2c (Xbox extension)
     uint32_t blendOperation;         // +0x30 0x8006 ADD, 0x800b REVERSE_SUBTRACT
     uint32_t blendSource;            // +0x34

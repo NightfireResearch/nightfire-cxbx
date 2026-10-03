@@ -4,6 +4,7 @@
 #include "../platform/RealPrint.h"
 
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -27,33 +28,101 @@
 #pragma STDC FP_CONTRACT OFF
 #endif
 
-typedef float F;
+// ---- FONT
 
-template <typename T> static inline T At(const void *p, int offset) {
-    T v;
-    memcpy(&v, (const uint8_t *)p + offset, sizeof(T));
-    return v;
+namespace {
+
+struct FontHeader {                  // 0x80, an FNTX file (.xfn)
+    uint8_t magic[4];                // +0x00 "FNTX"
+    int32_t size;                    // +0x04
+    uint16_t version;                // +0x08 0x0135
+    uint16_t glyphCount;             // +0x0a
+    uint32_t flags;                  // +0x0c kWideGlyphs
+    uint8_t centre[2];               // +0x10
+    uint8_t ascent;                  // +0x12
+    uint8_t descent;                 // +0x13
+    int32_t glyphOffset;             // +0x14 the glyph table, sorted by code
+    int32_t kernOffset;              // +0x18 the kern table
+    int32_t shapeOffset;             // +0x1c
+    uint8_t unknown20[0x18];
+    float scaleX;                    // +0x38
+    float scaleY;                    // +0x3c
+    uint8_t unknown40[0x40];
+};
+static_assert(sizeof(FontHeader) == 0x80, "a realgraph Font header is 0x80 bytes");
+
+// 16-byte glyphs with 16-bit advances and an indexed kern table; otherwise glyphs are 12 bytes and kern pairs are
+// searched in one table
+const uint32_t kWideGlyphs = 0x40000;
+
+struct FontGlyph {                   // 0xc, or 0x10 with kWideGlyphs
+    uint16_t code;                   // +0x00
+    uint8_t width;                   // +0x02
+    uint8_t height;                  // +0x03
+    uint8_t unknown04[4];
+    int8_t advance;                  // +0x08
+    int8_t xOffset;                  // +0x09
+    int8_t yOffset;                  // +0x0a
+    uint8_t kernCount;               // +0x0b
+    uint16_t firstKern;              // +0x0c wide form: the glyph's first entry in the kern table
+    int16_t wideAdvance;             // +0x0e wide form: the advance
+};
+static_assert(sizeof(FontGlyph) == 0x10, "a wide glyph is 0x10 bytes");
+
+struct FontKern {                    // 4
+    uint16_t previous;               // +0x00 the character drawn before
+    int8_t amount;                   // +0x02
+    uint8_t code;                    // +0x03 the glyph it applies to (the narrow form's single table)
+};
+
+struct FontKernTable {
+    int32_t count;                   // +0x00
+    FontKern entries[1];             // +0x04
+};
+
+// FONTcurrentdriver's table
+struct FontDriverTable {
+    FontDrawFn draw;
+    FontHookFn start;
+    FontHookFn end;
+    FontHookFn create;
+    FontHookFn destroy;
+};
+
+// What the batch hooks are given: 128 of these at most
+struct FontBatchEntry {
+    const uint8_t *glyph;
+    float x;
+    float y;
+};
+static_assert(sizeof(FontBatchEntry) == 12, "a batch entry is three words");
+
+typedef void (*FontBatchFn)(const uint8_t *font, FontBatchEntry *entries, int count);
+typedef void (*FontBatchExFn)(const uint8_t *font, FontBatchEntry *entries, int count, int argument, int first);
+
+}  // namespace
+
+#define FontDriver (*(FontDriverTable **)0x001cec98)            // FONTcurrentdriver
+#define DefaultFont (*(const uint8_t **)0x00241be0)
+#define FontBatchDraw (*(FontBatchFn *)0x00241be8)
+#define FontBatchDrawEx (*(FontBatchExFn *)0x00241bf0)
+#define BuiltInFont ((const uint8_t *)0x001ceca0)               // the font linked into the executable
+#define FontRestoreOriginal ((ExitCallback)0x00107b70)          // FONT_restore's own address, as the exit list holds it
+
+static inline const FontHeader *AsFont(const uint8_t *font) {
+    return reinterpret_cast<const FontHeader *>(font);
 }
-template <typename T> static inline void Put(void *p, int offset, T v) { memcpy((uint8_t *)p + offset, &v, sizeof(T)); }
 
-// ---- FONT. A font: +0xa glyph count (u16), +0xc flags (0x40000: 16-byte glyphs with 16-bit advances and an
-// indexed kern table), +0x12/+0x13 ascent and descent, +0x14 glyph table offset, +0x18 kern table offset,
-// +0x38/+0x3c the x and y scale. A glyph: +0 code (u16), +2/+3 width and height, +8 advance (s8; +0xe s16 in the
-// wide form), +9/+0xa x and y offset (s8), +0xb kern count, +0xc first kern (u16, wide form).
-
-#define FontDriver      (*(void ***)0x001cec98u)     // FONTcurrentdriver: draw, start, end, create, destroy
-#define DefaultFont     (*(const uint8_t **)0x00241be0u)
-#define FontBatchDraw   (*(void (**)(const uint8_t *, float *, int))0x00241be8u)
-#define FontBatchDrawEx (*(void (**)(const uint8_t *, float *, int, int, int))0x00241bf0u)
-
-static const uint32_t kFontRestore = 0x00107b70;    // FONT_restore's own address, as the exit list holds it
+static inline const FontGlyph *AsGlyph(const uint8_t *glyph) {
+    return reinterpret_cast<const FontGlyph *>(glyph);
+}
 
 // Binary search over count entries of entrySize bytes for the 16-bit code at their start.
 // AUTOINJECT
 const uint8_t* FONT_bsearch(int code, const uint8_t *table, int count, int entrySize) {
     while (count != 0) {
         const uint8_t *mid = table + (count >> 1) * entrySize;
-        int c = code - At<uint16_t>(mid, 0);
+        int c = code - AsGlyph(mid)->code;
         if (c == 0)
             return mid;
         if (c > 0) {
@@ -67,43 +136,47 @@ const uint8_t* FONT_bsearch(int code, const uint8_t *table, int count, int entry
 
 // The kerning between the glyph and the character drawn before it (0 if none).
 // AUTOINJECT
-int FONT_getkern(const uint8_t *font, const uint8_t *glyph, int previous) {
-    int n = glyph[0xb];
+int FONT_getkern(const uint8_t *fontData, const uint8_t *glyphData, int previous) {
+    const FontHeader *font = AsFont(fontData);
+    const FontGlyph *glyph = AsGlyph(glyphData);
+    int n = glyph->kernCount;
     if (n == 0)
         return 0;
-    const uint8_t *entry = NULL;
-    if (At<uint32_t>(font, 0xc) & 0x40000) {
-        const uint8_t *table = font + At<int32_t>(font, 0x18) + 4 + At<uint16_t>(glyph, 0xc) * 4;
+    const FontKernTable *table = reinterpret_cast<const FontKernTable *>(fontData + font->kernOffset);
+    const FontKern *entry = NULL;
+    if (font->flags & kWideGlyphs) {
+        const FontKern *kerns = &table->entries[glyph->firstKern];
         for (int i = 0; i < n; i++) {
-            if (At<uint16_t>(table, i * 4) == previous) {
-                entry = table + i * 4;
+            if (kerns[i].previous == previous) {
+                entry = &kerns[i];
                 break;
             }
         }
     } else {
-        const uint8_t *table = font + At<int32_t>(font, 0x18);
-        int total = At<int32_t>(table, 0);
-        for (int i = 0; i < total; i++) {
-            const uint8_t *e = table + 4 + i * 4;
-            if (At<uint16_t>(e, 0) == previous && (uint16_t)e[3] == At<uint16_t>(glyph, 0)) {
+        for (int i = 0; i < table->count; i++) {
+            const FontKern *e = &table->entries[i];
+            if (e->previous == previous && e->code == glyph->code) {
                 entry = e;
                 break;
             }
         }
     }
-    return entry != NULL ? (int8_t)entry[2] : 0;
+    return entry != NULL ? entry->amount : 0;
 }
 
-static inline int GlyphSize(const uint8_t *font) { return (At<uint32_t>(font, 0xc) & 0x40000) ? 0x10 : 0xc; }
+static inline int GlyphSize(const FontHeader *font) {
+    return (font->flags & kWideGlyphs) ? 0x10 : 0xc;
+}
 
 // A glyph by code: straight at code - 0x20 if it is there, else by binary search. A code below 0x20 indexes
 // before the table, as the original does.
-static const uint8_t *FindGlyph(const uint8_t *font, int code) {
-    const uint8_t *table = font + At<int32_t>(font, 0x14);
-    int count = At<uint16_t>(font, 0xa), size = GlyphSize(font);
+static const uint8_t *FindGlyph(const uint8_t *fontData, int code) {
+    const FontHeader *font = AsFont(fontData);
+    const uint8_t *table = fontData + font->glyphOffset;
+    int count = font->glyphCount, size = GlyphSize(font);
     if (code - 0x20 < count) {
         const uint8_t *g = table + (code - 0x20) * size;
-        if (At<uint16_t>(g, 0) == code)
+        if (AsGlyph(g)->code == code)
             return g;
     }
     return FONT_bsearch(code, table, count, size);
@@ -111,8 +184,8 @@ static const uint8_t *FindGlyph(const uint8_t *font, int code) {
 
 // The other case of a Latin-1 letter, or 0 if it has none.
 static int OtherCase(int c) {
-    if (c >= 0x41 && c <= 0x5a) return c + 0x20;
-    if (c >= 0x61 && c <= 0x7a) return c - 0x20;
+    if (c >= 'A' && c <= 'Z') return c + 0x20;
+    if (c >= 'a' && c <= 'z') return c - 0x20;
     if (c >= 0xc0 && c <= 0xd6) return c + 0x20;
     if (c >= 0xd8 && c <= 0xde) return c + 0x20;
     if (c >= 0xe0 && c <= 0xf6) return c - 0x20;
@@ -121,18 +194,19 @@ static int OtherCase(int c) {
 }
 
 // The glyph for a character that has none of its own: its other case, else the 0x7f glyph, else none.
-static const uint8_t *FallbackGlyph(const uint8_t *font, int c) {
+static const uint8_t *FallbackGlyph(const uint8_t *fontData, int c) {
     int other = OtherCase(c);
     if (other != 0) {
-        const uint8_t *g = FindGlyph(font, other);
+        const uint8_t *g = FindGlyph(fontData, other);
         if (g != NULL)
             return g;
     }
-    const uint8_t *table = font + At<int32_t>(font, 0x14);
-    int count = At<uint16_t>(font, 0xa), size = GlyphSize(font);
+    const FontHeader *font = AsFont(fontData);
+    const uint8_t *table = fontData + font->glyphOffset;
+    int count = font->glyphCount, size = GlyphSize(font);
     if (count > 0x5f) {
         const uint8_t *g = table + 0x5f * size;
-        if (At<uint16_t>(g, 0) == 0x7f)
+        if (AsGlyph(g)->code == 0x7f)
             return g;
     }
     return FONT_bsearch(0x7f, table, count, size);
@@ -145,68 +219,68 @@ static inline int32_t Ftol(double v) {
     return (int32_t)(int64_t)v;
 }
 
-static inline int Advance(const uint8_t *font, const uint8_t *glyph) {
-    return (At<uint32_t>(font, 0xc) & 0x40000) ? At<int16_t>(glyph, 0xe) : (int8_t)glyph[8];
+static inline int Advance(const FontHeader *font, const FontGlyph *glyph) {
+    return (font->flags & kWideGlyphs) ? glyph->wideAdvance : glyph->advance;
 }
 
-static inline int LineHeight(const uint8_t *font, float scaleY) {
-    return Ftol((double)(int)(font[0x12] + font[0x13]) * scaleY);
+static inline int LineHeight(const FontHeader *font, float scaleY) {
+    return Ftol(double(font->ascent + font->descent) * scaleY);
 }
 
 // Draws text at (x, y): glyph by glyph through the driver, or in batches of 128 through the batch hooks when
 // they are set (with batchArgument, the second hook). A newline returns to x and moves down a line.
 // FUNC_AT(0x001073f0)
-void FONT_drawtextx(const uint8_t *font, float x, float y, const uint8_t *text, int batchArgument) {
+void FONT_drawtextx(const uint8_t *fontData, float x, float y, const uint8_t *text, int batchArgument) {
+    const FontHeader *font = AsFont(fontData);
     float startX = x;
     int buffered = 0;
     int first = 1;
     uint8_t previous = 0;
-    float batch[128 * 3];
-    if (FontDriver[1] != NULL)
-        ((FontHookFn)FontDriver[1])(font);
-    float scaleY = At<float>(font, 0x3c), scaleX = At<float>(font, 0x38);
+    FontBatchEntry batch[128];
+    if (FontDriver->start != NULL)
+        FontDriver->start(fontData);
+    float scaleY = font->scaleY, scaleX = font->scaleX;
     for (; *text != 0; text++) {
-        const uint8_t *glyph = FindGlyph(font, *text);
+        const uint8_t *glyph = FindGlyph(fontData, *text);
         if (glyph == NULL) {
             if (*text == '\n') {
-                y = (F)((double)LineHeight(font, scaleY) + y);
+                y = float(double(LineHeight(font, scaleY)) + y);
                 x = startX;
                 previous = 0;
                 continue;
             }
-            glyph = FallbackGlyph(font, *text);
+            glyph = FallbackGlyph(fontData, *text);
             if (glyph == NULL)
                 continue;
         }
-        x = (F)((double)FONT_getkern(font, glyph, previous) * scaleX + x);
+        x = float(double(FONT_getkern(fontData, glyph, previous)) * scaleX + x);
         if (FontBatchDraw != NULL) {
-            uint32_t g = (uint32_t)(uintptr_t)glyph;
-            memcpy(&batch[buffered * 3], &g, 4);
-            batch[buffered * 3 + 1] = x;
-            batch[buffered * 3 + 2] = y;
+            batch[buffered].glyph = glyph;
+            batch[buffered].x = x;
+            batch[buffered].y = y;
             if (++buffered == 0x80) {
                 if (batchArgument == 0) {
-                    FontBatchDraw(font, batch, 0x80);
+                    FontBatchDraw(fontData, batch, 0x80);
                 } else {
-                    FontBatchDrawEx(font, batch, 0x80, batchArgument, first);
+                    FontBatchDrawEx(fontData, batch, 0x80, batchArgument, first);
                     first = 0;
                 }
                 buffered = 0;
             }
         } else {
-            ((FontDrawFn)FontDriver[0])(font, glyph, x, y);
+            FontDriver->draw(fontData, glyph, x, y);
         }
         previous = *text;
-        x = (F)((double)Advance(font, glyph) * scaleX + x);
+        x = float(double(Advance(font, AsGlyph(glyph))) * scaleX + x);
     }
     if (buffered != 0) {
         if (batchArgument == 0)
-            FontBatchDraw(font, batch, buffered);
+            FontBatchDraw(fontData, batch, buffered);
         else
-            FontBatchDrawEx(font, batch, buffered, batchArgument, first);
+            FontBatchDrawEx(fontData, batch, buffered, batchArgument, first);
     }
-    if (FontDriver[2] != NULL)
-        ((FontHookFn)FontDriver[2])(font);
+    if (FontDriver->end != NULL)
+        FontDriver->end(fontData);
 }
 
 // AUTOINJECT
@@ -227,50 +301,52 @@ void FONT_drawtextfa(const uint8_t *font, float x, float y, const char *format, 
 
 // The rectangle text covers, from (0, 0): each output optional; an empty text gives 0s.
 // FUNC_AT(0x00107770)
-void FONT_getrectx(const uint8_t *font, const uint8_t *text, float *outX, float *outY, float *outWidth,
+void FONT_getrectx(const uint8_t *fontData, const uint8_t *text, float *outX, float *outY, float *outWidth,
                    float *outHeight) {
-    const float big = 10000000.0f;   // 0x001a1570
+    const FontHeader *font = AsFont(fontData);
+    const float big = 10000000.0f;
     float minX = big, minY = big, maxX = -big, maxY = -big;
-    float scaleX = At<float>(font, 0x38), scaleY = At<float>(font, 0x3c);
+    float scaleX = font->scaleX, scaleY = font->scaleY;
     float penX = 0.0f, penY = 0.0f;
     uint8_t previous = 0;
     for (; *text != 0; text++) {
-        const uint8_t *glyph = FindGlyph(font, *text);
-        if (glyph == NULL) {
+        const uint8_t *glyphData = FindGlyph(fontData, *text);
+        if (glyphData == NULL) {
             if (*text == '\n') {
-                penY = (F)((double)LineHeight(font, scaleY) + penY);
+                penY = float(double(LineHeight(font, scaleY)) + penY);
                 penX = 0.0f;
                 previous = 0;
                 continue;
             }
-            glyph = FallbackGlyph(font, *text);
-            if (glyph == NULL)
+            glyphData = FallbackGlyph(fontData, *text);
+            if (glyphData == NULL)
                 continue;
         }
-        double pen = (double)FONT_getkern(font, glyph, previous) * scaleX + penX;   // never stored
-        double left = (double)(int8_t)glyph[9] * scaleX + pen;
-        float top = (F)((double)(int8_t)glyph[0xa] * scaleY + penY);
+        const FontGlyph *glyph = AsGlyph(glyphData);
+        double pen = double(FONT_getkern(fontData, glyphData, previous)) * scaleX + penX;   // never stored
+        double left = double(glyph->xOffset) * scaleX + pen;
+        float top = float(double(glyph->yOffset) * scaleY + penY);
         if (left < minX)
-            minX = (F)left;
+            minX = float(left);
         if (top < minY)
             minY = top;
-        double right = (double)glyph[2] * scaleX + left;
-        float bottom = (F)((double)glyph[3] * scaleY + top);
+        double right = double(glyph->width) * scaleX + left;
+        float bottom = float(double(glyph->height) * scaleY + top);
         if (right > maxX)
-            maxX = (F)right;
+            maxX = float(right);
         if (bottom > maxY)
             maxY = bottom;
         previous = *text;
-        penX = (F)((double)Advance(font, glyph) * scaleX + pen);
+        penX = float(double(Advance(font, glyph)) * scaleX + pen);
     }
     if (outX != NULL)
         *outX = (maxX > minX) ? minX : 0.0f;
     if (outY != NULL)
         *outY = (maxY > minY) ? minY : 0.0f;
     if (outWidth != NULL)
-        *outWidth = (maxX > minX) ? (F)((double)maxX - minX) : 0.0f;
+        *outWidth = (maxX > minX) ? maxX - minX : 0.0f;
     if (outHeight != NULL)
-        *outHeight = (maxY > minY) ? (F)((double)maxY - minY) : 0.0f;
+        *outHeight = (maxY > minY) ? maxY - minY : 0.0f;
 }
 
 // The jump callers use (0x00107b30).
@@ -281,15 +357,15 @@ void FONT_getrectx_thunk(const uint8_t *font, const uint8_t *text, float *x, flo
 
 // AUTOINJECT
 const uint8_t* FONT_create(const uint8_t *font) {
-    if (FontDriver[3] != NULL)
-        ((FontHookFn)FontDriver[3])(font);
+    if (FontDriver->create != NULL)
+        FontDriver->create(font);
     return font;
 }
 
 // AUTOINJECT
 void FONT_destroy(const uint8_t *font) {
-    if (FontDriver[4] != NULL)
-        ((FontHookFn)FontDriver[4])(font);
+    if (FontDriver->destroy != NULL)
+        FontDriver->destroy(font);
 }
 
 // AUTOINJECT
@@ -297,26 +373,61 @@ void FONT_restore() {
     if (DefaultFont != NULL) {
         FONT_destroy(DefaultFont);
         DefaultFont = NULL;
-        REAL_removeexit((ExitCallback)kFontRestore);
+        REAL_removeexit(FontRestoreOriginal);
     }
 }
 
-// The default font (0x001ceca0), destroyed at exit.
+// The default font, destroyed at exit.
 // AUTOINJECT
 void FONT_init() {
     if (DefaultFont == NULL) {
-        DefaultFont = FONT_create((const uint8_t *)0x001ceca0u);
-        REAL_addexit((ExitCallback)kFontRestore);
+        DefaultFont = FONT_create(BuiltInFont);
+        REAL_addexit(FontRestoreOriginal);
     }
 }
 
 // AUTOINJECT
 void FONT_installdriver(void *driver) {
-    FontDriver = (void **)driver;
+    FontDriver = static_cast<FontDriverTable *>(driver);
 }
 
-// ---- LOCALE. A LOCH file: +4 header size, +8 flags (1: ids go through a sorted {id, index} table after the
-// header), +0xe current language, +0x10 the languages' table offsets; a table: +0xc count, +0x10 string offsets.
+// ---- LOCALE
+
+namespace {
+
+struct LocaleFile {                  // a LOCH file (.loc)
+    uint8_t magic[4];                // +0x00 "LOCH"
+    int32_t headerSize;              // +0x04 where the id index starts
+    uint32_t flags;                  // +0x08 kIndexedIds
+    uint16_t languageCount;          // +0x0c
+    uint16_t language;               // +0x0e the current one
+    uint32_t tableOffsets[1];        // +0x10 each language's string table
+};
+
+const uint32_t kIndexedIds = 1;      // ids go through the sorted index after the header
+
+struct LocaleIdEntry {
+    uint16_t id;
+    uint16_t index;                  // the string's number in the tables
+};
+
+struct LocaleIdIndex {               // at headerSize
+    uint32_t unknown00;
+    uint32_t unknown04;
+    uint32_t count;                  // +0x08
+    uint32_t unknown0c;
+    LocaleIdEntry entries[1];        // +0x10, sorted by id
+};
+
+struct LocaleTable {                 // a "LOCI" string table
+    uint32_t unknown00;
+    uint32_t unknown04;
+    uint32_t unknown08;
+    uint32_t count;                  // +0x0c
+    uint32_t offsets[1];             // +0x10 each string's, from the table
+};
+
+}  // namespace
 
 // MSVC's bsearch, which the original calls (0x0013414b): which of several equal keys it finds depends on its
 // halving, so it is reproduced as the C runtime has it.
@@ -347,90 +458,141 @@ static const uint8_t *CrtBsearch(const void *key, const uint8_t *base, size_t co
 }
 
 static int CompareIds(const void *a, const void *b) {   // 0x00107be0
-    return (int)*(const uint16_t *)a - (int)*(const uint16_t *)b;
+    return *static_cast<const uint16_t *>(a) - *static_cast<const uint16_t *>(b);
 }
 
 // The string for id in the current language, or NULL.
 // AUTOINJECT
-const char* LOCALE_getstr(const uint8_t *locale, int id) {
-    if (At<uint32_t>(locale, 8) & 1) {
-        int header = At<int32_t>(locale, 4);
+const char* LOCALE_getstr(const uint8_t *localeData, int id) {
+    const LocaleFile *locale = reinterpret_cast<const LocaleFile *>(localeData);
+    if (locale->flags & kIndexedIds) {
+        const LocaleIdIndex *index = reinterpret_cast<const LocaleIdIndex *>(localeData + locale->headerSize);
         int32_t key = id;
-        const uint8_t *found = CrtBsearch(&key, locale + header + 0x10, (size_t)At<uint32_t>(locale, header + 8), 4,
-                                          CompareIds);
-        id = found != NULL ? At<uint16_t>(found, 2) : -1;
+        const uint8_t *found = CrtBsearch(&key, reinterpret_cast<const uint8_t *>(index->entries), index->count,
+                                          sizeof(LocaleIdEntry), CompareIds);
+        id = found != NULL ? reinterpret_cast<const LocaleIdEntry *>(found)->index : -1;
     }
-    const uint8_t *table = locale + At<uint32_t>(locale, 0x10 + At<uint16_t>(locale, 0xe) * 4);
-    if (id < 0 || (uint32_t)id >= At<uint32_t>(table, 0xc))
+    const uint8_t *tableData = localeData + locale->tableOffsets[locale->language];
+    const LocaleTable *table = reinterpret_cast<const LocaleTable *>(tableData);
+    if (id < 0 || (uint32_t)id >= table->count)
         return NULL;
-    return (const char *)(table + At<uint32_t>(table, 0x10 + id * 4));
+    return (const char *)(tableData + table->offsets[id]);
 }
 
-// ---- SHAPE. A SHPX file: "SHPX", size, image count (+8), directory id (+0xc), then {name, offset} pairs from
-// +0x10. An image header: type byte, the next attachment's offset in bits 8..31, +4 width, +6 height (s16), +0xc
-// mip levels in bits 28..31; attachments follow ('p' long name, 'o', 'i', palettes).
+// ---- SHAPE. An image header is followed by its pixels; attachments follow, each starting with the same link word
+// ('p' long name, 'o' name data, 'i' info, palettes).
 
-#define ShapeAlloc (*(void *(**)(const char *, int, int, int, int))0x001d1874u)   // MEM_allocalign
-#define ShapeFree  (*(void (**)(void *))0x001d1878u)                             // MEM_free
+namespace {
+
+struct ShapeImage {                  // 0x10
+    int32_t link;                    // +0x00 the type in the low byte, the next attachment's offset in bits 8..31
+    int16_t width;                   // +0x04
+    int16_t height;                  // +0x06
+    uint32_t unknown08;
+    uint32_t bits;                   // +0x0c bits 28..31: mip levels
+};
+static_assert(sizeof(ShapeImage) == 0x10, "a SHAPE image header is 0x10 bytes");
+
+struct ShapePalette {                // a palette attachment: the image header's layout, the colours after it
+    int32_t link;                    // +0x00
+    uint16_t entries;                // +0x04
+    uint16_t rows;                   // +0x06 1
+    uint32_t unknown08;
+    uint32_t bits;                   // +0x0c kColoursElsewhere
+    int32_t colourOffset;            // +0x10 with kColoursElsewhere: where the colours are, from the palette
+};
+
+const uint32_t kColoursElsewhere = 0x1000;
+
+struct ShapeNameData {               // 'o'
+    int32_t link;                    // +0x00
+    int32_t bytes;                   // +0x04 the data's, from +0x08
+};
+
+struct ShapeInfo {                   // 'i'
+    int32_t link;                    // +0x00
+    uint16_t unknown04;
+    uint16_t flags;                  // +0x06 kInfoHasData
+    uint32_t unknown08;
+    uint32_t unknown0c;
+};
+
+const uint16_t kInfoHasData = 0x10;  // data from +0x10
+
+// Image types, by bits per pixel where SHAPE_type maps a depth to them
+enum ShapeType : uint8_t {
+    kType4Bit = 0x79, kType8Bit = 0x7b, kType15Bit = 0x7e, kType16Bit = 0x78, kType24Bit = 0x7f, kType32Bit = 0x7d,
+    kType66 = 0x66, kType68 = 0x68, kType6a = 0x6a, kType6d = 0x6d,
+};
+
+}  // namespace
+
+#define ShapeAlloc (*(void *(**)(const char *, int, int, int, int))0x001d1874)   // MEM_allocalign
+#define ShapeFree (*(void (**)(void *))0x001d1878)                               // MEM_free
+
+static inline const ShapeFile *AsShapes(const uint8_t *shapes) {
+    return reinterpret_cast<const ShapeFile *>(shapes);
+}
+
+static inline int32_t Link(const uint8_t *block) {
+    return reinterpret_cast<const ShapeImage *>(block)->link;
+}
 
 // AUTOINJECT
 void SHAPE_name(const uint8_t *shapes, int index, uint32_t *name) {
-    *name = index < At<int32_t>(shapes, 8) ? At<uint32_t>(shapes, 0x10 + index * 8) : 0;
+    const ShapeFile *file = AsShapes(shapes);
+    *name = index < file->count ? file->entries[index].name : 0;
+}
+
+// The first attachment of a type along the image's chain (the image itself included), or NULL.
+static const uint8_t *FindAttachment(const uint8_t *image, uint8_t type) {
+    while (image != NULL) {
+        int32_t link = Link(image);
+        if ((uint8_t)link == type)
+            return image;
+        if ((link >> 8) == 0)
+            return NULL;
+        image += link >> 8;
+    }
+    return NULL;
 }
 
 // The image's long name ('p' attachment), or NULL.
 // AUTOINJECT
 const char* SHAPE_longname(const uint8_t *image) {
-    while (image != NULL) {
-        int32_t d = At<int32_t>(image, 0);
-        if ((uint8_t)d == 0x70)
-            return (const char *)(image + 4);
-        if ((d >> 8) == 0)
-            return NULL;
-        image += d >> 8;
-    }
-    return NULL;
+    const uint8_t *a = FindAttachment(image, 'p');
+    return a != NULL ? (const char *)(a + 4) : NULL;
 }
 
-static const uint8_t *FindAttachment(const uint8_t *image, uint8_t type) {
-    while (image != NULL) {
-        int32_t d = At<int32_t>(image, 0);
-        if ((uint8_t)d == type)
-            return image;
-        if ((d >> 8) == 0)
-            return NULL;
-        image += d >> 8;
-    }
-    return NULL;
-}
-
-// The 'i' attachment's flags (+6), or 0.
+// The 'i' attachment's flags, or 0.
 // FUNC_AT(0x001082a0)
 int SHAPE_infoflags(const uint8_t *image) {
-    const uint8_t *a = FindAttachment(image, 0x69);
-    return a != NULL ? At<uint16_t>(a, 6) : 0;
+    const uint8_t *a = FindAttachment(image, 'i');
+    return a != NULL ? reinterpret_cast<const ShapeInfo *>(a)->flags : 0;
 }
 
 // The 'o' attachment's data, or NULL.
 // FUNC_AT(0x001082d0)
 uint8_t* SHAPE_namedata(const uint8_t *image) {
-    const uint8_t *a = FindAttachment(image, 0x6f);
-    return a != NULL ? (uint8_t *)a + 8 : NULL;
+    const uint8_t *a = FindAttachment(image, 'o');
+    return a != NULL ? const_cast<uint8_t *>(a) + sizeof(ShapeNameData) : NULL;
 }
 
-// The 'i' attachment's data when its flag 0x10 says it has some, or NULL.
+// The 'i' attachment's data when its flags say it has some, or NULL.
 // FUNC_AT(0x001082f0)
 uint8_t* SHAPE_infodata(const uint8_t *image) {
-    const uint8_t *a = FindAttachment(image, 0x69);
-    return (a != NULL && (a[6] & 0x10)) ? (uint8_t *)a + 0x10 : NULL;
+    const uint8_t *a = FindAttachment(image, 'i');
+    if (a == NULL || !(reinterpret_cast<const ShapeInfo *>(a)->flags & kInfoHasData))
+        return NULL;
+    return const_cast<uint8_t *>(a) + sizeof(ShapeInfo);
 }
 
 // An image by name - its long name, else its four-character directory name - or NULL.
 // AUTOINJECT
 uint8_t* SHAPE_locatez(uint8_t *shapes, const char *name) {
-    int count = At<int32_t>(shapes, 8);
-    for (int i = 0; i < count; i++) {
-        uint8_t *image = shapes + At<int32_t>(shapes, 0x14 + i * 8);
+    const ShapeFile *file = AsShapes(shapes);
+    for (int i = 0; i < file->count; i++) {
+        uint8_t *image = shapes + file->entries[i].offset;
         const char *n = SHAPE_longname(image);
         char shortName[5];
         if (n == NULL) {
@@ -441,12 +603,12 @@ uint8_t* SHAPE_locatez(uint8_t *shapes, const char *name) {
             n = shortName;
         }
         if (strcmp(n, name) == 0)
-            return shapes + At<int32_t>(shapes, 0x14 + i * 8);
+            return shapes + file->entries[i].offset;
     }
     return NULL;
 }
 
-static const uint8_t kDepth[128] = {   // 0x001d17f0, bits per pixel by image type
+static const uint8_t kDepth[128] = {   // bits per pixel by image type (the original's table at 0x001d17f0)
     0, 4, 8, 15, 24, 32, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 8, 8, 16, 16, 15, 32, 0, 4, 8, 16, 0, 12, 0, 4, 0,
     15, 32, 24, 0, 24, 0, 0, 0, 0, 16, 32, 0, 32, 15, 32, 0, 16, 16, 15, 32, 0, 0, 0, 0, 32, 15, 0, 0, 0, 0, 0, 0,
     4, 8, 15, 24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 8, 15, 16, 16, 24, 32, 0,
@@ -454,16 +616,17 @@ static const uint8_t kDepth[128] = {   // 0x001d17f0, bits per pixel by image ty
 
 // AUTOINJECT
 int SHAPE_depth(const uint8_t *image) {
-    return kDepth[At<uint32_t>(image, 0) & 0x7f];
+    return kDepth[Link(image) & 0x7f];
 }
 
-// Bytes per row: the width itself for type 0x7b, else width * bits per pixel (15 counts as 16), rounded up.
+// Bytes per row: the width itself for 8-bit images, else width * bits per pixel (15 counts as 16), rounded up.
 // AUTOINJECT
-int SHAPE_rowbytes(const uint8_t *image) {
-    int width = At<int16_t>(image, 4);
-    if (image[0] == 0x7b)
+int SHAPE_rowbytes(const uint8_t *imageData) {
+    const ShapeImage *image = reinterpret_cast<const ShapeImage *>(imageData);
+    int width = image->width;
+    if ((uint8_t)image->link == kType8Bit)
         return width;
-    int depth = SHAPE_depth(image);
+    int depth = SHAPE_depth(imageData);
     if (depth == 15)
         depth = 16;
     return (depth * width + 7) >> 3;
@@ -473,20 +636,21 @@ int SHAPE_rowbytes(const uint8_t *image) {
 // AUTOINJECT
 int SHAPE_type(int format) {
     switch (format) {
-    case 4: return 0x79;
-    case 8: return 0x7b;
-    case 0xf: case 0x22b: case 0x613: return 0x7e;
-    case 0x10: case 0x235: return 0x78;
-    case 0x18: case 0x378: return 0x7f;
-    case 0x20: case 0x22b8: return 0x7d;
-    case 0x1e4: return 0x68;
-    case 0x115c: return 0x6d;
-    case 0x1a0a: return 0x66;
-    case 0x200f12: return 0x6a;
+    case 4: return kType4Bit;
+    case 8: return kType8Bit;
+    case 0xf: case 0x22b: case 0x613: return kType15Bit;
+    case 0x10: case 0x235: return kType16Bit;
+    case 0x18: case 0x378: return kType24Bit;
+    case 0x20: case 0x22b8: return kType32Bit;
+    case 0x1e4: return kType68;
+    case 0x115c: return kType6d;
+    case 0x1a0a: return kType66;
+    case 0x200f12: return kType6a;
     }
     return 0;
 }
 
+// The palette type for a colour depth; 0 if unknown.
 // AUTOINJECT
 int SHAPE_cluttype(int format) {
     switch (format) {
@@ -545,9 +709,10 @@ int SHAPE_createsize(int width, int height, int format, int clutFormat, int mipL
     return infoBytes != 0 ? size + infoBytes + 0x10 : size;
 }
 
-static void Link(uint8_t *from, uint8_t *to) {   // the header's next-attachment offset
-    uint32_t d = At<uint32_t>(from, 0);
-    Put<uint32_t>(from, 0, (uint32_t)((to - from) << 8) ^ (d & 0xff));
+// The block's next-attachment offset, its type byte kept
+static void SetLink(uint8_t *from, uint8_t *to) {
+    int32_t &link = reinterpret_cast<ShapeImage *>(from)->link;
+    link = (int32_t)((uint32_t)((to - from) << 8) ^ ((uint32_t)link & 0xff));
 }
 
 // Builds an image in place: header, a grey (or blank) palette for 4- and 8-bit formats, then the optional 'o' and
@@ -559,10 +724,11 @@ void SHAPE_createat(uint8_t *at, int width, int height, int format, int clutForm
         format = 0x20;
     int type = SHAPE_type(format);
     MEM_fill(at, 0, 0x10);
-    at[0] = (uint8_t)type;
-    Put<uint16_t>(at, 4, (uint16_t)width);
-    Put<uint16_t>(at, 6, (uint16_t)height);
-    Put<uint32_t>(at, 0xc, (At<uint32_t>(at, 0xc) & 0x0fffffff) | (uint32_t)mipLevels << 28);
+    ShapeImage *image = reinterpret_cast<ShapeImage *>(at);
+    at[0] = (uint8_t)type;   // the link word's low byte
+    image->width = (int16_t)width;
+    image->height = (int16_t)height;
+    image->bits = (image->bits & 0x0fffffff) | (uint32_t)mipLevels << 28;
     uint8_t *header = at;
     uint8_t *next = at + PixelBytes(format, height, width, mipLevels) + 0x10;
     if (format <= 8) {
@@ -571,36 +737,37 @@ void SHAPE_createat(uint8_t *at, int width, int height, int format, int clutForm
         uint8_t clutType = (uint8_t)SHAPE_cluttype(c);
         int bits = c == 0xf ? 0x10 : c;
         next = at + (((next - at) + 0x3f) & ~0x3f);
-        Link(at, next);
+        SetLink(at, next);
         MEM_fill(next, 0, 0x10);
+        ShapePalette *palette = reinterpret_cast<ShapePalette *>(next);
         next[0] = clutType;
-        Put<uint16_t>(next, 4, (uint16_t)entries);
-        Put<uint16_t>(next, 6, 1);
-        uint8_t *palette = (At<uint32_t>(next, 0xc) & 0x1000) ? next + At<int32_t>(next, 0x10) : next + 0x10;
+        palette->entries = (uint16_t)entries;
+        palette->rows = 1;
+        uint8_t *colours = (palette->bits & kColoursElsewhere) ? next + palette->colourOffset : next + 0x10;
         if (c >= 0x20) {
             for (int i = 0; i < entries; i++) {
-                palette[i * 4] = palette[i * 4 + 1] = palette[i * 4 + 2] = (uint8_t)i;
-                palette[i * 4 + 3] = 0xff;
+                colours[i * 4] = colours[i * 4 + 1] = colours[i * 4 + 2] = (uint8_t)i;
+                colours[i * 4 + 3] = 0xff;
             }
         } else {
-            MEM_fill(palette, 0xffffffff, DivideBy8(bits * entries));
+            MEM_fill(colours, 0xffffffff, DivideBy8(bits * entries));
         }
         header = next;
         next = next + DivideBy8(bits * entries) + 0x10;
     }
     if (nameBytes != 0) {
-        Link(header, next);
+        SetLink(header, next);
         MEM_fill(next, 0, nameBytes + 8);
-        next[0] = 0x6f;
-        Put<int32_t>(next, 4, nameBytes);
+        next[0] = 'o';
+        reinterpret_cast<ShapeNameData *>(next)->bytes = nameBytes;
         header = next;
         next = next + nameBytes + 8;
     }
     if (infoBytes != 0) {
-        Link(header, next);
+        SetLink(header, next);
         MEM_fill(next, 0, infoBytes + 0x10);
-        next[0] = 0x69;
-        Put<uint16_t>(next, 6, 0x10);
+        next[0] = 'i';
+        reinterpret_cast<ShapeInfo *>(next)->flags = kInfoHasData;
     }
 }
 
@@ -622,12 +789,13 @@ uint8_t* SHAPE_create(int width, int height, int format, int clutFormat, int mip
 // The directory id's version: a letter then three digits ("G344" is 344); 0 otherwise.
 // AUTOINJECT
 int SHAPE_version(const uint8_t *shapes) {
-    int8_t l = (int8_t)shapes[0xc], a = (int8_t)shapes[0xd], b = (int8_t)shapes[0xe], c = (int8_t)shapes[0xf];
-    if (l < 0x41 || l > 0x7a)
+    const int8_t *id = AsShapes(shapes)->id;
+    int8_t l = id[0], a = id[1], b = id[2], c = id[3];
+    if (l < 'A' || l > 'z')
         return 0;
-    if (a < 0x30 || a > 0x39 || b < 0x30 || b > 0x39 || c < 0x30 || c > 0x39)
+    if (a < '0' || a > '9' || b < '0' || b > '9' || c < '0' || c > '9')
         return 0;
-    return a * 100 + b * 10 + c - 0x14d0;
+    return a * 100 + b * 10 + c - 0x14d0;   // 0x14d0 = '0' * 111
 }
 
 // Loads a SHPX file (".xsh" added when the name has no extension) and unpacks it if packed; NULL if it is not a
@@ -652,7 +820,7 @@ static uint8_t *LoadShapes(const char *name, int flags) {
     uint8_t *data = (uint8_t *)FILE_loadpackz(path, flags);
     if (data == NULL)
         return NULL;
-    if (((uint32_t)data[0] << 24 | (uint32_t)data[1] << 16 | (uint32_t)data[2] << 8 | data[3]) != 0x53485058) {
+    if (memcmp(data, "SHPX", 4) != 0) {
         ShapeFree(data);
         return NULL;
     }

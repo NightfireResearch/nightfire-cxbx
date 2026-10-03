@@ -5,23 +5,31 @@
 // ---------------------------------------------------------------------------------------------------------------
 // EAGLAnim::EventTarget (docs/driving/eagl.md 4.10): the anim data names its events "event.<name>"; ResolveEventId
 // gives each name an id, kept in a name-sorted mapping (binary searched) and an id-ordered name array that grow by
-// 'grow' entries when full. A handler table indexed by id holds singly linked handler lists (next at +4). Each
+// 'grow' entries when full. A handler table indexed by id holds singly linked handler lists. Each
 // function is the original at the same address, allocations through EAGL's hooks with the original's names.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define EaglMalloc   (*(void *(**)(uint32_t size, const char *name))0x001caf68u)
-#define EaglFree     (*(void (**)(void *data, uint32_t size))0x001caf6cu)
+typedef void *(*EaglMallocHook)(uint32_t size, const char *name);
+typedef void (*EaglFreeHook)(void *data, uint32_t size);
+#define EaglMalloc (*(EaglMallocHook *)0x001caf68)
+#define EaglFree (*(EaglFreeHook *)0x001caf6c)
+
+// The allocations' names: the original's strings (two copies of "eventName")
+#define AllocEventName ((const char *)0x001ceafc)     // "eventName"
+#define AllocEventMapping ((const char *)0x001ceb08)  // "eventMapping"
+#define AllocEventNames ((const char *)0x001ceb18)    // "eventNames"
+#define AllocEventName2 ((const char *)0x001ceb24)    // "eventName"
 
 // FUNC_AT(0x000f8310)
 void EventTarget::Destruct() {
     if (mapping != NULL) {
         for (int i = 0; i < count; i++)
             if (mapping[i].name != NULL)
-                EaglFree(mapping[i].name, (uint32_t)strlen(mapping[i].name) + 1);
-        EaglFree(mapping, (uint32_t)capacity * 8);
+                EaglFree(mapping[i].name, strlen(mapping[i].name) + 1);
+        EaglFree(mapping, capacity * sizeof(EventMapping));
     }
     if (names != NULL)
-        EaglFree(names, (uint32_t)capacity * 4);
+        EaglFree(names, capacity * sizeof(char *));
 }
 
 // The id, or -1 with *position where the name would go.
@@ -60,7 +68,7 @@ bool EventTarget::ResolveEventId(const char *name, int *id) {
         for (int c = n; c >= position; c--)
             if (c > 0)
                 mapping[c] = mapping[c - 1];
-        mapping[position].name = (char *)EaglMalloc((uint32_t)length, (const char *)0x001ceafcu);   // "eventName"
+        mapping[position].name = static_cast<char *>(EaglMalloc(length, AllocEventName));
         memcpy(mapping[position].name, name, length);
         names[count] = mapping[position].name;
         mapping[position].id = count;
@@ -68,22 +76,22 @@ bool EventTarget::ResolveEventId(const char *name, int *id) {
         EventMapping *oldMapping = mapping;
         char **oldNames = names;
         capacity = oldCapacity + grow;
-        mapping = (EventMapping *)EaglMalloc((uint32_t)capacity * 8, (const char *)0x001ceb08u);   // "eventMapping"
-        names = (char **)EaglMalloc((uint32_t)capacity * 4, (const char *)0x001ceb18u);           // "eventNames"
+        mapping = static_cast<EventMapping *>(EaglMalloc(capacity * sizeof(EventMapping), AllocEventMapping));
+        names = static_cast<char **>(EaglMalloc(capacity * sizeof(char *), AllocEventNames));
         for (int c = count; c >= position; c--)
             if (c > 0)
                 mapping[c] = oldMapping[c - 1];
         for (int c = position - 1; c >= 0; c--)
             mapping[c] = oldMapping[c];
-        mapping[position].name = (char *)EaglMalloc((uint32_t)length, (const char *)0x001ceb24u);   // "eventName"
+        mapping[position].name = static_cast<char *>(EaglMalloc(length, AllocEventName2));
         memcpy(mapping[position].name, name, length);
         names[count] = mapping[position].name;
-        memcpy(names, oldNames, (size_t)count * 4);
+        memcpy(names, oldNames, count * sizeof(char *));
         mapping[position].id = count;
         if (oldMapping != NULL)
-            EaglFree(oldMapping, (uint32_t)oldCapacity * 8);
+            EaglFree(oldMapping, oldCapacity * sizeof(EventMapping));
         if (oldNames != NULL)
-            EaglFree(oldNames, (uint32_t)oldCapacity * 4);
+            EaglFree(oldNames, oldCapacity * sizeof(char *));
     }
     count++;
     *id = count - 1;
@@ -97,48 +105,48 @@ int EventTarget::GetEventId(const char *name) {
 }
 
 // FUNC_AT(0x000f8690)
-bool EventTarget::AddHandler(void **table, const char *name, void *handler) {
+bool EventTarget::AddHandler(EventHandler **table, const char *name, EventHandler *handler) {
     int position;
     int id = Find(name, &position);
     if (id < 0)
         return false;
-    void *head = table[id];
+    EventHandler *head = table[id];
     if (head != NULL)
-        ((void **)handler)[1] = head;
+        handler->next = head;
     table[id] = handler;
     return true;
 }
 
 // FUNC_AT(0x000f86d0)
-bool EventTarget::RemoveHandler(void **table, const char *name, void *handler) {
+bool EventTarget::RemoveHandler(EventHandler **table, const char *name, EventHandler *handler) {
     int position;
     int id = Find(name, &position);
     if (id < 0)
         return false;
-    void **h = (void **)table[id];
+    EventHandler *h = table[id];
     if (h == NULL)
         return true;
     if (h == handler) {
-        table[id] = ((void **)handler)[1];
+        table[id] = handler->next;
         return true;
     }
-    while (h[1] != NULL && h[1] != handler)
-        h = (void **)h[1];
-    if (h[1] == handler)
-        h[1] = ((void **)handler)[1];
+    while (h->next != NULL && h->next != handler)
+        h = h->next;
+    if (h->next == handler)
+        h->next = handler->next;
     return true;
 }
 
 // FUNC_AT(0x000f8740)
-bool EventTarget::ClearHandlers(void **table, const char *name) {
+bool EventTarget::ClearHandlers(EventHandler **table, const char *name) {
     int position;
     int id = Find(name, &position);
     if (id < 0)
         return false;
-    void **h = (void **)table[id];
+    EventHandler *h = table[id];
     while (h != NULL) {
-        void **next = (void **)h[1];
-        h[1] = NULL;
+        EventHandler *next = h->next;
+        h->next = NULL;
         h = next;
     }
     table[id] = NULL;

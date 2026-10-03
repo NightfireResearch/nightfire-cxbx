@@ -6,6 +6,20 @@
 
 #include <stdint.h>
 
+// A SHPX file (.xsh): the header and its directory, one entry per image (docs/driving/eagl.md 2.12)
+struct ShapeDirectoryEntry {
+    uint32_t name;                   // four characters, space padded
+    int32_t offset;                  // the image header's, from the start of the file
+};
+
+struct ShapeFile {
+    uint8_t magic[4];                // +0x00 "SHPX"
+    int32_t size;                    // +0x04
+    int32_t count;                   // +0x08 images
+    int8_t id[4];                    // +0x0c directory id: a letter and three digits ("G344", SHAPE_version)
+    ShapeDirectoryEntry entries[1];  // +0x10 count of them
+};
+
 typedef void (*FontDrawFn)(const uint8_t *font, const uint8_t *glyph, float x, float y);
 typedef void (*FontHookFn)(const uint8_t *font);
 

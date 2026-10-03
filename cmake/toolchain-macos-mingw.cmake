@@ -63,7 +63,10 @@ set(CMAKE_RC_COMPILER ${NF_WINDRES})
 # -fms-extensions  : __declspec(naked), and the MSVC spelling of other extensions the sources use
 # -fasm-blocks     : MSVC's __asm { } Intel-syntax blocks
 # -fno-exceptions  : nothing here throws, and it keeps the unwinder out of the binaries entirely
-set(NF_MINGW_FLAGS "--sysroot=${NF_MINGW_ROOT} -fms-extensions -fasm-blocks -fno-exceptions")
+# -Wno-invalid-offsetof : the ports static_assert field offsets of the game's records, some of which derive from a
+#                    common header (EAGLAnim's anim data); offsetof on those is conditionally supported, exact in
+#                    practice for plain single inheritance, and what MSVC accepts without comment
+set(NF_MINGW_FLAGS "--sysroot=${NF_MINGW_ROOT} -fms-extensions -fasm-blocks -fno-exceptions -Wno-invalid-offsetof")
 # -B points clang at the sysroot's binutils. Not for a /usr sysroot: there it would pick the host's own
 # /usr/bin/ld over i686-w64-mingw32-ld, which clang already finds on PATH.
 if(NOT NF_MINGW_ROOT STREQUAL "/usr")

@@ -1,7 +1,7 @@
 #include "AnimShadow.h"
 
 #include "../eagl/Loader.h"
-#include "../eagl/anim/FnAnim.h"
+#include "../eagl/anim/AnimObjects.h"
 #include "../platform/FileSys.h"
 #include "../platform/RefPack.h"
 #include "../../common/xbeOriginal.h"
@@ -104,11 +104,11 @@ int ShadowPrint(const char *format, va_list args) {
     return 0;
 }
 
-#define EaglMallocHook  (*(void **)0x001caf68u)
-#define EaglFreeHook    (*(void **)0x001caf6cu)
-#define PrintHook       (*(void **)0x00240268u)
-#define LoadedTables    (*(void **)0x0023fb88u)
-#define BlockSizes      ((const uint16_t *)0x001ceab0u)
+#define EaglMallocHook  (*(void **)0x001caf68)
+#define EaglFreeHook    (*(void **)0x001caf6c)
+#define PrintHook       (*(void **)0x00240268)
+#define LoadedTables    (*(void **)0x0023fb88)
+#define BlockSizes      ((const uint16_t *)0x001ceab0)
 
 // EAGLAnim's ranges: the objects and evaluation, and its functions linked among the engine's.
 struct Originals {
@@ -209,7 +209,7 @@ uint8_t g_maskAll[64], g_maskHalf[64];
 
 void FillPattern() {
     for (size_t i = 0; i < kOut; i++) {
-        uint32_t u = 0x7fc0de00u | (uint32_t)(i & 0xff);
+        uint32_t u = 0x7fc0de00 | (uint32_t)(i & 0xff);
         memcpy(&g_out[i], &u, 4);
     }
 }
@@ -339,11 +339,11 @@ int g_anims, g_types[kAnimTypeCount], g_subTypes[kAnimTypeCount], g_faults, g_ev
 void CountSubChannels(FnAnim *anim) {
     if (anim->type != kCompound)
         return;
-    FnAnim **channels = *(FnAnim ***)((uint8_t *)anim + 0x10);
-    uint8_t *data = *(uint8_t **)((uint8_t *)anim + 0xc);
+    FnCompoundChannel *compound = static_cast<FnCompoundChannel *>(anim);
+    FnAnim **channels = compound->channels;
     if (channels == NULL)
         return;
-    for (int i = 0; i < *(uint16_t *)(data + 8); i++) {
+    for (int i = 0; i < reinterpret_cast<CompoundData *>(compound->anim)->count; i++) {
         uint32_t t = channels[i]->type;
         if (t < kAnimTypeCount)
             g_subTypes[t]++;
@@ -363,7 +363,7 @@ void BankSide(bool original, const Bank &bank, std::vector<uint8_t> &image, Snap
     ArenaReset();
     memcpy(image.data(), bank.data.data(), image.size());
     LoadedTables = NULL;
-    memset((void *)0x00241ba0u, 0, 0x24);   // the three scratch buffers: each side starts without them
+    memset((void *)0x00241ba0, 0, 0x24);   // the three scratch buffers: each side starts without them
     {
         Originals scope(original);
         ((void (*)(uint32_t))0x000f7d00)(0x400000);   // MemoryPoolManager::Init
@@ -375,12 +375,13 @@ void BankSide(bool original, const Bank &bank, std::vector<uint8_t> &image, Snap
             Logf("no AnimationBank");
         } else {
             ((void (*)(uint8_t *, void *))0x000f7170)(symbol, &loader);   // AnimBank::Constructor
-            int count = *(int32_t *)(symbol + 4);
-            uint8_t **anims = *(uint8_t ***)(symbol + 0xc);
-            const char **names = *(const char ***)(symbol + 0x10);
+            AnimBank *animBank = reinterpret_cast<AnimBank *>(symbol);
+            int count = animBank->count;
+            uint8_t **anims = animBank->anims;
+            const char **names = animBank->names;
             std::vector<FnAnim *> built;
             for (int i = 0; i < count; i++) {
-                uint16_t type = *(uint16_t *)anims[i];
+                uint16_t type = reinterpret_cast<AnimData *>(anims[i])->type;
                 FnAnim *anim = ((FnAnim *(*)(uint8_t *))0x00014210)(anims[i]);   // NewFnAnim
                 uint32_t size = type < kAnimTypeCount ? BlockSizes[type] : 0;
                 Logf("anim %d \"%s\" type %u at %p, %08x", i, names != NULL ? names[i] : "?", type, (void *)anim,
@@ -482,7 +483,7 @@ void AnimShadow_Run(void) {
 
     // the game's state, put back at the end: EAGL's hooks and loaded list, EAGLAnim's pool and scratch globals
     void *savedMalloc = EaglMallocHook, *savedFree = EaglFreeHook, *savedPrint = PrintHook, *savedLoaded = LoadedTables;
-    std::vector<uint8_t> savedPool((uint8_t *)0x002414b0u, (uint8_t *)0x00241c00u);
+    std::vector<uint8_t> savedPool((uint8_t *)0x002414b0, (uint8_t *)0x00241c00);
     EaglMallocHook = (void *)ShadowMalloc;
     EaglFreeHook = (void *)ShadowFree;
     PrintHook = (void *)ShadowPrint;
@@ -507,7 +508,7 @@ void AnimShadow_Run(void) {
     EaglFreeHook = savedFree;
     PrintHook = savedPrint;
     LoadedTables = savedLoaded;
-    memcpy((uint8_t *)0x002414b0u, savedPool.data(), savedPool.size());
+    memcpy((uint8_t *)0x002414b0, savedPool.data(), savedPool.size());
     VirtualFree(g_arena, 0, MEM_RELEASE);
     char types[400] = "";
     for (int t = 0; t < kAnimTypeCount; t++)

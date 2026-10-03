@@ -1,9 +1,8 @@
 #include "Decode.h"
-#include "DecodeUnused.h"   // SND_UNTESTED
+#include "SndUntested.h"
 
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 #include <xmmintrin.h>
 
 #ifdef _MSC_VER
@@ -31,19 +30,18 @@ static_assert(offsetof(SND::CEAXABLKDecf, xac) == 0x94, "CEAXABLKDecf layout");
 
 namespace {
 
-#define XaPredictor1  ((const float *)0x001da9b8u)   // 0, 0.9375, 1.796875, 1.53125
-#define XaPredictor2  ((const float *)0x001da9c8u)   // 0, 0, -0.8125, -0.859375
-#define XaNibbles     ((const float *)0x001da9d8u)   // [shift][nibble]: signed nibble << (12 - shift)
-#define CodaNew       (*(void *(**)(size_t size))0x002475f4u)    // SNDMEMI_alloc's thunk, set by MIX_create
-#define CodaDelete    (*(void (**)(void *block))0x002475f8u)     // SNDMEMI_free's thunk
+// The tables stay in the original's .rdata, one after the other: a predictor nibble above 3 (no stream has one)
+// reads past the four predictors into the next table, as the original does.
+#define XaPredictor1 ((const float *)0x001da9b8)          // 0, 0.9375, 1.796875, 1.53125
+#define XaPredictor2 ((const float *)0x001da9c8)          // 0, 0, -0.8125, -0.859375
+#define XaNibbles ((const float (*)[16])0x001da9d8)       // [shift][nibble]: signed nibble << (12 - shift)
 
-const int kBlockFrames = 28;
-const int kBlockBytes = 15;
+// CODA_New/CODA_Delete: SNDMEMI_alloc's and SNDMEMI_free's thunks, set by MIX_create
+#define CodaNew (*(void *(**)(size_t size))0x002475f4)
+#define CodaDelete (*(void (**)(void *block))0x002475f8)
 
-// The copies are dword moves in the original: bits kept as they are.
-inline void CopyFrame(float *to, const float *from) {
-    memcpy(to, from, 4);
-}
+constexpr int kBlockFrames = 28;
+constexpr int kBlockBytes = 15;
 
 }   // namespace
 
@@ -59,9 +57,8 @@ void SND::decodexac(DecodeXacParams *params) {
     while (params->frames > 0) {
         params->frames -= kBlockFrames;
         uint32_t predictor = src[0] >> 4;
-        const float *nibbles = XaNibbles + (src[0] & 0xf) * 16;
-        src += 1;
-        src += 14;
+        const float *nibbles = XaNibbles[src[0] & 0xf];
+        src += kBlockBytes;
         dst += kBlockFrames;
         for (int i = -14; i < 0; i++) {
             x4 = _mm_mul_ss(x4, _mm_load_ss(&XaPredictor1[predictor]));
@@ -111,7 +108,7 @@ int SND::CEAXABLKDecf::Feed(const void *data, int byteCount, int frames) {
     if (data == NULL || framesLeft != 0)
         return -1;
     framesLeft = frames;
-    xac.src = (const uint8_t *)data;
+    xac.src = static_cast<const uint8_t *>(data);
     bytes = byteCount;
     return 0;
 }
@@ -129,11 +126,8 @@ int SND::CEAXABLKDecf::Decode(float **out, int frames) {
         int take = buffered;
         if (take > wanted)
             take = wanted;
-        for (int i = 0; i < take; i++) {
-            CopyFrame(xac.dst, bufferRead);
-            bufferRead++;
-            xac.dst++;
-        }
+        for (int i = 0; i < take; i++)   // dword moves in the original: a float copy keeps the bits
+            *xac.dst++ = *bufferRead++;
         framesLeft -= take;
         buffered -= take;
         wanted -= take;
@@ -159,7 +153,7 @@ int SND::CEAXABLKDecf::Decode(float **out, int frames) {
         buffered = -xac.frames;
         xac.dst = xac.dst - kBlockFrames;            // back to buffer
         for (int i = 0; i < rest; i++)
-            CopyFrame(&to[i], &xac.dst[i]);
+            to[i] = xac.dst[i];
         produced += rest;
     }
     if (framesLeft <= 0)
@@ -172,16 +166,16 @@ int SND::CEAXABLKDecf::Decode(float **out, int frames) {
 // FUNC_AT(0x0014a190)
 void* SND::CEAXABLKDecf::GetState(void *state) {
     SND_UNTESTED("SND::CEAXABLKDecf::GetState");
-    uint32_t s1, s2;
-    memcpy(&s1, &xac.s1, 4);
-    memcpy(&s2, &xac.s2, 4);
-    ((uint32_t *)state)[0] = s1;
-    ((uint32_t *)state)[1] = s2;
+    float s1 = xac.s1, s2 = xac.s2;   // both read before either is written, as the original does
+    float *history = static_cast<float *>(state);
+    history[0] = s1;
+    history[1] = s2;
     return state;
 }
 
 // FUNC_AT(0x0014a1c0)
 void SND::CEAXABLKDecf::SetState(const void *state) {
-    memcpy(&xac.s1, (const uint32_t *)state, 4);
-    memcpy(&xac.s2, (const uint32_t *)state + 1, 4);
+    const float *history = static_cast<const float *>(state);
+    xac.s1 = history[0];
+    xac.s2 = history[1];
 }

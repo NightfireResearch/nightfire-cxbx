@@ -1,5 +1,7 @@
 #include "DecodeUnused.h"
+#include "SndUntested.h"
 
+#include <bit>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -43,50 +45,51 @@ namespace {
 struct MutCode {                       // 12 bytes
     int32_t next;                      // +0 the state for the next code
     int32_t length;                    // +4 bits the code takes
-    uint32_t value;                    // +8 a float's bits (codes 4 and up)
+    float value;                       // +8 the sample (codes 4 and up)
 };
+static_assert(sizeof(MutCode) == 12, "a MicroTalk code is 12 bytes");
 
-#define MutMasks       ((const uint32_t *)0x001da530u)   // (1 << n) - 1
-#define MutCoefs6      ((const float *)0x001da558u)      // the first four coefficients' 64 levels
-#define MutCoefs5      ((const float *)0x001da598u)      // the other eight's 32 levels
-#define MutHuffStart   ((const uint8_t *)0x001da658u)    // [state][next 8 bits] -> code
-#define MutHuffCodes   ((const MutCode *)0x001da858u)
-#define kTwoTo32       (*(const float *)0x0018a4a8u)     // 4294967296: an unsigned FILD's correction
-#define kEight         (*(const float *)0x0018b5dcu)
-#define kGainStep      (*(const float *)0x001918ccu)     // 0.001
-#define kGainBase      (*(const float *)0x001a759cu)     // 1.04
-#define kQuarter       (*(const float *)0x0018a4c0u)
-#define kLtpGainStep   (*(const float *)0x0018b928u)     // 1/15
-#define kHalfBand0     (*(const float *)0x001a7598u)     // the taps at +-5
-#define kHalfBand1     (*(const float *)0x001a7594u)     // +-3
-#define kHalfBand2     (*(const float *)0x001a7590u)     // +-1
-#define kHalf          (*(const float *)0x00189eb0u)
+// The tables, in the original's .rdata
+#define MutCoefs6 ((const float *)0x001da558)              // the first four coefficients' 64 levels
+#define MutCoefs5 ((const float *)0x001da598)              // the other eight's 32 levels
+#define MutHuffStart ((const uint8_t (*)[256])0x001da658)  // [state][next 8 bits] -> code
+#define MutHuffCodes ((const MutCode *)0x001da858)
 
-// The original's inlined reader: take n bits, then top up one byte if fewer than 8 are left.
-inline uint32_t MutBits(SND::MutState *s, int n) {
-    uint32_t value = s->bits & MutMasks[n];
-    uint32_t bits = s->bits >> n;
+// The constants (the original's .rdata values)
+constexpr float kEight = 8.0f;
+constexpr float kGainStep = 0.001f;
+constexpr float kGainBase = 1.04f;
+constexpr float kQuarter = 0.25f;
+constexpr float kLtpGainStep = 1.0f / 15;
+constexpr float kHalfBand0 = 0x1.27728ap-6f;          // the half-band filter's taps at +-5
+constexpr float kHalfBand1 = 0x1.d55df6p-4f;          // +-3
+constexpr float kHalfBand2 = 0x1.31dc92p-1f;          // +-1
+constexpr float kHalf = 0.5f;
+static_assert(std::bit_cast<uint32_t>(kGainStep) == 0x3a83126f, "the original's 0.001");
+static_assert(std::bit_cast<uint32_t>(kGainBase) == 0x3f851eb8, "the original's 1.04");
+static_assert(std::bit_cast<uint32_t>(kLtpGainStep) == 0x3d888889, "the original's 1/15");
+static_assert(std::bit_cast<uint32_t>(kHalfBand0) == 0x3c93b945, "the original's tap at +-5");
+static_assert(std::bit_cast<uint32_t>(kHalfBand1) == 0x3deaaefb, "the original's tap at +-3");
+static_assert(std::bit_cast<uint32_t>(kHalfBand2) == 0x3f18ee49, "the original's tap at +-1");
+
+// The original's inlined reader: drop n bits, then top up one byte if fewer than 8 are left.
+inline void MutSkip(SND::MutState *s, int n) {
+    uint32_t bits = s->bits >> (n & 31);
     int32_t count = s->count - n;
     s->bits = bits;
     s->count = count;
     if (count < 8) {
-        s->bits = ((uint32_t)*s->ptr << (count & 31)) | bits;
+        s->bits = (uint32_t(*s->ptr) << (count & 31)) | bits;
         s->ptr++;
         s->count = count + 8;
     }
+}
+
+// Take n bits (n <= 8: the original masks with a table of (1 << n) - 1).
+inline uint32_t MutBits(SND::MutState *s, int n) {
+    uint32_t value = s->bits & ((1u << n) - 1);
+    MutSkip(s, n);
     return value;
-}
-
-// FILD of a register, then the unsigned correction (the original tests the sign just before the FILD).
-inline double UnsignedToDouble(uint32_t v) {
-    double d = (double)(int32_t)v;
-    if ((int32_t)v < 0)
-        d = d + (double)kTwoTo32;
-    return d;
-}
-
-inline void StoreBits(float *to, uint32_t bits) {
-    memcpy(to, &bits, 4);
 }
 
 }   // namespace
@@ -97,51 +100,24 @@ inline void StoreBits(float *to, uint32_t bits) {
 // FUNC_AT(0x001493e0)
 int initmut(const uint8_t *src, SND::MutState *s) {
     SND_UNTESTED("initmut");
-    uint32_t edx = src[0];
-    s->bits = edx;
+    s->bits = src[0];
     s->ptr = src + 1;
-    edx >>= 1;
-    s->bits = edx;
-    s->count = 7;
-    uint32_t esi = ((uint32_t)src[1] << 7) | edx;
-    s->bits = esi;
-    const uint8_t *p = src + 2;
-    s->ptr = p;
-    s->count = 15;
-    uint32_t ecx = esi >> 4;
-    esi &= MutMasks[4];
-    s->bits = ecx;
-    s->threshold = 32 - (int32_t)esi;
-    s->count = 11;
-    esi = ecx;
-    ecx >>= 4;
-    s->count = 7;
-    s->bits = ecx;
-    uint32_t ebx = ((uint32_t)*p << 7) | ecx;
-    esi &= MutMasks[4];
-    p++;
-    esi++;
-    s->bits = ebx;
-    s->ptr = p;
-    double g = UnsignedToDouble(esi);
-    s->count = 15;
-    g = g * (double)kEight;
-    ecx = s->bits;
-    edx = ecx & MutMasks[6];
-    ecx >>= 6;
-    s->gainTable[0] = (float)g;
-    double step = UnsignedToDouble(edx);
-    s->bits = ecx;
-    s->count = 9;
-    step = step * (double)kGainStep;
-    step = step + (double)kGainBase;
+    s->count = 8;
+    MutBits(s, 1);
+    s->threshold = 32 - int32_t(MutBits(s, 4));
+    // The original converts the two fields with FILD and its unsigned correction (+ 2^32 for a negative value):
+    // exact, so a plain conversion gives the same doubles.
+    uint32_t g0 = MutBits(s, 4) + 1;
+    uint32_t stepField = MutBits(s, 6);
+    s->gainTable[0] = float(double(g0) * kEight);
+    double step = double(stepField) * kGainStep + kGainBase;
     for (int i = 0; i < 63; i++)
-        s->gainTable[i + 1] = (float)(step * (double)s->gainTable[i]);
+        s->gainTable[i + 1] = float(step * s->gainTable[i]);
     for (int i = 0; i < 12; i++) {
-        StoreBits(&s->coefs[i], 0);
-        StoreBits(&s->synth[i], 0);
+        s->coefs[i] = 0.0f;
+        s->synth[i] = 0.0f;
     }
-    memset(s->signal, 0, 324 * 4);
+    memset(s->signal, 0, 324 * sizeof(float));
     return 0;
 }
 
@@ -152,59 +128,38 @@ int initmut(const uint8_t *src, SND::MutState *s) {
 void readsamples(SND::MutState *s, int mode, float *out) {
     SND_UNTESTED("readsamples");
     if (mode == 0) {
-        for (int i = 0; i < 0x6c; i += 2) {
+        for (int i = 0; i < 108; i += 2) {
             uint32_t low = s->bits & 3;
-            uint32_t bits;
-            int32_t count;
             if (low == 1) {
-                StoreBits(&out[i], 0xc0000000u);
-                bits = s->bits >> 2;
-                count = s->count - 2;
+                out[i] = -2.0f;
+                MutSkip(s, 2);
             } else if (low == 3) {
-                StoreBits(&out[i], 0x40000000u);
-                bits = s->bits >> 2;
-                count = s->count - 2;
+                out[i] = 2.0f;
+                MutSkip(s, 2);
             } else {
-                StoreBits(&out[i], 0);
-                bits = s->bits >> 1;
-                count = s->count - 1;
-            }
-            s->bits = bits;
-            s->count = count;
-            if (count < 8) {
-                s->bits = ((uint32_t)*s->ptr << (count & 31)) | bits;
-                s->ptr++;
-                s->count = count + 8;
+                out[i] = 0.0f;
+                MutSkip(s, 1);
             }
         }
         return;
     }
     int32_t state = 0;
     int i = 0;
-    while (i < 0x6c) {
-        uint32_t code = MutHuffStart[(s->bits & 0xff) + ((uint32_t)state << 8)];
+    while (i < 108) {
+        int code = MutHuffStart[state][s->bits & 0xff];
         state = MutHuffCodes[code].next;
-        int32_t length = MutHuffCodes[code].length;
-        uint32_t bits = s->bits >> (length & 31);
-        int32_t count = s->count - length;
-        s->bits = bits;
-        s->count = count;
-        if (count < 8) {
-            s->bits = ((uint32_t)*s->ptr << (count & 31)) | bits;
-            s->ptr++;
-            s->count = count + 8;
-        }
-        if ((int32_t)code > 3) {
-            StoreBits(&out[i], MutHuffCodes[code].value);
+        MutSkip(s, MutHuffCodes[code].length);
+        if (code > 3) {
+            out[i] = MutHuffCodes[code].value;
             i += 2;
-        } else if ((int32_t)code > 1) {
-            int32_t run = (int32_t)MutBits(s, 6) + 7;
-            if (i + run * 2 > 0x6c)
-                run = (0x6c - i) >> 1;
+        } else if (code > 1) {
+            int32_t run = int32_t(MutBits(s, 6)) + 7;
+            if (i + run * 2 > 108)
+                run = (108 - i) >> 1;
             if (run <= 0)
                 continue;
             do {
-                StoreBits(&out[i], 0);
+                out[i] = 0.0f;
                 i += 2;
             } while (--run != 0);
         } else {
@@ -212,9 +167,9 @@ void readsamples(SND::MutState *s, int mode, float *out) {
             while (MutBits(s, 1) == 1)
                 magnitude++;
             if (MutBits(s, 1) == 1)
-                out[i] = (float)(double)magnitude;
+                out[i] = float(magnitude);
             else
-                out[i] = (float)(double)-magnitude;
+                out[i] = float(-magnitude);
             i += 2;
         }
     }
@@ -230,28 +185,28 @@ void MutLpcCoefficients(float *b, const float *k) {
         L[i + 2] = k[i + 1];
     L[0] = 1.0f;
     for (int n = 0; n < 12; n++) {
-        double acc = -((double)L[11] * (double)k[11]);
+        double acc = -(double(L[11]) * k[11]);
         for (int c = 10; c >= 0; c--) {
-            acc = acc - (double)L[c] * (double)k[c];
-            L[c + 1] = (float)(acc * (double)k[c] + (double)L[c]);
+            acc = acc - double(L[c]) * k[c];
+            L[c + 1] = float(acc * k[c] + L[c]);
         }
-        L[0] = (float)acc;
-        R[n] = (float)acc;
+        L[0] = float(acc);
+        R[n] = float(acc);
         int j = 0;
         if (n >= 4) {
             int e = 3;
             do {
-                acc = acc - (double)R[n - 1 - j] * (double)b[j];
-                acc = acc - (double)b[j + 1] * (double)R[n - 2 - j];
-                acc = acc - (double)R[n - 3 - j] * (double)b[j + 2];
-                acc = acc - (double)R[n - 4 - j] * (double)b[j + 3];
+                acc = acc - double(R[n - 1 - j]) * b[j];
+                acc = acc - double(b[j + 1]) * R[n - 2 - j];
+                acc = acc - double(R[n - 3 - j]) * b[j + 2];
+                acc = acc - double(R[n - 4 - j]) * b[j + 3];
                 e += 4;
                 j += 4;
             } while (e < n);
         }
         for (; j < n; j++)
-            acc = acc - (double)b[j] * (double)R[n - 1 - j];
-        b[n] = (float)acc;
+            acc = acc - double(b[j]) * R[n - 1 - j];
+        b[n] = float(acc);
     }
 }
 
@@ -273,343 +228,343 @@ void MutSynthesise(int first, SND::MutState *s, int groups) {
     SND_UNTESTED("FUN_00146f00");
     float b[12];
     MutLpcCoefficients(b, s->coefs);
-    float *sf = (float *)s;
-    float *out = (float *)((uint8_t *)s + first * 4 + 0x680);
+    float *ring = s->synth;
+    float *out = &s->signal[324 + first];   // the frame's outputs
     double d;
     int done = 0;
     if (groups >= 4) {
         int next = 3;
         do {
-            d = (double)b[8] * sf[0x160 / 4] + (double)b[4] * sf[0x150 / 4] + (double)b[0] * sf[0x140 / 4]
-                + (double)b[9] * sf[0x164 / 4] + (double)b[5] * sf[0x154 / 4] + (double)b[1] * sf[0x144 / 4]
-                + (double)b[11] * sf[0x16c / 4] + (double)b[10] * sf[0x168 / 4] + (double)b[6] * sf[0x158 / 4]
-                + (double)b[2] * sf[0x148 / 4] + (double)b[7] * sf[0x15c / 4] + (double)b[3] * sf[0x14c / 4] + out[0];
-            sf[0x16c / 4] = (float)d;
-            out[0] = (float)d;
-            d = (double)b[9] * sf[0x160 / 4] + (double)b[5] * sf[0x150 / 4] + (double)b[1] * sf[0x140 / 4]
-                + (double)b[10] * sf[0x164 / 4] + (double)b[6] * sf[0x154 / 4] + (double)b[2] * sf[0x144 / 4]
-                + (double)b[11] * sf[0x168 / 4] + (double)b[7] * sf[0x158 / 4] + (double)b[3] * sf[0x148 / 4]
-                + (double)b[0] * sf[0x16c / 4] + (double)b[8] * sf[0x15c / 4] + (double)b[4] * sf[0x14c / 4] + out[1];
-            sf[0x168 / 4] = (float)d;
-            out[1] = (float)d;
-            d = (double)b[10] * sf[0x160 / 4] + (double)b[6] * sf[0x150 / 4] + (double)b[2] * sf[0x140 / 4]
-                + (double)b[11] * sf[0x164 / 4] + (double)b[7] * sf[0x154 / 4] + (double)b[3] * sf[0x144 / 4]
-                + (double)b[8] * sf[0x158 / 4] + (double)b[4] * sf[0x148 / 4] + (double)b[1] * sf[0x16c / 4]
-                + (double)b[0] * sf[0x168 / 4] + (double)b[9] * sf[0x15c / 4] + (double)b[5] * sf[0x14c / 4] + out[2];
-            sf[0x164 / 4] = (float)d;
-            out[2] = (float)d;
-            d = (double)b[11] * sf[0x160 / 4] + (double)b[7] * sf[0x150 / 4] + (double)b[3] * sf[0x140 / 4]
-                + (double)b[8] * sf[0x154 / 4] + (double)b[4] * sf[0x144 / 4] + (double)b[0] * sf[0x164 / 4]
-                + (double)b[9] * sf[0x158 / 4] + (double)b[5] * sf[0x148 / 4] + (double)b[2] * sf[0x16c / 4]
-                + (double)b[1] * sf[0x168 / 4] + (double)b[10] * sf[0x15c / 4] + (double)b[6] * sf[0x14c / 4]
+            d = double(b[8]) * ring[8] + double(b[4]) * ring[4] + double(b[0]) * ring[0]
+                + double(b[9]) * ring[9] + double(b[5]) * ring[5] + double(b[1]) * ring[1]
+                + double(b[11]) * ring[11] + double(b[10]) * ring[10] + double(b[6]) * ring[6]
+                + double(b[2]) * ring[2] + double(b[7]) * ring[7] + double(b[3]) * ring[3] + out[0];
+            ring[11] = float(d);
+            out[0] = float(d);
+            d = double(b[9]) * ring[8] + double(b[5]) * ring[4] + double(b[1]) * ring[0]
+                + double(b[10]) * ring[9] + double(b[6]) * ring[5] + double(b[2]) * ring[1]
+                + double(b[11]) * ring[10] + double(b[7]) * ring[6] + double(b[3]) * ring[2]
+                + double(b[0]) * ring[11] + double(b[8]) * ring[7] + double(b[4]) * ring[3] + out[1];
+            ring[10] = float(d);
+            out[1] = float(d);
+            d = double(b[10]) * ring[8] + double(b[6]) * ring[4] + double(b[2]) * ring[0]
+                + double(b[11]) * ring[9] + double(b[7]) * ring[5] + double(b[3]) * ring[1]
+                + double(b[8]) * ring[6] + double(b[4]) * ring[2] + double(b[1]) * ring[11]
+                + double(b[0]) * ring[10] + double(b[9]) * ring[7] + double(b[5]) * ring[3] + out[2];
+            ring[9] = float(d);
+            out[2] = float(d);
+            d = double(b[11]) * ring[8] + double(b[7]) * ring[4] + double(b[3]) * ring[0]
+                + double(b[8]) * ring[5] + double(b[4]) * ring[1] + double(b[0]) * ring[9]
+                + double(b[9]) * ring[6] + double(b[5]) * ring[2] + double(b[2]) * ring[11]
+                + double(b[1]) * ring[10] + double(b[10]) * ring[7] + double(b[6]) * ring[3]
                 + out[3];
-            sf[0x160 / 4] = (float)d;
-            out[3] = (float)d;
-            d = (double)b[8] * sf[0x150 / 4] + (double)b[4] * sf[0x140 / 4] + (double)b[0] * sf[0x160 / 4]
-                + (double)b[9] * sf[0x154 / 4] + (double)b[5] * sf[0x144 / 4] + (double)b[1] * sf[0x164 / 4]
-                + (double)b[10] * sf[0x158 / 4] + (double)b[6] * sf[0x148 / 4] + (double)b[3] * sf[0x16c / 4]
-                + (double)b[2] * sf[0x168 / 4] + (double)b[11] * sf[0x15c / 4] + (double)b[7] * sf[0x14c / 4]
+            ring[8] = float(d);
+            out[3] = float(d);
+            d = double(b[8]) * ring[4] + double(b[4]) * ring[0] + double(b[0]) * ring[8]
+                + double(b[9]) * ring[5] + double(b[5]) * ring[1] + double(b[1]) * ring[9]
+                + double(b[10]) * ring[6] + double(b[6]) * ring[2] + double(b[3]) * ring[11]
+                + double(b[2]) * ring[10] + double(b[11]) * ring[7] + double(b[7]) * ring[3]
                 + out[4];
-            sf[0x15c / 4] = (float)d;
-            out[4] = (float)d;
-            d = (double)b[9] * sf[0x150 / 4] + (double)b[5] * sf[0x140 / 4] + (double)b[1] * sf[0x160 / 4]
-                + (double)b[10] * sf[0x154 / 4] + (double)b[6] * sf[0x144 / 4] + (double)b[2] * sf[0x164 / 4]
-                + (double)b[11] * sf[0x158 / 4] + (double)b[7] * sf[0x148 / 4] + (double)b[4] * sf[0x16c / 4]
-                + (double)b[3] * sf[0x168 / 4] + (double)b[8] * sf[0x14c / 4] + (double)b[0] * sf[0x15c / 4] + out[5];
-            sf[0x158 / 4] = (float)d;
-            out[5] = (float)d;
-            d = (double)b[10] * sf[0x150 / 4] + (double)b[6] * sf[0x140 / 4] + (double)b[2] * sf[0x160 / 4]
-                + (double)b[11] * sf[0x154 / 4] + (double)b[7] * sf[0x144 / 4] + (double)b[3] * sf[0x164 / 4]
-                + (double)b[8] * sf[0x148 / 4] + (double)b[5] * sf[0x16c / 4] + (double)b[4] * sf[0x168 / 4]
-                + (double)b[0] * sf[0x158 / 4] + (double)b[9] * sf[0x14c / 4] + (double)b[1] * sf[0x15c / 4] + out[6];
-            sf[0x154 / 4] = (float)d;
-            out[6] = (float)d;
-            d = (double)b[11] * sf[0x150 / 4] + (double)b[7] * sf[0x140 / 4] + (double)b[3] * sf[0x160 / 4]
-                + (double)b[8] * sf[0x144 / 4] + (double)b[4] * sf[0x164 / 4] + (double)b[0] * sf[0x154 / 4]
-                + (double)b[9] * sf[0x148 / 4] + (double)b[6] * sf[0x16c / 4] + (double)b[5] * sf[0x168 / 4]
-                + (double)b[1] * sf[0x158 / 4] + (double)b[10] * sf[0x14c / 4] + (double)b[2] * sf[0x15c / 4]
+            ring[7] = float(d);
+            out[4] = float(d);
+            d = double(b[9]) * ring[4] + double(b[5]) * ring[0] + double(b[1]) * ring[8]
+                + double(b[10]) * ring[5] + double(b[6]) * ring[1] + double(b[2]) * ring[9]
+                + double(b[11]) * ring[6] + double(b[7]) * ring[2] + double(b[4]) * ring[11]
+                + double(b[3]) * ring[10] + double(b[8]) * ring[3] + double(b[0]) * ring[7] + out[5];
+            ring[6] = float(d);
+            out[5] = float(d);
+            d = double(b[10]) * ring[4] + double(b[6]) * ring[0] + double(b[2]) * ring[8]
+                + double(b[11]) * ring[5] + double(b[7]) * ring[1] + double(b[3]) * ring[9]
+                + double(b[8]) * ring[2] + double(b[5]) * ring[11] + double(b[4]) * ring[10]
+                + double(b[0]) * ring[6] + double(b[9]) * ring[3] + double(b[1]) * ring[7] + out[6];
+            ring[5] = float(d);
+            out[6] = float(d);
+            d = double(b[11]) * ring[4] + double(b[7]) * ring[0] + double(b[3]) * ring[8]
+                + double(b[8]) * ring[1] + double(b[4]) * ring[9] + double(b[0]) * ring[5]
+                + double(b[9]) * ring[2] + double(b[6]) * ring[11] + double(b[5]) * ring[10]
+                + double(b[1]) * ring[6] + double(b[10]) * ring[3] + double(b[2]) * ring[7]
                 + out[7];
-            sf[0x150 / 4] = (float)d;
-            out[7] = (float)d;
-            d = (double)b[8] * sf[0x140 / 4] + (double)b[4] * sf[0x160 / 4] + (double)b[0] * sf[0x150 / 4]
-                + (double)b[9] * sf[0x144 / 4] + (double)b[5] * sf[0x164 / 4] + (double)b[1] * sf[0x154 / 4]
-                + (double)b[10] * sf[0x148 / 4] + (double)b[7] * sf[0x16c / 4] + (double)b[6] * sf[0x168 / 4]
-                + (double)b[2] * sf[0x158 / 4] + (double)b[11] * sf[0x14c / 4] + (double)b[3] * sf[0x15c / 4]
+            ring[4] = float(d);
+            out[7] = float(d);
+            d = double(b[8]) * ring[0] + double(b[4]) * ring[8] + double(b[0]) * ring[4]
+                + double(b[9]) * ring[1] + double(b[5]) * ring[9] + double(b[1]) * ring[5]
+                + double(b[10]) * ring[2] + double(b[7]) * ring[11] + double(b[6]) * ring[10]
+                + double(b[2]) * ring[6] + double(b[11]) * ring[3] + double(b[3]) * ring[7]
                 + out[8];
-            sf[0x14c / 4] = (float)d;
-            out[8] = (float)d;
-            d = (double)b[9] * sf[0x140 / 4] + (double)b[5] * sf[0x160 / 4] + (double)b[1] * sf[0x150 / 4]
-                + (double)b[10] * sf[0x144 / 4] + (double)b[6] * sf[0x164 / 4] + (double)b[2] * sf[0x154 / 4]
-                + (double)b[11] * sf[0x148 / 4] + (double)b[8] * sf[0x16c / 4] + (double)b[7] * sf[0x168 / 4]
-                + (double)b[3] * sf[0x158 / 4] + (double)b[4] * sf[0x15c / 4] + (double)b[0] * sf[0x14c / 4] + out[9];
-            sf[0x148 / 4] = (float)d;
-            out[9] = (float)d;
-            d = (double)b[10] * sf[0x140 / 4] + (double)b[6] * sf[0x160 / 4] + (double)b[2] * sf[0x150 / 4]
-                + (double)b[11] * sf[0x144 / 4] + (double)b[7] * sf[0x164 / 4] + (double)b[3] * sf[0x154 / 4]
-                + (double)b[9] * sf[0x16c / 4] + (double)b[8] * sf[0x168 / 4] + (double)b[4] * sf[0x158 / 4]
-                + (double)b[0] * sf[0x148 / 4] + (double)b[5] * sf[0x15c / 4] + (double)b[1] * sf[0x14c / 4]
+            ring[3] = float(d);
+            out[8] = float(d);
+            d = double(b[9]) * ring[0] + double(b[5]) * ring[8] + double(b[1]) * ring[4]
+                + double(b[10]) * ring[1] + double(b[6]) * ring[9] + double(b[2]) * ring[5]
+                + double(b[11]) * ring[2] + double(b[8]) * ring[11] + double(b[7]) * ring[10]
+                + double(b[3]) * ring[6] + double(b[4]) * ring[7] + double(b[0]) * ring[3] + out[9];
+            ring[2] = float(d);
+            out[9] = float(d);
+            d = double(b[10]) * ring[0] + double(b[6]) * ring[8] + double(b[2]) * ring[4]
+                + double(b[11]) * ring[1] + double(b[7]) * ring[9] + double(b[3]) * ring[5]
+                + double(b[9]) * ring[11] + double(b[8]) * ring[10] + double(b[4]) * ring[6]
+                + double(b[0]) * ring[2] + double(b[5]) * ring[7] + double(b[1]) * ring[3]
                 + out[10];
-            sf[0x144 / 4] = (float)d;
-            out[10] = (float)d;
-            d = (double)b[11] * sf[0x140 / 4] + (double)b[7] * sf[0x160 / 4] + (double)b[3] * sf[0x150 / 4]
-                + (double)b[8] * sf[0x164 / 4] + (double)b[4] * sf[0x154 / 4] + (double)b[0] * sf[0x144 / 4]
-                + (double)b[10] * sf[0x16c / 4] + (double)b[9] * sf[0x168 / 4] + (double)b[5] * sf[0x158 / 4]
-                + (double)b[1] * sf[0x148 / 4] + (double)b[6] * sf[0x15c / 4] + (double)b[2] * sf[0x14c / 4]
+            ring[1] = float(d);
+            out[10] = float(d);
+            d = double(b[11]) * ring[0] + double(b[7]) * ring[8] + double(b[3]) * ring[4]
+                + double(b[8]) * ring[9] + double(b[4]) * ring[5] + double(b[0]) * ring[1]
+                + double(b[10]) * ring[11] + double(b[9]) * ring[10] + double(b[5]) * ring[6]
+                + double(b[1]) * ring[2] + double(b[6]) * ring[7] + double(b[2]) * ring[3]
                 + out[11];
-            sf[0x140 / 4] = (float)d;
-            out[11] = (float)d;
-            d = (double)b[8] * sf[0x160 / 4] + (double)b[4] * sf[0x150 / 4] + (double)b[0] * sf[0x140 / 4]
-                + (double)b[9] * sf[0x164 / 4] + (double)b[5] * sf[0x154 / 4] + (double)b[1] * sf[0x144 / 4]
-                + (double)b[11] * sf[0x16c / 4] + (double)b[10] * sf[0x168 / 4] + (double)b[6] * sf[0x158 / 4]
-                + (double)b[2] * sf[0x148 / 4] + (double)b[7] * sf[0x15c / 4] + (double)b[3] * sf[0x14c / 4]
+            ring[0] = float(d);
+            out[11] = float(d);
+            d = double(b[8]) * ring[8] + double(b[4]) * ring[4] + double(b[0]) * ring[0]
+                + double(b[9]) * ring[9] + double(b[5]) * ring[5] + double(b[1]) * ring[1]
+                + double(b[11]) * ring[11] + double(b[10]) * ring[10] + double(b[6]) * ring[6]
+                + double(b[2]) * ring[2] + double(b[7]) * ring[7] + double(b[3]) * ring[3]
                 + out[12];
-            sf[0x16c / 4] = (float)d;
-            out[12] = (float)d;
-            d = (double)b[9] * sf[0x160 / 4] + (double)b[5] * sf[0x150 / 4] + (double)b[1] * sf[0x140 / 4]
-                + (double)b[10] * sf[0x164 / 4] + (double)b[6] * sf[0x154 / 4] + (double)b[2] * sf[0x144 / 4]
-                + (double)b[11] * sf[0x168 / 4] + (double)b[7] * sf[0x158 / 4] + (double)b[3] * sf[0x148 / 4]
-                + (double)b[0] * sf[0x16c / 4] + (double)b[8] * sf[0x15c / 4] + (double)b[4] * sf[0x14c / 4]
+            ring[11] = float(d);
+            out[12] = float(d);
+            d = double(b[9]) * ring[8] + double(b[5]) * ring[4] + double(b[1]) * ring[0]
+                + double(b[10]) * ring[9] + double(b[6]) * ring[5] + double(b[2]) * ring[1]
+                + double(b[11]) * ring[10] + double(b[7]) * ring[6] + double(b[3]) * ring[2]
+                + double(b[0]) * ring[11] + double(b[8]) * ring[7] + double(b[4]) * ring[3]
                 + out[13];
-            sf[0x168 / 4] = (float)d;
-            out[13] = (float)d;
-            d = (double)b[10] * sf[0x160 / 4] + (double)b[6] * sf[0x150 / 4] + (double)b[2] * sf[0x140 / 4]
-                + (double)b[11] * sf[0x164 / 4] + (double)b[7] * sf[0x154 / 4] + (double)b[3] * sf[0x144 / 4]
-                + (double)b[8] * sf[0x158 / 4] + (double)b[4] * sf[0x148 / 4] + (double)b[1] * sf[0x16c / 4]
-                + (double)b[0] * sf[0x168 / 4] + (double)b[9] * sf[0x15c / 4] + (double)b[5] * sf[0x14c / 4]
+            ring[10] = float(d);
+            out[13] = float(d);
+            d = double(b[10]) * ring[8] + double(b[6]) * ring[4] + double(b[2]) * ring[0]
+                + double(b[11]) * ring[9] + double(b[7]) * ring[5] + double(b[3]) * ring[1]
+                + double(b[8]) * ring[6] + double(b[4]) * ring[2] + double(b[1]) * ring[11]
+                + double(b[0]) * ring[10] + double(b[9]) * ring[7] + double(b[5]) * ring[3]
                 + out[14];
-            sf[0x164 / 4] = (float)d;
-            out[14] = (float)d;
-            d = (double)b[11] * sf[0x160 / 4] + (double)b[7] * sf[0x150 / 4] + (double)b[3] * sf[0x140 / 4]
-                + (double)b[8] * sf[0x154 / 4] + (double)b[4] * sf[0x144 / 4] + (double)b[0] * sf[0x164 / 4]
-                + (double)b[9] * sf[0x158 / 4] + (double)b[5] * sf[0x148 / 4] + (double)b[2] * sf[0x16c / 4]
-                + (double)b[1] * sf[0x168 / 4] + (double)b[10] * sf[0x15c / 4] + (double)b[6] * sf[0x14c / 4]
+            ring[9] = float(d);
+            out[14] = float(d);
+            d = double(b[11]) * ring[8] + double(b[7]) * ring[4] + double(b[3]) * ring[0]
+                + double(b[8]) * ring[5] + double(b[4]) * ring[1] + double(b[0]) * ring[9]
+                + double(b[9]) * ring[6] + double(b[5]) * ring[2] + double(b[2]) * ring[11]
+                + double(b[1]) * ring[10] + double(b[10]) * ring[7] + double(b[6]) * ring[3]
                 + out[15];
-            sf[0x160 / 4] = (float)d;
-            out[15] = (float)d;
-            d = (double)b[8] * sf[0x150 / 4] + (double)b[4] * sf[0x140 / 4] + (double)b[0] * sf[0x160 / 4]
-                + (double)b[9] * sf[0x154 / 4] + (double)b[5] * sf[0x144 / 4] + (double)b[1] * sf[0x164 / 4]
-                + (double)b[10] * sf[0x158 / 4] + (double)b[6] * sf[0x148 / 4] + (double)b[3] * sf[0x16c / 4]
-                + (double)b[2] * sf[0x168 / 4] + (double)b[11] * sf[0x15c / 4] + (double)b[7] * sf[0x14c / 4]
+            ring[8] = float(d);
+            out[15] = float(d);
+            d = double(b[8]) * ring[4] + double(b[4]) * ring[0] + double(b[0]) * ring[8]
+                + double(b[9]) * ring[5] + double(b[5]) * ring[1] + double(b[1]) * ring[9]
+                + double(b[10]) * ring[6] + double(b[6]) * ring[2] + double(b[3]) * ring[11]
+                + double(b[2]) * ring[10] + double(b[11]) * ring[7] + double(b[7]) * ring[3]
                 + out[16];
-            sf[0x15c / 4] = (float)d;
-            out[16] = (float)d;
-            d = (double)b[9] * sf[0x150 / 4] + (double)b[5] * sf[0x140 / 4] + (double)b[1] * sf[0x160 / 4]
-                + (double)b[10] * sf[0x154 / 4] + (double)b[6] * sf[0x144 / 4] + (double)b[2] * sf[0x164 / 4]
-                + (double)b[11] * sf[0x158 / 4] + (double)b[7] * sf[0x148 / 4] + (double)b[4] * sf[0x16c / 4]
-                + (double)b[3] * sf[0x168 / 4] + (double)b[8] * sf[0x14c / 4] + (double)b[0] * sf[0x15c / 4]
+            ring[7] = float(d);
+            out[16] = float(d);
+            d = double(b[9]) * ring[4] + double(b[5]) * ring[0] + double(b[1]) * ring[8]
+                + double(b[10]) * ring[5] + double(b[6]) * ring[1] + double(b[2]) * ring[9]
+                + double(b[11]) * ring[6] + double(b[7]) * ring[2] + double(b[4]) * ring[11]
+                + double(b[3]) * ring[10] + double(b[8]) * ring[3] + double(b[0]) * ring[7]
                 + out[17];
-            sf[0x158 / 4] = (float)d;
-            out[17] = (float)d;
-            d = (double)b[10] * sf[0x150 / 4] + (double)b[6] * sf[0x140 / 4] + (double)b[2] * sf[0x160 / 4]
-                + (double)b[11] * sf[0x154 / 4] + (double)b[7] * sf[0x144 / 4] + (double)b[3] * sf[0x164 / 4]
-                + (double)b[8] * sf[0x148 / 4] + (double)b[5] * sf[0x16c / 4] + (double)b[4] * sf[0x168 / 4]
-                + (double)b[0] * sf[0x158 / 4] + (double)b[9] * sf[0x14c / 4] + (double)b[1] * sf[0x15c / 4]
+            ring[6] = float(d);
+            out[17] = float(d);
+            d = double(b[10]) * ring[4] + double(b[6]) * ring[0] + double(b[2]) * ring[8]
+                + double(b[11]) * ring[5] + double(b[7]) * ring[1] + double(b[3]) * ring[9]
+                + double(b[8]) * ring[2] + double(b[5]) * ring[11] + double(b[4]) * ring[10]
+                + double(b[0]) * ring[6] + double(b[9]) * ring[3] + double(b[1]) * ring[7]
                 + out[18];
-            sf[0x154 / 4] = (float)d;
-            out[18] = (float)d;
-            d = (double)b[11] * sf[0x150 / 4] + (double)b[7] * sf[0x140 / 4] + (double)b[3] * sf[0x160 / 4]
-                + (double)b[8] * sf[0x144 / 4] + (double)b[4] * sf[0x164 / 4] + (double)b[0] * sf[0x154 / 4]
-                + (double)b[9] * sf[0x148 / 4] + (double)b[6] * sf[0x16c / 4] + (double)b[5] * sf[0x168 / 4]
-                + (double)b[1] * sf[0x158 / 4] + (double)b[10] * sf[0x14c / 4] + (double)b[2] * sf[0x15c / 4]
+            ring[5] = float(d);
+            out[18] = float(d);
+            d = double(b[11]) * ring[4] + double(b[7]) * ring[0] + double(b[3]) * ring[8]
+                + double(b[8]) * ring[1] + double(b[4]) * ring[9] + double(b[0]) * ring[5]
+                + double(b[9]) * ring[2] + double(b[6]) * ring[11] + double(b[5]) * ring[10]
+                + double(b[1]) * ring[6] + double(b[10]) * ring[3] + double(b[2]) * ring[7]
                 + out[19];
-            sf[0x150 / 4] = (float)d;
-            out[19] = (float)d;
-            d = (double)b[8] * sf[0x140 / 4] + (double)b[4] * sf[0x160 / 4] + (double)b[0] * sf[0x150 / 4]
-                + (double)b[9] * sf[0x144 / 4] + (double)b[5] * sf[0x164 / 4] + (double)b[1] * sf[0x154 / 4]
-                + (double)b[10] * sf[0x148 / 4] + (double)b[7] * sf[0x16c / 4] + (double)b[6] * sf[0x168 / 4]
-                + (double)b[2] * sf[0x158 / 4] + (double)b[11] * sf[0x14c / 4] + (double)b[3] * sf[0x15c / 4]
+            ring[4] = float(d);
+            out[19] = float(d);
+            d = double(b[8]) * ring[0] + double(b[4]) * ring[8] + double(b[0]) * ring[4]
+                + double(b[9]) * ring[1] + double(b[5]) * ring[9] + double(b[1]) * ring[5]
+                + double(b[10]) * ring[2] + double(b[7]) * ring[11] + double(b[6]) * ring[10]
+                + double(b[2]) * ring[6] + double(b[11]) * ring[3] + double(b[3]) * ring[7]
                 + out[20];
-            sf[0x14c / 4] = (float)d;
-            out[20] = (float)d;
-            d = (double)b[9] * sf[0x140 / 4] + (double)b[5] * sf[0x160 / 4] + (double)b[1] * sf[0x150 / 4]
-                + (double)b[10] * sf[0x144 / 4] + (double)b[6] * sf[0x164 / 4] + (double)b[2] * sf[0x154 / 4]
-                + (double)b[11] * sf[0x148 / 4] + (double)b[8] * sf[0x16c / 4] + (double)b[7] * sf[0x168 / 4]
-                + (double)b[3] * sf[0x158 / 4] + (double)b[4] * sf[0x15c / 4] + (double)b[0] * sf[0x14c / 4]
+            ring[3] = float(d);
+            out[20] = float(d);
+            d = double(b[9]) * ring[0] + double(b[5]) * ring[8] + double(b[1]) * ring[4]
+                + double(b[10]) * ring[1] + double(b[6]) * ring[9] + double(b[2]) * ring[5]
+                + double(b[11]) * ring[2] + double(b[8]) * ring[11] + double(b[7]) * ring[10]
+                + double(b[3]) * ring[6] + double(b[4]) * ring[7] + double(b[0]) * ring[3]
                 + out[21];
-            sf[0x148 / 4] = (float)d;
-            out[21] = (float)d;
-            d = (double)b[10] * sf[0x140 / 4] + (double)b[6] * sf[0x160 / 4] + (double)b[2] * sf[0x150 / 4]
-                + (double)b[11] * sf[0x144 / 4] + (double)b[7] * sf[0x164 / 4] + (double)b[3] * sf[0x154 / 4]
-                + (double)b[9] * sf[0x16c / 4] + (double)b[8] * sf[0x168 / 4] + (double)b[4] * sf[0x158 / 4]
-                + (double)b[0] * sf[0x148 / 4] + (double)b[5] * sf[0x15c / 4] + (double)b[1] * sf[0x14c / 4]
+            ring[2] = float(d);
+            out[21] = float(d);
+            d = double(b[10]) * ring[0] + double(b[6]) * ring[8] + double(b[2]) * ring[4]
+                + double(b[11]) * ring[1] + double(b[7]) * ring[9] + double(b[3]) * ring[5]
+                + double(b[9]) * ring[11] + double(b[8]) * ring[10] + double(b[4]) * ring[6]
+                + double(b[0]) * ring[2] + double(b[5]) * ring[7] + double(b[1]) * ring[3]
                 + out[22];
-            sf[0x144 / 4] = (float)d;
-            out[22] = (float)d;
-            d = (double)b[11] * sf[0x140 / 4] + (double)b[7] * sf[0x160 / 4] + (double)b[3] * sf[0x150 / 4]
-                + (double)b[8] * sf[0x164 / 4] + (double)b[4] * sf[0x154 / 4] + (double)b[0] * sf[0x144 / 4]
-                + (double)b[10] * sf[0x16c / 4] + (double)b[9] * sf[0x168 / 4] + (double)b[5] * sf[0x158 / 4]
-                + (double)b[1] * sf[0x148 / 4] + (double)b[6] * sf[0x15c / 4] + (double)b[2] * sf[0x14c / 4]
+            ring[1] = float(d);
+            out[22] = float(d);
+            d = double(b[11]) * ring[0] + double(b[7]) * ring[8] + double(b[3]) * ring[4]
+                + double(b[8]) * ring[9] + double(b[4]) * ring[5] + double(b[0]) * ring[1]
+                + double(b[10]) * ring[11] + double(b[9]) * ring[10] + double(b[5]) * ring[6]
+                + double(b[1]) * ring[2] + double(b[6]) * ring[7] + double(b[2]) * ring[3]
                 + out[23];
-            sf[0x140 / 4] = (float)d;
-            out[23] = (float)d;
-            d = (double)b[8] * sf[0x160 / 4] + (double)b[4] * sf[0x150 / 4] + (double)b[0] * sf[0x140 / 4]
-                + (double)b[9] * sf[0x164 / 4] + (double)b[5] * sf[0x154 / 4] + (double)b[1] * sf[0x144 / 4]
-                + (double)b[11] * sf[0x16c / 4] + (double)b[10] * sf[0x168 / 4] + (double)b[6] * sf[0x158 / 4]
-                + (double)b[2] * sf[0x148 / 4] + (double)b[7] * sf[0x15c / 4] + (double)b[3] * sf[0x14c / 4]
+            ring[0] = float(d);
+            out[23] = float(d);
+            d = double(b[8]) * ring[8] + double(b[4]) * ring[4] + double(b[0]) * ring[0]
+                + double(b[9]) * ring[9] + double(b[5]) * ring[5] + double(b[1]) * ring[1]
+                + double(b[11]) * ring[11] + double(b[10]) * ring[10] + double(b[6]) * ring[6]
+                + double(b[2]) * ring[2] + double(b[7]) * ring[7] + double(b[3]) * ring[3]
                 + out[24];
-            sf[0x16c / 4] = (float)d;
-            out[24] = (float)d;
-            d = (double)b[9] * sf[0x160 / 4] + (double)b[5] * sf[0x150 / 4] + (double)b[1] * sf[0x140 / 4]
-                + (double)b[10] * sf[0x164 / 4] + (double)b[6] * sf[0x154 / 4] + (double)b[2] * sf[0x144 / 4]
-                + (double)b[11] * sf[0x168 / 4] + (double)b[7] * sf[0x158 / 4] + (double)b[3] * sf[0x148 / 4]
-                + (double)b[0] * sf[0x16c / 4] + (double)b[8] * sf[0x15c / 4] + (double)b[4] * sf[0x14c / 4]
+            ring[11] = float(d);
+            out[24] = float(d);
+            d = double(b[9]) * ring[8] + double(b[5]) * ring[4] + double(b[1]) * ring[0]
+                + double(b[10]) * ring[9] + double(b[6]) * ring[5] + double(b[2]) * ring[1]
+                + double(b[11]) * ring[10] + double(b[7]) * ring[6] + double(b[3]) * ring[2]
+                + double(b[0]) * ring[11] + double(b[8]) * ring[7] + double(b[4]) * ring[3]
                 + out[25];
-            sf[0x168 / 4] = (float)d;
-            out[25] = (float)d;
-            d = (double)b[10] * sf[0x160 / 4] + (double)b[6] * sf[0x150 / 4] + (double)b[2] * sf[0x140 / 4]
-                + (double)b[11] * sf[0x164 / 4] + (double)b[7] * sf[0x154 / 4] + (double)b[3] * sf[0x144 / 4]
-                + (double)b[8] * sf[0x158 / 4] + (double)b[4] * sf[0x148 / 4] + (double)b[1] * sf[0x16c / 4]
-                + (double)b[0] * sf[0x168 / 4] + (double)b[9] * sf[0x15c / 4] + (double)b[5] * sf[0x14c / 4]
+            ring[10] = float(d);
+            out[25] = float(d);
+            d = double(b[10]) * ring[8] + double(b[6]) * ring[4] + double(b[2]) * ring[0]
+                + double(b[11]) * ring[9] + double(b[7]) * ring[5] + double(b[3]) * ring[1]
+                + double(b[8]) * ring[6] + double(b[4]) * ring[2] + double(b[1]) * ring[11]
+                + double(b[0]) * ring[10] + double(b[9]) * ring[7] + double(b[5]) * ring[3]
                 + out[26];
-            sf[0x164 / 4] = (float)d;
-            out[26] = (float)d;
-            d = (double)b[11] * sf[0x160 / 4] + (double)b[7] * sf[0x150 / 4] + (double)b[3] * sf[0x140 / 4]
-                + (double)b[8] * sf[0x154 / 4] + (double)b[4] * sf[0x144 / 4] + (double)b[0] * sf[0x164 / 4]
-                + (double)b[9] * sf[0x158 / 4] + (double)b[5] * sf[0x148 / 4] + (double)b[2] * sf[0x16c / 4]
-                + (double)b[1] * sf[0x168 / 4] + (double)b[10] * sf[0x15c / 4] + (double)b[6] * sf[0x14c / 4]
+            ring[9] = float(d);
+            out[26] = float(d);
+            d = double(b[11]) * ring[8] + double(b[7]) * ring[4] + double(b[3]) * ring[0]
+                + double(b[8]) * ring[5] + double(b[4]) * ring[1] + double(b[0]) * ring[9]
+                + double(b[9]) * ring[6] + double(b[5]) * ring[2] + double(b[2]) * ring[11]
+                + double(b[1]) * ring[10] + double(b[10]) * ring[7] + double(b[6]) * ring[3]
                 + out[27];
-            sf[0x160 / 4] = (float)d;
-            out[27] = (float)d;
-            d = (double)b[8] * sf[0x150 / 4] + (double)b[4] * sf[0x140 / 4] + (double)b[0] * sf[0x160 / 4]
-                + (double)b[9] * sf[0x154 / 4] + (double)b[5] * sf[0x144 / 4] + (double)b[1] * sf[0x164 / 4]
-                + (double)b[10] * sf[0x158 / 4] + (double)b[6] * sf[0x148 / 4] + (double)b[3] * sf[0x16c / 4]
-                + (double)b[2] * sf[0x168 / 4] + (double)b[11] * sf[0x15c / 4] + (double)b[7] * sf[0x14c / 4]
+            ring[8] = float(d);
+            out[27] = float(d);
+            d = double(b[8]) * ring[4] + double(b[4]) * ring[0] + double(b[0]) * ring[8]
+                + double(b[9]) * ring[5] + double(b[5]) * ring[1] + double(b[1]) * ring[9]
+                + double(b[10]) * ring[6] + double(b[6]) * ring[2] + double(b[3]) * ring[11]
+                + double(b[2]) * ring[10] + double(b[11]) * ring[7] + double(b[7]) * ring[3]
                 + out[28];
-            sf[0x15c / 4] = (float)d;
-            out[28] = (float)d;
-            d = (double)b[9] * sf[0x150 / 4] + (double)b[5] * sf[0x140 / 4] + (double)b[1] * sf[0x160 / 4]
-                + (double)b[10] * sf[0x154 / 4] + (double)b[6] * sf[0x144 / 4] + (double)b[2] * sf[0x164 / 4]
-                + (double)b[11] * sf[0x158 / 4] + (double)b[7] * sf[0x148 / 4] + (double)b[4] * sf[0x16c / 4]
-                + (double)b[3] * sf[0x168 / 4] + (double)b[8] * sf[0x14c / 4] + (double)b[0] * sf[0x15c / 4]
+            ring[7] = float(d);
+            out[28] = float(d);
+            d = double(b[9]) * ring[4] + double(b[5]) * ring[0] + double(b[1]) * ring[8]
+                + double(b[10]) * ring[5] + double(b[6]) * ring[1] + double(b[2]) * ring[9]
+                + double(b[11]) * ring[6] + double(b[7]) * ring[2] + double(b[4]) * ring[11]
+                + double(b[3]) * ring[10] + double(b[8]) * ring[3] + double(b[0]) * ring[7]
                 + out[29];
-            sf[0x158 / 4] = (float)d;
-            out[29] = (float)d;
-            d = (double)b[10] * sf[0x150 / 4] + (double)b[6] * sf[0x140 / 4] + (double)b[2] * sf[0x160 / 4]
-                + (double)b[11] * sf[0x154 / 4] + (double)b[7] * sf[0x144 / 4] + (double)b[3] * sf[0x164 / 4]
-                + (double)b[8] * sf[0x148 / 4] + (double)b[5] * sf[0x16c / 4] + (double)b[4] * sf[0x168 / 4]
-                + (double)b[0] * sf[0x158 / 4] + (double)b[9] * sf[0x14c / 4] + (double)b[1] * sf[0x15c / 4]
+            ring[6] = float(d);
+            out[29] = float(d);
+            d = double(b[10]) * ring[4] + double(b[6]) * ring[0] + double(b[2]) * ring[8]
+                + double(b[11]) * ring[5] + double(b[7]) * ring[1] + double(b[3]) * ring[9]
+                + double(b[8]) * ring[2] + double(b[5]) * ring[11] + double(b[4]) * ring[10]
+                + double(b[0]) * ring[6] + double(b[9]) * ring[3] + double(b[1]) * ring[7]
                 + out[30];
-            sf[0x154 / 4] = (float)d;
-            out[30] = (float)d;
-            d = (double)b[11] * sf[0x150 / 4] + (double)b[7] * sf[0x140 / 4] + (double)b[3] * sf[0x160 / 4]
-                + (double)b[8] * sf[0x144 / 4] + (double)b[4] * sf[0x164 / 4] + (double)b[0] * sf[0x154 / 4]
-                + (double)b[9] * sf[0x148 / 4] + (double)b[6] * sf[0x16c / 4] + (double)b[5] * sf[0x168 / 4]
-                + (double)b[1] * sf[0x158 / 4] + (double)b[10] * sf[0x14c / 4] + (double)b[2] * sf[0x15c / 4]
+            ring[5] = float(d);
+            out[30] = float(d);
+            d = double(b[11]) * ring[4] + double(b[7]) * ring[0] + double(b[3]) * ring[8]
+                + double(b[8]) * ring[1] + double(b[4]) * ring[9] + double(b[0]) * ring[5]
+                + double(b[9]) * ring[2] + double(b[6]) * ring[11] + double(b[5]) * ring[10]
+                + double(b[1]) * ring[6] + double(b[10]) * ring[3] + double(b[2]) * ring[7]
                 + out[31];
-            sf[0x150 / 4] = (float)d;
-            out[31] = (float)d;
-            d = (double)b[8] * sf[0x140 / 4] + (double)b[4] * sf[0x160 / 4] + (double)b[0] * sf[0x150 / 4]
-                + (double)b[9] * sf[0x144 / 4] + (double)b[5] * sf[0x164 / 4] + (double)b[1] * sf[0x154 / 4]
-                + (double)b[10] * sf[0x148 / 4] + (double)b[7] * sf[0x16c / 4] + (double)b[6] * sf[0x168 / 4]
-                + (double)b[2] * sf[0x158 / 4] + (double)b[11] * sf[0x14c / 4] + (double)b[3] * sf[0x15c / 4]
+            ring[4] = float(d);
+            out[31] = float(d);
+            d = double(b[8]) * ring[0] + double(b[4]) * ring[8] + double(b[0]) * ring[4]
+                + double(b[9]) * ring[1] + double(b[5]) * ring[9] + double(b[1]) * ring[5]
+                + double(b[10]) * ring[2] + double(b[7]) * ring[11] + double(b[6]) * ring[10]
+                + double(b[2]) * ring[6] + double(b[11]) * ring[3] + double(b[3]) * ring[7]
                 + out[32];
-            sf[0x14c / 4] = (float)d;
-            out[32] = (float)d;
-            d = (double)b[9] * sf[0x140 / 4] + (double)b[5] * sf[0x160 / 4] + (double)b[1] * sf[0x150 / 4]
-                + (double)b[10] * sf[0x144 / 4] + (double)b[6] * sf[0x164 / 4] + (double)b[2] * sf[0x154 / 4]
-                + (double)b[11] * sf[0x148 / 4] + (double)b[8] * sf[0x16c / 4] + (double)b[7] * sf[0x168 / 4]
-                + (double)b[3] * sf[0x158 / 4] + (double)b[4] * sf[0x15c / 4] + (double)b[0] * sf[0x14c / 4]
+            ring[3] = float(d);
+            out[32] = float(d);
+            d = double(b[9]) * ring[0] + double(b[5]) * ring[8] + double(b[1]) * ring[4]
+                + double(b[10]) * ring[1] + double(b[6]) * ring[9] + double(b[2]) * ring[5]
+                + double(b[11]) * ring[2] + double(b[8]) * ring[11] + double(b[7]) * ring[10]
+                + double(b[3]) * ring[6] + double(b[4]) * ring[7] + double(b[0]) * ring[3]
                 + out[33];
-            sf[0x148 / 4] = (float)d;
-            out[33] = (float)d;
-            d = (double)b[10] * sf[0x140 / 4] + (double)b[6] * sf[0x160 / 4] + (double)b[2] * sf[0x150 / 4]
-                + (double)b[11] * sf[0x144 / 4] + (double)b[7] * sf[0x164 / 4] + (double)b[3] * sf[0x154 / 4]
-                + (double)b[9] * sf[0x16c / 4] + (double)b[8] * sf[0x168 / 4] + (double)b[4] * sf[0x158 / 4]
-                + (double)b[0] * sf[0x148 / 4] + (double)b[5] * sf[0x15c / 4] + (double)b[1] * sf[0x14c / 4]
+            ring[2] = float(d);
+            out[33] = float(d);
+            d = double(b[10]) * ring[0] + double(b[6]) * ring[8] + double(b[2]) * ring[4]
+                + double(b[11]) * ring[1] + double(b[7]) * ring[9] + double(b[3]) * ring[5]
+                + double(b[9]) * ring[11] + double(b[8]) * ring[10] + double(b[4]) * ring[6]
+                + double(b[0]) * ring[2] + double(b[5]) * ring[7] + double(b[1]) * ring[3]
                 + out[34];
-            sf[0x144 / 4] = (float)d;
-            out[34] = (float)d;
-            d = (double)b[11] * sf[0x140 / 4] + (double)b[7] * sf[0x160 / 4] + (double)b[3] * sf[0x150 / 4]
-                + (double)b[8] * sf[0x164 / 4] + (double)b[4] * sf[0x154 / 4] + (double)b[0] * sf[0x144 / 4]
-                + (double)b[10] * sf[0x16c / 4] + (double)b[9] * sf[0x168 / 4] + (double)b[5] * sf[0x158 / 4]
-                + (double)b[1] * sf[0x148 / 4] + (double)b[6] * sf[0x15c / 4] + (double)b[2] * sf[0x14c / 4]
+            ring[1] = float(d);
+            out[34] = float(d);
+            d = double(b[11]) * ring[0] + double(b[7]) * ring[8] + double(b[3]) * ring[4]
+                + double(b[8]) * ring[9] + double(b[4]) * ring[5] + double(b[0]) * ring[1]
+                + double(b[10]) * ring[11] + double(b[9]) * ring[10] + double(b[5]) * ring[6]
+                + double(b[1]) * ring[2] + double(b[6]) * ring[7] + double(b[2]) * ring[3]
                 + out[35];
-            sf[0x140 / 4] = (float)d;
-            out[35] = (float)d;
-            d = (double)b[8] * sf[0x160 / 4] + (double)b[4] * sf[0x150 / 4] + (double)b[0] * sf[0x140 / 4]
-                + (double)b[9] * sf[0x164 / 4] + (double)b[5] * sf[0x154 / 4] + (double)b[1] * sf[0x144 / 4]
-                + (double)b[11] * sf[0x16c / 4] + (double)b[10] * sf[0x168 / 4] + (double)b[6] * sf[0x158 / 4]
-                + (double)b[2] * sf[0x148 / 4] + (double)b[7] * sf[0x15c / 4] + (double)b[3] * sf[0x14c / 4]
+            ring[0] = float(d);
+            out[35] = float(d);
+            d = double(b[8]) * ring[8] + double(b[4]) * ring[4] + double(b[0]) * ring[0]
+                + double(b[9]) * ring[9] + double(b[5]) * ring[5] + double(b[1]) * ring[1]
+                + double(b[11]) * ring[11] + double(b[10]) * ring[10] + double(b[6]) * ring[6]
+                + double(b[2]) * ring[2] + double(b[7]) * ring[7] + double(b[3]) * ring[3]
                 + out[36];
-            sf[0x16c / 4] = (float)d;
-            out[36] = (float)d;
-            d = (double)b[9] * sf[0x160 / 4] + (double)b[5] * sf[0x150 / 4] + (double)b[1] * sf[0x140 / 4]
-                + (double)b[10] * sf[0x164 / 4] + (double)b[6] * sf[0x154 / 4] + (double)b[2] * sf[0x144 / 4]
-                + (double)b[11] * sf[0x168 / 4] + (double)b[7] * sf[0x158 / 4] + (double)b[3] * sf[0x148 / 4]
-                + (double)b[0] * sf[0x16c / 4] + (double)b[8] * sf[0x15c / 4] + (double)b[4] * sf[0x14c / 4]
+            ring[11] = float(d);
+            out[36] = float(d);
+            d = double(b[9]) * ring[8] + double(b[5]) * ring[4] + double(b[1]) * ring[0]
+                + double(b[10]) * ring[9] + double(b[6]) * ring[5] + double(b[2]) * ring[1]
+                + double(b[11]) * ring[10] + double(b[7]) * ring[6] + double(b[3]) * ring[2]
+                + double(b[0]) * ring[11] + double(b[8]) * ring[7] + double(b[4]) * ring[3]
                 + out[37];
-            sf[0x168 / 4] = (float)d;
-            out[37] = (float)d;
-            d = (double)b[10] * sf[0x160 / 4] + (double)b[6] * sf[0x150 / 4] + (double)b[2] * sf[0x140 / 4]
-                + (double)b[11] * sf[0x164 / 4] + (double)b[7] * sf[0x154 / 4] + (double)b[3] * sf[0x144 / 4]
-                + (double)b[8] * sf[0x158 / 4] + (double)b[4] * sf[0x148 / 4] + (double)b[1] * sf[0x16c / 4]
-                + (double)b[0] * sf[0x168 / 4] + (double)b[9] * sf[0x15c / 4] + (double)b[5] * sf[0x14c / 4]
+            ring[10] = float(d);
+            out[37] = float(d);
+            d = double(b[10]) * ring[8] + double(b[6]) * ring[4] + double(b[2]) * ring[0]
+                + double(b[11]) * ring[9] + double(b[7]) * ring[5] + double(b[3]) * ring[1]
+                + double(b[8]) * ring[6] + double(b[4]) * ring[2] + double(b[1]) * ring[11]
+                + double(b[0]) * ring[10] + double(b[9]) * ring[7] + double(b[5]) * ring[3]
                 + out[38];
-            sf[0x164 / 4] = (float)d;
-            out[38] = (float)d;
-            d = (double)b[11] * sf[0x160 / 4] + (double)b[7] * sf[0x150 / 4] + (double)b[3] * sf[0x140 / 4]
-                + (double)b[8] * sf[0x154 / 4] + (double)b[4] * sf[0x144 / 4] + (double)b[0] * sf[0x164 / 4]
-                + (double)b[9] * sf[0x158 / 4] + (double)b[5] * sf[0x148 / 4] + (double)b[2] * sf[0x16c / 4]
-                + (double)b[1] * sf[0x168 / 4] + (double)b[10] * sf[0x15c / 4] + (double)b[6] * sf[0x14c / 4]
+            ring[9] = float(d);
+            out[38] = float(d);
+            d = double(b[11]) * ring[8] + double(b[7]) * ring[4] + double(b[3]) * ring[0]
+                + double(b[8]) * ring[5] + double(b[4]) * ring[1] + double(b[0]) * ring[9]
+                + double(b[9]) * ring[6] + double(b[5]) * ring[2] + double(b[2]) * ring[11]
+                + double(b[1]) * ring[10] + double(b[10]) * ring[7] + double(b[6]) * ring[3]
                 + out[39];
-            sf[0x160 / 4] = (float)d;
-            out[39] = (float)d;
-            d = (double)b[8] * sf[0x150 / 4] + (double)b[4] * sf[0x140 / 4] + (double)b[0] * sf[0x160 / 4]
-                + (double)b[9] * sf[0x154 / 4] + (double)b[5] * sf[0x144 / 4] + (double)b[1] * sf[0x164 / 4]
-                + (double)b[10] * sf[0x158 / 4] + (double)b[6] * sf[0x148 / 4] + (double)b[3] * sf[0x16c / 4]
-                + (double)b[2] * sf[0x168 / 4] + (double)b[11] * sf[0x15c / 4] + (double)b[7] * sf[0x14c / 4]
+            ring[8] = float(d);
+            out[39] = float(d);
+            d = double(b[8]) * ring[4] + double(b[4]) * ring[0] + double(b[0]) * ring[8]
+                + double(b[9]) * ring[5] + double(b[5]) * ring[1] + double(b[1]) * ring[9]
+                + double(b[10]) * ring[6] + double(b[6]) * ring[2] + double(b[3]) * ring[11]
+                + double(b[2]) * ring[10] + double(b[11]) * ring[7] + double(b[7]) * ring[3]
                 + out[40];
-            sf[0x15c / 4] = (float)d;
-            out[40] = (float)d;
-            d = (double)b[9] * sf[0x150 / 4] + (double)b[5] * sf[0x140 / 4] + (double)b[1] * sf[0x160 / 4]
-                + (double)b[10] * sf[0x154 / 4] + (double)b[6] * sf[0x144 / 4] + (double)b[2] * sf[0x164 / 4]
-                + (double)b[11] * sf[0x158 / 4] + (double)b[7] * sf[0x148 / 4] + (double)b[4] * sf[0x16c / 4]
-                + (double)b[3] * sf[0x168 / 4] + (double)b[8] * sf[0x14c / 4] + (double)b[0] * sf[0x15c / 4]
+            ring[7] = float(d);
+            out[40] = float(d);
+            d = double(b[9]) * ring[4] + double(b[5]) * ring[0] + double(b[1]) * ring[8]
+                + double(b[10]) * ring[5] + double(b[6]) * ring[1] + double(b[2]) * ring[9]
+                + double(b[11]) * ring[6] + double(b[7]) * ring[2] + double(b[4]) * ring[11]
+                + double(b[3]) * ring[10] + double(b[8]) * ring[3] + double(b[0]) * ring[7]
                 + out[41];
-            sf[0x158 / 4] = (float)d;
-            out[41] = (float)d;
-            d = (double)b[10] * sf[0x150 / 4] + (double)b[6] * sf[0x140 / 4] + (double)b[2] * sf[0x160 / 4]
-                + (double)b[11] * sf[0x154 / 4] + (double)b[7] * sf[0x144 / 4] + (double)b[3] * sf[0x164 / 4]
-                + (double)b[8] * sf[0x148 / 4] + (double)b[5] * sf[0x16c / 4] + (double)b[4] * sf[0x168 / 4]
-                + (double)b[0] * sf[0x158 / 4] + (double)b[9] * sf[0x14c / 4] + (double)b[1] * sf[0x15c / 4]
+            ring[6] = float(d);
+            out[41] = float(d);
+            d = double(b[10]) * ring[4] + double(b[6]) * ring[0] + double(b[2]) * ring[8]
+                + double(b[11]) * ring[5] + double(b[7]) * ring[1] + double(b[3]) * ring[9]
+                + double(b[8]) * ring[2] + double(b[5]) * ring[11] + double(b[4]) * ring[10]
+                + double(b[0]) * ring[6] + double(b[9]) * ring[3] + double(b[1]) * ring[7]
                 + out[42];
-            sf[0x154 / 4] = (float)d;
-            out[42] = (float)d;
-            d = (double)b[11] * sf[0x150 / 4] + (double)b[7] * sf[0x140 / 4] + (double)b[3] * sf[0x160 / 4]
-                + (double)b[8] * sf[0x144 / 4] + (double)b[4] * sf[0x164 / 4] + (double)b[0] * sf[0x154 / 4]
-                + (double)b[9] * sf[0x148 / 4] + (double)b[6] * sf[0x16c / 4] + (double)b[5] * sf[0x168 / 4]
-                + (double)b[1] * sf[0x158 / 4] + (double)b[10] * sf[0x14c / 4] + (double)b[2] * sf[0x15c / 4]
+            ring[5] = float(d);
+            out[42] = float(d);
+            d = double(b[11]) * ring[4] + double(b[7]) * ring[0] + double(b[3]) * ring[8]
+                + double(b[8]) * ring[1] + double(b[4]) * ring[9] + double(b[0]) * ring[5]
+                + double(b[9]) * ring[2] + double(b[6]) * ring[11] + double(b[5]) * ring[10]
+                + double(b[1]) * ring[6] + double(b[10]) * ring[3] + double(b[2]) * ring[7]
                 + out[43];
-            sf[0x150 / 4] = (float)d;
-            out[43] = (float)d;
-            d = (double)b[8] * sf[0x140 / 4] + (double)b[4] * sf[0x160 / 4] + (double)b[0] * sf[0x150 / 4]
-                + (double)b[9] * sf[0x144 / 4] + (double)b[5] * sf[0x164 / 4] + (double)b[1] * sf[0x154 / 4]
-                + (double)b[10] * sf[0x148 / 4] + (double)b[7] * sf[0x16c / 4] + (double)b[6] * sf[0x168 / 4]
-                + (double)b[2] * sf[0x158 / 4] + (double)b[11] * sf[0x14c / 4] + (double)b[3] * sf[0x15c / 4]
+            ring[4] = float(d);
+            out[43] = float(d);
+            d = double(b[8]) * ring[0] + double(b[4]) * ring[8] + double(b[0]) * ring[4]
+                + double(b[9]) * ring[1] + double(b[5]) * ring[9] + double(b[1]) * ring[5]
+                + double(b[10]) * ring[2] + double(b[7]) * ring[11] + double(b[6]) * ring[10]
+                + double(b[2]) * ring[6] + double(b[11]) * ring[3] + double(b[3]) * ring[7]
                 + out[44];
-            sf[0x14c / 4] = (float)d;
-            out[44] = (float)d;
-            d = (double)b[9] * sf[0x140 / 4] + (double)b[5] * sf[0x160 / 4] + (double)b[1] * sf[0x150 / 4]
-                + (double)b[10] * sf[0x144 / 4] + (double)b[6] * sf[0x164 / 4] + (double)b[2] * sf[0x154 / 4]
-                + (double)b[11] * sf[0x148 / 4] + (double)b[8] * sf[0x16c / 4] + (double)b[7] * sf[0x168 / 4]
-                + (double)b[3] * sf[0x158 / 4] + (double)b[4] * sf[0x15c / 4] + (double)b[0] * sf[0x14c / 4]
+            ring[3] = float(d);
+            out[44] = float(d);
+            d = double(b[9]) * ring[0] + double(b[5]) * ring[8] + double(b[1]) * ring[4]
+                + double(b[10]) * ring[1] + double(b[6]) * ring[9] + double(b[2]) * ring[5]
+                + double(b[11]) * ring[2] + double(b[8]) * ring[11] + double(b[7]) * ring[10]
+                + double(b[3]) * ring[6] + double(b[4]) * ring[7] + double(b[0]) * ring[3]
                 + out[45];
-            sf[0x148 / 4] = (float)d;
-            out[45] = (float)d;
-            d = (double)b[10] * sf[0x140 / 4] + (double)b[6] * sf[0x160 / 4] + (double)b[2] * sf[0x150 / 4]
-                + (double)b[11] * sf[0x144 / 4] + (double)b[7] * sf[0x164 / 4] + (double)b[3] * sf[0x154 / 4]
-                + (double)b[9] * sf[0x16c / 4] + (double)b[8] * sf[0x168 / 4] + (double)b[4] * sf[0x158 / 4]
-                + (double)b[0] * sf[0x148 / 4] + (double)b[5] * sf[0x15c / 4] + (double)b[1] * sf[0x14c / 4]
+            ring[2] = float(d);
+            out[45] = float(d);
+            d = double(b[10]) * ring[0] + double(b[6]) * ring[8] + double(b[2]) * ring[4]
+                + double(b[11]) * ring[1] + double(b[7]) * ring[9] + double(b[3]) * ring[5]
+                + double(b[9]) * ring[11] + double(b[8]) * ring[10] + double(b[4]) * ring[6]
+                + double(b[0]) * ring[2] + double(b[5]) * ring[7] + double(b[1]) * ring[3]
                 + out[46];
-            sf[0x144 / 4] = (float)d;
-            out[46] = (float)d;
-            d = (double)b[11] * sf[0x140 / 4] + (double)b[7] * sf[0x160 / 4] + (double)b[3] * sf[0x150 / 4]
-                + (double)b[8] * sf[0x164 / 4] + (double)b[4] * sf[0x154 / 4] + (double)b[0] * sf[0x144 / 4]
-                + (double)b[10] * sf[0x16c / 4] + (double)b[9] * sf[0x168 / 4] + (double)b[5] * sf[0x158 / 4]
-                + (double)b[1] * sf[0x148 / 4] + (double)b[6] * sf[0x15c / 4] + (double)b[2] * sf[0x14c / 4]
+            ring[1] = float(d);
+            out[46] = float(d);
+            d = double(b[11]) * ring[0] + double(b[7]) * ring[8] + double(b[3]) * ring[4]
+                + double(b[8]) * ring[9] + double(b[4]) * ring[5] + double(b[0]) * ring[1]
+                + double(b[10]) * ring[11] + double(b[9]) * ring[10] + double(b[5]) * ring[6]
+                + double(b[1]) * ring[2] + double(b[6]) * ring[7] + double(b[2]) * ring[3]
                 + out[47];
-            sf[0x140 / 4] = (float)d;
-            out[47] = (float)d;
+            ring[0] = float(d);
+            out[47] = float(d);
             out += 48;
             next += 4;
             done += 4;
@@ -618,84 +573,84 @@ void MutSynthesise(int first, SND::MutState *s, int groups) {
     if (done < groups) {
         int left = groups - done;
         do {
-            d = (double)b[8] * sf[0x160 / 4] + (double)b[4] * sf[0x150 / 4] + (double)b[0] * sf[0x140 / 4]
-                + (double)b[9] * sf[0x164 / 4] + (double)b[5] * sf[0x154 / 4] + (double)b[1] * sf[0x144 / 4]
-                + (double)b[11] * sf[0x16c / 4] + (double)b[10] * sf[0x168 / 4] + (double)b[6] * sf[0x158 / 4]
-                + (double)b[2] * sf[0x148 / 4] + (double)b[7] * sf[0x15c / 4] + (double)b[3] * sf[0x14c / 4] + out[0];
-            sf[0x16c / 4] = (float)d;
-            out[0] = (float)d;
-            d = (double)b[9] * sf[0x160 / 4] + (double)b[5] * sf[0x150 / 4] + (double)b[1] * sf[0x140 / 4]
-                + (double)b[10] * sf[0x164 / 4] + (double)b[6] * sf[0x154 / 4] + (double)b[2] * sf[0x144 / 4]
-                + (double)b[11] * sf[0x168 / 4] + (double)b[7] * sf[0x158 / 4] + (double)b[3] * sf[0x148 / 4]
-                + (double)b[0] * sf[0x16c / 4] + (double)b[8] * sf[0x15c / 4] + (double)b[4] * sf[0x14c / 4] + out[1];
-            sf[0x168 / 4] = (float)d;
-            out[1] = (float)d;
-            d = (double)b[10] * sf[0x160 / 4] + (double)b[6] * sf[0x150 / 4] + (double)b[2] * sf[0x140 / 4]
-                + (double)b[11] * sf[0x164 / 4] + (double)b[7] * sf[0x154 / 4] + (double)b[3] * sf[0x144 / 4]
-                + (double)b[8] * sf[0x158 / 4] + (double)b[4] * sf[0x148 / 4] + (double)b[1] * sf[0x16c / 4]
-                + (double)b[0] * sf[0x168 / 4] + (double)b[9] * sf[0x15c / 4] + (double)b[5] * sf[0x14c / 4] + out[2];
-            sf[0x164 / 4] = (float)d;
-            out[2] = (float)d;
-            d = (double)b[11] * sf[0x160 / 4] + (double)b[7] * sf[0x150 / 4] + (double)b[3] * sf[0x140 / 4]
-                + (double)b[8] * sf[0x154 / 4] + (double)b[4] * sf[0x144 / 4] + (double)b[0] * sf[0x164 / 4]
-                + (double)b[9] * sf[0x158 / 4] + (double)b[5] * sf[0x148 / 4] + (double)b[2] * sf[0x16c / 4]
-                + (double)b[1] * sf[0x168 / 4] + (double)b[10] * sf[0x15c / 4] + (double)b[6] * sf[0x14c / 4]
+            d = double(b[8]) * ring[8] + double(b[4]) * ring[4] + double(b[0]) * ring[0]
+                + double(b[9]) * ring[9] + double(b[5]) * ring[5] + double(b[1]) * ring[1]
+                + double(b[11]) * ring[11] + double(b[10]) * ring[10] + double(b[6]) * ring[6]
+                + double(b[2]) * ring[2] + double(b[7]) * ring[7] + double(b[3]) * ring[3] + out[0];
+            ring[11] = float(d);
+            out[0] = float(d);
+            d = double(b[9]) * ring[8] + double(b[5]) * ring[4] + double(b[1]) * ring[0]
+                + double(b[10]) * ring[9] + double(b[6]) * ring[5] + double(b[2]) * ring[1]
+                + double(b[11]) * ring[10] + double(b[7]) * ring[6] + double(b[3]) * ring[2]
+                + double(b[0]) * ring[11] + double(b[8]) * ring[7] + double(b[4]) * ring[3] + out[1];
+            ring[10] = float(d);
+            out[1] = float(d);
+            d = double(b[10]) * ring[8] + double(b[6]) * ring[4] + double(b[2]) * ring[0]
+                + double(b[11]) * ring[9] + double(b[7]) * ring[5] + double(b[3]) * ring[1]
+                + double(b[8]) * ring[6] + double(b[4]) * ring[2] + double(b[1]) * ring[11]
+                + double(b[0]) * ring[10] + double(b[9]) * ring[7] + double(b[5]) * ring[3] + out[2];
+            ring[9] = float(d);
+            out[2] = float(d);
+            d = double(b[11]) * ring[8] + double(b[7]) * ring[4] + double(b[3]) * ring[0]
+                + double(b[8]) * ring[5] + double(b[4]) * ring[1] + double(b[0]) * ring[9]
+                + double(b[9]) * ring[6] + double(b[5]) * ring[2] + double(b[2]) * ring[11]
+                + double(b[1]) * ring[10] + double(b[10]) * ring[7] + double(b[6]) * ring[3]
                 + out[3];
-            sf[0x160 / 4] = (float)d;
-            out[3] = (float)d;
-            d = (double)b[8] * sf[0x150 / 4] + (double)b[4] * sf[0x140 / 4] + (double)b[0] * sf[0x160 / 4]
-                + (double)b[9] * sf[0x154 / 4] + (double)b[5] * sf[0x144 / 4] + (double)b[1] * sf[0x164 / 4]
-                + (double)b[10] * sf[0x158 / 4] + (double)b[6] * sf[0x148 / 4] + (double)b[3] * sf[0x16c / 4]
-                + (double)b[2] * sf[0x168 / 4] + (double)b[11] * sf[0x15c / 4] + (double)b[7] * sf[0x14c / 4]
+            ring[8] = float(d);
+            out[3] = float(d);
+            d = double(b[8]) * ring[4] + double(b[4]) * ring[0] + double(b[0]) * ring[8]
+                + double(b[9]) * ring[5] + double(b[5]) * ring[1] + double(b[1]) * ring[9]
+                + double(b[10]) * ring[6] + double(b[6]) * ring[2] + double(b[3]) * ring[11]
+                + double(b[2]) * ring[10] + double(b[11]) * ring[7] + double(b[7]) * ring[3]
                 + out[4];
-            sf[0x15c / 4] = (float)d;
-            out[4] = (float)d;
-            d = (double)b[9] * sf[0x150 / 4] + (double)b[5] * sf[0x140 / 4] + (double)b[1] * sf[0x160 / 4]
-                + (double)b[10] * sf[0x154 / 4] + (double)b[6] * sf[0x144 / 4] + (double)b[2] * sf[0x164 / 4]
-                + (double)b[11] * sf[0x158 / 4] + (double)b[7] * sf[0x148 / 4] + (double)b[4] * sf[0x16c / 4]
-                + (double)b[3] * sf[0x168 / 4] + (double)b[8] * sf[0x14c / 4] + (double)b[0] * sf[0x15c / 4] + out[5];
-            sf[0x158 / 4] = (float)d;
-            out[5] = (float)d;
-            d = (double)b[10] * sf[0x150 / 4] + (double)b[6] * sf[0x140 / 4] + (double)b[2] * sf[0x160 / 4]
-                + (double)b[11] * sf[0x154 / 4] + (double)b[7] * sf[0x144 / 4] + (double)b[3] * sf[0x164 / 4]
-                + (double)b[8] * sf[0x148 / 4] + (double)b[5] * sf[0x16c / 4] + (double)b[4] * sf[0x168 / 4]
-                + (double)b[0] * sf[0x158 / 4] + (double)b[9] * sf[0x14c / 4] + (double)b[1] * sf[0x15c / 4] + out[6];
-            sf[0x154 / 4] = (float)d;
-            out[6] = (float)d;
-            d = (double)b[11] * sf[0x150 / 4] + (double)b[7] * sf[0x140 / 4] + (double)b[3] * sf[0x160 / 4]
-                + (double)b[8] * sf[0x144 / 4] + (double)b[4] * sf[0x164 / 4] + (double)b[0] * sf[0x154 / 4]
-                + (double)b[9] * sf[0x148 / 4] + (double)b[6] * sf[0x16c / 4] + (double)b[5] * sf[0x168 / 4]
-                + (double)b[1] * sf[0x158 / 4] + (double)b[10] * sf[0x14c / 4] + (double)b[2] * sf[0x15c / 4]
+            ring[7] = float(d);
+            out[4] = float(d);
+            d = double(b[9]) * ring[4] + double(b[5]) * ring[0] + double(b[1]) * ring[8]
+                + double(b[10]) * ring[5] + double(b[6]) * ring[1] + double(b[2]) * ring[9]
+                + double(b[11]) * ring[6] + double(b[7]) * ring[2] + double(b[4]) * ring[11]
+                + double(b[3]) * ring[10] + double(b[8]) * ring[3] + double(b[0]) * ring[7] + out[5];
+            ring[6] = float(d);
+            out[5] = float(d);
+            d = double(b[10]) * ring[4] + double(b[6]) * ring[0] + double(b[2]) * ring[8]
+                + double(b[11]) * ring[5] + double(b[7]) * ring[1] + double(b[3]) * ring[9]
+                + double(b[8]) * ring[2] + double(b[5]) * ring[11] + double(b[4]) * ring[10]
+                + double(b[0]) * ring[6] + double(b[9]) * ring[3] + double(b[1]) * ring[7] + out[6];
+            ring[5] = float(d);
+            out[6] = float(d);
+            d = double(b[11]) * ring[4] + double(b[7]) * ring[0] + double(b[3]) * ring[8]
+                + double(b[8]) * ring[1] + double(b[4]) * ring[9] + double(b[0]) * ring[5]
+                + double(b[9]) * ring[2] + double(b[6]) * ring[11] + double(b[5]) * ring[10]
+                + double(b[1]) * ring[6] + double(b[10]) * ring[3] + double(b[2]) * ring[7]
                 + out[7];
-            sf[0x150 / 4] = (float)d;
-            out[7] = (float)d;
-            d = (double)b[8] * sf[0x140 / 4] + (double)b[4] * sf[0x160 / 4] + (double)b[0] * sf[0x150 / 4]
-                + (double)b[9] * sf[0x144 / 4] + (double)b[5] * sf[0x164 / 4] + (double)b[1] * sf[0x154 / 4]
-                + (double)b[10] * sf[0x148 / 4] + (double)b[7] * sf[0x16c / 4] + (double)b[6] * sf[0x168 / 4]
-                + (double)b[2] * sf[0x158 / 4] + (double)b[11] * sf[0x14c / 4] + (double)b[3] * sf[0x15c / 4]
+            ring[4] = float(d);
+            out[7] = float(d);
+            d = double(b[8]) * ring[0] + double(b[4]) * ring[8] + double(b[0]) * ring[4]
+                + double(b[9]) * ring[1] + double(b[5]) * ring[9] + double(b[1]) * ring[5]
+                + double(b[10]) * ring[2] + double(b[7]) * ring[11] + double(b[6]) * ring[10]
+                + double(b[2]) * ring[6] + double(b[11]) * ring[3] + double(b[3]) * ring[7]
                 + out[8];
-            sf[0x14c / 4] = (float)d;
-            out[8] = (float)d;
-            d = (double)b[9] * sf[0x140 / 4] + (double)b[5] * sf[0x160 / 4] + (double)b[1] * sf[0x150 / 4]
-                + (double)b[10] * sf[0x144 / 4] + (double)b[6] * sf[0x164 / 4] + (double)b[2] * sf[0x154 / 4]
-                + (double)b[11] * sf[0x148 / 4] + (double)b[8] * sf[0x16c / 4] + (double)b[7] * sf[0x168 / 4]
-                + (double)b[3] * sf[0x158 / 4] + (double)b[4] * sf[0x15c / 4] + (double)b[0] * sf[0x14c / 4] + out[9];
-            sf[0x148 / 4] = (float)d;
-            out[9] = (float)d;
-            d = (double)b[10] * sf[0x140 / 4] + (double)b[6] * sf[0x160 / 4] + (double)b[2] * sf[0x150 / 4]
-                + (double)b[11] * sf[0x144 / 4] + (double)b[7] * sf[0x164 / 4] + (double)b[3] * sf[0x154 / 4]
-                + (double)b[9] * sf[0x16c / 4] + (double)b[8] * sf[0x168 / 4] + (double)b[4] * sf[0x158 / 4]
-                + (double)b[0] * sf[0x148 / 4] + (double)b[5] * sf[0x15c / 4] + (double)b[1] * sf[0x14c / 4]
+            ring[3] = float(d);
+            out[8] = float(d);
+            d = double(b[9]) * ring[0] + double(b[5]) * ring[8] + double(b[1]) * ring[4]
+                + double(b[10]) * ring[1] + double(b[6]) * ring[9] + double(b[2]) * ring[5]
+                + double(b[11]) * ring[2] + double(b[8]) * ring[11] + double(b[7]) * ring[10]
+                + double(b[3]) * ring[6] + double(b[4]) * ring[7] + double(b[0]) * ring[3] + out[9];
+            ring[2] = float(d);
+            out[9] = float(d);
+            d = double(b[10]) * ring[0] + double(b[6]) * ring[8] + double(b[2]) * ring[4]
+                + double(b[11]) * ring[1] + double(b[7]) * ring[9] + double(b[3]) * ring[5]
+                + double(b[9]) * ring[11] + double(b[8]) * ring[10] + double(b[4]) * ring[6]
+                + double(b[0]) * ring[2] + double(b[5]) * ring[7] + double(b[1]) * ring[3]
                 + out[10];
-            sf[0x144 / 4] = (float)d;
-            out[10] = (float)d;
-            d = (double)b[11] * sf[0x140 / 4] + (double)b[7] * sf[0x160 / 4] + (double)b[3] * sf[0x150 / 4]
-                + (double)b[8] * sf[0x164 / 4] + (double)b[4] * sf[0x154 / 4] + (double)b[0] * sf[0x144 / 4]
-                + (double)b[10] * sf[0x16c / 4] + (double)b[9] * sf[0x168 / 4] + (double)b[5] * sf[0x158 / 4]
-                + (double)b[1] * sf[0x148 / 4] + (double)b[6] * sf[0x15c / 4] + (double)b[2] * sf[0x14c / 4]
+            ring[1] = float(d);
+            out[10] = float(d);
+            d = double(b[11]) * ring[0] + double(b[7]) * ring[8] + double(b[3]) * ring[4]
+                + double(b[8]) * ring[9] + double(b[4]) * ring[5] + double(b[0]) * ring[1]
+                + double(b[10]) * ring[11] + double(b[9]) * ring[10] + double(b[5]) * ring[6]
+                + double(b[1]) * ring[2] + double(b[6]) * ring[7] + double(b[2]) * ring[3]
                 + out[11];
-            sf[0x140 / 4] = (float)d;
-            out[11] = (float)d;
+            ring[0] = float(d);
+            out[11] = float(d);
             out += 12;
         } while (--left != 0);
     }
@@ -723,22 +678,22 @@ void decodemut(SND::MutState *s) {
     float w[118];                      // [esp+0x58..0x22f]: 5 zeros, 108 samples from w[5], 5 zeros
     float gainA, gainB;
     uint32_t a = MutBits(s, 6);
-    int flag = (int32_t)a < s->threshold;
-    K[0] = (float)(((double)MutCoefs6[a] - (double)s->coefs[0]) * (double)kQuarter);
+    int flag = int32_t(a) < s->threshold;
+    K[0] = float((double(MutCoefs6[a]) - s->coefs[0]) * kQuarter);
     for (int i = 1; i < 4; i++) {
         a = MutBits(s, 6);
-        K[i] = (float)(((double)MutCoefs6[a] - (double)s->coefs[i]) * (double)kQuarter);
+        K[i] = float((double(MutCoefs6[a]) - s->coefs[i]) * kQuarter);
     }
     for (int i = 4; i < 12; i++) {
         a = MutBits(s, 5);
-        K[i] = (float)(((double)MutCoefs5[a] - (double)s->coefs[i]) * (double)kQuarter);
+        K[i] = float((double(MutCoefs5[a]) - s->coefs[i]) * kQuarter);
     }
-    float *to = (float *)((uint8_t *)s + 0x684);
-    for (int j = 0xd8; j < 0x288; j += 0x6c) {
+    float *to = &s->signal[324];       // the frame's 432 outputs, a subframe of 108 at a time
+    for (int j = 216; j < 648; j += 108) {
         uint32_t back = MutBits(s, 8);
-        int32_t lag = j - (int32_t)back;
+        int32_t lag = j - int32_t(back);
         uint32_t ltpGain = MutBits(s, 4);
-        gainB = (float)(UnsignedToDouble(ltpGain) * (double)kLtpGainStep);
+        gainB = float(ltpGain) * kLtpGainStep;   // 0..15, exact as a float: one rounded product either way
         uint32_t gain = MutBits(s, 6);
         gainA = s->gainTable[gain];
         uint32_t phase = MutBits(s, 1);
@@ -746,33 +701,33 @@ void decodemut(SND::MutState *s) {
         readsamples(s, flag, &w[5 + phase]);
         if (sparse != 0) {
             for (int k = 0; k < 54; k++)
-                StoreBits(&w[6 - phase + k * 2], 0);
+                w[6 - phase + k * 2] = 0.0f;
         } else {
             for (int k = 0; k < 5; k++) {
-                StoreBits(&w[113 + k], 0);
-                StoreBits(&w[k], 0);
+                w[113 + k] = 0.0f;
+                w[k] = 0.0f;
             }
             float *x = &w[6 - phase];
             for (int k = 0; k < 54; k++) {
-                double v = ((double)x[2 * k - 5] + (double)x[2 * k + 5]) * (double)kHalfBand0;
-                v = v - ((double)x[2 * k - 3] + (double)x[2 * k + 3]) * (double)kHalfBand1;
-                v = v + ((double)x[2 * k - 1] + (double)x[2 * k + 1]) * (double)kHalfBand2;
-                x[2 * k] = (float)v;
+                double v = (double(x[2 * k - 5]) + x[2 * k + 5]) * kHalfBand0;
+                v = v - (double(x[2 * k - 3]) + x[2 * k + 3]) * kHalfBand1;
+                v = v + (double(x[2 * k - 1]) + x[2 * k + 1]) * kHalfBand2;
+                x[2 * k] = float(v);
             }
-            gainA = (float)((double)gainA * (double)kHalf);
+            gainA = gainA * kHalf;
         }
-        float *history = s->signal + lag;
-        for (int i = 0; i < 0x6c; i++)
-            to[i - 1] = (float)((double)gainA * (double)w[5 + i] + (double)gainB * (double)history[i]);
-        to += 0x6c;
+        const float *history = s->signal + lag;
+        for (int i = 0; i < 108; i++)
+            to[i] = float(double(gainA) * w[5 + i] + double(gainB) * history[i]);
+        to += 108;
     }
     for (int i = 0; i < 324; i++)
-        memcpy(&s->signal[i], &s->signal[432 + i], 4);
+        s->signal[i] = s->signal[432 + i];
     static const int kFirst[4] = { 0, 12, 24, 36 };
     static const int kGroups[4] = { 1, 1, 1, 33 };
     for (int step = 0; step < 4; step++) {
         for (int i = 0; i < 12; i++)
-            s->coefs[i] = (float)((double)K[i] + (double)s->coefs[i]);
+            s->coefs[i] = K[i] + s->coefs[i];
         MutSynthesise(kFirst[step], s, kGroups[step]);
     }
 }
@@ -782,9 +737,9 @@ void decodemut(SND::MutState *s) {
 // FUNC_AT(0x0014a1e0)
 void decode16x87(uint32_t count, const int16_t *in, float *out) {
     SND_UNTESTED("decode16x87");
-    int32_t n = (int32_t)count;
+    int32_t n = int32_t(count);
     while ((n & 7) != 0) {
-        out[n - 1] = (float)in[n - 1];
+        out[n - 1] = in[n - 1];
         n -= 1;
         if (n == 0)
             return;
@@ -792,14 +747,14 @@ void decode16x87(uint32_t count, const int16_t *in, float *out) {
     do {
         int16_t v0 = in[n - 8], v1 = in[n - 7], v2 = in[n - 6], v3 = in[n - 5];
         int16_t v4 = in[n - 4], v5 = in[n - 3], v6 = in[n - 2], v7 = in[n - 1];
-        out[n - 8] = (float)v0;
-        out[n - 2] = (float)v6;
-        out[n - 3] = (float)v5;
-        out[n - 4] = (float)v4;
-        out[n - 5] = (float)v3;
-        out[n - 6] = (float)v2;
-        out[n - 7] = (float)v1;
-        out[n - 1] = (float)v7;
+        out[n - 8] = v0;
+        out[n - 2] = v6;
+        out[n - 3] = v5;
+        out[n - 4] = v4;
+        out[n - 5] = v3;
+        out[n - 6] = v2;
+        out[n - 7] = v1;
+        out[n - 1] = v7;
         n -= 8;
     } while (n > 0);
 }

@@ -215,7 +215,7 @@ void *SndAlloc(int bytes) { return ((void *(*)(int))0x0013f780)(bytes); }       
 
 // A fake upstream (and, in section 3, the voices' unpacker): seeded noise into its fourth argument
 struct FakeSource {
-    SND::MixFilterNode head;
+    SND::SFilterNode head;
     uint32_t seed;                   // +0x1c
     int32_t left;                    // +0x20 frames before the end (then -1); negative: endless
     float amplitude;                 // +0x24
@@ -225,10 +225,10 @@ struct FakeSource {
 };
 static_assert(sizeof(FakeSource) == 0x58, "the fake source's size is in the unpacker table");
 
-int FakeProcess(void *node, int frames, float *scratch, float *out, int requester) {
+int FakeProcess(SND::SFilterNode *node, int frames, float *scratch, float *out, int requester) {
     (void)scratch;
     (void)requester;
-    FakeSource *s = (FakeSource *)node;
+    FakeSource *s = reinterpret_cast<FakeSource *>(node);
     s->calls++;
     if (s->forced == 1)
         return 0;
@@ -349,8 +349,8 @@ void BodySum() {
 
 void BodyAllpass() {
     ((InitAt)0x00144ff0)(At<void>(kNodeA));
-    At<SND::MixFilterNode>(kNodeA)->upstream = g_k.upstream ? At<SND::MixFilterNode>(kUp1) : NULL;
-    At<SND::MixFilterNode>(kNodeA)->requester = (uint8_t)g_k.requester;
+    At<SND::SFilterNode>(kNodeA)->input = g_k.upstream ? At<SND::SFilterNode>(kUp1) : NULL;
+    At<SND::SFilterNode>(kNodeA)->requester = (uint8_t)g_k.requester;
     ((ModifyAt)0x00145020)(At<void>(kNodeA), g_k.params);
     RunProcess(0x00144f30, 4);
     ((void (*)(void *))0x00144fc0)(At<void>(kNodeA));
@@ -358,14 +358,14 @@ void BodyAllpass() {
 
 void BodyGain() {
     ((InitAt)0x00145160)(At<void>(kNodeA));
-    At<SND::MixFilterNode>(kNodeA)->upstream = g_k.upstream ? At<SND::MixFilterNode>(kUp1) : NULL;
+    At<SND::SFilterNode>(kNodeA)->input = g_k.upstream ? At<SND::SFilterNode>(kUp1) : NULL;
     ((ModifyAt)0x00145190)(At<void>(kNodeA), g_k.params);
     RunProcess(0x001450b0, 3);
 }
 
 void BodyResonator() {
     ((InitAt)0x001453e0)(At<void>(kNodeA));
-    At<SND::MixFilterNode>(kNodeA)->upstream = g_k.upstream ? At<SND::MixFilterNode>(kUp1) : NULL;
+    At<SND::SFilterNode>(kNodeA)->input = g_k.upstream ? At<SND::SFilterNode>(kUp1) : NULL;
     ((ModifyAt)0x00145410)(At<void>(kNodeA), g_k.params);
     RunProcess(0x00145390, 3);
 }
@@ -376,7 +376,7 @@ void BodyResonatorRaw() {
 
 void BodyFir2() {
     ((InitAt)0x00145640)(At<void>(kNodeA));
-    At<SND::MixFilterNode>(kNodeA)->upstream = g_k.upstream ? At<SND::MixFilterNode>(kUp1) : NULL;
+    At<SND::SFilterNode>(kNodeA)->input = g_k.upstream ? At<SND::SFilterNode>(kUp1) : NULL;
     ((ModifyAt)0x00145670)(At<void>(kNodeA), g_k.params);
     RunProcess(0x001455f0, 2);
 }
@@ -445,8 +445,8 @@ void Kernels() {
         {
             SND::FxTeeNode *tee = At<SND::FxTeeNode>(kNodeA);
             memset(tee, 0, sizeof(*tee));
-            tee->head.process = (SND::MixProcessFn)(uintptr_t)0x00144bc0;
-            tee->head.upstream = At<SND::MixFilterNode>(kUp1);
+            tee->process = (SND::SFilterProcess)0x00144bc0;
+            tee->input = At<SND::SFilterNode>(kUp1);
             tee->served = (uint16_t)(Next() & 1);
             tee->fetch = (uint16_t)(Next() & 1);
             tee->capacity = (Next() & 1) ? Range(0, 600) : 0;
@@ -464,8 +464,8 @@ void Kernels() {
         {
             SND::FxSumNode *sum = At<SND::FxSumNode>(kNodeA);
             memset(sum, 0, sizeof(*sum));
-            sum->head.upstream = At<SND::MixFilterNode>(kUp1);
-            sum->head.upstream2 = At<SND::MixFilterNode>(kUp2);
+            sum->input = At<SND::SFilterNode>(kUp1);
+            sum->input2 = At<SND::SFilterNode>(kUp2);
             sum->capacity = (Next() & 1) ? Range(0, 600) : 0;
             sum->buffer = sum->capacity != 0 ? (float *)SndAlloc(sum->capacity * 4) : NULL;
             FakeSetup(At<FakeSource>(kUp1), (Next() & 3) == 0);
@@ -519,8 +519,8 @@ void Kernels() {
         WorldReset();
         {
             SND::FxResonatorNode *node = At<SND::FxResonatorNode>(kNodeA);
-            node->head.upstream = (Next() & 1) ? At<SND::MixFilterNode>(kUp1) : NULL;
-            node->head.requester = (uint8_t)Range(0, 6);
+            node->input = (Next() & 1) ? At<SND::SFilterNode>(kUp1) : NULL;
+            node->requester = (uint8_t)Range(0, 6);
             node->rate = (Next() & 7) == 0 ? (int)Next() : Range(8000, 48000);
             node->frequency = (Next() & 7) == 0 ? Sample() : (float)Range(-100, 30000);
             node->bandwidth = (Next() & 7) == 0 ? Sample() : (float)Range(0, 40000);
@@ -712,14 +712,15 @@ void FakeVoiceFree(int voice) {
     log[0]++;
 }
 
-int FakeUnpackerInit(void *node, int *params) {
-    FakeSource *s = (FakeSource *)node;
+void FakeUnpackerInit(SND::SFilterNode *node, SND::UnpackInfo *info) {
+    int *params = reinterpret_cast<int *>(info);   // logged and seeded from as words
+    FakeSource *s = reinterpret_cast<FakeSource *>(node);
     s->head.process = FakeProcess;
-    s->head.upstream = NULL;
-    s->head.upstream2 = NULL;
-    s->head.downstream = NULL;
-    s->head.field14 = 0;
-    s->head.field1b = 0;
+    s->head.input = NULL;
+    s->head.input2 = NULL;
+    s->head.output = NULL;
+    s->head.output2 = NULL;
+    s->head.flags = 0;
     s->seed = (uint32_t)params[0];
     s->left = params[1];
     s->amplitude = Float((uint32_t)params[2]);
@@ -727,8 +728,7 @@ int FakeUnpackerInit(void *node, int *params) {
     s->calls = 0;
     for (int i = 0; i < 10; i++)
         s->params[i] = params[i];
-    params[9] = 0x5000 + params[7];
-    return 0;
+    params[9] = 0x5000 + params[7];   // a recognisable getFrame for the voice's +0x44 (never called)
 }
 
 void Hash3(int step) {
@@ -819,9 +819,9 @@ void BodyMixer() {
     int step = 0;
     SND::MixCreateParams *params = (SND::MixCreateParams *)(g_mix + kMixParams);
     ((void (*)(const SND::MixCreateParams *))0x00141c20)(params);
-    U32(0x002459a8) = (uint32_t)(uintptr_t)FakeUnpackerInit;   // slot 1
-    U32(0x00245a2c) = sizeof(FakeSource);
-    // 0x0024599e (the resampler's second mode) stays 0, as in the game: nothing ever writes it, and in that mode
+    SndMix.unpackerInit[0] = FakeUnpackerInit;   // slot 1
+    SndMix.unpackerSize[0] = sizeof(FakeSource);
+    // SndMix.resamplerMode stays 0, as in the game: nothing ever writes it, and in the resampler's second mode
     // SFILTER_rsfinit leaves the kernel pointer (+0x24) unset - SFILTER_rsf then calls heap garbage, on both sides
     if (g_scenario->reverb != 0)
         ((void (*)(int, const uint8_t *))0x00143510)(48000, g_mix + kMixDesc);
@@ -848,7 +848,7 @@ void BodyMixer() {
         if (k == 10) {
             for (int v = 0; v < 6; v++)
                 ((void (*)(int, int, float))0x00141be0)(kVoices[v], 0, 0.0f);
-            U32(0x002475d0) = 2990;   // near the idle cut-off
+            SndMix.fxIdle = 2990;   // near the idle cut-off
         }
         if (k == 13)
             StartVoice(4);           // played again
@@ -877,7 +877,8 @@ void MixerScenario(int index) {
     BuildDescription(s.reverb);
     SND::MixCreateParams *params = (SND::MixCreateParams *)(g_mix + kMixParams);
     params->rate = 48000;
-    params->counts = 32 | (6 << 8);
+    params->counts.voices = 32;
+    params->counts.channels = 6;
     params->voiceFree = FakeVoiceFree;
     for (int v = 0; v < 6; v++) {
         g_seeds[v] = Next();

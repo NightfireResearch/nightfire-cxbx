@@ -1,9 +1,14 @@
 #include "View.h"
 
 #include "Loader.h"
+#include "Tar.h"
 #include "Transform.h"
+#include "D3D8State.h"
 #include "../platform/RealMath.h"
+#include "../../helpers.h"
 
+#include <bit>
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -15,8 +20,8 @@
 // adjustments), the frustum planes of SetPerspective in the original x87 instructions because they use FPTAN,
 // FPATAN and FSIN unrounded (8.7), and the D3D8 calls through the seam by their original addresses, in order.
 //
-// Views nest: BeginView remembers the view that was current (ViewPort +0x04) and ends it; EndView re-begins it.
-// The "end this view" sequence is inlined in several originals (EndViewOf below).
+// Views nest: BeginView remembers the view that was current (ViewPort::previous) and ends it; EndView re-begins
+// it. The "end this view" sequence is inlined in several originals (EndViewOf below).
 // ---------------------------------------------------------------------------------------------------------------
 
 #ifdef _MSC_VER
@@ -26,128 +31,104 @@
 #pragma STDC FP_CONTRACT OFF
 #endif
 
-using EAGL::ViewPort;
-using EAGL::TextureRenderContext;
-using EAGL::RenderContextViews;
 using EAGL::Device;
+using EAGL::RenderContext;
+using EAGL::TextureRenderContext;
+using EAGL::ViewPort;
+
+// ---- globals
+
+// EAGL's allocator pair: eagl_alloc / eagl_free until RRenderer overrides them (Device::SetNewOverride)
+typedef void *(__cdecl *EaglAllocator)(uint32_t size, const char *name);
+typedef void (__cdecl *EaglDeallocator)(void *pointer, uint32_t size);
+#define EaglMalloc (*(EaglAllocator *)0x001caf68)
+#define EaglFree (*(EaglDeallocator *)0x001caf6c)
+#define CurrentDevice (*(EAGL::Device **)0x0023fb60)
+#define CurrentRenderContext (*(EAGL::RenderContext **)0x0023fb64)
+#define CurrentTextureRenderContext (*(EAGL::TextureRenderContext **)0x0023fb68)
+#define RegisteredViewMatrix ((float *)0x0023f950)             // the matrices render methods read by name
+#define RegisteredProjectionMatrix ((float *)0x0023fa10)
+#define RegisteredViewProjectionMatrix ((float *)0x0023fa90)
+#define IdentityMatrix (*(const float **)0x001cdb70)            // -> 0x001cdb30, an identity MATRIX4
+#define TheConstructorPool (*(ConstructorPool *)0x0023fbe0)
+#define TheRuntimeAllocPool (*(RuntimeAllocConstructorPool *)0x0023fbb8)
+#define ReturnsTrueAnswer U32_AT(0x0023ff14)
+
+// The original's strings, passed by address as the original passes them
+#define ViewportNewName ((const char *)0x001ccfb4)              // "EAGL::Viewport new"
+#define RenderContextNewName ((const char *)0x001cb9ac)         // "RenderContext new"
+#define TextureRenderContextNewName ((const char *)0x001cb9c0)  // "TextureRenderContext new"
+#define TarTypeName ((const char *)0x001cb0b8)                  // "EAGL::TAR" (Init's)
+#define RenderMethodTypeName ((const char *)0x001cb0c4)         // "RenderMethod"
+#define ModelTypeName ((const char *)0x001cb0d4)                // "Model"
+#define VertexBufferTypeName ((const char *)0x001cb0dc)         // "VertexBuffer"
+#define GeoPrimStateRuntimeName ((const char *)0x001cb0ec)      // "EAGL::GeoPrimState"
+#define TarRuntimeName ((const char *)0x001cb100)               // "EAGL::TAR"
+#define ReflectionConstantsName ((const char *)0x001cb10c)      // "&EAGL::RenderMethodConstants::gReflectionConstants"
+#define SkinningConstantsName ((const char *)0x001cb140)        // "&...::gSkinningConstants"
+#define ZeroOneTwoThreeName ((const char *)0x001cb174)          // "&...::gZeroOneTwoThree"
+#define ShadowColourName ((const char *)0x001cb1a4)             // "&...::gShadowColour"
+#define EnvMapConstantsName ((const char *)0x001cb1d0)          // "&...::gEnvMapConstants"
+// Destruct's own copies of the same names
+#define ReflectionConstantsName2 ((const char *)0x001caf70)
+#define SkinningConstantsName2 ((const char *)0x001cafa4)
+#define ZeroOneTwoThreeName2 ((const char *)0x001cafd8)
+#define ShadowColourName2 ((const char *)0x001cb008)
+#define EnvMapConstantsName2 ((const char *)0x001cb034)
+#define TarTypeName2 ((const char *)0x001cb064)                 // "EAGL::TAR"
+#define RenderMethodTypeName2 ((const char *)0x001cb070)
+#define ModelTypeName2 ((const char *)0x001cb080)
+#define VertexBufferTypeName2 ((const char *)0x001cb088)
+#define TarRuntimeName2 ((const char *)0x001cb098)
+#define GeoPrimStateRuntimeName2 ((const char *)0x001cb0a4)
+
+// ---- callees
+
+#define D3DDevice_SetViewport ((void (__stdcall *)(const EAGL::D3DViewport8 *))0x001666d0)
+#define D3D_ReturnsTrue ((uint32_t (__stdcall *)(uint32_t))0x00169450)   // docs 2.13
+#define CRT_malloc ((void *(__cdecl *)(uint32_t))0x001340e3)
+#define CRT_free ((void (__cdecl *)(void *))0x001331dc)
 
 namespace {
 
-inline uint32_t &U32(uint32_t address) {
-    return *(uint32_t *)(uintptr_t)address;
-}
-
-inline float F32(uint32_t address) {
-    return *(const float *)(uintptr_t)address;
-}
-
-inline uint32_t Bits(float f) {
-    uint32_t u;
-    memcpy(&u, &f, 4);
-    return u;
-}
-
-inline float FromBits(uint32_t u) {
-    float f;
-    memcpy(&f, &u, 4);
-    return f;
-}
+constexpr float kPi = 3.14159265f;
+static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "pi as the original's float");
+constexpr float kOneOver180 = 1.0f / 180.0f;
+static_assert(std::bit_cast<uint32_t>(kOneOver180) == 0x3bb60b61, "1/180 as the original's float");
 
 // __ftol2: truncates ST0 (the full double) to 64 bits; the caller keeps EAX.
-inline int32_t Ftol(double d) {
+int32_t Ftol(double d) {
     return (int32_t)(int64_t)d;
 }
 
-// Constants in .rdata
-const uint32_t kZero = 0x00189dec, kOne = 0x00189de8, kHalf = 0x00189eb0, kOneOver180 = 0x0018a138,
-               kPi = 0x001a09b0;   // and -1 at 0x0018a134 (PerspectivePlanes)
-const uint32_t kOneBits = 0x3f800000;
-
-// Globals
-const uint32_t kCurrentDevice = 0x0023fb60, kCurrentRenderContext = 0x0023fb64,
-               kCurrentTextureRenderContext = 0x0023fb68;
-const uint32_t kMalloc = 0x001caf68, kFree = 0x001caf6c;
-const uint32_t kViewMatrix = 0x0023f950, kProjectionMatrix = 0x0023fa10, kViewProjectionMatrix = 0x0023fa90;
-const uint32_t kIdentityPointer = 0x001cdb70;   // -> 0x001cdb30, an identity MATRIX4
-const uint32_t kConstructorPool = 0x0023fbe0, kRuntimeAllocConstructorPool = 0x0023fbb8;
-const uint32_t kReturnsTrueAnswer = 0x0023ff14;
-
-inline void *EaglMalloc(uint32_t size, uint32_t name) {
-    return ((void *(__cdecl *)(uint32_t, const char *))U32(kMalloc))(size, (const char *)(uintptr_t)name);
-}
-
-inline void EaglFree(void *pointer, uint32_t size) {
-    ((void (__cdecl *)(void *, uint32_t))U32(kFree))(pointer, size);
-}
-
-// EAGL::RenderContext's own methods (another module): called by address.
-inline void RenderContextGetSize(RenderContextViews *context, float *width, float *height) {
-    ((void (__fastcall *)(void *, int, float *, float *))0x000e6a80)(context, 0, width, height);
-}
-
-inline RenderContextViews *RenderContextConstruct(void *memory, Device *device) {
-    return ((RenderContextViews *(__fastcall *)(void *, int, Device *))0x000e8740)(memory, 0, device);
-}
-
-inline void RenderContextDestruct(RenderContextViews *context) {
-    ((void (__fastcall *)(void *, int))0x000e8600)(context, 0);
-}
-
-// D3D8 entry points (the seam), by their original addresses
-inline void D3DSetRenderTarget(void *target, void *depth) {
-    ((void (__stdcall *)(void *, void *))0x00165dc0)(target, depth);
-}
-
-inline void D3DSetViewport(const void *viewport) {
-    ((void (__stdcall *)(const void *))0x001666d0)(viewport);
-}
-
-inline void *D3DTextureGetSurfaceLevel2(void *texture, uint32_t level) {
-    return ((void *(__stdcall *)(void *, uint32_t))0x00167330)(texture, level);
-}
-
-inline void D3DResourceRelease(void *resource) {
-    ((uint32_t (__stdcall *)(void *))0x00169230)(resource);
-}
-
-inline void D3DClear(uint32_t count, const void *rects, uint32_t flags, uint32_t colour, float z, uint32_t stencil) {
-    ((void (__stdcall *)(uint32_t, const void *, uint32_t, uint32_t, float, uint32_t))0x00168c90)(
-        count, rects, flags, colour, z, stencil);
-}
-
-inline uint32_t D3DReturnsTrue(uint32_t value) {
-    return ((uint32_t (__stdcall *)(uint32_t))0x00169450)(value);   // D3D_ReturnsTrue (docs 2.13)
-}
-
 // The inlined "end this view": it is no longer active, and the view it nested over is begun again.
-inline void EndViewOf(ViewPort *view) {
+void EndViewOf(ViewPort *view) {
     ViewPort *previous = view->previous;
     view->active = 0;
-    if (previous != NULL && previous != (ViewPort *)1)
+    if (previous != NULL && previous != reinterpret_cast<ViewPort *>(1))
         previous->BeginView();
     view->previous = NULL;
 }
 
 // The projection matrix set to identity before a D3DX builder overwrites it, in the two store orders the
 // originals use.
-inline void IdentityZerosFirst(float *m) {
-    uint32_t *w = (uint32_t *)m;
-    w[14] = 0; w[13] = 0; w[12] = 0; w[11] = 0; w[9] = 0; w[8] = 0;
-    w[7] = 0; w[6] = 0; w[4] = 0; w[3] = 0; w[2] = 0; w[1] = 0;
-    w[15] = kOneBits; w[10] = kOneBits; w[5] = kOneBits; w[0] = kOneBits;
+void IdentityZerosFirst(float *m) {
+    m[14] = 0.0f; m[13] = 0.0f; m[12] = 0.0f; m[11] = 0.0f; m[9] = 0.0f; m[8] = 0.0f;
+    m[7] = 0.0f; m[6] = 0.0f; m[4] = 0.0f; m[3] = 0.0f; m[2] = 0.0f; m[1] = 0.0f;
+    m[15] = 1.0f; m[10] = 1.0f; m[5] = 1.0f; m[0] = 1.0f;
 }
 
-inline void IdentityOnesFirst(float *m) {
-    uint32_t *w = (uint32_t *)m;
-    w[15] = kOneBits; w[10] = kOneBits; w[5] = kOneBits; w[0] = kOneBits;
-    w[14] = 0; w[13] = 0; w[12] = 0; w[11] = 0; w[9] = 0; w[8] = 0;
-    w[7] = 0; w[6] = 0; w[4] = 0; w[3] = 0; w[2] = 0; w[1] = 0;
+void IdentityOnesFirst(float *m) {
+    m[15] = 1.0f; m[10] = 1.0f; m[5] = 1.0f; m[0] = 1.0f;
+    m[14] = 0.0f; m[13] = 0.0f; m[12] = 0.0f; m[11] = 0.0f; m[9] = 0.0f; m[8] = 0.0f;
+    m[7] = 0.0f; m[6] = 0.0f; m[4] = 0.0f; m[3] = 0.0f; m[2] = 0.0f; m[1] = 0.0f;
 }
 
 // SetPerspective's frustum planes (0x000e478e..0x000e486b), the original instructions: the half field of view's
 // tangent, the four guard-band-adjusted angles through FPATAN, then each plane's tangent and sine, all unrounded
 // on the x87 stack except where the original stores a float. ESI is the ViewPort as in the original; the
-// original's float temporaries (stored over its fov, near and far argument slots) are three locals here.
+// original's float temporaries (stored over its fov, near and far argument slots) are three locals here. The
+// constants are read from the original's .rdata, as its instructions do.
 __declspec(naked) void __stdcall PerspectivePlanes(ViewPort *view, float fov, float aspect) {
     __asm {
         push esi
@@ -246,137 +227,133 @@ void EAGL::ViewPort::SetShape(float x, float y, float width, float height, float
     shape[1] = Ftol(y);
     shape[2] = Ftol(width);
     shape[3] = Ftol(height);
-    shapeMaxZ = FromBits(Bits(maxZ));
-    shapeMinZ = FromBits(Bits(minZ));
+    shapeMaxZ = maxZ;
+    shapeMinZ = minZ;
     float contextWidth, contextHeight;
     if (renderContext != NULL)
-        RenderContextGetSize(renderContext, &contextWidth, &contextHeight);
+        renderContext->GetSize(&contextWidth, &contextHeight);
     else
         textureRenderContext->GetSize(&contextWidth, &contextHeight);
-    float left = FromBits(Bits(x));
-    float top = FromBits(Bits(y));
-    float right = (float)((double)x + (double)width);
-    double bottom = (double)y + (double)height;                // kept on the x87 stack
-    if ((double)x < (double)F32(kZero))
-        left = FromBits(0);
-    if ((double)y < (double)F32(kZero))
-        top = FromBits(0);
-    if ((double)right < (double)F32(kZero))
-        right = FromBits(0);
-    if (bottom < (double)F32(kZero))
-        bottom = (double)F32(kZero);
-    if ((double)left > (double)contextWidth)
+    float left = x;
+    float top = y;
+    float right = x + width;
+    double bottom = double(y) + height;                        // kept on the x87 stack
+    if (x < 0.0f)
+        left = 0.0f;
+    if (y < 0.0f)
+        top = 0.0f;
+    if (right < 0.0f)
+        right = 0.0f;
+    if (bottom < 0.0)
+        bottom = 0.0;
+    if (left > contextWidth)
         left = contextWidth;
-    if ((double)top > (double)contextHeight)
+    if (top > contextHeight)
         top = contextHeight;
-    if ((double)right > (double)contextWidth)
+    if (right > contextWidth)
         right = contextWidth;
-    if (bottom > (double)contextHeight)
-        bottom = (double)contextHeight;
-    viewportX = (uint32_t)Ftol(left);
-    viewportY = (uint32_t)Ftol(top);
-    double clampedWidth = (double)right - (double)left;
-    float widthF = (float)clampedWidth;                        // over contextHeight's slot
-    int32_t w = Ftol(clampedWidth);
-    viewportWidth = (uint32_t)w;
-    double clampedHeight = bottom - (double)top;
-    float heightF = (float)clampedHeight;                      // over contextWidth's slot
-    int32_t h = Ftol(clampedHeight);
-    viewportMaxZ = FromBits(Bits(maxZ));
-    viewportHeight = (uint32_t)h;
-    viewportMinZ = FromBits(Bits(minZ));
+    if (bottom > contextHeight)
+        bottom = contextHeight;
+    viewport.x = Ftol(left);
+    viewport.y = Ftol(top);
+    double clampedWidth = double(right) - left;                // rounded to a float and truncated, both
+    float widthF = float(clampedWidth);                        // over contextHeight's slot
+    uint32_t w = Ftol(clampedWidth);
+    viewport.width = w;
+    double clampedHeight = bottom - top;
+    float heightF = float(clampedHeight);                      // over contextWidth's slot
+    uint32_t h = Ftol(clampedHeight);
+    viewport.maxZ = maxZ;
+    viewport.height = h;
+    viewport.minZ = minZ;
     // FCOMP + TEST AH,0x44 + JP: equal and ordered falls through
-    bool unchanged = (double)widthF == (double)width && (double)heightF == (double)height;
+    bool unchanged = widthF == width && heightF == height;
     if (!unchanged) {
-        if ((uint32_t)h * (uint32_t)w != 0) {
-            double scaleX = (double)F32(kOne) / (double)widthF;                 // kept on the stack
-            float scaleY = (float)((double)F32(kOne) / (double)heightF);         // stored
-            projectionScale[0] = (float)((double)width * scaleX);
-            projectionScale[1] = (float)((double)scaleY * (double)height);
-            double t = (double)width * (double)F32(kHalf);
-            float halfWidth = (float)t;
-            float centreX = (float)(t + (double)x);
-            double offsetX = (double)centreX - ((double)widthF * (double)F32(kHalf) + (double)left);
-            t = (double)height * (double)F32(kHalf);
-            float halfHeight = (float)t;
-            float centreY = (float)(t + (double)y);
-            float offsetY = (float)-((double)centreY - ((double)heightF * (double)F32(kHalf) + (double)top));
+        if (h * w != 0) {
+            double scaleX = 1.0 / widthF;                                       // kept on the stack
+            float scaleY = 1.0f / heightF;                                      // stored
+            projectionScale[0] = float(width * scaleX);
+            projectionScale[1] = scaleY * height;
+            double t = double(width) * 0.5;
+            float halfWidth = float(t);
+            float centreX = float(t + x);
+            double offsetX = double(centreX) - (double(widthF) * 0.5 + left);
+            t = double(height) * 0.5;
+            float halfHeight = float(t);
+            float centreY = float(t + y);
+            float offsetY = float(-(double(centreY) - (double(heightF) * 0.5 + top)));
             double o = scaleX * offsetX;
             o = o + o;
-            projectionOffsetCopy[0] = (float)o;
-            projectionOffset[0] = (float)o;
-            o = (double)offsetY * (double)scaleY;
+            projectionOffsetCopy[0] = float(o);
+            projectionOffset[0] = float(o);
+            o = double(offsetY) * scaleY;
             o = o + o;
-            projectionOffsetCopy[1] = (float)o;
-            projectionOffset[1] = (float)o;
-            guardBand[0] = (float)(((double)centreX - (double)left) / (double)halfWidth);
-            guardBand[1] = (float)(((double)right - (double)centreX) / (double)halfWidth);
-            guardBand[2] = (float)(((double)centreY - (double)top) / (double)halfHeight);
-            guardBand[3] = (float)((bottom - (double)centreY) / (double)halfHeight);
+            projectionOffsetCopy[1] = float(o);
+            projectionOffset[1] = float(o);
+            guardBand[0] = float((double(centreX) - left) / halfWidth);
+            guardBand[1] = float((double(right) - centreX) / halfWidth);
+            guardBand[2] = float((double(centreY) - top) / halfHeight);
+            guardBand[3] = float((bottom - centreY) / halfHeight);
             return;
         }
-        viewportX = 0;
-        viewportY = 0;
-        viewportWidth = 1;
-        viewportHeight = 1;
+        viewport.x = 0;
+        viewport.y = 0;
+        viewport.width = 1;
+        viewport.height = 1;
     }
-    uint32_t *o = (uint32_t *)projectionOffset;
-    uint32_t *c = (uint32_t *)projectionOffsetCopy;
-    uint32_t *s = (uint32_t *)projectionScale;
-    uint32_t *g = (uint32_t *)guardBand;
-    o[1] = 0;
-    o[0] = 0;
-    c[1] = 0;
-    c[0] = 0;
-    s[1] = kOneBits;
-    s[0] = kOneBits;
-    g[0] = kOneBits;
-    g[1] = kOneBits;
-    g[2] = kOneBits;
-    g[3] = kOneBits;
+    projectionOffset[1] = 0.0f;
+    projectionOffset[0] = 0.0f;
+    projectionOffsetCopy[1] = 0.0f;
+    projectionOffsetCopy[0] = 0.0f;
+    projectionScale[1] = 1.0f;
+    projectionScale[0] = 1.0f;
+    guardBand[0] = 1.0f;
+    guardBand[1] = 1.0f;
+    guardBand[2] = 1.0f;
+    guardBand[3] = 1.0f;
 }
 
 // FUNC_AT(0x000e4680)
 void EAGL::ViewPort::GetShape(float *x, float *y, float *width, float *height, float *minZ, float *maxZ) {
-    *x = (float)shape[0];
-    *y = (float)shape[1];
-    *width = (float)shape[2];
-    *height = (float)shape[3];
-    *(uint32_t *)minZ = Bits(shapeMinZ);
-    *(uint32_t *)maxZ = Bits(shapeMaxZ);
+    *x = float(shape[0]);
+    *y = float(shape[1]);
+    *width = float(shape[2]);
+    *height = float(shape[3]);
+    *minZ = shapeMinZ;
+    *maxZ = shapeMaxZ;
 }
 
 // A perspective projection: D3DXMatrixPerspectiveFovRH with the field of view in degrees and an aspect of 1, then
 // SetShape's scale and offset, the aspect applied to the y scale, and the frustum planes IsSphereInView tests.
 // FUNC_AT(0x000e46d0)
 void EAGL::ViewPort::SetPerspective(float fov, float aspect, float nearZ, float farZ) {
-    float fovY = (float)((double)F32(kPi) * (double)F32(kOneOver180) * (double)fov);
+    float fovY = float(double(kPi) * kOneOver180 * fov);
     IdentityZerosFirst(projection);
-    D3DXMatrixPerspectiveFovRH(projection, fovY, FromBits(kOneBits), nearZ, farZ);
-    projection[0] = (float)((double)projectionScale[0] * (double)projection[0]);
-    perspective[0] = FromBits(Bits(fov));
-    double y = (double)projectionScale[1] * (double)projection[5];
-    perspective[1] = FromBits(Bits(aspect));
-    perspective[2] = FromBits(Bits(nearZ));
-    perspective[3] = FromBits(Bits(farZ));
-    y = y * (double)aspect;
+    D3DXMatrixPerspectiveFovRH(projection, fovY, 1.0f, nearZ, farZ);
+    projection[0] = projectionScale[0] * projection[0];
+    perspective[0] = fov;
+    double y = double(projectionScale[1]) * projection[5];
+    perspective[1] = aspect;
+    perspective[2] = nearZ;
+    perspective[3] = farZ;
+    y = y * aspect;
     projectionType = 0;
-    projection[5] = (float)y;
-    projection[8] = (float)-(double)projectionOffset[0];
-    projection[9] = (float)-(double)projectionOffset[1];
+    projection[5] = float(y);
+    projection[8] = -projectionOffset[0];
+    projection[9] = -projectionOffset[1];
     PerspectivePlanes(this, fov, aspect);
 }
 
 // An orthographic projection 2 wide and 2 * height high (D3DXMatrixOrthoRH). Ghidra: unnamed.
 // FUNC_AT(0x000e4870)
 void EAGL::ViewPort::SetOrthographicScreenSpace(float height, float nearZ, float farZ) {
-    float h = (float)((double)height + (double)height);
+    float h = height + height;
     IdentityOnesFirst(projection);
     D3DXMatrixOrthoRH(projection, 2.0f, h, nearZ, farZ);
-    *(uint32_t *)&perspective[0] = 0;
-    perspective[1] = FromBits(Bits(height));
-    perspective[2] = FromBits(Bits(nearZ));
-    perspective[3] = FromBits(Bits(farZ));
+    perspective[0] = 0.0f;
+    perspective[1] = height;
+    perspective[2] = nearZ;
+    perspective[3] = farZ;
     projectionType = 1;
 }
 
@@ -387,10 +364,10 @@ void EAGL::ViewPort::SetOrthographic(float nearZ, float farZ) {
     IdentityOnesFirst(projection);
     float contextWidth, contextHeight;
     if (renderContext != NULL)
-        RenderContextGetSize(renderContext, &contextWidth, &contextHeight);
+        renderContext->GetSize(&contextWidth, &contextHeight);
     else
         textureRenderContext->GetSize(&contextWidth, &contextHeight);
-    D3DXMatrixOrthoOffCenterRH(projection, FromBits(0), (float)shape[2], (float)shape[3], FromBits(0), nearZ, farZ);
+    D3DXMatrixOrthoOffCenterRH(projection, 0.0f, float(shape[2]), float(shape[3]), 0.0f, nearZ, farZ);
     projectionType = 1;
 }
 
@@ -403,58 +380,56 @@ void EAGL::ViewPort::EndView() {
 // colour, Z 1 and stencil 0.
 // FUNC_AT(0x000e49d0)
 void EAGL::ViewPort::ClearViewPort(uint32_t flags) {
-    uint8_t f = (uint8_t)flags;
     uint32_t clear = 0;
-    if (f & 1)
+    if (flags & 1)
         clear = 0xf0;
-    if (f & 2)
+    if (flags & 2)
         clear |= 1;
-    if (f & 4)
+    if (flags & 4)
         clear |= 2;
-    D3DClear(0, NULL, clear, backgroundColour, FromBits(kOneBits), 0);
+    D3DDevice_Clear(0, NULL, clear, backgroundColour, 1.0f, 0);
 }
 
 // The sphere (centre in world space) against the near and far planes and, in perspective, the four side planes.
 // Every comparison is the original's: x > r is "FCOMP r; TEST AH,0x41; JE" (false when unordered), a test against
-// 0 "TEST AH,0x41; JNE" (x > 0) or "TEST AH,5; JP" (x < 0).
+// 0 "TEST AH,0x41; JNE" (x > 0) or "TEST AH,5; JP" (x < 0). The sums and products stay in double, unrounded, as on
+// the x87 stack.
 // FUNC_AT(0x000e4a10)
 bool EAGL::ViewPort::IsSphereInView(const float *centre, float radius) {
     alignas(16) Transform viewMatrix;
-    viewMatrix.BuildMatrix((const float *)(uintptr_t)kViewMatrix);
+    viewMatrix.BuildMatrix(RegisteredViewMatrix);
     float p[3];
     viewMatrix.TransformPoint(centre, p);
-    double r = (double)radius;
-    if ((double)p[2] + (double)perspective[2] > r)
+    double r = radius;
+    if (double(p[2]) + perspective[2] > r)
         return false;
-    if (-((double)p[2] + (double)perspective[3]) > r)
+    if (-(double(p[2]) + perspective[3]) > r)
         return false;
     if (projectionType != 0)
         return true;
-    double zero = (double)F32(kZero);
-    double a = (double)p[2] * (double)planes[2] + (double)p[0];
-    if (a > zero) {
-        if (a * (double)planes[3] > r)
+    double a = double(p[2]) * planes[2] + p[0];
+    if (a > 0.0) {
+        if (a * planes[3] > r)
             return false;
     } else {
-        a = (double)p[2] * (double)planes[0] + (double)p[0];
-        if (a < zero) {
-            if (-(a * (double)planes[1]) > r)
+        a = double(p[2]) * planes[0] + p[0];
+        if (a < 0.0) {
+            if (-(a * planes[1]) > r)
                 return false;
         }
     }
-    double b = (double)p[2] * (double)planes[4] + (double)p[1];
-    if (b > zero)
-        return !(b * (double)planes[5] > r);
-    b = (double)p[2] * (double)planes[6] + (double)p[1];
-    if (b < zero)
-        return !(-(b * (double)planes[7]) > r);
+    double b = double(p[2]) * planes[4] + p[1];
+    if (b > 0.0)
+        return !(b * planes[5] > r);
+    b = double(p[2]) * planes[6] + p[1];
+    if (b < 0.0)
+        return !(-(b * planes[7]) > r);
     return true;
 }
 
 // Candidate SetGuardBandScale (RViewCamera::SetGuardBandSize calls it): empty in this build.
 // FUNC_AT(0x000e4b50)
-void EAGL::ViewPort::SetGuardBandScale(float scale) {
-    (void)scale;
+void EAGL::ViewPort::SetGuardBandScale(float) {
 }
 
 // FUNC_AT(0x000e4b60)
@@ -485,12 +460,13 @@ void EAGL::ViewPort::Destruct() {
 
 // FUNC_AT(0x000e4bb0)
 EAGL::ViewPortPrivate* EAGL::ViewPortPrivate::Construct(ViewPort *owner) {
-    *(uint32_t *)(bytes + 0x18) = 0;      // ViewPort +0x28 render context
-    *(uint32_t *)(bytes + 0x1c) = 0;      // +0x2c texture render context
-    *(uint32_t *)(bytes + 0x24) = 0;      // +0x34 background colour
-    bytes[0x178] = 0;                     // +0x188 active
-    *(uint32_t *)(bytes + 0x17c) = 0;     // +0x18c next
-    *(ViewPort **)(bytes + 0x180) = owner;  // +0x190 linked
+    ViewPort *view = Object();
+    view->renderContext = NULL;
+    view->textureRenderContext = NULL;
+    view->backgroundColour = 0;
+    view->active = 0;
+    view->next = NULL;
+    view->linked = owner;
     return this;
 }
 
@@ -517,26 +493,25 @@ void EAGL::ViewPort::BeginView() {
         }
     }
     if (previous == NULL)
-        previous = (ViewPort *)1;
+        previous = reinterpret_cast<ViewPort *>(1);
     if (renderContext != NULL) {
-        ((RenderContextPrivateViews *)&renderContext->privateOwner)->SetCurrentViewPort(this);
-        D3DSetRenderTarget(renderContext->renderTarget, renderContext->depthSurface);
+        renderContext->Private()->SetCurrentViewPort(this);
+        D3DDevice_SetRenderTarget(renderContext->backBuffer, renderContext->depthSurface);
     } else {
-        ((TextureRenderContextPrivate *)&textureRenderContext->privateOwner)->SetCurrentViewPort(this);
-        void *surface = D3DTextureGetSurfaceLevel2(textureRenderContext->texture, 0);
-        D3DSetRenderTarget(surface, textureRenderContext->depthSurface);
-        D3DResourceRelease(surface);
+        textureRenderContext->Private()->SetCurrentViewPort(this);
+        void *surface = D3DTexture_GetSurfaceLevel2(textureRenderContext->texture, 0);
+        D3DDevice_SetRenderTarget(surface, textureRenderContext->depthSurface);
+        D3DResource_Release(surface);
     }
-    D3DSetViewport(&viewportX);
+    D3DDevice_SetViewport(&viewport);
     active = 1;
     alignas(16) Transform viewProjectionMatrix;
     viewProjectionMatrix.BuildMatrix(view);
-    float *projectionMatrix = projection;
-    viewProjectionMatrix.AppendMatrix(projectionMatrix);
-    memcpy(viewProjection, viewProjectionMatrix.m, 64);
-    memcpy((void *)(uintptr_t)kViewMatrix, view, 64);
-    memcpy((void *)(uintptr_t)kProjectionMatrix, projectionMatrix, 64);
-    memcpy((void *)(uintptr_t)kViewProjectionMatrix, viewProjectionMatrix.m, 64);
+    viewProjectionMatrix.AppendMatrix(projection);
+    memcpy(viewProjection, viewProjectionMatrix.m, sizeof(viewProjection));
+    memcpy(RegisteredViewMatrix, view, sizeof(view));
+    memcpy(RegisteredProjectionMatrix, projection, sizeof(projection));
+    memcpy(RegisteredViewProjectionMatrix, viewProjectionMatrix.m, sizeof(viewProjectionMatrix.m));
 }
 
 // Projects count points (12-byte strides) to the screen with this view (D3DXVec3Project, identity world), begun
@@ -554,7 +529,7 @@ void EAGL::ViewPortExtension::Project(int count, const float *points, float *out
             ViewPort *v = viewPort;
             alignas(16) float world[16];
             IdentityZerosFirst(world);
-            D3DXVec3Project(out, points, &v->viewportX, v->projection, v->view, world);
+            D3DXVec3Project(out, points, &v->viewport, v->projection, v->view, world);
             points += 3;
             out += 3;
         } while (--left != 0);
@@ -566,14 +541,14 @@ void EAGL::ViewPortExtension::Project(int count, const float *points, float *out
 // Ends and re-begins the view. No callers.
 // FUNC_AT(0x000e4eb0)
 void EAGL::ViewPortPrivate::ReBegin() {
-    EndViewOf(*(ViewPort **)(bytes + 0x180));
-    (*(ViewPort **)(bytes + 0x180))->BeginView();
+    EndViewOf(Object()->linked);
+    Object()->linked->BeginView();   // read again, as the original
 }
 
 // FUNC_AT(0x000e4ef0)
 void EAGL::ViewPort::SetViewMatrix(const float *matrix) {
     uint8_t wasActive = active;
-    memcpy(view, matrix, 64);
+    memcpy(view, matrix, sizeof(view));
     if (wasActive != 0) {
         EndViewOf(linked);
         linked->BeginView();
@@ -581,15 +556,15 @@ void EAGL::ViewPort::SetViewMatrix(const float *matrix) {
 }
 
 // FUNC_AT(0x000f37d0)
-EAGL::ViewPort* EAGL::ViewPort::Construct(RenderContextViews *context) {
-    ((ViewPortExtension *)this)->Construct(this);
-    ((ViewPortPrivate *)&viewportX)->Construct(this);
-    const float *identity = *(const float **)(uintptr_t)kIdentityPointer;
+EAGL::ViewPort* EAGL::ViewPort::Construct(RenderContext *context) {
+    Extension()->Construct(this);
+    Private()->Construct(this);
+    const float *identity = IdentityMatrix;
     previous = NULL;
     enableModelSphereCull = 0;
-    memcpy(projection, identity, 64);
-    memcpy(view, identity, 64);
-    memcpy(viewProjection, identity, 64);
+    memcpy(projection, identity, sizeof(projection));
+    memcpy(view, identity, sizeof(view));
+    memcpy(viewProjection, identity, sizeof(viewProjection));
     textureRenderContext = NULL;
     renderContext = context;
     return this;
@@ -598,14 +573,14 @@ EAGL::ViewPort* EAGL::ViewPort::Construct(RenderContextViews *context) {
 // ViewPort::ViewPort for a TextureRenderContext (TextureRenderContext::NewViewPort's). Ghidra: unnamed.
 // FUNC_AT(0x000f3860)
 EAGL::ViewPort* EAGL::ViewPort::ConstructForTexture(TextureRenderContext *context) {
-    ((ViewPortExtension *)this)->Construct(this);
-    ((ViewPortPrivate *)&viewportX)->Construct(this);
-    const float *identity = *(const float **)(uintptr_t)kIdentityPointer;
+    Extension()->Construct(this);
+    Private()->Construct(this);
+    const float *identity = IdentityMatrix;
     previous = NULL;
     enableModelSphereCull = 0;
-    memcpy(projection, identity, 64);
-    memcpy(view, identity, 64);
-    memcpy(viewProjection, identity, 64);
+    memcpy(projection, identity, sizeof(projection));
+    memcpy(view, identity, sizeof(view));
+    memcpy(viewProjection, identity, sizeof(viewProjection));
     renderContext = NULL;
     textureRenderContext = context;
     return this;
@@ -629,10 +604,10 @@ void EAGL::ViewPort::DestructThunk() {
 
 // FUNC_AT(0x000f3920)
 void EAGL::ViewPort::GetPerspective(float *fov, float *aspect, float *nearZ, float *farZ) {
-    *(uint32_t *)fov = Bits(perspective[0]);
-    *(uint32_t *)aspect = Bits(perspective[1]);
-    *(uint32_t *)nearZ = Bits(perspective[2]);
-    *(uint32_t *)farZ = Bits(perspective[3]);
+    *fov = perspective[0];
+    *aspect = perspective[1];
+    *nearZ = perspective[2];
+    *farZ = perspective[3];
 }
 
 // FUNC_AT(0x000f3960)
@@ -671,27 +646,27 @@ float* EAGL::ViewPort::GetViewProjectionMatrix() {
 // ---------------------------------------------------------------------------------------------------------------
 
 // FUNC_AT(0x000ee010)
-EAGL::ViewPort* EAGL::RenderContextViews::NewViewPort() {
-    void *memory = EaglMalloc(0x1a0, 0x001ccfb4);   // "EAGL::Viewport new"
-    ViewPort *v = memory != NULL ? ((ViewPort *)memory)->Construct(this) : NULL;
+EAGL::ViewPort* EAGL::RenderContext::NewViewPort() {
+    void *memory = EaglMalloc(sizeof(ViewPort), ViewportNewName);
+    ViewPort *v = memory != NULL ? static_cast<ViewPort *>(memory)->Construct(this) : NULL;
     v->next = viewPorts;                            // the original stores through a failed allocation too
     viewPorts = v;
     return v;
 }
 
 // FUNC_AT(0x000ee080)
-EAGL::ViewPort* EAGL::RenderContextViews::GetCurrentViewPort() {
+EAGL::ViewPort* EAGL::RenderContext::GetCurrentViewPort() {
     return currentViewPort;
 }
 
 // FUNC_AT(0x000ee090)
-void EAGL::RenderContextPrivateViews::SetCurrentViewPort(ViewPort *viewPort) {
+void EAGL::RenderContextPrivate::SetCurrentViewPort(ViewPort *viewPort) {
     owner->currentViewPort = viewPort;
 }
 
 // Unlinks, destroys and frees the viewport. One not in the list walks off the end and faults, as the original.
 // FUNC_AT(0x000ee0a0)
-void EAGL::RenderContextViews::DeleteViewPort(ViewPort *viewPort) {
+void EAGL::RenderContext::DeleteViewPort(ViewPort *viewPort) {
     ViewPort *victim = viewPorts;
     if (viewPort == victim) {
         viewPorts = victim->next;
@@ -703,33 +678,35 @@ void EAGL::RenderContextViews::DeleteViewPort(ViewPort *viewPort) {
         p->next = victim->next;
     }
     victim->DestructThunk();
-    EaglFree(victim, 0x1a0);
+    EaglFree(victim, sizeof(ViewPort));
     if (viewPort == currentViewPort)
         currentViewPort = NULL;
 }
 
+// The word at +0x1c (frontBufferDepth) added to the object's address. No callers.
 // FUNC_AT(0x000ee160)
-uint8_t* EAGL::RenderContextViews::OffsetSelf() {
-    return (uint8_t *)this + *(uint32_t *)((uint8_t *)this + 0x1c);
+uint8_t* EAGL::RenderContext::OffsetSelf() {
+    return reinterpret_cast<uint8_t *>(this) + uint32_t(frontBufferDepth);
 }
 
 namespace {
 
+// The register adapters' bodies: the RenderContext's words from +0x20 by index, and a pointer's shorts.
 uint32_t __cdecl RenderContextWordAt(const uint8_t *self, int index) {
-    return *(const uint32_t *)(self + index * 4 + 0x20);
+    return *reinterpret_cast<const uint32_t *>(self + index * 4 + 0x20);
 }
 
 uint8_t __cdecl RenderContextSetFloatAt(uint8_t *self, int index, uint32_t valueBits) {
-    *(uint32_t *)(self + index * 4 + 0x20) = valueBits;   // FLD/FSTP of a float: the same bits
+    *reinterpret_cast<uint32_t *>(self + index * 4 + 0x20) = valueBits;   // FLD/FSTP of a float: the same bits
     return 1;
 }
 
 float __cdecl RenderContextFloatAt(const uint8_t *self, int index) {
-    return *(const float *)(self + index * 4 + 0x20);
+    return *reinterpret_cast<const float *>(self + index * 4 + 0x20);
 }
 
 int32_t __cdecl ShortAt(const uint8_t *p, int offset) {
-    return (int32_t)*(const int16_t *)(p + offset);
+    return *reinterpret_cast<const int16_t *>(p + offset);
 }
 
 }  // namespace
@@ -821,16 +798,16 @@ __declspec(naked) void FUN_000ee180() {
 
 // FUNC_AT(0x000f3450)
 EAGL::TextureRenderContext* EAGL::TextureRenderContext::Construct(Device *owner) {
-    ((TextureRenderContextExtension *)this)->Construct(this);
-    ((TextureRenderContextPrivate *)&privateOwner)->Construct(this);
+    Extension()->Construct(this);
+    Private()->Construct(this);
     device = owner;
     return this;
 }
 
 // FUNC_AT(0x000f34b0)
 EAGL::ViewPort* EAGL::TextureRenderContext::NewViewPort() {
-    void *memory = EaglMalloc(0x1a0, 0x001ccfb4);   // "EAGL::Viewport new"
-    ViewPort *v = memory != NULL ? ((ViewPort *)memory)->ConstructForTexture(this) : NULL;
+    void *memory = EaglMalloc(sizeof(ViewPort), ViewportNewName);
+    ViewPort *v = memory != NULL ? static_cast<ViewPort *>(memory)->ConstructForTexture(this) : NULL;
     v->next = viewPorts;
     viewPorts = v;
     return v;
@@ -860,33 +837,33 @@ void EAGL::TextureRenderContext::DeleteViewPort(ViewPort *viewPort) {
         p->next = victim->next;
     }
     victim->DestructThunk();
-    EaglFree(victim, 0x1a0);
+    EaglFree(victim, sizeof(ViewPort));
 }
 
 // FUNC_AT(0x000f35a0)
 void EAGL::TextureRenderContext::Destruct() {
     while (viewPorts != NULL)
         DeleteViewPort(viewPorts);
-    ((TextureRenderContextExtension *)this)->Destruct();
+    Extension()->Destruct();
 }
 
 // FUNC_AT(0x000f3600)
 void EAGL::TextureRenderContext::BeginFrame() {
-    ((DevicePrivate *)&Device::Get()->privatePart)->SetCurrentTextureRenderContext(this);
+    Device::Get()->Private()->SetCurrentTextureRenderContext(this);
     inFrame = 1;
 }
 
 // FUNC_AT(0x000f3620)
 void EAGL::TextureRenderContext::EndFrame() {
-    ((DevicePrivate *)&Device::Get()->privatePart)->SetCurrentTextureRenderContext(NULL);
+    Device::Get()->Private()->SetCurrentTextureRenderContext(NULL);
     inFrame = 0;
 }
 
 // The size as kept: integers (FILD).
 // FUNC_AT(0x000f3640)
 void EAGL::TextureRenderContext::GetSize(float *w, float *h) {
-    *w = (float)width;
-    *h = (float)height;
+    *w = float(width);
+    *h = float(height);
 }
 
 // FUNC_AT(0x000f3660)
@@ -900,59 +877,52 @@ int32_t EAGL::TextureRenderContext::GetDepthFormat() {
 }
 
 // FUNC_AT(0x000f3680)
-bool EAGL::TextureRenderContext::UnsupportedF3680(uint32_t value) {
-    (void)value;
+bool EAGL::TextureRenderContext::UnsupportedF3680(uint32_t) {
     return false;
 }
 
 // FUNC_AT(0x000f3690)
-bool EAGL::TextureRenderContext::UnsupportedF3690(uint32_t value) {
-    (void)value;
+bool EAGL::TextureRenderContext::UnsupportedF3690(uint32_t) {
     return false;
 }
 
 // FUNC_AT(0x000f36a0)
-bool EAGL::TextureRenderContext::UnsupportedF36A0(uint32_t value) {
-    (void)value;
+bool EAGL::TextureRenderContext::UnsupportedF36A0(uint32_t) {
     return false;
 }
 
 // FUNC_AT(0x000f36b0)
-bool EAGL::TextureRenderContext::UnsupportedF36B0(uint32_t value) {
-    (void)value;
+bool EAGL::TextureRenderContext::UnsupportedF36B0(uint32_t) {
     return false;
 }
 
 // FUNC_AT(0x000f36c0)
-bool EAGL::TextureRenderContext::UnsupportedF36C0(uint32_t value) {
-    (void)value;
+bool EAGL::TextureRenderContext::UnsupportedF36C0(uint32_t) {
     return false;
 }
 
 // FUNC_AT(0x000f36d0)
-bool EAGL::TextureRenderContext::UnsupportedF36D0(uint32_t value) {
-    (void)value;
+bool EAGL::TextureRenderContext::UnsupportedF36D0(uint32_t) {
     return false;
 }
 
-// Takes the size, surface and format from the colour texture's header (+0x40 of the object given) and the depth
-// surface and format from the depth texture's, if there is one.
+// Takes the size, texture and format from the colour TAR's shared data and the depth texture and format from the
+// depth TAR's, if there is one. The formats are the shared data's bits 6..13 taken signed (the original's
+// SHL 0x12, SAR 0x18); the colour TAR's data pointer is read again for its format, as the original.
 // FUNC_AT(0x000f36e0)
-uint32_t EAGL::TextureRenderContext::SetupFrameBuffers(const void *colourTexture, const void *depthTexture) {
-    const uint8_t *colour = *(const uint8_t *const *)((const uint8_t *)colourTexture + 0x40);
-    const uint8_t *depth = NULL;
+uint32_t EAGL::TextureRenderContext::SetupFrameBuffers(const TAR *colourTexture, const TAR *depthTexture) {
+    const TARSharedData *colour = colourTexture->data;
+    const TARSharedData *depth = NULL;
     if (depthTexture != NULL)
-        depth = *(const uint8_t *const *)((const uint8_t *)depthTexture + 0x40);
-    height = *(const int32_t *)(colour + 0xc);
-    width = *(const int32_t *)(colour + 8);
-    texture = *(void *const *)(colour + 0x28);
-    colour = *(const uint8_t *const *)((const uint8_t *)colourTexture + 0x40);
-    colourFormat = (int32_t)(*(const uint32_t *)(colour + 0x10) << 0x12) >> 0x18;
+        depth = depthTexture->data;
+    height = colour->height;
+    width = colour->width;
+    texture = colour->texture;
+    colourFormat = int8_t(colourTexture->data->depth);
     depthSurface = NULL;
     if (depthTexture != NULL) {
-        depthSurface = *(void *const *)(depth + 0x28);
-        const uint8_t *d = *(const uint8_t *const *)((const uint8_t *)depthTexture + 0x40);
-        depthFormat = (int32_t)(*(const uint32_t *)(d + 0x10) << 0x12) >> 0x18;
+        depthSurface = depth->texture;
+        depthFormat = int8_t(depthTexture->data->depth);
     }
     return 1;
 }
@@ -987,11 +957,20 @@ EAGL::ZeroedWords3* EAGL::ZeroedWords3::Construct() {
 // At TextureRenderContext +0x04: the context's +0x08..+0x30 and +0x84 cleared.
 // FUNC_AT(0x000f3790)
 EAGL::TextureRenderContextPrivate* EAGL::TextureRenderContextPrivate::Construct(TextureRenderContext *context) {
-    uint32_t *w = (uint32_t *)this;
+    TextureRenderContext *object = Object();
     owner = context;
-    for (int i = 1; i <= 0xb; i++)
-        w[i] = 0;
-    w[0x20] = 0;
+    object->unknown08[0] = 0;
+    object->unknown08[1] = 0;
+    object->width = 0;
+    object->height = 0;
+    object->unknown18 = 0;
+    object->colourFormat = 0;
+    object->depthFormat = 0;
+    object->currentViewPort = NULL;
+    object->viewPorts = NULL;
+    object->unknown2c = 0;
+    object->next = NULL;
+    object->inFrame = 0;
     return this;
 }
 
@@ -1000,15 +979,13 @@ EAGL::TextureRenderContextPrivate* EAGL::TextureRenderContextPrivate::Construct(
 // ---------------------------------------------------------------------------------------------------------------
 
 // FUNC_AT(0x000e4f50)
-void *eagl_alloc(uint32_t size, const char *name) {
-    (void)name;
-    return ((void *(__cdecl *)(uint32_t))0x001340e3)(size);   // _malloc
+void *eagl_alloc(uint32_t size, const char *) {
+    return CRT_malloc(size);
 }
 
 // FUNC_AT(0x000e4f60)
-void eagl_free(void *pointer, uint32_t size) {
-    (void)size;
-    ((void (__cdecl *)(void *))0x001331dc)(pointer);          // free
+void eagl_free(void *pointer, uint32_t) {
+    CRT_free(pointer);
 }
 
 // Registers the load-time types in the ConstructorPool, the property-built ones in the RuntimeAllocConstructorPool,
@@ -1017,32 +994,31 @@ void eagl_free(void *pointer, uint32_t size) {
 // FUNC_AT(0x000e4f70)
 bool EAGL::Device::Init() {
     initialised = 1;
-    U32(kCurrentDevice) = (uint32_t)(uintptr_t)this;
-    ConstructorPool *pool = (ConstructorPool *)(uintptr_t)kConstructorPool;
-    RuntimeAllocConstructorPool *runtimePool = (RuntimeAllocConstructorPool *)(uintptr_t)kRuntimeAllocConstructorPool;
-    pool->AddType((const char *)0x001cb0b8u, (void *)0x000ed070u, (void *)0x000ed2b0u);   // "EAGL::TAR"
-    pool->AddType((const char *)0x001cb0c4u, (void *)0x000f11c0u, (void *)0x000f1390u);   // "RenderMethod"
-    pool->AddType((const char *)0x001cb0d4u, (void *)0x000ea1d0u, (void *)0x000e8b40u);   // "Model"
-    pool->AddType((const char *)0x001cb0dcu, (void *)0x000f0ee0u, (void *)0x000f0f10u);   // "VertexBuffer"
-    runtimePool->AddType((const char *)0x001cb0ecu, (void *)0x000ef4c0u, (void *)0x000ef780u);  // "EAGL::GeoPrimState"
-    runtimePool->AddType((const char *)0x001cb100u, (void *)0x000ecbe0u, (void *)0x000ed2d0u);  // "EAGL::TAR"
+    CurrentDevice = this;
+    TheConstructorPool.AddType(TarTypeName, (void *)0x000ed070, (void *)0x000ed2b0);
+    TheConstructorPool.AddType(RenderMethodTypeName, (void *)0x000f11c0, (void *)0x000f1390);
+    TheConstructorPool.AddType(ModelTypeName, (void *)0x000ea1d0, (void *)0x000e8b40);
+    TheConstructorPool.AddType(VertexBufferTypeName, (void *)0x000f0ee0, (void *)0x000f0f10);
+    TheRuntimeAllocPool.AddType(GeoPrimStateRuntimeName, (void *)0x000ef4c0, (void *)0x000ef780);
+    TheRuntimeAllocPool.AddType(TarRuntimeName, (void *)0x000ecbe0, (void *)0x000ed2d0);
     EAGL_SymbolInit();
-    DynamicLoader::RegisterVar((const char *)0x001cb10cu, (void *)0x001cdab0u);   // gReflectionConstants
-    DynamicLoader::RegisterVar((const char *)0x001cb140u, (void *)0x001cdac0u);   // gSkinningConstants
-    DynamicLoader::RegisterVar((const char *)0x001cb174u, (void *)0x001cdad0u);   // gZeroOneTwoThree
-    DynamicLoader::RegisterVar((const char *)0x001cb1a4u, (void *)0x001cdae0u);   // gShadowColour
-    DynamicLoader::RegisterVar((const char *)0x001cb1d0u, (void *)0x001cdaf0u);   // gEnvMapConstants
-    uint32_t answer = D3DReturnsTrue(0);
-    U32(kReturnsTrueAnswer) = answer;
+    DynamicLoader::RegisterVar(ReflectionConstantsName, (void *)0x001cdab0);
+    DynamicLoader::RegisterVar(SkinningConstantsName, (void *)0x001cdac0);
+    DynamicLoader::RegisterVar(ZeroOneTwoThreeName, (void *)0x001cdad0);
+    DynamicLoader::RegisterVar(ShadowColourName, (void *)0x001cdae0);
+    DynamicLoader::RegisterVar(EnvMapConstantsName, (void *)0x001cdaf0);
+    uint32_t answer = D3D_ReturnsTrue(0);
+    ReturnsTrueAnswer = answer;
     return answer != 0;
 }
 
 // FUNC_AT(0x000e5080)
 EAGL::DevicePrivate* EAGL::DevicePrivate::Construct() {
-    words[0] = 0;
-    words[3] = 0;
-    words[4] = 0;
-    *(uint8_t *)&words[5] = 0;
+    Device *object = Object();
+    object->privatePart = 0;
+    object->renderContexts = NULL;
+    object->textureRenderContexts = NULL;
+    object->initialised = 0;
     return this;
 }
 
@@ -1067,7 +1043,7 @@ EAGL::Device* EAGL::Device::Construct() {
     renderContexts = NULL;
     textureRenderContexts = NULL;
     initialised = 0;
-    U32(kCurrentDevice) = (uint32_t)(uintptr_t)this;
+    CurrentDevice = this;
     privatePart = 0;
     renderContexts = NULL;
     return this;
@@ -1078,20 +1054,18 @@ void EAGL::Device::Destruct() {
     while (renderContexts != NULL)
         DeleteRenderContext(renderContexts);
     while (textureRenderContexts != NULL)
-        ((DeviceExtension *)this)->DeleteTextureRenderContext(textureRenderContexts);
-    DynamicLoader::UnRegisterVar((const char *)0x001caf70u);   // gReflectionConstants
-    DynamicLoader::UnRegisterVar((const char *)0x001cafa4u);   // gSkinningConstants
-    DynamicLoader::UnRegisterVar((const char *)0x001cafd8u);   // gZeroOneTwoThree
-    DynamicLoader::UnRegisterVar((const char *)0x001cb008u);   // gShadowColour
-    DynamicLoader::UnRegisterVar((const char *)0x001cb034u);   // gEnvMapConstants
-    ConstructorPool *pool = (ConstructorPool *)(uintptr_t)kConstructorPool;
-    RuntimeAllocConstructorPool *runtimePool = (RuntimeAllocConstructorPool *)(uintptr_t)kRuntimeAllocConstructorPool;
-    pool->RemoveType((const char *)0x001cb064u);          // "EAGL::TAR"
-    pool->RemoveType((const char *)0x001cb070u);          // "RenderMethod"
-    pool->RemoveType((const char *)0x001cb080u);          // "Model"
-    pool->RemoveType((const char *)0x001cb088u);          // "VertexBuffer"
-    runtimePool->RemoveType((const char *)0x001cb098u);   // "EAGL::TAR"
-    runtimePool->RemoveType((const char *)0x001cb0a4u);   // "EAGL::GeoPrimState"
+        Extension()->DeleteTextureRenderContext(textureRenderContexts);
+    DynamicLoader::UnRegisterVar(ReflectionConstantsName2);
+    DynamicLoader::UnRegisterVar(SkinningConstantsName2);
+    DynamicLoader::UnRegisterVar(ZeroOneTwoThreeName2);
+    DynamicLoader::UnRegisterVar(ShadowColourName2);
+    DynamicLoader::UnRegisterVar(EnvMapConstantsName2);
+    TheConstructorPool.RemoveType(TarTypeName2);
+    TheConstructorPool.RemoveType(RenderMethodTypeName2);
+    TheConstructorPool.RemoveType(ModelTypeName2);
+    TheConstructorPool.RemoveType(VertexBufferTypeName2);
+    TheRuntimeAllocPool.RemoveType(TarRuntimeName2);
+    TheRuntimeAllocPool.RemoveType(GeoPrimStateRuntimeName2);
 }
 
 // FUNC_AT(0x000e51b0)
@@ -1104,76 +1078,77 @@ void EAGL_EmptyE51C0() {
 
 // A new RenderContext, put at the head of the list and made current.
 // FUNC_AT(0x000e8900)
-EAGL::RenderContextViews* EAGL::Device::NewRenderContext() {
-    void *memory = EaglMalloc(0x14c, 0x001cb9ac);   // "RenderContext new"
-    RenderContextViews *context = memory != NULL ? RenderContextConstruct(memory, this) : NULL;
+EAGL::RenderContext* EAGL::Device::NewRenderContext() {
+    void *memory = EaglMalloc(sizeof(RenderContext), RenderContextNewName);
+    RenderContext *context = memory != NULL ? static_cast<RenderContext *>(memory)->Construct(this) : NULL;
     context->next = renderContexts;
     renderContexts = context;
-    U32(kCurrentRenderContext) = (uint32_t)(uintptr_t)context;
+    CurrentRenderContext = context;
     return context;
 }
 
 // FUNC_AT(0x000e8970)
 EAGL::TextureRenderContext* EAGL::DeviceExtension::NewTextureRenderContext() {
-    void *memory = EaglMalloc(0xd4, 0x001cb9c0);    // "TextureRenderContext new"
-    TextureRenderContext *context = memory != NULL ? ((TextureRenderContext *)memory)->Construct(device) : NULL;
+    void *memory = EaglMalloc(sizeof(TextureRenderContext), TextureRenderContextNewName);
+    TextureRenderContext *context = memory != NULL ? static_cast<TextureRenderContext *>(memory)->Construct(device)
+                                                   : NULL;
     context->next = device->textureRenderContexts;
     device->textureRenderContexts = context;
     return context;
 }
 
 // FUNC_AT(0x000e89e0)
-EAGL::RenderContextViews* EAGL::Device::GetCurrentRenderContext() {
-    return (RenderContextViews *)(uintptr_t)U32(kCurrentRenderContext);
+EAGL::RenderContext* EAGL::Device::GetCurrentRenderContext() {
+    return CurrentRenderContext;
 }
 
 // FUNC_AT(0x000e89f0)
 EAGL::TextureRenderContext* EAGL::Device::GetCurrentTextureRenderContext() {
-    return (TextureRenderContext *)(uintptr_t)U32(kCurrentTextureRenderContext);
+    return CurrentTextureRenderContext;
 }
 
 // FUNC_AT(0x000e8a00)
-void EAGL::DevicePrivate::SetCurrentRenderContext(RenderContextViews *context) {
-    U32(kCurrentRenderContext) = (uint32_t)(uintptr_t)context;
+void EAGL::DevicePrivate::SetCurrentRenderContext(RenderContext *context) {
+    CurrentRenderContext = context;
 }
 
 // FUNC_AT(0x000e8a10)
 void EAGL::DevicePrivate::SetCurrentTextureRenderContext(TextureRenderContext *context) {
-    U32(kCurrentTextureRenderContext) = (uint32_t)(uintptr_t)context;
+    CurrentTextureRenderContext = context;
 }
 
 // FUNC_AT(0x000e8a20)
 void EAGL::Device::SetNewOverride(void *allocator) {
-    U32(kMalloc) = (uint32_t)(uintptr_t)allocator;
+    EaglMalloc = reinterpret_cast<EaglAllocator>(allocator);
 }
 
 // FUNC_AT(0x000e8a30)
 void EAGL::Device::SetDeleteOverride(void *deallocator) {
-    U32(kFree) = (uint32_t)(uintptr_t)deallocator;
+    EaglFree = reinterpret_cast<EaglDeallocator>(deallocator);
 }
 
 // FUNC_AT(0x000e8a40)
 EAGL::Device* EAGL::Device::Get() {
-    return (Device *)(uintptr_t)U32(kCurrentDevice);
+    return CurrentDevice;
 }
 
 // Unlinks, destroys and frees the context; the current one becomes the list's head if it was this.
 // FUNC_AT(0x000e8a50)
-void EAGL::Device::DeleteRenderContext(RenderContextViews *context) {
-    RenderContextViews *victim = renderContexts;
+void EAGL::Device::DeleteRenderContext(RenderContext *context) {
+    RenderContext *victim = renderContexts;
     if (context == victim) {
         renderContexts = victim->next;
     } else {
-        RenderContextViews *p = victim;
+        RenderContext *p = victim;
         while (p != NULL && p->next != context)
             p = p->next;
         victim = p->next;
         p->next = victim->next;
     }
-    RenderContextDestruct(victim);
-    EaglFree(victim, 0x14c);
-    if (U32(kCurrentRenderContext) == (uint32_t)(uintptr_t)context)
-        U32(kCurrentRenderContext) = (uint32_t)(uintptr_t)renderContexts;
+    victim->Destruct();
+    EaglFree(victim, sizeof(RenderContext));
+    if (CurrentRenderContext == context)
+        CurrentRenderContext = renderContexts;
 }
 
 // The texture contexts' DeleteRenderContext (Device::~Device's); the current one is left as it is.
@@ -1191,5 +1166,5 @@ void EAGL::DeviceExtension::DeleteTextureRenderContext(TextureRenderContext *con
         p->next = victim->next;
     }
     victim->Destruct();
-    EaglFree(victim, 0xd4);
+    EaglFree(victim, sizeof(TextureRenderContext));
 }

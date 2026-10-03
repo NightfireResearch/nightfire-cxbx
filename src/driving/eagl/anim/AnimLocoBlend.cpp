@@ -2,8 +2,10 @@
 #include "AnimPoseBlend.h"
 #include "AnimChannels.h"
 #include "AnimDecode.h"
+#include "AnimMisc.h"
 #include "AnimUntested.h"
 #include "Skeleton.h"
+#include "../../../helpers.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -24,112 +26,90 @@
 // step; between cycles it turns the root by the facing change over a cycle (alignQ). A turn blender does the same
 // over a row of run blenders. No shipped data builds either, so every function is a provisional port from the
 // listing (EAGL_UNTESTED). x87 in double in the original's order, a float store where the original stores one;
-// FSQRT is sqrt() on the double. The original's debug printfs are kept.
+// FSQRT is sqrt() on the double (a single operation on floats written in float: the same bits). The original's
+// debug printfs are kept.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define EaglFree      (*(void (**)(void *data, uint32_t size))0x001caf6cu)
-#define FreeByType    ((void **)0x002414b0u)
-#define FreeBySize    ((void **)0x00241520u)
-#define TurnAlignCount (*(int32_t *)0x00241b30u)   // FnTurnBlender::AlignCycleBeginEnd's printf counter
-#define VtFnAnim      ((const void *)0x001a0c6cu)
-#define VtTurnBlender ((const void *)0x001a14b4u)
-#define VtRunBlender  ((const void *)0x001a1504u)
+namespace {
 
-#define K_One      (*(const float *)0x00189de8u)   // 1.0f
-#define K_Zero     (*(const float *)0x00189decu)   // 0.0f
-#define K_Half     (*(const float *)0x00189eb0u)   // 0.5f
-#define K_Two      (*(const float *)0x00189e00u)   // 2.0f
-#define K_MinusOne (*(const float *)0x0018a134u)   // -1.0f
+typedef void (*EaglFreeHook)(void *data, uint32_t size);
+#define EaglFree (*(EaglFreeHook *)0x001caf6c)
+#define TurnAlignCount I32_AT(0x00241b30)               // FnTurnBlender::AlignCycleBeginEnd's printf counter
+#define VtTurnBlender ((const void *)0x001a14b4)
+#define VtRunBlender ((const void *)0x001a1504)
 
 // The quaternion product out = a * b (Ghidra's FUN_00016820, outside EAGLAnim, not ported).
-#define QuatMultiply ((void (*)(const float *a, const float *b, float *out))0x00016820u)
+#define QuatMultiply ((void (*)(const float *a, const float *b, float *out))0x00016820)
 
-static inline int Truncate(float f) {   // CVTTSS2SI
+inline int Truncate(float f) {   // CVTTSS2SI
     return _mm_cvtt_ss2si(_mm_set_ss(f));
 }
 
-static inline void FreeSized(void *block) {
-    uint32_t sizeClass = ((uint32_t *)block)[-1];
-    *(void **)block = FreeBySize[sizeClass];
-    FreeBySize[sizeClass] = block;
+inline float* ScratchPose(int index) {
+    return static_cast<float *>(ScratchBuffer_GetScratchBuffer(index)->buffer);
 }
 
-// AnimPool_DeleteFnAnim inlined: the destructor run, the object back on its type's free list.
-static inline void ReleaseAnim(FnAnim *anim) {
-    AnimVCall<void *>(anim, kSlotDelete, 0u);
-    uint16_t type = (uint16_t)anim->type;
-    *(void **)anim = FreeByType[type];
-    FreeByType[type] = anim;
-}
-
-static inline float* ScratchPose(int index) {
-    return (float *)ScratchBuffer_GetScratchBuffer(index)->buffer;
-}
-
-// 0x000fc080, AnimBlendPoseQT (AnimPoseBlend.cpp): out = blend of two poses by weight
-static inline void PoseBlend(int count, float weight, float *a, float *b, float *out, void *mask) {
-    AnimBlendPoseQT(count, weight, a, b, out, (const BoneMask *)mask);
-}
-
-static inline double PhaseLastFrame(const PhaseChanData *p) {   // fild (numFrames - 1)
-    return (double)(int)(p->numFrames - 1);
+// The phase channel's last frame (fild numFrames - 1).
+inline float LastFrame(const PhaseChanData *p) {
+    return float(p->numFrames - 1);
 }
 
 // ---- the helpers both classes have a copy of (each copy is its own FUNC_AT below)
 
 // The time wrapped into [startTime, endTime].
-static double WrapCycleTime(float t, float startTime, float endTime) {
-    float length = (float)((double)endTime - (double)startTime);
+double WrapCycleTime(float t, float startTime, float endTime) {
+    float length = endTime - startTime;
     if (t < startTime) {
-        double d = (double)startTime - (double)t;
-        float df = (float)d;
-        int n = Truncate((float)(d / (double)length));
-        return (double)endTime - ((double)df - (double)n * (double)length);
+        double d = double(startTime) - t;
+        float df = float(d);
+        int n = Truncate(float(d / length));
+        return endTime - (df - double(n) * length);
     }
     if (t >= endTime) {
-        double d = (double)t - (double)endTime;
-        float df = (float)d;
-        int n = Truncate((float)(d / (double)length));
-        return ((double)df - (double)n * (double)length) + (double)startTime;
+        double d = double(t) - endTime;
+        float df = float(d);
+        int n = Truncate(float(d / length));
+        return (df - double(n) * length) + startTime;
     }
-    return (double)t;
+    return t;
 }
 
 // How many cycles of [startTime, endTime] the time is outside it (0 inside).
-static int CycleIndex(float t, float startTime, float endTime) {
-    double length = (double)endTime - (double)startTime;
+int CycleIndex(float t, float startTime, float endTime) {
+    double length = double(endTime) - startTime;
     if (t < startTime)
-        return Truncate((float)(((double)startTime - (double)t) / length));
+        return Truncate(float((double(startTime) - t) / length));
     if (t >= endTime)
-        return Truncate((float)(((double)t - (double)endTime) / length)) + 1;
+        return Truncate(float((double(t) - endTime) / length)) + 1;
     return 0;
 }
 
-// The turn about y taking the 2D direction v1 to v2: q = {0, -+sin(a/2), 0, cos(a/2)}.
-static void AlignQuat(const float *v1, const float *v2, float *q) {
+// The turn about y taking the 2D direction v1 to v2: q = {0, -+sin(a/2), 0, cos(a/2)}. The sign is turned by a
+// multiply, as the original's FMUL by -1, which (unlike a negation) leaves a NaN's sign alone.
+void AlignQuat(const float *v1, const float *v2, float *q) {
     float b0 = v2[0], b1 = v2[1];
     double a1 = v1[1], a0 = v1[0];
     q[0] = 0.0f;
     q[2] = 0.0f;
-    double dot = (double)v1[1] * (double)v2[1] + (double)v1[0] * (double)v2[0];
+    double dot = double(v1[1]) * v2[1] + double(v1[0]) * v2[0];   // read again after the stores, as the original
     double la = sqrt(a0 * a0 + a1 * a1);
-    double lb = sqrt((double)b0 * (double)b0 + (double)b1 * (double)b1);
-    double c = (dot / (la * lb) + (double)K_One) * (double)K_Half;
-    float s = (float)sqrt((double)K_One - c);
+    double lb = sqrt(double(b0) * b0 + double(b1) * b1);
+    double c = (dot / (la * lb) + 1.0) * 0.5;
+    float s = float(sqrt(1.0 - c));
     q[1] = s;
-    q[3] = (float)sqrt(c);
-    if ((double)v1[0] * (double)v2[1] - (double)v1[1] * (double)v2[0] > 0.0)
-        q[1] = (float)((double)s * (double)K_MinusOne);
+    q[3] = float(sqrt(c));
+    if (double(v1[0]) * v2[1] - double(v1[1]) * v2[0] > 0.0)
+        q[1] = s * -1.0f;
 }
 
 // The root bone's quaternion (pose floats 4..7) turned by alignQ.
-static void AlignPoseRoot(const float *alignQ, float *sqt) {
+void AlignPoseRoot(const float *alignQ, float *sqt) {
     float q[4];
     QuatMultiply(sqt + 4, alignQ, q);
-    memcpy(sqt + 4, q, 16);
+    memcpy(sqt + 4, q, sizeof(q));
 }
 
-static void AlignVel2D(const float *alignQ, float *vel) {
+void AlignVel2D(const float *alignQ, float *vel) {
     float v[4] = { vel[0], 0.0f, vel[1], 1.0f };
     float out[4];
     AnimQuatRotateVector(alignQ, v, out);
@@ -138,7 +118,7 @@ static void AlignVel2D(const float *alignQ, float *vel) {
 }
 
 // The two anims' velocities blended by weight, rescaled to the blend of their speeds.
-static bool BlendVel2D(FnAnim *a0, FnAnim *a1, float weight, float t0, float t1, float *vel) {
+bool BlendVel2D(FnAnim *a0, FnAnim *a1, float weight, float t0, float t1, float *vel) {
     float v0[2], v1[2];
     if (!AnimVCall<bool>(a0, kSlotEvalVel2D, t0, v0))
         return false;
@@ -150,48 +130,46 @@ static bool BlendVel2D(FnAnim *a0, FnAnim *a1, float weight, float t0, float t1,
     if (!AnimVCall<bool>(a1, kSlotEvalVel2D, t1, v1))
         return false;
     double w = weight;
-    double u = (double)K_One - w;
-    vel[0] = (float)((double)v1[0] * w + (double)v0[0] * u);
-    double y = (double)v1[1] * w + (double)v0[1] * u;
-    vel[1] = (float)y;
+    double u = 1.0 - w;
+    vel[0] = float(v1[0] * w + v0[0] * u);
+    double y = v1[1] * w + v0[1] * u;
+    vel[1] = float(y);
     double x = vel[0];
     double length = sqrt(x * x + y * y);
-    float lengthF = (float)length;
+    float lengthF = float(length);
     if (length == 0.0)
         return true;
-    double s0 = sqrt((double)v0[1] * (double)v0[1] + (double)v0[0] * (double)v0[0]) * u;
-    double s1 = sqrt((double)v1[1] * (double)v1[1] + (double)v1[0] * (double)v1[0]);
-    double scale = (s0 + s1 * w) / (double)lengthF;
-    vel[0] = (float)(scale * (double)vel[0]);
-    vel[1] = (float)(scale * (double)vel[1]);
+    double s0 = sqrt(double(v0[1]) * v0[1] + double(v0[0]) * v0[0]) * u;
+    double s1 = sqrt(double(v1[1]) * v1[1] + double(v1[0]) * v1[0]);
+    double scale = (s0 + s1 * w) / lengthF;
+    vel[0] = float(scale * vel[0]);
+    vel[1] = float(scale * vel[1]);
     return true;
 }
+
+}  // namespace
 
 // ---- free functions
 
 // FUNC_AT(0x00104eb0)
 void AnimQuatRotateVector(const float *q, const float *v, float *out) {
     EAGL_UNTESTED("AnimQuatRotateVector");
-    double x2 = (double)q[0] + (double)q[0];
-    double y2 = (double)q[1] + (double)q[1];
-    float z2 = (float)((double)q[2] + (double)q[2]);
-    float wx = (float)(x2 * (double)q[3]);
-    float wy = (float)(y2 * (double)q[3]);
-    float wz = (float)((double)z2 * (double)q[3]);
-    float xx = (float)(x2 * (double)q[0]);
-    float xy = (float)(y2 * (double)q[0]);
-    float xz = (float)((double)z2 * (double)q[0]);
-    double yy = y2 * (double)q[1];
-    double yz = (double)z2 * (double)q[1];
-    double zz = (double)z2 * (double)q[2];
-    double one = K_One;
-    out[0] = (float)(((one - (zz + yy)) * (double)v[0] + ((double)xz + (double)wy) * (double)v[2]) +
-                     ((double)xy - (double)wz) * (double)v[1]);
-    out[1] = (float)(((one - (zz + (double)xx)) * (double)v[1] + ((double)xy + (double)wz) * (double)v[0]) +
-                     (yz - (double)wx) * (double)v[2]);
+    double x2 = double(q[0]) + q[0];
+    double y2 = double(q[1]) + q[1];
+    float z2 = q[2] + q[2];
+    float wx = float(x2 * q[3]);
+    float wy = float(y2 * q[3]);
+    float wz = z2 * q[3];
+    float xx = float(x2 * q[0]);
+    float xy = float(y2 * q[0]);
+    float xz = z2 * q[0];
+    double yy = y2 * q[1];
+    double yz = double(z2) * q[1];
+    double zz = double(z2) * q[2];
+    out[0] = float(((1.0 - (zz + yy)) * v[0] + (double(xz) + wy) * v[2]) + (double(xy) - wz) * v[1]);
+    out[1] = float(((1.0 - (zz + xx)) * v[1] + (double(xy) + wz) * v[0]) + (yz - wx) * v[2]);
     out[3] = 1.0f;
-    out[2] = (float)(((one - (yy + (double)xx)) * (double)v[2] + ((double)xz - (double)wy) * (double)v[0]) +
-                     (yz + (double)wx) * (double)v[1]);
+    out[2] = float(((1.0 - (yy + xx)) * v[2] + (double(xz) - wy) * v[0]) + (yz + wx) * v[1]);
 }
 
 // FUNC_AT(0x00104fd0)
@@ -238,7 +216,7 @@ void FnTurnBlender::Destruct() {
     if (numAnims != 0)
         ScratchBuffer_GetScratchBuffer(1)->FreeBuffer();
     if (anims != NULL)
-        FreeSized(anims);
+        AnimPool_FreeBlock(anims);
     FnAnim::Destruct();
 }
 
@@ -247,7 +225,7 @@ FnTurnBlender* FnTurnBlender::ScalarDelete(unsigned flags) {
     EAGL_UNTESTED("FnTurnBlender::ScalarDelete");
     Destruct();
     if (flags & 1)
-        EaglFree(this, 0x5c);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 
@@ -266,7 +244,7 @@ void FnTurnBlender::SetWeight(float w) {
         i = 0;
     if (i >= numAnims - 1)
         i = numAnims - 2;
-    weight = (float)((double)w - (double)i);
+    weight = float(double(w) - i);
     if (i != idx) {
         if (i == idx + 1) {
             fnAnims[0] = fnAnims[1];
@@ -280,24 +258,24 @@ void FnTurnBlender::SetWeight(float w) {
         }
         idx = i;
         FnRunBlender *a = fnAnims[0];
-        cycles[0] = (float)((double)K_One / (double)a->GetFrequency());
+        cycles[0] = 1.0f / a->GetFrequency();
         offsets[0] = a->offset;
         FnRunBlender *b = fnAnims[1];
-        cycles[1] = (float)((double)K_One / (double)b->GetFrequency());
+        cycles[1] = 1.0f / b->GetFrequency();
         offsets[1] = b->offset;
     }
     double old = freq;
-    freq = (float)(((double)K_One - (double)weight) / (double)cycles[0] + (double)weight / (double)cycles[1]);
-    offset = (float)(((double)prevTime + (double)offset) / (double)freq * old - (double)prevTime);
+    freq = float((1.0 - weight) / cycles[0] + double(weight) / cycles[1]);
+    offset = float((double(prevTime) + offset) / freq * old - prevTime);
 }
 
 // FUNC_AT(0x00104500)
 void FnTurnBlender::SetAnims(Skeleton *s, int count, FnRunBlender **blenders) {
     EAGL_UNTESTED("FnTurnBlender::SetAnims");
     skeleton = s;
-    ScratchBuffer_GetScratchBuffer(1)->AllocateBuffer((uint32_t)(s->count * 48));
+    ScratchBuffer_GetScratchBuffer(1)->AllocateBuffer(s->count * sizeof(float[12]));
     numAnims = count;
-    anims = (FnRunBlender **)AnimPool_NewBlock((uint32_t)(count * 4));
+    anims = static_cast<FnRunBlender **>(AnimPool_NewBlock(count * sizeof(FnRunBlender *)));
     for (int i = 0; i < numAnims; i++)
         anims[i] = blenders[i];
 }
@@ -358,7 +336,7 @@ bool FnTurnBlender::BlendBeginFacing(float *facing) {
     AnimQuatRotateVector(q, v, out);
     facing[0] = out[0];
     facing[1] = out[2];
-    printf("Facing: %g %g\n", (double)out[0], (double)out[2]);
+    printf("Facing: %g %g\n", out[0], out[2]);
     return true;
 }
 
@@ -374,17 +352,17 @@ void FnTurnBlender::SetSpeed(float s) {
     EAGL_UNTESTED("FnTurnBlender::SetSpeed");
     FnRunBlender *a = fnAnims[0];
     a->SetWeight(s);
-    cycles[0] = (float)((double)K_One / (double)a->GetFrequency());
+    cycles[0] = 1.0f / a->GetFrequency();
     offsets[0] = a->offset;
     FnRunBlender *b = fnAnims[1];
     b->SetWeight(s);
-    double cycle1 = (double)K_One / (double)b->GetFrequency();   // kept unrounded on the x87 stack
-    cycles[1] = (float)cycle1;
+    double cycle1 = 1.0 / b->GetFrequency();   // kept unrounded on the x87 stack
+    cycles[1] = float(cycle1);
     offsets[1] = b->offset;
     double old = freq;
-    double f = ((double)K_One - (double)weight) / (double)cycles[0] + (double)weight / cycle1;
-    freq = (float)f;
-    offset = (float)(((double)offset + (double)prevTime) / f * old - (double)prevTime);
+    double f = (1.0 - weight) / cycles[0] + weight / cycle1;
+    freq = float(f);
+    offset = float((double(offset) + prevTime) / f * old - prevTime);
 }
 
 // FUNC_AT(0x00104a40)
@@ -398,7 +376,7 @@ bool FnTurnBlender::BlendEndFacing(float *facing) {
     AnimQuatRotateVector(q, v, out);
     facing[0] = out[0];
     facing[1] = out[2];
-    printf("Facing: %g %g\n", (double)out[0], (double)out[2]);
+    printf("Facing: %g %g\n", out[0], out[2]);
     return true;
 }
 
@@ -422,13 +400,12 @@ void FnTurnBlender::AlignCycleBeginEnd(int cIdx) {
     BlendEndFacing(end);
     ComputeAlignQ(begin, end, q);
     if (cycleIdx - 1 == cIdx)
-        q[1] = (float)((double)q[1] * (double)K_MinusOne);
+        q[1] = q[1] * -1.0f;   // FMUL by -1 (a NaN keeps its sign)
     QuatMultiply(alignQ, q, product);
-    memcpy(alignQ, product, 16);
+    memcpy(alignQ, product, sizeof(product));
     int n = TurnAlignCount++;
     cycleIdx = cIdx;
-    printf("turn align[%d] Q: %g %g %g %g\n\n", n, (double)alignQ[0], (double)alignQ[1], (double)alignQ[2],
-           (double)alignQ[3]);
+    printf("turn align[%d] Q: %g %g %g %g\n\n", n, alignQ[0], alignQ[1], alignQ[2], alignQ[3]);
 }
 
 // The mask is not used (both sub-evaluations and the still pose get none).
@@ -439,12 +416,12 @@ bool FnTurnBlender::EvalSQT(float time, float *sqt, void *mask) {
     prevTime = time;
     if (fnAnims[0] == NULL)
         SetWeight(0.0f);
-    float t = (float)((double)time + (double)offset);
-    int cIdx = ComputeCycleIdx(t, 0.0f, (float)((double)K_Two / (double)freq));
-    float t0 = (float)((double)cycles[0] * (double)freq * (double)t);
-    float t1 = (float)((double)t * (double)freq * (double)cycles[1]);
-    float c0 = (float)(CycleTime(t0, 0.0f, (float)((double)cycles[0] + (double)cycles[0])) - (double)offsets[0]);
-    float c1 = (float)(CycleTime(t1, 0.0f, (float)((double)cycles[1] + (double)cycles[1])) - (double)offsets[1]);
+    float t = time + offset;
+    int cIdx = ComputeCycleIdx(t, 0.0f, 2.0f / freq);
+    float t0 = float(double(cycles[0]) * freq * t);
+    float t1 = float(double(t) * freq * cycles[1]);
+    float c0 = float(CycleTime(t0, 0.0f, cycles[0] + cycles[0]) - offsets[0]);
+    float c1 = float(CycleTime(t1, 0.0f, cycles[1] + cycles[1]) - offsets[1]);
     skeleton->GetStillPose(sqt, NULL);
     if (!AnimVCall<bool>(fnAnims[0], kSlotEvalSQT, c0, sqt, (void *)NULL))
         return false;
@@ -453,7 +430,7 @@ bool FnTurnBlender::EvalSQT(float time, float *sqt, void *mask) {
         skeleton->GetStillPose(pose, NULL);
         if (!AnimVCall<bool>(fnAnims[1], kSlotEvalSQT, c1, pose, (void *)NULL))
             return false;
-        PoseBlend(skeleton->count, weight, sqt, pose, sqt, NULL);
+        AnimBlendPoseQT(skeleton->count, weight, sqt, pose, sqt, NULL);
     }
     AlignCycleBeginEnd(cIdx);
     AlignPoseRoot(alignQ, sqt);
@@ -466,17 +443,17 @@ bool FnTurnBlender::EvalVel2D(float time, float *vel) {
     prevTime = time;
     if (fnAnims[0] == NULL)
         SetWeight(0.0f);
-    float t = (float)((double)time + (double)offset);
-    int cIdx = ComputeCycleIdx(t, 0.0f, (float)((double)K_Two / (double)freq));
-    printf("currTime: %g  offset: %g   cycle: %g\n", (double)t, (double)offset, (double)K_One / (double)freq);
-    printf("offset0: %g  offset1: %g\n", (double)offsets[0], (double)offsets[1]);
-    printf("cycle0: %g  cycle1: %g\n", (double)cycles[0], (double)cycles[1]);
-    float t0 = (float)((double)freq * (double)cycles[0] * (double)t);
-    double t1Wide = (double)freq * (double)cycles[1] * (double)t;   // printed unrounded
-    float t1 = (float)t1Wide;
-    printf("before offset t0: %g  t1: %g\n", (double)t0, t1Wide);
-    float c0 = (float)(CycleTime(t0, 0.0f, (float)((double)cycles[0] + (double)cycles[0])) - (double)offsets[0]);
-    float c1 = (float)(CycleTime(t1, 0.0f, (float)((double)cycles[1] + (double)cycles[1])) - (double)offsets[1]);
+    float t = time + offset;
+    int cIdx = ComputeCycleIdx(t, 0.0f, 2.0f / freq);
+    printf("currTime: %g  offset: %g   cycle: %g\n", t, offset, 1.0 / freq);
+    printf("offset0: %g  offset1: %g\n", offsets[0], offsets[1]);
+    printf("cycle0: %g  cycle1: %g\n", cycles[0], cycles[1]);
+    float t0 = float(double(freq) * cycles[0] * t);
+    double t1Wide = double(freq) * cycles[1] * t;   // printed unrounded
+    float t1 = float(t1Wide);
+    printf("before offset t0: %g  t1: %g\n", t0, t1Wide);
+    float c0 = float(CycleTime(t0, 0.0f, cycles[0] + cycles[0]) - offsets[0]);
+    float c1 = float(CycleTime(t1, 0.0f, cycles[1] + cycles[1]) - offsets[1]);
     if (!BlendVel(c0, c1, vel))
         return false;
     AlignCycleBeginEnd(cIdx);
@@ -517,23 +494,23 @@ void FnRunBlender::Destruct() {
     EAGL_UNTESTED("FnRunBlender::Destruct");
     vtable = VtRunBlender;
     if (fnAnims[0] != NULL)
-        ReleaseAnim(fnAnims[0]);
+        AnimPool_ReleaseFnAnim(fnAnims[0]);
     if (fnAnims[1] != NULL)
-        ReleaseAnim(fnAnims[1]);
+        AnimPool_ReleaseFnAnim(fnAnims[1]);
     if (fnVelAnims[0] != NULL)
-        ReleaseAnim(fnVelAnims[0]);
+        AnimPool_ReleaseFnAnim(fnVelAnims[0]);
     if (fnVelAnims[1] != NULL)
-        ReleaseAnim(fnVelAnims[1]);
+        AnimPool_ReleaseFnAnim(fnVelAnims[1]);
     if (numAnims != 0)
         ScratchBuffer_GetScratchBuffer(0)->FreeBuffer();
     if (anims != NULL)
-        FreeSized(anims);
+        AnimPool_FreeBlock(anims);
     if (phases != NULL)
-        FreeSized(phases);
+        AnimPool_FreeBlock(phases);
     if (vels != NULL)
-        FreeSized(vels);
+        AnimPool_FreeBlock(vels);
     if (speeds != NULL)
-        FreeSized(speeds);
+        AnimPool_FreeBlock(speeds);
     FnAnim::Destruct();
 }
 
@@ -542,7 +519,7 @@ FnRunBlender* FnRunBlender::ScalarDelete(unsigned flags) {
     EAGL_UNTESTED("FnRunBlender::ScalarDelete");
     Destruct();
     if (flags & 1)
-        EaglFree(this, 0x80);
+        EaglFree(this, sizeof(*this));
     return this;
 }
 
@@ -561,14 +538,14 @@ void FnRunBlender::SetWeight(float w) {
         i = 0;
     if (i >= numAnims - 1)
         i = numAnims - 2;
-    weight = (float)((double)w - (double)i);
+    weight = float(double(w) - i);
     if (i != idx) {
         if (i == idx + 1) {
-            ReleaseAnim(fnAnims[0]);
+            AnimPool_ReleaseFnAnim(fnAnims[0]);
             fnAnims[0] = fnAnims[1];
             fnAnims[1] = AnimPool_NewFnAnim(anims[i + 1]);
         } else if (i == idx - 1) {
-            ReleaseAnim(fnAnims[1]);
+            AnimPool_ReleaseFnAnim(fnAnims[1]);
             fnAnims[1] = fnAnims[0];
             fnAnims[0] = AnimPool_NewFnAnim(anims[i]);
         } else {
@@ -581,7 +558,7 @@ void FnRunBlender::SetWeight(float w) {
         }
         if (vels != NULL) {
             if (i == idx + 1) {
-                ReleaseAnim(fnVelAnims[0]);
+                AnimPool_ReleaseFnAnim(fnVelAnims[0]);
                 fnVelAnims[0] = fnVelAnims[1];
                 fnVelAnims[1] = AnimPool_NewFnAnim(vels[i + 1]);
             } else if (i == idx - 1) {
@@ -598,23 +575,23 @@ void FnRunBlender::SetWeight(float w) {
             }
         }
         const PhaseChanData *p0 = phases[i];
-        if (p0->flag & 1)
-            alignFrame[0] = (float)(int)p0->startTime;
+        if (p0->flags & kPhaseFlag01)
+            alignFrame[0] = float(p0->startTime);
         else
-            alignFrame[0] = (float)(int)(p0->cycles[0] + p0->startTime);
+            alignFrame[0] = float(p0->cycles[0] + p0->startTime);
         const PhaseChanData *p1 = phases[i + 1];
-        alignFrame[1] = (float)(int)p1->startTime;
-        if (!(p1->flag & 1))
-            alignFrame[1] = (float)((double)(int)p1->cycles[0] + (double)alignFrame[1]);
+        alignFrame[1] = float(p1->startTime);
+        if (!(p1->flags & kPhaseFlag01))
+            alignFrame[1] = p1->cycles[0] + alignFrame[1];
         idx = i;
         p0 = phases[idx];
-        cycles[0] = (float)((double)(int)(p0->cycles[1] + p0->cycles[0]) * (double)K_Half);
+        cycles[0] = float((p0->cycles[1] + p0->cycles[0]) * 0.5);
         p1 = phases[idx + 1];
-        cycles[1] = (float)((double)(int)(p1->cycles[1] + p1->cycles[0]) * (double)K_Half);
+        cycles[1] = float((p1->cycles[1] + p1->cycles[0]) * 0.5);
     }
     double old = freq;
-    freq = (float)(((double)K_One - (double)weight) / (double)cycles[0] + (double)weight / (double)cycles[1]);
-    offset = (float)(((double)prevTime + (double)offset) / (double)freq * old - (double)prevTime);
+    freq = float((1.0 - weight) / cycles[0] + double(weight) / cycles[1]);
+    offset = float((double(prevTime) + offset) / freq * old - prevTime);
 }
 
 // The phase channels are kept from objects built and released at once (as built); the speeds are the velocity
@@ -623,28 +600,28 @@ void FnRunBlender::SetWeight(float w) {
 void FnRunBlender::SetAnims(Skeleton *s, int count, uint8_t **animData, uint8_t **phaseData, uint8_t **velData) {
     EAGL_UNTESTED("FnRunBlender::SetAnims");
     skeleton = s;
-    ScratchBuffer_GetScratchBuffer(0)->AllocateBuffer((uint32_t)(s->count * 48));
-    uint32_t bytes = (uint32_t)(count * 4);
+    ScratchBuffer_GetScratchBuffer(0)->AllocateBuffer(s->count * sizeof(float[12]));
+    uint32_t bytes = count * sizeof(void *);
     numAnims = count;
-    anims = (uint8_t **)AnimPool_NewBlock(bytes);
-    phases = (PhaseChanData **)AnimPool_NewBlock(bytes);
+    anims = static_cast<uint8_t **>(AnimPool_NewBlock(bytes));
+    phases = static_cast<PhaseChanData **>(AnimPool_NewBlock(bytes));
     for (int i = 0; i < numAnims; i++) {
         anims[i] = animData[i];
         FnAnim *phase = AnimPool_NewFnAnim(phaseData[i]);
         phases[i] = AnimVCall<PhaseChanData *>(phase, kSlotGetPhaseChan);
-        ReleaseAnim(phase);
+        AnimPool_ReleaseFnAnim(phase);
     }
     if (velData == NULL)
         return;
-    vels = (uint8_t **)AnimPool_NewBlock(bytes);
+    vels = static_cast<uint8_t **>(AnimPool_NewBlock(bytes));
     memcpy(vels, velData, bytes);
-    speeds = (float *)AnimPool_NewBlock(bytes);
+    speeds = static_cast<float *>(AnimPool_NewBlock(bytes));
     for (int i = 0; i < numAnims; i++) {
         FnAnim *v = AnimPool_NewFnAnim(velData[i]);
         float vel[2];                // as built: read whether or not EvalVel2D wrote it
         AnimVCall<bool>(v, kSlotEvalVel2D, 0.0f, vel);
-        speeds[i] = (float)sqrt((double)vel[1] * (double)vel[1] + (double)vel[0] * (double)vel[0]);
-        ReleaseAnim(v);
+        speeds[i] = float(sqrt(double(vel[1]) * vel[1] + double(vel[0]) * vel[0]));
+        AnimPool_ReleaseFnAnim(v);
     }
 }
 
@@ -674,41 +651,41 @@ bool FnRunBlender::EvalPhase(float time, float *phase) {
 bool FnRunBlender::FindMatchTime(const MatchPhaseInput *input, float *time) {
     EAGL_UNTESTED("FnRunBlender::FindMatchTime");
     float phase = 0.0f;
-    double half = ((double)cycles[1] - (double)cycles[0]) * (double)weight + (double)cycles[0];
-    int limit = Truncate((float)(half + half));
+    double half = (double(cycles[1]) - cycles[0]) * weight + cycles[0];
+    int limit = Truncate(float(half + half));
     float angle = input->angle;
     float dAngle = input->dAngle;
-    if (input->searchLength > 0.0f && (double)limit > (double)input->searchLength)
+    if (input->searchLength > 0.0f && double(limit) > input->searchLength)
         limit = Truncate(input->searchLength) + 1;
     AnimVCall<bool>(this, kSlotEvalPhase, 0.0f, &phase);
-    double d = (double)angle - (double)phase;
+    double d = double(angle) - phase;
     float previous = phase;
-    float best = (float)d;
+    float best = float(d);
     if (d < 0.0)
-        best = (float)((double)best * (double)K_MinusOne);
+        best = best * -1.0f;
     int bestIdx = 0;
     for (int i = 1; i < limit; i++) {
-        AnimVCall<bool>(this, kSlotEvalPhase, (float)i, &phase);
+        AnimVCall<bool>(this, kSlotEvalPhase, float(i), &phase);
         if (previous <= angle && angle <= phase) {
-            double step = (double)phase - (double)previous;
-            if ((double)dAngle * step >= 0.0) {
+            double step = double(phase) - previous;
+            if (dAngle * step >= 0.0) {
                 if (step == 0.0)
-                    *time = (float)((double)(i - 1) + (double)K_Half);
+                    *time = float((i - 1) + 0.5);
                 else
-                    *time = (float)(((double)angle - (double)previous) / step + (double)(i - 1));
+                    *time = float((double(angle) - previous) / step + (i - 1));
                 return true;
             }
         }
-        double e = (double)angle - (double)phase;
+        double e = double(angle) - phase;
         if (e < 0.0)
-            e = e * (double)K_MinusOne;
-        if (e < (double)best) {
-            best = (float)e;
+            e = e * -1.0;
+        if (e < best) {
+            best = float(e);
             bestIdx = i;
         }
         previous = phase;
     }
-    *time = (float)bestIdx;
+    *time = float(bestIdx);
     return true;
 }
 
@@ -744,16 +721,16 @@ bool FnRunBlender::BlendFacing(float t0, float t1, float *facing) {
     if (!AnimVCall<bool>(fnAnims[0], kSlotEvalSQT, t0, pose, (void *)NULL))
         return false;
     float q0[4], q[4];
-    memcpy(q0, pose + 4, 16);
+    memcpy(q0, pose + 4, sizeof(q0));
     if (!(weight == 0.0f)) {
         skeleton->GetStillPose(pose, NULL);
         if (!AnimVCall<bool>(fnAnims[1], kSlotEvalSQT, t1, pose, (void *)NULL))
             return false;
         float q1[4];
-        memcpy(q1, pose + 4, 16);
+        memcpy(q1, pose + 4, sizeof(q1));
         EAGL_VU0_fastqslerp(weight, q0, q1, q);
     } else {
-        memcpy(q, pose + 4, 16);
+        memcpy(q, pose + 4, sizeof(float[4]));
     }
     float v[4] = { 0.0f, 1.0f, 0.0f, 1.0f };
     float out[4];
@@ -772,7 +749,7 @@ void FnRunBlender::SetSpeed(float s) {
         return;
     }
     if (s >= speeds[numAnims - 1]) {
-        SetWeight((float)(numAnims - 1));
+        SetWeight(float(numAnims - 1));
         return;
     }
     int j = 0;
@@ -781,8 +758,7 @@ void FnRunBlender::SetSpeed(float s) {
             j = k;
             break;
         }
-    SetWeight((float)(((double)s - (double)speeds[j - 1]) / ((double)speeds[j] - (double)speeds[j - 1]) +
-                      (double)(j - 1)));
+    SetWeight(float((double(s) - speeds[j - 1]) / (double(speeds[j]) - speeds[j - 1]) + (j - 1)));
 }
 
 // FUNC_AT(0x00105da0)
@@ -812,16 +788,16 @@ void FnRunBlender::ComputeRootQ(float t0, float t1, float *q) {
     if (!AnimVCall<bool>(fnAnims[0], kSlotEvalSQT, t0, pose, (void *)NULL))
         return;
     float q0[4];
-    memcpy(q0, pose + 4, 16);
+    memcpy(q0, pose + 4, sizeof(q0));
     if (weight == 0.0f) {
-        memcpy(q, q0, 16);
+        memcpy(q, q0, sizeof(q0));
         return;
     }
     skeleton->GetStillPose(pose, NULL);
     if (!AnimVCall<bool>(fnAnims[1], kSlotEvalSQT, t1, pose, (void *)NULL))
         return;
     float q1[4];
-    memcpy(q1, pose + 4, 16);
+    memcpy(q1, pose + 4, sizeof(q1));
     EAGL_VU0_fastqslerp(weight, q0, q1, q);
 }
 
@@ -834,7 +810,7 @@ void FnRunBlender::ComputeBeginRootQ(float *q) {
 // FUNC_AT(0x00105f10)
 void FnRunBlender::ComputeEndRootQ(float *q) {
     EAGL_UNTESTED("FnRunBlender::ComputeEndRootQ");
-    ComputeRootQ((float)PhaseLastFrame(phases[idx]), (float)PhaseLastFrame(phases[idx + 1]), q);
+    ComputeRootQ(LastFrame(phases[idx]), LastFrame(phases[idx + 1]), q);
 }
 
 // FUNC_AT(0x00105f50)
@@ -853,12 +829,12 @@ void FnRunBlender::AlignCycleBeginEnd(int cIdx) {
         return;
     float begin[2], end[2], q[4], product[4];
     BlendFacing(0.0f, 0.0f, begin);
-    BlendFacing((float)PhaseLastFrame(phases[idx]), (float)PhaseLastFrame(phases[idx + 1]), end);
+    BlendFacing(LastFrame(phases[idx]), LastFrame(phases[idx + 1]), end);
     ComputeAlignQ(begin, end, q);
     if (cycleIdx - 1 == cIdx)
-        q[1] = (float)((double)q[1] * (double)K_MinusOne);
+        q[1] = q[1] * -1.0f;   // FMUL by -1 (a NaN keeps its sign)
     QuatMultiply(alignQ, q, product);
-    memcpy(alignQ, product, 16);
+    memcpy(alignQ, product, sizeof(product));
     cycleIdx = cIdx;
 }
 
@@ -870,12 +846,12 @@ bool FnRunBlender::EvalSQT(float time, float *sqt, void *mask) {
     prevTime = time;
     if (fnAnims[0] == NULL)
         SetWeight(0.0f);
-    double t = (double)time + (double)offset;   // kept unrounded on the x87 stack
-    float t0 = (float)((double)cycles[0] * (double)freq * t + (double)alignFrame[0]);
-    float t1 = (float)((double)cycles[1] * (double)freq * t + (double)alignFrame[1]);
-    int cIdx = ComputeCycleIdx(t0, 0.0f, (float)PhaseLastFrame(phases[idx]));
-    float c0 = (float)CycleTime(t0, 0.0f, (float)PhaseLastFrame(phases[idx]));
-    float c1 = (float)CycleTime(t1, 0.0f, (float)PhaseLastFrame(phases[idx + 1]));
+    double t = double(time) + offset;   // kept unrounded on the x87 stack
+    float t0 = float(double(cycles[0]) * freq * t + alignFrame[0]);
+    float t1 = float(double(cycles[1]) * freq * t + alignFrame[1]);
+    int cIdx = ComputeCycleIdx(t0, 0.0f, LastFrame(phases[idx]));
+    float c0 = float(CycleTime(t0, 0.0f, LastFrame(phases[idx])));
+    float c1 = float(CycleTime(t1, 0.0f, LastFrame(phases[idx + 1])));
     skeleton->GetStillPose(sqt, NULL);
     if (!AnimVCall<bool>(fnAnims[0], kSlotEvalSQT, c0, sqt, (void *)NULL))
         return false;
@@ -884,7 +860,7 @@ bool FnRunBlender::EvalSQT(float time, float *sqt, void *mask) {
         skeleton->GetStillPose(pose, NULL);
         if (!AnimVCall<bool>(fnAnims[1], kSlotEvalSQT, c1, pose, (void *)NULL))
             return false;
-        PoseBlend(skeleton->count, weight, sqt, pose, sqt, NULL);
+        AnimBlendPoseQT(skeleton->count, weight, sqt, pose, sqt, NULL);
     }
     AlignCycleBeginEnd(cIdx);
     AlignPoseRoot(alignQ, sqt);
@@ -899,12 +875,12 @@ bool FnRunBlender::EvalVel2D(float time, float *vel) {
         return false;
     if (fnVelAnims[0] == NULL)
         SetWeight(0.0f);
-    double t = (double)time + (double)offset;
-    float t0 = (float)((double)cycles[0] * (double)freq * t + (double)alignFrame[0]);
-    float t1 = (float)((double)cycles[1] * (double)freq * t + (double)alignFrame[1]);
-    int cIdx = ComputeCycleIdx(t0, 0.0f, (float)PhaseLastFrame(phases[idx]));
-    float c0 = (float)CycleTime(t0, 0.0f, (float)PhaseLastFrame(phases[idx]));
-    float c1 = (float)CycleTime(t1, 0.0f, (float)PhaseLastFrame(phases[idx + 1]));
+    double t = double(time) + offset;
+    float t0 = float(double(cycles[0]) * freq * t + alignFrame[0]);
+    float t1 = float(double(cycles[1]) * freq * t + alignFrame[1]);
+    int cIdx = ComputeCycleIdx(t0, 0.0f, LastFrame(phases[idx]));
+    float c0 = float(CycleTime(t0, 0.0f, LastFrame(phases[idx])));
+    float c1 = float(CycleTime(t1, 0.0f, LastFrame(phases[idx + 1])));
     if (!BlendVel(c0, c1, vel))
         return false;
     AlignCycleBeginEnd(cIdx);

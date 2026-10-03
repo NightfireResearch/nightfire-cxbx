@@ -3,16 +3,19 @@
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"
 
+#include <bit>
 #include <stdint.h>
 #include <string.h>
+#include <utility>
 
 // ---------------------------------------------------------------------------------------------------------------
 // EAGL::Transform: the matrix class EAGL and EAGLAnim build their transforms with (docs/driving/eagl.md 4.7). Each
 // method is the original at the same address, ported from it bit for bit: the x87 arithmetic in double in the
 // original's order with its float roundings (Invert, the determinants, the quaternion conversions and BuildSQT are
-// generated statement for statement from the listing), the products through D3DXMatrixMultiply as the originals'
-// are, BuildRotate in the original instructions because it uses FSIN and FCOS unrounded.
-// devtools/TransformShadow.cpp compares every method with the original.
+// generated statement for statement from the listing, then tidied: a double intermediate used once is written
+// inline, and one operation on floats rounded straight to a float is written in float, which gives the same bits),
+// the products through D3DXMatrixMultiply as the originals' are, BuildRotate in the original instructions because it
+// uses FSIN and FCOS unrounded. devtools/MathShadow.cpp compares every method with the original.
 // ---------------------------------------------------------------------------------------------------------------
 
 #ifdef _MSC_VER
@@ -22,19 +25,13 @@
 #pragma STDC FP_CONTRACT OFF
 #endif
 
-typedef float F;
-
-static inline float FloatBits(uint32_t u) {
-    float f;
-    memcpy(&f, &u, 4);
-    return f;
-}
+static const float kIdentity[16] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
 
 // this = a * b through D3DXMatrixMultiply into a temporary, then copied in (the originals' MEM_copy)
 static inline void Multiply(Transform *self, const float *a, const float *b) {
     alignas(16) float t[16];
     VU0_MATRIX4_mult(t, a, b);
-    MEM_copy(self->m, t, 0x40);
+    MEM_copy(self->m, t, sizeof(t));
 }
 
 // AUTOINJECT
@@ -44,34 +41,28 @@ void Transform::PostMult(const float *matrix) {
 
 // FUNC_AT(0x000f1590)
 void Transform::BuildTranslate(float x, float y, float z) {
-    static const float identity[16] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
-    memcpy(m, identity, 48);
-    memcpy(&m[12], &x, 4);
-    memcpy(&m[13], &y, 4);
-    memcpy(&m[14], &z, 4);
+    memcpy(m, kIdentity, 12 * sizeof(float));   // rows 0..2
+    m[12] = x;
+    m[13] = y;
+    m[14] = z;
     m[15] = 1.0f;
 }
 
-// A 3x3 rotation (nine floats) and a translation, copied as integers; the 4-float form copies t.w, the 3-float form
-// writes 1.
+// A 3x3 rotation (nine floats) and a translation; the 4-float form copies t.w, the 3-float form writes 1.
 // FUNC_AT(0x000f1660)
 void Transform::BuildRotTrans4(const float *r, const float *t) {
-    uint32_t *o = (uint32_t *)m;
-    const uint32_t *a = (const uint32_t *)r, *b = (const uint32_t *)t;
-    o[0] = a[0]; o[1] = a[1]; o[2] = a[2]; o[3] = 0;
-    o[4] = a[3]; o[5] = a[4]; o[6] = a[5]; o[7] = 0;
-    o[8] = a[6]; o[9] = a[7]; o[10] = a[8]; o[11] = 0;
-    o[12] = b[0]; o[13] = b[1]; o[14] = b[2]; o[15] = b[3];
+    m[0] = r[0]; m[1] = r[1]; m[2] = r[2]; m[3] = 0.0f;
+    m[4] = r[3]; m[5] = r[4]; m[6] = r[5]; m[7] = 0.0f;
+    m[8] = r[6]; m[9] = r[7]; m[10] = r[8]; m[11] = 0.0f;
+    m[12] = t[0]; m[13] = t[1]; m[14] = t[2]; m[15] = t[3];
 }
 
 // FUNC_AT(0x000f16d0)
 void Transform::BuildRotTrans3(const float *r, const float *t) {
-    uint32_t *o = (uint32_t *)m;
-    const uint32_t *a = (const uint32_t *)r, *b = (const uint32_t *)t;
-    o[0] = a[0]; o[1] = a[1]; o[2] = a[2]; o[3] = 0;
-    o[4] = a[3]; o[5] = a[4]; o[6] = a[5]; o[7] = 0;
-    o[8] = a[6]; o[9] = a[7]; o[10] = a[8]; o[11] = 0;
-    o[12] = b[0]; o[13] = b[1]; o[14] = b[2];
+    m[0] = r[0]; m[1] = r[1]; m[2] = r[2]; m[3] = 0.0f;
+    m[4] = r[3]; m[5] = r[4]; m[6] = r[5]; m[7] = 0.0f;
+    m[8] = r[6]; m[9] = r[7]; m[10] = r[8]; m[11] = 0.0f;
+    m[12] = t[0]; m[13] = t[1]; m[14] = t[2];
     m[15] = 1.0f;
 }
 
@@ -86,7 +77,7 @@ void Transform::BuildAimedTrans(const float *aim, const float *up, int aimRow, i
     m[third] = side[0];
     m[third + 1] = side[1];
     m[third + 2] = side[2];
-    memcpy(&m[aimRow], aim, 12);
+    memcpy(&m[aimRow], aim, 3 * sizeof(float));
     m[upRow] = top[0];
     m[upRow + 1] = top[1];
     m[upRow + 2] = top[2];
@@ -96,7 +87,7 @@ void Transform::BuildAimedTrans(const float *aim, const float *up, int aimRow, i
 
 // AUTOINJECT
 void Transform::BuildMatrix(const float *matrix) {
-    memcpy(m, matrix, 64);
+    memcpy(m, matrix, sizeof(m));
 }
 
 // The rotation as a quaternion and row 3 as the translation (all four words). Ghidra calls it BuildQuatTrans.
@@ -104,20 +95,18 @@ void Transform::BuildMatrix(const float *matrix) {
 void Transform::ExtractQuatTrans(float *quaternion, float *translation) const {
     float r[9] = { m[0], m[1], m[2], m[4], m[5], m[6], m[8], m[9], m[10] };
     EAGL_RotationToQuat(r, quaternion);
-    memcpy(translation, &m[12], 16);
+    memcpy(translation, &m[12], 4 * sizeof(float));
 }
 
-// In place, as the original swaps (some words through the x87, some as integers).
+// In place.
 // AUTOINJECT
 void Transform::Transpose() {
-    uint32_t *o = (uint32_t *)m;
-    uint32_t t;
-    t = o[1]; o[1] = o[4]; o[4] = t;
-    t = o[2]; o[2] = o[8]; o[8] = t;
-    t = o[3]; o[3] = o[12]; o[12] = t;
-    t = o[6]; o[6] = o[9]; o[9] = t;
-    t = o[7]; o[7] = o[13]; o[13] = t;
-    t = o[11]; o[11] = o[14]; o[14] = t;
+    std::swap(m[1], m[4]);
+    std::swap(m[2], m[8]);
+    std::swap(m[3], m[12]);
+    std::swap(m[6], m[9]);
+    std::swap(m[7], m[13]);
+    std::swap(m[11], m[14]);
 }
 
 // 0x000f13b0, the determinant Invert and Determinant use (EAX = matrix): the same instructions as the maths
@@ -126,281 +115,95 @@ static inline double Determinant4(const float *m) {
     return Determinant4x4(m);
 }
 
+constexpr float kSingular = 1e-5f;   // Invert leaves the destination alone for a determinant this close to 0
+static_assert(std::bit_cast<uint32_t>(kSingular) == 0x3727c5ac, "the original's 1e-5");
+
 // destination = the inverse of source, unless the determinant is within 1e-5 of zero (NaN inverts). Answers the
-// determinant, unrounded; the callers pop it.
+// determinant, unrounded; the callers pop it. source may be destination: every element is read before the first
+// store. Column 0 stays on the x87 stack (double) throughout; the rest is read as floats.
 // AUTOINJECT
 double Transform::Invert(const float *source, float *destination) {
     const float *m = source;
     float *o = destination;
     double det = Determinant4(source);
-    if (det < (double)FloatBits(0x3727c5ac) && !(det <= -(double)FloatBits(0x3727c5ac)))   // +-1e-5
+    if (det < kSingular && !(det <= -kSingular))
         return det;
-    float f1 = m[1];
-    double d2 = 1.0 / det;
-    float f3 = m[5];
-    float f4 = m[9];
-    float f5 = m[2];
-    float f6 = m[13];
-    float f7 = m[10];
-    float f8 = m[6];
-    float f9 = m[3];
-    float f10 = m[14];
-    float f11 = m[7];
-    float f12 = m[11];
-    double d13 = (double)m[0];
-    double d14 = (double)m[4];
-    double d15 = (double)m[8];
-    double d16 = (double)m[12];
-    float f17 = m[15];
-    double d18 = (double)f17 * (double)f7;
-    double d19 = (double)f12 * (double)f10;
-    double d20 = d18 - d19;
-    float f21 = (float)d20;
-    double d22 = (double)f11 * (double)f10;
-    float f23 = (float)d22;
-    double d24 = (double)f17 * (double)f8;
-    float f25 = (float)d24;
-    double d26 = (double)f23 - (double)f25;
-    float f27 = (float)d26;
-    double d28 = (double)f12 * (double)f8;
-    double d29 = (double)f11 * (double)f7;
-    double d30 = d28 - d29;
-    float f31 = (float)d30;
-    double d32 = d30 * (double)f6;
-    double d33 = (double)f27 * (double)f4;
-    double d34 = d32 + d33;
-    double d35 = (double)f21 * (double)f3;
-    double d36 = d34 + d35;
-    double d37 = d36 * d2;
-    float f38 = (float)d37;
-    o[0] = f38;
-    double d39 = (double)f9 * (double)f10;
-    double d40 = (double)f17 * (double)f5;
-    double d41 = d39 - d40;
-    float f42 = (float)d41;
-    double d43 = (double)f12 * (double)f5;
-    float f44 = (float)d43;
-    double d45 = (double)f9 * (double)f7;
-    float f46 = (float)d45;
-    double d47 = (double)f44 - (double)f46;
-    float f48 = (float)d47;
-    double d49 = d47 * (double)f6;
-    double d50 = (double)f42 * (double)f4;
-    double d51 = d49 + d50;
-    double d52 = (double)f21 * (double)f1;
-    double d53 = d51 + d52;
-    double d54 = -d53;
-    double d55 = d54 * d2;
-    float f56 = (float)d55;
-    o[1] = f56;
-    double d57 = (double)f25 - (double)f23;
-    float f58 = (float)d57;
-    double d59 = (double)f11 * (double)f5;
-    double d60 = (double)f9 * (double)f8;
-    double d61 = d59 - d60;
-    float f62 = (float)d61;
-    double d63 = d61 * (double)f6;
-    double d64 = (double)f58 * (double)f1;
-    double d65 = d63 + d64;
-    double d66 = (double)f42 * (double)f3;
-    double d67 = d65 + d66;
-    double d68 = d67 * d2;
-    float f69 = (float)d68;
-    o[2] = f69;
-    double d70 = (double)f46 - (double)f44;
-    float f71 = (float)d70;
-    double d72 = d70 * (double)f3;
-    double d73 = (double)f62 * (double)f4;
-    double d74 = d72 + d73;
-    double d75 = (double)f31 * (double)f1;
-    double d76 = d74 + d75;
-    double d77 = -d76;
-    double d78 = d77 * d2;
-    float f79 = (float)d78;
-    o[3] = f79;
-    double d80 = (double)f31 * d16;
-    double d81 = (double)f27 * d15;
-    double d82 = d80 + d81;
-    double d83 = (double)f21 * d14;
-    double d84 = d82 + d83;
-    double d85 = -d84;
-    double d86 = d85 * d2;
-    float f87 = (float)d86;
-    o[4] = f87;
-    double d88 = (double)f48 * d16;
-    double d89 = (double)f42 * d15;
-    double d90 = d88 + d89;
-    double d91 = (double)f21 * d13;
-    double d92 = d90 + d91;
-    double d93 = d92 * d2;
-    float f94 = (float)d93;
-    o[5] = f94;
-    double d95 = (double)f62 * d16;
-    double d96 = (double)f58 * d13;
-    double d97 = d95 + d96;
-    double d98 = (double)f42 * d14;
-    double d99 = d97 + d98;
-    double d100 = -d99;
-    double d101 = d100 * d2;
-    float f102 = (float)d101;
-    o[6] = f102;
-    double d103 = (double)f71 * d14;
-    double d104 = (double)f62 * d15;
-    double d105 = d103 + d104;
-    double d106 = (double)f31 * d13;
-    double d107 = d105 + d106;
-    double d108 = d107 * d2;
-    float f109 = (float)d108;
-    o[7] = f109;
-    double d110 = (double)f17 * (double)f4;
-    double d111 = (double)f12 * (double)f6;
-    double d112 = d110 - d111;
-    float f113 = (float)d112;
-    double d114 = (double)f11 * (double)f6;
-    float f115 = (float)d114;
-    double d116 = (double)f17 * (double)f3;
-    float f117 = (float)d116;
-    double d118 = (double)f12 * (double)f3;
-    double d119 = (double)f11 * (double)f4;
-    double d120 = d118 - d119;
-    float f121 = (float)d120;
-    double d122 = (double)f115 - (double)f117;
-    double d123 = d122 * d15;
-    double d124 = (double)f121 * d16;
-    double d125 = d123 + d124;
-    double d126 = (double)f113 * d14;
-    double d127 = d125 + d126;
-    double d128 = d127 * d2;
-    float f129 = (float)d128;
-    o[8] = f129;
-    double d130 = (double)f9 * (double)f6;
-    double d131 = (double)f17 * (double)f1;
-    double d132 = d130 - d131;
-    float f133 = (float)d132;
-    double d134 = (double)f12 * (double)f1;
-    float f135 = (float)d134;
-    double d136 = (double)f9 * (double)f4;
-    float f137 = (float)d136;
-    double d138 = (double)f135 - (double)f137;
-    double d139 = d138 * d16;
-    double d140 = (double)f133 * d15;
-    double d141 = d139 + d140;
-    double d142 = (double)f113 * d13;
-    double d143 = d141 + d142;
-    double d144 = -d143;
-    double d145 = d144 * d2;
-    float f146 = (float)d145;
-    o[9] = f146;
-    double d147 = (double)f11 * (double)f1;
-    double d148 = (double)f9 * (double)f3;
-    double d149 = d147 - d148;
-    float f150 = (float)d149;
-    double d151 = (double)f117 - (double)f115;
-    double d152 = d151 * d13;
-    double d153 = (double)f150 * d16;
-    double d154 = d152 + d153;
-    double d155 = (double)f133 * d14;
-    double d156 = d154 + d155;
-    double d157 = d156 * d2;
-    float f158 = (float)d157;
-    o[10] = f158;
-    double d159 = (double)f137 - (double)f135;
-    double d160 = d159 * d14;
-    double d161 = (double)f150 * d15;
-    double d162 = d160 + d161;
-    double d163 = (double)f121 * d13;
-    double d164 = d162 + d163;
-    double d165 = -d164;
-    double d166 = d165 * d2;
-    float f167 = (float)d166;
-    o[11] = f167;
-    double d168 = (double)f10 * (double)f4;
-    double d169 = (double)f7 * (double)f6;
-    double d170 = d168 - d169;
-    float f171 = (float)d170;
-    double d172 = (double)f8 * (double)f6;
-    float f173 = (float)d172;
-    double d174 = (double)f10 * (double)f3;
-    float f175 = (float)d174;
-    double d176 = (double)f7 * (double)f3;
-    double d177 = (double)f8 * (double)f4;
-    double d178 = d176 - d177;
-    float f179 = (float)d178;
-    double d180 = (double)f173 - (double)f175;
-    double d181 = d180 * d15;
-    double d182 = (double)f179 * d16;
-    double d183 = d181 + d182;
-    double d184 = (double)f171 * d14;
-    double d185 = d183 + d184;
-    double d186 = -d185;
-    double d187 = d186 * d2;
-    float f188 = (float)d187;
-    o[12] = f188;
-    double d189 = (double)f5 * (double)f6;
-    double d190 = (double)f10 * (double)f1;
-    double d191 = d189 - d190;
-    float f192 = (float)d191;
-    double d193 = (double)f7 * (double)f1;
-    float f194 = (float)d193;
-    double d195 = (double)f5 * (double)f4;
-    float f196 = (float)d195;
-    double d197 = (double)f194 - (double)f196;
-    double d198 = d197 * d16;
-    double d199 = (double)f192 * d15;
-    double d200 = d198 + d199;
-    double d201 = (double)f171 * d13;
-    double d202 = d200 + d201;
-    double d203 = d202 * d2;
-    float f204 = (float)d203;
-    o[13] = f204;
-    double d205 = (double)f8 * (double)f1;
-    double d206 = (double)f5 * (double)f3;
-    double d207 = d205 - d206;
-    float f208 = (float)d207;
-    double d209 = (double)f175 - (double)f173;
-    double d210 = d209 * d13;
-    double d211 = (double)f208 * d16;
-    double d212 = d210 + d211;
-    double d213 = (double)f192 * d14;
-    double d214 = d212 + d213;
-    double d215 = -d214;
-    double d216 = d215 * d2;
-    float f217 = (float)d216;
-    o[14] = f217;
-    double d218 = (double)f196 - (double)f194;
-    double d219 = d218 * d14;
-    double d220 = (double)f208 * d15;
-    double d221 = d219 + d220;
-    double d222 = (double)f179 * d13;
-    double d223 = d221 + d222;
-    double d224 = d223 * d2;
-    float f225 = (float)d224;
-    o[15] = f225;
+    double e0 = m[0];
+    float e1 = m[1];
+    float e2 = m[2];
+    float e3 = m[3];
+    double e4 = m[4];
+    float e5 = m[5];
+    float e6 = m[6];
+    float e7 = m[7];
+    double e8 = m[8];
+    float e9 = m[9];
+    float e10 = m[10];
+    float e11 = m[11];
+    double e12 = m[12];
+    float e13 = m[13];
+    float e14 = m[14];
+    float e15 = m[15];
+    double invDet = 1.0 / det;
+    float f21 = float(double(e15) * e10 - double(e11) * e14);
+    float f23 = e7 * e14;
+    float f25 = e15 * e6;
+    float f27 = f23 - f25;
+    double d30 = double(e11) * e6 - double(e7) * e10;
+    float f31 = float(d30);
+    o[0] = float((d30 * e13 + double(f27) * e9 + double(f21) * e5) * invDet);
+    float f42 = float(double(e3) * e14 - double(e15) * e2);
+    float f44 = e11 * e2;
+    float f46 = e3 * e10;
+    double d47 = double(f44) - f46;
+    float f48 = float(d47);
+    o[1] = float(-(d47 * e13 + double(f42) * e9 + double(f21) * e1) * invDet);
+    float f58 = f25 - f23;
+    double d61 = double(e7) * e2 - double(e3) * e6;
+    float f62 = float(d61);
+    o[2] = float((d61 * e13 + double(f58) * e1 + double(f42) * e5) * invDet);
+    double d70 = double(f46) - f44;
+    float f71 = float(d70);
+    o[3] = float(-(d70 * e5 + double(f62) * e9 + double(f31) * e1) * invDet);
+    o[4] = float(-(f31 * e12 + f27 * e8 + f21 * e4) * invDet);
+    o[5] = float((f48 * e12 + f42 * e8 + f21 * e0) * invDet);
+    o[6] = float(-(f62 * e12 + f58 * e0 + f42 * e4) * invDet);
+    o[7] = float((f71 * e4 + f62 * e8 + f31 * e0) * invDet);
+    float f113 = float(double(e15) * e9 - double(e11) * e13);
+    float f115 = e7 * e13;
+    float f117 = e15 * e5;
+    float f121 = float(double(e11) * e5 - double(e7) * e9);
+    o[8] = float(((double(f115) - f117) * e8 + f121 * e12 + f113 * e4) * invDet);
+    float f133 = float(double(e3) * e13 - double(e15) * e1);
+    float f135 = e11 * e1;
+    float f137 = e3 * e9;
+    o[9] = float(-((double(f135) - f137) * e12 + f133 * e8 + f113 * e0) * invDet);
+    float f150 = float(double(e7) * e1 - double(e3) * e5);
+    o[10] = float(((double(f117) - f115) * e0 + f150 * e12 + f133 * e4) * invDet);
+    o[11] = float(-((double(f137) - f135) * e4 + f150 * e8 + f121 * e0) * invDet);
+    float f171 = float(double(e14) * e9 - double(e10) * e13);
+    float f173 = e6 * e13;
+    float f175 = e14 * e5;
+    float f179 = float(double(e10) * e5 - double(e6) * e9);
+    o[12] = float(-((double(f173) - f175) * e8 + f179 * e12 + f171 * e4) * invDet);
+    float f192 = float(double(e2) * e13 - double(e14) * e1);
+    float f194 = e10 * e1;
+    float f196 = e2 * e9;
+    o[13] = float(((double(f194) - f196) * e12 + f192 * e8 + f171 * e0) * invDet);
+    float f208 = float(double(e6) * e1 - double(e2) * e5);
+    o[14] = float(-((double(f175) - f173) * e0 + f208 * e12 + f192 * e4) * invDet);
+    o[15] = float(((double(f196) - f194) * e4 + f208 * e8 + f179 * e0) * invDet);
     return det;
 }
 
 // The 3x3 case of Determinant (generated from 0x000f27bb..0x000f2801).
 static double Determinant3(const float *m) {
-    double d1 = (double)m[4] * (double)m[9];
-    double d2 = (double)m[5] * (double)m[8];
-    double d3 = d1 - d2;
-    double d4 = d3 * (double)m[2];
-    double d5 = (double)m[6] * (double)m[8];
-    double d6 = (double)m[4] * (double)m[10];
-    double d7 = d5 - d6;
-    double d8 = d7 * (double)m[1];
-    double d9 = d4 + d8;
-    double d10 = (double)m[5] * (double)m[10];
-    double d11 = (double)m[6] * (double)m[9];
-    double d12 = d10 - d11;
-    double d13 = d12 * (double)m[0];
-    return d9 + d13;
+    return (double(m[4]) * m[9] - double(m[5]) * m[8]) * m[2] + (double(m[6]) * m[8] - double(m[4]) * m[10]) * m[1] +
+           (double(m[5]) * m[10] - double(m[6]) * m[9]) * m[0];
 }
 
 // The minor that leaves out one row and one column, rows four floats apart as in a MATRIX4.
 static void Minor(const float *matrix, int row, int column, int size, float *minor) {
-    const uint32_t *s = (const uint32_t *)matrix;
-    uint32_t *d = (uint32_t *)minor;
     int rowOffset = 0;
     for (int r = 0; r < size; r++) {
         if (r == row)
@@ -409,7 +212,7 @@ static void Minor(const float *matrix, int row, int column, int size, float *min
         for (int c = 0; c < size; c++) {
             if (c == column)
                 continue;
-            d[rowOffset + c2++] = s[c + r * 4];
+            minor[rowOffset + c2++] = matrix[c + r * 4];
         }
         rowOffset += 4;
     }
@@ -430,8 +233,8 @@ double Transform::Determinant(const float *matrix, int size) {
     for (int column = 0; column < size; column++) {
         float minor[64];
         Minor(matrix, 0, column, size, minor);
-        result = (Determinant(minor, size - 1) * matrix[column]) * sign + sum;
-        sum = (F)result;
+        result = Determinant(minor, size - 1) * matrix[column] * sign + sum;
+        sum = float(result);
         sign = -sign;
     }
     return result;
@@ -449,19 +252,18 @@ double Transform::ElementMinor(const float *matrix, int row, int column, int siz
 // ---- Append (this = this * B) and Prepend (this = B * this), B built locally
 
 static inline void Diagonal(float *b, float x, float y, float z, float w) {
-    memset(b, 0, 64);
-    memcpy(&b[0], &x, 4);
-    memcpy(&b[5], &y, 4);
-    memcpy(&b[10], &z, 4);
-    memcpy(&b[15], &w, 4);
+    memset(b, 0, 16 * sizeof(float));
+    b[0] = x;
+    b[5] = y;
+    b[10] = z;
+    b[15] = w;
 }
 
 static inline void Translation(float *b, float x, float y, float z) {
-    static const float identity[16] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
-    memcpy(b, identity, 64);
-    memcpy(&b[12], &x, 4);
-    memcpy(&b[13], &y, 4);
-    memcpy(&b[14], &z, 4);
+    memcpy(b, kIdentity, sizeof(kIdentity));
+    b[12] = x;
+    b[13] = y;
+    b[14] = z;
 }
 
 // AUTOINJECT
@@ -495,7 +297,7 @@ void Transform::AppendRotTrans3(const float *r, const float *t) {
 // AUTOINJECT
 void Transform::AppendMatrix(const float *matrix) {
     alignas(16) float b[16];
-    memcpy(b, matrix, 64);
+    memcpy(b, matrix, sizeof(b));
     Multiply(this, m, b);
 }
 
@@ -546,7 +348,7 @@ void Transform::PrependRotTrans(const float *r, const float *t) {
 // AUTOINJECT
 void Transform::PrependMatrix(const float *matrix) {
     alignas(16) float b[16];
-    memcpy(b, matrix, 64);
+    memcpy(b, matrix, sizeof(b));
     Multiply(this, b, m);
 }
 
@@ -570,64 +372,36 @@ void Transform::PrependRotate(float degrees, float x, float y, float z) {
 // AUTOINJECT
 void Transform::Inverse() {
     alignas(16) float copy[16];
-    memcpy(copy, m, 64);
+    memcpy(copy, m, sizeof(copy));
     Invert(copy, m);
 }
 
 // ---- quaternions
 
-// (generated from 0x000f3090)
+// (generated from 0x000f3090) Everything is read before the first store.
 // FUNC_AT(0x000f3090)
 void EAGL_QuatToRotation(const float *q, float *out) {
-    double d1 = (double)q[0] + (double)q[0];
-    double d2 = (double)q[1] + (double)q[1];
-    double d3 = (double)q[2] + (double)q[2];
-    float f4 = (float)d3;
-    double d5 = d1 * (double)q[3];
-    float f6 = (float)d5;
-    double d7 = d2 * (double)q[3];
-    float f8 = (float)d7;
-    double d9 = (double)f4 * (double)q[3];
-    float f10 = (float)d9;
-    double d11 = d1 * (double)q[0];
-    float f12 = (float)d11;
-    double d13 = d2 * (double)q[0];
-    float f14 = (float)d13;
-    double d15 = (double)f4 * (double)q[0];
-    float f16 = (float)d15;
-    double d17 = d2 * (double)q[1];
-    double d18 = (double)f4 * (double)q[1];
-    double d19 = (double)f4 * (double)q[2];
-    double d20 = d19 + d17;
-    double d21 = 1.0 - d20;
-    float f22 = (float)d21;
-    double d23 = (double)f14 - (double)f10;
-    float f24 = (float)d23;
-    double d25 = (double)f16 + (double)f8;
-    float f26 = (float)d25;
-    double d27 = (double)f14 + (double)f10;
-    float f28 = (float)d27;
-    double d29 = d19 + (double)f12;
-    double d30 = 1.0 - d29;
-    float f31 = (float)d30;
-    double d32 = d18 - (double)f6;
-    float f33 = (float)d32;
-    double d34 = (double)f16 - (double)f8;
-    float f35 = (float)d34;
-    double d36 = d18 + (double)f6;
-    float f37 = (float)d36;
-    double d38 = d17 + (double)f12;
-    double d39 = 1.0 - d38;
-    float f40 = (float)d39;
-    out[0] = f22;
-    out[3] = f24;
-    out[6] = f26;
-    out[1] = f28;
-    out[4] = f31;
-    out[7] = f33;
-    out[2] = f35;
-    out[5] = f37;
-    out[8] = f40;
+    double d1 = double(q[0]) + q[0];
+    double d2 = double(q[1]) + q[1];
+    float f4 = q[2] + q[2];
+    float f6 = float(d1 * q[3]);
+    float f8 = float(d2 * q[3]);
+    float f10 = f4 * q[3];
+    float f12 = float(d1 * q[0]);
+    float f14 = float(d2 * q[0]);
+    float f16 = f4 * q[0];
+    double d17 = d2 * q[1];
+    double d18 = double(f4) * q[1];
+    double d19 = double(f4) * q[2];
+    out[0] = float(1.0 - (d19 + d17));
+    out[3] = f14 - f10;
+    out[6] = f16 + f8;
+    out[1] = f14 + f10;
+    out[4] = float(1.0 - (d19 + f12));
+    out[7] = float(d18 - f6);
+    out[2] = f16 - f8;
+    out[5] = float(d18 + f6);
+    out[8] = float(1.0 - (d17 + f12));
 }
 
 // The same code as the maths library's 0x00115440, with stack arguments.
@@ -770,55 +544,47 @@ __declspec(naked) void __fastcall EAGL_BuildRotate(Transform *self, int unusedEd
 void Transform::BuildSQT(float sx, float sy, float sz, float qx, float qy, float qz, float qw, float tx, float ty,
                          float tz) {
     float *o = m;
-    double d1 = (double)qx + (double)qx;
-    double d2 = (double)qy + (double)qy;
-    double d3 = (double)qz + (double)qz;
-    float f4 = (float)d3;
-    double d5 = d1 * (double)qw;
-    float f6 = (float)d5;
-    double d7 = (double)qw * d2;
-    float f8 = (float)d7;
-    double d9 = (double)f4 * (double)qw;
-    float f10 = (float)d9;
-    double d11 = d1 * (double)qx;
-    float f12 = (float)d11;
-    double d13 = (double)qx * d2;
-    float f14 = (float)d13;
-    double d15 = (double)f4 * (double)qx;
-    float f16 = (float)d15;
-    double d17 = d2 * (double)qy;
-    double d18 = (double)f4 * (double)qy;
-    double d19 = (double)f4 * (double)qz;
+    double d1 = double(qx) + qx;
+    double d2 = double(qy) + qy;
+    float f4 = qz + qz;
+    float f6 = float(d1 * qw);
+    float f8 = float(qw * d2);
+    float f10 = f4 * qw;
+    float f12 = float(d1 * qx);
+    float f14 = float(qx * d2);
+    float f16 = f4 * qx;
+    double d17 = d2 * qy;
+    double d18 = double(f4) * qy;
+    double d19 = double(f4) * qz;
     o[3] = 0.0f;
     o[7] = 0.0f;
-    double d20 = d19 + d17;
-    double d21 = 1.0 - d20;
-    o[0] = (float)(d21 * (double)sx);
-    o[4] = (float)(((double)f14 - (double)f10) * (double)sy);
-    o[8] = (float)(((double)f16 + (double)f8) * (double)sz);
-    o[1] = (float)(((double)f14 + (double)f10) * (double)sx);
-    o[5] = (float)((1.0 - (d19 + (double)f12)) * (double)sy);
-    o[9] = (float)((d18 - (double)f6) * (double)sz);
-    o[2] = (float)(((double)f16 - (double)f8) * (double)sx);
-    o[6] = (float)((d18 + (double)f6) * (double)sy);
-    o[10] = (float)((1.0 - (d17 + (double)f12)) * (double)sz);
+    o[0] = float((1.0 - (d19 + d17)) * sx);
+    o[4] = float((double(f14) - f10) * sy);
+    o[8] = float((double(f16) + f8) * sz);
+    o[1] = float((double(f14) + f10) * sx);
+    o[5] = float((1.0 - (d19 + f12)) * sy);
+    o[9] = float((d18 - f6) * sz);
+    o[2] = float((double(f16) - f8) * sx);
+    o[6] = float((d18 + f6) * sy);
+    o[10] = float((1.0 - (d17 + f12)) * sz);
     o[11] = 0.0f;
-    memcpy(&o[12], &tx, 4);
-    memcpy(&o[13], &ty, 4);
-    memcpy(&o[14], &tz, 4);
+    o[12] = tx;
+    o[13] = ty;
+    o[14] = tz;
     o[15] = 1.0f;
 }
 
-// out = in (x, y, z, 1) through the matrix, three floats; out may be in.
+// out = in (x, y, z, 1) through the matrix, three floats. out may be in; when it is not, y and z are computed again
+// after out[0] is stored, as the original does (it matters only if out overlaps in partly).
 // AUTOINJECT
 void Transform::TransformPoint(const float *in, float *out) const {
-    float x = (F)((((double)m[8] * in[2] + (double)m[4] * in[1]) + (double)in[0] * m[0]) + m[12]);
-    float y = (F)((((double)m[1] * in[0] + (double)m[9] * in[2]) + (double)m[5] * in[1]) + m[13]);
-    float z = (F)((((double)m[2] * in[0] + (double)m[10] * in[2]) + (double)m[6] * in[1]) + m[14]);
+    float x = float(double(m[8]) * in[2] + double(m[4]) * in[1] + double(in[0]) * m[0] + m[12]);
+    float y = float(double(m[1]) * in[0] + double(m[9]) * in[2] + double(m[5]) * in[1] + m[13]);
+    float z = float(double(m[2]) * in[0] + double(m[10]) * in[2] + double(m[6]) * in[1] + m[14]);
     if (in != out) {
         out[0] = x;
-        out[1] = (F)((((double)m[1] * in[0] + (double)m[9] * in[2]) + (double)m[5] * in[1]) + m[13]);
-        out[2] = (F)((((double)m[2] * in[0] + (double)m[10] * in[2]) + (double)m[6] * in[1]) + m[14]);
+        out[1] = float(double(m[1]) * in[0] + double(m[9]) * in[2] + double(m[5]) * in[1] + m[13]);
+        out[2] = float(double(m[2]) * in[0] + double(m[10]) * in[2] + double(m[6]) * in[1] + m[14]);
         return;
     }
     out[0] = x;

@@ -1,7 +1,10 @@
 #include "FiltersUnused.h"
+#include "Banks.h"
+#include "Decode.h"
+#include "SndUntested.h"
 
+#include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 #ifdef _MSC_VER
 #pragma float_control(precise, on)
@@ -20,137 +23,62 @@
 // has no encoder to make data with.
 //
 // The time stretch's four helpers take register arguments (sound.md 7.1): naked adaptors under Ghidra's names
-// (AUTOLTCG) move them into calls to the C++ cores, which the ports call directly.
+// (AUTOLTCG) move them into calls to the C++ cores, which the ports call directly. The decoders (module I) and
+// SNDI_getb are called directly too; the packet player and the driver through the originals' addresses, where the
+// shadow test puts its fakes.
 // ---------------------------------------------------------------------------------------------------------------
 
 using namespace SND;
 
 namespace {
 
-inline float F32(uint32_t address) {
-    return *(const float *)(uintptr_t)address;
+constexpr float kRatioScale = 1.0f / 4096;   // the time stretch's 4.12 ratio
+
+// The process and frame-getter functions a node stores: the originals' addresses (which jump to the ports here),
+// so a node's bytes are the original's
+#define UnpackXafAt ((SFilterProcess)0x00145ed0)          // SFILTER_unpackxaf
+#define XapfRestoreAt ((SFilterRestore)0x00145bf0)        // SFILTER_unpackxapfrestore
+#define GetFrameXafAt ((SFilterGetFrame)0x00145f40)       // SFILTER_unpackgetframexaf
+#define UnpackXalfAt ((SFilterProcess)0x00145cc0)         // SFILTER_unpackxalf
+#define UnpackMtpfAt ((SFilterProcess)0x00145830)         // SFILTER_unpackmtpf
+#define UnpackMtfAt ((SFilterProcess)0x001459c0)          // SFILTER_unpackmtf
+#define UnpackPfAt ((SFilterProcess)0x00146000)           // SFILTER_unpackpf
+#define UnpackLfAt ((SFilterProcess)0x00146130)           // SFILTER_unpacklf
+#define GetFrameAt ((SFilterGetFrame)0x001461e0)          // SFILTER_unpackfgetframe_unpacklfgetframe
+#define UnpackFAt ((SFilterProcess)0x001461f0)            // SFILTER_unpackf
+#define TimeStretchAt ((SFilterProcess)0x00144340)        // SFILTER_timestretch
+
+// ---- the originals called from here (other modules). Through the originals' addresses, which jump to the ports
+// in game: the shadow test puts its recording fakes there (devtools/SndFilterShadow.cpp).
+#define MemClear ((void (*)(void *, int))0x0013f600)                            // memclr
+#define GetMasterVoice ((int (*)(int))0x00142420)                               // SNDDRV_getmastervoice
+#define GetSampleChan ((int (*)(int))0x00142460)                                // SNDDRV_getsamplechan
+#define VoiceToPacketHandle ((int (*)(int))0x001457e0)                          // SNDPKTPLAYI_voicetopackethandle
+#define FreeFrames ((void (*)(int, int, int))0x0013ef80)                        // SNDPKTPLAYI_freeframes
+#define GetPacket ((const void *(*)(int player, int channel, int *frames, int *other))0x0013ee00)   // SNDPKTPLAYI_get
+#define FramesOutstanding ((int (*)(int))0x0013edc0)                            // SNDPKTPLAY_framesoutstanding
+
+// The original's REP MOVSD: count floats, front to back (a float copy keeps the bits)
+void CopyForward(float *to, const float *from, uint32_t count) {
+    for (uint32_t i = 0; i < count; i++)
+        to[i] = from[i];
 }
 
-inline double F64(uint32_t address) {
-    return *(const double *)(uintptr_t)address;
-}
-
-const uint32_t kOne = 0x00189de8u;           // 1.0f
-const uint32_t kZero = 0x00189decu;          // 0.0f
-const uint32_t kMinusOne = 0x0018a134u;      // -1.0f
-const uint32_t kRatioScale = 0x001a7300u;    // 1/4096
-const uint32_t kRatioMin = 0x0018e9f8u;      // 0.5 (double)
-const uint32_t kRatioMax = 0x001a7558u;      // 2.0 (double)
-
-const uint32_t kUnpackXaf = 0x00145ed0u, kXapfRestore = 0x00145bf0u, kGetFrameXaf = 0x00145f40u,
-               kUnpackXalf = 0x00145cc0u, kUnpackMtpf = 0x00145830u, kUnpackMtf = 0x001459c0u,
-               kUnpackPf = 0x00146000u, kUnpackLf = 0x00146130u, kGetFrame = 0x001461e0u, kUnpackF = 0x001461f0u,
-               kTimeStretch = 0x00144340u;
-
-inline void CopyBits(void *to, const void *from) {
-    memcpy(to, from, 4);
-}
-
-// REP MOVSD then REP MOVSB over 'bytes', forwards
-inline void CopyRep(void *to, const void *from, uint32_t bytes) {
-    uint32_t *d = (uint32_t *)to;
-    const uint32_t *s = (const uint32_t *)from;
-    for (uint32_t i = 0; i < (bytes >> 2); i++)
-        *d++ = *s++;
-    uint8_t *db = (uint8_t *)d;
-    const uint8_t *sb = (const uint8_t *)s;
-    for (uint32_t i = 0; i < (bytes & 3); i++)
-        *db++ = *sb++;
-}
-
-inline int Pull(SFilterNode *node, int frames, float *a, float *b) {
+int Pull(SFilterNode *node, int frames, float *a, float *b) {
     SFilterNode *up = node->input;
-    return ((SFilterProcess)(uintptr_t)up->process)(up, frames, a, b, node->requester);
+    return up->process(up, frames, a, b, node->requester);
 }
 
-inline void Memclr(void *data, int bytes) {
-    ((void (*)(void *, int))0x0013f600u)(data, bytes);
-}
-
-inline float *Advance(float *p, int32_t elements) {
-    return (float *)(uintptr_t)((uint32_t)(uintptr_t)p + (uint32_t)elements * 4u);
-}
-
-inline const float *Advance(const float *p, int32_t elements) {
-    return (const float *)(uintptr_t)((uint32_t)(uintptr_t)p + (uint32_t)elements * 4u);
-}
-
-inline uint8_t *At(void *node, uint32_t offset) {
-    return (uint8_t *)node + offset;
-}
-
-inline uint32_t &U32At(void *node, uint32_t offset) {
-    return *(uint32_t *)At(node, offset);
-}
-
-inline uint16_t &U16At(void *node, uint32_t offset) {
-    return *(uint16_t *)At(node, offset);
-}
-
-// Module I's decoders and module D's packet player, at their addresses
-inline int DecoderDecode(CEAXABLKDecf *decoder, float **out, int frames) {
-    return ((int (__fastcall *)(CEAXABLKDecf *, int, float **, int))0x00149ec0u)(decoder, 0, out, frames);
-}
-
-inline int DecoderFeed(CEAXABLKDecf *decoder, const void *data, int bytes, int frames) {
-    return ((int (__fastcall *)(CEAXABLKDecf *, int, const void *, int, int))0x00149e90u)(decoder, 0, data, bytes,
-                                                                                          frames);
-}
-
-inline void DecoderSetState(CEAXABLKDecf *decoder, float *state) {
-    ((void (__fastcall *)(CEAXABLKDecf *, int, float *))0x0014a1c0u)(decoder, 0, state);
-}
-
-inline float *DecoderGetState(CEAXABLKDecf *decoder, float *state) {
-    return ((float *(__fastcall *)(CEAXABLKDecf *, int, float *))0x0014a190u)(decoder, 0, state);
-}
-
-inline CEAXABLKDecf *NewDecoder() {
-    void *memory = ((void *(*)(uint32_t))0x00149e50u)(0xa8);   // SND::CEAXABLKDecf::operator new
+SND::CEAXABLKDecf *NewDecoder() {
+    void *memory = SND::CEAXABLKDecf::operator new(sizeof(SND::CEAXABLKDecf));
     if (memory == NULL)
         return NULL;
-    return ((CEAXABLKDecf *(__fastcall *)(void *, int))0x00149e70u)(memory, 0);
+    return static_cast<SND::CEAXABLKDecf *>(memory)->Construct();
 }
 
-inline void InitMut(const void *data, void *state) {
-    ((void (*)(const void *, void *))0x001493e0u)(data, state);
-}
-
-inline void DecodeMut(void *state) {
-    ((void (*)(void *))0x00149500u)(state);
-}
-
-inline void Decode16(int count, const int16_t *src, float *dst) {
-    ((void (*)(int, const int16_t *, float *))0x0014a1e0u)(count, src, dst);
-}
-
-inline int GetMasterVoice(int voice) {
-    return ((int (*)(int))0x00142420u)(voice);
-}
-
-inline int VoiceToPacketHandle(int voice) {
-    return ((int (*)(int))0x001457e0u)(voice);
-}
-
-inline int GetSampleChan(int voice) {
-    return ((int (*)(int))0x00142460u)(voice);
-}
-
-inline void FreeFrames(int player, int channel, int frames) {
-    ((void (*)(int, int, int))0x0013ef80u)(player, channel, frames);
-}
-
-inline void *GetPacket(int player, int channel, int *frames, int *other) {
-    return ((void *(*)(int, int, int *, int *))0x0013ee00u)(player, channel, frames, other);
-}
-
-inline float *OutputBuffer(SFilterStretch *node) {
-    return (float *)At(node, 0x838);
+// The time stretch's output buffer: the floats after the node
+float *OutputBuffer(SFilterStretch *node) {
+    return reinterpret_cast<float *>(node + 1);
 }
 
 }  // namespace
@@ -164,15 +92,15 @@ int SFILTER_unpackxaf(SND::SFilterNode *node, int frames, float *scratch, float 
     SND_UNTESTED("SFILTER_unpackxaf");
     (void)scratch;
     (void)requester;
-    SFilterXAF *n = (SFilterXAF *)node;
+    SFilterXAF *n = reinterpret_cast<SFilterXAF *>(node);
     if (n->position >= n->frames)
         return -1;
-    int got = DecoderDecode(n->decoder, &out, frames);
+    int got = n->decoder->Decode(&out, frames);
     n->position += got;
-    out = Advance(out, got);
+    out += got;
     if (got < frames) {
         int rest = frames - got;
-        Memclr(out, rest * 4);
+        MemClear(out, rest * 4);
         got += rest;
     }
     return got;
@@ -188,14 +116,14 @@ int SFILTER_unpackgetframexaf(SND::SFilterXAF *node) {
 // FUNC_AT(0x00145f50)
 void SFILTER_unpackxafinit(SND::SFilterXAF *node, SND::UnpackInfo *info) {
     SND_UNTESTED("SFILTER_unpackxafinit");
-    node->node.process = kUnpackXaf;
-    node->node.restore = kXapfRestore;
-    node->data = (const uint8_t *)info->data;
+    node->node.process = UnpackXafAt;
+    node->node.restore = XapfRestoreAt;
+    node->data = static_cast<const uint8_t *>(info->data);
     node->frames = info->frames;
     node->position = 0;
     node->decoder = NewDecoder();
-    info->getFrame = kGetFrameXaf;
-    DecoderFeed(node->decoder, node->data, node->frames * 4, node->frames);
+    info->getFrame = GetFrameXafAt;
+    node->decoder->Feed(node->data, node->frames * 4, node->frames);
 }
 
 // The first call feeds the decoder up to the loop start's block; at the end of the data it feeds again from the
@@ -206,19 +134,19 @@ int SFILTER_unpackxalf(SND::SFilterNode *node, int frames, float *scratch, float
     SND_UNTESTED("SFILTER_unpackxalf");
     (void)scratch;
     (void)requester;
-    SFilterXALF *n = (SFilterXALF *)node;
+    SFilterXALF *n = reinterpret_cast<SFilterXALF *>(node);
     int total = 0;
     if (n->fed == 0) {
         int blocks = n->loopStart / 28 * 28;
-        DecoderFeed(n->decoder, n->data, blocks * 4, blocks);
+        n->decoder->Feed(n->data, blocks * 4, blocks);
         n->fed = 1;
     }
     int remaining = frames;
     if (remaining == 0)
         return total;
     do {
-        int got = DecoderDecode(n->decoder, &out, remaining);
-        out = Advance(out, got);
+        int got = n->decoder->Decode(&out, remaining);
+        out += got;
         n->position += got;
         total += got;
         if (got < remaining) {
@@ -228,25 +156,25 @@ int SFILTER_unpackxalf(SND::SFilterNode *node, int frames, float *scratch, float
             int count = n->loopEnd - start + into + 1;
             start -= into;
             n->position = start;
-            DecoderFeed(n->decoder, n->data + start / 28 * 15, count * 4, count);
+            n->decoder->Feed(n->data + start / 28 * 15, count * 4, count);
             if (n->stateSaved == 0) {
                 float state[2];
-                float *saved = DecoderGetState(n->decoder, state);
-                CopyBits(&n->loopState[1], &saved[1]);
-                CopyBits(&n->loopState[0], &saved[0]);
-                got = DecoderDecode(n->decoder, &out, remaining);
-                out = Advance(out, got);
+                const float *saved = static_cast<const float *>(n->decoder->GetState(state));
+                n->loopState[1] = saved[1];
+                n->loopState[0] = saved[0];
+                got = n->decoder->Decode(&out, remaining);
+                out += got;
                 total += got;
                 n->position += got;
                 n->stateSaved = 1;
             } else {
                 float state[2];
-                CopyBits(&state[1], &n->loopState[1]);
-                CopyBits(&state[0], &n->loopState[0]);
-                DecoderSetState(n->decoder, state);
+                state[1] = n->loopState[1];
+                state[0] = n->loopState[0];
+                n->decoder->SetState(state);
                 float skipped[28];
                 float *to = skipped;
-                n->position += DecoderDecode(n->decoder, &to, into);
+                n->position += n->decoder->Decode(&to, into);
                 continue;   // the original's jump past the subtraction
             }
         }
@@ -258,9 +186,9 @@ int SFILTER_unpackxalf(SND::SFilterNode *node, int frames, float *scratch, float
 // FUNC_AT(0x00145e40)
 void SFILTER_unpackxalfinit(SND::SFilterXALF *node, SND::UnpackInfo *info) {
     SND_UNTESTED("SFILTER_unpackxalfinit");
-    node->node.process = kUnpackXalf;
-    node->node.restore = kXapfRestore;
-    node->data = (const uint8_t *)info->data;
+    node->node.process = UnpackXalfAt;
+    node->node.restore = XapfRestoreAt;
+    node->data = static_cast<const uint8_t *>(info->data);
     node->frames = info->frames;
     node->position = 0;
     node->stateSaved = 0;
@@ -268,14 +196,12 @@ void SFILTER_unpackxalfinit(SND::SFilterXALF *node, SND::UnpackInfo *info) {
     node->loopStart = info->loopStart;
     node->loopEnd = info->loopEnd;
     node->decoder = NewDecoder();
-    info->getFrame = kGetFrameXaf;
+    info->getFrame = GetFrameXafAt;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// MicroTalk. The packet variant's node: +0x1c packet, +0x20 its frames, +0x24 packet player, +0x28 frames to
-// report, +0x2c (u16) frames taken from the packet, +0x2e (u16) samples left in the buffer, +0x30 decoder state,
-// the 432-sample buffer ending at +0xd70, +0xd70 (u8) channel. The bank variant's: +0x1c frames, +0x20 position,
-// +0x24 samples left, +0x28 decoder state, the buffer ending at +0xd68.
+// MicroTalk (SFilterMTPF, SFilterMTF): each hands out the decoder's 432-sample frame, the last 432 floats of
+// MutState::signal, a part at a time, decoding the next frame when it runs out.
 // ---------------------------------------------------------------------------------------------------------------
 
 // FUNC_AT(0x00145830)
@@ -283,66 +209,69 @@ int SFILTER_unpackmtpf(SND::SFilterNode *node, int frames, float *scratch, float
     SND_UNTESTED("SFILTER_unpackmtpf");
     (void)scratch;
     (void)requester;
-    if (U32At(node, 0x28) != 0) {
-        FreeFrames((int)U32At(node, 0x24), *At(node, 0xd70), (int)U32At(node, 0x28));
-        U32At(node, 0x28) = 0;
+    SFilterMTPF *n = reinterpret_cast<SFilterMTPF *>(node);
+    if (n->pending != 0) {
+        FreeFrames(n->packetPlayer, n->channel, n->pending);
+        n->pending = 0;
     }
     int remaining = frames;
     if (remaining <= 0)
-        return (int)U32At(node, 0x28);
+        return n->pending;
     do {
-        if ((int)U16At(node, 0x2c) >= (int)U32At(node, 0x20)) {
+        if (n->taken >= n->packetFrames) {
             int other;
-            const uint8_t *packet = (const uint8_t *)GetPacket((int)U32At(node, 0x24), *At(node, 0xd70),
-                                                               (int *)At(node, 0x20), &other);
-            U32At(node, 0x1c) = (uint32_t)(uintptr_t)packet;
-            U16At(node, 0x2c) = 0;
+            const uint8_t *packet =
+                static_cast<const uint8_t *>(GetPacket(n->packetPlayer, n->channel, &n->packetFrames, &other));
+            n->packet = packet;
+            n->taken = 0;
             if (packet == NULL) {
-                if (U32At(node, 0x28) != 0)
-                    Memclr(out, remaining * 4);
-                U32At(node, 0x20) = 0;
-                return (int)U32At(node, 0x28);
+                if (n->pending != 0)
+                    MemClear(out, remaining * 4);
+                n->packetFrames = 0;
+                return n->pending;
             }
             if (packet[0] != 0) {
-                U16At(node, 0x2e) = 0;
-                InitMut(packet + 1, At(node, 0x30));
+                n->left = 0;
+                initmut(packet + 1, &n->mut);
             } else {
-                U32At(node, 0x34) = packet[1];
-                U32At(node, 0x38) = 8;
-                U32At(node, 0x30) = (uint32_t)(uintptr_t)(packet + 2);
+                // no header: the bit reader starts on the packet's second byte
+                n->mut.bits = packet[1];
+                n->mut.count = 8;
+                n->mut.ptr = packet + 2;
             }
         }
-        if (U16At(node, 0x2e) == 0) {
-            DecodeMut(At(node, 0x30));
-            U16At(node, 0x2e) = 0x1b0;
+        if (n->left == 0) {
+            decodemut(&n->mut);
+            n->left = 432;
         }
-        int count = (int)U32At(node, 0x20) - (int)U16At(node, 0x2c);
+        int count = n->packetFrames - n->taken;
         if (remaining < count)
             count = remaining;
-        int left = (int)U16At(node, 0x2e);
+        int left = n->left;
         if (left < count)
             count = left;
-        CopyRep(out, At(node, (uint32_t)(0x35c - left) * 4u), (uint32_t)count * 4u);
-        U16At(node, 0x2c) = (uint16_t)(U16At(node, 0x2c) + count);
-        U16At(node, 0x2e) = (uint16_t)(U16At(node, 0x2e) - count);
-        out = Advance(out, count);
+        CopyForward(out, &n->mut.signal[756 - left], uint32_t(count));
+        n->taken = uint16_t(n->taken + count);
+        n->left = uint16_t(n->left - count);
+        out += count;
         remaining -= count;
-        U32At(node, 0x28) += (uint32_t)count;
+        n->pending += count;
     } while (remaining > 0);
-    return (int)U32At(node, 0x28);
+    return n->pending;
 }
 
 // FUNC_AT(0x00145970)
 void SFILTER_unpackmtpfinit(SND::SFilterNode *node, const SND::UnpackInfo *info) {
     SND_UNTESTED("SFILTER_unpackmtpfinit");
-    node->process = kUnpackMtpf;
-    U32At(node, 0x24) = (uint32_t)VoiceToPacketHandle(GetMasterVoice(info->voice));
-    *At(node, 0xd70) = (uint8_t)GetSampleChan(info->voice);
-    U32At(node, 0x1c) = 0;
-    U16At(node, 0x2c) = 0;
-    U32At(node, 0x20) = 0;
-    U16At(node, 0x2e) = 0;
-    U32At(node, 0x28) = 0;
+    SFilterMTPF *n = reinterpret_cast<SFilterMTPF *>(node);
+    node->process = UnpackMtpfAt;
+    n->packetPlayer = VoiceToPacketHandle(GetMasterVoice(info->voice));
+    n->channel = uint8_t(GetSampleChan(info->voice));
+    n->packet = NULL;
+    n->taken = 0;
+    n->packetFrames = 0;
+    n->left = 0;
+    n->pending = 0;
 }
 
 // FUNC_AT(0x001459c0)
@@ -350,37 +279,37 @@ int SFILTER_unpackmtf(SND::SFilterNode *node, int frames, float *scratch, float 
     SND_UNTESTED("SFILTER_unpackmtf");
     (void)scratch;
     (void)requester;
-    uint32_t position = U32At(node, 0x20), total = U32At(node, 0x1c);
+    SFilterMTF *n = reinterpret_cast<SFilterMTF *>(node);
+    uint32_t position = n->position, total = n->frames;
     if (!(position < total))
         return -1;
     int want = frames;
-    position += (uint32_t)want;
-    U32At(node, 0x20) = position;
-    int over = (int)(position - total);
+    position += uint32_t(want);
+    n->position = position;
+    int over = int(position - total);
     if (over > 0)
         want -= over;
     else
         over = 0;
-    int count = (int)U32At(node, 0x24);
+    int count = n->left;
     if (want > 0) {
         for (;;) {
             if (want < count)
                 count = want;
-            CopyRep(out, At(node, (uint32_t)(0x35a - (int)U32At(node, 0x24)) * 4u), (uint32_t)count * 4u);
-            out = Advance(out, count);
-            U32At(node, 0x24) -= (uint32_t)count;
+            CopyForward(out, &n->mut.signal[756 - n->left], uint32_t(count));
+            out += count;
+            n->left -= count;
             want -= count;
             if (want <= 0)
                 break;
-            DecodeMut(At(node, 0x28));
-            count = 0x1b0;
-            U32At(node, 0x24) = 0x1b0;
+            decodemut(&n->mut);
+            count = 432;
+            n->left = 432;
         }
     }
     if (over > 0) {
-        uint32_t *o = (uint32_t *)out;
-        for (uint32_t i = 0; i < (uint32_t)over; i++)
-            o[i] = 0;
+        for (uint32_t i = 0; i < uint32_t(over); i++)
+            out[i] = 0.0f;
     }
     return 1;
 }
@@ -388,12 +317,13 @@ int SFILTER_unpackmtf(SND::SFilterNode *node, int frames, float *scratch, float 
 // FUNC_AT(0x00145a70)
 void SFILTER_unpackmtfinit(SND::SFilterNode *node, SND::UnpackInfo *info) {
     SND_UNTESTED("SFILTER_unpackmtfinit");
-    node->process = kUnpackMtf;
-    U32At(node, 0x1c) = (uint32_t)info->frames;
-    U32At(node, 0x20) = 0;
-    info->getFrame = kGetFrame;
-    InitMut(info->data, At(node, 0x28));
-    U32At(node, 0x24) = 0;
+    SFilterMTF *n = reinterpret_cast<SFilterMTF *>(node);
+    node->process = UnpackMtfAt;
+    n->frames = uint32_t(info->frames);
+    n->position = 0;
+    info->getFrame = GetFrameAt;
+    initmut(static_cast<const uint8_t *>(info->data), &n->mut);
+    n->left = 0;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -405,7 +335,7 @@ int SFILTER_unpackpf(SND::SFilterNode *node, int frames, float *scratch, float *
     SND_UNTESTED("SFILTER_unpackpf");
     (void)scratch;
     (void)requester;
-    SFilterPF *n = (SFilterPF *)node;
+    SFilterPF *n = reinterpret_cast<SFilterPF *>(node);
     if (n->pending != 0) {
         FreeFrames(n->packetPlayer, n->channel, n->pending);
         n->pending = 0;
@@ -416,11 +346,12 @@ int SFILTER_unpackpf(SND::SFilterNode *node, int frames, float *scratch, float *
     do {
         if (n->position >= n->packetFrames) {
             int packetFrames, other;
-            const int16_t *packet = (const int16_t *)GetPacket(n->packetPlayer, n->channel, &packetFrames, &other);
+            const int16_t *packet =
+                static_cast<const int16_t *>(GetPacket(n->packetPlayer, n->channel, &packetFrames, &other));
             n->packet = packet;
             if (packet == NULL) {
                 if (n->pending != 0)
-                    Memclr(out, remaining * 4);
+                    MemClear(out, remaining * 4);
                 return n->pending;
             }
             n->position = 0;
@@ -431,11 +362,11 @@ int SFILTER_unpackpf(SND::SFilterNode *node, int frames, float *scratch, float *
         if (remaining < count)
             count = remaining;
         if (n->decode != 0)
-            Decode16(count, n->packet + at, out);
+            decode16x87(count, n->packet + at, out);
         n->position += count;
         remaining -= count;
         n->pending += count;
-        out = Advance(out, count);
+        out += count;
     } while (remaining > 0);
     return n->pending;
 }
@@ -443,13 +374,13 @@ int SFILTER_unpackpf(SND::SFilterNode *node, int frames, float *scratch, float *
 // FUNC_AT(0x001460e0)
 void SFILTER_unpackpfinit(SND::SFilterPF *node, const SND::UnpackInfo *info) {
     SND_UNTESTED("SFILTER_unpackpfinit");
-    node->node.process = kUnpackPf;
+    node->node.process = UnpackPfAt;
     node->packetPlayer = VoiceToPacketHandle(GetMasterVoice(info->voice));
-    node->channel = (uint8_t)GetSampleChan(info->voice);
+    node->channel = uint8_t(GetSampleChan(info->voice));
     node->packet = NULL;
     node->packetFrames = -1;
     node->position = 0;
-    node->decode = (uint8_t)info->flag;
+    node->decode = uint8_t(info->flag);
     node->pending = 0;
 }
 
@@ -458,20 +389,20 @@ int SFILTER_unpacklf(SND::SFilterNode *node, int frames, float *scratch, float *
     SND_UNTESTED("SFILTER_unpacklf");
     (void)scratch;
     (void)requester;
-    SFilterLF *n = (SFilterLF *)node;
+    SFilterLF *n = reinterpret_cast<SFilterLF *>(node);
     int remaining = frames;
     if (remaining > 0) {
         do {
             uint32_t at = n->position;
-            int count = (int)(n->loopEnd - at + 1);
+            int count = int(n->loopEnd - at + 1);
             if (remaining < count)
                 count = remaining;
             if (n->decode != 0)
-                Decode16(count, n->data + at, out);
-            uint32_t next = n->position + (uint32_t)count;
+                decode16x87(count, n->data + at, out);
+            uint32_t next = n->position + uint32_t(count);
             remaining -= count;
             n->position = next;
-            out = Advance(out, count);
+            out += count;
             if (next > n->loopEnd)
                 n->position = n->loopStart;
         } while (remaining > 0);
@@ -482,20 +413,20 @@ int SFILTER_unpacklf(SND::SFilterNode *node, int frames, float *scratch, float *
 // FUNC_AT(0x001461a0)
 void SFILTER_unpacklfinit(SND::SFilterLF *node, SND::UnpackInfo *info) {
     SND_UNTESTED("SFILTER_unpacklfinit");
-    node->node.process = kUnpackLf;
-    node->data = (const int16_t *)info->data;
+    node->node.process = UnpackLfAt;
+    node->data = static_cast<const int16_t *>(info->data);
     node->position = 0;
-    node->loopStart = (uint32_t)info->loopStart;
-    node->loopEnd = (uint32_t)info->loopEnd;
+    node->loopStart = uint32_t(info->loopStart);
+    node->loopEnd = uint32_t(info->loopEnd);
     node->decode = info->flag;
-    info->getFrame = kGetFrame;
+    info->getFrame = GetFrameAt;
 }
 
-// One body for the PCM16 bank unpackers' and MicroTalk's frame getters (+0x20)
+// One body for the PCM16 bank unpackers' and MicroTalk's frame getters: the position, at +0x20 in all three
 // FUNC_AT(0x001461e0)
 int SFILTER_unpackfgetframe_unpacklfgetframe(SND::SFilterNode *node) {
     SND_UNTESTED("SFILTER_unpackfgetframe_unpacklfgetframe");
-    return (int)U32At(node, 0x20);
+    return int(reinterpret_cast<SFilterF *>(node)->position);
 }
 
 // FUNC_AT(0x001461f0)
@@ -503,33 +434,33 @@ int SFILTER_unpackf(SND::SFilterNode *node, int frames, float *scratch, float *o
     SND_UNTESTED("SFILTER_unpackf");
     (void)scratch;
     (void)requester;
-    SFilterF *n = (SFilterF *)node;
+    SFilterF *n = reinterpret_cast<SFilterF *>(node);
     uint32_t at = n->position, end = n->frames;
     if (!(at < end))
         return -1;
-    uint32_t next = at + (uint32_t)frames;
+    uint32_t next = at + uint32_t(frames);
     n->position = next;
     if (next < end) {
         if (n->decode != 0)
-            Decode16(frames, n->data + at, out);
+            decode16x87(frames, n->data + at, out);
         return 1;
     }
-    int count = (int)(end - at);
+    int count = int(end - at);
     if (n->decode != 0)
-        Decode16(count, n->data + at, out);
-    Memclr(Advance(out, count), (frames - count) * 4);
+        decode16x87(count, n->data + at, out);
+    MemClear(out + count, (frames - count) * 4);
     return 1;
 }
 
 // FUNC_AT(0x00146280)
 void SFILTER_unpackfinit(SND::SFilterF *node, SND::UnpackInfo *info) {
     SND_UNTESTED("SFILTER_unpackfinit");
-    node->node.process = kUnpackF;
-    node->data = (const int16_t *)info->data;
+    node->node.process = UnpackFAt;
+    node->data = static_cast<const int16_t *>(info->data);
     node->position = 0;
-    node->frames = (uint32_t)info->frames;
+    node->frames = uint32_t(info->frames);
     node->decode = info->flag;
-    info->getFrame = kGetFrame;
+    info->getFrame = GetFrameAt;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -545,23 +476,23 @@ void SndStretch_Crossfade(int shift, const float *a, const float *b, float *out,
     float step;
     int s = shift;
     if (s > 0) {
-        g = (double)F32(kOne);
-        step = (float)((double)F32(kMinusOne) / (double)window);
+        g = 1.0;
+        step = float(-1.0 / window);
     } else {
-        g = (double)F32(kZero);
+        g = 0.0;
         s = -s;
-        step = (float)((double)F32(kOne) / (double)window);
+        step = float(1.0 / window);
     }
     int first = window - s;
     for (int i = s; i < window; i++) {
-        double v = ((double)F32(kOne) - g) * (double)a[i - s] + g * (double)a[i];
-        out[i - s] = (float)v;
-        g = g + (double)step;
+        double v = (1.0 - g) * a[i - s] + g * a[i];
+        out[i - s] = float(v);
+        g = g + step;
     }
     for (int i = 0; i < s; i++) {
-        double v = ((double)F32(kOne) - g) * (double)a[first + i] + g * (double)b[i];
-        out[first + i] = (float)v;
-        g = g + (double)step;
+        double v = (1.0 - g) * a[first + i] + g * b[i];
+        out[first + i] = float(v);
+        g = g + step;
     }
 }
 
@@ -582,22 +513,22 @@ __declspec(naked) void FUN_00143be0() {
 // The next segment's shift from the data byte and the error: 0 (one byte consumed) when keeping the window as it
 // is leaves the smaller error, else the byte's offset (+ or -, two bytes consumed when stretching below 1).
 int SndStretch_NextShift(const uint8_t **data, float *error, int window, float ratio) {
-    bool below = (double)ratio < (double)F32(kOne);
-    double w = (double)window;
-    double rw = (double)ratio * w;
+    bool below = ratio < 1.0f;
+    double w = window;
+    double rw = ratio * w;
     const uint8_t *p = *data;
     int c = window / 2 + p[0];
-    float d = (float)((w + (double)*error) - rw);
+    float d = float((w + *error) - rw);
     double e;
     if (below)
-        e = ((double)(window * 2 - c) + (double)*error) - (rw + rw);
+        e = (double(window * 2 - c) + *error) - (rw + rw);
     else
-        e = ((double)(c + window) + (double)*error) - rw;
-    double ad = (double)d;
-    if (ad < (double)F32(kZero))
+        e = (double(c + window) + *error) - rw;
+    double ad = d;
+    if (ad < 0.0)
         ad = -ad;
     double ae = e;
-    if (ae < (double)F32(kZero))
+    if (ae < 0.0)
         ae = -ae;
     if (ad < ae) {
         *data = p + 1;
@@ -606,11 +537,11 @@ int SndStretch_NextShift(const uint8_t **data, float *error, int window, float r
     }
     if (below) {
         *data = p + 2;
-        *error = (float)e;
+        *error = float(e);
         return -c;
     }
     *data = p + 1;
-    *error = (float)e;
+    *error = float(e);
     return c;
 }
 
@@ -635,11 +566,11 @@ int SndStretch_Segment(SND::SFilterStretch *node, const float **in, int shift) {
         b = *in;
     } else {
         a = *in;
-        b = Advance(*in, node->window);
+        b = *in + node->window;
     }
     float *outBuffer = OutputBuffer(node);
     if (shift == 0) {
-        CopyRep(outBuffer, a, (uint32_t)node->window * 4u);
+        CopyForward(outBuffer, a, uint32_t(node->window));
         int window = node->window;
         node->remaining -= window;
         node->available = window;
@@ -649,8 +580,8 @@ int SndStretch_Segment(SND::SFilterStretch *node, const float **in, int shift) {
         return 0;
     }
     if (shift > 0) {
-        CopyRep(outBuffer, a, (uint32_t)shift * 4u);
-        SndStretch_Crossfade(shift, a, b, Advance(outBuffer, shift), node->window);
+        CopyForward(outBuffer, a, uint32_t(shift));
+        SndStretch_Crossfade(shift, a, b, outBuffer + shift, node->window);
         int window = node->window;
         node->available = window + shift;
         node->remaining -= window;
@@ -661,11 +592,11 @@ int SndStretch_Segment(SND::SFilterStretch *node, const float **in, int shift) {
     }
     SndStretch_Crossfade(shift, a, b, outBuffer, node->window);
     int window = node->window;
-    CopyRep(Advance(outBuffer, window), Advance(b, -shift), (uint32_t)(window + shift) * 4u);
-    window = node->window;
+    CopyForward(outBuffer + window, b - shift, uint32_t(window + shift));
+    window = node->window;   // read again after the copy, as the original does
     node->available = window * 2 + shift;
     node->remaining -= window * 2;
-    *in = Advance(b, window);
+    *in = b + window;
     node->pending = 0;
     node->readPosition = 0;
     return 0;
@@ -685,15 +616,15 @@ __declspec(naked) void FUN_00143f20() {
 
 // Up to *frames of what the output buffer holds, into *out; both advanced. Answers the frames taken.
 int SndStretch_Drain(SND::SFilterStretch *node, int *frames, float **out) {
-    const float *from = Advance((const float *)OutputBuffer(node), node->readPosition);
+    const float *from = OutputBuffer(node) + node->readPosition;
     int count = *frames;
     if (count > node->available)
         count = node->available;
-    CopyRep(*out, from, (uint32_t)count * 4u);
+    CopyForward(*out, from, uint32_t(count));
     node->readPosition += count;
     node->available -= count;
     *frames -= count;
-    *out = Advance(*out, count);
+    *out += count;
     return count;
 }
 
@@ -716,12 +647,12 @@ __declspec(naked) void FUN_00144050() {
 int SFILTER_timestretch(SND::SFilterNode *node, int frames, float *scratch, float *out, int requester) {
     SND_UNTESTED("SFILTER_timestretch");
     (void)requester;
-    SFilterStretch *n = (SFilterStretch *)node;
+    SFilterStretch *n = reinterpret_cast<SFilterStretch *>(node);
     if (n->remaining == 0)
         return Pull(node, 200, out, scratch);
     int need = stretchframesneeded(n, frames);
     if (n->packetPlayer >= 0) {
-        if (need > ((int (*)(int))0x0013edc0u)(n->packetPlayer))   // SNDPKTPLAY_framesoutstanding
+        if (need > FramesOutstanding(n->packetPlayer))
             return 0;
     }
     if (need > 0) {
@@ -731,7 +662,7 @@ int SFILTER_timestretch(SND::SFilterNode *node, int frames, float *scratch, floa
     }
     int got = stretch(n, frames, scratch, out);
     if (got < frames)
-        Memclr(Advance(out, got), (frames - got) * 4);
+        MemClear(out + got, (frames - got) * 4);
     return frames;
 }
 
@@ -739,18 +670,17 @@ int SFILTER_timestretch(SND::SFilterNode *node, int frames, float *scratch, floa
 // FUNC_AT(0x001443f0)
 int SFILTER_timestretchinit(SND::SFilterStretch *node, const uint8_t *blob, int voice) {
     SND_UNTESTED("SFILTER_timestretchinit");
-    node->node.process = kTimeStretch;
-    node->node.restore = 0;
+    node->node.process = TimeStretchAt;
+    node->node.restore = NULL;
     if (voice >= 0)
         node->packetPlayer = VoiceToPacketHandle(GetMasterVoice(voice));
     else
         node->packetPlayer = -1;
     node->data = blob + 6;
-    uint32_t one = 0x3f800000u;
-    CopyBits(&node->ratio, &one);
-    memset(&node->error, 0, 4);
+    node->ratio = 1.0f;
+    node->error = 0.0f;
     node->window = blob[1] * 2;
-    node->remaining = ((int (*)(const uint8_t *, int))0x00144a90u)(blob + 2, 4);   // SNDI_getb
+    node->remaining = SNDI_getb(blob + 2, 4);
     node->pending = 0;
     node->available = 0;
     node->readPosition = 0;
@@ -761,17 +691,14 @@ int SFILTER_timestretchinit(SND::SFilterStretch *node, const uint8_t *blob, int 
 // FUNC_AT(0x00144300)
 void SFILTER_timestretchsetratio(SND::SFilterStretch *node, int ratio) {
     SND_UNTESTED("SFILTER_timestretchsetratio");
-    double f = (double)ratio * (double)F32(kRatioScale);
-    node->ratio = (float)f;
-    if (f < F64(kRatioMin)) {
-        uint32_t half = 0x3f000000u;
-        CopyBits(&node->ratio, &half);
+    double f = double(ratio) * kRatioScale;
+    node->ratio = float(f);
+    if (f < 0.5) {
+        node->ratio = 0.5f;
         return;
     }
-    if (f > F64(kRatioMax)) {
-        uint32_t two = 0x40000000u;
-        CopyBits(&node->ratio, &two);
-    }
+    if (f > 2.0)
+        node->ratio = 2.0f;
 }
 
 // FUNC_AT(0x001441a0)
@@ -794,13 +721,13 @@ int stretch(SND::SFilterStretch *node, int frames, float *in, float *out) {
         else
             shift = SndStretch_NextShift(&node->data, &node->error, node->window, node->ratio);
         SndStretch_Segment(node, &input, shift);
-        const float *from = Advance((const float *)OutputBuffer(node), node->readPosition);
+        const float *from = OutputBuffer(node) + node->readPosition;
         int count = node->available;
         if (!(remaining > count))
             count = remaining;
-        CopyRep(o, from, (uint32_t)count * 4u);
+        CopyForward(o, from, uint32_t(count));
         node->readPosition += count;
-        o = Advance(o, count);
+        o += count;
         node->available -= count;
         total += count;
         remaining -= count;
@@ -808,15 +735,15 @@ int stretch(SND::SFilterStretch *node, int frames, float *in, float *out) {
             break;
     }
     if (shift > 0) {
-        CopyRep(node->held, input, (uint32_t)node->window * 4u);
+        CopyForward(node->held, input, uint32_t(node->window));
         node->pending = node->window;
-        input = Advance(input, node->window);
+        input += node->window;
     }
     if (remaining > 0) {
         int count = node->remaining;
         if (!(remaining > count))
             count = remaining;
-        CopyRep(o, input, (uint32_t)count * 4u);
+        CopyForward(o, input, uint32_t(count));
         node->remaining -= count;
         total += count;
     }
@@ -832,8 +759,7 @@ int stretchframesneeded(SND::SFilterStretch *node, int frames) {
         return 0;
     int want = frames - node->available;
     const uint8_t *data = node->data;
-    float error;
-    CopyBits(&error, &node->error);
+    float error = node->error;
     int remaining = node->remaining;
     int total = 0;
     int shift = 0;

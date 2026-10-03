@@ -1,12 +1,13 @@
 #include "Stream.h"
+#include "SndUntested.h"
 
 #include "../../platform/FileSys.h"
 #include "../../platform/RealPrint.h"
 #include "../../platform/RealSystem.h"
+#include "../../../helpers.h"
 
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -27,58 +28,53 @@
 // what the originals preserve; the ports call the C++ cores beside them directly.
 // ---------------------------------------------------------------------------------------------------------------
 
-#ifndef SND_UNTESTED
-inline void SndStreamUntested(const char *what) {
-    printf("[snd] WARNING: %s ran - a provisional port that no shipped data reaches, UNTESTED. Check what it "
-           "computes against the original.\n", what);
-    fflush(stdout);
-}
-
-#define SND_UNTESTED(what) \
-    do { \
-        static bool warned_; \
-        if (!warned_) { \
-            warned_ = true; \
-            SndStreamUntested(what); \
-        } \
-    } while (0)
-#endif
-
 using namespace SND;
 
 namespace {
 
-const uint32_t kMagic = 0x4d525453u;            // "STRM"
-const uint32_t kOpenDone = 0x0014aee0u;         // FUN_0014aee0
-const uint32_t kCloseDone = 0x0014af10u;        // FUN_0014af10
-const uint32_t kReadDone = 0x0014b660u;         // FUN_0014b660
-const uint32_t kWrap = 0xffffffffu;             // chunk tag: continue at ringStart
-const uint32_t kSkip = 0xfffffffeu;             // chunk tag: released or skipped
+#define Generation U32_AT(0x002475fc)   // the request id generation, += 0x100, never 0
 
-inline uint32_t &Generation() {                 // request id generation, += 0x100, never 0
-    return *(uint32_t *)0x002475fcu;
-}
+constexpr uint32_t kMagic = 0x4d525453;   // "STRM"
+constexpr uint32_t kWrap = 0xffffffff;    // chunk tag: continue at ringStart
+constexpr uint32_t kSkip = 0xfffffffe;    // chunk tag: released or skipped
 
-inline RealMutex *Mutex(StrmInternal *s) {
-    return (RealMutex *)(void *)s->mutex;
-}
+// The FILESYS completion callbacks, as the originals' addresses
+#define OpenDone ((FsCallback)0x0014aee0)     // FUN_0014aee0
+#define CloseDone ((FsCallback)0x0014af10)    // FUN_0014af10
+#define ReadDone ((FsCallback)0x0014b660)     // FUN_0014b660
 
-inline uint32_t U(const void *p) {
-    return (uint32_t)(uintptr_t)p;
-}
+#define CrtStrncpy ((char *(*)(char *, const char *, int))0x00133d60)   // the CRT's _strncpy
+#define EnterCritical ((void (*)(void))0x0013b950)                      // SNDSYS_entercritical
+#define LeaveCritical ((void (*)(void))0x0013b970)                      // SNDSYS_leavecritical
+#define MemFreeImport (*(bool (**)(void *))0x001d1878)                 // MEM_free, the pointer the original jumps through
 
-inline FsCallback Callback(uint32_t address) {
-    return (FsCallback)(uintptr_t)address;
-}
-
-inline char *CrtStrncpy(char *destination, const char *source, int count) {   // the CRT's, 0x00133d60
-    return ((char *(*)(char *, const char *, int))0x00133d60u)(destination, source, count);
-}
-
-inline StrmInternal *Valid(StrmReader *stream) {   // the check every entry starts with
+StrmInternal *Valid(StrmReader *stream) {   // the check every entry starts with
     if (stream == NULL || stream->internal->magic != kMagic)
         return NULL;
     return stream->internal;
+}
+
+// The FILESYS operations' user data: the STREAM
+int UserData(StrmInternal *s) {
+    return int(uintptr_t(s));
+}
+
+StrmChunk *ChunkAt(uint8_t *p) {
+    return reinterpret_cast<StrmChunk *>(p);
+}
+
+StrmChunk *Advance(StrmChunk *chunk, uint32_t bytes) {
+    return ChunkAt(reinterpret_cast<uint8_t *>(chunk) + bytes);
+}
+
+// Where in its 128-byte block an address lies
+uint32_t Misalign(const uint8_t *p) {
+    return uint32_t(uintptr_t(p)) & 0x7f;
+}
+
+// A chunk's size padded so that it ends on a 128-byte boundary, from where in its block it starts
+uint32_t PadTo128(uint32_t misalign, uint32_t size) {
+    return ((misalign + size + 0x7f) & 0xffffff80) - misalign;
 }
 
 }  // namespace
@@ -87,11 +83,11 @@ inline StrmInternal *Valid(StrmReader *stream) {   // the check every entry star
 
 // bytes released: below the greedy level again, read at the greedy priority (the original's 0x0014aba0)
 void SndStream_ReleaseBytes(StrmInternal *s, int bytes) {
-    MUTEX_lock(Mutex(s));
+    MUTEX_lock(&s->mutex);
     int before = s->bytesBuffered;
     int after = before - bytes;
     s->bytesBuffered = after;
-    MUTEX_unlock(Mutex(s));
+    MUTEX_unlock(&s->mutex);
     int level = s->greedyLevel;
     if (before < level || after >= level)
         return;
@@ -112,19 +108,19 @@ __declspec(naked) void FUN_0014aba0() {
 }
 
 StrmRequest* SndStream_PopFree(StrmInternal *s) {
-    MUTEX_lock(Mutex(s));
+    MUTEX_lock(&s->mutex);
     StrmRequest *request = s->freeList;
     if (request == NULL) {
-        MUTEX_unlock(Mutex(s));
+        MUTEX_unlock(&s->mutex);
         return request;
     }
     s->freeList = request->next;
-    uint32_t generation = Generation() + 0x100;
-    Generation() = generation;
+    uint32_t generation = Generation + 0x100;
+    Generation = generation;
     if (generation == 0)
-        Generation() = 0x100;
-    request->id = (request->id & 0xff) | Generation();
-    MUTEX_unlock(Mutex(s));
+        Generation = 0x100;
+    request->id = (request->id & 0xff) | Generation;
+    MUTEX_unlock(&s->mutex);
     return request;
 }
 
@@ -141,7 +137,7 @@ __declspec(naked) void FUN_0014ac00() {
 void SndStream_Append(StrmInternal *s, StrmRequest *request) {
     request->state = 1;
     request->next = NULL;
-    MUTEX_lock(Mutex(s));
+    MUTEX_lock(&s->mutex);
     StrmRequest *tail = s->tail;
     if (tail == NULL) {
         request->prev = tail;
@@ -153,7 +149,7 @@ void SndStream_Append(StrmInternal *s, StrmRequest *request) {
         s->tail->next = request;
         s->tail = request;
     }
-    MUTEX_unlock(Mutex(s));
+    MUTEX_unlock(&s->mutex);
 }
 
 // AUTOLTCG
@@ -204,77 +200,69 @@ __declspec(naked) void freerequest() {
 // ends it (1). A cancelled request's chunks are left as they are.
 int SndStream_Deliver(StrmInternal *s) {
     StrmRequest *current = s->current;
-    if ((int32_t)(U(s->writePos) - U(s->parsePos)) < 8)
+    if (s->writePos - s->parsePos < 8)
         return 0;
     for (;;) {
-        uint32_t *chunk = (uint32_t *)s->parsePos;
-        uint32_t size = chunk[1];
-        if ((size & 0xff000000u) != 0) {
-            chunk[0] = current->endTag;
+        StrmChunk *chunk = ChunkAt(s->parsePos);
+        uint32_t size = chunk->size;
+        if ((size & 0xff000000) != 0) {
+            chunk->tag = current->endTag;
             size = 8;
-            chunk[1] = 8;
+            chunk->size = 8;
         }
-        uint32_t at = U(s->parsePos);
-        if (at + size > U(s->writePos))
+        uint8_t *at = s->parsePos;
+        if (at + size > s->writePos)
             return 0;
-        uint32_t tag = chunk[0];
-        if (tag == current->endTag) {
-            uint32_t misalign = at & 0x7f;
-            size = ((misalign + size + 0x7f) & 0xffffff80u) - misalign;
-        }
+        uint32_t tag = chunk->tag;
+        if (tag == current->endTag)
+            size = PadTo128(Misalign(at), size);
         int reader = -2;
         bool found = false;
-        int i = 0;
-        if (s->numFilters > 0) {
-            StrmFilter *filter = s->filters;
-            do {
-                if ((filter->mask & tag) == filter->value) {
-                    found = true;
-                    reader = filter->reader;
-                    break;
-                }
-                i++;
-                filter++;
-            } while (i < s->numFilters);
+        for (int i = 0; i < s->numFilters; i++) {
+            StrmFilter *filter = &s->filters[i];
+            if ((filter->mask & tag) == filter->value) {
+                found = true;
+                reader = filter->reader;
+                break;
+            }
         }
         int cancelled;
         if (!found || reader < 0) {
-            MUTEX_lock(Mutex(s));
+            MUTEX_lock(&s->mutex);
             cancelled = current->state == 4;
             if (!cancelled) {
-                chunk[0] = kSkip;
+                chunk->tag = kSkip;
                 s->parsePos += size;
             }
         } else {
-            chunk[1] = ((uint32_t)reader << 24) | size;
-            MUTEX_lock(Mutex(s));
+            chunk->size = (uint32_t(reader) << 24) | size;
+            MUTEX_lock(&s->mutex);
             cancelled = current->state == 4;
             if (!cancelled) {
                 StrmReader *handle = &s->readers[reader - 1];
-                int bytes = handle->bytes + (int)size;
+                int bytes = handle->bytes + int(size);
                 handle->bytes = bytes;
-                if (bytes == (int)size)
+                if (bytes == int(size))
                     handle->next = chunk;
                 s->parsePos += size;
                 int level = s->greedyLevel;
                 int before = s->bytesBuffered;
-                int after = before + (int)size;
+                int after = before + int(size);
                 s->bytesBuffered = after;
                 if (before < level && after >= level)
                     s->greedy = 0;
             }
         }
-        MUTEX_unlock(Mutex(s));
+        MUTEX_unlock(&s->mutex);
         if (cancelled) {
-            if (chunk[0] == current->endTag)
+            if (chunk->tag == current->endTag)
                 return 0;
-            uint32_t misalign = U(s->parsePos) & 0x7f;
-            chunk[1] = (((misalign + size + 0x7f) & 0xffffff80u) - misalign) | ((uint32_t)reader << 24);
+            chunk->size = PadTo128(Misalign(s->parsePos), size) | (uint32_t(reader) << 24);
             return 0;
         }
-        if (chunk[0] == current->endTag)
+        if (chunk->tag == current->endTag)
             return 1;
-        if ((int32_t)(U(s->writePos) - U(s->parsePos)) < 8)
+        if (s->writePos - s->parsePos < 8)
             return 0;
     }
 }
@@ -293,7 +281,7 @@ __declspec(naked) void FUN_0014ad20() {
 // open it, closing the open one first (the open continues from FUN_0014af10). No request left: idle.
 void SndStream_NextRequest(StrmInternal *s, int priority) {
     StrmRequest *request = NULL;
-    MUTEX_lock(Mutex(s));
+    MUTEX_lock(&s->mutex);
     int idle = 1;
     StrmRequest *current = s->current;
     if (current != NULL) {
@@ -316,7 +304,7 @@ void SndStream_NextRequest(StrmInternal *s, int priority) {
     } else {
         s->state = 0;
     }
-    MUTEX_unlock(Mutex(s));
+    MUTEX_unlock(&s->mutex);
     if (idle != 0)
         return;
     s->writePos = s->parsePos;
@@ -337,16 +325,16 @@ void SndStream_NextRequest(StrmInternal *s, int priority) {
             break;
     }
     if (s->fileSlot == 0) {
-        unsigned operation = FILESYS_open(s->fileName, 1, priority, (int)U(s));
+        unsigned operation = FILESYS_open(s->fileName, 1, priority, UserData(s));
         s->operation = operation;
         if (operation != 0)
-            FILESYS_callbackop(operation, Callback(kOpenDone));
+            FILESYS_callbackop(operation, OpenDone);
         return;
     }
-    unsigned operation = FILESYS_close(s->fileSlot, priority, (int)U(s));
+    unsigned operation = FILESYS_close(s->fileSlot, priority, UserData(s));
     s->operation = operation;
     if (operation != 0)
-        FILESYS_callbackop(operation, Callback(kCloseDone));
+        FILESYS_callbackop(operation, CloseDone);
 }
 
 // AUTOLTCG
@@ -377,10 +365,10 @@ void FUN_0014af10(unsigned operation, int status, StrmInternal *s) {
     (void)operation;
     (void)status;
     FILESYS_completeop(s->operation);
-    unsigned next = FILESYS_open(s->fileName, 1, s->priorityGreedy, (int)U(s));
+    unsigned next = FILESYS_open(s->fileName, 1, s->priorityGreedy, UserData(s));
     s->operation = next;
     if (next != 0)
-        FILESYS_callbackop(next, Callback(kOpenDone));
+        FILESYS_callbackop(next, OpenDone);
 }
 
 // FUNC_AT(0x0014b660)
@@ -408,10 +396,10 @@ void FUN_0014b660(unsigned operation, int status, StrmInternal *s) {
         FUN_0014b730(s, s->priorityGreedy);
         return;
     }
-    MUTEX_lock(Mutex(s));
+    MUTEX_lock(&s->mutex);
     if (request->state != 4)
         request->state = 3;
-    MUTEX_unlock(Mutex(s));
+    MUTEX_unlock(&s->mutex);
     SndStream_NextRequest(s, s->priorityGreedy);
 }
 
@@ -422,26 +410,27 @@ void FUN_0014b660(unsigned operation, int status, StrmInternal *s) {
 void FUN_0014b730(StrmInternal *s, int priority) {
     if (s->readPos != s->parsePos) {
         do {
-            uint32_t *chunk = (uint32_t *)s->readPos;
-            uint32_t tag = chunk[0];
+            StrmChunk *chunk = ChunkAt(s->readPos);
+            uint32_t tag = chunk->tag;
             if (tag == kWrap)
                 s->readPos = s->ringStart;
             else if (tag == kSkip)
-                s->readPos = (uint8_t *)chunk + chunk[1];
+                s->readPos = (uint8_t *)Advance(chunk, chunk->size);
             else
                 break;
         } while (s->readPos != s->parsePos);
     }
 
-    MUTEX_lock(Mutex(s));
+    MUTEX_lock(&s->mutex);
     StrmRequest *head = s->head;
     while (head->next != NULL) {
         StrmRequest *next = head->next;
         if (next->state == 1)
             break;
-        uint32_t mark = U(next->start) - 1;
-        uint32_t write = U(s->writePos);
-        uint32_t read = U(s->readPos);
+        // retired once the byte before the next request's data is outside the unconsumed part of the ring
+        uint8_t *mark = next->start - 1;
+        uint8_t *write = s->writePos;
+        uint8_t *read = s->readPos;
         bool retire;
         if (read > write)
             retire = mark < read && mark >= write;
@@ -465,25 +454,25 @@ void FUN_0014b730(StrmInternal *s, int priority) {
         s->freeList = head;
         head = s->head;
     }
-    MUTEX_unlock(Mutex(s));
+    MUTEX_unlock(&s->mutex);
 
-    uint32_t read = U(s->readPos);
-    uint32_t write = U(s->writePos);
+    uint8_t *read = s->readPos;
+    uint8_t *write = s->writePos;
     int space;
     if (read > write) {
-        space = (int)(read - write - 0x81);
+        space = int(read - write) - 0x81;
     } else {
-        space = (int)(U(s->ringEnd) - write - 0x80);
+        space = int(s->ringEnd - write) - 0x80;
         if (space < s->readChunk) {
-            int pending = (int)(write - U(s->parsePos));
+            int pending = int(write - s->parsePos);
             int fromMemory = s->current->fromMemory;
             if (fromMemory == 1) {
-                if ((int)(read - U(s->ringStart)) < pending + 1) {
+                if (int(read - s->ringStart) < pending + 1) {
                     s->state = 2;
                     return;
                 }
             } else {
-                if ((int)(read - U(s->ringStart) - 0x80) < pending + 1) {
+                if (int(read - s->ringStart) - 0x80 < pending + 1) {
                     s->state = 2;
                     return;
                 }
@@ -494,17 +483,17 @@ void FUN_0014b730(StrmInternal *s, int priority) {
             else
                 s->ringStart = s->ringBase;
             MEM_copy(s->ringStart, s->parsePos, pending);
-            uint32_t *old = (uint32_t *)s->parsePos;
-            old[0] = kWrap;
-            old[1] = 8;
+            StrmChunk *old = ChunkAt(s->parsePos);
+            old->tag = kWrap;
+            old->size = 8;
             uint8_t *start = s->ringStart;
             s->parsePos = start;
             s->writePos = start + pending;
-            if (*(uint32_t *)s->readPos == kWrap) {
+            if (ChunkAt(s->readPos)->tag == kWrap) {
                 s->readPos = start;
-                space = (int)(U(s->ringEnd) - U(s->writePos) - 0x80);
+                space = int(s->ringEnd - s->writePos) - 0x80;
             } else {
-                space = (int)(U(s->readPos) - U(s->writePos) - 1);
+                space = int(s->readPos - s->writePos) - 1;
             }
         }
     }
@@ -527,15 +516,16 @@ void FUN_0014b730(StrmInternal *s, int priority) {
     }
     int count = s->readChunk;
     s->readSize = count;
-    unsigned operation = FILESYS_read(s->fileSlot, offset, s->writePos, count, priority, (int)U(s));
+    unsigned operation = FILESYS_read(s->fileSlot, offset, s->writePos, count, priority, UserData(s));
     s->operation = operation;
     if (operation == 0)
         return;
-    FILESYS_callbackop(operation, Callback(kReadDone));
+    FILESYS_callbackop(operation, ReadDone);
 }
 
 // ---- the API
 
+// The header (0x190), the readers, 0x80 for aligning the ring, the requests and the filters
 // FUNC_AT(0x0014b090)
 int STREAM_overhead(int requests, int filters, int readers) {
     return (readers + 0x21) * 16 + requests * 0x124 + filters * 12;
@@ -551,21 +541,21 @@ SND::StrmReader* STREAM_create(int requests, int filters, int readers, StrmInter
         return NULL;
     StrmInternal *s = memory;
     s->magic = kMagic;
-    MUTEX_create(Mutex(s));
+    MUTEX_create(&s->mutex);
     s->numFilters = filters;
     s->numReaders = readers;
-    uint8_t *records = (uint8_t *)s + 0x190;
-    uint8_t *filterRecords = records + requestBytes;
-    s->filters = (StrmFilter *)filterRecords;
-    uint8_t *readerRecords = filterRecords + filterBytes;
-    uint8_t *ringBase = (uint8_t *)(uintptr_t)(((U(readerRecords) + (uint32_t)readers * 16) & 0xffffff80u) + 0x80);
-    s->readers = (StrmReader *)readerRecords;
+    StrmRequest *requestRecords = (StrmRequest *)(s + 1);
+    StrmFilter *filterRecords = (StrmFilter *)(requestRecords + requests);
+    s->filters = filterRecords;
+    StrmReader *readerRecords = (StrmReader *)(filterRecords + filters);
+    uint8_t *ringBase = (uint8_t *)((uintptr_t(readerRecords + readers) & 0xffffff80) + 0x80);   // 128-aligned
+    s->readers = readerRecords;
     s->ringBase = ringBase;
     s->ringStart = ringBase;
     s->readPos = ringBase;
     s->parsePos = ringBase;
     s->writePos = ringBase;
-    s->requests = (StrmRequest *)records;
+    s->requests = requestRecords;
     s->numRequests = requests;
     s->ringEnd = (uint8_t *)s + size;
     s->state = 0;
@@ -577,20 +567,20 @@ SND::StrmReader* STREAM_create(int requests, int filters, int readers, StrmInter
     s->head = NULL;
     s->current = NULL;
     s->tail = NULL;
-    s->freeList = (StrmRequest *)records;
-    MEM_clear(s->fileName, 0x100);
+    s->freeList = requestRecords;
+    MEM_clear(s->fileName, sizeof(s->fileName));
     s->fileSlot = 0;
     if (ring < 0x4000)
         s->readChunk = 0x800;
     else
         s->readChunk = ring >= 0x8000 ? 0x2000 : 0x1000;
     for (int i = 0; i < requests; i++) {
-        StrmRequest *request = (StrmRequest *)((uint8_t *)s->requests + i * 0x124);
-        request->id = (uint32_t)i;
+        StrmRequest *request = &s->requests[i];
+        request->id = i;
         request->state = 0;
-        request->next = (StrmRequest *)((uint8_t *)s->requests + i * 0x124 + 0x124);
+        request->next = &s->requests[i + 1];
     }
-    ((StrmRequest *)((uint8_t *)s->requests + requestBytes - 0x124))->next = NULL;
+    s->requests[requests - 1].next = NULL;
     for (int i = 0; i < filters; i++) {
         StrmFilter *filter = &s->filters[i];
         filter->mask = 0;
@@ -667,11 +657,11 @@ uint32_t STREAM_queuefile(SND::StrmReader *stream, const char *name, int offset,
     request->offset = offset;
     request->endTag = endTag;
     SndStream_Append(s, request);
-    MUTEX_lock(Mutex(s));
+    MUTEX_lock(&s->mutex);
     int state = s->state;
     if (state == 0)
         s->state = 1;
-    MUTEX_unlock(Mutex(s));
+    MUTEX_unlock(&s->mutex);
     if (state == 0) {
         if (s->greedy != 0)
             SndStream_NextRequest(s, s->priorityGreedy);
@@ -690,24 +680,24 @@ uint32_t STREAM_queuemem(SND::StrmReader *stream, const uint32_t *memory, int si
     if (request == NULL)
         return 0;
     if (size == 0) {   // the size of the chunks up to and including the end chunk
-        const uint32_t *chunk = memory;
-        while (chunk[0] != endTag) {
-            uint32_t length = chunk[1];
-            chunk = (const uint32_t *)((const uint8_t *)chunk + length);
-            size += (int)length;
+        const StrmChunk *chunk = reinterpret_cast<const StrmChunk *>(memory);
+        while (chunk->tag != endTag) {
+            uint32_t length = chunk->size;
+            chunk = reinterpret_cast<const StrmChunk *>(reinterpret_cast<const uint8_t *>(chunk) + length);
+            size += int(length);
         }
-        size += (int)chunk[1];
+        size += int(chunk->size);
     }
     request->endTag = endTag;
     request->fromMemory = 1;
-    request->memory = (const uint8_t *)memory;
+    request->memory = reinterpret_cast<const uint8_t *>(memory);
     request->offset = size;
     SndStream_Append(s, request);
-    MUTEX_lock(Mutex(s));
+    MUTEX_lock(&s->mutex);
     int state = s->state;
     if (state == 0)
         s->state = 1;
-    MUTEX_unlock(Mutex(s));
+    MUTEX_unlock(&s->mutex);
     if (state == 0)
         SndStream_NextRequest(s, state);
     return request->id;
@@ -722,25 +712,25 @@ uint32_t* STREAM_get(SND::StrmReader *stream) {
     StrmInternal *s = stream->internal;
     if (s->magic != kMagic || stream->bytes == 0)
         return NULL;
-    uint32_t *chunk = stream->next;
-    uint32_t size = chunk[1] & 0xffffff;
-    chunk[1] = size;
-    MUTEX_lock(Mutex(s));
-    int left = stream->bytes - (int)size;
+    StrmChunk *chunk = stream->next;
+    uint32_t size = chunk->size & 0xffffff;
+    chunk->size = size;
+    MUTEX_lock(&s->mutex);
+    int left = stream->bytes - int(size);
     stream->bytes = left;
-    MUTEX_unlock(Mutex(s));
+    MUTEX_unlock(&s->mutex);
     if (left > 0) {
-        uint32_t mine = (uint32_t)stream->index << 24;
-        uint32_t *p = (uint32_t *)((uint8_t *)chunk + size);
-        while ((p[1] & 0xff000000u) != mine) {
-            if (p[0] == kWrap)
-                p = (uint32_t *)s->ringStart;
+        uint32_t mine = uint32_t(stream->index) << 24;
+        StrmChunk *p = Advance(chunk, size);
+        while ((p->size & 0xff000000) != mine) {
+            if (p->tag == kWrap)
+                p = ChunkAt(s->ringStart);
             else
-                p = (uint32_t *)((uint8_t *)p + (p[1] & 0xffffff));
+                p = Advance(p, p->size & 0xffffff);
         }
         stream->next = p;
     }
-    return chunk;
+    return &chunk->tag;
 }
 
 // FUNC_AT(0x0014b5d0)
@@ -772,7 +762,7 @@ int STREAM_buffersize(SND::StrmReader *stream) {
     StrmInternal *s = Valid(stream);
     if (s == NULL)
         return 0;
-    return (int)(U(s->ringEnd) - U(s->ringBase));
+    return int(s->ringEnd - s->ringBase);
 }
 
 // FUNC_AT(0x0014b9a0)
@@ -790,20 +780,22 @@ void STREAM_setgreedylevel(SND::StrmReader *stream, int level) {
 }
 
 // FUNC_AT(0x0014b9f0)
-void STREAM_release(SND::StrmReader *stream, uint32_t *chunk) {
+void STREAM_release(SND::StrmReader *stream, uint32_t *chunkWords) {
     StrmInternal *s = Valid(stream);
     if (s == NULL)
         return;
-    if (U(chunk) < U(s->ringStart) || U(chunk) > U(s->ringEnd) - 8 || chunk[0] == kSkip)
+    StrmChunk *chunk = reinterpret_cast<StrmChunk *>(chunkWords);
+    uint8_t *at = reinterpret_cast<uint8_t *>(chunk);
+    if (at < s->ringStart || at > s->ringEnd - 8 || chunk->tag == kSkip)
         return;
-    uint32_t size = chunk[1];
-    chunk[0] = kSkip;
-    SndStream_ReleaseBytes(s, (int)size);
-    MUTEX_lock(Mutex(s));
+    uint32_t size = chunk->size;
+    chunk->tag = kSkip;
+    SndStream_ReleaseBytes(s, int(size));
+    MUTEX_lock(&s->mutex);
     int state = s->state;
     if (state == 2)
         s->state = 1;
-    MUTEX_unlock(Mutex(s));
+    MUTEX_unlock(&s->mutex);
     if (state != 2)
         return;
     if (s->greedy != 0)
@@ -817,43 +809,43 @@ void STREAM_release(SND::StrmReader *stream, uint32_t *chunk) {
 // STREAM_get/STREAM_release.
 // FUNC_AT(0x0014ba80)
 void STREAM_cancelrequest(SND::StrmReader *stream, uint32_t id) {
-    uint32_t from = 0, to = 0, readPos = 0;
+    uint8_t *from = NULL, *to = NULL, *readPos = NULL;
     if (stream == NULL)
         return;
     StrmInternal *s = stream->internal;
     if (s->magic != kMagic)
         return;
-    MUTEX_lock(Mutex(s));
+    MUTEX_lock(&s->mutex);
     int nothing = 1;
-    int index = (int)(id & 0xff);
+    int index = int(id & 0xff);
     if (index < s->numRequests) {
-        StrmRequest *request = (StrmRequest *)((uint8_t *)s->requests + index * 0x124);
+        StrmRequest *request = &s->requests[index];
         if (id == request->id && request->state != 0 && request->state != 4) {
             if (request->state == 1) {
                 SndStream_FreeRequest(request, s);
             } else {
                 request->state = 4;
-                readPos = U(s->readPos);
+                readPos = s->readPos;
                 from = readPos;
                 if (request != s->head)
-                    from = U(request->start);
+                    from = request->start;
                 StrmRequest *next = request->next;
                 if (next != NULL && next->state != 1)
-                    to = U(next->start);
+                    to = next->start;
                 else
-                    to = U(s->parsePos);
+                    to = s->parsePos;
                 nothing = 0;
             }
         }
     }
-    MUTEX_unlock(Mutex(s));
+    MUTEX_unlock(&s->mutex);
     if (nothing != 0)
         return;
     for (int i = 0; i < s->numReaders; i++) {
-        StrmReader *handle = (StrmReader *)((uint8_t *)s->readers + i * 0x10);
+        StrmReader *handle = &s->readers[i];
         if (handle->bytes <= 0)
             continue;
-        uint32_t at = U(handle->next);
+        uint8_t *at = (uint8_t *)handle->next;
         // which way to take the region [from, to) back from this reader
         bool consume;
         bool decided = false;
@@ -868,24 +860,24 @@ void STREAM_cancelrequest(SND::StrmReader *stream, uint32_t id) {
                 mark = true;
         }
         if (mark) {
-            uint32_t tagMine = (uint32_t)handle->index << 24;
-            uint32_t p = from;
+            uint32_t tagMine = uint32_t(handle->index) << 24;
+            uint8_t *p = from;
             if (from == to)
                 continue;
             do {
-                uint32_t *chunk = (uint32_t *)(uintptr_t)p;
-                if (chunk[0] == kWrap) {
-                    p = U(s->ringStart);
+                StrmChunk *chunk = ChunkAt(p);
+                if (chunk->tag == kWrap) {
+                    p = s->ringStart;
                 } else {
-                    uint32_t word = chunk[1];
+                    uint32_t word = chunk->size;
                     uint32_t size = word & 0xffffff;
-                    if ((word & 0xff000000u) == tagMine) {
-                        MUTEX_lock(Mutex(s));
-                        handle->bytes -= (int)size;
-                        MUTEX_unlock(Mutex(s));
-                        SndStream_ReleaseBytes(s, (int)size);
-                        chunk[0] = kSkip;
-                        chunk[1] = size;
+                    if ((word & 0xff000000) == tagMine) {
+                        MUTEX_lock(&s->mutex);
+                        handle->bytes -= int(size);
+                        MUTEX_unlock(&s->mutex);
+                        SndStream_ReleaseBytes(s, int(size));
+                        chunk->tag = kSkip;
+                        chunk->size = size;
                     }
                     p += size;
                 }
@@ -910,7 +902,7 @@ void STREAM_cancelrequest(SND::StrmReader *stream, uint32_t id) {
             STREAM_release(handle, STREAM_get(handle));
             if (handle->bytes <= 0)
                 break;
-            at = U(handle->next);
+            at = (uint8_t *)handle->next;
             if (from > to) {
                 if (at >= from)
                     continue;
@@ -961,15 +953,15 @@ void STREAM_kill(SND::StrmReader *stream) {
     }
     s->current->state = 4;
     for (int i = 0; i < s->numReaders; i++)
-        ((StrmReader *)((uint8_t *)s->readers + i * 0x10))->bytes = 0;
+        s->readers[i].bytes = 0;
 
     // FUN_0014aba0 inline, for everything buffered
     int all = s->bytesBuffered;
-    MUTEX_lock(Mutex(s));
+    MUTEX_lock(&s->mutex);
     int before = s->bytesBuffered;
     int after = before - all;
     s->bytesBuffered = after;
-    MUTEX_unlock(Mutex(s));
+    MUTEX_unlock(&s->mutex);
     int level = s->greedyLevel;
     if (before >= level && after < level) {
         s->greedy = 1;
@@ -979,13 +971,13 @@ void STREAM_kill(SND::StrmReader *stream) {
 
     uint8_t *p = s->readPos;
     while (p != s->parsePos) {
-        uint32_t *chunk = (uint32_t *)p;
-        if (chunk[0] == kWrap) {
+        StrmChunk *chunk = ChunkAt(p);
+        if (chunk->tag == kWrap) {
             p = s->ringStart;
         } else {
-            uint32_t size = chunk[1] & 0xffffff;
-            chunk[0] = kSkip;
-            chunk[1] = size;
+            uint32_t size = chunk->size & 0xffffff;
+            chunk->tag = kSkip;
+            chunk->size = size;
             last = size;
             p += size;
         }
@@ -999,10 +991,10 @@ void STREAM_kill(SND::StrmReader *stream) {
         s->state = 0;
         return;
     }
-    uint32_t pad = 0x80 - (U(s->parsePos) & 0x7f);
+    uint32_t pad = 0x80 - Misalign(s->parsePos);
     if (pad == 0x80)
         pad = 0;
-    ((uint32_t *)(s->parsePos - last))[1] = last + pad;
+    ChunkAt(s->parsePos - last)->size = last + pad;
     s->parsePos += pad;
     s->state = 0;
 }
@@ -1021,7 +1013,7 @@ void STREAM_destroy(SND::StrmReader *stream) {
         THREAD_yield(0);
     }
     s->magic = 0;
-    REALMUTEX_destroy(Mutex(s));
+    REALMUTEX_destroy(&s->mutex);
     int slot = s->fileSlot;
     if (slot != 0)
         FILESYS_closesync(slot, 0x64);
@@ -1032,8 +1024,8 @@ void STREAM_destroy(SND::StrmReader *stream) {
 // FUNC_AT(0x001503b0)
 int FUN_001503b0(void) {
     SND_UNTESTED("FUN_001503b0");
-    ((void (*)(void))0x0013b950u)();   // SNDSYS_entercritical
-    ((void (*)(void))0x0013b970u)();   // SNDSYS_leavecritical
+    EnterCritical();
+    LeaveCritical();
     return 0;
 }
 
@@ -1041,5 +1033,5 @@ int FUN_001503b0(void) {
 bool FUN_001503c0(char *p) {
     SND_UNTESTED("FUN_001503c0");
     *p = 0;
-    return (*(bool (**)(void *))0x001d1878u)(p);   // MEM_free, through the pointer the original jumps through
+    return MemFreeImport(p);
 }

@@ -11,6 +11,20 @@
 
 namespace SND {
 
+// The render-mode bits (Voice::renderMode, the configured modes 0x420 and 0x24): which path a voice plays on. The
+// code tests 0x410, 0x400 and 4; 0x20, set in both configured modes, is never tested here.
+enum RenderModeBits : uint16_t {
+    kRenderMainCpu = 0x0004,     // EA's software mixer (module G): voices 192..223
+    kRenderMode10 = 0x0010,      // a range with no voices (192..192); tested with the hardware bit
+    kRenderHardware = 0x0400,    // pooled DirectSound buffers: voices 0..191
+};
+
+// The two buffer pools (BufferNode::pool)
+enum BufferPool {
+    kPoolAdpcm = 0,              // Xbox ADPCM, 152 buffers
+    kPoolPcm16 = 1,              // 16-bit PCM, 28 buffers
+};
+
 struct BufferNode;
 
 // SNDPLATFORMVOICE (0x18), array at *0x00244c80 (NUM_VOICES of them)
@@ -83,9 +97,26 @@ struct DsBufferDesc {            // 0x18 cleared
     uint32_t bufferBytes;        // +0x08
     DsWaveFormat *format;        // +0x0c
     DsMixBins *mixBins;          // +0x10
-    uint32_t field14;            // +0x14
+    uint32_t inputMixBin;        // +0x14
 };
 static_assert(sizeof(DsBufferDesc) == 0x18, "the buffer description is 0x18 bytes here");
+
+// DSI3DL2LISTENER (0x30): an I3DL2 reverb's listener properties
+struct DsI3dl2Listener {
+    int32_t room;                // +0x00 hundredths of a dB
+    int32_t roomHF;              // +0x04
+    float roomRolloffFactor;     // +0x08
+    float decayTime;             // +0x0c seconds
+    float decayHFRatio;          // +0x10
+    int32_t reflections;         // +0x14
+    float reflectionsDelay;      // +0x18
+    int32_t reverb;              // +0x1c
+    float reverbDelay;           // +0x20
+    float diffusion;             // +0x24 percent
+    float density;               // +0x28 percent
+    float hfReference;           // +0x2c Hz
+};
+static_assert(sizeof(DsI3dl2Listener) == 0x30, "DSI3DL2LISTENER is 0x30 bytes");
 
 // SNDPKTPLAY_start's format (only the rate and the sample representation are read here)
 struct PacketFormat {

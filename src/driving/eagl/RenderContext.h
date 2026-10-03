@@ -7,13 +7,34 @@
 //
 // One object, three views of it: the RenderContextExtension is the object's first word (which points back at the
 // object), the RenderContextPrivate starts at +4 (its first word points back at the object too). The extension's
-// methods are called with the object's address and reach the fields through that first word.
+// methods are called with the object's address and reach the fields through that first word. The viewport-list
+// methods (0x000ee010..0x000ee160) are View.cpp's.
 
 #include <stdint.h>
 
 namespace EAGL {
 
+struct Device;
 struct RenderContextExtension;
+struct RenderContextPrivate;
+struct TAR;
+struct ViewPort;
+
+// D3D8's D3DPixelContainer: the header every D3D8 surface and texture starts with.
+struct D3DPixelContainer {               // 0x14
+    uint32_t common;                     // +0x00
+    uint32_t data;                       // +0x04 the pixels' address
+    uint32_t lock;                       // +0x08
+    uint32_t format;                     // +0x0c
+    uint32_t size;                       // +0x10
+};
+static_assert(sizeof(D3DPixelContainer) == 0x14, "a D3DPixelContainer is 0x14 bytes");
+
+// The 0x14-byte texture header EAGL lays over a surface ("D3DTexture"); its constructor clears it.
+struct SurfaceTexture : D3DPixelContainer {
+    SurfaceTexture* Construct();                                             // 0x000e85e0 (unreferenced)
+};
+static_assert(sizeof(SurfaceTexture) == 0x14, "the texture header is 0x14 bytes");
 
 // D3DPRESENT_PARAMETERS as the Xbox's D3D8 has it, plus the word after it SetupFrameBuffers clears with it.
 struct PresentParameters {               // 0x44
@@ -49,7 +70,7 @@ struct RenderContext {                   // 0x14c, "EAGL::RenderContext"
     uint8_t pad028[4];
     uint8_t syncToVBL;                   // +0x02c
     uint8_t pad02d[3];
-    uint32_t field030;                   // +0x030 kept, never sent
+    uint32_t unknown030;                 // +0x030 kept, never sent (SetField30)
     uint8_t ditherEnable;                // +0x034 sent as method 0x40310, shadowed at 0x0023ff10
     uint8_t pad035[3];
     uint32_t zEnable;                    // +0x038 SetRenderState_ZEnable in SetupFrameBuffers
@@ -78,8 +99,8 @@ struct RenderContext {                   // 0x14c, "EAGL::RenderContext"
     uint32_t shadowFunc;                 // +0x07c
     uint32_t pushBufferSize;             // +0x080 D3D_SetPushBufferSize, before the device exists
     uint32_t kickOffSize;                // +0x084
-    uint32_t screenSpaceOffsetX;         // +0x088 float bits
-    uint32_t screenSpaceOffsetY;         // +0x08c
+    float screenSpaceOffsetX;            // +0x088
+    float screenSpaceOffsetY;            // +0x08c
     uint32_t pointSize;                  // +0x090 slot 116
     uint32_t pointSizeMin;               // +0x094 slot 117
     uint32_t pointSizeMax;               // +0x098 slot 123
@@ -100,23 +121,27 @@ struct RenderContext {                   // 0x14c, "EAGL::RenderContext"
     int32_t currentFrontBufferDepth;     // +0x104
     int32_t currentBackBufferDepth;      // +0x108
     int32_t currentZBufferDepth;         // +0x10c
-    void *frontBuffer;                   // +0x110 D3D surface, GetBackBuffer2(-1)
-    void *backBuffer;                    // +0x114 GetBackBuffer2(0), the render target
-    void *depthSurface;                  // +0x118
-    void *copyTexture;                   // +0x11c CopyBackBuffer's texture
-    void *frontAlias;                    // +0x120 0x14-byte texture headers over the three surfaces,
-    void *backAlias;                     // +0x124 their data pointers refreshed every EndFrame
-    void *depthAlias;                    // +0x128
-    void *backTar;                       // +0x12c TARs over them (CopyBackBuffer also fills this one)
-    void *frontTar;                      // +0x130
-    void *depthTar;                      // +0x134
-    void *currentViewPort;               // +0x138
-    void *viewPorts;                     // +0x13c
-    RenderContext *next;                 // +0x140
-    uint32_t field144;                   // +0x144
-    void *device;                        // +0x148
+    D3DPixelContainer *frontBuffer;      // +0x110 D3D surface, GetBackBuffer2(-1)
+    D3DPixelContainer *backBuffer;       // +0x114 GetBackBuffer2(0), the render target
+    D3DPixelContainer *depthSurface;     // +0x118
+    D3DPixelContainer *copyTexture;      // +0x11c CopyBackBuffer's texture
+    SurfaceTexture *frontAlias;          // +0x120 texture headers over the three surfaces,
+    SurfaceTexture *backAlias;           // +0x124 their data pointers refreshed every EndFrame
+    SurfaceTexture *depthAlias;          // +0x128
+    TAR *backTar;                        // +0x12c TARs over them (CopyBackBuffer also fills this one)
+    TAR *frontTar;                       // +0x130
+    TAR *depthTar;                       // +0x134
+    ViewPort *currentViewPort;           // +0x138
+    ViewPort *viewPorts;                 // +0x13c list, linked through ViewPort::next
+    RenderContext *next;                 // +0x140 the Device's list
+    uint32_t unknown144;                 // +0x144
+    Device *device;                      // +0x148
 
-    RenderContext* Construct(void *device);                                  // 0x000e8740
+    // The extension and the private part are views of this object, at +0x00 and +0x04
+    RenderContextExtension* Extension() { return reinterpret_cast<RenderContextExtension *>(this); }
+    RenderContextPrivate* Private() { return reinterpret_cast<RenderContextPrivate *>(&privateOwner); }
+
+    RenderContext* Construct(Device *device);                                // 0x000e8740
     void Destruct();                                                         // 0x000e8600
     void BeginFrame();                                                       // 0x000e6610
     void* EndFrame();                                                        // 0x000e6640 (returns Device::Get())
@@ -141,6 +166,12 @@ struct RenderContext {                   // 0x14c, "EAGL::RenderContext"
     bool GetField30(uint32_t *value);                                        // 0x000e7450 (unreferenced)
     bool SetSwapInterval(int interval);                                      // 0x000e7460 (unreferenced)
     bool GetSwapInterval(int *interval);                                     // 0x000e74c0 (unreferenced)
+
+    // The viewport list (View.cpp)
+    ViewPort* NewViewPort();                                                 // 0x000ee010
+    ViewPort* GetCurrentViewPort();                                          // 0x000ee080
+    void DeleteViewPort(ViewPort *viewPort);                                 // 0x000ee0a0
+    uint8_t* OffsetSelf();                                                   // 0x000ee160 (invented; no callers)
 };
 static_assert(sizeof(RenderContext) == 0x14c, "a RenderContext is 0x14c bytes");
 
@@ -198,9 +229,9 @@ struct RenderContextExtension {
     bool EndVisibilityTest(uint32_t index);                                  // 0x000e7c80
     bool GetVisibilityTestResult(uint32_t index, uint32_t *result);          // 0x000e7ca0
     bool ReadBackBuffer(void *destination);                                  // 0x000e7d00 (unreferenced)
-    bool SetGlobal23ff0c(uint32_t value);                                    // 0x000e7d70
+    bool SetGlobal23ff0c(uint32_t value);                                    // 0x000e7d70 (TAR LOD bias override)
     bool GetGlobal23ff0c(float *value);                                      // 0x000e7d80 (unreferenced)
-    bool SetGlobal1cb938(uint32_t value);                                    // 0x000e7da0 (unreferenced)
+    bool SetGlobal1cb938(uint32_t value);                                    // 0x000e7da0 (unreferenced; filter)
     bool GetGlobal1cb938(uint32_t *value);                                   // 0x000e7db0 (unreferenced)
     bool SetMultiSampleAntiAlias(uint8_t enable);                            // 0x000e7dd0 (unreferenced)
     bool GetMultiSampleAntiAlias(uint8_t *enable);                           // 0x000e7e00 (unreferenced)
@@ -222,32 +253,24 @@ struct RenderContextExtension {
     bool GetPointScaleEnable(uint8_t *enable);                               // 0x000e8130 (unreferenced)
     uint8_t QueryPal60();                                                    // 0x000e8150
     bool IsDeviceCreated(uint32_t unused);                                   // 0x000e8190 (unreferenced)
-    void* CopyBackBuffer();                                                  // 0x000e81a0 (unreferenced; a TAR)
-    void* GetFrontBuffer();                                                  // 0x000e8270 (a TAR)
-    void* GetBackBuffer();                                                   // 0x000e8350 (a TAR)
-    void* GetDepthBuffer();                                                  // 0x000e8430 (unreferenced; a TAR)
+    TAR* CopyBackBuffer();                                                   // 0x000e81a0 (unreferenced)
+    TAR* GetFrontBuffer();                                                   // 0x000e8270
+    TAR* GetBackBuffer();                                                    // 0x000e8350
+    TAR* GetDepthBuffer();                                                   // 0x000e8430 (unreferenced)
     void ReleaseCopyTexture();                                               // 0x000e85b0
 };
 
-// The private part, at +4 of the object: only its constructor survives as a function (the RenderContext
-// constructor has it inlined). Offsets below are from the private part, i.e. 4 less than the object's.
+// The private part, at +4 of the object (EAGLInternal::RenderContextPrivate): its constructor (which the
+// RenderContext constructor has inlined) and the viewport setter (View.cpp).
 struct RenderContextPrivate {
     RenderContext *owner;                // +0x00 (object +0x004)
 
+    // The object this is the private part of: the one 4 bytes below, as the constructor addresses it
+    RenderContext* Object() { return reinterpret_cast<RenderContext *>(reinterpret_cast<uint8_t *>(this) - 4); }
+
     RenderContextPrivate* Construct(RenderContext *owner);                   // 0x000e86f0 (unreferenced)
+    void SetCurrentViewPort(ViewPort *viewPort);                             // 0x000ee090
 };
-
-// The 0x14-byte texture header EAGL lays over a surface ("D3DTexture"); its constructor clears it.
-struct SurfaceTexture {                  // 0x14
-    uint32_t common;                     // +0x00
-    uint32_t data;                       // +0x04 the surface's data pointer, copied in
-    uint32_t lock;                       // +0x08
-    uint32_t format;                     // +0x0c
-    uint32_t size;                       // +0x10
-
-    SurfaceTexture* Construct();                                             // 0x000e85e0 (unreferenced)
-};
-static_assert(sizeof(SurfaceTexture) == 0x14, "the texture header is 0x14 bytes");
 
 }  // namespace EAGL
 

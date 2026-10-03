@@ -19,7 +19,8 @@
 template <typename R, typename... A>
 static inline R AnimVCall(const void *object, int slot, A... args) {
     typedef R (__fastcall *Method)(const void *, int, A...);
-    return ((Method)((void *const *)*(void *const *)object)[slot])(object, 0, args...);
+    Method const *vtable = *static_cast<Method const *const *>(object);
+    return vtable[slot](object, 0, args...);
 }
 
 enum FnAnimSlot {                    // the 15 FnAnim slots; FnAnimMemoryMap adds 15-17
@@ -32,6 +33,14 @@ enum FnAnimType {                    // the type word of the anim data = the fac
     kRawPose = 0, kRawEvent, kRawLinear, kCycle, kEventBlender, kGraft, kPoseBlender, kPoseMirror, kRunBlender,
     kTurnBlender, kDeltaLerp, kDeltaQuat, kKeyLerp, kKeyQuat, kPhase, kCompound, kRawState, kDeltaQ, kDeltaQFast,
     kDeltaSingleQ, kDeltaF3, kDeltaF1, kAnimTypeCount
+};
+
+// Every anim data starts with its type (FnAnimType) and the checksum of the skeleton it targets.
+struct AnimData {
+    uint16_t type;                   // +0x00
+    uint16_t checksum;               // +0x02
+
+    uint16_t* GetType(uint16_t *out);                            // 0x000141d0
 };
 
 struct FnAnim {                      // 0xc
@@ -48,6 +57,7 @@ struct FnAnim {                      // 0xc
     void* GetAttributes();                                       // 0x000fb110
     bool NotImplemented(float a, void *b);                       // 0x000f70e0 (FindMatchTime, EvalPhase, ...)
 };
+static_assert(sizeof(FnAnim) == 0xc, "FnAnim is 0xc bytes");
 
 struct FnAnimMemoryMap : FnAnim {    // 0x10
     uint8_t *anim;                   // +0x0c the anim data
@@ -61,6 +71,7 @@ struct FnAnimMemoryMap : FnAnim {    // 0x10
     FnAnimMemoryMap* ScalarDelete(unsigned flags);               // 0x000faaf0
     bool GetAttributeByte(uint16_t id, uint8_t *out);            // 0x000fab10
 };
+static_assert(sizeof(FnAnimMemoryMap) == 0x10, "FnAnimMemoryMap is 0x10 bytes");
 
 struct FnCompoundChannel : FnAnimMemoryMap {   // 0x18, type 15
     FnAnim **channels;               // +0x10, from the pool (NewBlock), made on first use
@@ -87,6 +98,7 @@ struct FnCompoundChannel : FnAnimMemoryMap {   // 0x18, type 15
     uint8_t GetFPS();                                            // 0x000fb000
     void* GetAttributes();                                       // 0x000fb040
 };
+static_assert(sizeof(FnCompoundChannel) == 0x18, "FnCompoundChannel is 0x18 bytes");
 
 struct FnRawPoseChannel : FnAnimMemoryMap {    // 0x14, type 0
     uint8_t interpolate;             // +0x10
@@ -98,6 +110,7 @@ struct FnRawPoseChannel : FnAnimMemoryMap {    // 0x14, type 0
     void Eval(float previous, float time, float *out);           // 0x000fb120
     bool EvalSQT(float time, float *sqt, void *mask);            // 0x000fb140
 };
+static_assert(sizeof(FnRawPoseChannel) == 0x14, "FnRawPoseChannel is 0x14 bytes");
 
 struct FnRawEventChannel : FnAnimMemoryMap {   // 0x18, type 1
     int32_t lastIndex;               // +0x10
@@ -110,6 +123,7 @@ struct FnRawEventChannel : FnAnimMemoryMap {   // 0x18, type 1
     bool EvalEvent(float previous, float time, void **handlers, void *data);   // 0x000f7430
     void Eval(float previous, float time, float *out);           // 0x000f7460
 };
+static_assert(sizeof(FnRawEventChannel) == 0x18, "FnRawEventChannel is 0x18 bytes");
 
 struct FnRawLinearChannel : FnAnimMemoryMap {  // 0x14, type 2
     uint8_t interpolate;             // +0x10
@@ -120,10 +134,16 @@ struct FnRawLinearChannel : FnAnimMemoryMap {  // 0x14, type 2
     void Eval(float previous, float time, float *out);           // 0x000f74e0
     bool GetLength(float *length);                               // 0x000f7650
 };
+static_assert(sizeof(FnRawLinearChannel) == 0x14, "FnRawLinearChannel is 0x14 bytes");
 
-// The raw linear data (thiscall on the data): u16 type, u16 checksum, u16 channels, u16 frames, u16 index[channels]
-// (padded to even), then frames x channels floats.
-struct RawLinearData {
+// The raw linear data (thiscall on the data): the channels' output indexes (padded to even), then frames x channels
+// floats.
+struct RawLinearData : AnimData {
+    uint16_t channels;               // +0x04
+    uint16_t frames;                 // +0x06
+    uint16_t index[1];               // +0x08 [channels]
+
+    float* Frame(int frame) { return (float *)(index + ((channels + 1) & ~1)) + channels * frame; }
     void Eval(float time, float *out, bool interpolate);         // 0x000f7500
     void Copy(int frame, float *out);                            // 0x000f75a0
     void Lerp(float t, int frame0, int frame1, float *out);      // 0x000f75e0
@@ -148,6 +168,7 @@ struct FnKeyDeltaChan : FnAnimMemoryMap {      // 0x18: KeyLerp 12, KeyQuat 13
     void EvalLerp(float previous, float time, float *out);       // 0x000fba00 (FnKeyLerpChan::Eval)
     bool EvalSQTLerp(float time, float *sqt, void *mask);        // 0x000fba20 (FnKeyLerpChan::EvalSQT)
 };
+static_assert(sizeof(FnKeyDeltaChan) == 0x18, "FnKeyDeltaChan is 0x18 bytes");
 
 struct FnDeltaChan : FnAnimMemoryMap {         // 0x18: DeltaLerp 10, DeltaQuat 11
     int32_t frame;                   // +0x10, -1 until decoded
@@ -169,6 +190,7 @@ struct FnDeltaChan : FnAnimMemoryMap {         // 0x18: DeltaLerp 10, DeltaQuat 
     bool EvalWeightsLerp(float time, float *weights);            // 0x000fb630 (FnDeltaLerpChan::EvalWeights)
     bool EvalVel2DLerp(float time, float *velocity);             // 0x000fb650 (FnDeltaLerpChan::EvalVel2D)
 };
+static_assert(sizeof(FnDeltaChan) == 0x18, "FnDeltaChan is 0x18 bytes");
 
 struct FnGraft : FnAnim {            // 0x14, type 5: Eval runs every sub-anim
     FnAnim **anims;                  // +0x0c
@@ -177,6 +199,7 @@ struct FnGraft : FnAnim {            // 0x14, type 5: Eval runs every sub-anim
     FnGraft* ScalarDelete(unsigned flags);                       // 0x000f7790
     void Eval(float previous, float time, float *out);           // 0x000f77c0
 };
+static_assert(sizeof(FnGraft) == 0x14, "FnGraft is 0x14 bytes");
 
 struct FnCycle : FnAnim {            // 0x1c, type 3: time wrapped into [start, end] around a sub-anim
     float start;                     // +0x0c
@@ -190,6 +213,7 @@ struct FnCycle : FnAnim {            // 0x1c, type 3: time wrapped into [start, 
     bool EvalSQT(float time, float *sqt, void *mask);            // 0x000f7a90
     bool EvalPhase(float time, void *phase);                     // 0x000f7ac0
 };
+static_assert(sizeof(FnCycle) == 0x1c, "FnCycle is 0x1c bytes");
 
 struct FnPoseBlender : FnAnim {      // 0x80, type 6 (the blending: AnimPoseBlend.cpp)
     struct Skeleton *skeleton;       // +0x0c for the still poses
@@ -220,10 +244,11 @@ struct FnPoseBlender : FnAnim {      // 0x80, type 6 (the blending: AnimPoseBlen
     void Set(FnAnim *a, float offA, FnAnim *b, float offB, int alignBone, float previous, float startTime,
              float length);                                      // 0x000fce70
 };
+static_assert(sizeof(FnPoseBlender) == 0x80, "FnPoseBlender is 0x80 bytes");
 
 struct FnPoseMirror : FnAnim {       // 0x1c, type 7
     FnAnim *anim;                    // +0x0c
-    void *skeleton;                  // +0x10
+    struct Skeleton *skeleton;       // +0x10
     float *pose;                     // +0x14
     uint8_t flags;                   // +0x18
     uint8_t enabled;                 // +0x19
@@ -233,6 +258,7 @@ struct FnPoseMirror : FnAnim {       // 0x1c, type 7
     void Eval(float previous, float time, float *out);           // 0x000f78a0
     bool EvalSQT(float time, float *sqt, void *mask);            // 0x000f78f0
 };
+static_assert(sizeof(FnPoseMirror) == 0x1c, "FnPoseMirror is 0x1c bytes");
 
 struct FnEventBlender : FnAnim {     // 0x2c, type 4 (Set/Eval: AnimPoseBlend.cpp)
     FnAnim *animA;                   // +0x0c up to start
@@ -248,6 +274,7 @@ struct FnEventBlender : FnAnim {     // 0x2c, type 4 (Set/Eval: AnimPoseBlend.cp
     void Set(FnAnim *a, FnAnim *b, float offA, float offB, float startTime, float length, int blendMode);  // 0x000fcfa0
     void Eval(float previous, float time, float *out);           // 0x000fcfe0
 };
+static_assert(sizeof(FnEventBlender) == 0x2c, "FnEventBlender is 0x2c bytes");
 
 struct FnPhaseChan : FnAnimMemoryMap {         // 0x18, type 14
     uint16_t index;                  // +0x10, 0 (constructor, SetAnimMemoryMap)
@@ -263,6 +290,7 @@ struct FnPhaseChan : FnAnimMemoryMap {         // 0x18, type 14
     void Eval(float previous, float time, float *out);           // 0x000fd4c0
     void SetAnimMemoryMap(uint8_t *data);                        // 0x000fd670
 };
+static_assert(sizeof(FnPhaseChan) == 0x18, "FnPhaseChan is 0x18 bytes");
 
 struct FnRawStateChan : FnAnimMemoryMap {      // 0x14, type 16
     int32_t frame;                   // +0x10 the frame last decoded
@@ -276,6 +304,7 @@ struct FnRawStateChan : FnAnimMemoryMap {      // 0x14, type 16
     FnRawStateChan* ScalarDelete(unsigned flags);                // 0x000f7bc0
     void Destruct();                                             // 0x000f7bf0
 };
+static_assert(sizeof(FnRawStateChan) == 0x14, "FnRawStateChan is 0x14 bytes");
 
 // EAGLAnim's pool (MemoryPoolManager): blocks by anim type from free lists, and size-classed blocks.
 void* AnimPool_NewBlockByIdx(uint16_t type);                     // 0x000f7c40
@@ -287,5 +316,9 @@ void AnimPool_InitAnimMemoryMap(uint8_t *data);                  // 0x000f7d70
 FnAnim* AnimPool_Construct(uint16_t type);                       // 0x000f7de0 (the factory)
 FnAnim* AnimPool_NewFnAnim(uint8_t *data);                       // 0x00014210
 void AnimPool_DeleteFnAnim(FnAnim *anim);                        // 0x000141e0
+// Inlined in the original (AnimObjects.cpp): a size-classed block back on its free list, and an anim's destructor
+// run (scalar deleting, flags 0) with the object back on its type's free list.
+void AnimPool_FreeBlock(void *block);
+void AnimPool_ReleaseFnAnim(FnAnim *anim);
 
 #endif // DRIVING_EAGL_ANIM_FNANIM_H_

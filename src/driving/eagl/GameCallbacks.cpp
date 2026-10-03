@@ -8,22 +8,25 @@
 // EAGLNamespace for the object it has just loaded, so that CARP's symbolic references find its models by name.
 // ---------------------------------------------------------------------------------------------------------------
 
+#define UMemory_Alloc ((void *(*)(uint32_t size, uint32_t flags, const char *name))0x00114470)
+#define UMemory_Free ((void (*)(void *pointer))0x001144b0)
+
 // FUNC_AT(0x0007aea0)
 void* EAGLNamespace::NameLookup(const char *name, void *unused) {
     (void)unused;
     void *address = NULL;
-    if (!loader->GetAddr((const char *)0x001a09e0u, name, &address))   // "Model"
+    if (!loader->GetAddr("Model", name, &address))
         return NULL;
     return address;
 }
 
 // FUNC_AT(0x0007d040)
 void* EAGL_allocator(uint32_t size, const char *name) {
-    return ((void *(*)(uint32_t, uint32_t, const char *))0x00114470)(size, 0x100, name);   // UMemory::Alloc
+    return UMemory_Alloc(size, 0x100, name);
 }
 
 // FUNC_AT(0x000c5700)
 void EAGL_deallocator(void *pointer, uint32_t size) {
     (void)size;
-    ((void (*)(void *))0x001144b0)(pointer);   // UMemory::Free
+    UMemory_Free(pointer);
 }

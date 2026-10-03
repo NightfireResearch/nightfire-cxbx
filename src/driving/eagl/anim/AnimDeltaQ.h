@@ -17,20 +17,44 @@ struct DeltaSingleQMinRangef {       // 0x1c, a range record unquantised
 };
 static_assert(sizeof(DeltaSingleQMinRangef) == 0x1c, "DeltaSingleQMinRangef is 0x1c bytes");
 
-struct DeltaSingleQMinRange {        // 0xe: u16 const0, const1, min[2], range[2], index
+struct DeltaSingleQMinRange {        // 0xe, a range record in the data
+    uint16_t const0, const1;         // +0x00 the pre/post angles
+    uint16_t min[2];                 // +0x04 the axis component's and w's
+    uint16_t range[2];               // +0x08
+    uint16_t index;                  // +0x0c the axis (UnQuantize keeps its low byte)
+
     void UnQuantize(DeltaSingleQMinRangef *out);                 // 0x00101aa0 (name from MW)
 };
+static_assert(sizeof(DeltaSingleQMinRange) == 0xe, "DeltaSingleQMinRange is 0xe bytes");
 
-struct DeltaSingleQPhysical {        // 2 bytes: u8 v (the axis component), u8 w
+struct DeltaSingleQPhysical {        // a bone's quaternion at the start of a bin
+    uint8_t v;                       // +0x00 the axis component
+    uint8_t w;                       // +0x01
+
     void UnQuantize(int index, float *q);                        // 0x00101b50 (name from MW)
 };
+static_assert(sizeof(DeltaSingleQPhysical) == 2, "DeltaSingleQPhysical is 2 bytes");
 
-struct DeltaSingleQDelta {           // 1 byte: v in the high nibble, w in the low
+struct DeltaSingleQDelta {           // a bone's delta from one key to the next
+    uint8_t vw;                      // v in the high nibble, w in the low
+
     void UnQuantize(const DeltaSingleQMinRangef *range, float *q);   // 0x00101be0 (name from MW)
 };
 
+// The data: a range record per bone, then the bins: per bone a physical value, then a row of deltas per key after
+// the first.
+struct DeltaSingleQData : AnimData {
+    uint16_t keys;                   // +0x04
+    uint8_t bones;                   // +0x06
+    uint8_t binLengthPower;          // +0x07 keys a bin: 1 << binLengthPower
+    uint16_t *times;                 // +0x08 [keys - 1] (key k at times[k - 1]), or NULL: a key a frame
+    uint8_t *boneIdx;                // +0x0c [bones] each bone's index in the pose
+    DeltaSingleQMinRange ranges[1];  // +0x10 [bones], then the bins
+};
+static_assert(offsetof(DeltaSingleQData, ranges) == 0x10, "the single-axis ranges are at +0x10");
+
 struct FnDeltaSingleQ : FnAnimMemoryMap {      // 0x30
-    uint8_t *minRanges;              // +0x10 the data's range records (0xe bytes each)
+    DeltaSingleQMinRange *minRanges; // +0x10 the data's range records
     uint8_t *bins;                   // +0x14
     int32_t binSize;                 // +0x18
     int32_t prevKey;                 // +0x1c the key prevQs holds, -1 none
@@ -53,27 +77,54 @@ static_assert(sizeof(FnDeltaSingleQ) == 0x30, "FnDeltaSingleQ is 0x30 bytes");
 
 // ---- FnDeltaQFast (type 18): 12-bit keys, 6-bit deltas, linear interpolation between keys
 
-struct DeltaQFastMinRange {          // 0x10: u16 min[4], range[4]
-    void UnQuantize(float *out);                                 // 0x00102e30 (8 floats: min, range)
+struct DeltaQFastMinRangef {         // 0x20, a range record unquantised
+    float min[4];                    // +0x00
+    float range[4];                  // +0x10
 };
+static_assert(sizeof(DeltaQFastMinRangef) == 0x20, "DeltaQFastMinRangef is 0x20 bytes");
 
-struct DeltaQFastPhysical {          // 6 bytes: x, y, z in 12 bits each, w from the three low nibbles
+struct DeltaQFastMinRange {          // 0x10, a range record in the data
+    uint16_t min[4];                 // +0x00
+    uint16_t range[4];               // +0x08
+
+    void UnQuantize(DeltaQFastMinRangef *out);                   // 0x00102e30
+};
+static_assert(sizeof(DeltaQFastMinRange) == 0x10, "DeltaQFastMinRange is 0x10 bytes");
+
+struct DeltaQFastPhysical {          // x, y, z in the high 12 bits each, w from the three low nibbles
+    uint16_t xyz[3];
+
     void UnQuantize(float *q);                                   // 0x00102f00
 };
+static_assert(sizeof(DeltaQFastPhysical) == 6, "DeltaQFastPhysical is 6 bytes");
 
-struct DeltaQFastDelta {             // 3 bytes: x, y, z in 6 bits each, w from the three low bit pairs
-    void UnQuantize(const float *range, float *q);               // 0x00102fb0 (name from MW)
-};
+struct DeltaQFastDelta {             // x, y, z in the high 6 bits each, w from the three low bit pairs
+    uint8_t xyz[3];
 
-struct DeltaQFastHeader {            // the data: u16 type, checksum, keys; u8 bones, consts; u16 *times;
-                                     // u8 *boneIdx; u8 binLengthPower; ranges at +0x12
-    uint8_t* GetConstPhysical();                                 // 0x00103060
-    void GetArrays(uint8_t **minRanges, uint8_t **bins, uint8_t **constBoneIdxs, uint8_t **constPhysical);
-                                                                 // 0x00103230 (name from MW)
+    void UnQuantize(const DeltaQFastMinRangef *range, float *q);   // 0x00102fb0 (name from MW)
 };
+static_assert(sizeof(DeltaQFastDelta) == 3, "DeltaQFastDelta is 3 bytes");
+
+// The data: a range record per bone from +0x12, the bins (per bone a physical quaternion, then a row of deltas per
+// key after the first), the constant bones' indexes and, on a 2-byte boundary, their physical quaternions.
+struct DeltaQFastHeader : AnimData {
+    uint16_t keys;                   // +0x04
+    uint8_t bones;                   // +0x06 animated bones
+    uint8_t constBones;              // +0x07
+    uint16_t *times;                 // +0x08 [keys - 1] (key k at times[k - 1]), or NULL: a key a frame
+    uint8_t *boneIdx;                // +0x0c [bones] each bone's index in the pose
+    uint8_t binLengthPower;          // +0x10 keys a bin: 1 << binLengthPower
+    uint8_t unknown11;
+    DeltaQFastMinRange ranges[1];    // +0x12 [bones]
+
+    DeltaQFastPhysical* GetConstPhysical();                      // 0x00103060
+    void GetArrays(DeltaQFastMinRange **minRanges, uint8_t **bins, uint8_t **constBoneIdxs,
+                   DeltaQFastPhysical **constPhysical);          // 0x00103230 (name from MW)
+};
+static_assert(offsetof(DeltaQFastHeader, ranges) == 0x12, "the DeltaQFast ranges are at +0x12");
 
 struct FnDeltaQFast : FnAnimMemoryMap {        // 0x40
-    float *minRangesf;               // +0x10 8 floats a bone, from the pool
+    DeltaQFastMinRangef *minRangesf; // +0x10 [bones] from the pool
     uint8_t *bins;                   // +0x14
     int32_t binSize;                 // +0x18
     int32_t prevKey;                 // +0x1c
@@ -83,24 +134,27 @@ struct FnDeltaQFast : FnAnimMemoryMap {        // 0x40
     float *nextQBlock;               // +0x2c
     float *nextQs;                   // +0x30
     uint8_t *constBoneIdxs;          // +0x34
-    uint8_t *constPhysical;          // +0x38
+    DeltaQFastPhysical *constPhysical;   // +0x38
     void *boneMask;                  // +0x3c the last mask
 
     FnDeltaQFast* Construct();                                   // 0x00101f40
     void Destruct();                                             // 0x00101f90
     bool GetLength(float *length);                               // 0x00101ff0
     void Eval(float previous, float time, float *out);           // 0x00102040
-    void UpdateNextQs(uint8_t *data, int ceilKey, int floorBin, int floorDelta);   // 0x00102060
-    void AddDeltaMask(uint8_t *bin, uint8_t *data, int prevDelta, int floorDelta, float *qs, void *mask);
+    void UpdateNextQs(DeltaQFastHeader *data, int ceilKey, int floorBin, int floorDelta);   // 0x00102060
+    void AddDeltaMask(uint8_t *bin, DeltaQFastHeader *data, int prevDelta, int floorDelta, float *qs, void *mask);
                                                                  // 0x001021a0 (name from MW)
-    void SubDeltaMask(uint8_t *bin, uint8_t *data, int prevDelta, int floorDelta, float *qs, void *mask);
+    void SubDeltaMask(uint8_t *bin, DeltaQFastHeader *data, int prevDelta, int floorDelta, float *qs, void *mask);
                                                                  // 0x00102280 (name from MW)
-    void UpdateNextQsMask(uint8_t *data, int ceilKey, int floorBin, int floorDelta, void *mask);   // 0x00102370
+    void UpdateNextQsMask(DeltaQFastHeader *data, int ceilKey, int floorBin, int floorDelta, void *mask);
+                                                                 // 0x00102370
     void SetAnimMemoryMap(uint8_t *data);                        // 0x00102500
     bool EvalSQTMask(float time, float *sqt, void *mask);        // 0x00102510
     bool EvalSQT(float time, float *sqt, void *mask);            // 0x001029f0
-    void AddDelta(uint8_t *bin, uint8_t *data, int prevDelta, int floorDelta, float *qs);   // 0x001030c0 (MW)
-    void SubDelta(uint8_t *bin, uint8_t *data, int prevDelta, int floorDelta, float *qs);   // 0x00103170 (MW)
+    void AddDelta(uint8_t *bin, DeltaQFastHeader *data, int prevDelta, int floorDelta, float *qs);
+                                                                 // 0x001030c0 (name from MW)
+    void SubDelta(uint8_t *bin, DeltaQFastHeader *data, int prevDelta, int floorDelta, float *qs);
+                                                                 // 0x00103170 (name from MW)
     FnDeltaQFast* ScalarDelete(unsigned flags);                  // 0x001032b0
     void InitBuffers();                                          // 0x001032e0 (name from MW)
 };
@@ -108,29 +162,57 @@ static_assert(sizeof(FnDeltaQFast) == 0x40, "FnDeltaQFast is 0x40 bytes");
 
 // ---- FnDeltaQ (type 17): 15-bit keys, 7/8-bit deltas, w recovered from xyz, normalised lerp between keys
 
-struct DeltaQMinRange {              // 0xc: u16 min[3], range[3]
-    void UnQuantize(float *out);                                 // 0x00103fa0 (name from MW; 6 floats)
+struct DeltaQMinRangef {             // 0x18, a range record unquantised
+    float min[3];                    // +0x00
+    float range[3];                  // +0x0c
 };
+static_assert(sizeof(DeltaQMinRangef) == 0x18, "DeltaQMinRangef is 0x18 bytes");
 
-struct DeltaQPhysical {              // 6 bytes: x in 15 bits over w's sign bit, y, z
+struct DeltaQMinRange {              // 0xc, a range record in the data
+    uint16_t min[3];                 // +0x00
+    uint16_t range[3];               // +0x06
+
+    void UnQuantize(DeltaQMinRangef *out);                       // 0x00103fa0 (name from MW)
+};
+static_assert(sizeof(DeltaQMinRange) == 0xc, "DeltaQMinRange is 0xc bytes");
+
+struct DeltaQPhysical {              // x in the high 15 bits over w's sign bit, y, z
+    uint16_t xyz[3];
+
     void UnQuantize(float *q);                                   // 0x001040a0 (name from MW)
 };
+static_assert(sizeof(DeltaQPhysical) == 6, "DeltaQPhysical is 6 bytes");
 
-struct DeltaQHeader {                // as DeltaQFastHeader, with 0xc-byte ranges
-    uint8_t* GetConstPhysical();                                 // 0x00104120 (name from MW)
-    void GetArrays(uint8_t **minRanges, uint8_t **bins, uint8_t **constBoneIdxs, uint8_t **constPhysical);
-                                                                 // 0x00104180 (name from MW)
+struct DeltaQDelta {                 // x in the high 7 bits over w's sign bit, y, z
+    uint8_t xyz[3];
 };
+static_assert(sizeof(DeltaQDelta) == 3, "DeltaQDelta is 3 bytes");
+
+struct DeltaQHeader : AnimData {     // as DeltaQFastHeader, with DeltaQ's range records
+    uint16_t keys;                   // +0x04
+    uint8_t bones;                   // +0x06 animated bones
+    uint8_t constBones;              // +0x07
+    uint16_t *times;                 // +0x08 [keys - 1] (key k at times[k - 1]), or NULL: a key a frame
+    uint8_t *boneIdx;                // +0x0c [bones] each bone's index in the pose
+    uint8_t binLengthPower;          // +0x10 keys a bin: 1 << binLengthPower
+    uint8_t unknown11;
+    DeltaQMinRange ranges[1];        // +0x12 [bones]
+
+    DeltaQPhysical* GetConstPhysical();                          // 0x00104120 (name from MW)
+    void GetArrays(DeltaQMinRange **minRanges, uint8_t **bins, uint8_t **constBoneIdxs,
+                   DeltaQPhysical **constPhysical);              // 0x00104180 (name from MW)
+};
+static_assert(offsetof(DeltaQHeader, ranges) == 0x12, "the DeltaQ ranges are at +0x12");
 
 struct FnDeltaQ : FnAnimMemoryMap {  // 0x30
-    uint8_t *minRanges;              // +0x10 the data's range records
+    DeltaQMinRange *minRanges;       // +0x10 the data's range records
     uint8_t *bins;                   // +0x14 0 until the buffers are made
     int32_t binSize;                 // +0x18
     int32_t prevKey;                 // +0x1c
     float *prevQBlock;               // +0x20
     float *prevQs;                   // +0x24
     uint8_t *constBoneIdxs;          // +0x28
-    uint8_t *constPhysical;          // +0x2c
+    DeltaQPhysical *constPhysical;   // +0x2c
 
     FnDeltaQ* Construct();                                       // 0x001033b0
     void Destruct();                                             // 0x001033f0

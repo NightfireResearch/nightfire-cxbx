@@ -4,9 +4,10 @@
 // EAGLAnim::Skeleton and EAGLAnim::BoneMask (docs/driving/eagl.md 4.11). See Skeleton.cpp. Names are the PS2 symbol
 // sheet's, matched by argument count and order; Ghidra has the Xbox functions unnamed.
 
-#include <stdint.h>
+#include "../Transform.h"
 
-class Transform;
+#include <stddef.h>
+#include <stdint.h>
 
 struct BoneMask {                    // a bit per bone, 256 bones
     uint32_t bits[8];
@@ -33,17 +34,18 @@ struct SkeletonBone {                // 0x70
     float rotation[4];               // +0x10 the still pose's quaternion
     float translation[3];            // +0x20
     int32_t mirror;                  // +0x2c the bone mirroring this one (itself on the centre line)
-    float inverseBind[16];           // +0x30 global -> skin
+    Transform inverseBind;           // +0x30 global -> skin
 };
 static_assert(sizeof(SkeletonBone) == 0x70, "a skeleton bone is 0x70 bytes");
 
 // A pose is 12 floats a bone: scale xyz, a scale applied to the matrix's first column, quaternion xyzw,
 // translation xyz, and a 1.
 struct Skeleton {
-    uint32_t unknown0[2];            // +0x00
+    uint32_t unknown00;
+    uint32_t unknown04;
     int32_t count;                   // +0x08
     float *lengthScales;             // +0x0c per bone, the 4th pose float of GetStillPose; NULL for 1
-    SkeletonBone bones[1];           // +0x10
+    SkeletonBone bones[1];           // +0x10 [count]
 
     void BuildBoneMask(int bone, bool descendants, BoneMask *mask, int lowest);           // 0x000f88c0
     void BuildMirrorBoneMask(const BoneMask *source, BoneMask *destination);             // 0x000f8940
@@ -68,6 +70,8 @@ struct Skeleton {
     void PoseSQTToSkin(const float *pose, Transform *skin, const BoneMask *mask);         // 0x000fa850
     void PoseTrans(const float *translations, Transform *skin);                          // 0x000fa900
 };
+
+static_assert(offsetof(Skeleton, bones) == 0x10, "a skeleton's bones are at +0x10");
 
 // The default of the hierarchy multiply hook at 0x001cec7c: out = child * parent (VU0_MATRIX4_mult).
 void EAGLAnim_MultiplyMatrices(float *out, const float *parent, const float *child);    // 0x001066f0

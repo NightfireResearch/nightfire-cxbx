@@ -9,24 +9,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-// The warning beside a provisional port (the pattern of eagl/anim/AnimUntested.h). Guarded: other sound modules
-// may define the same macro.
-#ifndef SND_UNTESTED
-inline void SndSystemUntested(const char *what) {
-    printf("[snd] WARNING: %s ran - a provisional port that no shipped data reaches, UNTESTED. Check what it "
-           "computes against the original.\n", what);
-    fflush(stdout);
-}
-
-#define SND_UNTESTED(what) \
-    do { \
-        static bool warned_; \
-        if (!warned_) { \
-            warned_ = true; \
-            SndSystemUntested(what); \
-        } \
-    } while (0)
-#endif
+#include "SndUntested.h"
 
 namespace SND {
 
@@ -45,15 +28,15 @@ struct LinkList {
 };
 static_assert(sizeof(LinkList) == 0xc, "SNDLINKLIST is 0xc bytes");
 
-// An SNDMEMI allocation record: offset from the heap's base, rounded size
+// An SNDMEMI allocation record: offset from the heap's base, rounded size (MW: SNDMEMREC)
 struct MemEntry {
     int32_t offset;              // +0x00
     int32_t size;                // +0x04
 };
 
-// The SNDMEMI heap's header, at the start of the memory SNDSYSI_init is given (pSndHeap, 0x00244f6c). The records
-// are a table at the memory's end growing down: record 0 is the last 8 bytes, record -1 the 8 before, ...; they are
-// kept in offset order, record 0 the lowest.
+// The SNDMEMI heap's header, at the start of the memory SNDSYSI_init is given (pSndHeap, 0x00244f6c; MW:
+// SNDMEMSTATE). The records are a table at the memory's end growing down: record 0 is the last 8 bytes, record -1
+// the 8 before, ...; they are kept in offset order, record 0 the lowest.
 struct MemHeap {
     uint8_t *base;               // +0x00 the first 16-byte boundary past the header
     MemEntry *table;             // +0x04 record 0
@@ -64,11 +47,79 @@ struct MemHeap {
 };
 static_assert(sizeof(MemHeap) == 0x18, "the SNDMEMI header is 0x18 bytes");
 
+// The options (0x120 at 0x00244cc8, sound.md 2.6; MW: SNDSYSOPTS): the platform's caps, the settable part (saved at
+// 0x00244de8) and the vector table. MW's names where its layout agrees with how this build uses a field; the
+// settable part's layout differs from MW's past +0x12.
+struct SysCaps {                 // MW: SNDSYSCAP, as SNDPLATFORM_outputcaps fills it
+    uint16_t outputRateMin;      // +0x00 8000
+    uint16_t outputRateMax;      // +0x02 48000
+    uint8_t outputModeMin;       // +0x04 5
+    uint8_t outputModeMax;       // +0x05 5
+    uint8_t mixerVoicesMax;      // +0x06 0x40
+    uint8_t unknown07;
+    uint8_t unknown08;
+    uint8_t hardwareVoicesMax;   // +0x09 0xc0
+    uint8_t middleVoicesMax;     // +0x0a 0
+    uint8_t unknown0b[8];
+    uint8_t numRenderModes;      // +0x13 2
+    uint16_t renderModes[6];     // +0x14 0x420, 0x24
+};
+static_assert(sizeof(SysCaps) == 0x20, "the caps are 0x20 bytes");
+
+struct SysSet {                  // MW: SNDSYSSET; SNDPLATFORM_outputset clamps it to the caps
+    int32_t unknown00;           // +0x00
+    uint32_t randomSeed;         // +0x04 SNDI_randomseeed's
+    uint16_t maxBanks;           // +0x08 NUM_BANKS (16)
+    uint16_t outputRate;         // +0x0a platformSampleRate (48000)
+    uint16_t unknown0c;
+    uint8_t mixerVoices;         // +0x0e 32
+    uint8_t unknown0f;
+    uint8_t unknown10;
+    uint8_t middleVoices;        // +0x11 mixVoiceOffset1: 0
+    uint8_t hardwareVoices;      // +0x12 mixVoiceOffset2: 192 (NUM_VOICES = the three counts' sum)
+    uint8_t unknown13;
+    uint8_t unknown14;           // +0x14 10 by the caps, clamped to 1..200
+    uint8_t unknown15[7];
+    uint8_t stealEqualPriority;  // +0x1c SNDVOICEI_alloc steals at equal priority too
+    uint8_t unknown1d[4];
+    uint8_t unknown21;           // +0x21 0 by the caps
+    uint8_t unknown22[5];
+    uint8_t maxStreams;          // +0x27 NUM_STREAMS (16, at most 32)
+    uint8_t outputMode;          // +0x28 the speakers: 1, 2 ... 6 (the caps say 5, SetOpts writes 1 or 2)
+    uint8_t unknown29;           // +0x29 1 by the caps
+    uint8_t unknown2a[2];
+    uint8_t heapThreshold;       // +0x2c 0x5a (MW: sndheapthreshold)
+    uint8_t numRenderModes;      // +0x2d 2
+    uint8_t unknown2e[2];
+    uint16_t renderModes[6];     // +0x30 0x420, 0x24 (the zero ones dropped by SNDPLATFORM_outputset)
+    uint16_t unknown3c[8];
+    uint16_t speakerAzimuth[7][6];   // +0x4c row n: the azimuths of n speakers (row 0 unused)
+    uint8_t unknownA0[0x48];
+};
+static_assert(offsetof(SysSet, maxStreams) == 0x27, "NUM_STREAMS is at 0x00244d0f");
+static_assert(offsetof(SysSet, speakerAzimuth) == 0x4c, "the speaker azimuths are at 0x00244d34");
+static_assert(sizeof(SysSet) == 0xe8, "the settable options are 0xe8 bytes");
+
+struct SysVectors {              // sndopts2 (MW: SNDSYSVEC), every one dummyNullFunction
+    uint32_t functions[6];       // the functions' addresses
+};
+
+struct SysOpts {
+    SysCaps caps;                // +0x000
+    SysSet set;                  // +0x020
+    SysVectors vectors;          // +0x108
+};
+static_assert(sizeof(SysOpts) == 0x120, "the options are 0x120 bytes");
+
 }  // namespace SND
 
+// A 100 Hz or main-thread server client, a module's restore hook (SNDSYS_restore calls them)
+typedef void (*SndServerClient)(void);
+typedef void (*SndRestoreHook)(void);
+
 // init and restore, the options
-int SNDSYS_getopts(void *opts);                                              // 0x0013d090
-int SNDSYS_setops(const void *opts);                                         // 0x0013d0f0
+int SNDSYS_getopts(SND::SysOpts *opts);                                      // 0x0013d090
+int SNDSYS_setops(const SND::SysOpts *opts);                                 // 0x0013d0f0
 int SNDSYSI_init(void *memory, int size);                                    // 0x0013d140
 int SNDSYS_inited(void);                                                     // 0x0013d310 dead
 int SNDSYS_restore(void);                                                    // 0x0013d320
@@ -80,7 +131,6 @@ void SNDstopall(void);                                                       // 
 // the servers
 void SNDSYSI_100hzserver(void);                                              // 0x0013b7b0
 void SNDSYS_service(void);                                                   // 0x0013f980
-typedef void (*SndServerClient)(void);   // a 100 Hz client
 void iSNDserveraddclient(SndServerClient client);                              // 0x0013f900
 void iSNDserverremoveclient(SndServerClient client);                           // 0x0013f920
 

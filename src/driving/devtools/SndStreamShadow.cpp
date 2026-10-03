@@ -57,7 +57,8 @@
 // - packet: random sequences of SNDPKTPLAY_submit/start/stop, SNDPKTPLAYI_get/freeframes/flushcallbackdata on a
 //   small ring (2..8 slots, 1..6 channels) with fake callbacks.
 // - service: one to three streams in arbitrary states (idle, playing, waiting to restart, held) whose STREAM holds a
-//   run of chunks cut from a disc stream at a random chunk (data before any header included), serviced, mixed and
+//   run of chunks cut from a disc stream at a random chunk (data before any header only on a stream that has a
+//   format: see SetupService), serviced, mixed and
 //   flushed for one to six ticks.
 // - scenario: one to three streams made with SNDSTRM_create (or createtap), disc streams of up to 256 KB queued on
 //   them over 150..500 ticks of SNDSTRMI_service, a mixer stand-in taking packets on every channel with
@@ -571,30 +572,30 @@ void RandomBytes(void *p, size_t n) {
 void DefaultOpts(PlayOpts *o) {
     memset(o, 0, sizeof(*o));
     o->vol = 0x7f;
-    o->pan = 0x40;
+    o->bend = 0x40;
     o->key = 0x3c;
     o->velocity = 0x7f;
     o->progVol = 0x7f;
     o->fxLevel = 0x7f;
     o->pitchMult = 0x1000;
     o->timeMult = 0x1000;
-    o->opt10 = 0x1000;
-    o->opt14 = 0xffff;
+    o->tempoMult = 0x1000;
+    o->lowpass = 0xffff;
 }
 
 void RandomOpts(PlayOpts *o) {
     DefaultOpts(o);
     if (Chance(50)) {
         o->vol = (int8_t)Range(-128, 127);
-        o->pan = (int8_t)Range(0, 127);
+        o->bend = (int8_t)Range(0, 127);
         o->progVol = (uint8_t)Range(0, 255);
         o->fxLevel = (int8_t)Range(0, 127);
         o->azimuth = (uint16_t)Next();
         o->pitchMult = (uint16_t)Range(0, 0x3000);
         o->timeMult = (uint16_t)Next();
+        o->distort = (uint16_t)Next();
         o->lowpass = (uint16_t)Next();
-        o->opt14 = (uint16_t)Next();
-        o->opt16 = (uint16_t)Next();
+        o->highpass = (uint16_t)Next();
     }
 }
 
@@ -806,7 +807,7 @@ void SetupHeader(int index) {
         ss->format.sampleRep = 10;
         RandomBytes(&ss->attributes, Chance(50) ? 8 : sizeof(ss->attributes));
         for (int i = 0; i < 6; i++)
-            ss->attributes.blobs[i] = NULL;
+            ss->attributes.stretchData[i] = NULL;
         ss->state = (uint8_t)(Chance(80) ? 1 : 0);
         break;
     default:  // already waiting to restart
@@ -993,7 +994,7 @@ void SetupPacket(int index) {
     p->master = (int8_t)Range(0, channels - 1);
     p->waiting = (uint8_t)Range(0, 1);
     for (int c = 0; c < channels; c++)
-        p->blobs[c] = Chance(30) ? W->arena + 16 * c : NULL;
+        p->stretchData[c] = Chance(30) ? W->arena + 16 * c : NULL;
     W->player = Range(0, 15);
     PlayerAt(W->player) = p;
     if (Chance(50))   // another player, for voicetopackethandle
@@ -1004,7 +1005,7 @@ void SetupPacket(int index) {
     W->format.sampleRep = (uint8_t)Range(0, 30);
     RandomBytes(&W->attributes, sizeof(W->attributes));
     for (int i = 0; i < 6; i++)
-        W->attributes.blobs[i] = Chance(30) ? W->arena + 0x100 + 16 * i : NULL;
+        W->attributes.stretchData[i] = Chance(30) ? W->arena + 0x100 + 16 * i : NULL;
     W->attributes.renderMode = Chance(50) ? 0x24 : (uint16_t)Next();
     RandomOpts(&W->opts[0]);
 }
@@ -1055,7 +1056,11 @@ int PickHold() {
 }
 
 // Streams in arbitrary states (idle, playing, waiting to restart; held or not) whose STREAM holds a run of chunks
-// cut from a disc stream at a random chunk - data before any header included - serviced for a few ticks
+// cut from a disc stream at a random chunk, serviced for a few ticks. A run with data before its first header goes
+// only to a stream that has a format: SNDSTRMI_parsedata fills the packet's channel pointers for the stream's
+// format.channels and stores the chunk's address before channels[0], and SNDPKTPLAY_submit copies the player's
+// format.channels of them - on a stream with no header parsed (channels 0) that is uninitialised stack, which the
+// original and ours do not share.
 const uint32_t kServiceChunkBytes = 0x20000;
 
 void SetupService(int index) {
@@ -1072,12 +1077,14 @@ void SetupService(int index) {
         if (at + 8 > d.size)
             at = start;
         uint32_t room = kServiceChunkBytes / kStreams, length = 0;
-        bool header = false;
+        bool header = false, dataFirst = false;
         while (at + length + 8 <= d.size) {
             uint32_t next = *(uint32_t *)(d.data + at + length + 4);
             if (length + next > room)
                 break;
-            header |= *(uint32_t *)(d.data + at + length) == 0x6c484353u;
+            uint32_t tag = *(uint32_t *)(d.data + at + length);
+            dataFirst |= !header && tag == 0x6c444353u;
+            header |= tag == 0x6c484353u;
             length += next;
         }
         // a header moves the current request on: keep one after it (the original would fault on none)
@@ -1090,12 +1097,12 @@ void SetupService(int index) {
             player = (player + 1) & 15;
         StreamState *ss = MakeStream(s, streamIndex, player, requests, active, packets, d.channels);
         ss->state = (uint8_t)Range(0, 2);
-        if (ss->state != 0 || Chance(50)) {
+        if (ss->state != 0 || dataFirst || Chance(50)) {   // the format the player was started with
             ss->format.sampleRate = 48000;
             ss->format.channels = (uint8_t)d.channels;
             ss->format.sampleRep = 10;
         }
-        if (Chance(30))
+        if (Chance(30) || (ss->state == 2 && dataFirst))   // a restart starts the player with nextFormat
             ss->nextFormat = ss->format;
         ss->current = (StreamRequest *)((uint8_t *)ss + 0x138 + 0x28 * Range(0, header ? active - 2 : active - 1));
         for (StreamRequest *r = (StreamRequest *)ss->active.head; r != NULL; r = r->next) {

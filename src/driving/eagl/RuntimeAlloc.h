@@ -10,6 +10,11 @@
 
 class DynamicLoader;
 
+namespace EAGL {
+struct GeoPrimState;
+struct TAR;
+}
+
 struct Property {           // "name=value,value,...", 0xc (EAGLInternal::Property)
     const char *name;
     int count;
@@ -17,6 +22,7 @@ struct Property {           // "name=value,value,...", 0xc (EAGLInternal::Proper
 
     bool Is(const char *wanted, int valueCount);                 // 0x000ed330
 };
+static_assert(sizeof(Property) == 0xc, "a property is 0xc bytes");
 
 struct Properties {         // a property string split up in a copy of itself, 0x10
     int count;
@@ -27,6 +33,7 @@ struct Properties {         // a property string split up in a copy of itself, 0
     Properties* Construct(const char *text);                     // 0x000edb30
     void Destruct();        // inline in the original (0x000edde0 is only an unwind funclet's)
 };
+static_assert(sizeof(Properties) == 0x10, "a property list is 0x10 bytes");
 
 void* RuntimeAllocTARConstructor(const char *properties, DynamicLoader *loader, void **context, char *destroy);
 void RuntimeAllocTARDestructor(void *tars, int count);
@@ -34,10 +41,10 @@ void* RuntimeAllocGeoPrimStateConstructor(const char *properties, DynamicLoader 
                                           char *destroy);
 void RuntimeAllocGeoPrimStateDestructor(void *state, int unused);
 
-void EAGL_SetTarApi(uint8_t *tar, Property *property);           // 0x000ed640 (invented)
+void EAGL_SetTarApi(EAGL::TAR *tar, Property *property);        // 0x000ed640 (invented)
 uint32_t EAGL_ParseTarApi(const char *text);                     // 0x000ed390 (invented)
 uint32_t EAGL_ParseTarValue(const char *text);                   // 0x000ed700 (invented)
-void EAGL_SetGeoPrimState(uint8_t *state, Property *property);   // 0x000f0c50 (invented)
+void EAGL_SetGeoPrimState(EAGL::GeoPrimState *state, Property *property);   // 0x000f0c50 (invented)
 uint32_t EAGL_ParseGeoPrimState(const char *text);               // 0x000ef7a0 (invented)
 uint32_t EAGL_ParseXboxGeoPrimState(const char *text);           // 0x000f04d0 (invented)
 bool EAGL_ParseTrue(const char *text);                           // 0x000f0450 (invented)

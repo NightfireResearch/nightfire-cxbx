@@ -5,12 +5,18 @@
 // Voices.cpp. The records the library shares between modules (the logical voice, the parsed patch header, the play
 // options, the effects bus, the stream attributes) are declared here; Banks.h adds the bank's own.
 //
-// Plain data only (no member functions): other modules' headers may declare the same records.
+// Plain data only (no member functions). "MW:" gives MW's SND 9 name (sndo.h, sndcmn.h) where its layout agrees.
 
 #include <stddef.h>
 #include <stdint.h>
 
 namespace SND {
+
+// An envelope segment (MW: ENVELOPE), the bank's { ticks, level } pairs
+struct EnvSegment {
+    int32_t ticks;               // +0x00 negative: forever
+    int32_t level;               // +0x04 0..127
+};
 
 // SNDVOICEI: a logical voice (0x88), array at 0x00244f3c (224 of them, NUM_VOICES at 0x00244ed8)
 struct Voice {
@@ -46,9 +52,9 @@ struct Voice {
     uint8_t envCurrent;          // +0x59
     uint8_t envRelease;          // +0x5a
     uint8_t progVol;             // +0x5b
-    int8_t dry;                  // +0x5c } indexed by bus: +0x5c + bus, +0x5d + bus
-    int8_t fxLevel;              // +0x5d }
-    int16_t fxSend;              // +0x5e indexed by bus: +0x5e + 2 x bus
+    int8_t builtinFxLevel;       // +0x5c the patch's [0x13] } SNDI_calcfxlevel indexes these by bus past their
+    int8_t fxLevel;              // +0x5d the play option's    } size: bus 1's are the next fields' bytes
+    int16_t fxSend;              // +0x5e the product, x the bus's level >> 6
     int8_t bend;                 // +0x60 velocity / pitch bend byte
     uint8_t volLfoLength;        // +0x61
     uint8_t pitchLfoLength;      // +0x62
@@ -56,7 +62,7 @@ struct Voice {
     uint8_t pitchLfoPos;         // +0x64
     uint8_t inUse;               // +0x65 1 playing, 2 the last of a multi-timbre sound, freed once
     uint16_t timeMult;           // +0x66
-    int32_t *envTable;           // +0x68 { ticks, level } pairs, in the bank
+    EnvSegment *envTable;        // +0x68 in the bank
     int8_t *volTable;            // +0x6c volume scaling (indexed by the signed volume)
     int8_t *bendTable;           // +0x70
     int8_t *volLfo;              // +0x74
@@ -73,7 +79,7 @@ static_assert(sizeof(Voice) == 0x88, "SNDVOICEI is 0x88 bytes");
 // SNDIPATCHHEADER as SNDI_parsetimbre fills it (0xb8). Tag numbers in brackets.
 struct PatchHeader {
     uint16_t detuneRandom;       // +0x00 [0x24] randrange(this) added to the detune once per play
-    uint8_t tag80;               // +0x02 [0x80] (default 2)
+    uint8_t platformVersion;     // +0x02 [0x80] (default 2)
     int8_t channels;             // +0x03 [0x82] (default 1)
     uint16_t tune;               // +0x04 [0x10] detune base
     uint16_t tuneRandom;         // +0x06 [0x11]
@@ -96,13 +102,13 @@ struct PatchHeader {
     uint16_t renderMode;         // +0x18 [0x8c]
     int8_t envStart;             // +0x1a [0x1c]
     uint8_t volLfoLength;        // +0x1b [0x1e]
-    uint8_t volLfoRandom;        // +0x1c [0x1f]
+    int8_t volLfoRandom;         // +0x1c [0x1f] the LFO starts at a random position modulo it (sign-extended)
     uint8_t pitchLfoLength;      // +0x1d [0x21]
     uint8_t pitchLfoRandom;      // +0x1e [0x23]
-    uint8_t tag25;               // +0x1f [0x25]
+    uint8_t panMult;             // +0x1f [0x25] (default 1; MW: panmult)
     int8_t *volTable;            // +0x20 [0x12] data pointer + value
     int8_t *bendTable;           // +0x24 [0x17]
-    int32_t *envTable;           // +0x28 [0x19] (default 0x001d9d28)
+    EnvSegment *envTable;        // +0x28 [0x19] (default 0x001d9d28)
     int8_t *volLfo;              // +0x2c [0x1d]
     int8_t *pitchLfo;            // +0x30 [0x20]
     uint8_t *userData[4];        // +0x34 [0x14]
@@ -114,9 +120,9 @@ struct PatchHeader {
     int32_t loopEnd;             // +0x60 [0x87]
     uint8_t *sampleData;         // +0x64 [0x8a] its data pointer
     int32_t sampleOffsets[6];    // +0x68 [0x88] [0x89] [0x94] [0x95] [0xa2] [0xa3]
-    int32_t tag1a;               // +0x80 [0x1a] (default -1)
-    uint8_t *blobs[6];           // +0x84 [0x98] [0x99] [0x9a] [0x9b] [0xa4] [0xa5] data pointers
-    uint16_t blobSizes[6];       // +0x9c
+    int32_t tag1a;               // +0x80 [0x1a] (default -1), handed to MIX_playinit
+    uint8_t *stretchData[6];     // +0x84 [0x98] [0x99] [0x9a] [0x9b] [0xa4] [0xa5] per channel: time-stretch data
+    uint16_t stretchDataSizes[6];   // +0x9c (MW: ptimestretchdata, timestretchsize)
     uint16_t azimuth[6];         // +0xa8 default speaker azimuth + [0x9c] [0x9d] [0x9e] [0x9f] [0xa6] [0xa7]
     uint8_t *start;              // +0xb4 where the tags began
 };
@@ -125,25 +131,26 @@ static_assert(sizeof(PatchHeader) == 0xb8, "SNDIPATCHHEADER is 0xb8 bytes here")
 // SNDPLAYOPTS (0x18), defaults by SNDplaysetdef
 struct PlayOpts {
     int8_t vol;                  // +0x00 0x7f
-    int8_t pan;                  // +0x01 0x40 (lands in the voice's bend byte)
+    int8_t bend;                 // +0x01 0x40 the pitch bend (the voice's bend byte)
     int8_t key;                  // +0x02 0x3c
     int8_t velocity;             // +0x03 0x7f
-    uint8_t progVol;             // +0x04 0x7f
+    uint8_t progVol;             // +0x04 0x7f (MW: drylevel)
     int8_t fxLevel;              // +0x05 0x7f
     uint8_t pad06[2];
     uint16_t azimuth;            // +0x08 0
     uint16_t elevation;          // +0x0a 0
     uint16_t pitchMult;          // +0x0c 0x1000
     uint16_t timeMult;           // +0x0e 0x1000
-    uint16_t opt10;              // +0x10 0x1000
-    uint16_t lowpass;            // +0x12 0       } passed on to SNDPLATFORM_playtimbre
-    uint16_t opt14;              // +0x14 0xffff  }
-    uint16_t opt16;              // +0x16 0       }
+    uint16_t tempoMult;          // +0x10 0x1000
+    uint16_t distort;            // +0x12 0       } passed on to SNDPLATFORM_playtimbre / packetplay, which do not
+                                 //                 use distort (MW: pad2)
+    uint16_t lowpass;            // +0x14 0xffff  } the cutoffs
+    uint16_t highpass;           // +0x16 0       }
 };
 static_assert(sizeof(PlayOpts) == 0x18, "SNDPLAYOPTS is 0x18 bytes");
 
 // An effects bus entry (0x14): FXBUS at 0x00244f44 (main-CPU path) and 0x00244f58 (hardware path), indexed by
-// bus x 0x14 - the two paths' entries overlap from bus 1 on, as in the original.
+// bus - the two paths' entries overlap from bus 1 on, as in the original.
 struct FxBus {
     uint16_t mode;               // +0x00
     int8_t level;                // +0x02 master level
@@ -154,20 +161,20 @@ struct FxBus {
 };
 static_assert(sizeof(FxBus) == 0x14, "an FXBUS entry is 0x14 bytes");
 
-// The stream attributes SNDI_patchtohdr fills (0x68), defaults by SND_attrsetdef
+// The stream attributes SNDI_patchtohdr fills (0x68, MW: SNDSAMPLEATTR), defaults by SND_attrsetdef
 struct Attributes {
-    uint16_t a00;                // +0x00 0
+    int16_t detune;              // +0x00 0
     uint8_t priority;            // +0x02 [0x06] 0
     uint8_t vol;                 // +0x03 0x7f
     uint8_t pan;                 // +0x04 0x40
     uint8_t fxLevel;             // +0x05 [0x13] 0
     uint8_t bendRange;           // +0x06 [0x0a] 0
-    uint8_t tag80;               // +0x07 [0x80] 2
+    uint8_t platformVersion;     // +0x07 [0x80] 2
     uint16_t renderMode;         // +0x08 [0x8c]
     uint8_t pad0a[2];
     uint16_t azimuth[6];         // +0x0c
-    uint8_t *blobs[6];           // +0x18 [0x98] [0x99] [0x9a] [0x9b] [0xa4] [0xa5] copies in the sound heap
-    int32_t blobSizes[6];        // +0x30
+    uint8_t *stretchData[6];     // +0x18 [0x98] [0x99] [0x9a] [0x9b] [0xa4] [0xa5] copies in the sound heap
+    int32_t stretchDataSizes[6];    // +0x30 (MW: ptsdata, tsdatasize)
     uint8_t *userData[4];        // +0x48 [0x14]
     int32_t userDataSize[4];     // +0x58
 };

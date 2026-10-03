@@ -5,32 +5,13 @@
 // game's AStream calls, the per-stream request queue and SCHl/SCDl chunk parser (SNDSTRMI), and the packet player
 // the mixer's unpacker pulls from (SNDPKTPLAY/SNDPKTPLAYI). See Streams.cpp. SNDI_patchtohdr is Banks.cpp's.
 
+#include "SndUntested.h"   // first: System.h keeps its own guarded copy for now
 #include "Banks.h"
 #include "Voices.h"
 #include "System.h"
 
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-
-// The warning beside a provisional port (the pattern of eagl/anim/AnimUntested.h). Guarded: other sound modules
-// define the same macro.
-#ifndef SND_UNTESTED
-inline void SndStreamsUntested(const char *what) {
-    printf("[snd] WARNING: %s ran - a provisional port that no shipped data reaches, UNTESTED. Check what it "
-           "computes against the original.\n", what);
-    fflush(stdout);
-}
-
-#define SND_UNTESTED(what) \
-    do { \
-        static bool warned_; \
-        if (!warned_) { \
-            warned_ = true; \
-            SndStreamsUntested(what); \
-        } \
-    } while (0)
-#endif
 
 namespace SND {
 
@@ -64,7 +45,7 @@ struct StreamState {
     StreamFormat format;         // +0x14 the playing format
     StreamFormat nextFormat;     // +0x18 the last header's
     Attributes attributes;       // +0x1c the playing attributes
-    Attributes nextAttributes;   // +0x84 the last header's (its blobs are owned here until copied)
+    Attributes nextAttributes;   // +0x84 the last header's (its stretch data are owned here until copied)
     PlayOpts opts;               // +0xec
     uint8_t filter[0x10];        // +0x104 handed to SNDCTRL_filteradd when hasFilter
     int32_t hasFilter;           // +0x114 (nothing in this module sets it)
@@ -113,16 +94,19 @@ struct PacketPlayer {
     PacketFramesFn framesDone;   // +0x38
     void *context;               // +0x3c
     StreamFormat format;         // +0x40
-    uint8_t *blobs[6];           // +0x44 the attributes' per-channel blobs (freed by SNDPKTPLAY_stop)
+    uint8_t *stretchData[6];     // +0x44 the attributes' per-channel time-stretch data (freed by SNDPKTPLAY_stop)
     PacketSlot slot[1];          // +0x5c [slots]
 };
 static_assert(offsetof(PacketPlayer, slot) == 0x5c, "the packet slots start at +0x5c");
 
 // A queued packet callback: count at 0x00244fe0, entries at 0x00244fe4 (96 of them before sndpps)
 struct PacketCallback {
-    uint16_t release;            // +0x00 1: release callback (value = the slot's first channel), 0: frames
+    uint16_t release;            // +0x00 1: the release callback, 0: the frames callback
     uint16_t player;             // +0x02
-    uint32_t value;              // +0x04
+    union {                      // +0x04
+        uint8_t *data;           //       release: the slot's first channel
+        uint32_t frames;         //       frames: the frames consumed
+    };
 };
 static_assert(sizeof(PacketCallback) == 8, "a packet callback is 8 bytes");
 

@@ -9,15 +9,7 @@
 
 struct Skeleton;
 
-struct PhaseChanData {               // a phase channel's data, as GetPhaseChan answers it (MW's PhaseChan), 0xc+
-    uint16_t type;                   // +0x00
-    uint16_t checksum;               // +0x02
-    uint16_t numFrames;              // +0x04
-    uint16_t startTime;              // +0x06
-    uint8_t flag;                    // +0x08 bit 0: start with the right foot (no first-cycle offset)
-    uint8_t numCycles;               // +0x09
-    uint8_t cycles[2];               // +0x0a the two half-cycle lengths in frames
-};
+struct PhaseChanData;                // a phase channel's data (AnimMisc.h), as GetPhaseChan answers it
 
 struct MatchPhaseInput {             // FindMatchTime's input (MW's MatchPhaseInput)
     float angle;                     // +0x00

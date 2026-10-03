@@ -6,27 +6,6 @@
 // listing, provisional and untested against shipped data. See DecodeUnused.cpp.
 
 #include <stdint.h>
-#include <stdio.h>
-
-// The warning beside a provisional port (the pattern of eagl/anim/AnimUntested.h): said once, the first time the
-// code runs, so whatever first reaches it gets checked against the original. Guarded, so another sound header
-// may define the same macro.
-inline void SndDecodeUntested(const char *what) {
-    printf("[snd] WARNING: %s ran - a provisional port that no shipped data reaches, UNTESTED. Check what it "
-           "computes against the original.\n", what);
-    fflush(stdout);
-}
-
-#ifndef SND_UNTESTED
-#define SND_UNTESTED(what) \
-    do { \
-        static bool warned_; \
-        if (!warned_) { \
-            warned_ = true; \
-            SndDecodeUntested(what); \
-        } \
-    } while (0)
-#endif
 
 namespace SND {
 

@@ -1,6 +1,6 @@
 #include "System.h"
-
 #include "Voices.h"
+#include "SndGlobals.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -17,10 +17,11 @@
 // - SNDLINKI: doubly linked lists with a count. iSNDmulu64/divu64: 32 x 32 -> 64 and 64 / 32 by hand.
 //   iSNDrandom: a six-word add-with-carry generator seeded by SNDI_randomseeed (sic) from .rdata.
 //
-// Each function is the original at its address, ported from the listing; calls to modules not ported (the platform
-// driver, platform.system's SYNCTASK/REAL_addexit/memclr, engine.core's dummyNullFunction) go to their originals'
-// addresses, function addresses the library stores (the SYNCTASK, the exit hook) are the originals' too, so what
-// the rest of the program sees is unchanged. The library's globals stay where they are.
+// Each function is the original at its address, ported from the listing; calls to the other modules (the platform
+// driver, platform.system's SYNCTASK/REAL_addexit/memclr, engine.core's dummyNullFunction) go through their
+// originals' addresses (the shadow test's fakes are there), function addresses the library stores (the SYNCTASK,
+// the exit hook) are the originals' too, so what the rest of the program sees is unchanged. The library's globals
+// stay where they are (SndGlobals.h).
 //
 // devtools/SndSystemShadow.cpp compares the pure helpers, the lists, the heap, the client list and the 100 Hz
 // server (on snapshots of the voices, the platform driver replaced by recording fakes) with the originals.
@@ -28,120 +29,56 @@
 
 namespace {
 
-inline uint8_t &U8(uint32_t address) {
-    return *(uint8_t *)(uintptr_t)address;
-}
-
-inline int16_t &S16(uint32_t address) {
-    return *(int16_t *)(uintptr_t)address;
-}
-
-inline uint16_t &U16(uint32_t address) {
-    return *(uint16_t *)(uintptr_t)address;
-}
-
-inline uint32_t &U32(uint32_t address) {
-    return *(uint32_t *)(uintptr_t)address;
-}
-
 // ---- globals (sound.md 2.6)
+#define CapsResult I32_AT(0x00244c28)                  // what SNDPLATFORM_outputcaps answered
+#define CapsRead U32_AT(0x00244c2c)                    // set once the caps are read
+#define SysTaskAdded U32_AT(0x00244c30)                // systaskadded
+#define CriticalNesting U8_AT(0x00244ed3)              // counts up only
+#define Num100HzClients I8_AT(0x00244ed4)              // never registered
+#define NumServerClients I8_AT(0x00244ed5)
+#define ServerClients100Hz ((SndServerClient *)0x00244ee0)   // [6]
+#define ServerClients ((SndServerClient *)0x00244ef8)        // [6]
+#define RestoreHooks ((SndRestoreHook *)0x00244f20)          // the modules' restore hooks; [3] is BankExitHook
+#define RandomState ((uint32_t *)0x00245978)                 // iSNDrandom's six words
+#define AuthorByte U8_AT(0x001d9d48)                   // a byte of the SNDAUTHOR string, written 'S' by SNDSYSI_init
 
-const uint32_t kCapsResult = 0x00244c28;       // what SNDPLATFORM_outputcaps answered
-const uint32_t kCapsRead = 0x00244c2c;         // set once the caps are read
-const uint32_t kSysTaskAdded = 0x00244c30;     // systaskadded
-const uint32_t kOpts = 0x00244cc8;             // the options, 0x120 bytes (MW: SNDSYSCAP/SNDSYSSET)
-const uint32_t kOptsSettable = 0x00244ce8;     // their settable part, 0xe8 bytes ...
-const uint32_t kOptsSaved = 0x00244de8;        // ... and its saved copy
-const uint32_t kVectors = 0x00244dd0;          // sndopts2, 6 words
-const uint32_t kRandomBase = 0x00244cec;       // the options' seed word
-const uint32_t kNumBanks = 0x00244cf0;         // uint16
-const uint32_t kStealEqual = 0x00244d04;
-const uint32_t kOutputMode = 0x00244d10;
-const uint32_t kOpt14 = 0x00244d14;
-const uint32_t kInited = 0x00244ed0;           // SNDSYS_is_inited
-const uint32_t kMasterVolume = 0x00244ed1;
-const uint32_t kNesting = 0x00244ed3;          // critical-section nesting (int8)
-const uint32_t kNum100HzClients = 0x00244ed4;  // int8, never registered
-const uint32_t kNumServerClients = 0x00244ed5; // int8
-const uint32_t kNumUserClients = 0x00244ed6;   // int8, never registered
-const uint32_t kNumVoices = 0x00244ed8;        // int16
-const uint32_t kTick = 0x00244edc;             // the server's tick counter
-const uint32_t k100HzClients = 0x00244ee0;
-const uint32_t kServerClients = 0x00244ef8;
-const uint32_t kVoices = 0x00244f3c;           // sndvoicei_buffer
-const uint32_t kBanks = 0x00244f40;            // sndbanki_buffer
-const uint32_t kHeap = 0x00244f6c;             // pSndHeap
-const uint32_t kAzimuth = 0x00244f7c;          // the speaker azimuth tables for 2/4/5.1 output (uint16 each)
-const uint32_t kSoundMutex = 0x00244fc0;       // the CRITICAL_SECTION
-const uint32_t kRandom = 0x00245978;           // iSNDrandom's six words
-const uint32_t kRandomSeeds = 0x001d9d30;      // their .rdata starting values (+ the seed)
-const uint32_t kAuthorByte = 0x001d9d48;       // a byte of the SNDAUTHOR string, written 'S' by SNDSYSI_init
+// The random generator's starting words, + the seed (0x001d9d30 in the original's .rdata)
+const uint32_t kRandomSeeds[6] = { 0xf22d0e56, 0x883126e9, 0xc624dd2f, 0x0702c49c, 0x9e353f7d, 0x6fdf3b64 };
 
 // The functions the library keeps the addresses of: the originals', which jump to ours
 const uint32_t kSystemTaskAddress = 0x0013d3e0;   // SNDREAL_systemtask
 const uint32_t kExitHookAddress = 0x001413d0;     // ~ASystem
 const uint32_t kDummyNullAddress = 0x000d3580;    // dummyNullFunction
 
-// The exit / restore callbacks other modules register (each called with no argument by SNDSYS_restore) ...
-const uint32_t kRestoreHooks[6] = { 0x00244f20, 0x00244f24, 0x00244f28, 0x00244f34, 0x00244f38, 0x00244f30 };
-// ... and the bank module's, called with -1
-const uint32_t kBankExitHook = 0x00244f2c;     // SNDbank_on_exit_func
-
-inline SND::MemHeap *Heap() {
-    return *(SND::MemHeap **)(uintptr_t)kHeap;
-}
-
-inline SND::Voice *VoiceAt(int index) {
-    return (SND::Voice *)(*(uint8_t **)(uintptr_t)kVoices + index * 0x88);
-}
-
-inline int32_t Mul(int32_t a, int32_t b) {   // IMUL r32: wraps
-    return (int32_t)((uint32_t)a * (uint32_t)b);
+int32_t Mul(int32_t a, int32_t b) {   // IMUL r32: wraps
+    return int32_t(uint32_t(a) * uint32_t(b));
 }
 
 // REP MOVSD, forward a dword at a time (SNDSYSI_init has SNDSYS_getopts copy the options onto themselves)
-inline void CopyDwords(uint32_t *to, const uint32_t *from, int count) {
-    for (int i = 0; i < count; i++)
-        to[i] = from[i];
+void CopyDwords(void *to, const void *from, size_t bytes) {
+    uint32_t *d = static_cast<uint32_t *>(to);
+    const uint32_t *s = static_cast<const uint32_t *>(from);
+    for (size_t i = 0; i < bytes / 4; i++)
+        d[i] = s[i];
 }
 
 // ---- the originals called from here
-
-inline int PlatformOutputCaps() {
-    return ((int (*)(void))0x0013da00)();                   // SNDPLATFORM_outputcaps
-}
-inline void PlatformOutputSet() {
-    ((void (*)(void))0x0013dae0)();                         // SNDPLATFORM_outputset
-}
-inline int PlatformInit() {
-    return ((int (*)(void))0x0013dc50)();                   // SNDPLATFORM_init
-}
-inline void PlatformRestore() {
-    ((void (*)(void))0x0013ddc0)();                         // SNDPLATFORM_restore
-}
-inline void PlatformSetVol(int voice) {
-    ((void (*)(int))0x0013df50)(voice);                     // SNDPLATFORM_setvol
-}
-inline void PlatformSetPitch(int voice) {
-    ((void (*)(int))0x0013e320)(voice);                     // SNDPLATFORM_setpitch
-}
-inline void MemClr(void *memory, int bytes) {
-    ((void (*)(void *, int))0x0013f600)(memory, bytes);     // memclr (platform.system)
-}
-inline void DummyNull() {
-    ((void (*)(void))kDummyNullAddress)();                  // dummyNullFunction (engine.core)
-}
-inline void SyncTaskAdd(uint32_t task, int interval, int delay) {
-    ((void (*)(uint32_t, int, int))0x0010aa50)(task, interval, delay);   // SYNCTASK_add
-}
-inline void RealAddExit(uint32_t callback) {
-    ((void (*)(uint32_t))0x0010b310)(callback);             // REAL_addexit
-}
+#define PlatformOutputCaps ((int (*)(void))0x0013da00)          // SNDPLATFORM_outputcaps
+#define PlatformOutputSet ((int (*)(void))0x0013dae0)           // SNDPLATFORM_outputset
+#define PlatformInit ((int (*)(void))0x0013dc50)                // SNDPLATFORM_init
+#define PlatformRestore ((int (*)(void))0x0013ddc0)             // SNDPLATFORM_restore
+#define PlatformSetVol ((void (*)(int))0x0013df50)              // SNDPLATFORM_setvol
+#define PlatformSetPitch ((int (*)(int))0x0013e320)             // SNDPLATFORM_setpitch
+#define MemClear ((void (*)(void *, int))0x0013f600)            // memclr (platform.system)
+#define DummyNull ((void (*)(void))0x000d3580)                  // dummyNullFunction (engine.core)
+#define SYNCTASK_add ((void (*)(uint32_t, int, int))0x0010aa50)
+#define REAL_addexit ((void (*)(uint32_t))0x0010b310)
 
 // The kernel's critical-section calls, through the XBE's import table
-inline void ImportCall(uint32_t slot) {
-    ((void (__stdcall *)(void *)) * (void **)(uintptr_t)slot)((void *)(uintptr_t)kSoundMutex);
-}
+typedef void (__stdcall *CriticalSectionCall)(void *section);
+#define ImportRtlInitializeCriticalSection (*(CriticalSectionCall *)0x00189cf0)
+#define ImportRtlEnterCriticalSection (*(CriticalSectionCall *)0x00189c40)
+#define ImportRtlLeaveCriticalSection (*(CriticalSectionCall *)0x00189c3c)
 
 }  // namespace
 
@@ -154,17 +91,17 @@ inline void ImportCall(uint32_t slot) {
 // the current one runs out, stop after the last); a volume change is recalculated and sent.
 // FUNC_AT(0x0013b7b0)
 void SNDSYSI_100hzserver(void) {
-    U32(kTick) = U32(kTick) + 1;
+    SndTick++;
     iSNDserve();
-    for (int i = 0; i < (int8_t)U8(kNum100HzClients); i++)
-        (*(void (**)(void))(uintptr_t)(k100HzClients + i * 4))();
+    for (int i = 0; i < Num100HzClients; i++)
+        ServerClients100Hz[i]();
 
-    for (int voice = 0; voice < S16(kNumVoices); voice++) {
-        SND::Voice *v = VoiceAt(voice);
+    for (int voice = 0; voice < NumVoices; voice++) {
+        SND::Voice *v = &VoiceArray[voice];
         if (v->inUse != 1 || v->handle < 0)
             continue;
         if (v->pitchLfo != NULL) {
-            uint8_t position = (uint8_t)(v->pitchLfoPos + 1);
+            uint8_t position = v->pitchLfoPos + 1;
             v->pitchLfoPos = position;
             if (position >= v->pitchLfoLength)
                 v->pitchLfoPos = 0;
@@ -174,7 +111,7 @@ void SNDSYSI_100hzserver(void) {
         }
         int changed = 0;
         if (v->volLfo != NULL) {
-            uint8_t position = (uint8_t)(v->volLfoPos + 1);
+            uint8_t position = v->volLfoPos + 1;
             v->volLfoPos = position;
             changed = 1;
             if (position >= v->volLfoLength)
@@ -182,7 +119,7 @@ void SNDSYSI_100hzserver(void) {
         }
         int32_t step = v->fadeStep;
         if (step != 0) {
-            int32_t fade = (int32_t)((uint32_t)v->fade + (uint32_t)step);
+            int32_t fade = int32_t(uint32_t(v->fade) + uint32_t(step));
             int32_t target = v->fadeTarget;
             changed = 1;
             v->fade = fade;
@@ -198,21 +135,21 @@ void SNDSYSI_100hzserver(void) {
         int32_t ticks = v->envTicks - 1;
         v->envTicks = ticks;
         if (v->envStep != 0) {
-            v->env = (int32_t)((uint32_t)v->env + (uint32_t)v->envStep);
+            v->env = int32_t(uint32_t(v->env) + uint32_t(v->envStep));
             changed = 1;
         }
         if (ticks == 0) {
-            uint8_t segment = (uint8_t)(v->envCurrent + 1);
+            uint8_t segment = v->envCurrent + 1;
             v->envCurrent = segment;
-            if ((int8_t)segment >= (int8_t)v->envCount) {
+            if (int8_t(segment) >= int8_t(v->envCount)) {   // both bytes signed
                 SNDstop(v->handle);
                 continue;
             }
-            const int32_t *entry = (const int32_t *)((const uint8_t *)v->envTable + (int8_t)segment * 8);
-            v->envTicks = entry[0];
-            if (entry[0] < 0)
+            const SND::EnvSegment *entry = &v->envTable[int8_t(segment)];
+            v->envTicks = entry->ticks;
+            if (entry->ticks < 0)
                 v->envTicks = 0x7fffffff;
-            int32_t delta = (int32_t)(((uint32_t)entry[1] << 16) - (uint32_t)v->env);
+            int32_t delta = int32_t((uint32_t(entry->level) << 16) - uint32_t(v->env));
             v->envStep = delta / v->envTicks;   // IDIV: 0 ticks in a segment faults, as in the original
         }
         if (changed) {
@@ -227,32 +164,32 @@ void SNDSYSI_100hzserver(void) {
 // exists), once the system is up.
 // FUNC_AT(0x0013f980)
 void SNDSYS_service(void) {
-    if (U8(kInited) == 0)
+    if (SystemInited == 0)
         return;
-    for (int i = 0; i < (int8_t)U8(kNumServerClients); i++)
-        (*(void (**)(void))(uintptr_t)(kServerClients + i * 4))();
+    for (int i = 0; i < NumServerClients; i++)
+        ServerClients[i]();
 }
 
 // FUNC_AT(0x0013f900)
 void iSNDserveraddclient(SndServerClient client) {
-    *(void (**)(void))(uintptr_t)(kServerClients + (int8_t)U8(kNumServerClients) * 4) = client;
-    U8(kNumServerClients) = (uint8_t)(U8(kNumServerClients) + 1);
+    ServerClients[NumServerClients] = client;
+    NumServerClients++;
 }
 
 // FUNC_AT(0x0013f920)
 void iSNDserverremoveclient(SndServerClient client) {
-    int8_t count = (int8_t)U8(kNumServerClients);
+    int8_t count = NumServerClients;
     int i = 0;
     if (count <= 0)
         return;
-    while (*(void (**)(void))(uintptr_t)(kServerClients + i * 4) != client) {
+    while (ServerClients[i] != client) {
         if (++i >= count)
             return;
     }
-    count = (int8_t)(count - 1);
-    U8(kNumServerClients) = (uint8_t)count;
-    for (; i < (int8_t)U8(kNumServerClients); i++)
-        U32(kServerClients + i * 4) = U32(kServerClients + i * 4 + 4);
+    count--;
+    NumServerClients = count;
+    for (; i < NumServerClients; i++)
+        ServerClients[i] = ServerClients[i + 1];
 }
 
 // FUNC_AT(0x0013d3e0)
@@ -266,13 +203,13 @@ int SNDREAL_systemtask(int argument, int ticksLate) {
 // From ASystem::ASystem: the vector table's slot, the SYNCTASK (once), the exit hook.
 // FUNC_AT(0x0013d3f0)
 int SNDSYS_vectortoreal(void) {
-    uint32_t added = U32(kSysTaskAdded);
-    U32(0x00244ddc) = kDummyNullAddress;
+    uint32_t added = SysTaskAdded;
+    SndOptions.vectors.functions[3] = kDummyNullAddress;   // 0x00244ddc
     if (added == 0) {
-        SyncTaskAdd(kSystemTaskAddress, 0, 1);
-        U32(kSysTaskAdded) = 1;
+        SYNCTASK_add(kSystemTaskAddress, 0, 1);
+        SysTaskAdded = 1;
     }
-    RealAddExit(kExitHookAddress);
+    REAL_addexit(kExitHookAddress);
     return 0;
 }
 
@@ -283,28 +220,28 @@ int SNDSYS_vectortoreal(void) {
 // FUNC_AT(0x0013b950)
 void SNDSYS_entercritical(void) {
     SNDI_mutexlock();
-    U8(kNesting) = (uint8_t)(U8(kNesting) + 1);
+    CriticalNesting++;
 }
 
 // FUNC_AT(0x0013b970)
 void SNDSYS_leavecritical(void) {
-    U8(kNesting) = (uint8_t)(U8(kNesting) - 1);
+    CriticalNesting--;
     SNDI_mutexunlock();
 }
 
 // FUNC_AT(0x0013e7a0)
 void SNDI_mutexalloc(void) {
-    ImportCall(0x00189cf0);                                 // RtlInitializeCriticalSection
+    ImportRtlInitializeCriticalSection(SoundMutex);
 }
 
 // FUNC_AT(0x0013e7b0)
 void SNDI_mutexlock(void) {
-    ImportCall(0x00189c40);                                 // RtlEnterCriticalSection
+    ImportRtlEnterCriticalSection(SoundMutex);
 }
 
 // FUNC_AT(0x0013e7c0)
 void SNDI_mutexunlock(void) {
-    ImportCall(0x00189c3c);                                 // RtlLeaveCriticalSection
+    ImportRtlLeaveCriticalSection(SoundMutex);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -314,90 +251,90 @@ void SNDI_mutexunlock(void) {
 // The options: on the first call the platform's caps and the defaults (16 banks, steal at equal priority), saved;
 // then all 0x120 bytes copied out. The caps' result.
 // FUNC_AT(0x0013d090)
-int SNDSYS_getopts(void *opts) {
-    if (U32(kCapsRead) == 0) {
-        U32(kCapsResult) = (uint32_t)PlatformOutputCaps();
-        U16(kNumBanks) = 0x10;
-        U8(kOpt14) = 0x5a;
-        U8(kStealEqual) = 1;
-        U32(kCapsRead) = 1;
-        CopyDwords((uint32_t *)(uintptr_t)kOptsSaved, (const uint32_t *)(uintptr_t)kOptsSettable, 0x3a);
+int SNDSYS_getopts(SND::SysOpts *opts) {
+    if (CapsRead == 0) {
+        CapsResult = PlatformOutputCaps();
+        NumBanks = 0x10;
+        SndOptions.set.heapThreshold = 0x5a;
+        SndOptions.set.stealEqualPriority = 1;
+        CapsRead = 1;
+        CopyDwords(&SndSavedSet, &SndOptions.set, sizeof(SND::SysSet));
     }
-    int result = (int)U32(kCapsResult);
-    CopyDwords((uint32_t *)opts, (const uint32_t *)(uintptr_t)kOpts, 0x48);
+    int result = CapsResult;
+    CopyDwords(opts, &SndOptions, sizeof(SND::SysOpts));
     return result;
 }
 
 // The settable part and the vector table copied in, the platform told, the settable part saved.
 // FUNC_AT(0x0013d0f0)
-int SNDSYS_setops(const void *opts) {
-    CopyDwords((uint32_t *)(uintptr_t)kOptsSettable, (const uint32_t *)((const uint8_t *)opts + 0x20), 0x3a);
-    CopyDwords((uint32_t *)(uintptr_t)kVectors, (const uint32_t *)((const uint8_t *)opts + 0x108), 6);
+int SNDSYS_setops(const SND::SysOpts *opts) {
+    CopyDwords(&SndOptions.set, &opts->set, sizeof(SND::SysSet));
+    CopyDwords(&SndOptions.vectors, &opts->vectors, sizeof(SND::SysVectors));
     PlatformOutputSet();
-    CopyDwords((uint32_t *)(uintptr_t)kOptsSaved, (const uint32_t *)(uintptr_t)kOptsSettable, 0x3a);
+    CopyDwords(&SndSavedSet, &SndOptions.set, sizeof(SND::SysSet));
     return 0;
 }
 
 // From ASystem::ASystem with the 256 KB audio heap: 0, or the platform's (negative) failure.
 // FUNC_AT(0x0013d140)
 int SNDSYSI_init(void *memory, int size) {
-    U8(kAuthorByte) = 0x53;
-    if (U8(kInited) != 0)
+    AuthorByte = 'S';
+    if (SystemInited != 0)
         return 0;
-    MemClr(memory, size);
+    MemClear(memory, size);
     SNDMEMI_init(memory, size);
-    if (S16(kNumVoices) == 0) {
-        int result = SNDSYS_getopts((void *)(uintptr_t)kOpts);
+    if (NumVoices == 0) {
+        int result = SNDSYS_getopts(&SndOptions);
         if (result < 0)
             return result;
-        SNDSYS_setops((const void *)(uintptr_t)kOpts);
+        SNDSYS_setops(&SndOptions);
     }
-    SNDI_randomseeed((int)U32(kRandomBase));
+    SNDI_randomseeed(SndOptions.set.randomSeed);
     SNDI_mutexalloc();
     SNDSYS_entercritical();
-    U32(kVoices) = (uint32_t)(uintptr_t)SNDMEMI_alloc(S16(kNumVoices) * 0x88);
-    U32(kBanks) = (uint32_t)(uintptr_t)SNDMEMI_alloc(U16(kNumBanks) << 3);
+    VoiceArray = static_cast<SND::Voice *>(SNDMEMI_alloc(NumVoices * int(sizeof(SND::Voice))));
+    BankArray = static_cast<SND::BankSlot *>(SNDMEMI_alloc(NumBanks * int(sizeof(SND::BankSlot))));
     SNDSYS_leavecritical();
-    U32(kTick) = 0;
-    U8(kMasterVolume) = 0x7f;
-    U8(kNumUserClients) = 0;
-    U8(kNum100HzClients) = 0;
-    U8(kNumServerClients) = 0;
+    SndTick = 0;
+    MasterVolume = 0x7f;
+    NumUserDataClients = 0;
+    Num100HzClients = 0;
+    NumServerClients = 0;
     int result = PlatformInit();
     if (result < 0) {
         PlatformRestore();
         DummyNull();
         return result;
     }
-    // the speaker azimuths (65536ths of a turn): stereo, then 4 and 5.1 speakers (from the options for 4)
-    uint16_t *az = (uint16_t *)(uintptr_t)kAzimuth;   // az[i] at 0x00244f7c + 2i
-    int8_t mode = (int8_t)U8(kOutputMode);
-    U8(kInited) = 1;
+    // the channels' default azimuths (65536ths of a turn) for sounds of 2 (by the output mode), 3 (from the
+    // options' row for three speakers), 4, 5 and 6 channels
+    int8_t mode = OutputMode;
+    SystemInited = 1;
     if (mode == 2) {
-        az[0] = 0xc000;
-        az[1] = 0x4000;
+        ChannelAzimuth[2][0] = 0xc000;
+        ChannelAzimuth[2][1] = 0x4000;
     } else {
-        az[0] = 0xe000;
-        az[1] = 0x2000;
+        ChannelAzimuth[2][0] = 0xe000;
+        ChannelAzimuth[2][1] = 0x2000;
     }
-    az[6] = U16(0x00244d5c);                          // 0x00244f88
-    az[7] = U16(0x00244d58);
-    az[8] = U16(0x00244d5a);
-    az[12] = 0xe000;                                  // 0x00244f94
-    az[13] = 0x2000;
-    az[14] = 0xa000;
-    az[15] = 0x6000;
-    az[18] = 0xe000;                                  // 0x00244fa0
-    az[19] = 0;
-    az[20] = 0x2000;
-    az[21] = 0xa000;
-    az[22] = 0x6000;
-    az[24] = 0xe000;                                  // 0x00244fac
-    az[25] = 0;
-    az[26] = 0x2000;
-    az[27] = 0xa000;
-    az[28] = 0x6000;
-    az[29] = 0;                                       // 0x00244fb6
+    ChannelAzimuth[3][0] = SndOptions.set.speakerAzimuth[3][2];
+    ChannelAzimuth[3][1] = SndOptions.set.speakerAzimuth[3][0];
+    ChannelAzimuth[3][2] = SndOptions.set.speakerAzimuth[3][1];
+    ChannelAzimuth[4][0] = 0xe000;
+    ChannelAzimuth[4][1] = 0x2000;
+    ChannelAzimuth[4][2] = 0xa000;
+    ChannelAzimuth[4][3] = 0x6000;
+    ChannelAzimuth[5][0] = 0xe000;
+    ChannelAzimuth[5][1] = 0;
+    ChannelAzimuth[5][2] = 0x2000;
+    ChannelAzimuth[5][3] = 0xa000;
+    ChannelAzimuth[5][4] = 0x6000;
+    ChannelAzimuth[6][0] = 0xe000;
+    ChannelAzimuth[6][1] = 0;
+    ChannelAzimuth[6][2] = 0x2000;
+    ChannelAzimuth[6][3] = 0xa000;
+    ChannelAzimuth[6][4] = 0x6000;
+    ChannelAzimuth[6][5] = 0;
     SNDI_precalcaztospkrvol();
     return 0;
 }
@@ -406,32 +343,36 @@ int SNDSYSI_init(void *memory, int size) {
 // FUNC_AT(0x0013d310)
 int SNDSYS_inited(void) {
     SND_UNTESTED("SNDSYS_inited");
-    return (int8_t)U8(kInited);
+    return int8_t(SystemInited);
 }
 
 // From ASystem::Shutdown and the exit hook: -14 if not up; else the reverb off, the modules' restore hooks, every
 // voice stopped, the platform driver down, the arrays freed; the heap's percentage in use.
 // FUNC_AT(0x0013d320)
 int SNDSYS_restore(void) {
-    if (U8(kInited) == 0)
+    if (SystemInited == 0)
         return -14;
     SNDfxinitbus(0, 0, 0, -1, -1);
+    // the modules' restore hooks, called with no argument in this order (0x00244f20, f24, f28, f34, f38 - the
+    // streams' - and f30) ...
+    static const int kOrder[6] = { 0, 1, 2, 5, 6, 4 };
     for (int i = 0; i < 6; i++) {
-        void (*hook)(void) = *(void (**)(void))(uintptr_t)kRestoreHooks[i];
+        SndRestoreHook hook = RestoreHooks[kOrder[i]];
         if (hook != NULL)
             hook();
     }
     SNDstopall();
-    void (*bankExit)(int) = *(void (**)(int))(uintptr_t)kBankExitHook;
+    // ... and the bank module's, with -1
+    int (*bankExit)(int) = BankExitHook;
     if (bankExit != NULL)
         bankExit(-1);
     PlatformRestore();
     SNDSYS_entercritical();
-    SNDMEMI_free(*(void **)(uintptr_t)kVoices);
-    SNDMEMI_free(*(void **)(uintptr_t)kBanks);
+    SNDMEMI_free(VoiceArray);
+    SNDMEMI_free(BankArray);
     SNDSYS_leavecritical();
     int used = SNDMEMI_restore();
-    U8(kInited) = 0;
+    SystemInited = 0;
     DummyNull();
     return used;
 }
@@ -445,8 +386,8 @@ int SNDSYSI_exithook(void) {
 // FUNC_AT(0x00141390)
 void SNDstopall(void) {
     SNDSYS_entercritical();
-    for (int i = 0; i < S16(kNumVoices); i++)
-        SNDstop(VoiceAt(i)->handle);
+    for (int i = 0; i < NumVoices; i++)
+        SNDstop(VoiceArray[i].handle);
     SNDSYS_leavecritical();
 }
 
@@ -531,25 +472,25 @@ void SNDLINKI_remove(SND::LinkList *list, SND::LinkNode *node) {
 // The header at the memory's start (the caller has cleared it: the record count is not set here).
 // FUNC_AT(0x0013f710)
 void SNDMEMI_init(void *memory, int size) {
-    SND::MemHeap *heap = (SND::MemHeap *)memory;
-    U32(kHeap) = (uint32_t)(uintptr_t)memory;
+    SND::MemHeap *heap = static_cast<SND::MemHeap *>(memory);
+    SndHeap = heap;
     heap->size = size;
     SND::MemEntry *table = (SND::MemEntry *)((uint8_t *)memory + size - 8);
-    Heap()->table = table;
-    Heap()->base = (uint8_t *)memory + 0x18;
-    Heap()->base = Heap()->base + 0xf;
-    Heap()->base = (uint8_t *)((uintptr_t)Heap()->base & ~(uintptr_t)0xf);
+    SndHeap->table = table;
+    SndHeap->base = (uint8_t *)memory + sizeof(SND::MemHeap);
+    SndHeap->base = SndHeap->base + 0xf;
+    SndHeap->base = (uint8_t *)((uintptr_t)SndHeap->base & ~uintptr_t(0xf));
     int32_t left = size - 0xf;
-    Heap()->limit = left - 0x20;
-    Heap()->lowWater = left;
+    SndHeap->limit = left - 0x20;
+    SndHeap->lowWater = left;
 }
 
 // First fit in offset order, the size rounded up to 16; NULL if nothing fits.
 // FUNC_AT(0x0013f780)
 void* SNDMEMI_alloc(int size) {
-    SND::MemHeap *heap = Heap();
+    SND::MemHeap *heap = SndHeap;
     int32_t count = heap->count;
-    int32_t rounded = (int32_t)(((uint32_t)size + 0xf) & ~0xfu);
+    int32_t rounded = (uint32_t(size) + 0xf) & ~0xfu;
     int32_t index = 0;
     int32_t start, gap;
     if (count == 0) {
@@ -565,11 +506,11 @@ void* SNDMEMI_alloc(int size) {
                     gap = table[0].offset;
                     start = 0;
                 } else {
-                    start = (int32_t)((uint32_t)table[index + 1].size + (uint32_t)table[index + 1].offset);
-                    gap = (int32_t)((uint32_t)table[index].offset - (uint32_t)start);
+                    start = uint32_t(table[index + 1].size) + uint32_t(table[index + 1].offset);
+                    gap = uint32_t(table[index].offset) - uint32_t(start);
                 }
-                if ((uint32_t)gap + (uint32_t)start > (uint32_t)limit)
-                    gap = (int32_t)((uint32_t)limit - (uint32_t)start);
+                if (uint32_t(gap) + uint32_t(start) > uint32_t(limit))
+                    gap = uint32_t(limit) - uint32_t(start);
                 if (rounded <= gap) {
                     found = true;
                     break;
@@ -581,16 +522,16 @@ void* SNDMEMI_alloc(int size) {
         if (found) {
             // make room at 'index': the records below it move down one
             for (int32_t i = heap->count; i < index; i++) {
-                SND::MemEntry *e = &Heap()->table[i];
+                SND::MemEntry *e = &SndHeap->table[i];
                 e->offset = e[1].offset;
                 e->size = e[1].size;
-                heap = Heap();
+                heap = SndHeap;
             }
         } else {
             // past the last block
             SND::MemEntry *last = &heap->table[index + 1];
-            start = (int32_t)((uint32_t)last->size + (uint32_t)last->offset);
-            gap = (int32_t)((uint32_t)heap->limit - (uint32_t)start);
+            start = uint32_t(last->size) + uint32_t(last->offset);
+            gap = uint32_t(heap->limit) - uint32_t(start);
             if (rounded > gap)
                 return NULL;
         }
@@ -600,10 +541,10 @@ void* SNDMEMI_alloc(int size) {
     SND::MemEntry *e = &heap->table[index];
     e->offset = start;
     e->size = rounded;
-    Heap()->count--;
-    Heap()->limit -= 8;
-    heap = Heap();
-    int32_t left = (int32_t)((uint32_t)heap->limit - (uint32_t)start - (uint32_t)rounded);
+    SndHeap->count--;
+    SndHeap->limit -= 8;
+    heap = SndHeap;
+    int32_t left = uint32_t(heap->limit) - uint32_t(start) - uint32_t(rounded);
     void *block = heap->base + start;
     if (left < heap->lowWater)
         heap->lowWater = left;
@@ -613,9 +554,9 @@ void* SNDMEMI_alloc(int size) {
 // The block's record removed (a pointer the heap did not give is ignored).
 // FUNC_AT(0x0013f880)
 void SNDMEMI_free(void *block) {
-    SND::MemHeap *heap = Heap();
+    SND::MemHeap *heap = SndHeap;
     int32_t count = heap->count;
-    int32_t offset = (int32_t)((uint8_t *)block - heap->base);
+    int32_t offset = (uint8_t *)block - heap->base;
     int32_t index = 0;
     if (count >= 0)
         return;
@@ -627,9 +568,9 @@ void SNDMEMI_free(void *block) {
             return;
     }
     heap->count = count + 1;
-    Heap()->limit += 8;
-    while (index > Heap()->count) {
-        SND::MemEntry *t = &Heap()->table[index];
+    SndHeap->limit += 8;
+    while (index > SndHeap->count) {
+        SND::MemEntry *t = &SndHeap->table[index];
         t->offset = t[-1].offset;
         t->size = t[-1].size;
         index--;
@@ -657,7 +598,7 @@ void SNDMEMI_freethunk(void *block) {
 // The most of the heap ever in use, in percent (Ghidra: SNDMEMI_restore; candidate SNDMEMI_percentused).
 // FUNC_AT(0x001429d0)
 int SNDMEMI_percentused(void) {
-    SND::MemHeap *heap = Heap();
+    SND::MemHeap *heap = SndHeap;
     int32_t size = heap->size;
     return Mul(size - heap->lowWater, 100) / size;
 }
@@ -678,7 +619,7 @@ uint64_t iSNDmulu64(uint32_t a, uint32_t b) {
     uint32_t low = ((lowHigh + highLow) << 16) + lowLow;
     uint32_t high = (lowHigh & 0xffff) + (lowLow >> 16) + (highLow & 0xffff);
     high = (high >> 16) + highHigh + (lowHigh >> 16) + (highLow >> 16);
-    return ((uint64_t)high << 32) | low;
+    return (uint64_t(high) << 32) | low;
 }
 
 // (high:low) / divisor by 32 steps of shift and subtract: the quotient's low 32 bits (high must be below the
@@ -702,35 +643,35 @@ uint32_t iSNDdivu64(uint32_t low, uint32_t high, uint32_t divisor) {
 // FUNC_AT(0x00141280)
 void SNDI_randomseeed(int seed) {
     for (int i = 0; i < 6; i++)
-        U32(kRandom + i * 4) = U32(kRandomSeeds + i * 4) + (uint32_t)seed;
+        RandomState[i] = kRandomSeeds[i] + seed;
 }
 
 // Six words added into each other with carries, the last counting up (and carrying into the others when it
 // wraps); the first word is the number.
 // FUNC_AT(0x001412e0)
 uint32_t iSNDrandom(void) {
-    uint32_t s1 = U32(kRandom + 4), s2 = U32(kRandom + 8), s3 = U32(kRandom + 12);
-    uint32_t s4 = U32(kRandom + 16), s5 = U32(kRandom + 20);
+    uint32_t *w = RandomState;
+    uint32_t s1 = w[1], s2 = w[2], s3 = w[3];
+    uint32_t s4 = w[4], s5 = w[5];
     uint32_t a = s4 + s5;
     uint32_t carry = (a < s5 || a < s4) ? 1 : 0;
-    U32(kRandom + 16) = a;
+    w[4] = a;
     a += carry + s3;
     carry = a < s3 ? 1 : 0;
-    U32(kRandom + 12) = a;
+    w[3] = a;
     a += carry + s2;
     carry = a < s2 ? 1 : 0;
-    U32(kRandom + 8) = a;
+    w[2] = a;
     a += carry + s1;
     carry = a < s1 ? 1 : 0;
-    U32(kRandom + 4) = a;
-    uint32_t result = U32(kRandom) + a + carry;
+    w[1] = a;
+    uint32_t result = w[0] + a + carry;
     s5++;
-    U32(kRandom + 20) = s5;
-    U32(kRandom) = result;
-    if (s5 == 0 && ++U32(kRandom + 16) == 0 && ++U32(kRandom + 12) == 0 && ++U32(kRandom + 8) == 0 &&
-        ++U32(kRandom + 4) == 0) {
+    w[5] = s5;
+    w[0] = result;
+    if (s5 == 0 && ++w[4] == 0 && ++w[3] == 0 && ++w[2] == 0 && ++w[1] == 0) {
         result++;
-        U32(kRandom) = result;
+        w[0] = result;
     }
     return result;
 }
@@ -742,6 +683,6 @@ int randrange(int range) {
         range = 0x10000;
     else if (range < 0)
         range = 0;
-    int32_t r = (int32_t)(iSNDrandom() & 0x7fff) - 0x4000;
+    int32_t r = int32_t(iSNDrandom() & 0x7fff) - 0x4000;
     return Mul(r, range) >> 14;
 }

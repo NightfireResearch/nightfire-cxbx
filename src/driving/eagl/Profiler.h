@@ -6,7 +6,7 @@
 
 #include <stdint.h>
 
-#include "GeoPrimState.h"
+#include "RenderMethod.h"
 
 namespace EAGL {
 
@@ -62,37 +62,17 @@ struct ProfilerTimer {               // 0x14
 };
 static_assert(sizeof(ProfilerTimer) == 0x14, "a profiler timer is 0x14 bytes");
 
-// EAGL::DrawGouraud as the profiler uses it (the class is module F's; this Begin lies in the profiler's range)
-struct ProfilerDrawGouraud {         // 0x9c
-    uint32_t primitiveType;          // +0x00
-    GeoPrimState state;              // +0x04
-    void *pixelShader;               // +0x50
-    void *vertexShader;              // +0x54
-    uint8_t begun;                   // +0x58
-    uint8_t pad59[3];
-    float matrix[16];                // +0x5c
-
+// EAGL::DrawGouraud's Begin, which lies in the profiler's range (the class is RenderMethod.h's)
+struct ProfilerDrawGouraud : DrawGouraud {
     void Begin(uint32_t type);                                               // 0x000f5370 (invented)
 };
-static_assert(sizeof(ProfilerDrawGouraud) == 0x9c, "a DrawGouraud is 0x9c bytes");
+static_assert(sizeof(ProfilerDrawGouraud) == sizeof(DrawGouraud), "the DrawGouraud itself");
 
-// EAGL::DrawArray's constructor, which lies in the profiler's range (the class is module F's)
-struct ProfilerDrawArray {           // 0x4c
-    uint32_t field00;                // +0x00
-    void *dynamicModel;              // +0x04
-    uint32_t field08, field0c, field10, field14;
-    uint8_t field18;                 // +0x18
-    uint8_t pad19[3];
-    uint32_t field1c, field20, field24, field28;
-    int32_t field2c;                 // +0x2c
-    uint32_t field30;                // +0x30
-    uint8_t field34, field35;        // +0x34, +0x35
-    uint8_t pad36[2];
-    uint32_t field38, field3c, field40, field44, field48;
-
+// EAGL::DrawArray's constructor, which lies in the profiler's range (the class is RenderMethod.h's)
+struct ProfilerDrawArray : DrawArray {
     ProfilerDrawArray* Construct();                                          // 0x000f5500
 };
-static_assert(sizeof(ProfilerDrawArray) == 0x4c, "a DrawArray is 0x4c bytes");
+static_assert(sizeof(ProfilerDrawArray) == sizeof(DrawArray), "the DrawArray itself");
 
 int PrintMessage(int level, const char *format, ...);                        // 0x000f42b0
 void ProfilerSetVertexShaderConstantRegs();  // 0x000f4310 naked: EAX = count, ECX = register, EDX = data (invented)

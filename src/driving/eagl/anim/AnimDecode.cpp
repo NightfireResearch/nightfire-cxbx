@@ -17,21 +17,19 @@
 // current - the original's orders, kept (MW's source has another). x87 in double, a float store per store.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define EaglMalloc   (*(void *(**)(uint32_t size, const char *name))0x001caf68u)
-#define EaglFree     (*(void (**)(void *data, uint32_t size))0x001caf6cu)
-#define Scratch      ((ScratchBuffer *)0x00241ba0u)
-
-#define DeltaCount(d)   (*(uint16_t *)(d))
-#define DeltaBits(d)    (*((uint8_t *)(d) + 2))
-#define DeltaDofs(d)    ((DofInfo *)((uint8_t *)(d) + 4))
-#define DeltaStream(d)  ((uint8_t *)(d) + 4 + DeltaCount(d) * 12)
+typedef void *(*EaglMallocHook)(uint32_t size, const char *name);
+typedef void (*EaglFreeHook)(void *data, uint32_t size);
+#define EaglMalloc (*(EaglMallocHook *)0x001caf68)
+#define EaglFree (*(EaglFreeHook *)0x001caf6c)
+#define ScratchBuffers ((ScratchBuffer *)0x00241ba0)       // [3]
+#define ScratchBufferName ((const char *)0x001cec80)        // "ScratchBuffer::mBuffer", the original's string
 
 static inline float Step(float current, int q, const DofInfo &dof) {
-    return (float)(((double)q * (double)dof.range + (double)current) + (double)dof.min);
+    return float(q * double(dof.range) + current + dof.min);
 }
 
 static inline float StepScaled(float current, int q, const DofInfo &dof, float scale) {
-    return (float)(((double)q * (double)dof.range + (double)dof.min) * (double)scale + (double)current);
+    return float((q * double(dof.range) + dof.min) * scale + current);
 }
 
 // From the previous key's values ('source' copied to 'out') when going forward, otherwise from the start values;
@@ -42,11 +40,11 @@ void DeltaCompressedData::DecompressValues(int first, int count, int previousKey
                                            float *out) {
     if (key == previousKey)
         return;
-    DofInfo *dofs = DeltaDofs(this) + first;
+    DofInfo *dofs = this->dofs + first;
     int from;
     if (key >= previousKey && key != 0 && previousKey != -1) {
         if (out != source)
-            memcpy(out, source, (size_t)count * 4);
+            memcpy(out, source, count * sizeof(float));
         from = previousKey;
     } else {
         for (int i = 0; i < count; i++)
@@ -55,9 +53,9 @@ void DeltaCompressedData::DecompressValues(int first, int count, int previousKey
     }
     if (key == 0)
         return;
-    int n = DeltaCount(this);
-    uint8_t *stream = DeltaStream(this);
-    switch (DeltaBits(this)) {
+    int n = this->count;
+    uint8_t *stream = Stream();
+    switch (bits) {
     case 16: {
         const uint16_t *q = (const uint16_t *)stream + (n * from + first);
         for (int f = from; f < key; f++)
@@ -127,7 +125,7 @@ void DeltaCompressedData::DecompressValuesIndexed(int first, int count, int prev
                                                   float *out, int groupSize, uint16_t *index, float scale) {
     if (key == previousKey)
         return;
-    DofInfo *dofs = DeltaDofs(this) + first;
+    DofInfo *dofs = this->dofs + first;
     int groups = count / groupSize;
     int from;
     if (key != 0 && previousKey != -1 && key >= previousKey) {
@@ -145,9 +143,9 @@ void DeltaCompressedData::DecompressValuesIndexed(int first, int count, int prev
     }
     if (key == 0)
         return;
-    int n = DeltaCount(this);
-    uint8_t *stream = DeltaStream(this);
-    switch (DeltaBits(this)) {
+    int n = this->count;
+    uint8_t *stream = Stream();
+    switch (bits) {
     case 16: {
         const uint16_t *q = (const uint16_t *)stream + n * from;
         for (int f = from; f < key; f++) {
@@ -202,7 +200,7 @@ double DeltaCompressedData::DecompressValue(int value, int previousKey, int key,
     float result;   // the original decodes into its 'key' argument's slot: unchanged (the key's bits) if no step
     memcpy(&result, &key, 4);
     DecompressValues(value, 1, previousKey, key, &previous, &result);
-    return (double)result;
+    return result;
 }
 
 // ---- ScratchBuffer
@@ -215,7 +213,7 @@ void ScratchBuffer::AllocateBuffer(uint32_t bytes) {
     if (buffer != NULL)
         EaglFree(buffer, size);
     size = bytes;
-    buffer = EaglMalloc(bytes, (const char *)0x001cec80u);   // "ScratchBuffer::mBuffer"
+    buffer = EaglMalloc(bytes, ScratchBufferName);
 }
 
 // FUNC_AT(0x00106750)
@@ -229,23 +227,22 @@ void ScratchBuffer::FreeBuffer() {
 
 // FUNC_AT(0x00106780)
 ScratchBuffer* ScratchBuffer_GetScratchBuffer(int index) {
-    return &Scratch[index];
+    return &ScratchBuffers[index];
 }
 
 // (The pointers are not cleared.)
 // FUNC_AT(0x00106790)
 void ScratchBuffer_FreeScratchBuffers() {
     for (int i = 0; i < 3; i++)
-        if (Scratch[i].buffer != NULL)
-            EaglFree(Scratch[i].buffer, Scratch[i].size);
+        if (ScratchBuffers[i].buffer != NULL)
+            EaglFree(ScratchBuffers[i].buffer, ScratchBuffers[i].size);
 }
 
 // ---- AttributeBlock
 
 // FUNC_AT(0x001067c0)
 AttributeEntry* AttributeBlock::FindAttribute(uint16_t id) {
-    int lo = 0, hi = *(int32_t *)this - 1;
-    AttributeEntry *entries = (AttributeEntry *)((uint8_t *)this + 4);
+    int lo = 0, hi = count - 1;
     while (lo <= hi) {
         int mid = (lo + hi) >> 1;
         if (id > entries[mid].id)
@@ -271,7 +268,7 @@ static bool Copy(AttributeBlock *block, uint16_t id, void *out) {
     AttributeEntry *e = block->FindAttribute(id);
     if (e == NULL)
         return false;
-    memcpy(out, (const void *)(uintptr_t)e->value, e->size);
+    memcpy(out, e->pointer, e->size);
     return true;
 }
 
@@ -292,9 +289,9 @@ bool AttributeBlock::GetAttributeValue(uint16_t id, void *out) {
     if (e == NULL)
         return false;
     if (e->size > 4)
-        memcpy(out, (const void *)(uintptr_t)e->value, e->size);
+        memcpy(out, e->pointer, e->size);
     else
-        *(uint32_t *)out = e->value;
+        *static_cast<uint32_t *>(out) = e->value;
     return true;
 }
 

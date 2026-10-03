@@ -231,7 +231,7 @@ void LogDesc(uint32_t id, const DsBufferDesc *desc, uint32_t extra1, uint32_t ex
     w[n++] = desc->flags;
     w[n++] = desc->bufferBytes;
     w[n++] = desc->mixBins == NULL ? 0 : 1;
-    w[n++] = desc->field14;
+    w[n++] = desc->inputMixBin;
     const DsWaveFormat *f = desc->format;
     if (f != NULL) {
         w[n++] = f->formatTag | ((uint32_t)f->channels << 16);

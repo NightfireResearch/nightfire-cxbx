@@ -19,20 +19,19 @@
 // rest - masks, mirroring, bone length scaling, the QT/T/skin variants - only the never-built FnAnim types or
 // nothing at all call: provisional, with EAGL_UNTESTED.
 //
-// The arithmetic is single float products (exact in double, then one rounding, as the x87 does at PC=53) and a
-// reciprocal (one double division, then a float rounding - again what the x87 does); matrix products go through
-// the hook at 0x001cec7c, BuildSQT and Transpose through EAGL::Transform.
+// The arithmetic is single float products and a reciprocal, each one operation rounded once to float - written in
+// float, which gives the x87's bits at PC=53; matrix products go through the hook at 0x001cec7c, BuildSQT and
+// Transpose through EAGL::Transform.
 // ---------------------------------------------------------------------------------------------------------------
 
 typedef void (*MultiplyHook)(float *out, const float *parent, const float *child);
-#define Multiply (*(MultiplyHook *)0x001cec7cu)
+#define Multiply (*(MultiplyHook *)0x001cec7c)
+
+// The engine's Transform::BuildQT (thiscall): rotation quaternion and translation
+#define Transform_BuildQT ((void (__fastcall *)(Transform *, int, float, float, float, float, float, float, float))0x000162e0)
 
 static inline bool InMask(const BoneMask *mask, int bone) {
     return (mask->bits[bone >> 5] & (1u << (bone & 31))) != 0;
-}
-
-static inline void CopyBits(void *to, const void *from) {
-    memcpy(to, from, 4);
 }
 
 // FUNC_AT(0x001066f0)
@@ -208,14 +207,14 @@ void Skeleton::BuildSymmetricBoneMask(const BoneMask *source, BoneMask *destinat
 void Skeleton::GetBoneLengthScale(float *out) const {
     EAGL_UNTESTED("Skeleton::GetBoneLengthScale");
     for (int i = 0; i < count; i++)
-        CopyBits(&out[i], &bones[i].scale[0]);
+        out[i] = bones[i].scale[0];
 }
 
 // FUNC_AT(0x000f8b00)
 void Skeleton::RestoreBoneLengthScale(const float *in) {
     EAGL_UNTESTED("Skeleton::RestoreBoneLengthScale");
     for (int i = 0; i < count; i++)
-        CopyBits(&bones[i].scale[0], &in[i]);
+        bones[i].scale[0] = in[i];
     lengthScales = NULL;
 }
 
@@ -224,64 +223,56 @@ void Skeleton::RestoreBoneLengthScale(const float *in) {
 // FUNC_AT(0x000f8b30)
 void Skeleton::ScaleBoneLength(int bone, float scale, float *scales) {
     EAGL_UNTESTED("Skeleton::ScaleBoneLength");
-    float reciprocal = (float)(1.0 / (double)scale);
+    float reciprocal = 1.0f / scale;
     if (lengthScales != scales) {
         for (int i = 0; i < count; i++)
             scales[i] = 1.0f;
         lengthScales = scales;
     }
-    bones[bone].scale[0] = (float)((double)scale * (double)bones[bone].scale[0]);
+    bones[bone].scale[0] = scale * bones[bone].scale[0];
     for (int j = bone + 1; j < count; j++)
         if (bones[j].parent == bone)
-            scales[j] = (float)((double)reciprocal * (double)scales[j]);
+            scales[j] = reciprocal * scales[j];
 }
 
 // ---- mirroring: a bone's pose goes to its mirror bone with the quaternion's x and y and the translation's z
 // negated. Without keepRoot the root is turned round as well.
 
-static inline float Neg(float f) {
-    return -f;
-}
-
 static void MirrorSwap(float *a, float *b) {
     float t;
-    t = b[4]; b[4] = Neg(a[4]); a[4] = Neg(t);
-    t = b[5]; b[5] = Neg(a[5]); a[5] = Neg(t);
+    t = b[4]; b[4] = -a[4]; a[4] = -t;
+    t = b[5]; b[5] = -a[5]; a[5] = -t;
     for (int c = 6; c < 10; c++) {
-        uint32_t u, v;
-        memcpy(&u, &a[c], 4);
-        memcpy(&v, &b[c], 4);
-        memcpy(&b[c], &u, 4);
-        memcpy(&a[c], &v, 4);
+        float u = a[c], v = b[c];
+        b[c] = u;
+        a[c] = v;
     }
-    t = b[10]; b[10] = Neg(a[10]); a[10] = Neg(t);
+    t = b[10]; b[10] = -a[10]; a[10] = -t;
 }
 
 static void MirrorSelf(float *a) {
-    a[4] = Neg(a[4]);
-    a[5] = Neg(a[5]);
-    a[10] = Neg(a[10]);
+    a[4] = -a[4];
+    a[5] = -a[5];
+    a[10] = -a[10];
 }
 
 static void MirrorCopy(float *d, const float *s) {
-    memcpy(&d[0], &s[0], 12);
-    d[4] = Neg(s[4]);
-    d[5] = Neg(s[5]);
-    memcpy(&d[6], &s[6], 16);
-    d[10] = Neg(s[10]);
+    memcpy(&d[0], &s[0], 3 * sizeof(float));
+    d[4] = -s[4];
+    d[5] = -s[5];
+    memcpy(&d[6], &s[6], 4 * sizeof(float));
+    d[10] = -s[10];
 }
 
+// The root turned round: its quaternion (x, y, z, w) becomes (z, w, -x, -y), its translation's x and z negated.
 static void MirrorRoot(float *d) {
-    uint32_t q[4];
-    memcpy(q, &d[4], 16);
-    float x, y;
-    memcpy(&x, &q[0], 4);
-    memcpy(&y, &q[1], 4);
-    d[6] = Neg(x);
-    d[7] = Neg(y);
-    memcpy(&d[4], &q[2], 8);
-    d[8] = Neg(d[8]);
-    d[10] = Neg(d[10]);
+    float x = d[4], y = d[5], z = d[6], w = d[7];
+    d[6] = -x;
+    d[7] = -y;
+    d[4] = z;
+    d[5] = w;
+    d[8] = -d[8];
+    d[10] = -d[10];
 }
 
 static void MirrorBone(const Skeleton *s, int i, float *source, float *destination) {
@@ -322,9 +313,9 @@ static inline void BuildBone(Transform *t, const float *p) {
 }
 
 static inline void ScaleFirstColumn(Transform *t, const float *p) {
-    t->m[0] = (float)((double)p[3] * (double)t->m[0]);
-    t->m[4] = (float)((double)p[3] * (double)t->m[4]);
-    t->m[8] = (float)((double)p[3] * (double)t->m[8]);
+    t->m[0] = p[3] * t->m[0];
+    t->m[4] = p[3] * t->m[4];
+    t->m[8] = p[3] * t->m[8];
 }
 
 // FUNC_AT(0x000f9df0)
@@ -372,7 +363,7 @@ void Skeleton::PoseGlobalToSkin(const Transform *global, Transform *skin, const 
     for (int i = 0; i < n; i++) {
         if (mask != NULL && !InMask(mask, i))
             continue;
-        Multiply(skin[i].m, global[i].m, bones[i].inverseBind);
+        Multiply(skin[i].m, global[i].m, bones[i].inverseBind.m);
         skin[i].Transpose();
     }
 }
@@ -381,7 +372,7 @@ static inline void StillPose(const Skeleton *s, int i, float *p, const float *le
     const SkeletonBone *b = &s->bones[i];
     memcpy(&p[0], b->scale, 12);
     if (lengthScale != NULL)
-        CopyBits(&p[3], lengthScale);
+        p[3] = *lengthScale;
     else
         p[3] = 1.0f;
     memcpy(&p[4], b->rotation, 16);
@@ -407,7 +398,7 @@ void Skeleton::GetStillPoseBone(int bone, float *pose) const {
 // FUNC_AT(0x000fa5c0)
 void Skeleton::OrthoScaleBone(int bone, const Transform *scale) {
     EAGL_UNTESTED("Skeleton::OrthoScaleBone");
-    ((Transform *)bones[bone].inverseBind)->PostMult(scale->m);
+    bones[bone].inverseBind.PostMult(scale->m);
 }
 
 // FUNC_AT(0x000fa5e0)
@@ -438,8 +429,7 @@ void Skeleton::PoseQTToGlobal(int first, int last, const float *pose, Transform 
     EAGL_UNTESTED("Skeleton::PoseQTToGlobal");
     for (int i = first; i <= last; i++) {
         const float *p = &pose[i * 12];
-        ((void (__fastcall *)(Transform *, int, float, float, float, float, float, float, float))0x000162e0)(
-            &global[i], 0, p[4], p[5], p[6], p[7], p[8], p[9], p[10]);   // the engine's BuildQT
+        Transform_BuildQT(&global[i], 0, p[4], p[5], p[6], p[7], p[8], p[9], p[10]);
         int parent = bones[i].parent;
         if (parent >= 0)
             Multiply(global[i].m, global[parent].m, global[i].m);
@@ -463,7 +453,7 @@ void Skeleton::PoseQTToSkin(int first, int last, const float *pose, Transform *s
     EAGL_UNTESTED("Skeleton::PoseQTToSkin");
     PoseQTToGlobal(first, last, pose, skin);
     for (int i = first; i <= last; i++) {
-        Multiply(skin[i].m, skin[i].m, bones[i].inverseBind);
+        Multiply(skin[i].m, skin[i].m, bones[i].inverseBind.m);
         skin[i].Transpose();
     }
 }
@@ -476,7 +466,7 @@ void Skeleton::PoseSQTToSkin(const float *pose, Transform *skin, const BoneMask 
     for (int i = 0; i < n; i++) {
         if (mask != NULL && !InMask(mask, i))
             continue;
-        Multiply(skin[i].m, skin[i].m, bones[i].inverseBind);
+        Multiply(skin[i].m, skin[i].m, bones[i].inverseBind.m);
         skin[i].Transpose();
     }
 }

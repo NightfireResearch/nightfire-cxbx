@@ -785,7 +785,7 @@ void TestClients() {
 const int kVoiceCount = 224;
 struct ServerSpace {
     SND::Voice voices[kVoiceCount];
-    int32_t env[kVoiceCount][8][2];
+    SND::EnvSegment env[kVoiceCount][8];
     int8_t lfo[2][256];
     int8_t volTable[256];
     int8_t bendTable[256];
@@ -945,11 +945,11 @@ void RandomVoice(ServerSpace *s, int i, int gen) {
     v->envCurrent = (uint8_t)Range(0, v->envCount - 1);
     if (Chance(3))
         v->envCount = (uint8_t)Range(0x80, 0xff);   // a negative count: stops at once
-    v->envTable = &s->env[i][0][0];
+    v->envTable = s->env[i];
     for (int k = 0; k < 8; k++) {
         int ticks = Range(-2, 12);
-        s->env[i][k][0] = ticks == 0 ? 1 : ticks;
-        s->env[i][k][1] = Range(0, 127);
+        s->env[i][k].ticks = ticks == 0 ? 1 : ticks;
+        s->env[i][k].level = Range(0, 127);
     }
 }
 

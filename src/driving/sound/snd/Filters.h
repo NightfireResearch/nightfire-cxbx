@@ -12,20 +12,32 @@
 namespace SND {
 
 struct SFilterNode;
+struct UnpackInfo;
 
 // A node's process function: pull 'frames' frames, leave them in 'out'. 'scratch' is a buffer of the same size the
 // node may use; a node asks its upstream node for frames with (out, scratch) swapped, so what the upstream node
 // produces lands in this node's scratch. The answer is the frames produced, <= 0 at the end of the data.
 typedef int (*SFilterProcess)(SFilterNode *node, int frames, float *scratch, float *out, int requester);
+// Frees what a node owns before the node itself is freed (0: nothing to free)
+typedef void (*SFilterRestore)(SFilterNode *node);
+// A description's init (SFILTER_add): called on the newly allocated node with the description's param
+typedef void (*SFilterInit)(SFilterNode *node, uint32_t param, uint32_t arg);
+// A bank unpacker's frame getter, which its init hands back in UnpackInfo::getFrame
+typedef int (*SFilterGetFrame)(SFilterNode *node);
+// An unpacker's init (MIX_playinit's table, SndMix.unpackerInit)
+typedef void (*SFilterUnpackInit)(SFilterNode *node, UnpackInfo *info);
 
+// The node head every SFILTER node, the mixer's output stages and the reverb's blocks start with. The function
+// slots hold the originals' addresses (which jump to our ports), so a node's bytes are the original's.
 struct SFilterNode {                 // 0x1c (MW: SFILTERNODE)
-    uint32_t process;                // +0x00 SFilterProcess, the original's address
-    uint32_t restore;                // +0x04 void (*)(SFilterNode *) or 0
+    SFilterProcess process;          // +0x00
+    SFilterRestore restore;          // +0x04 0: nothing to free
     SFilterNode *input;              // +0x08 upstream node (input 1)
-    SFilterNode *input2;             // +0x0c upstream node (input 2)
+    SFilterNode *input2;             // +0x0c upstream node (input 2, the FX sum node)
     SFilterNode *output;             // +0x10 downstream node (output 1); the list's previous node
     SFilterNode *output2;            // +0x14 downstream node (output 2)
-    uint16_t priority;               // +0x18 the list is sorted by it, lowest first (0xf0 unpacker, 200 stretch)
+    uint16_t priority;               // +0x18 the list is sorted by it, lowest first: 0xf0 unpacker, 200 time
+                                     //       stretch, 0xa0 resampler, 0x50 high pass, 0x28 low pass
     uint8_t requester;               // +0x1a passed upstream as the fifth argument (the connection's slot)
     uint8_t flags;                   // +0x1b
 };
@@ -37,10 +49,11 @@ struct SFilterDesc {
     uint32_t size;                   // +0x04 the node's size
     uint16_t priority;               // +0x08
     uint16_t pad0a;
-    uint32_t init;                   // +0x0c void (*)(SFilterNode *, uint32_t param, int arg)
-    uint32_t process;                // +0x10
-    uint32_t restore;                // +0x14
+    SFilterInit init;                // +0x0c
+    SFilterProcess process;          // +0x10
+    SFilterRestore restore;          // +0x14
 };
+static_assert(sizeof(SFilterDesc) == 0x18, "SFilterDesc");
 
 struct SFilterLPFRC {                // 0x28, SFILTER_lpfRC: y = y * a + b * x
     SFilterNode node;
@@ -50,23 +63,21 @@ struct SFilterLPFRC {                // 0x28, SFILTER_lpfRC: y = y * a + b * x
 };
 static_assert(sizeof(SFilterLPFRC) == 0x28, "SFilterLPFRC");
 
-struct SFilterFIR8 {                 // 0x58, SFILTER_hpfFIR8 (and the reverb's FIR blocks, module G)
-    SFilterNode node;
-    float history[8];                // +0x1c [0] the newest input
-    float coef[5];                   // +0x3c symmetric taps: [0] outermost .. [4] centre
-    float cutoff;                    // +0x50 (design mode 3/4: the high pass edge, clamped to 0.8)
-    float cutoff2;                   // +0x54 (design mode 2/4: the low pass edge)
-};
-static_assert(sizeof(SFilterFIR8) == 0x58, "SFilterFIR8");
-
-// The FIR state the design and the filter take: SFilterFIR8 from +0x1c
+// The FIR state the design and the filter take (SFilterFIR8 from +0x1c)
 struct FirState {
-    float history[8];                // +0x00
-    float coef[5];                   // +0x20
-    float cutoff;                    // +0x34
-    float cutoff2;                   // +0x38
+    float history[8];                // +0x00 [0] the newest input
+    float coef[5];                   // +0x20 symmetric taps: [0] outermost .. [4] centre
+    float cutoff;                    // +0x34 (design mode 3/4: the high pass edge, clamped to 0.8)
+    float cutoff2;                   // +0x38 (design mode 2/4: the low pass edge)
 };
 static_assert(sizeof(FirState) == 0x3c, "FirState");
+
+// SFILTER_hpfFIR8's node, and the reverb's FIR blocks (fx2 types 2 and 4, Reverb.cpp)
+struct SFilterFIR8 {                 // 0x58
+    SFilterNode node;
+    FirState fir;                    // +0x1c
+};
+static_assert(sizeof(SFilterFIR8) == 0x58, "SFilterFIR8");
 
 // The resampler kernel: cdecl, seven stack arguments (FUN_001462b0)
 typedef void (*RsfKernel)(int count, const float *src, float *dst, int *index, uint32_t *fraction, int stepInt,
@@ -76,7 +87,7 @@ struct SFilterRSF {                  // 0x3c, SFILTER_rsf
     SFilterNode node;
     uint32_t pitch;                  // +0x1c 16.16, 0x10000 passes through
     uint32_t phase;                  // +0x20 the fraction (16 bits; the high half is cleared after each call)
-    uint32_t kernel;                 // +0x24 RsfKernel (0x001462b0)
+    RsfKernel kernel;                // +0x24 FUN_001462b0, the original's address
     int16_t primed;                  // +0x28 the history is valid
     int16_t offset;                  // +0x2a history offset (always 0: only rsfinit writes it)
     float history[4];                // +0x2c the last four input samples
@@ -89,17 +100,18 @@ struct SFilterSource {               // 0x20, PS2: SFILTER_src
 };
 static_assert(sizeof(SFilterSource) == 0x20, "SFilterSource");
 
-// What the unpacker inits take (MIX_playinit's description of the sample)
+// What the unpacker inits take (MIX_playinit's description of the sample, built from its arguments)
 struct UnpackInfo {
     const void *data;                // +0x00 the sample data (bank unpackers)
-    uint32_t unk04, unk08;
+    uint32_t unknown04;              // +0x04
+    uint32_t unknown08;              // +0x08
     int frames;                      // +0x0c
     int loopStart;                   // +0x10
     int loopEnd;                     // +0x14
     uint32_t flag;                   // +0x18 (PCM16: decode; the packet variant reads its low byte)
     int voice;                       // +0x1c the SND voice
-    uint32_t unk20;
-    uint32_t getFrame;               // +0x24 written by the bank unpackers' inits: int (*)(SFilterNode *)
+    uint32_t quality;                // +0x20 MixQuality
+    SFilterGetFrame getFrame;        // +0x24 written by the bank unpackers' inits (the original's address)
 };
 static_assert(sizeof(UnpackInfo) == 0x28, "UnpackInfo");
 

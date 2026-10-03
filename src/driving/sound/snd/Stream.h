@@ -6,12 +6,22 @@
 // and a ring of chunks filled through FILESYS (or copied from memory) and handed out chunk by chunk to readers.
 // See Stream.cpp.
 
+#include "../../platform/RealSystem.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
 namespace SND {
 
 struct StrmInternal;
+
+// A chunk in the ring: a header and its data. tag -1 = wrap to ringStart, -2 = released or skipped (size = the
+// bytes to step over); a chunk delivered to a reader carries the reader's index in the size word's top byte.
+struct StrmChunk {
+    uint32_t tag;                // +0x0
+    uint32_t size;               // +0x4 the bytes of the chunk, header included | reader << 24
+};
+static_assert(sizeof(StrmChunk) == 8, "a STREAM chunk header is 8 bytes");
 
 // A request (0x124): a file or a memory block queued for reading
 struct StrmRequest {
@@ -41,16 +51,15 @@ struct StrmReader {
     StrmInternal *internal;      // +0x0
     int32_t index;               // +0x4 1-based; a delivered chunk's size word carries it in its top byte
     int32_t bytes;               // +0x8 bytes delivered to this reader and not yet taken by STREAM_get
-    uint32_t *next;              // +0xc the next chunk STREAM_get hands out (Ghidra: pData)
+    StrmChunk *next;             // +0xc the next chunk STREAM_get hands out (Ghidra: pData)
 };
 static_assert(sizeof(StrmReader) == 0x10, "a STREAM reader is 0x10 bytes");
 
-// The header (0x190), at the start of the caller's memory, tagged "STRM"; the records and the ring follow it.
-// A chunk in the ring is {tag, size | reader << 24} and its data; tag -1 = wrap to ringStart, -2 = released or
-// skipped (size = the bytes to step over).
+// The header (0x190), at the start of the caller's memory, tagged "STRM"; the records and the ring of chunks
+// (StrmChunk) follow it.
 struct StrmInternal {
     uint32_t magic;              // +0x000 0x4d525453 "STRM"; 0 once destroyed
-    uint8_t mutex[0x20];         // +0x004 a RealMutex (platform/RealSystem.h)
+    RealMutex mutex;             // +0x004
     StrmRequest *requests;       // +0x024
     int32_t numRequests;         // +0x028 2..256
     StrmFilter *filters;         // +0x02c

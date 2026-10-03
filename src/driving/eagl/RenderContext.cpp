@@ -1,5 +1,12 @@
 #include "RenderContext.h"
+#include "Profiler.h"
+#include "RenderMethod.h"
+#include "Tar.h"
+#include "View.h"
+#include "D3D8State.h"
+#include "../../helpers.h"
 
+#include <bit>
 #include <stddef.h>
 #include <string.h>
 
@@ -10,12 +17,12 @@
 //
 // This code runs every frame. Each function makes the original's D3D8 calls (through the seam, by the entry
 // points' original addresses) in the original's order with the original's arguments, and writes D3D8's own
-// render-state table (0x00175628 + 4 * slot) and dirty flags (0x00175424) where the original's inlined D3D8 code
-// did, in the same order relative to the calls (5.2, 8.1). EndFrame's re-send of ~40 states after Swap (8.2) is
-// kept statement for statement, including the redundant dirty-flag writes.
+// render-state table and dirty flags (D3D8State.h) where the original's inlined D3D8 code did, in the same order
+// relative to the calls (5.2, 8.1). EndFrame's re-send of ~40 states after Swap (8.2) is kept statement for
+// statement, including the redundant dirty-flag writes.
 //
-// Every state write is gated on the device existing (0x0023ff18), as in the original. The shadows at
-// 0x001cb938..0x001cb960 are what the extension last sent; GeoPrimState::Apply reads the Z-write one.
+// Every state write is gated on the device existing (D3DDevicePointer), as in the original. The extension's
+// shadows (D3D8State.h) are what it last sent; GeoPrimState::Apply reads the Z-write one.
 //
 // The destructor's SEH frame (handler 0x00154c58) is left out: nothing in it can throw.
 // ---------------------------------------------------------------------------------------------------------------
@@ -27,130 +34,70 @@
 #pragma STDC FP_CONTRACT OFF
 #endif
 
+using EAGL::D3DPixelContainer;
+using EAGL::Device;
 using EAGL::RenderContext;
 using EAGL::RenderContextExtension;
-
-namespace {
-
-inline uint32_t &U32(uint32_t address) {
-    return *(uint32_t *)(uintptr_t)address;
-}
-
-inline uint8_t &U8(uint32_t address) {
-    return *(uint8_t *)(uintptr_t)address;
-}
-
-inline float &F32(uint32_t address) {
-    return *(float *)(uintptr_t)address;
-}
-
-inline uint32_t Bits(float f) {
-    uint32_t u;
-    memcpy(&u, &f, 4);
-    return u;
-}
-
-// __ftol2: truncation to 64 bits, of which the low 32 are used; what it cannot convert gives 0x80000000_00000000.
-inline int32_t Ftol(double v) {
-    if (!(v > -9223372036854775808.0 && v < 9223372036854775808.0))
-        return 0;
-    return (int32_t)(int64_t)v;
-}
+using EAGL::RenderMethod;
+using EAGL::SurfaceTexture;
 
 // ---- globals
 
-const uint32_t kDeviceCreated = 0x0023ff18;   // D3D8's device pointer, written by Direct3D_CreateDevice
-const uint32_t kDirty = 0x00175424;           // D3D8's dirty flags
-const uint32_t kStageTexture = 0x0023ff80;    // the texture bound per stage (TAR::Use, opcode 15)
-const uint32_t kRenderTargetTexture = 0x0023ff1c;
-const uint32_t kGammaRamp = 0x0023fc08;       // the ramp GetGammaRamp read at start-up: red, green, blue x 256
-const uint32_t kSavedDither = 0x0023ff10, kSavedFog = 0x0023ff11;
-const uint32_t kYuvEnable = 0x0023ffe0;       // the TAR code's YUV-enable shadow
-const uint32_t kPixelShader = 0x00240474, kVertexShader = 0x00240478;   // the shaders in use
-const uint32_t kVertexBufferList = 0x0023ff20, kRenderMethodList = 0x0023ff24;
-const uint32_t kGlobal23ff0c = 0x0023ff0c;
+#define EaglMalloc (*(void *(__cdecl **)(uint32_t size, const char *name))0x001caf68)   // EAGL's allocator
+#define D3DDevicePointer PTR_AT(0x0023ff18)           // D3D8's device, written by Direct3D_CreateDevice
+#define RenderTargetTexture PTR_AT(0x0023ff1c)
+#define GammaRamp ((uint8_t (*)[0x100])0x0023fc08)    // what GetGammaRamp read at start-up: GammaRamp[channel][i]
+#define SavedDither U8_AT(0x0023ff10)                 // EndFrame puts it in the specular-enable slot
+#define SavedFog U8_AT(0x0023ff11)
+#define YuvEnable U8_AT(0x0023ffe0)                   // the TAR code's YUV-enable shadow
+#define CurrentPixelShader U32_AT(0x00240474)
+#define CurrentVertexShader U32_AT(0x00240478)
+#define ConstructedMethods (*(RenderMethod **)0x0023ff20)   // the render methods, linked through next
+#define WaitingMethods (*(RenderMethod **)0x0023ff24)       // children waiting for their parent's shaders
+#define LodBiasOverride FLOAT_AT(0x0023ff0c)          // Tar.cpp: 0 = each TAR's own
+#define FilterOverride U32_AT(0x001cb938)             // Tar.cpp: -1 = each TAR's own
+#define D3DTextureNames ((const char (*)[12])0x001cb964)   // six copies of "D3DTexture", one per call site
 
-// RenderContextExtension's shadows of what it last sent
-const uint32_t kShadow1cb938 = 0x001cb938, kShadowStencilEnable = 0x001cb93c, kShadowStencilFail = 0x001cb940,
-               kShadowStencilZPass = 0x001cb944, kShadowStencilZFail = 0x001cb948, kShadowZWrites = 0x001cb94c,
-               kShadowColourMask = 0x001cb950, kShadowStencilMask = 0x001cb954, kShadowStencilRef = 0x001cb958,
-               kShadowStencilFunc = 0x001cb95c, kShadowStencilWriteMask = 0x001cb960;
+// ---- D3D8 and XGraphics entry points not in D3D8State.h
 
-// GeoPrimState::Apply's cache (GeoPrimState.cpp names them); EndFrame and SetupFrameBuffers invalidate some
-const uint32_t kCacheShading = 0x001cd18c, kCacheCullEnable = 0x001cd190, kCacheCullDirection = 0x001cd194,
-               kCache198 = 0x001cd198, kCacheDepthTest = 0x001cd19c, kCacheAlphaTest = 0x001cd1a4,
-               kCacheAlphaCompare = 0x001cd1a8, kCacheAlphaMethod = 0x001cd1ac, kCacheTransparency = 0x001cd1b8,
-               kCacheFillMode = 0x001cd1bc, kCacheBlendOperation = 0x001cd1c0, kCacheBlendSource = 0x001cd1c4,
-               kCacheBlendDestination = 0x001cd1c8, kCacheBlendColour = 0x001cd1cc, kCacheZSlope = 0x00240150,
-               kCacheZOffset = 0x00240154;
+#define D3DDevice_SetShaderConstantMode ((void (__stdcall *)(uint32_t))0x0016ab30)
+#define D3DDevice_Swap ((void (__stdcall *)(uint32_t))0x00169fb0)
+#define D3DDevice_SetRenderState_FogColor ((void (__stdcall *)(uint32_t))0x00167760)
+#define D3DDevice_SetRenderState_StencilEnable ((void (__stdcall *)(uint32_t))0x00168880)
+#define D3DDevice_SetRenderState_StencilFail ((void (__stdcall *)(uint32_t))0x00168910)
+#define D3DDevice_SetRenderState_ShadowFunc ((void (__stdcall *)(uint32_t))0x00167720)
+#define D3DDevice_SetRenderState_YuvEnable ((void (__stdcall *)(uint32_t))0x00168980)
+#define D3DDevice_SetRenderState_ZEnable ((void (__stdcall *)(uint32_t))0x001687f0)
+#define D3DDevice_SetRenderState_MultiSampleAntiAlias ((void (__stdcall *)(uint32_t))0x00168b70)
+#define D3DDevice_SetPixelShader ((void (__stdcall *)(uint32_t))0x0016af60)
+#define D3DDevice_SetVertexShader ((void (__stdcall *)(uint32_t))0x0016ad90)
+#define D3DDevice_PersistDisplay ((void (__stdcall *)())0x00166eb0)
+#define D3DDevice_Reset ((void (__stdcall *)(EAGL::PresentParameters *))0x00166230)
+#define D3DDevice_GetBackBuffer2 ((D3DPixelContainer *(__stdcall *)(int32_t))0x001662e0)
+#define D3DDevice_GetDepthStencilSurface2 ((D3DPixelContainer *(__stdcall *)())0x001666b0)
+#define D3DDevice_GetGammaRamp ((void (__stdcall *)(void *))0x00165e70)
+#define D3DDevice_SetGammaRamp ((void (__stdcall *)(uint32_t, const void *))0x00165de0)
+#define D3DDevice_SetScreenSpaceOffset ((void (__stdcall *)(float, float))0x00167030)
+#define D3DDevice_GetTile ((void (__stdcall *)(uint32_t, D3DTile *))0x00166060)
+#define D3DDevice_SetTile ((void (__stdcall *)(uint32_t, const D3DTile *))0x00166d00)
+#define D3DDevice_SetSoftDisplayFilter ((void (__stdcall *)(uint32_t))0x001660e0)
+#define D3DDevice_SetFlickerFilter ((void (__stdcall *)(int))0x00166090)
+#define D3DDevice_BeginVisibilityTest ((void (__stdcall *)())0x00166b40)
+#define D3DDevice_EndVisibilityTest ((void (__stdcall *)(uint32_t))0x00166be0)
+#define D3DDevice_GetVisibilityTestResult ((int32_t (__stdcall *)(uint32_t, uint32_t *, void *))0x00165fd0)
+#define D3DDevice_CreateTexture2 ((D3DPixelContainer *(__stdcall *)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t))0x00167260)
+#define D3DDevice_CopyRects ((void (__stdcall *)(void *, const D3DRect *, uint32_t, void *, const D3DPoint *))0x001663e0)
+#define D3DSurface_GetDesc ((void (__stdcall *)(D3DPixelContainer *, SurfaceDesc *))0x00167220)
+#define D3DSurface_LockRect ((void (__stdcall *)(D3DPixelContainer *, LockedRect *, const void *, uint32_t))0x00167240)
+#define D3D_SetPushBufferSize ((void (__stdcall *)(uint32_t, uint32_t))0x00169460)
+#define Direct3D_CreateDevice ((int32_t (__stdcall *)(uint32_t, uint32_t, void *, uint32_t, EAGL::PresentParameters *, void **))0x00169480)
+#define XGBytesPerPixelFromFormat ((uint32_t (__stdcall *)(uint32_t))0x00178fb8)
+#define XGSetTextureHeader ((void (__stdcall *)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, void *, uint32_t, uint32_t))0x0017a8ac)
+#define XGWriteSurfaceToFile ((void (__stdcall *)(D3DPixelContainer *, const char *))0x0017a8ee)
+#define XGetVideoFlags ((uint32_t (__stdcall *)())0x0010e02b)
+#define MEM_copy ((void (*)(void *, const void *, uint32_t))0x0010a5b0)
 
-// D3D8's render-state table: the slot each write lands in, by address
-inline void D3DState(uint32_t address, uint32_t value) {
-    U32(address) = value;
-}
-
-// ---- callees
-
-// D3DDevice_SetRenderState_Simple takes the push-buffer method in ECX and the value in EDX: __fastcall's registers.
-inline void SetRenderStateSimple(uint32_t method, uint32_t value) {
-    ((void (__fastcall *)(uint32_t, uint32_t))0x001673e0)(method, value);
-}
-
-inline void *DeviceGet() {
-    return ((void *(*)())0x000e8a40)();   // EAGL::Device::Get
-}
-
-inline void *EaglMalloc(uint32_t size, const char *name) {
-    return (*(void *(**)(uint32_t, const char *))0x001caf68u)(size, name);
-}
-
-inline void SetTexture(uint32_t stage, void *texture) {
-    ((void (__stdcall *)(uint32_t, void *))0x00166830)(stage, texture);
-}
-
-inline void SetShaderConstantMode(uint32_t mode) {
-    ((void (__stdcall *)(uint32_t))0x0016ab30)(mode);
-}
-
-inline void Swap(uint32_t flags) {
-    ((void (__stdcall *)(uint32_t))0x00169fb0)(flags);
-}
-
-inline void SetRenderStateFogColor(uint32_t colour) {
-    ((void (__stdcall *)(uint32_t))0x00167760)(colour);
-}
-
-inline void SetRenderStateStencilEnable(uint32_t enable) {
-    ((void (__stdcall *)(uint32_t))0x00168880)(enable);
-}
-
-inline void SetRenderStateStencilFail(uint32_t op) {
-    ((void (__stdcall *)(uint32_t))0x00168910)(op);
-}
-
-inline void SetRenderStateShadowFunc(uint32_t func) {
-    ((void (__stdcall *)(uint32_t))0x00167720)(func);
-}
-
-inline void PersistDisplay() {
-    ((void (__stdcall *)())0x00166eb0)();
-}
-
-inline void Reset(void *presentParameters) {
-    ((void (__stdcall *)(void *))0x00166230)(presentParameters);
-}
-
-inline void *GetBackBuffer2(int32_t index) {
-    return ((void *(__stdcall *)(int32_t))0x001662e0)(index);
-}
-
-inline void Release(void *resource) {
-    ((void (__stdcall *)(void *))0x00169230)(resource);
-}
-
-inline void D3DSetGammaRamp(uint32_t flags, const void *ramp) {
-    ((void (__stdcall *)(uint32_t, const void *))0x00165de0)(flags, ramp);
-}
+namespace {
 
 // D3DSURFACE_DESC as the Xbox's D3D8 has it
 struct SurfaceDesc {
@@ -164,37 +111,59 @@ struct SurfaceDesc {
 };
 static_assert(sizeof(SurfaceDesc) == 0x1c, "D3DSURFACE_DESC is 0x1c bytes");
 
-inline void SurfaceGetDesc(void *surface, SurfaceDesc *desc) {
-    ((void (__stdcall *)(void *, SurfaceDesc *))0x00167220)(surface, desc);
+// D3DTILE
+struct D3DTile {
+    uint32_t flags;               // +0x00
+    void *memory;                 // +0x04
+    uint32_t size;                // +0x08
+    uint32_t pitch;               // +0x0c
+    uint32_t zStartTag;           // +0x10
+    uint32_t zOffset;             // +0x14
+};
+static_assert(sizeof(D3DTile) == 0x18, "D3DTILE is 0x18 bytes");
+
+struct D3DRect {
+    int32_t left, top, right, bottom;
+};
+
+struct D3DPoint {
+    int32_t x, y;
+};
+
+struct LockedRect {               // D3DLOCKED_RECT
+    int32_t pitch;
+    void *bits;
+};
+
+// __ftol2: truncation to 64 bits, of which the low 32 are used; what it cannot convert gives 0x80000000_00000000.
+int32_t Ftol(double v) {
+    if (!(v > -9223372036854775808.0 && v < 9223372036854775808.0))
+        return 0;
+    return (int32_t)(int64_t)v;
 }
 
-inline uint32_t XGBytesPerPixelFromFormat(uint32_t format) {
-    return ((uint32_t (__stdcall *)(uint32_t))0x00178fb8)(format);
-}
-
-inline void XGSetTextureHeader(uint32_t width, uint32_t height, uint32_t levels, uint32_t usage, uint32_t format,
-                               uint32_t pool, void *texture, uint32_t data, uint32_t pitch) {
-    ((void (__stdcall *)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, void *, uint32_t,
-                         uint32_t))0x0017a8ac)(width, height, levels, usage, format, pool, texture, data, pitch);
-}
-
-inline void *MakeTar(void *texture) {
-    return ((void *(*)(void *))0x000ec610)(texture);   // a TAR over a D3D texture (texture module)
+// D3DPRESENT_PARAMETERS' presentation interval for a swap interval: 1 -> 0, 2 -> 2, 3 -> 4, anything else 0.
+uint32_t PresentationInterval(int swapInterval) {
+    switch (swapInterval) {
+    case 2: return 2;
+    case 3: return 4;
+    default: return 0;
+    }
 }
 
 // The texture header laid over a surface, as SetupFrameBuffers and the three buffer getters build it: allocated
 // under the given name (each site passes its own copy of "D3DTexture"), cleared, given the surface's size and
 // format (the depth surface's format mapped to its texture equivalent), and pointed at the surface's data.
-void BuildSurfaceTexture(void **slot, void *surface, const char *name, bool depth) {
-    uint32_t *texture = (uint32_t *)EaglMalloc(0x14, name);
+void BuildSurfaceTexture(SurfaceTexture **slot, D3DPixelContainer *surface, const char *name, bool depth) {
+    SurfaceTexture *texture = static_cast<SurfaceTexture *>(EaglMalloc(sizeof(SurfaceTexture), name));
     *slot = texture;
-    texture[0] = 0;
-    texture[1] = 0;
-    texture[2] = 0;
-    texture[3] = 0;
-    texture[4] = 0;
+    texture->common = 0;
+    texture->data = 0;
+    texture->lock = 0;
+    texture->format = 0;
+    texture->size = 0;
     SurfaceDesc desc;
-    SurfaceGetDesc(surface, &desc);
+    D3DSurface_GetDesc(surface, &desc);
     uint32_t format = desc.format;
     if (depth) {
         switch (format) {   // the switch tables at 0x000e7378 and 0x000e853c
@@ -207,7 +176,15 @@ void BuildSurfaceTexture(void **slot, void *surface, const char *name, bool dept
     }
     uint32_t pitch = XGBytesPerPixelFromFormat(format) * desc.width;
     XGSetTextureHeader(desc.width, desc.height, 1, 0, desc.format, 0, *slot, 0, pitch);
-    ((uint32_t *)*slot)[1] = ((const uint32_t *)surface)[1];
+    (*slot)->data = surface->data;
+}
+
+// One gamma-ramp entry scaled: (int)(entry * scale + 0.5) by __ftol2, 0xff when it overflows a byte.
+uint8_t ScaledGamma(uint8_t entry, float scale) {
+    int32_t v = Ftol(double(entry) * scale + 0.5);
+    if ((v & 0xff000000) != 0)
+        v = 0xff;
+    return uint8_t(v);
 }
 
 }  // namespace
@@ -218,151 +195,96 @@ void BuildSurfaceTexture(void **slot, void *surface, const char *name, bool dept
 
 // FUNC_AT(0x000e6610)
 void EAGL::RenderContext::BeginFrame() {
-    void *device = DeviceGet();
-    // DevicePrivate::SetCurrentRenderContext, on the device's private part at +4
-    ((void (__fastcall *)(void *, int, void *))0x000e8a00)((uint8_t *)device + 4, 0, this);
-    DeviceGet();
-    ((void (__stdcall *)(void *, void *))0x00165dc0)(backBuffer, depthSurface);   // D3DDevice_SetRenderTarget
+    Device *d = Device::Get();
+    d->Private()->SetCurrentRenderContext(this);
+    Device::Get();   // the original's call, its answer unused
+    D3DDevice_SetRenderTarget(backBuffer, depthSurface);
 }
 
 // Presents the frame, then sends again the states Swap leaves behind (8.2). Returns Device::Get(), the tail call.
 // FUNC_AT(0x000e6640)
 void* EAGL::RenderContext::EndFrame() {
-    ((void (*)())0x000f52d0)();   // the profiler's frame mark
+    ProfilerFrameMark();
 
     // Unbind whatever is still bound from the render-target texture
-    if (U32(kStageTexture) == U32(kRenderTargetTexture)) {
-        SetTexture(0, NULL);
-        U32(kStageTexture) = 0;
-    }
-    if (U32(kStageTexture + 4) == U32(kRenderTargetTexture)) {
-        SetTexture(1, NULL);
-        U32(kStageTexture + 4) = 0;
-    }
-    if (U32(kStageTexture + 8) == U32(kRenderTargetTexture)) {
-        SetTexture(2, NULL);
-        U32(kStageTexture + 8) = 0;
-    }
-    if (U32(kStageTexture + 12) == U32(kRenderTargetTexture)) {
-        SetTexture(3, NULL);
-        U32(kStageTexture + 12) = 0;
+    for (uint32_t stage = 0; stage < 4; stage++) {
+        if (StageTexture[stage] == RenderTargetTexture) {
+            D3DDevice_SetTexture(stage, NULL);
+            StageTexture[stage] = NULL;
+        }
     }
     if (multiSampleType != 0x11) {   // polygon offset off for the swap
-        SetRenderStateSimple(0x40384, 0);
-        D3DState(0x0017575c, 0);
-        SetRenderStateSimple(0x40388, 0);
-        D3DState(0x00175760, 0);
+        SendState(0x40384, kRsPolygonOffsetZSlopeScale, 0);
+        SendState(0x40388, kRsPolygonOffsetZOffset, 0);
     }
-    DeviceGet();
-    SetShaderConstantMode(0);
-    Swap(0);
-    SetShaderConstantMode(1);
+    Device::Get();
+    D3DDevice_SetShaderConstantMode(0);
+    D3DDevice_Swap(0);
+    D3DDevice_SetShaderConstantMode(1);
 
     if (multiSampleType != 0x11) {
-        uint32_t savedDither = U8(kSavedDither), savedFog = U8(kSavedFog);
-        U32(kDirty) = U32(kDirty) | 0x3000;
-        uint32_t dirty = U32(kDirty);
-        D3DState(0x001757c4, savedDither);   // slot 103
-        D3DState(0x00175798, savedFog);      // slot 92, fog enable
+        uint32_t savedDither = SavedDither, savedFog = SavedFog;
+        D3DDirtyFlags |= 0x3000;
+        uint32_t dirty = D3DDirtyFlags;
+        D3DRenderState[kRsSpecularEnable] = savedDither;   // slot 103, as the original (dither is slot 65)
+        D3DRenderState[kRsFogEnable] = savedFog;
         dirty |= 0x2000;
-        U32(kCacheFillMode) = 0xffffffffu;
-        U32(kCacheCullEnable) = 0xffffffffu;
-        U32(kCacheCullDirection) = 0xffffffffu;
-        U32(kCacheAlphaTest) = 0xffffffffu;
-        U32(kCacheTransparency) = 0xffffffffu;
-        U32(kDirty) = dirty;
+        ApplyCache.fillMode = 0xffffffff;
+        ApplyCache.cullEnable = 0xffffffff;
+        ApplyCache.cullDirection = 0xffffffff;
+        ApplyCache.alphaTestEnable = 0xffffffff;
+        ApplyCache.transparencyMethod = 0xffffffff;
+        D3DDirtyFlags = dirty;
         dirty |= 0x2000;
-        D3DState(0x0017579c, fogTableMode);
-        U32(kDirty) = dirty;
-        D3DState(0x001757a0, fogStart);
+        D3DRenderState[kRsFogTableMode] = fogTableMode;
+        D3DDirtyFlags = dirty;
+        D3DRenderState[kRsFogStart] = fogStart;
         dirty |= 0x2000;
-        U32(kDirty) = dirty;
-        D3DState(0x001757a4, fogEnd);
+        D3DDirtyFlags = dirty;
+        D3DRenderState[kRsFogEnd] = fogEnd;
         dirty |= 0x2000;
-        U32(kDirty) = dirty;
-        D3DState(0x001757a8, fogDensity);
-        SetRenderStateFogColor(fogColour);
-        SetRenderStateStencilEnable(U32(kShadowStencilEnable));
-        U32(kShadowColourMask) = 0xffffffffu;
-        ((void (__stdcall *)(uint32_t))0x00168980)(U8(kYuvEnable));   // SetRenderState_YuvEnable
-        U32(kCacheShading) = 0xffffffffu;
-        ((void (__stdcall *)(uint32_t))0x0016af60)(U32(kPixelShader));    // D3DDevice_SetPixelShader
-        ((void (__stdcall *)(uint32_t))0x0016ad90)(U32(kVertexShader));   // D3DDevice_SetVertexShader
+        D3DDirtyFlags = dirty;
+        D3DRenderState[kRsFogDensity] = fogDensity;
+        D3DDevice_SetRenderState_FogColor(fogColour);
+        D3DDevice_SetRenderState_StencilEnable(Shadows.stencilEnable);
+        Shadows.colourWriteMask = 0xffffffff;
+        D3DDevice_SetRenderState_YuvEnable(YuvEnable);
+        ApplyCache.shading = 0xffffffff;
+        D3DDevice_SetPixelShader(CurrentPixelShader);
+        D3DDevice_SetVertexShader(CurrentVertexShader);
 
-        SetRenderStateSimple(0x4147c, 0);
-        D3DState(0x00175774, 0);
-        uint32_t v = U32(kCacheZSlope);
-        SetRenderStateSimple(0x40384, v);
-        D3DState(0x0017575c, v);
-        v = U32(kCacheZOffset);
-        SetRenderStateSimple(0x40388, v);
-        D3DState(0x00175760, v);
-        SetRenderStateSimple(0x41d78, 1);
-        D3DState(0x00175770, 1);
+        SendState(0x4147c, kRsStippleEnable, 0);
+        SendState(0x40384, kRsPolygonOffsetZSlopeScale, std::bit_cast<uint32_t>(ApplyCacheZSlopeScale));
+        SendState(0x40388, kRsPolygonOffsetZOffset, std::bit_cast<uint32_t>(ApplyCacheZOffset));
+        SendState(0x41d78, kRsDepthClipControl, 1);
         // FCOMP against 0.0f, TEST AH,0x44, JNP: the enables go off only when the offset is equal (and ordered)
-        if (F32(kCacheZOffset) == F32(0x00189dec)) {
-            SetRenderStateSimple(0x40330, 0);
-            D3DState(0x00175764, 0);
-            SetRenderStateSimple(0x40334, 0);
-            D3DState(0x00175768, 0);
-            SetRenderStateSimple(0x40338, 0);
-            D3DState(0x0017576c, 0);
-        } else {
-            SetRenderStateSimple(0x40330, 1);
-            D3DState(0x00175764, 1);
-            SetRenderStateSimple(0x40334, 1);
-            D3DState(0x00175768, 1);
-            SetRenderStateSimple(0x40338, 1);
-            D3DState(0x0017576c, 1);
-        }
-        SetRenderStateSimple(0x409f8, 4);
-        D3DState(0x00175758, 4);
-        v = U32(kCacheBlendColour);
-        SetRenderStateSimple(0x4034c, v);
-        D3DState(0x00175754, v);
-        v = U32(kCacheBlendSource);
-        SetRenderStateSimple(0x40344, v);
-        D3DState(0x00175720, v);
-        v = U32(kCacheBlendDestination);
-        SetRenderStateSimple(0x40348, v);
-        D3DState(0x00175724, v);
-        v = U32(kCacheDepthTest);
-        SetRenderStateSimple(0x40354, v);
-        D3DState(0x0017570c, v);
-        v = U32(kCacheAlphaMethod);
-        SetRenderStateSimple(0x4033c, v);
-        D3DState(0x00175710, v);
-        v = U32(kCacheAlphaCompare);
-        SetRenderStateSimple(0x40340, v);
-        D3DState(0x0017571c, v);
-        v = U8(kShadowZWrites);
-        SetRenderStateSimple(0x4035c, v);
-        D3DState(0x00175728, v);
-        v = U32(kCacheBlendOperation);
-        SetRenderStateSimple(0x40350, v);
-        D3DState(0x00175750, v);
-        v = U32(kShadowStencilZFail);
-        SetRenderStateSimple(0x40374, v);
-        D3DState(0x00175738, v);
-        v = U32(kShadowStencilZPass);
-        SetRenderStateSimple(0x40378, v);
-        D3DState(0x0017573c, v);
-        v = U32(kShadowStencilFunc);
-        SetRenderStateSimple(0x40364, v);
-        D3DState(0x00175740, v);
-        v = U32(kShadowStencilRef);
-        SetRenderStateSimple(0x40368, v);
-        D3DState(0x00175744, v);
+        uint32_t on = ApplyCacheZOffset == 0.0f ? 0 : 1;
+        SendState(0x40330, kRsPointOffsetEnable, on);
+        SendState(0x40334, kRsWireFrameOffsetEnable, on);
+        SendState(0x40338, kRsSolidOffsetEnable, on);
+        SendState(0x409f8, kRsSwathWidth, 4);
+        SendState(0x4034c, kRsBlendColor, ApplyCache.blendColour);
+        SendState(0x40344, kRsSrcBlend, ApplyCache.blendSource);
+        SendState(0x40348, kRsDestBlend, ApplyCache.blendDestination);
+        SendState(0x40354, kRsZFunc, ApplyCache.depthTestMethod);
+        SendState(0x4033c, kRsAlphaFunc, ApplyCache.alphaTestMethod);
+        SendState(0x40340, kRsAlphaRef, ApplyCache.alphaCompareValue);
+        SendState(0x4035c, kRsZWriteEnable, Shadows.zWritesEnable);
+        SendState(0x40350, kRsBlendOp, ApplyCache.blendOperation);
+        SendState(0x40374, kRsStencilZFail, Shadows.stencilZFail);
+        SendState(0x40378, kRsStencilPass, Shadows.stencilZPass);
+        SendState(0x40364, kRsStencilFunc, Shadows.stencilFunc);
+        SendState(0x40368, kRsStencilRef, Shadows.stencilRef);
     }
 
     // The texture headers over the buffers follow the buffers' data, which Swap moved
     if (frontAlias != NULL)
-        ((uint32_t *)frontAlias)[1] = ((const uint32_t *)frontBuffer)[1];
+        frontAlias->data = frontBuffer->data;
     if (backAlias != NULL)
-        ((uint32_t *)backAlias)[1] = ((const uint32_t *)backBuffer)[1];
+        backAlias->data = backBuffer->data;
     if (depthAlias != NULL)
-        ((uint32_t *)depthAlias)[1] = ((const uint32_t *)depthSurface)[1];
-    return DeviceGet();
+        depthAlias->data = depthSurface->data;
+    return Device::Get();
 }
 
 // =================================================================================================================
@@ -371,15 +293,15 @@ void* EAGL::RenderContext::EndFrame() {
 
 // FUNC_AT(0x000e6a60)
 void EAGL::RenderContext::SetSize(float width_, float height_) {
-    width = Ftol((double)width_);
-    height = Ftol((double)height_);
+    width = Ftol(width_);
+    height = Ftol(height_);
 }
 
 // What SetupFrameBuffers last set up, not what SetSize asked for.
 // FUNC_AT(0x000e6a80)
 void EAGL::RenderContext::GetSize(float *width_, float *height_) {
-    *width_ = (float)currentWidth;
-    *height_ = (float)currentHeight;
+    *width_ = float(currentWidth);
+    *height_ = float(currentHeight);
 }
 
 // FUNC_AT(0x000e6aa0)
@@ -394,14 +316,14 @@ int EAGL::RenderContext::GetFrontBufferDepth() {
 // 16 or 32 bits; anything else is ignored. Sets the front buffer's depth too.
 // FUNC_AT(0x000e6ac0)
 void EAGL::RenderContext::SetBackBufferDepth(int depth) {
-    if (depth == 0x10) {
+    if (depth == 16) {
         backBufferFormat = 5;
-        frontBufferDepth = 0x10;
-        backBufferDepth = 0x10;
-    } else if (depth == 0x20) {
+        frontBufferDepth = 16;
+        backBufferDepth = 16;
+    } else if (depth == 32) {
         backBufferFormat = 6;
-        frontBufferDepth = 0x20;
-        backBufferDepth = 0x20;
+        frontBufferDepth = 32;
+        backBufferDepth = 32;
     }
 }
 
@@ -415,11 +337,11 @@ int EAGL::RenderContext::GetBackBufferDepth() {
 void EAGL::RenderContext::SetZBufferDepth(int depth) {
     if (depth == 0) {
         zBufferDepth = 0;
-    } else if (depth == 0x10) {
-        zBufferDepth = 0x10;
+    } else if (depth == 16) {
+        zBufferDepth = 16;
         depthFormat = 0x2c;
-    } else if (depth == 0x20) {
-        zBufferDepth = depth;
+    } else if (depth == 32) {
+        zBufferDepth = 32;
         depthFormat = 0x2a;
     }
 }
@@ -429,28 +351,19 @@ int EAGL::RenderContext::GetZBufferDepth() {
     return currentZBufferDepth;
 }
 
-// Off: immediate presentation. On: the swap interval's (1 -> 0, 2 -> 2, 3 -> 4, else 0). Resets the device if
-// it exists. The refresh rate is cleared either way.
+// Off: immediate presentation. On: the swap interval's. Resets the device if it exists. The refresh rate is
+// cleared either way.
 // FUNC_AT(0x000e6b60)
 void EAGL::RenderContext::SetSyncToVBL(uint8_t sync) {
     syncToVBL = sync;
     present.refreshRate = 0;
-    if (sync == 0) {
-        present.presentationInterval = 0x80000000u;
-    } else {
-        present.presentationInterval = 0;
-        uint32_t interval = 0;
-        switch (swapInterval) {
-        case 1: interval = 0; break;
-        case 2: interval = 2; break;
-        case 3: interval = 4; break;
-        default: break;
-        }
-        present.presentationInterval = interval;
-    }
-    if (U32(kDeviceCreated) != 0) {
-        PersistDisplay();
-        Reset(&present);
+    if (sync == 0)
+        present.presentationInterval = 0x80000000;   // D3DPRESENT_INTERVAL_IMMEDIATE
+    else
+        present.presentationInterval = PresentationInterval(swapInterval);
+    if (D3DDevicePointer != NULL) {
+        D3DDevice_PersistDisplay();
+        D3DDevice_Reset(&present);
     }
 }
 
@@ -479,41 +392,34 @@ bool EAGL::RenderContext::GetZEnable(uint32_t *enable) {
 
 // FUNC_AT(0x000e6c00)
 uint32_t EAGL::RenderContext::SetupFrameBuffers() {
-    if (U32(kDeviceCreated) == 0)
-        ((void (__stdcall *)(uint32_t, uint32_t))0x00169460)(pushBufferSize, kickOffSize);   // D3D_SetPushBufferSize
+    if (D3DDevicePointer == NULL)
+        D3D_SetPushBufferSize(pushBufferSize, kickOffSize);
 
     memset(&present, 0, sizeof(present));
     int32_t w = width, h = height;
-    present.backBufferWidth = (uint32_t)w;
-    present.backBufferHeight = (uint32_t)h;
+    present.backBufferWidth = w;
+    present.backBufferHeight = h;
     present.backBufferFormat = backBufferFormat;
     present.backBufferCount = 2;
-    if (w == 0x500 && h == 0x2d0)
+    if (w == 1280 && h == 720)
         present.flags = 0x50;   // 720p
-    if (w == 0x780) {
-        if (h == 0x438)
+    if (w == 1920) {
+        if (h == 1080)
             present.flags = 0x30;   // 1080
-        if (w == 0x780 && h == 0x21c)
+        if (h == 540)
             present.flags = 0xb0;   // 1080i field
     }
     if (wideScreen != 0)
         present.flags |= 0x10;
-    if (presentFlag100 != 0 && w == 0x280)
+    if (presentFlag100 != 0 && w == 640)
         present.flags |= 0x100;
     present.windowed = 0;
-    present.refreshRate = pal60 != 0 ? 0x3c : 0;
+    present.refreshRate = pal60 != 0 ? 60 : 0;
     if (syncToVBL == 0) {
         present.refreshRate = 0;
-        present.presentationInterval = 0x80000000u;
+        present.presentationInterval = 0x80000000;   // D3DPRESENT_INTERVAL_IMMEDIATE
     } else {
-        uint32_t interval = 0;
-        switch (swapInterval) {
-        case 1: interval = 0; break;
-        case 2: interval = 2; break;
-        case 3: interval = 4; break;
-        default: break;
-        }
-        present.presentationInterval = interval;
+        present.presentationInterval = PresentationInterval(swapInterval);
     }
     if (zBufferDepth != 0) {
         present.enableAutoDepthStencil = 1;
@@ -524,153 +430,132 @@ uint32_t EAGL::RenderContext::SetupFrameBuffers() {
     present.swapEffect = 1;
     present.multiSampleType = multiSampleType;
 
-    if (U32(kDeviceCreated) == 0) {
-        int32_t hr = ((int32_t (__stdcall *)(uint32_t, uint32_t, void *, uint32_t, void *, void *))0x00169480)(
-            0, 1, NULL, 0x10, &present, (void *)(uintptr_t)kDeviceCreated);   // Direct3D_CreateDevice
-        if (hr < 0)
+    if (D3DDevicePointer == NULL) {
+        if (Direct3D_CreateDevice(0, 1, NULL, 0x10, &present, &D3DDevicePointer) < 0)
             return 0;
     } else {
-        PersistDisplay();
-        Reset(&present);
+        D3DDevice_PersistDisplay();
+        D3DDevice_Reset(&present);
     }
 
-    ((void (__stdcall *)(void *))0x00165e70)((void *)(uintptr_t)kGammaRamp);   // D3DDevice_GetGammaRamp
-    SetShaderConstantMode(1);
-    ((void (__stdcall *)(uint32_t))0x001677b0)(0x901);   // SetRenderState_CullMode
-    SetRenderStateSimple(0x40304, 1);
-    D3DState(0x00175714, 1);
-    U32(kCacheTransparency) = 0xffffffffu;
-    U32(kCacheCullEnable) = 0xffffffffu;
-    U32(kCacheCullDirection) = 0xffffffffu;
-    ((void (__stdcall *)(uint32_t))0x001687f0)(zEnable);   // SetRenderState_ZEnable
-    SetRenderStateStencilEnable(stencilEnable);
-    uint32_t v = stencilMask;
-    SetRenderStateSimple(0x4036c, v);
-    D3DState(0x00175748, v);
-    v = stencilRef;
-    SetRenderStateSimple(0x40368, v);
-    D3DState(0x00175744, v);
-    v = stencilFunc;
-    SetRenderStateSimple(0x40364, v);
-    D3DState(0x00175740, v);
-    SetRenderStateStencilFail(stencilFail);
-    v = stencilZPass;
-    SetRenderStateSimple(0x40378, v);
-    D3DState(0x0017573c, v);
-    v = stencilZFail;
-    SetRenderStateSimple(0x40374, v);
-    D3DState(0x00175738, v);
-    v = zWritesEnable;
-    SetRenderStateSimple(0x4035c, v);
-    D3DState(0x00175728, v);
-    v = colourWriteMask;
-    SetRenderStateSimple(0x40358, v);
-    D3DState(0x00175734, v);
-    v = ditherEnable;
-    SetRenderStateSimple(0x40310, v);
-    D3DState(0x0017572c, v);
-    // FLD/FSTP of the two floats: passed as their bits (only a signalling NaN would differ, and none is stored)
-    ((void (__stdcall *)(uint32_t, uint32_t))0x00167030)(screenSpaceOffsetX, screenSpaceOffsetY);
-    U32(kCache198) = zEnable;
-    U32(kShadowStencilEnable) = stencilEnable;
-    U32(kShadowStencilMask) = stencilMask;
-    U32(kShadowStencilRef) = stencilRef;
-    U32(kShadowStencilFunc) = stencilFunc;
-    U32(kShadowStencilFail) = stencilFail;
-    U32(kShadowStencilZPass) = stencilZPass;
-    U32(kShadowStencilZFail) = stencilZFail;
-    U8(kShadowZWrites) = zWritesEnable;
-    U32(kShadowColourMask) = colourWriteMask;
-    U8(kSavedDither) = ditherEnable;
-    U8(kSavedFog) = fogEnable;
-    SetRenderStateShadowFunc(shadowFunc);
+    D3DDevice_GetGammaRamp(GammaRamp);
+    D3DDevice_SetShaderConstantMode(1);
+    D3DDevice_SetRenderState_CullMode(0x901);
+    SendState(0x40304, kRsAlphaBlendEnable, 1);
+    ApplyCache.transparencyMethod = 0xffffffff;
+    ApplyCache.cullEnable = 0xffffffff;
+    ApplyCache.cullDirection = 0xffffffff;
+    D3DDevice_SetRenderState_ZEnable(zEnable);
+    D3DDevice_SetRenderState_StencilEnable(stencilEnable);
+    SendState(0x4036c, kRsStencilMask, stencilMask);
+    SendState(0x40368, kRsStencilRef, stencilRef);
+    SendState(0x40364, kRsStencilFunc, stencilFunc);
+    D3DDevice_SetRenderState_StencilFail(stencilFail);
+    SendState(0x40378, kRsStencilPass, stencilZPass);
+    SendState(0x40374, kRsStencilZFail, stencilZFail);
+    SendState(0x4035c, kRsZWriteEnable, zWritesEnable);
+    SendState(0x40358, kRsColorWriteEnable, colourWriteMask);
+    SendState(0x40310, kRsDitherEnable, ditherEnable);
+    D3DDevice_SetScreenSpaceOffset(screenSpaceOffsetX, screenSpaceOffsetY);
+    ApplyCache.zEnable = zEnable;
+    Shadows.stencilEnable = stencilEnable;
+    Shadows.stencilMask = stencilMask;
+    Shadows.stencilRef = stencilRef;
+    Shadows.stencilFunc = stencilFunc;
+    Shadows.stencilFail = stencilFail;
+    Shadows.stencilZPass = stencilZPass;
+    Shadows.stencilZFail = stencilZFail;
+    Shadows.zWritesEnable = zWritesEnable;
+    Shadows.colourWriteMask = colourWriteMask;
+    SavedDither = ditherEnable;
+    SavedFog = fogEnable;
+    D3DDevice_SetRenderState_ShadowFunc(shadowFunc);
 
     // fog, slots 92..96
-    uint32_t dirty = U32(kDirty) | 0x2000;
-    U32(kDirty) = dirty;
-    D3DState(0x00175798, fogEnable);
+    uint32_t dirty = D3DDirtyFlags | 0x2000;
+    D3DDirtyFlags = dirty;
+    D3DRenderState[kRsFogEnable] = fogEnable;
     dirty |= 0x2000;
-    U32(kDirty) = dirty;
-    D3DState(0x0017579c, fogTableMode);
+    D3DDirtyFlags = dirty;
+    D3DRenderState[kRsFogTableMode] = fogTableMode;
     dirty |= 0x2000;
-    U32(kDirty) = dirty;
-    D3DState(0x001757a0, fogStart);
+    D3DDirtyFlags = dirty;
+    D3DRenderState[kRsFogStart] = fogStart;
     dirty |= 0x2000;
-    U32(kDirty) = dirty;
-    D3DState(0x001757a4, fogEnd);
+    D3DDirtyFlags = dirty;
+    D3DRenderState[kRsFogEnd] = fogEnd;
     dirty |= 0x2000;
-    U32(kDirty) = dirty;
-    D3DState(0x001757a8, fogDensity);
-    SetRenderStateFogColor(fogColour);
+    D3DDirtyFlags = dirty;
+    D3DRenderState[kRsFogDensity] = fogDensity;
+    D3DDevice_SetRenderState_FogColor(fogColour);
 
     // points, slots 116..123
-    dirty = U32(kDirty) | 0x100;
-    U32(kDirty) = dirty;
-    D3DState(0x001757f8, pointSize);
+    dirty = D3DDirtyFlags | 0x100;
+    D3DDirtyFlags = dirty;
+    D3DRenderState[kRsPointSize] = pointSize;
     dirty |= 0x100;
-    U32(kDirty) = dirty;
-    D3DState(0x001757fc, pointSizeMin);
+    D3DDirtyFlags = dirty;
+    D3DRenderState[kRsPointSizeMin] = pointSizeMin;
     dirty |= 0x100;
-    U32(kDirty) = dirty;
-    D3DState(0x00175814, pointSizeMax);
+    D3DDirtyFlags = dirty;
+    D3DRenderState[kRsPointSizeMax] = pointSizeMax;
     dirty |= 0x100;
-    U32(kDirty) = dirty;
-    D3DState(0x00175808, pointScaleA);
+    D3DDirtyFlags = dirty;
+    D3DRenderState[kRsPointScaleA] = pointScaleA;
     dirty |= 0x100;
-    U32(kDirty) = dirty;
-    D3DState(0x0017580c, pointScaleB);
+    D3DDirtyFlags = dirty;
+    D3DRenderState[kRsPointScaleB] = pointScaleB;
     dirty |= 0x100;
-    U32(kDirty) = dirty;
-    D3DState(0x00175810, pointScaleC);
+    D3DDirtyFlags = dirty;
+    D3DRenderState[kRsPointScaleC] = pointScaleC;
     dirty |= 0x900;
-    U32(kDirty) = dirty;
-    D3DState(0x00175800, pointSpriteEnable);
-    D3DState(0x00175804, pointScaleEnable);
+    D3DDirtyFlags = dirty;
+    D3DRenderState[kRsPointSpriteEnable] = pointSpriteEnable;
+    D3DRenderState[kRsPointScaleEnable] = pointScaleEnable;
     dirty |= 0x100;
-    U32(kDirty) = dirty;
+    D3DDirtyFlags = dirty;
 
     currentWidth = width;
     currentHeight = height;
     currentFrontBufferDepth = frontBufferDepth;
     currentBackBufferDepth = backBufferDepth;
     currentZBufferDepth = zBufferDepth;
-    // D3DDevice_Clear(0, NULL, target | Z | stencil, opaque black, 1.0f, 0)
-    ((void (__stdcall *)(uint32_t, void *, uint32_t, uint32_t, uint32_t, uint32_t))0x00168c90)(
-        0, NULL, 0xf3, 0xff000000u, 0x3f800000u, 0);
-    SetShaderConstantMode(0);
-    Swap(0);
-    SetShaderConstantMode(1);
-    backBuffer = GetBackBuffer2(0);
-    depthSurface = ((void *(__stdcall *)())0x001666b0)();   // D3DDevice_GetDepthStencilSurface2
-    frontBuffer = GetBackBuffer2(-1);
+    D3DDevice_Clear(0, NULL, 0xf3, 0xff000000, 1.0f, 0);   // target | Z | stencil, opaque black, Z 1, stencil 0
+    D3DDevice_SetShaderConstantMode(0);
+    D3DDevice_Swap(0);
+    D3DDevice_SetShaderConstantMode(1);
+    backBuffer = D3DDevice_GetBackBuffer2(0);
+    depthSurface = D3DDevice_GetDepthStencilSurface2();
+    frontBuffer = D3DDevice_GetBackBuffer2(-1);
 
-    for (uint8_t *p = *(uint8_t **)(uintptr_t)kVertexBufferList; p != NULL; p = *(uint8_t **)(p + 0x1c))
-        ((void (*)(void *, int))0x000f11c0)(p, 0);   // EAGLInternal::RenderMethodConstructor
-    for (uint8_t *p = *(uint8_t **)(uintptr_t)kRenderMethodList; p != NULL; p = *(uint8_t **)(p + 0x1c))
-        ((void (*)(void *))0x000f0e50)(p);
+    // (The original passes the constructor a second argument, 0, which it does not read.)
+    for (RenderMethod *method = ConstructedMethods; method != NULL; method = method->next)
+        EAGL_RenderMethodConstructor(method);
+    for (RenderMethod *method = WaitingMethods; method != NULL; method = method->next)
+        EAGL_CopyParentPackets(method);
 
     // Tiles 0 and 1 set again (tile 1 from a copy, as the original's by-value argument)
-    uint32_t tile0[6], tile1[6], tileCopy[6];
-    ((void (__stdcall *)(uint32_t, void *))0x00166060)(0, tile0);   // D3DDevice_GetTile
-    ((void (__stdcall *)(uint32_t, void *))0x00166060)(1, tile1);
-    ((void (__stdcall *)(uint32_t, const void *))0x00166d00)(0, NULL);   // D3DDevice_SetTile
-    ((void (__stdcall *)(uint32_t, const void *))0x00166d00)(0, tile0);
-    memcpy(tileCopy, tile1, sizeof(tileCopy));
-    ((void (__stdcall *)(uint32_t, const void *))0x00166d00)(1, NULL);
-    ((void (__stdcall *)(uint32_t, const void *))0x00166d00)(1, tileCopy);
+    D3DTile tile0, tile1;
+    D3DDevice_GetTile(0, &tile0);
+    D3DDevice_GetTile(1, &tile1);
+    D3DDevice_SetTile(0, NULL);
+    D3DDevice_SetTile(0, &tile0);
+    D3DTile tileCopy = tile1;
+    D3DDevice_SetTile(1, NULL);
+    D3DDevice_SetTile(1, &tileCopy);
 
     if (frontAlias == NULL)
-        BuildSurfaceTexture(&frontAlias, frontBuffer, (const char *)0x001cb964u, false);
+        BuildSurfaceTexture(&frontAlias, frontBuffer, D3DTextureNames[0], false);
     if (frontTar == NULL)
-        frontTar = MakeTar(frontAlias);
+        frontTar = EAGL_TARFromSurface(frontAlias);
     if (backAlias == NULL)
-        BuildSurfaceTexture(&backAlias, backBuffer, (const char *)0x001cb970u, false);
+        BuildSurfaceTexture(&backAlias, backBuffer, D3DTextureNames[1], false);
     if (backTar == NULL)
-        backTar = MakeTar(backAlias);
+        backTar = EAGL_TARFromSurface(backAlias);
     if (depthAlias == NULL)
-        BuildSurfaceTexture(&depthAlias, depthSurface, (const char *)0x001cb97cu, true);
+        BuildSurfaceTexture(&depthAlias, depthSurface, D3DTextureNames[2], true);
     if (depthTar == NULL)
-        depthTar = MakeTar(depthAlias);
+        depthTar = EAGL_TARFromSurface(depthAlias);
     return 1;
 }
 
@@ -678,17 +563,14 @@ uint32_t EAGL::RenderContext::SetupFrameBuffers() {
 // RenderContext's own setters
 // =================================================================================================================
 
-// Method 0x40310 (D3D8's slot 65), shadowed in 0x0023ff10 - which EndFrame writes into slot 103.
+// Method 0x40310 (D3D8's slot 65), shadowed in SavedDither - which EndFrame writes into slot 103.
 // FUNC_AT(0x000e73a0)
 bool EAGL::RenderContext::SetDitherEnable(uint8_t enable) {
     ditherEnable = enable;
-    if (U8(kSavedDither) != enable) {
-        U8(kSavedDither) = enable;
-        if (U32(kDeviceCreated) != 0) {
-            uint32_t v = ditherEnable;
-            SetRenderStateSimple(0x40310, v);
-            D3DState(0x0017572c, v);
-        }
+    if (SavedDither != enable) {
+        SavedDither = enable;
+        if (D3DDevicePointer != NULL)
+            SendState(0x40310, kRsDitherEnable, ditherEnable);
     }
     return true;
 }
@@ -702,14 +584,10 @@ bool EAGL::RenderContext::GetDitherEnable(uint8_t *enable) {
 // FUNC_AT(0x000e73f0)
 bool EAGL::RenderContext::SetZWritesEnable(uint8_t enable) {
     zWritesEnable = enable;
-    if (U8(kShadowZWrites) != enable) {
-        uint32_t device = U32(kDeviceCreated);
-        U8(kShadowZWrites) = enable;
-        if (device != 0) {
-            uint32_t v = enable;
-            SetRenderStateSimple(0x4035c, v);
-            D3DState(0x00175728, v);
-        }
+    if (Shadows.zWritesEnable != enable) {
+        Shadows.zWritesEnable = enable;
+        if (D3DDevicePointer != NULL)
+            SendState(0x4035c, kRsZWriteEnable, enable);
     }
     return true;
 }
@@ -722,32 +600,27 @@ bool EAGL::RenderContext::GetZWritesEnable(uint8_t *enable) {
 
 // FUNC_AT(0x000e7440)
 bool EAGL::RenderContext::SetField30(uint32_t value) {
-    field030 = value;
+    unknown030 = value;
     return true;
 }
 
 // FUNC_AT(0x000e7450)
 bool EAGL::RenderContext::GetField30(uint32_t *value) {
-    *value = field030;
+    *value = unknown030;
     return true;
 }
 
-// 1..3 (else false). With the device and VBL sync, D3D8's slot 127 directly - and a write of the dirty flags to
-// themselves, which the original makes (an OR with nothing).
+// 1..3 (else false). With the device and VBL sync, D3D8's presentation-interval slot directly - and a write of the
+// dirty flags to themselves, which the original makes (an OR with nothing).
 // FUNC_AT(0x000e7460)
 bool EAGL::RenderContext::SetSwapInterval(int interval) {
     if (interval <= 0 || interval > 3)
         return false;
     swapInterval = interval;
-    uint32_t value = 0;
-    switch (interval) {
-    case 1: value = 0; break;
-    case 2: value = 2; break;
-    case 3: value = 4; break;
-    }
-    if (U32(kDeviceCreated) != 0 && syncToVBL != 0) {
-        U32(kDirty) = U32(kDirty);
-        D3DState(0x00175824, value);
+    uint32_t value = PresentationInterval(interval);
+    if (D3DDevicePointer != NULL && syncToVBL != 0) {
+        D3DDirtyFlags = D3DDirtyFlags;
+        D3DRenderState[kRsPresentationInterval] = value;
     }
     return true;
 }
@@ -766,11 +639,7 @@ bool EAGL::RenderContext::GetSwapInterval(int *interval) {
 // FUNC_AT(0x000e74e0)
 bool EAGL::RenderContextExtension::SetMultiSampleType(uint32_t type) {
     context->multiSampleType = type;
-    if (type == 0x11) {
-        context->multiSampleAntiAlias = 0;
-        return true;
-    }
-    context->multiSampleAntiAlias = 1;
+    context->multiSampleAntiAlias = type == 0x11 ? 0 : 1;
     return true;
 }
 
@@ -786,13 +655,10 @@ bool EAGL::RenderContextExtension::GetMultiSampleType(uint32_t *type) {
 // FUNC_AT(0x000e7520)
 bool EAGL::RenderContextExtension::SetStencilZFail(uint32_t op) {
     context->stencilZFail = op;
-    uint32_t value = context->stencilZFail;
-    if (U32(kShadowStencilZFail) != value) {
-        U32(kShadowStencilZFail) = value;
-        if (U32(kDeviceCreated) != 0) {
-            SetRenderStateSimple(0x40374, op);
-            D3DState(0x00175738, op);
-        }
+    if (Shadows.stencilZFail != op) {
+        Shadows.stencilZFail = op;
+        if (D3DDevicePointer != NULL)
+            SendState(0x40374, kRsStencilZFail, op);
     }
     return true;
 }
@@ -806,13 +672,10 @@ bool EAGL::RenderContextExtension::GetStencilZFail(uint32_t *op) {
 // FUNC_AT(0x000e7570)
 bool EAGL::RenderContextExtension::SetStencilZPass(uint32_t op) {
     context->stencilZPass = op;
-    uint32_t value = context->stencilZPass;
-    if (U32(kShadowStencilZPass) != value) {
-        U32(kShadowStencilZPass) = value;
-        if (U32(kDeviceCreated) != 0) {
-            SetRenderStateSimple(0x40378, op);
-            D3DState(0x0017573c, op);
-        }
+    if (Shadows.stencilZPass != op) {
+        Shadows.stencilZPass = op;
+        if (D3DDevicePointer != NULL)
+            SendState(0x40378, kRsStencilPass, op);
     }
     return true;
 }
@@ -826,11 +689,10 @@ bool EAGL::RenderContextExtension::GetStencilZPass(uint32_t *op) {
 // FUNC_AT(0x000e75c0)
 bool EAGL::RenderContextExtension::SetStencilFail(uint32_t op) {
     context->stencilFail = op;
-    uint32_t value = context->stencilFail;
-    if (U32(kShadowStencilFail) != value) {
-        U32(kShadowStencilFail) = value;
-        if (U32(kDeviceCreated) != 0)
-            SetRenderStateStencilFail(op);
+    if (Shadows.stencilFail != op) {
+        Shadows.stencilFail = op;
+        if (D3DDevicePointer != NULL)
+            D3DDevice_SetRenderState_StencilFail(op);
     }
     return true;
 }
@@ -844,13 +706,10 @@ bool EAGL::RenderContextExtension::GetStencilFail(uint32_t *op) {
 // FUNC_AT(0x000e7600)
 bool EAGL::RenderContextExtension::SetStencilFunc(uint32_t func) {
     context->stencilFunc = func;
-    uint32_t value = context->stencilFunc;
-    if (U32(kShadowStencilFunc) != value) {
-        U32(kShadowStencilFunc) = value;
-        if (U32(kDeviceCreated) != 0) {
-            SetRenderStateSimple(0x40364, func);
-            D3DState(0x00175740, func);
-        }
+    if (Shadows.stencilFunc != func) {
+        Shadows.stencilFunc = func;
+        if (D3DDevicePointer != NULL)
+            SendState(0x40364, kRsStencilFunc, func);
     }
     return true;
 }
@@ -864,13 +723,10 @@ bool EAGL::RenderContextExtension::GetStencilFunc(uint32_t *func) {
 // FUNC_AT(0x000e7650)
 bool EAGL::RenderContextExtension::SetStencilRef(uint32_t ref) {
     context->stencilRef = ref;
-    uint32_t value = context->stencilRef;
-    if (U32(kShadowStencilRef) != value) {
-        U32(kShadowStencilRef) = value;
-        if (U32(kDeviceCreated) != 0) {
-            SetRenderStateSimple(0x40368, ref);
-            D3DState(0x00175744, ref);
-        }
+    if (Shadows.stencilRef != ref) {
+        Shadows.stencilRef = ref;
+        if (D3DDevicePointer != NULL)
+            SendState(0x40368, kRsStencilRef, ref);
     }
     return true;
 }
@@ -884,13 +740,10 @@ bool EAGL::RenderContextExtension::GetStencilRef(uint32_t *ref) {
 // FUNC_AT(0x000e76a0)
 bool EAGL::RenderContextExtension::SetStencilMask(uint32_t mask) {
     context->stencilMask = mask;
-    uint32_t value = context->stencilMask;
-    if (U32(kShadowStencilMask) != value) {
-        U32(kShadowStencilMask) = value;
-        if (U32(kDeviceCreated) != 0) {
-            SetRenderStateSimple(0x4036c, mask);
-            D3DState(0x00175748, mask);
-        }
+    if (Shadows.stencilMask != mask) {
+        Shadows.stencilMask = mask;
+        if (D3DDevicePointer != NULL)
+            SendState(0x4036c, kRsStencilMask, mask);
     }
     return true;
 }
@@ -904,13 +757,10 @@ bool EAGL::RenderContextExtension::GetStencilMask(uint32_t *mask) {
 // FUNC_AT(0x000e76f0)
 bool EAGL::RenderContextExtension::SetStencilWriteMask(uint32_t mask) {
     context->stencilWriteMask = mask;
-    uint32_t value = context->stencilWriteMask;
-    if (U32(kShadowStencilWriteMask) != value) {
-        U32(kShadowStencilWriteMask) = value;
-        if (U32(kDeviceCreated) != 0) {
-            SetRenderStateSimple(0x40360, mask);
-            D3DState(0x0017574c, mask);
-        }
+    if (Shadows.stencilWriteMask != mask) {
+        Shadows.stencilWriteMask = mask;
+        if (D3DDevicePointer != NULL)
+            SendState(0x40360, kRsStencilWriteMask, mask);
     }
     return true;
 }
@@ -923,39 +773,26 @@ bool EAGL::RenderContextExtension::GetStencilWriteMask(uint32_t *mask) {
 
 // ---- gamma (both unreferenced)
 
-// The start-up ramp scaled per channel: (int)(entry * scale + 0.5) by __ftol2, 0xff when it overflows a byte.
+// The start-up ramp scaled per channel.
 // FUNC_AT(0x000e7740)
 bool EAGL::RenderContextExtension::SetGamma(float red, float green, float blue) {
-    uint8_t ramp[0x300];
+    uint8_t ramp[3][0x100];
     for (int i = 0; i < 0x100; i++) {
-        int32_t v = Ftol((double)(int32_t)U8(kGammaRamp + i) * (double)red + (double)F32(0x00189eb0));
-        if ((v & 0xff000000) != 0)
-            v = 0xff;
-        ramp[i] = (uint8_t)v;
-        v = Ftol((double)(int32_t)U8(kGammaRamp + 0x100 + i) * (double)green + (double)F32(0x00189eb0));
-        if ((v & 0xff000000) != 0)
-            v = 0xff;
-        ramp[0x100 + i] = (uint8_t)v;
-        v = Ftol((double)(int32_t)U8(kGammaRamp + 0x200 + i) * (double)blue + (double)F32(0x00189eb0));
-        if ((v & 0xff000000) != 0)
-            v = 0xff;
-        ramp[0x200 + i] = (uint8_t)v;
+        ramp[0][i] = ScaledGamma(GammaRamp[0][i], red);
+        ramp[1][i] = ScaledGamma(GammaRamp[1][i], green);
+        ramp[2][i] = ScaledGamma(GammaRamp[2][i], blue);
     }
-    if (U32(kDeviceCreated) != 0)
-        D3DSetGammaRamp(2, ramp);
+    if (D3DDevicePointer != NULL)
+        D3DDevice_SetGammaRamp(2, ramp);
     return true;
 }
 
 // FUNC_AT(0x000e7820)
 bool EAGL::RenderContextExtension::SetGammaRamp(const uint8_t *source) {
-    uint8_t ramp[0x300];
-    for (int i = 0; i < 0x100; i++) {
-        ramp[i] = source[i];
-        ramp[0x100 + i] = source[0x100 + i];
-        ramp[0x200 + i] = source[0x200 + i];
-    }
-    if (U32(kDeviceCreated) != 0)
-        D3DSetGammaRamp(2, ramp);
+    uint8_t ramp[3][0x100];
+    memcpy(ramp, source, sizeof(ramp));
+    if (D3DDevicePointer != NULL)
+        D3DDevice_SetGammaRamp(2, ramp);
     return true;
 }
 
@@ -963,11 +800,9 @@ bool EAGL::RenderContextExtension::SetGammaRamp(const uint8_t *source) {
 // FUNC_AT(0x000e7890)
 bool EAGL::RenderContextExtension::SetStencilEnable(uint8_t enable) {
     context->stencilEnable = enable;
-    uint32_t value = context->stencilEnable;
-    uint32_t device = U32(kDeviceCreated);
-    U32(kShadowStencilEnable) = value;
-    if (device != 0)
-        SetRenderStateStencilEnable(enable);
+    Shadows.stencilEnable = enable;
+    if (D3DDevicePointer != NULL)
+        D3DDevice_SetRenderState_StencilEnable(enable);
     return true;
 }
 
@@ -977,12 +812,12 @@ bool EAGL::RenderContextExtension::GetStencilEnable(uint8_t *enable) {
     return true;
 }
 
-// The front buffer written to a file (XGWriteSurfaceToFile).
+// The front buffer written to a file.
 // FUNC_AT(0x000e78d0)
 bool EAGL::RenderContextExtension::Screenshot(const char *path) {
-    void *surface = GetBackBuffer2(-1);
-    ((void (__stdcall *)(void *, const char *))0x0017a8ee)(surface, path);
-    Release(surface);
+    D3DPixelContainer *surface = D3DDevice_GetBackBuffer2(-1);
+    XGWriteSurfaceToFile(surface, path);
+    D3DResource_Release(surface);
     return true;
 }
 
@@ -990,13 +825,10 @@ bool EAGL::RenderContextExtension::Screenshot(const char *path) {
 // FUNC_AT(0x000e7900)
 bool EAGL::RenderContextExtension::SetRenderMask(uint32_t mask) {
     context->colourWriteMask = mask;
-    uint32_t value = context->colourWriteMask;
-    if (U32(kShadowColourMask) != value) {
-        U32(kShadowColourMask) = value;
-        if (U32(kDeviceCreated) != 0) {
-            SetRenderStateSimple(0x40358, mask);
-            D3DState(0x00175734, mask);
-        }
+    if (Shadows.colourWriteMask != mask) {
+        Shadows.colourWriteMask = mask;
+        if (D3DDevicePointer != NULL)
+            SendState(0x40358, kRsColorWriteEnable, mask);
     }
     return true;
 }
@@ -1012,9 +844,9 @@ bool EAGL::RenderContextExtension::GetRenderMask(uint32_t *mask) {
 // FUNC_AT(0x000e7950)
 bool EAGL::RenderContextExtension::SetFogEnable(uint8_t enable) {
     context->fogEnable = enable;
-    if (U32(kDeviceCreated) != 0) {
-        U32(kDirty) = U32(kDirty) | 0x2000;
-        D3DState(0x00175798, enable);
+    if (D3DDevicePointer != NULL) {
+        D3DDirtyFlags |= 0x2000;
+        D3DRenderState[kRsFogEnable] = enable;
     }
     return true;
 }
@@ -1028,9 +860,9 @@ bool EAGL::RenderContextExtension::GetFogEnable(uint8_t *enable) {
 // FUNC_AT(0x000e79a0)
 bool EAGL::RenderContextExtension::SetFogTableMode(uint32_t mode) {
     context->fogTableMode = mode;
-    if (U32(kDeviceCreated) != 0) {
-        U32(kDirty) |= 0x2000;
-        D3DState(0x0017579c, mode);
+    if (D3DDevicePointer != NULL) {
+        D3DDirtyFlags |= 0x2000;
+        D3DRenderState[kRsFogTableMode] = mode;
     }
     return true;
 }
@@ -1044,9 +876,9 @@ bool EAGL::RenderContextExtension::GetFogTableMode(uint32_t *mode) {
 // FUNC_AT(0x000e79e0)
 bool EAGL::RenderContextExtension::SetFogStart(uint32_t start) {
     context->fogStart = start;
-    if (U32(kDeviceCreated) != 0) {
-        U32(kDirty) = U32(kDirty) | 0x2000;
-        D3DState(0x001757a0, start);
+    if (D3DDevicePointer != NULL) {
+        D3DDirtyFlags |= 0x2000;
+        D3DRenderState[kRsFogStart] = start;
     }
     return true;
 }
@@ -1060,9 +892,9 @@ bool EAGL::RenderContextExtension::GetFogStart(uint32_t *start) {
 // FUNC_AT(0x000e7a20)
 bool EAGL::RenderContextExtension::SetFogEnd(uint32_t end) {
     context->fogEnd = end;
-    if (U32(kDeviceCreated) != 0) {
-        U32(kDirty) = U32(kDirty) | 0x2000;
-        D3DState(0x001757a4, end);
+    if (D3DDevicePointer != NULL) {
+        D3DDirtyFlags |= 0x2000;
+        D3DRenderState[kRsFogEnd] = end;
     }
     return true;
 }
@@ -1076,9 +908,9 @@ bool EAGL::RenderContextExtension::GetFogEnd(uint32_t *end) {
 // FUNC_AT(0x000e7a60)
 bool EAGL::RenderContextExtension::SetFogDensity(uint32_t density) {
     context->fogDensity = density;
-    if (U32(kDeviceCreated) != 0) {
-        U32(kDirty) = U32(kDirty) | 0x2000;
-        D3DState(0x001757a8, density);
+    if (D3DDevicePointer != NULL) {
+        D3DDirtyFlags |= 0x2000;
+        D3DRenderState[kRsFogDensity] = density;
     }
     return true;
 }
@@ -1092,8 +924,8 @@ bool EAGL::RenderContextExtension::GetFogDensity(uint32_t *density) {
 // FUNC_AT(0x000e7aa0)
 bool EAGL::RenderContextExtension::SetFogColour(uint32_t colour) {
     context->fogColour = colour;
-    if (U32(kDeviceCreated) != 0)
-        SetRenderStateFogColor(colour);
+    if (D3DDevicePointer != NULL)
+        D3DDevice_SetRenderState_FogColor(colour);
     return true;
 }
 
@@ -1109,10 +941,10 @@ bool EAGL::RenderContextExtension::GetFogColour(uint32_t *colour) {
 // FUNC_AT(0x000e7ad0)
 bool EAGL::RenderContextExtension::SetWideScreen(uint8_t enable) {
     context->wideScreen = enable;
-    if (U32(kDeviceCreated) != 0) {
+    if (D3DDevicePointer != NULL) {
         context->present.flags |= 0x10;
-        PersistDisplay();
-        Reset(&context->present);
+        D3DDevice_PersistDisplay();
+        D3DDevice_Reset(&context->present);
     }
     return true;
 }
@@ -1126,10 +958,10 @@ bool EAGL::RenderContextExtension::GetWideScreen(uint8_t *enable) {
 // FUNC_AT(0x000e7b20)
 bool EAGL::RenderContextExtension::SetPresentFlag100(uint8_t enable) {
     context->presentFlag100 = enable;
-    if (U32(kDeviceCreated) != 0) {
+    if (D3DDevicePointer != NULL) {
         context->present.flags |= 0x100;
-        PersistDisplay();
-        Reset(&context->present);
+        D3DDevice_PersistDisplay();
+        D3DDevice_Reset(&context->present);
     }
     return true;
 }
@@ -1143,8 +975,8 @@ bool EAGL::RenderContextExtension::GetPresentFlag100(uint8_t *enable) {
 // FUNC_AT(0x000e7b70)
 bool EAGL::RenderContextExtension::SetSoftDisplayFilter(uint8_t enable) {
     context->softDisplayFilter = enable;
-    if (U32(kDeviceCreated) != 0)
-        ((void (__stdcall *)(uint32_t))0x001660e0)(enable);   // D3DDevice_SetSoftDisplayFilter
+    if (D3DDevicePointer != NULL)
+        D3DDevice_SetSoftDisplayFilter(enable);
     return true;
 }
 
@@ -1162,8 +994,8 @@ bool EAGL::RenderContextExtension::SetFlickerFilter(int level) {
         context->flickerFilter = 5;
     if (level < 0)
         context->flickerFilter = 0;
-    if (U32(kDeviceCreated) != 0)
-        ((void (__stdcall *)(int))0x00166090)(context->flickerFilter);   // D3DDevice_SetFlickerFilter
+    if (D3DDevicePointer != NULL)
+        D3DDevice_SetFlickerFilter(context->flickerFilter);
     return true;
 }
 
@@ -1176,8 +1008,8 @@ bool EAGL::RenderContextExtension::GetFlickerFilter(int *level) {
 // FUNC_AT(0x000e7c30)
 bool EAGL::RenderContextExtension::SetShadowFunc(uint32_t func) {
     context->shadowFunc = func;
-    if (U32(kDeviceCreated) != 0)
-        SetRenderStateShadowFunc(func);
+    if (D3DDevicePointer != NULL)
+        D3DDevice_SetRenderState_ShadowFunc(func);
     return true;
 }
 
@@ -1191,17 +1023,17 @@ bool EAGL::RenderContextExtension::GetShadowFunc(uint32_t *func) {
 
 // FUNC_AT(0x000e7c60)
 bool EAGL::RenderContextExtension::BeginVisibilityTest() {
-    if (U32(kDeviceCreated) == 0)
+    if (D3DDevicePointer == NULL)
         return false;
-    ((void (__stdcall *)())0x00166b40)();   // D3DDevice_BeginVisibilityTest
+    D3DDevice_BeginVisibilityTest();
     return true;
 }
 
 // FUNC_AT(0x000e7c80)
 bool EAGL::RenderContextExtension::EndVisibilityTest(uint32_t index) {
-    if (U32(kDeviceCreated) == 0)
+    if (D3DDevicePointer == NULL)
         return false;
-    ((void (__stdcall *)(uint32_t))0x00166be0)(index);   // D3DDevice_EndVisibilityTest
+    D3DDevice_EndVisibilityTest(index);
     return true;
 }
 
@@ -1209,12 +1041,12 @@ bool EAGL::RenderContextExtension::EndVisibilityTest(uint32_t index) {
 // answers false. src/common/gfx/d3d9Backend.cpp relies on this.
 // FUNC_AT(0x000e7ca0)
 bool EAGL::RenderContextExtension::GetVisibilityTestResult(uint32_t index, uint32_t *result) {
-    if (U32(kDeviceCreated) == 0) {
+    if (D3DDevicePointer == NULL) {
         *result = 0;
         return false;
     }
     uint32_t pixels = 0;
-    int32_t hr = ((int32_t (__stdcall *)(uint32_t, uint32_t *, void *))0x00165fd0)(index, &pixels, NULL);
+    int32_t hr = D3DDevice_GetVisibilityTestResult(index, &pixels, NULL);
     *result = pixels;
     if (hr < 0) {
         *result = 0;
@@ -1226,53 +1058,50 @@ bool EAGL::RenderContextExtension::GetVisibilityTestResult(uint32_t index, uint3
 // The front buffer copied out, when it is 32 bits a pixel and unpadded (else false).
 // FUNC_AT(0x000e7d00)
 bool EAGL::RenderContextExtension::ReadBackBuffer(void *destination) {
-    void *surface = GetBackBuffer2(-1);
+    D3DPixelContainer *surface = D3DDevice_GetBackBuffer2(-1);
     SurfaceDesc desc;
-    SurfaceGetDesc(surface, &desc);
+    D3DSurface_GetDesc(surface, &desc);
     if (desc.size != (desc.height * desc.width) << 2) {
-        Release(surface);
+        D3DResource_Release(surface);
         return false;
     }
-    struct {
-        int32_t pitch;
-        void *bits;
-    } locked;
-    ((void (__stdcall *)(void *, void *, void *, uint32_t))0x00167240)(surface, &locked, NULL, 0x40);   // LockRect
-    ((void (*)(void *, const void *, uint32_t))0x0010a5b0)(destination, locked.bits, desc.size);    // MEM_copy
-    Release(surface);
+    LockedRect locked;
+    D3DSurface_LockRect(surface, &locked, NULL, 0x40);
+    MEM_copy(destination, locked.bits, desc.size);
+    D3DResource_Release(surface);
     return true;
 }
 
-// Two globals with a setter and getter each; the first is set by RRenderHigh::Render, read as a float.
+// The TARs' two overrides (Tar.cpp), with a setter and getter each; RRenderHigh::Render sets the LOD bias.
 // FUNC_AT(0x000e7d70)
 bool EAGL::RenderContextExtension::SetGlobal23ff0c(uint32_t value) {
-    U32(kGlobal23ff0c) = value;
+    LodBiasOverride = std::bit_cast<float>(value);
     return true;
 }
 
 // FUNC_AT(0x000e7d80)
 bool EAGL::RenderContextExtension::GetGlobal23ff0c(float *value) {
-    *value = F32(kGlobal23ff0c);
+    *value = LodBiasOverride;
     return true;
 }
 
 // FUNC_AT(0x000e7da0)
 bool EAGL::RenderContextExtension::SetGlobal1cb938(uint32_t value) {
-    U32(kShadow1cb938) = value;
+    FilterOverride = value;
     return true;
 }
 
 // FUNC_AT(0x000e7db0)
 bool EAGL::RenderContextExtension::GetGlobal1cb938(uint32_t *value) {
-    *value = U32(kShadow1cb938);
+    *value = FilterOverride;
     return true;
 }
 
 // FUNC_AT(0x000e7dd0)
 bool EAGL::RenderContextExtension::SetMultiSampleAntiAlias(uint8_t enable) {
     context->multiSampleAntiAlias = enable;
-    if (U32(kDeviceCreated) != 0)
-        ((void (__stdcall *)(uint32_t))0x00168b70)(enable);   // SetRenderState_MultiSampleAntiAlias
+    if (D3DDevicePointer != NULL)
+        D3DDevice_SetRenderState_MultiSampleAntiAlias(enable);
     return true;
 }
 
@@ -1285,7 +1114,7 @@ bool EAGL::RenderContextExtension::GetMultiSampleAntiAlias(uint8_t *enable) {
 // Only before the device exists.
 // FUNC_AT(0x000e7e10)
 bool EAGL::RenderContextExtension::SetPushBufferSize(uint32_t size, uint32_t kickOffSize) {
-    if (U32(kDeviceCreated) != 0)
+    if (D3DDevicePointer != NULL)
         return false;
     context->pushBufferSize = size;
     context->kickOffSize = kickOffSize;
@@ -1301,17 +1130,17 @@ bool EAGL::RenderContextExtension::GetPushBufferSize(uint32_t *size, uint32_t *k
 
 // FUNC_AT(0x000e7e70)
 bool EAGL::RenderContextExtension::SetScreenSpaceOffset(float x, float y) {
-    context->screenSpaceOffsetX = Bits(x);
-    context->screenSpaceOffsetY = Bits(y);
-    if (U32(kDeviceCreated) != 0)
-        ((void (__stdcall *)(uint32_t, uint32_t))0x00167030)(Bits(x), Bits(y));   // SetScreenSpaceOffset
+    context->screenSpaceOffsetX = x;
+    context->screenSpaceOffsetY = y;
+    if (D3DDevicePointer != NULL)
+        D3DDevice_SetScreenSpaceOffset(x, y);
     return true;
 }
 
 // FUNC_AT(0x000e7eb0)
 bool EAGL::RenderContextExtension::GetScreenSpaceOffset(float *x, float *y) {
-    memcpy(x, &context->screenSpaceOffsetX, 4);
-    memcpy(y, &context->screenSpaceOffsetY, 4);
+    *x = context->screenSpaceOffsetX;
+    *y = context->screenSpaceOffsetY;
     return true;
 }
 
@@ -1320,9 +1149,9 @@ bool EAGL::RenderContextExtension::GetScreenSpaceOffset(float *x, float *y) {
 // FUNC_AT(0x000e7ee0)
 bool EAGL::RenderContextExtension::SetPointSize(uint32_t size) {
     context->pointSize = size;
-    if (U32(kDeviceCreated) != 0) {
-        U32(kDirty) = U32(kDirty) | 0x100;
-        D3DState(0x001757f8, size);
+    if (D3DDevicePointer != NULL) {
+        D3DDirtyFlags |= 0x100;
+        D3DRenderState[kRsPointSize] = size;
     }
     return true;
 }
@@ -1336,9 +1165,9 @@ bool EAGL::RenderContextExtension::GetPointSize(uint32_t *size) {
 // FUNC_AT(0x000e7f40)
 bool EAGL::RenderContextExtension::SetPointSizeMin(uint32_t size) {
     context->pointSizeMin = size;
-    if (U32(kDeviceCreated) != 0) {
-        U32(kDirty) = U32(kDirty) | 0x100;
-        D3DState(0x001757fc, size);
+    if (D3DDevicePointer != NULL) {
+        D3DDirtyFlags |= 0x100;
+        D3DRenderState[kRsPointSizeMin] = size;
     }
     return true;
 }
@@ -1352,9 +1181,9 @@ bool EAGL::RenderContextExtension::GetPointSizeMin(uint32_t *size) {
 // FUNC_AT(0x000e7fa0)
 bool EAGL::RenderContextExtension::SetPointSizeMax(uint32_t size) {
     context->pointSizeMax = size;
-    if (U32(kDeviceCreated) != 0) {
-        U32(kDirty) = U32(kDirty) | 0x100;
-        D3DState(0x00175814, size);
+    if (D3DDevicePointer != NULL) {
+        D3DDirtyFlags |= 0x100;
+        D3DRenderState[kRsPointSizeMax] = size;
     }
     return true;
 }
@@ -1370,12 +1199,12 @@ bool EAGL::RenderContextExtension::SetPointScale(uint32_t a, uint32_t b, uint32_
     context->pointScaleA = a;
     context->pointScaleB = b;
     context->pointScaleC = c;
-    if (U32(kDeviceCreated) != 0) {
-        D3DState(0x0017580c, b);
-        uint32_t dirty = U32(kDirty) | 0x100;
-        D3DState(0x00175808, a);
-        U32(kDirty) = dirty;
-        D3DState(0x00175810, c);
+    if (D3DDevicePointer != NULL) {
+        D3DRenderState[kRsPointScaleB] = b;
+        uint32_t dirty = D3DDirtyFlags | 0x100;
+        D3DRenderState[kRsPointScaleA] = a;
+        D3DDirtyFlags = dirty;
+        D3DRenderState[kRsPointScaleC] = c;
     }
     return true;
 }
@@ -1391,9 +1220,9 @@ bool EAGL::RenderContextExtension::GetPointScale(uint32_t *a, uint32_t *b, uint3
 // FUNC_AT(0x000e8090)
 bool EAGL::RenderContextExtension::SetPointSpriteEnable(uint8_t enable) {
     context->pointSpriteEnable = enable;
-    if (U32(kDeviceCreated) != 0) {
-        U32(kDirty) = U32(kDirty) | 0x900;
-        D3DState(0x00175800, enable);
+    if (D3DDevicePointer != NULL) {
+        D3DDirtyFlags |= 0x900;
+        D3DRenderState[kRsPointSpriteEnable] = enable;
     }
     return true;
 }
@@ -1407,9 +1236,9 @@ bool EAGL::RenderContextExtension::GetPointSpriteEnable(uint8_t *enable) {
 // FUNC_AT(0x000e80f0)
 bool EAGL::RenderContextExtension::SetPointScaleEnable(uint8_t enable) {
     context->pointScaleEnable = enable;
-    if (U32(kDeviceCreated) != 0) {
-        U32(kDirty) = U32(kDirty) | 0x100;
-        D3DState(0x00175804, enable);
+    if (D3DDevicePointer != NULL) {
+        D3DDirtyFlags |= 0x100;
+        D3DRenderState[kRsPointScaleEnable] = enable;
     }
     return true;
 }
@@ -1425,80 +1254,62 @@ bool EAGL::RenderContextExtension::GetPointScaleEnable(uint8_t *enable) {
 // Whether the dashboard allows PAL60 (XGetVideoFlags bit 0x40), kept for SetupFrameBuffers' refresh rate.
 // FUNC_AT(0x000e8150)
 uint8_t EAGL::RenderContextExtension::QueryPal60() {
-    if ((((uint32_t (__stdcall *)())0x0010e02b)() & 0x40) != 0) {   // XGetVideoFlags
-        context->pal60 = 1;
-        return context->pal60;
-    }
-    context->pal60 = 0;
+    context->pal60 = (XGetVideoFlags() & 0x40) != 0 ? 1 : 0;
     return context->pal60;
 }
 
 // FUNC_AT(0x000e8190)
 bool EAGL::RenderContextExtension::IsDeviceCreated(uint32_t) {
-    return U32(kDeviceCreated) != 0;
+    return D3DDevicePointer != NULL;
 }
 
 // The front buffer copied into a texture of its own (made the first time, with a TAR over it in the back
 // buffer's TAR slot if that is still empty), returning that slot.
 // FUNC_AT(0x000e81a0)
-void* EAGL::RenderContextExtension::CopyBackBuffer() {
-    void *source = GetBackBuffer2(0);
+EAGL::TAR* EAGL::RenderContextExtension::CopyBackBuffer() {
+    D3DPixelContainer *source = D3DDevice_GetBackBuffer2(0);
     SurfaceDesc desc;
-    SurfaceGetDesc(source, &desc);
-    RenderContext *owner = context;
-    if (owner->copyTexture == NULL) {
-        owner->copyTexture = ((void *(__stdcall *)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
-                                                   uint32_t))0x00167260)(desc.width, desc.height, 1, 1, 0,
-                                                                         desc.format, 3);   // CreateTexture2
+    D3DSurface_GetDesc(source, &desc);
+    if (context->copyTexture == NULL) {
+        context->copyTexture = D3DDevice_CreateTexture2(desc.width, desc.height, 1, 1, 0, desc.format, 3);
         if (context->backTar == NULL)
-            context->backTar = MakeTar(context->copyTexture);
+            context->backTar = EAGL_TARFromSurface(context->copyTexture);
     }
-    void *destination = ((void *(__stdcall *)(void *, uint32_t))0x00167330)(context->copyTexture, 0);   // GetSurfaceLevel2
-    struct {
-        int32_t left, top, right, bottom;
-    } rect = {0, 0, (int32_t)desc.width, (int32_t)desc.height};
-    struct {
-        int32_t x, y;
-    } point = {0, 0};
-    ((void (__stdcall *)(void *, void *, uint32_t, void *, void *))0x001663e0)(source, &rect, 1, destination,
-                                                                              &point);   // D3DDevice_CopyRects
-    Release(destination);
-    Release(source);
+    void *destination = D3DTexture_GetSurfaceLevel2(context->copyTexture, 0);
+    D3DRect rect = {0, 0, int32_t(desc.width), int32_t(desc.height)};
+    D3DPoint point = {0, 0};
+    D3DDevice_CopyRects(source, &rect, 1, destination, &point);
+    D3DResource_Release(destination);
+    D3DResource_Release(source);
     return context->backTar;
 }
 
 // The buffers as TARs, the texture headers and TARs built the first time (SetupFrameBuffers has normally built
 // them already).
 // FUNC_AT(0x000e8270)
-void* EAGL::RenderContextExtension::GetFrontBuffer() {
+EAGL::TAR* EAGL::RenderContextExtension::GetFrontBuffer() {
     if (context->frontAlias == NULL)
-        BuildSurfaceTexture(&context->frontAlias, context->frontBuffer, (const char *)0x001cb988u, false);
-    if (context->frontTar == NULL) {
-        context->frontTar = MakeTar(context->frontAlias);
-        return context->frontTar;
-    }
+        BuildSurfaceTexture(&context->frontAlias, context->frontBuffer, D3DTextureNames[3], false);
+    if (context->frontTar == NULL)
+        context->frontTar = EAGL_TARFromSurface(context->frontAlias);
     return context->frontTar;
 }
 
 // FUNC_AT(0x000e8350)
-void* EAGL::RenderContextExtension::GetBackBuffer() {
+EAGL::TAR* EAGL::RenderContextExtension::GetBackBuffer() {
     if (context->backAlias == NULL)
-        BuildSurfaceTexture(&context->backAlias, context->backBuffer, (const char *)0x001cb994u, false);
-    if (context->backTar == NULL) {
-        context->backTar = MakeTar(context->backAlias);
-        return context->backTar;
-    }
+        BuildSurfaceTexture(&context->backAlias, context->backBuffer, D3DTextureNames[4], false);
+    if (context->backTar == NULL)
+        context->backTar = EAGL_TARFromSurface(context->backAlias);
     return context->backTar;
 }
 
 // FUNC_AT(0x000e8430)
-void* EAGL::RenderContextExtension::GetDepthBuffer() {
+EAGL::TAR* EAGL::RenderContextExtension::GetDepthBuffer() {
     if (context->depthAlias == NULL)
-        BuildSurfaceTexture(&context->depthAlias, context->depthSurface, (const char *)0x001cb9a0u, true);
-    if (context->depthTar == NULL) {
-        context->depthTar = MakeTar(context->depthAlias);
-        return context->depthTar;
-    }
+        BuildSurfaceTexture(&context->depthAlias, context->depthSurface, D3DTextureNames[5], true);
+    if (context->depthTar == NULL)
+        context->depthTar = EAGL_TARFromSurface(context->depthAlias);
     return context->depthTar;
 }
 
@@ -1518,7 +1329,7 @@ EAGL::RenderContextExtension* EAGL::RenderContextExtension::Construct(RenderCont
 // FUNC_AT(0x000e85b0)
 void EAGL::RenderContextExtension::ReleaseCopyTexture() {
     if (context->copyTexture != NULL) {
-        Release(context->copyTexture);
+        D3DResource_Release(context->copyTexture);
         context->copyTexture = NULL;
     }
 }
@@ -1537,45 +1348,45 @@ EAGL::SurfaceTexture* EAGL::SurfaceTexture::Construct() {
 // Construction and destruction
 // =================================================================================================================
 
-// Every render method and vertex buffer is destroyed with the context (EAGL has one), then the viewports, the
-// three surfaces and the copy texture. The texture headers and TARs over the buffers are not freed (as the
-// original).
+// Every render method is destroyed with the context (EAGL has one), then the viewports, the three surfaces and the
+// copy texture. The texture headers and TARs over the buffers are not freed (as the original).
 // FUNC_AT(0x000e8600)
 void EAGL::RenderContext::Destruct() {
-    for (uint8_t *p = *(uint8_t **)(uintptr_t)kVertexBufferList; p != NULL; p = *(uint8_t **)(p + 0x1c))
-        ((void (*)(void *))0x000f1390)(p);   // EAGLInternal::RenderMethodDestructor
-    for (uint8_t *p = *(uint8_t **)(uintptr_t)kRenderMethodList; p != NULL; p = *(uint8_t **)(p + 0x1c))
-        ((void (*)(void *))0x000f1210)(p);
+    for (RenderMethod *method = ConstructedMethods; method != NULL; method = method->next)
+        EAGL_RenderMethodDestructor(method);
+    for (RenderMethod *method = WaitingMethods; method != NULL; method = method->next)
+        EAGL_ReleaseDynamicBuffers(method);
     while (viewPorts != NULL)
-        ((void (__fastcall *)(void *, int, void *))0x000ee0a0)(this, 0, viewPorts);   // DeleteViewPort
+        DeleteViewPort(viewPorts);
     if (depthSurface != NULL)
-        Release(depthSurface);
+        D3DResource_Release(depthSurface);
     if (frontBuffer != NULL)
-        Release(frontBuffer);
+        D3DResource_Release(frontBuffer);
     if (backBuffer != NULL)
-        Release(backBuffer);
-    RenderContext *owner = (RenderContext *)extension;   // the extension's back pointer: this object
+        D3DResource_Release(backBuffer);
+    // ReleaseCopyTexture inlined, on the extension pointer taken as the object (which it is)
+    RenderContext *owner = reinterpret_cast<RenderContext *>(extension);
     if (owner->copyTexture != NULL) {
-        Release(owner->copyTexture);
-        ((RenderContext *)extension)->copyTexture = NULL;
+        D3DResource_Release(owner->copyTexture);
+        reinterpret_cast<RenderContext *>(extension)->copyTexture = NULL;
     }
 }
 
 // FUNC_AT(0x000e86f0)
 EAGL::RenderContextPrivate* EAGL::RenderContextPrivate::Construct(RenderContext *owner_) {
-    uint8_t *self = (uint8_t *)this;
+    RenderContext *object = Object();
     owner = owner_;
-    self[0x28] = 1;                                   // object +0x2c, sync to VBL
-    *(uint32_t *)(self + 0x70) = 0;                   // object +0x74
-    *(uint32_t *)(self + 0xf8) = 0;                   // object +0xfc..+0x10c
-    *(uint32_t *)(self + 0xfc) = 0;
-    *(uint32_t *)(self + 0x100) = 0;
-    *(uint32_t *)(self + 0x104) = 0;
-    *(uint32_t *)(self + 0x108) = 0;
-    *(uint32_t *)(self + 0x134) = 0;                  // object +0x138..+0x144
-    *(uint32_t *)(self + 0x138) = 0;
-    *(uint32_t *)(self + 0x13c) = 0;
-    *(uint32_t *)(self + 0x140) = 0;
+    object->syncToVBL = 1;
+    object->fogColour = 0;
+    object->currentWidth = 0;
+    object->currentHeight = 0;
+    object->currentFrontBufferDepth = 0;
+    object->currentBackBufferDepth = 0;
+    object->currentZBufferDepth = 0;
+    object->currentViewPort = NULL;
+    object->viewPorts = NULL;
+    object->next = NULL;
+    object->unknown144 = 0;
     return this;
 }
 
@@ -1583,10 +1394,10 @@ EAGL::RenderContextPrivate* EAGL::RenderContextPrivate::Construct(RenderContext 
 // sync to the VBL, Z on, stencil off (ALWAYS, ref 0, masks 0xffffffff/0xff, ops 0x1e00 KEEP), Z writes on, all
 // colour channels, fog off (0..1), point states at D3D8's defaults with a maximum of 64.
 // FUNC_AT(0x000e8740)
-EAGL::RenderContext* EAGL::RenderContext::Construct(void *device_) {
-    extension = (RenderContextExtension *)this;
+EAGL::RenderContext* EAGL::RenderContext::Construct(Device *device_) {
+    extension = Extension();
     copyTexture = NULL;
-    RenderContext *owner = (RenderContext *)extension;
+    RenderContext *owner = reinterpret_cast<RenderContext *>(extension);
     owner->backTar = NULL;
     owner->frontTar = NULL;
     owner->depthTar = NULL;
@@ -1604,18 +1415,18 @@ EAGL::RenderContext* EAGL::RenderContext::Construct(void *device_) {
     currentViewPort = NULL;
     viewPorts = NULL;
     next = NULL;
-    field144 = 0;
+    unknown144 = 0;
     device = device_;
-    width = 0x280;
-    currentWidth = 0x280;
-    height = 0x1e0;
-    currentHeight = 0x1e0;
-    frontBufferDepth = 0x20;
-    currentFrontBufferDepth = 0x20;
-    backBufferDepth = 0x20;
-    currentBackBufferDepth = 0x20;
-    zBufferDepth = 0x20;
-    currentZBufferDepth = 0x20;
+    width = 640;
+    currentWidth = 640;
+    height = 480;
+    currentHeight = 480;
+    frontBufferDepth = 32;
+    currentFrontBufferDepth = 32;
+    backBufferDepth = 32;
+    currentBackBufferDepth = 32;
+    zBufferDepth = 32;
+    currentZBufferDepth = 32;
     stencilZFail = 0x1e00;
     stencilFail = 0x1e00;
     zEnable = 1;
@@ -1625,16 +1436,16 @@ EAGL::RenderContext* EAGL::RenderContext::Construct(void *device_) {
     stencilZPass = 0;
     stencilFunc = 0x207;
     stencilRef = 0;
-    stencilMask = 0xffffffffu;
+    stencilMask = 0xffffffff;
     stencilWriteMask = 0xff;
     stencilEnable = 0;
     zWritesEnable = 1;
-    colourWriteMask = 0x1010101;
+    colourWriteMask = 0x01010101;
     multiSampleAntiAlias = 0;
     fogEnable = 0;
     fogTableMode = 0;
     fogStart = 0;
-    fogEnd = 0x3f800000;       // 1.0f
+    fogEnd = 0x3f800000;         // 1.0f
     fogDensity = 0x3f800000;
     fogColour = 0;
     wideScreen = 0;
@@ -1642,11 +1453,11 @@ EAGL::RenderContext* EAGL::RenderContext::Construct(void *device_) {
     shadowFunc = 0x200;
     pushBufferSize = 0x80000;
     kickOffSize = 0x8000;
-    screenSpaceOffsetX = 0;
-    screenSpaceOffsetY = 0;
-    pointSize = 0x3f800000;    // 1.0f
+    screenSpaceOffsetX = 0.0f;
+    screenSpaceOffsetY = 0.0f;
+    pointSize = 0x3f800000;      // 1.0f
     pointSizeMin = 0x3f800000;
-    pointSizeMax = 0x42800000; // 64.0f
+    pointSizeMax = 0x42800000;   // 64.0f
     pointScaleA = 0x3f800000;
     pointScaleB = 0;
     pointScaleC = 0;

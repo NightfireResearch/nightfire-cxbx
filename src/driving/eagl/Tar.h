@@ -9,29 +9,68 @@
 
 #include <stdint.h>
 
+#include "RenderContext.h"
+#include "RuntimeAlloc.h"
+
 class DynamicLoader;
 
 namespace EAGL {
 
 struct TAR;
 
+// A SHAPE image header (realgraph's SHPX images), the fields the texture code reads. The attachments (clut '*',
+// info 'i', long name 'p') follow it, chained by the 24-bit offset in the first word.
+struct ShapeImage {                  // 0x14
+    uint32_t type : 8;               // +0x00 image type (0x60.. the texture types, 0x2a a clut attachment)
+    int32_t next : 24;               //       offset to the next attachment, 0 at the last
+    int16_t width;                   // +0x04
+    int16_t height;                  // +0x06
+    uint32_t unknown08;              // +0x08
+    uint32_t flags;                  // +0x0c 0x1000 data at dataOffset, 0x2000 linear, bits 28..31 mip levels - 1
+    int32_t dataOffset;              // +0x10 from the image, when flag 0x1000 is set; else the pixels start here
+};
+static_assert(sizeof(ShapeImage) == 0x14, "a SHAPE image header is 0x14 bytes");
+
+enum ShapeImageFlag : uint32_t {
+    kShapeDataAtOffset = 0x1000,
+    kShapeLinear = 0x2000,
+};
+
+// The atlas list LoadAtlas works through (TAR +0x44): records from +4, ended by one without an image.
+struct TARAtlasEntry {               // 0xc
+    uint16_t x;                      // +0x00
+    uint16_t y;                      // +0x02
+    uint8_t *image;                  // +0x04 a SHAPE image
+    uint32_t unknown08;              // +0x08
+};
+struct TARAtlas {
+    uint32_t unknown00;              // +0x00
+    TARAtlasEntry entries[1];        // +0x04
+};
+static_assert(sizeof(TARAtlas) == 0x10, "an atlas header and its first record");
+
 // EAGL::TARPrivate::SharedData: the image a TAR draws, shared by every TAR made from the same SHAPE. It lives in the
 // SHAPE's 'i' attachment when the file has room for it (magic "USED"), else in a long-name "EAGL" block, else it is
-// allocated (bit 23 of +0x10).
+// allocated (allocated set).
 struct TARSharedData {               // 0x34
     uint8_t magic[4];                // +0x00 "USED" in use, "DGK!" once released
     int32_t refCount;                // +0x04 TARs on it
     int32_t width;                   // +0x08
     int32_t height;                  // +0x0c
-    uint32_t bits;                   // +0x10 0..5 mip levels (signed), 6..13 depth, 22 set by Init, 23 allocated by
-                                     //       EAGL (freed with it), 24 the SHAPE's 0x2000 flag (linear: keep address modes)
+    int32_t mipLevels : 6;           // +0x10 bits 0..5 (signed)
+    uint32_t depth : 8;              //       bits 6..13
+    uint32_t unknownBits14 : 8;      //       bits 14..21
+    uint32_t initialised : 1;        //       bit 22, set by Init
+    uint32_t allocated : 1;          //       bit 23, allocated by EAGL (freed with it)
+    uint32_t linear : 1;             //       bit 24, the SHAPE's 0x2000 flag (linear: keep the address modes)
+    uint32_t unknownBits25 : 7;      //       bits 25..31
     uint32_t format;                 // +0x14 D3DFORMAT
-    void *atlas;                     // +0x18 the atlas list LoadAtlas copied from the TAR
+    TARAtlas *atlas;                 // +0x18 the atlas list LoadAtlas copied from the TAR
     uint8_t *shape;                  // +0x1c the SHAPE image (TAR::GetShape)
     uint8_t *pixels;                 // +0x20 the image's pixels
     void *contiguous;                // +0x24 the copy path's physical copy (never made now: see TAR::Commit)
-    uint32_t *texture;               // +0x28 the D3D texture header (0x14; D3D-created ones have common bit 24)
-    uint32_t flags;                  // +0x2c bit 0: the SHAPE header was allocated here (render targets)
+    SurfaceTexture *texture;         // +0x28 the D3D texture header (D3D-created ones have common bit 24)
+    uint32_t flags;                  // +0x2c kSharedOwnsShape
     uint8_t yuv;                     // +0x30 YUY2: D3DRS_YUVENABLE while bound
     uint8_t pad31[3];
 
@@ -39,6 +78,10 @@ struct TARSharedData {               // 0x34
     void Release();                                                          // 0x000eb880 (invented)
 };
 static_assert(sizeof(TARSharedData) == 0x34, "a TAR's shared data is 0x34 bytes");
+
+enum TARSharedFlag : uint32_t {
+    kSharedOwnsShape = 1,            // the SHAPE header was allocated here (render targets)
+};
 
 // The Xbox extension's methods work through the TAR's +0x48 field: their `this` is the field's address, the field
 // points at the TAR (itself). Opcode 15 calls SetStage that way.
@@ -53,8 +96,8 @@ struct TARExtension {
     bool GetMaxAnisotropy(uint32_t *anisotropy) const;                       // 0x000ebd90
     bool SetBumpEnvMatrix(float m00, float m01, float m10, float m11);       // 0x000ebda0
     bool GetBumpEnvMatrix(float *matrix) const;                              // 0x000ebdd0
-    void SetAtlas(void *atlas);                                              // 0x000eb3a0 (invented)
-    void* GetAtlas() const;                                                  // 0x000eb3e0 (invented)
+    void SetAtlas(TARAtlas *atlas);                                          // 0x000eb3a0 (invented)
+    TARAtlas* GetAtlas() const;                                              // 0x000eb3e0 (invented)
     void SwapShape(uint8_t *shape);                                          // 0x000ec420 (invented)
     void Share(TAR *other);                                                  // 0x000ec530 (invented)
 };
@@ -76,7 +119,7 @@ struct TAR {                         // 0x4c ("EAGL::TAR new"); arrays of them a
     void *palette;                   // +0x38 D3DPalette
     uint8_t *clut;                   // +0x3c the clut's colours
     TARSharedData *data;             // +0x40
-    void *atlas;                     // +0x44 {x, y, image} records, 0xc apart, from +4 (LoadAtlas)
+    TARAtlas *atlas;                 // +0x44 LoadAtlas's list
     TAR *extension;                  // +0x48 itself
 
     TAR* InitFields();                                                       // 0x000eb7a0 (invented)
@@ -99,26 +142,21 @@ struct TAR {                         // 0x4c ("EAGL::TAR new"); arrays of them a
 };
 static_assert(sizeof(TAR) == 0x4c, "a TAR is 0x4c bytes");
 
-// EAGLInternal::Property's folded constructor (Ghidra: RMissileStreak::RMissileStreak) and element destructor.
-struct TARProperty {                 // 0xc
-    const char *name;
-    int32_t count;
-    const char **values;
+const int32_t kTARArrayStride = 0x50;   // TARs in an array (a model's variations) are this far apart
 
+// EAGLInternal::Property's folded constructor (Ghidra: RMissileStreak::RMissileStreak) and element destructor, and
+// the Properties destructor the unwind funclet reaches: methods of RuntimeAlloc.h's Property / Properties, which
+// lie in this range. RuntimeAlloc.cpp has its own inline Properties::Destruct, hence the derived names.
+struct TARProperty : Property {
     TARProperty* Construct();                                                // 0x000ed310
     void Destruct();                                                         // 0x000ed320
 };
-static_assert(sizeof(TARProperty) == 0xc, "a property is 0xc bytes");
+static_assert(sizeof(TARProperty) == sizeof(Property), "the Property itself");
 
-struct TARProperties {               // 0x10, RuntimeAlloc.h's Properties
-    int32_t count;
-    TARProperty *list;
-    int32_t length;
-    char *buffer;
-
+struct TARProperties : Properties {
     void Destruct();                                                         // 0x000edde0
 };
-static_assert(sizeof(TARProperties) == 0x10, "a property list is 0x10 bytes");
+static_assert(sizeof(TARProperties) == sizeof(Properties), "the Properties itself");
 
 }  // namespace EAGL
 

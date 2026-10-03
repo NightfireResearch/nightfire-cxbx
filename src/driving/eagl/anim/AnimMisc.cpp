@@ -2,7 +2,9 @@
 #include "AnimChannels.h"
 #include "AnimDecode.h"
 #include "AnimUntested.h"
+#include "Skeleton.h"
 
+#include <bit>
 #include <stdio.h>
 #include <string.h>
 #include <xmmintrin.h>
@@ -18,26 +20,43 @@
 // The small channel types no shipped data builds (docs/driving/eagl.md 3.4): DeltaLerp (10), KeyLerp (12), phase
 // (14), raw state (16), and the raw pose data type 0's channel evaluates. Faithful ports from the listing, each
 // with a one-time "untested" warning: nothing on the disc reaches them. Each function is the original at the same
-// address; x87 in double in the original's order with a float store per store, comparisons as the original's FCOMP
-// flag tests decide them (unordered included), truncation by CVTTSS2SI.
+// address; x87 in double in the original's order with a float store per store (a single operation on floats written
+// in float: the same bits), comparisons as the original's FCOMP flag tests decide them (unordered included),
+// truncation by CVTTSS2SI.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define Zero         (*(const float *)0x00189decu)   // 0.0
-#define One          (*(const float *)0x00189de8u)   // 1.0
-#define PhaseScale   (*(const float *)0x001a120cu)   // 360/255
-#define Phase180     (*(const float *)0x00189f08u)   // 180.0
-#define PiF          (*(const float *)0x001a1228u)   // pi
-#define OneOver180   (*(const float *)0x0018a138u)   // 1/180
-#define ScratchQuat  ((float *)0x00241a58u)           // the lerps' first quaternion
-#define ScratchTrans ((float *)0x00241a68u)           // the translation lerp's first vector
+namespace {
 
-static inline int Truncate(float f) {
+#define ScratchQuat ((float *)0x00241a58)            // the lerps' first quaternion: ScratchQuat[4]
+#define ScratchTrans ((float *)0x00241a68)           // the translation lerp's first vector: ScratchTrans[3]
+
+// The original's .rdata constants (0x001a1228, 0x0018a138; 180, 1 and 0 are exact; kPhaseScale: AnimMisc.h)
+constexpr float kPi = 3.14159274f;
+constexpr float kOneOver180 = 1.0f / 180;
+static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "the original's pi");
+static_assert(std::bit_cast<uint32_t>(kOneOver180) == 0x3bb60b61, "the original's 1/180");
+
+inline int Truncate(float f) {   // CVTTSS2SI
     return _mm_cvtt_ss2si(_mm_set_ss(f));
 }
 
-static inline void CopyBits(void *to, const void *from, size_t n) {
-    memcpy(to, from, n);
+inline bool InMask(const BoneMask *mask, int bone) {
+    return (mask->bits[bone >> 5] & (1u << (bone & 31))) != 0;
 }
+
+DeltaChanData *DeltaData(uint8_t *anim) {
+    return reinterpret_cast<DeltaChanData *>(anim);
+}
+
+KeyChanData *KeyData(uint8_t *anim) {
+    return reinterpret_cast<KeyChanData *>(anim);
+}
+
+PhaseChanData *PhaseData(uint8_t *anim) {
+    return reinterpret_cast<PhaseChanData *>(anim);
+}
+
+}  // namespace
 
 // FUNC_AT(0x000fda60)
 int AnimTruncateRawState(float value) {
@@ -51,37 +70,32 @@ int AnimTruncateRawPose(float value) {
     return Truncate(value);
 }
 
-// ---- DeltaLerp: the DeltaQuat layout (u16 type, u16 checksum, DeltaCompressedData* at +4, u16 frames at +8,
-// u16 index[] at +0xa), each value written on its own (DeltaQuat's in groups of 4)
-
-#define DeltaInfo(anim) (*(DeltaCompressedData **)((anim) + 4))
-#define InfoCount(info) (*(uint16_t *)(info))
+// ---- DeltaLerp: the DeltaQuat layout (DeltaChanData), each value written on its own (DeltaQuat's in groups of 4)
 
 // The frame below the time decoded; between frames, one more frame's deltas scaled by the fraction.
 static void DeltaLerpEval(FnDeltaChan *c, float time, float *out) {
     int t0 = Truncate(time);
-    uint8_t *a = c->anim;
-    DeltaCompressedData *info = DeltaInfo(a);
-    int frames = *(uint16_t *)(a + 8);
+    DeltaChanData *d = DeltaData(c->anim);
+    DeltaCompressedData *info = d->info;
+    int frames = d->frames;
     int f = t0;
     if (t0 >= frames)
         f = frames - 1;
     else if (t0 < 0)
         f = 0;
-    info->DecompressValues(0, InfoCount(info), c->frame, f, c->values, c->values);
+    info->DecompressValues(0, info->count, c->frame, f, c->values, c->values);
     c->frame = f;
-    float tf = (float)t0;
-    a = c->anim;
-    info = DeltaInfo(a);
-    int count = InfoCount(info);
-    uint16_t *index = (uint16_t *)(a + 0xa);
-    if (!((double)time == (double)tf) && t0 + 1 < (int)*(uint16_t *)(a + 8)) {   // test ah,0x44 / jnp
-        float s = (float)((double)time - (double)tf);
-        info->DecompressValuesIndexed(0, count, t0, t0 + 1, c->values, out, 1, index, s);
+    float tf = float(t0);
+    d = DeltaData(c->anim);   // read again after the call, as the original does
+    info = d->info;
+    int count = info->count;
+    if (!(time == tf) && t0 + 1 < d->frames) {   // test ah,0x44 / jnp: unordered counts as between
+        float s = time - tf;
+        info->DecompressValuesIndexed(0, count, t0, t0 + 1, c->values, out, 1, d->index, s);
         return;
     }
     for (int i = 0; i < count; i++)
-        CopyBits(out + index[i], c->values + i, 4);
+        out[d->index[i]] = c->values[i];
 }
 
 // FUNC_AT(0x000fb440)
@@ -113,11 +127,7 @@ bool FnDeltaChan::EvalVel2DLerp(float time, float *velocity) {
     return true;
 }
 
-// ---- KeyLerp: the KeyQuat layout (DeltaCompressedData* at +4, u16 key times* at +8, u16 keys at +0xc, u16
-// index[] at +0xe), each value on its own and linear between keys
-
-#define KeyTimes(anim) (*(uint16_t **)((anim) + 8))
-#define KeyCount(anim) (*(uint16_t *)((anim) + 0xc))
+// ---- KeyLerp: the KeyQuat layout (KeyChanData), each value on its own and linear between keys
 
 // FUNC_AT(0x000fba00)
 void FnKeyDeltaChan::EvalLerp(float previous, float time, float *out) {
@@ -133,40 +143,39 @@ bool FnKeyDeltaChan::EvalSQTLerp(float time, float *sqt, void *mask) {
     EAGL_UNTESTED("FnKeyLerpChan::EvalSQT");
     (void)mask;
     int k = FindLowerKey(time);
-    DeltaCompressedData *info = DeltaInfo(anim);
-    info->DecompressValues(0, InfoCount(info), key, k, values, values);
-    uint8_t *a = anim;
+    DeltaCompressedData *info = KeyData(anim)->info;
+    info->DecompressValues(0, info->count, key, k, values, values);
+    KeyChanData *d = KeyData(anim);   // read again after the call
     key = k;
-    int keys = KeyCount(a);
-    uint16_t *times = KeyTimes(a);
-    info = DeltaInfo(a);
-    int count = InfoCount(info);
-    uint16_t *index = (uint16_t *)(a + 0xe);
+    int keys = d->keys;
+    uint16_t *times = d->times;
+    info = d->info;
+    int count = info->count;
     int previousTime = k != 0 ? times[k - 1] : 0;
-    float pf = (float)previousTime;
-    bool copy = (double)previousTime == (double)time;                       // test ah,0x44 / jnp
-    if (!copy && k == keys - 1 && (double)(int)times[keys - 2] < (double)time)   // test ah,5 / jnp
+    float pf = float(previousTime);
+    bool copy = double(previousTime) == time;                        // test ah,0x44 / jnp
+    if (!copy && k == keys - 1 && double(times[keys - 2]) < time)    // test ah,5 / jnp
         copy = true;
-    if (!copy && k == 0 && (double)time < (double)Zero)                     // test ah,5 / jnp
+    if (!copy && k == 0 && time < 0.0f)                              // test ah,5 / jnp
         copy = true;
     if (copy) {
         for (int i = 0; i < count; i++)
-            CopyBits(sqt + index[i], values + i, 4);
+            sqt[d->index[i]] = values[i];
         return true;
     }
-    int span = (int)times[k] - previousTime;
-    float s = (float)(((double)time - (double)pf) / (double)span);
-    info->DecompressValuesIndexed(0, count, k, k + 1, values, sqt, 1, index, s);
+    int span = times[k] - previousTime;
+    float s = float((double(time) - pf) / span);
+    info->DecompressValuesIndexed(0, count, k, k + 1, values, sqt, 1, d->index, s);
     return true;
 }
 
-// ---- the phase channel: one angle, sampled every 'step' frames (the phase data, AnimMisc.h); looping data wraps the time
-// into [0, samples - 1], and past the last sample the angle extrapolates from the last two.
+// ---- the phase channel: one angle, sampled every 'step' frames (PhaseChanData); looping data wraps the time into
+// [0, samples - 1], and past the last sample the angle extrapolates from the last two.
 
 // FUNC_AT(0x000fd4a0)
 bool FnPhaseChan::GetLength(float *length) {
     EAGL_UNTESTED("FnPhaseChan::GetLength");
-    *length = (float)(int)*(uint16_t *)(anim + 4);
+    *length = PhaseData(anim)->numFrames;
     return true;
 }
 
@@ -174,101 +183,112 @@ bool FnPhaseChan::GetLength(float *length) {
 void FnPhaseChan::Eval(float previous, float time, float *out) {
     EAGL_UNTESTED("FnPhaseChan::Eval");
     (void)previous;
-    uint8_t *a = anim;
-    int last = (int)*(uint16_t *)(a + 4) - 1;
-    if (a[8] & 2) {
-        if ((double)time < (double)Zero) {   // test ah,5 / jp not taken: ordered less
-            float lf = (float)last;
-            float q = (float)((double)time / (double)lf);
+    PhaseChanData *d = PhaseData(anim);
+    int last = d->numFrames - 1;
+    if (d->flags & kPhaseLooping) {
+        if (time < 0.0f) {   // test ah,5 / jp not taken: ordered less
+            float lf = float(last);
+            float q = time / lf;
             int k = Truncate(q) * last;
-            time = (float)((double)lf - ((double)time - (double)k));
-        } else if ((double)time > (double)last) {   // test ah,0x41 / jne not taken: ordered greater
-            double d = (double)time - (double)last;
-            float df = (float)d;
-            float q = (float)(d / (double)last);    // the unrounded difference
+            time = float(lf - (double(time) - k));
+        } else if (double(time) > last) {   // test ah,0x41 / jne not taken: ordered greater
+            double difference = double(time) - last;
+            float df = float(difference);
+            float q = float(difference / last);    // the unrounded difference
             int k = Truncate(q) * last;
-            time = (float)((double)df - (double)k);
+            time = float(double(df) - k);
         }
     }
     int i = Truncate(time);
     int div = step;
     int seg = i / div;
-    double frac = ((double)time - (double)(div * seg)) / (double)div;
-    int h = a[9] < 2 ? 2 : a[9];
-    double v0 = (double)(int)a[0xa + h + seg] * (double)PhaseScale - (double)Phase180;
-    out[0] = (float)v0;
-    if (seg < last / (int)step + 1) {
-        double v1 = (double)(int)a[0xb + h + seg] * (double)PhaseScale - (double)Phase180;
-        out[0] = (float)(v1 * frac + ((double)One - frac) * v0);
+    double frac = (double(time) - div * seg) / div;
+    const uint8_t *samples = d->Samples();
+    double v0 = samples[seg] * double(kPhaseScale) - 180.0;
+    out[0] = float(v0);
+    if (seg < last / step + 1) {
+        double v1 = samples[seg + 1] * double(kPhaseScale) - 180.0;
+        out[0] = float(v1 * frac + (1.0 - frac) * v0);
     } else {
-        double before = (double)(int)a[9 + h + seg] * (double)PhaseScale - (double)Phase180;
-        out[0] = (float)((frac + (double)One) * v0 - before * frac);
+        double before = samples[seg - 1] * double(kPhaseScale) - 180.0;
+        out[0] = float((frac + 1.0) * v0 - before * frac);
     }
 }
 
 // FUNC_AT(0x000fd670)
 void FnPhaseChan::SetAnimMemoryMap(uint8_t *data) {
     EAGL_UNTESTED("FnPhaseChan::SetAnimMemoryMap");
+    PhaseChanData *d = PhaseData(data);
     anim = data;
     index = 0;
-    count = *(uint16_t *)(data + 6);
-    notFlag1 = (uint8_t)(~data[8] & 1);
-    uint8_t flags = data[8];
-    if (flags & 8)
-        step = 1;
-    else if (flags & 0x10)
-        step = 2;
-    else if (flags & 0x20)
-        step = 4;
-    else
-        step = (flags & 0x40) ? 8 : 1;
+    count = d->startTime;
+    notFlag1 = uint8_t(~d->flags & kPhaseFlag01);
+    step = uint8_t(d->SampleStep());   // the flags read again after that store, as the original
 }
 
 // ---- the raw state channel: u16 type, u16 checksum, u16, u16 frames at +6, u8 fields at +8, u8 frame size at +9,
 // u16 field descriptors at +0xa, then (4-aligned) the frames: float time, then the fields packed. A descriptor:
 // bits 0-7 the output byte offset, 11-12 the size - 1 (1, 2 or 4 bytes stored; 3 stores nothing), 13-15 the
-// encoding (0/1/2: 1/2/4 bits from a bit stream, MSB first; 3/4/5: a whole byte/u16/u32; others keep the last value).
+// encoding (RawStateEncoding; others keep the last value).
 
-static inline uint8_t *StateFrames(uint8_t *a) {
-    int n = a[8];
-    return (n & 1) ? a + n * 2 + 0xa : a + n * 2 + 0xc;
+namespace {
+
+enum RawStateEncoding {
+    kEncode1Bit = 0,                 // 1, 2 or 4 bits from a bit stream, MSB first
+    kEncode2Bits = 1,
+    kEncode4Bits = 2,
+    kEncodeU8 = 3,                   // a whole byte, u16 or u32
+    kEncodeU16 = 4,
+    kEncodeU32 = 5,
+};
+
+static_assert(offsetof(RawStateChanData, descriptors) == 0xa, "the raw state descriptors are at +0xa");
+
+RawStateChanData *StateData(uint8_t *anim) {
+    return reinterpret_cast<RawStateChanData *>(anim);
 }
+
+// A frame's time, its first dword (the packed fields follow at +4).
+float FrameTime(const uint8_t *frame) {
+    return *reinterpret_cast<const float *>(frame);
+}
+
+}  // namespace
 
 // FUNC_AT(0x000fd730)
 void FnRawStateChan::Decode(uint8_t *data, uint8_t *out) {
     EAGL_UNTESTED("FnRawStateChan::Decode");
-    uint8_t *a = anim;
+    RawStateChanData *d = StateData(anim);
     uint32_t value = 0;
     uint8_t bit = 0;
-    const uint16_t *desc = (const uint16_t *)(a + 0xa);
-    for (int i = 0; i < (int)a[8]; i++) {
-        uint16_t d = desc[i];
-        uint8_t size = (uint8_t)(((d >> 11) & 3) + 1);
-        switch (d >> 13) {
-        case 0:
-            bit = (uint8_t)(bit + 1);
-            value = ((uint32_t)data[0] >> ((8 - bit) & 31)) & 1;   // SHR by CL: the count masked to 5 bits
+    for (int i = 0; i < d->fields; i++) {
+        uint16_t descriptor = d->descriptors[i];
+        uint8_t size = uint8_t(((descriptor >> 11) & 3) + 1);
+        switch (descriptor >> 13) {
+        case kEncode1Bit:
+            bit = uint8_t(bit + 1);
+            value = (data[0] >> ((8 - bit) & 31)) & 1;   // SHR by CL: the count masked to 5 bits
             break;
-        case 1:
-            bit = (uint8_t)(bit + 2);
-            value = ((uint32_t)data[0] >> ((8 - bit) & 31)) & 3;
+        case kEncode2Bits:
+            bit = uint8_t(bit + 2);
+            value = (data[0] >> ((8 - bit) & 31)) & 3;
             break;
-        case 2:
-            bit = (uint8_t)(bit + 4);
-            value = ((uint32_t)data[0] >> ((8 - bit) & 31)) & 0xf;
+        case kEncode4Bits:
+            bit = uint8_t(bit + 4);
+            value = (data[0] >> ((8 - bit) & 31)) & 0xf;
             break;
-        case 3:
+        case kEncodeU8:
             value = data[0];
             data += 1;
             break;
-        case 4: {
+        case kEncodeU16: {
             uint16_t v;
             memcpy(&v, data, 2);
             value = v;
             data += 2;
             break;
         }
-        case 5:
+        case kEncodeU32:
             memcpy(&value, data, 4);
             data += 4;
             break;
@@ -279,11 +299,11 @@ void FnRawStateChan::Decode(uint8_t *data, uint8_t *out) {
             data++;
             bit = 0;
         }
-        uint8_t *to = out + (d & 0xff);
+        uint8_t *to = out + (descriptor & 0xff);
         if (size == 1) {
-            *to = (uint8_t)value;
+            *to = uint8_t(value);
         } else if (size == 2) {
-            uint16_t v = (uint16_t)value;
+            uint16_t v = uint16_t(value);
             memcpy(to, &v, 2);
         } else if (size == 4) {
             memcpy(to, &value, 4);
@@ -297,39 +317,38 @@ void FnRawStateChan::Decode(uint8_t *data, uint8_t *out) {
 // FUNC_AT(0x000fd840)
 bool FnRawStateChan::EvalState(float time, void *state) {
     EAGL_UNTESTED("FnRawStateChan::EvalState");
-    uint8_t *a = anim;
-    uint8_t *frames = StateFrames(a);
-    int stride = a[9];
+    RawStateChanData *d = StateData(anim);
+    uint8_t *out = static_cast<uint8_t *>(state);
+    uint8_t *frames = d->Frames();
+    int stride = d->frameSize;
     int f = frame;
-    if ((double)time >= (double)*(float *)(frames + f * stride)) {   // test ah,1 / jne not taken
-        int count = *(uint16_t *)(a + 6);
+    if (time >= FrameTime(frames + f * stride)) {   // test ah,1 / jne not taken
+        int count = d->frames;
         if (f < count) {
             do {
                 uint8_t *p = frames + stride * f;
-                if ((double)time < (double)*(float *)(p + stride)) {   // test ah,5 / jnp: ordered less
-                    Decode(p + 4, (uint8_t *)state);
+                if (time < FrameTime(p + stride)) {   // test ah,5 / jnp: ordered less
+                    Decode(p + 4, out);
                     frame = f;
                     return true;
                 }
                 f++;
-            } while (f < (int)*(uint16_t *)(a + 6));
+            } while (f < d->frames);
         }
-        Decode(frames + ((int)*(uint16_t *)(a + 6) - 1) * stride + 4, (uint8_t *)state);
-        frame = (int)*(uint16_t *)(a + 6) - 1;
+        Decode(frames + (d->frames - 1) * stride + 4, out);
+        frame = d->frames - 1;
         return true;
     }
     for (f = f - 1; f >= 0; f--) {
         uint8_t *p = frames + stride * f;
-        uint32_t bits = (uint32_t)(uintptr_t)p;
-        float pointerAsFloat;
-        memcpy(&pointerAsFloat, &bits, 4);
-        if ((double)time >= (double)pointerAsFloat) {   // test ah,1 / je
-            Decode(p + 4, (uint8_t *)state);
+        float pointerAsFloat = std::bit_cast<float>(uint32_t(reinterpret_cast<uintptr_t>(p)));
+        if (time >= pointerAsFloat) {   // test ah,1 / je
+            Decode(p + 4, out);
             frame = f;
             return true;
         }
     }
-    Decode(frames + 4, (uint8_t *)state);
+    Decode(frames + 4, out);
     frame = 0;
     return true;
 }
@@ -339,14 +358,14 @@ bool FnRawStateChan::EvalState(float time, void *state) {
 // FUNC_AT(0x000fd9c0)
 bool FnRawStateChan::FindTime(void *test, float from, float *time) {
     EAGL_UNTESTED("FnRawStateChan::FindTime");
-    uint8_t *a = anim;
-    for (int f = 0; f < (int)*(uint16_t *)(a + 6); f++) {
-        uint8_t *p = StateFrames(a) + (int)a[9] * f;
-        float t = *(float *)p;
-        if (!((double)t < (double)from || (double)t == (double)from)) {   // test ah,0x41 / jnp: greater or unordered
-            uint32_t state[0x50 / 4];
-            Decode(p + 4, (uint8_t *)state);
-            if (((bool (__fastcall *)(void *, int, void *))(*(void ***)test)[0])(test, 0, state)) {
+    RawStateChanData *d = StateData(anim);
+    for (int f = 0; f < d->frames; f++) {
+        uint8_t *p = d->Frames() + d->frameSize * f;
+        float t = FrameTime(p);
+        if (!(t <= from)) {   // test ah,0x41 / jnp: greater or unordered
+            alignas(4) uint8_t state[0x50];
+            Decode(p + 4, state);
+            if (AnimVCall<bool>(test, 0, static_cast<void *>(state))) {
                 *time = t;
                 return true;
             }
@@ -357,58 +376,66 @@ bool FnRawStateChan::FindTime(void *test, float from, float *time) {
 
 // ---- the raw pose data (RawPoseChannel in AnimMisc.h)
 
-#define FnCopyQuat   0x000fdf20u
-#define FnEulF3      0x000fdec0u
-#define FnCopyTrans  0x000fdf60u
-#define FnLerpQuat   0x000fdfd0u
-#define FnLerpEuler  0x000fdf90u
-#define FnLerpTrans  0x000fe060u
+namespace {
+
+// The channel functions' original addresses, as InitAnimMemoryMap writes them into the signature tables (each
+// jumps to ours below).
+enum RawPoseFunctionAddress : uint32_t {
+    kCopyQuatAddress = 0x000fdf20,
+    kEulF3Address = 0x000fdec0,
+    kCopyTransAddress = 0x000fdf60,
+    kLerpQuatAddress = 0x000fdfd0,
+    kLerpEulerAddress = 0x000fdf90,
+    kLerpTransAddress = 0x000fe060,
+};
 
 typedef void (*FrameFn)(float **cursor, float *out);
 typedef void (*LerpFn)(float t, float **cursor0, float **cursor1, float *out);
 
-static inline uint32_t *Signatures(RawPoseChannel *p) {
-    return (uint32_t *)((uint8_t *)p + 0x10);
+FrameFn FrameFunction(uint32_t address) {
+    return reinterpret_cast<FrameFn>(uintptr_t(address));
 }
 
-static inline bool InMask(const uint32_t *mask, int bone) {
-    return (mask[bone >> 5] & (1u << (bone & 31))) != 0;
+LerpFn LerpFunction(uint32_t address) {
+    return reinterpret_cast<LerpFn>(uintptr_t(address));
 }
+
+}  // namespace
 
 // The signature tables' type numbers become the original addresses of the channel functions.
 // FUNC_AT(0x000fda70)
 void RawPoseChannel_InitAnimMemoryMap(uint8_t *data) {
     EAGL_UNTESTED("RawPoseChannel::InitAnimMemoryMap");
-    RawPoseChannel *p = (RawPoseChannel *)data;
+    RawPoseChannel *p = reinterpret_cast<RawPoseChannel *>(data);
     int count = p->count;
-    uint32_t *e = Signatures(p);
+    uint32_t *e = p->signatures;
     for (int i = 0; i < count;) {
-        int n = (int)*e++;
+        int n = *e++;
         i++;
         if (n <= 0)
             continue;
         i += n;
         for (; n > 0; n--, e++) {
             switch (*e) {
-            case 0: *e = FnCopyQuat; break;
-            case 1: *e = FnEulF3; break;
-            case 2: *e = FnCopyTrans; break;
+            case kSignatureQuat: *e = kCopyQuatAddress; break;
+            case kSignatureEuler: *e = kEulF3Address; break;
+            case kSignatureTrans: *e = kCopyTransAddress; break;
             default: printf("Bad signature channel type\n"); break;
             }
         }
     }
-    e = Signatures(p) + p->count;
+    e = p->Lerps();
     for (int i = 0; i < count;) {
-        int n = (int)*e++;
+        int n = *e++;
         i++;
         if (n <= 0)
             continue;
         i += n;
         for (; n > 0; n--, e++) {
             switch (*e) {
-            case 0: *e = FnLerpQuat; break;
-            case 1: *e = FnLerpEuler; break;
-            case 2: *e = FnLerpTrans; break;
+            case kSignatureQuat: *e = kLerpQuatAddress; break;
+            case kSignatureEuler: *e = kLerpEulerAddress; break;
+            case kSignatureTrans: *e = kLerpTransAddress; break;
             default: printf("Bad signature channel type\n"); break;
             }
         }
@@ -420,38 +447,38 @@ void RawPoseChannel_InitAnimMemoryMap(uint8_t *data) {
 void RawPoseChannel::RestoreSignatures() {
     EAGL_UNTESTED("RawPoseChannel::RestoreSignatures");
     int n0 = count;
-    uint32_t *e = Signatures(this);
+    uint32_t *e = signatures;
     for (int i = 0; i < n0;) {
-        int n = (int)*e++;
+        int n = *e++;
         i++;
         if (n <= 0)
             continue;
         i += n;
         for (; n > 0; n--, e++) {
-            if (*e == FnEulF3)
-                *e = 1;
-            else if (*e == FnCopyQuat)
-                *e = 0;
-            else if (*e == FnCopyTrans)
-                *e = 2;
+            if (*e == kEulF3Address)
+                *e = kSignatureEuler;
+            else if (*e == kCopyQuatAddress)
+                *e = kSignatureQuat;
+            else if (*e == kCopyTransAddress)
+                *e = kSignatureTrans;
             else
                 printf("Bad signature channel type\n");
         }
     }
-    e = Signatures(this) + count;
+    e = Lerps();
     for (int i = 0; i < n0;) {
-        int n = (int)*e++;
+        int n = *e++;
         i++;
         if (n <= 0)
             continue;
         i += n;
         for (; n > 0; n--, e++) {
-            if (*e == FnLerpEuler)
-                *e = 1;
-            else if (*e == FnLerpQuat)
-                *e = 0;
-            else if (*e == FnLerpTrans)
-                *e = 2;
+            if (*e == kLerpEulerAddress)
+                *e = kSignatureEuler;
+            else if (*e == kLerpQuatAddress)
+                *e = kSignatureQuat;
+            else if (*e == kLerpTransAddress)
+                *e = kSignatureTrans;
             else
                 printf("Bad signature channel type\n");
         }
@@ -463,29 +490,29 @@ void RawPoseChannel::RestoreSignatures() {
 // FUNC_AT(0x000fdc20)
 void RawPoseChannel::EvalFrame(int frame, float *out, void *mask) {
     EAGL_UNTESTED("RawPoseChannel::EvalFrame");
-    uint32_t *e = Signatures(this);
+    uint32_t *e = signatures;
     uint32_t *end = e + count;
-    float *cursor = (float *)((uint8_t *)this + 4 * (frameSize * frame + count * 2 + 4));
+    float *cursor = Frame(frame);
     float *bone = out + 4;
     if (mask == NULL) {
         for (; e < end; bone += 12) {
-            int n = (int)*e++;
+            int n = *e++;
             for (; n > 0; n--)
-                ((FrameFn)(uintptr_t)*e++)(&cursor, bone);
+                FrameFunction(*e++)(&cursor, bone);
         }
         return;
     }
     for (int b = 0; e < end; b++, bone += 12) {
-        int n = (int)*e++;
-        if (InMask((const uint32_t *)mask, b)) {
+        int n = *e++;
+        if (InMask(static_cast<const BoneMask *>(mask), b)) {
             for (; n > 0; n--)
-                ((FrameFn)(uintptr_t)*e++)(&cursor, bone);
+                FrameFunction(*e++)(&cursor, bone);
         } else {
             for (; n > 0; n--) {
                 uint32_t fn = *e++;
-                if (fn == FnEulF3 || fn == FnCopyTrans)
+                if (fn == kEulF3Address || fn == kCopyTransAddress)
                     cursor += 3;
-                else if (fn == FnCopyQuat)
+                else if (fn == kCopyQuatAddress)
                     cursor += 4;
             }
         }
@@ -506,9 +533,9 @@ void RawPoseChannel::Eval(float time, float *out, bool interpolate, void *mask) 
         EvalFrame(last, out, mask);
         return;
     }
-    double f = (double)time - (double)i;
-    float frac = (float)f;
-    if (f == (double)Zero || !interpolate) {   // test ah,0x44 / jnp: the unrounded difference, ordered equal
+    double f = double(time) - i;
+    float frac = float(f);
+    if (f == 0.0 || !interpolate) {   // test ah,0x44 / jnp: the unrounded difference, ordered equal
         EvalFrame(i, out, mask);
         return;
     }
@@ -519,32 +546,31 @@ void RawPoseChannel::Eval(float time, float *out, bool interpolate, void *mask) 
 // FUNC_AT(0x000fe110)
 void RawPoseChannel::Lerp(float t, int frame0, int frame1, float *out, void *mask) {
     EAGL_UNTESTED("RawPoseChannel::Lerp");
-    int base = count * 2 + 4;
-    float *cursor1 = (float *)((uint8_t *)this + 4 * (frameSize * frame1 + base));
-    float *cursor0 = (float *)((uint8_t *)this + 4 * (frameSize * frame0 + base));
-    uint32_t *e = Signatures(this) + count;
+    float *cursor1 = Frame(frame1);
+    float *cursor0 = Frame(frame0);
+    uint32_t *e = Lerps();
     uint32_t *end = e + count;
     float *bone = out + 4;
     if (mask == NULL) {
         for (; e < end; bone += 12) {
-            int n = (int)*e++;
+            int n = *e++;
             for (; n > 0; n--)
-                ((LerpFn)(uintptr_t)*e++)(t, &cursor0, &cursor1, bone);
+                LerpFunction(*e++)(t, &cursor0, &cursor1, bone);
         }
         return;
     }
     for (int b = 0; e < end; b++, bone += 12) {
-        int n = (int)*e++;
-        if (InMask((const uint32_t *)mask, b)) {
+        int n = *e++;
+        if (InMask(static_cast<const BoneMask *>(mask), b)) {
             for (; n > 0; n--)
-                ((LerpFn)(uintptr_t)*e++)(t, &cursor0, &cursor1, bone);
+                LerpFunction(*e++)(t, &cursor0, &cursor1, bone);
         } else {
             for (; n > 0; n--) {
                 uint32_t fn = *e++;
-                if (fn == FnLerpEuler || fn == FnLerpTrans) {
+                if (fn == kLerpEulerAddress || fn == kLerpTransAddress) {
                     cursor0 += 3;
                     cursor1 += 3;
-                } else if (fn == FnLerpQuat) {
+                } else if (fn == kLerpQuatAddress) {
                     cursor0 += 4;
                     cursor1 += 4;
                 }
@@ -557,8 +583,8 @@ void RawPoseChannel::Lerp(float t, int frame0, int frame1, float *out, void *mas
 // results (of the second and third half angles) on the x87 stack and multiplies them unrounded, at the 64-bit
 // mantissa FSIN returns whatever the precision control (docs/driving/maths.md 3.1-3.2); C++ double cannot hold
 // that, so, as Transform.cpp's EAGL_BuildRotate, the arithmetic is the original's instructions in assembly (the
-// 0.5 from 0x00189eb0 as a constant). The wrapper only adds the untested warning. Called by EulF3 and, by
-// address, by 0x00101c90.
+// 0.5 from 0x00189eb0 as a constant). The wrapper only adds the untested warning. Called by EulF3 and by
+// FnDeltaSingleQ::InitBuffersAsRequired.
 static const float kHalf = 0.5f;   // 0x3f000000
 
 __declspec(naked) static void __cdecl EulerToQuatX87(const float *angles, float *quat) {
@@ -638,11 +664,11 @@ void EAGLAnim_EulerToQuat(const float *angles, float *quat) {
 void EAGLAnim_EulF3(float **cursor, float *out) {
     EAGL_UNTESTED("EAGLAnim::EulF3");
     float *c = *cursor;
-    double s = (double)PiF * (double)OneOver180;
+    constexpr double kDegreesToRadians = double(kPi) * kOneOver180;   // exact: a product of two floats
     float angles[3];
-    angles[0] = (float)(s * (double)c[0]);
-    angles[1] = (float)(s * (double)c[1]);
-    angles[2] = (float)(s * (double)c[2]);
+    angles[0] = float(kDegreesToRadians * c[0]);
+    angles[1] = float(kDegreesToRadians * c[1]);
+    angles[2] = float(kDegreesToRadians * c[2]);
     *cursor = c + 3;
     EAGLAnim_EulerToQuat(angles, out);
 }
@@ -650,14 +676,14 @@ void EAGLAnim_EulF3(float **cursor, float *out) {
 // FUNC_AT(0x000fdf20)
 void RawPose_CopyQuat(float **cursor, float *out) {
     EAGL_UNTESTED("RawPose_CopyQuat");
-    CopyBits(out, *cursor, 16);
+    memcpy(out, *cursor, sizeof(float[4]));
     *cursor += 4;
 }
 
 // FUNC_AT(0x000fdf60)
 void RawPose_CopyTrans(float **cursor, float *out) {
     EAGL_UNTESTED("RawPose_CopyTrans");
-    CopyBits(out + 4, *cursor, 12);
+    memcpy(out + 4, *cursor, sizeof(float[3]));
     *cursor += 3;
 }
 
@@ -672,9 +698,9 @@ void RawPose_LerpEuler(float t, float **cursor0, float **cursor1, float *out) {
 // FUNC_AT(0x000fdfd0)
 void RawPose_LerpQuat(float t, float **cursor0, float **cursor1, float *out) {
     EAGL_UNTESTED("RawPose_LerpQuat");
-    CopyBits(ScratchQuat, *cursor0, 16);
+    memcpy(ScratchQuat, *cursor0, sizeof(float[4]));
     *cursor0 += 4;
-    CopyBits(out, *cursor1, 16);
+    memcpy(out, *cursor1, sizeof(float[4]));
     *cursor1 += 4;
     EAGL_VU0_fastqslerp(t, ScratchQuat, out, out);   // a tail jump in the original
 }
@@ -682,11 +708,11 @@ void RawPose_LerpQuat(float t, float **cursor0, float **cursor1, float *out) {
 // FUNC_AT(0x000fe060)
 void RawPose_LerpTrans(float t, float **cursor0, float **cursor1, float *out) {
     EAGL_UNTESTED("RawPose_LerpTrans");
-    float *g = ScratchTrans;
-    CopyBits(g, *cursor0, 12);
+    float *first = ScratchTrans;
+    memcpy(first, *cursor0, sizeof(float[3]));
     *cursor0 += 3;
-    CopyBits(out + 4, *cursor1, 12);
+    memcpy(out + 4, *cursor1, sizeof(float[3]));
     *cursor1 += 3;
     for (int j = 0; j < 3; j++)
-        out[4 + j] = (float)(((double)out[4 + j] - (double)g[j]) * (double)t + (double)g[j]);
+        out[4 + j] = float((double(out[4 + j]) - first[j]) * t + first[j]);
 }

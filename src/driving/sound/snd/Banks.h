@@ -10,15 +10,90 @@
 
 namespace SND {
 
-// A BNKl version 5 bank's header, in the game's bank memory
+// The PT tags (sound.md 4.3): a tag byte, a length byte (0xff: a 4-byte big-endian length follows), the data - for
+// lengths up to 4 also a big-endian value. Brackets in the PatchHeader/Attributes layouts give each field's tag.
+enum PtTag : uint8_t {
+    // SNDI_parsetimbre's low fields (0x00..0x25)
+    kTagVelocityLow = 0x01,
+    kTagVelocityHigh = 0x02,
+    kTagKeyLow = 0x03,
+    kTagKeyHigh = 0x04,
+    kTagPriority = 0x06,
+    kTagRootKey = 0x07,
+    kTagEnvRelease = 0x08,
+    kTagEnvCount = 0x09,
+    kTagBendRange = 0x0a,
+    kTagPan = 0x0c,
+    kTagPanRandom = 0x0d,
+    kTagVolume = 0x0e,
+    kTagVolumeRandom = 0x0f,
+    kTagTune = 0x10,
+    kTagTuneRandom = 0x11,
+    kTagVolTable = 0x12,         // value + data pointer
+    kTagFxLevel = 0x13,
+    kTagUserData = 0x14,         // up to four, each a block for the user-data clients
+    kTagBendTable = 0x17,        // value + data pointer
+    kTagEnvTable = 0x19,         // value + data pointer
+    kTag1a = 0x1a,
+    kTagEnvStart = 0x1c,
+    kTagVolLfo = 0x1d,           // value + data pointer
+    kTagVolLfoLength = 0x1e,
+    kTagVolLfoRandom = 0x1f,
+    kTagPitchLfo = 0x20,         // value + data pointer
+    kTagPitchLfoLength = 0x21,
+    kTagPitchLfoDepth = 0x22,
+    kTagPitchLfoRandom = 0x23,
+    kTagDetuneRandom = 0x24,
+    kTagPanMult = 0x25,
+    kTagLowEnd = 0x26,           // (the low range's end)
+
+    // the sample fields (0x80..0xa7)
+    kTagPlatformVersion = 0x80,
+    kTagSampleFirst = 0x80,      // (the sample range's start)
+    kTagChannels = 0x82,
+    kTagSampleRate = 0x84,
+    kTagFrames = 0x85,
+    kTagLoopStart = 0x86,
+    kTagLoopEnd = 0x87,
+    kTagSampleOffset0 = 0x88,    // per channel: 0x88, 0x89, 0x94, 0x95, 0xa2, 0xa3
+    kTagSampleOffset1 = 0x89,
+    kTagSampleData = 0x8a,       // the data pointer
+    kTagRenderMode = 0x8c,
+    kTagSampleOffset2 = 0x94,
+    kTagSampleOffset3 = 0x95,
+    kTagStretchData0 = 0x98,     // per channel: 0x98..0x9b, 0xa4, 0xa5 (time-stretch data)
+    kTagStretchData1 = 0x99,
+    kTagStretchData2 = 0x9a,
+    kTagStretchData3 = 0x9b,
+    kTagAzimuth0 = 0x9c,         // per channel: 0x9c..0x9f, 0xa6, 0xa7 (offsets from the default azimuth)
+    kTagAzimuth1 = 0x9d,
+    kTagAzimuth2 = 0x9e,
+    kTagAzimuth3 = 0x9f,
+    kTagSampleRep = 0xa0,
+    kTagSampleOffset4 = 0xa2,
+    kTagSampleOffset5 = 0xa3,
+    kTagStretchData4 = 0xa4,
+    kTagStretchData5 = 0xa5,
+    kTagAzimuth4 = 0xa6,
+    kTagAzimuth5 = 0xa7,
+    kTagSampleEnd = 0xa8,        // (the sample range's end)
+
+    // markers
+    kTagPadding = 0xfc,          // skipped
+    kTagMarker = 0xfd,           // bare
+    kTagNextTimbre = 0xfe,       // bare: another timbre follows
+    kTagEnd = 0xff,
+};
+
+// A BNKl version 5 bank's header, in the game's bank memory (MW: BANKVER5)
 struct BankHeader {
     char magic[4];               // +0x00 "BNKl"
     uint16_t version;            // +0x04 5
     uint16_t patchCount;         // +0x06
-    uint32_t sizeA;              // +0x08 } SNDbankheadersize: their sum
-    uint32_t sizeB;              // +0x0c }
+    uint32_t headerSize;         // +0x08 } SNDbankheadersize: their sum
+    uint32_t extraSize;          // +0x0c } (MW: spusize)
     uint32_t total;              // +0x10
-    uint32_t patchOffsets[1];    // +0x14 self-relative offsets to the "PT" headers, 0 = empty
+    uint32_t patchOffsets[1];    // +0x14 [patchCount] offsets to the "PT" headers from their own word, 0 = empty
 };
 
 // sndbanki_buffer (0x00244f40): one per bank (NUM_BANKS at 0x00244cf0)
@@ -28,6 +103,17 @@ struct BankSlot {
     uint8_t pad05[3];
 };
 static_assert(sizeof(BankSlot) == 8, "a bank slot is 8 bytes");
+
+// What a user-data client gets (MW: SNDUSERDATACBINFO); none is ever registered
+struct UserDataInfo {
+    int32_t operation;           // +0x00 1 played, 2 bank removed (MW: SND_UD_BANK_PLAY, _UNLOADED)
+    uint8_t *data;               // +0x04
+    int32_t size;                // +0x08
+    int32_t handle;              // +0x0c } the streams' (SNDSTRMI_parseheader); the bank module leaves them unset
+    int32_t request;             // +0x10 }
+};
+static_assert(sizeof(UserDataInfo) == 0x14, "SNDUSERDATACBINFO is 0x14 bytes");
+typedef void (*UserDataClient)(UserDataInfo *info);
 
 // The PT tag stream reader's state (SNDI_gettag)
 struct TagReader {
@@ -39,7 +125,7 @@ struct TagReader {
 };
 static_assert(sizeof(TagReader) == 0x14, "the tag reader is 0x14 bytes");
 
-// SNDI_patchtohdr's format (4 bytes) and sample layout (0x1c)
+// SNDI_patchtohdr's format (4 bytes, MW: SNDSAMPLEFORMAT) and sample layout (0x1c, MW: SNDSAMPLEDESC)
 struct StreamFormat {
     uint16_t sampleRate;         // +0x00 [0x84] (default 24000)
     uint8_t channels;            // +0x02 [0x82] (default 1)

@@ -1,7 +1,12 @@
 #include "RuntimeAlloc.h"
 
+#include "GeoPrimState.h"
 #include "Loader.h"
+#include "Profiler.h"
+#include "Realgraph.h"
+#include "Tar.h"
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,12 +26,17 @@
 // sscanf) are the host's.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define EaglMalloc   (*(void *(**)(uint32_t size, const char *name))0x001caf68u)
-#define EaglFree     (*(void (**)(void *data, uint32_t size))0x001caf6cu)
-#define GlobalPool   ((SymbolPool *)0x0023fb8cu)
+typedef void *(*EaglMallocFn)(uint32_t size, const char *name);
+typedef void (*EaglFreeFn)(void *data, uint32_t size);
 
-// EAGL's PrintMessage (0x000f42b0, not ours yet): level, format, arguments.
-#define PrintMessage ((int (*)(int level, const char *format, ...))0x000f42b0u)
+#define EaglMalloc (*(EaglMallocFn *)0x001caf68)
+#define EaglFree (*(EaglFreeFn *)0x001caf6c)
+#define GlobalPool (*(SymbolPool *)0x0023fb8c)
+#define BuiltInShapes ((ShapeFile *)0x001cbdd0)   // the SHPX file linked into the executable: a TAR's fallback image
+#define TarShapeName ((char *)0x001cc980)         // "shape_" and room for four characters, filled in per use
+#define TarClutName ((char *)0x001cc998)          // the same, for CLUTNAME
+
+using EAGL::PrintMessage;
 
 static void Untested(const char *what) {
     printf("[eagl] WARNING: %s ran - a provisional port that no shipped data reaches, UNTESTED. Check what it "
@@ -216,7 +226,7 @@ static const NameBlock kXboxGeoPrimState[] = {
     { "EAGL::XBF_", 10, kXboxGeoPrimState3, 15 },
 };
 
-static uint32_t ParseNamed(const char *text, const NameBlock *blocks, int blockCount, uint32_t message) {
+static uint32_t ParseNamed(const char *text, const NameBlock *blocks, int blockCount, const char *message) {
     for (int b = 0; b < blockCount; b++) {
         if (strncmp(text, blocks[b].prefix, blocks[b].length) != 0)
             continue;
@@ -225,34 +235,32 @@ static uint32_t ParseNamed(const char *text, const NameBlock *blocks, int blockC
                 return blocks[b].entries[i].value;
         break;
     }
-    PrintMessage(0, (const char *)(uintptr_t)message, text);
+    PrintMessage(0, message, text);
     return 0;
 }
 
 #define COUNT(a) (int)(sizeof(a) / sizeof((a)[0]))
 
-// "INTERNAL ERROR: Invalid TAR api function parameter '%s'"
 // FUNC_AT(0x000ed390)
 uint32_t EAGL_ParseTarApi(const char *text) {
-    return ParseNamed(text, kTarApi, COUNT(kTarApi), 0x001cccd8u);
+    return ParseNamed(text, kTarApi, COUNT(kTarApi), "INTERNAL ERROR: Invalid TAR api function parameter '%s'\n");
 }
 
-// "INTERNAL ERROR: Invalid TAR value %s"
 // FUNC_AT(0x000ed700)
 uint32_t EAGL_ParseTarValue(const char *text) {
-    return ParseNamed(text, kTarValue, COUNT(kTarValue), 0x001cce20u);
+    return ParseNamed(text, kTarValue, COUNT(kTarValue), "INTERNAL ERROR: Invalid TAR value %s\n");
 }
 
-// "INTERNAL ERROR: Invalid GeoPrimState function parameter '%s'"
 // FUNC_AT(0x000ef7a0)
 uint32_t EAGL_ParseGeoPrimState(const char *text) {
-    return ParseNamed(text, kGeoPrimState, COUNT(kGeoPrimState), 0x001cd2d8u);
+    return ParseNamed(text, kGeoPrimState, COUNT(kGeoPrimState),
+                      "INTERNAL ERROR: Invalid GeoPrimState function parameter '%s'\n");
 }
 
-// "INTERNAL ERROR: Invalid GeoPrimState value %s"
 // FUNC_AT(0x000f04d0)
 uint32_t EAGL_ParseXboxGeoPrimState(const char *text) {
-    return ParseNamed(text, kXboxGeoPrimState, COUNT(kXboxGeoPrimState), 0x001cd6f8u);
+    return ParseNamed(text, kXboxGeoPrimState, COUNT(kXboxGeoPrimState),
+                      "INTERNAL ERROR: Invalid GeoPrimState value %s\n");
 }
 
 // FUNC_AT(0x000f0450)
@@ -285,7 +293,7 @@ Properties* Properties::Construct(const char *text) {
     list = NULL;
     int widest = 0;
     length = (int)strlen(text);
-    buffer = (char *)EaglMalloc((uint32_t)length + 1, NULL);
+    buffer = (char *)EaglMalloc(length + 1, NULL);
     strcpy(buffer, text);
     int commas = 0, semicolons = 0;
     for (int i = 0; i < length; i++) {
@@ -301,7 +309,7 @@ Properties* Properties::Construct(const char *text) {
     }
     int properties = semicolons + 1;
     widest++;
-    int *block = (int *)EaglMalloc((uint32_t)(properties * 0xc + 4), (const char *)0x001cccb8u);
+    int *block = (int *)EaglMalloc(properties * sizeof(Property) + 4, "EAGLInternal::Property new[]");
     if (block != NULL) {   // new[]: the count, then each element zeroed (0x000ed310)
         block[0] = properties;
         list = (Property *)(block + 1);
@@ -312,9 +320,9 @@ Properties* Properties::Construct(const char *text) {
         }
     }
     for (int i = 0; i < properties; i++) {
-        const char **values = (const char **)EaglMalloc((uint32_t)widest * 4, (const char *)0x001ccc94u);
+        const char **values = (const char **)EaglMalloc(widest * 4, "EAGLInternal::PropertyValue new[]");
         if (values != NULL)
-            memset(values, 0, (size_t)widest * 4);
+            memset(values, 0, widest * 4);
         list[i].values = values;
     }
 
@@ -379,40 +387,46 @@ void Properties::Destruct() {
     if (list != NULL) {
         int *block = (int *)list - 1;
         for (int i = block[0]; i-- > 0;)   // the vector destructor iterator, last first (0x000ed320 each)
-            EaglFree((void *)list[i].values, 4);
-        EaglFree(block, 0xc);
+            EaglFree(list[i].values, 4);
+        EaglFree(block, sizeof(Property));
     }
-    EaglFree(buffer, (uint32_t)length + 1);
+    EaglFree(buffer, length + 1);
 }
 
 // ---- EAGL::TAR from properties: SHAPENAME=<4 chars>,<count> makes an array of count TARs on that image
 
+// An element of a TAR array: TARs are 0x50 apart in one
+struct TARSlot {
+    EAGL::TAR tar;
+    uint32_t unknown4c;
+};
+static_assert(sizeof(TARSlot) == 0x50, "TAR arrays are 0x50 apart");
+
 // FUNC_AT(0x000ed640)
-void EAGL_SetTarApi(uint8_t *tar, Property *property) {
+void EAGL_SetTarApi(EAGL::TAR *tar, Property *property) {
     if (property->Is("SetClampMode", 1)) {
         uint32_t mode = EAGL_ParseTarApi(property->values[0]);
-        *(uint32_t *)(tar + 4) = mode;
-        *(uint32_t *)(tar + 8) = mode;
-        *(uint32_t *)(tar + 0xc) = mode;
-        *(uint32_t *)(tar + 0x10) = mode;
+        tar->address0 = mode;
+        tar->addressU = mode;
+        tar->addressV = mode;
+        tar->addressW = mode;
     } else if (property->Is("SetFilterMode", 1)) {
-        *(uint32_t *)(tar + 0x14) = EAGL_ParseTarApi(property->values[0]);
+        tar->filter = EAGL_ParseTarApi(property->values[0]);
     } else if (property->Is("SetMIPMAPLODBias", 1)) {
-        *(float *)(tar + 0x18) = (float)atof(property->values[0]);
+        tar->lodBias = (float)atof(property->values[0]);
     } else if (property->Is("SetMIPMAPMode", 1)) {
-        *(uint32_t *)(tar + 0x1c) = EAGL_ParseTarApi(property->values[0]);
+        tar->mipFilter = EAGL_ParseTarApi(property->values[0]);
     }
 }
 
-// "shape_" and four characters, in the original's static buffer at 'name'.
-static char* ShapeName(uint32_t name, const char *four) {
-    char *s = (char *)(uintptr_t)name;
-    s[6] = four[0];
-    s[7] = four[1];
-    s[8] = four[2];
-    s[9] = four[3];
-    s[10] = 0;
-    return s;
+// "shape_" and four characters, in one of the original's static buffers.
+static char* ShapeName(char *buffer, const char *four) {
+    buffer[6] = four[0];
+    buffer[7] = four[1];
+    buffer[8] = four[2];
+    buffer[9] = four[3];
+    buffer[10] = 0;
+    return buffer;
 }
 
 // FUNC_AT(0x000ecbe0)
@@ -424,135 +438,134 @@ void* RuntimeAllocTARConstructor(const char *properties, DynamicLoader *loader, 
     }
     Properties p;
     p.Construct(properties);
-    uint8_t *tar = NULL;
+    TARSlot *tars = NULL;
     int count = 1;
     for (int i = 0; i < p.count; i++) {
         Property *property = &p.list[i];
         if (strcmp("UID", property->name) == 0) {
             *destroy = 1;
         } else if (strcmp("SHAPENAME", property->name) == 0) {
-            if (tar != NULL)
+            if (tars != NULL)
                 continue;
             const char *shape = property->values[0];
             count = atol(property->values[1]);
-            char *name = ShapeName(0x001cc980u, shape);
+            char *name = ShapeName(TarShapeName, shape);
             bool found;
-            void *image = GlobalPool->Search(name, &found);
+            void *image = GlobalPool.Search(name, &found);
             if (!found) {
                 void *unused;
                 loader->GetAddr("SHAPE", name, &unused);
             }
             if (image == NULL)
-                image = (void *)(uintptr_t)(*(uint32_t *)0x001cbde4u + 0x001cbdd0u);
-            tar = (uint8_t *)EaglMalloc((uint32_t)(count * 0x50), NULL);
-            if (tar != NULL)
-                ((void *(__fastcall *)(void *, int, void *))0x000eca20)(tar, 0, image);   // TAR::TAR
-        } else if (tar == NULL) {
+                image = (uint8_t *)BuiltInShapes + BuiltInShapes->entries[0].offset;
+            tars = (TARSlot *)EaglMalloc(count * sizeof(TARSlot), NULL);
+            if (tars != NULL)
+                tars->tar.Construct((uint8_t *)image);
+        } else if (tars == NULL) {
             continue;
         } else if (property->Is("CLUTNAME", 1)) {
-            char *name = ShapeName(0x001cc998u, property->values[0]);
+            char *name = ShapeName(TarClutName, property->values[0]);
             bool found;
-            void *clut = GlobalPool->Search(name, &found);
+            void *clut = GlobalPool.Search(name, &found);
             if (!found) {
                 void *unused;
                 loader->GetAddr("SHAPE", name, &unused);
             } else if (clut != NULL) {
-                ((void (__fastcall *)(void *, int, void *))0x000eb220)(tar, 0, clut);   // TAR::SwapClut
+                tars->tar.SwapClut((uint8_t *)clut);
             }
         } else if (strncmp("XBOXEXTOBJ", property->name, 10) == 0) {
-            uint32_t *extension = *(uint32_t **)(tar + 0x48);
+            // The extension's setters, inlined: the extension field points at the TAR itself
+            EAGL::TAR *extension = tars->tar.extension;
             if (property->Is("XBOXEXTOBJ_SetStage", 1)) {
-                extension[0] = EAGL_ParseTarValue(property->values[0]);
+                extension->stage = EAGL_ParseTarValue(property->values[0]);
             } else if (property->Is("XBOXEXTOBJ_SetAnisotropy", 1)) {
-                extension[0x24 / 4] = (uint32_t)atol(property->values[0]);
+                extension->maxAnisotropy = atol(property->values[0]);
             } else if (property->Is("XBOXEXTOBJ_SetBumpEnvMatrix", 4)) {
                 float m0 = (float)atof(property->values[0]);
                 float m1 = (float)atof(property->values[1]);
                 float m2 = (float)atof(property->values[2]);
                 float m3 = (float)atof(property->values[3]);
-                // the extension's SetBumpEnvMatrix, ECX = the TAR's extension field
-                ((char (__fastcall *)(void *, int, float, float, float, float))0x000ebda0)(tar + 0x48, 0, m0, m1, m2,
-                                                                                         m3);
+                // called as the original does, on the extension field (its `this` is the field's address)
+                reinterpret_cast<EAGL::TARExtension *>(&tars->tar.extension)->SetBumpEnvMatrix(m0, m1, m2, m3);
             } else if (property->Is("XBOXEXTOBJ_SetClampU", 1)) {
-                extension[2] = EAGL_ParseTarValue(property->values[0]);
+                extension->addressU = EAGL_ParseTarValue(property->values[0]);
             } else if (property->Is("XBOXEXTOBJ_SetClampV", 1)) {
-                extension[3] = EAGL_ParseTarValue(property->values[0]);
+                extension->addressV = EAGL_ParseTarValue(property->values[0]);
             } else if (property->Is("XBOXEXTOBJ_SetClampW", 1)) {
-                extension[4] = EAGL_ParseTarValue(property->values[0]);
+                extension->addressW = EAGL_ParseTarValue(property->values[0]);
             }
         } else {
-            EAGL_SetTarApi(tar, property);
+            EAGL_SetTarApi(&tars->tar, property);
         }
     }
-    // The rest of the array: each element's defaults, then the first element's 0x48 bytes over them (its own
-    // extension pointer kept), and one more reference on the shared image.
+    // The rest of the array: each element's defaults, then the first element's fields up to its extension pointer
+    // copied over them, and one more reference on the shared image.
     for (int k = 1; k < count; k++) {
-        uint8_t *e = (uint8_t *)((uintptr_t)tar + (uintptr_t)k * 0x50);
-        if (e == NULL)
+        EAGL::TAR *e = &tars[k].tar;
+        if (e == NULL)   // the compiled placement new's check
             continue;
-        *(uint32_t *)(e + 4) = 1;
-        *(uint32_t *)(e + 8) = 1;
-        *(uint32_t *)(e + 0xc) = 1;
-        *(uint32_t *)(e + 0x10) = 1;
-        *(uint32_t *)(e + 0) = 0;
-        *(uint32_t *)(e + 0x18) = 0;
-        *(uint32_t *)(e + 0x38) = 0;
-        *(uint32_t *)(e + 0x3c) = 0;
-        *(uint32_t *)(e + 0x40) = 0;
-        *(uint32_t *)(e + 0x2c) = 0;
-        *(uint32_t *)(e + 0x30) = 0;
-        *(uint32_t *)(e + 0x14) = 2;
-        *(uint32_t *)(e + 0x1c) = 2;
-        e[0x20] = 0;
-        *(uint32_t *)(e + 0x24) = 4;
-        *(uint32_t *)(e + 0x28) = 0x3f800000;
-        *(uint32_t *)(e + 0x34) = 0x3f800000;
-        *(uint8_t **)(e + 0x48) = e;
-        memcpy(e, tar, 0x48);
-        (*(int *)(*(uint8_t **)(e + 0x40) + 4))++;
+        e->address0 = 1;
+        e->addressU = 1;
+        e->addressV = 1;
+        e->addressW = 1;
+        e->stage = 0;
+        e->lodBias = 0.0f;
+        e->palette = NULL;
+        e->clut = NULL;
+        e->data = NULL;
+        e->bumpEnv[1] = 0.0f;
+        e->bumpEnv[2] = 0.0f;
+        e->filter = 2;
+        e->mipFilter = 2;
+        e->committed = 0;
+        e->maxAnisotropy = 4;
+        e->bumpEnv[0] = 1.0f;
+        e->bumpEnv[3] = 1.0f;
+        e->extension = e;
+        memcpy(e, &tars->tar, offsetof(EAGL::TAR, extension));
+        e->data->refCount++;
     }
-    *context = (void *)(intptr_t)count;
+    *context = (void *)count;
     p.Destruct();
-    return tar;
+    return tars;
 }
 
 // FUNC_AT(0x000ed2d0)
-void RuntimeAllocTARDestructor(void *tars, int count) {
-    uint8_t *t = (uint8_t *)tars;
-    for (int i = 0; i < count; i++, t += 0x50)
-        ((void (__fastcall *)(void *, int))0x000ecab0)(t, 0);   // TAR::~TAR
-    EaglFree(tars, (uint32_t)(count * 0x50));
+void RuntimeAllocTARDestructor(void *array, int count) {
+    TARSlot *tars = (TARSlot *)array;
+    for (int i = 0; i < count; i++)
+        tars[i].tar.Destruct();
+    EaglFree(array, count * sizeof(TARSlot));
 }
 
 // ---- EAGL::GeoPrimState from properties (a GeoPrimStateExtension, 0x4c)
 
 // FUNC_AT(0x000f0c50)
-void EAGL_SetGeoPrimState(uint8_t *state, Property *property) {
+void EAGL_SetGeoPrimState(EAGL::GeoPrimState *state, Property *property) {
     if (property->Is("SetPrimitiveType", 1)) {
-        *(uint32_t *)(state + 0) = EAGL_ParseGeoPrimState(property->values[0]);
+        state->primitiveType = EAGL_ParseGeoPrimState(property->values[0]);
     } else if (property->Is("SetShading", 1)) {
-        *(uint32_t *)(state + 4) = EAGL_ParseGeoPrimState(property->values[0]);
+        state->shading = EAGL_ParseGeoPrimState(property->values[0]);
     } else if (property->Is("SetCullEnable", 1)) {
-        state[8] = EAGL_ParseTrue(property->values[0]);
+        state->cullEnable = EAGL_ParseTrue(property->values[0]);
     } else if (property->Is("SetTextureEnable", 1)) {
-        state[0x24] = EAGL_ParseTrue(property->values[0]);
+        state->textureEnable = EAGL_ParseTrue(property->values[0]);
     } else if (property->Is("SetTextureCoordType", 1)) {
         EAGL_ParseGeoPrimState(property->values[0]);   // parsed, not kept
     } else if (property->Is("SetDepthTestMethod", 1)) {
-        *(uint32_t *)(state + 0x10) = EAGL_ParseGeoPrimState(property->values[0]);
+        state->depthTestMethod = EAGL_ParseGeoPrimState(property->values[0]);
     } else if (property->Is("SetTransparencyMethod", 1)) {
-        *(uint32_t *)(state + 0x28) = EAGL_ParseGeoPrimState(property->values[0]);
+        state->transparencyMethod = EAGL_ParseGeoPrimState(property->values[0]);
     } else if (property->Is("SetChromaColour", 1)) {
         EAGL_ParseHex(property->values[0]);            // parsed, not kept
     } else if (property->Is("SetAlphaBlendMode", 1)) {
-        uint32_t mode = EAGL_ParseGeoPrimState(property->values[0]);
-        ((void (__fastcall *)(void *, int, uint32_t))0x000eecf0)(state, 0, mode);   // GeoPrimState::SetAlphaBlendMode
+        state->SetAlphaBlendMode(EAGL_ParseGeoPrimState(property->values[0]));
     } else if (property->Is("SetAlphaTestEnable", 1)) {
-        state[0x18] = EAGL_ParseTrue(property->values[0]);
+        state->alphaTestEnable = EAGL_ParseTrue(property->values[0]);
     } else if (property->Is("SetAlphaCompareValue", 1)) {
-        *(uint32_t *)(state + 0x1c) = (uint32_t)atol(property->values[0]);
+        state->alphaCompareValue = atol(property->values[0]);
     } else if (property->Is("SetAlphaTestMethod", 1)) {
-        *(uint32_t *)(state + 0x20) = EAGL_ParseGeoPrimState(property->values[0]);
+        state->alphaTestMethod = EAGL_ParseGeoPrimState(property->values[0]);
     }
 }
 
@@ -568,36 +581,37 @@ void* RuntimeAllocGeoPrimStateConstructor(const char *properties, DynamicLoader 
     }
     Properties p;
     p.Construct(properties);
-    uint8_t *state = (uint8_t *)EaglMalloc(0x4c, (const char *)0x001cd2c0u);
+    EAGL::GeoPrimStateExtension *state =
+        (EAGL::GeoPrimStateExtension *)EaglMalloc(sizeof(EAGL::GeoPrimState), "EAGL::GeoPrimState new");
     if (state != NULL)
-        ((void *(__fastcall *)(void *, int))0x000eeea0)(state, 0);   // GeoPrimStateExtension::GeoPrimStateExtension
+        state->Construct();
     for (int i = 0; i < p.count; i++) {
         Property *property = &p.list[i];
         if (strcmp("UID", property->name) == 0) {
             *destroy = 1;
         } else if (strncmp("XBOXEXTOBJ", property->name, 10) == 0) {
             if (property->Is("XBOXEXTOBJ_SetCullDirection", 1)) {
-                *(uint32_t *)(state + 0xc) = EAGL_ParseXboxGeoPrimState(property->values[0]);
+                state->cullDirection = EAGL_ParseXboxGeoPrimState(property->values[0]);
             } else if (property->Is("XBOXEXTOBJ_SetFillMode", 1)) {
-                *(uint32_t *)(state + 0x2c) = EAGL_ParseXboxGeoPrimState(property->values[0]);
+                state->fillMode = EAGL_ParseXboxGeoPrimState(property->values[0]);
             } else if (property->Is("XBOXEXTOBJ_SetBlendOperation", 1)) {
-                *(uint32_t *)(state + 0x30) = EAGL_ParseXboxGeoPrimState(property->values[0]);
+                state->blendOperation = EAGL_ParseXboxGeoPrimState(property->values[0]);
             } else if (property->Is("XBOXEXTOBJ_SetAlphaBlend", 3)) {
                 // the last value parsed first (the messages come in that order)
                 uint32_t operation = EAGL_ParseXboxGeoPrimState(property->values[2]);
                 uint32_t destination = EAGL_ParseXboxGeoPrimState(property->values[1]);
                 uint32_t source = EAGL_ParseXboxGeoPrimState(property->values[0]);
-                *(uint32_t *)(state + 0x30) = operation;
-                *(uint32_t *)(state + 0x34) = source;
-                *(uint32_t *)(state + 0x38) = destination;
+                state->blendOperation = operation;
+                state->blendSource = source;
+                state->blendDestination = destination;
             } else if (property->Is("XBOXEXTOBJ_SetZOffset", 1)) {
-                *(float *)(state + 0x40) = (float)atof(property->values[0]);
+                state->zOffset = (float)atof(property->values[0]);
             } else if (property->Is("XBOXEXTOBJ_SetZSlopeScale", 1)) {
-                *(float *)(state + 0x3c) = (float)atof(property->values[0]);
+                state->zSlopeScale = (float)atof(property->values[0]);
             } else if (property->Is("XBOXEXTOBJ_SetBlendColour", 1)) {
-                *(uint32_t *)(state + 0x44) = EAGL_ParseHex(property->values[0]);
+                state->blendColour = EAGL_ParseHex(property->values[0]);
             } else if (property->Is("XBOXEXTOBJ_SetZWritesEnable", 1)) {
-                *(uint32_t *)(state + 0x48) = EAGL_ParseTrue(property->values[0]) ? 1 : 0;
+                state->zWritesEnable = EAGL_ParseTrue(property->values[0]) ? 1 : 0;
             }
         } else {
             EAGL_SetGeoPrimState(state, property);
@@ -611,5 +625,5 @@ void* RuntimeAllocGeoPrimStateConstructor(const char *properties, DynamicLoader 
 void RuntimeAllocGeoPrimStateDestructor(void *state, int unused) {
     (void)unused;
     if (state != NULL)
-        EaglFree(state, 0x4c);
+        EaglFree(state, sizeof(EAGL::GeoPrimState));
 }
