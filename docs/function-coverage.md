@@ -202,12 +202,12 @@ where to change it.
 
 | Subsystem | Functions | Replaced | Dead | Live | Done | KB | Done (bytes) |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| **game** | 2852 | 1 | 8 | 2843 | **0%** | 474 | 0% |
+| **game** | 2852 | 1 | 9 | 2842 | **0%** | 474 | 0% |
 | game.ai | 522 | 0 | 0 | 522 | 0% | 109 | 0% |
 | game.audio | 366 | 0 | 0 | 366 | 0% | 51 | 0% |
 | game.effects | 195 | 0 | 0 | 195 | 0% | 36 | 0% |
 | game.events | 793 | 0 | 0 | 793 | 0% | 72 | 0% |
-| game.frontend | 332 | 1 | 8 | 323 | 3% | 69 | 1% |
+| game.frontend | 332 | 1 | 9 | 322 | 3% | 69 | 1% |
 | game.missions | 273 | 0 | 0 | 273 | 0% | 33 | 0% |
 | game.vehicles | 193 | 0 | 0 | 193 | 0% | 62 | 0% |
 | game.weapons | 178 | 0 | 0 | 178 | 0% | 43 | 0% |
@@ -222,8 +222,8 @@ where to change it.
 | engine.render | 760 | 7 | 1 | 752 | 1% | 114 | 3% |
 | engine.static | 798 | 0 | 0 | 798 | 0% | 26 | 0% |
 | engine.world | 444 | 0 | 0 | 444 | 0% | 89 | 0% |
-| **platform** | 1459 | 305 | 165 | 989 | **32%** | 262 | 28% |
-| platform.eagl | 807 | 101 | 12 | 694 | 14% | 146 | 15% |
+| **platform** | 1459 | 319 | 167 | 973 | **33%** | 262 | 32% |
+| platform.eagl | 807 | 115 | 14 | 678 | 16% | 146 | 22% |
 | platform.files | 77 | 44 | 33 | 0 | 100% | 12 | 100% |
 | platform.input | 6 | 6 | 0 | 0 | 100% | 1 | 100% |
 | platform.math | 104 | 94 | 10 | 0 | 100% | 16 | 100% |
@@ -236,10 +236,10 @@ where to change it.
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6883 | 63 | 20 | 6800 | **1%** | 1001 | 1% |
-| **platform + system** | 2852 | 578 | 958 | 1316 | **54%** | 505 | 56% |
-| **  without the C runtime** | 2479 | 574 | 916 | 989 | **60%** | 462 | 59% |
-| **everything** | 9735 | 641 | 978 | 8116 | **17%** | 1506 | 20% |
+| **game + engine** | 6883 | 63 | 21 | 6799 | **1%** | 1001 | 1% |
+| **platform + system** | 2852 | 592 | 960 | 1300 | **54%** | 505 | 58% |
+| **  without the C runtime** | 2479 | 588 | 918 | 973 | **61%** | 462 | 62% |
+| **everything** | 9735 | 655 | 981 | 8099 | **17%** | 1506 | 20% |
 
 - **Almost nothing above the platform is ours yet: 1% of game and engine code.** What is replaced is the input
   layer (`engine.input`, 44%: `IOModule`, `XBoxPadDevice`, `ActionQueue`, the pad), the event and scheduler core,
@@ -259,12 +259,13 @@ where to change it.
     kernel shims hand out Win32 handles, so the two mix freely), and the startup's own entry point is ported.
     The process heap is a Win32 heap now: XAPI's five heap entry points go to `HeapCreate`/`HeapAlloc`/`HeapFree`/
     `HeapReAlloc`/`HeapSize`, so `malloc` and `free` reach Win32's heap through them.
-- **The platform tier is 32% done (28% by bytes): its system library, files, input, maths and movie player are
-  done, and EAGL is under way (14%).** What is left is the rest of EAGL (about 124 KB) and the sound library with
+- **The platform tier is 33% done (32% by bytes): its system library, files, input, maths and movie player are
+  done, and EAGL is under way (16%, 22% by bytes).** What is left is the rest of EAGL (about 114 KB) and the sound library with
   its streamer (64 KB).
   - *EAGL* (docs/driving/eagl.md, its plan in 9.2): realgraph FONT/SHAPE/LOCALE (`src/driving/eagl/Realgraph.cpp`)
     `EAGL::Transform` (`src/driving/eagl/Transform.cpp`) and the loader (`src/driving/eagl/Loader.cpp`) are ported
-    and shadow-tested; next the property parsers and EAGLAnim, then the frame-level modules together.
+    and shadow-tested, and the RUNTIME_ALLOC property parsers (`RuntimeAlloc.cpp`) ported provisionally (no data
+    reaches them); next EAGLAnim, then the frame-level modules together.
   - *System* (`src/driving/platform/RealSystem.cpp`, `RealPrint.cpp`, `RealMemory.cpp`): EA's portable library -
     TIMER, THREAD, SIGNAL, SYNCTASK, MUTEX, PRINT, the exit and abort handlers, the MEM_ copy and fill helpers,
     and the MEM block allocator itself (classes, first and largest fit, top allocation, resize, validation), which

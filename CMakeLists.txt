@@ -390,6 +390,7 @@ add_library(drivinginject SHARED
   src/driving/eagl/Realgraph.cpp
   src/driving/eagl/Transform.cpp
   src/driving/eagl/Loader.cpp
+  src/driving/eagl/RuntimeAlloc.cpp
   src/driving/platform/XboxTimer.cpp
   src/driving/platform/XboxInput.cpp
   src/driving/platform/LaunchOptions.cpp

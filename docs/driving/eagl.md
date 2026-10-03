@@ -9,7 +9,7 @@ cross over. *MW: X* means a name or layout from the Need for Speed Most Wanted (
 than this build; every MW item used here was checked against Driving.xbe, and section 1.4 says how far each one
 holds.
 
-**Status (3 October 2026): steps 0-3 of 9.2 done.** The classification fixes of 1.3 are in
+**Status (3 October 2026): steps 0-4 of 9.2 done.** The classification fixes of 1.3 are in
 `tools/subsystems_driving.txt`; realgraph FONT/SHAPE/LOCALE is ported (`src/driving/eagl/Realgraph.cpp`, checked
 by `src/driving/devtools/RealgraphShadow.cpp` on every font, image container and string table in the archives:
 606,458 comparisons, all the same), and so is `EAGL::Transform` (`src/driving/eagl/Transform.cpp`, bit for bit,
@@ -21,7 +21,10 @@ SHPX (left out); `Transform::Invert` returns the determinant to its callers, as 
 too (`src/driving/eagl/Loader.cpp`: SymbolPool, both ConstructorPools, DynamicLoader, RegisterShapes, 41
 functions), checked by `src/driving/devtools/LoaderShadow.cpp` - every object in the archives loaded by both on the
 same addresses, the images, symbol tables, allocations, messages and callbacks compared byte for byte, the same.
-What the data never does is in 3.1. The D3D8 library underneath is ours already
+What the data never does is in 3.1. Step 4, the RUNTIME_ALLOC property parsers (`src/driving/eagl/RuntimeAlloc.cpp`:
+the property tokenizer, the TAR and GeoPrimState runtime constructors, their setters and value tables, 14
+functions), is a provisional port without a test - nothing on the disc reaches it - and prints a loud warning the
+first time it runs. The D3D8 library underneath is ours already
 (the seam, `src/driving/gfx/`), and so are the maths, files, memory and threads EAGL calls (section 5).
 
 Conventions:
@@ -922,7 +925,7 @@ straight to the backend, so each step can be compared against the original runni
 | 1 | realgraph LOCALE, SHAPE, FONT text measurement (`LOCALE_getstr`, `SHAPE_*`, `FONT_getrectx`, `getkern`, `bsearch`) | ~28 / 4 | shadow: every `.loc`, `.xsh`, `.xfn` in the archives, every id/name, compare outputs |
 | 2 | `EAGL::Transform` (live 11 + `BuildSQT` + `TransformPoint`) | 13 / 4 | shadow, bit-exact (classes D, A for `BuildRotate`); random and recorded inputs |
 | 3 | loader: SymbolPool, ConstructorPools, DynamicLoader, RegisterShapes | 40 / 8 | shadow: load every `.o` and `.dat`+`.rel` pair with both, compare the relocated images, symbol tables and the sequence of constructor callbacks byte for byte |
-| 4 | property parsers (GeoPrimState and TAR runtime constructors) | ~10 / 9 | none: no `RUNTIME_ALLOC::` symbol exists on this disc (3.1), so the shipped game never calls them. Port provisionally with a loud untested warning (or an assert) beside them; a synthetic test is not worth the effort (the user, 3 Oct 2026). The loader already prints a one-time warning if a RUNTIME_ALLOC symbol ever turns up |
+| 4 | property parsers (GeoPrimState and TAR runtime constructors) | ~10 / 9 | none: no `RUNTIME_ALLOC::` symbol exists on this disc (3.1), so the shipped game never calls them. Done provisionally (`RuntimeAlloc.cpp`), with a loud untested warning in each constructor; a synthetic test is not worth the effort (the user, 3 Oct 2026) |
 | 5 | EAGLAnim, inside out: pool, scratch, attributes, bitsets; `DeltaCompressedData`; raw and key channels; delta families; phase, compound, blenders, mirror; Skeleton | 260 / 57 | shadow per FnAnim type: every anim in every bank, evaluated by both at a sweep of times and masks, `EvalSQT`/`Vel2D`/`Event`/`Phase` outputs compared bit for bit; then the driving replays that reach characters (peds, sniper) |
 | 6 | GeoPrimState setters and apply | 32 / 8 | in-game: runner frame dumps against the original; state-call trace comparison through the seam |
 | 7 | TAR and the texture commit (retires the seam's byte patch) | 28 / 11 | in-game frame dumps; the pause-menu girl; car colour swaps |
