@@ -4,6 +4,7 @@
 #include "Loader.h"
 #include "FS.h"
 #include "psiFile.h"
+#include "../devtools/FileDump.h"
 
 
 static int allocateAndLoadFileWithinArchive(char* a, unsigned short b, int* c) {
@@ -56,35 +57,6 @@ int maybePsiFileRead(int length) {
     return (int)(CurrentFile.data + at);
 }
 
-void dumpToFile(char* gamefile, void* data, size_t len) {
-    // Open the file in binary write mode
-
-	char filename[256];
-
-	snprintf(filename, sizeof(filename), "dump/%s", gamefile);
-
-    FILE* file = fopen(filename, "wb");
-
-    if (file == NULL) {
-        // Handle error if the file couldn't be opened
-        perror("Error opening file");
-        return;
-    }
-
-    // Write the data to the file
-    size_t written = fwrite(data, 1, len, file);
-
-    if (written != len) {
-        // Handle error if not all data could be written
-        perror("Error writing to file");
-    } else {
-        printf("Data written to %s successfully\n", filename);
-    }
-
-    // Close the file
-    fclose(file);
-}
-
 // XBE_GLOBAL(0x002adf70, 0x1)
 static uint8_t SingleFileMode;
 
@@ -100,14 +72,14 @@ int ** __cdecl psiFileLoadOrig(char *filename, unsigned short allocType, int *si
   if (SingleFileMode == '\0') {
     ppiVar1 = (int **)allocateAndLoadFileWithinArchive(filename,allocType,sizeOut);
     printf("psiFileLoad in multi-file mode: %s is 0x%08x bytes starting at 0x%p, type %04x\n", filename, *sizeOut, ppiVar1, allocType);
-    dumpToFile(filename, (void*)ppiVar1, *sizeOut);
+    FileDump_Save(filename, ppiVar1, *sizeOut);   // settings.ini DumpFiles=on only
     return ppiVar1;
   }
   if (sizeOut != NULL) {
     *sizeOut = DirFileLen;
   }
   printf("psiFileLoad in single-file mode: %s is 0x%08x bytes at the location pointed to by dirFileBuf, type %04x\n", filename, *sizeOut, allocType);
-  dumpToFile(filename, dirFileBuf, *sizeOut);
+  FileDump_Save(filename, dirFileBuf, *sizeOut);   // settings.ini DumpFiles=on only
   return (int**)dirFileBuf;
 }
 

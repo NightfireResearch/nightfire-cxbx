@@ -38,6 +38,7 @@ struct Settings {
     bool widescreen;
     uint32_t avRegion; // raw XC_FACTORY_AV_REGION-style value: 1 = NTSC-M, 3 = PAL-I
     bool perfLog;      // see PerfLog in the file this writes
+    bool dumpFiles;    // see DumpFiles in the file this writes
     uint32_t language; // raw XC_LANGUAGE-style value: 1=English,2=Japanese,3=German,4=French,5=Spanish,6=Italian
     int fpsOverride;   // 0 = "unset" - callers fall back to their own region-based default
     bool reverb;         // xaudio2 backend only: run the I3DL2 reverb send. On by default.
@@ -93,6 +94,10 @@ static void WriteDefaultSettingsFile() {
         "; Where the game's disc data lives - the folder containing eurocom\\filesys.d00 and the rest. This is\n"
         "; what the Xbox's D: drive resolves to. Relative paths are relative to this executable's folder.\n"
         "DiscPath=../disc\n"
+        "\n"
+        "; Developer option: save a copy of every file the game loads, as loaded from the disc's archives,\n"
+        "; under dump\\ (the action engine) and dump_driving\\ (the driving engine). Slow, and uses a lot of space.\n"
+        "DumpFiles=off\n"
     );
 
     fclose(file);
@@ -122,6 +127,7 @@ static void LoadSettingsFile() {
     g_settings.mouseLook = true;
     g_settings.mouseSensitivity = 1.0f;
     g_settings.mouseInvertY = false;
+    g_settings.dumpFiles = false;
     strncpy(g_settings.discPath, "../disc", sizeof(g_settings.discPath) - 1);
     g_settings.discPath[sizeof(g_settings.discPath) - 1] = '\0';
 
@@ -166,6 +172,8 @@ static void LoadSettingsFile() {
             g_settings.fpsOverride = atoi(value);
         } else if (_stricmp(key, "PerfLog") == 0) {
             g_settings.perfLog = (_stricmp(value, "on") == 0 || _stricmp(value, "1") == 0);
+        } else if (_stricmp(key, "DumpFiles") == 0) {
+            g_settings.dumpFiles = (_stricmp(value, "on") == 0 || _stricmp(value, "1") == 0);
         } else if (_stricmp(key, "Reverb") == 0) {
             g_settings.reverb = !(_stricmp(value, "off") == 0 || _stricmp(value, "0") == 0);
         } else if (_stricmp(key, "MouseLook") == 0) {
@@ -250,6 +258,10 @@ bool Settings_GetReverbEnabled(void) {
 
 bool Settings_GetPerfLog(void) {
     return GetSettings()->perfLog;
+}
+
+bool Settings_GetDumpFiles(void) {
+    return GetSettings()->dumpFiles;
 }
 
 bool Settings_GetMouseLook(void) {

@@ -15,12 +15,14 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "../devtools/FileDump.h"
+
 // ---------------------------------------------------------------------------------------------------------------
 // UFileLoader (see UFileLoader.h) and the file-name lists of its request logging (FileNameList.h).
 //
 // FileLoad and FileLoadz (the AUTOINJECT'd three functions further down) are the project's older replacements:
-// besides what the original does they print every path and save a copy of every file loaded under
-// dump_driving\ - the asset dump. The functions above them are ports of the originals.
+// besides what the original does they print every path, and with settings.ini's DumpFiles=on save a copy of every
+// file loaded under dump_driving\ (devtools/FileDump.cpp). The functions above them are ports of the originals.
 // ---------------------------------------------------------------------------------------------------------------
 
 #define BigFileName ((char *)0x002431d8)          // [256], the big file's name, for the request lists' files
@@ -304,56 +306,8 @@ void FileNameList::AddFile(char *name) {
     node->prev->next = node;
 }
 
-// ---- the project's FileLoad, with the asset dump
+// ---- the project's FileLoad (settings.ini DumpFiles=on also saves each file loaded: devtools/FileDump.cpp)
 
-#include <direct.h>
-static void ensureDirs(const char *path)
-{
-    char tmp[256];
-    snprintf(tmp, sizeof(tmp), "%s", path);
-
-    for (char *p = tmp + 1; *p; p++) {
-        if (*p == '/' || *p == '\\') {
-            char old = *p;
-            *p = '\0';
-            //printf("Making %s\n", tmp);
-            _mkdir(tmp);              // ignore error (EEXIST is fine)
-            *p = old;
-        }
-    }
-}
-
-void dumpToFile(char* gamefile, void* data, size_t len) {
-
-    // Open the file in binary write mode
-
-	char filename[256];
-
-	snprintf(filename, sizeof(filename), "dump_driving/%s", gamefile);
-
-    ensureDirs(filename);
-
-    FILE* file = fopen(filename, "wb");
-
-    if (file == NULL) {
-        // Handle error if the file couldn't be opened
-        perror("Error opening file\n");
-        return;
-    }
-
-    // Write the data to the file
-    size_t written = fwrite(data, 1, len, file);
-
-    if (written != len) {
-        // Handle error if not all data could be written
-        perror("Error writing to file");
-    } else {
-        printf("-- Dumped %s (%i bytes)\n", filename, len);
-    }
-
-    // Close the file
-    fclose(file);
-}
 #include "../platform/RealMemory.h"   // MEM_size, ours now
 
 // AUTOINJECT
@@ -379,9 +333,7 @@ void* UFileLoader::FileLoad(const char *rawPath, int param_2, bool param_3) {
     if(loadedFile == NULL)
         return NULL;
 
-    // OUR DEBUG: Retrieve file size and dump to file
-    size_t fileSize = MEM_size(loadedFile);
-    dumpToFile(fixedPath, loadedFile, fileSize);
+    FileDump_Save(fixedPath, loadedFile, MEM_size(loadedFile));   // settings.ini DumpFiles=on only
 
     UFileLoader::AddFileToRequestList(fixedPath);
 

@@ -25,6 +25,10 @@ bool Settings_GetReverbEnabled(void);
 // Whether to print the periodic frame-time and streaming-I/O summary. See PerfLog in settings.ini.
 bool Settings_GetPerfLog(void);
 
+// settings.ini's [Settings] DumpFiles key: save a copy of every file the game loads, under dump\ (off by
+// default). The driving engine reads the same key from the same file (src/driving/devtools/FileDump.cpp).
+bool Settings_GetDumpFiles(void);
+
 // settings.ini's [Settings] MouseLook, MouseSensitivity and MouseInvertY keys - see engine/mouseLook.h.
 // Sensitivity is a plain multiplier on the default, and is clamped to something usable rather than trusted.
 bool Settings_GetMouseLook(void);
