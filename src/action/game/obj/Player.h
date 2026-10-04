@@ -199,7 +199,9 @@ typedef enum {
     MovementType_Creep = 7,
     MovementType_ZeroG = 8,
     MovementType_ZeroG_Anim = 9, // Ghidra's ZEROG_2 - the same movement, animated; Player_ZeroG handles both
-    MovementType_RemoteControl = 10, // Experimentally, seems to be if firing Sentinel? Maybe also RC Cars?
+    MovementType_RemoteControl = 10, // Steering the Sentinel's guided missile (Bullet_Update)
+    MovementType_RCVehicle = 11,     // Driving an RC car or helicopter (Car_Activate, Car_Update)
+    MovementType_Emplacement = 12,   // On a gun emplacement (GunImp_Activate, GunImp_Update)
     MovementType_Zipline = 15,
     MovementType_Ronin = 16,
 } MovementType;

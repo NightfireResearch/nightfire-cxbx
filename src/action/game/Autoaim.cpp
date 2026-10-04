@@ -24,8 +24,8 @@ void Check_Target(obj_tag* obj) {
         case MovementType_Wire:
         case MovementType_Creep:
         case MovementType_RemoteControl:
-        case 11:
-        case 12:
+        case MovementType_RCVehicle:
+        case MovementType_Emplacement:
         case 13:
         case 14:
         case MovementType_Zipline:

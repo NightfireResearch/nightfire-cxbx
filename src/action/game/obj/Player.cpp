@@ -5,6 +5,7 @@
 #include "../../engine/viewer.h"
 #include "../../engine/Anim.h"
 #include "../../engine/mouseLook.h"
+#include "../../engine/mouseSteer.h"
 
 #include "../../input.h"
 #include "../../game.h"
@@ -331,7 +332,18 @@ void Player_ViewClamping(obj_tag *player) {
     }
 
     float yawRadians = 0.0f, pitchFraction = 0.0f;
-    if (blData->playerNum == 0 && MouseLook_TakeAimDelta(&yawRadians, &pitchFraction)) {
+    if (blData->playerNum == 0 && MouseSteer_IsRemoteControl(player->subState)) {
+        // Controlling something remotely: the guided missile, an RC car or helicopter, an emplacement or the
+        // Ronin. Player_Aiming leaves the player alone in these substates, since the sticks are steering the
+        // device - so the mouse does the same, and engine/mouseSteer.cpp hands the movement to the device. Once
+        // the device has gone (the burst of static after the missile blows up), the movement is thrown away
+        // rather than turning the player where nobody can see it.
+        if (blData->remoteControlDevice != NULL)
+            MouseLook_LeaveForSteering();
+        else
+            MouseLook_TakeAimDelta(&yawRadians, &pitchFraction);
+    }
+    else if (blData->playerNum == 0 && MouseLook_TakeAimDelta(&yawRadians, &pitchFraction)) {
 
         if (player->subState == MovementType_ZeroG || player->subState == MovementType_ZeroG_Anim) {
             // Zero G does not steer the way everything else does. Player_ZeroG builds a rotation matrix from

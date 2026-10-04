@@ -81,6 +81,7 @@ add_library(actioninject SHARED
   src/action/engine/psiGraphics.cpp
   src/action/engine/psiDraw.cpp
   src/action/engine/mouseLook.cpp
+  src/action/engine/mouseSteer.cpp
   src/action/engine/psiInput.cpp
   src/action/engine/psiLight.cpp
   src/action/engine/psiSprite.cpp

@@ -3,6 +3,7 @@
 
 #include "input.h"
 #include "engine/mouseLook.h"
+#include "engine/mouseSteer.h"
 #include "game/mp/multiplayer.h"
 
 // Keyboard input proper now lives in engine/psiInput.cpp, which presents the keyboard as a virtual Xbox pad on
@@ -52,6 +53,10 @@ void Input_Update(void) {
     // Input_ProcessEvents)
     void (*funcPtr)(void) = (void (*)(void))(0x0006cf50);
     funcPtr();
+
+    // While the player is controlling something remotely, the mouse joins the sticks that steer it - after the
+    // poll has filled them in, and before any object reads them. See engine/mouseSteer.h.
+    MouseSteer_Update();
 
     // Our added function - the debug keys
     Inject_KeyboardInput();

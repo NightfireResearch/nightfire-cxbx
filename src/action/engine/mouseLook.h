@@ -55,4 +55,19 @@ bool MouseLook_ZoomOut(void);
 // the change in view pitch as a fraction of a right angle, which is the unit the game stores pitch in.
 bool MouseLook_TakeAimDelta(float *yawRadians, float *pitchFraction);
 
+// Called by Player_ViewClamping instead of MouseLook_TakeAimDelta while the player is controlling something
+// remotely - the Sentinel's guided missile, an RC car or helicopter, a gun emplacement or the Ronin. It keeps the
+// capture alive the way MouseLook_TakeAimDelta does, but leaves the movement where it is for MouseLook_TakeStick,
+// since on a pad the sticks steer the device and not the player. See engine/mouseSteer.h.
+void MouseLook_LeaveForSteering(void);
+
+// The mouse as a stick, for engine/mouseSteer.cpp. Returns false, leaving the outputs untouched, when the mouse
+// is not captured or the stick is centred. Otherwise right and up are this frame's deflection, each -1 to 1.
+//
+// The stick is elastic: dragging pushes it over, and it springs back to centre when the drag stops. How far it
+// goes is the drag's speed against fullTurnPerSecond, the turn the device makes at full deflection - so a drag
+// that would turn the view by some angle at hip-fire speed turns the device by about that angle too, up to as
+// fast as the device can turn and no further. seconds is the frame's duration.
+bool MouseLook_TakeStick(float fullTurnPerSecond, float seconds, float *right, float *up);
+
 #endif // MOUSELOOK_H_
