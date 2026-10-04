@@ -249,3 +249,6 @@ void control_init_object_lists(void) {
     DynamicObjCount = 0;
     LList_Init(&ForcedList, 0xe4, 0);
 }
+
+// AUTOGEN
+void Control_InheritVelocity(obj_tag *obj, obj_tag *from, float param_3);

@@ -1285,7 +1285,7 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 		BU_tag *missile = (BU_tag*)blData->remoteControlDevice->extraObjectData;
 		
 		// Max age of the missile is represented in the range field for the sentinel missile
-		lifetime = missile->maybeAgeOrLifetime / missile->wpnDef->range;
+		lifetime = missile->distanceTravelled / missile->wpnDef->range;
 		
 		// Rotate UI elements (only available if in SP)
 		if(		extraItemsAsObjList[0] != NULL

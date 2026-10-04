@@ -99,6 +99,11 @@ void Vec_Spherical_2_Cartesian(float *out, float radius, float yaw, float pitch)
 float maybeAtan2(float y, float x);
 void Mat_Align2Dir(_MATRIX *mtxOut, _VECTOR *direction, _VECTOR *param_3, _VECTOR *param_4);
 void Vec_Add2(_VECTOR *a, _VECTOR *b, _VECTOR *out);
+
+// Not reimplemented yet: AUTOGEN stubs that call the original (math.cpp)
+void MulMatrix0(float *a, float *b, float *out);
+void Mat_GetPosition(_VECTOR *posOut, _MATRIX *mtxIn);
+void Vec_Scalef(_VECTOR *vIn, float scale, _VECTOR *vOut);
 void Mat_Normalize(_MATRIX *mtx);
 
 #endif // MATH_H

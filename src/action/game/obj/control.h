@@ -11,6 +11,7 @@ obj_tag* control_first_object(void);
 void control_delete_object(obj_tag* obj);
 void control_init_object(obj_tag* obj);
 obj_tag* control_create_object(int sizeBytes,_VECTOR *pos,_VECTOR *rot,quaternion_tag *quat);
+void Control_InheritVelocity(obj_tag *obj, obj_tag *from, float param_3);
 void control_movement_object_handler(char);
 obj_tag * Control_CreateObjEx(unsigned short, _VECTOR *, _VECTOR *, _MATRIX *, celglist_tag *, obj_tag *,char,unsigned short,float,unsigned short,unsigned char,unsigned char,unsigned char);
 void Control_SetGList(obj_tag *obj, celglist_tag *celgl);;

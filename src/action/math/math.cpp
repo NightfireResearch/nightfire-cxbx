@@ -907,3 +907,12 @@ void Mat_Normalize(_MATRIX *mtx) {
   mtx->m[1] = right.y;
   mtx->m[2] = right.z;
 }
+
+// AUTOGEN
+void MulMatrix0(float *a, float *b, float *out);
+
+// AUTOGEN
+void Mat_GetPosition(_VECTOR *posOut, _MATRIX *mtxIn);
+
+// AUTOGEN
+void Vec_Scalef(_VECTOR *vIn, float scale, _VECTOR *vOut);
