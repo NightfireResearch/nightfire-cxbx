@@ -3,7 +3,8 @@
 #include "Scheduler.hpp"
 #include "EventManager.hpp"
 #include "devtools/Teleport.h"
-#include "engine/GameLoop.h"
+#include "engine/CoreFoundation.h"
+#include "engine/UMemory.hpp"
 #include "platform/RealSystem.h"
 
 #include <windows.h>
@@ -32,12 +33,6 @@
 #define Schedule_HalfSimRate_vtable ((vtable_Schedule *)0x0018ea1c)
 #define Schedule_QuarterSimRate_vtable ((vtable_Schedule *)0x0018ea24)
 #define Schedule_OncePerGameLoop_vtable ((vtable_Schedule *)0x0018ea2c)
-
-// The game's allocator (not ours yet).
-#define UMemory_FastAlloc ((void *(*)(unsigned int, const char *))0x00114750)
-#define UMemory_FastFree ((void (*)(void *, unsigned int))0x001147d0)
-#define builtin_new ((void *(*)(unsigned int))0x001146a0)
-#define builtin_delete ((void (*)(void *))0x001146e0)
 
 // The STL algorithms the vector's _Insert_n calls, the game's copies for Schedule * (the ones popping their
 // arguments are members that do not use `this`).
@@ -98,7 +93,7 @@ TaskNode** TaskRecord_LListEntry::Erase(TaskNode **result, TaskNode *first, Task
         if (node != head) {
             node->prev->next = node->next;
             node->next->prev = node->prev;
-            UMemory_FastFree(node, sizeof(TaskNode));
+            UMemory::FastFree(node, sizeof(TaskNode));
             size--;
         }
     }
@@ -108,7 +103,7 @@ TaskNode** TaskRecord_LListEntry::Erase(TaskNode **result, TaskNode *first, Task
 
 // FUNC_AT(0x0005bc30)
 TaskNode* TaskRecord_LListEntry::BuyNode(TaskNode *next, TaskNode *prev, const TaskRecord *record) {
-    TaskNode *node = (TaskNode *)UMemory_FastAlloc(sizeof(TaskNode), "STL");
+    TaskNode *node = (TaskNode *)UMemory::FastAlloc(sizeof(TaskNode), "STL");
     if (node != NULL) {
         node->next = next;
         node->prev = prev;
@@ -119,7 +114,7 @@ TaskNode* TaskRecord_LListEntry::BuyNode(TaskNode *next, TaskNode *prev, const T
 
 // FUNC_AT(0x0005bda0)
 TaskNode* TaskRecord_LListEntry::BuyHead() {
-    TaskNode *node = (TaskNode *)UMemory_FastAlloc(sizeof(TaskNode), "STL");
+    TaskNode *node = (TaskNode *)UMemory::FastAlloc(sizeof(TaskNode), "STL");
     // The original tests the address of `prev` rather than the block, so a null block would have it write to
     // address 4; the pools never answer null.
     if (node != NULL) {
@@ -134,7 +129,7 @@ void TaskRecord_LListEntry::Destruct() {
     TaskNode *erased;
     Erase(&erased, head != NULL ? head->next : NULL, head);
     if (head != NULL)
-        UMemory_FastFree(head, sizeof(TaskNode));
+        UMemory::FastFree(head, sizeof(TaskNode));
     head = NULL;
     size = 0;
 }
@@ -150,7 +145,7 @@ void TaskRecord_LListEntry::IncSize(uint32_t count) {
 
 // A new, empty task list, from the pools - as the constructor and RemoveAllTasks make them.
 static TaskList *NewTaskList() {
-    TaskList *list = (TaskList *)UMemory_FastAlloc(sizeof(TaskList), "TaskList");
+    TaskList *list = (TaskList *)UMemory::FastAlloc(sizeof(TaskList), "TaskList");
     if (list == NULL)
         return NULL;
     list->head = TaskList::BuyHead();
@@ -179,7 +174,7 @@ void Schedule::Destruct() {
         TaskList *list = listOfTasks[i];
         if (list != NULL) {
             list->Destruct();
-            UMemory_FastFree(list, sizeof(TaskList));
+            UMemory::FastFree(list, sizeof(TaskList));
         }
     }
 }
@@ -193,7 +188,7 @@ void Schedule::DestructDerived() {
 Schedule* Schedule::Delete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        builtin_delete(this);
+        OperatorDelete(this);
     return this;
 }
 
@@ -201,7 +196,7 @@ Schedule* Schedule::Delete(unsigned flags) {
 Schedule* Schedule::DeleteDerived(unsigned flags) {
     DestructDerived();
     if (flags & 1)
-        builtin_delete(this);
+        OperatorDelete(this);
     return this;
 }
 
@@ -250,7 +245,7 @@ bool Schedule::RemoveTask(uint32_t taskNum) {
                 if (node != list->head) {
                     node->prev->next = node->next;
                     node->next->prev = node->prev;
-                    UMemory_FastFree(node, sizeof(TaskNode));
+                    UMemory::FastFree(node, sizeof(TaskNode));
                     list->size--;
                 }
                 return true;
@@ -268,10 +263,10 @@ void Schedule::RemoveAllTasks() {
             TaskNode *erased;
             list->Erase(&erased, list->head != NULL ? list->head->next : NULL, list->head);
             if (list->head != NULL)
-                UMemory_FastFree(list->head, sizeof(TaskNode));
+                UMemory::FastFree(list->head, sizeof(TaskNode));
             list->head = NULL;
             list->size = 0;
-            UMemory_FastFree(list, sizeof(TaskList));
+            UMemory::FastFree(list, sizeof(TaskList));
         }
         listOfTasks[i] = NewTaskList();
     }
@@ -348,7 +343,7 @@ void Vector_Schedule::InsertN(Schedule **where, unsigned count, Schedule *const 
         capacity = 0x3fffffff - capacity / 2 < capacity ? 0 : capacity + capacity / 2;
         if (capacity < Size() + count)
             capacity = Size() + count;
-        Schedule **block = (Schedule **)UMemory_FastAlloc(capacity * sizeof(Schedule *), "STL");
+        Schedule **block = (Schedule **)UMemory::FastAlloc(capacity * sizeof(Schedule *), "STL");
         Schedule **gap = Uninitialized_Copy(first, where, block);
         Uninitialized_Fill_N(gap, count, &copy);
         Uninitialized_Copy(where, last, gap + count);
@@ -393,7 +388,7 @@ Scheduler* Scheduler::Construct() {
     cinematicModeSkipping = 0;
     timeScale = 1.0f;
 
-    Vector_Schedule *list = (Vector_Schedule *)builtin_new(sizeof(Vector_Schedule));
+    Vector_Schedule *list = (Vector_Schedule *)OperatorNew(sizeof(Vector_Schedule));
     if (list != NULL) {
         list->first = NULL;
         list->last = NULL;
@@ -401,14 +396,14 @@ Scheduler* Scheduler::Construct() {
     }
     listOfSchedules = list;
 
-    Schedule *schedule = (Schedule *)builtin_new(sizeof(Schedule));
+    Schedule *schedule = (Schedule *)OperatorNew(sizeof(Schedule));
     if (schedule != NULL) {
         schedule->Construct(1);
         schedule->vtable = Schedule_OncePerGameLoop_vtable;
     }
     s_oncePerGameLoop = schedule;
 
-    schedule = (Schedule *)builtin_new(sizeof(Schedule));
+    schedule = (Schedule *)OperatorNew(sizeof(Schedule));
     if (schedule != NULL) {
         schedule->Construct(1);
         schedule->vtable = Schedule_SimRate_vtable;
@@ -416,7 +411,7 @@ Scheduler* Scheduler::Construct() {
     s_SimRate = schedule;
     listOfSchedules->Insert(&schedule);
 
-    schedule = (Schedule *)builtin_new(sizeof(Schedule));
+    schedule = (Schedule *)OperatorNew(sizeof(Schedule));
     if (schedule != NULL) {
         schedule->Construct(2);
         schedule->vtable = Schedule_HalfSimRate_vtable;
@@ -424,7 +419,7 @@ Scheduler* Scheduler::Construct() {
     s_halfSimRate = schedule;
     listOfSchedules->Insert(&schedule);
 
-    schedule = (Schedule *)builtin_new(sizeof(Schedule));
+    schedule = (Schedule *)OperatorNew(sizeof(Schedule));
     if (schedule != NULL) {
         schedule->Construct(4);
         schedule->vtable = Schedule_QuarterSimRate_vtable;
@@ -444,7 +439,7 @@ void Scheduler::Destruct() {
     Vector_Schedule *list = listOfSchedules;
     if (list != NULL) {
         Vector_Destruct(list, 0);
-        builtin_delete(list);
+        OperatorDelete(list);
     }
 }
 
@@ -452,7 +447,7 @@ void Scheduler::Destruct() {
 void Scheduler::Init() {
     if (fgScheduler != NULL)
         return;
-    Scheduler *scheduler = (Scheduler *)builtin_new(sizeof(Scheduler));
+    Scheduler *scheduler = (Scheduler *)OperatorNew(sizeof(Scheduler));
     fgScheduler = scheduler != NULL ? scheduler->Construct() : NULL;
 }
 
@@ -461,7 +456,7 @@ void Scheduler::Shutdown() {
     Scheduler *scheduler = fgScheduler;
     if (scheduler != NULL) {
         scheduler->Destruct();
-        builtin_delete(scheduler);
+        OperatorDelete(scheduler);
     }
     fgScheduler = NULL;
 }

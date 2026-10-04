@@ -3,7 +3,9 @@
 #endif
 
 #include "AttributeSystem.h"
+#include "Dafi.h"
 #include "../engine/UFileLoader.h"
+#include "../engine/UMemory.hpp"
 #include "../../common/xbeOverload.h"
 
 #include <stddef.h>
@@ -17,25 +19,10 @@
 // store, and the extension types. AttributeSystem.h says what the system is for; AttributeContainers.cpp has the
 // maps it is built from.
 //
-// Calls into other packages go to the originals at their addresses: the allocator (UMemory), DAFI, the path
-// builders, and the extension type map's insert (0x000552d0).
+// The path builders are called at their addresses (not ours yet).
 // ---------------------------------------------------------------------------------------------------------------
 
-#define UMemory_FastAlloc ((void *(*)(uint32_t, const char *))0x00114750)
-#define UMemory_FastFree ((void (*)(void *, uint32_t))0x001147d0)
-#define UMemory_Free ((void (*)(void *))0x001144b0)
-#define UMemory_Size ((uint32_t (*)(void *))0x001143f0)
-#define operator_new ((void *(*)(uint32_t))0x001146a0)
-#define operator_delete ((void (*)(void *))0x001146e0)
-#define operator_new_array ((void *(*)(uint32_t))0x00114710)
 #define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
-#define DAFI_open ((DAFI *(*)(const void *, uint32_t))0x0011a240)
-#define DAFI_close ((void (*)(DAFI *))0x0011a370)
-#define DAFI_getkeycount ((int (*)(DAFI *))0x0011a650)
-#define DAFI_getkeybyindex ((const char *(*)(DAFI *, int))0x0011a6b0)
-#define DAFI_getvaluebyindex ((const char *(*)(DAFI *, int))0x0011a6c0)
-#define DAFI_setsection ((int (*)(DAFI *, const char *))0x0011a6d0)
-#define ExtensionTypeMap_Insert ((ExtensionTypeMap::InsertResult *(__fastcall *)(ExtensionTypeMap *, int, ExtensionTypeMap::InsertResult *, const ExtensionTypeEntry *))0x000552d0)
 // "<directory><folder>/<name>.<extension>" and "<directory><name>.<extension>" into the buffer (ECX), answered.
 #define BuildPath ((char *(__fastcall *)(char *, int, const char *, const char *, const char *, const char *))0x00051f30)
 #define BuildFileName ((char *(__fastcall *)(char *, int, const char *, const char *, const char *))0x00051e90)
@@ -52,7 +39,7 @@ const char kDefaultCollection[] = "default";
 // allocator byte the game copies here is an uninitialised stack byte.
 template <class Map>
 Map *NewMap(const char *name) {
-    Map *map = static_cast<Map *>(UMemory_FastAlloc(sizeof(Map), name));
+    Map *map = static_cast<Map *>(UMemory::FastAlloc(sizeof(Map), name));
     if (map == NULL)
         return NULL;
     map->allocator = 0;
@@ -75,10 +62,10 @@ void DeleteMap(Map *map) {
     typename Map::Iterator ignored;
     map->EraseRange(&ignored, first, last);
     if (map->head != NULL)
-        UMemory_FastFree(map->head, sizeof(*map->head));
+        UMemory::FastFree(map->head, sizeof(*map->head));
     map->head = NULL;
     map->size = 0;
-    UMemory_FastFree(map, sizeof(Map));
+    UMemory::FastFree(map, sizeof(Map));
 }
 
 // The built-in parsers, indexed by -2 - type (the game's table at 0x001b7030).
@@ -137,7 +124,7 @@ AttributeSystem* AttributeSystem::Construct() {
     editConfig = NewMap<EditConfigMap>("AttributeEditConfigMap");
     collections = NewMap<CollectionMap>("AttributeCollectionMap");
     strings = NewMap<StringSet>("AttributeStringSet");
-    StoreBlockList *blocks = static_cast<StoreBlockList *>(UMemory_FastAlloc(sizeof(StoreBlockList),
+    StoreBlockList *blocks = static_cast<StoreBlockList *>(UMemory::FastAlloc(sizeof(StoreBlockList),
                                                                              "AttributeStoreBlockList"));
     if (blocks != NULL) {
         blocks->first = NULL;
@@ -163,17 +150,17 @@ void AttributeSystem::Destruct() {
     DeleteMap(collections);
     DeleteMap(strings);
     for (AttributeStoreBlock *block = storeBlocks->first; block != storeBlocks->last; block++)
-        operator_delete(block->block);
+        OperatorDelete(block->block);
     StoreBlockList *blocks = storeBlocks;
     if (blocks != NULL) {
         if (blocks->first != NULL) {   // (each element's destructor is an empty function, 0x000d3580)
             uint32_t capacity = static_cast<uint32_t>(blocks->end - blocks->first);
-            UMemory_FastFree(blocks->first, capacity * sizeof(AttributeStoreBlock));
+            UMemory::FastFree(blocks->first, capacity * sizeof(AttributeStoreBlock));
         }
         blocks->first = NULL;
         blocks->last = NULL;
         blocks->end = NULL;
-        UMemory_FastFree(blocks, sizeof(StoreBlockList));
+        UMemory::FastFree(blocks, sizeof(StoreBlockList));
     }
     loadingEnabled = 0;
     vtable = AttributeSystemBaseVtable;
@@ -183,13 +170,13 @@ void AttributeSystem::Destruct() {
 AttributeSystem* AttributeSystem::Delete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        operator_delete(this);
+        OperatorDelete(this);
     return this;
 }
 
 // FUNC_AT(0x00059550)
 void AttributeSystem::Init() {
-    AttributeSystem *system = static_cast<AttributeSystem *>(operator_new(sizeof(AttributeSystem)));
+    AttributeSystem *system = static_cast<AttributeSystem *>(OperatorNew(sizeof(AttributeSystem)));
     AttributeSystemInstance = system != NULL ? system->Construct() : NULL;
 }
 
@@ -218,7 +205,7 @@ void AttributeSystem::PrepareDatabase() {
     char *text = static_cast<char *>(
         UFileLoader::FileLoadz(BuildFileName(path, 0, kAttributeDirectory, "attrib", "dir"), 0x100));
     if (text != NULL) {
-        char *end = text + UMemory_Size(text);
+        char *end = text + UMemory::Size(text);
         char *line = text;
         for (char *at = text; at < end;) {
             if (static_cast<signed char>(*at) >= ' ') {
@@ -238,7 +225,7 @@ void AttributeSystem::PrepareDatabase() {
             }
             line = at;
         }
-        UMemory_Free(text);
+        UMemory::Free(text);
     }
     loadingEnabled = 1;
     loadingDatabase = 0;
@@ -280,11 +267,11 @@ void AttributeSystem::LoadCollection(AttributeCollection *collection) {
     collection->refCount++;
     collection->loaded = 1;
     char path[64];
-    void *text = UFileLoader::FileLoadz(
-        BuildPath(path, 0, kAttributeDirectory, collection->className, collection->name, "atr"), 0x100);
+    char *text = static_cast<char *>(UFileLoader::FileLoadz(
+        BuildPath(path, 0, kAttributeDirectory, collection->className, collection->name, "atr"), 0x100));
     if (text == NULL)
         return;
-    DAFI *file = DAFI_open(text, UMemory_Size(text));
+    DAFI *file = DAFI_open(text, int(UMemory::Size(text)));
     if (DAFI_setsection(file, collectionSection) >= 0)
         ProcessDafiSection(&file, collection);
     if (DAFI_setsection(file, collection->name) >= 0 && strcmp(collection->name, kDefaultCollection) != 0)
@@ -293,7 +280,7 @@ void AttributeSystem::LoadCollection(AttributeCollection *collection) {
         ProcessDafiSection(&file, collection);
     if (file != NULL)
         DAFI_close(file);
-    UMemory_Free(text);
+    UMemory::Free(text);
 }
 
 // Each key: its type suffix taken off, and either parsed into the collection's extension structure (a field of
@@ -428,7 +415,7 @@ const char* AttributeSystem::MakeString(const char *text) {
             block = storeBlocks->last - 1;
         }
         if (block->block == NULL)
-            block->block = static_cast<char *>(operator_new_array(AttributeStoreBlock::kBlockSize));
+            block->block = static_cast<char *>(OperatorNewArray(AttributeStoreBlock::kBlockSize));
         char *stored = block->block + block->used;
         block->used += bytes;
         StoreBlockSort(storeBlocks->first, storeBlocks->last, static_cast<int>(storeBlocks->last - storeBlocks->first));
@@ -485,7 +472,7 @@ AttributeExtension &AttributeSystem::ExtensionType(uint32_t type) {
     entry.extension.attributeName = NULL;
     entry.extension.className = NULL;
     ExtensionTypeMap::InsertResult inserted;
-    ExtensionTypeMap_Insert(extensionTypes, 0, &inserted, &entry);
+    extensionTypes->InsertUnique(&inserted, entry);
     return inserted.position.node->value.extension;
 }
 
@@ -501,7 +488,7 @@ uint32_t AttributeSystem::RegisterExtensionType(const char *className, const cha
     entry.extension.attributeName = attributeName;
     entry.extension.className = className;
     ExtensionTypeMap::InsertResult inserted;
-    ExtensionTypeMap_Insert(extensionTypes, 0, &inserted, &entry);
+    extensionTypes->InsertUnique(&inserted, entry);
     nextExtensionType++;
     return type;
 }

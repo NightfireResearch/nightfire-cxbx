@@ -602,7 +602,7 @@ void AttributeMapPhase(int side) {
     AttributeMap map;
     AttributeNode *head = static_cast<AttributeNode *>(((void *(*)(uint32_t, const char *))0x00114750)(sizeof(AttributeNode), "STL"));
     head->left = head->parent = head->right = NULL;
-    head->color = kAttributeTreeBlack;
+    head->color = kTreeBlack;
     NewTree(&map, head);
     std::vector<std::string> &log = g_treeLog[side];
     float data[32];   // room for the five vectors a value can have here

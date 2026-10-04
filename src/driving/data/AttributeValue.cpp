@@ -1,6 +1,7 @@
 #include "AttributeValue.h"
 #include "AttributeSystem.h"
 #include "AttributeUntested.h"
+#include "../engine/UMemory.hpp"
 #include "../platform/RealPrint.h"
 
 #include <stddef.h>
@@ -14,9 +15,6 @@
 // still says a one-element block: the copy constructors allocate one element for count 0 (only for owning values,
 // which never have count 0).
 // ---------------------------------------------------------------------------------------------------------------
-
-#define UMemory_FastAlloc ((void *(*)(uint32_t, const char *))0x00114750)
-#define UMemory_FastFree ((void (*)(void *, uint32_t))0x001147d0)
 
 // FUNC_AT(0x00055cf0)
 uint32_t AttributeValue::ComputeBytes(int type, uint32_t count) {
@@ -45,7 +43,7 @@ void* AttributeValue::Alloc(int type, uint32_t count, const void *source) {
     uint32_t bytes = ComputeBytes(type, count);
     if (bytes == 0)
         return NULL;
-    void *block = UMemory_FastAlloc(bytes, "AttributeValue");
+    void *block = UMemory::FastAlloc(bytes, "AttributeValue");
     if (source != NULL) {
         MEM_copy(block, source, bytes);
         return block;
@@ -72,7 +70,7 @@ void AttributeValue::Destruct() {
     if ((flags & kAttributeOwnsData) && data != NULL)
         bytes = ComputeBytes(type, count);
     if (data != NULL && bytes != 0)
-        UMemory_FastFree(data, bytes);
+        UMemory::FastFree(data, bytes);
 }
 
 // FUNC_AT(0x00056080)
@@ -81,7 +79,7 @@ AttributeValue* AttributeValue::Assign(const AttributeValue &other) {
     if ((flags & kAttributeOwnsData) && data != NULL)
         bytes = ComputeBytes(type, count);
     if (data != NULL && bytes != 0)
-        UMemory_FastFree(data, bytes);
+        UMemory::FastFree(data, bytes);
     type = other.type;
     count = other.count;
     flags = other.flags;

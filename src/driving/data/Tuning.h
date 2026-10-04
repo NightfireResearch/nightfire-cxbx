@@ -74,9 +74,6 @@ struct DTuningDBMgr {
     void LoadDatabase(const char *databaseName, const char *level, int retry, bool skipCheck);   // 0x0003d640
     // Deletes the file object; the loaded text stays (0x0003d6c0).
     void CloseCurrent();
-    // USingleton's own scalar deleting destructor (0x0003d5f0, in the base's vtable at 0x0018beb0), which the
-    // compiler placed among the tuning manager's functions.
-    void* SingletonBaseDelete(unsigned flags);
 };
 static_assert(sizeof(DTuningDBMgr) == 0x10, "DTuningDBMgr");
 

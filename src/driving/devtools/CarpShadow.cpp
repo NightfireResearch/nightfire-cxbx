@@ -687,7 +687,7 @@ void Shape(TreeNode *node, std::string *out) {
         return;
     }
     *out += '(';
-    *out += node->name;
+    *out += node->value.name;
     *out += node->color ? 'b' : 'r';
     Shape(node->left, out);
     Shape(node->right, out);
@@ -697,8 +697,8 @@ void Shape(TreeNode *node, std::string *out) {
 void LogTree(const char *what, Tree *tree) {
     std::string s;
     Shape(tree->head->parent, &s);
-    Logf("%s size %u left %s right %s %s", what, tree->size, tree->head->left->isNil ? "-" : tree->head->left->name,
-         tree->head->right->isNil ? "-" : tree->head->right->name, s.c_str());
+    Logf("%s size %u left %s right %s %s", what, tree->size, tree->head->left->isNil ? "-" : tree->head->left->value.name,
+         tree->head->right->isNil ? "-" : tree->head->right->value.name, s.c_str());
 }
 
 const char *const kNamespaceNames[] = { "CARP", "carp", "Carp", "CHAR", "DATA", "EAGL", "TEX0", "TEX1", "TEX9",
@@ -757,7 +757,7 @@ void RunTables() {
                     for (uint32_t k = Random(6); k > 0 && !last->isNil; k--)
                         last = TreeNext(last);
                     NamespaceMap_EraseRange(map, 0, &result, first, last);
-                    Logf("range end %s", result->isNil ? "-" : result->name);
+                    Logf("range end %s", result->isNil ? "-" : result->value.name);
                 }
                 LogTree("erase range", map);
             }
@@ -783,8 +783,8 @@ void RunTables() {
                 pair.group = reinterpret_cast<UGroup *>(uintptr_t(0x1000 + step));
                 TreeInsertResult result;
                 CarpMap_InsertUnique(map, 0, &result, &pair);
-                Logf("insert %s: %d %s %08x", pair.name, result.inserted, result.where->name,
-                     uint32_t(uintptr_t(result.where->group)));
+                Logf("insert %s: %d %s %08x", pair.name, result.inserted, result.where->value.name,
+                     uint32_t(uintptr_t(result.where->value.group)));
                 LogTree("map", map);
                 if (Random(6) == 0) {
                     TreeNode *first = map->head->left;
@@ -1036,16 +1036,16 @@ void CarpFileCheck(const DiscFile &file) {
                                              "carp::<<map>>", "CARP::{Base}" };
         Tree *map = g_carpNamespace.groups;
         for (TreeNode *node = map->head->left; !node->isNil && queries.size() < 400; node = TreeNext(node)) {
-            UGroup *group = node->group;
-            queries.push_back(std::string("CARP::") + node->name);
+            UGroup *group = node->value.group;
+            queries.push_back(std::string("CARP::") + node->value.name);
             UData *records = group->GetArray() + group->GroupCount();
             for (uint32_t r = 0; r < group->count && r < 4; r++) {
                 uint32_t tag = records[r].tag;
                 char q[200];
-                snprintf(q, sizeof(q), "CARP::%.100s::{%c%c%c%c}", node->name, char(tag >> 24), char(tag >> 16),
+                snprintf(q, sizeof(q), "CARP::%.100s::{%c%c%c%c}", node->value.name, char(tag >> 24), char(tag >> 16),
                          char(tag >> 8), char(tag));
                 queries.push_back(q);
-                snprintf(q, sizeof(q), "CARP::%.100s::{%c%c  %04x}}::%u", node->name, char(tag >> 24),
+                snprintf(q, sizeof(q), "CARP::%.100s::{%c%c  %04x}}::%u", node->value.name, char(tag >> 24),
                          char(tag >> 16), unsigned(tag & 0xffff), unsigned(Random(64)));
                 queries.push_back(q);
             }

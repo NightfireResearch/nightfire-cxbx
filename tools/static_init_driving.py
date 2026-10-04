@@ -69,6 +69,12 @@ TARGETS = {
     0x000f5010: ("method", "EAGL::ProfilerRegion", "UnlinkThunk"),
     0x000f5480: ("method", "EAGL::ProfilerTimer", "Enter"),
     0x000f4f30: ("method", "EAGL::ProfilerTimer", "Destruct"),
+    0x00117330: ("method", "FileNameList", "Construct"),
+    0x00117350: ("method", "FileNameList", "Destruct"),
+    0x00119e40: ("method", "CARP::ResolverMap", "Construct"),
+    0x00119e80: ("method", "CARP::ResolverMap", "Destruct"),
+    0x00119f50: ("method", "StringToNumber", "Construct"),
+    0x0011a020: ("method", "StringToNumber", "Destruct"),
 }
 # Argument types of the originals' stack arguments, where they are not plain words.
 ARG_TYPES = {
@@ -78,6 +84,7 @@ ARG_TYPES = {
 METHOD_ARGS = {
     ("ActionQueue", "Construct"): ["char *"],
     ("EAGL::ProfilerRegion", "Construct"): ["const char *", "uint32_t"],
+    ("StringToNumber", "Construct"): ["StringToNumberEntry *"],
     ("EAGL::RenderMethod", "Construct"): ["EAGL::Packet *", "int", "const void *", "const void **",
                                           "EAGL::VertexShader **", "const uint8_t **", "EAGL::PixelShader **", "const char **",
                                           "uint32_t", "const char *"],
@@ -477,6 +484,9 @@ def main():
             '#include "../eagl/RenderMethod.h"',
             '#include "../eagl/Loader.h"',
             '#include "../eagl/Profiler.h"',
+            '#include "../data/Carp.h"',
+            '#include "../data/SymbolTable.h"',
+            '#include "FileNameList.h"',
             '',
             '// ---- the originals the initialisers still call, by address',
             '',

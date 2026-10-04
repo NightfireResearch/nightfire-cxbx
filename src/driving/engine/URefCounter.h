@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "RbTree.h"
+
 // ---------------------------------------------------------------------------------------------------------------
 // URefCounter<T>: the game's registry of shared, named objects - models, textures, CARP files, the audio
 // framework's mixes, streams, faders, banks and engines. A std::map (the compiler's own, Dinkumware's red-black
@@ -16,21 +18,6 @@
 // See URefCounter.cpp.
 // ---------------------------------------------------------------------------------------------------------------
 
-// A tree node (0x98 bytes, allocated by the tree from the pools as "STL"). The head node is the tree's end: its
-// parent is the root, its left the first node, its right the last, and it is the one node marked isNil.
-struct RefCounterNode {
-    RefCounterNode *left;       // +0x00
-    RefCounterNode *parent;     // +0x04
-    RefCounterNode *right;      // +0x08
-    char name[0x80];            // +0x0c the key
-    int32_t references;         // +0x8c
-    void *object;               // +0x90
-    uint8_t color;              // +0x94 1: black
-    uint8_t isNil;              // +0x95
-    uint8_t unknown96[2];
-};
-static_assert(sizeof(RefCounterNode) == 0x98, "a reference counter's tree node is 0x98 bytes");
-
 // The map's mapped value, and the pair the tree's insert copies into a new node
 struct RefCounterEntry {
     int32_t references;
@@ -38,10 +25,15 @@ struct RefCounterEntry {
 };
 
 struct RefCounterValue {
-    char name[0x80];
+    char name[0x80];            // the key
     RefCounterEntry entry;
 };
 static_assert(sizeof(RefCounterValue) == 0x88, "a reference counter's value is 0x88 bytes");
+
+// A tree node (0x98 bytes, allocated by the tree from the pools as "STL"; RbTree.h has the layout): the name at
+// +0x0c, the count at +0x8c, the object at +0x90.
+struct RefCounterNode : RbTreeNode<RefCounterNode, RefCounterValue> {};
+static_assert(sizeof(RefCounterNode) == 0x98, "a reference counter's tree node is 0x98 bytes");
 
 // What the tree's insert_unique answers (through a pointer the caller supplies)
 struct RefCounterInsertResult {
@@ -62,12 +54,8 @@ typedef RefCounterNode **(__fastcall *RefCounterEraseRangeFn)(URefCounterMap *ma
 typedef void (*RefCounterDestroyFn)(void);   // a static's destructor, as atexit takes it
 
 // The map, as every instantiation lays it out (0xc bytes), with the code that does not depend on T.
-class URefCounterMap {
+class URefCounterMap : public RbTree<RefCounterNode> {
 public:
-    uint8_t compare;            // +0x00 the comparator (an empty object)
-    RefCounterNode *head;       // +0x04
-    uint32_t count;             // +0x08
-
     // The node of `name` (copied to a 128-byte key first, as the game does), or the head
     RefCounterNode* Find(const char *name);
 

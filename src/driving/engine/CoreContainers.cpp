@@ -9,16 +9,14 @@
 // insert_multi are Dinkumware's: walk down from the root remembering the last node and the last direction, then
 // either insert there or (insert_unique) find the key already present one step back. Each copy's _Insert (which
 // makes the node and rebalances) and iterator -- are its own compiled helpers, not ours yet, called by address.
+// The attribute extension map's insert (0x000552d0) and the CARP resolver map's (0x001198f0) are with the rest of
+// their maps, in data/AttributeContainers.cpp and data/Carp.cpp.
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- originals called by address
 
-#define AttributeExtensionMap_Insert ((GameTreeNode<AttributeExtensionValue> **(__fastcall *)(GameTree<AttributeExtensionValue> *, int, GameTreeNode<AttributeExtensionValue> **, bool, GameTreeNode<AttributeExtensionValue> *, const AttributeExtensionValue *))0x00054280)
-#define AttributeExtensionNode_Decrement ((void (__fastcall *)(GameTreeNode<AttributeExtensionValue> **, int))0x00053010)
 #define StateRefSet_Insert ((GameTreeNode<StateRefValue> **(__fastcall *)(GameTree<StateRefValue> *, int, GameTreeNode<StateRefValue> **, bool, GameTreeNode<StateRefValue> *, const StateRefValue *))0x00092690)
 #define StateRefNode_Decrement ((void (__fastcall *)(GameTreeNode<StateRefValue> **, int))0x00093200)
-#define ResolverMap_Insert ((GameTreeNode<ResolverValue> **(__fastcall *)(GameTree<ResolverValue> *, int, GameTreeNode<ResolverValue> **, bool, GameTreeNode<ResolverValue> *, const ResolverValue *))0x00119440)
-#define ResolverNode_Decrement ((void (__fastcall *)(GameTreeNode<ResolverValue> **, int))0x00126bd0)
 #define SimObjectMultimap_Insert ((GameTreeNode<SimObjectValue> **(__fastcall *)(GameTree<SimObjectValue> *, int, GameTreeNode<SimObjectValue> **, bool, GameTreeNode<SimObjectValue> *, const SimObjectValue *))0x000b31b0)
 #define SimObjectVector_Construct ((void (*)(void **where, int count, void *const *value, GameVector<void *> *vector, void *const *same))0x000b2ec0)   // uninitialized_fill_n with the allocator
 #define SimObjectVector_InsertN ((void (__fastcall *)(GameVector<void *> *, int, void **where, int count, void *const *value))0x000b3b80)
@@ -33,12 +31,7 @@ using InsertFn = GameTreeNode<Value> **(__fastcall *)(GameTree<Value> *, int, Ga
 template <class Value>
 using DecrementFn = void (__fastcall *)(GameTreeNode<Value> **, int);
 
-// The orders: unsigned keys, and StateRef's bytes of the state
-template <class Value>
-static bool KeyLess(const Value &a, const Value &b) {
-    return a.key < b.key;
-}
-
+// StateRef's order: the bytes of the state
 static bool StateLess(const StateRefValue &a, const StateRefValue &b) {
     return memcmp(a.state, b.state, 0x4c) < 0;
 }
@@ -75,20 +68,9 @@ static GameTreeInsertResult<Value> *InsertUnique(GameTree<Value> *tree, GameTree
     return result;
 }
 
-// FUNC_AT(0x000552d0)
-AttributeExtensionInsert* AttributeExtensionMap::InsertUnique(AttributeExtensionInsert *result, const AttributeExtensionValue *value) {
-    return ::InsertUnique(this, result, value, KeyLess<AttributeExtensionValue>, AttributeExtensionMap_Insert,
-                          AttributeExtensionNode_Decrement);
-}
-
 // FUNC_AT(0x00092b40)
 StateRefInsert* StateRefSet::InsertUnique(StateRefInsert *result, const StateRefValue *value) {
     return ::InsertUnique(this, result, value, StateLess, StateRefSet_Insert, StateRefNode_Decrement);
-}
-
-// FUNC_AT(0x001198f0)
-ResolverInsert* ResolverMap::InsertUnique(ResolverInsert *result, const ResolverValue *value) {
-    return ::InsertUnique(this, result, value, KeyLess<ResolverValue>, ResolverMap_Insert, ResolverNode_Decrement);
 }
 
 // FUNC_AT(0x000b3930)

@@ -7,6 +7,7 @@
 #include "Tar.h"
 #include "Transform.h"
 #include "View.h"
+#include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"
 #include "../platform/X87.h"
@@ -419,8 +420,8 @@ void EAGL::RenderMethod::Destruct() {
         EaglFree(block, *block);
         return;
     }
-    BuiltinDelete(vertexShaders);
-    BuiltinDelete(pixelShaders);
+    OperatorDelete(vertexShaders);
+    OperatorDelete(pixelShaders);
 }
 
 // FUNC_AT(0x000f1300)

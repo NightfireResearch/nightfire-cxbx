@@ -11,30 +11,27 @@
 
 #include "../../helpers.h"
 #include "StaticInit.h"
+#include "UMemory.hpp"
+#include "URefCounter.h"
+#include "USingleton.h"
+#include "../data/AttributeSet.h"
+#include "../data/SymbolTable.h"
 #include "../eagl/GeoPrimState.h"
 
 // ---- originals called by address
 
-#define UMemory_FastFree ((void (__cdecl *)(void *block, uint32_t size))0x001147d0)
-#define BuiltinDelete ((void (__cdecl *)(void *))0x001146e0)     // __builtin_delete (operator delete)
 #define ListDestruct_00013540 ((void (__fastcall *)(void *, int))0x00013540)
 #define ListErase_000ce900 ((void (__fastcall *)(NodeList *, int, void **, void *, void *))0x000ce900)
 
-#define URefCounter_ModelInfo_Destruct ((void (__fastcall *)(void *, int))0x000182b0)
-#define URefCounter_TextureInfo_Destruct ((void (__fastcall *)(void *, int))0x0001a880)
 #define FUN_0001be60 ((void (__fastcall *)(void *, int))0x0001be60)
 #define FUN_0004f400 ((void (__fastcall *)(void *, int))0x0004f400)
-#define FUN_00059c30 ((void (__fastcall *)(void *, int))0x00059c30)
-#define AttributeSet_Destruct ((void (__fastcall *)(void *, int))0x000752f0)
 #define RCameraSpline_Destruct ((void (__fastcall *)(void *, int))0x0007a9b0)
 #define FUN_000903a0 ((void (__fastcall *)(void *, int))0x000903a0)
 #define FUN_00094ff0 ((void (__fastcall *)(void *, int))0x00094ff0)
 #define WRoadNav_Destruct ((void (__fastcall *)(void *, int))0x000ca100)
-#define UCharNamespace_Destruct ((void (__fastcall *)(void *, int))0x0011a810)
 #define FUN_0011d580 ((void (__fastcall *)(void *, int))0x0011d580)
 #define FUN_001235a0 ((void (__fastcall *)(void *, int))0x001235a0)
 #define FUN_00125b90 ((void (__fastcall *)(void *, int))0x00125b90)
-#define URefCounter_ABank_Destruct ((void (__fastcall *)(void *, int))0x001267f0)
 #define FUN_0012f820 ((void (__fastcall *)(void *, int))0x0012f820)
 
 // ---- the weapon table
@@ -54,7 +51,7 @@ void DestroyNodeList(NodeList *list, NodeListErase erase, uint32_t nodeSize) {
     void **head = list->head;
     erase(list, 0, &after, head != NULL ? *head : NULL, head);
     if (list->head != NULL)
-        UMemory_FastFree(list->head, nodeSize);
+        UMemory::FastFree(list->head, nodeSize);
     list->head = NULL;
     list->size = 0;
 }
@@ -68,20 +65,20 @@ void DestroyGlobal_0023e1b0(void) {
     list = (NodeList *)PTR_AT(0x0023e1dc);
     if (list != NULL) {
         ListDestruct_00013540(list, 0);
-        BuiltinDelete(list);
+        OperatorDelete(list);
     }
-    BuiltinDelete(PTR_AT(0x0023e22c));
+    OperatorDelete(PTR_AT(0x0023e22c));
 }
 
 // ---- destructors of function-local statics, which game code registers with atexit when it first constructs them
 
 // FUNC_AT(0x0015cd20)
 void DestroyStatic_001dd9e8(void) {
-    URefCounter_ModelInfo_Destruct((void *)0x001dd9e8, 0);
+    ((ModelInfoRefCounter *)0x001dd9e8)->Destruct();
 }
 // FUNC_AT(0x0015cd30)
 void DestroyStatic_001dda04(void) {
-    URefCounter_TextureInfo_Destruct((void *)0x001dda04, 0);
+    ((TextureInfoRefCounter *)0x001dda04)->Destruct();
 }
 // FUNC_AT(0x0015cd40)
 void DestroyStatic_001dda14(void) {
@@ -100,19 +97,19 @@ void DestroyStatic_Empty(void) {
 }
 // FUNC_AT(0x0015ce10)
 void DestroyStatic_001e47c0(void) {
-    FUN_00059c30((void *)0x001e47c0, 0);
+    ((USingletonManager *)0x001e47c0)->Destruct();
 }
 // FUNC_AT(0x0015ce30)
 void DestroyStatic_001e9294(void) {
-    AttributeSet_Destruct((void *)0x001e9294, 0);
+    ((AttributeSet *)0x001e9294)->DestructThunk();
 }
 // FUNC_AT(0x0015ce40)
 void DestroyStatic_001ebd60(void) {
-    UCharNamespace_Destruct((void *)0x001ebd60, 0);
+    ((UCharNamespace *)0x001ebd60)->Destruct();
 }
 // FUNC_AT(0x0015ceb0)
 void DestroyStatic_001ec4a4(void) {
-    FUN_00059c30((void *)0x001ec4a4, 0);
+    ((USingletonManager *)0x001ec4a4)->Destruct();
 }
 // The object at 0x001f25b0 needs no destructor: the original jumped to an empty function (dummyNullFunction).
 // FUNC_AT(0x0015cec0)
@@ -156,7 +153,7 @@ void DestroyStatic_00243af8(void) {
 }
 // FUNC_AT(0x0015d2f0)
 void DestroyStatic_00243b08(void) {
-    URefCounter_ABank_Destruct((void *)0x00243b08, 0);
+    ((BankRefCounter *)0x00243b08)->Destruct();
 }
 // FUNC_AT(0x0015d300)
 void DestroyStatic_00243b74(void) {

@@ -96,7 +96,7 @@ RefCounterNode* URefCounterMap::Find(const char *name) {
     char key[0x80];
     CopyName(key, name);
     RefCounterNode *node = RefCounterMap_LowerBound(this, 0, key);
-    if (node == head || CRT_stricmp(key, node->name) < 0)
+    if (node == head || CRT_stricmp(key, node->value.name) < 0)
         return head;
     return node;
 }
@@ -104,7 +104,7 @@ RefCounterNode* URefCounterMap::Find(const char *name) {
 // FUNC_AT(0x00125270)
 void* URefCounterMap::GetReference(const char *name) {
     RefCounterNode *node = Find(name);
-    return node != head ? node->object : NULL;
+    return node != head ? node->value.entry.object : NULL;
 }
 
 void URefCounterMap::AddReference(const char *name, void *object, RefCounterInsertFn insert) {
@@ -119,14 +119,14 @@ void URefCounterMap::AddReference(const char *name, void *object, RefCounterInse
         RefCounterValue_Construct(&value, 0, key, &entry);   // copies all 128 bytes of the key
         RefCounterInsertResult result;
         node = insert(this, 0, &result, &value)->node;
-        node->object = object;
+        node->value.entry.object = object;
     }
-    node->references++;
+    node->value.entry.references++;
 }
 
 bool URefCounterMap::RemoveReference(void *object, RefCounterEraseFn erase) {
     for (RefCounterNode *node = head->left; node != head; RefCounterNode_Increment(&node, 0)) {
-        if (node->object == object && --node->references == 0) {
+        if (node->value.entry.object == object && --node->value.entry.references == 0) {
             RefCounterNode *after;
             erase(this, 0, &after, node);
             return true;
@@ -138,7 +138,7 @@ bool URefCounterMap::RemoveReference(void *object, RefCounterEraseFn erase) {
 void URefCounterMap::Destruct(RefCounterEraseTreeFn eraseTree, RefCounterEraseRangeFn eraseRange) {
     eraseTree(this, 0, head->parent);
     head->parent = head;
-    count = 0;
+    size = 0;
     head->left = head;
     head->right = head;
     RefCounterNode *after;
@@ -146,20 +146,20 @@ void URefCounterMap::Destruct(RefCounterEraseTreeFn eraseTree, RefCounterEraseRa
     if (head != NULL)
         UMemory::FastFree(head, sizeof(RefCounterNode));
     head = NULL;
-    count = 0;
+    size = 0;
 }
 
 void URefCounterMap::ConstructOnce(uint32_t *guard, RefCounterDestroyFn destroy) {
     if ((*guard & 1) != 0)
         return;
     *guard |= 1;
-    compare = 0;   // the original copies an uninitialised byte of its stack: the empty comparator
+    allocator = 0;   // the original copies an uninitialised byte of its stack: the empty comparator
     head = RefCounterMap_BuyHeadNode(this, 0);
     head->isNil = 1;
     head->parent = head;
     head->left = head;
     head->right = head;
-    count = 0;
+    size = 0;
     CRT_atexit(destroy);
 }
 

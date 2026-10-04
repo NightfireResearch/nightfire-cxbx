@@ -1,32 +1,18 @@
 #include "UGroup.h"
 
+#include "../data/UData.h"
+
 // ---------------------------------------------------------------------------------------------------------------
 // UGroup, the data group (0x00117940-0x00117e50, with 0x0003db60 and 0x0008d6e0), ported from the listing. See
 // UGroup.h for the format.
 //
-// The sorted lookups go through the game's binary search over 16-byte records (0x00117840, not ours yet): it takes
-// the number of records in EBX, a pointer to the first record (moved to the record found, or to where the tag would
-// be) and the tag, and answers the tag of the record it stopped at (0 if none). LocateSorted calls it.
+// The sorted lookups go through the game's binary search over 16-byte records (0x00117840, UDataFindTag in
+// data/UData.cpp, the C++ under its register-argument entry): the number of records, a pointer to the first record
+// (moved to the record found, or to where the tag would be) and the tag; it answers the tag of the record it
+// stopped at (0 if none).
 // ---------------------------------------------------------------------------------------------------------------
 
-#define UGroup_SearchSorted ((uint32_t (*)(UData **cursor, uint32_t tag))0x00117840)   // + the count in EBX: called by LocateSorted
-
 static_assert(sizeof(void *) == sizeof(uint32_t), "a group's offsets become pointers in place");
-
-// The binary search at 0x00117840, with its count in EBX (which it keeps)
-__declspec(naked) static uint32_t LocateSorted(uint32_t count, UData **cursor, uint32_t tag) {
-    __asm {
-        push ebx
-        mov ebx, dword ptr [esp + 8]
-        push dword ptr [esp + 16]    // tag
-        push dword ptr [esp + 16]    // cursor
-        mov eax, 0x00117840
-        call eax
-        add esp, 8
-        pop ebx
-        ret
-    }
-}
 
 // The items as an address: the code tests the address of the first data item for zero (a group with no items),
 // arithmetic a pointer would not be allowed to do.
@@ -53,7 +39,7 @@ UGroup* UGroup::GroupLocateTag(uint32_t tag) {
         return NULL;
     if ((flags & kGroupsSorted) != 0) {
         UData *found = groups;
-        if (LocateSorted(GroupCount(), &found, tag) == tag)
+        if (UDataFindTag(GroupCount(), &found, tag) == tag)
             return static_cast<UGroup *>(found);
         return GetArray() + GroupCount();
     }
@@ -83,11 +69,11 @@ UData* UGroup::DataLocateFirst(uint32_t type, int first, uint32_t last) {
         return NULL;
     UData *found = (UData *)items;
     if (first == -1) {
-        if (LocateSorted(count, &found, type) == type)
+        if (UDataFindTag(count, &found, type) == type)
             return found;
         return DataEnd();
     }
-    uint32_t foundTag = LocateSorted(count, &found, (type & 0xffff0000) | first);
+    uint32_t foundTag = UDataFindTag(count, &found, (type & 0xffff0000) | first);
     if (((foundTag & 0xffff2020) | 0x2020) == type && last >= (foundTag & 0xffff))   // the found tag's type
         return found;
     return DataEnd();
@@ -100,7 +86,7 @@ UData* UGroup::DataLocateTag(uint32_t tag) {
         return NULL;
     UData *item = (UData *)items;
     if ((flags & kDataSorted) != 0) {
-        if (LocateSorted(count, &item, tag) == tag)
+        if (UDataFindTag(count, &item, tag) == tag)
             return item;
         return DataEnd();
     }

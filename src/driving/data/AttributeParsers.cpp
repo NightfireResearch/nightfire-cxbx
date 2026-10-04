@@ -1,6 +1,7 @@
 #include "AttributeParsers.h"
 #include "AttributeSystem.h"
 #include "AttributeUntested.h"
+#include "SymbolTable.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -22,12 +23,9 @@
 // default's tail - but they write every element at the same place: of several vectors, the last one wins.
 // ---------------------------------------------------------------------------------------------------------------
 
-class USymbolTable;
-
 #define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 #define CRT_atol ((int32_t (*)(const char *))0x00133d51)
 #define CRT_atof ((double (*)(const char *))0x00133e84)
-#define USymbolTable_NameLookup ((void *(__fastcall *)(USymbolTable *, int, const char *, int *))0x0011a950)
 
 // What a vector or matrix element starts from: the game's (0,0,0,1) and identity, globals its static
 // initialisers fill in.
@@ -189,7 +187,7 @@ AttributeParseResult* Symbol_AttribByteOffsetParserFunc(AttributeParseResult *re
                                                         uint32_t unused1, uint32_t unused2, char *base) {
     ATTRIBUTE_UNTESTED("Symbol_AttribByteOffsetParserFunc");
     int size = 0;
-    void *symbol = USymbolTable_NameLookup(AttributeSystemInstance->symbolTable, 0, text, &size);
+    void *symbol = AttributeSystemInstance->symbolTable->NameLookup(text, &size);
     *reinterpret_cast<void **>(base + offset) = symbol;
     return Finish(result, kAttributeSymbol, 1, symbol);
 }

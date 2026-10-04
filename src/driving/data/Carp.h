@@ -186,6 +186,7 @@ public:
     void EraseSubtree(TreeNode *node);                                        // 0x00118e90
     TreeNode** Find(TreeNode **result, const uint32_t *tag);                  // 0x00118f20
     TreeNode** InsertAt(TreeNode **result, bool addLeft, TreeNode *where, const TreePair *value);  // 0x00119440
+    TreeInsertResult* InsertUnique(TreeInsertResult *result, const TreePair *value);   // 0x001198f0 insert(value)
     TreeNode** EraseAt(TreeNode **result, TreeNode *where);                   // 0x00119620
     TreeNode** EraseRange(TreeNode **result, TreeNode *first, TreeNode *last);   // 0x001199b0
 };

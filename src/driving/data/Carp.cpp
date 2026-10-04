@@ -25,8 +25,9 @@
 // leaves its quotient unrounded on the stack. The linear interpolation is the original's SSE, lane by lane.
 // ---------------------------------------------------------------------------------------------------------------
 
-// Other packages' functions not ported yet, called at their addresses.
-#define ResolverMap_InsertOne ((TreeInsertResult *(__fastcall *)(CARP::ResolverMap *, int, TreeInsertResult *, const TreePair *))0x001198f0)
+// The game's functions not ported yet, called at their addresses: the iterator step every map shares, and the C
+// runtime's printf.
+#define TreeIterator_Decrement ((void (__fastcall *)(TreeNode **, int))0x00126bd0)
 #define Crt_printf ((int (*)(const char *, ...))0x00132192)
 
 #define Resolvers (*(CARP::ResolverMap *)0x00243580)
@@ -371,20 +372,51 @@ void CARP::ResolverMap::EraseSubtree(TreeNode *node) {
 TreeNode** CARP::ResolverMap::Find(TreeNode **result, const uint32_t *tag) {
     TreeNode *bound = head;
     for (TreeNode *node = head->parent; !node->isNil;) {
-        if (node->tag < *tag) {
+        if (node->value.tag < *tag) {
             node = node->right;
         } else {
             bound = node;
             node = node->left;
         }
     }
-    *result = (bound == head || *tag < bound->tag) ? head : bound;
+    *result = (bound == head || *tag < bound->value.tag) ? head : bound;
     return result;
 }
 
 // FUNC_AT(0x00119440)
 TreeNode** CARP::ResolverMap::InsertAt(TreeNode **result, bool addLeft, TreeNode *where, const TreePair *value) {
     return Tree::InsertAt(result, addLeft, where, value);
+}
+
+// insert(value): walks down from the root remembering the last node and direction, then either inserts there or
+// finds the tag already present one step back.
+// FUNC_AT(0x001198f0)
+TreeInsertResult* CARP::ResolverMap::InsertUnique(TreeInsertResult *result, const TreePair *value) {
+    TreeNode *where = head;
+    bool addLeft = true;
+    for (TreeNode *node = head->parent; !node->isNil; node = addLeft ? node->left : node->right) {
+        where = node;
+        addLeft = value->tag < node->value.tag;
+    }
+    TreeNode *previous = where;
+    if (addLeft) {
+        if (where == head->left) {
+            TreeNode *inserted;
+            result->where = *InsertAt(&inserted, true, where, value);
+            result->inserted = true;
+            return result;
+        }
+        TreeIterator_Decrement(&previous, 0);
+    }
+    if (previous->value.tag < value->tag) {
+        TreeNode *inserted;
+        result->where = *InsertAt(&inserted, addLeft, where, value);
+        result->inserted = true;
+        return result;
+    }
+    result->where = previous;
+    result->inserted = false;
+    return result;
 }
 
 // FUNC_AT(0x00119620)
@@ -438,7 +470,7 @@ void CARP::InitResolvers() {
         pair.tag = entry.tag;
         pair.resolver = reinterpret_cast<CarpResolverFn>(uintptr_t(entry.function));
         TreeInsertResult result;
-        ResolverMap_InsertOne(&Resolvers, 0, &result, &pair);
+        Resolvers.InsertUnique(&result, &pair);
     }
     ResolversReady = 1;
 }
@@ -449,7 +481,7 @@ void CARP::ResolveTag(UGroup *shared, UGroup *parent, UGroup *record) {
     TreeNode *node;
     Resolvers.Find(&node, &tag);
     if (node != Resolvers.head)
-        node->resolver(record, shared, parent);
+        node->value.resolver(record, shared, parent);
 }
 
 // FUNC_AT(0x00118ff0)

@@ -102,8 +102,9 @@ struct CvtVec {
     uint32_t page;
 };
 
-// std::string (basic_string<char> with the game's allocator, which is UMemory): a 16-byte small buffer, used while
-// the capacity is under 16.
+// std::string (basic_string<char> with the game's allocator, which is UMemory; 0x1c bytes): a 16-byte small
+// buffer, used while the capacity is under 16, longer strings in a block from the pools. The game constructs and
+// destroys it inline wherever it uses one.
 struct String {
     uint8_t allocator;   // +0x00 empty allocator object
     uint8_t pad01[3];
@@ -119,6 +120,7 @@ struct String {
     String* AssignFill(uint32_t count, char ch);                          // 0x0003bce0 assign(count, ch)
     String* AppendFill(uint32_t count, char ch);                          // 0x0003bc20 append(count, ch)
     String* AppendSub(const String *right, uint32_t offset, uint32_t count);   // 0x0003d090 append(right, offset, count)
+    String* Assign(const char *string);                                   // 0x0005b0a0 assign(string)
 };
 static_assert(sizeof(String) == 0x1c, "String");
 

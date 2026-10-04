@@ -12,9 +12,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+struct DAFI;
+
 struct IniFiles {                // 0xc bytes
     const void *const *vtable;   // +0x00
-    void *dafi;                  // +0x04 the DAFI handle
+    DAFI *dafi;                  // +0x04 the DAFI handle
     char *text;                  // +0x08 the file
 
     IniFiles* Construct(const char *path, bool encrypted);                       // 0x000e4030

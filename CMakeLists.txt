@@ -361,7 +361,6 @@ add_library(drivinginject SHARED
   src/driving/data/Dafi.cpp
   src/driving/data/Carp.cpp
   src/driving/data/RCARPFile.cpp
-  src/driving/data/SingletonVector.cpp
   src/driving/data/DebugVariables.cpp
   src/driving/data/Tuning.cpp
   src/driving/data/IniFiles.cpp

@@ -1,8 +1,8 @@
 #ifndef DRIVING_DATA_ATTRIBUTECONTAINERS_H_
 #define DRIVING_DATA_ATTRIBUTECONTAINERS_H_
 
-// The attribute system's containers (AttributeTree.h has the layout they share): seven std::maps and std::sets,
-// the attribute collection - one of them with bookkeeping - and the list of string store blocks with the
+// The attribute system's containers (engine/RbTree.h has the layout every tree shares): seven std::maps and
+// std::sets, the attribute collection - one of them with bookkeeping - and the list of string store blocks with the
 // std::sort the system runs over it. See AttributeContainers.cpp.
 //
 //   tree                 node   key -> value                                    the game's name for it
@@ -16,7 +16,7 @@
 //
 // Names compare without regard to case (the game's _stricmp), the string set's strings with strcmp.
 
-#include "AttributeTree.h"
+#include "../engine/RbTree.h"
 #include "AttributeValue.h"
 #include "AttributeParsers.h"
 
@@ -33,12 +33,12 @@ struct AttributeMapValue {        // the map's value_type, 0xc
     void Destruct();                                                                            // 0x000561f0
 };
 
-struct AttributeNode : AttributeTreeNode<AttributeNode, AttributeMapValue> {
+struct AttributeNode : RbTreeNode<AttributeNode, AttributeMapValue> {
     void DestroyValue();   // the value's destructor, called on the node                        // 0x00056230
 };
 static_assert(sizeof(AttributeNode) == 0x1c, "an attribute map node is 0x1c bytes");
 
-struct AttributeMap : AttributeTree<AttributeNode> {
+struct AttributeMap : RbTree<AttributeNode> {
     struct Iterator {
         AttributeNode *node;
         void Inc();                                                                             // 0x00052720
@@ -83,10 +83,10 @@ struct AttributeFieldEntry {   // 0x1c
     AttributeField field;      // +0x04
 };
 
-struct AttributeFieldNode : AttributeTreeNode<AttributeFieldNode, AttributeFieldEntry> {};
+struct AttributeFieldNode : RbTreeNode<AttributeFieldNode, AttributeFieldEntry> {};
 static_assert(sizeof(AttributeFieldNode) == 0x2c, "a field map node is 0x2c bytes");
 
-struct AttributeFieldMap : AttributeTree<AttributeFieldNode> {
+struct AttributeFieldMap : RbTree<AttributeFieldNode> {
     struct Iterator {
         AttributeFieldNode *node;
         void Inc();                                                                             // 0x00052b40
@@ -129,12 +129,12 @@ struct ExtensionClassEntry {   // 0x10
     void Destruct();                                                                            // 0x00055f60
 };
 
-struct ExtensionClassNode : AttributeTreeNode<ExtensionClassNode, ExtensionClassEntry> {
+struct ExtensionClassNode : RbTreeNode<ExtensionClassNode, ExtensionClassEntry> {
     void DestroyValue();                                                                        // 0x00055fa0
 };
 static_assert(sizeof(ExtensionClassNode) == 0x20, "an extension class map node is 0x20 bytes");
 
-struct ExtensionClassMap : AttributeTree<ExtensionClassNode> {
+struct ExtensionClassMap : RbTree<ExtensionClassNode> {
     struct Iterator {
         ExtensionClassNode *node;
         void Inc();                                                                             // 0x00052a20
@@ -179,10 +179,10 @@ struct ExtensionTypeEntry {         // 0x18
     AttributeExtension extension;   // +0x04
 };
 
-struct ExtensionTypeNode : AttributeTreeNode<ExtensionTypeNode, ExtensionTypeEntry> {};
+struct ExtensionTypeNode : RbTreeNode<ExtensionTypeNode, ExtensionTypeEntry> {};
 static_assert(sizeof(ExtensionTypeNode) == 0x28, "an extension type map node is 0x28 bytes");
 
-struct ExtensionTypeMap : AttributeTree<ExtensionTypeNode> {
+struct ExtensionTypeMap : RbTree<ExtensionTypeNode> {
     struct Iterator {
         ExtensionTypeNode *node;
         void Inc();                                                                             // 0x00052a80
@@ -205,8 +205,8 @@ struct ExtensionTypeMap : AttributeTree<ExtensionTypeNode> {
     Iterator *Insert(Iterator *result, bool addLeft, ExtensionTypeNode *where,
                      const ExtensionTypeEntry &value);                                          // 0x00054280
     Iterator *Erase(Iterator *result, Iterator where);                                          // 0x00054990
+    InsertResult *InsertUnique(InsertResult *result, const ExtensionTypeEntry &value);          // 0x000552d0
     Iterator *EraseRange(Iterator *result, Iterator first, Iterator last);                      // 0x00055560
-    // insert(value) is 0x000552d0 (another package's port): AttributeSystem::ExtensionType calls it.
 };
 static_assert(sizeof(ExtensionTypeMap) == 0xc, "a map is 12 bytes");
 
@@ -219,10 +219,10 @@ struct EditConfigEntry {            // 0x20
     uint8_t unknown04[0x1c];
 };
 
-struct EditConfigNode : AttributeTreeNode<EditConfigNode, EditConfigEntry> {};
+struct EditConfigNode : RbTreeNode<EditConfigNode, EditConfigEntry> {};
 static_assert(sizeof(EditConfigNode) == 0x30, "an edit configuration map node is 0x30 bytes");
 
-struct EditConfigMap : AttributeTree<EditConfigNode> {
+struct EditConfigMap : RbTree<EditConfigNode> {
     struct Iterator {
         EditConfigNode *node;
         void Inc();                                                                             // 0x000529c0
@@ -276,12 +276,12 @@ struct CollectionEntry {             // 0x28
     AttributeCollection collection;  // +0x08
 };
 
-struct CollectionNode : AttributeTreeNode<CollectionNode, CollectionEntry> {
+struct CollectionNode : RbTreeNode<CollectionNode, CollectionEntry> {
     void DestroyValue();                                                                        // 0x000585b0
 };
 static_assert(sizeof(CollectionNode) == 0x38, "a collection map node is 0x38 bytes");
 
-struct CollectionMap : AttributeTree<CollectionNode> {
+struct CollectionMap : RbTree<CollectionNode> {
     struct Iterator {
         CollectionNode *node;
         void Inc();                                                                             // 0x00052d30
@@ -313,10 +313,10 @@ static_assert(sizeof(CollectionMap) == 0xc, "a map is 12 bytes");
 // ---------------------------------------------------------------------------------------------------------------
 // The string set: every string the system has stored, compared with strcmp.
 
-struct StringNode : AttributeTreeNode<StringNode, const char *> {};
+struct StringNode : RbTreeNode<StringNode, const char *> {};
 static_assert(sizeof(StringNode) == 0x14, "a string set node is 0x14 bytes");
 
-struct StringSet : AttributeTree<StringNode> {
+struct StringSet : RbTree<StringNode> {
     struct Iterator {
         StringNode *node;
         void Inc();                                                                             // 0x00052ae0

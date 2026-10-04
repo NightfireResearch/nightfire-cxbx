@@ -29,9 +29,17 @@ fills and order are the original's exactly: lockstep testing depends on an ident
   thin `URefCounter<T>`) with a plain entry class per instantiation.
 - `UGroup.h/.cpp`: data groups - the tagged, nested, offset-relative containers every CARP and gallery file is
   made of (lookup by tag, count by type, breadth-first processing, offset resolution, deserialisation).
-- `USingleton.h/.cpp`: the singleton manager that resets and kills the game's managers at start-up and clean-up.
+- `USingleton.h/.cpp`: the singleton manager that resets and kills the game's managers at start-up and clean-up
+  (`USingletonManager`, the function-local static at 0x001e47c0 that `SingletonManager()` makes, with its vector's
+  push_back/_Insert_n/_Xlen and the base class's deleting destructor).
+- `RbTree.h`: the layout every `std::map`/`set` in the engine shares (Dinkumware's `_Tree`: 12-byte tree, head
+  node, links/value/colour/isNil nodes). The algorithms stay with their owners - the core's compiled copies
+  (`CoreContainers`), the reference counters (`URefCounter`), the data layer's name and resolver maps
+  (`data/Tree.h`) and the attribute system's seven trees (`data/AttributeContainers`) - because each copy calls
+  different compiled helpers.
 - `CoreContainers.h/.cpp`: compiled `std` map/set/vector instances the game uses from many places.
-- `CoreFoundation.h/.cpp`: the video-mode accessors, `AssertMessage`, the empty stub functions.
+- `CoreFoundation.h/.cpp`: the video-mode accessors, `AssertMessage`, the empty stub functions, the STL's
+  length_error throw and the `[core]` untested warning.
 
 ### Scheduler, clock, randomness (`src/driving/Scheduler.cpp`, `Schedule.hpp`, `engine/SimRandom.cpp`)
 The scheduler runs the game: four schedules (per frame, sim rate, half and quarter rate), each with priority

@@ -1,6 +1,8 @@
 #include "AttributeContainers.h"
 #include "AttributeSystem.h"
 #include "AttributeUntested.h"
+#include "StdStreams.h"
+#include "../engine/UMemory.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -26,22 +28,11 @@
 // and _CxxThrowException), but nothing reaches them.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define UMemory_FastAlloc ((void *(*)(uint32_t, const char *))0x00114750)
-#define UMemory_FastFree ((void (*)(void *, uint32_t))0x001147d0)
 #define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 
-// The game's std::string (0x1c bytes) and the pieces of its exception machinery the STL's throws use.
-struct GameString {
-    uint8_t allocator;
-    uint8_t unknown01[3];
-    char buffer[16];     // +0x04 (a pointer when the string is longer)
-    uint32_t size;       // +0x14
-    uint32_t reserved;   // +0x18
-};
-static_assert(sizeof(GameString) == 0x1c, "the game's std::string is 0x1c bytes");
-
-#define GameString_Assign ((GameString *(__fastcall *)(GameString *, int, const char *, uint32_t))0x00013630)
-#define LogicError_Construct ((void *(__fastcall *)(void *, int, const GameString *))0x00013700)
+// The pieces of the game's exception machinery the STL's throws use.
+#define StdString_Assign ((GameStd::String *(__fastcall *)(GameStd::String *, int, const char *, uint32_t))0x00013630)
+#define LogicError_Construct ((void *(__fastcall *)(void *, int, const GameStd::String *))0x00013700)
 #define CxxThrowException ((void (__stdcall *)(void *, const void *))0x001325ad)
 
 // std::length_error's and std::out_of_range's vtables and throw descriptions.
@@ -55,11 +46,11 @@ namespace {
 // _THROW(error, message): a std::string of the message, the exception constructed from it (logic_error's
 // constructor, then the derived class's vtable), thrown. Does not return.
 void ThrowStl(const char *message, void *vtable, const void *throwInfo) {
-    GameString text;
-    text.reserved = 15;
+    GameStd::String text;
+    text.capacity = 15;
     text.size = 0;
-    text.buffer[0] = '\0';
-    GameString_Assign(&text, 0, message, static_cast<uint32_t>(strlen(message)));
+    text.text.buffer[0] = '\0';
+    StdString_Assign(&text, 0, message, static_cast<uint32_t>(strlen(message)));
     struct {
         void *vtable;
         uint8_t unknown04[0x24];
@@ -249,7 +240,7 @@ template <class Tree, class Value>
 typename Tree::Node *TreeBuynode(typename Tree::Node *left, typename Tree::Node *parent, typename Tree::Node *right,
                                  const Value &value, uint8_t color) {
     typedef typename Tree::Node Node;
-    Node *node = static_cast<Node *>(UMemory_FastAlloc(sizeof(Node), "STL"));
+    Node *node = static_cast<Node *>(UMemory::FastAlloc(sizeof(Node), "STL"));
     if (node != NULL) {
         node->left = left;
         node->parent = parent;
@@ -266,12 +257,12 @@ typename Tree::Node *TreeBuynode(typename Tree::Node *left, typename Tree::Node 
 // allocation writes through NULL as the original does.
 template <class Node>
 Node *TreeBuyHead() {
-    Node *node = static_cast<Node *>(UMemory_FastAlloc(sizeof(Node), "STL"));
+    Node *node = static_cast<Node *>(UMemory::FastAlloc(sizeof(Node), "STL"));
     if (node != NULL)
         node->left = NULL;
     node->parent = NULL;
     node->right = NULL;
-    node->color = kAttributeTreeBlack;
+    node->color = kTreeBlack;
     node->isNil = 0;
     return node;
 }
@@ -296,7 +287,7 @@ void TreeEraseSubtree(Tree *tree, typename Tree::Node *root) {
         node = node->left;
         TreeTraits<Tree>::DestroyValue(root);
         if (root != NULL)
-            UMemory_FastFree(root, sizeof(*root));
+            UMemory::FastFree(root, sizeof(*root));
     }
 }
 
@@ -307,7 +298,7 @@ typename Tree::Node *TreeInsert(Tree *tree, bool addLeft, typename Tree::Node *w
         ATTRIBUTE_UNTESTED("an attribute tree's insert past max_size");
         ThrowStl("map/set<T> too long", LengthErrorVtable, LengthErrorThrowInfo);
     }
-    Node *node = TreeBuynode<Tree>(tree->head, where, tree->head, value, kAttributeTreeRed);
+    Node *node = TreeBuynode<Tree>(tree->head, where, tree->head, value, kTreeRed);
     tree->size++;
     if (where == tree->head) {
         tree->head->parent = node;
@@ -322,42 +313,42 @@ typename Tree::Node *TreeInsert(Tree *tree, bool addLeft, typename Tree::Node *w
         if (where == tree->head->right)
             tree->head->right = node;
     }
-    for (Node *at = node; at->parent->color == kAttributeTreeRed;) {
+    for (Node *at = node; at->parent->color == kTreeRed;) {
         if (at->parent == at->parent->parent->left) {
             Node *uncle = at->parent->parent->right;
-            if (uncle->color == kAttributeTreeRed) {
-                at->parent->color = kAttributeTreeBlack;
-                uncle->color = kAttributeTreeBlack;
-                at->parent->parent->color = kAttributeTreeRed;
+            if (uncle->color == kTreeRed) {
+                at->parent->color = kTreeBlack;
+                uncle->color = kTreeBlack;
+                at->parent->parent->color = kTreeRed;
                 at = at->parent->parent;
             } else {
                 if (at == at->parent->right) {
                     at = at->parent;
                     TreeLrotate(tree, at);
                 }
-                at->parent->color = kAttributeTreeBlack;
-                at->parent->parent->color = kAttributeTreeRed;
+                at->parent->color = kTreeBlack;
+                at->parent->parent->color = kTreeRed;
                 TreeRrotate(tree, at->parent->parent);
             }
         } else {
             Node *uncle = at->parent->parent->left;
-            if (uncle->color == kAttributeTreeRed) {
-                at->parent->color = kAttributeTreeBlack;
-                uncle->color = kAttributeTreeBlack;
-                at->parent->parent->color = kAttributeTreeRed;
+            if (uncle->color == kTreeRed) {
+                at->parent->color = kTreeBlack;
+                uncle->color = kTreeBlack;
+                at->parent->parent->color = kTreeRed;
                 at = at->parent->parent;
             } else {
                 if (at == at->parent->left) {
                     at = at->parent;
                     TreeRrotate(tree, at);
                 }
-                at->parent->color = kAttributeTreeBlack;
-                at->parent->parent->color = kAttributeTreeRed;
+                at->parent->color = kTreeBlack;
+                at->parent->parent->color = kTreeRed;
                 TreeLrotate(tree, at->parent->parent);
             }
         }
     }
-    tree->head->parent->color = kAttributeTreeBlack;
+    tree->head->parent->color = kTreeBlack;
     return node;
 }
 
@@ -419,67 +410,67 @@ typename Tree::Node *TreeErase(Tree *tree, typename Tree::Node *erased) {
         node->color = erased->color;
         erased->color = color;
     }
-    if (erased->color == kAttributeTreeBlack) {
-        for (; fix != tree->head->parent && fix->color == kAttributeTreeBlack;
+    if (erased->color == kTreeBlack) {
+        for (; fix != tree->head->parent && fix->color == kTreeBlack;
              fix = fixParent, fixParent = fix->parent) {
             if (fix == fixParent->left) {
                 node = fixParent->right;
-                if (node->color == kAttributeTreeRed) {
-                    node->color = kAttributeTreeBlack;
-                    fixParent->color = kAttributeTreeRed;
+                if (node->color == kTreeRed) {
+                    node->color = kTreeBlack;
+                    fixParent->color = kTreeRed;
                     TreeLrotate(tree, fixParent);
                     node = fixParent->right;
                 }
                 if (node->isNil) {
                     fix = fixParent;   // (shouldn't happen)
-                } else if (node->left->color == kAttributeTreeBlack && node->right->color == kAttributeTreeBlack) {
-                    node->color = kAttributeTreeRed;
+                } else if (node->left->color == kTreeBlack && node->right->color == kTreeBlack) {
+                    node->color = kTreeRed;
                     fix = fixParent;
                 } else {
-                    if (node->right->color == kAttributeTreeBlack) {
-                        node->left->color = kAttributeTreeBlack;
-                        node->color = kAttributeTreeRed;
+                    if (node->right->color == kTreeBlack) {
+                        node->left->color = kTreeBlack;
+                        node->color = kTreeRed;
                         TreeRrotate(tree, node);
                         node = fixParent->right;
                     }
                     node->color = fixParent->color;
-                    fixParent->color = kAttributeTreeBlack;
-                    node->right->color = kAttributeTreeBlack;
+                    fixParent->color = kTreeBlack;
+                    node->right->color = kTreeBlack;
                     TreeLrotate(tree, fixParent);
                     break;
                 }
             } else {
                 node = fixParent->left;
-                if (node->color == kAttributeTreeRed) {
-                    node->color = kAttributeTreeBlack;
-                    fixParent->color = kAttributeTreeRed;
+                if (node->color == kTreeRed) {
+                    node->color = kTreeBlack;
+                    fixParent->color = kTreeRed;
                     TreeRrotate(tree, fixParent);
                     node = fixParent->left;
                 }
                 if (node->isNil) {
                     fix = fixParent;
-                } else if (node->right->color == kAttributeTreeBlack && node->left->color == kAttributeTreeBlack) {
-                    node->color = kAttributeTreeRed;
+                } else if (node->right->color == kTreeBlack && node->left->color == kTreeBlack) {
+                    node->color = kTreeRed;
                     fix = fixParent;
                 } else {
-                    if (node->left->color == kAttributeTreeBlack) {
-                        node->right->color = kAttributeTreeBlack;
-                        node->color = kAttributeTreeRed;
+                    if (node->left->color == kTreeBlack) {
+                        node->right->color = kTreeBlack;
+                        node->color = kTreeRed;
                         TreeLrotate(tree, node);
                         node = fixParent->left;
                     }
                     node->color = fixParent->color;
-                    fixParent->color = kAttributeTreeBlack;
-                    node->left->color = kAttributeTreeBlack;
+                    fixParent->color = kTreeBlack;
+                    node->left->color = kTreeBlack;
                     TreeRrotate(tree, fixParent);
                     break;
                 }
             }
         }
-        fix->color = kAttributeTreeBlack;
+        fix->color = kTreeBlack;
     }
     TreeTraits<Tree>::DestroyValue(erased);
-    UMemory_FastFree(erased, sizeof(Node));
+    UMemory::FastFree(erased, sizeof(Node));
     if (tree->size > 0)
         tree->size--;
     return next;
@@ -509,7 +500,7 @@ template <class Tree>
 void TreeDestruct(Tree *tree) {
     TreeEraseRange(tree, tree->head->left, tree->head);
     if (tree->head != NULL)
-        UMemory_FastFree(tree->head, sizeof(*tree->head));
+        UMemory::FastFree(tree->head, sizeof(*tree->head));
     tree->head = NULL;
     tree->size = 0;
 }
@@ -941,6 +932,12 @@ ExtensionTypeMap::Iterator* ExtensionTypeMap::Insert(Iterator *result, bool addL
     return result;
 }
 
+// FUNC_AT(0x000552d0)
+ExtensionTypeMap::InsertResult* ExtensionTypeMap::InsertUnique(InsertResult *result, const ExtensionTypeEntry &value) {
+    result->position.node = TreeInsertUnique(this, value, &result->inserted);
+    return result;
+}
+
 // FUNC_AT(0x00054990)
 ExtensionTypeMap::Iterator* ExtensionTypeMap::Erase(Iterator *result, Iterator where) {
     ATTRIBUTE_UNTESTED("ExtensionTypeMap::Erase");
@@ -1246,13 +1243,13 @@ void StoreBlockList::InsertN(AttributeStoreBlock *where, uint32_t count, const A
         if (capacity < Size() + count)
             capacity = Size() + count;
         AttributeStoreBlock *blocks =
-            static_cast<AttributeStoreBlock *>(UMemory_FastAlloc(capacity * sizeof(AttributeStoreBlock), "STL"));
+            static_cast<AttributeStoreBlock *>(UMemory::FastAlloc(capacity * sizeof(AttributeStoreBlock), "STL"));
         AttributeStoreBlock *at = StoreBlockUninitializedCopy(first, where, blocks);
         StoreBlockUninitializedFill(at, count, copy);
         StoreBlockUninitializedCopy(where, last, at + count);
         count += Size();
         if (first != NULL)   // (the elements' destructor is trivial)
-            UMemory_FastFree(first, static_cast<uint32_t>(end - first) * sizeof(AttributeStoreBlock));
+            UMemory::FastFree(first, static_cast<uint32_t>(end - first) * sizeof(AttributeStoreBlock));
         end = blocks + capacity;
         last = blocks + count;
         first = blocks;

@@ -2,7 +2,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 
 // ---------------------------------------------------------------------------------------------------------------
 // The driving engine's top: main, the system start-up and clean-up around the game loop (Bond_*), the loop
@@ -22,22 +21,6 @@
 //       Bond_CleanUp
 //       ReturnToAction                relaunch: the next part of the mission, or back to the action engine
 // ---------------------------------------------------------------------------------------------------------------
-
-// The warning beside a provisional port: code no shipped data reaches, ported from the listing without a test.
-inline void CoreUntested(const char *what) {
-    printf("[core] WARNING: %s ran - a provisional port that no shipped data reaches, UNTESTED. Check what it "
-           "computes against the original.\n", what);
-    fflush(stdout);
-}
-
-#define CORE_UNTESTED(what) \
-    do { \
-        static bool warned_; \
-        if (!warned_) { \
-            warned_ = true; \
-            CoreUntested(what); \
-        } \
-    } while (0)
 
 // The launch data page (Ghidra: uberBondScoreBuffer, 0xa4c bytes at 0x00243b90): what the action engine hands the
 // driving engine through XLaunchNewImage - its profile (volumes, options, progress) and the hand-over block - and
@@ -100,46 +83,6 @@ static_assert(offsetof(LaunchPage, missionName) == 0x4f4 && offsetof(LaunchPage,
                   offsetof(LaunchPage, missionNum) == 0x974 && offsetof(LaunchPage, language) == 0x988 &&
                   offsetof(LaunchPage, flags) == 0x9a0 && offsetof(LaunchPage, subtitles) == 0xa2c,
               "launch page offsets");
-
-// An MSVC 7 std::string (0x1c bytes): the small-string buffer holds up to 15 characters, longer ones live in a
-// block from the pools. Constructed and destroyed inline by its users.
-struct GameString {
-    uint8_t allocator;          // +0x00 std::allocator, empty
-    uint8_t _pad01[3];
-    union {
-        char buf[16];           // +0x04 capacity < 16
-        char *ptr;              // +0x04 capacity >= 16
-    };
-    uint32_t size;              // +0x14
-    uint32_t capacity;          // +0x18
-
-    const char *Text() const { return capacity < 16 ? buf : ptr; }
-    // assign(text) (0x0005b0a0).
-    GameString* Assign(const char *text);
-};
-static_assert(sizeof(GameString) == 0x1c, "std::string is 0x1c bytes");
-
-// The STL's length_error throw, as the game's _Xlen functions build it: std::string message, logic_error's
-// constructor, length_error's vtable, _CxxThrowException. Not reached by anything the game does.
-void ThrowLengthError(const char *message);
-
-// The USingletonManager instance (a function-local static at 0x001e47c0, 16 bytes): a vector of the singletons
-// it kills at clean-up.
-struct SingletonRegistry {
-    uint32_t unknown00;
-    void **first;               // +0x04
-    void **last;                // +0x08
-    void **end;                 // +0x0c
-
-    // The static's destructor, registered with atexit (0x00059c30): kills them all, frees the vector.
-    void Destruct();
-    // The vector's _Xlen (0x00059ca0).
-    static void Xlen();
-};
-static_assert(sizeof(SingletonRegistry) == 0x10, "the singleton manager is 16 bytes");
-
-// The singleton manager, made on first use (0x00059d20).
-SingletonRegistry* SingletonManager();
 
 // A key/value line in a tuning file (Ghidra: OptionParser, 8 bytes): where the value after `key` starts in the
 // text and how long it is, or null.

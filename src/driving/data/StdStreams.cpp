@@ -9,6 +9,7 @@
 #include "StdStreams.h"
 
 #include "DebugVarUntested.h"
+#include "../engine/UMemory.hpp"
 #include "../../helpers.h"
 #include "../../common/xbeOverload.h"
 
@@ -86,10 +87,6 @@ using namespace GameStd;
 #define String_Xran ((void (__fastcall *)(String *, int))0x00130b80)
 #define String_Xlen ((void (__fastcall *)(String *, int))0x00130bc0)
 
-#define BuiltinNew ((void *(__cdecl *)(size_t))0x001146a0)        // operator new (CORE_A)
-#define BuiltinDelete ((void (__cdecl *)(void *))0x001146e0)      // operator delete
-#define BuiltinVecNew ((void *(__cdecl *)(size_t))0x00114710)     // operator new[]
-#define UMemory_FastFree ((void (__cdecl *)(void *, uint32_t))0x001147d0)   // std::allocator's deallocate
 #define CrtFree ((void (__cdecl *)(void *))0x001331dc)
 #define Sprintf ((int (__cdecl *)(char *, const char *, ...))0x00132767)
 #define Localeconv ((Lconv *(__cdecl *)())0x001333d6)
@@ -181,7 +178,7 @@ inline void PutInline(OutIter *dest, char ch) {
 // ~basic_string as it is inlined: free the long buffer (through the game's allocator), no reset.
 inline void FreeString(String *s) {
     if (s->capacity >= 16 && s->text.pointer != NULL)
-        UMemory_FastFree(s->text.pointer, s->capacity + 1);
+        UMemory::FastFree(s->text.pointer, s->capacity + 1);
 }
 
 // The same, followed by _Tidy's reset, for a temporary destroyed in the middle of a function.
@@ -247,7 +244,7 @@ void GameStd::BasicIos::DestructIstream() {
 BasicIos* GameStd::BasicIos::Delete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        BuiltinDelete(this);
+        OperatorDelete(this);
     return this;
 }
 
@@ -258,7 +255,7 @@ void* GameStd::BasicIos::DeleteIstream(unsigned flags) {
     stream->Ios()->vtable = IstreamIosVtable;
     Destruct();
     if (flags & 1)
-        BuiltinDelete(stream);
+        OperatorDelete(stream);
     return stream;
 }
 
@@ -268,7 +265,7 @@ void* GameStd::BasicIos::DeleteIStrStream(unsigned flags) {
     IStrStream_Destruct(this, 0);
     Destruct();
     if (flags & 1)
-        BuiltinDelete(stream);
+        OperatorDelete(stream);
     return stream;
 }
 
@@ -312,7 +309,7 @@ Ctype* GameStd::Ctype::Construct(const short *table, bool deleteTable, uint32_t 
         if (ctype.deleteTable > 0)
             CrtFree((void *)ctype.table);
         else if (ctype.deleteTable < 0)
-            BuiltinDelete((void *)ctype.table);
+            OperatorDelete((void *)ctype.table);
         ctype.table = table;
         ctype.deleteTable = deleteTable ? -1 : 0;
     }
@@ -368,7 +365,7 @@ const char* GameStd::Ctype::DoNarrowRange(const char *first, const char *last, c
 // FUNC_AT(0x00037ff0)
 uint32_t GameStd::Ctype::GetCat(const Facet **cache) {
     if (cache != NULL && *cache == NULL) {
-        Ctype *made = (Ctype *)BuiltinNew(sizeof(Ctype));
+        Ctype *made = (Ctype *)OperatorNew(sizeof(Ctype));
         *cache = made != NULL ? made->Construct(NULL, false, 0) : NULL;
     }
     return 2;   // _X_CTYPE
@@ -378,7 +375,7 @@ uint32_t GameStd::Ctype::GetCat(const Facet **cache) {
 Ctype* GameStd::Ctype::Delete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        BuiltinDelete(this);
+        OperatorDelete(this);
     return this;
 }
 
@@ -388,7 +385,7 @@ void GameStd::Ctype::Destruct() {
     if (ctype.deleteTable > 0)
         CrtFree((void *)ctype.table);
     else if (ctype.deleteTable < 0)
-        BuiltinDelete((void *)ctype.table);
+        OperatorDelete((void *)ctype.table);
     vtable = FacetVtable;
 }
 
@@ -404,7 +401,7 @@ const Ctype* GameStd::UseCtype(const Locale *locale) {
 Streambuf* GameStd::Streambuf::Construct() {
     vtable = StreambufVtable;
     Mutex_Construct(&mutex, 0);
-    Locale *made = (Locale *)BuiltinNew(sizeof(Locale));
+    Locale *made = (Locale *)OperatorNew(sizeof(Locale));
     locale = made != NULL ? Locale_Construct(made, 0) : NULL;
     InitPointers();
     return this;
@@ -416,7 +413,7 @@ void GameStd::Streambuf::Destruct() {
     vtable = StreambufVtable;
     if (owned != NULL) {
         ReleaseLocale(owned->impl);
-        BuiltinDelete(owned);
+        OperatorDelete(owned);
     }
     Mutex_Destruct(&mutex, 0);
 }
@@ -425,7 +422,7 @@ void GameStd::Streambuf::Destruct() {
 Streambuf* GameStd::Streambuf::Delete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        BuiltinDelete(this);
+        OperatorDelete(this);
     return this;
 }
 
@@ -582,7 +579,7 @@ StrStreambuf* GameStd::StrStreambuf::Construct(const char *text, int count) {
 StrStreambuf* GameStd::StrStreambuf::Delete(unsigned flags) {
     StrStreambuf_Destruct(this, 0);
     if (flags & 1)
-        BuiltinDelete(this);
+        OperatorDelete(this);
     return this;
 }
 
@@ -933,14 +930,14 @@ NumGet* GameStd::NumGet::Construct(uint32_t refCount) {
 NumGet* GameStd::NumGet::Delete(unsigned flags) {
     Facet_Destruct(this, 0);
     if (flags & 1)
-        BuiltinDelete(this);
+        OperatorDelete(this);
     return this;
 }
 
 // FUNC_AT(0x00038a80)
 uint32_t GameStd::NumGet::GetCat(const Facet **cache) {
     if (cache != NULL && *cache == NULL) {
-        NumGet *made = (NumGet *)BuiltinNew(sizeof(NumGet));
+        NumGet *made = (NumGet *)OperatorNew(sizeof(NumGet));
         *cache = made != NULL ? made->Construct(0) : NULL;
     }
     return 4;   // _X_NUMERIC
@@ -959,7 +956,7 @@ const NumPut* GameStd::UseNumPut(const Locale *locale) {
 // FUNC_AT(0x00039d10)
 uint32_t GameStd::NumPut::GetCat(const Facet **cache) {
     if (cache != NULL && *cache == NULL) {
-        NumPut *made = (NumPut *)BuiltinNew(sizeof(NumPut));
+        NumPut *made = (NumPut *)OperatorNew(sizeof(NumPut));
         if (made != NULL) {
             made->refs = 0;
             made->vtable = NumPutVtable;
@@ -980,7 +977,7 @@ const Numpunct* GameStd::UseNumpunct(const Locale *locale) {
 // FUNC_AT(0x0003aa90)
 uint32_t GameStd::Numpunct::GetCat(const Facet **cache) {
     if (cache != NULL && *cache == NULL) {
-        Numpunct *made = (Numpunct *)BuiltinNew(sizeof(Numpunct));
+        Numpunct *made = (Numpunct *)OperatorNew(sizeof(Numpunct));
         if (made != NULL) {
             made->refs = 0;
             made->vtable = NumpunctVtable;
@@ -1010,7 +1007,7 @@ char GameStd::Numpunct::DoThousandsSep() {
 Numpunct* GameStd::Numpunct::Delete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        BuiltinDelete(this);
+        OperatorDelete(this);
     return this;
 }
 
@@ -1023,9 +1020,9 @@ void GameStd::Numpunct::Destruct() {
 
 // FUNC_AT(0x0003abd0)
 void GameStd::Numpunct::Tidy() {
-    BuiltinDelete((void *)grouping);   // delete, not delete[], as the library has it
-    BuiltinDelete((void *)falseName);
-    BuiltinDelete((void *)trueName);
+    OperatorDelete((void *)grouping);   // delete, not delete[], as the library has it
+    OperatorDelete((void *)falseName);
+    OperatorDelete((void *)trueName);
 }
 
 namespace {
@@ -1057,7 +1054,7 @@ void GameStd::Numpunct::Init(const Locinfo *) {
 // FUNC_AT(0x0003acd0)
 char* GameStd::Numpunct::MakeLocString(const char *text, char *, const CvtVec *) {
     uint32_t length = uint32_t(strlen(text)) + 1;
-    char *copy = (char *)BuiltinVecNew(length);
+    char *copy = (char *)OperatorNewArray(length);
     memcpy(copy, text, length);
     return copy;
 }
@@ -1174,6 +1171,11 @@ String* GameStd::String::AppendSub(const String *right, uint32_t offset, uint32_
         }
     }
     return this;
+}
+
+// FUNC_AT(0x0005b0a0)
+String* GameStd::String::Assign(const char *string) {
+    return String_AssignText(this, 0, string, uint32_t(strlen(string)));
 }
 
 // ---------------------------------------------------------------------------------------------------------------

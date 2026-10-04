@@ -7,6 +7,8 @@
 #include "../Scheduler.hpp"
 #include "../engine/GameLoop.h"
 #include "../engine/SimRandom.h"
+#include "../engine/UMemory.hpp"
+#include "../data/StdStreams.h"
 #include "../platform/RealMath.h"
 #include "../../common/xbeOriginal.h"
 #include "../../helpers.h"
@@ -25,8 +27,9 @@
 //   - Schedules: random scripts on synthetic schedules of 1, 2, 4 and 8 buckets - construct, add tasks, run
 //     buckets directly and through the three Process overrides, remove tasks, remove them all, delete - with the
 //     event table's first ten entries pointed at recording callbacks (some of which add or remove tasks while
-//     their bucket runs). The game's allocator entry points (pool alloc/free, operator new/delete/new[]) are
-//     five-byte jumps to a bump arena for the duration, reset to the same state before each run, so the two runs'
+//     their bucket runs). The game's allocator entry points (pool alloc/free, operator new/delete/new[]), and
+//     our UMemory functions behind them that the ports call directly, are five-byte jumps to a bump arena for
+//     the duration, reset to the same state before each run, so the two runs'
 //     objects sit at the same addresses: the arena's bytes, the allocation log (sizes, names, order, what was
 //     freed) and the callbacks' log must match exactly. Scheduler::Init / Reset / ResetTime / Shutdown likewise,
 //     which takes in the scheduler's constructor and destructor and the vector's push_back and _Insert_n.
@@ -38,7 +41,7 @@
 //   - OptionParser and GetFullString on generated tuning-file texts (keys mid-line, at line starts after \n and
 //     \r\n, values with every separator and trailing ']' / ')'), the key copies' allocations included - the
 //     original leaks one when a key matches mid-line.
-//   - GameString::Assign on strings of 0-40 characters; the bit set's AndNotFrom.
+//   - std::string's assign (GameStd::String::Assign) on strings of 0-40 characters; the bit set's AndNotFrom.
 //
 // Everything the tests touch is saved first and put back: the noise tables and their flag, the generator states,
 // the launch page, the scheduler pointer, the event table entries and the patched code bytes.
@@ -108,7 +111,7 @@ typedef double (*Noise1Fn)(float);
 typedef void (__fastcall *AndNotFn)(BitSet192 *, int, const BitSet192 *);
 typedef OptionParser *(__fastcall *OptionConstructFn)(OptionParser *, int, const char *, const char *);
 typedef bool (__fastcall *GetFullStringFn)(OptionParser *, int, char *);
-typedef GameString *(__fastcall *AssignFn)(GameString *, int, const char *);
+typedef GameStd::String *(__fastcall *AssignFn)(GameStd::String *, int, const char *);
 
 #define Orig_SimConstruct ((SimConstructFn)0x0005cc80)
 #define Orig_SimGenerate ((SimGenerateFn)0x0005cc90)
@@ -281,7 +284,7 @@ struct Hook {
     uint8_t saved[5];
     bool on;
 };
-Hook g_hooks[8];
+Hook g_hooks[16];
 int g_hookCount;
 
 void HookInstall(uint32_t at, const void *to) {
@@ -300,6 +303,16 @@ void HookInstall(uint32_t at, const void *to) {
     VirtualProtect((void *)(uintptr_t)at, 5, old, &old);
     FlushInstructionCache(GetCurrentProcess(), (void *)(uintptr_t)at, 5);
     h.on = true;
+}
+
+// The same jump over our C++ function too, for the callers that are ours and call it directly rather than through
+// the game's address (which jumps to it): the port's allocations must reach the fakes as the original's do.
+bool HookBoth(uint32_t at, const void *ours, const void *to) {
+    HookInstall(at, to);
+    bool on = g_hooks[g_hookCount - 1].on;
+    if ((uint32_t)(uintptr_t)ours != at)
+        HookInstall((uint32_t)(uintptr_t)ours, to);
+    return on;
 }
 
 void HooksRemove() {
@@ -758,7 +771,7 @@ void TestMissions() {
     memcpy(LaunchBytes, g_pageSaved, sizeof(g_pageSaved));
 }
 
-// ---- OptionParser and GameString
+// ---- OptionParser and std::string
 
 char g_text[1024];
 const char *g_key;
@@ -792,12 +805,12 @@ void MakeText(char *text, int size) {
     }
 }
 
-GameString *g_string;
+GameStd::String *g_string;
 const char *g_assign;
 
 void RunAssign(void *) {
-    GameString *s = (GameString *)FakeNew(sizeof(GameString));
-    memset(s, 0, sizeof(GameString));
+    GameStd::String *s = (GameStd::String *)FakeNew(sizeof(GameStd::String));
+    memset(s, 0, sizeof(GameStd::String));
     s->capacity = 15;
     bool original = g_ops == &kOriginalOps;
     Log(0x70, Offset(original ? Orig_Assign(s, 0, g_assign) : s->Assign(g_assign)));
@@ -826,7 +839,7 @@ void TestOptionsAndStrings() {
         text[length] = 0;
         g_assign = text;
         g_cases++;
-        RunBoth(RunAssign, "GameString::Assign", length);
+        RunBoth(RunAssign, "String::Assign", length);
     }
 }
 
@@ -846,11 +859,11 @@ void CoreLoopShadow_Run(void) {
     TestMissions();
     TestNoise();
 
-    HookInstall(0x00114750, (const void *)FakeFastAlloc);
-    HookInstall(0x001147d0, (const void *)FakeFastFree);
-    HookInstall(0x001146a0, (const void *)FakeNew);
-    HookInstall(0x001146e0, (const void *)FakeDelete);
-    HookInstall(0x00114710, (const void *)FakeVecNew);
+    HookBoth(0x00114750, (const void *)&UMemory::FastAlloc, (const void *)FakeFastAlloc);
+    HookBoth(0x001147d0, (const void *)&UMemory::FastFree, (const void *)FakeFastFree);
+    HookBoth(0x001146a0, (const void *)&OperatorNew, (const void *)FakeNew);
+    HookBoth(0x001146e0, (const void *)&OperatorDelete, (const void *)FakeDelete);
+    HookBoth(0x00114710, (const void *)&OperatorNewArray, (const void *)FakeVecNew);
     bool hooked = true;
     for (int i = 0; i < g_hookCount; i++)
         hooked = hooked && g_hooks[i].on;

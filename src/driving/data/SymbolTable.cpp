@@ -336,7 +336,7 @@ void Tree::Destroy() {
 TreeNode* NamespaceMap::LowerBound(const char *const *key) {
     TreeNode *bound = head;
     for (TreeNode *node = head->parent; !node->isNil;) {
-        if (Crt_stricmp(node->name, *key) < 0) {
+        if (Crt_stricmp(node->value.name, *key) < 0) {
             node = node->right;
         } else {
             bound = node;
@@ -372,7 +372,7 @@ TreeInsertResult* NamespaceMap::InsertEqual(TreeInsertResult *result, const Tree
     bool addLeft = true;
     for (TreeNode *node = head->parent; !node->isNil;) {
         where = node;
-        addLeft = Crt_stricmp(value->name, node->name) < 0;
+        addLeft = Crt_stricmp(value->name, node->value.name) < 0;
         node = addLeft ? node->left : node->right;
     }
     TreeNode *inserted;
@@ -400,7 +400,7 @@ TreeInsertResult* CarpGroupMap::InsertUnique(TreeInsertResult *result, const Tre
     bool addLeft = true;
     for (TreeNode *node = head->parent; !node->isNil;) {
         where = node;
-        addLeft = Crt_stricmp(value->name, node->name) < 0;
+        addLeft = Crt_stricmp(value->name, node->value.name) < 0;
         node = addLeft ? node->left : node->right;
     }
     TreeNode *before = where;
@@ -414,7 +414,7 @@ TreeInsertResult* CarpGroupMap::InsertUnique(TreeInsertResult *result, const Tre
         }
         TreeIterator_Decrement(&before, 0);
     }
-    if (Crt_stricmp(before->name, value->name) < 0) {
+    if (Crt_stricmp(before->value.name, value->name) < 0) {
         TreeNode *inserted;
         Tree::InsertAt(&inserted, addLeft, where, value);
         result->where = inserted;
@@ -495,15 +495,15 @@ void* USymbolTable::NameLookup(const char *name, int *size) {
     NamespaceMap *map = namespaces;
     const char *key = prefix;
     TreeNode *node = map->LowerBound(&key);
-    if (node == map->head || Crt_stricmp(prefix, node->name) < 0)
+    if (node == map->head || Crt_stricmp(prefix, node->value.name) < 0)
         node = map->head;
     // Without a separator the original hands the namespaces (char *)2 - null plus the separator's length; only
     // a namespace called "" would see it.
     const char *rest = reinterpret_cast<const char *>(uintptr_t(separator) + 2);
     for (; node != namespaces->head; node = TreeNext(node)) {
-        if (Crt_stricmp(node->name, prefix) != 0)
+        if (Crt_stricmp(node->value.name, prefix) != 0)
             return NULL;
-        void *found = node->ns->Lookup(rest, size);
+        void *found = node->value.ns->Lookup(rest, size);
         if (found != NULL)
             return found;
     }
@@ -523,9 +523,9 @@ void USymbolTable::AddNamespace(const char *name, SymbolNamespace *ns) {
 SymbolNamespace* USymbolTable::RemoveNamespace(const char *name) {
     NamespaceMap *map = namespaces;
     TreeNode *node = map->LowerBound(&name);
-    if (node == map->head || Crt_stricmp(name, node->name) < 0)
+    if (node == map->head || Crt_stricmp(name, node->value.name) < 0)
         node = map->head;
-    SymbolNamespace *ns = node->ns;
+    SymbolNamespace *ns = node->value.ns;
     TreeNode *ignored;
     namespaces->EraseAt(&ignored, node);
     return ns;
@@ -626,7 +626,7 @@ void* UCarpNamespace::NameLookup(const char *name, int *size) {
     NameMap_Find(groups, 0, &node, &key);   // find, shared by both name maps
     if (node == groups->head)
         return NULL;
-    UGroup *group = node->group;
+    UGroup *group = node->value.group;
     if (tag == 0) {
         *size = 0;
         return group;

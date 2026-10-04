@@ -3,6 +3,9 @@
 #include "Tuning.h"
 
 #include "DebugVarUntested.h"
+#include "../engine/GameLoop.h"
+#include "../engine/UFileLoader.h"
+#include "../engine/UMemory.hpp"
 #include "../../helpers.h"
 #include "../../common/xbeOverload.h"
 #include "../platform/FileSys.h"
@@ -12,25 +15,13 @@
 #include <string.h>
 
 #define DTuningDBMgrVtable ((const void *const *)0x0018bebc)
-#define USingletonVtable ((const void *const *)0x0018beb0)
 #define FoundValue ((char *)0x001e22f0)          // FindItem's result buffer
 #define FoundIndexedValue ((char *)0x001e2340)   // FindIndexedItem's
 
-#define BuiltinNew ((void *(__cdecl *)(size_t))0x001146a0)        // operator new (CORE_A)
-#define BuiltinDelete ((void (__cdecl *)(void *))0x001146e0)      // operator delete
 #define Sprintf ((int (__cdecl *)(char *, const char *, ...))0x00132767)
 #define Sscanf ((int (__cdecl *)(const char *, const char *, ...))0x00133234)
-#define UFileLoader_FileLoadz ((void *(__cdecl *)(const char *, int))0x001176d0)   // DATA_C
-#define OptionParser_Construct ((TuningLine *(__fastcall *)(TuningLine *, int, const char *, const char *))0x0005b870)   // CORE_B
-#define OptionParser_GetFullString ((bool (__fastcall *)(TuningLine *, int, char *))0x0005b9c0)   // CORE_B
 
 namespace {
-
-// OptionParser (8 bytes): where `key`'s value starts in the text, and its length.
-struct TuningLine {
-    const char *value;
-    int length;
-};
 
 static const int kFilePriority = 100;   // FILESYS_ ... sync priority
 
@@ -76,9 +67,9 @@ DTuningFile* DTuningFile::Construct(const char *name, const char *level, int ret
 
 // FUNC_AT(0x0003d9c0)
 DTuningFile::Reader* DTuningFile::OpenForRead() {
-    Reader *made = (Reader *)BuiltinNew(sizeof(Reader));
+    Reader *made = (Reader *)OperatorNew(sizeof(Reader));
     if (made != NULL)
-        made->text = path[0] != '\0' ? (const char *)UFileLoader_FileLoadz(path, 0) : NULL;
+        made->text = path[0] != '\0' ? (const char *)UFileLoader::FileLoadz(path, 0) : NULL;
     reader = made;
     mode = made != NULL ? kLoaded : kNotOpen;
     return made;
@@ -91,10 +82,10 @@ void DTuningFile::Destruct() {
         if (file != NULL) {
             DEBUGVAR_UNTESTED("DTuningFile::Destruct (text file)");
             file->Destruct();
-            BuiltinDelete(file);
+            OperatorDelete(file);
         }
     } else if (mode == kLoaded) {
-        BuiltinDelete(reader);   // the loaded text itself is not freed
+        OperatorDelete(reader);   // the loaded text itself is not freed
     }
 }
 
@@ -111,9 +102,9 @@ char* DTuningFile::Reader::FindItem(const char *name) {
         return NULL;
     char key[256];
     RemoveSpaces(key, name);
-    TuningLine line;
-    OptionParser_Construct(&line, 0, source, key);
-    return OptionParser_GetFullString(&line, 0, FoundValue) ? FoundValue : NULL;
+    OptionParser line;
+    line.Construct(source, key);
+    return line.GetFullString(FoundValue) ? FoundValue : NULL;
 }
 
 // FUNC_AT(0x0003d870)
@@ -123,9 +114,9 @@ char* DTuningFile::Reader::FindIndexedItem(const char *name, const char *index) 
     char key[256];
     Sprintf(key, "%s{%s}", name, index);
     RemoveSpaces(key, key);
-    TuningLine line;
-    OptionParser_Construct(&line, 0, text, key);
-    return OptionParser_GetFullString(&line, 0, FoundIndexedValue) ? FoundIndexedValue : NULL;
+    OptionParser line;
+    line.Construct(text, key);
+    return line.GetFullString(FoundIndexedValue) ? FoundIndexedValue : NULL;
 }
 
 // FUNC_AT(0x0003d910)
@@ -157,7 +148,7 @@ DTuningDBMgr* DTuningDBMgr::Construct() {
 
 // FUNC_AT(0x00059630)
 void DTuningDBMgr::InitSingleton() {
-    DTuningDBMgr *made = (DTuningDBMgr *)BuiltinNew(sizeof(DTuningDBMgr));
+    DTuningDBMgr *made = (DTuningDBMgr *)OperatorNew(sizeof(DTuningDBMgr));
     TuningDBMgr = made != NULL ? made->Construct() : NULL;
 }
 
@@ -175,7 +166,7 @@ void DTuningDBMgr::DestroySingleton() {
 // FUNC_AT(0x0003d640)
 void DTuningDBMgr::LoadDatabase(const char *databaseName, const char *level, int retry, bool skipCheck) {
     name = databaseName;
-    DTuningFile *made = (DTuningFile *)BuiltinNew(sizeof(DTuningFile));
+    DTuningFile *made = (DTuningFile *)OperatorNew(sizeof(DTuningFile));
     file = made != NULL ? made->Construct(databaseName, level, retry, skipCheck) : NULL;
     reader = file->OpenForRead();
 }
@@ -185,15 +176,6 @@ void DTuningDBMgr::CloseCurrent() {
     DTuningFile *open = file;
     if (open != NULL) {
         open->Destruct();
-        BuiltinDelete(open);
+        OperatorDelete(open);
     }
-}
-
-// FUNC_AT(0x0003d5f0)
-void* DTuningDBMgr::SingletonBaseDelete(unsigned flags) {
-    DEBUGVAR_UNTESTED("USingleton scalar deleting destructor");
-    vtable = USingletonVtable;
-    if (flags & 1)
-        BuiltinDelete(this);
-    return this;
 }

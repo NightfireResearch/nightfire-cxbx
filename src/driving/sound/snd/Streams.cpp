@@ -2,6 +2,7 @@
 #include "Platform.h"
 #include "Stream.h"
 #include "System.h"
+#include "../../engine/CoreFoundation.h"
 #include "../../platform/RealPrint.h"
 #include "SndGlobals.h"
 
@@ -86,9 +87,6 @@ static_assert(sizeof(SND::StreamState) == kStateSize && sizeof(SND::StreamReques
 #define DestroyAllEntry ((SndRestoreHook)0x0013c320)          // SNDSTRMI_destroyall, the on-exit function
 #define ReleaseEntry ((SND::PacketReleaseFn)0x0013bb20)       // SNDSTRMI_releasecallback
 #define FramesEntry ((SND::PacketFramesFn)0x0013bb50)         // SNDSTRMI_framescallback
-
-// ---- engine.core's dummyGetNullValue (not ours), at its address; the stack holds what it holds
-#define DummyGetNullValue ((int (*)(...))0x000f7330)
 
 // ---- SNDLINKI on the request lists: a request's first two words are the list's links
 static_assert(offsetof(SND::StreamRequest, next) == offsetof(SND::LinkNode, next) &&
@@ -775,7 +773,7 @@ SND::StreamRequest* SNDSTRMI_getrequestptr(int id) {
 
 // FUNC_AT(0x0013e8c0)
 int SNDPKTPLAY_overhead(int packets) {
-    int extra = DummyGetNullValue();
+    int extra = GetNullValue();   // dummyGetNullValue: 0
     return extra + packets * 32 + 0x7c;
 }
 
@@ -795,12 +793,12 @@ int SNDPKTPLAY_create(SND::PacketReleaseFn release, SND::PacketFramesFn framesDo
         SNDSYS_leavecritical();
         return -9;
     }
-    if (DummyGetNullValue(index, memory) < 0) {
+    if (GetNullValue() < 0) {   // the original passes the index and the memory, which it ignores
         SNDSYS_leavecritical();
         return -6;
     }
-    SND::PacketPlayer *p = (SND::PacketPlayer *)((uint8_t *)memory + DummyGetNullValue());
-    int extra = DummyGetNullValue();
+    SND::PacketPlayer *p = (SND::PacketPlayer *)((uint8_t *)memory + GetNullValue());
+    int extra = GetNullValue();   // dummyGetNullValue: 0
     p->slots = int16_t(uint32_t(size - extra - 0x7c) >> 5);   // an unsigned shift
     p->memory = memory;
     p->release = release;
@@ -949,7 +947,7 @@ int SNDPKTPLAY_framesoutstanding(int player) {
 
 // FUNC_AT(0x0013ede0)
 int SNDPKTPLAY_destroy(int player) {
-    DummyGetNullValue(player);
+    GetNullValue();   // passed the player, which it ignores
     PacketPlayers[player] = NULL;
     return 0;
 }

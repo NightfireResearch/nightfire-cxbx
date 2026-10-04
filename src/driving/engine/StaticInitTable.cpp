@@ -16,6 +16,9 @@
 #include "../eagl/RenderMethod.h"
 #include "../eagl/Loader.h"
 #include "../eagl/Profiler.h"
+#include "../data/Carp.h"
+#include "../data/SymbolTable.h"
+#include "FileNameList.h"
 
 // ---- the originals the initialisers still call, by address
 
@@ -40,12 +43,6 @@
 #define FUN_000cebc0 ((void (__fastcall *)(void *, int))0x000cebc0)
 #define FUN_000e2c20 ((void * (__fastcall *)(void *, int))0x000e2c20)
 #define FUN_000e2c80 ((void (__fastcall *)(NodeList *, int, void **, void *, void *))0x000e2c80)   // erase(result, first, last)
-#define FUN_00117330 ((void (__fastcall *)(void *, int))0x00117330)
-#define FUN_00117350 ((void (__fastcall *)(void *, int))0x00117350)
-#define FUN_00119e40 ((void (__fastcall *)(void *, int))0x00119e40)
-#define FUN_00119e80 ((void (__fastcall *)(void *, int))0x00119e80)
-#define StringToNumber_Construct ((void (__fastcall *)(void *, int, uint32_t))0x00119f50)
-#define StringToNumber_Destruct ((void (__fastcall *)(void *, int))0x0011a020)
 #define UVolatileMaterial_Construct ((void (__fastcall *)(void *, int))0x0011c210)
 #define FUN_0011cc10 ((void (__fastcall *)(void *, int))0x0011cc10)
 #define FUN_00124710 ((void (__fastcall *)(void *, int))0x00124710)
@@ -183,12 +180,12 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x001e23d4) = 1.0f / FLOAT_AT(0x001e23d0);                                                  // 0x00157460
     FLOAT_AT(0x001e23d8) = 180.0f / 3.1415925f;                                                          // 0x00157480
     FLOAT_AT(0x001e23dc) = 1.0f / FLOAT_AT(0x001e23d8);                                                  // 0x001574a0
-    StringToNumber_Construct((void *)0x001e23e0, 0, 0x001b6ba0);                                         // 0x001574c0
-    CrtAtExit([] { StringToNumber_Destruct((void *)0x001e23e0, 0); });
+    ((StringToNumber *)0x001e23e0)->Construct((StringToNumberEntry *)0x001b6ba0);                        // 0x001574c0
+    CrtAtExit([] { ((StringToNumber *)0x001e23e0)->Destruct(); });
     FLOAT_AT(0x001e4480) = 1.0f / FLOAT_AT(0x001b6f54);                                                  // 0x001574e0
     for (int i = 0; i < 4; i++) U32_AT(0x001e4488 + i * 0x34) = 0;                                       // 0x00157500
-    StringToNumber_Construct((void *)0x001e4590, 0, 0x001b6fd0);                                         // 0x00157520
-    CrtAtExit([] { StringToNumber_Destruct((void *)0x001e4590, 0); });
+    ((StringToNumber *)0x001e4590)->Construct((StringToNumberEntry *)0x001b6fd0);                        // 0x00157520
+    CrtAtExit([] { ((StringToNumber *)0x001e4590)->Destruct(); });
     FLOAT_AT(0x001e4648) = 1.0f / FLOAT_AT(0x001b702c);                                                  // 0x00157540
     FLOAT_AT(0x001e4650) = 1.0f / FLOAT_AT(0x001b7050);                                                  // 0x00157560
     FLOAT_AT(0x001e47b8) = 1.0f / FLOAT_AT(0x001b7058);                                                  // 0x00157580
@@ -773,12 +770,12 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x00243500) = 3.1415927f * 0.5f;                                                            // 0x0015c280
     DOUBLE_AT(0x002434f8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c2a0
     DOUBLE_AT(0x002434f0) = 3.141592653589793 * 0.5;                                                     // 0x0015c2b0
-    FUN_00117330((void *)0x00243508, 0);                                                                 // 0x0015c2d0
-    CrtAtExit([] { FUN_00117350((void *)0x00243508, 0); });
-    FUN_00117330((void *)0x00243514, 0);                                                                 // 0x0015c2f0
-    CrtAtExit([] { FUN_00117350((void *)0x00243514, 0); });
-    FUN_00117330((void *)0x002434e4, 0);                                                                 // 0x0015c310
-    CrtAtExit([] { FUN_00117350((void *)0x002434e4, 0); });
+    ((FileNameList *)0x00243508)->Construct();                                                           // 0x0015c2d0
+    CrtAtExit([] { ((FileNameList *)0x00243508)->Destruct(); });
+    ((FileNameList *)0x00243514)->Construct();                                                           // 0x0015c2f0
+    CrtAtExit([] { ((FileNameList *)0x00243514)->Destruct(); });
+    ((FileNameList *)0x002434e4)->Construct();                                                           // 0x0015c310
+    CrtAtExit([] { ((FileNameList *)0x002434e4)->Destruct(); });
     FLOAT_AT(0x0024353c) = 3.1415927f + 3.1415927f;                                                      // 0x0015c330
     FLOAT_AT(0x00243538) = 3.1415927f * 0.5f;                                                            // 0x0015c340
     DOUBLE_AT(0x00243530) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c360
@@ -792,8 +789,8 @@ void RunStaticInitialisers(void) {
     DOUBLE_AT(0x00243570) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c420
     DOUBLE_AT(0x00243568) = 3.141592653589793 * 0.5;                                                     // 0x0015c430
     FLOAT_AT(0x0024358c) = 1.0f / FLOAT_AT(0x001d5c48);                                                  // 0x0015c450
-    FUN_00119e40((void *)0x00243580, 0);                                                                 // 0x0015c470
-    CrtAtExit([] { FUN_00119e80((void *)0x00243580, 0); });
+    ((CARP::ResolverMap *)0x00243580)->Construct();                                                      // 0x0015c470
+    CrtAtExit([] { ((CARP::ResolverMap *)0x00243580)->Destruct(); });
     FLOAT_AT(0x002436a4) = 3.1415927f + 3.1415927f;                                                      // 0x0015c490
     FLOAT_AT(0x002436a0) = 3.1415927f * 0.5f;                                                            // 0x0015c4a0
     DOUBLE_AT(0x00243698) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c4c0

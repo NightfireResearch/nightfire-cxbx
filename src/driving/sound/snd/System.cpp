@@ -65,7 +65,9 @@ void CopyDwords(void *to, const void *from, size_t bytes) {
         d[i] = s[i];
 }
 
-// ---- engine.core's dummyNullFunction (not ours), called at its address
+// ---- engine.core's dummyNullFunction (CoreFoundation.cpp's NullFunction), called at its address on purpose:
+// SndSystemShadow.cpp records these calls by jumping that address to a fake, and our NullFunction is a lone RET,
+// too short to carry a jump of its own
 #define DummyNull ((void (*)(void))0x000d3580)
 
 // The kernel's critical-section calls, through the XBE's import table

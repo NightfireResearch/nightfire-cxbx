@@ -67,7 +67,7 @@ namespace {   // this file's own types: another test's of the same name must not
 #define ShadowOStrStream_Destruct ((void (__fastcall *)(BasicIos *, int))0x00131bbb)
 #define ShadowIosBase_GetLoc ((Locale *(__fastcall *)(IosBase *, int, Locale *))0x00037980)
 #define ShadowString_Tidy ((void (__fastcall *)(String *, int, bool))0x00013110)
-#define ShadowDAFI_open ((void *(__cdecl *)(const char *, int))0x0011a240)
+#define ShadowDAFI_open ((DAFI *(__cdecl *)(const char *, int))0x0011a240)
 
 static std::string *g_log;
 static uint32_t g_seed;

@@ -5,11 +5,20 @@
 
 #include "GameLoop.h"
 #include "ActionQueue.hpp"
+#include "CoreFoundation.h"
 #include "IOModule.hpp"
 #include "PlayMPC.hpp"
 #include "SimRandom.h"
+#include "UFileLoader.h"
+#include "UGroup.h"
+#include "UMemory.hpp"
+#include "USingleton.h"
 #include "../Scheduler.hpp"
 #include "../EventManager.hpp"
+#include "../data/AttributeSet.h"
+#include "../data/RCARPFile.h"
+#include "../data/StdStreams.h"
+#include "../data/Tuning.h"
 #include "../eagl/Realgraph.h"
 #include "../eagl/RenderContext.h"
 #include "../eagl/View.h"
@@ -53,13 +62,8 @@ static_assert(offsetof(RendererView, screenWidth) == 0x40 && offsetof(RendererVi
 
 // Objects the game's constructors build on our stack, as big as the original's frames make room for.
 struct IFeedbackStorage { uint32_t words[1]; };
-struct AttributeSetStorage { void *collection; };
 struct RRenderHighStorage { uint32_t words[0x44 / 4]; };
 struct GSubtitlesStorage { uint32_t words[0x94 / 4]; };
-struct LengthErrorStorage {
-    void *vtable;
-    uint32_t words[(0x28 - 4) / 4];
-};
 
 // The 'Map ' group of the track file and its 'AIEl' data.
 const uint32_t kTagMap = 0x4d617020;
@@ -90,7 +94,6 @@ char kDrivingXbe[] = "D:\\DRIVING.XBE";
 char *const kReturnImages[] = { kDefaultXbe, kDrivingXbe };
 
 const char kLoaderReady[] = "LOADER READY";
-const char kBigProcess[] = "..\\bigprocess";
 const char kCarModels[] = "data\\car\\model\\";
 
 }  // namespace
@@ -123,9 +126,6 @@ const char kCarModels[] = "data\\car\\model\\";
 #define CurrentMission I32_AT(0x001e4850)
 #define missionNames ((const char **)0x001b7060)   // "mis01" ... by mission index
 
-#define TheSingletonManager (*(SingletonRegistry *)0x001e47c0)
-#define SingletonManagerMade U32_AT(0x001e47d0)
-
 #define fgRenderer (*(RendererView **)0x001ebff4)
 #define fgScheduler (*(Scheduler **)0x001e520c)
 #define GlobalActionQueue (*(ActionQueue *)0x001e4870)
@@ -139,8 +139,6 @@ const char kCarModels[] = "data\\car\\model\\";
 #define TriggerManager (*(void **)0x0023e260)
 #define fgWorld (*(uint8_t **)0x0023f310)
 #define kWorldTrackGroup 0x14                     // WWorld::trackGroup
-#define glb_DTuningDBMgr (*(void **)0x001e22e8)
-#define AttributeSystem_fgThis (*(void **)0x001e464c)
 #define fActorDatabase (*(void **)0x001dd9a0)
 #define ASystem_fgSystem (*(void **)0x00243b34)
 #define ASoundManager_fgIsPaused BOOL8_AT(0x002439d0)
@@ -156,13 +154,11 @@ typedef const char *DiscErrorText[3];
 #define EAGLdriver ((void *)0x001cd114)
 #define DebugFontData ((const uint8_t *)0x001b7480)
 
-// Game code passed as a pointer, not called
-#define SingletonManager_AtExit ((void (*)(void))0x0015ce10)
-#define UMemoryREALAllocCallback ((FileMallocFn)0x00114630)
-#define UMemoryREALFreeCallback ((FileFreeFn)0x00114670)
+// Game code passed as a pointer, not called: the file system keeps the pointers, so they are the original's
+// addresses (which jump to UMemory's callbacks), as the original stores them
+#define UMemoryREALAllocCallbackAt ((FileMallocFn)0x00114630)
+#define UMemoryREALFreeCallbackAt ((FileFreeFn)0x00114670)
 #define GSubtitles_DrawFrame ((void (*)(int))0x000e3ab0)
-#define LengthError_vtable ((void *)0x00189eec)
-#define LengthError_ThrowInfo ((const void *)0x001a89bc)
 
 // ---- the game's functions, not ours yet
 
@@ -172,42 +168,12 @@ typedef const char *DiscErrorText[3];
 #define CRT_free ((void (*)(void *))0x001331dc)
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 #define CRT_clearfp ((unsigned (*)(void))0x00133c9e)
-#define CxxThrowException ((void (__stdcall *)(void *, const void *))0x001325ad)
-#define StdString_Assign ((GameString *(__fastcall *)(GameString *, int, const char *, unsigned))0x00013630)
-#define LogicError_Construct ((void *(__fastcall *)(void *, int, const GameString *))0x00013700)
-
-// memory (CORE_A)
-#define UMemory_Init ((void (*)(unsigned, int, int))0x00114880)
-#define UMemory_Shutdown ((void (*)(void))0x001149f0)
-#define UMemory_FastFree ((void (*)(void *, unsigned int))0x001147d0)
-#define UMemory_SetUp ((void (*)(int))0x001144e0)
-#define builtin_new ((void *(*)(unsigned int))0x001146a0)
-#define builtin_delete ((void (*)(void *))0x001146e0)
-#define builtin_vec_new ((void *(*)(unsigned int))0x00114710)
-#define dummyNullFunction ((void (*)(void))0x000d3580)
-#define USingletonManager_Register ((void (__fastcall *)(SingletonRegistry *, int, void *))0x0011bb50)
-#define USingletonManager_KillAll ((void (__fastcall *)(SingletonRegistry *, int))0x0011b7d0)
-#define SetFoundationVideoMode ((void (*)(int))0x00117d80)
-#define GetFoundationVideoModeRate ((float (*)(void))0x00117da0)
-#define AssertMessage ((void (*)(const char *, ...))0x00117db0)
-#define UGroup_GroupLocateTag ((void *(__fastcall *)(void *, int, uint32_t))0x00117950)
-#define UGroup_DataLocateTag ((void *(__fastcall *)(void *, int, uint32_t))0x00117b50)
+#define StdString_Assign ((GameStd::String *(__fastcall *)(GameStd::String *, int, const char *, unsigned))0x00013630)
 
 // XAPI (ours, behind the import thunk)
 #define XInitDevices ((void (__stdcall *)(unsigned, void *))0x00184bae)
 
-// files and data (DATA_*)
-#define UFileLoader_Startup ((void (*)(void))0x001173a0)
-#define UFileLoader_StartUsingBigFile ((bool (*)(const char *, const char *, uint8_t))0x00116e10)
-#define UFileLoader_StopUsingBigFile ((void (*)(const char *))0x00116ed0)
-#define UFileLoader_DumpFileRequestList ((void (*)(const char *))0x00117200)
-#define DTuningDBManager_InitSingleton ((void (*)(void))0x00059630)
-#define AttributeSystem_Init ((void (*)(void))0x00059550)
-#define AttributeSystem_PrepareDatabase ((void (__fastcall *)(void *, int))0x00058e30)
-#define AttributeSet_Construct ((void *(__fastcall *)(AttributeSetStorage *, int, const char *, const char *))0x00058f00)
-#define AttributeSet_Destruct ((void (__fastcall *)(AttributeSetStorage *, int))0x00057a40)
-#define AttributeSet_LookupString ((const char *(__fastcall *)(AttributeSetStorage *, int, const char *, bool *))0x000583a0)
-#define RCARPFile_LoadEAGLMaterials ((void (*)(void))0x0008baa0)
+// render
 #define thunk_FUN_0007aee0 ((void (*)(void))0x0008bab0)
 
 // the rest of the game
@@ -256,8 +222,8 @@ typedef const char *DiscErrorText[3];
 #define SWeaponManager_SetPlayerCar ((void (__fastcall *)(void *, int, void *))0x000ba990)
 #define PVehicle_InitializeGlobals ((void (*)(void))0x0006f930)
 #define PVehicle_Shutdown ((void (*)(void))0x00071900)
-#define PVehicle_GetNamedAttribs ((AttributeSetStorage *(*)(AttributeSetStorage *, const char *))0x0006f810)
-#define PVehicle_RenderNameAttrib ((const char *(*)(AttributeSetStorage *))0x0006f860)
+#define PVehicle_GetNamedAttribs ((AttributeSet *(*)(AttributeSet *, const char *))0x0006f810)
+#define PVehicle_RenderNameAttrib ((const char *(*)(AttributeSet *))0x0006f860)
 #define PBondCar_InitializeBondCarGlobals ((void (*)(void))0x00061ae0)
 #define PhysicsObject_SetHitPointLoc ((void (__fastcall *)(void *, int, void *))0x0006f7e0)
 #define WCollisionMgr_GetWorldHeightAtPoint ((void (__fastcall *)(void *, int, float *, float *, bool))0x000bf210)
@@ -320,51 +286,6 @@ static bool IsMission(const char *track) {
 
 // ---- small things
 
-// FUNC_AT(0x0005b0a0)
-GameString* GameString::Assign(const char *text) {
-    return StdString_Assign(this, 0, text, (unsigned)strlen(text));
-}
-
-void ThrowLengthError(const char *message) {
-    GameString text;
-    text.capacity = 15;
-    text.size = 0;
-    text.buf[0] = 0;
-    StdString_Assign(&text, 0, message, (unsigned)strlen(message));
-    LengthErrorStorage error;
-    LogicError_Construct(&error, 0, &text);
-    error.vtable = LengthError_vtable;
-    CxxThrowException(&error, LengthError_ThrowInfo);
-}
-
-// FUNC_AT(0x00059c30)
-void SingletonRegistry::Destruct() {
-    USingletonManager_KillAll(this, 0);
-    if (first != NULL)
-        UMemory_FastFree(first, unsigned(end - first) * sizeof(void *));
-    first = NULL;
-    last = NULL;
-    end = NULL;
-}
-
-// FUNC_AT(0x00059ca0)
-void SingletonRegistry::Xlen() {
-    CORE_UNTESTED("USingletonManager's vector _Xlen");
-    ThrowLengthError("vector<T> too long");
-}
-
-// FUNC_AT(0x00059d20)
-SingletonRegistry* SingletonManager() {
-    if ((SingletonManagerMade & 1) == 0) {
-        SingletonManagerMade |= 1;
-        TheSingletonManager.first = NULL;
-        TheSingletonManager.last = NULL;
-        TheSingletonManager.end = NULL;
-        CRT_atexit(SingletonManager_AtExit);
-    }
-    return &TheSingletonManager;
-}
-
 // The line's key must start the text or follow a line break; a match elsewhere moves the search on one
 // character - and, as in the original, leaks that attempt's copy of the key.
 // FUNC_AT(0x0005b870)
@@ -375,7 +296,7 @@ OptionParser* OptionParser::Construct(const char *text, const char *key) {
     const char *cursor = text;
     while (*cursor != 0) {
         size_t keyLength = strlen(key);
-        char *needle = (char *)builtin_vec_new((unsigned)keyLength + 1);
+        char *needle = (char *)OperatorNewArray((unsigned)keyLength + 1);
         strcpy(needle, key);
         needle[keyLength] = 0;
         const char *found = strstr(cursor, needle);
@@ -407,7 +328,7 @@ OptionParser* OptionParser::Construct(const char *text, const char *key) {
                 }
             }
         }
-        builtin_delete(needle);
+        OperatorDelete(needle);
         if (done)
             break;
     }
@@ -501,11 +422,11 @@ bool ApplicationMemoryHeapConfig() {
         PRINT_setdevicestate(1, 0);
         PRINT_setdevicestate(2, 0);
         TIMER_init(Ftol(GetFoundationVideoModeRate()));
-        UMemory_Init(0x2400000, 0, 0);
-        UMemory_SetUp(0x10);
+        UMemory::Init(0x2400000, 0, NULL);
+        UMemory::AddFastBlocks(0x10);
         HeapConfigured = 1;
     }
-    dummyNullFunction();
+    NullFunction();
     return true;
 }
 
@@ -576,12 +497,12 @@ void Bond_StartUpSystem() {
     }
 
     GLoadingScreen_Status("Init main singletons");
-    SingletonRegistry *singletons = SingletonManager();
-    DTuningDBManager_InitSingleton();
-    USingletonManager_Register(singletons, 0, glb_DTuningDBMgr);
+    USingletonManager *singletons = SingletonManager();
+    DTuningDBMgr::InitSingleton();
+    singletons->Register(reinterpret_cast<USingleton *>(TuningDBMgr));
     singletons = SingletonManager();
-    AttributeSystem_Init();
-    USingletonManager_Register(singletons, 0, AttributeSystem_fgThis);
+    AttributeSystem::Init();
+    singletons->Register(reinterpret_cast<USingleton *>(AttributeSystemInstance));
 
     GLoadingScreen_Status("Init Lib Render");
     Render_InitLibRender();
@@ -590,7 +511,7 @@ void Bond_StartUpSystem() {
     DiscError_Init();
 
     GLoadingScreen_Status("Init File System");
-    FILESYS_setmemcallbacks(UMemoryREALAllocCallback, UMemoryREALFreeCallback);
+    FILESYS_setmemcallbacks(UMemoryREALAllocCallbackAt, UMemoryREALFreeCallbackAt);
     FILESYS_init(0x10, 0x32, 0x20);
     GLoadingScreen_Status("Init ASync File System");
     ASYNCFILE_init(0x14, 0);
@@ -598,7 +519,7 @@ void Bond_StartUpSystem() {
     THREAD_init();
     GLoadingScreen_Status("CPU Detect");
     CPU_detect();
-    UFileLoader_Startup();
+    UFileLoader::Startup();
 
     GLoadingScreen_Status("Opening misc.viv");
     if (FILESYS_existssync("driving\\misc.viv", 100))
@@ -607,7 +528,7 @@ void Bond_StartUpSystem() {
         GLoadingScreen_Status("*** misc.viv found, and being used! ***");
 
     GLoadingScreen_Status("Init Global Render");
-    RCARPFile_LoadEAGLMaterials();
+    RCARPFile::LoadEAGLMaterialsThunk();
     GLoadingScreen_Status("Init Giotto");
     GSystem_CURATOR_Init();
     GLoadingScreen_Status("Load debug font");
@@ -616,10 +537,10 @@ void Bond_StartUpSystem() {
     GameLoop_StartUsingMainBigFile();
 
     GLoadingScreen_Status("Init Attribute System");
-    AttributeSystem_PrepareDatabase(AttributeSystem_fgThis, 0);
-    AttributeSetStorage sentryDefaults, sentry;
-    AttributeSet_Construct(&sentryDefaults, 0, "sentry", "default");
-    AttributeSet_Construct(&sentry, 0, "sentry", "sentry");
+    AttributeSystemInstance->PrepareDatabase();
+    AttributeSet sentryDefaults, sentry;
+    sentryDefaults.Construct("sentry", "default");
+    sentry.Construct("sentry", "sentry");
     RigidBody_InitRigidBodySystem();
 
     GLoadingScreen_Status("Loading track file");
@@ -632,8 +553,8 @@ void Bond_StartUpSystem() {
 
     GLoadingScreen_Status("Init Noise");
     Noise::Init();
-    AttributeSet_Destruct(&sentry, 0);
-    AttributeSet_Destruct(&sentryDefaults, 0);
+    sentry.Destruct();
+    sentryDefaults.Destruct();
 }
 
 // FUNC_AT(0x0005a110)
@@ -644,17 +565,17 @@ void Bond_CleanUp() {
     AStream_Remove("speech");
     AStream_Remove("music");
     ASoundManager_Shutdown();
-    USingletonManager_KillAll(SingletonManager(), 0);
+    SingletonManager()->KillAll();
     if (gUsingMisc)
         FILESYS_delbigsync(gHandleMisc, 100);
-    dummyNullFunction();
+    NullFunction();
     ASYNCFILE_restore();
     InputConfigManager_Shutdown(InputConfigManager_Get(), 0);
     IOModule::GetIOModule()->Release();
     DiscError_Shutdown();
     thunk_FUN_0007aee0();
     RRenderer_Shutdown();
-    UMemory_Shutdown();
+    UMemory::Shutdown();
     CRT_printf("Bond_CleanupDone");
 }
 
@@ -761,7 +682,7 @@ void GameLoop_StartUsingMainBigFile() {
         if (*at == '_')
             name = at + 1;
     GLoadingScreen_Status("Opening %s.viv", name);
-    if (UFileLoader_StartUsingBigFile("driving", name, gUseBigFile))
+    if (UFileLoader::StartUsingBigFile("driving", name, gUseBigFile))
         GLoadingScreen_Status("*** %s.viv found, and being used! ***", name);
 }
 
@@ -815,7 +736,7 @@ __declspec(naked) void FUN_0005a6b0(const char *movie) {
 void GameLoop_CleanUp() {
     GLoadingScreen_Status("---------------- Shutting Down Game ---------------");
     GLoadingScreen_Status("Kill World Camera");
-    dummyNullFunction();
+    NullFunction();
     GLoadingScreen_Status("Kill Player Camera");
     RPlayerCamera_Shutdown();
     GLoadingScreen_Status("Kill PIP Camera");
@@ -838,17 +759,17 @@ void GameLoop_CleanUp() {
     void *weapons = WeaponManager;
     if (weapons != NULL) {
         SWeaponManager_Destruct(weapons, 0);
-        builtin_delete(weapons);
+        OperatorDelete(weapons);
     }
     WeaponManager = NULL;
     const char *carType = PlayerCarTypeName();
-    AttributeSetStorage carAttributes;
+    AttributeSet carAttributes;
     RSceneObj_PurgePreloaded(kCarModels, PVehicle_RenderNameAttrib(PVehicle_GetNamedAttribs(&carAttributes, carType)));
-    AttributeSet_Destruct(&carAttributes, 0);
+    carAttributes.Destruct();
 
     GLoadingScreen_Status("Shutdown Sim");
     Simulation_CleanUpObjects(Sim, 0);
-    dummyNullFunction();
+    NullFunction();
     PVehicle_Shutdown();
     GLoadingScreen_Status("Dismiss actors");
     ActManager_ShutDown();
@@ -859,7 +780,7 @@ void GameLoop_CleanUp() {
     uint8_t *world = fgWorld;
     if (world != NULL) {
         WWorld_Destruct(world, 0);
-        builtin_delete(world);
+        OperatorDelete(world);
     }
     fgWorld = NULL;
     GLoadingScreen_Status("Kill Game Render");
@@ -944,8 +865,8 @@ void RunTheGame(bool simulateOncePerLoop, int unused) {
         while (bank != *ABank_End(&scratch))
             BankIterator_Increment(&bank, 0);
     }
-    UFileLoader_DumpFileRequestList(kBigProcess);
-    UFileLoader_StopUsingBigFile(kBigProcess);
+    UFileLoader::DumpFileRequestList();   // the original pushes "..\\bigprocess" to both; neither reads it
+    UFileLoader::StopUsingBigFile();
     GLoadingScreen_Status("Entering main loop");
     fgScheduler->ResetTime();
 
@@ -1014,10 +935,10 @@ void GameLoop_StartUp(int trafficSeed) {
     RRenderHigh_InitGameRender();
 
     GLoadingScreen_Status("Init Sound");
-    GameString speechName;   // constructed empty, inline
+    GameStd::String speechName;   // constructed empty, inline
     speechName.capacity = 15;
     speechName.size = 0;
-    speechName.buf[0] = 0;
+    speechName.text.buffer[0] = 0;
     const char *const languageSuffix[8] = { "en", "fr", "ge", "sp", "en", "en", "en", "en" };
     if (CRT_stricmp(MissionName, "uw_mis11") == 0 || CRT_stricmp(MissionName, "uw_map") == 0)
         StdString_Assign(&speechName, 0, "mis11", 5);
@@ -1038,11 +959,11 @@ void GameLoop_StartUp(int trafficSeed) {
         speechName.Assign("mis11");
     char speech[128];
     char speechFile[84];
-    snprintf(speech, sizeof(speech), "%s%s", speechName.Text(), languageSuffix[GLocale_GetLanguage()]);
+    snprintf(speech, sizeof(speech), "%s%s", speechName.Data(), languageSuffix[GLocale_GetLanguage()]);
     snprintf(speechFile, sizeof(speechFile), "driving\\%s.spe", speech);
     if (!FILESYS_existssync(speechFile, 100)) {
         GLoadingScreen_Status("WARNING: localized speech not found, using English");
-        snprintf(speech, sizeof(speech), "%s%s", speechName.Text(), "en");
+        snprintf(speech, sizeof(speech), "%s%s", speechName.Data(), "en");
     }
     MusicVolumeScale = float(double(Launch.musicVolume) * 0.01f);
     EffectsVolumeScale = float(double(Launch.effectsVolume) * 0.01f);
@@ -1056,14 +977,14 @@ void GameLoop_StartUp(int trafficSeed) {
     ActActorDatabase_StartUp();
     ActManager_StartUp(1.0f / GetFoundationVideoModeRate());
     GLoadingScreen_Status("Init Weapon Manager");
-    void *weapons = builtin_new(0x180);
+    void *weapons = OperatorNew(0x180);
     WeaponManager = weapons != NULL ? SWeaponManager_Construct(weapons, 0) : NULL;
     GLoadingScreen_Status("Init World");
     WWorld_Open(fgWorld, 0);
     GLoadingScreen_Status("Init AI Elements");
     RRenderHigh_InitTrackRenderPostSim();
-    void *map = UGroup_GroupLocateTag(*(void **)(fgWorld + kWorldTrackGroup), 0, kTagMap);
-    AIElementController_Construct(UGroup_DataLocateTag(map, 0, kTagAIElements));
+    UGroup *map = (*(UGroup **)(fgWorld + kWorldTrackGroup))->GroupLocateTag(kTagMap);
+    AIElementController_Construct(map->DataLocateTag(kTagAIElements));
     GLoadingScreen_Status("Init AI Controllers");
     AIVehicleController_Init();
     AIZoneController_Init();
@@ -1079,20 +1000,20 @@ void GameLoop_StartUp(int trafficSeed) {
     position[1] = height + 1.0f;
 
     GLoadingScreen_Status("Preload common models");
-    AttributeSetStorage carAttributes;
+    AttributeSet carAttributes;
     PVehicle_GetNamedAttribs(&carAttributes, carType);
     const char *model = PVehicle_RenderNameAttrib(&carAttributes);
     if (model == NULL)
         AssertMessage("Could not find attribute rendername for %s", carType);
     RSceneObj_PreLoad(kCarModels, model, carType);
-    const char *secondaryType = AttributeSet_LookupString(&carAttributes, 0, "SECONDARY_TYPE", NULL);
+    const char *secondaryType = carAttributes.LookupString("SECONDARY_TYPE", NULL);
     if (secondaryType != NULL) {
-        AttributeSetStorage secondaryAttributes;
-        AttributeSet_Construct(&secondaryAttributes, 0, "pvehicle", secondaryType);
+        AttributeSet secondaryAttributes;
+        secondaryAttributes.Construct("pvehicle", secondaryType);
         const char *secondaryModel = PVehicle_RenderNameAttrib(&secondaryAttributes);
         if (secondaryModel != NULL)
             RSceneObj_PreLoad(kCarModels, secondaryModel, secondaryType);
-        AttributeSet_Destruct(&secondaryAttributes, 0);
+        secondaryAttributes.Destruct();
     }
 
     GLoadingScreen_Status("Spawn player car");
@@ -1111,9 +1032,9 @@ void GameLoop_StartUp(int trafficSeed) {
     RCameraIniLoader_LoadFile();
     GLoadingScreen_Status("Leaving StartUp");
     IOModule::GetIOModule()->EnableUpdating(true);
-    AttributeSet_Destruct(&carAttributes, 0);
-    if (speechName.capacity >= 16 && speechName.ptr != NULL)
-        UMemory_FastFree(speechName.ptr, speechName.capacity + 1);
+    carAttributes.Destruct();
+    if (speechName.capacity >= 16 && speechName.text.pointer != NULL)
+        UMemory::FastFree(speechName.text.pointer, speechName.capacity + 1);
 }
 
 // FUNC_AT(0x0005b820)
@@ -1126,7 +1047,7 @@ void GameLoop_MainGameLoop(bool unused0, bool unused1, bool simulateOncePerLoop,
     GameLoop_StartUp(trafficSeed);
     RunTheGame(simulateOncePerLoop, unused3);
     GameLoop_CleanUp();
-    UFileLoader_StopUsingBigFile(kBigProcess);
+    UFileLoader::StopUsingBigFile();   // the original pushes "..\\bigprocess", unread
 }
 
 // ---- the disc error screen
@@ -1136,7 +1057,7 @@ void DiscError_Shutdown() {
     if (DiscErrorFont != NULL)
         FONT_destroy(DiscErrorFont);
     if (DiscErrorMade != NULL)
-        builtin_delete(DiscErrorMade);
+        OperatorDelete(DiscErrorMade);
     DiscErrorMade = NULL;
 }
 
@@ -1188,7 +1109,7 @@ char DiscError_Handler() {
 void DiscError_Init() {
     if (DiscErrorMade != NULL)
         return;
-    DiscErrorMade = builtin_new(1);
+    DiscErrorMade = OperatorNew(1);
     FILEDEV_setreaderror(DiscError_Handler);
     FONT_installdriver(EAGLdriver);
     FONT_init();

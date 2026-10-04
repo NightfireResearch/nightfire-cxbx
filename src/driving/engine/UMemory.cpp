@@ -1,5 +1,6 @@
 #include "UMemory.hpp"
 
+#include "GameLoop.h"                  // ApplicationMemoryHeapConfig
 #include "../../helpers.h"
 #include "../platform/RealMemory.h"   // MEMCLASS_init, MEMCLASS_restore, MEMCLASS_findfree
 #include "../platform/RealPrint.h"    // MEM_fill, MEM_clear, PRINT_*, REAL_exit
@@ -20,7 +21,6 @@
 // ---- originals called by address
 
 #define XPhysicalAlloc ((void *(__stdcall *)(uint32_t size, uint32_t highest, uint32_t alignment, uint32_t protect))0x0010e7e9)   // ours (XboxXapi.cpp), through its jump
-#define ApplicationMemoryHeapConfig ((bool (*)(void))0x00059920)
 
 // ---- globals
 

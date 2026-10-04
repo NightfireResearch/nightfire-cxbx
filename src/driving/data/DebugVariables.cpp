@@ -8,6 +8,7 @@
 #include "DebugVarUntested.h"
 #include "StdStreams.h"
 #include "Tuning.h"
+#include "../engine/UMemory.hpp"
 #include "../../helpers.h"
 #include "../../common/xbeOverload.h"
 #include "../platform/X87.h"
@@ -22,7 +23,6 @@ using namespace GameStd;
 #define CurrentIndexer (*(DebugUIntVariable **)0x001e22c4)   // the index dbindex set, until dbendindex
 #define DebugUIntVariableVtable ((const void *const *)0x0018bd00)
 
-#define BuiltinNew ((void *(__cdecl *)(size_t))0x001146a0)   // operator new (CORE_A)
 #define OStrStream_Construct ((OStrStream *(__fastcall *)(OStrStream *, int, char *, int, int, int))0x00131b27)
 #define OStrStream_Destruct ((void (__fastcall *)(BasicIos *, int))0x00131bbb)
 
@@ -155,7 +155,7 @@ void DebugUIntVariable::SetFromString(const char *text) {
 
 // FUNC_AT(0x00038190)
 void dbindex(const char *name, uint32_t *data, uint32_t minimum, uint32_t maximum, const char *const *names) {
-    DebugUIntVariable *index = (DebugUIntVariable *)BuiltinNew(sizeof(DebugUIntVariable));
+    DebugUIntVariable *index = (DebugUIntVariable *)OperatorNew(sizeof(DebugUIntVariable));
     if (index != NULL) {
         index->name = name;
         index->nameLength = uint32_t(strlen(name));

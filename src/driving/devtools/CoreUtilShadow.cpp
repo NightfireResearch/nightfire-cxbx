@@ -5,6 +5,8 @@
 #include "../engine/UMemory.hpp"
 #include "../engine/URefCounter.h"
 #include "../engine/USingleton.h"
+#include "../data/AttributeContainers.h"
+#include "../data/Carp.h"
 #include "../platform/FileSys.h"      // BIG_find, BIG_dirsize
 #include "../platform/RealMemory.h"   // MEMCLASS_init, MEMCLASS_restore
 #include "../platform/RefPack.h"
@@ -517,16 +519,16 @@ void ClearKeyTails(RefCounterNode *node) {
         return;
     ClearKeyTails(node->left);
     ClearKeyTails(node->right);
-    size_t length = strnlen(node->name, sizeof(node->name));
-    if (length < sizeof(node->name))
-        memset(node->name + length, 0, sizeof(node->name) - length);
+    size_t length = strnlen(node->value.name, sizeof(node->value.name));
+    if (length < sizeof(node->value.name))
+        memset(node->value.name + length, 0, sizeof(node->value.name) - length);
 }
 
 void DumpRefTree(std::string &log, RefCounterNode *node) {
     if (node == NULL || node->isNil)
         return;
     DumpRefTree(log, node->left);
-    Append(log, " [%s %s %d %s c%d]", Where(node).c_str(), node->name, node->references, Where(node->object).c_str(),
+    Append(log, " [%s %s %d %s c%d]", Where(node).c_str(), node->value.name, node->value.entry.references, Where(node->value.entry.object).c_str(),
            node->color);
     DumpRefTree(log, node->right);
 }
@@ -539,13 +541,13 @@ void RefScenario(bool original, std::string &log, std::vector<uint8_t> &extra) {
     GetReferenceFn get = original ? (GetReferenceFn)0x00125270 : PortGetReference;
 
     URefCounterMap *map = &g_refMap;
-    map->compare = 0;
+    map->allocator = 0;
     map->head = RefCounterMap_BuyHeadNode(map, 0);
     map->head->isNil = 1;
     map->head->parent = map->head;
     map->head->left = map->head;
     map->head->right = map->head;
-    map->count = 0;
+    map->size = 0;
     const int kNames = sizeof(kRefNames) / sizeof(kRefNames[0]);
     for (int op = 0; op < 500; op++) {
         const char *name = kRefNames[Random(kNames)];
@@ -553,10 +555,10 @@ void RefScenario(bool original, std::string &log, std::vector<uint8_t> &extra) {
         uint32_t what = Random(4);
         if (what < 2) {
             add(map, 0, name, object);
-            Append(log, "%d add \"%s\" %s count %u\n", op, name, Where(object).c_str(), map->count);
+            Append(log, "%d add \"%s\" %s count %u\n", op, name, Where(object).c_str(), map->size);
         } else if (what == 2 && remove != NULL) {
             bool removed = remove(map, 0, object);
-            Append(log, "%d remove %s -> %d count %u\n", op, Where(object).c_str(), removed, map->count);
+            Append(log, "%d remove %s -> %d count %u\n", op, Where(object).c_str(), removed, map->size);
         } else {
             void *found = get(map, 0, name);
             Append(log, "%d get \"%s\" -> %s\n", op, name, Where(found).c_str());
@@ -568,7 +570,7 @@ void RefScenario(bool original, std::string &log, std::vector<uint8_t> &extra) {
     ClearKeyTails(map->head->parent);
     if (destruct != NULL) {
         destruct(map, 0);
-        Append(log, "destructed: head %s count %u\n", Where(map->head).c_str(), map->count);
+        Append(log, "destructed: head %s count %u\n", Where(map->head).c_str(), map->size);
     }
     extra.assign((const uint8_t *)map, (const uint8_t *)map + sizeof(*map));
 }
@@ -577,17 +579,17 @@ void RefScenario(bool original, std::string &log, std::vector<uint8_t> &extra) {
 // The containers
 // ===============================================================================================================
 
-template <class Value>
-GameTreeNode<Value> *NewHead() {
-    GameTreeNode<Value> *head = (GameTreeNode<Value> *)UMemory::FastAlloc(sizeof(GameTreeNode<Value>), "STL");
+template <class Node>
+Node *NewHead() {
+    Node *head = (Node *)UMemory::FastAlloc(sizeof(Node), "STL");
     head->left = head->parent = head->right = head;
     head->color = 1;
     head->isNil = 1;
     return head;
 }
 
-template <class Value>
-void DumpTree(std::string &log, GameTreeNode<Value> *node) {
+template <class Node>
+void DumpTree(std::string &log, Node *node) {
     if (node->isNil)
         return;
     DumpTree(log, node->left);
@@ -595,24 +597,24 @@ void DumpTree(std::string &log, GameTreeNode<Value> *node) {
     DumpTree(log, node->right);
 }
 
-AttributeExtensionMap g_attributeMap;
-ResolverMap g_resolverMap;
+ExtensionTypeMap g_attributeMap;
+CARP::ResolverMap g_resolverMap;
 StateRefSet g_stateSet;
 SimObjectMultimap g_simMap;
 SimObjectVector g_simVector;
 LightningSegmentVec g_segments;
 USingletonManager g_singletonManager;
 
-typedef AttributeExtensionInsert *(__fastcall *AttributeInsertFn)(GameTree<AttributeExtensionValue> *, int, AttributeExtensionInsert *, const AttributeExtensionValue *);
-typedef ResolverInsert *(__fastcall *ResolverInsertFn)(GameTree<ResolverValue> *, int, ResolverInsert *, const ResolverValue *);
+typedef ExtensionTypeMap::InsertResult *(__fastcall *AttributeInsertFn)(ExtensionTypeMap *, int, ExtensionTypeMap::InsertResult *, const ExtensionTypeEntry *);
+typedef TreeInsertResult *(__fastcall *ResolverInsertFn)(CARP::ResolverMap *, int, TreeInsertResult *, const TreePair *);
 typedef StateRefInsert *(__fastcall *StateInsertFn)(GameTree<StateRefValue> *, int, StateRefInsert *, const StateRefValue *);
 typedef SimObjectInsert *(__fastcall *SimInsertFn)(GameTree<SimObjectValue> *, int, SimObjectInsert *, const SimObjectValue *);
 
-AttributeExtensionInsert *__fastcall PortAttributeInsert(GameTree<AttributeExtensionValue> *t, int, AttributeExtensionInsert *r, const AttributeExtensionValue *v) {
-    return static_cast<AttributeExtensionMap *>(t)->InsertUnique(r, v);
+ExtensionTypeMap::InsertResult *__fastcall PortAttributeInsert(ExtensionTypeMap *t, int, ExtensionTypeMap::InsertResult *r, const ExtensionTypeEntry *v) {
+    return t->InsertUnique(r, *v);
 }
-ResolverInsert *__fastcall PortResolverInsert(GameTree<ResolverValue> *t, int, ResolverInsert *r, const ResolverValue *v) {
-    return static_cast<ResolverMap *>(t)->InsertUnique(r, v);
+TreeInsertResult *__fastcall PortResolverInsert(CARP::ResolverMap *t, int, TreeInsertResult *r, const TreePair *v) {
+    return t->InsertUnique(r, v);
 }
 StateRefInsert *__fastcall PortStateInsert(GameTree<StateRefValue> *t, int, StateRefInsert *r, const StateRefValue *v) {
     return static_cast<StateRefSet *>(t)->InsertUnique(r, v);
@@ -627,14 +629,14 @@ void TreeScenario(bool original, std::string &log, std::vector<uint8_t> &extra) 
     StateInsertFn stateInsert = original ? (StateInsertFn)0x00092b40 : PortStateInsert;
     SimInsertFn simInsert = original ? (SimInsertFn)0x000b3930 : PortSimInsert;
 
-    g_attributeMap = AttributeExtensionMap();
-    g_attributeMap.head = NewHead<AttributeExtensionValue>();
-    g_resolverMap = ResolverMap();
-    g_resolverMap.head = NewHead<ResolverValue>();
+    g_attributeMap = ExtensionTypeMap();
+    g_attributeMap.head = NewHead<ExtensionTypeNode>();
+    g_resolverMap = CARP::ResolverMap();
+    g_resolverMap.head = NewHead<TreeNode>();
     g_stateSet = StateRefSet();
-    g_stateSet.head = NewHead<StateRefValue>();
+    g_stateSet.head = NewHead<GameTreeNode<StateRefValue>>();
     g_simMap = SimObjectMultimap();
-    g_simMap.head = NewHead<SimObjectValue>();
+    g_simMap.head = NewHead<GameTreeNode<SimObjectValue>>();
 
     // 16 states of 0x4c bytes; contents from 6 patterns, so different states compare equal
     static uint8_t states[16][0x4c];
@@ -647,21 +649,25 @@ void TreeScenario(bool original, std::string &log, std::vector<uint8_t> &extra) 
     for (int op = 0; op < 400; op++) {
         switch (Random(4)) {
         case 0: {
-            AttributeExtensionValue v;
-            v.key = Random(64) * 0x01000193u;
-            for (int b = 0; b < 0x14; b++)
-                v.extension[b] = (uint8_t)Random(256);
-            AttributeExtensionInsert r = {};
-            AttributeExtensionInsert *answer = attributeInsert(&g_attributeMap, 0, &r, &v);
-            Append(log, "%d attribute %x -> %s %s %d\n", op, v.key, Where(answer == &r ? NULL : answer).c_str(),
-                   Where(r.node).c_str(), r.inserted);
+            ExtensionTypeEntry v;
+            v.type = Random(64) * 0x01000193u;
+            uint8_t extension[sizeof(v.extension)];
+            for (size_t b = 0; b < sizeof(extension); b++)
+                extension[b] = (uint8_t)Random(256);
+            memcpy(&v.extension, extension, sizeof(extension));
+            ExtensionTypeMap::InsertResult r = {};
+            ExtensionTypeMap::InsertResult *answer = attributeInsert(&g_attributeMap, 0, &r, &v);
+            Append(log, "%d attribute %x -> %s %s %d\n", op, v.type, Where(answer == &r ? NULL : answer).c_str(),
+                   Where(r.position.node).c_str(), r.inserted);
             break;
         }
         case 1: {
-            ResolverValue v = {Random(48), (void *)(uintptr_t)Random(1000)};
-            ResolverInsert r = {};
+            TreePair v;
+            v.tag = Random(48);
+            v.resolver = (CarpResolverFn)(uintptr_t)Random(1000);
+            TreeInsertResult r = {};
             resolverInsert(&g_resolverMap, 0, &r, &v);
-            Append(log, "%d resolver %x -> %s %d\n", op, v.key, Where(r.node).c_str(), r.inserted);
+            Append(log, "%d resolver %x -> %s %d\n", op, v.tag, Where(r.where).c_str(), r.inserted);
             break;
         }
         case 2: {
@@ -731,7 +737,7 @@ void FindTest() {
         g_findHead.left = size > 0 ? &g_findNodes[0] : &g_findHead;
         g_findHead.right = size > 0 ? &g_findNodes[size - 1] : &g_findHead;
         CollisionInstanceMap map;
-        map.compare = 0;
+        map.allocator = 0;
         map.head = &g_findHead;
         map.size = size;
         g_cases++;

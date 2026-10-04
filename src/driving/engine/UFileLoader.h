@@ -10,13 +10,13 @@
 class UFileLoader {
 public:
     // '/' to '\', into pathOut (0x00116f00). Always true.
-    static bool LookupAbsolutePath(char *pathOut, char *pathIn);
+    static bool LookupAbsolutePath(char *pathOut, const char *pathIn);
     static void* FileLoadDirectFromDisk(char* param_1, int param_2, bool z_variant);
     static void* AttemptBigFileLoad(char *param_1, undefined4 param_2);
     static void AddFileToRequestList(char* fname);
-    static void* FileLoad(char *rawPath, int flags, bool param_3);
-    static void* FileLoad(char *rawPath, int flags);   // the two-argument overload, 0x001176b0
-    static void* FileLoadz(char *rawPath, int flags);
+    static void* FileLoad(const char *rawPath, int flags, bool param_3);
+    static void* FileLoad(const char *rawPath, int flags);   // the two-argument overload, 0x001176b0
+    static void* FileLoadz(const char *rawPath, int flags);
     // The linker's thunk to the two-argument FileLoad (0x000e3c20).
     static void* FileLoadThunk(char *rawPath, int flags);
 
@@ -25,9 +25,9 @@ public:
     static void StopUsingBigFile();                                  // 0x00116ed0
     static int AttemptBigFileExists(char *path);                     // 0x00116f30: 1 if the big file has it
     static int AttemptBigFileSize(char *path);                       // 0x00116f70
-    static int FileLoadAt(char *path, void *buffer, int size);       // 0x00116fc0: into the caller's buffer
-    static int FileExists(char *path);                               // 0x00117010
-    static int FileSize(char *path);                                 // 0x001170a0
+    static int FileLoadAt(const char *path, void *buffer, int size); // 0x00116fc0: into the caller's buffer
+    static int FileExists(const char *path);                         // 0x00117010
+    static int FileSize(const char *path);                           // 0x001170a0
     static void DumpFileRequestList();                               // 0x00117200
     static void Startup();                                           // 0x001173a0: the lists emptied
     static void* AttemptBigFileShapeLoad(char *path, int flags);     // 0x001175a0

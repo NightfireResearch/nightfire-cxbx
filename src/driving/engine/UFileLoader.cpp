@@ -46,7 +46,7 @@ static void BigFilePathOf(char *out, const char *path) {
 }
 
 // FUNC_AT(0x00116f00)
-bool UFileLoader::LookupAbsolutePath(char *pathOut, char *pathIn) {
+bool UFileLoader::LookupAbsolutePath(char *pathOut, const char *pathIn) {
     for (; *pathIn != 0; pathIn++, pathOut++)
         *pathOut = *pathIn == '/' ? '\\' : *pathIn;
     *pathOut = 0;
@@ -125,14 +125,14 @@ int UFileLoader::AttemptBigFileSize(char *path) {
 }
 
 // FUNC_AT(0x00116fc0)
-int UFileLoader::FileLoadAt(char *path, void *buffer, int size) {
+int UFileLoader::FileLoadAt(const char *path, void *buffer, int size) {
     char fixed[256];
     LookupAbsolutePath(fixed, path);
     return FILE_loadat(fixed, buffer, size);
 }
 
 // FUNC_AT(0x00117010)
-int UFileLoader::FileExists(char *path) {
+int UFileLoader::FileExists(const char *path) {
     char fixed[256];
     char absolute[256];
     LookupAbsolutePath(fixed, path);
@@ -144,7 +144,7 @@ int UFileLoader::FileExists(char *path) {
 }
 
 // FUNC_AT(0x001170a0)
-int UFileLoader::FileSize(char *path) {
+int UFileLoader::FileSize(const char *path) {
     char fixed[256];
     LookupAbsolutePath(fixed, path);
     int size = AttemptBigFileSize(fixed);
@@ -357,7 +357,7 @@ void dumpToFile(char* gamefile, void* data, size_t len) {
 #include "../platform/RealMemory.h"   // MEM_size, ours now
 
 // AUTOINJECT
-void* UFileLoader::FileLoad(char *rawPath, int param_2, bool param_3) {
+void* UFileLoader::FileLoad(const char *rawPath, int param_2, bool param_3) {
 
     char fixedPath [256];
 
@@ -393,11 +393,11 @@ void* UFileLoader::FileLoad(char *rawPath, int param_2, bool param_3) {
 // the stack of callers that had pushed two.
 //
 // AUTOINJECT
-void* UFileLoader::FileLoad(char *rawPath, int flags) {
+void* UFileLoader::FileLoad(const char *rawPath, int flags) {
     return FileLoad(rawPath, flags, true);
 }
 
 // AUTOINJECT
-void* UFileLoader::FileLoadz(char * fname, int flags) {
+void* UFileLoader::FileLoadz(const char *fname, int flags) {
     return FileLoad(fname, flags, false);
 }

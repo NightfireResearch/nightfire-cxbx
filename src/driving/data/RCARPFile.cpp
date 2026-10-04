@@ -11,6 +11,7 @@
 #include "../platform/RealPrint.h"
 #include "../../common/xbeOverload.h"
 #include "../../helpers.h"
+#include "../engine/CoreFoundation.h"
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
 
@@ -38,7 +39,6 @@
 #define RReflection_GetReflectionMatrix ((void *(__fastcall *)(void *, int))0x000984b0)
 #define RReflection_LightingProps ((void *(__fastcall *)(void *, int, int, const char *))0x00098380)
 #define RReflection_GetReflectionData2 ((void *(__fastcall *)(void *, int, const char *))0x00098410)
-#define RReflection_GetNull ((void *(__fastcall *)(void *, int))0x000f7330)
 #define CarpPathConcat ((void (__fastcall *)(char *, int, const char *, const char *, const char *))0x00051e90)
 #define EhVectorConstructor ((void (__stdcall *)(void *, uint32_t, uint32_t, uint32_t))0x00022770)
 #define Crt_printf ((int (*)(const char *, ...))0x00132192)
@@ -356,10 +356,12 @@ void* RCARPFile::RegisterSymbols(const char *name, bool *found) {
     }
     if (Is(name, "GAME::TestTexture"))
         value = ContextTexture(kTextureTest);
+    // RReflection's two EnvMapState getters are the shared empty function that answers 0 (dummyGetNullValue,
+    // called on the reflection object, which it ignores).
     if (Is(name, "EAGL::EnvMapState2C"))
-        value = RReflection_GetNull(Reflection, 0);
+        value = reinterpret_cast<void *>(GetNullValue());
     if (Is(name, "EAGL::EnvMapState2G"))
-        value = RReflection_GetNull(Reflection, 0);
+        value = reinterpret_cast<void *>(GetNullValue());
     if (Is(name, "GAME::CameraPos") || Is(name, "EAGL::CameraPos"))
         value = Renderer + 0x30;
     if (Is(name, "GAME::SpecularMat"))

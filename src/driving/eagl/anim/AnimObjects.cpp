@@ -9,6 +9,7 @@
 #include "../EaglGlobals.h"
 #include "../EaglOriginals.h"
 #include "../Loader.h"
+#include "../../engine/UMemory.hpp"
 #include "../../platform/X87.h"
 #include "../../../helpers.h"
 
@@ -347,7 +348,7 @@ void FnAnim::Destruct() {
 FnAnim* FnAnim::ScalarDelete(unsigned flags) {
     vtable = VtFnAnim;
     if (flags & 1)
-        BuiltinDelete(this);
+        OperatorDelete(this);
     return this;
 }
 
@@ -420,7 +421,7 @@ uint16_t FnAnimMemoryMap::GetTargetCheckSum() {
 FnAnimMemoryMap* FnAnimMemoryMap::ScalarDelete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        BuiltinDelete(this);
+        OperatorDelete(this);
     return this;
 }
 

@@ -2,7 +2,10 @@
 
 #include "IniFiles.h"
 
+#include "Dafi.h"
 #include "DebugVarUntested.h"
+#include "../engine/UFileLoader.h"
+#include "../engine/UMemory.hpp"
 #include "../../helpers.h"
 #include "../platform/RealMemory.h"
 
@@ -13,20 +16,9 @@
 #define IniFilesVtable ((const void *const *)0x001a0998)
 #define MemDefaultClass U32_AT(0x00242cdc)   // the MEM_ allocation flags in force
 
-#define BuiltinDelete ((void (__cdecl *)(void *))0x001146e0)      // operator delete (CORE_A)
-#define BuiltinVecNew ((void *(__cdecl *)(size_t))0x00114710)     // operator new[]
 #define Printf ((int (__cdecl *)(const char *, ...))0x00132192)
 #define Atof ((double (__cdecl *)(const char *))0x00133e84)
 #define Atol ((long (__cdecl *)(const char *))0x00133d51)
-#define UFileLoader_FileSize ((int (__cdecl *)(const char *))0x001170a0)                    // DATA_C
-#define UFileLoader_FileLoadAt ((int (__cdecl *)(const char *, void *, int))0x00116fc0)
-#define UFileLoader_FileLoad ((void *(__cdecl *)(const char *, int))0x001176b0)
-#define DAFI_open ((void *(__cdecl *)(const char *, int))0x0011a240)                       // DATA_C
-#define DAFI_close ((void (__cdecl *)(void *))0x0011a370)
-#define DAFI_getsectionindex ((int (__cdecl *)(void *, const char *))0x0011a5c0)
-#define DAFI_setsection ((int (__cdecl *)(void *, const char *))0x0011a6d0)
-#define DAFI_getkeyindex ((int (__cdecl *)(void *, const char *))0x0011a660)
-#define DAFI_getvalue ((char *(__cdecl *)(void *, const char *))0x0011a700)
 
 namespace {
 
@@ -35,7 +27,7 @@ static const int kLoadFlags = 0x100;
 static const char kIniKey[] = "b8D;V`fj";
 
 // The value of key in section, or null when either is missing.
-const char *FindValue(void *dafi, const char *section, const char *key, bool *found) {
+const char *FindValue(DAFI *dafi, const char *section, const char *key, bool *found) {
     *found = false;
     if (DAFI_getsectionindex(dafi, section) < 0)
         return NULL;
@@ -57,13 +49,13 @@ IniFiles* IniFiles::Construct(const char *path, bool encrypted) {
     if (encrypted) {
         DEBUGVAR_UNTESTED("IniFiles::Construct (encrypted)");
         unsigned flags = MemDefaultClass;
-        text = (char *)MEM_alloc("INIFile buffer", UFileLoader_FileSize(path), flags);
-        size = UFileLoader_FileLoadAt(path, text, kEncryptedLoadLimit);
+        text = (char *)MEM_alloc("INIFile buffer", UFileLoader::FileSize(path), flags);
+        size = UFileLoader::FileLoadAt(path, text, kEncryptedLoadLimit);
         for (int i = 0; i < 1000; i++)
             Printf("DO NOT USE INI FILE ENCYRPTION\n");
         EncryptDecrypt((const uint8_t *)text, size, (uint8_t *)text, kIniKey);
     } else {
-        text = (char *)UFileLoader_FileLoad(path, kLoadFlags);
+        text = (char *)UFileLoader::FileLoad(path, kLoadFlags);
         if (text != NULL)
             size = int(MEM_size(text));
     }
@@ -83,7 +75,7 @@ IniFiles* IniFiles::Delete(unsigned flags) {
         dafi = NULL;
     }
     if (flags & 1)
-        BuiltinDelete(this);
+        OperatorDelete(this);
     return this;
 }
 
@@ -127,7 +119,7 @@ void EncryptDecrypt(const uint8_t *in, int count, uint8_t *out, const char *key)
         0x359, 0xbb7, 0xeb7, 0x11e7, 0xbf5, 0x281, 0x833, 0x943, 0xc83, 0x1271, 0x1327, 0xda3 };
     int keyLength = int(strlen(key));
     int streamLength = keyLength * 4;
-    uint8_t *stream = (uint8_t *)BuiltinVecNew(streamLength);
+    uint8_t *stream = (uint8_t *)OperatorNewArray(streamLength);
     int entry = 0;
     for (int i = 0; i < keyLength; i++) {   // each key byte times the low bytes of four table entries
         for (int k = 0; k < 4; k++)
@@ -136,5 +128,5 @@ void EncryptDecrypt(const uint8_t *in, int count, uint8_t *out, const char *key)
     }
     for (int i = 0; i < count; i++)
         out[i] = stream[i % streamLength] ^ in[i];
-    BuiltinDelete(stream);   // delete, not delete[]
+    OperatorDelete(stream);   // delete, not delete[]
 }
