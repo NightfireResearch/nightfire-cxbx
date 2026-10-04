@@ -11,12 +11,14 @@ class UFileLoader {
 public:
     // '/' to '\', into pathOut (0x00116f00). Always true.
     static bool LookupAbsolutePath(char *pathOut, const char *pathIn);
-    static void* FileLoadDirectFromDisk(char* param_1, int param_2, bool z_variant);
-    static void* AttemptBigFileLoad(char *param_1, undefined4 param_2);
-    static void AddFileToRequestList(char* fname);
-    static void* FileLoad(const char *rawPath, int flags, bool param_3);
-    static void* FileLoad(const char *rawPath, int flags);   // the two-argument overload, 0x001176b0
-    static void* FileLoadz(const char *rawPath, int flags);
+    // From the big file ("|" + path) with FILE_loadpackz, recording the path in the in/not-in lists while
+    // request logging is on (0x00117530).
+    static void* AttemptBigFileLoad(const char *path, int flags);
+    // A file: the big file first, then the disc, as stored (uncompressed) or unpacked (0x00117610); the
+    // two-argument form loads it as stored (0x001176b0), FileLoadz unpacked (0x001176d0).
+    static void* FileLoad(const char *path, int flags, bool uncompressed);
+    static void* FileLoad(const char *path, int flags);
+    static void* FileLoadz(const char *path, int flags);
     // The linker's thunk to the two-argument FileLoad (0x000e3c20).
     static void* FileLoadThunk(char *rawPath, int flags);
 

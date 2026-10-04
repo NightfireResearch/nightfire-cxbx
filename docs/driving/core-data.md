@@ -90,10 +90,9 @@ manager.
 
 ### File loading (`src/driving/engine/UFileLoader.cpp`)
 The game's file front end over FILESYS: the mission archive (`StartUsingBigFile`), existence and size queries,
-loads into a given buffer, shape loads, the request log. *Note:* `FileLoad` (both overloads) and `FileLoadz` are
-older replacements from before this port, not yet faithful: they print every path loaded. With `DumpFiles=on` in
-settings.ini (off by default; the action engine reads the same key) each loaded file is also saved under
-`dump_driving\` (`src/driving/devtools/FileDump.cpp`).
+loads into a given buffer, shape loads, the request log. With `DumpFiles=on` in settings.ini (off by default; the
+action engine reads the same key) `FileLoad` also saves each file it loads under `dump_driving\`
+(`src/driving/devtools/FileDump.cpp`).
 
 ## 3. Tests
 

@@ -28,7 +28,7 @@ public:
     FileNameList* Construct();
     void Destruct();
     // Appends a name, as the loader does for every file it opens while its request logging is on (0x001174d0).
-    void AddFile(char *name);
+    void AddFile(const char *name);
     // Writes the names to a file, one per line (0x00117160).
     void Dump(const char *path);
 

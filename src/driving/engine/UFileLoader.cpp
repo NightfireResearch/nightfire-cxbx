@@ -20,9 +20,9 @@
 // ---------------------------------------------------------------------------------------------------------------
 // UFileLoader (see UFileLoader.h) and the file-name lists of its request logging (FileNameList.h).
 //
-// FileLoad and FileLoadz (the AUTOINJECT'd three functions further down) are the project's older replacements:
-// besides what the original does they print every path, and with settings.ini's DumpFiles=on save a copy of every
-// file loaded under dump_driving\ (devtools/FileDump.cpp). The functions above them are ports of the originals.
+// FileLoad also hands each file it loads to devtools/FileDump.cpp, which saves it only with settings.ini's
+// DumpFiles=on - in FileLoad itself because our own ports call it directly, so a wrapper at its address would
+// miss their loads.
 // ---------------------------------------------------------------------------------------------------------------
 
 #define BigFileName ((char *)0x002431d8)          // [256], the big file's name, for the request lists' files
@@ -55,28 +55,13 @@ bool UFileLoader::LookupAbsolutePath(char *pathOut, const char *pathIn) {
     return true;
 }
 
-// Inlined - can't be injected
-void * UFileLoader::FileLoadDirectFromDisk(char* param_1, int param_2, bool z_variant) {
-    if (z_variant) {
-        return FILE_load(param_1, param_2);
-    }
-    return FILE_loadz(param_1, param_2);
-}
-
-// Inlined - can't be injected
-void UFileLoader::AddFileToRequestList(char* fname) {
-    if (LogRequests == 1) {
-        RequestedFiles.AddFile(fname);
-    }
-}
-
-// 0x00117530, reached only from FileLoad (ours)
-void* UFileLoader::AttemptBigFileLoad(char *param_1, undefined4 param_2) {
-    char path[256];
-    BigFilePathOf(path, param_1);
-    void* loaded = FILE_loadpackz(path, param_2);
+// FUNC_AT(0x00117530)
+void* UFileLoader::AttemptBigFileLoad(const char *path, int flags) {
+    char packed[256];
+    BigFilePathOf(packed, path);
+    void *loaded = FILE_loadpackz(packed, flags);
     if (LogRequests != 0)
-        (loaded != NULL ? FilesInBigFile : FilesNotInBigFile).AddFile(param_1);
+        (loaded != NULL ? FilesInBigFile : FilesNotInBigFile).AddFile(path);
     return loaded;
 }
 
@@ -296,7 +281,7 @@ void FileNameList::IncSize(uint32_t count) {
 }
 
 // FUNC_AT(0x001174d0)
-void FileNameList::AddFile(char *name) {
+void FileNameList::AddFile(const char *name) {
     char copy[256];
     strcpy(copy, name);
     FileNameNode *end = head;
@@ -306,50 +291,35 @@ void FileNameList::AddFile(char *name) {
     node->prev->next = node;
 }
 
-// ---- the project's FileLoad (settings.ini DumpFiles=on also saves each file loaded: devtools/FileDump.cpp)
+// ---- loading files
 
 #include "../platform/RealMemory.h"   // MEM_size, ours now
 
-// AUTOINJECT
-void* UFileLoader::FileLoad(const char *rawPath, int param_2, bool param_3) {
-
-    char fixedPath [256];
-
-    // Normalise file path
-    UFileLoader::LookupAbsolutePath(fixedPath, rawPath);
-
-    // OUR DEBUG: Print details
-    printf("-------- Loading file %s, %i, %s\n", fixedPath, param_2, param_3 ? "true" : "false");
-
-    // First try from BIG archive
-    void* loadedFile = UFileLoader::AttemptBigFileLoad(fixedPath, param_2);
-
-    // Otherwise try direct file
-    if (loadedFile == NULL) {
-        loadedFile = UFileLoader::FileLoadDirectFromDisk(fixedPath, param_2, param_3);
+// A file, from the big file if it has it, otherwise from the disc: as stored (uncompressed true, FILE_load) or
+// unpacked if packed (FILE_loadz). The big file is always read with FILE_loadpackz. Gives the block or NULL.
+// FUNC_AT(0x00117610)
+void* UFileLoader::FileLoad(const char *path, int flags, bool uncompressed) {
+    char fixed[256];
+    LookupAbsolutePath(fixed, path);
+    void *loaded = AttemptBigFileLoad(fixed, flags);
+    if (loaded == NULL) {
+        loaded = uncompressed ? FILE_load(fixed, flags) : FILE_loadz(fixed, flags);
+        if (loaded == NULL)
+            return NULL;
     }
-
-    // No luck either from archive or filesystem means the file is missing
-    if(loadedFile == NULL)
-        return NULL;
-
-    FileDump_Save(fixedPath, loadedFile, MEM_size(loadedFile));   // settings.ini DumpFiles=on only
-
-    UFileLoader::AddFileToRequestList(fixedPath);
-
-    return loadedFile;
+    // (the original flushes the CPU cache here, WBINVD, for the GPU's sake - nothing to do on a PC)
+    FileDump_Save(fixed, loaded, MEM_size(loaded));   // devtools: settings.ini DumpFiles=on only
+    if (loaded != NULL && LogRequests == 1)
+        RequestedFiles.AddFile(fixed);
+    return loaded;
 }
 
-// The two-argument overload (0x001176b0), which the original writes as exactly this. It has to be replaced in
-// its own right: the three-argument replacement used to be patched over both, and read a third argument from
-// the stack of callers that had pushed two.
-//
-// AUTOINJECT
-void* UFileLoader::FileLoad(const char *rawPath, int flags) {
-    return FileLoad(rawPath, flags, true);
+// FUNC_AT(0x001176b0)
+void* UFileLoader::FileLoad(const char *path, int flags) {
+    return FileLoad(path, flags, true);
 }
 
-// AUTOINJECT
-void* UFileLoader::FileLoadz(const char *fname, int flags) {
-    return FileLoad(fname, flags, false);
+// FUNC_AT(0x001176d0)
+void* UFileLoader::FileLoadz(const char *path, int flags) {
+    return FileLoad(path, flags, false);
 }
