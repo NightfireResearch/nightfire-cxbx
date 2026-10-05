@@ -25,8 +25,14 @@ void MouseLook_Update(void);
 // trigger is a trigger whatever it is attached to, and going in at the pad level means the buttons inherit
 // every control style, the analog-to-digital thresholds and the action flags for free. Aiming had to bypass
 // all that because a mouse is not a stick; a mouse button really is just a button.
+//
+// What "zoom held" means depends on settings.ini's MouseZoom. With hold, it is the right button's own state.
+// With toggle, each click of the right button flips it, so the trigger stays held between clicks - unless the
+// game is itself set to toggle the scope on each press of the trigger (its Aim option, gameTogglesScope), when
+// the button is passed straight through: the game toggles already, and latching on top of that would make a
+// click that should zoom back out do nothing.
 bool MouseLook_FireHeld(void);
-bool MouseLook_ZoomHeld(void);
+bool MouseLook_ZoomHeld(bool gameTogglesScope);
 
 // Whether the player is currently looking down a scope, which changes what the mouse does: the wheel adjusts
 // the zoom instead of changing weapon, and aiming is slowed down. Set once a frame from Player_ViewClamping,

@@ -2,6 +2,7 @@
 #include "../actionhelpers.h"
 #include "../../common/renderWindow.h"
 #include "mouseLook.h"
+#include "../input.h"
 #include <string.h>
 #include <math.h>
 
@@ -195,7 +196,7 @@ static bool BuildKeyboardPadState(Win32_XINPUT_STATE *state) {
     // through the same mapping as every other button - see the comment on MouseLook_FireHeld. Both are held
     // false unless the pointer is captured, so this cannot pick up a click meant for something else.
     state->Gamepad.bRightTrigger = (KeyDown(VK_LCONTROL_) || MouseLook_FireHeld()) ? 0xFF : 0; // fire
-    state->Gamepad.bLeftTrigger  = (KeyDown('X') || MouseLook_ZoomHeld()) ? 0xFF : 0;          // scope zoom
+    state->Gamepad.bLeftTrigger  = (KeyDown('X') || MouseLook_ZoomHeld(PlayerInputs[0].manualAimToggle != 0)) ? 0xFF : 0;          // scope zoom
 
     return buttons != 0 || moveX != 0 || moveY != 0 || lookX != 0 || lookY != 0 ||
            state->Gamepad.bLeftTrigger != 0 || state->Gamepad.bRightTrigger != 0;

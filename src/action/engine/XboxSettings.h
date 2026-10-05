@@ -29,11 +29,13 @@ bool Settings_GetPerfLog(void);
 // default). The driving engine reads the same key from the same file (src/driving/devtools/FileDump.cpp).
 bool Settings_GetDumpFiles(void);
 
-// settings.ini's [Settings] MouseLook, MouseSensitivity and MouseInvertY keys - see engine/mouseLook.h.
-// Sensitivity is a plain multiplier on the default, and is clamped to something usable rather than trusted.
+// settings.ini's [Settings] MouseLook, MouseSensitivity, MouseInvertY and MouseZoom keys - see
+// engine/mouseLook.h. Sensitivity is a plain multiplier on the default, and is clamped to something usable
+// rather than trusted. MouseZoom is "hold" (the default) or "toggle"; true here means toggle.
 bool Settings_GetMouseLook(void);
 float Settings_GetMouseSensitivity(void);
 bool Settings_GetMouseInvertY(void);
+bool Settings_GetMouseZoomToggle(void);
 
 // settings.ini's [Settings] DiscPath key: the host folder the Xbox D: drive resolves to, i.e. the one holding
 // eurocom\filesys.d00. Defaults to "../disc". This is the value as written; a relative one is resolved against

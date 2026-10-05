@@ -91,6 +91,8 @@ static unsigned g_frame = 0;                // incremented once per MouseLook_Up
 static unsigned g_lastAimFrame = 0;         // g_frame the last time the aim hook ran; 0 = never
 static bool     g_prevButtonDown = false, g_prevEscapeDown = false;
 static bool     g_leftDown = false, g_rightDown = false; // as of the last MouseLook_Update
+static bool     g_prevRightDown = false;
+static bool     g_zoomLatched = false;                   // MouseZoom=toggle: the trigger as the clicks left it
 static bool     g_swallowLeftUntilRelease = false;       // see Capture
 static int      g_wheelAccum = 0;                        // raw wheel movement not yet turned into notches
 static int      g_wheelStep = 0;                         // -1, 0 or +1, for this frame only
@@ -309,6 +311,7 @@ static void Release(HWND window) {
     g_wheelAccum = 0;
     g_wheelStep = 0;
     g_scoped = false;
+    g_zoomLatched = false;
     g_stickRight = 0.0f;
     g_stickUp = 0.0f;
     g_captured = false;
@@ -349,6 +352,8 @@ void MouseLook_Update(void) {
     // the frame, and so that the capture rules are the only thing deciding whether any of it counts.
     g_leftDown = buttonDown;
     g_rightDown = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
+    bool rightPressed = g_rightDown && !g_prevRightDown;
+    g_prevRightDown = g_rightDown;
     if (!buttonDown)
         g_swallowLeftUntilRelease = false;
 
@@ -374,6 +379,9 @@ void MouseLook_Update(void) {
         Release(window);
         return;
     }
+
+    if (rightPressed)
+        g_zoomLatched = !g_zoomLatched;
 
     // One notch per frame, so that a flick of the wheel walks through the weapons one at a time instead of
     // jumping several at once - the game changes weapon on a press, and several presses in one frame would
@@ -409,8 +417,12 @@ bool MouseLook_FireHeld(void) {
     return g_captured && g_leftDown && !g_swallowLeftUntilRelease;
 }
 
-bool MouseLook_ZoomHeld(void) {
-    return g_captured && g_rightDown;
+bool MouseLook_ZoomHeld(bool gameTogglesScope) {
+    if (!g_captured)
+        return false;
+    if (Settings_GetMouseZoomToggle() && !gameTogglesScope)
+        return g_zoomLatched;
+    return g_rightDown;
 }
 
 void MouseLook_SetScoped(bool scoped) {

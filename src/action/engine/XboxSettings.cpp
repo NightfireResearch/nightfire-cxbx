@@ -45,6 +45,7 @@ struct Settings {
     bool mouseLook;        // see engine/mouseLook.h
     float mouseSensitivity;
     bool mouseInvertY;
+    bool mouseZoomToggle;
     char discPath[240];  // where the game's disc data lives; see common/xboxPath.cpp
 };
 
@@ -64,6 +65,10 @@ static void WriteDefaultSettingsFile() {
         "\n"
         "; 0 = 4:3, 1 = 16:9\n"
         "Widescreen=0\n"
+        "\n"
+        "; Render resolution does not affect UI scale, UI is referenced to 640x480 still\n"
+        "RenderWidth=640\n"
+        "RenderHeight=480\n"
         "\n"
         "; NTSC or PAL - also picks which of two English text variants the game uses (a real regional\n"
         "; product tie-in: the \"Stunner\" gadget is rebranded as a Philips-brand shaver outside NTSC/US).\n"
@@ -90,6 +95,10 @@ static void WriteDefaultSettingsFile() {
         "\n"
         "; Whether moving the mouse away from you looks down instead of up.\n"
         "MouseInvertY=off\n"
+        "\n"
+        "; The right mouse button zooms: hold = zoomed while it is held down, toggle = each click zooms\n"
+        "; in or back out. (With the game's own Aim option set to toggle, the button toggles either way.)\n"
+        "MouseZoom=hold\n"
         "\n"
         "; Where the game's disc data lives - the folder containing eurocom\\filesys.d00 and the rest. This is\n"
         "; what the Xbox's D: drive resolves to. Relative paths are relative to this executable's folder.\n"
@@ -127,6 +136,7 @@ static void LoadSettingsFile() {
     g_settings.mouseLook = true;
     g_settings.mouseSensitivity = 1.0f;
     g_settings.mouseInvertY = false;
+    g_settings.mouseZoomToggle = false;
     g_settings.dumpFiles = false;
     strncpy(g_settings.discPath, "../disc", sizeof(g_settings.discPath) - 1);
     g_settings.discPath[sizeof(g_settings.discPath) - 1] = '\0';
@@ -187,6 +197,8 @@ static void LoadSettingsFile() {
             g_settings.mouseSensitivity = sensitivity;
         } else if (_stricmp(key, "MouseInvertY") == 0) {
             g_settings.mouseInvertY = (_stricmp(value, "on") == 0 || _stricmp(value, "1") == 0);
+        } else if (_stricmp(key, "MouseZoom") == 0) {
+            g_settings.mouseZoomToggle = (_stricmp(value, "toggle") == 0);
         } else if (_stricmp(key, "DiscPath") == 0) {
             if (value[0] != '\0') {
                 strncpy(g_settings.discPath, value, sizeof(g_settings.discPath) - 1);
@@ -274,6 +286,10 @@ float Settings_GetMouseSensitivity(void) {
 
 bool Settings_GetMouseInvertY(void) {
     return GetSettings()->mouseInvertY;
+}
+
+bool Settings_GetMouseZoomToggle(void) {
+    return GetSettings()->mouseZoomToggle;
 }
 
 const char *Settings_GetDiscPath(void) {
