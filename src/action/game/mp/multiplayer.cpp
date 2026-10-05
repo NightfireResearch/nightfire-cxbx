@@ -401,7 +401,7 @@ short MP_PlayerOrBotInd(obj_tag *obj) {
 #define StatusSpr (*(sprite **)0x002637dc)
 
 static void ShowTopAgentResult(sprite *status) {
-    int fewestDeaths = 30000; // Original sentinel.
+    int fewestDeaths = 30000;
     int eligibleCountSinceTie = 0;
 
     for (int slot = 0; slot < ARRAY_SIZE(MPGame.players); ++slot) {
@@ -465,7 +465,6 @@ static void ShowScoreLimitResult(sprite *status) {
     }
 }
 
-// Xbox EU 0x0009d020.
 // AUTOINJECT
 void MP_SortOutWhoWon() {
     sprite *status = StatusSpr;
