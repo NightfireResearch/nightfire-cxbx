@@ -416,6 +416,27 @@ void Matrix_SetTrans(_VECTOR *vec, _MATRIX *mtx) {
 }
 
 // AUTOINJECT
+void Mat_Scale3f(_MATRIX *m_out, _MATRIX *m_in, float scale_x, float scale_y, float scale_z) {
+
+  m_out->m[0] = scale_x * m_in->m[0];
+  m_out->m[4] = scale_y * m_in->m[4];
+  m_out->m[8] = scale_z * m_in->m[8];
+
+  m_out->m[1] = scale_x * m_in->m[1];
+  m_out->m[5] = scale_y * m_in->m[5];
+  m_out->m[9] = scale_z * m_in->m[9];
+
+  m_out->m[2] = scale_x * m_in->m[2];
+  m_out->m[6] = scale_y * m_in->m[6];
+  m_out->m[10] = scale_z * m_in->m[10];
+
+  // Copy the translation part unmodified
+  m_out->m[0xc] = m_in->m[0xc];
+  m_out->m[0xd] = m_in->m[0xd];
+  m_out->m[0xe] = m_in->m[0xe];
+}
+
+// AUTOINJECT
 void Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
   
   float magnitude = Vec_Magnitude(vIn);
