@@ -358,6 +358,20 @@ add_library(drivinginject SHARED
   src/driving/devtools/CoreUtilShadow.cpp
   src/driving/devtools/RestoreRanges.cpp
   src/driving/devtools/FileDump.cpp
+  src/driving/world/Collider.cpp
+  src/driving/world/CollisionInstance.cpp
+  src/driving/world/CollisionManager.cpp
+  src/driving/world/CollisionQueries.cpp
+  src/driving/world/Grid.cpp
+  src/driving/world/Tree.cpp
+  src/driving/world/WorldMath.cpp
+  src/driving/world/WorldPos.cpp
+  src/driving/engine/OBB.cpp
+  src/driving/engine/PhysicsUtil.cpp
+  src/driving/devtools/ColQueryShadow.cpp
+  src/driving/devtools/ColListShadow.cpp
+  src/driving/devtools/ColGridShadow.cpp
+  src/driving/devtools/GeomShadow.cpp
   src/driving/devtools/CarpShadow.cpp
   src/driving/engine/UGroup.cpp
   src/driving/data/UData.cpp

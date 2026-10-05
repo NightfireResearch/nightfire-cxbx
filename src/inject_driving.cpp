@@ -10,6 +10,7 @@
 #include "driving/devtools/CoreLoopShadow.h"
 #include "driving/devtools/CoreUtilShadow.h"
 #include "driving/devtools/RestoreRanges.h"
+#include "driving/devtools/GeomShadow.h"
 #include "driving/devtools/FileSysShadow.h"
 #include "driving/devtools/FileSysTrace.h"
 #include "driving/devtools/MathShadow.h"
@@ -202,6 +203,7 @@ void Inject()
   MemShadow_Run();   // NIGHTFIRE_MEMSHADOW=1 only
   CoreLoopShadow_Run();   // NIGHTFIRE_CORELOOPSHADOW=1 only
   CoreUtilShadow_Run();   // NIGHTFIRE_COREUTILSHADOW=1 only
+  GeomShadow_Run();   // NIGHTFIRE_GEOMSHADOW=1 only (the pure maths; its world part runs on the first tick)
   FileSysShadow_Run();   // NIGHTFIRE_FSSHADOW=1 only
   FileSysTrace_Install();   // NIGHTFIRE_FSTRACE=1 only
   MathShadow_Run();   // NIGHTFIRE_MATHSHADOW=1 only

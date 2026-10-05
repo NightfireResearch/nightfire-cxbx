@@ -1,8 +1,8 @@
 # Function coverage by subsystem
 
 How much of each engine's code is ours, where the rest sits, and how much of it never needs reimplementing. The
-action engine's numbers are from 1 October 2026, the [driving engine's](#the-driving-engine) from 4 October 2026
-(after the engine's core and data layers); `tools/function_coverage.py` regenerates them.
+action engine's numbers are from 1 October 2026, the [driving engine's](#the-driving-engine) from 5 October 2026
+(after the collision system); `tools/function_coverage.py` regenerates them.
 
 ```
 python tools/function_coverage.py                 # the summary below
@@ -198,11 +198,11 @@ funclets at 0x150000 are named after the function they belong to and go with it.
 W world); where a class could sit in either of two tiers the choice is a judgement, and the rules in the file are
 where to change it.
 
-### By subsystem (4 October 2026)
+### By subsystem (5 October 2026)
 
 | Subsystem | Functions | Replaced | Dead | Live | Done | KB | Done (bytes) |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| **game** | 2852 | 2 | 70 | 2780 | **3%** | 474 | 0% |
+| **game** | 2852 | 2 | 76 | 2774 | **3%** | 474 | 0% |
 | game.ai | 522 | 0 | 29 | 493 | 6% | 109 | 1% |
 | game.audio | 366 | 0 | 0 | 366 | 0% | 51 | 0% |
 | game.effects | 195 | 1 | 0 | 194 | 1% | 36 | 0% |
@@ -210,18 +210,18 @@ where to change it.
 | game.frontend | 332 | 1 | 39 | 292 | 12% | 69 | 2% |
 | game.missions | 273 | 0 | 0 | 273 | 0% | 33 | 0% |
 | game.vehicles | 193 | 0 | 0 | 193 | 0% | 62 | 0% |
-| game.weapons | 178 | 0 | 0 | 178 | 0% | 43 | 0% |
-| **engine** | 3990 | 681 | 931 | 2378 | **40%** | 526 | 26% |
+| game.weapons | 178 | 0 | 6 | 172 | 3% | 43 | 0% |
+| **engine** | 3990 | 878 | 981 | 2131 | **47%** | 526 | 35% |
 | engine.anim | 415 | 2 | 5 | 408 | 2% | 54 | 0% |
 | engine.audio | 270 | 0 | 1 | 269 | 0% | 35 | 0% |
 | engine.camera | 273 | 0 | 1 | 272 | 0% | 60 | 0% |
 | engine.core | 213 | 155 | 56 | 2 | 99% | 25 | 100% |
-| engine.data | 554 | 453 | 76 | 25 | 95% | 79 | 100% |
+| engine.data | 554 | 454 | 75 | 25 | 95% | 79 | 100% |
 | engine.input | 107 | 42 | 15 | 50 | 53% | 12 | 47% |
-| engine.physics | 156 | 0 | 0 | 156 | 0% | 33 | 0% |
+| engine.physics | 156 | 22 | 0 | 134 | 14% | 33 | 11% |
 | engine.render | 760 | 7 | 1 | 752 | 1% | 114 | 3% |
 | engine.static | 798 | 22 | 776 | 0 | 100% | 26 | 100% |
-| engine.world | 444 | 0 | 0 | 444 | 0% | 89 | 0% |
+| engine.world | 444 | 174 | 51 | 219 | 51% | 89 | 50% |
 | **platform** | 1453 | 1254 | 199 | 0 | **100%** | 262 | 100% |
 | platform.eagl | 807 | 751 | 56 | 0 | 100% | 146 | 100% |
 | platform.files | 77 | 44 | 33 | 0 | 100% | 12 | 100% |
@@ -236,10 +236,10 @@ where to change it.
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6842 | 683 | 1001 | 5158 | **25%** | 1000 | 14% |
+| **game + engine** | 6842 | 880 | 1057 | 4905 | **28%** | 1000 | 19% |
 | **platform + system** | 2893 | 1527 | 1018 | 348 | **88%** | 506 | 93% |
 | **  without the C runtime** | 2473 | 1523 | 950 | 0 | **100%** | 462 | 100% |
-| **everything** | 9735 | 2210 | 2019 | 5506 | **43%** | 1506 | 41% |
+| **everything** | 9735 | 2407 | 2075 | 5253 | **46%** | 1506 | 44% |
 
 - **The engine's core and data layers are done (4 October 2026): `engine.core` and `engine.data`, 100% by bytes**
   (docs/driving/core-data.md): memory (UMemory, new/delete), reference counters, data groups, singletons, the
@@ -249,6 +249,10 @@ where to change it.
   baseline frame for frame. The functions still counted live there are exception funclets of functions in other
   subsystems, filed by address. With the static initialisers and the input layer, game and engine together are 25%
   done by functions, 14% by bytes.
+- **The collision system is done (5 October 2026, docs/driving/collision.md):** WCollisionMgr, colliders,
+  collision instances, the spatial grid and scene tree, the geometry maths, the physics Util_* helpers and OBB - 196
+  functions, half of `engine.world` by bytes. Four shadow tests match the originals on the loaded track, and
+  lockstep missions 1-8 match the baseline. Game and engine together are now 28% done by functions, 19% by bytes.
 - **Every system library but the C runtime is done: D3D (with D3DX and XGRPH), DSOUND, XPP and XAPI at 100%.**
   The C runtime (327 live, 12%) is left to go by itself, as in the action engine: game code calls it everywhere, and
   it goes as that code becomes ours. How the rest got there (2 October 2026):
@@ -298,7 +302,7 @@ where to change it.
     side, is counted with the sound library; EA's packer (`src/driving/platform/RefPack.cpp`, checked against the
     original on every packed file in the archives) with the files. `XGetAVPack`/`XGetVideoFlags`, which sat among
     the file code, are counted with XAPI (ported in `XboxXapi.cpp`).
-- **Of the 1,000 KB of game and engine code, about 860 KB is still original.** By size: rendering 110 KB, AI 109 KB, world
+- **Of the 1,000 KB of game and engine code, about 810 KB is still original.** By size: rendering 110 KB, AI 109 KB, world
   and collision 88 KB, data and tuning 79 KB, mission events 71 KB, front end and HUD 68 KB, vehicles 62 KB,
   cameras 60 KB, animation 51 KB, gameplay audio 50 KB, then the rest at under 45 KB each.
 - **The static initialisers are done: `engine.static`, 798 functions, 100%.** The C++ initialiser table

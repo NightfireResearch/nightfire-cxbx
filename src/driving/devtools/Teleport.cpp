@@ -2,6 +2,10 @@
 #include "CarpShadow.h"
 #include "DebugVarShadow.h"
 #include "AttribShadow.h"
+#include "ColQueryShadow.h"
+#include "ColListShadow.h"
+#include "ColGridShadow.h"
+#include "GeomShadow.h"
 
 #include <windows.h>
 #include <stdio.h>
@@ -137,6 +141,10 @@ void Teleport_Tick(void) {
         CarpShadow_Run();   // NIGHTFIRE_CARPSHADOW=1 only
         DebugVarShadow_Run();   // NIGHTFIRE_DBVARSHADOW=1 only
         AttribShadow_Run();   // NIGHTFIRE_ATTRIBSHADOW=1 only
+        ColQueryShadow_Run();   // NIGHTFIRE_COLQUERYSHADOW=1 only
+        ColListShadow_Run();   // NIGHTFIRE_COLLISTSHADOW=1 only
+        ColGridShadow_Run();   // NIGHTFIRE_COLGRIDSHADOW=1 only
+        GeomShadow_RunWorld();   // NIGHTFIRE_GEOMSHADOW=1 only
         char text[256] = "";
         DWORD fromEnv = GetEnvironmentVariableA("NIGHTFIRE_TELEPORT", text, sizeof(text));
         if (fromEnv == 0 || fromEnv >= sizeof(text))
