@@ -1,8 +1,8 @@
 # Function coverage by subsystem
 
 How much of each engine's code is ours, where the rest sits, and how much of it never needs reimplementing. The
-action engine's numbers are from 1 October 2026, the [driving engine's](#the-driving-engine) from 5 October 2026
-(after the collision system); `tools/function_coverage.py` regenerates them.
+numbers for both engines (the [driving engine's](#the-driving-engine) further down) are from 5 October 2026;
+`tools/function_coverage.py` regenerates them.
 
 ```
 python tools/function_coverage.py                 # the summary below
@@ -20,7 +20,7 @@ Every function Ghidra knows (`tools/functions_action.json`, 3,999 of them) is
   called, and library code the seams have cut off;
 - **live**: original code that still runs.
 
-**Done** is replaced plus dead: what no longer needs reimplementing. The plain replaced count, 717 of 3,999 (18%), is
+**Done** is replaced plus dead: what no longer needs reimplementing. The plain replaced count, 718 of 3,999 (18%), is
 the figure quoted so far. Replaced includes the startup layer's own patches of XAPI entry points (`WriteJump` in
 `engine/XboxStartup.cpp`).
 
@@ -77,7 +77,7 @@ the C runtime can still run.
 live callers, our code calling it, data holding its address, the entry point).
 
 So the work that matters is the game code above the surface: **2,500 functions, 19% done (21% by bytes), about
-677 KB still original.**
+675 KB still original.**
 
 ## By subsystem
 
@@ -87,7 +87,7 @@ So the work that matters is the game code above the surface: **2,500 functions, 
 | ai.bots | 75 | 5 | 1 | 69 | 8% | 21 | 2% |
 | ai.drones | 694 | 20 | 3 | 671 | 3% | 212 | 1% |
 | ai.nav | 68 | 3 | 0 | 65 | 4% | 16 | 1% |
-| **player** | 174 | 37 | 2 | 135 | **22%** | 75 | 13% |
+| **player** | 174 | 38 | 2 | 134 | **23%** | 75 | 17% |
 | **objects** | 204 | 30 | 2 | 172 | **16%** | 61 | 13% |
 | **effects** | 56 | 0 | 0 | 56 | **0%** | 19 | 0% |
 | **mp** | 77 | 17 | 1 | 59 | **23%** | 27 | 13% |
@@ -128,20 +128,20 @@ So the work that matters is the game code above the surface: **2,500 functions, 
 | lib.xapi | 102 | 31 | 71 | 0 | 100% | 14 | 100% |
 | lib.xmv | 60 | 0 | 60 | 0 | 100% | 157 | 100% |
 | lib.xpp | 177 | 0 | 177 | 0 | 100% | 23 | 100% |
-| **game code (above)** | 2500 | 443 | 24 | 2033 | **19%** | 858 | 21% |
+| **game code (above)** | 2500 | 444 | 24 | 2032 | **19%** | 858 | 21% |
 | **platform + libraries** | 1499 | 274 | 1068 | 157 | **90%** | 470 | 95% |
 | **  without the C runtime** | 1258 | 271 | 987 | 0 | **100%** | 436 | 100% |
-| **everything** | 3999 | 717 | 1092 | 2190 | **45%** | 1328 | 47% |
+| **everything** | 3999 | 718 | 1092 | 2189 | **45%** | 1328 | 47% |
 
 ## Where the remaining game code is
 
-Of the 677 KB of game code still original:
+Of the 675 KB of game code still original:
 
 | Subsystem | Live KB | Share |
 |---|--:|--:|
 | ai.drones | 209 | 31% |
 | ui.frontend | 107 | 16% |
-| player | 65 | 10% |
+| player | 62 | 9% |
 | objects | 53 | 8% |
 | engine.anim | 32 | 5% |
 | audio | 28 | 4% |
