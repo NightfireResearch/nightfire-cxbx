@@ -200,7 +200,6 @@ uint MP_GetSpawnPoint(short teamId, obj_tag *respawningPlayer) {
         if (!SpawnPoints[i].initialised)
             continue;
 
-        // The original caps squared distance at 9999, even with no other players.
         float nearestPlayerDistance = 9999.0f;
         for (int playerIdx = 0; playerIdx < ARRAY_SIZE(MPGame.players); playerIdx++) {
             obj_tag *player = MPGame.players[playerIdx].playerObj;
