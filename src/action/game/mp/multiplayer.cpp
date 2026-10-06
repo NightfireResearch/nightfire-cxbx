@@ -398,8 +398,91 @@ short MP_PlayerOrBotInd(obj_tag *obj) {
   return -1;
 }
 
-// AUTOGEN
-void MP_SortOutWhoWon(void);
+#define StatusSpr (*(sprite **)0x002637dc)
+
+static void ShowTopAgentResult(sprite *status) {
+    int fewestDeaths = 30000;
+    int eligibleCountSinceTie = 0;
+
+    for (int slot = 0; slot < ARRAY_SIZE(MPGame.players); ++slot) {
+        const MPGamePlayer &player = MPGame.players[slot];
+        int deaths = player.deaths;
+        int eliminationLimit = MPSettings.MaxPoints;
+
+        if (player.playerObj == NULL || deaths >= eliminationLimit)
+            continue;
+
+        ++eligibleCountSinceTie;
+        if (deaths < fewestDeaths) {
+            const char *winnerFormat = Txt_BindLabel(MP_RESULT_TOP_AGENT, 0);
+            sprintf(status->text, winnerFormat, MPSettings.Player[slot].Name);
+            fewestDeaths = deaths;
+        } else if (deaths == fewestDeaths) {
+            // Original behavior with three eligible players (deaths in slot order):
+            // [1, 1, 2] displays the first player as the winner;
+            // [1, 2, 1] displays a draw.
+            eligibleCountSinceTie = 0;
+        }
+    }
+
+    if (eligibleCountSinceTie == 0) {
+        const char *drawText = Txt_BindLabel(MP_RESULT_DRAW, 0);
+        sprintf(status->text, drawText);
+    }
+}
+
+static void ShowTeamResult(sprite *status) {
+    float phoenixScore = MPGame.teamScore[PHOENIX];
+    // The original compares Phoenix's score to itself.
+    // It displays a draw for any non-NaN score, or an MI6 win for NaN.
+    bool scoreIsNaN = phoenixScore != phoenixScore;
+
+    // The original looks up "Press START" even though it isn't displayed.
+    (void)Txt_BindLabel(MP_PRESS_START, 0);
+    const char *result = Txt_BindLabel(scoreIsNaN ? MP_RESULT_MI6 : MP_RESULT_DRAW, 0);
+    const char *heading = Txt_BindLabel(MP_RESULT_HEADING, 0);
+    sprintf(status->text, "%s%s", heading, result);
+}
+
+static void ShowScoreLimitResult(sprite *status) {
+    int winnerSlot = -1;
+    int playersAtLimit = 0;
+    double scoreLimit = MPSettings.MaxPoints;
+
+    for (int slot = 0; slot < ARRAY_SIZE(MPGame.players); ++slot) {
+        if (MPGame.players[slot].points >= scoreLimit) {
+            winnerSlot = slot;
+            ++playersAtLimit;
+        }
+    }
+
+    (void)Txt_BindLabel(MP_PRESS_START, 0);
+    if (playersAtLimit == 1) {
+        const char *won = Txt_BindLabel(MP_RESULT_WON, 0);
+        const char *heading = Txt_BindLabel(MP_RESULT_HEADING, 0);
+        sprintf(status->text, "%s%s %s", heading, MPSettings.Player[winnerSlot].Name, won);
+    } else {
+        const char *drawText = Txt_BindLabel(MP_RESULT_DRAW, 0);
+        const char *heading = Txt_BindLabel(MP_RESULT_HEADING, 0);
+        sprintf(status->text, "%s%s", heading, drawText);
+    }
+}
+
+// AUTOINJECT
+void MP_SortOutWhoWon() {
+    MPGame.EndGameFlowState = 3;
+
+    if (MPSettings.GameMode == GM_TOPAGENT) {
+        ShowTopAgentResult(StatusSpr);
+    } else if (MPSettings.maybeIsTeamGame) {
+        ShowTeamResult(StatusSpr);
+        return; // The original returns here without calling Sprite_SetText.
+    } else {
+        ShowScoreLimitResult(StatusSpr);
+    }
+
+    Sprite_SetText(StatusSpr, StatusSpr->text);
+}
 // AUTOGEN
 void MP_Pickup_Process(void);
 // AUTOGEN
@@ -481,7 +564,6 @@ void MP_RestartScenario(void) {
 
 }
 
-#define StatusSpr ((sprite*)(0x002637dc))
 
 // AUTOINJECT
 void MP_Update(void) {
