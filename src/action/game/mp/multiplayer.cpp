@@ -177,6 +177,68 @@ void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort t
 
 }
 
+// AUTOINJECT
+uint MP_GetSpawnPoint(short teamId, obj_tag *respawningPlayer) {
+    int startIdx = 0;
+    int endIdx = ARRAY_SIZE(SpawnPoints);
+    if (MPSettings.maybeIsTeamGame || MPSettings.GameMode == GM_ASSASSIN) {
+        if (teamId == PHOENIX) {
+            endIdx = 32;
+        } else if (teamId == MI6) {
+            startIdx = 32;
+        }
+    }
+
+    int closestSpawn = -1;
+    int farthestSpawn = -1;
+    float closestDistance = 9999.0f;
+    float farthestDistance = -9999.0f;
+    uint eligibleSpawns[ARRAY_SIZE(SpawnPoints)];
+    int eligibleCount = 0;
+
+    for (int i = startIdx; i < endIdx; i++) {
+        if (!SpawnPoints[i].initialised)
+            continue;
+
+        // The original caps squared distance at 9999, even with no other players.
+        float nearestPlayerDistance = 9999.0f;
+        for (int playerIdx = 0; playerIdx < ARRAY_SIZE(MPGame.players); playerIdx++) {
+            obj_tag *player = MPGame.players[playerIdx].playerObj;
+            if (player == NULL || player == respawningPlayer)
+                continue;
+
+            float distance = Vec_SqDist3D(&SpawnPoints[i].spawnPos, &player->position);
+            if (distance < nearestPlayerDistance)
+                nearestPlayerDistance = distance;
+        }
+
+        if (nearestPlayerDistance <= 2.0f)
+            continue;
+
+        if (nearestPlayerDistance < closestDistance) {
+            closestDistance = nearestPlayerDistance;
+            closestSpawn = i;
+        }
+        if (nearestPlayerDistance > farthestDistance) {
+            farthestDistance = nearestPlayerDistance;
+            farthestSpawn = i;
+        }
+        eligibleSpawns[eligibleCount++] = i;
+    }
+
+    switch (MPSettings.RespawnSelectionMode) {
+        case 0:
+            return closestSpawn >= 0 ? closestSpawn : startIdx;
+        case 1:
+            return farthestSpawn >= 0 ? farthestSpawn : startIdx;
+        case 2:
+            // With no eligible spawns, the original reads an uninitialized first entry.
+            return eligibleSpawns[Rand_Rand(eligibleCount)];
+        default:
+            return startIdx;
+    }
+}
+
 // AUTOGEN
 obj_tag* MP_RegisterMPObject(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 
