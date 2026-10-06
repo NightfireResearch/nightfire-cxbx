@@ -1,0 +1,12 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# ResetMap_LevelCode2Img against the original (LoadScreenShadow.cpp), with the text bank loaded.
+loadscreentest
+quit

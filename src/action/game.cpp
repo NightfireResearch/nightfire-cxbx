@@ -5,6 +5,7 @@
 #include "game/mp/multiplayer.h" // for MPSettings
 #include "ui/MenuManager.h"
 #include "engine/Text.h"
+#include "util/Random.h"
 #include "engine/XboxSettings.h"
 #include "engine/Direct3D/GraphicsSystem.h" // Gfx
 #include "engine/Fmv.h"
@@ -16,7 +17,7 @@
 #include <cstdio>
 
 #include <stdio.h>
-#include "engine/XboxSystem.h"
+#include "engine/XboxSystem.h"
 #include "devtools/Teleport.h"
 
 // XBE_GLOBAL(0x002ae288, 0x4)
@@ -389,6 +390,268 @@ void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv) {
         GameFlow_PushState(3, 0.0, 0xff);
 
       }
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The loading screen's picture for a level, and the text shown on it: a hint (one of the level's own, or, often,
+// a general gameplay tip) and the level's objective. ResetMap_GenLoadScreen is the only caller.
+// ---------------------------------------------------------------------------------------------------------------
+
+// General gameplay tips, which replace a level's own hint half the time (and always when it has none). 0x1000129
+// is not among them.
+static const uint32_t kGeneralHints[] = {
+    0x1000111, 0x1000112, 0x1000113, 0x1000114, 0x1000115, 0x1000116, 0x1000117, 0x1000118, 0x1000119, 0x100011a,
+    0x100011b, 0x100011c, 0x100011d, 0x100011e, 0x100011f, 0x1000120, 0x1000121, 0x1000122, 0x1000123, 0x1000124,
+    0x1000125, 0x1000126, 0x1000127, 0x1000128, 0x100012a, 0x100012b, 0x100012c, 0x100012d, 0x100012e, 0x100012f,
+    0x1000130, 0x1000131, 0x1000132, 0x1000133, 0x1000134, 0x1000135, 0x1000136, 0x1000137, 0x1000138, 0x1000139,
+    0x100013a, 0x100013b, 0x100013c,
+};
+
+// Multiplayer tips, for every multiplayer map.
+static const uint32_t kMultiplayerHints[] = {
+    0x100013e, 0x100013f, 0x1000140, 0x1000141, 0x1000142, 0x1000143, 0x1000144, 0x1000145, 0x1000146, 0x1000147,
+    0x1000148, 0x1000149, 0x100014a, 0x100014b, 0x100014c, 0x100014d, 0x100014e, 0x100014f, 0x1000150, 0x1000151,
+    0x1000152, 0x1000153, 0x1000154, 0x1000155, 0x1000156, 0x1000157, 0x1000158, 0x1000159, 0x100015a, 0x100015b,
+    0x100015c, 0x100015d, 0x100015e, 0x100015f, 0x1000160, 0x1000161, 0x1000162, 0x1000163, 0x1000164, 0x1000165,
+};
+
+static char *LoadText(uint32_t label) {
+    return (char *)Txt_BindLabel((Action_TranslatedText)label, 0);
+}
+
+// One of the hints at random, if the caller wants a hint. The random number is drawn only then - including for
+// a level with a single hint, so the generator advances as the original's does.
+template <size_t N>
+static void PickHint(char **hintOut, const uint32_t (&hints)[N]) {
+    if (hintOut != NULL)
+        *hintOut = LoadText(hints[Rand_Random() % N]);
+}
+
+static void SetObjective(char **objectiveOut, uint32_t objective) {
+    if (objectiveOut != NULL)
+        *objectiveOut = LoadText(objective);
+}
+
+// Half the time, and whenever the level gave no hint of its own, a general tip instead.
+static void MaybeGeneralHint(char **hintOut) {
+    bool keepLevelHint = (Rand_Random() & 1) != 0 && (hintOut == NULL || *hintOut != NULL);
+    if (!keepLevelHint)
+        PickHint(hintOut, kGeneralHints);
+}
+
+// The C++ under the register-argument entry below (not static: only the entry's inline assembly calls it).
+HASHCODE ResetMap_LevelCode2ImgCore(HASHCODE level, char **hintOut, char **objectiveOut) {
+    if (hintOut != NULL)
+        *hintOut = NULL;
+    if (objectiveOut != NULL)
+        *objectiveOut = NULL;
+
+    HASHCODE image;
+    switch (level) {
+    // Multiplayer maps: a multiplayer tip and no objective, and no general tip.
+    case HT_Level_SpaceStation:
+    case HT_Level_Facility:
+    case HT_Level_Atlantis:
+    case HT_Level_SkyRail:
+    case HT_Level_SubPen:
+    case HT_Level_StealthShip:
+    case HT_Level_FortKnox:
+    case HT_Level_MissileSilo:
+    case HT_Level_SnowBlind:
+    case HT_Level_Ravine:
+    case 0x700004c: {
+        PickHint(hintOut, kMultiplayerHints);
+        return LOADSCREEN_MULTIPLAYER;
+    }
+
+    // Castle. The exterior keeps its one hint: no general tip.
+    case HT_Level_CastleExterior: {
+        static const uint32_t hints[] = { 0x1000126 };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x4000000);
+        return LOADSCREEN_CASTLE;
+    }
+    case HT_Level_CastleCourtyard: {
+        static const uint32_t hints[] = { 0x10000c0, 0x10000c1 };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x4000001);
+        image = LOADSCREEN_CASTLE;
+        break;
+    }
+    case HT_Level_CastleIndoors1: {
+        static const uint32_t hints[] = { 0x10000c2 };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x4000002);
+        image = LOADSCREEN_CASTLE;
+        break;
+    }
+    case HT_Level_CastleIndoors2: {
+        static const uint32_t hints[] = { 0x10000c3, 0x10000c4, 0x10000c5, 0x10000c6 };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x4000003);
+        image = LOADSCREEN_CASTLE;
+        break;
+    }
+
+    // Henderson (Mayhew's estate and headquarters).
+    case HT_Level_HendersonA: {
+        static const uint32_t hints[] = { 0x10000d3, 0x10000d4 };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x4000006);
+        image = LOADSCREEN_HENDERSON;
+        break;
+    }
+    case HT_Level_HendersonB: {
+        static const uint32_t hints[] = { 0x10000c7, 0x10000c8, 0x10000cb, 0x10000d1 };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x4000008);
+        image = LOADSCREEN_HENDERSON;
+        break;
+    }
+    case HT_Level_HendersonC: {
+        static const uint32_t hints[] = { 0x10000ca, 0x10000cd, 0x10000ce, 0x10000c9, 0x10000d2 };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x400000a);
+        image = LOADSCREEN_HENDERSON;
+        break;
+    }
+    case HT_Level_HendersonD: {
+        static const uint32_t hints[] = { 0x10000cf, 0x10000d0 };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x400000d);
+        image = LOADSCREEN_HENDERSON;
+        break;
+    }
+
+    // Tower.
+    case HT_Level_TowerA: {
+        static const uint32_t hints[] = { 0x10000d5, 0x10000d8, 0x10000df, 0x10000e2 };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x4000016);
+        image = LOADSCREEN_TOWER;
+        break;
+    }
+    case HT_Level_TowerB: {
+        static const uint32_t hints[] = { 0x10000d7, 0x10000d9, 0x10000db, 0x10000e0, 0x10000e3, 0x10000e4, 0x10000e6 };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x4000019);
+        image = LOADSCREEN_TOWER;
+        break;
+    }
+    case HT_Level_TowerC: {
+        static const uint32_t hints[] = { 0x10000dc, 0x10000da, 0x10000dd, 0x10000de, 0x10000e1, 0x10000e5 };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x400001d);
+        image = LOADSCREEN_TOWER;
+        break;
+    }
+
+    // Power station.
+    case HT_Level_PowerStationA1: {
+        static const uint32_t hints[] = { 0x10000e7, 0x10000e9, 0x10000eb, 0x10000ed, 0x10000ef, 0x10000f1, 0x10000f4 };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x400002c);
+        image = LOADSCREEN_POWERSTATION;
+        break;
+    }
+    case HT_Level_PowerStationA2: {
+        static const uint32_t hints[] = { 0x10000e8, 0x10000ea, 0x10000ec, 0x10000ee, 0x10000f0, 0x10000f2, 0x10000f3,
+                                          0x10000f5 };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x400002f);
+        image = LOADSCREEN_POWERSTATION;
+        break;
+    }
+
+    // The second tower. Tower2A's list really has 0x10000f8 twice (0x10000f7 never appears), so it comes up two
+    // times in three. Tower2C has no hint of its own; the elevator keeps its one hint, with no general tip.
+    case HT_Level_Tower2A: {
+        static const uint32_t hints[] = { 0x10000f6, 0x10000f8, 0x10000f8 };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x4000036);
+        image = LOADSCREEN_TOWER2;
+        break;
+    }
+    case HT_Level_Tower2B: {
+        static const uint32_t hints[] = { 0x10000fe, 0x10000f9, 0x10000fa, 0x10000fc, 0x10000fd };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x4000037);
+        image = LOADSCREEN_TOWER2;
+        break;
+    }
+    case HT_Level_Tower2C:
+        if (hintOut != NULL)
+            *hintOut = NULL;
+        SetObjective(objectiveOut, 0x400003a);
+        image = LOADSCREEN_TOWER2;
+        break;
+    case HT_Level_Tower2Elevator: {
+        static const uint32_t hints[] = { 0x10000fb };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x4000039);
+        return LOADSCREEN_TOWER2;
+    }
+
+    // Drake's island base and the missile silo.
+    case HT_Level_EvilBase: {
+        static const uint32_t hints[] = { 0x1000103, 0x1000104, 0x1000105, 0x1000106 };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x4000049);
+        image = LOADSCREEN_EVILBASE;
+        break;
+    }
+    case HT_Level_EvilSilo: {
+        static const uint32_t hints[] = { 0x10000ff };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x400004d);
+        image = LOADSCREEN_EVILBASE;
+        break;
+    }
+    case HT_Level_EvilBaseC: {
+        static const uint32_t hints[] = { 0x1000100, 0x1000101, 0x1000102 };
+        PickHint(hintOut, hints);
+        SetObjective(objectiveOut, 0x400004f);
+        image = LOADSCREEN_EVILBASE;
+        break;
+    }
+
+    // Space station. The original stores the hint it picks through the objective pointer, not the hint pointer
+    // (and only when there is a hint pointer); the objective then overwrites it, so this level never shows a hint
+    // of its own - only, half the time, a general tip.
+    case HT_Level_SpaceStationD: {
+        static const uint32_t hints[] = { 0x1000108, 0x1000109, 0x100010a, 0x100010b, 0x100010c, 0x100010d, 0x100010e,
+                                          0x100010f, 0x1000110 };
+        if (hintOut != NULL)
+            *objectiveOut = LoadText(hints[Rand_Random() % ARRAY_SIZE(hints)]);
+        SetObjective(objectiveOut, 0x400005a);
+        image = LOADSCREEN_SPACESTATION;
+        break;
+    }
+
+    default:
+        if (hintOut != NULL)
+            *hintOut = NULL;
+        if (objectiveOut != NULL)
+            *objectiveOut = NULL;
+        return LOADSCREEN_UNKNOWN;
+    }
+
+    MaybeGeneralHint(hintOut);
+    return image;
+}
+
+// The original (0x000bedf0) takes the level in EAX, the hint pointer in ESI and the objective pointer in ECX, and
+// preserves ESI and EDI, which its caller relies on; the C++ core preserves them too.
+// AUTOLTCG
+HASHCODE __declspec(naked) ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objectiveOut) {
+    _asm {
+        push ecx
+        push esi
+        push eax
+        call ResetMap_LevelCode2ImgCore
+        add esp, 12
+        ret
     }
 }
 

@@ -52,6 +52,7 @@ add_library(actioninject SHARED
   src/common/xbeOriginal.cpp
   src/common/xbeRelocate.cpp
   src/action/devtools/MenuProbe.cpp
+  src/action/devtools/LoadScreenShadow.cpp
   src/action/devtools/FileDump.cpp
   src/action/devtools/SecretsShadow.cpp
   src/action/devtools/UnlocksShadow.cpp

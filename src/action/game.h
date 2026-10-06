@@ -31,6 +31,10 @@ void Reset_MapLoadSettings(void);
 uint GameFlow_GetState(void);
 void GameFlow_PushState(int state, float param_2, uint param_3);
 void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv);
+// The loading screen's picture for a level and its hint and objective text (0x000bedf0). The original takes its
+// arguments in registers: ResetMap_LevelCode2Img is the entry for that, ResetMap_LevelCode2ImgCore the C++ under it.
+HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objectiveOut);
+HASHCODE ResetMap_LevelCode2ImgCore(HASHCODE level, char **hintOut, char **objectiveOut);
 void psiStopBackgroundMovie(void);
 void maybeStartBackgroundMovie(void);
 void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume);

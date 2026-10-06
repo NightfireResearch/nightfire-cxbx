@@ -40,6 +40,7 @@
 //                          !!! level, but the match itself differs within seconds (a bot kills you in one).    !!!
 //                          !!! Seed right before the random step, and screenshot as soon after it as you can.  !!!
 //     unlockstest          compare the original progress/unlock functions with ours (UnlocksShadow.cpp)
+//     loadscreentest       compare the original loading-screen image/hint/objective choice with ours (LoadScreenShadow.cpp)
 //     quit                 end the process
 //   BTN: A B X Y BLACK WHITE LT RT START BACK UP DOWN LEFT RIGHT
 //
@@ -57,6 +58,7 @@
 #include "../ui/Manager.h"
 #include "SecretsShadow.h"
 #include "UnlocksShadow.h"
+#include "LoadScreenShadow.h"
 #include "UpgradeShadow.h"
 #include "MemShadow.h"
 #include "ScoreShadow.h"
@@ -122,7 +124,7 @@ static const char *const kButtonNames[] = { "A", "B", "X", "Y", "BLACK", "WHITE"
 static const unsigned short kDigitalBits[] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20 };   // UP..BACK
 
 struct Step {
-    enum { WAIT, HOLD, SHOT, LOG, QUIT, GOPAGE, SECRETSTEST, FOCUS, WAITPAGE, UNLOCKSTEST, POKE, RELOAD, LEVEL, TELEPORT, DUMP, OBJLOG, GFXINFO, HIDEGFX } kind;
+    enum { WAIT, HOLD, SHOT, LOG, QUIT, GOPAGE, SECRETSTEST, FOCUS, WAITPAGE, UNLOCKSTEST, LOADSCREENTEST, POKE, RELOAD, LEVEL, TELEPORT, DUMP, OBJLOG, GFXINFO, HIDEGFX } kind;
     int button;
     unsigned frames;
     char text[96];
@@ -205,6 +207,8 @@ static bool LoadScript(const char *path) {
             s.kind = Step::POKE; s.frames = 0x0018cdfc; s.button = (int)0x159a55e5; AddStep(s);
         } else if (_stricmp(cmd, "unlockstest") == 0) {
             s.kind = Step::UNLOCKSTEST; AddStep(s);
+        } else if (_stricmp(cmd, "loadscreentest") == 0) {
+            s.kind = Step::LOADSCREENTEST; AddStep(s);
         } else if (_stricmp(cmd, "secretstest") == 0) {
             s.kind = Step::SECRETSTEST; AddStep(s);
         } else if (_stricmp(cmd, "level") == 0 && n >= 2) {
@@ -390,6 +394,9 @@ static int ScriptFrame(void) {
             break;
         case Step::UNLOCKSTEST:
             UnlocksShadow_Run();
+            break;
+        case Step::LOADSCREENTEST:
+            LoadScreenShadow_Run();
             break;
         case Step::LEVEL: {
             // ResetMap_LevelToLoad only acts in play (state 2) and states 7, 8, 0xd and 0xe; during a cutscene it
