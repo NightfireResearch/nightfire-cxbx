@@ -48,7 +48,7 @@ enum ScriptFlags {
     ScriptFlag_RestoreOnKillStream = 0x10,  // Script_KillStream restores (rather than deletes) entity/anim
                                              // streams' linked objects when their stream ends (copies the
                                              // transform matrix's position back into position/lastPosition and
-                                             // sets renderType bit 0x20, instead of marking them for deletion)
+                                             // sets TRANSFORM_MOVED, instead of marking them for deletion)
     ScriptFlag_FFwdKillsCamera = 0x20,      // Script_FFwd skips straight to the end by killing the active Camera
                                              // stream outright, instead of fading out over the remaining frames
     ScriptFlag_IsCameraNIS = 0x40,          // Script_Play sets ScriptCam from scriptHashcode when set

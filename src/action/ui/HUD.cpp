@@ -1294,13 +1294,13 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 		{
 				
 			extraItemsAsObjList[0]->rotation.z = (M_PI/2.0f) - blData->remoteControlDevice->rotation.z + M_PI;
-			extraItemsAsObjList[0]->renderType |= 0x20;
+			extraItemsAsObjList[0]->transformFlags |= TRANSFORM_MOVED;
 
 			extraItemsAsObjList[1]->rotation.z = blData->remoteControlDevice->rotation.z - (M_PI/4.0f);
-			extraItemsAsObjList[1]->renderType |= 0x20;
+			extraItemsAsObjList[1]->transformFlags |= TRANSFORM_MOVED;
 
 			extraItemsAsObjList[2]->rotation.z = (blData->remoteControlDevice->rotation.z + M_PI) - (M_PI/4.0f);
-			extraItemsAsObjList[2]->renderType |= 0x20;
+			extraItemsAsObjList[2]->transformFlags |= TRANSFORM_MOVED;
 				
 		}
 		

@@ -124,7 +124,7 @@ obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
         sensor->beamObject = control_create_object(0, pos, rot, NULL);
         sensor->beamObject->objectType = OBJECTTYPE_GFX;
         sensor->beamObject->effectFlags |= 0x20;
-        sensor->beamObject->renderType |= 0x0005;
+        sensor->beamObject->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY | TRANSFORM_MATRIX_PLACED;
         sensor->beamObject->scale = sensor->beamLength;
         sensor->beamObject->maybeParent = obj;
         Mat_Copy(&obj->transformMatrix, &sensor->beamObject->transformMatrix);
@@ -137,14 +137,14 @@ obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
 
         sensor->bodyObject = control_create_object(0, pos, rot, NULL);
         sensor->bodyObject->objectType = OBJECTTYPE_GFX;
-        sensor->bodyObject->renderType |= 0x0004;
+        sensor->bodyObject->transformFlags |= TRANSFORM_MATRIX_PLACED;
         sensor->bodyObject->maybeParent = obj;
         Mat_Align2Up(sensor->bodyObject->transformMatrix.m, &CONST_UP_VECTOR.x, &direction.x);
         hashtable_set_object_to_entity_gfx(sensor->bodyObject, createParams->bodyHashcode);
     }
 
     if(sensor->sweepLastPoint != 0)
-        obj->renderType |= 0x0044;
+        obj->transformFlags |= TRANSFORM_MATRIX_PLACED | TRANSFORM_POSITION_FROM_MATRIX;
 
     obj->objectType = OBJECTTYPE_SENSOR;
     obj->objGraphics = celgl;
@@ -171,13 +171,13 @@ short _Sensor_SetBeam(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor) {
     if (sensor->bodyObject != NULL) {
         Mat_GetDir(&direction, &sensorObj->transformMatrix);
         Mat_Align2Up(sensor->bodyObject->transformMatrix.m, &CONST_UP_VECTOR.x, &direction.x);
-        sensor->bodyObject->renderType |= 0x20;
+        sensor->bodyObject->transformFlags |= TRANSFORM_MOVED;
     }
 
     // Update beam object and check for hit
     if ((sensor->beamObject != NULL) && (targetObj != NULL)) {
         Mat_Copy(&sensorObj->transformMatrix, &sensor->beamObject->transformMatrix);
-        sensor->beamObject->renderType |= 0x20;
+        sensor->beamObject->transformFlags |= TRANSFORM_MOVED;
 
         Mat_GetDir(&direction, &sensorObj->transformMatrix);
         auxVec_AddMulR32(&sensorObj->position, &direction, sensor->beamLength, &endPosition);
@@ -329,7 +329,7 @@ void Sensor_Update(obj_tag *sensorObj) {
         // Handle sweeping motion if spline exists
         if (sensor->sweepLastPoint != 0) {
             Spline_Interp(sensor->sweepSpline, 0, (ushort)sensor->sweepLastPoint, sensor->sweepPosition, &sensorObj->transformMatrix, NULL, 2);
-            sensorObj->renderType |= 0x20;
+            sensorObj->transformFlags |= TRANSFORM_MOVED;
 
             sensor->sweepPosition += FRAME_RATE_MUL * sensor->sweepStep;
 

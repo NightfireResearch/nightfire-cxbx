@@ -195,7 +195,7 @@ typedef struct obj_tag {
     unsigned short curState; // 0xD0
     unsigned short subState; // MovementType (Player), PlayerNum (Car)
     ushort displayMask;
-    ushort renderType; // bit 0x20 set by Script_KillStream when restoring an entity/anim stream's linked object
+    ushort transformFlags; // ObjectTransformFlags: how the update derives the matrix and bounds (0xd6)
     char unknown_0xd8;
     char _pad_6;
     char flags; // (1 == Marked for deletion or resetting)
@@ -217,6 +217,36 @@ typedef enum{
     FLAG_IN_FORCEDLIST = 0x30000000,
 } ObjectEffectFlags;
 
+// obj_tag::transformFlags bits: how the game's update derives an object's matrix and bounds each frame - in
+// Control_GetObjMatrix (0x0002cf10), Control_BuildWorldSph (0x0002db20), control_movement_object_handler
+// (0x0002dd10) and Player_Update. Ordinarily the matrix is rebuilt from rotation, position and scale, and the
+// bounding sphere from the model. (The field was called transformFlags, a guess; Ghidra calls it rendererType.)
+// 0x10 is set on particle-emitter objects but no reader has been found; 0x80 is not traced.
+typedef enum {
+    // Scale stretches the object along its own length (Z) only, rather than evenly: beams, lasers, tracers.
+    TRANSFORM_SCALE_LENGTH_ONLY = 0x01,
+    // The matrix's rotation is set elsewhere and kept; only its translation comes from position.
+    TRANSFORM_KEEP_ROTATION = 0x02,
+    // The whole matrix is set elsewhere and kept: neither rotation nor position is put into it (Player_Update
+    // too). With TRANSFORM_KEEP_ROTATION, the last rotation is taken from the matrix's direction.
+    TRANSFORM_MATRIX_PLACED = 0x04,
+    // A skinned, animated object (set by AnimObjectNew): the bounding sphere comes from the animation rather
+    // than the model, and collision and the view code treat it as such.
+    TRANSFORM_ANIMATED = 0x08,
+    // Moved this frame: control_movement_object_handler wraps the rotation into +-pi, rebuilds the matrix, the
+    // world bounds, the cel and the lighting, and keeps the position and rotation as the last ones.
+    TRANSFORM_MOVED = 0x20,
+    // After the frame's update, the position is read back out of the matrix's translation.
+    TRANSFORM_POSITION_FROM_MATRIX = 0x40,
+    // The radius is kept as set, not worked out from the model and the scale.
+    TRANSFORM_FIXED_RADIUS = 0x100,
+    // The scale is not applied to the matrix.
+    TRANSFORM_NO_SCALE = 0x200,
+    // Not a transform matter, but kept here with the rest: others may point at the object, so when it is
+    // deleted, bullets, explosions and hit lists referring to it are cleared.
+    TRANSFORM_REFERENCED = 0x400,
+} ObjectTransformFlags;
+
 //char (*__kaboom)[offsetof(obj_tag,objectType)] = 1;
 static_assert(offsetof(obj_tag, position) == 0x24, "Offset of position not correct");
 static_assert(offsetof(obj_tag, lastPosition) == 0x30, "Offset of lastPosition not correct");
@@ -226,7 +256,7 @@ static_assert(offsetof(obj_tag, transformMatrix) == 0x70, "Offset of transformMa
 static_assert(offsetof(obj_tag, extraObjectData) == 0xbc, "Offset of extraObjectData not correct");
 static_assert(offsetof(obj_tag, scriptPlayer) == 0xc0, "Offset of scriptPlayer not correct");
 static_assert(offsetof(obj_tag, effectFlags) == 0xcc, "Offset of effectFlags not correct");
-static_assert(offsetof(obj_tag, renderType) == 0xd6, "Offset of renderType not correct");
+static_assert(offsetof(obj_tag, transformFlags) == 0xd6, "Offset of transformFlags not correct");
 static_assert(offsetof(obj_tag, flags) == 0xda, "Offset of flags not correct");
 static_assert(offsetof(obj_tag, objectType) == 0xdb, "Offset of objectType not correct");
 static_assert(offsetof(obj_tag, tweakB) == 0xe1, "Offset of tweakB not correct");

@@ -78,7 +78,7 @@ void Script_KillStream(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
             linkedObj->scriptPlayer = NULL;
             if (scriptInfo->scriptFlags & ScriptFlag_RestoreOnKillStream) {
                 Vec_Copy2(Mat_Position(linkedObj->transformMatrix), &linkedObj->position, &linkedObj->lastPosition);
-                linkedObj->renderType |= 0x20;
+                linkedObj->transformFlags |= TRANSFORM_MOVED;
             } else {
                 linkedObj->flags |= 1; // mark for deletion
             }

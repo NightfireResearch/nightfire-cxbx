@@ -178,7 +178,7 @@ void Player_CreateSight(obj_tag *playerObj, byte viewerNum) {
     if (sightObj == NULL) 
         return;
     
-    sightObj->renderType |= 2;
+    sightObj->transformFlags |= TRANSFORM_KEEP_ROTATION;
     sightObj->objectType = OBJECTTYPE_DELETED;
     sightObj->effectFlags |= 0x20;
     sightObj->maybeParent = playerObj;
@@ -216,9 +216,9 @@ void PositionBeam(obj_tag *param_1, _VECTOR *param_2, _VECTOR *param_3) {
 
     float distance = Vec_Dist3D(param_2, param_3);
 
-    param_1->renderType &= 0xdf;
-    param_1->renderType |= 1;
-    param_1->renderType |= 0x20;
+    param_1->transformFlags &= ~TRANSFORM_MOVED;
+    param_1->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY;
+    param_1->transformFlags |= TRANSFORM_MOVED;
 
     param_1->scale = distance;
 
@@ -599,7 +599,7 @@ void Player_Weapon(obj_tag *player) {
     BLData *blData = (BLData *)player->extraObjectData;
     short subState = (short)player->subState;
     char weaponId = anim->currentWeaponId;
-    player->renderType |= 0x20;
+    player->transformFlags |= TRANSFORM_MOVED;
     char playerNum = blData->playerNum;
     weapon_definition_tag *weapon = &weapon_data[weaponId];
 

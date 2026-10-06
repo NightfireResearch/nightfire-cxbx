@@ -310,7 +310,7 @@ void Searchlight_Update(obj_tag *searchlight) {
         if (searchlight->rotation.x >= 0.8f) {
             return;
         }
-        searchlight->renderType |= 0x20;
+        searchlight->transformFlags |= TRANSFORM_MOVED;
         searchlight->rotation.x += 0.05f;
         return;
 
@@ -326,7 +326,7 @@ void Searchlight_Update(obj_tag *searchlight) {
     // Update stand object (only copies yaw, not pitch)
     componentObj = spotlight->standObject;
     if (componentObj != NULL) {
-        componentObj->renderType |= 0x20;
+        componentObj->transformFlags |= TRANSFORM_MOVED;
         componentObj->rotation.y = searchlight->rotation.y;
     }
 
@@ -349,7 +349,7 @@ void Searchlight_Update(obj_tag *searchlight) {
             } else {
                 // Position projection spot at hit point on surface
                 componentObj->position = hitData->hitPosition;
-                componentObj->renderType |= 0x20;
+                componentObj->transformFlags |= TRANSFORM_MOVED;
 
                 // Orient projection spot to match surface normal (so it lies flat on ground/walls)
                 float normalX = hitData->surfaceNormal.normal.x;
@@ -399,7 +399,7 @@ void Searchlight_Update(obj_tag *searchlight) {
     // Update volumetric light cone beam effect
     componentObj = spotlight->volumetricCone;
     if (componentObj != NULL) {
-        componentObj->renderType |= 0x24;
+        componentObj->transformFlags |= TRANSFORM_MATRIX_PLACED | TRANSFORM_MOVED;
         View_SetDrawInAllViews(componentObj);
 
         // Orient cone in beam direction toward player
@@ -429,7 +429,7 @@ void Searchlight_Update(obj_tag *searchlight) {
             // Only show flare when player is looking toward the searchlight
             if (dotProduct > 0.2f) {
                 View_SetDrawInAllViews(componentObj);
-                componentObj->renderType |= 0x20;
+                componentObj->transformFlags |= TRANSFORM_MOVED;
 
                 // Scale and brighten based on viewing angle
                 float intensity = (dotProduct - 0.2f) * 4.0f;
@@ -454,7 +454,7 @@ void Searchlight_Update(obj_tag *searchlight) {
         }
     }
 
-    searchlight->renderType |= 0x20;
+    searchlight->transformFlags |= TRANSFORM_MOVED;
 
 check_bullet_hits:
     // Check for bullet damage

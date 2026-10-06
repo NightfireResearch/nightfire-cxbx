@@ -175,7 +175,7 @@ static void Bullet_TripBombBeam(obj_tag *obj, BU_tag *bullet) {
         bullet->swoosh->objectType = OBJECTTYPE_GFX;
         bullet->swoosh->effectFlags |= 0x20;
         bullet->swoosh->maybeParent = obj;
-        bullet->swoosh->renderType |= 1;
+        bullet->swoosh->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY;
         Sound_Play3D(SFX_WEAPON_GENERIC_LASER_SIGHT_ON, &obj->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
     }
 
@@ -334,7 +334,7 @@ void Bullet_Update(obj_tag *obj) {
                 if (gfx != 0) {
                     hashtable_set_object_to_entity_gfx(obj, gfx);
                     if (bullet->wpnDef->projectileFlags & ProjectileFlag_LaserBeam) {
-                        obj->renderType |= 1;
+                        obj->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY;
                         obj->scale = bullet->speed;
                     }
                 }
@@ -347,7 +347,7 @@ void Bullet_Update(obj_tag *obj) {
                      || (bullet->wpnDef->projectileFlags & ProjectileFlag_Tracer)) {
                 View_SetDrawInAllViews(obj);
                 hashtable_set_object_to_entity_gfx(obj, (HASHCODE)0x2000123);
-                obj->renderType |= 1;
+                obj->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY;
                 obj->scale = bullet->speed;
             }
             break;
@@ -356,7 +356,7 @@ void Bullet_Update(obj_tag *obj) {
 
     if (obj->curState == BulletState_Stuck) {
         Bullet_DoTrails(obj, bullet, &startPosition, step);
-        obj->renderType |= 0x20;
+        obj->transformFlags |= TRANSFORM_MOVED;
         return;
     }
 
@@ -423,13 +423,13 @@ void Bullet_Update(obj_tag *obj) {
     obj->position.x = (float)((double)distance * bullet->direction.x + obj->position.x);
     obj->position.y = (float)((double)distance * bullet->direction.y + obj->position.y);
     obj->position.z = (float)((double)distance * bullet->direction.z + obj->position.z);
-    obj->renderType |= 0x20;
+    obj->transformFlags |= TRANSFORM_MOVED;
 
     Bullet_DoTrails(obj, bullet, &startPosition, step);
 
     if (bullet->wpnDef->projectileFlags & ProjectileFlag_Homing)
         Bullet_homing(bullet, obj);
 
-    obj->renderType |= 0x20;
+    obj->transformFlags |= TRANSFORM_MOVED;
 
 }

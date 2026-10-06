@@ -41,7 +41,7 @@ void rotor_update(obj_tag* gameObj) {
     ObjData_Rotor *rotor = (ObjData_Rotor*)gameObj->extraObjectData;
 
     if((rotor->switchChannel == 0) || (switch_channels[rotor->switchChannel] == rotor->switchPolarity)) {
-        gameObj->renderType |= 0x20;
+        gameObj->transformFlags |= TRANSFORM_MOVED;
         auxVec_AddMulR32(&gameObj->rotation, &rotor->axis, FRAME_RATE_MUL, &gameObj->rotation);
     }
 }

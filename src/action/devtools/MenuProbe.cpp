@@ -254,9 +254,9 @@ static void ObjLog(int type) {
         if (o->objectType != type)
             continue;
         const unsigned char *x = (const unsigned char *)o->extraObjectData;
-        printf("[menuscript] f=%u obj %p type %d at %.3f,%.3f,%.3f scale %.3f effectFlags %08x render %04x flags %02x "
+        printf("[menuscript] f=%u obj %p type %d at %.3f,%.3f,%.3f scale %.3f effectFlags %08x transform %04x flags %02x "
                "display %04x tint %02x%02x%02x%02x gfx %p", g_frame, (void *)o, type, o->position.x, o->position.y,
-               o->position.z, o->scale, (unsigned)o->effectFlags, o->renderType, (unsigned char)o->flags,
+               o->position.z, o->scale, (unsigned)o->effectFlags, o->transformFlags, (unsigned char)o->flags,
                o->displayMask, o->tweakR, o->tweakG, o->tweakB, o->maybeBrightness, (void *)o->objGraphics);
         if (o->objGraphics != NULL)
             printf(" \"%s\" geom %d lod %08x apply %08x", o->objGraphics->name ? o->objGraphics->name : "",

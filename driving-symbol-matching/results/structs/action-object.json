@@ -1,0 +1,69 @@
+{
+ "program": "default.xbe",
+ "enums": [
+  {
+   "name": "ObjectTransformFlags",
+   "size": 2,
+   "comment": "obj_tag::transformFlags (0xd6): how the update derives an object's matrix and bounds each frame - Control_GetObjMatrix 0x2cf10, Control_BuildWorldSph 0x2db20, control_movement_object_handler 0x2dd10, Player_Update. Ordinarily the matrix is rebuilt from rotation, position and scale, and the bounding sphere from the model. 0x10 is set on particle-emitter objects (no reader found); 0x80 is not traced. src/action/game/obj/object.h",
+   "values": [
+    {"name": "TRANSFORM_SCALE_LENGTH_ONLY", "value": "0x01", "comment": "scale stretches along the object's Z only (beams, lasers, tracers), not evenly"},
+    {"name": "TRANSFORM_KEEP_ROTATION", "value": "0x02", "comment": "the matrix's rotation is set elsewhere and kept; only its translation comes from position"},
+    {"name": "TRANSFORM_MATRIX_PLACED", "value": "0x04", "comment": "the whole matrix is set elsewhere and kept (Player_Update stops putting position into it too); with 0x02, the last rotation comes from the matrix's direction"},
+    {"name": "TRANSFORM_ANIMATED", "value": "0x08", "comment": "skinned, animated object (AnimObjectNew): bounding sphere from the animation, not the model; collision and the view code test it"},
+    {"name": "TRANSFORM_MOVED", "value": "0x20", "comment": "moved this frame: control_movement_object_handler wraps the rotation, rebuilds matrix, world bounds, cel and lighting, keeps position and rotation as the last ones"},
+    {"name": "TRANSFORM_POSITION_FROM_MATRIX", "value": "0x40", "comment": "after the frame's update, the position is read back out of the matrix's translation"},
+    {"name": "TRANSFORM_FIXED_RADIUS", "value": "0x100", "comment": "the radius is kept as set, not worked out from the model and scale"},
+    {"name": "TRANSFORM_NO_SCALE", "value": "0x200", "comment": "scale is not applied to the matrix"},
+    {"name": "TRANSFORM_REFERENCED", "value": "0x400", "comment": "others may point at it: on deletion, bullets, explosions and hit lists referring to it are cleared"}
+   ]
+  }
+ ],
+ "types": [
+  {
+   "name": "obj_tag",
+   "size": 228,
+   "comment": "A game object. Rebuilt here only to rename and retype 0xd6 (was rendererType, a guess); every other field is as it was. src/action/game/obj/object.h",
+   "fields": [
+    {"offset": 0, "type": "HITDATA_tag *", "name": "someHitDataMaybe"},
+    {"offset": 4, "type": "Drone_tag *", "name": "drone"},
+    {"offset": 8, "type": "obj_tag *", "name": "maybePrevInCel"},
+    {"offset": 12, "type": "obj_tag *", "name": "maybeNextInCel"},
+    {"offset": 16, "type": "obj_tag *", "name": "maybeSObjs"},
+    {"offset": 20, "type": "obj_tag *", "name": "nextObject"},
+    {"offset": 24, "type": "obj_tag *", "name": "prevObject"},
+    {"offset": 28, "type": "obj_tag *", "name": "maybeParent"},
+    {"offset": 32, "type": "cel_tag *", "name": "inCel"},
+    {"offset": 36, "type": "_VECTOR", "name": "position"},
+    {"offset": 48, "type": "_VECTOR", "name": "lastPosition"},
+    {"offset": 60, "type": "_VECTOR", "name": "rotation"},
+    {"offset": 72, "type": "_VECTOR", "name": "lastRotation"},
+    {"offset": 84, "type": "undefined4", "name": null},
+    {"offset": 96, "type": "_VECTOR", "name": "centrePoint"},
+    {"offset": 108, "type": "float", "name": "radius"},
+    {"offset": 112, "type": "_MATRIX", "name": "mtx"},
+    {"offset": 172, "type": "HITDATA_tag *", "name": "hitList"},
+    {"offset": 176, "type": "undefined *", "name": "maybeCollision"},
+    {"offset": 180, "type": "celglist_tag *", "name": "objGraphics"},
+    {"offset": 184, "type": "AnimState *", "name": "animState"},
+    {"offset": 188, "type": "void *", "name": "extraObjectData"},
+    {"offset": 192, "type": "void *", "name": "scriptPlayer"},
+    {"offset": 196, "type": "float", "name": "scale"},
+    {"offset": 200, "type": "undefined4", "name": "creationTimeFrames"},
+    {"offset": 204, "type": "uint", "name": "effectFlags"},
+    {"offset": 208, "type": "ushort", "name": "curState"},
+    {"offset": 210, "type": "MovementType", "name": "subState"},
+    {"offset": 212, "type": "ushort", "name": "displayMask"},
+    {"offset": 214, "type": "ObjectTransformFlags", "name": "transformFlags", "comment": "how the update derives the matrix and bounds; was rendererType"},
+    {"offset": 218, "type": "byte", "name": "flags"},
+    {"offset": 219, "type": "ObjectType", "name": "objectType"},
+    {"offset": 220, "type": "byte", "name": "light_related1"},
+    {"offset": 221, "type": "byte", "name": "light_related2"},
+    {"offset": 222, "type": "byte", "name": "light_related3"},
+    {"offset": 223, "type": "undefined1", "name": "tweakR"},
+    {"offset": 224, "type": "undefined1", "name": "tweakG"},
+    {"offset": 225, "type": "undefined1", "name": "tweakB"},
+    {"offset": 226, "type": "undefined1", "name": "maybeBrightness"}
+   ]
+  }
+ ]
+}
