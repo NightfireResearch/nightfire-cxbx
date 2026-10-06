@@ -443,8 +443,7 @@ static void ShowTeamResult(sprite *status) {
 static void ShowScoreLimitResult(sprite *status) {
     int winnerSlot = -1;
     int playersAtLimit = 0;
-    // Match x87's exact signed-integer load; float would round large limits.
-    double scoreLimit = static_cast<int32_t>(MPSettings.MaxPoints);
+    double scoreLimit = MPSettings.MaxPoints;
 
     for (int slot = 0; slot < ARRAY_SIZE(MPGame.players); ++slot) {
         if (MPGame.players[slot].points >= scoreLimit) {
