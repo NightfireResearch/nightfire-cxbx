@@ -231,7 +231,7 @@ uint MP_GetSpawnPoint(short teamId, obj_tag *respawningPlayer) {
         case 1:
             return farthestSpawn >= 0 ? farthestSpawn : startIdx;
         case 2:
-            // With no eligible spawns, the original reads an uninitialized first entry.
+            // If there are no eligible spawns, this returns the first (uninitialized) array entry (undefined behavior).
             return eligibleSpawns[Rand_Rand(eligibleCount)];
         default:
             return startIdx;
