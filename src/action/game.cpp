@@ -576,7 +576,7 @@ void bootup_bootup(void) {
   PlayerInputs[3].controllerPort = 3;
 
   GameState.difficultyModifier = 2;
-  MPSettings.RespawnSelectionMode = 2;
+  MPSettings.RespawnSelectionMode = RESPAWN_RANDOM;
   GameState.ReloadMainMenu = 0x80000002;
   GameState.ReloadMenupage = 0x40000034;
   MPSettings.numPlayers = 1;

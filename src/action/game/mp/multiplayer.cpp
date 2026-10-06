@@ -228,11 +228,11 @@ uint MP_GetSpawnPoint(short teamId, obj_tag *respawningPlayer) {
     }
 
     switch (MPSettings.RespawnSelectionMode) {
-        case 0:
+        case RESPAWN_NEAR:
             return closestSpawn >= 0 ? closestSpawn : startIdx;
-        case 1:
+        case RESPAWN_FAR:
             return farthestSpawn >= 0 ? farthestSpawn : startIdx;
-        case 2:
+        case RESPAWN_RANDOM:
             // If there are no eligible spawns, this returns the first (uninitialized) array entry (undefined behavior).
             return eligibleSpawns[Rand_Rand(eligibleCount)];
         default:
