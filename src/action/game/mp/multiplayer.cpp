@@ -466,19 +466,18 @@ static void ShowScoreLimitResult(sprite *status) {
 
 // AUTOINJECT
 void MP_SortOutWhoWon() {
-    sprite *status = StatusSpr;
     MPGame.EndGameFlowState = 3;
 
     if (MPSettings.GameMode == GM_TOPAGENT) {
-        ShowTopAgentResult(status);
+        ShowTopAgentResult(StatusSpr);
     } else if (MPSettings.maybeIsTeamGame) {
-        ShowTeamResult(status);
+        ShowTeamResult(StatusSpr);
         return; // Original team path skips the sprite refresh.
     } else {
-        ShowScoreLimitResult(status);
+        ShowScoreLimitResult(StatusSpr);
     }
 
-    Sprite_SetText(status, status->text);
+    Sprite_SetText(StatusSpr, StatusSpr->text);
 }
 // AUTOGEN
 void MP_Pickup_Process(void);
