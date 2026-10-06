@@ -92,6 +92,23 @@ another type**); check each before owning it.
 If the summary says **[has initial data]**, the XBE's file data for that range is not all zero: the game
 starts with values there, and our definition must be initialised with them.
 
+## When to do it
+
+Two ways, and neither should slow a port down:
+
+- **As you go**, when ownership is plain from the code: a global only the functions you are porting use, and
+  that nothing else can reach. In the action engine the compiler's per-file statics (`name.NNN`) are the
+  easy case - their uses are limited to one compilation unit, so once that file's functions are ours, they are.
+- **In occasional sweeps** for the rest, the wider globals (the Gfx struct, anything several subsystems share):
+  run this report, own what it says is clear, run `--check`, then run the game - the menu replays and an in-level
+  one such as `tools/ui/scripts/weapons.txt`, compared against a build of the commit before - to confirm nothing
+  still used the game's copy. A type that undersizes its global is the usual surprise (see `DynamicObjList`
+  above).
+
+The driving engine has no globals report yet: `global_coverage.py` reads the action engine's sources. Until it
+has one, own a driving global only where it is plainly safe, and check it with lockstep runs
+(`NIGHTFIRE_LOCKSTEP`, frames compared against a build from before the change).
+
 ## Reading the report
 
 ```

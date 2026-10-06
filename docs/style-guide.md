@@ -32,6 +32,12 @@ What Ghidra and MSVC produce is not what anyone wrote. Undo it wherever behaviou
   / `uVar` / `extraout_` names, no casts the decompiler added to make its types fit.
 - **Types:** use the type the value is (`bool` for a flag the code only tests, an enum for a set of named values,
   a struct pointer for an object) - subject to the exceptions in section 6.
+- **No casts the language already does.** If the implicit conversion gives the right result on every compiler and
+  target we build for (MSVC x86, clang i686-w64-mingw32), leave the cast out: `int deaths = player.deaths;`, not
+  `int deaths = static_cast<int32_t>(player.deaths);`. Prefer typed pointers so casts aren't needed in the first
+  place. A cast stays only where it changes the result - an unsigned value converted to `double` through
+  `int32_t` because the original loads it signed, a `double` that starts an x87 chain - and then it's the
+  narrowest honest one, with a short comment if the reason isn't obvious.
 
 ## 3. Data: structures, not pointer maths
 
@@ -46,6 +52,13 @@ What Ghidra and MSVC produce is not what anyone wrote. Undo it wherever behaviou
   destructors are `Construct()` / `Destruct()` methods; the vtable stays the game's (first word), so our classes
   declare no `virtual` - see `docs/driving-injection-framework.md` for `VIRTUAL(n)` and overlay classes.
 - **One definition per type.** Before defining a struct, look for it; shared records live in one header.
+- **Globals we own become our variables.** Once every reader and writer of a global is ours, it stops being a
+  `#define` at the game's address and becomes a definition of our own; the original address stays only in an
+  `// XBE_GLOBAL(address, size)` tag above it, for the tools. Do it as you go where it's plainly safe (a static
+  only one compilation unit uses - in the action engine, the `name.NNN` statics the compiler numbered per file),
+  and leave wider ones (the Gfx struct, anything shared across subsystems) to the sweeps in
+  `docs/global-coverage.md`, which check ownership with `tools/global_coverage.py` and then in game. It should
+  never hold up a port.
 
 ## 4. Constants and names
 
