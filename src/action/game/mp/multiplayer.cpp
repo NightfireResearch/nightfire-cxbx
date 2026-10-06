@@ -211,6 +211,8 @@ uint MP_GetSpawnPoint(short teamId, obj_tag *respawningPlayer) {
                 nearestPlayerDistance = distance;
         }
 
+        // Prevent spawning on top of another player
+        // This condition could in extreme cases lead to all spawn points being ineligible, causing undefined behaviour below.
         if (nearestPlayerDistance <= 2.0f)
             continue;
 
