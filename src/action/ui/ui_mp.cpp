@@ -289,9 +289,9 @@ bool P_MPENVIROMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, 
         case MessageType_PageEnter: {
             
             RADIO_CLEAR(managerNum, SUB_C_MPENVIROMODS_RESPAWNMODE);
-            RADIO_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_RESPAWNMODE, MP_RESPAWN_NEAR, 0);
-            RADIO_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_RESPAWNMODE, MP_RESPAWN_FAR, 1);
-            RADIO_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_RESPAWNMODE, MP_RANDOM, 2);
+            RADIO_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_RESPAWNMODE, MP_RESPAWN_NEAR, RESPAWN_NEAR);
+            RADIO_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_RESPAWNMODE, MP_RESPAWN_FAR, RESPAWN_FAR);
+            RADIO_ADD_ITEM(managerNum, SUB_C_MPENVIROMODS_RESPAWNMODE, MP_RANDOM, RESPAWN_RANDOM);
             RADIO_SELECT_ITEM(managerNum, SUB_C_MPENVIROMODS_RESPAWNMODE, MPSettings.RespawnSelectionMode);
             
             RADIO_CLEAR(managerNum, SUB_C_MPENVIROMODS_GUNEMPLACEMENTS);
@@ -325,7 +325,7 @@ bool P_MPENVIROMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, 
         case MessageType_Select: {
 
             // Commit the settings
-            MPSettings.RespawnSelectionMode = RADIO_GET_VALUE(managerNum, SUB_C_MPENVIROMODS_RESPAWNMODE);
+            MPSettings.RespawnSelectionMode = (RespawnMode) RADIO_GET_VALUE(managerNum, SUB_C_MPENVIROMODS_RESPAWNMODE);
             MPSettings.GunEmplacementsEnabled = (WeaponSet) RADIO_GET_VALUE(managerNum, SUB_C_MPENVIROMODS_GUNEMPLACEMENTS);
             MPSettings.ExplosiveSceneryEnabled = RADIO_GET_VALUE(managerNum, SUB_C_MPENVIROMODS_EXPLOSIVESCENERY);
             MPSettings.GrappleEnabled = RADIO_GET_VALUE(managerNum, SUB_C_MPENVIROMODS_GRAPPLE);

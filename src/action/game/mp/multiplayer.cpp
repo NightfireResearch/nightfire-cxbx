@@ -177,6 +177,69 @@ void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort t
 
 }
 
+// AUTOINJECT
+uint MP_GetSpawnPoint(short teamId, obj_tag *respawningPlayer) {
+    int startIdx = 0;
+    int endIdx = ARRAY_SIZE(SpawnPoints);
+    if (MPSettings.maybeIsTeamGame || MPSettings.GameMode == GM_ASSASSIN) {
+        if (teamId == PHOENIX) {
+            endIdx = 32;
+        } else if (teamId == MI6) {
+            startIdx = 32;
+        }
+    }
+
+    int closestSpawn = -1;
+    int farthestSpawn = -1;
+    float closestDistance = 9999.0f;
+    float farthestDistance = -9999.0f;
+    uint eligibleSpawns[ARRAY_SIZE(SpawnPoints)];
+    int eligibleCount = 0;
+
+    for (int i = startIdx; i < endIdx; i++) {
+        if (!SpawnPoints[i].initialised)
+            continue;
+
+        float nearestPlayerDistance = 9999.0f;
+        for (int playerIdx = 0; playerIdx < ARRAY_SIZE(MPGame.players); playerIdx++) {
+            obj_tag *player = MPGame.players[playerIdx].playerObj;
+            if (player == NULL || player == respawningPlayer)
+                continue;
+
+            float distance = Vec_SqDist3D(&SpawnPoints[i].spawnPos, &player->position);
+            if (distance < nearestPlayerDistance)
+                nearestPlayerDistance = distance;
+        }
+
+        // Prevent spawning on top of another player
+        // This condition could in extreme cases lead to all spawn points being ineligible, causing undefined behaviour below.
+        if (nearestPlayerDistance <= 2.0f)
+            continue;
+
+        if (nearestPlayerDistance < closestDistance) {
+            closestDistance = nearestPlayerDistance;
+            closestSpawn = i;
+        }
+        if (nearestPlayerDistance > farthestDistance) {
+            farthestDistance = nearestPlayerDistance;
+            farthestSpawn = i;
+        }
+        eligibleSpawns[eligibleCount++] = i;
+    }
+
+    switch (MPSettings.RespawnSelectionMode) {
+        case RESPAWN_NEAR:
+            return closestSpawn >= 0 ? closestSpawn : startIdx;
+        case RESPAWN_FAR:
+            return farthestSpawn >= 0 ? farthestSpawn : startIdx;
+        case RESPAWN_RANDOM:
+            // If there are no eligible spawns, this returns the first (uninitialized) array entry (undefined behavior).
+            return eligibleSpawns[Rand_Rand(eligibleCount)];
+        default:
+            return startIdx;
+    }
+}
+
 // AUTOGEN
 obj_tag* MP_RegisterMPObject(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 

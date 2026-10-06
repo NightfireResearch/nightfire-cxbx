@@ -41,6 +41,12 @@ typedef enum {
     WEAPSET_FORCE_UINT32 = 0x7fffffff
 } WeaponSet;
 
+enum RespawnMode : uint32_t {
+    RESPAWN_NEAR = 0,
+    RESPAWN_FAR = 1,
+    RESPAWN_RANDOM = 2
+};
+
 typedef enum  {
     PHOENIX = 0,
     MI6 = 1,
@@ -83,7 +89,7 @@ typedef struct { // on Xbox, starts at 0025fe38
     WeaponSet weaponSet;
     undefined4 GunEmplacementsEnabled;
     undefined4 TripleDamageModifierProfessionalMode;
-    undefined4 RespawnSelectionMode;
+    RespawnMode RespawnSelectionMode;
     undefined4 ShowTeamAndNameOverhead;
     undefined4 LocationDamageEnabled;
     undefined4 MiniVehiclesEnabled;
@@ -95,6 +101,8 @@ typedef struct { // on Xbox, starts at 0025fe38
 } MPSettings_t;
 
 static_assert(sizeof(MPSettings_t) == 572, "MPSettings_t is wrong size");
+static_assert(offsetof(MPSettings_t, RespawnSelectionMode) == 0x220, "RespawnSelectionMode is at wrong offset");
+static_assert(offsetof(MPSettings_t, ShowTeamAndNameOverhead) == 0x224, "ShowTeamAndNameOverhead is at wrong offset");
 
 #define MPSettings (*((MPSettings_t*)0x0025fe38))
 #define MultiplayerLayout_LeftRightOrTopBtm U32_AT(0x001f660c) // Part of a DrawInfo struct which also contains IsWidescreen?
@@ -221,6 +229,7 @@ MPTeam MP_getObjectTeam(obj_tag* param_1);
 bool MP_IsAssasin(obj_tag *param_1);
 bool MP_IsTarget(obj_tag *param_1);
 void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId);
+uint MP_GetSpawnPoint(short teamId, obj_tag *respawningPlayer);
 obj_tag* MP_RegisterMPObject(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 void MP_objectBeingDeleted(obj_tag* obj);
 void MP_Update(void);
