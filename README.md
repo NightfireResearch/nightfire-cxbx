@@ -189,6 +189,10 @@ Conventions: rename in Ghidra, re-sync the JSON, cite addresses in comments so a
 
 ## Documentation
 
+`docs/style-guide.md` is how reimplemented code should look - as close as possible to what the game's own
+programmers wrote, with tooling and test harnesses kept out of the way. Read it before writing or reviewing a
+port.
+
 `docs/cxbx-removal-plan.md` is the history of getting the action engine off cxbx-reloaded, which was finished
 and the emulator dropped on 3 October 2026. `docs/driving-engine-plan.md` is the driving engine's plan, which
 is where the work is now; its section 0.1 is the current state and the list of what is left.
