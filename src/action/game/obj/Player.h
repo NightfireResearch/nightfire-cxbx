@@ -7,7 +7,11 @@ typedef enum {
     CamMode_Default = 0x00,
     CamMode_PostMPGameThirdPerson = 0x01,
     CamMode_Redeemer = 0x0c, // Redeemer = Sentinel Missile?
+    CamMode_RemoteDeviceBehind = 0x09, // behind the remote device, from its rotation
+    CamMode_FollowObject = 0x0a,       // following BLData::cameraFollowObject
+    CamMode_CreepWall = 0x0b,
     CamMode_RCCar = 0x0d,
+    CamMode_GunImp = 0x0e,   // on a gun emplacement (GunImp_Activate)
     CamMode_Ronin = 0x0f,
 } CamMode;
 
@@ -38,12 +42,17 @@ typedef struct BLData {
     // negative turning right. Anything wanting to steer the player adds to it in between - which is what
     // mouse look does, in Player_ViewClamping.
     _VECTOR rotationDelta; // 0x24
-    char _pad_0b[0xbc - 0x30];
+    _VECTOR lastRotationDelta; // 0x30 - Player_Update copies rotationDelta here once it is applied
+    _VECTOR field_0x3c; // 0x3c - zeroed by GunImp_Deactivate and Player_SSScanMode
+    char _pad_0b[0xb0 - 0x48];
+    // The point the multiplayer end-of-match camera looks at - the player's head (Player_PositionCamera).
+    _VECTOR thirdPersonTarget; // 0xb0
     float someMPCameraThing1; // 0xbc
     float someMPCameraThing2; // 0xc0
     float someMPCameraThing3; // 0xc4
     undefined4 someMPCameraThing4; // 0xc8
-    char _pad_11111[0xd4 - 0xcc];
+    obj_tag *thirdPersonSubject; // 0xcc - the player the end-of-match camera is on
+    char _pad_11111[0xd4 - 0xd0];
     // Three words Player_InitWeapon zeroes; nothing else is known about them yet
     undefined4 field_0xd4; // 0xd4
     undefined4 field_0xd8; // 0xd8
@@ -78,7 +87,8 @@ typedef struct BLData {
     char _unknown[4];
     obj_tag* muzzleFlashObj; // 0x804
     obj_tag* remoteControlDevice; // 0x808
-    char _pad_2a[0x814-0x80c];
+    obj_tag* cameraFollowObject; // 0x80c - what camera mode 10 follows (Player_PositionCamera)
+    char _pad_2a[0x814-0x810];
     // The ladder (or wire, zipline...) the player is on, in the movement substates that attach him to one.
     // Name from the PS2 symbols.
     obj_tag* attachedToSpecialMovementItem; // 0x814
@@ -98,14 +108,20 @@ typedef struct BLData {
     // the game is paused - so the bars fade in over its first quarter. (Its writers were not traced.)
     float hudFadeIn; // 0x84c
     char _pad_2c2[0x860-0x850];
-    float lensFlareRelated; // 0x860
+    // The weapon's zoom, 1 when not zoomed: Player_Zoom drives it, Player_PositionCamera hands it to the viewer
+    // (viewer_tag::projectionScaleZ), and the view is drawn at fovRadians / zoom.
+    float zoom; // 0x860
     char _pad_222222[0x86c-0x864];
     undefined4 field_0x86c[4]; // 0x86c-0x87b - zeroed by Player_InitWeapon
     char _pad_222222b[0x88c-0x87c];
     float turnAccelState; // 0x88c - AccelFunc0's carried state for the turn axis; see Player_Move
-    char _pad_222223[0x8b0-0x890];
+    char _pad_222223[0x898-0x890];
+    float headSwimOffset; // 0x898 - eased towards 0.7 while surfaced (Player_PositionCamera)
+    float headCrouchOffset; // 0x89c - how far crouching has lowered the view, 0 to 0.45
+    char _pad_222223b[0x8b0-0x8a0];
     float nightVisionTimer; // 0x8b0
-    char _pad_22[0x8bc-0x8b0-4];
+    char _pad_22[0x8b8-0x8b0-4];
+    undefined4 field_0x8b8; // 0x8b8 - zeroed by GunImp_Deactivate
     float field_0x8bc; // 0x8bc - zeroed by Player_InitWeapon
     char _pad_22b[0x8c4-0x8bc-4];
     // The weapon the player was switching to when Player_RamSave ran at the end of the previous part of the
@@ -160,6 +176,14 @@ static_assert(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisi
 
 //char (*__kaboom)[offsetof(BLData,playerNum)] = 1;
 static_assert(offsetof(BLData, remoteControlDevice) == 0x808, "Offset of remoteControlDevice not correct");
+static_assert(offsetof(BLData, field_0x3c) == 0x3c, "Offset of field_0x3c not correct");
+static_assert(offsetof(BLData, thirdPersonTarget) == 0xb0, "Offset of thirdPersonTarget not correct");
+static_assert(offsetof(BLData, thirdPersonSubject) == 0xcc, "Offset of thirdPersonSubject not correct");
+static_assert(offsetof(BLData, cameraFollowObject) == 0x80c, "Offset of cameraFollowObject not correct");
+static_assert(offsetof(BLData, zoom) == 0x860, "Offset of zoom not correct");
+static_assert(offsetof(BLData, headSwimOffset) == 0x898, "Offset of headSwimOffset not correct");
+static_assert(offsetof(BLData, field_0x8b8) == 0x8b8, "Offset of field_0x8b8 not correct");
+static_assert(offsetof(BLData, weaponObject) == 0x778, "Offset of weaponObject not correct");
 static_assert(offsetof(BLData, health) == 0x824, "Offset of health not correct");
 static_assert(offsetof(BLData, playerNum) == 0x8de, "Offset of playerNum not correct");
 static_assert(offsetof(BLData, rotationDelta) == 0x24, "Offset of rotationDelta not correct");
@@ -233,6 +257,7 @@ unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState); // 
 void Player_SetCamMode(BLData *param_1,unsigned short param_2);
 void Player_Disable(obj_tag *param_1,char param_2);
 void Player_WeaponNone(obj_tag *param_1);
+void Player_PositionCamera(obj_tag *player);
 void Player_ViewClamping(obj_tag *player);
 void Player_Move(BLData *blData, obj_tag *player, float speedScale);
 void Player_Weapon(obj_tag *player);

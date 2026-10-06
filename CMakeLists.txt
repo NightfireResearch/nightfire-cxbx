@@ -62,6 +62,7 @@ add_library(actioninject SHARED
   src/action/devtools/DroneShadow.cpp
   src/action/devtools/WeaponTableShadow.cpp
   src/action/devtools/MatrixShadow.cpp
+  src/action/devtools/CameraShadow.cpp
   src/action/devtools/Teleport.cpp
   src/action/game.cpp
   src/action/main.cpp
@@ -82,6 +83,7 @@ add_library(actioninject SHARED
   src/action/engine/psiDraw.cpp
   src/action/engine/mouseLook.cpp
   src/action/engine/mouseSteer.cpp
+  src/action/engine/viewFov.cpp
   src/action/engine/psiInput.cpp
   src/action/engine/psiLight.cpp
   src/action/engine/psiSprite.cpp

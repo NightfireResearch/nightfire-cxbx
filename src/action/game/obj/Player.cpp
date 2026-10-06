@@ -6,6 +6,9 @@
 #include "../../engine/Anim.h"
 #include "../../engine/mouseLook.h"
 #include "../../engine/mouseSteer.h"
+#include "../../engine/viewFov.h"
+#include "../../engine/Camera.h"
+#include "GT.h"
 
 #include "../../input.h"
 #include "../../game.h"
@@ -302,7 +305,7 @@ void Player_WeaponNone(obj_tag* obj) {
     
     blData->weaponObject->curState = 0;
     blData->muzzleFlashRelated = 0;
-    blData->lensFlareRelated = 1.0f;
+    blData->zoom = 1.0f;
 
     obj->animState->animFlags &= 0xfe;
 
@@ -1330,4 +1333,279 @@ void __stdcall ReadTuningVars(void) {
     default:
         break;
     }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Player_PositionCamera (0x000a8a60): the player's camera, once a frame. Player_Init hands it to the camera system
+// as the viewer's updater (Camera_SetUpdator), so it runs from Camera_UpdateAll, not from Player_Update.
+//
+// First the head height - crouching lowers the view, anything else brings it back, and the remote-control
+// substates leave it where it was. Then whatever the camera mode says: first person, the remote devices' views,
+// the multiplayer end-of-match camera, or one of the debug cameras. First person is the only one that passes the
+// weapon's zoom on; every other view is drawn unzoomed.
+// ---------------------------------------------------------------------------------------------------------------
+
+#define surfaced U8_AT(0x00276760)       // non-zero while swimming at the surface
+#define debug_cam_posy FLOAT_AT(0x001fec50) // height of camera mode 8's overhead view above the player
+
+// The bone AnimGetBoneWorldTrans gives the head for (also Player_Update's breath effect).
+#define BONE_HEAD 0x80000005
+
+#define WPNFLAG_REAL_SCOPE 0x40 // the gun is hidden while scoped (and see WPNFLAG_SIGHTED_SCOPE above)
+
+// The original's, called by address: ends in a bare RET, so caller-cleans whatever Ghidra's __stdcall says.
+static float moveTowardsValue(float current, float target, float speed) {
+    return reinterpret_cast<float (__cdecl *)(float, float, float)>(0x00024000)(current, target, speed);
+}
+
+// The debug cameras' placements, called by address: unnamed, and only these camera modes use them.
+static void CameraMode2_PlaceA(_VECTOR *position, _VECTOR *rotation, viewer_tag *viewer, float a, float b) {
+    reinterpret_cast<void (__cdecl *)(_VECTOR *, _VECTOR *, viewer_tag *, float, float)>(0x00024710)
+        (position, rotation, viewer, a, b);
+}
+static void CameraMode2_PlaceB(obj_tag *obj, viewer_tag *viewer, float a, float b) {
+    reinterpret_cast<void (__cdecl *)(obj_tag *, viewer_tag *, float, float)>(0x000246a0)(obj, viewer, a, b);
+}
+static void CameraMode2_PlaceC(_VECTOR *position, viewer_tag *viewer, float a) {
+    reinterpret_cast<void (__cdecl *)(_VECTOR *, viewer_tag *, float)>(0x000245a0)(position, viewer, a);
+}
+static void CameraMode2_PlaceD(_VECTOR *position, viewer_tag *viewer, float a) {
+    reinterpret_cast<void (__cdecl *)(_VECTOR *, viewer_tag *, float)>(0x00024610)(position, viewer, a);
+}
+static void CameraMode3_Place(obj_tag *obj, viewer_tag *viewer) {
+    reinterpret_cast<void (__cdecl *)(obj_tag *, viewer_tag *)>(0x00024b10)(obj, viewer);
+}
+static void CameraMode4_Place(obj_tag *obj, viewer_tag *viewer) {
+    reinterpret_cast<void (__cdecl *)(obj_tag *, viewer_tag *)>(0x00024d40)(obj, viewer);
+}
+static void CameraMode5_Place(obj_tag *obj, viewer_tag *viewer) {
+    reinterpret_cast<void (__cdecl *)(obj_tag *, viewer_tag *)>(0x00024d70)(obj, viewer);
+}
+static void Camera_Follow(obj_tag *obj, viewer_tag *viewer) { // camera modes 6 and 10
+    reinterpret_cast<void (__cdecl *)(obj_tag *, viewer_tag *)>(0x00024880)(obj, viewer);
+}
+static void Camera_LookAtFrom(viewer_tag *viewer, _VECTOR *target) { // the end-of-match camera
+    reinterpret_cast<void (__cdecl *)(viewer_tag *, _VECTOR *)>(0x00025450)(viewer, target);
+}
+
+// AUTOINJECT
+void Player_PositionCamera(obj_tag *player) {
+
+    BLData *blData = (BLData*)player->extraObjectData;
+    char playerNum = blData->playerNum;
+    viewer_tag *viewer = glb_viewer[playerNum];
+
+    if (!GS_IsPaused(-1)) {
+        switch ((short)player->subState) {
+            case MovementType_Crouch: {
+                double offset = (double)FRAME_RATE_MUL * 0.0225f + blData->headCrouchOffset;
+                blData->headCrouchOffset = (float)offset;
+                if (offset > 0.45f)
+                    blData->headCrouchOffset = 0.45f;
+                break;
+            }
+            case MovementType_RemoteControl:
+            case MovementType_RCVehicle:
+            case MovementType_Emplacement:
+            case MovementType_Ronin:
+                break;
+            default: {
+                double offset = blData->headCrouchOffset - (double)FRAME_RATE_MUL * 0.0225f;
+                blData->headCrouchOffset = (float)offset;
+                if (offset < 0.0)
+                    blData->headCrouchOffset = 0.0f;
+                break;
+            }
+        }
+    }
+
+    obj_tag *device;
+
+    switch ((uchar)blData->camMode) {
+
+        case CamMode_Default:
+        case CamMode_GunImp: {
+            View_SetDrawInOtherViewsOnly(player, playerNum);
+            View_SetDrawInThisViewOnly(blData->weaponObject, playerNum);
+
+            weapon_definition_tag *weapon = &weapon_data[player->animState->currentWeaponId];
+            bool realScope = (player->animState->animFlags & 1) && (weapon->weaponFlags & WPNFLAG_REAL_SCOPE);
+            if (realScope)
+                View_SetDrawInNoViews(blData->weaponObject);
+            if (weapon->weaponModelHashcode == 0)
+                View_SetDrawInNoViews(blData->weaponObject);
+
+            blData->headSwimOffset = moveTowardsValue(blData->headSwimOffset, surfaced ? 0.7f : 0.0f, 0.1f);
+
+            viewer->projectionScaleZ = blData->zoom;
+            // Not in the original: the player view's field of view comes from settings.ini, but a real scope
+            // keeps showing what it always did, so its zoom makes up the difference (engine/viewFov.h).
+            if (realScope)
+                viewer->projectionScaleZ *= ViewFov_ScopeZoomCorrection();
+
+            if (player->curState == 2 || player->curState == 3)
+                blData->headCrouchOffset = 0.0f;
+
+            Camera_SetToPlayer(player, viewer);
+            return;
+        }
+
+        case CamMode_PostMPGameThirdPerson:
+            viewer->projectionScaleZ = 1.0f;
+            blData->thirdPersonSubject = player;
+            AnimGetBoneWorldTrans(player, BONE_HEAD, 0, &blData->thirdPersonTarget, NULL);
+            View_SetDrawInAllViews(player);
+            View_SetDrawInNoViews(blData->weaponObject);
+            Camera_LookAtFrom(viewer, &blData->thirdPersonTarget);
+            viewer->someCel = NULL;
+            return;
+
+        case 2:
+            View_SetDrawInAllViews(player);
+            View_SetDrawInNoViews(blData->weaponObject);
+            CameraMode2_PlaceA(&player->position, &player->rotation, viewer, 1.0f, 10.0f);
+            CameraMode2_PlaceB(player, viewer, 1.0f, 0.0f);
+            CameraMode2_PlaceC(&player->position, viewer, 1.0f);
+            CameraMode2_PlaceD(&player->position, viewer, 1.0f);
+            viewer->projectionScaleZ = 1.0f;
+            viewer->someCel = NULL;
+            return;
+
+        case 3:
+            View_SetDrawInAllViews(player);
+            View_SetDrawInNoViews(blData->weaponObject);
+            CameraMode3_Place(player, viewer);
+            viewer->projectionScaleZ = 1.0f;
+            viewer->someCel = NULL;
+            return;
+
+        case 4:
+            View_SetDrawInAllViews(player);
+            View_SetDrawInNoViews(blData->weaponObject);
+            CameraMode4_Place(player, viewer);
+            viewer->projectionScaleZ = 1.0f;
+            return;
+
+        case 5:
+            View_SetDrawInAllViews(player);
+            View_SetDrawInNoViews(blData->weaponObject);
+            CameraMode5_Place(player, viewer);
+            viewer->projectionScaleZ = 1.0f;
+            viewer->someCel = NULL;
+            return;
+
+        case 6:
+            View_SetDrawInAllViews(player);
+            View_SetDrawInNoViews(blData->weaponObject);
+            Camera_Follow(player, viewer);
+            viewer->projectionScaleZ = 1.0f;
+            viewer->someCel = NULL;
+            return;
+
+        case 8: // looking straight down on the player from debug_cam_posy above
+            View_SetDrawInAllViews(player);
+            View_SetDrawInNoViews(blData->weaponObject);
+            viewer->pos.x = player->position.x;
+            viewer->pos.z = player->position.z;
+            viewer->someVec.y = 0.0f;
+            viewer->pos.y = (float)((double)debug_cam_posy + player->position.y + 2.0f);
+            viewer->someVec.x = 1.5707964f;
+            viewer->someVec.z = 0.0f;
+            viewer->projectionScaleZ = 1.0f;
+            Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+            return;
+
+        case CamMode_RemoteDeviceBehind: {
+            device = blData->remoteControlDevice;
+            if (device == NULL)
+                return;
+
+            _VECTOR offset = { 0.0f, 0.0f, -0.2f };
+            View_SetDrawInAllViews(player);
+            _VECTOR rotation = device->rotation;
+            _MATRIX rotationMatrix;
+            RotMatrixZYX(&rotation, &rotationMatrix);
+            ApplyMatrixLVI(rotationMatrix.m, &offset.x);
+            offset.x += device->position.x;
+            offset.y += device->position.y;
+            offset.z += device->position.z;
+            Vec_Copy(&offset, &viewer->pos);
+            viewer->someVec = device->rotation;
+            viewer->projectionScaleZ = 1.0f;
+            Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+            return;
+        }
+
+        case CamMode_FollowObject:
+            View_SetDrawInNoViews(player);
+            View_SetDrawInAllViews(glb_blokes[playerNum]->cameraFollowObject);
+            View_SetDrawInNoViews(blData->weaponObject);
+            Camera_Follow(glb_blokes[playerNum]->cameraFollowObject, viewer);
+            viewer->projectionScaleZ = 1.0f;
+            return;
+
+        case CamMode_CreepWall:
+            View_SetDrawInAllViews(player);
+            View_SetDrawInNoViews(blData->weaponObject);
+            camera_tracking(player, viewer);
+            viewer->projectionScaleZ = 1.0f;
+            viewer->someCel = NULL;
+            return;
+
+        case CamMode_Redeemer: // the missile's own view
+            device = blData->remoteControlDevice;
+            if (device == NULL)
+                return;
+            View_SetDrawInAllViews(player);
+            View_SetDrawInNoViews(blData->weaponObject);
+            View_SetDrawInOtherViewsOnly(device, playerNum);
+            Mat_Copy(&device->transformMatrix, &viewer->viewMatrix);
+            return;
+
+        case CamMode_RCCar: { // from on top of the vehicle, raised by its height (a fixed 0.1 for the helicopter)
+            device = blData->remoteControlDevice;
+            if (device == NULL)
+                return;
+            View_SetDrawInAllViews(player);
+            View_SetDrawInNoViews(blData->weaponObject);
+            View_SetDrawInOtherViewsOnly(device, playerNum);
+
+            _VECTOR up;
+            Mat_GetUp(&up, &device->transformMatrix);
+            Mat_Copy(&device->transformMatrix, &viewer->viewMatrix);
+
+            celglist_tag *model = device->objGraphics;
+            float height;
+            if (model == hashtable_hashcode_to_celglist(GFX_LittleNellie_Body)) {
+                height = 0.1f;
+            }
+            else {
+                height = model->extentMin.y * 3.0f;
+                if (height < 0.0f)
+                    height = -height;
+            }
+            auxVec_AddMulR32(Mat_Position(device->transformMatrix), &up, height, Mat_Position(viewer->viewMatrix));
+            return;
+        }
+
+        case CamMode_Ronin: { // riding on the gun, a little above and behind its muzzle
+            device = blData->remoteControlDevice;
+            if (device == NULL)
+                return;
+            GUNTURRET *turret = (GUNTURRET*)device->extraObjectData;
+            View_SetDrawInAllViews(player);
+            View_SetDrawInNoViews(blData->weaponObject);
+            View_SetDrawInOtherViewsOnly(device, playerNum);
+
+            _VECTOR offset = { 0.0f, 0.15f, -0.4f };
+            ApplyMatrixLVI(turret->muzzleFlash->transformMatrix.m, &offset.x);
+            _VECTOR position;
+            Vec_Add2(&offset, Mat_Position(turret->muzzleFlash->transformMatrix), &position);
+            Mat_Copy(&turret->muzzleFlash->transformMatrix, &viewer->viewMatrix);
+            Matrix_SetTrans(&position, &viewer->viewMatrix);
+            return;
+        }
+
+    }
+
 }

@@ -1,6 +1,7 @@
 // Multiplayer, remote-controlled tank / helicopter
 #include "../../game.h"
 #include "../../engine/Camera.h"
+#include "../../engine/viewFov.h"
 #include "../mp/multiplayer.h"
 #include "object.h"
 #include "Player.h"
@@ -151,7 +152,7 @@ void __cdecl Car_Activate(obj_tag* carObj, obj_tag* playerObj) {
 
     Player_WeaponNone(playerObj);
 
-    Camera_CalcViewAngles(carObj->subState, DEG2RAD(60.0f)); // FIXME: Hardcoded FOV?
+    Camera_CalcViewAngles(carObj->subState, ViewFov_PlayerFov());
 
 }
 

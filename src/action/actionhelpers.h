@@ -139,6 +139,7 @@ static_assert(sizeof(COMP_FUNC) == 4, "COMP_FUNC is a 32-bit argument");
 #include "game/obj/FuseBox.h"
 #include "game/obj/Grapple.h"
 #include "game/obj/GT.h"
+#include "game/obj/GunImp.h"
 #include "game/obj/Hint.h"
 #include "game/obj/Hurt.h"
 #include "game/obj/Ladder.h"

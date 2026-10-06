@@ -46,6 +46,7 @@ struct Settings {
     float mouseSensitivity;
     bool mouseInvertY;
     bool mouseZoomToggle;
+    float fovDegrees;
     char discPath[240];  // where the game's disc data lives; see common/xboxPath.cpp
 };
 
@@ -65,6 +66,10 @@ static void WriteDefaultSettingsFile() {
         "\n"
         "; 0 = 4:3, 1 = 16:9\n"
         "Widescreen=0\n"
+        "\n"
+        "; Field of view in play, in degrees from the top of the screen to the bottom (widescreen adds width at\n"
+        "; the sides). The game's own is 60. Scopes show the same view whatever this is set to.\n"
+        "FOV=60\n"
         "\n"
         "; Render resolution does not affect UI scale, UI is referenced to 640x480 still\n"
         "RenderWidth=640\n"
@@ -137,6 +142,7 @@ static void LoadSettingsFile() {
     g_settings.mouseSensitivity = 1.0f;
     g_settings.mouseInvertY = false;
     g_settings.mouseZoomToggle = false;
+    g_settings.fovDegrees = 60.0f;
     g_settings.dumpFiles = false;
     strncpy(g_settings.discPath, "../disc", sizeof(g_settings.discPath) - 1);
     g_settings.discPath[sizeof(g_settings.discPath) - 1] = '\0';
@@ -197,6 +203,15 @@ static void LoadSettingsFile() {
             g_settings.mouseSensitivity = sensitivity;
         } else if (_stricmp(key, "MouseInvertY") == 0) {
             g_settings.mouseInvertY = (_stricmp(value, "on") == 0 || _stricmp(value, "1") == 0);
+        } else if (_stricmp(key, "FOV") == 0) {
+            // Clamped, like the sensitivity: below 30 the view is a telescope, and from 120 up it bends so
+            // badly at the edges that it looks broken rather than wide. A value that is not a number keeps 60.
+            float fov = (float)atof(value);
+            if (fov > 0.0f) {
+                if (fov < 30.0f) fov = 30.0f;
+                if (fov > 120.0f) fov = 120.0f;
+                g_settings.fovDegrees = fov;
+            }
         } else if (_stricmp(key, "MouseZoom") == 0) {
             g_settings.mouseZoomToggle = (_stricmp(value, "toggle") == 0);
         } else if (_stricmp(key, "DiscPath") == 0) {
@@ -290,6 +305,10 @@ bool Settings_GetMouseInvertY(void) {
 
 bool Settings_GetMouseZoomToggle(void) {
     return GetSettings()->mouseZoomToggle;
+}
+
+float Settings_GetFovDegrees(void) {
+    return GetSettings()->fovDegrees;
 }
 
 const char *Settings_GetDiscPath(void) {

@@ -104,6 +104,8 @@ void Vec_Add2(_VECTOR *a, _VECTOR *b, _VECTOR *out);
 void MulMatrix0(float *a, float *b, float *out);
 void Mat_GetPosition(_VECTOR *posOut, _MATRIX *mtxIn);
 void Vec_Scalef(_VECTOR *vIn, float scale, _VECTOR *vOut);
+void ApplyMatrixLVI(float *matrix, float *vector);
+void Mat_GetUp(_VECTOR *vOut, _MATRIX *mIn);
 void Mat_Normalize(_MATRIX *mtx);
 
 #endif // MATH_H

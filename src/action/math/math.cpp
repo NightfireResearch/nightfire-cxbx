@@ -916,3 +916,10 @@ void Mat_GetPosition(_VECTOR *posOut, _MATRIX *mtxIn);
 
 // AUTOGEN
 void Vec_Scalef(_VECTOR *vIn, float scale, _VECTOR *vOut);
+
+// Rotates a vector by a matrix, in place
+// AUTOGEN
+void ApplyMatrixLVI(float *matrix, float *vector);
+
+// AUTOGEN
+void Mat_GetUp(_VECTOR *vOut, _MATRIX *mIn);

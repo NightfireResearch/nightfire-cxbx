@@ -3,6 +3,7 @@
 #include "../game/mp/multiplayer.h" // For MPSettings
 #include "../game/obj/build.h"
 #include "viewer.h"
+#include "viewFov.h"
 
 #include <math.h>
 
@@ -79,7 +80,7 @@ void Camera_ScreenCoords(ushort viewerNum,float PosX,float PosY,float Width,floa
     vwr->xMin = PosX;
     vwr->yMax = PosY + Height;
     vwr->yMin = PosY;
-    Camera_CalcViewAngles(viewerNum, DEG2RAD(60.0f)); // TODO: Hardcoded FOV
+    Camera_CalcViewAngles(viewerNum, ViewFov_ForViewer(viewerNum));
 
 }
 
@@ -188,6 +189,12 @@ void Camera_CheckLocation(ushort idx);
 void Camera_UpdateGlbVars(ushort idx);
 // AUTOGEN
 void Camera_Shear(viewer_tag *vwr);
+// AUTOGEN
+void Camera_SetToPlayer(obj_tag *player, viewer_tag *viewer);
+// AUTOGEN
+void Camera_Set(viewer_tag *viewer, _VECTOR *transform, _VECTOR *rotation);
+// AUTOGEN
+void camera_tracking(obj_tag *obj, viewer_tag *viewer);
 
 // AUTOINJECT
 void Camera_Update(uint idx) { 
@@ -231,6 +238,7 @@ void Camera_UpdateAll(void) {
             Camera_UpdateGlbVars(i);
         }
     }
+
 }
 
 // AUTOINJECT

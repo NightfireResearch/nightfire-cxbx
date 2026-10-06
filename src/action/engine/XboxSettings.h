@@ -37,6 +37,10 @@ float Settings_GetMouseSensitivity(void);
 bool Settings_GetMouseInvertY(void);
 bool Settings_GetMouseZoomToggle(void);
 
+// settings.ini's [Settings] FOV key: the vertical field of view in play, in degrees (60 by default, which is the
+// game's own; clamped to 30-120). See engine/viewFov.h.
+float Settings_GetFovDegrees(void);
+
 // settings.ini's [Settings] DiscPath key: the host folder the Xbox D: drive resolves to, i.e. the one holding
 // eurocom\filesys.d00. Defaults to "../disc". This is the value as written; a relative one is resolved against
 // the executable's folder by Xbox_SetDiscRoot. See common/xboxPath.h for the drive-letter mapping this feeds.

@@ -64,6 +64,7 @@
 #include "DroneShadow.h"
 #include "WeaponTableShadow.h"
 #include "MatrixShadow.h"
+#include "CameraShadow.h"
 #include "Teleport.h"
 #include "../game.h"   // reload: ResetMap_LevelToLoad, GameFlow_PushState
 
@@ -501,6 +502,7 @@ static void CheckLists(void) {
 }
 
 void MenuProbe_Install(void) {
+    CameraShadow_Install();
     if (SettingOn("MenuCheckLists")) {
         CheckLists();
         DroneTablesCheck_Run();
