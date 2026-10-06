@@ -409,7 +409,7 @@ static void ShowTopAgentResult(sprite *status) {
         int deaths = static_cast<int32_t>(player.deaths);
         int eliminationLimit = static_cast<int32_t>(MPSettings.MaxPoints);
 
-        if (player.playerObj == nullptr || deaths >= eliminationLimit)
+        if (player.playerObj == NULL || deaths >= eliminationLimit)
             continue;
 
         ++eligibleCountSinceTie;
