@@ -418,7 +418,9 @@ static void ShowTopAgentResult(sprite *status) {
             sprintf(status->text, winnerFormat, MPSettings.Player[slot].Name);
             fewestDeaths = deaths;
         } else if (deaths == fewestDeaths) {
-            // The original resets on a tie, but counts later, worse survivors again.
+            // Original behavior with three eligible players (deaths in slot order):
+            // [1, 1, 2] displays the first player as the winner;
+            // [1, 2, 1] displays a draw.
             eligibleCountSinceTie = 0;
         }
     }
@@ -431,10 +433,12 @@ static void ShowTopAgentResult(sprite *status) {
 
 static void ShowTeamResult(sprite *status) {
     float phoenixScore = MPGame.teamScore[PHOENIX];
-    // The original compares Phoenix's score to itself: numbers draw; NaN selects MI6.
+    // The original compares Phoenix's score to itself.
+    // It displays a draw for any non-NaN score, or an MI6 win for NaN.
     bool scoreIsNaN = phoenixScore != phoenixScore;
 
-    (void)Txt_BindLabel(MP_PRESS_START, 0); // Original fetches it, but the format never consumes it.
+    // The original looks up "Press START" even though it isn't displayed.
+    (void)Txt_BindLabel(MP_PRESS_START, 0);
     const char *result = Txt_BindLabel(scoreIsNaN ? MP_RESULT_MI6 : MP_RESULT_DRAW, 0);
     const char *heading = Txt_BindLabel(MP_RESULT_HEADING, 0);
     sprintf(status->text, "%s%s", heading, result);
@@ -472,7 +476,7 @@ void MP_SortOutWhoWon() {
         ShowTopAgentResult(StatusSpr);
     } else if (MPSettings.maybeIsTeamGame) {
         ShowTeamResult(StatusSpr);
-        return; // Original team path skips the sprite refresh.
+        return; // The original returns here without calling Sprite_SetText.
     } else {
         ShowScoreLimitResult(StatusSpr);
     }
