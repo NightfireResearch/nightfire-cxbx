@@ -105,9 +105,13 @@ Two ways, and neither should slow a port down:
   still used the game's copy. A type that undersizes its global is the usual surprise (see `DynamicObjList`
   above).
 
-The driving engine has no globals report yet: `global_coverage.py` reads the action engine's sources. Until it
-has one, own a driving global only where it is plainly safe, and check it with lockstep runs
-(`NIGHTFIRE_LOCKSTEP`, frames compared against a build from before the change).
+The driving engine has the same report: `python tools/global_coverage.py --driving` (with any of the options
+below). It reads `src/driving`, `Driving.xbe`'s references (`tools/xrefs_driving.json`) and the driving call
+graph (`tools/function_coverage.py --driving` uses the same one). Its first run, on 7 October 2026: 507 globals
+defined at the game's addresses, none owned yet, 189 that nothing live touches, 48 still used by original code,
+and 195 in `.data` whose size the source does not give (strings, pointer tables) that want an `XBE_GLOBAL` tag.
+Check a driving global you own with lockstep runs (`NIGHTFIRE_LOCKSTEP`, frames compared against a build from
+before the change) as well as `--driving --check`.
 
 ## Reading the report
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Coverage of the action engine's globals: which ones only our code touches now, and what else still does.
+"""Coverage of the game's globals (the action engine's, or with --driving the driving engine's): which ones only
+our code touches now, and what else still does.
 
 A global can move into the DLL - its `#define Name (*(T*)address)` becoming a definition of our own - once no
 game code that can still run touches it. This works that out from Ghidra's references (tools/xrefs_action.json,
@@ -26,6 +27,7 @@ written by ghidra/NightfireSync.py) and our source:
     python tools/global_coverage.py Gfx MPGame   # what still touches these, function by function
     python tools/global_coverage.py --all        # every global, one line each
     python tools/global_coverage.py --check      # fail if a global we own is still touched by live code
+    python tools/global_coverage.py --driving    # the same for the driving engine (with any of the above)
 
 A global that has initial data in the XBE (anything non-zero in the section's file data) needs that data
 copied into our definition when it is owned; the summary says which. Hex literals in our source that fall
@@ -141,7 +143,7 @@ def type_size(spec, struct_sizes):
     if spec.endswith("*"):
         return 4
     spec = spec.replace("unsigned int", "uint").replace("unsigned char", "uchar").replace("unsigned short", "ushort")
-    return PLAIN.get(spec) or struct_sizes.get(spec)
+    return PLAIN.get(spec) or struct_sizes.get(spec) or struct_sizes.get(spec.split("::")[-1])
 
 
 def parse_define(body, struct_sizes):
@@ -150,17 +152,17 @@ def parse_define(body, struct_sizes):
     if m and m.group(1) in AT_SIZES:
         return int(m.group(2), 16), AT_SIZES[m.group(1)]
     # (*(T(*)[n])address)
-    m = re.fullmatch(r"\(\s*\*\s*\(\s*([\w\s\*]+?)\s*\(\s*\*\s*\)\s*\[\s*(\w+)\s*\]\s*\)\s*\(?\s*" + HEX + r"\s*\)?\s*\)", body)
+    m = re.fullmatch(r"\(\s*\*\s*\(\s*([\w:\s\*]+?)\s*\(\s*\*\s*\)\s*\[\s*(\w+)\s*\]\s*\)\s*\(?\s*" + HEX + r"\s*\)?\s*\)", body)
     if m:
         element, count = type_size(m.group(1), struct_sizes), m.group(2)
         count = int(count, 0) if re.fullmatch(r"0x[0-9a-fA-F]+|\d+", count) else struct_sizes.get("#" + count)
         return int(m.group(3), 16), element * count if element and count else None
     # (*(T*)address) / (*((T*)address)) / (*(T*)(address))
-    m = re.fullmatch(r"\(\s*\*\s*\(*\s*([\w\s\*]+?)\s*\*\s*\)\s*\(?\s*" + HEX + r"\s*\)?\s*\)*", body)
+    m = re.fullmatch(r"\(\s*\*\s*\(*\s*([\w:\s\*]+?)\s*\*\s*\)\s*\(?\s*" + HEX + r"\s*\)?\s*\)*", body)
     if m:
         return int(m.group(2), 16), type_size(m.group(1), struct_sizes)
     # ((T*)address): a pointer to however many T - sized only by a tag
-    m = re.fullmatch(r"\(\s*\(\s*[\w\s\*]+?\*\s*\)\s*\(?\s*" + HEX + r"\s*\)?\s*\)", body)
+    m = re.fullmatch(r"\(\s*\(\s*[\w:\s\*]+?\*\s*\)\s*\(?\s*" + HEX + r"\s*\)?\s*\)", body)
     if m:
         return int(m.group(1), 16), None
     return None
@@ -173,8 +175,9 @@ def read_source():
     for path in source_files():
         text = open(path, encoding="utf-8", errors="replace").read()
         texts[path] = text.splitlines()
-        for m in re.finditer(r"static_assert\s*\(\s*sizeof\s*\(\s*(\w+)\s*\)\s*==\s*(0x[0-9a-fA-F]+|\d+)", text):
+        for m in re.finditer(r"static_assert\s*\(\s*sizeof\s*\(\s*([\w:]+)\s*\)\s*==\s*(0x[0-9a-fA-F]+|\d+)", text):
             struct_sizes[m.group(1)] = int(m.group(2), 0)
+            struct_sizes.setdefault(m.group(1).split("::")[-1], int(m.group(2), 0))   # EAGL::Foo also as Foo
         for m in re.finditer(r"#define\s+(\w+)\s+(0x[0-9a-fA-F]+|\d+)\b", text):
             struct_sizes["#" + m.group(1)] = int(m.group(2), 0)   # for array counts spelt as a macro
 
@@ -288,6 +291,20 @@ def read_xbe():
                 return data[ra + address - va: ra + min(rs, address - va + size)]
         return None
     return nonzero, read, entry
+
+
+def section_named(name):
+    """(start, end) of the XBE section with this name, or None."""
+    data = open(XBE, "rb").read()
+    base = struct.unpack_from("<I", data, 0x104)[0]
+    count = struct.unpack_from("<I", data, 0x11C)[0]
+    headers = struct.unpack_from("<I", data, 0x120)[0] - base
+    for i in range(count):
+        flags, va, vs, ra, rs, name_at = struct.unpack_from("<IIIIII", data, headers + i * 0x38)
+        at = name_at - base
+        if data[at:data.index(b"\0", at)].decode("ascii", "replace") == name:
+            return va, va + vs
+    return None
 
 
 def executable_ranges():
@@ -498,8 +515,10 @@ class CallGraph:
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     flags = {a for a in sys.argv[1:] if a.startswith("--")}
+    if "--driving" in flags:
+        use_engine("driving")
     if not os.path.exists(XREFS):
-        sys.exit("%s is missing: run ghidra/NightfireSync.py in Ghidra on default.xbe" % rel(XREFS))
+        sys.exit("%s is missing: run ghidra/NightfireSync.py in Ghidra on the XBE" % rel(XREFS))
 
     graph = CallGraph()
     funcs, by_name, replaced = graph.funcs, graph.by_name, graph.replaced
@@ -630,8 +649,10 @@ def main():
     owned = [g for g in sized if g["owned"]]
     ready = [g for g in sized if not g["owned"] and not g["live"] and not g["inside"]]
     in_use = [g for g in sized if not g["owned"] and g["live"]]
-    print("%d globals: %d owned, %d ready to own, %d still used by game code, %d of unknown size" % (
-        len(merged), len(owned), len(ready), len(in_use), len(unsized)))
+    rdata = section_named(".rdata") or (0, 0)
+    print("%d globals: %d owned, %d ready to own, %d still used by game code, %d of unknown size (%d of them in "
+          ".rdata)" % (len(merged), len(owned), len(ready), len(in_use), len(unsized),
+                       sum(1 for g in unsized if rdata[0] <= g["address"] < rdata[1])))
     print("functions: %d replaced, %d dead, %d live; %d \"pointers\" inside code images and %d references hung "
           "on a MOV reg, imm ignored" % (
               len(replaced & set(funcs)), len(set(funcs) - replaced - live), len(live), len(ignored), spurious))
@@ -677,10 +698,16 @@ def main():
             why = (["inside " + ", ".join(g["inside"])] if g["inside"] else []) + \
                   ["%s:%d" % (l[1], l[2]) for l in g["literals"]]
             print("  %-28s %s" % (g["name"], "; ".join(why)))
-    if unsized:
+    # Unsized pointers into .rdata are vtables, strings and constant tables: the game never writes them, and they
+    # move into the DLL only with the code that uses them, so they are counted rather than listed for tagging.
+    unsized_data = [g for g in unsized if not (rdata[0] <= g["address"] < rdata[1])]
+    if unsized_data:
         print("\nUnknown size (tag with // XBE_GLOBAL(address, size) on the line before):")
-        for g in unsized:
+        for g in unsized_data:
             print("  %-28s %08x %s:%d" % (g["name"], g["address"], g["file"], g["line"]))
+    if len(unsized_data) < len(unsized):
+        print("\n%d more of unknown size point into .rdata (vtables, strings, constant tables): not listed" %
+              (len(unsized) - len(unsized_data)))
 
 
 if __name__ == "__main__":
