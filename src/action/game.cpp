@@ -394,12 +394,12 @@ void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// The loading screen's picture for a level, and the text shown on it: a hint (one of the level's own, or, often,
-// a general gameplay tip) and the level's objective. ResetMap_GenLoadScreen is the only caller.
+// The loading screen's picture for a level, and the text shown on it: a hint (one of the level's own, or one of a
+// set shared by every level) and the level's objective. ResetMap_GenLoadScreen is the only caller.
 // ---------------------------------------------------------------------------------------------------------------
 
-// General gameplay tips, which replace a level's own hint half the time (and always when it has none). 0x1000129
-// is not among them.
+// The hints shared by every level, which replace a level's own hint half the time (and always when it has none).
+// 0x1000129 is not among them.
 static const uint32_t kGeneralHints[] = {
     0x1000111, 0x1000112, 0x1000113, 0x1000114, 0x1000115, 0x1000116, 0x1000117, 0x1000118, 0x1000119, 0x100011a,
     0x100011b, 0x100011c, 0x100011d, 0x100011e, 0x100011f, 0x1000120, 0x1000121, 0x1000122, 0x1000123, 0x1000124,
@@ -408,7 +408,7 @@ static const uint32_t kGeneralHints[] = {
     0x100013a, 0x100013b, 0x100013c,
 };
 
-// Multiplayer tips, for every multiplayer map.
+// The hints for the levels that use the multiplayer loading screen.
 static const uint32_t kMultiplayerHints[] = {
     0x100013e, 0x100013f, 0x1000140, 0x1000141, 0x1000142, 0x1000143, 0x1000144, 0x1000145, 0x1000146, 0x1000147,
     0x1000148, 0x1000149, 0x100014a, 0x100014b, 0x100014c, 0x100014d, 0x100014e, 0x100014f, 0x1000150, 0x1000151,
@@ -433,7 +433,7 @@ static void SetObjective(char **objectiveOut, uint32_t objective) {
         *objectiveOut = LoadText(objective);
 }
 
-// Half the time, and whenever the level gave no hint of its own, a general tip instead.
+// Half the time, and whenever the level gave no hint of its own, one of the shared hints instead.
 static void MaybeGeneralHint(char **hintOut) {
     bool keepLevelHint = (Rand_Random() & 1) != 0 && (hintOut == NULL || *hintOut != NULL);
     if (!keepLevelHint)
@@ -449,7 +449,7 @@ HASHCODE ResetMap_LevelCode2ImgCore(HASHCODE level, char **hintOut, char **objec
 
     HASHCODE image;
     switch (level) {
-    // Multiplayer maps: a multiplayer tip and no objective, and no general tip.
+    // A hint from kMultiplayerHints, no objective, and no shared hint.
     case HT_Level_SpaceStation:
     case HT_Level_Facility:
     case HT_Level_Atlantis:
@@ -465,7 +465,7 @@ HASHCODE ResetMap_LevelCode2ImgCore(HASHCODE level, char **hintOut, char **objec
         return LOADSCREEN_MULTIPLAYER;
     }
 
-    // Castle. The exterior keeps its one hint: no general tip.
+    // The castle exterior keeps its one hint: no shared hint.
     case HT_Level_CastleExterior: {
         static const uint32_t hints[] = { 0x1000126 };
         PickHint(hintOut, hints);
@@ -494,7 +494,6 @@ HASHCODE ResetMap_LevelCode2ImgCore(HASHCODE level, char **hintOut, char **objec
         break;
     }
 
-    // Henderson (Mayhew's estate and headquarters).
     case HT_Level_HendersonA: {
         static const uint32_t hints[] = { 0x10000d3, 0x10000d4 };
         PickHint(hintOut, hints);
@@ -524,7 +523,6 @@ HASHCODE ResetMap_LevelCode2ImgCore(HASHCODE level, char **hintOut, char **objec
         break;
     }
 
-    // Tower.
     case HT_Level_TowerA: {
         static const uint32_t hints[] = { 0x10000d5, 0x10000d8, 0x10000df, 0x10000e2 };
         PickHint(hintOut, hints);
@@ -547,7 +545,6 @@ HASHCODE ResetMap_LevelCode2ImgCore(HASHCODE level, char **hintOut, char **objec
         break;
     }
 
-    // Power station.
     case HT_Level_PowerStationA1: {
         static const uint32_t hints[] = { 0x10000e7, 0x10000e9, 0x10000eb, 0x10000ed, 0x10000ef, 0x10000f1, 0x10000f4 };
         PickHint(hintOut, hints);
@@ -564,8 +561,8 @@ HASHCODE ResetMap_LevelCode2ImgCore(HASHCODE level, char **hintOut, char **objec
         break;
     }
 
-    // The second tower. Tower2A's list really has 0x10000f8 twice (0x10000f7 never appears), so it comes up two
-    // times in three. Tower2C has no hint of its own; the elevator keeps its one hint, with no general tip.
+    // Tower2A's list really has 0x10000f8 twice (0x10000f7 never appears), so it comes up two times in three.
+    // Tower2C has no hint of its own; the elevator keeps its one hint, with no shared hint.
     case HT_Level_Tower2A: {
         static const uint32_t hints[] = { 0x10000f6, 0x10000f8, 0x10000f8 };
         PickHint(hintOut, hints);
@@ -593,7 +590,6 @@ HASHCODE ResetMap_LevelCode2ImgCore(HASHCODE level, char **hintOut, char **objec
         return LOADSCREEN_TOWER2;
     }
 
-    // Drake's island base and the missile silo.
     case HT_Level_EvilBase: {
         static const uint32_t hints[] = { 0x1000103, 0x1000104, 0x1000105, 0x1000106 };
         PickHint(hintOut, hints);
@@ -616,9 +612,9 @@ HASHCODE ResetMap_LevelCode2ImgCore(HASHCODE level, char **hintOut, char **objec
         break;
     }
 
-    // Space station. The original stores the hint it picks through the objective pointer, not the hint pointer
-    // (and only when there is a hint pointer); the objective then overwrites it, so this level never shows a hint
-    // of its own - only, half the time, a general tip.
+    // The original stores the hint it picks through the objective pointer, not the hint pointer (and only when
+    // there is a hint pointer); the objective then overwrites it, so this level never shows a hint of its own -
+    // only, half the time, a shared one.
     case HT_Level_SpaceStationD: {
         static const uint32_t hints[] = { 0x1000108, 0x1000109, 0x100010a, 0x100010b, 0x100010c, 0x100010d, 0x100010e,
                                           0x100010f, 0x1000110 };
