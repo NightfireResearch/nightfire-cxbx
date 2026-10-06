@@ -406,8 +406,8 @@ static void ShowTopAgentResult(sprite *status) {
 
     for (int slot = 0; slot < ARRAY_SIZE(MPGame.players); ++slot) {
         const MPGamePlayer &player = MPGame.players[slot];
-        int deaths = static_cast<int32_t>(player.deaths);
-        int eliminationLimit = static_cast<int32_t>(MPSettings.MaxPoints);
+        int deaths = player.deaths;
+        int eliminationLimit = MPSettings.MaxPoints;
 
         if (player.playerObj == NULL || deaths >= eliminationLimit)
             continue;
@@ -447,7 +447,7 @@ static void ShowScoreLimitResult(sprite *status) {
     double scoreLimit = static_cast<int32_t>(MPSettings.MaxPoints);
 
     for (int slot = 0; slot < ARRAY_SIZE(MPGame.players); ++slot) {
-        if (static_cast<double>(MPGame.players[slot].points) >= scoreLimit) {
+        if (MPGame.players[slot].points >= scoreLimit) {
             winnerSlot = slot;
             ++playersAtLimit;
         }
