@@ -15,6 +15,7 @@
 #include "RigidCoreShadow.h"
 #include "RigidResolveShadow.h"
 #include "RigidCollideShadow.h"
+#include "RenderShadow.h"
 #include "GeomShadow.h"
 
 #include <windows.h>
@@ -165,6 +166,7 @@ void Teleport_Tick(void) {
         RigidCoreShadow_Run();   // NIGHTFIRE_RIGIDCORESHADOW=1 only
         RigidResolveShadow_Run();   // NIGHTFIRE_RIGIDRESOLVESHADOW=1 only
         RigidCollideShadow_Run();   // NIGHTFIRE_RIGIDCOLLIDESHADOW=1 only
+        RenderShadow_Run();   // NIGHTFIRE_RENDERSHADOW=1 only
         char text[256] = "";
         DWORD fromEnv = GetEnvironmentVariableA("NIGHTFIRE_TELEPORT", text, sizeof(text));
         if (fromEnv == 0 || fromEnv >= sizeof(text))

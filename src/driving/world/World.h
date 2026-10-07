@@ -104,6 +104,8 @@ struct WorldModel {
 struct WorldArticle {
     WorldModel *model;                  // +0x00
     ArticleEffect *effects;             // +0x04 NULL for none
+    uint8_t unknown08[0x15];
+    uint8_t drawPass;                   // +0x1d which of WRender's passes draws its instances
 };
 
 inline WorldArticle *ArticleOf(const CARP::Instance *instance) {

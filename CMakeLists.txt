@@ -379,6 +379,7 @@ add_library(drivinginject SHARED
   src/driving/world/RoadNav.cpp
   src/driving/world/Targeting.cpp
   src/driving/world/SoundGroup.cpp
+  src/driving/world/Render.cpp
   src/driving/physics/PhysicsObject.cpp
   src/driving/physics/SimpleRigidBody.cpp
   src/driving/physics/PhysicsNamespace.cpp
@@ -403,6 +404,7 @@ add_library(drivinginject SHARED
   src/driving/devtools/RigidCoreShadow.cpp
   src/driving/devtools/RigidResolveShadow.cpp
   src/driving/devtools/RigidCollideShadow.cpp
+  src/driving/devtools/RenderShadow.cpp
   src/driving/devtools/CarpShadow.cpp
   src/driving/engine/UGroup.cpp
   src/driving/data/UData.cpp

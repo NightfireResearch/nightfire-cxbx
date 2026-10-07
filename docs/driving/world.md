@@ -6,9 +6,9 @@ AI traffic, pedestrians, helicopters and the spline camera drive along, target p
 visibility curtains. Ported on 7 October 2026 by five packages, then merged (`src/driving/world/`). Every address
 is Driving.xbe's.
 
-**Status:** 144 functions ported (142 the coverage tool listed, plus two entry points Ghidra had not made
-functions: WorldSceneObjectList::Deallocate 0x000d1550 and AWorldSound::Delete 0x000cca00). `engine.world` is 94%
-ours by bytes; what is left is WRender (0x000c7330..0x000c8940), the world's drawing, with its unnamed helpers.
+**Status:** 144 functions ported on 7 October 2026 (142 the coverage tool listed, plus two entry points Ghidra had
+not made functions: WorldSceneObjectList::Deallocate 0x000d1550 and AWorldSound::Delete 0x000cca00), and WRender's 23
+the same day. `engine.world` is 100% ours by bytes; the functions still counted live are exception funclets.
 Checked by five shadow tests against the originals on the loaded track (missions 1 and 4) and by lockstep runs of
 missions 1-8, every dumped frame identical to the baseline.
 
@@ -26,6 +26,7 @@ missions 1-8, every dumped frame identical to the baseline.
 | `world/RoadNav.h/.cpp` | WRoadNav (0xc0 bytes): placing a navigator at a point or segment, stepping it along the network, lane changes, and the four ways to choose the next segment (random, by direction, by lane, along the sidewalk) |
 | `world/Targeting.h/.cpp` | WTargetable and WTargetPicker: screen and off-screen positions, distances, selection, auto-drive targeting, the shared pointer-list erase |
 | `world/SoundGroup.h/.cpp` | WSoundGroup, WSound / AWorldSound / ABaseSound as far as they are read, and WSoundMap (`std::map<int, WSound *>`) |
+| `world/Render.h/.cpp` | WRender (0xe0 bytes, `fgRender` at 0x0023e000): the draw passes it splits the instances into at track load, the scene tree walks against the camera's frustum and the curtains (into CachedDrawInfo, the visible node and draw lists), GetNextPoint's walk for the culling, DrawPass, DrawWorld, DrawWorldAtPoint; and the game's compiled std::sort for its draw entries (ten functions, `namespace RenderSort`) |
 | `render/RPathHandle.hpp` | the path engine's handle, as the world and the trigger manager read it |
 
 ## Tests
@@ -37,8 +38,9 @@ missions 1-8, every dumped frame identical to the baseline.
 | `NIGHTFIRE_ROADNETSHADOW` | first tick | every query over every segment and node (lane types, widths, weights, points on segments, lane indices at the lane table's boundaries), lines and probes, Init/Restart/Shutdown with the live tables set aside |
 | `NIGHTFIRE_ROADNAVSHADOW` | first tick | navigators placed at up to 300 points in every mode and driven for up to 40 operations each, the navigator, its spline, the random generator and every segment stamp compared after each; `=2` names each case before it runs |
 | `NIGHTFIRE_TARGETSHADOW` | first tick | screen-space maths against the live camera, the WTargetable constructors and queries, the picker on a copy of the live one, the sound map through 600 scripted steps |
+| `NIGHTFIRE_RENDERSHADOW` | first tick | the tree walks from the live frustum and 80 others over the map, the culling walk on the real, reversed and empty lists, CopyDrawPasses over every pass range, the simple tree walk, std::sort and each of its helpers on arrays of 0-1100 entries |
 
-Open, Reset, Close, the managers' Init/Restart/Update, event lists that run events, sound groups and the per-frame
+Drawing (DrawWorld, DrawPass, DrawWorldAtPoint), Open, Reset, Close, the managers' Init/Restart/Update, event lists that run events, sound groups and the per-frame
 targeting updates are covered by the lockstep runs.
 
 ## What the port taught
@@ -68,3 +70,7 @@ targeting updates are covered by the lockstep runs.
   for an empty grid cell; several CalcNextSegment* paths use a null GetAttachedDirectionalSegment result unchecked.
 - WRoadNetwork::Init fills 32 lane-weight row pointers of which 10 are used; GetLinePointIntersect normalises its
   direction twice.
+- WRender::PrepareForCull clears the draws of the list the tree walk filled last, not of its argument; at track
+  load an instance without an article joins the pass of the instance after it; the curtain count is left unset on
+  a track with no 'VisC'; ShutDown deletes the object without its destructor, so the curtains leak; neither the
+  visible node list nor DrawWorldAtPoint's draws are bounds-checked.

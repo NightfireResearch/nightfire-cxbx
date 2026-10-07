@@ -211,7 +211,7 @@ where to change it.
 | game.missions | 273 | 0 | 0 | 273 | 0% | 33 | 0% |
 | game.vehicles | 193 | 0 | 0 | 193 | 0% | 62 | 0% |
 | game.weapons | 178 | 0 | 6 | 172 | 3% | 43 | 0% |
-| **engine** | 3990 | 1114 | 1050 | 1826 | **54%** | 526 | 48% |
+| **engine** | 3990 | 1137 | 1052 | 1801 | **55%** | 526 | 49% |
 | engine.anim | 415 | 2 | 5 | 408 | 2% | 54 | 0% |
 | engine.audio | 270 | 0 | 1 | 269 | 0% | 35 | 0% |
 | engine.camera | 273 | 0 | 1 | 272 | 0% | 60 | 0% |
@@ -221,7 +221,7 @@ where to change it.
 | engine.physics | 156 | 117 | 29 | 10 | 94% | 33 | 100% |
 | engine.render | 760 | 7 | 1 | 752 | 1% | 114 | 3% |
 | engine.static | 798 | 22 | 776 | 0 | 100% | 26 | 100% |
-| engine.world | 444 | 315 | 90 | 39 | 91% | 89 | 94% |
+| engine.world | 444 | 338 | 92 | 14 | 97% | 89 | 100% |
 | **platform** | 1453 | 1254 | 199 | 0 | **100%** | 262 | 100% |
 | platform.eagl | 807 | 751 | 56 | 0 | 100% | 146 | 100% |
 | platform.files | 77 | 44 | 33 | 0 | 100% | 12 | 100% |
@@ -236,10 +236,10 @@ where to change it.
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6842 | 1117 | 1126 | 4599 | **33%** | 1000 | 26% |
+| **game + engine** | 6842 | 1140 | 1128 | 4574 | **33%** | 1000 | 26% |
 | **platform + system** | 2893 | 1527 | 1018 | 348 | **88%** | 506 | 93% |
 | **  without the C runtime** | 2473 | 1523 | 950 | 0 | **100%** | 462 | 100% |
-| **everything** | 9735 | 2644 | 2144 | 4947 | **49%** | 1506 | 48% |
+| **everything** | 9735 | 2667 | 2146 | 4922 | **49%** | 1506 | 49% |
 
 - **The engine's core and data layers are done (4 October 2026): `engine.core` and `engine.data`, 100% by bytes**
   (docs/driving/core-data.md): memory (UMemory, new/delete), reference counters, data groups, singletons, the
@@ -255,7 +255,7 @@ where to change it.
   lockstep missions 1-8 match the baseline. Game and engine together are now 28% done by functions, 19% by bytes.
 - **The rest of the world is done (7 October 2026, docs/driving/world.md):** WWorld (open, reset, close), the
   visibility curtains, triggers, the road network and road navigation, targeting and sound groups - 144 functions;
-  `engine.world` is 94% ours by bytes, all but WRender (the world's drawing). Five shadow tests match the originals
+  `engine.world` is 94% ours by bytes, all but WRender (the world's drawing, ported the same day: now 100%). Five shadow tests match the originals
   on the loaded track, and lockstep missions 1-8 match the baseline. Game and engine together are now 31% done by
   functions, 23% by bytes.
 - **Physics is done (7 October 2026, docs/driving/physics.md):** RigidBody (integration, levers, ground, world and

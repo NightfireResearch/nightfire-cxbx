@@ -22,12 +22,17 @@ class RSceneObj;
 struct WMapNode {
     WMapNode *children;            // +0x00
     RSceneObj *firstSceneObj;      // +0x04
-    uint16_t curtainListOffset;    // +0x08
-    uint16_t curtainListStart;     // +0x0a
+    uint16_t indexListOffset;      // +0x08 the byte offset of its index list (IndexList)
+    uint16_t numInstances;         // +0x0a
     uint8_t numCurtains;           // +0x0c
     uint8_t depth;                 // +0x0d the root is 0
     uint8_t cellX;                 // +0x0e the node's column and row among the nodes of its depth
     uint8_t cellZ;                 // +0x0f
+
+    // Its instances' indices (numInstances of them), then its curtains' (numCurtains)
+    const uint16_t *IndexList() const {
+        return reinterpret_cast<const uint16_t *>(reinterpret_cast<const uint8_t *>(this) + indexListOffset);
+    }
 };
 static_assert(sizeof(WMapNode) == 0x10, "a map node is 16 bytes");
 

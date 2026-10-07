@@ -3,7 +3,7 @@
 
 // ---------------------------------------------------------------------------------------------------------------
 // The visibility curtains: vertical walls in the track that hide what is behind them. Each frame the renderer
-// (WRender, not ported) clears the active list and adds the curtains of the scene tree nodes it finds visible;
+// (WRender, world/Render.cpp) clears the active list and adds the curtains of the scene tree nodes it finds visible;
 // a curtain is added only when the eye is on its front side, as four planes - the wall itself, the two from the
 // eye through its ends, and the one through its far end - and a sphere is hidden when it is behind all four of one
 // curtain's planes. See VisCurtain.cpp.
