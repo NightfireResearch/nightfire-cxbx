@@ -17,18 +17,18 @@
 #include "../data/AttributeSet.h"
 #include "../data/SymbolTable.h"
 #include "../eagl/GeoPrimState.h"
+#include "../world/RoadNav.h"
+#include "../world/Targeting.h"
 
 // ---- originals called by address
 
 #define ListDestruct_00013540 ((void (__fastcall *)(void *, int))0x00013540)
-#define ListErase_000ce900 ((void (__fastcall *)(NodeList *, int, void **, void *, void *))0x000ce900)
 
 #define FUN_0001be60 ((void (__fastcall *)(void *, int))0x0001be60)
 #define FUN_0004f400 ((void (__fastcall *)(void *, int))0x0004f400)
 #define RCameraSpline_Destruct ((void (__fastcall *)(void *, int))0x0007a9b0)
 #define FUN_000903a0 ((void (__fastcall *)(void *, int))0x000903a0)
 #define FUN_00094ff0 ((void (__fastcall *)(void *, int))0x00094ff0)
-#define WRoadNav_Destruct ((void (__fastcall *)(void *, int))0x000ca100)
 #define FUN_0011d580 ((void (__fastcall *)(void *, int))0x0011d580)
 #define FUN_001235a0 ((void (__fastcall *)(void *, int))0x001235a0)
 #define FUN_00125b90 ((void (__fastcall *)(void *, int))0x00125b90)
@@ -56,18 +56,18 @@ void DestroyNodeList(NodeList *list, NodeListErase erase, uint32_t nodeSize) {
     list->size = 0;
 }
 
-// The object holds a list behind a pointer (+0x2c) and an ATargeting (+0x7c), both allocated by its constructor.
+// The picker's target list and its ATargeting, both allocated by its constructor.
 void DestroyGlobal_0023e1b0(void) {
-    NodeList *list = (NodeList *)PTR_AT(0x0023e1dc);
-    void **head = list->head;
-    void *after;
-    ListErase_000ce900(list, 0, &after, head != NULL ? *head : NULL, head);
-    list = (NodeList *)PTR_AT(0x0023e1dc);
+    PointerList *list = TargetPicker.targets;
+    PointerListNode *head = list->head;
+    PointerListNode *after;
+    list->Erase(&after, head != NULL ? head->next : NULL, head);
+    list = TargetPicker.targets;
     if (list != NULL) {
         ListDestruct_00013540(list, 0);
         OperatorDelete(list);
     }
-    OperatorDelete(PTR_AT(0x0023e22c));
+    OperatorDelete(TargetPicker.targeting);
 }
 
 // ---- destructors of function-local statics, which game code registers with atexit when it first constructs them
@@ -86,7 +86,7 @@ void DestroyStatic_001dda14(void) {
 }
 // FUNC_AT(0x0015cd50)
 void DestroyStatic_001de820(void) {
-    WRoadNav_Destruct((void *)0x001de820, 0);
+    ((WRoadNav *)0x001de820)->Destruct();
 }
 // FUNC_AT(0x0015cde0)
 void DestroyStatic_001e23f0(void) {

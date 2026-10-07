@@ -2,7 +2,9 @@
 
 #include "CollisionQueries.h"             // the vectors' uninitialized_fill_n copies
 #include "Grid.h"
+#include "SoundMap.h"                       // BuyMapHead
 #include "WorldMath.h"
+#include "World.h"
 #include "WorldPos.h"
 
 #include <math.h>
@@ -46,7 +48,6 @@
 #define WindowMap_Increment ((void (__fastcall *)(WindowMapNode **it, int))0x00052a20)
 #define WindowMap_Decrement ((void (__fastcall *)(WindowMapNode **it, int))0x00123930)
 #define WindowMap_Max ((WindowMapNode *(*)(WindowMapNode *node))0x00123850)
-#define ArticleMap_Buyhead ((ArticleMapNode *(*)())0x00094030)
 #define ArticleMap_Find ((ArticleMapNode **(__fastcall *)(ArticleMap *, int, ArticleMapNode **result, WCollisionInstance *const *key))0x00118f20)
 #define ArticleMap_Increment ((void (__fastcall *)(ArticleMapNode **it, int))0x000b2920)
 
@@ -177,10 +178,10 @@ void StripList::PushBack(const CollisionStrip *const *strip) {
 // ---------------------------------------------------------------------------------------------------------------
 
 // FUNC_AT(0x000c2ff0)
-bool WCollisionMgr::SetCollisionArticle(RWorldInstance *renderInstance, uint32_t article) {
+bool WCollisionMgr::SetCollisionArticle(CARP::Instance *renderInstance, uint32_t article) {
     // the render instance's index, as an unsigned difference
     uint32_t renderIndex =
-        uint32_t(uintptr_t(renderInstance) - uintptr_t(fgWorld->renderInstances)) / sizeof(RWorldInstance);
+        uint32_t(uintptr_t(renderInstance) - uintptr_t(fgWorld->instances)) / sizeof(CARP::Instance);
     uint32_t i = 0;
     while (i < instanceCount && instances[i].renderIndex != renderIndex)
         i++;
@@ -201,7 +202,7 @@ bool WCollisionMgr::SetCollisionArticle(RWorldInstance *renderInstance, uint32_t
         instance->article = NULL;
         return true;
     }
-    UGroup *model = **renderInstance->Model();
+    UGroup *model = ArticleOf(renderInstance)->model->group;
     UData *data = model->DataLocateTag(kArticleTag | article);
     if (uint32_t(model->DataCountType(kArticleType)) <= article)
         return false;
@@ -1090,7 +1091,7 @@ WCollisionMgr* WCollisionMgr::Construct() {
     windows.head->left = windows.head;
     windows.head->right = windows.head;
     windows.size = 0;
-    articles.head = ArticleMap_Buyhead();
+    articles.head = BuyMapHead<ArticleMapNode>();
     articles.head->isNil = 1;
     articles.head->parent = articles.head;
     articles.head->left = articles.head;

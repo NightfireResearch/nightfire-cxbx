@@ -24,6 +24,9 @@
 #include "../data/Tree.h"               // Tree: the article map's compiled code is the data layer's maps'
 #include "../engine/RbTree.h"
 
+namespace CARP {
+class Instance;
+}
 struct OBB;
 class UGroup;
 class WWorldPos;
@@ -223,7 +226,7 @@ public:
     // Swaps the collision article of the instance drawn by `renderInstance` for article `article` of its model
     // (none for -1), remembering the original for Restart. False if no instance is drawn by it or the model has
     // no such article.
-    bool SetCollisionArticle(RWorldInstance *renderInstance, uint32_t article);          // 0x000c2ff0
+    bool SetCollisionArticle(CARP::Instance *renderInstance, uint32_t article);          // 0x000c2ff0
 
     // The instances whose spheres reach a segment, from the grid cells it crosses.
     void GetInstanceListGuts(WGridCellList *cells, InstanceList *out, const Coord4 *segment); // 0x000c31f0

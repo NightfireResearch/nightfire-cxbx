@@ -5,6 +5,11 @@
 #include "ColQueryShadow.h"
 #include "ColListShadow.h"
 #include "ColGridShadow.h"
+#include "WorldShadow.h"
+#include "TriggerShadow.h"
+#include "RoadNetShadow.h"
+#include "RoadNavShadow.h"
+#include "TargetShadow.h"
 #include "GeomShadow.h"
 
 #include <windows.h>
@@ -145,6 +150,11 @@ void Teleport_Tick(void) {
         ColListShadow_Run();   // NIGHTFIRE_COLLISTSHADOW=1 only
         ColGridShadow_Run();   // NIGHTFIRE_COLGRIDSHADOW=1 only
         GeomShadow_RunWorld();   // NIGHTFIRE_GEOMSHADOW=1 only
+        WorldShadow_Run();   // NIGHTFIRE_WORLDSHADOW=1 only
+        TriggerShadow_Run();   // NIGHTFIRE_TRIGGERSHADOW=1 only
+        RoadNetShadow_Run();   // NIGHTFIRE_ROADNETSHADOW=1 only
+        RoadNavShadow_Run();   // NIGHTFIRE_ROADNAVSHADOW=1 only
+        TargetShadow_Run();   // NIGHTFIRE_TARGETSHADOW=1 only
         char text[256] = "";
         DWORD fromEnv = GetEnvironmentVariableA("NIGHTFIRE_TELEPORT", text, sizeof(text));
         if (fromEnv == 0 || fromEnv >= sizeof(text))

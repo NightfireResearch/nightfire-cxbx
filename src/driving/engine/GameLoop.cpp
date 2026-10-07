@@ -27,6 +27,9 @@
 #include "../platform/RealPrint.h"
 #include "../platform/RealSystem.h"
 #include "../platform/X87.h"
+#include "../world/RoadNetwork.h"
+#include "../world/TriggerManager.h"
+#include "../world/World.h"
 #include "../../common/launchInfo.h"
 #include "../../helpers.h"
 
@@ -136,9 +139,6 @@ const char kCarModels[] = "data\\car\\model\\";
 #define WeaponManager (*(void **)0x0023923c)
 #define playerPhysicsObject (*(void ***)0x00234e40)
 #define CollisionManager (*(void **)0x00239a70)
-#define TriggerManager (*(void **)0x0023e260)
-#define fgWorld (*(uint8_t **)0x0023f310)
-#define kWorldTrackGroup 0x14                     // WWorld::trackGroup
 #define fActorDatabase (*(void **)0x001dd9a0)
 #define ASystem_fgSystem (*(void **)0x00243b34)
 #define ASoundManager_fgIsPaused BOOL8_AT(0x002439d0)
@@ -227,15 +227,6 @@ typedef const char *DiscErrorText[3];
 #define PBondCar_InitializeBondCarGlobals ((void (*)(void))0x00061ae0)
 #define PhysicsObject_SetHitPointLoc ((void (__fastcall *)(void *, int, void *))0x0006f7e0)
 #define WCollisionMgr_GetWorldHeightAtPoint ((void (__fastcall *)(void *, int, float *, float *, bool))0x000bf210)
-#define WTriggerManager_Update ((void (__fastcall *)(void *, int))0x000d0c90)
-#define WWorld_InitSingleton ((void (*)(void))0x000595c0)
-#define WWorld_SetTrackName ((void (*)(const char *, bool))0x000d1210)
-#define WWorld_LoadTrackFile ((void (__fastcall *)(void *, int, const char *, const char *))0x000d12d0)
-#define WWorld_Open ((void (__fastcall *)(void *, int))0x000d21a0)
-#define WWorld_Close ((void (__fastcall *)(void *, int))0x000d1b30)
-#define WWorld_Destruct ((void (__fastcall *)(void *, int))0x000d1610)
-#define WRoadNetwork_Init ((void (*)(void))0x000c8950)
-#define WRoadNetwork_Shutdown ((void (*)(void))0x000c9af0)
 #define AIElementController_Construct ((void (*)(void *))0x000285b0)
 #define AIVehicleController_Get ((void *(*)(void))0x00035c00)
 #define AIVehicleController_Init ((void (*)(void))0x00035c10)
@@ -544,8 +535,8 @@ void Bond_StartUpSystem() {
     RigidBody_InitRigidBodySystem();
 
     GLoadingScreen_Status("Loading track file");
-    WWorld_InitSingleton();
-    WWorld_LoadTrackFile(fgWorld, 0, "data\\track\\", MissionName);
+    WWorld::InitSingleton();
+    fgWorld->LoadTrackFile("data\\track\\", MissionName);
 
     GLoadingScreen_Status("Init Controllers");
     IOModule::GetIOModule()->Initialize();
@@ -608,7 +599,7 @@ int GameMain(int argc, char **argv) {
             } else if (argv[i][1] == 'T' || argv[i][1] == 't') {
                 strncpy(MissionName, argv[i] + 2, 15);
                 MissionName[15] = 0;
-                WWorld_SetTrackName(argv[i] + 2, true);
+                WWorld::SetTrackName(argv[i] + 2, true);
                 if (strncmp(argv[i] + 2, "mis", 3) == 0)
                     mission = atol(argv[i] + 5) - 1;
             }
@@ -627,7 +618,7 @@ int GameMain(int argc, char **argv) {
     if (CRT_stricmp(MissionName, "paris_mis01") != 0)
         gSuperEasy = 0;
     if (MissionName[0] != 0) {
-        WWorld_SetTrackName(MissionName, true);
+        WWorld::SetTrackName(MissionName, true);
         if (strncmp(MissionName, "mis", 3) == 0)
             mission = atol(MissionName + 3) - 1;
     }
@@ -744,13 +735,13 @@ void GameLoop_CleanUp() {
     AICharacter_Shutdown();
     RRenderHigh_KillTrackRenderPostSim();
     GLoadingScreen_Status("Shutdown Roads");
-    WRoadNetwork_Shutdown();
+    WRoadNetwork::Shutdown();
     GLoadingScreen_Status("Shutdown AI Controller's");
     AIRoadSpawn_Shutdown();
     AIZoneController_Shutdown();
     AIVehicleController_Shutdown();
     GLoadingScreen_Status("Deinit world");
-    WWorld_Close(fgWorld, 0);
+    fgWorld->Close();
     GLoadingScreen_LoadAndDrawUnLoadingScreen();
     RRenderer_Flush(fgRenderer, 0, true);
     GLoadingScreen_FreeUnloadingScreen();
@@ -777,9 +768,9 @@ void GameLoop_CleanUp() {
     GLoadingScreen_Status("Cleanup render objects");
     RSceneObj_DestroyAll();
     GLoadingScreen_Status("Deinit world");
-    uint8_t *world = fgWorld;
+    WWorld *world = fgWorld;
     if (world != NULL) {
-        WWorld_Destruct(world, 0);
+        world->Destruct();
         OperatorDelete(world);
     }
     fgWorld = NULL;
@@ -821,7 +812,7 @@ void RunTheGame(bool simulateOncePerLoop, int unused) {
     perFrame->AddTask(EAudioUpdate, 0, 7, true, 0, 0);
     simulation->AddTask(ESimEndFrame, 0, 7, true, 0, 0);
     simulation->AddTask(ECameraUpdate, 0, 2, true, 0, 0);
-    WTriggerManager_Update(TriggerManager, 0);
+    fgTriggerManager->Update();
 
     char movieFile[128];
     char subtitleFile[128];
@@ -980,16 +971,16 @@ void GameLoop_StartUp(int trafficSeed) {
     void *weapons = OperatorNew(0x180);
     WeaponManager = weapons != NULL ? SWeaponManager_Construct(weapons, 0) : NULL;
     GLoadingScreen_Status("Init World");
-    WWorld_Open(fgWorld, 0);
+    fgWorld->Open();
     GLoadingScreen_Status("Init AI Elements");
     RRenderHigh_InitTrackRenderPostSim();
-    UGroup *map = (*(UGroup **)(fgWorld + kWorldTrackGroup))->GroupLocateTag(kTagMap);
+    UGroup *map = fgWorld->group->GroupLocateTag(kTagMap);
     AIElementController_Construct(map->DataLocateTag(kTagAIElements));
     GLoadingScreen_Status("Init AI Controllers");
     AIVehicleController_Init();
     AIZoneController_Init();
     GLoadingScreen_Status("Init Roads");
-    WRoadNetwork_Init();
+    WRoadNetwork::Init();
 
     GLoadingScreen_Status("Init Simulation");
     const char *carType = SMissionManager_GetCarType(glbMissionManager, 0);
@@ -1043,7 +1034,7 @@ void GameLoop_MainGameLoop(bool unused0, bool unused1, bool simulateOncePerLoop,
     (void)unused0;
     (void)unused1;
     CurrentMission = mission;
-    WWorld_SetTrackName(missionNames[mission], false);
+    WWorld::SetTrackName(missionNames[mission], false);
     GameLoop_StartUp(trafficSeed);
     RunTheGame(simulateOncePerLoop, unused3);
     GameLoop_CleanUp();

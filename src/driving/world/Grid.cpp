@@ -3,6 +3,7 @@
 #include "Grid.h"
 
 #include "CollisionManager.h"
+#include "World.h"
 
 #include "../engine/CoreFoundation.h"
 #include "../engine/UMemory.hpp"
@@ -528,7 +529,7 @@ void WGrid::Init(UGroup *carp) {
             AppendMover(mover);
         } else if (element->type == kGridObject) {
             WCollisionObject *object = &fgCollisionMgr->objects[index];
-            const Coord4 *translation = MatrixRow(&fgWorld->renderInstances[object->renderIndex].matrix, 3);
+            const Coord4 *translation = MatrixRow(&fgWorld->instances[object->renderIndex].Matrix(), 3);
             mover.position = translation;
             mover.lastPosition = DefaultVector;
             mover.index = index;

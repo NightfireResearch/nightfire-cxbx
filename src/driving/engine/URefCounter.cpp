@@ -2,14 +2,15 @@
 
 #include "UMemory.hpp"
 #include "../../helpers.h"
+#include "../world/SoundMap.h"          // RefCounterMapBuyHead
 
 // ---------------------------------------------------------------------------------------------------------------
 // URefCounter<T>, ported from the listings of its 29 compiled copies (see URefCounter.h). Every AddReference copy
 // is the same code (0x00018030 is the model), as is every RemoveReference (0x00090130), destructor (0x000182b0)
 // and Get (0x00018340); they differ only in the tree helpers they call and, for Get, the static they make.
 //
-// The tree's helpers (lower_bound, the iterator's ++, the value's constructor, the head node's allocation, and each
-// instantiation's insert and erase) are not ours yet and are called by address. The name comparisons are the C
+// The tree's helpers (lower_bound, the iterator's ++, the value's constructor, and each instantiation's insert and
+// erase) are not ours yet and are called by address. The name comparisons are the C
 // runtime's _stricmp, called at its own address too: the tree's order depends on them.
 // ---------------------------------------------------------------------------------------------------------------
 
@@ -18,7 +19,6 @@
 #define RefCounterMap_LowerBound ((RefCounterNode *(__fastcall *)(URefCounterMap *, int, const char *key))0x00019de0)
 #define RefCounterNode_Increment ((void (__fastcall *)(RefCounterNode **iterator, int))0x00019d80)
 #define RefCounterValue_Construct ((RefCounterValue *(__fastcall *)(RefCounterValue *, int, const char *name, const RefCounterEntry *entry))0x0012ef50)
-#define RefCounterMap_BuyHeadNode ((RefCounterNode *(__fastcall *)(URefCounterMap *, int))0x00094070)
 #define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
@@ -154,7 +154,7 @@ void URefCounterMap::ConstructOnce(uint32_t *guard, RefCounterDestroyFn destroy)
         return;
     *guard |= 1;
     allocator = 0;   // the original copies an uninitialised byte of its stack: the empty comparator
-    head = RefCounterMap_BuyHeadNode(this, 0);
+    head = RefCounterMapBuyHead();
     head->isNil = 1;
     head->parent = head;
     head->left = head;

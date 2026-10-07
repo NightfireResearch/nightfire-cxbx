@@ -158,28 +158,69 @@ void PushBack(ColVector<T> *vector, const T *value, Insert insert) {
 
 }  // namespace ColStl
 
-// A trigger volume (WTriggerManager's): its matrix and its packed size. Only the fields read here; the object is
-// larger.
+namespace CARP {
+class Instance;
+}
+struct TriggerEvents;   // Trigger.h
+
+// A trigger volume (0x40 bytes, one of WTriggerManager's): a box, a sphere or an upright cylinder whose events run
+// when something it accepts touches it. Its methods are in Trigger.cpp (and Size and MakeMatrix in
+// CollisionInstance.cpp); the manager's tests in TriggerManager.cpp.
 class WTrigger {
 public:
-    enum Flag : uint8_t {
-        kRotated = 0x10,           // flags: the up axis is computed from the other two
+    enum Shape : uint8_t {
+        kBox = 1,                  // width along right, depth along forward, height up from the position
+        kSphere = 2,               // of the radius about the position
+        kCylinder = 3,             // of the radius, height up from the position
     };
 
-    Coord3 position;               // +0x00
-    uint8_t unknown0c[7];
-    uint8_t flags;                 // +0x13 Flag
-    uint8_t unknown14[0xc];
+    // (the names of the touch bits are ours, from WTriggerManager::Process)
+    enum Flag : uint16_t {
+        kEnabled = 0x0001,         // tested at all
+        kOnce = 0x0002,            // FireEvents clears kEnabled
+        kRigidType1 = 0x0004,      // touched by rigid bodies whose unknown6d is 1
+        kRigidType2 = 0x0008,      // by rigid bodies whose unknown6d is 2, simple bodies of types 2 and 8
+        kSimpleType1 = 0x0010,     // by simple bodies of type 1
+        kOthers = 0x0040,          // by the other rigid bodies, simple bodies of types 4 and 5, and ray shells
+        kPlayer = 0x0080,          // by the player's simple bodies and ray shells; the others' skip it
+        kFlag100 = 0x0100,         // Smackable::GoToSleep sets and clears it
+        kInstances = 0x0200,       // touched by the path engine's instances; Init clears kWhileActive
+        kWhileActive = 0x0400,     // only while WTriggerManager::active is set
+        kDirectional = 0x0800,     // only by things moving along forward (TestDirection)
+        kRotated = 0x1000,         // the up axis is computed from the other two
+        kIgnored = 0x2000,         // never tested
+    };
+
+    Coord3 position;               // +0x00 the bottom's centre
+    float radius;                  // +0x0c of a sphere or cylinder; position and radius make the Coord4 the grid
+                                   //       keeps it by
+    uint8_t unknown10;
+    uint8_t shape;                 // +0x11 Shape
+    uint16_t flags;                // +0x12 Flag
+    float height;                  // +0x14
+    TriggerEvents *events;         // +0x18 NULL: none
+    uint32_t queryStamp;           // +0x1c the last WTriggerManager::Process that looked at it
     Coord3 right;                  // +0x20
-    uint32_t unknown2c;
+    float width;                   // +0x2c a box's, along right
     Coord3 forward;                // +0x30
-    uint32_t packedSize;           // +0x3c bit 31: the size is in bits 20-29, else in bits 0-9 (doubled);
-                                   //       bit 30 picks the unit
+    union {                        // +0x3c
+        float depth;               // a box's, along forward
+        uint32_t packedSize;       // what Size reads: bit 31: the size is in bits 20-29, else in bits 0-9
+                                   //   (doubled); bit 30 picks the unit (CARP::Instance::packedDimensions)
+    };
+
+    // The position and radius as one vector (the grid's position and radius)
+    Coord4 *Bounds() { return reinterpret_cast<Coord4 *>(this); }
 
     double Size();                                       // 0x000cf1f0, answered unrounded (as on the x87 stack)
     void MakeMatrix(MATRIX4 *out, bool translate);       // 0x000cf260
+    void FireEvents(bool flag, int index, CARP::Instance *instance);    // 0x000cf300
+    bool TestDirection(const Coord4 *segment);           // 0x000cf440
+    bool UpdateRotPos(const Coord4 *rotation, const Coord3 *position); // 0x000cf490
 };
-static_assert(offsetof(WTrigger, flags) == 0x13, "WTrigger::flags");
+static_assert(sizeof(WTrigger) == 0x40, "a trigger is 64 bytes");
+static_assert(offsetof(WTrigger, flags) == 0x12, "WTrigger::flags");
+static_assert(offsetof(WTrigger, events) == 0x18, "WTrigger::events");
 static_assert(offsetof(WTrigger, packedSize) == 0x3c, "WTrigger::packedSize");
 
 #endif // DRIVING_WORLD_COLLISIONINSTANCE_H_

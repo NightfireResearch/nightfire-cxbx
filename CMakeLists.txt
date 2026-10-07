@@ -369,12 +369,27 @@ add_library(drivinginject SHARED
   src/driving/world/Tree.cpp
   src/driving/world/WorldMath.cpp
   src/driving/world/WorldPos.cpp
+  src/driving/world/World.cpp
+  src/driving/world/VisCurtain.cpp
+  src/driving/world/SoundMap.cpp
+  src/driving/world/Trigger.cpp
+  src/driving/world/TriggerManager.cpp
+  src/driving/world/SimpleZone.cpp
+  src/driving/world/RoadNetwork.cpp
+  src/driving/world/RoadNav.cpp
+  src/driving/world/Targeting.cpp
+  src/driving/world/SoundGroup.cpp
   src/driving/engine/OBB.cpp
   src/driving/engine/PhysicsUtil.cpp
   src/driving/devtools/ColQueryShadow.cpp
   src/driving/devtools/ColListShadow.cpp
   src/driving/devtools/ColGridShadow.cpp
   src/driving/devtools/GeomShadow.cpp
+  src/driving/devtools/WorldShadow.cpp
+  src/driving/devtools/TriggerShadow.cpp
+  src/driving/devtools/RoadNetShadow.cpp
+  src/driving/devtools/RoadNavShadow.cpp
+  src/driving/devtools/TargetShadow.cpp
   src/driving/devtools/CarpShadow.cpp
   src/driving/engine/UGroup.cpp
   src/driving/data/UData.cpp

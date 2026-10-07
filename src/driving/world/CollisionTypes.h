@@ -21,7 +21,6 @@
 #include "../engine/CoreContainers.h"   // GameVector
 
 class UGroup;
-struct WMapHeader;                      // Tree.h
 
 // A matrix's row as a vector (row 3: the translation)
 inline Coord4 *MatrixRow(MATRIX4 *matrix, int row) {
@@ -176,30 +175,6 @@ struct CollisionArticle {
 };
 static_assert(sizeof(CollisionArticle) == 0x20, "an article's header is 32 bytes");
 
-// ---- the world's render instances (fgWorld)
-
-// A placed render instance (fgWorld->renderInstances, 0x40 bytes): its matrix, whose rows' fourth words carry other
-// data - row 1's (+0x1c) leads through two handles to the model's CARP data group, where SetCollisionArticle looks
-// its articles up.
-struct RWorldInstance {
-    MATRIX4 matrix;
-
-    UGroup ***Model() const { return *reinterpret_cast<UGroup ***const *>(&matrix.mtx[1][3]); }
-};
-static_assert(sizeof(RWorldInstance) == 0x40, "a world render instance is 64 bytes");
-
-// The world's loaded data (WWorld's object): only the fields the collision system reads.
-struct WWorldData {
-    uint8_t unknown00[0x14];
-    UGroup *mapGroup;           // +0x14 the 'Map ' group: the render instances' names
-    uint8_t unknown18[4];
-    WMapHeader *map;            // +0x1c the scene tree's header (Tree.h)
-    RWorldInstance *renderInstances;    // +0x20
-};
-static_assert(offsetof(WWorldData, renderInstances) == 0x20, "fgWorld's render instances");
-
-#define fgWorld (*(WWorldData **)0x0023f310)
-
 // ---- the placed things
 
 enum CollisionInstanceFlags : uint8_t {
@@ -221,7 +196,7 @@ public:
     float halfHeight;           // +0x14
     uint8_t flags;              // +0x18 CollisionInstanceFlags; >> 2: the window variant
     uint8_t unknown19;
-    uint16_t renderIndex;       // +0x1a its render instance (fgWorld->renderInstances), and its name
+    uint16_t renderIndex;       // +0x1a its render instance (fgWorld->instances), and its name
     union {                     // +0x1c
         CollisionArticle *article;  // its geometry, from WCollisionMgr::Init on (colliders and WWorldPos keep it
                                     // to see that it has not changed)
@@ -257,7 +232,7 @@ public:
     uint8_t unknown21;
     uint8_t flags;              // +0x22 CollisionObjectFlags
     uint8_t unknown23;
-    uint16_t renderIndex;       // +0x24 its render instance in fgWorld->renderInstances
+    uint16_t renderIndex;       // +0x24 its render instance in fgWorld->instances
     uint8_t faceType;           // +0x26
     uint8_t faceSubType;        // +0x27
     uint8_t unknown28[8];
@@ -370,7 +345,9 @@ struct ObjectList : ColVector<WCollisionObject *> {
 // What a grid entry is
 enum WGridElementType : uint32_t {
     kGridInstance = 0,          // a collision instance
+    kGridTrigger = 1,           // a trigger (WTriggerManager's)
     kGridObject = 2,            // a collision object
+    kGridRoadSegment = 3,       // a road segment (WRoadNetwork's)
 };
 
 // The cells a search found (cell numbers)

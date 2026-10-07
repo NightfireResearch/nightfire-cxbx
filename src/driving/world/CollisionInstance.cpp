@@ -1,6 +1,7 @@
 #pragma fp_contract(off)
 
 #include "CollisionInstance.h"
+#include "World.h"
 
 #include "../platform/RealMath.h"
 
@@ -61,7 +62,7 @@ double EdgeArea(const Coord3 *p, const StripVertex &a, const StripVertex &b) {
 
 // FUNC_AT(0x000be6f0)
 void WCollisionObject::MakeMatrix(MATRIX4 *out, bool translate) {
-    const MATRIX4 &placed = fgWorld->renderInstances[renderIndex].matrix;
+    const MATRIX4 &placed = fgWorld->instances[renderIndex].Matrix();
     for (int axis = 0; axis < 3; axis++) {
         out->mtx[axis][0] = placed.mtx[axis][0];
         out->mtx[axis][1] = placed.mtx[axis][1];
@@ -75,12 +76,12 @@ void WCollisionObject::MakeMatrix(MATRIX4 *out, bool translate) {
 
 // FUNC_AT(0x000be780)
 MATRIX4* WCollisionInstance::GetRenderInstance() {
-    return &fgWorld->renderInstances[renderIndex].matrix;
+    return &fgWorld->instances[renderIndex].Matrix();
 }
 
 // FUNC_AT(0x000be7a0)
 const char* WCollisionInstance::GetName() {
-    UGroup *names = fgWorld->mapGroup->GroupLocateTag(kTagMap);
+    UGroup *names = fgWorld->group->GroupLocateTag(kTagMap);
     int index = renderIndex;
     uint32_t tag = index == -1 ? kTagInstanceName : uint32_t(index) | kTagInstanceNameIndexed;   // never -1
     UData *name = names->DataLocateTag(tag);

@@ -8,8 +8,8 @@ four packages, then merged (`src/driving/world/`). Every address is Driving.xbe'
 **Status:** 196 functions ported (WCollisionMgr, WCollider, WCollisionInstance/Object, WGrid, WTree, WWorldMath,
 WWorldPos, FasterSegmentIntersect, the physics Util_* helpers, OBB). Checked by four shadow tests against the
 originals on the loaded track and by lockstep runs of missions 1-8, every dumped frame identical to the baseline.
-The rest of `engine.world` - triggers, road network and navigation, targeting, sound zones, visibility curtains,
-world rendering, WWorld itself - is still original.
+The rest of `engine.world` (WWorld, triggers, the road network and navigation, targeting, sound groups, the
+visibility curtains) followed on 7 October 2026: [world.md](world.md).
 
 ## Layout
 

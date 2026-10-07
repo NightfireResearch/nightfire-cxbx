@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "../world/CollisionManager.h"
+#include "../world/World.h"
 #include "../EventManager.hpp"
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
@@ -63,7 +64,7 @@ const unsigned kPackageHi = 0x000c5700;   // (0x000c5700 is GameCallbacks.cpp's)
 #define Orig_CheckHitWorld ((int (__fastcall *)(WCollisionMgr *, int, const Coord4 *, WorldCollisionInfo *))0x000c3b40)
 #define Orig_StepCheckHitWorld ((int (__fastcall *)(WCollisionMgr *, int, Coord4 *, float))0x000c4000)
 #define Orig_CheckHitWindow ((bool (__fastcall *)(WCollisionMgr *, int, WorldCollisionInfo *, bool, int))0x000c4d70)
-#define Orig_SetCollisionArticle ((bool (__fastcall *)(WCollisionMgr *, int, RWorldInstance *, uint32_t))0x000c2ff0)
+#define Orig_SetCollisionArticle ((bool (__fastcall *)(WCollisionMgr *, int, CARP::Instance *, uint32_t))0x000c2ff0)
 #define Orig_WindowMapInsertUnique ((WindowMapInsert *(__fastcall *)(WindowMap *, int, WindowMapInsert *, const WindowMapValue *))0x000c4c60)
 #define Orig_WindowMapEraseRange ((WindowMapNode **(__fastcall *)(WindowMap *, int, WindowMapNode **, WindowMapNode *, WindowMapNode *))0x000c52c0)
 
@@ -809,9 +810,9 @@ void TestSetCollisionArticle() {
         return;
     int tested = 0;
     for (uint32_t i = 0; i < m->instanceCount && tested < 60; i += 1 + NextRandom() % 7) {
-        RWorldInstance *render = &fgWorld->renderInstances[m->instances[i].renderIndex];
+        CARP::Instance *render = &fgWorld->instances[m->instances[i].renderIndex];
         int count = -1;
-        Guarded([&] { count = (**render->Model())->DataCountType(0x63612020); });
+        Guarded([&] { count = ArticleOf(render)->model->group->DataCountType(0x63612020); });
         if (count < 0)
             continue;
         tested++;

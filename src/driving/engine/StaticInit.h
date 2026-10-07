@@ -55,8 +55,8 @@ typedef void (__fastcall *NodeListErase)(NodeList *list, int, void **result, voi
 // A global list's destructor: erase every node, free the head node, clear the head and the size.
 void DestroyNodeList(NodeList *list, NodeListErase erase, uint32_t nodeSize);
 
-// The destructor of the object at 0x0023e1b0, built by FUN_000cebc0: the original thunk (0x0015d080) had it
-// inline.
+// The destructor of the object at 0x0023e1b0 (Targeting.h's TargetPicker, built by WTargetPicker::Construct): the
+// original thunk (0x0015d080) had it inline.
 void DestroyGlobal_0023e1b0(void);
 
 // The destructors of function-local statics that game code registers with atexit (StaticInit.cpp).

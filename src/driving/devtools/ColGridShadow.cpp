@@ -9,6 +9,7 @@
 #include "../world/CollisionInstance.h"
 #include "../world/Grid.h"
 #include "../world/Tree.h"
+#include "../world/World.h"
 #include "../../common/xbeOriginal.h"
 #include "../../helpers.h"
 

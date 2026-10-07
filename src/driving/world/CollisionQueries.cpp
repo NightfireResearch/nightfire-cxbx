@@ -1,6 +1,7 @@
 #include "CollisionQueries.h"
 
 #include "Collider.h"                      // the colliders' vector helpers, folded with these vectors'
+#include "World.h"
 #include "WorldMath.h"
 #include "WorldPos.h"
 #include "../../helpers.h"
@@ -33,7 +34,6 @@
 
 #define WWorldPos_GetFaceNormal ((void (__fastcall *)(const WWorldPos *, int, float *))0x0005d3f0)
 #define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
-#define WWorld_GetSceneObjFromInstance ((void *(__fastcall *)(void *, int, const void *))0x000d14a0)
 #define Simulation_GetScratchPadFreeZone ((uint8_t *(__fastcall *)(void *, int))0x000b2820)
 #define BarrierList_Size ((uint32_t (__fastcall *)(const BarrierList *, int))0x00023f20)
 #define InstanceList_Xlen ((void (*)(void))0x000a8b90)
@@ -934,7 +934,7 @@ OBB* WCollisionMgr::PopObjectOBB(ObjectList *list, Coord3 *velocity, uint16_t *f
     velocity->y = 0.0f;
     velocity->x = 0.0f;
     if (object->flags & kObjectFlag01) {
-        void *sceneObject = WWorld_GetSceneObjFromInstance(fgWorld, 0, &fgWorld->renderInstances[object->renderIndex]);
+        RSceneObj *sceneObject = fgWorld->GetSceneObjFromInstance(&fgWorld->instances[object->renderIndex]);
         if (sceneObject != NULL) {
             if (SceneObjectVelocity(sceneObject) != NULL)
                 *velocity = *SceneObjectVelocity(sceneObject);
