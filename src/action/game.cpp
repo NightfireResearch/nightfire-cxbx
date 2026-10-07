@@ -424,24 +424,26 @@ static char *LoadText(uint32_t label) {
 // a level with a single hint, so the generator advances as the original's does.
 template <size_t N>
 static void PickHint(char **hintOut, const uint32_t (&hints)[N]) {
-    if (hintOut != NULL)
-        *hintOut = LoadText(hints[Rand_Random() % N]);
+    if (hintOut == NULL)
+        return;
+    *hintOut = LoadText(hints[Rand_Random() % N]);
 }
 
 static void SetObjective(char **objectiveOut, uint32_t objective) {
-    if (objectiveOut != NULL)
-        *objectiveOut = LoadText(objective);
+    if (objectiveOut == NULL)
+        return;
+    *objectiveOut = LoadText(objective);
 }
 
 // Half the time, and whenever the level gave no hint of its own, one of the shared hints instead.
 static void MaybeGeneralHint(char **hintOut) {
-    bool keepLevelHint = (Rand_Random() & 1) != 0 && (hintOut == NULL || *hintOut != NULL);
-    if (!keepLevelHint)
-        PickHint(hintOut, kGeneralHints);
+    if ((Rand_Random() & 1) != 0 && (hintOut == NULL || *hintOut != NULL))
+        return;
+    PickHint(hintOut, kGeneralHints);
 }
 
 // The C++ under the register-argument entry below (not static: only the entry's inline assembly calls it).
-HASHCODE ResetMap_LevelCode2ImgCore(HASHCODE level, char **hintOut, char **objectiveOut) {
+HASHCODE _ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objectiveOut) {
     if (hintOut != NULL)
         *hintOut = NULL;
     if (objectiveOut != NULL)
@@ -645,7 +647,7 @@ HASHCODE __declspec(naked) ResetMap_LevelCode2Img(HASHCODE level, char **hintOut
         push ecx
         push esi
         push eax
-        call ResetMap_LevelCode2ImgCore
+        call _ResetMap_LevelCode2Img
         add esp, 12
         ret
     }

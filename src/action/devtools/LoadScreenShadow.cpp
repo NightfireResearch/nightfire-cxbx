@@ -56,7 +56,7 @@ void Run(bool original, HASHCODE level, const uint32_t seed[2], int outputs, Res
         XbeOriginalScope scope(0x000bedf0);
         r->image = CallOriginal(level, hint, objective);
     } else {
-        r->image = ResetMap_LevelCode2ImgCore(level, hint, objective);
+        r->image = _ResetMap_LevelCode2Img(level, hint, objective);
     }
     r->rand[0] = RandState[0];
     r->rand[1] = RandState[1];
