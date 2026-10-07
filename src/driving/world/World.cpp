@@ -17,6 +17,7 @@
 #include "../../helpers.h"
 #include "../data/RCARPFile.h"
 #include "../engine/CoreFoundation.h"     // NullFunction, ThrowLengthError
+#include "../engine/MissionManager.h"
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
 #include "../render/RSceneObj.hpp"
@@ -29,7 +30,6 @@
 
 // ---- the game's globals
 #define TrackName ((char *)0x0023f290)                  // 0x80 bytes
-#define glbMissionManager PTR_AT(0x00239220)
 #define Sim ((void *)0x00233ff0)                        // the Simulation
 #define SimStepCount I32_AT(0x00234e34)
 #define DefaultVector (*(const Coord4 *)0x001d4c00)     // (0, 0, 0, 1)

@@ -5,6 +5,7 @@
 #include "devtools/Teleport.h"
 #include "engine/CoreFoundation.h"
 #include "engine/UMemory.hpp"
+#include "physics/RigidBodyBasics.h"   // PointerVectorDeallocate
 #include "platform/RealSystem.h"
 
 #include <windows.h>
@@ -38,7 +39,6 @@
 // arguments are members that do not use `this`).
 #define Uninitialized_Copy ((Schedule **(*)(Schedule **, Schedule **, Schedule **))0x000bfeb0)
 #define Uninitialized_Fill_N ((void (*)(Schedule **, unsigned, Schedule *const *))0x000b2ec0)
-#define Allocator_Deallocate ((void (__stdcall *)(Schedule **, unsigned))0x000ad630)
 #define Vector_Ucopy ((Schedule **(__stdcall *)(Schedule **, Schedule **, Schedule **))0x000c1230)
 #define Vector_Ufill ((Schedule **(__stdcall *)(Schedule **, unsigned, Schedule *const *))0x000c1290)
 #define Copy_Backward ((Schedule ***(*)(Schedule ***, Schedule **, Schedule **, Schedule **))0x000b2e40)
@@ -349,7 +349,7 @@ void Vector_Schedule::InsertN(Schedule **where, unsigned count, Schedule *const 
         Uninitialized_Copy(where, last, gap + count);
         unsigned size = Size() + count;
         if (first != NULL)
-            Allocator_Deallocate(first, unsigned(end - first));
+            PointerVectorDeallocate(first, unsigned(end - first));
         end = block + capacity;
         last = block + size;
         first = block;

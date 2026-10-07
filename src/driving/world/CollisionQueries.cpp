@@ -10,6 +10,7 @@
 #include "../engine/OBB.h"
 #include "../engine/PhysicsUtil.h"
 #include "../engine/UMemory.hpp"
+#include "../physics/RigidBodyBasics.h"   // PointerVectorDeallocate, VectorXlen
 #include "../platform/RealMath.h"
 
 #include <bit>
@@ -38,9 +39,7 @@
 #define BarrierList_Size ((uint32_t (__fastcall *)(const BarrierList *, int))0x00023f20)
 #define InstanceList_Xlen ((void (*)(void))0x000a8b90)
 #define InstanceList_Deallocate ((void (__fastcall *)(InstanceList *, int, InstanceListEntry *, uint32_t))0x000a87c0)
-#define PointerVector_Xlen ((void (*)(void))0x000b13a0)
 #define CellList_Xlen ((void (*)(void))0x00034e50)
-#define PointerVector_Deallocate ((void (__fastcall *)(void *, int, void **, uint32_t))0x000ad630)
 #define PointerUninitializedFill ((void (*)(void **, uint32_t, void *const *))0x000b2ec0)
 #define PointerCopyBackward ((void ***(*)(void ***, void **, void **, void **))0x000b2e40)
 #define PointerFill ((void (*)(void **, void **, void *const *))0x0004f3e0)
@@ -1688,12 +1687,12 @@ struct PointerListOps {
         PointerFill(Raw(first), Raw(last), Raw(value));
     }
     static void Deallocate(Vector *v, T *first, uint32_t count) {
-        PointerVector_Deallocate(v, 0, Raw(first), count);
+        PointerVectorDeallocate(Raw(first), count);
     }
 };
 
 struct ObjectListOps : PointerListOps<ObjectList, WCollisionObject *> {
-    static void Xlen(ObjectList *) { PointerVector_Xlen(); }
+    static void Xlen(ObjectList *) { VectorXlen(); }
 };
 
 struct StripListOps : PointerListOps<StripList, const CollisionStrip *> {
@@ -1753,7 +1752,7 @@ void WGridCellList::Reserve(uint32_t count) {
 void ObjectList::Reserve(uint32_t count) {
     if (count > 0x3fffffff) {
         COLLISION_QUERIES_UNTESTED("ObjectList::Reserve's throw");
-        PointerVector_Xlen();
+        VectorXlen();
         return;
     }
     ::Reserve<WCollisionObject *>(this, count);

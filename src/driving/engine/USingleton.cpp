@@ -2,20 +2,20 @@
 
 #include "CoreFoundation.h"
 #include "UMemory.hpp"
+#include "../physics/RigidBodyBasics.h"   // PointerVectorDeallocate
 #include "../../helpers.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // USingleton and USingletonManager, ported from the listings (0x0003d5f0, 0x0007d780, 0x0011b7a0-0x0011b820,
 // 0x0011bb50, and the static instance's functions at 0x00059c30-0x00059d20), with the manager's vector.
 //
-// The vector's growth calls the STL's own helpers - the uninitialised copies and fills, copy_backward, the
-// deallocation - at their addresses, in the original's order with its arguments. The original's catch block (free
+// The vector's growth calls the STL's own helpers - the uninitialised copies and fills, copy_backward - at their
+// addresses, and the deallocation (PointerVectorDeallocate), in the original's order with its arguments. The original's catch block (free
 // the new storage, rethrow) has nothing to catch here: copying pointers cannot throw.
 // ---------------------------------------------------------------------------------------------------------------
 
 #define Vector_UninitializedCopy ((USingleton **(*)(USingleton **, USingleton **, USingleton **, SingletonVector *, uint32_t))0x000bfeb0)
 #define Vector_UninitializedFillN ((void (*)(USingleton **, uint32_t, USingleton *const *, SingletonVector *, uint32_t))0x000b2ec0)
-#define Vector_Deallocate ((void (__fastcall *)(SingletonVector *, int, USingleton **, uint32_t))0x000ad630)
 #define Vector_Ucopy ((USingleton **(__fastcall *)(SingletonVector *, int, USingleton **, USingleton **, USingleton **))0x000c1230)
 #define Vector_Ufill ((void (__fastcall *)(SingletonVector *, int, USingleton **, uint32_t, USingleton *const *))0x000c1290)
 #define Vector_CopyBackward ((void (*)(USingleton ***, USingleton **, USingleton **, USingleton **))0x000b2e40)
@@ -75,7 +75,7 @@ void SingletonVector::InsertN(USingleton **where, uint32_t count, USingleton *co
         Vector_UninitializedCopy(where, last, at + count, this, count);
         uint32_t newSize = count + (first != NULL ? uint32_t(last - first) : 0);
         if (first != NULL)
-            Vector_Deallocate(this, 0, first, uint32_t(end - first));
+            PointerVectorDeallocate(first, uint32_t(end - first));
         end = reinterpret_cast<USingleton **>(reinterpret_cast<uint8_t *>(storage) + bytes);
         last = storage + newSize;
         first = storage;

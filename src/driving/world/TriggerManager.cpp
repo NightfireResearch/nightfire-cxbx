@@ -39,10 +39,8 @@
 #define Instance_SizeY ((double (__fastcall *)(const CARP::Instance *, int))0x0008d640)
 #define Simulation_GetRigidBody ((RigidBody *(__fastcall *)(void *, int, int index))0x000b2700)
 #define Simulation_GetSimpleRigidBody ((SimpleRigidBody *(__fastcall *)(void *, int, int index))0x000b2730)
-#define Simulation_GetPlayerObject ((void *(__fastcall *)(void *, int))0x000b2d30)
+#define Simulation_GetPlayerObject ((PhysicsObject *(__fastcall *)(void *, int))0x000b2d30)
 #define Simulation_FindPhysicsObjectSignature ((void *(__fastcall *)(void *, int, uint32_t signature))0x000b27d0)
-#define SimpleRigidBody_GetOwner ((void *(__fastcall *)(SimpleRigidBody *, int))0x000b1ea0)
-#define PhysicsObject_IsOwnedBy ((bool (__fastcall *)(void *, int, void *owner))0x0006f5b0)
 #define RayShell_GetNumActiveRayShells ((int (*)())0x00071930)
 #define RayShell_GetActiveRayShell ((ActiveRayShell *(*)(int index))0x00071940)
 #define RayShell_ClearActiveRayShells ((void (*)())0x00071960)
@@ -57,9 +55,6 @@
 #define QueryStamp U32_AT(0x0023e270)              // the triggers' queryStamp of the current Process
 #define ASystem_fgSystem PTR_AT(0x00243b34)
 #define Sim ((void *)0x00233ff0)                    // the Simulation
-// The owners of the simulation's rigid bodies and simple rigid bodies, by body (NULL: not in use)
-#define RigidBodyOwners ((void **)0x002342a0)
-#define SimpleBodyOwners ((void **)0x002343a0)
 
 namespace {
 
@@ -69,16 +64,6 @@ constexpr uint32_t kRuleTag = 0x52756c65;    // 'Rule'
 constexpr int kRigidBodies = 0x40;
 constexpr int kSimpleBodies = 0x60;
 constexpr uint32_t kCellsReserved = 0x40;
-
-constexpr uint8_t kAwake = 2;                // RigidBody::sleepState: tested
-
-enum SimpleBodyType : uint8_t {    // SimpleRigidBody::bodyType
-    kBodyType1 = 1,
-    kBodyType2 = 2,
-    kBodyType4 = 4,
-    kBodyType5 = 5,
-    kBodyType8 = 8,
-};
 
 constexpr uint32_t kDimensionsSeparate = 0x80000000;   // CARP::Instance::packedDimensions
 constexpr int kDimensionUnitShift = 30;
@@ -416,9 +401,9 @@ bool WTriggerManager::CheckCollide(const Coord3 *point, float radius, float abov
 void WTriggerManager::Process(int index, RigidBody *body) {
     QueryStamp++;
     unsigned touch;
-    if (body->unknown6d == 1)
+    if (body->kind == 1)
         touch = WTrigger::kRigidType1;
-    else if (body->unknown6d == 2)
+    else if (body->kind == 2)
         touch = WTrigger::kRigidType2;
     else
         touch = WTrigger::kOthers;
@@ -491,23 +476,23 @@ void WTriggerManager::Process(CARP::Instance *instance) {
 void WTriggerManager::Process(int index, SimpleRigidBody *body) {
     QueryStamp++;
     unsigned touch = 0;
-    void *player = Simulation_GetPlayerObject(Sim, 0);
-    void *owner = SimpleRigidBody_GetOwner(body, 0);
-    bool byPlayer = PhysicsObject_IsOwnedBy(owner, 0, player);
+    PhysicsObject *player = Simulation_GetPlayerObject(Sim, 0);
+    PhysicsObject *owner = body->GetOwner();
+    bool byPlayer = owner->IsOwnedBy(player);
     if (!(body->flags & SimpleRigidBody::kTouchesTriggers))
         return;
     if (byPlayer)
         touch = WTrigger::kPlayer;
     switch (body->bodyType) {
-    case kBodyType1:
+    case kSimpleExplosion:
         touch |= WTrigger::kSimpleType1;
         break;
-    case kBodyType2:
-    case kBodyType8:
+    case kSimpleHuman:
+    case kSimpleHelicopter:
         touch |= WTrigger::kRigidType2;
         break;
-    case kBodyType4:
-    case kBodyType5:
+    case kSimpleMissile:
+    case kSimpleShell:
         touch |= WTrigger::kOthers;
         break;
     }
@@ -595,10 +580,10 @@ void WTriggerManager::Process(int rayShell) {
 void WTriggerManager::Update() {
     RayShell_SetTriggerHittingRayShell(-1);
     for (int i = 0; i < kRigidBodies; i++) {
-        if (RigidBodyOwners[i] == NULL)
+        if (PhysicsObjects[i] == NULL)
             continue;
         RigidBody *body = Simulation_GetRigidBody(Sim, 0, i);
-        if (body->sleepState == kAwake)
+        if (body->sleepState == RigidBody::kAwake)
             Process(i, body);
     }
     for (int i = 0; i < kSimpleBodies; i++) {

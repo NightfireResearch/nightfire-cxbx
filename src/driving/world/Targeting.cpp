@@ -5,7 +5,10 @@
 #include "../../helpers.h"
 #include "../engine/CoreFoundation.h"      // ThrowLengthError
 #include "../engine/GameInterfaces.hpp"    // GHud
+#include "../engine/MissionManager.h"
 #include "../engine/UMemory.hpp"
+#include "../physics/RigidBody.h"
+#include "../physics/SimpleRigidBody.h"
 #include "../platform/RealMath.h"
 
 #include <bit>
@@ -64,41 +67,6 @@ struct RRendererFields {
 };
 static_assert(offsetof(RRendererFields, fieldOfViewScale) == 0x58, "RRenderer layout");
 
-// A rigid body of the simulation (only the fields read here)
-struct RigidBodyFields {
-    uint8_t unknown00[0x10];
-    Coord3 position;            // +0x10
-    uint32_t unknown1c;
-    Coord3 velocity;            // +0x20
-    uint8_t unknown2c[0x30];
-    const MATRIX4 *matrix;      // +0x5c
-};
-static_assert(offsetof(RigidBodyFields, matrix) == 0x5c, "rigid body layout");
-
-enum PhysicsObjectFlags : uint8_t {
-    kPhysicsSimpleBody = 0x01,  // its body is one of the simulation's simple rigid bodies
-};
-
-// A physics object (only the fields read here)
-struct PhysicsObjectFields {
-    uint32_t vtable;
-    uint8_t unknown04[0x44];
-    uint8_t flags;              // +0x48 PhysicsObjectFlags
-    uint8_t unknown49;
-    int16_t rigidBody;          // +0x4a its body's number
-};
-static_assert(offsetof(PhysicsObjectFields, rigidBody) == 0x4a, "physics object layout");
-
-// What PVehicle::GetPhysics answers (only the fields read here)
-struct VehiclePhysicsFields {
-    uint8_t unknown00[0xbc];
-    int32_t unknownBC;          // +0xbc
-    int32_t unknownC0;          // +0xc0
-};
-
-// The player's vehicle (a PVehicle, a physics object)
-struct PVehicleFields : PhysicsObjectFields {};
-
 enum AIVehicleKind : int32_t {
     kAIVehicleRigidBody = 1,    // its physics object's body is a rigid body
     kAIVehicleSimpleBody = 2,   // ... a simple one
@@ -119,14 +87,6 @@ struct AICharacterFields {
     uint32_t vtable;
     uint8_t unknown04[0x3c];
     Coord3 position;            // +0x40
-};
-
-// The mission manager (only the fields read here)
-struct SMissionManagerFields {
-    uint8_t unknown000[0x474];
-    int32_t unknown474;         // +0x474 3 or 4: no targeting
-    uint8_t unknown478[0x78];
-    int32_t unknown4f0;         // +0x4f0 non-zero: no targeting
 };
 
 struct WeaponSlot {
@@ -160,17 +120,15 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 #define SimState I32_AT(0x00234e24)
 #define SimTimeStep FLOAT_AT(0x00234e30)                         // the simulation's step, in seconds
 #define SimStepCount I32_AT(0x00234e34)
-#define playerPhysicsObject (*(PVehicleFields ***)0x00234e40)
-#define glbMissionManager (*(SMissionManagerFields **)0x00239220)
+#define playerPhysicsObject (*(RigidVehicle ***)0x00234e40)
 #define WeaponManager (*(SWeaponManagerFields **)0x0023923c)
 
 // ---- calls to originals not ported
 
-#define Simulation_GetRigidBody ((RigidBodyFields *(__fastcall *)(void *, int, int body))0x000b2700)
-#define Simulation_GetSimpleRigidBody ((RigidBodyFields *(__fastcall *)(void *, int, int body))0x000b2730)
-#define AIVehicle_GetPhysicsObject ((PhysicsObjectFields *(__fastcall *)(AIVehicle *, int))0x00035840)
+#define Simulation_GetRigidBody ((RigidBody *(__fastcall *)(void *, int, int body))0x000b2700)
+#define Simulation_GetSimpleRigidBody ((SimpleRigidBody *(__fastcall *)(void *, int, int body))0x000b2730)
+#define AIVehicle_GetPhysicsObject ((PhysicsObject *(__fastcall *)(AIVehicle *, int))0x00035840)
 #define AIVehicle_GetPosition ((const Coord3 *(__fastcall *)(AIVehicle *, int))0x000359e0)
-#define PhysicsObject_GetHitPoints ((double (__fastcall *)(PhysicsObject *, int))0x0006f450)
 #define RCamera_Copy ((RCamera *(__fastcall *)(RCamera *, int, const RCamera *other))0x00096980)
 #define RCamera_CreateMatrix4Inv ((void (__fastcall *)(RCamera *, int))0x000784a0)
 #define RViewCamera_AspectRatio ((double (__fastcall *)(RViewCamera *, int))0x00096960)
@@ -249,10 +207,6 @@ __declspec(naked) float Tangent(double radians) {
     }
 }
 
-const PhysicsObjectFields *Fields(const PhysicsObject *object) {
-    return reinterpret_cast<const PhysicsObjectFields *>(object);
-}
-
 const AIVehicleFields *Fields(const AIVehicle *vehicle) {
     return reinterpret_cast<const AIVehicleFields *>(vehicle);
 }
@@ -261,23 +215,13 @@ AICharacterFields *Fields(AICharacter *character) {
     return reinterpret_cast<AICharacterFields *>(character);
 }
 
-// A physics object's body
-const RigidBodyFields *BodyOf(const PhysicsObjectFields *object) {
-    if (object->flags & kPhysicsSimpleBody)
-        return Simulation_GetSimpleRigidBody(Sim, 0, object->rigidBody);
-    return Simulation_GetRigidBody(Sim, 0, object->rigidBody);
-}
-
 // The player's vehicle's body (always a rigid body)
-const RigidBodyFields *PlayerBody() {
-    return Simulation_GetRigidBody(Sim, 0, (*playerPhysicsObject)->rigidBody);
+const RigidBody *PlayerBody() {
+    return (*playerPhysicsObject)->GetRigidBody();
 }
 
-// PVehicle::GetPhysics on the player's vehicle (its vtable's slot 57)
-const VehiclePhysicsFields *PlayerPhysics() {
-    typedef VehiclePhysicsFields *(PVehicleFields::*GetPhysicsMethod)();
-    PVehicleFields *vehicle = *playerPhysicsObject;
-    return (vehicle->*XbeVirtual<GetPhysicsMethod>(vehicle, 57))();
+const RigidVehiclePhysics *PlayerPhysics() {
+    return (*playerPhysicsObject)->GetPhysics();
 }
 
 // AICharacter::IsAlive (its vtable's slot 1)
@@ -409,7 +353,7 @@ void WTargetable::UpdatePosition() {
     case kTargetPhysicsObject:
         if (physics == NULL)
             break;
-        position = BodyOf(Fields(physics))->position;
+        position = *physics->GetPosition();
         zone.SetPosition(&position);
         break;
     case kTargetCharacter:
@@ -456,17 +400,18 @@ bool WTargetable::GetVelocity(Coord3 *velocity) {
     case kTargetPhysicsObject:
         if (physics == NULL)
             return false;
-        *velocity = BodyOf(Fields(physics))->velocity;
+        *velocity = *physics->GetLinearVelocity();
         return true;
     case kTargetVehicle:
         if (vehicle == NULL || !Fields(vehicle)->unknown68)
             break;
         if (Fields(vehicle)->kind == kAIVehicleRigidBody) {
-            *velocity = Simulation_GetRigidBody(Sim, 0, AIVehicle_GetPhysicsObject(vehicle, 0)->rigidBody)->velocity;
+            *velocity = Simulation_GetRigidBody(Sim, 0, AIVehicle_GetPhysicsObject(vehicle, 0)->rigidBodySlot)->velocity;
             return true;
         }
         if (Fields(vehicle)->kind == kAIVehicleSimpleBody) {
-            *velocity = Simulation_GetSimpleRigidBody(Sim, 0, AIVehicle_GetPhysicsObject(vehicle, 0)->rigidBody)->velocity;
+            *velocity =
+                Simulation_GetSimpleRigidBody(Sim, 0, AIVehicle_GetPhysicsObject(vehicle, 0)->rigidBodySlot)->velocity;
             return true;
         }
         return false;
@@ -630,7 +575,7 @@ void WTargetPicker::UpdateTargets() {
         if (target->updateCountdown != 0)
             continue;
         if (target->ownerType == kTargetPhysicsObject) {
-            if (!(PhysicsObject_GetHitPoints(target->physics, 0) > 0.0))
+            if (!(target->physics->GetHitPoints() > 0.0))
                 continue;
         } else if (target->ownerType == kTargetCharacter) {
             if (!IsAlive(target->character))
@@ -662,7 +607,7 @@ void WTargetPicker::UpdateTargets() {
     if (count > 0)
         Crt_qsort(sorted, count, sizeof(sorted[0]), kSortCompares[sortMode]);
 
-    SMissionManagerFields *missions = glbMissionManager;
+    SMissionManager *missions = glbMissionManager;
     bool suspended = missions->unknown474 == kMissionState3 || missions->unknown474 == kMissionState4 ||
                      SimState == kSimState3 || missions->unknown4f0 != 0;
     if (active && !suspended) {
@@ -696,12 +641,12 @@ void WTargetPicker::UpdateSelection() {
         aim[0] = *MatrixRow(&camera->matrix, 3);
         VU0_v4scaleadd(RPlayerCamera_GetForwardAimVec4(camera, 0, 1.0f), kAimDistance, &aim[0], &worldTarget);
     } else {
-        const RigidBodyFields *body = PlayerBody();
+        const RigidBody *body = PlayerBody();
         aim[0].x = body->position.x;
         aim[0].y = body->position.y;
         aim[0].z = body->position.z;
         aim[0].w = 1.0f;
-        VU0_v4scaleadd(MatrixRow(body->matrix, 2), kCarAimDistance, &aim[0], &worldTarget);
+        VU0_v4scaleadd(MatrixRow(&body->info->orientation, 2), kCarAimDistance, &aim[0], &worldTarget);
     }
     aim[1].x = worldTarget.x;
     aim[1].y = worldTarget.y;

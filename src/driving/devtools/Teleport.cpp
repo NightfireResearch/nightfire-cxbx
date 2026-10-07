@@ -10,6 +10,11 @@
 #include "RoadNetShadow.h"
 #include "RoadNavShadow.h"
 #include "TargetShadow.h"
+#include "PhysObjShadow.h"
+#include "RigidBasicsShadow.h"
+#include "RigidCoreShadow.h"
+#include "RigidResolveShadow.h"
+#include "RigidCollideShadow.h"
 #include "GeomShadow.h"
 
 #include <windows.h>
@@ -155,6 +160,11 @@ void Teleport_Tick(void) {
         RoadNetShadow_Run();   // NIGHTFIRE_ROADNETSHADOW=1 only
         RoadNavShadow_Run();   // NIGHTFIRE_ROADNAVSHADOW=1 only
         TargetShadow_Run();   // NIGHTFIRE_TARGETSHADOW=1 only
+        PhysObjShadow_Run();   // NIGHTFIRE_PHYSOBJSHADOW=1 only
+        RigidBasicsShadow_Run();   // NIGHTFIRE_RIGIDBASICSSHADOW=1 only
+        RigidCoreShadow_Run();   // NIGHTFIRE_RIGIDCORESHADOW=1 only
+        RigidResolveShadow_Run();   // NIGHTFIRE_RIGIDRESOLVESHADOW=1 only
+        RigidCollideShadow_Run();   // NIGHTFIRE_RIGIDCOLLIDESHADOW=1 only
         char text[256] = "";
         DWORD fromEnv = GetEnvironmentVariableA("NIGHTFIRE_TELEPORT", text, sizeof(text));
         if (fromEnv == 0 || fromEnv >= sizeof(text))

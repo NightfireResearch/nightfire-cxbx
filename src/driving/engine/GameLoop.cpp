@@ -7,6 +7,7 @@
 #include "ActionQueue.hpp"
 #include "CoreFoundation.h"
 #include "IOModule.hpp"
+#include "MissionManager.h"
 #include "PlayMPC.hpp"
 #include "SimRandom.h"
 #include "UFileLoader.h"
@@ -22,6 +23,7 @@
 #include "../eagl/Realgraph.h"
 #include "../eagl/RenderContext.h"
 #include "../eagl/View.h"
+#include "../physics/RigidBody.h"
 #include "../platform/FileSys.h"
 #include "../platform/RealMemory.h"
 #include "../platform/RealPrint.h"
@@ -134,10 +136,8 @@ const char kCarModels[] = "data\\car\\model\\";
 #define GlobalActionQueue (*(ActionQueue *)0x001e4870)
 #define Sim ((void *)0x00233ff0)                  // the Simulation
 #define SimState I32_AT(0x00234e24)               // Sim.simState
-#define glbMissionManager (*(uint8_t **)0x00239220)
-#define kMissionManagerPlayerHealth 0x49c         // &SMissionManager::playerHealth
 #define WeaponManager (*(void **)0x0023923c)
-#define playerPhysicsObject (*(void ***)0x00234e40)
+#define playerPhysicsObject (*(RigidVehicle ***)0x00234e40)
 #define CollisionManager (*(void **)0x00239a70)
 #define fActorDatabase (*(void **)0x001dd9a0)
 #define ASystem_fgSystem (*(void **)0x00243b34)
@@ -210,7 +210,6 @@ typedef const char *DiscErrorText[3];
 #define RPlayerCamera_Shutdown ((void (*)(void))0x00080a60)
 #define RCameraIniLoader_LoadFile ((void (*)(void))0x00081880)
 #define Draw_DrawBox ((void (*)(float, float, float, float, uint32_t))0x000760e0)
-#define RigidBody_InitRigidBodySystem ((void (*)(void))0x000acde0)
 #define RayShell_Reset ((void (*)(void))0x00071d40)
 #define Simulation_Reset ((void (__fastcall *)(void *, int))0x000b49f0)
 #define Simulation_CleanUpObjects ((void (__fastcall *)(void *, int))0x000b4750)
@@ -225,7 +224,6 @@ typedef const char *DiscErrorText[3];
 #define PVehicle_GetNamedAttribs ((AttributeSet *(*)(AttributeSet *, const char *))0x0006f810)
 #define PVehicle_RenderNameAttrib ((const char *(*)(AttributeSet *))0x0006f860)
 #define PBondCar_InitializeBondCarGlobals ((void (*)(void))0x00061ae0)
-#define PhysicsObject_SetHitPointLoc ((void (__fastcall *)(void *, int, void *))0x0006f7e0)
 #define WCollisionMgr_GetWorldHeightAtPoint ((void (__fastcall *)(void *, int, float *, float *, bool))0x000bf210)
 #define AIElementController_Construct ((void (*)(void *))0x000285b0)
 #define AIVehicleController_Get ((void *(*)(void))0x00035c00)
@@ -263,11 +261,9 @@ typedef const char *DiscErrorText[3];
 #define ABank_End ((void **(*)(void **))0x00126930)
 #define BankIterator_Increment ((void (__fastcall *)(void **, int))0x00019d80)
 
-// The car's type name, slot 15 of the player's physics object's vtable.
+// The car's type name (a virtual method of the player's vehicle).
 static const char *PlayerCarTypeName() {
-    typedef const char *(__fastcall *NameFn)(void *, int);
-    void *car = *playerPhysicsObject;
-    return (*(NameFn *const *)car)[15](car, 0);
+    return (*playerPhysicsObject)->GetCarType();
 }
 
 // MissionName against a track name, as the original compares them: the name's bytes and its terminator.
@@ -532,7 +528,7 @@ void Bond_StartUpSystem() {
     AttributeSet sentryDefaults, sentry;
     sentryDefaults.Construct("sentry", "default");
     sentry.Construct("sentry", "sentry");
-    RigidBody_InitRigidBodySystem();
+    RigidBody::InitRigidBodySystem();
 
     GLoadingScreen_Status("Loading track file");
     WWorld::InitSingleton();
@@ -1009,13 +1005,13 @@ void GameLoop_StartUp(int trafficSeed) {
 
     GLoadingScreen_Status("Spawn player car");
     Simulation_SpawnCarObject(Sim, 0, 0, carType, 0, orientation, position);
-    PhysicsObject_SetHitPointLoc(*playerPhysicsObject, 0, glbMissionManager + kMissionManagerPlayerHealth);
+    (*playerPhysicsObject)->SetHitPointLoc(&glbMissionManager->playerHealth);
     AIRoadSpawn_Init();
     AIVehicleController_Get();
     TrafficSeed = (int16_t)trafficSeed;
     AIVehicleController_CreateSimTrafficCars(AIVehicleController_Get(), 0, true);
     AIVehicleController_RegisterSimCarList(AIVehicleController_Get(), 0);
-    SWeaponManager_SetPlayerCar(WeaponManager, 0, ((void **)*playerPhysicsObject)[0x4c / 4]);
+    SWeaponManager_SetPlayerCar(WeaponManager, 0, (*playerPhysicsObject)->renderObject);
     if (fActorDatabase != NULL) {
         GLoadingScreen_Status("Init AI Characters");
         AICharacter_Init();

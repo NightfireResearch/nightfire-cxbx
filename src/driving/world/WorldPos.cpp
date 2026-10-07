@@ -75,7 +75,7 @@ bool WWorldPos::FindClosestFace(const InstanceList *instances, const Coord3 *poi
     valid = 0;
     bool found = false;
     float nearest = kNoFace;
-    StripTriangle candidate;
+    StripTriangle candidate = {};   // the original leaves corner[0]'s count word as stack garbage
     float height;
     for (const InstanceListEntry *entry = instances->first; entry != instances->last; entry++) {
         candidate.corner[2].tag.type = 0;
@@ -103,7 +103,7 @@ bool WWorldPos::FindClosestFace(const InstanceList *instances, const Coord4 *fro
         return false;
     valid = 0;
     float nearest = kNoFace;
-    StripTriangle candidate;
+    StripTriangle candidate = {};   // the original leaves corner[0]'s count word as stack garbage
     float height;
     for (const InstanceListEntry *entry = instances->first; entry != instances->last; entry++) {
         candidate.corner[2].tag.type = 0;

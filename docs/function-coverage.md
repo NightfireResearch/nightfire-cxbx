@@ -211,14 +211,14 @@ where to change it.
 | game.missions | 273 | 0 | 0 | 273 | 0% | 33 | 0% |
 | game.vehicles | 193 | 0 | 0 | 193 | 0% | 62 | 0% |
 | game.weapons | 178 | 0 | 6 | 172 | 3% | 43 | 0% |
-| **engine** | 3990 | 1019 | 1021 | 1950 | **51%** | 526 | 43% |
+| **engine** | 3990 | 1114 | 1050 | 1826 | **54%** | 526 | 48% |
 | engine.anim | 415 | 2 | 5 | 408 | 2% | 54 | 0% |
 | engine.audio | 270 | 0 | 1 | 269 | 0% | 35 | 0% |
 | engine.camera | 273 | 0 | 1 | 272 | 0% | 60 | 0% |
 | engine.core | 213 | 155 | 56 | 2 | 99% | 25 | 100% |
 | engine.data | 554 | 454 | 76 | 24 | 96% | 79 | 100% |
 | engine.input | 107 | 42 | 15 | 50 | 53% | 12 | 47% |
-| engine.physics | 156 | 22 | 0 | 134 | 14% | 33 | 11% |
+| engine.physics | 156 | 117 | 29 | 10 | 94% | 33 | 100% |
 | engine.render | 760 | 7 | 1 | 752 | 1% | 114 | 3% |
 | engine.static | 798 | 22 | 776 | 0 | 100% | 26 | 100% |
 | engine.world | 444 | 315 | 90 | 39 | 91% | 89 | 94% |
@@ -236,10 +236,10 @@ where to change it.
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6842 | 1022 | 1097 | 4723 | **31%** | 1000 | 23% |
+| **game + engine** | 6842 | 1117 | 1126 | 4599 | **33%** | 1000 | 26% |
 | **platform + system** | 2893 | 1527 | 1018 | 348 | **88%** | 506 | 93% |
 | **  without the C runtime** | 2473 | 1523 | 950 | 0 | **100%** | 462 | 100% |
-| **everything** | 9735 | 2549 | 2115 | 5071 | **48%** | 1506 | 46% |
+| **everything** | 9735 | 2644 | 2144 | 4947 | **49%** | 1506 | 48% |
 
 - **The engine's core and data layers are done (4 October 2026): `engine.core` and `engine.data`, 100% by bytes**
   (docs/driving/core-data.md): memory (UMemory, new/delete), reference counters, data groups, singletons, the
@@ -258,6 +258,10 @@ where to change it.
   `engine.world` is 94% ours by bytes, all but WRender (the world's drawing). Five shadow tests match the originals
   on the loaded track, and lockstep missions 1-8 match the baseline. Game and engine together are now 31% done by
   functions, 23% by bytes.
+- **Physics is done (7 October 2026, docs/driving/physics.md):** RigidBody (integration, levers, ground, world and
+  object collision, impulses, damage), SimpleRigidBody, PhysicsObject, PhysicsNamespace and Newton - 95 functions;
+  `engine.physics` is 100% ours by bytes. Five shadow tests match the originals on copies of the live bodies, and
+  lockstep missions 1-8 match the baseline. Game and engine together are now 33% done by functions, 26% by bytes.
 - **Every system library but the C runtime is done: D3D (with D3DX and XGRPH), DSOUND, XPP and XAPI at 100%.**
   The C runtime (327 live, 12%) is left to go by itself, as in the action engine: game code calls it everywhere, and
   it goes as that code becomes ours. How the rest got there (2 October 2026):

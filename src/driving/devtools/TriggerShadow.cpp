@@ -31,7 +31,7 @@
 //     (every shape, directional or not, rotated or not, sizes changed): segments through, near and past them (some
 //     level, some along z), points and radii round them and on their top and bottom, rigid bodies (sphere, circle
 //     and height, box against box with a synthetic RigidBodyInfo) and simple bodies; the answers compared.
-//   - The four Process overloads on the live trigger array: synthetic rigid bodies (each unknown6d), simple bodies
+//   - The four Process overloads on the live trigger array: synthetic rigid bodies (each kind), simple bodies
 //     (each type, the player's or not, when an owner slot is in use), path instances (dimensions packed together or
 //     separately) and a ray shell (written into RayShell's table, slot 0) at every trigger, and the live bodies as
 //     Update finds them. The array is put back before each run with an empty event list on every trigger (so FireEvents
@@ -297,16 +297,16 @@ void MakeRigidBody(const WTrigger &trigger, RigidBody *body) {
     body->position = Around(trigger);
     body->velocity = { Uniform(-30.0f, 30.0f), Uniform(-5.0f, 5.0f), Uniform(-30.0f, 30.0f) };
     body->info = &g_info;
-    body->unknown6d = uint8_t(RandomInt(4));
+    body->kind = int8_t(RandomInt(4));
     body->sleepState = 2;
     body->radius = Uniform(0.0f, 6.0f);
 }
 
-void MakeSimpleBody(const WTrigger &trigger, SimpleRigidBody *body, int ownerIndex) {
+void MakeSimpleBody(const WTrigger &trigger, SimpleRigidBody *body, int slot) {
     memset(body, 0, sizeof(*body));
     body->position = Around(trigger);
     body->bodyType = uint8_t(RandomInt(10));
-    body->ownerIndex = int8_t(ownerIndex);
+    body->slot = int8_t(slot);
     body->flags = uint16_t(RandomInt(5) != 0 ? SimpleRigidBody::kTouchesTriggers : 0);
     body->velocity = { Uniform(-30.0f, 30.0f), Uniform(-5.0f, 5.0f), Uniform(-30.0f, 30.0f) };
     body->radius = Uniform(0.0f, 3.0f);
