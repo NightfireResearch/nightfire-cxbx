@@ -391,14 +391,23 @@ static int ScriptFrame(void) {
         case Step::UNLOCKSTEST:
             UnlocksShadow_Run();
             break;
-        case Step::LEVEL:
-            printf("[menuscript] f=%u level 0x%08x\n", g_frame, g_steps[g_stepIndex].frames);
+        case Step::LEVEL: {
+            // ResetMap_LevelToLoad only acts in play (state 2) and states 7, 8, 0xd and 0xe; during a cutscene it
+            // does nothing. So wait for one of those (pressing A now and then to skip the cutscene), for up to 60 s.
+            // Setting NextLevelHashcode and fading (state 7) is not enough: the fade reloaded the current level.
+            uint state = GameFlow_GetState();
+            bool canLoad = state == 2 || state == 7 || state == 8 || state == 0xd || state == 0xe;
+            if (!canLoad && g_stepFrames < 3600) {
+                g_stepFrames++;
+                return g_stepFrames % 60 == 0 ? BTN_A : BTN_NONE;
+            }
+            printf("[menuscript] f=%u level 0x%08x%s (state %u)\n", g_frame, s.frames,
+                   canLoad ? "" : ": TIMED OUT waiting for play", state);
             fflush(stdout);
-            // ResetMap_LevelToLoad only acts from the menu and loading states; mid-level the fade (state 7)
-            // goes on to load NextLevelHashcode, so that is what to set
-            GameState.NextLevelHashcode = (HASHCODE)g_steps[g_stepIndex].frames;
+            ResetMap_LevelToLoad((HASHCODE)s.frames, false, true);
             GameFlow_PushState(7, 60.0f, 0xff);
             break;
+        }
         case Step::TELEPORT: {
             ActionPlace place;
             if (ActionTeleport_Parse(g_steps[g_stepIndex].text, &place))
