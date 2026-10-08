@@ -133,7 +133,7 @@ void WRender::FindVisibleTreeNodesAndCurtains(WMapNode *node, const Coord4 *box,
     CurrentList->nodes[CurrentList->nodeCount] = node;
     CurrentList->nodeCount++;
 
-    Coord4 eye = camera->position;
+    Coord4 eye = *MatrixRow(&camera->matrix, 3);
     const uint16_t *indices = node->IndexList();
     for (int i = 0; i < node->numCurtains; i++) {
         WVisCurtain *curtain = &curtains[indices[node->numInstances + i]];

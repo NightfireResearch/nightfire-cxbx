@@ -2,6 +2,7 @@
 
 #include "RoadNav.h"
 #include "Grid.h"
+#include "../camera/CameraSpline.h"
 #include "../engine/SimRandom.h"
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
@@ -29,14 +30,8 @@
 #define WRoadNetwork_GetLinePointIntersect ((double (__fastcall *)(WRoadNetwork *, int, const void *, const void *, const void *, void *, bool))0x000c9000)
 #define WRoadNetwork_GetSegmentPointIntersect ((double (__fastcall *)(WRoadNetwork *, int, WRoadSegment *, const void *, void *, bool))0x000c9f70)
 
-#define RCameraSpline_Construct ((RCameraSpline* (__fastcall *)(void *, int))0x0007acd0)
-#define RCameraSpline_Destruct ((void (__fastcall *)(RCameraSpline *, int))0x0007a9b0)
-#define RCameraSpline_BuildSplineEx ((void (__fastcall *)(RCameraSpline *, int, const Coord3 *, const Coord3 *, const Coord3 *, const Coord3 *))0x0007a650)
-#define RCameraSpline_EvaluateSpline ((void (__fastcall *)(RCameraSpline *, int, float, Coord4 *))0x0007a530)
-
 #define Sprintf ((int (__cdecl *)(char *, const char *, ...))0x00132767)
 
-static constexpr unsigned kSplineSize = 0x70;              // sizeof(RCameraSpline)
 static constexpr float kNoDirection = -2.0f;                // below any dot product of two unit vectors
 static constexpr float kMinCurveLength = 0.01f;
 static constexpr float kNoSegment = 20000.0f;               // FindClosestSegmentInd's starting distance
@@ -110,15 +105,14 @@ static void SetCurve(WRoadNav *nav, WRoadSegment *road, float offset) {
 }
 
 static void BuildSpline(WRoadNav *nav) {
-    RCameraSpline_BuildSplineEx(nav->spline, 0, &nav->boundStart, &nav->startControl, &nav->boundEnd,
-                                &nav->endControl);
+    nav->spline->BuildSplineEx(&nav->boundStart, &nav->startControl, &nav->boundEnd, &nav->endControl);
 }
 
 // The position t along the curve
 static void PlaceOnCurve(WRoadNav *nav, WRoadSegment *road) {
     if (road->flags & kSegmentCurved) {
         Coord4 point;
-        RCameraSpline_EvaluateSpline(nav->spline, 0, nav->t, &point);
+        nav->spline->EvaluateSpline(nav->t, &point);
         nav->position = Xyz(point);
         nav->roadPoint = Xyz(point);
     } else {
@@ -131,8 +125,8 @@ static void PlaceOnCurve(WRoadNav *nav, WRoadSegment *road) {
 
 // FUNC_AT(0x000ca090)
 WRoadNav* WRoadNav::Construct() {
-    void *block = UMemory::FastAlloc(kSplineSize, "RCameraSpline");
-    spline = block != NULL ? RCameraSpline_Construct(block, 0) : NULL;
+    RCameraSpline *block = static_cast<RCameraSpline *>(UMemory::FastAlloc(sizeof(RCameraSpline), "RCameraSpline"));
+    spline = block != NULL ? block->Construct() : NULL;
     Reset();
     return this;
 }
@@ -140,8 +134,8 @@ WRoadNav* WRoadNav::Construct() {
 // FUNC_AT(0x000ca100)
 void WRoadNav::Destruct() {
     if (spline != NULL) {
-        RCameraSpline_Destruct(spline, 0);
-        UMemory::FastFree(spline, kSplineSize);
+        spline->Destruct();
+        UMemory::FastFree(spline, sizeof(RCameraSpline));
     }
 }
 
@@ -402,7 +396,7 @@ void WRoadNav::InitAtSegment(short segmentIndex, int8_t laneNumber, float along,
         // only roadPoint, here
         BuildSpline(this);
         Coord4 point;
-        RCameraSpline_EvaluateSpline(spline, 0, t, &point);
+        spline->EvaluateSpline(t, &point);
         roadPoint = Xyz(point);
     } else {
         RoadNetwork->GetPointOnSegment(&boundStart, &boundEnd, road, t, &position);

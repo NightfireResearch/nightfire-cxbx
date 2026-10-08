@@ -380,6 +380,15 @@ add_library(drivinginject SHARED
   src/driving/world/Targeting.cpp
   src/driving/world/SoundGroup.cpp
   src/driving/world/Render.cpp
+  src/driving/camera/Camera.cpp
+  src/driving/camera/WorldCamera.cpp
+  src/driving/camera/CameraIniLoader.cpp
+  src/driving/camera/CameraSpline.cpp
+  src/driving/camera/DirectorQueue.cpp
+  src/driving/camera/PlayerCamState.cpp
+  src/driving/camera/PlayerCameraA.cpp
+  src/driving/camera/PlayerCameraB.cpp
+  src/driving/camera/PlayerCameraC.cpp
   src/driving/physics/PhysicsObject.cpp
   src/driving/physics/SimpleRigidBody.cpp
   src/driving/physics/PhysicsNamespace.cpp
@@ -405,6 +414,11 @@ add_library(drivinginject SHARED
   src/driving/devtools/RigidResolveShadow.cpp
   src/driving/devtools/RigidCollideShadow.cpp
   src/driving/devtools/RenderShadow.cpp
+  src/driving/devtools/ViewCamShadow.cpp
+  src/driving/devtools/CamDataShadow.cpp
+  src/driving/devtools/PlayerCamShadowA.cpp
+  src/driving/devtools/PlayerCamShadowB.cpp
+  src/driving/devtools/PlayerCamShadowC.cpp
   src/driving/devtools/CarpShadow.cpp
   src/driving/engine/UGroup.cpp
   src/driving/data/UData.cpp

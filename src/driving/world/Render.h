@@ -18,16 +18,7 @@
 #include "Tree.h"                         // WMapNode, WRenderSortEntry
 #include "VisCurtain.h"
 #include "World.h"                        // ProcAnimState; CARP::Instance
-
-// The engine's camera (RCamera, 0xc0 bytes), as far as WRender reads it
-struct RCamera {
-    uint32_t vtable;                    // +0x00
-    uint8_t unknown04[0xc];
-    float axes[3][4];                   // +0x10 the camera's frame, rows 0-2
-    Coord4 position;                    // +0x40 row 3
-    uint8_t unknown50[0x70];
-};
-static_assert(sizeof(RCamera) == 0xc0, "RCamera is 192 bytes");
+#include "../camera/Camera.h"             // RCamera
 
 constexpr int kMaxVisibleNodes = 0x300;
 constexpr int kMaxDraws = 0x400;

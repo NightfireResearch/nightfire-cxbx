@@ -66,7 +66,10 @@ struct LaunchPage {
     uint8_t unknowna24[0x4];
     int32_t audioMode;          // +0xa28
     int32_t subtitles;          // +0xa2c non-zero: subtitles on
-    uint8_t unknowna30[0x1c];
+    uint8_t unknowna30[0x10];
+    int32_t autoAim;            // +0xa40 zero: no auto-drive target angles (name ours)
+    int32_t unknowna44;         // +0xa44 the auto-drive camera's lock-on input reads it
+    uint8_t unknowna48[0x4];
 
     // Copies `text` into loaderReady (0x00059900).
     void SetLoaderReady(const char *text);
@@ -81,7 +84,8 @@ static_assert(sizeof(LaunchPage) == 0xa4c, "the launch page is 0xa4c bytes");
 static_assert(offsetof(LaunchPage, missionName) == 0x4f4 && offsetof(LaunchPage, localeFile) == 0x540 &&
                   offsetof(LaunchPage, bootCount) == 0x618 && offsetof(LaunchPage, handOver) == 0x960 &&
                   offsetof(LaunchPage, missionNum) == 0x974 && offsetof(LaunchPage, language) == 0x988 &&
-                  offsetof(LaunchPage, flags) == 0x9a0 && offsetof(LaunchPage, subtitles) == 0xa2c,
+                  offsetof(LaunchPage, flags) == 0x9a0 && offsetof(LaunchPage, subtitles) == 0xa2c &&
+                  offsetof(LaunchPage, autoAim) == 0xa40,
               "launch page offsets");
 
 // A key/value line in a tuning file (Ghidra: OptionParser, 8 bytes): where the value after `key` starts in the

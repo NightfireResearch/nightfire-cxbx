@@ -75,12 +75,12 @@
 #define TestData ((void *)0x001c45d0)
 #define ReflStretch ((void *)0x001c3ef0)
 
-constexpr uint32_t kGlobalSymbolTableVtable = 0x00190e18;
+constexpr uint32_t kGlobalSymbolTableVtable = 0x00190e18;   // GameSymbolTable's (camera/CameraSpline.h)
 constexpr uint32_t kEAGLNamespaceVtable = 0x001913b4;
 constexpr uint32_t kCharNamespaceAtExit = 0x0015ce40;
 constexpr int kCallbackSlots = 16;
-constexpr uint32_t kCallbackAt0007ae90 = 0x0007ae90;   // another package's callback
-constexpr uint32_t kCallbackAt000a59c0 = 0x000a59c0;   // ditto
+constexpr uint32_t kCallbackAt0007ae90 = 0x0007ae90;   // NoSymbolCallback (camera/CameraSpline.h), by its address
+constexpr uint32_t kCallbackAt000a59c0 = 0x000a59c0;   // not ported
 constexpr uint32_t kRegisterSymbolsAt = 0x0007b020;
 constexpr uint32_t kResolveEAGLReferencesAt = 0x0007b8a0;
 

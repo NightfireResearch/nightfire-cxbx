@@ -7,6 +7,8 @@
 #include "../engine/GameInterfaces.hpp"    // GHud
 #include "../engine/MissionManager.h"
 #include "../engine/UMemory.hpp"
+#include "../camera/CameraSpline.h"     // RCameraMath
+#include "../camera/PlayerCamera.h"     // RCamera, RViewCamera, RPlayerCamera, CameraViews
 #include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
 #include "../platform/RealMath.h"
@@ -27,33 +29,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 namespace {
-
-// The engine's camera (RCamera, 0xc0 bytes; RCamera_Copy copies these fields).
-struct RCamera {
-    uint32_t vtable;            // +0x00
-    uint8_t unknown04[0xc];
-    MATRIX4 matrix;             // +0x10 the camera's frame; row 3 its position
-    Coord4 unknown50;
-    uint8_t unknown60;
-    uint8_t unknown61[0xf];
-    MATRIX4 inverse;            // +0x70 made by CreateMatrix4Inv
-    uint8_t unknownB0;
-    uint8_t unknownB1[3];
-    float fieldOfView;          // +0xb4 in degrees
-    uint8_t unknownB8[8];
-};
-static_assert(sizeof(RCamera) == 0xc0, "RCamera is 192 bytes");
-
-struct RViewCamera {
-    uint32_t unknown00;
-    RCamera *camera;            // +0x04
-};
-
-// One of the renderer's camera views (RRenderHigh sets the table): the view and its camera (an RPlayerCamera).
-struct CameraView {
-    RViewCamera *view;
-    RCamera *camera;
-};
 
 // The renderer (only the fields read here)
 struct RRendererFields {
@@ -109,7 +84,6 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 
 // ---- the game's globals
 
-#define CameraViews (*(CameraView **)0x001ec488)                 // (name ours)
 #define fgRenderer (*(RRendererFields **)0x001ebff4)
 #define ViewWidth I32_AT(0x001f2d7c)                             // the view's size in pixels (names ours)
 #define ViewHeight I32_AT(0x001f2d80)
@@ -129,12 +103,6 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 #define Simulation_GetSimpleRigidBody ((SimpleRigidBody *(__fastcall *)(void *, int, int body))0x000b2730)
 #define AIVehicle_GetPhysicsObject ((PhysicsObject *(__fastcall *)(AIVehicle *, int))0x00035840)
 #define AIVehicle_GetPosition ((const Coord3 *(__fastcall *)(AIVehicle *, int))0x000359e0)
-#define RCamera_Copy ((RCamera *(__fastcall *)(RCamera *, int, const RCamera *other))0x00096980)
-#define RCamera_CreateMatrix4Inv ((void (__fastcall *)(RCamera *, int))0x000784a0)
-#define RViewCamera_AspectRatio ((double (__fastcall *)(RViewCamera *, int))0x00096960)
-#define RPlayerCamera_CameraAiming ((uint8_t (__fastcall *)(RCamera *, int))0x00081980)
-#define RPlayerCamera_GetForwardAimVec4 ((const Coord4 *(__fastcall *)(RCamera *, int, float scale))0x00081890)
-#define RCameraMath_GenerateQuat ((void (*)(const Coord4 *direction, Coord4 *quat))0x0007a4e0)
 #define ATargeting_Construct ((ATargeting *(__fastcall *)(ATargeting *, int))0x0012e0f0)
 #define ATargeting_SetState ((void (__fastcall *)(ATargeting *, int, int state))0x0012e120)
 #define GHud_SetTarget ((void (__fastcall *)(GHud *, int, const ScreenPos *cursor))0x000d9f50)
@@ -637,9 +605,9 @@ void WTargetPicker::UpdateSelection() {
     // the world target: along the auto-drive camera's aim, or ahead of the car, up to the world in the way
     Coord4 aim[2];              // a segment from the camera or the car to the target
     if (mode == kTargetingAutoDrive) {
-        RCamera *camera = CameraViews[0].camera;
+        RPlayerCamera *camera = CameraViews[0].camera;
         aim[0] = *MatrixRow(&camera->matrix, 3);
-        VU0_v4scaleadd(RPlayerCamera_GetForwardAimVec4(camera, 0, 1.0f), kAimDistance, &aim[0], &worldTarget);
+        VU0_v4scaleadd(camera->GetForwardAimVec4(1.0f), kAimDistance, &aim[0], &worldTarget);
     } else {
         const RigidBody *body = PlayerBody();
         aim[0].x = body->position.x;
@@ -702,8 +670,8 @@ void WTargetPicker::MoveTargetingCursors() {
 
 // FUNC_AT(0x000ce1b0)
 void WTargetPicker::UpdateAutoDriveTargeting() {
-    RCamera *camera = CameraViews[0].camera;
-    if (RPlayerCamera_CameraAiming(camera, 0) == 1) {
+    RPlayerCamera *camera = CameraViews[0].camera;
+    if (camera->CameraAiming() == 1) {
         autoDriveQuat = kIdentityQuat;
         return;
     }
@@ -716,7 +684,7 @@ void WTargetPicker::UpdateAutoDriveTargeting() {
         VU0_MATRIX4_transpose(&transposed, &camera->matrix);
         VU0_MATRIX4_vect3rotate(&direction, &transposed, &direction);
         Coord4 turn;
-        RCameraMath_GenerateQuat(&direction, &turn);
+        RCameraMath::VU0_GenerateQuat(&direction, &turn);
         VU0_fastqslerp(&autoDriveQuat, &turn, &autoDriveQuat, kAutoDriveTurnRate);
     } else {
         Coord4 identity = kIdentityQuat;
@@ -743,9 +711,9 @@ void WTargetPicker::DrawTargetingSystem() {
 ScreenPos* WTargetPicker::GetScreenPos(ScreenPos *result, const Coord3 *point) {
     RViewCamera *view = CameraViews[0].view;
     RCamera camera;
-    RCamera_Copy(&camera, 0, view->camera);
+    camera.ConstructCopy(view->camera);
     float tangent = Tangent(double(fgRenderer->fieldOfViewScale) * camera.fieldOfView * kDegreesToRadians);
-    RCamera_CreateMatrix4Inv(&camera, 0);
+    camera.CreateMatrix4Inv();
     Coord4 local;
     MATRIX4_TransformPoint(&camera.inverse, point, &local);
     if (local.z <= kNearZ) {
@@ -753,7 +721,7 @@ ScreenPos* WTargetPicker::GetScreenPos(ScreenPos *result, const Coord3 *point) {
         result->y = kBehindCamera;
         return result;
     }
-    double aspect = RViewCamera_AspectRatio(view, 0);
+    double aspect = view->AspectRatio();
     if (fgRenderer->widescreen)
         aspect *= kWidescreenAspect;
     double depth = fabs(local.z);

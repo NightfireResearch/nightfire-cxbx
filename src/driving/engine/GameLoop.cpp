@@ -15,6 +15,8 @@
 #include "UMemory.hpp"
 #include "USingleton.h"
 #include "../Scheduler.hpp"
+#include "../camera/CameraIniLoader.h"
+#include "../camera/PlayerCamera.h"
 #include "../EventManager.hpp"
 #include "../data/AttributeSet.h"
 #include "../data/RCARPFile.h"
@@ -207,8 +209,6 @@ typedef const char *DiscErrorText[3];
 #define RSceneObj_PreLoad ((void (*)(const char *, const char *, const char *))0x000904c0)
 #define RSceneObj_PurgePreloaded ((void (*)(const char *, const char *))0x00090560)
 #define RSceneObj_DestroyAll ((void (*)(void))0x0008dac0)
-#define RPlayerCamera_Shutdown ((void (*)(void))0x00080a60)
-#define RCameraIniLoader_LoadFile ((void (*)(void))0x00081880)
 #define Draw_DrawBox ((void (*)(float, float, float, float, uint32_t))0x000760e0)
 #define RayShell_Reset ((void (*)(void))0x00071d40)
 #define Simulation_Reset ((void (__fastcall *)(void *, int))0x000b49f0)
@@ -725,7 +725,7 @@ void GameLoop_CleanUp() {
     GLoadingScreen_Status("Kill World Camera");
     NullFunction();
     GLoadingScreen_Status("Kill Player Camera");
-    RPlayerCamera_Shutdown();
+    RPlayerCamera::Shutdown();
     GLoadingScreen_Status("Kill PIP Camera");
     GLoadingScreen_Status("Shutdown AI characters");
     AICharacter_Shutdown();
@@ -1016,7 +1016,7 @@ void GameLoop_StartUp(int trafficSeed) {
         GLoadingScreen_Status("Init AI Characters");
         AICharacter_Init();
     }
-    RCameraIniLoader_LoadFile();
+    RCameraIniLoader::LoadFileThunk();
     GLoadingScreen_Status("Leaving StartUp");
     IOModule::GetIOModule()->EnableUpdating(true);
     carAttributes.Destruct();

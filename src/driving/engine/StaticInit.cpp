@@ -16,6 +16,7 @@
 #include "USingleton.h"
 #include "../data/AttributeSet.h"
 #include "../data/SymbolTable.h"
+#include "../camera/CameraSpline.h"
 #include "../eagl/GeoPrimState.h"
 #include "../world/RoadNav.h"
 #include "../world/Targeting.h"
@@ -26,7 +27,6 @@
 
 #define FUN_0001be60 ((void (__fastcall *)(void *, int))0x0001be60)
 #define FUN_0004f400 ((void (__fastcall *)(void *, int))0x0004f400)
-#define RCameraSpline_Destruct ((void (__fastcall *)(void *, int))0x0007a9b0)
 #define FUN_000903a0 ((void (__fastcall *)(void *, int))0x000903a0)
 #define FUN_00094ff0 ((void (__fastcall *)(void *, int))0x00094ff0)
 #define FUN_0011d580 ((void (__fastcall *)(void *, int))0x0011d580)
@@ -133,7 +133,7 @@ void DestroyStatic_00201790(void) {
 }
 // FUNC_AT(0x0015d070)
 void DestroyStatic_0023e100(void) {
-    RCameraSpline_Destruct((void *)0x0023e100, 0);
+    ((RCameraSpline *)0x0023e100)->Destruct();
 }
 // FUNC_AT(0x0015d0d0)
 void DestroyStatic_0023f330(void) {

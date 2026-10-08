@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "../../helpers.h"
+#include "../camera/CameraSpline.h"      // RCameraSpline
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"           // OperatorNew, OperatorDelete
 #include "../platform/RealMath.h"
@@ -17,12 +18,7 @@
 // has the records. WRoadNav's methods sit between these in the game (RoadNav.cpp).
 // ---------------------------------------------------------------------------------------------------------------
 
-class RCameraSpline;
-
 // ---- the game's code not ported yet
-#define RCameraSpline_Construct ((RCameraSpline *(__fastcall *)(RCameraSpline *, int))0x0007acd0)
-#define RCameraSpline_BuildSplineEx ((void (__fastcall *)(RCameraSpline *, int, const Coord3 *start, const Coord3 *startControl, const Coord3 *end, const Coord3 *endControl))0x0007a650)
-#define RCameraSpline_EvaluateSpline ((void (__fastcall *)(RCameraSpline *, int, float t, Coord4 *point))0x0007a530)
 #define Crt_atexit ((int (*)(void (*)()))0x00132a7b)
 
 // GetSegmentCurveStep's static spline and its guard
@@ -423,12 +419,12 @@ void WRoadNetwork::GetSegmentCurveStep(const Coord3 *start, const Coord3 *end, W
                                        Coord3 *out) {
     if (!(CurveSplineGuard & 1)) {
         CurveSplineGuard |= 1;
-        RCameraSpline_Construct(CurveSpline, 0);
+        CurveSpline->Construct();
         Crt_atexit(reinterpret_cast<void (*)()>(kCurveSplineAtExit));
     }
-    RCameraSpline_BuildSplineEx(CurveSpline, 0, start, &segment->startControl, end, &segment->endControl);
+    CurveSpline->BuildSplineEx(start, &segment->startControl, end, &segment->endControl);
     Coord4 point;
-    RCameraSpline_EvaluateSpline(CurveSpline, 0, t, &point);
+    CurveSpline->EvaluateSpline(t, &point);
     out->x = point.x;
     out->y = point.y;
     out->z = point.z;

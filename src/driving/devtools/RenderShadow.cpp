@@ -404,7 +404,7 @@ void TestView(int index, const Coord4 &eye, float yaw, float pitch, float viewRa
     static GenerateCase generate[2];
     memset(generate, 0, sizeof(generate));
     memset(&g_camera, 0, sizeof(g_camera));
-    g_camera.position = eye;
+    *MatrixRow(&g_camera.matrix, 3) = eye;
     if (!SideBySide(RunGenerate, &generate[0], &generate[1]))
         return;
     CheckU32("GenerateCurtainsAndNodes result", index, uint32_t(uintptr_t(generate[0].result)),
