@@ -42,10 +42,11 @@ enum ProcAnimFlags : uint8_t {
 };
 
 // A render instance's proc-anim state ('ps  ' records, 0x20 bytes; Ghidra: ProcAnimState). Open makes the scene
-// object of each state that names an article.
+// object of each state that names an article; the proc-anim functions (anim/ProcAnim.cpp) read its type and parameter.
 struct ProcAnimState {
     uint8_t type;                       // +0x00 (2: the two references are resolved, data/Carp.cpp)
-    uint8_t unknown01[3];
+    uint8_t procAnimType;               // +0x01 ProcAnimByState's
+    uint16_t parameter;                 // +0x02 the proc-anim function's (with a state)
     uint8_t unknown04;
     uint8_t flags;                      // +0x05 ProcAnimFlags
     uint8_t unknown06;
@@ -59,28 +60,41 @@ static_assert(offsetof(ProcAnimState, sceneObj) == 8, "ProcAnimState::sceneObj")
 
 constexpr uint8_t kNoArticle = 0xff;
 
-// An effect of an article (0x40 bytes, a list ended by a zero type)
-enum ArticleEffectType : uint8_t {
-    kArticleEffectEnd = 0,
-    kArticleEffect2 = 2,
-    kArticleEffectGfx = 6,              // its reference is GFX::Trigger's effect
-};
-
-enum ArticleEffectFlags : uint32_t {
-    kArticleEffectFlag01 = 0x01,
-    kArticleEffectFlag10 = 0x10,
-};
-
+// An effect of an article (0x40 bytes, a list ended by a zero type). RAnimEngine::Handle keeps copies of the ones
+// with any of kHandleFlags (Handle::FindEffectByID).
 struct ArticleEffect {
+    enum Flags : uint16_t {
+        kFlag01 = 0x0001,
+        kFlag02 = 0x0002,
+        kFlag04 = 0x0004,
+        kFlag08 = 0x0008,               // Handle::effectMask28
+        kFlag10 = 0x0010,
+        kFlag80 = 0x0080,
+        kFlag200 = 0x0200,              // also on a mirrored instance
+        kFlag1000 = 0x1000,
+        kHandleFlags = kFlag02 | kFlag04 | kFlag08 | kFlag10 | kFlag80 | kFlag1000,   // a handle keeps the effect
+        kMask38Flags = kFlag02 | kFlag04 | kFlag10 | kFlag80,                         // Handle::effectMask38
+    };
+    enum Type : uint8_t {
+        kTypeEnd = 0,
+        kType2 = 2,
+        kTypeGfx = 6,                   // its reference is GFX::Trigger's effect; Handle::effectMask30
+    };
+
     uint8_t unknown00[0x10];
-    uint32_t flags;                     // +0x10 ArticleEffectFlags
-    uint8_t type;                       // +0x14 ArticleEffectType
-    uint8_t unknown15[3];
+    uint16_t flags;                     // +0x10 Flags
+    uint16_t bits;                      // +0x12 Handle::effectBits' initial value
+    uint8_t type;                       // +0x14 Type
+    uint8_t instance;                   // +0x15 a handle's copy: the handle's instance it belongs to
+    uint8_t unknown16;
+    uint8_t id;                         // +0x17 FindEffectByID's
     void *reference;                    // +0x18 the effect GFX::Trigger plays
     void *triggered;                    // +0x1c what GFX::Trigger answered
     uint8_t unknown20[0x20];            // +0x20 handed to GFX::Trigger
 };
 static_assert(sizeof(ArticleEffect) == 0x40, "an article effect is 64 bytes");
+static_assert(offsetof(ArticleEffect, bits) == 0x12 && offsetof(ArticleEffect, instance) == 0x15 &&
+              offsetof(ArticleEffect, id) == 0x17, "ArticleEffect layout");
 
 // What a model leads to (the names of these three are ours)
 struct WorldModelInfo {
@@ -104,9 +118,15 @@ struct WorldModel {
 struct WorldArticle {
     WorldModel *model;                  // +0x00
     ArticleEffect *effects;             // +0x04 NULL for none
-    uint8_t unknown08[0x15];
+    CARP::AnimInfo *animInfos;          // +0x08 its animations (RAnimEngine's), NULL for none
+    uint8_t unknown0C[0xe];
+    uint8_t systemId;                   // +0x1a RAnimEngine::Handle::Create's copies of animInfos[0]'s ids
+    uint8_t mirroredSystemId;           // +0x1b
+    uint8_t unknown1C;
     uint8_t drawPass;                   // +0x1d which of WRender's passes draws its instances
 };
+static_assert(offsetof(WorldArticle, animInfos) == 8 && offsetof(WorldArticle, systemId) == 0x1a &&
+              offsetof(WorldArticle, drawPass) == 0x1d, "WorldArticle layout");
 
 inline WorldArticle *ArticleOf(const CARP::Instance *instance) {
     return reinterpret_cast<WorldArticle *>(uintptr_t(instance->articleDesc.value));

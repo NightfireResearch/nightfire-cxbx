@@ -7,6 +7,7 @@
 #include "Skeleton.h"
 #include "../EaglGlobals.h"
 #include "../EaglOriginals.h"
+#include "../Transform.h"                // QuatProduct
 #include "../../platform/X87.h"
 #include "../../../helpers.h"
 
@@ -101,7 +102,7 @@ void AlignQuat(const float *v1, const float *v2, float *q) {
 // The root bone's quaternion (pose floats 4..7) turned by alignQ.
 void AlignPoseRoot(const float *alignQ, float *sqt) {
     float q[4];
-    QuatMultiply(sqt + 4, alignQ, q);
+    QuatProduct(sqt + 4, alignQ, q);
     memcpy(sqt + 4, q, sizeof(q));
 }
 
@@ -397,7 +398,7 @@ void FnTurnBlender::AlignCycleBeginEnd(int cIdx) {
     ComputeAlignQ(begin, end, q);
     if (cycleIdx - 1 == cIdx)
         q[1] = q[1] * -1.0f;   // FMUL by -1 (a NaN keeps its sign)
-    QuatMultiply(alignQ, q, product);
+    QuatProduct(alignQ, q, product);
     memcpy(alignQ, product, sizeof(product));
     int n = TurnAlignCount++;
     cycleIdx = cIdx;
@@ -829,7 +830,7 @@ void FnRunBlender::AlignCycleBeginEnd(int cIdx) {
     ComputeAlignQ(begin, end, q);
     if (cycleIdx - 1 == cIdx)
         q[1] = q[1] * -1.0f;   // FMUL by -1 (a NaN keeps its sign)
-    QuatMultiply(alignQ, q, product);
+    QuatProduct(alignQ, q, product);
     memcpy(alignQ, product, sizeof(product));
     cycleIdx = cIdx;
 }

@@ -591,3 +591,160 @@ void Transform::TransformPoint(const float *in, float *out) const {
     out[1] = y;
     out[2] = z;
 }
+
+// ---- the methods and helpers compiled beside the actors' IK (0x000161a0-0x000163e0, 0x00016530, 0x00016820)
+
+namespace {
+
+// FSIN, FCOS and FPATAN (atan2(y, x)) as the originals use them, their results unrounded
+__declspec(naked) double X87Sin(double) {
+    __asm {
+        fld qword ptr [esp + 4]
+        fsin
+        ret
+    }
+}
+
+__declspec(naked) double X87Cos(double) {
+    __asm {
+        fld qword ptr [esp + 4]
+        fcos
+        ret
+    }
+}
+
+__declspec(naked) double X87Atan2(double, double) {
+    __asm {
+        fld qword ptr [esp + 4]
+        fld qword ptr [esp + 12]
+        fpatan
+        ret
+    }
+}
+
+} // namespace
+
+// out may be in; when it is not, y and z are computed again after out[0] is stored, as the original does (it
+// matters only if out overlaps in partly).
+// FUNC_AT(0x000161a0)
+void Transform::TransformVector(const float *in, float *out) const {
+    float x = float(double(m[8]) * in[2] + double(m[4]) * in[1] + double(in[0]) * m[0]);
+    float y = float(double(m[1]) * in[0] + double(m[9]) * in[2] + double(m[5]) * in[1]);
+    float z = float(double(m[2]) * in[0] + double(m[10]) * in[2] + double(m[6]) * in[1]);
+    if (in != out) {
+        out[0] = x;
+        out[1] = float(double(m[1]) * in[0] + double(m[9]) * in[2] + double(m[5]) * in[1]);
+        out[2] = float(double(m[2]) * in[0] + double(m[10]) * in[2] + double(m[6]) * in[1]);
+        return;
+    }
+    out[0] = x;
+    out[1] = y;
+    out[2] = z;
+}
+
+// FUNC_AT(0x00016250)
+void Transform::GetOrthoInverse(Transform *out) const {
+    out->m[0] = m[0];
+    out->m[1] = m[4];
+    out->m[2] = m[8];
+    out->m[4] = m[1];
+    out->m[5] = m[5];
+    out->m[6] = m[9];
+    out->m[8] = m[2];
+    out->m[9] = m[6];
+    out->m[10] = m[10];
+    out->m[12] = float(-(double(m[12]) * m[0]) - double(m[1]) * m[13] - double(m[14]) * m[2]);
+    out->m[13] = float(-(double(m[12]) * m[4]) - double(m[5]) * m[13] - double(m[14]) * m[6]);
+    out->m[14] = float(-(double(m[12]) * m[8]) - double(m[9]) * m[13] - double(m[10]) * m[14]);
+}
+
+// FUNC_AT(0x000162e0)
+void Transform::BuildQT(float qx, float qy, float qz, float qw, float tx, float ty, float tz) {
+    double x2 = double(qx) + qx;
+    double y2 = double(qy) + qy;
+    float z2 = float(double(qz) + qz);
+    float wx = float(x2 * qw);
+    float wy = float(double(qw) * y2);
+    float wz = float(double(z2) * qw);
+    float xx = float(x2 * qx);
+    float xy = float(double(qx) * y2);
+    float xz = float(double(z2) * qx);
+    double yy = y2 * qy;
+    double yz = double(z2) * qy;
+    double zz = double(z2) * qz;
+    m[0] = float(1.0 - (zz + yy));
+    m[1] = xy + wz;
+    m[2] = xz - wy;
+    m[3] = 0.0f;
+    m[4] = xy - wz;
+    m[5] = float(1.0 - (zz + xx));
+    m[6] = float(yz + wx);
+    m[7] = 0.0f;
+    m[8] = xz + wy;
+    m[9] = float(yz - wx);
+    m[10] = float(1.0 - (yy + xx));
+    m[11] = 0.0f;
+    m[12] = tx;
+    m[13] = ty;
+    m[14] = tz;
+    m[15] = 1.0f;
+}
+
+// The angle is compared with 0 before it is rounded; FSIN and FCOS take it rounded.
+// FUNC_AT(0x000163e0)
+void Transform::BuildRotation(float degrees, float x, float y, float z) {
+    double radians = double(kPi) * kOneOver180 * degrees;
+    if (radians == 0.0) {
+        m[0] = 1.0f;
+        m[1] = 0.0f;
+        m[2] = 0.0f;
+        m[4] = 0.0f;
+        m[5] = 1.0f;
+        m[6] = 0.0f;
+        m[8] = 0.0f;
+        m[9] = 0.0f;
+        m[10] = 1.0f;
+        return;
+    }
+    float angle = float(radians);
+    double s = X87Sin(angle);
+    double c = X87Cos(angle);
+    double scale = 1.0 / sqrt(double(x) * x + double(y) * y + double(z) * z);
+    double ux = x * scale;
+    float uy = float(scale * y);
+    float uz = float(scale * z);
+    double t = 1.0 - c;
+    double tx = t * ux;
+    float ty = float(t * uy);
+    float tz = float(t * uz);
+    float sx = float(s * ux);
+    float sy = float(s * uy);
+    float sz = float(s * uz);
+    m[0] = float(tx * ux + c);
+    m[1] = float(uy * tx + sz);
+    m[2] = float(tx * uz - sy);
+    m[4] = float(ty * ux - sz);
+    m[5] = float(double(ty) * uy + c);
+    m[6] = float(double(ty) * uz + sx);
+    m[8] = float(tz * ux + sy);
+    m[9] = float(double(tz) * uy - sx);
+    m[10] = float(double(tz) * uz + c);
+}
+
+// FUNC_AT(0x00016530)
+double AngleBetweenVectors(const float *a, const float *b) {
+    double x = double(b[2]) * a[1] - double(a[2]) * b[1];
+    double y = double(a[2]) * b[0] - double(b[2]) * a[0];
+    double z = double(a[0]) * b[1] - double(b[0]) * a[1];
+    double sine = sqrt(z * z + y * y + x * x);
+    double cosine = double(a[0]) * b[0] + double(a[2]) * b[2] + double(a[1]) * b[1];
+    return X87Atan2(sine, cosine);
+}
+
+// FUNC_AT(0x00016820)
+void QuatProduct(const float *a, const float *b, float *out) {
+    out[0] = float(double(a[0]) * b[3] - double(b[2]) * a[1] + double(b[1]) * a[2] + double(a[3]) * b[0]);
+    out[1] = float(double(a[1]) * b[3] + double(b[2]) * a[0] - double(a[2]) * b[0] + double(b[1]) * a[3]);
+    out[2] = float(double(b[2]) * a[3] + double(a[2]) * b[3] - double(b[1]) * a[0] + double(a[1]) * b[0]);
+    out[3] = float(double(a[3]) * b[3] - (double(a[0]) * b[0] + double(b[1]) * a[1] + double(b[2]) * a[2]));
+}

@@ -398,9 +398,9 @@ void WWorld::Reset() {
         WorldArticle *article = ArticleOf(instance);
         if (article == NULL || article->effects == NULL)
             continue;
-        for (ArticleEffect *effect = article->effects; effect->type != kArticleEffectEnd; effect++) {
-            if (effect->flags & kArticleEffectFlag10) {
-                if (effect->type == kArticleEffectGfx && effect->reference != NULL)
+        for (ArticleEffect *effect = article->effects; effect->type != ArticleEffect::kTypeEnd; effect++) {
+            if (effect->flags & ArticleEffect::kFlag10) {
+                if (effect->type == ArticleEffect::kTypeGfx && effect->reference != NULL)
                     effect->triggered = GFX_Trigger(effect->reference, instance->position, &DefaultVector, effect,
                                                     effect->unknown20, 0, 0, 0);
             } else {
@@ -566,14 +566,14 @@ bool WWorld::Open() {
             WorldArticle *article = ArticleOf(instance);
             if (article == NULL || article->effects == NULL)
                 continue;
-            for (ArticleEffect *effect = article->effects; effect->type != kArticleEffectEnd; effect++) {
-                if (effect->flags & kArticleEffectFlag10) {
-                    effect->flags |= kArticleEffectFlag01;
-                    if (effect->type == kArticleEffectGfx && effect->reference != NULL)
+            for (ArticleEffect *effect = article->effects; effect->type != ArticleEffect::kTypeEnd; effect++) {
+                if (effect->flags & ArticleEffect::kFlag10) {
+                    effect->flags |= ArticleEffect::kFlag01;
+                    if (effect->type == ArticleEffect::kTypeGfx && effect->reference != NULL)
                         effect->triggered = GFX_Trigger(effect->reference, instance->position, &DefaultVector, effect,
                                                         effect->unknown20, 0, 0, 0);
-                } else if (effect->type == kArticleEffect2) {
-                    effect->flags |= kArticleEffectFlag01;
+                } else if (effect->type == ArticleEffect::kType2) {
+                    effect->flags |= ArticleEffect::kFlag01;
                 }
             }
         }

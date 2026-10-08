@@ -7,8 +7,7 @@
 //     culling the track (through WRender), the actors, the scene objects and the gallery's canvases, then the
 //     static world, the cars and deferred scene objects, the effects, the post-processing and the headlight.
 //   RPlayerViewCamera (0x4c bytes, vtable 0x00191910): a player's view; ConfigureView sets the culling up.
-// RWorldCamera's methods (Camera.h has the class) are ported here too, with ActActorDatabase::DrawActorWeapons,
-// which DoRender calls. See WorldCamera.cpp.
+// RWorldCamera's methods (Camera.h has the class) are ported here too. See WorldCamera.cpp.
 // ---------------------------------------------------------------------------------------------------------------
 
 #include <stddef.h>
@@ -63,30 +62,5 @@ int FloorToInt(float value);                                                    
 // FUN_0008d120 (the name is ours): the point's x and z through the matrix's rows 0 and 2, less row 3 -
 // RRenderWorldCulling::QuadtreeFrustrumCheck2d's
 void TransformPointXZ(const Coord3 *point, const MATRIX4 *matrix, Coord4 *out);                 // 0x0008d120
-
-// ---- the action engine's actors as the world's view draws them (not ported; only what is read here)
-
-class ActActor {
-public:
-    uint8_t unknown00[0x40];
-    uint8_t culled;                     // +0x40 ActActorDatabase::SetActorCull's
-};
-
-struct ActActorNode {                   // a std::list node
-    ActActorNode *next;
-    ActActorNode *prev;
-    ActActor *actor;
-};
-
-class ActActorDatabase {
-public:
-    uint32_t allocator;
-    ActActorNode *actors;               // +0x04 the list's head
-    uint32_t actorCount;
-
-    // ActActor::DrawWeapons for every actor not culled (Ghidra files it under RRenderWorldCamera; ECX is the
-    // database)
-    void DrawActorWeapons(RViewCamera *view, bool unknown);                                     // 0x00013020
-};
 
 #endif // DRIVING_CAMERA_WORLDCAMERA_H_

@@ -188,7 +188,7 @@ void FnPoseBlender::XZProjectAlign(const Transform *a, const Transform *b, Trans
     AnimXZProjectLongestAxis(a, va, &axis);
     AnimXZProjectAxis(b, vb, axis);
     constexpr double kRadiansToDegrees = 180.0 / kPi;   // the original's 180 / pi, in double as its x87 FDIV
-    double angle = AngleBetween(vb, va);
+    double angle = AngleBetweenVectors(vb, va);
     float degrees = float(angle * kRadiansToDegrees);
     EAGL_BuildRotate(out, 0, degrees, 0.0f, 1.0f, 0.0f);
     out->m[12] = a->m[12] - b->m[12];

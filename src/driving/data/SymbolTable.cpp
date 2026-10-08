@@ -4,6 +4,7 @@
 
 #include "SymbolTable.h"
 #include "DataUntested.h"
+#include "StdStreams.h"                 // GameStd::String, GameStd::LogicError
 #include "../../common/xbeOverload.h"
 #include "../audio/Bank.h"              // SharedTreeMax, SharedTreeIterator
 #include "../engine/UGroup.h"
@@ -35,8 +36,6 @@
 #define Crt_atol ((long (*)(const char *))0x00133d51)
 
 // The STL's exception machinery.
-#define StdString_Assign ((void (__fastcall *)(void *, int, const char *, uint32_t))0x00013630)
-#define StdLogicError_Construct ((void (__fastcall *)(void *, int, const void *))0x00013700)
 #define CxxThrowException ((void (__stdcall *)(void *, uint32_t))0x001325ad)
 
 constexpr uint32_t kUSymbolTableVtable = 0x001a2240;
@@ -69,16 +68,15 @@ static UData *DataEnd(UGroup *group) {
 
 void TreeThrow(const char *message, uint32_t vtable, uint32_t throwInfo) {
     DATA_UNTESTED("an STL container's throw");
-    // std::string: allocator byte, 16-byte buffer, size, capacity; then std::logic_error over it
-    uint8_t text[0x1c];
-    uint8_t exception[0x28];
-    *reinterpret_cast<uint32_t *>(text + 0x18) = 15;
-    *reinterpret_cast<uint32_t *>(text + 0x14) = 0;
-    text[4] = 0;
-    StdString_Assign(text, 0, message, uint32_t(strlen(message)));
-    StdLogicError_Construct(exception, 0, text);
-    SetVtable(exception, vtable);
-    CxxThrowException(exception, throwInfo);
+    GameStd::String text;
+    text.capacity = 15;
+    text.size = 0;
+    text.text.buffer[0] = 0;
+    text.AssignText(message, uint32_t(strlen(message)));
+    GameStd::LogicError exception;
+    exception.Construct(&text);
+    SetVtable(&exception, vtable);
+    CxxThrowException(&exception, throwInfo);
 }
 
 TreeNode *TreeNext(TreeNode *node) {

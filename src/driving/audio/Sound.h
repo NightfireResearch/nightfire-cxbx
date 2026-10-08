@@ -144,8 +144,6 @@ bool Generic_FuncReturnsFalse();                                                
 // PointerList::Remove, is shared by every such list)
 
 struct ASoundList : PointerList {
-    PointerListNode *Begin() const { return head != NULL ? head->next : NULL; }
-
     // _Incsize: throws length_error("list<T> too long") past 0x3fffffff nodes.
     void IncreaseSize(uint32_t count);                                          // 0x0011c860
 };

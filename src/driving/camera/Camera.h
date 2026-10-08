@@ -156,28 +156,6 @@ public:
 static_assert(offsetof(AISplinePath, path) == 0x60 && offsetof(AISplinePath, placement) == 0x70,
               "AI spline path layout");
 
-// A camera animation (a 'Cams' instance's): its tracks of keys
-struct CameraAnimKey {
-    Coord4 rotation;                    // +0x00 a quaternion
-    Coord4 position;                    // +0x10
-};
-static_assert(sizeof(CameraAnimKey) == 0x20, "a camera animation key is 32 bytes");
-
-struct CameraAnimTrack {
-    CameraAnimKey *keys;                // +0x00
-    uint32_t unknown04;
-    uint16_t keyCount;                  // +0x08
-    uint8_t unknown0A[5];
-    uint8_t framesPerKey;               // +0x0f the instance's frame times this, in sixtieths of a second
-};
-static_assert(sizeof(CameraAnimTrack) == 0x10, "a camera animation track is 16 bytes");
-
-// What a 'Cams' instance's article description resolves to (and the animation engine's instance's data)
-struct CameraAnimData {
-    uint8_t unknown00[8];
-    CameraAnimTrack *tracks;            // +0x08 by the instance's procAnimType
-};
-
 // ---- RWorldCamera
 
 // An anchor's position or velocity (or three floats) read as a VU0 vector: with the word after it, as the

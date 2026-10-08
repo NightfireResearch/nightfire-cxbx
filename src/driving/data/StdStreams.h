@@ -121,8 +121,45 @@ struct String {
     String* AppendFill(uint32_t count, char ch);                          // 0x0003bc20 append(count, ch)
     String* AppendSub(const String *right, uint32_t offset, uint32_t count);   // 0x0003d090 append(right, offset, count)
     String* Assign(const char *string);                                   // 0x0005b0a0 assign(string)
+
+    // The members compiled with the actor database (Dinkumware's names in the comments)
+    String* ConstructText(const char *string);                            // 0x00013840 basic_string(string)
+    String* ConstructCopy(const String *right);                           // 0x000136d0 basic_string(right)
+    void Destruct();                                                      // 0x000132c0 ~basic_string
+    const char* CStr();                                                   // 0x00012590 c_str()
+    String* AssignSub(const String *right, uint32_t offset, uint32_t count);   // 0x00013580 assign(right, offset, count)
+    String* AssignText(const char *string, uint32_t count);               // 0x00013630 assign(string, count)
+    String* Erase(uint32_t offset, uint32_t count);                       // 0x00013480 erase(offset, count)
+    void Copy(uint32_t newSize, uint32_t oldLength);                      // 0x00013150 _Copy
+    bool Grow(uint32_t newSize, bool trim);                               // 0x00013300 _Grow
+    void Eos(uint32_t length);                                            // 0x00012c80 _Eos
+    void Tidy(bool built);                                                // 0x00013110 _Tidy
 };
 static_assert(sizeof(String) == 0x1c, "String");
+
+// std::allocator<char>::deallocate (`this` is not read)
+void __stdcall AllocatorDeallocate(void *block, uint32_t count);          // 0x000125a0
+
+// std::logic_error (0x28, vtable 0x00189ee4) over the C runtime's std::exception (0x0c), and std::length_error
+// (vtable 0x00189eec). Only the STL's throws make them.
+struct LogicError {
+    const void *vtable;   // +0x00
+    uint8_t exception[8]; // +0x04 std::exception's fields
+    String message;       // +0x0c
+
+    LogicError* Construct(const String *message);                         // 0x00013700
+    LogicError* ConstructCopy(const LogicError *other);                   // 0x00013930
+    void Destruct();                                                      // 0x000133d0
+    LogicError* Delete(unsigned flags);     // vtable slot 0              // 0x00013460
+    const char* What();                     // vtable slot 1              // 0x00013450
+};
+static_assert(sizeof(LogicError) == 0x28, "LogicError");
+
+struct LengthError : LogicError {
+    LengthError* ConstructCopy(const LengthError *other);                 // 0x000139a0
+    void Destruct();                                                      // 0x00013780
+    LengthError* Delete(unsigned flags);    // vtable slot 0              // 0x00013760
+};
 
 // std::fpos<_Mbstatet>, as streambuf's seek functions return it (through a hidden pointer).
 struct StreamPos {

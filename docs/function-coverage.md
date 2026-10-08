@@ -211,15 +211,15 @@ where to change it.
 | game.missions | 273 | 0 | 0 | 273 | 0% | 33 | 0% |
 | game.vehicles | 193 | 0 | 0 | 193 | 0% | 62 | 0% |
 | game.weapons | 178 | 0 | 6 | 172 | 3% | 43 | 0% |
-| **engine** | 3990 | 1566 | 1149 | 1275 | **68%** | 526 | 67% |
-| engine.anim | 415 | 3 | 5 | 407 | 2% | 54 | 1% |
+| **engine** | 3990 | 1896 | 1216 | 878 | **78%** | 526 | 78% |
+| engine.anim | 415 | 332 | 72 | 11 | 97% | 54 | 100% |
 | engine.audio | 270 | 203 | 54 | 13 | 95% | 35 | 100% |
 | engine.camera | 273 | 224 | 39 | 10 | 96% | 60 | 99% |
 | engine.core | 213 | 155 | 56 | 2 | 99% | 25 | 100% |
 | engine.data | 554 | 454 | 78 | 22 | 96% | 79 | 100% |
 | engine.input | 107 | 42 | 16 | 49 | 54% | 12 | 47% |
 | engine.physics | 156 | 117 | 29 | 10 | 94% | 33 | 100% |
-| engine.render | 760 | 8 | 4 | 748 | 2% | 114 | 3% |
+| engine.render | 760 | 9 | 4 | 747 | 2% | 114 | 3% |
 | engine.static | 798 | 22 | 776 | 0 | 100% | 26 | 100% |
 | engine.world | 444 | 338 | 92 | 14 | 97% | 89 | 100% |
 | **platform** | 1453 | 1254 | 199 | 0 | **100%** | 262 | 100% |
@@ -236,10 +236,10 @@ where to change it.
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6842 | 1569 | 1226 | 4047 | **41%** | 1000 | 36% |
+| **game + engine** | 6842 | 1899 | 1293 | 3650 | **47%** | 1000 | 41% |
 | **platform + system** | 2893 | 1527 | 1019 | 347 | **88%** | 506 | 93% |
 | **  without the C runtime** | 2473 | 1523 | 950 | 0 | **100%** | 462 | 100% |
-| **everything** | 9735 | 3096 | 2245 | 4394 | **55%** | 1506 | 55% |
+| **everything** | 9735 | 3426 | 2312 | 3997 | **59%** | 1506 | 58% |
 
 - **The engine's core and data layers are done (4 October 2026): `engine.core` and `engine.data`, 100% by bytes**
   (docs/driving/core-data.md): memory (UMemory, new/delete), reference counters, data groups, singletons, the
@@ -272,6 +272,11 @@ where to change it.
   100% ours by bytes. Five shadow tests match the originals, and a trace of every call into the sound library over
   lockstep runs of missions 1-8 (with the sound side in lockstep too) matches the baseline line for line. Game and
   engine together are now 41% done by functions, 36% by bytes.
+- **Animation is done (8 October 2026, docs/driving/anim.md):** the actors and their controllers, characters,
+  animation banks and groups, events, IK and pose overrides, the manager, models, skeletons and textures, posers,
+  weapons, and RAnimEngine with the proc-anim functions - 341 functions; `engine.anim` is 100% ours by bytes. Six
+  shadow tests match the originals, and lockstep missions 1-8 match the baseline in frames and sound traces. Game and
+  engine together are now 47% done by functions, 41% by bytes.
 - **Every system library but the C runtime is done: D3D (with D3DX and XGRPH), DSOUND, XPP and XAPI at 100%.**
   The C runtime (327 live, 12%) is left to go by itself, as in the action engine: game code calls it everywhere, and
   it goes as that code becomes ours. How the rest got there (2 October 2026):

@@ -24,7 +24,6 @@
 
 // ---- the game's code called by address
 // std::list<T *>'s _Buynode, shared by every list of pointers
-#define ViewList_BuyNode ((PointerListNode *(__fastcall *)(PointerList *, int, PointerListNode *next, PointerListNode *prev, void *const *value))0x000130e0)
 // The tree helpers every map with 0x20-byte nodes shares (identical code folded by the linker), on this file's node
 // type: 0x00053580, 0x000527e0 and 0x00052a20 are the attribute system's ported copies, 0x000bf460 the collision
 // manager's, of their own node types.
@@ -130,7 +129,7 @@ void AVoice::View::Push() {
     AVoiceViewList &list = ActiveViews;
     PointerListNode *end = list.head;
     void *value = this;
-    PointerListNode *node = ViewList_BuyNode(&list, 0, end, end->prev, &value);
+    PointerListNode *node = list.BuyNode(end, end->prev, &value);
     list.IncreaseSize(1);
     end->prev = node;
     node->prev->next = node;

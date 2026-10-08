@@ -234,10 +234,10 @@ struct Hook {
     uint8_t saved[5];
     bool on;
 };
-Hook g_hooks[8];
+Hook g_hooks[16];
 int g_hookCount = 0;
 
-void HookInstall(uint32_t at, const void *to) {
+void HookOne(uint32_t at, const void *to) {
     Hook &h = g_hooks[g_hookCount++];
     h.at = at;
     DWORD old;
@@ -251,6 +251,20 @@ void HookInstall(uint32_t at, const void *to) {
     memcpy((void *)(uintptr_t)at, jump, 5);
     VirtualProtect((void *)(uintptr_t)at, 5, old, &old);
     FlushInstructionCache(GetCurrentProcess(), (void *)(uintptr_t)at, 5);
+}
+
+// The original's entry, and the port its jump leads to (ported callers call the port directly)
+void HookInstall(uint32_t at, const void *to) {
+    const uint8_t *entry = (const uint8_t *)(uintptr_t)at;
+    uint32_t port = 0;
+    if (entry[0] == 0xe9) {
+        int32_t rel;
+        memcpy(&rel, entry + 1, 4);
+        port = at + 5 + uint32_t(rel);
+    }
+    HookOne(at, to);
+    if (port != 0 && port != (uint32_t)(uintptr_t)to)
+        HookOne(port, to);
 }
 
 void HooksRemove() {

@@ -107,7 +107,6 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 #define ATargeting_SetState ((void (__fastcall *)(ATargeting *, int, int state))0x0012e120)
 #define GHud_SetTarget ((void (__fastcall *)(GHud *, int, const ScreenPos *cursor))0x000d9f50)
 #define GHud_SetTargetLockState ((void (__fastcall *)(GHud *, int, int state))0x000d9fb0)
-#define PointerList_BuyNode ((PointerListNode *(__fastcall *)(PointerList *, int, PointerListNode *next, PointerListNode *prev, void *const *value))0x000130e0)
 #define PointerList_BuyHead ((PointerListNode *(__fastcall *)(PointerList *, int))0x000b8490)
 #define Crt_qsort ((void (*)(void *base, size_t count, size_t size, TargetCompare compare))0x00132db0)
 
@@ -237,6 +236,27 @@ void InitTargetable(WTargetable *target, TargetOwnerType type, void *owner) {
 // =============================================================================================================
 // std::list<T *>'s shared code
 // =============================================================================================================
+
+// FUNC_AT(0x00013540)
+void PointerList::Destruct() {
+    PointerListNode *erased;
+    Erase(&erased, Begin(), head);
+    if (head != NULL)
+        UMemory::FastFree(head, sizeof(PointerListNode));
+    head = NULL;
+    size = 0;
+}
+
+// FUNC_AT(0x000130e0)
+PointerListNode* PointerList::BuyNode(PointerListNode *next, PointerListNode *prev, void *const *value) {
+    PointerListNode *node = (PointerListNode *)UMemory::FastAlloc(sizeof(PointerListNode), "STL");
+    if (node != NULL) {
+        node->next = next;
+        node->prev = prev;
+        node->value = *value;
+    }
+    return node;
+}
 
 // FUNC_AT(0x000ce900)
 PointerListNode** PointerList::Erase(PointerListNode **result, PointerListNode *first, PointerListNode *last) {
@@ -469,7 +489,7 @@ void WTargetPicker::RegisterTarget(WTargetable *target) {
     PointerList *list = targets;
     PointerListNode *end = list->head;
     void *value = target;
-    PointerListNode *node = PointerList_BuyNode(list, 0, end, end->prev, &value);
+    PointerListNode *node = list->BuyNode(end, end->prev, &value);
     list->IncreaseSize(1);
     end->prev = node;
     node->prev->next = node;

@@ -28,8 +28,6 @@
 typedef void (*MultiplyHook)(float *out, const float *parent, const float *child);
 #define Multiply (*(MultiplyHook *)0x001cec7c)
 
-// (The engine's Transform::BuildQT, thiscall - rotation quaternion and translation - is EaglOriginals.h's.)
-
 // FUNC_AT(0x001066f0)
 void EAGLAnim_MultiplyMatrices(float *out, const float *parent, const float *child) {
     VU0_MATRIX4_mult(out, child, parent);
@@ -425,7 +423,7 @@ void Skeleton::PoseQTToGlobal(int first, int last, const float *pose, Transform 
     EAGL_UNTESTED("Skeleton::PoseQTToGlobal");
     for (int i = first; i <= last; i++) {
         const float *p = &pose[i * 12];
-        Transform_BuildQT(&global[i], 0, p[4], p[5], p[6], p[7], p[8], p[9], p[10]);
+        global[i].BuildQT(p[4], p[5], p[6], p[7], p[8], p[9], p[10]);
         int parent = bones[i].parent;
         if (parent >= 0)
             Multiply(global[i].m, global[parent].m, global[i].m);

@@ -31,8 +31,6 @@
 #define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 
 // The pieces of the game's exception machinery the STL's throws use.
-#define StdString_Assign ((GameStd::String *(__fastcall *)(GameStd::String *, int, const char *, uint32_t))0x00013630)
-#define LogicError_Construct ((void *(__fastcall *)(void *, int, const GameStd::String *))0x00013700)
 #define CxxThrowException ((void (__stdcall *)(void *, const void *))0x001325ad)
 
 // std::length_error's and std::out_of_range's vtables and throw descriptions.
@@ -50,12 +48,9 @@ void ThrowStl(const char *message, void *vtable, const void *throwInfo) {
     text.capacity = 15;
     text.size = 0;
     text.text.buffer[0] = '\0';
-    StdString_Assign(&text, 0, message, static_cast<uint32_t>(strlen(message)));
-    struct {
-        void *vtable;
-        uint8_t unknown04[0x24];
-    } error;
-    LogicError_Construct(&error, 0, &text);
+    text.AssignText(message, static_cast<uint32_t>(strlen(message)));
+    GameStd::LogicError error;
+    error.Construct(&text);
     error.vtable = vtable;
     CxxThrowException(&error, throwInfo);
 }

@@ -40,6 +40,12 @@ struct PointerList {
     PointerListNode *head;      // +0x04
     uint32_t size;              // +0x08
 
+    PointerListNode *Begin() const { return head != NULL ? head->next : NULL; }
+
+    // The destructor: erase(begin(), end()), then the head freed (Ghidra: ActActorDatabase::~ActActorDatabase)
+    void Destruct();                                                                                    // 0x00013540
+    // _Buynode (`this` is not read)
+    PointerListNode* BuyNode(PointerListNode *next, PointerListNode *prev, void *const *value);         // 0x000130e0
     // erase(first, last): unlinks and frees each node (never the head), answers `last`.
     PointerListNode** Erase(PointerListNode **result, PointerListNode *first, PointerListNode *last);   // 0x000ce900
     // remove(value): every node holding the value unlinked and freed (Ghidra: list<AVoice::View *>::remove).

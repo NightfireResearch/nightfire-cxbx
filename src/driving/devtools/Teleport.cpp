@@ -28,6 +28,12 @@
 #include "AudioStreamShadow.h"
 #include "AudioVoiceShadow.h"
 #include "AudioIndexShadow.h"
+#include "ActorShadow.h"
+#include "CharacterShadow.h"
+#include "IKShadow.h"
+#include "ActModelShadow.h"
+#include "PoserShadow.h"
+#include "AnimEngineShadow.h"
 
 #include <windows.h>
 #include <stdio.h>
@@ -189,6 +195,12 @@ void Teleport_Tick(void) {
         AudioStreamShadow_Run();   // NIGHTFIRE_AUDIOSTREAMSHADOW=1 only
         AudioVoiceShadow_Run();   // NIGHTFIRE_AUDIOVOICESHADOW=1 only
         AudioIndexShadow_Run();   // NIGHTFIRE_AUDIOINDEXSHADOW=1 only
+        ActorShadow_Run();   // NIGHTFIRE_ACTORSHADOW=1 only
+        CharacterShadow_Run();   // NIGHTFIRE_CHARACTERSHADOW=1 only
+        IKShadow_Run();   // NIGHTFIRE_IKSHADOW=1 only
+        ActModelShadow_Run();   // NIGHTFIRE_ACTMODELSHADOW=1 only
+        PoserShadow_Run();   // NIGHTFIRE_POSERSHADOW=1 only
+        AnimEngineShadow_Run();   // NIGHTFIRE_ANIMENGINESHADOW=1 only
         char text[256] = "";
         DWORD fromEnv = GetEnvironmentVariableA("NIGHTFIRE_TELEPORT", text, sizeof(text));
         if (fromEnv == 0 || fromEnv >= sizeof(text))

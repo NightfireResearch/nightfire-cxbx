@@ -12,7 +12,6 @@
 #include <bit>
 
 #include "../../helpers.h"
-#include "../data/Tree.h"               // TreeThrow
 #include "../engine/UFileLoader.h"
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"       // VU0_MATRIX4_vect4mult
@@ -29,19 +28,11 @@
 
 // ---- originals called by address
 
-// The helpers every URefCounter's tree shares.
-#define RefCounterNode_Increment ((void (__fastcall *)(RefCounterNode **iterator, int))0x00019d80)
-#define RefCounterTree_Rrotate ((void (__fastcall *)(RefCounterTree *, int, RefCounterNode *where))0x00019d20)
-#define RefCounterTree_Min ((RefCounterNode *(*)(RefCounterNode *node))0x0008eea0)
-#define RefCounterTree_Max ((RefCounterNode *(*)(RefCounterNode *node))0x00017560)
-#define RefCounterTree_BuyNode ((RefCounterNode *(__fastcall *)(RefCounterTree *, int, RefCounterNode *left, RefCounterNode *parent, RefCounterNode *right, const RefCounterValue *value, uint32_t color))0x00093f60)
 
 // std::list<T *>'s node and head makers.
-#define PointerList_BuyNode ((PointerListNode *(__fastcall *)(PointerList *, int, PointerListNode *next, PointerListNode *prev, AMix *const *value))0x000130e0)
 #define PointerList_BuyHead ((PointerListNode *(__fastcall *)(PointerList *, int))0x000b8490)
 
 // The C runtime's (the names' order and the volumes' parsing are its).
-#define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 #define CRT_sscanf ((int (*)(const char *text, const char *format, ...))0x00133234)
 
 // ---- globals
@@ -208,7 +199,8 @@ void AMix::Load(const char *path) {
 
         AMix *mix = Add(name);
         // Mixes.push_back(mix)
-        PointerListNode *node = PointerList_BuyNode(&Mixes, 0, Mixes.head, Mixes.head->prev, &mix);
+        void *value = mix;
+        PointerListNode *node = Mixes.BuyNode(Mixes.head, Mixes.head->prev, &value);
         Mixes.IncreaseSize(1);
         Mixes.head->prev = node;
         node->prev->next = node;
@@ -264,304 +256,6 @@ void MixList::IncreaseSize(uint32_t count) {
 // =============================================================================================================
 // The URefCounters' trees
 // =============================================================================================================
-
-// FUNC_AT(0x0011caa0)
-void RefCounterIterator::Decrement() {
-    if (node->isNil) {
-        node = node->right;
-        return;
-    }
-    if (!node->left->isNil) {
-        RefCounterNode *rightmost = node->left;
-        while (!rightmost->right->isNil)
-            rightmost = rightmost->right;
-        node = rightmost;
-        return;
-    }
-    RefCounterNode *parent = node->parent;
-    while (!parent->isNil && node == parent->left) {
-        node = parent;
-        parent = parent->parent;
-    }
-    if (!parent->isNil)
-        node = parent;
-}
-
-// FUNC_AT(0x0011cb20)
-void RefCounterTree::Lrotate(RefCounterNode *where) {
-    RefCounterNode *node = where->right;
-    where->right = node->left;
-    if (!node->left->isNil)
-        node->left->parent = where;
-    node->parent = where->parent;
-    if (where == head->parent)
-        head->parent = node;
-    else if (where == where->parent->left)
-        where->parent->left = node;
-    else
-        where->parent->right = node;
-    node->left = where;
-    where->parent = node;
-}
-
-void RefCounterTree::EraseSubtree(RefCounterNode *node) {
-    while (!node->isNil) {
-        EraseSubtree(node->right);
-        RefCounterNode *left = node->left;
-        if (node != NULL)
-            UMemory::FastFree(node, sizeof(RefCounterNode));
-        node = left;
-    }
-}
-
-RefCounterNode **RefCounterTree::EraseAt(RefCounterNode **result, RefCounterNode *where) {
-    if (where->isNil)
-        TreeThrow("invalid map/set<T> iterator", kOutOfRangeVtable, kOutOfRangeThrowInfo);
-    RefCounterNode *erased = where;
-    RefCounterNode_Increment(&where, 0);    // where is the next node from here on
-
-    RefCounterNode *node = erased;          // the node that leaves its place: the erased one or its successor
-    RefCounterNode *fix;                    // the subtree that takes that node's place
-    if (node->left->isNil) {
-        fix = node->right;
-    } else if (node->right->isNil) {
-        fix = node->left;
-    } else {
-        node = where;
-        fix = node->right;
-    }
-    RefCounterNode *fixParent;
-    if (node == erased) {
-        fixParent = erased->parent;
-        if (!fix->isNil)
-            fix->parent = fixParent;
-        if (head->parent == erased)
-            head->parent = fix;
-        else if (fixParent->left == erased)
-            fixParent->left = fix;
-        else
-            fixParent->right = fix;
-        if (head->left == erased)
-            head->left = fix->isNil ? fixParent : RefCounterTree_Min(fix);
-        if (head->right == erased)
-            head->right = fix->isNil ? fixParent : RefCounterTree_Max(fix);
-    } else {
-        erased->left->parent = node;
-        node->left = erased->left;
-        if (node == erased->right) {
-            fixParent = node;
-        } else {
-            fixParent = node->parent;
-            if (!fix->isNil)
-                fix->parent = fixParent;
-            fixParent->left = fix;
-            node->right = erased->right;
-            erased->right->parent = node;
-        }
-        if (head->parent == erased)
-            head->parent = node;
-        else if (erased->parent->left == erased)
-            erased->parent->left = node;
-        else
-            erased->parent->right = node;
-        node->parent = erased->parent;
-        uint8_t color = node->color;
-        node->color = erased->color;
-        erased->color = color;
-    }
-
-    if (erased->color == kTreeBlack) {
-        while (fix != head->parent && fix->color == kTreeBlack) {
-            if (fix == fixParent->left) {
-                RefCounterNode *sibling = fixParent->right;
-                if (sibling->color == kTreeRed) {
-                    sibling->color = kTreeBlack;
-                    fixParent->color = kTreeRed;
-                    Lrotate(fixParent);
-                    sibling = fixParent->right;
-                }
-                if (!sibling->isNil) {
-                    if (sibling->left->color == kTreeBlack && sibling->right->color == kTreeBlack) {
-                        sibling->color = kTreeRed;
-                    } else {
-                        if (sibling->right->color == kTreeBlack) {
-                            sibling->left->color = kTreeBlack;
-                            sibling->color = kTreeRed;
-                            RefCounterTree_Rrotate(this, 0, sibling);
-                            sibling = fixParent->right;
-                        }
-                        sibling->color = fixParent->color;
-                        fixParent->color = kTreeBlack;
-                        sibling->right->color = kTreeBlack;
-                        Lrotate(fixParent);
-                        break;
-                    }
-                }
-            } else {
-                RefCounterNode *sibling = fixParent->left;
-                if (sibling->color == kTreeRed) {
-                    sibling->color = kTreeBlack;
-                    fixParent->color = kTreeRed;
-                    RefCounterTree_Rrotate(this, 0, fixParent);
-                    sibling = fixParent->left;
-                }
-                if (!sibling->isNil) {
-                    if (sibling->right->color == kTreeBlack && sibling->left->color == kTreeBlack) {
-                        sibling->color = kTreeRed;
-                    } else {
-                        if (sibling->left->color == kTreeBlack) {
-                            sibling->right->color = kTreeBlack;
-                            sibling->color = kTreeRed;
-                            Lrotate(sibling);
-                            sibling = fixParent->left;
-                        }
-                        sibling->color = fixParent->color;
-                        fixParent->color = kTreeBlack;
-                        sibling->left->color = kTreeBlack;
-                        RefCounterTree_Rrotate(this, 0, fixParent);
-                        break;
-                    }
-                }
-            }
-            fix = fixParent;
-            fixParent = fix->parent;
-        }
-        fix->color = kTreeBlack;
-    }
-
-    UMemory::FastFree(erased, sizeof(RefCounterNode));
-    if (size > 0)
-        size--;
-    *result = where;
-    return result;
-}
-
-RefCounterNode **RefCounterTree::InsertAt(RefCounterNode **result, bool addLeft, RefCounterNode *where,
-                                          const RefCounterValue *value) {
-    if (size >= 0xffffffffu / sizeof(RefCounterValue) - 1)
-        TreeThrow("map/set<T> too long", kLengthErrorVtable, kLengthErrorThrowInfo);
-    RefCounterNode *node = RefCounterTree_BuyNode(this, 0, head, where, head, value, kTreeRed);
-    size++;
-    if (where == head) {
-        head->parent = node;
-        head->left = node;
-        head->right = node;
-    } else if (addLeft) {
-        where->left = node;
-        if (where == head->left)
-            head->left = node;
-    } else {
-        where->right = node;
-        if (where == head->right)
-            head->right = node;
-    }
-    for (RefCounterNode *at = node; at->parent->color == kTreeRed;) {
-        if (at->parent == at->parent->parent->left) {
-            RefCounterNode *uncle = at->parent->parent->right;
-            if (uncle->color == kTreeRed) {
-                at->parent->color = kTreeBlack;
-                uncle->color = kTreeBlack;
-                at->parent->parent->color = kTreeRed;
-                at = at->parent->parent;
-            } else {
-                if (at == at->parent->right) {
-                    at = at->parent;
-                    Lrotate(at);
-                }
-                at->parent->color = kTreeBlack;
-                at->parent->parent->color = kTreeRed;
-                RefCounterTree_Rrotate(this, 0, at->parent->parent);
-            }
-        } else {
-            RefCounterNode *uncle = at->parent->parent->left;
-            if (uncle->color == kTreeRed) {
-                at->parent->color = kTreeBlack;
-                uncle->color = kTreeBlack;
-                at->parent->parent->color = kTreeRed;
-                at = at->parent->parent;
-            } else {
-                if (at == at->parent->left) {
-                    at = at->parent;
-                    RefCounterTree_Rrotate(this, 0, at);
-                }
-                at->parent->color = kTreeBlack;
-                at->parent->parent->color = kTreeRed;
-                Lrotate(at->parent->parent);
-            }
-        }
-    }
-    head->parent->color = kTreeBlack;
-    *result = node;
-    return result;
-}
-
-RefCounterNode **RefCounterTree::EraseRange(RefCounterNode **result, RefCounterNode *first, RefCounterNode *last) {
-    if (first == head->left && last == head) {
-        EraseSubtree(head->parent);
-        head->parent = head;
-        size = 0;
-        head->left = head;
-        head->right = head;
-        *result = head->left;
-        return result;
-    }
-    while (first != last) {
-        RefCounterNode *erased = first;
-        RefCounterNode_Increment(&first, 0);
-        RefCounterNode *next;
-        EraseAt(&next, erased);
-    }
-    *result = first;
-    return result;
-}
-
-RefCounterInsertResult *RefCounterTree::InsertUnique(RefCounterInsertResult *result, const RefCounterValue *value) {
-    RefCounterNode *tryNode = head->parent;
-    RefCounterNode *where = head;
-    bool addLeft = true;
-    while (!tryNode->isNil) {
-        where = tryNode;
-        addLeft = CRT_stricmp(value->name, tryNode->value.name) < 0;
-        tryNode = addLeft ? tryNode->left : tryNode->right;
-    }
-    RefCounterIterator before = { where };
-    if (addLeft) {
-        if (where == head->left) {
-            RefCounterNode *node;
-            result->node = *InsertAt(&node, true, where, value);
-            result->inserted = true;
-            return result;
-        }
-        before.Decrement();
-    }
-    if (CRT_stricmp(before.node->value.name, value->name) < 0) {
-        RefCounterNode *node;
-        result->node = *InsertAt(&node, addLeft, where, value);
-        result->inserted = true;
-        return result;
-    }
-    result->node = before.node;
-    result->inserted = false;
-    return result;
-}
-
-void RefCounterTree::Destroy() {
-    EraseSubtree(head->parent);
-    head->parent = head;
-    size = 0;
-    head->left = head;
-    head->right = head;
-    DestroyRange();
-}
-
-void RefCounterTree::DestroyRange() {
-    RefCounterNode *after;
-    EraseRange(&after, head->left, head);
-    if (head != NULL)
-        UMemory::FastFree(head, sizeof(RefCounterNode));
-    head = NULL;
-    size = 0;
-}
 
 // ---- URefCounter<AMix>'s
 

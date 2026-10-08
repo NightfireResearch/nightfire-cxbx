@@ -18,6 +18,8 @@
 #include <bit>
 
 #include "../../helpers.h"
+#include "../anim/AnimEngine.h"         // Handle
+#include "../world/World.h"              // WorldArticle, ArticleOf
 #include "../data/Carp.h"
 #include "../engine/CoreFoundation.h"   // NullFunction
 #include "../engine/GameLoop.h"         // LaunchPage
@@ -42,12 +44,6 @@ namespace {
 // The 'Cams' instance's flags as the animation cameras read them
 enum CameraAnimFlags : uint8_t {
     kCamAnimFollowsAnchor = 0x01,       // the path is kept relative to the camera's lookAt
-};
-
-// RWorldCamera::animHandle (RAnimEngine::Handle): its 'Cams' instance
-struct CameraAnimHandle {
-    uint8_t unknown00[0x40];
-    CARP::Instance instance;            // +0x40
 };
 
 // The weapon manager: the current slot and the slots (the first word of each is its weapon)
@@ -146,13 +142,9 @@ static_assert(std::bit_cast<uint32_t>(kWorldAnimTension) == 0x3ea8f5c3, "the wor
 
 // ---- helpers
 
+// RWorldCamera::animHandle's 'Cams' instance
 CARP::Instance *AnimInstanceOf(RPlayerCamera *camera) {
-    return &reinterpret_cast<CameraAnimHandle *>(camera->animHandle)->instance;
-}
-
-// The instance's animation, NULL if it has none
-const CameraAnimData *AnimDescOf(const CARP::Instance *instance) {
-    return reinterpret_cast<const CameraAnimData *>(instance->articleDesc.value);
+    return camera->animHandle->Instances();
 }
 
 // a + (b - a) * t in x, y and z, out's w kept: the SSE lerp the compiler inlined (MOVSS and MOVHPS put x in
@@ -881,12 +873,12 @@ void RPlayerCamera::UpdateWorldAnimationCam() {
             const Coord4 *end;
             Coord4 endDirection = {};
             MATRIX4 endFrame;
-            const CameraAnimData *desc = AnimDescOf(instance);
+            const WorldArticle *desc = ArticleOf(instance);
             if (desc != NULL) {
-                const CameraAnimTrack *track = &desc->tracks[instance->procAnimType];
-                const CameraAnimKey *keys = track->keys;
-                end = &keys[0].position;
-                const Coord4 *next = track->keyCount > 1 ? &keys[1].position : end;
+                const CARP::AnimInfo *track = &desc->animInfos[instance->procAnimType];
+                const CARP::AnimKey *keys = track->keys;
+                end = AsVector4(&keys[0].position);
+                const Coord4 *next = track->frameCount > 1 ? AsVector4(&keys[1].position) : end;
                 VU0_v4sub(next, end, &endDirection);
                 VU0_quattom4(&endFrame, &keys[0].rotation);
                 FUN_00080980(&endFrame);
@@ -987,12 +979,12 @@ void RPlayerCamera::UpdateRelativeAnimationCam() {
     if (modeChangeFlags & kAnchorChanged) {
         if (DoSmoothModeChange() && unknown26C != 0) {
             Coord4 end, endDirection = {};
-            const CameraAnimData *desc = AnimDescOf(instance);
+            const WorldArticle *desc = ArticleOf(instance);
             if (desc != NULL) {
-                const CameraAnimTrack *track = &desc->tracks[instance->procAnimType];
-                const CameraAnimKey *keys = track->keys;
-                end = keys[0].position;
-                Coord4 next = track->keyCount > 1 ? keys[1].position : end;
+                const CARP::AnimInfo *track = &desc->animInfos[instance->procAnimType];
+                const CARP::AnimKey *keys = track->keys;
+                end = *AsVector4(&keys[0].position);
+                Coord4 next = track->frameCount > 1 ? *AsVector4(&keys[1].position) : end;
                 VU0_quattom4(path, &keys[0].rotation);
                 FUN_000809e0(path);
                 if (unknown260 != 0.0f) {

@@ -8,7 +8,7 @@
 //     mix); a mix may be scaled by another (its master). A mix moves to a new volume over a number of calls to
 //     GetVolume (a transition). AMix::Load reads the mixes' preset volumes from an ini file and keeps the loaded
 //     mixes in a list; Reset moves every one of those back to its preset.
-//   - the code of URefCounter<AMix>'s tree, and two helpers every URefCounter's tree calls;
+//   - URefCounter<AMix>'s tree's compiled copies of RefCounterTree's code (engine/URefCounter.h);
 //   - AFX: the environmental effect (the reverb on the sound library's effect bus), chosen by mode, each mode with
 //     a mix of its own whose volume is the effect's level;
 //   - AListener: where the sounds are heard from.
@@ -82,43 +82,6 @@ struct MixList : PointerList {
     MixList* Construct();                                                       // 0x0011cc10
     // _Incsize, a copy of PointerList::IncreaseSize.
     void IncreaseSize(uint32_t count);                                          // 0x0011cc80
-};
-
-// ---- the URefCounters' trees
-
-// An iterator over a URefCounter's tree, and the decrement every such tree calls (inlined --iterator: the head
-// goes to the rightmost node).
-struct RefCounterIterator {
-    RefCounterNode *node;
-
-    void Decrement();                                                           // 0x0011caa0
-};
-
-// The tree code each URefCounter<T> compiles, written once. Every copy is the same instructions, calling the
-// helpers every such tree shares (the iterator's steps, the minimum and maximum, the rotations, the node maker);
-// each instantiation's copies call each other. The bodies here are those copies; MixRefTree's entries (and
-// FaderRefTree's, Fader.h) call them.
-class RefCounterTree : public URefCounterMap {
-public:
-    // The rotation every URefCounter's tree calls.
-    void Lrotate(RefCounterNode *where);                                        // 0x0011cb20
-
-protected:
-    // _Erase: frees a subtree without rebalancing.
-    void EraseSubtree(RefCounterNode *node);
-    // erase(where): unlinks and frees the node, rebalances, answers the next one.
-    RefCounterNode **EraseAt(RefCounterNode **result, RefCounterNode *where);
-    // _Insert: a new red node under `where` (on its left if `addLeft`), then rebalances.
-    RefCounterNode **InsertAt(RefCounterNode **result, bool addLeft, RefCounterNode *where,
-                              const RefCounterValue *value);
-    // erase(first, last): everything is cleared at once, otherwise one node at a time.
-    RefCounterNode **EraseRange(RefCounterNode **result, RefCounterNode *first, RefCounterNode *last);
-    // insert(value): where the name is, or a new node for it.
-    RefCounterInsertResult *InsertUnique(RefCounterInsertResult *result, const RefCounterValue *value);
-    // The static's destructor: everything erased, the head freed.
-    void Destroy();
-    // The same without erasing the subtree first (the copy an exception unwind calls).
-    void DestroyRange();
 };
 
 // URefCounter<AMix>'s tree (MixRefCounter's map, at 0x00243944): its compiled copies.

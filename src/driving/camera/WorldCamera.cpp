@@ -9,6 +9,9 @@
 
 #include "../../common/xbeOverload.h"     // XbeVirtual
 #include "../../helpers.h"
+#include "../anim/Actor.h"              // ActActorDatabase
+#include "../anim/AnimEngine.h"         // Handle
+#include "../world/World.h"              // ArticleOf
 #include "../data/Carp.h"
 #include "../data/DebugVariables.h"
 #include "../data/IniFiles.h"
@@ -50,24 +53,9 @@ struct RigidBody;
 
 namespace {
 
-// The animation engine's instance of a camera animation system (names ours; only the fields read here)
-struct AnimSystemInstance {
-    uint8_t unknown00[0xc];
-    uint8_t flags;                      // +0x0c kInstanceStopped
-    uint8_t track;                      // +0x0d
-    uint16_t frame;                     // +0x0e
-    uint8_t unknown10[0xc];
-    CameraAnimData *data;               // +0x1c
-};
-
+// The flags of a camera animation system's first instance (CARP::Instance::flags)
 enum AnimSystemInstanceFlags : uint8_t {
     kInstanceFlag10 = 0x10,             // UpdateAnimationCam answers false
-};
-
-// What a 'Cams' instance's article description's third word leads to (name ours)
-struct CameraAnimHeader {
-    uint32_t unknown00;
-    uint16_t id;                        // +0x04 LoadSingleAnimationFromList's
 };
 
 // A shell (an entry of the Simulation's shells): a physics object with a simple body
@@ -92,14 +80,6 @@ struct ParticleSystemManagerFields {
 // ---- the game's code not ported yet
 #define Simulation_GetRigidBody ((RigidBody *(__fastcall *)(void *, int, int slot))0x000b2700)
 #define Simulation_GetSimpleRigidBody ((SimpleRigidBody *(__fastcall *)(void *, int, int slot))0x000b2730)
-#define Handle_Create ((Handle *(*)(int unknown, uint32_t tick, CARP::Instance *instance, int, int))0x00078210)
-#define Handle_Delete ((void (*)(Handle *handle, uint32_t size))0x00076810)
-#define Handle_Stop ((void (__fastcall *)(Handle *, int))0x00078200)
-// Answers a 16-bit id; the game stores all of EAX
-#define Handle_GetInstanceSystemID ((uint32_t (__fastcall *)(Handle *, int, uint32_t index))0x00076900)
-#define Handle_IsSystemPlaying ((bool (__fastcall *)(Handle *, int, uint32_t system))0x000774a0)
-#define Handle_GetFirstSystemInstance ((AnimSystemInstance *(__fastcall *)(Handle *, int, uint32_t system))0x000776a0)
-#define Handle_ProcessStimuli ((void (__fastcall *)(Handle *, int, uint32_t system, uint32_t stimulus, uint32_t step, int unknown))0x00077d70)
 #define AISplinePath_Construct ((AISplinePath *(__fastcall *)(AISplinePath *, int, void *path))0x00035680)
 #define AISplinePath_Destruct ((void (__fastcall *)(AISplinePath *, int))0x00035730)
 #define AISplinePath_Reset ((void (__fastcall *)(AISplinePath *, int, void *path))0x00035740)
@@ -108,12 +88,6 @@ struct ParticleSystemManagerFields {
 #define FUN_00022870 ((void (*)(Coord4 *out, const Coord4 *a, const Coord4 *b, float t))0x00022870)
 #define FUN_00080980 ((void (*)(MATRIX4 *frame))0x00080980)
 #define FUN_000809e0 ((void (*)(MATRIX4 *frame))0x000809e0)
-#define ActActor_DrawWeapons ((void (__fastcall *)(ActActor *, int, RViewCamera *view, bool unknown))0x000118a0)
-#define ActActorDatabase_PrepareActorsForCulling ((void (*)())0x00012580)
-#define ActActorDatabase_GetNextActorCullInfo ((int (*)(Coord4 *sphere, float *height, bool *checkFar, float *farScale))0x00012f40)
-#define ActActorDatabase_SetActorCull ((void (*)(int item, bool culled, float distance))0x0008c8d0)
-#define ActActorDatabase_SetupFOVConversions ((void (__fastcall *)(ActActorDatabase *, int, RViewCamera *view))0x000130a0)
-#define ActActorDatabase_DrawAll ((void (__fastcall *)(ActActorDatabase *, int, RViewCamera *view, bool, bool))0x00012fd0)
 #define RRenderWorldCulling_IsInFrustum2d ((bool (__fastcall *)(void *, int, const Coord4 *sphere, float radius, bool checkFar, float farScale, float *distance))0x0008d180)
 #define RRenderWorldCulling_Setup2dFrustrum ((void (__fastcall *)(void *, int, const Coord4 *position, const MATRIX4 *frame, float fieldOfView, float range))0x0008d440)
 #define RSceneObj_PrepareSceneObjsForCulling ((void (*)(CachedDrawInfo *list))0x0008d830)
@@ -192,7 +166,6 @@ struct ParticleSystemManagerFields {
 #define WorldViewMade BOOL8_AT(0x001f2c50)                      // set by RRenderWorldCamera; RVehicle::Render reads it
 #define ParticleSystemsUnknown U32_AT(0x001ec46c)
 #define WorldCulling ((void *)0x001f2c80)                       // the RRenderWorldCulling
-#define ActorDatabase (*(ActActorDatabase **)0x001dd9a0)
 #define Pass0Draws ((CachedDrawInfo *)0x001ef0c0)               // pass 0 of the track's draws, drawn last
 #define Pass1Draws ((CachedDrawInfo *)0x001ec4b8)               // pass 1, drawn after the cars (names ours)
 #define Fog (*(void **)0x001ec004)
@@ -255,13 +228,12 @@ SimpleRigidBody *SimpleBodyOf(const PhysicsObject *object) {
 }
 
 void DeleteHandle(Handle *handle) {
-    Handle_Stop(handle, 0);
-    Handle_Delete(handle, kHandleSize);
+    handle->Stop();
+    Handle::OperatorDelete(handle, kHandleSize);
 }
 
 uint16_t CameraAnimId(const CARP::Instance *instance) {
-    const CARP::BaseDesc *desc = reinterpret_cast<const CARP::BaseDesc *>(instance->articleDesc.value);
-    return reinterpret_cast<const CameraAnimHeader *>(desc->unknown08)->id;
+    return ArticleOf(instance)->animInfos->systemId;
 }
 
 // value + t * (target - value) in x, y and z, w kept, in single precision (FUN_00022870, inlined in the game)
@@ -321,14 +293,6 @@ void TransformPointXZ(const Coord3 *point, const MATRIX4 *matrix, Coord4 *out) {
     out->y = (float)((double)m[0][1] * point->x + (double)m[2][1] * point->z - m[3][1]);
     out->z = (float)((double)m[0][2] * point->x + (double)m[2][2] * point->z - m[3][2]);
     out->w = (float)((double)m[0][3] * point->x + (double)m[2][3] * point->z - m[3][3]);
-}
-
-// FUNC_AT(0x00013020)
-void ActActorDatabase::DrawActorWeapons(RViewCamera *view, bool unknown) {
-    for (ActActorNode *node = actors == NULL ? NULL : actors->next; node != actors; node = node->next) {
-        if (!node->actor->culled)
-            ActActor_DrawWeapons(node->actor, 0, view, unknown);
-    }
 }
 
 // ---- RWorldCamera
@@ -565,8 +529,8 @@ void RWorldCamera::SetCameraZoom(float target, float step) {
 bool RWorldCamera::LoadSingleAnimation(CARP::Instance *instance) {
     if (animHandle != NULL)
         DeleteHandle(animHandle);
-    animHandle = Handle_Create(1, GameTick, instance, 0, 0);
-    animSystemId = Handle_GetInstanceSystemID(animHandle, 0, 0);
+    animHandle = Handle::Create(1, GameTick, instance, NULL, NULL);
+    animSystemId = animHandle->GetInstanceSystemID(0);
     return animHandle != NULL;
 }
 
@@ -595,7 +559,7 @@ bool RWorldCamera::LoadSingleAnimationFromList(uint32_t id) {
         return false;
     if (animHandle != NULL)
         DeleteHandle(animHandle);
-    animHandle = Handle_Create(1, GameTick, &cameraAnims[i], 0, 0);
+    animHandle = Handle::Create(1, GameTick, &cameraAnims[i], NULL, NULL);
     if (animHandle == NULL)
         return false;
     animSystemId = id;
@@ -606,8 +570,8 @@ bool RWorldCamera::LoadSingleAnimationFromList(uint32_t id) {
 bool RWorldCamera::PlayCurrentAnimation() {
     if (animHandle == NULL)
         return false;
-    Handle_ProcessStimuli(animHandle, 0, animSystemId, kCameraStimulus, SimStepCount, 2);
-    return Handle_IsSystemPlaying(animHandle, 0, animSystemId);
+    animHandle->ProcessStimuli(animSystemId, kCameraStimulus, SimStepCount, 2);
+    return animHandle->IsSystemPlaying(animSystemId);
 }
 
 // FUNC_AT(0x00097970)
@@ -626,25 +590,25 @@ void RWorldCamera::ReadAnchorInfo(IniFiles *ini, const char *section, CameraAnch
 bool RWorldCamera::UpdateAnimationCam(MATRIX4 *frame, uint8_t flags) {
     if (animHandle == NULL)
         return false;
-    AnimSystemInstance *instance = Handle_GetFirstSystemInstance(animHandle, 0, animSystemId);
-    if (instance == NULL || instance->data == NULL)
+    CARP::Instance *instance = animHandle->GetFirstSystemInstance(animSystemId);
+    if (instance == NULL || ArticleOf(instance) == NULL)
         return false;
-    const CameraAnimTrack *track = &instance->data->tracks[instance->track];
+    const CARP::AnimInfo *track = &ArticleOf(instance)->animInfos[instance->procAnimType];
     if (instance->flags & kInstanceFlag10)
         return false;
-    bool playing = Handle_IsSystemPlaying(animHandle, 0, animSystemId);
+    bool playing = animHandle->IsSystemPlaying(animSystemId);
     if (!playing)
         return playing;
 
-    float time = (float)((double)int32_t(instance->frame * track->framesPerKey) * kSecondsPerFrame);
+    float time = (float)((double)int32_t(instance->procAnimIndex * track->frameRate) * kSecondsPerFrame);
     int key = FloorToInt(time);
     float t = (float)(time - (double)uint32_t(key));    // the key loaded signed, 2^32 added when negative
     uint32_t from = key;
-    if (from >= track->keyCount)
-        from = track->keyCount - 1;
+    if (from >= track->frameCount)
+        from = track->frameCount - 1;
     uint32_t to = from + 1;
-    if (to >= track->keyCount)
-        to = track->keyCount - 1;
+    if (to >= track->frameCount)
+        to = track->frameCount - 1;
     Coord4 rotation;
     VU0_fastqslerp(&track->keys[from].rotation, &track->keys[to].rotation, &rotation, t);
     VU0_quattom4(frame, &rotation);
@@ -652,7 +616,7 @@ bool RWorldCamera::UpdateAnimationCam(MATRIX4 *frame, uint8_t flags) {
         FUN_000809e0(frame);
     else
         FUN_00080980(frame);
-    FUN_00022870(&eye, &track->keys[from].position, &track->keys[to].position, t);
+    FUN_00022870(&eye, AsVector4(&track->keys[from].position), AsVector4(&track->keys[to].position), t);
     if (flags & kAnimMirror) {
         frame->mtx[0][0] = -frame->mtx[0][0];
         frame->mtx[1][0] = -frame->mtx[1][0];
@@ -781,8 +745,8 @@ CachedDrawInfo* RRenderWorldCamera::PerformCulling() {
     WRender::PrepareForCull(list);
     CullModule(WRender::GetNextPoint, WRender::SetCull, true);
     if (ActorDatabase != NULL) {
-        ActActorDatabase_PrepareActorsForCulling();
-        CullModule(ActActorDatabase_GetNextActorCullInfo, ActActorDatabase_SetActorCull, false);
+        ActActorDatabase::PrepareActorsForCulling();
+        CullModule(ActActorDatabase::GetNextActorCullInfo, ActActorDatabase::SetActorCull, false);
     }
     RSceneObj_PrepareSceneObjsForCulling(list);
     CullModule(RSceneObj_GetNextSceneObjCullInfo, RSceneObj_SetSceneObjectCull, false);
@@ -911,12 +875,12 @@ void RRenderWorldCamera::DoRender() {
     CachedDrawInfo *list = PerformCulling();
     RRenderSharedData_SendPerViewPort();
     if (ActorDatabase != NULL)
-        ActActorDatabase_SetupFOVConversions(ActorDatabase, 0, this);
+        ActorDatabase->SetupFOVConversions(this);
     DrawStaticWorldGeometry(list);
     fgRender->CopyDrawPasses(list, Pass0Draws, 0, 0);
     fgRender->CopyDrawPasses(list, Pass1Draws, 1, 1);
     if (ActorDatabase != NULL)
-        ActActorDatabase_DrawAll(ActorDatabase, 0, this, false, false);
+        ActorDatabase->DrawAll(this, false, false);
 
     RRenderer_EnableAlphaWrites(fgRenderer, 0);
     RFog_EnableFog(Fog, 0);
@@ -938,7 +902,7 @@ void RRenderWorldCamera::DoRender() {
     DrawEffects();
     if (ActorDatabase != NULL) {
         RRenderer_EnableAlphaWrites(fgRenderer, 0);
-        ActActorDatabase_DrawAll(ActorDatabase, 0, this, true, true);
+        ActorDatabase->DrawAll(this, true, true);
         RRenderer_FlushDrawLists(fgRenderer, 0);
         RRenderer_DisableAlphaWrites(fgRenderer, 0);
     }

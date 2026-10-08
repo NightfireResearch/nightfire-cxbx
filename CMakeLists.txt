@@ -388,6 +388,19 @@ add_library(drivinginject SHARED
   src/driving/audio/Bank.cpp
   src/driving/audio/Index.cpp
   src/driving/audio/ZoomObj.cpp
+  src/driving/anim/Actor.cpp
+  src/driving/anim/Controllers.cpp
+  src/driving/anim/AnimationDatabase.cpp
+  src/driving/anim/Character.cpp
+  src/driving/anim/Events.cpp
+  src/driving/anim/IK.cpp
+  src/driving/anim/Manager.cpp
+  src/driving/anim/Model.cpp
+  src/driving/anim/Skeleton.cpp
+  src/driving/anim/Poser.cpp
+  src/driving/anim/Weapon.cpp
+  src/driving/anim/AnimEngine.cpp
+  src/driving/anim/ProcAnim.cpp
   src/driving/world/Render.cpp
   src/driving/camera/Camera.cpp
   src/driving/camera/WorldCamera.cpp
@@ -435,6 +448,12 @@ add_library(drivinginject SHARED
   src/driving/devtools/AudioStreamShadow.cpp
   src/driving/devtools/AudioVoiceShadow.cpp
   src/driving/devtools/AudioIndexShadow.cpp
+  src/driving/devtools/ActorShadow.cpp
+  src/driving/devtools/CharacterShadow.cpp
+  src/driving/devtools/IKShadow.cpp
+  src/driving/devtools/ActModelShadow.cpp
+  src/driving/devtools/PoserShadow.cpp
+  src/driving/devtools/AnimEngineShadow.cpp
   src/driving/devtools/CarpShadow.cpp
   src/driving/engine/UGroup.cpp
   src/driving/data/UData.cpp

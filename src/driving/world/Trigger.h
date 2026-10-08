@@ -8,6 +8,8 @@
 #include "CollisionTypes.h"
 #include "../data/Carp.h"         // CARP::Instance
 
+class ActWeapon;
+
 // ---------------------------------------------------------------------------------------------------------------
 // The triggers' own methods (WTrigger, CollisionInstance.h): running their events, the direction test, following a
 // moving object. See Trigger.cpp; WTriggerManager (TriggerManager.h) finds what touches them.
@@ -73,12 +75,13 @@ static_assert(sizeof(ActiveRayShell) == 0x30, "an active ray shell is 48 bytes")
 // SMissionRule::RunEvents and FireEvents fill it). The name is ours, after SetEventDynamicData.
 struct EventDynamicData {
     CARP::Instance *instance;   // +0x00
-    uint8_t unknown04[8];
-    int32_t unknown0c;          // +0x0c FireEvents: -1
+    uint32_t unknown04;         // +0x04 RAnimEngine::System::Update: 0
+    uint32_t unknown08;
+    int32_t instanceIndex;      // +0x0c the handle's instance (RAnimEngine::System::Update); FireEvents: -1
     Coord4 position;            // +0x10 the trigger's, w 1
     uint8_t unknown20[0x10];
     WTrigger *trigger;          // +0x30
-    uint32_t unknown34;
+    ActWeapon *weapon;          // +0x34 ActWeapon::SetEventDynamicData's
     uint8_t flag;               // +0x38 FireEvents' first argument
     uint8_t unknown39[3];
     int32_t index;              // +0x3c its second

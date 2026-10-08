@@ -7,6 +7,7 @@
 #include "PhysicsMath.h"
 #include "PhysicsObject.h"
 #include "../../helpers.h"
+#include "../anim/AnimEngine.h"         // Handle
 #include "../EventManager.hpp"            // Event::operator new
 #include "../data/Carp.h"                 // CARP::Instance
 #include "../engine/CoreFoundation.h"     // NullFunction
@@ -32,7 +33,6 @@
 #define Simulation_GetRigidBody ((RigidBody *(__fastcall *)(void *, int, int slot))0x000b2700)
 #define CollisionImpact_Construct ((CollisionImpact *(__fastcall *)(CollisionImpact *, int))0x0003dc20)
 #define ECollision_Construct ((void *(__fastcall *)(void *, int, CollisionImpact impact))0x0003f370)
-#define Handle_ProcessStimuli ((void (__fastcall *)(Handle *, int, uint32_t stimulus, uint32_t step, int unknown))0x00077e00)
 #define SMissionManager_ProgrammerDefinedEvent ((void (__fastcall *)(void *, int, int event, const char *text))0x000b72f0)
 
 // ---- globals
@@ -435,15 +435,15 @@ void RigidBody::CollideWithWorld() {
                 if (sceneObject != NULL) {
                     Handle *animation = sceneObject->animHandle;
                     uint32_t step = SimStepCount;
-                    Handle_ProcessStimuli(animation, 0, kStimulusHit, step, 0);
+                    animation->ProcessStimuli(kStimulusHit, step, 0);
                     if (impact.strength >= 5.0f)
-                        Handle_ProcessStimuli(animation, 0, kStimulusHit16, step, 0);
+                        animation->ProcessStimuli(kStimulusHit16, step, 0);
                     if (impact.strength >= 2.5f)
-                        Handle_ProcessStimuli(animation, 0, kStimulusHit15, step, 0);
+                        animation->ProcessStimuli(kStimulusHit15, step, 0);
                     if (impact.strength >= 0.5f)
-                        Handle_ProcessStimuli(animation, 0, kStimulusHit14, step, 0);
+                        animation->ProcessStimuli(kStimulusHit14, step, 0);
                     if (impact.strength >= kTenth)
-                        Handle_ProcessStimuli(animation, 0, kStimulusHit13, step, 0);
+                        animation->ProcessStimuli(kStimulusHit13, step, 0);
                 }
             }
             RaiseCollisionEvent(impact);

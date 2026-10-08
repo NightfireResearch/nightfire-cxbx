@@ -77,15 +77,14 @@ using namespace GameStd;
 #define BadCast_Construct ((void *(__fastcall *)(void *, int, const char *))0x001326ae)
 #define CxxThrowException ((void (__stdcall *)(void *, const void *))0x001325ad)
 
-#define String_Eos ((void (__fastcall *)(String *, int, uint32_t))0x00012c80)
-#define String_Copy ((void (__fastcall *)(String *, int, uint32_t, uint32_t))0x00013150)
-#define String_Grow ((bool (__fastcall *)(String *, int, uint32_t, bool))0x00013300)
-#define String_AssignText ((String *(__fastcall *)(String *, int, const char *, uint32_t))0x00013630)
-#define String_ConstructCopy ((String *(__fastcall *)(String *, int, const String *))0x000136d0)
-#define String_ConstructText ((String *(__fastcall *)(String *, int, const char *))0x00013840)
-#define String_Tidy ((void (__fastcall *)(String *, int, bool))0x00013110)
 #define String_Xran ((void (__fastcall *)(String *, int))0x00130b80)
 #define String_Xlen ((void (__fastcall *)(String *, int))0x00130bc0)
+#define Exception_Construct ((void (__fastcall *)(void *, int))0x001325e6)
+#define Exception_ConstructCopy ((void (__fastcall *)(void *, int, const void *other))0x0013263c)
+#define Exception_Destruct ((void (__fastcall *)(void *, int))0x0013268b)
+
+#define LogicErrorVtable ((const void *)0x00189ee4)
+#define LengthErrorVtable ((const void *)0x00189eec)
 
 #define CrtFree ((void (__cdecl *)(void *))0x001331dc)
 #define Sprintf ((int (__cdecl *)(char *, const char *, ...))0x00132767)
@@ -110,6 +109,8 @@ struct Lconv {
 
 static const char kCharMax = 0x7f;   // CHAR_MAX: "no further grouping"
 static const uint32_t kNpos = 0xffffffff;
+static const uint32_t kStringBufferSize = 16;            // the small buffer
+static const uint32_t kMaxStringSize = 0xfffffffe;       // max_size()
 
 // A call through the object's (the game's) vtable.
 template <class R, class C, class... A> inline R CallVirtual(C *object, int slot, A... args) {
@@ -185,7 +186,7 @@ inline void FreeString(String *s) {
 inline void TidyString(String *s) {
     FreeString(s);
     s->capacity = 15;
-    String_Eos(s, 0, 0);
+    s->Eos(0);
 }
 
 // use_facet<F>(locale): the locale's facet, or (made once, kept in the cache) a default one.
@@ -1079,7 +1080,7 @@ String* GameStd::Numpunct::TrueName(String *result) {
 
 // FUNC_AT(0x0003d3b0)
 String* GameStd::Numpunct::DoGrouping(String *result) {
-    String_ConstructText(result, 0, grouping);
+    result->ConstructText(grouping);
     return result;
 }
 
@@ -1089,7 +1090,7 @@ String* GameStd::Numpunct::DoFalseName(String *result) {
     result->capacity = 15;
     result->size = 0;
     result->text.buffer[0] = '\0';
-    String_AssignText(result, 0, name, uint32_t(strlen(name)));
+    result->AssignText(name, uint32_t(strlen(name)));
     return result;
 }
 
@@ -1099,7 +1100,7 @@ String* GameStd::Numpunct::DoTrueName(String *result) {
     result->capacity = 15;
     result->size = 0;
     result->text.buffer[0] = '\0';
-    String_AssignText(result, 0, name, uint32_t(strlen(name)));
+    result->AssignText(name, uint32_t(strlen(name)));
     return result;
 }
 
@@ -1119,7 +1120,7 @@ String* GameStd::String::ConstructFill(uint32_t count, char ch) {
 String* GameStd::String::AssignFill(uint32_t count, char ch) {
     if (count == kNpos)
         String_Xlen(this, 0);
-    if (String_Grow(this, 0, count, true)) {
+    if (Grow(count, true)) {
         memset(Data(), ch, count);
         size = count;
         Data()[count] = '\0';
@@ -1133,7 +1134,7 @@ String* GameStd::String::AppendFill(uint32_t count, char ch) {
         String_Xlen(this, 0);
     if (count > 0) {
         uint32_t newSize = size + count;
-        if (String_Grow(this, 0, newSize, false)) {
+        if (Grow(newSize, false)) {
             memset(Data() + size, ch, count);
             size = newSize;
             Data()[newSize] = '\0';
@@ -1157,7 +1158,7 @@ String* GameStd::String::AppendSub(const String *right, uint32_t offset, uint32_
         if (newSize > kNpos - 1)
             String_Xlen(this, 0);
         if (capacity < newSize) {
-            String_Copy(this, 0, newSize, size);
+            Copy(newSize, size);
         } else if (newSize == 0) {
             size = 0;
             Data()[0] = '\0';
@@ -1175,7 +1176,193 @@ String* GameStd::String::AppendSub(const String *right, uint32_t offset, uint32_
 
 // FUNC_AT(0x0005b0a0)
 String* GameStd::String::Assign(const char *string) {
-    return String_AssignText(this, 0, string, uint32_t(strlen(string)));
+    return AssignText(string, uint32_t(strlen(string)));
+}
+
+// FUNC_AT(0x00013840)
+String* GameStd::String::ConstructText(const char *string) {
+    capacity = kStringBufferSize - 1;
+    size = 0;
+    text.buffer[0] = 0;
+    AssignText(string, uint32_t(strlen(string)));
+    return this;
+}
+
+// FUNC_AT(0x000136d0)
+String* GameStd::String::ConstructCopy(const String *right) {
+    size = 0;
+    capacity = kStringBufferSize - 1;
+    text.buffer[0] = 0;
+    AssignSub(right, 0, kNpos);
+    return this;
+}
+
+// FUNC_AT(0x000132c0)
+void GameStd::String::Destruct() {
+    Tidy(true);
+}
+
+// FUNC_AT(0x00012590)
+const char* GameStd::String::CStr() {
+    return Data();
+}
+
+// FUNC_AT(0x00013580)
+String* GameStd::String::AssignSub(const String *right, uint32_t offset, uint32_t count) {
+    if (right->size < offset)
+        String_Xran(this, 0);
+    uint32_t length = right->size - offset;
+    if (count < length)
+        length = count;
+    if (this == right) {
+        Erase(offset + length, kNpos);
+        Erase(0, offset);
+    } else if (Grow(length, true)) {
+        const char *source = right->capacity < kStringBufferSize ? right->text.buffer : right->text.pointer;
+        memcpy(Data(), source + offset, length);
+        Eos(length);
+    }
+    return this;
+}
+
+// FUNC_AT(0x00013630)
+String* GameStd::String::AssignText(const char *string, uint32_t count) {
+    if (Data() <= string && string < Data() + size)
+        return AssignSub(this, string - Data(), count);    // a part of itself
+    if (Grow(count, true)) {
+        memcpy(Data(), string, count);
+        Eos(count);
+    }
+    return this;
+}
+
+// FUNC_AT(0x00013480)
+String* GameStd::String::Erase(uint32_t offset, uint32_t count) {
+    if (size < offset)
+        String_Xran(this, 0);
+    if (size - offset < count)
+        count = size - offset;
+    if (count > 0) {
+        memmove(Data() + offset, Data() + offset + count, size - offset - count);
+        uint32_t newSize = size - count;
+        if (Grow(newSize, false))
+            Eos(newSize);
+    }
+    return this;
+}
+
+// _Copy's try/catch funclet is not ported: it retries a failed allocation at the exact size, and the game's
+// allocator does not throw.
+// FUNC_AT(0x00013150)
+void GameStd::String::Copy(uint32_t newSize, uint32_t oldLength) {
+    uint32_t newCapacity = newSize | (kStringBufferSize - 1);
+    if (newCapacity > kMaxStringSize)
+        newCapacity = newSize;
+    char *block = (char *)UMemory::FastAlloc(newCapacity + 1, "STL");
+    if (oldLength > 0)
+        memcpy(block, Data(), oldLength);
+    Tidy(true);
+    text.pointer = block;
+    capacity = newCapacity;
+    Eos(oldLength);
+}
+
+// FUNC_AT(0x00013300)
+bool GameStd::String::Grow(uint32_t newSize, bool trim) {
+    if (newSize > kMaxStringSize)
+        String_Xlen(this, 0);
+    if (capacity < newSize)
+        Copy(newSize, trim ? 0 : size);
+    else if (trim && newSize < kStringBufferSize)
+        Tidy(true);
+    else if (newSize == 0)
+        Eos(0);
+    return newSize > 0;
+}
+
+// FUNC_AT(0x00012c80)
+void GameStd::String::Eos(uint32_t length) {
+    size = length;
+    Data()[length] = 0;
+}
+
+// FUNC_AT(0x00013110)
+void GameStd::String::Tidy(bool built) {
+    if (built && capacity >= kStringBufferSize && text.pointer != NULL)
+        UMemory::FastFree(text.pointer, capacity + 1);
+    capacity = kStringBufferSize - 1;
+    size = 0;
+    text.buffer[0] = 0;
+}
+
+// FUNC_AT(0x000125a0)
+void __stdcall GameStd::AllocatorDeallocate(void *block, uint32_t count) {
+    if (block != NULL)
+        UMemory::FastFree(block, count);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// std::logic_error, std::length_error. Their unwinding is not ported: nothing the game does throws.
+
+// FUNC_AT(0x00013700)
+LogicError* GameStd::LogicError::Construct(const String *message) {
+    DEBUGVAR_UNTESTED("std::logic_error::logic_error (0x00013700)");
+    Exception_Construct(this, 0);
+    vtable = LogicErrorVtable;
+    this->message.ConstructCopy(message);
+    return this;
+}
+
+// FUNC_AT(0x00013930)
+LogicError* GameStd::LogicError::ConstructCopy(const LogicError *other) {
+    DEBUGVAR_UNTESTED("std::logic_error's copy constructor (0x00013930)");
+    Exception_ConstructCopy(this, 0, other);
+    vtable = LogicErrorVtable;
+    message.ConstructCopy(&other->message);
+    return this;
+}
+
+// FUNC_AT(0x000133d0)
+void GameStd::LogicError::Destruct() {
+    DEBUGVAR_UNTESTED("std::logic_error::~logic_error (0x000133d0)");
+    vtable = LogicErrorVtable;
+    message.Tidy(true);
+    Exception_Destruct(this, 0);
+}
+
+// FUNC_AT(0x00013460)
+LogicError* GameStd::LogicError::Delete(unsigned flags) {
+    Destruct();
+    if (flags & 1)
+        OperatorDelete(this);
+    return this;
+}
+
+// FUNC_AT(0x00013450)
+const char* GameStd::LogicError::What() {
+    DEBUGVAR_UNTESTED("std::logic_error::what (0x00013450)");
+    return message.CStr();
+}
+
+// FUNC_AT(0x000139a0)
+LengthError* GameStd::LengthError::ConstructCopy(const LengthError *other) {
+    LogicError::ConstructCopy(other);
+    vtable = LengthErrorVtable;
+    return this;
+}
+
+// FUNC_AT(0x00013780)
+void GameStd::LengthError::Destruct() {
+    vtable = LengthErrorVtable;
+    LogicError::Destruct();
+}
+
+// FUNC_AT(0x00013760)
+LengthError* GameStd::LengthError::Delete(unsigned flags) {
+    Destruct();
+    if (flags & 1)
+        OperatorDelete(this);
+    return this;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -1293,7 +1480,7 @@ OutIter* GameStd::NumPut::IntPut(OutIter *result, OutIter dest, IosBase *ios, ch
     for (; fillCount > 0; fillCount--)
         PutInline(&out, fill);
     *result = out;
-    String_Tidy(&grouping, 0, true);
+    grouping.Tidy(true);
     return result;
 }
 
@@ -1485,11 +1672,11 @@ OutIter* GameStd::NumPut::DoPutBool(OutIter *result, OutIter dest, IosBase *ios,
     String name, trueName, falseName;
     if (value) {
         const_cast<Numpunct *>(punct)->TrueName(&trueName);
-        String_ConstructCopy(&name, 0, &trueName);
+        name.ConstructCopy(&trueName);
         TidyString(&trueName);
     } else {
         const_cast<Numpunct *>(punct)->FalseName(&falseName);
-        String_ConstructCopy(&name, 0, &falseName);
+        name.ConstructCopy(&falseName);
         TidyString(&falseName);
     }
 
@@ -1715,7 +1902,7 @@ int GameStd::NumGet::GetLocText(InIter *first, InIter *last, uint32_t fieldCount
     columns.text.buffer[0] = '\0';
     if (fieldCount == kNpos)
         String_Xlen(&columns, 0);
-    if (String_Grow(&columns, 0, fieldCount, true)) {
+    if (columns.Grow(fieldCount, true)) {
         memset(columns.Data(), 0, fieldCount);
         columns.size = fieldCount;
         columns.Data()[fieldCount] = '\0';

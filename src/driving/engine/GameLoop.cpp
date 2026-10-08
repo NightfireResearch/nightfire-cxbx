@@ -15,6 +15,8 @@
 #include "UMemory.hpp"
 #include "USingleton.h"
 #include "../Scheduler.hpp"
+#include "../anim/Actor.h"              // ActActorDatabase, ActorDatabase
+#include "../anim/Manager.h"            // ActManager
 #include "../camera/CameraIniLoader.h"
 #include "../camera/PlayerCamera.h"
 #include "../EventManager.hpp"
@@ -145,7 +147,6 @@ const char kCarModels[] = "data\\car\\model\\";
 #define WeaponManager (*(void **)0x0023923c)
 #define playerPhysicsObject (*(RigidVehicle ***)0x00234e40)
 #define CollisionManager (*(void **)0x00239a70)
-#define fActorDatabase (*(void **)0x001dd9a0)
 #define TrafficSeed I16_AT(0x001de914)
 
 // The disc error screen's: a one-byte block standing for "made", and the font
@@ -170,7 +171,6 @@ typedef const char *DiscErrorText[3];
 #define CRT_free ((void (*)(void *))0x001331dc)
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 #define CRT_clearfp ((unsigned (*)(void))0x00133c9e)
-#define StdString_Assign ((GameStd::String *(__fastcall *)(GameStd::String *, int, const char *, unsigned))0x00013630)
 
 // XAPI (ours, behind the import thunk)
 #define XInitDevices ((void (__stdcall *)(unsigned, void *))0x00184bae)
@@ -237,17 +237,12 @@ typedef const char *DiscErrorText[3];
 #define AIRoadSpawn_Shutdown ((void (*)(void))0x000349e0)
 #define AICharacter_Init ((void (*)(void))0x0001c190)
 #define AICharacter_Shutdown ((void (*)(void))0x0001c1b0)
-#define ActActorDatabase_StartUp ((void (*)(void))0x00013790)
-#define ActActorDatabase_ShutDown ((void (*)(void))0x00013810)
-#define ActManager_StartUp ((void (*)(float))0x000172c0)
-#define ActManager_ShutDown ((void (*)(void))0x000173d0)
 #define InputConfigManager_Get ((void *(*)(void))0x00050270)
 #define InputConfigManager_InitAndPreload ((void (__fastcall *)(void *, int))0x000504d0)
 #define InputConfigManager_Shutdown ((void (__fastcall *)(void *, int))0x00050080)
 #define IFeedback_Construct ((void *(__fastcall *)(IFeedbackStorage *, int, int))0x0004fe30)
 #define IFeedback_Destruct ((void (__fastcall *)(IFeedbackStorage *, int))0x0004fb10)
 #define IFeedback_Pause ((void (*)(void))0x0004fa00)
-#define BankIterator_Increment ((void (__fastcall *)(RefCounterNode **, int))0x00019d80)
 
 // The car's type name (a virtual method of the player's vehicle).
 static const char *PlayerCarTypeName() {
@@ -747,8 +742,8 @@ void GameLoop_CleanUp() {
     NullFunction();
     PVehicle_Shutdown();
     GLoadingScreen_Status("Dismiss actors");
-    ActManager_ShutDown();
-    ActActorDatabase_ShutDown();
+    ActManager::ShutDown();
+    ActActorDatabase::ShutDown();
     GLoadingScreen_Status("Cleanup render objects");
     RSceneObj_DestroyAll();
     GLoadingScreen_Status("Deinit world");
@@ -836,9 +831,9 @@ void RunTheGame(bool simulateOncePerLoop, int unused) {
         AStream::Get("music")->Event("opera\\puccini48sec", -1.0f, true, false, false);
     if (ASystem_fgSystem != NULL) {
         RefCounterNode *scratch;
-        RefCounterNode *bank = *ABank::Begin(&scratch);
-        while (bank != *ABank::End(&scratch))
-            BankIterator_Increment(&bank, 0);
+        RefCounterIterator bank = { *ABank::Begin(&scratch) };
+        while (bank.node != *ABank::End(&scratch))
+            bank.Increment();
     }
     UFileLoader::DumpFileRequestList();   // the original pushes "..\\bigprocess" to both; neither reads it
     UFileLoader::StopUsingBigFile();
@@ -916,9 +911,9 @@ void GameLoop_StartUp(int trafficSeed) {
     speechName.text.buffer[0] = 0;
     const char *const languageSuffix[8] = { "en", "fr", "ge", "sp", "en", "en", "en", "en" };
     if (CRT_stricmp(MissionName, "uw_mis11") == 0 || CRT_stricmp(MissionName, "uw_map") == 0)
-        StdString_Assign(&speechName, 0, "mis11", 5);
+        speechName.AssignText("mis11", 5);
     else if (CRT_stricmp(MissionName, "snow1a_mis3") == 0 || CRT_stricmp(MissionName, "snow1a") == 0)
-        StdString_Assign(&speechName, 0, "mis3", 4);
+        speechName.AssignText("mis3", 4);
     else if (CRT_stricmp(MissionName, "snow2a_mis4") == 0 || CRT_stricmp(MissionName, "snow2a") == 0 ||
              CRT_stricmp(MissionName, "snow2a_race") == 0)
         speechName.Assign("mis4");
@@ -949,8 +944,8 @@ void GameLoop_StartUp(int trafficSeed) {
     GLoadingScreen_Status("Audio System Mode : %d\n", Launch.audioMode);
 
     GLoadingScreen_Status("Init Actors");
-    ActActorDatabase_StartUp();
-    ActManager_StartUp(1.0f / GetFoundationVideoModeRate());
+    ActActorDatabase::StartUp();
+    ActManager::StartUp(1.0f / GetFoundationVideoModeRate());
     GLoadingScreen_Status("Init Weapon Manager");
     void *weapons = OperatorNew(0x180);
     WeaponManager = weapons != NULL ? SWeaponManager_Construct(weapons, 0) : NULL;
@@ -1000,7 +995,7 @@ void GameLoop_StartUp(int trafficSeed) {
     AIVehicleController_CreateSimTrafficCars(AIVehicleController_Get(), 0, true);
     AIVehicleController_RegisterSimCarList(AIVehicleController_Get(), 0);
     SWeaponManager_SetPlayerCar(WeaponManager, 0, (*playerPhysicsObject)->renderObject);
-    if (fActorDatabase != NULL) {
+    if (ActorDatabase != NULL) {
         GLoadingScreen_Status("Init AI Characters");
         AICharacter_Init();
     }

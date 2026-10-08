@@ -18,7 +18,6 @@
 // directory + name + extension into the buffer, which it answers
 #define BuildFileName ((char *(__fastcall *)(char *, int, const char *directory, const char *name, const char *extension))0x00051e90)
 // ++ on URefCounter<T>'s maps, shared by all of them
-#define BankMap_Increment ((void (__fastcall *)(RefCounterNode **it, int))0x00019d80)
 // The C runtime's: the trees' order depends on it.
 #define Crt_stricmp ((int (*)(const char *, const char *))0x00134537)
 
@@ -141,9 +140,10 @@ RefCounterNode** ABank::End(RefCounterNode **result) {
 // FUNC_AT(0x00126a30)
 const char* ABank::GetPatchName(int handle, int patch) {
     const char *name = GameEmptyString;
-    RefCounterNode *node = BankRefCounter::Get()->Begin();
+    RefCounterIterator it = { BankRefCounter::Get()->Begin() };
     RefCounterNode *end = BankRefCounter::Get()->End();
-    for (; node != end; BankMap_Increment(&node, 0)) {
+    for (; it.node != end; it.Increment()) {
+        RefCounterNode *node = it.node;
         ABank *bank = static_cast<ABank *>(node->value.entry.object);
         if (bank->handle != handle)
             continue;

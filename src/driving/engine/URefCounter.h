@@ -61,6 +61,9 @@ public:
 
     // The object registered as `name`, or NULL (0x00125270: one compiled copy serves every instantiation).
     void* GetReference(const char *name);
+    // The first node whose name is not below `key` (without case), or the head; every instantiation calls this
+    // copy.
+    RefCounterNode* LowerBound(const char *key);                                // 0x00019de0
 
 protected:
     void AddReference(const char *name, void *object, RefCounterInsertFn insert);
@@ -86,6 +89,47 @@ protected:
     bool RemoveReference(T *object, RefCounterEraseFn erase) { return URefCounterMap::RemoveReference(object, erase); }
 };
 
+// ---- the trees' code
+
+// An iterator over a URefCounter's tree, and the steps every such tree calls: ++ leaves the head where it is,
+// -- takes it to the rightmost node.
+struct RefCounterIterator {
+    RefCounterNode *node;
+
+    void Increment();                                                           // 0x00019d80
+    void Decrement();                                                           // 0x0011caa0
+};
+
+// The tree code each URefCounter<T> compiles, written once. Every copy is the same instructions, calling the
+// helpers every such tree shares (the iterator's steps, the minimum and maximum, the rotations, the node maker);
+// each instantiation's copies call each other. The bodies here are those copies; each instantiation's tree class
+// (MixRefTree, audio/Mix.h; ModelInfoRefTree, anim/Model.h; ...) gives every compiled copy its entry.
+class RefCounterTree : public URefCounterMap {
+public:
+    // The rotations every URefCounter's tree calls.
+    void Lrotate(RefCounterNode *where);                                        // 0x0011cb20
+    void Rrotate(RefCounterNode *where);                                        // 0x00019d20
+    // The rightmost node of a subtree (_Max).
+    static RefCounterNode* Max(RefCounterNode *node);                           // 0x00017560
+
+protected:
+    // _Erase: frees a subtree without rebalancing.
+    void EraseSubtree(RefCounterNode *node);
+    // erase(where): unlinks and frees the node, rebalances, answers the next one.
+    RefCounterNode **EraseAt(RefCounterNode **result, RefCounterNode *where);
+    // _Insert: a new red node under `where` (on its left if `addLeft`), then rebalances.
+    RefCounterNode **InsertAt(RefCounterNode **result, bool addLeft, RefCounterNode *where,
+                              const RefCounterValue *value);
+    // erase(first, last): everything is cleared at once, otherwise one node at a time.
+    RefCounterNode **EraseRange(RefCounterNode **result, RefCounterNode *first, RefCounterNode *last);
+    // insert(value): where the name is, or a new node for it.
+    RefCounterInsertResult *InsertUnique(RefCounterInsertResult *result, const RefCounterValue *value);
+    // The static's destructor: everything erased, the head freed.
+    void Destroy();
+    // The same without erasing the subtree first (the copy an exception unwind calls).
+    void DestroyRange();
+};
+
 // The objects the instantiations count (layouts not needed here)
 struct ActModelInfo;        // ActModelDatabase::ModelInfo
 struct ActTextureInfo;      // ActTextureDatabase::TextureInfo
@@ -102,6 +146,7 @@ class AEngine;
 
 class ModelInfoRefCounter : public URefCounter<ActModelInfo> {
 public:
+    bool RemoveReference(ActModelInfo *info);                   // 0x00017ee0
     void AddReference(const char *name, ActModelInfo *info);    // 0x00018030
     void Destruct();                                            // 0x000182b0
     static ModelInfoRefCounter* Get();                          // 0x00018340, the static at 0x001dd9e8
@@ -109,6 +154,8 @@ public:
 
 class TextureInfoRefCounter : public URefCounter<ActTextureInfo> {
 public:
+    // Ghidra: ActTextureDatabase::UnloadTexture
+    bool RemoveReference(ActTextureInfo *info);                 // 0x0001a490
     void AddReference(const char *name, ActTextureInfo *info);  // 0x0001a5e0
     void Destruct();                                            // 0x0001a880
     static TextureInfoRefCounter* Get();                        // 0x0001a910, at 0x001dda04
@@ -116,7 +163,9 @@ public:
 
 class WeaponInfoRefCounter : public URefCounter<ActWeaponInfo> {
 public:
+    bool RemoveReference(ActWeaponInfo *info);                  // 0x0001ba80
     void AddReference(const char *name, ActWeaponInfo *info);   // 0x0001bbd0
+    void Destruct();                                            // 0x0001be60
     static WeaponInfoRefCounter* Get();                         // 0x0001bef0, at 0x001dda14
 };
 

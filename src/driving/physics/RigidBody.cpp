@@ -10,6 +10,7 @@
 #include "../../helpers.h"
 #include "../engine/CoreFoundation.h"     // NullFunction
 #include "../engine/PhysicsUtil.h"        // Util_Bound
+#include "../data/StdStreams.h"         // GameStd::String, GameStd::LengthError
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
 #include "../world/WorldPos.h"
@@ -24,8 +25,6 @@
 // ---- the game's code not ported yet
 #define Simulation_GetRigidBodyInfo ((RigidBodyInfo *(__fastcall *)(void *, int, int ownerIndex))0x000b2760)
 #define Crt_stricmp ((int (*)(const char *, const char *))0x00134537)
-#define String_Assign ((void (__fastcall *)(void *, int, const char *text, uint32_t length))0x00013630)
-#define LogicError_Construct ((void (__fastcall *)(void *, int, const void *message))0x00013700)
 #define Crt_CxxThrowException ((void (__stdcall *)(void *object, const void *throwInfo))0x001325ad)
 
 // ---- globals
@@ -91,21 +90,6 @@ void SetFrame(RigidBody *body) {
     info->worldInverseInertia = worldInverseInertia;
     VU0_MATRIX4_vect4multarray(info->levers, &rotation, info->worldLevers, info->leverCount);
 }
-
-// The game's std::string (MSVC 7.x): its own 16 bytes, or a pointer to the heap past them
-struct GameString {
-    uint32_t allocator;
-    char buffer[16];
-    uint32_t size;
-    uint32_t capacity;
-};
-static_assert(sizeof(GameString) == 0x1c, "the game's std::string is 28 bytes");
-
-// The game's std::length_error: std::logic_error's vtable, std::exception's message and its string
-struct GameLengthError {
-    void *vtable;
-    uint8_t unknown04[0x24];
-};
 
 } // namespace
 
@@ -601,14 +585,14 @@ void RigidBody::ResetRigidBodySPThunk() {
 // FUNC_AT(0x000b13a0)
 void VectorXlen() {
     RIGIDCORE_UNTESTED("VectorXlen");
-    GameString message;
+    GameStd::String message;
     message.capacity = 15;
     message.size = 0;
-    message.buffer[0] = '\0';
+    message.text.buffer[0] = '\0';
     const char *text = "vector<T> too long";
-    String_Assign(&message, 0, text, (uint32_t)strlen(text));
-    GameLengthError error;
-    LogicError_Construct(&error, 0, &message);
+    message.AssignText(text, (uint32_t)strlen(text));
+    GameStd::LengthError error;
+    error.Construct(&message);
     error.vtable = LengthErrorVtable;
     Crt_CxxThrowException(&error, LengthErrorThrowInfo);
 }

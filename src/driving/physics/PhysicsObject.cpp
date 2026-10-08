@@ -8,6 +8,7 @@
 #include "SimpleRigidBody.h"
 #include "../../common/xbeOverload.h"     // XbeVirtual
 #include "../../helpers.h"
+#include "../anim/AnimEngine.h"         // Handle
 #include "../engine/CoreFoundation.h"     // NullFunction
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
@@ -29,8 +30,6 @@
 #define RSceneObj_SetPhysics ((void (__fastcall *)(RSceneObj *, int, PhysicsObject *physics))0x0008f580)
 #define RSceneObj_GetBoundingDimensions ((void (__fastcall *)(RSceneObj *, int, Coord4 *bounds))0x0008dfd0)
 #define RSceneObj_GetCollisionGeometry ((void *(__fastcall *)(RSceneObj *, int, uint32_t *count))0x0008e060)
-#define Handle_Stop ((void (__fastcall *)(Handle *, int))0x00077be0)
-#define Handle_ProcessStimuli ((void (__fastcall *)(Handle *, int, uint32_t stimulus, uint32_t step, int unknown))0x00077e00)
 #define IFeedback_Destruct ((void (__fastcall *)(IFeedback *, int))0x0004fb10)
 
 // ---- globals
@@ -139,7 +138,7 @@ void PhysicsObject::Destruct() {
     collider = NULL;
     RSceneObj *render = renderObject;
     if (render != NULL)
-        Handle_Stop(render->animHandle, 0);
+        render->animHandle->Stop();
     SetRenderObject(NULL);
     if (render != NULL)
         DeleteObject(render);
@@ -312,7 +311,7 @@ bool PhysicsObject::GetCollisionBounds(Coord4 *bounds) {
 // FUNC_AT(0x0006f560)
 void PhysicsObject::PlayAnimation(uint32_t stimulus) {
     if (renderObject != NULL)
-        Handle_ProcessStimuli(renderObject->animHandle, 0, stimulus, SimStepCount, 2);
+        renderObject->animHandle->ProcessStimuli(stimulus, SimStepCount, 2);
 }
 
 // FUNC_AT(0x0006f580)

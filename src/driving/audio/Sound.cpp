@@ -27,7 +27,6 @@
 #define AVoice_IsFinished ((bool (__fastcall *)(AVoice *, int))0x000d36c0)
 
 // The list code every std::list of pointers shares: _Buynode(next, prev, value)
-#define SoundList_BuyNode ((PointerListNode *(__fastcall *)(ASoundList *, int, PointerListNode *, PointerListNode *, ABaseSound *const *))0x000130e0)
 
 // The C runtime: the vector destructor iterator (`eh vector destructor iterator'), sprintf
 #define CRT_VectorDestructor ((void (__stdcall *)(void *, uint32_t, int, void (__fastcall *)(AVoice::View *, int)))0x0013332e)
@@ -149,7 +148,8 @@ void* ABaseSound::OperatorNew(unsigned int size, const char *name) {
     ABaseSound *sound = static_cast<ABaseSound *>(UMemory::FastAlloc(size, name));
     ASoundList *list = fgSoundList;
     PointerListNode *end = list->head;
-    PointerListNode *node = SoundList_BuyNode(list, 0, end, end->prev, &sound);
+    void *value = sound;
+    PointerListNode *node = list->BuyNode(end, end->prev, &value);
     list->IncreaseSize(1);
     end->prev = node;
     node->prev->next = node;

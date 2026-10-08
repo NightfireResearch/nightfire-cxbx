@@ -15,8 +15,6 @@
 #define CRT_vsprintf ((int (*)(char *buffer, const char *format, va_list arguments))0x00133aee)
 
 // The STL's exception machinery, the game's
-#define StdString_Assign ((GameStd::String *(__fastcall *)(GameStd::String *, int, const char *, unsigned))0x00013630)
-#define LogicError_Construct ((void *(__fastcall *)(void *, int, const GameStd::String *))0x00013700)
 #define CxxThrowException ((void (__stdcall *)(void *, const void *))0x001325ad)
 #define LengthError_vtable ((void *)0x00189eec)
 #define LengthError_ThrowInfo ((const void *)0x001a89bc)
@@ -79,12 +77,9 @@ void ThrowLengthError(const char *message) {
     text.capacity = 15;
     text.size = 0;
     text.text.buffer[0] = 0;
-    StdString_Assign(&text, 0, message, (unsigned)strlen(message));
-    struct {
-        void *vtable;
-        uint32_t words[(0x28 - 4) / 4];
-    } error;   // std::length_error
-    LogicError_Construct(&error, 0, &text);
+    text.AssignText(message, (unsigned)strlen(message));
+    GameStd::LengthError error;
+    error.Construct(&text);
     error.vtable = LengthError_vtable;
     CxxThrowException(&error, LengthError_ThrowInfo);
 }

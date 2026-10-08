@@ -32,7 +32,7 @@ void WTrigger::FireEvents(bool flag, int index, CARP::Instance *instance) {
     TriggerEvent *event = events->Events();
     MEM_fill(&gEventDynamicData, 0, sizeof(EventDynamicData));
     gEventDynamicData.flag = flag;
-    gEventDynamicData.unknown0c = -1;
+    gEventDynamicData.instanceIndex = -1;
     gEventDynamicData.index = index;
     gEventDynamicData.instance = instance;
     gEventDynamicData.position = *Bounds();

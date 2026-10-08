@@ -32,8 +32,6 @@
 // The list code every std::list of pointers shares: the head node, _Buynode(next, prev, value), the destructor
 #define SoundList_BuyHead ((PointerListNode *(__fastcall *)(ASoundList *, int))0x000b8490)
 #define StreamNameList_BuyHead ((PointerListNode *(__fastcall *)(StreamNameList *, int))0x000b8490)
-#define StreamNameList_BuyNode ((PointerListNode *(__fastcall *)(StreamNameList *, int, PointerListNode *, PointerListNode *, void *const *))0x000130e0)
-#define List_Destruct ((void (__fastcall *)(void *, int))0x00013540)
 
 // The C runtime: its rand state, its output and formatting are the game's
 #define CRT_rand ((int (*)(void))0x00133ee0)
@@ -419,13 +417,13 @@ void ASoundManager::Shutdown() {
     AMix::Clear();
     ASoundList *sounds = fgSoundList;
     if (sounds != NULL) {
-        List_Destruct(sounds, 0);
+        sounds->Destruct();
         UMemory::FastFree(sounds, sizeof(ASoundList));
     }
     fgSoundList = NULL;
     StreamNameList *failed = fgFailedStreams;
     if (failed != NULL) {
-        List_Destruct(failed, 0);
+        failed->Destruct();
         UMemory::FastFree(failed, sizeof(StreamNameList));
     }
     fgFailedStreams = NULL;
@@ -441,7 +439,7 @@ void ASoundManager::ReportFailure(const char *name) {
     StreamNameList *list = fgFailedStreams;
     PointerListNode *end = list->head;
     void *value = const_cast<char *>(name);     // the list holds untyped pointers
-    PointerListNode *node = StreamNameList_BuyNode(list, 0, end, end->prev, &value);
+    PointerListNode *node = list->BuyNode(end, end->prev, &value);
     list->IncreaseSize(1);
     end->prev = node;
     node->prev->next = node;

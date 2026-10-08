@@ -26,9 +26,7 @@
 
 // ---- originals called by address
 
-#define ListDestruct_00013540 ((void (__fastcall *)(void *, int))0x00013540)
 
-#define FUN_0001be60 ((void (__fastcall *)(void *, int))0x0001be60)
 #define FUN_0004f400 ((void (__fastcall *)(void *, int))0x0004f400)
 #define FUN_000903a0 ((void (__fastcall *)(void *, int))0x000903a0)
 #define FUN_00094ff0 ((void (__fastcall *)(void *, int))0x00094ff0)
@@ -64,7 +62,7 @@ void DestroyGlobal_0023e1b0(void) {
     list->Erase(&after, head != NULL ? head->next : NULL, head);
     list = TargetPicker.targets;
     if (list != NULL) {
-        ListDestruct_00013540(list, 0);
+        list->Destruct();
         OperatorDelete(list);
     }
     OperatorDelete(TargetPicker.targeting);
@@ -82,7 +80,7 @@ void DestroyStatic_001dda04(void) {
 }
 // FUNC_AT(0x0015cd40)
 void DestroyStatic_001dda14(void) {
-    FUN_0001be60((void *)0x001dda14, 0);
+    ((WeaponInfoRefCounter *)0x001dda14)->Destruct();
 }
 // FUNC_AT(0x0015cd50)
 void DestroyStatic_001de820(void) {

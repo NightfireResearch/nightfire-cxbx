@@ -4,6 +4,7 @@
 #include "RigidBody.h"
 #include "SimpleRigidBody.h"
 #include "../../helpers.h"
+#include "../anim/AnimEngine.h"         // Handle
 #include "../engine/PhysicsUtil.h"       // Util_GenerateMatrix
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
@@ -37,7 +38,6 @@
 #define RSceneObj_GetInstancePosition ((void (__fastcall *)(RSceneObj *, int, uint32_t index, MATRIX4 *transform, bool unknown))0x0008dd20)
 #define RSceneObj_GetCollisionInfo ((void (__fastcall *)(RSceneObj *, int, Coord4 *centre, Coord4 *extents))0x0008e2d0)
 #define RSceneObj_UseInstanceList ((void (__fastcall *)(RSceneObj *, int, CARP::Instance *instances, int count, int unknown, bool single, const char *name))0x00090660)
-#define RAnimHandle_InitAllSystemStates ((void (__fastcall *)(Handle *, int, uint32_t state))0x00076890)
 #define RandomScaled ((double (*)(float scale))0x0001aae0)      // a random value in [0, scale): 16 bits of FUN_0001aab0's
 
 // ---- globals
@@ -153,7 +153,7 @@ Newton* Newton::Construct(const Coord3 *direction, const Coord3 *position, const
     }
     SetRenderObject(render);
     RSceneObj_UseInstanceList(renderObject, 0, instances, instanceCount, 0, instanceCount == 1, "<<Newton>>");
-    RAnimHandle_InitAllSystemStates(renderObject->animHandle, 0, kAnimStatesAll);
+    renderObject->animHandle->InitAllSystemStates(kAnimStatesAll);
     hitPoints = mass * kHitPointsPerMass;
     SetHitPointLoc(&hitPoints);
     static_cast<CARP::Instance *>(renderObject->sourceInstance)->SetDimensions(false, kInstanceSize, 0.0f, 0.0f);
