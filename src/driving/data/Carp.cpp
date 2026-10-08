@@ -10,6 +10,7 @@
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../../helpers.h"
+#include "../audio/Bank.h"              // SharedTreeIterator
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
 
@@ -25,9 +26,7 @@
 // leaves its quotient unrounded on the stack. The linear interpolation is the original's SSE, lane by lane.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The game's functions not ported yet, called at their addresses: the iterator step every map shares, and the C
-// runtime's printf.
-#define TreeIterator_Decrement ((void (__fastcall *)(TreeNode **, int))0x00126bd0)
+// The C runtime's printf, called at its address.
 #define Crt_printf ((int (*)(const char *, ...))0x00132192)
 
 #define Resolvers (*(CARP::ResolverMap *)0x00243580)
@@ -398,7 +397,7 @@ TreeInsertResult* CARP::ResolverMap::InsertUnique(TreeInsertResult *result, cons
         where = node;
         addLeft = value->tag < node->value.tag;
     }
-    TreeNode *previous = where;
+    SharedTreeIterator previous = {where};
     if (addLeft) {
         if (where == head->left) {
             TreeNode *inserted;
@@ -406,15 +405,15 @@ TreeInsertResult* CARP::ResolverMap::InsertUnique(TreeInsertResult *result, cons
             result->inserted = true;
             return result;
         }
-        TreeIterator_Decrement(&previous, 0);
+        previous.Dec();
     }
-    if (previous->value.tag < value->tag) {
+    if (previous.node->value.tag < value->tag) {
         TreeNode *inserted;
         result->where = *InsertAt(&inserted, addLeft, where, value);
         result->inserted = true;
         return result;
     }
-    result->where = previous;
+    result->where = previous.node;
     result->inserted = false;
     return result;
 }

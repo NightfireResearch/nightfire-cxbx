@@ -16,12 +16,18 @@
 #include "RigidResolveShadow.h"
 #include "RigidCollideShadow.h"
 #include "RenderShadow.h"
+#include "SndCallTrace.h"
 #include "ViewCamShadow.h"
 #include "CamDataShadow.h"
 #include "PlayerCamShadowA.h"
 #include "PlayerCamShadowB.h"
 #include "PlayerCamShadowC.h"
 #include "GeomShadow.h"
+#include "AudioMgrShadow.h"
+#include "AudioMixShadow.h"
+#include "AudioStreamShadow.h"
+#include "AudioVoiceShadow.h"
+#include "AudioIndexShadow.h"
 
 #include <windows.h>
 #include <stdio.h>
@@ -142,6 +148,7 @@ static void FormatPlace(const Place *p, char *out, size_t size) {
 }
 
 void Teleport_Tick(void) {
+    SndCallTrace_Tick();   // NIGHTFIRE_SNDTRACE=1 only: marks the tick boundary in the sound call trace
     static bool loaded = false;
     static Place configured, recorded;
     static bool haveConfigured = false, haveRecorded = false;
@@ -177,6 +184,11 @@ void Teleport_Tick(void) {
         PlayerCamShadowA_Run();   // NIGHTFIRE_PLAYERCAMSHADOWA=1 only
         PlayerCamShadowB_Run();   // NIGHTFIRE_PLAYERCAMSHADOWB=1 only
         PlayerCamShadowC_Run();   // NIGHTFIRE_PLAYERCAMSHADOWC=1 only
+        AudioMgrShadow_Run();   // NIGHTFIRE_AUDIOMGRSHADOW=1 only
+        AudioMixShadow_Run();   // NIGHTFIRE_AUDIOMIXSHADOW=1 only
+        AudioStreamShadow_Run();   // NIGHTFIRE_AUDIOSTREAMSHADOW=1 only
+        AudioVoiceShadow_Run();   // NIGHTFIRE_AUDIOVOICESHADOW=1 only
+        AudioIndexShadow_Run();   // NIGHTFIRE_AUDIOINDEXSHADOW=1 only
         char text[256] = "";
         DWORD fromEnv = GetEnvironmentVariableA("NIGHTFIRE_TELEPORT", text, sizeof(text));
         if (fromEnv == 0 || fromEnv >= sizeof(text))

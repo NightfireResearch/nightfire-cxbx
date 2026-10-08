@@ -42,6 +42,8 @@ struct PointerList {
 
     // erase(first, last): unlinks and frees each node (never the head), answers `last`.
     PointerListNode** Erase(PointerListNode **result, PointerListNode *first, PointerListNode *last);   // 0x000ce900
+    // remove(value): every node holding the value unlinked and freed (Ghidra: list<AVoice::View *>::remove).
+    void Remove(void *const &value);                                                                    // 0x0011c7c0
     // _Incsize: throws length_error("list<T> too long") past 0x3fffffff nodes.
     void IncreaseSize(uint32_t count);                                                                  // 0x000ceca0
 };

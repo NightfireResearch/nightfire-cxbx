@@ -5,6 +5,7 @@
 #include "SymbolTable.h"
 #include "DataUntested.h"
 #include "../../common/xbeOverload.h"
+#include "../audio/Bank.h"              // SharedTreeMax, SharedTreeIterator
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
 #include "../world/SoundMap.h"          // MapBuyHead
@@ -19,14 +20,12 @@
 // names compare with the game's own _stricmp.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The tree helpers every map in the game shares, called at their addresses (0x000cca30 is ported, as
-// WSoundMap::Lrotate on that map's node type).
+// The tree helpers every map in the game shares, called at their addresses (0x000cca30 is ported as
+// WSoundMap::Lrotate on that map's node type, 0x00126b70 and 0x00126cb0 as SharedTree's, audio/Bank.h).
 #define Tree_Lrotate ((void (__fastcall *)(Tree *, int, TreeNode *))0x000cca30)
 #define Tree_Rrotate ((void (__fastcall *)(Tree *, int, TreeNode *))0x00126b70)
 #define Tree_Min ((TreeNode *(*)(TreeNode *))0x0009c310)
-#define Tree_Max ((TreeNode *(*)(TreeNode *))0x00126b50)
 #define TreeIterator_Increment ((void (__fastcall *)(TreeNode **, int))0x000b2920)
-#define TreeIterator_Decrement ((void (__fastcall *)(TreeNode **, int))0x00126bd0)
 #define Tree_BuyNode ((TreeNode *(__fastcall *)(Tree *, int, TreeNode *, TreeNode *, TreeNode *, const TreePair *, int))0x00093f10)
 #define NameMap_Find ((TreeNode **(__fastcall *)(Tree *, int, TreeNode **, const char *const *))0x00126cb0)
 
@@ -211,7 +210,7 @@ TreeNode **Tree::EraseAt(TreeNode **result, TreeNode *where) {
         if (head->left == where)
             head->left = fixnode->isNil ? fixnodeParent : Tree_Min(fixnode);
         if (head->right == where)
-            head->right = fixnode->isNil ? fixnodeParent : Tree_Max(fixnode);
+            head->right = fixnode->isNil ? fixnodeParent : SharedTreeMax(fixnode);
     } else {
         where->left->parent = pnode;
         pnode->left = where->left;
@@ -404,7 +403,7 @@ TreeInsertResult* CarpGroupMap::InsertUnique(TreeInsertResult *result, const Tre
         addLeft = Crt_stricmp(value->name, node->value.name) < 0;
         node = addLeft ? node->left : node->right;
     }
-    TreeNode *before = where;
+    SharedTreeIterator before = {where};
     if (addLeft) {
         if (where == head->left) {
             TreeNode *inserted;
@@ -413,16 +412,16 @@ TreeInsertResult* CarpGroupMap::InsertUnique(TreeInsertResult *result, const Tre
             result->inserted = true;
             return result;
         }
-        TreeIterator_Decrement(&before, 0);
+        before.Dec();
     }
-    if (Crt_stricmp(before->value.name, value->name) < 0) {
+    if (Crt_stricmp(before.node->value.name, value->name) < 0) {
         TreeNode *inserted;
         Tree::InsertAt(&inserted, addLeft, where, value);
         result->where = inserted;
         result->inserted = true;
         return result;
     }
-    result->where = before;
+    result->where = before.node;
     result->inserted = false;
     return result;
 }

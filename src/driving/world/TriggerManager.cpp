@@ -14,6 +14,7 @@
 #include "World.h"
 #include "WorldMath.h"
 #include "../../helpers.h"
+#include "../audio/SoundManager.h"        // ASoundManager::ReportFailure, ASystem_fgSystem
 #include "../engine/CoreFoundation.h"     // NullFunction
 #include "../engine/OBB.h"
 #include "../engine/UGroup.h"
@@ -34,7 +35,6 @@
 #define Crt_sprintf ((int (*)(char *, const char *, ...))0x00132767)
 #define Crt_stricmp ((int (*)(const char *, const char *))0x00134537)
 #define Crt_printf ((int (*)(const char *, ...))0x00132192)
-#define ASoundManager_ReportFailure ((void (*)(const char *name))0x00121e40)
 // the y size packed in an instance's dimensions (unnamed in Ghidra; the name is ours)
 #define Instance_SizeY ((double (__fastcall *)(const CARP::Instance *, int))0x0008d640)
 #define Simulation_GetRigidBody ((RigidBody *(__fastcall *)(void *, int, int index))0x000b2700)
@@ -53,7 +53,6 @@
 #define TriggerData (*(WTrigger **)0x0023e268)     // the track's triggers (fgTriggerManager->triggers)
 #define TriggerDataCopy PTR_AT(0x0023e26c)         // their state at Init, put back by Restart
 #define QueryStamp U32_AT(0x0023e270)              // the triggers' queryStamp of the current Process
-#define ASystem_fgSystem PTR_AT(0x00243b34)
 #define Sim ((void *)0x00233ff0)                    // the Simulation
 
 namespace {
@@ -109,7 +108,7 @@ void ValidateStreams(TriggerEvents *events, bool notePreBuffer) {
                 strcat(line, "OK ");
             } else {
                 strcat(line, "FAILED ");
-                ASoundManager_ReportFailure(stream->name);
+                ASoundManager::ReportFailure(stream->name);
             }
         } else {
             strcat(line, "N/A ");

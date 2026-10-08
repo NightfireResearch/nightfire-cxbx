@@ -18,6 +18,9 @@
 #include "../data/SymbolTable.h"
 #include "../camera/CameraSpline.h"
 #include "../eagl/GeoPrimState.h"
+#include "../audio/Fader.h"             // FaderRefTree
+#include "../audio/Mix.h"               // MixRefTree
+#include "../audio/Stream.h"            // StreamRefTree
 #include "../world/RoadNav.h"
 #include "../world/Targeting.h"
 
@@ -29,9 +32,6 @@
 #define FUN_0004f400 ((void (__fastcall *)(void *, int))0x0004f400)
 #define FUN_000903a0 ((void (__fastcall *)(void *, int))0x000903a0)
 #define FUN_00094ff0 ((void (__fastcall *)(void *, int))0x00094ff0)
-#define FUN_0011d580 ((void (__fastcall *)(void *, int))0x0011d580)
-#define FUN_001235a0 ((void (__fastcall *)(void *, int))0x001235a0)
-#define FUN_00125b90 ((void (__fastcall *)(void *, int))0x00125b90)
 #define FUN_0012f820 ((void (__fastcall *)(void *, int))0x0012f820)
 
 // ---- the weapon table
@@ -141,15 +141,15 @@ void DestroyStatic_0023f330(void) {
 }
 // FUNC_AT(0x0015d250)
 void DestroyStatic_00243944(void) {
-    FUN_0011d580((void *)0x00243944, 0);
+    ((MixRefTree *)0x00243944)->Destruct();
 }
 // FUNC_AT(0x0015d260)
 void DestroyStatic_00243a88(void) {
-    FUN_001235a0((void *)0x00243a88, 0);
+    ((StreamRefTree *)0x00243a88)->Destruct();
 }
 // FUNC_AT(0x0015d2d0)
 void DestroyStatic_00243af8(void) {
-    FUN_00125b90((void *)0x00243af8, 0);
+    ((FaderRefTree *)0x00243af8)->Destruct();
 }
 // FUNC_AT(0x0015d2f0)
 void DestroyStatic_00243b08(void) {

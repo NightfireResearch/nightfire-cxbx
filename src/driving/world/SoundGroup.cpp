@@ -2,6 +2,7 @@
 #include "SoundMap.h"                       // BuyMapHead
 
 #include "../../common/xbeOverload.h"
+#include "../audio/Bank.h"                  // ABank
 #include "../engine/CoreFoundation.h"      // NullFunction
 #include "../engine/UMemory.hpp"
 
@@ -13,19 +14,13 @@
 // listings. See SoundGroup.h.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The audio tier (not ported).
-#define ABaseSound_Construct ((ABaseSound *(__fastcall *)(ABaseSound *, int, const char *name, uint32_t))0x0001bfa0)
-#define ABaseSound_OperatorNew ((void *(*)(uint32_t size, const char *name))0x0011c910)
-#define ABaseSound_OperatorDelete ((void (*)(void *block, uint32_t size))0x0011c830)
-#define AVoice_Construct ((AVoice *(__fastcall *)(AVoice *, int, AMix *mix, int bank, int index))0x00123ca0)
+// The audio framework's, not ported.
 #define AWorldSound_Destruct ((void (__fastcall *)(AWorldSound *, int))0x0012e090)
-#define AVoiceView_Destruct ((void (__fastcall *)(AVoiceView *, int))0x00123c50)
-// The C runtime's `eh vector destructor iterator`
-#define EhVectorDestructor ((void (__stdcall *)(void *, uint32_t, int, void (__fastcall *)(AVoiceView *, int)))0x0013332e)
-#define ABank_Get ((ABankFields *(*)(const char *name))0x001269d0)
-#define AIndex_Lookup ((int (__fastcall *)(void *index, int, const char *name))0x00126d40)
+// AVoice::View's destructor, by the address the original hands the C runtime's `eh vector destructor iterator'
+#define AVoiceView_Destruct ((void (__fastcall *)(AVoice::View *, int))0x00123c50)
+#define EhVectorDestructor ((void (__stdcall *)(void *, uint32_t, int, void (__fastcall *)(AVoice::View *, int)))0x0013332e)
 
-// The maps' shared helpers.
+// The maps' shared helpers: --iterator (SharedTreeIterator::Dec, audio/Bank.h, on the data layer's node type).
 #define SoundMap_Decrement ((void (__fastcall *)(SoundMapNode **it, int))0x00126bd0)
 
 // The C runtime's.
@@ -35,14 +30,6 @@ namespace {
 
 constexpr uint32_t kAWorldSoundVtable = 0x00193ae8;
 constexpr uint32_t kWSoundVtable = 0x00193ac4;
-
-// A bank (only what Add reads): the word AVoice::Set takes as the bank, and the bank's index of sound names.
-struct ABankFields {
-    uint8_t unknown00[8];
-    int32_t unknown08;          // +0x08
-    uint8_t unknown0c[4];
-    uint8_t index[4];           // +0x10 its AIndex
-};
 
 SoundMapNode *Next(SoundMapNode *node) {
     return reinterpret_cast<SoundMapNode *>(TreeNext(reinterpret_cast<TreeNode *>(node)));
@@ -64,7 +51,7 @@ void DeleteSound(WSound *sound) {
 
 // new WSound(bank, index), inlined twice in Add.
 WSound *NewSound(int bank, int index) {
-    WSound *sound = static_cast<WSound *>(ABaseSound_OperatorNew(sizeof(WSound), "WSound"));
+    WSound *sound = static_cast<WSound *>(ABaseSound::OperatorNew(sizeof(WSound), "WSound"));
     return sound != NULL ? sound->Construct(bank, index) : NULL;
 }
 
@@ -76,9 +63,9 @@ WSound *NewSound(int bank, int index) {
 
 // FUNC_AT(0x000cc930)
 AWorldSound* AWorldSound::Construct(int bank, int index, const char *name) {
-    ABaseSound_Construct(this, 0, name, 4);
+    ABaseSound::Construct(name, kSoundViewsActive);
     vtable = kAWorldSoundVtable;
-    AVoice_Construct(&voice, 0, mix, bank, index);
+    voice.Construct(mix, bank, index);
     inUse = 1;
     unknown138 = 1;
     unknown118 = 0.0f;
@@ -99,7 +86,7 @@ AWorldSound* AWorldSound::Construct(int bank, int index, const char *name) {
 AWorldSound* AWorldSound::Delete(unsigned flags) {
     AWorldSound_Destruct(this, 0);
     if (flags & 1)
-        ABaseSound_OperatorDelete(this, sizeof(AWorldSound));
+        OperatorDelete(this, sizeof(AWorldSound));
     return this;
 }
 
@@ -120,7 +107,7 @@ void WSound::Destruct() {
 WSound* WSound::Delete(unsigned flags) {
     Destruct();
     if (flags & 1)
-        ABaseSound_OperatorDelete(this, sizeof(WSound));
+        OperatorDelete(this, sizeof(WSound));
     return this;
 }
 
@@ -301,7 +288,7 @@ WSound* WSoundGroup::Add(int id, int bank, int index) {
         sound->inUse = 1;
         return sound;
     }
-    if (index != int(found->value.sound->voice.views[0].unknown00)) {
+    if (index != found->value.sound->voice.views[0].patch) {
         DeleteSound(found->value.sound);
         found->value.sound = NewSound(bank, index);
     }
@@ -314,9 +301,9 @@ WSound* WSoundGroup::Add(int id, const char *name) {
     char bankName[0x20] = {};
     char soundName[0x40] = {};
     Crt_sscanf(name, "%[^:]: %s", bankName, soundName);
-    ABankFields *bank = ABank_Get(bankName);
-    int bankNumber = bank->unknown08;
-    return Add(id, bankNumber, AIndex_Lookup(bank->index, 0, soundName));
+    ABank *bank = ABank::Get(bankName);
+    int handle = bank->handle;
+    return Add(id, handle, bank->index.Lookup(soundName));
 }
 
 // FUNC_AT(0x000cd540)
@@ -331,7 +318,7 @@ void WSound::SetUnknown118(float first, float second) {
     double sum = double(first) + second;
     if (sum != 0.0) {
         for (int i = 0; i < 3; i++)
-            voice.views[i].unknown08 = 0;
+            voice.views[i].loop = 0;
     }
     if (sum < double(unknown11c) + unknown118)
         unknown130 = 0;
@@ -343,9 +330,9 @@ void WSound::SetUnknown118(float first, float second) {
 void WSound::SetVoice(int id) {
     if (extraVoice != NULL) {
         // AVoice's destructor
-        EhVectorDestructor(extraVoice->views, sizeof(AVoiceView), 3, AVoiceView_Destruct);
+        EhVectorDestructor(extraVoice->views, sizeof(AVoice::View), 3, AVoiceView_Destruct);
         UMemory::FastFree(extraVoice, sizeof(AVoice));
     }
     void *memory = UMemory::FastAlloc(sizeof(AVoice), "AVoice");
-    extraVoice = memory != NULL ? AVoice_Construct(static_cast<AVoice *>(memory), 0, mix, id >> 7, id & 0x7f) : NULL;
+    extraVoice = memory != NULL ? static_cast<AVoice *>(memory)->Construct(mix, id >> 7, id & 0x7f) : NULL;
 }

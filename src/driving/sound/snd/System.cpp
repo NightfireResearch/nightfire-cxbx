@@ -4,6 +4,7 @@
 #include "../../platform/RealPrint.h"
 #include "../../platform/RealSystem.h"
 #include "SndGlobals.h"
+#include "../../devtools/SndLockstep.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -192,6 +193,9 @@ void iSNDserverremoveclient(SndServerClient client) {
 int SNDREAL_systemtask(int argument, int ticksLate) {
     (void)argument;
     (void)ticksLate;
+    // NIGHTFIRE_SNDLOCKSTEP: devtools runs it once a simulation tick instead of whenever SYNCTASK's timer says
+    if (SndLockstep_DefersService())
+        return 0;
     SNDSYS_service();
     return 0;
 }

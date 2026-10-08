@@ -26,6 +26,7 @@
 #include "driving/devtools/SndStreamShadow.h"
 #include "driving/devtools/SndPlatformShadow.h"
 #include "driving/devtools/SndStreamFileShadow.h"
+#include "driving/devtools/SndCallTrace.h"
 #include "common/xbeOriginal.h"
 #include "driving/gfx/d3dSeam.h"
 #include "driving/platform/XboxInput.h"
@@ -219,4 +220,6 @@ void Inject()
   SndStreamShadow_Run();   // NIGHTFIRE_SNDSTREAMSHADOW=1 only
   SndPlatformShadow_Run();   // NIGHTFIRE_SNDPLATFORMSHADOW=1 only
   SndStreamFileShadow_Run();   // NIGHTFIRE_SNDSTREAMFILESHADOW=1 only
+  // Last: it moves the jumps the injection table wrote, and must not see the shadow tests' calls
+  SndCallTrace_Install();   // NIGHTFIRE_SNDTRACE=1 only
 }

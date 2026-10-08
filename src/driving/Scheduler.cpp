@@ -2,6 +2,7 @@
 
 #include "Scheduler.hpp"
 #include "EventManager.hpp"
+#include "devtools/SndLockstep.h"
 #include "devtools/Teleport.h"
 #include "engine/CoreFoundation.h"
 #include "engine/UMemory.hpp"
@@ -484,6 +485,11 @@ static double g_pendingTicks = 0.0;
 // Runs one simulation tick: every simulation schedule at every priority, then the events they raised; on the last
 // tick of the call, the per-frame schedule (rendering among it) and its events too.
 static void RunTick(Scheduler *scheduler, int tick, bool last, bool *teleportDone) {
+    // NIGHTFIRE_SNDLOCKSTEP: the sound side's time for this call, before the simulation reads any of it - which is
+    // why it is here and not in Teleport_Tick, after the schedules
+    if (!*teleportDone)
+        SndLockstep_Tick();
+
     // The original iterates listOfSchedules, which the Scheduler's constructor fills with exactly these three and
     // nothing else adds to. Each schedule's own Process (slot 1 of its vtable) picks which of its buckets the tick
     // runs - every tick, tick & 1, tick & 3 - so this does not need to know which is which.

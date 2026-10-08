@@ -34,6 +34,10 @@
 #include "../world/RoadNetwork.h"
 #include "../world/TriggerManager.h"
 #include "../world/World.h"
+#include "../audio/Bank.h"
+#include "../audio/Fader.h"
+#include "../audio/SoundManager.h"
+#include "../audio/Stream.h"
 #include "../../common/launchInfo.h"
 #include "../../helpers.h"
 
@@ -142,10 +146,6 @@ const char kCarModels[] = "data\\car\\model\\";
 #define playerPhysicsObject (*(RigidVehicle ***)0x00234e40)
 #define CollisionManager (*(void **)0x00239a70)
 #define fActorDatabase (*(void **)0x001dd9a0)
-#define ASystem_fgSystem (*(void **)0x00243b34)
-#define ASoundManager_fgIsPaused BOOL8_AT(0x002439d0)
-#define MusicVolumeScale FLOAT_AT(0x001d8064)
-#define EffectsVolumeScale FLOAT_AT(0x001d8068)
 #define TrafficSeed I16_AT(0x001de914)
 
 // The disc error screen's: a one-byte block standing for "made", and the font
@@ -247,19 +247,7 @@ typedef const char *DiscErrorText[3];
 #define IFeedback_Construct ((void *(__fastcall *)(IFeedbackStorage *, int, int))0x0004fe30)
 #define IFeedback_Destruct ((void (__fastcall *)(IFeedbackStorage *, int))0x0004fb10)
 #define IFeedback_Pause ((void (*)(void))0x0004fa00)
-#define ASoundManager_Init ((void (*)(const char *, uint8_t, const char *, const char *, int))0x00121470)
-#define ASoundManager_Stop ((void (*)(void))0x00120f90)
-#define ASoundManager_Pause ((void (*)(void))0x00121070)
-#define ASoundManager_Resume ((void (*)(void))0x00121150)
-#define ASoundManager_ClearMission ((void (*)(void))0x00121280)
-#define ASoundManager_Shutdown ((void (*)(void))0x00121d00)
-#define AFader_Remove ((void (*)(const char *))0x00125d60)
-#define AStream_Get ((void *(*)(const char *))0x001237d0)
-#define AStream_Remove ((void (*)(const char *))0x001237f0)
-#define AStream_Event ((void (__fastcall *)(void *, int, const char *, float, bool, bool, bool))0x001234d0)
-#define ABank_Begin ((void **(*)(void **))0x00126910)
-#define ABank_End ((void **(*)(void **))0x00126930)
-#define BankIterator_Increment ((void (__fastcall *)(void **, int))0x00019d80)
+#define BankIterator_Increment ((void (__fastcall *)(RefCounterNode **, int))0x00019d80)
 
 // The car's type name (a virtual method of the player's vehicle).
 static const char *PlayerCarTypeName() {
@@ -547,11 +535,11 @@ void Bond_StartUpSystem() {
 // FUNC_AT(0x0005a110)
 void Bond_CleanUp() {
     CURATOR_Shutdown();
-    ASoundManager_Stop();
-    AFader_Remove("SpeechVsAmbience");
-    AStream_Remove("speech");
-    AStream_Remove("music");
-    ASoundManager_Shutdown();
+    ASoundManager::Stop();
+    AFader::Remove("SpeechVsAmbience");
+    AStream::Remove("speech");
+    AStream::Remove("music");
+    ASoundManager::Shutdown();
     SingletonManager()->KillAll();
     if (gUsingMisc)
         FILESYS_delbigsync(gHandleMisc, 100);
@@ -687,7 +675,7 @@ void GameLoop_PlayMovie(const char *movie, const char *subtitles) {
     GLoadingScreen_Status("Play Movie");
     IOModule::GetIOModule()->EnableUpdating(false);
     IFeedback_Pause();
-    ASoundManager_Pause();
+    ASoundManager::Pause();
     ActionQueueManager::GetActionQueueManager()->FlushAllQueues();
     RRenderer_Flush(fgRenderer, 0, false);
     if (subtitles != NULL) {
@@ -702,7 +690,7 @@ void GameLoop_PlayMovie(const char *movie, const char *subtitles) {
     IOModule::GetIOModule()->resyncDevices = true;
     IOModule::GetIOModule()->EnableUpdating(true);
     ActionQueueManager::GetActionQueueManager()->FlushAllQueues();
-    ASoundManager_Resume();
+    ASoundManager::Resume();
     _mm_empty();
     CRT_clearfp();
 }
@@ -778,9 +766,9 @@ void GameLoop_CleanUp() {
     EventManager::Shutdown();
     GLoadingScreen_Status("Shutdown Clock");
     RealClock_CleanUp();
-    ASoundManager_Stop();
+    ASoundManager::Stop();
     GLoadingScreen_Status("Unload banks");
-    ASoundManager_ClearMission();
+    ASoundManager::ClearMission();
     GLoadingScreen_Status("------------ Finished Shutting Down Game ----------");
 }
 
@@ -845,11 +833,11 @@ void RunTheGame(bool simulateOncePerLoop, int unused) {
     if (gPlayMovies && movie != NULL)
         GameLoop_PlayMovie(movie, subtitles);
     if (IsMission("demo1"))
-        AStream_Event(AStream_Get("music"), 0, "opera\\puccini48sec", -1.0f, true, false, false);
+        AStream::Get("music")->Event("opera\\puccini48sec", -1.0f, true, false, false);
     if (ASystem_fgSystem != NULL) {
-        void *scratch;
-        void *bank = *ABank_Begin(&scratch);
-        while (bank != *ABank_End(&scratch))
+        RefCounterNode *scratch;
+        RefCounterNode *bank = *ABank::Begin(&scratch);
+        while (bank != *ABank::End(&scratch))
             BankIterator_Increment(&bank, 0);
     }
     UFileLoader::DumpFileRequestList();   // the original pushes "..\\bigprocess" to both; neither reads it
@@ -871,7 +859,7 @@ void RunTheGame(bool simulateOncePerLoop, int unused) {
 
     GLoadingScreen_Status("Leaving loop");
     if (!ASoundManager_fgIsPaused)
-        ASoundManager_Pause();
+        ASoundManager::Pause();
     RRenderer_Flush(fgRenderer, 0, false);
     simulation->RemoveAllTasks();
 
@@ -954,7 +942,7 @@ void GameLoop_StartUp(int trafficSeed) {
     }
     MusicVolumeScale = float(double(Launch.musicVolume) * 0.01f);
     EffectsVolumeScale = float(double(Launch.effectsVolume) * 0.01f);
-    ASoundManager_Init("data\\audio\\", gSoundOption, speech, MissionName, Launch.audioMode);
+    ASoundManager::Init("data\\audio\\", gSoundOption, speech, MissionName, Launch.audioMode);
     GLoadingScreen_Status("Music Volume : Uber(%d) --> Driving(%f)\n", Launch.musicVolume, double(MusicVolumeScale));
     GLoadingScreen_Status("Effects Volume : Uber(%d) --> Driving(%f)\n", Launch.effectsVolume,
                           double(EffectsVolumeScale));

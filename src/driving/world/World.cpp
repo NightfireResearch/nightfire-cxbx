@@ -471,9 +471,9 @@ bool WWorld::Open() {
             sound->volume = record->volume;
             sound->pitch = record->pitch;
             sound->position = record->position;
-            sound->unknown6c = record->unknown58;
-            sound->radius = record->radius;
-            sound->radiusSquared = record->radius * record->radius;
+            sound->minDistance = record->unknown58;
+            sound->maxDistance = record->radius;
+            sound->maxDistanceSq = record->radius * record->radius;
             sound->SetUnknown118(record->unknown48, record->unknown4c);
             sound->unknown124 = record->unknown54;
             sound->unknown120 = record->unknown50;
@@ -506,9 +506,9 @@ bool WWorld::Open() {
         soundId++;
         sound->position = *RPathHandle_GetPosition(path, 0);
         sound->pathHandle = path;
-        sound->unknown6c = 10.0f;
-        sound->radius = 100.0f;
-        sound->radiusSquared = 10000.0f;
+        sound->minDistance = 10.0f;
+        sound->maxDistance = 100.0f;
+        sound->maxDistanceSq = 10000.0f;
         if (model->info->voice >= 0)
             sound->SetVoice(model->info->voice);
     }

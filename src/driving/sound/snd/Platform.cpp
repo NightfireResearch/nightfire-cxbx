@@ -12,6 +12,7 @@
 #include "../../platform/XboxXapi.h"
 #include "SndUntested.h"
 #include "SndGlobals.h"
+#include "../../devtools/SndLockstep.h"
 
 #include <bit>
 #include <stddef.h>
@@ -464,6 +465,9 @@ void SNDPLATFORM_getvoicerange(int mode, int *first, int *end) {
 // FUNC_AT(0x0013d980)
 uint32_t __stdcall SNDDRV_thread(void *parameter) {
     (void)parameter;
+    // NIGHTFIRE_SNDLOCKSTEP: the steps run when the simulation hands them over, so the thread's loop is devtools'
+    if (SndLockstep_Enabled())
+        return SndLockstep_DriverThread();
     volatile uint8_t &keepRunning = KeepRunning;   // cleared by SNDPLATFORM_restore on another thread
     if (keepRunning != 0) {
         do {

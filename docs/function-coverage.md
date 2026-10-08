@@ -198,28 +198,28 @@ funclets at 0x150000 are named after the function they belong to and go with it.
 W world); where a class could sit in either of two tiers the choice is a judgement, and the rules in the file are
 where to change it.
 
-### By subsystem (7 October 2026)
+### By subsystem (8 October 2026)
 
 | Subsystem | Functions | Replaced | Dead | Live | Done | KB | Done (bytes) |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| **game** | 2852 | 3 | 76 | 2773 | **3%** | 474 | 0% |
+| **game** | 2852 | 3 | 77 | 2772 | **3%** | 474 | 0% |
 | game.ai | 522 | 0 | 29 | 493 | 6% | 109 | 1% |
 | game.audio | 366 | 1 | 0 | 365 | 0% | 51 | 0% |
 | game.effects | 195 | 1 | 0 | 194 | 1% | 36 | 0% |
-| game.events | 793 | 0 | 2 | 791 | 0% | 72 | 0% |
+| game.events | 793 | 0 | 3 | 790 | 0% | 72 | 0% |
 | game.frontend | 332 | 1 | 39 | 292 | 12% | 69 | 2% |
 | game.missions | 273 | 0 | 0 | 273 | 0% | 33 | 0% |
 | game.vehicles | 193 | 0 | 0 | 193 | 0% | 62 | 0% |
 | game.weapons | 178 | 0 | 6 | 172 | 3% | 43 | 0% |
-| **engine** | 3990 | 1362 | 1092 | 1536 | **62%** | 526 | 61% |
-| engine.anim | 415 | 2 | 5 | 408 | 2% | 54 | 0% |
-| engine.audio | 270 | 0 | 1 | 269 | 0% | 35 | 0% |
+| **engine** | 3990 | 1566 | 1149 | 1275 | **68%** | 526 | 67% |
+| engine.anim | 415 | 3 | 5 | 407 | 2% | 54 | 1% |
+| engine.audio | 270 | 203 | 54 | 13 | 95% | 35 | 100% |
 | engine.camera | 273 | 224 | 39 | 10 | 96% | 60 | 99% |
 | engine.core | 213 | 155 | 56 | 2 | 99% | 25 | 100% |
 | engine.data | 554 | 454 | 78 | 22 | 96% | 79 | 100% |
-| engine.input | 107 | 42 | 15 | 50 | 53% | 12 | 47% |
+| engine.input | 107 | 42 | 16 | 49 | 54% | 12 | 47% |
 | engine.physics | 156 | 117 | 29 | 10 | 94% | 33 | 100% |
-| engine.render | 760 | 8 | 1 | 751 | 1% | 114 | 3% |
+| engine.render | 760 | 8 | 4 | 748 | 2% | 114 | 3% |
 | engine.static | 798 | 22 | 776 | 0 | 100% | 26 | 100% |
 | engine.world | 444 | 338 | 92 | 14 | 97% | 89 | 100% |
 | **platform** | 1453 | 1254 | 199 | 0 | **100%** | 262 | 100% |
@@ -230,16 +230,16 @@ where to change it.
 | platform.movie | 72 | 0 | 72 | 0 | 100% | 15 | 100% |
 | platform.sound | 299 | 299 | 0 | 0 | 100% | 64 | 100% |
 | platform.system | 88 | 60 | 28 | 0 | 100% | 9 | 100% |
-| **sys** | 1440 | 273 | 819 | 348 | **76%** | 244 | 85% |
-| sys.crt | 420 | 4 | 68 | 348 | 17% | 44 | 17% |
+| **sys** | 1440 | 273 | 820 | 347 | **76%** | 244 | 85% |
+| sys.crt | 420 | 4 | 69 | 347 | 17% | 44 | 17% |
 | sys.d3d | 427 | 151 | 276 | 0 | 100% | 120 | 100% |
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6842 | 1365 | 1168 | 4309 | **37%** | 1000 | 32% |
-| **platform + system** | 2893 | 1527 | 1018 | 348 | **88%** | 506 | 93% |
+| **game + engine** | 6842 | 1569 | 1226 | 4047 | **41%** | 1000 | 36% |
+| **platform + system** | 2893 | 1527 | 1019 | 347 | **88%** | 506 | 93% |
 | **  without the C runtime** | 2473 | 1523 | 950 | 0 | **100%** | 462 | 100% |
-| **everything** | 9735 | 2892 | 2186 | 4657 | **52%** | 1506 | 53% |
+| **everything** | 9735 | 3096 | 2245 | 4394 | **55%** | 1506 | 55% |
 
 - **The engine's core and data layers are done (4 October 2026): `engine.core` and `engine.data`, 100% by bytes**
   (docs/driving/core-data.md): memory (UMemory, new/delete), reference counters, data groups, singletons, the
@@ -267,6 +267,11 @@ where to change it.
   camera input - 226 functions; `engine.camera` is 99% ours by bytes. Five shadow tests match the originals on copies
   of the live camera, and lockstep missions 1-8 match the baseline. Game and engine together are now 37% done by
   functions, 32% by bytes.
+- **The audio framework is done (8 October 2026, docs/driving/audio.md):** ASoundManager, the sounds, voices,
+  mixes, faders, effects, the listener, banks and their indexes, and streams - 207 functions; `engine.audio` is
+  100% ours by bytes. Five shadow tests match the originals, and a trace of every call into the sound library over
+  lockstep runs of missions 1-8 (with the sound side in lockstep too) matches the baseline line for line. Game and
+  engine together are now 41% done by functions, 36% by bytes.
 - **Every system library but the C runtime is done: D3D (with D3DX and XGRPH), DSOUND, XPP and XAPI at 100%.**
   The C runtime (327 live, 12%) is left to go by itself, as in the action engine: game code calls it everywhere, and
   it goes as that code becomes ours. How the rest got there (2 October 2026):

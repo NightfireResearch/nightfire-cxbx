@@ -18,7 +18,7 @@
 
 class RSceneObj;
 class WCollider;
-struct ABaseSound;
+class ABaseSound;
 struct DamageZone;
 struct IFeedback;
 struct RigidBody;

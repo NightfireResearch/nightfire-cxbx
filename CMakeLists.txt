@@ -379,6 +379,15 @@ add_library(drivinginject SHARED
   src/driving/world/RoadNav.cpp
   src/driving/world/Targeting.cpp
   src/driving/world/SoundGroup.cpp
+  src/driving/audio/Sound.cpp
+  src/driving/audio/SoundManager.cpp
+  src/driving/audio/Mix.cpp
+  src/driving/audio/Fader.cpp
+  src/driving/audio/Stream.cpp
+  src/driving/audio/Voice.cpp
+  src/driving/audio/Bank.cpp
+  src/driving/audio/Index.cpp
+  src/driving/audio/ZoomObj.cpp
   src/driving/world/Render.cpp
   src/driving/camera/Camera.cpp
   src/driving/camera/WorldCamera.cpp
@@ -419,6 +428,13 @@ add_library(drivinginject SHARED
   src/driving/devtools/PlayerCamShadowA.cpp
   src/driving/devtools/PlayerCamShadowB.cpp
   src/driving/devtools/PlayerCamShadowC.cpp
+  src/driving/devtools/SndCallTrace.cpp
+  src/driving/devtools/SndLockstep.cpp
+  src/driving/devtools/AudioMgrShadow.cpp
+  src/driving/devtools/AudioMixShadow.cpp
+  src/driving/devtools/AudioStreamShadow.cpp
+  src/driving/devtools/AudioVoiceShadow.cpp
+  src/driving/devtools/AudioIndexShadow.cpp
   src/driving/devtools/CarpShadow.cpp
   src/driving/engine/UGroup.cpp
   src/driving/data/UData.cpp

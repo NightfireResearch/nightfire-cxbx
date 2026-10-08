@@ -130,7 +130,7 @@ struct WorldSoundRecord {
     float unknown4c;
     uint32_t unknown50;                 // +0x50 WSound::unknown120
     float unknown54;                    // +0x54 WSound::unknown124
-    float unknown58;                    // +0x58 WSound::unknown6c
+    float unknown58;                    // +0x58 WSound::minDistance
     float radius;                       // +0x5c
 };
 static_assert(sizeof(WorldSoundRecord) == 0x60, "a track sound is 96 bytes");

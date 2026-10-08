@@ -1,6 +1,7 @@
 #include "dsndSeam.h"
 #include "DirectSound.h"
 #include "xaudio2Driving.h"
+#include "../devtools/SndLockstep.h"
 
 #include "../../common/xbeEntrySeam.h"
 
@@ -160,6 +161,8 @@ static IDirectSoundBuffer *CreateBuffer(const DsBufferDesc *desc) {
     if (g_audio)
         buffer->voice = DrivingAudio_CreateVoice(buffer->sampleRate, buffer->formatTag, buffer->channels,
                                                  buffer->blockAlign, buffer->bitsPerSample);
+    SndLockstep_BufferCreated(buffer, buffer->sampleRate, buffer->formatTag, buffer->channels, buffer->blockAlign,
+                              buffer->bitsPerSample, buffer->dataBytes);   // NIGHTFIRE_SNDLOCKSTEP only
     return buffer;
 }
 
@@ -221,6 +224,7 @@ uint32_t __stdcall IDirectSoundBuffer_SetBufferData(IDirectSoundBuffer *buffer, 
     buffer->dataBytes = bytes;
     buffer->durationMs = DurationMsOf(buffer, bytes);
     DrivingAudio_SetData(buffer->voice, data, bytes);
+    SndLockstep_BufferData(buffer, bytes);   // NIGHTFIRE_SNDLOCKSTEP only
     return 0;
 }
 
@@ -233,6 +237,7 @@ uint32_t __stdcall IDirectSoundBuffer_Play(IDirectSoundBuffer *buffer, uint32_t 
     buffer->looping = (flags & DSBPLAY_LOOPING) != 0;
     buffer->startedAtMs = timeGetTime();
     DrivingAudio_Play(buffer->voice, buffer->looping);
+    SndLockstep_BufferPlay(buffer, buffer->looping);   // NIGHTFIRE_SNDLOCKSTEP only
     return 0;
 }
 
@@ -241,6 +246,7 @@ uint32_t __stdcall IDirectSoundBuffer_Stop(IDirectSoundBuffer *buffer) {
         buffer->playing = false;
         buffer->position = 0;
         DrivingAudio_Stop(buffer->voice);
+        SndLockstep_BufferStop(buffer);   // NIGHTFIRE_SNDLOCKSTEP only
     }
     return 0;
 }
@@ -252,6 +258,9 @@ uint32_t __stdcall IDirectSoundBuffer_GetStatus(IDirectSoundBuffer *buffer, uint
         *status = 0;
         return 0;
     }
+    // NIGHTFIRE_SNDLOCKSTEP: the voice allocator's reclaim follows the simulation's sound clock, not the device
+    if (SndLockstep_BufferStatus(buffer, status))
+        return 0;
     *status = StillPlaying(buffer) ? (DSBSTATUS_PLAYING | (buffer->looping ? DSBSTATUS_LOOPING : 0)) : 0;
     return 0;
 }
@@ -261,6 +270,9 @@ uint32_t __stdcall IDirectSoundBuffer_GetStatus(IDirectSoundBuffer *buffer, uint
 // of it, so reporting them at the same place is as true as anything here.
 uint32_t __stdcall IDirectSoundBuffer_GetCurrentPosition(IDirectSoundBuffer *buffer, uint32_t *playPosition,
                                                          uint32_t *writePosition) {
+    // NIGHTFIRE_SNDLOCKSTEP: the mixer's pacing follows the simulation's sound clock, not the device
+    if (SndLockstep_BufferCursors(buffer, playPosition, writePosition))
+        return 0;
     if (buffer != NULL && buffer->voice != NULL) {
         DrivingAudio_GetPosition(buffer->voice, playPosition, writePosition);
         return 0;
@@ -294,12 +306,14 @@ uint32_t __stdcall IDirectSoundBuffer_SetCurrentPosition(IDirectSoundBuffer *buf
         buffer->startedAtMs = timeGetTime() - into;
     }
     DrivingAudio_SetPosition(buffer->voice, position);
+    SndLockstep_BufferPosition(buffer, position);   // NIGHTFIRE_SNDLOCKSTEP only
     return 0;
 }
 
 uint32_t __stdcall IDirectSoundBuffer_SetLoopRegion(IDirectSoundBuffer *buffer, uint32_t start, uint32_t length) {
     if (buffer != NULL)
         DrivingAudio_SetLoopRegion(buffer->voice, start, length);
+    SndLockstep_BufferLoopRegion(buffer, start, length);   // NIGHTFIRE_SNDLOCKSTEP only
     return 0;
 }
 
@@ -312,6 +326,7 @@ uint32_t __stdcall IDirectSoundBuffer_SetVolume(IDirectSoundBuffer *buffer, int3
 uint32_t __stdcall IDirectSoundBuffer_SetFrequency(IDirectSoundBuffer *buffer, uint32_t hz) {
     if (buffer != NULL)
         DrivingAudio_SetFrequency(buffer->voice, hz);
+    SndLockstep_BufferFrequency(buffer, hz);   // NIGHTFIRE_SNDLOCKSTEP only
     return 0;
 }
 
@@ -363,6 +378,7 @@ uint32_t __stdcall IDirectSound_SetI3DL2Listener(IDirectSound *device, const DsI
 uint32_t __stdcall IDirectSoundBuffer_Release(IDirectSoundBuffer *buffer) {
     if (buffer != NULL)
         DrivingAudio_Release(buffer->voice);
+    SndLockstep_BufferReleased(buffer);   // NIGHTFIRE_SNDLOCKSTEP only
     free(buffer);
     return 0;
 }

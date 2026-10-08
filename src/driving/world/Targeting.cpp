@@ -108,7 +108,6 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 #define GHud_SetTarget ((void (__fastcall *)(GHud *, int, const ScreenPos *cursor))0x000d9f50)
 #define GHud_SetTargetLockState ((void (__fastcall *)(GHud *, int, int state))0x000d9fb0)
 #define PointerList_BuyNode ((PointerListNode *(__fastcall *)(PointerList *, int, PointerListNode *next, PointerListNode *prev, void *const *value))0x000130e0)
-#define PointerList_Remove ((void (__fastcall *)(PointerList *, int, void *const *value))0x0011c7c0)
 #define PointerList_BuyHead ((PointerListNode *(__fastcall *)(PointerList *, int))0x000b8490)
 #define Crt_qsort ((void (*)(void *base, size_t count, size_t size, TargetCompare compare))0x00132db0)
 
@@ -253,6 +252,26 @@ PointerListNode** PointerList::Erase(PointerListNode **result, PointerListNode *
     }
     *result = first;
     return result;
+}
+
+// FUNC_AT(0x0011c7c0)
+void PointerList::Remove(void *const &value) {
+    PointerListNode *end = head;
+    PointerListNode *node = end != NULL ? end->next : NULL;
+    while (node != end) {
+        if (node->value == value) {
+            PointerListNode *erased = node;
+            node = node->next;
+            if (erased != head) {
+                erased->prev->next = erased->next;
+                erased->next->prev = erased->prev;
+                UMemory::FastFree(erased, sizeof(PointerListNode));
+                size--;
+            }
+        } else {
+            node = node->next;
+        }
+    }
 }
 
 // FUNC_AT(0x000ceca0)
@@ -469,7 +488,7 @@ void WTargetPicker::UnregisterTarget(WTargetable *target) {
             if (selected == target)
                 selected = NULL;
             void *value = target;
-            PointerList_Remove(list, 0, &value);
+            list->Remove(value);
             target->RemoveReference();
             return;
         }

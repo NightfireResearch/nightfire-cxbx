@@ -1,6 +1,7 @@
 #include "RealSystem.h"
 
 #include "XboxTimer.h"
+#include "../devtools/SndLockstep.h"
 
 #include <windows.h>
 #include <mmsystem.h>
@@ -28,6 +29,9 @@ static const int kTimerTasks = 8;
 
 // AUTOINJECT
 int TIMER_gettick() {
+    // NIGHTFIRE_SNDLOCKSTEP: the audio framework times voices and streams by it, so it counts simulation ticks
+    if (SndLockstep_Enabled())
+        return SndLockstep_TimerTick(SomeTicks);
     return SomeTicks;
 }
 

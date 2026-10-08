@@ -23,6 +23,9 @@ void NullFunctionThunk();                    // 0x000112b0, a jump to the one ab
 void __stdcall NullFunctionPop4(int unused); // 0x00017550, ret 4
 int GetNullValue();                          // 0x000f7330
 
+// The game's own "" (.rdata), for the functions that answer it: its address can be compared or used as a key.
+#define GameEmptyString ((const char *)0x00189fb1)
+
 // The STL's length_error throw, as the game's _Xlen functions build it: a std::string of the message,
 // logic_error's constructor, length_error's vtable, _CxxThrowException. Nothing the game does reaches it.
 void ThrowLengthError(const char *message);

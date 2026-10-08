@@ -5,6 +5,7 @@
 #include "RealSystem.h"
 #include "RefPack.h"
 #include "XboxXapi.h"
+#include "../devtools/SndLockstep.h"
 
 #include <windows.h>
 #include <stdint.h>
@@ -1108,6 +1109,10 @@ int FILESYS_completeop(unsigned handle) {
 void FILESYS_callbackop(unsigned handle, FsCallback callback) {
     FsWorker *w = WorkerOf(handle);
     if (!w->alive)
+        return;
+    // NIGHTFIRE_SNDLOCKSTEP: a sound stream's callbacks run on this thread once its op is done, so its ring fills
+    // at points the game decides
+    if (SndLockstep_FileCallback(handle, callback))
         return;
     Q_lock(&w->pending);
     Where where;

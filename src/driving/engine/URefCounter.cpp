@@ -2,6 +2,10 @@
 
 #include "UMemory.hpp"
 #include "../../helpers.h"
+#include "../audio/Bank.h"              // BankRefTree
+#include "../audio/Fader.h"             // FaderRefTree
+#include "../audio/Mix.h"               // MixRefTree
+#include "../audio/Stream.h"            // StreamRefTree
 #include "../world/SoundMap.h"          // RefCounterMapBuyHead
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -34,15 +38,6 @@
 #define CarpFileMap_Insert ((RefCounterInsertResult *(__fastcall *)(URefCounterMap *, int, RefCounterInsertResult *, const RefCounterValue *))0x000901a0)
 #define TextureContextMap_Erase ((RefCounterNode **(__fastcall *)(URefCounterMap *, int, RefCounterNode **, RefCounterNode *))0x000946b0)
 #define TextureContextMap_Insert ((RefCounterInsertResult *(__fastcall *)(URefCounterMap *, int, RefCounterInsertResult *, const RefCounterValue *))0x00094df0)
-#define MixMap_Erase ((RefCounterNode **(__fastcall *)(URefCounterMap *, int, RefCounterNode **, RefCounterNode *))0x0011cd30)
-#define MixMap_Insert ((RefCounterInsertResult *(__fastcall *)(URefCounterMap *, int, RefCounterInsertResult *, const RefCounterValue *))0x0011d380)
-#define StreamMap_Erase ((RefCounterNode **(__fastcall *)(URefCounterMap *, int, RefCounterNode **, RefCounterNode *))0x00122b10)
-#define StreamMap_Insert ((RefCounterInsertResult *(__fastcall *)(URefCounterMap *, int, RefCounterInsertResult *, const RefCounterValue *))0x001232a0)
-#define FaderMap_Erase ((RefCounterNode **(__fastcall *)(URefCounterMap *, int, RefCounterNode **, RefCounterNode *))0x00125340)
-#define FaderMap_Insert ((RefCounterInsertResult *(__fastcall *)(URefCounterMap *, int, RefCounterInsertResult *, const RefCounterValue *))0x00125990)
-#define BankMap_Erase ((RefCounterNode **(__fastcall *)(URefCounterMap *, int, RefCounterNode **, RefCounterNode *))0x00125fa0)
-#define BankMap_Insert ((RefCounterInsertResult *(__fastcall *)(URefCounterMap *, int, RefCounterInsertResult *, const RefCounterValue *))0x001265f0)
-#define BankMap_EraseRange ((RefCounterNode **(__fastcall *)(URefCounterMap *, int, RefCounterNode **, RefCounterNode *, RefCounterNode *))0x00126500)
 #define EngineMap_Erase ((RefCounterNode **(__fastcall *)(URefCounterMap *, int, RefCounterNode **, RefCounterNode *))0x0012efd0)
 #define EngineMap_Insert ((RefCounterInsertResult *(__fastcall *)(URefCounterMap *, int, RefCounterInsertResult *, const RefCounterValue *))0x0012f620)
 
@@ -250,6 +245,18 @@ TextureContextRefCounter* TextureContextRefCounter::Get() {
 
 // ---- AMix
 
+// The instantiation's tree code (audio/Mix.h), in the shape URefCounter's helpers take; likewise for AStream,
+// AFader and ABank below.
+static RefCounterNode **__fastcall MixMap_Erase(URefCounterMap *map, int, RefCounterNode **result,
+                                                RefCounterNode *where) {
+    return static_cast<MixRefTree *>(map)->EraseAt(result, where);
+}
+
+static RefCounterInsertResult *__fastcall MixMap_Insert(URefCounterMap *map, int, RefCounterInsertResult *result,
+                                                        const RefCounterValue *value) {
+    return static_cast<MixRefTree *>(map)->InsertUnique(result, value);
+}
+
 // FUNC_AT(0x0011d310)
 bool MixRefCounter::RemoveReference(AMix *mix) {
     return URefCounter::RemoveReference(mix, MixMap_Erase);
@@ -268,6 +275,16 @@ MixRefCounter* MixRefCounter::Get() {
 
 // ---- AStream
 
+static RefCounterNode **__fastcall StreamMap_Erase(URefCounterMap *map, int, RefCounterNode **result,
+                                                   RefCounterNode *where) {
+    return static_cast<StreamRefTree *>(map)->EraseAt(result, where);
+}
+
+static RefCounterInsertResult *__fastcall StreamMap_Insert(URefCounterMap *map, int, RefCounterInsertResult *result,
+                                                           const RefCounterValue *value) {
+    return static_cast<StreamRefTree *>(map)->InsertUnique(result, value);
+}
+
 // FUNC_AT(0x00123230)
 bool StreamRefCounter::RemoveReference(AStream *stream) {
     return URefCounter::RemoveReference(stream, StreamMap_Erase);
@@ -285,6 +302,16 @@ StreamRefCounter* StreamRefCounter::Get() {
 }
 
 // ---- AFader
+
+static RefCounterNode **__fastcall FaderMap_Erase(URefCounterMap *map, int, RefCounterNode **result,
+                                                  RefCounterNode *where) {
+    return static_cast<FaderRefTree *>(map)->EraseAt(result, where);
+}
+
+static RefCounterInsertResult *__fastcall FaderMap_Insert(URefCounterMap *map, int, RefCounterInsertResult *result,
+                                                          const RefCounterValue *value) {
+    return static_cast<FaderRefTree *>(map)->InsertUnique(result, value);
+}
 
 // FUNC_AT(0x00125920)
 bool FaderRefCounter::RemoveReference(AFader *fader) {
@@ -318,6 +345,21 @@ void BankRefCounter::EraseSubtree(RefCounterNode *node) {
 
 static void __fastcall BankMap_EraseTree(URefCounterMap *map, int, RefCounterNode *subtree) {
     static_cast<BankRefCounter *>(map)->EraseSubtree(subtree);
+}
+
+static RefCounterNode **__fastcall BankMap_Erase(URefCounterMap *map, int, RefCounterNode **result,
+                                                 RefCounterNode *where) {
+    return static_cast<BankRefTree *>(map)->EraseAt(result, where);
+}
+
+static RefCounterInsertResult *__fastcall BankMap_Insert(URefCounterMap *map, int, RefCounterInsertResult *result,
+                                                         const RefCounterValue *value) {
+    return static_cast<BankRefTree *>(map)->InsertUnique(result, value);
+}
+
+static RefCounterNode **__fastcall BankMap_EraseRange(URefCounterMap *map, int, RefCounterNode **result,
+                                                      RefCounterNode *first, RefCounterNode *last) {
+    return static_cast<BankRefTree *>(map)->EraseRange(result, first, last);
 }
 
 // FUNC_AT(0x00126580)
