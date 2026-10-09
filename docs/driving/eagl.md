@@ -253,7 +253,7 @@ The per-primitive render state. The game derives its materials from it (`UVolati
 | +0x08 | `0x000eecb0` | byte |
 | +0x0c | `0x000eef20` | |
 | +0x10 | `0x000eecd0` SetDepthTestMethod | OpenGL numbering (0x201 LESS, 0x207 ALWAYS) |
-| +0x14 | `0x000eecf0` *(candidate: SetAlphaBlendMode)* | 0..5 picks +0x30/+0x34/+0x38 = op/src/dst in OpenGL numbering (0x8006 ADD, 0x800b REVERSE_SUBTRACT; 0x302/0x303/0x306/1/0) |
+| +0x14 | `0x000eecf0` *(candidate: SetAlphaBlendMode)* | 0..5 (the parser's `ABM_OFF`, `BLEND`, `ADD`, `ATTENUATE`, `MODULATE`, `SUBTRACT`) picks +0x34/+0x38/+0x30 = src/dst/op in OpenGL numbering: 1/0, 0x302/0x303, 0x302/1, 0x302/0, 0x306/0 with ADD (0x8006), and 1/1 with REVERSE_SUBTRACT (0x800b). The jump table (`0x000eed8c`) is not in address order: the fourth case body (`0x000eed4c`, reverse subtract) is mode 5 |
 | +0x18 | `0x000eedc0` | byte (28 callers) |
 | +0x1c | `0x000eede0` | |
 | +0x20 | `0x000eee00` SetAlphaTestMethod | |

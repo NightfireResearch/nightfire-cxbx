@@ -375,6 +375,7 @@ add_library(drivinginject SHARED
   src/driving/devtools/ColListShadow.cpp
   src/driving/devtools/ColGridShadow.cpp
   src/driving/devtools/GeomShadow.cpp
+  src/driving/devtools/GeoPrimShadow.cpp
   src/driving/devtools/CarpShadow.cpp
   src/driving/engine/UGroup.cpp
   src/driving/data/UData.cpp

@@ -6,6 +6,7 @@
 #include "ColListShadow.h"
 #include "ColGridShadow.h"
 #include "GeomShadow.h"
+#include "GeoPrimShadow.h"
 
 #include <windows.h>
 #include <stdio.h>
@@ -145,6 +146,7 @@ void Teleport_Tick(void) {
         ColListShadow_Run();   // NIGHTFIRE_COLLISTSHADOW=1 only
         ColGridShadow_Run();   // NIGHTFIRE_COLGRIDSHADOW=1 only
         GeomShadow_RunWorld();   // NIGHTFIRE_GEOMSHADOW=1 only
+        GeoPrimShadow_Run();   // NIGHTFIRE_GEOPRIMSHADOW=1 only
         char text[256] = "";
         DWORD fromEnv = GetEnvironmentVariableA("NIGHTFIRE_TELEPORT", text, sizeof(text));
         if (fromEnv == 0 || fromEnv >= sizeof(text))
@@ -167,8 +169,10 @@ void Teleport_Tick(void) {
     // here because this runs every call that simulates), so that a run's Nth frame is the same whatever the host's
     // timing - the frame dumps and traces of two builds can then be compared exactly. With NIGHTFIRE_DUMP_TICKS=N
     // (or a comma-separated list) the frame N ticks after the car appears is dumped, the same frame in every run.
+    // NIGHTFIRE_DUMP_EVERY=N with NIGHTFIRE_DUMP_UNTIL=M dumps every Nth tick up to M instead (50 ticks a second).
     static int lockstep = -1, ticksSinceCar = 0;
     static int dumpTicks[16], dumpTickCount = 0;
+    static int dumpEvery = 0, dumpUntil = 0;
     if (lockstep < 0) {
         char text[32] = "";
         lockstep = GetEnvironmentVariableA("NIGHTFIRE_LOCKSTEP", text, sizeof(text)) && text[0] != '0' ? 1 : 0;
@@ -181,6 +185,10 @@ void Teleport_Tick(void) {
                 if (*p == 0)
                     break;
             }
+        if (GetEnvironmentVariableA("NIGHTFIRE_DUMP_EVERY", text, sizeof(text)))
+            dumpEvery = atoi(text);
+        if (GetEnvironmentVariableA("NIGHTFIRE_DUMP_UNTIL", text, sizeof(text)))
+            dumpUntil = atoi(text);
         if (lockstep)
             printf("[lockstep] one simulation tick per frame\n");
     }
@@ -204,7 +212,32 @@ void Teleport_Tick(void) {
             printf("[teleport] dumping frame %u (d3d9_dump_frame_%u.bmp), %d ticks after the car appeared%s\n",
                    frame, frame, dumpTicks[i], i == dumpTickCount - 1 ? " - the last" : "");
         }
+    if (dumpEvery > 0 && ticksSinceCar > 0 && ticksSinceCar % dumpEvery == 0 && ticksSinceCar <= dumpUntil) {
+        uint32_t frame = D3D9_RequestDump();
+        printf("[teleport] dumping frame %u (d3d9_dump_frame_%u.bmp), %d ticks after the car appeared%s\n",
+               frame, frame, ticksSinceCar, ticksSinceCar + dumpEvery > dumpUntil ? " - the last" : "");
+    }
     ticksSinceCar++;
+
+    // NIGHTFIRE_GODMODE=1: the player's health (the hit points SetHitPointLoc points the player's object at:
+    // SMissionManager +0x49c) is put back to what it was when the car appeared, every tick, so that long unattended
+    // runs cannot fail the mission.
+    static int godMode = -1;
+    static float fullHealth = 0.0f;
+    if (godMode < 0) {
+        char text[8] = "";
+        godMode = GetEnvironmentVariableA("NIGHTFIRE_GODMODE", text, sizeof(text)) && text[0] != '0' ? 1 : 0;
+    }
+    uint8_t *missionManager = *(uint8_t **)0x00239220u;    // glbMissionManager
+    if (godMode && missionManager != NULL) {
+        float &health = *(float *)(missionManager + 0x49c);
+        if (fullHealth <= 0.0f && health > 0.0f) {
+            fullHealth = health;
+            printf("[godmode] keeping the player's health at %g\n", fullHealth);
+        }
+        if (fullHealth > 0.0f && health < fullHealth)
+            health = fullHealth;
+    }
 
     if (KeyPressed(VK_F8_, &f8Down)) {
         ReadPlace(car, &recorded);
