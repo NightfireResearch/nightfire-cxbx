@@ -1,7 +1,7 @@
 # Function coverage by subsystem
 
 How much of each engine's code is ours, where the rest sits, and how much of it never needs reimplementing. The
-numbers for both engines (the [driving engine's](#the-driving-engine) further down) are from 7 October 2026;
+action engine's numbers are from 7 October 2026, the [driving engine's](#the-driving-engine) further down from 9 October;
 `tools/function_coverage.py` regenerates them.
 
 ```
@@ -198,7 +198,7 @@ funclets at 0x150000 are named after the function they belong to and go with it.
 W world); where a class could sit in either of two tiers the choice is a judgement, and the rules in the file are
 where to change it.
 
-### By subsystem (8 October 2026)
+### By subsystem (9 October 2026)
 
 | Subsystem | Functions | Replaced | Dead | Live | Done | KB | Done (bytes) |
 |---|--:|--:|--:|--:|--:|--:|--:|
@@ -278,7 +278,7 @@ where to change it.
   shadow tests match the originals, and lockstep missions 1-8 match the baseline in frames and sound traces. Game and
   engine together are now 47% done by functions, 41% by bytes.
 - **Every system library but the C runtime is done: D3D (with D3DX and XGRPH), DSOUND, XPP and XAPI at 100%.**
-  The C runtime (327 live, 12%) is left to go by itself, as in the action engine: game code calls it everywhere, and
+  The C runtime (347 live, 17%) is left to go by itself, as in the action engine: game code calls it everywhere, and
   it goes as that code becomes ours. How the rest got there (2 October 2026):
   - *D3D*: the seam's table gained 25 entry points EAGL calls directly (render-state setters, `SetIndices`,
     `SetGammaRamp`, `CreateIndexBuffer2`...), named in Ghidra after the table was last generated, and a hand-kept
@@ -292,7 +292,7 @@ where to change it.
     kernel shims hand out Win32 handles, so the two mix freely), and the startup's own entry point is ported.
     The process heap is a Win32 heap now: XAPI's five heap entry points go to `HeapCreate`/`HeapAlloc`/`HeapFree`/
     `HeapReAlloc`/`HeapSize`, so `malloc` and `free` reach Win32's heap through them.
-- **The platform tier is done: all 1,459 functions, 100% by functions and by bytes.** With the system libraries
+- **The platform tier is done: all 1,453 functions, 100% by functions and by bytes.** With the system libraries
   but the C runtime, everything below the game is ours. The last piece was the sound library.
   - *Sound* (`src/driving/sound/snd/`, docs/driving/sound.md): all 305 functions - banks and voices, the EA-XA,
     MicroTalk and PCM decoders, the SFILTER graph, the mixer and reverb, the system and its server thread, the
@@ -326,9 +326,10 @@ where to change it.
     side, is counted with the sound library; EA's packer (`src/driving/platform/RefPack.cpp`, checked against the
     original on every packed file in the archives) with the files. `XGetAVPack`/`XGetVideoFlags`, which sat among
     the file code, are counted with XAPI (ported in `XboxXapi.cpp`).
-- **Of the 1,000 KB of game and engine code, about 810 KB is still original.** By size: rendering 110 KB, AI 109 KB, world
-  and collision 88 KB, data and tuning 79 KB, mission events 71 KB, front end and HUD 68 KB, vehicles 62 KB,
-  cameras 60 KB, animation 51 KB, gameplay audio 50 KB, then the rest at under 45 KB each.
+- **Of the 1,000 KB of game and engine code, about 590 KB is still original:** the whole game tier (474 KB) and
+  rendering (110 KB); what else is left is input (6 KB) and exception funclets filed in finished subsystems. The
+  game tier by size: AI 109 KB, mission events 72 KB, front end and HUD 68 KB, vehicles 62 KB, gameplay audio 51 KB,
+  weapons 43 KB, effects 36 KB, missions 33 KB.
 - **The static initialisers are done: `engine.static`, 798 functions, 100%.** The C++ initialiser table
   (0x001b3db0) is no longer walked: `RunStaticInitialisers` (`src/driving/engine/StaticInitTable.cpp`, generated
   from the XBE by `tools/static_init_driving.py`) does all 720 entries' work in table order - 585 float and double
