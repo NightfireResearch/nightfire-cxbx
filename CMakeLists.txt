@@ -436,6 +436,7 @@ add_library(drivinginject SHARED
   src/driving/devtools/RigidResolveShadow.cpp
   src/driving/devtools/RigidCollideShadow.cpp
   src/driving/devtools/RenderShadow.cpp
+  src/driving/devtools/GeoPrimShadow.cpp
   src/driving/devtools/ViewCamShadow.cpp
   src/driving/devtools/CamDataShadow.cpp
   src/driving/devtools/PlayerCamShadowA.cpp

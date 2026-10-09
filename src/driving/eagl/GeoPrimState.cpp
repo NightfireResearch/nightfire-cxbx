@@ -218,20 +218,21 @@ bool EAGL::GeoPrimState::GetDepthTestMethod(uint32_t *method) const {
     return true;
 }
 
-// 0 replace, 1 alpha blend, 2 additive, 3 reverse subtract, 4 alpha over black, 5 multiply by destination colour.
-// Out of range: the mode is kept and nothing else changes - and the answer is still true.
+// The modes are the property parser's EAGL::ABM_ names. Out of range (ABM_CUSTOM included): the mode is kept and
+// nothing else changes - and the answer is still true.
 // FUNC_AT(0x000eecf0)
 bool EAGL::GeoPrimState::SetAlphaBlendMode(uint32_t mode) {
+    enum { kOff, kBlend, kAdd, kAttenuate, kModulate, kSubtract };
     enum { kZero = 0, kOne = 1, kSrcAlpha = 0x302, kOneMinusSrcAlpha = 0x303, kDstColor = 0x306 };   // GL numbering
-    enum { kAdd = 0x8006, kReverseSubtract = 0x800b };
+    enum { kOpAdd = 0x8006, kOpReverseSubtract = 0x800b };
     alphaBlendMode = mode;
     switch (mode) {
-    case 0: blendSource = kOne; blendDestination = kZero; blendOperation = kAdd; break;
-    case 1: blendSource = kSrcAlpha; blendDestination = kOneMinusSrcAlpha; blendOperation = kAdd; break;
-    case 2: blendSource = kSrcAlpha; blendDestination = kOne; blendOperation = kAdd; break;
-    case 3: blendSource = kOne; blendDestination = kOne; blendOperation = kReverseSubtract; break;
-    case 4: blendSource = kSrcAlpha; blendDestination = kZero; blendOperation = kAdd; break;
-    case 5: blendSource = kDstColor; blendDestination = kZero; blendOperation = kAdd; break;
+    case kOff: blendSource = kOne; blendDestination = kZero; blendOperation = kOpAdd; break;
+    case kBlend: blendSource = kSrcAlpha; blendDestination = kOneMinusSrcAlpha; blendOperation = kOpAdd; break;
+    case kAdd: blendSource = kSrcAlpha; blendDestination = kOne; blendOperation = kOpAdd; break;
+    case kAttenuate: blendSource = kSrcAlpha; blendDestination = kZero; blendOperation = kOpAdd; break;
+    case kModulate: blendSource = kDstColor; blendDestination = kZero; blendOperation = kOpAdd; break;
+    case kSubtract: blendSource = kOne; blendDestination = kOne; blendOperation = kOpReverseSubtract; break;
     }
     return true;
 }
