@@ -14,6 +14,9 @@
 #include "UGroup.h"
 #include "UMemory.hpp"
 #include "USingleton.h"
+#include "../render/Draw.h"
+#include "../render/RenderHigh.h"
+#include "../render/RSceneObj.hpp"
 #include "../Scheduler.hpp"
 #include "../anim/Actor.h"              // ActActorDatabase, ActorDatabase
 #include "../anim/Manager.h"            // ActManager
@@ -33,6 +36,7 @@
 #include "../platform/RealPrint.h"
 #include "../platform/RealSystem.h"
 #include "../platform/X87.h"
+#include "../render/Renderer.h"
 #include "../world/RoadNetwork.h"
 #include "../world/TriggerManager.h"
 #include "../world/World.h"
@@ -55,27 +59,8 @@
 
 namespace {
 
-// The renderer (Ghidra: RRenderer, RRenderer::fgRenderer) - only the fields read here.
-struct RendererView {
-    uint8_t unknown00[0x1d];
-    uint8_t screenCapturePending;           // +0x1d the next frame is saved to disc
-    uint8_t unknown1e[0x22];
-    int32_t screenWidth;                    // +0x40
-    int32_t screenHeight;                   // +0x44
-    uint8_t unknown48[0x4];
-    uint8_t widescreen;                     // +0x4c 16:9
-    uint8_t unknown4d[0x13];
-    void *device;                           // +0x60 the EAGL device
-    EAGL::RenderContext *renderContext;     // +0x64
-    EAGL::ViewPort *viewPort;               // +0x68
-};
-static_assert(offsetof(RendererView, screenWidth) == 0x40 && offsetof(RendererView, widescreen) == 0x4c &&
-                  offsetof(RendererView, renderContext) == 0x64 && offsetof(RendererView, viewPort) == 0x68,
-              "RRenderer offsets");
-
 // Objects the game's constructors build on our stack, as big as the original's frames make room for.
 struct IFeedbackStorage { uint32_t words[1]; };
-struct RRenderHighStorage { uint32_t words[0x44 / 4]; };
 struct GSubtitlesStorage { uint32_t words[0x94 / 4]; };
 
 // The 'Map ' group of the track file and its 'AIEl' data.
@@ -139,7 +124,6 @@ const char kCarModels[] = "data\\car\\model\\";
 #define CurrentMission I32_AT(0x001e4850)
 #define missionNames ((const char **)0x001b7060)   // "mis01" ... by mission index
 
-#define fgRenderer (*(RendererView **)0x001ebff4)
 #define fgScheduler (*(Scheduler **)0x001e520c)
 #define GlobalActionQueue (*(ActionQueue *)0x001e4870)
 #define Sim ((void *)0x00233ff0)                  // the Simulation
@@ -176,7 +160,6 @@ typedef const char *DiscErrorText[3];
 #define XInitDevices ((void (__stdcall *)(unsigned, void *))0x00184bae)
 
 // render
-#define thunk_FUN_0007aee0 ((void (*)(void))0x0008bab0)
 
 // the rest of the game
 #define GLoadingScreen_Status ((void (*)(const char *, ...))0x000e2ff0)
@@ -196,20 +179,6 @@ typedef const char *DiscErrorText[3];
 #define GSubtitles_ClearSubtitles ((void (__fastcall *)(void *, int))0x000e3630)
 #define GSystem_CURATOR_Init ((void (*)(void))0x000e3fd0)
 #define CURATOR_Shutdown ((void (*)(void))0x000e3eb0)
-#define Render_InitLibRender ((void (*)(void))0x0007d710)
-#define RRenderer_LoadDebugFont ((void (__fastcall *)(RendererView *, int))0x0007d560)
-#define RRenderer_Flush ((void (__fastcall *)(RendererView *, int, bool))0x0007d070)
-#define RRenderer_Shutdown ((void (*)(void))0x0007d740)
-#define RRenderHigh_Construct ((void *(__fastcall *)(RRenderHighStorage *, int))0x0008c210)
-#define RRenderHigh_Destruct ((void (__fastcall *)(RRenderHighStorage *, int))0x0008c090)
-#define RRenderHigh_InitGameRender ((void (*)(void))0x0008c3d0)
-#define RRenderHigh_KillGameRender ((void (*)(void))0x0008c740)
-#define RRenderHigh_InitTrackRenderPostSim ((void (*)(void))0x0008c800)
-#define RRenderHigh_KillTrackRenderPostSim ((void (*)(void))0x0008bac0)
-#define RSceneObj_PreLoad ((void (*)(const char *, const char *, const char *))0x000904c0)
-#define RSceneObj_PurgePreloaded ((void (*)(const char *, const char *))0x00090560)
-#define RSceneObj_DestroyAll ((void (*)(void))0x0008dac0)
-#define Draw_DrawBox ((void (*)(float, float, float, float, uint32_t))0x000760e0)
 #define RayShell_Reset ((void (*)(void))0x00071d40)
 #define Simulation_Reset ((void (__fastcall *)(void *, int))0x000b49f0)
 #define Simulation_CleanUpObjects ((void (__fastcall *)(void *, int))0x000b4750)
@@ -502,7 +471,7 @@ void Bond_StartUpSystem() {
     GLoadingScreen_Status("Init Giotto");
     GSystem_CURATOR_Init();
     GLoadingScreen_Status("Load debug font");
-    RRenderer_LoadDebugFont(fgRenderer, 0);
+    fgRenderer->LoadDebugFont();
     Bond_LoadingScreen();
     GameLoop_StartUsingMainBigFile();
 
@@ -543,8 +512,8 @@ void Bond_CleanUp() {
     InputConfigManager_Shutdown(InputConfigManager_Get(), 0);
     IOModule::GetIOModule()->Release();
     DiscError_Shutdown();
-    thunk_FUN_0007aee0();
-    RRenderer_Shutdown();
+    FreeEAGLMaterialsThunk();
+    RRenderer::Shutdown();
     UMemory::Shutdown();
     CRT_printf("Bond_CleanupDone");
 }
@@ -660,9 +629,8 @@ void GameLoop_StartUsingMainBigFile() {
 // pads resynchronised afterwards.
 void GameLoop_PlayMovie(const char *movie, const char *subtitles) {
     EAGL::RenderContext *context = fgRenderer->renderContext;
-    // PlayMPC takes the context and view port as render/RenderState.hpp's overlay classes: the same objects.
     PlayMPC player;
-    player.Construct(fgRenderer->device, reinterpret_cast<RenderContext *>(context), Launch.controllerPort, 0);
+    player.Construct(fgRenderer->device, context, Launch.controllerPort, 0);
     player.Init(movie, Launch.effectsVolume * 127 / 100, false);
     EAGL::ViewPort *view = context->NewViewPort();
     view->SetShape(0.0f, 0.0f, (float)fgRenderer->screenWidth, (float)fgRenderer->screenHeight, 0.01f, 1.0f);
@@ -672,13 +640,13 @@ void GameLoop_PlayMovie(const char *movie, const char *subtitles) {
     IFeedback_Pause();
     ASoundManager::Pause();
     ActionQueueManager::GetActionQueueManager()->FlushAllQueues();
-    RRenderer_Flush(fgRenderer, 0, false);
+    fgRenderer->Flush(false);
     if (subtitles != NULL) {
         GSubtitles_LoadSubtitles(GSubtitles_TheApp(), 0, subtitles);
-        player.Play(reinterpret_cast<ViewPort *>(view), fgRenderer->widescreen != 0, GSubtitles_DrawFrame);
+        player.Play(view, fgRenderer->widescreen != 0, GSubtitles_DrawFrame);
         GSubtitles_ClearSubtitles(GSubtitles_TheApp(), 0);
     } else {
-        player.Play(reinterpret_cast<ViewPort *>(view), fgRenderer->widescreen != 0, NULL);
+        player.Play(view, fgRenderer->widescreen != 0, NULL);
     }
     context->DeleteViewPort(view);
     player.Destruct();
@@ -712,7 +680,7 @@ void GameLoop_CleanUp() {
     GLoadingScreen_Status("Kill PIP Camera");
     GLoadingScreen_Status("Shutdown AI characters");
     AICharacter_Shutdown();
-    RRenderHigh_KillTrackRenderPostSim();
+    RRenderHigh::KillTrackRenderPostSim();
     GLoadingScreen_Status("Shutdown Roads");
     WRoadNetwork::Shutdown();
     GLoadingScreen_Status("Shutdown AI Controller's");
@@ -722,7 +690,7 @@ void GameLoop_CleanUp() {
     GLoadingScreen_Status("Deinit world");
     fgWorld->Close();
     GLoadingScreen_LoadAndDrawUnLoadingScreen();
-    RRenderer_Flush(fgRenderer, 0, true);
+    fgRenderer->Flush(true);
     GLoadingScreen_FreeUnloadingScreen();
 
     GLoadingScreen_Status("Delete weapon manager");
@@ -734,7 +702,7 @@ void GameLoop_CleanUp() {
     WeaponManager = NULL;
     const char *carType = PlayerCarTypeName();
     AttributeSet carAttributes;
-    RSceneObj_PurgePreloaded(kCarModels, PVehicle_RenderNameAttrib(PVehicle_GetNamedAttribs(&carAttributes, carType)));
+    RSceneObj::PurgePreloaded(kCarModels, PVehicle_RenderNameAttrib(PVehicle_GetNamedAttribs(&carAttributes, carType)));
     carAttributes.Destruct();
 
     GLoadingScreen_Status("Shutdown Sim");
@@ -745,7 +713,7 @@ void GameLoop_CleanUp() {
     ActManager::ShutDown();
     ActActorDatabase::ShutDown();
     GLoadingScreen_Status("Cleanup render objects");
-    RSceneObj_DestroyAll();
+    RSceneObj::DestroyAll();
     GLoadingScreen_Status("Deinit world");
     WWorld *world = fgWorld;
     if (world != NULL) {
@@ -754,7 +722,7 @@ void GameLoop_CleanUp() {
     }
     fgWorld = NULL;
     GLoadingScreen_Status("Kill Game Render");
-    RRenderHigh_KillGameRender();
+    RRenderHigh::KillGameRender();
     GLoadingScreen_Status("Shutdown Scheduler");
     Scheduler::Shutdown();
     GLoadingScreen_Status("Shutdown Event Manger");
@@ -775,8 +743,8 @@ void RunTheGame(bool simulateOncePerLoop, int unused) {
     (void)unused;
     CRT_printf("Track is %s\n", MissionName);
     MEM_validate();
-    RRenderHighStorage render;
-    RRenderHigh_Construct(&render, 0);
+    RRenderHigh render;
+    render.Construct();
     MEM_validate();
 
     Schedule *perFrame = fgScheduler->s_oncePerGameLoop;
@@ -855,7 +823,7 @@ void RunTheGame(bool simulateOncePerLoop, int unused) {
     GLoadingScreen_Status("Leaving loop");
     if (!ASoundManager_fgIsPaused)
         ASoundManager::Pause();
-    RRenderer_Flush(fgRenderer, 0, false);
+    fgRenderer->Flush(false);
     simulation->RemoveAllTasks();
 
     subtitles = subtitleFile;
@@ -883,7 +851,7 @@ void RunTheGame(bool simulateOncePerLoop, int unused) {
     if (gPlayMovies && movie != NULL && (Launch.unknown978 == 0 || Launch.unknown5d8 != 0))
         GameLoop_PlayMovie(movie, subtitles);
     GSubtitles_Destruct(&subtitlePlayer, 0);
-    RRenderHigh_Destruct(&render, 0);
+    render.Destruct();
 }
 
 // The speech file is <mission's speech name><language>, falling back to English when the language's is missing.
@@ -902,7 +870,7 @@ void GameLoop_StartUp(int trafficSeed) {
     PVehicle_InitializeGlobals();
     PBondCar_InitializeBondCarGlobals();
     GLoadingScreen_Status("Init Game Render");
-    RRenderHigh_InitGameRender();
+    RRenderHigh::InitGameRender();
 
     GLoadingScreen_Status("Init Sound");
     GameStd::String speechName;   // constructed empty, inline
@@ -952,7 +920,7 @@ void GameLoop_StartUp(int trafficSeed) {
     GLoadingScreen_Status("Init World");
     fgWorld->Open();
     GLoadingScreen_Status("Init AI Elements");
-    RRenderHigh_InitTrackRenderPostSim();
+    RRenderHigh::InitTrackRenderPostSim();
     UGroup *map = fgWorld->group->GroupLocateTag(kTagMap);
     AIElementController_Construct(map->DataLocateTag(kTagAIElements));
     GLoadingScreen_Status("Init AI Controllers");
@@ -975,14 +943,14 @@ void GameLoop_StartUp(int trafficSeed) {
     const char *model = PVehicle_RenderNameAttrib(&carAttributes);
     if (model == NULL)
         AssertMessage("Could not find attribute rendername for %s", carType);
-    RSceneObj_PreLoad(kCarModels, model, carType);
+    RSceneObj::PreLoad(kCarModels, model, carType);
     const char *secondaryType = carAttributes.LookupString("SECONDARY_TYPE", NULL);
     if (secondaryType != NULL) {
         AttributeSet secondaryAttributes;
         secondaryAttributes.Construct("pvehicle", secondaryType);
         const char *secondaryModel = PVehicle_RenderNameAttrib(&secondaryAttributes);
         if (secondaryModel != NULL)
-            RSceneObj_PreLoad(kCarModels, secondaryModel, secondaryType);
+            RSceneObj::PreLoad(kCarModels, secondaryModel, secondaryType);
         secondaryAttributes.Destruct();
     }
 
@@ -1034,7 +1002,7 @@ void DiscError_Shutdown() {
 // "There's a problem with the disc..." in up to three lines, centred on a black screen.
 // FUNC_AT(0x0005c7e0)
 void DiscError_Draw() {
-    Draw_DrawBox(0.0f, 0.0f, (float)fgRenderer->screenWidth, (float)fgRenderer->screenHeight, 0xff000000);
+    Draw::DrawBox(0.0f, 0.0f, (float)fgRenderer->screenWidth, (float)fgRenderer->screenHeight, 0xff000000);
     const char *const *lines;
     switch (Launch.language) {
     case kFrench: lines = DiscErrorMessages[1]; break;

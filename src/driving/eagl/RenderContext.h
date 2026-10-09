@@ -3,7 +3,7 @@
 
 // EAGL::RenderContext, its Xbox extension and its private part (docs/driving/eagl.md 2.2, 3.2, 4.2, 8.1, 8.2):
 // the frame, the frame buffers and every render-context setting the game changes. See RenderContext.cpp. In
-// namespace EAGL, as in Ghidra: the game-side overlay in render/RenderState.hpp has a RenderContext of its own.
+// namespace EAGL, as in Ghidra.
 //
 // One object, three views of it: the RenderContextExtension is the object's first word (which points back at the
 // object), the RenderContextPrivate starts at +4 (its first word points back at the object too). The extension's

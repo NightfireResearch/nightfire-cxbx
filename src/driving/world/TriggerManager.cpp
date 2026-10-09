@@ -19,9 +19,11 @@
 #include "../engine/OBB.h"
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
+#include "../physics/Simulation.h"
 #include "../platform/FileSys.h"          // FILE_exists
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"        // MEM_copy
+#include "../render/PathEngine.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // WTriggerManager (0x000cf520-0x000d0d50), ported from the listing: the triggers' lifecycle, the collision tests
@@ -36,17 +38,10 @@
 #define Crt_stricmp ((int (*)(const char *, const char *))0x00134537)
 #define Crt_printf ((int (*)(const char *, ...))0x00132192)
 // the y size packed in an instance's dimensions (unnamed in Ghidra; the name is ours)
-#define Instance_SizeY ((double (__fastcall *)(const CARP::Instance *, int))0x0008d640)
-#define Simulation_GetRigidBody ((RigidBody *(__fastcall *)(void *, int, int index))0x000b2700)
-#define Simulation_GetSimpleRigidBody ((SimpleRigidBody *(__fastcall *)(void *, int, int index))0x000b2730)
-#define Simulation_GetPlayerObject ((PhysicsObject *(__fastcall *)(void *, int))0x000b2d30)
-#define Simulation_FindPhysicsObjectSignature ((void *(__fastcall *)(void *, int, uint32_t signature))0x000b27d0)
 #define RayShell_GetNumActiveRayShells ((int (*)())0x00071930)
 #define RayShell_GetActiveRayShell ((ActiveRayShell *(*)(int index))0x00071940)
 #define RayShell_ClearActiveRayShells ((void (*)())0x00071960)
 #define RayShell_SetTriggerHittingRayShell ((void (*)(int index))0x00071970)
-#define RPathEngine_GetFirstPathHandle ((RPathHandle *(*)())0x0007ffa0)
-#define RPathEngine_GetNextPathHandle ((RPathHandle *(*)())0x0007ffc0)
 
 // ---- globals
 #define TriggerDataSize U32_AT(0x0023e264)
@@ -437,7 +432,7 @@ void WTriggerManager::Process(CARP::Instance *instance) {
     uint32_t packed = instance->packedDimensions;
     float radius = float(packed & kDimensionMask) * kDimensionUnit[(packed >> kDimensionUnitShift) & 1];
     const Coord3 *position = reinterpret_cast<const Coord3 *>(instance->position);
-    float above = float(Instance_SizeY(instance, 0));
+    float above = float(instance->SizeY());
     // the game calls WTrigger::Size on the instance: the same packed word at +0x3c, its z size
     float below = float(reinterpret_cast<WTrigger *>(instance)->Size());
     QueryStamp++;
@@ -574,7 +569,7 @@ void WTriggerManager::Process(int rayShell) {
 }
 
 // The frame's tests: the awake rigid bodies, the simple bodies, the instances of the paths that have none of their
-// own (unknownA0), and the ray shells queued since the last frame, which it then clears.
+// own (master), and the ray shells queued since the last frame, which it then clears.
 // FUNC_AT(0x000d0c90)
 void WTriggerManager::Update() {
     RayShell_SetTriggerHittingRayShell(-1);
@@ -589,8 +584,8 @@ void WTriggerManager::Update() {
         if (SimpleBodyOwners[i] != NULL)
             Process(i, Simulation_GetSimpleRigidBody(Sim, 0, i));
     }
-    for (RPathHandle *path = RPathEngine_GetFirstPathHandle(); path != NULL; path = RPathEngine_GetNextPathHandle()) {
-        if (path->unknownA0 == NULL)
+    for (RPathHandle *path = RPathEngine::GetFirstPathHandle(); path != NULL; path = RPathEngine::GetNextPathHandle()) {
+        if (path->master == NULL)
             Process(path->instance);
     }
     int rayShells = RayShell_GetNumActiveRayShells();

@@ -36,6 +36,13 @@
 #include "ActModelShadow.h"
 #include "PoserShadow.h"
 #include "AnimEngineShadow.h"
+#include "RendererShadow.h"
+#include "LightShadow.h"
+#include "SceneObjShadow.h"
+#include "TexContextShadow.h"
+#include "ReflectionShadow.h"
+#include "RenderFxShadow.h"
+#include "ParticleShadow.h"
 
 #include <windows.h>
 #include <stdio.h>
@@ -204,6 +211,13 @@ void Teleport_Tick(void) {
         ActModelShadow_Run();   // NIGHTFIRE_ACTMODELSHADOW=1 only
         PoserShadow_Run();   // NIGHTFIRE_POSERSHADOW=1 only
         AnimEngineShadow_Run();   // NIGHTFIRE_ANIMENGINESHADOW=1 only
+        RendererShadow_Run();   // NIGHTFIRE_RENDERERSHADOW=1 only
+        LightShadow_Run();   // NIGHTFIRE_LIGHTSHADOW=1 only
+        SceneObjShadow_Run();   // NIGHTFIRE_SCENEOBJSHADOW=1 only
+        TexContextShadow_Run();   // NIGHTFIRE_TEXCONTEXTSHADOW=1 only
+        ReflectionShadow_Run();   // NIGHTFIRE_REFLECTIONSHADOW=1 only
+        RenderFxShadow_Run();   // NIGHTFIRE_RENDERFXSHADOW=1 only
+        ParticleShadow_Run();   // NIGHTFIRE_PARTICLESHADOW=1 only
         char text[256] = "";
         DWORD fromEnv = GetEnvironmentVariableA("NIGHTFIRE_TELEPORT", text, sizeof(text));
         if (fromEnv == 0 || fromEnv >= sizeof(text))

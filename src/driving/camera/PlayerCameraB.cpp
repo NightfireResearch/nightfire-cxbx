@@ -14,6 +14,9 @@
 #include "../physics/SimpleRigidBody.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
+#include "../render/Colorize.h"
+#include "../render/PathEngine.h"
+#include "../render/Renderer.h"
 #include "../world/RoadNav.h"
 #include "../world/RoadNetwork.h"
 
@@ -91,20 +94,11 @@ static_assert(std::bit_cast<uint32_t>(kRecentred) == 0x38d1b717, "0x0018cb6c");
 #define SimStepCount I32_AT(0x00234e34)
 #define SimState I32_AT(0x00234e24)
 #define playerPhysicsObject (*(RigidVehicle ***)0x00234e40)
-#define fgRenderer (*(CameraRendererFields **)0x001ebff4)
-#define Colorize (*(void **)0x001f6898)                     // the RColorize post-process
 
 // ---- calls to originals not ported
 
 // RCamera's field of view, if above 2 degrees (an inline the compiler sometimes kept)
 #define RCamera_SetFieldOfView ((void (__fastcall *)(RPlayerCamera *, int, float fov))0x00011000)
-// The helpers before them (unnamed)
-#define WrapTurns ((double (*)(float turns))0x00080820)             // into (-1, 1), negatives then into [0, 1)
-#define HeadingTurns ((double (*)(float x, float z))0x000808c0)     // atan_turns(x, z) in [0, 1)
-#define SinTurnsWrapped ((double (*)(float turns))0x00080860)       // FSIN's result, unrounded
-#define TanTurnsWrapped ((double (*)(float turns))0x00080890)       // FPTAN's result, unrounded
-#define WRoadNav_LaneCount ((int8_t (__fastcall *)(WRoadNav *, int))0x00080a30)
-#define RColorize_SetEnabled ((void (__fastcall *)(void *, int, int mode))0x0009a500)
 
 namespace {
 
@@ -190,7 +184,7 @@ void LeaveMissileView(RPlayerCamera *camera) {
     RPlayerCamState *state = camera->state;
     if (state->unknown20 || camera->cameraMode == fgCameraModeIndices.missile) {
         state->unknown20 = false;
-        RColorize_SetEnabled(Colorize, 0, 0);
+        Colorize->SetEnabled(0);
         camera->cameraMode = camera->previousCameraMode;
         fgCameraTables.weaponArmTurn = 0.0f;
     }
@@ -726,7 +720,7 @@ void RPlayerCamera::DirectorChangeCameraMode(RDirectorQueueData *data) {
     if (fgCameraTables.modes[cameraMode].type != kCameraAnimation || (data->flags & RDirectorQueueData::kKeepPoints))
         spline->ClearSplinePtList();
     if (cameraMode == fgCameraModeIndices.missile) {
-        RColorize_SetEnabled(Colorize, 0, 2);
+        Colorize->SetEnabled(2);
         state->unknown20 = true;
     }
     if (!(data->flags & RDirectorQueueData::kKeep260))
@@ -853,7 +847,7 @@ void RPlayerCamera::UpdateSplineCam() {
         // On a road of several lanes, 2.5 to the side of the line along the road nearest the anchor. (The
         // original leaves the offset uninitialised on a road of one lane.)
         Coord4 offset = {};
-        if (WRoadNav_LaneCount(roadNav, 0) > 1) {
+        if (int8_t(roadNav->SegmentLaneCount()) > 1) {      // the original compares AL only
             Coord4 direction = {along.x, 0.0f, along.z, 0.0f};
             Coord4 point = {roadNav->position.x, 0.0f, roadNav->position.z, 0.0f};
             Coord4 side = {0.0f, 1.0f, 0.0f, 0.0f};

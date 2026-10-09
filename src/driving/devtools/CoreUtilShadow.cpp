@@ -672,8 +672,8 @@ void TreeScenario(bool original, std::string &log, std::vector<uint8_t> &extra) 
         }
         case 2: {
             StateRefValue v = {};
-            v.state = states[Random(16)];
-            v.unknown04[0] = (uint8_t)op;
+            v.state = reinterpret_cast<EAGL::GeoPrimState *>(states[Random(16)]);
+            v.name[0] = char(op);
             StateRefInsert r = {};
             stateInsert(&g_stateSet, 0, &r, &v);
             Append(log, "%d state %d -> %s %d\n", op, (int)(((const uint8_t *)v.state - &states[0][0]) / 0x4c),

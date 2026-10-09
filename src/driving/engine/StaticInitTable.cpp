@@ -18,12 +18,14 @@
 #include "../eagl/Profiler.h"
 #include "../data/Carp.h"
 #include "../data/SymbolTable.h"
+#include "../render/Draw.h"
+#include "../render/Materials.h"
+#include "../render/WorldCulling.h"
 #include "FileNameList.h"
 
 // ---- the originals the initialisers still call, by address
 
 #define CrtAtExit ((int (__cdecl *)(void (__cdecl *)(void)))0x00132a7b)   // atexit
-#define ColourConvertXBoxToPS2 ((uint32_t (__cdecl *)(uint32_t))0x00075c40)
 #define ActActorDatabase_Destruct ((void (__fastcall *)(void *, int))0x00013540)
 #define AIGroundVehicle_Construct ((void (__fastcall *)(void *, int))0x0002bd40)
 #define AIGroundVehicle_Destruct ((void (__fastcall *)(void *, int))0x0002be70)
@@ -34,7 +36,6 @@
 #define FUN_00037940 ((void (__fastcall *)(void *, int))0x00037940)
 #define FUN_0007c6e0 ((void (__fastcall *)(void *, int))0x0007c6e0)
 #define FUN_0007c7b0 ((void (__fastcall *)(void *, int))0x0007c7b0)
-#define RRenderWorldCulling_Construct ((void (__fastcall *)(void *, int, float, float))0x0008d420)
 #define Simulation_Construct ((void (__fastcall *)(void *, int))0x000b4fe0)
 #define Simulation_Destruct ((void (__fastcall *)(void *, int))0x000b5310)
 #define FUN_000b8490 ((void * (__fastcall *)(void *, int))0x000b8490)
@@ -43,7 +44,6 @@
 #define FUN_000cebc0 ((void (__fastcall *)(void *, int))0x000cebc0)
 #define FUN_000e2c20 ((void * (__fastcall *)(void *, int))0x000e2c20)
 #define FUN_000e2c80 ((void (__fastcall *)(NodeList *, int, void **, void *, void *))0x000e2c80)   // erase(result, first, last)
-#define UVolatileMaterial_Construct ((void (__fastcall *)(void *, int))0x0011c210)
 #define FUN_0011cc10 ((void (__fastcall *)(void *, int))0x0011cc10)
 #define FUN_00124710 ((void (__fastcall *)(void *, int))0x00124710)
 #define FUN_00124750 ((void (__fastcall *)(void *, int))0x00124750)
@@ -317,7 +317,7 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x001f2c60) = 180.0f / 3.1415925f;                                                          // 0x00158390
     FLOAT_AT(0x001f2c64) = 1.0f / FLOAT_AT(0x001f2c60);                                                  // 0x001583b0
     FLOAT_AT(0x001f2c70) = 1.0f / FLOAT_AT(0x001c47a4);                                                  // 0x001583d0
-    RRenderWorldCulling_Construct((void *)0x001f2c80, 0, 33.0f, 400.0f);                                 // 0x001583f0
+    fgWorldCulling.Construct(33.0f, 400.0f);                                                             // 0x001583f0
     CrtAtExit([] {});
     FLOAT_AT(0x001f2d64) = 1.0f / FLOAT_AT(0x001c47e4);                                                  // 0x00158410
     FLOAT_AT(0x001f2d68) = 3.1415925f + 3.1415925f;                                                      // 0x00158430
@@ -331,7 +331,7 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x001f5ef8) = 1.0f / FLOAT_AT(0x001f5ef4);                                                  // 0x00158510
     FLOAT_AT(0x001f5efc) = 180.0f / 3.1415925f;                                                          // 0x00158530
     FLOAT_AT(0x001f5f00) = 1.0f / FLOAT_AT(0x001f5efc);                                                  // 0x00158550
-    for (int i = 0; i < 4; i++) UVolatileMaterial_Construct((void *)(0x001f5f10 + i * 0x60), 0);         // 0x00158570
+    for (int i = 0; i < 4; i++) ((UVolatileMaterial *)(0x001f5f10 + i * 0x60))->Construct();             // 0x00158570
     CrtAtExit([] { for (int i = 3; i >= 0; i--) ((EAGL::GeoPrimState *)(0x001f5f10 + i * 0x60))->Destruct(); });
     memset((void *)0x001f6090, 0, 0x800);                                                                // 0x001585a0
     FLOAT_AT(0x001f689c) = 1.0f / FLOAT_AT(0x001c4890);                                                  // 0x001585c0
@@ -358,9 +358,9 @@ void RunStaticInitialisers(void) {
     memset((void *)0x002012f0, 0, 0xa0);                                                                 // 0x001587e0
     FLOAT_AT(0x00201474) = 1.0f / FLOAT_AT(0x001c4e88);                                                  // 0x00158800
     memset((void *)0x00201480, 0, 0x68);                                                                 // 0x00158820
-    for (int i = 0; i < 5; i++) UVolatileMaterial_Construct((void *)(0x002014f0 + i * 0x60), 0);         // 0x00158840
+    for (int i = 0; i < 5; i++) ((UVolatileMaterial *)(0x002014f0 + i * 0x60))->Construct();             // 0x00158840
     CrtAtExit([] { for (int i = 4; i >= 0; i--) ((EAGL::GeoPrimState *)(0x002014f0 + i * 0x60))->Destruct(); });
-    UVolatileMaterial_Construct((void *)0x002016d0, 0);                                                  // 0x00158870
+    ((UVolatileMaterial *)0x002016d0)->Construct();                                                      // 0x00158870
     CrtAtExit([] { ((EAGL::GeoPrimState *)0x002016d0)->Destruct(); });
     FLOAT_AT(0x00201734) = 1.0f / FLOAT_AT(0x001c4f40);                                                  // 0x00158890
     FLOAT_AT(0x00201758) = 1.0f / FLOAT_AT(0x001c4f44);                                                  // 0x001588b0
@@ -380,19 +380,19 @@ void RunStaticInitialisers(void) {
     memset((void *)0x00202a90, 0, 0x200);                                                                // 0x00158a60
     FLOAT_AT(0x00208cb8) = 1.0f / FLOAT_AT(0x001c8ed0);                                                  // 0x00158a80
     memset((void *)0x00208cc0, 0, 0x1000);                                                               // 0x00158aa0
-    UVolatileMaterial_Construct((void *)0x00209cc0, 0);                                                  // 0x00158ac0
+    ((UVolatileMaterial *)0x00209cc0)->Construct();                                                      // 0x00158ac0
     CrtAtExit([] { ((EAGL::GeoPrimState *)0x00209cc0)->Destruct(); });
     FLOAT_AT(0x0022ad38) = 1.0f / FLOAT_AT(0x001c8edc);                                                  // 0x00158ae0
     memset((void *)0x0022ad40, 0, 0x2000);                                                               // 0x00158b00
     memset((void *)0x0022cd40, 0, 0x2000);                                                               // 0x00158b20
     memset((void *)0x0022ed40, 0, 0x1800);                                                               // 0x00158b40
-    UVolatileMaterial_Construct((void *)0x00230540, 0);                                                  // 0x00158b60
+    ((UVolatileMaterial *)0x00230540)->Construct();                                                      // 0x00158b60
     CrtAtExit([] { ((EAGL::GeoPrimState *)0x00230540)->Destruct(); });
-    UVolatileMaterial_Construct((void *)0x002305a0, 0);                                                  // 0x00158b80
+    ((UVolatileMaterial *)0x002305a0)->Construct();                                                      // 0x00158b80
     CrtAtExit([] { ((EAGL::GeoPrimState *)0x002305a0)->Destruct(); });
     FLOAT_AT(0x0023361c) = 1.0f / FLOAT_AT(0x001c8f20);                                                  // 0x00158ba0
     memset((void *)0x00233620, 0, 0x800);                                                                // 0x00158bc0
-    for (int i = 0; i < 4; i++) UVolatileMaterial_Construct((void *)(0x00233e20 + i * 0x60), 0);         // 0x00158be0
+    for (int i = 0; i < 4; i++) ((UVolatileMaterial *)(0x00233e20 + i * 0x60))->Construct();             // 0x00158be0
     CrtAtExit([] { for (int i = 3; i >= 0; i--) ((EAGL::GeoPrimState *)(0x00233e20 + i * 0x60))->Destruct(); });
     FLOAT_AT(0x00233fa4) = 1.0f / FLOAT_AT(0x001c8f24);                                                  // 0x00158c10
     FLOAT_AT(0x00233fa8) = 1.0f / FLOAT_AT(0x001c8f28);                                                  // 0x00158c30

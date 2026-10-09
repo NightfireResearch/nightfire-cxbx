@@ -27,12 +27,23 @@ class RGlareManager {
 public:
     XBE_FIELDS(RGlareManager)
 
+    // The material and texture set up, the 80 glare types loaded from the "Render:Glare" tuning database
+    // (0x000a9c70)
+    RGlareManager* Construct();
+    // Deletes the instance (vtable slot 2, 0x000a9eb0)
+    static void Kill();
+    // Empties the queue (vtable slot 1, 0x000a9ed0)
+    void Reset();
+    // Each type's halo and spike texture ids made into texture coordinates in the "flar" texture: ids 0 and 1
+    // the top half's two halves, 2 to 17 the bottom half's quarters (0x000a9870)
+    void CreateUVsFromTexIDs();
+
     // Queues a glare as given - the sun's flare and effects' glares (0x000a9c10).
     void AddGlare(Glare *glare, int unused);
 
     // Queues a model's glare node: blinks, fades with distance and, if directional, with the angle to the
     // camera (0x000a9aa0).
-    void AddModelGlare(Glare *node, MATRIX4 *transform, float distance);
+    void AddModelGlare(Glare *node, const MATRIX4 *transform, float distance);
 
     // Draws every queued glare - a halo quad and a spike quad each - and empties the queue (0x000aa5d0). In the
     // world (inWorld, from DrawEffects: the glares on lights and models) the quads face the camera and are depth
@@ -50,3 +61,6 @@ void __stdcall AddGlareToRender(int *count, const Glare *glare, const GlareSprit
                                 uint32_t colour, float distance, float zBias);
 void __stdcall Add2DGlareToRender(int *count, const Glare *glare, const GlareSprite *sprite, float size,
                                   uint32_t colour, float distance);
+
+// RenderManagers::InitGlareManager's instance
+#define TheGlareManager (*(RGlareManager **)0x00208cb4)

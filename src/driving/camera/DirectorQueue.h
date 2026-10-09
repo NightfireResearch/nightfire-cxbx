@@ -15,6 +15,7 @@
 #include "../data/CoordConvert.h"       // Coord4
 
 class RPlayerCamera;
+class RSceneObj;
 struct PhysicsObject;
 
 namespace CARP {
@@ -129,12 +130,18 @@ struct TextureDofState {
 };
 static_assert(sizeof(TextureDofState) == 0x4c, "the DOF state is 0x4c bytes");
 
-// RDrawGroup's reverse draw list ("RReverseDrawList", 0x10 bytes): a std::vector of 0x50-byte entries. Its compiled
-// members.
+// RDrawGroup's reverse draw list ("RReverseDrawList", 0x10 bytes): a std::vector of the translucent instances a
+// view's draw keeps for its end (DrawInstance's), with its compiled members.
 struct ReverseDrawEntry {
-    uint32_t words[20];
+    MATRIX4 transform;                  // +0x00
+    CARP::Instance *instance;           // +0x40
+    RSceneObj *sceneObj;                // +0x44
+    uint32_t distance;                  // +0x48 the view distance * 65536
+    uint32_t unknown4C;                 // +0x4c never written: DrawInstance's stack
 };
 static_assert(sizeof(ReverseDrawEntry) == 0x50, "a reverse draw entry is 80 bytes");
+static_assert(offsetof(ReverseDrawEntry, instance) == 0x40 && offsetof(ReverseDrawEntry, distance) == 0x48,
+              "ReverseDrawEntry layout");
 
 struct ReverseDrawList {
     uint32_t allocator;                 // +0x00
@@ -147,6 +154,12 @@ struct ReverseDrawList {
     ReverseDrawEntry* Ucopy(ReverseDrawEntry *from, ReverseDrawEntry *to, ReverseDrawEntry *dest);   // 0x0007c930
     ReverseDrawEntry* Ufill(ReverseDrawEntry *dest, uint32_t count, const ReverseDrawEntry *value);   // 0x0007c960
     void Tidy();                                                                                // 0x0007c990
+    void ThrowLength();                 // _Xlen: length_error("vector<T> too long")             // 0x0007ca60
+    void InsertN(ReverseDrawEntry *where, uint32_t count, const ReverseDrawEntry *value);       // 0x0007cb00
+    // insert(where, value), the iterator to the new element answered through `result`
+    ReverseDrawEntry** Insert(ReverseDrawEntry **result, ReverseDrawEntry *where, const ReverseDrawEntry *value);
+                                                                                                // 0x0007ce30
+    void PushBack(const ReverseDrawEntry *value);                                               // 0x0007ceb0
 };
 static_assert(sizeof(ReverseDrawList) == 0x10, "a vector is 16 bytes");
 

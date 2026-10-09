@@ -6,6 +6,10 @@
 
 #include "RbTree.h"
 
+namespace EAGL {
+struct GeoPrimState;
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // Compiled copies of the C++ library's containers that the engine's core owns: a few red-black tree methods
 // (std::map, std::set, std::multimap as the game's compiler had them - Dinkumware's), a vector's push_back, and
@@ -42,8 +46,8 @@ struct GameVector {
 // ---- the values
 
 struct StateRefValue {              // StateRef: ordered by the 0x4c bytes of the state it points at
-    const void *state;
-    uint8_t unknown04[0x10];
+    EAGL::GeoPrimState *state;
+    char name[0x10];                // the first 15 characters of the state's string
 };
 
 struct CollisionInstanceValue {     // keyed by a WCollisionInstance pointer (compared unsigned)

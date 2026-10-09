@@ -11,6 +11,8 @@
 #include "../../common/fmv/FmvAudio.h"
 #include "../../common/gfx/d3d9Backend.h"
 #include "../../common/xboxPath.h"
+#include "../eagl/RenderContext.h"
+#include "../eagl/View.h"
 #include "../platform/Pad.hpp"
 #include "../sound/xaudio2Driving.h"
 
@@ -359,7 +361,7 @@ static void ConvertFrame(const AVFrame *f) {
 #define MovieGlobal244798 (*(int32_t *)0x00244798u)   // set by the original Play, cleared here; never read
 
 // FUNC_AT(0x00130780)
-PlayMPC* PlayMPC::Construct(void *device_, RenderContext *context_, int32_t padPort_, int32_t allocFlags) {
+PlayMPC* PlayMPC::Construct(void *device_, EAGL::RenderContext *context_, int32_t padPort_, int32_t allocFlags) {
     device = device_;
     context = context_;
     unknown08 = 0;
@@ -409,7 +411,7 @@ void PlayMPC::Init(const char *path, uint32_t volume, bool mode) {
 }
 
 // AUTOINJECT
-void PlayMPC::Play(ViewPort *viewport, bool widescreen, SubtitleCallback subtitles) {
+void PlayMPC::Play(EAGL::ViewPort *viewport, bool widescreen, SubtitleCallback subtitles) {
     if (M.owner != this || M.file == NULL)
         return;                         // as the original, with no player: nothing to play
 
@@ -432,7 +434,7 @@ void PlayMPC::Play(ViewPort *viewport, bool widescreen, SubtitleCallback subtitl
     // a sixth of the screen, so that the film inside the 4:3 frame fills a 16:9 one
     float width, height;
     this->context->GetSize(&width, &height);
-    viewport->SetRect(0.0f, 0.0f, width, height, 0.01f, 1.0f);
+    viewport->SetShape(0.0f, 0.0f, width, height, 0.01f, 1.0f);
     float top = widescreen ? height * -0.16666669f : 0.0f;
     float bottom = top + (widescreen ? height * 1.3333334f : height);
 

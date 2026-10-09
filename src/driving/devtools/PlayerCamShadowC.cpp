@@ -8,6 +8,7 @@
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../engine/UMemory.hpp"
+#include "../render/RenderHigh.h"
 #include "../world/Collider.h"
 #include "../../common/xbeOriginal.h"
 
@@ -21,7 +22,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 // NIGHTFIRE_PLAYERCAMSHADOWC=1, once on the first simulation tick: camera/PlayerCameraC.cpp against the originals.
 //
-// Each case starts from a copy of the live player camera (CameraViews[0]), perturbed, with its RPlayerCamState
+// Each case starts from a copy of the live player camera (fgRenderHigh->views[0]), perturbed, with its RPlayerCamState
 // and director queue swapped for copies of their own and no collider. The case runs twice from the same bytes -
 // first with 0x00086bb0-0x00089b70's originals swapped back in, then with our jumps - calling the original
 // address both times, and the two runs' camera, state, queue, the camera globals they write (the shake position,
@@ -287,12 +288,12 @@ void PlayerCamShadowC_Run(void) {
     const char *setting = getenv("NIGHTFIRE_PLAYERCAMSHADOWC");
     if (setting == NULL || atoi(setting) == 0)
         return;
-    if (CameraViews == NULL || CameraViews[0].camera == NULL || fgCameraTables.modes == NULL) {
+    if (fgRenderHigh == NULL || fgRenderHigh->views[0].camera == NULL || fgCameraTables.modes == NULL) {
         printf("[playercamC] no player camera yet - skipped\n");
         fflush(stdout);
         return;
     }
-    const RPlayerCamera *live = CameraViews[0].camera;
+    const RPlayerCamera *live = fgRenderHigh->views[0].camera;
     CameraGlobals globals;
     ReadGlobals(&globals);
     Rng rng = {0x5eed0c3u};

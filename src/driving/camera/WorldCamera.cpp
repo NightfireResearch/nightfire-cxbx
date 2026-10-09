@@ -11,6 +11,23 @@
 #include "../../helpers.h"
 #include "../anim/Actor.h"              // ActActorDatabase
 #include "../anim/AnimEngine.h"         // Handle
+#include "../physics/Simulation.h"
+#include "../render/Colorize.h"
+#include "../render/Decals.h"
+#include "../render/Fog.h"
+#include "../render/Gain.h"
+#include "../render/LensFlare.h"
+#include "../render/Lightning.h"
+#include "../render/Lights.h"
+#include "../render/ParticleCache.h"
+#include "../render/Particles.h"
+#include "../render/Particulate.h"
+#include "../render/PathEngine.h"
+#include "../render/PostProcessing.h"
+#include "../render/Reflection.h"
+#include "../render/ShadowMap.h"
+#include "../render/SkyWater.h"
+#include "../render/WorldCulling.h"
 #include "../world/World.h"              // ArticleOf
 #include "../data/Carp.h"
 #include "../data/DebugVariables.h"
@@ -32,6 +49,7 @@
 #include "../world/Render.h"              // WRender, fgRender
 #include "../world/Targeting.h"           // TargetPicker
 #include "../world/VisCurtain.h"          // IsVisibleAgainstCurtains
+#include "../render/Renderer.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // RWorldCamera (0x00097100-0x000980e0), RRenderWorldCamera (0x0008c8e0-0x0008d120), RPlayerViewCamera
@@ -69,66 +87,23 @@ struct SceneObjDescFields {
     UGroup *group;
 };
 
-// The particle system manager (only this field)
-struct ParticleSystemManagerFields {
-    uint8_t unknown00[0x14];
-    uint32_t unknown14;                 // +0x14 copied to 0x001ec46c before the update
-};
-
 } // namespace
 
 // ---- the game's code not ported yet
-#define Simulation_GetRigidBody ((RigidBody *(__fastcall *)(void *, int, int slot))0x000b2700)
-#define Simulation_GetSimpleRigidBody ((SimpleRigidBody *(__fastcall *)(void *, int, int slot))0x000b2730)
 #define AISplinePath_Construct ((AISplinePath *(__fastcall *)(AISplinePath *, int, void *path))0x00035680)
 #define AISplinePath_Destruct ((void (__fastcall *)(AISplinePath *, int))0x00035730)
 #define AISplinePath_Reset ((void (__fastcall *)(AISplinePath *, int, void *path))0x00035740)
 #define AIVehicle_GetSplinePath ((AISplinePath *(__fastcall *)(AIVehicle *, int))0x000359d0)
-#define RPathHandle_SetNextPath ((void (__fastcall *)(RPathHandle *, int, CARP::PathInfo *path))0x0007fec0)
 #define FUN_00022870 ((void (*)(Coord4 *out, const Coord4 *a, const Coord4 *b, float t))0x00022870)
-#define FUN_00080980 ((void (*)(MATRIX4 *frame))0x00080980)
-#define FUN_000809e0 ((void (*)(MATRIX4 *frame))0x000809e0)
-#define RRenderWorldCulling_IsInFrustum2d ((bool (__fastcall *)(void *, int, const Coord4 *sphere, float radius, bool checkFar, float farScale, float *distance))0x0008d180)
-#define RRenderWorldCulling_Setup2dFrustrum ((void (__fastcall *)(void *, int, const Coord4 *position, const MATRIX4 *frame, float fieldOfView, float range))0x0008d440)
-#define RSceneObj_PrepareSceneObjsForCulling ((void (*)(CachedDrawInfo *list))0x0008d830)
-#define RSceneObj_GetNextSceneObjCullInfo ((int (*)(Coord4 *sphere, float *height, bool *checkFar, float *farScale))0x0008d860)
-#define RSceneObj_SetSceneObjectCull ((void (*)(int item, bool culled, float distance))0x0008f000)
-#define RSceneObj_RenderAllNormal ((void (*)())0x0008d9f0)
-#define RSceneObj_RenderAllDrawLast ((void (*)())0x0008da30)
-#define RSceneObj_RenderAllDeferredEffects ((void (*)())0x0008da60)
 #define GFXGallery_CULL_Start ((void (__fastcall *)(void *, int))0x000d3aa0)
 #define GFX_CULL_GetNextCanvas ((int (*)(Coord4 *sphere, float *height, bool *checkFar, float *farScale))0x000d3450)
 #define GGallery_CULL_SetCanvas ((void (*)(int item, bool culled, float distance))0x000d3470)
 #define GFX_Update ((void (*)())0x000d34c0)
-#define RRenderer_FlushDrawLists ((void (__fastcall *)(CameraRendererFields *, int))0x0007d020)
-#define RRenderer_EnableAlphaWrites ((void (__fastcall *)(CameraRendererFields *, int))0x0007d0b0)
-#define RRenderer_DisableAlphaWrites ((void (__fastcall *)(CameraRendererFields *, int))0x0007d0e0)
-#define RFog_DisableFog ((void (__fastcall *)(void *, int))0x0007d7a0)
-#define RFog_EnableFog ((void (__fastcall *)(void *, int))0x0007d820)
-#define RRenderSharedData_SetVehiclesAllowed ((bool (*)(bool allowed))0x0007e1a0)
-#define RRenderSharedData_SendPerViewPort ((void (*)())0x0007e1c0)
-#define RLightManager_AddPositionalLight ((void (__fastcall *)(void *, int, const Coord4 *position, const Coord4 *colour))0x0007e440)
-#define RReflection_EnableReflectionMapWarpage ((void (__fastcall *)(void *, int, bool enable))0x00098220)
-#define RColorize_Draw ((void (__fastcall *)(void *, int))0x0009a6e0)
 #define RBulletStreak_Draw ((void (*)())0x00099e20)
 #define RBulletStreak_Add ((void (*)(const Coord3 *position, const Coord4 *direction, int kind))0x0009a3b0)
-#define RDecalManager_DrawDecals ((void (__fastcall *)(void *, int))0x0009b2d0)
-#define RGain_Draw ((void (__fastcall *)(void *, int))0x0009dec0)
-#define RLensFlareManager_Enable ((void (__fastcall *)(void *, int, bool enable))0x0009e1f0)
-#define RLensFlareManager_DrawFlares ((void (__fastcall *)(void *, int))0x0009e540)
-#define RLensFlareManager_TestFlares ((void (__fastcall *)(void *, int, RViewCamera *view))0x0009e720)
-#define RLightning_Draw ((void (__fastcall *)(void *, int))0x0009fd20)
 #define RMissileCam_Draw ((void (__fastcall *)(void *, int))0x000a0b50)
-#define RParticleSystemManager_UpdateAndRenderAllSystems ((void (__fastcall *)(ParticleSystemManagerFields *, int))0x000a1e30)
-#define RParticleSystemManager_UpdateSpawnAllSystems ((void (__fastcall *)(ParticleSystemManagerFields *, int))0x000a2930)
-#define RParticulate_Draw ((void (__fastcall *)(void *, int))0x000a3e60)
-#define RParticulate_Update ((void (__fastcall *)(void *, int))0x000a3fd0)
-#define RPostProcessing_Draw ((void (__fastcall *)(void *, int))0x000a4ed0)
-#define RPostProcessing_GrabBackBuffer ((void (__fastcall *)(void *, int))0x000a5020)
-#define RShadowMap_FUN_000a5930 ((void (__fastcall *)(void *, int))0x000a5930)
 #define RSniperZoom_GrabBackBuffer ((void (__fastcall *)(void *, int))0x000a68a0)
 #define RSniperZoom_Draw ((void (__fastcall *)(void *, int))0x000a6bc0)
-#define RWindow_DrawBrokenWindows ((void (*)(float unknown))0x000a8c10)
 #define RDebris_Draw ((void (__fastcall *)(void *, int))0x000a9660)
 #define RTyreTrack_Draw ((void (__fastcall *)(RTyreTrack *, int))0x000ac250)
 #define RayShell_DrawTracers ((void (*)())0x00071a60)
@@ -143,7 +118,6 @@ struct ParticleSystemManagerFields {
 #define RWorldCameraVtable ((void **)0x001924e4)
 #define RRenderWorldCameraVtable ((void **)0x00191b2c)
 #define RPlayerViewCameraVtable ((void **)0x00191910)
-#define fgRenderer (*(CameraRendererFields **)0x001ebff4)
 #define Sim ((void *)0x00233ff0)                                // the Simulation
 #define SimStepCount U32_AT(0x00234e34)
 // The Simulation's lists of physics objects (Ghidra's names): its cars, the player's first, its missiles,
@@ -165,25 +139,12 @@ struct ParticleSystemManagerFields {
 #define CullDistance FLOAT_AT(0x001c4624)                       // ESetCullDistanceFactor's; 400
 #define WorldViewMade BOOL8_AT(0x001f2c50)                      // set by RRenderWorldCamera; RVehicle::Render reads it
 #define ParticleSystemsUnknown U32_AT(0x001ec46c)
-#define WorldCulling ((void *)0x001f2c80)                       // the RRenderWorldCulling
 #define Pass0Draws ((CachedDrawInfo *)0x001ef0c0)               // pass 0 of the track's draws, drawn last
 #define Pass1Draws ((CachedDrawInfo *)0x001ec4b8)               // pass 1, drawn after the cars (names ours)
-#define Fog (*(void **)0x001ec004)
-#define LightManager (*(void **)0x001ec260)
-#define Colorize (*(void **)0x001f6898)
-#define Reflection (*(void **)0x001f2dfc)
-#define DecalManager (*(void **)0x001fe820)
-#define Gain (*(void **)0x00200f20)
-#define LensFlares (*(void **)0x00200f44)
-#define Lightning (*(void **)0x00200f4c)
+// The render managers not ported yet (the others are in their headers)
 #define MissileCam (*(void **)0x00200f54)
-#define ParticleSystems (*(ParticleSystemManagerFields **)0x00201730)
-#define Particulate (*(void **)0x00201754)
-#define PostProcessing (*(void **)0x0020175c)
-#define ShadowMap (*(void **)0x0020176c)
 #define SniperZoom (*(void **)0x00201818)
 #define Debris (*(void **)0x00202a80)
-#define GlareManager (*(RGlareManager **)0x00208cb4)
 #define Gallery (*(void **)0x0023f320)
 
 namespace {
@@ -200,7 +161,7 @@ constexpr float kSecondsPerFrame = 1.0f / 60.0f;
 constexpr float kAnimZoomStep = 1.5f;
 constexpr float kLookAtEase = 0.05f;            // of the way to the new lookAt each call
 constexpr uint8_t kAnimMirror = 0x1;            // UpdateAnimationCam's flags
-constexpr uint8_t kAnimFlag2 = 0x2;             // FUN_000809e0 for the axes, not FUN_00080980
+constexpr uint8_t kAnimFlag2 = 0x2;             // FlipFrameRows for the axes, not TurnFrameRows
 constexpr float kCullFar = 120.0f;              // GenerateCurtainsAndNodes's second argument
 constexpr float kGuardBandSize = 4.0f;
 constexpr float kBrokenWindowsUnknown = 75.0f;
@@ -542,7 +503,7 @@ bool RWorldCamera::LoadAISplinePathAnimation(void *path) {
     } else {
         AISplinePath_Reset(aiSplinePath, 0, path);
     }
-    RPathHandle_SetNextPath(aiSplinePath->path, 0, NULL);
+    aiSplinePath->path->SetNextPath(NULL);
     return true;
 }
 
@@ -613,9 +574,9 @@ bool RWorldCamera::UpdateAnimationCam(MATRIX4 *frame, uint8_t flags) {
     VU0_fastqslerp(&track->keys[from].rotation, &track->keys[to].rotation, &rotation, t);
     VU0_quattom4(frame, &rotation);
     if (flags & kAnimFlag2)
-        FUN_000809e0(frame);
+        FlipFrameRows(frame);
     else
-        FUN_00080980(frame);
+        TurnFrameRows(frame);
     FUN_00022870(&eye, AsVector4(&track->keys[from].position), AsVector4(&track->keys[to].position), t);
     if (flags & kAnimMirror) {
         frame->mtx[0][0] = -frame->mtx[0][0];
@@ -688,7 +649,7 @@ void RWorldCamera::RestartCamera() {
 RRenderWorldCamera* RRenderWorldCamera::Construct(RCamera *camera) {
     RViewCamera::Construct(camera);
     vtable = RRenderWorldCameraVtable;
-    RLensFlareManager_Enable(LensFlares, 0, true);
+    TheLensFlareManager->Enable(true);
     WorldViewMade = 1;
     SetGuardBandSize(kGuardBandSize);
     return this;
@@ -715,7 +676,7 @@ void RRenderWorldCamera::LoadAttributes() {
 
 // FUNC_AT(0x0008c990)
 void RRenderWorldCamera::PreRender() {
-    RReflection_EnableReflectionMapWarpage(Reflection, 0, false);
+    TheReflection->EnableReflectionMapWarpage(false);
     ConfigureViewVirtual();
 }
 
@@ -729,7 +690,7 @@ void RRenderWorldCamera::CullModule(CullNextItem next, CullSetItem set, bool) {
     for (int item = next(&sphere, &height, &checkFar, &farScale); item != -1;
          item = next(&sphere, &height, &checkFar, &farScale)) {
         float distance = 0.0f;
-        if (!RRenderWorldCulling_IsInFrustum2d(WorldCulling, 0, &sphere, sphere.w, checkFar, farScale, &distance)) {
+        if (!fgWorldCulling.IsInFrustum2d(&sphere, sphere.w, checkFar, farScale, &distance)) {
             set(item, true, distance);
             continue;
         }
@@ -748,8 +709,8 @@ CachedDrawInfo* RRenderWorldCamera::PerformCulling() {
         ActActorDatabase::PrepareActorsForCulling();
         CullModule(ActActorDatabase::GetNextActorCullInfo, ActActorDatabase::SetActorCull, false);
     }
-    RSceneObj_PrepareSceneObjsForCulling(list);
-    CullModule(RSceneObj_GetNextSceneObjCullInfo, RSceneObj_SetSceneObjectCull, false);
+    RSceneObj::PrepareSceneObjsForCulling(list);
+    CullModule(RSceneObj::GetNextSceneObjCullInfo, RSceneObj::SetSceneObjectCull, false);
     GFXGallery_CULL_Start(Gallery, 0);
     CullModule(GFX_CULL_GetNextCanvas, GGallery_CULL_SetCanvas, false);
     return list;
@@ -757,23 +718,23 @@ CachedDrawInfo* RRenderWorldCamera::PerformCulling() {
 
 // FUNC_AT(0x0008cb30)
 void RRenderWorldCamera::DrawStaticWorldGeometry(CachedDrawInfo *list) {
-    RRenderer_EnableAlphaWrites(fgRenderer, 0);
-    RFog_EnableFog(Fog, 0);
+    fgRenderer->EnableAlphaWrites();
+    Fog->EnableFog();
     fgRender->DrawWorld(list, 1);
     TargetPicker.UpdateTargets();
     GHud_UpdateTargets(GHud_TheApp(), 0);
-    RFog_DisableFog(Fog, 0);
-    RRenderer_DisableAlphaWrites(fgRenderer, 0);
+    Fog->DisableFog();
+    fgRenderer->DisableAlphaWrites();
 }
 
 // Pass 0, farthest first, without depth writes.
 // FUNC_AT(0x0008cb90)
 void RRenderWorldCamera::DrawFinalStaticWorldGeometry(CachedDrawInfo *list) {
     fgRenderer->renderContext->SetZWritesEnable(0);
-    RFog_EnableFog(Fog, 0);
-    RRenderSharedData_SendPerViewPort();
+    Fog->EnableFog();
+    RRenderSharedData::SendPerViewPort();
     fgRender->DrawPass(list, 0, 0, 2);
-    RFog_DisableFog(Fog, 0);
+    Fog->DisableFog();
     fgRenderer->renderContext->SetZWritesEnable(1);
 }
 
@@ -781,33 +742,33 @@ void RRenderWorldCamera::DrawFinalStaticWorldGeometry(CachedDrawInfo *list) {
 void RRenderWorldCamera::DrawPostProcessingEffects() {
     if (!PostProcessingEnabled)
         return;
-    RPostProcessing_GrabBackBuffer(PostProcessing, 0);
+    ThePostProcessing->GrabBackBuffer();
     RSniperZoom_GrabBackBuffer(SniperZoom, 0);
     fgRenderer->currentView->SetDeviceTransformMode();
-    RLensFlareManager_TestFlares(LensFlares, 0, this);
-    RLensFlareManager_DrawFlares(LensFlares, 0);
-    RColorize_Draw(Colorize, 0);
-    RGain_Draw(Gain, 0);
+    TheLensFlareManager->TestFlares(this);
+    TheLensFlareManager->DrawFlares();
+    Colorize->Draw();
+    TheGain->Draw();
     RSniperZoom_Draw(SniperZoom, 0);
-    RPostProcessing_Draw(PostProcessing, 0);
+    ThePostProcessing->Draw();
     RMissileCam_Draw(MissileCam, 0);
 }
 
 // FUNC_AT(0x0008cc70)
 void RRenderWorldCamera::DrawVehiclesAndDeferredSceneObjects() {
-    RRenderer_EnableAlphaWrites(fgRenderer, 0);
-    RFog_EnableFog(Fog, 0);
-    bool vehiclesAllowed = RRenderSharedData_SetVehiclesAllowed(true);
-    RRenderSharedData_SendPerViewPort();
-    RShadowMap_FUN_000a5930(ShadowMap, 0);
-    RRenderSharedData_SendPerViewPort();
-    RSceneObj_RenderAllDrawLast();
-    RRenderer_DisableAlphaWrites(fgRenderer, 0);
-    RRenderSharedData_SendPerViewPort();
-    RRenderer_FlushDrawLists(fgRenderer, 0);
+    fgRenderer->EnableAlphaWrites();
+    Fog->EnableFog();
+    bool vehiclesAllowed = RRenderSharedData::SetVehiclesAllowed(true);
+    RRenderSharedData::SendPerViewPort();
+    TheShadowMap->SetupFrameBuffers();
+    RRenderSharedData::SendPerViewPort();
+    RSceneObj::RenderAllDrawLast();
+    fgRenderer->DisableAlphaWrites();
+    RRenderSharedData::SendPerViewPort();
+    fgRenderer->FlushDrawLists();
     NullFunction();             // called on the shadow map
-    RRenderSharedData_SetVehiclesAllowed(vehiclesAllowed);
-    RFog_DisableFog(Fog, 0);
+    RRenderSharedData::SetVehiclesAllowed(vehiclesAllowed);
+    Fog->DisableFog();
 }
 
 // FUNC_AT(0x0008cd10)
@@ -848,32 +809,32 @@ void RRenderWorldCamera::AddPlayerHeadlight() {
     light.x = (float)((double)forward->x * kHeadlightReach + light.x);
     light.y = (float)((double)forward->y * kHeadlightReach + light.y);
     light.z = (float)((double)forward->z * kHeadlightReach + light.z);
-    RLightManager_AddPositionalLight(LightManager, 0, &light, &colour);
+    fgLightManager->AddPositionalLight(&light, &colour);
 }
 
 // FUNC_AT(0x0008cf10)
 void RRenderWorldCamera::DrawEffects() {
     DrawBulletStreaks();
-    RWindow_DrawBrokenWindows(kBrokenWindowsUnknown);
-    RDecalManager_DrawDecals(DecalManager, 0);
+    RWindow::DrawBrokenWindows(kBrokenWindowsUnknown);
+    TheDecalManager->DrawDecals();
     RBulletStreak_Draw();
-    RLightning_Draw(Lightning, 0);
-    RSceneObj_RenderAllDeferredEffects();
+    TheLightning->Draw();
+    RSceneObj::RenderAllDeferredEffects();
     GFX_Update();
     RDebris_Draw(Debris, 0);
-    GlareManager->DrawGlares(true);
-    RParticleSystemManager_UpdateSpawnAllSystems(ParticleSystems, 0);
-    ParticleSystemsUnknown = ParticleSystems->unknown14;
-    RParticleSystemManager_UpdateAndRenderAllSystems(ParticleSystems, 0);
+    TheGlareManager->DrawGlares(true);
+    fgParticleSystems->UpdateSpawnAllSystems();
+    ParticleSystemsUnknown = fgParticleSystems->cache.count;
+    fgParticleSystems->UpdateAndRenderAllSystems();
     Sentry_DrawMuzzleFlashes();
-    RParticulate_Update(Particulate, 0);
-    RParticulate_Draw(Particulate, 0);
+    fgParticulate->Update();
+    fgParticulate->Draw();
 }
 
 // FUNC_AT(0x0008cfa0)
 void RRenderWorldCamera::DoRender() {
     CachedDrawInfo *list = PerformCulling();
-    RRenderSharedData_SendPerViewPort();
+    RRenderSharedData::SendPerViewPort();
     if (ActorDatabase != NULL)
         ActorDatabase->SetupFOVConversions(this);
     DrawStaticWorldGeometry(list);
@@ -882,29 +843,29 @@ void RRenderWorldCamera::DoRender() {
     if (ActorDatabase != NULL)
         ActorDatabase->DrawAll(this, false, false);
 
-    RRenderer_EnableAlphaWrites(fgRenderer, 0);
-    RFog_EnableFog(Fog, 0);
-    RRenderSharedData_SendPerViewPort();
-    RSceneObj_RenderAllNormal();
-    RFog_DisableFog(Fog, 0);
-    RRenderer_DisableAlphaWrites(fgRenderer, 0);
+    fgRenderer->EnableAlphaWrites();
+    Fog->EnableFog();
+    RRenderSharedData::SendPerViewPort();
+    RSceneObj::RenderAllNormal();
+    Fog->DisableFog();
+    fgRenderer->DisableAlphaWrites();
     DrawTyreTracks();
     DrawVehiclesAndDeferredSceneObjects();
 
-    RFog_EnableFog(Fog, 0);
-    RRenderSharedData_SendPerViewPort();
+    Fog->EnableFog();
+    RRenderSharedData::SendPerViewPort();
     fgRender->DrawPass(Pass1Draws, 1, 1, 2);
-    RFog_DisableFog(Fog, 0);
+    Fog->DisableFog();
     if (ActorDatabase != NULL)
         ActorDatabase->DrawActorWeapons(this, false);
     DrawFinalStaticWorldGeometry(Pass0Draws);
     TargetPicker.DrawTargetingSystem();
     DrawEffects();
     if (ActorDatabase != NULL) {
-        RRenderer_EnableAlphaWrites(fgRenderer, 0);
+        fgRenderer->EnableAlphaWrites();
         ActorDatabase->DrawAll(this, true, true);
-        RRenderer_FlushDrawLists(fgRenderer, 0);
-        RRenderer_DisableAlphaWrites(fgRenderer, 0);
+        fgRenderer->FlushDrawLists();
+        fgRenderer->DisableAlphaWrites();
     }
     DrawPostProcessingEffects();
     if (HeadlightsEnabled && (SimCars.first[0]->renderObject->damagedZones & kHeadlightsBroken) != kHeadlightsBroken)
@@ -945,5 +906,5 @@ void RPlayerViewCamera::ConfigureView() {
     if (fgRenderer->widescreen)
         fieldOfView = fieldOfView * kWidescreenFovScale;
     Coord4 position = *MatrixRow(&camera->matrix, 3);
-    RRenderWorldCulling_Setup2dFrustrum(WorldCulling, 0, &position, &camera->matrix, fieldOfView, range);
+    fgWorldCulling.Setup2dFrustrum(&position, &camera->matrix, fieldOfView, range);
 }

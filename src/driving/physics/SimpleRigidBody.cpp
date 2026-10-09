@@ -4,6 +4,7 @@
 
 #include "PhysicsObject.h"
 #include "RigidBody.h"
+#include "Simulation.h"
 #include "../../helpers.h"
 #include "../engine/CoreFoundation.h"     // NullFunction
 #include "../engine/OBB.h"
@@ -14,10 +15,6 @@
 // SimpleRigidBody (0x000b1e10-0x000b25e0), ported from the listing. The x87 arithmetic is the original's: chains in
 // double in its order, rounded where it stores to a float; the comparisons keep its sense for NaNs.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- the game's code not ported yet
-#define Simulation_GetRigidBody ((RigidBody *(__fastcall *)(void *, int, int slot))0x000b2700)
-#define Simulation_GetSimpleRigidBody ((SimpleRigidBody *(__fastcall *)(void *, int, int slot))0x000b2730)
 
 // ---- globals
 #define Sim ((void *)0x00233ff0)                    // the Simulation

@@ -27,6 +27,10 @@ struct TAR;
 struct GeoPrimParam {                // 8
     uint32_t count;                  // +0x00 a count or a name
     uint8_t *data;                   // +0x04
+
+    // The game's code points parameters at its own records
+    void SetData(const void *p) { data = (uint8_t *)p; }
+    void Set(uint32_t n, const void *p) { data = (uint8_t *)p; count = n; }
 };
 static_assert(sizeof(GeoPrimParam) == 8, "a GeoPrim parameter is 8 bytes");
 

@@ -13,6 +13,7 @@
 #include "../engine/MissionManager.h"
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
+#include "../render/RenderHigh.h"
 #include "../world/Targeting.h"
 #include "../world/WorldPos.h"
 #include "../../common/xbeOriginal.h"
@@ -32,7 +33,8 @@
 //
 // Two passes run the same cases, calling every function at its original address: the first with the originals
 // swapped back in (0x00080a60-0x00083190), the second with our jumps. Each case starts from a fresh copy of the
-// live player camera (CameraViews[0]) with its own copies of the camera state, the director's queue and the world
+// live player camera (fgRenderHigh->views[0])
+// with its own copies of the camera state, the director's queue and the world
 // position, a new spline, and perturbations drawn from the case's seed (mode, mode-change flags, positions,
 // eased values, inputs, look-back, zoom arm, the simulation state); the globals a case changes are put back after
 // it. Each case logs what the function answered, the whole camera (64 bytes a line), the state, the queue's flags,
@@ -731,13 +733,13 @@ void PlayerCamShadowA_Run(void) {
     const char *setting = getenv("NIGHTFIRE_PLAYERCAMSHADOWA");
     if (setting == NULL || atoi(setting) == 0)
         return;
-    if (CameraViews == NULL || CameraViews[0].camera == NULL || fgCameraTables.modes == NULL ||
-        *reinterpret_cast<uint32_t *>(CameraViews[0].camera) != ShadowPlayerCameraVtable) {
+    if (fgRenderHigh == NULL || fgRenderHigh->views[0].camera == NULL || fgCameraTables.modes == NULL ||
+        *reinterpret_cast<uint32_t *>(fgRenderHigh->views[0].camera) != ShadowPlayerCameraVtable) {
         printf("[playercamA] no player camera yet - skipped\n");
         fflush(stdout);
         return;
     }
-    g_live = CameraViews[0].camera;
+    g_live = fgRenderHigh->views[0].camera;
     if (g_live->state == NULL || g_live->directorQueue == NULL || g_live->worldPos == NULL ||
         g_live->roadNav == NULL || g_live->anchor == NULL) {
         printf("[playercamA] the player camera is not set up - skipped\n");

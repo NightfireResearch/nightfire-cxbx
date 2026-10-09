@@ -347,11 +347,11 @@ Where it differs from the plan above:
 
 - **The picture goes to the backend, not EAGL.** `D3D9_DrawMovieFrame` (`src/common/gfx/d3d9Backend.cpp`) uploads the
   frame to a texture of its own and draws one quad, saving and restoring the device state around it. The frame around
-  the picture is still the game's own, through `AUTOGEN` calls (`src/driving/render/RenderState.hpp`):
+  the picture is still the game's own, through EAGL's `RenderContext` and `ViewPort` (ours now, called directly):
   `RenderContext::BeginFrame`/`EndFrame`/`GetSize`, `ViewPort::BeginView`/`ClearViewPort(7)`/`EndView`, and
-  `0x000e4340`, which turned out to set the viewport's rectangle and depth range (`SetRect(0, 0, width, height, 0.01,
-  1.0)`). The subtitle callback draws between them as before. The colour is 32-bit, converted from FFmpeg's 4:2:0
-  (BT.601), with no 565 dithering.
+  `ViewPort::SetShape` (`0x000e4340`), which sets the viewport's rectangle and depth range (`SetShape(0, 0, width,
+  height, 0.01, 1.0)`). The subtitle callback draws between them as before. The colour is 32-bit, converted from
+  FFmpeg's 4:2:0 (BT.601), with no 565 dithering.
 - **The audio header comes after the first video chunk**, so `Play` reads ahead until it has seen the `SCHl` (or 16
   video packets) before starting the clock. A late header would have created a voice after the clock started. The
   header begins `PT`, the platform (7) and a zero, not `PT\0\0`. FFmpeg's demuxer checks only the `P`.

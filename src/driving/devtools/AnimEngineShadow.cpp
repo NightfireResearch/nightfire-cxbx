@@ -491,8 +491,9 @@ void MakeScene() {
         static const uint16_t kFlags[] = { 0x0002, 0x0004, 0x0008, 0x0010, 0x0080, 0x0200, 0x1000, 0x0001, 0x0400 };
         for (int e = 0; e < effects; e++) {
             ArticleEffect &effect = g_scene.effects[a][e];
-            for (uint8_t &byte : effect.unknown00)
-                byte = uint8_t(Random());
+            uint8_t *head = reinterpret_cast<uint8_t *>(&effect.position);    // +0x00 to +0x10
+            for (size_t i = 0; i < offsetof(ArticleEffect, flags); i++)
+                head[i] = uint8_t(Random());
             effect.flags = 0;
             for (int f = RandomInt(4); f > 0; f--)
                 effect.flags |= kFlags[RandomInt(9)];
@@ -501,8 +502,8 @@ void MakeScene() {
             effect.type = kTypes[RandomInt(4)];
             effect.instance = uint8_t(RandomInt(40));
             effect.id = uint8_t(RandomInt(8));
-            uint8_t *tail = reinterpret_cast<uint8_t *>(&effect.reference);   // +0x18 on
-            for (size_t i = 0; i < sizeof(ArticleEffect) - offsetof(ArticleEffect, reference); i++)
+            uint8_t *tail = reinterpret_cast<uint8_t *>(&effect.gfx);   // +0x18 on
+            for (size_t i = 0; i < sizeof(ArticleEffect) - offsetof(ArticleEffect, gfx); i++)
                 tail[i] = uint8_t(Random());
         }
         article.effects = RandomInt(5) == 0 ? NULL : g_scene.effects[a];

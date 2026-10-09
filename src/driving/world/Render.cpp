@@ -7,6 +7,10 @@
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
+#include "../render/Lights.h"
+#include "../render/Renderer.h"
+#include "../render/SkyWater.h"
+#include "../render/WorldCulling.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // WRender (0x000c7330..0x000c8940), ported from the listing, with the compiled copy of std::sort for its draws
@@ -17,18 +21,7 @@
 #define VisibleList (*(CachedDrawInfo *)0x0023b3c0)
 #define CurrentList (*(CachedDrawInfo **)0x0023e014)     // the list the tree walks fill
 #define VisibleNodeCount I32_AT(0x0023e02c)               // DrawWorldAtPoint's, never read
-#define WorldCulling ((void *)0x001f2c80)                 // the RRenderWorldCulling
 #define ViewCull (*(WViewCull *)0x0023dfd0)
-#define Lighting (*(LightingFields **)0x001ec260)
-
-// ---- the game's code not ported yet
-#define RRenderWorldCulling_QuadtreeFrustrumCheck2d ((int (__fastcall *)(void *, int, const Coord4 *box, float radius))0x0008d250)
-#define RRenderWorldCulling_IsInFrustum2d ((bool (__fastcall *)(void *, int, const Coord4 *sphere, float radius, bool checkFar, float farScale, float *distance))0x0008d180)
-#define Instance_SizeY ((double (__fastcall *)(const CARP::Instance *, int))0x0008d640)
-#define RSky_Draw ((void (*)(CARP::Instance *instances, bool))0x000a6690)
-#define QuickDrawInstance ((void (*)(CARP::Instance *, ProcAnimState *))0x0007df10)
-#define RInstanceRender_SetShadowInformation ((void (*)(void *data))0x0007daf0)
-#define RInstanceRender_SetDefaultShadowInformation ((void (*)(void))0x0007dbc0)
 
 // The cursor of GetNextPoint's walk (0x0023e008)
 struct CullCursor {
@@ -59,20 +52,6 @@ enum {
 // DrawWorldAtPoint skips instances with any of these
 constexpr uint8_t kNotDrawnAtPoint = kWorldInstanceSceneObj | kInstanceSky | kInstanceNoFarCull;
 
-// GAME::PositionalLights (RCARPFile's name for it): 0x80 bytes, as rows
-struct PositionalLights {
-    Coord4 rows[8];
-};
-
-// The lighting the renderer keeps (only the fields read here)
-struct LightingFields {
-    uint8_t unknown000[0x2a0];
-    PositionalLights *positionalLights; // +0x2a0
-    uint8_t unknown2a4[0x21];
-    uint8_t unknown2c5;                 // +0x2c5 nonzero: the track's 'Shad' data is used, if it has any
-};
-static_assert(offsetof(LightingFields, unknown2c5) == 0x2c5, "LightingFields layout");
-
 // The instance's position, and its packed dimensions in the w word
 const Coord4 *PositionOf(const CARP::Instance *instance) {
     return reinterpret_cast<const Coord4 *>(instance->position);
@@ -86,7 +65,7 @@ double Dimension(uint32_t packed, int shift) {
     return double((packed >> shift) & 0x3ff) * kDimensionStep[(packed >> 30) & 1];
 }
 
-// Instance_SizeY, as DrawWorldAtPoint has it inline: y when the three were given separately, else twice x
+// CARP::Instance::SizeY, as DrawWorldAtPoint has it inline: y when the three were given separately, else twice x
 double SizeY(const CARP::Instance *instance) {
     uint32_t packed = instance->packedDimensions;
     if ((packed & kDimensionsSeparate) == kDimensionsSeparate)
@@ -124,7 +103,7 @@ void SortDraws(CachedDrawInfo *list, RenderSortPredicate pred) {
 // FUNC_AT(0x000c7330)
 void WRender::FindVisibleTreeNodesAndCurtains(WMapNode *node, const Coord4 *box, bool clip, int depth) {
     if (clip) {
-        int where = RRenderWorldCulling_QuadtreeFrustrumCheck2d(WorldCulling, 0, box, box->w * kRootTwo);
+        int where = fgWorldCulling.QuadtreeFrustrumCheck2d(box, box->w * kRootTwo);
         if (where == kOutside)
             return;
         clip = where == kAcross;
@@ -139,7 +118,7 @@ void WRender::FindVisibleTreeNodesAndCurtains(WMapNode *node, const Coord4 *box,
         WVisCurtain *curtain = &curtains[indices[node->numInstances + i]];
         Coord4 middle = {};
         VU0_v4addscale(&curtain->start, &curtain->end, kHalf, &middle);
-        if (RRenderWorldCulling_IsInFrustum2d(WorldCulling, 0, &middle, curtain->start.w, true, 1.0f, NULL))
+        if (fgWorldCulling.IsInFrustum2d(&middle, curtain->start.w, true, 1.0f, NULL))
             AddActiveCurtain(curtain, &eye);
     }
 
@@ -229,7 +208,7 @@ int WRender::GetNextPoint(Coord4 *sphere, float *height, bool *checkFar, float *
     }
 
     CARP::Instance *instance = &fgRender->instances[list->nodes[Cursor.node]->IndexList()[Cursor.item]];
-    *height = float(Instance_SizeY(instance, 0));
+    *height = float(instance->SizeY());
     *sphere = *PositionOf(instance);
     sphere->w = float(Dimension(instance->packedDimensions, 0));
     *checkFar = !(instance->flags & kInstanceNoFarCull);
@@ -330,8 +309,8 @@ WRender* WRender::Construct() {
     }
 
     UData *shadowData = mapGroup->DataLocateTag(kTagShadows);
-    if (shadowData != mapGroup->DataEnd() && Lighting->unknown2c5)
-        RInstanceRender_SetShadowInformation(shadowData->Data());
+    if (shadowData != mapGroup->DataEnd() && fgLightManager->lightMapsEnabled)
+        RInstanceRender_SetShadowInformation(reinterpret_cast<const ShadowMapInfo *>(shadowData->Data()));
     else
         RInstanceRender_SetDefaultShadowInformation();
     return this;
@@ -378,7 +357,7 @@ void WRender::DrawPass(CachedDrawInfo *list, int firstPass, int lastPass, int so
 // FUNC_AT(0x000c8450)
 void WRender::DrawWorld(CachedDrawInfo *list, int sort) {
     CurrentList = &VisibleList;
-    RSky_Draw(instances, false);
+    RSky::Draw(instances, false);
     DrawPass(list, 2, 3, sort);
 }
 
@@ -387,13 +366,13 @@ void WRender::DrawWorld(CachedDrawInfo *list, int sort) {
 // FUNC_AT(0x000c8490)
 void WRender::DrawWorldAtPoint(CachedDrawInfo *list, const Coord3 *eye, float radius, float ambient, Coord4 facing) {
     CurrentList = list;
-    PositionalLights *lights = Lighting->positionalLights;
-    PositionalLights saved = *lights;
-    *lights = PositionalLights();
-    lights->rows[4].x = ambient;
-    lights->rows[4].y = ambient;
-    lights->rows[4].z = ambient;
-    RSky_Draw(instances, false);
+    RPositionalLights *lights = fgLightManager->positionalLights;
+    RPositionalLights saved = *lights;
+    *lights = RPositionalLights();
+    lights->colours[0].x = ambient;
+    lights->colours[0].y = ambient;
+    lights->colours[0].z = ambient;
+    RSky::Draw(instances, false);
     *lights = saved;
 
     ViewCull.facing = facing;

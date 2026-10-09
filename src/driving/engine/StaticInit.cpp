@@ -21,6 +21,8 @@
 #include "../audio/Fader.h"             // FaderRefTree
 #include "../audio/Mix.h"               // MixRefTree
 #include "../audio/Stream.h"            // StreamRefTree
+#include "../render/RSceneObj.hpp"
+#include "../render/TextureContext.h"
 #include "../world/RoadNav.h"
 #include "../world/Targeting.h"
 
@@ -28,8 +30,6 @@
 
 
 #define FUN_0004f400 ((void (__fastcall *)(void *, int))0x0004f400)
-#define FUN_000903a0 ((void (__fastcall *)(void *, int))0x000903a0)
-#define FUN_00094ff0 ((void (__fastcall *)(void *, int))0x00094ff0)
 #define FUN_0012f820 ((void (__fastcall *)(void *, int))0x0012f820)
 
 // ---- the weapon table
@@ -115,11 +115,11 @@ void DestroyStatic_001f25b0(void) {
 }
 // FUNC_AT(0x0015ced0)
 void DestroyStatic_001f25f4(void) {
-    FUN_000903a0((void *)0x001f25f4, 0);
+    ((CarpFileRefTree *)0x001f25f4)->Destruct();
 }
 // FUNC_AT(0x0015cef0)
 void DestroyStatic_001f2a34(void) {
-    FUN_00094ff0((void *)0x001f2a34, 0);
+    ((TextureContextRefTree *)0x001f2a34)->Destruct();
 }
 // FUNC_AT(0x0015cf60)
 void DestroyStatic_00200f60(void) {

@@ -4,6 +4,7 @@
 #include "../platform/RealPrint.h"
 
 #include <bit>
+#include <math.h>
 #include <stdint.h>
 #include <string.h>
 #include <utility>

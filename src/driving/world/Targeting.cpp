@@ -8,10 +8,13 @@
 #include "../engine/MissionManager.h"
 #include "../engine/UMemory.hpp"
 #include "../camera/CameraSpline.h"     // RCameraMath
-#include "../camera/PlayerCamera.h"     // RCamera, RViewCamera, RPlayerCamera, CameraViews
+#include "../camera/PlayerCamera.h"     // RCamera, RViewCamera, RPlayerCamera
 #include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
+#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
+#include "../render/Renderer.h"
+#include "../render/RenderHigh.h"
 
 #include <bit>
 #include <math.h>
@@ -29,18 +32,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 namespace {
-
-// The renderer (only the fields read here)
-struct RRendererFields {
-    uint8_t unknown00[0x40];
-    int32_t screenWidth;        // +0x40
-    int32_t screenHeight;       // +0x44
-    uint8_t unknown48[4];
-    uint8_t widescreen;         // +0x4c
-    uint8_t unknown4d[0xb];
-    float fieldOfViewScale;     // +0x58
-};
-static_assert(offsetof(RRendererFields, fieldOfViewScale) == 0x58, "RRenderer layout");
 
 enum AIVehicleKind : int32_t {
     kAIVehicleRigidBody = 1,    // its physics object's body is a rigid body
@@ -84,7 +75,6 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 
 // ---- the game's globals
 
-#define fgRenderer (*(RRendererFields **)0x001ebff4)
 #define ViewWidth I32_AT(0x001f2d7c)                             // the view's size in pixels (names ours)
 #define ViewHeight I32_AT(0x001f2d80)
 #define DefaultVector (*(const Coord4 *)0x001d4c00)              // (0, 0, 0, 1)
@@ -99,8 +89,6 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 
 // ---- calls to originals not ported
 
-#define Simulation_GetRigidBody ((RigidBody *(__fastcall *)(void *, int, int body))0x000b2700)
-#define Simulation_GetSimpleRigidBody ((SimpleRigidBody *(__fastcall *)(void *, int, int body))0x000b2730)
 #define AIVehicle_GetPhysicsObject ((PhysicsObject *(__fastcall *)(AIVehicle *, int))0x00035840)
 #define AIVehicle_GetPosition ((const Coord3 *(__fastcall *)(AIVehicle *, int))0x000359e0)
 #define ATargeting_Construct ((ATargeting *(__fastcall *)(ATargeting *, int))0x0012e0f0)
@@ -385,10 +373,10 @@ void WTargetable::UpdatePosition() {
 
 // FUNC_AT(0x000cd670)
 void WTargetable::UpdateVisibility() {
-    if (CameraViews == NULL || CameraViews[0].camera == NULL)
+    if (fgRenderHigh == NULL || fgRenderHigh->views[0].camera == NULL)
         return;
     Coord4 sight[2];            // a segment from the camera to the target
-    sight[0] = *MatrixRow(&CameraViews[0].camera->matrix, 3);
+    sight[0] = *MatrixRow(&fgRenderHigh->views[0].camera->matrix, 3);
     sight[1].x = position.x;
     sight[1].y = position.y;
     sight[1].z = position.z;
@@ -433,7 +421,7 @@ bool WTargetable::GetVelocity(Coord3 *velocity) {
 
 // FUNC_AT(0x000cd840)
 float WTargetable::DistFromCamera(int camera) {
-    return VU0_v3distancesquare(MatrixRow(&CameraViews[camera].camera->matrix, 3), &position);
+    return VU0_v3distancesquare(MatrixRow(&fgRenderHigh->views[camera].camera->matrix, 3), &position);
 }
 
 // FUNC_AT(0x000cd890)
@@ -644,7 +632,7 @@ void WTargetPicker::UpdateSelection() {
     // the world target: along the auto-drive camera's aim, or ahead of the car, up to the world in the way
     Coord4 aim[2];              // a segment from the camera or the car to the target
     if (mode == kTargetingAutoDrive) {
-        RPlayerCamera *camera = CameraViews[0].camera;
+        RPlayerCamera *camera = fgRenderHigh->views[0].camera;
         aim[0] = *MatrixRow(&camera->matrix, 3);
         VU0_v4scaleadd(camera->GetForwardAimVec4(1.0f), kAimDistance, &aim[0], &worldTarget);
     } else {
@@ -709,7 +697,7 @@ void WTargetPicker::MoveTargetingCursors() {
 
 // FUNC_AT(0x000ce1b0)
 void WTargetPicker::UpdateAutoDriveTargeting() {
-    RPlayerCamera *camera = CameraViews[0].camera;
+    RPlayerCamera *camera = fgRenderHigh->views[0].camera;
     if (camera->CameraAiming() == 1) {
         autoDriveQuat = kIdentityQuat;
         return;
@@ -748,7 +736,7 @@ void WTargetPicker::DrawTargetingSystem() {
 
 // FUNC_AT(0x000ce2b0)
 ScreenPos* WTargetPicker::GetScreenPos(ScreenPos *result, const Coord3 *point) {
-    RViewCamera *view = CameraViews[0].view;
+    RViewCamera *view = fgRenderHigh->views[0].view;
     RCamera camera;
     camera.ConstructCopy(view->camera);
     float tangent = Tangent(double(fgRenderer->fieldOfViewScale) * camera.fieldOfView * kDegreesToRadians);
@@ -791,7 +779,7 @@ bool WTargetPicker::IsPointOnScreen(const ScreenPos *point) {
 // FUNC_AT(0x000cdc10)
 ScreenPos* WTargetPicker::GetOffScreenPos(ScreenPos *result, const Coord3 *point) {
     // the point in the camera's frame: its rotation transposed, the translation carried into it
-    const MATRIX4 &frame = CameraViews[0].view->camera->matrix;
+    const MATRIX4 &frame = fgRenderHigh->views[0].view->camera->matrix;
     MATRIX4 view;
     for (int row = 0; row < 3; row++) {
         for (int column = 0; column < 3; column++)

@@ -12,6 +12,7 @@
 #include "../engine/UMemory.hpp"
 #include "../physics/RigidBody.h"       // RigidVehicle
 #include "../platform/RealMath.h"
+#include "../render/Renderer.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // RCamera (0x00078430-0x00078550, 0x00096820, 0x00096980) and RViewCamera (0x00096830-0x000970a0, 0x0008bf20),
@@ -22,15 +23,9 @@
 
 using EAGL::ViewPort;
 
-// ---- the game's code not ported yet
-#define RRenderer_EndView ((void (__fastcall *)(CameraRendererFields *, int))0x0007d030)
-// FUN_00013c80: writes RRenderer::currentView
-#define RRenderer_SetCurrentView ((void (__fastcall *)(CameraRendererFields *, int, RViewCamera *view))0x00013c80)
-
 // ---- globals
 #define RCameraVtable ((void **)0x00190350)
 #define RViewCameraVtable ((void **)0x00192444)
-#define fgRenderer (*(CameraRendererFields **)0x001ebff4)
 #define ResolutionStamp I32_AT(0x001f2d78)              // changes with the screen's resolution (names ours)
 #define ViewWidth I32_AT(0x001f2d7c)                    // the screen's size in pixels
 #define ViewHeight I32_AT(0x001f2d80)
@@ -96,6 +91,17 @@ RCamera* RCamera::Construct() {
 // FUNC_AT(0x00096980)
 RCamera* RCamera::ConstructCopy(const RCamera *other) {
     vtable = RCameraVtable;
+    matrix = other->matrix;
+    unknown50 = other->unknown50;
+    matrixChanged = other->matrixChanged;
+    inverse = other->inverse;
+    active = other->active;
+    fieldOfView = other->fieldOfView;
+    return this;
+}
+
+// FUNC_AT(0x0008b330)
+RCamera* RCamera::Assign(const RCamera *other) {
     matrix = other->matrix;
     unknown50 = other->unknown50;
     matrixChanged = other->matrixChanged;
@@ -221,7 +227,7 @@ void RViewCamera::RefreshLODMultiplier() {
 void RViewCamera::EndView() {
     viewPort->EndView();
     active = 0;
-    RRenderer_EndView(fgRenderer, 0);
+    fgRenderer->EndView();
 }
 
 // The range is kept but not used; the shape is made again as UpdateForResolution makes it.
@@ -334,7 +340,7 @@ void RViewCamera::SetWorldTransformMode() {
 
 // FUNC_AT(0x00096fc0)
 void RViewCamera::SetRenderCamera() {
-    RRenderer_SetCurrentView(fgRenderer, 0, this);
+    fgRenderer->SetCurrentView(this);
     int stamp = ResolutionStamp;
     if (resolutionStamp != stamp) {
         resolutionStamp = stamp;

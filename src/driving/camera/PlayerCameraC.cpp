@@ -22,22 +22,21 @@
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
+#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"      // MEM_fill
 #include "../platform/X87.h"
 #include "../data/Carp.h"
+#include "../render/Colorize.h"
+#include "../render/PathEngine.h"
 #include "../world/Collider.h"
 #include "../world/RoadNav.h"
 #include "../world/WorldPos.h"
 
 // ---- the game's code not ported yet
 #define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
-#define Simulation_GetRigidBody ((RigidBody *(__fastcall *)(void *, int, int slot))0x000b2700)
-#define Simulation_GetSimpleRigidBody ((SimpleRigidBody *(__fastcall *)(void *, int, int slot))0x000b2730)
-#define RotateOffsetToHeading ((void (*)(const Coord4 *offset, const Coord4 *heading, Coord4 *out))0x000808f0)
 #define BlendVectors ((void (*)(Coord4 *out, const Coord4 *from, const Coord4 *to, float t))0x00022870)
 #define Instance_SetMatrix ((void (__fastcall *)(CARP::Instance *, int, const MATRIX4 *))0x00035610)     // FUN_00035610: the axes and position
-#define RColorize_SetEnabled ((void (__fastcall *)(void *, int, int))0x0009a500)
 
 namespace {
 
@@ -57,7 +56,6 @@ struct ShakeSource : PhysicsObject {
 #define SimStepsPerSecond I32_AT(0x00234e2c)
 #define PlayerObjects (*(GameVector<PhysicsObject *> *)0x00234e3c)  // the players' objects; the first is ours
 #define Explosions (*(GameVector<ShakeSource *> *)0x00234ebc)
-#define Colorize PTR_AT(0x001f6898)                                 // the RColorize
 #define SimpleBodyOwners ((PhysicsObject **)0x002343a0)             // [96] the simple bodies' owners, by slot
 
 #define HeliGroundCount I32_AT(0x001ec3e8)          // the heli camera's ground-contact count, 0-80
@@ -916,7 +914,7 @@ void RPlayerCamera::EndMissileCamera() {
     SetAnchor(PlayerObjects.first[0]);
     SetLastSelectableCameraMode(0, 0, false, true);
     modeChangeFlags |= kNoSmoothChange;
-    RColorize_SetEnabled(Colorize, 0, 0);
+    Colorize->SetEnabled(0);
 }
 
 // Puts the camera on an animation path. With `timePath`, the path's steps are shared out again over its points

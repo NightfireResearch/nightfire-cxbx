@@ -24,6 +24,7 @@
 #include "../eagl/Loader.h"
 #include "../eagl/anim/EventTarget.h"
 #include "../engine/UMemory.hpp"
+#include "../render/Lights.h"
 #include "../world/SoundMap.h"          // RefCounterMapBuyHead
 #include "../../common/xbeOriginal.h"
 #include "../../helpers.h"

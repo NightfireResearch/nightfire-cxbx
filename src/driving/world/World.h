@@ -24,6 +24,9 @@ class RSceneObj;
 class UGroup;
 class WSoundGroup;
 class WWorldPos;
+namespace EAGL {
+struct Model;
+}
 struct RCARPFile;
 struct WMapHeader;
 
@@ -52,13 +55,52 @@ struct ProcAnimState {
     uint8_t unknown06;
     uint8_t article;                    // +0x07 RSceneObj::UseArticle's index; 0xff none
     RSceneObj *sceneObj;                // +0x08 made by Open, again by Reset
-    uint32_t references[2];             // +0x0c
-    uint8_t unknown14[0xc];
+    // A path's (type 2, RPathEngine's): the CARP resolver resolves the path and the master
+    CARP::PathInfo *path;               // +0x0c
+    CARP::Instance *master;             // +0x10 the instance whose path's time this one keeps behind
+    float startTime;                    // +0x14 the parametric time it starts at
+    float speed;                        // +0x18
+    uint8_t untransformed;              // +0x1c the path's matrix is applied as it is, not through kPathAxes
+    uint8_t unknown1D[3];
 };
 static_assert(sizeof(ProcAnimState) == 0x20, "a proc-anim state is 32 bytes");
 static_assert(offsetof(ProcAnimState, sceneObj) == 8, "ProcAnimState::sceneObj");
+static_assert(offsetof(ProcAnimState, path) == 0x0c && offsetof(ProcAnimState, untransformed) == 0x1c,
+              "ProcAnimState layout");
 
 constexpr uint8_t kNoArticle = 0xff;
+
+// The per-type parts of an article effect, from its +0x18 (ArticleEffect's union)
+struct ArticleGfxEffect {               // kTypeGfx
+    void *reference;                    // +0x18 the effect GFX::Trigger plays
+    void *triggered;                    // +0x1c what GFX::Trigger answered
+    Coord4 rotation;                    // +0x20 a quaternion; the start of what GFX::Trigger is handed
+    uint8_t unknown30[0x10];
+};
+struct ArticleLightEffect {             // kTypeLight: RHighLevelLightManager::AddDynamicLightEffect's
+    int32_t priority;                   // +0x18
+    uint8_t colour[4];                  // +0x1c taken as x, y, z, w from the last byte back
+    uint32_t blinkStartTick;            // +0x20 the blink, as a glare's
+    float blinkRate;                    // +0x24 cycles per tick
+    float blinkDuty;                    // +0x28 the part of a cycle it is lit
+    float blinkBase;                    // +0x2c
+    float blinkAmplitude;               // +0x30
+    uint8_t unknown34[0xc];
+};
+struct ArticleLocatorEffect {           // kTypeLocator: RSceneObj::LocateFX's
+    char name[0x14];                    // +0x18
+    int32_t instance;                   // +0x2c
+    Coord4 rotation;                    // +0x30 a quaternion
+};
+struct ArticleSpringEffect {            // kTypeSpring: RSkeletalObj's springs
+    Coord3 axis;                        // +0x18 the hinge
+    float mass;                         // +0x24
+    float limit;                        // +0x28 the angle (turns) it swings to, from 0; negative: the other way
+    float torqueThreshold;              // +0x2c above it, a spring past its rest side is released
+    float angularVelocity;              // +0x30
+    float angle;                        // +0x34 in turns
+    uint8_t unknown38[8];
+};
 
 // An effect of an article (0x40 bytes, a list ended by a zero type). RAnimEngine::Handle keeps copies of the ones
 // with any of kHandleFlags (Handle::FindEffectByID).
@@ -66,33 +108,50 @@ struct ArticleEffect {
     enum Flags : uint16_t {
         kFlag01 = 0x0001,
         kFlag02 = 0x0002,
-        kFlag04 = 0x0004,
+        kStartsOnInitial = 0x0004,      // RSceneObj::InitEffects(true) switches it on
         kFlag08 = 0x0008,               // Handle::effectMask28
-        kFlag10 = 0x0010,
-        kFlag80 = 0x0080,
+        kStartsOn = 0x0010,             // RSceneObj::InitEffects switches it on
+        kPermanent = kStartsOnInitial | kStartsOn,  // RSceneObj::DecayEffects leaves it on
+        kFollowsSystem = 0x0080,        // drawn only while its instance's animation system plays
+        kOnGround = 0x0100,             // its height is the world's under it
         kFlag200 = 0x0200,              // also on a mirrored instance
+        kBlinks = 0x0400,               // a glare's or a light's brightness follows its blink
+        kBlinkShaped = 0x0800,          // ... as a triangle wave rather than a sawtooth
         kFlag1000 = 0x1000,
-        kHandleFlags = kFlag02 | kFlag04 | kFlag08 | kFlag10 | kFlag80 | kFlag1000,   // a handle keeps the effect
-        kMask38Flags = kFlag02 | kFlag04 | kFlag10 | kFlag80,                         // Handle::effectMask38
+        kShowsDamaged = 0x2000,         // drawn even when its zone is damaged
+        kBlinkPulse = 0x4000,           // ... or, with kBlinkShaped, a pulse with a dip at its peak
+        // a handle keeps the effect
+        kHandleFlags = kFlag02 | kStartsOnInitial | kFlag08 | kStartsOn | kFollowsSystem | kFlag1000,
+        kMask38Flags = kFlag02 | kStartsOnInitial | kStartsOn | kFollowsSystem,     // Handle::effectMask38
     };
     enum Type : uint8_t {
         kTypeEnd = 0,
-        kType2 = 2,
+        kTypeGlare = 2,                 // RGlareManager::AddModelGlare
+        kTypeLight = 5,                 // RHighLevelLightManager::AddDynamicLightEffect
         kTypeGfx = 6,                   // its reference is GFX::Trigger's effect; Handle::effectMask30
+        kTypeLocator = 7,               // RSceneObj::LocateFX's
+        kTypeSpring = 8,                // RSkeletalObj's
     };
 
-    uint8_t unknown00[0x10];
+    Coord3 position;                    // +0x00 in the object's frame
+    float unknown0C;                    // +0x0c a light's position's w
     uint16_t flags;                     // +0x10 Flags
     uint16_t bits;                      // +0x12 Handle::effectBits' initial value
     uint8_t type;                       // +0x14 Type
-    uint8_t instance;                   // +0x15 a handle's copy: the handle's instance it belongs to
-    uint8_t unknown16;
+    uint8_t instance;                   // +0x15 the instance it belongs to (a handle's copy: the handle's instance)
+    uint8_t zone;                       // +0x16 its damage zone: unless kShowsDamaged, not drawn while it is damaged
     uint8_t id;                         // +0x17 FindEffectByID's
-    void *reference;                    // +0x18 the effect GFX::Trigger plays
-    void *triggered;                    // +0x1c what GFX::Trigger answered
-    uint8_t unknown20[0x20];            // +0x20 handed to GFX::Trigger
+    union {                             // +0x18 by type
+        ArticleGfxEffect gfx;
+        ArticleLightEffect light;
+        ArticleLocatorEffect locator;
+        ArticleSpringEffect spring;
+    };
 };
 static_assert(sizeof(ArticleEffect) == 0x40, "an article effect is 64 bytes");
+static_assert(offsetof(ArticleEffect, gfx.rotation) == 0x20 && offsetof(ArticleEffect, light.blinkAmplitude) == 0x30 &&
+              offsetof(ArticleEffect, locator.instance) == 0x2c && offsetof(ArticleEffect, spring.angle) == 0x34,
+              "ArticleEffect layout");
 static_assert(offsetof(ArticleEffect, bits) == 0x12 && offsetof(ArticleEffect, instance) == 0x15 &&
               offsetof(ArticleEffect, id) == 0x17, "ArticleEffect layout");
 
@@ -112,21 +171,48 @@ struct WorldModel {
     UGroup *group;                      // +0x00 the model's CARP data group (RSceneObj::UseArticle's)
     uint8_t unknown04[8];
     WorldModelInfo *info;               // +0x0c
+    uint8_t unknown10[0x24];
+    const void *pathUserData;           // +0x34 RPathEngine::CreatePathHandle's RPathHandle::userData
+};
+
+// An article's model for view distances up to `distance` (the last one's beyond it too)
+struct ArticleLod {
+    float distance;
+    EAGL::Model *model;
 };
 
 // What a render instance's article reference (CARP::Instance::articleDesc) leads to.
 struct WorldArticle {
+    // renderType: the lighting setup the model draws call (render/Renderer.cpp's RenderTypeSetups)
+    enum RenderType : uint8_t {
+        kRenderWorld = 0,               // RRenderSharedData::SendPerWorldInstance
+        kRenderCar = 1,                 // SendPerCarInstance
+        kRenderObject = 2,              // SendPerObjectInstance
+        kRenderType3 = 3,               // none; RVehicle::PostLoad keeps its first model
+        kRenderType4 = 4,               // none; ditto
+    };
+    enum RenderFlags : uint8_t {
+        kNoFog = 0x01,                  // drawn with the fog off
+    };
+
     WorldModel *model;                  // +0x00
-    ArticleEffect *effects;             // +0x04 NULL for none
+    ArticleEffect *effects;             // +0x04 NULL for none; a list ended by a zero type
     CARP::AnimInfo *animInfos;          // +0x08 its animations (RAnimEngine's), NULL for none
     uint8_t unknown0C[0xe];
     uint8_t systemId;                   // +0x1a RAnimEngine::Handle::Create's copies of animInfos[0]'s ids
     uint8_t mirroredSystemId;           // +0x1b
-    uint8_t unknown1C;
+    uint8_t lodCount;                   // +0x1c
     uint8_t drawPass;                   // +0x1d which of WRender's passes draws its instances
+    uint8_t renderType;                 // +0x1e RenderType
+    uint8_t renderFlags;                // +0x1f RenderFlags
+    ArticleLod lods[1];                 // +0x20 lodCount of them, nearest first
+
+    // (the name is ours; the linker placed it among the renderer's code)
+    ArticleLod* GetLods();                                                                      // 0x0007dae0
 };
 static_assert(offsetof(WorldArticle, animInfos) == 8 && offsetof(WorldArticle, systemId) == 0x1a &&
-              offsetof(WorldArticle, drawPass) == 0x1d, "WorldArticle layout");
+              offsetof(WorldArticle, lodCount) == 0x1c && offsetof(WorldArticle, drawPass) == 0x1d &&
+              offsetof(WorldArticle, lods) == 0x20, "WorldArticle layout");
 
 inline WorldArticle *ArticleOf(const CARP::Instance *instance) {
     return reinterpret_cast<WorldArticle *>(uintptr_t(instance->articleDesc.value));

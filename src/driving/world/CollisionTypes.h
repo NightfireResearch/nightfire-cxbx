@@ -313,6 +313,10 @@ struct InstanceList : ColVector<InstanceListEntry> {
     void InsertN(InstanceListEntry *where, uint32_t count, const InstanceListEntry *value); // 0x000c1f30
     InstanceListEntry* Ufill(InstanceListEntry *first, uint32_t count, const InstanceListEntry *value);   // 0x000c12c0
     void Reserve(uint32_t count);                                                           // 0x000bdf60
+    // The linker folded these with every 8-byte vector's and placed them among RWindow's code
+    void Deallocate(InstanceListEntry *first, uint32_t count);                              // 0x000a87c0
+    void Tidy();                        // no callers                                       // 0x000a8b50
+    static void Xlen();                 // length_error("vector<T> too long")               // 0x000a8b90
 };
 
 // A barrier near the query, carried into the world's frame unless its instance is tilted (then in the

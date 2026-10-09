@@ -15,6 +15,7 @@
 #include "../engine/UMemory.hpp"
 #include "../physics/PhysicsObject.h"
 #include "../../common/xbeOriginal.h"
+#include "../render/Lights.h"
 
 #include <windows.h>
 #include <stdarg.h>

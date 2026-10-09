@@ -3,6 +3,7 @@
 #include "PhysicsMath.h"
 #include "RigidBody.h"
 #include "SimpleRigidBody.h"
+#include "Simulation.h"
 #include "../../helpers.h"
 #include "../anim/AnimEngine.h"         // Handle
 #include "../engine/PhysicsUtil.h"       // Util_GenerateMatrix
@@ -10,6 +11,7 @@
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
+#include "../render/Renderer.h"
 #include "../render/RSceneObj.hpp"
 #include "../world/CollisionManager.h"
 #include "../world/World.h"
@@ -27,18 +29,9 @@
 
 // ---- the game's, not ported yet
 
-#define Simulation_GetRigidBody ((RigidBody *(__fastcall *)(void *, int, int slot))0x000b2700)
-#define Simulation_GetSimpleRigidBody ((SimpleRigidBody *(__fastcall *)(void *, int, int slot))0x000b2730)
-#define Simulation_GetPlayerObject ((PhysicsObject *(__fastcall *)(void *, int))0x000b2d30)
 #define Simulation_DeletePhysicsObject ((void (__fastcall *)(void *, int, PhysicsObject *))0x000b4740)
 #define Simulation_SpawnNewtonObject ((Newton *(__fastcall *)(void *, int, const Coord4 *direction, const Coord4 *position, const Coord4 *momentum, const Coord4 *spin, CARP::Instance *instances, int instanceCount, float mass, float lifetime))0x000b5e20)
 #define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
-#define RSceneObj_Construct ((RSceneObj *(__fastcall *)(RSceneObj *, int, CARP::Instance *))0x0008eec0)
-#define RSceneObj_GetTransform ((void (__fastcall *)(RSceneObj *, int, MATRIX4 *))0x0008dc60)
-#define RSceneObj_GetInstancePosition ((void (__fastcall *)(RSceneObj *, int, uint32_t index, MATRIX4 *transform, bool unknown))0x0008dd20)
-#define RSceneObj_GetCollisionInfo ((void (__fastcall *)(RSceneObj *, int, Coord4 *centre, Coord4 *extents))0x0008e2d0)
-#define RSceneObj_UseInstanceList ((void (__fastcall *)(RSceneObj *, int, CARP::Instance *instances, int count, int unknown, bool single, const char *name))0x00090660)
-#define RandomScaled ((double (*)(float scale))0x0001aae0)      // a random value in [0, scale): 16 bits of FUN_0001aab0's
 
 // ---- globals
 
@@ -46,26 +39,8 @@
 #define SimTimeStep FLOAT_AT(0x00234e30)                    // the simulation's step, in seconds
 #define ZeroVector (*(const Coord3 *)0x00243030)            // the game's zero vector
 #define IdentityMatrix (*(const MATRIX4 **)0x001c4654)
-#define RandomSeed U32_AT(0x001c45c4)                       // FUN_0001aab0's state, and its multiplier
-#define RandomMultiplier U32_AT(0x001c45c8)
 
 namespace {
-
-// The renderer (only the field read here)
-struct NewtonRendererFields {
-    uint8_t unknown00[0x30];
-    Coord3 unknown30;           // +0x30 the point SpawnFromEvent throws towards
-};
-#define fgRenderer (*(NewtonRendererFields **)0x001ebff4)
-
-// A scene object's animation handle (only the fields read here)
-struct NewtonAnimHandle {
-    uint8_t unknown00[0x1c];
-    uint8_t instanceCount;      // +0x1c
-    uint8_t unknown1d[0x23];
-    CARP::Instance instances[1];    // +0x40 as many as instanceCount
-};
-static_assert(offsetof(NewtonAnimHandle, instances) == 0x40, "anim handle layout");
 
 void **const kNewtonVtable = (void **)0x0018ef7c;
 RSceneObj_vtbl *const kRAutonomousObjVtable = (RSceneObj_vtbl *)0x0018a398;
@@ -103,17 +78,10 @@ constexpr float kAwayMinHeight = 4.0f;
 constexpr float kTowardsMassScale = 10000.0f;
 constexpr float kFlightTime = 1.0f;                 // 0x0018ef68 (the name is ours)
 
-// FUN_0001aab0, inlined: the next 16 bits of the game's random sequence
-uint32_t NextRandom() {
-    uint32_t product = RandomMultiplier * RandomSeed;
-    RandomSeed = product & 0xffff;
-    return (int32_t(product) >> 8) & 0xffff;
-}
-
 // Two draws packed for BytesToCoordXYZ: x from the second, inverted, y and z from the first
 uint32_t RandomBytes() {
-    uint32_t low = NextRandom();
-    uint32_t high = NextRandom();
+    uint32_t low = RandomShort();
+    uint32_t high = RandomShort();
     return ~high << 16 | low;
 }
 
@@ -147,12 +115,12 @@ Newton* Newton::Construct(const Coord3 *direction, const Coord3 *position, const
 
     RAutonomousObj *render = static_cast<RAutonomousObj *>(UMemory::FastAlloc(sizeof(RAutonomousObj), "RAutonomousObj"));
     if (render != NULL) {
-        memcpy(render->instance, IdentityMatrix, sizeof render->instance);
-        RSceneObj_Construct(render, 0, reinterpret_cast<CARP::Instance *>(render->instance));
+        memcpy(&render->instance, IdentityMatrix, sizeof render->instance);
+        render->Construct(&render->instance);
         render->vtable = kRAutonomousObjVtable;
     }
     SetRenderObject(render);
-    RSceneObj_UseInstanceList(renderObject, 0, instances, instanceCount, 0, instanceCount == 1, "<<Newton>>");
+    renderObject->UseInstanceList(instances, instanceCount, NULL, instanceCount == 1, "<<Newton>>");
     renderObject->animHandle->InitAllSystemStates(kAnimStatesAll);
     hitPoints = mass * kHitPointsPerMass;
     SetHitPointLoc(&hitPoints);
@@ -283,11 +251,11 @@ void Newton::SpawnFromEvent(float mass, float lifetime, CARP::Instance *instance
     bool modelInstance = false;
     uint32_t modelIndex = 0;
     if (sceneObj != NULL) {
-        NewtonAnimHandle *handle = reinterpret_cast<NewtonAnimHandle *>(sceneObj->animHandle);
+        Handle *handle = sceneObj->animHandle;
         if (sceneObj->sourceInstance == instance) {
             sceneObj->Hide();
             instanceCount = handle->instanceCount;
-            instance = handle->instances;
+            instance = handle->Instances();
         } else {
             CARP::BaseDesc *desc = static_cast<CARP::BaseDesc *>(sceneObj->baseDesc);
             UGroup *model = reinterpret_cast<UGroup *>(uintptr_t(desc->model.value));
@@ -299,7 +267,7 @@ void Newton::SpawnFromEvent(float mass, float lifetime, CARP::Instance *instance
                 return;
             if (modelIndex >= handle->instanceCount)
                 return;
-            instance = &handle->instances[modelIndex];
+            instance = &handle->Instances()[modelIndex];
             modelInstance = true;
         }
     }
@@ -344,11 +312,11 @@ void Newton::SpawnFromEvent(float mass, float lifetime, CARP::Instance *instance
         VU0_v4Init(&extents);
     } else {
         if (modelInstance)
-            RSceneObj_GetInstancePosition(sceneObj, 0, modelIndex, &matrix, true);
+            sceneObj->GetInstancePosition(modelIndex, &matrix, true);
         else
-            RSceneObj_GetTransform(sceneObj, 0, &matrix);
+            sceneObj->GetTransform(&matrix);
         if (useCollisionInfo) {
-            RSceneObj_GetCollisionInfo(sceneObj, 0, &centre, &extents);
+            sceneObj->GetCollisionInfo(&centre, &extents);
         } else if (!modelInstance && !simpleBody && body != -1) {
             // behind the instance as seen from the body, by the body's speed in x/z, at least 4 high
             RigidBody *rigid = Simulation_GetRigidBody(Sim, 0, body);
@@ -383,7 +351,7 @@ void Newton::SpawnFromEvent(float mass, float lifetime, CARP::Instance *instance
         // from the instance to the renderer's point, led by the player's velocity, in kFlightTime under gravity
         mass = mass * kTowardsMassScale;
         Coord4 from = {matrix.mtx[3][0], matrix.mtx[3][1], matrix.mtx[3][2], 0.0f};
-        const Coord3 &view = fgRenderer->unknown30;
+        const Coord4 &view = fgRenderer->cameraPosition;
         Coord4 target = {view.x, view.y, view.z, 0.0f};
         PhysicsObject *player = Simulation_GetPlayerObject(Sim, 0);
         const Coord3 &playerVelocity = Simulation_GetRigidBody(Sim, 0, player->rigidBodySlot)->velocity;

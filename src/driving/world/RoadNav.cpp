@@ -1069,3 +1069,14 @@ short WRoadNav::CalcNextSegmentSidewalk(float *offset, uint8_t *ahead, bool *cha
     *changed = true;
     return next;
 }
+
+// FUNC_AT(0x00080a30)
+int WRoadNav::SegmentLaneCount() {
+    int index = segment;
+    // The original asks for the network three times and uses none of the answers
+    WRoadNetwork::Get();
+    WRoadNetwork::Get();
+    WRoadNetwork::Get();
+    const WRoadSegment *road = fgRoadNetworkData.segments[index];
+    return road->rightLanes + road->leftLanes;
+}

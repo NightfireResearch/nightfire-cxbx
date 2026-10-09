@@ -37,14 +37,10 @@
 #define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
 #define Simulation_GetScratchPadFreeZone ((uint8_t *(__fastcall *)(void *, int))0x000b2820)
 #define BarrierList_Size ((uint32_t (__fastcall *)(const BarrierList *, int))0x00023f20)
-#define InstanceList_Xlen ((void (*)(void))0x000a8b90)
-#define InstanceList_Deallocate ((void (__fastcall *)(InstanceList *, int, InstanceListEntry *, uint32_t))0x000a87c0)
 #define CellList_Xlen ((void (*)(void))0x00034e50)
 #define PointerUninitializedFill ((void (*)(void **, uint32_t, void *const *))0x000b2ec0)
 #define PointerCopyBackward ((void ***(*)(void ***, void **, void **, void **))0x000b2e40)
 #define PointerFill ((void (*)(void **, void **, void *const *))0x0004f3e0)
-#define WindowPaneMin ((WindowPaneNode *(*)(WindowPaneNode *))0x000a87a0)
-#define WindowPaneIncrement ((void (__fastcall *)(WindowPaneNode **, int))0x000a8a80)
 #define ArticleMapDecrement ((void (__fastcall *)(ArticleMapNode **, int))0x00126bd0)
 
 // ---- globals
@@ -1212,8 +1208,8 @@ WindowPaneNode** WindowPaneMap::EraseAt(WindowPaneNode **result, WindowPaneNode 
         TreeThrow("invalid map/set<T> iterator", kOutOfRangeVtable, kOutOfRangeThrowInfo);
     }
     WindowPaneNode *erased = where;
-    WindowPaneNode *next = where;
-    WindowPaneIncrement(&next, 0);
+    WindowPaneIterator next = {where};
+    next.Increment();
 
     WindowPaneNode *pnode = where;   // the node that really leaves its place: where, or its successor
     WindowPaneNode *fixnode;         // the node that takes pnode's place
@@ -1223,7 +1219,7 @@ WindowPaneNode** WindowPaneMap::EraseAt(WindowPaneNode **result, WindowPaneNode 
     } else if (where->right->isNil) {
         fixnode = where->left;
     } else {
-        pnode = next;
+        pnode = next.node;
         fixnode = pnode->right;
     }
 
@@ -1238,7 +1234,7 @@ WindowPaneNode** WindowPaneMap::EraseAt(WindowPaneNode **result, WindowPaneNode 
         else
             fixnodeParent->right = fixnode;
         if (head->left == where)
-            head->left = fixnode->isNil ? fixnodeParent : WindowPaneMin(fixnode);
+            head->left = fixnode->isNil ? fixnodeParent : WindowPaneMap::Min(fixnode);
         if (head->right == where)
             head->right = fixnode->isNil ? fixnodeParent : Max(fixnode);
     } else {
@@ -1327,7 +1323,7 @@ WindowPaneNode** WindowPaneMap::EraseAt(WindowPaneNode **result, WindowPaneNode 
     UMemory::FastFree(erased, sizeof(WindowPaneNode));
     if (size > 0)
         size--;
-    *result = next;
+    *result = next.node;
     return result;
 }
 
@@ -1628,7 +1624,7 @@ ColliderStamp *AsStamps(InstanceListEntry *entries) {
 
 struct InstanceListOps {
     static constexpr uint32_t kMaxSize = 0x1fffffff;
-    static void Xlen(InstanceList *) { InstanceList_Xlen(); }
+    static void Xlen(InstanceList *) { InstanceList::Xlen(); }
     static uint32_t Size(InstanceList *v) { return VectorSize(v); }
     static InstanceListEntry *UninitializedCopy(InstanceListEntry *first, InstanceListEntry *last,
                                                 InstanceListEntry *dest) {
@@ -1655,7 +1651,7 @@ struct InstanceListOps {
                        *reinterpret_cast<const AttributeStoreBlock *>(value));
     }
     static void Deallocate(InstanceList *v, InstanceListEntry *first, uint32_t count) {
-        InstanceList_Deallocate(v, 0, first, count);
+        v->Deallocate(first, count);
     }
 };
 

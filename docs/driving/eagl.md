@@ -143,8 +143,8 @@ anim eval -> anim objects 16, -> skeleton 10, -> Transform 5; skeleton -> anim e
 ### 1.3 Classification fixes for `tools/subsystems_driving.txt`
 
 - `0x000e4340` (832 bytes, filed `engine.data` as `FUN_000e4340`) is **ViewPort::SetShape** *(PS2: ViewPort::
-  SetShape(float x6))*: our `RenderState.hpp` already calls it as `ViewPort::SetRect`. EAGL's range should start
-  there, not at `0x000e4680`.
+  SetShape(float x6))*: ported as `EAGL::ViewPort::SetShape` (`src/driving/eagl/View.cpp`). EAGL's range should
+  start there, not at `0x000e4680`.
 - `0x0014a370` (224 bytes, filed `platform.sound`) is SHAPE's file loader (`EAX` = file name, appends `.xsh`,
   `FILE_loadpackz`, checks `SHPX`); it belongs with SHAPE.
 - `0x0007aea0 EAGLNamespace::NameLookup`, `0x0007d040 EAGL_allocator` and `0x000c5700 EAGL_deallocator` are the
@@ -213,7 +213,8 @@ types (`EAGL::TAR`, `RenderMethod`, `Model`, `VertexBuffer`) in the ConstructorP
 | +0x120..+0x128 | optional surface aliases refreshed every EndFrame |
 | +0x138 | current ViewPort, +0x13c ViewPort list, +0x140 next RenderContext, +0x148 Device |
 
-The game keeps RRenderer's at `RRenderer::fgRenderer + 0x64` (our `src/driving/render/RenderState.hpp`).
+The game keeps RRenderer's at `RRenderer::fgRenderer + 0x64` (`RRenderer::renderContext`,
+`src/driving/render/Renderer.h`).
 
 ### 2.3 TextureRenderContext (0xd4)
 
@@ -829,10 +830,10 @@ name**, so a port can move them as long as it registers them.
 
 ### 6.2 What our code already touches
 
-- `src/driving/render/RenderState.hpp` (used by `RGlareManager.cpp` and `PlayMPC.hpp`) declares AUTOGEN calls to
-  `RenderContext::SetZWritesEnable` `0x000e73f0`, `BeginFrame` `0x000e6610`, `EndFrame` `0x000e6640`, `GetSize`
-  `0x000e6a80`, `ViewPort::SetShape` (as `SetRect`) `0x000e4340`, `BeginView` `0x000e4be0`, `EndView` `0x000e49a0`,
-  `ClearViewPort` `0x000e49d0`, `GeoPrimState::SetDepthTestMethod` `0x000eecd0`.
+- `src/driving/render/RenderState.hpp`, which declared AUTOGEN calls to the RenderContext, ViewPort and GeoPrimState
+  methods the glare manager and the movie player used, is gone: those methods are ported, and the renderer
+  (`src/driving/render/`, docs/driving/render.md) and `PlayMPC` call `EAGL::RenderContext` and `EAGL::ViewPort`
+  directly.
 - `src/driving/gfx/d3dSeam.cpp` patches the texture commit's two branches (`0x000ebbec`, `0x000ebbf4`, 7.5), and
   replaces `D3DDevice_End` at `0x000eea10` inside EAGL's range. Its comments name `0x000eb910` as
   `D3DXLoadSurfaceFromMemory`'s caller and `0x000e7890` as the screenshot: `0x000eb910` has no caller, and the

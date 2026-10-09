@@ -24,6 +24,8 @@
 
 class SymbolNamespace;
 class UGroup;
+class RParticleSystem;                  // render/Particles.h
+struct RParticleSystemData;
 typedef void (*CarpResolverFn)(UGroup *record, UGroup *shared, UGroup *parent);
 
 // The map's value_type: the key (a name in the name maps, a tag in the resolver map) and the mapped value.
@@ -36,6 +38,8 @@ struct TreePair {
         SymbolNamespace *ns;
         UGroup *group;
         CarpResolverFn resolver;
+        RParticleSystem *system;        // the particle maps' (render/Particles.h)
+        RParticleSystemData *type;
     };
 };
 

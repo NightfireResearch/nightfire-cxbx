@@ -21,6 +21,7 @@
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
+#include "../render/RSceneObj.hpp"
 
 #pragma fp_contract(off)
 
@@ -37,7 +38,6 @@
 #define StripList_Construct ((void (*)(const CollisionStrip **where, int count, const CollisionStrip *const *value, StripList *vector, const CollisionStrip *const *same))0x000b2ec0)
 #define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
 #define WWorldPos_FaceNormal ((void (__fastcall *)(const WWorldPos *, int, Coord4 *normal))0x0005d3f0)
-#define GameRandom ((uint32_t (*)())0x0001aab0)
 #define EHitWindow_Construct ((void (__fastcall *)(void *, int, Coord4 point, Coord4 normal, WindowHit hit, int flag))0x000403f0)
 // The tree helpers every map of the game shares (identical code folded by the linker), on this file's node types.
 // 0x00053580 and 0x000527e0, 0x00052a20 are the attribute system's ported copies (of its own node types; one warns
@@ -736,7 +736,7 @@ bool WCollisionMgr::CheckHitWindow(WorldCollisionInfo *info, bool create, int ki
         pane->MakeCorners(&origin, &direction, corners);
         MATRIX4 inverse = toLocal;
         OrthoInverse(&inverse);
-        uint32_t breakKind = GameRandom() & 3;
+        uint32_t breakKind = RandomShort() & 3;
         if (pane->top * kPaneHeightScale + info->segmentStart.y > kHighPane)
             breakKind += 4;
         *hit = *fresh.Construct(breakKind, 0, &corners[0], &corners[2]);

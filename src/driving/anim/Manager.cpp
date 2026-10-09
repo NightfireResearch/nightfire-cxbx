@@ -1,7 +1,8 @@
 #include "Manager.h"
 
 #include "AnimationDatabase.h"         // ActAnimationDatabase
-#include "Character.h"                 // LightBlock, LightingView
+#include "Character.h"
+#include "../render/Lights.h"          // LightBlock, fgLightManager
 #include "Events.h"                    // ActEvents, ActEventResolver
 #include "Model.h"
 #include "Skeleton.h"
@@ -77,19 +78,19 @@ void ActManager::ShutDown() {
 void ActManager::SetIRMode(bool on) {
     if (!IRLightReady) {
         IRLightReady = 1;
-        *NormalLight = Lighting->lights;
-        *IRLight = Lighting->lights;
+        *NormalLight = fgLightManager->lightInfos[kEnvironmentCharacter];
+        *IRLight = fgLightManager->lightInfos[kEnvironmentCharacter];
         const Coord4 white = {1.0f, 1.0f, 1.0f, 1.0f};
         IRLight->colours[0] = IRLight->colours[1] = IRLight->colours[2] = IRLight->colours[3] = white;
     }
     if (on) {
         if (!IRModeOn) {
             IRModeOn = 1;
-            Lighting->lights = *IRLight;
+            fgLightManager->lightInfos[kEnvironmentCharacter] = *IRLight;
         }
     } else if (IRModeOn) {
         IRModeOn = 0;
-        Lighting->lights = *NormalLight;
+        fgLightManager->lightInfos[kEnvironmentCharacter] = *NormalLight;
     }
 }
 

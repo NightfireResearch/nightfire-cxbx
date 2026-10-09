@@ -49,10 +49,14 @@ struct WindowPaneInsert {       // std::pair<iterator, bool>
 struct WindowPaneIterator {
     WindowPaneNode *node;
     void Decrement();                                                           // 0x000bfe10
+    // (the linker placed Increment among RWindow's code)
+    void Increment();                                                           // 0x000a8a80
 };
 
 // std::map<const WindowPane *, WindowHit>
 struct WindowPaneMap : RbTree<WindowPaneNode> {
+    // The leftmost node under `node` (the linker placed it among RWindow's code)
+    static WindowPaneNode* Min(WindowPaneNode *node);                           // 0x000a87a0
     WindowPaneMap* Construct();                                                 // 0x000c45d0
     WindowPaneMap* CopyConstruct(const WindowPaneMap *other);                   // 0x000c3ab0
     void Destruct();                                                            // 0x000c4610

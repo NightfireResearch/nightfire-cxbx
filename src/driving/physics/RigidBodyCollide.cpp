@@ -6,6 +6,7 @@
 
 #include "PhysicsMath.h"
 #include "PhysicsObject.h"
+#include "Simulation.h"
 #include "../../helpers.h"
 #include "../anim/AnimEngine.h"         // Handle
 #include "../EventManager.hpp"            // Event::operator new
@@ -30,7 +31,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-#define Simulation_GetRigidBody ((RigidBody *(__fastcall *)(void *, int, int slot))0x000b2700)
 #define CollisionImpact_Construct ((CollisionImpact *(__fastcall *)(CollisionImpact *, int))0x0003dc20)
 #define ECollision_Construct ((void *(__fastcall *)(void *, int, CollisionImpact impact))0x0003f370)
 #define SMissionManager_ProgrammerDefinedEvent ((void (__fastcall *)(void *, int, int event, const char *text))0x000b72f0)

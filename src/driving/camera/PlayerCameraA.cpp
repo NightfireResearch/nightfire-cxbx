@@ -19,6 +19,7 @@
 
 #include "../../helpers.h"
 #include "../anim/AnimEngine.h"         // Handle
+#include "../render/PathEngine.h"
 #include "../world/World.h"              // WorldArticle, ArticleOf
 #include "../data/Carp.h"
 #include "../engine/CoreFoundation.h"   // NullFunction
@@ -96,11 +97,6 @@ constexpr uint16_t kCarAnimationFlags = 0x44;   // TriggerCarAnimationCamera's a
 #define CARPInstance_GetMatrix4 ((void (__fastcall *)(const CARP::Instance *, int, MATRIX4 *))0x0003db00)
 #define InputConfigManager_Get ((InputConfig *(*)(void))0x00050270)
 #define WWorldPos_FaceNormal ((void (__fastcall *)(const WWorldPos *, int, Coord3 *))0x0005d3f0)
-#define RPathHandle_GetPosition ((const Coord3 *(__fastcall *)(RPathHandle *, int))0x0007ff50)
-#define RPathHandle_GetOrientMat ((void (__fastcall *)(RPathHandle *, int, MATRIX4 *))0x0007ff60)
-#define FUN_00080820 ((double (*)(float))0x00080820)        // the turns brought into 0..1
-#define FUN_00080980 ((void (*)(MATRIX4 *))0x00080980)      // row 1 = row 2, row 2 = -row 1
-#define FUN_000809e0 ((void (*)(MATRIX4 *))0x000809e0)      // rows 0-2 = -row 0, -row 2, -row 1
 
 namespace {
 
@@ -308,11 +304,11 @@ void RPlayerCamera::UpdateAIPathAnimationCam() {
         return;
     RPathHandle *path = aiSplinePath->path;
     MATRIX4 frame;
-    RPathHandle_GetOrientMat(path, 0, &frame);
+    path->GetOrientMat(&frame);
     Coord4 *position = MatrixRow(&frame, 3);    // (0, 0, 0, 1) from GetOrientMat
-    position->x = RPathHandle_GetPosition(path, 0)->x;
-    position->y = RPathHandle_GetPosition(path, 0)->y;
-    position->z = RPathHandle_GetPosition(path, 0)->z;
+    position->x = path->GetPosition()->x;
+    position->y = path->GetPosition()->y;
+    position->z = path->GetPosition()->z;
     VU0_MATRIX4_mult(&frame, &frame, &aiSplinePath->placement);
     GetAnchorMatrix4();
     AnchorCamera(false, &fgCameraTables.animationAnchor.offset);
@@ -881,7 +877,7 @@ void RPlayerCamera::UpdateWorldAnimationCam() {
                 const Coord4 *next = track->frameCount > 1 ? AsVector4(&keys[1].position) : end;
                 VU0_v4sub(next, end, &endDirection);
                 VU0_quattom4(&endFrame, &keys[0].rotation);
-                FUN_00080980(&endFrame);
+                TurnFrameRows(&endFrame);
             } else {
                 CARPInstance_GetMatrix4(instance, 0, &endFrame);
                 end = MatrixRow(&endFrame, 3);
@@ -986,10 +982,10 @@ void RPlayerCamera::UpdateRelativeAnimationCam() {
                 end = *AsVector4(&keys[0].position);
                 Coord4 next = track->frameCount > 1 ? *AsVector4(&keys[1].position) : end;
                 VU0_quattom4(path, &keys[0].rotation);
-                FUN_000809e0(path);
+                FlipFrameRows(path);
                 if (unknown260 != 0.0f) {
                     MATRIX4 turn;
-                    VU0_MATRIX4setyrot(&turn, float(FUN_00080820(unknown260)));
+                    VU0_MATRIX4setyrot(&turn, float(WrapTurns(unknown260)));
                     VU0_MATRIX4_vect3rotate(&next, &turn, &next);
                     VU0_MATRIX4_vect3rotate(&end, &turn, &end);
                     VU0_MATRIX4_mult(path, path, &turn);
@@ -1042,7 +1038,7 @@ void RPlayerCamera::UpdateRelativeAnimationCam() {
         playing = UpdateAnimationCam(path, 2);
         if (playing == 1 && unknown260 != 0.0f) {
             MATRIX4 turn;
-            VU0_MATRIX4setyrot(&turn, float(FUN_00080820(unknown260)));
+            VU0_MATRIX4setyrot(&turn, float(WrapTurns(unknown260)));
             VU0_MATRIX4_vect3rotate(MatrixRow(path, 3), &turn, MatrixRow(path, 3));
             VU0_MATRIX4_mult(path, path, &turn);
         }

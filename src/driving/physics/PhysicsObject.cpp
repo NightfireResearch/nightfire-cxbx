@@ -6,6 +6,7 @@
 
 #include "RigidBody.h"
 #include "SimpleRigidBody.h"
+#include "Simulation.h"
 #include "../../common/xbeOverload.h"     // XbeVirtual
 #include "../../helpers.h"
 #include "../anim/AnimEngine.h"         // Handle
@@ -23,13 +24,7 @@
 
 // ---- the game's code not ported yet
 #define Simulation_AssignRigidBodySlot ((int (__fastcall *)(void *, int, PhysicsObject *object, int simple))0x000b2630)
-#define Simulation_GetRigidBody ((RigidBody *(__fastcall *)(void *, int, int slot))0x000b2700)
-#define Simulation_GetSimpleRigidBody ((SimpleRigidBody *(__fastcall *)(void *, int, int slot))0x000b2730)
-#define Simulation_FindPhysicsObjectSignature ((PhysicsObject *(__fastcall *)(void *, int, uint32_t sig))0x000b27d0)
 #define Simulation_ReleaseRigidBodySlot ((void (__fastcall *)(void *, int, int slot, int simple))0x000b2980)
-#define RSceneObj_SetPhysics ((void (__fastcall *)(RSceneObj *, int, PhysicsObject *physics))0x0008f580)
-#define RSceneObj_GetBoundingDimensions ((void (__fastcall *)(RSceneObj *, int, Coord4 *bounds))0x0008dfd0)
-#define RSceneObj_GetCollisionGeometry ((void *(__fastcall *)(RSceneObj *, int, uint32_t *count))0x0008e060)
 #define IFeedback_Destruct ((void (__fastcall *)(IFeedback *, int))0x0004fb10)
 
 // ---- globals
@@ -245,9 +240,9 @@ void PhysicsObject::SetRenderObject(RSceneObj *object) {
         return;
     renderObject = object;
     if (previous != NULL && previous->physics == this)
-        RSceneObj_SetPhysics(previous, 0, NULL);
+        previous->SetPhysics(NULL);
     if (renderObject != NULL)
-        RSceneObj_SetPhysics(renderObject, 0, this);
+        renderObject->SetPhysics(this);
 }
 
 // FUNC_AT(0x0006f430)
@@ -294,14 +289,14 @@ void* PhysicsObject::GetCollisionGeometry(uint32_t *count, float *offset) {
         return NULL;
     }
     *offset = (float)(RenderOffset(renderObject) * -1.0);
-    return RSceneObj_GetCollisionGeometry(renderObject, 0, count);
+    return renderObject->GetCollisionGeometry(count);
 }
 
 // FUNC_AT(0x0006f520)
 bool PhysicsObject::GetCollisionBounds(Coord4 *bounds) {
     if (!(flags & kSimpleBody) || !(SimpleBody(this)->flags & SimpleRigidBody::kFlag01)) {
         if (renderObject != NULL) {
-            RSceneObj_GetBoundingDimensions(renderObject, 0, bounds);
+            renderObject->GetBoundingDimensions(bounds);
             return true;
         }
     }

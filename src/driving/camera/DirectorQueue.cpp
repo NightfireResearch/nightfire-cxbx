@@ -5,6 +5,7 @@
 #include "../eagl/EaglGlobals.h"        // EaglMalloc, EaglFree
 #include "../eagl/Loader.h"             // DynamicLoader
 #include "../eagl/RenderMethod.h"
+#include "../engine/CoreFoundation.h"   // ThrowLengthError
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
 #include "../../helpers.h"
@@ -286,4 +287,73 @@ void ReverseDrawList::Tidy() {
     first = NULL;
     last = NULL;
     end = NULL;
+}
+
+// The largest vector of 80-byte entries
+constexpr uint32_t kMaxReverseDrawEntries = 0x3333333;
+
+// FUNC_AT(0x0007ca60)
+void ReverseDrawList::ThrowLength() {
+    CAMERA_UNTESTED("vector<ReverseDrawEntry>::_Xlen");
+    ThrowLengthError("vector<T> too long");
+}
+
+// FUNC_AT(0x0007cb00)
+void ReverseDrawList::InsertN(ReverseDrawEntry *where, uint32_t count, const ReverseDrawEntry *value) {
+    ReverseDrawEntry copy = *value;
+    uint32_t capacity = first == NULL ? 0 : uint32_t(end - first);
+    if (count == 0)
+        return;
+    uint32_t size = first == NULL ? 0 : uint32_t(last - first);
+    if (kMaxReverseDrawEntries - size < count) {
+        ThrowLength();
+    } else if (capacity < size + count) {
+        uint32_t newCapacity = kMaxReverseDrawEntries - capacity / 2 < capacity ? 0 : capacity + capacity / 2;
+        if (newCapacity < size + count)
+            newCapacity = Size() + count;
+        ReverseDrawEntry *block =
+            static_cast<ReverseDrawEntry *>(UMemory::FastAlloc(newCapacity * sizeof(ReverseDrawEntry), "STL"));
+        ReverseDrawEntry *next = UninitializedCopyReverseDrawEntries(first, where, block);
+        UninitializedFillReverseDrawEntries(next, count, &copy);
+        UninitializedCopyReverseDrawEntries(where, last, next + count);
+        uint32_t newSize = count + (first == NULL ? 0 : uint32_t(last - first));
+        if (first != NULL)
+            Deallocate(first, uint32_t(end - first));
+        end = block + newCapacity;
+        last = block + newSize;
+        first = block;
+    } else if (uint32_t(last - where) < count) {
+        Ucopy(where, last, where + count);
+        Ufill(last, count - uint32_t(last - where), &copy);
+        last += count;
+        FillReverseDrawEntries(where, last - count, &copy);
+    } else {
+        ReverseDrawEntry *oldLast = last;
+        last = Ucopy(oldLast - count, oldLast, oldLast);
+        ReverseDrawEntry *unused;
+        CopyBackwardReverseDrawEntriesThunk(&unused, where, oldLast - count, oldLast);
+        FillReverseDrawEntries(where, where + count, &copy);
+    }
+}
+
+// FUNC_AT(0x0007ce30)
+ReverseDrawEntry** ReverseDrawList::Insert(ReverseDrawEntry **result, ReverseDrawEntry *where,
+                                           const ReverseDrawEntry *value) {
+    uint32_t size = first == NULL ? 0 : uint32_t(last - first);
+    uint32_t offset = size == 0 ? 0 : uint32_t(where - first);
+    InsertN(where, 1, value);
+    *result = first + offset;
+    return result;
+}
+
+// FUNC_AT(0x0007ceb0)
+void ReverseDrawList::PushBack(const ReverseDrawEntry *value) {
+    uint32_t size = first == NULL ? 0 : uint32_t(last - first);
+    if (first != NULL && size < uint32_t(end - first)) {
+        UninitializedFillReverseDrawEntries(last, 1, value);
+        last++;
+    } else {
+        ReverseDrawEntry *inserted;
+        Insert(&inserted, last, value);
+    }
 }

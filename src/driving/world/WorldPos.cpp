@@ -138,3 +138,17 @@ bool WWorldPos::FindClosestFace(const Coord3 *point, bool keepCurrent) {
         UMemory::FastFree(nearby.first, unsigned(nearby.end - nearby.first) * sizeof(InstanceListEntry));
     return true;
 }
+
+// FUNC_AT(0x000a5080)
+void WWorldPos::GetNormal(Coord4 *normal, int unused) {
+    (void)unused;
+    if (valid) {
+        FUN_0005d3f0(&face, 0, reinterpret_cast<Coord3 *>(normal));   // x, y and z
+        normal->w = 0.0f;
+    } else {
+        normal->z = 0.0f;
+        normal->x = 0.0f;
+        normal->y = 1.0f;
+        normal->w = 0.0f;
+    }
+}

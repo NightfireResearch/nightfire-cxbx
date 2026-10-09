@@ -55,6 +55,8 @@ public:
     RCamera* Construct();                                                                       // 0x00078430
     // The copy constructor (Ghidra: FUN_00096980): every field but the unknown ones
     RCamera* ConstructCopy(const RCamera *other);                                               // 0x00096980
+    // The assignment (Ghidra: FUN_0008b330; the name is ours): the fields ConstructCopy copies
+    RCamera* Assign(const RCamera *other);                                                      // 0x0008b330
     void Destruct();                                                                            // 0x00096820
     RCamera* Delete(unsigned flags);    // the scalar deleting destructor, vtable slot 0          // 0x00078470
     void CreateMatrix4Inv();            // the inverse, if the frame changed                    // 0x000784a0
@@ -271,30 +273,5 @@ static_assert(offsetof(RWorldCamera, eye) == 0xc0 && offsetof(RWorldCamera, mode
               offsetof(RWorldCamera, unknown100) == 0x100 && offsetof(RWorldCamera, animSystemId) == 0x110 &&
               offsetof(RWorldCamera, inputQueue) == 0x124 && offsetof(RWorldCamera, anchor) == 0x128,
               "RWorldCamera layout");
-
-// ---- the renderer as the cameras use it (RRenderer is not ported; only these fields)
-
-struct CameraRendererFields {
-    uint32_t unknown00;
-    RViewCamera *currentView;           // +0x04 SetRenderCamera's view
-    uint8_t unknown08[0x18];
-    uint32_t unknown20;                 // +0x20 cleared by RPlayerViewCamera::ConfigureView
-    uint8_t unknown24[0xc];
-    Coord4 cameraPosition;              // +0x30 the view's camera's, w 1
-    int32_t screenWidth;                // +0x40
-    int32_t screenHeight;               // +0x44
-    uint8_t unknown48[4];
-    uint8_t widescreen;                 // +0x4c
-    uint8_t unknown4D[0xb];
-    float fieldOfViewScale;             // +0x58
-    uint8_t unknown5C[8];
-    EAGL::RenderContext *renderContext; // +0x64
-};
-static_assert(offsetof(CameraRendererFields, currentView) == 0x04 &&
-              offsetof(CameraRendererFields, cameraPosition) == 0x30 &&
-              offsetof(CameraRendererFields, screenWidth) == 0x40 &&
-              offsetof(CameraRendererFields, widescreen) == 0x4c &&
-              offsetof(CameraRendererFields, fieldOfViewScale) == 0x58 &&
-              offsetof(CameraRendererFields, renderContext) == 0x64, "RRenderer offsets");
 
 #endif // DRIVING_CAMERA_CAMERA_H_

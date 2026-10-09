@@ -209,13 +209,11 @@ public:
 };
 static_assert(sizeof(RPlayerCamera) == 0x370, "RPlayerCamera is 880 bytes");
 
-// One of the renderer's camera views (RRenderHigh sets the table): the view and its camera
+// One of the renderer's camera views (RRenderHigh::views, render/RenderHigh.h): the view and its camera
 struct CameraView {
     RViewCamera *view;
     RPlayerCamera *camera;
 };
-
-#define CameraViews (*(CameraView **)0x001ec488)        // (name ours)
 
 // ---- the player camera's globals (names ours)
 

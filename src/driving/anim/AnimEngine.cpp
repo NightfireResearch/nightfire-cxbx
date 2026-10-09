@@ -461,7 +461,7 @@ Handle* Handle::Construct(CARP::Instance *instances, ProcAnimState *statesIn, ui
     systems = reinterpret_cast<System *>(states + stateCount);
     effectBits = reinterpret_cast<uint16_t *>(systems + systemCount);
     systemIds = EffectIds() + effectCount;
-    unknown20 = 0;
+    effectsOn = 0;
     effectMask28 = 0;
     effectMask30 = 0;
     effectMask38 = 0;
@@ -894,4 +894,20 @@ void SystemIdSort::Sort(uint8_t *first, uint8_t *last, int ideal) {
     } else if (count > 1) {
         InsertionSort(first, last);
     }
+}
+
+// FUNC_AT(0x0008d610)
+void Handle::SetEffectOn(uint32_t index) {
+    uint8_t shift = uint8_t(index);     // the game's 64-bit shift: nothing past bit 63
+    effectsOn |= shift < 64 ? uint64_t(1) << shift : 0;
+}
+
+// FUNC_AT(0x0001aa90)
+uint32_t Handle::GetInstanceCount() {
+    return instanceCount;
+}
+
+// FUNC_AT(0x0001aaa0)
+CARP::Instance* Handle::GetInstances() {
+    return Instances();
 }

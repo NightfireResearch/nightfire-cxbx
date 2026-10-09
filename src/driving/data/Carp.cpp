@@ -867,3 +867,12 @@ void CARP::AISpline::GetApplyTransform(float *out) {
     memcpy(out, IdentityMatrix, 16 * sizeof(float));
 }
 
+// FUNC_AT(0x0008d640)
+double CARP::Instance::SizeY() const {
+    static const float kStep[2] = { 0.25f, 16.0f };
+    float step = kStep[packedDimensions >> 30 & 1];
+    if (packedDimensions & 0x80000000)
+        return float((packedDimensions >> 10 & 0x3ff) * step);
+    double x = float((packedDimensions & 0x3ff) * step);
+    return x + x;
+}

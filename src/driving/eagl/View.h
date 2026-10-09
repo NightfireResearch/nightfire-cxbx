@@ -2,8 +2,7 @@
 #define DRIVING_EAGL_VIEW_H_
 
 // EAGL's device, its texture render contexts, and the viewports of both kinds of context (docs/driving/eagl.md 2.1,
-// 2.3, 2.4, 3.2, 4.2, 8.7). See View.cpp. In namespace EAGL: the game-side overlay in render/RenderState.hpp has a
-// global ViewPort and RenderContext of its own.
+// 2.3, 2.4, 3.2, 4.2, 8.7). See View.cpp. In namespace EAGL, as in Ghidra.
 //
 // EAGL::RenderContext itself is RenderContext.h's (0x000e6610..0x000e8900); its viewport-list methods
 // (0x000ee010..0x000ee190) are defined in View.cpp.

@@ -17,6 +17,9 @@
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../../helpers.h"
+#include "../render/Lights.h"
+#include "../render/Renderer.h"
+#include "../render/RSceneObj.hpp"
 
 #include <algorithm>
 #include <bit>
@@ -38,10 +41,6 @@
 
 // The textures' and the models' stop-using calls: one empty function (Ghidra: dummyNullFunction)
 #define DummyNullFunction ((void (__fastcall *)(void *, int, const void *))0x00017550)
-#define RSceneObj_SetTransform ((void (__fastcall *)(RSceneObj *, int, const MATRIX4 *))0x0008dcb0)
-#define GetArticleViewDistance ((double (__cdecl *)(const MATRIX4 *, float))0x0007dc00)
-#define RLightManager_SetLightingModel ((void (__fastcall *)(LightingView *, int, int))0x0007f470)
-#define RLightManager_DisablePositionalLighting ((void (__fastcall *)(LightingView *, int, bool))0x0007e860)
 
 // ---- the C runtime's (strtok keeps its place between calls; tolower as the game has it)
 
@@ -121,11 +120,6 @@ uint8_t BrightnessByte(double level) {
 
 // ---- helpers
 
-// FUNC_AT(0x000143e0)
-void RSceneObjBrightness::SetBrightness(float level) {
-    brightness = BrightnessByte(level);
-}
-
 // FUNC_AT(0x00014440)
 Coord4* MakeCoord4(Coord4 *result, float x, float y, float z, float w) {
     result->x = x;
@@ -138,25 +132,6 @@ Coord4* MakeCoord4(Coord4 *result, float x, float y, float z, float w) {
 // FUNC_AT(0x00014880)
 const float* MinFloat(const float *a, const float *b) {
     return *b < *a ? b : a;
-}
-
-// FUNC_AT(0x000148a0)
-void LightBlock::GetLight(int light, Coord4 *direction, Coord4 *colour) {
-    direction->x = directions[0][light];
-    direction->y = directions[1][light];
-    direction->z = directions[2][light];
-    colour->y = colours[light].x;
-    colour->z = colours[light].y;
-    colour->w = colours[light].z;
-    colour->x = colours[light].w;
-}
-
-// FUNC_AT(0x000148f0)
-void LightBlock::SetLight(int light, const Coord4 *direction, const Coord4 *colour) {
-    directions[0][light] = direction->x;
-    directions[1][light] = direction->y;
-    directions[2][light] = direction->z;
-    colours[light] = *colour;
 }
 
 // ---- CharacterDrawOptions
@@ -345,7 +320,7 @@ void ActCharacter::DrawWeapon(int weapon, EAGL::ViewPort *unused) {
 // FUNC_AT(0x00014850)
 void ActCharacter::SetWeaponBone(int weapon, const MATRIX4 *matrix) {
     if (weapons[weapon] != NULL)
-        RSceneObj_SetTransform(weapons[weapon], 0, matrix);
+        weapons[weapon]->SetTransform(matrix);
 }
 
 // FUNC_AT(0x00014870)
@@ -413,7 +388,8 @@ void ActCharacter::EndShadow() {
 // through the stencil.
 // FUNC_AT(0x00014c50)
 int ActCharacter::Draw(const MATRIX4 *cullMatrix, const MATRIX4 *matrix) {
-    double distance = GetArticleViewDistance(cullMatrix, 0.0f);
+    // the matrix in an instance's place: only its position, row 3, is read
+    double distance = GetArticleViewDistance(reinterpret_cast<const CARP::Instance *>(cullMatrix), 0.0f);
     float distance2 = float(distance * distance);
     if (distance2 < 0.0f || distance2 > 1.0f || distance2 > kDrawDistance2)
         return kFarLod;
@@ -434,11 +410,11 @@ int ActCharacter::Draw(const MATRIX4 *cullMatrix, const MATRIX4 *matrix) {
             for (int i = 0; i < 3; i++)
                 model->SetTexture(drawLod, i, skins[i]);
         }
-        RLightManager_SetLightingModel(Lighting, 0, 2);
+        fgLightManager->SetLightingModel(kLightingModel2);
         LightBlock saved = {};
-        LightBlock *lights = &Lighting->lights;
+        LightBlock *lights = &fgLightManager->lightInfos[kEnvironmentCharacter];
         if (muzzleFlash > 0.0f) {
-            RLightManager_DisablePositionalLighting(Lighting, 0, true);
+            fgLightManager->DisablePositionalLighting(true);
             saved = *lights;
             Coord4 colour;
             MakeCoord4(&colour, muzzleFlash, muzzleFlash, muzzleFlash, 1.0f);
@@ -448,7 +424,7 @@ int ActCharacter::Draw(const MATRIX4 *cullMatrix, const MATRIX4 *matrix) {
         drawn->SetModelMatrix(matrix->mtx[0]);
         drawn->Draw(drawn->matrix);
         if (muzzleFlash > 0.0f) {
-            RLightManager_DisablePositionalLighting(Lighting, 0, false);
+            fgLightManager->DisablePositionalLighting(false);
             *lights = saved;
         }
 

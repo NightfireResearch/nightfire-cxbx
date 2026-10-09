@@ -9,6 +9,8 @@
 #include "../anim/Model.h"              // ModelInfoRefTree, TextureInfoRefTree
 #include "../anim/Weapon.h"             // WeaponInfoRefTree
 #include "../data/Tree.h"               // TreeThrow
+#include "../render/RSceneObj.hpp"
+#include "../render/TextureContext.h"
 #include "../world/SoundMap.h"          // RefCounterMapBuyHead
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -26,14 +28,8 @@
 #define RefCounterValue_Construct ((RefCounterValue *(__fastcall *)(RefCounterValue *, int, const char *name, const RefCounterEntry *entry))0x0012ef50)
 #define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
-#define RefCounterTree_Min ((RefCounterNode *(*)(RefCounterNode *node))0x0008eea0)
-#define RefCounterTree_BuyNode ((RefCounterNode *(__fastcall *)(RefCounterTree *, int, RefCounterNode *left, RefCounterNode *parent, RefCounterNode *right, const RefCounterValue *value, uint32_t color))0x00093f60)
 
 // Each instantiation's own insert_unique, erase(where), _Erase(subtree) and erase(first, last)
-#define CarpFileMap_Erase ((RefCounterNode **(__fastcall *)(URefCounterMap *, int, RefCounterNode **, RefCounterNode *))0x0008fb50)
-#define CarpFileMap_Insert ((RefCounterInsertResult *(__fastcall *)(URefCounterMap *, int, RefCounterInsertResult *, const RefCounterValue *))0x000901a0)
-#define TextureContextMap_Erase ((RefCounterNode **(__fastcall *)(URefCounterMap *, int, RefCounterNode **, RefCounterNode *))0x000946b0)
-#define TextureContextMap_Insert ((RefCounterInsertResult *(__fastcall *)(URefCounterMap *, int, RefCounterInsertResult *, const RefCounterValue *))0x00094df0)
 #define EngineMap_Erase ((RefCounterNode **(__fastcall *)(URefCounterMap *, int, RefCounterNode **, RefCounterNode *))0x0012efd0)
 #define EngineMap_Insert ((RefCounterInsertResult *(__fastcall *)(URefCounterMap *, int, RefCounterInsertResult *, const RefCounterValue *))0x0012f620)
 
@@ -284,6 +280,29 @@ WeaponInfoRefCounter* WeaponInfoRefCounter::Get() {
 
 // ---- RCARPFile
 
+// The instantiations' tree code (render/RSceneObj.hpp, render/TextureContext.h), in the shapes URefCounter's
+// helpers take
+static RefCounterNode **__fastcall CarpFileMap_Erase(URefCounterMap *map, int, RefCounterNode **result,
+                                                    RefCounterNode *where) {
+    return static_cast<CarpFileRefTree *>(map)->EraseAt(result, where);
+}
+
+static RefCounterInsertResult *__fastcall CarpFileMap_Insert(URefCounterMap *map, int, RefCounterInsertResult *result,
+                                                            const RefCounterValue *value) {
+    return static_cast<CarpFileRefTree *>(map)->InsertUnique(result, value);
+}
+
+static RefCounterNode **__fastcall TextureContextMap_Erase(URefCounterMap *map, int, RefCounterNode **result,
+                                                          RefCounterNode *where) {
+    return static_cast<TextureContextRefTree *>(map)->EraseAt(result, where);
+}
+
+static RefCounterInsertResult *__fastcall TextureContextMap_Insert(URefCounterMap *map, int,
+                                                                  RefCounterInsertResult *result,
+                                                                  const RefCounterValue *value) {
+    return static_cast<TextureContextRefTree *>(map)->InsertUnique(result, value);
+}
+
 // FUNC_AT(0x00090130)
 bool CarpFileRefCounter::RemoveReference(RCARPFile *file) {
     return URefCounter::RemoveReference(file, CarpFileMap_Erase);
@@ -532,6 +551,28 @@ void RefCounterIterator::Increment() {
     node = parent;
 }
 
+// FUNC_AT(0x00093f60)
+RefCounterNode* RefCounterTree::BuyNode(RefCounterNode *left, RefCounterNode *parent, RefCounterNode *right,
+                                        const RefCounterValue *value, uint8_t color) {
+    RefCounterNode *node = static_cast<RefCounterNode *>(UMemory::FastAlloc(sizeof(RefCounterNode), "STL"));
+    if (node != NULL) {
+        node->left = left;
+        node->parent = parent;
+        node->right = right;
+        node->value = *value;
+        node->color = color;
+        node->isNil = 0;
+    }
+    return node;
+}
+
+// FUNC_AT(0x0008eea0)
+RefCounterNode* RefCounterTree::Min(RefCounterNode *node) {
+    while (!node->left->isNil)
+        node = node->left;
+    return node;
+}
+
 // FUNC_AT(0x00017560)
 RefCounterNode* RefCounterTree::Max(RefCounterNode *node) {
     while (!node->right->isNil)
@@ -618,7 +659,7 @@ RefCounterNode **RefCounterTree::EraseAt(RefCounterNode **result, RefCounterNode
         else
             fixParent->right = fix;
         if (head->left == erased)
-            head->left = fix->isNil ? fixParent : RefCounterTree_Min(fix);
+            head->left = fix->isNil ? fixParent : Min(fix);
         if (head->right == erased)
             head->right = fix->isNil ? fixParent : Max(fix);
     } else {
@@ -716,7 +757,7 @@ RefCounterNode **RefCounterTree::InsertAt(RefCounterNode **result, bool addLeft,
                                           const RefCounterValue *value) {
     if (size >= 0xffffffffu / sizeof(RefCounterValue) - 1)
         TreeThrow("map/set<T> too long", kLengthErrorVtable, kLengthErrorThrowInfo);
-    RefCounterNode *node = RefCounterTree_BuyNode(this, 0, head, where, head, value, kTreeRed);
+    RefCounterNode *node = BuyNode(head, where, head, value, kTreeRed);
     size++;
     if (where == head) {
         head->parent = node;

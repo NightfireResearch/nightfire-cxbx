@@ -22,12 +22,13 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // The tree helpers every map in the game shares, called at their addresses (0x000cca30 is ported as
-// WSoundMap::Lrotate on that map's node type, 0x00126b70 and 0x00126cb0 as SharedTree's, audio/Bank.h).
+// WSoundMap::Lrotate on that map's node type, 0x00126b70 and 0x00126cb0 as SharedTree's, audio/Bank.h, 0x00093f10
+// as TextureContextMap::BuyNode, render/TextureContext.h).
 #define Tree_Lrotate ((void (__fastcall *)(Tree *, int, TreeNode *))0x000cca30)
 #define Tree_Rrotate ((void (__fastcall *)(Tree *, int, TreeNode *))0x00126b70)
+#define Tree_BuyNode ((TreeNode *(__fastcall *)(Tree *, int, TreeNode *, TreeNode *, TreeNode *, const TreePair *, int))0x00093f10)
 #define Tree_Min ((TreeNode *(*)(TreeNode *))0x0009c310)
 #define TreeIterator_Increment ((void (__fastcall *)(TreeNode **, int))0x000b2920)
-#define Tree_BuyNode ((TreeNode *(__fastcall *)(Tree *, int, TreeNode *, TreeNode *, TreeNode *, const TreePair *, int))0x00093f10)
 #define NameMap_Find ((TreeNode **(__fastcall *)(Tree *, int, TreeNode **, const char *const *))0x00126cb0)
 
 // The C runtime's: case-insensitive comparison and qsort (whose order of equal elements is its own), atol.

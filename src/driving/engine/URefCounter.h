@@ -111,6 +111,10 @@ public:
     void Rrotate(RefCounterNode *where);                                        // 0x00019d20
     // The rightmost node of a subtree (_Max).
     static RefCounterNode* Max(RefCounterNode *node);                           // 0x00017560
+    static RefCounterNode* Min(RefCounterNode *node);                           // 0x0008eea0
+    // The node maker every URefCounter's tree calls (the linker placed it among the texture contexts' code).
+    RefCounterNode* BuyNode(RefCounterNode *left, RefCounterNode *parent, RefCounterNode *right,
+                            const RefCounterValue *value, uint8_t color);           // 0x00093f60
 
 protected:
     // _Erase: frees a subtree without rebalancing.

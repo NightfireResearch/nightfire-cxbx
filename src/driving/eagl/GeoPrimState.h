@@ -2,12 +2,13 @@
 #define DRIVING_EAGL_GEOPRIMSTATE_H_
 
 // EAGL::GeoPrimState, the per-primitive render state, and its Xbox extension's setters (docs/driving/eagl.md 2.5,
-// 4.5). See GeoPrimState.cpp. In namespace EAGL, as in Ghidra: the game-side overlay in render/RenderState.hpp
-// already has a GeoPrimState of its own.
+// 4.5). See GeoPrimState.cpp. In namespace EAGL, as in Ghidra.
 
 #include <stdint.h>
 
 namespace EAGL {
+
+struct GeoPrimStateExtension;
 
 struct GeoPrimState {                // 0x4c; the game derives its materials from it
     uint32_t primitiveType;          // +0x00
@@ -62,6 +63,9 @@ struct GeoPrimState {                // 0x4c; the game derives its materials fro
     bool GetTransparencyMethod(uint32_t *method) const;                      // 0x000eee70
     bool SetChromaColour(uint32_t colour);                                   // 0x000eee80 (not kept: false)
     bool GetChromaColour(uint32_t *colour) const;                            // 0x000eee90 (false)
+
+    // The Xbox extension, this object
+    GeoPrimStateExtension* Extension();
 };
 static_assert(sizeof(GeoPrimState) == 0x4c, "a GeoPrimState is 0x4c bytes");
 
@@ -86,6 +90,7 @@ struct GeoPrimStateExtension : GeoPrimState {
     bool SetZWritesEnable(bool enable);                                      // 0x000ef020
     bool GetZWritesEnable(bool *enable) const;                               // 0x000ef030
 };
+inline GeoPrimStateExtension* GeoPrimState::Extension() { return static_cast<GeoPrimStateExtension *>(this); }
 
 }  // namespace EAGL
 

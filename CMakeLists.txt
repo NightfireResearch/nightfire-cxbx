@@ -327,6 +327,39 @@ add_library(drivinginject SHARED
   src/driving/Scheduler.cpp
   src/driving/render/RGlareManager.cpp
   src/driving/render/RSceneObj.cpp
+  src/driving/render/Colorize.cpp
+  src/driving/render/DebugView.cpp
+  src/driving/render/Decals.cpp
+  src/driving/render/Draw.cpp
+  src/driving/render/Fog.cpp
+  src/driving/render/Gain.cpp
+  src/driving/render/LensFlare.cpp
+  src/driving/render/Lightning.cpp
+  src/driving/render/Lights.cpp
+  src/driving/render/Materials.cpp
+  src/driving/render/OffscreenBuffer.cpp
+  src/driving/render/ParticleCache.cpp
+  src/driving/render/Particles.cpp
+  src/driving/render/Particulate.cpp
+  src/driving/render/PathEngine.cpp
+  src/driving/render/PostProcessing.cpp
+  src/driving/render/Reflection.cpp
+  src/driving/render/RenderHigh.cpp
+  src/driving/render/Renderer.cpp
+  src/driving/render/ShadowMap.cpp
+  src/driving/render/SkeletalObj.cpp
+  src/driving/render/SkyWater.cpp
+  src/driving/render/StateManager.cpp
+  src/driving/render/TextureContext.cpp
+  src/driving/render/TimeData.cpp
+  src/driving/render/WorldCulling.cpp
+  src/driving/devtools/LightShadow.cpp
+  src/driving/devtools/ParticleShadow.cpp
+  src/driving/devtools/ReflectionShadow.cpp
+  src/driving/devtools/RenderFxShadow.cpp
+  src/driving/devtools/RendererShadow.cpp
+  src/driving/devtools/SceneObjShadow.cpp
+  src/driving/devtools/TexContextShadow.cpp
   src/driving/devtools/Teleport.cpp
   src/driving/devtools/MemShadow.cpp
   src/driving/devtools/FileSysShadow.cpp
@@ -437,6 +470,7 @@ add_library(drivinginject SHARED
   src/driving/devtools/RigidCollideShadow.cpp
   src/driving/devtools/RenderShadow.cpp
   src/driving/devtools/GeoPrimShadow.cpp
+  src/driving/devtools/DumpTimer.cpp
   src/driving/devtools/ViewCamShadow.cpp
   src/driving/devtools/CamDataShadow.cpp
   src/driving/devtools/PlayerCamShadowA.cpp

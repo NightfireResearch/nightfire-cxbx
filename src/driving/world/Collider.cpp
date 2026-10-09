@@ -17,10 +17,7 @@
 // of them, folded.
 // ---------------------------------------------------------------------------------------------------------------
 
-// ---- originals called by address
-
-// The 8-byte vectors' length_error throw the instance list's reserve calls (CollisionVectorXlen's twin)
-#define PairVector_Xlen ((void (__fastcall *)(void *, int))0x000a8b90)
+// ---- globals
 
 #define ZeroVector (*(const Coord3 *)0x00243030)   // the game's zero vector
 
@@ -109,7 +106,7 @@ void BarrierList::Reserve(uint32_t count) {
 void InstanceList::Reserve(uint32_t count) {
     ColStl::Reserve(this, count, kMaxPairs, [this] {
         WORLD_UNTESTED("a collider instance list's _Xlen");
-        PairVector_Xlen(this, 0);
+        Xlen();
     });
 }
 

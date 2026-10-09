@@ -14,7 +14,9 @@
 #include "../engine/UMemory.hpp"
 #include "../physics/PhysicsMath.h"     // Abs
 #include "../physics/PhysicsObject.h"
+#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
+#include "../render/Renderer.h"
 #include "../world/Trigger.h"             // gEventDynamicData
 #include "../../helpers.h"
 
@@ -41,18 +43,9 @@
 
 // ---- originals called by address
 
-#define RSceneObj_Construct ((RSceneObj *(__fastcall *)(RSceneObj *, int, void *instance))0x0008eec0)
-#define RSceneObj_Destruct ((void (__fastcall *)(RSceneObj *, int))0x000905a0)
-#define RSceneObj_UseArticle ((void (__fastcall *)(RSceneObj *, int, UGroup *article, uint32_t unknown))0x000908d0)
-#define RSceneObj_SetEventDynamicData ((void (__fastcall *)(RSceneObj *, int))0x0008dae0)
-#define RSceneObj_SetNowVisible ((void (__fastcall *)(RSceneObj *, int))0x0008dbc0)
-#define RSceneObj_Render ((void (__fastcall *)(RSceneObj *, int))0x0008f9f0)
-#define RSceneObj_GetTransform ((void (__fastcall *)(RSceneObj *, int, MATRIX4 *out))0x0008dc60)
-#define RRenderSharedData_SendPerViewPort ((void (*)(void))0x0007e1c0)
 #define RMuzzleFlash_Draw ((void (*)(const MATRIX4 *transform, const Coord4 *position, const Coord4 *direction, int unknown, float intensity))0x000a1870)
 #define RMuzzleFlash_DrawPOV ((void (*)(const MATRIX4 *transform, const Coord4 *position, int type, float intensity))0x000a19d0)
 #define RDebris_DrawShellCasings ((void (__fastcall *)(void *, int))0x000a9680)   // FUN_000a9680, named for its caller
-#define Simulation_GetPlayerObject ((PhysicsObject *(__fastcall *)(void *, int))0x000b2d30)
 #define Simulation_SpawnNewtonObject ((Newton *(__fastcall *)(void *, int, const Coord3 *direction, const Coord3 *position, const Coord3 *momentum, const Coord3 *spin, CARP::Instance *instances, int instanceCount, float mass, float lifetime))0x000b5e20)
 
 // ---- globals
@@ -62,8 +55,6 @@
 #define PlayerPhysicsObject (*(PhysicsObject **)PTR_AT(0x00234e40))
 #define IdentityMatrix (*(const MATRIX4 **)0x001c4654)
 #define Debris PTR_AT(0x00202a80)
-#define RandomSeed U32_AT(0x001c45c4)                       // FUN_0001aab0's state, and its multiplier
-#define RandomMultiplier U32_AT(0x001c45c8)
 #define HenchmenMuzzleFlashSize FLOAT_AT(0x001b4e3c)
 
 // The player's weapon manager (Ghidra: SWeaponManager; only the field read here)
@@ -112,13 +103,6 @@ __declspec(naked) static double CrtPow(double, double) {
     }
 }
 
-// The generator of FUN_0001aab0 (inline here): 16 bits of the product, the state the product's low 16
-static int NextRandom() {
-    uint32_t product = RandomMultiplier * RandomSeed;
-    RandomSeed = product & 0xffff;
-    return (product >> 8) & 0xffff;
-}
-
 // ---- ActWeaponAux
 
 // FUNC_AT(0x0001ab50)
@@ -140,8 +124,8 @@ void ActWeapon::LoadAttributes() {
 
 // FUNC_AT(0x0001abd0)
 ActWeapon* ActWeapon::Construct(ActWeaponAux *aux, uint32_t flags) {
-    memcpy(instance, IdentityMatrix, sizeof instance);
-    RSceneObj_Construct(this, 0, instance);
+    memcpy(&instance, IdentityMatrix, sizeof instance);
+    RSceneObj::Construct(&instance);
     this->flags = flags;
     vtable = kActWeaponVtable;
     muzzleFlashEndTick = 0;
@@ -155,7 +139,7 @@ ActWeapon* ActWeapon::Construct(ActWeaponAux *aux, uint32_t flags) {
     velocity.y = 0.0f;
     velocity.x = 0.0f;
     this->aux = aux;
-    RSceneObj_UseArticle(this, 0, aux->carp->root->GroupLocateTag(kArticleTag), 0);
+    UseArticle(aux->carp->root->GroupLocateTag(kArticleTag), 0);
     for (int i = 0; i < kFlashCount; i++)
         flashes[i].endTick = 0;
     this->flags |= kManualRender;
@@ -169,7 +153,7 @@ void ActWeapon::Destruct() {
         OperatorDelete(worldTransforms[0]);
     if (worldTransforms[1] != NULL)
         OperatorDelete(worldTransforms[1]);
-    RSceneObj_Destruct(this, 0);
+    RSceneObj::Destruct();
 }
 
 // FUNC_AT(0x0001b1b0)
@@ -201,7 +185,7 @@ void ActWeapon::SetOwner(PhysicsObject *owner) {
 
 // FUNC_AT(0x0001adc0)
 void ActWeapon::SetEventDynamicData() {
-    RSceneObj_SetEventDynamicData(this, 0);
+    RSceneObj::SetEventDynamicData();
     gEventDynamicData.weapon = this;
 }
 
@@ -235,9 +219,9 @@ void ActWeapon::Render() {
 
 // FUNC_AT(0x0001ae70)
 void ActWeapon::ManualRender() {
-    RSceneObj_SetNowVisible(this, 0);
-    RRenderSharedData_SendPerViewPort();
-    RSceneObj_Render(this, 0);
+    SetNowVisible();
+    RRenderSharedData::SendPerViewPort();
+    RSceneObj::Render();
     for (int i = 0; i < kFlashCount; i++) {
         const ActWeaponFlash &flash = flashes[i];
         if (flash.endTick <= SimStepCount)
@@ -247,7 +231,7 @@ void ActWeapon::ManualRender() {
         uint32_t drawn = SimStepCount - flash.endTick + kFlashTicks;
         float fade = (float)CrtPow(kFlashFade, (double)drawn);
         alignas(16) MATRIX4 transform;
-        RSceneObj_GetTransform(this, 0, &transform);
+        GetTransform(&transform);
         if (flags & kPlayerOwned) {
             float size;
             int type;   // RMuzzleFlash::DrawPOV's
@@ -349,9 +333,9 @@ void ActWeapon::StartMuzzleFlash(const Coord3 *position) {
     ActWeaponFlash &flash = flashes[slot];
     flash.position = *position;
     flash.endTick = SimStepCount + kFlashTicks;
-    flash.size = (float)(NextRandom() * 0.25 * (1.0 / 65536) + extra + 0.75);
+    flash.size = (float)(RandomShort() * 0.25 * (1.0 / 65536) + extra + 0.75);
     alignas(16) MATRIX4 transform;
-    RSceneObj_GetTransform(this, 0, &transform);
+    GetTransform(&transform);
     muzzleDirection.x = transform.mtx[2][0];
     muzzleDirection.y = transform.mtx[2][1];
     muzzleDirection.z = transform.mtx[2][2];

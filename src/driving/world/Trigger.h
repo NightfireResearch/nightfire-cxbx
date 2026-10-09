@@ -9,6 +9,7 @@
 #include "../data/Carp.h"         // CARP::Instance
 
 class ActWeapon;
+class RSceneObj;
 
 // ---------------------------------------------------------------------------------------------------------------
 // The triggers' own methods (WTrigger, CollisionInstance.h): running their events, the direction test, following a
@@ -76,7 +77,7 @@ static_assert(sizeof(ActiveRayShell) == 0x30, "an active ray shell is 48 bytes")
 struct EventDynamicData {
     CARP::Instance *instance;   // +0x00
     uint32_t unknown04;         // +0x04 RAnimEngine::System::Update: 0
-    uint32_t unknown08;
+    RSceneObj *sceneObj;        // +0x08 RSceneObj::SetEventDynamicData's
     int32_t instanceIndex;      // +0x0c the handle's instance (RAnimEngine::System::Update); FireEvents: -1
     Coord4 position;            // +0x10 the trigger's, w 1
     uint8_t unknown20[0x10];

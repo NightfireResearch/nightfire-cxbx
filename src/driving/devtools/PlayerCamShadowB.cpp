@@ -13,6 +13,8 @@
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
+#include "../render/Colorize.h"
+#include "../render/RenderHigh.h"
 #include "../world/RoadNav.h"
 #include "../world/RoadNetwork.h"
 #include "../../common/xbeOriginal.h"
@@ -30,13 +32,13 @@
 // ---------------------------------------------------------------------------------------------------------------
 // NIGHTFIRE_PLAYERCAMSHADOWB=1, once on the first simulation tick: camera/PlayerCameraB.cpp against the originals.
 //
-// Each case starts from a copy of the live player camera (CameraViews[0]), perturbed, with its RPlayerCamState and
-// its road navigator (and the navigator's spline) swapped for copies of their own. The case runs twice from the
-// same bytes - first with 0x00083190-0x00086bb0's originals swapped back in, then with our jumps - calling the
-// original address both times. Everything a run can write is put back before each run and compared after: the
-// camera, its state and navigator, the auto-drive arms, the mode table, the cinematic heli arm, the camera
-// globals, the simulation's random generator, the road network's query stamps, GetSegmentCurveStep's spline, the
-// player car audio's two flags, the scratch arguments and the result.
+// Each case starts from a copy of the live player camera (fgRenderHigh->views[0]), perturbed, with its
+// RPlayerCamState and its road navigator (and the navigator's spline) swapped for copies of their own. The case runs
+// twice from the same bytes - first with 0x00083190-0x00086bb0's originals swapped back in, then with our jumps -
+// calling the original address both times. Everything a run can write is put back before each run and compared
+// after: the camera, its state and navigator, the auto-drive arms, the mode table, the cinematic heli arm, the
+// camera globals, the simulation's random generator, the road network's query stamps, GetSegmentCurveStep's spline,
+// the player car audio's two flags, the scratch arguments and the result.
 //
 // The calls that reach beyond the camera are replaced for both runs by fakes that record their arguments, and the
 // two records compared: RDirectorQueue::AppendData (the record queued), RColorize::SetEnabled, RCameraSpline::
@@ -45,7 +47,8 @@
 //
 // The original UpdateSplineCam eases towards an uninitialised stack vector on a road of one lane (the port uses
 // zero), so the spline cases start on segments of several lanes only, and only where the navigator finds a segment
-// at each point the camera may place it (see NavFindsSegment). UpdateAutoDriveCam's cameraOffset.w is the
+// at each point the camera may place it (see NavFindsSegment); a navigator never placed is placed at the eye for
+// the cases without a mode change (see NavCurveHasLength). UpdateAutoDriveCam's cameraOffset.w is the
 // original's uninitialised stack too, and is not compared.
 //
 // A mutation this catches: BoostDiagonalRotation (FUN_000846d0) without the absolute value of the difference of
@@ -186,7 +189,7 @@ void __fastcall FakeGetSafePosition(RPlayerCamera *camera, int, Coord4 *position
 
 void InstallFakes() {
     HookBoth(0x0007c6a0, XbeAddress(&RDirectorQueue::AppendData), (const void *)&FakeAppendData);
-    HookBoth(0x0009a500, 0, (const void *)&FakeColorize);
+    HookBoth(0x0009a500, XbeAddress(&RColorize::SetEnabled), (const void *)&FakeColorize);
     HookBoth(0x0007a9f0, XbeAddress(&RCameraSpline::ClearSplinePtList), (const void *)&FakeClearPoints);
     HookBoth(0x00097770, XbeAddress(&RWorldCamera::LoadSingleAnimation), (const void *)&FakeLoadAnimation);
     HookBoth(0x00097870, XbeAddress(&RWorldCamera::LoadSingleAnimationFromList), (const void *)&FakeLoadFromList);
@@ -509,6 +512,10 @@ void RunCase(const Case &c) {
         fflush(stdout);
     }
     RunOnce(c, &original, true);
+    if (g_verbose) {
+        printf("[playercamB]   original returned\n");
+        fflush(stdout);
+    }
     RunOnce(c, &ours, false);
     Put(g_live);
     if (original.faulted || ours.faulted) {
@@ -737,6 +744,29 @@ bool SplinePointsOnRoads() {
            NavFindsSegment(&ahead, &heading);
 }
 
+// Without a mode change UpdateSplineCam moves its navigator on from where it is. On a curve of no length (a
+// navigator never placed: Reset leaves both ends zero) the original's IncNavPosition divides the step by zero and
+// loops forever on the NaN, as ours does.
+bool NavCurveHasLength(const WRoadNav *nav) {
+    return nav->boundStart.x != nav->boundEnd.x || nav->boundStart.y != nav->boundEnd.y ||
+           nav->boundStart.z != nav->boundEnd.z;
+}
+
+// The case's navigator placed at the eye, facing the anchor's way, as a mode change places it
+void PlaceNavAtEye() {
+    alignas(16) uint8_t cameraBytes[sizeof(RPlayerCamera)];
+    memcpy(cameraBytes, g_case.camera, sizeof(cameraBytes));
+    RPlayerCamera *camera = reinterpret_cast<RPlayerCamera *>(cameraBytes);
+    MATRIX4 *anchorMatrix = camera->GetAnchorMatrix4();
+    if (anchorMatrix == NULL)
+        return;
+    WRoadNav *nav = EditNav();
+    nav->spline = reinterpret_cast<RCameraSpline *>(g_case.navSpline);
+    nav->InitAtPoint(reinterpret_cast<const Coord3 *>(&camera->eye),
+                     reinterpret_cast<const Coord3 *>(MatrixRow(anchorMatrix, 2)), false);
+    Put(g_live);
+}
+
 // A table of three arms for the auto-drive cases when the track's camera file has none
 alignas(16) AutoDriveArmInfo g_syntheticArms[3];
 
@@ -778,12 +808,12 @@ void PlayerCamShadowB_Run(void) {
     if (setting == NULL || atoi(setting) == 0)
         return;
     g_verbose = atoi(setting) >= 2;
-    if (CameraViews == NULL || CameraViews[0].camera == NULL || fgCameraTables.modes == NULL) {
+    if (fgRenderHigh == NULL || fgRenderHigh->views[0].camera == NULL || fgCameraTables.modes == NULL) {
         printf("[playercamB] no player camera yet - skipped\n");
         fflush(stdout);
         return;
     }
-    g_liveCamera = CameraViews[0].camera;
+    g_liveCamera = fgRenderHigh->views[0].camera;
     Rng rng = {0x5eedb0bu};
     int modes = fgCameraTables.modeCount;
 
@@ -1026,6 +1056,13 @@ void PlayerCamShadowB_Run(void) {
                 Jiggle(&camera->unknown2D0, &rng, 2.0f);
                 Jiggle(&camera->lookAt, &rng, rng.Chance(20) ? 80.0f : 3.0f);
                 WRoadNav *nav = EditNav();
+                bool steady = !(camera->modeChangeFlags & RWorldCamera::kAnchorChanged);
+                if (steady && !NavCurveHasLength(nav))
+                    PlaceNavAtEye();
+                if (steady && !NavCurveHasLength(nav)) {
+                    g_skipped++;
+                    continue;
+                }
                 if (nav->segment < 0 || nav->segment >= fgRoadNetworkData.segmentCount) {
                     g_skipped++;
                     continue;

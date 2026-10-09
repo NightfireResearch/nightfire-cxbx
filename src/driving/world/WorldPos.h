@@ -41,6 +41,9 @@ public:
     // (its instance unchanged) that still holds the point is kept and the answer is false; otherwise the search is
     // made and the answer true.
     bool FindClosestFace(const Coord3 *point, bool keepCurrent);
+    // The ground normal: the face's, w 0, or straight up without a face. The second argument is not read.
+    // (FUN_000a5080, the scorch marks'; the name is ours. The linker placed it among the renderer's code.)
+    void GetNormal(Coord4 *normal, int unused);
 };
 static_assert(sizeof(WWorldPos) == 0x40, "WWorldPos is 0x40 bytes");
 static_assert(offsetof(WWorldPos, valid) == 0x30 && offsetof(WWorldPos, article) == 0x38, "WWorldPos layout");

@@ -7,10 +7,10 @@
 #include <stdio.h>
 
 #include "../../helpers.h"
-#include "../camera/Camera.h"             // CameraRendererFields
 #include "../platform/RealMath.h"
 #include "../world/World.h"               // ProcAnimState, kWorldInstanceProcAnim
 #include "AnimEngine.h"                   // RAnimEngine::EvaluateInstance
+#include "../render/Renderer.h"
 
 #pragma fp_contract(off)
 
@@ -29,7 +29,6 @@
 #define DefaultProcAnimParam ((float *)0x00191938)
 #define DefaultProcAnimXForm ((MATRIX4 *)0x00191940)
 #define SimStep FLOAT_AT(0x001c465c)                           // "GAME::SimStep": the tick, as a float
-#define fgRenderer (*(CameraRendererFields **)0x001ebff4)
 
 namespace {
 

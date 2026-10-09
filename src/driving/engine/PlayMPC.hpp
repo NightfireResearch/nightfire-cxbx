@@ -2,7 +2,10 @@
 
 #include <stdint.h>
 
-#include "../render/RenderState.hpp"
+namespace EAGL {
+struct RenderContext;
+struct ViewPort;
+}
 
 // Draws the subtitles for a frame of the movie (the caller's; it is handed the frame number)
 typedef void (*SubtitleCallback)(int frame);
@@ -15,7 +18,7 @@ typedef void (*SubtitleCallback)(int frame);
 class PlayMPC {
 public:
     void *device;                   // +0x00 the EAGL device
-    RenderContext *context;         // +0x04 the render context drawn into
+    EAGL::RenderContext *context;   // +0x04 the render context drawn into
     int16_t unknown08;              // +0x08 cleared by the constructor and by Play
     uint8_t _pad0a[2];
     int32_t frameShown;             // +0x0c the frame number handed to the subtitle callback
@@ -27,7 +30,7 @@ public:
 
     // The constructor (0x00130780): the device, context and skipping pad, and the allocation flags EA's player
     // library would have used, which go to its settings as the original's do.
-    PlayMPC* Construct(void *device_, RenderContext *context_, int32_t padPort_, int32_t allocFlags);
+    PlayMPC* Construct(void *device_, EAGL::RenderContext *context_, int32_t padPort_, int32_t allocFlags);
 
     // The destructor (0x00130b50).
     void Destruct();
@@ -39,7 +42,7 @@ public:
     // Plays it to the end, or until A, B or Start is pressed on the pad at +0x18, drawing into `viewport`. With
     // `widescreen` the 4:3 picture is stretched to fill a 16:9 screen as the original does. `subtitles`, if not null,
     // is called with the frame number once per frame drawn, between the picture and the end of the frame (0x001308a0).
-    void Play(ViewPort *viewport, bool widescreen, SubtitleCallback subtitles);
+    void Play(EAGL::ViewPort *viewport, bool widescreen, SubtitleCallback subtitles);
 };
 static_assert(sizeof(PlayMPC) == 0x20, "PlayMPC is 0x20 bytes");
 

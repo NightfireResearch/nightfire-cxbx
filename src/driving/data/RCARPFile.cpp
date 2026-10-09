@@ -14,6 +14,12 @@
 #include "../engine/CoreFoundation.h"
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
+#include "../render/Fog.h"
+#include "../render/Lights.h"
+#include "../render/Reflection.h"
+#include "../render/Renderer.h"
+#include "../render/SkyWater.h"
+#include "../render/TextureContext.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -24,21 +30,6 @@
 
 // Other packages' functions not ported yet, called at their addresses.
 
-// The renderer's (not ported yet).
-#define RRenderer_Flush ((void (__fastcall *)(void *, int, int))0x0007d070)
-#define RTextureContextManager_GetContext ((RTextureContext *(*)(int))0x000940c0)
-#define RTextureContextManager_FindOrCreateTexture ((void *(__fastcall *)(void *, int, uint32_t, int))0x00093fb0)
-#define RTextureContextManager_NewContext ((RTextureContext *(__fastcall *)(void *, int, const char *, int))0x000951e0)
-#define RTextureContextManager_KillContext ((void (__fastcall *)(void *, int, RTextureContext *))0x00094c90)
-#define RTextureContext_FindOrCreateTexture ((void *(__fastcall *)(RTextureContext *, int, uint32_t, int))0x00093ba0)
-#define RReflection_GetReflectionMapWarpageData ((void *(__fastcall *)(void *, int))0x00098210)
-#define RReflection_TextureSpecular ((void *(__fastcall *)(void *, int))0x00098490)
-#define RReflection_GetReflectionCarPos ((void *(__fastcall *)(void *, int))0x00098470)
-#define RReflection_Texture ((void *(__fastcall *)(void *, int))0x000984a0)
-#define RReflection_TextureWeaponEnvMap ((void *(__fastcall *)(void *, int))0x00098480)
-#define RReflection_GetReflectionMatrix ((void *(__fastcall *)(void *, int))0x000984b0)
-#define RReflection_LightingProps ((void *(__fastcall *)(void *, int, int, const char *))0x00098380)
-#define RReflection_GetReflectionData2 ((void *(__fastcall *)(void *, int, const char *))0x00098410)
 #define CarpPathConcat ((void (__fastcall *)(char *, int, const char *, const char *, const char *))0x00051e90)
 #define EhVectorConstructor ((void (__stdcall *)(void *, uint32_t, uint32_t, uint32_t))0x00022770)
 #define Crt_printf ((int (*)(const char *, ...))0x00132192)
@@ -53,12 +44,6 @@
 #define Bond (*(uint8_t **)0x001e464c)                 // its symbol table pointer at 0x64
 #define EaglAllocate (*(void *(**)(uint32_t, const char *))0x001caf68)   // EAGL's allocator hooks
 #define EaglFree (*(void (**)(void *, uint32_t))0x001caf6c)
-#define TextureManager PTR_AT(0x001f2a30)
-#define Reflection PTR_AT(0x001f2dfc)
-#define Renderer (*(uint8_t **)0x001ebff4)
-#define Lighting (*(uint8_t **)0x001ec260)
-#define Fog (*(uint8_t **)0x001ec004)
-#define UVAnimation (*(uint8_t **)0x00201844)
 #define Colours (*(uint32_t **)0x001ebd2c)
 #define ShadowAnim ((float *)0x001ebd50)               // [3]
 #define CarShadowColour ((uint32_t *)0x001ebd30)       // [4], a function-local static
@@ -80,9 +65,10 @@ constexpr uint32_t kEAGLNamespaceVtable = 0x001913b4;
 constexpr uint32_t kCharNamespaceAtExit = 0x0015ce40;
 constexpr int kCallbackSlots = 16;
 constexpr uint32_t kCallbackAt0007ae90 = 0x0007ae90;   // NoSymbolCallback (camera/CameraSpline.h), by its address
-constexpr uint32_t kCallbackAt000a59c0 = 0x000a59c0;   // not ported
+constexpr uint32_t kCallbackAt000a59c0 = 0x000a59c0;   // RShadowMap::LookupVariable (render/ShadowMap.h), by address
 constexpr uint32_t kRegisterSymbolsAt = 0x0007b020;
 constexpr uint32_t kResolveEAGLReferencesAt = 0x0007b8a0;
+constexpr uint32_t kPackedColourConstruct = 0x00076240;   // PackedColour::Construct (render/Draw.h), by its address
 
 constexpr uint32_t kTagTextureFile = 0x736e2020;   // 'sn  ' (indexed: the TEXn number)
 constexpr uint32_t kTagModel = 0x454c4664;         // 'dFLE'
@@ -109,16 +95,6 @@ enum LightingKind {
     kLightingDash = 5,
 };
 
-// What RCARPFile reads of a texture context: its shapes, for EAGL's registry.
-struct TextureContextView {
-    uint32_t unknown00[2];
-    uint8_t *shapes;
-};
-
-static uint8_t *Shapes(RTextureContext *context) {
-    return reinterpret_cast<TextureContextView *>(context)->shapes;
-}
-
 // The 'Sect' record: the sizes of the file's sections that resolving leaves unused, at its end.
 struct CarpSections {
     uint8_t unknown00[0x60];
@@ -127,6 +103,11 @@ struct CarpSections {
 
 static UData *DataEnd(UGroup *group) {
     return group->GetArray() + (group->GroupCount() + group->count);
+}
+
+// RWater's 16-byte entries, which the UV names index (the water's vectors and matrix rows)
+static Coord4 *WaterEntries() {
+    return reinterpret_cast<Coord4 *>(TheWater);
 }
 
 static SymbolCallback CallbackAt(uint32_t address) {
@@ -226,7 +207,7 @@ static bool Is(const char *name, const char *what) {
 }
 
 static void *ContextTexture(uint32_t tag) {
-    return RTextureContext_FindOrCreateTexture(RTextureContextManager_GetContext(0), 0, tag, 0);
+    return RTextureContextManager::GetContext(0)->FindOrCreateTexture(tag, 0);
 }
 
 // FUNC_AT(0x0007b020)
@@ -246,39 +227,39 @@ void* RCARPFile::RegisterSymbols(const char *name, bool *found) {
     if (Has(name, "GAME::DamageZones") || Has(name, "EAGL::DamageZones"))
         value = DamageZones;
     if (Has(name, "GAME::FishEyeParams"))
-        value = RReflection_GetReflectionMapWarpageData(Reflection, 0);
+        value = TheReflection->GetReflectionMapWarpageData();
     if (Has(name, "GAME::ReflectionMap1"))
-        value = RReflection_TextureSpecular(Reflection, 0);
+        value = TheReflection->TextureSpecular();
     if (Has(name, "GAME::ReflectionCarPos"))
-        value = RReflection_GetReflectionCarPos(Reflection, 0);
+        value = TheReflection->GetReflectionCarPos();
     if (Has(name, "GAME::ReflectionMap"))
-        value = RReflection_Texture(Reflection, 0);
+        value = TheReflection->Texture();
     if (Has(name, "GAME::WeaponReflectionMap"))
-        value = RReflection_TextureWeaponEnvMap(Reflection, 0);
+        value = TheReflection->TextureWeaponEnvMap();
     if (Has(name, "GAME::ReflMatrix"))
-        value = RReflection_GetReflectionMatrix(Reflection, 0);
+        value = TheReflection->GetReflectionMatrix();
     if (Has(name, "GAME::SpecularMap"))
-        value = RReflection_TextureSpecular(Reflection, 0);
+        value = TheReflection->TextureSpecular();
     if (Has(name, "GAME::SphereMap"))
-        value = RReflection_Texture(Reflection, 0);
+        value = TheReflection->Texture();
     if (Has(name, "GAME::CarLightingGlassProps"))
-        value = RReflection_LightingProps(Reflection, 0, kLightingGlass, CurrentCarpName);
+        value = TheReflection->LightingProps(kLightingGlass, CurrentCarpName);
     if (Has(name, "GAME::CarLightingSpecularProps"))
-        value = RReflection_LightingProps(Reflection, 0, kLightingSpecular, CurrentCarpName);
+        value = TheReflection->LightingProps(kLightingSpecular, CurrentCarpName);
     if (Has(name, "GAME::CarLightingGlossyProps"))
-        value = RReflection_LightingProps(Reflection, 0, kLightingGlossy, CurrentCarpName);
+        value = TheReflection->LightingProps(kLightingGlossy, CurrentCarpName);
     if (Has(name, "GAME::CarLightingDashProps"))
-        value = RReflection_LightingProps(Reflection, 0, kLightingDash, CurrentCarpName);
+        value = TheReflection->LightingProps(kLightingDash, CurrentCarpName);
     if (Has(name, "GAME::CarLightingChromeProps"))
-        value = RReflection_LightingProps(Reflection, 0, kLightingChrome, CurrentCarpName);
+        value = TheReflection->LightingProps(kLightingChrome, CurrentCarpName);
     if (Has(name, "GAME::CarLightingDullProps"))
-        value = RReflection_LightingProps(Reflection, 0, kLightingDull, CurrentCarpName);
+        value = TheReflection->LightingProps(kLightingDull, CurrentCarpName);
     if (Has(name, "GAME::CharacterLightingDullProps"))
-        value = RReflection_LightingProps(Reflection, 0, kLightingDull, "Character");
+        value = TheReflection->LightingProps(kLightingDull, "Character");
     if (Has(name, "GAME::CharacterLightingGlossyProps"))
-        value = RReflection_LightingProps(Reflection, 0, kLightingGlossy, "Character");
+        value = TheReflection->LightingProps(kLightingGlossy, "Character");
     if (Has(name, "GAME::DynamicObjectLightingProps"))
-        value = RReflection_LightingProps(Reflection, 0, kLightingDull, "Dynamic Objects");
+        value = TheReflection->LightingProps(kLightingDull, "Dynamic Objects");
     if (Has(name, "GAME::ReflectionInfo1")) {
         // The original answers the address of a 16-byte local of its own frame, dead once it returns; a static
         // buffer stands in for it. No shipped model asks for this name.
@@ -286,17 +267,17 @@ void* RCARPFile::RegisterSymbols(const char *name, bool *found) {
         value = reflectionInfo1;
     }
     if (Has(name, "GAME::ReflectionInfo2") || Has(name, "GAME::WorldSpecularInfo"))
-        value = RReflection_GetReflectionData2(Reflection, 0, CurrentCarpName);
+        value = TheReflection->GetReflectionData2(CurrentCarpName);
     if (Has(name, "GAME::CharacterReflectionInfo"))
-        value = RReflection_GetReflectionData2(Reflection, 0, "Character");
+        value = TheReflection->GetReflectionData2("Character");
     if (Is(name, "EAGL::FogData"))
-        value = *reinterpret_cast<void **>(Fog + 4);
+        value = Fog->params;
     if (Has(name, "GAME::UVScale") || Has(name, "EAGL::UVScale"))
-        value = UVAnimation + (name[0xd] - 0x2c) * 16;   // the digit after the name: entries 4..
+        value = &WaterEntries()[name[0xd] - 0x2c];   // the digit after the name: entries 4..
     if (Has(name, "GAME::UVScroll") || Has(name, "EAGL::UVScroll"))
-        value = UVAnimation + (name[0xe] - 0x26) * 16;   // entries 10..
+        value = &WaterEntries()[name[0xe] - 0x26];   // entries 10..
     if (Is(name, "GAME::WaterRotToSun") || Is(name, "EAGL::WaterRotToSun"))
-        value = UVAnimation + 0x10;
+        value = &TheWater->sunRotation;
     if (Is(name, "GAME::SimStep"))
         value = SimStep;
     if (Is(name, "GAME::SwayData"))
@@ -314,27 +295,27 @@ void* RCARPFile::RegisterSymbols(const char *name, bool *found) {
     if (Is(name, "EAGL::CarShadowColour")) {
         if (!(CarShadowColourGuard & 1)) {
             CarShadowColourGuard |= 1;
-            EhVectorConstructor(CarShadowColour, 4, 4, 0x00076240);   // four colours, each constructed to 0
+            EhVectorConstructor(CarShadowColour, 4, 4, kPackedColourConstruct);   // four colours, each constructed to 0
         }
         CarShadowColour[0] = 0x80303030;
         value = CarShadowColour;
     }
     if (Is(name, "GAME::LightVector"))
-        value = Lighting + 0x10;
+        value = &fgLightManager->specularLight;
     if (Is(name, "GAME::LightSources"))
-        value = *reinterpret_cast<void **>(Lighting + 0x78);
+        value = fgLightManager->lightBlock;
     if (Is(name, "GAME::ActorLightSources"))
-        value = Lighting + 0xec;
+        value = &fgLightManager->lightInfos[kEnvironmentCharacter];
     if (Is(name, "GAME::PositionalLights"))
-        value = *reinterpret_cast<void **>(Lighting + 0x2a0);
+        value = fgLightManager->positionalLights;
     if (Is(name, "GAME::CurrentAmbientDiffuse"))
-        value = Lighting + 0x2a4;
+        value = &fgLightManager->currentAmbient;
     if (Is(name, "EAGL::EnvironmentMap")) {
-        void *texture = RTextureContextManager_FindOrCreateTexture(TextureManager, 0, kTextureReflection, 4);
+        void *texture = TheTextureContextManager->FindOrCreateTexture(kTextureReflection, 4);
         if (texture == NULL) {
             Crt_printf("UNABLE TO FIND REFLECTION MAP IN TEXTURE FILE\n");
-            RTextureContextManager_NewContext(TextureManager, 0, "data\\render\\ext.xsh", 5);
-            texture = RTextureContextManager_FindOrCreateTexture(TextureManager, 0, kTextureReflection, 5);
+            TheTextureContextManager->NewContext("data\\render\\ext.xsh", 5);
+            texture = TheTextureContextManager->FindOrCreateTexture(kTextureReflection, 5);
         }
         value = texture;
     }
@@ -363,9 +344,9 @@ void* RCARPFile::RegisterSymbols(const char *name, bool *found) {
     if (Is(name, "EAGL::EnvMapState2G"))
         value = reinterpret_cast<void *>(GetNullValue());
     if (Is(name, "GAME::CameraPos") || Is(name, "EAGL::CameraPos"))
-        value = Renderer + 0x30;
+        value = &fgRenderer->cameraPosition;
     if (Is(name, "GAME::SpecularMat"))
-        value = Lighting + 0x20;
+        value = &fgLightManager->specularMatrix;
     if (Is(name, "EAGL::ReflStretch"))
         value = ReflStretch;
     if (Is(name, "EAGL::Colours")) {
@@ -416,11 +397,11 @@ void RCARPFile::Resolve(const char *directory, UCarpNamespace *carp) {
         if (record->MatchTag() != kTagTextureFile)
             break;
         sprintf(path, "%s%s", directory, reinterpret_cast<char *>(record->Data()));
-        RTextureContext *context = RTextureContextManager_NewContext(TextureManager, 0, path, 4);
+        RTextureContext *context = TheTextureContextManager->NewContext(path, 4);
         Symbols->AddNamespace(TextureNames[record->TagIndex()], reinterpret_cast<SymbolNamespace *>(context));
         textures[record->TagIndex()] = context;
         added[record->TagIndex()] = true;
-        DynamicLoader::RegisterShapes(Shapes(context));
+        DynamicLoader::RegisterShapes(context->shapes);
     }
 
     // The model object, as the "EAGL" namespace while the references are resolved.
@@ -465,7 +446,7 @@ void RCARPFile::Resolve(const char *directory, UCarpNamespace *carp) {
         if (added[i])
             Symbols->RemoveNamespace(TextureNames[i]);
         if (textures[i] != NULL)
-            DynamicLoader::UnRegisterShapes(Shapes(textures[i]));
+            DynamicLoader::UnRegisterShapes(textures[i]->shapes);
     }
     if (model != DataEnd(root))
         Symbols->RemoveNamespace("EAGL");
@@ -473,10 +454,10 @@ void RCARPFile::Resolve(const char *directory, UCarpNamespace *carp) {
 
 // FUNC_AT(0x0007bff0)
 void RCARPFile::Destruct() {
-    RRenderer_Flush(Renderer, 0, 0);
+    fgRenderer->Flush(false);
     for (int i = 0; i < kCarpTextureFiles; i++)
         if (textures[i] != NULL)
-            RTextureContextManager_KillContext(TextureManager, 0, textures[i]);
+            TheTextureContextManager->KillContext(textures[i]);
     DynamicLoader *object = loader;
     if (object != NULL) {
         object->Destruct();
@@ -548,4 +529,9 @@ RCARPFile* RCARPFileLoader::LoadCARPFile(const char *directory, const char *file
 // FUNC_AT(0x0007bd40)
 void RCARPFileLoader::ResolveCARPFile(const char *directory, RCARPFile *file) {
     file->Resolve(directory, this);
+}
+
+// FUNC_AT(0x0001aa80)
+UGroup* RCARPFile::GetRoot() {
+    return root;
 }

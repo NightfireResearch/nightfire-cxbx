@@ -1,6 +1,9 @@
 #include "CoreContainers.h"
 
 #include "UMemory.hpp"
+#include "../../common/xbeOverload.h"
+#include "../render/Lightning.h"
+#include "../render/StateManager.h"
 
 #include <string.h>
 
@@ -15,14 +18,12 @@
 
 // ---- originals called by address
 
-#define StateRefSet_Insert ((GameTreeNode<StateRefValue> **(__fastcall *)(GameTree<StateRefValue> *, int, GameTreeNode<StateRefValue> **, bool, GameTreeNode<StateRefValue> *, const StateRefValue *))0x00092690)
-#define StateRefNode_Decrement ((void (__fastcall *)(GameTreeNode<StateRefValue> **, int))0x00093200)
 #define SimObjectMultimap_Insert ((GameTreeNode<SimObjectValue> **(__fastcall *)(GameTree<SimObjectValue> *, int, GameTreeNode<SimObjectValue> **, bool, GameTreeNode<SimObjectValue> *, const SimObjectValue *))0x000b31b0)
 #define SimObjectVector_Construct ((void (*)(void **where, int count, void *const *value, GameVector<void *> *vector, void *const *same))0x000b2ec0)   // uninitialized_fill_n with the allocator
 #define SimObjectVector_InsertN ((void (__fastcall *)(GameVector<void *> *, int, void **where, int count, void *const *value))0x000b3b80)
 #define CRT_VectorDestructorIterator ((void (__stdcall *)(void *array, uint32_t size, int32_t count, void *destructor))0x0013332e)   // ??_M
 
-static void *const kLightningSegmentDestructor = (void *)0x0009f7e0;
+static void *const kLightningSegmentDestructor = (void *)XbeAddress(&RLightningSegment::Destruct);
 static const uint32_t kLightningSegmentBytes = 0x18;
 
 template <class Value>
@@ -30,6 +31,16 @@ using InsertFn = GameTreeNode<Value> **(__fastcall *)(GameTree<Value> *, int, Ga
                                                      GameTreeNode<Value> *, const Value *);
 template <class Value>
 using DecrementFn = void (__fastcall *)(GameTreeNode<Value> **, int);
+
+// The set's compiled helpers (render/StateManager.h), in the shapes InsertUnique takes
+static StateRefNode **__fastcall StateRefSet_Insert(GameTree<StateRefValue> *tree, int, StateRefNode **result,
+                                                    bool addLeft, StateRefNode *where, const StateRefValue *value) {
+    return static_cast<StateRefTree *>(tree)->InsertAt(result, addLeft, where, value);
+}
+
+static void __fastcall StateRefNode_Decrement(StateRefNode **node, int) {
+    reinterpret_cast<StateRefIterator *>(node)->Decrement();
+}
 
 // StateRef's order: the bytes of the state
 static bool StateLess(const StateRefValue &a, const StateRefValue &b) {

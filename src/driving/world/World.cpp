@@ -20,6 +20,7 @@
 #include "../engine/MissionManager.h"
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
+#include "../render/PathEngine.h"
 #include "../render/RSceneObj.hpp"
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -46,16 +47,6 @@
 #define AIElementController_Destruct ((void (*)(void))0x00028b60)
 #define Simulation_UntrackAllInstances ((void (__fastcall *)(void *, int))0x000b30c0)
 #define Simulation_TrackInstance ((void (__fastcall *)(void *, int, CARP::Instance *, int))0x000b4810)
-#define RPathEngine_Reset ((void (*)(float time))0x00080330)
-#define RPathEngine_Purge ((void (*)(void))0x000803e0)
-#define RPathEngine_AddInstanceList ((void (*)(CARP::Instance *, ProcAnimState *, uint32_t count, float time))0x00080520)
-#define RPathEngine_GetFirstPathHandle ((RPathHandle *(*)(void))0x0007ffa0)
-#define RPathEngine_GetNextPathHandle ((RPathHandle *(*)(void))0x0007ffc0)
-#define RPathHandle_GetPosition ((const Coord3 *(__fastcall *)(RPathHandle *, int))0x0007ff50)
-#define RSceneObj_Construct ((RSceneObj *(__fastcall *)(void *, int, CARP::Instance *))0x0008eec0)
-#define RSceneObj_UseArticle ((void (__fastcall *)(RSceneObj *, int, UGroup *model, int article))0x000908d0)
-#define RSceneObj_SetTransform ((void (__fastcall *)(RSceneObj *, int, const MATRIX4 *))0x0008dcb0)
-#define RSceneObj_EnableTarget ((void (__fastcall *)(RSceneObj *, int))0x0008f160)
 #define GFX_Trigger ((void *(*)(void *effect, const float *position, const Coord4 *direction, ArticleEffect *owner, void *data, int, int, int))0x000d34e0)
 
 namespace {
@@ -82,7 +73,7 @@ char *CopyString(const char *text) {
 
 RSceneObj *NewSceneObj(CARP::Instance *instance) {
     void *memory = UMemory::FastAlloc(sizeof(RSceneObj), "RSceneObj");
-    return memory != NULL ? RSceneObj_Construct(memory, 0, instance) : NULL;
+    return memory != NULL ? static_cast<RSceneObj *>(memory)->Construct(instance) : NULL;
 }
 
 void DeleteSceneObj(RSceneObj *sceneObj) {
@@ -378,17 +369,16 @@ void WWorld::Reset() {
             memcpy(object->procAnim, object->savedState, sizeof(object->savedState));
             CARP::Instance *instance = &instances[object->instanceIndex];
             object->procAnim->sceneObj = NewSceneObj(instance);
-            RSceneObj_UseArticle(object->procAnim->sceneObj, 0, ArticleOf(instance)->model->group,
-                                 object->procAnim->article);
-            RSceneObj_SetTransform(object->procAnim->sceneObj, 0, object->Transform());
+            object->procAnim->sceneObj->UseArticle(ArticleOf(instance)->model->group, object->procAnim->article);
+            object->procAnim->sceneObj->SetTransform(object->Transform());
             if (object->targetable)
-                RSceneObj_EnableTarget(object->procAnim->sceneObj, 0);
+                object->procAnim->sceneObj->EnableTarget();
             if (object->procAnim->flags & kProcAnimTracked)
                 TrackInstance(instance);
         }
     }
 
-    RPathEngine_Reset(float(SimStepCount));
+    RPathEngine::Reset(float(SimStepCount));
 
     // the effects of the instances without a proc-anim state triggered again
     for (uint32_t i = 0; i < instanceCount; i++) {
@@ -399,12 +389,12 @@ void WWorld::Reset() {
         if (article == NULL || article->effects == NULL)
             continue;
         for (ArticleEffect *effect = article->effects; effect->type != ArticleEffect::kTypeEnd; effect++) {
-            if (effect->flags & ArticleEffect::kFlag10) {
-                if (effect->type == ArticleEffect::kTypeGfx && effect->reference != NULL)
-                    effect->triggered = GFX_Trigger(effect->reference, instance->position, &DefaultVector, effect,
-                                                    effect->unknown20, 0, 0, 0);
+            if (effect->flags & ArticleEffect::kStartsOn) {
+                if (effect->type == ArticleEffect::kTypeGfx && effect->gfx.reference != NULL)
+                    effect->gfx.triggered = GFX_Trigger(effect->gfx.reference, instance->position, &DefaultVector,
+                                                        effect, &effect->gfx.rotation, 0, 0, 0);
             } else {
-                effect->triggered = NULL;
+                effect->gfx.triggered = NULL;
             }
         }
     }
@@ -418,7 +408,7 @@ void WWorld::Close() {
         list->Tidy();
         OperatorDelete(list);
     }
-    RPathEngine_Purge();
+    RPathEngine::Purge();
     SMissionManager_Destruct();
     AIElementController_Destruct();
     WTriggerManager *triggers = fgTriggerManager;
@@ -492,10 +482,10 @@ bool WWorld::Open() {
     procAnims = NULL;
     if (procAnimData != mapGroup->DataEnd())
         procAnims = reinterpret_cast<ProcAnimState *>(procAnimData->Data());
-    RPathEngine_AddInstanceList(instances, procAnims, instanceCount, float(SimStepCount));
+    RPathEngine::AddInstanceList(instances, procAnims, instanceCount, float(SimStepCount));
 
     // a sound, and its voice, for each path whose model has one
-    for (RPathHandle *path = RPathEngine_GetFirstPathHandle(); path != NULL; path = RPathEngine_GetNextPathHandle()) {
+    for (RPathHandle *path = RPathEngine::GetFirstPathHandle(); path != NULL; path = RPathEngine::GetNextPathHandle()) {
         const WorldArticle *article = ArticleOf(path->instance);
         if (article == NULL)
             continue;
@@ -504,7 +494,7 @@ bool WWorld::Open() {
             continue;
         WSound *sound = soundGroup->AddPacked(soundId, model->info->sound);
         soundId++;
-        sound->position = *RPathHandle_GetPosition(path, 0);
+        sound->position = *path->GetPosition();
         sound->pathHandle = path;
         sound->minDistance = 10.0f;
         sound->maxDistance = 100.0f;
@@ -538,13 +528,13 @@ bool WWorld::Open() {
                 instance->flags |= kWorldInstanceSceneObj;
                 if (instance->articleDesc.value != 0) {
                     state->sceneObj = NewSceneObj(instance);
-                    RSceneObj_UseArticle(state->sceneObj, 0, ArticleOf(instance)->model->group, state->article);
+                    state->sceneObj->UseArticle(ArticleOf(instance)->model->group, state->article);
                     MATRIX4 transform = instance->Matrix();
                     transform.mtx[0][3] = 0.0f;
                     transform.mtx[1][3] = 0.0f;
                     transform.mtx[2][3] = 0.0f;
                     transform.mtx[3][3] = 1.0f;
-                    RSceneObj_SetTransform(state->sceneObj, 0, &transform);
+                    state->sceneObj->SetTransform(&transform);
 
                     WorldSceneObject object;
                     memcpy(&object, &transform, sizeof(transform));
@@ -552,7 +542,7 @@ bool WWorld::Open() {
                     object.instanceIndex = i;
                     object.procAnim = state;
                     if (instance->flags & kWorldInstanceTargetable) {
-                        RSceneObj_EnableTarget(state->sceneObj, 0);
+                        state->sceneObj->EnableTarget();
                         object.targetable = 1;
                     } else {
                         object.targetable = 0;
@@ -567,12 +557,12 @@ bool WWorld::Open() {
             if (article == NULL || article->effects == NULL)
                 continue;
             for (ArticleEffect *effect = article->effects; effect->type != ArticleEffect::kTypeEnd; effect++) {
-                if (effect->flags & ArticleEffect::kFlag10) {
+                if (effect->flags & ArticleEffect::kStartsOn) {
                     effect->flags |= ArticleEffect::kFlag01;
-                    if (effect->type == ArticleEffect::kTypeGfx && effect->reference != NULL)
-                        effect->triggered = GFX_Trigger(effect->reference, instance->position, &DefaultVector, effect,
-                                                        effect->unknown20, 0, 0, 0);
-                } else if (effect->type == ArticleEffect::kType2) {
+                    if (effect->type == ArticleEffect::kTypeGfx && effect->gfx.reference != NULL)
+                        effect->gfx.triggered = GFX_Trigger(effect->gfx.reference, instance->position, &DefaultVector,
+                                                            effect, &effect->gfx.rotation, 0, 0, 0);
+                } else if (effect->type == ArticleEffect::kTypeGlare) {
                     effect->flags |= ArticleEffect::kFlag01;
                 }
             }
@@ -585,4 +575,9 @@ bool WWorld::Open() {
     WCollisionMgr::Init(group);
     WGrid::Init(group);
     return group != NULL;
+}
+
+// FUNC_AT(0x0007dae0)
+ArticleLod* WorldArticle::GetLods() {
+    return lods;
 }

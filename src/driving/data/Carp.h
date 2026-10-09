@@ -96,6 +96,8 @@ public:
 
     // Packs the dimensions (0x00118cc0), rounding each up to the step; `separate` false uses x for all three.
     void SetDimensions(bool separate, float x, float y, float z);
+    // Its height: y when the three dimensions were given separately, else twice x (FUN_0008d640); unrounded
+    double SizeY() const;
 };
 static_assert(sizeof(Instance) == 64, "CARP::Instance is 64 bytes");
 
@@ -148,7 +150,8 @@ enum PathChannelFlag : uint32_t {
 
 class PathInfo {
 public:
-    uint8_t unknown00[0xc];
+    float duration;         // the parametric time it runs for (RPathHandle's)
+    uint8_t unknown04[8];
     int rotationChannel;    // -1 for none
     int positionChannel;    // -1 for none
     uint8_t unknown14[0x2c];

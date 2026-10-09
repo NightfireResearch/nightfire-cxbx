@@ -1,14 +1,25 @@
 #include "RGlareManager.hpp"
-#include "RenderState.hpp"
+#include "Materials.h"
+#include "Renderer.h"
+#include "../camera/Camera.h"
+#include "TextureContext.h"
 #include "VectorMaths.hpp"
 #include "../drivinghelpers.h"
+#include "../../common/xbeOverload.h"   // XbeVirtual
+#include "../data/DebugVariables.h"
+#include "../data/Tuning.h"
+#include "../eagl/GeoPrimState.h"
+#include "../eagl/RenderContext.h"
+
+namespace EAGL {
+struct TAR;
+}
 
 #include <math.h>
 
 // The game's tick, which the blink is timed against, and the renderer, whose camera the directional fade
 // looks along. Addresses from AddModelGlare (0x000a9b7d) and GlareBlinkBrightness (0x000a99a1).
 #define GlareTick        U32_AT(0x001f2a4c)
-#define RRendererInstance (*(uint8_t **)0x001ebff4)
 
 // The three maths helpers AddModelGlare calls - a point through a matrix (0x00114e20, a wrapper of
 // VU0_MATRIX4_vect3mult), a direction through its rotation (0x00114e60) and a dot product (0x001089e0) - are ours
@@ -63,7 +74,7 @@ void RGlareManager::AddGlare(Glare *glare, int unused) {
 }
 
 // AUTOINJECT
-void RGlareManager::AddModelGlare(Glare *node, MATRIX4 *transform, float distance) {
+void RGlareManager::AddModelGlare(Glare *node, const MATRIX4 *transform, float distance) {
     if (glareCount >= 128 || !enabled)
         return;
 
@@ -89,8 +100,7 @@ void RGlareManager::AddModelGlare(Glare *node, MATRIX4 *transform, float distanc
         // Brightest seen head-on, gone at ninety degrees: -(facing * intensity) - 0.5, doubled, where facing is
         // the dot product of the camera's forward vector and the glare's direction.
         MATRIX4_RotateVector(transform, &node->direction, &glare->direction);
-        uint8_t *camera = *(uint8_t **)(RRendererInstance + 4);
-        const _VEC3 *forward = (const _VEC3 *)(*(uint8_t **)(camera + 4) + 0x30);
+        const _VEC3 *forward = (const _VEC3 *)fgRenderer->currentView->camera->matrix.mtx[2];
         glare->rangeOrIntensity = (float)-(VEC3_Dot(forward, &glare->direction) * glare->rangeOrIntensity);
         glare->rangeOrIntensity = glare->rangeOrIntensity - 0.5f;
         if (glare->rangeOrIntensity <= 0.0f)
@@ -110,11 +120,10 @@ void RGlareManager::AddModelGlare(Glare *node, MATRIX4 *transform, float distanc
 
 #define GlarePositions   ((float (*)[4])0x00202cb0)
 #define GlareUVs         ((float (*)[2])0x00206cb0)
-#define GlareTexture     (*(uint32_t *)0x00208cb0)     // the "flar" texture, from the constructor
+#define GlareTexture     (*(EAGL::TAR **)0x00208cb0)   // the "flar" texture, from the constructor
 #define GlareColours     ((uint32_t *)0x00208cc0)
-// The glare material. Its depth state is set through the same object, as the GeoPrimState it starts with.
+// The glare material
 #define GlareMaterial    ((UVolatileMaterial *)0x00209cc0)
-#define GlareDepthState  ((GeoPrimState *)0x00209cc0)
 #define GlareDrawParity  (*(int *)0x00209d28)          // flipped by every DrawGlares with glares; never read
 
 // Degrees in a radian, as the float the original multiplies by.
@@ -125,15 +134,6 @@ static const float kDegreesPerRadian = 57.295784f;
 static const float kCornerUV[4][2] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
 static const float kWorldCorner[4][2] = { { 1, -1 }, { 1, 1 }, { -1, 1 }, { -1, -1 } };    // (up, right)
 static const float kScreenCorner[4][2] = { { -1, -1 }, { 1, -1 }, { 1, 1 }, { -1, 1 } };   // (up, right)
-
-// The camera the glares face: its axes at +0x10, +0x20 and +0x30 (the last the one they spin about) and its
-// position at +0x40. RRenderer::fgRenderer->[+4] is the view; the view's +4 is this.
-static uint8_t *GlareView() {
-    return *(uint8_t **)(RRendererInstance + 4);
-}
-static uint8_t *GlareCamera() {
-    return *(uint8_t **)(GlareView() + 4);
-}
 
 // One vertex into the arrays. The original computes each coordinate on the x87, so in extended precision, and
 // rounds once when it stores; double is the nearest C++ has, and with coefficients of +-1 the sums are exact in
@@ -154,23 +154,25 @@ static void EmitGlareVertex(int *count, int corner, double x, double y, double z
 // AUTOINJECT
 void __stdcall AddGlareToRender(int *count, const Glare *glare, const GlareSprite *sprite, float size,
                                 uint32_t colour, float distance, float zBias) {
-    const uint8_t *camera = GlareCamera();
-    const float *spinAxis = (const float *)(camera + 0x30);
+    // The view's camera: its frame's rows 0 to 2 its axes (the last the one the sprite spins about), row 3 its
+    // position
+    const RCamera *camera = fgRenderer->currentView->camera;
+    const float *spinAxis = camera->matrix.mtx[2];
 
     // The camera's two screen axes, spun about its view axis and scaled to the sprite's size.
     alignas(16) MATRIX4 spin;
     BuildRotate(&spin, (float)((double)distance * sprite->spin * kDegreesPerRadian), spinAxis[0], spinAxis[1],
                 spinAxis[2]);
     Vec4 up, right;
-    VU0_MATRIX4_vect3mult(camera + 0x20, &spin, &up);
-    VU0_MATRIX4_vect3mult(camera + 0x10, &spin, &right);
+    VU0_MATRIX4_vect3mult(camera->matrix.mtx[1], &spin, &up);
+    VU0_MATRIX4_vect3mult(camera->matrix.mtx[0], &spin, &right);
     VU0_v4scale(&up, size, &up);
     VU0_v4scale(&right, size, &right);
 
     // The centre, moved size * zBias towards the camera.
     Vec4 centre = { glare->position.x, glare->position.y, glare->position.z, 0.0f };
     Vec4 away;
-    VU0_v4sub(&centre, camera + 0x40, &away);
+    VU0_v4sub(&centre, camera->matrix.mtx[3], &away);
     VU0_v4unitxyz(&away, &away);
     VU0_v4scaleadd(&away, (float)-((double)size * zBias), &centre, &centre);
 
@@ -228,15 +230,15 @@ void RGlareManager::DrawGlares(bool inWorld) {
     if (glareCount == 0)
         return;
 
-    const uint8_t *view = GlareView();
-    const uint8_t *camera = GlareCamera();
+    const RViewCamera *view = fgRenderer->currentView;
+    const RCamera *camera = view->camera;
     farDepth = -1e8f;
-    screenScale = (float)(66.0 / ((double)*(const float *)(camera + 0xb4) * *(const float *)(view + 0x48)));
+    screenScale = (float)(66.0 / ((double)camera->fieldOfView * view->guardBandSize));
 
     int vertices = 0;
     for (int i = 0; i < glareCount; i++) {
         const Glare *glare = &glares[i];
-        float distance = vec3distance(glare, camera + 0x40);
+        float distance = vec3distance(glare, camera->matrix.mtx[3]);
         const GlareType *type = &types[glare->type];
         const GlareSprite *sprites[2] = { &type->halo, &type->spike };
         const uint32_t colours[2] = { type->haloColour, type->spikeColour };
@@ -255,21 +257,108 @@ void RGlareManager::DrawGlares(bool inWorld) {
     }
 
     if (vertices > 0) {
-        (*(RenderContext **)(RRendererInstance + 0x64))->SetZWritesEnable(0);
+        fgRenderer->renderContext->SetZWritesEnable(0);
         if (!inWorld)
-            GlareDepthState->SetDepthTestMethod(0x207);   // GL_ALWAYS
+            GlareMaterial->SetDepthTestMethod(0x207);   // GL_ALWAYS
 
-        uint8_t *request = VolatileRequests[VolatileRequestIndex];
-        *(uint32_t **)(request + 0x30) = GlareColours;
-        *(float (**)[4])(request + 0x28) = GlarePositions;
-        *(float (**)[2])(request + 0x38) = GlareUVs;
-        *(uint32_t *)(request + 0x10) = GlareTexture;
-        GlareMaterial->Draw(8, vertices, nullptr);
+        TexturedGeoPrim *request = VolatileRequests[VolatileRequestIndex];
+        request->colours.SetData(GlareColours);
+        request->positions.SetData(GlarePositions);
+        request->texCoords.SetData(GlareUVs);
+        request->texture.SetData(GlareTexture);
+        GlareMaterial->Draw(kQuadList, vertices, nullptr);
 
         if (!inWorld)
-            GlareDepthState->SetDepthTestMethod(0x201);   // GL_LESS
-        (*(RenderContext **)(RRendererInstance + 0x64))->SetZWritesEnable(1);
+            GlareMaterial->SetDepthTestMethod(0x201);   // GL_LESS
+        fgRenderer->renderContext->SetZWritesEnable(1);
         glareCount = 0;
     }
     GlareDrawParity = 1 - GlareDrawParity;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Construction, the singleton's slots and the texture coordinates.
+// ---------------------------------------------------------------------------------------------------------------
+
+#define GlareID U32_AT(0x00209d24)                          // "Glare ID"
+#define HaloColourUnused ((uint8_t *)0x00209d21)            // dbattrib_argb's unused flag bytes
+#define SpikeColourUnused ((uint8_t *)0x00209d20)
+#define TuningLevel ((const char *)0x00244084)              // the level the tuning databases are read for
+
+static void *const kGlareManagerVtable = (void *)0x001931e0;
+constexpr uint32_t kGlareTexture = 0x72616c66;      // 'flar'
+constexpr int kGlareTypes = 80;
+constexpr int kQuads = 8;
+constexpr float kDefaultZBias = 2.0f;
+constexpr float kLowZBias = 0.3f;
+static const int kLowZBiasTypes[3] = { 33, 34, 52 };
+
+// FUNC_AT(0x000a9870)
+void RGlareManager::CreateUVsFromTexIDs() {
+    for (int i = 0; i < kGlareTypes; i++) {
+        GlareType *type = &types[i];
+        GlareSprite *sprites[2] = { &type->halo, &type->spike };
+        const uint32_t textures[2] = { type->haloTexture, type->spikeTexture };
+        for (int layer = 0; layer < 2; layer++) {
+            GlareSprite *sprite = sprites[layer];
+            uint32_t id = textures[layer];
+            if (id < 2) {
+                sprite->v = 0.0f;
+                sprite->uvSize = 0.5f;
+                sprite->u = (float)(id & 1) * 0.5f;
+            } else {
+                id -= 2;
+                sprite->u = (float)(id & 3) * 0.25f;
+                sprite->uvSize = 0.25f;
+                sprite->v = (float)((id >> 2 & 3) * 0.25 + 0.5);
+            }
+        }
+    }
+}
+
+// FUNC_AT(0x000a9c70)
+RGlareManager* RGlareManager::Construct() {
+    vtable = kGlareManagerVtable;
+    glareCount = 0;
+    enabled = true;
+    GlareTexture = RTextureContextManager::GetContext(0)->FindOrCreateTexture(kGlareTexture, 0);
+    GlareMaterial->SetPrimitiveType(kQuads);
+    GlareMaterial->SetTextureEnable(true);
+    GlareMaterial->SetShading(1);
+    GlareMaterial->SetTransparencyMethod(1);
+    GlareMaterial->SetAlphaBlendMode(2);
+    for (int i = 0; i < kGlareTypes; i++)
+        types[i].zBias = kDefaultZBias;
+    for (int type : kLowZBiasTypes)
+        types[type].zBias = kLowZBias;
+
+    TuningDBMgr->LoadDatabase("Render:Glare", TuningLevel, 0, false);
+    dbindex("Glare ID", &GlareID, 0, kGlareTypes - 1, NULL);
+    dbattrib_u8("Halo Tex", &types[0].haloTexture, 0, 9, sizeof(GlareType), -1.0f, NULL);
+    dbattrib_float("Halo Spin", &types[0].halo.spin, 0.0f, 0.25f, sizeof(GlareType), 1.0f, NULL);
+    dbattrib_argb("Halo Col", &types[0].haloColour, HaloColourUnused, sizeof(GlareType));
+    dbattrib_float("Halo Size", &types[0].haloSize, 0.0f, 10.0f, sizeof(GlareType), 1.0f, NULL);
+    dbattrib_u8("Spike Tex", &types[0].spikeTexture, 0, 9, sizeof(GlareType), -1.0f, NULL);
+    dbattrib_float("Spike Spin", &types[0].spike.spin, 0.0f, 0.25f, sizeof(GlareType), 1.0f, NULL);
+    dbattrib_argb("Spike Col", &types[0].spikeColour, SpikeColourUnused, sizeof(GlareType));
+    dbattrib_float("Spike Size", &types[0].spikeSize, 0.0f, 10.0f, sizeof(GlareType), 1.0f, NULL);
+    dbattrib_float("Z Bias", &types[0].zBias, 0.0f, 4.0f, sizeof(GlareType), 1.0f, NULL);
+    dbendindex();
+    TuningDBMgr->CloseCurrent();
+    CreateUVsFromTexIDs();
+    return this;
+}
+
+// FUNC_AT(0x000a9eb0)
+void RGlareManager::Kill() {
+    RGlareManager *glareManager = TheGlareManager;
+    if (glareManager != NULL) {
+        typedef RGlareManager *(RGlareManager::*DeletingDestructor)(unsigned flags);
+        (glareManager->*XbeVirtual<DeletingDestructor>(glareManager, 0))(1);
+    }
+}
+
+// FUNC_AT(0x000a9ed0)
+void RGlareManager::Reset() {
+    glareCount = 0;
 }

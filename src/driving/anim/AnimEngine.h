@@ -125,7 +125,7 @@ struct Handle {
     uint8_t stateCount;                  // +0x1d
     uint8_t systemCount;                 // +0x1e
     uint8_t effectCount;                 // +0x1f
-    uint64_t unknown20;                  // +0x20 0
+    uint64_t effectsOn;                  // +0x20 the effects switched on, by index (0 at first)
     uint64_t effectMask28;               // +0x28 the effects with ArticleEffect::kFlag08, by index
     uint64_t effectMask30;               // +0x30 ... of type kType6
     uint64_t effectMask38;               // +0x38 ... with any of kMask38Flags
@@ -147,6 +147,10 @@ struct Handle {
     static void OperatorDelete(Handle *handle, uint32_t size);                                  // 0x00076810
 
     void SetEffectBits(uint32_t index, uint16_t bits);                                          // 0x00076830
+    void SetEffectOn(uint32_t index);                                                           // 0x0008d610
+    // Getters the linker folded with other classes' (FUN_0001aa90, FUN_0001aaa0)
+    uint32_t GetInstanceCount();                                                                // 0x0001aa90
+    CARP::Instance* GetInstances();                                                             // 0x0001aaa0
     ArticleEffect* FindEffectByID(uint32_t id);    // NULL if none                                  // 0x00076850
     void InitAllSystemStates(uint8_t state);                                                    // 0x00076890
     bool AnySystemPlaying();                                                                    // 0x000768c0

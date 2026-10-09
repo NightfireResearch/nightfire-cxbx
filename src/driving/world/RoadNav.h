@@ -69,9 +69,9 @@ public:
     uint8_t unknownB2;          // +0xb2
     uint8_t unknownB3[0x0d];
 
-    WRoadNav* Construct();                                                          // 0x000ca090
-    void Destruct();                                                                // 0x000ca100
-    void Reset();                                                                   // 0x000c9130
+    WRoadNav* Construct();                                                                          // 0x000ca090
+    void Destruct();                                                                                // 0x000ca100
+    void Reset();                                                                                   // 0x000c9130
 
     // Placing it: at the segment nearest a point, facing along a heading (segment -1 when there is none; with
     // noLane the lane offset stays 0)                                                0x000cc100
@@ -94,7 +94,7 @@ public:
     void ChangeLanes(float offset, float distance);
     // Advances a lane change by a distance; false when none is under way             0x000c99f0
     bool UpdateLaneChange(float step);
-    void ReverseNavDirection();                                                     // 0x000c95a0
+    void ReverseNavDirection();                                                                     // 0x000c95a0
 
     // The segment shares a road or both intersections with the navigator's           0x000c97b0
     bool PathShareRoadSegment(short other);
@@ -109,6 +109,9 @@ public:
     short CalcNextSegmentDirection(Coord3 *heading, short *target, uint8_t *ahead, bool *unused);   // 0x000ca120
     short CalcNextSegmentLane(float *offset, uint8_t *ahead, bool *changed);                        // 0x000ca530
     short CalcNextSegmentSidewalk(float *offset, uint8_t *ahead, bool *changed);                    // 0x000cad40
+    // The lanes of its segment, left and right (FUN_00080a30; the name is ours, and the linker placed it among the
+    // renderer's code)
+    int SegmentLaneCount();                                                                         // 0x00080a30
 };
 static_assert(sizeof(WRoadNav) == 0xc0, "WRoadNav is 0xc0 bytes");
 static_assert(offsetof(WRoadNav, segment) == 0x3e && offsetof(WRoadNav, boundStart) == 0x50 &&

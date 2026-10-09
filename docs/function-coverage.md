@@ -1,7 +1,7 @@
 # Function coverage by subsystem
 
 How much of each engine's code is ours, where the rest sits, and how much of it never needs reimplementing. The
-action engine's numbers are from 7 October 2026, the [driving engine's](#the-driving-engine) further down from 9 October;
+action engine's numbers are from 7 October 2026, the [driving engine's](#the-driving-engine) further down from 10 October;
 `tools/function_coverage.py` regenerates them.
 
 ```
@@ -198,28 +198,28 @@ funclets at 0x150000 are named after the function they belong to and go with it.
 W world); where a class could sit in either of two tiers the choice is a judgement, and the rules in the file are
 where to change it.
 
-### By subsystem (9 October 2026)
+### By subsystem (10 October 2026)
 
 | Subsystem | Functions | Replaced | Dead | Live | Done | KB | Done (bytes) |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| **game** | 2852 | 3 | 77 | 2772 | **3%** | 474 | 0% |
+| **game** | 2852 | 6 | 85 | 2761 | **3%** | 474 | 1% |
 | game.ai | 522 | 0 | 29 | 493 | 6% | 109 | 1% |
 | game.audio | 366 | 1 | 0 | 365 | 0% | 51 | 0% |
-| game.effects | 195 | 1 | 0 | 194 | 1% | 36 | 0% |
+| game.effects | 195 | 4 | 8 | 183 | 6% | 36 | 2% |
 | game.events | 793 | 0 | 3 | 790 | 0% | 72 | 0% |
 | game.frontend | 332 | 1 | 39 | 292 | 12% | 69 | 2% |
 | game.missions | 273 | 0 | 0 | 273 | 0% | 33 | 0% |
 | game.vehicles | 193 | 0 | 0 | 193 | 0% | 62 | 0% |
 | game.weapons | 178 | 0 | 6 | 172 | 3% | 43 | 0% |
-| **engine** | 3990 | 1896 | 1216 | 878 | **78%** | 526 | 78% |
+| **engine** | 3990 | 2442 | 1390 | 158 | **96%** | 526 | 98% |
 | engine.anim | 415 | 332 | 72 | 11 | 97% | 54 | 100% |
 | engine.audio | 270 | 203 | 54 | 13 | 95% | 35 | 100% |
-| engine.camera | 273 | 224 | 39 | 10 | 96% | 60 | 99% |
+| engine.camera | 273 | 224 | 41 | 8 | 97% | 60 | 99% |
 | engine.core | 213 | 155 | 56 | 2 | 99% | 25 | 100% |
-| engine.data | 554 | 454 | 78 | 22 | 96% | 79 | 100% |
+| engine.data | 554 | 454 | 80 | 20 | 96% | 79 | 100% |
 | engine.input | 107 | 42 | 16 | 49 | 54% | 12 | 47% |
 | engine.physics | 156 | 117 | 29 | 10 | 94% | 33 | 100% |
-| engine.render | 760 | 9 | 4 | 747 | 2% | 114 | 3% |
+| engine.render | 760 | 555 | 174 | 31 | 96% | 114 | 100% |
 | engine.static | 798 | 22 | 776 | 0 | 100% | 26 | 100% |
 | engine.world | 444 | 338 | 92 | 14 | 97% | 89 | 100% |
 | **platform** | 1453 | 1254 | 199 | 0 | **100%** | 262 | 100% |
@@ -230,16 +230,16 @@ where to change it.
 | platform.movie | 72 | 0 | 72 | 0 | 100% | 15 | 100% |
 | platform.sound | 299 | 299 | 0 | 0 | 100% | 64 | 100% |
 | platform.system | 88 | 60 | 28 | 0 | 100% | 9 | 100% |
-| **sys** | 1440 | 273 | 820 | 347 | **76%** | 244 | 85% |
-| sys.crt | 420 | 4 | 69 | 347 | 17% | 44 | 17% |
+| **sys** | 1440 | 273 | 821 | 346 | **76%** | 244 | 85% |
+| sys.crt | 420 | 4 | 70 | 346 | 18% | 44 | 17% |
 | sys.d3d | 427 | 151 | 276 | 0 | 100% | 120 | 100% |
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6842 | 1899 | 1293 | 3650 | **47%** | 1000 | 41% |
-| **platform + system** | 2893 | 1527 | 1019 | 347 | **88%** | 506 | 93% |
+| **game + engine** | 6842 | 2448 | 1475 | 2919 | **57%** | 1000 | 52% |
+| **platform + system** | 2893 | 1527 | 1020 | 346 | **88%** | 506 | 93% |
 | **  without the C runtime** | 2473 | 1523 | 950 | 0 | **100%** | 462 | 100% |
-| **everything** | 9735 | 3426 | 2312 | 3997 | **59%** | 1506 | 58% |
+| **everything** | 9735 | 3975 | 2495 | 3265 | **66%** | 1506 | 66% |
 
 - **The engine's core and data layers are done (4 October 2026): `engine.core` and `engine.data`, 100% by bytes**
   (docs/driving/core-data.md): memory (UMemory, new/delete), reference counters, data groups, singletons, the
@@ -277,6 +277,13 @@ where to change it.
   weapons, and RAnimEngine with the proc-anim functions - 341 functions; `engine.anim` is 100% ours by bytes. Six
   shadow tests match the originals, and lockstep missions 1-8 match the baseline in frames and sound traces. Game and
   engine together are now 47% done by functions, 41% by bytes.
+- **Rendering is done (10 October 2026, docs/driving/render.md):** the renderer core and its instance draws, the
+  materials, fog, lights, the path engine, render states and texture contexts, scene objects and culling, the
+  high-level renderer, and the effects - reflections, colouring, decals, gain, lens flares, glare, lightning, the
+  glow, shadow maps, sky, water, broken windows and particles - about 560 functions; `engine.render` is 100% ours by
+  bytes. Seven shadow tests match the originals on missions 1, 4 and 6, and lockstep missions 1-8 match the baseline
+  pixel for pixel. The engine tier is now 98% ours by bytes, all but input. Game and engine together are now 57%
+  done by functions, 52% by bytes.
 - **Every system library but the C runtime is done: D3D (with D3DX and XGRPH), DSOUND, XPP and XAPI at 100%.**
   The C runtime (347 live, 17%) is left to go by itself, as in the action engine: game code calls it everywhere, and
   it goes as that code becomes ours. How the rest got there (2 October 2026):
@@ -326,9 +333,9 @@ where to change it.
     side, is counted with the sound library; EA's packer (`src/driving/platform/RefPack.cpp`, checked against the
     original on every packed file in the archives) with the files. `XGetAVPack`/`XGetVideoFlags`, which sat among
     the file code, are counted with XAPI (ported in `XboxXapi.cpp`).
-- **Of the 1,000 KB of game and engine code, about 590 KB is still original:** the whole game tier (474 KB) and
-  rendering (110 KB); what else is left is input (6 KB) and exception funclets filed in finished subsystems. The
-  game tier by size: AI 109 KB, mission events 72 KB, front end and HUD 68 KB, vehicles 62 KB, gameplay audio 51 KB,
+- **Of the 1,000 KB of game and engine code, about 480 KB is still original:** essentially the whole game tier
+  (474 KB) and input (6 KB); what else is left is exception funclets filed in finished subsystems. The game tier by
+  size: AI 109 KB, mission events 72 KB, front end and HUD 68 KB, vehicles 62 KB, gameplay audio 51 KB,
   weapons 43 KB, effects 36 KB, missions 33 KB.
 - **The static initialisers are done: `engine.static`, 798 functions, 100%.** The C++ initialiser table
   (0x001b3db0) is no longer walked: `RunStaticInitialisers` (`src/driving/engine/StaticInitTable.cpp`, generated
@@ -350,6 +357,6 @@ functions no rule matches (now almost only exception funclets named after a meth
 places correctly). Sizes are bytes to the next function, so a function followed by code Ghidra never disassembled
 looks larger than it is (`EFireWeapon::~EFireWeapon` at 6.8 KB is one).
 
-The largest live functions above the platform: `GHud::DrawPauseMenu`, `RCameraIniLoader::LoadFile`, `GHud::GHud`,
-`PVehicle::InitializeGlobals`, `PBondCar::ApplyDamage`, `GHud::DrawCrossHairs`, `PBondCar::ProcessPhysics`,
-`AIHelicopter::DoAgentLogic` and `RPlayerCamera::UpdateAutoDriveCam`, each 5-7 KB.
+The largest live functions above the platform, all in the game tier: `GHud::DrawPauseMenu`, `GHud::GHud`,
+`PVehicle::InitializeGlobals`, `PBondCar::ApplyDamage`, `GHud::DrawCrossHairs`, `PBondCar::ProcessPhysics` and
+`AIHelicopter::DoAgentLogic`, each 5-7 KB.

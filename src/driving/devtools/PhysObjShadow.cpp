@@ -4,6 +4,7 @@
 #include "PhysObjShadow.h"
 #include "FpControl.h"
 
+#include "../../common/xbeOverload.h"
 #include "../data/AttributeSystem.h"
 #include "../engine/UMemory.hpp"
 #include "../physics/PhysicsNamespace.h"
@@ -284,6 +285,8 @@ void HooksRemove() {
 struct Fakes {
     Fakes() {
         HookInstall(0x0008f580, (const void *)&FakeSetPhysics);
+        // ours, which PhysicsObject::SetRenderObject calls directly
+        HookInstall(uint32_t(XbeAddress(&RSceneObj::SetPhysics)), (const void *)&FakeSetPhysics);
         HookInstall(0x00077be0, (const void *)&FakeHandleStop);
         HookInstall(0x00077e00, (const void *)&FakeProcessStimuli);
         HookInstall(0x0004fb10, (const void *)&FakeFeedbackDestruct);

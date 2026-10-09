@@ -200,7 +200,7 @@ __declspec(naked) void __stdcall PerspectivePlanes(ViewPort *view, float fov, fl
 // The rectangle (x, y, width, height, truncated), clamped to the context's size, becomes the D3D viewport. When
 // the clamped rectangle is not the one asked for, the projection is scaled and offset so the picture is the
 // asked-for rectangle's, cut, and the guard-band factors say how far each edge moved; otherwise those are 1 and 0.
-// Ghidra: unnamed (the overlay calls it SetRect).
+// Ghidra: unnamed.
 // FUNC_AT(0x000e4340)
 void EAGL::ViewPort::SetShape(float x, float y, float width, float height, float minZ, float maxZ) {
     shape[0] = Ftol(x);

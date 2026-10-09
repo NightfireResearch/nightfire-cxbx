@@ -108,7 +108,7 @@ struct WTargetable {
     // The owner's velocity: false if the target cannot tell (a fixed point's, or an absent vehicle's, is zero).
     bool GetVelocity(Coord3 *velocity);                                         // 0x000cd740
 
-    // The squared distance from the camera (CameraViews[camera]), answered as the x87 left it.
+    // The squared distance from the camera (fgRenderHigh->views[camera]), answered as the x87 left it.
     float DistFromCamera(int camera);                                           // 0x000cd840
     // The squared distances on screen from a point and from the screen's centre.
     double DistFromScreenPos(const ScreenPos *point);                           // 0x000cd890

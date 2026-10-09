@@ -152,35 +152,10 @@ static_assert(sizeof(ActCharacter) == 0x84, "an ActCharacter is 0x84 bytes");
 
 // ---- helpers the linker placed among the character's code (names ours)
 
-// RSceneObj::brightness from a level clamped to 0..1. Provisional home: RSceneObj (render/RSceneObj.hpp).
-class RSceneObjBrightness : public RSceneObj {
-public:
-    void SetBrightness(float level);                                            // 0x000143e0
-};
-
 // A Coord4, returned by value
 Coord4* MakeCoord4(Coord4 *result, float x, float y, float z, float w);         // 0x00014440
 
 // std::min<float>
 const float* MinFloat(const float *a, const float *b);                          // 0x00014880
-
-// EAGL::LightBlock (0x70, "EAGL::LightBlock new"): four lights' directions as rows of x, y and z, and their colours
-struct LightBlock {
-    float directions[3][4];             // +0x00
-    Coord4 colours[4];                  // +0x30
-
-    // The directions' x, y and z only; the colour comes back as (w, x, y, z)
-    void GetLight(int light, Coord4 *direction, Coord4 *colour);                // 0x000148a0
-    void SetLight(int light, const Coord4 *direction, const Coord4 *colour);    // 0x000148f0
-};
-static_assert(sizeof(LightBlock) == 0x70, "a LightBlock is 0x70 bytes");
-
-// The lighting manager (RLightManager) as the characters and ActManager use it
-struct LightingView {
-    uint8_t unknown000[0xec];
-    LightBlock lights;                  // +0xec the scene's lights
-};
-
-#define Lighting (*(LightingView **)0x001ec260)
 
 #endif // DRIVING_ANIM_CHARACTER_H_

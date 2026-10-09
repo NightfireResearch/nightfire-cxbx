@@ -5,13 +5,14 @@
 #include "FpControl.h"
 
 #include "../camera/Camera.h"
-#include "../camera/PlayerCamera.h"       // CameraViews
+#include "../camera/PlayerCamera.h"
 #include "../camera/WorldCamera.h"
 #include "../eagl/View.h"
 #include "../engine/CoreContainers.h"
 #include "../physics/PhysicsObject.h"
 #include "../../common/xbeOriginal.h"
 #include "../../helpers.h"
+#include "../render/RenderHigh.h"
 
 #include <windows.h>
 #include <float.h>
@@ -785,14 +786,14 @@ void ViewCamShadow_Run(void) {
     DWORD length = GetEnvironmentVariableA("NIGHTFIRE_VIEWCAMSHADOW", value, sizeof(value));
     if (length == 0 || length >= sizeof(value) || atoi(value) == 0)
         return;
-    if (CameraViews == NULL || CameraViews[0].view == NULL || CameraViews[0].camera == NULL ||
-        ShadowRendererFields == NULL || CameraViews[0].view->viewPort == NULL) {
+    if (fgRenderHigh == NULL || fgRenderHigh->views[0].view == NULL || fgRenderHigh->views[0].camera == NULL ||
+        ShadowRendererFields == NULL || fgRenderHigh->views[0].view->viewPort == NULL) {
         printf("[viewcam] no camera view yet - skipped\n");
         fflush(stdout);
         return;
     }
-    g_liveView = CameraViews[0].view;
-    g_liveCamera = CameraViews[0].camera;
+    g_liveView = fgRenderHigh->views[0].view;
+    g_liveCamera = fgRenderHigh->views[0].camera;
     FpControlGet(&g_x87, &g_sse);
     TakeGlobals(&g_live);
     TestCameraAndView();

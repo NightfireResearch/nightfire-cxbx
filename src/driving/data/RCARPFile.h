@@ -42,6 +42,8 @@ struct RCARPFile {
     void Resolve(const char *directory, UCarpNamespace *carp);
     // The destructor (0x0007bff0): the texture contexts killed, the loader destroyed, the data freed.
     void Destruct();
+    // The root group (FUN_0001aa80, folded with other classes' getters)
+    UGroup* GetRoot();
 
     // Loads the shared EAGL material objects (eaglrm.o, bondrm.o) at start-up and leaves them loaded (0x0007bc90,
     // and the linker's thunk to it at 0x0008baa0).
