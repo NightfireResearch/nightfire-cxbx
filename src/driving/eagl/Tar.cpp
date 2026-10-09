@@ -224,19 +224,19 @@ uint32_t EAGL_TextureFormatFromShape(const uint8_t *shape) {
     uint32_t type = image->type - 0x60;
     uint32_t format = 0;
     if (type <= 0x1e) {
-        bool linear = (image->flags & EAGL::kShapeLinear) != 0;
+        bool swizzled = (image->flags & EAGL::kShapeSwizzled) != 0;
         switch (type) {
             case 0x00: format = 0xc; break;
             case 0x01: format = 0xe; break;
             case 0x02: format = 0xf; break;
-            case 0x04: format = linear ? 0x19 : 0x1f; break;
-            case 0x05: format = linear ? 0x1a : 0x20; break;
+            case 0x04: format = swizzled ? 0x19 : 0x1f; break;
+            case 0x05: format = swizzled ? 0x1a : 0x20; break;
             case 0x08: format = 0x24; break;
-            case 0x0d: format = linear ? 0x04 : 0x1d; break;
-            case 0x18: format = linear ? 0x05 : 0x11; break;
+            case 0x0d: format = swizzled ? 0x04 : 0x1d; break;
+            case 0x18: format = swizzled ? 0x05 : 0x11; break;
             case 0x1b: format = 0xb; break;
-            case 0x1d: format = linear ? 0x06 : 0x12; break;
-            case 0x1e: format = linear ? 0x02 : 0x10; break;
+            case 0x1d: format = swizzled ? 0x06 : 0x12; break;
+            case 0x1e: format = swizzled ? 0x02 : 0x10; break;
             default: format = 0; break;
         }
     }
@@ -621,8 +621,8 @@ uint32_t EAGL::TAR::Commit() {
     if (SHAPE_infoflags(data->shape) & 2)
         filter = 1;
     d = data;
-    if (!d->linear && d->format != kDxt1 && d->format != kDxt3 && d->format != kDxt5) {
-        address0 = kAddressClamp;   // swizzled, not compressed: clamp
+    if (!d->swizzled && d->format != kDxt1 && d->format != kDxt3 && d->format != kDxt5) {
+        address0 = kAddressClamp;   // linear, not compressed: clamp
         addressU = kAddressClamp;
         addressV = kAddressClamp;
         addressW = kAddressClamp;
@@ -677,7 +677,7 @@ void EAGL::TAR::Create(uint8_t *shape) {
     data->width = image->width;
     data->height = image->height;
     data->mipLevels = (image->flags >> 28) + 1;
-    data->linear = (image->flags & kShapeLinear) != 0;
+    data->swizzled = (image->flags & kShapeSwizzled) != 0;
     data->depth = SHAPE_depth(shape);
     data->format = EAGL_TextureFormatFromShape(shape);
     FindAndLoadClut(this, shape);
@@ -812,7 +812,7 @@ TAR* EAGL_TARFromSurface(D3DPixelContainer *surface) {
     t->data->height = desc.height;
     t->data->format = desc.format;
     t->data->mipLevels = 0;
-    t->data->linear = 0;
+    t->data->swizzled = 0;
     t->data->depth = 0;
     t->addressU = kAddressClamp;
     t->addressV = kAddressClamp;
@@ -838,7 +838,7 @@ static uint8_t *SurfaceShape(TARSharedData *d, int32_t width, int32_t height, in
     return s;
 }
 
-// A render-target texture (depth 16 or 32; mode 1 linear, 0 swizzled and clamped), with a SHAPE header of its own.
+// A render-target texture (depth 16 or 32; mode 1 swizzled, 0 linear and clamped), with a SHAPE header of its own.
 // FUNC_AT(0x000ec6e0)
 TAR* EAGL_TARRenderTarget(int32_t width, int32_t height, int32_t depth, int32_t mode) {
     TAR *t = (TAR *)EaglMalloc(sizeof(TAR), NameTARNew);
@@ -849,10 +849,10 @@ TAR* EAGL_TARRenderTarget(int32_t width, int32_t height, int32_t depth, int32_t 
     t->data->width = width;
     t->data->height = height;
     t->data->mipLevels = 1;
-    t->data->linear = 1;
+    t->data->swizzled = 1;
     t->data->depth = depth;
     if (mode == 0) {
-        t->data->linear = 0;
+        t->data->swizzled = 0;
         t->address0 = kAddressClamp;
         t->addressU = kAddressClamp;
         t->addressV = kAddressClamp;
@@ -881,7 +881,7 @@ TAR* EAGL_TARDepthSurface(int32_t width, int32_t height, int32_t depth) {
     t->data->width = width;
     t->data->height = height;
     t->data->mipLevels = 1;
-    t->data->linear = 0;
+    t->data->swizzled = 0;
     t->data->depth = depth;
     t->address0 = kAddressClamp;
     t->addressU = kAddressClamp;

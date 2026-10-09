@@ -181,7 +181,7 @@ void FONTEAGL_createfont(FNTXFont *font) {
     font->texOffsetU = 0.0f;
     font->texOffsetV = 0.0f;
     const EAGL::ShapeImage *image = (const EAGL::ShapeImage *)shape;
-    if ((image->flags & EAGL::kShapeLinear) == 0) {
+    if ((image->flags & EAGL::kShapeSwizzled) == 0) {
         font->texScaleU = 1.0f;
         font->texScaleV = 1.0f;
     } else {

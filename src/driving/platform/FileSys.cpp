@@ -1077,8 +1077,6 @@ int FILESYS_completeop(unsigned handle) {
         } else {
             if (big->slot != 0)
                 FILEDEV_close(big->slot);
-            if (big->dir != NULL)
-                pFILE_mfree(big->dir);
             pFILE_mfree(big);
         }
         break;

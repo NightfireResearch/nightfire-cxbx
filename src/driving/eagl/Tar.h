@@ -26,14 +26,14 @@ struct ShapeImage {                  // 0x14
     int16_t width;                   // +0x04
     int16_t height;                  // +0x06
     uint32_t unknown08;              // +0x08
-    uint32_t flags;                  // +0x0c 0x1000 data at dataOffset, 0x2000 linear, bits 28..31 mip levels - 1
+    uint32_t flags;                  // +0x0c 0x1000 data at dataOffset, 0x2000 swizzled, bits 28..31 mip levels - 1
     int32_t dataOffset;              // +0x10 from the image, when flag 0x1000 is set; else the pixels start here
 };
 static_assert(sizeof(ShapeImage) == 0x14, "a SHAPE image header is 0x14 bytes");
 
 enum ShapeImageFlag : uint32_t {
     kShapeDataAtOffset = 0x1000,
-    kShapeLinear = 0x2000,
+    kShapeSwizzled = 0x2000,
 };
 
 // The atlas list LoadAtlas works through (TAR +0x44): records from +4, ended by one without an image.
@@ -62,7 +62,7 @@ struct TARSharedData {               // 0x34
     uint32_t unknownBits14 : 8;      //       bits 14..21
     uint32_t initialised : 1;        //       bit 22, set by Init
     uint32_t allocated : 1;          //       bit 23, allocated by EAGL (freed with it)
-    uint32_t linear : 1;             //       bit 24, the SHAPE's 0x2000 flag (linear: keep the address modes)
+    uint32_t swizzled : 1;           //       bit 24, the SHAPE's 0x2000 flag (swizzled: keep the address modes)
     uint32_t unknownBits25 : 7;      //       bits 25..31
     uint32_t format;                 // +0x14 D3DFORMAT
     TARAtlas *atlas;                 // +0x18 the atlas list LoadAtlas copied from the TAR
