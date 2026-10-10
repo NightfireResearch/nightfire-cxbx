@@ -6,9 +6,10 @@
 //
 // Covered: MP_HitBy, MP_GetTarget, MP_playerIsDead, MP_ResetBotPickupTimes, MP_GetRadarObjects at their
 // original addresses (the callers still the game's reach them there), and MP_Pickup_Process with
-// MP_CheckForEndCondition through MP_Update, which is ours and calls ours directly: MP_Update is compared whole
-// while EndGameFlowState is 0, the state in which it calls nothing else that can't be run twice. A call during
-// which the hundredths clock moves is not compared. Not covered: MP_Start (creates objects and sprites) and
+// MP_CheckForEndCondition through MP_Update, which Game_Run (ours) calls directly: once a frame, from the devtools
+// tick before it, MP_Update is run as the original and as ours from the same state, compared, and the state put
+// back, while EndGameFlowState is 0 (the state in which it calls nothing else that can't be run twice). A run
+// during which the hundredths clock moves is not compared. Not covered: MP_Start (creates objects and sprites) and
 // MP_assassinReset (plays a sound).
 
 #include "MPMatchShadow.h"
@@ -302,11 +303,11 @@ static ushort __cdecl ShadowGetRadarObjects(obj_tag *viewer, MP_RADAR_OBJECT **o
     return ours;
 }
 
-static void __cdecl ShadowUpdate(void) {
-    if (MPGame.EndGameFlowState != 0) {
-        MP_Update();
+static bool g_on;
+
+void MPMatchShadow_Tick(void) {
+    if (!g_on || !MPSettings.isMultiplayer || MPGame.EndGameFlowState != 0)
         return;
-    }
 
     State s;
     Collect(&s);
@@ -321,12 +322,10 @@ static void __cdecl ShadowUpdate(void) {
     MP_Update();
     uint32_t clockAfter = (uint32_t)psiGetTimeIn100ths();
 
-    if (clockBefore != clockAfter) {
+    if (clockBefore != clockAfter)
         g_update.skipped++;
-        Finish(g_update, false);
-        return;
-    }
-    Finish(g_update, Compare(g_update, &s, &g_original));
+    Finish(g_update, clockBefore == clockAfter && Compare(g_update, &s, &g_original));
+    Load(&s, &g_before);   // a dry run: the frame's own MP_Update comes after
 }
 
 void MPMatchShadow_Install(void) {
@@ -334,12 +333,12 @@ void MPMatchShadow_Install(void) {
     GetPrivateProfileStringA("Settings", "MPMatchShadow", "", v, sizeof(v), ".\\settings.ini");
     if (_stricmp(v, "on") != 0 && strcmp(v, "1") != 0)
         return;
+    g_on = true;
     bool ok = XbeOriginal_Redirect(kHitBy, (const void *)&ShadowHitByEntry);
     ok &= XbeOriginal_Redirect(kGetTarget, (const void *)&ShadowGetTarget);
     ok &= XbeOriginal_Redirect(kPlayerIsDead, (const void *)&ShadowPlayerIsDead);
     ok &= XbeOriginal_Redirect(kResetBotPickupTimes, (const void *)&ShadowResetBotPickupTimes);
     ok &= XbeOriginal_Redirect(kGetRadarObjects, (const void *)&ShadowGetRadarObjects);
-    ok &= XbeOriginal_Redirect(kUpdate, (const void *)&ShadowUpdate);
     printf("[mpmatch] comparing the multiplayer match functions with the originals on every call%s\n",
            ok ? "" : " (some not patched)");
 }

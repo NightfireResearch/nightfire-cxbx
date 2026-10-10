@@ -524,6 +524,11 @@ static void CheckLists(void) {
     printf("[lists] %d item lists checked against the game's: %d items differ\n", (int)ARRAY_SIZE(lists), bad);
 }
 
+void Devtools_Tick(void) {
+    ActionTeleport_Tick();
+    MPMatchShadow_Tick();
+}
+
 void MenuProbe_Install(void) {
     CameraShadow_Install();
     BotCoreShadow_Install();
