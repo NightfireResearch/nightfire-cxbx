@@ -1,0 +1,83 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# The single player pause menu (P_PAUSE, C_GCPAUSE) in the first mission: each tab by focus (ids 0, 1, 3, 4), an
+# objective's description box, the controller style and inversion, restart answered no, then restart answered yes
+# (the level loads again). Drones frozen and the player immortal so nothing happens behind the menu.
+press A                    # NightFire
+waitpage 0x40000025        # P_NFSELECT
+wait 100
+press A                    # the codename
+waitpage 0x4000002f        # P_MESSAGEBOX
+wait 150
+press A
+waitpage 0x40000023        # P_NFDFCTY
+wait 100
+press A                    # difficulty
+waitpage 0x4000001c        # P_NFMAP
+wait 100
+press A                    # the first mission
+wait 1500
+press A                    # skip the opening cutscene
+wait 300
+cheat nodrones
+cheat immortal
+press START                # pause
+waitpage 0x4000004b 400    # P_PAUSE
+wait 60
+shot pause
+focus 0x10000028 1         # objectives
+wait 30
+shot objectives
+press A                    # the selected objective's description
+wait 60
+shot objective_box
+press A                    # close it
+wait 60
+shot objective_closed
+focus 0x10000028 4         # statistics
+wait 30
+shot stats
+focus 0x10000028 3         # controls
+wait 30
+shot controls
+press DOWN                 # the next controller style
+wait 30
+shot controls_style
+press UP                   # back
+wait 30
+press X                    # invert
+wait 30
+shot controls_inverted
+press X                    # and back
+wait 30
+shot controls_normal
+focus 0x10000028 0         # resume / restart / quit
+wait 30
+shot options
+press DOWN                 # restart
+wait 30
+press A
+wait 30
+shot restart_confirm
+press A                    # "no" is selected
+wait 30
+shot restart_no
+press A                    # the Select the "no" leaves behind is dropped
+wait 30
+press A                    # restart again
+wait 30
+press UP                   # "yes"
+wait 30
+press A
+wait 1500
+press A                    # skip the opening cutscene
+wait 300
+shot restarted
+quit

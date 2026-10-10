@@ -1,0 +1,59 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# The multiplayer pause menu in a Quick Game with bots (as mp_start.txt): the scores tab (C_GCPAUSE id 4, the
+# players' and bots' scores), the controls and options tabs, then quit answered yes, which goes to the debriefing.
+# !!! The match is not repeatable (see mp_start.txt): the scores and the picture behind the menu differ run to run.
+press DOWN
+wait 30
+press A                    # Multiplayer
+waitpage 0x40000019        # P_MPJOIN
+wait 100
+press A
+wait 120
+press A
+wait 120
+press A
+waitpage 0x4000001a        # P_MPSCENARIO
+wait 100
+press UP                   # Quick Game
+wait 40
+seed                       # the Quick Game's level is random: the same one on every run
+press A
+waitpage 0x40000049 400    # P_MPCONFIRM
+wait 100
+press A                    # start the match
+wait 900
+press START                # pause
+waitpage 0x4000004b 400    # P_PAUSE
+wait 60
+shot pause
+focus 0x10000028 4         # scores
+wait 30
+shot scores
+focus 0x10000028 3         # controls
+wait 30
+shot controls
+focus 0x10000028 0         # resume / restart / quit
+wait 30
+shot options
+press DOWN
+wait 30
+press DOWN                 # quit
+wait 30
+press A
+wait 30
+shot quit_confirm
+press UP                   # "yes"
+wait 30
+press A
+waitpage 0x40000033 3000   # P_MPDEBRIEFING
+wait 100
+shot debriefing
+quit

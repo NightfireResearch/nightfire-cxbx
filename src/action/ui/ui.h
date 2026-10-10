@@ -353,6 +353,9 @@ uint64_t Menu_SpecialCodenameCheck(byte *code);
 bool P_CNNAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
 bool C_KEYBOARD_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
 
+// ui_pause
+bool C_GCPAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+
 // ui_score
 void SeparateNumber(uint score, char* scoreText);
 

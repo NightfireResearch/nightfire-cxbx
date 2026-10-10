@@ -386,6 +386,7 @@ typedef enum {
     SUB_C_SBCNSELECT_IRIS = 0x10000108,
     SUB_C_SBCNOPTIONS_IRIS = 0x10000109,
     SUB_P_NFMAP_BUTTON_HINT_TEXT = 0x1000010e,  // also on P_NFRESULTS and C_SBNFCN's page
+    SUB_P_PAUSE_BUTTON_HINT_TEXT = 0x1000006f,  // (invented name) also on P_ENDMISSION and P_LANGUAGE
     SUB_C_SBBOTS_WHEEL_TEXT = 0x10000110,
     SUB_C_SBBOTS_ICON = 0x10000112,
     SUB_C_SBBOTS_IRIS = 0x10000113,
@@ -911,6 +912,31 @@ typedef enum {
     SPMAP_EQUINOX_DESC = 0x03000023, // Prevent a hostile takeover of the missile defence platform...and save the world.
     SPMAP_COUNTDOWN_NAME = 0x03000034, // Countdown
     SPMAP_COUNTDOWN_DESC = 0x03000035, // Covertly make your way into the secret underwater base and pursue Drake.
+
+    // The pause menu (C_GCPAUSE); names proposed in docs/ui/items.json unless marked
+    STATS_OPPONENTS = 0x15a,
+    STATS_DISPATCHED = 0x15b,
+    STATS_SUBDUED = 0x15c,
+    STATS_ACCURACY_RATING = 0x15e,
+    STATS_HEALTH_REMAINING = 0x15f,
+    STATS_TIME = 0x160,
+    STATS_007_BONUS = 0x161,
+    STATS_TOTAL = 0x163,
+    STATS_BOND_MOVES = 0x165,
+    STATS_SURRENDERED = 0x16e,
+    RESTART_CONFIRMATION = 0x1ff,
+    QUIT_CONFIRMATION = 0x200,
+    CONTROL_INVERTED = 0x206,
+    OBJECTIVE_NO_DESCRIPTION = 0x31d, // (invented name) an objective's description when it has none
+    CONTROL_NORMAL = 0x3bd,
+    STATS_CURRENT = 0x010001e1,
+    STATS_TARGET = 0x010001e2,
+    STATS_CATEGORY = 0x01000204,
+    BUTTONS_SELECT_SCROLL_NEXT_CONTINUE = 0x01000217,
+    BUTTONS_HINT_SCROLL_NEXT_CONTINUE = 0x01000218,
+    BUTTONS_INVERT_SCROLL_NEXT_CONTINUE = 0x0100021a,
+    BUTTONS_NEXT_CONTINUE = 0x0100021b,
+    BUTTONS_SELECT_BACK_SCROLL_CONTINUE = 0x010002d6,
 
     Action_TranslatedText_FORCE_UINT32 = 0x7FFFFFFF,
     Action_TranslatedText_NULLVALUE = 0xFFFFFFFF

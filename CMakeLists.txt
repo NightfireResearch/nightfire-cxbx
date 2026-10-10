@@ -131,6 +131,7 @@ add_library(actioninject SHARED
   src/action/ui/ui_nightfire.cpp
   src/action/ui/ui_codenames.cpp
   src/action/ui/ui_cheats.cpp
+  src/action/ui/ui_pause.cpp
   src/action/ui/MenuUnlocks.cpp
   src/action/ui/ui_score.cpp
   src/action/ui/Menu.cpp

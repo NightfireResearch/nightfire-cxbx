@@ -87,8 +87,6 @@ bool C_CHCHHUD_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint pa
 // AUTOGEN
 bool C_RBCONTROL_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool C_GCPAUSE_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool C_NIS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_KEYPAD_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
