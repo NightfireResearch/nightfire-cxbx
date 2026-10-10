@@ -226,9 +226,7 @@ undefined4 __cdecl BOTSTATE_increaseDistraction(int param_1, float param_2);
 void * __stdcall MP_getProtectionObj_NotExt(void);
 // AUTOGEN
 obj_tag * __stdcall MP_getDemolitionObj_NotExt(void);
-// AUTOGEN
 bool __cdecl NDrone2_CanSeeObject(Drone_tag *param_1, obj_tag *param_2, uint param_3, ushort param_4);
-// AUTOGEN
 void __cdecl MP_sendBotMessage(obj_tag *param_1, uint param_2, uint param_3, uint param_4);
 // AUTOGEN
 undefined4 __cdecl FUN_00037bc0(int param_1, int param_2, _VECTOR *param_3);
@@ -377,7 +375,7 @@ static int NDrone2_FindBotOpponent(Drone_tag *drone) {
                     }
                 }
             } else {
-                taken = ((Drone_tag *)agent->extraObjectData)->botVars->beingGuarded != 0;
+                taken = ((Drone_tag *)agent->extraObjectData)->botVars->targeted != 0;
             }
             if (taken)
                 dist *= 16.0f;
