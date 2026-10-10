@@ -147,7 +147,9 @@ typedef struct BLData {
     char field_0x8e6; // 0x8e6 - zeroed by Player_InitWeapon
     char _pad_5b;
     char field_0x8e8; // 0x8e8 - zeroed by Player_InitWeapon
-    char _pad_5c[0x8ef-0x8e9];
+    char _pad_5c[0x8eb-0x8e9];
+    uchar firedThisFrame; // 0x8eb - invented name (docs/architecture/player-weapons-mp.md)
+    char _pad_5c2[0x8ef-0x8ec];
     // The third-person action icon to show (index into HUD.cpp's ThirdIconSprites: grapple, wire, standing, ...),
     // 0xff for none
     uchar thirdIcon; // 0x8ef
@@ -168,6 +170,7 @@ static_assert(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisi
 static_assert(offsetof(BLData, nightVisionTimer) == 0x8b0, "Offset of nightVisionTimer not correct");
 static_assert(offsetof(BLData, hudFadeIn) == 0x84c, "Offset of hudFadeIn not correct");
 static_assert(offsetof(BLData, bondMomentTimer) == 0x8d8, "Offset of bondMomentTimer not correct");
+static_assert(offsetof(BLData, firedThisFrame) == 0x8eb, "Offset of firedThisFrame not correct");
 static_assert(offsetof(BLData, thirdIcon) == 0x8ef, "Offset of thirdIcon not correct");
 static_assert(offsetof(BLData, hitDirections) == 0x8f7, "Offset of hitDirections not correct");
 static_assert(offsetof(BLData, hitDirectionFade) == 0x8f8, "Offset of hitDirectionFade not correct");

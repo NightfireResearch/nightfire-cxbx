@@ -78,7 +78,9 @@ typedef struct Drone_tag {
     char _pad2a[0x31 - 0x2a];
     uchar modeFlag31;               // 0x031
     uchar modeFromOldTable;         // 0x032 - DoModeSettingsOLD ran: DefaultInit then runs DoTypeSettingsOLD
-    char _pad33[0x44 - 0x33];
+    char _pad33[0x3c - 0x33];
+    uchar unknown3c;                // 0x03c - DroneWeap_Fire clears it
+    char _pad3d[0x44 - 0x3d];
     uchar side;                     // 0x044 - 1 enemy, 2 ally, 3 civilian / neutral
     char _pad45[0x90 - 0x45];
     float health;                   // 0x090
@@ -175,6 +177,12 @@ typedef struct Drone_tag {
     struct BOT_vars_t *botVars;     // 0x974 - multiplayer bots only
 } Drone_tag;
 
+// The level_tag Drone_Create is given: the object header, then the drone's keys
+typedef struct DroneCreationData {
+    char baseObj[0x2c];
+    DroneKeys keys;
+} DroneCreationData;
+
 // A state machine message (0x1c bytes). See docs/drone/architecture/README.md 3.2.
 typedef struct MsgObject {
     uint msgType;           // 0x00 - a DRONE_MSG
@@ -195,7 +203,9 @@ static_assert(offsetof(StateMachineInfo_tag, stateParam) == 0x24, "Wrong offset 
 static_assert(sizeof(DIVars_tag) == 0xa4, "DIVars is wrong size");
 static_assert(sizeof(DCVars_tag) == 0x10, "DCVars is wrong size");
 static_assert(sizeof(MsgObject) == 0x1c, "MsgObject is 0x1c bytes");
+static_assert(sizeof(DroneCreationData) == 0xb0, "DroneCreationData is 0xb0 bytes");
 static_assert(sizeof(Drone_tag) == 0x978, "Drone_tag is 0x978 bytes");
+static_assert(offsetof(Drone_tag, unknown3c) == 0x3c, "Wrong offset for unknown3c");
 static_assert(offsetof(Drone_tag, side) == 0x44, "Wrong offset for side");
 static_assert(offsetof(Drone_tag, health) == 0x90, "Wrong offset for health");
 static_assert(offsetof(Drone_tag, dtype) == 0xa9, "Wrong offset for dtype");

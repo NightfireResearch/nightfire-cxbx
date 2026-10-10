@@ -401,7 +401,7 @@ typedef struct {
   uint TimeUnpaused;
   float TimeLimit;
   float restartScenarioTimeout;
-  uint TimeIncPaused; // pickups, opponent selection, visit times?? possibly misidentified?
+  float TimeIncPaused; // pickups, opponent selection, visit times (BOT_setOtherPlayerInfo reads it as a float)
   float winStateTimeout; // MP init and update
   float lastTimePaused; // end conditions
   short unknown_maybe_capture_state; // player status / goals

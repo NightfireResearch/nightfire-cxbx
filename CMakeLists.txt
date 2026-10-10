@@ -65,6 +65,7 @@ add_library(actioninject SHARED
   src/action/devtools/WeaponTableShadow.cpp
   src/action/devtools/MatrixShadow.cpp
   src/action/devtools/CameraShadow.cpp
+  src/action/devtools/BotCoreShadow.cpp
   src/action/devtools/Teleport.cpp
   src/action/game.cpp
   src/action/main.cpp

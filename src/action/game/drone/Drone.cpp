@@ -25,12 +25,6 @@ bool Drone_DCVfromOBJ(obj_tag* gameObj, DCVars_tag* dcVars) {
 }
 
 
-typedef struct {
-    char baseObj[0x2c];
-    DroneKeys keys;
-} DroneCreationData;
-
-
 // AUTOINJECT
 obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     

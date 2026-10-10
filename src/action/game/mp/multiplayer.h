@@ -1,3 +1,4 @@
+#pragma once
 #include <stddef.h>
 #include "../../actionhelpers.h"
 #include "../../math/math.h"
@@ -129,6 +130,9 @@ typedef struct {
 } MP_skin;
 
 static_assert(sizeof(MP_skin) == 0x10, "MP_skin is wrong size");
+
+// The same definition as multiplayer.cpp's (which carries its XBE_GLOBAL tag), for BOT.cpp
+#define MP_skins ((MP_skin*)0x001637c0)
 
 
 typedef struct {
