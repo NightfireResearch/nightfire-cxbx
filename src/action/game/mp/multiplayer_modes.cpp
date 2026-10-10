@@ -35,35 +35,7 @@ ushort Hurt_GetType(obj_tag *obj);
 #define BOT_SetHealth ((void (__cdecl *)(Drone_tag *drone, float health))0x0001b120)
 #define MP_sendTeamBotMessage ((void (__cdecl *)(MPTeam team, uint msg, obj_tag *obj, uint param4, uint senderId))0x0009e430)
 
-// gameObj in EAX, mpObj in EDI, the flag on the stack, removed by the caller. EDI is callee-saved for our
-// compiler, so it is put back afterwards.
-static void __declspec(naked) MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, char dropped) {
-    _asm {
-        push edi
-        mov eax, [esp + 8]          // gameObj
-        mov edi, [esp + 12]         // mpObj
-        push dword ptr [esp + 16]   // dropped
-        mov edx, 0x0009f2c0
-        call edx
-        add esp, 4
-        pop edi
-        ret
-    }
-}
-
 // gameObj in EAX, the other two on the stack, removed by the caller.
-static void __declspec(naked) MP_BluePrintUpdate(MPOBJECT *mpObj, char dropped, obj_tag *gameObj) {
-    _asm {
-        mov eax, [esp + 12]         // gameObj
-        push dword ptr [esp + 8]    // dropped
-        push dword ptr [esp + 8]    // mpObj (8 again: the push moved it along)
-        mov edx, 0x000a19f0
-        call edx
-        add esp, 8
-        ret
-    }
-}
-
 static void __declspec(naked) MP_GoldenEyeUpdate(MPOBJECT *mpObj, char dropped, obj_tag *gameObj) {
     _asm {
         mov eax, [esp + 12]         // gameObj
@@ -441,10 +413,10 @@ void MP_PlayerKilled(obj_tag *obj) {
             mpObj->unknown04 = FRAME_RATE_INT * 30;
         switch (mpObj->type) {
         case CTF_FLAG:
-            MP_FlagUpdate(MPObjects[i], mpObj, 1);
+            _MP_FlagUpdate(MPObjects[i], mpObj, true);
             break;
         case BLUEPRINT:
-            MP_BluePrintUpdate(mpObj, 1, MPObjects[i]);
+            _MP_BluePrintUpdate(mpObj, true, MPObjects[i]);
             break;
         case GOLDENEYE_KEY:
         case GOLDENEYE_CRYSTAL:

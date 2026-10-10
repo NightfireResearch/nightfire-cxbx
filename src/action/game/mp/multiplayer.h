@@ -279,6 +279,8 @@ static_assert(sizeof(MP_RADAR_OBJECT) == 0x14, "MP_RADAR_OBJECT is wrong size");
 #define CurrentAssassinObjId (*(obj_tag **)0x0026178c)
 #define AssassinTarget (*(obj_tag **)0x00261788)
 #define MPObjects (*(obj_tag*(*)[64])0x00263640)
+#define Bases (*(MP_OBJ_EXT(*)[2])0x00261bd0)
+#define EsponageBase (*(MP_OBJ_EXT(*)[2])0x00261a70)
 #define TimeSpr (*(sprite **)0x002637d8)
 #define StatusSpr (*(sprite **)0x002637dc)
 
@@ -323,6 +325,14 @@ void MP_KOHUpdate(obj_tag *hill);
 void MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj);
 void _MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj);
 void MP_PlayerKilled(obj_tag *obj);
+
+// multiplayer_flag.cpp
+// The originals take gameObj in EAX (and MP_FlagUpdate mpObj in EDI): the plain names are the entries for that,
+// the _ names the C++ under them.
+void MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped);
+void _MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped);
+void MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj);
+void _MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj);
 
 // FIXME move to a separate file
 bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float distance, _VECTOR *searchDirection);

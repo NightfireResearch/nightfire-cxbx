@@ -260,11 +260,9 @@ void MP_CleanupMPObjExt(MP_OBJ_EXT *mp_obj) {
 }
 
 #define UplinkCount U16_AT(0x002637c8)
-#define Bases (*(MP_OBJ_EXT(*)[2])0x00261bd0)
 #define Uplinks (*(MP_OBJ_EXT(*)[8])0x002633d8)
 #define Flags (*(MP_OBJ_EXT(*)[2])0x00263740)
 #define Hill (*(MP_OBJ_EXT*)0x00261b88)
-#define EsponageBase (*(MP_OBJ_EXT(*)[2])0x00261a70)
 #define GoldenEye (*(GoldenEyeStruct(*))0x00261678)
 #define Demolition (*(MP_OBJ_EXT*)0x00261af8)
 #define Protection (*(MP_OBJ_EXT*)0x00261b40)

@@ -67,6 +67,7 @@ add_library(actioninject SHARED
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/BotCoreShadow.cpp
   src/action/devtools/MPModesShadow.cpp
+  src/action/devtools/MPFlagShadow.cpp
   src/action/devtools/DroneMPShadow.cpp
   src/action/devtools/MPMatchShadow.cpp
   src/action/devtools/BotStateShadow.cpp
@@ -153,6 +154,7 @@ add_library(actioninject SHARED
   src/action/game/drone/NDrone2_Hostage.cpp
   src/action/game/mp/multiplayer.cpp
   src/action/game/mp/multiplayer_modes.cpp
+  src/action/game/mp/multiplayer_flag.cpp
   src/action/game/obj/Break.cpp
   src/action/game/obj/Door.cpp
   src/action/game/obj/Hint.cpp

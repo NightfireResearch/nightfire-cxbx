@@ -775,6 +775,14 @@ typedef enum {
     MP_RESULT_MI6 = 0x02000025,               // "MI6 Team Won"
     MP_RESULT_WON = 0x02000027,               // "Won"
     MP_TIME_UP = 0x02000028,
+    NOTIF_X_FLAG_DROPPED = 0x02000039,        // formatted with a team name (MP_FlagUpdate)
+    NOTIF_X_FLAG_CAPTURED = 0x0200003a,       // formatted with a team name (MP_FlagUpdate)
+    NOTIF_X_FLAG_RETURNED = 0x0200003b,       // formatted with a team name (MP_FlagUpdate)
+    NOTIF_X_FLAG_PICKED_UP = 0x0200003c,      // formatted with a team name (MP_FlagUpdate)
+    NOTIF_X_TEAM_SCORED = 0x0200003d,         // formatted with a team name (MP_FlagUpdate)
+    NOTIF_X_PICKED_UP_BLUEPRINT = 0x02000045, // formatted with a team name (MP_BluePrintUpdate)
+    NOTIF_X_DROPPED_BLUEPRINT = 0x02000046,   // formatted with a team name (MP_BluePrintUpdate)
+    NOTIF_BLUEPRINT_RETURNED = 0x02000048,
     NOTIF_RESTARTING = 0x02000049,
     NOTIF_KILLED_X = 0x0200004d,              // formatted with the victim's name (MP_PlayerKilled)
 
