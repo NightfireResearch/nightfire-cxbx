@@ -138,7 +138,7 @@ void MP_KOHUpdate(obj_tag *hill) {
                 bool entered = !(was & MPPLAYER_IN_HILL);
                 if (entered)
                     MP_sendBotMessage(obj, 0x3b, 1, 0);
-                MPGame.unknown_maybe_capture_state = 0;
+                MPGame.unknown_9 = 0;
                 if (entered)
                     MP_sendBotMessage(obj, 0x39, 0, 0);
             }
@@ -159,7 +159,7 @@ void MP_KOHUpdate(obj_tag *hill) {
                     DCVars_tag dcVars;
                     Drone_DCVfromOBJ(obj, &dcVars);
                 }
-                MPGame.unknown_maybe_capture_state = 0;
+                MPGame.unknown_9 = 0;
                 MP_sendBotMessage(obj, 0x3a, 0, 0);
             }
         }
@@ -196,7 +196,7 @@ static void MP_UplinkTaken(MPOBJECT *mpObj, obj_tag *gameObj, obj_tag *taker, MP
         }
         MP_sendBotMessage(taker, 0x3b, 1, 0);
         MP_sendTeamBotMessage(takerTeam, 0x3d, gameObj, 0, senderId);
-        MPGame.unknown_maybe_capture_state = 0;
+        MPGame.unknown_9 = 0;
         MP_sendBotMessage(taker, 0x3e, 0, 0);
     }
     mpObj->holderIdx = Control_Plr2Ind(taker);
@@ -221,7 +221,7 @@ void _MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj) {
                         DCVars_tag dcVars;
                         Drone_DCVfromOBJ(taker, &dcVars);
                     }
-                    MPGame.unknown_maybe_capture_state = 0;
+                    MPGame.unknown_9 = 0;
                     MP_sendBotMessage(taker, 0x3f, 0, 0);
                 }
                 mpObj->holderIdx = Control_Plr2Ind(taker);
