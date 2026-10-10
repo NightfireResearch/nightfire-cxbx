@@ -72,7 +72,6 @@
 #include "DroneMPShadow.h"
 #include "MPMatchShadow.h"
 #include "MPMenusShadow.h"
-#include "MPModesShadow.h"
 #include "MPObjectsShadow.h"
 #include "MPFlagShadow.h"
 #include "MPGoldenEyeShadow.h"
@@ -539,7 +538,6 @@ void MenuProbe_Install(void) {
     DroneMPShadow_Install();
     MPMatchShadow_Install();
     MPMenusShadow_Install();
-    MPModesShadow_Install();
     MPObjectsShadow_Install();
     MPFlagShadow_Install();
     MPGoldenEyeShadow_Install();

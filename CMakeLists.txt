@@ -66,7 +66,6 @@ add_library(actioninject SHARED
   src/action/devtools/MatrixShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/BotCoreShadow.cpp
-  src/action/devtools/MPModesShadow.cpp
   src/action/devtools/MPFlagShadow.cpp
   src/action/devtools/MPGoldenEyeShadow.cpp
   src/action/devtools/DroneMPShadow.cpp

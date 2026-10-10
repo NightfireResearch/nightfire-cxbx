@@ -342,7 +342,8 @@ Game modes are bit sets (`MultiplayerGameMode`): bit 29 = team game, bit 30 = KO
   switch, `switch_MP4EVER`, disables all of it. Level scripts can therefore also end a match by setting those
   channels [I].
 - Scenario objects: `MP_RegisterMPObject` (placement) → `MP_CreateObject` → type 53 objects. Their update
-  `MP_ObjectUpdate` [D] dispatches on `MPOBJECT.type` to:
+  `MP_ObjectUpdate` (ours, reached through `control_funcs[53]`, which holds the original's address) dispatches on
+  `MPOBJECT.type` to (all ours, in `game/mp/multiplayer_*.cpp`):
   - `MP_FlagUpdate` (CTF);
   - `MP_UplinkUpdate`;
   - `MP_DemolitionProtectionUpdate` (two modes);
@@ -351,7 +352,10 @@ Game modes are bit sets (`MultiplayerGameMode`): bit 29 = team game, bit 30 = KO
   - `MP_KOHUpdate`.
   
   An object script on the object is moved with it. The carried-object updates call `MP_HitBy` and
-  `MP_SetUpPlayerSomehow`.
+  `MP_SetUpPlayerSomehow`, and put an object back with `MP_ResetMPObject`; the originals of all three take
+  register arguments. `MP_KOHUpdate`, `MP_UplinkUpdate`, the flag, blueprint and GoldenEye updates and
+  `MP_BluePrintReachedBase` clear the word at MPGame+0x20c (`unknown_9`); `MP_Init` and `MP_RestartScenario` clear
+  +0x208 and +0x20a.
 - **Scoring** happens in `MP_PlayerKilled` 0xa1fc0, called from `Player_CheckForDeath` and the two bot death
   states [D][X]:
   - the victim's death count goes up (the field Ghidra calls `pointsScored` is the debriefing's Deaths);

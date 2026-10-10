@@ -4,8 +4,7 @@
 // can write: MPGame, the RNG words, the MPOBJECT, the object, the demolition and protection MP_OBJ_EXTs and the
 // hit list scratch. The game carries on with ours.
 //
-// Our MP_ObjectUpdate calls the uplink and hill updates directly, so MPModesShadow's redirects no longer see them;
-// they are compared here instead, with its rules.
+// Our MP_ObjectUpdate calls the uplink and hill updates directly, so they are compared here, through it.
 //
 // A call whose original played a sound, queued a message, switched the script, exploded the object or sent a bot
 // message cannot be run twice, so the original's result is kept and ours is not run ("kept" in the summary):
@@ -126,7 +125,7 @@ bool ObjectiveSideEffects(const Snapshot &before, const obj_tag *gameObj, const 
     return wasExt.gameObj != ext.gameObj;
 }
 
-// As MPModesShadow: an agent entering or leaving the hill, the entry sound, the beep at every fifth point.
+// An agent entering or leaving the hill, the entry sound, the beep at every fifth point.
 bool KOHSideEffects(const Snapshot &before) {
     const MPGameStruct &was = *(const MPGameStruct *)before.bytes[0];
     for (int i = 0; i < NUM_AGENTS; i++) {
