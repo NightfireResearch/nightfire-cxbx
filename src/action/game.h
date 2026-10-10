@@ -395,6 +395,8 @@ typedef struct {
 enum MPGamePlayerFlags : ushort {
     MPPLAYER_FLAG_1 = 1,        // a CTF bot with it heads for its base (BOTSTATE_pickGoal)
     MPPLAYER_FLAG_2 = 2,        // a Blueprint bot with it heads for the espionage base; MP_BluePrintReachedBase clears it
+    MPPLAYER_GOLDENEYE_KEY = 4,     // holds the GoldenEye key (MP_GoldenEyeUpdate)
+    MPPLAYER_GOLDENEYE_CRYSTAL = 8, // holds the GoldenEye crystal (MP_GoldenEyeUpdate)
     MPPLAYER_IN_HILL = 0x10,    // inside the King of the Hill object's box (MP_KOHUpdate); a bot with it picks no objective
 };
 

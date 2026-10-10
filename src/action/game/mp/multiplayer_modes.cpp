@@ -35,19 +35,6 @@ ushort Hurt_GetType(obj_tag *obj);
 #define BOT_SetHealth ((void (__cdecl *)(Drone_tag *drone, float health))0x0001b120)
 #define MP_sendTeamBotMessage ((void (__cdecl *)(MPTeam team, uint msg, obj_tag *obj, uint param4, uint senderId))0x0009e430)
 
-// gameObj in EAX, the other two on the stack, removed by the caller.
-static void __declspec(naked) MP_GoldenEyeUpdate(MPOBJECT *mpObj, char dropped, obj_tag *gameObj) {
-    _asm {
-        mov eax, [esp + 12]         // gameObj
-        push dword ptr [esp + 8]    // dropped
-        push dword ptr [esp + 8]    // mpObj
-        mov edx, 0x000a0370
-        call edx
-        add esp, 8
-        ret
-    }
-}
-
 // Bot messages sent here (docs/drone/bots-and-navigation, DSTATE_BotGlobal): 0x3a objective changed, 0x3b goal
 // complete, 0x3d cancel goals on an object, 0x43 a player died. 0x39, 0x3e and 0x3f are not in its table.
 
@@ -420,7 +407,7 @@ void MP_PlayerKilled(obj_tag *obj) {
             break;
         case GOLDENEYE_KEY:
         case GOLDENEYE_CRYSTAL:
-            MP_GoldenEyeUpdate(mpObj, 1, MPObjects[i]);
+            _MP_GoldenEyeUpdate(mpObj, true, MPObjects[i]);
             break;
         }
     }

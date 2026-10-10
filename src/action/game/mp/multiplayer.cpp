@@ -263,7 +263,6 @@ void MP_CleanupMPObjExt(MP_OBJ_EXT *mp_obj) {
 #define Uplinks (*(MP_OBJ_EXT(*)[8])0x002633d8)
 #define Flags (*(MP_OBJ_EXT(*)[2])0x00263740)
 #define Hill (*(MP_OBJ_EXT*)0x00261b88)
-#define GoldenEye (*(GoldenEyeStruct(*))0x00261678)
 #define Demolition (*(MP_OBJ_EXT*)0x00261af8)
 #define Protection (*(MP_OBJ_EXT*)0x00261b40)
 #define BluePrint (*(MP_OBJ_EXT*)0x002635f8)
@@ -728,9 +727,6 @@ void __stdcall Pickup_MakeRandomWeaponSet(void);
 #define PickupLastDeletedIdx (*(int*)0x00261b84) // -1 = none
 #define BluePrints (*(SpawnPlace(*)[8])0x00262458)
 #define BluePrintCount U16_AT(0x002637d4)
-#define GoldenEyeSpawns (*(SpawnPlace(*)[16])0x00262978)
-#define GoldenEyeKeyCount U16_AT(0x00262970)
-#define GoldenEyeNonKeyCount U16_AT(0x00262972)
 
 // Game mode bits (see MultiplayerGameMode): bit 29 is set by every team mode, bit 30 by KOTH, team KOTH and
 // uplink.

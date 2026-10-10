@@ -205,11 +205,13 @@ typedef struct {
     char unknown06[2];
     obj_tag *holder;            // 0x08 MP_PlayerKilled hands the object back when this one dies
     obj_tag *scriptPlayer;      // 0x0c
-    char unknown10[0x4e-0x10];
+    _MATRIX resetMtx;           // 0x10 MP_ResetMPObject puts the object back here; MP_GoldeneyeResetObject picks it
+    char unknown4c[2];
     short holderIdx;            // 0x4e uplink: the agent index that took it (Control_Plr2Ind), -1 none
 } MPOBJECT;
 
 static_assert(sizeof(MPOBJECT) == 0x50, "MPOBJECT is wrong size");
+static_assert(offsetof(MPOBJECT, resetMtx) == 0x10, "MPOBJECT.resetMtx is at wrong offset");
 static_assert(offsetof(MPOBJECT, holderIdx) == 0x4e, "MPOBJECT.holderIdx is at wrong offset");
 
 
@@ -233,6 +235,11 @@ typedef struct {
 static_assert(sizeof(SpawnPlace) == 0x5c, "Bad size for SpawnPlace"); // Known from MP_Init via size of DemolitionPlaces array
 
 #pragma pack(pop)
+
+#define GoldenEye (*(GoldenEyeStruct(*))0x00261678)
+#define GoldenEyeSpawns (*(SpawnPlace(*)[16])0x00262978)
+#define GoldenEyeKeyCount U16_AT(0x00262970)
+#define GoldenEyeNonKeyCount U16_AT(0x00262972)
 
 
 // One multiplayer weapon/ammo pickup slot (Ghidra's MP_PICKUP; 64 of them, 0x1600 bytes, from MP_Init's clear)
@@ -333,6 +340,11 @@ void MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped);
 void _MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped);
 void MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj);
 void _MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj);
+// multiplayer_goldeneye.cpp
+void MP_GoldeneyeResetObject(MPOBJECT *mpObj, obj_tag *gameObj, int unused, char state);
+// The original takes gameObj in EAX: MP_GoldenEyeUpdate is the entry for that, _MP_GoldenEyeUpdate the C++ under it.
+void MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj);
+void _MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj);
 
 // FIXME move to a separate file
 bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float distance, _VECTOR *searchDirection);
