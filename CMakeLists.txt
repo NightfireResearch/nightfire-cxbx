@@ -70,6 +70,7 @@ add_library(actioninject SHARED
   src/action/devtools/DroneMPShadow.cpp
   src/action/devtools/MPMatchShadow.cpp
   src/action/devtools/BotStateShadow.cpp
+  src/action/devtools/MPObjectsShadow.cpp
   src/action/devtools/Teleport.cpp
   src/action/game.cpp
   src/action/main.cpp
@@ -167,6 +168,7 @@ add_library(actioninject SHARED
   src/action/game/obj/Ladder.cpp
   src/action/game/obj/Light.cpp
   src/action/game/obj/PCQWorm.cpp
+  src/action/game/obj/Pickup.cpp
   src/action/game/obj/Player.cpp
   src/action/game/obj/Rotor.cpp
   src/action/game/obj/ScriptPlayer.cpp

@@ -325,7 +325,7 @@ void MP_PlayerKilled(obj_tag *obj) {
                 continue;
             }
             case OBJECTTYPE_GUNTURRET:
-                hitBy = ((GUNTURRET *)hitBy->extraObjectData)->user;
+                hitBy = ((GUNTURRET *)hitBy->extraObjectData)->playerController;
                 continue;
             case OBJECTTYPE_GUNTURRET2:
                 hitBy = ((GUNIMP *)hitBy->extraObjectData)->user;

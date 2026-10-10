@@ -447,7 +447,7 @@ uchar BOTSTATE_pickGoal(DCVars_tag *dc, int slot) {
                     }
 
                     PICKUPINFO *info = (PICKUPINFO *)pickup->gameObj->extraObjectData;
-                    if (info->unknown18 == 2 && ((goal->pickFlags & BOT_PICK_SKIP_UNKNOWN18_2) || distance < 5.0f))
+                    if (info->state == PICKUP_RESPAWNING && ((goal->pickFlags & BOT_PICK_SKIP_RESPAWNING) || distance < 5.0f))
                         continue;
 
                     double score;

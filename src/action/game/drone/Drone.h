@@ -260,5 +260,8 @@ void Drone_SM_RouteMsg(MsgObject *msg);
 // (DroneSM.cpp).
 void Drone_SM_RouteMsgDCV(DCVars_tag *dcVars, MsgObject *msg);
 void Drone_EnableAll(char enable, HASHCODE hashcode);
+// The game's (AUTOGEN in GT.cpp): false only for an object whose drone has its AI running (flag 0x100), neither
+// 0x200 nor 0x400 set, health not at or below 0, that is not OBJECTTYPE_DEAD_DRONE and not marked for deletion
+bool MPDrone_MaybeIsDyingOrDead(obj_tag *obj);
 
 #endif // DRONE_H_

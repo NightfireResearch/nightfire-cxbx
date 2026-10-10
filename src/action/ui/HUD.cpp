@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "../game/view.h"
+#include "../game/drone/Drone.h"
+#include "../../driving/platform/X87.h"
 
 
 // AUTOINJECT
@@ -866,7 +868,7 @@ static HUDPANECREATE_tag MPMsgInfoStatusPane = {0, 0, 640, 480, (HUDPANE_createF
 // XBE_GLOBAL(0x001812d4, 0x1c)
 static HUDPANECREATE_tag MPScorePane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b67d0 /* HUD_CreateMPScorePane */, (HUDPANE_updateFunc)0x000b5190 /* HUD_MPUpdatePane */, (SpriteInfo*)0x001811a0 /* MPScoreInfo */, 7, 0, 384, 0, 0};
 // XBE_GLOBAL(0x001806d8, 0x1c)
-static HUDPANECREATE_tag RadarPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b69e0 /* HUD_CreateRadar */, (HUDPANE_updateFunc)0x000b54d0 /* HUD_RadarUpdate */, (SpriteInfo*)0x001806ac /* RadarSprInfo */, 1, 28, 384, 0, 0};
+static HUDPANECREATE_tag RadarPane = {0, 0, 640, 480, (HUDPANE_createFunc)0x000b69e0 /* HUD_CreateRadar */, HUD_RadarUpdate, (SpriteInfo*)0x001806ac /* RadarSprInfo */, 1, 28, 384, 0, 0};
 
 // XBE_GLOBAL(0x001812f0, 0x58)
 HUDPANECREATE_tag * MPPaneList[] = {
@@ -1602,5 +1604,206 @@ void HUD_UpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
 
         default:
             return;
+    }
+}
+
+
+// ---- The multiplayer radar, and the name tags over the other agents ----
+
+// Ghidra has two functions named Mat_Inverse, so this one cannot be AUTOGEN
+#define Mat_Inverse ((void (__cdecl *)(_MATRIX *mIn, _MATRIX *mOut))0x000d51e0)
+
+// AUTOGEN
+void RotPreTransVec(_MATRIX *mtx, _VECTOR *translation, _VECTOR *posOut);
+
+// AUTOGEN
+bool Font_GetTextExtent(char *text, char *fmt, GPOINT *extent, GPOINT *param_4, int param_5);
+
+// Where on the radar's sheet each MP_RADAR_TYPE is drawn from
+typedef struct {
+    int x;
+    int y;
+    int width;
+    int height;
+    int unknown10;
+} RadarBlipShape;
+
+// XBE_GLOBAL(0x001819a0, 0xa0)
+static const RadarBlipShape RadarBlipShapes[8] = {
+    {0, 0, 4, 4, 1},
+    {0, 8, 8, 8, 0},
+    {0, 8, 8, 8, 0},
+    {0, 8, 8, 8, 0},
+    {0, 8, 8, 8, 0},
+    {8, 0, 8, 8, 0},
+    {0, 8, 8, 8, 0},
+    {0, 8, 8, 8, 0},
+};
+
+// XBE_GLOBAL(0x002790d4, 0xc)
+static _VECTOR RadarTarget;             // Ghidra: Target_293
+// XBE_GLOBAL(0x002790e0, 0x3c)
+static _MATRIX RadarViewInverse;
+
+// The game's format string "\xff\x02", which the name tags are measured and drawn with
+#define NameTagFmt ((char *)0x0015eb20)
+
+#define RADAR_SHOWN         0x1e    // maybeEnabled of the radar, a name tag and an assassination marker
+#define RADAR_BLIP_SHOWN    0x1c
+
+#define NAMETAG_COLOUR          0x1e504bff
+#define NAMETAG_COLOUR_PHOENIX  0x5a1414ff
+#define NAMETAG_COLOUR_MI6      0x14145aff
+
+// The pane's extra items are sprites: the first half the radar's blips, the rest the name tags. The radar is
+// spriteList[0]; MPGame.radar_related holds each player's two assassination markers.
+// AUTOINJECT
+void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
+    if (obj != NULL && (obj->objectType == OBJECTTYPE_DRONE || obj->objectType == OBJECTTYPE_DEAD_DRONE))
+        return;
+
+    sprite **items = (sprite **)pane->extraItems;
+    sprite *radar = pane->spriteList[0];
+    viewer_tag *viewer = glb_viewer[blData->playerNum];
+    float radiusX = radar->onscreenWidth * 0.45f;
+    float radiusY = radar->onscreenHeight * 0.45f;
+    Mat_Inverse(&viewer->viewMatrix, &RadarViewInverse);
+
+    MP_RADAR_OBJECT *objects = NULL;
+    ushort numObjects = MP_GetRadarObjects(obj, &objects);
+    radar->maybeEnabled = MPSettings.Player[blData->playerNum].SomeField2 ? RADAR_SHOWN : 0xff;
+
+    ushort item = 0;
+    for (; item < numObjects && item < pane->base->numExtraItems; item++) {
+        MP_RADAR_OBJECT *object = &objects[item];
+        RotPreTransVec(&RadarViewInverse, &object->pos, &RadarTarget);
+        float distance = Vec_NormaliseLen(&RadarTarget, &RadarTarget);
+        RadarTarget.z = -RadarTarget.z;
+        RadarTarget.x = -RadarTarget.x;
+        RadarTarget.y = (object->pos.y - obj->transformMatrix.m[13]) * 0.125f;
+        if (RadarTarget.y < -1.0f)
+            RadarTarget.y = -1.0f;
+        else if (RadarTarget.y > 1.0f)
+            RadarTarget.y = 1.0f;
+
+        // x87 in the original: the scale and the sums stay unrounded
+        double scale = (double)distance * 0.02f;
+        if (scale > 1.0)
+            scale = 1.0;
+
+        sprite *blip = items[item];
+        blip->positionX = Ftol(RadarTarget.x * scale * radiusX + radar->onscreenWidth * 0.5f + radar->positionX + 0.5f);
+        blip->positionY = Ftol(RadarTarget.z * scale * radiusY + radar->onscreenHeight * 0.5f + radar->positionY + 0.5f);
+        const RadarBlipShape *shape = &RadarBlipShapes[object->type];
+        blip->spritesheetX = shape->x;
+        blip->spritesheetY = shape->y;
+        blip->spritesheetWidth = shape->width;
+        blip->onscreenWidth = blip->spritesheetWidth;
+        blip->spritesheetHeight = shape->height;
+        blip->onscreenHeight = blip->spritesheetHeight;
+        blip->colourTint = object->colour;
+        blip->maybeEnabled = RADAR_BLIP_SHOWN;
+    }
+    for (; item < pane->base->numExtraItems / 2; item++)
+        items[item]->maybeEnabled = 0xff;
+
+    sprite *assassinMarker = NULL;
+    sprite *targetMarker = NULL;
+    if (MPSettings.GameMode == GM_ASSASSIN) {
+        assassinMarker = MPGame.radar_related[blData->playerNum * 2 + 1];
+        targetMarker = MPGame.radar_related[blData->playerNum * 2];
+        if (assassinMarker != NULL)
+            assassinMarker->maybeEnabled = 0xff;
+        if (targetMarker != NULL)
+            targetMarker->maybeEnabled = 0xff;
+    }
+
+    if (MPSettings.ShowTeamAndNameOverhead || MPSettings.GameMode == GM_ASSASSIN) {
+        for (ushort i = 0; i < NUM_AGENTS; i++) {
+            if (i == blData->playerNum)
+                continue;
+            obj_tag *agent = MPGame.players[i].playerObj;
+            if (agent == NULL)
+                continue;
+            switch (agent->objectType) {
+            case OBJECTTYPE_DRONE:
+                if (MPDrone_MaybeIsDyingOrDead(agent))
+                    continue;
+                break;
+            case OBJECTTYPE_PLAYER:
+                if (agent->curState != 1)
+                    continue;
+                break;
+            case OBJECTTYPE_DEAD_DRONE:
+            case OBJECTTYPE_DEAD_PLAYER:
+                continue;
+            }
+
+            _VECTOR screen;
+            screen.x = viewer->width;
+            screen.y = viewer->height;
+            if (View_3DPoint2Screen(&agent->position, &screen, blData->playerNum) <= 0)
+                continue;
+
+            GPOINT extent;
+            Font_GetTextExtent(MPSettings.Player[i].Name, NameTagFmt, &extent, NULL, -1);
+            float halfWidth = extent.x * 0.5f;
+            if (!(screen.z < 100.0f && screen.x > halfWidth && (double)viewer->width - halfWidth > screen.x))
+                continue;
+
+            obj_tag *me = MPGame.players[blData->playerNum].playerObj;
+            if (!Collide_LineOfSight(&agent->position, &me->position, agent->inCel, agent, me, 0x623))
+                continue;
+
+            if (MPSettings.ShowTeamAndNameOverhead) {
+                sprite *tag = items[item];
+                tag->maybeClippedString = NameTagFmt;
+                Sprite_SetText(tag, MPSettings.Player[i].Name);
+                tag->positionX = Ftol((double)screen.x - halfWidth + viewer->xMin);
+                // Kept 12 pixels inside the top and bottom of the view
+                double y = screen.y;
+                if (screen.y < 12.0f)
+                    y = 12.0f;
+                else if (screen.y > (double)viewer->height - 12.0f)
+                    y = (double)viewer->height - 12.0f;
+                tag->positionY = Ftol((double)viewer->height - y + viewer->yMin);
+                tag->maybeEnabled = RADAR_SHOWN;
+                if (MPSettings.maybeIsTeamGame)
+                    tag->colourTint = MPSettings.Player[i].TeamId != PHOENIX ? NAMETAG_COLOUR_MI6 : NAMETAG_COLOUR_PHOENIX;
+                else
+                    tag->colourTint = NAMETAG_COLOUR;
+                item++;
+            }
+
+            if (MPSettings.GameMode == GM_ASSASSIN) {
+                sprite *marker;
+                float markerWidth = 80.0f;
+                float markerHeight = 16.0f;
+                if (MP_IsAssasin(MPGame.players[i].playerObj)) {
+                    marker = assassinMarker;
+                } else if (MP_IsTarget(MPGame.players[i].playerObj)) {
+                    markerWidth = 40.0f;
+                    markerHeight = 40.0f;
+                    marker = targetMarker;
+                } else {
+                    continue;
+                }
+                if (marker != NULL) {
+                    marker->positionX = Ftol((double)screen.x - markerWidth * 0.5f + viewer->xMin);
+                    marker->positionY = Ftol((double)viewer->height - screen.y + viewer->yMin);
+                    float top = marker->positionY - viewer->yMin;
+                    // The last test is of top against the width, not of the marker's x
+                    if (top >= 0.0f && (double)viewer->height - markerHeight > top
+                        && marker->positionX - (double)viewer->xMin >= 0.0f
+                        && (double)viewer->width - markerWidth > top)
+                        marker->maybeEnabled = RADAR_SHOWN;
+                }
+            }
+        }
+    }
+
+    for (; item < pane->base->numExtraItems; item++) {
+        if (items[item] != NULL)
+            items[item]->maybeEnabled = 0xff;
     }
 }

@@ -29,7 +29,7 @@ enum {
 
 // BOT_goal_t.pickFlags
 #define BOT_PICK_SINGLE_PASS 2
-#define BOT_PICK_SKIP_UNKNOWN18_2 4     // skip every pickup whose PICKUPINFO.unknown18 is 2, not only the near ones
+#define BOT_PICK_SKIP_RESPAWNING 4      // skip every respawning pickup, not only the near ones
 #define BOT_PICK_AVOID_OPPONENT 8       // plan the route at once and pick again if it passes the opponent
 #define BOT_PICK_IGNORE_VISITS 0x20
 

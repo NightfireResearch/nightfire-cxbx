@@ -152,6 +152,7 @@ static_assert(sizeof(COMP_FUNC) == 4, "COMP_FUNC is a 32-bit argument");
 #include "game/obj/object.h" // for obj_tag needed by some autogen functions
 #include "game/obj/OneSided.h"
 #include "game/obj/PCQWorm.h"
+#include "game/obj/Pickup.h"
 #include "game/obj/Player.h" // for BLData
 #include "game/obj/RainBox.h"
 #include "game/obj/Rotor.h"
