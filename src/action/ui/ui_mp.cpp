@@ -451,7 +451,7 @@ bool P_MPBOTCHOOSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 static void TakeDefaultStats(M_CONTROL *wheel) {
     BOT_stats_t *stats = BOT_getDefaultStats(SCROLL_GET_VALUE(wheel));
     mp_bot_default_stats = stats;
-    memcpy(mpbots.bot[mp_editing_bot].stats, stats, sizeof(BOT_stats_t));
+    mpbots.bot[mp_editing_bot].stats = *stats;
 }
 
 // AUTOINJECT
@@ -486,6 +486,118 @@ bool C_SBMPBTCHOOSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode,
     return true;
 }
 
+// The bot setup page's health, reaction and recover choices (reaction and recover stop at 200).
+static const struct { const char *text; int value; } bot_stat_values[] = {
+    { "50", 50 }, { "75", 75 }, { "100", 100 }, { "125", 125 }, { "150", 150 }, { "175", 175 }, { "200", 200 },
+    { "250", 250 }, { "300", 300 },
+};
+
+static void AddStatValues(uchar managerNum, HASHCODE radio, int count) {
+    RADIO_CLEAR(managerNum, radio);
+    for (int i = 0; i < count; i++)
+        __Menu_Send(managerNum, radio, MessageType_AddItem, (int)bot_stat_values[i].text, bot_stat_values[i].value);
+}
+
+// The editing bot's setup: whether it plays and, for the characters below 15, its stats (the others' are fixed).
+// A keeps them and goes back to the bot wheel.
+// AUTOINJECT
+bool P_MPBOTSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+    static const HASHCODE stat_radios[] = { SUB_P_MPBOTSETUP_SPEED_SCROLL, SUB_P_MPBOTSETUP_ACCURACY_SCROLL,
+        SUB_P_MPBOTSETUP_AGGRESSION_SCROLL, SUB_P_MPBOTSETUP_HEALTH_SCROLL, SUB_P_MPBOTSETUP_PERSONALITY_SCROLL,
+        SUB_P_MPBOTSETUP_REACTION_SCROLL, SUB_P_MPBOTSETUP_RECOVER_SCROLL };
+
+    if (message == MessageType_Select) {
+        mpbots.bot[mp_editing_bot].isPlaying = RADIO_GET_VALUE(managerNum, SUB_P_MPBOTSETUP_PLAYING_SCROLL);
+        mpbots.bot[mp_editing_bot].stats.accuracy = RADIO_GET_VALUE(managerNum, SUB_P_MPBOTSETUP_ACCURACY_SCROLL);
+        // aggression is stored 16 bits wide, over the byte after it too
+        uint aggression = RADIO_GET_VALUE(managerNum, SUB_P_MPBOTSETUP_AGGRESSION_SCROLL);
+        mpbots.bot[mp_editing_bot].stats.baseAggression = (uchar)aggression;
+        mpbots.bot[mp_editing_bot].stats.unused3 = (uchar)(aggression >> 8);
+        mpbots.bot[mp_editing_bot].stats.health = RADIO_GET_VALUE(managerNum, SUB_P_MPBOTSETUP_HEALTH_SCROLL);
+        mpbots.bot[mp_editing_bot].stats.speed = RADIO_GET_VALUE(managerNum, SUB_P_MPBOTSETUP_SPEED_SCROLL);
+        mpbots.bot[mp_editing_bot].stats.personality = RADIO_GET_VALUE(managerNum, SUB_P_MPBOTSETUP_PERSONALITY_SCROLL);
+        mpbots.bot[mp_editing_bot].stats.reaction = RADIO_GET_VALUE(managerNum, SUB_P_MPBOTSETUP_REACTION_SCROLL);
+        MPBOT *bot = &mpbots.bot[mp_editing_bot];
+        bot->stats.recover = RADIO_GET_VALUE(managerNum, SUB_P_MPBOTSETUP_RECOVER_SCROLL);
+        bot->statsEdited = 1;
+        Manager_SendMessage(&manager[managerNum], MessageType_Back, 0, 0);
+        Manager_SendMessage(&manager[managerNum], MessageType_Back, 0, 0);
+
+        // give back the one-per-game characters if the bot no longer has one or is not playing
+        bot = &mpbots.bot[mp_editing_bot];
+        if ((MPSettings.GameMode & TEAMGAME) == GM_QUICK && mp_good_bot_taken == mp_editing_bot + 10)
+            if (!Menu_IsBotGood((uchar)bot->SkinNum) || !bot->isPlaying)
+                mp_good_bot_taken = 0;
+        if (mp_bond_bot_taken == mp_editing_bot + 10)
+            if (!IsBondSkin((uchar)bot->SkinNum) || !bot->isPlaying)
+                mp_bond_bot_taken = 0;
+    } else if (message == MessageType_PageEnter) {
+        RADIO_CLEAR(managerNum, SUB_P_MPBOTSETUP_PLAYING_SCROLL);
+        RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_PLAYING_SCROLL, TXT_YES, 1);
+        RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_PLAYING_SCROLL, TXT_NO, 0);
+        RADIO_SELECT_ITEM(managerNum, SUB_P_MPBOTSETUP_PLAYING_SCROLL, (uchar)mpbots.bot[mp_editing_bot].isPlaying);
+
+        if ((uchar)mpbots.bot[mp_editing_bot].SkinNum < 15) {
+            __Menu_SendEx(managerNum, SUB_P_MPBOTSETUP_PLAYING_SCROLL, 0, MessageType_SetAlwaysHighlighted, 1, 0);
+            for (HASHCODE radio : stat_radios) {
+                __Menu_SendEx(managerNum, radio, 0, MessageType_SetAlwaysHighlighted, 1, 0);
+                __Menu_SendEx(managerNum, radio, 1, MessageType_SetState, CONTROL_STATE_SHOWN, 0);
+            }
+        } else {
+            for (HASHCODE radio : stat_radios)
+                __Menu_Send(managerNum, radio, MessageType_SetState, CONTROL_STATE_INERT, 0);
+        }
+
+        RADIO_CLEAR(managerNum, SUB_P_MPBOTSETUP_ACCURACY_SCROLL);
+        RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_ACCURACY_SCROLL, BOT_ACCURACY_POOR, 8);
+        RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_ACCURACY_SCROLL, BOT_ACCURACY_AVERAGE, 5);
+        RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_ACCURACY_SCROLL, BOT_ACCURACY_GOOD, 3);
+        RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_ACCURACY_SCROLL, BOT_ACCURACY_VERYGOOD, 1);
+        RADIO_SELECT_ITEM(managerNum, SUB_P_MPBOTSETUP_ACCURACY_SCROLL, mpbots.bot[mp_editing_bot].stats.accuracy);
+
+        RADIO_CLEAR(managerNum, SUB_P_MPBOTSETUP_AGGRESSION_SCROLL);
+        RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_AGGRESSION_SCROLL, CONTROL_NORMAL, 2);
+        RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_AGGRESSION_SCROLL, BOT_AGGRESSION_HIGH, 3);
+        RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_AGGRESSION_SCROLL, BOT_AGGRESSION_VERYHIGH, 4);
+        const BOT_stats_t *stats = &mpbots.bot[mp_editing_bot].stats;
+        RADIO_SELECT_ITEM(managerNum, SUB_P_MPBOTSETUP_AGGRESSION_SCROLL, stats->baseAggression | stats->unused3 << 8);
+
+        AddStatValues(managerNum, SUB_P_MPBOTSETUP_HEALTH_SCROLL, ARRAY_SIZE(bot_stat_values));
+        RADIO_SELECT_ITEM(managerNum, SUB_P_MPBOTSETUP_HEALTH_SCROLL, mpbots.bot[mp_editing_bot].stats.health);
+
+        RADIO_CLEAR(managerNum, SUB_P_MPBOTSETUP_SPEED_SCROLL);
+        RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_SPEED_SCROLL, BOT_SPEED_SLOW, 0);
+        RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_SPEED_SCROLL, BOT_SPEED_NORMAL, 1);
+        RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_SPEED_SCROLL, BOT_SPEED_FAST, 2);
+        RADIO_SELECT_ITEM(managerNum, SUB_P_MPBOTSETUP_SPEED_SCROLL, mpbots.bot[mp_editing_bot].stats.speed);
+
+        // the personalities of the bot's side
+        RADIO_CLEAR(managerNum, SUB_P_MPBOTSETUP_PERSONALITY_SCROLL);
+        if (Menu_IsBotGood((uchar)mpbots.bot[mp_editing_bot].SkinNum)) {
+            RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_PERSONALITY_SCROLL, BOT_PERSONALITY_NONE, 0);
+            RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_PERSONALITY_SCROLL, BOT_PERSONALITY_JUDGE, 4);
+            RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_PERSONALITY_SCROLL, BOT_PERSONALITY_COLLECTOR, 1);
+            RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_PERSONALITY_SCROLL, BOT_PERSONALITY_GUARDIAN, 2);
+            RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_PERSONALITY_SCROLL, BOT_PERSONALITY_TEAMPLAYER, 3);
+        } else {
+            RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_PERSONALITY_SCROLL, BOT_PERSONALITY_NONE, 0);
+            RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_PERSONALITY_SCROLL, BOT_PERSONALITY_BERSERKER, 5);
+            RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_PERSONALITY_SCROLL, BOT_PERSONALITY_GREEDY, 6);
+            RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_PERSONALITY_SCROLL, BOT_PERSONALITY_VENGEFUL, 7);
+            RADIO_ADD_ITEM(managerNum, SUB_P_MPBOTSETUP_PERSONALITY_SCROLL, BOT_PERSONALITY_ASSASSIN, 8);
+        }
+        RADIO_SELECT_ITEM(managerNum, SUB_P_MPBOTSETUP_PERSONALITY_SCROLL, mpbots.bot[mp_editing_bot].stats.personality);
+
+        AddStatValues(managerNum, SUB_P_MPBOTSETUP_REACTION_SCROLL, 7);
+        RADIO_SELECT_ITEM(managerNum, SUB_P_MPBOTSETUP_REACTION_SCROLL, mpbots.bot[mp_editing_bot].stats.reaction);
+        AddStatValues(managerNum, SUB_P_MPBOTSETUP_RECOVER_SCROLL, 7);
+        RADIO_SELECT_ITEM(managerNum, SUB_P_MPBOTSETUP_RECOVER_SCROLL, mpbots.bot[mp_editing_bot].stats.recover);
+    } else if (message == MessageType_PageUpdate && (uchar)mpbots.bot[mp_editing_bot].SkinNum >= 15) {
+        __Menu_Send(managerNum, SUB_P_MPBOTSETUP_INFO_TEXT, MessageType_SetText, (int)Txt_BindLabel(BOT_STATS_FIXED, 0), 0);
+    }
+    return true;
+}
+
 // XBE_GLOBAL(0x0025e3d8, 0xff)
 static char mp_option_box_text[0xff];
 // XBE_GLOBAL(0x0025e4d7, 0x1)
@@ -500,10 +612,37 @@ static void SetUpBot(int bot, uchar skin) {
     b->SkinNum = skin;
     BOT_stats_t *stats = BOT_getDefaultStats(skin);
     mp_bot_default_stats = stats;
-    memcpy(b->stats, stats, sizeof(BOT_stats_t));
+    b->stats = *stats;
     M_ITEM *character = Menu_GetItemFromHash(mp_characters, skin, ARRAY_SIZE(mp_characters));
     if (character != NULL)
         strcpy(MPSettings.Player[NUM_PLAYERS + bot].Name, Txt_BindLabel(character->title, 0));
+}
+
+// The playing bots move to the front, in order, and are counted (none on Ravine). A moved bot's name is copied with it,
+// but the bot it swaps places with is not given its own name back (as the original).
+// AUTOINJECT
+void __stdcall Menu_PrepareBots(void) {
+    uchar playing = 0;
+    for (uchar i = 0; i < NUM_BOTS; i++) {
+        if (!mpbots.bot[i].isPlaying)
+            continue;
+        if (i != playing) {
+            char name[sizeof(MPSettings.Player[0].Name)];
+            strcpy(name, MPSettings.Player[NUM_PLAYERS + i].Name);
+            MPBOT bot = mpbots.bot[playing];
+            mpbots.bot[playing] = mpbots.bot[i];
+            mpbots.bot[i] = bot;
+            strcpy(MPSettings.Player[NUM_PLAYERS + playing].Name, name);
+        }
+        playing++;
+    }
+    mpbots.NumBots = playing;
+    mpbots.Enabled = 1;
+    MPSettings.numBots = playing;
+    if (MPSettings.multiplayerLevelHashcode == HT_Level_Ravine) {
+        mpbots.NumBots = 0;
+        MPSettings.numBots = 0;
+    }
 }
 
 // AUTOINJECT
@@ -941,8 +1080,26 @@ static char mp_confirm_duration_text[0x40];
 static char mp_confirm_friendly_text[0x40];
 #define MP_UNLIMITED ((int)-1)     // MaxPoints / MaxDuration
 
-// AUTOGEN
-void __stdcall Menu_StoreMPSettings(void);
+// The settings and controls a match was started with (P_MPCONFIRM), for C_MPDBG to go back to.
+#define mp_settings_backup (*(MPSettings_t *)0x002245f8)
+#define mp_inputs_backup (*(PlayerInput(*)[NUM_PLAYERS])0x00224838)
+
+// AUTOINJECT
+void __stdcall Menu_StoreMPSettings(void) {
+    mp_settings_backup = MPSettings;
+    memcpy(mp_inputs_backup, PlayerInputs, sizeof(mp_inputs_backup));
+}
+
+// Each player keeps the controller style it has now (its low byte).
+// AUTOINJECT
+void __stdcall Menu_RestoreMPSettings(void) {
+    MPSettings = mp_settings_backup;
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+        uchar style = (uchar)PlayerInputs[i].controlStyle;
+        PlayerInputs[i] = mp_inputs_backup[i];
+        PlayerInputs[i].controlStyle = style;
+    }
+}
 
 // "<label> : <value>", the value looked up first, as the original does (a TXT_NULL value takes a heap string).
 static void ConfirmLine(char *out, Action_TranslatedText label, Action_TranslatedText value) {

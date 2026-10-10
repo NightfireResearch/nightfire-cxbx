@@ -50,9 +50,6 @@ void* Menu_Malloc(int size);
 
 
 // AUTOGEN
-void __stdcall Menu_PrepareBots(void);
-
-// AUTOGEN
 void Menu_CreateOptionBox(byte managerNum, int **text, undefined4 type, char param_4, char param_5);
 
 // AUTOGEN

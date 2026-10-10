@@ -56,6 +56,7 @@ add_library(actioninject SHARED
   src/action/devtools/FileDump.cpp
   src/action/devtools/SecretsShadow.cpp
   src/action/devtools/UnlocksShadow.cpp
+  src/action/devtools/MPMenusShadow.cpp
   src/action/devtools/UpgradeShadow.cpp
   src/action/devtools/MemShadow.cpp
   src/action/devtools/ScoreShadow.cpp

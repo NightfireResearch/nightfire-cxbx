@@ -35,6 +35,8 @@ undefined4 __Menu_SendDelayedMessage(uint duration,M_CONTROL *control,uint arg1,
 
 bool Menu_IsBotGood(uint idx);
 void __stdcall Menu_PrepareBots(void);
+void __stdcall Menu_StoreMPSettings(void);
+void __stdcall Menu_RestoreMPSettings(void);
 void Menu_CreateOptionBox(byte managerNum, int **text, undefined4 type, char param_4, char param_5);
 bool Menu_HasMedal(HASHCODE hc, uint level, uchar maybePlayerNum);
 

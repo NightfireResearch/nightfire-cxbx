@@ -2,6 +2,7 @@
 #include "../../actionhelpers.h"
 #include "../../math/math.h"
 #include "../../engine/AINetwork.h"
+#include "../drone/BOT.h"
 
 
 typedef enum {
@@ -131,7 +132,7 @@ static_assert(sizeof(MP_skin) == 0x10, "MP_skin is wrong size");
 
 
 typedef struct {
-    char stats[14];     // 0x00 its BOT_stats_t: the character's defaults (BOT_getDefaultStats), then P_MPBOTSETUP's
+    BOT_stats_t stats;  // 0x00 the character's defaults (BOT_getDefaultStats), then P_MPBOTSETUP's
     char isPlaying;     // 0x0e the bot is in the game (P_MPBOTSETUP's "Playing" option)
     char isGood;        // 0x0f its character is on MI6's side (Menu_IsBotGood)
     char SkinNum;       // 0x10 its character: an mp_characters identifier

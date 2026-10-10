@@ -425,6 +425,15 @@ typedef enum {
     SUB_P_CNMENU_TITLE_TEXT = 0x100001f9,       // "Edit <codename>"
     SUB_P_NFMAP_LOADING_PANEL = 0x1000022c,     // shown once a mission is picked
     SUB_C_SBBOTS_PLAYING_TEXT = 0x10000243,     // "Playing : Yes/No" for the bot under the wheel
+    SUB_P_MPBOTSETUP_PLAYING_SCROLL = 0x10000116,       // MPBOT.isPlaying
+    SUB_P_MPBOTSETUP_AGGRESSION_SCROLL = 0x10000185,    // the rest: BOT_stats_t fields
+    SUB_P_MPBOTSETUP_ACCURACY_SCROLL = 0x10000186,
+    SUB_P_MPBOTSETUP_HEALTH_SCROLL = 0x10000187,
+    SUB_P_MPBOTSETUP_REACTION_SCROLL = 0x10000188,
+    SUB_P_MPBOTSETUP_RECOVER_SCROLL = 0x1000018a,
+    SUB_P_MPBOTSETUP_SPEED_SCROLL = 0x1000018c,
+    SUB_P_MPBOTSETUP_PERSONALITY_SCROLL = 0x10000195,
+    SUB_P_MPBOTSETUP_INFO_TEXT = 0x10000225,           // BOT_STATS_FIXED for a bot whose stats are fixed
     SUB_P_CREDITS_LEFT_TEXT = 0x10000213,       // 26 labels (by id), the left column / a centred line
     SUB_P_CREDITS_RIGHT_TEXT = 0x10000214,      // 26 labels (by id), the right column
     SUB_P_CREDITS_FADE = 0x10000215,            // the black overlay faded in at the end
@@ -667,6 +676,26 @@ typedef enum {
     MP_GOOD_GUYS_WRONG_TEAM = 0x01000311,      // "You can't have good players playing against each other in a non-team game."
     TXT_NO = 0x00000182,
     MP_BOT_PLAYING = 0x00000295,               // "Playing"
+    BOT_ACCURACY_POOR = 0x00000241,            // "Poor"
+    BOT_ACCURACY_AVERAGE = 0x00000242,         // "Average"
+    BOT_ACCURACY_GOOD = 0x00000243,            // "Good"
+    BOT_ACCURACY_VERYGOOD = 0x00000244,        // "Very good"
+    CONTROL_NORMAL = 0x000003bd,               // "Normal"
+    BOT_AGGRESSION_HIGH = 0x0000031b,          // "High"
+    BOT_AGGRESSION_VERYHIGH = 0x0000031c,      // "Very high"
+    BOT_SPEED_SLOW = 0x0000023c,               // "Slow"
+    BOT_SPEED_NORMAL = 0x0000023d,             // "Normal"
+    BOT_SPEED_FAST = 0x0000023e,               // "Fast"
+    BOT_PERSONALITY_NONE = 0x010002d0,         // "None"
+    BOT_PERSONALITY_COLLECTOR = 0x00000233,    // "Collector"
+    BOT_PERSONALITY_GUARDIAN = 0x00000234,     // "Guardian"
+    BOT_PERSONALITY_TEAMPLAYER = 0x00000235,   // "Team Player"
+    BOT_PERSONALITY_BERSERKER = 0x00000237,    // "Berserker"
+    BOT_PERSONALITY_GREEDY = 0x00000238,       // "Greedy"
+    BOT_PERSONALITY_VENGEFUL = 0x00000239,     // "Vengeful"
+    BOT_PERSONALITY_JUDGE = 0x0000024a,        // "Judge"
+    BOT_PERSONALITY_ASSASSIN = 0x0000024b,     // "Assassin"
+    BOT_STATS_FIXED = 0x010002d1,              // "This Bot's statistics and personality are fixed and cannot be modified."
 
     // Button hints
     NFMAP_HINT_BACK = 0x00000208,              // "~A Select  ~Y Dossier  ~V Scroll  ~B Back"
