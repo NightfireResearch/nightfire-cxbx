@@ -9,8 +9,6 @@
 #include <string.h>
 #include "../../../driving/platform/X87.h" // Ftol
 
-#define CurrentAssassinObjId (*(obj_tag **)0x0026178c)
-#define AssassinTarget (*(obj_tag **)0x00261788)
 // AUTOGEN
 short Control_Plr2Ind(obj_tag* a);
 // AUTOGEN
@@ -22,8 +20,6 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
 #define BOT_init ((obj_tag* (__cdecl *)(short, _VECTOR *, _VECTOR *, obj_tag *, MPBOT *, char))0x0001b170)
 
 #define NUM_SKINS 29 // unique characters
-// XBE_GLOBAL(0x001637c0, 0x1d0)
-#define MP_skins ((MP_skin*)0x001637c0)
 
 
 // AUTOINJECT
@@ -274,7 +270,6 @@ void MP_CleanupMPObjExt(MP_OBJ_EXT *mp_obj) {
 #define Protection (*(MP_OBJ_EXT*)0x00261b40)
 #define BluePrint (*(MP_OBJ_EXT*)0x002635f8)
 
-#define MPObjects (*(obj_tag*(*)[64])0x00263640)
 
 // AUTOINJECT
 void MP_objectBeingDeleted(obj_tag* obj) {
@@ -469,8 +464,6 @@ short MP_PlayerOrBotInd(obj_tag *obj) {
   return -1;
 }
 
-#define TimeSpr (*(sprite **)0x002637d8)
-#define StatusSpr (*(sprite **)0x002637dc)
 
 static void ShowTopAgentResult(sprite *status) {
     int fewestDeaths = 30000;

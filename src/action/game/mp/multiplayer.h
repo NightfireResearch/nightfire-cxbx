@@ -132,7 +132,7 @@ typedef struct {
 
 static_assert(sizeof(MP_skin) == 0x10, "MP_skin is wrong size");
 
-// The same definition as multiplayer.cpp's (which carries its XBE_GLOBAL tag), for BOT.cpp
+// XBE_GLOBAL(0x001637c0, 0x1d0)
 #define MP_skins ((MP_skin*)0x001637c0)
 
 
@@ -275,6 +275,12 @@ static_assert(sizeof(MP_RADAR_OBJECT) == 0x14, "MP_RADAR_OBJECT is wrong size");
 
 // Room for 22 up to Uplinks (0x002633d8); MP_GetRadarObjects writes at most NUM_AGENTS + 8
 #define MPRadarObjects (*(MP_RADAR_OBJECT(*)[22])0x00263220)
+
+#define CurrentAssassinObjId (*(obj_tag **)0x0026178c)
+#define AssassinTarget (*(obj_tag **)0x00261788)
+#define MPObjects (*(obj_tag*(*)[64])0x00263640)
+#define TimeSpr (*(sprite **)0x002637d8)
+#define StatusSpr (*(sprite **)0x002637dc)
 
 void MP_setLoadingSkins(void);
 bool MP_areObjectsOnSameTeam(obj_tag* a, obj_tag* b);

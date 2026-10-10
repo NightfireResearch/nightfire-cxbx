@@ -65,8 +65,6 @@ Counter g_hitBy = {"MP_HitBy"}, g_getTarget = {"MP_GetTarget"}, g_playerIsDead =
         g_resetTimes = {"MP_ResetBotPickupTimes"}, g_radar = {"MP_GetRadarObjects"}, g_update = {"MP_Update"};
 unsigned g_reported;
 
-#define TimeSpr (*(sprite **)0x002637d8)
-#define StatusSpr (*(sprite **)0x002637dc)
 
 void Add(State *s, const char *name, int index, void *at, size_t size) {
     if (s->count == kMaxRegions || s->total + size > sizeof(Snapshot::bytes))

@@ -19,9 +19,6 @@
 
 #pragma fp_contract(off)
 
-#define CurrentAssassinObjId (*(obj_tag **)0x0026178c)
-#define AssassinTarget (*(obj_tag **)0x00261788)
-#define MPObjects (*(obj_tag*(*)[64])0x00263640)
 // The objects that damaged the dying agent, from its hit list
 #define HitByList (*(obj_tag*(*)[64])0x00261c58)
 
