@@ -31,8 +31,8 @@ cheat immortal
 press START                # pause
 waitpage 0x4000004b 400    # P_PAUSE
 wait 60
-shot pause
-focus 0x10000028 1         # objectives
+shot pause                 # the mission tab: continue / restart / quit
+press RIGHT                # objectives
 wait 30
 shot objectives
 press A                    # the selected objective's description
@@ -41,10 +41,7 @@ shot objective_box
 press A                    # close it
 wait 60
 shot objective_closed
-focus 0x10000028 4         # statistics
-wait 30
-shot stats
-focus 0x10000028 3         # controls
+press RIGHT                # controls
 wait 30
 shot controls
 press DOWN                 # the next controller style
@@ -58,7 +55,14 @@ shot controls_inverted
 press X                    # and back
 wait 30
 shot controls_normal
-focus 0x10000028 0         # resume / restart / quit
+press RIGHT                # score: the statistics
+wait 30
+shot stats
+press LEFT
+wait 30
+press LEFT
+wait 30
+press LEFT                 # back to the mission tab
 wait 30
 shot options
 press DOWN                 # restart
@@ -71,6 +75,7 @@ wait 30
 shot restart_no
 press A                    # the Select the "no" leaves behind is dropped
 wait 30
+shot restart_dropped
 press A                    # restart again
 wait 30
 press UP                   # "yes"

@@ -33,14 +33,21 @@ wait 900
 press START                # pause
 waitpage 0x4000004b 400    # P_PAUSE
 wait 60
-shot pause
-focus 0x10000028 4         # scores
+shot pause                 # the mission tab: continue / restart / quit
+press RIGHT
 wait 30
-shot scores
-focus 0x10000028 3         # controls
+shot tab_2
+press RIGHT
 wait 30
-shot controls
-focus 0x10000028 0         # resume / restart / quit
+shot tab_3
+press RIGHT
+wait 30
+shot tab_4
+press LEFT
+wait 30
+press LEFT
+wait 30
+press LEFT                 # back to the mission tab
 wait 30
 shot options
 press DOWN
