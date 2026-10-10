@@ -857,17 +857,17 @@ void bootup_bootup(void) {
   MPSettings.ShowTeamAndNameOverhead = 1;
   MPSettings.GameMode = GM_ARENA;
 
-  for(int i = 0; i < 10; i++) {
+  for(int i = 0; i < NUM_AGENTS; i++) {
 
     MPSettings.Player[i].TeamId = (i & 1) ? MI6 : PHOENIX;
     MPSettings.Player[i].SkinNum = 0;
     MPSettings.Player[i].SomeField2 = 1;
     MPSettings.Player[i].HealthModifier = 0;
 
-    if(i < 4) {
+    if(i < NUM_PLAYERS) {
       sprintf(MPSettings.Player[i].Name, "%s %d", Txt_BindLabel(PLAYER, 0), i + 1);
     } else {
-      sprintf(MPSettings.Player[i].Name, "%s %d", "Bot", i - 3);
+      sprintf(MPSettings.Player[i].Name, "%s %d", "Bot", i - NUM_PLAYERS + 1);
     }
 
   }

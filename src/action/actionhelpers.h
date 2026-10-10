@@ -102,6 +102,7 @@ static_assert(sizeof(COMP_FUNC) == 4, "COMP_FUNC is a 32-bit argument");
 #include "util/Random.h"
 #include "engine/AINetwork.h"
 #include "engine/Anim.h"
+#include "game/mp/MPLimits.h"
 #include "engine/Camera.h"
 #include "engine/Collide.h"
 #include "engine/EDL.h"
@@ -183,8 +184,8 @@ static_assert(sizeof(COMP_FUNC) == 4, "COMP_FUNC is a 32-bit argument");
 // globals and constants
 #define glb_viewer (*(viewer_tag*(*)[11])0x001f661c)
 #define glb_world (*(world_tag**)0x001f6674)
-#define glb_blokes (*(BLData*(*)[4])(0x002774b8))
-#define glb_players (*(obj_tag*(*)[4])(0x001f6654))
+#define glb_blokes (*(BLData*(*)[NUM_PLAYERS])(0x002774b8))
+#define glb_players (*(obj_tag*(*)[NUM_PLAYERS])(0x001f6654))
 
 // XBE_GLOBAL(0x0029d71c, 0xc)
 #define CONST_UP_VECTOR (*(_VECTOR*)0x0029d71c)

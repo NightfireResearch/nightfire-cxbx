@@ -31,7 +31,7 @@ static_assert(offsetof(PlayerMissionStats, timerPaused) == 0x34, "PlayerMissionS
 
 #pragma pack(pop)
 
-#define PlrMissionStats (*(PlayerMissionStats(*)[10])0x00278e70)
+#define PlrMissionStats (*(PlayerMissionStats(*)[NUM_AGENTS])0x00278e70)
 #define BondMoments (*(short(*)[113])0x00278d8e)
 
 // AUTOINJECT

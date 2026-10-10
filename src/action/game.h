@@ -393,7 +393,7 @@ static_assert(sizeof(MPGamePlayer) == 0x30, "MPGamePlayer is wrong size"); // De
 
 typedef struct {
   // Note that PS2 and Xbox have different number of entries in MPGame! PS2 has 8, Xbox has 10
-  MPGamePlayer players[10];
+  MPGamePlayer players[NUM_AGENTS];
   // Immediately following is more state related to MP game
   float teamScore[2]; // by MPTeam: Phoenix, MI6 (MP_SortOutWhoWon, the debriefing)
   uint EndGameFlowState;
@@ -408,7 +408,7 @@ typedef struct {
   short unknown_maybe_unused; // restart
   short unknown_9; // uplink, goldeneye, blueprint timers?
   short maybe_pad;
-  sprite* radar_related[2 * 4]; // One pair per human participant
+  sprite* radar_related[2 * NUM_PLAYERS]; // One pair per human participant
 } MPGameStruct;
 
 static_assert(sizeof(MPGameStruct) == 0x230, "MPGameStruct is wrong size"); // Determined from MP_Init

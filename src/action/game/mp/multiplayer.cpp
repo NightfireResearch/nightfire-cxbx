@@ -453,7 +453,7 @@ short MP_PlayerOrBotInd(obj_tag *obj) {
     return -1; 
 
   // Search through MPGame player list
-  for(int i = 0; i < 10; i++) {
+  for(int i = 0; i < NUM_AGENTS; i++) {
     if(MPGame.players[i].playerObj == obj)
       return i;
   }
@@ -611,7 +611,7 @@ void MP_RestartScenario(void) {
       MP_ReSpawn(plyObj, i);
   }
 
-  for(int i = 4; i < 10; i++) { // TODO: Hardcoded bounds
+  for(int i = NUM_PLAYERS; i < NUM_AGENTS; i++) {
     obj_tag *botObj = MPGame.players[i].playerObj;
     if(botObj != NULL)
       BOT_respawn(botObj, i, false);
@@ -620,7 +620,7 @@ void MP_RestartScenario(void) {
   MPGame.unknown_maybe_capture_state = 0;
   MPGame.unknown_maybe_unused = 0;
   
-  for(int i = 0; i < 10; i++) {
+  for(int i = 0; i < NUM_AGENTS; i++) {
     MPGame.players[i].maybeIdxOfLastInjurer = -1;
     MPGame.players[i].maybeIdxOfMyAssassin = -1;
   }
@@ -698,7 +698,7 @@ void MP_Update(void) {
       GameState.ReloadMenupage = P_MPDEBRIEFING;
       ResetMap_LevelToLoad(HT_Level_Menu_Pre, false, false);
       GameFlow_PushState(7, 60.0f, 0xFF);
-      for(int i = 0; i < 4; i++) { // TODO: make a define for the number of human players?
+      for(int i = 0; i < NUM_PLAYERS; i++) {
         obj_tag* plyObj = MPGame.players[i].playerObj;
         if(plyObj != NULL) {
           Player_SetCamMode((BLData*)plyObj->extraObjectData, 1);
@@ -734,7 +734,7 @@ typedef struct {
     obj_tag *gameObj;
     CelPos_tag celPos;                  // 0x04
     AIEmitter_tag aiEmitter;            // 0x14 so bots can path to it
-    float maybeBotPickupVisitTimes[6];  // 0x3c one per bot: MP_Pickup_Process ages all 6, MP_ResetBotPickupTimes
+    float maybeBotPickupVisitTimes[NUM_BOTS]; // 0x3c one per bot: MP_Pickup_Process ages them all, MP_ResetBotPickupTimes
                                         //      and BOTSTATE_pickGoal index it by bot
     uint32_t unknown_0x54;              // 0x54 no reference in the XBE (MP_Init's clear aside)
 } MP_PICKUP;
@@ -758,9 +758,6 @@ static_assert(offsetof(MP_PICKUP, aiEmitter) == 0x14, "Bad offset of MP_PICKUP.a
 
 // The time limit demolition and protection fall back to when MaxDuration is negative, in seconds
 #define MP_DEFAULT_OBJECTIVE_TIME_LIMIT 60.0f
-
-// Player slots in MPGame.players[] (10 on Xbox)
-#define MP_GAME_PLAYER_SLOTS 10
 
 // Reset values of the two per-player indices (MPGamePlayer notes -2 as possibly "the environment")
 #define MP_INJURER_NONE ((short)-2)
@@ -826,7 +823,7 @@ void MP_Init(void) {
     if ((gameMode == GM_DEMOLITION || gameMode == GM_PROTECTION) && MPGame.TimeLimit < 0.0f)
         MPGame.TimeLimit = MP_DEFAULT_OBJECTIVE_TIME_LIMIT;
 
-    for (int i = 0; i < MP_GAME_PLAYER_SLOTS; i++) {
+    for (int i = 0; i < NUM_AGENTS; i++) {
         MPGame.players[i].maybeIdxOfLastInjurer = MP_INJURER_NONE;
         MPGame.players[i].maybeIdxOfMyAssassin = MP_ASSASSIN_NONE;
         // Top Agent starts everyone on the points limit

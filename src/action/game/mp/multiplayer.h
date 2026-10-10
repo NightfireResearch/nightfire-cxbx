@@ -4,9 +4,6 @@
 #include "../../engine/AINetwork.h"
 
 
-#define MAX_MP_AGENTS 8 // = 4 bots + 4 players? Or is it 7??
-
-
 typedef enum {
     GM_QUICK=0,
     GM_ARENA=1,
@@ -59,7 +56,7 @@ typedef enum  {
 
 #pragma pack(push, 1)
 
-// Should contain team, character ID, health bonus etc for each of 10 agents in the multiplayer game
+// Should contain team, character ID, health bonus etc for each agent in the multiplayer game
 typedef struct {
     char Name[32];
     MPTeam TeamId;
@@ -71,7 +68,7 @@ static_assert(sizeof(MPSettings_PerPlayer) == 0x30, "MPSettings_PerPlayer is wro
 
 typedef struct { // on Xbox, starts at 0025fe38
 
-    MPSettings_PerPlayer Player[10]; // Different on PS2 and Xbox.  1E0: Xbox
+    MPSettings_PerPlayer Player[NUM_AGENTS]; // Different on PS2 and Xbox.  1E0: Xbox
 
     undefined4 isMultiplayer; // on Xbox, at 00260018
     undefined4 maybeDroneAIEnabled;
@@ -146,13 +143,15 @@ static_assert(sizeof(MPBOT) == 18, "MPBOT is wrong size");
 typedef struct {
     char Enabled;
     char NumBots;
-    MPBOT bot[6]; // FIXME: How many bots are there? Platform-specific? Enough memory for 10 on Xbox
+    MPBOT bot[NUM_BOTS];
 } MPBOTS;
+
+static_assert(sizeof(MPBOTS) == 0x6e, "MPBOTS is wrong size");
 
 // XBE_GLOBAL(0x00245280, 0x6e)
 #define mpbots (*(MPBOTS*)0x00245280)
 
-// The four controllers' places on the join page (P_MPJOIN)
+// The controllers' places on the join page (P_MPJOIN)
 typedef struct {
     char joined;        // 0x00
     char ready;         // 0x01 finished setting up (C_RBMPSETUP)
@@ -164,7 +163,7 @@ typedef struct {
 } MPJoinSlot;
 static_assert(sizeof(MPJoinSlot) == 0x10, "MPJoinSlot is wrong size");
 
-#define mp_join_slots (*(MPJoinSlot(*)[4])0x00245240)
+#define mp_join_slots (*(MPJoinSlot(*)[NUM_PLAYERS])0x00245240)
 
 
 typedef struct {

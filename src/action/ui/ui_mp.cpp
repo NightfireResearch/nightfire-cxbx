@@ -473,7 +473,7 @@ bool C_SBMPBTCHOOSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode,
                 mp_bond_bot_taken = mp_editing_bot + 10;
             M_ITEM *character = Menu_GetItemFromHash(mp_characters, skin, ARRAY_SIZE(mp_characters));
             if (character != NULL)
-                strcpy(MPSettings.Player[mp_editing_bot + 4].Name, Txt_BindLabel(character->title, 0));   // the bots follow the 4 players
+                strcpy(MPSettings.Player[NUM_PLAYERS + mp_editing_bot].Name, Txt_BindLabel(character->title, 0));   // the bots follow the players
             mpbots.bot[mp_editing_bot].isPlaying = 1;
             Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_MPBOTSETUP, 0);
         }
@@ -503,7 +503,7 @@ static void SetUpBot(int bot, uchar skin) {
     memcpy(b->stats, stats, sizeof(BOT_stats_t));
     M_ITEM *character = Menu_GetItemFromHash(mp_characters, skin, ARRAY_SIZE(mp_characters));
     if (character != NULL)
-        strcpy(MPSettings.Player[4 + bot].Name, Txt_BindLabel(character->title, 0));
+        strcpy(MPSettings.Player[NUM_PLAYERS + bot].Name, Txt_BindLabel(character->title, 0));
 }
 
 // AUTOINJECT
@@ -542,7 +542,7 @@ bool C_SBMPSCEN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
         MPSettings.multiplayerLevelHashcode = GameState.NextLevelHashcode;
         static const uint quick_skins[4] = { 0, 6, 7, 8 };
         uchar players = 0;
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < NUM_PLAYERS; i++) {
             if (!mp_join_slots[i].joined)
                 continue;
             players++;
@@ -583,7 +583,7 @@ bool C_SBMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
             // match that could not be played.
             Menu_PrepareBots();
             uchar phoenix = 0, mi6 = 0;
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < NUM_PLAYERS; i++)
                 if (mp_join_slots[i].joined) {
                     if (mp_join_slots[i].team == PHOENIX)
                         phoenix++;
@@ -624,9 +624,9 @@ bool C_SBMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
         break;
     }
     case MessageType_ControlCreated:
-        // the first time: the six bots as the next six characters
+        // the first time: the bots as the characters from 6 on
         if (!mp_bots_initialised) {
-            for (int b = 0; b < 6; b++)
+            for (int b = 0; b < NUM_BOTS; b++)
                 mpbots.bot[b].SkinNum = (char)(6 + b);
             mp_bots_initialised = 1;
         }
@@ -644,7 +644,7 @@ typedef enum {
     JOIN_CHOOSE_HANDICAP = 4,
     JOIN_READY = 5,
 } JoinStep;
-#define mp_join_step (*(int(*)[4])0x00245698)
+#define mp_join_step (*(int(*)[NUM_PLAYERS])0x00245698)
 
 // Fills an agent's character radio on the join page with the characters it may have: unlocked, and - in a game
 // without teams - only a good one if no other agent has one (taken = true: never), or in a team game one of its
@@ -691,7 +691,7 @@ static void ShowTeamIcon(uchar managerNum, M_CONTROL *radio, uint agent) {
 // The other agents still choosing a character get their lists again, with the one-per-game characters taken
 // (taken = true) or given back.
 static void RefreshCharacterChoices(uchar managerNum, uint except, bool taken) {
-    for (uint i = 0; i < 4; i++) {
+    for (uint i = 0; i < NUM_PLAYERS; i++) {
         if (i == except || mp_join_step[i] != JOIN_CHOOSE_CHARACTER)
             continue;
         int current = __Menu_SendEx(managerNum, C_RBMPSETUP, i, MessageType_GetSelectedItemValue, 0, 0);
@@ -792,10 +792,10 @@ bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
             // the original)
             if (!teams && mp_good_bot_taken == agent + 1) {
                 mp_good_bot_taken = 0;
-                RefreshCharacterChoices(managerNum, 4, false);
+                RefreshCharacterChoices(managerNum, NUM_PLAYERS, false);
             } else if (teams && mp_bond_bot_taken == agent + 1) {
                 mp_bond_bot_taken = 0;
-                RefreshCharacterChoices(managerNum, 4, false);
+                RefreshCharacterChoices(managerNum, NUM_PLAYERS, false);
             }
             *(int *)arg2 = -2;
         }
@@ -829,9 +829,9 @@ bool P_MPDEBRIEFING_Handler(uchar managerNum, M_CONTROL *control, uint hashcode,
 
     // As the original lays them out: the four place labels, then {score, participant} per player and bot - the
     // labels are read by place index, and a fifth place or later reads on into the scores.
-    int table[4 + 2 * 10] = { PLACE_1ST, PLACE_2ND, PLACE_3RD, PLACE_4TH };
+    int table[4 + 2 * NUM_AGENTS] = { PLACE_1ST, PLACE_2ND, PLACE_3RD, PLACE_4TH };
     int *place = &table[0];
-    int *entry = &table[4];   // entry[2k] score, entry[2k + 1] participant (players 0-3, bots 4 on)
+    int *entry = &table[4];   // entry[2k] score, entry[2k + 1] participant (players, then bots)
 
     mp_debrief_text_count = 0;
     Menu_RestartFrontEndLoop();
@@ -840,7 +840,7 @@ bool P_MPDEBRIEFING_Handler(uchar managerNum, M_CONTROL *control, uint hashcode,
         entry[count * 2 + 1] = p;
         entry[count * 2] = Menu_GetMPScore((byte)p);
     }
-    for (int p = 4; p < MPSettings.numBots + 4; p++, count++) {
+    for (int p = NUM_PLAYERS; p < MPSettings.numBots + NUM_PLAYERS; p++, count++) {
         entry[count * 2 + 1] = p;
         entry[count * 2] = Menu_GetMPScore((byte)p);
     }
@@ -884,7 +884,7 @@ bool P_MPDEBRIEFING_Handler(uchar managerNum, M_CONTROL *control, uint hashcode,
         M_ITEM *character = Menu_GetItemFromHash(mp_characters_small, MPSettings.Player[who].SkinNum, ARRAY_SIZE(mp_characters_small));
         if (character != NULL)
             __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_ICON, row, MessageType_SetIcon, character->iconHashcode, 0);
-        const char *name = who < 4 ? MPSettings.Player[who].Name : Menu_GetBotShortName((BotNum)MPSettings.Player[who].SkinNum);
+        const char *name = who < NUM_PLAYERS ? MPSettings.Player[who].Name : Menu_GetBotShortName((BotNum)MPSettings.Player[who].SkinNum);
         __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_NAME, row, MessageType_SetText, (int)name, 0);
         __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_POINTS, row, MessageType_SetText, (int)DebriefNumber((int)MPGame.players[who].points), 0);
         mp_debrief_text_count++;
@@ -926,7 +926,7 @@ static uint8_t mp_confirm_phoenix_players;
 static uint8_t mp_confirm_mi6_bots;
 // XBE_GLOBAL(0x0025e958, 0x1)
 static uint8_t mp_confirm_phoenix_bots;
-#define mp_confirm_handicap_text   (*(char(*)[4][32])0x0025e8d8)
+#define mp_confirm_handicap_text   (*(char(*)[NUM_PLAYERS][32])0x0025e8d8)
 // XBE_GLOBAL(0x0025e4d8, 0x40)
 static char mp_confirm_map_text[0x40];
 // XBE_GLOBAL(0x0025e518, 0x40)
@@ -975,9 +975,9 @@ bool P_MPCONFIRM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
         // its player number, and its join slot is copied beside it. (As the original, a moved controller's port
         // byte takes the old value of the slot it moves into, and player 3's the last one moved.)
         Menu_StoreMPSettings();
-        MPJoinSlot slots[4];
+        MPJoinSlot slots[NUM_PLAYERS];
         memset(slots, 0, sizeof(slots));
-        for (int k = 0; k < 4; k++)
+        for (int k = 0; k < NUM_PLAYERS; k++)
             slots[k].controllerPort = (uchar)k;
         uchar players = 0;
         if (mp_join_slots[0].joined) {
@@ -986,7 +986,7 @@ bool P_MPCONFIRM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
             players = 1;
         }
         uchar port3 = 0;
-        for (int k = 1; k < 4; k++) {
+        for (int k = 1; k < NUM_PLAYERS; k++) {
             if (!mp_join_slots[k].joined) {
                 if (k == 3)
                     port3 = slots[3].controllerPort;
@@ -1030,7 +1030,7 @@ bool P_MPCONFIRM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
     mp_confirm_mi6_bots = 0;
     mp_confirm_phoenix_players = 0;
     mp_confirm_mi6_players = 0;
-    for (uint row = 0; row < 4; row++) {
+    for (uint row = 0; row < NUM_PLAYERS; row++) {
         __Menu_SendEx(managerNum, SUB_P_MPCONFIRM_MI6_NAME, row, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
         __Menu_SendEx(managerNum, SUB_P_MPCONFIRM_PHOENIX_NAME, row, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
         __Menu_SendEx(managerNum, SUB_P_MPCONFIRM_MI6_ICON, row, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
@@ -1043,7 +1043,7 @@ bool P_MPCONFIRM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
     __Menu_Send(managerNum, SUB_P_MPCONFIRM_HEADING_1, MessageType_SetText, (int)Txt_BindLabel(teams ? MP_TEAM_MI6 : MP_BOT_PLAYING, 0), 0);
     __Menu_Send(managerNum, SUB_P_MPCONFIRM_HEADING_2, MessageType_SetState, teams ? CONTROL_STATE_INERT : CONTROL_STATE_HIDDEN, 0);
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < NUM_PLAYERS; i++) {
         const MPJoinSlot *slot = &mp_join_slots[i];
         if (!slot->joined)
             continue;

@@ -54,13 +54,13 @@ typedef struct BOT_goal_t {
     uchar _pad3b;
 } BOT_goal_t;
 
-// A bot player's state (six at 0x001d98e0, one per bot player 4..9; Drone_tag.botVars). Ghidra's type is 0x75f
+// A bot player's state (NUM_BOTS at 0x001d98e0, one per bot agent; Drone_tag.botVars). Ghidra's type is 0x75f
 // bytes, too short.
 typedef struct BOT_vars_t {
     BOT_goal_t goals[2];            // 0x000
     BOT_stats_t stats;              // 0x078 - a copy of the bot's stats
     uchar _pad86[2];
-    uchar players[10][0x10];        // 0x088 - per player: last seen alive, distance�, facing, flags (FUN_0001a660)
+    uchar players[NUM_AGENTS][0x10]; // 0x088 - per agent: last seen alive, distance�, facing, flags (FUN_0001a660)
     _VECTOR opponentLastPos;        // 0x128
     uchar weapons[114][0xc];        // 0x134 - per weapon id: sqrt(range), rounds in clip, held. One slot per id
                                     //         (NUM_WEAPONS), but the bot code only walks ids 0-82 (BOTWEAP_CheckWeaponsLoaded,

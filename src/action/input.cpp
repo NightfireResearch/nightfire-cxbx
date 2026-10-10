@@ -20,7 +20,7 @@ void Inject_KeyboardInput(void) {
     bool dumpDown = (GetAsyncKeyState(0x78) & 0x8000) != 0; // VK_F9
     if (dumpDown && !dumpHeld) {
       printf("MP settings:\n");
-      for(int i = 0; i < 10; i++) {
+      for(int i = 0; i < NUM_AGENTS; i++) {
         printf("Index %i: %-16s\t%-10s\t%i\t%i\t%i\n", i, MPSettings.Player[i].Name, TEAM_GET_NAME(MPSettings.Player[i].TeamId), MPSettings.Player[i].SkinNum, MPSettings.Player[i].SomeField2, MPSettings.Player[i].HealthModifier);
       }
     }
@@ -74,7 +74,7 @@ unsigned short Input_Action(short playerNum, GameActions_tag action,unsigned cha
     }
 
     // One specific player and the action is pressed
-    if ((playerNum < 4) && (PlayerInputs[playerNum].actions[action] & flags)) {
+    if ((playerNum < NUM_PLAYERS) && (PlayerInputs[playerNum].actions[action] & flags)) {
       return (unsigned short)(int)(PlayerInputs[playerNum].fChannels[action] * 100.0);
     }
 
@@ -99,7 +99,7 @@ float Input_Actionf(short playerNum, GameActions_tag action, unsigned char flags
     }
 
   // A specific player and the action is pressed
-  if ((playerNum < 4) && (PlayerInputs[playerNum].actions[action] & flags)) {
+  if ((playerNum < NUM_PLAYERS) && (PlayerInputs[playerNum].actions[action] & flags)) {
       return PlayerInputs[playerNum].fChannels[action];
   }
 
