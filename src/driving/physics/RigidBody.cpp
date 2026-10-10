@@ -209,7 +209,7 @@ void RigidBody::ApplyInitialForcesAndTorques() {
         drag.y = 0.0f;
         ResolveMassScaledForce4(&drag);
     }
-    if (kind < 4 && RigidVehicles[ownerIndex]->GetPhysics()->unknownCC != 0) {
+    if (kind < 4 && RigidVehicles[ownerIndex]->GetPhysics()->isBoat != 0) {
         gravity.y = gravity.y * kDragGravityScale;
         Coord4 drag = {velocity.x, velocity.y, velocity.z, 0.0f};
         VU0_v4scale(&drag, kDrag, &drag);
@@ -230,7 +230,7 @@ void RigidBody::ApplyInitialForcesAndTorques() {
                 RigidPlayerGravity = Rigid_BODGE_PLAYER_GRAVITY;
         }
     }
-    if (!(kind < 4 && RigidVehicles[ownerIndex]->GetPhysics()->unknownC0 == 1))
+    if (!(kind < 4 && RigidVehicles[ownerIndex]->GetPhysics()->subPhysics == 1))
         ResolveMassScaledForce4(&gravity);
 
     if ((int8_t)groundContacts > 2 && kind >= 4 && info->unknown4ff == 0 && info->unknown4fd == 0) {
@@ -262,7 +262,7 @@ void RigidBody::ResolveLeverForces(const LeverContacts *contacts, const Coord4 *
         float speed = Abs(approach);
         if (speed > Rigid_MICRO_THRESHOLD)
             speed = Rigid_MICRO_THRESHOLD;
-        double rate = kind < 4 && RigidVehicles[ownerIndex]->GetPhysics()->unknownC8 != 0
+        double rate = kind < 4 && RigidVehicles[ownerIndex]->GetPhysics()->isSnowmobile != 0
                           ? RigidRestitutionRateC8 : RigidGroundRestitutionRate;
         Coord4 impulse, forcePerMass, normalPart, sliding;
         VU0_v4scale(&normal, (float)(-((rate * speed + 1.0) * approach) / effectiveInverseMass), &impulse);
@@ -294,7 +294,7 @@ void RigidBody::ResolveLeverForces(const LeverContacts *contacts, const Coord4 *
 void RigidBody::CollideWithGround() {
     if (RigidUnderwater)
         return;
-    if (kind < 4 && RigidVehicles[ownerIndex]->GetPhysics()->unknownC4 != 0)
+    if (kind < 4 && RigidVehicles[ownerIndex]->GetPhysics()->noWorldCollisions != 0)
         return;
     if (kind < 4 && RigidVehicles[ownerIndex]->GetSplinePath() != NULL) {
         info->ground.x = 0.0f;

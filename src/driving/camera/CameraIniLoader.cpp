@@ -10,7 +10,7 @@
 #include "../data/Dafi.h"
 #include "../data/IniFiles.h"
 #include "../engine/UMemory.hpp"
-#include "../physics/RigidBody.h"       // RigidVehicle
+#include "../physics/RigidBody.h"       // PVehicle
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"      // MEM_copy
 #include "../platform/X87.h"
@@ -31,7 +31,7 @@
 #define Crt_atof ((double (__cdecl *)(const char *))0x00133e84)
 
 #define PlayerCamera (*(RPlayerCamera **)0x001ebc8c)          // RCameraIniLoader's
-#define playerPhysicsObject (*(RigidVehicle ***)0x00234e40)
+#define playerPhysicsObject (*(PVehicle ***)0x00234e40)
 #define OverrideCarType (*(const char **)0x001e7a8c)          // used for a car of class 0 when set (name ours)
 #define TwoPi FLOAT_AT(0x001ebc90)                            // set by static initialisers
 #define TurnsPerRadian FLOAT_AT(0x001ebc94)
@@ -65,8 +65,8 @@ struct WeaponManagerSlots {
 #define WeaponManager (*(WeaponManagerSlots **)0x0023923c)
 
 // PBondCar::GetSecondaryType, vtable slot 0x144 / 4 of the player's car
-const char *SecondaryType(RigidVehicle *car) {
-    typedef const char *(RigidVehicle::*Method)();
+const char *SecondaryType(PVehicle *car) {
+    typedef const char *(PVehicle::*Method)();
     return (car->*XbeVirtual<Method>(car, 0x144 / 4))();
 }
 
@@ -177,7 +177,7 @@ bool RCameraIniLoader::CheckCameraAgainstCar(char *cars) {
         if (cars[i] >= 'A' && cars[i] <= 'Z')
             cars[i] += 'a' - 'A';
     }
-    RigidVehicle *car = *playerPhysicsObject;
+    PVehicle *car = *playerPhysicsObject;
     if (OverrideCarType != NULL && car->GetCarClass() == 0)
         return CarListContains(cars, OverrideCarType);
     const char *type = car->GetCarType();

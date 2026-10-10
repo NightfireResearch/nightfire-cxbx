@@ -5,6 +5,7 @@
 #include "../data/Tuning.h"           // TuningDBMgr
 #include "../engine/GameLoop.h"       // LaunchPage
 #include "../engine/UMemory.hpp"
+#include "../game/BondCarState.h"    // BondCar_BASE_FRICTION_MASS
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../world/CollisionManager.h"
@@ -40,8 +41,7 @@ constexpr uint32_t kHeightSearchMask = 0x20;        // TempGetHeightInformation'
 constexpr uint32_t kHeightRestoreMask = 0x10;       // and the mask it leaves
 constexpr float kProbeStep = 0.1f;                  // its probes' step along x
 constexpr float kVehicleHeightLift = 10.0f;
-constexpr float kNoGeometryUnknown60 = 1.5f;
-constexpr float kGroundFrictionMassScale = 8.0f;    // 0x001c36d0
+constexpr float kNoGeometrySpringRestLength = 1.5f;
 
 constexpr int8_t kVehicleKinds = 4;                 // a body of kind below 4 belongs to a vehicle
 constexpr int8_t kKind1 = 1;
@@ -323,7 +323,7 @@ bool RigidBody::TempGetHeightInformation(bool, const Coord3 *point, Coord4 *grou
         const StripVertex &corner = worldPosition->face.corner[0];
         ground->w = (float)(bump + ((double)corner.z - point->z) * ground->z + ((double)corner.y - point->y) * ground->y +
                             ((double)corner.x - point->x) * ground->x);
-        if (kind < kVehicleKinds && RigidVehicles[ownerIndex]->GetPhysics()->unknownCC != 0)
+        if (kind < kVehicleKinds && RigidVehicles[ownerIndex]->GetPhysics()->isBoat != 0)
             ground->w += kVehicleHeightLift;
     } else {
         ground->w = 0.0f;
@@ -343,13 +343,13 @@ void RigidBody::InitLevers(PhysicsObject *owner, const Coord4 *halfExtents) {
     if (count != 0) {
         int first = 0;
         if (owner->type == kOwnerTypeCar) {
-            static_cast<RigidVehicle *>(owner)->GetPhysics();     // the answer is not used
+            static_cast<PVehicle *>(owner)->GetPhysics();     // the answer is not used
             float wheelX = owner->attributes.LookupFloat("CAR_WHEEL_X_OFFSET", NULL);
             float frontZ = owner->attributes.LookupFloat("CAR_WHEEL_ZF_OFFSET", NULL);
             float rearZ = owner->attributes.LookupFloat("CAR_WHEEL_ZR_OFFSET", NULL);
             levers[0] = Coord4{wheelX - halfExtents->x, -halfExtents->y, frontZ + halfExtents->z, 0.0f};
             levers[1] = Coord4{halfExtents->x - wheelX, -halfExtents->y, frontZ + halfExtents->z, 0.0f};
-            if (RigidVehicles[ownerIndex]->GetPhysics()->unknownC8 != 0) {
+            if (RigidVehicles[ownerIndex]->GetPhysics()->isSnowmobile != 0) {
                 levers[2] = Coord4{0.0f, -halfExtents->y, rearZ - halfExtents->z, 0.0f};
                 levers[3] = Coord4{0.0f, -halfExtents->y, rearZ - halfExtents->z, 0.0f};
             } else {
@@ -378,7 +378,7 @@ void RigidBody::InitLevers(PhysicsObject *owner, const Coord4 *halfExtents) {
         levers[6] = Coord4{halfExtents->x, halfExtents->y, -halfExtents->z, 0.0f};
         levers[7] = Coord4{-halfExtents->x, halfExtents->y, -halfExtents->z, 0.0f};
         if (kind < kVehicleKinds)
-            static_cast<RigidVehicle *>(owner)->GetPhysics()->unknown60 = kNoGeometryUnknown60;
+            static_cast<PVehicle *>(owner)->GetPhysics()->springRestLength = kNoGeometrySpringRestLength;
     }
-    info->groundFriction = (float)((double)mass / kGroundFrictionMassScale * Rigid_GROUND_FRICTION_COEFF);
+    info->groundFriction = (float)((double)mass / BondCar_BASE_FRICTION_MASS * Rigid_GROUND_FRICTION_COEFF);
 }

@@ -413,7 +413,7 @@ struct FakeCall {
 };
 
 struct FakeState {
-    RigidVehiclePhysics physics;
+    CarPhysics physics;
     uint8_t physicsTail[0x40];
     void *splinePath;
     uint32_t timer;
@@ -476,7 +476,7 @@ bool __fastcall FakeGetDamageByPlayerTimer(PhysicsObject *, int) {
     return g_fake.timer != 0;
 }
 
-RigidVehiclePhysics *__fastcall FakeGetPhysics(PhysicsObject *, int) {
+CarPhysics *__fastcall FakeGetPhysics(PhysicsObject *, int) {
     NextCall(57);
     return &g_fake.physics;
 }
@@ -511,8 +511,8 @@ FakeState RandomFake() {
     uint8_t *bytes = reinterpret_cast<uint8_t *>(&fake.physics);
     for (size_t i = 0; i < sizeof(fake.physics); i++)
         bytes[i] = uint8_t(Random());
-    fake.physics.unknownC8 = RandomInt(2) ? int32_t(Random()) : 0;
-    fake.physics.unknownCC = RandomInt(2) ? int32_t(Random()) : 0;
+    fake.physics.isSnowmobile = RandomInt(2) ? int32_t(Random()) : 0;
+    fake.physics.isBoat = RandomInt(2) ? int32_t(Random()) : 0;
     fake.splinePath = RandomInt(3) == 0 ? &g_fake : NULL;
     fake.timer = RandomInt(2);
     fake.renderOffset = Uniform(-1.0f, 1.0f);

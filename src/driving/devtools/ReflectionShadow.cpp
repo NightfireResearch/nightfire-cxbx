@@ -4,6 +4,7 @@
 #include "ReflectionShadow.h"
 #include "FpControl.h"
 
+#include "../game/Vehicle.h"             // PVehicle's car names
 #include "../render/Colorize.h"
 #include "../render/Decals.h"
 #include "../render/Gain.h"
@@ -122,9 +123,6 @@ typedef void (*FeatureInitFn)(int, int, int, int);
 #define Orig_SetUserSpecifiedRenderFeatures ((StaticFn)0x000980f0)
 #define Orig_SetTexelsAreOffset ((TexelsFn)0x000980e0)
 #define Orig_FeatureInit ((FeatureInitFn)0x000981c0)
-
-#define PVehicle_GetNameCount ((uint32_t (*)())0x00071880)
-#define PVehicle_GetCarNames ((const char *const *(*)())0x000718e0)
 
 // ---- the game's state
 
@@ -459,8 +457,8 @@ void TestQueries() {
     static const char *const kOthers[] = { "Character", "character", "Dynamic Objects", "DYNAMIC OBJECTS",
                                            "Characters", "no such car" };
     int index = 0;
-    uint32_t cars = PVehicle_GetNameCount();
-    const char *const *names = PVehicle_GetCarNames();
+    uint32_t cars = PVehicle::GetNameCount();
+    const char *const *names = PVehicle::GetCarNames();
     for (int kind = 0; kind < 6; kind++) {
         for (uint32_t car = 0; car < cars; car++)
             Query(0, kind, names[car], index++);

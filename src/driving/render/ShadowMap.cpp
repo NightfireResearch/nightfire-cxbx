@@ -21,6 +21,7 @@
 #include "../physics/PhysicsMath.h"       // Abs
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
+#include "../game/Vehicle.h"           // PVehicle's car names
 #include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
@@ -81,14 +82,14 @@ static double LeverHeight(PhysicsObject *physics, int lever) {
 // FUNC_AT(0x000a5820)
 void RShadowMap::LoadAttributes() {
     if (CarShadowSizes == NULL)
-        CarShadowSizes = static_cast<CarShadowSize *>(OperatorNewArray(PVehicle_GetNameCount() * sizeof(CarShadowSize)));
-    for (uint32_t car = 0; car < PVehicle_GetNameCount(); car++) {
+        CarShadowSizes = static_cast<CarShadowSize *>(OperatorNewArray(PVehicle::GetNameCount() * sizeof(CarShadowSize)));
+    for (uint32_t car = 0; car < PVehicle::GetNameCount(); car++) {
         CarShadowSizes[car].width = kDefaultShadowSize;
         CarShadowSizes[car].length = kDefaultShadowSize;
     }
     PS2ShadowStrength = kDefaultPS2ShadowStrength;
-    const char *const *carNames = PVehicle_GetCarNames();
-    uint32_t lastCar = PVehicle_GetNameCount() - 1;
+    const char *const *carNames = PVehicle::GetCarNames();
+    uint32_t lastCar = PVehicle::GetNameCount() - 1;
     dbindex("Car to edit", &CarToEdit, 0, lastCar, carNames);
     dbattrib_float("Shadow width", &CarShadowSizes[0].width, 0.0f, 2.0f, sizeof(CarShadowSize), 1.0f, NULL);
     dbattrib_float("Shadow length", &CarShadowSizes[0].length, 0.0f, 2.0f, sizeof(CarShadowSize), 1.0f, NULL);

@@ -544,6 +544,6 @@ AttributeValue* AttributeSystem::CreateExtensionAttribute(uint32_t type, Attribu
 }
 
 // FUNC_AT(0x000525f0)
-void AttributeSystem::ConfigEditParameters(const char *className, const char *name, uint32_t unknown3, float low,
-                                           float high, uint32_t unknown6) {
+void AttributeSystem::ConfigEditParameters(const char *className, const char *name, uint32_t low, float high,
+                                           float scope, uint32_t unknown6) {
 }

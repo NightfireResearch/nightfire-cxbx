@@ -39,7 +39,7 @@
 //     the body, its info and the impact (pre-filled with a pattern);
 //   - CollideWithWorld on each live body with a collider: as it is, lowered into the ground, sped up and slowed down,
 //     as the player's kind and as an object's, placed on the collision objects (boxes and cylinders) near it, with
-//     the vehicle physics' unknownC0 0 and 1 and the step count at 0 and random (the step mask);
+//     the vehicle physics' subPhysics 0 and 1 and the step count at 0 and random (the step mask);
 //   - CollideWithObject with the copy placed on or near each other live body, at different start indices, as the
 //     player's kind or not, two-wheeled or not, with unknown4fc set on its info or the other's.
 //
@@ -308,9 +308,9 @@ uint32_t __fastcall FakeGetIsInTwoWheelMode(void *self, int) {
     return 0x12345600u | g_twoWheel;
 }
 
-void SetVehiclePhysics(int32_t unknownC0) {
+void SetVehiclePhysics(int32_t subPhysics) {
     for (int i = 0; i < kSlots; i++)
-        reinterpret_cast<RigidVehiclePhysics *>(g_physics[i])->unknownC0 = unknownC0;
+        reinterpret_cast<CarPhysics *>(g_physics[i])->subPhysics = subPhysics;
 }
 
 void OwnersSwap(bool fake) {

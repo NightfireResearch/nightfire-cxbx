@@ -20,6 +20,14 @@ float cos_fractionalangle(float turns);
 void sincos_fractionalangle(const float *turns, float *sinOut, float *cosOut);
 float tan_fractionalangle(float turns);
 float atan_turns(float y, float x);
+// sin_fractionalangle and cos_fractionalangle leave FSIN's and FCOS's results unrounded in ST0: these read
+// them as doubles, for callers that keep computing with them as the original does
+inline double SineTurns(float turns) {
+    return reinterpret_cast<double (*)(float)>(&sin_fractionalangle)(turns);
+}
+inline double CosineTurns(float turns) {
+    return reinterpret_cast<double (*)(float)>(&cos_fractionalangle)(turns);
+}
 
 // ---- EA's portable vector and matrix routines (x87)
 void v3add_x87(const float *a, const float *b, float *out);       // the EBP-framed helpers the v3 functions call

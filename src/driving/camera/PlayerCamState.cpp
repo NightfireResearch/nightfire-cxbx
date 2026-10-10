@@ -8,7 +8,8 @@
 #include "../engine/GameLoop.h"         // LaunchPage
 #include "../engine/MissionManager.h"
 #include "../physics/PhysicsMath.h"     // Abs
-#include "../physics/RigidBody.h"       // RigidVehicle
+#include "../game/VehicleSound.h"     // AVehicle
+#include "../physics/RigidBody.h"       // PVehicle
 #include "../../helpers.h"
 
 #include <stddef.h>
@@ -35,16 +36,16 @@ const char kSpinTrack[] = "snow1a_mis3";   // the one track with the spin
 
 #define SimState I32_AT(0x00234e24)
 #define SimStepCount I32_AT(0x00234e34)
-#define playerPhysicsObject (*(RigidVehicle ***)0x00234e40)
+#define playerPhysicsObject (*(PVehicle ***)0x00234e40)
 #define Launch (*(LaunchPage *)0x00243b90)
 
 namespace {
 
-// PBondCar::GetAudio, vtable slot 0x1c / 4 of the player's car
-CarAudioFlags *CarAudio() {
-    typedef CarAudioFlags *(RigidVehicle::*Method)();
-    RigidVehicle *car = *playerPhysicsObject;
-    return (car->*XbeVirtual<Method>(car, 0x1c / 4))();
+// The player's car's engine sound (its GetAudio, through its vtable)
+AVehicle *CarAudio() {
+    typedef AVehicle *(PVehicle::*Method)();
+    PVehicle *car = *playerPhysicsObject;
+    return (car->*XbeVirtual<Method>(car, PVehicle::kGetAudio))();
 }
 
 } // namespace
@@ -88,42 +89,42 @@ void RPlayerCamState::ResetStateForAnimation() {
 void RPlayerCamState::DriveCamInputHandler(int input, float value) {
     paused = SimState == kSimPaused || SimStepCount < kFirstSteps;
     switch (input) {
-    case kInput38:
-    case kInput39:
+    case kActionChangeCamera:
+    case kActionChangeCameraUp:
         if (!paused && !DriveInputHeld())
             camera->NextCameraMode(0);
         break;
-    case kInput40:
+    case kActionChangeCameraDown:
         if (!paused && !DriveInputHeld())
             camera->PrevCameraMode(0);
         break;
-    case kInput41:
+    case kActionCamLookBack:
         lookBackOff = false;
         if (!paused && !DriveInputHeld())
             camera->SetCameraLookBack(true);
         break;
-    case kInput42:
+    case kActionCamLookBackRelease:
         if (!lookBackOff) {
             lookBackOff = true;
             if (!paused)
                 camera->SetCameraLookBack(false);
         }
         break;
-    case kInput1:
+    case kActionSteer:
         if (!paused && !DriveInputHeld())
             unknown24 = -value;
         break;
-    case kInput44:
+    case kActionCamRotateX:
         if (!paused && !DriveInputHeld())
             unknown24 = value;
         break;
-    case kInput27:
+    case kActionHandbrake:
         if (!paused && !DriveInputHeld()) {
             unknown2C = true;
             unknown30 = kUnknown30Time;
         }
         break;
-    case kInput28:
+    case kActionHandbrakeRelease:
         unknown2C = false;
         break;
     }
@@ -139,8 +140,8 @@ RPlayerCamState* RPlayerCamState::Construct(RPlayerCamera *camera) {
 
 // One of the two rotation-about-y inputs: the camera turns by whichever of the two is larger.
 void RPlayerCamState::RotateY(int input, float value) {
-    float &own = rotationY[input == kInput44 ? 0 : 1];
-    float other = rotationY[input == kInput44 ? 1 : 0];
+    float &own = rotationY[input == kActionCamRotateX ? 0 : 1];
+    float other = rotationY[input == kActionCamRotateX ? 1 : 0];
     own = value;
     if (value != 0.0f)
         unknown0D = false;
@@ -151,7 +152,7 @@ void RPlayerCamState::RotateY(int input, float value) {
 
 // ... about x, `negate`d for one input of each pair
 void RPlayerCamState::RotateX(int input, float value, bool negate) {
-    bool first = input == kInput45 || input == kInput46;
+    bool first = input == kActionCamRotateY || input == kActionCamRotateYInv;
     float &own = rotationX[first ? 0 : 1];
     float other = rotationX[first ? 1 : 0];
     own = value;
@@ -171,41 +172,41 @@ void RPlayerCamState::AutoDriveCamInputHandler(int input, float value) {
         return;
     bool allowed = mission->unknown47c == 0;
     switch (input) {
-    case kInput44:
+    case kActionCamRotateX:
         if (allowed)
             RotateY(input, value);
         break;
-    case kInput47:
+    case kActionCamRotateX2:
         if (aiming && unknown0F)
             break;
         if (allowed)
             RotateY(input, value);
         break;
-    case kInput45:
-    case kInput46:
+    case kActionCamRotateY:
+    case kActionCamRotateYInv:
         if (allowed)
-            RotateX(input, value, input == kInput45);
+            RotateX(input, value, input == kActionCamRotateY);
         break;
-    case kInput48:
-    case kInput49:
+    case kActionCamRotateY2:
+    case kActionCamRotateY2Inv:
         if (aiming && unknown0F)
             break;
         if (allowed)
-            RotateX(input, value, input == kInput48);
+            RotateX(input, value, input == kActionCamRotateY2);
         break;
-    case kInput50:
+    case kActionCamSpin:
         if (mission->unknown4f0 != 0 || Crt_stricmp(Launch.missionName, kSpinTrack) != 0)
             break;
         CarAudio()->flagC2 = 1;
         if (allowed && !paused)
             camera->InitSpin();
         break;
-    case kInput51:
+    case kActionCamCentre:
         if (allowed && !paused)
             unknown0D = true;
         CarAudio()->flagC2 = 0;
         break;
-    case kInput56:
+    case kActionAimZoomRight:
         if (!aiming) {
             if (mission->unknown710 == 0 || lockedOn)
                 CameraLockOnFlag = 1;
@@ -213,25 +214,25 @@ void RPlayerCamState::AutoDriveCamInputHandler(int input, float value) {
             CameraLockOnFlag = 0;
         }
         break;
-    case kInput58:
+    case kActionAimRelease:
         if (Launch.unknowna44 == 0 && !lockedOn)
             CameraLockOnFlag = 0;
         break;
-    case kInput52:
+    case kActionCamZoomInOut:
         if (aiming && !paused && allowed && !lockedOn)
             camera->SetAutoDriveZoom(-value);
         break;
-    case kInput53:
+    case kActionCamZoomIn:
         if (aiming && !paused && allowed && !lockedOn)
             camera->SetAutoDriveZoom(value > 0.5f ? -1.0f : 0.0f);
         break;
-    case kInput54:
+    case kActionCamZoomOut:
         if (aiming && !paused && allowed && !lockedOn)
             camera->SetAutoDriveZoom(value > 0.5f ? 1.0f : 0.0f);
         break;
-    case kInput33:
-    case kInput34:
-    case kInput35:
+    case kActionToggleSecondary:
+    case kActionToggleSecondaryUp:
+    case kActionToggleSecondaryDown:
         if (allowed && !paused)
             camera->InitWeaponChange();
         break;

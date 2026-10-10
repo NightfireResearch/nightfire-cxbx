@@ -9,7 +9,7 @@
 #include "../eagl/GeoPrimState.h"
 #include "../eagl/RenderContext.h"
 #include "../engine/UMemory.hpp"
-#include "../physics/RigidBody.h"       // RigidVehicle
+#include "../physics/RigidBody.h"       // PVehicle
 #include "Draw.h"
 #include "Materials.h"
 #include "Renderer.h"
@@ -22,7 +22,7 @@
 
 // ---- the game's globals
 
-#define PlayerVehicles (*(RigidVehicle ***)0x00234e40)              // the player's first
+#define PlayerVehicles (*(PVehicle ***)0x00234e40)              // the player's first
 #define DebugViewEnabled BOOL8_AT(0x001ec484)
 #define DebugSpeedFraction FLOAT_AT(0x001c45d4)                     // written only here (the name is ours)
 
@@ -58,7 +58,7 @@ constexpr uint32_t kRandomStep = 0xffffcd15;
 constexpr uint32_t kRandomMultiplier = 123456789;
 
 // PBondCar::GetCarSpeed (vtable slot 20), its result unrounded
-typedef double (RigidVehicle::*GetCarSpeedMethod)();
+typedef double (PVehicle::*GetCarSpeedMethod)();
 
 }  // namespace
 
@@ -136,7 +136,7 @@ RRenderDebugViewScreenSpace* RRenderDebugViewScreenSpace::Delete(unsigned flags)
 
 // FUNC_AT(0x0008b530)
 void RRenderDebugViewScreenSpace::DoRender() {
-    RigidVehicle *car = PlayerVehicles[0];
+    PVehicle *car = PlayerVehicles[0];
     double speed = (car->*XbeVirtual<GetCarSpeedMethod>(car, 20))();
     float fraction = float((speed - kSpeedFloor) * kSpeedScale);
     if (1.0f < fraction)

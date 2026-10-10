@@ -10,7 +10,7 @@
 #include "../eagl/View.h"
 #include "../engine/CoreContainers.h"   // GameVector
 #include "../engine/UMemory.hpp"
-#include "../physics/RigidBody.h"       // RigidVehicle
+#include "../physics/RigidBody.h"       // PVehicle
 #include "../platform/RealMath.h"
 #include "../render/Renderer.h"
 
@@ -30,7 +30,7 @@ using EAGL::ViewPort;
 #define ViewWidth I32_AT(0x001f2d7c)                    // the screen's size in pixels
 #define ViewHeight I32_AT(0x001f2d80)
 #define AspectScale FLOAT_AT(0x001c47a0)                // scales the aspect ratio (RRenderHigh::RearrangeSplitScreens's)
-#define SimCars (*(GameVector<RigidVehicle *> *)0x00234e3c)   // the Simulation's cars, the player's first
+#define SimCars (*(GameVector<PVehicle *> *)0x00234e3c)   // the Simulation's cars, the player's first
 #define SimStepCount I32_AT(0x00234e34)
 // ApplyPerspectiveFunction's sway (names ours): on, and the period in steps and amplitude of each part
 #define PerspectiveSway BOOL8_AT(0x001c47b8)            // 1
@@ -306,7 +306,7 @@ void RViewCamera::SetExtents(const RViewCamera *other) {
 
 // FUNC_AT(0x00096e20)
 void ApplyPerspectiveFunction(float *aspect, float *fieldOfView) {
-    if (!PerspectiveSway || SimCars.first[0]->GetPhysics()->unknownBC == 0)
+    if (!PerspectiveSway || SimCars.first[0]->GetPhysics()->isSub == 0)
         return;
     int step = SimStepCount % FovSwayPeriod;
     *fieldOfView = AddSine((double)step * kTwoPi / FovSwayPeriod, FovSwayAmplitude, *fieldOfView);

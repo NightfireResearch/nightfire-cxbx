@@ -579,7 +579,7 @@ const char *__fastcall FakeGetSecondaryType(void *, int) {
 
 // The player's car's vtable pointer
 void **&PlayerCarVtable() {
-    RigidVehicle *car = **reinterpret_cast<RigidVehicle ***>(uintptr_t(0x00234e40));
+    PVehicle *car = **reinterpret_cast<PVehicle ***>(uintptr_t(0x00234e40));
     return *reinterpret_cast<void ***>(car);
 }
 
@@ -849,7 +849,7 @@ void LoadFileCases(Rng &rng) {
     CameraModeIndices liveIndices = fgCameraModeIndices;
     CameraConstants liveConstants = fgCameraConstants;
     int32_t liveShake = kExplosionShakePeriod, liveLatency = kAutoDriveLatency;
-    RigidVehicle *car = *(*reinterpret_cast<RigidVehicle ***>(uintptr_t(0x00234e40)));
+    PVehicle *car = *(*reinterpret_cast<PVehicle ***>(uintptr_t(0x00234e40)));
     const char *realType = car->GetCarType();
     int realClass = car->GetCarClass();
     const char *realSecondary = reinterpret_cast<const char *(__fastcall *)(void *, int)>((*reinterpret_cast<void ***>(car))[0x144 / 4])(car, 0);
@@ -1347,8 +1347,8 @@ void StateCases(Rng &rng) {
                                           "AutoDriveCamInputHandler", "AimZoom", "AimRelease" };
     static const int kInputs[] = { 1, 27, 28, 33, 34, 35, 38, 39, 40, 41, 42, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,
                                    54, 56, 58, 0, 2, 36, 43, 55, 57, 60 };
-    RigidVehicle *car = *(*reinterpret_cast<RigidVehicle ***>(uintptr_t(0x00234e40)));
-    typedef CarAudioFlagsView *(RigidVehicle::*AudioFn)();
+    PVehicle *car = *(*reinterpret_cast<PVehicle ***>(uintptr_t(0x00234e40)));
+    typedef CarAudioFlagsView *(PVehicle::*AudioFn)();
     CarAudioFlagsView *audio = (car->*XbeVirtual<AudioFn>(car, 0x1c / 4))();
     uint8_t *mission = ShadowMission;
     if (audio == NULL || mission == NULL) {

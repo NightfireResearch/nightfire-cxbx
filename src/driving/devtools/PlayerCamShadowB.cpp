@@ -71,7 +71,7 @@ struct Rng {
 };
 
 #define ShadowSimStepCount I32_AT(0x00234e34)
-#define ShadowPlayerCar (**(RigidVehicle ***)0x00234e40)
+#define ShadowPlayerCar (**(PVehicle ***)0x00234e40)
 #define ShadowGetSimpleRigidBody ((SimpleRigidBody *(__fastcall *)(void *, int, int slot))0x000b2730)
 #define ShadowSim ((void *)0x00233ff0)
 
@@ -829,8 +829,8 @@ void PlayerCamShadowB_Run(void) {
 
     g_carAudio = NULL;
     if (ShadowPlayerCar != NULL) {
-        typedef uint8_t *(RigidVehicle::*GetAudioMethod)();
-        RigidVehicle *car = ShadowPlayerCar;
+        typedef uint8_t *(PVehicle::*GetAudioMethod)();
+        PVehicle *car = ShadowPlayerCar;
         g_carAudio = (car->*XbeVirtual<GetAudioMethod>(car, 7))();
     }
     g_cinematicArm = NULL;

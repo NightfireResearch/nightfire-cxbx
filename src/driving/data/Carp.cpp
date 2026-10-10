@@ -568,12 +568,12 @@ enum DamageZoneBits : uint32_t {
 
 // The 16 zones: the combination of bits each stands for, and the zones damage there spreads to (the game's table
 // at 0x001a2080).
-struct DamageZone {
+struct DamageZoneEntry {
     uint16_t position;
     uint16_t spread;
 };
 
-static const DamageZone kDamageZones[16] = {
+static const DamageZoneEntry kDamageZones[16] = {
     { 0x0168, 0x4602 }, { 0x0440, 0x4c05 }, { 0x0154, 0x480a }, { 0x0054, 0xd816 },
     { 0x0094, 0xd868 }, { 0x0294, 0x9050 }, { 0x0480, 0xb0a0 }, { 0x02a8, 0xa140 },
     { 0x00a8, 0xe6c0 }, { 0x0068, 0xe503 }, { 0x0049, 0x2a03 }, { 0x0045, 0x140e },

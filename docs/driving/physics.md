@@ -15,7 +15,7 @@ live bodies (missions 1 and 4) and by lockstep runs of missions 1-8, every dumpe
 
 | File | What |
 |---|---|
-| `physics/RigidBody.h` | the shared layouts: RigidBody (0x80: orientation quaternion, position, velocities, momenta, mass, the inverse inertia's diagonal in the vectors' w words, sleep state, kind), RigidBodyInfo (0x500: orientation and world inverse inertia matrices, 16 levers, corners, the levers' WWorldPos and ground), the vehicle view of the owner's virtual methods (RigidVehicle, named after PBondCar's overrides), the simulation's scratch pad, the tuning floats named after their attributes |
+| `physics/RigidBody.h` | the shared layouts: RigidBody (0x80: orientation quaternion, position, velocities, momenta, mass, the inverse inertia's diagonal in the vectors' w words, sleep state, kind), RigidBodyInfo (0x500: orientation and world inverse inertia matrices, 16 levers, corners, the levers' WWorldPos and ground), the simulation's scratch pad, the tuning floats named after their attributes |
 | `physics/RigidBody.cpp` | construction, reset, initial forces, levers and ground collision, sleep control, integration |
 | `physics/RigidBodyBasics.cpp` | the small methods: InitRigidBodySystem, local/world conversions, damping, friction, force and torque resolution, zones, world damage, ground height, InitLevers |
 | `physics/RigidBodyResolve.h/.cpp` | collision response: ResolveCollision, GenerateImpulse, and the CollisionImpact record (0x54) they fill |

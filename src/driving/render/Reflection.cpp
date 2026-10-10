@@ -18,7 +18,7 @@
 #include "../eagl/View.h"
 #include "../engine/GameLoop.h"           // LaunchPage
 #include "../engine/UMemory.hpp"
-#include "../physics/Simulation.h"
+#include "../game/Vehicle.h"           // PVehicle's car names
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"        // MOUSE_setbounds
 #include "../platform/RealSystem.h"       // CPU_detect
@@ -85,15 +85,6 @@ constexpr float kTurnStep = 0.05f;
 constexpr float kTurnsEnd = 1.0001f;
 static_assert(std::bit_cast<uint32_t>(kPoleOffset) == 0x3a83126f && std::bit_cast<uint32_t>(kStripEnd) == 0x3f7ff972 &&
               std::bit_cast<uint32_t>(kTurnsEnd) == 0x3f800347, "the strips' constants");
-
-// sin_fractionalangle and cos_fractionalangle leave FSIN's and FCOS's results unrounded in ST0
-double SineTurns(float turns) {
-    return reinterpret_cast<double (*)(float)>(&sin_fractionalangle)(turns);
-}
-
-double CosineTurns(float turns) {
-    return reinterpret_cast<double (*)(float)>(&cos_fractionalangle)(turns);
-}
 
 void Clamp(EAGL::TAR *texture) {
     texture->address0 = kAddressClamp;
@@ -178,14 +169,14 @@ RReflection::ReflPrivateData* RReflection::ReflPrivateData::Construct() {
     states[1].Construct();
     unknown260 = 1;
 
-    charactersIndex = PVehicle_GetNameCount();
+    charactersIndex = PVehicle::GetNameCount();
     dynamicObjectsIndex = charactersIndex + 1;
     lightingCount = dynamicObjectsIndex + 1;
     lighting = static_cast<ReflLighting *>(OperatorNewArray(lightingCount * sizeof(ReflLighting)));
     lightingNames = static_cast<const char **>(OperatorNewArray(lightingCount * sizeof(const char *)));
     uint32_t car;
-    for (car = 0; car < PVehicle_GetNameCount(); car++)
-        lightingNames[car] = PVehicle_GetCarNames()[car];
+    for (car = 0; car < PVehicle::GetNameCount(); car++)
+        lightingNames[car] = PVehicle::GetCarNames()[car];
     lightingNames[car] = "Characters";
     lightingNames[car + 1] = "Dynamic Objects";
 
@@ -386,7 +377,7 @@ ReflMaterial* RReflection::LightingProps(int kind, const char *name) {
     else if (CRT_stricmp(name, "Dynamic Objects") == 0)
         index = privateData->dynamicObjectsIndex;
     else
-        index = PVehicle_NameToIndex(name);
+        index = PVehicle::NameToIndex(name);
     return &privateData->lighting[index].materials[kind];
 }
 
@@ -396,7 +387,7 @@ float* RReflection::GetReflectionData2(const char *name) {
     if (CRT_stricmp(name, "Character") == 0)
         index = privateData->charactersIndex;
     else
-        index = PVehicle_NameToIndex(name);
+        index = PVehicle::NameToIndex(name);
     return &privateData->lighting[index].fresnel;
 }
 

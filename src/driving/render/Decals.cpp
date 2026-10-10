@@ -58,15 +58,6 @@ constexpr uint32_t kPrimitiveTriangles = 5;
 constexpr int kCylinderSteps = 17;
 constexpr float kCylinderTurnStep = 1.0f / 16.0f;
 
-// sin_fractionalangle and cos_fractionalangle leave FSIN's and FCOS's results unrounded in ST0
-double SineTurns(float turns) {
-    return reinterpret_cast<double (*)(float)>(&sin_fractionalangle)(turns);
-}
-
-double CosineTurns(float turns) {
-    return reinterpret_cast<double (*)(float)>(&cos_fractionalangle)(turns);
-}
-
 void *RegisteredVar(const char *name) {
     bool found;
     return DynamicLoader::GetRegisteredVar(name, &found);

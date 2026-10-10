@@ -45,7 +45,7 @@ namespace {
 
 constexpr unsigned kMaxPhysicsObjects = 64;      // PhysicsObjects' size
 constexpr int8_t kPlayerKind = 1;           // the damage its body does to a vehicle goes to AddDamageByPlayer
-constexpr int8_t kFirstObjectKind = 4;      // below: the owner is a vehicle (RigidVehicle)
+constexpr int8_t kFirstObjectKind = 4;      // below: the owner is a vehicle (PVehicle)
 
 // WCollisionMgr::barrierMask while a body's points are tested, and otherwise
 constexpr uint32_t kBodyBarrierMask = 0x20;
@@ -325,7 +325,7 @@ void RigidBody::CollideWithWorld() {
     if (kind == kPlayerKind)
         fgCollisionMgr->GetObjectLists(&cylinders, &boxes, &position, radius);
 
-    bool wantInstances = kind < kFirstObjectKind && RigidVehicles[ownerIndex]->GetPhysics()->unknownC0 == 1;
+    bool wantInstances = kind < kFirstObjectKind && RigidVehicles[ownerIndex]->GetPhysics()->subPhysics == 1;
     fgCollisionMgr->barrierMask = kBodyBarrierMask;
     PhysicsObject *owner = PhysicsObjects[ownerIndex];
     uint32_t mask = WCollider::kCollideBarriers | (wantInstances ? WCollider::kCollideInstances : 0);
@@ -386,7 +386,7 @@ void RigidBody::CollideWithWorld() {
             hit.normal.w = 1.0f;
             Coord4 penetration = {};
             VU0_v4sub(&segment[1], &hit.point, &penetration);
-            if (!(kind < kFirstObjectKind && RigidVehicles[ownerIndex]->GetPhysics()->unknownC0 == 1))
+            if (!(kind < kFirstObjectKind && RigidVehicles[ownerIndex]->GetPhysics()->subPhysics == 1))
                 penetration.y = 0.0f;
             float push = VU0_v3length(&penetration);
             float speedScale;
@@ -414,7 +414,7 @@ void RigidBody::CollideWithWorld() {
                         facing = -facing;
                     lift = facing > kSteepFace ? lift * Rigid_CornerLift : 0.0f;
                 }
-                if (RigidVehicles[ownerIndex]->GetPhysics()->unknownC0 == 0)
+                if (RigidVehicles[ownerIndex]->GetPhysics()->subPhysics == 0)
                     point.y = float((double(point.y) - height) + lift);
             }
 

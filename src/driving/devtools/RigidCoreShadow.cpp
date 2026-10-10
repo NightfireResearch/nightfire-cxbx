@@ -4,6 +4,7 @@
 #include "RigidCoreShadow.h"
 #include "FpControl.h"
 
+#include "../game/BondCar.h"
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../platform/RealMath.h"
@@ -87,20 +88,6 @@ typedef RigidBodyInfo *(__fastcall *GetRigidBodyInfoFn)(void *, int, int);
 #define Sim_GetRigidBodyInfo ((GetRigidBodyInfoFn)0x000b2760)
 #define ShadowSim ((void *)0x00233ff0)
 
-// What PBondCar's PVehicle methods read and write here
-struct PBondCarFields {
-    uint8_t unknown000[0x23c];
-    RigidVehiclePhysics *physics;   // +0x23c GetPhysics
-    uint8_t unknown240[0x59];
-    int8_t wheelsOnGround;          // +0x299 GetNumWheelsOnGround
-    uint8_t unknown29a[0x32];
-    const char *carType;            // +0x2cc GetCarType
-    uint8_t unknown2d0[0x141];
-    uint8_t wasInAir;               // +0x411 GetWasInAir, SetWasInAir
-};
-static_assert(offsetof(PBondCarFields, wheelsOnGround) == 0x299 && offsetof(PBondCarFields, carType) == 0x2cc &&
-              offsetof(PBondCarFields, wasInAir) == 0x411, "PBondCar fields");
-
 // ---- results
 
 int g_cases = 0, g_checks = 0, g_differ = 0, g_details = 0, g_faults = 0;
@@ -170,7 +157,7 @@ struct State {
 };
 
 State g_start, g_work, g_result[2];
-PBondCarFields *g_car[2];           // the bodies' owners when PBondCars
+PBondCar *g_car[2];           // the bodies' owners when PBondCars
 
 uint32_t &CollisionQueryField() {
     return *reinterpret_cast<uint32_t *>(reinterpret_cast<uint8_t *>(fgCollisionMgr) + 0x2c);
@@ -280,11 +267,11 @@ void RandomRotation(MATRIX4 *m) {
 
 std::vector<RigidBody *> g_live;
 
-PBondCarFields *Car(const RigidBody *live) {
+PBondCar *Car(const RigidBody *live) {
     PhysicsObject *owner = PhysicsObjects[live->ownerIndex];
     if (owner == NULL || uint32_t(uintptr_t(owner->vtable)) != kPBondCarVtable)
         return NULL;
-    return reinterpret_cast<PBondCarFields *>(owner);
+    return reinterpret_cast<PBondCar *>(owner);
 }
 
 // Whether the code may call the owner's PVehicle methods for this body (they exist, and what they write is known)
@@ -368,10 +355,10 @@ void PerturbGameState() {
 // ---- the PBondCars' state, perturbed and put back
 
 struct CarSave {
-    PBondCarFields *car;
+    PBondCar *car;
     int8_t wheelsOnGround;
     const char *carType;
-    RigidVehiclePhysics physics;
+    CarPhysics physics;
 };
 
 std::vector<CarSave> g_cars;
@@ -380,12 +367,12 @@ const char *const kCarTypes[] = { "paradis_car", "jungle_truck", "shadow_car" };
 void SaveCars() {
     g_cars.clear();
     for (RigidBody *live : g_live) {
-        PBondCarFields *car = Car(live);
+        PBondCar *car = Car(live);
         if (car == NULL)
             continue;
         CarSave save;
         save.car = car;
-        save.wheelsOnGround = car->wheelsOnGround;
+        save.wheelsOnGround = car->numWheelsOnGround;
         save.carType = car->carType;
         if (car->physics != NULL)
             save.physics = *car->physics;
@@ -397,22 +384,22 @@ void PerturbCars() {
     for (CarSave &save : g_cars) {
         if (RandomInt(2) == 0)
             continue;
-        PBondCarFields *car = save.car;
-        car->wheelsOnGround = int8_t(RandomInt(5));
+        PBondCar *car = save.car;
+        car->numWheelsOnGround = int8_t(RandomInt(5));
         if (RandomInt(2))
             car->carType = kCarTypes[RandomInt(3)];
         if (car->physics != NULL) {
-            car->physics->unknownC0 = RandomInt(3) == 0 ? 1 : 0;
-            car->physics->unknownC4 = RandomInt(4) == 0 ? 1 : 0;
-            car->physics->unknownC8 = RandomInt(2);
-            car->physics->unknownCC = RandomInt(3) == 0 ? 1 : 0;
+            car->physics->subPhysics = RandomInt(3) == 0 ? 1 : 0;
+            car->physics->noWorldCollisions = RandomInt(4) == 0 ? 1 : 0;
+            car->physics->isSnowmobile = RandomInt(2);
+            car->physics->isBoat = RandomInt(3) == 0 ? 1 : 0;
         }
     }
 }
 
 void RestoreCars() {
     for (CarSave &save : g_cars) {
-        save.car->wheelsOnGround = save.wheelsOnGround;
+        save.car->numWheelsOnGround = save.wheelsOnGround;
         save.car->carType = save.carType;
         if (save.car->physics != NULL)
             *save.car->physics = save.physics;
@@ -430,8 +417,8 @@ void TestConstruct() {
         static RigidBodyInfo saved;
         saved = *liveInfo;
         PhysicsObject *owner = PhysicsObjects[live->ownerIndex];
-        PBondCarFields *car = Car(live);
-        RigidVehiclePhysics physics = {};
+        PBondCar *car = Car(live);
+        CarPhysics physics = {};
         if (car != NULL && car->physics != NULL)
             physics = *car->physics;
         for (int repeat = 0; repeat < 6; repeat++, index++) {

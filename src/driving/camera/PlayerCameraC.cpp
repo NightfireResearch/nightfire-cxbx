@@ -75,11 +75,6 @@ static const MATRIX4 kIdentity = { {
     { 0.0f, 0.0f, 0.0f, 1.0f },
 } };
 
-// cos_fractionalangle leaves FCOS's result in ST0, which the ellipse camera multiplies unrounded: read as a double.
-static double CosineTurns(float turns) {
-    return reinterpret_cast<double (*)(float)>(&cos_fractionalangle)(turns);
-}
-
 // The inlined VU0 lerp: out = from + t * (to - from), on x, y and z
 static void LerpXYZ(const Coord4 *from, const Coord4 *to, float t, Coord4 *out) {
     float x = (to->x - from->x) * t + from->x;

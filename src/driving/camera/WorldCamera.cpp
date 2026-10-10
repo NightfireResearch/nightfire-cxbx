@@ -122,7 +122,7 @@ struct SceneObjDescFields {
 #define SimStepCount U32_AT(0x00234e34)
 // The Simulation's lists of physics objects (Ghidra's names): its cars, the player's first, its missiles,
 // grenades and shells
-#define SimCars (*(GameVector<RigidVehicle *> *)0x00234e3c)
+#define SimCars (*(GameVector<PVehicle *> *)0x00234e3c)
 #define SimMissiles (*(GameVector<Missile *> *)0x00234e7c)
 #define SimGrenades (*(GameVector<Grenade *> *)0x00234e9c)
 #define SimShells (*(GameVector<ShellFields *> *)0x00234eac)
@@ -218,14 +218,14 @@ int ResetAvailable(PhysicsObject *object) {
 }
 
 // A vehicle's slot 10
-AIVehicle *AIVehicleOf(RigidVehicle *car) {
-    typedef AIVehicle *(RigidVehicle::*Method)();
+AIVehicle *AIVehicleOf(PVehicle *car) {
+    typedef AIVehicle *(PVehicle::*Method)();
     return (car->*XbeVirtual<Method>(car, 10))();
 }
 
 // A vehicle's slot 41: a wheel's tyre track, NULL if none
-RTyreTrack *TyreTrack(RigidVehicle *car, int wheel) {
-    typedef RTyreTrack *(RigidVehicle::*Method)(int wheel);
+RTyreTrack *TyreTrack(PVehicle *car, int wheel) {
+    typedef RTyreTrack *(PVehicle::*Method)(int wheel);
     return (car->*XbeVirtual<Method>(car, 41))(wheel);
 }
 
@@ -773,7 +773,7 @@ void RRenderWorldCamera::DrawVehiclesAndDeferredSceneObjects() {
 
 // FUNC_AT(0x0008cd10)
 void RRenderWorldCamera::DrawTyreTracks() {
-    for (RigidVehicle **car = SimCars.first; car != SimCars.last; car++) {
+    for (PVehicle **car = SimCars.first; car != SimCars.last; car++) {
         for (int wheel = 0; wheel < kWheels; wheel++) {
             if (TyreTrack(*car, wheel) != NULL)
                 RTyreTrack_Draw(TyreTrack(*car, wheel), 0);
@@ -801,7 +801,7 @@ void RRenderWorldCamera::DrawBulletStreaks() {
 // A light ahead of the player's car.
 // FUNC_AT(0x0008ce50)
 void RRenderWorldCamera::AddPlayerHeadlight() {
-    RigidVehicle *car = SimCars.first[0];
+    PVehicle *car = SimCars.first[0];
     const Coord3 *position = &RigidBodyOf(car)->position;
     const Coord4 *forward = MatrixRow(&RigidBodyOf(car)->info->orientation, 2);
     Coord4 light = { position->x, position->y, position->z, kHeadlightW };

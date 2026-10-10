@@ -40,6 +40,7 @@ struct TreePair {
         CarpResolverFn resolver;
         RParticleSystem *system;        // the particle maps' (render/Particles.h)
         RParticleSystemData *type;
+        int32_t index;                  // the car name map's (game/Vehicle.h)
     };
 };
 

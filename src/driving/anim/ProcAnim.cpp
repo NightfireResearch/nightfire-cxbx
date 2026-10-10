@@ -123,16 +123,6 @@ bool ParamRotate(CARP::Instance *instance, ProcAnimState *state, const Coord4 *a
     return true;
 }
 
-// sin_fractionalangle and cos_fractionalangle leave FSIN's and FCOS's results in ST0, which the sway multiplies
-// unrounded: read as doubles
-double SineTurns(float turns) {
-    return reinterpret_cast<double (*)(float)>(&sin_fractionalangle)(turns);
-}
-
-double CosineTurns(float turns) {
-    return reinterpret_cast<double (*)(float)>(&cos_fractionalangle)(turns);
-}
-
 } // namespace
 
 // FUNC_AT(0x0008a4f0)

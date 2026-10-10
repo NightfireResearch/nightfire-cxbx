@@ -10,6 +10,7 @@
 #include "../engine/MissionManager.h"
 #include "../engine/UMemory.hpp"
 #include "../physics/PhysicsMath.h"
+#include "../game/VehicleSound.h"    // AVehicle
 #include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
 #include "../platform/RealMath.h"
@@ -93,7 +94,7 @@ static_assert(std::bit_cast<uint32_t>(kRecentred) == 0x38d1b717, "0x0018cb6c");
 #define SimTimeStep FLOAT_AT(0x00234e30)                    // the simulation's step, in seconds
 #define SimStepCount I32_AT(0x00234e34)
 #define SimState I32_AT(0x00234e24)
-#define playerPhysicsObject (*(RigidVehicle ***)0x00234e40)
+#define playerPhysicsObject (*(PVehicle ***)0x00234e40)
 
 // ---- calls to originals not ported
 
@@ -173,10 +174,10 @@ RigidBody *PlayerBody() {
     return (*playerPhysicsObject)->GetRigidBody();
 }
 
-CarAudioFlags *PlayerCarAudio() {
-    typedef CarAudioFlags *(RigidVehicle::*GetAudioMethod)();
-    RigidVehicle *car = *playerPhysicsObject;
-    return (car->*XbeVirtual<GetAudioMethod>(car, 7))();
+AVehicle *PlayerCarAudio() {
+    typedef AVehicle *(PVehicle::*GetAudioMethod)();
+    PVehicle *car = *playerPhysicsObject;
+    return (car->*XbeVirtual<GetAudioMethod>(car, PVehicle::kGetAudio))();
 }
 
 // The missile mode's colouring off, back to the mode before it (inlined twice in DirectorChangeCameraMode)

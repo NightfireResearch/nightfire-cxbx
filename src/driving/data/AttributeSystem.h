@@ -75,8 +75,9 @@ public:
     void InitializeExtensionType(int type, const char *collectionName, void *data);             // 0x00055b80
     // The collection's structure of `type`: the existing one, or a new one its initialiser fills in.
     AttributeValue *CreateExtensionAttribute(uint32_t type, AttributeCollection *collection);   // 0x000570c0
-    // An editor's range for a field: empty in the retail game.
-    void ConfigEditParameters(const char *className, const char *name, uint32_t unknown3, float low, float high,
+    // An editor's range for a field: empty in the retail game. Its callers pass the bounds as raw words (floats or
+    // ints as the field's type), then -1 for an extension structure's field or 1 for a plain key, then 0.
+    void ConfigEditParameters(const char *className, const char *name, uint32_t low, float high, float scope,
                               uint32_t unknown6);                                               // 0x000525f0
 
     // extensionTypes[type] (std::map::operator[], inlined wherever it is used): an unknown type gets an empty

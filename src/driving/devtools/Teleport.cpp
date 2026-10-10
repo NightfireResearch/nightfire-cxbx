@@ -44,6 +44,11 @@
 #include "RenderFxShadow.h"
 #include "ParticleShadow.h"
 #include "InputShadow.h"
+#include "BondCarShadowA.h"
+#include "BondCarShadowB.h"
+#include "BondCarShadowC.h"
+#include "BondCarShadowD.h"
+#include "VehicleShadow.h"
 
 #include <windows.h>
 #include <stdio.h>
@@ -163,6 +168,92 @@ static void FormatPlace(const Place *p, char *out, size_t size) {
     snprintf(out, size, "%.3f,%.3f,%.3f,%.4f,%.4f,%.4f", p->x, p->y, p->z, p->dx, p->dy, p->dz);
 }
 
+// ---- the vehicle shadows' footprint on the game's queues
+// What a shadow leaves behind that the next ticks act on: events still queued (they run right after this, in
+// Scheduler::Run), sounds in the sound list, and the sound driver's free DirectSound buffers (152 ADPCM and 28
+// PCM16 when idle; FUN_0013d550 faults once both run out). Printed around each vehicle shadow and, while anything
+// changes, for the ticks after them. Events a vehicle shadow raised are test artefacts: they are dropped.
+
+#define EVENT_CREATION_POINT    0x001e47d8   // the event queue's next free byte
+#define EVENT_DELETION_POINT    0x001e47dc   // the next event to run
+#define SOUND_LIST              0x00243a58   // -> fgSoundList (MSVC std::list: allocator, head, size)
+#define SND_FREE_ADPCM          0x00244c68   // LList_maybeFreeDsndBuffers[0].count
+#define SND_FREE_PCM16          0x00244c74   // LList_maybeFreeDsndBuffers[1].count
+
+struct QueueState {
+    uint32_t events;        // bytes queued
+    uint32_t sounds;
+    int32_t freeAdpcm, freePcm16;
+};
+
+static QueueState ReadQueues(void) {
+    QueueState q;
+    uint8_t *creation = *(uint8_t **)EVENT_CREATION_POINT, *deletion = *(uint8_t **)EVENT_DELETION_POINT;
+    q.events = creation != NULL && deletion != NULL ? uint32_t(creation - deletion) : 0;
+    uint32_t *list = *(uint32_t **)SOUND_LIST;
+    q.sounds = list != NULL ? list[2] : 0;
+    q.freeAdpcm = *(int32_t *)SND_FREE_ADPCM;
+    q.freePcm16 = *(int32_t *)SND_FREE_PCM16;
+    return q;
+}
+
+static void PrintQueues(const char *when, const QueueState &q) {
+    printf("[vshadowq] %s: %u event bytes queued, %u sounds, free buffers %d ADPCM + %d PCM16\n", when, q.events,
+           q.sounds, q.freeAdpcm, q.freePcm16);
+    fflush(stdout);
+}
+
+static bool AnyVehicleShadow(void) {
+    static const char *const kNames[] = { "NIGHTFIRE_BONDCARSHADOWA", "NIGHTFIRE_BONDCARSHADOWB",
+                                          "NIGHTFIRE_BONDCARSHADOWC", "NIGHTFIRE_BONDCARSHADOWD",
+                                          "NIGHTFIRE_VEHICLESHADOW" };
+    for (const char *name : kNames) {
+        char value[16] = "";
+        DWORD length = GetEnvironmentVariableA(name, value, sizeof(value));
+        if (length != 0 && length < sizeof(value) && atoi(value) != 0)
+            return true;
+    }
+    return false;
+}
+
+// One vehicle shadow, its leftover events dropped and its footprint printed
+static void RunVehicleShadow(const char *name, void (*run)(void)) {
+    uint8_t *creation = *(uint8_t **)EVENT_CREATION_POINT;
+    run();
+    QueueState after = ReadQueues();
+    uint8_t *left = *(uint8_t **)EVENT_CREATION_POINT;
+    char when[96];
+    snprintf(when, sizeof(when), "after %s (%d event bytes it left dropped)", name, int(left - creation));
+    *(uint8_t **)EVENT_CREATION_POINT = creation;
+    after.events = ReadQueues().events;
+    PrintQueues(when, after);
+}
+
+// The ticks after the vehicle shadows, while the footprint changes
+static void WatchQueues(void) {
+    static int ticks = -1;
+    static QueueState last;
+    if (ticks < 0) {
+        if (!AnyVehicleShadow()) {
+            ticks = 0;
+            return;
+        }
+        ticks = 200;
+        last = ReadQueues();
+        return;
+    }
+    if (ticks == 0)
+        return;
+    ticks--;
+    QueueState now = ReadQueues();
+    if (memcmp(&now, &last, sizeof(now)) == 0)
+        return;
+    last = now;
+    char when[32];
+    snprintf(when, sizeof(when), "tick +%d", 200 - ticks);
+    PrintQueues(when, now);
+}
+
 void Teleport_Tick(void) {
     SndCallTrace_Tick();   // NIGHTFIRE_SNDTRACE=1 only: marks the tick boundary in the sound call trace
     static bool loaded = false;
@@ -220,6 +311,14 @@ void Teleport_Tick(void) {
         RenderFxShadow_Run();   // NIGHTFIRE_RENDERFXSHADOW=1 only
         ParticleShadow_Run();   // NIGHTFIRE_PARTICLESHADOW=1 only
         InputShadow_Run();   // NIGHTFIRE_INPUTSHADOW=1 only
+        if (AnyVehicleShadow()) {
+            PrintQueues("before the vehicle shadows", ReadQueues());
+            RunVehicleShadow("bondcarA", BondCarShadowA_Run);   // NIGHTFIRE_BONDCARSHADOWA=1 only
+            RunVehicleShadow("bondcarB", BondCarShadowB_Run);   // NIGHTFIRE_BONDCARSHADOWB=1 only
+            RunVehicleShadow("bondcarC", BondCarShadowC_Run);   // NIGHTFIRE_BONDCARSHADOWC=1 only
+            RunVehicleShadow("bondcarD", BondCarShadowD_Run);   // NIGHTFIRE_BONDCARSHADOWD=1 only
+            RunVehicleShadow("vehicle", VehicleShadow_Run);     // NIGHTFIRE_VEHICLESHADOW=1 only
+        }
         char text[256] = "";
         DWORD fromEnv = GetEnvironmentVariableA("NIGHTFIRE_TELEPORT", text, sizeof(text));
         if (fromEnv == 0 || fromEnv >= sizeof(text))
@@ -237,6 +336,19 @@ void Teleport_Tick(void) {
             printf("[teleport] will teleport to %s %lu ms after the car appears\n", formatted, delayMs);
         }
     }
+    {
+        // NIGHTFIRE_VEHICLESHADOW=1 only: the helicopter tests again once one is live (events it raises dropped)
+        uint8_t *creation = *(uint8_t **)EVENT_CREATION_POINT;
+        VehicleShadow_Tick();
+        BondCarShadowB_Tick();   // NIGHTFIRE_BONDCARSHADOWB=3 only: the live submarine/spline comparison
+        BondCarShadowA_Tick();   // NIGHTFIRE_BONDCARSHADOWA=3 only: the live snowmobile physics comparison
+        if (*(uint8_t **)EVENT_CREATION_POINT != creation) {
+            printf("[vshadowq] the live helicopter tests left %d event bytes: dropped\n",
+                   int(*(uint8_t **)EVENT_CREATION_POINT - creation));
+            *(uint8_t **)EVENT_CREATION_POINT = creation;
+        }
+    }
+    WatchQueues();         // any vehicle shadow on: the event queue, sound list and sound buffers as they change
 
     // NIGHTFIRE_LOCKSTEP=1: exactly one simulation tick per rendered frame (the scheduler's own oneTickPerRun, set
     // here because this runs every call that simulates), so that a run's Nth frame is the same whatever the host's

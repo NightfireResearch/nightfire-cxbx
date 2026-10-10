@@ -32,6 +32,7 @@
 #include "../eagl/Realgraph.h"
 #include "../eagl/RenderContext.h"
 #include "../eagl/View.h"
+#include "../game/BondCar.h"            // PBondCar::InitializeBondCarGlobals, PVehicle
 #include "../physics/RigidBody.h"
 #include "../platform/FileSys.h"
 #include "../platform/RealMemory.h"
@@ -130,7 +131,7 @@ const char kCarModels[] = "data\\car\\model\\";
 #define Sim ((void *)0x00233ff0)                  // the Simulation
 #define SimState I32_AT(0x00234e24)               // Sim.simState
 #define WeaponManager (*(void **)0x0023923c)
-#define playerPhysicsObject (*(RigidVehicle ***)0x00234e40)
+#define playerPhysicsObject (*(PVehicle ***)0x00234e40)
 #define CollisionManager (*(void **)0x00239a70)
 #define TrafficSeed I16_AT(0x001de914)
 
@@ -189,11 +190,6 @@ typedef const char *DiscErrorText[3];
 #define SWeaponManager_Construct ((void *(__fastcall *)(void *, int))0x000bb220)
 #define SWeaponManager_Destruct ((void (__fastcall *)(void *, int))0x000bad40)
 #define SWeaponManager_SetPlayerCar ((void (__fastcall *)(void *, int, void *))0x000ba990)
-#define PVehicle_InitializeGlobals ((void (*)(void))0x0006f930)
-#define PVehicle_Shutdown ((void (*)(void))0x00071900)
-#define PVehicle_GetNamedAttribs ((AttributeSet *(*)(AttributeSet *, const char *))0x0006f810)
-#define PVehicle_RenderNameAttrib ((const char *(*)(AttributeSet *))0x0006f860)
-#define PBondCar_InitializeBondCarGlobals ((void (*)(void))0x00061ae0)
 #define WCollisionMgr_GetWorldHeightAtPoint ((void (__fastcall *)(void *, int, float *, float *, bool))0x000bf210)
 #define AIElementController_Construct ((void (*)(void *))0x000285b0)
 #define AIVehicleController_Get ((void *(*)(void))0x00035c00)
@@ -697,13 +693,14 @@ void GameLoop_CleanUp() {
     WeaponManager = NULL;
     const char *carType = PlayerCarTypeName();
     AttributeSet carAttributes;
-    RSceneObj::PurgePreloaded(kCarModels, PVehicle_RenderNameAttrib(PVehicle_GetNamedAttribs(&carAttributes, carType)));
+    RSceneObj::PurgePreloaded(kCarModels,
+                              PVehicle::RenderNameAttrib(PVehicle::GetNamedAttribs(&carAttributes, carType)));
     carAttributes.Destruct();
 
     GLoadingScreen_Status("Shutdown Sim");
     Simulation_CleanUpObjects(Sim, 0);
     NullFunction();
-    PVehicle_Shutdown();
+    PVehicle::Shutdown();
     GLoadingScreen_Status("Dismiss actors");
     ActManager::ShutDown();
     ActActorDatabase::ShutDown();
@@ -862,8 +859,8 @@ void GameLoop_StartUp(int trafficSeed) {
     EventManager::Init();
     GLoadingScreen_Status("Init Scheduler");
     Scheduler::Init();
-    PVehicle_InitializeGlobals();
-    PBondCar_InitializeBondCarGlobals();
+    PVehicle::InitializeGlobals();
+    PBondCar::InitializeBondCarGlobals();
     GLoadingScreen_Status("Init Game Render");
     RRenderHigh::InitGameRender();
 
@@ -934,8 +931,8 @@ void GameLoop_StartUp(int trafficSeed) {
 
     GLoadingScreen_Status("Preload common models");
     AttributeSet carAttributes;
-    PVehicle_GetNamedAttribs(&carAttributes, carType);
-    const char *model = PVehicle_RenderNameAttrib(&carAttributes);
+    PVehicle::GetNamedAttribs(&carAttributes, carType);
+    const char *model = PVehicle::RenderNameAttrib(&carAttributes);
     if (model == NULL)
         AssertMessage("Could not find attribute rendername for %s", carType);
     RSceneObj::PreLoad(kCarModels, model, carType);
@@ -943,7 +940,7 @@ void GameLoop_StartUp(int trafficSeed) {
     if (secondaryType != NULL) {
         AttributeSet secondaryAttributes;
         secondaryAttributes.Construct("pvehicle", secondaryType);
-        const char *secondaryModel = PVehicle_RenderNameAttrib(&secondaryAttributes);
+        const char *secondaryModel = PVehicle::RenderNameAttrib(&secondaryAttributes);
         if (secondaryModel != NULL)
             RSceneObj::PreLoad(kCarModels, secondaryModel, secondaryType);
         secondaryAttributes.Destruct();

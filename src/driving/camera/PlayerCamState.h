@@ -10,44 +10,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../engine/ActionQueue.hpp"   // GameAction, the inputs the handlers act on
+
 class RPlayerCamera;
-
-// What the player's car's GetAudio answers (PBondCar::GetAudio, its vtable slot 7): the flags the camera's input
-// handlers and the auto-drive camera set (names ours)
-struct CarAudioFlags {
-    uint8_t unknown000[0xc2];
-    uint8_t flagC2;                     // +0xc2 rotating about y, or spinning
-    uint8_t flagC3;                     // +0xc3 rotating about x
-    uint8_t flagC4;                     // +0xc4 aiming
-};
-
-// The inputs the handlers act on (action numbers; the names are neutral, the comments say what the handlers do)
-enum CameraInput : int32_t {
-    kInput1 = 1,                        // drive: unknown24 = -value
-    kInput27 = 27,                      // drive: unknown2C set, unknown30 120
-    kInput28 = 28,                      // drive: unknown2C cleared
-    kInput33 = 33,                      // auto-drive: weapon change
-    kInput34 = 34,                      // ditto
-    kInput35 = 35,                      // ditto
-    kInput38 = 38,                      // drive: next mode
-    kInput39 = 39,                      // ditto
-    kInput40 = 40,                      // drive: previous mode
-    kInput41 = 41,                      // drive: look back on
-    kInput42 = 42,                      // drive: look back off
-    kInput44 = 44,                      // drive: unknown24 = value; auto-drive: rotation Y, first input
-    kInput45 = 45,                      // auto-drive: rotation X, first input, negated
-    kInput46 = 46,                      // ... first input
-    kInput47 = 47,                      // auto-drive: rotation Y, second input
-    kInput48 = 48,                      // auto-drive: rotation X, second input, negated
-    kInput49 = 49,                      // ... second input
-    kInput50 = 50,                      // auto-drive: spin
-    kInput51 = 51,                      // auto-drive: unknown0D set, the car audio's flagC2 cleared
-    kInput52 = 52,                      // auto-drive, aiming: zoom by -value
-    kInput53 = 53,                      // ... zoom -1 past half way
-    kInput54 = 54,                      // ... zoom 1 past half way
-    kInput56 = 56,                      // auto-drive: the lock-on flag set, or cleared while aiming
-    kInput58 = 58,                      // auto-drive: the lock-on flag cleared
-};
 
 class RPlayerCamState {
 public:

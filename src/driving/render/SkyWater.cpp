@@ -87,16 +87,6 @@ static const Coord4 kCrackUVs[8][4] = {
     { { 0.5f, 0.75f, 1.0f, 1.0f }, { 1.0f, 0.75f, 1.0f, 1.0f }, { 0.5f, 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
 };
 
-// sin_fractionalangle and cos_fractionalangle leave FSIN's and FCOS's results in ST0, which the sun's offset
-// multiplies unrounded: read as doubles
-static double SineTurns(float turns) {
-    return reinterpret_cast<double (*)(float)>(&sin_fractionalangle)(turns);
-}
-
-static double CosineTurns(float turns) {
-    return reinterpret_cast<double (*)(float)>(&cos_fractionalangle)(turns);
-}
-
 // ---- RSky
 
 // FUNC_AT(0x000a6690)

@@ -20,11 +20,6 @@ constexpr float kEyePullBack = -0.2f;           // of the range, times how far t
 static_assert(std::bit_cast<uint32_t>(kDegreesToTurns) == 0x3b360b61 && std::bit_cast<uint32_t>(kEyePullBack) == 0xbe4ccccd,
               "the original's constants");
 
-// sin_fractionalangle leaves FSIN's result in ST0, which InitializePlaneInfo multiplies unrounded: read as a double
-double SineTurns(float turns) {
-    return reinterpret_cast<double (*)(float)>(&sin_fractionalangle)(turns);
-}
-
 // A plane's distance to a point in the ground plane, less its own distance: the columns of the planes' matrix
 double ColumnDistance(const MATRIX4 *planes, int column, const Coord4 *point) {
     return (double)planes->mtx[0][column] * point->x + (double)planes->mtx[2][column] * point->z -

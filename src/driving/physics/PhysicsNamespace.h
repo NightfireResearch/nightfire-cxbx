@@ -26,6 +26,10 @@ struct PhysicsData {
     int32_t impactSoundHi;      // +0x20 IMPACTSOUNDHI
     int32_t scrapeSound;        // +0x24 SCRAPESOUND
     float description;          // +0x28 DESCRIPTION, registered with the float parser
+
+    // The "smackable" set of `name` and InitPhysicsData's defaults (Smackable::Smackable calls it; the code sits
+    // among PVehicle's, and is ported in game/Vehicle.cpp)
+    PhysicsData* Construct(const char *name);                                                   // 0x0006ec80
 };
 static_assert(sizeof(PhysicsData) == 0x2c, "PhysicsData is 0x2c bytes");
 

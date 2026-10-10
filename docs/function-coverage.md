@@ -202,23 +202,23 @@ where to change it.
 
 | Subsystem | Functions | Replaced | Dead | Live | Done | KB | Done (bytes) |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| **game** | 2852 | 6 | 87 | 2759 | **3%** | 474 | 1% |
+| **game** | 2852 | 140 | 146 | 2566 | **10%** | 474 | 14% |
 | game.ai | 522 | 0 | 29 | 493 | 6% | 109 | 1% |
 | game.audio | 366 | 1 | 0 | 365 | 0% | 51 | 0% |
 | game.effects | 195 | 4 | 8 | 183 | 6% | 36 | 2% |
 | game.events | 793 | 0 | 5 | 788 | 1% | 72 | 0% |
 | game.frontend | 332 | 1 | 39 | 292 | 12% | 69 | 2% |
 | game.missions | 273 | 0 | 0 | 273 | 0% | 33 | 0% |
-| game.vehicles | 193 | 0 | 0 | 193 | 0% | 62 | 0% |
+| game.vehicles | 193 | 134 | 59 | 0 | 100% | 62 | 100% |
 | game.weapons | 178 | 0 | 6 | 172 | 3% | 43 | 0% |
-| **engine** | 3990 | 2479 | 1397 | 114 | **97%** | 526 | 100% |
+| **engine** | 3990 | 2479 | 1399 | 112 | **97%** | 526 | 100% |
 | engine.anim | 415 | 332 | 72 | 11 | 97% | 54 | 100% |
 | engine.audio | 270 | 203 | 54 | 13 | 95% | 35 | 100% |
 | engine.camera | 273 | 224 | 41 | 8 | 97% | 60 | 99% |
 | engine.core | 213 | 155 | 56 | 2 | 99% | 25 | 100% |
 | engine.data | 554 | 454 | 80 | 20 | 96% | 79 | 100% |
 | engine.input | 107 | 79 | 23 | 5 | 95% | 12 | 100% |
-| engine.physics | 156 | 117 | 29 | 10 | 94% | 33 | 100% |
+| engine.physics | 156 | 117 | 31 | 8 | 95% | 33 | 100% |
 | engine.render | 760 | 555 | 174 | 31 | 96% | 114 | 100% |
 | engine.static | 798 | 22 | 776 | 0 | 100% | 26 | 100% |
 | engine.world | 444 | 338 | 92 | 14 | 97% | 89 | 100% |
@@ -236,10 +236,10 @@ where to change it.
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6842 | 2485 | 1484 | 2873 | **58%** | 1000 | 53% |
+| **game + engine** | 6842 | 2619 | 1545 | 2678 | **61%** | 1000 | 59% |
 | **platform + system** | 2893 | 1527 | 1021 | 345 | **88%** | 506 | 93% |
 | **  without the C runtime** | 2473 | 1523 | 950 | 0 | **100%** | 462 | 100% |
-| **everything** | 9735 | 4012 | 2505 | 3218 | **67%** | 1506 | 66% |
+| **everything** | 9735 | 4146 | 2566 | 3023 | **69%** | 1506 | 70% |
 
 - **The engine's core and data layers are done (4 October 2026): `engine.core` and `engine.data`, 100% by bytes**
   (docs/driving/core-data.md): memory (UMemory, new/delete), reference counters, data groups, singletons, the
@@ -290,6 +290,12 @@ where to change it.
   the text and path helpers - 40 functions on top of IOModule, the devices and the queues; `engine.input` is 100%
   ours by bytes, and the engine tier with it. A shadow test compares them with the originals on the disc's control
   files and mutated copies. Game and engine together are now 58% done by functions, 53% by bytes.
+- **The vehicles are done (10 October 2026, docs/driving/vehicles.md):** PBondCar - every car, the player's and
+  the AI's, with the snowmobile, submarine and spline modes, its construction, controls, physics steps, wheel
+  forces, damage, tyre tracks, weapons and engine sound inputs - PVehicle with its car names and attributes, and
+  PHelicopter: 134 functions, `game.vehicles` 100% by bytes, the first finished game-tier subsystem. Five shadow
+  tests compare them with the originals on copies of the live cars and helicopters (to be run in game). Game and
+  engine together are now 61% done by functions, 59% by bytes.
 - **Every system library but the C runtime is done: D3D (with D3DX and XGRPH), DSOUND, XPP and XAPI at 100%.**
   The C runtime (347 live, 17%) is left to go by itself, as in the action engine: game code calls it everywhere, and
   it goes as that code becomes ours. How the rest got there (2 October 2026):
@@ -339,10 +345,10 @@ where to change it.
     side, is counted with the sound library; EA's packer (`src/driving/platform/RefPack.cpp`, checked against the
     original on every packed file in the archives) with the files. `XGetAVPack`/`XGetVideoFlags`, which sat among
     the file code, are counted with XAPI (ported in `XboxXapi.cpp`).
-- **Of the 1,000 KB of game and engine code, about 480 KB is still original:** essentially the whole game tier
-  (474 KB) and input (6 KB); what else is left is exception funclets filed in finished subsystems. The game tier by
-  size: AI 109 KB, mission events 72 KB, front end and HUD 68 KB, vehicles 62 KB, gameplay audio 51 KB,
-  weapons 43 KB, effects 36 KB, missions 33 KB.
+- **Of the 1,000 KB of game and engine code, about 410 KB is still original:** the game tier but its vehicles;
+  what else is left is exception funclets filed in finished subsystems. The game tier by size: AI 109 KB, mission
+  events 72 KB, front end and HUD 68 KB, gameplay audio 51 KB, weapons 43 KB, effects 36 KB, missions 33 KB
+  (vehicles, 62 KB, done).
 - **The static initialisers are done: `engine.static`, 798 functions, 100%.** The C++ initialiser table
   (0x001b3db0) is no longer walked: `RunStaticInitialisers` (`src/driving/engine/StaticInitTable.cpp`, generated
   from the XBE by `tools/static_init_driving.py`) does all 720 entries' work in table order - 585 float and double

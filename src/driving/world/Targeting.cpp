@@ -84,7 +84,7 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 #define SimState I32_AT(0x00234e24)
 #define SimTimeStep FLOAT_AT(0x00234e30)                         // the simulation's step, in seconds
 #define SimStepCount I32_AT(0x00234e34)
-#define playerPhysicsObject (*(RigidVehicle ***)0x00234e40)
+#define playerPhysicsObject (*(PVehicle ***)0x00234e40)
 #define WeaponManager (*(SWeaponManagerFields **)0x0023923c)
 
 // ---- calls to originals not ported
@@ -174,7 +174,7 @@ const RigidBody *PlayerBody() {
     return (*playerPhysicsObject)->GetRigidBody();
 }
 
-const RigidVehiclePhysics *PlayerPhysics() {
+const CarPhysics *PlayerPhysics() {
     return (*playerPhysicsObject)->GetPhysics();
 }
 
@@ -647,7 +647,7 @@ void WTargetPicker::UpdateSelection() {
     aim[1].y = worldTarget.y;
     aim[1].z = worldTarget.z;
     aim[1].w = 1.0f;
-    if (PlayerPhysics()->unknownC0 != 0) {
+    if (PlayerPhysics()->subPhysics != 0) {
         WorldCollisionInfo hit = {};    // (WorldCollisionInfo's constructor, inlined)
         hit.point = DefaultVector;
         hit.segmentStart = aim[0];
@@ -659,7 +659,7 @@ void WTargetPicker::UpdateSelection() {
         }
     }
 
-    if (PlayerPhysics()->unknownBC != 0) {
+    if (PlayerPhysics()->isSub != 0) {
         worldTargetScreen.x = float(double(ViewWidth) * kHalf);
         worldTargetScreen.y = float(double(ViewHeight) * kHalf);
     } else {
@@ -670,7 +670,7 @@ void WTargetPicker::UpdateSelection() {
     if (sortedCount > 0) {
         currentIndex = 0;
         selected = sorted[0];
-        if (selected != NULL && (mode == kTargetingAutoDrive || PlayerPhysics()->unknownBC != 0)) {
+        if (selected != NULL && (mode == kTargetingAutoDrive || PlayerPhysics()->isSub != 0)) {
             float radius = lockState == kLockNone ? kLockRadius : kLockedRadius;
             if (double(radius) * radius < selected->DistFromScreenPos(&worldTargetScreen))
                 selected = NULL;

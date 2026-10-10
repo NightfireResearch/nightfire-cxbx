@@ -453,6 +453,15 @@ add_library(drivinginject SHARED
   src/driving/physics/RigidBodyResolve.cpp
   src/driving/physics/RigidBodyCollide.cpp
   src/driving/physics/Newton.cpp
+  src/driving/game/Vehicle.cpp
+  src/driving/game/Helicopter.cpp
+  src/driving/game/BondCarSimulate.cpp
+  src/driving/game/BondCarState.cpp
+  src/driving/game/BondCarSnowmobile.cpp
+  src/driving/game/SoftZone.cpp
+  src/driving/game/BondCarModes.cpp
+  src/driving/game/BondCarBasics.cpp
+  src/driving/game/BondCarPhysics.cpp
   src/driving/engine/OBB.cpp
   src/driving/engine/PhysicsUtil.cpp
   src/driving/devtools/ColQueryShadow.cpp
@@ -468,6 +477,11 @@ add_library(drivinginject SHARED
   src/driving/devtools/RigidBasicsShadow.cpp
   src/driving/devtools/RigidCoreShadow.cpp
   src/driving/devtools/RigidResolveShadow.cpp
+  src/driving/devtools/BondCarShadowA.cpp
+  src/driving/devtools/BondCarShadowB.cpp
+  src/driving/devtools/BondCarShadowC.cpp
+  src/driving/devtools/BondCarShadowD.cpp
+  src/driving/devtools/VehicleShadow.cpp
   src/driving/devtools/RigidCollideShadow.cpp
   src/driving/devtools/RenderShadow.cpp
   src/driving/devtools/GeoPrimShadow.cpp

@@ -4,6 +4,7 @@
 #include "RigidResolveShadow.h"
 #include "FpControl.h"
 
+#include "../game/BondCar.h"
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBodyResolve.h"
 #include "../../common/xbeOriginal.h"
@@ -63,23 +64,6 @@ typedef RigidBody *(__fastcall *GetRigidBodyFn)(void *, int, int);
 #define ShadowSim ((void *)0x00233ff0)
 #define ShadowMissionManager (*(uint8_t **)0x00239220)
 const int kRigidBodies = 0x40;
-
-// What PBondCar's PVehicle methods read (GetCarControl +0x240, GetNumWheelsOnGround +0x299, IsReversing +0x29c,
-// GetCarClass +0x2c8, GetPhysics +0x23c)
-struct PBondCarFields {
-    uint8_t unknown000[0x23c];
-    RigidVehiclePhysics *physics;   // +0x23c
-    float control;              // +0x240
-    uint8_t unknown244[0x55];
-    int8_t wheelsOnGround;      // +0x299
-    uint8_t unknown29a[2];
-    uint8_t reversing;          // +0x29c
-    uint8_t unknown29d[0x2b];
-    int32_t carClass;           // +0x2c8
-};
-static_assert(offsetof(PBondCarFields, control) == 0x240 && offsetof(PBondCarFields, wheelsOnGround) == 0x299 &&
-              offsetof(PBondCarFields, reversing) == 0x29c && offsetof(PBondCarFields, carClass) == 0x2c8,
-              "PBondCar fields");
 
 // ---- results
 
@@ -311,9 +295,9 @@ void FreshImpact() {
 // ---- the owners' state, perturbed for PBondCars and put back
 
 struct OwnerSave {
-    PBondCarFields *car;
-    PBondCarFields saved;
-    int32_t physicsC0;
+    PBondCar *car;
+    uint8_t saved[sizeof(PBondCar)];
+    int32_t subPhysics;
 };
 
 std::vector<OwnerSave> g_owners;
@@ -326,19 +310,19 @@ void PerturbOwners() {
         if (owner == NULL || uint32_t(uintptr_t(owner->vtable)) != kPBondCarVtable)
             continue;
         OwnerSave save;
-        save.car = reinterpret_cast<PBondCarFields *>(owner);
-        save.saved = *save.car;
-        save.physicsC0 = save.car->physics != NULL ? save.car->physics->unknownC0 : 0;
+        save.car = static_cast<PBondCar *>(owner);
+        memcpy(save.saved, save.car, sizeof(save.saved));
+        save.subPhysics = save.car->physics != NULL ? save.car->physics->subPhysics : 0;
         g_owners.push_back(save);
         if (RandomInt(2) == 0)
             continue;
-        PBondCarFields *car = save.car;
-        car->control = Uniform(-1.2f, 1.2f);
-        car->wheelsOnGround = int8_t(RandomInt(5));
+        PBondCar *car = save.car;
+        car->control.steering = Uniform(-1.2f, 1.2f);
+        car->numWheelsOnGround = int8_t(RandomInt(5));
         car->reversing = uint8_t(RandomInt(2));
         car->carClass = RandomInt(4);
         if (car->physics != NULL)
-            car->physics->unknownC0 = RandomInt(3);
+            car->physics->subPhysics = RandomInt(3);
     }
     if (ShadowMissionManager != NULL)
         ShadowMissionManager[0x478] = uint8_t(RandomInt(2));
@@ -346,9 +330,9 @@ void PerturbOwners() {
 
 void RestoreOwners() {
     for (OwnerSave &save : g_owners) {
-        *save.car = save.saved;
+        memcpy(save.car, save.saved, sizeof(save.saved));
         if (save.car->physics != NULL)
-            save.car->physics->unknownC0 = save.physicsC0;
+            save.car->physics->subPhysics = save.subPhysics;
     }
     g_owners.clear();
     if (ShadowMissionManager != NULL)

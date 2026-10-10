@@ -13,7 +13,7 @@
 
 // ---------------------------------------------------------------------------------------------------------------
 // RigidBody's collision response. Bodies of kind below 4 belong to vehicles: their owners' PVehicle methods are
-// called (through the owner's vtable, RigidVehicle).
+// called (through the owner's vtable).
 // ---------------------------------------------------------------------------------------------------------------
 
 namespace {
@@ -22,7 +22,7 @@ PhysicsObject *Owner(const RigidBody *body) {
     return PhysicsObjects[body->ownerIndex];
 }
 
-RigidVehicle *Vehicle(const RigidBody *body) {
+PVehicle *Vehicle(const RigidBody *body) {
     return RigidVehicles[body->ownerIndex];
 }
 
@@ -381,14 +381,14 @@ void RigidBody::GenerateImpulse(CollisionImpact *impact, const Coord4 *normal, c
         VU0_v4sub(&linear, &friction, &linear);
     VU0_v4scale(&linear, mass, &linear);
 
-    // A kind 1 car reversing, its control's first value beyond 0.75, the point on the negative side of its z axis
+    // A kind 1 car reversing, its steering beyond 0.75, the point on the negative side of its z axis
     // and the normal well off it: no vertical impulse, and a small turn
-    RigidVehicle *owner = Vehicle(this);
+    PVehicle *owner = Vehicle(this);
     bool flatten = false;
-    if (fromWorld && kind == 1 && owner->GetPhysics()->unknownC0 == 0 && owner->GetCarClass() != 1 &&
+    if (fromWorld && kind == 1 && owner->GetPhysics()->subPhysics == 0 && owner->GetCarClass() != 1 &&
         owner->IsReversing()) {
-        CarControl control;
-        if (Abs(owner->GetCarControl(&control)->unknown00) > 0.75f &&
+        BondCarControl control;
+        if (Abs(owner->GetCarControl(&control)->steering) > 0.75f &&
             v3dotprod(&lever, info->orientation.mtx[2]) < 0.0f &&
             Abs(v3dotprod(normal, info->orientation.mtx[2])) < kFlattenTurn) {
             linear.y = 0.0f;
@@ -413,7 +413,7 @@ void RigidBody::GenerateImpulse(CollisionImpact *impact, const Coord4 *normal, c
 
     Coord4 angular = {};
     VU0_v4crossprodxyz(&lever, &linear, &angular);
-    if (fromWorld && kind < 4 && owner->GetPhysics()->unknownC0 == 0) {
+    if (fromWorld && kind < 4 && owner->GetPhysics()->subPhysics == 0) {
         ConvertWorldToLocal(&angular);
         angular.z *= 0.2f;
     }
@@ -424,11 +424,11 @@ void RigidBody::GenerateImpulse(CollisionImpact *impact, const Coord4 *normal, c
     if (kind >= 4) {
         VU0_v4scale(&angular, 0.1f, &angular);
     } else {
-        if (fromWorld && owner->GetPhysics()->unknownC0 == 0) {
+        if (fromWorld && owner->GetPhysics()->subPhysics == 0) {
             angular.y *= 0.2f;
             VU0_MATRIX4_vect3mult(&angular, &info->orientation, &angular);
         }
-        if (owner->GetPhysics()->unknownC0 == 1) {
+        if (owner->GetPhysics()->subPhysics == 1) {
             MATRIX4 worldToBody;
             VU0_MATRIX4_transpose(&worldToBody, &info->orientation);
             VU0_MATRIX4_vect3mult(&angular, &worldToBody, &angular);
