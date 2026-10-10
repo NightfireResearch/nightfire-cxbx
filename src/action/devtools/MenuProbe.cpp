@@ -74,6 +74,9 @@
 #include "MPMenusShadow.h"
 #include "MPModesShadow.h"
 #include "MPObjectsShadow.h"
+#include "MPFlagShadow.h"
+#include "MPGoldenEyeShadow.h"
+#include "MPObjectivesShadow.h"
 #include "Teleport.h"
 #include "../game.h"   // reload: ResetMap_LevelToLoad, GameFlow_PushState
 
@@ -538,6 +541,9 @@ void MenuProbe_Install(void) {
     MPMenusShadow_Install();
     MPModesShadow_Install();
     MPObjectsShadow_Install();
+    MPFlagShadow_Install();
+    MPGoldenEyeShadow_Install();
+    MPObjectivesShadow_Install();
     if (SettingOn("MenuCheckLists")) {
         CheckLists();
         DroneTablesCheck_Run();

@@ -13,7 +13,8 @@
 //   a "protect it" message (a friendly-fire timer goes from 0), and a change of the objective's object;
 // - hill: an agent entering or leaving, the entry sound, the beep at every fifth point;
 // - uplink: a change of team.
-// Flags, bases, blueprints and GoldenEye objects run ours only (their updates are other files' ports), and so does
+// Flags, blueprints and GoldenEye parts go through the original dispatch, which calls their updates by address:
+// MPFlagShadow and MPGoldenEyeShadow compare those. Bases run ours only, and so does
 // MP_BluePrintReachedBase, which always plays a sound, sends bot messages, draws a random number and queues a
 // message; those are left to the replays.
 
@@ -58,7 +59,8 @@ struct Counts {
 };
 
 Counts s_demolition = { "Demolition" }, s_protection = { "Protection" }, s_uplink = { "Uplink" },
-       s_koh = { "KOH" }, s_other = { "other (ours only)" };
+       s_koh = { "KOH" }, s_carried = { "flag, blueprint, GoldenEye (original dispatch)" },
+       s_other = { "other (ours only)" };
 
 int CollectRegions(Region *regions, MPOBJECT *mpObj, obj_tag *gameObj) {
     int n = 0;
@@ -151,6 +153,17 @@ void __cdecl ShadowObjectUpdate(obj_tag *gameObj) {
     case PROTECTION: c = &s_protection; inner = kDemolitionProtectionUpdate; break;
     case UPLINK: c = &s_uplink; inner = kUplinkUpdate; break;
     case KOH: c = &s_koh; inner = kKOHUpdate; break;
+    case CTF_FLAG:
+    case BLUEPRINT:
+    case GOLDENEYE_KEY:
+    case GOLDENEYE_CRYSTAL: {
+        // the original dispatch reaches their updates by address, so MPFlagShadow and MPGoldenEyeShadow see
+        // them (ours, or the shadows, run there either way)
+        XbeOriginalScope scope(kObjectUpdate);
+        reinterpret_cast<void (__cdecl *)(obj_tag *)>(kObjectUpdate)(gameObj);
+        Count(s_carried);
+        return;
+    }
     default:
         MP_ObjectUpdate(gameObj);
         Count(s_other);
