@@ -390,32 +390,32 @@ void MP_objectBeingDeleted(obj_tag* obj) {
 }
 
 // AUTOINJECT
-obj_tag* MP_getFlagObj(uint i) {
+MP_OBJ_EXT* MP_getFlagObj(uint i) {
   if(i >= ARRAY_SIZE(Flags))
     return NULL;
-  return Flags[i].gameObj;
+  return &Flags[i];
 }
 
 // AUTOINJECT
-obj_tag* MP_getBaseObj(uint i) {
+MP_OBJ_EXT* MP_getBaseObj(uint i) {
   if(i >= ARRAY_SIZE(Bases))
     return NULL;
-  return Bases[i].gameObj;
+  return &Bases[i];
 }
 
 // AUTOINJECT
-obj_tag* MP_getDemolitionObj(void) {
-  return Demolition.gameObj;
+MP_OBJ_EXT* MP_getDemolitionObj(void) {
+  return &Demolition;
 }
 
 // AUTOINJECT
-obj_tag* MP_getProtectionObj(void) {
-  return Protection.gameObj;
+MP_OBJ_EXT* MP_getProtectionObj(void) {
+  return &Protection;
 }
 
 // AUTOINJECT
-obj_tag* MP_getHillObj(void) {
-  return Hill.gameObj;
+MP_OBJ_EXT* MP_getHillObj(void) {
+  return &Hill;
 }
 
 // UNINJECTABLE - custom calling convention

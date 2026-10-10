@@ -174,12 +174,15 @@ static_assert(sizeof(MPJoinSlot) == 0x10, "MPJoinSlot is wrong size");
 
 typedef struct {
     obj_tag* gameObj;
-    char unknown[16];
-    AIEmitter_tag aiEmitter;
-    char unknown2[8];
+    CelPos_tag celPos;          // 0x04 - where bots go for it
+    AIEmitter_tag aiEmitter;    // 0x14
+    uint flags;                 // 0x3c - 1 or 2: its bit in MPGame.teamObjectiveFlags (BOTSTATE_processGoals)
+    char unknown40[4];
 } MP_OBJ_EXT;
 
 static_assert(sizeof(MP_OBJ_EXT) == 0x44, "MP_OBJ_EXT is wrong size");
+static_assert(offsetof(MP_OBJ_EXT, aiEmitter) == 0x14, "Bad offset of MP_OBJ_EXT.aiEmitter");
+static_assert(offsetof(MP_OBJ_EXT, flags) == 0x3c, "Bad offset of MP_OBJ_EXT.flags");
 
 typedef enum {
     CTF_FLAG = 0,
@@ -284,11 +287,11 @@ uint MP_GetSpawnPoint(short teamId, obj_tag *respawningPlayer);
 obj_tag* MP_RegisterMPObject(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 void MP_objectBeingDeleted(obj_tag* obj);
 void MP_Update(void);
-obj_tag* MP_getFlagObj(uint i);
-obj_tag* MP_getBaseObj(uint i);
-obj_tag* MP_getDemolitionObj(void);
-obj_tag* MP_getProtectionObj(void);
-obj_tag* MP_getHillObj(void);
+MP_OBJ_EXT* MP_getFlagObj(uint i);
+MP_OBJ_EXT* MP_getBaseObj(uint i);
+MP_OBJ_EXT* MP_getDemolitionObj(void);
+MP_OBJ_EXT* MP_getProtectionObj(void);
+MP_OBJ_EXT* MP_getHillObj(void);
 MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj);
 short MP_PlayerOrBotInd(obj_tag *obj);
 void MP_SortOutWhoWon(void);

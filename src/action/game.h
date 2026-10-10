@@ -393,7 +393,9 @@ typedef struct {
 } MPGamePlayer;
 
 enum MPGamePlayerFlags : ushort {
-    MPPLAYER_IN_HILL = 0x10,    // inside the King of the Hill object's box (MP_KOHUpdate)
+    MPPLAYER_FLAG_1 = 1,        // a CTF bot with it heads for its base (BOTSTATE_pickGoal)
+    MPPLAYER_FLAG_2 = 2,        // a Blueprint bot with it heads for the espionage base; MP_BluePrintReachedBase clears it
+    MPPLAYER_IN_HILL = 0x10,    // inside the King of the Hill object's box (MP_KOHUpdate); a bot with it picks no objective
 };
 
 static_assert(sizeof(MPGamePlayer) == 0x30, "MPGamePlayer is wrong size"); // Determined from stride length in various funcs
@@ -413,9 +415,16 @@ typedef struct {
   float TimeIncPaused; // seconds of unpaused play, counted even with switch_MP4EVER: pickup visit times, bot goals
   float winStateTimeout; // MP init and update
   float lastTimePaused; // end conditions
-  short unknown_maybe_capture_state; // player status / goals
-  short unknown_maybe_unused; // restart
-  short unknown_9; // uplink, goldeneye, blueprint timers?
+  union {
+    struct {
+      short unknown_maybe_capture_state; // player status / goals
+      short unknown_maybe_unused; // restart
+      short unknown_9; // uplink, goldeneye, blueprint timers?
+    };
+    ushort teamObjectiveFlags[3]; // by MPTeam: bits 1 and 2 match an objective's MP_OBJ_EXT.flags, and a bot drops
+                                  // its goal for an objective whose bit is set (BOTSTATE_processGoals). BOTSTATE_pickGoal
+                                  // reads it for NO_TEAM too, which is unknown_9
+  };
   short maybe_pad;
   sprite* radar_related[2 * NUM_PLAYERS]; // One pair per human participant
 } MPGameStruct;
@@ -423,6 +432,8 @@ typedef struct {
 static_assert(sizeof(MPGameStruct) == 0x230, "MPGameStruct is wrong size"); // Determined from MP_Init
 
 static_assert(offsetof(MPGameStruct, lastTimePaused) == 0x204, "Offset of lastTimePaused wrong");
+static_assert(offsetof(MPGameStruct, TimeIncPaused) == 0x1fc, "Offset of TimeIncPaused wrong");
+static_assert(offsetof(MPGameStruct, teamObjectiveFlags) == 0x208, "Offset of teamObjectiveFlags wrong");
 
 #pragma pack(pop)
 
