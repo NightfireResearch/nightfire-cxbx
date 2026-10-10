@@ -112,7 +112,8 @@ bool CompareResult(const Stats &st, unsigned original, unsigned ours) {
 void Count(Stats &st, bool differs) {
     if (differs)
         st.differing++;
-    if (++st.calls % 500 == 0)
+    // every 500 calls, and at 1, 2, 4 ... before that, so a rarely called function reports too
+    if (++st.calls % 500 == 0 || (st.calls < 500 && (st.calls & (st.calls - 1)) == 0))
         printf("[botstate] %s: %u calls, %u differ, %u not compared\n", st.name, st.calls, st.differing, st.skipped);
 }
 

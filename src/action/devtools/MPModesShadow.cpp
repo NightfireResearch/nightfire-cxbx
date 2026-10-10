@@ -84,7 +84,8 @@ void Compare(Counts &c, const Region *regions, int n, const Snapshot *s) {
 }
 
 void Count(Counts &c) {
-    if (++c.calls % 500 == 0)
+    // every 500 calls, and at 1, 2, 4 ... before that, so a rarely called function reports too
+    if (++c.calls % 500 == 0 || (c.calls < 500 && (c.calls & (c.calls - 1)) == 0))
         printf("[mpmodes] %s: %u calls, %u kept, %u differ\n", c.name, c.calls, c.kept, c.differing);
 }
 
