@@ -196,12 +196,17 @@ typedef enum {
 typedef struct {
     ushort type; // MPOBJECTTYPE
     ushort num;
-    char unknown_pad_1[8];
-    obj_tag *scriptPlayer;
-    char _pad[0x50-16];
+    short unknown04;            // 0x04 MP_PlayerKilled sets it to 30 seconds of frames when a hurt object of types 5-7
+                                //      was among the holder's damage
+    char unknown06[2];
+    obj_tag *holder;            // 0x08 MP_PlayerKilled hands the object back when this one dies
+    obj_tag *scriptPlayer;      // 0x0c
+    char unknown10[0x4e-0x10];
+    short holderIdx;            // 0x4e uplink: the agent index that took it (Control_Plr2Ind), -1 none
 } MPOBJECT;
 
 static_assert(sizeof(MPOBJECT) == 0x50, "MPOBJECT is wrong size");
+static_assert(offsetof(MPOBJECT, holderIdx) == 0x4e, "MPOBJECT.holderIdx is at wrong offset");
 
 
 typedef struct {
@@ -267,6 +272,13 @@ void MP_RestartScenario(void);
 void MP_Init(void);
 obj_tag* MP_CreateObject(_MATRIX *mtx, unsigned short* data, celglist_tag *celgl);
 bool MP_ReSpawn(obj_tag* obj, ushort idx);
+
+// multiplayer_modes.cpp
+void MP_KOHUpdate(obj_tag *hill);
+// The original takes gameObj in EAX: MP_UplinkUpdate is the entry for that, _MP_UplinkUpdate the C++ under it.
+void MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj);
+void _MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj);
+void MP_PlayerKilled(obj_tag *obj);
 
 // FIXME move to a separate file
 bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float distance, _VECTOR *searchDirection);

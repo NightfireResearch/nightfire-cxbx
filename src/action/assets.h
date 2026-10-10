@@ -776,6 +776,7 @@ typedef enum {
     MP_RESULT_WON = 0x02000027,               // "Won"
     MP_TIME_UP = 0x02000028,
     NOTIF_RESTARTING = 0x02000049,
+    NOTIF_KILLED_X = 0x0200004d,              // formatted with the victim's name (MP_PlayerKilled)
 
 
     TXT_MISSION_FAIL_ALARM_TRIGGERED = 0x04000032,

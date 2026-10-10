@@ -66,6 +66,7 @@ add_library(actioninject SHARED
   src/action/devtools/MatrixShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/BotCoreShadow.cpp
+  src/action/devtools/MPModesShadow.cpp
   src/action/devtools/Teleport.cpp
   src/action/game.cpp
   src/action/main.cpp
@@ -146,6 +147,7 @@ add_library(actioninject SHARED
   src/action/game/drone/NDrone2.cpp
   src/action/game/drone/NDrone2_Hostage.cpp
   src/action/game/mp/multiplayer.cpp
+  src/action/game/mp/multiplayer_modes.cpp
   src/action/game/obj/Break.cpp
   src/action/game/obj/Door.cpp
   src/action/game/obj/Hint.cpp

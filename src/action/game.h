@@ -378,18 +378,27 @@ typedef struct {
     uint paused;
     uint victories;         // the debriefing's "Victories"
     uint deaths;            // the debriefing's "Deaths" (Ghidra: pointsScored)
-    char unknown_pad0[0x18-0xc];
+    char unknown0c[4];
+    uint unknown10;         // 0x10 MP_PlayerKilled adds one with each victory and clears it on a suicide
+    char unknown14[4];
     float points;           // the debriefing's "Points"
     obj_tag* playerObj;
     short maybeIdxOfLastInjurer; // Index of who or what last dealt me damage? -2 = environment?
     short friendlyFireLabelTimer;
     short friendlyFireProtectionLabelTimer;
-    char unknown_pad1[2];
+    ushort flags;           // 0x26 MPGamePlayerFlags
     short maybeIdxOfMyAssassin;
-    char unknown_pad2[0x30-0x2a];
+    char unknown2a[2];
+    float hillSoundTime;    // 0x2c MPGame.TimeIncPaused when MP_KOHUpdate last played the hill's entry sound
 } MPGamePlayer;
 
+enum MPGamePlayerFlags : ushort {
+    MPPLAYER_IN_HILL = 0x10,    // inside the King of the Hill object's box (MP_KOHUpdate)
+};
+
 static_assert(sizeof(MPGamePlayer) == 0x30, "MPGamePlayer is wrong size"); // Determined from stride length in various funcs
+static_assert(offsetof(MPGamePlayer, flags) == 0x26, "Offset of MPGamePlayer.flags wrong");
+static_assert(offsetof(MPGamePlayer, hillSoundTime) == 0x2c, "Offset of MPGamePlayer.hillSoundTime wrong");
 
 typedef struct {
   // Note that PS2 and Xbox have different number of entries in MPGame! PS2 has 8, Xbox has 10
@@ -401,7 +410,7 @@ typedef struct {
   uint TimeUnpaused;
   float TimeLimit;
   float restartScenarioTimeout;
-  float TimeIncPaused; // pickups, opponent selection, visit times (BOT_setOtherPlayerInfo reads it as a float)
+  float TimeIncPaused; // pickups, opponent selection, visit times (BOT_setOtherPlayerInfo and MP_KOHUpdate read it as a float)
   float winStateTimeout; // MP init and update
   float lastTimePaused; // end conditions
   short unknown_maybe_capture_state; // player status / goals
