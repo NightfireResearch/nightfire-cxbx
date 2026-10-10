@@ -75,7 +75,7 @@ desktop)
     ;;
 run)
     script=$1; name=${2:-$(basename "$1" .txt)}; timeout=${3:-300}
-    "$0" desktop "tools/ui/run_menu.sh $script $name $timeout"
+    "$0" desktop "ORIGINAL='${ORIGINAL:-}' SETTINGS='${SETTINGS:-}' tools/ui/run_menu.sh $script $name $timeout"
     mkdir -p "$REPO/build/remote/$name"
     r "cd $RREPO/build/menurun/$name && tar cf - run.log menu.log menu_shots d3d9_trace_*.log d3d9_dump_frame_*.bmp 2>/dev/null" |
         (cd "$REPO/build/remote/$name" && rm -rf menu_shots && tar xf -)
