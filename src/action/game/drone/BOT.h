@@ -3,7 +3,6 @@
 
 #include "../../actionhelpers.h"
 #include "../../engine/AINetwork.h"
-#include "../mp/multiplayer.h"  // MPBOT
 
 #pragma pack(push, 1)
 // A multiplayer bot's statistics: the defaults per character (BOT_getDefaultStats, 29 entries at 0x00163628, indexed by
@@ -179,6 +178,7 @@ typedef enum {
 
 BOT_stats_t* BOT_getDefaultStats(uint identifier);
 // noSpawn (0 from every caller): BOT_init does not start the drone, BOT_respawn does not move it to a spawn point
+struct MPBOT;
 obj_tag* BOT_init(short playerNum, _VECTOR *pos, _VECTOR *rot, obj_tag *gameObj, MPBOT *bot, char noSpawn);
 bool BOT_respawn(obj_tag* gameObj, int playerNum, char noSpawn);
 void BOT_setOtherPlayerInfo(DCVars_tag *dcv);

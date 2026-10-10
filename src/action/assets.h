@@ -687,15 +687,15 @@ typedef enum {
     BOT_SPEED_SLOW = 0x0000023c,               // "Slow"
     BOT_SPEED_NORMAL = 0x0000023d,             // "Normal"
     BOT_SPEED_FAST = 0x0000023e,               // "Fast"
-    BOT_PERSONALITY_NONE = 0x010002d0,         // "None"
-    BOT_PERSONALITY_COLLECTOR = 0x00000233,    // "Collector"
-    BOT_PERSONALITY_GUARDIAN = 0x00000234,     // "Guardian"
-    BOT_PERSONALITY_TEAMPLAYER = 0x00000235,   // "Team Player"
-    BOT_PERSONALITY_BERSERKER = 0x00000237,    // "Berserker"
-    BOT_PERSONALITY_GREEDY = 0x00000238,       // "Greedy"
-    BOT_PERSONALITY_VENGEFUL = 0x00000239,     // "Vengeful"
-    BOT_PERSONALITY_JUDGE = 0x0000024a,        // "Judge"
-    BOT_PERSONALITY_ASSASSIN = 0x0000024b,     // "Assassin"
+    MP_PERSONALITY_NONE = 0x010002d0,         // "None"
+    MP_PERSONALITY_COLLECTOR = 0x00000233,    // "Collector"
+    MP_PERSONALITY_GUARDIAN = 0x00000234,     // "Guardian"
+    MP_PERSONALITY_TEAMPLAYER = 0x00000235,   // "Team Player"
+    MP_PERSONALITY_BERSERKER = 0x00000237,    // "Berserker"
+    MP_PERSONALITY_GREEDY = 0x00000238,       // "Greedy"
+    MP_PERSONALITY_VENGEFUL = 0x00000239,     // "Vengeful"
+    MP_PERSONALITY_JUDGE = 0x0000024a,        // "Judge"
+    MP_PERSONALITY_ASSASSIN = 0x0000024b,     // "Assassin"
     BOT_STATS_FIXED = 0x010002d1,              // "This Bot's statistics and personality are fixed and cannot be modified."
 
     // Button hints
@@ -928,7 +928,6 @@ typedef enum {
     QUIT_CONFIRMATION = 0x200,
     CONTROL_INVERTED = 0x206,
     OBJECTIVE_NO_DESCRIPTION = 0x31d, // (invented name) an objective's description when it has none
-    CONTROL_NORMAL = 0x3bd,
     STATS_CURRENT = 0x010001e1,
     STATS_TARGET = 0x010001e2,
     STATS_CATEGORY = 0x01000204,

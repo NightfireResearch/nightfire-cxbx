@@ -53,11 +53,11 @@ obj_tag* BOT_init(short playerNum, _VECTOR *pos, _VECTOR *rot, obj_tag *gameObj,
 
     if (bot == NULL) {
         DefaultMPBOT.isGood = MPSettings.Player[playerNum].TeamId;
-        memcpy(DefaultMPBOT.stats, &DefaultBotStats[1], sizeof(DefaultMPBOT.stats));
+        DefaultMPBOT.stats = DefaultBotStats[1];
         DefaultMPBOT.SkinNum = 1;
         bot = &DefaultMPBOT;
     }
-    const BOT_stats_t *stats = (const BOT_stats_t *)bot->stats;
+    const BOT_stats_t *stats = &bot->stats;
     uchar skinNum = bot->SkinNum;
 
     DroneCreationData placement;

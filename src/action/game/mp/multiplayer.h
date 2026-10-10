@@ -135,7 +135,7 @@ static_assert(sizeof(MP_skin) == 0x10, "MP_skin is wrong size");
 #define MP_skins ((MP_skin*)0x001637c0)
 
 
-typedef struct {
+typedef struct MPBOT {
     BOT_stats_t stats;  // 0x00 the character's defaults (BOT_getDefaultStats), then P_MPBOTSETUP's
     char isPlaying;     // 0x0e the bot is in the game (P_MPBOTSETUP's "Playing" option)
     char isGood;        // 0x0f its character is on MI6's side (Menu_IsBotGood)
