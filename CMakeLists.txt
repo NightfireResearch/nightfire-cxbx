@@ -73,6 +73,7 @@ add_library(actioninject SHARED
   src/action/devtools/MPMatchShadow.cpp
   src/action/devtools/BotStateShadow.cpp
   src/action/devtools/MPObjectsShadow.cpp
+  src/action/devtools/MPObjectivesShadow.cpp
   src/action/devtools/Teleport.cpp
   src/action/game.cpp
   src/action/main.cpp
@@ -157,6 +158,7 @@ add_library(actioninject SHARED
   src/action/game/mp/multiplayer_goldeneye.cpp
   src/action/game/mp/multiplayer_modes.cpp
   src/action/game/mp/multiplayer_flag.cpp
+  src/action/game/mp/multiplayer_objects.cpp
   src/action/game/obj/Break.cpp
   src/action/game/obj/Door.cpp
   src/action/game/obj/Hint.cpp

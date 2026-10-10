@@ -20,7 +20,6 @@ void MP_sendBotMessage(obj_tag *obj, uint msg, uint param3, uint param4);
 #define MP_setPlayerStatus ((void (__cdecl *)(obj_tag *obj, ushort status, uint msg, uint param4, obj_tag *target, bool clear))0x0009e490)
 #define MPSound_Play ((void (__cdecl *)(Action_SFX sfx))0x0009ec60)
 #define MP_sendTeamBotMessage ((void (__cdecl *)(MPTeam team, uint msg, obj_tag *obj, uint param4, uint senderId))0x0009e430)
-#define MP_BluePrintReachedBase ((void (__cdecl *)(obj_tag *gameObj, MPOBJECT *mpObj, int param3))0x000a0ec0)
 
 // mpObj in ECX, gameObj in EBX, stayPut in AL, the state on the stack, removed by the caller. Unless stayPut, the
 // object goes back to the matrix at mpObj + 0x10.
@@ -235,7 +234,7 @@ void _MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
         MP_SetUpPlayerSomehow(gameObj, mpObj->holder, 0x15);
         for (HITDATA_tag *hit = EsponageBase[mpObj->num].gameObj->hitList; hit != NULL; hit = hit->next) {
             if (hit->hitObj == mpObj->holder) {
-                MP_BluePrintReachedBase(gameObj, mpObj, 0);
+                MP_BluePrintReachedBase(gameObj, mpObj);
                 return;
             }
         }

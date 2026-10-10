@@ -92,6 +92,14 @@ typedef struct BOT_playerInfo_t {
     uchar _padD[3];
 } BOT_playerInfo_t;
 
+// One weapon as a bot holds it (BOT_vars_t.weapons, indexed by weapon id). Invented name.
+typedef struct BOT_weapon_t {
+    uchar unknown0[4];          // 0x0 - sqrt(range)
+    short rounds;               // 0x4 - rounds in clip
+    uchar held;                 // 0x6
+    uchar unknown7[5];
+} BOT_weapon_t;
+
 // A bot player's state (NUM_BOTS at 0x001d98e0, one per bot agent; Drone_tag.botVars). Ghidra's type is 0x75f
 // bytes, too short.
 typedef struct BOT_vars_t {
@@ -100,7 +108,7 @@ typedef struct BOT_vars_t {
     uchar _pad86[2];
     BOT_playerInfo_t players[NUM_AGENTS]; // 0x088 - per agent, refreshed each frame (BOT_setOtherPlayerInfo)
     _VECTOR opponentLastPos;        // 0x128
-    uchar weapons[114][0xc];        // 0x134 - per weapon id: sqrt(range), rounds in clip, held. One slot per id
+    BOT_weapon_t weapons[114];      // 0x134 - per weapon id: sqrt(range), rounds in clip, held. One slot per id
                                     //         (NUM_WEAPONS), but the bot code only walks ids 0-82 (BOTWEAP_CheckWeaponsLoaded,
                                     //         BOTWEAP_listHeldLoadedWeapons stop at 0x53): 83 and up are gadgets
                                     //         (camera, decryptor, Q-worm, ...) and vehicle / boss weapons
@@ -144,6 +152,8 @@ typedef struct BOT_vars_t {
 
 static_assert(sizeof(BOT_goal_t) == 0x3c, "BOT_goal_t is 0x3c bytes");
 static_assert(sizeof(BOT_playerInfo_t) == 0x10, "BOT_playerInfo_t is 0x10 bytes");
+static_assert(sizeof(BOT_weapon_t) == 0xc, "BOT_weapon_t is 0xc bytes");
+static_assert(offsetof(BOT_weapon_t, held) == 0x6, "Wrong offset for BOT_weapon_t.held");
 static_assert(sizeof(BOT_vars_t) == 0x768, "BOT_vars_t is 0x768 bytes");
 static_assert(offsetof(BOT_vars_t, players) == 0x88, "Wrong offset for BOT_vars_t.players");
 static_assert(offsetof(BOT_vars_t, weapons) == 0x134, "Wrong offset for BOT_vars_t.weapons");

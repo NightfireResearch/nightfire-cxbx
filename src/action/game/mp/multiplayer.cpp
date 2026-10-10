@@ -725,8 +725,6 @@ void __stdcall Pickup_MakeRandomWeaponSet(void);
 
 #define PickupNextAddIndex U32_AT(0x0025fe30)
 #define PickupLastDeletedIdx (*(int*)0x00261b84) // -1 = none
-#define BluePrints (*(SpawnPlace(*)[8])0x00262458)
-#define BluePrintCount U16_AT(0x002637d4)
 
 // Game mode bits (see MultiplayerGameMode): bit 29 is set by every team mode, bit 30 by KOTH, team KOTH and
 // uplink.

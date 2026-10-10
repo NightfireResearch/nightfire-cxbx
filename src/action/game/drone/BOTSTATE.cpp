@@ -41,7 +41,6 @@ void* __stdcall MP_getProtectionObj_NotExt(void);
 #define MP_getEsponageBaseObj ((MP_OBJ_EXT *(__cdecl *)(uint team, int approachQuadrant))0x0009e2f0)
 #define MP_getGoldenEyeObj ((MP_OBJ_EXT *(__cdecl *)(uint key))0x0009e3a0)
 #define MP_getAssassinTarget ((obj_tag *(__cdecl *)(void))0x0009e7b0)
-#define MP_BluePrintReachedBase ((void (__cdecl *)(obj_tag *blueprint, void *blueprintData, int param3))0x000a0ec0)
 
 // Whether a bot other than playerIndex has obj as its objective goal. Every bot slot is asked, whatever its team;
 // a player on no team gets false.
@@ -692,7 +691,7 @@ void BOTSTATE_processGoals(DCVars_tag *dc) {
                    && objective == MP_getEsponageBaseObj(team, -1)
                    && (MPGame.players[bot->playerIndex].flags & MPPLAYER_FLAG_2)
                    && MP_getBlueprintObj() != NULL && MP_getBlueprintObj()->gameObj != NULL) {
-            MP_BluePrintReachedBase(MP_getBlueprintObj()->gameObj, MP_getBlueprintObj()->gameObj->extraObjectData, 0);
+            MP_BluePrintReachedBase(MP_getBlueprintObj()->gameObj, (MPOBJECT *)MP_getBlueprintObj()->gameObj->extraObjectData);
         }
 
         NDrone2_InvalidateAttackRoute(dc);

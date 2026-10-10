@@ -205,13 +205,16 @@ typedef struct {
     char unknown06[2];
     obj_tag *holder;            // 0x08 MP_PlayerKilled hands the object back when this one dies
     obj_tag *scriptPlayer;      // 0x0c
-    _MATRIX resetMtx;           // 0x10 MP_ResetMPObject puts the object back here; MP_GoldeneyeResetObject picks it
-    char unknown4c[2];
+    _MATRIX resetMtx;           // 0x10 MP_ResetMPObject puts the object back here (MP_GoldeneyeResetObject,
+                                //      MP_BluePrintReachedBase pick it)
+    short attackerIdx;          // 0x4c demolition, protection: the agent index (Control_Plr2Ind) that last damaged it
+                                //      (our name)
     short holderIdx;            // 0x4e uplink: the agent index that took it (Control_Plr2Ind), -1 none
 } MPOBJECT;
 
 static_assert(sizeof(MPOBJECT) == 0x50, "MPOBJECT is wrong size");
 static_assert(offsetof(MPOBJECT, resetMtx) == 0x10, "MPOBJECT.resetMtx is at wrong offset");
+static_assert(offsetof(MPOBJECT, attackerIdx) == 0x4c, "MPOBJECT.attackerIdx is at wrong offset");
 static_assert(offsetof(MPOBJECT, holderIdx) == 0x4e, "MPOBJECT.holderIdx is at wrong offset");
 
 
@@ -283,6 +286,9 @@ static_assert(sizeof(MP_RADAR_OBJECT) == 0x14, "MP_RADAR_OBJECT is wrong size");
 // Room for 22 up to Uplinks (0x002633d8); MP_GetRadarObjects writes at most NUM_AGENTS + 8
 #define MPRadarObjects (*(MP_RADAR_OBJECT(*)[22])0x00263220)
 
+#define BluePrints (*(SpawnPlace(*)[8])0x00262458)
+#define BluePrintCount U16_AT(0x002637d4)
+
 #define CurrentAssassinObjId (*(obj_tag **)0x0026178c)
 #define AssassinTarget (*(obj_tag **)0x00261788)
 #define MPObjects (*(obj_tag*(*)[64])0x00263640)
@@ -345,6 +351,13 @@ void MP_GoldeneyeResetObject(MPOBJECT *mpObj, obj_tag *gameObj, int unused, char
 // The original takes gameObj in EAX: MP_GoldenEyeUpdate is the entry for that, _MP_GoldenEyeUpdate the C++ under it.
 void MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj);
 void _MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj);
+// multiplayer_objects.cpp
+void MP_ObjectUpdate(obj_tag *gameObj);
+// The original takes defenders in AX and gameObj in EBX: MP_DemolitionProtectionUpdate is the entry for that,
+// _MP_DemolitionProtectionUpdate the C++ under it.
+void MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders);
+void _MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders, obj_tag *gameObj);
+void MP_BluePrintReachedBase(obj_tag *gameObj, MPOBJECT *mpObj);
 
 // FIXME move to a separate file
 bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float distance, _VECTOR *searchDirection);
