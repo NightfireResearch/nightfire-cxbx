@@ -728,21 +728,6 @@ void MP_Update(void) {
 // AUTOGEN
 void __stdcall Pickup_MakeRandomWeaponSet(void);
 
-// One multiplayer weapon/ammo pickup slot (Ghidra's MP_PICKUP; 64 of them, 0x1600 bytes, from this clear)
-#pragma pack(push, 1)
-typedef struct {
-    obj_tag *gameObj;
-    CelPos_tag celPos;                  // 0x04
-    AIEmitter_tag aiEmitter;            // 0x14 so bots can path to it
-    float maybeBotPickupVisitTimes[NUM_BOTS]; // 0x3c one per bot: MP_Pickup_Process ages them all, MP_ResetBotPickupTimes
-                                        //      and BOTSTATE_pickGoal index it by bot
-    uint32_t unknown_0x54;              // 0x54 no reference in the XBE (MP_Init's clear aside)
-} MP_PICKUP;
-#pragma pack(pop)
-static_assert(sizeof(MP_PICKUP) == 0x58, "MP_PICKUP is wrong size");
-static_assert(offsetof(MP_PICKUP, aiEmitter) == 0x14, "Bad offset of MP_PICKUP.aiEmitter");
-
-#define MPpickups (*(MP_PICKUP(*)[64])0x00260078)
 #define PickupNextAddIndex U32_AT(0x0025fe30)
 #define PickupLastDeletedIdx (*(int*)0x00261b84) // -1 = none
 #define BluePrints (*(SpawnPlace(*)[8])0x00262458)

@@ -113,6 +113,9 @@ static_assert(offsetof(BOT_vars_t, attackers) == 0x6d0, "Wrong offset for BOT_va
 static_assert(offsetof(BOT_vars_t, drone) == 0x748, "Wrong offset for BOT_vars_t.drone");
 static_assert(offsetof(BOT_vars_t, insideObjective) == 0x765, "Wrong offset for BOT_vars_t.insideObjective");
 
+// One per bot, indexed by BOT_vars_t.botIndex
+#define BOT_vars (*(BOT_vars_t(*)[NUM_BOTS])0x001d98e0)
+
 #pragma pack(pop)
 
 // What BOTSTATE_getStateType says a bot DSTATE is (docs/drone/bots-and-navigation/README.md 5.5). NDrone2_DSTATE_BotGlobal
