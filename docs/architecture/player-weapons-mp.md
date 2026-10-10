@@ -40,7 +40,7 @@ runs earlier at every level load and clears all per-match state unless the next 
   `Player_Init(0, pos, rot, level_tag)` [S].
 - Multiplayer: `MP_Start` creates the objective objects for the mode (a random demolition / protection /
   blueprint place, two GoldenEye spawns), then `Player_Init(i, spawn)` for each human (slots 0-3, spawn from
-  `MP_GetSpawnPoint(team)`), then `BOT_init(4 + i, ...)` for up to 6 bots (slots 4-9, clamped to 6), then the
+  `MP_GetSpawnPoint(team)`), then `BOT_init(NUM_PLAYERS + i, ...)` for up to `NUM_BOTS` bots (clamped), then the
   assassin radar sprites and the time and status sprites [D].
 
 `Player_Init` 0xacab0 [D]:
@@ -312,16 +312,16 @@ directly:
 
 | global | address | size | notes |
 |---|---|---|---|
-| `MPSettings` | 0x25fe38 | 572 | the menu's choices: `Player[10]` (0x30 each: name, team, skin, health modifier), mode, limits, weapon set, modifiers [S] |
-| `MPGame` | 0x262738 | 0x230 | `players[10]` (0x30 each), team scores, end-game flow state, timers, radar sprites [S] |
+| `MPSettings` | 0x25fe38 | 572 | the menu's choices: `Player[NUM_AGENTS]` (0x30 each: name, team, skin, health modifier), mode, limits, weapon set, modifiers [S] |
+| `MPGame` | 0x262738 | 0x230 | `players[NUM_AGENTS]` (0x30 each), team scores, end-game flow state, timers, radar sprites [S] |
 | `SpawnPoints` | 0x261d58 | 64 x 0x1c | per-team counts at 0x262968 [S] |
 | `MPObjects` | 0x263640 | 64 pointers | scenario objects (`MPOBJECT` 0x50 bytes in `extraObjectData`) [S] |
 | `MPpickups` | 0x260078 | 64 x 0x58 | weapon pickups with AI emitters for bots [S] |
 | `GoldenEyeStruct`, flags, bases, uplinks, demolition, protection, blueprint and hill tables | 0x261790-0x2637d4 | | cleared by `MP_Init` [S] |
 | `mpbots` | 0x245280 | 0x6e | the bot set-up page [S] |
 
-Slots: 0-3 are humans and 4-9 bots, in `MPSettings.Player[]` and `MPGame.players[]`; there are 8 on PS2.
-`multiplayer.h`'s `MAX_MP_AGENTS 8` does not match the Xbox's 10 and is unused [S][I].
+Slots: 0-3 are humans and 4-9 bots, in `MPSettings.Player[]` and `MPGame.players[]`; there are 8 on PS2. The counts
+are `NUM_PLAYERS` (4), `NUM_BOTS` (6) and `NUM_AGENTS` (10) in `game/mp/MPLimits.h` [S]; see "The bot limit" below.
 
 Game modes are bit sets (`MultiplayerGameMode`): bit 29 = team game, bit 30 = KOTH, team KOTH and uplink.
 `MP_Init` copies both bits into `MPSettings` (+0x1ec, +0x1f0) [S].
@@ -376,7 +376,7 @@ Game modes are bit sets (`MultiplayerGameMode`): bit 29 = team game, bit 30 = KO
 
 See [../drone/bots-and-navigation/](../drone/bots-and-navigation/README.md).
 
-- `MP_Start` → `BOT_init(slot 4+, spawn, NULL, &mpbots.bot[i], 0)`.
+- `MP_Start` → `BOT_init(NUM_PLAYERS + i, spawn, NULL, &mpbots.bot[i], 0)`.
 - Bots are drone objects (type 2 / 17), so `Control_Plr2Ind` and `MP_PlayerOrBotInd` map both kinds to an
   `MPGame` slot.
 - Bots use their own weapon code (`BOTWEAP_*`, `DroneWeap_FireWeapon`) on the same `weapon_data` and `Bullet_init`.
@@ -384,6 +384,49 @@ See [../drone/bots-and-navigation/](../drone/bots-and-navigation/README.md).
   weapon switch, message 0x44, from the state machine above).
 - They find goals through the AI emitters on `MP_PICKUP` and `MP_OBJ_EXT`, built only when bots are active.
 - `MP_ResetBotPickupTimes` and `MP_getMPpickup` serve their goal picking.
+
+### The bot limit
+
+The game allows 6 bots: `MP_Start` clamps `NumBots` to 6, `Menu_PrepareBots` walks 6 `MPBOT`s and the bot wheel
+shows 6 [S]. The menu text has "Setup Bot 1" to "Setup Bot 16" (`mp_bots[17]`), and the PS2 build has 8 agents.
+
+Every function that bounded a loop or an array by the bot count (6), the agent count (10) or the first bot slot (4)
+is ours (October 2026), written against `NUM_PLAYERS`, `NUM_BOTS` and `NUM_AGENTS` (`game/mp/MPLimits.h`). A
+program-wide scan for the bounds (0x262814, 0x262930-0x26293e, 0x260038, 0x1d98e0) finds no original left [X].
+The records sized by the constants keep their size asserts, so changing a constant shows each layout that moves.
+What raising `NUM_BOTS` still needs:
+
+- **Records at the game's addresses, packed against their neighbours.** Each needs its last original referrer
+  ported, then a definition of our own:
+  - `MPSettings` (`Player[NUM_AGENTS]`, then `isMultiplayer`): 31 live originals reach `Player[]` by agent and
+    another 142 the scalars (`tools/global_coverage.py MPSettings`). `Menu_StoreMPSettings` copies all 0x23c bytes
+    to 0x2245f8, and the `PlayerInputs` backup follows at 0x224838.
+  - `MPGame` (`players[NUM_AGENTS]`, then `teamScore`): live originals still index `players[]` (`HUD_MPUpdatePane`
+    and `FUN_00043070` read `playerObj`; `global_coverage.py` does not parse `MPGame`'s define, so the full list
+    is not taken).
+  - `BOT_vars` (`NUM_BOTS` x 0x768 at 0x1d98e0; shard and cel tables follow at 0x1dc564): only `BOT_init` (ours)
+    names it, the rest go through `Drone_tag.botVars`, so it can be ours now. Its entries hold
+    `players[NUM_AGENTS]`, which moves every later field.
+  - `mpbots` (0x6e at 0x245280): `mp_stuff` follows at 0x245338, room for 4 more `MPBOT`s; 6 live originals read
+    its count.
+  - `MP_PICKUP.maybeBotPickupVisitTimes[NUM_BOTS]`: 4 bytes spare in the 0x58-byte pickup; 4 live originals
+    (`MP_RegisterPickup`, `MP_UnregisterPickup`, `MP_getMPpickup`, `MP_PostLoad_Init`) step the 64 pickups by that
+    stride.
+  - `PlrMissionStats[NUM_AGENTS]` at 0x278e70.
+- **Fixed capacities elsewhere:**
+  - `MPRadarObjects` (0x263220) has 22 entries before `Uplinks`; `MP_GetRadarObjects` writes up to
+    `NUM_AGENTS` + 8.
+  - The radar pane has 28 extra items, shared by blips and name tags (`HUD_RadarUpdate` does not bound the tags).
+  - `NDrone2_SetOpponent` → `DroneFunc_AllocateTargetID` hands out 8 target slots.
+  - The delayed-message pool has 1024 nodes.
+  - There are 32 spawn points per team.
+  - The 0xff "none" in `BOT_vars_t.preferredOpponent` is read signed: agent indices below 128.
+- **Menu data and its handlers:**
+  - The pause menu's score list has 10 rows (team totals on row 9).
+  - The debriefing shows 4 rows (its score table is `NUM_AGENTS` long).
+  - The confirm page hides 10 bot rows per side.
+  - The bot wheel has 16 bot items.
+  - `mp_good_bot_taken` / `mp_bond_bot_taken` encode a bot as index + 10 and a player as index + 1, in a byte.
 
 ## Connections to other subsystems
 
@@ -408,7 +451,7 @@ See [../drone/bots-and-navigation/](../drone/bots-and-navigation/README.md).
 ## Well understood
 
 - The per-frame order of `Player_Update` and `Player_CollisionHandler`, and the object-type handler wiring [D][X].
-- Creation (`Player_Init`, `MP_Start`), the slot layout (4 humans, 6 bots), and BLData's size [D].
+- Creation (`Player_Init`, `MP_Start`), the slot layout (4 humans, 6 bots: `MPLimits.h`), and BLData's size [D].
 - The weapon state machine's transitions, and where bullets are spawned [D]. The weapon-switch and reload logic in
   `Player_Weapon` is ours [S].
 - The MP end-game flow, end-condition channels, kill scoring and respawn trigger [D][S].

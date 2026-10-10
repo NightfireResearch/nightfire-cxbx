@@ -377,7 +377,7 @@ No reader of 0x100/0x200 was found among the nav functions. They probably feed t
 ### 5.1 Identity and lifetime **[D]**
 
 - Bots are MP players 4..9 (`MPGame.players[4..9]`, `MPSettings.Players[4..9]`). `BOT_vars[player-4]` lives at
-  0x1d98e0 + i*0x768. There are 6 of them, which matches `mpbots.bot[6]`.
+  0x1d98e0 + i*0x768. There are `NUM_BOTS` (6) of them, as many as `mpbots.bot[]` (`game/mp/MPLimits.h`).
 - `MP_Start` → `BOT_init(player, pos, rot, NULL, &mpbots.bot[i], 0)`. With a NULL MPBOT, a scratch MPBOT at 0x1dc550
   is filled from `default_bot_stats[1]` (Drake). BOT_init:
   1. clears BOT_vars
@@ -405,7 +405,7 @@ No reader of 0x100/0x200 was found among the nav functions. They probably feed t
 | +0x000 | goal slot 0 (0x3c): pickup / opponent / guard |
 | +0x03c | goal slot 1 (0x3c): game-mode objective |
 | +0x078 | stats[14], a copy of the MPBOT (5.3) |
-| +0x088 | 10 x 0x10 player table (`FUN_0001a660`, each frame): +0 last time alive and visible, +4 dist², +8 how much they face me (degrees), +0xc flags (1 alive, 2 present, 4 visible: one `NDrone2_CanSeeObject` per frame, round-robin cursor at +0x75b; 8 team-mate) |
+| +0x088 | `NUM_AGENTS` x 0x10 per-agent table, `BOT_playerInfo_t` (`BOT_setOtherPlayerInfo`, the PS2 name of 0x1a660; each frame): +0 `MPGame.TimeIncPaused` while flag 1 is set, +4 dist², +8 how much they face me (degrees), +0xc flags (1 firing: a player's BLData+0x8eb is 1 or a drone's +0x3c is 0, held 2 s after it stops; 2 present, cleared for team-mates unless the bot is a Guardian; 4 visible: one `NDrone2_CanSeeObject` per frame, round-robin cursor at +0x75b; 8 team-mate) |
 | +0x128 | opponent's last position (BOT_opponentTargetting) |
 | +0x134 | 83 x 0xc weapon slots: +0 f32 sqrt(range), +4 s16 rounds in clip, +6 u8 held |
 | +0x68c | 33 x s16 reserve ammo per ammo type |
@@ -436,7 +436,7 @@ No reader of 0x100/0x200 was found among the nav functions. They probably feed t
 | +0x761 | route-failure count |
 | +0x762 | last pickup index (not picked twice in a row) |
 | +0x763 | "at objective" flag |
-| +0x764 | being guarded |
+| +0x764 | targeted: another bot's drone has this bot as its opponent (`BOT_setOtherPlayerInfo`) |
 | +0x765 | inside the protection/demolition object |
 
 **Goal slot (0x3c)** **[D]**:
@@ -477,9 +477,9 @@ in the appendix):
 | 13 | editable | 1 for skins 0..14 | | P_MPBOTSETUP locks skins ≥ 15: "This Bot's statistics and personality are fixed" |
 | 1, 3, 5 | 0 in every entry | | | |
 
-`P_MPBOTSETUP_Handler` (0x8ade0, not ours) reads its 8 scrolls back into `mpbots.bot[mp_editing_bot]` on message
-0x4b and fills them on 0x4c: Playing, Accuracy, Aggression, Health, Speed, Personality, and the two 50..200%
-scrolls REACTION2 → byte 7 and REACTION1 → byte 8. Good characters can pick None/Judge/Collector/Guardian/Team
+`P_MPBOTSETUP_Handler` (0x8ade0, ours in ui_mp.cpp) reads its 8 scrolls back into `mpbots.bot[mp_editing_bot]` on
+message 0x4b and fills them on 0x4c: Playing, Accuracy, Aggression (a 16-bit store over bytes 2-3), Health, Speed,
+Personality, and the two 50..200% scrolls 0x10000188 → byte 7 (reaction) and 0x1000018a → byte 8 (recover). Good characters can pick None/Judge/Collector/Guardian/Team
 Player; bad ones None/Berserker/Greedy/Vengeful/Assassin. The rest of the bot UI is already ours in ui_mp.cpp
 (P_MPBOTS, C_SBBOTS, P_MPBOTCHOOSE, C_SBMPBTCHOOSE, Menu_PrepareBots use).
 
