@@ -383,14 +383,20 @@ typedef struct {
     Drone_tag *NDrone2List;     // +0x4 - every live drone, linked through Drone_tag.next
     char _pad8[0x19c - 0x8];
     uint32_t hostagesSaved;     // +0x19c
-    char _pad1a0[0x230 - 0x1a0];
+    uchar targetBlankSpawner;   // +0x1a0 - single player: enemies target blankSpawner instead of the player
+    char _pad1a1[0x1a4 - 0x1a1];
+    obj_tag *blankSpawner;      // +0x1a4 - DroneSpawner_CreateBlank
+    char _pad1a8[0x230 - 0x1a8];
     ushort NumDrones;           // +0x230 - drones given a state machine this level; the last id handed out
-    char _pad232[0x142c - 0x232];
+    ushort lineOfSightTests;    // +0x232 - counts the line-of-sight raycasts (DroneVision_LineOfSightToObject ...)
+    char _pad234[0x142c - 0x234];
 } NPCGlobals_t;
 static_assert(sizeof(NPCGlobals_t) == 0x142c, "Bad size for NPCGlobals_t");
 static_assert(offsetof(NPCGlobals_t, NDrone2List) == 0x4, "Wrong offset for NDrone2List");
 static_assert(offsetof(NPCGlobals_t, hostagesSaved) == 0x19c, "Wrong offset for hostagesSaved");
 static_assert(offsetof(NPCGlobals_t, NumDrones) == 0x230, "Wrong offset for NumDrones");
+static_assert(offsetof(NPCGlobals_t, blankSpawner) == 0x1a4, "Wrong offset for blankSpawner");
+static_assert(offsetof(NPCGlobals_t, lineOfSightTests) == 0x232, "Wrong offset for lineOfSightTests");
 #define NPCGlobals (*(NPCGlobals_t *)0x001e5630)
 
 // The state machine's leaf layer (DroneSM.cpp; docs/drone/architecture/README.md 3.2-3.4).
@@ -411,6 +417,7 @@ void DroneFunc_CheckAlarmRaised(void);
 uint DroneFunc_RecoverTime(DCVars_tag *dcv, HITDATA_tag *hit);
 uint DroneFunc_ReactionTime(Drone_tag *drone);
 void NDrone2_SetIdleTimeOut(DCVars_tag *dcv, int minSeconds, uint randSeconds);
+int NDrone2_FindOpponent(Drone_tag *drone);
 void Drone_AlertStatusSet(char newStatus, DCVars_tag *dcv);
 
 #endif // NDRONE2_H

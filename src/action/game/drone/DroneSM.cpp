@@ -1,12 +1,13 @@
-// The leaf layer of the drone state machine: starting a drone's machine, requesting a state change, and the four
-// ways of sending it a message. See docs/drone/architecture/README.md section 3 - the dispatcher these feed
-// (Drone_SM_RouteMsgDCV) and the router (Drone_SM_RouteMsg) are still the game's.
+// The leaf layer of the drone state machine: starting a drone's machine, requesting a state change, the four
+// ways of sending it a message, and the router they go through (Drone_SM_RouteMsg). See
+// docs/drone/architecture/README.md section 3 - the dispatcher (Drone_SM_RouteMsgDCV) is still the game's.
 
 #include "Drone.h"
 #include "NDrone2.h"
 #include "DroneTables.h"
 #include "BOT.h"
-#include "../../game.h"     // GameState
+#include "../../game.h"     // GameState, MPGame
+#include "../mp/multiplayer.h"  // MPSettings
 
 // Runs a message through the drone's current state's handler (NDrone2_StateFuncs, still the game's table) and says
 // whether it was handled; a state beyond the table handles nothing. Every drone's state machine holds this as its
@@ -49,6 +50,84 @@ static obj_tag *Drone_FindObjBySMId(uint id) {
             return drone->gameObj;
     }
     return NULL;
+}
+
+// AUTOGEN
+void __cdecl FUN_0004e3c0(undefined4 *param_1);
+
+// Delivers a message (README 3.2): one due later is queued (FUN_0004e3c0, the delayed list); a broadcast goes to
+// every drone on the list, a negative receiver -1-n to every bot on team n (multiplayer with bots only), any other
+// receiver to the drone with that id. A message is not delivered to a drone in a state that takes none: WaitSwitch,
+// HostageDead, Dead and Fade, and also PlayScript (broadcasts and team messages) and FadeFast (team and addressed
+// messages). Each broadcast or team delivery first rewrites msg->receiver to that drone's id.
+// AUTOINJECT
+void Drone_SM_RouteMsg(MsgObject *msg) {
+    if (msg->handleOnFrame > GameState.NumFramesUnpaused) {
+        FUN_0004e3c0((undefined4 *)msg);
+        return;
+    }
+
+    DCVars_tag dcVars;
+    int receiver = msg->receiver;
+    if (receiver == 0) {
+        for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
+            switch (drone->sm.curState) {
+            case DSTATE_WaitSwitch:
+            case DSTATE_PlayScript:
+            case DSTATE_HostageDead:
+            case DSTATE_Dead:
+            case DSTATE_Fade:
+                break;
+            default:
+                dcVars.drone = drone;
+                dcVars.gameObj = drone->gameObj;
+                dcVars.aiStateMachine = &drone->sm;
+                dcVars.cel = drone->gameObj->inCel;
+                msg->receiver = drone->sm.id;
+                Drone_SM_RouteMsgDCV(&dcVars, msg);
+                break;
+            }
+        }
+    } else if (MPSettings.maybeDroneAIEnabled && receiver < 0) {
+        int team = -1 - receiver;
+        for (int i = NUM_PLAYERS; i < NUM_AGENTS; i++) {
+            obj_tag *bot = MPGame.players[i].playerObj;
+            if (bot == NULL || MPSettings.Player[i].TeamId != team)
+                continue;
+            // Whether it worked is not tested
+            Drone_DCVfromOBJ(bot, &dcVars);
+            switch (dcVars.aiStateMachine->curState) {
+            case DSTATE_WaitSwitch:
+            case DSTATE_PlayScript:
+            case DSTATE_HostageDead:
+            case DSTATE_Dead:
+            case DSTATE_Fade:
+            case DSTATE_FadeFast:
+                break;
+            default:
+                msg->receiver = dcVars.aiStateMachine->id;
+                Drone_SM_RouteMsgDCV(&dcVars, msg);
+                break;
+            }
+        }
+    } else {
+        obj_tag *gameObj = Drone_FindObjBySMId(receiver);
+        if (gameObj == NULL)
+            return;
+        // Whether it worked is not tested
+        Drone_DCVfromOBJ(gameObj, &dcVars);
+        switch (dcVars.aiStateMachine->curState) {
+        case DSTATE_WaitSwitch:
+        case DSTATE_HostageDead:
+        case DSTATE_Dead:
+        case DSTATE_Fade:
+        case DSTATE_FadeFast:
+            break;
+        default:
+            Drone_SM_RouteMsgDCV(&dcVars, msg);
+            break;
+        }
+    }
 }
 
 // Starts a drone's state machine (once, from NDrone2_PostLoad_Init): gives it its id and sends it Enter.

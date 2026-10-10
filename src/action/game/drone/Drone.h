@@ -129,12 +129,20 @@ typedef struct Drone_tag {
     char _pad134[0x138 - 0x134];
     float playerDistance[4];        // 0x138 - PreDroneControl
     obj_tag *opponent;              // 0x148
-    char _pad14c[0x168 - 0x14c];
+    uchar targetSlot;               // 0x14c - NDrone2_SetOpponent's target slot, 0..7, 0xff none
+    char _pad14d[0x168 - 0x14d];
     float distanceToTarget;         // 0x168 - to the opponent (Drone_GetOpponentInfo)
-    char _pad16c[0x1c8 - 0x16c];
+    char _pad16c[0x1b4 - 0x16c];
+    _VECTOR maybeVectorToOpponent;  // 0x1b4 (Ghidra's name)
+    char _pad1c0[0x1c8 - 0x1c0];
     uint sightFlags;                // 0x1c8 - DRONE_SIGHT_*: 4 sees its opponent (DroneVision_HaveOpponentSight), 8 has
                                     //         reacted to its first sighting (set with message 0xf; also by HostageIdle)
-    char _pad1cc[0x3d4 - 0x1cc];
+    char _pad1cc[0x204 - 0x1cc];
+    uint framesSinceSeen;           // 0x204 - frames since the opponent was last seen
+    char _pad208[0x240 - 0x208];
+    Drone_tag *opponentScanResume;  // 0x240 - allies: where NDrone2_FindOpponent's walk of the drone list goes on
+                                    //         from (our name)
+    char _pad244[0x3d4 - 0x244];
     uint *currentBehaviour;         // 0x3d4 - behaviour1 or behaviour2
     uint behaviour1[3];             // 0x3d8 - behaviour property words (behaviour_util_*)
     uint behaviour2[3];             // 0x3e4
@@ -217,6 +225,9 @@ static_assert(offsetof(Drone_tag, modeChangeSwitchChannel) == 0x119, "Wrong offs
 static_assert(offsetof(Drone_tag, key7) == 0x12c, "Wrong offset for key7");
 static_assert(offsetof(Drone_tag, opponent) == 0x148, "Wrong offset for opponent");
 static_assert(offsetof(Drone_tag, distanceToTarget) == 0x168, "Wrong offset for distanceToTarget");
+static_assert(offsetof(Drone_tag, maybeVectorToOpponent) == 0x1b4, "Wrong offset for maybeVectorToOpponent");
+static_assert(offsetof(Drone_tag, framesSinceSeen) == 0x204, "Wrong offset for framesSinceSeen");
+static_assert(offsetof(Drone_tag, opponentScanResume) == 0x240, "Wrong offset for opponentScanResume");
 static_assert(offsetof(Drone_tag, accuracy) == 0x98, "Wrong offset for accuracy");
 static_assert(offsetof(Drone_tag, speed) == 0x9a, "Wrong offset for speed");
 static_assert(offsetof(Drone_tag, currentBehaviour) == 0x3d4, "Wrong offset for currentBehaviour");

@@ -386,7 +386,7 @@ typedef struct {
     short maybeIdxOfLastInjurer; // Index of who or what last dealt me damage? -2 = environment?
     short friendlyFireLabelTimer;
     short friendlyFireProtectionLabelTimer;
-    ushort flags;           // 0x26 MPGamePlayerFlags
+    ushort flags;           // 0x26 MPGamePlayerFlags; NDrone2_FindOpponent tests the low 4 bits
     short maybeIdxOfMyAssassin;
     char unknown2a[2];
     float hillSoundTime;    // 0x2c MPGame.TimeIncPaused when MP_KOHUpdate last played the hill's entry sound
