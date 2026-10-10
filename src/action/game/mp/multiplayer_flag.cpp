@@ -21,41 +21,6 @@ void MP_sendBotMessage(obj_tag *obj, uint msg, uint param3, uint param4);
 #define MPSound_Play ((void (__cdecl *)(Action_SFX sfx))0x0009ec60)
 #define MP_sendTeamBotMessage ((void (__cdecl *)(MPTeam team, uint msg, obj_tag *obj, uint param4, uint senderId))0x0009e430)
 
-// mpObj in ECX, gameObj in EBX, stayPut in AL, the state on the stack, removed by the caller. Unless stayPut, the
-// object goes back to the matrix at mpObj + 0x10.
-static void __declspec(naked) MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool stayPut) {
-    _asm {
-        push ebx
-        mov ecx, [esp + 8]          // mpObj
-        mov ebx, [esp + 16]         // gameObj
-        mov al, [esp + 20]          // stayPut
-        push dword ptr [esp + 12]   // state
-        mov edx, 0x0009ecb0
-        call edx
-        add esp, 4
-        pop ebx
-        ret
-    }
-}
-
-// Puts gameObj on its holder: gameObj in ESI and on the stack (removed by the caller), holder in EBX, attach in EAX.
-static void __declspec(naked) MP_SetUpPlayerSomehow(obj_tag *gameObj, obj_tag *holder, int attach) {
-    _asm {
-        push ebx
-        push esi
-        mov esi, [esp + 12]         // gameObj
-        mov ebx, [esp + 16]         // holder
-        mov eax, [esp + 20]         // attach
-        push esi
-        mov edx, 0x0009c7e0
-        call edx
-        add esp, 4
-        pop esi
-        pop ebx
-        ret
-    }
-}
-
 // A message to every player naming team. (Our helper; the original repeats it inline.)
 static void MP_TeamMessage(Action_TranslatedText format, ushort team) {
     char *str = Txt_GetStringFromHeap(0);

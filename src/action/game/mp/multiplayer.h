@@ -314,6 +314,11 @@ MP_OBJ_EXT* MP_getDemolitionObj(void);
 MP_OBJ_EXT* MP_getProtectionObj(void);
 MP_OBJ_EXT* MP_getHillObj(void);
 MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj);
+void _MP_recalcObjExtPaths(MP_OBJ_EXT *ext, bool keepPos);
+// The original takes ext in ESI: MP_recalcObjExtPaths is the entry for that, _MP_recalcObjExtPaths the C++ under it.
+void MP_recalcObjExtPaths(bool keepPos);
+void MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool keepPlace);
+void MP_SetUpPlayerSomehow(obj_tag *gameObj, obj_tag *holder, uint attach);
 short MP_PlayerOrBotInd(obj_tag *obj);
 void MP_SortOutWhoWon(void);
 void MP_Pickup_Process(void);

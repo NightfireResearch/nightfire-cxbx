@@ -5,6 +5,7 @@
 #include "../obj/GT.h"
 #include "../obj/GunImp.h"
 #include "../drone/BOT.h"
+#include "../view.h"
 #include <stdio.h>
 #include <string.h>
 #include "../../../driving/platform/X87.h" // Ftol
@@ -442,6 +443,85 @@ MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj) {
 
   return NULL;
 }
+
+// AUTOGEN
+undefined Control_BuildWorldSph(obj_tag *obj);
+// AUTOGEN
+bool AINetwork_InitEmitter(obj_tag *obj, _VECTOR *position, cel_tag *cel, AIEmitter_tag *emitter, AIPath_tag *path);
+// AUTOGEN
+undefined4 AINetwork_EmitPath(AIEmitter_tag *emitter, float param_2);
+
+// Rebuilds a scenario object's AI emitter, which the bots path to: at the object's matrix and cel unless keepPos,
+// the cel looked up if it has none. Emitters exist only in a game with bots.
+void _MP_recalcObjExtPaths(MP_OBJ_EXT *ext, bool keepPos) {
+    if (ext == NULL)
+        return;
+    if (mpbots.NumBots && ext->aiEmitter.data != NULL)
+        AINetwork_FreeEmitter(&ext->aiEmitter);
+    if (!keepPos) {
+        obj_tag *obj = ext->gameObj;
+        ext->celPos.pos.x = obj->transformMatrix.m[12];
+        ext->celPos.pos.y = obj->transformMatrix.m[13];
+        ext->celPos.pos.z = obj->transformMatrix.m[14];
+        ext->celPos.cel = obj->inCel;
+    }
+    if (ext->celPos.cel == NULL)
+        ext->celPos.cel = build_FindCel(&ext->celPos.pos, glb_world);
+    if (ext->celPos.cel != NULL && mpbots.NumBots) {
+        AINetwork_InitEmitter(NULL, &ext->celPos.pos, ext->celPos.cel, &ext->aiEmitter, NULL);
+        if (ext->aiEmitter.path != NULL)
+            AINetwork_EmitPath(&ext->aiEmitter, 0.0f);
+    }
+}
+
+// The original takes ext in ESI and keepPos on the stack, removed by the caller (MP_getEsponageBaseObj).
+// AUTOLTCG
+__declspec(naked) void MP_recalcObjExtPaths(bool keepPos) {
+    _asm {
+        push dword ptr [esp + 4]    // keepPos
+        push esi                    // ext
+        call _MP_recalcObjExtPaths
+        add esp, 8
+        ret
+    }
+}
+
+// Puts a scenario object back at rest: at mpObj->resetMtx unless keepPlace, in state, relinked into the world,
+// shown in every view, with its AI emitter rebuilt. The original (0x9ecb0) takes mpObj in ECX, gameObj in EBX and
+// keepPlace in AL; every caller is ours.
+void MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool keepPlace) {
+    if (!keepPlace)
+        Mat_Copy(&mpObj->resetMtx, &gameObj->transformMatrix);
+    gameObj->transformFlags |= TRANSFORM_MOVED;
+    gameObj->curState = state;
+    control_unlink_object(gameObj);
+    Control_BuildWorldSph(gameObj);
+    build_LinkToRoom(gameObj, 0, glb_world);
+    gameObj->maybeParent = NULL;
+    MP_OBJ_EXT *ext = MP_getObjExtFromMPOBJECT(mpObj);
+    if (ext != NULL)
+        _MP_recalcObjExtPaths(ext, false);
+    gameObj->effectFlags &= ~0x21;
+    gameObj->maybeBrightness = 0xff;
+    View_SetDrawInAllViews(gameObj);
+}
+
+// Puts a carried object on its holder, at the holder's attach point (an AnimGetBoneWorldTrans one), facing along
+// it; a player's own view does not draw it. The original (0x9c7e0) takes attach in EAX, holder in EBX and the
+// object in ESI and on the stack; every caller is ours and passes the same object.
+void MP_SetUpPlayerSomehow(obj_tag *gameObj, obj_tag *holder, uint attach) {
+    _VECTOR dir, pos;
+    _MATRIX mtx;
+    AnimGetBoneWorldTrans(holder, attach | 0x80000000, 0, &pos, &mtx);
+    Mat_GetDir(&dir, &mtx);
+    Mat_Align2Dir(&gameObj->transformMatrix, &dir, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+    Matrix_SetTrans(&pos, &gameObj->transformMatrix);
+    gameObj->transformFlags |= TRANSFORM_MOVED;
+    gameObj->effectFlags |= 0x20;
+    if (holder->objectType == OBJECTTYPE_PLAYER)
+        View_SetDrawInOtherViewsOnly(gameObj, ((BLData *)holder->extraObjectData)->playerNum);
+}
+
 
 // AUTOINJECT
 short MP_PlayerOrBotInd(obj_tag *obj) {

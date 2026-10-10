@@ -53,23 +53,6 @@ constexpr Action_TranslatedText NOTIF_X_GOT_BLUEPRINT_TECH = (Action_TranslatedT
 constexpr HASHCODE EXPLOSION_OBJECTIVE = (HASHCODE)0x0600004f;    // our name
 constexpr short EQUIP_FULL_AMMO = 999;                              // as Player.cpp
 
-// Until ported: mpObj in ECX, keepPlace in AL, gameObj in EBX, state on the stack, removed by the caller. Without
-// keepPlace the object is put back at mpObj->resetMtx. EBX is callee-saved for our compiler, so it is put back.
-static void __declspec(naked) MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool keepPlace) {
-    _asm {
-        push ebx
-        mov ecx, [esp + 8]          // mpObj
-        mov ebx, [esp + 16]         // gameObj
-        mov al, [esp + 20]          // keepPlace
-        push dword ptr [esp + 12]   // state
-        mov edx, 0x0009ecb0
-        call edx
-        add esp, 4
-        pop ebx
-        ret
-    }
-}
-
 // The update of every scenario object; control_funcs[OBJECTTYPE_MPOBJECT] points at it. Flags and bases share
 // CTF_FLAG's update and espionage bases have none.
 // AUTOINJECT

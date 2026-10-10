@@ -38,41 +38,6 @@ undefined MPSound_Play(Action_SFX sfx);
 // The ray's script (name ours)
 #define HT_Script_GoldenEyeRay ((HASHCODE)0x0600003e)
 
-// mpObj in ECX, gameObj in EBX, keepPlace in AL, state on the stack, removed by the caller. EBX is callee-saved
-// for our compiler, so it is put back afterwards.
-static void __declspec(naked) MP_ResetMPObject(MPOBJECT *mpObj, short state, obj_tag *gameObj, bool keepPlace) {
-    _asm {
-        push ebx
-        mov ecx, [esp + 8]          // mpObj
-        mov ebx, [esp + 16]         // gameObj
-        mov al, [esp + 20]          // keepPlace
-        push dword ptr [esp + 12]   // state
-        mov edx, 0x0009ecb0
-        call edx
-        add esp, 4
-        pop ebx
-        ret
-    }
-}
-
-// obj on the stack, removed by the caller; holder in EBX, gameObj in ESI, point in EAX. EBX and ESI are put back.
-static void __declspec(naked) MP_SetUpPlayerSomehow(obj_tag *obj, obj_tag *holder, obj_tag *gameObj, int point) {
-    _asm {
-        push ebx
-        push esi
-        mov ebx, [esp + 16]         // holder
-        mov esi, [esp + 20]         // gameObj
-        mov eax, [esp + 24]         // point
-        push dword ptr [esp + 12]   // obj
-        mov edx, 0x0009c7e0
-        call edx
-        add esp, 4
-        pop esi
-        pop ebx
-        ret
-    }
-}
-
 // Bot messages sent here: 0x35 / 0x36 when the key / the crystal is taken, after 0x3b and 0x3d (see
 // multiplayer_modes.cpp); 0x37 / 0x38 when it is let go, after 0x3c.
 
@@ -208,7 +173,7 @@ void _MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
 
     case 1:
         if (!dropped) {
-            MP_SetUpPlayerSomehow(gameObj, mpObj->holder, gameObj, gameObj->subState != 0 ? 0x23 : 0x15);
+            MP_SetUpPlayerSomehow(gameObj, mpObj->holder, gameObj->subState != 0 ? 0x23 : 0x15);
 
             // Both parts held by one team, and no ray out yet: fire it at an agent of the other team
             if (GoldenEye.keys[gameObj->subState == 0].gameObj->curState != 1)
