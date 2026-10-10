@@ -67,6 +67,13 @@
 #include "WeaponTableShadow.h"
 #include "MatrixShadow.h"
 #include "CameraShadow.h"
+#include "BotCoreShadow.h"
+#include "BotStateShadow.h"
+#include "DroneMPShadow.h"
+#include "MPMatchShadow.h"
+#include "MPMenusShadow.h"
+#include "MPModesShadow.h"
+#include "MPObjectsShadow.h"
 #include "Teleport.h"
 #include "../game.h"   // reload: ResetMap_LevelToLoad, GameFlow_PushState
 
@@ -519,6 +526,13 @@ static void CheckLists(void) {
 
 void MenuProbe_Install(void) {
     CameraShadow_Install();
+    BotCoreShadow_Install();
+    BotStateShadow_Install();
+    DroneMPShadow_Install();
+    MPMatchShadow_Install();
+    MPMenusShadow_Install();
+    MPModesShadow_Install();
+    MPObjectsShadow_Install();
     if (SettingOn("MenuCheckLists")) {
         CheckLists();
         DroneTablesCheck_Run();
@@ -534,6 +548,7 @@ void MenuProbe_Install(void) {
         DroneShadow_Run();
         WeaponTableShadow_Run();
         MatrixShadow_Run();
+        MPMenusShadow_Run();
     }
     g_logging = SettingOn("MenuLog");
     if (g_logging) {
