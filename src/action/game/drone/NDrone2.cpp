@@ -216,7 +216,6 @@ void Drone_AlertStatusSet(char newStatus, DCVars_tag *dcv) {
 
 // AUTOGEN
 void __cdecl NDrone2_SetOpponent(Drone_tag *param_1, obj_tag *param_2);
-// AUTOGEN
 bool __cdecl MPDrone_MaybeIsDyingOrDead(obj_tag *param_1);
 // AUTOGEN
 int __cdecl BOT_handleOpponentHistory(int param_1, int param_2);

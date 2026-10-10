@@ -74,7 +74,8 @@ typedef struct { // on Xbox, starts at 0025fe38
 
     undefined4 isMultiplayer; // on Xbox, at 00260018
     undefined4 maybeDroneAIEnabled;
-    undefined4 Started;
+    bool Started; // a byte: MP_Start clears it, then sets it once the match is set up
+    undefined _pad1e9[3];
     undefined4 maybeIsTeamGame;
     undefined4 field53_0x190;
     undefined4 numPlayersAndBots;
@@ -94,7 +95,7 @@ typedef struct { // on Xbox, starts at 0025fe38
     undefined4 MiniVehiclesEnabled;
     undefined4 GrappleEnabled;
     undefined4 ExplosiveSceneryEnabled;
-    short numActivePickups;
+    ushort numActivePickups;
     undefined field72_0x1da;
     undefined field73_0x1db;
 } MPSettings_t;
@@ -247,6 +248,31 @@ static_assert(offsetof(MP_PICKUP, aiEmitter) == 0x14, "Bad offset of MP_PICKUP.a
 
 #define MPpickups (*(MP_PICKUP(*)[64])0x00260078)
 
+// What a radar blip stands for (MP_GetRadarObjects); HUD_RadarUpdate picks its sprite by it
+typedef enum {
+    MP_RADAR_AGENT = 0,
+    MP_RADAR_FLAG = 1,
+    MP_RADAR_UPLINK = 2,
+    MP_RADAR_OBJECTIVE = 3,         // the demolition or protection object
+    MP_RADAR_GOLDENEYE_KEY = 4,
+    MP_RADAR_BLUEPRINT = 6,
+    MP_RADAR_BASE = 7,              // an espionage base
+} MP_RADAR_TYPE;
+
+// One radar blip, as MP_GetRadarObjects lists them for HUD_RadarUpdate
+#pragma pack(push, 1)
+typedef struct {
+    _VECTOR pos;        // 0x00
+    uint colour;        // 0x0c 0xRRGGBBAA
+    ushort type;        // 0x10 MP_RADAR_TYPE
+    ushort _pad12;
+} MP_RADAR_OBJECT;
+#pragma pack(pop)
+static_assert(sizeof(MP_RADAR_OBJECT) == 0x14, "MP_RADAR_OBJECT is wrong size");
+
+// Room for 22 up to Uplinks (0x002633d8); MP_GetRadarObjects writes at most NUM_AGENTS + 8
+#define MPRadarObjects (*(MP_RADAR_OBJECT(*)[22])0x00263220)
+
 void MP_setLoadingSkins(void);
 bool MP_areObjectsOnSameTeam(obj_tag* a, obj_tag* b);
 bool MP_isObjectOnTeam(obj_tag *param_1,uint teamId);
@@ -272,6 +298,15 @@ void MP_RestartScenario(void);
 void MP_Init(void);
 obj_tag* MP_CreateObject(_MATRIX *mtx, unsigned short* data, celglist_tag *celgl);
 bool MP_ReSpawn(obj_tag* obj, ushort idx);
+// The original takes obj in EAX and team in CX: MP_HitBy is the entry for that, _MP_HitBy the C++ under it
+obj_tag* MP_HitBy(obj_tag *obj, ushort team, obj_tag *exclude, ushort *teamOut);
+obj_tag* _MP_HitBy(obj_tag *obj, ushort team, obj_tag *exclude, ushort *teamOut);
+obj_tag* MP_GetTarget(ushort team, obj_tag *exclude, bool aliveOnly);
+bool MP_playerIsDead(obj_tag *obj);
+void MP_ResetBotPickupTimes(ushort botNum);
+ushort MP_GetRadarObjects(obj_tag *viewer, MP_RADAR_OBJECT **objects);
+void MP_assassinReset(bool handOver);
+void MP_Start(void);
 
 // multiplayer_modes.cpp
 void MP_KOHUpdate(obj_tag *hill);

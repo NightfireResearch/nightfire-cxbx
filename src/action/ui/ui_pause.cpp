@@ -71,7 +71,6 @@ static bool pause_skip_select;      // the confirmation was answered no: the opt
 
 // AUTOGEN
 void Menu_DisplayControllerStyleList(undefined4 managerNum, Action_TranslatedText style);
-// AUTOGEN
 char* Timer_Seconds2String(int timeInHundredths, undefined4 timeFormat);
 // (AUTOGEN in ui_mp.cpp)
 undefined4 Menu_GetMPScore(byte participant);

@@ -406,11 +406,11 @@ typedef struct {
   // Immediately following is more state related to MP game
   float teamScore[2]; // by MPTeam: Phoenix, MI6 (MP_SortOutWhoWon, the debriefing)
   uint EndGameFlowState;
-  uint unknown_3; // end conditions
-  uint TimeUnpaused;
+  uint unknown_3; // MP_CheckForEndCondition: the highest score, team or player
+  float TimeUnpaused; // seconds of unpaused play, against TimeLimit (MP_CheckForEndCondition)
   float TimeLimit;
   float restartScenarioTimeout;
-  float TimeIncPaused; // pickups, opponent selection, visit times (BOT_setOtherPlayerInfo and MP_KOHUpdate read it as a float)
+  float TimeIncPaused; // seconds of unpaused play, counted even with switch_MP4EVER: pickup visit times, bot goals
   float winStateTimeout; // MP init and update
   float lastTimePaused; // end conditions
   short unknown_maybe_capture_state; // player status / goals

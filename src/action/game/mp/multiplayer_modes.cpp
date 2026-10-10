@@ -34,26 +34,9 @@ void MP_sendBotMessage(obj_tag *obj, uint msg, uint param3, uint param4);
 bool Intersect_SphereBox(_VECTOR *spherePosition, float radius, _VECTOR *bboxMin, _VECTOR *bboxMax);
 // AUTOGEN
 ushort Hurt_GetType(obj_tag *obj);
-// AUTOGEN
-void MP_assassinReset(char param1);
 
 #define BOT_SetHealth ((void (__cdecl *)(Drone_tag *drone, float health))0x0001b120)
 #define MP_sendTeamBotMessage ((void (__cdecl *)(MPTeam team, uint msg, obj_tag *obj, uint param4, uint senderId))0x0009e430)
-
-// The first agent of the team (or any team, NO_TEAM) in obj's hit list, other than ignore; NULL if none. The
-// original takes obj in EAX and the team in CX, the rest on the stack, removed by the caller.
-static __declspec(naked) obj_tag *MP_HitBy(obj_tag *obj, ushort team, obj_tag *ignore, short *teamOut) {
-    _asm {
-        mov eax, [esp + 4]          // obj
-        mov ecx, [esp + 8]          // team
-        push dword ptr [esp + 16]   // teamOut
-        push dword ptr [esp + 16]   // ignore (16 again: the push moved it along)
-        mov edx, 0x0009c880
-        call edx
-        add esp, 8
-        ret
-    }
-}
 
 // gameObj in EAX, mpObj in EDI, the flag on the stack, removed by the caller. EDI is callee-saved for our
 // compiler, so it is put back afterwards.
@@ -230,8 +213,8 @@ void _MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj) {
         return;
 
     if (state <= MI6) {
-        if (MP_HitBy(gameObj, gameObj->curState, NULL, NULL) == NULL) {
-            obj_tag *taker = MP_HitBy(gameObj, gameObj->curState == PHOENIX, NULL, NULL);
+        if (_MP_HitBy(gameObj, gameObj->curState, NULL, NULL) == NULL) {
+            obj_tag *taker = _MP_HitBy(gameObj, gameObj->curState == PHOENIX, NULL, NULL);
             if (taker != NULL) {
                 gameObj->subState = 0;
                 gameObj->curState = gameObj->curState == PHOENIX;
@@ -263,10 +246,10 @@ void _MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj) {
     }
     else if (state == NO_TEAM) {
         mpObj->holderIdx = -1;
-        obj_tag *taker = MP_HitBy(gameObj, PHOENIX, NULL, NULL);
+        obj_tag *taker = _MP_HitBy(gameObj, PHOENIX, NULL, NULL);
         if (taker != NULL)
             MP_UplinkTaken(mpObj, gameObj, taker, PHOENIX);
-        taker = MP_HitBy(gameObj, MI6, NULL, NULL);
+        taker = _MP_HitBy(gameObj, MI6, NULL, NULL);
         if (taker != NULL)
             MP_UplinkTaken(mpObj, gameObj, taker, MI6);
     }
@@ -427,7 +410,7 @@ void MP_PlayerKilled(obj_tag *obj) {
             } else {
                 Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_BEAM, 100.0f, 0, 0);
             }
-            MP_assassinReset(1);
+            MP_assassinReset(true);
         }
     }
 
