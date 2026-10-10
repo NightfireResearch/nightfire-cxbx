@@ -4,6 +4,7 @@
 
 #include "AttributeSystem.h"
 #include "Dafi.h"
+#include "../engine/InputConfig.h"   // BuildFileName, BuildPath
 #include "../engine/UFileLoader.h"
 #include "../engine/UMemory.hpp"
 #include "../../common/xbeOverload.h"
@@ -23,9 +24,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 #define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
-// "<directory><folder>/<name>.<extension>" and "<directory><name>.<extension>" into the buffer (ECX), answered.
-#define BuildPath ((char *(__fastcall *)(char *, int, const char *, const char *, const char *, const char *))0x00051f30)
-#define BuildFileName ((char *(__fastcall *)(char *, int, const char *, const char *, const char *))0x00051e90)
 
 #define AttributeSystemVtable ((void **)0x0018dc28)
 #define AttributeSystemBaseVtable ((void **)0x0018beb0)   // its base class's: a destructor and two pure virtuals

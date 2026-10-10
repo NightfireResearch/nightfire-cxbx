@@ -55,15 +55,17 @@ struct LaunchPage {
     uint8_t unknown980[0x4];
     int32_t difficulty;         // +0x984 1-4 from the action engine, 0-2 once MissionNumToString has folded it
     int32_t language;           // +0x988 0 Brazilian, 1 French, 2 German, 3 Spanish, 4 Italian, 5 Dutch, 8 Swedish
-    uint8_t unknown98c[0x4];
+    int32_t povConfig;          // +0x98c the POV control configuration chosen (InputConfigManager)
     int32_t controllerPort;     // +0x990 the player's controller: the movies' skip pad, IFeedback's port
-    uint8_t unknown994[0xc];
+    int32_t vibration;          // +0x994 non-zero: force feedback on (IFeedback)
+    uint8_t unknown998[0x8];
     uint32_t flags;             // +0x9a0
-    uint8_t unknown9a4[0x74];
+    uint8_t unknown9a4[0x70];
+    int32_t drivingConfig;      // +0xa14 the driving control configuration chosen (InputConfigManager)
     int32_t unknowna18;         // +0xa18
     int32_t videoMode;          // +0xa1c 0 NTSC, 2 PAL, 3 PAL60, 5 (PAL as well)
     int32_t dvdSource;          // +0xa20 gDVD on a relaunch
-    uint8_t unknowna24[0x4];
+    int32_t invertedControls;   // +0xa24 non-zero: inverted controls (InputConfigManager)
     int32_t audioMode;          // +0xa28
     int32_t subtitles;          // +0xa2c non-zero: subtitles on
     uint8_t unknowna30[0x10];
@@ -85,6 +87,8 @@ static_assert(offsetof(LaunchPage, missionName) == 0x4f4 && offsetof(LaunchPage,
                   offsetof(LaunchPage, bootCount) == 0x618 && offsetof(LaunchPage, handOver) == 0x960 &&
                   offsetof(LaunchPage, missionNum) == 0x974 && offsetof(LaunchPage, language) == 0x988 &&
                   offsetof(LaunchPage, flags) == 0x9a0 && offsetof(LaunchPage, subtitles) == 0xa2c &&
+                  offsetof(LaunchPage, povConfig) == 0x98c && offsetof(LaunchPage, vibration) == 0x994 &&
+                  offsetof(LaunchPage, drivingConfig) == 0xa14 && offsetof(LaunchPage, invertedControls) == 0xa24 &&
                   offsetof(LaunchPage, autoAim) == 0xa40,
               "launch page offsets");
 

@@ -21,6 +21,7 @@
 #include "../../helpers.h"
 #include "../data/Tree.h"               // TreeThrow
 #include "../engine/CoreFoundation.h"   // GameEmptyString
+#include "../engine/InputConfig.h"      // BuildFileName
 #include "../engine/UMemory.hpp"
 #include "../platform/FileSys.h"
 #include "../platform/RealSystem.h"     // TIMER_gettick, TIMER_getfrequency
@@ -38,8 +39,6 @@
 
 // ---- originals called by address
 
-// A 64-byte file name: dir, name, then "." and ext unless ext is empty (thiscall: it answers `name`).
-#define BuildFileName ((char *(__fastcall *)(char *, int, const char *dir, const char *name, const char *ext))0x00051e90)
 #define PointerUninitializedFill ((void (*)(AStreamEntry **, uint32_t, AStreamEntry *const *))0x000b2ec0)
 
 // The C runtime's: case-insensitive comparison (the registry's order depends on it) and printf (its formatting).

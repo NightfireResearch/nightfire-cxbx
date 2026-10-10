@@ -43,6 +43,7 @@
 #include "ReflectionShadow.h"
 #include "RenderFxShadow.h"
 #include "ParticleShadow.h"
+#include "InputShadow.h"
 
 #include <windows.h>
 #include <stdio.h>
@@ -218,6 +219,7 @@ void Teleport_Tick(void) {
         ReflectionShadow_Run();   // NIGHTFIRE_REFLECTIONSHADOW=1 only
         RenderFxShadow_Run();   // NIGHTFIRE_RENDERFXSHADOW=1 only
         ParticleShadow_Run();   // NIGHTFIRE_PARTICLESHADOW=1 only
+        InputShadow_Run();   // NIGHTFIRE_INPUTSHADOW=1 only
         char text[256] = "";
         DWORD fromEnv = GetEnvironmentVariableA("NIGHTFIRE_TELEPORT", text, sizeof(text));
         if (fromEnv == 0 || fromEnv >= sizeof(text))

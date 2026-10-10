@@ -4,6 +4,7 @@
 
 #include "ActionQueue.hpp"
 #include "GameInterfaces.hpp"
+#include "InputConfig.h"
 #include "InputDevice.hpp"
 #include "UMemory.hpp"
 #include "../platform/Pad.hpp"
@@ -11,7 +12,7 @@
 // The IOModule static and its construction guard (bit 0), GetIOModule's function-local static.
 #define gIOModule ((IOModule *)0x001e45a0)
 #define gIOModuleGuard (*(uint32_t *)0x001e4644)
-// The pad port input comes from. Named glbIFeedback in Ghidra; 0 in the image and never written.
+// The pad port input comes from: the launch page's controllerPort (GameLoop.h). Named glbIFeedback in Ghidra.
 #define glbActivePort (*(int *)0x00244520)
 // The simulation's step count, and how many steps must have run before the unplugged message is shown (2).
 #define SimStepCount (*(int *)0x00234e34)

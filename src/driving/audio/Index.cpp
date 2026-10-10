@@ -5,6 +5,7 @@
 #include "Index.h"
 
 #include "../engine/CoreFoundation.h"   // GameEmptyString
+#include "../engine/InputConfig.h"      // BuildFileName
 #include "../engine/UFileLoader.h"
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMemory.h"     // MEM_size, MEM_free_copy
@@ -24,9 +25,6 @@
 // the data layer's node type), by address on this file's node types.
 #define SharedTreeIterator_Dec ((void (__fastcall *)(void *it, int))0x00126bd0)
 #define SharedTree_FindName ((AIndexNameNode **(__fastcall *)(AIndexNameMap *, int, AIndexNameNode **, const char *const *))0x00126cb0)
-
-// "<directory><name>.<extension>" into the buffer, answered.
-#define BuildFileName ((char *(__fastcall *)(char *, int, const char *, const char *, const char *))0x00051e90)
 
 // The C runtime's.
 #define Crt_sscanf ((int (*)(const char *text, const char *format, ...))0x00133234)

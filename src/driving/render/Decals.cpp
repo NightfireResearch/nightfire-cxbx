@@ -13,6 +13,7 @@
 #include "../eagl/Loader.h"               // DynamicLoader::GetRegisteredVar
 #include "../eagl/Model.h"                // DynamicModel
 #include "../eagl/RenderContext.h"
+#include "../engine/InputConfig.h"        // BuildFileName
 #include "../engine/UFileLoader.h"
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
@@ -27,7 +28,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-#define BuildFileName ((char *(__fastcall *)(char *buffer, int, const char *directory, const char *name, const char *extension))0x00051e90)
 #define CRT_printf ((int (*)(const char *format, ...))0x00132192)
 
 // ---- globals

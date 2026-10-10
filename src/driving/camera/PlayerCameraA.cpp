@@ -24,6 +24,7 @@
 #include "../data/Carp.h"
 #include "../engine/CoreFoundation.h"   // NullFunction
 #include "../engine/GameLoop.h"         // LaunchPage
+#include "../engine/InputConfig.h"
 #include "../engine/MissionManager.h"
 #include "../engine/UMemory.hpp"
 #include "../physics/PhysicsMath.h"     // Abs
@@ -61,16 +62,6 @@ struct WeaponManagerFields {
     WeaponSlot *slots;                  // +0x10
 };
 
-// The input configuration (InputConfigManager +0x04)
-struct InputConfig {
-    uint32_t unknown00;
-    int32_t scheme;                     // +0x04 InputScheme
-};
-
-enum InputScheme : int32_t {
-    kInputAutoDrive = 1,                // the auto-drive camera's input handler
-};
-
 constexpr int32_t kSimState3 = 3;       // Sim.simState: the cameras stand still
 constexpr int32_t kAnchorRigidBody = 1; // PhysicsObject::type: a rigid body (the dashboard camera's vertigo)
 constexpr int32_t kWeapon1C = 0x1c;     // the weapon WeaponFired notes
@@ -95,7 +86,6 @@ constexpr uint16_t kCarAnimationFlags = 0x44;   // TriggerCarAnimationCamera's a
 #define RCamera_SetFieldOfView ((void (__fastcall *)(RCamera *, int, float))0x00011000)    // FUN_00011000: above 2 only
 // FUN_0003db00: the instance's matrix, its fourth column (0, 0, 0, 1)
 #define CARPInstance_GetMatrix4 ((void (__fastcall *)(const CARP::Instance *, int, MATRIX4 *))0x0003db00)
-#define InputConfigManager_Get ((InputConfig *(*)(void))0x00050270)
 #define WWorldPos_FaceNormal ((void (__fastcall *)(const WWorldPos *, int, Coord3 *))0x0005d3f0)
 
 namespace {
@@ -604,7 +594,7 @@ void RPlayerCamera::PauseOff() {
 // vtable slot 6: an action from the camera's input queue, to the camera state's handler for the input scheme.
 // FUNC_AT(0x00081840)
 void RPlayerCamera::CameraInputCallback(int action, float value) {
-    if (InputConfigManager_Get()->scheme == kInputAutoDrive)
+    if (InputConfigManager::Get()->currentType == kInputPOV)
         state->AutoDriveCamInputHandler(action, value);
     else
         state->DriveCamInputHandler(action, value);

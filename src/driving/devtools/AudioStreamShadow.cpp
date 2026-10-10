@@ -317,8 +317,11 @@ int FakeQueuefile(int stream, int hold, const char *name, uint32_t offset) {
     return g_script.queueResult;
 }
 int FakeCreate(SND::PlayOpts *opts, int requests, int packets, void *, int size) {
+    // pad06 is never written (SNDplaysetdef 0x0013c5c0, AStreamPriv's constructor 0x00122190): the caller's stack
+    SND::PlayOpts copy = *opts;
+    memset(copy.pad06, 0, sizeof(copy.pad06));
     Append(g_log, "create(%d,%d,%d,", requests, packets, size);
-    AppendBytes(g_log, opts, sizeof(*opts));
+    AppendBytes(g_log, &copy, sizeof(copy));
     g_log += ") ";
     return g_script.created;
 }

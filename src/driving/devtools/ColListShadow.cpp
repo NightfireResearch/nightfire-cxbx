@@ -43,7 +43,11 @@
 //   - SetCollisionArticle on real render instances with valid, invalid and -1 articles, into a fresh article map.
 //
 // WorldCollisionInfo's segment words (+0x20..+0x3f) are not compared after CheckHitWorld: the game's constructor
-// copies them from its own uninitialised stack. Init, Restart, Shutdown and the constructor are left to the
+// copies them from its own uninitialised stack. The rest is, but CheckHitWorld copies its candidate whole into the
+// info (0x000c3e2f, 0x000c3f4c), and the constructor leaves the candidate's normal, +0x4c, +0x56 and +0x5c unset:
+// those words are whatever the candidate's stack slot held. The stack below the test is filled with one pattern
+// right before each side's call, so a word neither side writes reads the same on both, whatever the two frames'
+// layouts (the port's frame and the original's differ, and the first call's leftovers lie where the second runs). Init, Restart, Shutdown and the constructor are left to the
 // lockstep runs (loading, restarting and leaving a mission).
 //
 // One summary line: [collistshadow] ...: N cases, M checks, D differ.
@@ -374,11 +378,36 @@ void TestBarrierList(const Coord3 *point, float radius) {
 
 // ---- the hit checks
 
+bool Compared(size_t offset) {
+    return offset < offsetof(WorldCollisionInfo, segmentStart) || offset >= offsetof(WorldCollisionInfo, instance);
+}
+
 bool SameInfo(const WorldCollisionInfo &a, const WorldCollisionInfo &b) {
-    const uint8_t *x = reinterpret_cast<const uint8_t *>(&a), *y = reinterpret_cast<const uint8_t *>(&b);
-    return memcmp(x, y, offsetof(WorldCollisionInfo, segmentStart)) == 0 &&
-           memcmp(x + offsetof(WorldCollisionInfo, instance), y + offsetof(WorldCollisionInfo, instance),
-                  sizeof(WorldCollisionInfo) - offsetof(WorldCollisionInfo, instance)) == 0;
+    const uint32_t *x = reinterpret_cast<const uint32_t *>(&a), *y = reinterpret_cast<const uint32_t *>(&b);
+    for (size_t i = 0; i < sizeof(WorldCollisionInfo) / 4; i++)
+        if (Compared(i * 4) && x[i] != y[i])
+            return false;
+    return true;
+}
+
+// The words that differ, port then original.
+void ReportInfo(const WorldCollisionInfo &a, const WorldCollisionInfo &b) {
+    const uint32_t *x = reinterpret_cast<const uint32_t *>(&a), *y = reinterpret_cast<const uint32_t *>(&b);
+    printf("[collistshadow]   hitType %u/%u:", a.hitType, b.hitType);
+    for (size_t i = 0; i < sizeof(WorldCollisionInfo) / 4; i++)
+        if (Compared(i * 4) && x[i] != y[i])
+            printf(" +%02x %08x/%08x", unsigned(i * 4), x[i], y[i]);
+    printf("\n");
+    fflush(stdout);
+}
+
+const uint32_t kStackFill = 0xa5a5a5a5;
+
+// Fills the stack below the caller with kStackFill (see the comment at the top).
+__declspec(noinline) void FillStack() {
+    volatile uint32_t words[0x1000];
+    for (int i = 0; i < 0x1000; i++)
+        words[i] = kStackFill;
 }
 
 void TestCheckHitWorld(const Coord4 *segment) {
@@ -390,19 +419,24 @@ void TestCheckHitWorld(const Coord4 *segment) {
     State before, port, original;
     Save(&before);
     int hitP = 0, hitO = 0;
+    FillStack();
     bool okP = Guarded([&] { hitP = Orig_CheckHitWorld(m, 0, segment, &p); });   // outside the window: the port
     Save(&port);
     Load(before);
     bool okO;
     {
         OriginalsWindow window;
+        FillStack();
         okO = Guarded([&] { hitO = Orig_CheckHitWorld(m, 0, segment, &o); });
     }
     Save(&original);
     Load(before);
     Check(okP == okO, "CheckHitWorld faults", g_cases);
     Check(hitP == hitO, "CheckHitWorld answer", g_cases);
+    bool reported = g_reported < 10;
     Check(SameInfo(p, o), "CheckHitWorld info", g_cases);
+    if (!SameInfo(p, o) && reported)
+        ReportInfo(p, o);
     Check(SameState(port, original), "CheckHitWorld state", g_cases);
     g_cases++;
 }

@@ -6,6 +6,8 @@
 #include "GameLoop.h"
 #include "ActionQueue.hpp"
 #include "CoreFoundation.h"
+#include "Feedback.h"
+#include "InputConfig.h"
 #include "IOModule.hpp"
 #include "MissionManager.h"
 #include "PlayMPC.hpp"
@@ -60,7 +62,6 @@
 namespace {
 
 // Objects the game's constructors build on our stack, as big as the original's frames make room for.
-struct IFeedbackStorage { uint32_t words[1]; };
 struct GSubtitlesStorage { uint32_t words[0x94 / 4]; };
 
 // The 'Map ' group of the track file and its 'AIEl' data.
@@ -206,12 +207,6 @@ typedef const char *DiscErrorText[3];
 #define AIRoadSpawn_Shutdown ((void (*)(void))0x000349e0)
 #define AICharacter_Init ((void (*)(void))0x0001c190)
 #define AICharacter_Shutdown ((void (*)(void))0x0001c1b0)
-#define InputConfigManager_Get ((void *(*)(void))0x00050270)
-#define InputConfigManager_InitAndPreload ((void (__fastcall *)(void *, int))0x000504d0)
-#define InputConfigManager_Shutdown ((void (__fastcall *)(void *, int))0x00050080)
-#define IFeedback_Construct ((void *(__fastcall *)(IFeedbackStorage *, int, int))0x0004fe30)
-#define IFeedback_Destruct ((void (__fastcall *)(IFeedbackStorage *, int))0x0004fb10)
-#define IFeedback_Pause ((void (*)(void))0x0004fa00)
 
 // The car's type name (a virtual method of the player's vehicle).
 static const char *PlayerCarTypeName() {
@@ -488,7 +483,7 @@ void Bond_StartUpSystem() {
 
     GLoadingScreen_Status("Init Controllers");
     IOModule::GetIOModule()->Initialize();
-    InputConfigManager_InitAndPreload(InputConfigManager_Get(), 0);
+    InputConfigManager::Get()->InitAndPreload();
 
     GLoadingScreen_Status("Init Noise");
     Noise::Init();
@@ -509,7 +504,7 @@ void Bond_CleanUp() {
         FILESYS_delbigsync(gHandleMisc, 100);
     NullFunction();
     ASYNCFILE_restore();
-    InputConfigManager_Shutdown(InputConfigManager_Get(), 0);
+    InputConfigManager::Get()->Shutdown();
     IOModule::GetIOModule()->Release();
     DiscError_Shutdown();
     FreeEAGLMaterialsThunk();
@@ -573,10 +568,10 @@ int GameMain(int argc, char **argv) {
 
     Bond_StartUpSystem();
     GLoadingScreen_Status("Entering GameLoop");
-    IFeedbackStorage feedback;   // in the original, the slot argv came in
-    IFeedback_Construct(&feedback, 0, Launch.controllerPort);
+    IFeedback feedback;   // in the original, the slot argv came in
+    feedback.Construct(Launch.controllerPort);
     GameLoop_MainGameLoop(false, false, false, 0, mission, 0);
-    IFeedback_Destruct(&feedback, 0);
+    feedback.Destruct();
     Bond_CleanUp();
 
     if (Launch.unknown978 == 3)
@@ -637,7 +632,7 @@ void GameLoop_PlayMovie(const char *movie, const char *subtitles) {
     view->SetOrthographic(0.0f, 200.0f);
     GLoadingScreen_Status("Play Movie");
     IOModule::GetIOModule()->EnableUpdating(false);
-    IFeedback_Pause();
+    IFeedback::Pause();
     ASoundManager::Pause();
     ActionQueueManager::GetActionQueueManager()->FlushAllQueues();
     fgRenderer->Flush(false);

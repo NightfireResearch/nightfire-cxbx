@@ -12,6 +12,7 @@
 #include "../../common/xbeOverload.h"
 #include "../../helpers.h"
 #include "../engine/CoreFoundation.h"
+#include "../engine/InputConfig.h"   // BuildFileName
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
 #include "../render/Fog.h"
@@ -30,7 +31,6 @@
 
 // Other packages' functions not ported yet, called at their addresses.
 
-#define CarpPathConcat ((void (__fastcall *)(char *, int, const char *, const char *, const char *))0x00051e90)
 #define EhVectorConstructor ((void (__stdcall *)(void *, uint32_t, uint32_t, uint32_t))0x00022770)
 #define Crt_printf ((int (*)(const char *, ...))0x00132192)
 #define Crt_atexit ((int (*)(void (*)()))0x00132a7b)
@@ -474,7 +474,7 @@ void RCARPFile::Destruct() {
 void RCARPFile::LoadEAGLMaterials() {
     for (const char **file = MaterialFiles; *file != NULL; file++) {
         char path[64];
-        CarpPathConcat(path, 0, "data\\render\\", *file, "");
+        BuildFileName(path, 0, "data\\render\\", *file, "");
         MaterialData = UFileLoader::FileLoadz(path, 0);
         uint32_t size = UMemory::Size(MaterialData);
         void *memory = EaglAllocate(sizeof(DynamicLoader), "EAGL::DynamicLoader new");

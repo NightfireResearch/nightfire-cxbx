@@ -7,6 +7,7 @@
 
 #include "../audio/Bank.h"              // SharedTreeIterator
 #include "../data/Carp.h"               // CARP::ResolverMap::Find
+#include "../engine/InputConfig.h"      // BuildFileName
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"      // MEM_copy
@@ -26,7 +27,6 @@
 // ---- originals called by address
 
 #define CRT_printf ((int (*)(const char *format, ...))0x00132192)
-#define BuildFileName ((char *(__fastcall *)(char *, int, const char *directory, const char *name, const char *extension))0x00051e90)
 #define TreeIterator_Increment ((void (__fastcall *)(TreeNode **, int))0x000b2920)
 
 // ---- globals

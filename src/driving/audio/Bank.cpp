@@ -4,6 +4,7 @@
 #include "../../helpers.h"
 #include "../data/SymbolTable.h"        // NamespaceMap::LowerBound
 #include "../engine/CoreFoundation.h"   // GameEmptyString
+#include "../engine/InputConfig.h"      // BuildFileName
 #include "../engine/UFileLoader.h"
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMemory.h"     // MEM_free
@@ -15,8 +16,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code called by address
-// directory + name + extension into the buffer, which it answers
-#define BuildFileName ((char *(__fastcall *)(char *, int, const char *directory, const char *name, const char *extension))0x00051e90)
 // ++ on URefCounter<T>'s maps, shared by all of them
 // The C runtime's: the trees' order depends on it.
 #define Crt_stricmp ((int (*)(const char *, const char *))0x00134537)

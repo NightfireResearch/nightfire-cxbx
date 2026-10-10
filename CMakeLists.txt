@@ -355,6 +355,7 @@ add_library(drivinginject SHARED
   src/driving/render/WorldCulling.cpp
   src/driving/devtools/LightShadow.cpp
   src/driving/devtools/ParticleShadow.cpp
+  src/driving/devtools/InputShadow.cpp
   src/driving/devtools/ReflectionShadow.cpp
   src/driving/devtools/RenderFxShadow.cpp
   src/driving/devtools/RendererShadow.cpp
@@ -513,6 +514,8 @@ add_library(drivinginject SHARED
   src/driving/engine/ActionQueue.cpp
   src/driving/engine/InputDevice.cpp
   src/driving/engine/IOModule.cpp
+  src/driving/engine/Feedback.cpp
+  src/driving/engine/InputConfig.cpp
   src/driving/platform/Pad.cpp
   src/common/xboxPath.cpp
   src/driving/platform/XboxStartup.cpp

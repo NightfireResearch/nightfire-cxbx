@@ -14,6 +14,7 @@
 #include "SoundManager.h"               // FramesSinceAudioUpdate, ASoundManager_fgIsPaused, ASoundManager_fgMissionOver
 #include "Stream.h"
 #include "../../helpers.h"
+#include "../engine/InputConfig.h"      // BuildFileName
 #include "../engine/UMemory.hpp"
 
 #pragma fp_contract(off)
@@ -26,8 +27,6 @@
 
 // Moves the sound to the mix `mixName` (Remove, then Add).
 #define ABaseSound_SetMix ((void (__fastcall *)(ABaseSound *, int, const char *mixName))0x000d3690)
-// Concatenates (the third with a separator, if not empty) into the buffer.
-#define BuildFileName ((char *(__fastcall *)(char *buffer, int, const char *, const char *, const char *))0x00051e90)
 #define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 
 // ---- globals

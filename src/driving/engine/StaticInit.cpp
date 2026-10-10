@@ -11,6 +11,7 @@
 
 #include "../../helpers.h"
 #include "StaticInit.h"
+#include "ActionQueue.hpp"
 #include "UMemory.hpp"
 #include "URefCounter.h"
 #include "USingleton.h"
@@ -28,8 +29,6 @@
 
 // ---- originals called by address
 
-
-#define FUN_0004f400 ((void (__fastcall *)(void *, int))0x0004f400)
 #define FUN_0012f820 ((void (__fastcall *)(void *, int))0x0012f820)
 
 // ---- the weapon table
@@ -88,7 +87,7 @@ void DestroyStatic_001de820(void) {
 }
 // FUNC_AT(0x0015cde0)
 void DestroyStatic_001e23f0(void) {
-    FUN_0004f400((void *)0x001e23f0, 0);
+    ((ActionQueueManager *)0x001e23f0)->Tidy();
 }
 // FUNC_AT(0x0015ce00)
 void DestroyStatic_Empty(void) {

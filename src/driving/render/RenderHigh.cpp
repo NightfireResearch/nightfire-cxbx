@@ -34,6 +34,7 @@
 #include "../eagl/RenderContext.h"
 #include "../engine/CoreFoundation.h"     // NullFunction
 #include "../engine/GameLoop.h"           // LaunchPage
+#include "../engine/InputConfig.h"        // BuildFileName
 #include "../engine/MissionManager.h"
 #include "../engine/StaticInit.h"
 #include "../engine/UMemory.hpp"
@@ -105,7 +106,6 @@ typedef void *(__fastcall *ManagerConstructor)(void *memory, int);   // the unpo
 #define GHud_Construct ((GHud *(__fastcall *)(void *, int))0x000dab50)
 #define GHud_Render ((void (__fastcall *)(GHud *, int))0x000e0140)
 #define Simulation_FUN_000b2d40 ((const Coord3 *(__fastcall *)(void *, int))0x000b2d40)
-#define BuildFileName ((char *(__fastcall *)(char *, int, const char *directory, const char *name, const char *extension))0x00051e90)
 #define GetParticFileForMission ((const char *(*)(void))0x000e3e50)
 #define RVehicleParticle_Init ((void (*)(void))0x000a8240)
 #define RVehicleParticle_LoadAttributes ((void (*)(void))0x000a6db0)

@@ -7,6 +7,7 @@
 #include "Fader.h"
 #include "Stream.h"
 #include "../data/Dafi.h"
+#include "../engine/InputConfig.h"      // BuildFileName
 #include "../engine/UFileLoader.h"
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"       // VU0_v3distancesquare, VU0_sqrt
@@ -26,8 +27,6 @@
 #define AEngine_RemoveAll ((void (*)(void))0x0012f9e0)
 // The play parameters for the sound as params->listener hears it (Ghidra: FUN_0012eab0; the name is ours)
 #define SoundPlayParams_Compute ((ASoundPlayParams *(__fastcall *)(ASoundPlayParams *, int, ABaseSound *))0x0012eab0)
-// "<directory><name>.<extension>" into the buffer (no '.' for an empty extension), answered
-#define BuildFileName ((char *(__fastcall *)(char *, int, const char *, const char *, const char *))0x00051e90)
 
 // The list code every std::list of pointers shares: the head node, _Buynode(next, prev, value), the destructor
 #define SoundList_BuyHead ((PointerListNode *(__fastcall *)(ASoundList *, int))0x000b8490)

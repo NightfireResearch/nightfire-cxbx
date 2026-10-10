@@ -11,6 +11,7 @@
 #include "../../helpers.h"
 #include "../anim/AnimEngine.h"         // Handle
 #include "../engine/CoreFoundation.h"     // NullFunction
+#include "../engine/Feedback.h"
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
 #include "../render/RSceneObj.hpp"
@@ -25,7 +26,6 @@
 // ---- the game's code not ported yet
 #define Simulation_AssignRigidBodySlot ((int (__fastcall *)(void *, int, PhysicsObject *object, int simple))0x000b2630)
 #define Simulation_ReleaseRigidBodySlot ((void (__fastcall *)(void *, int, int slot, int simple))0x000b2980)
-#define IFeedback_Destruct ((void (__fastcall *)(IFeedback *, int))0x0004fb10)
 
 // ---- globals
 #define PhysicsObjectVtable ((void **)0x0018f9a0)
@@ -39,7 +39,7 @@ namespace {
 constexpr float kForceScale = 1.0f / 300.0f;
 static_assert(std::bit_cast<uint32_t>(kForceScale) == 0x3b5a740e, "the original's 1/300");
 
-constexpr uint32_t kFeedbackSize = 4;   // an IFeedback
+constexpr uint32_t kFeedbackSize = sizeof(IFeedback);
 
 SimpleRigidBody *SimpleBody(const PhysicsObject *object) {
     return Simulation_GetSimpleRigidBody(Sim, 0, object->rigidBodySlot);
@@ -145,7 +145,7 @@ void PhysicsObject::Destruct() {
     if (feedbackObject != NULL) {
         IFeedback *feedback = feedbackObject;
         feedbackObject = NULL;
-        IFeedback_Destruct(feedback, 0);
+        feedback->Destruct();
         UMemory::FastFree(feedback, kFeedbackSize);
     }
     Simulation_ReleaseRigidBodySlot(Sim, 0, rigidBodySlot, flags & kSimpleBody);
