@@ -205,4 +205,9 @@ static_assert(sizeof(WRoadNetwork) == 1, "Init news one byte for the road networ
 // The first segment at the node, other than `excluded`, without kSegmentNonDirectional; NULL if none.  0x000c9aa0
 WRoadSegment* GetAttachedDirectionalSegment(WRoadNode *node, short excluded);
 
+// GetSegmentCurveStep's static spline and its guard
+class RCameraSpline;
+extern RCameraSpline CurveSpline;
+extern uint32_t CurveSplineGuard;
+
 #endif // DRIVING_WORLD_ROADNETWORK_H_

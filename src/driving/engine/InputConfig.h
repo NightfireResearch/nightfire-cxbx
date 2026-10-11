@@ -151,4 +151,13 @@ char* __fastcall BuildFileName(char *buffer, int unused, const char *directory, 
 char* __fastcall BuildPath(char *buffer, int unused, const char *directory, const char *subdirectory,
                            const char *name, const char *extension);
 
+// The action and update-method names (InputConfig.cpp), constructed by the static initialisers.
+struct StringToNumber;
+extern StringToNumber gActionNames;
+extern StringToNumber gUpdateMethodNames;
+
+// The configurations and the guard of their construction (bit 0)
+extern InputConfigManager gInputConfigManager;
+extern uint32_t gInputConfigManagerMade;
+
 #endif // DRIVING_ENGINE_INPUTCONFIG_H_

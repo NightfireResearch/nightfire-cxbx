@@ -42,15 +42,71 @@
 #define RVehicle_TriggerEmpBolts ((void (__fastcall *)(RSceneObj *, int))0x00095a10)
 #define SMissionManager_ProgrammerDefinedEvent ((void (__fastcall *)(void *, int, int event, const char *text))0x000b72f0)
 #define SMissionManager_IncShotsHit ((void (__fastcall *)(void *, int, int unknown))0x000b6720)
-#define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 
 // ---- globals
 #define Launch (*(LaunchPage *)0x00243b90)
 #define SimulationRandom (*(SimRandom **)0x00233ff0)   // the Simulation's first word
 #define SimStepCount U32_AT(0x00234e34)                 // the Simulation's steps so far
-#define ZeroVector (*(const Coord3 *)0x00243030)        // the game's zero vector, never written
+
+// The cars' tuning (BondCarState.h), at its starting values
+// XBE_GLOBAL(0x001c36c0, 4)
+float BondCar_FarDistanceSq = 2500.0f;
+// XBE_GLOBAL(0x001c36cc, 4)
+float BondCar_ENABLE_ROLL_STOPS_THRESHOLD = 0.2f;
+// XBE_GLOBAL(0x001c36d0, 4)
+float BondCar_BASE_FRICTION_MASS = 8.0f;
+// XBE_GLOBAL(0x001c36d4, 4)
+float BondCar_SHRED_DRAG = 2.0f;
+// XBE_GLOBAL(0x001c36d8, 4)
+float BondCar_PAD_DEAD_ZONE = 0.2f;
+// XBE_GLOBAL(0x001c36dc, 4)
+float BondCar_TWO_WHEEL_ANGLE = 0.1f;
+// XBE_GLOBAL(0x001c36e0, 4)
+float BondCar_TWO_WHEEL_SCALE = 1875.0f;
+// XBE_GLOBAL(0x001c36e4, 4)
+float BondCar_TWO_WHEEL_LIMIT = 1875.0f;
+// XBE_GLOBAL(0x001c36e8, 4)
+float BondCar_TWO_WHEEL_OPPOSITE_SCALE = 0.05f;
+// XBE_GLOBAL(0x001c36ec, 4)
+float BondCar_TWO_WHEEL_TENSOR_SCALE = 1.0f;
+// XBE_GLOBAL(0x001c36f0, 4)
+float BondCar_SKID_AUDIO_SCALE = 0.15f;
+// XBE_GLOBAL(0x001c36f4, 4)
+float BondCar_ROLLING_RESISTANCE = 0.1f;
+// XBE_GLOBAL(0x001c36f8, 4)
+float BondCar_MIN_BUTTON_VALUE = 0.1f;
+// XBE_GLOBAL(0x001c36fc, 4)
+float BondCar_WHEEL_SPIN_EXTRA_RPM = 4000.0f;
+// XBE_GLOBAL(0x001c3704, 4)
+float BondCar_DAMAGE_SCALE_COLLISION = 1.0f;
+// XBE_GLOBAL(0x001c3708, 4)
+int32_t BondCar_EMP_LIFETIME = 120;
+// XBE_GLOBAL(0x001c370c, 4)
+float BondCar_TYRE_DAMAGE_RADIUS = 1.25f;
+// XBE_GLOBAL(0x001c3710, 4)
+float BondCar_MAX_WHEEL_SPIN_RATE = 0.013f;
+// XBE_GLOBAL(0x001c3714, 4)
+float BondCar_MAX_WHEEL_SPIN_RATE_AI = 0.05f;
+// XBE_GLOBAL(0x001c3718, 4)
+int32_t BondCar_POST_BRAKE_ACCEL_COUNT = 160;
+// XBE_GLOBAL(0x001c371c, 4)
+float BondCar_POST_BRAKE_ACCEL_SCALE = 0.2f;
+// XBE_GLOBAL(0x001c3720, 4)
+float BondCar_POST_BRAKE_ACCEL_MIN = 0.1f;
+// XBE_GLOBAL(0x001c3728, 0x40)
+float BondCar_friction[kCarSurfaces] = {
+    1.0f, 1.0f, 1.0f, 0.8f, 1.0f, 0.9f, 1.0f, 1.0f,
+    1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+};
+// XBE_GLOBAL(0x001c3768, 0x40)
+float BondCar_lateralLoss[kCarSurfaces] = {
+    1.0f, 1.0f, 1.0f, 0.75f, 1.0f, 0.9f, 1.0f, 1.0f,
+    0.6f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+};
 
 namespace {
+
+const Coord3 kZero = {0.0f, 0.0f, 0.0f};
 
 // The modes of the turn signal (turnSignalMode)
 enum : int32_t {
@@ -126,7 +182,7 @@ CarPhysics *GetPhysicsVirtual(PBondCar *car) {
 void TriggerFX(RSceneObj *object, int type, uint32_t which) {
     typedef void (RSceneObj::*TriggerFXMethod)(int type, uint32_t which, uint32_t unused, const Coord3 *position,
                                                const Coord3 *direction, float intensity);
-    (object->*XbeVirtual<TriggerFXMethod>(object, 15))(type, which, 0, &ZeroVector, &ZeroVector, -1.0f);
+    (object->*XbeVirtual<TriggerFXMethod>(object, 15))(type, which, 0, &kZero, &kZero, -1.0f);
 }
 
 RTyreTrack *NewTyreTrack(float width, bool longTrack, bool unknown) {
@@ -221,14 +277,14 @@ void PBondCar::InitTyreTracks() {
             tyreTracks[wheel] = NULL;
         return;
     }
-    if (carClass == kCarClass2 && CRT_stricmp(carType, "750") != 0) {
+    if (carClass == kCarClass2 && _stricmp(carType, "750") != 0) {
         for (int wheel = 2; wheel < kCarWheels; wheel++)
             tyreTracks[wheel] = NewTyreTrack(width, false, false);
         tyreTracks[1] = NULL;
         tyreTracks[0] = NULL;
         return;
     }
-    if (carClass == kPlayerCar || carClass == kCarClass1 || CRT_stricmp(carType, "750") == 0) {
+    if (carClass == kPlayerCar || carClass == kCarClass1 || _stricmp(carType, "750") == 0) {
         for (int wheel = 0; wheel < kCarWheels; wheel++)
             tyreTracks[wheel] = NewTyreTrack(width, true, false);
         return;

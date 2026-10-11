@@ -34,15 +34,27 @@ using namespace GameStd;
 #define NumpunctVtable ((const void *const *)0x0018be30)
 #define BadCastThrowInfo ((const void *)0x001a952c)
 
-#define FacetIdCount U32_AT(0x00244838)       // locale::id::_Id_cnt
-#define CtypeId U32_AT(0x00244888)            // ctype<char>::id (the runtime's)
-#define NumGetId U32_AT(0x001e22e0)           // the ids of the facets instantiated here
-#define NumPutId U32_AT(0x001e22e4)
-#define NumpunctId U32_AT(0x001e22dc)
-#define CtypeCache (*(const Facet **)0x001e22cc)      // _Facetptr<>::_Psave: the facet use_facet made itself
-#define NumGetCache (*(const Facet **)0x001e22d0)
-#define NumPutCache (*(const Facet **)0x001e22d4)
-#define NumpunctCache (*(const Facet **)0x001e22d8)
+// XBE_GLOBAL(0x00244838, 0x4)
+static uint32_t FacetIdCount;          // locale::id::_Id_cnt
+// XBE_GLOBAL(0x00244888, 0x4)
+static uint32_t CtypeId;               // ctype<char>::id (the runtime's)
+// The ids of the facets instantiated here
+// XBE_GLOBAL(0x001e22e0, 0x4)
+static uint32_t NumGetId;
+// XBE_GLOBAL(0x001e22e4, 0x4)
+static uint32_t NumPutId;
+// XBE_GLOBAL(0x001e22dc, 0x4)
+static uint32_t NumpunctId;
+// _Facetptr<>::_Psave: the facet use_facet made itself
+// XBE_GLOBAL(0x001e22cc, 0x4)
+static const Facet *CtypeCache;
+// XBE_GLOBAL(0x001e22d0, 0x4)
+static const Facet *NumGetCache;
+// XBE_GLOBAL(0x001e22d4, 0x4)
+static const Facet *NumPutCache;
+// XBE_GLOBAL(0x001e22d8, 0x4)
+static const Facet *NumpunctCache;
+// XBE_GLOBAL(0x00244848, 0x8)
 #define ZeroStreamPos ((const uint32_t *)0x00244848)  // the fpos_t a failed seek reports
 #define InitialMbState I32_AT(0x001e22c8)             // _Stinit, the conversion state it reports
 

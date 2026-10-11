@@ -37,17 +37,21 @@
 #define CRT_printf ((int (*)(const char *, ...))0x00132192)
 #define CRT_sprintf ((int (*)(char *, const char *, ...))0x00132767)
 
-// NormalizedRandomNumber's second number, kept for the next call
-struct NormalSpare {
-    float value;                // +0x00
-    uint8_t available;          // +0x04
-};
-
 #define fgFailedStreams (*(StreamNameList **)0x00243a5c)  // (this name and the next two ours)
-#define fgInitialised BOOL8_AT(0x00243a76)
-#define RandomSpare (*(NormalSpare *)0x00243a78)
+// XBE_GLOBAL(0x00243a76, 1)
+static bool fgInitialised;
+// XBE_GLOBAL(0x00243a78, 8)
+NormalSpare RandomSpare;
 #define SoundManagerUnknown243a6c U32_AT(0x00243a6c)    // zeroed by Stop
-#define MusicStreamFile ((char *)0x00243a18)            // 64 bytes (name ours)
+// XBE_GLOBAL(0x00243a18, 0x40)
+static char MusicStreamFile[64];                        // (name ours)
+
+// XBE_GLOBAL(0x001d8064, 4)
+float MusicVolumeScale = 1.0f;
+// XBE_GLOBAL(0x001d8068, 4)
+float EffectsVolumeScale = 1.0f;
+// XBE_GLOBAL(0x00243b34, 4)
+ASystem *ASystem_fgSystem;
 
 namespace {
 

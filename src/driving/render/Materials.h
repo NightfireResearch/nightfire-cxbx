@@ -114,13 +114,16 @@ void ShutdownAllSimpleMaterials();                                              
 // The rings: each class's current request, its requests and their models
 constexpr int kMaterialRequests = 16;
 #define SimpleRequestIndex (*(uint32_t *)0x00243708)
+// XBE_GLOBAL(0x00243758, 0x40)
 #define SimpleRequests ((SimpleGeoPrim **)0x00243758)
-#define SimpleModels ((EAGL::DynamicModel **)0x00243798)
 #define TexturedRequestIndex (*(uint32_t *)0x00243750)
+// XBE_GLOBAL(0x00243710, 0x40)
 #define TexturedRequests ((TexturedGeoPrim **)0x00243710)
-#define TexturedModels ((EAGL::DynamicModel **)0x002437d8)
 #define VolatileRequestIndex (*(uint32_t *)0x00243830)
+// XBE_GLOBAL(0x00243878, 0x40)
 #define VolatileRequests ((TexturedGeoPrim **)0x00243878)
-#define VolatileModels ((EAGL::DynamicModel **)0x00243838)
+extern EAGL::DynamicModel *SimpleModels[kMaterialRequests];
+extern EAGL::DynamicModel *TexturedModels[kMaterialRequests];
+extern EAGL::DynamicModel *VolatileModels[kMaterialRequests];
 
 #endif // DRIVING_RENDER_MATERIALS_H_

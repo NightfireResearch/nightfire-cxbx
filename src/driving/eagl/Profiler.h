@@ -4,6 +4,7 @@
 // EAGL's PrintMessage and profiler (docs/driving/eagl.md 4.9): the ranges 0x000f42b0..0x000f4340 and
 // 0x000f4580..0x000f55a0. See Profiler.cpp. In namespace EAGL, as in Ghidra; invented names are marked.
 
+#include <stdarg.h>
 #include <stdint.h>
 
 #include "RenderMethod.h"
@@ -73,6 +74,9 @@ struct ProfilerDrawArray : DrawArray {
     ProfilerDrawArray* Construct();                                          // 0x000f5500
 };
 static_assert(sizeof(ProfilerDrawArray) == sizeof(DrawArray), "the DrawArray itself");
+
+typedef int (*PrintHookFn)(const char *format, va_list arguments);
+extern PrintHookFn PrintHook;     // PrintMessage's hook: when set, it takes the message
 
 int PrintMessage(int level, const char *format, ...);                        // 0x000f42b0
 void ProfilerSetVertexShaderConstantRegs();  // 0x000f4310 naked: EAX = count, ECX = register, EDX = data (invented)

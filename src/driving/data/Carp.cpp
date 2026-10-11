@@ -13,6 +13,7 @@
 #include "../audio/Bank.h"              // SharedTreeIterator
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
+#include "../logging.h"                 // dbg_wprintf, our printf
 
 #include <math.h>
 #include <string.h>
@@ -26,14 +27,21 @@
 // leaves its quotient unrounded on the stack. The linear interpolation is the original's SSE, lane by lane.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The C runtime's printf, called at its address.
-#define Crt_printf ((int (*)(const char *, ...))0x00132192)
+static const float kIdentityMatrix[16] = {
+    1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f,
+};
 
-#define Resolvers (*(CARP::ResolverMap *)0x00243580)
-#define ResolversReady BOOL8_AT(0x00243560)
-#define CarpVerbose BOOL8_AT(0x00243561)        // report references the symbol table cannot resolve
-#define CountedStringBuffer ((char *)0x00243590)
-#define IdentityMatrix ((float *)0x001d4c10)    // set up by a static initialiser
+// XBE_GLOBAL(0x00243580, 0xc)
+CARP::ResolverMap CARP::Resolvers;
+// XBE_GLOBAL(0x00243560, 0x1)
+bool ResolversReady;
+// XBE_GLOBAL(0x00243561, 0x1)
+bool CarpVerbose;                        // report references the symbol table cannot resolve
+// XBE_GLOBAL(0x00243590, 0x100)
+char CountedStringBuffer[0x100];
 
 constexpr uint32_t kSymbolicResolverVtable = 0x001a20cc;
 constexpr uint32_t kTagResolverVtable = 0x001a20c0;
@@ -471,7 +479,7 @@ void CARP::InitResolvers() {
         TreeInsertResult result;
         Resolvers.InsertUnique(&result, &pair);
     }
-    ResolversReady = 1;
+    ResolversReady = true;
 }
 
 // FUNC_AT(0x00118f90)
@@ -515,7 +523,7 @@ bool CARP::SymbolicResolver::ProcessData(UGroup *parent, UData *record) {
         } else {
             where = "<<Unknown Group>>";
         }
-        Crt_printf("CARP FAILURE resolving [%s] for '%s'\n", reinterpret_cast<char *>(record->Data()), where);
+        dbg_wprintf("CARP FAILURE resolving [%s] for '%s'\n", reinterpret_cast<char *>(record->Data()), where);
     }
     record->AdoptData(found, size, 0, false);
     return true;
@@ -861,10 +869,10 @@ void CARP::AISpline::GetApplyTransform(float *out) {
         alignas(16) float evaluated[16];
         float weight;
         pathInfo->EvaluateMatrix(0.0f, &positionKey, &rotationKey, evaluated, &weight);
-        RotateSplineAboutBase(IdentityMatrix, evaluated, matrix, out);
+        RotateSplineAboutBase(kIdentityMatrix, evaluated, matrix, out);
         return;
     }
-    memcpy(out, IdentityMatrix, 16 * sizeof(float));
+    memcpy(out, kIdentityMatrix, sizeof(kIdentityMatrix));
 }
 
 // FUNC_AT(0x0008d640)

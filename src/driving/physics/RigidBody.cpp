@@ -24,13 +24,11 @@
 
 // ---- the game's code not ported yet
 #define Simulation_GetRigidBodyInfo ((RigidBodyInfo *(__fastcall *)(void *, int, int ownerIndex))0x000b2760)
-#define Crt_stricmp ((int (*)(const char *, const char *))0x00134537)
 #define Crt_CxxThrowException ((void (__stdcall *)(void *object, const void *throwInfo))0x001325ad)
 
 // ---- globals
 #define Sim ((void *)0x00233ff0)                    // the Simulation
 #define SimTimeStep FLOAT_AT(0x00234e30)            // the simulation's step, in seconds
-#define ZeroVector (*(const Coord3 *)0x00243030)    // the game's zero vector, never written
 #define LengthErrorVtable ((void *)0x00189eec)      // std::length_error's
 #define LengthErrorThrowInfo ((const void *)0x001a89bc)
 
@@ -105,7 +103,7 @@ RigidBody* RigidBody::Construct(int8_t ownerIndex, int8_t kind, const Coord3 *po
     this->kind = kind;
     groundContacts = 0;
     this->ownerIndex = ownerIndex;
-    torque = ZeroVector;
+    torque = {0.0f, 0.0f, 0.0f};
     if (moving) {
         this->velocity = *velocity;
         this->angularVelocity = *angularVelocity;
@@ -216,7 +214,7 @@ void RigidBody::ApplyInitialForcesAndTorques() {
         drag.y = 0.0f;
         ResolveMassScaledForce4(&drag);
     }
-    if (kind < 4 && (kind == 1 || Crt_stricmp(RigidVehicles[ownerIndex]->GetCarType(), "paradis_car") == 0)) {
+    if (kind < 4 && (kind == 1 || _stricmp(RigidVehicles[ownerIndex]->GetCarType(), "paradis_car") == 0)) {
         if (RigidVehicles[ownerIndex]->GetNumWheelsOnGround() == 0) {
             RigidVehicles[ownerIndex]->SetWasInAir(true);
             gravity.x = playerGravity.x;
@@ -224,7 +222,7 @@ void RigidBody::ApplyInitialForcesAndTorques() {
             gravity.z = playerGravity.z;
         } else if (RigidVehicles[ownerIndex]->GetWasInAir()) {
             RigidVehicles[ownerIndex]->SetWasInAir(false);
-            if (Crt_stricmp(RigidVehicles[ownerIndex]->GetCarType(), "jungle_truck") == 0)
+            if (_stricmp(RigidVehicles[ownerIndex]->GetCarType(), "jungle_truck") == 0)
                 RigidPlayerGravity = kJungleTruckGravity;
             else
                 RigidPlayerGravity = Rigid_BODGE_PLAYER_GRAVITY;

@@ -26,9 +26,10 @@
 
 using namespace SND;   // the tags
 
-namespace {
+// XBE_GLOBAL(0x00245374, 1)
+uint8_t NextKey;                                     // SNDBANKI_findfreekey's running counter
 
-#define NextKey U8_AT(0x00245374)                    // SNDBANKI_findfreekey's running counter
+namespace {
 
 const int32_t kDefaultEnvelope = 0x001d9d28;         // the default envelope's address, in the original's .rdata
 const uint32_t kBankRemoveAddress = 0x0013cf60;      // SNDbankremove, as the exit hook holds it
@@ -48,9 +49,6 @@ int32_t Div127(int32_t x) {
     hi >>= 6;
     return hi + int32_t(uint32_t(hi) >> 31);
 }
-
-// ---- the C runtime's _memmove (not ours: sys.crt)
-#define MemMove ((void *(*)(void *, const void *, int))0x00132270)
 
 // SNDI_parsetimbre's frame from the reader on: the channel loop reads the azimuth offsets past six into the tag
 // tables, as the original's does.
@@ -94,7 +92,7 @@ int SNDbankheadercopy(SND::BankHeader *destination, int bank) {
     int size = SNDbankheadersize(bank);
     if (size < 0)
         return size;
-    MemMove(destination, BankArray[bank].header, size);
+    memmove(destination, BankArray[bank].header, size);
     BankArray[bank].header = destination;
     return 0;
 }
@@ -536,7 +534,7 @@ int SNDI_parsetimbre(uint8_t **cursor, SND::PatchHeader *header) {
         do {
             if (OutputMode == 2 && header->channels == 2)
                 f.azimuth[i] = 0;
-            uint16_t base = ChannelAzimuth[header->channels][i];
+            uint16_t base = ChannelAzimuth[header->channels - 1][i];
             header->azimuth[i] = base + f.azimuth[i];
             i++;
         } while (i < header->channels);
@@ -667,7 +665,7 @@ void SNDI_patchtohdr(int base, uint8_t *pt, SND::StreamFormat *format, SND::Attr
     for (int i = format->channels - 1; i >= 0; i--) {
         if (OutputMode == 2 && format->channels == 2)
             azimuth[i] = 0;
-        uint16_t defaultAzimuth = ChannelAzimuth[format->channels][i];
+        uint16_t defaultAzimuth = ChannelAzimuth[format->channels - 1][i];
         attributes->azimuth[i] = defaultAzimuth + azimuth[i];
         uint16_t mode = attributes->renderMode;
         if ((mode & 0x14) != 0 || mode == 0)

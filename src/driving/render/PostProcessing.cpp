@@ -34,6 +34,7 @@ class RTextureContext;
 static const USingletonVtable *const kPostProcessingVtable = (const USingletonVtable *)0x00192ec4;
 static const USingletonVtable *const kSingletonVtable = (const USingletonVtable *)0x0018beb0;
 
+// XBE_GLOBAL(0x00242e84, 0x34)
 #define BondPostGlare ((EAGL::RenderMethod *)0x00242e84)    // "HB_RM = BondPostGlare", made by a static initialiser
 #define OffOnNames ((const char *const *)0x001b6638)        // "Off", "On"
 

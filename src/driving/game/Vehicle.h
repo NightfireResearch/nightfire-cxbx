@@ -108,7 +108,7 @@ struct DamageLevels {
 static_assert(sizeof(DamageLevels) == 0x2c, "the damage levels are 11 floats");
 
 #define fgDamageLevels (*(DamageLevels *)0x001c3db4)
-#define fgDamageImpulseScale FLOAT_AT(0x001c3da4)     // 1000: a bullet's push per point of damage (name ours)
+extern float fgDamageImpulseScale;              // a bullet's push per point of damage (name ours)
 
 // A new CarPhysics's defaults: all zero (the type's AttributeExtensionInit; the name is ours)       0x0006f8e0
 void InitCarPhysics(const char *className, const char *collectionName, const char *attributeName, uint32_t type,
@@ -285,9 +285,9 @@ static_assert(offsetof(PVehicle, missionEditorOnMask) == 0x6c, "PVehicle layout"
 
 constexpr uint32_t kPVehicleVtable = 0x0018fa00;
 
-#define CarPhysicsType U32_AT(0x001c3de8)                   // the extension type's id (InitializeGlobals)
-#define fgCarNameMap (*(CarNameMap **)0x001e7ac0)           // BuildCarNames' map
-#define fgCarNames (*(const char ***)0x001e7ac4)            // ... and list
+extern CarNameMap *fgCarNameMap;                        // BuildCarNames' map
+extern const char **fgCarNames;                         // ... and list
 #define fgCarNameCount U32_AT(0x001e7ac8)
+extern uint32_t CarPhysicsType;                         // the extension type's id (InitializeGlobals)
 
 #endif // DRIVING_GAME_VEHICLE_H_

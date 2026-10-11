@@ -21,15 +21,19 @@
 // exact ports checked in game.
 // ---------------------------------------------------------------------------------------------------------------
 
-namespace {
+// XBE_GLOBAL(0x00245364, 0xc)
+int16_t AllocScratch[6];                               // SNDVOICEI_alloc's chosen voices
+// XBE_GLOBAL(0x00245370, 4)
+int32_t HandleGeneration;                              // the handle generation, += 0x100 per allocation
+// XBE_GLOBAL(0x00245378, 0x600)
+uint8_t SpeakerGains[256][6];                          // [azimuth / 256][speaker]: SNDI_precalcaztospkrvol's table
 
-#define AllocScratch ((int16_t *)0x00245364)          // SNDVOICEI_alloc's chosen voices
-#define Generation I32_AT(0x00245370)                  // the handle generation, += 0x100 per allocation
-#define SpeakerGains ((uint8_t (*)[6])0x00245378)     // [azimuth / 256][speaker]: SNDI_precalcaztospkrvol's table
+namespace {
 
 // The pan -> azimuth table (128 entries in the original's .rdata: a quarter turn left, 0xc000, through 0 to a quarter
 // turn right, on a sine). Read where it is: SNDI_pantoazimuth reads past it for a pan over 127, as the original's
 // does.
+// XBE_GLOBAL(0x001d9d88, 0x100)
 #define PanAzimuth ((const uint16_t *)0x001d9d88)
 
 // 2^(i/256) - 1 in 256ths, i = 0..255 (0x001d97c0 in the original's .rdata). The original reads the fractions
@@ -456,10 +460,10 @@ int SNDVOICEI_alloc(int count, int priority, int *handle, int first, int end) {
     if (count > 0)
         for (uint32_t i = 0; i < uint32_t(count); i++)
             chosen[i] = -1;
-    int32_t generation = int32_t(uint32_t(Generation) + 0x100);
-    Generation = generation;
+    int32_t generation = int32_t(uint32_t(HandleGeneration) + 0x100);
+    HandleGeneration = generation;
     if (generation < 0)
-        Generation = 0;
+        HandleGeneration = 0;
 
     if (count > 0) {
         int16_t *next = chosen;
@@ -554,7 +558,7 @@ int SNDVOICEI_alloc(int count, int priority, int *handle, int first, int end) {
         }
     } while (!sorted);
 
-    *handle = chosen[0] | Generation;
+    *handle = chosen[0] | HandleGeneration;
     int master = chosen[0];
     for (int e = 0; e < n; e++) {
         SND::Voice *v = &VoiceArray[chosen[e]];

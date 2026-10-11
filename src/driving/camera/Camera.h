@@ -274,4 +274,6 @@ static_assert(offsetof(RWorldCamera, eye) == 0xc0 && offsetof(RWorldCamera, mode
               offsetof(RWorldCamera, inputQueue) == 0x124 && offsetof(RWorldCamera, anchor) == 0x128,
               "RWorldCamera layout");
 
+extern bool PerspectiveSway;            // ApplyPerspectiveFunction's sway of the aspect and field of view
+
 #endif // DRIVING_CAMERA_CAMERA_H_

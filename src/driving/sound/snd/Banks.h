@@ -141,6 +141,8 @@ static_assert(sizeof(StreamLayout) == 0x1c, "the stream layout is 0x1c bytes");
 
 }  // namespace SND
 
+extern uint8_t NextKey;                         // SNDBANKI_findfreekey's running counter
+
 int SNDBANK_play(int bank, int patch, SND::PlayOpts *opts);                   // 0x0013cc20
 int SNDbankheadercopy(SND::BankHeader *destination, int bank);               // 0x0013ce20
 int SNDbankheadersize(int bank);                                             // 0x0013ce60

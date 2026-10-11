@@ -26,6 +26,29 @@ struct AnimBank {                    // an AnimationBank symbol
 };
 static_assert(offsetof(AnimBank, names) == 0x10, "an AnimationBank's names are at +0x10");
 
+// A free block's first word links the next.
+struct FreeBlock {
+    FreeBlock *next;
+};
+
+// MemoryPoolManager's statics. A size-classed block has its class in the dword before it.
+struct MemoryPool {
+    FreeBlock *freeByType[kAnimTypeCount];   // +0x000 free objects per anim type
+    uint32_t unknown58;
+    uint16_t unknown5c;              // +0x5c cleared by Init
+    uint16_t unknown5e;
+    uint8_t *base;                   // +0x60
+    uint32_t size;                   // +0x64
+    uint8_t *cursor;                 // +0x68 the next new block
+    uint32_t unknown6c;
+    FreeBlock *freeBySize[256];      // +0x70 free blocks per 16-byte size class
+};
+static_assert(offsetof(MemoryPool, base) == 0x60, "the pool's base is at +0x60");
+static_assert(sizeof(MemoryPool) == 0x470, "the pool is 0x470 bytes");
+
+extern MemoryPool Pool;
+extern void *FactoryBlock;
+
 void AnimBank_Constructor(AnimBank *bank, void *loader);         // 0x000f7170, the loader's AnimationBank callback
 void AnimBank_Destructor(AnimBank *bank);                        // 0x000f71a0
 FnAnim* AnimBank_NewCompound(uint8_t *data);                     // 0x000f7240 (invented)

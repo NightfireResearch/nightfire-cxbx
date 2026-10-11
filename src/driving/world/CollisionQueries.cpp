@@ -48,9 +48,10 @@
 #define Sim ((void *)0x00233ff0)                            // the Simulation
 #define SimTimeStep FLOAT_AT(0x00234e30)                    // the simulation's step, in seconds (as its users read it)
 #define LargeStripScratch ((StripVertex *)0x00239a80)       // FindFaceInTriStrip's vertices beyond the scratch pad's
-#define WorldOrigin ((const Coord3 *)0x00243030)            // a zero vector the game keeps
 
 namespace {
+
+const Coord3 kZero = {0.0f, 0.0f, 0.0f};
 
 // A scene object's velocity (its vtable's slot 13).
 const Coord3 *SceneObjectVelocity(void *sceneObject) {
@@ -387,7 +388,7 @@ bool WCollisionMgr::FindFaceInCInstStrips(const MATRIX4 *segmentFrame, const Coo
             continue;
         const StripVertex *vertices = article->Vertices(strip);
         float above;
-        const StripVertex *triangle = FindFaceInTriStrip(&toSegment, WorldOrigin, &vertices, &above);
+        const StripVertex *triangle = FindFaceInTriStrip(&toSegment, &kZero, &vertices, &above);
         if (triangle == NULL)
             continue;
         double lifted = double(above) + 0.5;
@@ -589,7 +590,7 @@ bool WCollisionMgr::FindFaceInCInst(const MATRIX4 *segmentFrame, const Coord4 *e
             continue;
         const StripVertex *vertices = article->Vertices(strip);
         float above;
-        const StripVertex *triangle = FindFaceInTriStrip(&toSegment, WorldOrigin, &vertices, &above);
+        const StripVertex *triangle = FindFaceInTriStrip(&toSegment, &kZero, &vertices, &above);
         if (triangle == NULL)
             continue;
         double lifted = double(above) + 0.5;

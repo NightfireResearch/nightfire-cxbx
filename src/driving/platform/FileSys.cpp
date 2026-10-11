@@ -27,10 +27,10 @@
 //                     asynchronously;
 //   file device       a table of open files ("slots"), and the .viv (BIGF) archives a path may be found in.
 //
-// The records and globals stay where the original kept them - the block FILESYS_init allocates, and the
-// addresses below - so the layer allocates exactly what it did and the rest of the binary (and a dump) finds
-// its state where it always was. The queue helpers, the slot functions and the archive lookup have no callers
-// outside the layer, several take register arguments, and they die with it, so they are plain functions here.
+// The records stay where the original kept them, in the block FILESYS_init allocates, so the layer allocates
+// exactly what it did; the globals are ours, except the worker pointer, which original code still reads, and the
+// allocation callback. The queue helpers, the slot functions and the archive lookup have no callers outside the
+// layer, several take register arguments, and they die with it, so they are plain functions here.
 //
 // Latent bugs in the original, fixed (docs/driving/filesys.md section 7 has the full list):
 //   - running out of op records crashed; a submit now fails and returns 0, which every caller handles (7.1);
@@ -118,28 +118,53 @@ enum FsOpFlags { OPF_OWNSNAME = 1, OPF_CANCELLED = 2, OPF_HASCALLBACK = 4, OPF_C
 enum FsStatus { ST_PENDING = 0, ST_OK = 1, ST_FAILED = -2, ST_CANCELLED = -1, ST_UNKNOWN = -3 };
 enum FsMode { MODE_READ = 1, MODE_CREATE = 2, MODE_TRUNCATE = 4 };
 
-#define SyncPriority       (*(int *)0x001d1c00u)            // 100: every FILE_ helper's
+struct AsyncRequest;
+
+// XBE_GLOBAL(0x001d1c00, 4)
+static const int SyncPriority = 100;   // every FILE_ helper's
+// The game's while the tools count the original at 0x0010da00 as live (FILE_loadsizez's callback, which Ghidra
+// has no function for; only the replaced FILE_loadsizez refers to it).
+// XBE_GLOBAL(0x001d1c0c, 4)
 #define pFILE_malloc       (*(FileMallocFn *)0x001d1c0cu)
-#define pFILE_mfree        (*(FileFreeFn *)0x001d1c10u)
-#define ReadErrorHandler   (*(FsReadErrorFn *)0x001d1c14u)
-#define FileRoot           (*(const char **)0x001d1c28u)    // "D:"
-#define AsyncMutex         ((RealMutex *)0x00242838u)
-#define AsyncGeneration    (*(unsigned *)0x00242858u)
-#define AsyncFreeHead      (*(AsyncRequest **)0x0024285cu)
-#define AsyncFreeTail      (*(AsyncRequest **)0x00242860u)
-#define AsyncCount         (*(int *)0x00242864u)
-#define AsyncRequests      (*(AsyncRequest **)0x00242868u)
+// XBE_GLOBAL(0x001d1c10, 4)
+static FileFreeFn pFILE_mfree;
+// XBE_GLOBAL(0x001d1c14, 4)
+static FsReadErrorFn ReadErrorHandler;
+// XBE_GLOBAL(0x001d1c28, 4)
+static const char *FileRoot = "D:";
+// XBE_GLOBAL(0x00242838, 0x20)
+static RealMutex AsyncMutex;
+// XBE_GLOBAL(0x00242858, 4)
+static unsigned AsyncGeneration;
+// XBE_GLOBAL(0x0024285c, 4)
+static AsyncRequest *AsyncFreeHead;
+// XBE_GLOBAL(0x00242860, 4)
+static AsyncRequest *AsyncFreeTail;
+// XBE_GLOBAL(0x00242864, 4)
+static int AsyncCount;
+// XBE_GLOBAL(0x00242868, 4)
+static AsyncRequest *AsyncRequests;
 #define FsWorkers          (*(FsWorker **)0x00242870u)      // non-zero once initialised
-#define FreeOps            ((LockQueue *)0x00242874u)
-#define BigIdMutex         ((RealMutex *)0x002428acu)
-#define OpRecords          (*(FsOp **)0x002428ccu)          // written once, read by nothing
-#define NextBigId          (*(int *)0x002428d0u)
-#define BigFiles           ((LockQueue *)0x002428d4u)
-#define WorkerExit         (*(volatile int *)0x0024290cu)  // only ever 0: the worker never leaves
-#define SubDirectory       ((const char *)0x00242910u)      // never written: always empty
-#define SlotMutex          ((RealMutex *)0x00242a10u)
-#define SlotCount          (*(int *)0x00242a30u)
-#define Slots              (*(FileSlot **)0x00242a34u)
+// XBE_GLOBAL(0x00242874, 0x38)
+static LockQueue FreeOps;
+// XBE_GLOBAL(0x002428ac, 0x20)
+static RealMutex BigIdMutex;
+// XBE_GLOBAL(0x002428cc, 4)
+static FsOp *OpRecords;                // written once, read by nothing
+// XBE_GLOBAL(0x002428d0, 4)
+static int NextBigId;
+// XBE_GLOBAL(0x002428d4, 0x38)
+static LockQueue BigFiles;
+// XBE_GLOBAL(0x0024290c, 4)
+static volatile int WorkerExit;        // only ever 0: the worker never leaves
+// XBE_GLOBAL(0x00242910, 0x100)
+static char SubDirectory[0x100];       // never written: always empty
+// XBE_GLOBAL(0x00242a10, 0x20)
+static RealMutex SlotMutex;
+// XBE_GLOBAL(0x00242a30, 4)
+static int SlotCount;
+// XBE_GLOBAL(0x00242a34, 4)
+static FileSlot *Slots;
 
 
 static const int kChunk = 0x2000;   // a sync read or write goes as ops of this size
@@ -326,7 +351,7 @@ static FileSlot *SlotOf(int slot) {
 }
 
 static void FILEDEV_init(int count, FileSlot *table) {              // 0x0010d1f0
-    MUTEX_create(SlotMutex);
+    MUTEX_create(&SlotMutex);
     Slots = table;
     SlotCount = count;
 }
@@ -338,15 +363,15 @@ void FILEDEV_setreaderror(FsReadErrorFn handler) {
 }
 
 static int FILEDEV_claim() {                                        // 0x0010d220
-    MUTEX_lock(SlotMutex);
+    MUTEX_lock(&SlotMutex);
     for (int i = 0; i < SlotCount; i++) {
         if (Slots[i].handle == NULL) {
             Slots[i].handle = (HANDLE)1;
-            MUTEX_unlock(SlotMutex);
+            MUTEX_unlock(&SlotMutex);
             return i;
         }
     }
-    MUTEX_unlock(SlotMutex);
+    MUTEX_unlock(&SlotMutex);
     return -1;
 }
 
@@ -601,7 +626,7 @@ static int FILEDEV_resolveopen(const char *path, int mode, int searchBig) {   //
         name[0] = 0;
     }
     if (searchBig && !c.found)
-        Q_foreachlocked(BigFiles, FILEDEV_bigmatch, (int)&c);
+        Q_foreachlocked(&BigFiles, FILEDEV_bigmatch, (int)&c);
     return c.slot;
 }
 
@@ -632,13 +657,13 @@ bool FILESYS_initadr(int numFiles, int cdBuffer, int numOps, void *block) {
         int files = numFiles != 0 ? numFiles : 0x10, ops = numOps != 0 ? numOps : 0x20;
         MEM_fill(block, 0, BlockBytes(files, ops));
         FILEDEV_init(files, (FileSlot *)block);
-        Q_init(FreeOps, NULL, 0);
-        Q_init(BigFiles, NULL, 0);
+        Q_init(&FreeOps, NULL, 0);
+        Q_init(&BigFiles, NULL, 0);
         FsWorkers = (FsWorker *)((uint8_t *)block + files * 16);
         FsOp *op = OpRecords = (FsOp *)((uint8_t *)FsWorkers + 2 * sizeof(FsWorker));
         for (int i = 0; i < ops; i++, op++)
-            Q_pushfront(FreeOps, op);
-        MUTEX_create(BigIdMutex);
+            Q_pushfront(&FreeOps, op);
+        MUTEX_create(&BigIdMutex);
         NextBigId = -1;
     }
     return true;
@@ -670,7 +695,7 @@ static void FILESYS_startworker(int index) {                       // 0x0010cae0
     FsWorker *w = &FsWorkers[index];
     if (w->alive)
         return;
-    Q_lock(FreeOps);
+    Q_lock(&FreeOps);
     w->current = NULL;
     Q_init(&w->pending, FsOpKey, 0);
     Q_init(&w->done, NULL, 0);   // the original copied the pending queue's lock
@@ -683,12 +708,12 @@ static void FILESYS_startworker(int index) {                       // 0x0010cae0
         WaitForSingleObject(w->doneEvent, INFINITE);
         ResetEvent(w->doneEvent);
     }
-    Q_unlock(FreeOps);
+    Q_unlock(&FreeOps);
 }
 
 // A record off the free list, numbered; NULL when all are in use (the original crashed).
 static FsOp *FILESYS_allocop(int type, int priority, int userData, int index) {   // 0x0010cbf0
-    FsOp *op = (FsOp *)Q_popfront(FreeOps);
+    FsOp *op = (FsOp *)Q_popfront(&FreeOps);
     if (op == NULL) {
         printf("FILESYS: out of operation records\n");
         return NULL;
@@ -802,7 +827,7 @@ static void Execute(FsOp *op) {
         break;
     }
     case OP_DELBIG:
-        Q_remove(BigFiles, (void *)op->arg2);
+        Q_remove(&BigFiles, (void *)op->arg2);
         op->status = ST_OK;
         break;
     }
@@ -946,9 +971,9 @@ unsigned FILESYS_addbig(const char *name, int allocFlags, int priority, int user
     BigFile *big = (BigFile *)pFILE_malloc("BigFile", sizeof(BigFile), allocFlags);
     if (big == NULL)
         return 0;
-    MUTEX_lock(BigIdMutex);
+    MUTEX_lock(&BigIdMutex);
     big->id = NextBigId--;
-    MUTEX_unlock(BigIdMutex);
+    MUTEX_unlock(&BigIdMutex);
     big->unused8 = 0;
     big->slot = 0;
     big->dir = NULL;
@@ -965,7 +990,7 @@ unsigned FILESYS_addbig(const char *name, int allocFlags, int priority, int user
 
 // AUTOINJECT
 unsigned FILESYS_delbig(int bigId, int priority, int userData) {
-    BigFile *big = (BigFile *)Q_find(BigFiles, BigIdIs, bigId);
+    BigFile *big = (BigFile *)Q_find(&BigFiles, BigIdIs, bigId);
     if (big == NULL)
         return 0;
     FsOp *op = FILESYS_allocop(OP_DELBIG, priority, userData, 0);
@@ -1072,7 +1097,7 @@ int FILESYS_completeop(unsigned handle) {
         if (big == NULL)
             break;
         if (!(op->flags & OPF_CANCELLED) && op->status == ST_OK) {
-            Q_pushback(BigFiles, big);
+            Q_pushback(&BigFiles, big);
             result = big->id;
         } else {
             if (big->slot != 0)
@@ -1098,7 +1123,7 @@ int FILESYS_completeop(unsigned handle) {
     if (op->flags & OPF_OWNSNAME)
         pFILE_mfree((void *)op->arg2);
     op->handle = 0;
-    Q_pushback(FreeOps, op);
+    Q_pushback(&FreeOps, op);
     return result;
 }
 
@@ -1500,7 +1525,7 @@ int ASYNCFILE_init(int count, int allocFlags) {
     AsyncRequests = AsyncFreeHead = (AsyncRequest *)pFILE_malloc("ASYNCFILE", count * (int)sizeof(AsyncRequest),
                                                                  allocFlags);
     AsyncFreeTail = AsyncRequests + count - 1;
-    MUTEX_create(AsyncMutex);
+    MUTEX_create(&AsyncMutex);
     for (int i = 0; i < count; i++) {
         AsyncRequests[i].id = (unsigned)i;
         AsyncRequests[i].buffer = NULL;
@@ -1515,20 +1540,20 @@ static void ASYNCFILE_free(AsyncRequest *r) {                      // 0x0010b8b0
         pFILE_mfree(r->buffer);
     r->id &= 0xff;
     r->op = 0;
-    MUTEX_lock(AsyncMutex);
+    MUTEX_lock(&AsyncMutex);
     if (AsyncFreeHead != NULL)
         AsyncFreeTail->link = r;
     else
         AsyncFreeHead = r;
     AsyncFreeTail = r;
     r->link = NULL;
-    MUTEX_unlock(AsyncMutex);
+    MUTEX_unlock(&AsyncMutex);
 }
 
 // 1 if the request was live and is now cancelled, else -1.
 // AUTOINJECT
 int ASYNCFILE_cancel(unsigned id) {
-    MUTEX_lock(AsyncMutex);
+    MUTEX_lock(&AsyncMutex);
     AsyncRequest *r = NULL;
     if (id >= 0x100 && (int)(id & 0xff) < AsyncCount && AsyncRequests[id & 0xff].id == id)
         r = &AsyncRequests[id & 0xff];
@@ -1541,7 +1566,7 @@ int ASYNCFILE_cancel(unsigned id) {
         if (op != 0 || !released)
             r->cancelled = 1;
     }
-    MUTEX_unlock(AsyncMutex);
+    MUTEX_unlock(&AsyncMutex);
     if (r != NULL && !was && r->cancelled) {
         if (op != 0)
             FILESYS_cancelop(op);
@@ -1569,6 +1594,6 @@ void ASYNCFILE_restore() {
         THREAD_yield(0);
     }
     pFILE_mfree(AsyncRequests);
-    REALMUTEX_destroy(AsyncMutex);
+    REALMUTEX_destroy(&AsyncMutex);
     AsyncRequests = NULL;
 }

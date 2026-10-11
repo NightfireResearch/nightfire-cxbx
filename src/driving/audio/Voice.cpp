@@ -7,13 +7,15 @@
 #include <bit>
 
 #include "../../helpers.h"
+#include "../data/AttributeContainers.h"   // ExtensionClassMap: the shared tree helpers
 #include "../data/Tree.h"               // TreeThrow
 #include "../engine/UMemory.hpp"
-#include "../platform/RealSystem.h"     // TIMER_gettick
+#include "../platform/RealSystem.h"     // TIMER_gettick, TimerFrequency
 #include "../platform/X87.h"
 #include "../sound/snd/Banks.h"
 #include "../sound/snd/System.h"
 #include "../sound/snd/Voices.h"
+#include "../world/CollisionManager.h"  // WindowMapMin
 
 #pragma fp_contract(off)
 
@@ -22,24 +24,33 @@
 // See Voice.h.
 // ---------------------------------------------------------------------------------------------------------------
 
-// ---- the game's code called by address
-// std::list<T *>'s _Buynode, shared by every list of pointers
-// The tree helpers every map with 0x20-byte nodes shares (identical code folded by the linker), on this file's node
-// type: 0x00053580, 0x000527e0 and 0x00052a20 are the attribute system's ported copies, 0x000bf460 the collision
-// manager's, of their own node types.
-#define VoiceMap_BuyHead ((AVoiceMapNode *(*)())0x00053580)
-#define VoiceMap_Rrotate ((void (__fastcall *)(AVoiceMap *, int, AVoiceMapNode *node))0x000527e0)
-#define VoiceMap_Increment ((void (__fastcall *)(AVoiceMapNode **it, int))0x00052a20)
-#define VoiceMap_Min ((AVoiceMapNode *(*)(AVoiceMapNode *node))0x000bf460)
-
 // ---- globals
-#define LastPlayTick I32_AT(0x00243a98)             // TIMER_gettick at the last PlayVoices
+// XBE_GLOBAL(0x00243a98, 4)
+int32_t LastPlayTick;                               // TIMER_gettick at the last PlayVoices
+// Constructed by the static initialisers (engine/StaticInitTable.cpp)
 #define VoiceInfoMap (*(AVoiceMap *)0x00243a9c)
 #define ActiveViews (*(AVoiceViewList *)0x00243aa8)
-#define FxMode I32_AT(0x001d8100)                   // AFX's current mode; -1: off
-#define TimerTicksPerSecond I32_AT(0x00242424)
 
 namespace {
+
+// The tree helpers every map with 0x20-byte nodes shares (identical code folded by the linker), on this file's node
+// type: the attribute system's (0x00053580, 0x000527e0, 0x00052a20) and the collision manager's (0x000bf460), each
+// ported on its own node type.
+AVoiceMapNode *VoiceMapBuyHead() {
+    return reinterpret_cast<AVoiceMapNode *>(ExtensionClassMap::BuyHead());
+}
+
+void VoiceMapRrotate(AVoiceMap *map, AVoiceMapNode *node) {
+    reinterpret_cast<ExtensionClassMap *>(map)->Rrotate(reinterpret_cast<ExtensionClassNode *>(node));
+}
+
+void VoiceMapIncrement(AVoiceMapNode **it) {
+    reinterpret_cast<ExtensionClassMap::Iterator *>(it)->Inc();
+}
+
+AVoiceMapNode *VoiceMapMin(AVoiceMapNode *node) {
+    return reinterpret_cast<AVoiceMapNode *>(WindowMapMin(reinterpret_cast<WindowMapNode *>(node)));
+}
 
 constexpr uint16_t kUnitPitch = 0x1000;             // 1.0 as SNDpitchmult's 4.12 multiplier
 constexpr int8_t kLoudestFx = 0x7f;
@@ -160,7 +171,7 @@ void AVoice::View::Play(float volume, float pitch, float azimuth, float delay, f
     if (this->delay < 0) {
         if (delay < 0.0f)
             delay = 0.0f;
-        double ticksPerSecond = TimerTicksPerSecond;
+        double ticksPerSecond = TimerFrequency;
         double longest = 1.0 / ticksPerSecond * kLongestDelay;
         if (delay > longest)
             delay = float(longest);
@@ -229,7 +240,7 @@ void AVoice::PlayVoices() {
     if (ActiveViews.size == 0)
         return;
 
-    int fxMode = FxMode;
+    int fxMode = Fx.currentMode;
     bool allVoices = AFX::IsAllVoices();
     SNDSYS_entercritical();
     PointerListNode *head = ActiveViews.head;
@@ -317,7 +328,7 @@ void AVoiceViewList::IncreaseSize(uint32_t count) {
 // FUNC_AT(0x00124710)
 AVoiceMap* AVoiceMap::Construct() {
     allocator = 0;
-    head = VoiceMap_BuyHead();
+    head = VoiceMapBuyHead();
     head->isNil = 1;
     head->parent = head;
     head->left = head;
@@ -437,7 +448,7 @@ AVoiceMapNode** AVoiceMap::InsertAt(AVoiceMapNode **result, bool addLeft, AVoice
                 }
                 x->parent->color = kTreeBlack;
                 x->parent->parent->color = kTreeRed;
-                VoiceMap_Rrotate(this, 0, x->parent->parent);
+                VoiceMapRrotate(this, x->parent->parent);
             }
         } else {
             AVoiceMapNode *uncle = grandparent->left;
@@ -449,7 +460,7 @@ AVoiceMapNode** AVoiceMap::InsertAt(AVoiceMapNode **result, bool addLeft, AVoice
             } else {
                 if (x == parent->left) {
                     x = parent;
-                    VoiceMap_Rrotate(this, 0, x);
+                    VoiceMapRrotate(this, x);
                 }
                 x->parent->color = kTreeBlack;
                 x->parent->parent->color = kTreeRed;
@@ -470,7 +481,7 @@ AVoiceMapNode** AVoiceMap::EraseAt(AVoiceMapNode **result, AVoiceMapNode *where)
     }
     AVoiceMapNode *erased = where;
     AVoiceMapNode *next = where;
-    VoiceMap_Increment(&next, 0);
+    VoiceMapIncrement(&next);
 
     // unlink it: the node that takes its place (pnode), the subtree that moves up (fixnode) and its new parent
     AVoiceMapNode *pnode = erased;
@@ -495,7 +506,7 @@ AVoiceMapNode** AVoiceMap::EraseAt(AVoiceMapNode **result, AVoiceMapNode *where)
         else
             fixparent->right = fixnode;
         if (head->left == erased)
-            head->left = fixnode->isNil ? fixparent : VoiceMap_Min(fixnode);
+            head->left = fixnode->isNil ? fixparent : VoiceMapMin(fixnode);
         if (head->right == erased)
             head->right = fixnode->isNil ? fixparent : AVoiceMapMax(fixnode);
     } else {
@@ -544,7 +555,7 @@ AVoiceMapNode** AVoiceMap::EraseAt(AVoiceMapNode **result, AVoiceMapNode *where)
                 if (pnode->right->color == kTreeBlack) {
                     pnode->left->color = kTreeBlack;
                     pnode->color = kTreeRed;
-                    VoiceMap_Rrotate(this, 0, pnode);
+                    VoiceMapRrotate(this, pnode);
                     pnode = fixparent->right;
                 }
                 pnode->color = fixparent->color;
@@ -557,7 +568,7 @@ AVoiceMapNode** AVoiceMap::EraseAt(AVoiceMapNode **result, AVoiceMapNode *where)
                 if (pnode->color == kTreeRed) {
                     pnode->color = kTreeBlack;
                     fixparent->color = kTreeRed;
-                    VoiceMap_Rrotate(this, 0, fixparent);
+                    VoiceMapRrotate(this, fixparent);
                     pnode = fixparent->left;
                 }
                 if (pnode->isNil)
@@ -575,7 +586,7 @@ AVoiceMapNode** AVoiceMap::EraseAt(AVoiceMapNode **result, AVoiceMapNode *where)
                 pnode->color = fixparent->color;
                 fixparent->color = kTreeBlack;
                 pnode->left->color = kTreeBlack;
-                VoiceMap_Rrotate(this, 0, fixparent);
+                VoiceMapRrotate(this, fixparent);
                 break;
             }
         }

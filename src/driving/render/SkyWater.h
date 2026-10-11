@@ -22,6 +22,10 @@
 #include "../world/CollisionManager.h"    // WindowPaneNode, WindowPaneIterator
 #include "../world/CollisionTypes.h"      // InstanceList
 
+namespace EAGL {
+struct TAR;
+}
+
 namespace CARP {
 class Instance;
 }
@@ -73,7 +77,7 @@ static_assert(sizeof(RWater) == 0x120, "RWater is 0x120 bytes");
 static_assert(offsetof(RWater, scales) == 0x50 && offsetof(RWater, scrolls) == 0xb0 &&
               offsetof(RWater, sunDirection) == 0x110, "RWater layout");
 
-#define TheWater (*(RWater **)0x00201844)                   // RWater::Init's instance
+extern RWater *TheWater;                                    // RWater::Init's instance
 
 class RWindow {
 public:
@@ -88,8 +92,22 @@ void QueueBrokenWindowQuad(const Coord4 *a, const Coord4 *b, const Coord4 *c, co
                            const Coord4 *uvs, bool flush);
 void FUN_000a87e0();                    // naked: EAX a, the rest on the stack
 
+// The window batch: its vertex arrays, its count, and the texture
+constexpr int kWindowVertices = 0x80;
+extern EAGL::TAR *WindowTexture;
+extern Coord4 WindowUVs[kWindowVertices];
+extern Coord4 WindowPositions[kWindowVertices];
+extern int32_t WindowVertexCount;
+extern uint32_t WindowColours[kWindowVertices];
+extern uint32_t WindowColoursCleared;               // the colours' function-local static guard
+
 // The data of RDebris's draws scaled once, by RDebris's constructor (FUN_000a8e80, the name is ours)
 void ScaleDebrisTables();                                                                       // 0x000a8e80
+
+constexpr int kDebrisCountA = 26;
+extern const Coord4 DebrisVectorsA[kDebrisCountA];
+extern float DebrisScaleA;
+extern int32_t DebrisCountB;
 
 // Among RWindow's code the linker placed compiled library code too: WindowPaneMap::Min,
 // WindowPaneIterator::Increment (world/CollisionManager.h) and InstanceList's Deallocate, Tidy and Xlen

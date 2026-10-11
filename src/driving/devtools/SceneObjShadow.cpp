@@ -6,6 +6,7 @@
 
 #include "../eagl/View.h"                 // EAGL::ViewPort
 #include "../engine/UMemory.hpp"          // OperatorNew, OperatorDelete
+#include "../engine/URefCounter.h"        // CarpFileRefs
 #include "../render/RSceneObj.hpp"
 #include "../render/RenderHigh.h"
 #include "../render/Renderer.h"
@@ -115,14 +116,12 @@ typedef RRenderWorldCulling RWC;
 
 // ---- the game's state
 #define GameTick U32_AT(0x001f2a4c)
-#define VisibleList (*(CachedDrawInfo *)0x0023b3c0)
-#define SceneObjStatics ((uint8_t *)0x001f1cf0)
-const uint32_t kSceneObjStaticsBytes = 0x001f2594 - 0x001f1cf0;
 #define RandomSeed U32_AT(0x001c45c4)
-#define AspectScale U32_AT(0x001c47a0)
+// The originals' copies of the port's SceneObjs and AspectScale (RSceneObj.hpp, RenderHigh.h)
+#define OrigSceneObjs (*(SceneObjStatics *)0x001f1cf0)
+#define OrigAspectScale (*(float *)0x001c47a0)
+const uint32_t kSceneObjStaticsBytes = sizeof(SceneObjStatics);
 #define RendererUnknown48 (*(int32_t *)(*(uint8_t **)0x001ebff4 + 0x48))   // RRenderer::unknown48
-#define CarpFileRefsHead (*(RefCounterNode **)0x001f25f8)
-#define CarpFileRefsGuard U32_AT(0x001f2600)
 
 const uint32_t kSceneObjVtable = 0x00191be0;
 const uint32_t kAutonomousObjVtable = 0x0018a398;
@@ -579,17 +578,22 @@ void RunWalk(void *context, bool original) {
     }
 }
 
+// The original from its copy of the statics set to the port's, the copy put back after
+SceneObjStatics g_origStaticsBefore;
+
 void Walk(CachedDrawInfo *list, int index) {
-    memcpy(g_staticsBefore, SceneObjStatics, kSceneObjStaticsBytes);
+    memcpy(g_staticsBefore, &SceneObjs, kSceneObjStaticsBytes);
+    g_origStaticsBefore = OrigSceneObjs;
+    OrigSceneObjs = SceneObjs;
     g_walk[0].list = list;
     g_walk[1].list = list;
     g_cases++;
     bool ok = Guarded(RunWalk, &g_walk[0], true);
-    memcpy(g_walk[0].statics, SceneObjStatics, kSceneObjStaticsBytes);
-    memcpy(SceneObjStatics, g_staticsBefore, kSceneObjStaticsBytes);
+    memcpy(g_walk[0].statics, &OrigSceneObjs, kSceneObjStaticsBytes);
+    OrigSceneObjs = g_origStaticsBefore;
     ok = Guarded(RunWalk, &g_walk[1], false) && ok;
-    memcpy(g_walk[1].statics, SceneObjStatics, kSceneObjStaticsBytes);
-    memcpy(SceneObjStatics, g_staticsBefore, kSceneObjStaticsBytes);
+    memcpy(g_walk[1].statics, &SceneObjs, kSceneObjStaticsBytes);
+    memcpy(&SceneObjs, g_staticsBefore, kSceneObjStaticsBytes);
     if (!ok)
         return;
     CheckBytes("culling walk length", index, &g_walk[0].count, &g_walk[1].count, sizeof(int));
@@ -687,7 +691,7 @@ void RunVisible(void *context, bool original) {
         RSceneObj *o = g_objects[(i * 7) % g_objectCount];
         original ? Orig_SetNowVisible(o, 0) : o->SetNowVisible();
     }
-    memcpy(c->statics, SceneObjStatics, kSceneObjStaticsBytes);
+    memcpy(c->statics, original ? &OrigSceneObjs : &SceneObjs, kSceneObjStaticsBytes);
 }
 
 // SetMapNode over nodes and objects of our own
@@ -783,14 +787,16 @@ void TestWrites() {
     if (g_objectCount > 0) {
         const int kCalls[3] = { 5, 300, 0x1f0 };
         for (int k = 0; k < 3; k++) {
-            memcpy(g_staticsBefore, SceneObjStatics, kSceneObjStaticsBytes);
+            memcpy(g_staticsBefore, &SceneObjs, kSceneObjStaticsBytes);
+            g_origStaticsBefore = OrigSceneObjs;
+            OrigSceneObjs = SceneObjs;
             g_visible[0].calls = kCalls[k];
             g_visible[1].calls = kCalls[k];
             g_cases++;
             bool ok = Guarded(RunVisible, &g_visible[0], true);
-            memcpy(SceneObjStatics, g_staticsBefore, kSceneObjStaticsBytes);
+            OrigSceneObjs = g_origStaticsBefore;
             ok = Guarded(RunVisible, &g_visible[1], false) && ok;
-            memcpy(SceneObjStatics, g_staticsBefore, kSceneObjStaticsBytes);
+            memcpy(&SceneObjs, g_staticsBefore, kSceneObjStaticsBytes);
             if (ok)
                 CheckBytes("SetNowVisible", k, g_visible[0].statics, g_visible[1].statics, kSceneObjStaticsBytes);
         }
@@ -928,7 +934,7 @@ struct SplitCase {
     struct {
         RViewCamera views[RRenderHigh::kMaxViews];
         EAGL::ViewPort viewPorts[RRenderHigh::kMaxViews];
-        uint32_t aspectScale;
+        float aspectScale;
     } out;
 };
 
@@ -956,7 +962,7 @@ void RunSplit(void *context, bool original) {
     RendererUnknown48 = savedLetterbox;
     memcpy(c->out.views, g_views, sizeof(g_views));
     memcpy(c->out.viewPorts, g_viewPorts, sizeof(g_viewPorts));
-    c->out.aspectScale = AspectScale;
+    c->out.aspectScale = original ? OrigAspectScale : AspectScale;
 }
 
 void TestSplitScreens() {
@@ -966,7 +972,7 @@ void TestSplitScreens() {
         return;
     }
     const RViewCamera *live = fgRenderHigh->views[0].view;
-    uint32_t savedAspect = AspectScale;
+    float savedAspect = AspectScale, savedOrigAspect = OrigAspectScale;
     for (uint32_t count = 0; count <= RRenderHigh::kMaxViews; count++) {
         for (int letterbox = 0; letterbox < 2; letterbox++) {
             g_split[0].viewCount = count;
@@ -974,8 +980,9 @@ void TestSplitScreens() {
             g_split[1] = g_split[0];
             g_cases++;
             SplitStart(live);
-            AspectScale = savedAspect;
+            OrigAspectScale = savedAspect;
             bool ok = Guarded(RunSplit, &g_split[0], true);
+            OrigAspectScale = savedOrigAspect;
             SplitStart(live);
             AspectScale = savedAspect;
             ok = Guarded(RunSplit, &g_split[1], false) && ok;
@@ -1013,9 +1020,9 @@ void SceneObjShadow_Run(void) {
     } else {
         printf("[sceneobj] no world - the scene objects skipped\n");
     }
-    if ((CarpFileRefsGuard & 1) != 0 && CarpFileRefsHead != NULL) {
+    if (CarpFileRefs.head != NULL) {   // the port's CarpFileRefs (URefCounter.h), once constructed
         int index = 0;
-        MinOfTree(CarpFileRefsHead->parent, &index);
+        MinOfTree(CarpFileRefs.head->parent, &index);
     }
     TestSplitScreens();
     ResetFpu();

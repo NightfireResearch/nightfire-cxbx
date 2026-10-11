@@ -24,27 +24,86 @@
 // Each function is the original at its address, ported from the listing; calls to the other modules (the platform
 // driver, platform.system's SYNCTASK/REAL_addexit/memclr) are direct, engine.core's dummyNullFunction is called at
 // its address. Function addresses the library stores (the SYNCTASK, the exit hook) are the originals', so what the
-// rest of the program sees is unchanged. The library's globals
-// stay where they are (SndGlobals.h).
+// rest of the program sees is unchanged. The library's shared globals are defined here (SndGlobals.h).
 //
 // devtools/SndSystemShadow.cpp compares the pure helpers, the lists, the heap, the client list and the 100 Hz
 // server (on snapshots of the voices, the platform driver replaced by recording fakes) with the originals.
 // ---------------------------------------------------------------------------------------------------------------
 
-namespace {
+// ---- the shared globals (SndGlobals.h)
+// XBE_GLOBAL(0x00244cc8, 0x120)
+SND::SysOpts SndOptions;
+// XBE_GLOBAL(0x00244de8, 0xe8)
+SND::SysSet SndSavedSet;
+// XBE_GLOBAL(0x00244ed0, 1)
+uint8_t SystemInited;
+// XBE_GLOBAL(0x00244ed1, 1)
+int8_t MasterVolume;
+// XBE_GLOBAL(0x00244ed6, 1)
+int8_t NumUserDataClients;
+// XBE_GLOBAL(0x00244ed7, 1)
+uint8_t MixQuality;
+// XBE_GLOBAL(0x00244ed8, 2)
+int16_t NumVoices;
+// XBE_GLOBAL(0x00244edc, 4)
+uint32_t SndTick;
+// XBE_GLOBAL(0x00244f10, 0x10)
+SND::UserDataClient UserDataClients[4];
+// XBE_GLOBAL(0x00244f2c, 4)
+int (*BankExitHook)(int);
+// XBE_GLOBAL(0x00244f38, 4)
+SndRestoreHook StreamExitHook;
+// XBE_GLOBAL(0x00244f6c, 4)
+SND::MemHeap *SndHeap;
+// XBE_GLOBAL(0x00244f3c, 4)
+SND::Voice *VoiceArray;
+// XBE_GLOBAL(0x00244f40, 4)
+SND::BankSlot *BankArray;
+// XBE_GLOBAL(0x00244f44, 0x28)
+SND::FxBus FxBuses[2];
+// XBE_GLOBAL(0x00244f70, 0x48)
+uint16_t ChannelAzimuth[6][6];
 
-// ---- globals (sound.md 2.6)
-#define CapsResult I32_AT(0x00244c28)                  // what SNDPLATFORM_outputcaps answered
-#define CapsRead U32_AT(0x00244c2c)                    // set once the caps are read
-#define SysTaskAdded U32_AT(0x00244c30)                // systaskadded
-#define CriticalNesting U8_AT(0x00244ed3)              // counts up only
-#define Num100HzClients I8_AT(0x00244ed4)              // never registered
-#define NumServerClients I8_AT(0x00244ed5)
-#define ServerClients100Hz ((SndServerClient *)0x00244ee0)   // [6]
-#define ServerClients ((SndServerClient *)0x00244ef8)        // [6]
-#define RestoreHooks ((SndRestoreHook *)0x00244f20)          // the modules' restore hooks; [3] is BankExitHook
-#define RandomState ((uint32_t *)0x00245978)                 // iSNDrandom's six words
-#define AuthorByte U8_AT(0x001d9d48)                   // a byte of the SNDAUTHOR string, written 'S' by SNDSYSI_init
+// XBE_GLOBAL(0x00244c30, 4)
+uint32_t SysTaskAdded;                         // systaskadded
+
+// ---- the module's globals (sound.md 2.6)
+// XBE_GLOBAL(0x00244c28, 4)
+int32_t CapsResult;                            // what SNDPLATFORM_outputcaps answered
+// XBE_GLOBAL(0x00244c2c, 4)
+uint32_t CapsRead;                             // set once the caps are read
+// XBE_GLOBAL(0x00244ed3, 1)
+uint8_t CriticalNesting;                       // counts up only
+// XBE_GLOBAL(0x00244ed4, 1)
+int8_t Num100HzClients;                        // never registered
+// XBE_GLOBAL(0x00244ed5, 1)
+int8_t NumServerClients;
+// XBE_GLOBAL(0x00244ee0, 0x18)
+SndServerClient ServerClients100Hz[6];
+// XBE_GLOBAL(0x00244ef8, 0x18)
+SndServerClient ServerClients[6];
+// The restore hooks SNDSYS_restore calls besides BankExitHook and StreamExitHook; nothing sets them (names ours)
+// XBE_GLOBAL(0x00244f20, 4)
+SndRestoreHook RestoreHook20;
+// XBE_GLOBAL(0x00244f24, 4)
+SndRestoreHook RestoreHook24;
+// XBE_GLOBAL(0x00244f28, 4)
+SndRestoreHook RestoreHook28;
+// XBE_GLOBAL(0x00244f30, 4)
+SndRestoreHook RestoreHook30;
+// XBE_GLOBAL(0x00244f34, 4)
+SndRestoreHook RestoreHook34;
+// XBE_GLOBAL(0x00245978, 0x18)
+uint32_t RandomState[6];                       // iSNDrandom's six words
+// SNDSYSI_init writes the first byte of the author string
+// XBE_GLOBAL(0x001d9d48, 0x3c)
+char SndAuthor[] = "SNDAUTHOR:  Adamchan, Friday 02:56PM Jun 14, 2002, V7.42.00";
+static_assert(sizeof(SndAuthor) == 0x3c);
+
+// XBE_GLOBAL(0x00244fc0, 0x1c)
+alignas(4) uint8_t SoundMutex[0x1c];          // the CRITICAL_SECTION
+
+namespace {
 
 // The random generator's starting words, + the seed (0x001d9d30 in the original's .rdata)
 const uint32_t kRandomSeeds[6] = { 0xf22d0e56, 0x883126e9, 0xc624dd2f, 0x0702c49c, 0x9e353f7d, 0x6fdf3b64 };
@@ -278,7 +337,7 @@ int SNDSYS_setops(const SND::SysOpts *opts) {
 // From ASystem::ASystem with the 256 KB audio heap: 0, or the platform's (negative) failure.
 // FUNC_AT(0x0013d140)
 int SNDSYSI_init(void *memory, int size) {
-    AuthorByte = 'S';
+    SndAuthor[0] = 'S';
     if (SystemInited != 0)
         return 0;
     memclr(memory, size);
@@ -311,30 +370,30 @@ int SNDSYSI_init(void *memory, int size) {
     int8_t mode = OutputMode;
     SystemInited = 1;
     if (mode == 2) {
-        ChannelAzimuth[2][0] = 0xc000;
-        ChannelAzimuth[2][1] = 0x4000;
+        ChannelAzimuth[1][0] = 0xc000;
+        ChannelAzimuth[1][1] = 0x4000;
     } else {
-        ChannelAzimuth[2][0] = 0xe000;
-        ChannelAzimuth[2][1] = 0x2000;
+        ChannelAzimuth[1][0] = 0xe000;
+        ChannelAzimuth[1][1] = 0x2000;
     }
-    ChannelAzimuth[3][0] = SndOptions.set.speakerAzimuth[3][2];
-    ChannelAzimuth[3][1] = SndOptions.set.speakerAzimuth[3][0];
-    ChannelAzimuth[3][2] = SndOptions.set.speakerAzimuth[3][1];
+    ChannelAzimuth[2][0] = SndOptions.set.speakerAzimuth[3][2];
+    ChannelAzimuth[2][1] = SndOptions.set.speakerAzimuth[3][0];
+    ChannelAzimuth[2][2] = SndOptions.set.speakerAzimuth[3][1];
+    ChannelAzimuth[3][0] = 0xe000;
+    ChannelAzimuth[3][1] = 0x2000;
+    ChannelAzimuth[3][2] = 0xa000;
+    ChannelAzimuth[3][3] = 0x6000;
     ChannelAzimuth[4][0] = 0xe000;
-    ChannelAzimuth[4][1] = 0x2000;
-    ChannelAzimuth[4][2] = 0xa000;
-    ChannelAzimuth[4][3] = 0x6000;
+    ChannelAzimuth[4][1] = 0;
+    ChannelAzimuth[4][2] = 0x2000;
+    ChannelAzimuth[4][3] = 0xa000;
+    ChannelAzimuth[4][4] = 0x6000;
     ChannelAzimuth[5][0] = 0xe000;
     ChannelAzimuth[5][1] = 0;
     ChannelAzimuth[5][2] = 0x2000;
     ChannelAzimuth[5][3] = 0xa000;
     ChannelAzimuth[5][4] = 0x6000;
-    ChannelAzimuth[6][0] = 0xe000;
-    ChannelAzimuth[6][1] = 0;
-    ChannelAzimuth[6][2] = 0x2000;
-    ChannelAzimuth[6][3] = 0xa000;
-    ChannelAzimuth[6][4] = 0x6000;
-    ChannelAzimuth[6][5] = 0;
+    ChannelAzimuth[5][5] = 0;
     SNDI_precalcaztospkrvol();
     return 0;
 }
@@ -353,11 +412,11 @@ int SNDSYS_restore(void) {
     if (SystemInited == 0)
         return -14;
     SNDfxinitbus(0, 0, 0, -1, -1);
-    // the modules' restore hooks, called with no argument in this order (0x00244f20, f24, f28, f34, f38 - the
-    // streams' - and f30) ...
-    static const int kOrder[6] = { 0, 1, 2, 5, 6, 4 };
+    // the modules' restore hooks, called with no argument in this order ...
+    SndRestoreHook *const hooks[6] = { &RestoreHook20, &RestoreHook24, &RestoreHook28, &RestoreHook34,
+                                       &StreamExitHook, &RestoreHook30 };
     for (int i = 0; i < 6; i++) {
-        SndRestoreHook hook = RestoreHooks[kOrder[i]];
+        SndRestoreHook hook = *hooks[i];
         if (hook != NULL)
             hook();
     }

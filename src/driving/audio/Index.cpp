@@ -3,6 +3,7 @@
 #endif
 
 #include "Index.h"
+#include "Bank.h"                       // SharedTree, SharedTreeIterator
 
 #include "../engine/CoreFoundation.h"   // GameEmptyString
 #include "../engine/InputConfig.h"      // BuildFileName
@@ -21,14 +22,8 @@
 // AIndex and its two maps (0x00126d10..0x00127a70), ported from the listings. See Index.h.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The maps' helpers the game shares among its maps (Bank.cpp's SharedTreeIterator::Dec and SharedTree::FindName, on
-// the data layer's node type), by address on this file's node types.
-#define SharedTreeIterator_Dec ((void (__fastcall *)(void *it, int))0x00126bd0)
-#define SharedTree_FindName ((AIndexNameNode **(__fastcall *)(AIndexNameMap *, int, AIndexNameNode **, const char *const *))0x00126cb0)
-
 // The C runtime's.
 #define Crt_sscanf ((int (*)(const char *text, const char *format, ...))0x00133234)
-#define Crt_stricmp ((int (*)(const char *, const char *))0x00134537)
 
 namespace {
 
@@ -70,7 +65,7 @@ AIndexIdInsert* AIndexIdMap::InsertUnique(AIndexIdInsert *result, const AIndexId
             result->inserted = true;
             return result;
         }
-        SharedTreeIterator_Dec(&before, 0);
+        reinterpret_cast<SharedTreeIterator *>(&before)->Dec();
     }
     if (before->value.id < value->id) {
         AIndexIdNode *node;
@@ -114,7 +109,7 @@ AIndexNameInsert* AIndexNameMap::InsertUnique(AIndexNameInsert *result, const AI
     bool addLeft = true;
     for (AIndexNameNode *node = head->parent; !node->isNil; node = addLeft ? node->left : node->right) {
         where = node;
-        addLeft = Crt_stricmp(value->name, node->value.name) < 0;
+        addLeft = _stricmp(value->name, node->value.name) < 0;
     }
     AIndexNameNode *before = where;
     if (addLeft) {
@@ -123,9 +118,9 @@ AIndexNameInsert* AIndexNameMap::InsertUnique(AIndexNameInsert *result, const AI
             result->inserted = true;
             return result;
         }
-        SharedTreeIterator_Dec(&before, 0);
+        reinterpret_cast<SharedTreeIterator *>(&before)->Dec();
     }
-    if (Crt_stricmp(before->value.name, value->name) < 0) {
+    if (_stricmp(before->value.name, value->name) < 0) {
         result->node = InsertAt(addLeft, where, value);
         result->inserted = true;
         return result;
@@ -267,6 +262,7 @@ int AIndex::Lookup(const char *name) {
     if (name == NULL)
         return -1;
     AIndexNameNode *node;
-    SharedTree_FindName(&maps->byName, 0, &node, &name);
+    // The helper the game shares among its maps with the data layer's node type (Bank.cpp)
+    static_cast<SharedTree *>(maps->byName.AsTree())->FindName(reinterpret_cast<TreeNode **>(&node), &name);
     return node == maps->byName.head ? -1 : node->value.id;
 }

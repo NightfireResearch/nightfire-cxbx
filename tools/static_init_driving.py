@@ -22,6 +22,13 @@ objects into lists. This script reads every entry and writes it out as C++:
     time, as a typed table (WeaponDefinition in src/driving/engine/StaticInit.h).
 
 An entry of any other shape stops the script: it is a new kind, to be added here or to HAND below.
+
+Globals we own (an XBE_GLOBAL tag above our own definition, see docs/global-coverage.md) are read from the source
+each run. An object of ours the initialisers construct is named in NAMED below and constructed there. Any other
+store into an owned global is left out, with a comment giving the value it stored: the owner's definition starts
+the variable with that value (the script checks the initialisers it can read and lists the rest). An owned global
+an initialiser reads is replaced by the value it holds at that point, which the script follows from the XBE's data
+and the earlier entries. Rerun the script whenever globals the table touches become ours.
 """
 import os
 import re
@@ -75,6 +82,25 @@ TARGETS = {
     0x00119e80: ("method", "CARP::ResolverMap", "Destruct"),
     0x00119f50: ("method", "StringToNumber", "Construct"),
     0x0011a020: ("method", "StringToNumber", "Destruct"),
+    0x0008d420: ("method", "RRenderWorldCulling", "Construct"),
+    0x0011c210: ("method", "UVolatileMaterial", "Construct"),
+}
+# Objects the initialisers construct that our code names, by address: the name and its class. A constructor or
+# destructor of that class is called on the name; for the globals we own (XBE_GLOBAL) this is what makes the
+# initialisers write our variable rather than the game's copy.
+NAMED = {
+    0x001e23e0: ("gActionNames", "StringToNumber"),            # engine/InputConfig.cpp
+    0x001e4590: ("gUpdateMethodNames", "StringToNumber"),      # engine/InputConfig.cpp
+    0x001e4870: ("GlobalActionQueue", "ActionQueue"),          # engine/GameLoop.cpp
+    0x00243508: ("RequestedFiles", "FileNameList"),            # engine/UFileLoader.cpp
+    0x00243514: ("FilesInBigFile", "FileNameList"),
+    0x002434e4: ("FilesNotInBigFile", "FileNameList"),
+    0x00243580: ("CARP::Resolvers", "CARP::ResolverMap"),      # data/Carp.cpp
+    0x001f2c80: ("fgWorldCulling", "RRenderWorldCulling"),     # render/WorldCulling.h
+}
+# Owned arrays of records that a loop of stores clears: the name, and the field at each record's offset 0.
+NAMED_ARRAYS = {
+    0x001e4488: ("gFeedbackPorts", "users"),                   # engine/Feedback.cpp, FeedbackPort[4]
 }
 # Argument types of the originals' stack arguments, where they are not plain words.
 ARG_TYPES = {
@@ -85,6 +111,7 @@ METHOD_ARGS = {
     ("ActionQueue", "Construct"): ["char *"],
     ("EAGL::ProfilerRegion", "Construct"): ["const char *", "uint32_t"],
     ("StringToNumber", "Construct"): ["StringToNumberEntry *"],
+    ("RRenderWorldCulling", "Construct"): ["float", "float"],
     ("EAGL::RenderMethod", "Construct"): ["EAGL::Packet *", "int", "const void *", "const void **",
                                           "EAGL::VertexShader **", "const uint8_t **", "EAGL::PixelShader **", "const char **",
                                           "uint32_t", "const char *"],
@@ -104,6 +131,45 @@ md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
 md.detail = True
 nonzero, read, entry = gc.read_xbe()
 NAMES = {}
+OWNED = [g for g in gc.read_source()[0] if g["owned"]]
+WRITTEN = {}    # address -> byte: what the entries so far have stored
+LEFT_OUT = []   # (global, the value it starts with as C++ text, the value's bytes)
+
+
+def owned_global(address, size):
+    """The owned global the range falls in, or None; a range that only partly covers one is a new case."""
+    for g in OWNED:
+        if g["address"] < address + size and address < g["address"] + g["size"]:
+            if not (g["address"] <= address and address + size <= g["address"] + g["size"]):
+                raise SystemExit("0x%08x+0x%x covers part of %s: a case this script does not know" %
+                                 (address, size, g["name"]))
+            return g
+    return None
+
+
+def value_bytes(address, size):
+    """The bytes at the address when the entry runs: the last entry's store, or the XBE's data; None if an entry
+    the script does not follow wrote them."""
+    initial = (read(address, size) or b"").ljust(size, b"\0")
+    data = [WRITTEN.get(address + k, initial[k]) for k in range(size)]
+    return None if None in data else bytes(data)
+
+
+def known(data, what):
+    if data is None:
+        raise SystemExit("%s: a value this script does not follow" % what)
+    return data
+
+
+def store(address, data, size=4):
+    for k in range(size if data is None else len(data)):
+        WRITTEN[address + k] = None if data is None else data[k]
+
+
+def left_out(g, text, data):
+    """The comment standing for a store into an owned global."""
+    LEFT_OUT.append((g, text, data))
+    return "// %s = %s: ours (%s)" % (g["name"], text, g["file"].replace("src/driving/", ""))
 
 
 def u32(address):
@@ -146,10 +212,21 @@ def float_literal(value, double):
 
 
 def operand(address, double):
-    """A float operand: a literal when it is a constant in .rdata, otherwise the global."""
-    if RDATA <= address < DATA:
-        return float_literal(f64(address) if double else f32(address), double)
+    """A float operand: a literal when it is a constant in .rdata or a global we own (the value it holds then),
+    otherwise the global."""
+    if RDATA <= address < DATA or owned_global(address, 8 if double else 4):
+        known(value_bytes(address, 8 if double else 4), "0x%08x" % address)
+        return float_literal(operand_value(address, double), double)
     return "%s(0x%08x)" % ("DOUBLE_AT" if double else "FLOAT_AT", address)
+
+
+def operand_value(address, double):
+    data = value_bytes(address, 8 if double else 4)
+    return None if data is None else struct.unpack("<d" if double else "<f", data)[0]
+
+
+def float_bytes(value, double):
+    return struct.pack("<d" if double else "<f", value)
 
 
 def hexw(value):
@@ -191,11 +268,19 @@ def this_call(target, obj, args=()):
     """A __thiscall to target with `this` = obj (an address, or C++ text), and stack arguments (raw words, first
     argument first)."""
     obj_text = hexw(obj) if isinstance(obj, int) else obj
+    if isinstance(obj, int) and obj not in NAMED and owned_global(obj, 1):
+        raise SystemExit("0x%08x: a call on %s, which is ours: add it to NAMED" % (obj, owned_global(obj, 1)["name"]))
     if target in TARGETS:
         _, cls, method = TARGETS[target]
         types = METHOD_ARGS.get((cls, method), [])
         assert len(types) == len(args), (cls, method)
-        return "((%s *)%s)->%s(%s)" % (cls, obj_text, method, ", ".join(map(argument, types, args)))
+        arguments = ", ".join(map(argument, types, args))
+        if isinstance(obj, int) and obj in NAMED:
+            name, named_class = NAMED[obj]
+            if named_class == cls:
+                return "%s.%s(%s)" % (name, method, arguments)
+            return "((%s *)&%s)->%s(%s)" % (cls, name, method, arguments)
+        return "((%s *)%s)->%s(%s)" % (cls, obj_text, method, arguments)
     types = ARG_TYPES.get(target, ["uint32_t"] * len(args))
     THIS_CALLS.setdefault(target, types)
     return "%s((void *)%s, 0%s)" % (callee(target), obj_text, "".join(", " + argument(t, a) for t, a in zip(types, args)))
@@ -270,21 +355,43 @@ def emit(address):
         a = ins[0].operands[0].mem.disp
         d = ins[2].operands[0].mem.disp
         op = {"fadd": "+", "fsub": "-", "fmul": "*", "fdiv": "/"}[mn[1]]
-        left = operand(a, double)
-        right = left if ins[1].operands[0].type == X86_OP_REG else operand(ins[1].operands[0].mem.disp, double)
+        b = a if ins[1].operands[0].type == X86_OP_REG else ins[1].operands[0].mem.disp
+        left, right = operand(a, double), operand(b, double)
+        x, y = operand_value(a, double), operand_value(b, double)
+        data = None if x is None or y is None else \
+            float_bytes({"+": x + y, "-": x - y, "*": x * y, "/": x / y}[op], double)
+        g = owned_global(d, 8 if double else 4)
+        store(d, data, 8 if double else 4)
+        if g:
+            known(data, g["name"])
+            return [left_out(g, float_literal(struct.unpack("<d" if double else "<f", data)[0], double), data)]
         return ["%s(0x%08x) = %s %s %s;" % ("DOUBLE_AT" if double else "FLOAT_AT", d, left, op, right)]
     # fld a ; f<op> b ; call __ftol2 ; mov [d], eax ; ret
     if len(ins) == 5 and mn[0] == "fld" and mn[2] == "call" and ins[2].operands[0].imm == FTOL:
         op = {"fmul": "*", "fdiv": "/"}[mn[1]]
         a, b, d = ins[0].operands[0].mem.disp, ins[1].operands[0].mem.disp, ins[3].operands[0].mem.disp
+        x, y = operand_value(a, False), operand_value(b, False)
+        data = None if x is None or y is None else struct.pack("<i", int(x * y if op == "*" else x / y))
+        g = owned_global(d, 4)
+        store(d, data)
+        if g:
+            known(data, g["name"])
+            return [left_out(g, str(struct.unpack("<i", data)[0]), data)]
         return ["I32_AT(0x%08x) = Ftol((double)%s %s %s);" % (d, operand(a, False), op, operand(b, False))]
     # push colour ; call ColourConvertXBoxToPS2 ; add esp, 4 ; mov [d], eax ; ret
-    if mn == ["push", "call", "add", "mov", "ret"] and ins[1].operands[0].imm == COLOUR:
+    if mn == ["push", "call", "add", "mov", "ret"] and ins[1].operands[0].imm == COLOUR:   # ours, render/Draw.h
         colour = ins[0].operands[0].imm & 0xffffffff
+        if owned_global(ins[3].operands[0].mem.disp, 4):
+            raise SystemExit("a colour conversion into an owned global: a case this script does not know")
+        store(ins[3].operands[0].mem.disp, None)   # not followed
         return ["U32_AT(0x%08x) = ColourConvertXBoxToPS2(0x%08x);" % (ins[3].operands[0].mem.disp, colour)]
     # mov dword [d], imm ; ret
     if mn == ["mov", "ret"]:
         d, v = ins[0].operands[0].mem.disp, ins[0].operands[1].imm & 0xffffffff
+        g = owned_global(d, 4)
+        store(d, struct.pack("<I", v))
+        if g:
+            return [left_out(g, "0x%08x" % v, struct.pack("<I", v))]
         return ["U32_AT(0x%08x) = 0x%08x;" % (d, v)]
     # mov eax, [s] ; mov [d], eax ; ret   (and the four-word copy)
     if all(m == "mov" for m in mn[:-1]) and mn[-1] == "ret" and \
@@ -294,16 +401,30 @@ def emit(address):
             dst, src = i.operands
             if dst.type == X86_OP_REG:
                 regs[dst.reg] = src.mem.disp
+                continue
+            source = regs[src.reg]
+            data = value_bytes(source, 4)
+            g = owned_global(dst.mem.disp, 4)
+            store(dst.mem.disp, data)
+            if g:
+                out.append(left_out(g, "0x%08x" % struct.unpack("<I", known(data, g["name"]))[0], data))
+            elif owned_global(source, 4):
+                known(data, owned_global(source, 4)["name"])
+                out.append("U32_AT(0x%08x) = 0x%08x;   // %s's value" % (dst.mem.disp, struct.unpack("<I", data)[0],
+                                                                          owned_global(source, 4)["name"]))
             else:
-                out.append("U32_AT(0x%08x) = U32_AT(0x%08x);" % (dst.mem.disp, regs[src.reg]))
+                out.append("U32_AT(0x%08x) = U32_AT(0x%08x);" % (dst.mem.disp, source))
         return out
     # push edi ; mov ecx, n ; xor eax, eax ; mov edi, d ; rep stosd ; pop edi ; ret
     if mn == ["push", "mov", "xor", "mov", "rep stosd", "pop", "ret"]:
         n, d = ins[1].operands[1].imm, ins[3].operands[1].imm
-        return ["memset((void *)0x%08x, 0, 0x%x);" % (d, n * 4)]
+        return zero_fill(d, n * 4)
     # push esi ; push edi ; mov ecx, n ; mov esi, s ; mov edi, d ; [push dtor] ; rep movsd ; [call atexit ...]
     if mn[:5] == ["push", "push", "mov", "mov", "mov"] and "rep movsd" in mn:
         n, s, d = ins[2].operands[1].imm, ins[3].operands[1].imm, ins[4].operands[1].imm
+        if owned_global(d, n * 4) or owned_global(s, n * 4):
+            raise SystemExit("a block copy to or from an owned global: a case this script does not know")
+        store(d, value_bytes(s, n * 4), n * 4)
         out = ["memcpy((void *)0x%08x, %s, 0x%x);" % (d, source_block(s, n * 4), n * 4)]
         if "call" in mn:
             push = ins[mn.index("rep movsd") - 1] if mn[mn.index("rep movsd") - 1] == "push" else ins[5]
@@ -316,8 +437,15 @@ def emit(address):
         stride = [i for i in ins if i.mnemonic == "add"][0].operands[1].imm
         offsets = [s.operands[0].mem.disp for s in stores]
         if offsets == list(range(min(offsets), min(offsets) + 4 * len(offsets), 4)) and stride == 4 * len(offsets):
-            return ["memset((void *)0x%08x, 0, 0x%x);" % (base + min(offsets), count * stride)]
+            return zero_fill(base + min(offsets), count * stride)
         assert len(offsets) == 1 and offsets[0] == 0
+        for i in range(count):
+            store(base + i * stride, b"\0\0\0\0")
+        if base in NAMED_ARRAYS:
+            name, field = NAMED_ARRAYS[base]
+            return ["for (int i = 0; i < %d; i++) %s[i].%s = 0;" % (count, name, field)]
+        if owned_global(base, count * stride):
+            raise SystemExit("0x%08x: stores into an owned array not in NAMED_ARRAYS" % base)
         return ["for (int i = 0; i < %d; i++) U32_AT(0x%08x + i * 0x%x) = 0;" % (count, base, stride)]
     # constructors: [push args] ; mov ecx, obj ; [mov [x], imm] ; call ctor ; [push dtor ; mov [o+4], eax ; ...] ;
     # push dtor ; call atexit ; pop ecx ; ret
@@ -326,6 +454,41 @@ def emit(address):
         return constructor(ins)
     raise SystemExit("0x%08x: an initialiser of a shape this script does not know:\n  %s" %
                      (address, "\n  ".join("%s %s" % (i.mnemonic, i.op_str) for i in ins)))
+
+
+def zero_fill(address, size):
+    g = owned_global(address, size)
+    store(address, bytes(size))
+    if g:
+        return [left_out(g, "zero" if size == g["size"] else "zero (0x%x bytes)" % size, bytes(size))]
+    return ["memset((void *)0x%08x, 0, 0x%x);" % (address, size)]
+
+
+def check_left_out():
+    """Every left-out store's value against the owner's initialiser, where the script can read it."""
+    unchecked = []
+    for g, text, data in LEFT_OUT:
+        line = open(os.path.join(REPO, g["file"]), encoding="utf-8").read().splitlines()[g["line"] - 1]
+        m = re.search(r"=\s*([^;{]+);", line.split("//")[0])
+        if data == bytes(len(data)) and not m:
+            continue   # a zero store into a zero-initialised variable
+        try:
+            expression = re.sub(r"(\d+\.\d*(?:e[-+]?\d+)?|\d*\.\d+(?:e[-+]?\d+)?)f\b", r"_f(\1)", m.group(1))
+            value = eval(expression, {"_f": lambda v: struct.unpack("<f", struct.pack("<f", v))[0]})
+        except Exception:
+            unchecked.append("%s (%s:%d)" % (g["name"], g["file"], g["line"]))
+            continue
+        size = len(data)
+        if isinstance(value, float) and size in (4, 8):
+            ok = float_bytes(value, size == 8) == data or struct.pack("<i", int(value)) == data and \
+                "." not in m.group(1)
+        else:
+            ok = struct.pack("<I", int(value) & 0xffffffff) == data
+        if not ok:
+            raise SystemExit("%s (%s:%d) starts as %s, not %s as the initialiser it stands for left it" %
+                             (g["name"], g["file"], g["line"], m.group(1).strip(), text))
+    if unchecked:
+        print("left out, initialisers not checked:", ", ".join(unchecked))
 
 
 def source_block(address, size):
@@ -486,12 +649,17 @@ def main():
             '#include "../eagl/Profiler.h"',
             '#include "../data/Carp.h"',
             '#include "../data/SymbolTable.h"',
+            '#include "../render/Draw.h"',
+            '#include "../render/Materials.h"',
+            '#include "../render/WorldCulling.h"',
+            '#include "Feedback.h"',
             '#include "FileNameList.h"',
+            '#include "GameLoop.h"',
+            '#include "InputConfig.h"',
             '',
             '// ---- the originals the initialisers still call, by address',
             '',
-            '#define CrtAtExit ((int (__cdecl *)(void (__cdecl *)(void)))0x%08x)   // atexit' % ATEXIT,
-            '#define ColourConvertXBoxToPS2 ((uint32_t (__cdecl *)(uint32_t))0x%08x)' % COLOUR]
+            '#define CrtAtExit ((int (__cdecl *)(void (__cdecl *)(void)))0x%08x)   // atexit' % ATEXIT]
     for target in sorted(NAMES):
         if target in ERASERS:
             head.append("#define %s ((void (__fastcall *)(NodeList *, int, void **, void *, void *))0x%08x)   "
@@ -519,6 +687,7 @@ def main():
     head.append("")
     head.append("void RunStaticInitialisers(void) {")
     text = "\n".join(head + body + ["}", ""])
+    check_left_out()
 
     if "--check" in sys.argv:
         current = open(OUT, encoding="utf-8").read() if os.path.exists(OUT) else ""

@@ -234,7 +234,8 @@ static void MATRIX4_rowmult(const float *row, const float *m, float *out) {
     memcpy(out, o, sizeof(o));
 }
 
-static float MatrixScratch[16];   // the original's 0x002420f0, for b == out
+// XBE_GLOBAL(0x002420f0, 0x40)
+static float MatrixScratch[16];   // for b == out
 
 // AUTOINJECT
 void MATRIX4_mult(const void *a, const void *b, void *out) {
@@ -292,33 +293,35 @@ void MATRIX4_axisrotate(const void *axis, float turns, void *out) {
 
 // ---- the random number generator: six words of state, an add-with-carry chain and a counter
 
-// The state stays where the original kept it (0x001d187c, six words, initialised to seedrandom(0)).
-#define S ((uint32_t *)0x001d187cu)
+// XBE_GLOBAL(0x001d187c, 0x18)
+uint32_t RandomWords[6] = {   // as seedrandom(0) leaves them
+    0xf22d0e56, 0x883126e9, 0xc624dd2f, 0x0702c49c, 0x9e353f7d, 0x6fdf3b64,
+};
 
 // FUNC_AT(0x00108a50)
 uint32_t REAL_random() {
-    uint32_t a = S[4] + S[5];
-    uint32_t c = (a < S[5] || a < S[4]);
-    S[4] = a;
-    a = a + S[3] + c; c = a < S[3]; S[3] = a;   // the original's carry test, not a 64-bit add
-    a = a + S[2] + c; c = a < S[2]; S[2] = a;
-    a = a + S[1] + c; c = a < S[1]; S[1] = a;
-    S[0] = S[0] + a + c;
-    if (++S[5] == 0 && ++S[4] == 0 && ++S[3] == 0 && ++S[2] == 0 && ++S[1] == 0)
-        ++S[0];
-    return S[0];
+    uint32_t a = RandomWords[4] + RandomWords[5];
+    uint32_t c = (a < RandomWords[5] || a < RandomWords[4]);
+    RandomWords[4] = a;
+    a = a + RandomWords[3] + c; c = a < RandomWords[3]; RandomWords[3] = a;   // the original's carry test
+    a = a + RandomWords[2] + c; c = a < RandomWords[2]; RandomWords[2] = a;
+    a = a + RandomWords[1] + c; c = a < RandomWords[1]; RandomWords[1] = a;
+    RandomWords[0] = RandomWords[0] + a + c;
+    if (++RandomWords[5] == 0 && ++RandomWords[4] == 0 && ++RandomWords[3] == 0 && ++RandomWords[2] == 0 &&
+        ++RandomWords[1] == 0)
+        ++RandomWords[0];
+    return RandomWords[0];
 }
 
 // AUTOINJECT
 void seedrandom(uint32_t seed) {
-    S[0] = seed + 0xf22d0e56;
-    S[1] = S[0] - 0x69fbe76d;
-    S[2] = S[1] + 0x3df3b646;
-    S[3] = S[2] + 0x40dde76d;
-    S[4] = S[3] - 0x68cd851f;
-    S[5] = S[4] + 0xd1a9fbe7;
+    RandomWords[0] = seed + 0xf22d0e56;
+    RandomWords[1] = RandomWords[0] - 0x69fbe76d;
+    RandomWords[2] = RandomWords[1] + 0x3df3b646;
+    RandomWords[3] = RandomWords[2] + 0x40dde76d;
+    RandomWords[4] = RandomWords[3] - 0x68cd851f;
+    RandomWords[5] = RandomWords[4] + 0xd1a9fbe7;
 }
-#undef S
 
 // In [0, 1), exact (unrounded).
 // AUTOINJECT
@@ -683,9 +686,8 @@ bool FindOBBIntersect(const void *halfExtents, const void *from, const void *to,
     }
     for (int i = 0; i < 3; i++)
         a[i] = (t[i] < 0) ? -t[i] : t[i];
-    const float *zero = (const float *)0x00243030u;   // the game's zero vector, never written
     for (int n = 3; n > 0; n--) {
-        memcpy(big, zero, 12);
+        big[0] = big[1] = big[2] = 0.0f;
         int k = (a[0] < a[1] && a[0] < a[2]) ? 0 : (a[1] < a[2]) ? 1 : 2;
         VU0_v4scale(dir, t[k], scaled);
         big[k] = FloatBits(0x4e6e6b28);   // 1e9

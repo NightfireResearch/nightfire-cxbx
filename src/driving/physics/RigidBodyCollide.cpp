@@ -39,7 +39,6 @@
 #define Sim ((void *)0x00233ff0)                    // the Simulation
 #define SimTimeStep FLOAT_AT(0x00234e30)            // the simulation's step, in seconds
 #define SimStepCount U32_AT(0x00234e34)             // the Simulation's steps so far
-#define DefaultVector (*(const Coord4 *)0x001d4c00) // (0, 0, 0, 1)
 
 namespace {
 
@@ -362,7 +361,7 @@ void RigidBody::CollideWithWorld() {
 
             Coord4 segment[2] = { origin, point };
             WorldCollisionInfo hit = {};
-            hit.point = DefaultVector;
+            hit.point = {0.0f, 0.0f, 0.0f, 1.0f};
             fgCollisionMgr->barrierMask = kBodyBarrierMask;
             bool collided = owner->collider->GetWorldNormal(segment, &hit) ||
                             fgCollisionMgr->GetCylObjectCollision(segment, &cylinders, &hit);

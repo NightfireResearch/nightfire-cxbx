@@ -35,42 +35,18 @@
 // devtools/AnimShadow.cpp builds every anim in every bank with both and compares what they evaluate.
 // ---------------------------------------------------------------------------------------------------------------
 
+// XBE_GLOBAL(0x002414b0, 0x470)
+MemoryPool Pool;
+// XBE_GLOBAL(0x00241b80, 4)
+void *FactoryBlock;
+
 namespace {
-
-
-// A free block's first word links the next.
-struct FreeBlock {
-    FreeBlock *next;
-};
-
-// MemoryPoolManager's statics, at 0x002414b0. A size-classed block has its class in the dword before it.
-struct MemoryPool {
-    FreeBlock *freeByType[kAnimTypeCount];   // +0x000 free objects per anim type
-    uint32_t unknown58;
-    uint16_t unknown5c;              // +0x5c cleared by Init
-    uint16_t unknown5e;
-    uint8_t *base;                   // +0x60
-    uint32_t size;                   // +0x64
-    uint8_t *cursor;                 // +0x68 the next new block
-    uint32_t unknown6c;
-    FreeBlock *freeBySize[256];      // +0x70 free blocks per 16-byte size class
-};
-static_assert(offsetof(MemoryPool, base) == 0x60, "the pool's base is at 0x00241510");
-static_assert(sizeof(MemoryPool) == 0x470, "the pool's free lists run to 0x00241920");
-
-#define Pool (*(MemoryPool *)0x002414b0)
-#define FactoryBlock PTR_AT(0x00241b80)
 
 // The object size of each anim type (a table only the pool reads)
 constexpr uint16_t kBlockSizes[kAnimTypeCount] = {
     0x14, 0x18, 0x14, 0x1c, 0x2c, 0x14, 0x80, 0x1c, 0x80, 0x5c, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x14, 0x30, 0x40,
     0x30, 0x30, 0x30,
 };
-
-// The names the allocations and the bank type are registered under: the original's strings, the pointers kept
-#define PoolName ((const char *)0x001ceadc)                 // "EAGLAnim Memory Pool"
-#define FactoryName ((const char *)0x001ceb30)              // "EAGLAnim::FnAnimFactory new"
-#define BankTypeName ((const char *)0x001a0a04)             // "AnimationBank"
 
 // The game's vtables, which the objects keep
 #define VtFnAnim ((const void *)0x001a0c6c)
@@ -186,7 +162,7 @@ void AnimPool_ResetPool() {
 // FUNC_AT(0x000f7d00)
 void AnimPool_Init(uint32_t size) {
     Pool.size = size;
-    Pool.base = static_cast<uint8_t *>(EaglMalloc(size, PoolName));
+    Pool.base = static_cast<uint8_t *>(EaglMalloc(size, "EAGLAnim Memory Pool"));
     Pool.cursor = Pool.base;
     memset(Pool.freeBySize, 0, sizeof(Pool.freeBySize));
     memset(Pool.freeByType, 0, sizeof(Pool.freeByType));
@@ -257,8 +233,8 @@ FnAnim* AnimPool_Construct(uint16_t type) {
 // FUNC_AT(0x000fa9c0)
 void EAGLAnim_InitInternal(uint32_t poolSize) {
     AnimPool_Init(poolSize);
-    FactoryBlock = EaglMalloc(1, FactoryName);
-    TheConstructorPool.AddType(BankTypeName, (void *)0x000f7170, (void *)0x000f71a0);
+    FactoryBlock = EaglMalloc(1, "EAGLAnim::FnAnimFactory new");
+    TheConstructorPool.AddType("AnimationBank", (void *)0x000f7170, (void *)0x000f71a0);
 }
 
 // FUNC_AT(0x000faa00)
@@ -285,7 +261,7 @@ void EAGLAnim_ResetPool() {
 
 // FUNC_AT(0x000faa50)
 void EAGLAnim_ShutDown() {
-    TheConstructorPool.RemoveType(BankTypeName);
+    TheConstructorPool.RemoveType("AnimationBank");
     ScratchBuffer_FreeScratchBuffers();
     if (FactoryBlock != NULL)
         EaglFree(FactoryBlock, 1);

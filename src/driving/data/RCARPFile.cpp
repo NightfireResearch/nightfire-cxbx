@@ -4,6 +4,7 @@
 
 #include "RCARPFile.h"
 #include "Carp.h"
+#include "AttributeSystem.h"
 #include "../eagl/GameCallbacks.h"
 #include "../eagl/Loader.h"
 #include "../engine/UFileLoader.h"
@@ -11,6 +12,7 @@
 #include "../platform/RealPrint.h"
 #include "../../common/xbeOverload.h"
 #include "../../helpers.h"
+#include "../logging.h"   // dbg_wprintf, our printf
 #include "../engine/CoreFoundation.h"
 #include "../engine/InputConfig.h"   // BuildFileName
 #include "../engine/UGroup.h"
@@ -32,24 +34,36 @@
 // Other packages' functions not ported yet, called at their addresses.
 
 #define EhVectorConstructor ((void (__stdcall *)(void *, uint32_t, uint32_t, uint32_t))0x00022770)
-#define Crt_printf ((int (*)(const char *, ...))0x00132192)
 #define Crt_atexit ((int (*)(void (*)()))0x00132a7b)
 
-#define Symbols (*(USymbolTable **)0x001ebcdc)
-#define CurrentCarpName (*(const char **)0x001ebce0)   // the file being resolved: lighting is per file
-#define MaterialData PTR_AT(0x001ebce4)
-#define Callbacks ((SymbolCallback *)0x001ebce8)       // [16]
-#define CharNamespace (*(UCharNamespace *)0x001ebd60)
-#define CharNamespaceGuard U32_AT(0x001ebd64)
-#define Bond (*(uint8_t **)0x001e464c)                 // its symbol table pointer at 0x64
+// XBE_GLOBAL(0x001ebcdc, 0x4)
+USymbolTable *Symbols;
+// XBE_GLOBAL(0x001ebce0, 0x4)
+const char *CurrentCarpName;   // the file being resolved: lighting is per file
+// XBE_GLOBAL(0x001ebce4, 0x4)
+void *MaterialData;   // LoadEAGLMaterials' file
+// XBE_GLOBAL(0x001ebce8, 0x40)
+SymbolCallback Callbacks[16];
+// XBE_GLOBAL(0x001ebd60, 0x4)
+UCharNamespace CharNamespace;
+// XBE_GLOBAL(0x001ebd64, 0x4)
+uint32_t CharNamespaceGuard;
 #define EaglAllocate (*(void *(**)(uint32_t, const char *))0x001caf68)   // EAGL's allocator hooks
 #define EaglFree (*(void (**)(void *, uint32_t))0x001caf6c)
-#define Colours (*(uint32_t **)0x001ebd2c)
-#define ShadowAnim ((float *)0x001ebd50)               // [3]
-#define CarShadowColour ((uint32_t *)0x001ebd30)       // [4], a function-local static
-#define CarShadowColourGuard U32_AT(0x001ebd40)
-#define TextureNames ((const char **)0x001c3ec0)       // "TEX0".."TEX9"
-#define MaterialFiles ((const char **)0x001c3f04)      // "eaglrm.o", "bondrm.o", null
+// XBE_GLOBAL(0x001ebd2c, 0x4)
+uint32_t *Colours;
+// XBE_GLOBAL(0x001ebd50, 0xc)
+float ShadowAnim[3];
+// XBE_GLOBAL(0x001ebd30, 0x10)
+uint32_t CarShadowColour[4];   // a function-local static
+// XBE_GLOBAL(0x001ebd40, 0x4)
+uint32_t CarShadowColourGuard;
+// XBE_GLOBAL(0x001c3ec0, 0x28)
+static const char *const TextureNames[10] = {
+    "TEX0", "TEX1", "TEX2", "TEX3", "TEX4", "TEX5", "TEX6", "TEX7", "TEX8", "TEX9",
+};
+// XBE_GLOBAL(0x001c3f04, 0xc)
+static const char *const MaterialFiles[3] = {"eaglrm.o", "bondrm.o", NULL};
 
 // The game's data RegisterSymbols hands out by address.
 #define SwitchData ((uint8_t *)0x001f2a50)             // 16-byte entries
@@ -133,7 +147,7 @@ void GlobalSymbolTable::Init() {
     }
     Symbols->AddNamespace("CHAR", &CharNamespace);
     Symbols->AddNamespace("DATA", &CharNamespace);
-    *reinterpret_cast<USymbolTable **>(Bond + 0x64) = Symbols;
+    AttributeSystemInstance->symbolTable = Symbols;
 }
 
 // FUNC_AT(0x0007af50)
@@ -313,7 +327,7 @@ void* RCARPFile::RegisterSymbols(const char *name, bool *found) {
     if (Is(name, "EAGL::EnvironmentMap")) {
         void *texture = TheTextureContextManager->FindOrCreateTexture(kTextureReflection, 4);
         if (texture == NULL) {
-            Crt_printf("UNABLE TO FIND REFLECTION MAP IN TEXTURE FILE\n");
+            dbg_wprintf("UNABLE TO FIND REFLECTION MAP IN TEXTURE FILE\n");
             TheTextureContextManager->NewContext("data\\render\\ext.xsh", 5);
             texture = TheTextureContextManager->FindOrCreateTexture(kTextureReflection, 5);
         }
@@ -472,7 +486,7 @@ void RCARPFile::Destruct() {
 
 // FUNC_AT(0x0007bc90)
 void RCARPFile::LoadEAGLMaterials() {
-    for (const char **file = MaterialFiles; *file != NULL; file++) {
+    for (const char *const *file = MaterialFiles; *file != NULL; file++) {
         char path[64];
         BuildFileName(path, 0, "data\\render\\", *file, "");
         MaterialData = UFileLoader::FileLoadz(path, 0);

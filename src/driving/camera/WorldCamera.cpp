@@ -127,20 +127,30 @@ struct SceneObjDescFields {
 #define SimGrenades (*(GameVector<Grenade *> *)0x00234e9c)
 #define SimShells (*(GameVector<ShellFields *> *)0x00234eac)
 #define GameTick U32_AT(0x001f2a4c)                             // the game's tick (RGlareManager.cpp's GlareTick)
-#define IdentityMatrix4 (*(const MATRIX4 *)0x001d4c10)
 // GetAnchorMatrix4's matrix, made the identity on its first call (a function-local static and its guard)
-#define AnchorMatrix (*(MATRIX4 *)0x001f2d20)
-#define AnchorMatrixGuard U32_AT(0x001f2d60)
-#define AnchorNoPosition (*(Coord3 *)0x001c47f0)                // zero (names ours)
-#define AnchorNoVelocity (*(Coord3 *)0x001c4800)
-#define HeadlightsEnabled (*(bool *)0x001c4618)                 // "Enable headlights"
+// XBE_GLOBAL(0x001f2d20, 0x40)
+alignas(16) MATRIX4 AnchorMatrix;
+// XBE_GLOBAL(0x001f2d60, 4)
+uint32_t AnchorMatrixGuard;
+// The anchor's position and velocity without one (names ours): zero, w 1; the callers read all four words
+// XBE_GLOBAL(0x001c47f0, 0x10)
+alignas(16) Coord4 AnchorNoPosition = { 0.0f, 0.0f, 0.0f, 1.0f };
+// XBE_GLOBAL(0x001c4800, 0x10)
+alignas(16) Coord4 AnchorNoVelocity = { 0.0f, 0.0f, 0.0f, 1.0f };
+// XBE_GLOBAL(0x001c4618, 1)
+static bool HeadlightsEnabled = true;                   // "Enable headlights"
+// XBE_GLOBAL(0x001b6638, 8)
 #define OffOnNames ((const char *const *)0x001b6638)            // "Off", "On"
-#define PostProcessingEnabled BOOL8_AT(0x001c4620)              // (names ours)
+// XBE_GLOBAL(0x001c4620, 1)
+static bool PostProcessingEnabled = true;               // (names ours)
 #define CullDistance FLOAT_AT(0x001c4624)                       // ESetCullDistanceFactor's; 400
 #define WorldViewMade BOOL8_AT(0x001f2c50)                      // set by RRenderWorldCamera; RVehicle::Render reads it
-#define ParticleSystemsUnknown U32_AT(0x001ec46c)
+// XBE_GLOBAL(0x001ec46c, 4)
+static uint32_t ParticleSystemsUnknown;
+// XBE_GLOBAL(0x001ef0c0, 0x2c08)
 #define Pass0Draws ((CachedDrawInfo *)0x001ef0c0)               // pass 0 of the track's draws, drawn last
-#define Pass1Draws ((CachedDrawInfo *)0x001ec4b8)               // pass 1, drawn after the cars (names ours)
+// XBE_GLOBAL(0x001ec4b8, 0x2c08)
+static CachedDrawInfo Pass1Draws;                       // pass 1, drawn after the cars (names ours)
 // The render managers not ported yet (the others are in their headers)
 #define MissileCam (*(void **)0x00200f54)
 #define SniperZoom (*(void **)0x00201818)
@@ -381,7 +391,10 @@ void RWorldCamera::GetAnchorAcceleration(Coord4 *acceleration) {
 // FUNC_AT(0x000973c0)
 MATRIX4* RWorldCamera::GetAnchorMatrix4() {
     if (!(AnchorMatrixGuard & 1)) {
-        AnchorMatrix = IdentityMatrix4;
+        AnchorMatrix = { { { 1.0f, 0.0f, 0.0f, 0.0f },
+                           { 0.0f, 1.0f, 0.0f, 0.0f },
+                           { 0.0f, 0.0f, 1.0f, 0.0f },
+                           { 0.0f, 0.0f, 0.0f, 1.0f } } };
         AnchorMatrixGuard |= 1;
     }
     PhysicsObject *object = ValidAnchor();
@@ -397,7 +410,7 @@ MATRIX4* RWorldCamera::GetAnchorMatrix4() {
 Coord3* RWorldCamera::GetAnchorPosition() {
     PhysicsObject *object = ValidAnchor();
     if (object == NULL)
-        return &AnchorNoPosition;
+        return reinterpret_cast<Coord3 *>(&AnchorNoPosition);
     if (!(object->flags & PhysicsObject::kSimpleBody))
         return &RigidBodyOf(object)->position;
     return &SimpleBodyOf(object)->position;
@@ -438,7 +451,7 @@ double RWorldCamera::GetAnchorRenderOffset() {
 Coord3* RWorldCamera::GetAnchorLinearVelocity() {
     PhysicsObject *object = ValidAnchor();
     if (object == NULL)
-        return &AnchorNoVelocity;
+        return reinterpret_cast<Coord3 *>(&AnchorNoVelocity);
     if (object->flags & PhysicsObject::kSimpleBody)
         return &SimpleBodyOf(object)->velocity;
     AIVehicle *vehicle = AIVehicleOf(SimCars.first[0]);
@@ -839,7 +852,7 @@ void RRenderWorldCamera::DoRender() {
         ActorDatabase->SetupFOVConversions(this);
     DrawStaticWorldGeometry(list);
     fgRender->CopyDrawPasses(list, Pass0Draws, 0, 0);
-    fgRender->CopyDrawPasses(list, Pass1Draws, 1, 1);
+    fgRender->CopyDrawPasses(list, &Pass1Draws, 1, 1);
     if (ActorDatabase != NULL)
         ActorDatabase->DrawAll(this, false, false);
 
@@ -854,7 +867,7 @@ void RRenderWorldCamera::DoRender() {
 
     Fog->EnableFog();
     RRenderSharedData::SendPerViewPort();
-    fgRender->DrawPass(Pass1Draws, 1, 1, 2);
+    fgRender->DrawPass(&Pass1Draws, 1, 1, 2);
     Fog->DisableFog();
     if (ActorDatabase != NULL)
         ActorDatabase->DrawActorWeapons(this, false);

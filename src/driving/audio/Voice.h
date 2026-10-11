@@ -77,6 +77,8 @@ static_assert(offsetof(AVoice::View, delay) == 0x14, "View::delay");
 static_assert(offsetof(AVoice::View, finished) == 0x19, "View::finished");
 static_assert(sizeof(AVoice) == 0x58, "AVoice is 88 bytes");
 
+extern int32_t LastPlayTick;        // TIMER_gettick at the last PlayVoices
+
 // ---- the active views: std::list<AVoice::View *> (0x00243aa8)
 
 struct AVoiceViewList : PointerList {

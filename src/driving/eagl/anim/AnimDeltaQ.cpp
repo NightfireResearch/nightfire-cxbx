@@ -34,12 +34,15 @@
 // bits).
 // ---------------------------------------------------------------------------------------------------------------
 
+// XBE_GLOBAL(0x00241ae0, 4)
+float SingleQAngleRange = 6.28318548f;                      // pi - -pi, as the static initialisers computed it
+
 namespace {
 
 #define VtDeltaSingleQ ((const void *)0x001a1360)
 #define VtDeltaQFast ((const void *)0x001a13e0)
 #define VtDeltaQ ((const void *)0x001a1450)
-#define SingleQAngleRange FLOAT_AT(0x00241ae0)              // set at run time (2 pi, presumably)
+static_assert(std::bit_cast<uint32_t>(6.28318548f) == 0x40c90fdb, "twice the original's pi");
 
 // The dequantisation scales, the original's .rdata floats (1 and 0 are exact)
 constexpr float kOneOver255 = 1.0f / 255;                   // 0x001a1348 (doubled), 0x001a1440

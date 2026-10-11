@@ -13,6 +13,7 @@
 #include "../world/RoadNetwork.h"
 #include "../../common/xbeOriginal.h"
 #include "../world/World.h"
+#include "../render/TimeData.h"
 
 #include <windows.h>
 #include <math.h>
@@ -278,15 +279,81 @@ __declspec(naked) void CallDirections(LightBlock *, const RLightAngles *) {
 
 // ---- the game's state the tests read and write
 
-#define GameTick (*(uint32_t *)0x001f2a4c)
-#define SavedLights (*(RPositionalLights *)0x001ec268)
 #define ColorizeMode (*(int32_t *)(*(uint8_t **)0x001f6898 + 0x30))
 #define RandomSeed (*(uint32_t *)0x001c45c4)
 #define RandomMultiplier (*(uint32_t *)0x001c45c8)
-uint8_t *const kLightTables = reinterpret_cast<uint8_t *>(0x001c4080);     // explosion and missile types
-const size_t kLightTablesSize = 0xf0;
-uint8_t *const kLightIndices = reinterpret_cast<uint8_t *>(0x001ec2e8);    // the dbindex values and flag bytes
-const size_t kLightIndicesSize = 0x14;
+
+// The originals' copies of the port's globals (render/Lights.h, PathEngine.h, DebugView.h): the originals' pass
+// reads and writes these, set from the port's when it starts
+bool g_original;
+#define OrigSavedLights (*(RPositionalLights *)0x001ec268)
+#define OrigLightTypes ((RLightType *)0x001c4080)                // the explosion types, then the missile types
+#define OrigLightIndices (*(LightIndices *)0x001ec2e8)
+#define OrigPathHandles (*(PathList **)0x001ec300)
+#define OrigPathIterator (*(PathListNode **)0x001ec308)
+#define OrigDebugViewEnabled (*(bool *)0x001ec484)
+#define OrigDebugSpeedFraction (*(float *)0x001c45d4)
+// This pass's
+#define SavedLights (g_original ? OrigSavedLights : SavedPositionalLights)
+#define PathHandles (g_original ? OrigPathHandles : fgPathHandles)
+#define PathIterator (g_original ? OrigPathIterator : fgPathIterator)
+
+// The dbindex values and flag bytes, as the original lays them out
+struct LightIndices {
+    uint32_t missileType;
+    uint8_t typeColourFlag;
+    uint8_t pad05[3];
+    uint32_t explosionType;
+    uint8_t light2ColourFlag;
+    uint8_t light1ColourFlag;
+    uint8_t groundColourFlag;
+    uint8_t skyColourFlag;
+    uint32_t environment;
+};
+static_assert(sizeof(LightIndices) == 0x14, "the indices are 0x14 bytes");
+
+struct LightTables {
+    RLightType types[10];            // the explosion types, then the missile types
+    LightIndices indices;
+};
+
+void TakeTables(LightTables *t) {
+    memset(t, 0, sizeof(*t));
+    if (g_original) {
+        memcpy(t->types, OrigLightTypes, sizeof(t->types));
+        t->indices = OrigLightIndices;
+        memset(t->indices.pad05, 0, sizeof(t->indices.pad05));
+        return;
+    }
+    memcpy(t->types, ExplosionTypes, sizeof(ExplosionTypes));
+    memcpy(t->types + 5, MissileTypes, sizeof(MissileTypes));
+    t->indices.missileType = MissileTypeIndex;
+    t->indices.typeColourFlag = TypeColourFlag;
+    t->indices.explosionType = ExplosionTypeIndex;
+    t->indices.light2ColourFlag = Light2ColourFlag;
+    t->indices.light1ColourFlag = Light1ColourFlag;
+    t->indices.groundColourFlag = GroundColourFlag;
+    t->indices.skyColourFlag = SkyColourFlag;
+    t->indices.environment = EnvironmentIndex;
+}
+
+void PutTables(const LightTables *t) {
+    if (g_original) {
+        memcpy(OrigLightTypes, t->types, sizeof(t->types));
+        OrigLightIndices = t->indices;
+        return;
+    }
+    memcpy(ExplosionTypes, t->types, sizeof(ExplosionTypes));
+    memcpy(MissileTypes, t->types + 5, sizeof(MissileTypes));
+    MissileTypeIndex = t->indices.missileType;
+    TypeColourFlag = t->indices.typeColourFlag;
+    ExplosionTypeIndex = t->indices.explosionType;
+    Light2ColourFlag = t->indices.light2ColourFlag;
+    Light1ColourFlag = t->indices.light1ColourFlag;
+    GroundColourFlag = t->indices.groundColourFlag;
+    SkyColourFlag = t->indices.skyColourFlag;
+    EnvironmentIndex = t->indices.environment;
+}
 
 struct LightState {
     uint8_t manager[sizeof(RLightManager)];
@@ -577,7 +644,7 @@ void TestHighLevel(Rng &rng) {
 // The constructor and the deleting destructor on a buffer of ours. The heap pointers are logged by what they
 // point at.
 alignas(16) uint8_t g_managerBuffer[sizeof(RLightManager)];
-std::vector<uint8_t> g_tables, g_indices;
+LightTables g_tables;
 
 void TestConstruction() {
     if (TuningDBMgr == NULL || TuningDBMgr->file != NULL) {
@@ -599,8 +666,10 @@ void TestConstruction() {
     memset(copy + offsetof(RLightManager, pendingLights), 0, 8);
     memset(copy + offsetof(RLightManager, lightBlock), 0, 4);
     LogBytes(" manager", copy, sizeof(copy));
-    LogBytes(" tables", kLightTables, kLightTablesSize);
-    LogBytes(" indices", kLightIndices, kLightIndicesSize);
+    LightTables tables;
+    TakeTables(&tables);
+    LogBytes(" tables", tables.types, sizeof(tables.types));
+    LogBytes(" indices", &tables.indices, sizeof(tables.indices));
     if (result == m) {
         Guarded("RLightManager::scalar_deleting_destructor", [&] { result = DeleteAt(m, 0, 0); });
         memcpy(copy, m, sizeof(copy));
@@ -609,8 +678,7 @@ void TestConstruction() {
         Logf("delete %d", result == m);
         LogBytes(" manager", copy, sizeof(copy));
     }
-    memcpy(kLightTables, g_tables.data(), kLightTablesSize);
-    memcpy(kLightIndices, g_indices.data(), kLightIndicesSize);
+    PutTables(&g_tables);
 }
 
 // ---- path handles: copies of the live ones
@@ -685,7 +753,7 @@ void TestHandles(Rng &rng) {
                 h->currentPath = NULL;
             if (rng.Chance(30))
                 h->master = NULL;
-            float now = float(double(h->lastUpdateTime) / (60.0 * (*(float *)0x001f2a48))) + rng.Range(-2.0f, 2.0f);
+            float now = float(double(h->lastUpdateTime) / (60.0 * TickSeconds)) + rng.Range(-2.0f, 2.0f);
             for (int step = 0; step < 6; step++) {
                 if (step != 2)
                     now += rng.Range(0.0f, 3.0f);
@@ -747,7 +815,7 @@ int IndexOf(const void *p, const void *base, size_t size, size_t count) {
 int NodeIndex(const RPathHandle *handle) {
     if (handle == NULL)
         return -1;
-    PathList *list = fgPathHandles;
+    PathList *list = PathHandles;
     if (list == NULL)
         return -3;
     int i = 0;
@@ -758,7 +826,7 @@ int NodeIndex(const RPathHandle *handle) {
 }
 
 void LogList(const char *what) {
-    PathList *list = fgPathHandles;
+    PathList *list = PathHandles;
     if (list == NULL) {
         Logf("%s: no list", what);
         return;
@@ -781,7 +849,7 @@ void LogList(const char *what) {
 }
 
 void TestLiveList() {
-    PathListNode *iterator = fgPathIterator;
+    PathListNode *iterator = PathIterator;
     Guarded("live iteration", [&] {
         int n = 0;
         for (RPathHandle *h = GetFirstAt(); h != NULL && n < 4000; h = GetNextAt(), n++)
@@ -794,16 +862,16 @@ void TestLiveList() {
         CARP::Instance none = {};
         Logf("lookup none: %d", NodeIndex(GetPathHandleAt(&none)));
     });
-    fgPathIterator = iterator;
+    PathIterator = iterator;
 }
 
 void TestOwnList(Rng &rng) {
-    PathList *liveList = fgPathHandles;
-    PathListNode *liveIterator = fgPathIterator;
+    PathList *liveList = PathHandles;
+    PathListNode *liveIterator = PathIterator;
     g_instances = g_instancesPristine;
     g_states = g_statesPristine;
     uint32_t count = uint32_t(g_instances.size());
-    fgPathHandles = NULL;
+    PathHandles = NULL;
 
     float time = rng.Range(0.0f, 20000.0f);
     if (count > 0) {
@@ -848,9 +916,9 @@ void TestOwnList(Rng &rng) {
     Guarded("DestroyPathHandle", [&] {
         RPathHandle stray;
         DestroyPathHandleAt(&stray);
-        for (int i = 0; i < 3 && fgPathHandles->size > 0; i++) {
-            uint32_t k = rng.Below(fgPathHandles->size);
-            PathListNode *node = fgPathHandles->Begin();
+        for (int i = 0; i < 3 && PathHandles->size > 0; i++) {
+            uint32_t k = rng.Below(PathHandles->size);
+            PathListNode *node = PathHandles->Begin();
             while (k-- > 0)
                 node = node->next;
             DestroyPathHandleAt(&node->value);
@@ -858,15 +926,15 @@ void TestOwnList(Rng &rng) {
     });
     LogList("DestroyPathHandle");
     Guarded("Purge", [&] { PurgeAt(); });
-    Logf("purged %d", fgPathHandles == NULL);
+    Logf("purged %d", PathHandles == NULL);
     Guarded("Purge (no list)", [&] { PurgeAt(); });
     Guarded("DestroyPathHandle (no list)", [&] {
         RPathHandle stray;
         DestroyPathHandleAt(&stray);
     });
 
-    fgPathHandles = liveList;
-    fgPathIterator = liveIterator;
+    PathHandles = liveList;
+    PathIterator = liveIterator;
 }
 
 // ---- the helpers
@@ -943,6 +1011,16 @@ void TestHelpers(Rng &rng) {
 
 void RunPass(bool original, std::string *log) {
     g_log = log;
+    g_original = original;
+    if (original) {   // the originals' copies from the port's
+        OrigPathHandles = fgPathHandles;
+        OrigPathIterator = fgPathIterator;
+        OrigDebugViewEnabled = DebugViewEnabled;
+        OrigDebugSpeedFraction = DebugSpeedFraction;
+        PutTables(&g_tables);
+        if (fgLightManager != NULL)
+            PutLights(&g_lights);
+    }
     Originals originals(original);
     Rng rng = { 0x6b43a9b5u };
     if (fgLightManager != NULL) {
@@ -951,13 +1029,14 @@ void RunPass(bool original, std::string *log) {
         PutLights(&g_lights);
         TestConstruction();
     }
-    if (fgPathHandles != NULL) {
+    if (PathHandles != NULL) {
         TestHandles(rng);
         TestLiveList();
     }
     TestOwnList(rng);
     TestHelpers(rng);
     g_log = NULL;
+    g_original = false;
 }
 
 void SplitLines(const std::string &text, std::vector<std::string> *lines) {
@@ -975,7 +1054,7 @@ void SplitLines(const std::string &text, std::vector<std::string> *lines) {
 // instance and state (the scene object cleared, a master pointing into the copies), then rejected ones
 void GatherPaths() {
     g_liveHandles.clear();
-    PathList *list = fgPathHandles;
+    PathList *list = PathHandles;
     if (list != NULL && list->head != NULL) {
         for (PathListNode *node = list->Begin(); node != list->head && g_liveHandles.size() < 40; node = node->next)
             g_liveHandles.push_back(&node->value);
@@ -1033,9 +1112,18 @@ void LightShadow_Run(void) {
 
     if (fgLightManager != NULL)
         TakeLights(&g_lights);
-    g_tables.assign(kLightTables, kLightTables + kLightTablesSize);
-    g_indices.assign(kLightIndices, kLightIndices + kLightIndicesSize);
+    TakeTables(&g_tables);
     uint32_t tick = GameTick;
+    // the originals' copies, put back at the end
+    RPositionalLights savedOrigLights = OrigSavedLights;
+    LightTables savedOrigTables;
+    g_original = true;
+    TakeTables(&savedOrigTables);
+    g_original = false;
+    PathList *savedOrigHandles = OrigPathHandles;
+    PathListNode *savedOrigIterator = OrigPathIterator;
+    bool savedOrigDebugView = OrigDebugViewEnabled;
+    float savedOrigSpeedFraction = OrigDebugSpeedFraction;
 
     std::string logOriginal, logPort;
     RunPass(true, &logOriginal);
@@ -1046,6 +1134,13 @@ void LightShadow_Run(void) {
     if (fgLightManager != NULL)
         PutLights(&g_lights);
     GameTick = tick;
+    OrigSavedLights = savedOrigLights;
+    memcpy(OrigLightTypes, savedOrigTables.types, sizeof(savedOrigTables.types));
+    memcpy(&OrigLightIndices, &savedOrigTables.indices, sizeof(LightIndices));   // its padding too
+    OrigPathHandles = savedOrigHandles;
+    OrigPathIterator = savedOrigIterator;
+    OrigDebugViewEnabled = savedOrigDebugView;
+    OrigDebugSpeedFraction = savedOrigSpeedFraction;
 
     std::vector<std::string> a, b;
     SplitLines(logOriginal, &a);

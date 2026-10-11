@@ -19,15 +19,17 @@
 // and then runs the constructor registered for each symbol's class. Around it, the name pools: an open-addressed
 // hash table (SymbolPool), and two of them per constructor pool (constructors, destructors).
 //
-// Each function is the original at the same address, ported from it; the state stays where the original keeps it
-// (the pools at 0x0023fb8c, 0x0023fbb8 and 0x0023fbe0, the list of loaded objects at 0x0023fb88), allocations go
-// through EAGL's allocator hooks under the original's allocation names, and diagnostics through PrintMessage.
+// Each function is the original at the same address, ported from it; the pools stay where the static initialisers
+// construct them (0x0023fb8c, 0x0023fbb8 and 0x0023fbe0), allocations go through EAGL's allocator hooks under the
+// original's allocation names, and diagnostics through PrintMessage.
 // devtools/LoaderShadow.cpp loads every object on the disc with both and compares the results.
 // ---------------------------------------------------------------------------------------------------------------
 
 // (The allocator hooks, the pools and EAGL::ViewPort's matrices, registered by name, are EaglGlobals.h's.)
-#define DefaultPoolSize U32_AT(0x001cdc50)                      // a new pool's table size (256)
-#define LoadedTables (*(HashTable **)0x0023fb88)
+// XBE_GLOBAL(0x001cdc50, 4)
+uint32_t DefaultPoolSize = 256;                             // a new pool's table size
+// XBE_GLOBAL(0x0023fb88, 4)
+HashTable *LoadedTables;                                    // the loaded objects' symbol tables, a list
 
 using EAGL::PrintMessage;
 

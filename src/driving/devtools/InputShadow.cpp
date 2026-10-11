@@ -17,6 +17,7 @@
 #include "../platform/Pad.hpp"
 #include "../platform/RealMemory.h"
 #include "../platform/RealSystem.h"
+#include "OwnedGlobals.h"
 #include "../../common/xbeOriginal.h"
 #include "../../helpers.h"
 
@@ -151,13 +152,17 @@ typedef void (__fastcall *ConfigSetFn)(InputConfigManager *, int, int, int);
 #define ShSuperEasy U8_AT(0x001e476c)
 #define ShFeedbackAllowed U8_AT(0x001b6f50)
 #define ShFeedbackThread (*(RealThread *)0x001e2410)
-#define ShFeedbackUsers I32_AT(0x001e4430)
-#define ShPadFeedback ((uint8_t *)0x001e4438)
-#define ShFeedbackPorts ((FeedbackPort *)0x001e4488)
-#define ShFeedbackTick U32_AT(0x001e4558)
-#define ShPads ((PadData *)0x00241c50)
 #define ShActionNames ((const StringToNumberEntry *)0x001b6ba0)
-#define ShSlotNames ((StringToNumberEntry *)0x001b6f58)
+// The original's copy of the port's kFrontEndSlotNames (initialised data, the same names)
+#define OrigSlotNames ((StringToNumberEntry *)0x001b6f58)
+
+// The feedback's state is the port's (gFeedbackUsers, gPadFeedback, gFeedbackPorts, gFeedbackTick: Feedback.h;
+// gPads: Pad.hpp); the original keeps its copy at the game's addresses
+#define OrigFeedbackUsers I32_AT(0x001e4430)
+#define OrigPadFeedback ((uint8_t *)0x001e4438)
+#define OrigFeedbackPorts ((FeedbackPort *)0x001e4488)
+#define OrigFeedbackTick U32_AT(0x001e4558)
+#define OrigPads ((PadData *)0x00241c50)
 
 const uint32_t kXInputSetState = 0x00184b59;
 const size_t kPadFeedbackBytes = 0x46;
@@ -339,28 +344,43 @@ struct FeedbackState {
     void *handles[4];
 };
 
-void SaveFeedback(FeedbackState *s) {
-    memcpy(s->ports, ShFeedbackPorts, sizeof(s->ports));
-    s->tick = ShFeedbackTick;
-    memcpy(s->padFeedback, ShPadFeedback, kPadFeedbackBytes);
+// The state as one side has it: the original's copy, or the port's
+void SaveFeedback(FeedbackState *s, bool original) {
+    memcpy(s->ports, original ? OrigFeedbackPorts : gFeedbackPorts, sizeof(s->ports));
+    s->tick = original ? OrigFeedbackTick : gFeedbackTick;
+    memcpy(s->padFeedback, original ? OrigPadFeedback : (uint8_t *)&gPadFeedback, kPadFeedbackBytes);
     s->allowed = ShFeedbackAllowed;
     s->vibration = ShLaunch.vibration;
     s->superEasy = ShSuperEasy;
-    s->users = ShFeedbackUsers;
+    s->users = original ? OrigFeedbackUsers : gFeedbackUsers;
     for (int i = 0; i < 4; i++)
-        s->handles[i] = ShPads[i].handle;
+        s->handles[i] = (original ? OrigPads : gPads)[i].handle;
 }
 
-void LoadFeedback(const FeedbackState *s) {
-    memcpy(ShFeedbackPorts, s->ports, sizeof(s->ports));
-    ShFeedbackTick = s->tick;
-    memcpy(ShPadFeedback, s->padFeedback, kPadFeedbackBytes);
+void LoadFeedbackSide(const FeedbackState *s, bool original) {
+    memcpy(original ? OrigFeedbackPorts : gFeedbackPorts, s->ports, sizeof(s->ports));
+    (original ? OrigFeedbackTick : gFeedbackTick) = s->tick;
+    memcpy(original ? OrigPadFeedback : (uint8_t *)&gPadFeedback, s->padFeedback, kPadFeedbackBytes);
     ShFeedbackAllowed = s->allowed;
     ShLaunch.vibration = s->vibration;
     ShSuperEasy = s->superEasy;
-    ShFeedbackUsers = s->users;
+    (original ? OrigFeedbackUsers : gFeedbackUsers) = s->users;
     for (int i = 0; i < 4; i++)
-        ShPads[i].handle = s->handles[i];
+        (original ? OrigPads : gPads)[i].handle = s->handles[i];
+}
+
+// Both sides' copies
+void LoadFeedback(const FeedbackState *s) {
+    LoadFeedbackSide(s, true);
+    LoadFeedbackSide(s, false);
+}
+
+// A record pointer as a port number when it is one of the side's records
+long long RecordId(const FeedbackPort *record, bool original) {
+    const FeedbackPort *ports = original ? OrigFeedbackPorts : gFeedbackPorts;
+    if (record >= ports && record < ports + 4)
+        return record - ports;
+    return (long long)(uintptr_t)record;
 }
 
 void CompareFeedback(const char *what, int index, const FeedbackState *a, const FeedbackState *b) {
@@ -386,15 +406,16 @@ void RandomPort(FeedbackPort *p, int number) {
     p->steadyInput = Random() % 8 == 0 ? EdgeFloat() : RandomFloat(-0.5f, 3.0f);
 }
 
+// Random state in the port's copy (SaveFeedback and LoadFeedback then give it to both)
 void RandomFeedbackState() {
     for (int i = 0; i < 4; i++)
-        RandomPort(&ShFeedbackPorts[i], i);
-    ShFeedbackTick = Random();
+        RandomPort(&gFeedbackPorts[i], i);
+    gFeedbackTick = Random();
     ShFeedbackAllowed = Random() % 4 != 0;
     ShLaunch.vibration = Random() % 5 != 0 ? 1 : 0;
     ShSuperEasy = Random() % 6 == 0;
     for (int i = 0; i < 4; i++)
-        ShPads[i].handle = Random() % 3 == 0 ? nullptr : (void *)(uintptr_t)(0x1000 + i);
+        gPads[i].handle = Random() % 3 == 0 ? nullptr : (void *)(uintptr_t)(0x1000 + i);
 }
 
 void TestFeedbackUpdate() {
@@ -408,15 +429,16 @@ void TestFeedbackUpdate() {
         g_cases++;
         RandomFeedbackState();
         FeedbackState start, original, port;
-        SaveFeedback(&start);
+        SaveFeedback(&start, false);
+        LoadFeedback(&start);
         g_motorCalls.clear();
         Run(true, [] { Orig_FeedbackUpdate(); });
         std::vector<MotorCall> originalCalls = g_motorCalls;
-        SaveFeedback(&original);
+        SaveFeedback(&original, true);
         LoadFeedback(&start);
         g_motorCalls.clear();
         Run(false, [] { IFeedback::Update(); });
-        SaveFeedback(&port);
+        SaveFeedback(&port, false);
         CompareFeedback("IFeedback::Update", c, &original, &port);
         CheckInt("IFeedback::Update calls", c, int(originalCalls.size()), int(g_motorCalls.size()));
         if (originalCalls.size() == g_motorCalls.size() && !originalCalls.empty())
@@ -432,43 +454,45 @@ void TestFeedbackLifetime() {
         g_cases++;
         RandomFeedbackState();
         int port = int(Random() % 4);
-        ShFeedbackPorts[port].users = int(Random() % 4);
-        ShFeedbackUsers = 2 + int(Random() % 3);
+        gFeedbackPorts[port].users = int(Random() % 4);
+        gFeedbackUsers = 2 + int(Random() % 3);
         bool construct = Random() % 2 == 0;
         FeedbackState start, original, ported;
-        SaveFeedback(&start);
+        SaveFeedback(&start, false);
+        LoadFeedback(&start);
         IFeedback a = {(FeedbackPort *)(uintptr_t)0xdead0000}, b = a;
         IFeedback *returnedA = nullptr, *returnedB = nullptr;
         if (construct) {
             Run(true, [&] { returnedA = Orig_FeedbackConstruct(&a, 0, port); });
         } else {
-            a.record = &ShFeedbackPorts[port];
+            a.record = &OrigFeedbackPorts[port];
             Run(true, [&] { Orig_FeedbackDestruct(&a, 0); });
         }
-        SaveFeedback(&original);
+        SaveFeedback(&original, true);
         LoadFeedback(&start);
         if (construct) {
             Run(false, [&] { returnedB = b.Construct(port); });
         } else {
-            b.record = &ShFeedbackPorts[port];
+            b.record = &gFeedbackPorts[port];
             Run(false, [&] { b.Destruct(); });
         }
-        SaveFeedback(&ported);
+        SaveFeedback(&ported, false);
         const char *what = construct ? "IFeedback::IFeedback" : "IFeedback::~IFeedback";
         CompareFeedback(what, c, &original, &ported);
-        CheckInt(what, c, (long long)(uintptr_t)a.record, (long long)(uintptr_t)b.record);
+        CheckInt(what, c, RecordId(a.record, true), RecordId(b.record, false));
         CheckInt(what, c, returnedA == &a, returnedB == &b);
     }
     for (int c = 0; c < 200; c++) {
         g_cases++;
         RandomFeedbackState();
         FeedbackState start, original, ported;
-        SaveFeedback(&start);
+        SaveFeedback(&start, false);
+        LoadFeedback(&start);
         Run(true, [] { Orig_FeedbackPause(); });
-        SaveFeedback(&original);
+        SaveFeedback(&original, true);
         LoadFeedback(&start);
         Run(false, [] { IFeedback::Pause(); });
-        SaveFeedback(&ported);
+        SaveFeedback(&ported, false);
         CompareFeedback("IFeedback::Pause", c, &original, &ported);
     }
 }
@@ -512,15 +536,21 @@ void TestFeedbackSetters() {
 }
 
 void TestFeedback() {
-    FeedbackState real;
+    FeedbackState real, realOriginal;
     // Update runs on the feedback thread, on the same records: it waits while these run.
-    HANDLE thread = ShFeedbackUsers > 0 ? ShFeedbackThread.handle : nullptr;
+    HANDLE thread = gFeedbackUsers > 0 ? ShFeedbackThread.handle : nullptr;
     bool suspended = thread != nullptr && SuspendThread(thread) != (DWORD)-1;
-    SaveFeedback(&real);
+    SaveFeedback(&real, false);
+    SaveFeedback(&realOriginal, true);
+    static PadData origPads[4];
+    memcpy(origPads, OrigPads, sizeof(origPads));
+    memcpy(OrigPads, gPads, sizeof(origPads));   // the pads as the port has them, for the original's reads
     TestFeedbackUpdate();
     TestFeedbackLifetime();
     TestFeedbackSetters();
-    LoadFeedback(&real);
+    LoadFeedbackSide(&realOriginal, true);
+    LoadFeedbackSide(&real, false);
+    memcpy(OrigPads, origPads, sizeof(origPads));
     if (suspended)
         ResumeThread(thread);
 }
@@ -548,7 +578,9 @@ void TestQueueVector() {
     Run(true, [&] { returnedA = Orig_GetActionQueueManager(); });
     Run(false, [&] { returnedB = ActionQueueManager::GetActionQueueManager(); });
     g_cases++;
-    CheckInt("GetActionQueueManager", 0, (long long)(uintptr_t)returnedA, (long long)(uintptr_t)returnedB);
+    // the original answers its copy of the static
+    CheckInt("GetActionQueueManager", 0, (long long)OwnedGlobals_AsOurs(uint32_t(uintptr_t(returnedA))),
+             (long long)(uintptr_t)returnedB);
 
     // push_back from empty
     for (int c = 0; c < 20; c++) {
@@ -911,7 +943,7 @@ void TestMappings() {
         printf("[input] no pad device: InputToAction not tested\n");
         return;
     }
-    std::vector<std::string> actions = NamesOf(ShActionNames), slots = NamesOf(ShSlotNames), controls;
+    std::vector<std::string> actions = NamesOf(ShActionNames), slots = NamesOf(OrigSlotNames), controls;
     std::vector<const char *> texts = LiveDefinitions();
 
     for (int round = 0; round < 3; round++) {
@@ -1078,7 +1110,7 @@ void TestMasterFile() {
 }
 
 void TestFrontEndLabels() {
-    std::vector<std::string> actions = NamesOf(ShActionNames), slots = NamesOf(ShSlotNames), controls;
+    std::vector<std::string> actions = NamesOf(ShActionNames), slots = NamesOf(OrigSlotNames), controls;
     InputDevice *device = ActiveDevice();
     if (device != nullptr)
         for (int i = 0; i < device->GetNumDeviceScalar(); i++)
@@ -1086,7 +1118,7 @@ void TestFrontEndLabels() {
     if (controls.empty())
         controls.push_back("AButtonA");
     StringToNumber lookup;
-    lookup.Construct(ShSlotNames);
+    lookup.Construct(OrigSlotNames);
     std::vector<const char *> texts = LiveDefinitions();
     int index = 0;
     for (const char *text : texts) {
@@ -1150,7 +1182,8 @@ void TestLiveManager() {
     InputConfigManager *returned = nullptr;
     Run(true, [&] { returned = Orig_ConfigGet(); });
     g_cases++;
-    CheckInt("InputConfigManager::Get", 0, (long long)(uintptr_t)returned, (long long)(uintptr_t)m);
+    CheckInt("InputConfigManager::Get", 0, (long long)OwnedGlobals_AsOurs(uint32_t(uintptr_t(returned))),
+             (long long)(uintptr_t)m);
     if (!m->initialised) {
         printf("[input] the configurations are not loaded: the live manager not tested\n");
         return;

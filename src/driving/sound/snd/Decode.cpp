@@ -32,7 +32,9 @@ namespace {
 
 // The tables stay in the original's .rdata, one after the other: a predictor nibble above 3 (no stream has one)
 // reads past the four predictors into the next table, as the original does.
+// XBE_GLOBAL(0x001da9b8, 0x10)
 #define XaPredictor1 ((const float *)0x001da9b8)          // 0, 0.9375, 1.796875, 1.53125
+// XBE_GLOBAL(0x001da9c8, 0x10)
 #define XaPredictor2 ((const float *)0x001da9c8)          // 0, 0, -0.8125, -0.859375
 #define XaNibbles ((const float (*)[16])0x001da9d8)       // [shift][nibble]: signed nibble << (12 - shift)
 

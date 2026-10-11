@@ -1,6 +1,7 @@
 #include "Realgraph.h"
 
 #include "EaglGlobals.h"
+#include "../engine/CoreFoundation.h"
 #include "../platform/FileSys.h"
 #include "../platform/RealPrint.h"
 #include "../platform/X87.h"
@@ -82,31 +83,22 @@ struct FontKernTable {
     FontKern entries[1];             // +0x04
 };
 
-// FONTcurrentdriver's table
-struct FontDriverTable {
-    FontDrawFn draw;
-    FontHookFn start;
-    FontHookFn end;
-    FontHookFn create;
-    FontHookFn destroy;
-};
-
-// What the batch hooks are given: 128 of these at most
-struct FontBatchEntry {
-    const uint8_t *glyph;
-    float x;
-    float y;
-};
-static_assert(sizeof(FontBatchEntry) == 12, "a batch entry is three words");
-
-typedef void (*FontBatchFn)(const uint8_t *font, FontBatchEntry *entries, int count);
-typedef void (*FontBatchExFn)(const uint8_t *font, FontBatchEntry *entries, int count, int argument, int first);
-
 }  // namespace
 
-#define FontDriver (*(FontDriverTable **)0x001cec98)            // FONTcurrentdriver
-#define FontBatchDraw (*(FontBatchFn *)0x00241be8)
-#define FontBatchDrawEx (*(FontBatchExFn *)0x00241bf0)
+// FONT's null driver (the original's is at 0x001d1770): FONTcurrentdriver until FONT_installdriver replaces it
+static FontDriverTable NullFontDriver = { reinterpret_cast<FontDrawFn>(&NullFunction), NULL, NULL, NULL, NULL };
+
+// XBE_GLOBAL(0x001cec98, 4)
+FontDriverTable *FontDriver = &NullFontDriver;              // FONTcurrentdriver
+// XBE_GLOBAL(0x00241be8, 4)
+FontBatchFn FontBatchDraw;
+// XBE_GLOBAL(0x00241bf0, 4)
+FontBatchExFn FontBatchDrawEx;
+// XBE_GLOBAL(0x00241be0, 4)
+const uint8_t *DefaultFont;                                 // EaglGlobals.h
+
+// The XBE's own tables point at it, so it stays where it is
+// XBE_GLOBAL(0x001ceca0, 0x2ad0)
 #define BuiltInFont ((const uint8_t *)0x001ceca0)               // the font linked into the executable
 
 static inline const FontHeader *AsFont(const uint8_t *font) {

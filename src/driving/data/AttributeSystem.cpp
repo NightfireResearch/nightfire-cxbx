@@ -23,10 +23,12 @@
 // The path builders are called at their addresses (not ours yet).
 // ---------------------------------------------------------------------------------------------------------------
 
-#define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 
 #define AttributeSystemVtable ((void **)0x0018dc28)
 #define AttributeSystemBaseVtable ((void **)0x0018beb0)   // its base class's: a destructor and two pure virtuals
+
+// XBE_GLOBAL(0x001e464c, 0x4)
+AttributeSystem *AttributeSystemInstance;
 
 namespace {
 
@@ -318,7 +320,7 @@ void AttributeSystem::ProcessDafiSection(DAFI **file, AttributeCollection *colle
 
         bool copy = true;
         AttributeFieldNode *field = fields->Lbound(stored);
-        if (field == fields->head || CRT_stricmp(stored, field->value.name) < 0)
+        if (field == fields->head || _stricmp(stored, field->value.name) < 0)
             field = fields->head;
         AttributeParseResult result;
         uint8_t buffer[1024];   // what a plain key's parser writes into
@@ -432,7 +434,7 @@ int AttributeSystem::CountClassNames(const char *className) {
     CollectionKey key = { className, "" };
     CollectionNode *node = collections->Lbound(key);
     while (node != collections->head) {
-        if (CRT_stricmp(className, node->value.key.className) != 0)
+        if (_stricmp(className, node->value.key.className) != 0)
             return count;
         CollectionMap::Iterator next = { node };
         next.Inc();
@@ -448,11 +450,11 @@ int AttributeSystem::CountClassNames(const char *className) {
 const char* AttributeSystem::GetClassNextName(const char *className, const char *after) {
     CollectionKey key = { className, after != NULL ? after : "" };
     CollectionMap::Iterator at = { collections->Lbound(key) };
-    if (at.node == collections->head || CRT_stricmp(className, at.node->value.key.className) != 0)
+    if (at.node == collections->head || _stricmp(className, at.node->value.key.className) != 0)
         return NULL;
     if (after != NULL) {
         at.Inc();
-        if (CRT_stricmp(className, at.node->value.key.className) != 0)
+        if (_stricmp(className, at.node->value.key.className) != 0)
             return NULL;
     }
     return at.node->value.key.name;
@@ -526,7 +528,7 @@ AttributeValue* AttributeSystem::CreateExtensionAttribute(uint32_t type, Attribu
     const char *name = extension.attributeName;
     AttributeMap &attributes = collection->attributes;
     AttributeNode *node = attributes.Lbound(name);
-    if (node == attributes.head || CRT_stricmp(name, node->value.name) < 0)
+    if (node == attributes.head || _stricmp(name, node->value.name) < 0)
         node = attributes.head;
     if (node == attributes.head) {
         AttributeValue structure;

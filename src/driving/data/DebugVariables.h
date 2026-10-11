@@ -61,6 +61,8 @@ struct DebugUIntVariable : DebugData {
 };
 static_assert(sizeof(DebugUIntVariable) == 0x2c, "DebugUIntVariable");
 
+extern DebugUIntVariable *CurrentIndexer;   // the index dbindex set, until dbendindex
+
 // Starts an index: the dbattrib_ calls up to dbendindex read one value per index (0x00038190).
 void dbindex(const char *name, uint32_t *data, uint32_t minimum, uint32_t maximum, const char *const *names);
 // Ends it (0x00037ad0).

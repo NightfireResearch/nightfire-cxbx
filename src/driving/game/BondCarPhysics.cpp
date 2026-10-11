@@ -52,15 +52,15 @@
 #define APlayerVehicle_Construct ((ABaseSound *(__fastcall *)(void *, int, const char *engineSound))0x001284b0)
 #define CollisionImpact_Construct ((CollisionImpact *(__fastcall *)(CollisionImpact *, int))0x0003dc20)
 #define ECollision_Construct ((void *(__fastcall *)(void *, int, CollisionImpact impact))0x0003f370)
-#define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 
 // ---- globals
 #define Sim ((void *)0x00233ff0)                        // the Simulation
 #define SimStepCount U32_AT(0x00234e34)                 // the Simulation's steps so far
 #define playerPhysicsObject (*(PBondCar ***)0x00234e40) // the Simulation's cars, the player's first
-#define ZeroVector (*(const Coord3 *)0x00243030)        // the game's zero vector, never written
 
 namespace {
+
+const Coord3 kZero = {0.0f, 0.0f, 0.0f};
 
 // ForceStopOn's flags that stop the car dead; the others brake it
 constexpr uint8_t kForceStopDead = 0x0a;
@@ -338,9 +338,9 @@ void PBondCar::SetVisualDamage(float fromA, float toA, float fromB, float toB) {
         if (bandZones[band] != 0)
             handle->ProcessStimuliZones(kStimulusDamageBand + band, bandZones[band], SimStepCount, kStimulusModeZones);
     if (damagedZones != 0)
-        TriggerFX(render, RSceneObj::kFXDamage, damagedZones, &ZeroVector, &ZeroVector, -1.0f);
+        TriggerFX(render, RSceneObj::kFXDamage, damagedZones, &kZero, &kZero, -1.0f);
     if (effectZones != 0)
-        TriggerFX(render, RSceneObj::kFXDamageEffects, effectZones, &ZeroVector, &ZeroVector, -1.0f);
+        TriggerFX(render, RSceneObj::kFXDamageEffects, effectZones, &kZero, &kZero, -1.0f);
 }
 
 // The car put back on the ground where it is: facing the current objective if there is one, else (the player's car)
@@ -422,8 +422,8 @@ void PBondCar::GetControllerInput() {
         control.unknown1B = 0;
         if (forceStop & kForceStopDead) {
             body->ApplyHeavyFriction();
-            body->velocity = ZeroVector;
-            body->momentum = ZeroVector;
+            body->velocity = kZero;
+            body->momentum = kZero;
             control.brake = 0.0f;
             unknown27C = 0.0f;
         } else if (v3dotprod(MatrixRow(&body->info->orientation, 2), &body->velocity) > 0.0f) {
@@ -1144,7 +1144,7 @@ void PBondCar::ProcessPhysics() {
         body->force.x = 0.0f;
         body->force.z = 0.0f;
         body->torque.y = 0.0f;
-        body->SetAngularMomentum(&ZeroVector);
+        body->SetAngularMomentum(&kZero);
     }
 
     for (int wheel = 0; wheel < kCarWheels; wheel++)
@@ -1529,7 +1529,7 @@ void PBondCar::ProcessSimplePhysics() {
     if (unknown3FD) {
         unknown3FE = 1;
         unknown3FD--;
-        float slip = CRT_stricmp(carType, "750") == 0 ? 1.75f : 0.95f;
+        float slip = _stricmp(carType, "750") == 0 ? 1.75f : 0.95f;
         wheelSlip[3] = slip;
         wheelSlip[2] = slip;
         wheelSlip[1] = slip;
@@ -1576,7 +1576,7 @@ void PBondCar::ProcessSimplePhysics() {
 // FUNC_AT(0x0006a460)
 void PBondCar::ChangeCarType(const char *newType, bool purgeModel) {
     static const char kModelDirectory[] = "data\\car\\model\\";
-    if (CRT_stricmp(carType, newType) == 0)
+    if (_stricmp(carType, newType) == 0)
         return;
     Coord3 position = Simulation_GetRigidBody(Sim, 0, rigidBodySlot)->position;
     AttributeSet playerAttributes;
@@ -1644,7 +1644,7 @@ void PBondCar::ChangeCarType(const char *newType, bool purgeModel) {
                            halfExtents.z);
     RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
     if (body != NULL)
-        body->Construct(int8_t(rigidBodySlot), int8_t(kind), &position, &velocity, &ZeroVector, &orientation,
+        body->Construct(int8_t(rigidBodySlot), int8_t(kind), &position, &velocity, &kZero, &orientation,
                         attributes.LookupFloat("MASS", NULL), &inverseInertia, &halfExtents, this, true, false);
 }
 

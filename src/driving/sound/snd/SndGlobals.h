@@ -1,23 +1,19 @@
 #ifndef DRIVING_SOUND_SND_SNDGLOBALS_H_
 #define DRIVING_SOUND_SND_SNDGLOBALS_H_
 
-// The sound library's globals that more than one module reads (docs/driving/sound.md 2.6), named once. They stay
-// at the original's addresses: the library's code that is not ours yet, the game and the shadow tests read them
-// there. A module's own globals are named at the top of its .cpp.
-//
-// Include this from .cpp files only: the names are macros.
+// The sound library's globals that more than one module reads (docs/driving/sound.md 2.6), defined in System.cpp
+// (the buffer lists in Platform.cpp). A module's own globals are defined at the top of its .cpp.
 
 #include "System.h"
 #include "Voices.h"
 #include "Banks.h"
 #include "Platform.h"
-#include "../../../helpers.h"
 
 #include <stdint.h>
 
 // ---- the options (SNDSYS_getopts/setops, SNDPLATFORM_outputcaps/outputset)
-#define SndOptions (*(SND::SysOpts *)0x00244cc8)
-#define SndSavedSet (*(SND::SysSet *)0x00244de8)        // the settable part as last set, put back once inited
+extern SND::SysOpts SndOptions;
+extern SND::SysSet SndSavedSet;                  // the settable part as last set, put back once inited
 #define NumBanks (SndOptions.set.maxBanks)               // 0x00244cf0
 #define PlatformRate (SndOptions.set.outputRate)         // 0x00244cf2, 48000
 #define NumStreams (SndOptions.set.maxStreams)           // 0x00244d0f
@@ -26,27 +22,33 @@
 #define RenderModes (SndOptions.set.renderModes)         // 0x00244d18, [RenderModeCount]
 
 // ---- the system's state
-#define SystemInited U8_AT(0x00244ed0)                   // SNDSYS_is_inited
-#define MasterVolume I8_AT(0x00244ed1)                   // 0x7f
-#define NumUserDataClients I8_AT(0x00244ed6)             // never registered
-#define MixQuality U8_AT(0x00244ed7)                     // handed to the resampler and the unpackers (2)
-#define NumVoices I16_AT(0x00244ed8)                     // NUM_VOICES (224)
-#define SndTick U32_AT(0x00244edc)                       // the 100 Hz server's tick counter
-#define UserDataClients ((SND::UserDataClient *)0x00244f10)   // [4]
-#define BankExitHook (*(int (**)(int))0x00244f2c)       // SNDbank_on_exit_func: SNDbankremove, called with -1
-#define StreamExitHook (*(SndRestoreHook *)0x00244f38)  // SNDSTRM_on_exit_func
-#define SndHeap (*(SND::MemHeap **)0x00244f6c)          // pSndHeap
-#define SoundMutex ((void *)0x00244fc0)                  // the CRITICAL_SECTION
+extern uint8_t SystemInited;                     // SNDSYS_is_inited
+extern int8_t MasterVolume;                      // 0x7f
+extern int8_t NumUserDataClients;                // never registered
+extern uint8_t MixQuality;                       // handed to the resampler and the unpackers (2)
+extern int16_t NumVoices;                        // NUM_VOICES (224)
+extern uint32_t SndTick;                         // the 100 Hz server's tick counter
+extern SND::UserDataClient UserDataClients[4];
+extern int (*BankExitHook)(int);                 // SNDbank_on_exit_func: SNDbankremove, called with -1
+extern SndRestoreHook StreamExitHook;            // SNDSTRM_on_exit_func
+extern SND::MemHeap *SndHeap;                    // pSndHeap
 
 // ---- the voices, banks and buses
-#define VoiceArray (*(SND::Voice **)0x00244f3c)         // sndvoicei_buffer: [NumVoices]
-#define BankArray (*(SND::BankSlot **)0x00244f40)       // sndbanki_buffer: [NumBanks]
-#define FxBusMainCpu ((SND::FxBus *)0x00244f44)         // FXBUS: [bus] - the two overlap from bus 1 on
-#define FxBusHardware ((SND::FxBus *)0x00244f58)
-#define ActiveBufferLists ((SND::BufferList *)0x00244c48)   // Llist_MaybeActiveDsndBuffers[2]
+extern SND::Voice *VoiceArray;                   // sndvoicei_buffer: [NumVoices]
+extern SND::BankSlot *BankArray;                 // sndbanki_buffer: [NumBanks]
+// FXBUS: [bus], the main CPU's path's from the first entry and the hardware path's from the second - the two
+// overlap from bus 1 on (only bus 0 is ever used)
+extern SND::FxBus FxBuses[2];
+#define FxBusMainCpu FxBuses
+#define FxBusHardware (FxBuses + 1)
+// The hardware buffer nodes' lists by pool: Llist_MaybeActiveDsndBuffers[2], then LList_maybeFreeDsndBuffers[2]
+// - one block, as FUN_0013d550 can pop from the list before the free lists
+extern SND::BufferList BufferLists[4];
+#define ActiveBufferLists BufferLists
+#define FreeBufferLists (BufferLists + 2)
 
-// The default azimuth of each channel of a sound of n channels: ChannelAzimuth[n][channel], 65536ths of a turn
-// (SNDSYSI_init fills rows 2..6; row 0 is never read and overlaps the globals before)
-#define ChannelAzimuth ((uint16_t (*)[6])0x00244f64)
+// The default azimuth of each channel of a sound of n channels: ChannelAzimuth[n - 1][channel], 65536ths of a turn
+// (SNDSYSI_init fills the rows for 2..6 channels; a single channel's stays 0)
+extern uint16_t ChannelAzimuth[6][6];
 
 #endif // DRIVING_SOUND_SND_SNDGLOBALS_H_

@@ -113,18 +113,25 @@ void RGlareManager::AddModelGlare(Glare *node, const MATRIX4 *transform, float d
 // ---------------------------------------------------------------------------------------------------------------
 // Drawing: DrawGlares and its two quad builders.
 //
-// The vertices go into four fixed arrays of the game's, sized for the worst case - 128 glares, two sprites each,
+// The vertices go into four fixed arrays, sized for the worst case - 128 glares, two sprites each,
 // four vertices a sprite, 1024 in all - and are handed to the draw-request ring with the glare material. The
 // constructor set that material up (quads, blended, the "flar" texture), which is why nothing here sets it.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define GlarePositions   ((float (*)[4])0x00202cb0)
-#define GlareUVs         ((float (*)[2])0x00206cb0)
-#define GlareTexture     (*(EAGL::TAR **)0x00208cb0)   // the "flar" texture, from the constructor
-#define GlareColours     ((uint32_t *)0x00208cc0)
+constexpr int kGlareVertices = 1024;
+// XBE_GLOBAL(0x00202cb0, 0x4000)
+alignas(16) static float GlarePositions[kGlareVertices][4];
+// XBE_GLOBAL(0x00206cb0, 0x2000)
+static float GlareUVs[kGlareVertices][2];
+// XBE_GLOBAL(0x00208cb0, 4)
+static EAGL::TAR *GlareTexture;                         // the "flar" texture, from the constructor
+// XBE_GLOBAL(0x00208cc0, 0x1000)
+static uint32_t GlareColours[kGlareVertices];
 // The glare material
+// XBE_GLOBAL(0x00209cc0, 0x60)
 #define GlareMaterial    ((UVolatileMaterial *)0x00209cc0)
-#define GlareDrawParity  (*(int *)0x00209d28)          // flipped by every DrawGlares with glares; never read
+// XBE_GLOBAL(0x00209d28, 4)
+static int GlareDrawParity;                             // flipped by every DrawGlares with glares; never read
 
 // Degrees in a radian, as the float the original multiplies by.
 static const float kDegreesPerRadian = 57.295784f;
@@ -280,9 +287,13 @@ void RGlareManager::DrawGlares(bool inWorld) {
 // Construction, the singleton's slots and the texture coordinates.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define GlareID U32_AT(0x00209d24)                          // "Glare ID"
-#define HaloColourUnused ((uint8_t *)0x00209d21)            // dbattrib_argb's unused flag bytes
-#define SpikeColourUnused ((uint8_t *)0x00209d20)
+// XBE_GLOBAL(0x00209d24, 4)
+static uint32_t GlareID;                                    // "Glare ID"
+// dbattrib_argb's unused flag bytes
+// XBE_GLOBAL(0x00209d21, 1)
+static uint8_t HaloColourUnused;
+// XBE_GLOBAL(0x00209d20, 1)
+static uint8_t SpikeColourUnused;
 #define TuningLevel ((const char *)0x00244084)              // the level the tuning databases are read for
 
 static void *const kGlareManagerVtable = (void *)0x001931e0;
@@ -336,11 +347,11 @@ RGlareManager* RGlareManager::Construct() {
     dbindex("Glare ID", &GlareID, 0, kGlareTypes - 1, NULL);
     dbattrib_u8("Halo Tex", &types[0].haloTexture, 0, 9, sizeof(GlareType), -1.0f, NULL);
     dbattrib_float("Halo Spin", &types[0].halo.spin, 0.0f, 0.25f, sizeof(GlareType), 1.0f, NULL);
-    dbattrib_argb("Halo Col", &types[0].haloColour, HaloColourUnused, sizeof(GlareType));
+    dbattrib_argb("Halo Col", &types[0].haloColour, &HaloColourUnused, sizeof(GlareType));
     dbattrib_float("Halo Size", &types[0].haloSize, 0.0f, 10.0f, sizeof(GlareType), 1.0f, NULL);
     dbattrib_u8("Spike Tex", &types[0].spikeTexture, 0, 9, sizeof(GlareType), -1.0f, NULL);
     dbattrib_float("Spike Spin", &types[0].spike.spin, 0.0f, 0.25f, sizeof(GlareType), 1.0f, NULL);
-    dbattrib_argb("Spike Col", &types[0].spikeColour, SpikeColourUnused, sizeof(GlareType));
+    dbattrib_argb("Spike Col", &types[0].spikeColour, &SpikeColourUnused, sizeof(GlareType));
     dbattrib_float("Spike Size", &types[0].spikeSize, 0.0f, 10.0f, sizeof(GlareType), 1.0f, NULL);
     dbattrib_float("Z Bias", &types[0].zBias, 0.0f, 4.0f, sizeof(GlareType), 1.0f, NULL);
     dbendindex();

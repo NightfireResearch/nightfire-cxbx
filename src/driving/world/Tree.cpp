@@ -10,8 +10,12 @@
 // unordered (NaN) behaviour; the arithmetic is the x87's, in double, in the original's order.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define TreeLevelScale ((const float *)0x001ca36c)   // a node's half-width over the root's, by depth: 1, 1/2, 1/4...
-#define ViewCull (*(const WViewCull *)0x0023dfd0)
+// A node's half-width over the root's, by depth
+// XBE_GLOBAL(0x001ca36c, 0x38)
+static const float TreeLevelScale[14] = {
+    1.0f, 0.5f, 0.25f, 0.125f, 0.0625f, 0.03125f, 0.015625f, 0.0078125f, 0.00390625f, 0.001953125f,
+    0.0009765625f, 0.00048828125f, 0.000244140625f, 0.0001220703125f,
+};
 
 namespace {
 

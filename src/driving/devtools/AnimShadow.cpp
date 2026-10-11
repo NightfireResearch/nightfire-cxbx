@@ -2,6 +2,9 @@
 
 #include "../eagl/EaglGlobals.h"
 #include "../eagl/Loader.h"
+#include "../eagl/Profiler.h"
+#include "../eagl/anim/AnimDecode.h"
+#include "../eagl/anim/AnimDeltaQ.h"
 #include "../eagl/anim/AnimObjects.h"
 #include "../platform/FileSys.h"
 #include "../platform/RefPack.h"
@@ -105,9 +108,15 @@ int ShadowPrint(const char *format, va_list args) {
     return 0;
 }
 
-#define PrintHook       (*(void **)0x00240268)
-#define LoadedTables    (*(void **)0x0023fb88)
 #define BlockSizes      ((const uint16_t *)0x001ceab0)
+
+// The originals' copies of EAGLAnim's pool, factory block and scratch buffers (the port's are Pool, FactoryBlock
+// and ScratchBuffers). PrintMessage and the loader are ours on both sides: they use EAGL::PrintHook and LoadedTables.
+#define OrigPool           (*(MemoryPool *)0x002414b0)
+#define OrigFactoryBlock   (*(void **)0x00241b80)
+#define OrigScratchBuffers ((ScratchBuffer *)0x00241ba0)
+#define OrigSingleQAngleRange (*(float *)0x00241ae0)            // and of the settings the originals read
+#define OrigReverseDeltaSumEnabled (*(uint8_t *)0x001ceb4c)
 
 // EAGLAnim's ranges: the objects and evaluation, and its functions linked among the engine's.
 struct Originals {
@@ -362,7 +371,10 @@ void BankSide(bool original, const Bank &bank, std::vector<uint8_t> &image, Snap
     ArenaReset();
     memcpy(image.data(), bank.data.data(), image.size());
     LoadedTables = NULL;
-    memset((void *)0x00241ba0, 0, 0x24);   // the three scratch buffers: each side starts without them
+    OrigSingleQAngleRange = SingleQAngleRange;
+    OrigReverseDeltaSumEnabled = ReverseDeltaSumEnabled;
+    memset(OrigScratchBuffers, 0, sizeof(ScratchBuffers));   // the three scratch buffers: each side starts
+    memset(ScratchBuffers, 0, sizeof(ScratchBuffers));       // without them
     {
         Originals scope(original);
         ((void (*)(uint32_t))0x000f7d00)(0x400000);   // MemoryPoolManager::Init
@@ -483,11 +495,16 @@ void AnimShadow_Run(void) {
     // the game's state, put back at the end: EAGL's hooks and loaded list, EAGLAnim's pool and scratch globals
     EaglMallocFn savedMalloc = EaglMalloc;
     EaglFreeFn savedFree = EaglFree;
-    void *savedPrint = PrintHook, *savedLoaded = LoadedTables;
-    std::vector<uint8_t> savedPool((uint8_t *)0x002414b0, (uint8_t *)0x00241c00);
+    EAGL::PrintHookFn savedPrint = EAGL::PrintHook;
+    HashTable *savedLoaded = LoadedTables;
+    MemoryPool savedPool = Pool, savedOrigPool = OrigPool;
+    void *savedFactory = FactoryBlock, *savedOrigFactory = OrigFactoryBlock;
+    ScratchBuffer savedScratch[3], savedOrigScratch[3];
+    memcpy(savedScratch, ScratchBuffers, sizeof(savedScratch));
+    memcpy(savedOrigScratch, OrigScratchBuffers, sizeof(savedOrigScratch));
     EaglMalloc = ShadowMalloc;
     EaglFree = ShadowFree;
-    PrintHook = (void *)ShadowPrint;
+    EAGL::PrintHook = ShadowPrint;
 
     for (const Bank &bank : banks) {
         std::vector<uint8_t> image(bank.data.size(), 0);
@@ -507,9 +524,14 @@ void AnimShadow_Run(void) {
 
     EaglMalloc = savedMalloc;
     EaglFree = savedFree;
-    PrintHook = savedPrint;
+    EAGL::PrintHook = savedPrint;
     LoadedTables = savedLoaded;
-    memcpy((uint8_t *)0x002414b0, savedPool.data(), savedPool.size());
+    Pool = savedPool;
+    OrigPool = savedOrigPool;
+    FactoryBlock = savedFactory;
+    OrigFactoryBlock = savedOrigFactory;
+    memcpy(ScratchBuffers, savedScratch, sizeof(savedScratch));
+    memcpy(OrigScratchBuffers, savedOrigScratch, sizeof(savedOrigScratch));
     VirtualFree(g_arena, 0, MEM_RELEASE);
     char types[400] = "";
     for (int t = 0; t < kAnimTypeCount; t++)

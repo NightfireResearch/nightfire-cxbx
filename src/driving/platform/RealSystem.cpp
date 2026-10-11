@@ -19,13 +19,20 @@
 
 // ---- TIMER: the periodic tick (the video refresh rate) and the task list it runs
 
-#define TimerActive      (*(int *)0x002422d0u)
-#define SysTimerHandle   (*(unsigned *)0x002422d4u)
-#define TimerTaskList    ((TimerTask *)0x00242404u)    // eight slots, to 0x00242424
-#define TimerFrequency   (*(int *)0x00242424u)
-#define SomeTicks        (*(volatile int *)0x00242428u)
-#define LibTicks         (*(volatile int *)0x0024242cu)
 static const int kTimerTasks = 8;
+
+// XBE_GLOBAL(0x002422d0, 4)
+static int TimerActive;
+// XBE_GLOBAL(0x002422d4, 4)
+static unsigned SysTimerHandle;
+// XBE_GLOBAL(0x00242404, 0x20)
+static TimerTask TimerTaskList[kTimerTasks];
+// XBE_GLOBAL(0x00242424, 4)
+int TimerFrequency;
+// XBE_GLOBAL(0x00242428, 4)
+volatile int SomeTicks;
+// XBE_GLOBAL(0x0024242c, 4)
+static volatile int LibTicks;
 
 // AUTOINJECT
 int TIMER_gettick() {
@@ -101,10 +108,14 @@ int getTickCount() {
 
 // ---- SYNCTASK: tasks run from the game loop (SYNCTASK_run), each every so many ticks
 
-#define SyncTasks        ((SyncTask *)0x002421c8u)    // sixteen slots
-#define SyncTaskSkip     (*(int *)0x002422c8u)        // free slots for SYNCTASK_add to pass over before taking one
-#define LastSystemTask   (*(int *)0x002422ccu)
 static const int kSyncTasks = 16;
+
+// XBE_GLOBAL(0x002421c8, 0x100)
+static SyncTask SyncTasks[kSyncTasks];
+// XBE_GLOBAL(0x002422c8, 4)
+static int SyncTaskSkip;      // free slots for SYNCTASK_add to pass over before taking one
+// XBE_GLOBAL(0x002422cc, 4)
+static int LastSystemTask;
 
 // interval: -1 means every tick (0), 0 means every other (1); first run `delay` ticks from now. A task already
 // in the list has its slot rewritten (the last such slot, as the original's scan leaves it); otherwise the first
@@ -167,8 +178,10 @@ unsigned SYNCTASK_run(int argument) {
 
 // ---- THREAD
 
-#define MainThreadHandle (*(HANDLE *)0x002421c0u)
-#define MainThreadId     (*(DWORD *)0x002421c4u)
+// XBE_GLOBAL(0x002421c0, 4)
+static HANDLE MainThreadHandle;
+// XBE_GLOBAL(0x002421c4, 4)
+static DWORD MainThreadId;
 
 // AUTOINJECT
 void THREAD_init() {
@@ -347,14 +360,24 @@ void MUTEX_unlock(RealMutex *mutex) {
 
 // ---- CPU
 
-// The console's answer, from the XBE's data: "Pentium3" and its clock speed (0x001d1b90).
-#define CpuSpeed  (*(const unsigned *)0x001d1b90u)
-#define CpuInfo   ((uint8_t *)0x002422e0u)   // speed, 0, then the name
+// The console's answer, from the XBE's data: "Pentium3" and its clock speed.
+// XBE_GLOBAL(0x001d1b90, 4)
+static const unsigned CpuSpeed = 733000000;
+
+struct CpuInfoRecord {
+    unsigned speed;
+    unsigned unknown4;
+    char name[16];
+};
+static_assert(sizeof(CpuInfoRecord) == 0x18, "CpuInfoRecord is 0x18 bytes");
+
+// XBE_GLOBAL(0x002422e0, 0x18)
+static CpuInfoRecord CpuInfo;
 
 // AUTOINJECT
 unsigned CPU_detect() {
-    *(unsigned *)(CpuInfo + 0) = CpuSpeed;
-    *(unsigned *)(CpuInfo + 4) = 0;
-    memcpy(CpuInfo + 8, (const void *)0x001a1880u, 9);   // "Pentium3" and its terminator
+    CpuInfo.speed = CpuSpeed;
+    CpuInfo.unknown4 = 0;
+    memcpy(CpuInfo.name, "Pentium3", 9);
     return CpuSpeed;
 }

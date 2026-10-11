@@ -129,6 +129,11 @@ struct RequestStatus {
 
 }  // namespace SND
 
+extern SND::StreamState *StreamArray[32];               // sndss: [NumStreams]
+extern SND::PacketPlayer *PacketPlayers[32];            // sndpps: [NumStreams]
+extern int32_t PacketCallbackCount;
+extern SND::PacketCallback PacketCallbacks[96];         // [PacketCallbackCount]
+
 // The API (stream index in; 0 or a negative error out)
 int SNDSTRM_autovol(int stream, int time, int vol);                                         // 0x0013b990
 int SNDSTRM_queuefile(int stream, int hold, const char *name, uint32_t offset);              // 0x0013c160

@@ -31,6 +31,9 @@
 #define PlayerPhysicsObject (*(PhysicsObject **)PTR_AT(0x00234e40))
 #define OffOnNames ((const char *const *)0x001b6638)    // "Off", "On"
 
+// XBE_GLOBAL(0x00201754, 4)
+RParticulate *fgParticulate;
+
 const USingletonVtable *const kRParticulateVtable = (const USingletonVtable *)0x00192e54;
 const USingletonVtable *const kUSingletonVtable = (const USingletonVtable *)0x0018beb0;
 typedef RParticulate *(__fastcall *DeletingDestructor)(RParticulate *particulate, int, unsigned flags);

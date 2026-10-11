@@ -29,6 +29,12 @@ bool XbeOriginal_Redirect(unsigned at, const void *to);
 // Every patched address in [lo, hi) swapped at once; the number swapped.
 int XbeOriginal_RestoreRange(unsigned lo, unsigned hi, bool original);
 
+// Called as each window opens (original true, before the swap) and closes (false, after it), [lo, hi) holding the
+// entries swapped. The driving engine's shadow tests lend the globals we own to the originals through it
+// (src/driving/devtools/OwnedGlobals.cpp). NULL (the default) for none.
+typedef void (*XbeOriginalWindowHook)(unsigned lo, unsigned hi, bool original);
+void XbeOriginal_SetWindowHook(XbeOriginalWindowHook hook);
+
 struct XbeOriginalScope {
     unsigned at;
     bool ok;

@@ -41,17 +41,16 @@
 
 #define PointerUninitializedFill ((void (*)(AStreamEntry **, uint32_t, AStreamEntry *const *))0x000b2ec0)
 
-// The C runtime's: case-insensitive comparison (the registry's order depends on it) and printf (its formatting).
-#define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
+// The C runtime's printf (its formatting).
 #define CRT_printf ((int (*)(const char *, ...))0x00132192)
 
 // ---- globals
 
-#define StreamPath ((char *)0x001d8070)                // char[0x80], "./" until SetPath
-#define MusicExtension ((const char *)0x001d7fc8)      // char[8], "mus"
-#define SpeechExtension ((const char *)0x001d7fd0)     // char[8], "spe"
+// XBE_GLOBAL(0x001d8070, 0x80)
+char StreamPath[0x80] = "./";                          // until SetPath
 #define StreamHold I32_AT(0x00243a80)                  // StreamHoldState (name ours)
-#define StreamHoldTick I32_AT(0x00243a84)              // TIMER_gettick when the held request was queued
+// XBE_GLOBAL(0x00243a84, 4)
+int32_t StreamHoldTick;                                // TIMER_gettick when the held request was queued
 
 // A held request: queued with SNDSTRM's hold -1; EReleaseStream releases it.
 enum StreamHoldState {
@@ -406,7 +405,7 @@ void AStream::Play(ASoundPlayParams *params) {
     if (p->stream == -1)
         return;
     p->playTick = TIMER_gettick();
-    if (ASoundManager_fgMissionOver && CRT_stricmp(mix->name, "music") == 0)
+    if (ASoundManager_fgMissionOver && _stricmp(mix->name, "music") == 0)
         return;
 
     p->volume = float(mix->GetVolume() * volume * params->volume);
@@ -556,10 +555,10 @@ void AStream::Event(const char *name, float fadeTime, bool loop, bool effect, bo
 AStream* AStream::Create(const char *name, const char *file, unsigned int bufferSize) {
     StreamRefCounter::Get()->GetReference(name);   // the answer is not used
     char extension[8];
-    if (CRT_stricmp(name, "music") == 0)
-        strcpy(extension, MusicExtension);
-    else if (CRT_stricmp(name, "speech") == 0 || CRT_stricmp(name, "nis") == 0)
-        strcpy(extension, SpeechExtension);
+    if (_stricmp(name, "music") == 0)
+        strcpy(extension, "mus");
+    else if (_stricmp(name, "speech") == 0 || _stricmp(name, "nis") == 0)
+        strcpy(extension, "spe");
     else
         strcpy(extension, "viv");
 

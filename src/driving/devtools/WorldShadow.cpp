@@ -4,6 +4,7 @@
 #include "WorldShadow.h"
 #include "FpControl.h"
 
+#include "../data/AttributeSystem.h"
 #include "../engine/UMemory.hpp"
 #include "../world/SoundGroup.h"
 #include "../world/SoundMap.h"
@@ -51,7 +52,12 @@ const uint32_t kRanges[4][2] = {
     { 0x000595c0, 0x00059630 }, { 0x00094030, 0x000940c0 }, { 0x000d0d50, 0x000d1060 }, { 0x000d11a0, 0x000d2860 },
 };
 
+// The original's copy of the port's AttributeSystemInstance, lent as the window opens
+#define OrigAttributeSystemInstance (*(AttributeSystem **)0x001e464c)
+
 void OriginalWindow(bool original) {
+    if (original)
+        OrigAttributeSystemInstance = AttributeSystemInstance;
     for (const uint32_t *range : kRanges)
         XbeOriginal_RestoreRange(range[0], range[1], original);
 }
@@ -97,12 +103,29 @@ typedef void (__fastcall *ListTidyFn)(WorldSceneObjectList *, int);
 
 // ---- the game's state
 
-#define CurtainState ((uint8_t *)0x0023e280)            // the count, then the 64 matrices at 0x0023e290
-const uint32_t kCurtainStateBytes = 0x0023f290 - 0x0023e280;
-#define ActiveCurtainCount I32_AT(0x0023e280)
-#define ActiveCurtains ((const float *)0x0023e290)
-#define TrackNameBytes ((uint8_t *)0x0023f290)
-const uint32_t kTrackNameBytes = 0x80;
+// The active curtains as the original keeps them (the port's: ActiveCurtainCount, ActiveCurtains)
+struct CurtainState {
+    int32_t count;
+    uint8_t pad04[0xc];
+    MATRIX4 curtains[64];
+};
+static_assert(sizeof(CurtainState) == 0x0023f290 - 0x0023e280, "the count, then the 64 matrices at 0x0023e290");
+
+// The originals' copies of the port's active curtains and TrackName
+#define OrigCurtains (*(CurtainState *)0x0023e280)
+#define OrigTrackName ((char *)0x0023f290)
+
+CurtainState OurCurtains() {
+    CurtainState state = {};
+    state.count = ActiveCurtainCount;
+    memcpy(state.curtains, ActiveCurtains, sizeof(state.curtains));
+    return state;
+}
+
+void SetOurCurtains(const CurtainState &state) {
+    ActiveCurtainCount = state.count;
+    memcpy(ActiveCurtains, state.curtains, sizeof(state.curtains));
+}
 
 // ---- results
 
@@ -274,23 +297,25 @@ void MakeCurtainBatch(CurtainBatch *batch, int count) {
 
 void TestCurtains() {
     static CurtainBatch batch, batchCopy;
-    static uint8_t saved[kCurtainStateBytes], before[kCurtainStateBytes], afterOriginal[kCurtainStateBytes];
-    memcpy(saved, CurtainState, kCurtainStateBytes);
+    static CurtainState saved, savedOriginal, before, afterOriginal;
+    saved = OurCurtains();
+    savedOriginal = OrigCurtains;
     for (int b = 0; b < 60; b++) {
         MakeCurtainBatch(&batch, b % 3 == 0 ? 72 : 1 + int(Next() % 40));
         memcpy(&batchCopy, &batch, sizeof(batch));
-        memcpy(before, CurtainState, kCurtainStateBytes);
+        before = OurCurtains();
+        OrigCurtains = before;
         g_cases++;
         bool ok = Guarded(RunCurtainBatch, &batch, true);
-        memcpy(afterOriginal, CurtainState, kCurtainStateBytes);
-        memcpy(CurtainState, before, kCurtainStateBytes);
+        afterOriginal = OrigCurtains;
+        SetOurCurtains(before);
         ok &= Guarded(RunCurtainBatch, &batchCopy, false);
         if (!ok)
             continue;
         for (int i = 0; i < batch.count; i++)
             CheckFloats("curtain", b * 100 + i, &batch.cases[i].curtain.start.x, &batchCopy.cases[i].curtain.start.x, 8);
-        CheckU32("active curtain count", b, *reinterpret_cast<const uint32_t *>(afterOriginal), uint32_t(ActiveCurtainCount));
-        CheckFloats("active curtains", b, reinterpret_cast<const float *>(afterOriginal + 0x10), ActiveCurtains,
+        CheckU32("active curtain count", b, uint32_t(afterOriginal.count), uint32_t(ActiveCurtainCount));
+        CheckFloats("active curtains", b, &afterOriginal.curtains[0].mtx[0][0], &ActiveCurtains[0].mtx[0][0],
                     16 * kMaxActiveCurtains);
 
         // spheres at random, and behind the curtains as seen from their eyes
@@ -316,7 +341,8 @@ void TestCurtains() {
                 CheckU32("IsVisibleAgainstCurtains", b * 100 + s, c.result, port.result);
         }
     }
-    memcpy(CurtainState, saved, kCurtainStateBytes);
+    SetOurCurtains(saved);
+    OrigCurtains = savedOriginal;
 }
 
 // ---- WSound::SetUnknown118
@@ -474,8 +500,9 @@ void RunTrackName(void *context, bool original) {
 }
 
 void TestTrackName() {
-    static uint8_t saved[kTrackNameBytes], afterOriginal[kTrackNameBytes];
-    memcpy(saved, TrackNameBytes, kTrackNameBytes);
+    static char saved[sizeof(TrackName)], savedOriginal[sizeof(TrackName)], afterOriginal[sizeof(TrackName)];
+    memcpy(saved, TrackName, sizeof(TrackName));
+    memcpy(savedOriginal, OrigTrackName, sizeof(TrackName));
     for (int i = 0; i < 20; i++) {
         TrackNameCase c;
         memset(&c, 0, sizeof(c));
@@ -483,15 +510,16 @@ void TestTrackName() {
         for (int k = 0; k < length; k++)
             c.name[k] = char('a' + Next() % 26);
         c.copy = i % 3 != 0;
-        memset(TrackNameBytes, 0xcd, kTrackNameBytes);
+        memset(OrigTrackName, 0xcd, sizeof(TrackName));
+        memset(TrackName, 0xcd, sizeof(TrackName));
         g_cases++;
         bool ok = Guarded(RunTrackName, &c, true);
-        memcpy(afterOriginal, TrackNameBytes, kTrackNameBytes);
-        memset(TrackNameBytes, 0xcd, kTrackNameBytes);
+        memcpy(afterOriginal, OrigTrackName, sizeof(TrackName));
         if (ok && Guarded(RunTrackName, &c, false))
-            CheckBytes("SetTrackName", i, afterOriginal, TrackNameBytes, kTrackNameBytes);
+            CheckBytes("SetTrackName", i, afterOriginal, TrackName, sizeof(TrackName));
     }
-    memcpy(TrackNameBytes, saved, kTrackNameBytes);
+    memcpy(TrackName, saved, sizeof(TrackName));
+    memcpy(OrigTrackName, savedOriginal, sizeof(TrackName));
 }
 
 // ---- the scene object vector

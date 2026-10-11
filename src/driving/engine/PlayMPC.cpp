@@ -358,7 +358,8 @@ static void ConvertFrame(const AVFrame *f) {
 #define RcmpAllocate     (*(uint32_t *)0x001dcd14u)
 #define RcmpFree         (*(uint32_t *)0x001dcd18u)
 #define RcmpAllocFlags   (*(int32_t *)0x001dcd1cu)
-#define MovieGlobal244798 (*(int32_t *)0x00244798u)   // set by the original Play, cleared here; never read
+// XBE_GLOBAL(0x00244798, 0x4)
+static int32_t MovieGlobal244798;   // set by the original Play, cleared here; never read
 
 // FUNC_AT(0x00130780)
 PlayMPC* PlayMPC::Construct(void *device_, EAGL::RenderContext *context_, int32_t padPort_, int32_t allocFlags) {

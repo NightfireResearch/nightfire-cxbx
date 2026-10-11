@@ -18,16 +18,24 @@
 //
 // Sixty-four channels, each a name and a flags word (bit 0: on; bit 1: in the group that channel 1 switches), and
 // eight output devices, each a callback(channel, text), a flags word (bit 0: on) and a word nothing here uses. A
-// line goes out when its channel is on, to every device that is on. The tables are the game's, initialised in the
-// XBE, so they are used where they are.
+// line goes out when its channel is on, to every device that is on. The device table is the game's, initialised in
+// the XBE with the originals' callbacks, so it is used where it is.
 
 struct PrintChannel { const char *name; uint32_t flags; };
 struct PrintDevice { void (*callback)(int channel, const char *text); uint32_t flags; uint32_t unused; };
-
-#define PrintChannels    ((PrintChannel *)0x001d1990u)   // 64, to 0x001d1b90
-#define PrintDevices     ((PrintDevice *)0x001d1ba4u)    // 8, to 0x001d1c04
-#define PrintInitialised (*(int *)0x002422d8u)
 static const int kPrintChannels = 64, kPrintDevices = 8;
+
+// XBE_GLOBAL(0x001d1990, 0x200)
+static PrintChannel PrintChannels[kPrintChannels] = {
+    {"all", 3}, {"real", 2}, {"alert", 3}, {"general", 2}, {"memory", 2}, {"connection", 2}, {"graphics", 2},
+    {"file", 2}, {"input", 2}, {"system", 2}, {"3d", 2}, {"font", 2}, {"codec", 2}, {"math", 2}, {"eagl", 2},
+    {"capture", 2},
+};
+// The last device's unused word is the next global (FileSys.cpp's SyncPriority); nothing reads it.
+// XBE_GLOBAL(0x001d1ba4, 0x5c)
+#define PrintDevices     ((PrintDevice *)0x001d1ba4u)    // 8
+// XBE_GLOBAL(0x002422d8, 4)
+static int PrintInitialised;
 
 // AUTOINJECT
 void PRINT_init() {
@@ -127,11 +135,14 @@ void PrintToConsole(int channel, const char *text) {
 
 // ---- exit and abort
 
-#define ExitCallbacks    ((ExitCallback *)0x00242300u)   // 64, to 0x00242400
-#define AbortHandler     (*(void (**)(const char *, ...))0x001d1b94u)   // SYSTEM_abortmessage, unless replaced
-#define AbortFile        (*(const char **)0x002422f8u)
-#define AbortLine        (*(int *)0x002422fcu)
 static const int kExitCallbacks = 64;
+
+// XBE_GLOBAL(0x00242300, 0x100)
+static ExitCallback ExitCallbacks[kExitCallbacks];
+// XBE_GLOBAL(0x002422f8, 4)
+static const char *AbortFile;
+// XBE_GLOBAL(0x002422fc, 4)
+static int AbortLine;
 
 // The memory manager's "are we under a debugger" query, a virtual call (0x001143f0, through the object at
 // 0x001d48c4); the original breaks into the debugger when it says yes.
@@ -194,6 +205,10 @@ void SYSTEM_abortmessage(const char *format, ...) {
         PRINT_string(2, "FILE %s LINE %d\n", AbortFile, AbortLine);
     REAL_exit();
 }
+
+typedef void (*AbortHandlerFn)(const char *format, ...);
+// XBE_GLOBAL(0x001d1b94, 4)
+static AbortHandlerFn AbortHandler = SYSTEM_abortmessage;
 
 // AUTOINJECT
 void REAL_abortmessage(const char *format, ...) {

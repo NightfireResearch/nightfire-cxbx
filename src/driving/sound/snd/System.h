@@ -117,6 +117,26 @@ static_assert(sizeof(SysOpts) == 0x120, "the options are 0x120 bytes");
 typedef void (*SndServerClient)(void);
 typedef void (*SndRestoreHook)(void);
 
+// Set once SNDREAL_systemtask is a SYNCTASK (systaskadded)
+extern uint32_t SysTaskAdded;
+extern uint8_t SoundMutex[0x1c];               // the CRITICAL_SECTION
+
+// The module's globals
+extern int32_t CapsResult;                      // what SNDPLATFORM_outputcaps answered
+extern uint32_t CapsRead;                       // set once the caps are read
+extern uint8_t CriticalNesting;                 // counts up only
+extern int8_t Num100HzClients;                  // never registered
+extern int8_t NumServerClients;
+extern SndServerClient ServerClients100Hz[6];
+extern SndServerClient ServerClients[6];
+extern SndRestoreHook RestoreHook20;            // the restore hooks besides BankExitHook and StreamExitHook
+extern SndRestoreHook RestoreHook24;
+extern SndRestoreHook RestoreHook28;
+extern SndRestoreHook RestoreHook30;
+extern SndRestoreHook RestoreHook34;
+extern uint32_t RandomState[6];                 // iSNDrandom's six words
+extern char SndAuthor[0x3c];                    // SNDSYSI_init writes its first byte
+
 // init and restore, the options
 int SNDSYS_getopts(SND::SysOpts *opts);                                      // 0x0013d090
 int SNDSYS_setops(const SND::SysOpts *opts);                                 // 0x0013d0f0
@@ -134,7 +154,7 @@ void SNDSYS_service(void);                                                   // 
 void iSNDserveraddclient(SndServerClient client);                              // 0x0013f900
 void iSNDserverremoveclient(SndServerClient client);                           // 0x0013f920
 
-// the critical section (SoundMutex, 0x00244fc0)
+// the critical section (SoundMutex)
 void SNDSYS_entercritical(void);                                             // 0x0013b950
 void SNDSYS_leavecritical(void);                                             // 0x0013b970
 void SNDI_mutexalloc(void);                                                  // 0x0013e7a0

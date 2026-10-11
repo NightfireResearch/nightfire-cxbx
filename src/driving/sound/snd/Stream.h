@@ -95,6 +95,8 @@ static_assert(offsetof(StrmInternal, fileSlot) == 0x17c, "STREAM fileSlot");
 
 }  // namespace SND
 
+extern uint32_t RequestGeneration;      // the request id generation, += 0x100, never 0
+
 int STREAM_overhead(int requests, int filters, int readers);                                     // 0x0014b090
 SND::StrmReader* STREAM_create(int requests, int filters, int readers, SND::StrmInternal *memory,
                                  int size);                                                      // 0x0014b0c0

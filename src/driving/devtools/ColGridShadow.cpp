@@ -56,14 +56,24 @@
 // the z one, changes its answer for circles on a node's edge (rarely - the containment cases count it).
 // ---------------------------------------------------------------------------------------------------------------
 
+#define kOrigUnnamed ((const char *)0x001939b4)   // the original's "<unnamed>" (.rdata)
+
 namespace {
 
 const uint32_t kRanges[3][2] = {
     { 0x000bd750, 0x000bedd0 }, { 0x000c5710, 0x000c7330 }, { 0x000cedd0, 0x000cf300 },
 };
 
+// The originals' copies of the port's ViewCull, GridData and GridMaxSteps, lent to them as each window opens
+#define OrigViewCull (*(WViewCull *)0x0023dfd0)
+#define OrigGridData (*(UGroup **)0x0023b3a4)
+#define OrigGridMaxSteps (*(int32_t *)0x001c9fec)
+
 struct OriginalWindow {
     OriginalWindow() {
+        OrigViewCull = ViewCull;
+        OrigGridData = GridData;
+        OrigGridMaxSteps = GridMaxSteps;
         for (const uint32_t *range : kRanges)
             XbeOriginal_RestoreRange(range[0], range[1], true);
     }
@@ -147,7 +157,7 @@ struct ShadowCollisionArrays {
 #define CollisionManagerObject (*(uint8_t **)0x00239a70)
 #define CollisionArrays (*(ShadowCollisionArrays **)0x00239a70)
 const uint32_t kCollisionManagerBytes = 0x34;
-#define ViewCullBytes ((uint8_t *)0x0023dfd0)
+
 
 // ---- results
 
@@ -545,6 +555,9 @@ void TestInstances() {
         });
         CheckU32("WCollisionInstance::GetRenderInstance", int(i), uint32_t(uintptr_t(render[0])),
                  uint32_t(uintptr_t(render[1])));
+        // An instance without a name: the original answers its "<unnamed>" in .rdata, the port its own
+        if (name[0] == kOrigUnnamed && name[1] != NULL && strcmp(name[1], kOrigUnnamed) == 0)
+            name[0] = name[1];
         CheckU32("WCollisionInstance::GetName", int(i), uint32_t(uintptr_t(name[0])), uint32_t(uintptr_t(name[1])));
         g_cases += 3;
     }
@@ -734,17 +747,15 @@ void TestHelpers() {
     }
 
     // DistanceCheck2d: the view as it is, then random views
-    uint8_t view[0x30];
-    memcpy(view, ViewCullBytes, sizeof(view));
+    const WViewCull view = ViewCull;
     for (int i = 0; i < 2000; i++) {
         if (i >= 1000) {
-            WViewCull *cull = reinterpret_cast<WViewCull *>(ViewCullBytes);
-            cull->radius = Uniform(0.0f, 300.0f);
-            cull->eye = { Uniform(-3000.0f, 3000.0f), Uniform(-50.0f, 50.0f), Uniform(-3000.0f, 3000.0f), 1.0f };
+            ViewCull.radius = Uniform(0.0f, 300.0f);
+            ViewCull.eye = { Uniform(-3000.0f, 3000.0f), Uniform(-50.0f, 50.0f), Uniform(-3000.0f, 3000.0f), 1.0f };
             float angle = Uniform(0.0f, 6.2831853f);
-            cull->facing = { cosf(angle), 0.0f, sinf(angle), 0.0f };
+            ViewCull.facing = { cosf(angle), 0.0f, sinf(angle), 0.0f };
         }
-        const WViewCull *cull = reinterpret_cast<const WViewCull *>(ViewCullBytes);
+        const WViewCull *cull = &ViewCull;
         Coord4 position = { cull->eye.x + Coordinate(-600.0f, 600.0f), Uniform(-50.0f, 50.0f),
                            cull->eye.z + Coordinate(-600.0f, 600.0f), 1.0f };
         float radius = RandomInt(30) == 0 ? Special() : Uniform(0.0f, 200.0f);
@@ -758,7 +769,7 @@ void TestHelpers() {
         CheckU32("DistanceCheck2d", i, uint32_t(where[0]), uint32_t(where[1]));
         g_cases++;
     }
-    memcpy(ViewCullBytes, view, sizeof(view));
+    ViewCull = view;
 
     for (int i = 0; i < 2000; i++) {
         WRenderSortEntry a = { Random(), Coordinate(-100.0f, 100.0f) }, b = { Random(), Coordinate(-100.0f, 100.0f) };

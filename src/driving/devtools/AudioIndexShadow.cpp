@@ -4,6 +4,7 @@
 
 #include "AudioIndexShadow.h"
 
+#include "../audio/Bank.h"             // AudioDirectory
 #include "../audio/Index.h"
 #include "../audio/SoundManager.h"      // fgBanks
 #include "../audio/ZoomObj.h"
@@ -136,8 +137,6 @@ const IdInsertFn OriginalIdInsert = (IdInsertFn)0x00127230;
 const NameInsertFn OriginalNameInsert = (NameInsertFn)0x001272f0;
 const IdEraseRangeFn OriginalIdEraseRange = (IdEraseRangeFn)0x001273c0;
 const NameEraseRangeFn OriginalNameEraseRange = (NameEraseRangeFn)0x00127480;
-
-const char *const kAudioDirectory = (const char *)0x001d8318;   // the directory ABank's constructor passes
 
 // ---- trees as text: pre-order, colour, key and value, names as offsets into the block (or the text itself)
 
@@ -488,11 +487,11 @@ void SyntheticCases() {
         g_textMissing = round == 3;
         snprintf(what, sizeof(what), "synthetic %d", round);
         static const char *const kFiles[] = { "bank.bnk", "a.b.c", "x.", "Weapons.BNK" };
-        CompareIndex(what, Random(4) == 0 ? "data\\audio\\" : kAudioDirectory, kFiles[Random(4)]);
+        CompareIndex(what, Random(4) == 0 ? "data\\audio\\" : AudioDirectory, kFiles[Random(4)]);
     }
     g_textMissing = false;
     CompareIndex("no directory", NULL, "bank.bnk");
-    CompareIndex("no file", kAudioDirectory, NULL);
+    CompareIndex("no file", AudioDirectory, NULL);
     HooksRemove();
 }
 
@@ -504,7 +503,7 @@ void BankCases() {
     for (RefCounterNode *node = banks->head->left; node != banks->head && count < 64; node = Next(node), count++) {
         char what[160];
         snprintf(what, sizeof(what), "bank \"%.100s\"", node->value.name);
-        CompareIndex(what, kAudioDirectory, node->value.name);
+        CompareIndex(what, AudioDirectory, node->value.name);
     }
     printf("[audioindex] %d banks\n", count);
 }

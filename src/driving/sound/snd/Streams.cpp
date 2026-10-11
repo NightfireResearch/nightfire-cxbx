@@ -44,13 +44,17 @@
 // devtools/SndStreamShadow.cpp compares them with the originals (sound.md 9.3 step 6).
 // ---------------------------------------------------------------------------------------------------------------
 
-namespace {
-
 // ---- this module's globals
-#define StreamArray ((SND::StreamState **)0x00244ba8)      // sndss: [NumStreams]
-#define PacketPlayers ((SND::PacketPlayer **)0x002452e4)   // sndpps: [NumStreams]
-#define PacketCallbackCount I32_AT(0x00244fe0)
-#define PacketCallbacks ((SND::PacketCallback *)0x00244fe4)   // [PacketCallbackCount], no bound
+// XBE_GLOBAL(0x00244ba8, 0x80)
+SND::StreamState *StreamArray[32];                     // sndss: [NumStreams]
+// XBE_GLOBAL(0x002452e4, 0x80)
+SND::PacketPlayer *PacketPlayers[32];                  // sndpps: [NumStreams]
+// XBE_GLOBAL(0x00244fe0, 4)
+int32_t PacketCallbackCount;
+// XBE_GLOBAL(0x00244fe4, 0x300)
+SND::PacketCallback PacketCallbacks[96];               // [PacketCallbackCount], added to without a bound check
+
+namespace {
 
 // The chunk tags of an EA stream
 enum ChunkTag : uint32_t {

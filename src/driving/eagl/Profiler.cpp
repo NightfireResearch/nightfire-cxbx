@@ -57,31 +57,45 @@ constexpr double kBarHeight = 1280.0;          // a full frame's bar sum
 constexpr double kBarScale = 0.03125;          // bar sum to pixels (1 / 32)
 
 // PrintMessage's state
-#define PrintLevel I32_AT(0x001cdcc8)                       // messages above it are dropped
-#define PrintHook (*(int (**)(const char *format, va_list arguments))0x00240268)
-#define PrintBuffer ((char *)0x00240270)                    // 0x200 bytes
+// XBE_GLOBAL(0x001cdcc8, 4)
+int32_t PrintLevel = 10;                                    // messages above it are dropped
+// XBE_GLOBAL(0x00240270, 0x200)
+char PrintBuffer[0x200];
 
 // The profiler's state
-#define HistoryIndex U32_AT(0x00240528)                     // the ring slot this frame writes
-#define Gouraud (*(EAGL::ProfilerDrawGouraud **)0x0024052c)
-#define PageTick U32_AT(0x00240530)
-#define Page U32_AT(0x00240534)                             // which region's label is shown
-#define ScreenWidth FLOAT_AT(0x00240538)
-#define RegionList (*(ProfilerRegion **)0x0024053c)
-#define ProfilerViewPort (*(EAGL::ViewPort **)0x00240540)
-#define DrawEnabled U8_AT(0x00240544)
-#define BarMode U8_AT(0x00240545)
-#define LastFrameTsc U32_AT(0x00240548)
-#define FrameRegion ((ProfilerRegion *)0x00240560)          // the static region the frame mark times
-#define Paging U8_AT(0x001ce018)
-#define StartX FLOAT_AT(0x001ce01c)
-#define StartY FLOAT_AT(0x001ce020)
-#define CurrentTimer (*(ProfilerTimer **)0x001ce024)
-#define SkipFrame U8_AT(0x001ce072)
-#define PageTicks U32_AT(0x00242424)                        // TIMER ticks per page (and per flash)
+// XBE_GLOBAL(0x00240528, 4)
+uint32_t HistoryIndex;                                      // the ring slot this frame writes
+// XBE_GLOBAL(0x0024052c, 4)
+EAGL::ProfilerDrawGouraud *Gouraud;
+// XBE_GLOBAL(0x00240530, 4)
+uint32_t PageTick;
+// XBE_GLOBAL(0x00240534, 4)
+uint32_t Page;                                              // which region's label is shown
+// XBE_GLOBAL(0x00240538, 4)
+float ScreenWidth;
+// XBE_GLOBAL(0x0024053c, 4)
+ProfilerRegion *RegionList;
+// XBE_GLOBAL(0x00240540, 4)
+EAGL::ViewPort *ProfilerViewPort;
+// XBE_GLOBAL(0x00240544, 1)
+uint8_t DrawEnabled;
+// XBE_GLOBAL(0x00240545, 1)
+uint8_t BarMode;
+// XBE_GLOBAL(0x00240548, 4)
+uint32_t LastFrameTsc;
+// XBE_GLOBAL(0x001ce018, 1)
+uint8_t Paging = 1;
+// XBE_GLOBAL(0x001ce01c, 4)
+float StartX = 40.0f;
+// XBE_GLOBAL(0x001ce020, 4)
+float StartY = 380.0f;
+// XBE_GLOBAL(0x001ce072, 1)
+uint8_t SkipFrame = 1;
 
-#define NameDrawGouraudNew ((const char *)0x001ce05c)       // "EAGL::DrawGouraud new"
-#define NameDynamicModelNew ((const char *)0x001ce3b0)      // "EAGL::DynamicModel new"
+// The static initialisers build the frame region, and the timer CurrentTimer starts at (0x00240688), where they are
+// XBE_GLOBAL(0x00240560, 0x128)
+#define FrameRegion ((ProfilerRegion *)0x00240560)          // the static region the frame mark times
+#define CurrentTimer (*(ProfilerTimer **)0x001ce024)
 
 enum : uint32_t { kVertexDiffuse = 3, kVertexPosition = 0xffffffff };   // D3DVSDE_*
 enum { kLineList = 2, kQuadStrip = 6 };             // D3DPT_*
@@ -105,6 +119,9 @@ void EndPrimitive() {
 }
 
 }  // namespace
+
+// XBE_GLOBAL(0x00240268, 4)
+EAGL::PrintHookFn EAGL::PrintHook;
 
 // FUNC_AT(0x000f42b0)
 int EAGL::PrintMessage(int level, const char *format, ...) {
@@ -167,12 +184,12 @@ void EAGL::ProfilerResetMaxima() {
     }
 }
 
-// Turns the page of regions labelled every PageTicks ticks while paging is on, back to the first page past the
-// last; with paging off it only keeps the tick.
+// Turns the page of regions labelled every TimerFrequency ticks (a second) while paging is on, back to the first
+// page past the last; with paging off it only keeps the tick.
 // FUNC_AT(0x000f4620)
 void EAGL::ProfilerAdvancePage(uint32_t count) {
     if (Paging != 0) {
-        uint32_t interval = PageTicks;
+        uint32_t interval = TimerFrequency;
         if (TIMER_gettick() - PageTick >= interval) {
             PageTick = TIMER_gettick();
             Page++;
@@ -253,7 +270,7 @@ void EAGL::ProfilerRegion::DrawRegion(float x, float y, int index, int pass, flo
     }
     if (flashTick != 0) {
         uint32_t now = TIMER_gettick();
-        if (now - flashTick >= PageTicks)
+        if (now - flashTick >= uint32_t(TimerFrequency))
             flashTick = 0;
         else if ((now & 8) != 0)
             swatch = 0xffaa0000;
@@ -459,7 +476,7 @@ void EAGL::ProfilerRegion::DrawRegions() {
         ScreenWidth = width;
     }
     if (Gouraud == NULL) {
-        void *memory = EaglMalloc(sizeof(DrawGouraud), NameDrawGouraudNew);
+        void *memory = EaglMalloc(sizeof(DrawGouraud), "EAGL::DrawGouraud new");
         DrawGouraud *drawGouraud = memory != NULL ? static_cast<DrawGouraud *>(memory)->Construct() : NULL;
         Gouraud = static_cast<ProfilerDrawGouraud *>(drawGouraud);
         drawGouraud->Init();
@@ -612,7 +629,7 @@ EAGL::ProfilerDrawArray* EAGL::ProfilerDrawArray::Construct() {
     dirty = 1;
     keepCounts = 0;
     numVerts = 0;
-    void *memory = EaglMalloc(sizeof(DynamicModel), NameDynamicModelNew);
+    void *memory = EaglMalloc(sizeof(DynamicModel), "EAGL::DynamicModel new");
     model = memory != NULL ? static_cast<DynamicModel *>(memory)->Construct() : NULL;
     stream.noCopy = 0;
     stream.user = 0;

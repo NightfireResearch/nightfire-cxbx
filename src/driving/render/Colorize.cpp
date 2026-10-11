@@ -41,12 +41,18 @@ struct ColorizeMissileCamView {
 // ---- globals
 #define MissileCam (*(ColorizeMissileCamView **)0x00200f54)
 #define SimStepCount U32_AT(0x00234e34)
-#define InfraredStartBrightness FLOAT_AT(0x001c487c)    // 0.4: the previous brightness the infrared mode starts from
-#define BrightnessLightScale FLOAT_AT(0x001c4880)       // 100
-#define BrightnessEaseSteps I32_AT(0x001c4884)          // 240: the steps the light takes to follow the brightness
-#define ColorizeUnknown1c4888 FLOAT_AT(0x001c4888)      // set to 1 when the video mode is not 1; not read
-#define ColorizeUnknown1c488c FLOAT_AT(0x001c488c)      // set to 0.625 then
-#define VideoModeChecked BOOL8_AT(0x001f68a0)           // a function-local static's guard
+// XBE_GLOBAL(0x001c487c, 4)
+float InfraredStartBrightness = 0.4f;    // the previous brightness the infrared mode starts from
+// XBE_GLOBAL(0x001c4880, 4)
+float BrightnessLightScale = 100.0f;
+// XBE_GLOBAL(0x001c4884, 4)
+int32_t BrightnessEaseSteps = 240;       // the steps the light takes to follow the brightness
+// XBE_GLOBAL(0x001c4888, 4)
+float ColorizeUnknown1c4888 = 0.875f;    // set to 1 when the video mode is not 1; not read
+// XBE_GLOBAL(0x001c488c, 4)
+float ColorizeUnknown1c488c = 0.625f;    // set to 0.625 then
+// XBE_GLOBAL(0x001f68a0, 1)
+bool VideoModeChecked;                   // a function-local static's guard
 
 namespace {
 
@@ -207,7 +213,7 @@ void RColorize::Draw() {
     }
 
     if (!VideoModeChecked) {
-        VideoModeChecked = 1;
+        VideoModeChecked = true;
         if (GetFoundationVideoMode() != kVideoMode1) {
             ColorizeUnknown1c488c = 0.625f;
             ColorizeUnknown1c4888 = 1.0f;

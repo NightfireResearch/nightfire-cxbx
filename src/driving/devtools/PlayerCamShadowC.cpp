@@ -4,7 +4,9 @@
 
 #include "PlayerCamShadowC.h"
 
+#include "../camera/CameraIniLoader.h"  // fgCameraConstants, kExplosionShakePeriod
 #include "../camera/PlayerCamera.h"
+#include "../camera/PlayerCameraC.h"
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../engine/UMemory.hpp"
@@ -56,26 +58,36 @@ struct Rng {
 
 #define ShadowPlayerObject (**(PhysicsObject ***)0x00234e40)
 
-// The camera globals the functions write
+// The originals' copies of the camera globals the functions write (ours: ShakeOrigin, HeliGroundCount,
+// HeliGroundPoint, AimMatrix), and of fgCameraConstants and kExplosionShakePeriod, which they read
+#define OrigShakeOrigin (*(Coord4 *)0x001ec3a0)
+#define OrigHeliGroundCount (*(int32_t *)0x001ec3e8)
+#define OrigHeliGroundPoint (*(Coord4 *)0x001ec3f0)
+#define OrigAimMatrix (*(MATRIX4 *)0x001ec400)
+#define OrigCameraConstants (*(CameraConstants *)0x001c3e40)
+#define OrigExplosionShakePeriod (*(int32_t *)0x001ebca4)
+
 struct CameraGlobals {
-    Coord4 shakePosition;       // 0x001ec3a0
-    int32_t groundCount;        // 0x001ec3e8
-    Coord4 groundPoint;         // 0x001ec3f0
-    MATRIX4 aimMatrix;          // 0x001ec400
+    Coord4 shakePosition;
+    int32_t groundCount;
+    Coord4 groundPoint;
+    MATRIX4 aimMatrix;
 };
 
-void ReadGlobals(CameraGlobals *g) {
-    memcpy(&g->shakePosition, (void *)0x001ec3a0, 16);
-    memcpy(&g->groundCount, (void *)0x001ec3e8, 4);
-    memcpy(&g->groundPoint, (void *)0x001ec3f0, 16);
-    memcpy(&g->aimMatrix, (void *)0x001ec400, 64);
+// The side's copies
+void ReadGlobals(CameraGlobals *g, bool original) {
+    g->shakePosition = original ? OrigShakeOrigin : ShakeOrigin;
+    g->groundCount = original ? OrigHeliGroundCount : HeliGroundCount;
+    g->groundPoint = original ? OrigHeliGroundPoint : HeliGroundPoint;
+    g->aimMatrix = original ? OrigAimMatrix : AimMatrix;
 }
 
+// Both copies
 void WriteGlobals(const CameraGlobals *g) {
-    memcpy((void *)0x001ec3a0, &g->shakePosition, 16);
-    memcpy((void *)0x001ec3e8, &g->groundCount, 4);
-    memcpy((void *)0x001ec3f0, &g->groundPoint, 16);
-    memcpy((void *)0x001ec400, &g->aimMatrix, 64);
+    ShakeOrigin = OrigShakeOrigin = g->shakePosition;
+    HeliGroundCount = OrigHeliGroundCount = g->groundCount;
+    HeliGroundPoint = OrigHeliGroundPoint = g->groundPoint;
+    AimMatrix = OrigAimMatrix = g->aimMatrix;
 }
 
 enum Op { kAim, kShake, kObjects, kResolve, kHeli, kTumble, kEllipse };
@@ -123,7 +135,7 @@ int32_t Call(const Case &c) {
     switch (c.op) {
     case kAim: {
         MATRIX4 *m = reinterpret_cast<AimFn>(0x000876b0)(camera, 0, c.x, c.y);
-        return m == &camera->aimMatrix ? 1 : m == &camera->matrix ? 2 : m == (MATRIX4 *)0x001ec400 ? 3 : 4;
+        return m == &camera->aimMatrix ? 1 : m == &camera->matrix ? 2 : m == &OrigAimMatrix || m == &AimMatrix ? 3 : 4;
     }
     case kShake:
         reinterpret_cast<MethodFn>(0x000873e0)(camera, 0);
@@ -171,8 +183,11 @@ void RunOnce(const Case &c, Result *r, bool original) {
     g_a = c.a;
     g_b = c.b;
 
-    if (original)
+    if (original) {
+        OrigCameraConstants = fgCameraConstants;
+        OrigExplosionShakePeriod = kExplosionShakePeriod;
         XbeOriginal_RestoreRange(kRangeLo, kRangeHi, true);
+    }
     r->faulted = !SafeCall(c, &r->value);
     if (original)
         XbeOriginal_RestoreRange(kRangeLo, kRangeHi, false);
@@ -188,7 +203,7 @@ void RunOnce(const Case &c, Result *r, bool original) {
     memcpy(r->camera, g_camera, sizeof(r->camera));
     memcpy(r->state, g_state, sizeof(r->state));
     memcpy(r->queue, g_queue, sizeof(r->queue));
-    ReadGlobals(&r->globals);
+    ReadGlobals(&r->globals, original);
     r->a = g_a;
 }
 
@@ -295,7 +310,7 @@ void PlayerCamShadowC_Run(void) {
     }
     const RPlayerCamera *live = fgRenderHigh->views[0].camera;
     CameraGlobals globals;
-    ReadGlobals(&globals);
+    ReadGlobals(&globals, false);
     Rng rng = {0x5eed0c3u};
     int modes = fgCameraTables.modeCount;
     Coord4 anchorAt = live->lookAt;

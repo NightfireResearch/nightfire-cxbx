@@ -1,13 +1,19 @@
 #include "Pad.hpp"
 
+#include "RealSystem.h"
+
+#include <bit>
 #include <math.h>
 #include <stdint.h>
 #include <string.h>
 
-// The four records, and the library's initialised flag.
-#define gPads ((PadData *)0x00241c50)
-#define gPadInitialised (*(bool *)0x00241e90)
 static const int kPorts = 4;
+
+// The four records, and the library's initialised flag.
+// XBE_GLOBAL(0x00241c50, 0x240)
+PadData gPads[kPorts];
+// XBE_GLOBAL(0x00241e90, 1)
+static bool gPadInitialised;
 
 // XAPI, called at its entry points in the XBE, which are XboxInput.cpp's replacements. XDEVICE_TYPE_GAMEPAD is the address of the device-type table XAPI
 // keeps in the XBE.
@@ -31,11 +37,8 @@ typedef uint32_t (__stdcall *XInputGetStateFn)(void *handle, XboxGamepadState *s
 #define XInputGetCapabilities ((XInputGetCapabilitiesFn)0x0018490f)
 #define XInputGetState ((XInputGetStateFn)0x00184aed)
 
-// The game's task list: PAD_init adds PAD_update to it (0x0010aa50, __cdecl; the two zeros are passed as the
-// original passes them).
-typedef void (__cdecl *SyncTaskAddFn)(void *task, int a, int b);
-#define SYNCTASK_add ((SyncTaskAddFn)0x0010aa50)
-#define kPAD_updateOriginal ((void *)0x00108490)   // patched to jump to PAD_update below
+// PAD_init adds PAD_update to the game's task list by the original's address, which IOModule::Initialize removes.
+#define kPAD_updateOriginal ((SyncTaskFn)0x00108490)   // patched to jump to PAD_update below
 
 // AUTOINJECT
 PadData* PAD_getdataptr(int port) {
@@ -47,13 +50,15 @@ int PAD_getpadtype(int port) {
     return gPads[port].handle != nullptr;
 }
 
+constexpr float kStickScale = 0x1.0001p-15f;   // 1 / 32767.5, as the game rounds it
+static_assert(std::bit_cast<uint32_t>(kStickScale) == 0x38000080);
+
 // A stick axis: the signed 16-bit reading centred and scaled to about -1 .. 1, and zero within 0.25 of the middle.
 // The original keeps the unrounded product on the x87 stack for the deadzone test; it has at most 41 significant
 // bits, so double holds it exactly.
 static float StickValue(int16_t raw) {
-    const float scale = *(const float *)0x001a1788;   // 1 / 32767.5, as the game rounds it
-    float value = ((float)raw + 0.5f) * scale;
-    if (fabs(((double)raw + 0.5) * (double)scale) < 0.25)
+    float value = ((float)raw + 0.5f) * kStickScale;
+    if (fabs(((double)raw + 0.5) * (double)kStickScale) < 0.25)
         value = 0.0f;
     return value;
 }

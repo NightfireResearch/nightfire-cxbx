@@ -48,4 +48,6 @@ public:
 };
 static_assert(sizeof(PhysicsNamespace) == 4, "a physics namespace is a vtable");
 
+extern int32_t PhysicsDataType;         // the extension type's id; -1 until the first constructor
+
 #endif // DRIVING_PHYSICS_PHYSICSNAMESPACE_H_

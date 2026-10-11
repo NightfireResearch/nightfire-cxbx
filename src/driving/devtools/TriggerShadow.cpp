@@ -102,7 +102,8 @@ typedef SimpleRigidBody *(__fastcall *GetSimpleBodyFn)(void *, int, int);
 
 // ---- the game's state the tests write and restore
 
-#define ShadowQueryStamp U32_AT(0x0023e270)
+// The original's copy of the port's QueryStamp
+#define OrigQueryStamp (*(uint32_t *)0x0023e270)
 #define ShadowHittingRay I32_AT(0x001c3df4)
 #define ShadowRayShells ((ActiveRayShell *)0x001e8570)
 #define ShadowRigidOwners ((void **)0x002342a0)
@@ -378,14 +379,14 @@ uint32_t g_stamp0;
 
 void StartRun(WTriggerManager *manager) {
     memcpy(manager->triggers, g_work.data(), g_work.size());
-    ShadowQueryStamp = g_stamp0;
+    QueryStamp = OrigQueryStamp = g_stamp0;
     ShadowHittingRay = -1;
 }
 
-void EndRun(WTriggerManager *manager, ProcessState *state) {
+void EndRun(WTriggerManager *manager, ProcessState *state, bool original) {
     state->triggers.assign(reinterpret_cast<uint8_t *>(manager->triggers),
                            reinterpret_cast<uint8_t *>(manager->triggers) + g_work.size());
-    state->stamp = ShadowQueryStamp;
+    state->stamp = original ? OrigQueryStamp : QueryStamp;
     state->hittingRay = ShadowHittingRay;
 }
 
@@ -439,7 +440,7 @@ void TestProcess() {
                     Orig_ProcessRigid(manager, 0, bodyIndex, &rigid);
                 else
                     manager->Process(bodyIndex, &rigid);
-                EndRun(manager, &state[original ? 0 : 1]);
+                EndRun(manager, &state[original ? 0 : 1], original);
             });
             CompareRuns("Process(RigidBody)", index, state);
 
@@ -452,7 +453,7 @@ void TestProcess() {
                         Orig_ProcessSimple(manager, 0, bodyIndex, &simple);
                     else
                         manager->Process(bodyIndex, &simple);
-                    EndRun(manager, &state[original ? 0 : 1]);
+                    EndRun(manager, &state[original ? 0 : 1], original);
                 });
                 CompareRuns("Process(SimpleRigidBody)", index, state);
             }
@@ -472,7 +473,7 @@ void TestProcess() {
                     Orig_ProcessInstance(manager, 0, &instance);
                 else
                     manager->Process(&instance);
-                EndRun(manager, &state[original ? 0 : 1]);
+                EndRun(manager, &state[original ? 0 : 1], original);
             });
             CompareRuns("Process(CARP::Instance)", index, state);
 
@@ -490,7 +491,7 @@ void TestProcess() {
                     Orig_ProcessRay(manager, 0, 0);
                 else
                     manager->Process(0);
-                EndRun(manager, &state[original ? 0 : 1]);
+                EndRun(manager, &state[original ? 0 : 1], original);
             });
             CompareRuns("Process(ray shell)", index, state);
         }
@@ -509,7 +510,7 @@ void TestProcess() {
                 Orig_ProcessRigid(manager, 0, i, body);
             else
                 manager->Process(i, body);
-            EndRun(manager, &state[original ? 0 : 1]);
+            EndRun(manager, &state[original ? 0 : 1], original);
         });
         CompareRuns("Process(live RigidBody)", i, state);
     }
@@ -523,7 +524,7 @@ void TestProcess() {
                 Orig_ProcessSimple(manager, 0, i, body);
             else
                 manager->Process(i, body);
-            EndRun(manager, &state[original ? 0 : 1]);
+            EndRun(manager, &state[original ? 0 : 1], original);
         });
         CompareRuns("Process(live SimpleRigidBody)", i, state);
     }
@@ -630,7 +631,7 @@ void TriggerShadow_Run(void) {
     std::vector<uint8_t> savedTriggers(reinterpret_cast<uint8_t *>(manager->triggers),
                                        reinterpret_cast<uint8_t *>(manager->triggers) + bytes);
     bool savedActive = manager->active;
-    uint32_t savedStamp = ShadowQueryStamp;
+    uint32_t savedStamp = QueryStamp, savedOrigStamp = OrigQueryStamp;
     int32_t savedHitting = ShadowHittingRay;
     ActiveRayShell savedRay = ShadowRayShells[0];
     EventDynamicData savedData = gEventDynamicData;
@@ -645,7 +646,8 @@ void TriggerShadow_Run(void) {
 
     memcpy(manager->triggers, savedTriggers.data(), bytes);
     manager->active = savedActive;
-    ShadowQueryStamp = savedStamp;
+    QueryStamp = savedStamp;
+    OrigQueryStamp = savedOrigStamp;
     ShadowHittingRay = savedHitting;
     ShadowRayShells[0] = savedRay;
     gEventDynamicData = savedData;

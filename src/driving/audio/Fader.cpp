@@ -27,7 +27,6 @@
 
 // Moves the sound to the mix `mixName` (Remove, then Add).
 #define ABaseSound_SetMix ((void (__fastcall *)(ABaseSound *, int, const char *mixName))0x000d3690)
-#define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 
 // ---- globals
 
@@ -230,7 +229,7 @@ void AFader::SetFilter(float filter) {
 // FUNC_AT(0x00125230)
 void AFader::Call911() {
     Priv *state = priv;
-    if (CRT_stricmp(state->secondary, "city") != 0)
+    if (_stricmp(state->secondary, "city") != 0)
         return;
     if (!state->unknown28) {
         state->unknown29 = 1;

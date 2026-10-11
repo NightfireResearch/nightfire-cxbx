@@ -14,7 +14,7 @@
 //   CollectionMap        0x38   (class, name) -> AttributeCollection            "AttributeCollectionMap"
 //   StringSet            0x14   string                                          "AttributeStringSet"
 //
-// Names compare without regard to case (the game's _stricmp), the string set's strings with strcmp.
+// Names compare without regard to case (_stricmp), the string set's strings with strcmp.
 
 #include "../engine/RbTree.h"
 #include "AttributeValue.h"

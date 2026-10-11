@@ -3,6 +3,7 @@
 #endif
 
 #include "BondCarShadowA.h"
+#include "BondCarOrigTuning.h"
 #include "FpControl.h"
 
 #include "../EventManager.hpp"
@@ -20,6 +21,7 @@
 #include "../render/RSceneObj.hpp"
 #include "../world/CollisionManager.h"
 #include "../world/Targeting.h"
+#include "OwnedGlobals.h"
 #include "../../common/xbeOriginal.h"
 #include "../../common/xbeOverload.h"
 
@@ -87,10 +89,9 @@ struct Rng {
 #define ShadowGetRigidBody ((RigidBody *(__fastcall *)(void *, int, int slot))0x000b2700)
 #define ShadowSim ((void *)0x00233ff0)
 #define ShadowRandom (*(SimRandom **)0x00233ff0)
-#define ShadowCreationPoint (*(char **)0x001e47d8)
-
-constexpr uintptr_t kTuningStart = 0x001c36cc;      // the tuning globals InitializeBondCarGlobals loads
-constexpr size_t kTuningSize = 0x001c37a8 - 0x001c36cc;
+// The original's copy of the port's BondCarScratchPad (the cars' tuning: BondCarOrigTuning.h). The event queue's
+// creation point is ours on both sides: the originals reach it through EventManager's ported functions.
+#define OrigBondCarScratchPad (*(BondCarScratch **)0x001e7a88)
 constexpr size_t kAudioSize = 0x160;                // the car's audio object, as far as the package writes it
 constexpr size_t kSoundSize = 0x60;                 // SetOrientation's
 
@@ -251,8 +252,8 @@ void __fastcall FakeTriggerFX(void *self, int, int type, uint32_t which, uint32_
         e->words[1] = uint32_t(type);
         e->words[2] = which;
         e->words[3] = unused;
-        e->words[4] = uint32_t(uintptr_t(position));
-        e->words[5] = uint32_t(uintptr_t(direction));
+        e->words[4] = OwnedGlobals_VectorWord(position);
+        e->words[5] = OwnedGlobals_VectorWord(direction);
         memcpy(&e->words[6], &intensity, 4);
     }
 }
@@ -291,12 +292,13 @@ struct World {
     uint8_t liveCar[sizeof(PBondCar)];
     SimRandom random;
     uint32_t barrierMask;
-    uint8_t tuning[kTuningSize];
+    BondCarTuning tuning;
     float damageThreshold;
     char *creationPoint;
 };
 
-void Take(World *w) {
+// The world after a run: the tuning the side's code uses (the original's copy or ours)
+void Take(World *w, bool original) {
     memset(w, 0, sizeof(*w));
     if (g_body != NULL)
         memcpy(w->body, g_body, sizeof(w->body));
@@ -306,9 +308,9 @@ void Take(World *w) {
         memcpy(w->liveCar, g_liveCar, sizeof(w->liveCar));
     w->random = *ShadowRandom;
     w->barrierMask = fgCollisionMgr->barrierMask;
-    memcpy(w->tuning, (const void *)kTuningStart, kTuningSize);
+    w->tuning = original ? OrigBondCarTuning : OurBondCarTuning();
     w->damageThreshold = fgDamageLevels.spread;
-    w->creationPoint = ShadowCreationPoint;
+    w->creationPoint = gCreationPoint;
 }
 
 void Put(const World &w) {
@@ -320,9 +322,10 @@ void Put(const World &w) {
         memcpy(g_liveCar, w.liveCar, sizeof(w.liveCar));
     *ShadowRandom = w.random;
     fgCollisionMgr->barrierMask = w.barrierMask;
-    memcpy((void *)kTuningStart, w.tuning, kTuningSize);
+    OrigBondCarTuning = w.tuning;
+    SetOurBondCarTuning(w.tuning);
     fgDamageLevels.spread = w.damageThreshold;
-    ShadowCreationPoint = w.creationPoint;
+    gCreationPoint = w.creationPoint;
 }
 
 // ---- the cases
@@ -556,8 +559,8 @@ void RunOnce(const Case &c, Result *r, bool original) {
     car->hitPointLoc = &g_hitPoints;
     if (c.clearTracks)
         memset(car->tyreTracks, 0, sizeof(car->tyreTracks));
-    BondCarScratch *savedPad = BondCarScratchPad;
-    BondCarScratchPad = &g_pad;
+    BondCarScratch *savedPad = BondCarScratchPad, *savedOrigPad = OrigBondCarScratchPad;
+    BondCarScratchPad = OrigBondCarScratchPad = &g_pad;
     Put(c.world);
     g_logCount = 0;
     if (original)
@@ -566,6 +569,7 @@ void RunOnce(const Case &c, Result *r, bool original) {
     if (original)
         XbeOriginal_RestoreRange(kRangeLo, kRangeHi, false);
     BondCarScratchPad = savedPad;
+    OrigBondCarScratchPad = savedOrigPad;
     if (kBoolResult[c.op])
         r->value &= 0xff;
     // tyre tracks made by the run: freed, and compared as made or not
@@ -586,7 +590,7 @@ void RunOnce(const Case &c, Result *r, bool original) {
     memcpy(r->pad, &g_pad, sizeof(r->pad));
     memcpy(r->sound, g_sound, sizeof(r->sound));
     r->args = g_args;
-    Take(&r->world);
+    Take(&r->world, original);
     memcpy(r->log, g_log, sizeof(r->log));
     r->logCount = g_logCount;
 }
@@ -674,7 +678,7 @@ void RunCase(const Case &c) {
     CompareBlock(c, index, "live car", a.liveCar, b.liveCar, sizeof(a.liveCar), &differ);
     CompareBlock(c, index, "random", &a.random, &b.random, sizeof(a.random), &differ);
     CompareBlock(c, index, "barrier mask", &a.barrierMask, &b.barrierMask, 4, &differ);
-    CompareBlock(c, index, "tuning", a.tuning, b.tuning, sizeof(a.tuning), &differ);
+    CompareBlock(c, index, "tuning", &a.tuning, &b.tuning, sizeof(a.tuning), &differ);
     CompareBlock(c, index, "damage threshold", &a.damageThreshold, &b.damageThreshold, 4, &differ);
     CompareBlock(c, index, "event queue", &a.creationPoint, &b.creationPoint, sizeof(a.creationPoint), &differ);
     CompareBlock(c, index, "calls made", &original.logCount, &ours.logCount, sizeof(original.logCount), &differ);
@@ -1017,7 +1021,7 @@ void Take(State *s) {
     memcpy(s->info, g_body->info, sizeof(s->info));
     s->physics = *g_car->physics;
     memcpy(s->pad, BondCarScratchPad, sizeof(s->pad));
-    s->creationPoint = ShadowCreationPoint;
+    s->creationPoint = gCreationPoint;
 }
 
 void Put(const State &s) {
@@ -1028,7 +1032,7 @@ void Put(const State &s) {
     memcpy(info, s.info, sizeof(s.info));
     *physics = s.physics;
     memcpy(BondCarScratchPad, s.pad, sizeof(s.pad));
-    ShadowCreationPoint = s.creationPoint;
+    gCreationPoint = s.creationPoint;
 }
 
 void *__fastcall RecordECollision(void *self, int, CollisionImpact impact) {
@@ -1134,6 +1138,8 @@ void __fastcall LiveSnowmobile(PBondCar *car, int) {
     g_body = car->GetRigidBody();
     Take(&g_start);
     Patch(&g_eventHook, (const void *)&RecordECollision);
+    OrigBondCarScratchPad = BondCarScratchPad;
+    LendBondCarTuning();
 
     g_impacts = &g_result[0].impacts;
     g_impacts->count = 0;
@@ -1250,7 +1256,7 @@ void BondCarShadowA_Run(void) {
     g_body = NULL;
     g_info = NULL;
     g_liveCar = NULL;
-    Take(&g_live);
+    Take(&g_live, false);
     g_source = NULL;
     PBondCar *player = ShadowPlayerCar;
     int cars = 0;
@@ -1265,7 +1271,7 @@ void BondCarShadowA_Run(void) {
         g_liveCar = car;
         g_body = car->GetRigidBody();
         g_info = g_body->info;
-        Take(&g_live);
+        Take(&g_live, false);
         CarCases(&rng, car == player ? 12 : 6);
         Put(g_live);
         cars++;

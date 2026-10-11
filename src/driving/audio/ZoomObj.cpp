@@ -21,16 +21,9 @@
 // the name is ours).
 #define AVoice_IsFinished ((bool (__fastcall *)(AVoice *, int))0x000d36c0)
 
-// The C runtime's `eh vector constructor iterator` and `eh vector destructor iterator`, given AVoice::View's
-// constructor and destructor by address.
-#define EhVectorConstructor ((void (__stdcall *)(void *array, uint32_t size, int count, uint32_t construct, uint32_t destruct))0x0013326e)
-#define EhVectorDestructor ((void (__stdcall *)(void *array, uint32_t size, int count, uint32_t destruct))0x0013332e)
-
 namespace {
 
 constexpr uint32_t kASoundVtable = 0x001a2a7c;
-constexpr uint32_t kViewConstruct = 0x00123820;     // AVoice::View::Construct
-constexpr uint32_t kViewDestruct = 0x00123c50;      // AVoice::View::Destruct
 
 constexpr float kFrameSeconds = 1.0f / 60.0f;
 static_assert(std::bit_cast<uint32_t>(kFrameSeconds) == 0x3c888889, "1/60 as the original's .rdata has it");
@@ -119,7 +112,8 @@ ASound* ASound::Construct(const char *mixName) {
     ABaseSound::Construct(mixName, kSoundViewsActive);
     vtable = kASoundVtable;
     voice.mix = mix;
-    EhVectorConstructor(voice.views, sizeof(AVoice::View), 3, kViewConstruct, kViewDestruct);
+    for (int i = 0; i < 3; i++)       // the C runtime's vector constructor iterator in the original
+        voice.views[i].Construct();
     volume = 0.0f;
     pitch = 1.0f;
     return this;
@@ -128,7 +122,8 @@ ASound* ASound::Construct(const char *mixName) {
 // FUNC_AT(0x00127b70)
 void ASound::Destruct() {
     vtable = kASoundVtable;
-    EhVectorDestructor(voice.views, sizeof(AVoice::View), 3, kViewDestruct);
+    for (int i = 3; i-- > 0;)         // the C runtime's vector destructor iterator in the original
+        voice.views[i].Destruct();
     ABaseSound::Destruct();
 }
 

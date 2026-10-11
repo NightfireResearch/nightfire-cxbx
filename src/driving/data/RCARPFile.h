@@ -88,4 +88,21 @@ public:
 // The resolver EAGL's loaders are given (0x0007b8a0): the symbol table, then the callbacks.
 void *ResolveEAGLReferences(const char *name, bool *found);
 
+// The one symbol table, its "CHAR" and "DATA" namespace (GlobalSymbolTable::Init's function-local static), and
+// the material file RCARPFile::LoadEAGLMaterials loads (all RCARPFile.cpp).
+class USymbolTable;
+class UCharNamespace;
+extern USymbolTable *Symbols;
+extern UCharNamespace CharNamespace;
+extern void *MaterialData;
+
+// RCARPFile.cpp's state
+extern const char *CurrentCarpName;         // the file being resolved
+extern SymbolCallback Callbacks[16];
+extern uint32_t CharNamespaceGuard;
+extern uint32_t *Colours;
+extern float ShadowAnim[3];
+extern uint32_t CarShadowColour[4];
+extern uint32_t CarShadowColourGuard;
+
 #endif // DRIVING_DATA_RCARPFILE_H_

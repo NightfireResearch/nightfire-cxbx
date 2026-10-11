@@ -28,9 +28,16 @@ class ASystem;
 #define ASoundManager_fgIsPaused BOOL8_AT(0x002439d0)
 #define ASoundManager_fgMissionOver BOOL8_AT(0x00243a77)    // set by SetMissionOver, cleared by Restart
 #define FramesSinceAudioUpdate I32_AT(0x00243a68)   // the simulation's frames since the last audio update
-#define MusicVolumeScale FLOAT_AT(0x001d8064)       // the options' volumes
-#define EffectsVolumeScale FLOAT_AT(0x001d8068)
-#define ASystem_fgSystem (*(ASystem **)0x00243b34)  // the one ASystem, or NULL
+extern float MusicVolumeScale;                  // the options' volumes
+extern float EffectsVolumeScale;
+extern ASystem *ASystem_fgSystem;               // the one ASystem, or NULL
+
+// NormalizedRandomNumber's second number, kept for the next call
+struct NormalSpare {
+    float value;                // +0x00
+    uint8_t available;          // +0x04
+};
+extern NormalSpare RandomSpare;
 
 // The streams that failed to play: std::list<char *> ("FailedStreams")
 struct StreamNameList : PointerList {

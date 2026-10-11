@@ -6,6 +6,7 @@
 
 #include "../audio/Bank.h"
 #include "../audio/Mix.h"
+#include "../audio/SoundManager.h"      // ASystem_fgSystem
 #include "../audio/Voice.h"
 #include "../data/SymbolTable.h"        // CarpGroupMap: trees for the shared helpers
 #include "../engine/UMemory.hpp"
@@ -66,9 +67,10 @@
 namespace {   // this file's own types: another test's of the same name must not merge with them
 
 #define Shadow_ActiveViews (*(AVoiceViewList *)0x00243aa8)
-#define Shadow_LastPlayTick I32_AT(0x00243a98)
-#define Shadow_FxMode I32_AT(0x001d8100)
-#define Shadow_fgSystem PTR_AT(0x00243b34)
+// The port's LastPlayTick (Voice.h), Fx (Mix.h) and ASystem_fgSystem (SoundManager.h), and the original's copies
+#define Orig_LastPlayTick I32_AT(0x00243a98)
+#define Orig_FxMode I32_AT(0x001d8100)                  // Fx.currentMode
+#define Orig_fgSystem (*(ASystem **)0x00243b34)
 #define Shadow_EmptyBank ((ABank *)0x00243b18)
 
 // ---- the originals
@@ -628,8 +630,8 @@ void PlayVoicesCases() {
     const int kMost = 12;
     AVoice::View viewsO[kMost], viewsP[kMost];
     PointerListNode headO, headP, nodesO[kMost], nodesP[kMost];
-    int savedFxMode = Shadow_FxMode;
-    int savedLastTick = Shadow_LastPlayTick;
+    int savedFxMode = Fx.currentMode, savedOrigFxMode = Orig_FxMode;
+    int savedLastTick = LastPlayTick, savedOrigLastTick = Orig_LastPlayTick;
     for (int i = 0; i < 1500; i++) {
         int count = Chance(10) ? 0 : int(1 + Random(kMost));
         for (int k = 0; k < count; k++) {
@@ -664,8 +666,9 @@ void PlayVoicesCases() {
 
         Shadow_ActiveViews.head = &headO;
         Shadow_ActiveViews.size = uint32_t(count);
-        Shadow_FxMode = fxMode;
-        Shadow_LastPlayTick = last;
+        Orig_FxMode = fxMode;
+        Orig_LastPlayTick = last;
+        Fx.currentMode = fxMode;    // also ours: the original calls our AFX::IsAllVoices, which reads it
         g_tick = now;
         g_log.clear();
         {
@@ -673,16 +676,16 @@ void PlayVoicesCases() {
             Guarded([&] { Orig_PlayVoices(); });
         }
         logO = g_log;
-        lastO = Shadow_LastPlayTick;
+        lastO = Orig_LastPlayTick;
 
         Shadow_ActiveViews.head = &headP;
         Shadow_ActiveViews.size = uint32_t(count);
-        Shadow_FxMode = fxMode;
-        Shadow_LastPlayTick = last;
+        Fx.currentMode = fxMode;
+        LastPlayTick = last;
         g_log.clear();
         Guarded([&] { AVoice::PlayVoices(); });
         logP = g_log;
-        lastP = Shadow_LastPlayTick;
+        lastP = LastPlayTick;
 
         g_cases++;
         Check(memcmp(viewsO, viewsP, sizeof(AVoice::View) * count) == 0, "PlayVoices: views", i);
@@ -691,8 +694,10 @@ void PlayVoicesCases() {
     }
     Shadow_ActiveViews.head = &g_listHead;
     Shadow_ActiveViews.size = 0;
-    Shadow_FxMode = savedFxMode;
-    Shadow_LastPlayTick = savedLastTick;
+    Fx.currentMode = savedFxMode;
+    Orig_FxMode = savedOrigFxMode;
+    LastPlayTick = savedLastTick;
+    Orig_LastPlayTick = savedOrigLastTick;
 }
 
 // =============================================================================================================
@@ -1097,8 +1102,9 @@ void BankLiveCases() {
         ABank bankO, bankP;
         memset(&bankO, 0xcd, sizeof(bankO));
         memset(&bankP, 0xcd, sizeof(bankP));
-        void *system = Shadow_fgSystem;
-        Shadow_fgSystem = NULL;
+        ASystem *system = ASystem_fgSystem, *origSystem = Orig_fgSystem;
+        ASystem_fgSystem = NULL;
+        Orig_fgSystem = NULL;
         {
             Originals scope;
             Guarded([&] {
@@ -1114,7 +1120,8 @@ void BankLiveCases() {
             else
                 bankP.Construct();
         });
-        Shadow_fgSystem = system;
+        ASystem_fgSystem = system;
+        Orig_fgSystem = origSystem;
         g_cases++;
         Check(memcmp(&bankO, &bankP, offsetof(ABank, index)) == 0 && bankO.index.names == bankP.index.names &&
               (bankO.index.maps != NULL) == (bankP.index.maps != NULL), "ABank constructor", named);

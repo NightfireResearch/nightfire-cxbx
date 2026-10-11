@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>                       // _stricmp
 
 #include "../../common/xbeOverload.h"     // XbeVirtual
 #include "../../helpers.h"
@@ -37,27 +38,38 @@
 // FeatureManager and RReflection (0x000980e0-0x00099e20), ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
 
-// ---- the game's code not ported yet
-#define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
-
 // ---- globals
 #define Features (*(FeatureManagerData *)0x001f2d78)
-#define CpuType U32_AT(0x001c4810)                      // CPU_detect's (names ours)
-#define FeatureDefault50 I32_AT(0x001c4820)             // copied to FeatureManagerData::unknown50
-#define WarpageX FLOAT_AT(0x001c482c)                   // 1 (names ours)
-#define WarpageY FLOAT_AT(0x001c4830)                   // 1
-#define ReflNearZ FLOAT_AT(0x001c4834)                  // 23
-#define ReflFarZ FLOAT_AT(0x001c4838)                   // 2500
-#define ReflWorldRadius FLOAT_AT(0x001c483c)            // 50: DrawWorldAtPoint's radius
-#define ReflDrawWorld I32_AT(0x001c4840)                // 1
-#define ReflDrawBack BOOL8_AT(0x001c4844)               // 1: the backwards hemisphere into the sphere map
-#define ReflDrawFront BOOL8_AT(0x001c4845)              // 1: the forwards one
-#define ReflUpdating BOOL8_AT(0x001f2e00)               // UpdateMaps is running
-// "Car to edit": a function-local static, its first value and its guard
-#define CarToEdit U32_AT(0x001f2e08)
-#define CarToEditInitial U32_AT(0x001f2e0c)
-#define CarToEditGuard U32_AT(0x001f2e10)
 #define Launch (*(LaunchPage *)0x00243b90)
+// XBE_GLOBAL(0x001c4810, 4)
+uint32_t CpuType = 1;                    // CPU_detect's (names ours)
+// XBE_GLOBAL(0x001c4820, 4)
+int32_t FeatureDefault50 = 1;            // copied to FeatureManagerData::unknown50
+// XBE_GLOBAL(0x001c482c, 4)
+float WarpageX = 1.0f;                   // (names ours)
+// XBE_GLOBAL(0x001c4830, 4)
+float WarpageY = 1.0f;
+// XBE_GLOBAL(0x001c4834, 4)
+float ReflNearZ = 23.0f;
+// XBE_GLOBAL(0x001c4838, 4)
+float ReflFarZ = 2500.0f;
+// XBE_GLOBAL(0x001c483c, 4)
+float ReflWorldRadius = 50.0f;           // DrawWorldAtPoint's radius
+// XBE_GLOBAL(0x001c4840, 4)
+int32_t ReflDrawWorld = 1;
+// XBE_GLOBAL(0x001c4844, 1)
+bool ReflDrawBack = true;                // the backwards hemisphere into the sphere map
+// XBE_GLOBAL(0x001c4845, 1)
+bool ReflDrawFront = true;               // the forwards one
+// XBE_GLOBAL(0x001f2e00, 1)
+bool ReflUpdating;                       // UpdateMaps is running
+// "Car to edit": a function-local static, its first value and its guard
+// XBE_GLOBAL(0x001f2e08, 4)
+static uint32_t CarToEdit;
+// XBE_GLOBAL(0x001f2e0c, 4)
+static uint32_t CarToEditInitial;
+// XBE_GLOBAL(0x001f2e10, 4)
+static uint32_t CarToEditGuard;
 
 namespace {
 
@@ -372,9 +384,9 @@ void RReflection::SetReflectiveSpecularStrength(int index, float strength) {
 // FUNC_AT(0x00098380)
 ReflMaterial* RReflection::LightingProps(int kind, const char *name) {
     int index;
-    if (CRT_stricmp(name, "Character") == 0)
+    if (_stricmp(name, "Character") == 0)
         index = privateData->charactersIndex;
-    else if (CRT_stricmp(name, "Dynamic Objects") == 0)
+    else if (_stricmp(name, "Dynamic Objects") == 0)
         index = privateData->dynamicObjectsIndex;
     else
         index = PVehicle::NameToIndex(name);
@@ -384,7 +396,7 @@ ReflMaterial* RReflection::LightingProps(int kind, const char *name) {
 // FUNC_AT(0x00098410)
 float* RReflection::GetReflectionData2(const char *name) {
     int index;
-    if (CRT_stricmp(name, "Character") == 0)
+    if (_stricmp(name, "Character") == 0)
         index = privateData->charactersIndex;
     else
         index = PVehicle::NameToIndex(name);
@@ -585,7 +597,7 @@ void RReflection::RenderView(float side, const MATRIX4 *frame, const Coord3 *eye
 void RReflection::UpdateMaps(const Coord3 *eye) {
     if (ReflUpdating)
         return;
-    ReflUpdating = 1;
+    ReflUpdating = true;
     MATRIX4 frame = fgRenderHigh->views[0].view->camera->matrix;
     for (int side = 0; side < 2; side++) {
         Begin(&privateData->buffers[side]);
@@ -601,7 +613,7 @@ void RReflection::UpdateMaps(const Coord3 *eye) {
     active = 0;
     fgRenderer->EndView();
     (&privateData->buffers[2])->End();
-    ReflUpdating = 0;
+    ReflUpdating = false;
 }
 
 // FUNC_AT(0x00098980)

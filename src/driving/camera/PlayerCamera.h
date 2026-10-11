@@ -221,6 +221,6 @@ struct CameraView {
 // DoFiring, DoIdling and DoReloading read it
 #define CameraLockOnFlag U8_AT(0x001dda98)
 // Where the last shake that keeps its origin came from (ShakeCamera sets it; CheckForCameraShaking reads it)
-#define ShakeOrigin (*(Coord4 *)0x001ec3a0)
+extern Coord4 ShakeOrigin;
 
 #endif  // DRIVING_CAMERA_PLAYERCAMERA_H_

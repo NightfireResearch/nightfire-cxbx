@@ -24,16 +24,28 @@
 
 // ---- globals
 
-#define Functions (*(MemoryFunctions **)0x001d48c4)   // the allocator's table in use
-#define Pools (*(FastPool **)0x001d48c8)              // the pools in use (DefaultPools until Init)
-#define DefaultPools (*(FastPool *)0x00242eb8)
-#define MemFunctions (*(MemoryFunctions *)0x001d4894) // the MEM_ functions
-#define DeadFunctions (*(MemoryFunctions *)0x001d4864) // after Shutdown: alloc answers NULL
-#define Initialised BOOL8_AT(0x00242fc0)
-#define PageSize U32_AT(0x00242fc4)                   // 0x1000, set by Init and NewClass; nothing reads it
-#define ObjectHeapClass I32_AT(0x00242fc8)            // the class operator new and big FastAllocs use
-#define ClassMemory ((void **)0x00242fd0)             // [64]: each class's contiguous memory
-#define OwnsRam BOOL8_AT(0x001d4830)                  // class 0's memory is Init's own (and is freed with it)
+// The allocator's tables, the game's: they hold its functions' addresses, some of them originals not ported.
+#define InitialFunctions (*(MemoryFunctions *)0x001d4834)   // before Init
+#define MemFunctions (*(MemoryFunctions *)0x001d4894)       // the MEM_ functions
+#define DeadFunctions (*(MemoryFunctions *)0x001d4864)      // after Shutdown: alloc answers NULL
+
+// XBE_GLOBAL(0x00242eb8, 0x108)
+static FastPool DefaultPools;
+// XBE_GLOBAL(0x001d48c4, 0x4)
+MemoryFunctions *Functions = &InitialFunctions;          // the allocator's table in use
+// XBE_GLOBAL(0x001d48c8, 0x4)
+FastPool *Pools = &DefaultPools;                         // the pools in use (DefaultPools until Init)
+// XBE_GLOBAL(0x00242fc0, 0x1)
+static bool Initialised;
+// XBE_GLOBAL(0x00242fc4, 0x4)
+uint32_t PageSize;                                       // 0x1000, set by Init and NewClass; nothing reads it
+// XBE_GLOBAL(0x00242fc8, 0x4)
+int32_t ObjectHeapClass;                                 // the class operator new and big FastAllocs use
+// XBE_GLOBAL(0x00242fd0, 0x40)
+#define ClassMemory ((void **)0x00242fd0)   // each class's contiguous memory, by class number (up to 63: the game's
+                                            // room for 16 runs into the globals after it, so it stays the game's)
+// XBE_GLOBAL(0x001d4830, 0x1)
+static bool OwnsRam = true;                              // class 0's memory is Init's own (and is freed with it)
 
 // XPhysicalAlloc's arguments for a class's memory: anywhere, 0x80-aligned, PAGE_READWRITE.
 static const uint32_t kAnyAddress = 0xffffffff;
@@ -219,7 +231,7 @@ void UMemory::Init(unsigned int bytes, unsigned int objectHeapBytes, void *base)
     if (ClassMemory[0] != NULL)
         return;
     PageSize = 0x1000;
-    Initialised = 1;
+    Initialised = true;
     Functions = &MemFunctions;
     MEM_fill(Pools, 0, sizeof(FastPool));
     void *memory = base;
@@ -227,9 +239,9 @@ void UMemory::Init(unsigned int bytes, unsigned int objectHeapBytes, void *base)
         if (PageSize == 0)   // as the original: it was set just above
             PageSize = 0x1000;
         memory = XPhysicalAlloc(bytes, kAnyAddress, kClassAlignment, kPageReadWrite);
-        OwnsRam = 1;
+        OwnsRam = true;
     } else {
-        OwnsRam = 0;
+        OwnsRam = false;
     }
     ClassMemory[0] = memory;
     if (memory == NULL) {

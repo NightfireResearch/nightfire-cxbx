@@ -135,3 +135,9 @@ void DiscError_Shutdown();    // 0x0005c7b0
 void DiscError_Draw();        // 0x0005c7e0
 char DiscError_Handler();     // 0x0005c960
 void DiscError_Init();        // 0x0005c9a0
+
+// GameLoop.cpp's globals that other files use: gDVD (the launch page's dvdSource; UFileLoader adds the big file
+// without checking it exists when it is set), and the queue the main loop reads the screen-capture action from.
+extern int32_t gDVD;
+class ActionQueue;
+extern ActionQueue GlobalActionQueue;

@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <bit>
 #include <xmmintrin.h>
+#include <string.h>
 
 #include "AIVehicle.h"
 #include "BondCarBasics.h"          // GetCarColourVariation
@@ -45,15 +46,18 @@
 #define SimStepCount I32_AT(0x00234e34)
 #define SimState I32_AT(0x00234e24)
 #define PlayerPhysicsObject (*(PhysicsObject **)PTR_AT(0x00234e40))
-#define ZeroVector (*(const Coord3 *)0x00243030)            // the game's zero vector, never written
-#define OverrideCarType (*(const char **)0x001e7a8c)        // used for a car of class 0 when set (name ours)
+
 #define ControllerPort I32_AT(0x00244520)                   // the launch page's controller port
 #define AIControllerInstance (*(void **)0x001ddee4)          // AIElementController's one instance (name ours)
 #define WeaponManager (*(BondCarWeapons **)0x0023923c)
 
+// XBE_GLOBAL(0x001e7a88, 4)
+BondCarScratch *BondCarScratchPad;
+// XBE_GLOBAL(0x001e7a8c, 4)
+const char *OverrideCarType;
+
 // ---- calls to originals not ported
 
-#define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 #define RVehicle_Construct ((RSceneObj *(__fastcall *)(void *, int, PBondCar *owner))0x000953e0)
 #define RVehicle_SetEMPVictimEffect ((void (__fastcall *)(RSceneObj *, int, bool on))0x000959d0)
 #define AIVehicleController_Get ((void *(*)())0x00035c00)
@@ -85,6 +89,8 @@
 #define AGun_SetFirePatch ((void (__fastcall *)(void *, int, GameStd::String patch))0x001296b0)
 
 namespace {
+
+const Coord3 kZero = {0.0f, 0.0f, 0.0f};
 
 // The weapon manager (SWeaponManager, not ported): what Simulate reads
 struct BondCarWeaponSlot {
@@ -177,7 +183,7 @@ void SetViewDrawList(RSceneObj *object, int list) {
 void TriggerFX(RSceneObj *object, RSceneObj::FXType type, uint32_t which, float intensity) {
     typedef void (RSceneObj::*Method)(int type, uint32_t which, uint32_t unused3, const Coord3 *unused4,
                                       const Coord3 *unused5, float intensity);
-    (object->*XbeVirtual<Method>(object, 15))(type, which, 0, &ZeroVector, &ZeroVector, intensity);
+    (object->*XbeVirtual<Method>(object, 15))(type, which, 0, &kZero, &kZero, intensity);
 }
 
 const Coord3 *XYZ(const Coord4 *v) {
@@ -236,7 +242,7 @@ PBondCar* PBondCar::Construct(int carClass, const char *carType, uint32_t colour
     const char *name = carType;
     if (OverrideCarType != NULL && carClass == kPlayerCar)
         name = OverrideCarType;
-    if (CRT_stricmp(carType, name) != 0) {
+    if (_stricmp(carType, name) != 0) {
         attributes.SetName(name, false);
         this->carType = name;
     }
@@ -325,7 +331,7 @@ PBondCar* PBondCar::Construct(int carClass, const char *carType, uint32_t colour
                                                     dimensions.y, dimensions.z);
     RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
     if (body != NULL)
-        body->Construct(int8_t(rigidBodySlot), kind, position, &velocity, &ZeroVector, &orientation,
+        body->Construct(int8_t(rigidBodySlot), kind, position, &velocity, &kZero, &orientation,
                         attributes.LookupFloat("MASS", NULL), &inverseInertia, &dimensions, this, true, false);
     SetOwnerObject(this);
     InitTyreTracks();
@@ -358,25 +364,25 @@ void PBondCar::InitAudioObject(int carClass) {
     switch (carClass) {
     case kPlayerCar: {
         void *block;
-        if (CRT_stricmp(carType, "tank") == 0) {
+        if (_stricmp(carType, "tank") == 0) {
             block = ABaseSound::OperatorNew(0x210, "APlayerTank");
             audio = block != NULL ? APlayerTank_Construct(block, 0, engine) : NULL;
-        } else if (CRT_stricmp(carType, "helicopter") == 0 || CRT_stricmp(carType, "helivanquish") == 0) {
+        } else if (_stricmp(carType, "helicopter") == 0 || _stricmp(carType, "helivanquish") == 0) {
             block = ABaseSound::OperatorNew(0x210, "APlayerHeli");
             audio = block != NULL ? APlayerHeli_Construct(block, 0) : NULL;
-        } else if (CRT_stricmp(carType, "vanquishsub") == 0) {
+        } else if (_stricmp(carType, "vanquishsub") == 0) {
             block = ABaseSound::OperatorNew(0x240, "ASubmersible");
             audio = block != NULL ? ASubmersible_Construct(block, 0, "Sub") : NULL;
-        } else if (CRT_stricmp(carType, "supersnow") == 0) {
+        } else if (_stricmp(carType, "supersnow") == 0) {
             block = ABaseSound::OperatorNew(0x260, "ASnowMobile");
             audio = block != NULL ? ASnowMobile_Construct(block, 0, "SupSnow") : NULL;
-        } else if (CRT_stricmp(carType, "ultralight") == 0) {
+        } else if (_stricmp(carType, "ultralight") == 0) {
             block = ABaseSound::OperatorNew(0x230, "AUltraLite");
             audio = block != NULL ? AUltraLite_Construct(block, 0) : NULL;
-        } else if (CRT_stricmp(carType, "fodbase") == 0) {
+        } else if (_stricmp(carType, "fodbase") == 0) {
             block = ABaseSound::OperatorNew(0x200, "AFingoDeath");
             audio = block != NULL ? AFingoDeath_Construct(block, 0) : NULL;
-        } else if (CRT_stricmp(carType, "jungle_truck") == 0) {
+        } else if (_stricmp(carType, "jungle_truck") == 0) {
             block = ABaseSound::OperatorNew(0x240, "ATrafficVehicle");
             audio = block != NULL ? ATrafficVehicle_Construct(block, 0, engine, "Traffic Cars") : NULL;
             AVehicle_ActivateGun(audio, 0, "Machine Gun");
@@ -421,7 +427,7 @@ void PBondCar::InitAudioObject(int carClass) {
         break;
     }
     case kCarClass4: {
-        const char *mix = CRT_stricmp(engine, "750") == 0 || CRT_stricmp(engine, "Nsub") == 0 ? "Opponents"
+        const char *mix = _stricmp(engine, "750") == 0 || _stricmp(engine, "Nsub") == 0 ? "Opponents"
                                                                                              : "Friendly";
         void *block = ABaseSound::OperatorNew(0x240, "ATrafficVehicle");
         audio = block != NULL ? ATrafficVehicle_Construct(block, 0, engine, mix) : NULL;
@@ -615,7 +621,7 @@ void PBondCar::Simulate() {
             float speedXZ = VU0_v3lengthxz(&body->velocity);
             if (!(Virtual(this, PVehicle::kGetCarControl, &PBondCar::GetCarControl, &controls)->brake > 0.1f) &&
                 !Virtual(this, PVehicle::kGetCarControl, &PBondCar::GetCarControl, &controls)->handBrake) {
-                if (CRT_stricmp(carType, "tank") != 0 && speedXZ > 2.0f && speedXZ < 4.0f)
+                if (_stricmp(carType, "tank") != 0 && speedXZ > 2.0f && speedXZ < 4.0f)
                     rearSlip = 1.0f;
                 throttle = 1.0f;
             } else {
@@ -712,8 +718,8 @@ void PBondCar::Simulate() {
     PhysicsObject::Simulate();
 
     if (GetHitPoints() <= 0.0f && carClass == kCarClass2 &&
-        (CRT_stricmp(carType, "tunnel") == 0 || CRT_stricmp(carType, "openheli") == 0 ||
-         CRT_stricmp(carType, "redheli") == 0) &&
+        (_stricmp(carType, "tunnel") == 0 || _stricmp(carType, "openheli") == 0 ||
+         _stricmp(carType, "redheli") == 0) &&
         !renderObject->animHandle->AnySystemPlaying()) {
         AIGroundVehicle *agent = AIVehicleController_FindAgentGroundVehiclePtr(AIVehicleController_Get(), 0, this);
         if (agent != NULL) {
@@ -952,7 +958,7 @@ int PBondCar::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, fl
                 AIGroundVehicle *ai = Virtual(this, PVehicle::kGetAIGroundVehiclePtr, &PBondCar::GetAIGroundVehiclePtr);
                 if (ai != NULL) {
                     AIElementController_ForceVehicleToSleep(AIControllerInstance, 0, ai);
-                    Simulation_GetRigidBody(Sim, 0, rigidBodySlot)->velocity = ZeroVector;
+                    Simulation_GetRigidBody(Sim, 0, rigidBodySlot)->velocity = kZero;
                 }
             }
         }

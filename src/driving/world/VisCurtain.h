@@ -36,4 +36,7 @@ void AddActiveCurtain(const WVisCurtain *curtain, const Coord4 *eye);       // 0
 // than `farMargin`.
 bool IsVisibleAgainstCurtains(const Coord4 *sphere, float farMargin);       // 0x000d0f50
 
+extern int32_t ActiveCurtainCount;
+extern MATRIX4 ActiveCurtains[64];      // kMaxActiveCurtains used
+
 #endif // DRIVING_WORLD_VISCURTAIN_H_

@@ -130,12 +130,14 @@ typedef GameStd::String *(__fastcall *AssignFn)(GameStd::String *, int, const ch
 #define fgScheduler (*(Scheduler **)0x001e520c)
 #define EventTable ((TaskCallback *)0x0018bf38)
 #define LaunchBytes ((uint8_t *)0x00243b90)
+// The noise's state is the port's (SimRandom.h); the original keeps its copy at the game's addresses, the tables
+// and the flag in one block. The platform generator's words (RandomWords) are the port's on both sides: the
+// originals reach REAL_random and seedrandom through their addresses.
 const uint32_t kNoiseLo = 0x001e5220, kNoiseHi = 0x001e7a5c;     // both tables, the permutation, the flag
-#define NoiseGradient ((float *)0x001e5628)
-#define NoisePermutation ((int16_t *)0x001e5a58)
-#define NoiseTableMade I32_AT(0x001e7a58)
-#define NoiseRandomWords ((uint32_t *)0x001c34f8)                // state, multiplier, count
-#define RealRandomWords ((uint32_t *)0x001d187c)                 // the platform generator's six words
+const uint32_t kNoiseTableAt = 0x001e5220, kNoiseGradientAt = 0x001e5628, kNoisePermutationAt = 0x001e5a58,
+               kNoiseMadeAt = 0x001e7a58;
+#define OrigNoiseTableMade I32_AT(0x001e7a58)
+#define OrigNoiseRandomWords ((uint32_t *)0x001c34f8)            // state, multiplier, count
 
 // ---- results
 
@@ -592,9 +594,28 @@ void TestSimRandom() {
 
 // ---- Noise
 
-uint8_t g_noiseSaved[kNoiseHi - kNoiseLo];
+uint8_t g_noiseSaved[kNoiseHi - kNoiseLo], g_noiseOrigSaved[kNoiseHi - kNoiseLo];
 uint8_t g_noiseAfter[2][kNoiseHi - kNoiseLo];
 uint32_t g_noiseWordsAfter[2][3 + 6];
+
+// The port's tables and flag laid out as the original's block, and back
+void PortNoiseToBlock(uint8_t *block) {
+    memcpy(block + (kNoiseTableAt - kNoiseLo), NoiseTable, sizeof(NoiseTable));
+    memcpy(block + (kNoiseGradientAt - kNoiseLo), NoiseGradient, sizeof(NoiseGradient));
+    memcpy(block + (kNoisePermutationAt - kNoiseLo), NoisePermutation, sizeof(NoisePermutation));
+    memcpy(block + (kNoiseMadeAt - kNoiseLo), &NoiseTableMade, sizeof(NoiseTableMade));
+}
+void BlockToPortNoise(const uint8_t *block) {
+    memcpy(NoiseTable, block + (kNoiseTableAt - kNoiseLo), sizeof(NoiseTable));
+    memcpy(NoiseGradient, block + (kNoiseGradientAt - kNoiseLo), sizeof(NoiseGradient));
+    memcpy(NoisePermutation, block + (kNoisePermutationAt - kNoiseLo), sizeof(NoisePermutation));
+    memcpy(&NoiseTableMade, block + (kNoiseMadeAt - kNoiseLo), sizeof(NoiseTableMade));
+}
+void SetPortNoiseWords(const uint32_t *words) {
+    NoiseRandomState = words[0];
+    NoiseRandomMultiplier = words[1];
+    NoiseRandomCount = words[2];
+}
 
 void RunNoiseInitOriginal(void *) { Orig_NoiseInit(); }
 void RunNoiseInitPort(void *) { Noise::Init(); }
@@ -655,10 +676,12 @@ void CompareNoise1(const char *what, int count) {
 }
 
 void TestNoise() {
-    memcpy(g_noiseSaved, (void *)(uintptr_t)kNoiseLo, sizeof(g_noiseSaved));
-    uint32_t noiseWords[3], realWords[6];
-    memcpy(noiseWords, NoiseRandomWords, sizeof(noiseWords));
-    memcpy(realWords, RealRandomWords, sizeof(realWords));
+    PortNoiseToBlock(g_noiseSaved);   // the live state, where both sides start
+    memcpy(g_noiseOrigSaved, (void *)(uintptr_t)kNoiseLo, sizeof(g_noiseOrigSaved));
+    uint32_t noiseWords[3] = { NoiseRandomState, NoiseRandomMultiplier, NoiseRandomCount }, origNoiseWords[3],
+             realWords[6];
+    memcpy(origNoiseWords, OrigNoiseRandomWords, sizeof(origNoiseWords));
+    memcpy(realWords, RandomWords, sizeof(realWords));
     HookInstall(0x00133ee0, (const void *)FakeRand);
     if (!g_hooks[g_hookCount - 1].on) {
         printf("[coreloop] could not jump the C runtime's rand to the fake - noise not tested\n");
@@ -671,23 +694,37 @@ void TestNoise() {
         uint32_t randSeed = Random(0), realSeed = Random(0), state = Random(0x10000);
         uint32_t multiplier = i < 4 ? noiseWords[1] : Random(0);
         bool table = i % 3 != 0;
+        const uint32_t words[3] = { state, multiplier, 77 };
         for (int side = 0; side < 2; side++) {
-            memcpy((void *)(uintptr_t)kNoiseLo, g_noiseSaved, sizeof(g_noiseSaved));
-            NoiseTableMade = table ? 0 : 1;
-            NoiseRandomWords[0] = state;
-            NoiseRandomWords[1] = multiplier;
-            NoiseRandomWords[2] = 77;
+            if (side == 0) {
+                memcpy((void *)(uintptr_t)kNoiseLo, g_noiseSaved, sizeof(g_noiseSaved));
+                OrigNoiseTableMade = table ? 0 : 1;
+                memcpy(OrigNoiseRandomWords, words, sizeof(words));
+                // ours the same, so the window's lend (OwnedGlobals.h) cannot replace them with the port's last
+                // results where the inputs happen to equal what the original left last time
+                BlockToPortNoise(g_noiseSaved);
+                NoiseTableMade = table ? 0 : 1;
+                SetPortNoiseWords(words);
+            } else {
+                BlockToPortNoise(g_noiseSaved);
+                NoiseTableMade = table ? 0 : 1;
+                SetPortNoiseWords(words);
+            }
             seedrandom(realSeed);
             g_rand = randSeed;
             if (side == 0) {
                 OriginalsWindow window;
                 Guarded(i % 2 ? RunNoiseTableOriginal : RunNoiseInitOriginal, NULL);
+                memcpy(g_noiseAfter[side], (void *)(uintptr_t)kNoiseLo, sizeof(g_noiseSaved));
+                memcpy(g_noiseWordsAfter[side], OrigNoiseRandomWords, 3 * 4);
             } else {
                 Guarded(i % 2 ? RunNoiseTablePort : RunNoiseInitPort, NULL);
+                PortNoiseToBlock(g_noiseAfter[side]);
+                g_noiseWordsAfter[side][0] = NoiseRandomState;
+                g_noiseWordsAfter[side][1] = NoiseRandomMultiplier;
+                g_noiseWordsAfter[side][2] = NoiseRandomCount;
             }
-            memcpy(g_noiseAfter[side], (void *)(uintptr_t)kNoiseLo, sizeof(g_noiseSaved));
-            memcpy(g_noiseWordsAfter[side], NoiseRandomWords, 3 * 4);
-            memcpy(g_noiseWordsAfter[side] + 3, RealRandomWords, 6 * 4);
+            memcpy(g_noiseWordsAfter[side] + 3, RandomWords, 6 * 4);
             g_noiseWordsAfter[side][2] ^= g_rand;   // how far the fake rand went, folded in
         }
         g_cases++;
@@ -702,12 +739,14 @@ void TestNoise() {
             Check("noise generator words", i, g_noiseWordsAfter[0][k], g_noiseWordsAfter[1][k]);
     }
 
-    // Noise1 over the real tables (the game's own generator state, as made by the port above)
-    memcpy((void *)(uintptr_t)kNoiseLo, g_noiseSaved, sizeof(g_noiseSaved));
+    // Noise1 over the real tables (the game's own generator state, as made by the port above), given to the
+    // original's copy too
+    BlockToPortNoise(g_noiseSaved);
     NoiseTableMade = 0;
-    memcpy(NoiseRandomWords, noiseWords, sizeof(noiseWords));
+    SetPortNoiseWords(noiseWords);
     seedrandom(0);
     Guarded(RunNoiseInitPort, NULL);
+    PortNoiseToBlock((uint8_t *)(uintptr_t)kNoiseLo);
     CompareNoise1("Noise1 (real tables)", 20000);
 
     // and over random raw tables
@@ -718,13 +757,16 @@ void TestNoise() {
         }
         for (int k = 0; k < 0x1000; k++)
             NoisePermutation[k] = (int16_t)Random(0);
+        PortNoiseToBlock((uint8_t *)(uintptr_t)kNoiseLo);
         CompareNoise1("Noise1 (random tables)", 2000);
     }
 
     HooksRemove();
-    memcpy((void *)(uintptr_t)kNoiseLo, g_noiseSaved, sizeof(g_noiseSaved));
-    memcpy(NoiseRandomWords, noiseWords, sizeof(noiseWords));
-    memcpy(RealRandomWords, realWords, sizeof(realWords));
+    BlockToPortNoise(g_noiseSaved);
+    SetPortNoiseWords(noiseWords);
+    memcpy((void *)(uintptr_t)kNoiseLo, g_noiseOrigSaved, sizeof(g_noiseOrigSaved));
+    memcpy(OrigNoiseRandomWords, origNoiseWords, sizeof(origNoiseWords));
+    memcpy(RandomWords, realWords, sizeof(realWords));
 }
 
 // ---- MissionNumToString

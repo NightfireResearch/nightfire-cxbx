@@ -27,7 +27,6 @@
 
 // ---- the C runtime's, at their addresses
 
-#define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 #define CRT_printf ((int (*)(const char *format, ...))0x00132192)
 
 static const char kActorShapes[] = "data\\Render\\Actors.xsh";

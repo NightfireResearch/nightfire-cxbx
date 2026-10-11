@@ -27,6 +27,7 @@ struct RenderContext;
 struct ViewPort;
 }
 class RSceneObj;
+class RTextureContext;
 class RViewCamera;
 struct ReverseDrawEntry;                 // camera/DirectorQueue.h
 struct ReverseDrawList;
@@ -122,6 +123,13 @@ static_assert(offsetof(RRenderer, currentDrawGroup) == 0x10 && offsetof(RRendere
               "RRenderer layout");
 
 #define fgRenderer (*(RRenderer **)0x001ebff4)
+extern const MATRIX4 *ViewProjectionMatrixPointer;     // EAGL's view-projection matrix
+extern uint8_t WideScreenSwitch;                        // it or the menu's option makes ConfigureRes choose 16:9
+extern int32_t CaptureCount;
+extern uint8_t ModelGlaresEnabled;                      // DrawGroupDrawEffects queues the articles' glares
+extern float ObjectBrightness;                          // SendPerCarInstance's
+extern bool VehiclesAllowed;
+extern RSceneObj *CurrentObject;                        // the scene object the lighting is set up for
 
 // Makes the renderer, the simple draw's materials and the random generator
 void Render_InitLibRender();                                                                    // 0x0007d710
@@ -201,6 +209,22 @@ struct ShadowMapInfo {
     float offsetV;                      // +0x08
     float scale;                        // +0x0c from world units to the image's 0..1
 };
+
+// The track's shadow maps (0x0023ec010..0x001ec220 as one record; the name is ours)
+struct ShadowMapData {
+    int32_t count;                      // +0x000 RInstanceRender_SetShadowInformation's; the default's 1
+    uint32_t unknown004;
+    ShadowMapImage *images[64];         // +0x008 by ShadowMapInfo::image; images[0] NULL: no shadow maps
+    void *defaultTexture;               // +0x108 RInstanceRender_SetDefaultShadowInformation's
+    uint32_t unknown10C[63];
+    RTextureContext *context;           // +0x208 the track's _S.xsh
+    const ShadowMapInfo *info;          // +0x20c by the instances' shadow record index
+};
+static_assert(sizeof(ShadowMapData) == 0x210, "ShadowMapData layout");
+
+extern ShadowMapData ShadowMaps;
+extern char ShadowImageName[12];
+extern ShadowMapInfo DefaultShadowInfo;
 
 // Points the instances at the track's shadow records and loads its shadow maps ("data\track\<track>_S.xsh",
 // images "0000", "0001", ... up to the first missing)

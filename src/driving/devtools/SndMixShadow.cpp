@@ -2,6 +2,8 @@
 
 #include "../sound/snd/Mixer.h"
 #include "../sound/snd/Reverb.h"
+#include "../sound/snd/SndGlobals.h"
+#include "../sound/snd/System.h"
 #include "../../common/xbeOriginal.h"
 
 #include <windows.h>
@@ -664,6 +666,10 @@ void PureFunctions() {
 // ---- section 3: the whole mixer
 
 const uint32_t kGlobalsFrom = 0x00245978, kGlobalsTo = 0x00247600;
+
+// The original's copies of the port's PlatformRate (SndOptions') and MixQuality (SndGlobals.h)
+#define OrigPlatformRate (*(uint16_t *)0x00244cf2)
+#define OrigMixQuality (*(uint8_t *)0x00244ed7)
 const size_t kMixWorld = 0x200000;
 const uint32_t kMixHeap = 0x180000;
 const uint32_t kMixDesc = 0x180000;       // the reverb description, 0x400
@@ -967,14 +973,16 @@ void SndMixShadow_Run(void) {
     g_mixStart = g_start + kMixWorld;
     g_mixOrig = g_orig + kMixWorld;
 
-    // the state this touches, put back at the end
+    // the state this touches, put back at the end. The heap and the critical section are the port's on both sides
+    // (the originals call SNDMEMI and SNDSYS through their addresses, which lead to the port); the rate and the
+    // quality are set in the port's variables and in the original's copies.
     std::vector<uint8_t> savedGlobals((uint8_t *)(uintptr_t)kGlobalsFrom, (uint8_t *)(uintptr_t)kGlobalsTo);
-    uint32_t savedHeap = U32(0x00244f6c);
-    uint16_t savedRate = U16(0x00244cf2);
-    uint8_t savedQuality = U8(0x00244ed7);
-    uint8_t savedNesting = U8(0x00244ed3);
-    U16(0x00244cf2) = 48000;
-    U8(0x00244ed7) = 0;
+    SND::MemHeap *savedHeap = SndHeap;
+    uint16_t savedRate = PlatformRate, savedOrigRate = OrigPlatformRate;
+    uint8_t savedQuality = MixQuality, savedOrigQuality = OrigMixQuality;
+    uint8_t savedNesting = CriticalNesting;
+    PlatformRate = OrigPlatformRate = 48000;
+    MixQuality = OrigMixQuality = 0;
 
     PureFunctions();
     Kernels();
@@ -982,10 +990,12 @@ void SndMixShadow_Run(void) {
         MixerScenario(i);
 
     memcpy((void *)(uintptr_t)kGlobalsFrom, savedGlobals.data(), savedGlobals.size());
-    U32(0x00244f6c) = savedHeap;
-    U16(0x00244cf2) = savedRate;
-    U8(0x00244ed7) = savedQuality;
-    U8(0x00244ed3) = savedNesting;
+    SndHeap = savedHeap;
+    PlatformRate = savedRate;
+    OrigPlatformRate = savedOrigRate;
+    MixQuality = savedQuality;
+    OrigMixQuality = savedOrigQuality;
+    CriticalNesting = savedNesting;
     VirtualFree(g_world, 0, MEM_RELEASE);
     VirtualFree(g_mix, 0, MEM_RELEASE);
     VirtualFree(g_start, 0, MEM_RELEASE);

@@ -83,4 +83,10 @@ static_assert(sizeof(RShadowMap) == 0x58, "RShadowMap is 0x58 bytes");
 
 #define TheShadowMap (*(RShadowMap **)0x0020176c)          // RShadowMap::Init's instance
 
+extern bool ProjectedShadows;                               // "Enable projected shadows"
+// The shader constants LookupVariable answers for
+extern Coord4 ShadowFatnessConstants;
+extern Coord4 ShadowPlaneConstants;
+extern Coord4 ZeroOneTwoThree;
+
 #endif // DRIVING_RENDER_SHADOWMAP_H_

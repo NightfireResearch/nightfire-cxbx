@@ -4,6 +4,7 @@
 
 #include "RoadNetShadow.h"
 
+#include "../camera/CameraSpline.h"     // RCameraSpline
 #include "../world/RoadNetwork.h"
 #include "../../common/xbeOriginal.h"
 
@@ -179,9 +180,30 @@ typedef void (__fastcall *PointOnSegmentFn)(WRoadNetwork *, int, WRoadSegment *,
 #define GetPointBetweenAt ((PointBetweenFn)0x000cb430)
 #define GetPointOnSegmentAt ((PointOnSegmentFn)0x000cbe70)
 
-// GetSegmentCurveStep's static spline and its guard
-uint8_t *const kSplineState = reinterpret_cast<uint8_t *>(0x0023e100);
-const size_t kSplineStateSize = 0x74;
+// The original's copy of GetSegmentCurveStep's static spline and its guard (the port's: CurveSpline and
+// CurveSplineGuard). Each is constructed by its own side's first use, with a point list of its own; a pass's
+// spline is compared as its curve (everything before the point list) and its guard.
+#define OrigCurveSpline (*(RCameraSpline *)0x0023e100)
+#define OrigCurveSplineGuard (*(uint32_t *)0x0023e170)
+
+struct SplineState {
+    uint8_t curve[offsetof(RCameraSpline, pointList)];
+    uint32_t guard;
+
+    bool operator!=(const SplineState &other) const { return memcmp(this, &other, sizeof(*this)) != 0; }
+};
+
+SplineState TakeSpline(bool original) {
+    SplineState s;
+    memcpy(s.curve, original ? &OrigCurveSpline : &CurveSpline, sizeof(s.curve));
+    s.guard = original ? OrigCurveSplineGuard : CurveSplineGuard;
+    return s;
+}
+
+void PutSpline(const SplineState &s, bool original) {
+    memcpy(original ? &OrigCurveSpline : &CurveSpline, s.curve, sizeof(s.curve));
+    (original ? OrigCurveSplineGuard : CurveSplineGuard) = s.guard;
+}
 
 // ---- what the tests see of the network
 
@@ -528,27 +550,37 @@ void RoadNetShadow_Run(void) {
         nonDirectional += (flags & kSegmentNonDirectional) != 0;
     }
 
-    // The spline's first use constructs it and registers its destructor: let the original do that once, before
-    // either pass, so both passes find it made.
-    if (!(*reinterpret_cast<uint32_t *>(kSplineState + 0x70) & 1)) {
-        Originals originals(true);
+    // The spline's first use constructs it and registers its destructor: let each side do that once, before
+    // either pass, so both passes find theirs made.
+    if (!(OrigCurveSplineGuard & 1) || !(CurveSplineGuard & 1)) {
         WRoadSegment *segment = net.segments[0];
         Coord4 start = NodePosition(segment, 0);
         Coord4 end = NodePosition(segment, 1);
         Coord3 out;
-        Guarded("spline construction", [&] {
-            GetSegmentCurveStepAt(GetAt(), 0, C3(&start), C3(&end), segment, 0.5f, &out);
-        });
+        if (!(OrigCurveSplineGuard & 1)) {
+            Originals originals(true);
+            Guarded("spline construction", [&] {
+                GetSegmentCurveStepAt(GetAt(), 0, C3(&start), C3(&end), segment, 0.5f, &out);
+            });
+        }
+        if (!(CurveSplineGuard & 1)) {
+            Guarded("spline construction", [&] {
+                GetSegmentCurveStepAt(GetAt(), 0, C3(&start), C3(&end), segment, 0.5f, &out);
+            });
+        }
         g_cases = 0;
     }
 
-    std::vector<uint8_t> before(kSplineState, kSplineState + kSplineStateSize);
+    // Both passes start from our spline's curve
+    const SplineState before = TakeSpline(false), origBefore = TakeSpline(true);
+    PutSpline(before, true);
     std::string logOriginal, logPort;
     RunPass(true, &logOriginal);
-    std::vector<uint8_t> afterOriginal(kSplineState, kSplineState + kSplineStateSize);
-    memcpy(kSplineState, before.data(), kSplineStateSize);
+    const SplineState afterOriginal = TakeSpline(true);
+    PutSpline(origBefore, true);
     RunPass(false, &logPort);
-    std::vector<uint8_t> afterPort(kSplineState, kSplineState + kSplineStateSize);
+    const SplineState afterPort = TakeSpline(false);
+    PutSpline(before, false);
 
     std::vector<std::string> a, b;
     SplitLines(logOriginal, &a);

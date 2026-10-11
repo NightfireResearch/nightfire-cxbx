@@ -39,24 +39,23 @@ using EAGL::TARAtlas;
 using EAGL::TARExtension;
 using EAGL::TARSharedData;
 
+// ---- EAGL's state (the overrides and the built-in SHPX are EaglGlobals.h's)
+
+// XBE_GLOBAL(0x0023ffe0, 1)
+uint8_t YuvEnable;                                          // EaglGlobals.h
+// XBE_GLOBAL(0x0023ff80, 0x20)
+D3DPixelContainer *StageTexture[8];                         // D3D8State.h
+
 namespace {
 
-// The allocations' names, passed as the original's strings (and NameTARNew, EaglGlobals.h)
-#define NameSharedDataNew ((const char *)0x001ccc70)        // "EAGL::TARPrivate::SharedData new"
-#define NameD3DTexture ((const char *)0x001ccc4c)           // "D3DTexture"
-#define NameRenderTargetShape ((const char *)0x001ccc58)    // "EGLRTShape"
-#define NameDepthSurfaceShape ((const char *)0x001ccc64)    // "EGLRTZShape"
+// XBE_GLOBAL(0x0023ffa0, 0x20)
+D3DResource *StagePalette[8];                               // the palette bound per stage
+// XBE_GLOBAL(0x0023ffc0, 0x20)
+float CacheLodBias[8];                                      // per stage
+// XBE_GLOBAL(0x0023ffe8, 0x80)
+float CacheBumpEnv[8][4];                                   // four per stage
 
-// TARProperty::Destruct's original entry, which jumps to ours: the C runtime's vector destructor iterator calls it
-// with the element in ECX, which no C++ function pointer of ours can be passed as.
-#define TARPropertyDestructEntry ((void *)0x000ed320)
-
-// ---- EAGL's state (the overrides, the YUV shadow and the built-in SHPX are EaglGlobals.h's)
-#define StagePalette ((D3DResource **)0x0023ffa0)           // the palette bound per stage
-#define CacheLodBias ((float *)0x0023ffc0)                  // per stage
-#define CacheBumpEnv ((float (*)[4])0x0023ffe8)             // four per stage
-
-// What Use last sent per stage, at 0x001ccb8c: a word per stage in each array (eight slots, four stages used)
+// What Use last sent per stage: a word per stage in each array (eight slots, four stages used)
 struct StageStateCache {
     uint32_t addressU[8];            // +0x00
     uint32_t addressV[8];            // +0x20
@@ -65,9 +64,12 @@ struct StageStateCache {
     uint32_t mipFilter[8];           // +0x80
     uint32_t maxAnisotropy[8];       // +0xa0
 };
-static_assert(sizeof(StageStateCache) == 0xc0, "the stage caches run to 0x001ccc4c");
+static_assert(sizeof(StageStateCache) == 0xc0, "the stage caches are 0xc0 bytes");
 
-#define StageCache (*(StageStateCache *)0x001ccb8c)
+// XBE_GLOBAL(0x001ccb8c, 0xc0)
+StageStateCache StageCache = {
+    { 0xffffffff }, { 0xffffffff }, { 0xffffffff }, { 0xffffffff }, { 0xffffffff }, { 0xffffffff },
+};
 
 // The texture-stage states Use writes into D3D8's table (D3D8State.h), as the Xbox's D3D8 numbers them
 enum D3DTextureStateIndex {
@@ -165,7 +167,7 @@ void ReleaseShared(TARSharedData *d) {
 
 // A new record when the SHAPE has none of its own (TARSharedData::Init inlined).
 TARSharedData *NewShared() {
-    TARSharedData *d = (TARSharedData *)EaglMalloc(sizeof(TARSharedData), NameSharedDataNew);
+    TARSharedData *d = (TARSharedData *)EaglMalloc(sizeof(TARSharedData), "EAGL::TARPrivate::SharedData new");
     if (d != NULL)
         d->Init();
     return d;
@@ -613,7 +615,7 @@ uint32_t EAGL::TAR::Commit() {
     if (format == kYuy2)
         d->yuv = 1;
     if (data->texture == NULL) {
-        data->texture = (SurfaceTexture *)EaglMalloc(sizeof(SurfaceTexture), NameD3DTexture);
+        data->texture = (SurfaceTexture *)EaglMalloc(sizeof(SurfaceTexture), "D3DTexture");
     } else {
         UnbindTexture(this);
         D3DResource_BlockUntilNotBusy(data->texture);
@@ -801,7 +803,7 @@ void EAGL::TARExtension::Share(TAR *other) {
 
 // FUNC_AT(0x000ec610)
 TAR* EAGL_TARFromSurface(D3DPixelContainer *surface) {
-    TAR *t = (TAR *)EaglMalloc(sizeof(TAR), NameTARNew);
+    TAR *t = (TAR *)EaglMalloc(sizeof(TAR), "EAGL::TAR new");
     t = t != NULL ? t->ConstructShared() : NULL;
     D3DSurfaceDesc desc;
     D3D_Get2DSurfaceDesc(surface, 0, &desc);
@@ -841,7 +843,7 @@ static uint8_t *SurfaceShape(TARSharedData *d, int32_t width, int32_t height, in
 // A render-target texture (depth 16 or 32; mode 1 swizzled, 0 linear and clamped), with a SHAPE header of its own.
 // FUNC_AT(0x000ec6e0)
 TAR* EAGL_TARRenderTarget(int32_t width, int32_t height, int32_t depth, int32_t mode) {
-    TAR *t = (TAR *)EaglMalloc(sizeof(TAR), NameTARNew);
+    TAR *t = (TAR *)EaglMalloc(sizeof(TAR), "EAGL::TAR new");
     t = t != NULL ? t->ConstructShared() : NULL;
     t->data->shape = NULL;
     t->clut = NULL;
@@ -866,14 +868,14 @@ TAR* EAGL_TARRenderTarget(int32_t width, int32_t height, int32_t depth, int32_t 
     d->texture = static_cast<SurfaceTexture *>(D3DDevice_CreateTexture2(d->width, d->height, 1, 1, 1, d->format, 3));
     t->committed = 0;
     t->data->flags |= EAGL::kSharedOwnsShape;
-    t->data->shape = SurfaceShape(t->data, width, height, depth, NameRenderTargetShape);
+    t->data->shape = SurfaceShape(t->data, width, height, depth, "EGLRTShape");
     return t;
 }
 
 // A depth surface (depth 16 or 32), with its own SHAPE header.
 // FUNC_AT(0x000ec8a0)
 TAR* EAGL_TARDepthSurface(int32_t width, int32_t height, int32_t depth) {
-    TAR *t = (TAR *)EaglMalloc(sizeof(TAR), NameTARNew);
+    TAR *t = (TAR *)EaglMalloc(sizeof(TAR), "EAGL::TAR new");
     t = t != NULL ? t->ConstructShared() : NULL;
     t->data->shape = NULL;
     t->clut = NULL;
@@ -895,7 +897,7 @@ TAR* EAGL_TARDepthSurface(int32_t width, int32_t height, int32_t depth) {
     d->texture = static_cast<SurfaceTexture *>(D3D_CreateStandAloneSurface(d->width, d->height, 2, d->format));
     t->committed = 0;
     t->data->flags |= EAGL::kSharedOwnsShape;
-    t->data->shape = SurfaceShape(t->data, width, height, depth, NameDepthSurfaceShape);
+    t->data->shape = SurfaceShape(t->data, width, height, depth, "EGLRTZShape");
     return t;
 }
 
@@ -1007,7 +1009,9 @@ void EAGL::TARProperty::Destruct() {
 void EAGL::TARProperties::Destruct() {
     if (list != NULL) {
         int32_t *block = (int32_t *)list - 1;
-        VectorDestructorIterator(list, sizeof(TARProperty), block[0], TARPropertyDestructEntry);
+        TARProperty *properties = static_cast<TARProperty *>(list);
+        for (int32_t i = block[0]; i-- > 0;)   // the vector destructor iterator, last first
+            properties[i].Destruct();
         EaglFree(block, sizeof(TARProperty));
     }
     EaglFree(buffer, length + 1);

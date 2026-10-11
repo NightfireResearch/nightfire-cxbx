@@ -2,6 +2,7 @@
 
 #include "../anim/Events.h"
 #include "../anim/IK.h"
+#include "../anim/Manager.h"            // EventResolver
 #include "../engine/UMemory.hpp"
 #include "../../common/xbeOriginal.h"
 #include "../../helpers.h"
@@ -25,12 +26,11 @@
 // prefilled with a pattern (so "untouched" is checked too), the matrices, the objects. Allocations compare by
 // content. Inputs: random rigid matrices and unit quaternions, random vectors, targets in and out of the chain's
 // reach, weights below 0, between 0 and 1, exactly 1 and above, poles or none, and a fake EAGLAnim skeleton for
-// ActIK::Init and CreateIKs. ActEvents is built twice over the live resolver (0x001dd9d0).
+// ActIK::Init and CreateIKs. ActEvents is built twice over the live resolver (anim/Manager.cpp's EventResolver).
 //
 // A word that differs only as two NaNs is counted apart (NaN payloads differ between the x87 and SSE).
 // ---------------------------------------------------------------------------------------------------------------
 
-#define LiveEventResolver (*(ActEventResolver **)0x001dd9d0)
 
 namespace {
 
@@ -844,7 +844,7 @@ int HandlerIndex(const ActEvents *e, const EventHandler *h) {
 }
 
 void TestEvents() {
-    ActEventResolver *resolver = LiveEventResolver;
+    ActEventResolver *resolver = EventResolver;
     if (resolver == NULL || resolver->target == NULL) {
         printf("[ikshadow] no event resolver: ActEvents not tested\n");
         return;

@@ -6,7 +6,9 @@
 
 #include "../anim/AnimationDatabase.h"
 #include "../anim/IK.h"
+#include "../anim/Manager.h"
 #include "../anim/Poser.h"
+#include "../anim/Skeleton.h"
 #include "../anim/Weapon.h"
 #include "../eagl/anim/AnimDeltaF.h"
 #include "../eagl/anim/AnimObjects.h"
@@ -143,7 +145,10 @@ struct ShadowActorDatabase {
 };
 
 #define ShadowActors (*(ShadowActorDatabase **)0x001dd9a0)
-#define ShadowSkinMatrices (*(MATRIX4 **)0x001dd9fc)
+// The originals' copies of the port's TheActManager and AnimationBuffer (the skin matrices), lent for the
+// originals' pass
+#define OrigActManager (*(ActManager **)0x001dd9cc)
+#define OrigAnimationBuffer (*(MATRIX4 **)0x001dd9fc)
 #define ShadowRootScratch ((void *)0x001b4a90)
 #define ShadowRandomSeed (*(uint32_t *)0x001c45c4)
 #define ShadowStepCount (*(int32_t *)0x00234e34)
@@ -261,7 +266,7 @@ void AddPoserRegions(ActPoser *poser, Saved *saved) {
     saved->Add(skeleton->stillPose, bones * 12 * sizeof(float));
     saved->Add(skeleton->pose, bones * 12 * sizeof(float));
     saved->Add(skeleton->matrices, bones * sizeof(MATRIX4));
-    saved->Add(ShadowSkinMatrices, bones * sizeof(MATRIX4));
+    saved->Add(AnimationBuffer, bones * sizeof(MATRIX4));
     saved->Add(ShadowRootScratch, kRootScratchSize);
     if (poser->crossFade != NULL) {
         saved->Add(poser->crossFade, sizeof(ActCrossFadeBlendData));
@@ -297,12 +302,23 @@ void LogRegions(const Saved &saved, const char *what) {
     }
 }
 
+#ifdef _MSC_VER
+// A fault's code, where, and (an access violation) the address it touched, printed (not logged: the logs compare)
+int PrintFault(const EXCEPTION_POINTERS *e) {
+    const EXCEPTION_RECORD *r = e->ExceptionRecord;
+    printf("[anim]   fault %08x at %08x, address %08x\n", unsigned(r->ExceptionCode),
+           unsigned(uintptr_t(r->ExceptionAddress)),
+           r->NumberParameters >= 2 ? unsigned(r->ExceptionInformation[1]) : 0u);
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+#endif
+
 bool SafeCall(void (*test)(void *), void *context) {
 #ifdef _MSC_VER
     __try {
         test(context);
         return true;
-    } __except (EXCEPTION_EXECUTE_HANDLER) {
+    } __except (PrintFault(GetExceptionInformation())) {
         g_faults++;
         return false;
     }
@@ -1017,16 +1033,24 @@ void SwapRanges(bool original) {
 
 void RunPass(std::string *log, bool original) {
     g_log = log;
-    if (original)
+    ActManager *origManager = OrigActManager;
+    MATRIX4 *origBuffer = OrigAnimationBuffer;
+    if (original) {
+        OrigActManager = TheActManager;
+        OrigAnimationBuffer = AnimationBuffer;
         SwapRanges(true);
+    }
     void (*const tests[])(Rng *) = {TestLivePosers, TestFakePosers, TestConstruct, TestWeapons, TestTree};
     uint32_t seed = 0x5e0f11u;
     for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
         Rng rng = {seed + uint32_t(i) * 7919u};
         tests[i](&rng);
     }
-    if (original)
+    if (original) {
         SwapRanges(false);
+        OrigActManager = origManager;
+        OrigAnimationBuffer = origBuffer;
+    }
     g_log = NULL;
 }
 

@@ -3,16 +3,19 @@
 #endif
 
 #include "BondCarShadowD.h"
+#include "BondCarOrigTuning.h"
 
 #include "../anim/AnimEngine.h"
 #include "../audio/Sound.h"
 #include "../camera/PlayerCamera.h"
 #include "../engine/SimRandom.h"
 #include "../game/BondCar.h"
+#include "../game/Vehicle.h"            // fgDamageImpulseScale
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../render/RSceneObj.hpp"
 #include "../world/Targeting.h"
+#include "OwnedGlobals.h"
 #include "../../common/xbeOriginal.h"
 #include "../../common/xbeOverload.h"
 
@@ -55,6 +58,13 @@
 namespace {
 
 constexpr unsigned kRangeLo = 0x0006a840, kRangeHi = 0x0006cc20;
+
+// The originals' copies of the port's BondCarScratchPad and fgDamageImpulseScale (the cars' tuning:
+// BondCarOrigTuning.h)
+#define OrigBondCarScratchPad (*(BondCarScratch **)0x001e7a88)
+#define OrigDamageImpulseScale (*(float *)0x001c3da4)
+
+bool g_originalRun;         // the run of the originals: they set the game's copy of the scratch pad
 constexpr size_t kRenderSize = 0x370;       // RVehicle
 constexpr size_t kAudioSize = 0x190;        // the engine sound, as far as Simulate writes it
 constexpr size_t kAIVehicleSize = 0x90;
@@ -193,7 +203,7 @@ void __fastcall FakeGlareOn(void *self, int, int glare) {
 }
 void LogProcess(uint32_t id, void *self) {
     if (LogEntry *e = Log(id)) {
-        BondCarScratch *pad = BondCarScratchPad;
+        BondCarScratch *pad = g_originalRun ? OrigBondCarScratchPad : BondCarScratchPad;
         e->words[0] = Word(self);
         e->words[1] = pad != NULL && (uintptr_t(pad) & 15) == 0;
     }
@@ -381,8 +391,8 @@ void __fastcall FakeTriggerFX(void *self, int, int type, uint32_t which, uint32_
         e->words[1] = uint32_t(type);
         e->words[2] = which;
         e->words[3] = unused;
-        e->words[4] = Word(a);
-        e->words[5] = Word(b);
+        e->words[4] = OwnedGlobals_VectorWord(a);
+        e->words[5] = OwnedGlobals_VectorWord(b);
         e->words[6] = Bits(intensity);
     }
 }
@@ -578,15 +588,21 @@ void RunOnce(const Case &c, Result *r, bool original) {
     car->hitPointLoc = &g_hitPoints;
     car->shieldPointLoc = c.hasShield ? &g_shield : NULL;
 
-    BondCarScratch *savedPad = BondCarScratchPad;
+    BondCarScratch *savedPad = BondCarScratchPad, *savedOrigPad = OrigBondCarScratchPad;
     Put(c.world);
     g_logCount = 0;
-    if (original)
+    g_originalRun = original;
+    if (original) {
+        LendBondCarTuning();
+        OrigDamageImpulseScale = fgDamageImpulseScale;
         XbeOriginal_RestoreRange(kRangeLo, kRangeHi, true);
+    }
     r->faulted = !SafeCall(c, &r->value);
     if (original)
         XbeOriginal_RestoreRange(kRangeLo, kRangeHi, false);
+    g_originalRun = false;
     BondCarScratchPad = savedPad;
+    OrigBondCarScratchPad = savedOrigPad;
 
     memcpy(r->car, g_car, sizeof(r->car));
     r->physics = g_physics;

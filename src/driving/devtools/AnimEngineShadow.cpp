@@ -8,6 +8,7 @@
 #include "../anim/ProcAnim.h"
 #include "../engine/UMemory.hpp"
 #include "../render/RSceneObj.hpp"
+#include "../render/TimeData.h"         // TickSeconds
 #include "../world/Trigger.h"
 #include "../world/World.h"
 #include "../../common/xbeOriginal.h"
@@ -168,13 +169,63 @@ __declspec(naked) CARP::AnimInfo *CallFindAnimInfo(uint32_t address, const World
 
 // ---- the game's state the tests write and restore
 
-#define ShadowActiveList ((uint8_t *)0x001eb878)      // the active systems, their count, Update's last frame
-const size_t kActiveListBytes = 0x408;
-#define ShadowActiveCount U32_AT(0x001ebc78)
-#define ShadowProcAnimLists ((uint8_t *)0x001c41b0)   // the parameter and transform lists and their counts
-const size_t kProcAnimListBytes = 0x10;
+// The originals' copies of the port's active list (ActiveSystems, ActiveSystemCount, LastUpdateFrame), proc-anim
+// lists (ProcAnimParams, ProcAnimParamCount, ProcAnimXForms, ProcAnimXFormCount) and TickSeconds
+struct ActiveList {
+    RAnimEngine::System *systems[0x100];
+    uint32_t count;
+    uint32_t lastUpdateFrame;
+};
+static_assert(sizeof(ActiveList) == 0x408, "the original's active list, its count and Update's last frame");
+const size_t kActiveListBytes = sizeof(ActiveList);
+struct ProcAnimLists {
+    float *params;
+    uint32_t paramCount;
+    MATRIX4 *xforms;
+    uint32_t xformCount;
+};
+const size_t kProcAnimListBytes = sizeof(ProcAnimLists);
+#define OrigActiveList (*(ActiveList *)0x001eb878)
+#define OrigProcAnimLists (*(ProcAnimLists *)0x001c41b0)
+#define OrigTickSeconds (*(float *)0x001f2a48)
 #define ShadowSimStep FLOAT_AT(0x001c465c)
-#define ShadowTickSeconds FLOAT_AT(0x001f2a48)
+
+ActiveList OurActiveList() {
+    ActiveList list;
+    memcpy(list.systems, ActiveSystems, sizeof(list.systems));
+    list.count = ActiveSystemCount;
+    list.lastUpdateFrame = LastUpdateFrame;
+    return list;
+}
+
+void SetOurActiveList(const ActiveList &list) {
+    memcpy(ActiveSystems, list.systems, sizeof(list.systems));
+    ActiveSystemCount = list.count;
+    LastUpdateFrame = list.lastUpdateFrame;
+}
+
+// The original's lists, its defaults (constants in .rdata) as ours
+#define OrigDefaultProcAnimParam ((float *)0x00191938)
+#define OrigDefaultProcAnimXForm ((MATRIX4 *)0x00191940)
+ProcAnimLists OrigLists() {
+    ProcAnimLists lists = OrigProcAnimLists;
+    if (lists.params == OrigDefaultProcAnimParam)
+        lists.params = &DefaultProcAnimParam;
+    if (lists.xforms == OrigDefaultProcAnimXForm)
+        lists.xforms = &DefaultProcAnimXForm;
+    return lists;
+}
+
+ProcAnimLists OurProcAnimLists() {
+    return { ProcAnimParams, ProcAnimParamCount, ProcAnimXForms, ProcAnimXFormCount };
+}
+
+void SetOurProcAnimLists(const ProcAnimLists &lists) {
+    ProcAnimParams = lists.params;
+    ProcAnimParamCount = lists.paramCount;
+    ProcAnimXForms = lists.xforms;
+    ProcAnimXFormCount = lists.xformCount;
+}
 #define ShadowRenderer PTR_AT(0x001ebff4)
 #define ShadowEventCallbacks ((void **)0x0018bf38)    // RegisterEvent's
 #define ShadowDrawOffset ((const Coord4 *)0x001d4c00) // QuickDrawInstance's offset
@@ -568,6 +619,7 @@ void RandomLists() {
         SetProcAnimParamList(NULL, 0);
     else
         SetProcAnimParamList(g_params, 1 + RandomInt(16));
+    OrigProcAnimLists = OurProcAnimLists();
 }
 
 void TestLists() {
@@ -581,7 +633,8 @@ void TestLists() {
                 (original ? Orig_SetProcAnimXFormList : SetProcAnimXFormList)(none ? NULL : g_xforms, count);
             else
                 (original ? Orig_SetProcAnimParamList : SetProcAnimParamList)(none ? NULL : g_params, count);
-            memcpy(lists[original ? 0 : 1], ShadowProcAnimLists, kProcAnimListBytes);
+            ProcAnimLists after = original ? OrigLists() : OurProcAnimLists();
+            memcpy(lists[original ? 0 : 1], &after, kProcAnimListBytes);
         });
         CheckBytes("SetProcAnim*List", i, lists[0], lists[1], kProcAnimListBytes);
         g_cases++;
@@ -629,7 +682,7 @@ void TestProcAnim(const std::vector<CARP::Instance> &real) {
 
     static const uint8_t kPorted[] = { 0, 5, 63, 99, 100, 101, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247,
                                        249, 250, 251, 252, 253, 254, 255 };
-    float savedSimStep = ShadowSimStep, savedTickSeconds = ShadowTickSeconds;
+    float savedSimStep = ShadowSimStep, savedTickSeconds = TickSeconds;
     for (int i = 0; i < 30000; i++) {
         CARP::Instance instance;
         if (!real.empty() && RandomInt(2) == 0) {
@@ -665,12 +718,12 @@ void TestProcAnim(const std::vector<CARP::Instance> &real) {
         }
         alignas(16) Coord4 offset = { Uniform(-30.0f, 30.0f), Uniform(-30.0f, 30.0f), Uniform(-30.0f, 30.0f), 1.0f };
         ShadowSimStep = RandomInt(3) == 0 ? Uniform(0.0f, 100000.0f) : float(Random() % 2000000);
-        ShadowTickSeconds = RandomInt(2) ? 1.0f / 60.0f : 1.0f / 50.0f;
+        TickSeconds = OrigTickSeconds = RandomInt(2) ? 1.0f / 60.0f : 1.0f / 50.0f;
         RandomLists();
         MatrixCase("GetInstanceMatrix", i, &instance, &offset, reinterpret_cast<ProcAnimState *>(g_states));
     }
     ShadowSimStep = savedSimStep;
-    ShadowTickSeconds = savedTickSeconds;
+    TickSeconds = OrigTickSeconds = savedTickSeconds;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -717,14 +770,16 @@ Side g_sides[2];
 Handle *g_handles[2];
 
 void SwapIn(int side) {
-    memcpy(ShadowActiveList, g_sides[side].active, kActiveListBytes);
+    memcpy(&OrigActiveList, g_sides[side].active, kActiveListBytes);
+    SetOurActiveList(OrigActiveList);
     gEventDynamicData = g_sides[side].eventData;
     g_scene = g_sides[side].scene;
     g_sceneObjCalls = g_sides[side].sceneObjCalls;
 }
 
 void SwapOut(int side) {
-    memcpy(g_sides[side].active, ShadowActiveList, kActiveListBytes);
+    ActiveList after = side == 0 ? OrigActiveList : OurActiveList();
+    memcpy(g_sides[side].active, &after, kActiveListBytes);
     g_sides[side].eventData = gEventDynamicData;
     g_sides[side].scene = g_scene;
     g_sides[side].sceneObjCalls = g_sceneObjCalls;
@@ -1027,10 +1082,15 @@ void AnimEngineShadow_Run(void) {
     FpControlGet(&g_x87, &g_sse);
 
     // what the tests write, put back at the end
-    std::vector<uint8_t> savedActive(ShadowActiveList, ShadowActiveList + kActiveListBytes);
-    std::vector<uint8_t> savedLists(ShadowProcAnimLists, ShadowProcAnimLists + kProcAnimListBytes);
+    // (the originals' copies start from ours)
+    const ActiveList savedActive = OurActiveList(), savedOrigActive = OrigActiveList;
+    const ProcAnimLists savedLists = OurProcAnimLists(), savedOrigLists = OrigProcAnimLists;
+    const float savedOrigTickSeconds = OrigTickSeconds;
+    OrigActiveList = savedActive;
+    OrigProcAnimLists = savedLists;
+    OrigTickSeconds = TickSeconds;
     EventDynamicData savedData = gEventDynamicData;
-    float savedSimStep = ShadowSimStep, savedTickSeconds = ShadowTickSeconds;
+    float savedSimStep = ShadowSimStep, savedTickSeconds = TickSeconds;
 
     std::vector<CARP::Instance> real(world->instances, world->instances + world->instanceCount);
     std::vector<CARP::Instance *> animated;
@@ -1046,14 +1106,18 @@ void AnimEngineShadow_Run(void) {
     TestSort();
     TestLists();
     TestProcAnim(real);
-    memcpy(ShadowActiveList, savedActive.data(), kActiveListBytes);
+    SetOurActiveList(savedActive);
+    OrigActiveList = savedActive;
     TestHandles(animated, world->procAnims);
 
-    memcpy(ShadowActiveList, savedActive.data(), kActiveListBytes);
-    memcpy(ShadowProcAnimLists, savedLists.data(), kProcAnimListBytes);
+    SetOurActiveList(savedActive);
+    OrigActiveList = savedOrigActive;
+    SetOurProcAnimLists(savedLists);
+    OrigProcAnimLists = savedOrigLists;
     gEventDynamicData = savedData;
     ShadowSimStep = savedSimStep;
-    ShadowTickSeconds = savedTickSeconds;
+    TickSeconds = savedTickSeconds;
+    OrigTickSeconds = savedOrigTickSeconds;
     ResetFpu();
 
     printf("[animengine] RAnimEngine, handles, proc-anim functions vs originals: %d cases, %d checks, %d differ%s "

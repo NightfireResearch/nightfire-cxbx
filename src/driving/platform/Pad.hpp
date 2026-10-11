@@ -12,6 +12,8 @@
 // PadData (a name invented here; 0x90 bytes) is asked of the layout generator:
 // XBE_NEEDS(PadData)
 
+extern PadData gPads[4];
+
 // The record for a port (0x00108480).
 PadData *PAD_getdataptr(int port);
 

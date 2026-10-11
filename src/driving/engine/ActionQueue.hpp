@@ -200,3 +200,7 @@ static_assert(sizeof(ActionQueueManager) == 0x10, "the manager is a vector, 16 b
 
 // std::fill over a range of pointers (Ghidra: maybe_memset_ptr2, 0x0004f3e0).
 void FillQueuePointers(ActionQueue **first, ActionQueue **last, ActionQueue *const *value);
+
+// GetActionQueueManager's static (ActionQueue.cpp).
+extern ActionQueueManager gActionQueueManager;
+extern uint32_t gActionQueueManagerMade;   // its construction guard (bit 0)

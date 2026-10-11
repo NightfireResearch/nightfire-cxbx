@@ -11,6 +11,8 @@
 #include "../platform/X87.h"
 #include "../../helpers.h"
 
+#include <math.h>
+
 // ---------------------------------------------------------------------------------------------------------------
 // WGrid, its cells' lists and the dynamic elements (0x000c5710..0x000c7230), ported from the listings.
 //
@@ -23,14 +25,13 @@
 
 #define MoverList_Erase ((WGridMoverNode **(__fastcall *)(WGridMoverList *, int, WGridMoverNode **, WGridMoverNode *, WGridMoverNode *))0x00037160)
 #define CellVector_Xlen ((void (__fastcall *)(void *, int))0x00034e50)
-#define CRT_ceil ((double (*)(double))0x00133040)
-#define CRT_floor ((double (*)(double))0x0013310e)
 
 // ---- the game's state
 
-#define GridData (*(UGroup **)0x0023b3a4)                 // the CARP group the grid came from (for Restart)
-#define GridMaxSteps I32_AT(0x001c9fec)                   // the most cells a segment search walks (100)
-#define DefaultVector (*(const Coord4 *)0x001d4c00)       // (0, 0, 0, 1)
+// XBE_GLOBAL(0x0023b3a4, 4)
+UGroup *GridData;                               // the CARP group the grid came from (for Restart)
+// XBE_GLOBAL(0x001c9fec, 4)
+int32_t GridMaxSteps = 100;                     // the most cells a segment search walks
 
 namespace {
 
@@ -397,8 +398,10 @@ void WGrid::FindNodes(const Coord4 *segment, WGridCellList *cells) {
     float crossZ = fabs(stepZ) >= kTinyStep ? float(1.0 / stepZ) : kNoCrossing;
     bool increasingX = stepX >= 0.0f;
     bool increasingZ = stepZ >= 0.0;
-    float nextX = float((increasingX ? CRT_ceil : CRT_floor)(double(startX) * inverseCellSize) * cellSize);
-    float nextZ = float((increasingZ ? CRT_ceil : CRT_floor)(double(startZ) * inverseCellSize) * cellSize);
+    double cellX = double(startX) * inverseCellSize;
+    double cellZ = double(startZ) * inverseCellSize;
+    float nextX = float((increasingX ? ceil(cellX) : floor(cellX)) * cellSize);
+    float nextZ = float((increasingZ ? ceil(cellZ) : floor(cellZ)) * cellSize);
     float x = startX;
     float z = startZ;
     int column = column0;
@@ -518,7 +521,7 @@ void WGrid::Init(UGroup *carp) {
             WCollisionInstance *instance = &fgCollisionMgr->instances[index];
             MATRIX4 *placed = instance->GetRenderInstance();
             mover.position = MatrixRow(placed, 3);
-            mover.lastPosition = DefaultVector;
+            mover.lastPosition = {0.0f, 0.0f, 0.0f, 1.0f};
             mover.index = index;
             mover.unknown16 = 0;
             mover.type = kGridInstance;
@@ -531,7 +534,7 @@ void WGrid::Init(UGroup *carp) {
             WCollisionObject *object = &fgCollisionMgr->objects[index];
             const Coord4 *translation = MatrixRow(&fgWorld->instances[object->renderIndex].Matrix(), 3);
             mover.position = translation;
-            mover.lastPosition = DefaultVector;
+            mover.lastPosition = {0.0f, 0.0f, 0.0f, 1.0f};
             mover.index = index;
             mover.unknown16 = 0;
             mover.type = kGridObject;

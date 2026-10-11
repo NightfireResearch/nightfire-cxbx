@@ -287,7 +287,7 @@ struct CameraModeIndices {
 };
 static_assert(sizeof(CameraModeIndices) == 0xb, "eleven mode indices");
 
-// The [Global] section (at 0x001c3e40; the game's data holds the defaults, which LoadFile passes again)
+// The [Global] section (it starts with the defaults, which LoadFile passes again)
 struct CameraConstants {
     int32_t kMaxTumble;                 // +0x00
     int32_t kMaxCollision;              // +0x04
@@ -318,15 +318,15 @@ static_assert(sizeof(CameraConstants) == 0x6c, "the camera constants are 0x6c by
 
 #define fgCameraTables (*(CameraTables *)0x001ec310)
 #define fgCameraModeIndices (*(CameraModeIndices *)0x001c4194)
-#define fgCameraConstants (*(CameraConstants *)0x001c3e40)
-#define kExplosionShakePeriod I32_AT(0x001ebca4)   // [Global]'s; a static initialiser sets the default first
-#define kAutoDriveLatency I32_AT(0x001ebc88)       // [Global]'s
+extern CameraConstants fgCameraConstants;
+extern int32_t kExplosionShakePeriod;       // [Global]'s
+extern int32_t kAutoDriveLatency;           // [Global]'s
 
 // ---- RCameraIniLoader (no data: a byte)
 
 class RCameraIniLoader {
 public:
-    // Keeps the player camera (a static, at 0x001ebc8c).                                           0x00078550
+    // Keeps the player camera (a static).                                                          0x00078550
     RCameraIniLoader* Construct(RPlayerCamera *camera);
     // Reads the file into the tables, once (nothing when the mode table exists).                    0x00078770
     static void LoadFile();

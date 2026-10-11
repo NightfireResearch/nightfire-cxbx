@@ -16,6 +16,5 @@
 #define CRT_free ((void (__cdecl *)(void *))0x001331dc)
 #define CRT_malloc ((void *(__cdecl *)(uint32_t))0x001340e3)
 #define CrtVsnprintf ((int (*)(char *buffer, int size, const char *format, va_list arguments))0x001340f5)
-#define VectorDestructorIterator ((void (__stdcall *)(void *array, uint32_t size, int32_t count, void *destructor))0x0013332e)   // ??_M
 
 #endif // DRIVING_EAGL_EAGLORIGINALS_H_

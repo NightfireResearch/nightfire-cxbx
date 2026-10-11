@@ -16,32 +16,25 @@
 // the main thread, with nothing between them but the records.
 // ---------------------------------------------------------------------------------------------------------------
 
-// XAPI's XINPUT_FEEDBACK: a header (status, an event to signal on completion, the driver's bytes), then the two
-// motors' speeds
-struct PadFeedback {
-    uint32_t status;            // +0x00
-    void *event;                // +0x04
-    uint8_t reserved[58];       // +0x08
-    uint16_t leftMotorSpeed;    // +0x42
-    uint16_t rightMotorSpeed;   // +0x44
-};
-static_assert(offsetof(PadFeedback, leftMotorSpeed) == 0x42 && offsetof(PadFeedback, rightMotorSpeed) == 0x44,
-              "XINPUT_FEEDBACK layout");
-
 #define Launch (*(LaunchPage *)0x00243b90)
 #define gSuperEasy BOOL8_AT(0x001e476c)
-#define gPads ((PadData *)0x00241c50)
 // Cleared by the end-of-mission, exit, letterbox and pause events, set again by resume and restart (name ours)
 #define gFeedbackAllowed BOOL8_AT(0x001b6f50)
 
 #define gFeedbackThread (*(RealThread *)0x001e2410)
 #define gFeedbackThreadStop BOOL8_AT(0x001e241c)
+// XBE_GLOBAL(0x001e2420, 0x10)
 #define gFeedbackSignal (*(RealSignal *)0x001e2420)
-#define gFeedbackThreadStack ((uint8_t *)0x001e2430)   // 0x2000 bytes, the PS2's thread stack
-#define gFeedbackUsers I32_AT(0x001e4430)              // ports in use
-#define gPadFeedback (*(PadFeedback *)0x001e4438)
-#define gFeedbackPorts ((FeedbackPort *)0x001e4488)
-#define gFeedbackTick U32_AT(0x001e4558)
+// XBE_GLOBAL(0x001e2430, 0x2000)
+static uint8_t gFeedbackThreadStack[0x2000];   // the PS2's thread stack
+// XBE_GLOBAL(0x001e4430, 0x4)
+int32_t gFeedbackUsers;                        // ports in use
+// XBE_GLOBAL(0x001e4438, 0x48)
+PadFeedback gPadFeedback;
+// XBE_GLOBAL(0x001e4488, 0xd0)
+FeedbackPort gFeedbackPorts[4];
+// XBE_GLOBAL(0x001e4558, 0x4)
+uint32_t gFeedbackTick;
 
 #define XInputSetState ((uint32_t (__stdcall *)(void *, PadFeedback *))0x00184b59)
 

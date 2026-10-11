@@ -3,6 +3,7 @@
 #endif
 
 #include "SndSystemShadow.h"
+#include "SndOwned.h"
 
 #include "../sound/snd/Platform.h"
 #include "../sound/snd/System.h"
@@ -50,6 +51,11 @@
 //
 // The platform driver's entries are replaced for the run by five-byte jumps to the fakes, put back afterwards;
 // every global the test touches is saved first and put back at the end.
+//
+// The globals the port owns are set at the game's addresses (the original's copy) and copied into the port's
+// variables before each side runs (the port's functions of other modules run on the original's side too, and what
+// they write there is carried into the original's copy); after the port's run its variables are copied back to the
+// game's addresses, which the comparisons read (SndOwned.h). The fakes read and write the running side's copy.
 // ---------------------------------------------------------------------------------------------------------------
 
 namespace {   // this file's own types
@@ -110,6 +116,13 @@ bool CheckBytes(const void *a, const void *b, size_t n, const char *what, int at
     g_differ++;
     Detail("%s, case %d: byte +0x%x differs (original %02x, port %02x)", what, at, (unsigned)i,
            ((const uint8_t *)a)[i], ((const uint8_t *)b)[i]);
+    size_t row = i & ~size_t(15);
+    if (row + 16 <= n) {
+        const uint32_t *wa = (const uint32_t *)((const uint8_t *)a + row);
+        const uint32_t *wb = (const uint32_t *)((const uint8_t *)b + row);
+        Detail("  +0x%x original %08x %08x %08x %08x, port %08x %08x %08x %08x", (unsigned)row, wa[0], wa[1], wa[2],
+               wa[3], wb[0], wb[1], wb[2], wb[3]);
+    }
     return false;
 }
 
@@ -186,14 +199,25 @@ struct CallLog {
 CallLog g_log[2];
 int g_side;
 
+// A global as the running side has it: the original's copy, or the port's variable
+template <class T>
+T &Sided(uint32_t original) {
+    return *static_cast<T *>(SndOwned_At(original, g_side == 1));
+}
+
 void LogReset() {
     memset(&g_log[0], 0, sizeof(CallLog));
     memset(&g_log[1], 0, sizeof(CallLog));
 }
 
+// The original names the game's copy of the critical section, the port ours: logged as ours on both sides
+uint32_t AsPortWord(uint32_t word) {
+    return g_side == 0 && word == 0x00244fc0u ? uint32_t(uintptr_t(SoundMutex)) : word;
+}
+
 void Log(uint32_t a, uint32_t b = 0, uint32_t c = 0, uint32_t d = 0) {
     CallLog &l = g_log[g_side];
-    uint32_t v[4] = { a, b, c, d };
+    uint32_t v[4] = { AsPortWord(a), AsPortWord(b), AsPortWord(c), AsPortWord(d) };
     uint32_t h = l.hash * 16777619u + 1;
     for (int i = 0; i < 16; i++)
         h = (h ^ ((const uint8_t *)v)[i]) * 16777619u;
@@ -295,12 +319,25 @@ void SetImportSlots(const uint32_t *values) {
 
 typedef void (*SideFn)(bool original);
 
+// The last fault: its code, where, and (an access violation) the address it touched
+uint32_t g_faultCode, g_faultAt, g_faultAddress;
+
+#ifdef _MSC_VER
+int NoteFault(const EXCEPTION_POINTERS *e) {
+    g_faultCode = e->ExceptionRecord->ExceptionCode;
+    g_faultAt = uint32_t(uintptr_t(e->ExceptionRecord->ExceptionAddress));
+    g_faultAddress = e->ExceptionRecord->NumberParameters >= 2 ? uint32_t(e->ExceptionRecord->ExceptionInformation[1])
+                                                               : 0;
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+#endif
+
 bool Guarded(SideFn fn, bool original) {
 #ifdef _MSC_VER
     __try {
         fn(original);
         return true;
-    } __except (EXCEPTION_EXECUTE_HANDLER) {
+    } __except (NoteFault(GetExceptionInformation())) {
         return false;
     }
 #else
@@ -328,7 +365,8 @@ bool CheckFaults(bool okO, bool okP, const char *what, int at) {
         Detail("%s, case %d: faults on both sides", what, at);
         return true;   // both fault: the same behaviour, as far as can be told
     }
-    return Check(false, "%s, case %d: %s faulted", what, at, okO ? "the port" : "the original");
+    return Check(false, "%s, case %d: %s faulted (%08x at %08x, address %08x)", what, at,
+                 okO ? "the port" : "the original", g_faultCode, g_faultAt, g_faultAddress);
 }
 
 // =================================================================================================================
@@ -405,7 +443,7 @@ void TestArith() {
 // =================================================================================================================
 
 const int kRandomSteps = 2000;
-const uint32_t kRandomState = 0x00245978;
+#define OrigRandomState ((uint32_t *)0x00245978)   // RandomState's original copy
 struct RandomRun {
     int32_t values[kRandomSteps];
     uint32_t state[6];
@@ -425,13 +463,14 @@ void RandomSide(bool original) {
     RandomFn random = original ? (RandomFn)0x001412e0 : &iSNDrandom;
     RangeFn range = original ? (RangeFn)0x00142ea0 : &randrange;
     RandomRun *r = original ? &g_randO : &g_randP;
+    uint32_t *state = original ? OrigRandomState : RandomState;
     if (g_randomFromSeed)
         seed(g_randomSeed);
     else
-        memcpy((void *)(uintptr_t)kRandomState, g_startState, sizeof(g_startState));
+        memcpy(state, g_startState, sizeof(g_startState));
     for (int i = 0; i < g_randomSteps; i++)
         r->values[i] = (i & 1) != 0 ? range(g_ranges[i]) : (int32_t)random();
-    memcpy(r->state, (void *)(uintptr_t)kRandomState, sizeof(r->state));
+    memcpy(r->state, state, sizeof(r->state));
 }
 
 void TestRandom() {
@@ -576,7 +615,7 @@ void TestLists() {
 // =================================================================================================================
 
 const int kArenaBytes = 0x20000;
-const uint32_t kHeapPointer = 0x00244f6c;
+#define OrigSndHeap (*(SND::MemHeap **)0x00244f6c)   // SndHeap's original copy
 uint8_t *g_arena[2];      // original's, port's (page aligned: the same 16-byte phase)
 int g_heapPhase, g_heapSize;
 int g_heapOp, g_heapArg, g_heapVia;
@@ -585,7 +624,7 @@ intptr_t g_heapResult[2];
 
 void HeapSide(bool original) {
     int s = original ? 0 : 1;
-    U32(kHeapPointer) = (uint32_t)(uintptr_t)(g_arena[s] + g_heapPhase);
+    (original ? OrigSndHeap : SndHeap) = (SND::MemHeap *)(g_arena[s] + g_heapPhase);
     typedef void (*InitFn)(void *, int);
     typedef void *(*AllocFn)(int);
     typedef void (*FreeFn)(void *);
@@ -750,20 +789,36 @@ bool CompareGlobals(const char *what, int at) {
 }
 
 // Snapshot the globals, run both sides from it, keep both results, leave the port's in place.
+// The port's variables before the original's run, for carrying what the port's functions it called wrote
+SndOwnedCopy g_carryBefore;
+
+// Mid-way through an original's run, before it calls the port's functions that read what it has just set up (the
+// 100 Hz server's voice updates read VoiceArray, which the original's init allocated): the original's copies into
+// the port's variables, and only what the port writes from here on carried back
+void OriginalStateToPort() {
+    SndOwned_ToPort();
+    SndOwned_Take(&g_carryBefore);
+}
+
 bool RunBoth(SideFn fn, const char *what, int at, uint8_t *space = NULL, uint8_t *spaceSnapshot = NULL,
              uint8_t *spaceOriginal = NULL, size_t spaceBytes = 0) {
     SaveGlobals(&g_snapshotGlobals);
     if (space != NULL)
         memcpy(spaceSnapshot, space, spaceBytes);
     LogReset();
+    SndOwned_ToPort();
+    SndOwned_Take(&g_carryBefore);
     bool okO = RunSide(fn, true);
+    SndOwned_CarryWrites(g_carryBefore);
     SaveGlobals(&g_originalGlobals);
     if (space != NULL) {
         memcpy(spaceOriginal, space, spaceBytes);
         memcpy(space, spaceSnapshot, spaceBytes);
     }
     LoadGlobals(&g_snapshotGlobals);
+    SndOwned_ToPort();
     bool okP = RunSide(fn, false);
+    SndOwned_ToOriginal();
     SaveGlobals(&g_portGlobals);
     g_cases++;
     if (!CheckFaults(okO, okP, what, at))
@@ -808,7 +863,7 @@ ServerSpace *g_ss, *g_ssSnapshot, *g_ssOriginal;
 int g_ticks;
 
 SND::Voice *FakeVoice(int voice) {
-    return (SND::Voice *)(*(uint8_t **)(uintptr_t)0x00244f3cu + voice * 0x88);
+    return (SND::Voice *)(Sided<uint8_t *>(0x00244f3c) + voice * 0x88);
 }
 
 // The platform driver (and the rest of what the system calls) as recording fakes
@@ -824,21 +879,21 @@ void FakeStop(int voice) {
 int g_capsResult, g_initResult, g_voicesToSet;
 int FakeOutputCaps(void) {
     Log(4);
-    U32(0x00244cd0) ^= 0x5a5a5a5au;   // a mark in the caps part the copies must carry
+    Sided<uint32_t>(0x00244cd0) ^= 0x5a5a5a5au;   // a mark in the caps part the copies must carry
     return g_capsResult;
 }
 int FakeOutputSet(void) {
     uint32_t h = 0;
     for (uint32_t a = 0x00244ce8; a < 0x00244de8; a += 4)
-        h = h * 31 + U32(a);
+        h = h * 31 + Sided<uint32_t>(a);
     for (uint32_t a = 0x00244dd0; a < 0x00244de8; a += 4)
-        h = h * 31 + U32(a);
+        h = h * 31 + Sided<uint32_t>(a);
     Log(5, h);
-    S16(0x00244ed8) = (int16_t)g_voicesToSet;   // NUM_VOICES, as the real one sets it
+    Sided<int16_t>(0x00244ed8) = (int16_t)g_voicesToSet;   // NUM_VOICES, as the real one sets it
     return 0;
 }
 int FakePlatformInit(void) {
-    Log(6, (uint32_t)S16(0x00244ed8), U32(0x00244f3c), U32(0x00244f40));
+    Log(6, (uint32_t)Sided<int16_t>(0x00244ed8), Sided<uint32_t>(0x00244f3c), Sided<uint32_t>(0x00244f40));
     return g_initResult;
 }
 int FakePlatformRestore(void) {
@@ -864,10 +919,10 @@ void __stdcall FakeRtlInit(void *section) {
     Log(13, (uint32_t)(uintptr_t)section);
 }
 void __stdcall FakeRtlEnter(void *section) {
-    Log(14, (uint32_t)(uintptr_t)section, U8(0x00244ed3));
+    Log(14, (uint32_t)(uintptr_t)section, Sided<uint8_t>(0x00244ed3));
 }
 void __stdcall FakeRtlLeave(void *section) {
-    Log(15, (uint32_t)(uintptr_t)section, U8(0x00244ed3));
+    Log(15, (uint32_t)(uintptr_t)section, Sided<uint8_t>(0x00244ed3));
 }
 template <int N>
 void FakeHook(void) {
@@ -1022,12 +1077,14 @@ void SystemSide(bool original) {
     int32_t *r = g_sys->results;
     r[0] = g_canVector ? (original ? (IntFn)0x0013d3f0 : &SNDSYS_vectortoreal)() : 0;
     r[1] = (original ? (InitFn)0x0013d140 : &SNDSYSI_init)(g_sys->arena + g_sysPhase, g_sysSize);
+    if (original)
+        OriginalStateToPort();
     r[2] = (original ? (IntFn)0x0013d310 : &SNDSYS_inited)();
     // the new voices given something to do (the same on both sides)
-    uint8_t *voices = *(uint8_t **)(uintptr_t)0x00244f3cu;
+    uint8_t *voices = Sided<uint8_t *>(0x00244f3c);
     if (r[1] == 0 && voices != NULL) {
         uint32_t seed = g_sysVoiceSeed;
-        int n = S16(0x00244ed8);
+        int n = Sided<int16_t>(0x00244ed8);
         for (int i = 0; i < n; i++) {
             SND::Voice *v = (SND::Voice *)(voices + i * 0x88);
             seed = seed * 1103515245u + 12345u;
@@ -1059,6 +1116,11 @@ void TestSystem() {
         return;
     g_sysSnapshot = g_sys + 1;
     g_sysOriginal = g_sys + 2;
+    // Known limitation: case 0 differs in two halfwords of the arena (+0x16 and +0x18 are 0x107f on the port's
+    // side, untouched on the original's). Not a port difference but the two copies: the original init's own code
+    // keeps the heap and voices in the game's copies while the port's functions it calls (the 100 Hz server's voice
+    // updates) keep theirs in ours, copied across only once, after init (OriginalStateToPort). Before the globals
+    // were ours there was one copy.
     for (int c = 0; c < 120; c++) {
         LoadGlobals(&g_real);
         memset((void *)(uintptr_t)0x00244c48, 0, 0x30);
@@ -1090,6 +1152,7 @@ void TestSystem() {
                 S16(0x00244ed8) = 1;
             memset(g_sys->arena, 0, 0x100);
             SNDMEMI_init(g_sys->arena + g_sysPhase, g_sysSize);
+            OrigSndHeap = SndHeap;
             U32(0x00244f3c) = (uint32_t)(uintptr_t)(g_sys->arena + 0x200);   // not the heap's: freeing it is ignored
             for (int i = 0; i < S16(0x00244ed8); i++) {
                 SND::Voice *v = (SND::Voice *)(g_sys->arena + 0x200 + i * 0x88);
@@ -1129,15 +1192,17 @@ void SndSystemShadow_Run(void) {
         printf("[sndsysshadow] only %d of module A's %d entries are patched: the others compare the original with "
                "itself\n", patched, total);
 
+    SndOwned_ToOriginal();
     SaveGlobals(&g_real);
-    uint32_t heapPointer = U32(kHeapPointer);
+    SND::MemHeap *heap = SndHeap, *origHeap = OrigSndHeap;
 
     TestArith();
     TestRandom();
     LoadGlobals(&g_real);
     TestLists();
     TestHeap();
-    U32(kHeapPointer) = heapPointer;
+    SndHeap = heap;
+    OrigSndHeap = origHeap;
     InstallFakes();
     TestClients();
     LoadGlobals(&g_real);
@@ -1146,6 +1211,7 @@ void SndSystemShadow_Run(void) {
     TestSystem();
     RemoveFakes();
     LoadGlobals(&g_real);
+    SndOwned_ToPort();
 
     printf("[sndsysshadow] module A (system, heap, lists, random, 100 Hz server, init/restore): %d cases, %d checks, "
            "%d differ (%d cases fault on both sides)\n", g_cases, g_checks, g_differ, g_faults);

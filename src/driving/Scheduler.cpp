@@ -4,10 +4,13 @@
 #include "EventManager.hpp"
 #include "devtools/SndLockstep.h"
 #include "devtools/Teleport.h"
+#include "engine/ActionQueue.hpp"     // FillQueuePointers, ActionQueueManager::Tidy
 #include "engine/CoreFoundation.h"
 #include "engine/UMemory.hpp"
 #include "physics/RigidBodyBasics.h"   // PointerVectorDeallocate
 #include "platform/RealSystem.h"
+#include "world/CollisionQueries.h"   // PointerUninitializedCopy
+#include "world/CollisionTypes.h"     // PointerVector
 
 #include <windows.h>
 #include <cmath>
@@ -21,7 +24,8 @@
 
 // The game's clock: ticks at the video refresh rate (50 Hz PAL), from the timer callback - see
 // src/driving/platform/XboxTimer.cpp and docs/driving-engine-plan.md, section 2.
-#define Clock U32_AT(0x001e5204)
+// XBE_GLOBAL(0x001e5204, 0x4)
+static uint32_t Clock;
 #define RealClock_Div2Ticks U32_AT(0x001e5208)     // every second tick
 #define fgScheduler (*(Scheduler **)0x001e520c)
 
@@ -36,15 +40,14 @@
 #define Schedule_QuarterSimRate_vtable ((vtable_Schedule *)0x0018ea24)
 #define Schedule_OncePerGameLoop_vtable ((vtable_Schedule *)0x0018ea2c)
 
-// The STL algorithms the vector's _Insert_n calls, the game's copies for Schedule * (the ones popping their
-// arguments are members that do not use `this`).
-#define Uninitialized_Copy ((Schedule **(*)(Schedule **, Schedule **, Schedule **))0x000bfeb0)
+// The STL algorithms the vector's _Insert_n calls, the game's copies for Schedule * that are not ours yet.
 #define Uninitialized_Fill_N ((void (*)(Schedule **, unsigned, Schedule *const *))0x000b2ec0)
-#define Vector_Ucopy ((Schedule **(__stdcall *)(Schedule **, Schedule **, Schedule **))0x000c1230)
-#define Vector_Ufill ((Schedule **(__stdcall *)(Schedule **, unsigned, Schedule *const *))0x000c1290)
 #define Copy_Backward ((Schedule ***(*)(Schedule ***, Schedule **, Schedule **, Schedule **))0x000b2e40)
-#define Fill ((void (*)(Schedule **, Schedule **, Schedule *const *))0x0004f3e0)
-#define Vector_Destruct ((void (__fastcall *)(Vector_Schedule *, int))0x0004f400)
+
+// The rest are ours: the game's one copy for every vector of pointers (the linker folded them together).
+static Schedule **Uninitialized_Copy(Schedule **first, Schedule **last, Schedule **dest) {
+    return (Schedule **)PointerUninitializedCopy((void *const *)first, (void *const *)last, (void **)dest);
+}
 
 // Task numbers start here, and AddTask passes over a bucket this full.
 static const uint32_t kFirstTaskNumber = 1000;
@@ -357,17 +360,18 @@ void Vector_Schedule::InsertN(Schedule **where, unsigned count, Schedule *const 
         return;
     }
     CORE_UNTESTED("std::vector<Schedule *>::_Insert_n in place");
+    PointerVector *pointers = reinterpret_cast<PointerVector *>(this);
     if (unsigned(last - where) < count) {
-        Vector_Ucopy(where, last, where + count);
-        Vector_Ufill(last, count - unsigned(last - where), &copy);
+        pointers->Ucopy((void *const *)where, (void *const *)last, (void **)(where + count));
+        pointers->Ufill((void **)last, count - unsigned(last - where), (void *const *)&copy);
         last += count;
-        Fill(where, last - count, &copy);
+        FillQueuePointers((ActionQueue **)where, (ActionQueue **)(last - count), (ActionQueue *const *)&copy);
     } else {
         Schedule **oldLast = last;
-        last = Vector_Ucopy(oldLast - count, oldLast, oldLast);
+        last = (Schedule **)pointers->Ucopy((void *const *)(oldLast - count), (void *const *)oldLast, (void **)oldLast);
         Schedule **moved;
         Copy_Backward(&moved, where, oldLast - count, oldLast);
-        Fill(where, where + count, &copy);
+        FillQueuePointers((ActionQueue **)where, (ActionQueue **)(where + count), (ActionQueue *const *)&copy);
     }
 }
 
@@ -439,7 +443,7 @@ void Scheduler::Destruct() {
             (*at)->DeletingDestructor(1);
     Vector_Schedule *list = listOfSchedules;
     if (list != NULL) {
-        Vector_Destruct(list, 0);
+        reinterpret_cast<ActionQueueManager *>(list)->Tidy();   // the vector-of-pointers destructor, folded
         OperatorDelete(list);
     }
 }

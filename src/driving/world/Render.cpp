@@ -18,18 +18,19 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's globals
-#define VisibleList (*(CachedDrawInfo *)0x0023b3c0)
-#define CurrentList (*(CachedDrawInfo **)0x0023e014)     // the list the tree walks fill
-#define VisibleNodeCount I32_AT(0x0023e02c)               // DrawWorldAtPoint's, never read
-#define ViewCull (*(WViewCull *)0x0023dfd0)
+// XBE_GLOBAL(0x0023b3c0, 0x2c08)
+CachedDrawInfo VisibleList;
+// XBE_GLOBAL(0x0023e014, 4)
+CachedDrawInfo *CurrentList;                    // the list the tree walks fill
+// XBE_GLOBAL(0x0023e02c, 4)
+static int32_t VisibleNodeCount;                // DrawWorldAtPoint's, never read
+// XBE_GLOBAL(0x0023dfd0, 0x30)
+alignas(16) WViewCull ViewCull;
+// XBE_GLOBAL(0x0023e000, 4)
+WRender *fgRender;
 
-// The cursor of GetNextPoint's walk (0x0023e008)
-struct CullCursor {
-    int32_t node;                       // the index of the visible node
-    int32_t item;                       // the index of its instance
-    CachedDrawInfo *list;               // PrepareForCull's
-};
-#define Cursor (*(CullCursor *)0x0023e008)
+// XBE_GLOBAL(0x0023e008, 0xc)
+WCullCursor Cursor;
 
 namespace {
 

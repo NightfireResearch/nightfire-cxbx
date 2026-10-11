@@ -49,6 +49,7 @@ void MATRIX4_vect3mult(const void *v, const void *m, void *out);
 void MATRIX4_vect4mult(const void *v, const void *m, void *out);
 void MATRIX4_axisrotate(const void *axis, float turns, void *out);
 
+extern uint32_t RandomWords[6];     // the generator's state
 uint32_t REAL_random();
 void seedrandom(uint32_t seed);
 double rrandom();

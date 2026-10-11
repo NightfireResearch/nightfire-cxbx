@@ -132,25 +132,22 @@ static void StartRecord(const uint8_t *font) { Record(2, (uint32_t)(font - g_log
 static void EndRecord(const uint8_t *font) { Record(3, (uint32_t)(font - g_logFont), 0, 0); }
 static void CreateRecord(const uint8_t *font) { Record(4, (uint32_t)(font - g_logFont), 0, 0); }
 static void DestroyRecord(const uint8_t *font) { Record(5, (uint32_t)(font - g_logFont), 0, 0); }
-static void BatchRecord(const uint8_t *font, float *batch, int count) {
+static void BatchRecord(const uint8_t *font, FontBatchEntry *entries, int count) {
     Record(6, (uint32_t)count, 0, 0);
-    for (int i = 0; i < count; i++) {
-        uint32_t g;
-        memcpy(&g, &batch[i * 3], 4);
-        Record(7, g - (uint32_t)(uintptr_t)font, Bits(batch[i * 3 + 1]), Bits(batch[i * 3 + 2]));
-    }
+    for (int i = 0; i < count; i++)
+        Record(7, (uint32_t)(entries[i].glyph - font), Bits(entries[i].x), Bits(entries[i].y));
 }
-static void BatchExRecord(const uint8_t *font, float *batch, int count, int argument, int first) {
+static void BatchExRecord(const uint8_t *font, FontBatchEntry *entries, int count, int argument, int first) {
     Record(8, (uint32_t)count, (uint32_t)argument, (uint32_t)(first & 0xff));
-    BatchRecord(font, batch, count);
+    BatchRecord(font, entries, count);
 }
 
-static void *g_driver[5] = { (void *)DrawRecord, (void *)StartRecord, (void *)EndRecord, (void *)CreateRecord,
-                             (void *)DestroyRecord };
+static FontDriverTable g_driver = { DrawRecord, StartRecord, EndRecord, CreateRecord, DestroyRecord };
 
-#define FontDriverSlot  (*(void ***)0x001cec98u)
-#define FontBatch       (*(void **)0x00241be8u)
-#define FontBatchEx     (*(void **)0x00241bf0u)
+// The originals' copies of the port's FontDriver, FontBatchDraw and FontBatchDrawEx
+#define OrigFontDriver      (*(FontDriverTable **)0x001cec98u)
+#define OrigFontBatchDraw   (*(FontBatchFn *)0x00241be8u)
+#define OrigFontBatchDrawEx (*(FontBatchExFn *)0x00241bf0u)
 
 typedef void (*DrawFn)(const uint8_t *, float, float, const uint8_t *, int);
 typedef void (*RectFn)(const uint8_t *, const uint8_t *, float *, float *, float *, float *);
@@ -164,8 +161,8 @@ static void CompareText(const Entry &font, const uint8_t *text, float x, float y
     for (int side = 0; side < 2; side++) {
         g_log = side == 0 ? &logO : &logP;
         g_logFont = f;
-        FontBatch = batchMode ? (void *)BatchRecord : NULL;
-        FontBatchEx = batchMode ? (void *)BatchExRecord : NULL;
+        FontBatchDraw = OrigFontBatchDraw = batchMode ? BatchRecord : NULL;
+        FontBatchDrawEx = OrigFontBatchDrawEx = batchMode ? BatchExRecord : NULL;
         float *r = side == 0 ? rO : rP;
         memset(r, 0x5a, 16);
         int argument = batchMode == 2 ? 7 : 0;
@@ -426,9 +423,10 @@ void RealgraphShadow_Run(void) {
         } while (FindNextFileA(search, &found));
         FindClose(search);
     }
-    void **savedDriver = FontDriverSlot;
-    void *savedBatch = FontBatch, *savedBatchEx = FontBatchEx;
-    FontDriverSlot = g_driver;
+    FontDriverTable *savedDriver = FontDriver, *savedOrigDriver = OrigFontDriver;
+    FontBatchFn savedBatch = FontBatchDraw, savedOrigBatch = OrigFontBatchDraw;
+    FontBatchExFn savedBatchEx = FontBatchDrawEx, savedOrigBatchEx = OrigFontBatchDrawEx;
+    FontDriver = OrigFontDriver = &g_driver;
     std::vector<std::string> strings;
     int fonts = 0, shapes = 0, locales = 0;
     for (Entry &e : entries)
@@ -447,9 +445,12 @@ void RealgraphShadow_Run(void) {
         }
     }
     CheckCreate();
-    FontDriverSlot = savedDriver;
-    FontBatch = savedBatch;
-    FontBatchEx = savedBatchEx;
+    FontDriver = savedDriver;
+    OrigFontDriver = savedOrigDriver;
+    FontBatchDraw = savedBatch;
+    OrigFontBatchDraw = savedOrigBatch;
+    FontBatchDrawEx = savedBatchEx;
+    OrigFontBatchDrawEx = savedOrigBatchEx;
     printf("[rgshadow] %d fonts, %d image containers, %d string tables (%u strings), %d checks: %s\n", fonts, shapes,
            locales, (unsigned)strings.size(), g_checks, g_failures == 0 ? "the same as the original" : "FAILED");
     fflush(stdout);

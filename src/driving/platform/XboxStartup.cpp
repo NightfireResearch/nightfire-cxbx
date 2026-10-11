@@ -433,7 +433,9 @@ static void RunInitialisers(void (**begin)(void), void (**end)(void)) {
 #define XbeCertificate       (*(uint32_t **)0x00010118u)
 #define XbeStackCommit       (*(uint32_t *)0x00010130u)
 #define XbeTls               ((uint32_t *)0x001a1ddcu)   // the TLS directory: template start, end, index address, ..., zero fill
-#define XapiThreadTlsSize    (*(uint32_t *)0x0024b228u)
+
+// XBE_GLOBAL(0x0024b228, 4)
+static uint32_t XapiThreadTlsSize;
 
 static void __cdecl Xbox_Entry(void) {
     uint32_t certificateLimit = XbeSizeOfHeaders - (uint32_t)(uintptr_t)XbeCertificate + 0x10000;

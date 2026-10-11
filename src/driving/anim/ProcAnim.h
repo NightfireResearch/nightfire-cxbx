@@ -35,6 +35,14 @@ bool GetInstanceMatrix(CARP::Instance *instance, const Coord4 *offset, MATRIX4 *
 void SetProcAnimXFormList(MATRIX4 *xforms, uint32_t count);                                     // 0x0008a520
 void SetProcAnimParamList(float *params, uint32_t count);                                       // 0x0008a550
 
+// The lists, and their defaults (a zero parameter and a zero transform)
+extern float DefaultProcAnimParam;
+extern MATRIX4 DefaultProcAnimXForm;
+extern float *ProcAnimParams;
+extern uint32_t ProcAnimParamCount;
+extern MATRIX4 *ProcAnimXForms;
+extern uint32_t ProcAnimXFormCount;
+
 // The proc-anim functions
 // The instance's own matrix
 bool ProcAnimStatic(CARP::Instance *instance, ProcAnimState *state, const Coord4 *offset, MATRIX4 *out);       // 0x0008a580

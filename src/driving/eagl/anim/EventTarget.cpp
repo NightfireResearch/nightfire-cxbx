@@ -11,12 +11,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 
-// The allocations' names: the original's strings (two copies of "eventName")
-#define AllocEventName ((const char *)0x001ceafc)     // "eventName"
-#define AllocEventMapping ((const char *)0x001ceb08)  // "eventMapping"
-#define AllocEventNames ((const char *)0x001ceb18)    // "eventNames"
-#define AllocEventName2 ((const char *)0x001ceb24)    // "eventName"
-
 // FUNC_AT(0x000f8310)
 void EventTarget::Destruct() {
     if (mapping != NULL) {
@@ -65,7 +59,7 @@ bool EventTarget::ResolveEventId(const char *name, int *id) {
         for (int c = n; c >= position; c--)
             if (c > 0)
                 mapping[c] = mapping[c - 1];
-        mapping[position].name = static_cast<char *>(EaglMalloc(length, AllocEventName));
+        mapping[position].name = static_cast<char *>(EaglMalloc(length, "eventName"));
         memcpy(mapping[position].name, name, length);
         names[count] = mapping[position].name;
         mapping[position].id = count;
@@ -73,14 +67,14 @@ bool EventTarget::ResolveEventId(const char *name, int *id) {
         EventMapping *oldMapping = mapping;
         char **oldNames = names;
         capacity = oldCapacity + grow;
-        mapping = static_cast<EventMapping *>(EaglMalloc(capacity * sizeof(EventMapping), AllocEventMapping));
-        names = static_cast<char **>(EaglMalloc(capacity * sizeof(char *), AllocEventNames));
+        mapping = static_cast<EventMapping *>(EaglMalloc(capacity * sizeof(EventMapping), "eventMapping"));
+        names = static_cast<char **>(EaglMalloc(capacity * sizeof(char *), "eventNames"));
         for (int c = count; c >= position; c--)
             if (c > 0)
                 mapping[c] = oldMapping[c - 1];
         for (int c = position - 1; c >= 0; c--)
             mapping[c] = oldMapping[c];
-        mapping[position].name = static_cast<char *>(EaglMalloc(length, AllocEventName2));
+        mapping[position].name = static_cast<char *>(EaglMalloc(length, "eventName"));
         memcpy(mapping[position].name, name, length);
         names[count] = mapping[position].name;
         memcpy(names, oldNames, count * sizeof(char *));

@@ -37,6 +37,7 @@ struct ScratchBuffer {               // three at 0x00241ba0
     void FreeBuffer();                                           // 0x00106750
 };
 static_assert(sizeof(ScratchBuffer) == 0xc, "a ScratchBuffer is 0xc bytes");
+extern ScratchBuffer ScratchBuffers[3];
 ScratchBuffer* ScratchBuffer_GetScratchBuffer(int index);        // 0x00106780
 void ScratchBuffer_FreeScratchBuffers();                         // 0x00106790
 

@@ -19,7 +19,7 @@
 // tree with the same node size (the linker folded identical copies; the attribute map's minimum and maximum are
 // at 0x0009c350 and 0x0009c330, for one), the templates call their own: the same code, so the same result.
 //
-// What differs between the trees is in TreeTraits: the key, its comparison (the game's _stricmp, or strcmp for
+// What differs between the trees is in TreeTraits: the key, its comparison (_stricmp, or strcmp for
 // the string set), and how a node's value is copied in and destroyed - an AttributeValue that owns its data
 // allocates a copy, a collection or a field map is constructed and torn down. Every node and head comes from
 // UMemory::FastAlloc ("STL") and goes back with FastFree at its size.
@@ -28,7 +28,6 @@
 // and _CxxThrowException), but nothing reaches them.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 
 // The pieces of the game's exception machinery the STL's throws use.
 #define CxxThrowException ((void (__stdcall *)(void *, const void *))0x001325ad)
@@ -65,7 +64,7 @@ template <>
 struct TreeTraits<AttributeMap> {
     typedef const char *Key;
     static Key KeyOf(const AttributeMapValue &value) { return value.name; }
-    static bool Less(Key a, Key b) { return CRT_stricmp(a, b) < 0; }
+    static bool Less(Key a, Key b) { return _stricmp(a, b) < 0; }
     static void ConstructValue(AttributeMapValue *at, const AttributeMapValue &value) {
         at->name = value.name;
         at->value.ConstructCopy(value.value);
@@ -77,7 +76,7 @@ template <>
 struct TreeTraits<AttributeFieldMap> {
     typedef const char *Key;
     static Key KeyOf(const AttributeFieldEntry &value) { return value.name; }
-    static bool Less(Key a, Key b) { return CRT_stricmp(a, b) < 0; }
+    static bool Less(Key a, Key b) { return _stricmp(a, b) < 0; }
     static void ConstructValue(AttributeFieldEntry *at, const AttributeFieldEntry &value) { *at = value; }
     static void DestroyValue(AttributeFieldNode *) {}
 };
@@ -86,7 +85,7 @@ template <>
 struct TreeTraits<ExtensionClassMap> {
     typedef const char *Key;
     static Key KeyOf(const ExtensionClassEntry &value) { return value.className; }
-    static bool Less(Key a, Key b) { return CRT_stricmp(a, b) < 0; }
+    static bool Less(Key a, Key b) { return _stricmp(a, b) < 0; }
     static void ConstructValue(ExtensionClassEntry *at, const ExtensionClassEntry &value) {
         at->className = value.className;
         at->fields.ConstructCopy(value.fields);
@@ -113,9 +112,9 @@ struct TreeTraits<CollectionMap> {
     typedef CollectionKey Key;
     static const CollectionKey &KeyOf(const CollectionEntry &value) { return value.key; }
     static bool Less(const CollectionKey &a, const CollectionKey &b) {
-        int order = CRT_stricmp(a.className, b.className);
+        int order = _stricmp(a.className, b.className);
         if (order == 0)
-            order = CRT_stricmp(a.name, b.name);
+            order = _stricmp(a.name, b.name);
         return order < 0;
     }
     static void ConstructValue(CollectionEntry *at, const CollectionEntry &value) {

@@ -63,4 +63,7 @@ static_assert(sizeof(USingletonManager) == 0x10, "the singleton manager is a vec
 // The singleton manager, made on first use (0x00059d20).
 USingletonManager* SingletonManager();
 
+// The static (USingleton.cpp), emptied by its first Get.
+extern USingletonManager TheSingletonManager;
+
 #endif // DRIVING_ENGINE_USINGLETON_H_

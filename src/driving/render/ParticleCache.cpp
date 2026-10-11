@@ -38,26 +38,42 @@
 #define GameTick U32_AT(0x001f2a4c)
 #define Sim ((void *)0x00233ff0)                    // the Simulation
 #define Gallery (*(void **)0x0023f320)              // the GFXGallery
-#define ParticleDrag FLOAT_AT(0x00230600)           // UpdateBlock's copy of the particle's drag (name ours)
-#define ParticleFovScale FLOAT_AT(0x001c8ed4)       // 33 / the camera's field of view (names ours)
-#define SpriteFadeSize FLOAT_AT(0x001c8ed8)         // 0.3: sprites bigger than this on screen fade out
+// XBE_GLOBAL(0x00230600, 4)
+float ParticleDrag;                  // UpdateBlock's copy of the particle's drag (name ours)
+// XBE_GLOBAL(0x001c8ed4, 4)
+float ParticleFovScale = 1.0f;       // 33 / the camera's field of view (names ours)
+// XBE_GLOBAL(0x001c8ed8, 4)
+float SpriteFadeSize = 0.3f;         // sprites bigger than this on screen fade out
 
 // The vertex arrays and their materials and textures (names ours)
+constexpr int kQuadVertices = 4 * kParticleBlock;
 constexpr int kStreakVertices = 3 * kParticleBlock;
-#define NormalPositions ((Coord4 *)0x00222d30)
-#define NormalColours ((uint32_t *)0x0022ad40)
-#define NormalUVs ((float (*)[2])0x0021ed30)
-#define AdditivePositions ((Coord4 *)0x00216d30)
-#define AdditiveColours ((uint32_t *)0x0022cd40)
-#define AdditiveUVs ((float (*)[2])0x00212d30)
-#define StreakPositions ((Coord4 *)0x0020cd30)
-#define StreakColours ((uint32_t *)0x0022ed40)
-#define StreakUVs ((float (*)[2])0x00209d30)
-#define SpriteTexture (*(EAGL::TAR **)0x0022ad30)
-#define StreakTexture (*(EAGL::TAR **)0x0022ad34)
+// XBE_GLOBAL(0x00222d30, 0x8000)
+alignas(16) Coord4 NormalPositions[kQuadVertices];
+// XBE_GLOBAL(0x0022ad40, 0x2000)
+uint32_t NormalColours[kQuadVertices];
+// XBE_GLOBAL(0x0021ed30, 0x4000)
+float NormalUVs[kQuadVertices][2];
+// XBE_GLOBAL(0x00216d30, 0x8000)
+alignas(16) Coord4 AdditivePositions[kQuadVertices];
+// XBE_GLOBAL(0x0022cd40, 0x2000)
+uint32_t AdditiveColours[kQuadVertices];
+// XBE_GLOBAL(0x00212d30, 0x4000)
+float AdditiveUVs[kQuadVertices][2];
+// XBE_GLOBAL(0x0020cd30, 0x6000)
+alignas(16) Coord4 StreakPositions[kStreakVertices];
+// XBE_GLOBAL(0x0022ed40, 0x1800)
+uint32_t StreakColours[kStreakVertices];
+// XBE_GLOBAL(0x00209d30, 0x3000)
+float StreakUVs[kStreakVertices][2];
+// XBE_GLOBAL(0x0022ad30, 4)
+EAGL::TAR *SpriteTexture;
+// XBE_GLOBAL(0x0022ad34, 4)
+EAGL::TAR *StreakTexture;
+// XBE_GLOBAL(0x00230540, 0x60)
 #define SpriteMaterial ((UVolatileMaterial *)0x00230540)
+// XBE_GLOBAL(0x002305a0, 0x60)
 #define StreakMaterial ((UVolatileMaterial *)0x002305a0)
-#define SpriteBlendState ((EAGL::GeoPrimStateExtension *)0x00230540)   // the sprite material's GeoPrimState
 
 constexpr uint32_t kTextureMain = 0x4e49414d;       // "MAIN" in memory
 constexpr uint32_t kTextureSpark = 0x6b727073;      // "sprk"
@@ -394,7 +410,7 @@ void RParticleParticleCache::RenderBlock(int block) {
         DrawVertices(SpriteMaterial, kQuadList, normalCount, NormalPositions, NormalColours, NormalUVs, SpriteTexture);
     }
     if (additiveCount > 0) {
-        SpriteBlendState->SetAlphaBlend(kGLSrcAlpha, kGLOne, kGLFuncAdd);
+        SpriteMaterial->Extension()->SetAlphaBlend(kGLSrcAlpha, kGLOne, kGLFuncAdd);
         DrawVertices(SpriteMaterial, kQuadList, additiveCount, AdditivePositions, AdditiveColours, AdditiveUVs,
                      SpriteTexture);
     }

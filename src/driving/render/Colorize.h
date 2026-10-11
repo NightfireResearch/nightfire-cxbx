@@ -61,4 +61,11 @@ static_assert(offsetof(RColorize, colourA) == 0x10 && offsetof(RColorize, mode) 
 
 #define Colorize (*(RColorize **)0x001f6898)
 
+extern float InfraredStartBrightness;       // the previous brightness the infrared mode starts from
+extern float BrightnessLightScale;
+extern int32_t BrightnessEaseSteps;         // the steps the light takes to follow the brightness
+extern float ColorizeUnknown1c4888;
+extern float ColorizeUnknown1c488c;
+extern bool VideoModeChecked;               // a function-local static's guard
+
 #endif // DRIVING_RENDER_COLORIZE_H_

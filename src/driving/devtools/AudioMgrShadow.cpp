@@ -116,11 +116,22 @@ const unsigned kEntries[] = {
 // The globals the code under test reads and writes
 #define ShadowFailedStreams (*(StreamNameList **)0x00243a5c)
 #define ShadowLimitedCount I32_AT(0x00243b30)
-#define ShadowSpare ((uint8_t *)0x00243a78)
 #define ShadowPaused U8_AT(0x002439d0)
 #define ShadowMissionOver U8_AT(0x00243a77)
 #define ShadowUnknown6c U32_AT(0x00243a6c)
-#define ShadowSystem PTR_AT(0x00243b34)
+
+// The globals the port owns (RandomSpare, ASystem_fgSystem, the option volumes Resume and Restart put back) and
+// the original's copies of them
+#define OrigRandomSpare (*(NormalSpare *)0x00243a78)
+#define OrigSystem (*(ASystem **)0x00243b34)
+#define OrigMusicVolumeScale FLOAT_AT(0x001d8064)
+#define OrigEffectsVolumeScale FLOAT_AT(0x001d8068)
+
+bool g_original;    // the side Case is running
+
+NormalSpare &SideSpare() {
+    return g_original ? OrigRandomSpare : RandomSpare;
+}
 
 long g_cases, g_checks, g_differ, g_faults;
 int g_reported;
@@ -491,11 +502,12 @@ struct Globals {
     uint32_t views;
     ABank *banks[kBankSlotCount];
     int32_t limited;
-    uint8_t spare[8];
+    NormalSpare spare, origSpare;
     uint8_t paused;
     uint8_t missionOver;
     uint32_t unknown6c;
-    void *system;
+    ASystem *system, *origSystem;
+    float origMusicVolume, origEffectsVolume;
 };
 
 void SaveGlobals(Globals *g) {
@@ -504,11 +516,15 @@ void SaveGlobals(Globals *g) {
     g->views = fgActiveViews;
     memcpy(g->banks, fgBanks, sizeof(g->banks));
     g->limited = ShadowLimitedCount;
-    memcpy(g->spare, ShadowSpare, 8);
+    g->spare = RandomSpare;
+    g->origSpare = OrigRandomSpare;
     g->paused = ShadowPaused;
     g->missionOver = ShadowMissionOver;
     g->unknown6c = ShadowUnknown6c;
-    g->system = ShadowSystem;
+    g->system = ASystem_fgSystem;
+    g->origSystem = OrigSystem;
+    g->origMusicVolume = OrigMusicVolumeScale;
+    g->origEffectsVolume = OrigEffectsVolumeScale;
 }
 
 void LoadGlobals(const Globals &g) {
@@ -517,18 +533,22 @@ void LoadGlobals(const Globals &g) {
     fgActiveViews = g.views;
     memcpy(fgBanks, g.banks, sizeof(g.banks));
     ShadowLimitedCount = g.limited;
-    memcpy(ShadowSpare, g.spare, 8);
+    RandomSpare = g.spare;
+    OrigRandomSpare = g.origSpare;
     ShadowPaused = g.paused;
     ShadowMissionOver = g.missionOver;
     ShadowUnknown6c = g.unknown6c;
-    ShadowSystem = g.system;
+    ASystem_fgSystem = g.system;
+    OrigSystem = g.origSystem;
+    OrigMusicVolumeScale = g.origMusicVolume;
+    OrigEffectsVolumeScale = g.origEffectsVolume;
 }
 
 void GlobalWords(std::vector<uint32_t> &out) {
     out.push_back(fgActiveViews);
     out.push_back(uint32_t(ShadowLimitedCount));
     uint32_t spare[2];
-    memcpy(spare, ShadowSpare, 8);
+    memcpy(spare, &SideSpare(), 8);
     out.push_back(spare[0]);
     out.push_back(spare[1] & 0xff);     // the flag; the bytes after it are not the manager's
     out.push_back(ShadowPaused);
@@ -576,10 +596,10 @@ void Append(std::vector<uint32_t> &out, const void *data, size_t size) {
     }
 }
 
-// The first differing case's words, 8 to a line (at most 256)
-void DumpWords(const char *what, const std::vector<uint32_t> &words) {
+// The first differing case's words, 8 to a line (at most 256, from `from`)
+void DumpWords(const char *what, const std::vector<uint32_t> &words, size_t from = 0) {
     printf("[audiomgrshadow]   %s (%u words):\n", what, unsigned(words.size()));
-    for (size_t i = 0; i < words.size() && i < 256; i += 8) {
+    for (size_t i = from; i < words.size() && i < from + 256; i += 8) {
         printf("[audiomgrshadow]     %3u:", unsigned(i));
         for (size_t j = i; j < i + 8 && j < words.size(); j++)
             printf(" %08x", words[j]);
@@ -594,6 +614,7 @@ void Case(const char *what, Setup setup, Run run, Capture capture) {
     Outcome results[2];
     for (int phase = 0; phase < 2; phase++) {
         bool original = phase == 0;
+        g_original = original;
         setup();
         g_log.clear();
         bool ok;
@@ -616,8 +637,13 @@ void Case(const char *what, Setup setup, Run run, Capture capture) {
     static bool dumped;
     if (!dumped && (results[0].words != results[1].words || results[0].log != results[1].log)) {
         dumped = true;
-        DumpWords("state, original", results[0].words);
-        DumpWords("state, port    ", results[1].words);
+        size_t first = 0;     // from the row of the first differing word
+        while (first < results[0].words.size() && first < results[1].words.size() &&
+               results[0].words[first] == results[1].words[first])
+            first++;
+        first &= ~size_t(7);
+        DumpWords("state, original", results[0].words, first);
+        DumpWords("state, port    ", results[1].words, first);
         DumpWords("calls, original", results[0].log);
         DumpWords("calls, port    ", results[1].log);
     }
@@ -683,14 +709,15 @@ void TestRandom() {
              [&] {
                  g_randState = seed;
                  g_randCalls = 0;
-                 memcpy(ShadowSpare, spare, 5);
+                 memcpy(&RandomSpare, spare, 5);
+                 memcpy(&OrigRandomSpare, spare, 5);
              },
              [&](bool original) {
                  answer = original ? Orig_NormalRandom() : ASoundManager::NormalizedRandomNumber();
              },
              [&](std::vector<uint32_t> &w) {
                  Append(w, &answer, 8);
-                 Append(w, ShadowSpare, 5);
+                 Append(w, &SideSpare(), 5);
                  w.push_back(uint32_t(g_randCalls));
              });
     }
@@ -1095,9 +1122,12 @@ void TestManager() {
         bool system = (NextRandom() & 1) != 0;
         ASoundList list;
         StreamNameList failed;
+        const NormalSpare spare = RandomSpare;
         Case("ASoundManager",
              [&] {
                  memcpy(g_sounds, start, sizeof(start));
+                 RandomSpare = spare;       // NormalizedRandomNumber's spare, the same on both sides
+                 OrigRandomSpare = spare;
                  g_listener = listener;
                  ResetMixes();
                  ListInit(&list);
@@ -1113,7 +1143,7 @@ void TestManager() {
                  ShadowPaused = paused;
                  ShadowMissionOver = missionOver;
                  ShadowUnknown6c = unknown6c;
-                 ShadowSystem = system ? (void *)g_object : NULL;
+                 ASystem_fgSystem = OrigSystem = system ? reinterpret_cast<ASystem *>(g_object) : NULL;
              },
              [&](bool original) {
                  switch (op) {
@@ -1211,6 +1241,10 @@ void AudioMgrShadow_Run(void) {
     Globals saved;
     SaveGlobals(&saved);
     AVoice savedVoice = g_voice;
+    OrigRandomSpare = RandomSpare;      // the original starts from the live state
+    OrigSystem = ASystem_fgSystem;
+    OrigMusicVolumeScale = MusicVolumeScale;
+    OrigEffectsVolumeScale = EffectsVolumeScale;
 
     HookInstall(0x0011d6a0, (const void *)&FakeMixAdd);
     HookInstall(0x0011d720, (const void *)&FakeMixGet);

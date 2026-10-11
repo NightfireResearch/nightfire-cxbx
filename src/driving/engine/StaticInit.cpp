@@ -16,8 +16,8 @@
 #include "URefCounter.h"
 #include "USingleton.h"
 #include "../data/AttributeSet.h"
+#include "../data/RCARPFile.h"         // CharNamespace
 #include "../data/SymbolTable.h"
-#include "../camera/CameraSpline.h"
 #include "../eagl/GeoPrimState.h"
 #include "../audio/Fader.h"             // FaderRefTree
 #include "../audio/Mix.h"               // MixRefTree
@@ -71,15 +71,15 @@ void DestroyGlobal_0023e1b0(void) {
 
 // FUNC_AT(0x0015cd20)
 void DestroyStatic_001dd9e8(void) {
-    ((ModelInfoRefCounter *)0x001dd9e8)->Destruct();
+    ModelInfoRefs.Destruct();
 }
 // FUNC_AT(0x0015cd30)
 void DestroyStatic_001dda04(void) {
-    ((TextureInfoRefCounter *)0x001dda04)->Destruct();
+    TextureInfoRefs.Destruct();
 }
 // FUNC_AT(0x0015cd40)
 void DestroyStatic_001dda14(void) {
-    ((WeaponInfoRefCounter *)0x001dda14)->Destruct();
+    WeaponInfoRefs.Destruct();
 }
 // FUNC_AT(0x0015cd50)
 void DestroyStatic_001de820(void) {
@@ -87,14 +87,14 @@ void DestroyStatic_001de820(void) {
 }
 // FUNC_AT(0x0015cde0)
 void DestroyStatic_001e23f0(void) {
-    ((ActionQueueManager *)0x001e23f0)->Tidy();
+    gActionQueueManager.Tidy();
 }
 // FUNC_AT(0x0015ce00)
 void DestroyStatic_Empty(void) {
 }
 // FUNC_AT(0x0015ce10)
 void DestroyStatic_001e47c0(void) {
-    ((USingletonManager *)0x001e47c0)->Destruct();
+    TheSingletonManager.Destruct();
 }
 // FUNC_AT(0x0015ce30)
 void DestroyStatic_001e9294(void) {
@@ -102,7 +102,7 @@ void DestroyStatic_001e9294(void) {
 }
 // FUNC_AT(0x0015ce40)
 void DestroyStatic_001ebd60(void) {
-    ((UCharNamespace *)0x001ebd60)->Destruct();
+    CharNamespace.Destruct();
 }
 // FUNC_AT(0x0015ceb0)
 void DestroyStatic_001ec4a4(void) {
@@ -114,11 +114,11 @@ void DestroyStatic_001f25b0(void) {
 }
 // FUNC_AT(0x0015ced0)
 void DestroyStatic_001f25f4(void) {
-    ((CarpFileRefTree *)0x001f25f4)->Destruct();
+    reinterpret_cast<CarpFileRefTree *>(&CarpFileRefs)->Destruct();
 }
 // FUNC_AT(0x0015cef0)
 void DestroyStatic_001f2a34(void) {
-    ((TextureContextRefTree *)0x001f2a34)->Destruct();
+    reinterpret_cast<TextureContextRefTree *>(&TextureContextRefs)->Destruct();
 }
 // FUNC_AT(0x0015cf60)
 void DestroyStatic_00200f60(void) {
@@ -128,31 +128,27 @@ void DestroyStatic_00200f60(void) {
 void DestroyStatic_00201790(void) {
     ((EAGL::GeoPrimState *)0x00201790)->Destruct();
 }
-// FUNC_AT(0x0015d070)
-void DestroyStatic_0023e100(void) {
-    ((RCameraSpline *)0x0023e100)->Destruct();
-}
 // FUNC_AT(0x0015d0d0)
 void DestroyStatic_0023f330(void) {
     ((EAGL::GeoPrimState *)0x0023f330)->Destruct();
 }
 // FUNC_AT(0x0015d250)
 void DestroyStatic_00243944(void) {
-    ((MixRefTree *)0x00243944)->Destruct();
+    reinterpret_cast<MixRefTree *>(&MixRefs)->Destruct();
 }
 // FUNC_AT(0x0015d260)
 void DestroyStatic_00243a88(void) {
-    ((StreamRefTree *)0x00243a88)->Destruct();
+    reinterpret_cast<StreamRefTree *>(&StreamRefs)->Destruct();
 }
 // FUNC_AT(0x0015d2d0)
 void DestroyStatic_00243af8(void) {
-    ((FaderRefTree *)0x00243af8)->Destruct();
+    reinterpret_cast<FaderRefTree *>(&FaderRefs)->Destruct();
 }
 // FUNC_AT(0x0015d2f0)
 void DestroyStatic_00243b08(void) {
-    ((BankRefCounter *)0x00243b08)->Destruct();
+    BankRefs.Destruct();
 }
 // FUNC_AT(0x0015d300)
 void DestroyStatic_00243b74(void) {
-    FUN_0012f820((void *)0x00243b74, 0);
+    FUN_0012f820(&EngineRefs, 0);
 }

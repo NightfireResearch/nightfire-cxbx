@@ -12,9 +12,8 @@
 // asked type whatever it holds (one element in the value itself, else the first element its data points at).
 // ---------------------------------------------------------------------------------------------------------------
 
-#define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 
-#define DefaultVector (*(AttributeVector *)0x001d4c00)   // (0,0,0,1), filled in by a static initialiser
+#define DefaultVector (*(AttributeVector *)0x001d4c00)   // (0,0,0,1); its address is handed out, so the game's
 
 // FUNC_AT(0x00058f00)
 AttributeSet* AttributeSet::Construct(const char *className, const char *name) {
@@ -70,7 +69,7 @@ bool AttributeSet::FindAttribute(const char *key, AttributeValue **value) {
             AttributeSystemInstance->LoadCollection(at);
         AttributeMap &attributes = at->attributes;
         AttributeNode *node = attributes.Lbound(key);
-        if (node == attributes.head || CRT_stricmp(key, node->value.name) < 0)
+        if (node == attributes.head || _stricmp(key, node->value.name) < 0)
             node = attributes.head;
         if (node != attributes.head) {
             *value = &node->value.value;

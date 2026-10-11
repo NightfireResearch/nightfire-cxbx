@@ -30,25 +30,52 @@
 
 #define GameTick U32_AT(0x001f2a4c)
 #define Launch (*(LaunchPage *)0x00243b90)
-#define SavedPositionalLights (*(RPositionalLights *)0x001ec268)    // DisablePositionalLighting's
+#define OffOnNames ((const char *const *)0x001b6638)            // "Off", "On"
+
+// XBE_GLOBAL(0x001ec268, 0x80)
+RPositionalLights SavedPositionalLights;                 // DisablePositionalLighting's
 
 // The tuning file's types and the indices dbindex reads them through
-#define ExplosionTypes ((RLightType *)0x001c4080)               // by explosion size, five
-#define MissileTypes ((RLightType *)0x001c40f8)
-#define EnvironmentIndex (*(uint32_t *)0x001ec2f8)
-#define ExplosionTypeIndex (*(uint32_t *)0x001ec2f0)
-#define MissileTypeIndex (*(uint32_t *)0x001ec2e8)
+// XBE_GLOBAL(0x001c4080, 0x78)
+RLightType ExplosionTypes[5] = {                         // by explosion size
+    { { 0.04f, 0.03f, 0.02f, 1.0f }, 1.0f, 45.0f },
+    { { 0.04f, 0.03f, 0.02f, 1.0f }, 0.8f, 90.0f },
+    { { 0.04f, 0.03f, 0.02f, 1.0f }, 0.4f, 120.0f },
+    { { 0.04f, 0.03f, 0.02f, 1.0f }, 0.2f, 180.0f },
+    { { 0.04f, 0.03f, 0.02f, 1.0f }, 0.1f, 240.0f },
+};
+// XBE_GLOBAL(0x001c40f8, 0x78)
+RLightType MissileTypes[5] = {
+    { { 0.0f, 0.0f, 0.1f, 1.0f }, 5.0f, 0.0f },
+    { { 0.1f, 0.1f, 0.05f, 1.0f }, 5.0f, 0.0f },
+    { { 0.0f, 0.0f, 0.1f, 1.0f }, 5.0f, 0.0f },
+    { { 0.1f, 0.1f, 0.05f, 1.0f }, 5.0f, 0.0f },
+    { { 0.0f, 0.0f, 0.1f, 1.0f }, 5.0f, 0.0f },
+};
+// XBE_GLOBAL(0x001ec2f8, 4)
+uint32_t EnvironmentIndex;
+// XBE_GLOBAL(0x001ec2f0, 4)
+uint32_t ExplosionTypeIndex;
+// XBE_GLOBAL(0x001ec2e8, 4)
+uint32_t MissileTypeIndex;
 // The flag bytes dbattrib_floatrgb is handed (and does not use)
-#define SkyColourFlag (*(uint8_t *)0x001ec2f7)
-#define GroundColourFlag (*(uint8_t *)0x001ec2f6)
-#define Light1ColourFlag (*(uint8_t *)0x001ec2f5)
-#define Light2ColourFlag (*(uint8_t *)0x001ec2f4)
-#define TypeColourFlag (*(uint8_t *)0x001ec2ec)
-// The menu's names for the indices' values and for a bool
-#define EnvironmentNames ((const char *const *)0x001c4048)      // "World", "Character", "Unused1"
-#define ExplosionTypeNames ((const char *const *)0x001c4058)    // "Tiny", "Small", "Medium", "Large", "Huge"
-#define MissileTypeNames ((const char *const *)0x001c406c)      // "Missile", "Rocket", "SnowmobileRocket", ...
-#define OffOnNames ((const char *const *)0x001b6638)            // "Off", "On"
+// XBE_GLOBAL(0x001ec2f7, 1)
+uint8_t SkyColourFlag;
+// XBE_GLOBAL(0x001ec2f6, 1)
+uint8_t GroundColourFlag;
+// XBE_GLOBAL(0x001ec2f5, 1)
+uint8_t Light1ColourFlag;
+// XBE_GLOBAL(0x001ec2f4, 1)
+uint8_t Light2ColourFlag;
+// XBE_GLOBAL(0x001ec2ec, 1)
+uint8_t TypeColourFlag;
+// The menu's names for the indices' values
+// XBE_GLOBAL(0x001c4048, 0x10)
+static const char *const EnvironmentNames[4] = { "World", "Character", "Unused1", "Unused2" };
+// XBE_GLOBAL(0x001c4058, 0x14)
+static const char *const ExplosionTypeNames[5] = { "Tiny", "Small", "Medium", "Large", "Huge" };
+// XBE_GLOBAL(0x001c406c, 0x14)
+static const char *const MissileTypeNames[5] = { "Missile", "Rocket", "SnowmobileRocket", "EMPInflight", "EMPTarget" };
 
 namespace {
 

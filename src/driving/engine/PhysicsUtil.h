@@ -40,6 +40,14 @@ Coord3* Util_GenerateCarTensor(Coord3 *result, float mass, float sizeX, float si
 // Box-Muller method, which makes two - the second is kept for the next call. Unrounded.
 double Util_GaussRandom();
 
+// Util_GaussRandom's second number, kept for the next call
+struct GaussSpare {
+    float value;                // +0x00
+    uint8_t available;          // +0x04
+};
+static_assert(sizeof(GaussSpare) == 8, "the kept number and its flag");
+extern GaussSpare GaussRandomSpare;
+
 // A direction turned by yTurns about y, then by zTurns about z (0x000bd1e0). Answers result.
 Coord3* Util_PerturbVector(Coord3 *result, float yTurns, float zTurns, const Coord4 *direction);
 

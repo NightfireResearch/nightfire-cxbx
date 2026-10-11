@@ -3,6 +3,7 @@
 #endif
 
 #include "SndTagShadow.h"
+#include "SndOwned.h"
 
 #include "../sound/snd/Banks.h"
 #include "../sound/snd/Voices.h"
@@ -231,10 +232,18 @@ bool Guarded(Call *c) {
 }
 
 // One side: the original (at its address) or ours (called directly)
+// The globals the port owns are the original's copies' values on both sides (the port's calls into other modules
+// reach the originals); what the port wrote in its variables goes back to the original's copies, which the tests
+// compare
 bool Side(Call *c, bool original) {
     c->original = original;
     c->result = (intptr_t)0xcccccccc;
-    return Guarded(c);
+    SndOwned_ToPort();
+    SndOwnedCopy before;
+    SndOwned_Take(&before);
+    bool ok = Guarded(c);
+    SndOwned_CarryWrites(before);
+    return ok;
 }
 
 // Both sides ran (or both faulted); false if only one did
@@ -258,13 +267,15 @@ struct SavedRange {
     void Restore() const { memcpy((void *)(uintptr_t)at, bytes.data(), bytes.size()); }
 };
 
-#define OutputMode   (*(uint8_t *)0x00244d10u)
-#define ModeCount    (*(uint8_t *)0x00244d15u)
-#define SndHeap      (*(void **)0x00244f6cu)
-#define VoiceArray   (*(uint8_t **)0x00244f3cu)
-#define NumVoicesG   (*(int16_t *)0x00244ed8u)
-#define MasterVolume (*(uint8_t *)0x00244ed1u)
-#define NextKey      (*(uint8_t *)0x00245374u)
+// The tests set the globals at the game's addresses, the original's copy; Side gives the port's variables the same
+// values before each side runs and carries what the side wrote in them back (SndOwned.h)
+#define OrigOutputMode   (*(uint8_t *)0x00244d10u)     // SndOptions'
+#define OrigModeCount    (*(uint8_t *)0x00244d15u)     // SndOptions'
+#define OrigSndHeap      (*(void **)0x00244f6cu)
+#define OrigVoiceArray   (*(uint8_t **)0x00244f3cu)
+#define OrigNumVoices    (*(int16_t *)0x00244ed8u)
+#define OrigMasterVolume (*(uint8_t *)0x00244ed1u)
+#define OrigNextKey      (*(uint8_t *)0x00245374u)
 const uint32_t kGainTable = 0x00245378, kGainTableEnd = 0x00245978;
 const uint32_t kAngles = 0x00244d30, kAnglesEnd = 0x00244d90;   // the speaker angles (+ 12 x mode from 0x244d34)
 const uint32_t kChannelAz = 0x00244f70, kChannelAzEnd = 0x00244fb8;   // default azimuth per channel layout
@@ -730,7 +741,7 @@ void TestPatch(const Input &in, const Walk &w) {
     if (!BothRan("SNDI_patchtohdr", in.name.c_str(), okO, okP))
         return;
     int channels = oo.format.channels;
-    if (channels >= 2 && !(OutputMode == 2 && channels == 2) && !w.has9d) {
+    if (channels >= 2 && !(OrigOutputMode == 2 && channels == 2) && !w.has9d) {
         oo.attributes.azimuth[1] = 0;
         op.attributes.azimuth[1] = 0;
         g_masked++;
@@ -793,11 +804,11 @@ void TestTags() {
     std::vector<Input> all = g_inputs;
     all.insert(all.end(), generated.begin(), generated.end());
 
-    uint8_t savedMode = OutputMode;
+    uint8_t savedMode = OrigOutputMode;
     SavedRange channelAz(kChannelAz, kChannelAzEnd);
     for (uint32_t a = kChannelAz; a < kChannelAzEnd; a += 2)   // default azimuths a wrong index would show
         *(uint16_t *)(uintptr_t)a = (uint16_t)(0x1000 + (a - kChannelAz) * 0x135);
-    void *savedHeap = SndHeap;
+    void *savedHeap = OrigSndHeap;
     for (const Input &in : all) {
         Walk w = WalkTags(in.pt, in.end);
         if (!w.ok || w.undefinedValue) {
@@ -810,13 +821,13 @@ void TestTags() {
             continue;
         }
         for (int mode = 1; mode <= 2; mode++) {
-            OutputMode = (uint8_t)mode;
+            OrigOutputMode = (uint8_t)mode;
             TestParse(in);
             TestPatch(in, w);
         }
     }
-    SndHeap = savedHeap;
-    OutputMode = savedMode;
+    OrigSndHeap = savedHeap;
+    OrigOutputMode = savedMode;
     channelAz.Restore();
 }
 
@@ -851,12 +862,12 @@ void VoicePair(Which which, int a0, int a1, int index, const char *what) {
 }
 
 void TestVoices() {
-    uint8_t *savedArray = VoiceArray;
-    int16_t savedCount = NumVoicesG;
-    uint8_t savedMaster = MasterVolume, savedKey = NextKey;
+    uint8_t *savedArray = OrigVoiceArray;
+    int16_t savedCount = OrigNumVoices;
+    uint8_t savedMaster = OrigMasterVolume, savedKey = OrigNextKey;
     SavedRange fxbus(0x00244f44, 0x00244f6c);
-    VoiceArray = g_voices;
-    NumVoicesG = kVoices;
+    OrigVoiceArray = g_voices;
+    OrigNumVoices = kVoices;
     for (int i = 0; i < 256; i++)
         g_table256[i] = (int8_t)Next();
     for (int i = 0; i < 512; i++)
@@ -872,7 +883,7 @@ void TestVoices() {
             v->env = (int32_t)((Next() % 0x80) << 16);
         v->volLfo = Next() % 2 ? g_table256 : NULL;
         v->volTable = Next() % 2 ? g_table512 + 256 : NULL;
-        MasterVolume = (uint8_t)(Next() % 3 == 0 ? 0x7f : Next());
+        OrigMasterVolume = (uint8_t)(Next() % 3 == 0 ? 0x7f : Next());
         VoicePair(kCalcVol, index, 0, index, "iSNDcalcvol");
     }
     for (int i = 0; i < 20000; i++) {   // iSNDcalcpitch, iSNDdetunetolinear through it
@@ -895,7 +906,8 @@ void TestVoices() {
         v->renderMode = modes[Next() % (sizeof(modes) / 2)];
         for (uint32_t a = 0x00244f44; a < 0x00244f6c; a++)
             *(uint8_t *)(uintptr_t)a = (uint8_t)Next();
-        int bus = (int)(Next() % 2);
+        // the hardware path's bus 1 is past FXBUS (the original reads pSndHeap there); only bus 0 is ever used
+        int bus = (v->renderMode & 0x71c) == 0x400 ? 0 : (int)(Next() % 2);
         VoicePair(kCalcFx, bus, index, index, "SNDI_calcfxlevel");
     }
     for (int i = 0; i < 2000; i++) {   // SNDBANKI_findfreekey
@@ -905,24 +917,24 @@ void TestVoices() {
             v->key = (uint8_t)(Next() % 8 == 0 ? Next() : Next() % 4);
         }
         uint8_t start = (uint8_t)(Next() % 4 == 0 ? 0xfe + Next() % 2 : Next());
-        NextKey = start;
+        OrigNextKey = start;
         Call o = { kFindKey, true, {} }, p = { kFindKey, false, {} };
         bool okO = Side(&o, true);
-        uint8_t keyO = NextKey;
-        NextKey = start;
+        uint8_t keyO = OrigNextKey;
+        OrigNextKey = start;
         bool okP = Side(&p, false);
         g_cases++;
         char where[40];
         snprintf(where, sizeof(where), "counter %02x", start);
         if (BothRan("SNDBANKI_findfreekey", where, okO, okP) &&
             SameInt("SNDBANKI_findfreekey", where, o.result, p.result))
-            SameInt("SNDBANKI_findfreekey counter", where, keyO, NextKey);
+            SameInt("SNDBANKI_findfreekey counter", where, keyO, OrigNextKey);
     }
 
-    VoiceArray = savedArray;
-    NumVoicesG = savedCount;
-    MasterVolume = savedMaster;
-    NextKey = savedKey;
+    OrigVoiceArray = savedArray;
+    OrigNumVoices = savedCount;
+    OrigMasterVolume = savedMaster;
+    OrigNextKey = savedKey;
     fxbus.Restore();
 }
 
@@ -951,7 +963,7 @@ void TestDetune() {
 }
 
 void TestSpeakers() {
-    uint8_t savedMode = OutputMode;
+    uint8_t savedMode = OrigOutputMode;
     SavedRange angles(kAngles, kAnglesEnd), table(kGainTable, kGainTableEnd);
     // SNDI_precalcaztospkrvol: modes 1..6, the console's angles and random ones
     for (int mode = 1; mode <= 6; mode++) {
@@ -970,7 +982,7 @@ void TestSpeakers() {
                 for (uint16_t v : picked)
                     a[k++] = v;
             }
-            OutputMode = (uint8_t)mode;
+            OrigOutputMode = (uint8_t)mode;
             memset((void *)(uintptr_t)kGainTable, 0x33, kGainTableEnd - kGainTable);
             Call o = { kPrecalc, true, {} }, p = { kPrecalc, false, {} };
             bool okO = Side(&o, true);
@@ -988,7 +1000,7 @@ void TestSpeakers() {
     }
     // SNDI_aztospkrvol: random tables, every row and random azimuths
     for (int mode = 0; mode <= 6; mode++) {
-        OutputMode = (uint8_t)mode;
+        OrigOutputMode = (uint8_t)mode;
         for (uint32_t at = kGainTable; at < kGainTableEnd; at++)
             *(uint8_t *)(uintptr_t)at = (uint8_t)Next();
         for (int i = 0; i < 1024; i++) {
@@ -1005,7 +1017,7 @@ void TestSpeakers() {
                 Same("SNDI_aztospkrvol", where, go, gp, sizeof(go));
         }
     }
-    OutputMode = savedMode;
+    OrigOutputMode = savedMode;
     angles.Restore();
     table.Restore();
 
@@ -1022,14 +1034,14 @@ void TestSpeakers() {
 
 void TestSmall() {
     // SNDI_validrendermode: random mode tables and patches
-    uint8_t savedCount = ModeCount;
+    uint8_t savedCount = OrigModeCount;
     SavedRange modes(0x00244d18, 0x00244d28);
     static const uint16_t interesting[] = { 0x420, 0x24, 0x400, 0x4, 0x10, 0x20, 0x40, 0x80, 0x480, 0x84, 0x4a0,
                                             0x1c, 0x71c, 0xe0, 0x0, 0x8, 0x100, 0x200, 0x30, 0xffff };
     const int nInteresting = sizeof(interesting) / 2;
     for (int i = 0; i < 20000; i++) {
         int count = (int)(Next() % 5);
-        ModeCount = (uint8_t)count;
+        OrigModeCount = (uint8_t)count;
         for (int k = 0; k < 8; k++)
             *(uint16_t *)(uintptr_t)(0x00244d18u + k * 2) =
                 (uint16_t)(Next() % 3 == 0 ? Next() : interesting[Next() % nInteresting]);
@@ -1050,7 +1062,7 @@ void TestSmall() {
             SameInt("SNDI_validrendermode", where, o.result, p.result))
             SameInt("SNDI_validrendermode index", where, io, ip);
     }
-    ModeCount = savedCount;
+    OrigModeCount = savedCount;
     modes.Restore();
 
     for (int i = 0; i < 100; i++) {   // SND_attrsetdef
@@ -1073,8 +1085,11 @@ void TestSmall() {
         g_cases++;
         char where[40];
         snprintf(where, sizeof(where), "bus %d mode %x", bus, mode);
+        // The original's bus as the same offset from our FxBuses as from its copy (a bus outside the array lands
+        // in other globals, laid out differently on our side)
+        intptr_t original = o.result == 0 ? 0 : o.result - intptr_t(0x00244f44) + intptr_t(FxBuses);
         if (BothRan("SNDCTRLI_getfxbus", where, okO, okP))
-            SameInt("SNDCTRLI_getfxbus", where, o.result, p.result);
+            SameInt("SNDCTRLI_getfxbus", where, original, p.result);
     }
 
     for (uint8_t *bank : g_banks) {   // SNDBANKI_getppatch
@@ -1118,6 +1133,7 @@ void SndTagShadow_Run(void) {
     if (g_heap == NULL)
         return;
 
+    SndOwned_ToOriginal();   // the original's copies from the live state
     {
         Originals scope(true);
         TestGetb();
@@ -1127,6 +1143,7 @@ void SndTagShadow_Run(void) {
         TestSpeakers();
         TestSmall();
     }
+    SndOwned_ToPort();
 
     VirtualFree(g_heap, 0, MEM_RELEASE);
     g_buffers.clear();

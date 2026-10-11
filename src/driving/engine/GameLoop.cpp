@@ -40,6 +40,7 @@
 #include "../platform/RealSystem.h"
 #include "../platform/X87.h"
 #include "../render/Renderer.h"
+#include "../world/CollisionManager.h"   // fgCollisionMgr
 #include "../world/RoadNetwork.h"
 #include "../world/TriggerManager.h"
 #include "../world/World.h"
@@ -49,6 +50,7 @@
 #include "../audio/Stream.h"
 #include "../../common/launchInfo.h"
 #include "../../helpers.h"
+#include "../logging.h"             // dbg_wprintf, our printf
 
 #include <mmintrin.h>
 #include <stdlib.h>
@@ -102,44 +104,72 @@ const char kCarModels[] = "data\\car\\model\\";
 
 #define Launch (*(LaunchPage *)0x00243b90)
 #define MissionName (Launch.missionName)
-#define LaunchInfoRead I32_AT(0x00244790)
-#define LaunchCommandLine ((char *)0x001e4660)    // a debugger command line, if the page was one
+// XBE_GLOBAL(0x00244790, 0x4)
+static int32_t LaunchInfoRead;
+// XBE_GLOBAL(0x001e4660, 0x100)
+static char LaunchCommandLine[0x100];   // a debugger command line, if the page was one
 
-#define HeapConfigured BOOL8_AT(0x001e47bc)
+// XBE_GLOBAL(0x001e47bc, 0x1)
+static bool HeapConfigured;
 #define gDAudio BOOL8_AT(0x001e4761)
-#define ScreenCaptureEnabled BOOL8_AT(0x001e4766)
-#define gDVD I32_AT(0x001e4768)
+// XBE_GLOBAL(0x001e4766, 0x1)
+static bool ScreenCaptureEnabled;
+// XBE_GLOBAL(0x001e4768, 0x4)
+int32_t gDVD;
 #define gSuperEasy BOOL8_AT(0x001e476c)
 #define gSubtitles BOOL8_AT(0x001e476d)
-#define gUsingMisc BOOL8_AT(0x001e476e)
-#define gHandleMisc I32_AT(0x001e4658)
+// XBE_GLOBAL(0x001e476e, 0x1)
+static bool gUsingMisc;
+// XBE_GLOBAL(0x001e4658, 0x4)
+static int32_t gHandleMisc;
 // Bond_SetExitToDriving's request, read by main at the end
-#define ExitToDriving BOOL8_AT(0x001e476f)
-#define ExitClearScore BOOL8_AT(0x001e4770)
-#define ExitMission I32_AT(0x001e4774)
-#define ExitMissionName ((char *)0x001e4778)
+// XBE_GLOBAL(0x001e476f, 0x1)
+static bool ExitToDriving;
+// XBE_GLOBAL(0x001e4770, 0x1)
+static uint8_t ExitClearScore;   // the request's bool, its byte as given
+// XBE_GLOBAL(0x001e4774, 0x4)
+static int32_t ExitMission;
+// XBE_GLOBAL(0x001e4778, 0x40)
+static char ExitMissionName[0x40];
 
 #define gStreams BOOL8_AT(0x001b7056)             // -streams / +streams
 #define gPlayMovies BOOL8_AT(0x001b7057)
 #define gSoundOption BOOL8_AT(0x001b7054)         // ASoundManager::Init's second argument
-#define gUseBigFile BOOL8_AT(0x001e4854)          // UFileLoader::StartUsingBigFile's third
-#define CurrentMission I32_AT(0x001e4850)
-#define missionNames ((const char **)0x001b7060)   // "mis01" ... by mission index
+// XBE_GLOBAL(0x001e4854, 0x1)
+static bool gUseBigFile;                          // UFileLoader::StartUsingBigFile's third
+// XBE_GLOBAL(0x001e4850, 0x4)
+static int32_t CurrentMission;
+// XBE_GLOBAL(0x001b7060, 0x50)
+static const char *const missionNames[20] = {     // by mission index
+    "mis01", "mis02", "mis03", "mis04", "mis05", "mis06", "mis07", "mis08", "mis09", "mis10",
+    "mis11", "mis12", "mis13", "mis14", "mis15", "mis16", "mis17", "e_map", "a_map", "hk_map",
+};
 
 #define fgScheduler (*(Scheduler **)0x001e520c)
-#define GlobalActionQueue (*(ActionQueue *)0x001e4870)
+// XBE_GLOBAL(0x001e4870, 0x974)
+ActionQueue GlobalActionQueue;
 #define Sim ((void *)0x00233ff0)                  // the Simulation
 #define SimState I32_AT(0x00234e24)               // Sim.simState
 #define WeaponManager (*(void **)0x0023923c)
 #define playerPhysicsObject (*(PVehicle ***)0x00234e40)
-#define CollisionManager (*(void **)0x00239a70)
 #define TrafficSeed I16_AT(0x001de914)
 
 // The disc error screen's: a one-byte block standing for "made", and the font
-#define DiscErrorMade (*(void **)0x001e5210)
-#define DiscErrorFont (*(const uint8_t **)0x001e5214)
+// XBE_GLOBAL(0x001e5210, 0x4)
+static void *DiscErrorMade;
+// XBE_GLOBAL(0x001e5214, 0x4)
+static const uint8_t *DiscErrorFont;
 typedef const char *DiscErrorText[3];
-#define DiscErrorMessages ((DiscErrorText *)0x001c3450)   // English, French, German, Spanish, Italian, Swedish, Dutch
+// XBE_GLOBAL(0x001c3450, 0x54)
+static const DiscErrorText DiscErrorMessages[7] = {   // English, French, German, Spanish, Italian, Swedish, Dutch
+    {"There's a problem with the", "disc you're using.  It may be", "dirty or damaged."},
+    {"Il y a un probl\xe8me avec le disque", "que vous disc utilisez. Il est", "peut-\xeatre sale ou ab\xeem\xe9."},
+    {"Beim Benutzen der CD ist ein Problem", "aufgetreten. M\xf6glicherweise ist sie", "verschmutzt oder besch\xe4" "digt."},
+    {"Hay un problema con el disco", "que est\xe1s usando. Puede estar", "sucio o da\xf1" "ado."},
+    {"Si \xe8 verificato un problema con", "il disco che stai utilizzando.", "Potrebbe essere sporco o danneggiato."},
+    {"Spelskivan du anv\xe4nder", "har ett fel. Den kan vara", "smutsig eller skadad."},
+    {"Er is een probleem met de cd", "die je gebruikt. De cd is", "mogelijk vuil of beschadigd."},
+};
 #define EAGLdriver ((void *)0x001cd114)
 #define DebugFontData ((const uint8_t *)0x001b7480)
 
@@ -151,9 +181,7 @@ typedef const char *DiscErrorText[3];
 
 // ---- the game's functions, not ours yet
 
-// the C runtime: output, locale and heap are the game's
-#define CRT_printf ((int (*)(const char *, ...))0x00132192)
-#define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
+// the C runtime: the heap, the atexit list and the FPU status are the game's
 #define CRT_free ((void (*)(void *))0x001331dc)
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 #define CRT_clearfp ((unsigned (*)(void))0x00133c9e)
@@ -190,7 +218,6 @@ typedef const char *DiscErrorText[3];
 #define SWeaponManager_Construct ((void *(__fastcall *)(void *, int))0x000bb220)
 #define SWeaponManager_Destruct ((void (__fastcall *)(void *, int))0x000bad40)
 #define SWeaponManager_SetPlayerCar ((void (__fastcall *)(void *, int, void *))0x000ba990)
-#define WCollisionMgr_GetWorldHeightAtPoint ((void (__fastcall *)(void *, int, float *, float *, bool))0x000bf210)
 #define AIElementController_Construct ((void (*)(void *))0x000285b0)
 #define AIVehicleController_Get ((void *(*)(void))0x00035c00)
 #define AIVehicleController_Init ((void (*)(void))0x00035c10)
@@ -302,7 +329,7 @@ void LaunchPage::ReturnToAction(int target) {
         XLaunchNewImageA(kReturnImages[target], &Launch);
         return;
     }
-    CRT_printf("Loader not present!\n");
+    dbg_wprintf("Loader not present!\n");
 }
 
 // FUNC_AT(0x000596a0)
@@ -354,7 +381,7 @@ bool ApplicationMemoryHeapConfig() {
         TIMER_init(Ftol(GetFoundationVideoModeRate()));
         UMemory::Init(0x2400000, 0, NULL);
         UMemory::AddFastBlocks(0x10);
-        HeapConfigured = 1;
+        HeapConfigured = true;
     }
     NullFunction();
     return true;
@@ -405,7 +432,7 @@ void Bond_LoadingScreen() {
 void Bond_SetExitToDriving(int mission, const char *missionName, bool clearScore) {
     strcpy(ExitMissionName, missionName);
     ExitMission = mission;
-    ExitToDriving = 1;
+    ExitToDriving = true;
     ExitClearScore = clearScore;
 }
 
@@ -506,7 +533,7 @@ void Bond_CleanUp() {
     FreeEAGLMaterialsThunk();
     RRenderer::Shutdown();
     UMemory::Shutdown();
-    CRT_printf("Bond_CleanupDone");
+    dbg_wprintf("Bond_CleanupDone");
 }
 
 // The command line (a first boot only): +/-streams, -ntsc, -pal, -pal60, -T<track>. A track named "mis<N>..."
@@ -527,13 +554,13 @@ int GameMain(int argc, char **argv) {
             if (arg[0] != '-' && arg[0] != '+')
                 continue;
             bool plus = arg[0] == '+';
-            if (CRT_stricmp(arg + 1, "streams") == 0) {
+            if (_stricmp(arg + 1, "streams") == 0) {
                 gStreams = plus;
-            } else if (CRT_stricmp(argv[i] + 1, "ntsc") == 0) {
+            } else if (_stricmp(argv[i] + 1, "ntsc") == 0) {
                 Launch.videoMode = kVideoNtsc;
-            } else if (CRT_stricmp(argv[i] + 1, "pal") == 0) {
+            } else if (_stricmp(argv[i] + 1, "pal") == 0) {
                 Launch.videoMode = kVideoPal;
-            } else if (CRT_stricmp(argv[i] + 1, "pal60") == 0) {
+            } else if (_stricmp(argv[i] + 1, "pal60") == 0) {
                 Launch.videoMode = kVideoPal60;
             } else if (argv[i][1] == 'T' || argv[i][1] == 't') {
                 strncpy(MissionName, argv[i] + 2, 15);
@@ -552,9 +579,9 @@ int GameMain(int argc, char **argv) {
 
     if (Launch.bootCount == 1 && Launch.difficulty == 0 && Launch.unknowna18 == 0)
         gSuperEasy = 1;
-    ExitToDriving = 0;
+    ExitToDriving = false;
     ExitClearScore = 0;
-    if (CRT_stricmp(MissionName, "paris_mis01") != 0)
+    if (_stricmp(MissionName, "paris_mis01") != 0)
         gSuperEasy = 0;
     if (MissionName[0] != 0) {
         WWorld::SetTrackName(MissionName, true);
@@ -733,7 +760,7 @@ void GameLoop_CleanUp() {
 // FUNC_AT(0x0005aa80)
 void RunTheGame(bool simulateOncePerLoop, int unused) {
     (void)unused;
-    CRT_printf("Track is %s\n", MissionName);
+    dbg_wprintf("Track is %s\n", MissionName);
     MEM_validate();
     RRenderHigh render;
     render.Construct();
@@ -870,20 +897,20 @@ void GameLoop_StartUp(int trafficSeed) {
     speechName.size = 0;
     speechName.text.buffer[0] = 0;
     const char *const languageSuffix[8] = { "en", "fr", "ge", "sp", "en", "en", "en", "en" };
-    if (CRT_stricmp(MissionName, "uw_mis11") == 0 || CRT_stricmp(MissionName, "uw_map") == 0)
+    if (_stricmp(MissionName, "uw_mis11") == 0 || _stricmp(MissionName, "uw_map") == 0)
         speechName.AssignText("mis11", 5);
-    else if (CRT_stricmp(MissionName, "snow1a_mis3") == 0 || CRT_stricmp(MissionName, "snow1a") == 0)
+    else if (_stricmp(MissionName, "snow1a_mis3") == 0 || _stricmp(MissionName, "snow1a") == 0)
         speechName.AssignText("mis3", 4);
-    else if (CRT_stricmp(MissionName, "snow2a_mis4") == 0 || CRT_stricmp(MissionName, "snow2a") == 0 ||
-             CRT_stricmp(MissionName, "snow2a_race") == 0)
+    else if (_stricmp(MissionName, "snow2a_mis4") == 0 || _stricmp(MissionName, "snow2a") == 0 ||
+             _stricmp(MissionName, "snow2a_race") == 0)
         speechName.Assign("mis4");
-    else if (CRT_stricmp(MissionName, "paris_mis01") == 0 || CRT_stricmp(MissionName, "paris_map") == 0)
+    else if (_stricmp(MissionName, "paris_mis01") == 0 || _stricmp(MissionName, "paris_map") == 0)
         speechName.Assign("mis01");
-    else if (CRT_stricmp(MissionName, "junglea_mis13a") == 0 || CRT_stricmp(MissionName, "junglea") == 0)
+    else if (_stricmp(MissionName, "junglea_mis13a") == 0 || _stricmp(MissionName, "junglea") == 0)
         speechName.Assign("mis13a");
-    else if (CRT_stricmp(MissionName, "jungleb_mis13b") == 0 || CRT_stricmp(MissionName, "jungleb") == 0)
+    else if (_stricmp(MissionName, "jungleb_mis13b") == 0 || _stricmp(MissionName, "jungleb") == 0)
         speechName.Assign("mis13b");
-    else if (CRT_stricmp(MissionName, "junglec_mis13c") == 0 || CRT_stricmp(MissionName, "junglec") == 0)
+    else if (_stricmp(MissionName, "junglec_mis13c") == 0 || _stricmp(MissionName, "junglec") == 0)
         speechName.Assign("mis13c");
     else
         speechName.Assign("mis11");
@@ -926,7 +953,7 @@ void GameLoop_StartUp(int trafficSeed) {
     float orientation[4] = { 0.0f, 0.0f, 1.0f, 0.0f };   // the fourth word is never written
     float position[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     float height = 0.0f;
-    WCollisionMgr_GetWorldHeightAtPoint(CollisionManager, 0, position, &height, false);
+    fgCollisionMgr->GetWorldHeightAtPoint(reinterpret_cast<const Coord3 *>(position), &height, false);
     position[1] = height + 1.0f;
 
     GLoadingScreen_Status("Preload common models");

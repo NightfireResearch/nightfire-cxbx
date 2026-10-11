@@ -1,6 +1,7 @@
 #pragma fp_contract(off)
 
 #include "Actor.h"
+#include "../render/Renderer.h"   // ViewProjectionMatrixPointer
 
 #include <math.h>
 #include <stddef.h>
@@ -35,12 +36,14 @@
 #define PointerList_BuyHead ((PointerListNode *(__fastcall *)(PointerList *, int))0x000b8490)
 
 // ---- globals
-#define CullRestart BOOL8_AT(0x001dd9a4)                // PrepareActorsForCulling's: the walk starts again
-#define CullCursor (*(PointerListNode **)0x001dd9bc)    // the culling walk's node
-#define UpdatingActor (*(ActActor **)0x001dd9e0)        // the actor updating (name ours)
+// XBE_GLOBAL(0x001dd9a4, 1)
+bool CullRestart;                               // PrepareActorsForCulling's: the walk starts again
+// XBE_GLOBAL(0x001dd9bc, 4)
+PointerListNode *CullCursor;                    // the culling walk's node
+// XBE_GLOBAL(0x001dd9e0, 4)
+static ActActor *UpdatingActor;                 // the actor updating (name ours)
 #define SimState I32_AT(0x00234e24)                     // Sim.simState
 // EAGL's pointer to the view-projection matrix (0x0023fa90)
-#define ViewProjectionMatrixPointer (*(const MATRIX4 **)0x001caf5c)
 
 constexpr int32_t kSimPaused = 3;
 // The stimulus Fire plays on weapon 0
@@ -815,15 +818,15 @@ void ActActorDatabase::SetupFOVConversions(RViewCamera *view) {
 
 // FUNC_AT(0x00012580)
 void ActActorDatabase::PrepareActorsForCulling() {
-    CullRestart = 1;
+    CullRestart = true;
 }
 
 // FUNC_AT(0x00012f40)
 int ActActorDatabase::GetNextActorCullInfo(Coord4 *sphere, float *height, bool *checkFar, float *farScale) {
     ActActorDatabase *database = ActorDatabase;
     PointerListNode *node;
-    if (CullRestart == 1) {
-        CullRestart = 0;
+    if (CullRestart) {
+        CullRestart = false;
         node = database->Begin();
     } else {
         node = CullCursor->next;

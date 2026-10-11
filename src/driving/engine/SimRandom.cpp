@@ -14,15 +14,22 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // noise_init's table: 256 values and the first again at the end.
-#define NoiseTable ((float *)0x001e5220)
-#define NoiseTableMade I32_AT(0x001e7a58)
+// XBE_GLOBAL(0x001e5220, 0x404)
+float NoiseTable[257];
+// XBE_GLOBAL(0x001e7a58, 0x4)
+int32_t NoiseTableMade;
 // Noise::Init's: 267 gradients (each lattice point k uses the pair k, k + 1), and the 4096-entry permutation.
-#define NoiseGradient ((float *)0x001e5628)
-#define NoisePermutation ((int16_t *)0x001e5a58)
+// XBE_GLOBAL(0x001e5628, 0x42c)
+float NoiseGradient[267];
+// XBE_GLOBAL(0x001e5a58, 0x2000)
+int16_t NoisePermutation[0x1000];
 // The generator the gradients are drawn from: SimRandom's scheme, a state and a multiplier, and a count Init clears.
-#define NoiseRandomState U32_AT(0x001c34f8)
-#define NoiseRandomMultiplier U32_AT(0x001c34fc)
-#define NoiseRandomCount U32_AT(0x001c3500)
+// XBE_GLOBAL(0x001c34f8, 0x4)
+uint32_t NoiseRandomState = 987654321;
+// XBE_GLOBAL(0x001c34fc, 0x4)
+uint32_t NoiseRandomMultiplier = 123456789;
+// XBE_GLOBAL(0x001c3500, 0x4)
+uint32_t NoiseRandomCount = 1;
 
 // The C runtime's rand, the game's: its state is the game's.
 #define CRT_rand ((int (*)(void))0x00133ee0)

@@ -5,6 +5,7 @@
 #include "RoadNavShadow.h"
 
 #include "../world/RoadNav.h"
+#include "../camera/CameraSpline.h"     // RCameraSpline
 #include "../world/RoadNetwork.h"
 #include "../engine/SimRandom.h"
 #include "../../common/xbeOriginal.h"
@@ -118,8 +119,7 @@ typedef short (__fastcall *CalcLaneFn)(void *, int, float *, uint8_t *, bool *);
 
 SimRandom *Random() { return *reinterpret_cast<SimRandom **>(0x00233ff0); }
 
-uint8_t *const kCurveState = reinterpret_cast<uint8_t *>(0x0023e100);   // GetSegmentCurveStep's spline
-const size_t kCurveStateSize = 0x74;
+
 const size_t kSplineSize = 0x70;
 
 alignas(16) uint8_t g_navBytes[sizeof(WRoadNav)];
@@ -136,7 +136,8 @@ struct Snapshot {
     SimRandom random;
     uint32_t queryStamp;
     std::vector<uint32_t> stamps;
-    uint8_t curve[kCurveStateSize];
+    uint8_t curve[sizeof(RCameraSpline)];   // GetSegmentCurveStep's spline and its guard: the originals reach them
+    uint32_t curveGuard;                    // through the ported WRoadNetwork
     Coord4 heading;
 };
 
@@ -148,7 +149,8 @@ void Take(Snapshot *s) {
     s->stamps.resize(size_t(Net().segmentCount));
     for (int i = 0; i < Net().segmentCount; i++)
         s->stamps[size_t(i)] = Net().segments[i]->queryStamp;
-    memcpy(s->curve, kCurveState, sizeof(s->curve));
+    memcpy(s->curve, &CurveSpline, sizeof(s->curve));
+    s->curveGuard = CurveSplineGuard;
     s->heading = g_heading;
 }
 
@@ -159,7 +161,8 @@ void Put(const Snapshot &s) {
     Net().queryStamp = s.queryStamp;
     for (int i = 0; i < Net().segmentCount; i++)
         Net().segments[i]->queryStamp = s.stamps[size_t(i)];
-    memcpy(kCurveState, s.curve, sizeof(s.curve));
+    memcpy(&CurveSpline, s.curve, sizeof(s.curve));
+    CurveSplineGuard = s.curveGuard;
     g_heading = s.heading;
 }
 
@@ -640,7 +643,7 @@ void RoadNavShadow_Run(void) {
 
     // GetSegmentCurveStep's first call constructs its spline (an allocation) and registers its destructor: make it
     // here, once, so that the original's run and the port's both find it made
-    if (!(*reinterpret_cast<uint32_t *>(kCurveState + 0x70) & 1)) {
+    if (!(CurveSplineGuard & 1)) {
         WRoadSegment *segment = net.segments[0];
         Coord3 point;
         WRoadNetwork::Get()->GetSegmentCurveStep(&net.nodes[segment->node[0]]->position,

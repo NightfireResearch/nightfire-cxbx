@@ -14,6 +14,7 @@
 #include "../render/Particulate.h"
 #include "../render/RenderHigh.h"
 #include "../render/Renderer.h"
+#include "OwnedGlobals.h"
 #include "../../common/xbeOriginal.h"
 #include "../../helpers.h"
 
@@ -97,9 +98,8 @@ typedef RParticleLibrary::RPartLibraryData RLibData;
 #define Orig_ParticulateDraw ((void (__fastcall *)(RParticulate *, int))0x000a3e60)
 
 #define RandomSeed U32_AT(0x001c45c4)
-#define ParticleFovScale FLOAT_AT(0x001c8ed4)
-#define VertexArrays ((uint8_t *)0x00209d30)        // the vertex arrays, materials and drag, up to 0x00230604
-const size_t kVertexBytes = 0x00230604 - 0x00209d30;
+#define Materials ((uint8_t *)0x00230540)           // the sprite and streak materials
+const size_t kMaterialBytes = 0xc0;
 const unsigned kVolatileDraw = 0x0011c290;
 const unsigned kSimpleDraw = 0x0011bbf0;
 
@@ -136,26 +136,33 @@ void ResetFpu() {
 
 // ---- the watched memory: saved before a case, the original's and ours kept, put back after
 
+// `at` is the port's; `orig` the original's copy of it, or `at` when both sides share the memory. The original runs
+// from its copy set to the port's state; the copy is put back after.
 struct Region {
     const char *name;
     uint8_t *at;
+    uint8_t *orig;
     size_t size;
-    uint8_t *before, *original, *port;
+    bool pointers;          // shared, and holds addresses of owned globals (the draw log, a request): translated
+    uint8_t *before, *origBefore, *original, *port;
 };
 
-const int kMaxRegions = 16;
+const int kMaxRegions = 40;
 Region g_regions[kMaxRegions];
 int g_regionCount = 0;
 int g_fixedRegions = 0;
 
-void Watch(const char *name, void *at, size_t size) {
+void Watch(const char *name, void *at, size_t size, uint32_t orig = 0, bool pointers = false) {
     if (at == NULL || g_regionCount == kMaxRegions)
         return;
     Region *r = &g_regions[g_regionCount++];
     r->name = name;
+    r->pointers = pointers;
     r->at = static_cast<uint8_t *>(at);
+    r->orig = orig != 0 ? reinterpret_cast<uint8_t *>(orig) : r->at;
     r->size = size;
     r->before = static_cast<uint8_t *>(malloc(size));
+    r->origBefore = static_cast<uint8_t *>(malloc(size));
     r->original = static_cast<uint8_t *>(malloc(size));
     r->port = static_cast<uint8_t *>(malloc(size));
 }
@@ -165,21 +172,41 @@ void Unwatch() {
     while (g_regionCount > g_fixedRegions) {
         Region *r = &g_regions[--g_regionCount];
         free(r->before);
+        free(r->origBefore);
         free(r->original);
         free(r->port);
     }
 }
 
+// 0: before (and the original's copies as they were), 1: the original's result, 2: the port's
 void SaveAll(int which) {
     for (int i = 0; i < g_regionCount; i++) {
         Region *r = &g_regions[i];
-        memcpy(which == 0 ? r->before : which == 1 ? r->original : r->port, r->at, r->size);
+        if (which == 0) {
+            memcpy(r->before, r->at, r->size);
+            memcpy(r->origBefore, r->orig, r->size);
+        } else {
+            memcpy(which == 1 ? r->original : r->port, which == 1 ? r->orig : r->at, r->size);
+            // A region holding the address of an owned global: the original's is the game's copy, the port's
+            // ours. Only those marked: a random word elsewhere can fall in a game copy's range.
+            if (which == 1 && r->pointers)
+                OwnedGlobals_TranslateWords(r->original, r->size);
+        }
     }
 }
 
-void RestoreAll() {
+// The original's copies set to the port's state
+void PrepareOriginal() {
     for (int i = 0; i < g_regionCount; i++)
+        if (g_regions[i].orig != g_regions[i].at)
+            memcpy(g_regions[i].orig, g_regions[i].before, g_regions[i].size);
+}
+
+void RestoreAll() {
+    for (int i = 0; i < g_regionCount; i++) {
+        memcpy(g_regions[i].orig, g_regions[i].origBefore, g_regions[i].size);
         memcpy(g_regions[i].at, g_regions[i].before, g_regions[i].size);
+    }
 }
 
 typedef void (*CaseFn)(bool original);
@@ -209,6 +236,7 @@ bool Guarded(CaseFn run, bool original) {
 void SideBySide(const char *what, int index, CaseFn run) {
     g_cases++;
     SaveAll(0);
+    PrepareOriginal();
     bool originalOk = Guarded(run, true);
     SaveAll(1);
     RestoreAll();
@@ -1016,16 +1044,29 @@ void ParticleShadow_Run(void) {
 
     // The memory every case watches
     Watch("random state", &RandomSeed, 4);
-    Watch("fov scale", &ParticleFovScale, 4);
-    Watch("vertex arrays", VertexArrays, kVertexBytes);
+    Watch("fov scale", &ParticleFovScale, 4, 0x001c8ed4);
+    Watch("sprite fade size", &SpriteFadeSize, 4, 0x001c8ed8);
+    Watch("drag", &ParticleDrag, 4, 0x00230600);
+    Watch("normal positions", NormalPositions, sizeof(NormalPositions), 0x00222d30);
+    Watch("normal colours", NormalColours, sizeof(NormalColours), 0x0022ad40);
+    Watch("normal UVs", NormalUVs, sizeof(NormalUVs), 0x0021ed30);
+    Watch("additive positions", AdditivePositions, sizeof(AdditivePositions), 0x00216d30);
+    Watch("additive colours", AdditiveColours, sizeof(AdditiveColours), 0x0022cd40);
+    Watch("additive UVs", AdditiveUVs, sizeof(AdditiveUVs), 0x00212d30);
+    Watch("streak positions", StreakPositions, sizeof(StreakPositions), 0x0020cd30);
+    Watch("streak colours", StreakColours, sizeof(StreakColours), 0x0022ed40);
+    Watch("streak UVs", StreakUVs, sizeof(StreakUVs), 0x00209d30);
+    Watch("textures", &SpriteTexture, 4, 0x0022ad30);
+    Watch("streak texture", &StreakTexture, 4, 0x0022ad34);
+    Watch("materials", Materials, kMaterialBytes);
     Watch("live cache", &fgParticleSystems->cache, sizeof(RParticleParticleCache));
     Watch("live types", fgParticleSystems->library.data, sizeof(RLibData));
-    Watch("draws", &g_drawLog, sizeof(g_drawLog));
+    Watch("draws", &g_drawLog, sizeof(g_drawLog), 0, true);
     Watch("point states", &D3DRenderState[kRsPointSize], (kRsPointScaleA - kRsPointSize + 1) * 4);
     Watch("dirty flags", &D3DDirtyFlags, 4);
     if (canDraw) {
-        Watch("volatile request", VolatileRequests[VolatileRequestIndex], sizeof(TexturedGeoPrim));
-        Watch("simple request", SimpleRequests[SimpleRequestIndex], sizeof(SimpleGeoPrim));
+        Watch("volatile request", VolatileRequests[VolatileRequestIndex], sizeof(TexturedGeoPrim), 0, true);
+        Watch("simple request", SimpleRequests[SimpleRequestIndex], sizeof(SimpleGeoPrim), 0, true);
     }
     g_fixedRegions = g_regionCount;
     SaveAll(0);

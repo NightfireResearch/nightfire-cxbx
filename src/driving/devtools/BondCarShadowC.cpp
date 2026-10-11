@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include "BondCarShadowC.h"
+#include "BondCarOrigTuning.h"
 #include "FpControl.h"
 
 #include "../EventManager.hpp"
@@ -112,10 +113,10 @@ typedef int (__fastcall *SimpleWheelForcesFn)(PBondCar *, int, BondCarWheelInput
 #define ShadowSim ((void *)0x00233ff0)
 #define ShadowSimRandom (*(SimRandom **)0x00233ff0)          // the Simulation's first word
 #define ShadowRandomSeed U32_AT(0x001c45c4)
-#define ShadowActiveSystems ((void **)0x001eb878)          // [0x100]
-#define ShadowActiveSystemCount U32_AT(0x001ebc78)
-#define ShadowCreationPoint (*(uint8_t **)0x001e47d8)
-#define ShadowDeletionPoint (*(uint8_t **)0x001e47dc)
+// The original's copy of the port's BondCarScratchPad (the cars' tuning: BondCarOrigTuning.h). The animation
+// engine's active list and the event queue's points are ours on both sides: the originals reach them through
+// ported functions.
+#define OrigBondCarScratchPad (*(BondCarScratch **)0x001e7a88)
 
 // ---- results
 
@@ -247,10 +248,11 @@ void __fastcall RecordTriggerFX(void *, int, int type, uint32_t which, uint32_t 
         record->words[0] = uint32_t(type);
         record->words[1] = which;
         record->words[2] = unused;
+        // Coord3s: the word after one is not part of it (after the game's zero vector and a port's kZero it differs)
         if (point != NULL)
-            memcpy(record->point, point, sizeof(record->point));
+            memcpy(record->point, point, 3 * sizeof(float));
         if (velocity != NULL)
-            memcpy(record->velocity, velocity, sizeof(record->velocity));
+            memcpy(record->velocity, velocity, 3 * sizeof(float));
         record->intensity = intensity;
     }
 }
@@ -372,8 +374,8 @@ struct CarState {
     uint32_t randomSeed;
     SimRandom simRandom;
     uint32_t barrierMask;
-    uint8_t *creationPoint;
-    uint8_t *deletionPoint;
+    char *creationPoint;
+    char *deletionPoint;
     uint8_t events[kEventBytes];        // what a run added to the event queue
     uint32_t sounds;                    // the sounds a run added to fgSoundList (deleted)
     Log log;
@@ -433,13 +435,13 @@ void TakeState(CarState *state) {
         memcpy(state->queue, g_live.queue, sizeof(ActionQueue));
     if (g_live.handleBytes != 0)
         memcpy(state->handle, g_live.handle, g_live.handleBytes);
-    memcpy(state->activeSystems, ShadowActiveSystems, sizeof(state->activeSystems));
-    state->activeSystemCount = ShadowActiveSystemCount;
+    memcpy(state->activeSystems, ActiveSystems, sizeof(state->activeSystems));
+    state->activeSystemCount = ActiveSystemCount;
     state->randomSeed = ShadowRandomSeed;
     state->simRandom = *ShadowSimRandom;
     state->barrierMask = fgCollisionMgr->barrierMask;
-    state->creationPoint = ShadowCreationPoint;
-    state->deletionPoint = ShadowDeletionPoint;
+    state->creationPoint = gCreationPoint;
+    state->deletionPoint = gDeletionPoint;
     state->log = g_log;
 }
 
@@ -464,13 +466,13 @@ void PutState(const CarState *state) {
         memcpy(g_live.queue, state->queue, sizeof(ActionQueue));
     if (g_live.handleBytes != 0)
         memcpy(g_live.handle, state->handle, g_live.handleBytes);
-    memcpy(ShadowActiveSystems, state->activeSystems, sizeof(state->activeSystems));
-    ShadowActiveSystemCount = state->activeSystemCount;
+    memcpy(ActiveSystems, state->activeSystems, sizeof(state->activeSystems));
+    ActiveSystemCount = state->activeSystemCount;
     ShadowRandomSeed = state->randomSeed;
     *ShadowSimRandom = state->simRandom;
     fgCollisionMgr->barrierMask = state->barrierMask;
-    ShadowCreationPoint = state->creationPoint;
-    ShadowDeletionPoint = state->deletionPoint;
+    gCreationPoint = state->creationPoint;
+    gDeletionPoint = state->deletionPoint;
     g_log = state->log;
 }
 
@@ -520,8 +522,10 @@ void Both(F &&call) {
         const bool original = run == 0;
         PutState(&g_start);
         PointerListNode *lastSound = fgSoundList != NULL ? fgSoundList->head->prev : NULL;
-        if (original)
+        if (original) {
+            LendBondCarTuning();
             RestoreOriginals(true);
+        }
         g_runFaults[run] = Guarded(thunk, &call, original) ? 0 : 1;
         if (original)
             RestoreOriginals(false);
@@ -529,7 +533,7 @@ void Both(F &&call) {
         g_result[run].sounds = DeleteNewSounds(lastSound);
         g_soundsDeleted += int(g_result[run].sounds);
         memset(g_result[run].events, 0, kEventBytes);
-        if (ShadowCreationPoint != g_start.creationPoint && g_start.creationPoint != NULL) {
+        if (gCreationPoint != g_start.creationPoint && g_start.creationPoint != NULL) {
             memcpy(g_result[run].events, g_start.creationPoint, kEventBytes);
             // the impact's +0x38..+0x3f (after the event's vtable), which its constructor leaves as the stack had it
             memset(g_result[run].events + 4 + 0x38, 0, 8);
@@ -1134,9 +1138,9 @@ void BondCarShadowC_Run(void) {
         return;
     }
     FpControlGet(&g_x87, &g_sse);
-    BondCarScratch *livePad = BondCarScratchPad;
+    BondCarScratch *livePad = BondCarScratchPad, *origPad = OrigBondCarScratchPad;
     FillPad();
-    BondCarScratchPad = &g_pad;
+    BondCarScratchPad = OrigBondCarScratchPad = &g_pad;
     g_log.count = 0;
     Redirect(&g_redirections[0], reinterpret_cast<const void *>(&RecordInitTyreTracks));
     Redirect(&g_redirections[1], reinterpret_cast<const void *>(&RecordInitializeCarVariables));
@@ -1155,6 +1159,7 @@ void BondCarShadowC_Run(void) {
     for (Redirection &r : g_redirections)
         Unredirect(&r);
     BondCarScratchPad = livePad;
+    OrigBondCarScratchPad = origPad;
     ResetFpu();
     EndCase();
     printf("[bondcarC]   by function (cases/differing/faulted original+port):");

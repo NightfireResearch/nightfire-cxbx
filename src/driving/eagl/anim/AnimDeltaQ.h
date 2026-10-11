@@ -9,6 +9,8 @@
 
 // ---- FnDeltaSingleQ (type 19): one rotation axis per bone, between a fixed pre- and post-rotation
 
+extern float SingleQAngleRange;      // pi - -pi: the single-quaternion ranges' angle span
+
 struct DeltaSingleQMinRangef {       // 0x1c, a range record unquantised
     float const0, const1;            // +0x00 the pre/post angles (radians)
     float min[2];                    // +0x08

@@ -29,7 +29,7 @@ static const int kOperations = 20000;
 static const int kLive = 400;
 
 #define MemClass        ((uint8_t **)0x00242ce0u)
-#define MemOutOfMemory  (*(void **)0x00242cd8u)
+#define OrigMemOutOfMemory (*(MemOutOfMemoryFn *)0x00242cd8u)   // MemOutOfMemory's original copy
 
 // The originals, by address. Each runs inside a scope that puts its entry bytes back.
 typedef int (*InitClassFn)(unsigned, const char *, void *, int, int, int, int, char, char, char);
@@ -112,8 +112,9 @@ void MemShadow_Run(void) {
 
     uint8_t *arenaO = (uint8_t *)VirtualAlloc(NULL, kArenaBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     uint8_t *arenaP = (uint8_t *)VirtualAlloc(NULL, kArenaBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-    void *savedOom = MemOutOfMemory;
+    MemOutOfMemoryFn savedOom = MemOutOfMemory, savedOrigOom = OrigMemOutOfMemory;
     MemOutOfMemory = NULL;
+    OrigMemOutOfMemory = NULL;
 
     int sizeO, sizeP;
     {
@@ -234,6 +235,7 @@ void MemShadow_Run(void) {
     }
     MEMCLASS_restore(kPortClass);
     MemOutOfMemory = savedOom;
+    OrigMemOutOfMemory = savedOrigOom;
     VirtualFree(arenaO, 0, MEM_RELEASE);
     VirtualFree(arenaP, 0, MEM_RELEASE);
     if (g_notRestored != 0) {

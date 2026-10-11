@@ -84,12 +84,17 @@ static_assert(std::bit_cast<uint32_t>(kRecentred) == 0x38d1b717, "0x0018cb6c");
 
 // The auto-drive arms' change of arm (the names are ours), with fgCameraTables.weaponArmTurn and
 // previousAutoDriveArm
-#define WeaponArmFrom (*(Coord4 *)0x001c4180)               // the rotation the change starts from
-#define WeaponArmBlend FLOAT_AT(0x001c4190)                 // how far it has gone, 0 to 1
+// XBE_GLOBAL(0x001c4180, 0x10)
+alignas(16) Coord4 WeaponArmFrom = { 0.0f, 0.0f, 0.0f, 1.0f };    // the rotation the change starts from
+// XBE_GLOBAL(0x001c4190, 4)
+float WeaponArmBlend = 1.0f;                     // how far it has gone, 0 to 1
 // The auto-drive camera's steering the step before (the names are ours)
-#define PreviousRotationX FLOAT_AT(0x001ec3e0)
-#define PreviousRotationY FLOAT_AT(0x001ec3e4)
-#define DiagonalBoost FLOAT_AT(0x001ec3c4)                  // 0.005 * 0.2 (a static initialiser)
+// XBE_GLOBAL(0x001ec3e0, 4)
+float PreviousRotationX;
+// XBE_GLOBAL(0x001ec3e4, 4)
+float PreviousRotationY;
+// XBE_GLOBAL(0x001ec3c4, 4)
+static float DiagonalBoost = 0.005f * 0.2f;             // as a static initialiser made it
 
 #define SimTimeStep FLOAT_AT(0x00234e30)                    // the simulation's step, in seconds
 #define SimStepCount I32_AT(0x00234e34)

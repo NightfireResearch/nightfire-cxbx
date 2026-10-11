@@ -38,6 +38,9 @@ struct RealMutex {
 };
 #pragma pack(pop)
 
+extern int TimerFrequency;     // TIMER's rate in Hz
+extern volatile int SomeTicks; // TIMER's tick count
+
 int TIMER_gettick();
 int TIMER_getfrequency();
 void __stdcall TIMER_ontick(unsigned id, unsigned message, DWORD_PTR user, DWORD_PTR reserved1, DWORD_PTR reserved2);

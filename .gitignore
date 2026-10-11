@@ -26,3 +26,4 @@ CMakeSettings.json
 /dump_levels_collision/
 /collision_export/
 /Cxbx-Reloaded/
+src/driving/devtools/OwnedGlobals.inc

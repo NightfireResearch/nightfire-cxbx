@@ -4,27 +4,33 @@
 #include "InputUntested.h"
 #include "UMemory.hpp"
 #include "../physics/RigidBodyBasics.h"   // PointerVectorDeallocate
+#include "../world/CollisionQueries.h"     // PointerUninitializedCopy
+#include "../world/CollisionTypes.h"       // PointerVector
 #include "../../helpers.h"
 
 // While this is 0, action 0x1f is not delivered to anyone (FeedQueue, 0x0004f371). Written elsewhere in the game.
 #define gAllowAction31 (*(int *)0x00234e34)
 
 // The manager, GetActionQueueManager's function-local static, and its construction guard (bit 0)
-#define gActionQueueManager (*(ActionQueueManager *)0x001e23f0)
-#define gActionQueueManagerMade U32_AT(0x001e2400)
+// XBE_GLOBAL(0x001e23f0, 0x10)
+ActionQueueManager gActionQueueManager;
+// XBE_GLOBAL(0x001e2400, 0x4)
+uint32_t gActionQueueManagerMade;
 
 // The static's destructor as the original registers it, at its address: a call of Tidy (StaticInit.cpp's
 // DestroyStatic_001e23f0).
 #define ActionQueueManager_AtExit ((void (*)(void))0x0015cde0)
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
-// The STL's helpers the vector's growth calls, at their addresses and in the original's order (the extra
-// arguments are the allocator and a word the helpers ignore, as the original passes them)
-#define Vector_UninitializedCopy ((ActionQueue **(*)(ActionQueue **, ActionQueue **, ActionQueue **, ActionQueueManager *, uint32_t))0x000bfeb0)
+// The STL's helpers the vector's growth calls, in the original's order: the game's one copy for every vector of
+// pointers (the linker folded them together). Those not ours yet are called at their addresses (the extra
+// arguments are the allocator and a word the helper ignores, as the original passes them).
 #define Vector_UninitializedFillN ((void (*)(ActionQueue **, uint32_t, ActionQueue *const *, ActionQueueManager *, uint32_t))0x000b2ec0)
-#define Vector_Ucopy ((ActionQueue **(__fastcall *)(ActionQueueManager *, int, ActionQueue **, ActionQueue **, ActionQueue **))0x000c1230)
-#define Vector_Ufill ((void (__fastcall *)(ActionQueueManager *, int, ActionQueue **, uint32_t, ActionQueue *const *))0x000c1290)
 #define Vector_CopyBackward ((void (*)(ActionQueue ***, ActionQueue **, ActionQueue **, ActionQueue **))0x000b2e40)
+
+static ActionQueue **Vector_UninitializedCopy(ActionQueue **first, ActionQueue **last, ActionQueue **dest) {
+    return (ActionQueue **)PointerUninitializedCopy((void *const *)first, (void *const *)last, (void **)dest);
+}
 
 constexpr uint32_t kMaxQueues = 0x3fffffff;   // max_size() of a vector of pointers
 
@@ -187,9 +193,9 @@ void ActionQueueManager::InsertN(ActionQueue **where, uint32_t count, ActionQueu
             grown = size + count;
         uint32_t bytes = grown * sizeof(ActionQueue *);
         ActionQueue **storage = static_cast<ActionQueue **>(UMemory::FastAlloc(bytes, "STL"));
-        ActionQueue **at = Vector_UninitializedCopy(queuesFirst, where, storage, this, count);
+        ActionQueue **at = Vector_UninitializedCopy(queuesFirst, where, storage);
         Vector_UninitializedFillN(at, count, &copy, this, count);
-        Vector_UninitializedCopy(where, queuesLast, at + count, this, count);
+        Vector_UninitializedCopy(where, queuesLast, at + count);
         uint32_t newSize = size + count;
         if (queuesFirst != nullptr)
             PointerVectorDeallocate(queuesFirst, uint32_t(queuesEnd - queuesFirst));
@@ -199,14 +205,16 @@ void ActionQueueManager::InsertN(ActionQueue **where, uint32_t count, ActionQueu
     } else if (uint32_t(queuesLast - where) < count) {
         // Room enough: push_back never comes here (it only inserts when the vector is full).
         INPUT_UNTESTED("ActionQueueManager::InsertN in the middle");
-        Vector_Ucopy(this, 0, where, queuesLast, where + count);
-        Vector_Ufill(this, 0, queuesLast, count - uint32_t(queuesLast - where), &copy);
+        PointerVector *pointers = reinterpret_cast<PointerVector *>(this);
+        pointers->Ucopy((void *const *)where, (void *const *)queuesLast, (void **)(where + count));
+        pointers->Ufill((void **)queuesLast, count - uint32_t(queuesLast - where), (void *const *)&copy);
         queuesLast += count;
         FillQueuePointers(where, queuesLast - count, &copy);
     } else {
         INPUT_UNTESTED("ActionQueueManager::InsertN in the middle");
         ActionQueue **oldLast = queuesLast;
-        queuesLast = Vector_Ucopy(this, 0, oldLast - count, oldLast, oldLast);
+        queuesLast = (ActionQueue **)reinterpret_cast<PointerVector *>(this)->Ucopy(
+            (void *const *)(oldLast - count), (void *const *)oldLast, (void **)oldLast);
         ActionQueue **ignored;
         Vector_CopyBackward(&ignored, where, oldLast - count, oldLast);
         FillQueuePointers(where, where + count, &copy);

@@ -17,13 +17,16 @@
 // ---------------------------------------------------------------------------------------------------------------
 // FnDeltaF1 and FnDeltaF3 (docs/driving/eagl.md 3.4), most of the disc's channels. The data keeps its keys in
 // blocks of 2^shift: each block a u16 base value per value, then a row of u8 deltas per key after the first. A
-// key is reached from the cached one by adding the rows on (or, going back, taking them off, unless the global at
-// 0x001ceb4c disables that and the block is decoded again from its base); between keys the next key's values,
+// key is reached from the cached one by adding the rows on (or, going back, taking them off, unless
+// ReverseDeltaSumEnabled is clear and the block is decoded again from its base); between keys the next key's values,
 // kept in a second buffer that becomes the first when time reaches it, are interpolated. Constant values follow
 // the blocks. The masked variant skips values whose bone (output index / 12) is not in the 256-bit mask and starts
 // again whenever the mask changes. Each function is the original at the same address; x87 in double in the
 // original's order with a float store per store (a single operation on floats written in float: the same bits).
 // ---------------------------------------------------------------------------------------------------------------
+
+// XBE_GLOBAL(0x001ceb4c, 1)
+uint8_t ReverseDeltaSumEnabled = 1;                         // EaglGlobals.h
 
 namespace {
 

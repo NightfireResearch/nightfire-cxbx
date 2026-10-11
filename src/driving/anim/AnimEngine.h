@@ -42,7 +42,6 @@ enum AnimInstanceFlags : uint8_t {
 // ---- the engine
 
 // A tick's length: 1 / the video mode's rate
-#define TickSeconds FLOAT_AT(0x001f2a48)
 
 namespace RAnimEngine {
 
@@ -105,6 +104,11 @@ void DeactivateSystem();                                                        
 // Takes the active list's `index`th system off the list, leaving it in its next state; with `next`, starts its first
 // queued stimulus. The index before it.
 uint32_t DeactivateActiveSystem(uint32_t index, uint32_t frame, bool next);
+
+// The active list
+extern RAnimEngine::System *ActiveSystems[0x100];
+extern uint32_t ActiveSystemCount;
+extern uint32_t LastUpdateFrame;        // RAnimEngine::Update's
 
 // ---- RAnimEngine::Handle (a header of 0x40 bytes, then its data, one allocation)
 

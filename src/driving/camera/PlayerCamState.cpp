@@ -14,6 +14,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 // ---------------------------------------------------------------------------------------------------------------
 // RPlayerCamState. See PlayerCamState.h.
@@ -22,7 +23,6 @@
 // The game's code not ported yet
 #define GHud_AimOn ((void (__fastcall *)(GHud *, int))0x000d9ba0)
 #define GHud_AimOff ((void (__fastcall *)(GHud *, int))0x000d9bd0)
-#define Crt_stricmp ((int (*)(const char *, const char *))0x00134537)
 
 namespace {
 
@@ -195,7 +195,7 @@ void RPlayerCamState::AutoDriveCamInputHandler(int input, float value) {
             RotateX(input, value, input == kActionCamRotateY2);
         break;
     case kActionCamSpin:
-        if (mission->unknown4f0 != 0 || Crt_stricmp(Launch.missionName, kSpinTrack) != 0)
+        if (mission->unknown4f0 != 0 || _stricmp(Launch.missionName, kSpinTrack) != 0)
             break;
         CarAudio()->flagC2 = 1;
         if (allowed && !paused)

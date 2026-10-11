@@ -55,7 +55,8 @@
 #define PlayerPhysicsObject (*(PhysicsObject **)PTR_AT(0x00234e40))
 #define IdentityMatrix (*(const MATRIX4 **)0x001c4654)
 #define Debris PTR_AT(0x00202a80)
-#define HenchmenMuzzleFlashSize FLOAT_AT(0x001b4e3c)
+// XBE_GLOBAL(0x001b4e3c, 4)
+static float HenchmenMuzzleFlashSize = 0.4f;
 
 // The player's weapon manager (Ghidra: SWeaponManager; only the field read here)
 struct WeaponManagerFields {

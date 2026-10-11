@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include "RigidResolveShadow.h"
+#include "RigidOrigGlobals.h"
 #include "FpControl.h"
 
 #include "../game/BondCar.h"
@@ -175,6 +176,7 @@ bool Both(F &&call) {
         g_animCount[run] = 0;
         g_answer[run] = false;
         if (original) {
+            LendRigidTuning();  // the originals read the game's copies
             XbeOriginal_Restore(kResolveAt, true);
             XbeOriginal_Restore(kImpulseAt, true);
         }

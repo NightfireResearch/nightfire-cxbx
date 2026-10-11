@@ -16,29 +16,17 @@
 // the original's order and roundings.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define DrawModelMatrix (*(MATRIX4 **)0x001e92d8)
-#define DrawZ FLOAT_AT(0x001c3e28)
+// XBE_GLOBAL(0x001e92d8, 4)
+MATRIX4 *DrawModelMatrix;
+// XBE_GLOBAL(0x001c3e28, 4)
+float DrawZ = 1.0f;
+
+// XBE_GLOBAL(0x001e9420, 0x1224)
+alignas(16) VertexBatch QuadBatch;          // DrawBatchedTexturedQuad's
+// XBE_GLOBAL(0x001ea650, 0x1224)
+alignas(16) VertexBatch SpriteBatch;        // DrawBatchedSprite's
 
 namespace {
-
-// A batch's vertices (the statics of a batched draw, the name is ours). The colours are a function-local static
-// array constructed on first use: their guard's bit 0 says they have been.
-struct VertexBatch {
-    Coord4 texCoords[128];              // +0x0000
-    Coord4 positions[128];              // +0x0800
-    int32_t count;                      // +0x1000
-    uint32_t unknown1004[3];
-    EAGL::TAR *texture;                 // +0x1010 the one every vertex in the batch has
-    uint32_t unknown1014[3];
-    PackedColour colours[128];          // +0x1020
-    uint32_t coloursGuard;              // +0x1220
-};
-static_assert(offsetof(VertexBatch, count) == 0x1000 && offsetof(VertexBatch, texture) == 0x1010 &&
-              offsetof(VertexBatch, colours) == 0x1020 && offsetof(VertexBatch, coloursGuard) == 0x1220,
-              "VertexBatch layout");
-
-#define QuadBatch (*(VertexBatch *)0x001e9420)       // DrawBatchedTexturedQuad's
-#define SpriteBatch (*(VertexBatch *)0x001ea650)     // DrawBatchedSprite's
 
 // A batch is drawn once it holds more than this many vertices
 constexpr int32_t kBatchLimit = 120;

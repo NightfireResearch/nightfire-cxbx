@@ -3,6 +3,7 @@
 #endif
 
 #include "PlayerCamShadowA.h"
+#include "OrigConstants.h"
 
 #include "../camera/CameraIniLoader.h"
 #include "../camera/CameraSpline.h"
@@ -183,6 +184,10 @@ ShadowStateBytes *State() {
     return reinterpret_cast<ShadowStateBytes *>(g_stateBytes);
 }
 
+// The original's copy of RPlayerCamera::GetForwardAimVec4's static result (the port's is a function-local static:
+// both write its x, y and z before each use and never its w)
+#define OrigBlendedAim (*(Coord4 *)0x001ec3d0)
+
 // The globals a case may change, put back after it
 struct SavedGlobals {
     int32_t simState;
@@ -204,7 +209,7 @@ struct SavedGlobals {
         missionFlag = glbMissionManager->unknown478;
         memcpy(&missionScale, reinterpret_cast<uint8_t *>(glbMissionManager) + 0x4dc, 4);
         selected = TargetPicker.selected;
-        memcpy(&aimStatic, reinterpret_cast<void *>(0x001ec3d0), sizeof(aimStatic));
+        aimStatic = OrigBlendedAim;
     }
     void Restore() const {
         ShadowSimState = simState;
@@ -216,10 +221,13 @@ struct SavedGlobals {
         glbMissionManager->unknown478 = missionFlag;
         memcpy(reinterpret_cast<uint8_t *>(glbMissionManager) + 0x4dc, &missionScale, 4);
         TargetPicker.selected = selected;
-        memcpy(reinterpret_cast<void *>(0x001ec3d0), &aimStatic, sizeof(aimStatic));
+        OrigBlendedAim = aimStatic;
     }
 };
 SavedGlobals g_saved;
+
+// The originals' copy of the port's fgCameraConstants, lent for the originals' pass
+#define OrigCameraConstants (*(CameraConstants *)0x001c3e40)
 
 void MakeSpline() {
     g_spline = static_cast<RCameraSpline *>(UMemory::FastAlloc(sizeof(RCameraSpline), "RCameraSpline"));
@@ -702,8 +710,11 @@ void TestTargetAngles(Rng *rng) {
 
 void RunPass(std::string *log, bool original) {
     g_log = log;
-    if (original)
+    const CameraConstants origConstants = OrigCameraConstants;
+    if (original) {
+        OrigCameraConstants = fgCameraConstants;
         XbeOriginal_RestoreRange(0x00080a60, 0x00083190, true);
+    }
     void (*const tests[])(Rng *) = {TestFree, TestSmall, TestPositionAnchor, TestBumperDashboard, TestAnimation,
                                     TestTargetAngles};
     uint32_t seed = 0x3ca7e5u;
@@ -711,8 +722,10 @@ void RunPass(std::string *log, bool original) {
         Rng rng = {seed + uint32_t(i) * 7919u};
         tests[i](&rng);
     }
-    if (original)
+    if (original) {
         XbeOriginal_RestoreRange(0x00080a60, 0x00083190, false);
+        OrigCameraConstants = origConstants;
+    }
     g_log = NULL;
 }
 
@@ -747,6 +760,7 @@ void PlayerCamShadowA_Run(void) {
         return;
     }
 
+    FillOrigCameraConstants();
     std::string original, ours;
     g_counting = true;
     RunPass(&original, true);

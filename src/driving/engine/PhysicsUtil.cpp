@@ -19,13 +19,8 @@
 // The C runtime's rand, the game's: its state is the game's.
 #define CRT_rand ((int (*)(void))0x00133ee0)
 
-// Util_GaussRandom's second number, kept for the next call
-struct GaussSpare {
-    float value;                // +0x00
-    uint8_t available;          // +0x04
-};
-static_assert(sizeof(GaussSpare) == 8, "the kept number and its flag");
-#define GaussRandomSpare (*(GaussSpare *)0x00239a60)
+// XBE_GLOBAL(0x00239a60, 0x8)
+GaussSpare GaussRandomSpare;
 
 static constexpr float kRandToSigned = 0x1.0002p-14f;       // rand() * this - 1 is in [-1, 1]: 2 / 32767, as a float
 static_assert(kRandToSigned == 2.0f / 32767.0f, "Util_GaussRandom's scale");

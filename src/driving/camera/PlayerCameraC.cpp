@@ -56,11 +56,17 @@ struct ShakeSource : PhysicsObject {
 #define SimStepsPerSecond I32_AT(0x00234e2c)
 #define PlayerObjects (*(GameVector<PhysicsObject *> *)0x00234e3c)  // the players' objects; the first is ours
 #define Explosions (*(GameVector<ShakeSource *> *)0x00234ebc)
+// XBE_GLOBAL(0x002343a0, 0x180)
 #define SimpleBodyOwners ((PhysicsObject **)0x002343a0)             // [96] the simple bodies' owners, by slot
 
-#define HeliGroundCount I32_AT(0x001ec3e8)          // the heli camera's ground-contact count, 0-80
-#define HeliGroundPoint (*(Coord4 *)0x001ec3f0)     // where its last ground probe hit
-#define AimMatrix (*(MATRIX4 *)0x001ec400)          // GetAimMatrix4's answer
+// XBE_GLOBAL(0x001ec3e8, 4)
+int32_t HeliGroundCount;                                // the heli camera's ground-contact count, 0-80
+// XBE_GLOBAL(0x001ec3f0, 0x10)
+alignas(16) Coord4 HeliGroundPoint;                     // where its last ground probe hit
+// XBE_GLOBAL(0x001ec400, 0x40)
+alignas(16) MATRIX4 AimMatrix;                          // GetAimMatrix4's answer
+// XBE_GLOBAL(0x001ec3a0, 0x10)
+alignas(16) Coord4 ShakeOrigin;
 
 constexpr int32_t kSimState3 = 3;
 constexpr unsigned kVirtualUpdateCamera = 3;

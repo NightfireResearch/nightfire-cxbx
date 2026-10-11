@@ -4,6 +4,7 @@
 
 #include "SndStreamShadow.h"
 #include "FpControl.h"
+#include "SndOwned.h"
 
 #include "../sound/snd/Platform.h"
 #include "../sound/snd/Stream.h"
@@ -46,6 +47,11 @@
 // directly. Scripted answers are a function of the case and of how many times that fake was called, so both
 // sides see the same answers as long as they make the same calls. SNDLINKI_*, iSNDmulu64/divu64, memclr,
 // dummyGetNullValue and SNDI_patchtohdr (Banks.cpp's port, the same code on both sides) run for real.
+//
+// The globals are set up at the game's addresses, the original's copy; the port's variables are given the same
+// values before each side runs (the ports above run on the original's side too, and what they write there is
+// carried into the original's copy), and after ours runs its variables go back to the game's addresses for the
+// comparison (SndOwned.h). The cases' own reads of the stream and player tables read the running side's.
 //
 // The cases:
 // - header: every SCHl chunk of every .mus and .spe (842 streams, all languages) through SNDSTRMI_parseheader, on
@@ -226,8 +232,14 @@ const uint32_t kG2 = 0x00244fe0u, kG2Size = 0x00245330u - 0x00244fe0u;
 uint8_t g_savedG1[kG1Size], g_savedG2[kG2Size];
 uint8_t g_snapG1[kG1Size], g_snapG2[kG2Size], g_resG1[kG1Size], g_resG2[kG2Size];
 
-inline PacketPlayer *&PlayerAt(int i) { return ((PacketPlayer **)(uintptr_t)0x002452e4u)[i]; }
-inline StreamState *&StreamAt(int i) { return ((StreamState **)(uintptr_t)0x00244ba8u)[i]; }
+int g_side = -1;   // -1: setup (not logged)
+
+// sndpps and sndss: the original's copies (set up there), or the port's while ours runs
+#define OrigPacketPlayers ((PacketPlayer **)0x002452e4)
+#define OrigStreamArray ((StreamState **)0x00244ba8)
+#define OrigPacketCallbackCount (*(int32_t *)0x00244fe0)
+inline PacketPlayer *&PlayerAt(int i) { return (g_side == 1 ? PacketPlayers : OrigPacketPlayers)[i]; }
+inline StreamState *&StreamAt(int i) { return (g_side == 1 ? StreamArray : OrigStreamArray)[i]; }
 
 void GlobalsBase() {
     memcpy((void *)(uintptr_t)kG1, g_savedG1, kG1Size);
@@ -246,7 +258,6 @@ const int kKeep = 8192;
 struct Entry {
     uint32_t w[6];
 };
-int g_side = -1;   // -1: setup (not logged)
 uint32_t g_hash[2], g_logCount[2];
 Entry *g_log[2];
 
@@ -1044,7 +1055,7 @@ void RunPacket() {
             Log(0x305, (uint32_t)VoiceToPacket(Range(-1, 255)));
         }
     }
-    Log(0x306, (uint32_t)*(int32_t *)(uintptr_t)0x00244fe0u);
+    Log(0x306, (uint32_t)(g_side == 1 ? PacketCallbackCount : OrigPacketCallbackCount));
 }
 
 int PickHold() {
@@ -1380,12 +1391,16 @@ void RunCase(int kindIndex, int index) {
     memcpy(g_snapG1, (void *)(uintptr_t)kG1, kG1Size);
     memcpy(g_snapG2, (void *)(uintptr_t)kG2, kG2Size);
 
+    SndOwned_ToPort();
+    SndOwnedCopy before;
+    SndOwned_Take(&before);
     g_side = 0;
     g_hash[0] = 2166136261u;
     g_logCount[0] = 0;
     Originals(true);
     bool okOriginal = Guarded(kind.run);
     Originals(false);
+    SndOwned_CarryWrites(before);
     memcpy(g_resultOriginal, W, g_extent);
     memcpy(g_resG1, (void *)(uintptr_t)kG1, kG1Size);
     memcpy(g_resG2, (void *)(uintptr_t)kG2, kG2Size);
@@ -1393,6 +1408,7 @@ void RunCase(int kindIndex, int index) {
     memcpy(W, g_snapshot, g_extent);
     memcpy((void *)(uintptr_t)kG1, g_snapG1, kG1Size);
     memcpy((void *)(uintptr_t)kG2, g_snapG2, kG2Size);
+    SndOwned_ToPort();
     g_side = 1;
     g_hash[1] = 2166136261u;
     g_logCount[1] = 0;
@@ -1400,6 +1416,7 @@ void RunCase(int kindIndex, int index) {
     bool okOurs = Guarded(kind.run);
     g_counting = false;
     g_side = -1;
+    SndOwned_ToOriginal();
 
     g_cases++;
     kind.ran++;
@@ -1603,6 +1620,7 @@ void SndStreamShadow_Run(void) {
         }
     }
 
+    SndOwned_ToOriginal();
     memcpy(g_savedG1, (void *)(uintptr_t)kG1, kG1Size);
     memcpy(g_savedG2, (void *)(uintptr_t)kG2, kG2Size);
     InstallFakes();
@@ -1641,6 +1659,7 @@ void SndStreamShadow_Run(void) {
     HooksRemove();
     memcpy((void *)(uintptr_t)kG1, g_savedG1, kG1Size);
     memcpy((void *)(uintptr_t)kG2, g_savedG2, kG2Size);
+    SndOwned_ToPort();
     VirtualFree(W, 0, MEM_RELEASE);
     VirtualFree(g_snapshot, 0, MEM_RELEASE);
     VirtualFree(g_resultOriginal, 0, MEM_RELEASE);

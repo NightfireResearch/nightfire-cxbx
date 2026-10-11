@@ -64,6 +64,6 @@ static_assert(offsetof(RParticulate, positions) == 0x10 && offsetof(RParticulate
               offsetof(RParticulate, material) == 0x1010, "RParticulate layout");
 #endif
 
-#define fgParticulate (*(RParticulate **)0x00201754)
+extern RParticulate *fgParticulate;
 
 #endif // DRIVING_RENDER_PARTICULATE_H_

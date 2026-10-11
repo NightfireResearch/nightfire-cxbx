@@ -10,6 +10,7 @@
 
 #include "UFileLoader.h"
 #include "FileNameList.h"
+#include "GameLoop.h"   // gDVD
 #include "UMemory.hpp"
 
 #include <stdio.h>
@@ -25,16 +26,23 @@
 // miss their loads.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define BigFileName ((char *)0x002431d8)          // [256], the big file's name, for the request lists' files
-#define BigFilePath ((char *)0x002430d8)          // [256], cleared and not otherwise used
-#define BigFileOpen BOOL8_AT(0x002434da)
-#define BigFileId I32_AT(0x002434dc)
-#define LogRequests BOOL8_AT(0x002434e0)
-#define TrustBigFile I32_AT(0x001e4768)           // non-zero: add the big file without checking it exists
+// XBE_GLOBAL(0x002431d8, 0x100)
+char BigFileName[0x100];          // the big file's name, for the request lists' files
+// XBE_GLOBAL(0x002430d8, 0x100)
+static char BigFilePath[0x100];   // cleared and not otherwise used
+// XBE_GLOBAL(0x002434da, 0x1)
+uint8_t BigFileOpen;
+// XBE_GLOBAL(0x002434dc, 0x4)
+static int32_t BigFileId;
+// XBE_GLOBAL(0x002434e0, 0x1)
+uint8_t LogRequests;              // the bool StartUsingBigFile is given, its byte as given
 
-#define RequestedFiles (*(FileNameList *)0x00243508)      // every file loaded
-#define FilesInBigFile (*(FileNameList *)0x00243514)      // found in the big file
-#define FilesNotInBigFile (*(FileNameList *)0x002434e4)   // not found there
+// XBE_GLOBAL(0x00243508, 0xc)
+FileNameList RequestedFiles;      // every file loaded
+// XBE_GLOBAL(0x00243514, 0xc)
+FileNameList FilesInBigFile;      // found in the big file
+// XBE_GLOBAL(0x002434e4, 0xc)
+FileNameList FilesNotInBigFile;   // not found there
 
 constexpr int kBigFileAllocFlags = 0x100;
 constexpr int kBigFilePriority = 2;
@@ -76,7 +84,7 @@ bool UFileLoader::StartUsingBigFile(const char *directory, const char *name, boo
     strcpy(BigFileName, name);
     char path[256];
     sprintf(path, "%s\\%s.viv", directory, name);
-    if (TrustBigFile != 0 || FILE_exists(path)) {
+    if (gDVD != 0 || FILE_exists(path)) {
         if (FILESYS_addbigsync(path, kBigFileAllocFlags, kBigFilePriority, &BigFileId)) {
             BigFileOpen = 1;
             return true;

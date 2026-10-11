@@ -21,7 +21,10 @@
 #include "../render/Draw.h"
 #include "../render/Materials.h"
 #include "../render/WorldCulling.h"
+#include "Feedback.h"
 #include "FileNameList.h"
+#include "GameLoop.h"
+#include "InputConfig.h"
 
 // ---- the originals the initialisers still call, by address
 
@@ -180,12 +183,12 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x001e23d4) = 1.0f / FLOAT_AT(0x001e23d0);                                                  // 0x00157460
     FLOAT_AT(0x001e23d8) = 180.0f / 3.1415925f;                                                          // 0x00157480
     FLOAT_AT(0x001e23dc) = 1.0f / FLOAT_AT(0x001e23d8);                                                  // 0x001574a0
-    ((StringToNumber *)0x001e23e0)->Construct((StringToNumberEntry *)0x001b6ba0);                        // 0x001574c0
-    CrtAtExit([] { ((StringToNumber *)0x001e23e0)->Destruct(); });
+    gActionNames.Construct((StringToNumberEntry *)0x001b6ba0);                                           // 0x001574c0
+    CrtAtExit([] { gActionNames.Destruct(); });
     FLOAT_AT(0x001e4480) = 1.0f / FLOAT_AT(0x001b6f54);                                                  // 0x001574e0
-    for (int i = 0; i < 4; i++) U32_AT(0x001e4488 + i * 0x34) = 0;                                       // 0x00157500
-    ((StringToNumber *)0x001e4590)->Construct((StringToNumberEntry *)0x001b6fd0);                        // 0x00157520
-    CrtAtExit([] { ((StringToNumber *)0x001e4590)->Destruct(); });
+    for (int i = 0; i < 4; i++) gFeedbackPorts[i].users = 0;                                             // 0x00157500
+    gUpdateMethodNames.Construct((StringToNumberEntry *)0x001b6fd0);                                     // 0x00157520
+    CrtAtExit([] { gUpdateMethodNames.Destruct(); });
     FLOAT_AT(0x001e4648) = 1.0f / FLOAT_AT(0x001b702c);                                                  // 0x00157540
     FLOAT_AT(0x001e4650) = 1.0f / FLOAT_AT(0x001b7050);                                                  // 0x00157560
     FLOAT_AT(0x001e47b8) = 1.0f / FLOAT_AT(0x001b7058);                                                  // 0x00157580
@@ -194,8 +197,8 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x001e4860) = 180.0f / 3.1415925f;                                                          // 0x001575d0
     FLOAT_AT(0x001e4864) = 1.0f / FLOAT_AT(0x001e4860);                                                  // 0x001575f0
     FLOAT_AT(0x001e4868) = 1.0f / FLOAT_AT(0x001b70b0);                                                  // 0x00157610
-    ((ActionQueue *)0x001e4870)->Construct((char *)"GLOB");                                              // 0x00157630
-    CrtAtExit([] { ((ActionQueue *)0x001e4870)->Destruct(); });
+    GlobalActionQueue.Construct((char *)"GLOB");                                                         // 0x00157630
+    CrtAtExit([] { GlobalActionQueue.Destruct(); });
     FLOAT_AT(0x001e51fc) = 3.1415927f + 3.1415927f;                                                      // 0x00157650
     FLOAT_AT(0x001e51f8) = 3.1415927f * 0.5f;                                                            // 0x00157660
     DOUBLE_AT(0x001e51f0) = 3.141592653589793 + 3.141592653589793;                                       // 0x00157680
@@ -233,15 +236,15 @@ void RunStaticInitialisers(void) {
     memset((void *)0x001e92e0, 0, 0x140);                                                                // 0x00157a50
     FLOAT_AT(0x001ebc80) = 1.0f / FLOAT_AT(0x001c3e30);                                                  // 0x00157a70
     FLOAT_AT(0x001ebc84) = 1.0f / FLOAT_AT(0x001c3e34);                                                  // 0x00157a90
-    FLOAT_AT(0x001ebc90) = 3.1415925f + 3.1415925f;                                                      // 0x00157ab0
-    FLOAT_AT(0x001ebc94) = 1.0f / FLOAT_AT(0x001ebc90);                                                  // 0x00157ac0
+    // TwoPi = 6.283185f: ours (camera/CameraIniLoader.cpp)                                              // 0x00157ab0
+    // TurnsPerRadian = 0.15915495f: ours (camera/CameraIniLoader.cpp)                                   // 0x00157ac0
     FLOAT_AT(0x001ebc98) = 180.0f / 3.1415925f;                                                          // 0x00157ae0
     FLOAT_AT(0x001ebc9c) = 1.0f / FLOAT_AT(0x001ebc98);                                                  // 0x00157b00
     FLOAT_AT(0x001ebca0) = 1.0f / FLOAT_AT(0x001c3eac);                                                  // 0x00157b20
-    I32_AT(0x001ebca4) = Ftol((double)52.0f / FLOAT_AT(0x001ebc90));                                     // 0x00157b40
+    // kExplosionShakePeriod = 8: ours (camera/CameraIniLoader.cpp)                                      // 0x00157b40
     FLOAT_AT(0x001ebca8) = 1.0f / FLOAT_AT(0x001c3eb0);                                                  // 0x00157b60
     FLOAT_AT(0x001ebcac) = 3.1415925f + 3.1415925f;                                                      // 0x00157b80
-    FLOAT_AT(0x001ebcb0) = 1.0f / FLOAT_AT(0x001ebcac);                                                  // 0x00157b90
+    // RadiansToTurns = 0.15915495f: ours (camera/CameraSpline.cpp)                                      // 0x00157b90
     FLOAT_AT(0x001ebcb4) = 180.0f / 3.1415925f;                                                          // 0x00157bb0
     FLOAT_AT(0x001ebcb8) = 1.0f / FLOAT_AT(0x001ebcb4);                                                  // 0x00157bd0
     FLOAT_AT(0x001ebcbc) = 1.0f / FLOAT_AT(0x001c3eb4);                                                  // 0x00157bf0
@@ -268,10 +271,10 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x001ec30c) = 1.0f / FLOAT_AT(0x001c417c);                                                  // 0x00157e30
     FLOAT_AT(0x001ec3b0) = 1.0f / FLOAT_AT(0x001c41a0);                                                  // 0x00157e50
     FLOAT_AT(0x001ec3b4) = 3.1415925f + 3.1415925f;                                                      // 0x00157e70
-    FLOAT_AT(0x001ec3b8) = 1.0f / FLOAT_AT(0x001ec3b4);                                                  // 0x00157e80
+    // RadiansToTurns = 0.15915495f: ours (camera/PlayerCameraA.cpp)                                     // 0x00157e80
     FLOAT_AT(0x001ec3bc) = 180.0f / 3.1415925f;                                                          // 0x00157ea0
     FLOAT_AT(0x001ec3c0) = 1.0f / FLOAT_AT(0x001ec3bc);                                                  // 0x00157ec0
-    FLOAT_AT(0x001ec3c4) = 0.005f * 0.2f;                                                                // 0x00157ee0
+    // DiagonalBoost = 0.001f: ours (camera/PlayerCameraB.cpp)                                           // 0x00157ee0
     FLOAT_AT(0x001ec440) = 3.1415925f + 3.1415925f;                                                      // 0x00157f00
     FLOAT_AT(0x001ec444) = 1.0f / FLOAT_AT(0x001ec440);                                                  // 0x00157f10
     FLOAT_AT(0x001ec448) = 180.0f / 3.1415925f;                                                          // 0x00157f30
@@ -336,7 +339,7 @@ void RunStaticInitialisers(void) {
     memset((void *)0x001f6090, 0, 0x800);                                                                // 0x001585a0
     FLOAT_AT(0x001f689c) = 1.0f / FLOAT_AT(0x001c4890);                                                  // 0x001585c0
     FLOAT_AT(0x001fe824) = 1.0f / FLOAT_AT(0x001c48b0);                                                  // 0x001585e0
-    memset((void *)0x001fe830, 0, 0xfc0);                                                                // 0x00158600
+    // DecalColours = zero: ours (render/Decals.cpp)                                                     // 0x00158600
     ((EAGL::GeoPrimState *)0x001ff7f0)->Construct();                                                     // 0x00158620
     CrtAtExit([] { ((EAGL::GeoPrimState *)0x001ff7f0)->Destruct(); });
     FLOAT_AT(0x00200c88) = 1.0f / FLOAT_AT(0x001c4900);                                                  // 0x00158640
@@ -379,13 +382,13 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x00202a84) = 1.0f / FLOAT_AT(0x001c5b80);                                                  // 0x00158a40
     memset((void *)0x00202a90, 0, 0x200);                                                                // 0x00158a60
     FLOAT_AT(0x00208cb8) = 1.0f / FLOAT_AT(0x001c8ed0);                                                  // 0x00158a80
-    memset((void *)0x00208cc0, 0, 0x1000);                                                               // 0x00158aa0
+    // GlareColours = zero: ours (render/RGlareManager.cpp)                                              // 0x00158aa0
     ((UVolatileMaterial *)0x00209cc0)->Construct();                                                      // 0x00158ac0
     CrtAtExit([] { ((EAGL::GeoPrimState *)0x00209cc0)->Destruct(); });
     FLOAT_AT(0x0022ad38) = 1.0f / FLOAT_AT(0x001c8edc);                                                  // 0x00158ae0
-    memset((void *)0x0022ad40, 0, 0x2000);                                                               // 0x00158b00
-    memset((void *)0x0022cd40, 0, 0x2000);                                                               // 0x00158b20
-    memset((void *)0x0022ed40, 0, 0x1800);                                                               // 0x00158b40
+    // NormalColours = zero: ours (render/ParticleCache.cpp)                                             // 0x00158b00
+    // AdditiveColours = zero: ours (render/ParticleCache.cpp)                                           // 0x00158b20
+    // StreakColours = zero: ours (render/ParticleCache.cpp)                                             // 0x00158b40
     ((UVolatileMaterial *)0x00230540)->Construct();                                                      // 0x00158b60
     CrtAtExit([] { ((EAGL::GeoPrimState *)0x00230540)->Destruct(); });
     ((UVolatileMaterial *)0x002305a0)->Construct();                                                      // 0x00158b80
@@ -397,10 +400,10 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x00233fa4) = 1.0f / FLOAT_AT(0x001c8f24);                                                  // 0x00158c10
     FLOAT_AT(0x00233fa8) = 1.0f / FLOAT_AT(0x001c8f28);                                                  // 0x00158c30
     FLOAT_AT(0x00233fb4) = 1.0f / FLOAT_AT(0x001c8fb4);                                                  // 0x00158c50
-    U32_AT(0x00233fb8) = U32_AT(0x001c8f30);                                                             // 0x00158c70
-    FLOAT_AT(0x00233fbc) = FLOAT_AT(0x001c8f38) / FLOAT_AT(0x001c8f34);                                  // 0x00158c80
-    FLOAT_AT(0x00233fc0) = FLOAT_AT(0x001c8f3c) / FLOAT_AT(0x001c8f34);                                  // 0x00158ca0
-    FLOAT_AT(0x00233fc4) = FLOAT_AT(0x001c8f80) / FLOAT_AT(0x001c8f7c);                                  // 0x00158cc0
+    U32_AT(0x00233fb8) = 0xc2080000;   // Rigid_BODGE_PLAYER_GRAVITY's value                             // 0x00158c70
+    // RigidGroundRestitutionRate = 0.05f: ours (physics/RigidBodyBasics.cpp)                            // 0x00158c80
+    // RigidRestitutionRateC8 = 0.0025f: ours (physics/RigidBodyBasics.cpp)                              // 0x00158ca0
+    // RigidBuildingRestitutionRate = 0.0004f: ours (physics/RigidBodyBasics.cpp)                        // 0x00158cc0
     FLOAT_AT(0x00233fc8) = 1.0f / FLOAT_AT(0x001c8fb8);                                                  // 0x00158ce0
     FLOAT_AT(0x00233fd4) = 1.0f / FLOAT_AT(0x001c8fc0);                                                  // 0x00158d00
     FLOAT_AT(0x00233fd8) = 3.1415925f + 3.1415925f;                                                      // 0x00158d20
@@ -709,7 +712,7 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x00241af8) = 3.1415927f * 0.5f;                                                            // 0x0015bca0
     DOUBLE_AT(0x00241af0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015bcc0
     DOUBLE_AT(0x00241ae8) = 3.141592653589793 * 0.5;                                                     // 0x0015bcd0
-    FLOAT_AT(0x00241ae0) = 3.1415927f - -3.1415927f;                                                     // 0x0015bcf0
+    // SingleQAngleRange = 6.2831855f: ours (eagl/anim/AnimDeltaQ.cpp)                                   // 0x0015bcf0
     FLOAT_AT(0x00241b14) = 3.1415927f + 3.1415927f;                                                      // 0x0015bd10
     FLOAT_AT(0x00241b10) = 3.1415927f * 0.5f;                                                            // 0x0015bd20
     DOUBLE_AT(0x00241b08) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015bd40
@@ -734,7 +737,7 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x00241b98) = 3.1415927f * 0.5f;                                                            // 0x0015bf00
     DOUBLE_AT(0x00241b90) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015bf20
     DOUBLE_AT(0x00241b88) = 3.141592653589793 * 0.5;                                                     // 0x0015bf30
-    memset((void *)0x00241ba0, 0, 0x24);                                                                 // 0x0015bf50
+    // ScratchBuffers = zero: ours (eagl/anim/AnimDecode.cpp)                                            // 0x0015bf50
     FLOAT_AT(0x00241bdc) = 3.1415927f + 3.1415927f;                                                      // 0x0015bf70
     FLOAT_AT(0x00241bd8) = 3.1415927f * 0.5f;                                                            // 0x0015bf80
     DOUBLE_AT(0x00241bd0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015bfa0
@@ -770,12 +773,12 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x00243500) = 3.1415927f * 0.5f;                                                            // 0x0015c280
     DOUBLE_AT(0x002434f8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c2a0
     DOUBLE_AT(0x002434f0) = 3.141592653589793 * 0.5;                                                     // 0x0015c2b0
-    ((FileNameList *)0x00243508)->Construct();                                                           // 0x0015c2d0
-    CrtAtExit([] { ((FileNameList *)0x00243508)->Destruct(); });
-    ((FileNameList *)0x00243514)->Construct();                                                           // 0x0015c2f0
-    CrtAtExit([] { ((FileNameList *)0x00243514)->Destruct(); });
-    ((FileNameList *)0x002434e4)->Construct();                                                           // 0x0015c310
-    CrtAtExit([] { ((FileNameList *)0x002434e4)->Destruct(); });
+    RequestedFiles.Construct();                                                                          // 0x0015c2d0
+    CrtAtExit([] { RequestedFiles.Destruct(); });
+    FilesInBigFile.Construct();                                                                          // 0x0015c2f0
+    CrtAtExit([] { FilesInBigFile.Destruct(); });
+    FilesNotInBigFile.Construct();                                                                       // 0x0015c310
+    CrtAtExit([] { FilesNotInBigFile.Destruct(); });
     FLOAT_AT(0x0024353c) = 3.1415927f + 3.1415927f;                                                      // 0x0015c330
     FLOAT_AT(0x00243538) = 3.1415927f * 0.5f;                                                            // 0x0015c340
     DOUBLE_AT(0x00243530) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c360
@@ -789,8 +792,8 @@ void RunStaticInitialisers(void) {
     DOUBLE_AT(0x00243570) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c420
     DOUBLE_AT(0x00243568) = 3.141592653589793 * 0.5;                                                     // 0x0015c430
     FLOAT_AT(0x0024358c) = 1.0f / FLOAT_AT(0x001d5c48);                                                  // 0x0015c450
-    ((CARP::ResolverMap *)0x00243580)->Construct();                                                      // 0x0015c470
-    CrtAtExit([] { ((CARP::ResolverMap *)0x00243580)->Destruct(); });
+    CARP::Resolvers.Construct();                                                                         // 0x0015c470
+    CrtAtExit([] { CARP::Resolvers.Destruct(); });
     FLOAT_AT(0x002436a4) = 3.1415927f + 3.1415927f;                                                      // 0x0015c490
     FLOAT_AT(0x002436a0) = 3.1415927f * 0.5f;                                                            // 0x0015c4a0
     DOUBLE_AT(0x00243698) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c4c0

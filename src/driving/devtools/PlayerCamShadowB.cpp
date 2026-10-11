@@ -3,6 +3,7 @@
 #endif
 
 #include "PlayerCamShadowB.h"
+#include "OrigConstants.h"
 
 #include "../camera/CameraSpline.h"
 #include "../camera/DirectorQueue.h"
@@ -76,8 +77,7 @@ struct Rng {
 #define ShadowSim ((void *)0x00233ff0)
 
 constexpr unsigned kNavSplineSize = 0x70;           // RCameraSpline
-uint8_t *const kCurveState = reinterpret_cast<uint8_t *>(0x0023e100);   // GetSegmentCurveStep's spline
-constexpr size_t kCurveStateSize = 0x74;
+
 constexpr int kMaxModes = 128;
 
 // ---- five-byte jumps over the callees the fakes stand in for
@@ -201,31 +201,45 @@ void InstallFakes() {
 
 SimRandom *Random() { return *reinterpret_cast<SimRandom **>(0x00233ff0); }
 
+// The originals' copies of the port's WeaponArmFrom, WeaponArmBlend, PreviousRotationX/Y, ShakeOrigin and
+// fgCameraConstants. GetSegmentCurveStep's spline is ours on both sides: the originals reach it through the
+// ported WRoadNetwork.
+#define OrigWeaponArmFrom (*(Coord4 *)0x001c4180)
+#define OrigWeaponArmBlend (*(float *)0x001c4190)
+#define OrigPreviousRotationX (*(float *)0x001ec3e0)
+#define OrigPreviousRotationY (*(float *)0x001ec3e4)
+#define OrigShakeOrigin (*(Coord4 *)0x001ec3a0)
+#define OrigCameraConstants (*(CameraConstants *)0x001c3e40)
+
 struct CameraGlobals {
     int32_t previousArm;        // 0x001ec378
     float armTurn;              // 0x001ec37c
-    Coord4 armFrom;             // 0x001c4180
-    float armBlend;             // 0x001c4190
-    float previousRotation[2];  // 0x001ec3e0
-    Coord4 shakeOrigin;         // 0x001ec3a0
+    Coord4 armFrom;
+    float armBlend;
+    float previousRotation[2];
+    Coord4 shakeOrigin;
 };
 
-void ReadGlobals(CameraGlobals *g) {
+// The camera globals the side's code uses (the originals' copies or ours)
+void ReadGlobals(CameraGlobals *g, bool original) {
     memcpy(&g->previousArm, (void *)0x001ec378, 4);
     memcpy(&g->armTurn, (void *)0x001ec37c, 4);
-    memcpy(&g->armFrom, (void *)0x001c4180, 16);
-    memcpy(&g->armBlend, (void *)0x001c4190, 4);
-    memcpy(g->previousRotation, (void *)0x001ec3e0, 8);
-    memcpy(&g->shakeOrigin, (void *)0x001ec3a0, 16);
+    g->armFrom = original ? OrigWeaponArmFrom : WeaponArmFrom;
+    g->armBlend = original ? OrigWeaponArmBlend : WeaponArmBlend;
+    g->previousRotation[0] = original ? OrigPreviousRotationX : PreviousRotationX;
+    g->previousRotation[1] = original ? OrigPreviousRotationY : PreviousRotationY;
+    g->shakeOrigin = original ? OrigShakeOrigin : ShakeOrigin;
 }
 
+// Both copies
 void WriteGlobals(const CameraGlobals *g) {
     memcpy((void *)0x001ec378, &g->previousArm, 4);
     memcpy((void *)0x001ec37c, &g->armTurn, 4);
-    memcpy((void *)0x001c4180, &g->armFrom, 16);
-    memcpy((void *)0x001c4190, &g->armBlend, 4);
-    memcpy((void *)0x001ec3e0, g->previousRotation, 8);
-    memcpy((void *)0x001ec3a0, &g->shakeOrigin, 16);
+    WeaponArmFrom = OrigWeaponArmFrom = g->armFrom;
+    WeaponArmBlend = OrigWeaponArmBlend = g->armBlend;
+    PreviousRotationX = OrigPreviousRotationX = g->previousRotation[0];
+    PreviousRotationY = OrigPreviousRotationY = g->previousRotation[1];
+    ShakeOrigin = OrigShakeOrigin = g->shakeOrigin;
 }
 
 uint8_t *g_carAudio;            // the player car's GetAudio(): its flags at +0xc2 and +0xc3
@@ -239,7 +253,8 @@ struct World {
     SimRandom random;
     uint32_t queryStamp;
     std::vector<uint32_t> stamps;
-    uint8_t curve[kCurveStateSize];
+    uint8_t curve[sizeof(RCameraSpline)];
+    uint32_t curveGuard;
     uint8_t audio[2];
 };
 
@@ -251,7 +266,7 @@ size_t ModesBytes() {
     return size_t(count) * sizeof(CameraModeInfo);
 }
 
-void Take(World *w) {
+void Take(World *w, bool original) {
     w->arms.resize(ArmsBytes());
     if (!w->arms.empty())
         memcpy(w->arms.data(), fgCameraTables.autoDriveArms, w->arms.size());
@@ -260,13 +275,14 @@ void Take(World *w) {
     memset(w->heliArm, 0, sizeof(w->heliArm));
     if (g_cinematicArm != NULL)
         memcpy(w->heliArm, g_cinematicArm, sizeof(w->heliArm));
-    ReadGlobals(&w->globals);
+    ReadGlobals(&w->globals, original);
     w->random = *Random();
     w->queryStamp = fgRoadNetworkData.queryStamp;
     w->stamps.resize(fgRoadNetworkData.loaded ? size_t(fgRoadNetworkData.segmentCount) : 0);
     for (size_t i = 0; i < w->stamps.size(); i++)
         w->stamps[i] = fgRoadNetworkData.segments[i]->queryStamp;
-    memcpy(w->curve, kCurveState, sizeof(w->curve));
+    memcpy(w->curve, &CurveSpline, sizeof(w->curve));
+    w->curveGuard = CurveSplineGuard;
     memset(w->audio, 0, sizeof(w->audio));
     if (g_carAudio != NULL)
         memcpy(w->audio, g_carAudio + 0xc2, 2);
@@ -283,7 +299,8 @@ void Put(const World &w) {
     fgRoadNetworkData.queryStamp = w.queryStamp;
     for (size_t i = 0; i < w.stamps.size(); i++)
         fgRoadNetworkData.segments[i]->queryStamp = w.stamps[i];
-    memcpy(kCurveState, w.curve, sizeof(w.curve));
+    memcpy(&CurveSpline, w.curve, sizeof(w.curve));
+    CurveSplineGuard = w.curveGuard;
     if (g_carAudio != NULL)
         memcpy(g_carAudio + 0xc2, w.audio, 2);
 }
@@ -456,8 +473,10 @@ void RunOnce(const Case &c, Result *r, bool original) {
     g_logCount = 0;
     g_loadAnswer = c.loadAnswer;
 
-    if (original)
+    if (original) {
+        OrigCameraConstants = fgCameraConstants;
         XbeOriginal_RestoreRange(kRangeLo, kRangeHi, true);
+    }
     r->faulted = !SafeCall(c, &r->value);
     if (original)
         XbeOriginal_RestoreRange(kRangeLo, kRangeHi, false);
@@ -467,7 +486,7 @@ void RunOnce(const Case &c, Result *r, bool original) {
     memcpy(r->nav, g_nav, sizeof(r->nav));
     memcpy(r->navSpline, g_navSpline, sizeof(r->navSpline));
     r->scratch = g_scratch;
-    Take(&r->world);
+    Take(&r->world, original);
     memcpy(r->log, g_log, sizeof(r->log));
     r->logCount = g_logCount;
 }
@@ -547,6 +566,7 @@ void RunCase(const Case &c) {
     CompareBlock(c, index, "query stamp", &a.queryStamp, &b.queryStamp, sizeof(a.queryStamp), &differ);
     CompareBlock(c, index, "segment stamps", a.stamps.data(), b.stamps.data(), a.stamps.size() * 4, &differ);
     CompareBlock(c, index, "curve spline", a.curve, b.curve, sizeof(a.curve), &differ);
+    CompareBlock(c, index, "curve spline guard", &a.curveGuard, &b.curveGuard, sizeof(a.curveGuard), &differ);
     CompareBlock(c, index, "car audio", a.audio, b.audio, sizeof(a.audio), &differ);
     CompareBlock(c, index, "calls made", &original.logCount, &ours.logCount, sizeof(original.logCount), &differ);
     CompareBlock(c, index, "calls", original.log, ours.log, sizeof(LogEntry) * size_t(original.logCount), &differ);
@@ -814,6 +834,7 @@ void PlayerCamShadowB_Run(void) {
         return;
     }
     g_liveCamera = fgRenderHigh->views[0].camera;
+    FillOrigCameraConstants();
     Rng rng = {0x5eedb0bu};
     int modes = fgCameraTables.modeCount;
 
@@ -839,7 +860,7 @@ void PlayerCamShadowB_Run(void) {
 
     // GetSegmentCurveStep's first call constructs its spline (an allocation): made here, once, for both runs
     if (fgRoadNetworkData.loaded && fgRoadNetworkData.segmentCount > 0 &&
-        !(*reinterpret_cast<uint32_t *>(kCurveState + 0x70) & 1)) {
+        !(CurveSplineGuard & 1)) {
         WRoadSegment *segment = fgRoadNetworkData.segments[0];
         Coord3 point;
         WRoadNetwork::Get()->GetSegmentCurveStep(&fgRoadNetworkData.nodes[segment->node[0]]->position,
@@ -847,7 +868,7 @@ void PlayerCamShadowB_Run(void) {
                                                  0.5f, &point);
     }
 
-    Take(&g_live);
+    Take(&g_live, false);
     InstallFakes();
 
     // LimitPitchYaw: the track's arms and random ones, pitches and yaws round their limits

@@ -120,6 +120,9 @@ public:
 static_assert(sizeof(DynamicLoader) == 0x1c, "DynamicLoader is 0x1c bytes");
 
 void *EAGL_LookupInObject(HashTable *table, const char *name);   // 0x000e5af0 (invented)
+
+extern uint32_t DefaultPoolSize;     // a new SymbolPool's table size
+extern HashTable *LoadedTables;      // the loaded objects' symbol tables, a list
 void EAGL_SymbolInit();
 
 #endif // DRIVING_EAGL_LOADER_H_

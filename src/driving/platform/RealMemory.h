@@ -7,6 +7,9 @@
 
 typedef int (*MemOutOfMemoryFn)(int unused, int size, unsigned flags);   // 1: try the allocation again
 
+extern unsigned MemDefaultClass;   // the flags a request with none takes
+extern MemOutOfMemoryFn MemOutOfMemory;   // asked when an allocation fails
+
 int MEM_initblock(void *block, const char *name, int size, int tail, unsigned flags, void *previous, void *next);
 int MEM_tailsize(const char *name, int flags);
 size_t MEM_size(void *data);

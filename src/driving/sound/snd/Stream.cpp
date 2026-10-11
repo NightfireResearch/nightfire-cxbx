@@ -1,8 +1,13 @@
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS   // (the build defines it; for a file compiled alone)
+#endif
+
 #include "Stream.h"
 #include "SndUntested.h"
 #include "System.h"
 
 #include "../../platform/FileSys.h"
+#include "../../platform/RealMemory.h"
 #include "../../platform/RealPrint.h"
 #include "../../platform/RealSystem.h"
 #include "../../../helpers.h"
@@ -31,9 +36,10 @@
 
 using namespace SND;
 
-namespace {
+// XBE_GLOBAL(0x002475fc, 4)
+uint32_t RequestGeneration;                // the request id generation, += 0x100, never 0
 
-#define Generation U32_AT(0x002475fc)   // the request id generation, += 0x100, never 0
+namespace {
 
 constexpr uint32_t kMagic = 0x4d525453;   // "STRM"
 constexpr uint32_t kWrap = 0xffffffff;    // chunk tag: continue at ringStart
@@ -43,9 +49,6 @@ constexpr uint32_t kSkip = 0xfffffffe;    // chunk tag: released or skipped
 #define OpenDone ((FsCallback)0x0014aee0)     // FUN_0014aee0
 #define CloseDone ((FsCallback)0x0014af10)    // FUN_0014af10
 #define ReadDone ((FsCallback)0x0014b660)     // FUN_0014b660
-
-#define CrtStrncpy ((char *(*)(char *, const char *, int))0x00133d60)   // the CRT's _strncpy
-#define MemFreeImport (*(bool (**)(void *))0x001d1878)                 // MEM_free, the pointer the original jumps through
 
 StrmInternal *Valid(StrmReader *stream) {   // the check every entry starts with
     if (stream == NULL || stream->internal->magic != kMagic)
@@ -114,11 +117,11 @@ StrmRequest* SndStream_PopFree(StrmInternal *s) {
         return request;
     }
     s->freeList = request->next;
-    uint32_t generation = Generation + 0x100;
-    Generation = generation;
+    uint32_t generation = RequestGeneration + 0x100;
+    RequestGeneration = generation;
     if (generation == 0)
-        Generation = 0x100;
-    request->id = (request->id & 0xff) | Generation;
+        RequestGeneration = 0x100;
+    request->id = (request->id & 0xff) | RequestGeneration;
     MUTEX_unlock(&s->mutex);
     return request;
 }
@@ -652,7 +655,7 @@ uint32_t STREAM_queuefile(SND::StrmReader *stream, const char *name, int offset,
     if (request == NULL)
         return 0;
     request->fromMemory = 0;
-    CrtStrncpy(request->name, name, 0xff);
+    strncpy(request->name, name, 0xff);
     request->offset = offset;
     request->endTag = endTag;
     SndStream_Append(s, request);
@@ -1032,5 +1035,5 @@ int FUN_001503b0(void) {
 bool FUN_001503c0(char *p) {
     SND_UNTESTED("FUN_001503c0");
     *p = 0;
-    return MemFreeImport(p);
+    return MEM_free(p);   // through the pointer to it at 0x001d1878 in the original
 }

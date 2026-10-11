@@ -4,6 +4,7 @@
 #include "RenderShadow.h"
 #include "FpControl.h"
 
+#include "../render/Reflection.h"         // ReflWorldRadius
 #include "../world/Render.h"
 #include "../../common/xbeOriginal.h"
 #include "../../helpers.h"
@@ -19,9 +20,9 @@
 // ---------------------------------------------------------------------------------------------------------------
 // NIGHTFIRE_RENDERSHADOW=1, from the first simulation tick on the open track: world/Render.cpp against the
 // originals (0x000c7330-0x000c8940 swapped back in for each original run, common/xbeOriginal.h), on identical
-// inputs, compared byte for byte. Before each side's run the state the functions write is put back: the statics
-// 0x0023b3c0-0x0023e030 (the visible list, the view block, fgRender, GetNextPoint's cursor, the current list), the
-// active curtains, the RRenderWorldCulling and the WRender.
+// inputs, compared byte for byte. Before each side's run the state the functions write is put back: Render.cpp's
+// statics (the visible list, the view block, fgRender, GetNextPoint's cursor, the current list; the original's
+// copy set from the port's), the active curtains, the RRenderWorldCulling and the WRender.
 //
 //   - GenerateCurtainsAndNodes (with FindVisibleTreeNodesAndCurtains) for the live frustum and for frustums set up
 //     by the original RRenderWorldCulling::Setup2dFrustrum at random points and headings over the map and near the
@@ -83,40 +84,87 @@ typedef void (__fastcall *SetupFrustumFn)(void *, int, const Coord4 *position, c
 
 // ---- the game's state
 
-#define RenderStatics ((uint8_t *)0x0023b3c0)
-const uint32_t kRenderStaticsBytes = 0x0023e030 - 0x0023b3c0;
-#define CurtainState ((uint8_t *)0x0023e280)
-const uint32_t kCurtainStateBytes = 0x0023f290 - 0x0023e280;
 #define WorldCulling ((uint8_t *)0x001f2c80)
 const uint32_t kWorldCullingBytes = 0xa0;
 #define CullingFov FLOAT_AT(0x001f2ce4)
 #define CullingFar FLOAT_AT(0x001f2ce8)
 #define CullingEye (*(const Coord4 *)0x001f2cd0)
-#define AtPointRadius FLOAT_AT(0x001c483c)          // what DrawWorldAtPoint's caller passes
 
-#define VisibleList (*(CachedDrawInfo *)0x0023b3c0)
-#define CurrentList (*(CachedDrawInfo **)0x0023e014)
-#define ViewCull (*(WViewCull *)0x0023dfd0)
+// Render.cpp's statics as the game lays them out. The originals run from the game's copy (OrigStatics), set from
+// the port's variables before each original run; the port's are gathered in the same layout to compare. Both
+// sides make curtains active through the port's AddActiveCurtain and test distances through its DistanceCheck2d
+// (ViewCull), so the curtains are the port's only.
+struct RenderStatics {
+    CachedDrawInfo visibleList;         // 0x0023b3c0 VisibleList
+    uint8_t unknown2c08[8];
+    WViewCull viewCull;                 // 0x0023dfd0 ViewCull
+    WRender *render;                    // 0x0023e000 fgRender
+    uint8_t unknown2c44[4];
+    WCullCursor cursor;                 // 0x0023e008 Cursor
+    CachedDrawInfo *currentList;        // 0x0023e014 CurrentList
+    uint8_t unknown2c58[0x18];          // the static initialisers' constants, DrawWorldAtPoint's node count
+};
+static_assert(sizeof(RenderStatics) == 0x0023e030 - 0x0023b3c0, "Render.cpp's statics");
+#define OrigStatics (*(RenderStatics *)0x0023b3c0)
+
+// A list pointer as the original's copy holds it: the port's visible list is the game's
+CachedDrawInfo *AsOriginal(CachedDrawInfo *list) {
+    return list == &VisibleList ? &OrigStatics.visibleList : list;
+}
+
+CachedDrawInfo *AsPort(CachedDrawInfo *list) {
+    return list == &OrigStatics.visibleList ? &VisibleList : list;
+}
+
+void TakePort(RenderStatics *s) {
+    *s = OrigStatics;                   // the bytes neither side writes
+    s->visibleList = VisibleList;
+    s->viewCull = ViewCull;
+    s->render = fgRender;
+    s->cursor = Cursor;
+    s->cursor.list = AsOriginal(Cursor.list);
+    s->currentList = AsOriginal(CurrentList);
+}
+
+void PutPort(const RenderStatics *s) {
+    VisibleList = s->visibleList;
+    ViewCull = s->viewCull;
+    fgRender = s->render;
+    Cursor = s->cursor;
+    Cursor.list = AsPort(s->cursor.list);
+    CurrentList = AsPort(s->currentList);
+}
 
 struct Snapshot {
-    uint8_t statics[kRenderStaticsBytes];
-    uint8_t curtains[kCurtainStateBytes];
+    RenderStatics original;             // the original's copy
+    RenderStatics port;                 // the port's variables
+    int32_t curtainCount;
+    MATRIX4 curtains[64];
     uint8_t culling[kWorldCullingBytes];
     uint8_t render[sizeof(WRender)];
 };
 
 void Take(Snapshot *s) {
-    memcpy(s->statics, RenderStatics, sizeof(s->statics));
-    memcpy(s->curtains, CurtainState, sizeof(s->curtains));
+    s->original = OrigStatics;
+    TakePort(&s->port);
+    s->curtainCount = ActiveCurtainCount;
+    memcpy(s->curtains, ActiveCurtains, sizeof(s->curtains));
     memcpy(s->culling, WorldCulling, sizeof(s->culling));
     memcpy(s->render, fgRender, sizeof(s->render));
 }
 
 void Put(const Snapshot *s) {
-    memcpy(RenderStatics, s->statics, sizeof(s->statics));
-    memcpy(CurtainState, s->curtains, sizeof(s->curtains));
+    OrigStatics = s->original;
+    PutPort(&s->port);
+    ActiveCurtainCount = s->curtainCount;
+    memcpy(ActiveCurtains, s->curtains, sizeof(s->curtains));
     memcpy(WorldCulling, s->culling, sizeof(s->culling));
     memcpy(fgRender, s->render, sizeof(s->render));
+}
+
+// The port's state lent to the original's copy
+void Lend(const Snapshot *s) {
+    OrigStatics = s->port;
 }
 
 Snapshot g_base, g_pre, g_afterOriginal, g_afterPort;
@@ -156,7 +204,8 @@ void CheckU32(const char *what, int index, uint32_t a, uint32_t b) {
 }
 
 void CheckSnapshots(const char *what, int index) {
-    CheckBytes(what, index, g_afterOriginal.statics, g_afterPort.statics, sizeof(g_afterPort.statics));
+    CheckBytes(what, index, &g_afterOriginal.original, &g_afterPort.port, sizeof(RenderStatics));
+    CheckU32(what, index, g_afterOriginal.curtainCount, g_afterPort.curtainCount);
     CheckBytes(what, index, g_afterOriginal.curtains, g_afterPort.curtains, sizeof(g_afterPort.curtains));
     CheckBytes(what, index, g_afterOriginal.culling, g_afterPort.culling, sizeof(g_afterPort.culling));
     CheckBytes(what, index, g_afterOriginal.render, g_afterPort.render, sizeof(g_afterPort.render));
@@ -191,10 +240,11 @@ bool Guarded(CaseFn run, void *context, bool original) {
     return ok;
 }
 
-// Both sides from the state as it is now, the state after each kept
+// Both sides from the port's state as it is now, the state after each kept
 bool SideBySide(CaseFn run, void *original, void *port) {
     g_cases++;
     Take(&g_pre);
+    Lend(&g_pre);
     bool ok = Guarded(run, original, true);
     Take(&g_afterOriginal);
     Put(&g_pre);
@@ -263,7 +313,7 @@ CachedDrawInfo g_walkList;              // one list for both sides: the cursor k
 
 void RunWalk(void *context, bool original) {
     WalkCase *c = static_cast<WalkCase *>(context);
-    CachedDrawInfo *list = &VisibleList;
+    CachedDrawInfo *list = original ? &OrigStatics.visibleList : &VisibleList;
     if (c->source != NULL) {
         g_walkList = *c->source;
         list = &g_walkList;
@@ -408,7 +458,7 @@ void TestView(int index, const Coord4 &eye, float yaw, float pitch, float viewRa
     if (!SideBySide(RunGenerate, &generate[0], &generate[1]))
         return;
     CheckU32("GenerateCurtainsAndNodes result", index, uint32_t(uintptr_t(generate[0].result)),
-             uint32_t(uintptr_t(generate[1].result)));
+             uint32_t(uintptr_t(AsOriginal(generate[1].result))));
     CheckSnapshots("GenerateCurtainsAndNodes", index);
 
     // the walk on the visible list, on its nodes reversed with repeats, on an empty list
@@ -460,7 +510,7 @@ void TestCulling() {
         live.y = box.y;
         live.z = box.z;
     }
-    TestView(0, live, 0.0f, 0.0f, AtPointRadius, true);
+    TestView(0, live, 0.0f, 0.0f, ReflWorldRadius, true);   // what DrawWorldAtPoint's caller passes
     for (int i = 1; i <= 80; i++) {
         Coord4 eye;
         if (i % 2 == 0) {
@@ -473,7 +523,7 @@ void TestCulling() {
             eye.z = map->corner.z + Uniform(0.0f, map->size);
         }
         eye.w = 1.0f;
-        float radius = i % 5 == 0 ? AtPointRadius : Uniform(0.0f, 120.0f);
+        float radius = i % 5 == 0 ? ReflWorldRadius : Uniform(0.0f, 120.0f);
         TestView(i, eye, Uniform(-3.2f, 3.2f), Uniform(-0.4f, 0.4f), radius, false);
     }
     Put(&g_base);

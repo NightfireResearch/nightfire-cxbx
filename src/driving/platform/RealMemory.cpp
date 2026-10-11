@@ -29,10 +29,16 @@
 // +0x38 whether it has a lock, +0x3c the lock (a MUTEX).
 // ---------------------------------------------------------------------------------------------------------------
 
-#define MemClass         ((uint8_t **)0x00242ce0u)   // 64 class records
-#define MemError         (*(int *)0x00242cd4u)       // what MEM_validate last found wrong
-#define MemOutOfMemory   (*(MemOutOfMemoryFn *)0x00242cd8u)
-#define MemDefaultClass  (*(unsigned *)0x00242cdcu)
+// The class records stay the game's: the original at 0x001500a0 (the block holding a pointer), which UMemory still
+// calls through its table of MEM_ functions, reads them.
+// XBE_GLOBAL(0x00242ce0, 0x100)
+#define MemClass         ((uint8_t **)0x00242ce0u)   // 64
+// XBE_GLOBAL(0x00242cd4, 4)
+static int MemError;                   // what MEM_validate last found wrong
+// XBE_GLOBAL(0x00242cd8, 4)
+MemOutOfMemoryFn MemOutOfMemory;
+// XBE_GLOBAL(0x00242cdc, 4)
+unsigned MemDefaultClass;
 
 enum : uint16_t { MAGIC_USED = 0x424d, MAGIC_FREE = 0x4246, MAGIC_SENTINEL = 0x4253, MAGIC_GONE = 0x424f };
 

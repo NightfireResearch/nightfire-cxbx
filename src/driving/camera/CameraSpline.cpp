@@ -1,6 +1,7 @@
 #pragma fp_contract(off)
 
 #include "CameraSpline.h"
+#include "../data/RCARPFile.h"   // MaterialData
 
 #include "../engine/UMemory.hpp"
 #include "../world/CollisionTypes.h"   // MatrixRow
@@ -17,8 +18,8 @@
 // put after them. See CameraSpline.h.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define RadiansToTurns FLOAT_AT(0x001ebcb0)            // 1 / (2 pi), set by a static initialiser
-#define MaterialData PTR_AT(0x001ebce4)                // RCARPFile::LoadEAGLMaterials' file
+// XBE_GLOBAL(0x001ebcb0, 4)
+static float RadiansToTurns = 1.0f / 6.283185f;         // as the static initialiser made it (0x3e22f984)
 
 constexpr uint32_t kGameSymbolTableVtable = 0x00190e18;
 

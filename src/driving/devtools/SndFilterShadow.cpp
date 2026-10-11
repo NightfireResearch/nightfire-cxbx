@@ -186,7 +186,9 @@ struct Workspace {
 
 Workspace *W, *g_snapshot, *g_resultOriginal;
 
-const uint32_t kKernelGlobals = 0x001da4e0u, kKernelGlobalsSize = 0x50;
+// The resampler kernel's scratch: the port's KernelScratch (Filters.h), and the original's copy
+#define OrigKernelScratch ((uint8_t *)0x001da4e0)
+const uint32_t kKernelGlobalsSize = sizeof(RsfKernelScratch);
 uint8_t g_globalsSnapshot[kKernelGlobalsSize], g_globalsOriginal[kKernelGlobalsSize];
 
 // ---- the per-side call log
@@ -1019,7 +1021,8 @@ void RunCase(Kind &kind, int index, int kindIndex) {
     FillBuffers();
     kind.setup(index);
     memcpy(g_snapshot, W, sizeof(Workspace));
-    memcpy(g_globalsSnapshot, (void *)(uintptr_t)kKernelGlobals, kKernelGlobalsSize);
+    memcpy(g_globalsSnapshot, &KernelScratch, kKernelGlobalsSize);
+    memcpy(OrigKernelScratch, g_globalsSnapshot, kKernelGlobalsSize);
 
     g_side = 0;
     g_hash[0] = 2166136261u;
@@ -1028,10 +1031,10 @@ void RunCase(Kind &kind, int index, int kindIndex) {
     bool okOriginal = Guarded(kind.run, true);
     Originals(kind.originals, false);
     memcpy(g_resultOriginal, W, sizeof(Workspace));
-    memcpy(g_globalsOriginal, (void *)(uintptr_t)kKernelGlobals, kKernelGlobalsSize);
+    memcpy(g_globalsOriginal, OrigKernelScratch, kKernelGlobalsSize);
 
     memcpy(W, g_snapshot, sizeof(Workspace));
-    memcpy((void *)(uintptr_t)kKernelGlobals, g_globalsSnapshot, kKernelGlobalsSize);
+    memcpy(&KernelScratch, g_globalsSnapshot, kKernelGlobalsSize);
     g_side = 1;
     g_hash[1] = 2166136261u;
     g_logCount[1] = 0;
@@ -1068,7 +1071,7 @@ void RunCase(Kind &kind, int index, int kindIndex) {
         Detail("%s case %d: %d words differ, first %s +0x%x: original %08x, ours %08x", kind.name, index, differing,
                Region(first * 4), (unsigned)(first * 4), a[first], b[first]);
     }
-    if (memcmp(g_globalsOriginal, (void *)(uintptr_t)kKernelGlobals, kKernelGlobalsSize) != 0) {
+    if (memcmp(g_globalsOriginal, &KernelScratch, kKernelGlobalsSize) != 0) {
         differ = true;
         Detail("%s case %d: the kernel's scratch globals differ", kind.name, index);
     }
@@ -1279,8 +1282,9 @@ void SndFilterShadow_Run(void) {
     // the fakes, and the globals the run borrows
     uint32_t savedNew = *(uint32_t *)0x002475f4u, savedDelete = *(uint32_t *)0x002475f8u;
     uint8_t *savedMixList = *(uint8_t **)0x00245be4u;
-    uint8_t savedKernelGlobals[kKernelGlobalsSize];
-    memcpy(savedKernelGlobals, (void *)(uintptr_t)kKernelGlobals, kKernelGlobalsSize);
+    uint8_t savedKernelGlobals[kKernelGlobalsSize], savedOrigKernelGlobals[kKernelGlobalsSize];
+    memcpy(savedKernelGlobals, &KernelScratch, kKernelGlobalsSize);
+    memcpy(savedOrigKernelGlobals, OrigKernelScratch, kKernelGlobalsSize);
     *(uint32_t *)0x002475f4u = P((void *)&FakeCodaNew);
     *(uint32_t *)0x002475f8u = P((void *)&FakeCodaDelete);
     HookBoth(0x0013ee00, (const void *)&SNDPKTPLAYI_get, (const void *)&FakeGetPacket);
@@ -1302,7 +1306,8 @@ void SndFilterShadow_Run(void) {
     *(uint32_t *)0x002475f4u = savedNew;
     *(uint32_t *)0x002475f8u = savedDelete;
     *(uint8_t **)0x00245be4u = savedMixList;
-    memcpy((void *)(uintptr_t)kKernelGlobals, savedKernelGlobals, kKernelGlobalsSize);
+    memcpy(&KernelScratch, savedKernelGlobals, kKernelGlobalsSize);
+    memcpy(OrigKernelScratch, savedOrigKernelGlobals, kKernelGlobalsSize);
     VirtualFree(W, 0, MEM_RELEASE);
     VirtualFree(g_snapshot, 0, MEM_RELEASE);
     VirtualFree(g_resultOriginal, 0, MEM_RELEASE);

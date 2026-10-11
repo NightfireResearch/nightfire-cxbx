@@ -8,6 +8,7 @@
 // conversion the static initialisers apply to their colour constants. See Draw.cpp.
 // ---------------------------------------------------------------------------------------------------------------
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "VectorMaths.hpp"                // Vec4
@@ -73,6 +74,27 @@ public:
     static void DrawBatchedSprite(float x, float y, float width, float height, uint32_t colour,
                                   const SpriteTexCoords *texCoords, EAGL::TAR *texture);        // 0x000765e0
 };
+
+// A batch's vertices (the statics of a batched draw, the name is ours). The colours are a function-local static
+// array constructed on first use: their guard's bit 0 says they have been.
+struct VertexBatch {
+    Coord4 texCoords[128];              // +0x0000
+    Coord4 positions[128];              // +0x0800
+    int32_t count;                      // +0x1000
+    uint32_t unknown1004[3];
+    EAGL::TAR *texture;                 // +0x1010 the one every vertex in the batch has
+    uint32_t unknown1014[3];
+    PackedColour colours[128];          // +0x1020
+    uint32_t coloursGuard;              // +0x1220
+};
+static_assert(offsetof(VertexBatch, count) == 0x1000 && offsetof(VertexBatch, texture) == 0x1010 &&
+              offsetof(VertexBatch, colours) == 0x1020 && offsetof(VertexBatch, coloursGuard) == 0x1220,
+              "VertexBatch layout");
+
+extern VertexBatch QuadBatch;               // DrawBatchedTexturedQuad's
+extern VertexBatch SpriteBatch;             // DrawBatchedSprite's
+extern MATRIX4 *DrawModelMatrix;
+extern float DrawZ;
 
 #define SimpleMaterial (*(USimpleMaterial **)0x001e92d0)
 #define SimpleTexturedMaterial (*(USimpleTexturedMaterial **)0x001e92d4)

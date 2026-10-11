@@ -33,6 +33,7 @@ struct WeaponDefinition {
 };
 static_assert(sizeof(WeaponDefinition) == 0x54, "a weapon record is 0x54 bytes");
 
+// XBE_GLOBAL(0x001c94d8, 0xa80)
 #define WeaponDefinitions ((WeaponDefinition *)0x001c94d8)   // [32]
 
 // The table as its initialiser left it (StaticInitTable.cpp), and the initialiser that puts it in place.
@@ -75,7 +76,6 @@ void DestroyStatic_001f25f4(void);
 void DestroyStatic_001f2a34(void);
 void DestroyStatic_00200f60(void);
 void DestroyStatic_00201790(void);
-void DestroyStatic_0023e100(void);
 void DestroyStatic_0023f330(void);
 void DestroyStatic_00243944(void);
 void DestroyStatic_00243a88(void);

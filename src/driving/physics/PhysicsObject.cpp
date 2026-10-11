@@ -30,7 +30,9 @@
 // ---- globals
 #define PhysicsObjectVtable ((void **)0x0018f9a0)
 #define Sim ((void *)0x00233ff0)                    // the Simulation
+// XBE_GLOBAL(0x00234020, 0x100)
 #define RigidBodySigs ((uint32_t *)0x00234020)      // [64] the Simulation's signatures of its bodies, by slot
+// XBE_GLOBAL(0x00234120, 0x180)
 #define SimpleBodySigs ((uint32_t *)0x00234120)     // [96]
 #define SimStepCount U32_AT(0x00234e34)             // the Simulation's steps so far
 

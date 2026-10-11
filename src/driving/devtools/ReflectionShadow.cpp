@@ -13,6 +13,8 @@
 #include "../render/Reflection.h"
 #include "../render/RSceneObj.hpp"
 #include "../anim/Character.h"            // LightBlock
+#include "../anim/Manager.h"              // NormalLight, IRLight, IRLightReady, IRModeOn
+#include "OwnedGlobals.h"
 #include "../../common/xbeOriginal.h"
 #include "../../helpers.h"
 
@@ -129,70 +131,117 @@ typedef void (*FeatureInitFn)(int, int, int, int);
 #define ShadowReflection (*(RReflection **)0x001f2dfc)
 #define ShadowColorize (*(RColorize **)0x001f6898)
 #define ShadowDecals (*(RDecalManager **)0x001fe820)
-#define ShadowGain (*(RGain **)0x00200f20)
-#define ShadowLensFlares (*(RLensFlareManager **)0x00200f44)
 #define ShadowMissileCam (*(uint8_t **)0x00200f54)
 #define ShadowLightManager (*(uint8_t **)0x001ec260)
 #define ShadowRendererEye ((const float *)((*(uint8_t **)0x001ebff4) + 0x30))
-#define ShadowNormalLight (*(LightBlock **)0x001dd9d4)
-#define ShadowIRLight (*(LightBlock **)0x001dd9d8)
-#define ShadowIRState ((uint8_t *)0x001dd9dc)          // IRLightReady, IRModeOn
-#define ShadowWarpage ((uint8_t *)0x001c482c)
-#define ShadowWarpageX FLOAT_AT(0x001c482c)
-#define ShadowWarpageY FLOAT_AT(0x001c4830)
 #define ShadowFeatures ((uint8_t *)0x001f2d78)
 #define ShadowFeaturesLocked BOOL8_AT(0x001f2df8)
-#define ShadowCpuType ((uint8_t *)0x001c4810)
 #define ShadowMouseBounds ((uint8_t *)0x002420bc)
-#define ShadowDecalGeoPrims ((TexturedGeoPrim **)0x001f68b0)
-#define ShadowDecalGlobals ((uint8_t *)0x001f68b0)
-const size_t kDecalGlobalsBytes = 0x001ff7f0 + 0x4c - 0x001f68b0;
+#define ShadowDecalState ((uint8_t *)0x001ff7f0)       // after the decal arrays
+const size_t kDecalStateBytes = 0x4c;
+
+// The package's globals the port has its own of, by the original's copy (render/Reflection.h, Colorize.h,
+// LensFlare.h, Gain.h, Decals.h): in every case's regions, the original running from its copies set to the port's
+struct Owned {
+    uint32_t orig;
+    void *port;
+    size_t bytes;
+};
+const Owned kOwned[] = {
+    {0x001c4810, &CpuType, 4},
+    {0x001c4820, &FeatureDefault50, 4},
+    {0x001c482c, &WarpageX, 4},
+    {0x001c4830, &WarpageY, 4},
+    {0x001c4834, &ReflNearZ, 4},
+    {0x001c4838, &ReflFarZ, 4},
+    {0x001c483c, &ReflWorldRadius, 4},
+    {0x001c4840, &ReflDrawWorld, 4},
+    {0x001c4844, &ReflDrawBack, 1},
+    {0x001c4845, &ReflDrawFront, 1},
+    {0x001f2e00, &ReflUpdating, 1},
+    {0x001c487c, &InfraredStartBrightness, 4},
+    {0x001c4880, &BrightnessLightScale, 4},
+    {0x001c4884, &BrightnessEaseSteps, 4},
+    {0x001c4888, &ColorizeUnknown1c4888, 4},
+    {0x001c488c, &ColorizeUnknown1c488c, 4},
+    {0x001f68a0, &VideoModeChecked, 1},
+    {0x001c4a84, &FlareTestDepth, 4},
+    {0x001c4a40, GainPositions, sizeof(GainPositions)},
+    {0x00200f30, GainColours, sizeof(GainColours)},
+    {0x00200f40, &GainColoursGuard, 4},
+    {0x001f68b0, DecalGeoPrims, sizeof(DecalGeoPrims)},
+    {0x001f68d0, DecalAlpha, sizeof(DecalAlpha)},
+    {0x001f6978, DecalDelay, sizeof(DecalDelay)},
+    {0x001f6a20, DecalPositions, sizeof(DecalPositions)},
+    {0x001fa920, DecalUVs, sizeof(DecalUVs)},
+    {0x001fe830, DecalColours, sizeof(DecalColours)},
+    {0x001c48a0, DecalVertexCount, sizeof(DecalVertexCount)},
+};
 
 // ---- the regions a case may write, snapshotted as one block
 
+// `at` is the port's; `orig` the original's copy of it, or `at` when both sides share the memory
 struct Region {
     void *at;
+    void *orig;
     size_t bytes;
+    bool pointers;          // shared, and holds addresses of owned globals (a decal's request): translated
 };
 
 struct Regions {
-    Region list[24];
+    Region list[64];
     int count;
     size_t total;
 };
 
 Regions g_regions;
-uint8_t *g_pre, *g_afterOriginal, *g_afterPort;
+uint8_t *g_pre, *g_originalPre, *g_afterOriginal, *g_afterPort;
 size_t g_capacity = 0;
 
-void ClearRegions() {
-    g_regions.count = 0;
-    g_regions.total = 0;
-}
-
-void AddRegion(void *at, size_t bytes) {
+void AddRegion(void *at, size_t bytes, uint32_t orig = 0, bool pointers = false) {
     if (at == NULL || bytes == 0)
         return;
-    g_regions.list[g_regions.count++] = { at, bytes };
+    g_regions.list[g_regions.count++] = { at, orig != 0 ? reinterpret_cast<void *>(orig) : at, bytes, pointers };
     g_regions.total += bytes;
     if (g_regions.total > g_capacity) {
         g_capacity = g_regions.total + 0x1000;
         g_pre = static_cast<uint8_t *>(realloc(g_pre, g_capacity));
+        g_originalPre = static_cast<uint8_t *>(realloc(g_originalPre, g_capacity));
         g_afterOriginal = static_cast<uint8_t *>(realloc(g_afterOriginal, g_capacity));
         g_afterPort = static_cast<uint8_t *>(realloc(g_afterPort, g_capacity));
     }
 }
 
-void Take(uint8_t *out) {
+// Every case's regions start with the package's own globals
+void ClearRegions() {
+    g_regions.count = 0;
+    g_regions.total = 0;
+    for (const Owned &o : kOwned)
+        AddRegion(o.port, o.bytes, o.orig);
+}
+
+// The port's state, or the original's copies
+void Take(uint8_t *out, bool original = false) {
     for (int i = 0; i < g_regions.count; i++) {
-        memcpy(out, g_regions.list[i].at, g_regions.list[i].bytes);
+        memcpy(out, original ? g_regions.list[i].orig : g_regions.list[i].at, g_regions.list[i].bytes);
         out += g_regions.list[i].bytes;
     }
 }
 
-void Put(const uint8_t *in) {
+// The original's result in the regions marked as holding pointers (a decal's request) with each address of an
+// owned global's game copy made ours, as the port's holds. Not every shared region: a random word can fall in a
+// game copy's range.
+void TranslateShared(uint8_t *out) {
     for (int i = 0; i < g_regions.count; i++) {
-        memcpy(g_regions.list[i].at, in, g_regions.list[i].bytes);
+        if (g_regions.list[i].pointers)
+            OwnedGlobals_TranslateWords(out, g_regions.list[i].bytes);
+        out += g_regions.list[i].bytes;
+    }
+}
+
+void Put(const uint8_t *in, bool original = false) {
+    for (int i = 0; i < g_regions.count; i++) {
+        memcpy(original ? g_regions.list[i].orig : g_regions.list[i].at, in, g_regions.list[i].bytes);
         in += g_regions.list[i].bytes;
     }
 }
@@ -268,12 +317,17 @@ bool Guarded(CaseFn run, void *context, bool original) {
     return ok;
 }
 
-// Both sides from the state as it is now; the regions compared, the port's state kept
+// Both sides from the state as it is now (the original from its copies set to it); the regions compared, the port's
+// state kept, the original's copies put back
 bool SideBySide(const char *what, int index, CaseFn run, void *original, void *port) {
     g_cases++;
     Take(g_pre);
+    Take(g_originalPre, true);
+    Put(g_pre, true);
     bool ok = Guarded(run, original, true);
-    Take(g_afterOriginal);
+    Take(g_afterOriginal, true);
+    TranslateShared(g_afterOriginal);
+    Put(g_originalPre, true);
     Put(g_pre);
     ok = Guarded(run, port, false) && ok;
     Take(g_afterPort);
@@ -557,7 +611,6 @@ void TestReflectionState() {
     AddRegion(copy, sizeof(copy));
     AddRegion(privateCopy, sizeof(privateCopy));
     AddRegion(g_private->lighting, records * sizeof(ReflLighting));
-    AddRegion(ShadowWarpage, 8);
     uint8_t *base = static_cast<uint8_t *>(malloc(g_regions.total));
     Take(base);
 
@@ -594,8 +647,8 @@ void TestReflectionState() {
         } else if (roll < 85) {
             g_refl.op = 2;
             g_refl.enable = Next() % 2 == 0;
-            ShadowWarpageX = Awkward(-2.0f, 2.0f);
-            ShadowWarpageY = Awkward(-2.0f, 2.0f);
+            WarpageX = Awkward(-2.0f, 2.0f);
+            WarpageY = Awkward(-2.0f, 2.0f);
         } else if (roll < 95) {
             g_refl.op = 3;
             g_refl.index = int(Next() % uint32_t(records));
@@ -671,9 +724,10 @@ void TestColorize() {
     AddRegion(copy, sizeof(copy));
     AddRegion(ShadowMissileCam, 0x18);
     AddRegion(ShadowLightManager, 0x170);
-    AddRegion(ShadowIRState, 2);
-    AddRegion(ShadowNormalLight, sizeof(LightBlock));
-    AddRegion(ShadowIRLight, sizeof(LightBlock));
+    AddRegion(&IRLightReady, 1);
+    AddRegion(&IRModeOn, 1);
+    AddRegion(NormalLight, sizeof(LightBlock));
+    AddRegion(IRLight, sizeof(LightBlock));
     uint8_t *base = static_cast<uint8_t *>(malloc(g_regions.total));
     Take(base);
 
@@ -738,8 +792,8 @@ void RunFlares(void *context, bool original) {
 
 void TestFlares() {
     static LensFlareData copy;
-    memcpy(&copy, ShadowLensFlares->data, sizeof(copy));
-    g_flares.vtable = ShadowLensFlares->vtable;
+    memcpy(&copy, TheLensFlareManager->data, sizeof(copy));
+    g_flares.vtable = TheLensFlareManager->vtable;
     g_flares.data = &copy;
     copy.enabled = 1;
 
@@ -799,9 +853,9 @@ void TestDecals() {
 
     ClearRegions();
     AddRegion(copy, sizeof(copy));
-    AddRegion(ShadowDecalGlobals, kDecalGlobalsBytes);
+    AddRegion(ShadowDecalState, kDecalStateBytes);
     for (int i = 0; i < 8; i++)
-        AddRegion(ShadowDecalGeoPrims[i], sizeof(TexturedGeoPrim));
+        AddRegion(DecalGeoPrims[i], sizeof(TexturedGeoPrim), 0, true);
     uint8_t *base = static_cast<uint8_t *>(malloc(g_regions.total));
     Take(base);
 
@@ -845,7 +899,7 @@ void RunGain(void *, bool original) {
 
 void TestGain() {
     static uint8_t copy[sizeof(RGain)];
-    memcpy(copy, ShadowGain, sizeof(copy));
+    memcpy(copy, TheGain, sizeof(copy));
     g_gain = reinterpret_cast<RGain *>(copy);
     ClearRegions();
     AddRegion(copy, sizeof(copy));
@@ -897,7 +951,6 @@ void RunFeatures(void *context, bool original) {
 void TestFeatures() {
     ClearRegions();
     AddRegion(ShadowFeatures, sizeof(FeatureManagerData));
-    AddRegion(ShadowCpuType, 4);
     AddRegion(ShadowMouseBounds, 0x24);
     uint8_t *base = static_cast<uint8_t *>(malloc(g_regions.total));
     Take(base);
@@ -935,19 +988,19 @@ void ReflectionShadow_Run(void) {
         printf("[reflection] no RReflection - its cases skipped\n");
     }
     if (ShadowColorize != NULL && ShadowMissileCam != NULL && ShadowLightManager != NULL &&
-        ShadowNormalLight != NULL && ShadowIRLight != NULL)
+        NormalLight != NULL && IRLight != NULL)
         TestColorize();
     else
         printf("[reflection] no RColorize, missile camera, light manager or IR light blocks - RColorize skipped\n");
-    if (ShadowLensFlares != NULL && ShadowLensFlares->data != NULL)
+    if (TheLensFlareManager != NULL && TheLensFlareManager->data != NULL)
         TestFlares();
     else
         printf("[reflection] no RLensFlareManager - its cases skipped\n");
-    if (ShadowDecals != NULL && ShadowDecalGeoPrims[0] != NULL)
+    if (ShadowDecals != NULL && DecalGeoPrims[0] != NULL)
         TestDecals();
     else
         printf("[reflection] no RDecalManager - its cases skipped\n");
-    if (ShadowGain != NULL)
+    if (TheGain != NULL)
         TestGain();
 
     ResetFpu();

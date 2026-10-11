@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../data/CoordConvert.h"       // Coord4
 #include "../eagl/GeoPrimState.h"
 #include "../eagl/Model.h"              // DynamicModel
 #include "../eagl/RenderMethod.h"       // GeoPrimParam
@@ -47,6 +48,10 @@ static_assert(sizeof(RGain) == 0x12c, "RGain is 0x12c bytes");
 static_assert(offsetof(RGain, state) == 0x24 && offsetof(RGain, model) == 0x70 &&
               offsetof(RGain, vertexCount) == 0xc8 && offsetof(RGain, geoPrim) == 0xd8, "RGain layout");
 
-#define TheGain (*(RGain **)0x00200f20)
+extern RGain *TheGain;
+// The screen quad's corners and colours, and the colours' guard
+extern Coord4 GainPositions[4];
+extern uint32_t GainColours[4];
+extern uint32_t GainColoursGuard;
 
 #endif // DRIVING_RENDER_GAIN_H_

@@ -14,8 +14,18 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // The render methods the requests' methods are children of (static initialisers')
+// XBE_GLOBAL(0x0024b07c, 0x34)
 #define MatDebugMethod ((EAGL::RenderMethod *)0x0024b07c)               // "HB_RM = MatDebug"
+// XBE_GLOBAL(0x0024b0b0, 0x34)
 #define MatVolatileTextureMethod ((EAGL::RenderMethod *)0x0024b0b0)     // "HB_RM = MatVolatileTexture"
+
+// The rings' models
+// XBE_GLOBAL(0x00243798, 0x40)
+EAGL::DynamicModel *SimpleModels[kMaterialRequests];
+// XBE_GLOBAL(0x002437d8, 0x40)
+EAGL::DynamicModel *TexturedModels[kMaterialRequests];
+// XBE_GLOBAL(0x00243838, 0x40)
+EAGL::DynamicModel *VolatileModels[kMaterialRequests];
 
 namespace {
 

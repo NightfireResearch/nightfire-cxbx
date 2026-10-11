@@ -10,6 +10,7 @@
 #include "../data/Dafi.h"
 #include "../data/IniFiles.h"
 #include "../engine/UMemory.hpp"
+#include "../game/BondCar.h"            // OverrideCarType
 #include "../physics/RigidBody.h"       // PVehicle
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"      // MEM_copy
@@ -25,16 +26,34 @@
 // RCameraIniLoader. See CameraIniLoader.h.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The C runtime's, whose state or number parsing must stay the game's
+// The C runtime's number formatting and parsing, kept the game's
 #define Crt_sprintf ((int (__cdecl *)(char *, const char *, ...))0x00132767)
-#define Crt_strtok ((char *(__cdecl *)(char *, const char *))0x0013282a)
 #define Crt_atof ((double (__cdecl *)(const char *))0x00133e84)
 
-#define PlayerCamera (*(RPlayerCamera **)0x001ebc8c)          // RCameraIniLoader's
 #define playerPhysicsObject (*(PVehicle ***)0x00234e40)
-#define OverrideCarType (*(const char **)0x001e7a8c)          // used for a car of class 0 when set (name ours)
-#define TwoPi FLOAT_AT(0x001ebc90)                            // set by static initialisers
-#define TurnsPerRadian FLOAT_AT(0x001ebc94)
+
+// XBE_GLOBAL(0x001ebc8c, 4)
+static RPlayerCamera *PlayerCamera;                     // RCameraIniLoader's
+
+// The tables' defaults, until LoadFile reads the file
+// XBE_GLOBAL(0x001c3e40, 0x6c)
+CameraConstants fgCameraConstants = {
+    100, 50, 60,
+    0.03f, 0.02f, 0.4f, 1.0f, 0.01f, 0.035f, 0.25f, 0.1f, 1.0f,
+    { 1.675f, 1.925f, 1.325f, 1.0f },
+    2.875f, 0.04f, 0.13f, 0.008f, 1.5f, 0.5f,
+    60, 40,
+    60.0f, 1.0f, 300.0f,
+};
+// XBE_GLOBAL(0x001ebc88, 4)
+int32_t kAutoDriveLatency;
+// XBE_GLOBAL(0x001ebca4, 4)
+int32_t kExplosionShakePeriod = 8;                      // 52 / 2 pi, truncated
+// XBE_GLOBAL(0x001ebc90, 4)
+static float TwoPi = 6.283185f;
+// XBE_GLOBAL(0x001ebc94, 4)
+static float TurnsPerRadian = 1.0f / 6.283185f;
+static_assert(std::bit_cast<uint32_t>(1.0f / 6.283185f) == 0x3e22f984, "TurnsPerRadian as the static initialiser made it");
 
 namespace {
 
@@ -387,10 +406,10 @@ void RCameraIniLoader::LoadFile() {
             // copies no further
             int8_t heights[kMaxEllipseHeights];
             int count = 0;
-            char *token = Crt_strtok(const_cast<char *>(ini->ReadString(section, "heights", "2.0")), " ,");
+            char *token = strtok(const_cast<char *>(ini->ReadString(section, "heights", "2.0")), " ,");
             while (token != NULL) {
                 heights[count] = int8_t(Ftol(Crt_atof(token) * 2.0));
-                token = Crt_strtok(NULL, " ,");
+                token = strtok(NULL, " ,");
                 if (++count >= kMaxEllipseHeights)
                     break;
             }

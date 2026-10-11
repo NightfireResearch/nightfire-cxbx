@@ -348,24 +348,27 @@ void HookRemove(Hook *h) {
 }
 
 // Util_GaussRandom's kept number: f[100] the generator state, f[101] the kept value, f[102] its flag; after the
-// call the same words hold the state after.
-#define GaussSpareValue FLOAT_AT(0x00239a60)
-#define GaussSpareFlag U8_AT(0x00239a64)
+// call the same words hold the state after. The port's is GaussRandomSpare (PhysicsUtil.h), the original's its copy.
+#define OrigGaussRandomSpare (*(GaussSpare *)0x00239a60)
+
+GaussSpare &SideGaussSpare(bool original) {
+    return original ? OrigGaussRandomSpare : GaussRandomSpare;
+}
 
 void RandomState(Work *w) {
     w->f[100] = Bits(Next());
     w->f[101] = Next() % 3 == 0 ? AnyFloat() : Uniform(-3, 3);
     w->f[102] = Bits(Next() % 3 == 0 ? 1u : 0u);
 }
-void SetRandom(const Work *w) {
+void SetRandom(const Work *w, bool original) {
     g_rand = U(w->f[100]);
-    GaussSpareValue = w->f[101];
-    GaussSpareFlag = uint8_t(U(w->f[102]));
+    SideGaussSpare(original).value = w->f[101];
+    SideGaussSpare(original).available = uint8_t(U(w->f[102]));
 }
-void TakeRandom(Work *w) {
+void TakeRandom(Work *w, bool original) {
     w->f[100] = Bits(g_rand);
-    w->f[101] = GaussSpareValue;
-    w->f[102] = Bits(GaussSpareFlag);
+    w->f[101] = SideGaussSpare(original).value;
+    w->f[102] = Bits(SideGaussSpare(original).available);
 }
 
 // ---- the register-argument region fit: the original and our adapter called the same way. Answers 0 when EBX,
@@ -459,28 +462,28 @@ void GenRandomState(Work *w, int style) {
 }
 
 void BodyGauss(Work *w, bool original) {
-    SetRandom(w);
+    SetRandom(w, original);
     DoubleVoid gauss = original ? Original<DoubleVoid>(0x000bd130) : Util_GaussRandom;
     double first = gauss();
     double second = gauss();
     memcpy(&w->f[110], &first, 8);
     w->ret = D(second);
-    TakeRandom(w);
+    TakeRandom(w, original);
 }
 
 void BodyPerturbRandom(Work *w, bool original) {
-    SetRandom(w);
+    SetRandom(w, original);
     Coord3 *out = reinterpret_cast<Coord3 *>(&w->f[8]);
     const Coord4 *d = reinterpret_cast<const Coord4 *>(&w->f[4]);
     w->ret = Offset((original ? Original<PerturbRandomFn>(0x000bd250) : (PerturbRandomFn)Util_PerturbVector)(out, d, w->f[0]),
                     w);
-    TakeRandom(w);
+    TakeRandom(w, original);
 }
 
 void BodyApplyVariance(Work *w, bool original) {
-    SetRandom(w);
+    SetRandom(w, original);
     w->ret = D((original ? Original<DoubleFF>(0x000bd450) : Util_ApplyVariance)(w->f[0], w->f[1]));
-    TakeRandom(w);
+    TakeRandom(w, original);
 }
 
 void BodyPerturbAngles(Work *w, bool original) {
@@ -1004,8 +1007,7 @@ void GeomShadow_Run(void) {
     unsigned int x87, sse;
     FpControlGet(&x87, &sse);
     printf("[geomshadow] x87 control word %04x, MXCSR %08x\n", x87, sse);
-    float spareValue = GaussSpareValue;
-    uint8_t spareFlag = GaussSpareFlag;
+    GaussSpare spare = GaussRandomSpare, origSpare = OrigGaussRandomSpare;
     const int N = 4000;
 
     Test("Util_Step", N, GenScalars, BodyStep);
@@ -1029,8 +1031,8 @@ void GeomShadow_Run(void) {
     } else {
         Detail("could not jump the C runtime's rand to the fake: Util_GaussRandom and its callers not tested");
     }
-    GaussSpareValue = spareValue;
-    GaussSpareFlag = spareFlag;
+    GaussRandomSpare = spare;
+    OrigGaussRandomSpare = origSpare;
 
     Test("OBB::OBB()", 16, GenBoxInputs, BodyObbConstruct);
     Test("OBB::OBB(matrix, position, extents)", N, GenBoxInputs, BodyObbConstructFrom);

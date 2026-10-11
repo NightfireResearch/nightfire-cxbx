@@ -22,14 +22,14 @@
 // EAGL's render methods (docs/driving/eagl.md 2.8, 2.9, 3.3, 4.6). A RenderMethod is a packet stream - a header
 // dword (opcode << 16 | length in dwords) and operands, ended by a zero header - plus its shader variants.
 // RenderMethod::Draw runs the stream over a GeoPrim: it keeps the method, the GeoPrim's parameter cursor and the
-// packet cursor in three globals (Interp, at 0x002401bc) and calls each packet's handler through the opcode table
-// at 0x001ce700. The table is left as it is (it points at the originals' addresses, which jump to the handlers
+// packet cursor in three globals (Interp) and calls each packet's handler through the game's opcode table at
+// 0x001ce700. The table is left as it is (it points at the originals' addresses, which jump to the handlers
 // here), so a handler stays patchable. Handlers take no arguments; most read one 8-byte parameter for the current
 // variation (parameter.data + packet.variationStride * CurrentVariation) and step the parameter cursor.
 //
 // Every D3D8 call goes to the seam (../gfx/D3D8.h), with the original's convention: stdcall, except
 // SetVertexShaderConstant1/4 (ECX register, EDX data) and NotInline (the same plus the dword count on the stack). The direct writes into D3D8's state are the stream source and shader caches EAGL keeps
-// itself (Cache, 0x00240470..0x00240508); this module writes none of D3D8's own tables.
+// itself (Cache); this module writes none of D3D8's own tables.
 //
 // The originals call EAGL::Device::Get (0x000e8a40, "mov eax, [0x0023fb60]; ret") before and after most D3D calls
 // and throw the result away; those calls have no effect and are left out. Where an original tail-jumps to it, it
@@ -37,8 +37,8 @@
 // constructor throwing) are left out too.
 //
 // The opcode handlers 15, 25 and 26 flush the CPU cache (WBINVD) when a vertex buffer was registered since the last
-// draw (0x00240814); XboxStartup.cpp NOPs those instructions in the originals, and they are left out here - the
-// flag is still cleared.
+// draw (ResourceRegistered); XboxStartup.cpp NOPs those instructions in the originals, and they are left out here -
+// the flag is still cleared.
 // ---------------------------------------------------------------------------------------------------------------
 
 #ifdef _MSC_VER
@@ -48,64 +48,93 @@
 
 using namespace EAGL;
 
+// ---- the interpreter's globals (RenderMethod.h, EaglGlobals.h)
+
+// XBE_GLOBAL(0x002401bc, 0x18)
+InterpreterState Interp;
+// XBE_GLOBAL(0x00240470, 0x98)
+DeviceCache Cache;
+// XBE_GLOBAL(0x00240804, 4)
+static const SkinVertex *SkinSource;                            // opcode 31's skinning records
+// XBE_GLOBAL(0x00240808, 4)
+static int32_t SkinCount;                                   //   and their count
+// XBE_GLOBAL(0x00240830, 0xc00)
+alignas(16) static float PaletteScratch[48 * 16];           // the matrix palette scratch, 16 floats a matrix
+// XBE_GLOBAL(0x0023ff20, 4)
+RenderMethod *ConstructedMethods;
+// XBE_GLOBAL(0x0023ff24, 4)
+RenderMethod *WaitingMethods;
+// XBE_GLOBAL(0x00240814, 1)
+uint8_t ResourceRegistered;
+
 namespace {
 
-// ---- the interpreter's globals
-
-// The interpreter's state, at 0x002401bc: Draw's method and cursors, and opcode 2's stream description
-struct InterpreterState {
-    RenderMethod *method;            // +0x00 the render method running
-    GeoPrimParam *param;             // +0x04 the parameter cursor
-    Packet *packet;                  // +0x08 the packet cursor
-    uint32_t streamVertexCount;      // +0x0c the current stream (opcode 2): vertex count
-    uint32_t streamNoCopy;           // +0x10   nonzero: opcode 11 does not copy the vertices
-    uint32_t streamUser;             // +0x14   nonzero: opcode 11 draws from the caller's memory
-};
-static_assert(sizeof(InterpreterState) == 0x18, "the interpreter's globals run to 0x002401d4");
-
-// What EAGL last sent D3D8, at 0x00240470: the wrappers skip a call that would send the same again
-struct DeviceCache {
-    uint32_t primitiveType;          // +0x00 opcode 16's, for the draws
-    uint32_t pixelShader;            // +0x04 the handles in use
-    uint32_t vertexShader;           // +0x08
-    uint32_t unknown0c;              // +0x0c
-    D3DResource *streams[16];        // +0x10 the stream sources
-    uint32_t strides[16];            // +0x50 their strides
-    const uint16_t *indexData;       // +0x90 opcode 14's index data
-    uint32_t indexBase;              // +0x94
-};
-static_assert(offsetof(DeviceCache, streams) == 0x10, "the stream sources are at 0x00240480");
-static_assert(offsetof(DeviceCache, strides) == 0x50, "the strides are at 0x002404c0");
-static_assert(offsetof(DeviceCache, indexData) == 0x90, "the index data is at 0x00240500");
-static_assert(sizeof(DeviceCache) == 0x98, "the device cache runs to 0x00240508");
-
-#define Interp (*(InterpreterState *)0x002401bc)
-#define Cache (*(DeviceCache *)0x00240470)
-#define SkinSource (*(const EAGL::SkinVertex **)0x00240804)   // opcode 31's skinning records
-#define SkinCount I32_AT(0x00240808)                        //   and their count
-#define PaletteScratch ((float *)0x00240830)                // the matrix palette scratch, 16 floats a matrix
 #define D3DPushBufferCursor (*(const uint16_t **)0x00175420)   // D3D8's push-buffer pointer
 
-// The handlers, called by opcode
+// The handlers, called by opcode: the game's table, which points at the originals' entries
 typedef void (*OpcodeHandler)();
+// XBE_GLOBAL(0x001ce700, 0x94)
 #define OpcodeTable ((const OpcodeHandler *)0x001ce700)
 
-// The original's allocation names, passed by address as it does (the allocator hook is given the pointer; the
-// shader objects' are EaglGlobals.h's)
-#define NamePCode ((const char *)0x001cda70)     // "EAGL::RenderMethod(RenderMethod &parent) allocating PCode block"
-#define NameVSArray ((const char *)0x001cdb00)   // "EAGL::VertexShader *"
-#define NamePSArray ((const char *)0x001cdb18)   // "EAGL::PixelShader *"
-#define NameUserVar ((const char *)0x001ce3a0)   // "mUserVarData"
-#define NameVBNew ((const char *)0x001ce798)     // "EAGL::VertexBuffer new"
-#define NameD3DVB ((const char *)0x001ce7b0)     // "IDirect3DVertexBuffer8"
+// DrawGouraud's and DrawTextured's shaders
+// XBE_GLOBAL(0x001ce218, 0x10)
+const uint32_t GouraudVSDeclaration[4] = {
+    0x20000000, 0x40320000, 0x40400003, 0xffffffff,
+};
 
-// DrawGouraud's and DrawTextured's shaders, in the original's data
-#define GouraudVSDeclaration ((const void *)0x001ce218)
-#define GouraudVSFunction ((const void *)0x001ce228)
-#define GouraudPSDefinition ((const void *)0x001ce2b0)
-#define TexturedVSDeclaration ((const void *)0x001ce078)
-#define TexturedVSFunction ((const void *)0x001ce090)
-#define TexturedPSDefinition ((const void *)0x001ce128)
+// XBE_GLOBAL(0x001ce228, 0x88)
+const uint32_t GouraudVSFunction[34] = {
+    0x00082078, 0x00000000, 0x00ec001b, 0x0836186c, 0x20708800, 0x00000000,
+    0x00ec201b, 0x0836186c, 0x20704800, 0x00000000, 0x00ec401b, 0x0836186c,
+    0x20702800, 0x00000000, 0x00ec601b, 0x0836186c, 0x20701800, 0x00000000,
+    0x0020061b, 0x0836106c, 0x2070f818, 0x00000000, 0x002000ff, 0xc436106c,
+    0x20708828, 0x00000000, 0x0647401b, 0xc4361bff, 0x1078e800, 0x00000000,
+    0x0087601b, 0xc400286c, 0x3070e801, 0x00000000,
+};
+
+// XBE_GLOBAL(0x001ce2b0, 0xf0)
+const uint32_t GouraudPSDefinition[60] = {
+    0xd4301010, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x000000c0, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xc4200000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x000000c0, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00011101,
+    0x00000000, 0x00000000, 0x00000000, 0xffffffff, 0xffffffff, 0x000001ff,
+};
+
+// XBE_GLOBAL(0x001ce078, 0x18)
+const uint32_t TexturedVSDeclaration[6] = {
+    0x20000000, 0x40320000, 0x40400003, 0x40220009, 0xffffffff, 0x00000000,
+};
+
+// XBE_GLOBAL(0x001ce090, 0x98)
+const uint32_t TexturedVSFunction[38] = {
+    0x00092078, 0x00000000, 0x00ec001b, 0x0836186c, 0x20708800, 0x00000000,
+    0x00ec201b, 0x0836186c, 0x20704800, 0x00000000, 0x00ec401b, 0x0836186c,
+    0x20702800, 0x00000000, 0x00ec601b, 0x0836186c, 0x20701800, 0x00000000,
+    0x0020121b, 0x0836106c, 0x2070f848, 0x00000000, 0x0020061b, 0x0836106c,
+    0x2070f818, 0x00000000, 0x002000ff, 0xc436106c, 0x20708828, 0x00000000,
+    0x0647401b, 0xc4361bff, 0x1078e800, 0x00000000, 0x0087601b, 0xc400286c,
+    0x3070e801, 0x00000000,
+};
+
+// XBE_GLOBAL(0x001ce128, 0xf0)
+const uint32_t TexturedPSDefinition[60] = {
+    0xd4d81010, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x000000c0, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xc4c80000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x000000c0, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00011101,
+    0x00000001, 0x00000000, 0x00000000, 0xffffffff, 0xffffffff, 0x000001ff,
+};
 
 // An opcode-11 packet's slots while it has no buffer: all bits set
 template <class T> T *Unset() {
@@ -234,7 +263,8 @@ void EAGL_CopyParentPackets(EAGL::RenderMethod *method) {
     } while (length != 0);
     uint32_t bytes = n * 4 + 4;
     uint32_t block = bytes + 4;
-    uint32_t *memory = static_cast<uint32_t *>(EaglMalloc(block, NamePCode));
+    uint32_t *memory = static_cast<uint32_t *>(
+        EaglMalloc(block, "EAGL::RenderMethod(RenderMethod &parent) allocating PCode block"));
     method->packets = reinterpret_cast<Packet *>(memory);
     memory[0] = block;
     method->packets = reinterpret_cast<Packet *>(memory + 1);
@@ -319,13 +349,13 @@ void EAGL::RenderMethod::Nop1040(uint32_t) {
 // FUNC_AT(0x000f1050)
 void EAGL::RenderMethod::CreateShaders() {
     int half = variantHalf == 0 ? 1 : 0;
-    vertexShaders = static_cast<VertexShader **>(EaglMalloc(numVariants << 2, NameVSArray));
-    pixelShaders = static_cast<PixelShader **>(EaglMalloc(numVariants * 4, NamePSArray));
+    vertexShaders = static_cast<VertexShader **>(EaglMalloc(numVariants << 2, "EAGL::VertexShader *"));
+    pixelShaders = static_cast<PixelShader **>(EaglMalloc(numVariants * 4, "EAGL::PixelShader *"));
     for (int i = 0; i < numVariants; i++) {
-        VertexShader *vs = static_cast<VertexShader *>(EaglMalloc(4, NameVertexShaderNew));
+        VertexShader *vs = static_cast<VertexShader *>(EaglMalloc(4, "EAGL::VertexShader new"));
         vs = vs != NULL ? vs->Construct(declaration, vsMicrocode[i]) : NULL;
         vertexShaders[i] = vs;
-        PixelShader *ps = static_cast<PixelShader *>(EaglMalloc(4, NamePixelShaderNew));
+        PixelShader *ps = static_cast<PixelShader *>(EaglMalloc(4, "EAGL::PixelShader new"));
         ps = ps != NULL ? ps->Construct(psDefinitions[i] + half * 4) : NULL;
         pixelShaders[i] = ps;
     }
@@ -613,7 +643,7 @@ bool EAGL::DrawArray::SetGeoPrim(GeoPrim *prim) {
     paramCount = 0;
     while (geoPrim->method->paramNames[paramCount] != NULL)
         paramCount++;
-    userVars = static_cast<UserVar *>(EaglMalloc(paramCount << 3, NameUserVar));
+    userVars = static_cast<UserVar *>(EaglMalloc(paramCount << 3, "mUserVarData"));
     if (userVars == NULL)
         return false;
     for (int i = 0; i < paramCount; i++) {
@@ -776,10 +806,10 @@ bool EAGL::DrawArray::Draw(int count) {
 EAGL::DrawGouraud* EAGL::DrawGouraud::Construct() {
     primitiveType = 1;
     state.Construct();
-    VertexShader *vs = static_cast<VertexShader *>(EaglMalloc(4, NameVertexShaderNew));
+    VertexShader *vs = static_cast<VertexShader *>(EaglMalloc(4, "EAGL::VertexShader new"));
     vs = vs != NULL ? vs->Construct(GouraudVSDeclaration, GouraudVSFunction) : NULL;
     vertexShader = vs;
-    PixelShader *ps = static_cast<PixelShader *>(EaglMalloc(4, NamePixelShaderNew));
+    PixelShader *ps = static_cast<PixelShader *>(EaglMalloc(4, "EAGL::PixelShader new"));
     ps = ps != NULL ? ps->Construct(GouraudPSDefinition) : NULL;
     pixelShader = ps;
     return this;
@@ -818,10 +848,10 @@ bool EAGL::DrawTextured::Init() {
     state.SetShading(1);
     state.SetAlphaBlendMode(0);
     state.SetCullEnable(false);
-    VertexShader *vs = static_cast<VertexShader *>(EaglMalloc(4, NameVertexShaderNew));
+    VertexShader *vs = static_cast<VertexShader *>(EaglMalloc(4, "EAGL::VertexShader new"));
     vs = vs != NULL ? vs->Construct(TexturedVSDeclaration, TexturedVSFunction) : NULL;
     vertexShader = vs;
-    PixelShader *ps = static_cast<PixelShader *>(EaglMalloc(4, NamePixelShaderNew));
+    PixelShader *ps = static_cast<PixelShader *>(EaglMalloc(4, "EAGL::PixelShader new"));
     ps = ps != NULL ? ps->Construct(TexturedPSDefinition) : NULL;
     pixelShader = ps;
     tar = NULL;
@@ -1266,12 +1296,12 @@ void EAGL_RMOp_DynamicStream() {
             EaglFree(buffer, sizeof(DynamicVertexBuffer));
         }
         if (Interp.streamUser != 0) {
-            slot = EaglMalloc(sizeof(DynamicVertexBuffer), NameVBNew);
+            slot = EaglMalloc(sizeof(DynamicVertexBuffer), "EAGL::VertexBuffer new");
             buffer = slot != NULL
                 ? static_cast<DynamicVertexBuffer *>(slot)->ConstructUser(Interp.param->data, bytes * 4, stride)
                 : NULL;
         } else {
-            slot = EaglMalloc(sizeof(DynamicVertexBuffer), NameVBNew);
+            slot = EaglMalloc(sizeof(DynamicVertexBuffer), "EAGL::VertexBuffer new");
             buffer = slot != NULL ? static_cast<DynamicVertexBuffer *>(slot)->Construct(bytes * 4, stride) : NULL;
         }
         packet->buffer = buffer;
@@ -1326,7 +1356,7 @@ EAGL::StaticVertexBuffer* EAGL::StaticVertexBuffer::ConstructUser(uint32_t size_
     stride = stride_;
     user = 1;
     unknown10 = 0;
-    buffer = static_cast<D3DResource *>(EaglMalloc(sizeof(D3DResource), NameD3DVB));
+    buffer = static_cast<D3DResource *>(EaglMalloc(sizeof(D3DResource), "IDirect3DVertexBuffer8"));
     return this;
 }
 

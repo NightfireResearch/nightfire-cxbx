@@ -36,3 +36,7 @@ public:
     static void Shutdown();
     static void RunEvents();
 };
+
+// The queue's two points (EventManager.cpp), for the devtools that look at the queue.
+extern char *gCreationPoint;
+extern char *gDeletionPoint;

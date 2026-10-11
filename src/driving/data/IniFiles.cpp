@@ -7,16 +7,16 @@
 #include "../engine/UFileLoader.h"
 #include "../engine/UMemory.hpp"
 #include "../../helpers.h"
-#include "../platform/RealMemory.h"
+#include "../platform/RealMemory.h"   // MemDefaultClass
+#include "../logging.h"               // dbg_wprintf, our printf
 
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
 #define IniFilesVtable ((const void *const *)0x001a0998)
-#define MemDefaultClass U32_AT(0x00242cdc)   // the MEM_ allocation flags in force
 
-#define Printf ((int (__cdecl *)(const char *, ...))0x00132192)
+// The C runtime's, the game's: its float parsing, and atol wraps rather than saturates.
 #define Atof ((double (__cdecl *)(const char *))0x00133e84)
 #define Atol ((long (__cdecl *)(const char *))0x00133d51)
 
@@ -52,7 +52,7 @@ IniFiles* IniFiles::Construct(const char *path, bool encrypted) {
         text = (char *)MEM_alloc("INIFile buffer", UFileLoader::FileSize(path), flags);
         size = UFileLoader::FileLoadAt(path, text, kEncryptedLoadLimit);
         for (int i = 0; i < 1000; i++)
-            Printf("DO NOT USE INI FILE ENCYRPTION\n");
+            dbg_wprintf("DO NOT USE INI FILE ENCYRPTION\n");
         EncryptDecrypt((const uint8_t *)text, size, (uint8_t *)text, kIniKey);
     } else {
         text = (char *)UFileLoader::FileLoad(path, kLoadFlags);

@@ -2,24 +2,33 @@
 
 #include "CoreFoundation.h"
 #include "UMemory.hpp"
+#include "ActionQueue.hpp"                // FillQueuePointers
 #include "../physics/RigidBodyBasics.h"   // PointerVectorDeallocate
+#include "../world/CollisionQueries.h"     // PointerUninitializedCopy
+#include "../world/CollisionTypes.h"       // PointerVector
 #include "../../helpers.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // USingleton and USingletonManager, ported from the listings (0x0003d5f0, 0x0007d780, 0x0011b7a0-0x0011b820,
 // 0x0011bb50, and the static instance's functions at 0x00059c30-0x00059d20), with the manager's vector.
 //
-// The vector's growth calls the STL's own helpers - the uninitialised copies and fills, copy_backward - at their
-// addresses, and the deallocation (PointerVectorDeallocate), in the original's order with its arguments. The original's catch block (free
-// the new storage, rethrow) has nothing to catch here: copying pointers cannot throw.
+// The vector's growth calls the STL's own helpers - the uninitialised copies and fills, copy_backward - and the
+// deallocation (PointerVectorDeallocate), in the original's order with its arguments: the game's one copy for
+// every vector of pointers (the linker folded them together), at their addresses where they are not ours yet.
+// The original's catch block (free the new storage, rethrow) has nothing to catch here: copying pointers cannot
+// throw.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define Vector_UninitializedCopy ((USingleton **(*)(USingleton **, USingleton **, USingleton **, SingletonVector *, uint32_t))0x000bfeb0)
 #define Vector_UninitializedFillN ((void (*)(USingleton **, uint32_t, USingleton *const *, SingletonVector *, uint32_t))0x000b2ec0)
-#define Vector_Ucopy ((USingleton **(__fastcall *)(SingletonVector *, int, USingleton **, USingleton **, USingleton **))0x000c1230)
-#define Vector_Ufill ((void (__fastcall *)(SingletonVector *, int, USingleton **, uint32_t, USingleton *const *))0x000c1290)
 #define Vector_CopyBackward ((void (*)(USingleton ***, USingleton **, USingleton **, USingleton **))0x000b2e40)
-#define Vector_Fill ((void (*)(USingleton **, USingleton **, USingleton *const *))0x0004f3e0)
+
+static USingleton **Vector_UninitializedCopy(USingleton **first, USingleton **last, USingleton **dest) {
+    return (USingleton **)PointerUninitializedCopy((void *const *)first, (void *const *)last, (void **)dest);
+}
+
+static void Vector_Fill(USingleton **first, USingleton **last, USingleton *const *value) {
+    FillQueuePointers((ActionQueue **)first, (ActionQueue **)last, (ActionQueue *const *)value);
+}
 
 // The C runtime's atexit, the game's (its table holds the destructor's address).
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
@@ -27,7 +36,8 @@
 // (StaticInit.cpp's DestroyStatic_001e47c0), passed at its original address as the original passes it.
 #define SingletonManager_AtExit ((void (*)(void))0x0015ce10)
 
-#define TheSingletonManager (*(USingletonManager *)0x001e47c0)
+// XBE_GLOBAL(0x001e47c0, 0x10)
+USingletonManager TheSingletonManager;
 #define SingletonManagerMade U32_AT(0x001e47d0)
 
 static const USingletonVtable *const kSingletonVtable = (const USingletonVtable *)0x0018beb0;
@@ -70,9 +80,9 @@ void SingletonVector::InsertN(USingleton **where, uint32_t count, USingleton *co
             grown = size + count;
         uint32_t bytes = grown * sizeof(USingleton *);
         USingleton **storage = static_cast<USingleton **>(UMemory::FastAlloc(bytes, "STL"));
-        USingleton **at = Vector_UninitializedCopy(first, where, storage, this, count);
+        USingleton **at = Vector_UninitializedCopy(first, where, storage);
         Vector_UninitializedFillN(at, count, &copy, this, count);
-        Vector_UninitializedCopy(where, last, at + count, this, count);
+        Vector_UninitializedCopy(where, last, at + count);
         uint32_t newSize = count + (first != NULL ? uint32_t(last - first) : 0);
         if (first != NULL)
             PointerVectorDeallocate(first, uint32_t(end - first));
@@ -82,14 +92,16 @@ void SingletonVector::InsertN(USingleton **where, uint32_t count, USingleton *co
     } else if (uint32_t(last - where) < count) {
         // Room enough: push_back never comes here (it only inserts when the vector is full).
         CORE_UNTESTED("SingletonVector::InsertN in the middle");
-        Vector_Ucopy(this, 0, where, last, where + count);
-        Vector_Ufill(this, 0, last, count - uint32_t(last - where), &copy);
+        PointerVector *pointers = reinterpret_cast<PointerVector *>(this);
+        pointers->Ucopy((void *const *)where, (void *const *)last, (void **)(where + count));
+        pointers->Ufill((void **)last, count - uint32_t(last - where), (void *const *)&copy);
         last += count;
         Vector_Fill(where, last - count, &copy);
     } else {
         CORE_UNTESTED("SingletonVector::InsertN in the middle");
         USingleton **oldLast = last;
-        last = Vector_Ucopy(this, 0, oldLast - count, oldLast, oldLast);
+        last = (USingleton **)reinterpret_cast<PointerVector *>(this)->Ucopy(
+            (void *const *)(oldLast - count), (void *const *)oldLast, (void **)oldLast);
         USingleton **ignored;
         Vector_CopyBackward(&ignored, where, oldLast - count, oldLast);
         Vector_Fill(where, where + count, &copy);

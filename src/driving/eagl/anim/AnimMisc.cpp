@@ -28,7 +28,9 @@
 
 namespace {
 
+// XBE_GLOBAL(0x00241a58, 0x10)
 #define ScratchQuat ((float *)0x00241a58)            // the lerps' first quaternion: ScratchQuat[4]
+// XBE_GLOBAL(0x00241a68, 0xc)
 #define ScratchTrans ((float *)0x00241a68)           // the translation lerp's first vector: ScratchTrans[3]
 
 // The original's .rdata constants (0x001a1228, 0x0018a138; 180, 1 and 0 are exact; kPhaseScale: AnimMisc.h)

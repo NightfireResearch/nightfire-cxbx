@@ -52,15 +52,6 @@
 
 namespace {
 
-// ---- the driver's globals (Platform.cpp, sound.md 2.6)
-typedef void (*FrameCallback)(void);
-#define IsRunning U8_AT(0x00244c3c)                    // SNDDRV_isRunning
-#define KeepRunning U8_AT(0x00244c3d)                  // SNDDRV_shouldContinueRunning
-#define PreFrameCallback (*(FrameCallback volatile *)0x00244fb8)    // SNDDRVPreFrameCb
-#define PostFrameCallback (*(FrameCallback volatile *)0x00244fbc)   // SNDDRVPostFrameCb
-#define SysTaskAdded U32_AT(0x00244c30)                // systaskadded: SNDREAL_systemtask is a SYNCTASK
-#define RealTimerTicks (*(volatile int *)0x00242428u)  // what TIMER_gettick answers otherwise
-
 // SNDREAL_systemtask by the original's address, as SYNCTASK holds it
 #define SystemTask ((int (*)(int, int))0x0013d3e0)
 
@@ -215,13 +206,13 @@ template <class F> void WithBuffer(const IDirectSoundBuffer *buffer, F change) {
 void RunDriverStep() {
     SNDI_mutexlock();
     AdvancePlayback();
-    FrameCallback pre = PreFrameCallback;
+    SndFrameCallback pre = PreFrameCallback;
     if (pre != NULL)
         pre();
     SNDSYSI_100hzserver();
     dsndMixProcess();
     SNDPKTPLAYI_flushcallbackdata();
-    FrameCallback post = PostFrameCallback;
+    SndFrameCallback post = PostFrameCallback;
     if (post != NULL)
         post();
     SNDI_mutexunlock();
@@ -275,7 +266,7 @@ void SndLockstep_Tick(void) {
     if (!SndLockstep_Enabled())
         return;
 
-    int realTick = RealTimerTicks;
+    int realTick = SomeTicks;
     int virtualTick = g_ticking ? SndLockstep_TimerTick(realTick) + 1 : realTick;
     g_realAtTick = realTick;
     g_virtualTick = virtualTick;

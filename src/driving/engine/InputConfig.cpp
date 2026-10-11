@@ -23,19 +23,25 @@
 #define Launch (*(LaunchPage *)0x00243b90)
 #define TuningLevel ((const char *)0x00244084)   // the track the tuning databases are read for
 
-#define gInputConfigManager (*(InputConfigManager *)0x001e455c)
-#define gInputConfigManagerMade U32_AT(0x001e458c)
+// XBE_GLOBAL(0x001e455c, 0x30)
+InputConfigManager gInputConfigManager;
+// XBE_GLOBAL(0x001e458c, 0x4)
+uint32_t gInputConfigManagerMade;
 
 // The names the .def files use, built by static initialisers: the actions (over the table at 0x001b6ba0) and the
-// update methods (0x001b6fd0); and the front end's slot names, ButtonA .. TITLE.
-#define gActionNames (*(StringToNumber *)0x001e23e0)
-#define gUpdateMethodNames (*(StringToNumber *)0x001e4590)
-#define kFrontEndSlotNames ((StringToNumberEntry *)0x001b6f58)
+// update methods (0x001b6fd0); and the front end's slot names.
+// XBE_GLOBAL(0x001e23e0, 0x10)
+StringToNumber gActionNames;
+// XBE_GLOBAL(0x001e4590, 0x10)
+StringToNumber gUpdateMethodNames;
+// XBE_GLOBAL(0x001b6f58, 0x78)
+static StringToNumberEntry kFrontEndSlotNames[15] = {
+    {0, "ButtonA"}, {1, "ButtonB"}, {2, "ButtonY"}, {3, "ButtonX"}, {4, "DPadLeftRight"}, {5, "DPadUpDown"},
+    {6, "ButtonLThumb"}, {7, "ButtonLTrigger"}, {8, "ButtonBlack"}, {9, "ButtonRThumb"}, {10, "ButtonRTrigger"},
+    {11, "ButtonWhite"}, {12, "DESCRIPTION"}, {13, "TITLE"}, {0, NULL},
+};
 
-// The C runtime's, the game's: strtok keeps its place between calls, _stricmp and sscanf follow the game's locale,
-// and atol wraps rather than saturates.
-#define Crt_strtok ((char *(*)(char *, const char *))0x0013282a)
-#define Crt_stricmp ((int (*)(const char *, const char *))0x00134537)
+// The C runtime's, the game's: sscanf parses floats, and atol wraps rather than saturates.
 #define Crt_atol ((long (*)(const char *))0x00133d51)
 #define Crt_sscanf ((int (*)(const char *, const char *, ...))0x00133234)
 
@@ -182,15 +188,15 @@ void InputToAction::LoadParseDefFile(char *text) {
     for (;;) {
         AdvanceFilePtr(&text);
         CopyLine(line, text);
-        char *actionName = Crt_strtok(line, kSeparators);
-        if (Crt_stricmp(actionName, "FRONTEND") == 0 || Crt_stricmp(actionName, "END") == 0)
+        char *actionName = strtok(line, kSeparators);
+        if (_stricmp(actionName, "FRONTEND") == 0 || _stricmp(actionName, "END") == 0)
             return;
-        char *scalarName = Crt_strtok(nullptr, kSeparators);
+        char *scalarName = strtok(nullptr, kSeparators);
         int action = getActionID(actionName);
         int scalar = scalarLookup->ConvertStringToNumber(scalarName);
 
         int method = UPDATE_ON_CHANGE;
-        if (char *methodName = Crt_strtok(nullptr, kSeparators)) {
+        if (char *methodName = strtok(nullptr, kSeparators)) {
             int named = gUpdateMethodNames.ConvertStringToNumber(methodName);
             if (named != -1)
                 method = named;
@@ -198,7 +204,7 @@ void InputToAction::LoadParseDefFile(char *text) {
         float threshold = 0.0f;
         if (method >= UPDATE_ABOVE && method <= UPDATE_BELOW)
             threshold = 0.5f;
-        if (char *thresholdText = Crt_strtok(nullptr, kSeparators))
+        if (char *thresholdText = strtok(nullptr, kSeparators))
             Crt_sscanf(thresholdText, "%f", &threshold);
 
         InputTable *table = &tables[scalar];
@@ -254,15 +260,15 @@ void InputConfigManager::ParseMasterConfigFile(char *text) {
     int type = kInputNoType;
     int named[2] = {0, 0};
     CopyLine(line, text);
-    char *token = Crt_strtok(line, kSeparators);
-    while (Crt_stricmp(token, "END") != 0) {
-        if (Crt_stricmp(token, "Driving") == 0) {
+    char *token = strtok(line, kSeparators);
+    while (_stricmp(token, "END") != 0) {
+        if (_stricmp(token, "Driving") == 0) {
             type = kInputDriving;
-            numConfigs[kInputDriving] = Crt_atol(Crt_strtok(nullptr, kSeparators));
+            numConfigs[kInputDriving] = Crt_atol(strtok(nullptr, kSeparators));
             configs[kInputDriving] = NewConfigs(numConfigs[kInputDriving]);
-        } else if (Crt_stricmp(token, "POV") == 0) {
+        } else if (_stricmp(token, "POV") == 0) {
             type = kInputPOV;
-            numConfigs[kInputPOV] = Crt_atol(Crt_strtok(nullptr, kSeparators));
+            numConfigs[kInputPOV] = Crt_atol(strtok(nullptr, kSeparators));
             configs[kInputPOV] = NewConfigs(numConfigs[kInputPOV]);
         } else {
             strcpy(configs[type][named[type]].name, token);
@@ -270,7 +276,7 @@ void InputConfigManager::ParseMasterConfigFile(char *text) {
         }
         AdvanceFilePtr(&text);
         CopyLine(line, text);
-        token = Crt_strtok(line, kSeparators);
+        token = strtok(line, kSeparators);
     }
 }
 
@@ -281,18 +287,18 @@ void InputConfigManager::ParseDefFileForFrontEnd(InputConfig *config, char *text
     bool seekingFrontEnd = true;
     AdvanceFilePtr(&text);
     CopyLine(line, text);
-    char *token = Crt_strtok(line, kSeparators);
-    while (Crt_stricmp(token, "END") != 0) {
+    char *token = strtok(line, kSeparators);
+    while (_stricmp(token, "END") != 0) {
         if (seekingFrontEnd) {
-            if (Crt_stricmp(token, "FRONTEND") == 0)
+            if (_stricmp(token, "FRONTEND") == 0)
                 seekingFrontEnd = false;
         } else {
             int slot = frontEndSlots->ConvertStringToNumber(token);
-            config->localeIDs[slot] = Crt_atol(Crt_strtok(nullptr, kSeparators));
+            config->localeIDs[slot] = Crt_atol(strtok(nullptr, kSeparators));
         }
         AdvanceFilePtr(&text);
         CopyLine(line, text);
-        token = Crt_strtok(line, kSeparators);
+        token = strtok(line, kSeparators);
     }
 }
 
@@ -413,7 +419,7 @@ int InputConfigManager::GetLocaleID(int type, int config, int slot) {
     int id = configs[type][config].localeIDs[slot];
     switch (id) {
     case 0x590:
-        if (Crt_stricmp(TuningLevel, "snow1a_mis3") != 0)
+        if (_stricmp(TuningLevel, "snow1a_mis3") != 0)
             id = 0xaa1;
         break;
     case 0xa94:
@@ -422,14 +428,14 @@ int InputConfigManager::GetLocaleID(int type, int config, int slot) {
         break;
     case 0xa98:
     case 0xa99:
-        if (Crt_stricmp(TuningLevel, "paris_mis01") == 0 && type != kInputDriving)
+        if (_stricmp(TuningLevel, "paris_mis01") == 0 && type != kInputDriving)
             id = 0xaa1;
         break;
     case 0xa9f:
         id = 0xaa1;
         break;
     case 0xaa3:
-        if (Crt_stricmp(TuningLevel, "paris_mis01") == 0 && type != kInputDriving)
+        if (_stricmp(TuningLevel, "paris_mis01") == 0 && type != kInputDriving)
             id = config == 6 || config == 7 ? 0x6ad : 0xaa1;
         break;
     }

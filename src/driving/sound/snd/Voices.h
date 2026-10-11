@@ -182,6 +182,10 @@ static_assert(sizeof(Attributes) == 0x68, "the stream attributes are 0x68 bytes"
 
 }  // namespace SND
 
+extern int16_t AllocScratch[6];                 // SNDVOICEI_alloc's chosen voices
+extern int32_t HandleGeneration;                // the handle generation, += 0x100 per allocation
+extern uint8_t SpeakerGains[256][6];            // [azimuth / 256][speaker]: SNDI_precalcaztospkrvol's table
+
 // The control API: handle in, the voice index (or a negative error) out
 int SNDplaysetdef(SND::PlayOpts *opts);                                      // 0x0013c5c0
 int SNDstop(int handle);                                                     // 0x0013c900

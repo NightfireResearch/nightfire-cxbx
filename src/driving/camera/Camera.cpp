@@ -1,6 +1,7 @@
 #pragma fp_contract(off)
 
 #include "Camera.h"
+#include "../render/RenderHigh.h"   // AspectScale
 
 #include <bit>
 #include <stddef.h>
@@ -29,15 +30,19 @@ using EAGL::ViewPort;
 #define ResolutionStamp I32_AT(0x001f2d78)              // changes with the screen's resolution (names ours)
 #define ViewWidth I32_AT(0x001f2d7c)                    // the screen's size in pixels
 #define ViewHeight I32_AT(0x001f2d80)
-#define AspectScale FLOAT_AT(0x001c47a0)                // scales the aspect ratio (RRenderHigh::RearrangeSplitScreens's)
 #define SimCars (*(GameVector<PVehicle *> *)0x00234e3c)   // the Simulation's cars, the player's first
 #define SimStepCount I32_AT(0x00234e34)
 // ApplyPerspectiveFunction's sway (names ours): on, and the period in steps and amplitude of each part
-#define PerspectiveSway BOOL8_AT(0x001c47b8)            // 1
-#define FovSwayPeriod I32_AT(0x001c47b4)                // 500
-#define FovSwayAmplitude FLOAT_AT(0x001c47b0)           // 0.95 degrees
-#define AspectSwayPeriod I32_AT(0x001c47ac)             // 720
-#define AspectSwayAmplitude FLOAT_AT(0x001c47a8)        // 0.05
+// XBE_GLOBAL(0x001c47b8, 1)
+bool PerspectiveSway = true;
+// XBE_GLOBAL(0x001c47b4, 4)
+static int32_t FovSwayPeriod = 500;
+// XBE_GLOBAL(0x001c47b0, 4)
+static float FovSwayAmplitude = 0.95f;          // degrees
+// XBE_GLOBAL(0x001c47ac, 4)
+static int32_t AspectSwayPeriod = 720;
+// XBE_GLOBAL(0x001c47a8, 4)
+static float AspectSwayAmplitude = 0.05f;
 
 namespace {
 

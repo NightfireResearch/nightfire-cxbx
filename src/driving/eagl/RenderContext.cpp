@@ -46,15 +46,29 @@ using EAGL::RenderContextExtension;
 using EAGL::RenderMethod;
 using EAGL::SurfaceTexture;
 
-// ---- globals
+// ---- globals (D3DDevicePointer and the TARs' overrides are EaglGlobals.h's)
 
-#define RenderTargetTexture PTR_AT(0x0023ff1c)
-#define GammaRamp (*(D3DGammaRamp *)0x0023fc08)       // what GetGammaRamp read at start-up
-#define SavedDither U8_AT(0x0023ff10)                 // EndFrame puts it in the specular-enable slot
-#define SavedFog U8_AT(0x0023ff11)
-#define CurrentPixelShader U32_AT(0x00240474)
-#define CurrentVertexShader U32_AT(0x00240478)
-#define D3DTextureNames ((const char (*)[12])0x001cb964)   // six copies of "D3DTexture", one per call site
+// XBE_GLOBAL(0x0023ff18, 4)
+void *D3DDevicePointer;
+// XBE_GLOBAL(0x0023ff0c, 4)
+float LodBiasOverride;
+// XBE_GLOBAL(0x001cb938, 4)
+uint32_t FilterOverride = 0xffffffff;
+
+// What the extension last sent (D3D8State.h): nothing yet, but Z writes enabled
+// XBE_GLOBAL(0x001cb93c, 0x28)
+ExtensionShadows Shadows = {
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 1, {}, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+};
+
+// XBE_GLOBAL(0x0023ff1c, 4)
+static D3DPixelContainer *RenderTargetTexture;              // nothing writes it
+// XBE_GLOBAL(0x0023fc08, 0x300)
+static D3DGammaRamp GammaRamp;                              // what GetGammaRamp read at start-up
+// XBE_GLOBAL(0x0023ff10, 1)
+static uint8_t SavedDither;                                 // EndFrame puts it in the specular-enable slot
+// XBE_GLOBAL(0x0023ff11, 1)
+static uint8_t SavedFog;
 
 namespace {
 
@@ -68,10 +82,10 @@ uint32_t PresentationInterval(int swapInterval) {
 }
 
 // The texture header laid over a surface, as SetupFrameBuffers and the three buffer getters build it: allocated
-// under the given name (each site passes its own copy of "D3DTexture"), cleared, given the surface's size and
-// format (the depth surface's format mapped to its texture equivalent), and pointed at the surface's data.
-void BuildSurfaceTexture(SurfaceTexture **slot, D3DPixelContainer *surface, const char *name, bool depth) {
-    SurfaceTexture *texture = static_cast<SurfaceTexture *>(EaglMalloc(sizeof(SurfaceTexture), name));
+// as "D3DTexture", cleared, given the surface's size and format (the depth surface's format mapped to its texture
+// equivalent), and pointed at the surface's data.
+void BuildSurfaceTexture(SurfaceTexture **slot, D3DPixelContainer *surface, bool depth) {
+    SurfaceTexture *texture = static_cast<SurfaceTexture *>(EaglMalloc(sizeof(SurfaceTexture), "D3DTexture"));
     *slot = texture;
     texture->common = 0;
     texture->data = 0;
@@ -166,8 +180,8 @@ void* EAGL::RenderContext::EndFrame() {
         Shadows.colourWriteMask = 0xffffffff;
         D3DDevice_SetRenderState_YuvEnable(YuvEnable);
         ApplyCache.shading = 0xffffffff;
-        D3DDevice_SetPixelShader(CurrentPixelShader);
-        D3DDevice_SetVertexShader(CurrentVertexShader);
+        D3DDevice_SetPixelShader(Cache.pixelShader);
+        D3DDevice_SetVertexShader(Cache.vertexShader);
 
         SendState(0x4147c, kRsStippleEnable, 0);
         SendState(0x40384, kRsPolygonOffsetZSlopeScale, std::bit_cast<uint32_t>(ApplyCacheZSlopeScale));
@@ -461,15 +475,15 @@ uint32_t EAGL::RenderContext::SetupFrameBuffers() {
     D3DDevice_SetTile(1, &tileCopy);
 
     if (frontAlias == NULL)
-        BuildSurfaceTexture(&frontAlias, frontBuffer, D3DTextureNames[0], false);
+        BuildSurfaceTexture(&frontAlias, frontBuffer, false);
     if (frontTar == NULL)
         frontTar = EAGL_TARFromSurface(frontAlias);
     if (backAlias == NULL)
-        BuildSurfaceTexture(&backAlias, backBuffer, D3DTextureNames[1], false);
+        BuildSurfaceTexture(&backAlias, backBuffer, false);
     if (backTar == NULL)
         backTar = EAGL_TARFromSurface(backAlias);
     if (depthAlias == NULL)
-        BuildSurfaceTexture(&depthAlias, depthSurface, D3DTextureNames[2], true);
+        BuildSurfaceTexture(&depthAlias, depthSurface, true);
     if (depthTar == NULL)
         depthTar = EAGL_TARFromSurface(depthAlias);
     return 1;
@@ -1205,7 +1219,7 @@ EAGL::TAR* EAGL::RenderContextExtension::CopyBackBuffer() {
 // FUNC_AT(0x000e8270)
 EAGL::TAR* EAGL::RenderContextExtension::GetFrontBuffer() {
     if (context->frontAlias == NULL)
-        BuildSurfaceTexture(&context->frontAlias, context->frontBuffer, D3DTextureNames[3], false);
+        BuildSurfaceTexture(&context->frontAlias, context->frontBuffer, false);
     if (context->frontTar == NULL)
         context->frontTar = EAGL_TARFromSurface(context->frontAlias);
     return context->frontTar;
@@ -1214,7 +1228,7 @@ EAGL::TAR* EAGL::RenderContextExtension::GetFrontBuffer() {
 // FUNC_AT(0x000e8350)
 EAGL::TAR* EAGL::RenderContextExtension::GetBackBuffer() {
     if (context->backAlias == NULL)
-        BuildSurfaceTexture(&context->backAlias, context->backBuffer, D3DTextureNames[4], false);
+        BuildSurfaceTexture(&context->backAlias, context->backBuffer, false);
     if (context->backTar == NULL)
         context->backTar = EAGL_TARFromSurface(context->backAlias);
     return context->backTar;
@@ -1223,7 +1237,7 @@ EAGL::TAR* EAGL::RenderContextExtension::GetBackBuffer() {
 // FUNC_AT(0x000e8430)
 EAGL::TAR* EAGL::RenderContextExtension::GetDepthBuffer() {
     if (context->depthAlias == NULL)
-        BuildSurfaceTexture(&context->depthAlias, context->depthSurface, D3DTextureNames[5], true);
+        BuildSurfaceTexture(&context->depthAlias, context->depthSurface, true);
     if (context->depthTar == NULL)
         context->depthTar = EAGL_TARFromSurface(context->depthAlias);
     return context->depthTar;

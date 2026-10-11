@@ -31,6 +31,16 @@ public:
 // The other noise table, 257 floats of the C runtime's rand() in [-1, 1) (0x0005cb50, once).
 void noise_init();
 
+// The noise's state: noise_init's table and its flag, Init's gradients and permutation, and the generator the
+// gradients are drawn from (a state, a multiplier, a count Init clears)
+extern float NoiseTable[257];
+extern int32_t NoiseTableMade;
+extern float NoiseGradient[267];
+extern int16_t NoisePermutation[0x1000];
+extern uint32_t NoiseRandomState;
+extern uint32_t NoiseRandomMultiplier;
+extern uint32_t NoiseRandomCount;
+
 // Six words: each becomes the bits of `other`'s that it did not have (0x0005cd00, Explosion::Simulate's). The
 // stray function linked after the noise.
 struct BitSet192 {

@@ -38,7 +38,9 @@ using SND::SFilterNode;
 using SND::ReverbTap;
 
 // The description tables in the original's .rdata, read where they are: an unknown node type reads past the ten
+// XBE_GLOBAL(0x001d9e88, 0x28)
 #define NodeSizes ((const uint32_t *)0x001d9e88)       // [type] bytes per node
+// XBE_GLOBAL(0x001da498, 0x28)
 #define EntrySizes ((const uint32_t *)0x001da498)      // [type] bytes per node entry
 #define RouteTable ((const uint8_t *)0x001d9e85)       // [(channels + configuration x 6) x 6 + route]: the routing slot
 #define MixRows ((const int8_t (*)[6])0x001d9f88)      // per configuration and channel: the other speakers fed, or -1

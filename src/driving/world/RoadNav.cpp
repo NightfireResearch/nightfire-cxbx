@@ -2,6 +2,7 @@
 
 #include "RoadNav.h"
 #include "Grid.h"
+#include "../camera/Camera.h"           // AsCoord3
 #include "../camera/CameraSpline.h"
 #include "../engine/SimRandom.h"
 #include "../engine/UMemory.hpp"
@@ -25,10 +26,6 @@
 #define RoadIntersections (fgRoadNetworkData.intersections)
 
 #define SimulationRandom (*(SimRandom **)0x00233ff0)   // the Simulation's first word
-
-// Two of WRoadNetwork's queries, called at their addresses where the point is a Coord4 (the ports take Coord3s)
-#define WRoadNetwork_GetLinePointIntersect ((double (__fastcall *)(WRoadNetwork *, int, const void *, const void *, const void *, void *, bool))0x000c9000)
-#define WRoadNetwork_GetSegmentPointIntersect ((double (__fastcall *)(WRoadNetwork *, int, WRoadSegment *, const void *, void *, bool))0x000c9f70)
 
 #define Sprintf ((int (__cdecl *)(char *, const char *, ...))0x00132767)
 
@@ -205,7 +202,7 @@ int WRoadNav::FindClosestSegmentInd(const Coord4 *point, Coord3 *closest, float 
             continue;
         }
         Coord3 onRoad;
-        float roadT = float(WRoadNetwork_GetSegmentPointIntersect(RoadNetwork, 0, road, point, &onRoad, true));
+        float roadT = float(RoadNetwork->GetSegmentPointIntersect(road, AsCoord3(point), &onRoad, true));
         if (road->flags & kSegmentCurved)
             RoadNetwork->GetPointOnSegment(road, roadT, &onRoad);
         float distance = vec3distance(point, &onRoad);
@@ -337,7 +334,7 @@ void WRoadNav::InitAtPoint(const Coord3 *point, const Coord3 *heading, bool noLa
 
     SetCurve(this, road, laneOffset);
     Coord4 onCurve;
-    t = float(WRoadNetwork_GetLinePointIntersect(RoadNetwork, 0, &boundStart, &boundEnd, &at, &onCurve, true));
+    t = float(RoadNetwork->GetLinePointIntersect(&boundStart, &boundEnd, AsCoord3(&at), AsCoord3(&onCurve), true));
     if (road->flags & kSegmentCurved)
         BuildSpline(this);
     PlaceOnCurve(this, road);

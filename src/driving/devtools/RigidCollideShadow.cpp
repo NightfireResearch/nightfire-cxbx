@@ -3,6 +3,7 @@
 #endif
 
 #include "RigidCollideShadow.h"
+#include "RigidOrigGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -469,6 +470,7 @@ void RunSide(bool original, Outcome *out) {
     OwnersSwap(true);
     uint32_t answer = 0;
     if (original) {
+        LendRigidGlobals();     // the originals read the game's copies
         for (unsigned at : kEntries)
             XbeOriginal_Restore(at, true);
         out->ok = Guarded([&] { answer = RunOriginal(); });

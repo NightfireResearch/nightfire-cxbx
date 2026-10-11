@@ -3,6 +3,7 @@
 #endif
 
 #include "CamDataShadow.h"
+#include "OrigConstants.h"
 
 #include "../camera/CameraIniLoader.h"
 #include "../camera/CameraSpline.h"
@@ -14,6 +15,7 @@
 #include "../eagl/RenderMethod.h"
 #include "../engine/UFileLoader.h"
 #include "../engine/UMemory.hpp"
+#include "../game/BondCar.h"            // OverrideCarType
 #include "../physics/RigidBody.h"
 #include "../../common/xbeOriginal.h"
 #include "../../common/xbeOverload.h"
@@ -575,7 +577,8 @@ const char *__fastcall FakeGetSecondaryType(void *, int) {
     return g_carSecondary;
 }
 
-#define ShadowOverrideCarType (*(const char **)0x001e7a8c)
+// The original's copy of the port's OverrideCarType
+#define OrigOverrideCarType (*(const char **)0x001e7a8c)
 
 // The player's car's vtable pointer
 void **&PlayerCarVtable() {
@@ -585,7 +588,7 @@ void **&PlayerCarVtable() {
 
 struct FakeCar {
     void **saved;
-    const char *savedOverride;
+    const char *savedOverride, *savedOrigOverride;
     void *vtable[128];
     explicit FakeCar(const char *override) {
         saved = PlayerCarVtable();
@@ -594,12 +597,14 @@ struct FakeCar {
         vtable[0x48 / 4] = reinterpret_cast<void *>(&FakeGetCarClass);
         vtable[0x144 / 4] = reinterpret_cast<void *>(&FakeGetSecondaryType);
         PlayerCarVtable() = vtable;
-        savedOverride = ShadowOverrideCarType;
-        ShadowOverrideCarType = override;
+        savedOverride = OverrideCarType;
+        savedOrigOverride = OrigOverrideCarType;
+        OverrideCarType = OrigOverrideCarType = override;
     }
     ~FakeCar() {
         PlayerCarVtable() = saved;
-        ShadowOverrideCarType = savedOverride;
+        OverrideCarType = savedOverride;
+        OrigOverrideCarType = savedOrigOverride;
     }
 };
 
@@ -738,13 +743,19 @@ void Take(std::vector<uint8_t> *out, const T *table, int count) {
         out->insert(out->end(), reinterpret_cast<const uint8_t *>(table), reinterpret_cast<const uint8_t *>(table + count));
 }
 
-void Snapshot(LoadedTables *out) {
+// The originals' copies of the port's fgCameraConstants, kExplosionShakePeriod and kAutoDriveLatency
+#define OrigCameraConstants (*(CameraConstants *)0x001c3e40)
+#define OrigExplosionShakePeriod (*(int32_t *)0x001ebca4)
+#define OrigAutoDriveLatency (*(int32_t *)0x001ebc88)
+
+// The side's LoadFile wrote the original's copies of the globals or ours
+void Snapshot(LoadedTables *out, bool original) {
     CameraTables &t = fgCameraTables;
     out->tables = t;
     out->indices = fgCameraModeIndices;
-    out->constants = fgCameraConstants;
-    out->shakePeriod = kExplosionShakePeriod;
-    out->latency = kAutoDriveLatency;
+    out->constants = original ? OrigCameraConstants : fgCameraConstants;
+    out->shakePeriod = original ? OrigExplosionShakePeriod : kExplosionShakePeriod;
+    out->latency = original ? OrigAutoDriveLatency : kAutoDriveLatency;
     Take(&out->modes, t.modes, t.modeCount + 1);
     Take(&out->bumpers, t.bumpers, t.bumperCount);
     for (int i = 0; i < t.heliCount; i++) {
@@ -809,9 +820,6 @@ void CompareTable(const char *what, int index, const std::vector<uint8_t> &a, co
             return;
 }
 
-#define ShadowArchiveName ((char *)0x002431d8)
-#define ShadowArchiveOpen (*(uint8_t *)0x002434da)
-#define ShadowArchiveLogRequests (*(uint8_t *)0x002434e0)
 
 void LoadFileCases(Rng &rng) {
     typedef void (*LoadFn)();
@@ -849,6 +857,8 @@ void LoadFileCases(Rng &rng) {
     CameraModeIndices liveIndices = fgCameraModeIndices;
     CameraConstants liveConstants = fgCameraConstants;
     int32_t liveShake = kExplosionShakePeriod, liveLatency = kAutoDriveLatency;
+    CameraConstants origConstants = OrigCameraConstants;
+    int32_t origShake = OrigExplosionShakePeriod, origLatency = OrigAutoDriveLatency;
     PVehicle *car = *(*reinterpret_cast<PVehicle ***>(uintptr_t(0x00234e40)));
     const char *realType = car->GetCarType();
     int realClass = car->GetCarClass();
@@ -864,16 +874,16 @@ void LoadFileCases(Rng &rng) {
             g_carClass = int(rng.Below(2));
             g_carSecondary = rng.Chance(40) ? RandomCarName(rng) : NULL;
         }
-        const char *override = i > 0 && rng.Chance(25) ? RandomCarName(rng) : ShadowOverrideCarType;
+        const char *override = i > 0 && rng.Chance(25) ? RandomCarName(rng) : OverrideCarType;
         LoadedTables loaded[2];
         bool ok = true;
         for (int side = 0; side < 2 && ok; side++) {
             fgCameraTables = liveTables;
             fgCameraTables.modes = NULL;
             fgCameraModeIndices = liveIndices;
-            fgCameraConstants = liveConstants;
-            kExplosionShakePeriod = liveShake;
-            kAutoDriveLatency = liveLatency;
+            fgCameraConstants = OrigCameraConstants = liveConstants;
+            kExplosionShakePeriod = OrigExplosionShakePeriod = liveShake;
+            kAutoDriveLatency = OrigAutoDriveLatency = liveLatency;
             FakeCar fake(override);
             auto op = [&]() { At<LoadFn>(0x00078770)(); };
             if (!RunSide(side == 0, kIniRange, &op)) {
@@ -881,7 +891,7 @@ void LoadFileCases(Rng &rng) {
                 ok = false;
                 break;
             }
-            Snapshot(&loaded[side]);
+            Snapshot(&loaded[side], side == 0);
             FreeLoaded();
         }
         if (!ok)
@@ -924,6 +934,9 @@ void LoadFileCases(Rng &rng) {
     fgCameraConstants = liveConstants;
     kExplosionShakePeriod = liveShake;
     kAutoDriveLatency = liveLatency;
+    OrigCameraConstants = origConstants;
+    OrigExplosionShakePeriod = origShake;
+    OrigAutoDriveLatency = origLatency;
 }
 
 // ---- recording fakes for the camera's and the HUD's methods
@@ -1612,22 +1625,23 @@ void CamDataShadow_Run(void) {
     if (on == NULL || atoi(on) == 0)
         return;
     Rng rng = { 0x5eed1234 };
+    FillOrigCameraConstants();
     MathCases(rng);
     SplineCases(rng);
     StrayCases(rng);
 
     // camera.ini is in the mission archive, closed before the main loop: opened again for these, closed after
     bool reopened = false;
-    uint8_t logRequests = ShadowArchiveLogRequests;
-    if (ShadowArchiveOpen == 0 && ShadowArchiveName[0] != 0) {
+    uint8_t logRequests = LogRequests;
+    if (BigFileOpen == 0 && BigFileName[0] != 0) {
         char name[256];
-        strcpy(name, ShadowArchiveName);
+        strcpy(name, BigFileName);
         reopened = UFileLoader::StartUsingBigFile("driving", name, false);
     }
     LoadFileCases(rng);
     if (reopened)
         UFileLoader::StopUsingBigFile();
-    ShadowArchiveLogRequests = logRequests;
+    LogRequests = logRequests;
     SmallIniCases(rng);
 
     InstallFakes();

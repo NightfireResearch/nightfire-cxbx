@@ -4,9 +4,11 @@
 #include "RenderFxShadow.h"
 #include "FpControl.h"
 
+#include "../eagl/D3D8State.h"            // Shadows
 #include "../eagl/EaglGlobals.h"          // D3DDevicePointer
 #include "../eagl/RenderContext.h"
 #include "../eagl/View.h"
+#include "../engine/PhysicsUtil.h"      // GaussRandomSpare
 #include "../engine/UMemory.hpp"
 #include "../physics/PhysicsObject.h"
 #include "../render/Lightning.h"
@@ -121,17 +123,21 @@ const uint32_t kRand = 0x00133ee0;                  // the C runtime's rand
 #define FxSimTimeStep FLOAT_AT(0x00234e30)
 #define FxSimStepCount I32_AT(0x00234e34)
 #define FxSimStepsPerSecond I32_AT(0x00234e2c)
-#define FxGaussSpare ((uint8_t *)0x00239a60)       // the kept number and its flag, 8 bytes
 #define FxPlayerPhysics (*(PhysicsObject **)PTR_AT(0x00234e40))
 #define FxGlareManager (*(RGlareManager **)0x00208cb4)
-#define FxWindowState ((uint8_t *)0x00201850)      // the windows' texture, arrays, count and guard
-const uint32_t kWindowStateBytes = 0x00202a74 - 0x00201850;
-#define FxWindowCount I32_AT(0x00202860)
-#define FxDebrisState ((uint8_t *)0x001c59e0)      // the debris vectors and their scaled copies
+// The originals' copies of the window batch (the port's are SkyWater.h's WindowTexture ... WindowColoursCleared)
+#define OrigWindowTexture (*(EAGL::TAR **)0x00201850)
+#define OrigWindowUVs ((Coord4 *)0x00201860)
+#define OrigWindowPositions ((Coord4 *)0x00202060)
+#define OrigWindowVertexCount (*(int32_t *)0x00202860)
+#define OrigWindowColours ((uint32_t *)0x00202870)
+#define OrigWindowColoursCleared (*(uint32_t *)0x00202a70)
+// The debris vectors and their scaled copies, among them the originals' copies of DebrisVectorsA and DebrisScaleA
+#define FxDebrisState ((uint8_t *)0x001c59e0)
 const uint32_t kDebrisStateBytes = 0x001c6bb0 - 0x001c59e0;
-#define FxDebrisScaleA FLOAT_AT(0x001c5b84)
-#define FxDebrisCountB I32_AT(0x001c8e44)
-#define FxShadowZWrites (*(uint8_t *)0x001cb94c)   // RenderContextExtension's shadow of the Z-write state
+#define OrigDebrisVectorsA ((Coord4 *)0x001c59e0)
+#define OrigDebrisScaleA (*(float *)0x001c5b84)
+#define OrigDebrisCountB (*(int32_t *)0x001c8e44)
 
 // The draw-request rings (the renderer core's): the slot fields the drawing code fills
 struct FxRequest {
@@ -298,7 +304,7 @@ void SetRandomState(const RandomState &s) {
     FxRandomSeed = s.seed;
     FxRandomMultiplier = s.multiplier;
     g_rand = s.rand;
-    memcpy(FxGaussSpare, s.gauss, sizeof(s.gauss));
+    memcpy(&GaussRandomSpare, s.gauss, sizeof(s.gauss));   // the port's on both sides: Util_GaussRandom is not swapped
     FxSimStepCount = s.step;
     FxSimTimeStep = s.timeStep;
     FxSimStepsPerSecond = s.perSecond;
@@ -308,7 +314,7 @@ void GetRandomState(RandomState *s) {
     s->seed = FxRandomSeed;
     s->multiplier = FxRandomMultiplier;
     s->rand = g_rand;
-    memcpy(s->gauss, FxGaussSpare, sizeof(s->gauss));
+    memcpy(s->gauss, &GaussRandomSpare, sizeof(s->gauss));
     s->step = FxSimStepCount;
     s->timeStep = FxSimTimeStep;
     s->perSecond = FxSimStepsPerSecond;
@@ -807,9 +813,48 @@ void RunQuads(void *context, bool original) {
         CallQuadEntry(NULL, NULL, NULL, NULL, 0, NULL, 1);
 }
 
+// The window batch, from the port's globals or the original's copies
+struct WindowBatch {
+    EAGL::TAR *texture;
+    Coord4 uvs[kWindowVertices];
+    Coord4 positions[kWindowVertices];
+    int32_t count;
+    uint32_t colours[kWindowVertices];
+    uint32_t coloursCleared;
+};
+
+void TakeWindows(WindowBatch *w, bool original) {
+    memset(w, 0, sizeof(*w));
+    w->texture = original ? OrigWindowTexture : WindowTexture;
+    memcpy(w->uvs, original ? OrigWindowUVs : WindowUVs, sizeof(w->uvs));
+    memcpy(w->positions, original ? OrigWindowPositions : WindowPositions, sizeof(w->positions));
+    w->count = original ? OrigWindowVertexCount : WindowVertexCount;
+    memcpy(w->colours, original ? OrigWindowColours : WindowColours, sizeof(w->colours));
+    w->coloursCleared = original ? OrigWindowColoursCleared : WindowColoursCleared;
+}
+
+void PutWindows(const WindowBatch *w, bool original) {
+    if (original) {
+        OrigWindowTexture = w->texture;
+        memcpy(OrigWindowUVs, w->uvs, sizeof(w->uvs));
+        memcpy(OrigWindowPositions, w->positions, sizeof(w->positions));
+        OrigWindowVertexCount = w->count;
+        memcpy(OrigWindowColours, w->colours, sizeof(w->colours));
+        OrigWindowColoursCleared = w->coloursCleared;
+    } else {
+        WindowTexture = w->texture;
+        memcpy(WindowUVs, w->uvs, sizeof(w->uvs));
+        memcpy(WindowPositions, w->positions, sizeof(w->positions));
+        WindowVertexCount = w->count;
+        memcpy(WindowColours, w->colours, sizeof(w->colours));
+        WindowColoursCleared = w->coloursCleared;
+    }
+}
+
 void TestWindowQuads() {
-    static uint8_t saved[kWindowStateBytes], after[2][kWindowStateBytes];
-    memcpy(saved, FxWindowState, kWindowStateBytes);
+    static WindowBatch saved, savedOriginal, start, after[2];
+    TakeWindows(&saved, false);
+    TakeWindows(&savedOriginal, true);
     Log logs[2] = {};
     for (int c = 0; c < 60; c++) {
         QuadRun run;
@@ -823,24 +868,25 @@ void TestWindowQuads() {
         int fill = Range(0, 0x78);
         run.quads = g_canDrawTextured ? Range(0, 30) : Range(0, (0x78 - fill) / 6 + 1);
         run.flush = g_canDrawTextured ? int(Next() % 2) : 0;
-        uint32_t guard = Next() % 2;
+        start = saved;
+        start.count = fill;
+        start.coloursCleared = Next() % 2;
         for (int side = 0; side < 2; side++) {
-            memcpy(FxWindowState, saved, kWindowStateBytes);
-            FxWindowCount = fill;
-            U32_AT(0x00202a70) = guard;
+            PutWindows(&start, side == 0);
             logs[side].size = 0;
             g_drawLog = &logs[side];
             Guarded(RunQuads, &run, side == 0);
             g_drawLog = NULL;
-            memcpy(after[side], FxWindowState, kWindowStateBytes);
+            TakeWindows(&after[side], side == 0);
         }
         g_cases++;
-        CheckBytes("window batch", c, after[0], after[1], kWindowStateBytes);
+        CheckBytes("window batch", c, &after[0], &after[1], sizeof(WindowBatch));
         CheckU32("window draws", c, uint32_t(logs[0].size), uint32_t(logs[1].size));
         if (logs[0].size == logs[1].size && logs[0].size != 0)
             CheckBytes("window draw log", c, logs[0].data, logs[1].data, logs[0].size);
     }
-    memcpy(FxWindowState, saved, kWindowStateBytes);
+    PutWindows(&saved, false);
+    PutWindows(&savedOriginal, true);
     free(logs[0].data);
     free(logs[1].data);
 }
@@ -945,19 +991,25 @@ void RunDebris(void *context, bool original) {
 
 void TestDebris() {
     static uint8_t saved[kDebrisStateBytes], start[kDebrisStateBytes], after[2][kDebrisStateBytes];
-    uint8_t savedOther[8];
     memcpy(saved, FxDebrisState, kDebrisStateBytes);
-    memcpy(savedOther, &FxDebrisCountB, 4);
+    float savedScale = DebrisScaleA;
+    int32_t savedCount = DebrisCountB, savedOrigCount = OrigDebrisCountB;
     for (int c = 0; c < 12; c++) {
         memcpy(FxDebrisState, saved, kDebrisStateBytes);
+        DebrisScaleA = savedScale;
+        DebrisCountB = savedCount;
         if (c > 0) {
             float *vectors = reinterpret_cast<float *>(FxDebrisState);
             for (uint32_t i = 0; i < kDebrisStateBytes / 4; i++)
                 if (Next() % 3 == 0)
                     vectors[i] = Uniform(-10.0f, 10.0f);
-            FxDebrisScaleA = Uniform(-2.0f, 2.0f);
-            FxDebrisCountB = Range(0, 30);
+            DebrisScaleA = Uniform(-2.0f, 2.0f);
+            DebrisCountB = Range(0, 30);
         }
+        // the original reads its copies of what the port reads (the port's DebrisVectorsA is constant)
+        memcpy(OrigDebrisVectorsA, DebrisVectorsA, sizeof(DebrisVectorsA));
+        OrigDebrisScaleA = DebrisScaleA;
+        OrigDebrisCountB = DebrisCountB;
         memcpy(start, FxDebrisState, kDebrisStateBytes);
         for (int side = 0; side < 2; side++) {
             memcpy(FxDebrisState, start, kDebrisStateBytes);
@@ -968,7 +1020,9 @@ void TestDebris() {
         CheckBytes("debris tables", c, after[0], after[1], kDebrisStateBytes);
     }
     memcpy(FxDebrisState, saved, kDebrisStateBytes);
-    memcpy(&FxDebrisCountB, savedOther, 4);
+    DebrisScaleA = savedScale;
+    DebrisCountB = savedCount;
+    OrigDebrisCountB = savedOrigCount;
 }
 
 // ---- the shadow map
@@ -986,7 +1040,28 @@ void RunLookup(void *context, bool original) {
     run->enabled = original ? Orig_ProjectedShadowsEnabled() : RShadowMap::ProjectedShadowsEnabled();
 }
 
+// The original's copies of the port's shadow-map globals: its answers are mapped to the port's
+#define OrigProjectedShadows (*(bool *)0x001c5078)
+struct OwnedVariable {
+    uint32_t orig;
+    void *port;
+};
+const OwnedVariable kShadowVariables[] = {
+    {0x00201770, &ShadowFatnessConstants},
+    {0x001c5080, &ShadowPlaneConstants},
+    {0x001c5094, &ZeroOneTwoThree},
+};
+
+void *PortVariable(void *result) {
+    for (const OwnedVariable &v : kShadowVariables)
+        if (uint32_t(uintptr_t(result)) == v.orig)
+            return v.port;
+    return result;
+}
+
 void TestShadowLookup() {
+    bool savedOrigProjected = OrigProjectedShadows;
+    OrigProjectedShadows = ProjectedShadows;
     const char *names[] = {
         "GAME::ShadowFatnessConstants", "GAME::ShadowPlaneConstants", "GAME::ZeroOneTwoThree", "GAME::ShadowTexture",
         "GAME::ShadowMatrix", "GAME::ShadowMatri", "GAME::ShadowMatrixX", "GAME::", "", "game::ShadowTexture",
@@ -1003,10 +1078,12 @@ void TestShadowLookup() {
             Guarded(RunLookup, &runs[side], side == 0);
         }
         g_cases++;
-        CheckU32("shadow lookup", c, uint32_t(uintptr_t(runs[0].result)), uint32_t(uintptr_t(runs[1].result)));
+        CheckU32("shadow lookup", c, uint32_t(uintptr_t(PortVariable(runs[0].result))),
+                 uint32_t(uintptr_t(runs[1].result)));
         CheckU32("shadow lookup found", c, runs[0].found, runs[1].found);
         CheckU32("projected shadows", c, runs[0].enabled, runs[1].enabled);
     }
+    OrigProjectedShadows = savedOrigProjected;
 }
 
 struct CameraRun {
@@ -1127,7 +1204,7 @@ void RenderFxShadow_Run(void) {
     void *savedDevice = D3DDevicePointer;
     EAGL::RenderContext *context = fgRenderer != NULL ? fgRenderer->renderContext : NULL;
     uint8_t zWrites = context != NULL ? context->zWritesEnable : 1;
-    uint8_t shadowZWrites = FxShadowZWrites;
+    uint8_t shadowZWrites = Shadows.zWritesEnable;
 
     if (FxPlayerPhysics != NULL)
         g_car = FxPlayerPhysics->renderObject;
@@ -1194,7 +1271,7 @@ void RenderFxShadow_Run(void) {
         XbeOriginal_Redirect(kTexturedDraw, texturedDraw);
     if (context != NULL)
         context->zWritesEnable = zWrites;
-    FxShadowZWrites = shadowZWrites;
+    Shadows.zWritesEnable = shadowZWrites;
     SetRandomState(saved);
     ResetFpu();
     printf("[renderfx] lightning, glare UVs, windows, debris, shadow map, ground normal vs originals: %d cases, %d checks, "

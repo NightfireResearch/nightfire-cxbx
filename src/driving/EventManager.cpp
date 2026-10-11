@@ -4,10 +4,14 @@
 
 // The event manager's state, all at file scope in the original (Ghidra's names). The two points are addresses in
 // the buffer: events live from the deletion point, which is the next to run, up to the creation point.
-#define gMemoryBuffer (*(char **)0x001e47d4)
-#define gCreationPoint (*(char **)0x001e47d8)
-#define gDeletionPoint (*(char **)0x001e47dc)
-#define fgCurrentEvent (*(Event **)0x001e47e0)   // the event running; written, never read by the game
+// XBE_GLOBAL(0x001e47d4, 0x4)
+static char *gMemoryBuffer;
+// XBE_GLOBAL(0x001e47d8, 0x4)
+char *gCreationPoint;
+// XBE_GLOBAL(0x001e47dc, 0x4)
+char *gDeletionPoint;
+// XBE_GLOBAL(0x001e47e0, 0x4)
+static Event *fgCurrentEvent;   // the event running; written, never read by the game
 
 static const unsigned int kBufferSize = 0x8000;
 

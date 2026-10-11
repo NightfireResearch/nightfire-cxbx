@@ -57,8 +57,15 @@ void OriginalWindow(bool original) {
 
 #define FontState (*(const GeoPrimState *)0x002400f8)       // EaglFont's state
 #define OpcodeSlot16 (*(void (**)())0x001ce740)               // the render-method opcode table's entry 16
-#define InterpParam (*(EAGL::GeoPrimParam **)0x002401c0)      // the interpreter's parameter cursor
-#define InterpPacket (*(const EAGL::ParamPacket **)0x002401c4)   // and its packet cursor
+
+// The originals' copies of what Apply reads and writes (the port's are ApplyCache, ApplyCacheZSlopeScale,
+// ApplyCacheZOffset, Shadows, StageTexture and CurrentRenderContext)
+#define OrigApplyCache (*(GeoPrimApplyCache *)0x001cd18c)
+#define OrigApplyCacheZSlopeScale (*(float *)0x00240150)
+#define OrigApplyCacheZOffset (*(float *)0x00240154)
+#define OrigShadows (*(ExtensionShadows *)0x001cb93c)
+#define OrigStageTexture ((D3DPixelContainer **)0x0023ff80)
+#define OrigCurrentRenderContext (*(EAGL::RenderContext **)0x0023fb64)
 
 const uint32_t kOpcode16 = 0x000f6320;
 const int kRenderStates = 128;
@@ -553,32 +560,89 @@ struct Snapshot {
     uint8_t renderContext[sizeof(EAGL::RenderContext)];
 };
 
-void Take(Snapshot *s) {
+// From the port's globals, or the originals' copies; D3D8's state and the render context's bytes are shared
+void Take(Snapshot *s, bool original = false) {
     memset(s, 0, sizeof(*s));
-    s->cache = ApplyCache;
-    s->zSlopeScale = ApplyCacheZSlopeScale;
-    s->zOffset = ApplyCacheZOffset;
-    s->shadows = Shadows;
-    memcpy(s->stageTextures, StageTexture, sizeof(s->stageTextures));
+    s->cache = original ? OrigApplyCache : ApplyCache;
+    s->zSlopeScale = original ? OrigApplyCacheZSlopeScale : ApplyCacheZSlopeScale;
+    s->zOffset = original ? OrigApplyCacheZOffset : ApplyCacheZOffset;
+    s->shadows = original ? OrigShadows : Shadows;
+    memcpy(s->stageTextures, original ? OrigStageTexture : StageTexture, sizeof(s->stageTextures));
     s->dirtyFlags = D3DDirtyFlags;
     memcpy(s->renderStates, D3DRenderState, sizeof(s->renderStates));
-    if (CurrentRenderContext != NULL)
-        memcpy(s->renderContext, CurrentRenderContext, sizeof(s->renderContext));
+    EAGL::RenderContext *context = original ? OrigCurrentRenderContext : CurrentRenderContext;
+    if (context != NULL)
+        memcpy(s->renderContext, context, sizeof(s->renderContext));
 }
 
-void Put(const Snapshot *s) {
-    ApplyCache = s->cache;
-    ApplyCacheZSlopeScale = s->zSlopeScale;
-    ApplyCacheZOffset = s->zOffset;
-    Shadows = s->shadows;
-    memcpy(StageTexture, s->stageTextures, sizeof(s->stageTextures));
+// Into the port's globals, or the originals' copies (pointed at the port's render context)
+void Put(const Snapshot *s, bool original = false) {
+    if (original) {
+        OrigApplyCache = s->cache;
+        OrigApplyCacheZSlopeScale = s->zSlopeScale;
+        OrigApplyCacheZOffset = s->zOffset;
+        OrigShadows = s->shadows;
+        memcpy(OrigStageTexture, s->stageTextures, sizeof(s->stageTextures));
+        OrigCurrentRenderContext = CurrentRenderContext;
+    } else {
+        ApplyCache = s->cache;
+        ApplyCacheZSlopeScale = s->zSlopeScale;
+        ApplyCacheZOffset = s->zOffset;
+        Shadows = s->shadows;
+        memcpy(StageTexture, s->stageTextures, sizeof(s->stageTextures));
+    }
     D3DDirtyFlags = s->dirtyFlags;
     memcpy(D3DRenderState, s->renderStates, sizeof(s->renderStates));
     if (CurrentRenderContext != NULL)
         memcpy(CurrentRenderContext, s->renderContext, sizeof(s->renderContext));
 }
 
+// The originals' copies as they were, put back after each test
+struct OriginalCopies {
+    GeoPrimApplyCache cache;
+    float zSlopeScale, zOffset;
+    ExtensionShadows shadows;
+    D3DPixelContainer *stageTextures[8];
+    EAGL::RenderContext *renderContext;
+};
+
+void TakeOriginalCopies(OriginalCopies *o) {
+    o->cache = OrigApplyCache;
+    o->zSlopeScale = OrigApplyCacheZSlopeScale;
+    o->zOffset = OrigApplyCacheZOffset;
+    o->shadows = OrigShadows;
+    memcpy(o->stageTextures, OrigStageTexture, sizeof(o->stageTextures));
+    o->renderContext = OrigCurrentRenderContext;
+}
+
+void PutOriginalCopies(const OriginalCopies *o) {
+    OrigApplyCache = o->cache;
+    OrigApplyCacheZSlopeScale = o->zSlopeScale;
+    OrigApplyCacheZOffset = o->zOffset;
+    OrigShadows = o->shadows;
+    memcpy(OrigStageTexture, o->stageTextures, sizeof(o->stageTextures));
+    OrigCurrentRenderContext = o->renderContext;
+}
+
+OriginalCopies g_originalCopies;
+
 Snapshot g_base, g_pre, g_afterOriginal, g_afterPort;
+
+// What the port's functions an original called (the render context's SetZWritesEnable, say) wrote in the port's
+// globals during its run: part of the original's result, carried into its snapshot byte by byte. g_pre holds the
+// port's globals from before the run.
+void CarryPortWrites(Snapshot *original) {
+    Snapshot ours;
+    Take(&ours);
+    const size_t owned = offsetof(Snapshot, dirtyFlags);   // the cache to the stage textures: two copies each
+    const uint8_t *before = reinterpret_cast<const uint8_t *>(&g_pre);
+    const uint8_t *after = reinterpret_cast<const uint8_t *>(&ours);
+    uint8_t *out = reinterpret_cast<uint8_t *>(original);
+    for (size_t i = 0; i < owned; i++)
+        if (after[i] != before[i])
+            out[i] = after[i];
+}
+
 Call g_originalCalls[kMaxCalls];
 int g_originalCallCount;
 
@@ -651,15 +715,18 @@ void RunApply(void *context, bool original) {
 
 ApplyCase g_apply[2];
 
-// One state applied by both sides from the state as it is now; the port's result is left in place
+// One state applied by both sides from the state as it is now (the port's globals, copied into the originals'
+// for the original); the port's result is left in place
 void ApplyBoth(const GeoPrimState *state, const char *what, int index) {
     g_cases++;
     g_apply[0].state = *state;
     g_apply[1].state = *state;
     Take(&g_pre);
+    Put(&g_pre, true);
     g_callCount = 0;
     bool ok = Guarded(RunApply, &g_apply[0], true);
-    Take(&g_afterOriginal);
+    Take(&g_afterOriginal, true);
+    CarryPortWrites(&g_afterOriginal);
     memcpy(g_originalCalls, g_calls, sizeof(g_calls));
     g_originalCallCount = g_callCount;
     Put(&g_pre);
@@ -767,6 +834,7 @@ void RandomStageTextures() {
 
 void TestApply() {
     const int kSequences = 96, kSteps = 24;
+    TakeOriginalCopies(&g_originalCopies);
     Take(&g_base);
     HooksInstall();
     for (int sequence = 0; sequence < kSequences; sequence++) {
@@ -792,6 +860,7 @@ void TestApply() {
     }
     HooksRemove();
     Put(&g_base);
+    PutOriginalCopies(&g_originalCopies);
 }
 
 // ---- the states the game draws with, collected at opcode 16
@@ -839,6 +908,7 @@ void Report(bool last) {
 void TestLive(const GeoPrimState *state) {
     int before = g_differ;
     int index = g_liveCount - 1;
+    TakeOriginalCopies(&g_originalCopies);
     Take(&g_base);
     HooksInstall();
     ApplyBoth(state, "live Apply (live cache)", index);
@@ -852,6 +922,7 @@ void TestLive(const GeoPrimState *state) {
     }
     HooksRemove();
     Put(&g_base);
+    PutOriginalCopies(&g_originalCopies);
     if (g_differ != before)
         g_liveDiffer++;
 }
@@ -866,7 +937,7 @@ void SetSlot16(void (*handler)()) {
 
 void CollectOpcode16() {
     const GeoPrimState *state = reinterpret_cast<const GeoPrimState *>(
-        InterpParam->data + InterpPacket->variationStride * CurrentVariation);
+        Interp.param->data + static_cast<const EAGL::ParamPacket *>(Interp.packet)->variationStride * CurrentVariation);
     if (g_collecting && Remember(state)) {
         TestLive(state);
         if (g_liveCount == kMaxLive) {

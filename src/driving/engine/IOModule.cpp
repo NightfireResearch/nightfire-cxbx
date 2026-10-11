@@ -8,34 +8,30 @@
 #include "InputDevice.hpp"
 #include "UMemory.hpp"
 #include "../platform/Pad.hpp"
+#include "../platform/RealSystem.h"
 
 // The IOModule static and its construction guard (bit 0), GetIOModule's function-local static.
-#define gIOModule ((IOModule *)0x001e45a0)
-#define gIOModuleGuard (*(uint32_t *)0x001e4644)
+// XBE_GLOBAL(0x001e45a0, 0xa4)
+static IOModule gIOModule;
+// XBE_GLOBAL(0x001e4644, 0x4)
+static uint32_t gIOModuleGuard;
 // The pad port input comes from: the launch page's controllerPort (GameLoop.h). Named glbIFeedback in Ghidra.
 #define glbActivePort (*(int *)0x00244520)
 // The simulation's step count, and how many steps must have run before the unplugged message is shown (2).
 #define SimStepCount (*(int *)0x00234e34)
-#define kUnplugMinSimSteps (*(const int *)0x001b7028)
+// XBE_GLOBAL(0x001b7028, 0x4)
+static const int kUnplugMinSimSteps = 2;
 
 // The game's own names for its allocations, as the original passes them.
 #define kXBoxPadDeviceTag ((const char *)0x0018da2c)
 #define kInputToActionTag ((const char *)0x0018da1c)
 
-// Called at their addresses, all __cdecl: the timer, the sync-task list and the CRT's atexit. The tasks are
-// named by the originals' addresses (patched to jump here), so adding and removing find the same entry
-// whichever side registered it.
-typedef int (__cdecl *IntFn)();
-typedef void (__cdecl *SyncTaskAddFn)(void *task, int interval, int delay);
-typedef void (__cdecl *SyncTaskDelFn)(void *task);
+// The CRT's atexit, called at its address. The sync tasks are named by the originals' addresses (patched to jump
+// here), so adding and removing find the same entry whichever side registered it.
 typedef int (__cdecl *AtexitFn)(void (__cdecl *fn)());
-#define TIMER_gettick ((IntFn)0x0010a6c0)
-#define TIMER_getfrequency ((IntFn)0x0010a6d0)
-#define SYNCTASK_add ((SyncTaskAddFn)0x0010aa50)
-#define SYNCTASK_del ((SyncTaskDelFn)0x0010abc0)
 #define CRT_atexit ((AtexitFn)0x00132a7b)
-#define kUpdateTask ((void *)0x000516d0)
-#define kPAD_updateTask ((void *)0x00108490)
+#define kUpdateTask (reinterpret_cast<SyncTaskFn>(0x000516d0))
+#define kPAD_updateTask (reinterpret_cast<SyncTaskFn>(0x00108490))
 #define kIOModuleAtexit ((void (__cdecl *)())0x0015ce00)   // IOModule's trivial destructor: a bare RET
 
 static const int kPorts = 4;
@@ -45,7 +41,7 @@ static const int kInputSync = 0x73;   // ACTION_INPUTSYNC, sent after every devi
 IOModule* IOModule::GetIOModule() {
     if (!(gIOModuleGuard & 1)) {
         gIOModuleGuard |= 1;
-        IOModule *io = gIOModule;
+        IOModule *io = &gIOModule;
         io->updatingEnabled = false;
         io->numControllers = 0;
         io->padStable = false;
@@ -56,7 +52,7 @@ IOModule* IOModule::GetIOModule() {
         io->unused98 = 0;
         CRT_atexit(kIOModuleAtexit);
     }
-    return gIOModule;
+    return &gIOModule;
 }
 
 // AUTOINJECT

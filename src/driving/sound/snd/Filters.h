@@ -133,6 +133,15 @@ static_assert(sizeof(SFilterXAPF) == 0x38, "SFilterXAPF");
 
 }  // namespace SND
 
+// The resampler kernel's scratch, written as the original writes it
+struct RsfKernelScratch {            // 0x50, every array 16-byte aligned
+    float lo[8];                     // +0x00 src[i]
+    float hi[4];                     // +0x20 src[i + 1]
+    uint32_t fraction[8];            // +0x30 the 31-bit fractions
+};
+static_assert(sizeof(RsfKernelScratch) == 0x50, "the kernel's scratch is 0x50 bytes");
+extern RsfKernelScratch KernelScratch;
+
 // The node list (MIX +0x40) and the connections
 SND::SFilterNode* SFILTER_add(int voice, uint32_t arg, const SND::SFilterDesc *desc);         // 0x00144a30
 SND::SFilterNode* SFILTER_addtofilterlist(SND::SFilterNode **head, SND::SFilterNode *node);   // 0x00144460

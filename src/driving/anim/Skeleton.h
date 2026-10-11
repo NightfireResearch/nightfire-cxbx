@@ -61,6 +61,8 @@ static_assert(sizeof(ActSkeletonDatabase) == 0x24, "an ActSkeletonDatabase is 0x
 
 // The skeletons' shared buffer of a matrix a bone, registered with EAGL as "EAGLAnimationBuffer" (the skin matrices
 // ActPoser::Skin makes)
-#define AnimationBuffer (*(MATRIX4 **)0x001dd9fc)
+extern MATRIX4 *AnimationBuffer;
+extern int32_t AnimationBufferBones;
+extern const char SkeletonFiles[ActSkeletonDatabase::kSkeletonCount][0x5a];
 
 #endif // DRIVING_ANIM_SKELETON_H_

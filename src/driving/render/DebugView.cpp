@@ -23,8 +23,10 @@
 // ---- the game's globals
 
 #define PlayerVehicles (*(PVehicle ***)0x00234e40)              // the player's first
-#define DebugViewEnabled BOOL8_AT(0x001ec484)
-#define DebugSpeedFraction FLOAT_AT(0x001c45d4)                     // written only here (the name is ours)
+// XBE_GLOBAL(0x001ec484, 1)
+bool DebugViewEnabled;
+// XBE_GLOBAL(0x001c45d4, 4)
+float DebugSpeedFraction = 0.85f;                // written only here (the name is ours)
 
 // ---- the game's code not ported yet
 

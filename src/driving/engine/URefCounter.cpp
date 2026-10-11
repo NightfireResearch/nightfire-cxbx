@@ -1,5 +1,7 @@
 #include "URefCounter.h"
 
+#include <string.h>
+
 #include "UMemory.hpp"
 #include "../../helpers.h"
 #include "../audio/Bank.h"              // BankRefTree
@@ -19,14 +21,13 @@
 // and Get (0x00018340); they differ only in the tree helpers they call and, for Get, the static they make.
 //
 // Each instantiation's own tree code is reached through the shapes URefCounter's helpers take (the adaptors below),
-// or by address where it is not ours yet. The name comparisons are the C runtime's _stricmp, called at its own
-// address: the tree's order depends on them. RefCounterTree's code, every instantiation's, is at the end.
+// or by address where it is not ours yet. The name comparisons are _stricmp: the tree's order depends on them,
+// and ours orders as the game's does. RefCounterTree's code, every instantiation's, is at the end.
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- originals called by address
 
 #define RefCounterValue_Construct ((RefCounterValue *(__fastcall *)(RefCounterValue *, int, const char *name, const RefCounterEntry *entry))0x0012ef50)
-#define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // Each instantiation's own insert_unique, erase(where), _Erase(subtree) and erase(first, last)
@@ -36,26 +37,46 @@
 // ---- the statics: each instance, the guard of its construction (bit 0), and the destructor its Get registers
 // with atexit (the original thunks, StaticInit.cpp)
 
-#define ModelInfoRefs (*(ModelInfoRefCounter *)0x001dd9e8)
-#define ModelInfoRefsGuard U32_AT(0x001dd9f4)
-#define TextureInfoRefs (*(TextureInfoRefCounter *)0x001dda04)
-#define TextureInfoRefsGuard U32_AT(0x001dda10)
-#define WeaponInfoRefs (*(WeaponInfoRefCounter *)0x001dda14)
-#define WeaponInfoRefsGuard U32_AT(0x001dda20)
-#define CarpFileRefs (*(CarpFileRefCounter *)0x001f25f4)
-#define CarpFileRefsGuard U32_AT(0x001f2600)
-#define TextureContextRefs (*(TextureContextRefCounter *)0x001f2a34)
-#define TextureContextRefsGuard U32_AT(0x001f2a40)
-#define MixRefs (*(MixRefCounter *)0x00243944)
-#define MixRefsGuard U32_AT(0x00243950)
-#define StreamRefs (*(StreamRefCounter *)0x00243a88)
-#define StreamRefsGuard U32_AT(0x00243a94)
-#define FaderRefs (*(FaderRefCounter *)0x00243af8)
-#define FaderRefsGuard U32_AT(0x00243b04)
-#define BankRefs (*(BankRefCounter *)0x00243b08)
-#define BankRefsGuard U32_AT(0x00243b14)
-#define EngineRefs (*(EngineRefCounter *)0x00243b74)
-#define EngineRefsGuard U32_AT(0x00243b80)
+// XBE_GLOBAL(0x001dd9e8, 0xc)
+ModelInfoRefCounter ModelInfoRefs;
+// XBE_GLOBAL(0x001dd9f4, 0x4)
+uint32_t ModelInfoRefsGuard;
+// XBE_GLOBAL(0x001dda04, 0xc)
+TextureInfoRefCounter TextureInfoRefs;
+// XBE_GLOBAL(0x001dda10, 0x4)
+uint32_t TextureInfoRefsGuard;
+// XBE_GLOBAL(0x001dda14, 0xc)
+WeaponInfoRefCounter WeaponInfoRefs;
+// XBE_GLOBAL(0x001dda20, 0x4)
+uint32_t WeaponInfoRefsGuard;
+// XBE_GLOBAL(0x001f25f4, 0xc)
+CarpFileRefCounter CarpFileRefs;
+// XBE_GLOBAL(0x001f2600, 0x4)
+uint32_t CarpFileRefsGuard;
+// XBE_GLOBAL(0x001f2a34, 0xc)
+TextureContextRefCounter TextureContextRefs;
+// XBE_GLOBAL(0x001f2a40, 0x4)
+uint32_t TextureContextRefsGuard;
+// XBE_GLOBAL(0x00243944, 0xc)
+MixRefCounter MixRefs;
+// XBE_GLOBAL(0x00243950, 0x4)
+uint32_t MixRefsGuard;
+// XBE_GLOBAL(0x00243a88, 0xc)
+StreamRefCounter StreamRefs;
+// XBE_GLOBAL(0x00243a94, 0x4)
+uint32_t StreamRefsGuard;
+// XBE_GLOBAL(0x00243af8, 0xc)
+FaderRefCounter FaderRefs;
+// XBE_GLOBAL(0x00243b04, 0x4)
+uint32_t FaderRefsGuard;
+// XBE_GLOBAL(0x00243b08, 0xc)
+BankRefCounter BankRefs;
+// XBE_GLOBAL(0x00243b14, 0x4)
+uint32_t BankRefsGuard;
+// XBE_GLOBAL(0x00243b74, 0xc)
+EngineRefCounter EngineRefs;
+// XBE_GLOBAL(0x00243b80, 0x4)
+uint32_t EngineRefsGuard;
 
 static const RefCounterDestroyFn kDestroyModelInfoRefs = (RefCounterDestroyFn)0x0015cd20;
 static const RefCounterDestroyFn kDestroyTextureInfoRefs = (RefCounterDestroyFn)0x0015cd30;
@@ -83,7 +104,7 @@ RefCounterNode* URefCounterMap::Find(const char *name) {
     char key[0x80];
     CopyName(key, name);
     RefCounterNode *node = LowerBound(key);
-    if (node == head || CRT_stricmp(key, node->value.name) < 0)
+    if (node == head || _stricmp(key, node->value.name) < 0)
         return head;
     return node;
 }
@@ -522,7 +543,7 @@ RefCounterNode* URefCounterMap::LowerBound(const char *key) {
     RefCounterNode *bound = head;
     RefCounterNode *node = head->parent;
     while (!node->isNil) {
-        if (CRT_stricmp(node->value.name, key) < 0) {
+        if (_stricmp(node->value.name, key) < 0) {
             node = node->right;
         } else {
             bound = node;
@@ -839,7 +860,7 @@ RefCounterInsertResult *RefCounterTree::InsertUnique(RefCounterInsertResult *res
     bool addLeft = true;
     while (!tryNode->isNil) {
         where = tryNode;
-        addLeft = CRT_stricmp(value->name, tryNode->value.name) < 0;
+        addLeft = _stricmp(value->name, tryNode->value.name) < 0;
         tryNode = addLeft ? tryNode->left : tryNode->right;
     }
     RefCounterIterator before = { where };
@@ -852,7 +873,7 @@ RefCounterInsertResult *RefCounterTree::InsertUnique(RefCounterInsertResult *res
         }
         before.Decrement();
     }
-    if (CRT_stricmp(before.node->value.name, value->name) < 0) {
+    if (_stricmp(before.node->value.name, value->name) < 0) {
         RefCounterNode *node;
         result->node = *InsertAt(&node, addLeft, where, value);
         result->inserted = true;

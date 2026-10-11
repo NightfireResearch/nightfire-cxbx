@@ -7,10 +7,9 @@
 
 // ---------------------------------------------------------------------------------------------------------------
 // DAFI, the INI-style text reader (see Dafi.h). Section and key indexing write terminators into DAFI's own copy
-// of the text, exactly where the original does; names compare with the game's _stricmp.
+// of the text, exactly where the original does; names compare with _stricmp.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define Crt_stricmp ((int (*)(const char *, const char *))0x00134537)
 
 static bool IsLineEnd(char c) {
     return c == '\n' || c == '\r' || c == 0;
@@ -203,7 +202,7 @@ int DAFI_getsectionindex(DAFI *dafi, const char *name) {
     if (name == NULL)
         return dafi->currentSection;
     for (int i = 0; i < dafi->sectionCount; i++)
-        if (Crt_stricmp(dafi->sectionNames[i], name) == 0)
+        if (_stricmp(dafi->sectionNames[i], name) == 0)
             return i;
     return -1;
 }
@@ -223,7 +222,7 @@ int DAFI_getkeycount(DAFI *dafi) {
 // FUNC_AT(0x0011a660)
 int DAFI_getkeyindex(DAFI *dafi, const char *key) {
     for (int i = 0; i < dafi->keyCount; i++)
-        if (Crt_stricmp(dafi->keys[i], key) == 0)
+        if (_stricmp(dafi->keys[i], key) == 0)
             return i;
     return -1;
 }

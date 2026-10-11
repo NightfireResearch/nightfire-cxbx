@@ -194,49 +194,50 @@ static_assert(offsetof(RigidScratchPadFields, contactGrounds) == 0x100 &&
 
 // The shared rigid-body globals. The tuning values are loaded by InitRigidBodySystem from "Physics:Rigid" (each
 // named as its attribute); the names of the tuning block's floats with no attribute are ours.
-#define RigidScratchPad (*(RigidScratchPadFields **)0x00233fac)    // Simulation::GetScratchPadFreeZone's, set by
-                                                                    // InitRigidBodySystem
-#define RigidUnderwater BOOL8_AT(0x00233fb0)            // the track's name holds "uw_"
+extern RigidScratchPadFields *RigidScratchPad;  // Simulation::GetScratchPadFreeZone's, set by InitRigidBodySystem
+extern bool RigidUnderwater;                    // the track's name holds "uw_"
 #define RigidPlayerGravity FLOAT_AT(0x00233fb8)         // BODGE_PLAYER_GRAVITY at start; -34 for "jungle_truck"
-#define RigidGroundRestitutionRate FLOAT_AT(0x00233fbc) // GROUND_RESTITUTION / MICRO_THRESHOLD (static initialiser)
-#define RigidRestitutionRateC8 FLOAT_AT(0x00233fc0)     // 0x001c8f3c's value / MICRO_THRESHOLD (static initialiser)
-#define RigidBuildingRestitutionRate FLOAT_AT(0x00233fc4) // BUILDING_COEFF_RESTITUTION / BUILDING_MICRO_THRESHOLD
+extern float RigidGroundRestitutionRate;        // GROUND_RESTITUTION / MICRO_THRESHOLD at start-up
+extern float RigidRestitutionRateC8;            // 0x001c8f3c's value / MICRO_THRESHOLD at start-up
+extern float RigidBuildingRestitutionRate;      // BUILDING_COEFF_RESTITUTION / BUILDING_MICRO_THRESHOLD at start-up
 #define DamageSourceSig ((const uint32_t *)0x00233fe8)  // the source world and object damage name (the name is ours)
+// XBE_GLOBAL(0x002342a0, 0x100)
 #define PhysicsObjects ((PhysicsObject **)0x002342a0)   // [64] by owner index (the Simulation's)
 #define RigidVehicles ((PVehicle **)0x002342a0)         // the same, for owners of kind below 4 (vehicles)
+// XBE_GLOBAL(0x002343a0, 0x180)
 #define SimpleBodyOwners ((PhysicsObject **)0x002343a0) // [96] the simple bodies' owners, by slot (NULL: not in use)
 #define SimStepsPerSecond I32_AT(0x00234e2c)            // the Simulation's steps a second
-#define Rigid_GRAVITY FLOAT_AT(0x001c8f2c)
-#define Rigid_BODGE_PLAYER_GRAVITY FLOAT_AT(0x001c8f30)
-#define Rigid_MICRO_THRESHOLD FLOAT_AT(0x001c8f34)
-#define Rigid_GROUND_RESTITUTION FLOAT_AT(0x001c8f38)
-#define Rigid_GROUND_FRICTION_COEFF FLOAT_AT(0x001c8f40)
-#define Rigid_NATURAL_ANGULAR_DAMPING FLOAT_AT(0x001c8f44)
-#define Rigid_SLEEP_VEL FLOAT_AT(0x001c8f48)
-#define Rigid_AM_LIMIT FLOAT_AT(0x001c8f4c)
-#define Rigid_M_LIMIT FLOAT_AT(0x001c8f50)
-#define Rigid_SPEED_FORCE_LIMIT FLOAT_AT(0x001c8f54)
-#define Rigid_SPEED_SCALE FLOAT_AT(0x001c8f5c)
-#define Rigid_DEPTH_FORCE_SCALE FLOAT_AT(0x001c8f60)
-#define Rigid_TOTAL_FORCE_LIMIT FLOAT_AT(0x001c8f64)
-#define Rigid_ForceCapDivisor FLOAT_AT(0x001c8f68)      // ResolveCollision's
-#define Rigid_ForceCapFloor FLOAT_AT(0x001c8f6c)        // ResolveCollision's and ResolveWorldOBBCollision's
-#define Rigid_BoxSpeedScale FLOAT_AT(0x001c8f70)        // ResolveWorldOBBCollision's
-#define Rigid_BoxDepthScale FLOAT_AT(0x001c8f74)
-#define Rigid_BoxForceCapScale FLOAT_AT(0x001c8f78)
-#define Rigid_BUILDING_MICRO_THRESHOLD FLOAT_AT(0x001c8f7c)
-#define Rigid_BUILDING_COEFF_RESTITUTION FLOAT_AT(0x001c8f80)
-#define Rigid_BUILDING_FRICTION_FACTOR FLOAT_AT(0x001c8f84)
-#define Rigid_BUILDING_FRICTION_LIMIT FLOAT_AT(0x001c8f88)
-#define Rigid_BUILDING_COLLIDE_COG_SCALE FLOAT_AT(0x001c8f8c)
-#define Rigid_BUILDING_FORCE_LIMIT FLOAT_AT(0x001c8f90)
-#define Rigid_CornerLift FLOAT_AT(0x001c8f94)           // CollideWithWorld's
-#define Rigid_PF_SCALE FLOAT_AT(0x001c8f98)
-#define Rigid_WorldDamageFactor FLOAT_AT(0x001c8f9c)    // 0.35: ApplyDamage's fourth argument for world damage
-#define Rigid_CAR_COLLIDE_COG_SCALE FLOAT_AT(0x001c8fa0)
-#define Rigid_UnknownCogScale FLOAT_AT(0x001c8fa4)      // ModifyLevers' scale for bodies of kinds other than 1
-#define Rigid_ObjectDamageFactor FLOAT_AT(0x001c8fa8)   // ApplyDamage's fourth argument for a body's damage
-#define Rigid_DamageScale FLOAT_AT(0x001c8fac)          // 5: world and object damage (read, never written)
-#define Rigid_VehicleWorldDamageScale FLOAT_AT(0x001c8fb0)  // 6: a vehicle's world damage (read, never written)
+extern float Rigid_GRAVITY;
+extern float Rigid_BODGE_PLAYER_GRAVITY;
+extern float Rigid_MICRO_THRESHOLD;
+extern float Rigid_GROUND_RESTITUTION;
+extern float Rigid_GROUND_FRICTION_COEFF;
+extern float Rigid_NATURAL_ANGULAR_DAMPING;
+extern float Rigid_SLEEP_VEL;
+extern float Rigid_AM_LIMIT;
+extern float Rigid_M_LIMIT;
+extern float Rigid_SPEED_FORCE_LIMIT;
+extern float Rigid_SPEED_SCALE;
+extern float Rigid_DEPTH_FORCE_SCALE;
+extern float Rigid_TOTAL_FORCE_LIMIT;
+extern float Rigid_ForceCapDivisor;     // ResolveCollision's
+extern float Rigid_ForceCapFloor;       // ResolveCollision's and ResolveWorldOBBCollision's
+extern float Rigid_BoxSpeedScale;       // ResolveWorldOBBCollision's
+extern float Rigid_BoxDepthScale;
+extern float Rigid_BoxForceCapScale;
+extern float Rigid_BUILDING_MICRO_THRESHOLD;
+extern float Rigid_BUILDING_COEFF_RESTITUTION;
+extern float Rigid_BUILDING_FRICTION_FACTOR;
+extern float Rigid_BUILDING_FRICTION_LIMIT;
+extern float Rigid_BUILDING_COLLIDE_COG_SCALE;
+extern float Rigid_BUILDING_FORCE_LIMIT;
+extern float Rigid_CornerLift;          // CollideWithWorld's
+extern float Rigid_PF_SCALE;
+extern float Rigid_WorldDamageFactor;   // 0.35: ApplyDamage's fourth argument for world damage
+extern float Rigid_CAR_COLLIDE_COG_SCALE;
+extern float Rigid_UnknownCogScale;     // ModifyLevers' scale for bodies of kinds other than 1
+extern float Rigid_ObjectDamageFactor;  // ApplyDamage's fourth argument for a body's damage
+extern float Rigid_DamageScale;         // 5: world and object damage (read, never written)
+extern float Rigid_VehicleWorldDamageScale; // 6: a vehicle's world damage (read, never written)
 
 #endif // DRIVING_PHYSICS_RIGIDBODY_H_

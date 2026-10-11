@@ -59,7 +59,7 @@ struct BufferNode {
 };
 static_assert(sizeof(BufferNode) == 0x30, "the hardware buffer node is 0x30 bytes");
 
-// SNDLINKLIST (0xc): LList_maybeFreeDsndBuffers[2] at 0x00244c60, Llist_MaybeActiveDsndBuffers[2] at 0x00244c48
+// SNDLINKLIST (0xc): the hardware buffer nodes' lists (SndGlobals.h)
 struct BufferList {
     BufferNode *first;           // +0x00
     BufferNode *last;            // +0x04
@@ -81,6 +81,28 @@ typedef StreamFormat PacketFormat;
 struct PatchHeader;
 
 }  // namespace SND
+
+// The driver's state the lockstep harness (devtools/SndLockstep.cpp) drives
+typedef void (*SndFrameCallback)(void);
+extern uint8_t IsRunning;                                // SNDDRV_isRunning
+extern uint8_t KeepRunning;                              // SNDDRV_shouldContinueRunning
+extern SndFrameCallback volatile PreFrameCallback;       // SNDDRVPreFrameCb
+extern SndFrameCallback volatile PostFrameCallback;      // SNDDRVPostFrameCb
+
+// The driver's own globals
+extern uint32_t NextDeadline;                            // the SND thread's next deadline (ms)
+extern uint32_t SetFxFunc;                               // p_setfx_func, written, never read
+extern SND::BufferNode *BufferNodes;                     // SND_BUFFER_LIST: [180]
+extern int32_t PoolSizes[2];                             // [pool]: 152, 28
+extern SND::PlatformVoice *PlatformVoices;               // [NumVoices]
+extern IDirectSound *Device;
+extern IDirectSoundBuffer *Rings[6];                     // the mixer's six DirectSound buffers, one per speaker
+extern int16_t *RingMemory[6];                           // their memory blocks
+extern int32_t RingFrames;                               // 2400
+extern int32_t MixLead;                                  // 960
+extern int32_t MixPosition;                              // the next frame to mix
+extern const DsI3dl2Listener ListenerPresets[23];        // the I3DL2 listener presets
+extern const uint8_t DefaultReverb[0x18];                // the mixer's default reverb description
 
 // The driver's setters and queries (voice = logical voice index)
 IDirectSoundBuffer* dsndCreateBufferAndMixBins(int pool);                    // 0x0013d430

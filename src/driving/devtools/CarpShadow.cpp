@@ -297,7 +297,7 @@ typedef void (__fastcall *DimensionsFn)(CARP::Instance *, int, bool, float, floa
 #define Base_GetZoneBits ((ZoneBitsFn)0x00118170)
 #define Instance_SetDimensions ((DimensionsFn)0x00118cc0)
 
-#define CarpVerbose (*(uint8_t *)0x00243561)
+#define OrigCarpVerbose (*(bool *)0x00243561)   // CarpVerbose's original copy (Carp.h)
 
 // ---- the disc
 
@@ -1068,10 +1068,11 @@ void CarpFileCheck(const DiscFile &file) {
                 Logf("lookup %s: %s %d", q.c_str(), Where(found).c_str(), size);
         }
 
-        uint8_t verbose = CarpVerbose;
-        CarpVerbose = 0;   // the failure report would print every EAGL name: none is in this table
+        bool verbose = CarpVerbose, origVerbose = OrigCarpVerbose;
+        CarpVerbose = OrigCarpVerbose = false;   // the failure report would print every EAGL name: none is here
         uint32_t sect = Carp_ResolveSymbolicReferences(root, table);
         CarpVerbose = verbose;
+        OrigCarpVerbose = origVerbose;
         Logf("resolved: sect %08x", sect);
 
         Table_Delete(table, 0, 1);

@@ -13,9 +13,6 @@
 // original stores to a float. The functions that leave their result on the x87 stack answer a double.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The name the original answers for an instance whose render instance has none (its .rdata string).
-#define kUnnamedInstance ((const char *)0x001939b4)   // "<unnamed>"
-
 namespace {
 
 enum : uint32_t {
@@ -86,7 +83,7 @@ const char* WCollisionInstance::GetName() {
     uint32_t tag = index == -1 ? kTagInstanceName : uint32_t(index) | kTagInstanceNameIndexed;   // never -1
     UData *name = names->DataLocateTag(tag);
     if (name == names->DataEnd())
-        return kUnnamedInstance;
+        return "<unnamed>";
     return reinterpret_cast<const char *>(name->Data());
 }
 

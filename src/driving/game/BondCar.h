@@ -134,7 +134,8 @@ static_assert(offsetof(BondCarScratch, steeredOrientation) == 0x100 && offsetof(
               offsetof(BondCarScratch, boostGrip) == 0x438 && offsetof(BondCarScratch, onGround) == 0x444,
               "scratch pad layout");
 
-#define BondCarScratchPad (*(BondCarScratch **)0x001e7a88)
+extern BondCarScratch *BondCarScratchPad;
+extern const char *OverrideCarType;             // used for a car of class 0 when set (name ours)
 
 class PBondCar : public PVehicle {
 public:

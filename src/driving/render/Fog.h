@@ -56,5 +56,6 @@ static_assert(offsetof(RFog, params) == 4 && offsetof(RFog, fadeEndTick) == 0xc 
               "RFog layout");
 
 #define Fog (*(RFog **)0x001ec004)
+extern uint8_t FogColourFlag;                   // the flag byte dbattrib_argb is handed (and does not use)
 
 #endif // DRIVING_RENDER_FOG_H_

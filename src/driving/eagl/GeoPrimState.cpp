@@ -16,6 +16,18 @@
 // Each setter answers true, the two the Xbox build does not keep (texture coordinate type, chroma colour) false.
 // ---------------------------------------------------------------------------------------------------------------
 
+// What Apply last sent (D3D8State.h): nothing yet, but the texture enabled
+// XBE_GLOBAL(0x001cd18c, 0x48)
+GeoPrimApplyCache ApplyCache = {
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+    1, {}, 0xffffffff,
+    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+};
+// XBE_GLOBAL(0x00240150, 4)
+float ApplyCacheZSlopeScale;
+// XBE_GLOBAL(0x00240154, 4)
+float ApplyCacheZOffset;
+
 namespace {
 
 uint32_t Bits(float f) {

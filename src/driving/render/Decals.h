@@ -73,4 +73,13 @@ void CylinderSection(Coord3 *positions, CylinderUV *uvs, float radiusB, float ra
 
 #define TheDecalManager (*(RDecalManager **)0x001fe820)
 
+// The quads: eight GeoPrims of 21, six vertices each (two triangles), and per quad its alpha and delay
+extern TexturedGeoPrim *DecalGeoPrims[8];
+extern uint8_t DecalAlpha[8 * 21];
+extern uint8_t DecalDelay[8 * 21];
+extern Coord4 DecalPositions[8 * 21 * 6];
+extern Coord4 DecalUVs[8 * 21 * 6];
+extern uint32_t DecalColours[8 * 21 * 6];
+extern uint32_t DecalVertexCount[4];        // the GeoPrims' vertex count record
+
 #endif // DRIVING_RENDER_DECALS_H_

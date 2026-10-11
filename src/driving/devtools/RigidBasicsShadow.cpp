@@ -2,6 +2,8 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include "RigidBasicsShadow.h"
+#include "BondCarOrigTuning.h"
+#include "RigidOrigGlobals.h"
 #include "FpControl.h"
 
 #include "../physics/Newton.h"
@@ -62,8 +64,12 @@ const uint32_t kRanges[2][2] = {
     { 0x00060b60, 0x00061a50 }, { 0x000acde0, 0x000adc80 },
 };
 
+// The originals read the game's copies of the rigid body globals and of BondCar_BASE_FRICTION_MASS: ours are lent
+// to them as each window opens
 struct OriginalWindow {
     OriginalWindow() {
+        LendRigidGlobals();
+        LendBondCarTuning();
         for (const uint32_t *range : kRanges)
             XbeOriginal_RestoreRange(range[0], range[1], true);
     }

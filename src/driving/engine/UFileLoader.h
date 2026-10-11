@@ -37,3 +37,7 @@ public:
     static void* ShapeFileLoad(char *path, int flags, bool uncompressed);
     static void* ShapeFileLoad(char *path, int flags);
 };
+
+extern char BigFileName[0x100];         // the big file's name, for the request lists' files
+extern uint8_t BigFileOpen;
+extern uint8_t LogRequests;             // the bool StartUsingBigFile is given, its byte as given

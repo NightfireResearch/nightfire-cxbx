@@ -245,7 +245,7 @@ records (0xc), reader records (0x10) and a ring of chunks aligned to 128 bytes (
 | `0x00244f40` | `sndbanki_buffer` | banks (8 bytes each: header pointer, flag) |
 | `0x00244f44` | `FXBUS[2]` | per bus (0 main CPU, 1 hardware): mode, master level, delay, feedback |
 | `0x00244f6c` | `pSndHeap` | the SNDMEMI heap (256 KB "Audio Heap" from `UMemory::Alloc` in `ASystem::ASystem`) |
-| `0x00244f7c..0x00244fb6` | | speaker azimuth tables for 2/4/5.1 output |
+| `0x00244f70..0x00244fb6` | | `ChannelAzimuth[6][6]`: the default azimuth of each channel of a sound of 1..6 channels, indexed by channels - 1 (the one-channel row is never written) |
 | `0x00244fb8`, `0x00244fbc` | `SNDDRVPreFrameCb`, `SNDDRVPostFrameCb` | read by the SND thread, never written |
 | `0x00244fc0` | `SoundMutex` | the CRITICAL_SECTION (`RtlInitializeCriticalSection`, kernel imports `0x00189cf0`/`0x00189c40`/`0x00189c3c`) |
 | `0x00245364..0x00245370` | | `SNDVOICEI_alloc` scratch and the handle generation |
@@ -765,8 +765,10 @@ constructor (funclets `0x00156ba0..0x00156c00`). A port drops them (EA's `CODA_N
 (`SndShadow.cpp` and friends: test code stays out of the reimplemented functions): `Decode.cpp` (EA-XA, the
 data-dead decoders separately in `DecodeUnused.cpp`), `Filters.cpp`, `Mixer.cpp`, `Reverb.cpp`, `Tags.cpp`
 (`gettag`/`getb`/`parsetimbre`/`patchtohdr`), `Voices.cpp`, `Banks.cpp`, `Streams.cpp`, `Stream.cpp` (file side),
-`Platform.cpp`, `System.cpp`. Globals stay at their addresses (`static_assert`ed layouts, the way `GraphicsSystem.h`
-owns graphics globals) until every reader is ours. Calls down go to the DirectSound entry points (the seam), not to
+`Platform.cpp`, `System.cpp`. The library's globals are ours (October 2026's ownership sweep): defined in
+`System.cpp` and the module that uses them, declared in `SndGlobals.h`, each tagged `// XBE_GLOBAL(address, size)`;
+the few the original still reads (blocks read past their ends, tables handed over by address) stay at the game's
+address. Calls down go to the DirectSound entry points (the seam), not to
 `xaudio2Driving.cpp`, so every step can be compared with the original running on the same seam; collapsing the seam
 is the last step.
 

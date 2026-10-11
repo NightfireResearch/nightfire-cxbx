@@ -20,6 +20,7 @@
 #include "../audio/Fader.h"
 #include "../audio/Mix.h"
 #include "../audio/Sound.h"             // ABaseSound::GetMixedVolume
+#include "../audio/SoundManager.h"      // ASystem_fgSystem
 #include "../engine/UMemory.hpp"
 #include "../world/SoundMap.h"          // RefCounterMapBuyHead
 #include "../../common/xbeOriginal.h"
@@ -602,14 +603,17 @@ void TestTrees() {
 // 5. AFX
 // ===============================================================================================================
 
-#define ShadowFx (*(FxState *)0x001d80f0)
-#define ShadowFxModes ((const FxMode *)0x001d8190)
-#define ShadowFxMixes ((AMix **)0x00243ab8)
-#define ShadowFxLevel FLOAT_AT(0x00243af0)
-#define ShadowFxPaused BOOL8_AT(0x00243af4)
-#define ShadowFxReady BOOL8_AT(0x00243aec)
+// AFX's state is the port's (Fx, FxBus, FxMixes, FxReady, FxLevel, FxPaused: Mix.h; and ASystem_fgSystem, which
+// Update reads); the original keeps its own copy at the game's addresses, given the port's before each of its runs.
+#define OrigFx (*(FxState *)0x001d80f0)
+#define OrigFxModes ((const FxMode *)0x001d8190)    // constant, the same as the port's
+#define OrigFxBus I32_AT(0x00243ab4)
+#define OrigFxMixes ((AMix **)0x00243ab8)
+#define OrigFxReady BOOL8_AT(0x00243aec)
+#define OrigFxLevel FLOAT_AT(0x00243af0)
+#define OrigFxPaused BOOL8_AT(0x00243af4)
+#define OrigSystem (*(ASystem **)0x00243b34)    // ASystem_fgSystem's (SoundManager.h)
 #define ShadowFrames I32_AT(0x00243a68)
-#define ShadowSystem PTR_AT(0x00243b34)
 
 // ---- hooks over the sound library's entries (ours: the original's jump and the port it leads to)
 
@@ -686,27 +690,64 @@ int FakeInitBus(int bus, int level, int mode, int delay, int feedback) {
 struct FxSnapshot {
     FxState fx;
     float level;
-    uint8_t paused, ready;
+    bool paused;
     int32_t frames;
     void Take() {
-        fx = ShadowFx;
-        level = ShadowFxLevel;
-        paused = ShadowFxPaused;
-        ready = ShadowFxReady;
+        fx = Fx;
+        level = FxLevel;
+        paused = FxPaused;
         frames = ShadowFrames;
     }
     void Put() const {
-        ShadowFx = fx;
-        ShadowFxLevel = level;
-        ShadowFxPaused = paused;
-        ShadowFxReady = ready;
+        Fx = fx;
+        FxLevel = level;
+        FxPaused = paused;
         ShadowFrames = frames;
     }
 };
 
-void DumpFx(std::string &log) {
-    AppendBytes(log, &ShadowFx, sizeof(FxState));
-    Append(log, "level %08x paused %d\n", Bits(ShadowFxLevel), ShadowFxPaused);
+// The original's copy of AFX's state, as the test found it
+struct OrigFxSnapshot {
+    FxState fx;
+    int32_t bus;
+    AMix *mixes[AFX::kModeCount];
+    bool ready, paused;
+    float level;
+    ASystem *system;
+    void Take() {
+        system = OrigSystem;
+        fx = OrigFx;
+        bus = OrigFxBus;
+        memcpy(mixes, OrigFxMixes, sizeof(mixes));
+        ready = OrigFxReady;
+        level = OrigFxLevel;
+        paused = OrigFxPaused;
+    }
+    void Put() const {
+        OrigSystem = system;
+        OrigFx = fx;
+        OrigFxBus = bus;
+        memcpy(OrigFxMixes, mixes, sizeof(mixes));
+        OrigFxReady = ready;
+        OrigFxLevel = level;
+        OrigFxPaused = paused;
+    }
+};
+
+// The port's state handed to the original
+void FxToOriginal() {
+    OrigSystem = ASystem_fgSystem;
+    OrigFx = Fx;
+    OrigFxBus = FxBus;
+    memcpy(OrigFxMixes, FxMixes, sizeof(FxMixes));
+    OrigFxReady = FxReady;
+    OrigFxLevel = FxLevel;
+    OrigFxPaused = FxPaused;
+}
+
+void DumpFx(std::string &log, bool orig) {
+    AppendBytes(log, orig ? &OrigFx : &Fx, sizeof(FxState));
+    Append(log, "level %08x paused %d\n", Bits(orig ? OrigFxLevel : FxLevel), orig ? OrigFxPaused : FxPaused);
 }
 
 typedef void (*VoidFn)(void);
@@ -716,22 +757,22 @@ typedef bool (*BoolFn)(void);
 
 void PerturbFx() {
     for (int i = 0; i < 2; i++) {
-        ShadowFx.requests[i].mode = int32_t(Random(AFX::kModeCount));
-        ShadowFx.requests[i].priority = int32_t(Random(5)) - 1;
+        Fx.requests[i].mode = int32_t(Random(AFX::kModeCount));
+        Fx.requests[i].priority = int32_t(Random(5)) - 1;
     }
-    ShadowFx.currentMode = Random(4) == 0 ? -1 : int32_t(Random(AFX::kModeCount));
+    Fx.currentMode = Random(4) == 0 ? -1 : int32_t(Random(AFX::kModeCount));
     uint32_t bus = Random(4);
-    ShadowFx.busReverb = bus == 0 ? -1 : ShadowFxModes[Random(AFX::kModeCount)].reverb;
+    Fx.busReverb = bus == 0 ? -1 : OrigFxModes[Random(AFX::kModeCount)].reverb;
     switch (Random(4)) {
-    case 0: ShadowFxLevel = 0.0f; break;
-    case 1: ShadowFxLevel = Uniform(0.0f, 0.05f); break;
-    default: ShadowFxLevel = Uniform(0.0f, 1.2f); break;
+    case 0: FxLevel = 0.0f; break;
+    case 1: FxLevel = Uniform(0.0f, 0.05f); break;
+    default: FxLevel = Uniform(0.0f, 1.2f); break;
     }
-    ShadowFxPaused = Random(10) == 0;
+    FxPaused = Random(10) == 0;
     ShadowFrames = int32_t(Random(5));
-    if (ShadowFxReady) {
+    if (FxReady) {
         for (int i = 0; i < AFX::kModeCount; i++) {
-            AMix *mix = ShadowFxMixes[i];
+            AMix *mix = FxMixes[i];
             if (mix == NULL || Random(2) == 0)
                 continue;
             mix->volume = RandomVolume();
@@ -743,12 +784,14 @@ void PerturbFx() {
 }
 
 void TestFx() {
-    if (!ShadowFxReady)
+    if (!FxReady)
         return;
     MixSnapshot live;
     live.Take();
     FxSnapshot fx;
     fx.Take();
+    OrigFxSnapshot origFx;
+    origFx.Take();
     HookInstall(0x0013ccc0, (const void *)&FakeMasterLevel);
     HookInstall(0x0013cd50, (const void *)&FakeInitBus);
 
@@ -762,12 +805,13 @@ void TestFx() {
             fx.Put();
             g_seed = seed;
             PerturbFx();
+            FxToOriginal();
         }, [&](bool orig, std::string &log) {
             g_calls = &log;
             (orig ? (VoidFn)0x001248b0 : AFX::Update)();
             g_calls = NULL;
             log += '\n';
-            DumpFx(log);
+            DumpFx(log, orig);
             live.Dump(log);
         }, original, port);
         Check(original == port, "AFX::Update", c);
@@ -782,6 +826,7 @@ void TestFx() {
             fx.Put();
             g_seed = seed;
             PerturbFx();
+            FxToOriginal();
         }, [&](bool orig, std::string &log) {
             g_calls = &log;
             for (int op = 0; op < 4; op++) {
@@ -807,7 +852,7 @@ void TestFx() {
             }
             g_calls = NULL;
             log += '\n';
-            DumpFx(log);
+            DumpFx(log, orig);
         }, original, port);
         Check(original == port, "AFX's small methods", c);
     }
@@ -815,6 +860,7 @@ void TestFx() {
     HooksRemove();
     live.Put();
     fx.Put();
+    origFx.Put();
 }
 
 // ===============================================================================================================

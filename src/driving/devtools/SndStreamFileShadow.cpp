@@ -35,7 +35,8 @@
 // priorityop/closesync, MUTEX create/lock/unlock/destroy - which pins the lock scope - THREAD_iscurrent/yield,
 // SYNCTASK_run), every API call's result, and a hash of the STREAM header and records after each step and at
 // every lock and unlock (so a store moved across a lock boundary shows). Also
-// compared: the request generation global 0x002475fc, and whether a side faulted (SEH: counted, not fatal).
+// compared: the request generation (the port's RequestGeneration, the original's copy at 0x002475fc), and whether
+// a side faulted (SEH: counted, not fatal).
 //
 // The fake FILESYS is replaced by five-byte jumps over both the originals' entries and our FILESYS's (the port
 // calls ours directly), put back after; operations complete only when the script pumps them, in order, the
@@ -47,7 +48,7 @@ namespace {   // this file's own types
 using namespace SND;
 
 const uint32_t kEndTag = 0x6c454353u;   // 'SCEl', what SNDSTRMI_queue asks for
-const uint32_t kGeneration = 0x002475fcu;
+#define OrigRequestGeneration (*(uint32_t *)0x002475fc)   // RequestGeneration's original copy (Stream.h)
 
 // ---- random numbers (the case set-up's; the script's own lives in the workspace)
 
@@ -879,18 +880,19 @@ void SetupCase(int index) {
 void RunCase(int index) {
     SetupCase(index);
     memcpy(g_snapshot, W, sizeof(Workspace));
-    uint32_t generation = *(uint32_t *)(uintptr_t)kGeneration;
+    uint32_t generation = RequestGeneration;
 
+    OrigRequestGeneration = generation;
     Originals(true);
     bool okOriginal = Guarded(true);
     Originals(false);
     memcpy(g_resultOriginal, W, sizeof(Workspace));
-    uint32_t generationOriginal = *(uint32_t *)(uintptr_t)kGeneration;
+    uint32_t generationOriginal = OrigRequestGeneration;
 
     memcpy(W, g_snapshot, sizeof(Workspace));
-    *(uint32_t *)(uintptr_t)kGeneration = generation;
+    RequestGeneration = generation;
     bool okOurs = Guarded(false);
-    uint32_t generationOurs = *(uint32_t *)(uintptr_t)kGeneration;
+    uint32_t generationOurs = RequestGeneration;
 
     g_cases++;
     g_checks += 3;
@@ -980,13 +982,14 @@ void SndStreamFileShadow_Run(void) {
     replaced += XbeOriginal_RestoreRange(0x001503b0u, 0x001503e0u, true);
     XbeOriginal_RestoreRange(0x001503b0u, 0x001503e0u, false);
 
-    uint32_t savedGeneration = *(uint32_t *)(uintptr_t)kGeneration;
+    uint32_t savedGeneration = RequestGeneration, savedOrigGeneration = OrigRequestGeneration;
     HooksInstall();
     const int cases = 120;
     for (int i = 0; i < cases; i++)
         RunCase(i);
     HooksRemove();
-    *(uint32_t *)(uintptr_t)kGeneration = savedGeneration;
+    RequestGeneration = savedGeneration;
+    OrigRequestGeneration = savedOrigGeneration;
 
     for (int i = 0; i < kFiles; i++)
         if (g_files[i].file != NULL) {

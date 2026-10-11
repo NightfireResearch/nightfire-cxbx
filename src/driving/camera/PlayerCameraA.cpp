@@ -72,7 +72,8 @@ constexpr uint16_t kCarAnimationFlags = 0x44;   // TriggerCarAnimationCamera's a
 // ---- the game's globals
 
 #define Launch (*(LaunchPage *)0x00243b90)
-#define RadiansToTurns FLOAT_AT(0x001ec3b8)     // 1 / (2 pi), set by a static initialiser (this unit's copy)
+// XBE_GLOBAL(0x001ec3b8, 4)
+static float RadiansToTurns = 1.0f / 6.283185f; // as the static initialiser made it (0x3e22f984; this unit's copy)
 #define SimState I32_AT(0x00234e24)
 #define SimStepsPerSecond I32_AT(0x00234e2c)
 #define SimTimeStep FLOAT_AT(0x00234e30)

@@ -47,6 +47,11 @@ struct FastPool {
 };
 static_assert(sizeof(FastPool) == 0x108, "the pools are 0x108 bytes");
 
+extern MemoryFunctions *Functions;  // the allocator's table in use
+extern FastPool *Pools;             // the pools in use
+extern uint32_t PageSize;           // 0x1000, set by Init and NewClass
+extern int32_t ObjectHeapClass;     // the class operator new and big FastAllocs use
+
 class UMemory {
 public:
     // Brings the memory manager up (0x00114880): a "RAM" class 0 over `bytes` at `base` (or over contiguous memory

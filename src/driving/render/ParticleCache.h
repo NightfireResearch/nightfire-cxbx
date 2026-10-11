@@ -16,6 +16,10 @@
 
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 
+namespace EAGL {
+struct TAR;
+}
+
 struct RParticleSystemData;
 struct RParticleEmitter;
 
@@ -93,5 +97,22 @@ static_assert(sizeof(RParticleParticleCache) == 0x10018, "RParticleParticleCache
 static_assert(offsetof(RParticleParticleCache, particles) == 0x10 &&
               offsetof(RParticleParticleCache, buffer) == 0x10010 &&
               offsetof(RParticleParticleCache, spawned) == 0x10014, "RParticleParticleCache layout");
+
+// The draws' state: UpdateBlock's drag, the scales, and per batch (quads drawn normally, additively, and streaks)
+// the vertex arrays and the textures
+extern float ParticleDrag;
+extern float ParticleFovScale;
+extern float SpriteFadeSize;
+extern Coord4 NormalPositions[4 * kParticleBlock];
+extern uint32_t NormalColours[4 * kParticleBlock];
+extern float NormalUVs[4 * kParticleBlock][2];
+extern Coord4 AdditivePositions[4 * kParticleBlock];
+extern uint32_t AdditiveColours[4 * kParticleBlock];
+extern float AdditiveUVs[4 * kParticleBlock][2];
+extern Coord4 StreakPositions[3 * kParticleBlock];
+extern uint32_t StreakColours[3 * kParticleBlock];
+extern float StreakUVs[3 * kParticleBlock][2];
+extern EAGL::TAR *SpriteTexture;
+extern EAGL::TAR *StreakTexture;
 
 #endif // DRIVING_RENDER_PARTICLECACHE_H_

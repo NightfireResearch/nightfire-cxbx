@@ -94,7 +94,18 @@ static_assert(sizeof(WRender) == 0xe0, "WRender is 224 bytes");
 static_assert(offsetof(WRender, procAnims) == 0x2c && offsetof(WRender, curtains) == 0x34 &&
               offsetof(WRender, camera) == 0xd4, "WRender layout");
 
-#define fgRender (*(WRender **)0x0023e000)      // the name is ours
+extern WRender *fgRender;               // the name is ours
+
+// The cursor of GetNextPoint's walk
+struct WCullCursor {
+    int32_t node;                       // the index of the visible node
+    int32_t item;                       // the index of its instance
+    CachedDrawInfo *list;               // PrepareForCull's
+};
+
+extern CachedDrawInfo VisibleList;
+extern CachedDrawInfo *CurrentList;     // the list the tree walks fill
+extern WCullCursor Cursor;
 
 // std::sort over the draws, as the game compiled it (Dinkumware's helpers, named without their underscore; the
 // namespace is ours). Ranges are [first, last); holes and counts are indices.

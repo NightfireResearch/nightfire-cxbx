@@ -13,6 +13,7 @@
 #include "SndUntested.h"
 #include "SndGlobals.h"
 #include "../../devtools/SndLockstep.h"
+#include "../../../helpers.h"
 
 #include <bit>
 #include <stddef.h>
@@ -51,6 +52,42 @@
 // originals on snapshots of the driver's state, DirectSound and the mixer replaced by recorders.
 // ---------------------------------------------------------------------------------------------------------------
 
+// ---- the driver's globals other modules read (sound.md 2.2-2.6)
+// XBE_GLOBAL(0x00244c3c, 1)
+uint8_t IsRunning;                                     // SNDDRV_isRunning
+// XBE_GLOBAL(0x00244c3d, 1)
+uint8_t KeepRunning;                                   // SNDDRV_shouldContinueRunning
+// XBE_GLOBAL(0x00244fb8, 4)
+SndFrameCallback volatile PreFrameCallback;            // SNDDRVPreFrameCb
+// XBE_GLOBAL(0x00244fbc, 4)
+SndFrameCallback volatile PostFrameCallback;           // SNDDRVPostFrameCb
+// XBE_GLOBAL(0x00244c48, 0x30)
+SND::BufferList BufferLists[4];                        // SndGlobals.h
+
+// ---- the driver's own globals (sound.md 2.2-2.6)
+// XBE_GLOBAL(0x00244c38, 4)
+uint32_t NextDeadline;                                 // the SND thread's next deadline (ms)
+// XBE_GLOBAL(0x00244c40, 4)
+uint32_t SetFxFunc;                                    // p_setfx_func, written, never read
+// XBE_GLOBAL(0x00244c44, 4)
+SND::BufferNode *BufferNodes;                          // SND_BUFFER_LIST: [180]
+// XBE_GLOBAL(0x00244c78, 8)
+int32_t PoolSizes[2];                                  // [pool]: 152, 28
+// XBE_GLOBAL(0x00244c80, 4)
+SND::PlatformVoice *PlatformVoices;                    // [NumVoices]
+// XBE_GLOBAL(0x00244c84, 4)
+IDirectSound *Device;
+// XBE_GLOBAL(0x00244c88, 0x18)
+IDirectSoundBuffer *Rings[6];                          // the mixer's six DirectSound buffers, one per speaker
+// XBE_GLOBAL(0x00244ca0, 0x18)
+int16_t *RingMemory[6];                                // their memory blocks
+// XBE_GLOBAL(0x00244cb8, 4)
+int32_t RingFrames;                                    // 2400
+// XBE_GLOBAL(0x00244cbc, 4)
+int32_t MixLead;                                       // 960
+// XBE_GLOBAL(0x00244cc0, 4)
+int32_t MixPosition;                                   // the next frame to mix
+
 namespace {
 
 using SND::BufferList;
@@ -64,25 +101,7 @@ using SND::DsWaveFormat;
 using SND::PlatformVoice;
 using SND::Voice;
 
-// ---- the driver's globals (sound.md 2.2-2.6)
-typedef void (*FrameCallback)(void);
-
-#define NextDeadline U32_AT(0x00244c38)                // the SND thread's next deadline (ms)
-#define IsRunning U8_AT(0x00244c3c)                    // SNDDRV_isRunning
-#define KeepRunning U8_AT(0x00244c3d)                  // SNDDRV_shouldContinueRunning
-#define SetFxFunc U32_AT(0x00244c40)                   // p_setfx_func, written, never read
-#define BufferNodes (*(BufferNode **)0x00244c44)      // SND_BUFFER_LIST: [180]
-#define FreeBufferLists ((BufferList *)0x00244c60)     // LList_maybeFreeDsndBuffers[pool]
-#define PoolSizes ((int32_t *)0x00244c78)              // [pool]: 152, 28
-#define PlatformVoices (*(PlatformVoice **)0x00244c80)   // [NumVoices]
-#define Device (*(IDirectSound **)0x00244c84)        // the IDirectSound
-#define Rings ((IDirectSoundBuffer **)0x00244c88)      // the mixer's six DirectSound buffers, one per speaker
-#define RingMemory ((int16_t **)0x00244ca0)            // their memory blocks
-#define RingFrames I32_AT(0x00244cb8)                  // 2400
-#define MixLead I32_AT(0x00244cbc)                     // 960
-#define MixPosition I32_AT(0x00244cc0)                 // the next frame to mix
-#define PreFrameCallback (*(FrameCallback volatile *)0x00244fb8)    // SNDDRVPreFrameCb
-#define PostFrameCallback (*(FrameCallback volatile *)0x00244fbc)   // SNDDRVPostFrameCb
+// The mixer's (SndMix, still at the original's address)
 #define MixFxInitFunc U32_AT(0x002459a0)               // the mixer's FX init (SNDMIXI_fxinit)
 #define MixFxHook U32_AT(0x002459a4)                   // unpackerInitFuncs[0]: the per-slice FX hook
 
@@ -99,11 +118,47 @@ typedef void (*FrameCallback)(void);
 // The low-pass coefficients: uint16 [256], indexed by cutoff >> 5 (a negative cutoff reads before it, as the
 // original's does)
 #define LowpassTable ((const uint16_t *)0x001a7350)
-// The DSP effects image (0x3360 bytes), the I3DL2 listener presets (23, in DirectSound's order) and the mixer's
-// default reverb description - handed over by address
+// The DSP effects image (0x3360 bytes), handed over by address
 #define EffectsImage ((const void *)0x001a3e80)
-#define ListenerPresets ((const DsI3dl2Listener *)0x001d98d8)
-#define DefaultReverb ((const uint8_t *)0x001d98c0)
+
+}  // namespace
+
+// The I3DL2 listener presets, in DirectSound's order (I3dl2Preset below)
+// XBE_GLOBAL(0x001d98d8, 0x450)
+const DsI3dl2Listener ListenerPresets[23] = {
+    { -1000, -100, 0.0f, 1.49f, 0.83f, -2602, 0.007f, 200, 0.011f, 100.0f, 100.0f, 5000.0f },   // Generic
+    { -1000, -6000, 0.0f, 0.17f, 0.1f, -1204, 0.001f, 207, 0.002f, 100.0f, 100.0f, 5000.0f },   // PaddedCell
+    { -1000, -454, 0.0f, 0.4f, 0.83f, -1646, 0.002f, 53, 0.003f, 100.0f, 100.0f, 5000.0f },   // Room
+    { -1000, -1200, 0.0f, 1.49f, 0.54f, -370, 0.007f, 1030, 0.011f, 100.0f, 60.0f, 5000.0f },   // Bathroom
+    { -1000, -6000, 0.0f, 0.5f, 0.1f, -1376, 0.003f, -1104, 0.004f, 100.0f, 100.0f, 5000.0f },   // LivingRoom
+    { -1000, -300, 0.0f, 2.31f, 0.64f, -711, 0.012f, 83, 0.017f, 100.0f, 100.0f, 5000.0f },   // StoneRoom
+    { -1000, -476, 0.0f, 4.32f, 0.59f, -789, 0.02f, -289, 0.03f, 100.0f, 100.0f, 5000.0f },   // Auditorium
+    { -1000, -500, 0.0f, 3.92f, 0.7f, -1230, 0.02f, -2, 0.029f, 100.0f, 100.0f, 5000.0f },   // ConcertHall
+    { -1000, 0, 0.0f, 2.91f, 1.3f, -602, 0.015f, -302, 0.022f, 100.0f, 100.0f, 5000.0f },   // Cave
+    { -1000, -698, 0.0f, 7.24f, 0.33f, -1166, 0.02f, 16, 0.03f, 100.0f, 100.0f, 5000.0f },   // Arena
+    { -1000, -1000, 0.0f, 10.05f, 0.23f, -602, 0.02f, 198, 0.03f, 100.0f, 100.0f, 5000.0f },   // Hangar
+    { -1000, -4000, 0.0f, 0.3f, 0.1f, -1831, 0.002f, -1630, 0.03f, 100.0f, 100.0f, 5000.0f },   // CarpetedHallway
+    { -1000, -300, 0.0f, 1.49f, 0.59f, -1219, 0.007f, 441, 0.011f, 100.0f, 100.0f, 5000.0f },   // Hallway
+    { -1000, -237, 0.0f, 2.7f, 0.79f, -1214, 0.013f, 395, 0.02f, 100.0f, 100.0f, 5000.0f },   // StoneCorridor
+    { -1000, -270, 0.0f, 1.49f, 0.86f, -1204, 0.007f, -4, 0.011f, 100.0f, 100.0f, 5000.0f },   // Alley
+    { -1000, -3300, 0.0f, 1.49f, 0.54f, -2560, 0.162f, -613, 0.088f, 79.0f, 100.0f, 5000.0f },   // Forest
+    { -1000, -800, 0.0f, 1.49f, 0.67f, -2273, 0.007f, -2217, 0.011f, 50.0f, 100.0f, 5000.0f },   // City
+    { -1000, -2500, 0.0f, 1.49f, 0.21f, -2780, 0.3f, -2014, 0.1f, 27.0f, 100.0f, 5000.0f },   // Mountains
+    { -1000, -1000, 0.0f, 1.49f, 0.83f, -10000, 0.061f, 500, 0.025f, 100.0f, 100.0f, 5000.0f },   // Quarry
+    { -1000, -2000, 0.0f, 1.49f, 0.5f, -2466, 0.179f, -2514, 0.1f, 21.0f, 100.0f, 5000.0f },   // Plain
+    { -1000, 0, 0.0f, 1.65f, 1.5f, -1363, 0.008f, -1153, 0.012f, 100.0f, 100.0f, 5000.0f },   // ParkingLot
+    { -1000, -1000, 0.0f, 2.81f, 0.14f, 429, 0.014f, 648, 0.021f, 80.0f, 60.0f, 5000.0f },   // SewerPipe
+    { -1000, -4000, 0.0f, 1.49f, 0.1f, -449, 0.007f, 1700, 0.011f, 100.0f, 100.0f, 5000.0f },   // Underwater
+};
+
+// The mixer's default reverb description: "FX", mode 0, four taps in the first group, damping -6, the taps
+// XBE_GLOBAL(0x001d98c0, 0x18)
+const uint8_t DefaultReverb[0x18] = {
+    0x46, 0x58, 0x00, 0x00, 0x04, 0x00, 0x00, 0xfa, 0x00, 0x64, 0x40, 0x00, 0x00, 0x46, 0x40, 0x5f,
+    0x00, 0x31, 0x4c, 0x00, 0x00, 0x22, 0x4c, 0x5f,
+};
+
+namespace {
 
 // ---- constants (the original reads the floats from .rdata: the same bits)
 constexpr float kOver127 = 0x1.020408p-7f;          // 1/127 as a float
@@ -472,13 +527,13 @@ uint32_t __stdcall SNDDRV_thread(void *parameter) {
     if (keepRunning != 0) {
         do {
             SNDI_mutexlock();
-            FrameCallback pre = PreFrameCallback;
+            SndFrameCallback pre = PreFrameCallback;
             if (pre != NULL)
                 pre();
             SNDSYSI_100hzserver();
             dsndMixProcess();
             SNDPKTPLAYI_flushcallbackdata();
-            FrameCallback post = PostFrameCallback;
+            SndFrameCallback post = PostFrameCallback;
             if (post != NULL)
                 post();
             SNDI_mutexunlock();

@@ -92,6 +92,10 @@ public:
 static_assert(sizeof(WGrid) == 0x24, "the grid is 0x24 bytes");
 
 #define TheGrid (*(WGrid **)0x0023b3a0)
+// XBE_GLOBAL(0x0023b3ac, 0xc)
 #define GridMovers (*(WGridMoverList *)0x0023b3ac)
+
+extern UGroup *GridData;                // the CARP group the grid came from (for Restart)
+extern int32_t GridMaxSteps;            // the most cells a segment search walks
 
 #endif // DRIVING_WORLD_GRID_H_

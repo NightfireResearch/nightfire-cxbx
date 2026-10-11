@@ -10,6 +10,7 @@
 #include "../game/BondCar.h"
 #include "../game/BondCarBasics.h"
 #include "../game/BondCarModes.h"
+#include "../game/SoftZone.h"           // SoftZones
 #include "../physics/RigidBody.h"
 #include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
@@ -61,8 +62,7 @@ namespace {
 const uint32_t kBondCarVtable = 0x0018f580;
 const int kOwners = 0x40;
 const size_t kAudioBytes = 0x160;
-const int kSoftZones = 19;
-const uint32_t kSoftZoneTable = 0x001c37b0;
+
 
 typedef void (__fastcall *CarFn)(PBondCar *, int);
 typedef void *(__fastcall *PtrGetFn)(PBondCar *, int);
@@ -302,7 +302,7 @@ int InteriorMode() {
 void TestSubmarine() {
     static const float kSpecial[] = { 0.0f, -0.0f, 1.0f, -1.0f, 0.5f };
     const int interiorMode = InteriorMode();
-    const Coord4 *zones = reinterpret_cast<const Coord4 *>(kSoftZoneTable);   // 5 vectors each
+
     int index = 0;
     for (PBondCar *car : g_cars) {
         Bind(car);
@@ -346,11 +346,12 @@ void TestSubmarine() {
                     Camera()->cameraMode = interiorMode;
                 if (RandomInt(3) == 0) {
                     // into a soft zone: its corners' centre, some way along its normal
-                    const Coord4 *zone = zones + 5 * RandomInt(kSoftZones);
-                    float depth = zone[4].w * Uniform(-0.1f, 1.1f);
-                    body->position.x = (zone[0].x + zone[1].x + zone[2].x + zone[3].x) * 0.25f + zone[4].x * depth;
-                    body->position.y = (zone[0].y + zone[1].y + zone[2].y + zone[3].y) * 0.25f + zone[4].y * depth;
-                    body->position.z = (zone[0].z + zone[1].z + zone[2].z + zone[3].z) * 0.25f + zone[4].z * depth;
+                    const SoftZone &zone = SoftZones[RandomInt(kSoftZones)];
+                    const Coord4 *c = zone.corners;
+                    float depth = zone.plane.w * Uniform(-0.1f, 1.1f);
+                    body->position.x = (c[0].x + c[1].x + c[2].x + c[3].x) * 0.25f + zone.plane.x * depth;
+                    body->position.y = (c[0].y + c[1].y + c[2].y + c[3].y) * 0.25f + zone.plane.y * depth;
+                    body->position.z = (c[0].z + c[1].z + c[2].z + c[3].z) * 0.25f + zone.plane.z * depth;
                     RandomVector(&body->force, RandomInt(2) ? 100.0f : 5000.0f);
                 }
             }

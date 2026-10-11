@@ -57,10 +57,7 @@ using namespace GameStd;
 
 namespace {   // this file's own types: another test's of the same name must not merge with them
 
-#define ArchiveName ((char *)0x002431d8)          // UFileLoader's mission archive name (kept after closing)
-#define ArchiveOpen (*(uint8_t *)0x002434da)
-#define ArchiveLogRequests (*(uint8_t *)0x002434e0)
-#define ShadowCurrentIndexer (*(DebugUIntVariable **)0x001e22c4)
+#define OrigCurrentIndexer (*(DebugUIntVariable **)0x001e22c4)   // CurrentIndexer's original copy
 #define ShadowBuiltinNew ((void *(__cdecl *)(size_t))0x001146a0)
 #define ShadowBuiltinDelete ((void (__cdecl *)(void *))0x001146e0)
 #define ShadowOStrStream_Construct ((OStrStream *(__fastcall *)(OStrStream *, int, char *, int, int, int))0x00131b27)
@@ -124,6 +121,13 @@ template <class F> static void ThunkOf(void *context) {
 
 // One case: the call, logged by the lambda; a fault is logged instead.
 // Each case starts with a "#kind" line, which the compare counts differences under.
+static bool g_originalSide;   // the suite is running with the originals swapped back
+
+// The index dbindex set, as the running side has it
+static DebugUIntVariable *&SideCurrentIndexer() {
+    return g_originalSide ? OrigCurrentIndexer : CurrentIndexer;
+}
+
 template <class F> static void Run(const char *what, int index, F f) {
     g_cases++;
     Logf("#%s", what);
@@ -840,7 +844,7 @@ static void ReadAllTypes(const char *name, bool indexed, uint32_t indexMax, cons
 
 static void TuningTextCases(const std::vector<TuningText> &tunings) {
     DTuningDBMgr *savedManager = TuningDBMgr;
-    DebugUIntVariable *savedIndex = ShadowCurrentIndexer;
+    DebugUIntVariable *savedIndex = CurrentIndexer, *savedOrigIndex = OrigCurrentIndexer;
     std::vector<TuningText> all = tunings;
     TuningText synthetic;
     synthetic.name = "synthetic";
@@ -877,7 +881,7 @@ static void TuningTextCases(const std::vector<TuningText> &tunings) {
         for (int k = 0; k < (int)keys.size(); k++) {
             Run("dbattrib", k, [&] {
                 TuningDBMgr = &g_fakeManager;
-                ShadowCurrentIndexer = NULL;
+                SideCurrentIndexer() = NULL;
                 Logf("file %d key %d:", f, k);
                 ReadAllTypes(keys[k].c_str(), false, 0, NULL);
                 char *item = (g_fakeReader.*At<char *(DTuningFile::Reader::*)(const char *)>(0x0003d7f0))(keys[k].c_str());
@@ -901,7 +905,7 @@ static void TuningTextCases(const std::vector<TuningText> &tunings) {
                     uint32_t indexMax = named ? last : (last > 4 ? 4 : last);
                     ((void (*)(const char *, uint32_t *, uint32_t, uint32_t, const char *const *))0x00038190)(
                         "index", &indexValue, 0, indexMax, named ? names.data() : NULL);
-                    DebugUIntVariable *index = ShadowCurrentIndexer;
+                    DebugUIntVariable *index = SideCurrentIndexer();
                     Logf("file %d index %d/%d: index value %08x", f, b, named, indexValue);
                     ReadAllTypes(it->first.c_str(), true, indexMax, named ? names.data() : NULL);
                     LogBytes("indexer", (const uint8_t *)index + 8, 0x20);   // not the name or names pointers
@@ -910,14 +914,15 @@ static void TuningTextCases(const std::vector<TuningText> &tunings) {
                         0x0003d870))(it->first.c_str(), names[0]);
                     Logf("FindIndexedItem %s value %08x", item != NULL ? item : "(null)", indexValue);
                     ((void (*)())0x00037ad0)();
-                    Logf("after dbendindex %d", ShadowCurrentIndexer == NULL);
+                    Logf("after dbendindex %d", SideCurrentIndexer() == NULL);
                     ShadowBuiltinDelete(index);
                 });
             }
         }
     }
     TuningDBMgr = savedManager;
-    ShadowCurrentIndexer = savedIndex;
+    CurrentIndexer = savedIndex;
+    OrigCurrentIndexer = savedOrigIndex;
 }
 
 // ParseData, ParseData_Colour, EncryptDecrypt, the coordinates.
@@ -1076,7 +1081,7 @@ static void MountedCases(const std::vector<TuningText> &inis) {
             } else {
                 text = inis[i].text;
                 ini.vtable = (const void *const *)0x001a0998;
-                ini.text = (char *)MEM_alloc("dbvarshadow ini", int(text.size()) + 1, *(unsigned *)0x00242cdc);
+                ini.text = (char *)MEM_alloc("dbvarshadow ini", int(text.size()) + 1, MemDefaultClass);
                 memcpy(ini.text, text.data(), text.size());
                 ini.text[text.size()] = '\0';
                 ini.dafi = ShadowDAFI_open(ini.text, int(text.size()));
@@ -1134,16 +1139,16 @@ static void Suite(const std::vector<TuningText> &tunings, const std::vector<Tuni
     // The mission archive the tuning files and camera.ini are in is closed just before the game's main loop
     // (UFileLoader::StopUsingBigFile): opened again under its name for this part, and closed after.
     bool reopened = false;
-    uint8_t logRequests = ArchiveLogRequests;
-    if (ArchiveOpen == 0 && ArchiveName[0] != 0) {
+    uint8_t logRequests = LogRequests;
+    if (BigFileOpen == 0 && BigFileName[0] != 0) {
         char name[256];
-        strcpy(name, ArchiveName);
+        strcpy(name, BigFileName);
         reopened = UFileLoader::StartUsingBigFile("driving", name, false);
     }
     MountedCases(inis);
     if (reopened)
         UFileLoader::StopUsingBigFile();
-    ArchiveLogRequests = logRequests;
+    LogRequests = logRequests;
 }
 
 } // namespace
@@ -1160,7 +1165,9 @@ void DebugVarShadow_Run(void) {
     g_log = &originalLog;
     g_cases = 0;
     int swapped = SwapOriginals(true);
+    g_originalSide = true;
     Suite(tunings, inis);
+    g_originalSide = false;
     SwapOriginals(false);
     int cases = g_cases;
     int filesOriginal = g_filesOpened;

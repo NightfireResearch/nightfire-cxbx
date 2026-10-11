@@ -21,17 +21,18 @@
 // nothing at all call: provisional, with EAGL_UNTESTED.
 //
 // The arithmetic is single float products and a reciprocal, each one operation rounded once to float - written in
-// float, which gives the x87's bits at PC=53; matrix products go through the hook at 0x001cec7c, BuildSQT and
+// float, which gives the x87's bits at PC=53; matrix products go through the hook Multiply, BuildSQT and
 // Transpose through EAGL::Transform.
 // ---------------------------------------------------------------------------------------------------------------
-
-typedef void (*MultiplyHook)(float *out, const float *parent, const float *child);
-#define Multiply (*(MultiplyHook *)0x001cec7c)
 
 // FUNC_AT(0x001066f0)
 void EAGLAnim_MultiplyMatrices(float *out, const float *parent, const float *child) {
     VU0_MATRIX4_mult(out, child, parent);
 }
+
+typedef void (*MultiplyHook)(float *out, const float *parent, const float *child);
+// XBE_GLOBAL(0x001cec7c, 4)
+static MultiplyHook Multiply = EAGLAnim_MultiplyMatrices;
 
 // ---- BoneMask
 

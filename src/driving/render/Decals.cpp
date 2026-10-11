@@ -31,17 +31,11 @@
 #define CRT_printf ((int (*)(const char *format, ...))0x00132192)
 
 // ---- globals
+// XBE_GLOBAL(0x00242de8, 0x34)
 #define TexturedParentMethod ((EAGL::RenderMethod *)0x00242de8)     // the render methods the GeoPrims inherit
+// XBE_GLOBAL(0x00242e1c, 0x34)
 #define EmpParentMethod ((EAGL::RenderMethod *)0x00242e1c)
-// The quads: eight GeoPrims of 21, six vertices each (two triangles), and per quad its alpha and delay
-#define DecalGeoPrims ((TexturedGeoPrim **)0x001f68b0)
-#define DecalAlpha ((uint8_t *)0x001f68d0)
-#define DecalDelay ((uint8_t *)0x001f6978)
-#define DecalPositions ((Coord4 *)0x001f6a20)
-#define DecalUVs ((Coord4 *)0x001fa920)
-#define DecalColours ((uint32_t *)0x001fe830)
 #define DecalState (*(EAGL::GeoPrimState *)0x001ff7f0)
-#define DecalVertexCount ((uint32_t *)0x001c48a0)      // the GeoPrims' vertex count record: 126, 0, 0, 0
 
 namespace {
 
@@ -53,6 +47,27 @@ constexpr int kVerticesPerQuad = 6;
 constexpr int kQuads = kGeoPrims * kQuadsPerGeoPrim;
 constexpr int kVerticesPerGeoPrim = kQuadsPerGeoPrim * kVerticesPerQuad;
 constexpr int kVertices = kQuads * kVerticesPerQuad;
+
+}  // namespace
+
+// The quads: eight GeoPrims of 21, six vertices each (two triangles), and per quad its alpha and delay
+// XBE_GLOBAL(0x001f68b0, 0x20)
+TexturedGeoPrim *DecalGeoPrims[kGeoPrims];
+// XBE_GLOBAL(0x001f68d0, 0xa8)
+uint8_t DecalAlpha[kQuads];
+// XBE_GLOBAL(0x001f6978, 0xa8)
+uint8_t DecalDelay[kQuads];
+// XBE_GLOBAL(0x001f6a20, 0x3f00)
+alignas(16) Coord4 DecalPositions[kVertices];
+// XBE_GLOBAL(0x001fa920, 0x3f00)
+alignas(16) Coord4 DecalUVs[kVertices];
+// XBE_GLOBAL(0x001fe830, 0xfc0)
+uint32_t DecalColours[kVertices];
+// XBE_GLOBAL(0x001c48a0, 0x10)
+uint32_t DecalVertexCount[4] = { kVerticesPerGeoPrim, 0, 0, 0 };   // the GeoPrims' vertex count record
+
+namespace {
+
 constexpr uint32_t kTextureDecl = 0x6c636564;   // 'decl'
 constexpr uint32_t kPrimitiveTriangles = 5;
 constexpr int kCylinderSteps = 17;

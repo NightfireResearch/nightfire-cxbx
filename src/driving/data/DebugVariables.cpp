@@ -20,7 +20,8 @@
 
 using namespace GameStd;
 
-#define CurrentIndexer (*(DebugUIntVariable **)0x001e22c4)   // the index dbindex set, until dbendindex
+// XBE_GLOBAL(0x001e22c4, 0x4)
+DebugUIntVariable *CurrentIndexer;          // the index dbindex set, until dbendindex
 #define DebugUIntVariableVtable ((const void *const *)0x0018bd00)
 
 #define OStrStream_Construct ((OStrStream *(__fastcall *)(OStrStream *, int, char *, int, int, int))0x00131b27)

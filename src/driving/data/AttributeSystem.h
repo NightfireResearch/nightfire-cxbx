@@ -86,7 +86,7 @@ public:
 };
 static_assert(sizeof(AttributeSystem) == 0x68, "AttributeSystem is 0x68 bytes");
 
-#define AttributeSystemInstance (*(AttributeSystem **)0x001e464c)   // AttributeSystem::fgThis
+extern AttributeSystem *AttributeSystemInstance;   // AttributeSystem::fgThis (AttributeSystem.cpp)
 
 // What ProcessDafiSection does with a parsed key of a plain type (SetAttribute<T> in the PS2 build): the value
 // goes into the map under `name` - held in the value if it is one element and `copy` is set, in a block of its

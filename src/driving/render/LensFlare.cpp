@@ -4,6 +4,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <bit>
 
 #include "../../common/xbeOverload.h"     // XbeVirtual
 #include "../../helpers.h"
@@ -24,8 +25,11 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- globals
-#define ViewProjectionMatrixPointer (*(const MATRIX4 **)0x001caf5c)
-#define FlareTestDepth FLOAT_AT(0x001c4a84)             // 9.9999: the test sprites' depth (name ours)
+// XBE_GLOBAL(0x001c4a84, 4)
+float FlareTestDepth = 9.9999f;          // the test sprites' depth (name ours)
+static_assert(std::bit_cast<uint32_t>(9.9999f) == 0x411fff97, "9.9999");
+// XBE_GLOBAL(0x00200f44, 4)
+RLensFlareManager *TheLensFlareManager;
 
 namespace {
 

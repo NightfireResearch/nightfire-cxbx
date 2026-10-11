@@ -1224,9 +1224,9 @@ files, `src/driving/devtools/`). Suggested internal pieces, in the file's order:
 1. **Records as structs** with `static_assert`ed offsets: `LockQueue` (0x38), `FsWorker` (0xb8), `FsOp` (0x30),
    `BigFile` (0x118), `FileSlot` (0x10), `ChunkCtx`, `FileReq`, `ResolveCtx`; reuse `RealMutex`, `RealSignal`,
    `RealThread` from `RealSystem.h`.
-2. **Globals by address** (`#define FsOperations (*(FsWorker **)0x00242870u)` etc., as RealSystem.cpp does), so the
-   state stays where the rest of the binary and the dumps expect it during the transition, and `global_clears.py`
-   can later own them.
+2. **Globals by address** during the port (`#define FsOperations (*(FsWorker **)0x00242870u)` etc.); since
+   October 2026's ownership sweep they are our own variables tagged `// XBE_GLOBAL(address, size)`, except
+   `FsWorkers`, which unported FILESYS_write reaches through data.
 3. **Queue helpers** as plain C++ functions (no need to patch them: no outside callers), `Q_unlink` taking
    `(q, node)` normally. Keep `FUN_0014a540` the original.
 4. **File device** (slot table, `FILEDEV_*`, `BIG_*`, the resolver) - pure functions over the slot table and a

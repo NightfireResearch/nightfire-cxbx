@@ -92,4 +92,23 @@ void IFeedback_Timer_Callback();
 // The thread: an Update for every signal until the destructor asks it to stop (0x0004fe10; the name is ours).
 void IFeedback_Thread();
 
+// Every port's record (Feedback.cpp); the static initialisers clear each one's user count.
+extern FeedbackPort gFeedbackPorts[4];
+
+// XAPI's XINPUT_FEEDBACK: a header (status, an event to signal on completion, the driver's bytes), then the two
+// motors' speeds
+struct PadFeedback {
+    uint32_t status;            // +0x00
+    void *event;                // +0x04
+    uint8_t reserved[58];       // +0x08
+    uint16_t leftMotorSpeed;    // +0x42
+    uint16_t rightMotorSpeed;   // +0x44
+};
+static_assert(offsetof(PadFeedback, leftMotorSpeed) == 0x42 && offsetof(PadFeedback, rightMotorSpeed) == 0x44,
+              "XINPUT_FEEDBACK layout");
+
+extern int32_t gFeedbackUsers;      // ports in use
+extern PadFeedback gPadFeedback;    // what Update last sent
+extern uint32_t gFeedbackTick;
+
 #endif // DRIVING_ENGINE_FEEDBACK_H_

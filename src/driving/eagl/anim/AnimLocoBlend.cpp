@@ -36,7 +36,8 @@
 
 namespace {
 
-#define TurnAlignCount I32_AT(0x00241b30)               // FnTurnBlender::AlignCycleBeginEnd's printf counter
+// XBE_GLOBAL(0x00241b30, 4)
+int32_t TurnAlignCount;                         // FnTurnBlender::AlignCycleBeginEnd's printf counter
 #define VtTurnBlender ((const void *)0x001a14b4)
 #define VtRunBlender ((const void *)0x001a1504)
 

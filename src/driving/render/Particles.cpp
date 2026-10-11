@@ -33,9 +33,10 @@
 
 #define GameTick U32_AT(0x001f2a4c)
 #define ParticleDensity U32_AT(0x001f2dd8)          // FeatureManager's, in 256ths (name ours)
-#define NoVelocity (*(const Coord4 *)0x00201740)    // what CreateParticles moves its particles back along (zero)
-#define LastSystem (*(RParticleSystem **)0x0020174c)    // AddOrRefresh's answer
-#define LastSystemIsNew BOOL8_AT(0x00201750)
+// XBE_GLOBAL(0x0020174c, 4)
+static RParticleSystem *LastSystem;                 // AddOrRefresh's answer
+// XBE_GLOBAL(0x00201750, 1)
+static bool LastSystemIsNew;
 #define DefaultSystem (*(RParticleSystemData *)0x001c4e90)  // Reload's 'dflt'
 
 const RParticleSystemVtable *const kRMovableParticleSystemVtable = (const RParticleSystemVtable *)0x00192da8;
@@ -505,10 +506,10 @@ RParticleSystem** RParticleSystemManager::AddOrRefresh(uint32_t key, RParticleEm
         value.system = system;
         TreeInsertResult inserted;
         systems->InsertUnique(&inserted, &value);
-        LastSystemIsNew = 1;
+        LastSystemIsNew = true;
     } else {
         system = found->value.system;
-        LastSystemIsNew = 0;
+        LastSystemIsNew = false;
     }
     system->keepAlive = kKeepAlive;
     system->unknown34 = unknown34;
@@ -567,9 +568,10 @@ void RParticleSystemManager::CreateParticles(RParticleSystemData *data, const Co
     }
     VU0_v4unitcrossprodxyz(&forward, &up, &emitter.side);
     VU0_v4unitcrossprodxyz(&emitter.side, &forward, &up);
+    const Coord4 noVelocity = { 0.0f, 0.0f, 0.0f, 0.0f };   // what the particles are moved back along
     for (int i = 0; i < count; i++) {
         RParticle *particle = fgParticleSystems->cache.Spawn();
         if (particle != NULL)
-            particle->ResetParticle(position, data, &emitter, &up, direction, &NoVelocity, 0.0f, 0.0f);
+            particle->ResetParticle(position, data, &emitter, &up, direction, &noVelocity, 0.0f, 0.0f);
     }
 }

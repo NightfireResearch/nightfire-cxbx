@@ -28,7 +28,7 @@
 
 struct StringToNumberEntry {
     int number;
-    char *string;
+    const char *string;
 };
 
 struct StringToNumber {

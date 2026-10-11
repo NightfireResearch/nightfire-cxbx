@@ -63,8 +63,19 @@ const uint32_t kRanges[2][2] = {
     { 0x0006f810, 0x00071930 },     // PVehicle, the car name map
 };
 
+// The originals' copies of the port's CarPhysicsType, AttributeSystemInstance, fgCarNameMap and fgCarNames: lent to
+// them as each window opens (the car name tests set the two lists' copies themselves)
+#define OrigCarPhysicsType (*(uint32_t *)0x001c3de8)
+#define OrigAttributeSystemInstance (*(AttributeSystem **)0x001e464c)
+#define OrigCarNameMap (*(CarNameMap **)0x001e7ac0)
+#define OrigCarNames (*(const char ***)0x001e7ac4)
+
 struct OriginalWindow {
     OriginalWindow() {
+        OrigCarPhysicsType = CarPhysicsType;
+        OrigAttributeSystemInstance = AttributeSystemInstance;
+        OrigCarNameMap = fgCarNameMap;
+        OrigCarNames = fgCarNames;
         for (const uint32_t *range : kRanges)
             XbeOriginal_RestoreRange(range[0], range[1], true);
     }
@@ -563,8 +574,8 @@ void TestCarNames() {
             Orig_BuildCarNames();
         else
             PVehicle::BuildCarNames();
-        maps[side] = fgCarNameMap;
-        names[side] = fgCarNames;
+        maps[side] = original ? OrigCarNameMap : fgCarNameMap;
+        names[side] = original ? OrigCarNames : fgCarNames;
         built[side] = fgCarNameCount;
     });
     g_cases++;
@@ -576,16 +587,16 @@ void TestCarNames() {
     }
     Both([&](bool original) {
         int side = original ? 0 : 1;
-        fgCarNameMap = maps[side];
-        fgCarNames = names[side];
+        fgCarNameMap = OrigCarNameMap = maps[side];
+        fgCarNames = OrigCarNames = names[side];
         fgCarNameCount = built[side];
         if (original)
             Orig_Shutdown();
         else
             PVehicle::Shutdown();
     });
-    fgCarNameMap = savedMap;
-    fgCarNames = savedNames;
+    fgCarNameMap = OrigCarNameMap = savedMap;
+    fgCarNames = OrigCarNames = savedNames;
     fgCarNameCount = savedCount;
 }
 

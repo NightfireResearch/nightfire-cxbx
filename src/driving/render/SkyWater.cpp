@@ -37,28 +37,6 @@ class RTextureContext;
 
 // ---- globals
 
-// The sun's offset from the eye, worked out by the first RSky::Draw
-#define SunOffset (*(Coord3 *)0x00201800)
-#define SunPlaced BOOL8_AT(0x00201810)
-
-#define WaterLayer U32_AT(0x0020184c)                       // "Water layer"
-
-// The window batch: its vertex arrays, its count, and the texture
-#define WindowTexture (*(EAGL::TAR **)0x00201850)
-#define WindowUVs ((Coord4 *)0x00201860)
-#define WindowPositions ((Coord4 *)0x00202060)
-#define WindowVertexCount I32_AT(0x00202860)
-#define WindowColours ((uint32_t *)0x00202870)
-#define WindowColoursCleared U32_AT(0x00202a70)            // the colours' function-local static guard
-
-// The debris tables ScaleDebrisTables scales: two lists of vectors, each scaled into a copy
-#define DebrisVectorsA ((const Coord4 *)0x001c59e0)
-#define DebrisScaledA ((Coord4 *)0x001c6a10)
-#define DebrisScaleA FLOAT_AT(0x001c5b84)
-#define DebrisVectorsB ((const Coord4 *)0x001c5d80)
-#define DebrisScaledB ((Coord4 *)0x001c5f60)
-#define DebrisCountB I32_AT(0x001c8e44)
-
 static const USingletonVtable *const kWaterVtable = (const USingletonVtable *)0x001930b8;
 
 constexpr float kTurnsPerDegree = 1.0f / 360.0f;
@@ -67,9 +45,74 @@ constexpr float kSunDistance = 1500.0f;
 constexpr uint32_t kWindowTexture = 0x77646e77;     // 'wndw'
 constexpr uint32_t kCrackColour = 0x80ffffff;       // white, half transparent
 constexpr int kWindowBatch = 0x78;                  // the batch is drawn before a pane would take it past this
-constexpr int kDebrisCountA = 26;
 constexpr float kDebrisScaleB = 2.5f;
-constexpr int kWindowVertices = 0x80;               // the batch's arrays
+
+// XBE_GLOBAL(0x00201844, 4)
+RWater *TheWater;
+
+// The sun's offset from the eye, worked out by the first RSky::Draw
+// XBE_GLOBAL(0x00201800, 0xc)
+static Coord3 SunOffset;
+// XBE_GLOBAL(0x00201810, 1)
+static bool SunPlaced;
+
+// XBE_GLOBAL(0x0020184c, 4)
+static uint32_t WaterLayer;                         // "Water layer"
+
+// The window batch: its vertex arrays, its count, and the texture
+// XBE_GLOBAL(0x00201850, 4)
+EAGL::TAR *WindowTexture;
+// XBE_GLOBAL(0x00201860, 0x800)
+alignas(16) Coord4 WindowUVs[kWindowVertices];
+// XBE_GLOBAL(0x00202060, 0x800)
+alignas(16) Coord4 WindowPositions[kWindowVertices];
+// XBE_GLOBAL(0x00202860, 4)
+int32_t WindowVertexCount;
+// XBE_GLOBAL(0x00202870, 0x200)
+uint32_t WindowColours[kWindowVertices];
+// XBE_GLOBAL(0x00202a70, 4)
+uint32_t WindowColoursCleared;               // the colours' function-local static guard
+
+// The debris tables ScaleDebrisTables scales: two lists of vectors, each scaled into a copy
+// XBE_GLOBAL(0x001c59e0, 0x1a0)
+const Coord4 DebrisVectorsA[kDebrisCountA] = {
+    { -0.011719f, 0.0f, -0.023438f, 1.0f },
+    { -0.003906f, 0.007813f, -0.023438f, 1.0f },
+    { -0.003906f, -0.007813f, -0.023438f, 1.0f },
+    { 0.003906f, 0.007813f, -0.023438f, 1.0f },
+    { 0.003906f, -0.007813f, -0.023438f, 1.0f },
+    { 0.011719f, 0.0f, -0.023438f, 1.0f },
+    { 0.007813f, 0.0f, 0.023438f, 1.0f },
+    { 0.003906f, 0.007813f, 0.023438f, 1.0f },
+    { 0.003906f, -0.007813f, 0.023438f, 1.0f },
+    { -0.003906f, 0.007813f, 0.023438f, 1.0f },
+    { -0.003906f, -0.007813f, 0.023438f, 1.0f },
+    { -0.007813f, 0.0f, 0.023438f, 1.0f },
+    { 0.007813f, 0.0f, 0.023438f, 1.0f },
+    { 0.011719f, 0.0f, -0.023438f, 1.0f },
+    { 0.003906f, -0.007813f, 0.023438f, 1.0f },
+    { 0.003906f, -0.007813f, -0.023438f, 1.0f },
+    { -0.003906f, -0.007813f, 0.023438f, 1.0f },
+    { -0.003906f, -0.007813f, -0.023438f, 1.0f },
+    { -0.007813f, 0.0f, 0.023438f, 1.0f },
+    { -0.011719f, 0.0f, -0.023438f, 1.0f },
+    { -0.003906f, 0.007813f, 0.023438f, 1.0f },
+    { -0.003906f, 0.007813f, -0.023438f, 1.0f },
+    { 0.003906f, 0.007813f, 0.023438f, 1.0f },
+    { 0.003906f, 0.007813f, -0.023438f, 1.0f },
+    { 0.007813f, 0.0f, 0.023438f, 1.0f },
+    { 0.011719f, 0.0f, -0.023438f, 1.0f },
+};
+// XBE_GLOBAL(0x001c6a10, 0x1a0)
+#define DebrisScaledA ((Coord4 *)0x001c6a10)
+// XBE_GLOBAL(0x001c5b84, 4)
+float DebrisScaleA = 0.52f;
+// XBE_GLOBAL(0x001c5d80, 0x1e0)
+#define DebrisVectorsB ((const Coord4 *)0x001c5d80)
+// XBE_GLOBAL(0x001c5f60, 0x1e0)
+#define DebrisScaledB ((Coord4 *)0x001c5f60)
+// XBE_GLOBAL(0x001c8e44, 4)
+int32_t DebrisCountB = 30;
 
 // GeoPrimState's depth comparison, in OpenGL's numbering
 constexpr uint32_t kDepthLessEqual = 0x203;

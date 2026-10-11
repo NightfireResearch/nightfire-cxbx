@@ -30,7 +30,7 @@
 // Each function is the original at the same address, ported from the listing: x87 arithmetic in double in the
 // original's order with a float rounding at every float store and the x87 stack's values kept unrounded, the
 // resampler kernel FUN_001462b0 (hand-written SSE) instruction for instruction in intrinsics, writing the same
-// scratch globals (0x001da4e0..0x001da52c). The x87 results equal the original's at 53-bit precision control
+// scratch globals. The x87 results equal the original's at 53-bit precision control
 // (docs/driving/sound.md 8.8). devtools/SndFilterShadow.cpp compares every function here with the original.
 //
 // Calls outside module H (SNDPKTPLAYI, SNDDRV, SNDMEMI_alloc, memclr, the EA-XA decoder of module I, the reverb's
@@ -39,6 +39,9 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 using namespace SND;
+
+// XBE_GLOBAL(0x001da4e0, 0x50)
+alignas(16) RsfKernelScratch KernelScratch;
 
 namespace {
 
@@ -73,14 +76,6 @@ static_assert(std::bit_cast<uint32_t>(kSin11) == 0x32d7322b, "the original's 1/1
 static_assert(std::bit_cast<uint32_t>(kSin13) == 0x2f309211, "the original's 1/13!");
 static_assert(std::bit_cast<uint32_t>(kRsfScale) == 0x30000000, "the original's 2^-31");
 
-// The resampler kernel's scratch in .data (0x001da4e0..0x001da52f), written as the original writes it
-struct RsfKernelScratch {            // 0x50, every array 16-byte aligned
-    float lo[8];                     // +0x00 src[i]
-    float hi[4];                     // +0x20 src[i + 1]
-    uint32_t fraction[8];            // +0x30 the 31-bit fractions
-};
-static_assert(sizeof(RsfKernelScratch) == 0x50, "the kernel's scratch is 0x50 bytes");
-#define KernelScratch (*(RsfKernelScratch *)0x001da4e0)
 
 #define MixVoices (*(SND::MixVoice **)0x00245be4)   // MixList: SndMix.voices
 

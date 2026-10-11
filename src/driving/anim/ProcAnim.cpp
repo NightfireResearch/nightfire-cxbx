@@ -1,4 +1,5 @@
 #include "ProcAnim.h"
+#include "../render/TimeData.h"   // TickSeconds
 
 #include <bit>
 #include <math.h>
@@ -20,14 +21,8 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's globals
+// XBE_GLOBAL(0x001c41c0, 0x400)
 #define ProcAnimFunctions ((ProcAnimFunction *)0x001c41c0)    // [256], by CARP::Instance::procAnimType
-#define ProcAnimParams (*(float **)0x001c41b0)
-#define ProcAnimParamCount U32_AT(0x001c41b4)
-#define ProcAnimXForms (*(MATRIX4 **)0x001c41b8)
-#define ProcAnimXFormCount U32_AT(0x001c41bc)
-// The lists' defaults: a zero parameter and a zero transform the globals point at
-#define DefaultProcAnimParam ((float *)0x00191938)
-#define DefaultProcAnimXForm ((MATRIX4 *)0x00191940)
 #define SimStep FLOAT_AT(0x001c465c)                           // "GAME::SimStep": the tick, as a float
 
 namespace {
@@ -84,6 +79,23 @@ void CopyInstanceMatrix(const CARP::Instance *instance, MATRIX4 *out) {
     out->mtx[3][3] = 1.0f;
 }
 
+} // namespace
+
+// The lists' defaults: a zero parameter and a zero transform
+float DefaultProcAnimParam = 0.0f;
+alignas(16) MATRIX4 DefaultProcAnimXForm = {};
+
+// XBE_GLOBAL(0x001c41b0, 4)
+float *ProcAnimParams = &DefaultProcAnimParam;
+// XBE_GLOBAL(0x001c41b4, 4)
+uint32_t ProcAnimParamCount = 1;
+// XBE_GLOBAL(0x001c41b8, 4)
+MATRIX4 *ProcAnimXForms = &DefaultProcAnimXForm;
+// XBE_GLOBAL(0x001c41bc, 4)
+uint32_t ProcAnimXFormCount = 1;
+
+namespace {
+
 // The function's parameter: its state's, or the instance's procAnimIndex
 uint16_t Parameter(const CARP::Instance *instance, ProcAnimState *state) {
     return (instance->flags & kWorldInstanceProcAnim) ? state->parameter : instance->procAnimIndex;
@@ -136,7 +148,7 @@ void SetProcAnimXFormList(MATRIX4 *xforms, uint32_t count) {
         ProcAnimXForms = xforms;
         ProcAnimXFormCount = count;
     } else {
-        ProcAnimXForms = DefaultProcAnimXForm;
+        ProcAnimXForms = &DefaultProcAnimXForm;
         ProcAnimXFormCount = 1;
     }
 }
@@ -147,7 +159,7 @@ void SetProcAnimParamList(float *params, uint32_t count) {
         ProcAnimParams = params;
         ProcAnimParamCount = count;
     } else {
-        ProcAnimParams = DefaultProcAnimParam;
+        ProcAnimParams = &DefaultProcAnimParam;
         ProcAnimParamCount = 1;
     }
 }

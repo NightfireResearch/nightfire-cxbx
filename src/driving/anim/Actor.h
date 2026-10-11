@@ -192,4 +192,7 @@ static_assert(sizeof(ActActorDatabase) == 0xc, "an ActActorDatabase is 12 bytes"
 // Four forms of the same algebra, by the largest component of `from`.
 void VU0_quatstoangvel(Coord3 *out, const Coord4 *from, const Coord4 *to, float time);         // 0x00011930
 
+extern bool CullRestart;                // PrepareActorsForCulling's: the walk starts again
+extern PointerListNode *CullCursor;     // the culling walk's node
+
 #endif // DRIVING_ANIM_ACTOR_H_

@@ -241,4 +241,16 @@ void ReflMapVertex(float height, float turns, bool flip, Coord4 *position, Coord
 
 #define TheReflection (*(RReflection **)0x001f2dfc)
 
+extern uint32_t CpuType;                    // CPU_detect's
+extern int32_t FeatureDefault50;            // copied to FeatureManagerData::unknown50
+extern float WarpageX;
+extern float WarpageY;
+extern float ReflNearZ;
+extern float ReflFarZ;
+extern float ReflWorldRadius;               // DrawWorldAtPoint's radius
+extern int32_t ReflDrawWorld;
+extern bool ReflDrawBack;                   // the backwards hemisphere into the sphere map
+extern bool ReflDrawFront;                  // the forwards one
+extern bool ReflUpdating;                   // UpdateMaps is running
+
 #endif // DRIVING_RENDER_REFLECTION_H_

@@ -42,44 +42,27 @@ using EAGL::ViewPort;
 // ---- globals
 
 // (EAGL's allocator pair is eagl_alloc / eagl_free until RRenderer overrides it through Device::SetNewOverride;
-// it, the device and context pointers, the registered matrices and the pools are EaglGlobals.h's.)
-#define IdentityMatrix (*(const float **)0x001cdb70)            // -> 0x001cdb30, an identity MATRIX4
-#define ReturnsTrueAnswer U32_AT(0x0023ff14)
+// it, the registered matrices and the pools are EaglGlobals.h's.)
 
-// The original's strings, passed by address as the original passes them
-#define ViewportNewName ((const char *)0x001ccfb4)              // "EAGL::Viewport new"
-#define RenderContextNewName ((const char *)0x001cb9ac)         // "RenderContext new"
-#define TextureRenderContextNewName ((const char *)0x001cb9c0)  // "TextureRenderContext new"
-#define TarTypeName ((const char *)0x001cb0b8)                  // "EAGL::TAR" (Init's)
-#define RenderMethodTypeName ((const char *)0x001cb0c4)         // "RenderMethod"
-#define ModelTypeName ((const char *)0x001cb0d4)                // "Model"
-#define VertexBufferTypeName ((const char *)0x001cb0dc)         // "VertexBuffer"
-#define GeoPrimStateRuntimeName ((const char *)0x001cb0ec)      // "EAGL::GeoPrimState"
-#define TarRuntimeName ((const char *)0x001cb100)               // "EAGL::TAR"
-#define ReflectionConstantsName ((const char *)0x001cb10c)      // "&EAGL::RenderMethodConstants::gReflectionConstants"
-#define SkinningConstantsName ((const char *)0x001cb140)        // "&...::gSkinningConstants"
-#define ZeroOneTwoThreeName ((const char *)0x001cb174)          // "&...::gZeroOneTwoThree"
-#define ShadowColourName ((const char *)0x001cb1a4)             // "&...::gShadowColour"
-#define EnvMapConstantsName ((const char *)0x001cb1d0)          // "&...::gEnvMapConstants"
-// Destruct's own copies of the same names
-#define ReflectionConstantsName2 ((const char *)0x001caf70)
-#define SkinningConstantsName2 ((const char *)0x001cafa4)
-#define ZeroOneTwoThreeName2 ((const char *)0x001cafd8)
-#define ShadowColourName2 ((const char *)0x001cb008)
-#define EnvMapConstantsName2 ((const char *)0x001cb034)
-#define TarTypeName2 ((const char *)0x001cb064)                 // "EAGL::TAR"
-#define RenderMethodTypeName2 ((const char *)0x001cb070)
-#define ModelTypeName2 ((const char *)0x001cb080)
-#define VertexBufferTypeName2 ((const char *)0x001cb088)
-#define TarRuntimeName2 ((const char *)0x001cb098)
-#define GeoPrimStateRuntimeName2 ((const char *)0x001cb0a4)
+// XBE_GLOBAL(0x0023fb60, 4)
+Device *CurrentDevice;
+// XBE_GLOBAL(0x0023fb64, 4)
+RenderContext *CurrentRenderContext;
+// XBE_GLOBAL(0x0023fb68, 4)
+TextureRenderContext *CurrentTextureRenderContext;
+// XBE_GLOBAL(0x0023ff14, 4)
+static uint32_t ReturnsTrueAnswer;
 
 namespace {
+
+const float kIdentity[16] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
 
 constexpr float kPi = 3.14159265f;
 static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "pi as the original's float");
 constexpr float kOneOver180 = 1.0f / 180.0f;
 static_assert(std::bit_cast<uint32_t>(kOneOver180) == 0x3bb60b61, "1/180 as the original's float");
+const float kHalf = 0.5f;
+const float kMinusOne = -1.0f;
 
 // The inlined "end this view": it is no longer active, and the view it nested over is begun again.
 void EndViewOf(ViewPort *view) {
@@ -108,7 +91,7 @@ void IdentityOnesFirst(float *m) {
 // tangent, the four guard-band-adjusted angles through FPATAN, then each plane's tangent and sine, all unrounded
 // on the x87 stack except where the original stores a float. ESI is the ViewPort as in the original; the
 // original's float temporaries (stored over its fov, near and far argument slots) are three locals here. The
-// constants are read from the original's .rdata, as its instructions do.
+// constants are ours (the original reads its .rdata copies through EAX, ECX and EDX).
 __declspec(naked) void __stdcall PerspectivePlanes(ViewPort *view, float fov, float aspect) {
     __asm {
         push esi
@@ -116,13 +99,10 @@ __declspec(naked) void __stdcall PerspectivePlanes(ViewPort *view, float fov, fl
         // [esp] angle 0, [esp + 4] angle 1, [esp + 8] angle 2; view [esp + 0x14], fov [esp + 0x18],
         // aspect [esp + 0x1c]
         mov esi, dword ptr [esp + 0x14]
-        mov eax, 0x001a09b0         // pi
-        mov ecx, 0x0018a138         // 1/180
-        mov edx, 0x00189eb0         // 0.5
-        fld dword ptr [eax]
-        fmul dword ptr [ecx]
+        fld dword ptr [kPi]
+        fmul dword ptr [kOneOver180]
         fmul dword ptr [esp + 0x18]
-        fmul dword ptr [edx]
+        fmul dword ptr [kHalf]
         fptan
         fstp st(0)
         fld st(0)
@@ -142,8 +122,7 @@ __declspec(naked) void __stdcall PerspectivePlanes(ViewPort *view, float fov, fl
         fld1
         fpatan
         fstp dword ptr [esp + 8]
-        mov ecx, 0x0018a134         // -1
-        fld dword ptr [ecx]
+        fld dword ptr [kMinusOne]
         fdiv dword ptr [esp + 0x1c]
         fmul dword ptr [esi + 0x184]
         fmulp st(1), st
@@ -153,8 +132,8 @@ __declspec(naked) void __stdcall PerspectivePlanes(ViewPort *view, float fov, fl
         fptan
         fstp st(0)
         fstp dword ptr [esi + 0x158]
-        fld dword ptr [eax]
-        fmul dword ptr [edx]
+        fld dword ptr [kPi]
+        fmul dword ptr [kHalf]
         fld dword ptr [esp]
         fsubr st, st(1)
         fsin
@@ -539,12 +518,11 @@ void EAGL::ViewPort::SetViewMatrix(const float *matrix) {
 EAGL::ViewPort* EAGL::ViewPort::Construct(RenderContext *context) {
     Extension()->Construct(this);
     Private()->Construct(this);
-    const float *identity = IdentityMatrix;
     previous = NULL;
     enableModelSphereCull = 0;
-    memcpy(projection, identity, sizeof(projection));
-    memcpy(view, identity, sizeof(view));
-    memcpy(viewProjection, identity, sizeof(viewProjection));
+    memcpy(projection, kIdentity, sizeof(projection));
+    memcpy(view, kIdentity, sizeof(view));
+    memcpy(viewProjection, kIdentity, sizeof(viewProjection));
     textureRenderContext = NULL;
     renderContext = context;
     return this;
@@ -555,12 +533,11 @@ EAGL::ViewPort* EAGL::ViewPort::Construct(RenderContext *context) {
 EAGL::ViewPort* EAGL::ViewPort::ConstructForTexture(TextureRenderContext *context) {
     Extension()->Construct(this);
     Private()->Construct(this);
-    const float *identity = IdentityMatrix;
     previous = NULL;
     enableModelSphereCull = 0;
-    memcpy(projection, identity, sizeof(projection));
-    memcpy(view, identity, sizeof(view));
-    memcpy(viewProjection, identity, sizeof(viewProjection));
+    memcpy(projection, kIdentity, sizeof(projection));
+    memcpy(view, kIdentity, sizeof(view));
+    memcpy(viewProjection, kIdentity, sizeof(viewProjection));
     renderContext = NULL;
     textureRenderContext = context;
     return this;
@@ -627,7 +604,7 @@ float* EAGL::ViewPort::GetViewProjectionMatrix() {
 
 // FUNC_AT(0x000ee010)
 EAGL::ViewPort* EAGL::RenderContext::NewViewPort() {
-    void *memory = EaglMalloc(sizeof(ViewPort), ViewportNewName);
+    void *memory = EaglMalloc(sizeof(ViewPort), "EAGL::Viewport new");
     ViewPort *v = memory != NULL ? static_cast<ViewPort *>(memory)->Construct(this) : NULL;
     v->next = viewPorts;                            // the original stores through a failed allocation too
     viewPorts = v;
@@ -786,7 +763,7 @@ EAGL::TextureRenderContext* EAGL::TextureRenderContext::Construct(Device *owner)
 
 // FUNC_AT(0x000f34b0)
 EAGL::ViewPort* EAGL::TextureRenderContext::NewViewPort() {
-    void *memory = EaglMalloc(sizeof(ViewPort), ViewportNewName);
+    void *memory = EaglMalloc(sizeof(ViewPort), "EAGL::Viewport new");
     ViewPort *v = memory != NULL ? static_cast<ViewPort *>(memory)->ConstructForTexture(this) : NULL;
     v->next = viewPorts;
     viewPorts = v;
@@ -975,18 +952,18 @@ void eagl_free(void *pointer, uint32_t) {
 bool EAGL::Device::Init() {
     initialised = 1;
     CurrentDevice = this;
-    TheConstructorPool.AddType(TarTypeName, (void *)0x000ed070, (void *)0x000ed2b0);
-    TheConstructorPool.AddType(RenderMethodTypeName, (void *)0x000f11c0, (void *)0x000f1390);
-    TheConstructorPool.AddType(ModelTypeName, (void *)0x000ea1d0, (void *)0x000e8b40);
-    TheConstructorPool.AddType(VertexBufferTypeName, (void *)0x000f0ee0, (void *)0x000f0f10);
-    TheRuntimeAllocPool.AddType(GeoPrimStateRuntimeName, (void *)0x000ef4c0, (void *)0x000ef780);
-    TheRuntimeAllocPool.AddType(TarRuntimeName, (void *)0x000ecbe0, (void *)0x000ed2d0);
+    TheConstructorPool.AddType("EAGL::TAR", (void *)0x000ed070, (void *)0x000ed2b0);
+    TheConstructorPool.AddType("RenderMethod", (void *)0x000f11c0, (void *)0x000f1390);
+    TheConstructorPool.AddType("Model", (void *)0x000ea1d0, (void *)0x000e8b40);
+    TheConstructorPool.AddType("VertexBuffer", (void *)0x000f0ee0, (void *)0x000f0f10);
+    TheRuntimeAllocPool.AddType("EAGL::GeoPrimState", (void *)0x000ef4c0, (void *)0x000ef780);
+    TheRuntimeAllocPool.AddType("EAGL::TAR", (void *)0x000ecbe0, (void *)0x000ed2d0);
     EAGL_SymbolInit();
-    DynamicLoader::RegisterVar(ReflectionConstantsName, (void *)0x001cdab0);
-    DynamicLoader::RegisterVar(SkinningConstantsName, (void *)0x001cdac0);
-    DynamicLoader::RegisterVar(ZeroOneTwoThreeName, (void *)0x001cdad0);
-    DynamicLoader::RegisterVar(ShadowColourName, (void *)0x001cdae0);
-    DynamicLoader::RegisterVar(EnvMapConstantsName, (void *)0x001cdaf0);
+    DynamicLoader::RegisterVar("&EAGL::RenderMethodConstants::gReflectionConstants", (void *)0x001cdab0);
+    DynamicLoader::RegisterVar("&EAGL::RenderMethodConstants::gSkinningConstants", (void *)0x001cdac0);
+    DynamicLoader::RegisterVar("&EAGL::RenderMethodConstants::gZeroOneTwoThree", (void *)0x001cdad0);
+    DynamicLoader::RegisterVar("&EAGL::RenderMethodConstants::gShadowColour", (void *)0x001cdae0);
+    DynamicLoader::RegisterVar("&EAGL::RenderMethodConstants::gEnvMapConstants", (void *)0x001cdaf0);
     uint32_t answer = D3D_ReturnsTrue(0);
     ReturnsTrueAnswer = answer;
     return answer != 0;
@@ -1035,17 +1012,17 @@ void EAGL::Device::Destruct() {
         DeleteRenderContext(renderContexts);
     while (textureRenderContexts != NULL)
         Extension()->DeleteTextureRenderContext(textureRenderContexts);
-    DynamicLoader::UnRegisterVar(ReflectionConstantsName2);
-    DynamicLoader::UnRegisterVar(SkinningConstantsName2);
-    DynamicLoader::UnRegisterVar(ZeroOneTwoThreeName2);
-    DynamicLoader::UnRegisterVar(ShadowColourName2);
-    DynamicLoader::UnRegisterVar(EnvMapConstantsName2);
-    TheConstructorPool.RemoveType(TarTypeName2);
-    TheConstructorPool.RemoveType(RenderMethodTypeName2);
-    TheConstructorPool.RemoveType(ModelTypeName2);
-    TheConstructorPool.RemoveType(VertexBufferTypeName2);
-    TheRuntimeAllocPool.RemoveType(TarRuntimeName2);
-    TheRuntimeAllocPool.RemoveType(GeoPrimStateRuntimeName2);
+    DynamicLoader::UnRegisterVar("&EAGL::RenderMethodConstants::gReflectionConstants");
+    DynamicLoader::UnRegisterVar("&EAGL::RenderMethodConstants::gSkinningConstants");
+    DynamicLoader::UnRegisterVar("&EAGL::RenderMethodConstants::gZeroOneTwoThree");
+    DynamicLoader::UnRegisterVar("&EAGL::RenderMethodConstants::gShadowColour");
+    DynamicLoader::UnRegisterVar("&EAGL::RenderMethodConstants::gEnvMapConstants");
+    TheConstructorPool.RemoveType("EAGL::TAR");
+    TheConstructorPool.RemoveType("RenderMethod");
+    TheConstructorPool.RemoveType("Model");
+    TheConstructorPool.RemoveType("VertexBuffer");
+    TheRuntimeAllocPool.RemoveType("EAGL::TAR");
+    TheRuntimeAllocPool.RemoveType("EAGL::GeoPrimState");
 }
 
 // FUNC_AT(0x000e51b0)
@@ -1059,7 +1036,7 @@ void EAGL_EmptyE51C0() {
 // A new RenderContext, put at the head of the list and made current.
 // FUNC_AT(0x000e8900)
 EAGL::RenderContext* EAGL::Device::NewRenderContext() {
-    void *memory = EaglMalloc(sizeof(RenderContext), RenderContextNewName);
+    void *memory = EaglMalloc(sizeof(RenderContext), "RenderContext new");
     RenderContext *context = memory != NULL ? static_cast<RenderContext *>(memory)->Construct(this) : NULL;
     context->next = renderContexts;
     renderContexts = context;
@@ -1069,7 +1046,7 @@ EAGL::RenderContext* EAGL::Device::NewRenderContext() {
 
 // FUNC_AT(0x000e8970)
 EAGL::TextureRenderContext* EAGL::DeviceExtension::NewTextureRenderContext() {
-    void *memory = EaglMalloc(sizeof(TextureRenderContext), TextureRenderContextNewName);
+    void *memory = EaglMalloc(sizeof(TextureRenderContext), "TextureRenderContext new");
     TextureRenderContext *context = memory != NULL ? static_cast<TextureRenderContext *>(memory)->Construct(device)
                                                    : NULL;
     context->next = device->textureRenderContexts;

@@ -32,6 +32,84 @@
 
 #define Launch (*(LaunchPage *)0x00243b90)
 
+// XBE_GLOBAL(0x00233fac, 4)
+RigidScratchPadFields *RigidScratchPad;
+// XBE_GLOBAL(0x00233fb0, 1)
+bool RigidUnderwater;
+// The rates the static initialisers worked out from the tuning's starting values
+// XBE_GLOBAL(0x00233fbc, 4)
+float RigidGroundRestitutionRate = 0.05f;       // 0.5 / 10
+// XBE_GLOBAL(0x00233fc0, 4)
+float RigidRestitutionRateC8 = 0.0025f;         // 0.025 / 10
+// XBE_GLOBAL(0x00233fc4, 4)
+float RigidBuildingRestitutionRate = 0.0004f;   // 0.01 / 25
+
+// The tuning, loaded by InitRigidBodySystem
+// XBE_GLOBAL(0x001c8f2c, 4)
+float Rigid_GRAVITY = -34.0f;
+// XBE_GLOBAL(0x001c8f30, 4)
+float Rigid_BODGE_PLAYER_GRAVITY = -34.0f;
+// XBE_GLOBAL(0x001c8f34, 4)
+float Rigid_MICRO_THRESHOLD = 10.0f;
+// XBE_GLOBAL(0x001c8f38, 4)
+float Rigid_GROUND_RESTITUTION = 0.5f;
+// XBE_GLOBAL(0x001c8f40, 4)
+float Rigid_GROUND_FRICTION_COEFF = 0.05f;
+// XBE_GLOBAL(0x001c8f44, 4)
+float Rigid_NATURAL_ANGULAR_DAMPING = 0.995f;
+// XBE_GLOBAL(0x001c8f48, 4)
+float Rigid_SLEEP_VEL = 5.0f;
+// XBE_GLOBAL(0x001c8f4c, 4)
+float Rigid_AM_LIMIT = 10.0f;
+// XBE_GLOBAL(0x001c8f50, 4)
+float Rigid_M_LIMIT = 100.0f;
+// XBE_GLOBAL(0x001c8f54, 4)
+float Rigid_SPEED_FORCE_LIMIT = 10.0f;
+// XBE_GLOBAL(0x001c8f5c, 4)
+float Rigid_SPEED_SCALE = 0.25f;
+// XBE_GLOBAL(0x001c8f60, 4)
+float Rigid_DEPTH_FORCE_SCALE = 4.5f;
+// XBE_GLOBAL(0x001c8f64, 4)
+float Rigid_TOTAL_FORCE_LIMIT = 40.0f;
+// XBE_GLOBAL(0x001c8f68, 4)
+float Rigid_ForceCapDivisor = 1600.0f;
+// XBE_GLOBAL(0x001c8f6c, 4)
+float Rigid_ForceCapFloor = 5.0f;
+// XBE_GLOBAL(0x001c8f70, 4)
+float Rigid_BoxSpeedScale = 0.32f;
+// XBE_GLOBAL(0x001c8f74, 4)
+float Rigid_BoxDepthScale = 3.75f;
+// XBE_GLOBAL(0x001c8f78, 4)
+float Rigid_BoxForceCapScale = 40.0f;
+// XBE_GLOBAL(0x001c8f7c, 4)
+float Rigid_BUILDING_MICRO_THRESHOLD = 25.0f;
+// XBE_GLOBAL(0x001c8f80, 4)
+float Rigid_BUILDING_COEFF_RESTITUTION = 0.01f;
+// XBE_GLOBAL(0x001c8f84, 4)
+float Rigid_BUILDING_FRICTION_FACTOR = 0.0045f;
+// XBE_GLOBAL(0x001c8f88, 4)
+float Rigid_BUILDING_FRICTION_LIMIT = 0.125f;
+// XBE_GLOBAL(0x001c8f8c, 4)
+float Rigid_BUILDING_COLLIDE_COG_SCALE = 1.0f;
+// XBE_GLOBAL(0x001c8f90, 4)
+float Rigid_BUILDING_FORCE_LIMIT = 10.0f;
+// XBE_GLOBAL(0x001c8f94, 4)
+float Rigid_CornerLift = -0.11f;
+// XBE_GLOBAL(0x001c8f98, 4)
+float Rigid_PF_SCALE = 10.0f;
+// XBE_GLOBAL(0x001c8f9c, 4)
+float Rigid_WorldDamageFactor = 0.35f;
+// XBE_GLOBAL(0x001c8fa0, 4)
+float Rigid_CAR_COLLIDE_COG_SCALE = 0.4f;
+// XBE_GLOBAL(0x001c8fa4, 4)
+float Rigid_UnknownCogScale = 0.1f;
+// XBE_GLOBAL(0x001c8fa8, 4)
+float Rigid_ObjectDamageFactor = 0.35f;
+// XBE_GLOBAL(0x001c8fac, 4)
+float Rigid_DamageScale = 5.0f;
+// XBE_GLOBAL(0x001c8fb0, 4)
+float Rigid_VehicleWorldDamageScale = 6.0f;
+
 namespace {
 
 constexpr float kZoneScale = 0.2f;                  // UpdateZonalInfo: a zone is 5 units

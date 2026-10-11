@@ -51,22 +51,41 @@
 
 #define ViewWidth I32_AT(0x001f2d7c)                  // the screen's size in pixels
 #define ViewHeight I32_AT(0x001f2d80)
-#define ScreenWidthCopy I32_AT(0x00241c0c)            // copies the constructor makes (names ours)
-#define ScreenHeightCopy I32_AT(0x00241c10)
-#define WideScreenOption I32_AT(0x002441a4)           // either makes ConfigureRes choose 16:9 (names ours)
-#define WideScreenSwitch U8_AT(0x001e4762)
-#define VBlankSyncOff U8_AT(0x001e4764)               // with kLaunchNoSync, the frames are not synced (names ours)
+#define WideScreenOption I32_AT(0x002441a4)           // it or WideScreenSwitch makes ConfigureRes choose 16:9 (names ours)
 #define LaunchFlags U32_AT(0x00244530)
 #define LoaderReady U8_AT(0x00244044)                 // the first byte of "LOADER READY"; with the next, no capture file
 #define Unknown2445b0 U32_AT(0x002445b0)
-#define CaptureCount I32_AT(0x001ec000)
 #define DebugFontDriver ((void *)0x001cd114)          // EAGL's FONT driver table
-#define ModelGlaresEnabled U8_AT(0x001c3ff0)          // 1: DrawGroupDrawEffects queues the articles' glares
-#define RenderTypeSetups ((RenderTypeSetup *)0x001c3ff4)  // by WorldArticle::RenderType, five
-#define InstanceOffset (*(const Coord4 *)0x001d4c00)  // (0, 0, 0, 1), a static initialiser's
-#define ObjectBrightness FLOAT_AT(0x001c4044)         // SendPerCarInstance's, 1 to start with
-#define VehiclesAllowed (*(bool *)0x001ec220)
-#define CurrentObject (*(RSceneObj **)0x001ec224)     // the scene object the lighting is set up for
+
+// XBE_GLOBAL(0x001caf5c, 4)
+const MATRIX4 *ViewProjectionMatrixPointer = reinterpret_cast<const MATRIX4 *>(ViewProjectionMatrix);
+// XBE_GLOBAL(0x00241c0c, 4)
+static int32_t ScreenWidthCopy;                 // copies the constructor makes (names ours)
+// XBE_GLOBAL(0x00241c10, 4)
+static int32_t ScreenHeightCopy;
+// XBE_GLOBAL(0x001e4762, 1)
+uint8_t WideScreenSwitch;
+// XBE_GLOBAL(0x001e4764, 1)
+static uint8_t VBlankSyncOff;                   // with kLaunchNoSync, the frames are not synced (names ours)
+// XBE_GLOBAL(0x001ec000, 4)
+int32_t CaptureCount;
+// XBE_GLOBAL(0x001c3ff0, 1)
+uint8_t ModelGlaresEnabled = 1;          // DrawGroupDrawEffects queues the articles' glares
+// By WorldArticle::RenderType (the world's and the last two take no arguments)
+// XBE_GLOBAL(0x001c3ff4, 0x14)
+static const RenderTypeSetup RenderTypeSetups[5] = {
+    reinterpret_cast<RenderTypeSetup>(&RRenderSharedData::SendPerWorldInstance),
+    &RRenderSharedData::SendPerCarInstance,
+    &RRenderSharedData::SendPerObjectInstance,
+    reinterpret_cast<RenderTypeSetup>(&NullFunction),
+    reinterpret_cast<RenderTypeSetup>(&NullFunction),
+};
+// XBE_GLOBAL(0x001c4044, 4)
+float ObjectBrightness = 1.0f;           // SendPerCarInstance's
+// XBE_GLOBAL(0x001ec220, 1)
+bool VehiclesAllowed;
+// XBE_GLOBAL(0x001ec224, 4)
+RSceneObj *CurrentObject;                // the scene object the lighting is set up for
 
 // ---- the game's code not ported yet
 
@@ -75,23 +94,16 @@
 #define CRT_printf ((int (*)(const char *format, ...))0x00132192)
 #define CRT_sprintf ((int (*)(char *buffer, const char *format, ...))0x00132767)
 
+// XBE_GLOBAL(0x001ec010, 0x210)
+ShadowMapData ShadowMaps;
+// XBE_GLOBAL(0x001ec244, 0xc)
+char ShadowImageName[12];                       // "%04d", what SHAPE_locatez is handed
+// XBE_GLOBAL(0x001ec250, 0x10)
+ShadowMapInfo DefaultShadowInfo;
+
 namespace {
 
-// The track's shadow maps (0x0023ec010..0x001ec220 as one record; the name is ours)
-struct ShadowMapData {
-    int32_t count;                      // +0x000 RInstanceRender_SetShadowInformation's; the default's 1
-    uint32_t unknown004;
-    ShadowMapImage *images[64];         // +0x008 by ShadowMapInfo::image; images[0] NULL: no shadow maps
-    void *defaultTexture;               // +0x108 RInstanceRender_SetDefaultShadowInformation's
-    uint32_t unknown10C[63];
-    RTextureContext *context;      // +0x208 the track's _S.xsh
-    const ShadowMapInfo *info;          // +0x20c by the instances' shadow record index
-};
-static_assert(sizeof(ShadowMapData) == 0x210, "ShadowMapData layout");
-
-#define ShadowMaps (*(ShadowMapData *)0x001ec010)
-#define ShadowImageName ((char *)0x001ec244)          // "%04d", what SHAPE_locatez is handed
-#define DefaultShadowInfo (*(ShadowMapInfo *)0x001ec250)
+const Coord4 kInstanceOffset = { 0.0f, 0.0f, 0.0f, 1.0f };      // QuickDrawInstance's for GetInstanceMatrix
 
 // A TGA file's header (18 bytes)
 #pragma pack(push, 1)
@@ -607,7 +619,7 @@ void QuickDrawInstance(CARP::Instance *instance, ProcAnimState *procAnims) {
     if (article == NULL)
         return;
     alignas(16) MATRIX4 placed;
-    if (!GetInstanceMatrix(instance, &InstanceOffset, &placed, procAnims))
+    if (!GetInstanceMatrix(instance, &kInstanceOffset, &placed, procAnims))
         return;
     float distance = (float)GetInstanceViewDistance(instance);
     DrawArticleModel(instance, article, &placed, distance, NULL);

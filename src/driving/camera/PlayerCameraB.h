@@ -18,4 +18,10 @@
 // each in [-1, 1] (Ghidra: FUN_000846d0; the name is ours). The arguments come in ECX and EDX.        0x000846d0
 void __fastcall BoostDiagonalRotation(float *x, float *y);
 
+// The auto-drive arms' change of arm, and the auto-drive camera's steering the step before (names ours)
+extern Coord4 WeaponArmFrom;            // the rotation the change starts from
+extern float WeaponArmBlend;            // how far it has gone, 0 to 1
+extern float PreviousRotationX;
+extern float PreviousRotationY;
+
 #endif  // DRIVING_CAMERA_PLAYERCAMERAB_H_

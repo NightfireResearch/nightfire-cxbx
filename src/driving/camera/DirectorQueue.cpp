@@ -17,6 +17,7 @@
 // RDirectorQueue and RDirectorQueueData, and the renderer pieces after them. See DirectorQueue.h.
 // ---------------------------------------------------------------------------------------------------------------
 
+// XBE_GLOBAL(0x00241460, 0x34)
 #define TextureDofMethod ((EAGL::RenderMethod *)0x00241460)   // "HB_RM = TextureDOF", a static initialiser's
 
 // ---- RDirectorQueueData

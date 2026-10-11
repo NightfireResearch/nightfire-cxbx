@@ -2,6 +2,7 @@
 
 #include "../eagl/EaglGlobals.h"
 #include "../eagl/Loader.h"
+#include "../eagl/Profiler.h"
 #include "../platform/FileSys.h"
 #include "../platform/RefPack.h"
 #include "../../common/xbeOriginal.h"
@@ -152,9 +153,10 @@ static int ShadowPrint(const char *format, va_list args) {
     return 0;
 }
 
-#define PrintHook       (*(void **)0x00240268u)
-#define PoolSize        (*(uint32_t *)0x001cdc50u)
-#define LoadedTables    (*(void **)0x0023fb88u)
+// The originals' copies of the port's EAGL::PrintHook, DefaultPoolSize and LoadedTables: each side reads its own
+#define OrigPrintHook    (*(EAGL::PrintHookFn *)0x00240268u)
+#define OrigPoolSize     (*(uint32_t *)0x001cdc50u)
+#define OrigLoadedTables (*(HashTable **)0x0023fb88u)
 
 static uint32_t Hash(const char *s) {
     uint32_t h = 2166136261u;
@@ -241,8 +243,9 @@ static void DumpPool(const SymbolPool *pool) {
 static void PoolScript(bool original, uint32_t initialSize, std::string *log) {
     g_log = log;
     ArenaReset();
-    uint32_t savedSize = PoolSize;
-    PoolSize = initialSize;
+    uint32_t savedSize = DefaultPoolSize, savedOrigSize = OrigPoolSize;
+    DefaultPoolSize = initialSize;
+    OrigPoolSize = initialSize;
     SymbolPool pool;
     memset(&pool, 0xee, sizeof(pool));
     uint32_t seed = 12345;
@@ -299,7 +302,8 @@ static void PoolScript(bool original, uint32_t initialSize, std::string *log) {
             pool.Destruct();
         DumpPool(&pool);
     }
-    PoolSize = savedSize;
+    DefaultPoolSize = savedSize;
+    OrigPoolSize = savedOrigSize;
     g_log = NULL;
 }
 
@@ -668,6 +672,7 @@ static void GroupSide(bool original, std::vector<Object> &objects, std::vector<D
     ArenaReset();
     g_runtimeCount = 0;
     LoadedTables = NULL;
+    OrigLoadedTables = NULL;
     {
         Originals scope(original);
         LoadGroup(original, objects, loaders);
@@ -685,7 +690,7 @@ static void GroupSide(bool original, std::vector<Object> &objects, std::vector<D
                 memset(out->arena.data() + (t - g_arena) + 0xd, 0, 3);
         }
         out->loaders.assign((uint8_t *)loaders.data(), (uint8_t *)(loaders.data() + loaders.size()));
-        Logf("loaded list %p", LoadedTables);
+        Logf("loaded list %p", original ? OrigLoadedTables : LoadedTables);
         ReadBack(original, loaders);
         for (size_t k = loaders.size(); k-- > 0;) {
             Logf("destroy %u", (unsigned)k);
@@ -694,8 +699,8 @@ static void GroupSide(bool original, std::vector<Object> &objects, std::vector<D
             else
                 loaders[k].Destruct();
         }
-        out->loadedAfter = LoadedTables;
-        Logf("loaded list after %p", LoadedTables);
+        out->loadedAfter = original ? OrigLoadedTables : LoadedTables;
+        Logf("loaded list after %p", out->loadedAfter);
     }
     g_log = NULL;
 }
@@ -886,18 +891,20 @@ void LoaderShadow_Run(void) {
     // the game's state, put back at the end
     EaglMallocFn savedMalloc = EaglMalloc;
     EaglFreeFn savedFree = EaglFree;
-    void *savedPrint = PrintHook, *savedLoaded = LoadedTables;
+    EAGL::PrintHookFn savedPrint = EAGL::PrintHook, savedOrigPrint = OrigPrintHook;
+    HashTable *savedLoaded = LoadedTables, *savedOrigLoaded = OrigLoadedTables;
     uint8_t savedPools[0x14 + 0x28 + 0x28];
     memcpy(savedPools, &GlobalPool, 0x14);
     memcpy(savedPools + 0x14, &TheRuntimeAllocPool, 0x28);
     memcpy(savedPools + 0x3c, &TheConstructorPool, 0x28);
     EaglMalloc = ShadowMalloc;
     EaglFree = ShadowFree;
-    PrintHook = (void *)ShadowPrint;
+    EAGL::PrintHook = ShadowPrint;
+    OrigPrintHook = ShadowPrint;
 
     Progress("pools", "");
     g_inArena = true;
-    const uint32_t sizes[] = { PoolSize, 3 };
+    const uint32_t sizes[] = { DefaultPoolSize, 3 };
     for (uint32_t size : sizes) {
         std::string o, p;
         PoolScript(true, size, &o);
@@ -942,8 +949,10 @@ void LoaderShadow_Run(void) {
 
     EaglMalloc = savedMalloc;
     EaglFree = savedFree;
-    PrintHook = savedPrint;
+    EAGL::PrintHook = savedPrint;
+    OrigPrintHook = savedOrigPrint;
     LoadedTables = savedLoaded;
+    OrigLoadedTables = savedOrigLoaded;
     memcpy(&GlobalPool, savedPools, 0x14);
     memcpy(&TheRuntimeAllocPool, savedPools + 0x14, 0x28);
     memcpy(&TheConstructorPool, savedPools + 0x3c, 0x28);

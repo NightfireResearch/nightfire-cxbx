@@ -21,8 +21,22 @@
 
 // ---- globals
 
-#define AnimationBufferBones I32_AT(0x001dda00)
-#define SkeletonFiles ((const char (*)[0x5a])0x001b4ae8)   // data\actors\skeleton\0skel.o .. 8skel.o
+// XBE_GLOBAL(0x001dd9fc, 4)
+MATRIX4 *AnimationBuffer;
+// XBE_GLOBAL(0x001dda00, 4)
+int32_t AnimationBufferBones;
+// XBE_GLOBAL(0x001b4ae8, 0x32a)
+const char SkeletonFiles[ActSkeletonDatabase::kSkeletonCount][0x5a] = {
+    "data\\actors\\skeleton\\0skel.o",
+    "data\\actors\\skeleton\\1skel.o",
+    "data\\actors\\skeleton\\2skel.o",
+    "data\\actors\\skeleton\\3skel.o",
+    "data\\actors\\skeleton\\4skel.o",
+    "data\\actors\\skeleton\\5skel.o",
+    "data\\actors\\skeleton\\6skel.o",
+    "data\\actors\\skeleton\\7skel.o",
+    "data\\actors\\skeleton\\8skel.o",
+};
 
 static const char kAnimationBufferName[] = "EAGLAnimationBuffer";
 

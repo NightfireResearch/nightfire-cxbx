@@ -18,7 +18,8 @@
 
 // ---- globals
 #define PhysicsNamespaceVtable ((void **)0x0018f8fc)
-#define PhysicsDataType I32_AT(0x001c3dac)          // the extension type's id; -1 until the first constructor
+// XBE_GLOBAL(0x001c3dac, 4)
+int32_t PhysicsDataType = -1;                   // the extension type's id; -1 until the first constructor
 
 namespace {
 

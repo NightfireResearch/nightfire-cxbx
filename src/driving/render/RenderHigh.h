@@ -57,6 +57,7 @@ static_assert(offsetof(RRenderHigh, viewCount) == 0x20 && offsetof(RRenderHigh, 
 
 // The one instance (its constructor sets it)
 #define fgRenderHigh (*(RRenderHigh **)0x001ec488)
+extern float AspectScale;                       // RViewCamera::AspectRatio's scale, set by RearrangeSplitScreens
 
 // The renderer's singleton manager: a second copy of SingletonManager (engine/USingleton.h) with its own static
 // (0x001ec4a4), which only the renderer's managers are registered with (FUN_0008c370; the name is ours)

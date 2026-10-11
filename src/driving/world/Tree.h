@@ -62,7 +62,7 @@ public:
     static void WalkTree(WMapNode *node, MapNodeCallback callback);                                       // 0x000cf1a0
 };
 
-// The renderer's view for its culling (0x0023dfd0)
+// The renderer's view for its culling
 struct WViewCull {
     float radius;                  // +0x00
     uint8_t unknown04[0xc];
@@ -70,6 +70,7 @@ struct WViewCull {
     Coord4 facing;                 // +0x20 the view direction in the ground plane (x, z)
 };
 static_assert(sizeof(WViewCull) == 0x30, "the renderer's view block");
+extern WViewCull ViewCull;              // Render.cpp's
 
 // Where a circle is against the view: 0 out of it, 1 inside its radius, 2 across an edge
 int DistanceCheck2d(const Coord4 *position, float radius);                                                // 0x000c7270

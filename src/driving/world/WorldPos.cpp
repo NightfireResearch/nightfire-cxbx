@@ -15,7 +15,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 #define SimStepCount I32_AT(0x00234e34)
-#define ZeroVector (*(const Coord3 *)0x00243030)        // the game's zero vector, never written
 
 // The face's unit normal (thiscall on the face; name unknown)
 #define FUN_0005d3f0 ((void (__fastcall *)(const StripTriangle *, int, Coord3 *))0x0005d3f0)
@@ -32,9 +31,9 @@ WWorldPos* WWorldPos::Construct() {
     instance = NULL;
     article = NULL;
     lastQueryStep = 0;
-    face.corner[0].Position() = ZeroVector;
-    face.corner[1].Position() = ZeroVector;
-    face.corner[2].Position() = ZeroVector;
+    face.corner[0].Position() = {0.0f, 0.0f, 0.0f};
+    face.corner[1].Position() = {0.0f, 0.0f, 0.0f};
+    face.corner[2].Position() = {0.0f, 0.0f, 0.0f};
     face.corner[2].tag.id = 0;
     return this;
 }

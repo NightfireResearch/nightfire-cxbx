@@ -15,8 +15,10 @@
 #include <string.h>
 
 #define DTuningDBMgrVtable ((const void *const *)0x0018bebc)
-#define FoundValue ((char *)0x001e22f0)          // FindItem's result buffer
-#define FoundIndexedValue ((char *)0x001e2340)   // FindIndexedItem's
+// XBE_GLOBAL(0x001e22f0, 0x50)
+static char FoundValue[0x50];          // FindItem's result buffer
+// XBE_GLOBAL(0x001e2340, 0x50)
+static char FoundIndexedValue[0x50];   // FindIndexedItem's
 
 #define Sprintf ((int (__cdecl *)(char *, const char *, ...))0x00132767)
 #define Sscanf ((int (__cdecl *)(const char *, const char *, ...))0x00133234)

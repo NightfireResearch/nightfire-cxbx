@@ -7,4 +7,8 @@
 
 #include "PlayerCamera.h"
 
+extern int32_t HeliGroundCount;         // the heli camera's ground-contact count, 0-80
+extern Coord4 HeliGroundPoint;          // where its last ground probe hit
+extern MATRIX4 AimMatrix;               // GetAimMatrix4's answer
+
 #endif  // DRIVING_CAMERA_PLAYERCAMERAC_H_

@@ -37,23 +37,47 @@ void XbeOriginal_Record(unsigned at) {
     memset(r->patched, 0, 5);
 }
 
-bool XbeOriginal_Restore(unsigned at, bool original) {
-    PatchRecord *r = Find(at);
-    if (r == NULL)
-        return false;
+static XbeOriginalWindowHook g_windowHook = NULL;
+
+void XbeOriginal_SetWindowHook(XbeOriginalWindowHook hook) {
+    g_windowHook = hook;
+}
+
+static void Swap(PatchRecord *r, bool original) {
+    unsigned at = r->at;
     // The jump's bytes are only known once it has been written, so they are captured on the first swap.
     if (original)
         memcpy(r->patched, (void *)(size_t)at, 5);
     memcpy((void *)(size_t)at, original ? r->original : r->patched, 5);
     FlushInstructionCache(GetCurrentProcess(), (void *)(size_t)at, 5);
+}
+
+bool XbeOriginal_Restore(unsigned at, bool original) {
+    PatchRecord *r = Find(at);
+    if (r == NULL)
+        return false;
+    if (original && g_windowHook != NULL)
+        g_windowHook(at, at + 1, true);
+    Swap(r, original);
+    if (!original && g_windowHook != NULL)
+        g_windowHook(at, at + 1, false);
     return true;
 }
 
 int XbeOriginal_RestoreRange(unsigned lo, unsigned hi, bool original) {
     int n = 0;
     for (int i = 0; i < g_numPatches; i++)
-        if (g_patches[i].at >= lo && g_patches[i].at < hi && XbeOriginal_Restore(g_patches[i].at, original))
+        if (g_patches[i].at >= lo && g_patches[i].at < hi)
             n++;
+    if (n == 0)
+        return 0;
+    if (original && g_windowHook != NULL)
+        g_windowHook(lo, hi, true);
+    for (int i = 0; i < g_numPatches; i++)
+        if (g_patches[i].at >= lo && g_patches[i].at < hi)
+            Swap(&g_patches[i], original);
+    if (!original && g_windowHook != NULL)
+        g_windowHook(lo, hi, false);
     return n;
 }
 

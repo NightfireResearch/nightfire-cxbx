@@ -1,4 +1,5 @@
 #include "AnimEngine.h"
+#include "../render/TimeData.h"   // TickSeconds
 
 #include <algorithm>
 #include <bit>
@@ -30,9 +31,6 @@
 #define BlendVectors ((void (*)(float *out, const float *from, const float *to, float t))0x00022870)
 
 // ---- the game's globals
-#define ActiveSystems ((RAnimEngine::System **)0x001eb878)     // [kMaxActiveSystems]
-#define ActiveSystemCount U32_AT(0x001ebc78)
-#define LastUpdateFrame U32_AT(0x001ebc7c)                     // RAnimEngine::Update's
 
 using RAnimEngine::System;
 using CARP::AnimInfo;
@@ -52,6 +50,18 @@ constexpr int kDimensionCoarseShift = 30;
 constexpr int kSetEventDynamicDataSlot = 11;     // RSceneObj's vtable
 constexpr int kQueueAll = 2;                     // System::ProcessStimuli's mode: queue up to four
 static_assert(std::bit_cast<uint32_t>(kSixtieth) == 0x3c888889, "the original's constant");
+
+} // namespace
+
+// The active list (removing from a full one copies the count's word into the last slot, which it then leaves)
+// XBE_GLOBAL(0x001eb878, 0x400)
+System *ActiveSystems[kMaxActiveSystems];
+// XBE_GLOBAL(0x001ebc78, 4)
+uint32_t ActiveSystemCount;
+// XBE_GLOBAL(0x001ebc7c, 4)
+uint32_t LastUpdateFrame;                        // RAnimEngine::Update's
+
+namespace {
 
 // A tick in 60ths of a second (inlined in the game)
 uint32_t FrameOf(uint32_t tick) {

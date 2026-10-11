@@ -23,14 +23,17 @@
 // default's tail - but they write every element at the same place: of several vectors, the last one wins.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 #define CRT_atol ((int32_t (*)(const char *))0x00133d51)
 #define CRT_atof ((double (*)(const char *))0x00133e84)
 
-// What a vector or matrix element starts from: the game's (0,0,0,1) and identity, globals its static
-// initialisers fill in.
-#define DefaultVector (*(AttributeVector *)0x001d4c00)
-#define IdentityMatrix (*(AttributeMatrix *)0x001d4c10)
+// What a vector or matrix element starts from.
+static const AttributeVector kDefaultVector = {0.0f, 0.0f, 0.0f, 1.0f};
+static const AttributeMatrix kIdentityMatrix = {{
+    {1.0f, 0.0f, 0.0f, 0.0f},
+    {0.0f, 1.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 1.0f, 0.0f},
+    {0.0f, 0.0f, 0.0f, 1.0f},
+}};
 
 namespace {
 
@@ -94,13 +97,13 @@ AttributeParseResult* Bool_AttribByteOffsetParserFunc(AttributeParseResult *resu
             break;
         if (token[0] == '\0')
             *out++ = 0;
-        if (CRT_stricmp(token, "true") == 0)
+        if (_stricmp(token, "true") == 0)
             *out = 1;
-        else if (CRT_stricmp(token, "false") == 0)
+        else if (_stricmp(token, "false") == 0)
             *out = 0;
-        else if (CRT_stricmp(token, "on") == 0)
+        else if (_stricmp(token, "on") == 0)
             *out = 1;
-        else if (CRT_stricmp(token, "off") == 0)
+        else if (_stricmp(token, "off") == 0)
             *out = 0;
         else
             *out = CRT_atol(token) != 0;
@@ -151,7 +154,7 @@ AttributeParseResult* Vector_AttribByteOffsetParserFunc(AttributeParseResult *re
         char token[128];
         if (!NextToken(text, token, kAtSemicolon) || text == NULL)
             break;
-        *reinterpret_cast<AttributeVector *>(start) = DefaultVector;
+        *reinterpret_cast<AttributeVector *>(start) = kDefaultVector;
         AttributeParseResult components;
         Float_AttribByteOffsetParserFunc(&components, name, token, 0, 4, 0, 0, start);
         parsed++;
@@ -170,7 +173,7 @@ AttributeParseResult* Matrix_AttribByteOffsetParserFunc(AttributeParseResult *re
         char token[512];
         if (!NextToken(text, token, kAtSemicolon) || text == NULL)
             break;
-        *reinterpret_cast<AttributeMatrix *>(start) = IdentityMatrix;
+        *reinterpret_cast<AttributeMatrix *>(start) = kIdentityMatrix;
         AttributeParseResult components;
         Float_AttribByteOffsetParserFunc(&components, name, token, 0, 16, 0, 0, start);
         parsed++;

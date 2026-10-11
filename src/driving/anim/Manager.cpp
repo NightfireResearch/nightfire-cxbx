@@ -23,10 +23,18 @@
 
 // ---- globals
 
-#define EventResolver (*(ActEventResolver **)0x001dd9d0)
-#define NormalLight (*(LightBlock **)0x001dd9d4)    // the scene's lights, saved when IR mode is first set
-#define IRLight (*(LightBlock **)0x001dd9d8)
-#define IRLightReady BOOL8_AT(0x001dd9dc)
+// XBE_GLOBAL(0x001dd9cc, 4)
+ActManager *TheActManager;
+// XBE_GLOBAL(0x001dd9d0, 4)
+ActEventResolver *EventResolver;
+// XBE_GLOBAL(0x001dd9d4, 4)
+LightBlock *NormalLight;                 // the scene's lights, saved when IR mode is first set
+// XBE_GLOBAL(0x001dd9d8, 4)
+LightBlock *IRLight;
+// XBE_GLOBAL(0x001dd9dc, 1)
+bool IRLightReady;
+// XBE_GLOBAL(0x001dd9dd, 1)
+bool IRModeOn;                                  // SetIRMode's
 
 constexpr uint32_t kAnimPoolSize = 0xc800;     // EAGLAnim's pool; the original also passes a 1 nothing reads
 
@@ -77,7 +85,7 @@ void ActManager::ShutDown() {
 // FUNC_AT(0x00016ed0)
 void ActManager::SetIRMode(bool on) {
     if (!IRLightReady) {
-        IRLightReady = 1;
+        IRLightReady = true;
         *NormalLight = fgLightManager->lightInfos[kEnvironmentCharacter];
         *IRLight = fgLightManager->lightInfos[kEnvironmentCharacter];
         const Coord4 white = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -85,11 +93,11 @@ void ActManager::SetIRMode(bool on) {
     }
     if (on) {
         if (!IRModeOn) {
-            IRModeOn = 1;
+            IRModeOn = true;
             fgLightManager->lightInfos[kEnvironmentCharacter] = *IRLight;
         }
     } else if (IRModeOn) {
-        IRModeOn = 0;
+        IRModeOn = false;
         fgLightManager->lightInfos[kEnvironmentCharacter] = *NormalLight;
     }
 }
@@ -97,8 +105,8 @@ void ActManager::SetIRMode(bool on) {
 // FUNC_AT(0x00017060)
 void ActManager::Init(float frameTime) {
     this->frameTime = frameTime;
-    IRLightReady = 0;
-    IRModeOn = 0;
+    IRLightReady = false;
+    IRModeOn = false;
     EAGLAnim_InitInternal(kAnimPoolSize);
     DynamicLoader::RegisterVar("GAME::CharacterOptions", &drawOptions.alphaScale);
     RegisterCallback::AddMajorCallbacks();

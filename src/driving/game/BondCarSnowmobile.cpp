@@ -5,6 +5,7 @@
 #include <bit>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "BondCar.h"
 #include "BondCarPhysics.h"                 // RaiseLandingImpact
@@ -22,12 +23,6 @@
 // double in the original's order and rounded where it stores a float; comparisons fail on NaN where the original's
 // jumps do.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- the game's code not ported yet
-#define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
-
-// ---- globals
-#define ZeroVector (*(const Coord3 *)0x00243030)        // the game's zero vector, never written
 
 namespace {
 
@@ -245,7 +240,7 @@ int PBondCar::AddSnowmobileForces(const BondCarWheelInput *inputs, const Coord4 
                                                                              : physics->springDampingRear;
     pad->force.z = 0.0f;
     pad->force.y = float(damping * double(kPitchScale));
-    double grip = CRT_stricmp(carType, "small_snowmobile") == 0 ? kSmallGripScale : kGripScale;
+    double grip = _stricmp(carType, "small_snowmobile") == 0 ? kSmallGripScale : kGripScale;
     if (suspensionCompression[0] == 0.0f && suspensionCompression[1] == 0.0f)
         pad->axle.x = 0.0f;
     else
@@ -364,8 +359,8 @@ void PBondCar::ProcessSnowmobilePhysics() {
     if (carClass == kCarClass1 && carSpeed <= kStopSpeed && carSpeed > 0.0f &&
         (control.handBrake || (control.gas == 0.0f && control.brake == 0.0f))) {
         body->ApplyHeavyFriction();
-        body->velocity = ZeroVector;
-        body->momentum = ZeroVector;
+        body->velocity = {0.0f, 0.0f, 0.0f};
+        body->momentum = {0.0f, 0.0f, 0.0f};
     }
 
     for (int wheel = 0; wheel < kCarWheels; wheel++) {

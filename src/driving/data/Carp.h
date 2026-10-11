@@ -267,6 +267,13 @@ struct CountedString {
     char *CString();
 };
 
+// The tag to resolver map (Carp.cpp), constructed by the static initialisers and filled by InitResolvers.
+extern ResolverMap Resolvers;
+
 }  // namespace CARP
+
+extern bool CarpVerbose;    // report references the symbol table cannot resolve
+extern bool ResolversReady;                 // InitResolvers has run
+extern char CountedStringBuffer[0x100];     // CountedString::CString's buffer
 
 #endif // DRIVING_DATA_CARP_H_

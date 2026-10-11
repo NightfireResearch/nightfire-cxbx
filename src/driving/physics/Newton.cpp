@@ -37,7 +37,6 @@
 
 #define Sim ((void *)0x00233ff0)                            // the Simulation
 #define SimTimeStep FLOAT_AT(0x00234e30)                    // the simulation's step, in seconds
-#define ZeroVector (*(const Coord3 *)0x00243030)            // the game's zero vector
 #define IdentityMatrix (*(const MATRIX4 **)0x001c4654)
 
 namespace {
@@ -272,8 +271,8 @@ void Newton::SpawnFromEvent(float mass, float lifetime, CARP::Instance *instance
         }
     }
 
-    Coord4 kick = {ZeroVector.x, ZeroVector.y, ZeroVector.z, 0.0f};
-    Coord4 spin = {ZeroVector.x, ZeroVector.y, ZeroVector.z, 0.0f};
+    Coord4 kick = {0.0f, 0.0f, 0.0f, 0.0f};
+    Coord4 spin = {0.0f, 0.0f, 0.0f, 0.0f};
     float speed = 0.0f;
     if (body >= 0) {
         if (simpleBody) {

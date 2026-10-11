@@ -42,9 +42,9 @@ static inline void SendState(uint32_t method, D3DRenderStateIndex index, uint32_
     D3DRenderState[index] = value;
 }
 
-// ---- EAGL's shadows of what it last sent
+// ---- EAGL's shadows of what it last sent (GeoPrimState.cpp, RenderContext.cpp, Tar.cpp)
 
-// What GeoPrimState::Apply last sent, at 0x001cd18c. RenderContext::EndFrame and SetupFrameBuffers invalidate parts
+// What GeoPrimState::Apply last sent. RenderContext::EndFrame and SetupFrameBuffers invalidate parts
 // of it (0xffffffff) and SetupFrameBuffers writes the Z enable.
 struct GeoPrimApplyCache {
     uint32_t shading;                // +0x00
@@ -67,13 +67,13 @@ struct GeoPrimApplyCache {
     uint32_t blendColour;            // +0x40
     uint32_t zWritesEnable;          // +0x44
 };
-static_assert(sizeof(GeoPrimApplyCache) == 0x48, "the GeoPrimState apply cache runs to 0x001cd1d4");
+static_assert(sizeof(GeoPrimApplyCache) == 0x48, "the GeoPrimState apply cache is 0x48 bytes");
 
-#define ApplyCache (*(GeoPrimApplyCache *)0x001cd18c)
-#define ApplyCacheZSlopeScale FLOAT_AT(0x00240150)
-#define ApplyCacheZOffset FLOAT_AT(0x00240154)
+extern GeoPrimApplyCache ApplyCache;
+extern float ApplyCacheZSlopeScale;
+extern float ApplyCacheZOffset;
 
-// What RenderContextExtension last sent, at 0x001cb93c; GeoPrimState::Apply reads the Z-write byte.
+// What RenderContextExtension last sent; GeoPrimState::Apply reads the Z-write byte.
 struct ExtensionShadows {
     uint32_t stencilEnable;          // +0x00
     uint32_t stencilFail;            // +0x04
@@ -87,10 +87,10 @@ struct ExtensionShadows {
     uint32_t stencilFunc;            // +0x20
     uint32_t stencilWriteMask;       // +0x24
 };
-static_assert(sizeof(ExtensionShadows) == 0x28, "the extension's shadows run to 0x001cb964");
+static_assert(sizeof(ExtensionShadows) == 0x28, "the extension's shadows are 0x28 bytes");
 
-#define Shadows (*(ExtensionShadows *)0x001cb93c)
+extern ExtensionShadows Shadows;
 
-#define StageTexture ((D3DPixelContainer **)0x0023ff80)     // the texture bound per stage (opcode 15, TAR::Use)
+extern D3DPixelContainer *StageTexture[8];                  // the texture bound per stage (opcode 15, TAR::Use)
 
 #endif // DRIVING_EAGL_D3D8STATE_H_

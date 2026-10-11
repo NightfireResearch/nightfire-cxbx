@@ -39,15 +39,13 @@ using EAGL::GeoPrim;
 using EAGL::MorphRecord;
 using EAGL::TAR;
 
+// The variation render methods index their parameters with (EaglGlobals.h)
+// XBE_GLOBAL(0x0023ff60, 4)
+int32_t CurrentVariation;
+
 namespace {
 
-// (EAGL's allocator hooks (2.13), the registered view matrices and the variation render methods index their
-// parameters with are EaglGlobals.h's.)
-#define NameDrawArrayNew ((const char *)0x001cbdb4)         // "EAGL::DrawArray new"
-#define NameGeoPrimList ((const char *)0x001cbd3c)          // "Dynamic Model Geoprim list"
-#define NameDrawArrayList ((const char *)0x001cbd58)        // "Dynamic Model DrawArray list"
-#define NameGeoPrimList2 ((const char *)0x001cbd78)         // "Dynamic Model Geoprim list" (AddGeoPrim's copy)
-#define NameDrawArrayList2 ((const char *)0x001cbd94)       // "Dynamic Model Draw Array list"
+// (EAGL's allocator hooks (2.13) and the registered view matrices are EaglGlobals.h's.)
 
 // REP MOVSD of 16 dwords
 inline void CopyMatrix(float *destination, const float *source) {
@@ -110,7 +108,7 @@ TAR *VariationOf(TAR *first, int32_t variation) {
 // A DynamicModel's DrawArray for a GeoPrim, created on first use (the prologue of every vertex-array method)
 DrawArray *DrawArrayFor(EAGL::DynamicModel *model, int index) {
     if (model->drawArrays[index] == NULL) {
-        void *memory = EaglMalloc(sizeof(DrawArray), NameDrawArrayNew);
+        void *memory = EaglMalloc(sizeof(DrawArray), "EAGL::DrawArray new");
         DrawArray *drawArray = memory != NULL ? static_cast<EAGL::ProfilerDrawArray *>(memory)->Construct() : NULL;
         model->drawArrays[index] = drawArray;
         model->drawArrays[index]->SetGeoPrim(model->geoPrims[index]);
@@ -808,13 +806,13 @@ void EAGL::DynamicModel::Reserve(int newCapacity) {
     if (newCapacity <= oldCapacity)
         return;
     capacity = newCapacity;
-    GeoPrim **prims = (GeoPrim **)EaglMalloc(newCapacity * 4, NameGeoPrimList);
+    GeoPrim **prims = (GeoPrim **)EaglMalloc(newCapacity * 4, "Dynamic Model Geoprim list");
     for (int i = 0; i < count; i++)
         prims[i] = geoPrims[i];
     if (geoPrims != NULL)
         EaglFree(geoPrims, oldCapacity * 4);
     geoPrims = prims;
-    DrawArray **arrays = (DrawArray **)EaglMalloc(capacity * 4, NameDrawArrayList);
+    DrawArray **arrays = (DrawArray **)EaglMalloc(capacity * 4, "Dynamic Model DrawArray list");
     memset(arrays, 0, capacity * 4);
     for (int i = 0; i < count; i++)
         arrays[i] = drawArrays[i];
@@ -828,13 +826,13 @@ int EAGL::DynamicModel::AddGeoPrim(GeoPrim *geoPrim) {
     int oldCapacity = capacity;
     if (count >= oldCapacity) {
         capacity = oldCapacity < 0x10 ? 0x10 : oldCapacity * 2;
-        GeoPrim **prims = (GeoPrim **)EaglMalloc(capacity * 4, NameGeoPrimList2);
+        GeoPrim **prims = (GeoPrim **)EaglMalloc(capacity * 4, "Dynamic Model Geoprim list");
         for (int i = 0; i < count; i++)
             prims[i] = geoPrims[i];
         if (geoPrims != NULL)
             EaglFree(geoPrims, oldCapacity * 4);
         geoPrims = prims;
-        DrawArray **arrays = (DrawArray **)EaglMalloc(capacity * 4, NameDrawArrayList2);
+        DrawArray **arrays = (DrawArray **)EaglMalloc(capacity * 4, "Dynamic Model Draw Array list");
         memset(arrays, 0, capacity * 4);
         for (int i = 0; i < count; i++)
             arrays[i] = drawArrays[i];

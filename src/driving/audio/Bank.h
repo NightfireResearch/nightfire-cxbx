@@ -61,8 +61,9 @@ static_assert(offsetof(ABank, index) == 0x10, "ABank::index");
 
 enum { kBankSlotCount = 10 };
 
+// XBE_GLOBAL(0x001d8398, 0x28)
 #define fgBanks ((ABank **)0x001d8398)              // the banks by slot (ABank::Load's second argument)
-#define AudioDirectory ((char *)0x001d8318)         // [0x80] where the banks and banks.ini are; "./" until
+extern char AudioDirectory[0x80];                   // where the banks and banks.ini are; "./" until
                                                     // ASoundManager::Init (name ours)
 
 // ---- URefCounter<ABank>'s tree (BankRefCounter's map, at 0x00243b08): its compiled copies of RefCounterTree's

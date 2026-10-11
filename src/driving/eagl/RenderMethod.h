@@ -8,6 +8,7 @@
 // classes. See RenderMethod.cpp. Types in namespace EAGL; free functions global with an EAGL_ prefix (invented
 // names where Ghidra has none).
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "GeoPrimState.h"
@@ -403,6 +404,38 @@ struct DrawTextured {
 static_assert(sizeof(DrawTextured) == 0xa0, "the fields DrawTextured's code touches end at 0xa0");
 
 }  // namespace EAGL
+
+// ---- the interpreter's globals (RenderMethod.cpp)
+
+// The interpreter's state: Draw's method and cursors, and opcode 2's stream description
+struct InterpreterState {
+    EAGL::RenderMethod *method;      // +0x00 the render method running
+    EAGL::GeoPrimParam *param;       // +0x04 the parameter cursor
+    EAGL::Packet *packet;            // +0x08 the packet cursor
+    uint32_t streamVertexCount;      // +0x0c the current stream (opcode 2): vertex count
+    uint32_t streamNoCopy;           // +0x10   nonzero: opcode 11 does not copy the vertices
+    uint32_t streamUser;             // +0x14   nonzero: opcode 11 draws from the caller's memory
+};
+static_assert(sizeof(InterpreterState) == 0x18, "the interpreter's globals are 0x18 bytes");
+
+// What EAGL last sent D3D8: the wrappers skip a call that would send the same again
+struct DeviceCache {
+    uint32_t primitiveType;          // +0x00 opcode 16's, for the draws
+    uint32_t pixelShader;            // +0x04 the handles in use
+    uint32_t vertexShader;           // +0x08
+    uint32_t unknown0c;              // +0x0c
+    D3DResource *streams[16];        // +0x10 the stream sources
+    uint32_t strides[16];            // +0x50 their strides
+    const uint16_t *indexData;       // +0x90 opcode 14's index data
+    uint32_t indexBase;              // +0x94
+};
+static_assert(offsetof(DeviceCache, streams) == 0x10, "the stream sources at +0x10");
+static_assert(offsetof(DeviceCache, strides) == 0x50, "the strides at +0x50");
+static_assert(offsetof(DeviceCache, indexData) == 0x90, "the index data at +0x90");
+static_assert(sizeof(DeviceCache) == 0x98, "the device cache is 0x98 bytes");
+
+extern InterpreterState Interp;
+extern DeviceCache Cache;
 
 // ---- construction (loader callbacks and helpers)
 void EAGL_CopyParentPackets(EAGL::RenderMethod *method);                       // 0x000f0e50

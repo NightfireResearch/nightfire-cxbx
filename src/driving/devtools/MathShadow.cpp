@@ -234,8 +234,16 @@ typedef uint32_t (*U32V)(void);
 typedef void (*VoidU)(uint32_t);
 typedef double (*DoubleVoid)(void);
 
-// The random generator's state, at the original's address: both sides must start from the same.
-#define RandomState ((uint32_t *)0x001d187cu)
+// The random generator's state: the port's RandomWords (RealMath.h) and the original's copy. Both start from the
+// same state; the original's rrandom calls REAL_random at its address, which is the port's, so its state is the
+// port's on both sides.
+#define OrigRandomWords ((uint32_t *)0x001d187cu)
+
+static void SetRandomState(const uint32_t *in, uint32_t word5) {
+    uint32_t state[6] = { in[0], in[1], in[2], in[3], in[0] ^ 0x9e3779b9, word5 };
+    memcpy(RandomWords, state, sizeof(state));
+    memcpy(OrigRandomWords, state, sizeof(state));
+}
 
 static unsigned short ControlWord() {
     unsigned short controlWord = 0;
@@ -252,6 +260,9 @@ void MathShadow_Run(void) {
     unsigned mxcsr = _mm_getcsr();
     printf("[mathshadow] x87 control word %04x (expect 027f), MXCSR controls %08x (expect 00001f80)\n", cw, mxcsr & ~0x3fu);
     const int N = 20000;
+    uint32_t savedRandom[6], savedOrigRandom[6];
+    memcpy(savedRandom, RandomWords, sizeof(savedRandom));
+    memcpy(savedOrigRandom, OrigRandomWords, sizeof(savedOrigRandom));
 
     // ---- trig in turns: the same instructions
     CASE("sin_fractionalangle", ANY, N, 0x00108790, {
@@ -363,24 +374,20 @@ void MathShadow_Run(void) {
         return 0;
     });
     CASE("random", ANY, N, 0x00108a50, {
-        memcpy(RandomState, in->u, 16);
-        RandomState[4] = in->u[0] ^ 0x9e3779b9;
-        RandomState[5] = (in->u[1] & 1) ? 0xffffffffu : in->u[2];
+        SetRandomState(in->u, (in->u[1] & 1) ? 0xffffffffu : in->u[2]);
         uint32_t r = (original ? ORIG(U32V, 0x00108a50) : REAL_random)();
-        memcpy(out, RandomState, 24);
+        memcpy(out, original ? OrigRandomWords : RandomWords, 24);
         return r;
     });
     CASE("seedrandom", ANY, N, 0x00108b00, {
         (original ? ORIG(VoidU, 0x00108b00) : seedrandom)(in->u[0]);
-        memcpy(out, RandomState, 24);
+        memcpy(out, original ? OrigRandomWords : RandomWords, 24);
         return 0;
     });
     CASE("rrandom", ANY, N, 0x00114a60, {
-        memcpy(RandomState, in->u, 16);
-        RandomState[4] = in->u[0] ^ 0x9e3779b9;
-        RandomState[5] = in->u[2];
+        SetRandomState(in->u, in->u[2]);
         double r = (original ? ORIG(DoubleVoid, 0x00114a60) : rrandom)();
-        memcpy(out, RandomState, 24);
+        memcpy(out, RandomWords, 24);
         return D(r);
     });
 
@@ -895,6 +902,8 @@ void MathShadow_Run(void) {
         return 0;
     });
 
+    memcpy(RandomWords, savedRandom, sizeof(savedRandom));
+    memcpy(OrigRandomWords, savedOrigRandom, sizeof(savedOrigRandom));
     printf("[mathshadow] %s\n", g_failedFunctions == 0 ? "every function the same as the original"
                                                        : "FAILED: some functions differ");
     fflush(stdout);

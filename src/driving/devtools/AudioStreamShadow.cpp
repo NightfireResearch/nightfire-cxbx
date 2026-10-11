@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include "../audio/SoundManager.h"      // ASystem_fgSystem
 #include "../audio/Stream.h"
 #include "../engine/UMemory.hpp"
 #include "../sound/snd/Streams.h"
@@ -167,8 +168,11 @@ struct Originals {
 #define ShadowAudioFrames I32_AT(0x00243a68)
 #define ShadowMissionOver BOOL8_AT(0x00243a77)
 #define ShadowStreamHold I32_AT(0x00243a80)
-#define ShadowStreamHoldTick I32_AT(0x00243a84)
-#define ShadowSystem PTR_AT(0x00243b34)
+
+// The port's StreamHoldTick, StreamPath (Stream.h) and ASystem_fgSystem (SoundManager.h), and the original's copies
+#define OrigStreamHoldTick I32_AT(0x00243a84)
+#define OrigStreamPath ((char *)0x001d8070)
+#define OrigSystem (*(ASystem **)0x00243b34)
 
 struct Globals {
     int32_t frames;
@@ -177,16 +181,18 @@ struct Globals {
     int32_t holdTick;
 };
 
-Globals GlobalsSave() {
-    Globals g = { ShadowAudioFrames, ShadowMissionOver, ShadowStreamHold, ShadowStreamHoldTick };
+// The hold tick is the side's: the original's copy or the port's
+Globals GlobalsSave(bool original) {
+    Globals g = { ShadowAudioFrames, ShadowMissionOver, ShadowStreamHold,
+                  original ? OrigStreamHoldTick : StreamHoldTick };
     return g;
 }
 
-void GlobalsLoad(const Globals &g) {
+void GlobalsLoad(const Globals &g, bool original) {
     ShadowAudioFrames = g.frames;
     ShadowMissionOver = g.missionOver;
     ShadowStreamHold = g.hold;
-    ShadowStreamHoldTick = g.holdTick;
+    (original ? OrigStreamHoldTick : StreamHoldTick) = g.holdTick;
 }
 
 // ---- hooks: a jump written over an entry (and over the port a patched entry jumps to)
@@ -821,7 +827,7 @@ void Free(Synthetic *s) {
     priv->file = NULL;
 }
 
-void DumpStream(std::string &log, Synthetic *s) {
+void DumpStream(std::string &log, Synthetic *s, bool original) {
     AStream *stream = s->Stream();
     AStreamPriv *priv = s->Priv();
     AppendBytes(log, s->stream.bytes, kMixOffset);
@@ -836,7 +842,7 @@ void DumpStream(std::string &log, Synthetic *s) {
     Append(log, "memory %p ", priv->memory);
     AppendBytes(log, s->priv.bytes + offsetof(AStreamPriv, filePrefix), sizeof(AStreamPriv) - offsetof(AStreamPriv, filePrefix));
     AppendBytes(log, &s->mix, sizeof(s->mix));
-    Globals g = GlobalsSave();
+    Globals g = GlobalsSave(original);
     Append(log, "globals %d %d %d %d ", g.frames, g.missionOver, g.hold, g.holdTick);
 }
 
@@ -891,7 +897,7 @@ const char *const kOperationNames[kOpCount] = {
 std::string RunOperation(int op, const Setup &setup, bool original, int extra) {
     Synthetic *s = new Synthetic;
     Build(s, setup.seed);
-    GlobalsLoad(setup.globals);
+    GlobalsLoad(setup.globals, original);
     g_script = setup.script;
     g_log.clear();
     ASoundPlayParams params = setup.params;
@@ -976,7 +982,7 @@ std::string RunOperation(int op, const Setup &setup, bool original, int extra) {
     Append(result, "%s| ", ok ? "" : "FAULT");
     result += g_log;
     result += "| ";
-    DumpStream(result, s);
+    DumpStream(result, s, original);
     Free(s);
     delete s;
     return result;
@@ -987,10 +993,12 @@ void TestStreams() {
         int op = i < 700 ? kOpPlay : int(Random(kOpCount));
         Setup setup = RandomSetup();
         int extra = int(Random(0x7fffffff));
-        Globals live = GlobalsSave();
+        Globals live = GlobalsSave(false);
+        int32_t origHoldTick = OrigStreamHoldTick;
         std::string a = RunOperation(op, setup, true, extra);
         std::string b = RunOperation(op, setup, false, extra);
-        GlobalsLoad(live);
+        GlobalsLoad(live, false);
+        OrigStreamHoldTick = origHoldTick;
         Check(a == b, kOperationNames[op], i, &a, &b);
     }
 }
@@ -1008,7 +1016,10 @@ void DumpPriv(std::string &log, AStreamPriv *priv) {
 }
 
 void TestPriv() {
-    void *liveSystem = ShadowSystem;
+    ASystem *liveSystem = ASystem_fgSystem, *origSystem = OrigSystem;
+    char origPath[sizeof(StreamPath)];
+    memcpy(origPath, OrigStreamPath, sizeof(origPath));
+    memcpy(OrigStreamPath, StreamPath, sizeof(StreamPath));   // the original builds its file names from the live path
     for (int i = 0; i < 60; i++, g_cases++) {
         Setup setup = RandomSetup();
         char file[0x20];
@@ -1025,7 +1036,7 @@ void TestPriv() {
             AStreamPriv *priv = reinterpret_cast<AStreamPriv *>(bytes->bytes);
             g_script = setup.script;
             g_log.clear();
-            ShadowSystem = system ? liveSystem : NULL;
+            ASystem_fgSystem = OrigSystem = system ? liveSystem : NULL;
             AStreamPriv *answer = NULL;
             bool ok;
             if (original) {
@@ -1034,7 +1045,8 @@ void TestPriv() {
             } else {
                 ok = Guarded([&] { answer = priv->Construct(file, extension, bufferSize); });
             }
-            ShadowSystem = liveSystem;
+            ASystem_fgSystem = liveSystem;
+            OrigSystem = origSystem;
             std::string &log = logs[side];
             Append(log, "%s answer %d | ", ok ? "" : "FAULT", answer == priv);
             log += g_log;
@@ -1066,6 +1078,7 @@ void TestPriv() {
         }
         Check(logs[0] == logs[1], "AStreamPriv's constructor and destructor", i, &logs[0], &logs[1]);
     }
+    memcpy(OrigStreamPath, origPath, sizeof(origPath));
 }
 
 }  // namespace

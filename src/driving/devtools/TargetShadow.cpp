@@ -117,8 +117,12 @@ struct RendererScreen {
 #define ShadowCameraViews (*(CameraViewEntry **)0x001ec488)
 #define ShadowRenderer (*(RendererScreen **)0x001ebff4)
 #define ShadowPlayerPhysics (*(PhysicsObject ***)0x00234e40)
-#define ShadowTargetableCount (*(int32_t *)0x0023e174)
-#define ShadowTargetableStagger (*(int32_t *)0x0023e178)
+// The originals' copies of the port's TargetableCount and TargetableStagger: each pass's counters are its side's
+#define OrigTargetableCount (*(int32_t *)0x0023e174)
+#define OrigTargetableStagger (*(int32_t *)0x0023e178)
+bool g_originalPass;
+int32_t &PassTargetableCount() { return g_originalPass ? OrigTargetableCount : TargetableCount; }
+int32_t &PassTargetableStagger() { return g_originalPass ? OrigTargetableStagger : TargetableStagger; }
 #define ShadowPicker ((WTargetPicker *)0x0023e1b0)
 
 // ---- the functions, at their original addresses
@@ -280,7 +284,7 @@ void TestTargetables(Rng *rng) {
         float z = m.mtx[3][2] + rng->Uniform(-300.0f, 300.0f);
         Logf("made %d", ConstructPoint(t, 0, x, y, z) == t);
         LogBytes("  point", t, sizeof(WTargetable));
-        Logf("  counters %d %d", ShadowTargetableCount, ShadowTargetableStagger);
+        Logf("  counters %d %d", PassTargetableCount(), PassTargetableStagger());
         for (int k = 0; k < 7; k++)
             UpdatePosition(t, 0);
         LogBytes("  updated", t, sizeof(WTargetable));
@@ -292,7 +296,7 @@ void TestTargetables(Rng *rng) {
         RemoveReference(t, 0);
         Logf("  refs %d", t->refCount);
         DestructTarget(t, 0);
-        Logf("  count %d", ShadowTargetableCount);
+        Logf("  count %d", PassTargetableCount());
     }
 
     PhysicsObject *car = ShadowPlayerPhysics != NULL ? *ShadowPlayerPhysics : NULL;
@@ -338,13 +342,13 @@ void TestPicker(Rng *rng) {
     }
 
     Case();
-    int32_t count = ShadowTargetableCount;
+    int32_t count = PassTargetableCount();
     WTargetable *made = GetWorldTarget(picker, 0);
     if (made != NULL) {
         LogBytes("world target", made, sizeof(WTargetable));
         UMemory::FastFree(made, sizeof(WTargetable));
     }
-    ShadowTargetableCount = count;
+    PassTargetableCount() = count;
 }
 
 void LogTree(std::string *out, const WSoundMap *map, const SoundMapNode *node, int depth) {
@@ -486,6 +490,7 @@ bool Safe(void (*test)(Rng *), Rng *rng) {
 
 void RunPass(std::string *log, bool original) {
     g_log = log;
+    g_originalPass = original;
     if (original)
         XbeOriginal_RestoreRange(0x000cc8f0, 0x000cedd0, true);
     void (*const tests[])(Rng *) = {TestScreen, TestWorldPoints, TestDistances, TestTargetables, TestPicker,
@@ -498,6 +503,7 @@ void RunPass(std::string *log, bool original) {
     }
     if (original)
         XbeOriginal_RestoreRange(0x000cc8f0, 0x000cedd0, false);
+    g_originalPass = false;
     g_log = NULL;
 }
 
@@ -525,16 +531,20 @@ void TargetShadow_Run(void) {
         return;
     }
 
-    int32_t count = ShadowTargetableCount, stagger = ShadowTargetableStagger;
+    // The originals' pass starts from our counters
+    const int32_t count = TargetableCount, stagger = TargetableStagger;
+    const int32_t origCount = OrigTargetableCount, origStagger = OrigTargetableStagger;
+    OrigTargetableCount = count;
+    OrigTargetableStagger = stagger;
     std::string original, ours;
     g_counting = true;
     RunPass(&original, true);
-    ShadowTargetableCount = count;
-    ShadowTargetableStagger = stagger;
+    OrigTargetableCount = origCount;
+    OrigTargetableStagger = origStagger;
     g_counting = false;
     RunPass(&ours, false);
-    ShadowTargetableCount = count;
-    ShadowTargetableStagger = stagger;
+    TargetableCount = count;
+    TargetableStagger = stagger;
 
     std::vector<std::string> a, b;
     SplitLines(original, &a);

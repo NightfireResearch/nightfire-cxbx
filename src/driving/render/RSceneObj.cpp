@@ -3,6 +3,7 @@
 #include "RSceneObj.hpp"
 
 #include <bit>
+#include <stddef.h>
 #include <string.h>
 
 #include "Lights.h"
@@ -101,6 +102,15 @@ const char kFragmentName[] = "<<fragment1>>";
 // VU0_SQTquattom4's scale: none
 const Coord4 kUnitScale = { 1.0f, 1.0f, 1.0f, 1.0f };
 
+const Coord3 kZeroVector = { 0.0f, 0.0f, 0.0f };
+const Coord4 kOrigin = { 0.0f, 0.0f, 0.0f, 1.0f };
+const MATRIX4 kIdentity = { {
+    { 1.0f, 0.0f, 0.0f, 0.0f },
+    { 0.0f, 1.0f, 0.0f, 0.0f },
+    { 0.0f, 0.0f, 1.0f, 0.0f },
+    { 0.0f, 0.0f, 0.0f, 1.0f },
+} };
+
 RSceneObj_vtbl *const kSceneObjVtable = (RSceneObj_vtbl *)0x00191be0;
 
 } // namespace
@@ -117,22 +127,13 @@ RSceneObj_vtbl *const kSceneObjVtable = (RSceneObj_vtbl *)0x00191be0;
 // ---- globals
 #define Sim ((void *)0x00233ff0)                                // the Simulation
 #define GameTick U32_AT(0x001f2a4c)
-#define ZeroVector (*(const Coord3 *)0x00243030)
-#define Origin (*(const Coord4 *)0x001d4c00)                    // (0, 0, 0, 1)
-#define IdentityMatrix4 (*(const MATRIX4 *)0x001d4c10)
-// This frame's draw lists (normal, and drawn last), the culling walk's cursor and the object being loaded
-#define SceneObjListCapacity U32_AT(0x001f1cf0)                 // 0x200
-#define DrawLastSceneObjCount U32_AT(0x001f1cf4)
-#define NormalSceneObjCount U32_AT(0x001f1cf8)
-#define DrawLastSceneObjs ((RSceneObj **)0x001f1d00)            // 32 of them; only the normal count is checked
-#define NormalSceneObjs ((RSceneObj **)0x001f1d80)              // 0x200
-#define SceneObjCullList (*(CachedDrawInfo **)0x001f2584)
-#define SceneObjCullNode (*(int32_t *)0x001f2588)               // the list's visible node being walked
-#define LoadingSceneObj (*(RSceneObj **)0x001f258c)             // Load's, for ResolveData
-#define SceneObjCullObject (*(RSceneObj **)0x001f2590)          // the walk's last object
-// InitializeLighting's static: a world position, made on the first call (bit 0 of its guard)
-#define LightingWorldPos (*(WWorldPos *)0x001f25b0)
 #define LightingWorldPosGuard U32_AT(0x001f25f0)
+
+// XBE_GLOBAL(0x001f1cf0, 0x8a4)
+SceneObjStatics SceneObjs;
+// InitializeLighting's static: a world position, made on the first call (bit 0 of its guard)
+// XBE_GLOBAL(0x001f25b0, 0x40)
+static WWorldPos LightingWorldPos;
 
 namespace {
 
@@ -338,9 +339,9 @@ RSceneObj* RSceneObj::Delete(unsigned flags) {
 // FUNC_AT(0x0008d6b0)
 void* RSceneObj::ResolveData(const char *name, bool *found) {
     *found = false;
-    if (LoadingSceneObj == NULL)
+    if (SceneObjs.loading == NULL)
         return NULL;
-    return LoadingSceneObj->ResolveObjectDataVirtual(name, found);
+    return SceneObjs.loading->ResolveObjectDataVirtual(name, found);
 }
 
 // FUNC_AT(0x0008d6d0)
@@ -351,7 +352,7 @@ void* RSceneObj::ResolveObjectData(const char *, bool *found) {
 
 // FUNC_AT(0x00090a60)
 void RSceneObj::Load(const char *directory, const char *file, const char *label, uint32_t article) {
-    LoadingSceneObj = this;
+    SceneObjs.loading = this;
     RegisterCallback::Add(ResolveData);
     RCARPFile *loaded = LoadCarpFile(directory, file, label);
     GFX_PurgeSceneObjEffects(this);
@@ -363,7 +364,7 @@ void RSceneObj::Load(const char *directory, const char *file, const char *label,
     CarpFileRefCounter::Get()->AddReference(file, loaded);
     RegisterCallback::Remove(ResolveData);
     UseArticle(carpFile->root->GroupLocateTag(kTagArti), article);
-    LoadingSceneObj = NULL;
+    SceneObjs.loading = NULL;
 }
 
 // FUNC_AT(0x000904c0)
@@ -402,7 +403,7 @@ bool RSceneObj::UseArticle(UGroup *model, uint32_t article) {
         single = *Instance();
         single.flags &= ~(kInstanceSceneObj | kInstanceProcAnim);
         single.procAnimType = 0xff;
-        Instance_SetMatrix(&single, 0, &IdentityMatrix4);
+        Instance_SetMatrix(&single, 0, &kIdentity);
         count = 1;
         instances = &single;
         if (single.articleDesc.value == 0) {
@@ -532,29 +533,29 @@ void RSceneObj::SetMapNode(WMapNode *node) {
 
 // FUNC_AT(0x0008d830)
 void RSceneObj::PrepareSceneObjsForCulling(CachedDrawInfo *list) {
-    NormalSceneObjCount = 0;
-    DrawLastSceneObjCount = 0;
-    SceneObjCullObject = NULL;
-    SceneObjCullNode = -1;
-    SceneObjCullList = list;
-    SceneObjListCapacity = kSceneObjLists;
+    SceneObjs.normalCount = 0;
+    SceneObjs.drawLastCount = 0;
+    SceneObjs.cullObject = NULL;
+    SceneObjs.cullNode = -1;
+    SceneObjs.cullList = list;
+    SceneObjs.capacity = kSceneObjLists;
 }
 
 // FUNC_AT(0x0008d860)
 int RSceneObj::GetNextSceneObjCullInfo(Coord4 *sphere, float *height, bool *checkFar, float *farScale) {
-    CachedDrawInfo *list = SceneObjCullList;
+    CachedDrawInfo *list = SceneObjs.cullList;
     if (list->nodeCount == 0)
         return -1;
-    RSceneObj *object = SceneObjCullObject;
+    RSceneObj *object = SceneObjs.cullObject;
     if (object != NULL)
-        object = SceneObjCullObject = object->next;
+        object = SceneObjs.cullObject = object->next;
     if (object == NULL) {
         do {
-            SceneObjCullNode++;
-            if (SceneObjCullNode >= list->nodeCount)
+            SceneObjs.cullNode++;
+            if (SceneObjs.cullNode >= list->nodeCount)
                 return -1;
-        } while (list->nodes[SceneObjCullNode]->firstSceneObj == NULL);
-        object = SceneObjCullObject = list->nodes[SceneObjCullNode]->firstSceneObj;
+        } while (list->nodes[SceneObjs.cullNode]->firstSceneObj == NULL);
+        object = SceneObjs.cullObject = list->nodes[SceneObjs.cullNode]->firstSceneObj;
     }
 
     if (object->physics != NULL) {
@@ -565,7 +566,7 @@ int RSceneObj::GetNextSceneObjCullInfo(Coord4 *sphere, float *height, bool *chec
     } else {
         *sphere = *reinterpret_cast<const Coord4 *>(object->Instance()->position);
     }
-    const CARP::Instance *instance = SceneObjCullObject->Instance();
+    const CARP::Instance *instance = SceneObjs.cullObject->Instance();
     if ((instance->packedDimensions & kDimensionsSeparate) == kDimensionsSeparate) {
         sphere->w = Dimension(instance->packedDimensions, 0);
         *height = (float)instance->SizeY();
@@ -574,9 +575,9 @@ int RSceneObj::GetNextSceneObjCullInfo(Coord4 *sphere, float *height, bool *chec
         *height = radius;
         sphere->w = radius;
     }
-    *checkFar = (SceneObjCullObject->flags & kStatic) == 0;
-    *farScale = (SceneObjCullObject->flags & kFarScaled) ? kFarScale : 1.0f;
-    return int(uintptr_t(SceneObjCullObject));
+    *checkFar = (SceneObjs.cullObject->flags & kStatic) == 0;
+    *farScale = (SceneObjs.cullObject->flags & kFarScaled) ? kFarScale : 1.0f;
+    return int(uintptr_t(SceneObjs.cullObject));
 }
 
 // FUNC_AT(0x0008f000)
@@ -587,34 +588,34 @@ void RSceneObj::SetSceneObjectCull(int item, bool culled, float) {
 
 // FUNC_AT(0x0008dbc0)
 void RSceneObj::SetNowVisible() {
-    if ((flags & kVisible) == 0 || NormalSceneObjCount >= SceneObjListCapacity)
+    if ((flags & kVisible) == 0 || SceneObjs.normalCount >= SceneObjs.capacity)
         return;
     if (flags & kDrawLast)
-        DrawLastSceneObjs[DrawLastSceneObjCount++] = this;
+        SceneObjs.drawLast[SceneObjs.drawLastCount++] = this;
     else
-        NormalSceneObjs[NormalSceneObjCount++] = this;
+        SceneObjs.normal[SceneObjs.normalCount++] = this;
 }
 
 // FUNC_AT(0x0008d9f0)
 void RSceneObj::RenderAllNormal() {
     TheReflection->ResetSceneObjDistances();
-    uint32_t count = NormalSceneObjCount;
+    uint32_t count = SceneObjs.normalCount;
     for (uint32_t i = 0; i < count; i++)
-        NormalSceneObjs[i]->RenderVirtual();
+        SceneObjs.normal[i]->RenderVirtual();
 }
 
 // FUNC_AT(0x0008da30)
 void RSceneObj::RenderAllDrawLast() {
-    uint32_t count = DrawLastSceneObjCount;
+    uint32_t count = SceneObjs.drawLastCount;
     for (uint32_t i = 0; i < count; i++)
-        DrawLastSceneObjs[i]->RenderVirtual();
+        SceneObjs.drawLast[i]->RenderVirtual();
 }
 
 // FUNC_AT(0x0008da60)
 void RSceneObj::RenderAllDeferredEffects() {
-    uint32_t count = DrawLastSceneObjCount;
+    uint32_t count = SceneObjs.drawLastCount;
     for (uint32_t i = 0; i < count; i++)
-        DrawLastSceneObjs[i]->RenderDeferredEffectsVirtual();
+        SceneObjs.drawLast[i]->RenderDeferredEffectsVirtual();
 }
 
 // FUNC_AT(0x0008da90)
@@ -1042,7 +1043,7 @@ void RSceneObj::GetCollisionInfo(Coord4 *centre, Coord4 *extents) {
         extents->z = velocity->z;
         extents->w = 1.0f;
     } else {
-        *extents = Origin;
+        *extents = kOrigin;
     }
 }
 
@@ -1082,7 +1083,7 @@ void RSceneObj::ToggleEffect(bool on, uint32_t index, ArticleEffect *effect, flo
         }
         if (effect->gfx.triggered == NULL) {
             Coord3 *velocity = GetVelocityVirtual();
-            effect->gfx.triggered = GFX_Trigger(effect->gfx.reference, &ZeroVector, &Origin, effect,
+            effect->gfx.triggered = GFX_Trigger(effect->gfx.reference, &kZeroVector, &kOrigin, effect,
                                                 &effect->gfx.rotation, this, effect->instance, velocity);
             if (effect->gfx.triggered != NULL)
                 animHandle->SetEffectOn(index);

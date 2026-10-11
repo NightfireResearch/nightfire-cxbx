@@ -10,9 +10,11 @@
 #include "../eagl/View.h"
 #include "../engine/CoreContainers.h"
 #include "../physics/PhysicsObject.h"
+#include "OwnedGlobals.h"
 #include "../../common/xbeOriginal.h"
 #include "../../helpers.h"
 #include "../render/RenderHigh.h"
+#include "../world/Render.h"            // fgRender
 
 #include <windows.h>
 #include <float.h>
@@ -51,6 +53,11 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 namespace {
+
+// An original's answer that points at an owned global's game copy, as the same byte of ours (the port's answer)
+void *OrigPointer(const void *answer) {
+    return reinterpret_cast<void *>(uintptr_t(OwnedGlobals_AsOurs(uint32_t(uintptr_t(answer)))));
+}
 
 void OriginalWindow(bool original) {
     XbeOriginal_RestoreRange(0x00013020, 0x00013060, original);
@@ -139,12 +146,16 @@ struct ShadowRenderer {
 };
 
 #define ShadowRendererFields (*(ShadowRenderer **)0x001ebff4)
-#define ShadowAnchorMatrix ((uint8_t *)0x001f2d20)          // the static matrix and its guard
-const uint32_t kAnchorMatrixBytes = 0x44;
+// The originals' copies of the port's AnchorMatrix and its guard, AspectScale, PerspectiveSway, and fgRender (lent
+// to the originals)
+#define OrigAnchorMatrix (*(MATRIX4 *)0x001f2d20)
+#define OrigAnchorMatrixGuard (*(uint32_t *)0x001f2d60)
+#define OrigAspectScale (*(float *)0x001c47a0)
+#define OrigPerspectiveSway (*(bool *)0x001c47b8)
+#define OrigRender (*(WRender **)0x0023e000)
 #define ShadowWorldCulling ((uint8_t *)0x001f2c80)
 const uint32_t kWorldCullingBytes = 0xa0;
-#define ShadowAspectScale (*(float *)0x001c47a0)
-#define ShadowSway (*(uint8_t *)0x001c47b8)
+
 #define ShadowCars (*(GameVector<PhysicsObject *> *)0x00234e3c)
 #define ShadowMissiles (*(GameVector<PhysicsObject *> *)0x00234e7c)
 #define ShadowGrenades (*(GameVector<PhysicsObject *> *)0x00234e9c)
@@ -157,11 +168,12 @@ const uint32_t kFakeBytes = 0x420;      // a car (PBondCar) copied whole, its vi
 // ---- one case's state
 
 struct Globals {
-    uint8_t anchorMatrix[kAnchorMatrixBytes];
+    MATRIX4 anchorMatrix;
+    uint32_t anchorMatrixGuard;
     uint8_t culling[kWorldCullingBytes];
     uint32_t rendererUnknown20;
     uint8_t widescreen;
-    uint8_t sway;
+    bool sway;
     float fieldOfViewScale;
     float aspectScale;
 };
@@ -192,24 +204,28 @@ struct State {
     Globals globals;
 };
 
-void TakeGlobals(Globals *g) {
-    memcpy(g->anchorMatrix, ShadowAnchorMatrix, sizeof(g->anchorMatrix));
+// The side's copies (the originals' or ours)
+void TakeGlobals(Globals *g, bool original) {
+    g->anchorMatrix = original ? OrigAnchorMatrix : AnchorMatrix;
+    g->anchorMatrixGuard = original ? OrigAnchorMatrixGuard : AnchorMatrixGuard;
     memcpy(g->culling, ShadowWorldCulling, sizeof(g->culling));
     g->rendererUnknown20 = ShadowRendererFields->unknown20;
     g->widescreen = ShadowRendererFields->widescreen;
     g->fieldOfViewScale = ShadowRendererFields->fieldOfViewScale;
-    g->aspectScale = ShadowAspectScale;
-    g->sway = ShadowSway;
+    g->aspectScale = original ? OrigAspectScale : AspectScale;
+    g->sway = original ? OrigPerspectiveSway : PerspectiveSway;
 }
 
+// Both copies
 void PutGlobals(const Globals *g) {
-    memcpy(ShadowAnchorMatrix, g->anchorMatrix, sizeof(g->anchorMatrix));
+    AnchorMatrix = OrigAnchorMatrix = g->anchorMatrix;
+    AnchorMatrixGuard = OrigAnchorMatrixGuard = g->anchorMatrixGuard;
     memcpy(ShadowWorldCulling, g->culling, sizeof(g->culling));
     ShadowRendererFields->unknown20 = g->rendererUnknown20;
     ShadowRendererFields->widescreen = g->widescreen;
     ShadowRendererFields->fieldOfViewScale = g->fieldOfViewScale;
-    ShadowAspectScale = g->aspectScale;
-    ShadowSway = g->sway;
+    AspectScale = OrigAspectScale = g->aspectScale;
+    PerspectiveSway = OrigPerspectiveSway = g->sway;
 }
 
 State g_state, g_pre, g_afterOriginal, g_afterPort;
@@ -378,10 +394,12 @@ void Run(bool original) {
         original ? Orig_RWorldCamera_GetAnchorAcceleration(w, 0, &r.vector) : w->GetAnchorAcceleration(&r.vector);
         break;
     case kOpAnchorMatrix:
-        r.word = uint32_t(uintptr_t(original ? Orig_RWorldCamera_GetAnchorMatrix4(w, 0) : (void *)w->GetAnchorMatrix4()));
+        r.word = uint32_t(uintptr_t(original ? OrigPointer(Orig_RWorldCamera_GetAnchorMatrix4(w, 0))
+                                             : (void *)w->GetAnchorMatrix4()));
         break;
     case kOpAnchorPosition:
-        r.word = uint32_t(uintptr_t(original ? Orig_RWorldCamera_GetAnchorPosition(w, 0) : (void *)w->GetAnchorPosition()));
+        r.word = uint32_t(uintptr_t(original ? OrigPointer(Orig_RWorldCamera_GetAnchorPosition(w, 0))
+                                             : (void *)w->GetAnchorPosition()));
         break;
     case kOpAnchorReset:
         r.word = original ? Orig_RWorldCamera_GetAnchorResetAvailable(w, 0) : w->GetAnchorResetAvailable();
@@ -393,7 +411,7 @@ void Run(bool original) {
         r.number = original ? Orig_RWorldCamera_GetAnchorRenderOffset(w, 0) : w->GetAnchorRenderOffset();
         break;
     case kOpAnchorVelocity:
-        r.word = uint32_t(uintptr_t(original ? Orig_RWorldCamera_GetAnchorLinearVelocity(w, 0)
+        r.word = uint32_t(uintptr_t(original ? OrigPointer(Orig_RWorldCamera_GetAnchorLinearVelocity(w, 0))
                                              : (void *)w->GetAnchorLinearVelocity()));
         break;
     case kOpZoom:
@@ -433,8 +451,10 @@ void ResetFpu() {
 }
 
 bool Guarded(bool original) {
-    if (original)
+    if (original) {
+        OrigRender = fgRender;
         OriginalWindow(true);
+    }
     bool ok = true;
 #ifdef _MSC_VER
     __try {
@@ -472,12 +492,12 @@ void SideBySide(int index) {
     PutGlobals(&g_state.globals);
     g_pre = g_state;
     bool originalOk = Guarded(true);
-    TakeGlobals(&g_state.globals);
+    TakeGlobals(&g_state.globals, true);
     g_afterOriginal = g_state;
     g_state = g_pre;
     PutGlobals(&g_state.globals);
     bool portOk = Guarded(false);
-    TakeGlobals(&g_state.globals);
+    TakeGlobals(&g_state.globals, false);
     g_afterPort = g_state;
     g_state = g_pre;
     const char *name = kOpNames[g_in.op];
@@ -569,7 +589,7 @@ void PerturbView() {
     s.globals.widescreen = uint8_t(Next() % 2);
     s.globals.fieldOfViewScale = Next() % 2 ? g_live.fieldOfViewScale : Uniform(0.2f, 2.0f);
     s.globals.aspectScale = Next() % 2 ? g_live.aspectScale : Uniform(0.5f, 2.0f);
-    s.globals.sway = uint8_t(Next() % 2);
+    s.globals.sway = Next() % 2 != 0;
 }
 
 // ---- the anchors
@@ -737,7 +757,7 @@ void TestWorldCamera() {
                 RandomFrame(&w.matrix);
                 w.fieldOfView = RandomFieldOfView();
                 if (round % 4 == 1)
-                    g_state.globals.anchorMatrix[0x40] &= ~1;     // the static not made yet
+                    g_state.globals.anchorMatrixGuard &= ~1;      // the static not made yet
                 memset(&g_in, 0, sizeof(g_in));
                 g_in.op = Op(op);
                 g_in.anchor = g_anchors[a];
@@ -795,7 +815,7 @@ void ViewCamShadow_Run(void) {
     g_liveView = fgRenderHigh->views[0].view;
     g_liveCamera = fgRenderHigh->views[0].camera;
     FpControlGet(&g_x87, &g_sse);
-    TakeGlobals(&g_live);
+    TakeGlobals(&g_live, false);
     TestCameraAndView();
     TestWorldCamera();
     TestCulling();

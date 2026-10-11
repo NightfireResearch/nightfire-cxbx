@@ -329,3 +329,24 @@ public:
     // The static's destructor (its atexit thunk calls it)
     void Destruct();                                                                            // 0x000903a0
 };
+
+// This frame's draw lists (normal, and drawn last), the culling walk's cursor and the object being loaded (the
+// struct's name is ours). One block: only the normal count is checked, so a draw-last list past its 32 runs on
+// into the normal one.
+struct SceneObjStatics {
+    uint32_t capacity;                  // +0x000 0x200
+    uint32_t drawLastCount;             // +0x004
+    uint32_t normalCount;               // +0x008
+    uint32_t unknown00C;
+    RSceneObj *drawLast[32];            // +0x010
+    RSceneObj *normal[0x200];          // +0x090 capacity of them
+    uint32_t unknown890;
+    CachedDrawInfo *cullList;           // +0x894
+    int32_t cullNode;                   // +0x898 the list's visible node being walked
+    RSceneObj *loading;                 // +0x89c Load's, for ResolveData
+    RSceneObj *cullObject;              // +0x8a0 the walk's last object
+};
+static_assert(sizeof(SceneObjStatics) == 0x8a4 && offsetof(SceneObjStatics, normal) == 0x90 &&
+              offsetof(SceneObjStatics, cullList) == 0x894, "SceneObjStatics layout");
+
+extern SceneObjStatics SceneObjs;

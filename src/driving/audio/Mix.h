@@ -129,6 +129,8 @@ struct FxState {
 };
 static_assert(sizeof(FxState) == 0x24, "AFX's state is 0x24 bytes");
 
+extern FxState Fx;
+
 class AFX {
 public:
     enum { kModeCount = 13 };
@@ -148,6 +150,13 @@ public:
     // and the level follows the mode's mix.
     static void Update();                                                       // 0x001248b0
 };
+
+// AFX's state beside Fx: the bus, each mode's mix, whether Init made them, the level, Pause's flag
+extern int32_t FxBus;
+extern AMix *FxMixes[AFX::kModeCount];
+extern bool FxReady;
+extern float FxLevel;
+extern bool FxPaused;
 
 // ---- AListener
 

@@ -62,8 +62,14 @@ const uint32_t kRanges[5][2] = {
     { 0x00097a90, 0x00097aa0 }, { 0x000b1e10, 0x000b25e0 },
 };
 
+// The originals' copies of the port's PhysicsDataType and AttributeSystemInstance, lent to them
+#define OrigPhysicsDataType (*(int32_t *)0x001c3dac)
+#define OrigAttributeSystemInstance (*(AttributeSystem **)0x001e464c)
+
 struct OriginalWindow {
     OriginalWindow() {
+        OrigPhysicsDataType = PhysicsDataType;
+        OrigAttributeSystemInstance = AttributeSystemInstance;
         for (const uint32_t *range : kRanges)
             XbeOriginal_RestoreRange(range[0], range[1], true);
     }

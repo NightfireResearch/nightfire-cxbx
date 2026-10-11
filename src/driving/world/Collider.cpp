@@ -17,10 +17,6 @@
 // of them, folded.
 // ---------------------------------------------------------------------------------------------------------------
 
-// ---- globals
-
-#define ZeroVector (*(const Coord3 *)0x00243030)   // the game's zero vector
-
 namespace {
 
 const uint32_t kMaxPairs = 0x1fffffff;           // max_size of a vector of 8-byte elements
@@ -31,11 +27,11 @@ constexpr float kRegionSlack = 1.1f;             // the region's radius over the
 
 // The fields both constructors clear before the first refresh
 void ClearCollider(WCollider *collider) {
-    collider->position = ZeroVector;
+    collider->position = {0.0f, 0.0f, 0.0f};
     collider->radius = 0.0f;
-    collider->previousPosition = ZeroVector;
+    collider->previousPosition = {0.0f, 0.0f, 0.0f};
     collider->previousRadius = 0.0f;
-    collider->regionCentre = ZeroVector;
+    collider->regionCentre = {0.0f, 0.0f, 0.0f};
     collider->regionRadius = 0.0f;
     collider->instances.first = NULL;
     collider->instances.last = NULL;

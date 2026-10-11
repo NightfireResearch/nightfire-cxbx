@@ -20,6 +20,8 @@ class ActSkeletonDatabase;
 class ActAnimationDatabase;
 class ActWeaponDatabase;
 class ActEvents;
+class ActEventResolver;
+struct LightBlock;
 
 class ActManager {                    // 0x80 (operator new)
 public:
@@ -50,8 +52,12 @@ public:
 static_assert(offsetof(ActManager, drawOptions) == 0x20, "the character options are at +0x20");
 static_assert(sizeof(ActManager) == 0x80, "an ActManager is 0x80 bytes");
 
-#define TheActManager (*(ActManager **)0x001dd9cc)
-#define IRModeOn BOOL8_AT(0x001dd9dd)       // SetIRMode's
+extern ActManager *TheActManager;
+extern bool IRModeOn;                   // SetIRMode's
+extern ActEventResolver *EventResolver;
+extern LightBlock *NormalLight;
+extern LightBlock *IRLight;
+extern bool IRLightReady;
 
 // ---- helpers the linker placed here
 

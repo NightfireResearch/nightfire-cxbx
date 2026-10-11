@@ -9,7 +9,9 @@
 #include "../audio/Bank.h"              // SharedTreeMax, SharedTreeIterator
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
+#include "../world/SoundGroup.h"        // WSoundMap
 #include "../world/SoundMap.h"          // MapBuyHead
+#include "../render/TextureContext.h"  // TextureContextMap
 
 #include <stddef.h>
 #include <stdint.h>
@@ -18,21 +20,36 @@
 // ---------------------------------------------------------------------------------------------------------------
 // The symbol table, its namespaces, the red-black tree under their maps, and StringToNumber. See SymbolTable.h for
 // what each is and Tree.h for the tree. The order of every comparison, allocation and free is the original's;
-// names compare with the game's own _stricmp.
+// names compare with _stricmp.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The tree helpers every map in the game shares, called at their addresses (0x000cca30 is ported as
-// WSoundMap::Lrotate on that map's node type, 0x00126b70 and 0x00126cb0 as SharedTree's, audio/Bank.h, 0x00093f10
-// as TextureContextMap::BuyNode, render/TextureContext.h).
-#define Tree_Lrotate ((void (__fastcall *)(Tree *, int, TreeNode *))0x000cca30)
-#define Tree_Rrotate ((void (__fastcall *)(Tree *, int, TreeNode *))0x00126b70)
-#define Tree_BuyNode ((TreeNode *(__fastcall *)(Tree *, int, TreeNode *, TreeNode *, TreeNode *, const TreePair *, int))0x00093f10)
+// The tree helpers every map in the game shares (the linker folded the copies together). Four are ours, ported on
+// other maps' types: 0x000cca30 as WSoundMap::Lrotate (world/SoundGroup.h), 0x00126b70 and 0x00126cb0 as
+// SharedTree's (audio/Bank.h), 0x00093f10 as TextureContextMap::BuyNode (render/TextureContext.h). The rest are
+// called at their addresses.
 #define Tree_Min ((TreeNode *(*)(TreeNode *))0x0009c310)
 #define TreeIterator_Increment ((void (__fastcall *)(TreeNode **, int))0x000b2920)
-#define NameMap_Find ((TreeNode **(__fastcall *)(Tree *, int, TreeNode **, const char *const *))0x00126cb0)
 
-// The C runtime's: case-insensitive comparison and qsort (whose order of equal elements is its own), atol.
-#define Crt_stricmp ((int (*)(const char *, const char *))0x00134537)
+static void Tree_Lrotate(Tree *tree, TreeNode *node) {
+    reinterpret_cast<WSoundMap *>(tree)->Lrotate(reinterpret_cast<SoundMapNode *>(node));
+}
+
+static void Tree_Rrotate(Tree *tree, TreeNode *node) {
+    static_cast<SharedTree *>(tree)->Rrotate(node);
+}
+
+static TreeNode *Tree_BuyNode(Tree *tree, TreeNode *left, TreeNode *parent, TreeNode *right, const TreePair *value) {
+    return reinterpret_cast<TreeNode *>(reinterpret_cast<TextureContextMap *>(tree)->BuyNode(
+        reinterpret_cast<TextureContextNode *>(left), reinterpret_cast<TextureContextNode *>(parent),
+        reinterpret_cast<TextureContextNode *>(right), reinterpret_cast<const TextureContextEntry *>(value),
+        kTreeRed));
+}
+
+static void NameMap_Find(Tree *tree, TreeNode **result, const char *const *key) {
+    static_cast<SharedTree *>(tree)->FindName(result, key);
+}
+
+// The C runtime's: qsort (whose order of equal elements is its own) and atol (which wraps rather than saturates).
 #define Crt_qsort ((void (*)(void *, size_t, size_t, int (*)(const void *, const void *)))0x00132db0)
 #define Crt_atol ((long (*)(const char *))0x00133d51)
 
@@ -119,7 +136,7 @@ void Tree::EraseSubtree(TreeNode *node) {
 TreeNode **Tree::InsertAt(TreeNode **result, bool addLeft, TreeNode *where, const TreePair *value) {
     if (size >= 0x1ffffffe)
         TreeThrow("map/set<T> too long", kLengthErrorVtable, kLengthErrorThrowInfo);
-    TreeNode *node = Tree_BuyNode(this, 0, head, where, head, value, kTreeRed);
+    TreeNode *node = Tree_BuyNode(this, head, where, head, value);
     size++;
     if (where == head) {
         head->parent = node;
@@ -148,11 +165,11 @@ TreeNode **Tree::InsertAt(TreeNode **result, bool addLeft, TreeNode *where, cons
             } else {
                 if (x == parent->right) {
                     x = parent;
-                    Tree_Lrotate(this, 0, x);
+                    Tree_Lrotate(this, x);
                 }
                 x->parent->color = kTreeBlack;
                 x->parent->parent->color = kTreeRed;
-                Tree_Rrotate(this, 0, x->parent->parent);
+                Tree_Rrotate(this, x->parent->parent);
             }
         } else {
             TreeNode *uncle = grandparent->left;
@@ -164,11 +181,11 @@ TreeNode **Tree::InsertAt(TreeNode **result, bool addLeft, TreeNode *where, cons
             } else {
                 if (x == parent->left) {
                     x = parent;
-                    Tree_Rrotate(this, 0, x);
+                    Tree_Rrotate(this, x);
                 }
                 x->parent->color = kTreeBlack;
                 x->parent->parent->color = kTreeRed;
-                Tree_Lrotate(this, 0, x->parent->parent);
+                Tree_Lrotate(this, x->parent->parent);
             }
         }
     }
@@ -243,7 +260,7 @@ TreeNode **Tree::EraseAt(TreeNode **result, TreeNode *where) {
                 if (sibling->color == kTreeRed) {
                     sibling->color = kTreeBlack;
                     fixnodeParent->color = kTreeRed;
-                    Tree_Lrotate(this, 0, fixnodeParent);
+                    Tree_Lrotate(this, fixnodeParent);
                     sibling = fixnodeParent->right;
                 }
                 if (sibling->isNil)
@@ -255,20 +272,20 @@ TreeNode **Tree::EraseAt(TreeNode **result, TreeNode *where) {
                 if (sibling->right->color == kTreeBlack) {
                     sibling->left->color = kTreeBlack;
                     sibling->color = kTreeRed;
-                    Tree_Rrotate(this, 0, sibling);
+                    Tree_Rrotate(this, sibling);
                     sibling = fixnodeParent->right;
                 }
                 sibling->color = fixnodeParent->color;
                 fixnodeParent->color = kTreeBlack;
                 sibling->right->color = kTreeBlack;
-                Tree_Lrotate(this, 0, fixnodeParent);
+                Tree_Lrotate(this, fixnodeParent);
                 break;
             } else {
                 TreeNode *sibling = fixnodeParent->left;
                 if (sibling->color == kTreeRed) {
                     sibling->color = kTreeBlack;
                     fixnodeParent->color = kTreeRed;
-                    Tree_Rrotate(this, 0, fixnodeParent);
+                    Tree_Rrotate(this, fixnodeParent);
                     sibling = fixnodeParent->left;
                 }
                 if (sibling->isNil)
@@ -280,13 +297,13 @@ TreeNode **Tree::EraseAt(TreeNode **result, TreeNode *where) {
                 if (sibling->left->color == kTreeBlack) {
                     sibling->right->color = kTreeBlack;
                     sibling->color = kTreeRed;
-                    Tree_Lrotate(this, 0, sibling);
+                    Tree_Lrotate(this, sibling);
                     sibling = fixnodeParent->left;
                 }
                 sibling->color = fixnodeParent->color;
                 fixnodeParent->color = kTreeBlack;
                 sibling->left->color = kTreeBlack;
-                Tree_Rrotate(this, 0, fixnodeParent);
+                Tree_Rrotate(this, fixnodeParent);
                 break;
             }
         }
@@ -335,7 +352,7 @@ void Tree::Destroy() {
 TreeNode* NamespaceMap::LowerBound(const char *const *key) {
     TreeNode *bound = head;
     for (TreeNode *node = head->parent; !node->isNil;) {
-        if (Crt_stricmp(node->value.name, *key) < 0) {
+        if (_stricmp(node->value.name, *key) < 0) {
             node = node->right;
         } else {
             bound = node;
@@ -371,7 +388,7 @@ TreeInsertResult* NamespaceMap::InsertEqual(TreeInsertResult *result, const Tree
     bool addLeft = true;
     for (TreeNode *node = head->parent; !node->isNil;) {
         where = node;
-        addLeft = Crt_stricmp(value->name, node->value.name) < 0;
+        addLeft = _stricmp(value->name, node->value.name) < 0;
         node = addLeft ? node->left : node->right;
     }
     TreeNode *inserted;
@@ -399,7 +416,7 @@ TreeInsertResult* CarpGroupMap::InsertUnique(TreeInsertResult *result, const Tre
     bool addLeft = true;
     for (TreeNode *node = head->parent; !node->isNil;) {
         where = node;
-        addLeft = Crt_stricmp(value->name, node->value.name) < 0;
+        addLeft = _stricmp(value->name, node->value.name) < 0;
         node = addLeft ? node->left : node->right;
     }
     SharedTreeIterator before = {where};
@@ -413,7 +430,7 @@ TreeInsertResult* CarpGroupMap::InsertUnique(TreeInsertResult *result, const Tre
         }
         before.Dec();
     }
-    if (Crt_stricmp(before.node->value.name, value->name) < 0) {
+    if (_stricmp(before.node->value.name, value->name) < 0) {
         TreeNode *inserted;
         Tree::InsertAt(&inserted, addLeft, where, value);
         result->where = inserted;
@@ -494,13 +511,13 @@ void* USymbolTable::NameLookup(const char *name, int *size) {
     NamespaceMap *map = namespaces;
     const char *key = prefix;
     TreeNode *node = map->LowerBound(&key);
-    if (node == map->head || Crt_stricmp(prefix, node->value.name) < 0)
+    if (node == map->head || _stricmp(prefix, node->value.name) < 0)
         node = map->head;
     // Without a separator the original hands the namespaces (char *)2 - null plus the separator's length; only
     // a namespace called "" would see it.
     const char *rest = reinterpret_cast<const char *>(uintptr_t(separator) + 2);
     for (; node != namespaces->head; node = TreeNext(node)) {
-        if (Crt_stricmp(node->value.name, prefix) != 0)
+        if (_stricmp(node->value.name, prefix) != 0)
             return NULL;
         void *found = node->value.ns->Lookup(rest, size);
         if (found != NULL)
@@ -522,7 +539,7 @@ void USymbolTable::AddNamespace(const char *name, SymbolNamespace *ns) {
 SymbolNamespace* USymbolTable::RemoveNamespace(const char *name) {
     NamespaceMap *map = namespaces;
     TreeNode *node = map->LowerBound(&name);
-    if (node == map->head || Crt_stricmp(name, node->value.name) < 0)
+    if (node == map->head || _stricmp(name, node->value.name) < 0)
         node = map->head;
     SymbolNamespace *ns = node->value.ns;
     TreeNode *ignored;
@@ -622,7 +639,7 @@ void* UCarpNamespace::NameLookup(const char *name, int *size) {
 
     const char *key = groupName;
     TreeNode *node;
-    NameMap_Find(groups, 0, &node, &key);   // find, shared by both name maps
+    NameMap_Find(groups, &node, &key);   // find, shared by both name maps
     if (node == groups->head)
         return NULL;
     UGroup *group = node->value.group;

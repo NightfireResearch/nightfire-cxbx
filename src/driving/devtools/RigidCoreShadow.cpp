@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include "RigidCoreShadow.h"
+#include "RigidOrigGlobals.h"
 #include "FpControl.h"
 
 #include "../game/BondCar.h"
@@ -163,7 +164,9 @@ uint32_t &CollisionQueryField() {
     return *reinterpret_cast<uint32_t *>(reinterpret_cast<uint8_t *>(fgCollisionMgr) + 0x2c);
 }
 
-// The game's state the calls read and write, from g_work before a run and back into it after
+// The game's state the calls read and write, from g_work before a run and back into it after (the rigid body
+// globals: ours, lent to the originals before theirs, RigidOrigGlobals.h; the underwater flag back from the side's
+// copy)
 void PutGameState() {
     memcpy(RigidScratchPad, g_work.scratch, kScratchBytes);
     RigidPlayerGravity = g_work.playerGravity;
@@ -174,10 +177,10 @@ void PutGameState() {
     CollisionQueryField() = g_work.queryField;
 }
 
-void TakeGameState() {
+void TakeGameState(bool original) {
     memcpy(g_work.scratch, RigidScratchPad, kScratchBytes);
     g_work.playerGravity = RigidPlayerGravity;
-    g_work.underwater = RigidUnderwater;
+    g_work.underwater = original ? OrigRigidUnderwater : RigidUnderwater;
     for (int k = 0; k < 2; k++)
         if (g_car[k] != NULL)
             g_work.wasInAir[k] = g_car[k]->wasInAir;
@@ -193,12 +196,14 @@ void Both(F &&call) {
         const bool original = run == 0;
         g_work = g_start;
         PutGameState();
-        if (original)
+        if (original) {
+            LendRigidGlobals();
             RestoreOriginals(true);
+        }
         Guarded(thunk, &call, original);
         if (original)
             RestoreOriginals(false);
-        TakeGameState();
+        TakeGameState(original);
         g_result[run] = g_work;
     }
 }

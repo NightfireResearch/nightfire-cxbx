@@ -188,4 +188,18 @@ void SetLightDirections(LightBlock *info, const RLightAngles *angles);
 // The instance (RLightManager::Init makes it)
 #define fgLightManager (*(RLightManager **)0x001ec260)
 
+extern RPositionalLights SavedPositionalLights;     // DisablePositionalLighting's
+// The tuning file's types and the indices dbindex reads them through
+extern RLightType ExplosionTypes[5];                // by explosion size
+extern RLightType MissileTypes[5];
+extern uint32_t EnvironmentIndex;
+extern uint32_t ExplosionTypeIndex;
+extern uint32_t MissileTypeIndex;
+// The flag bytes dbattrib_floatrgb is handed (and does not use)
+extern uint8_t SkyColourFlag;
+extern uint8_t GroundColourFlag;
+extern uint8_t Light1ColourFlag;
+extern uint8_t Light2ColourFlag;
+extern uint8_t TypeColourFlag;
+
 #endif // DRIVING_RENDER_LIGHTS_H_

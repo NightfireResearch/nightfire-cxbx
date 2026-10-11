@@ -224,4 +224,27 @@ public:
     static EngineRefCounter* Get();                             // 0x0012f8b0, at 0x00243b74
 };
 
+// The statics (URefCounter.cpp), each constructed by its Get.
+extern ModelInfoRefCounter ModelInfoRefs;
+extern TextureInfoRefCounter TextureInfoRefs;
+extern WeaponInfoRefCounter WeaponInfoRefs;
+extern CarpFileRefCounter CarpFileRefs;
+extern TextureContextRefCounter TextureContextRefs;
+extern MixRefCounter MixRefs;
+extern StreamRefCounter StreamRefs;
+extern FaderRefCounter FaderRefs;
+extern BankRefCounter BankRefs;
+extern EngineRefCounter EngineRefs;
+// The guards of their construction (bit 0)
+extern uint32_t ModelInfoRefsGuard;
+extern uint32_t TextureInfoRefsGuard;
+extern uint32_t WeaponInfoRefsGuard;
+extern uint32_t CarpFileRefsGuard;
+extern uint32_t TextureContextRefsGuard;
+extern uint32_t MixRefsGuard;
+extern uint32_t StreamRefsGuard;
+extern uint32_t FaderRefsGuard;
+extern uint32_t BankRefsGuard;
+extern uint32_t EngineRefsGuard;
+
 #endif // DRIVING_ENGINE_UREFCOUNTER_H_

@@ -39,12 +39,12 @@
 #define SimulationRandom (*(SimRandom **)0x00233ff0)                // the Simulation's first word
 #define SimStepCount I32_AT(0x00234e34)
 #define fgAIElementController PTR_AT(0x001ddee4)
-#define ZeroVector (*(const Coord3 *)0x00243030)                    // the game's zero vector, never written
-constexpr uint32_t kZeroVectorAddress = 0x00243030;
 
 static_assert(sizeof(ActionQueue) == 0x974, "an action queue is 0x974 bytes");
 
 namespace {
+
+const Coord3 kZero = {0.0f, 0.0f, 0.0f};
 
 // The stimuli ApplyDamage sends its animations
 enum HelicopterStimulus : uint8_t {
@@ -100,8 +100,9 @@ Coord3 *Xyz(Coord4 *v) {
 
 // RSceneObj::TriggerFX through the render object's vtable (slot 15)
 void TriggerFX(RSceneObj *render, int type, uint32_t which, uint32_t unused3 = 0) {
-    (render->*XbeVirtual<decltype(&RSceneObj::TriggerFX)>(render, 15))(type, which, unused3, kZeroVectorAddress,
-                                                                       kZeroVectorAddress, -1.0f);
+    typedef void (RSceneObj::*TriggerFXMethod)(int type, uint32_t which, uint32_t unused, const Coord3 *position,
+                                               const Coord3 *direction, float intensity);
+    (render->*XbeVirtual<TriggerFXMethod>(render, 15))(type, which, unused3, &kZero, &kZero, -1.0f);
 }
 
 } // namespace
@@ -149,7 +150,7 @@ PHelicopter* PHelicopter::Construct(const char *name, float speed, Coord3 direct
 
     SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
     if (body != NULL)
-        body->Construct(rigidBodySlot, kSimpleHelicopter, &position, &velocity, &ZeroVector, &orientation, 3.0f,
+        body->Construct(rigidBodySlot, kSimpleHelicopter, &position, &velocity, &kZero, &orientation, 3.0f,
                         500.0f);
     if (!proximityDestructEnabled)
         renderObject->ScaleBoundingRadius(3.0f);
@@ -228,7 +229,7 @@ void PHelicopter::Simulate() {
     SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
     if (sleepStep != 0 && SimStepCount > sleepStep) {
         AIElementController_ForceVehicleToSleep(fgAIElementController, 0, ai);
-        body->velocity = ZeroVector;
+        body->velocity = kZero;
     }
 
     if (unknownA8 == 1) {

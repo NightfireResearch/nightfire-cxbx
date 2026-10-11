@@ -63,4 +63,11 @@ int FloorToInt(float value);                                                    
 // RRenderWorldCulling::QuadtreeFrustrumCheck2d's
 void TransformPointXZ(const Coord3 *point, const MATRIX4 *matrix, Coord4 *out);                 // 0x0008d120
 
+// GetAnchorMatrix4's matrix, made the identity on its first call (a function-local static and its guard)
+extern MATRIX4 AnchorMatrix;
+extern uint32_t AnchorMatrixGuard;
+// The anchor's position and velocity without one: zero, w 1
+extern Coord4 AnchorNoPosition;
+extern Coord4 AnchorNoVelocity;
+
 #endif // DRIVING_CAMERA_WORLDCAMERA_H_

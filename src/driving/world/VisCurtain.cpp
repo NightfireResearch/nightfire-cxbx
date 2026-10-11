@@ -9,8 +9,10 @@
 // The visibility curtains (0x000d0d50-0x000d1060), ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define ActiveCurtainCount I32_AT(0x0023e280)
-#define ActiveCurtains ((MATRIX4 *)0x0023e290)        // 64 of them; kMaxActiveCurtains used
+// XBE_GLOBAL(0x0023e280, 4)
+int32_t ActiveCurtainCount;
+// XBE_GLOBAL(0x0023e290, 0x1000)
+alignas(16) MATRIX4 ActiveCurtains[64];         // kMaxActiveCurtains used
 
 // FUNC_AT(0x000d0d50)
 void InitActiveCurtainList() {

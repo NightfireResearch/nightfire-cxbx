@@ -17,7 +17,7 @@ void dbg_printf(char* format, ...)
 }
 
 // FUNC_AT(00132192) - the CRT printf
-void dbg_wprintf(char* format, ...)
+void dbg_wprintf(const char* format, ...)
 {
     va_list args;
     va_start(args, format);

@@ -4,6 +4,8 @@
 
 #include "SndPlatformShadow.h"
 #include "FpControl.h"
+#include "OwnedGlobals.h"
+#include "SndOwned.h"
 
 #include "../sound/snd/Mixer.h"
 #include "../sound/snd/Platform.h"
@@ -41,6 +43,11 @@
 // mix bin / filter / wave format / buffer description contents passed by pointer), the mixer and SFILTER_add,
 // SNDMEMI, the critical section and SND mutex, the 100 Hz server, the packet player and the thread primitives -
 // in order. SNDLINKI, memclr, SNDVOICEI_free and SNDI_aztospkrvol run for real on the workspace.
+//
+// The globals the port owns are built at the game's addresses (the original's copy) and copied into the port's
+// variables before either side runs (the port's helpers run on the original's side too, and what they write there
+// is carried into the original's copy); the port's are copied back to the game's addresses after it runs, for the
+// comparison (SndOwned.h).
 //
 // Covered, over random voices and values: setvol, set3dpos, setpitch (pause/resume, the packet cap, the clamps),
 // setfxlevel (both buses), lowpass, highpass, timemult, filteradd, stop, getvoicerange, getmastervoice,
@@ -387,8 +394,8 @@ uint32_t FakeTick() {
 }
 void __stdcall FakeSleep(uint32_t ms) {
     Log(L_SLEEP, 1, ms);
-    if (--W->sleeps <= 0)
-        U8(W->sleepClears) = 0;
+    if (--W->sleeps <= 0)   // the flag in the running side's copy
+        *static_cast<uint8_t *>(SndOwned_At(W->sleepClears, g_side == 1)) = 0;
 }
 void *__stdcall FakeCreateThread(void *attributes, uint32_t stack, uint32_t entry, void *parameter, uint32_t flags,
                                  uint32_t *id) {
@@ -1190,6 +1197,9 @@ void RunCase(Kind &kind, int index, int kindIndex) {
     kind.setup(index);
     memcpy(g_snapshot, W, sizeof(Workspace));
     SaveRegions(g_r1Snapshot, g_r2Snapshot, g_gtSnapshot);
+    SndOwned_ToPort();
+    SndOwnedCopy before;
+    SndOwned_Take(&before);
 
     g_side = 0;
     g_logLength[0] = 0;
@@ -1197,15 +1207,18 @@ void RunCase(Kind &kind, int index, int kindIndex) {
     Originals(true);
     bool okOriginal = Guarded(kind.run);
     Originals(false);
+    SndOwned_CarryWrites(before);
     memcpy(g_resultOriginal, W, sizeof(Workspace));
     SaveRegions(g_r1Original, g_r2Original, g_gtOriginal);
 
     memcpy(W, g_snapshot, sizeof(Workspace));
     LoadRegions(g_r1Snapshot, g_r2Snapshot, g_gtSnapshot);
+    SndOwned_ToPort();
     g_side = 1;
     g_logLength[1] = 0;
     g_logOverflow[1] = false;
     bool okOurs = Guarded(kind.run);
+    SndOwned_ToOriginal();
 
     g_cases++;
     kind.ran++;
@@ -1243,6 +1256,8 @@ void RunCase(Kind &kind, int index, int kindIndex) {
         Detail("%s case %d: the FX hook pair or the speaker gain table differ", kind.name, index);
     }
     g_checks++;
+    // An address of one of our globals the original passed (a listener preset, say) is its copy's
+    OwnedGlobals_TranslateWords(g_log[0], size_t(g_logLength[0]) * 4);
     if (g_logOverflow[0] || g_logOverflow[1] || g_logLength[0] != g_logLength[1] ||
         memcmp(g_log[0], g_log[1], (size_t)g_logLength[0] * 4) != 0) {
         differ = true;
@@ -1301,6 +1316,7 @@ void SndPlatformShadow_Run(void) {
         }
     }
 
+    SndOwned_ToOriginal();
     SaveRegions(g_r1Saved, g_r2Saved, g_gtSaved);
     HooksInstall();
     int kindCount = (int)(sizeof(g_kinds) / sizeof(g_kinds[0]));
@@ -1311,6 +1327,7 @@ void SndPlatformShadow_Run(void) {
     }
     HooksRemove();
     LoadRegions(g_r1Saved, g_r2Saved, g_gtSaved);
+    SndOwned_ToPort();
 
     for (int k = 0; k < kindCount; k++)
         if (g_kinds[k].differ != 0 || g_kinds[k].faults != 0)

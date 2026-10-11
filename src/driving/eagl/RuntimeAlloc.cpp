@@ -29,8 +29,10 @@
 
 // (The allocator hooks, the global pool and BuiltInShapes - the SHPX file linked into the executable, a TAR's
 // fallback image - are EaglGlobals.h's.)
-#define TarShapeName ((char *)0x001cc980)         // "shape_" and room for four characters, filled in per use
-#define TarClutName ((char *)0x001cc998)          // the same, for CLUTNAME
+// XBE_GLOBAL(0x001cc980, 0xc)
+static char TarShapeName[12] = "shape_";      // and room for four characters, filled in per use
+// XBE_GLOBAL(0x001cc998, 0xc)
+static char TarClutName[12] = "shape_";       // the same, for CLUTNAME
 
 using EAGL::PrintMessage;
 

@@ -20,7 +20,8 @@
 #define GameTick U32_AT(0x001f2a4c)
 #define TicksPerSecond FLOAT_AT(0x001f2a44)             // (name ours)
 #define TuningLevel ((const char *)0x00244084)          // the name of the level the tuning databases are read for
-#define FogColourFlag (*(uint8_t *)0x001ec008)          // the flag byte dbattrib_argb is handed (and does not use)
+// XBE_GLOBAL(0x001ec008, 1)
+uint8_t FogColourFlag;                   // the flag byte dbattrib_argb is handed (and does not use)
 
 namespace {
 

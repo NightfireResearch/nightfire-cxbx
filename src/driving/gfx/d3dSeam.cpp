@@ -5,6 +5,7 @@
 #include "../../common/xbeEntrySeam.h"
 #include "../../common/xbeProfiler.h"
 #include "../../common/xboxPath.h"   // XGWriteSurfaceToFile
+#include "../platform/RealSystem.h"   // TimerFrequency: 50 on a PAL video mode, 60 on an NTSC one (TIMER_init)
 
 #include <windows.h>
 #include <stdint.h>
@@ -59,9 +60,6 @@ static XbeEntrySeam g_seam = { g_entries, sizeof(g_entries) / sizeof(g_entries[0
 // wants something in a different shape - a viewport as six numbers rather than a structure, a float where the
 // stack holds a dword - the conversion happens here, so the backend stays free of Xbox-isms it does not need.
 // ---------------------------------------------------------------------------------------------------------------
-
-// The game's tick rate, as TIMER_init (0x0010ae50) left it: 50 on a PAL video mode, 60 on an NTSC one.
-#define GameTimerFrequency (*(const uint32_t *)0x00242424u)
 
 // ---------------------------------------------------------------------------------------------------------------
 // The state D3D8 would have started with.
@@ -133,10 +131,10 @@ int32_t __stdcall Direct3D_CreateDevice(uint32_t adapter, uint32_t deviceType, v
     if (parameters != NULL)
         printf("[d3dSeam] device %ux%u, format 0x%x, multisample type 0x%x, flags 0x%x\n",
                parameters[0], parameters[1], parameters[2], parameters[4], parameters[10]);
-    if (parameters != NULL && parameters[11] == 0 && GameTimerFrequency != 0) {
-        parameters[11] = GameTimerFrequency;
+    if (parameters != NULL && parameters[11] == 0 && uint32_t(TimerFrequency) != 0) {
+        parameters[11] = uint32_t(TimerFrequency);
         printf("[d3dSeam] no refresh rate in the present parameters; pacing to the game's %u Hz tick\n",
-               GameTimerFrequency);
+               uint32_t(TimerFrequency));
     }
 
     int32_t result = D3D9_CreateDevice(adapter, deviceType, focusWindow, behaviourFlags,

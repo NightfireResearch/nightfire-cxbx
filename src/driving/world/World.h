@@ -334,4 +334,6 @@ static_assert(offsetof(WWorld, group) == 0x14 && offsetof(WWorld, map) == 0x1c &
 
 #define fgWorld (*(WWorld **)0x0023f310)
 
+extern char TrackName[0x80];            // SetTrackName's
+
 #endif // DRIVING_WORLD_WORLD_H_

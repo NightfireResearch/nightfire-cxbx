@@ -18,6 +18,7 @@
 #include "../render/RGlareManager.hpp"
 #include "../render/RSceneObj.hpp"
 #include "../world/World.h"
+#include "OwnedGlobals.h"
 #include "../../common/xbeOriginal.h"
 #include "../../helpers.h"
 
@@ -167,25 +168,48 @@ typedef void (__fastcall *RendererFn)(RRenderer *, int);
 // ---- the game's state
 
 #define GameTick U32_AT(0x001f2a4c)
-#define ShadowImages ((ShadowMapImage **)0x001ec018)
-#define ShadowCount I32_AT(0x001ec010)
-#define RenderTypeSetups ((RenderTypeSetup *)0x001c3ff4)
-#define DrawZ FLOAT_AT(0x001c3e28)
-#define DrawModelMatrix (*(MATRIX4 **)0x001e92d8)
-#define CurrentObject (*(RSceneObj **)0x001ec224)
 
+// The originals' copies of the port's DrawZ and the ring models (the rest are only in the region table below)
+#define OrigDrawZ FLOAT_AT(0x001c3e28)
+#define OrigSimpleModels ((EAGL::DynamicModel **)0x00243798)
+#define OrigTexturedModels ((EAGL::DynamicModel **)0x002437d8)
+#define OrigVolatileModels ((EAGL::DynamicModel **)0x00243838)
+
+// The state the functions write, by the original's address: the port's own variable where it has one, else the
+// bytes both sides share. The original runs from its copies, set from the port's before it runs.
 struct Region {
     uint32_t at;
+    void *port;
     uint32_t bytes;
 };
+#define SHARED(at, bytes) {at, reinterpret_cast<void *>(at), bytes}
 const Region kRegions[] = {
-    {0x001e9420, 0x001eb880 - 0x001e9420},  // the two batches
-    {0x001e92d0, 0xc},                      // the simple materials, the model matrix
-    {0x001c3e28, 4},                        // the depth
-    {0x00243708, 0x002438b8 - 0x00243708},  // the rings
-    {0x001ec000, 0x260},                    // capture count ... the shadow maps, the shared data, the default info
-    {0x001c4044, 4},                        // the object brightness
-    {0x001c3ff0, 0x18},                     // the glare switch and the setup table
+    {0x001e9420, &QuadBatch, sizeof(VertexBatch)},          // the two batches
+    {0x001ea650, &SpriteBatch, sizeof(VertexBatch)},
+    SHARED(0x001e92d0, 8),                                  // the simple materials
+    {0x001e92d8, &DrawModelMatrix, 4},                      // the model matrix
+    {0x001c3e28, &DrawZ, 4},                                // the depth
+    SHARED(0x00243708, 0x90),                               // the rings: indices and requests ...
+    {0x00243798, SimpleModels, sizeof(SimpleModels)},       // ... and models
+    {0x002437d8, TexturedModels, sizeof(TexturedModels)},
+    SHARED(0x00243818, 0x20),
+    {0x00243838, VolatileModels, sizeof(VolatileModels)},
+    SHARED(0x00243878, 0x40),
+    {0x001ec000, &CaptureCount, 4},                         // capture count ... the default info
+    SHARED(0x001ec004, 4),                                  // the fog
+    {0x001ec008, &FogColourFlag, 1},
+    SHARED(0x001ec009, 7),
+    {0x001ec010, &ShadowMaps, sizeof(ShadowMaps)},          // the shadow maps
+    {0x001ec220, &VehiclesAllowed, 1},                      // the shared data
+    SHARED(0x001ec221, 3),
+    {0x001ec224, &CurrentObject, 4},
+    SHARED(0x001ec228, 0x1c),
+    {0x001ec244, ShadowImageName, sizeof(ShadowImageName)},
+    {0x001ec250, &DefaultShadowInfo, sizeof(DefaultShadowInfo)},
+    {0x001c4044, &ObjectBrightness, 4},                     // the object brightness
+    {0x001c3ff0, &ModelGlaresEnabled, 1},                   // the glare switch
+    SHARED(0x001c3ff1, 0x17),                               // and the setup table (the port's is constant)
+    {0x001e4762, &WideScreenSwitch, 1},                     // ConfigureRes's switch
 };
 const int kRegionCount = sizeof(kRegions) / sizeof(kRegions[0]);
 uint32_t RegionBytes() {
@@ -199,7 +223,7 @@ uint32_t RegionBytes() {
 const uint32_t kRingBytes = 16 * (0x2c + 0x58) + 32 * (0x3c + 0x58);
 
 struct Snapshot {
-    uint8_t regions[0x2460 + 0xc + 4 + 0x1b0 + 0x260 + 4 + 0x18];
+    uint8_t regions[0x1224 * 2 + 0xc + 4 + 0x1b0 + 0x260 + 4 + 0x18 + 1];
     uint8_t rings[kRingBytes];
     uint8_t fogParams[sizeof(FogParams)];
 };
@@ -224,20 +248,22 @@ void RingCopy(uint8_t *&cursor, Request **requests, EAGL::DynamicModel **models,
     }
 }
 
-void Copy(Snapshot *s, bool take) {
+// The port's state, or the original's copies of it
+void Copy(Snapshot *s, bool take, bool original = false) {
     uint8_t *cursor = s->regions;
     for (int i = 0; i < kRegionCount; i++) {
-        uint8_t *game = (uint8_t *)(uintptr_t)kRegions[i].at;
+        uint8_t *state = original ? reinterpret_cast<uint8_t *>(kRegions[i].at)
+                                  : static_cast<uint8_t *>(kRegions[i].port);
         if (take)
-            memcpy(cursor, game, kRegions[i].bytes);
+            memcpy(cursor, state, kRegions[i].bytes);
         else
-            memcpy(game, cursor, kRegions[i].bytes);
+            memcpy(state, cursor, kRegions[i].bytes);
         cursor += kRegions[i].bytes;
     }
     cursor = s->rings;
-    RingCopy(cursor, SimpleRequests, SimpleModels, take);
-    RingCopy(cursor, TexturedRequests, TexturedModels, take);
-    RingCopy(cursor, VolatileRequests, VolatileModels, take);
+    RingCopy(cursor, SimpleRequests, original ? OrigSimpleModels : SimpleModels, take);
+    RingCopy(cursor, TexturedRequests, original ? OrigTexturedModels : TexturedModels, take);
+    RingCopy(cursor, VolatileRequests, original ? OrigVolatileModels : VolatileModels, take);
     if (Fog != NULL && Fog->params != NULL) {
         if (take)
             memcpy(s->fogParams, Fog->params, sizeof(FogParams));
@@ -246,7 +272,7 @@ void Copy(Snapshot *s, bool take) {
     }
 }
 
-Snapshot g_base, g_pre, g_afterOriginal, g_afterPort;
+Snapshot g_base, g_originalBase, g_pre, g_afterOriginal, g_afterPort;
 
 // ---- results
 
@@ -563,6 +589,7 @@ const void *CodeOf(F f) {
 // vector's push for real by the vector's test
 bool g_fakeMaterials = true;
 bool g_fakePushBack = true;
+bool g_fakeSetups = false;   // the render types' setups, for the instance draws
 
 void InstallFakes() {
     if (g_fakeMaterials) {
@@ -583,6 +610,11 @@ void InstallFakes() {
     HookBoth(0x000e6640, CodeOf(&EAGL::RenderContext::EndFrame), PTR(FakeEndFrame));
     if (g_fakePushBack)
         HookBoth(0x0007ceb0, CodeOf(&ReverseDrawList::PushBack), PTR(FakePushBack));
+    if (g_fakeSetups) {
+        HookBoth(0x0007e1f0, PTR(&RRenderSharedData::SendPerWorldInstance), PTR(FakeSetup));
+        HookBoth(0x0007e2b0, PTR(&RRenderSharedData::SendPerObjectInstance), PTR(FakeSetup));
+        HookBoth(0x0007e310, PTR(&RRenderSharedData::SendPerCarInstance), PTR(FakeSetup));
+    }
     HookBoth(0x0006f330, CodeOf(&PhysicsObject::GetPosition), PTR(FakeGetPosition));
     HookBoth(0x000a9aa0, CodeOf(&RGlareManager::AddModelGlare), PTR(FakeAddModelGlare));
     HookBoth(0x0007e950, CodeOf(&RLightManager::AddSpecularLight), PTR(FakeSpecularLight));
@@ -660,11 +692,13 @@ void CheckLogs(const char *what, int index) {
 void SideBySide(const char *what, int index, CaseFn run, void *context, CaseFn reset = NULL) {
     g_cases++;
     Copy(&g_pre, true);
+    Copy(&g_pre, false, true);
     if (reset != NULL)
         reset(context, true);
     Guarded(run, context, true);
     MarkStackPointers();
-    Copy(&g_afterOriginal, true);
+    Copy(&g_afterOriginal, true, true);
+    OwnedGlobals_TranslateWords(g_afterOriginal.rings, sizeof(g_afterOriginal.rings));   // e.g. a request's vertices
     Copy(&g_pre, false);
     if (reset != NULL)
         reset(context, false);
@@ -747,12 +781,12 @@ void TestColours() {
 void TestShadowMaps() {
     ValueCase c;
     memset(&c, 0, sizeof(c));
-    int images = ShadowImages[0] != NULL ? ShadowCount : 0;
+    int images = ShadowMaps.images[0] != NULL ? ShadowMaps.count : 0;
     if (images > 64)
         images = 64;
     int index = 0;
     for (int i = 0; i < images; i++) {
-        const ShadowMapImage *image = ShadowImages[i];
+        const ShadowMapImage *image = ShadowMaps.images[i];
         if (image == NULL)
             continue;
         c.image = image;
@@ -780,13 +814,13 @@ void TestShadowMaps() {
             c.position.z = at[2] + RandomFloat(-40.0f, 40.0f);
             RunValue("GetShadowBrightness", i, ShadowBrightnessCase, &c, 8);
         }
-        ShadowMapImage *first = ShadowImages[0];
-        ShadowImages[0] = NULL;
+        ShadowMapImage *first = ShadowMaps.images[0];
+        ShadowMaps.images[0] = NULL;
         for (int i = 0; i < 4; i++) {
             c.instance = RandomInt(fgWorld->instanceCount);
             RunValue("GetShadowBrightness (none)", i, ShadowBrightnessCase, &c, 8);
         }
-        ShadowImages[0] = first;
+        ShadowMaps.images[0] = first;
     }
     printf("[renderer] %d shadow map(s) sampled\n", images);
 }
@@ -962,7 +996,7 @@ struct DrawCase {
 void DrawReset(void *context, bool original) {
     DrawCase *c = static_cast<DrawCase *>(context);
     memcpy(c->material[original ? 0 : 1], c->materialIn, sizeof(c->materialIn));
-    DrawZ = c->z;
+    (original ? OrigDrawZ : DrawZ) = c->z;
 }
 
 EAGL::TAR *const kTextures[3] = {(EAGL::TAR *)0x00a00000, (EAGL::TAR *)0x00b00000, NULL};
@@ -1206,10 +1240,7 @@ void TestDrawGroups() {
     g_articleInstance = RandomArticleInstance(fgWorld->instanceCount);
     if (g_articleInstance < 0)
         return;
-    RenderTypeSetup savedSetups[5];
-    memcpy(savedSetups, RenderTypeSetups, sizeof(savedSetups));
-    for (int i = 0; i < 5; i++)
-        RenderTypeSetups[i] = FakeSetup;
+    g_fakeSetups = true;
     g_fakePushBack = false;
     GroupCase c;
     for (int i = 0; i < 120; i++) {
@@ -1227,7 +1258,7 @@ void TestDrawGroups() {
         free(c.draws[1]);
     }
     g_fakePushBack = true;
-    memcpy(RenderTypeSetups, savedSetups, sizeof(savedSetups));
+    g_fakeSetups = false;
 }
 
 // ---- the instance draws
@@ -1275,10 +1306,7 @@ void InstanceRun(void *context, bool original) {
 void TestInstances() {
     if (fgWorld == NULL || fgWorld->instances == NULL || fgWorld->instanceCount == 0 || Fog == NULL)
         return;
-    RenderTypeSetup savedSetups[5];
-    memcpy(savedSetups, RenderTypeSetups, sizeof(savedSetups));
-    for (int i = 0; i < 5; i++)
-        RenderTypeSetups[i] = FakeSetup;
+    g_fakeSetups = true;
     int count = fgWorld->instanceCount;
     InstanceCase c;
     memset(&c, 0, sizeof(c));
@@ -1330,7 +1358,7 @@ void TestInstances() {
         }
         SideBySide("instance draws", i, InstanceRun, &c);
     }
-    memcpy(RenderTypeSetups, savedSetups, sizeof(savedSetups));
+    g_fakeSetups = false;
 }
 
 // ---- RRenderSharedData
@@ -1505,7 +1533,8 @@ void RendererShadow_Run(void) {
         fflush(stdout);
         return;
     }
-    static_assert(sizeof(Snapshot::regions) == 0x2460 + 0xc + 4 + 0x1b0 + 0x260 + 4 + 0x18, "the regions' bytes");
+    static_assert(sizeof(Snapshot::regions) == 0x1224 * 2 + 0xc + 4 + 0x1b0 + 0x260 + 4 + 0x18 + 1,
+                  "the regions' bytes");
     if (RegionBytes() != sizeof(g_base.regions)) {
         printf("[renderer] region table mismatch - skipped\n");
         fflush(stdout);
@@ -1513,6 +1542,7 @@ void RendererShadow_Run(void) {
     }
     FpControlGet(&g_x87, &g_sse);
     Copy(&g_base, true);
+    Copy(&g_originalBase, true, true);
     const struct {
         const char *name;
         void (*run)();
@@ -1527,6 +1557,7 @@ void RendererShadow_Run(void) {
         test.run();
         SectionEnd();
     }
+    Copy(&g_originalBase, false, true);
     Copy(&g_base, false);
     ResetFpu();
     printf("[renderer] colour, shadow maps, view distances, fog, draws, materials, draw groups, instance draws, shared "

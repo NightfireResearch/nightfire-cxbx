@@ -14,6 +14,7 @@
 #include "../world/RoadNetwork.h"
 #include "../world/World.h"             // kWorldInstanceProcAnim, ArticleOf, WorldModel
 #include "RSceneObj.hpp"
+#include "TimeData.h"                    // TickSeconds
 
 // ---------------------------------------------------------------------------------------------------------------
 // RPathEngine and RPathHandle (0x0007f9f0..0x00080820) and the camera helpers after them (..0x00080a60), ported
@@ -22,9 +23,12 @@
 
 // ---- the game's globals
 
-#define TickSeconds FLOAT_AT(0x001f2a48)        // RTimeData::Init's: 1 / VideoModeRate
 #define VideoModeRate FLOAT_AT(0x001f2a44)      // the video mode's frames per second
-#define ZeroVector (*(const Coord3 *)0x00243030)
+
+// XBE_GLOBAL(0x001ec300, 4)
+PathList *fgPathHandles;
+// XBE_GLOBAL(0x001ec308, 4)
+PathListNode *fgPathIterator;
 
 // ---- the game's code not ported yet
 
@@ -148,7 +152,7 @@ RPathHandle* RPathHandle::ConstructCopy(const RPathHandle *other) {
 RPathHandle* RPathHandle::Construct(CARP::Instance *instance, ProcAnimState *state) {
     procAnim = state;
     this->instance = instance;
-    velocity = ZeroVector;
+    velocity = { 0.0f, 0.0f, 0.0f };
     lastUpdateTime = 0.0f;
     currentPath = NULL;
     nextPath = NULL;
@@ -319,7 +323,7 @@ void RPathHandle::Init(float time) {
     ProcAnimState *state = procAnim;
     currentPath = state->path;
     nextPath = state->path;
-    velocity = ZeroVector;
+    velocity = { 0.0f, 0.0f, 0.0f };
     lastUpdateTime = now;
     parametricTime = state->startTime;
     throttle = 1.0f;

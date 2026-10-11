@@ -132,8 +132,8 @@ public:
     static RPathHandle* CreatePathHandle(CARP::Instance *instance, ProcAnimState *state, float time);  // 0x00080700
 };
 
-#define fgPathHandles (*(PathList **)0x001ec300)
-#define fgPathIterator (*(PathListNode **)0x001ec308)
+extern PathList *fgPathHandles;
+extern PathListNode *fgPathIterator;
 
 // ---- the helpers after it (the names are ours)
 

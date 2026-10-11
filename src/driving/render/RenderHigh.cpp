@@ -126,20 +126,24 @@ typedef void *(__fastcall *ManagerConstructor)(void *memory, int);   // the unpo
 
 // ---- globals
 #define Sim ((void *)0x00233ff0)                                // the Simulation
+// XBE_GLOBAL(0x00234e40, 0x4)
 #define SimCars (*(SimCarList *)0x00234e40)
-#define Symbols (*(USymbolTable **)0x001ebcdc)
 #define Launch (*(LaunchPage *)0x00243b90)
-#define AspectScale FLOAT_AT(0x001c47a0)                        // RViewCamera::AspectRatio's scale
-#define RenderLodBias U32_AT(0x001c4614)                        // EAGL's TAR LOD bias override, set each frame
 #define CullDistance FLOAT_AT(0x001c4624)                       // "Far plane dist"
 #define FrameAnimationTime U32_AT(0x001c4668)                   // ESetFrameAnimationTime's
 #define RenderFeaturesUnknown U8_AT(0x001f2df8)                 // FeatureManager::SetUserSpecifiedRenderFeatures reads it
+// XBE_GLOBAL(0x001c4610, 0x4)
 #define TheGalleryNamespace (*(GalleryNamespace *)0x001c4610)
-#define PhysNamespace (*(PhysicsNamespace **)0x001ec48c)
 #define TheRenderSingletonManager (*(USingletonManager *)0x001ec4a4)
 #define RenderSingletonManagerMade U32_AT(0x001ec4b4)
 #define RHUDViewVtable ((void **)0x00191aa8)
 #define GalleryNamespaceVtable ((void *)0x00191aa0)
+// XBE_GLOBAL(0x001c47a0, 4)
+float AspectScale = 1.0f;
+// XBE_GLOBAL(0x001c4614, 4)
+static uint32_t RenderLodBias = 0xbf800000;             // EAGL's TAR LOD bias override (-1.0f), set each frame
+// XBE_GLOBAL(0x001ec48c, 4)
+static PhysicsNamespace *PhysNamespace;
 // The managers not ported yet (the others are in their headers)
 #define Debris (*(RDebris **)0x00202a80)
 #define MissileCam (*(void **)0x00200f54)

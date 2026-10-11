@@ -38,15 +38,23 @@ class RTextureContext;
 
 // ---- globals
 #define Sim ((void *)0x00233ff0)                            // the Simulation
-#define CarShadowSizes (*(CarShadowSize **)0x00201768)      // one per car name, made by the first LoadAttributes
-#define CarToEdit U32_AT(0x00201784)                        // "Car to edit"
-#define ProjectedShadows (*(bool *)0x001c5078)              // "Enable projected shadows"
-#define PS2ShadowStrength I32_AT(0x001c507c)                // "PS2 shadow strength"
+// XBE_GLOBAL(0x00201768, 4)
+static CarShadowSize *CarShadowSizes;                       // one per car name, made by the first LoadAttributes
+// XBE_GLOBAL(0x00201784, 4)
+static uint32_t CarToEdit;                                  // "Car to edit"
+// XBE_GLOBAL(0x001c5078, 1)
+bool ProjectedShadows = true;                        // "Enable projected shadows"
+// XBE_GLOBAL(0x001c507c, 4)
+static int32_t PS2ShadowStrength = 40;                      // "PS2 shadow strength"
 // The render methods' constants that LookupVariable answers
-#define ShadowFatnessConstants ((void *)0x00201770)
-#define ShadowPlaneConstants ((void *)0x001c5080)
-#define ZeroOneTwoThree ((void *)0x001c5094)
+// XBE_GLOBAL(0x00201770, 0x10)
+alignas(16) Coord4 ShadowFatnessConstants;
+// XBE_GLOBAL(0x001c5080, 0x10)
+alignas(16) Coord4 ShadowPlaneConstants = { 1.0f, 200.0f, 100.0f, 0.0f };
+// XBE_GLOBAL(0x001c5094, 0x10)
+Coord4 ZeroOneTwoThree = { 0.0f, 1.0f, 2.0f, 3.0f };
 // The simple shadow's material: a function-local static USimpleTexturedMaterial, made on first use
+// XBE_GLOBAL(0x00201790, 0x60)
 #define ShadowMaterial ((USimpleTexturedMaterial *)0x00201790)
 #define ShadowMaterialMade U32_AT(0x002017f0)
 #define OffOnNames ((const char *const *)0x001b6638)        // "Off", "On"
@@ -125,11 +133,11 @@ void RShadowMap::ClearShadowMap() {
 void* RShadowMap::LookupVariable(const char *name, bool *found) {
     void *variable = NULL;
     if (strcmp(name, "GAME::ShadowFatnessConstants") == 0)
-        variable = ShadowFatnessConstants;
+        variable = &ShadowFatnessConstants;
     if (strcmp(name, "GAME::ShadowPlaneConstants") == 0)
-        variable = ShadowPlaneConstants;
+        variable = &ShadowPlaneConstants;
     if (strcmp(name, "GAME::ZeroOneTwoThree") == 0)
-        variable = ZeroOneTwoThree;
+        variable = &ZeroOneTwoThree;
     RShadowMap *shadowMap = TheShadowMap;
     if (strcmp(name, "GAME::ShadowTexture") == 0)
         variable = shadowMap->data->colourTarget;

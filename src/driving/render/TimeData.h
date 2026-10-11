@@ -15,6 +15,7 @@
 #define GameTick U32_AT(0x001f2a4c)                         // the simulation's step count, as of this frame
 #define SimStep FLOAT_AT(0x001c465c)                        // "GAME::SimStep"'s first float: the same, as a float
 #define CausticControl ((float *)0x001c467c)                // its [3] is its [0] times the step count
+extern float TickSeconds;                                   // 1 / VideoModeRate
 
 class RTimeData {
 public:

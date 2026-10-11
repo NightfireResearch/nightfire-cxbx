@@ -7,10 +7,12 @@
 #include "../anim/Actor.h"
 #include "../anim/AnimationDatabase.h"
 #include "../anim/Character.h"
+#include "../anim/Manager.h"
 #include "../anim/Poser.h"
 #include "../data/StdStreams.h"
 #include "../engine/UFileLoader.h"
 #include "../engine/UMemory.hpp"
+#include "../render/Renderer.h"       // ViewProjectionMatrixPointer
 #include "../../common/xbeOriginal.h"
 #include "../../common/xbeOverload.h"   // XbeAddress
 
@@ -61,6 +63,7 @@ namespace {
 int g_cases, g_faults;
 bool g_counting;
 std::string *g_log;
+bool g_originalPass;    // the pass running the originals (they use the game's copies of the globals)
 
 void Logf(const char *format, ...) {
     if (g_log == NULL)
@@ -115,8 +118,12 @@ struct Rng {
 // ---- what the tests read of the game
 
 #define ShadowActorDatabase (*(ActActorDatabase **)0x001dd9a0)
-#define ShadowCullRestart (*(uint8_t *)0x001dd9a4)
-#define ShadowCullCursor (*(PointerListNode **)0x001dd9bc)
+// The originals' copies of the port's CullRestart and CullCursor: each pass's culling walk uses its own
+#define OrigCullRestart (*(bool *)0x001dd9a4)
+#define OrigCullCursor (*(PointerListNode **)0x001dd9bc)
+// ... and of TheActManager and ViewProjectionMatrixPointer, lent for the originals' pass
+#define OrigActManager (*(ActManager **)0x001dd9cc)
+#define OrigViewProjectionMatrixPointer (*(const MATRIX4 **)0x001caf5c)
 
 // ---- the functions, at their original addresses
 
@@ -536,8 +543,10 @@ void TestLiveActors(Rng *rng) {
 
 void TestCulling(Rng *rng) {
     ActActorDatabase *savedDatabase = ShadowActorDatabase;
-    uint8_t savedRestart = ShadowCullRestart;
-    PointerListNode *savedCursor = ShadowCullCursor;
+    bool &restart = g_originalPass ? OrigCullRestart : CullRestart;
+    PointerListNode *&cursor = g_originalPass ? OrigCullCursor : CullCursor;
+    bool savedRestart = restart;
+    PointerListNode *savedCursor = cursor;
 
     PointerListNode *head = &g_cullNodes[kFakeActors];
     PointerListNode *prev = head;
@@ -558,8 +567,8 @@ void TestCulling(Rng *rng) {
 
     for (int round = 0; round < 3; round++) {
         if (round == 1) {
-            ShadowCullRestart = 0;
-            ShadowCullCursor = &g_cullNodes[2];
+            restart = false;
+            cursor = &g_cullNodes[2];
         } else {
             PrepareActorsForCulling();
         }
@@ -578,7 +587,7 @@ void TestCulling(Rng *rng) {
                 index = -1;
             Logf("cull %d %d: %d %08x %08x %08x %08x %08x %d %08x restart %d", round, k, index, Bits(sphere.x),
                  Bits(sphere.y), Bits(sphere.z), Bits(sphere.w), Bits(height), int(checkFar), Bits(farScale),
-                 int(ShadowCullRestart));
+                 int(restart));
             if (index >= 0) {
                 SetActorCull(item, rng->Range(0, 1) != 0, rng->Uniform(0.0f, 100.0f));
                 Logf("  culled %d", int(g_actors[index].culled));
@@ -593,7 +602,7 @@ void TestCulling(Rng *rng) {
     Logf("culled walks done");
 
     g_cullDatabase.head = NULL;
-    ShadowCullRestart = 1;
+    restart = true;
     Logf("empty: %d", GetNextActorCullInfo(NULL, NULL, NULL, NULL));
 
     head->next = head;
@@ -603,8 +612,8 @@ void TestCulling(Rng *rng) {
     Logf("update walk done");
 
     ShadowActorDatabase = savedDatabase;
-    ShadowCullRestart = savedRestart;
-    ShadowCullCursor = savedCursor;
+    restart = savedRestart;
+    cursor = savedCursor;
 }
 
 void LogList(const char *what, const ActActorDatabase *database) {
@@ -796,7 +805,12 @@ bool Safe(void (*test)(Rng *), Rng *rng) {
 
 void RunPass(std::string *log, bool original) {
     g_log = log;
+    g_originalPass = original;
+    ActManager *origManager = OrigActManager;
+    const MATRIX4 *origViewProjection = OrigViewProjectionMatrixPointer;
     if (original) {
+        OrigActManager = TheActManager;
+        OrigViewProjectionMatrixPointer = ViewProjectionMatrixPointer;
         XbeOriginal_RestoreRange(0x00011020, 0x00013c00, true);
         XbeOriginal_Restore(0x0008c8d0, true);
     }
@@ -817,6 +831,8 @@ void RunPass(std::string *log, bool original) {
     if (original) {
         XbeOriginal_RestoreRange(0x00011020, 0x00013c00, false);
         XbeOriginal_Restore(0x0008c8d0, false);
+        OrigActManager = origManager;
+        OrigViewProjectionMatrixPointer = origViewProjection;
     }
     g_log = NULL;
 }

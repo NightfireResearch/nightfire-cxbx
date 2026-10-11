@@ -21,8 +21,10 @@
 
 typedef void (*AssertHandler)(const char *message);
 
-#define FoundationVideoMode I32_AT(0x00243540)
-#define AssertMessageHandler (*(AssertHandler *)0x00243544)
+// XBE_GLOBAL(0x00243540, 0x4)
+static int32_t FoundationVideoMode;
+// XBE_GLOBAL(0x00243544, 0x4)
+static AssertHandler AssertMessageHandler;
 
 // The rate of each video mode (the original's table at 0x001a204c; mode 0 is never set)
 static const float kVideoModeRates[4] = {60.0f, 60.0f, 50.0f, 60.0f};

@@ -18,8 +18,8 @@
 // current - the original's orders, kept (MW's source has another). x87 in double, a float store per store.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define ScratchBuffers ((ScratchBuffer *)0x00241ba0)       // [3]
-#define ScratchBufferName ((const char *)0x001cec80)        // "ScratchBuffer::mBuffer", the original's string
+// XBE_GLOBAL(0x00241ba0, 0x24)
+ScratchBuffer ScratchBuffers[3];
 
 static inline float Step(float current, int q, const DofInfo &dof) {
     return float(q * double(dof.range) + current + dof.min);
@@ -210,7 +210,7 @@ void ScratchBuffer::AllocateBuffer(uint32_t bytes) {
     if (buffer != NULL)
         EaglFree(buffer, size);
     size = bytes;
-    buffer = EaglMalloc(bytes, ScratchBufferName);
+    buffer = EaglMalloc(bytes, "ScratchBuffer::mBuffer");
 }
 
 // FUNC_AT(0x00106750)

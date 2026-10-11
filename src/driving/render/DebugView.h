@@ -45,4 +45,7 @@ public:
     static void StartUp(unsigned seed);                                                         // 0x0008b2b0
 };
 
+extern bool DebugViewEnabled;
+extern float DebugSpeedFraction;
+
 #endif // DRIVING_RENDER_DEBUGVIEW_H_

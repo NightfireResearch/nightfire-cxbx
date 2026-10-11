@@ -145,12 +145,14 @@ void CompareBytes(const char *what, const uint8_t *original, const uint8_t *port
 // ===============================================================================================================
 
 #define MemClassTable ((void **)0x00242ce0)
-#define MemOutOfMemoryHook (*(void **)0x00242cd8)
-#define MemDefaultClass (*(unsigned *)0x00242cdc)   // the class a request with flags 0 goes to
-#define AllocatorTable (*(MemoryFunctions **)0x001d48c4)
-#define PoolsInUse (*(FastPool **)0x001d48c8)
-#define ObjectHeapClass (*(int32_t *)0x00242fc8)
-#define PageSize (*(uint32_t *)0x00242fc4)
+// The world's globals are the ports' (MemOutOfMemory, MemDefaultClass: RealMemory.h; Functions, Pools,
+// ObjectHeapClass, PageSize: UMemory.hpp) and the originals' copies of them, set alike
+#define OrigMemOutOfMemory (*(MemOutOfMemoryFn *)0x00242cd8)
+#define OrigMemDefaultClass (*(unsigned *)0x00242cdc)   // the class a request with flags 0 goes to
+#define OrigFunctions (*(MemoryFunctions **)0x001d48c4)
+#define OrigPools (*(FastPool **)0x001d48c8)
+#define OrigObjectHeapClass (*(int32_t *)0x00242fc8)
+#define OrigPageSize (*(uint32_t *)0x00242fc4)
 #define ClassMemory ((void **)0x00242fd0)
 
 MemoryFunctions *const kMemFunctions = (MemoryFunctions *)0x001d4894;
@@ -159,44 +161,52 @@ const size_t kArenaBytes = 16 << 20;
 uint8_t *g_arena;
 FastPool g_pools;
 
-struct SavedWorld {
-    void *class0, *outOfMemory;
+struct WorldGlobals {
+    MemOutOfMemoryFn outOfMemory;
     MemoryFunctions *functions;
     FastPool *pools;
     int32_t objectHeap;
     uint32_t pageSize;
     unsigned defaultClass;
+};
+
+struct SavedWorld {
+    void *class0;
+    WorldGlobals port, original;
 } g_saved;
 
 void SaveWorld() {
     g_saved.class0 = MemClassTable[0];
-    g_saved.outOfMemory = MemOutOfMemoryHook;
-    g_saved.functions = AllocatorTable;
-    g_saved.pools = PoolsInUse;
-    g_saved.objectHeap = ObjectHeapClass;
-    g_saved.pageSize = PageSize;
-    g_saved.defaultClass = MemDefaultClass;
+    g_saved.port = { MemOutOfMemory, Functions, Pools, ObjectHeapClass, PageSize, MemDefaultClass };
+    g_saved.original = { OrigMemOutOfMemory, OrigFunctions, OrigPools, OrigObjectHeapClass, OrigPageSize,
+                         OrigMemDefaultClass };
 }
 
 void RestoreWorld() {
     MemClassTable[0] = g_saved.class0;
-    MemOutOfMemoryHook = g_saved.outOfMemory;
-    AllocatorTable = g_saved.functions;
-    PoolsInUse = g_saved.pools;
-    ObjectHeapClass = g_saved.objectHeap;
-    PageSize = g_saved.pageSize;
-    MemDefaultClass = g_saved.defaultClass;
+    MemOutOfMemory = g_saved.port.outOfMemory;
+    Functions = g_saved.port.functions;
+    Pools = g_saved.port.pools;
+    ObjectHeapClass = g_saved.port.objectHeap;
+    PageSize = g_saved.port.pageSize;
+    MemDefaultClass = g_saved.port.defaultClass;
+    OrigMemOutOfMemory = g_saved.original.outOfMemory;
+    OrigFunctions = g_saved.original.functions;
+    OrigPools = g_saved.original.pools;
+    OrigObjectHeapClass = g_saved.original.objectHeap;
+    OrigPageSize = g_saved.original.pageSize;
+    OrigMemDefaultClass = g_saved.original.defaultClass;
 }
 
 void BeginWorld() {
     memset(g_arena, 0, kArenaBytes);
     memset(&g_pools, 0, sizeof(g_pools));
-    MemOutOfMemoryHook = NULL;
-    MemDefaultClass = 0;   // flags 0 ("FastBlock", new[]) means class 0 (nothing in the game changes it)
+    MemOutOfMemory = OrigMemOutOfMemory = NULL;
+    MemDefaultClass = OrigMemDefaultClass = 0;   // flags 0 ("FastBlock", new[]): class 0 (nothing in the game changes it)
     MEMCLASS_init(0, "SHADOW", g_arena, (int)kArenaBytes, 0x80, 0x80, 0, 0, 0, 0);
-    AllocatorTable = kMemFunctions;
-    PoolsInUse = &g_pools;
-    ObjectHeapClass = 0;
+    Functions = OrigFunctions = kMemFunctions;
+    Pools = OrigPools = &g_pools;
+    ObjectHeapClass = OrigObjectHeapClass = 0;
 }
 
 void EndWorld() {
@@ -431,7 +441,7 @@ void MemoryScenario(bool original, std::string &log, std::vector<uint8_t> &extra
                    (const char *)record, *(int *)(record + 0x28), *(int *)(record + 0x2c), *(int *)(record + 0x30),
                    *(unsigned *)(record + 0x34), record[0x38]);
         }
-        Append(log, " pagesize %x\n", PageSize);
+        Append(log, " pagesize %x\n", original ? OrigPageSize : PageSize);
         api.deleteClass(number);
         Append(log, "  deleted: record %d memory %d\n", MemClassTable[number] != NULL, ClassMemory[number] != NULL);
     }

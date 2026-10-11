@@ -40,3 +40,8 @@ public:
     void IncSize(uint32_t count);
 };
 static_assert(sizeof(FileNameList) == 12, "a list is 12 bytes");
+
+// UFileLoader's request logging: every file loaded, those found in the big file and those not (UFileLoader.cpp).
+extern FileNameList RequestedFiles;
+extern FileNameList FilesInBigFile;
+extern FileNameList FilesNotInBigFile;

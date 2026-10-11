@@ -6,6 +6,7 @@
 
 #include <bit>
 #include <stdio.h>
+#include <string.h>
 
 #include "../audio/Bank.h"              // SharedTreeIterator
 #include "../data/AttributeParsers.h"
@@ -17,8 +18,14 @@
 // PVehicle (0x0006f810-0x00071930) and PhysicsData's constructor, ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The C runtime's case-insensitive comparison (the car names' order)
-#define Crt_stricmp ((int (*)(const char *, const char *))0x00134537)
+// XBE_GLOBAL(0x001c3da4, 4)
+float fgDamageImpulseScale = 1000.0f;
+// XBE_GLOBAL(0x001c3de8, 4)
+uint32_t CarPhysicsType = 0xffffffff;           // the extension type's id (InitializeGlobals)
+// XBE_GLOBAL(0x001e7ac0, 4)
+CarNameMap *fgCarNameMap;
+// XBE_GLOBAL(0x001e7ac4, 4)
+const char **fgCarNames;
 
 // ---- PhysicsData
 
@@ -241,7 +248,7 @@ TreeInsertResult* CarNameMap::InsertUnique(TreeInsertResult *result, const TreeP
     bool addLeft = true;
     for (TreeNode *node = head->parent; !node->isNil;) {
         where = node;
-        addLeft = Crt_stricmp(value->name, node->value.name) < 0;
+        addLeft = _stricmp(value->name, node->value.name) < 0;
         node = addLeft ? node->left : node->right;
     }
     SharedTreeIterator before = {where};
@@ -255,7 +262,7 @@ TreeInsertResult* CarNameMap::InsertUnique(TreeInsertResult *result, const TreeP
         }
         before.Dec();
     }
-    if (Crt_stricmp(before.node->value.name, value->name) < 0) {
+    if (_stricmp(before.node->value.name, value->name) < 0) {
         TreeNode *inserted;
         Tree::InsertAt(&inserted, addLeft, where, value);
         result->where = inserted;

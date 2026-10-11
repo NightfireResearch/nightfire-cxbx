@@ -72,6 +72,7 @@ public:
 };
 static_assert(sizeof(RLensFlareManager) == 8, "RLensFlareManager is 8 bytes");
 
-#define TheLensFlareManager (*(RLensFlareManager **)0x00200f44)
+extern RLensFlareManager *TheLensFlareManager;
+extern float FlareTestDepth;                // the test sprites' depth
 
 #endif // DRIVING_RENDER_LENSFLARE_H_

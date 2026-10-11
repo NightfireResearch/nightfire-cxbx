@@ -122,6 +122,7 @@ typedef void (*TimeFn)(void);
 
 #define ShadowSimTimeStep FLOAT_AT(0x00234e30)
 #define ShadowSimStepCount U32_AT(0x00234e34)
+#define OrigTickSeconds FLOAT_AT(0x001f2a48)    // the original's copy of the port's TickSeconds
 
 // FUN_000914f0's convention: EDX the name, the table on the stack. Answers the result, or (the second) EDX after.
 __declspec(naked) const void *CallWithNameInEdx(const void *, const char *, const void *) {
@@ -1156,19 +1157,20 @@ struct TimeState {
     float caustic[4];
 };
 
-TimeState CaptureTime() {
+// The tick length from the port's or the original's copy; the rest both share
+TimeState CaptureTime(bool original = false) {
     TimeState s;
     s.videoModeRate = VideoModeRate;
-    s.tickSeconds = TickSeconds;
+    s.tickSeconds = original ? OrigTickSeconds : TickSeconds;
     s.simStep = SimStep;
     s.gameTick = GameTick;
     memcpy(s.caustic, CausticControl, sizeof(s.caustic));
     return s;
 }
 
-void PutTime(const TimeState &s) {
+void PutTime(const TimeState &s, bool original = false) {
     VideoModeRate = s.videoModeRate;
-    TickSeconds = s.tickSeconds;
+    (original ? OrigTickSeconds : TickSeconds) = s.tickSeconds;
     SimStep = s.simStep;
     GameTick = s.gameTick;
     memcpy(CausticControl, s.caustic, sizeof(s.caustic));
@@ -1188,6 +1190,7 @@ void RunTime(void *context, bool original) {
 
 void TestTime() {
     TimeState saved = CaptureTime();
+    float savedOrigTick = OrigTickSeconds;
     uint32_t savedCount = ShadowSimStepCount;
     const uint32_t counts[] = { 0, 1, 12345, 0x7fffffffu, 0x80000000u, 0xfffffffeu, 0xffffffffu };
     for (int n = 0; n < 40; n++) {
@@ -1195,11 +1198,11 @@ void TestTime() {
         TimeState start = saved;
         start.caustic[0] = Uniform(-1, 1);
         ShadowSimStepCount = n < 7 ? counts[n] : Next() * 977u;
-        PutTime(start);
+        PutTime(start, true);
         g_cases++;
         if (!Guarded(RunTime, &c, true))
             continue;
-        TimeState original = CaptureTime();
+        TimeState original = CaptureTime(true);
         PutTime(start);
         if (!Guarded(RunTime, &c, false))
             continue;
@@ -1208,6 +1211,7 @@ void TestTime() {
     }
     ShadowSimStepCount = savedCount;
     PutTime(saved);
+    OrigTickSeconds = savedOrigTick;
 }
 
 }  // namespace

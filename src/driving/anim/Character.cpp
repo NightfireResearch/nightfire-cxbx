@@ -42,9 +42,8 @@
 // The textures' and the models' stop-using calls: one empty function (Ghidra: dummyNullFunction)
 #define DummyNullFunction ((void (__fastcall *)(void *, int, const void *))0x00017550)
 
-// ---- the C runtime's (strtok keeps its place between calls; tolower as the game has it)
+// ---- the C runtime's (tolower as the game has it: it is given plain, signed, chars)
 
-#define Crt_strtok ((char *(__cdecl *)(char *, const char *))0x0013282a)
 #define Crt_tolower ((int (__cdecl *)(int))0x001327f9)
 
 // ---- globals
@@ -469,8 +468,8 @@ int ActCharacter::Draw(const MATRIX4 *cullMatrix, const MATRIX4 *matrix) {
 // FUNC_AT(0x00015260)
 ActCharacterInfo* ActCharacterInfo::Construct(const char *text) {
     strcpy(description, text);
-    numberToken = Crt_strtok(description, kSeparator);
-    name = Crt_strtok(NULL, kSeparator);
+    numberToken = strtok(description, kSeparator);
+    name = strtok(NULL, kSeparator);
     switch (Crt_tolower(*name)) {
     case 'h':
         type = kCharacterH;
@@ -497,8 +496,8 @@ ActCharacterInfo* ActCharacterInfo::Construct(const char *text) {
 
     if (type == kCharacterH || type == kCharacterC) {
         texture = NULL;
-        texture1 = Crt_strtok(NULL, kSeparator);
-        texture2 = Crt_strtok(NULL, kSeparator);
+        texture1 = strtok(NULL, kSeparator);
+        texture2 = strtok(NULL, kSeparator);
         texturePath = NULL;
         texture1Path = static_cast<char *>(OperatorNewArray(kPathLength));
         texture2Path = static_cast<char *>(OperatorNewArray(kPathLength));
@@ -509,7 +508,7 @@ ActCharacterInfo* ActCharacterInfo::Construct(const char *text) {
         strcat(texture2Path, texture2);
         strcat(texture2Path, ".xsh");
     } else {
-        texture = Crt_strtok(NULL, kSeparator);
+        texture = strtok(NULL, kSeparator);
         texture1 = NULL;
         texture2 = NULL;
         texture1Path = NULL;
@@ -520,7 +519,7 @@ ActCharacterInfo* ActCharacterInfo::Construct(const char *text) {
         strcat(texturePath, ".xsh");
     }
 
-    scaleToken = Crt_strtok(NULL, kSeparator);
+    scaleToken = strtok(NULL, kSeparator);
     int percent = 100;
     switch (strlen(scaleToken)) {
     case 1:

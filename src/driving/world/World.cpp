@@ -30,10 +30,10 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's globals
-#define TrackName ((char *)0x0023f290)                  // 0x80 bytes
+// XBE_GLOBAL(0x0023f290, 0x80)
+char TrackName[0x80];
 #define Sim ((void *)0x00233ff0)                        // the Simulation
 #define SimStepCount I32_AT(0x00234e34)
-#define DefaultVector (*(const Coord4 *)0x001d4c00)     // (0, 0, 0, 1)
 
 // ---- the game's code not ported yet
 #define GLoadingScreen_Status ((void (*)(const char *))0x000e2ff0)
@@ -50,6 +50,8 @@
 #define GFX_Trigger ((void *(*)(void *effect, const float *position, const Coord4 *direction, ArticleEffect *owner, void *data, int, int, int))0x000d34e0)
 
 namespace {
+
+const Coord4 kDefaultVector = {0.0f, 0.0f, 0.0f, 1.0f};
 
 constexpr uint32_t kTagMap = 0x4d617020;            // 'Map '
 constexpr uint32_t kTagWorldMap = 0x576d6170;       // 'Wmap'
@@ -391,7 +393,7 @@ void WWorld::Reset() {
         for (ArticleEffect *effect = article->effects; effect->type != ArticleEffect::kTypeEnd; effect++) {
             if (effect->flags & ArticleEffect::kStartsOn) {
                 if (effect->type == ArticleEffect::kTypeGfx && effect->gfx.reference != NULL)
-                    effect->gfx.triggered = GFX_Trigger(effect->gfx.reference, instance->position, &DefaultVector,
+                    effect->gfx.triggered = GFX_Trigger(effect->gfx.reference, instance->position, &kDefaultVector,
                                                         effect, &effect->gfx.rotation, 0, 0, 0);
             } else {
                 effect->gfx.triggered = NULL;
@@ -560,7 +562,7 @@ bool WWorld::Open() {
                 if (effect->flags & ArticleEffect::kStartsOn) {
                     effect->flags |= ArticleEffect::kFlag01;
                     if (effect->type == ArticleEffect::kTypeGfx && effect->gfx.reference != NULL)
-                        effect->gfx.triggered = GFX_Trigger(effect->gfx.reference, instance->position, &DefaultVector,
+                        effect->gfx.triggered = GFX_Trigger(effect->gfx.reference, instance->position, &kDefaultVector,
                                                             effect, &effect->gfx.rotation, 0, 0, 0);
                 } else if (effect->type == ArticleEffect::kTypeGlare) {
                     effect->flags |= ArticleEffect::kFlag01;

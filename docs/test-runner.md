@@ -47,6 +47,29 @@ over SSH directly, but game runs do not. `remote.sh desktop '<command>'` writes 
 exit code. `remote.sh setup` creates the task. It is set to run only when the user is logged on, so someone must be
 logged in to the runner.
 
+## To do before the next full test round: parallel slots
+
+A full round (lockstep runs of missions 1-8 to tick 9000, idle and accelerating, then every shadow on every mission)
+takes about four hours, because `remote.sh` runs one game at a time: one `job.sh`, one scheduled task, one checkout,
+and every run writes into the same `Release\` (frame dumps, `drive.log`, `sndtrace.log`, `crash.dmp`). The game itself
+does not need to run alone: a lockstep run simulates exactly one tick per rendered frame and holds the sound in
+lockstep too, so machine load changes only how long a run takes, never its frames or sound trace (runs repeat exactly
+to tick 9000), and `-GameHold` is applied inside the game, so window focus does not matter.
+
+The plan, about one to one and a half hours a round with three or four slots:
+
+1. **Slots on the runner:** run folders, each a copy of `Release\` with `disc\` as a junction to the checkout's
+   (remove such a folder by deleting the junction first - `git worktree remove` and some tools follow junctions and
+   delete the target), and its own logs, dumps, traces, `settings.ini` and `saves\`. One build, copied to every slot.
+2. **`remote.sh`:** `drive` takes a slot; `job.sh` and the `done` marker are per slot; the scheduled task launches
+   several games in the one desktop session; results come back per slot. Builds stay serial.
+3. **Prove it before relying on it:** one mission in two slots at once against a serial run of the same build -
+   frames and sound traces identical - then one full round parallel against serial.
+
+Watch for files the game writes outside its working folder (crash dumps, saves, loader logs), and for the shadow
+runs' CPU-heavy first tick slowing each other down. A second runner (the development PC) could take a share when
+nobody is using it.
+
 ## Setting up a runner
 
 - **SSH:** OpenSSH Server with key login, an administrator account, and Git Bash as the default shell

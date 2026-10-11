@@ -22,8 +22,10 @@
 #define Crt_atexit ((int (*)(void (*)()))0x00132a7b)
 
 // GetSegmentCurveStep's static spline and its guard
-#define CurveSpline ((RCameraSpline *)0x0023e100)
-#define CurveSplineGuard U32_AT(0x0023e170)
+// XBE_GLOBAL(0x0023e100, 0x70)
+alignas(16) RCameraSpline CurveSpline;
+// XBE_GLOBAL(0x0023e170, 4)
+uint32_t CurveSplineGuard;
 
 // The lane tables in the game's data: lane offsets, rows of six by lane type, and lane weights, rows of 32 - one set
 // for the tracks snow2a_mis4 and snow2a_race, one for the others
@@ -43,7 +45,10 @@ constexpr uint32_t kIntersectionTag = 0x72690000;      // 'ri'
 constexpr uint32_t kJunctionTag = 0x726a0000;          // 'rj'
 constexpr uint32_t kRoadTag = 0x72720000;              // 'rr'
 
-const uintptr_t kCurveSplineAtExit = 0x0015d070;      // DestroyStatic_0023e100 (engine/StaticInit.cpp)
+// The spline's destructor, which GetSegmentCurveStep registers with atexit on first use
+void DestroyCurveSpline() {
+    CurveSpline.Destruct();
+}
 
 constexpr float kLaneWidth = 5.0f;
 constexpr float kHalfLaneWidth = 2.5f;
@@ -419,12 +424,12 @@ void WRoadNetwork::GetSegmentCurveStep(const Coord3 *start, const Coord3 *end, W
                                        Coord3 *out) {
     if (!(CurveSplineGuard & 1)) {
         CurveSplineGuard |= 1;
-        CurveSpline->Construct();
-        Crt_atexit(reinterpret_cast<void (*)()>(kCurveSplineAtExit));
+        CurveSpline.Construct();
+        Crt_atexit(DestroyCurveSpline);
     }
-    CurveSpline->BuildSplineEx(start, &segment->startControl, end, &segment->endControl);
+    CurveSpline.BuildSplineEx(start, &segment->startControl, end, &segment->endControl);
     Coord4 point;
-    CurveSpline->EvaluateSpline(t, &point);
+    CurveSpline.EvaluateSpline(t, &point);
     out->x = point.x;
     out->y = point.y;
     out->z = point.z;

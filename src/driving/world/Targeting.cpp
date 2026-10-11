@@ -77,9 +77,6 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 
 #define ViewWidth I32_AT(0x001f2d7c)                             // the view's size in pixels (names ours)
 #define ViewHeight I32_AT(0x001f2d80)
-#define DefaultVector (*(const Coord4 *)0x001d4c00)              // (0, 0, 0, 1)
-#define TargetableCount I32_AT(0x0023e174)                       // the targets in existence (name ours)
-#define TargetableStagger I32_AT(0x0023e178)                     // staggers new targets' first refresh (name ours)
 #define Sim ((void *)0x00233ff0)                                 // the Simulation
 #define SimState I32_AT(0x00234e24)
 #define SimTimeStep FLOAT_AT(0x00234e30)                         // the simulation's step, in seconds
@@ -97,6 +94,11 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 #define GHud_SetTargetLockState ((void (__fastcall *)(GHud *, int, int state))0x000d9fb0)
 #define PointerList_BuyHead ((PointerListNode *(__fastcall *)(PointerList *, int))0x000b8490)
 #define Crt_qsort ((void (*)(void *base, size_t count, size_t size, TargetCompare compare))0x00132db0)
+
+// XBE_GLOBAL(0x0023e174, 4)
+int32_t TargetableCount;                        // the targets in existence (name ours)
+// XBE_GLOBAL(0x0023e178, 4)
+int32_t TargetableStagger;                      // staggers new targets' first refresh (name ours)
 
 namespace {
 
@@ -649,7 +651,7 @@ void WTargetPicker::UpdateSelection() {
     aim[1].w = 1.0f;
     if (PlayerPhysics()->subPhysics != 0) {
         WorldCollisionInfo hit = {};    // (WorldCollisionInfo's constructor, inlined)
-        hit.point = DefaultVector;
+        hit.point = {0.0f, 0.0f, 0.0f, 1.0f};
         hit.segmentStart = aim[0];
         hit.segmentEnd = aim[1];
         if (fgCollisionMgr->CheckHitWorld(aim, &hit) > 0 && !(hit.faceInstance->flags & kInstanceFlag02)) {

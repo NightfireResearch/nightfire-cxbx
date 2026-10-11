@@ -23,6 +23,30 @@ struct ShapeFile {
 typedef void (*FontDrawFn)(const uint8_t *font, const uint8_t *glyph, float x, float y);
 typedef void (*FontHookFn)(const uint8_t *font);
 
+// FONTcurrentdriver's table
+struct FontDriverTable {
+    FontDrawFn draw;
+    FontHookFn start;
+    FontHookFn end;
+    FontHookFn create;
+    FontHookFn destroy;
+};
+
+// What the batch hooks are given: 128 of these at most
+struct FontBatchEntry {
+    const uint8_t *glyph;
+    float x;
+    float y;
+};
+static_assert(sizeof(FontBatchEntry) == 12, "a batch entry is three words");
+
+typedef void (*FontBatchFn)(const uint8_t *font, FontBatchEntry *entries, int count);
+typedef void (*FontBatchExFn)(const uint8_t *font, FontBatchEntry *entries, int count, int argument, int first);
+
+extern FontDriverTable *FontDriver;  // FONTcurrentdriver
+extern FontBatchFn FontBatchDraw;    // the batch hooks: nothing in the game sets them
+extern FontBatchExFn FontBatchDrawEx;
+
 // ---- FONT
 void FONT_drawtextfa(const uint8_t *font, float x, float y, const char *format, ...);
 void FONT_drawtextx(const uint8_t *font, float x, float y, const uint8_t *text, int batchArgument);

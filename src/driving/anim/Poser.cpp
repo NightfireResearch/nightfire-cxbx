@@ -39,6 +39,7 @@ struct RootPoseScratch {
     float *scaleRef;                  // +0x50 -> scale
 };
 static_assert(offsetof(RootPoseScratch, scaleRef) == 0x50, "the scratch's pointers are at +0x30..+0x50");
+// XBE_GLOBAL(0x001b4a90, 0x54)
 #define RootScratch (*(RootPoseScratch *)0x001b4a90)
 
 // A bone of a pose

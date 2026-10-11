@@ -17,13 +17,22 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- globals
+// XBE_GLOBAL(0x00242e50, 0x34)
 #define GainParentMethod ((EAGL::RenderMethod *)0x00242e50)       // the render method the GeoPrim inherits
 // The screen quad: its four corners (0, 0), (w, 0), (0, h), (w, h), their texture coordinates, and their colours, a
 // function-local static made white on the first draw (names ours)
-#define GainPositions ((Coord4 *)0x001c4a40)
-#define GainUVs ((float (*)[2])0x001c4a20)
-#define GainColours ((uint32_t *)0x00200f30)
-#define GainColoursGuard U32_AT(0x00200f40)
+// XBE_GLOBAL(0x001c4a40, 0x40)
+alignas(16) Coord4 GainPositions[4] = {
+    { 0.0f, 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } };
+// XBE_GLOBAL(0x001c4a20, 0x20)
+static const float GainUVs[4][2] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 0.0f, 1.0f }, { 1.0f, 1.0f } };
+// XBE_GLOBAL(0x00200f30, 0x10)
+uint32_t GainColours[4];
+// XBE_GLOBAL(0x00200f40, 4)
+uint32_t GainColoursGuard;
+
+// XBE_GLOBAL(0x00200f20, 4)
+RGain *TheGain;
 
 namespace {
 

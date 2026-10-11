@@ -145,10 +145,13 @@ bool Guarded(Phase phase, int side) {
 
 bool g_sideFaulted[2];
 
-// Runs a phase on one side, with fgThis pointed at `system` while it runs.
+#define OrigAttributeSystemInstance (*(AttributeSystem **)0x001e464c)   // AttributeSystemInstance's original copy
+
+// Runs a phase on one side, with fgThis (the port's and the original's copy) pointed at `system` while it runs.
 bool RunSide(Phase phase, int side, AttributeSystem *system) {
-    AttributeSystem *game = AttributeSystemInstance;
+    AttributeSystem *game = AttributeSystemInstance, *origGame = OrigAttributeSystemInstance;
     AttributeSystemInstance = system;
+    OrigAttributeSystemInstance = system;
     bool ok;
     if (side == 0) {
         Originals scope;
@@ -157,6 +160,7 @@ bool RunSide(Phase phase, int side, AttributeSystem *system) {
         ok = Guarded(phase, side);
     }
     AttributeSystemInstance = game;
+    OrigAttributeSystemInstance = origGame;
     if (!ok) {
         g_faults++;
         g_sideFaulted[side] = true;
@@ -934,9 +938,6 @@ void SortPhase(int side) {
 #define Orig_LookupStruct ((void *(__fastcall *)(AttributeSet *, int, const char *, uint32_t, bool *))0x00058420)
 
 #define DefaultVector (*(AttributeVector *)0x001d4c00)
-#define ArchiveName ((char *)0x002431d8)               // UFileLoader's mission archive name (kept after closing)
-#define ArchiveOpen (*(uint8_t *)0x002434da)
-#define ArchiveLogRequests (*(uint8_t *)0x002434e0)
 #define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 
 alignas(8) uint8_t g_systemStorage[2][sizeof(AttributeSystem)];
@@ -1406,10 +1407,10 @@ void AttribShadow_Run(void) {
     // (UFileLoader::StopUsingBigFile): opened again for the database part, under the name it was opened with,
     // and closed again afterwards.
     bool reopened = false;
-    uint8_t logRequests = ArchiveLogRequests;
-    if (ArchiveOpen == 0 && ArchiveName[0] != 0) {
+    uint8_t logRequests = LogRequests;
+    if (BigFileOpen == 0 && BigFileName[0] != 0) {
         char name[256];
-        strcpy(name, ArchiveName);
+        strcpy(name, BigFileName);
         reopened = UFileLoader::StartUsingBigFile("driving", name, false);
         if (!reopened)
             printf("[attribshadow] could not open driving\\%s.viv again: the .atr files will not load\n", name);
@@ -1417,7 +1418,7 @@ void AttribShadow_Run(void) {
     TestDatabase();
     if (reopened)
         UFileLoader::StopUsingBigFile();
-    ArchiveLogRequests = logRequests;
+    LogRequests = logRequests;
 
     printf("[attribshadow] parsers, values, trees, store blocks and the disc's attribute database (%u collections), "
            "original vs port: %d cases, %d checks, %d differ%s\n",

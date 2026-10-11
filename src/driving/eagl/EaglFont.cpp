@@ -52,14 +52,40 @@ struct DrawParameters {
 };
 static_assert(sizeof(DrawParameters) == 0x30, "the driver's statics run to 0x002400e8");
 
-#define Params (*(DrawParameters *)0x002400b8)
-#define VertexColour U32_AT(0x001cd110)                     // font +0x20
+// XBE_GLOBAL(0x002400b8, 0x30)
+DrawParameters Params;
+// XBE_GLOBAL(0x001cd110, 4)
+uint32_t VertexColour = 0xffffffff;                         // font +0x20
+// The static initialisers construct it where it is
+// XBE_GLOBAL(0x002400f8, 0x4c)
 #define FontState (*(EAGL::GeoPrimStateExtension *)0x002400f8)
 
-// The font shaders' declaration and programs, in the XBE
-#define FontShaderDeclaration ((const void *)0x001ccfd8)
-#define FontVertexShaderFunction ((const void *)0x001ccfec)
-#define FontPixelShaderDefinition ((const void *)0x001cd020)
+// The font shaders' declaration and programs
+// XBE_GLOBAL(0x001ccfd8, 0x14)
+const uint32_t FontShaderDeclaration[5] = {
+    0x20000000, 0x40320000, 0x40400003, 0x40220009, 0xffffffff,
+};
+
+// XBE_GLOBAL(0x001ccfec, 0x34)
+const uint32_t FontVertexShaderFunction[13] = {
+    0x00032078, 0x00000000, 0x0020001b, 0x0836106c, 0x2070f800, 0x00000000,
+    0x0020061b, 0x0836106c, 0x2070f818, 0x00000000, 0x0020121b, 0x0836106c,
+    0x2070f849,
+};
+
+// XBE_GLOBAL(0x001cd020, 0xf0)
+const uint32_t FontPixelShaderDefinition[60] = {
+    0xd4d81010, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x000000c0, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xc4c80000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x000000c0, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00011101,
+    0x00000001, 0x00000000, 0x00000000, 0xffffffff, 0xffffffff, 0x000001ff,
+};
 
 enum { kVertexDiffuse = 3, kVertexTexCoord0 = 9, kVertexPosition = 0xffffffff };   // D3DVSDE_*
 enum { kDepthLessEqual = 0x203, kDepthAlways = 0x207, kAlphaGreaterEqual = 0x204 };   // OpenGL numbering
@@ -175,7 +201,7 @@ void* FONTEAGL_draw(const FNTXFont *, const FNTXGlyph *glyph, float x, float y) 
 void FONTEAGL_createfont(FNTXFont *font) {
     uint8_t *shape = (uint8_t *)font + font->shapeOffset;
     font->shape = shape;
-    EAGL::TAR *tar = (EAGL::TAR *)EaglMalloc(sizeof(EAGL::TAR), NameTARNew);
+    EAGL::TAR *tar = (EAGL::TAR *)EaglMalloc(sizeof(EAGL::TAR), "EAGL::TAR new");
     tar = tar != NULL ? tar->Construct(shape) : NULL;
     font->tar = tar;
     font->texOffsetU = 0.0f;
@@ -198,12 +224,13 @@ void FONTEAGL_createfont(FNTXFont *font) {
     FontState.SetTextureCoordType(0xffffffff);
     FontState.SetTransparencyMethod(1);
     if (Params.vertexShader == NULL) {
-        EAGL::VertexShader *shader = (EAGL::VertexShader *)EaglMalloc(sizeof(EAGL::VertexShader), NameVertexShaderNew);
+        EAGL::VertexShader *shader =
+            (EAGL::VertexShader *)EaglMalloc(sizeof(EAGL::VertexShader), "EAGL::VertexShader new");
         shader = shader != NULL ? shader->Construct(FontShaderDeclaration, FontVertexShaderFunction) : NULL;
         Params.vertexShader = shader;
     }
     if (Params.pixelShader == NULL) {
-        EAGL::PixelShader *shader = (EAGL::PixelShader *)EaglMalloc(sizeof(EAGL::PixelShader), NamePixelShaderNew);
+        EAGL::PixelShader *shader = (EAGL::PixelShader *)EaglMalloc(sizeof(EAGL::PixelShader), "EAGL::PixelShader new");
         shader = shader != NULL ? shader->Construct(FontPixelShaderDefinition) : NULL;
         Params.pixelShader = shader;
     }

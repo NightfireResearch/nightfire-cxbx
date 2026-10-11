@@ -17,9 +17,6 @@
 // written by its constructor and destructor as the original writes it.
 // ---------------------------------------------------------------------------------------------------------------
 
-// AVoice::View's destructor, by the address the original hands the C runtime's vector destructor iterator
-#define AVoiceView_Destruct ((void (__fastcall *)(AVoice::View *, int))0x00123c50)
-
 // AVoice's destructor where it is not inlined (Ghidra: FUN_0003f400)
 #define AVoice_Destruct ((void (__fastcall *)(AVoice *, int))0x0003f400)
 // Whether the voice is done with (Ghidra: FUN_000d36c0; the name is ours): it has been played, and the shared view
@@ -28,8 +25,7 @@
 
 // The list code every std::list of pointers shares: _Buynode(next, prev, value)
 
-// The C runtime: the vector destructor iterator (`eh vector destructor iterator'), sprintf
-#define CRT_VectorDestructor ((void (__stdcall *)(void *, uint32_t, int, void (__fastcall *)(AVoice::View *, int)))0x0013332e)
+// The C runtime's sprintf
 #define CRT_sprintf ((int (*)(char *, const char *, ...))0x00132767)
 
 namespace {
@@ -45,9 +41,11 @@ constexpr float kDefaultMaxDistance = 350.0f;
 
 const uint32_t kListMaxSize = 0x3fffffff;
 
-// AVoice's destructor as the compiler inlines it: its views'.
+// AVoice's destructor as the compiler inlines it: its views', last first (the C runtime's vector destructor
+// iterator in the original).
 void DestroyVoiceViews(AVoice *voice) {
-    CRT_VectorDestructor(voice->views, sizeof(AVoice::View), 3, AVoiceView_Destruct);
+    for (int i = 3; i-- > 0;)
+        voice->views[i].Destruct();
 }
 
 }  // namespace

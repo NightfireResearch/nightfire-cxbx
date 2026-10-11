@@ -32,23 +32,15 @@
 
 class RTextureContext;
 
-// ---- the game's code not ported here
-// The C runtime's array iterators: `eh vector constructor iterator` and `vector destructor iterator`
-#define CRT_VectorConstructorIterator ((void (__stdcall *)(void *array, uint32_t size, int32_t count, void *constructor, void *destructor))0x0013326e)
-#define CRT_VectorDestructorIterator ((void (__stdcall *)(void *array, uint32_t size, int32_t count, void *destructor))0x0013332e)
-
 // ---- globals
 #define SimTimeStep FLOAT_AT(0x00234e30)                // the simulation's step, in seconds
 #define SimStepCount I32_AT(0x00234e34)
 #define SimStepsPerSecond I32_AT(0x00234e2c)
-#define ZeroVector ((const Coord3 *)0x00243030)         // the game's zero vector, never written
 
 static const USingletonVtable *const kLightningVtable = (const USingletonVtable *)0x00192d20;
 static const USingletonVtable *const kSingletonVtable = (const USingletonVtable *)0x0018beb0;
 
-// The segment constructor and destructor the C runtime's iterators run
-static void *const kSegmentConstructor = (void *)XbeAddress(&RLightningSegment::Construct);
-static void *const kSegmentDestructor = (void *)XbeAddress(&RLightningSegment::Destruct);
+static const Coord3 kZeroVector = { 0.0f, 0.0f, 0.0f };
 
 // The bolt textures, drawn in turn
 static const uint32_t kBoltTextures[4] = {
@@ -110,7 +102,7 @@ void RLightningMidPoint::Respawn(float fraction, float lift) {
 void RLightningControlPoint::Init(const Coord3 *position, RSceneObj *object, const ArticleEffect *fxLocator) {
     base = *position;
     startTick = SimStepCount;
-    drift = *ZeroVector;
+    drift = kZeroVector;
     life = 0;
     jitter = 0.0f;
     spread = 0.0f;
@@ -158,7 +150,8 @@ void RLightningSegment::Destruct() {
 void RLightningSegmentArray::Allocate(uint32_t newCount) {
     if (data != NULL) {
         int32_t *cookie = (int32_t *)data - 1;   // new[]'s count of elements
-        CRT_VectorDestructorIterator(data, sizeof(RLightningSegment), *cookie, kSegmentDestructor);
+        for (int32_t i = *cookie - 1; i >= 0; i--)
+            data[i].Destruct();
         OperatorDelete(cookie);
     }
     data = NULL;
@@ -170,9 +163,10 @@ void RLightningSegmentArray::Allocate(uint32_t newCount) {
         return;
     }
     *block = newCount;
-    CRT_VectorConstructorIterator(block + 1, sizeof(RLightningSegment), newCount, kSegmentConstructor,
-                                  kSegmentDestructor);
-    data = reinterpret_cast<RLightningSegment *>(block + 1);
+    RLightningSegment *segments = reinterpret_cast<RLightningSegment *>(block + 1);
+    for (int32_t i = 0; i < int32_t(newCount); i++)
+        segments[i].Construct();
+    data = segments;
 }
 
 // FUNC_AT(0x0009f250)
@@ -651,7 +645,7 @@ int RLightning::AddBolt(const Coord3 *from, RSceneObj *fromObj, const ArticleEff
 int RLightning::AddRoundedBolt(RSceneObj *sceneObj, const ArticleEffect *fromLocator, const ArticleEffect *toLocator,
                                float driftMin, float driftMax, float driftVariance, float spread, bool aroundObject,
                                int pointCount, int levels, float bulge, int life) {
-    Coord4 centre = { ZeroVector->x, ZeroVector->y, ZeroVector->z, 0.0f };
+    Coord4 centre = { 0.0f, 0.0f, 0.0f, 0.0f };
     RLightningBolt *bolt = static_cast<RLightningBolt *>(OperatorNew(sizeof(RLightningBolt)));
     if (bolt != NULL)
         bolt->Construct();
@@ -670,16 +664,16 @@ int RLightning::AddRoundedBolt(RSceneObj *sceneObj, const ArticleEffect *fromLoc
     bolt->points.data =
         static_cast<RLightningControlPoint *>(OperatorNewArray((pointCount + 1) * sizeof(RLightningControlPoint)));
     RLightningControlPoint *points = bolt->points.data;
-    points[0].Init(ZeroVector, sceneObj, fromLocator);
-    points[pointCount].Init(ZeroVector, sceneObj, toLocator);
+    points[0].Init(&kZeroVector, sceneObj, fromLocator);
+    points[pointCount].Init(&kZeroVector, sceneObj, toLocator);
 
     // The locators' positions
     alignas(16) MATRIX4 transform;
     Coord4 fromPosition = {}, toPosition = {};
     sceneObj->LocateFX(fromLocator, &transform, false);
-    VU0_MATRIX4_vect3mult(ZeroVector, &transform, &fromPosition);
+    VU0_MATRIX4_vect3mult(&kZeroVector, &transform, &fromPosition);
     sceneObj->LocateFX(toLocator, &transform, false);
-    VU0_MATRIX4_vect3mult(ZeroVector, &transform, &toPosition);
+    VU0_MATRIX4_vect3mult(&kZeroVector, &transform, &toPosition);
 
     if (pointCount > 1) {
         float total = (float)pointCount;

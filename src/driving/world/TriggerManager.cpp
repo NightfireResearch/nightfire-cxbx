@@ -35,7 +35,6 @@
 
 // ---- the game's code not ported yet
 #define Crt_sprintf ((int (*)(char *, const char *, ...))0x00132767)
-#define Crt_stricmp ((int (*)(const char *, const char *))0x00134537)
 #define Crt_printf ((int (*)(const char *, ...))0x00132192)
 // the y size packed in an instance's dimensions (unnamed in Ghidra; the name is ours)
 #define RayShell_GetNumActiveRayShells ((int (*)())0x00071930)
@@ -44,10 +43,14 @@
 #define RayShell_SetTriggerHittingRayShell ((void (*)(int index))0x00071970)
 
 // ---- globals
-#define TriggerDataSize U32_AT(0x0023e264)
-#define TriggerData (*(WTrigger **)0x0023e268)     // the track's triggers (fgTriggerManager->triggers)
-#define TriggerDataCopy PTR_AT(0x0023e26c)         // their state at Init, put back by Restart
-#define QueryStamp U32_AT(0x0023e270)              // the triggers' queryStamp of the current Process
+// XBE_GLOBAL(0x0023e264, 4)
+static uint32_t TriggerDataSize;
+// XBE_GLOBAL(0x0023e268, 4)
+static WTrigger *TriggerData;                   // the track's triggers (fgTriggerManager->triggers)
+// XBE_GLOBAL(0x0023e26c, 4)
+static void *TriggerDataCopy;                   // their state at Init, put back by Restart
+// XBE_GLOBAL(0x0023e270, 4)
+uint32_t QueryStamp;                            // the triggers' queryStamp of the current Process
 #define Sim ((void *)0x00233ff0)                    // the Simulation
 
 namespace {
@@ -97,8 +100,8 @@ void ValidateStreams(TriggerEvents *events, bool notePreBuffer) {
         char line[64];
         Crt_sprintf(path, "%s.asf", stream->name);
         Crt_sprintf(line, "Validating stream [%s] (%s): ", path, stream->type);
-        if (Crt_stricmp(stream->type, "music") == 0 || Crt_stricmp(stream->type, "speech") == 0 ||
-            Crt_stricmp(stream->type, "nis") == 0) {
+        if (_stricmp(stream->type, "music") == 0 || _stricmp(stream->type, "speech") == 0 ||
+            _stricmp(stream->type, "nis") == 0) {
             if (FILE_exists(path)) {
                 strcat(line, "OK ");
             } else {

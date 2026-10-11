@@ -37,30 +37,30 @@ enum CarSurface {
 
 // The cars' tuning, loaded by PBondCar::InitializeBondCarGlobals from "Physics:Physical" and "Physics:Friction",
 // each named as its attribute; the first is initialised data no code writes (the name is ours)
-#define BondCar_FarDistanceSq FLOAT_AT(0x001c36c0)          // 2500: class 3 cars beyond it simulate every other step
-#define BondCar_ENABLE_ROLL_STOPS_THRESHOLD FLOAT_AT(0x001c36cc)
-#define BondCar_BASE_FRICTION_MASS FLOAT_AT(0x001c36d0)
-#define BondCar_SHRED_DRAG FLOAT_AT(0x001c36d4)
-#define BondCar_PAD_DEAD_ZONE FLOAT_AT(0x001c36d8)
-#define BondCar_TWO_WHEEL_ANGLE FLOAT_AT(0x001c36dc)
-#define BondCar_TWO_WHEEL_SCALE FLOAT_AT(0x001c36e0)
-#define BondCar_TWO_WHEEL_LIMIT FLOAT_AT(0x001c36e4)
-#define BondCar_TWO_WHEEL_OPPOSITE_SCALE FLOAT_AT(0x001c36e8)
-#define BondCar_TWO_WHEEL_TENSOR_SCALE FLOAT_AT(0x001c36ec)
-#define BondCar_SKID_AUDIO_SCALE FLOAT_AT(0x001c36f0)
-#define BondCar_ROLLING_RESISTANCE FLOAT_AT(0x001c36f4)
-#define BondCar_MIN_BUTTON_VALUE FLOAT_AT(0x001c36f8)
-#define BondCar_WHEEL_SPIN_EXTRA_RPM FLOAT_AT(0x001c36fc)
-#define BondCar_DAMAGE_SCALE_COLLISION FLOAT_AT(0x001c3704)
-#define BondCar_EMP_LIFETIME I32_AT(0x001c3708)                 // simulation steps
-#define BondCar_TYRE_DAMAGE_RADIUS FLOAT_AT(0x001c370c)
-#define BondCar_MAX_WHEEL_SPIN_RATE FLOAT_AT(0x001c3710)
-#define BondCar_MAX_WHEEL_SPIN_RATE_AI FLOAT_AT(0x001c3714)
-#define BondCar_POST_BRAKE_ACCEL_COUNT I32_AT(0x001c3718)
-#define BondCar_POST_BRAKE_ACCEL_SCALE FLOAT_AT(0x001c371c)
-#define BondCar_POST_BRAKE_ACCEL_MIN FLOAT_AT(0x001c3720)
-#define BondCar_friction ((float *)0x001c3728)                  // [kCarSurfaces]
-#define BondCar_lateralLoss ((float *)0x001c3768)               // [kCarSurfaces]
+extern float BondCar_FarDistanceSq;             // class 3 cars beyond it simulate every other step
+extern float BondCar_ENABLE_ROLL_STOPS_THRESHOLD;
+extern float BondCar_BASE_FRICTION_MASS;
+extern float BondCar_SHRED_DRAG;
+extern float BondCar_PAD_DEAD_ZONE;
+extern float BondCar_TWO_WHEEL_ANGLE;
+extern float BondCar_TWO_WHEEL_SCALE;
+extern float BondCar_TWO_WHEEL_LIMIT;
+extern float BondCar_TWO_WHEEL_OPPOSITE_SCALE;
+extern float BondCar_TWO_WHEEL_TENSOR_SCALE;
+extern float BondCar_SKID_AUDIO_SCALE;
+extern float BondCar_ROLLING_RESISTANCE;
+extern float BondCar_MIN_BUTTON_VALUE;
+extern float BondCar_WHEEL_SPIN_EXTRA_RPM;
+extern float BondCar_DAMAGE_SCALE_COLLISION;
+extern int32_t BondCar_EMP_LIFETIME;            // simulation steps
+extern float BondCar_TYRE_DAMAGE_RADIUS;
+extern float BondCar_MAX_WHEEL_SPIN_RATE;
+extern float BondCar_MAX_WHEEL_SPIN_RATE_AI;
+extern int32_t BondCar_POST_BRAKE_ACCEL_COUNT;
+extern float BondCar_POST_BRAKE_ACCEL_SCALE;
+extern float BondCar_POST_BRAKE_ACCEL_MIN;
+extern float BondCar_friction[kCarSurfaces];
+extern float BondCar_lateralLoss[kCarSurfaces];
 
 // Beside them, two values no code writes (0x001c36c4, 0x001c36c8): the steps a body is off the ground before
 // ImproveLanding turns it, and the steps of landingFlag after which ImproveLanding damps its spin

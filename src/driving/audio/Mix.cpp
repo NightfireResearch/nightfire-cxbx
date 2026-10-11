@@ -37,16 +37,46 @@
 
 // ---- globals
 
+// Constructed by the static initialisers (engine/StaticInitTable.cpp)
+// XBE_GLOBAL(0x00243954, 0xc)
 #define Mixes (*(MixList *)0x00243954)
 
-#define Fx (*(FxState *)0x001d80f0)
-#define FxModes ((const FxMode *)0x001d8190)
-#define FxBusModes ((const int32_t *)0x001d8118)   // the sound library's reverb for each FxMode::reverb
-#define FxBus I32_AT(0x00243ab4)
-#define FxMixes ((AMix **)0x00243ab8)
-#define FxReady BOOL8_AT(0x00243aec)
-#define FxLevel FLOAT_AT(0x00243af0)
-#define FxPaused BOOL8_AT(0x00243af4)
+// XBE_GLOBAL(0x001d80f0, 0x24)
+FxState Fx = { { { 0, -1 }, { 0, -1 } }, -1, -1, -1, -1, -1 };
+
+// XBE_GLOBAL(0x001d8190, 0x104)
+static const FxMode FxModes[AFX::kModeCount] = {
+    { "X:City", false, {}, 20, -1, -1 },
+    { "X:Overpass", true, {}, 20, -1, -1 },
+    { "X:AlpineTunnel", true, {}, 15, -1, -1 },
+    { "X:Grotto", true, {}, 14, -1, -1 },
+    { "X:VolTunnel", true, {}, 9, -1, -1 },
+    { "X:Compound", true, {}, 5, -1, -1 },
+    { "X:Canyon", true, {}, 6, -1, -1 },
+    { "X:VolBowl", true, {}, 18, -1, -1 },
+    { "X:SunkTanker", true, {}, 7, -1, -1 },
+    { "X:MetalTunnel", true, {}, 15, -1, -1 },
+    { "X:LargeCave", true, {}, 16, -1, -1 },
+    { "X:SmallCave", true, {}, 16, -1, -1 },
+    { "X:BigTunnel", true, {}, 22, -1, -1 },
+};
+
+// The sound library's reverb for each FxMode::reverb
+// XBE_GLOBAL(0x001d8118, 0x74)
+static const int32_t FxBusModes[29] = {
+    2, 3, 5, 10, 13, 15, 17, 20, 23, 25, 27, 30, 32, 33, 34, 35, 36, 37, 38, 40, 50, 55, 60, 55, 55, 55, 55, 55, 55,
+};
+
+// XBE_GLOBAL(0x00243ab4, 4)
+int32_t FxBus;
+// XBE_GLOBAL(0x00243ab8, 0x34)
+AMix *FxMixes[AFX::kModeCount];
+// XBE_GLOBAL(0x00243aec, 1)
+bool FxReady;
+// XBE_GLOBAL(0x00243af0, 4)
+float FxLevel;
+// XBE_GLOBAL(0x00243af4, 1)
+bool FxPaused;
 
 namespace {
 
@@ -297,7 +327,7 @@ void MixRefTree::Destruct() {
 void AFX::Init() {
     for (int i = 0; i < kModeCount; i++)
         FxMixes[i] = AMix::Add(FxModes[i].name);
-    FxReady = 1;
+    FxReady = true;
     FxBus = 0x100;
 }
 
@@ -330,19 +360,19 @@ bool AFX::IsAllVoices() {
 void AFX::Pause() {
     if (ASystem_fgSystem != NULL)
         SNDfxmasterlevel(0x40, 0);      // a bus of its own, not FxBus
-    FxPaused = 1;
+    FxPaused = true;
 }
 
 // FUNC_AT(0x00124870)
 void AFX::Resume() {
-    FxPaused = 0;
+    FxPaused = false;
 }
 
 // FUNC_AT(0x00124880)
 void AFX::Shutdown() {
     for (int i = 0; i < kModeCount; i++)
         FxMixes[i]->Remove();
-    FxReady = 0;
+    FxReady = false;
 }
 
 // FUNC_AT(0x001248b0)

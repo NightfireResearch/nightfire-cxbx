@@ -10,18 +10,18 @@
 #include "../platform/RealMemory.h"     // MEM_free
 #include "../sound/snd/Banks.h"
 
+#include <string.h>
+
 // ---------------------------------------------------------------------------------------------------------------
 // ABank, URefCounter<ABank>'s tree's entries and the shared map helpers after them (0x00125db0..0x00126d10), ported
 // from the listings. See Bank.h.
 // ---------------------------------------------------------------------------------------------------------------
 
-// ---- the game's code called by address
-// ++ on URefCounter<T>'s maps, shared by all of them
-// The C runtime's: the trees' order depends on it.
-#define Crt_stricmp ((int (*)(const char *, const char *))0x00134537)
-
 // ---- globals
 #define EmptyBank (*(ABank *)0x00243b18)
+
+// XBE_GLOBAL(0x001d8318, 0x80)
+char AudioDirectory[0x80] = "./";
 
 namespace {
 
@@ -251,6 +251,6 @@ void SharedTree::EraseNameSubtree(TreeNode *node) {
 TreeNode** SharedTree::FindName(TreeNode **result, const char *const *key) {
     // lower_bound: the namespace map's compiled copy serves every map keyed by a name
     TreeNode *bound = static_cast<NamespaceMap *>(static_cast<Tree *>(this))->LowerBound(key);
-    *result = bound == head || Crt_stricmp(*key, bound->value.name) < 0 ? head : bound;
+    *result = bound == head || _stricmp(*key, bound->value.name) < 0 ? head : bound;
     return result;
 }

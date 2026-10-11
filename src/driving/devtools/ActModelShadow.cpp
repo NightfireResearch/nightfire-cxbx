@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include "../anim/Events.h"                // ActEventResolver
 #include "../anim/Manager.h"
 #include "../anim/Model.h"
 #include "../anim/Poser.h"                // ActPoseMatrices
@@ -64,16 +65,17 @@
 
 namespace {
 
-#define ShadowActManager (*(ActManager **)0x001dd9cc)
-#define ShadowEventResolver (*(EventTarget ***)0x001dd9d0)   // ActEventResolver: its EventTarget first
-#define ShadowNormalLight (*(LightBlock **)0x001dd9d4)
-#define ShadowIRLight (*(LightBlock **)0x001dd9d8)
-#define ShadowIRLightReady U8_AT(0x001dd9dc)
-#define ShadowIRModeOn U8_AT(0x001dd9dd)
+// The originals' copies of the globals they use (the ports use ours: TheActManager, EventResolver, NormalLight, IRLight,
+// IRLightReady, IRModeOn, AnimationBuffer, AnimationBufferBones)
+#define OrigActManager (*(ActManager **)0x001dd9cc)
+#define OrigEventResolver (*(ActEventResolver **)0x001dd9d0)
+#define OrigNormalLight (*(LightBlock **)0x001dd9d4)
+#define OrigIRLight (*(LightBlock **)0x001dd9d8)
+#define OrigIRLightReady (*(bool *)0x001dd9dc)
+#define OrigIRModeOn (*(bool *)0x001dd9dd)
+#define OrigAnimationBuffer (*(MATRIX4 **)0x001dd9fc)
+#define OrigAnimationBufferBones (*(int32_t *)0x001dda00)
 #define ShadowLighting (*(uint8_t **)0x001ec260)               // the scene's LightBlock at +0xec
-#define ShadowAnimationBuffer (*(MATRIX4 **)0x001dd9fc)
-#define ShadowAnimationBufferBones I32_AT(0x001dda00)
-#define ShadowSkeletonFiles ((const char (*)[0x5a])0x001b4ae8)
 
 const char kBufferName[] = "EAGLAnimationBuffer";
 
@@ -411,7 +413,7 @@ typedef void (__fastcall *BlendBonesFn)(ActSkeleton *, int, float, const float *
 
 std::vector<ActSkeleton *> LiveSkeletons() {
     std::vector<ActSkeleton *> list;
-    ActManager *manager = ShadowActManager;
+    ActManager *manager = TheActManager;
     if (manager == NULL || manager->skeletons == NULL)
         return list;
     for (ActSkeleton *skeleton : manager->skeletons->skeletons)
@@ -567,10 +569,14 @@ typedef void (__fastcall *SkeletonDestructFn)(ActSkeleton *, int);
 
 void TestSkeletonLoads() {
     static const unsigned kEntries[] = {0x000198b0, 0x00019c60, 0x000197f0, 0x00016ec0};
-    MATRIX4 *liveBuffer = ShadowAnimationBuffer;
-    int liveBones = ShadowAnimationBufferBones;
+    MATRIX4 *liveBuffer = AnimationBuffer;
+    int liveBones = AnimationBufferBones;
+    MATRIX4 *origBuffer = OrigAnimationBuffer;
+    int origBones = OrigAnimationBufferBones;
+    ActManager *origManager = OrigActManager;
     if (liveBuffer == NULL)
         return;
+    OrigActManager = TheActManager;
     for (int file = 0; file < ActSkeletonDatabase::kSkeletonCount; file++) {
         for (int state = 0; state < 3; state++) {   // the buffer as it is, too small, absent
             MATRIX4 *scratch = NULL;
@@ -580,22 +586,24 @@ void TestSkeletonLoads() {
                 DynamicLoader::UnRegisterVar(kBufferName);
                 scratch = NULL;
                 if (state == 0) {
-                    ShadowAnimationBuffer = liveBuffer;
-                    ShadowAnimationBufferBones = liveBones;
+                    AnimationBuffer = OrigAnimationBuffer = liveBuffer;
+                    AnimationBufferBones = OrigAnimationBufferBones = liveBones;
                     DynamicLoader::RegisterVar(kBufferName, liveBuffer);
                 } else if (state == 1) {
                     scratch = static_cast<MATRIX4 *>(OperatorNewArray(sizeof(MATRIX4)));
-                    ShadowAnimationBuffer = scratch;
-                    ShadowAnimationBufferBones = 0;
+                    AnimationBuffer = OrigAnimationBuffer = scratch;
+                    AnimationBufferBones = OrigAnimationBufferBones = 0;
                     DynamicLoader::RegisterVar(kBufferName, scratch);
                 } else {
-                    ShadowAnimationBuffer = NULL;
-                    ShadowAnimationBufferBones = 0;
+                    AnimationBuffer = OrigAnimationBuffer = NULL;
+                    AnimationBufferBones = OrigAnimationBufferBones = 0;
                 }
             }, [&](bool orig, std::string &log) {
+                MATRIX4 *&buffer = orig ? OrigAnimationBuffer : AnimationBuffer;
+                int32_t &bones = orig ? OrigAnimationBufferBones : AnimationBufferBones;
                 ActSkeleton *skeleton = static_cast<ActSkeleton *>(UMemory::FastAlloc(sizeof(ActSkeleton), "ActSkeleton"));
                 memset(skeleton, 0xab, sizeof(ActSkeleton));
-                const char *path = ShadowSkeletonFiles[file];
+                const char *path = SkeletonFiles[file];
                 if (orig)
                     ((SkeletonConstructFn)0x000198b0)(skeleton, 0, path);
                 else
@@ -606,8 +614,7 @@ void TestSkeletonLoads() {
                 Append(log, "bones %d root %d weapon %d clip %d at %d buffer %d/%d/%d registered %d/%d\n", count,
                        skeleton->rootBone, skeleton->weaponBones[0], skeleton->weaponBones[1],
                        int(reinterpret_cast<uint8_t *>(skeleton->skeleton) - static_cast<uint8_t *>(skeleton->file)),
-                       ShadowAnimationBuffer == liveBuffer, ShadowAnimationBuffer == scratch,
-                       ShadowAnimationBufferBones, found, registered == ShadowAnimationBuffer);
+                       buffer == liveBuffer, buffer == scratch, bones, found, registered == buffer);
                 AppendBytes(log, skeleton->stillPose, size_t(count) * 12 * sizeof(float));
                 Append(log, "buffers %d %d\n", skeleton->pose != NULL, skeleton->matrices != NULL);
                 if (orig)
@@ -616,17 +623,20 @@ void TestSkeletonLoads() {
                     skeleton->Destruct();
                 UMemory::FastFree(skeleton, sizeof(ActSkeleton));
                 // A buffer the constructor made is freed here (it freed the scratch one itself)
-                if (ShadowAnimationBuffer != liveBuffer && ShadowAnimationBuffer != NULL)
-                    OperatorDelete(ShadowAnimationBuffer);
-                ShadowAnimationBuffer = NULL;
+                if (buffer != liveBuffer && buffer != NULL)
+                    OperatorDelete(buffer);
+                buffer = NULL;
             }, original, port);
             Check(original == port, "ActSkeleton::ActSkeleton/~ActSkeleton", file * 3 + state);
         }
     }
     DynamicLoader::UnRegisterVar(kBufferName);
     DynamicLoader::RegisterVar(kBufferName, liveBuffer);
-    ShadowAnimationBuffer = liveBuffer;
-    ShadowAnimationBufferBones = liveBones;
+    AnimationBuffer = liveBuffer;
+    AnimationBufferBones = liveBones;
+    OrigAnimationBuffer = origBuffer;
+    OrigAnimationBufferBones = origBones;
+    OrigActManager = origManager;
 }
 
 // ===============================================================================================================
@@ -673,19 +683,23 @@ typedef void (*SetIRModeFn)(bool);
 
 void TestIRMode() {
     static const unsigned kEntries[] = {0x00016ed0};
-    LightBlock *normal = ShadowNormalLight, *ir = ShadowIRLight;
+    LightBlock *normal = NormalLight, *ir = IRLight;
     uint8_t *lighting = ShadowLighting;
     if (normal == NULL || ir == NULL || lighting == NULL)
         return;
     LightBlock *scene = reinterpret_cast<LightBlock *>(lighting + 0xec);
     LightBlock savedScene = *scene, savedNormal = *normal, savedIR = *ir;
-    uint8_t savedReady = ShadowIRLightReady, savedMode = ShadowIRModeOn;
+    bool savedReady = IRLightReady, savedMode = IRModeOn;
+    LightBlock *origNormal = OrigNormalLight, *origIR = OrigIRLight;
+    bool origReady = OrigIRLightReady, origMode = OrigIRModeOn;
+    OrigNormalLight = normal;
+    OrigIRLight = ir;
     for (int c = 0; c < 64; c++) {
         LightBlock blocks[3];
         for (LightBlock &block : blocks)
             for (size_t i = 0; i < sizeof(LightBlock) / sizeof(float); i++)
                 reinterpret_cast<float *>(&block)[i] = RandomFloat(-2.0f, 2.0f);
-        uint8_t ready = uint8_t(c & 1), mode = uint8_t((c >> 1) & 1);
+        bool ready = (c & 1) != 0, mode = ((c >> 1) & 1) != 0;
         bool on = ((c >> 2) & 1) != 0;
         g_cases++;
         std::string original, port;
@@ -693,22 +707,29 @@ void TestIRMode() {
             *scene = blocks[0];
             *normal = blocks[1];
             *ir = blocks[2];
-            ShadowIRLightReady = ready;
-            ShadowIRModeOn = mode;
+            IRLightReady = OrigIRLightReady = ready;
+            IRModeOn = OrigIRModeOn = mode;
         }, [&](bool orig, std::string &log) {
             (orig ? (SetIRModeFn)0x00016ed0 : ActManager::SetIRMode)(on);
             AppendBytes(log, scene, sizeof(LightBlock));
             AppendBytes(log, normal, sizeof(LightBlock));
             AppendBytes(log, ir, sizeof(LightBlock));
-            Append(log, "%d %d\n", ShadowIRLightReady, ShadowIRModeOn);
+            if (orig)
+                Append(log, "%d %d\n", OrigIRLightReady, OrigIRModeOn);
+            else
+                Append(log, "%d %d\n", IRLightReady, IRModeOn);
         }, original, port);
         Check(original == port, "ActManager::SetIRMode", c);
     }
     *scene = savedScene;
     *normal = savedNormal;
     *ir = savedIR;
-    ShadowIRLightReady = savedReady;
-    ShadowIRModeOn = savedMode;
+    IRLightReady = savedReady;
+    IRModeOn = savedMode;
+    OrigNormalLight = origNormal;
+    OrigIRLight = origIR;
+    OrigIRLightReady = origReady;
+    OrigIRModeOn = origMode;
 }
 
 // ===============================================================================================================
@@ -722,11 +743,13 @@ typedef EAGL::TAR *(__fastcall *UseTextureFn)(ActTextureDatabase *, int, const c
 void TestLookups() {
     static const unsigned kEntries[] = {0x00017010, 0x00017840, 0x00019e30};
     std::vector<std::string> names = {"event", "Event.x", "", "events.a", "notevent.a"};
-    EventTarget **resolver = ShadowEventResolver;
-    if (resolver != NULL && *resolver != NULL && (*resolver)->names != NULL)
-        for (int i = 0; i < (*resolver)->count; i++)
-            if ((*resolver)->names[i] != NULL)
-                names.push_back(std::string("event.") + (*resolver)->names[i]);
+    EventTarget *target = EventResolver != NULL ? EventResolver->target : NULL;
+    if (target != NULL && target->names != NULL)
+        for (int i = 0; i < target->count; i++)
+            if (target->names[i] != NULL)
+                names.push_back(std::string("event.") + target->names[i]);
+    ActEventResolver *origResolver = OrigEventResolver;
+    OrigEventResolver = EventResolver;
     g_cases++;
     std::string original, port;
     Both(kEntries, 3, [] {}, [&](bool orig, std::string &log) {
@@ -737,8 +760,9 @@ void TestLookups() {
         }
     }, original, port);
     Check(original == port, "ActManager::SymbolResolver", 0);
+    OrigEventResolver = origResolver;
 
-    ActManager *manager = ShadowActManager;
+    ActManager *manager = TheActManager;
     if (manager == NULL)
         return;
     if (ActModelDatabase *models = manager->models) {

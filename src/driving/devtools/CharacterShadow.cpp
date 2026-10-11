@@ -151,15 +151,18 @@ typedef void (__fastcall *ResolverDestructFn)(ActEventResolver *, int);
 
 #define AT(type, address) reinterpret_cast<type>(uintptr_t(address))
 
-#define ShadowActManager (*(ActManager **)0x001dd9cc)
+// The originals' copies of the port's TheActManager and IRModeOn, lent for the originals' pass. EAGL's anim object
+// pool is shared: inside the window the originals name ours (devtools/OwnedGlobals.h, the redirects).
+#define OrigActManager (*(ActManager **)0x001dd9cc)
+#define OrigIRModeOn (*(bool *)0x001dd9dd)
 #define ShadowActorDatabase (*(ActActorDatabase **)0x001dd9a0)
 #define ShadowCurrentActor (*(ActActor **)0x001dd9c4)
 #define ShadowPlayerCar (**(PhysicsObject ***)0x00234e40)
 
 PrivateData *Banks() {
-    if (ShadowActManager == NULL || ShadowActManager->animations == NULL)
+    if (TheActManager == NULL || TheActManager->animations == NULL)
         return NULL;
-    return ShadowActManager->animations->data;
+    return TheActManager->animations->data;
 }
 
 // The anim indices an entry of the lookup names are within its bank (or -1)
@@ -231,7 +234,7 @@ void TestLookups(Rng *rng) {
             uint8_t *second = anim;
             AT(GetAnimationFn, 0x00013c00)(data, 0, b, i, &anim, &second);
             uint8_t *anim2 = NULL, *second2 = NULL;
-            AT(GetAnimationFn, 0x00013c70)(ShadowActManager->animations, 0, b, i, &anim2, &second2);
+            AT(GetAnimationFn, 0x00013c70)(TheActManager->animations, 0, b, i, &anim2, &second2);
             Logf("lookup %d %d %p %p %p %p", b, i, anim, second, anim2, second2);
         }
     }
@@ -569,8 +572,13 @@ bool Safe(void (*test)(Rng *), Rng *rng) {
 
 void RunPass(std::string *log, bool original) {
     g_log = log;
-    if (original)
+    ActManager *origManager = OrigActManager;
+    bool origIRMode = OrigIRModeOn;
+    if (original) {
+        OrigActManager = TheActManager;
+        OrigIRModeOn = IRModeOn;
         XbeOriginal_RestoreRange(0x00013c00, 0x000157e0, true);
+    }
     void (*const tests[])(Rng *) = {TestBanks, TestLookups, TestGroups, TestInfos, TestHelpers, TestCharacters,
                                     TestEvents};
     uint32_t seed = 0x5c4a7bu;
@@ -579,8 +587,11 @@ void RunPass(std::string *log, bool original) {
         if (!Safe(tests[i], &rng))
             Logf("fault in test %u", unsigned(i));
     }
-    if (original)
+    if (original) {
         XbeOriginal_RestoreRange(0x00013c00, 0x000157e0, false);
+        OrigActManager = origManager;
+        OrigIRModeOn = origIRMode;
+    }
     g_log = NULL;
 }
 
@@ -601,7 +612,7 @@ void CharacterShadow_Run(void) {
     const char *setting = getenv("NIGHTFIRE_CHARACTERSHADOW");
     if (setting == NULL || atoi(setting) == 0)
         return;
-    if (ShadowActManager == NULL) {
+    if (TheActManager == NULL) {
         printf("[character] no ActManager yet - skipped\n");
         fflush(stdout);
         return;
