@@ -47,28 +47,43 @@ over SSH directly, but game runs do not. `remote.sh desktop '<command>'` writes 
 exit code. `remote.sh setup` creates the task. It is set to run only when the user is logged on, so someone must be
 logged in to the runner.
 
-## To do before the next full test round: parallel slots
+## Parallel slots
 
-A full round (lockstep runs of missions 1-8 to tick 9000, idle and accelerating, then every shadow on every mission)
-takes about four hours, because `remote.sh` runs one game at a time: one `job.sh`, one scheduled task, one checkout,
-and every run writes into the same `Release\` (frame dumps, `drive.log`, `sndtrace.log`, `crash.dmp`). The game itself
-does not need to run alone: a lockstep run simulates exactly one tick per rendered frame and holds the sound in
-lockstep too, so machine load changes only how long a run takes, never its frames or sound trace (runs repeat exactly
-to tick 9000), and `-GameHold` is applied inside the game, so window focus does not matter.
+Games that need no window focus can run several at once, each in its own **slot**: a run folder
+`C:\nightfire-slots\<n>`, holding a copy of the checkout's `Release\` (executables, DLLs, maps, `settings.ini`,
+`saves\`, `tdata\`) and `disc` as a junction to the checkout's `disc\`. The game reads `..\disc` from its executable's
+folder and writes everything else (frame dumps, logs, `sndtrace.log`, `crash.dmp`, saves) into its working folder,
+so slots never share a file. Each slot also has its own job files (`C:\nightfire-runner\slot<n>\`) and scheduled task
+(`NightfireRunner<n>`). Builds stay in the checkout and serial; a slot runs a copy, so building never locks a running
+game's DLL.
 
-The plan, about one to one and a half hours a round with three or four slots:
+```
+tools/runner/remote.sh setup 4                       # the tasks: NightfireRunner and NightfireRunner1-4 (once)
+tools/runner/remote.sh slots 4                       # refresh slots 1-4 from the checkout's build
+RUNNER_SLOT=2 tools/runner/remote.sh drive m2 "..."  # one run in slot 2
+tools/runner/parallel.sh runs.list 4                 # "<name> <drive_game.ps1 arguments>" per line, over 4 slots
+RUNNER_SLOTS=4 BASE=lbase tools/runner/round.sh new  # the full round: sync, build, every run, summary
+python tools/runner/compare.py build/baselines/lbase_m1_idle build/remote/new_m1_idle
+```
 
-1. **Slots on the runner:** run folders, each a copy of `Release\` with `disc\` as a junction to the checkout's
-   (remove such a folder by deleting the junction first - `git worktree remove` and some tools follow junctions and
-   delete the target), and its own logs, dumps, traces, `settings.ini` and `saves\`. One build, copied to every slot.
-2. **`remote.sh`:** `drive` takes a slot; `job.sh` and the `done` marker are per slot; the scheduled task launches
-   several games in the one desktop session; results come back per slot. Builds stay serial.
-3. **Prove it before relying on it:** one mission in two slots at once against a serial run of the same build -
-   frames and sound traces identical - then one full round parallel against serial.
+`round.sh <prefix> [lockstep|shadow|all] [missions]` runs the lockstep runs (each mission to tick 9000, idle and
+accelerating, 16 frames and the sound call trace, sound in lockstep) and the shadow runs (every shadow at once, per
+mission). It writes the summary to `build/remote/<prefix>.summary`. With `BASE=<prefix>`, it compares each lockstep
+run against `build/baselines/<BASE>_m<n>_<idle|accelerate>`.
 
-Watch for files the game writes outside its working folder (crash dumps, saves, loader logs), and for the shadow
-runs' CPU-heavy first tick slowing each other down. A second runner (the development PC) could take a share when
-nobody is using it.
+Only runs that send no keys can share the desktop. A lockstep run simulates exactly one tick per rendered frame,
+holds the sound in lockstep, and applies `-GameHold` inside the game, so load and focus change only how long it takes.
+Shadow runs send no keys either. `parallel.sh` refuses a list with `-Keys`, `-HoldKey` or `-AfterHoldKeys`. Those runs
+go to the serial `remote.sh drive`. Refresh the slots (`parallel.sh` does) only while none is running.
+
+Checked on 11 October 2026: three lockstep runs at once (mission 1 twice, mission 6 accelerating) matched serial runs
+of the same build, with 0 pixels different and identical sound traces to tick 9000. A full round on 4 slots (16
+lockstep runs and 8 shadow runs) took 35 minutes, against about four hours serially, and every lockstep run matched
+its serial baseline.
+
+`parallel.sh` reads its list on a file descriptor of its own and gives `remote.sh` an empty stdin. `ssh` reads its
+stdin, so inside a plain `while read` loop it swallows the rest of the list: the first try ran 4 of 24 runs and
+reported success. Scripts that loop over `remote.sh` calls need the same care.
 
 ## Setting up a runner
 

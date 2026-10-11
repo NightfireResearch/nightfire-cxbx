@@ -8,9 +8,13 @@
 #   tools/runner/remote.sh desktop '<command>'         # any command, in the desktop session, from the checkout
 #   tools/runner/remote.sh drive <name> "<args>"       # tools/drive_game.ps1 there; log and dumped frames to build/remote/<name>
 #   tools/runner/remote.sh ssh '<command>'             # any command over SSH (no desktop: fine for builds, not for D3D)
+#   tools/runner/remote.sh slots [n]                   # n run folders (default 3), each a copy of the built Release/
+#   tools/runner/remote.sh setup [n]                   # the scheduled tasks: the serial one and one per slot
 #
 # Settings (environment): RUNNER_HOST (vr-desktop), RUNNER_USER (Charlie), RUNNER_KEY (~/.ssh/nightfire_runner),
-# RUNNER_REPO (/c/nightfire-cxbx, the checkout there).
+# RUNNER_REPO (/c/nightfire-cxbx, the checkout there), RUNNER_SLOT (unset: "desktop", "drive" and "run" use the
+# checkout's Release/ and the serial task; a number: that slot's run folder and task, so several run at once -
+# tools/runner/parallel.sh shares a list of drive runs out over the slots).
 #
 # A runner is only a speed-up: everything here also runs locally (tools/ui/run_menu.sh, cmake), and nothing may
 # require one. The defaults are Charlie's runner, reachable only on Charlie's home LAN - not a public machine, so not usable by
@@ -27,7 +31,18 @@ USER_=${RUNNER_USER:-Charlie}
 KEY=${RUNNER_KEY:-$HOME/.ssh/nightfire_runner}
 RREPO=${RUNNER_REPO:-/c/nightfire-cxbx}
 JOBS=/c/nightfire-runner
+SLOTS=/c/nightfire-slots
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
+
+# A slot has its own job files (slot<n>/ beside the serial ones), task (NightfireRunner<n>) and run folder:
+# <n>/Release, a copy of the checkout's, beside <n>/disc, a junction to the checkout's disc/. The game reads ../disc
+# from its executable's folder and writes everything else - dumps, logs, traces, saves - into its working folder.
+SLOT=${RUNNER_SLOT:-}
+JOBDIR=$JOBS${SLOT:+/slot$SLOT}
+TASK=NightfireRunner$SLOT
+RUNDIR=$RREPO
+[ -z "$SLOT" ] || RUNDIR=$SLOTS/$SLOT
+win() { echo "$1" | sed 's#^/\(.\)/#\1:/#'; }   # /c/x -> c:/x, for Windows programs
 
 # CanonicalDomains: macOS resolves a Windows machine's bare name only with ".local" (mDNS); ssh tries that first
 # and falls back to the bare name, so either works. HostKeyAlias checks the host key under the configured name
@@ -69,10 +84,10 @@ build)
     ;;
 desktop)
     [ -n "$1" ] || { echo "desktop: no command"; exit 2; }
-    printf 'cd %s\n%s\n' "$RREPO" "$1" | r "mkdir -p $JOBS && rm -f $JOBS/done && cat > $JOBS/job.sh && schtasks //run //tn NightfireRunner > /dev/null"
+    printf 'cd %s\n%s\n' "$RUNDIR" "$1" | r "mkdir -p $JOBDIR && rm -f $JOBDIR/done && cat > $JOBDIR/job.sh && schtasks //run //tn $TASK > /dev/null"
     # Wait for the job to finish (desktop_job.sh writes the exit code to done)
-    while ! r "test -f $JOBS/done"; do sleep 5; done
-    r "cat $JOBS/job.log; exit \$(cat $JOBS/done)"
+    while ! r "test -f $JOBDIR/done"; do sleep 5; done
+    r "cat $JOBDIR/job.log; exit \$(cat $JOBDIR/done)"
     ;;
 run)
     script=$1; name=${2:-$(basename "$1" .txt)}; timeout=${3:-300}
@@ -84,27 +99,47 @@ run)
     ;;
 drive)
     # tools/runner/remote.sh drive <name> "<tools/drive_game.ps1 arguments>": a drive_game run in the desktop session;
-    # its log and the frames it dumped come back to build/remote/<name> (drive.log, d3d9_dump_frame_*.bmp).
+    # its log, the frames it dumped and its sound trace if it wrote one come back to build/remote/<name> (drive.log,
+    # d3d9_dump_frame_*.bmp, sndtrace.log). Each run starts without the last one's outputs: a frame dump also writes
+    # the frame's textures and draw trace, which stay on the runner.
     name=$1; args=$2
     [ -n "$name" ] && [ -n "$args" ] || { echo "drive: tools/runner/remote.sh drive <name> \"<drive_game.ps1 arguments>\""; exit 2; }
-    "$0" desktop "rm -f Release/d3d9_dump_frame_*.bmp Release/d3d9_trace_*.log; powershell -NoProfile -ExecutionPolicy Bypass -File tools/drive_game.ps1 $args -LogPath 'C:\\nightfire-runner\\drive.log' > /dev/null 2>&1; true" > /dev/null
+    "$0" desktop "rm -f Release/d3d9_dump_* Release/d3d9_trace_*.log Release/sndtrace.log; powershell -NoProfile -ExecutionPolicy Bypass -File '$(win $RREPO)/tools/drive_game.ps1' $args -LogPath '$(win $JOBDIR)/drive.log' > /dev/null 2>&1; true" > /dev/null
     mkdir -p "$REPO/build/remote/$name"
-    rm -f "$REPO/build/remote/$name"/d3d9_dump_frame_*.bmp
-    r "cp $JOBS/drive.log $RREPO/Release/drive.log; cd $RREPO/Release && tar cf - drive.log \$(ls d3d9_dump_frame_*.bmp 2>/dev/null | grep -v alpha)" |
+    rm -f "$REPO/build/remote/$name"/d3d9_dump_frame_*.bmp "$REPO/build/remote/$name/sndtrace.log"
+    r "cp $JOBDIR/drive.log $RUNDIR/Release/drive.log; cd $RUNDIR/Release && tar cf - drive.log \$(ls d3d9_dump_frame_*.bmp 2>/dev/null | grep -v alpha) \$(ls sndtrace.log 2>/dev/null)" |
         (cd "$REPO/build/remote/$name" && tar xf -)
-    echo "build/remote/$name: $(ls "$REPO/build/remote/$name" | tr '\n' ' ')"
+    echo "build/remote/$name: $(ls "$REPO/build/remote/$name" | wc -l) files"
     ;;
 ssh)
     r "cd $RREPO && $*"
     ;;
+slots)
+    # Fresh run folders from the checkout's build: its executables, DLLs and maps, settings.ini, saves/ and tdata/.
+    # After "build", before runs start in the slots - never while one is running.
+    n=${1:-3}
+    for i in $(seq 1 "$n"); do
+        d=$SLOTS/$i
+        r "mkdir -p $d/Release && cd $d/Release && find . -maxdepth 1 -type f -delete && rm -rf saves tdata cache && \
+           cp $RREPO/Release/*.exe $RREPO/Release/*.dll $RREPO/Release/*.map $RREPO/Release/settings.ini . && \
+           cp -r $RREPO/Release/saves $RREPO/Release/tdata . && \
+           { [ -e $d/disc ] || powershell -NoProfile -Command \"New-Item -ItemType Junction -Path '$(win $d)/disc' -Target '$(win $RREPO)/disc'\" > /dev/null; }"
+    done
+    echo "slots 1-$n refreshed from $RREPO/Release"
+    ;;
 setup)
-    # The scheduled task that runs jobs in the desktop session: run only when the user is logged on (/IT), so it
-    # starts in their interactive session. Started on demand by "desktop"; the trigger date is never reached.
-    r "mkdir -p $JOBS && schtasks //create //f //tn NightfireRunner //it //ru $USER_ //sc once //sd 01/01/2099 //st 00:00 \
-       //tr '\"C:\\Program Files\\Git\\bin\\bash.exe\" -l /c/nightfire-cxbx/tools/runner/desktop_job.sh'"
+    # The scheduled tasks that run jobs in the desktop session: the serial one, NightfireRunner, and one per slot,
+    # NightfireRunner1... Run only when the user is logged on (/IT), so they start in their interactive session.
+    # Started on demand by "desktop"; the trigger date is never reached.
+    n=${1:-3}
+    for i in '' $(seq 1 "$n"); do
+        r "mkdir -p $JOBS${i:+/slot$i} && schtasks //create //f //tn NightfireRunner$i //it //ru $USER_ //sc once //sd 01/01/2099 //st 00:00 \
+           //tr '\"C:\\Program Files\\Git\\bin\\bash.exe\" -l $RREPO/tools/runner/desktop_job.sh $i' > /dev/null"
+    done
+    echo "tasks NightfireRunner and NightfireRunner1-$n"
     ;;
 *)
-    sed -n '2,20p' "$0"
+    sed -n '2,25p' "$0"
     exit 2
     ;;
 esac

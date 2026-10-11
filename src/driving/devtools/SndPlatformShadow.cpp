@@ -102,9 +102,6 @@ inline uint32_t &U32(uint32_t address) {
 inline void *&Ptr(uint32_t address) {
     return *(void **)(uintptr_t)address;
 }
-inline uint32_t P(const void *p) {
-    return (uint32_t)(uintptr_t)p;
-}
 
 // ---- random numbers
 uint32_t g_seed = 1;
@@ -175,6 +172,13 @@ uint32_t g_log[2][kLogWords];
 int g_logLength[2];
 bool g_logOverflow[2];
 int g_side;
+
+// A pointer as the log records it: one into the game's copy of a global we own, which the original passes (a
+// listener preset, say), as ours
+inline uint32_t P(const void *p) {
+    uint32_t word = (uint32_t)(uintptr_t)p;
+    return g_side == 0 ? OwnedGlobals_AsOurs(word) : word;
+}
 
 void Log(uint32_t id, int count, ...) {
     int &n = g_logLength[g_side];
@@ -472,7 +476,7 @@ void FakeMixTime(int voice, int mult) {
     Log(L_MIXTIME, 2, (uint32_t)voice, (uint32_t)mult);
 }
 void FakeInitReverb(int rate, uint32_t description) {
-    Log(L_INITREVERB, 2, (uint32_t)rate, description);
+    Log(L_INITREVERB, 2, (uint32_t)rate, P((const void *)(uintptr_t)description));
 }
 void FakeRestoreReverb() {
     Log(L_RESTOREREVERB, 0);
@@ -1256,8 +1260,6 @@ void RunCase(Kind &kind, int index, int kindIndex) {
         Detail("%s case %d: the FX hook pair or the speaker gain table differ", kind.name, index);
     }
     g_checks++;
-    // An address of one of our globals the original passed (a listener preset, say) is its copy's
-    OwnedGlobals_TranslateWords(g_log[0], size_t(g_logLength[0]) * 4);
     if (g_logOverflow[0] || g_logOverflow[1] || g_logLength[0] != g_logLength[1] ||
         memcmp(g_log[0], g_log[1], (size_t)g_logLength[0] * 4) != 0) {
         differ = true;
