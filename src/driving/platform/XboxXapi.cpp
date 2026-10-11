@@ -1,6 +1,7 @@
 #include "XboxXapi.h"
 
 #include "../../common/xboxPath.h"
+#include "../devtools/Teleport.h"
 
 #include <windows.h>
 #include <stdint.h>
@@ -242,7 +243,10 @@ static DWORD __stdcall Xbox_GetTimeZoneInformation(TIME_ZONE_INFORMATION *zone) 
     return GetTimeZoneInformation(zone);
 }
 
+// Its one caller is the dashboard clock (RVehicle::UpdatePosition, 0x000964b0).
 static void __stdcall Xbox_GetLocalTime(SYSTEMTIME *time) {
+    if (Teleport_LockstepLocalTime(time))   // NIGHTFIRE_LOCKSTEP: the same time in every run
+        return;
     GetLocalTime(time);
 }
 

@@ -73,9 +73,8 @@ mission). It runs the shadow runs and the lockstep runs as two separate batches,
 `build/baselines/<BASE>_m<n>_<idle|accelerate>`.
 
 Only runs that send no keys can share the desktop. A lockstep run simulates exactly one tick per rendered frame,
-holds the sound in lockstep, and applies `-GameHold` inside the game, so focus does not matter. Load does, past a
-point: a run is paced to 50 frames a second and mostly waits, but once the CPU saturates the runs stop repeating
-exactly (below). Shadow runs send no keys either. `parallel.sh` refuses a list with `-Keys`, `-HoldKey` or `-AfterHoldKeys`. Those runs
+holds the sound in lockstep, and applies `-GameHold` inside the game, so neither focus nor load matters: a starved
+run is slower, not different (below). Shadow runs send no keys either. `parallel.sh` refuses a list with `-Keys`, `-HoldKey` or `-AfterHoldKeys`. Those runs
 go to the serial `remote.sh drive`. Refresh the slots (`parallel.sh` does) only while none is running.
 
 Two users of the runner at once (two sessions, say) each need their own slots and checkout: `RUNNER_SLOT_FIRST=9`
@@ -93,13 +92,32 @@ How many slots: the runner (i7-9700K, 8 cores; RTX 3090; 32 GB) runs the 16 lock
 | --- | --- | --- | --- |
 | 4 | 16 min | not measured | exact |
 | 8 | 8 min | 35-78% | exact |
-| 16 | 5 min | 97-100% | 10 runs' frames and 2 sound traces differ |
+| 16 | 5 min | 97-100% | 10 runs' frames and 2 sound traces differed - before the fix below |
+| 8, plus 10 busy-loop processes | 65 min | 100% | exact, after the fix |
 
 Memory (about 2 GB for 16 games) and the GPU (at most about 80%, 2 GB) are nowhere near their limits. The CPU is.
-So 8 is the default (`RUNNER_SLOTS`), and `round.sh` keeps the shadow runs, the heavy ones, out of the lockstep
-batch. That a starved game diverges at all means something in a lockstep run still depends on wall time, perhaps a
-loader thread finishing at a different tick. It does not matter while the runner has room, but it would be worth
-finding.
+8 is the default (`RUNNER_SLOTS`), and `round.sh` keeps the shadow runs, the heavy ones, out of the lockstep batch,
+for speed: a saturated CPU no longer changes a lockstep run's result.
+
+The 16-slot failures (11 October 2026) had two causes, both wall time leaking into lockstep:
+
+- **The first pass of the game loop ran several ticks.** Lockstep set the scheduler's `oneTickPerRun` from inside a
+  tick, so the first `Scheduler::Run` of a level (and the first after an `ERestart`, whose `Scheduler::Reset` clears
+  the flag) ran as many ticks as the clock had moved since "Entering main loop" - two or three when the host was
+  slow. Every later tick was then shifted (mission 6 idle differed from tick 0). `Teleport_BeforeRun` now sets the
+  flag at the top of every `Scheduler::Run`.
+- **`TIMER_gettick` jumped after a slow frame.** It followed the real clock again whenever more than a second passed
+  between two ticks, meant for loads and movies; a starved frame looked the same (the first frame, which translates
+  shaders, comes close to a second on its own). Voice fades and pitch ramps, the stream hold timeout and the
+  Mission Failed screen's animated figure (`GGirl::UpdateTexture`) read it. It now switches to the clock only after
+  1000 reads with no tick in between, which only a wait loop does.
+
+`NIGHTFIRE_LOCKSTEP_JITTER=<ms>` (devtools/SndLockstep.cpp) tests for this kind of leak without loading the
+runner: random delays of up to that many ms before each loop pass and tick, an occasional stall of over a second,
+and delays during the load. With 40 ms, the build before the fix differed from the baselines in 15 of the 16
+lockstep runs; with the fix, all 16 matched them exactly. GetLocalTime, read by the dashboard clock, also answers a
+fixed time in lockstep. A starved run also showed a harness race: `drive_game.ps1` stopped the game a second after
+"the last" dump was announced, before a slow game had written it. It now waits for the named file.
 
 `parallel.sh` reads its list on a file descriptor of its own and gives `remote.sh` an empty stdin. `ssh` reads its
 stdin, so inside a plain `while read` loop it swallows the rest of the list: the first try ran 4 of 24 runs and

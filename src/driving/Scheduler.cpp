@@ -538,6 +538,8 @@ static void RunTick(Scheduler *scheduler, int tick, bool last, bool *teleportDon
 // AUTOINJECT
 void Scheduler::Run(int unused) {
     (void)unused;
+    // NIGHTFIRE_LOCKSTEP: oneTickPerRun on before it is read - here, as the constructor and Reset clear it
+    Teleport_BeforeRun(this);
     const int now = (int)Clock;
     bool teleportDone = false;
 

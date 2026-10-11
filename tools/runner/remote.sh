@@ -73,7 +73,9 @@ sync)
     if ! git diff --quiet HEAD; then
         git diff --binary HEAD | r "cd $RREPO && git apply --whitespace=nowarn -"
     fi
-    git ls-files --others --exclude-standard -z | grep -zv '\.mp4$' | xargs -0r tar cf - | r "cd $RREPO && tar xf -"
+    if [ -n "$(git ls-files --others --exclude-standard | grep -v '\.mp4$')" ]; then
+        git ls-files --others --exclude-standard -z | grep -zv '\.mp4$' | xargs -0 tar cf - | r "cd $RREPO && tar xf -"
+    fi
     echo "runner at $(r "cd $RREPO && git rev-parse --short HEAD") plus $(git diff --stat HEAD | tail -1)"
     ;;
 build)

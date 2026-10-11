@@ -1,3 +1,4 @@
+#define _CRT_RAND_S
 #include "SndLockstep.h"
 
 #include "../sound/snd/Platform.h"
@@ -9,6 +10,7 @@
 #include <windows.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <unordered_map>
 
@@ -43,8 +45,9 @@
 //    timing. No stream callback ever runs on the worker. (Nothing else uses FILESYS asynchronously once the game
 //    loop runs, so the worker has nothing else in hand while the caller waits.)
 //  - TIMER_gettick counts lockstep ticks from the first one: the real count then, plus one per tick, the same
-//    value for everything that reads it during a tick. If the simulation stops ticking for over a second (a load,
-//    a movie inside the loop) it follows the real clock again from there, so a wait on it cannot hang.
+//    value for everything that reads it during a tick. Only something waiting on it reads it a thousand times with
+//    no tick in between (a load or a movie outside the loop); from that read on it follows the real clock, so the
+//    wait cannot hang. The switch is counted in reads, not time: a slow frame on a busy host is still one tick.
 //
 // Before the first tick (the loads) nothing on the sound side moves: no driver steps, no service, playback
 // frozen, file ops already synchronous - so every run reaches the first tick with the same sound state.
@@ -65,6 +68,8 @@ constexpr uint32_t kStatusPlaying = 1;             // DSBSTATUS_PLAYING
 constexpr uint32_t kStatusLooping = 4;             // DSBSTATUS_LOOPING
 constexpr uint16_t kFormatXboxAdpcm = 0x69;        // 64 frames to a block of 36 bytes a channel
 constexpr DWORD kFileOpPatienceMs = 10000;
+constexpr LONG kReadsWithoutTick = 1000;           // TIMER_gettick reads in one tick before it follows the clock
+constexpr DWORD kDriverPatienceMs = 10000;
 
 // ---- the mode's state
 volatile LONG g_once;                  // 0 not read, 1 being read, 2 read
@@ -82,7 +87,28 @@ unsigned g_ticks;
 // TIMER_gettick (any thread reads these)
 volatile bool g_ticking;               // the first lockstep tick has happened
 volatile int g_virtualTick;            // TIMER_gettick at the last lockstep tick
-volatile int g_realAtTick;             // the real count then
+volatile LONG g_readsSinceTick;        // TIMER_gettick reads since then
+volatile bool g_followingClock;        // so many that it follows the real count again
+volatile int g_realWhenFollowed;       // the real count when it started to
+
+// NIGHTFIRE_LOCKSTEP_JITTER=<ms>: random delays on the game thread, as a starved CPU gives them - before each pass
+// of the game loop (from SYNCTASK), at the start of each tick (now and then a stall of over a second instead), and
+// on one TIMER_gettick read in eight before the first tick (up to four times as long). A lockstep run with it must
+// give the same frames and sound trace as one without.
+int g_jitterMs;
+
+// A delay of up to maxMs, and one time in `stallOdds` (0: never) a stall of over a second.
+void Jitter(int maxMs, unsigned stallOdds) {
+    if (g_jitterMs <= 0)
+        return;
+    unsigned r = 0;
+    rand_s(&r);
+    if (stallOdds != 0 && (r >> 16) % stallOdds == 0) {
+        Sleep(1100 + (r & 0xff));
+        return;
+    }
+    Sleep((r & 0xffff) % unsigned(maxMs + 1));
+}
 
 void Init() {
     if (g_once == 2)
@@ -104,6 +130,12 @@ void Init() {
         g_stepGranted = CreateSemaphoreA(NULL, 0, 0x7fffffff, NULL);
         g_stepDone = CreateSemaphoreA(NULL, 0, 0x7fffffff, NULL);
         printf("[sndlockstep] the sound driver, stream reads and TIMER_gettick follow the simulation's ticks\n");
+        text[0] = 0;
+        if (GetEnvironmentVariableA("NIGHTFIRE_LOCKSTEP_JITTER", text, sizeof(text)) != 0)
+            g_jitterMs = atoi(text);
+        if (g_jitterMs > 0)
+            printf("[sndlockstep] jitter: up to %d ms delays on the game thread, and stalls of over a second\n",
+                   g_jitterMs);
     }
     fflush(stdout);
     InterlockedExchange(&g_once, 2);
@@ -266,10 +298,20 @@ void SndLockstep_Tick(void) {
     if (!SndLockstep_Enabled())
         return;
 
+    Jitter(g_jitterMs, 400);
+
     int realTick = SomeTicks;
-    int virtualTick = g_ticking ? SndLockstep_TimerTick(realTick) + 1 : realTick;
-    g_realAtTick = realTick;
+    if (g_followingClock) {
+        printf("[sndlockstep] tick %u: TIMER_gettick had followed the clock for %d ticks\n", g_ticks,
+               realTick - g_realWhenFollowed);
+        fflush(stdout);
+    }
+    int virtualTick = !g_ticking ? realTick
+                    : g_followingClock ? g_virtualTick + (realTick - g_realWhenFollowed) + 1
+                    : g_virtualTick + 1;
     g_virtualTick = virtualTick;
+    g_followingClock = false;
+    g_readsSinceTick = 0;
     g_ticking = true;
 
     int rate = TIMER_getfrequency();
@@ -278,6 +320,17 @@ void SndLockstep_Tick(void) {
     g_stepRemainder += 1000 / kStepMs;
     int steps = g_stepRemainder / rate;
     g_stepRemainder %= rate;
+    // The driver thread is made at SNDPLATFORM_init but runs when the host gets round to it: its steps must not
+    // depend on whether it has yet.
+    volatile uint8_t &keepRunning = KeepRunning;
+    for (DWORD start = GetTickCount(); keepRunning != 0 && !g_driverAlive;) {
+        if (GetTickCount() - start > kDriverPatienceMs) {
+            printf("[sndlockstep] the sound driver thread has not started after %lu ms\n", kDriverPatienceMs);
+            fflush(stdout);
+            break;
+        }
+        Sleep(1);
+    }
     if (g_driverAlive && KeepRunning != 0) {
         for (int i = 0; i < steps; i++) {
             ReleaseSemaphore(g_stepGranted, 1, NULL);
@@ -319,6 +372,8 @@ uint32_t SndLockstep_DriverThread(void) {
 bool SndLockstep_DefersService(void) {
     if (!SndLockstep_Enabled())
         return false;
+    if (!g_ownService)
+        Jitter(g_jitterMs, 0);
     if (g_ownService) {
         g_ownService = false;
         return false;
@@ -359,10 +414,19 @@ bool SndLockstep_FileCallback(unsigned handle, FsCallback callback) {
 }
 
 int SndLockstep_TimerTick(int realTick) {
-    if (!g_ticking)
+    if (!g_ticking) {
+        unsigned r = 0;
+        if (g_jitterMs > 0 && rand_s(&r) == 0 && r % 8 == 0)
+            Jitter(g_jitterMs * 4, 0);
         return realTick;
-    int stalled = realTick - g_realAtTick - TIMER_getfrequency();
-    return stalled > 0 ? g_virtualTick + stalled : g_virtualTick;
+    }
+    if (!g_followingClock) {
+        if (InterlockedIncrement(&g_readsSinceTick) <= kReadsWithoutTick)
+            return g_virtualTick;
+        g_realWhenFollowed = realTick;
+        g_followingClock = true;
+    }
+    return g_virtualTick + (realTick - g_realWhenFollowed);
 }
 
 void SndLockstep_BufferCreated(const IDirectSoundBuffer *buffer, uint32_t sampleRate, uint16_t formatTag,

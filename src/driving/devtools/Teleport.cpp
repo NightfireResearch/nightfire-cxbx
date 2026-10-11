@@ -1,4 +1,5 @@
 #include "Teleport.h"
+#include "../Scheduler.hpp"
 #include "../engine/MissionManager.h"
 #include "../EventManager.hpp"
 #include "../sound/snd/SndGlobals.h"
@@ -353,17 +354,18 @@ void Teleport_Tick(void) {
     }
     WatchQueues();         // any vehicle shadow on: the event queue, sound list and sound buffers as they change
 
-    // NIGHTFIRE_LOCKSTEP=1: exactly one simulation tick per rendered frame (the scheduler's own oneTickPerRun, set
-    // here because this runs every call that simulates), so that a run's Nth frame is the same whatever the host's
-    // timing - the frame dumps and traces of two builds can then be compared exactly. With NIGHTFIRE_DUMP_TICKS=N
-    // (or a comma-separated list) the frame N ticks after the car appears is dumped, the same frame in every run.
-    // NIGHTFIRE_DUMP_EVERY=N with NIGHTFIRE_DUMP_UNTIL=M dumps every Nth tick up to M instead (50 ticks a second).
-    static int lockstep = -1, ticksSinceCar = 0;
+    // NIGHTFIRE_LOCKSTEP=1: exactly one simulation tick per rendered frame (Teleport_BeforeRun), so that a run's Nth
+    // frame is the same whatever the host's timing - the frame dumps and traces of two builds can then be compared
+    // exactly. With NIGHTFIRE_DUMP_TICKS=N (or a comma-separated list) the frame N ticks after the car appears is
+    // dumped, the same frame in every run. NIGHTFIRE_DUMP_EVERY=N with NIGHTFIRE_DUMP_UNTIL=M dumps every Nth tick
+    // up to M instead (50 ticks a second).
+    static bool dumpsRead = false;
+    static int ticksSinceCar = 0;
     static int dumpTicks[16], dumpTickCount = 0;
     static int dumpEvery = 0, dumpUntil = 0;
-    if (lockstep < 0) {
+    if (!dumpsRead) {
+        dumpsRead = true;
         char text[32] = "";
-        lockstep = GetEnvironmentVariableA("NIGHTFIRE_LOCKSTEP", text, sizeof(text)) && text[0] != '0' ? 1 : 0;
         char list[256] = "";
         if (GetEnvironmentVariableA("NIGHTFIRE_DUMP_TICKS", list, sizeof(list)))
             for (char *p = list; *p != 0 && dumpTickCount < 16; p++) {
@@ -377,13 +379,6 @@ void Teleport_Tick(void) {
             dumpEvery = atoi(text);
         if (GetEnvironmentVariableA("NIGHTFIRE_DUMP_UNTIL", text, sizeof(text)))
             dumpUntil = atoi(text);
-        if (lockstep)
-            printf("[lockstep] one simulation tick per frame\n");
-    }
-    if (lockstep) {
-        uint8_t *scheduler = *(uint8_t **)0x001e520cu;   // RunTheGame's Scheduler
-        if (scheduler != NULL)
-            scheduler[28] = 1;                           // oneTickPerRun
     }
 
     uint8_t *car = PlayerCar();
@@ -486,4 +481,33 @@ void Teleport_Tick(void) {
     }
 
     fflush(stdout);
+}
+
+static bool LockstepOn(void) {
+    static int lockstep = -1;
+    if (lockstep < 0) {
+        char text[32] = "";
+        lockstep = GetEnvironmentVariableA("NIGHTFIRE_LOCKSTEP", text, sizeof(text)) && text[0] != '0' ? 1 : 0;
+        if (lockstep) {
+            printf("[lockstep] one simulation tick per frame\n");
+            fflush(stdout);
+        }
+    }
+    return lockstep != 0;
+}
+
+// The scheduler's own one-tick mode, on before each call decides how many ticks to run. Scheduler::Run otherwise
+// simulates as many ticks as the clock moved since its last call, which on the first call after the scheduler is
+// made, and the first after an ERestart's Scheduler::Reset, is however long the host took to get there.
+void Teleport_BeforeRun(Scheduler *scheduler) {
+    if (LockstepOn())
+        scheduler->oneTickPerRun = 1;
+}
+
+// The dashboard clock reads the host's local time, which no two runs share.
+bool Teleport_LockstepLocalTime(SYSTEMTIME *time) {
+    if (!LockstepOn())
+        return false;
+    *time = SYSTEMTIME{ 2002, 11, 2, 26, 12, 0, 0, 0 };   // year, month, weekday, day, 12:00:00.000
+    return true;
 }

@@ -227,9 +227,20 @@ if (-not $proc.HasExited) {
         $deadline = (Get-Date).AddMilliseconds($TailWaitMs)
         while ((Get-Date) -lt $deadline -and -not $proc.HasExited) {
             $tail = Get-Content $LogPath -Tail 40 -ErrorAction SilentlyContinue
-            if ($tail -and ($tail | Select-String -Pattern $StopPattern -Quiet)) {
+            $match = if ($tail) { $tail | Select-String -Pattern $StopPattern | Select-Object -Last 1 }
+            if ($match) {
                 Write-Output ">> log matched '$StopPattern'"
                 Start-Sleep -Milliseconds 1000
+                # A frame dump the matched line names is written at the next present, which a starved game can be
+                # slow to reach: wait for the file (up to a minute) before stopping it.
+                if ($match.Line -match '\((d3d9_dump_frame_\d+\.bmp)\)') {
+                    $dump = Join-Path $workDir $Matches[1]
+                    $dumpDeadline = (Get-Date).AddSeconds(60)
+                    while (-not (Test-Path $dump) -and (Get-Date) -lt $dumpDeadline -and -not $proc.HasExited) {
+                        Start-Sleep -Milliseconds 250
+                    }
+                    Start-Sleep -Milliseconds 500
+                }
                 break
             }
             Start-Sleep -Milliseconds 500
