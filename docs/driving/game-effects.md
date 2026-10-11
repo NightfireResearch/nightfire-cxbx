@@ -7,14 +7,15 @@ RMissileCam, RSniperZoom). They sit on the renderer and EAGL (docs/driving/rende
 vehicles (docs/driving/vehicles.md), all ours. Ported on 11 October 2026 by four packages, then merged
 (`src/driving/game/`). Every address is Driving.xbe's.
 
-**Status: untested.** 125 functions ported (with the 4 replaced before, 129): 122 `FUNC_AT` and three register
+**Status: tested (12 October 2026).** 125 functions ported (with the 4 replaced before, 129): 122 `FUNC_AT` and three register
 adaptors (`AUTOLTCG`) under Ghidra's names - FUN_00095f90 (the switch effects' fade, EAX/ECX in, ST0 out),
 FUN_000a68f0 (a sniper ring point, outputs in ESI/EDI) and FUN_000a6cd0 (a particle type's sprite rectangle, EAX
 texture, ECX rectangle) - over plain C++ cores. `game.effects` is 100% ours by bytes: 129 replaced, 56 dead
 (exception funclets), 10 live - all exception funclets at 0x00153680..0x00153c40 with no caller the tool can see
 (their owners are replaced). Four shadow tests compare the ports with the originals on copies of the live objects
-and synthetic ones (to be run in game); the main test is the frames of lockstep runs of missions 1-8, since every
-car on screen is drawn through RVehicle with its tyre tracks and particles.
+and synthetic ones, all with no differences on missions 1-8; lockstep runs of missions 1-8 to tick 9000, idle and
+accelerating, match the baseline frame for frame and in their sound traces (every car on screen is drawn through
+RVehicle with its tyre tracks and particles).
 
 ## Layout
 
@@ -107,7 +108,17 @@ perpendicular w, RScorchWorld's centre and cross w.
 
 ## What the port taught
 
-(to be filled in after testing)
+- **A register-argument helper's stack.** FUN_000a6cd0 pops ESI between its first FILD [ESP+4] and the next two, so
+  those read the second and third locals, not the first again. The first port read the listing as written and gave
+  every smoke, dirt, snow and water sprite the wrong rectangle: the lockstep frames showed it at once (wheel smoke
+  and spray only), and restoring the vehicle particles with NIGHTFIRE_RESTORE_DIRECT pinned it to the helper.
+- **FSIN/FCOS results stay unrounded.** SniperRingPoint multiplies the 64-bit sine and cosine by the radius; going
+  through a double-returning helper first is one ulp off on some inputs (docs/driving/maths.md 3.2): naked helpers.
+- **Shadows log by value.** A transform built on the caller's stack, a material pointer logged raw, the game's copy
+  of an owned global read on the port's side: each gave hundreds of false differences, which hid the real one (only
+  the first ten print).
+- **NIGHTFIRE_RESTORE_DIRECT=1** (docs/driving/core-data.md) makes NIGHTFIRE_RESTORE_RANGES restore ports our own
+  code calls directly, which a bisect over this round needed.
 
 ## Odd things in the original, kept
 
@@ -127,7 +138,7 @@ perpendicular w, RScorchWorld's centre and cross w.
   anchor.
 - RMuzzleFlash::Init turns its static model a further quarter round each run. The bullet streaks' vertices 2 and 3
   get v = 0.1 (RBulletStreak::Init's switch on v % 6, from the jump table at 0x0009a1ac). RMissileStreak::Update
-  with count 0 at an odd tick writes points[-2]. RScorchWorld's level test compares with a double holding 0.85f.
+  with count 0 at an odd tick writes points[-2] and, as points[-1], its own header (shadow D leaves that case
+  out). RScorchWorld's level test compares with a double holding 0.85f.
 - RMissileCam::Draw points its GeoPrim at its own stack. RSniperZoom::Draw sets the shared material's state, not
-  its own; the outer ring's outer grey is never written, so always 0. ParticleTextureRect puts its first value in
-  both u and v, and keeps a third value for each texture that nothing reads.
+  its own; the outer ring's outer grey is never written, so always 0.

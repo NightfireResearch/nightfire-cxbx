@@ -112,7 +112,10 @@ mission archive is closed by then, so the ones that read it reopen it around the
 
 `NIGHTFIRE_RESTORE_RANGES=lo-hi[,lo-hi...]` (`src/driving/devtools/RestoreRanges.cpp`) puts the originals back
 in those address ranges at start-up - how the one real crash of this port (a misread rule-type table in the CARP
-'Rule' resolver, which crashed missions 1 and 6) was bisected to its function without rebuilding.
+'Rule' resolver, which crashed missions 1 and 6) was bisected to its function without rebuilding. With
+`NIGHTFIRE_RESTORE_DIRECT=1` as well, each restored port's own entry jumps to its original too, so our callers that
+call it directly reach the original as well (a port shorter than five bytes would overwrite its neighbour). A
+register adaptor's entry is redirected, not its C core: a port calling the core directly still reaches the port.
 
 ## 4. Departures and kept quirks
 

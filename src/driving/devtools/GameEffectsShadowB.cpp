@@ -830,8 +830,12 @@ void GameEffectsShadowB_Run(void) {
     TestSet();
 
     if (built != NULL) {
-        SetGlobals(NULL, 0, true);
+        // The destructor erases the object from the set, so it needs one (as the original's does)
+        VehicleParticleSet *set = NewSet();
+        SetGlobals(set, 0, true);
         built->Delete(1);
+        FreeSet(set);
+        SetGlobals(NULL, 0, true);
     }
     fgVehicleParticles = savedSet;
     GameSetCopy = savedGameSet;

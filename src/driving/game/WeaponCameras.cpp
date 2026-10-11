@@ -19,7 +19,7 @@
 #include "../engine/MissionManager.h"     // glbMissionManager
 #include "../engine/StaticInit.h"         // DestroyStatic_00200f60
 #include "../engine/UMemory.hpp"
-#include "../platform/RealMath.h"         // SineTurns, CosineTurns
+#include "../platform/RealMath.h"         // sin_fractionalangle, cos_fractionalangle
 #include "../render/Draw.h"               // SimpleTexturedMaterial
 #include "../render/Particles.h"          // RParticleSystemData
 #include "../render/PostProcessing.h"     // ThePostProcessing
@@ -110,6 +110,27 @@ uint32_t ShadeColour(int32_t alpha, int32_t grey) {
     colour = colour << 8 | uint32_t(grey);
     colour = colour << 8 | uint32_t(grey);
     return colour << 8 | uint32_t(grey);
+}
+
+// sin or cos of `turns` times `scale` on the x87, as the original multiplies FSIN's and FCOS's unrounded results
+__declspec(naked) double ScaledSine(float turns, float scale) {
+    __asm {
+        push dword ptr [esp + 4]
+        call sin_fractionalangle
+        add esp, 4
+        fmul dword ptr [esp + 8]
+        ret
+    }
+}
+
+__declspec(naked) double ScaledCosine(float turns, float scale) {
+    __asm {
+        push dword ptr [esp + 4]
+        call cos_fractionalangle
+        add esp, 4
+        fmul dword ptr [esp + 8]
+        ret
+    }
 }
 
 }  // namespace
@@ -250,12 +271,12 @@ void SniperRingPoint(Coord4 *position, Coord4 *uv, float radius, float turns) {
     float aimX = camera->unknown1D0;
     float aimY = camera->unknown1D4;
     int32_t width = fgRenderer->screenWidth;
-    position->x = float(SineTurns(turns) * radius + width * 0.5 + aimX);
+    position->x = float(ScaledSine(turns, radius) + width * 0.5 + aimX);
     int32_t height = fgRenderer->screenHeight;
-    double cosine = CosineTurns(turns);
+    double cosine = ScaledCosine(turns, radius);
     position->z = 1.0f;
     position->w = 1.0f;
-    position->y = float(cosine * radius + height * 0.5 + aimY);
+    position->y = float(cosine + height * 0.5 + aimY);
     uv->x = float(position->x / double(fgRenderer->screenWidth));
     uv->z = 1.0f;
     uv->w = 1.0f;
@@ -340,30 +361,34 @@ void RSniperZoom::Draw() {
 
 // ---- the vehicle particles' sprite rectangles
 
-// The original also keeps a third value for each texture (0x20, 0x40, 0x20, 0x40, 0x20; 0x100 for any other) and
-// never reads it.
+// A particle type's sprite in its texture, in 256ths: the corner (u, v) and the size, by the texture's name
 void ParticleTextureRect(uint32_t texture, float *rect) {
-    int32_t first = 0, second = 0;
+    int32_t u = 0, v = 0, size = 0x100;
     if (texture == ParticleTypeSMRT.texture) {
-        first = 0x60;
-        second = 0xa0;
+        u = 0x60;
+        v = 0xa0;
+        size = 0x20;
     } else if (texture == ParticleTypeRDDF.texture) {
-        first = 0x80;
-        second = 0x40;
+        u = 0x80;
+        v = 0x40;
+        size = 0x40;
     } else if (texture == ParticleTypeRDGR.texture) {
-        first = 0xa0;
-        second = 0xe0;
+        u = 0xa0;
+        v = 0xe0;
+        size = 0x20;
     } else if (texture == ParticleTypeSNOW.texture) {
-        first = 0x80;
-        second = 0x60;
+        u = 0x80;
+        v = 0x60;
+        size = 0x40;
     } else if (texture == ParticleTypeWATR.texture) {
-        first = 0x60;
-        second = 0xa0;
+        u = 0x60;
+        v = 0xa0;
+        size = 0x20;
     }
     rect[3] = 0.0f;
-    rect[0] = float((double(first) + kHalf) * kOneIn256);
-    rect[1] = float((double(first) + kHalf) * kOneIn256);
-    rect[2] = float((second - 1.0) * kOneIn256);
+    rect[0] = float((double(u) + kHalf) * kOneIn256);
+    rect[1] = float((double(v) + kHalf) * kOneIn256);
+    rect[2] = float((size - 1.0) * kOneIn256);
 }
 
 // AUTOLTCG

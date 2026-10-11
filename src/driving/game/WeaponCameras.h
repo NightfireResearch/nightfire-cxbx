@@ -110,8 +110,9 @@ void FUN_000a68f0();                    // naked: ESI position, EDI uv, then rad
 // ---- the vehicle particles' sprite rectangles
 
 // A particle system type's sprite in its texture (RParticleSystemData's u, v, uvSize and the word after), by
-// comparison of `texture` with the texture names of five of the vehicle particles' types: two values for each (0, 0
-// for any other); u and v get the first plus a half, the size the second less one, all over 256; the fourth word 0.
+// comparison of `texture` with the texture names of five of the vehicle particles' types: a corner and a size for
+// each (0, 0 and 0x100 for any other); u and v get the corner plus a half, the size less one, all over 256; the
+// fourth word 0.
 // (The name is ours.) The core of FUN_000a6cd0, which takes the texture in EAX and the rectangle in ECX.
 void ParticleTextureRect(uint32_t texture, float *rect);
 void FUN_000a6cd0();                    // naked: EAX texture, ECX rectangle

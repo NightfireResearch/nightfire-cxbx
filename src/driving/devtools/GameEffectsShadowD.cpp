@@ -137,7 +137,7 @@ const uint32_t kDbEnd = 0x00037ad0;
 // ---- results
 
 bool g_original;
-long g_cases, g_checks, g_differ, g_faults;
+long g_cases, g_checks, g_differ, g_faults, g_bothFaulted;
 int g_reported;
 unsigned g_x87, g_sse;
 
@@ -232,6 +232,9 @@ uint32_t Canon(const void *pointer) {
             return uint32_t(uintptr_t(r.game + (p - r.ours)));
     return uint32_t(uintptr_t(pointer));
 }
+
+// What a pointer into one of our globals reads on the side running: the original reads and writes the game's copy
+const void *SideData(const void *pointer);
 
 struct Snapshot {
     std::vector<uint8_t> bytes;
@@ -391,7 +394,7 @@ void LogRequest(const TexturedGeoPrim *request, uint32_t count, uint32_t uvBytes
 
 void __fastcall FakeVolatileDraw(UVolatileMaterial *material, int, int primitive, int count, MATRIX4 *transform) {
     Log(kTagVolatile);
-    Log(uint32_t(uintptr_t(material)));
+    Log(Canon(material));
     Log(uint32_t(primitive));
     Log(uint32_t(count));
     LogBytes(transform, transform != NULL ? sizeof(MATRIX4) : 0);
@@ -408,6 +411,10 @@ void __fastcall FakeTexturedDraw(USimpleTexturedMaterial *material, int, int pri
     LogRequest(TexturedRequests[TexturedRequestIndex], uint32_t(count), sizeof(Coord4));
 }
 
+const void *SideData(const void *pointer) {
+    return g_original ? reinterpret_cast<const void *>(uintptr_t(Canon(pointer))) : pointer;
+}
+
 void LogGeoPrim(const TexturedGeoPrim *geoPrim) {
     if (geoPrim == NULL) {
         Log(0);
@@ -416,24 +423,24 @@ void LogGeoPrim(const TexturedGeoPrim *geoPrim) {
     Log(geoPrim->method != NULL);
     Log(geoPrim->state.count);
     Log(Canon(geoPrim->state.data));
-    LogBytes(geoPrim->state.data, geoPrim->state.data != NULL ? sizeof(EAGL::GeoPrimState) : 0);
+    LogBytes(SideData(geoPrim->state.data), geoPrim->state.data != NULL ? sizeof(EAGL::GeoPrimState) : 0);
     Log(geoPrim->texture.count);
     Log(uint32_t(uintptr_t(geoPrim->texture.data)));
     Log(geoPrim->vertexCount.count);
     uint32_t vertices = 0;
     if (geoPrim->vertexCount.data != NULL)
-        memcpy(&vertices, geoPrim->vertexCount.data, 4);
+        memcpy(&vertices, SideData(geoPrim->vertexCount.data), 4);
     Log(vertices);
     if (vertices > kMaxLoggedVertices)
         vertices = kMaxLoggedVertices;
     Log(geoPrim->modelViewProjection.count);
     Log(uint32_t(uintptr_t(geoPrim->modelViewProjection.data)));
     Log(geoPrim->positions.count);
-    LogBytes(geoPrim->positions.data, vertices * sizeof(Coord4));
+    LogBytes(SideData(geoPrim->positions.data), vertices * sizeof(Coord4));
     Log(geoPrim->colours.count);
-    LogBytes(geoPrim->colours.data, vertices * 4);
+    LogBytes(SideData(geoPrim->colours.data), vertices * 4);
     Log(geoPrim->texCoords.count);
-    LogBytes(geoPrim->texCoords.data, vertices * sizeof(Coord4));
+    LogBytes(SideData(geoPrim->texCoords.data), vertices * sizeof(Coord4));
 }
 
 void __fastcall FakeModelDraw(EAGL::DynamicModel *model, int) {
@@ -606,6 +613,9 @@ bool Hooked(std::initializer_list<int> which) {
 
 typedef void (*SideFn)(void);
 
+const char *g_caseName = "";
+long g_caseIndex;
+
 void Window(bool original) {
     for (unsigned at : kEntries)
         XbeOriginal_Restore(at, original);
@@ -619,7 +629,9 @@ void RunSide(SideFn run, bool original) {
     __try {
         run();
     } __except (EXCEPTION_EXECUTE_HANDLER) {
-        g_faults++;
+        if (g_faults++ < 10)
+            printf("[gameeffectsshadowd]   %s #%ld: the %s faulted\n", g_caseName, g_caseIndex,
+                   original ? "original" : "port");
     }
 #else
     run();
@@ -631,19 +643,32 @@ void RunSide(SideFn run, bool original) {
 
 // The inputs are in place (ours): both sides from them, the results compared, everything put back
 void RunCase(const char *what, long index, SideFn run, const Snapshot &before) {
+    g_caseName = what;
+    g_caseIndex = index;
     Lend();
     Snapshot inputs, original, port;
     Capture(&inputs);
     g_logs[0].clear();
     g_logs[1].clear();
+    long faults = g_faults;
     RunSide(run, true);
+    bool originalFaulted = g_faults != faults;
     Capture(&original);
     Restore(inputs);
+    faults = g_faults;
     RunSide(run, false);
+    bool portFaulted = g_faults != faults;
     Capture(&port);
     g_cases++;
-    CompareResults(what, index, original, port);
-    CompareLogs(what, index);
+    // Two sides that both fault stop at different stores: only one-sided faults count
+    if (originalFaulted && portFaulted) {
+        g_bothFaulted++;
+    } else {
+        if (originalFaulted != portFaulted)
+            Report(what, index, originalFaulted ? "only the original faulted" : "only the port faulted");
+        CompareResults(what, index, original, port);
+        CompareLogs(what, index);
+    }
     Restore(before);
 }
 
@@ -837,6 +862,11 @@ void TestMissileStreaks(const Snapshot &before) {
         ShadowRandomSeed = Next() & 0xffff;
         g_in.position = { Uniform(-200.0f, 200.0f), Uniform(-20.0f, 20.0f), Uniform(-200.0f, 200.0f), 1.0f };
         g_in.tickOnly = Chance(10);
+        // With no points at an odd tick the second point lands on the streak's own header, and the type read
+        // back indexes the width and jitter tables by a float's bits: what that reads (or whether it faults)
+        // depends on where each side's tables lie, so those cases lay a pair first
+        if (g_streak->count < 2 && g_streak->tick % 2 != 0)
+            g_streak->tick++;
         RunCase("RMissileStreak::Update", i, SideStreakUpdate, before);
     }
     bool geoPrims = MissileStreakGeoPrims[0] != NULL && MissileStreakGeoPrims[1] != NULL &&
@@ -1306,6 +1336,7 @@ void GameEffectsShadowD_Run(void) {
            "zoom vs originals: %ld cases, %ld checks, %ld differ%s\n",
            g_cases, g_checks, g_differ, g_faults != 0 ? " (with faults)" : "");
     if (g_faults != 0)
-        printf("[gameeffectsshadowd]   %ld calls faulted\n", g_faults);
+        printf("[gameeffectsshadowd]   %ld calls faulted (%ld cases on both sides, not compared)\n", g_faults,
+               g_bothFaulted);
     fflush(stdout);
 }

@@ -425,12 +425,21 @@ enum CallKind : uint32_t {
 
 // ---- the fakes
 
+alignas(16) MATRIX4 g_transform;
+
+// A transform handed on: the case's own, or one the caller built on its stack (compared by value)
+uint32_t TransformWord(const MATRIX4 *transform) {
+    return transform == &g_transform ? 1 : 0;
+}
+
 void FakeMuzzleDraw(const MATRIX4 *transform, const Coord4 *position, const Coord4 *direction, int type, float size) {
-    Log(kCallMuzzleDraw, { Word(transform), Word(position), Word(direction), uint32_t(type), Bits(size) });
+    Log(kCallMuzzleDraw, { TransformWord(transform), Word(position), Word(direction), uint32_t(type), Bits(size) },
+        transform, sizeof(*transform));
 }
 
 void FakeMuzzleDrawPOV(const MATRIX4 *transform, const Coord4 *position, int type, float size) {
-    Log(kCallMuzzleDrawPOV, { Word(transform), Word(position), uint32_t(type), Bits(size) });
+    Log(kCallMuzzleDrawPOV, { TransformWord(transform), Word(position), uint32_t(type), Bits(size) }, transform,
+        sizeof(*transform));
 }
 
 void __fastcall FakeUpdateCar(void *self, int, bool active) {
@@ -438,7 +447,7 @@ void __fastcall FakeUpdateCar(void *self, int, bool active) {
 }
 
 void FakeShootingEffect(const MATRIX4 *transform, float intensity) {
-    Log(kCallShootingEffect, { Word(transform), Bits(intensity) });
+    Log(kCallShootingEffect, { TransformWord(transform), Bits(intensity) }, transform, sizeof(*transform));
 }
 
 void FakeSendPerViewPort() {
@@ -788,7 +797,6 @@ double &Result(bool original) {
 
 // ---- inputs shared by several cases
 
-alignas(16) MATRIX4 g_transform;
 int g_argInt[4];
 float g_argFloat[2];
 alignas(16) Coord3 g_point, g_direction;
