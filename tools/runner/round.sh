@@ -6,18 +6,23 @@
 #   shadow:   every shadow test at once on each mission - <prefix>_shadow_m<n>
 #
 # Syncs and builds driving + drivinginject first, then shares the runs out with parallel.sh (RUNNER_SLOTS slots,
-# default 3). Results in build/remote/<name>; the summary in build/remote/<prefix>.summary. Settings (environment):
-# BASE=<prefix> compares each lockstep run with build/baselines/<BASE>_m<n>_<idle|accelerate> (tools/runner/compare.py),
-# SKIP=<regex> leaves out shadow variables matching it. Missions default to 1-8.
+# default 8): the shadow runs, then the lockstep runs, as two batches. A lockstep run repeats exactly only while the
+# runner's CPU has room - 16 at once on its 8 cores saturated it, and frames and sound traces differed - and the
+# shadow runs are the heavy ones, so the two never share the machine. Results in build/remote/<name>; the summary in
+# build/remote/<prefix>.summary. Settings (environment): BASE=<prefix> compares each lockstep run with
+# build/baselines/<BASE>_m<n>_<idle|accelerate> (tools/runner/compare.py), SKIP=<regex> leaves out shadow variables
+# matching it. Missions default to 1-8.
 set -e
 P=$1; WHAT=${2:-all}; MS=${3:-1 2 3 4 5 6 7 8}
-[ -n "$P" ] || { sed -n '2,12p' "$0"; exit 2; }
+[ -n "$P" ] || { sed -n '2,14p' "$0"; exit 2; }
 HERE=$(cd "$(dirname "$0")" && pwd)
 REPO=$(cd "$HERE/../.." && pwd)
 cd "$REPO"
 mkdir -p build/remote
-LIST=build/remote/$P.list
+SHADOW_LIST=build/remote/$P.shadow.list
+LOCKSTEP_LIST=build/remote/$P.lockstep.list
 SUMMARY=build/remote/$P.summary
+export RUNNER_SLOTS=${RUNNER_SLOTS:-8}
 
 "$HERE/remote.sh" sync > /dev/null
 "$HERE/remote.sh" build driving drivinginject | grep " error " && exit 1
@@ -25,28 +30,32 @@ SUMMARY=build/remote/$P.summary
 TICKS=500,1000,1500,2000,2500,3000,3500,4000,4500,5000,5500,6000,6500,7000,8000,9000
 SHADOWS=$(grep -rhoE '"NIGHTFIRE_[A-Z0-9]*SHADOW[A-Z0-9]*"' src/driving src/inject_driving.cpp | tr -d '"' | sort -u |
           grep -vE "${SKIP:-^$}" | sed 's/$/=1/' | tr '\n' ';' | sed 's/;$//')
-: > "$LIST"
-# The shadow runs first: they take longest
-if [ "$WHAT" != lockstep ]; then
-    for m in $MS; do
-        echo "${P}_shadow_m$m -Exe 'Release\\driving.exe' -GameArgs '-mission $m' -GameEnv '$SHADOWS' -DumpAfterMs 20000 -StopPattern 'dumping frame' -StartupWaitMs 3000 -TailWaitMs 1200000" >> "$LIST"
-    done
-fi
-if [ "$WHAT" != shadow ]; then
-    for m in $MS; do
+: > "$SHADOW_LIST"
+: > "$LOCKSTEP_LIST"
+for m in $MS; do
+    if [ "$WHAT" != lockstep ]; then
+        echo "${P}_shadow_m$m -Exe 'Release\\driving.exe' -GameArgs '-mission $m' -GameEnv '$SHADOWS' -DumpAfterMs 20000 -StopPattern 'dumping frame' -StartupWaitMs 3000 -TailWaitMs 1200000" >> "$SHADOW_LIST"
+    fi
+    if [ "$WHAT" != shadow ]; then
         for h in idle accelerate; do
             hold=""; [ $h = accelerate ] && hold="-GameHold accelerate"
-            echo "${P}_m${m}_$h -Exe 'Release\\driving.exe' -GameArgs '-mission $m' $hold -GameEnv 'NIGHTFIRE_LOCKSTEP=1;NIGHTFIRE_DUMP_TICKS=$TICKS;NIGHTFIRE_SNDTRACE=1;NIGHTFIRE_SNDLOCKSTEP=1' -StopPattern 'the last' -StartupWaitMs 3000 -TailWaitMs 1200000" >> "$LIST"
+            echo "${P}_m${m}_$h -Exe 'Release\\driving.exe' -GameArgs '-mission $m' $hold -GameEnv 'NIGHTFIRE_LOCKSTEP=1;NIGHTFIRE_DUMP_TICKS=$TICKS;NIGHTFIRE_SNDTRACE=1;NIGHTFIRE_SNDLOCKSTEP=1' -StopPattern 'the last' -StartupWaitMs 3000 -TailWaitMs 1200000" >> "$LOCKSTEP_LIST"
         done
-    done
-fi
-"$HERE/parallel.sh" "$LIST" || echo "!! not every run finished: see the summary"
+    fi
+done
+for list in "$SHADOW_LIST" "$LOCKSTEP_LIST"; do
+    [ -s "$list" ] || continue
+    "$HERE/parallel.sh" "$list" || echo "!! not every run finished: see the summary"
+done
 
 : > "$SUMMARY"
 for m in $MS; do
-    if [ "$WHAT" != lockstep ]; then
-        L=build/remote/${P}_shadow_m$m/drive.log
-        [ -f "$L" ] || { echo "== shadows, mission $m: NO LOG" >> "$SUMMARY"; continue; }
+    L=build/remote/${P}_shadow_m$m/drive.log
+    if [ "$WHAT" = lockstep ]; then
+        :
+    elif [ ! -f "$L" ]; then
+        echo "== shadows, mission $m: NO LOG" >> "$SUMMARY"
+    else
         # A summary line names its differences. Passes: "0 differ", "0 of n cases differ", "same, n NaN-only
         # differences" (the math shadows) and a "differ by kind:" list of zeros
         grep -a ' differ' "$L" | grep -av ' 0 differ\|: 0 of [0-9]* cases differ\|: same, [0-9]* NaN-only' |

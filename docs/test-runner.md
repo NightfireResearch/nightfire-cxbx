@@ -58,28 +58,48 @@ so slots never share a file. Each slot also has its own job files (`C:\nightfire
 game's DLL.
 
 ```
-tools/runner/remote.sh setup 4                       # the tasks: NightfireRunner and NightfireRunner1-4 (once)
-tools/runner/remote.sh slots 4                       # refresh slots 1-4 from the checkout's build
+tools/runner/remote.sh setup 8                       # the tasks: NightfireRunner and NightfireRunner1-8 (once)
+tools/runner/remote.sh slots 8                       # refresh slots 1-8 from the checkout's build
 RUNNER_SLOT=2 tools/runner/remote.sh drive m2 "..."  # one run in slot 2
-tools/runner/parallel.sh runs.list 4                 # "<name> <drive_game.ps1 arguments>" per line, over 4 slots
-RUNNER_SLOTS=4 BASE=lbase tools/runner/round.sh new  # the full round: sync, build, every run, summary
+tools/runner/parallel.sh runs.list                   # "<name> <drive_game.ps1 arguments>" per line, over 8 slots
+BASE=lbase tools/runner/round.sh new                 # the full round: sync, build, every run, summary
 python tools/runner/compare.py build/baselines/lbase_m1_idle build/remote/new_m1_idle
 ```
 
 `round.sh <prefix> [lockstep|shadow|all] [missions]` runs the lockstep runs (each mission to tick 9000, idle and
 accelerating, 16 frames and the sound call trace, sound in lockstep) and the shadow runs (every shadow at once, per
-mission). It writes the summary to `build/remote/<prefix>.summary`. With `BASE=<prefix>`, it compares each lockstep
-run against `build/baselines/<BASE>_m<n>_<idle|accelerate>`.
+mission). It runs the shadow runs and the lockstep runs as two separate batches, and writes the summary to
+`build/remote/<prefix>.summary`. With `BASE=<prefix>`, it compares each lockstep run against
+`build/baselines/<BASE>_m<n>_<idle|accelerate>`.
 
 Only runs that send no keys can share the desktop. A lockstep run simulates exactly one tick per rendered frame,
-holds the sound in lockstep, and applies `-GameHold` inside the game, so load and focus change only how long it takes.
-Shadow runs send no keys either. `parallel.sh` refuses a list with `-Keys`, `-HoldKey` or `-AfterHoldKeys`. Those runs
+holds the sound in lockstep, and applies `-GameHold` inside the game, so focus does not matter. Load does, past a
+point: a run is paced to 50 frames a second and mostly waits, but once the CPU saturates the runs stop repeating
+exactly (below). Shadow runs send no keys either. `parallel.sh` refuses a list with `-Keys`, `-HoldKey` or `-AfterHoldKeys`. Those runs
 go to the serial `remote.sh drive`. Refresh the slots (`parallel.sh` does) only while none is running.
+
+Two users of the runner at once (two sessions, say) each need their own slots and checkout: `RUNNER_SLOT_FIRST=9`
+makes `slots` and `parallel.sh` use slots 9 onwards, and `RUNNER_REPO` points at a second checkout. Their runs share
+the CPU, and the table below applies to the total.
 
 Checked on 11 October 2026: three lockstep runs at once (mission 1 twice, mission 6 accelerating) matched serial runs
 of the same build, with 0 pixels different and identical sound traces to tick 9000. A full round on 4 slots (16
 lockstep runs and 8 shadow runs) took 35 minutes, against about four hours serially, and every lockstep run matched
 its serial baseline.
+
+How many slots: the runner (i7-9700K, 8 cores; RTX 3090; 32 GB) runs the 16 lockstep runs
+
+| slots | 16 lockstep runs | CPU | result |
+| --- | --- | --- | --- |
+| 4 | 16 min | not measured | exact |
+| 8 | 8 min | 35-78% | exact |
+| 16 | 5 min | 97-100% | 10 runs' frames and 2 sound traces differ |
+
+Memory (about 2 GB for 16 games) and the GPU (at most about 80%, 2 GB) are nowhere near their limits. The CPU is.
+So 8 is the default (`RUNNER_SLOTS`), and `round.sh` keeps the shadow runs, the heavy ones, out of the lockstep
+batch. That a starved game diverges at all means something in a lockstep run still depends on wall time, perhaps a
+loader thread finishing at a different tick. It does not matter while the runner has room, but it would be worth
+finding.
 
 `parallel.sh` reads its list on a file descriptor of its own and gives `remote.sh` an empty stdin. `ssh` reads its
 stdin, so inside a plain `while read` loop it swallows the rest of the list: the first try ran 4 of 24 runs and

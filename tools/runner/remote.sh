@@ -8,13 +8,14 @@
 #   tools/runner/remote.sh desktop '<command>'         # any command, in the desktop session, from the checkout
 #   tools/runner/remote.sh drive <name> "<args>"       # tools/drive_game.ps1 there; log and dumped frames to build/remote/<name>
 #   tools/runner/remote.sh ssh '<command>'             # any command over SSH (no desktop: fine for builds, not for D3D)
-#   tools/runner/remote.sh slots [n]                   # n run folders (default 3), each a copy of the built Release/
+#   tools/runner/remote.sh slots [n]                   # n run folders (default 8), each a copy of the built Release/
 #   tools/runner/remote.sh setup [n]                   # the scheduled tasks: the serial one and one per slot
 #
 # Settings (environment): RUNNER_HOST (vr-desktop), RUNNER_USER (Charlie), RUNNER_KEY (~/.ssh/nightfire_runner),
 # RUNNER_REPO (/c/nightfire-cxbx, the checkout there), RUNNER_SLOT (unset: "desktop", "drive" and "run" use the
 # checkout's Release/ and the serial task; a number: that slot's run folder and task, so several run at once -
-# tools/runner/parallel.sh shares a list of drive runs out over the slots).
+# tools/runner/parallel.sh shares a list of drive runs out over the slots), RUNNER_SLOT_FIRST (1: the first slot
+# "slots" and parallel.sh use, so that two users of the runner can take separate slots - 1-8 and 9-16, say).
 #
 # A runner is only a speed-up: everything here also runs locally (tools/ui/run_menu.sh, cmake), and nothing may
 # require one. The defaults are Charlie's runner, reachable only on Charlie's home LAN - not a public machine, so not usable by
@@ -117,21 +118,21 @@ ssh)
 slots)
     # Fresh run folders from the checkout's build: its executables, DLLs and maps, settings.ini, saves/ and tdata/.
     # After "build", before runs start in the slots - never while one is running.
-    n=${1:-3}
-    for i in $(seq 1 "$n"); do
+    n=${1:-8}; first=${RUNNER_SLOT_FIRST:-1}
+    for i in $(seq "$first" $((first + n - 1))); do
         d=$SLOTS/$i
         r "mkdir -p $d/Release && cd $d/Release && find . -maxdepth 1 -type f -delete && rm -rf saves tdata cache && \
            cp $RREPO/Release/*.exe $RREPO/Release/*.dll $RREPO/Release/*.map $RREPO/Release/settings.ini . && \
            cp -r $RREPO/Release/saves $RREPO/Release/tdata . && \
            { [ -e $d/disc ] || powershell -NoProfile -Command \"New-Item -ItemType Junction -Path '$(win $d)/disc' -Target '$(win $RREPO)/disc'\" > /dev/null; }"
     done
-    echo "slots 1-$n refreshed from $RREPO/Release"
+    echo "slots $first-$((first + n - 1)) refreshed from $RREPO/Release"
     ;;
 setup)
     # The scheduled tasks that run jobs in the desktop session: the serial one, NightfireRunner, and one per slot,
     # NightfireRunner1... Run only when the user is logged on (/IT), so they start in their interactive session.
     # Started on demand by "desktop"; the trigger date is never reached.
-    n=${1:-3}
+    n=${1:-8}
     for i in '' $(seq 1 "$n"); do
         r "mkdir -p $JOBS${i:+/slot$i} && schtasks //create //f //tn NightfireRunner$i //it //ru $USER_ //sc once //sd 01/01/2099 //st 00:00 \
            //tr '\"C:\\Program Files\\Git\\bin\\bash.exe\" -l $RREPO/tools/runner/desktop_job.sh $i' > /dev/null"
@@ -139,7 +140,7 @@ setup)
     echo "tasks NightfireRunner and NightfireRunner1-$n"
     ;;
 *)
-    sed -n '2,25p' "$0"
+    sed -n '2,28p' "$0"
     exit 2
     ;;
 esac

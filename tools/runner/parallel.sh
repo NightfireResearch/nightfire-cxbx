@@ -1,6 +1,7 @@
 #!/bin/sh
 # tools/runner/parallel.sh <list> [slots]: the drive runs in <list> shared out over the runner's slots (default
-# RUNNER_SLOTS, else 3), each slot taking the next run as it finishes one. A line is "<name> <drive_game.ps1
+# RUNNER_SLOTS, else 8: more saturate the runner's CPU, and lockstep runs stop repeating exactly - see
+# docs/test-runner.md), each slot taking the next run as it finishes one. A line is "<name> <drive_game.ps1
 # arguments>", as for "remote.sh drive"; blank lines and lines starting with # are skipped. Results land in
 # build/remote/<name> as for a serial run. The build already on the runner is used: sync and build first, then this
 # refreshes the slots from it.
@@ -8,8 +9,8 @@
 # Only runs that need no window focus can share the desktop: lockstep runs (-GameHold holds a key inside the game)
 # and shadow runs. Runs that send keys (-Keys, -HoldKey) go to the serial "remote.sh drive", one at a time.
 set -e
-LIST=$1; N=${2:-${RUNNER_SLOTS:-3}}
-[ -f "$LIST" ] || { sed -n '2,9p' "$0"; exit 2; }
+LIST=$1; N=${2:-${RUNNER_SLOTS:-8}}
+[ -f "$LIST" ] || { sed -n '2,10p' "$0"; exit 2; }
 HERE=$(cd "$(dirname "$0")" && pwd)
 if grep -v '^#' "$LIST" | grep -qE -- "-Keys|-HoldKey|-AfterHoldKeys"; then
     echo "parallel: $LIST has runs that send keys; run those with remote.sh drive"; exit 2
@@ -35,7 +36,8 @@ worker() {   # slot: claims each line no other slot has (mkdir is atomic) and ru
         echo "[$(date +%H:%M:%S)] slot $1: $name $status in $(( $(date +%s) - t ))s ($(ls "$CLAIMS" | grep -c done)/$total done)"
     done 3< "$LIST"
 }
-for s in $(seq 1 "$N"); do worker "$s" & done
+first=${RUNNER_SLOT_FIRST:-1}
+for s in $(seq "$first" $((first + N - 1))); do worker "$s" & done
 wait
 finished=$(ls "$CLAIMS" | grep -c done || true)
 rm -rf "$CLAIMS"
