@@ -65,6 +65,9 @@ public:
     void Set(int bank, int patch);                                                  // 0x00123870
     // Plays the view at `volume` scaled by the mix's volume, counting it in the mix.
     void Play(int view, float volume, float pitch, float azimuth, float delay, float fxLevel);   // 0x00124690
+    // Each view not finished and without an SND voice: AWorldSound::Play starts it again (Ghidra: FUN_0012dd80;
+    // the name is ours; game/WeaponSound.cpp).
+    void Rewind();                                                                  // 0x0012dd80
 
     // Starts, updates or retires the SND voices of every active view (each audio frame).
     static void PlayVoices();                                                       // 0x00123a30

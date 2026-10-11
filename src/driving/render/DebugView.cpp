@@ -8,6 +8,7 @@
 #include "../../helpers.h"
 #include "../eagl/GeoPrimState.h"
 #include "../eagl/RenderContext.h"
+#include "../game/DebugAudio.h"
 #include "../engine/UMemory.hpp"
 #include "../physics/RigidBody.h"       // PVehicle
 #include "Draw.h"
@@ -27,10 +28,6 @@
 bool DebugViewEnabled;
 // XBE_GLOBAL(0x001c45d4, 4)
 float DebugSpeedFraction = 0.85f;                // written only here (the name is ours)
-
-// ---- the game's code not ported yet
-
-#define DAudio_Draw ((void (*)())0x00037620)
 
 namespace {
 
@@ -146,5 +143,5 @@ void RRenderDebugViewScreenSpace::DoRender() {
     if (fraction < 0.0f)
         fraction = 0.0f;
     DebugSpeedFraction = fraction;
-    DAudio_Draw();
+    DAudio::Draw();
 }

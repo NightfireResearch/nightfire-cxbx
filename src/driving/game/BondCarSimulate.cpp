@@ -12,7 +12,9 @@
 #include "BondCarState.h"           // CarSurface, the BondCar_* tuning
 #include "Missile.h"
 #include "Vehicle.h"
+#include "FingoDeathSound.h"
 #include "VehicleSound.h"
+#include "VehicleSoundKinds.h"
 #include "../anim/AnimEngine.h"
 #include "../audio/Bank.h"
 #include "../audio/Sound.h"
@@ -71,26 +73,16 @@ const char *OverrideCarType;
 #define GHud_TriggerDamageFlash ((void (__fastcall *)(void *, int, float damage))0x000d87a0)
 // AOneShotSound's constructor: a patch of a bank at a place
 #define AOneShotSound_Construct ((AOneShotSound *(__fastcall *)(void *, int, int bank, int patch, const Coord3 *position, const Coord3 *velocity, float volume, const char *mix))0x000476f0)
-// The engine sounds' constructors and methods (AVehicle and its kinds)
-#define ATrafficVehicle_Construct ((ABaseSound *(__fastcall *)(void *, int, const char *engine, const char *mix))0x0012cb90)
-#define AHelicopter_Construct ((ABaseSound *(__fastcall *)(void *, int, const char *mix))0x0012c7f0)
-#define APlayerTank_Construct ((ABaseSound *(__fastcall *)(void *, int, const char *engine))0x0012c550)
-#define ASubmersible_Construct ((ABaseSound *(__fastcall *)(void *, int, const char *mix))0x0012b960)
-#define ASnowMobile_Construct ((ABaseSound *(__fastcall *)(void *, int, const char *mix))0x0012b5f0)
-#define AUltraLite_Construct ((ABaseSound *(__fastcall *)(void *, int))0x0012a440)
-#define AFingoDeath_Construct ((ABaseSound *(__fastcall *)(void *, int))0x00129a30)
-#define APlayerVehicle_Construct ((ABaseSound *(__fastcall *)(void *, int, const char *engine))0x001284b0)
-#define APlayerHeli_Construct ((ABaseSound *(__fastcall *)(void *, int))0x00128a40)
-#define AVehicle_ChooseHorn ((void (__fastcall *)(ABaseSound *, int, const char *horn, float volume, float pitch))0x00120960)
-#define AVehicle_ActivateGun ((void (__fastcall *)(ABaseSound *, int, const char *mix))0x0011e9a0)
-#define AVehicle_ActivateWind ((void (__fastcall *)(ABaseSound *, int))0x0011eaf0)
-#define ATrafficVehicle_AddSiren ((void (__fastcall *)(ABaseSound *, int, const char *patch))0x0012ce30)
-// The gun's fire patch, the string passed by value (the callee destroys it)
-#define AGun_SetFirePatch ((void (__fastcall *)(void *, int, GameStd::String patch))0x001296b0)
 
 namespace {
 
 const Coord3 kZero = {0.0f, 0.0f, 0.0f};
+
+// A block for a sound of the kind, from ABaseSound's operator new
+template <class Kind>
+Kind* NewSound(const char *name) {
+    return static_cast<Kind *>(ABaseSound::OperatorNew(sizeof(Kind), name));
+}
 
 // The weapon manager (SWeaponManager, not ported): what Simulate reads
 struct BondCarWeaponSlot {
@@ -363,61 +355,60 @@ void PBondCar::InitAudioObject(int carClass) {
     float maxDistanceSq = 160000.0f;
     switch (carClass) {
     case kPlayerCar: {
-        void *block;
         if (_stricmp(carType, "tank") == 0) {
-            block = ABaseSound::OperatorNew(0x210, "APlayerTank");
-            audio = block != NULL ? APlayerTank_Construct(block, 0, engine) : NULL;
+            APlayerTank *sound = NewSound<APlayerTank>("APlayerTank");
+            audio = sound != NULL ? sound->Construct(engine) : NULL;
         } else if (_stricmp(carType, "helicopter") == 0 || _stricmp(carType, "helivanquish") == 0) {
-            block = ABaseSound::OperatorNew(0x210, "APlayerHeli");
-            audio = block != NULL ? APlayerHeli_Construct(block, 0) : NULL;
+            APlayerHeli *sound = NewSound<APlayerHeli>("APlayerHeli");
+            audio = sound != NULL ? sound->Construct() : NULL;
         } else if (_stricmp(carType, "vanquishsub") == 0) {
-            block = ABaseSound::OperatorNew(0x240, "ASubmersible");
-            audio = block != NULL ? ASubmersible_Construct(block, 0, "Sub") : NULL;
+            ASubmersible *sound = NewSound<ASubmersible>("ASubmersible");
+            audio = sound != NULL ? sound->Construct("Sub") : NULL;
         } else if (_stricmp(carType, "supersnow") == 0) {
-            block = ABaseSound::OperatorNew(0x260, "ASnowMobile");
-            audio = block != NULL ? ASnowMobile_Construct(block, 0, "SupSnow") : NULL;
+            ASnowMobile *sound = NewSound<ASnowMobile>("ASnowMobile");
+            audio = sound != NULL ? sound->Construct("SupSnow") : NULL;
         } else if (_stricmp(carType, "ultralight") == 0) {
-            block = ABaseSound::OperatorNew(0x230, "AUltraLite");
-            audio = block != NULL ? AUltraLite_Construct(block, 0) : NULL;
+            AUltraLite *sound = NewSound<AUltraLite>("AUltraLite");
+            audio = sound != NULL ? sound->Construct() : NULL;
         } else if (_stricmp(carType, "fodbase") == 0) {
-            block = ABaseSound::OperatorNew(0x200, "AFingoDeath");
-            audio = block != NULL ? AFingoDeath_Construct(block, 0) : NULL;
+            AFingoDeath *sound = NewSound<AFingoDeath>("AFingoDeath");
+            audio = sound != NULL ? sound->Construct() : NULL;
         } else if (_stricmp(carType, "jungle_truck") == 0) {
-            block = ABaseSound::OperatorNew(0x240, "ATrafficVehicle");
-            audio = block != NULL ? ATrafficVehicle_Construct(block, 0, engine, "Traffic Cars") : NULL;
-            AVehicle_ActivateGun(audio, 0, "Machine Gun");
-            AVehicle_ActivateWind(audio, 0);
-            AVehicle *sound = static_cast<AVehicle *>(audio);
-            sound->unknownD0 = 7;
+            ATrafficVehicle *block = NewSound<ATrafficVehicle>("ATrafficVehicle");
+            ATrafficVehicle *sound = block != NULL ? block->Construct(engine, "Traffic Cars") : NULL;
+            audio = sound;
+            sound->ActivateGun("Machine Gun");
+            sound->ActivateWind();
+            sound->vehicleType = kVehicleSoundPlayerCar;
             GameStd::String patch;
             patch.ConstructText("SFX_mntmachfire");
-            AGun_SetFirePatch(sound->gun, 0, patch);
-            sound->unknownC5 = 0;
+            sound->gun->SetFirePatch(patch);
+            sound->gunLoops = 0;
         } else {
-            block = ABaseSound::OperatorNew(0x220, "APlayerVehicle");
-            audio = block != NULL ? APlayerVehicle_Construct(block, 0, engine) : NULL;
+            APlayerVehicle *sound = NewSound<APlayerVehicle>("APlayerVehicle");
+            audio = sound != NULL ? sound->Construct(engine) : NULL;
         }
         audio->volume = volume;
         break;
     }
     case kCarClass2: {
-        void *block;
         if (isHeli) {
-            block = ABaseSound::OperatorNew(sizeof(AHelicopter), "AHelicopter");
-            audio = block != NULL ? AHelicopter_Construct(block, 0, "Helicopter") : NULL;
+            AHelicopter *sound = NewSound<AHelicopter>("AHelicopter");
+            audio = sound != NULL ? sound->Construct("Helicopter") : NULL;
         } else {
-            block = ABaseSound::OperatorNew(0x240, "ATrafficVehicle");
-            audio = block != NULL ? ATrafficVehicle_Construct(block, 0, engine, "Opponents") : NULL;
+            ATrafficVehicle *sound = NewSound<ATrafficVehicle>("ATrafficVehicle");
+            audio = sound != NULL ? sound->Construct(engine, "Opponents") : NULL;
         }
         audio->volume = volume;
         if (isHeli) {
             int roll = SimulationRandom->Generate();
-            static_cast<AHelicopter *>(audio)->randomPhase = (float)(double(roll) * 0.2f * kRandomScale);
+            static_cast<AHelicopter *>(audio)->pitchOffset = (float)(double(roll) * 0.2f * kRandomScale);
         } else {
             int roll = SimulationRandom->Generate();
-            static_cast<ATrafficVehicle *>(audio)->randomPhase = (float)(double(roll) * 0.2f * kRandomScale);
+            ATrafficVehicle *sound = static_cast<ATrafficVehicle *>(audio);
+            sound->pitchOffset = (float)(double(roll) * 0.2f * kRandomScale);
             if (hasSiren)
-                ATrafficVehicle_AddSiren(audio, 0, "SFX_copsiren");
+                sound->AddSiren("SFX_copsiren");
         }
         if (isHeli || isFlying) {
             minDistance = 100.0f;
@@ -429,21 +420,23 @@ void PBondCar::InitAudioObject(int carClass) {
     case kCarClass4: {
         const char *mix = _stricmp(engine, "750") == 0 || _stricmp(engine, "Nsub") == 0 ? "Opponents"
                                                                                              : "Friendly";
-        void *block = ABaseSound::OperatorNew(0x240, "ATrafficVehicle");
-        audio = block != NULL ? ATrafficVehicle_Construct(block, 0, engine, mix) : NULL;
+        ATrafficVehicle *block = NewSound<ATrafficVehicle>("ATrafficVehicle");
+        ATrafficVehicle *sound = block != NULL ? block->Construct(engine, mix) : NULL;
+        audio = sound;
         int roll = SimulationRandom->Generate();
-        static_cast<ATrafficVehicle *>(audio)->randomPhase = (float)(double(roll) * 0.2f * kRandomScale);
+        sound->pitchOffset = (float)(double(roll) * 0.2f * kRandomScale);
         if (hasSiren)
-            ATrafficVehicle_AddSiren(audio, 0, "SFX_copsiren");
+            sound->AddSiren("SFX_copsiren");
         audio->volume = volume;
         break;
     }
     default: {
-        void *block = ABaseSound::OperatorNew(0x240, "ATrafficVehicle");
-        audio = block != NULL ? ATrafficVehicle_Construct(block, 0, engine, "Traffic Cars") : NULL;
+        ATrafficVehicle *block = NewSound<ATrafficVehicle>("ATrafficVehicle");
+        ATrafficVehicle *sound = block != NULL ? block->Construct(engine, "Traffic Cars") : NULL;
+        audio = sound;
         float hornPitch = attributes.LookupFloat("SFX_HORNPITCH", NULL);
         const char *horn = attributes.LookupString("SFX_HORN", NULL);
-        AVehicle_ChooseHorn(audio, 0, horn, 1.0f, hornPitch);
+        sound->ChooseHorn(horn, 1.0f, hornPitch);
         audio->volume = volume;
         minDistance = 10.0f;
         maxDistance = 200.0f;
@@ -686,14 +679,14 @@ void PBondCar::Simulate() {
     sound->rpm = rpm;
     sound->engineOn = engineOn;
     sound->throttle = throttle;
-    sound->frontSlip = frontSlip < 1.0f ? frontSlip : 1.0f;
-    sound->rearSlip = rearSlip < 1.0f ? rearSlip : 1.0f;
+    sound->frontSlipTarget = frontSlip < 1.0f ? frontSlip : 1.0f;
+    sound->rearSlipTarget = rearSlip < 1.0f ? rearSlip : 1.0f;
     for (int wheel = 0; wheel < kCarWheels; wheel++) {
         sound->previousSurfaces[wheel] = sound->surfaces[wheel];
         sound->surfaces[wheel] = surfaces[wheel];
     }
-    sound->weaponFlags = weaponFlagC0;
-    sound->unknownC1 = weaponFlagC1;
+    sound->servo = weaponFlagC0;
+    sound->firing = weaponFlagC1;
     sound->position = body->position;
     sound->velocity = body->velocity;
     const MATRIX4 *orientation = &body->info->orientation;
@@ -703,14 +696,14 @@ void PBondCar::Simulate() {
     sound->cameraAim.x = aim->x;
     sound->cameraAim.y = aim->y;
     sound->cameraAim.z = aim->z;
-    sound->speed = carSpeed;
+    sound->carSpeed = carSpeed;
     sound->steering = control.steering;
     sound->steeringVertical = control.steeringVertical;
-    sound->unknown150 = unknown2EC;
+    sound->landingForce = unknown2EC;
     for (int wheel = 0; wheel < kCarWheels; wheel++)
         sound->suspensionCompression[wheel] = suspensionCompression[wheel];
-    sound->unknown17A = unknown278 > 0.0f;
-    sound->unknown17B = unknown27C > 0.0f;
+    sound->gasButton = unknown278 > 0.0f;
+    sound->brakeButton = unknown27C > 0.0f;
 
     if (carClass == kPlayerCar)
         targetBeacon->UpdatePosition();

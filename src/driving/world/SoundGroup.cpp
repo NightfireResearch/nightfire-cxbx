@@ -14,8 +14,6 @@
 // listings. See SoundGroup.h.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The audio framework's, not ported.
-#define AWorldSound_Destruct ((void (__fastcall *)(AWorldSound *, int))0x0012e090)
 // AVoice::View's destructor, by the address the original hands the C runtime's `eh vector destructor iterator'
 #define AVoiceView_Destruct ((void (__fastcall *)(AVoice::View *, int))0x00123c50)
 #define EhVectorDestructor ((void (__stdcall *)(void *, uint32_t, int, void (__fastcall *)(AVoice::View *, int)))0x0013332e)
@@ -67,16 +65,16 @@ AWorldSound* AWorldSound::Construct(int bank, int index, const char *name) {
     vtable = kAWorldSoundVtable;
     voice.Construct(mix, bank, index);
     inUse = 1;
-    unknown138 = 1;
-    unknown118 = 0.0f;
-    unknown11c = 0.0f;
-    unknown120 = 0;
-    unknown124 = 0.0f;
-    unknown128 = 0;
-    unknown130 = 0;
-    unknown134 = 0;
-    extraVoice = NULL;
-    unknown140 = 0;
+    waiting = 1;
+    minDelay = 0.0f;
+    maxDelay = 0.0f;
+    minRepeats = 0.0f;
+    maxRepeats = 0.0f;
+    mode = 0;
+    nextTime = 0.0f;
+    repeats = 0.0f;
+    passVoice = NULL;
+    passFrames = 0;
     volume = 1.0f;
     pitch = 1.0f;
     return this;
@@ -84,7 +82,7 @@ AWorldSound* AWorldSound::Construct(int bank, int index, const char *name) {
 
 // FUNC_AT(0x000cca00)
 AWorldSound* AWorldSound::Delete(unsigned flags) {
-    AWorldSound_Destruct(this, 0);
+    AWorldSound::Destruct();
     if (flags & 1)
         OperatorDelete(this, sizeof(AWorldSound));
     return this;
@@ -100,7 +98,7 @@ WSound* WSound::Construct(int bank, int index) {
 // FUNC_AT(0x000cc8f0)
 void WSound::Destruct() {
     vtable = kWSoundVtable;
-    AWorldSound_Destruct(this, 0);
+    AWorldSound::Destruct();
 }
 
 // FUNC_AT(0x000cc900)
@@ -314,25 +312,25 @@ WSound* WSoundGroup::AddPacked(int id, int packed) {
 // ---- the two methods WWorld::Open calls
 
 // FUNC_AT(0x000d11a0)
-void WSound::SetUnknown118(float first, float second) {
-    double sum = double(first) + second;
+void WSound::SetDelays(float minDelay, float maxDelay) {
+    double sum = double(minDelay) + maxDelay;
     if (sum != 0.0) {
         for (int i = 0; i < 3; i++)
             voice.views[i].loop = 0;
     }
-    if (sum < double(unknown11c) + unknown118)
-        unknown130 = 0;
-    unknown118 = first;
-    unknown11c = second;
+    if (sum < double(this->maxDelay) + this->minDelay)
+        nextTime = 0.0f;
+    this->minDelay = minDelay;
+    this->maxDelay = maxDelay;
 }
 
 // FUNC_AT(0x000d1570)
 void WSound::SetVoice(int id) {
-    if (extraVoice != NULL) {
+    if (passVoice != NULL) {
         // AVoice's destructor
-        EhVectorDestructor(extraVoice->views, sizeof(AVoice::View), 3, AVoiceView_Destruct);
-        UMemory::FastFree(extraVoice, sizeof(AVoice));
+        EhVectorDestructor(passVoice->views, sizeof(AVoice::View), 3, AVoiceView_Destruct);
+        UMemory::FastFree(passVoice, sizeof(AVoice));
     }
     void *memory = UMemory::FastAlloc(sizeof(AVoice), "AVoice");
-    extraVoice = memory != NULL ? static_cast<AVoice *>(memory)->Construct(mix, id >> 7, id & 0x7f) : NULL;
+    passVoice = memory != NULL ? static_cast<AVoice *>(memory)->Construct(mix, id >> 7, id & 0x7f) : NULL;
 }

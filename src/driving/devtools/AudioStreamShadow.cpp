@@ -870,9 +870,9 @@ Setup RandomSetup() {
     setup.params.volume = Perturbed(0.0f, 1.3f);
     setup.params.pitch = Perturbed(-0.5f, 5.0f);
     setup.params.azimuth = Perturbed(-1.0f, 1.0f);
-    setup.params.unknown0c = 0.0f;
+    setup.params.facing = 0.0f;
     setup.params.unknown10 = 0.0f;
-    setup.params.unknown14 = 0;
+    setup.params.distance = 0.0f;
     setup.params.listener = NULL;
     return setup;
 }

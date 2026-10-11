@@ -17,7 +17,9 @@
 #include "../eagl/Loader.h"
 #include "../eagl/Profiler.h"
 #include "../data/Carp.h"
+#include "../data/StdStreams.h"
 #include "../data/SymbolTable.h"
+#include "../game/DebugAudio.h"
 #include "../render/Draw.h"
 #include "../render/Materials.h"
 #include "../render/WorldCulling.h"
@@ -34,9 +36,6 @@
 #define AIGroundVehicle_Destruct ((void (__fastcall *)(void *, int))0x0002be70)
 #define FUN_00036a00 ((void (__fastcall *)(void *, int))0x00036a00)
 #define FUN_00037160 ((void (__fastcall *)(NodeList *, int, void **, void *, void *))0x00037160)   // erase(result, first, last)
-#define FUN_00037640 ((void (__fastcall *)(void *, int))0x00037640)
-#define FUN_00037660 ((void (__fastcall *)(void *, int))0x00037660)
-#define FUN_00037940 ((void (__fastcall *)(void *, int))0x00037940)
 #define FUN_0007c6e0 ((void (__fastcall *)(void *, int))0x0007c6e0)
 #define FUN_0007c7b0 ((void (__fastcall *)(void *, int))0x0007c7b0)
 #define Simulation_Construct ((void (__fastcall *)(void *, int))0x000b4fe0)
@@ -170,8 +169,8 @@ void RunStaticInitialisers(void) {
     for (int i = 0; i < 30; i++) FUN_00036a00((void *)(0x001e1f20 + i * 0x1c), 0);                       // 0x00157310
     CrtAtExit([] {});
     FLOAT_AT(0x001e2274) = 1.0f / FLOAT_AT(0x001b6630);                                                  // 0x00157340
-    FUN_00037640((void *)0x001e2278, 0);                                                                 // 0x00157360
-    CrtAtExit([] { FUN_00037660((void *)0x001e2278, 0); });
+    DAudioTargets.Construct();                                                                           // 0x00157360
+    CrtAtExit([] { DAudioTargets.Destruct(); });
     FLOAT_AT(0x001e22b0) = 3.1415925f + 3.1415925f;                                                      // 0x00157380
     FLOAT_AT(0x001e22b4) = 1.0f / FLOAT_AT(0x001e22b0);                                                  // 0x00157390
     FLOAT_AT(0x001e22b8) = 180.0f / 3.1415925f;                                                          // 0x001573b0
@@ -868,7 +867,7 @@ void RunStaticInitialisers(void) {
     DOUBLE_AT(0x002447a0) = 3.141592653589793 * 0.5;                                                     // 0x0015cb60
     FUN_00130c99((void *)0x00244828, 0);                                                                 // 0x0015cb80
     CrtAtExit([] { FUN_00130cc7((void *)0x00244828, 0); });
-    CrtAtExit([] { FUN_00037940((void *)0x0024483c, 0); });                                              // 0x0015cb96
+    CrtAtExit([] { ((GameStd::Locale *)0x0024483c)->Destruct(); });                                      // 0x0015cb96
     // 0x0017c535: DirectSound's, left out (every DSOUND entry point is the seam's)
     // 0x0017c540: DirectSound's, left out (every DSOUND entry point is the seam's)
     // 0x0018040a: DirectSound's, left out (every DSOUND entry point is the seam's)

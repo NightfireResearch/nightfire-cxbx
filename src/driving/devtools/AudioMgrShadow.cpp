@@ -467,9 +467,9 @@ uint32_t ListenerWords(const AListener *listener, uint32_t *words) {
     if (listener == NULL)
         return 0;
     words[0] = Tag(listener);
-    words[1] = uint32_t(listener->unknown5c);
+    words[1] = uint32_t(listener->view);
     words[2] = Hash(listener, 0x5c);
-    words[3] = Bits(listener->unknown70) ^ listener->unknown74;
+    words[3] = Bits(listener->level) ^ Bits(listener->bandWidth);
     return 4;
 }
 ABaseSound *__fastcall FakeSoundDelete(ABaseSound *sound, int, unsigned int flags) {
@@ -484,7 +484,7 @@ void __fastcall FakeSoundPlay(ABaseSound *sound, int, ASoundPlayParams *params) 
     uint32_t l[4] = {};
     ListenerWords(params->listener, l);
     Log(kSoundPlay, { Tag(sound), Bits(params->volume), Bits(params->pitch), Bits(params->azimuth),
-                      Bits(params->unknown0c), l[0], l[1], l[2], l[3] });
+                      Bits(params->facing), l[0], l[1], l[2], l[3] });
 }
 const void *g_fakeVtable[5] = {
     (const void *)&FakeSoundDelete, (const void *)&FakeSoundIsTransient, (const void *)0x0011c710,

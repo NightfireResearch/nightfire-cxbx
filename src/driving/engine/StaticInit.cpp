@@ -19,6 +19,7 @@
 #include "../data/RCARPFile.h"         // CharNamespace
 #include "../data/SymbolTable.h"
 #include "../eagl/GeoPrimState.h"
+#include "../game/VehicleSound.h"       // EngineRefTree
 #include "../audio/Fader.h"             // FaderRefTree
 #include "../audio/Mix.h"               // MixRefTree
 #include "../audio/Stream.h"            // StreamRefTree
@@ -26,10 +27,6 @@
 #include "../render/TextureContext.h"
 #include "../world/RoadNav.h"
 #include "../world/Targeting.h"
-
-// ---- originals called by address
-
-#define FUN_0012f820 ((void (__fastcall *)(void *, int))0x0012f820)
 
 // ---- the weapon table
 
@@ -150,5 +147,5 @@ void DestroyStatic_00243b08(void) {
 }
 // FUNC_AT(0x0015d300)
 void DestroyStatic_00243b74(void) {
-    FUN_0012f820(&EngineRefs, 0);
+    reinterpret_cast<EngineRefTree *>(&EngineRefs)->Destruct();
 }

@@ -87,7 +87,7 @@ static_assert(std::bit_cast<uint32_t>(0.15f) == 0x3e19999a && std::bit_cast<uint
 // The sound's voice played for the listener: the sound's volume times its mix's, times the listener's.
 void PlayVoice(ABaseSound *sound, AVoice *voice, ASoundPlayParams *params, float fxLevel) {
     float volume = float(sound->mix->GetVolume() * sound->volume * params->volume);
-    voice->Play(params->listener->unknown5c, volume, sound->pitch * params->pitch, params->azimuth, params->unknown10,
+    voice->Play(params->listener->view, volume, sound->pitch * params->pitch, params->azimuth, params->unknown10,
                 fxLevel);
 }
 
@@ -204,9 +204,9 @@ void AZoomObj::Destruct() {
 void AZoomObj::Play(ASoundPlayParams *params) {
     if (inZone) {
         float volume = float(mix->GetVolume() * params->volume);
-        voice->Play(params->listener->unknown5c, volume, params->pitch, params->azimuth, 0.0f, 0.0f);
+        voice->Play(params->listener->view, volume, params->pitch, params->azimuth, 0.0f, 0.0f);
     } else {
-        voice->Play(params->listener->unknown5c, 0.0f, params->pitch, params->azimuth, 0.0f, 0.0f);
+        voice->Play(params->listener->view, 0.0f, params->pitch, params->azimuth, 0.0f, 0.0f);
     }
 }
 

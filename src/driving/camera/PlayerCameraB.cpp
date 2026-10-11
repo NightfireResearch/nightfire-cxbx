@@ -1289,8 +1289,8 @@ void RPlayerCamera::UpdateAutoDriveCam() {
     }
     autoDriveRotating = LimitPitchYaw(arm, &targetAngleX, &targetAngleY);
     if (autoDriveRotating) {
-        PlayerCarAudio()->flagC2 = 0;
-        PlayerCarAudio()->flagC3 = 0;
+        PlayerCarAudio()->turningSideways = 0;
+        PlayerCarAudio()->turningUpDown = 0;
     }
 
     // the frame: yawed about up, pitched about its own row 0

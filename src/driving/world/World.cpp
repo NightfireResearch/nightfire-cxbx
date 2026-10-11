@@ -466,10 +466,10 @@ bool WWorld::Open() {
             sound->minDistance = record->unknown58;
             sound->maxDistance = record->radius;
             sound->maxDistanceSq = record->radius * record->radius;
-            sound->SetUnknown118(record->unknown48, record->unknown4c);
-            sound->unknown124 = record->unknown54;
-            sound->unknown120 = record->unknown50;
-            sound->unknown128 = record->unknown3f == 0;
+            sound->SetDelays(record->minDelay, record->maxDelay);
+            sound->maxRepeats = record->maxRepeats;
+            sound->minRepeats = record->minRepeats;
+            sound->mode = record->unknown3f == 0;
         }
         soundGroup->End();
     }

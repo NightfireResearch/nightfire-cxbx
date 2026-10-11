@@ -229,13 +229,13 @@ struct WorldSoundRecord {
     Coord3 position;                    // +0x00
     uint32_t unknown0c;
     char name[0x2f];                    // +0x10 "<bank>: <sound>" (WSoundGroup::Add's format)
-    uint8_t unknown3f;                  // +0x3f WSound::unknown128 is 1 when it is 0
+    uint8_t unknown3f;                  // +0x3f WSound::mode is 1 when it is 0
     float volume;                       // +0x40
     float pitch;                        // +0x44
-    float unknown48;                    // +0x48 WSound::SetUnknown118's
-    float unknown4c;
-    uint32_t unknown50;                 // +0x50 WSound::unknown120
-    float unknown54;                    // +0x54 WSound::unknown124
+    float minDelay;                     // +0x48 WSound::SetDelays'
+    float maxDelay;                     // +0x4c
+    float minRepeats;                   // +0x50 WSound's
+    float maxRepeats;                   // +0x54
     float unknown58;                    // +0x58 WSound::minDistance
     float radius;                       // +0x5c
 };

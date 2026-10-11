@@ -773,13 +773,13 @@ void MakeSoundCase(SoundCase &c) {
     ABank *bank = fgBanks[Random(kBankSlotCount)];
     sound->voice.views[0].bank = bank != NULL && Random(4) != 0 ? bank->handle : int(Random(5)) - 1;
     memset(&c.listener, 0, sizeof(c.listener));
-    c.listener.unknown5c = int(Random(3));
+    c.listener.view = int(Random(3));
     c.params.volume = RandomFloat();
     c.params.pitch = RandomFloat();
     c.params.azimuth = RandomFloat();
-    c.params.unknown0c = RandomFloat();
+    c.params.facing = RandomFloat();
     c.params.unknown10 = RandomFloat();
-    c.params.unknown14 = Random(0x10000);
+    c.params.distance = float(Random(0x10000));
     c.params.listener = &c.listener;
     for (double &v : c.volumes)
         v = Random(5) == 0 ? double(RandomFloat()) : double(Random(1u << 30)) / double(1u << 29) / 3.0;

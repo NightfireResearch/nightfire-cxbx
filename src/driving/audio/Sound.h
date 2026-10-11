@@ -43,15 +43,19 @@ enum SoundView {
 class ABaseSound;
 
 // What a sound's virtual Play is given (0x1c bytes; the name is ours). ASoundManager::BuildPaths fills it for a
-// listener (FUN_0012eab0); Stop and Pause hand over a silent one.
+// listener (Compute); Stop and Pause hand over a silent one.
 struct ASoundPlayParams {
     float volume;               // +0x00 scales the sound's and its mix's
     float pitch;                // +0x04 a multiplier
     float azimuth;              // +0x08
-    float unknown0c;            // +0x0c zero from FUN_0012eab0
-    float unknown10;            // +0x10 zero from FUN_0012eab0
-    uint32_t unknown14;
+    float facing;               // +0x0c the sound's forward vector along the line from the listener (name ours)
+    float unknown10;            // +0x10 zero within 25 of the listener, a quarter of a hundredth per unit beyond
+    float distance;             // +0x14 from the listener, once out of the band (SoundPlayParams::Compute)
     AListener *listener;        // +0x18 the listener it is heard by
+
+    // Volume, pitch (Doppler), azimuth and the rest for `sound` as `listener` hears it (Ghidra: FUN_0012eab0;
+    // game/VehicleSoundEngine.cpp)
+    ASoundPlayParams* Compute(ABaseSound *sound);                               // 0x0012eab0
 };
 static_assert(sizeof(ASoundPlayParams) == 0x1c, "a sound's play parameters are 0x1c bytes");
 
@@ -181,30 +185,36 @@ public:
 };
 static_assert(sizeof(ALimitedSound) == 0x120, "ALimitedSound is 0x120 bytes");
 
-// The world's sound (0x150 bytes; vtable 0x00193ae8; WSound's base). Its destructor (0x0012e090) and Play
-// (0x0012dda0) are not ported; Construct and Delete are in world/SoundGroup.cpp.
+// The world's sound (0x150 bytes; vtable 0x00193ae8; WSound's base): its voice played in bursts of repeats with
+// random waits between, and a pass voice heard while it comes close. Construct and Delete are in
+// world/SoundGroup.cpp, the destructor and Play in game/WeaponSound.cpp. (Field names ours, from what Play does.)
 class AWorldSound : public ABaseSound {
 public:
     AVoice voice;               // +0xc0
-    float unknown118;           // +0x118 zero from the constructor, as are the next four
-    float unknown11c;           // +0x11c
-    uint32_t unknown120;        // +0x120
-    float unknown124;           // +0x124
-    int32_t unknown128;         // +0x128
+    float minDelay;             // +0x118 the random wait between bursts: from minDelay to maxDelay (from zero to
+    float maxDelay;             // +0x11c maxDelay the first time); zero from the constructor, as are the next three
+    float minRepeats;           // +0x120 the random number of plays after a wait
+    float maxRepeats;           // +0x124
+    int32_t mode;               // +0x128 1: neither the listener's pitch nor its azimuth
     uint8_t inUse;              // +0x12c WSoundGroup::Add sets it, Start clears it, End deletes the sound if it is
                                 //        still clear
     uint8_t unknown12d[3];
-    int32_t unknown130;         // +0x130 zero
-    uint32_t unknown134;
-    uint8_t unknown138;         // +0x138 one
+    float nextTime;             // +0x130 the audio clock's time the wait ends; zero: never waited
+    float repeats;              // +0x134 plays left before the next wait
+    uint8_t waiting;            // +0x138 one: the voice is done; wait, or play it again
     uint8_t unknown139[3];
-    AVoice *extraVoice;         // +0x13c NULL from the constructor; WSound::SetVoice's
-    uint32_t unknown140;        // +0x140 zero
+    AVoice *passVoice;          // +0x13c NULL from the constructor; WSound::SetVoice's, played while something
+                                //        passes close
+    int32_t passFrames;         // +0x140 180 when the listener is within 6 of where the sound will be over the
+                                //        next five velocity steps; counted down
     uint8_t unknown144[0xc];
 
     // A sound named `name` playing the bank's sound `index`.
     AWorldSound* Construct(int bank, int index, const char *name);              // 0x000cc930
+    void Destruct();                                                            // 0x0012e090
     AWorldSound* Delete(unsigned flags);                                        // 0x000cca00
+    // vtable slot 3
+    void Play(ASoundPlayParams *params);                                        // 0x0012dda0
 };
 static_assert(sizeof(AWorldSound) == 0x150, "AWorldSound is 336 bytes");
 

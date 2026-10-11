@@ -28,10 +28,10 @@ public:
     void Destruct();                                                            // 0x000cc8f0
     WSound* Delete(unsigned flags);                                             // 0x000cc900
 
-    // Sets +0x118 and +0x11c (from a track sound's record): a non-zero sum clears each view's loop flag, a sum
-    // below the old one clears +0x130. The name is ours (Ghidra: FUN_000d11a0).
-    void SetUnknown118(float first, float second);                              // 0x000d11a0
-    // Replaces the extra voice with a new one for the id (bank << 7 | index). The name is ours (FUN_000d1570).
+    // The waits between bursts (from a track sound's record): a non-zero sum clears each view's loop flag, a sum
+    // below the old one ends the wait. The name is ours (Ghidra: FUN_000d11a0).
+    void SetDelays(float minDelay, float maxDelay);                             // 0x000d11a0
+    // Replaces the pass voice with a new one for the id (bank << 7 | index). The name is ours (FUN_000d1570).
     void SetVoice(int id);                                                      // 0x000d1570
 };
 static_assert(sizeof(WSound) == 0x160, "WSound is 352 bytes");

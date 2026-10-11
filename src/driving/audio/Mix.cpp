@@ -85,7 +85,7 @@ constexpr float kFxFadeInRate = 0.3f;      // the level gained per frame towards
 static_assert(std::bit_cast<uint32_t>(kFxFadeOutRate) == 0x3d23d70a, "0.04f as the original's .rdata has it");
 static_assert(std::bit_cast<uint32_t>(kFxFadeInRate) == 0x3e99999a, "0.3f as the original's .rdata has it");
 
-constexpr float kListenerUnknown70 = -100000.0f;
+constexpr float kListenerLevel = -100000.0f;
 
 // new AMix
 AMix *NewMix() {
@@ -434,7 +434,7 @@ void AFX::Update() {
 // =============================================================================================================
 
 // FUNC_AT(0x00124ae0)
-AListener* AListener::Construct(int unknown) {
+AListener* AListener::Construct(int view) {
     for (int row = 0; row < 4; row++) {
         for (int column = 0; column < 4; column++)
             matrix.mtx[row][column] = row == column ? 1.0f : 0.0f;
@@ -446,14 +446,14 @@ AListener* AListener::Construct(int unknown) {
     velocity.x = 0.0f;
     velocity.y = 0.0f;
     velocity.z = 0.0f;
-    unknown5c = unknown;
-    unknown70 = kListenerUnknown70;
-    unknown74 = 0;
+    this->view = view;
+    level = kListenerLevel;
+    bandWidth = 0.0f;
     return this;
 }
 
 // FUNC_AT(0x00124b50)
-AListener* AListener::Construct(const MATRIX4 *camera, const Coord3 *cameraVelocity, int unknown) {
+AListener* AListener::Construct(const MATRIX4 *camera, const Coord3 *cameraVelocity, int view) {
     position.x = camera->mtx[3][0];
     position.y = camera->mtx[3][1];
     position.z = camera->mtx[3][2];
@@ -472,8 +472,8 @@ AListener* AListener::Construct(const MATRIX4 *camera, const Coord3 *cameraVeloc
     VU0_MATRIX4_vect4mult(&back, &matrix, matrix.mtx[3]);
     matrix.mtx[3][3] = 1.0f;
     velocity = *cameraVelocity;
-    unknown74 = 0;
-    unknown5c = unknown;
-    unknown70 = kListenerUnknown70;
+    bandWidth = 0.0f;
+    this->view = view;
+    level = kListenerLevel;
     return this;
 }

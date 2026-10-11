@@ -10,6 +10,7 @@
 #include "../engine/InputConfig.h"      // BuildFileName
 #include "../engine/UFileLoader.h"
 #include "../engine/UMemory.hpp"
+#include "../game/VehicleSound.h"       // AEngine::RemoveAll
 #include "../platform/RealMath.h"       // VU0_v3distancesquare, VU0_sqrt
 #include "../platform/RealMemory.h"     // MEM_size, MEM_free
 #include "../sound/snd/System.h"
@@ -22,11 +23,6 @@
 // the listeners, and each sound keeps the volume each view last played it at, so that BuildPaths, Stop and Pause
 // silence only what was heard.
 // ---------------------------------------------------------------------------------------------------------------
-
-// Not ported
-#define AEngine_RemoveAll ((void (*)(void))0x0012f9e0)
-// The play parameters for the sound as params->listener hears it (Ghidra: FUN_0012eab0; the name is ours)
-#define SoundPlayParams_Compute ((ASoundPlayParams *(__fastcall *)(ASoundPlayParams *, int, ABaseSound *))0x0012eab0)
 
 // The list code every std::list of pointers shares: the head node, _Buynode(next, prev, value), the destructor
 #define SoundList_BuyHead ((PointerListNode *(__fastcall *)(ASoundList *, int))0x000b8490)
@@ -212,22 +208,22 @@ void ASoundManager::BuildPaths(AListener *listener) {
         params.listener = listener;
         float heard = 0.0f;
         bool audible = false;
-        if ((sound->views & (1u << listener->unknown5c)) &&
+        if ((sound->views & (1u << listener->view)) &&
             (sound->maxDistanceSq == 0.0f || distanceSquared < sound->maxDistanceSq)) {
-            SoundPlayParams_Compute(&params, 0, sound);
+            params.Compute(sound);
             heard = params.volume;
             audible = params.volume > 0.0f;
         }
         if (audible) {
             sound->CallPlay(&params);
-        } else if (sound->lastVolumes[listener->unknown5c] > 0.0f) {
+        } else if (sound->lastVolumes[listener->view] > 0.0f) {
             params.volume = 0.0f;
             params.pitch = 0.0f;
             params.azimuth = 0.0f;
-            params.unknown0c = 0.0f;
+            params.facing = 0.0f;
             sound->CallPlay(&params);
         }
-        sound->lastVolumes[listener->unknown5c] = heard;
+        sound->lastVolumes[listener->view] = heard;
     }
 }
 
@@ -246,7 +242,7 @@ void ASoundManager::Stop() {
                 params.volume = 0.0f;
                 params.pitch = 0.0f;
                 params.azimuth = 0.0f;
-                params.unknown0c = 0.0f;
+                params.facing = 0.0f;
                 sound->CallPlay(&params);
             }
         }
@@ -269,7 +265,7 @@ void ASoundManager::Pause() {
                 params.volume = sound->lastVolumes[view];
                 params.pitch = 0.0f;
                 params.azimuth = 0.0f;
-                params.unknown0c = 0.0f;
+                params.facing = 0.0f;
                 sound->CallPlay(&params);
             }
         }
@@ -309,7 +305,7 @@ void ASoundManager::ClearMission() {
     AStream::Get("music")->Stop();
     AStream::Get("speech")->Stop();
     Stop();
-    AEngine_RemoveAll();
+    AEngine::RemoveAll();
     for (int slot = 0; slot < kBankSlotCount; slot++)
         fgBanks[slot]->Remove();
 }

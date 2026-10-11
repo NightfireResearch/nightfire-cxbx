@@ -457,6 +457,13 @@ add_library(drivinginject SHARED
   src/driving/game/Vehicle.cpp
   src/driving/game/Helicopter.cpp
   src/driving/game/BondCarSimulate.cpp
+  src/driving/game/VehicleSound.cpp
+  src/driving/game/VehicleSoundEngine.cpp
+  src/driving/game/VehicleSoundKinds.cpp
+  src/driving/game/WeaponSound.cpp
+  src/driving/game/CharacterSound.cpp
+  src/driving/game/FingoDeathSound.cpp
+  src/driving/game/DebugAudio.cpp
   src/driving/game/BondCarState.cpp
   src/driving/game/BondCarSnowmobile.cpp
   src/driving/game/SoftZone.cpp
@@ -482,6 +489,10 @@ add_library(drivinginject SHARED
   src/driving/devtools/BondCarShadowB.cpp
   src/driving/devtools/BondCarShadowC.cpp
   src/driving/devtools/BondCarShadowD.cpp
+  src/driving/devtools/GameAudioShadowA.cpp
+  src/driving/devtools/GameAudioShadowB.cpp
+  src/driving/devtools/GameAudioShadowC.cpp
+  src/driving/devtools/GameAudioShadowD.cpp
   src/driving/devtools/VehicleShadow.cpp
   src/driving/devtools/RigidCollideShadow.cpp
   src/driving/devtools/RenderShadow.cpp
@@ -516,6 +527,8 @@ add_library(drivinginject SHARED
   src/driving/data/Tuning.cpp
   src/driving/data/IniFiles.cpp
   src/driving/data/StdStreams.cpp
+  src/driving/data/StdLocale.cpp
+  src/driving/data/DebugItem.cpp
   src/driving/data/CoordConvert.cpp
   src/driving/devtools/DebugVarShadow.cpp
   src/driving/data/AttributeValue.cpp

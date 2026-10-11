@@ -13,6 +13,7 @@
 #include "BondCarState.h"                   // CarSurface, the BondCar_* tuning
 #include "Vehicle.h"
 #include "VehicleSound.h"                   // AVehicle
+#include "VehicleSoundKinds.h"              // APlayerVehicle
 #include "../../common/xbeOverload.h"       // XbeVirtual
 #include "../../helpers.h"
 #include "../EventManager.hpp"              // Event
@@ -49,7 +50,6 @@
 #define RTyreTrack_Add ((void (__fastcall *)(RTyreTrack *, int, const Coord4 *point, float slip, float width, int surface, const WWorldPos *ground))0x000ac4c0)
 #define RTyreTrack_Break ((void (__fastcall *)(RTyreTrack *, int, int surface))0x000ac170)
 #define RVehicle_Construct ((RSceneObj *(__fastcall *)(void *, int, PBondCar *car))0x000953e0)
-#define APlayerVehicle_Construct ((ABaseSound *(__fastcall *)(void *, int, const char *engineSound))0x001284b0)
 #define CollisionImpact_Construct ((CollisionImpact *(__fastcall *)(CollisionImpact *, int))0x0003dc20)
 #define ECollision_Construct ((void *(__fastcall *)(void *, int, CollisionImpact impact))0x0003f370)
 
@@ -93,7 +93,6 @@ constexpr uint16_t kLandingImpactTag = 1;
 
 constexpr uint32_t kBondCarSize = 0x420;        // sizeof(PBondCar)
 constexpr uint32_t kRVehicleSize = 0x370;
-constexpr uint32_t kAPlayerVehicleSize = 0x220;
 
 constexpr float kUnitsPerTurn = 6.32f;          // the wheels' speed: the body's over steps a second x WHEEL_RADIUS x it
 constexpr float kOneThirtieth = 1.0f / 30.0f;
@@ -1611,8 +1610,9 @@ void PBondCar::ChangeCarType(const char *newType, bool purgeModel) {
     if (oldSound != NULL)
         oldSound->CallDelete(1);
     SetAudioObject(NULL);
-    void *soundBlock = ABaseSound::OperatorNew(kAPlayerVehicleSize, "APlayerVehicle");
-    ABaseSound *sound = soundBlock != NULL ? APlayerVehicle_Construct(soundBlock, 0, engineSound) : NULL;
+    APlayerVehicle *soundBlock = static_cast<APlayerVehicle *>(ABaseSound::OperatorNew(sizeof(APlayerVehicle),
+                                                                                         "APlayerVehicle"));
+    ABaseSound *sound = soundBlock != NULL ? soundBlock->Construct(engineSound) : NULL;
     CallSetAudio(this, sound);
     SetAudioObject(sound);
     sound->volume = attributes.LookupFloat("SFX_VOLUME", NULL);

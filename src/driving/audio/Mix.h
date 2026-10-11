@@ -166,17 +166,26 @@ public:
     MATRIX4 matrix;             // +0x00 the inverse of the camera's: its rotation transposed, the translation
     Coord4 position;            // +0x40 w = 1
     Coord3 velocity;            // +0x50
-    int32_t unknown5c;          // +0x5c the constructors' last argument
+    int32_t view;               // +0x5c the constructors' last argument: view 2 hears a sound at its azimuth, the
+                                //       others on one side each (SoundPlayParams::Compute)
     uint8_t unknown60[0x10];
-    float unknown70;            // +0x70 -100000
-    uint32_t unknown74;         // +0x74 zero
+    float level;                // +0x70 -100000; a listener below it and a sound above (or the other way round)
+    float bandWidth;            // +0x74 zero; hear the sound scaled down across a band this wide (names ours)
 
     // At the origin, unrotated.
-    AListener* Construct(int unknown);                                          // 0x00124ae0
+    AListener* Construct(int view);                                          // 0x00124ae0
     // From a camera's matrix and velocity.
-    AListener* Construct(const MATRIX4 *camera, const Coord3 *velocity, int unknown);   // 0x00124b50
+    AListener* Construct(const MATRIX4 *camera, const Coord3 *velocity, int view);   // 0x00124b50
 };
-static_assert(offsetof(AListener, unknown70) == 0x70, "AListener::unknown70 is at +0x70");
+static_assert(offsetof(AListener, view) == 0x5c && offsetof(AListener, level) == 0x70, "AListener layout");
+
+// AListener::view as the object its one caller (ASoundPlayParams::Compute) passes: the azimuth the view hears a
+// sound at (names ours; Ghidra: FUN_0012ea80; game/VehicleSoundEngine.cpp).
+struct ListenerView {
+    int32_t view;
+
+    float Azimuth(float azimuth);                                               // 0x0012ea80
+};
 static_assert(sizeof(AListener) == 0x78, "AListener is 0x78 bytes");
 
 #endif // DRIVING_AUDIO_MIX_H_

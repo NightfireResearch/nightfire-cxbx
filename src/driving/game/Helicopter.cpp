@@ -27,7 +27,6 @@
 
 // ---- the game's code not ported yet
 #define RVehicle_Construct ((RSceneObj *(__fastcall *)(void *, int, void *unknown))0x000953e0)
-#define AHelicopter_Construct ((ABaseSound *(__fastcall *)(void *, int, const char *name))0x0012c7f0)
 #define AIElementController_ForceVehicleToSleep ((void (__fastcall *)(void *, int, HelicopterAI *vehicle))0x000289f0)
 #define AIHelicopter_DisableTargetBeacon ((void (__fastcall *)(HelicopterAI *, int))0x000318d0)
 #define SMissionManager_IncShotsHit ((void (__fastcall *)(SMissionManager *, int, bool hit))0x000b6720)
@@ -159,10 +158,10 @@ PHelicopter* PHelicopter::Construct(const char *name, float speed, Coord3 direct
     TriggerFX(renderObject, RSceneObj::kFXOn, kSpawnEffect, SimStepCount);
     renderObject->animHandle->ProcessStimuli(kStartSystem, kStimulusStart08, SimStepCount, kStimulusMode);
 
-    void *sound = ABaseSound::OperatorNew(sizeof(AHelicopter), "AHelicopter");
-    SetAudioObject(sound != NULL ? AHelicopter_Construct(sound, 0, "Helicopter") : NULL);
+    AHelicopter *sound = static_cast<AHelicopter *>(ABaseSound::OperatorNew(sizeof(AHelicopter), "AHelicopter"));
+    SetAudioObject(sound != NULL ? sound->Construct("Helicopter") : NULL);
     AHelicopter *audio = static_cast<AHelicopter *>(audioObject);
-    audio->randomPhase = float(double(int32_t(SimulationRandom->Generate())) * 0.1f * kOneOver65536);
+    audio->pitchOffset = float(double(int32_t(SimulationRandom->Generate())) * 0.1f * kOneOver65536);
     ai = NULL;
     return this;
 }

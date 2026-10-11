@@ -653,7 +653,7 @@ static void SetUpVariable(uint32_t minimum, uint32_t maximum, float step, uint32
     memset(&g_var, 0, sizeof(g_var));
     memset(&g_inner, 0, sizeof(g_inner));
     g_var.vtable = (const void *const *)0x0018bd00;
-    g_var.name = "variable";
+    g_var.name.text = "variable";
     g_var.data = g_values;
     g_var.maximum = maximum;
     g_var.minimum = minimum;

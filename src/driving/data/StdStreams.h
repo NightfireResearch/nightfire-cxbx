@@ -12,8 +12,8 @@
 //
 // The non-template parts stay the C runtime's, called at their addresses (0x00130xxx..0x00134xxx: ios_base,
 // locale, _Lockit, _Locinfo, strstreambuf's own members, _Stod/_Stoul, sprintf ...), as do std::string's members
-// compiled elsewhere (0x00012c80..0x00013840) and the getloc/facet helpers just below this range (0x00037930,
-// 0x00037980).
+// compiled elsewhere (0x00012c80..0x00013840). The getloc/facet helpers just below this range (0x000378c0..
+// 0x000379c0) are StdLocale.cpp's.
 //
 // The classes here are the game's objects, laid out as Dinkumware lays them out (sizes asserted); their vtables
 // are the game's, in the first word. MSVC lists overloaded virtuals in reverse, so num_get's slots run void*, long
@@ -66,13 +66,21 @@ struct Facet;
 // std::locale: a pointer to its implementation, itself a facet.
 struct Locale {
     Facet *impl;
+
+    // ~locale: the implementation deleted with its last reference (StdLocale.cpp).
+    void Destruct();                                                                                    // 0x00037940
 };
 static_assert(sizeof(Locale) == 4, "Locale");
 
-// std::locale::facet.
+// std::locale::facet. Its reference count is taken under the library's locale lock (StdLocale.cpp).
 struct Facet {
     const void *const *vtable;   // +0x00
     uint32_t refs;               // +0x04
+
+    void Incref();                          // _Incref: one more reference, unless the count is full    // 0x000378c0
+    Facet* Decref();                        // _Decref: one fewer; the facet itself once none are left  // 0x000378f0
+    void Destruct();                                                                                    // 0x00037930
+    Facet* Delete(unsigned flags);          // vtable slot 0 of the facet vtable                        // 0x00037960
 };
 static_assert(sizeof(Facet) == 8, "Facet");
 
@@ -238,6 +246,9 @@ struct IosBase {
     void *callbacks;             // +0x1c _Calls
     Locale *locale;              // +0x20
     uint32_t standardStream;     // +0x24 _Stdstr
+
+    Locale* GetLoc(Locale *result);         // getloc(): a copy of the stream's locale (StdLocale.cpp)  // 0x00037980
+    IosBase* Delete(unsigned flags);        // vtable slot 0 of ios_base's vtable                       // 0x000379c0
 };
 static_assert(sizeof(IosBase) == 0x28, "IosBase");
 

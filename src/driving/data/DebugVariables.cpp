@@ -29,7 +29,7 @@ DebugUIntVariable *CurrentIndexer;          // the index dbindex set, until dben
 
 namespace {
 
-static const int kSlotAsString = 9;   // DebugData's vtable
+static const int kSlotAsString = 9;   // DebugItem's vtable
 
 static const int kOpenOut = 2;        // ios_base::out
 
@@ -158,11 +158,11 @@ void DebugUIntVariable::SetFromString(const char *text) {
 void dbindex(const char *name, uint32_t *data, uint32_t minimum, uint32_t maximum, const char *const *names) {
     DebugUIntVariable *index = (DebugUIntVariable *)OperatorNew(sizeof(DebugUIntVariable));
     if (index != NULL) {
-        index->name = name;
-        index->nameLength = uint32_t(strlen(name));
+        index->name.text = name;
+        index->name.length = int(strlen(name));
         index->data = data;
         index->maximum = maximum;
-        index->unknown0c = 0;
+        index->flags = 0;
         index->indexer = NULL;
         index->stride = 0;
         index->minimum = minimum;

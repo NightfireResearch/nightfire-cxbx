@@ -147,7 +147,7 @@ void RPlayerCamState::RotateY(int input, float value) {
         unknown0D = false;
     float rotation = Abs(other) <= Abs(value) ? value : other;
     bool rotating = !camera->SetAutoDriveRotationY(rotation) && rotation != 0.0f;
-    CarAudio()->flagC2 = rotating;
+    CarAudio()->turningSideways = rotating;
 }
 
 // ... about x, `negate`d for one input of each pair
@@ -161,7 +161,7 @@ void RPlayerCamState::RotateX(int input, float value, bool negate) {
     float rotation = Abs(other) <= Abs(value) ? value : other;
     bool rotating = !camera->SetAutoDriveRotationX(negate ? -rotation : rotation) &&
                     rotation != 0.0f;
-    CarAudio()->flagC3 = rotating;
+    CarAudio()->turningUpDown = rotating;
 }
 
 // FUNC_AT(0x00089e10)
@@ -197,14 +197,14 @@ void RPlayerCamState::AutoDriveCamInputHandler(int input, float value) {
     case kActionCamSpin:
         if (mission->unknown4f0 != 0 || _stricmp(Launch.missionName, kSpinTrack) != 0)
             break;
-        CarAudio()->flagC2 = 1;
+        CarAudio()->turningSideways = 1;
         if (allowed && !paused)
             camera->InitSpin();
         break;
     case kActionCamCentre:
         if (allowed && !paused)
             unknown0D = true;
-        CarAudio()->flagC2 = 0;
+        CarAudio()->turningSideways = 0;
         break;
     case kActionAimZoomRight:
         if (!aiming) {
@@ -253,7 +253,7 @@ void RPlayerCamState::AimZoom() {
     rotationY[1] = 0.0f;
     camera->SetAutoDriveRotationX(0.0f);
     camera->SetAutoDriveRotationY(rotationY[0]);
-    CarAudio()->flagC4 = 1;
+    CarAudio()->aiming = 1;
     if (GHud::TheApp() != NULL)
         GHud_AimOn(GHud::TheApp(), 0);
 }
@@ -263,7 +263,7 @@ void RPlayerCamState::AimRelease() {
     if (lockedOn)
         return;
     if (aiming) {
-        CarAudio()->flagC4 = 0;
+        CarAudio()->aiming = 0;
         if (GHud::TheApp() != NULL)
             GHud_AimOff(GHud::TheApp(), 0);
     }

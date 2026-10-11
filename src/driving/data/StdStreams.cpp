@@ -65,7 +65,6 @@ static const Facet *NumpunctCache;
 #define Locale_GetFacet ((const Facet *(__fastcall *)(const Locale *, int, uint32_t))0x00130d9b)
 #define Locale_Construct ((Locale *(__fastcall *)(Locale *, int))0x001310bf)
 #define Facet_Register ((void (__fastcall *)(Facet *, int))0x00130e13)
-#define Facet_Destruct ((void (__fastcall *)(Facet *, int))0x00037930)
 #define Locinfo_Construct ((Locinfo *(__fastcall *)(Locinfo *, int, const char *))0x00130f8f)
 #define Locinfo_Destruct ((void (__fastcall *)(Locinfo *, int))0x00130ed2)
 #define Getctype ((CtypeVec *(__cdecl *)(CtypeVec *))0x00130c3c)
@@ -76,7 +75,6 @@ static const Facet *NumpunctCache;
 #define IosBase_Init ((void (__fastcall *)(IosBase *, int))0x001313b8)
 #define IosBase_AddStandard ((void (__fastcall *)(IosBase *, int))0x001310fa)
 #define IosBase_Destruct ((void (__fastcall *)(IosBase *, int))0x00131191)
-#define IosBase_GetLoc ((Locale *(__fastcall *)(IosBase *, int, Locale *))0x00037980)
 #define Mutex_Construct ((void (__fastcall *)(uint32_t *, int))0x001313fe)
 #define Mutex_Destruct ((void (__fastcall *)(uint32_t *, int))0x00131416)
 #define Mutex_Lock ((void (__fastcall *)(uint32_t *, int))0x0013142b)
@@ -607,7 +605,7 @@ bool GameStd::Istream::Ipfx(bool noSkip) {
             ios->tie->Flush();
         if (!noSkip && (Ios()->flags & kSkipWs)) {
             Locale locale;
-            const Ctype *ctype = UseCtype(IosBase_GetLoc(Ios(), 0, &locale));
+            const Ctype *ctype = UseCtype(Ios()->GetLoc(&locale));
             ReleaseLocale(locale.impl);
             int ch = Sgetc(Ios()->streambuf);
             for (;;) {
@@ -705,7 +703,7 @@ Istream* GameStd::Istream::ExtractBool(bool *value) {
     sentry.Construct(this, false);
     if (sentry.ok) {
         Locale locale;
-        const NumGet *numGet = UseNumGet(IosBase_GetLoc(Ios(), 0, &locale));
+        const NumGet *numGet = UseNumGet(Ios()->GetLoc(&locale));
         ReleaseLocale(locale.impl);
         BasicIos *ios = Ios();
         InIter result;
@@ -726,7 +724,7 @@ Istream* GameStd::Istream::ExtractInt(int *value) {
     if (sentry.ok) {
         long read = 0;
         Locale locale;
-        const NumGet *numGet = UseNumGet(IosBase_GetLoc(Ios(), 0, &locale));
+        const NumGet *numGet = UseNumGet(Ios()->GetLoc(&locale));
         ReleaseLocale(locale.impl);
         BasicIos *ios = Ios();
         InIter result;
@@ -751,7 +749,7 @@ Istream* GameStd::Istream::ExtractUInt(unsigned *value) {
     sentry.Construct(this, false);
     if (sentry.ok) {
         Locale locale;
-        const NumGet *numGet = UseNumGet(IosBase_GetLoc(Ios(), 0, &locale));
+        const NumGet *numGet = UseNumGet(Ios()->GetLoc(&locale));
         ReleaseLocale(locale.impl);
         BasicIos *ios = Ios();
         InIter result;
@@ -771,7 +769,7 @@ Istream* GameStd::Istream::ExtractFloat(float *value) {
     sentry.Construct(this, false);
     if (sentry.ok) {
         Locale locale;
-        const NumGet *numGet = UseNumGet(IosBase_GetLoc(Ios(), 0, &locale));
+        const NumGet *numGet = UseNumGet(Ios()->GetLoc(&locale));
         ReleaseLocale(locale.impl);
         BasicIos *ios = Ios();
         InIter result;
@@ -852,7 +850,7 @@ Ostream* GameStd::Ostream::InsertUInt(unsigned value) {
     sentry.Construct(this);
     if (sentry.ok) {
         Locale locale;
-        const NumPut *numPut = UseNumPut(IosBase_GetLoc(Ios(), 0, &locale));
+        const NumPut *numPut = UseNumPut(Ios()->GetLoc(&locale));
         ReleaseLocale(locale.impl);
         BasicIos *ios = Ios();
         OutIter dest = { false, {}, ios->streambuf };
@@ -941,7 +939,7 @@ NumGet* GameStd::NumGet::Construct(uint32_t refCount) {
 
 // FUNC_AT(0x00038770)
 NumGet* GameStd::NumGet::Delete(unsigned flags) {
-    Facet_Destruct(this, 0);
+    Facet::Destruct();
     if (flags & 1)
         OperatorDelete(this);
     return this;
@@ -1433,7 +1431,7 @@ OutIter* GameStd::NumPut::IntPut(OutIter *result, OutIter dest, IosBase *ios, ch
     uint32_t prefix = text[0] == '+' || text[0] == '-' ? 1
                     : text[0] == '0' && (text[1] == 'x' || text[1] == 'X') ? 2 : 0;
     Locale locale;
-    const Numpunct *punct = UseNumpunct(IosBase_GetLoc(ios, 0, &locale));
+    const Numpunct *punct = UseNumpunct(ios->GetLoc(&locale));
     ReleaseLocale(locale.impl);
     String grouping;
     const_cast<Numpunct *>(punct)->Grouping(&grouping);
@@ -1635,7 +1633,7 @@ OutIter* GameStd::NumPut::FloatPut(OutIter *result, OutIter dest, IosBase *ios, 
     const char *point = (const char *)memchr(text, Localeconv()->decimalPoint[0], count);
     if (point != NULL) {
         Locale locale;
-        const Numpunct *punct = UseNumpunct(IosBase_GetLoc(ios, 0, &locale));
+        const Numpunct *punct = UseNumpunct(ios->GetLoc(&locale));
         ReleaseLocale(locale.impl);
         uint32_t fraction = uint32_t(point - text) + 1;
         for (uint32_t i = 0; i < fraction - 1; i++)
@@ -1679,7 +1677,7 @@ OutIter* GameStd::NumPut::DoPutBool(OutIter *result, OutIter dest, IosBase *ios,
         return CallVirtual<OutIter *>(this, kNumPutLong, result, dest, ios, fill, long(uint8_t(value)));
 
     Locale locale;
-    const Numpunct *punct = UseNumpunct(IosBase_GetLoc(ios, 0, &locale));
+    const Numpunct *punct = UseNumpunct(ios->GetLoc(&locale));
     ReleaseLocale(locale.impl);
     String name, trueName, falseName;
     if (value) {
@@ -1954,7 +1952,7 @@ InIter* GameStd::NumGet::DoGetBool(InIter *result, InIter first, InIter last, Io
     int answer = -1;
     if (ios->flags & kBoolAlpha) {
         Locale locale;
-        const Numpunct *punct = UseNumpunct(IosBase_GetLoc(ios, 0, &locale));
+        const Numpunct *punct = UseNumpunct(ios->GetLoc(&locale));
         ReleaseLocale(locale.impl);
         String names;   // "\0" "false" "\0" "true": the two fields, each led by a NUL
         names.capacity = 15;
@@ -1974,7 +1972,7 @@ InIter* GameStd::NumGet::DoGetBool(InIter *result, InIter first, InIter last, Io
     } else {
         *Errno() = 0;
         Locale locale;
-        IosBase_GetLoc(ios, 0, &locale);
+        ios->GetLoc(&locale);
         char digits[32];
         char *end;
         int base = GetIntField(digits, &first, &last, ios->flags, &locale);
@@ -1998,7 +1996,7 @@ InIter* GameStd::NumGet::DoGetUShort(InIter *result, InIter first, InIter last, 
                                      unsigned short *value) {
     *Errno() = 0;
     Locale locale;
-    IosBase_GetLoc(ios, 0, &locale);
+    ios->GetLoc(&locale);
     char digits[32];
     char *end;
     int base = GetIntField(digits, &first, &last, ios->flags, &locale);
@@ -2020,7 +2018,7 @@ InIter* GameStd::NumGet::DoGetUInt(InIter *result, InIter first, InIter last, Io
                                    unsigned *value) {
     *Errno() = 0;
     Locale locale;
-    IosBase_GetLoc(ios, 0, &locale);
+    ios->GetLoc(&locale);
     char digits[32];
     char *end;
     int base = GetIntField(digits, &first, &last, ios->flags, &locale);
@@ -2041,7 +2039,7 @@ InIter* GameStd::NumGet::DoGetUInt(InIter *result, InIter first, InIter last, Io
 InIter* GameStd::NumGet::DoGetLong(InIter *result, InIter first, InIter last, IosBase *ios, int *state, long *value) {
     *Errno() = 0;
     Locale locale;
-    IosBase_GetLoc(ios, 0, &locale);
+    ios->GetLoc(&locale);
     char digits[32];
     char *end;
     int base = GetIntField(digits, &first, &last, ios->flags, &locale);
@@ -2062,7 +2060,7 @@ InIter* GameStd::NumGet::DoGetULong(InIter *result, InIter first, InIter last, I
                                     unsigned long *value) {
     *Errno() = 0;
     Locale locale;
-    IosBase_GetLoc(ios, 0, &locale);
+    ios->GetLoc(&locale);
     char digits[32];
     char *end;
     int base = GetIntField(digits, &first, &last, ios->flags, &locale);
@@ -2083,7 +2081,7 @@ InIter* GameStd::NumGet::DoGetInt64(InIter *result, InIter first, InIter last, I
                                     int64_t *value) {
     *Errno() = 0;
     Locale locale;
-    IosBase_GetLoc(ios, 0, &locale);
+    ios->GetLoc(&locale);
     char digits[32];
     char *end;
     int base = GetIntField(digits, &first, &last, ios->flags, &locale);
@@ -2104,7 +2102,7 @@ InIter* GameStd::NumGet::DoGetUInt64(InIter *result, InIter first, InIter last, 
                                      uint64_t *value) {
     *Errno() = 0;
     Locale locale;
-    IosBase_GetLoc(ios, 0, &locale);
+    ios->GetLoc(&locale);
     char digits[32];
     char *end;
     int base = GetIntField(digits, &first, &last, ios->flags, &locale);
@@ -2125,7 +2123,7 @@ InIter* GameStd::NumGet::DoGetFloat(InIter *result, InIter first, InIter last, I
                                     float *value) {
     *Errno() = 0;
     Locale locale;
-    IosBase_GetLoc(ios, 0, &locale);
+    ios->GetLoc(&locale);
     char digits[60];
     char *end;
     int exponent = GetFloatField(digits, &first, &last, &locale);
@@ -2146,7 +2144,7 @@ InIter* GameStd::NumGet::DoGetDouble(InIter *result, InIter first, InIter last, 
                                      double *value) {
     *Errno() = 0;
     Locale locale;
-    IosBase_GetLoc(ios, 0, &locale);
+    ios->GetLoc(&locale);
     char digits[60];
     char *end;
     int exponent = GetFloatField(digits, &first, &last, &locale);
@@ -2167,7 +2165,7 @@ InIter* GameStd::NumGet::DoGetLongDouble(InIter *result, InIter first, InIter la
                                          double *value) {
     *Errno() = 0;
     Locale locale;
-    IosBase_GetLoc(ios, 0, &locale);
+    ios->GetLoc(&locale);
     char digits[60];
     char *end;
     int exponent = GetFloatField(digits, &first, &last, &locale);
@@ -2188,7 +2186,7 @@ InIter* GameStd::NumGet::DoGetPointer(InIter *result, InIter first, InIter last,
                                       void **value) {
     *Errno() = 0;
     Locale locale;
-    IosBase_GetLoc(ios, 0, &locale);
+    ios->GetLoc(&locale);
     char digits[32];
     char *end;
     int base = GetIntField(digits, &first, &last, kHex, &locale);

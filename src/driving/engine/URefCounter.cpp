@@ -11,6 +11,7 @@
 #include "../anim/Model.h"              // ModelInfoRefTree, TextureInfoRefTree
 #include "../anim/Weapon.h"             // WeaponInfoRefTree
 #include "../data/Tree.h"               // TreeThrow
+#include "../game/VehicleSound.h"       // EngineRefTree, RefCounterPair
 #include "../render/RSceneObj.hpp"
 #include "../render/TextureContext.h"
 #include "../world/SoundMap.h"          // RefCounterMapBuyHead
@@ -27,12 +28,7 @@
 
 // ---- originals called by address
 
-#define RefCounterValue_Construct ((RefCounterValue *(__fastcall *)(RefCounterValue *, int, const char *name, const RefCounterEntry *entry))0x0012ef50)
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
-
-// Each instantiation's own insert_unique, erase(where), _Erase(subtree) and erase(first, last)
-#define EngineMap_Erase ((RefCounterNode **(__fastcall *)(URefCounterMap *, int, RefCounterNode **, RefCounterNode *))0x0012efd0)
-#define EngineMap_Insert ((RefCounterInsertResult *(__fastcall *)(URefCounterMap *, int, RefCounterInsertResult *, const RefCounterValue *))0x0012f620)
 
 // ---- the statics: each instance, the guard of its construction (bit 0), and the destructor its Get registers
 // with atexit (the original thunks, StaticInit.cpp)
@@ -124,7 +120,7 @@ void URefCounterMap::AddReference(const char *name, void *object, RefCounterInse
         entry.references = 0;
         entry.object = NULL;   // the original leaves it uninitialised; the node's is set just below
         RefCounterValue value;
-        RefCounterValue_Construct(&value, 0, key, &entry);   // copies all 128 bytes of the key
+        static_cast<RefCounterPair *>(&value)->Construct(key, &entry);   // copies all 128 bytes of the key
         RefCounterInsertResult result;
         node = insert(this, 0, &result, &value)->node;
         node->value.entry.object = object;
@@ -499,6 +495,16 @@ BankRefCounter* BankRefCounter::Get() {
 }
 
 // ---- AEngine
+
+static RefCounterNode **__fastcall EngineMap_Erase(URefCounterMap *map, int, RefCounterNode **result,
+                                                   RefCounterNode *where) {
+    return static_cast<EngineRefTree *>(map)->EraseAt(result, where);
+}
+
+static RefCounterInsertResult *__fastcall EngineMap_Insert(URefCounterMap *map, int, RefCounterInsertResult *result,
+                                                           const RefCounterValue *value) {
+    return static_cast<EngineRefTree *>(map)->InsertUnique(result, value);
+}
 
 // FUNC_AT(0x0012f5b0)
 bool EngineRefCounter::RemoveReference(AEngine *engine) {

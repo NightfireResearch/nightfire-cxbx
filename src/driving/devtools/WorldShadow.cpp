@@ -30,7 +30,7 @@
 //     from random eyes in batches past the list's limit, the whole active list compared; then
 //     IsVisibleAgainstCurtains at random spheres and at spheres placed behind the curtains. The active list is put
 //     back to the same state before each side's run, and as it was at the end.
-//   - WSound::SetUnknown118 on random sound images (zero sums, sums equal to the old one, NaN), the whole 0x160
+//   - WSound::SetDelays on random sound images (zero sums, sums equal to the old one, NaN), the whole 0x160
 //     bytes compared.
 //   - The two map head allocators: the nodes' bytes.
 //   - WWorld's queries over the open world: GetSceneObjFromInstance and GetProcAnimStateFromInstance for every
@@ -87,7 +87,7 @@ typedef void (__fastcall *ListTidyFn)(WorldSceneObjectList *, int);
 #define Orig_AddActiveCurtain ((AddCurtainFn)0x000d0d60)
 #define Orig_IsVisibleAgainstCurtains ((VisibleFn)0x000d0f50)
 #define Orig_CurtainConstruct ((CurtainConstructFn)0x000d0ff0)
-#define Orig_SetUnknown118 ((SoundSetFn)0x000d11a0)
+#define Orig_SetDelays ((SoundSetFn)0x000d11a0)
 #define Orig_MapBuyHead ((BuyHeadFn)0x00094030)
 #define Orig_RefCounterMapBuyHead ((BuyHeadFn)0x00094070)
 #define Orig_GetSceneObjFromInstance ((SceneObjFn)0x000d14a0)
@@ -345,7 +345,7 @@ void TestCurtains() {
     OrigCurtains = savedOriginal;
 }
 
-// ---- WSound::SetUnknown118
+// ---- WSound::SetDelays
 
 struct SoundCase {
     alignas(16) uint8_t image[sizeof(WSound)];
@@ -356,9 +356,9 @@ void RunSound(void *context, bool original) {
     SoundCase *c = static_cast<SoundCase *>(context);
     WSound *sound = reinterpret_cast<WSound *>(c->image);
     if (original)
-        Orig_SetUnknown118(sound, 0, c->first, c->second);
+        Orig_SetDelays(sound, 0, c->first, c->second);
     else
-        sound->SetUnknown118(c->first, c->second);
+        sound->SetDelays(c->first, c->second);
 }
 
 float SoundValue() {
@@ -376,19 +376,19 @@ void TestSound() {
         for (size_t b = 0; b < sizeof(c.image); b++)
             c.image[b] = uint8_t(Next());
         WSound *sound = reinterpret_cast<WSound *>(c.image);
-        sound->unknown118 = SoundValue();
-        sound->unknown11c = SoundValue();
+        sound->minDelay = SoundValue();
+        sound->maxDelay = SoundValue();
         c.first = SoundValue();
         c.second = SoundValue();
         switch (i % 4) {
         case 0: c.second = -c.first; break;                                 // a zero sum
-        case 1: c.first = sound->unknown118; c.second = sound->unknown11c; break;   // the old sum
+        case 1: c.first = sound->minDelay; c.second = sound->maxDelay; break;   // the old sum
         default: break;
         }
         memcpy(&port, &c, sizeof(c));
         g_cases++;
         if (Guarded(RunSound, &c, true) && Guarded(RunSound, &port, false))
-            CheckBytes("WSound::SetUnknown118", i, c.image, port.image, sizeof(c.image));
+            CheckBytes("WSound::SetDelays", i, c.image, port.image, sizeof(c.image));
     }
 }
 

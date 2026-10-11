@@ -23,13 +23,31 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// A debug-menu item with a value (Ghidra: DebugData): the variable's name, and where its value is - indexed by
-// another variable when `indexer` is set.
-struct DebugData {
+#include "Carp.h"                       // CARP::CountedString
+
+struct DebugData;
+
+// A debug-menu item (the PS2 build's DebugItem; vtable 0x0018bc78, 20 slots): its name and flags. Its small virtual
+// methods are DebugItem.cpp's; DebugItem.h lists the vtable.
+struct DebugItem {
     const void *const *vtable;   // +0x00
-    const char *name;            // +0x04
-    uint32_t nameLength;         // +0x08
-    uint32_t unknown0c;          // +0x0c 0
+    CARP::CountedString name;    // +0x04 (an LString on the PS2)
+    uint32_t flags;              // +0x0c bit 1: hidden; 0 from dbindex
+
+    void Destruct();                                                    // ~DebugItem           // 0x000379e0
+    DebugItem* Delete(unsigned flags);                                  // slot 0               // 0x00037a90
+    void Increment();                                                   // slot 5: Increase(0)  // 0x000379f0
+    void Decrement();                                                   // slot 6: Decrease(0)  // 0x00037a00
+    void Activate();                                                    // slot 13: Increment() // 0x00037a20
+    CARP::CountedString* SubMenuNamespace(CARP::CountedString *result); // slot 14: ""          // 0x00037a30
+    char* Name();                                                       // slot 15              // 0x00037a60
+    int IsHidden();                                                     // slot 17: flag bit 1  // 0x00037a80
+};
+static_assert(sizeof(DebugItem) == 0x10, "DebugItem");
+
+// A debug-menu item with a value (Ghidra: DebugData): where its value is - indexed by another variable when
+// `indexer` is set.
+struct DebugData : DebugItem {
     DebugData *indexer;          // +0x10 the index variable this one is an array over, or null
     uint32_t stride;             // +0x14 bytes from one index's value to the next
     void *data;                  // +0x18
@@ -41,8 +59,10 @@ struct DebugData {
     // DebugData's own AsString (0x000380e0) and Axis2AsString (0x00038130), vtable slots 9 and 10: empty.
     char* AsString(char *out);
     char* Axis2AsString();
+    int IsIndexed();                            // slot 18 (DebugItem.cpp)                              // 0x00037ac0
+    DebugData* GetIndexer();                    // slot 19 (DebugItem.cpp)                              // 0x00037ab0
 };
-static_assert(sizeof(DebugData) == 0x1c, "DebugData");
+static_assert(offsetof(DebugData, indexer) == 0x10 && sizeof(DebugData) == 0x1c, "DebugData");
 
 // DebugVariable<unsigned int> (0x2c bytes): an index variable, with its range, step and value names.
 struct DebugUIntVariable : DebugData {

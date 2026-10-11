@@ -160,7 +160,7 @@ public:
     uint32_t unknown98;
     uint8_t active;             // +0x9c
     uint8_t unknown9d[3];
-    int32_t lockState;          // +0xa0 TargetLockState
+    TargetLockState lockState;  // +0xa0
     int32_t mode;               // +0xa4 TargetingMode
     int32_t sortMode;           // +0xa8 TargetSortMode
     uint32_t unknownAC;         // +0xac zero

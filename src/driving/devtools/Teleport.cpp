@@ -50,6 +50,10 @@
 #include "BondCarShadowB.h"
 #include "BondCarShadowC.h"
 #include "BondCarShadowD.h"
+#include "GameAudioShadowA.h"
+#include "GameAudioShadowB.h"
+#include "GameAudioShadowC.h"
+#include "GameAudioShadowD.h"
 #include "VehicleShadow.h"
 
 #include <windows.h>
@@ -307,6 +311,10 @@ void Teleport_Tick(void) {
         RenderFxShadow_Run();   // NIGHTFIRE_RENDERFXSHADOW=1 only
         ParticleShadow_Run();   // NIGHTFIRE_PARTICLESHADOW=1 only
         InputShadow_Run();   // NIGHTFIRE_INPUTSHADOW=1 only
+        GameAudioShadowA_Run();   // NIGHTFIRE_GAMEAUDIOSHADOWA=1 only
+        GameAudioShadowB_Run();   // NIGHTFIRE_GAMEAUDIOSHADOWB=1 only
+        GameAudioShadowC_Run();   // NIGHTFIRE_GAMEAUDIOSHADOWC=1 only
+        GameAudioShadowD_Run();   // NIGHTFIRE_GAMEAUDIOSHADOWD=1 only
         if (AnyVehicleShadow()) {
             PrintQueues("before the vehicle shadows", ReadQueues());
             RunVehicleShadow("bondcarA", BondCarShadowA_Run);   // NIGHTFIRE_BONDCARSHADOWA=1 only

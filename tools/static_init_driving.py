@@ -84,6 +84,9 @@ TARGETS = {
     0x0011a020: ("method", "StringToNumber", "Destruct"),
     0x0008d420: ("method", "RRenderWorldCulling", "Construct"),
     0x0011c210: ("method", "UVolatileMaterial", "Construct"),
+    0x00037640: ("method", "DAudioTargetList", "Construct"),
+    0x00037660: ("method", "DAudioTargetList", "Destruct"),
+    0x00037940: ("method", "GameStd::Locale", "Destruct"),
 }
 # Objects the initialisers construct that our code names, by address: the name and its class. A constructor or
 # destructor of that class is called on the name; for the globals we own (XBE_GLOBAL) this is what makes the
@@ -97,6 +100,7 @@ NAMED = {
     0x002434e4: ("FilesNotInBigFile", "FileNameList"),
     0x00243580: ("CARP::Resolvers", "CARP::ResolverMap"),      # data/Carp.cpp
     0x001f2c80: ("fgWorldCulling", "RRenderWorldCulling"),     # render/WorldCulling.h
+    0x001e2278: ("DAudioTargets", "DAudioTargetList"),         # game/DebugAudio.cpp
 }
 # Owned arrays of records that a loop of stores clears: the name, and the field at each record's offset 0.
 NAMED_ARRAYS = {
@@ -648,7 +652,9 @@ def main():
             '#include "../eagl/Loader.h"',
             '#include "../eagl/Profiler.h"',
             '#include "../data/Carp.h"',
+            '#include "../data/StdStreams.h"',
             '#include "../data/SymbolTable.h"',
+            '#include "../game/DebugAudio.h"',
             '#include "../render/Draw.h"',
             '#include "../render/Materials.h"',
             '#include "../render/WorldCulling.h"',

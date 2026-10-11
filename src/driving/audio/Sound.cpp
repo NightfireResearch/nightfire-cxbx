@@ -227,7 +227,7 @@ AMenuSoundPriv* AMenuSoundPriv::Construct(int bank, int patch, const char *mixNa
 // FUNC_AT(0x0011dee0)
 void AMenuSoundPriv::Play(ASoundPlayParams *params) {
     float level = float(mix->GetVolume() * volume * params->volume);
-    voice.Play(params->listener->unknown5c, level, params->pitch, params->azimuth, 0.0f, 0.0f);
+    voice.Play(params->listener->view, level, params->pitch, params->azimuth, 0.0f, 0.0f);
     if (AVoice_IsFinished(&voice, 0))
         CallDelete(1);
 }
@@ -297,7 +297,7 @@ void ABasic::Play(ASoundPlayParams *params) {
         voice = made != NULL ? made->Construct(mix, bank->handle, patch) : NULL;
     }
     double level = mix->GetVolume() * volume;
-    voice->Play(params->listener->unknown5c, float(level * params->volume), pitch * params->pitch, params->azimuth,
+    voice->Play(params->listener->view, float(level * params->volume), pitch * params->pitch, params->azimuth,
                 0.0f, 0.0f);
 }
 

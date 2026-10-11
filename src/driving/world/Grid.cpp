@@ -7,6 +7,7 @@
 
 #include "../engine/CoreFoundation.h"
 #include "../engine/UMemory.hpp"
+#include "../game/DebugAudio.h"         // DAudioTargetList, whose erase the two lists share
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../../helpers.h"
@@ -23,7 +24,6 @@
 
 // ---- originals called by address
 
-#define MoverList_Erase ((WGridMoverNode **(__fastcall *)(WGridMoverList *, int, WGridMoverNode **, WGridMoverNode *, WGridMoverNode *))0x00037160)
 #define CellVector_Xlen ((void (__fastcall *)(void *, int))0x00034e50)
 
 // ---- the game's state
@@ -101,9 +101,10 @@ void AppendMover(const WGridMover &mover) {
 }
 
 void ClearMovers() {
-    WGridMoverNode *head = GridMovers.head;
-    WGridMoverNode *ignored;
-    MoverList_Erase(&GridMovers, 0, &ignored, head == NULL ? NULL : head->next, head);
+    // The two lists' nodes are the same size: the linker kept one erase, DAudio's target list's
+    DAudioTargetList *list = reinterpret_cast<DAudioTargetList *>(&GridMovers);
+    DAudioTargetNode *ignored;
+    list->Erase(&ignored, list->Begin(), list->head);
 }
 
 // Moved further than the threshold along an axis (an unordered difference has not)

@@ -7,6 +7,7 @@
 #include "../engine/GameInterfaces.hpp"    // GHud
 #include "../engine/MissionManager.h"
 #include "../engine/UMemory.hpp"
+#include "../game/WeaponSound.h"       // ATargeting
 #include "../camera/CameraSpline.h"     // RCameraMath
 #include "../camera/PlayerCamera.h"     // RCamera, RViewCamera, RPlayerCamera
 #include "../physics/RigidBody.h"
@@ -88,8 +89,6 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 
 #define AIVehicle_GetPhysicsObject ((PhysicsObject *(__fastcall *)(AIVehicle *, int))0x00035840)
 #define AIVehicle_GetPosition ((const Coord3 *(__fastcall *)(AIVehicle *, int))0x000359e0)
-#define ATargeting_Construct ((ATargeting *(__fastcall *)(ATargeting *, int))0x0012e0f0)
-#define ATargeting_SetState ((void (__fastcall *)(ATargeting *, int, int state))0x0012e120)
 #define GHud_SetTarget ((void (__fastcall *)(GHud *, int, const ScreenPos *cursor))0x000d9f50)
 #define GHud_SetTargetLockState ((void (__fastcall *)(GHud *, int, int state))0x000d9fb0)
 #define PointerList_BuyHead ((PointerListNode *(__fastcall *)(PointerList *, int))0x000b8490)
@@ -461,8 +460,8 @@ WTargetPicker* WTargetPicker::Construct() {
         list->size = 0;
     }
     targets = list;
-    ATargeting *sound = static_cast<ATargeting *>(OperatorNew(0xc));
-    targeting = sound != NULL ? ATargeting_Construct(sound, 0) : NULL;
+    ATargeting *sound = static_cast<ATargeting *>(OperatorNew(sizeof(ATargeting)));
+    targeting = sound != NULL ? sound->Construct() : NULL;
     return this;
 }
 
@@ -686,13 +685,13 @@ void WTargetPicker::MoveTargetingCursors() {
     if (canLock && selected != NULL && selected->onScreen) {
         int32_t held = SimStepCount - lockStartTime;
         lockState = held * double(SimTimeStep) > kLockTime ? kLockLocked : kLockTracking;
-        ATargeting_SetState(targeting, 0, lockState);
+        targeting->SetState(lockState);
         cursor = selected->screenPos;
         return;
     }
     lockStartTime = SimStepCount;
     lockState = kLockNone;
-    ATargeting_SetState(targeting, 0, kLockNone);
+    targeting->SetState(kLockNone);
     ScreenPos screen;
     cursor = *GetScreenPos(&screen, &worldTarget);
 }
