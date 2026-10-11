@@ -38,7 +38,6 @@ enum CarClass : int32_t {
     kCarClass4 = 4,
 };
 constexpr uint32_t kPBondCarVtable = 0x0018f580;
-constexpr uint32_t kTyreTrackSize = 0x920;         // sizeof(RTyreTrack), the tracks' FastAlloc size
 
 // What the wheel-force methods work from at each wheel (AddWheelForces, AddSimpleWheelForces, AddSnowmobileForces;
 // the names are ours)

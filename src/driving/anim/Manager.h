@@ -69,7 +69,7 @@ struct IndexedTagGroup : UGroup {
     UGroup* LocateTag(uint32_t tag, int index);                                 // 0x0001aa40
 };
 
-// A getter of the field at +0x2c of the object RVehicle::PostLoad calls it on (invented names).
+// A getter of the field at +0x2c (invented names): RVehicle::PostLoad calls it for RSceneObj::animHandle.
 struct Field2cGetter {
     uint8_t unknown00[0x2c];
     void *unknown2c;

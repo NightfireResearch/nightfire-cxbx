@@ -590,7 +590,8 @@ void TestSystems() {
         SystemWork *w = &g_system;
         memset(w, 0, sizeof(*w));
         w->op = i % kSystemOps;
-        w->emitter.position = RandomPoint(100);
+        Coord3 position = RandomPoint(100);
+        w->emitter.position = { position.x, position.y, position.z, 0.0f };
         w->emitter.side = RandomPoint(1);
         w->emitter.direction = RandomPoint(1);
         w->emitter.systemTag = RandomTag();

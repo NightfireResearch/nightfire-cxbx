@@ -16,6 +16,8 @@
 #include "../game/BondCar.h"
 #include "../game/BondCarPhysics.h"
 #include "../game/BondCarState.h"       // the BondCar_* tuning
+#include "../game/TyreTrack.h"
+#include "../game/VehicleRender.h"
 #include "../physics/RigidBody.h"
 #include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
@@ -83,9 +85,9 @@ const uint32_t kPorted[] = {
 const uint32_t kBondCarVtable = 0x0018f580;
 const int kOwners = 0x40;
 const size_t kAudioBytes = 0x180;
-const size_t kTyreTrackBytes = 0x920;
+const size_t kTyreTrackBytes = sizeof(RTyreTrack);
 const size_t kAIBytes = 0x84;
-const size_t kRenderBytes = 0x370;      // sizeof(RVehicle)
+const size_t kRenderBytes = sizeof(RVehicle);
 const size_t kHandleBytes = 0x10000;    // the most of a handle (header and data) the state covers
 const int kVtableSlots = 32;
 const int kMaxRecords = 32;

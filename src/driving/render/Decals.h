@@ -19,11 +19,31 @@ namespace EAGL {
 struct GeoPrim;
 }
 
+// The parameters of REmp's GeoPrims (EmpGeoPrim's params: the render method's packets)
+enum EmpGeoPrimParam {
+    kEmpParamState = 0,
+    kEmpParamTexture = 1,
+    kEmpParamVertexCount = 2,           // a vertex count record
+    kEmpParamIndices = 3,
+    kEmpParamModelMatrix = 4,           // "EAGL::ViewPort::gpModelMatrix"
+    kEmpParamModelViewMatrix = 5,       // "EAGL::ViewPort::gpModelViewMatrix"
+    kEmpParamProjectionMatrix = 6,      // "EAGL::ViewPort::gpProjectionMatrix"
+    kEmpParamFishEye = 7,               // "GAME::FishEyeParams"; REmp::Init points it at the reflection's warpage
+    kEmpParamLights = 8,                // "GAME::PositionalLights"; REmp::Init points it at the light manager's
+    kEmpParamConstants = 9,
+    kEmpParam10 = 10,
+    kEmpParamSimStep = 11,              // "GAME::SimStep"
+    kEmpParamPositions = 12,
+    kEmpParamTexCoords = 13,
+    kEmpParamColours = 14,
+    kEmpParamCount = 15,
+};
+
 // REmp's GeoPrim (0x7c) over a child of the render method at 0x00242e1c: the model, model-view and projection
 // matrices, "GAME::FishEyeParams", eight "GAME::PositionalLights" and "GAME::SimStep". The name is ours.
 struct EmpGeoPrim {
     EAGL::RenderMethod *method;         // +0x00
-    EAGL::GeoPrimParam params[15];      // +0x04
+    EAGL::GeoPrimParam params[kEmpParamCount];  // +0x04 by EmpGeoPrimParam
 
     EmpGeoPrim* Construct();            // FUN_0009b550                                  // 0x0009b550
 };

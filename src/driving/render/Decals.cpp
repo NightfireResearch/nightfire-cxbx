@@ -122,19 +122,19 @@ TexturedGeoPrim* TexturedGeoPrim::Construct() {
 // FUNC_AT(0x0009b550)
 EmpGeoPrim* EmpGeoPrim::Construct() {
     method = NewChildRenderMethod(EmpParentMethod);
-    for (int i = 0; i < 4; i++)
+    for (int i = kEmpParamState; i <= kEmpParamIndices; i++)
         params[i].Set(0, NULL);
-    params[4].Set(1, RegisteredVar("EAGL::ViewPort::gpModelMatrix"));
-    params[5].Set(1, RegisteredVar("EAGL::ViewPort::gpModelViewMatrix"));
-    params[6].Set(1, RegisteredVar("EAGL::ViewPort::gpProjectionMatrix"));
-    params[7].Set(1, RegisteredVar("GAME::FishEyeParams"));
-    params[8].Set(8, RegisteredVar("GAME::PositionalLights"));
-    params[9].Set(0, NULL);
-    params[10].Set(0, NULL);
+    params[kEmpParamModelMatrix].Set(1, RegisteredVar("EAGL::ViewPort::gpModelMatrix"));
+    params[kEmpParamModelViewMatrix].Set(1, RegisteredVar("EAGL::ViewPort::gpModelViewMatrix"));
+    params[kEmpParamProjectionMatrix].Set(1, RegisteredVar("EAGL::ViewPort::gpProjectionMatrix"));
+    params[kEmpParamFishEye].Set(1, RegisteredVar("GAME::FishEyeParams"));
+    params[kEmpParamLights].Set(8, RegisteredVar("GAME::PositionalLights"));
+    params[kEmpParamConstants].Set(0, NULL);
+    params[kEmpParam10].Set(0, NULL);
     void *simStep = RegisteredVar("GAME::SimStep");
-    for (int i = 12; i < 15; i++)
+    for (int i = kEmpParamPositions; i <= kEmpParamColours; i++)
         params[i].Set(0, NULL);
-    params[11].Set(1, simStep);
+    params[kEmpParamSimStep].Set(1, simStep);
     return this;
 }
 

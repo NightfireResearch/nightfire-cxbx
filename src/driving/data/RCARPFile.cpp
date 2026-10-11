@@ -17,6 +17,7 @@
 #include "../engine/InputConfig.h"   // BuildFileName
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
+#include "../game/VehicleRender.h"   // VehicleBuffers
 #include "../render/Fog.h"
 #include "../render/Lights.h"
 #include "../render/Reflection.h"
@@ -65,9 +66,7 @@ static const char *const TextureNames[10] = {
 // XBE_GLOBAL(0x001c3f04, 0xc)
 static const char *const MaterialFiles[3] = {"eaglrm.o", "bondrm.o", NULL};
 
-// The game's data RegisterSymbols hands out by address.
-#define SwitchData ((uint8_t *)0x001f2a50)             // 16-byte entries
-#define DamageZones ((void *)0x001f2b50)
+// The game's data RegisterSymbols hands out by address (and RVehicle's shared buffers, VehicleBuffers).
 #define SimStep ((void *)0x001c465c)
 #define SwayData ((void *)0x001c466c)
 #define CausticControl ((void *)0x001c467c)
@@ -230,16 +229,16 @@ void* RCARPFile::RegisterSymbols(const char *name, bool *found) {
     void *value = NULL;
     if (Has(name, "GAME::SwitchData[")) {
         if (name[0x12] == ']')
-            value = SwitchData + (name[0x11] - '0') * 16;
+            value = &VehicleBuffers.switches[name[0x11] - '0'];
         else
-            value = SwitchData + ((name[0x11] - '0') * 10 + (name[0x12] - '0')) * 16;
+            value = &VehicleBuffers.switches[(name[0x11] - '0') * 10 + (name[0x12] - '0')];
     } else if (Has(name, "GAME::SwitchData")) {
-        value = SwitchData + 8 * 16;
+        value = &VehicleBuffers.switches[8];
     }
     if (Has(name, "GAME::WMap") || Has(name, "EAGL::WMap"))
         value = ContextTexture(kTextureWater);
     if (Has(name, "GAME::DamageZones") || Has(name, "EAGL::DamageZones"))
-        value = DamageZones;
+        value = VehicleBuffers.damageZones;
     if (Has(name, "GAME::FishEyeParams"))
         value = TheReflection->GetReflectionMapWarpageData();
     if (Has(name, "GAME::ReflectionMap1"))

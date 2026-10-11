@@ -9,6 +9,7 @@
 #include "../audio/Bank.h"              // SharedTreeMax, SharedTreeIterator
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
+#include "../game/EmpEffect.h"          // SharedTreeMin
 #include "../world/SoundGroup.h"        // WSoundMap
 #include "../world/SoundMap.h"          // MapBuyHead
 #include "../render/TextureContext.h"  // TextureContextMap
@@ -23,11 +24,10 @@
 // names compare with _stricmp.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The tree helpers every map in the game shares (the linker folded the copies together). Four are ours, ported on
+// The tree helpers every map in the game shares (the linker folded the copies together). Five are ours, ported on
 // other maps' types: 0x000cca30 as WSoundMap::Lrotate (world/SoundGroup.h), 0x00126b70 and 0x00126cb0 as
-// SharedTree's (audio/Bank.h), 0x00093f10 as TextureContextMap::BuyNode (render/TextureContext.h). The rest are
-// called at their addresses.
-#define Tree_Min ((TreeNode *(*)(TreeNode *))0x0009c310)
+// SharedTree's (audio/Bank.h), 0x00093f10 as TextureContextMap::BuyNode (render/TextureContext.h), 0x0009c310 as
+// SharedTreeMin (game/EmpEffect.h). The rest are called at their addresses.
 #define TreeIterator_Increment ((void (__fastcall *)(TreeNode **, int))0x000b2920)
 
 static void Tree_Lrotate(Tree *tree, TreeNode *node) {
@@ -224,7 +224,7 @@ TreeNode **Tree::EraseAt(TreeNode **result, TreeNode *where) {
         else
             fixnodeParent->right = fixnode;
         if (head->left == where)
-            head->left = fixnode->isNil ? fixnodeParent : Tree_Min(fixnode);
+            head->left = fixnode->isNil ? fixnodeParent : SharedTreeMin(fixnode);
         if (head->right == where)
             head->right = fixnode->isNil ? fixnodeParent : SharedTreeMax(fixnode);
     } else {

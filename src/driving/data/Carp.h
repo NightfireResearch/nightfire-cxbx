@@ -58,7 +58,7 @@ public:
     uint32_t bboxMaxW;
     uint32_t unknown30;
     TagReference name;              // 'Name', set by the resolver before it resolves it
-    uint32_t unknown38;
+    float height;                   // +0x38 RVehicle's PostLoad and GetRenderOffset read it
     uint32_t numCollisionPrims;
     float damageBoxMin[3];
     uint32_t damageBoxMinW;

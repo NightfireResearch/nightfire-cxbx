@@ -14,6 +14,7 @@
 #include "../eagl/RenderContext.h"
 #include "../engine/CoreFoundation.h"     // GetFoundationVideoMode
 #include "../engine/MissionManager.h"
+#include "../game/WeaponCameras.h"        // MissileCam
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "Draw.h"
@@ -26,20 +27,7 @@
 // cases in order (0x0009a520, 0x0009a547, 0x0009a5e9, 0x0009a656), no byte table in front.
 // ---------------------------------------------------------------------------------------------------------------
 
-namespace {
-
-// The missile camera as the colouring uses it (RMissileCam; only these fields)
-struct ColorizeMissileCamView {
-    uint8_t unknown00[0x10];
-    uint8_t unknown10;                  // +0x10 set in the infrared mode and mode 2
-    uint8_t unknown11[3];
-    int32_t unknown14;                  // +0x14 0x20 infrared, 0x40 mode 2
-};
-
-} // namespace
-
 // ---- globals
-#define MissileCam (*(ColorizeMissileCamView **)0x00200f54)
 #define SimStepCount U32_AT(0x00234e34)
 // XBE_GLOBAL(0x001c487c, 4)
 float InfraredStartBrightness = 0.4f;    // the previous brightness the infrared mode starts from
@@ -134,13 +122,13 @@ void RColorize::SetEnabled(int newMode) {
     switch (newMode) {
     case kModeOff:
         ActManager::SetIRMode(false);
-        MissileCam->unknown10 = 0;
+        MissileCam->enabled = 0;
         fgLightManager->forcePositionalLighting = false;
         break;
     case kModeInfrared:
         ActManager::SetIRMode(true);
-        MissileCam->unknown10 = 1;
-        MissileCam->unknown14 = 0x20;
+        MissileCam->enabled = 1;
+        MissileCam->alpha = 0x20;
         fgLightManager->forcePositionalLighting = true;
         tintColour = 0xff001010;
         tintColour3 = 0xffff0050;
@@ -151,8 +139,8 @@ void RColorize::SetEnabled(int newMode) {
         brightnessChangeTime = SimStepCount;
         break;
     case kMode2:
-        MissileCam->unknown10 = 1;
-        MissileCam->unknown14 = 0x40;
+        MissileCam->enabled = 1;
+        MissileCam->alpha = 0x40;
         tintColour = 0xff282840;
         tintColour2 = 0xff282840;
         tintColour3 = 0xff008080;
@@ -263,7 +251,7 @@ void RColorize::Draw() {
 void RColorize::Reset() {
     mode = kModeOff;
     ActManager::SetIRMode(false);
-    MissileCam->unknown10 = 0;
+    MissileCam->enabled = 0;
     fgLightManager->forcePositionalLighting = false;
     prevAreaBrightness = areaBrightness;
     areaBrightness = 0.0f;

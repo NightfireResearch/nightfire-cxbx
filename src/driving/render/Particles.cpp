@@ -60,6 +60,11 @@ static_assert(std::bit_cast<uint32_t>(kRadiansPerDegree) == 0x3c8efa35 &&
 
 static const char kLifeTooLong[] = "ERROR IN PARTICLE DATA: lifeTime of %d is too large. Capping at 255.\n";
 
+// A vector's x, y and z
+static Coord3 *Xyz(Coord4 *v) {
+    return reinterpret_cast<Coord3 *>(v);
+}
+
 // ---- the maps
 
 // FUNC_AT(0x000a23c0)
@@ -336,8 +341,8 @@ RParticleSystem* RParticleSystem::Construct(float unknown34, RParticleEmitter *e
 
 // FUNC_AT(0x000a1c00)
 void RParticleSystem::InitData() {
-    positionSource = &emitter->position;
-    lastPosition = emitter->position;
+    positionSource = Xyz(&emitter->position);
+    lastPosition = *Xyz(&emitter->position);
     VU0_v4crossprodxyz(&emitter->side, &emitter->direction, &axis);
     spawns = float(double(rateScale) * rate * double(data->unknown48) + spawns);
 }
@@ -358,7 +363,7 @@ void RParticleSystem::SetSystem(uint32_t tag) {
 void RParticleSystem::Update(int ticks) {
     if (!active || emitter == NULL)
         return;
-    Coord3 *source = (systemFlags & kSystemAtEmitter) ? &emitter->position : positionSource;
+    Coord3 *source = (systemFlags & kSystemAtEmitter) ? Xyz(&emitter->position) : positionSource;
     Coord4 motion;
     VU0_v4sub(&lastPosition, source, &motion);
     lastPosition = *source;
@@ -553,7 +558,7 @@ void RParticleSystemManager::CreateParticles(RParticleSystemData *data, const Co
     Coord4 forward = { direction->x, direction->y, direction->z, 0.0f };
     RParticleEmitter emitter = {};
     emitter.direction = *direction;
-    memset(&emitter.body, 0xff, 4);     // the direction's fourth word, -1: no body
+    emitter.body = -1;                  // no body
     Coord4 up = { 0.0f, 1.0f, 0.0f, 0.0f };
     if ((fabsf(forward.x) < kSteep || fabs(double(forward.y) / forward.x) > 1.0) &&
         (fabsf(forward.z) < kSteep || fabs(double(forward.y) / forward.z) > 1.0)) {

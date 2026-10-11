@@ -235,6 +235,27 @@ struct PVehicle : PhysicsObject {
     void *GetSplinePath() { return (this->*XbeVirtual<void *(PVehicle::*)()>(this, kGetSplinePath))(); }
     const char *GetCarType() { return (this->*XbeVirtual<const char *(PVehicle::*)()>(this, kGetCarType))(); }
     int GetCarClass() { return (this->*XbeVirtual<int (PVehicle::*)()>(this, kGetCarClass))(); }
+    float GetCarSpeed() { return (this->*XbeVirtual<float (PVehicle::*)()>(this, kGetCarSpeed))(); }
+    float GetCarSteer() { return (this->*XbeVirtual<float (PVehicle::*)()>(this, kGetCarSteer))(); }
+    bool IsTyreShredded(int8_t wheel) {
+        return (this->*XbeVirtual<bool (PVehicle::*)(int8_t)>(this, kIsTyreShredded))(wheel);
+    }
+    float GetCarWheelSpinAngle(int8_t axle) {
+        return (this->*XbeVirtual<float (PVehicle::*)(int8_t)>(this, kGetCarWheelSpinAngle))(axle);
+    }
+    float GetSuspensionCompression(int wheel) {
+        return (this->*XbeVirtual<float (PVehicle::*)(int)>(this, kGetSuspensionCompression))(wheel);
+    }
+    int GetWheelRoadSurface(int wheel) {
+        return (this->*XbeVirtual<int (PVehicle::*)(int)>(this, kGetWheelRoadSurface))(wheel);
+    }
+    // The particles' callers test AL only
+    bool IsWheelOnGround(int8_t wheel) {
+        return (this->*XbeVirtual<bool (PVehicle::*)(int8_t)>(this, kIsWheelOnGround))(wheel);
+    }
+    float GetCarWheelSlip(int wheel) {
+        return (this->*XbeVirtual<float (PVehicle::*)(int)>(this, kGetCarWheelSlip))(wheel);
+    }
     // The controls are returned by value: the caller's record, filled and answered
     BondCarControl *GetCarControl(BondCarControl *result) {
         typedef BondCarControl *(PVehicle::*Method)(BondCarControl *result);

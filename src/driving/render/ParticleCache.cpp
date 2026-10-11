@@ -177,7 +177,7 @@ void RParticle::ResetParticle(const Coord3 *start, const RParticleSystemData *da
                           (double(data->gravity) - data->gravitySpread)));
     spin = int8_t(Ftol((double(RandomShort()) * data->spin * kRandom15 - data->spin) * kSpinScale));
     system = uint8_t(data->index);
-    body = emitter->body;
+    body = uint8_t(emitter->body);
     alphaSize = uint8_t(data->unknown2C);
     unknown1D = uint8_t(Ftol(double(data->drag) * 255.0f));
     flags = uint8_t(data->flags);

@@ -20,6 +20,9 @@
 #include "../data/StdStreams.h"
 #include "../data/SymbolTable.h"
 #include "../game/DebugAudio.h"
+#include "../game/EmpEffect.h"
+#include "../game/TyreTrack.h"
+#include "../game/WeaponEffects.h"
 #include "../render/Draw.h"
 #include "../render/Materials.h"
 #include "../render/WorldCulling.h"
@@ -333,21 +336,21 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x001f5ef8) = 1.0f / FLOAT_AT(0x001f5ef4);                                                  // 0x00158510
     FLOAT_AT(0x001f5efc) = 180.0f / 3.1415925f;                                                          // 0x00158530
     FLOAT_AT(0x001f5f00) = 1.0f / FLOAT_AT(0x001f5efc);                                                  // 0x00158550
-    for (int i = 0; i < 4; i++) ((UVolatileMaterial *)(0x001f5f10 + i * 0x60))->Construct();             // 0x00158570
-    CrtAtExit([] { for (int i = 3; i >= 0; i--) ((EAGL::GeoPrimState *)(0x001f5f10 + i * 0x60))->Destruct(); });
-    memset((void *)0x001f6090, 0, 0x800);                                                                // 0x001585a0
+    for (int i = 0; i < 4; i++) BulletStreakMaterials[i].Construct();                                    // 0x00158570
+    CrtAtExit([] { for (int i = 3; i >= 0; i--) ((EAGL::GeoPrimState *)&BulletStreakMaterials[i])->Destruct(); });
+    // BulletStreakColours = zero: ours (game/WeaponEffects.cpp)                                         // 0x001585a0
     FLOAT_AT(0x001f689c) = 1.0f / FLOAT_AT(0x001c4890);                                                  // 0x001585c0
     FLOAT_AT(0x001fe824) = 1.0f / FLOAT_AT(0x001c48b0);                                                  // 0x001585e0
     // DecalColours = zero: ours (render/Decals.cpp)                                                     // 0x00158600
     ((EAGL::GeoPrimState *)0x001ff7f0)->Construct();                                                     // 0x00158620
     CrtAtExit([] { ((EAGL::GeoPrimState *)0x001ff7f0)->Destruct(); });
     FLOAT_AT(0x00200c88) = 1.0f / FLOAT_AT(0x001c4900);                                                  // 0x00158640
-    memset((void *)0x00200c90, 0, 0x98);                                                                 // 0x00158660
-    ((EAGL::GeoPrimState *)0x00200d30)->Construct();                                                     // 0x00158680
-    CrtAtExit([] { ((EAGL::GeoPrimState *)0x00200d30)->Destruct(); });
-    memset((void *)0x00200d80, 0, 0xa8);                                                                 // 0x001586a0
-    ((EAGL::GeoPrimState *)0x00200e30)->Construct();                                                     // 0x001586c0
-    CrtAtExit([] { ((EAGL::GeoPrimState *)0x00200e30)->Destruct(); });
+    // EmpSphereColours = zero: ours (game/EmpEffect.cpp)                                                // 0x00158660
+    EmpSphereState.Construct();                                                                          // 0x00158680
+    CrtAtExit([] { EmpSphereState.Destruct(); });
+    // EmpRingColours = zero: ours (game/EmpEffect.cpp)                                                  // 0x001586a0
+    EmpRingState.Construct();                                                                            // 0x001586c0
+    CrtAtExit([] { EmpRingState.Destruct(); });
     FLOAT_AT(0x00200f10) = 1.0f / FLOAT_AT(0x001c4a0c);                                                  // 0x001586e0
     FLOAT_AT(0x00200f1c) = 1.0f / FLOAT_AT(0x001c4a10);                                                  // 0x00158700
     FLOAT_AT(0x00200f24) = 1.0f / FLOAT_AT(0x001c4a80);                                                  // 0x00158720
@@ -355,15 +358,15 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x00200f50) = 1.0f / FLOAT_AT(0x001c4a9c);                                                  // 0x00158760
     FLOAT_AT(0x00200f58) = 1.0f / FLOAT_AT(0x001c4aac);                                                  // 0x00158780
     FLOAT_AT(0x00201290) = 1.0f / FLOAT_AT(0x001c4b18);                                                  // 0x001587a0
-    ((EAGL::GeoPrimState *)0x002012a0)->Construct();                                                     // 0x001587c0
-    CrtAtExit([] { ((EAGL::GeoPrimState *)0x002012a0)->Destruct(); });
-    memset((void *)0x002012f0, 0, 0xa0);                                                                 // 0x001587e0
+    MissileStreakState.Construct();                                                                      // 0x001587c0
+    CrtAtExit([] { MissileStreakState.Destruct(); });
+    // MissileStreakColours = zero: ours (game/WeaponEffects.cpp)                                        // 0x001587e0
     FLOAT_AT(0x00201474) = 1.0f / FLOAT_AT(0x001c4e88);                                                  // 0x00158800
-    memset((void *)0x00201480, 0, 0x68);                                                                 // 0x00158820
-    for (int i = 0; i < 5; i++) ((UVolatileMaterial *)(0x002014f0 + i * 0x60))->Construct();             // 0x00158840
-    CrtAtExit([] { for (int i = 4; i >= 0; i--) ((EAGL::GeoPrimState *)(0x002014f0 + i * 0x60))->Destruct(); });
-    ((UVolatileMaterial *)0x002016d0)->Construct();                                                      // 0x00158870
-    CrtAtExit([] { ((EAGL::GeoPrimState *)0x002016d0)->Destruct(); });
+    // MuzzleFlashColours = zero: ours (game/WeaponEffects.cpp)                                          // 0x00158820
+    for (int i = 0; i < 5; i++) MuzzleFlashMaterials[i].Construct();                                     // 0x00158840
+    CrtAtExit([] { for (int i = 4; i >= 0; i--) ((EAGL::GeoPrimState *)&MuzzleFlashMaterials[i])->Destruct(); });
+    MuzzleFlashPOVMaterial.Construct();                                                                  // 0x00158870
+    CrtAtExit([] { ((EAGL::GeoPrimState *)&MuzzleFlashPOVMaterial)->Destruct(); });
     FLOAT_AT(0x00201734) = 1.0f / FLOAT_AT(0x001c4f40);                                                  // 0x00158890
     FLOAT_AT(0x00201758) = 1.0f / FLOAT_AT(0x001c4f44);                                                  // 0x001588b0
     FLOAT_AT(0x00201760) = 1.0f / FLOAT_AT(0x001c5020);                                                  // 0x001588d0
@@ -379,7 +382,7 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x00201848) = 1.0f / FLOAT_AT(0x001c57d4);                                                  // 0x00158a00
     FLOAT_AT(0x00201854) = 1.0f / FLOAT_AT(0x001c59d8);                                                  // 0x00158a20
     FLOAT_AT(0x00202a84) = 1.0f / FLOAT_AT(0x001c5b80);                                                  // 0x00158a40
-    memset((void *)0x00202a90, 0, 0x200);                                                                // 0x00158a60
+    // DebrisColours = zero: ours (game/Debris.cpp)                                                      // 0x00158a60
     FLOAT_AT(0x00208cb8) = 1.0f / FLOAT_AT(0x001c8ed0);                                                  // 0x00158a80
     // GlareColours = zero: ours (render/RGlareManager.cpp)                                              // 0x00158aa0
     ((UVolatileMaterial *)0x00209cc0)->Construct();                                                      // 0x00158ac0
@@ -393,9 +396,9 @@ void RunStaticInitialisers(void) {
     ((UVolatileMaterial *)0x002305a0)->Construct();                                                      // 0x00158b80
     CrtAtExit([] { ((EAGL::GeoPrimState *)0x002305a0)->Destruct(); });
     FLOAT_AT(0x0023361c) = 1.0f / FLOAT_AT(0x001c8f20);                                                  // 0x00158ba0
-    memset((void *)0x00233620, 0, 0x800);                                                                // 0x00158bc0
-    for (int i = 0; i < 4; i++) ((UVolatileMaterial *)(0x00233e20 + i * 0x60))->Construct();             // 0x00158be0
-    CrtAtExit([] { for (int i = 3; i >= 0; i--) ((EAGL::GeoPrimState *)(0x00233e20 + i * 0x60))->Destruct(); });
+    // TrackColours = zero: ours (game/TyreTrack.cpp)                                                    // 0x00158bc0
+    for (int i = 0; i < 4; i++) TrackMaterials[i].Construct();                                           // 0x00158be0
+    CrtAtExit([] { for (int i = 3; i >= 0; i--) ((EAGL::GeoPrimState *)&TrackMaterials[i])->Destruct(); });
     FLOAT_AT(0x00233fa4) = 1.0f / FLOAT_AT(0x001c8f24);                                                  // 0x00158c10
     FLOAT_AT(0x00233fa8) = 1.0f / FLOAT_AT(0x001c8f28);                                                  // 0x00158c30
     FLOAT_AT(0x00233fb4) = 1.0f / FLOAT_AT(0x001c8fb4);                                                  // 0x00158c50

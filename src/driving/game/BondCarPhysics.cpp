@@ -11,7 +11,10 @@
 #include "BondCar.h"
 #include "BondCarBasics.h"                  // GetCarColourVariation
 #include "BondCarState.h"                   // CarSurface, the BondCar_* tuning
+#include "TyreTrack.h"
 #include "Vehicle.h"
+#include "VehicleParticle.h"                // RVehicleParticle::kSparkLine
+#include "VehicleRender.h"                  // RVehicle
 #include "VehicleSound.h"                   // AVehicle
 #include "VehicleSoundKinds.h"              // APlayerVehicle
 #include "../../common/xbeOverload.h"       // XbeVirtual
@@ -47,9 +50,7 @@
 
 // ---- the game's code not ported yet
 #define SMissionManager_GetCurrObjective ((const Coord4 *(__fastcall *)(SMissionManager *, int, int unknown))0x000b6c70)
-#define RTyreTrack_Add ((void (__fastcall *)(RTyreTrack *, int, const Coord4 *point, float slip, float width, int surface, const WWorldPos *ground))0x000ac4c0)
-#define RTyreTrack_Break ((void (__fastcall *)(RTyreTrack *, int, int surface))0x000ac170)
-#define RVehicle_Construct ((RSceneObj *(__fastcall *)(void *, int, PBondCar *car))0x000953e0)
+
 #define CollisionImpact_Construct ((CollisionImpact *(__fastcall *)(CollisionImpact *, int))0x0003dc20)
 #define ECollision_Construct ((void *(__fastcall *)(void *, int, CollisionImpact impact))0x0003f370)
 
@@ -75,10 +76,6 @@ enum : uint8_t {
     kDriveReverseHandbrake = 5,
 };
 
-// RVehicle's TriggerFX types past RSceneObj's (the landing's)
-constexpr int kFXType6 = 6;
-constexpr uint32_t kFXLandingWhich = 0x0d;
-
 // SetVisualDamage: the damage bands of its random points (fgDamageLevels.zone[1..4]: each band's zones get
 // stimulus 0x13 + band)
 constexpr int kDamageBands = 4;
@@ -92,7 +89,6 @@ constexpr uint8_t kLandingImpactKindB = 7;
 constexpr uint16_t kLandingImpactTag = 1;
 
 constexpr uint32_t kBondCarSize = 0x420;        // sizeof(PBondCar)
-constexpr uint32_t kRVehicleSize = 0x370;
 
 constexpr float kUnitsPerTurn = 6.32f;          // the wheels' speed: the body's over steps a second x WHEEL_RADIUS x it
 constexpr float kOneThirtieth = 1.0f / 30.0f;
@@ -395,7 +391,7 @@ void PBondCar::ResetCar(bool unused) {
 
     for (int wheel = 0; wheel < kCarWheels; wheel++)
         if (tyreTracks[wheel] != NULL)
-            UMemory::FastFree(tyreTracks[wheel], kTyreTrackSize);
+            UMemory::FastFree(tyreTracks[wheel], sizeof(RTyreTrack));
     InitTyreTracks();
 }
 
@@ -614,7 +610,7 @@ void PBondCar::ControlTyreTracks() {
         uint8_t surface = wheels[wheel].face.corner[2].tag.type;
         if (surface == kSurface11 || !(suspensionCompression[wheel] > 0.0f) || CallIsTyreShredded(this, wheel) ||
             (!(wheelSlip[wheel] > 0.0f) && !snowmobile)) {
-            RTyreTrack_Break(track, 0, surface);
+            track->Break(surface);
             continue;
         }
         float width;
@@ -627,7 +623,7 @@ void PBondCar::ControlTyreTracks() {
         *Xyz(&velocity) = Simulation_GetRigidBody(Sim, 0, rigidBodySlot)->velocity;
         VU0_v4scaleadd(&velocity, kOneThirtieth, &point, &point);
         WWorldPos ground = wheels[wheel];
-        RTyreTrack_Add(track, 0, &point, wheelSlip[wheel], width, surface, &ground);
+        track->Add(&point, wheelSlip[wheel], width, surface, &ground);
     }
 }
 
@@ -1196,7 +1192,7 @@ void PBondCar::ProcessPhysics() {
         for (int wheel = 0; wheel < kCarWheels; wheel++)
             VU0_v4scaleadd4(&wheelPos[wheel], 0.25f, &centre, &centre);
         centre.y = centre.y + 0.2f;
-        TriggerFX(renderObject, kFXType6, kFXLandingWhich, &centre, &step->velocity, -1.0f);
+        TriggerFX(renderObject, RVehicle::kFXSparks, RVehicleParticle::kSparkLine, &centre, &step->velocity, -1.0f);
     }
     if (unknown3FD) {
         unknown3FD--;
@@ -1594,8 +1590,8 @@ void PBondCar::ChangeCarType(const char *newType, bool purgeModel) {
     if (purgeModel)
         RSceneObj::PurgePreloaded(kModelDirectory, oldModel);
     physics = PVehicle::CarPhysicsAttrib(&attributes);
-    void *block = UMemory::FastAlloc(kRVehicleSize, "RVehicle");
-    SetRenderObject(block != NULL ? RVehicle_Construct(block, 0, this) : NULL);
+    void *block = UMemory::FastAlloc(sizeof(RVehicle), "RVehicle");
+    SetRenderObject(block != NULL ? static_cast<RVehicle *>(block)->Construct(this) : NULL);
     RSceneObj *render = renderObject;
     uint32_t variation = GetCarColourVariation(carType, carColour);
     const char *label = attributes.Name();

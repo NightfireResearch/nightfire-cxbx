@@ -30,6 +30,7 @@
 #include "../engine/CoreFoundation.h"     // NullFunction, GetFoundationVideoMode, ThrowLengthError
 #include "../engine/UFileLoader.h"
 #include "../engine/UMemory.hpp"
+#include "../game/VehicleRender.h"        // RVehicle's shared buffers
 #include "../gfx/D3D8.h"
 #include "../physics/PhysicsObject.h"
 #include "../platform/FileSys.h"          // FILE_save
@@ -89,8 +90,6 @@ RSceneObj *CurrentObject;                // the scene object the lighting is set
 
 // ---- the game's code not ported yet
 
-#define RVehicle_SetPerObjectBuffers ((void (__fastcall *)(RSceneObj *, int))0x00095ff0)
-#define RVehicle_ClearSharedBuffers ((void (*)(void))0x00095970)
 #define CRT_printf ((int (*)(const char *format, ...))0x00132192)
 #define CRT_sprintf ((int (*)(char *buffer, const char *format, ...))0x00132767)
 
@@ -741,9 +740,9 @@ void RRenderSharedData::SendPerCarInstance(CARP::Instance *instance, RSceneObj *
     fgLightManager->SetLightingModel(kLightingModel0);
     int renderType = sceneObj->renderTypeIndex;
     if (sceneObj->flags & kSceneObjVehicle)
-        RVehicle_SetPerObjectBuffers(sceneObj, 0);
+        static_cast<RVehicle *>(sceneObj)->SetPerObjectBuffers();
     else
-        RVehicle_ClearSharedBuffers();
+        RVehicle::ClearSharedBuffers();
     PhysicsObject *physics = sceneObj->physics;
     if (physics != NULL && physics->worldPos.valid && physics->worldPos.instance != NULL) {
         int instanceIndex = physics->worldPos.instance->renderIndex;

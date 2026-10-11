@@ -32,7 +32,7 @@ struct RParticleSystemData {
     float axisSpeed;                    // +0x18 up to this either way along the spawner's axis
     uint32_t flags;                     // +0x1c ParticleFlags
     float drag;                         // +0x20 velocity's factor each tick
-    uint32_t unknown24;
+    uint32_t texture;                   // +0x24 its texture's name; ParticleTextureRect gives u, v and uvSize from it
     uint32_t unknown28;
     uint32_t unknown2C;                 // +0x2c a particle's alphaSize unless unknownA0 or alphaSpread is set
     float invLife;                      // +0x30 1 / life
@@ -62,18 +62,21 @@ static_assert(offsetof(RParticleSystemData, flags) == 0x1c && offsetof(RParticle
               offsetof(RParticleSystemData, maxSize) == 0x5c && offsetof(RParticleSystemData, colours) == 0x70 &&
               offsetof(RParticleSystemData, index) == 0xac, "RParticleSystemData layout");
 
-// What a system follows (name ours): an effect's or a vehicle's record, of which the particle code reads these.
+// What a system follows (0x40 bytes; name ours): an effect's or a vehicle's record (RVehicleParticle's
+// emitters), of which the particle code reads these.
 struct RParticleEmitter {
-    Coord3 position;                    // +0x00
-    uint8_t unknown0C[0xc];
+    Coord4 position;                    // +0x00 the particle code reads xyz; the vehicle particles write w (1 in the
+                                        //       world, or a position relative to the car's body)
+    uint8_t unknown10[8];
     RParticleSystem *system;            // +0x18 its system; the system's destructor clears it
     uint8_t unknown1C[4];
     Coord3 side;                        // +0x20
     uint32_t systemTag;                 // +0x2c its system type's tag in the library
     Coord3 direction;                   // +0x30
-    uint8_t body;                       // +0x3c handed to its particles (RParticle::body)
-    uint8_t unknown3D[3];
+    int32_t body;                       // +0x3c a rigid body slot, 0xff (or -1) for none; its low byte is handed
+                                        //       to the particles (RParticle::body)
 };
+static_assert(sizeof(RParticleEmitter) == 0x40, "an emitter is 0x40 bytes");
 static_assert(offsetof(RParticleEmitter, system) == 0x18 && offsetof(RParticleEmitter, side) == 0x20 &&
               offsetof(RParticleEmitter, systemTag) == 0x2c && offsetof(RParticleEmitter, direction) == 0x30 &&
               offsetof(RParticleEmitter, body) == 0x3c, "RParticleEmitter layout");

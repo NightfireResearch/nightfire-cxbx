@@ -470,6 +470,13 @@ add_library(drivinginject SHARED
   src/driving/game/BondCarModes.cpp
   src/driving/game/BondCarBasics.cpp
   src/driving/game/BondCarPhysics.cpp
+  src/driving/game/VehicleRender.cpp
+  src/driving/game/TyreTrack.cpp
+  src/driving/game/Debris.cpp
+  src/driving/game/VehicleParticle.cpp
+  src/driving/game/EmpEffect.cpp
+  src/driving/game/WeaponEffects.cpp
+  src/driving/game/WeaponCameras.cpp
   src/driving/engine/OBB.cpp
   src/driving/engine/PhysicsUtil.cpp
   src/driving/devtools/ColQueryShadow.cpp
@@ -493,6 +500,10 @@ add_library(drivinginject SHARED
   src/driving/devtools/GameAudioShadowB.cpp
   src/driving/devtools/GameAudioShadowC.cpp
   src/driving/devtools/GameAudioShadowD.cpp
+  src/driving/devtools/GameEffectsShadowA.cpp
+  src/driving/devtools/GameEffectsShadowB.cpp
+  src/driving/devtools/GameEffectsShadowC.cpp
+  src/driving/devtools/GameEffectsShadowD.cpp
   src/driving/devtools/VehicleShadow.cpp
   src/driving/devtools/RigidCollideShadow.cpp
   src/driving/devtools/RenderShadow.cpp

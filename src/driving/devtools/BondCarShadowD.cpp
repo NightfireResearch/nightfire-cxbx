@@ -11,6 +11,7 @@
 #include "../engine/SimRandom.h"
 #include "../game/BondCar.h"
 #include "../game/Vehicle.h"            // fgDamageImpulseScale
+#include "../game/VehicleRender.h"      // RVehicle::SetEMPVictimEffect
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../render/RSceneObj.hpp"
@@ -65,7 +66,7 @@ constexpr unsigned kRangeLo = 0x0006a840, kRangeHi = 0x0006cc20;
 #define OrigDamageImpulseScale (*(float *)0x001c3da4)
 
 bool g_originalRun;         // the run of the originals: they set the game's copy of the scratch pad
-constexpr size_t kRenderSize = 0x370;       // RVehicle
+constexpr size_t kRenderSize = sizeof(RVehicle);
 constexpr size_t kAudioSize = 0x190;        // the engine sound, as far as Simulate writes it
 constexpr size_t kAIVehicleSize = 0x90;
 constexpr int kCarSlots = 84;
@@ -408,7 +409,7 @@ void __fastcall FakeAudioSlot4(void *self, int, float volume, const Coord3 *posi
 void InstallFakes() {
     typedef void StimuliId(uint32_t, uint8_t, uint32_t, int);
     typedef void Stimuli(uint8_t, uint32_t, int);
-    HookInstall(0x000959d0, (const void *)&FakeEmpVictim);
+    HookBoth(0x000959d0, XbeAddress(&RVehicle::SetEMPVictimEffect), (const void *)&FakeEmpVictim);
     HookBoth(0x00062de0, XbeAddress(&PBondCar::HandleTurnSignals), (const void *)&FakeTurnSignals);
     HookBoth(0x00062d70, XbeAddress(&PBondCar::GlareOff), (const void *)&FakeGlareOff);
     HookBoth(0x00065740, XbeAddress(&PBondCar::ProcessSplinePhysics), (const void *)&FakeSpline);

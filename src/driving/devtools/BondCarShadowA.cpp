@@ -16,6 +16,8 @@
 #include "../game/BondCarSnowmobile.h"
 #include "../game/BondCarState.h"
 #include "../game/SoftZone.h"
+#include "../game/TyreTrack.h"
+#include "../game/VehicleRender.h"
 #include "../physics/RigidBody.h"
 #include "../physics/RigidBodyResolve.h"
 #include "../render/RSceneObj.hpp"
@@ -260,9 +262,9 @@ void __fastcall FakeTriggerFX(void *self, int, int type, uint32_t which, uint32_
 
 void InstallFakes() {
     typedef void MenuTrigger(int, const char *, const char *, int);
-    HookInstall(0x000959d0, (const void *)&FakeEmpVictim);
-    HookInstall(0x00095a10, (const void *)&FakeEmpBolts);
-    HookInstall(0x000959f0, (const void *)&FakeBoostSmoke);
+    HookBoth(0x000959d0, XbeAddress(&RVehicle::SetEMPVictimEffect), (const void *)&FakeEmpVictim);
+    HookBoth(0x00095a10, XbeAddress(&RVehicle::TriggerEmpBolts), (const void *)&FakeEmpBolts);
+    HookBoth(0x000959f0, XbeAddress(&RVehicle::TriggerTurboBoostSmoke), (const void *)&FakeBoostSmoke);
     HookBoth(0x0011e010, XbeAddress(XbeOverload<MenuTrigger>::Of(&AMenuSound::Trigger)),
              (const void *)&FakeMenuSound);
     HookInstall(0x000b72f0, (const void *)&FakeMissionEvent);
@@ -270,7 +272,7 @@ void InstallFakes() {
     HookBoth(0x00090a40, XbeAddress(&RSceneObj::Reset), (const void *)&FakeSceneReset);
     HookBoth(0x00081430, XbeAddress(&RPlayerCamera::ResetCamera), (const void *)&FakeResetCamera);
     HookInstall(0x0003f370, (const void *)&FakeECollision);
-    HookInstall(0x000abfc0, (const void *)&FakeTyreTrack);
+    HookBoth(0x000abfc0, XbeAddress(&RTyreTrack::Construct), (const void *)&FakeTyreTrack);
 }
 
 // The render object the copies hold: its vtable's slots 14 and 15 record
@@ -576,7 +578,7 @@ void RunOnce(const Case &c, Result *r, bool original) {
     if (c.clearTracks) {
         for (int wheel = 0; wheel < kCarWheels; wheel++) {
             if (car->tyreTracks[wheel] != NULL) {
-                UMemory::FastFree(car->tyreTracks[wheel], 0x920);
+                UMemory::FastFree(car->tyreTracks[wheel], sizeof(RTyreTrack));
                 car->tyreTracks[wheel] = reinterpret_cast<RTyreTrack *>(1);
             }
         }

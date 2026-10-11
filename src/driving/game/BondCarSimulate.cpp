@@ -12,6 +12,7 @@
 #include "BondCarState.h"           // CarSurface, the BondCar_* tuning
 #include "Missile.h"
 #include "Vehicle.h"
+#include "VehicleRender.h"          // RVehicle
 #include "FingoDeathSound.h"
 #include "VehicleSound.h"
 #include "VehicleSoundKinds.h"
@@ -60,8 +61,6 @@ const char *OverrideCarType;
 
 // ---- calls to originals not ported
 
-#define RVehicle_Construct ((RSceneObj *(__fastcall *)(void *, int, PBondCar *owner))0x000953e0)
-#define RVehicle_SetEMPVictimEffect ((void (__fastcall *)(RSceneObj *, int, bool on))0x000959d0)
 #define AIVehicleController_Get ((void *(*)())0x00035c00)
 // Static in effect: ECX (the controller) is not read
 #define AIVehicleController_FindAgentGroundVehiclePtr ((AIGroundVehicle *(__fastcall *)(void *, int, PBondCar *vehicle))0x00035e90)
@@ -248,8 +247,8 @@ PBondCar* PBondCar::Construct(int carClass, const char *carType, uint32_t colour
     unknown395[2] = 0;
 
     if (renderObject == NULL) {
-        void *block = UMemory::FastAlloc(0x370, "RVehicle");
-        SetRenderObject(block != NULL ? RVehicle_Construct(block, 0, this) : NULL);
+        void *block = UMemory::FastAlloc(sizeof(RVehicle), "RVehicle");
+        SetRenderObject(block != NULL ? static_cast<RVehicle *>(block)->Construct(this) : NULL);
         RSceneObj *render = renderObject;
         uint32_t variation = GetCarColourVariation(this->carType, colour);
         const char *label = attributes.Name();
@@ -517,7 +516,7 @@ void PBondCar::Simulate() {
         }
         HandleTurnSignals();
         if (empActive && SimStepCount > empTimer) {
-            RVehicle_SetEMPVictimEffect(renderObject, 0, false);
+            static_cast<RVehicle *>(renderObject)->SetEMPVictimEffect(false);
             empActive = 0;
         }
     } else if (carClass == kCarClass1) {

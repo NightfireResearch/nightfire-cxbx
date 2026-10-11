@@ -12,6 +12,8 @@
 #include "../data/RCARPFile.h"
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
+#include "../game/Debris.h"
+#include "../game/WeaponEffects.h"      // RMuzzleFlash
 #include "../physics/PhysicsMath.h"     // Abs
 #include "../physics/PhysicsObject.h"
 #include "../physics/Simulation.h"
@@ -43,9 +45,6 @@
 
 // ---- originals called by address
 
-#define RMuzzleFlash_Draw ((void (*)(const MATRIX4 *transform, const Coord4 *position, const Coord4 *direction, int unknown, float intensity))0x000a1870)
-#define RMuzzleFlash_DrawPOV ((void (*)(const MATRIX4 *transform, const Coord4 *position, int type, float intensity))0x000a19d0)
-#define RDebris_DrawShellCasings ((void (__fastcall *)(void *, int))0x000a9680)   // FUN_000a9680, named for its caller
 #define Simulation_SpawnNewtonObject ((Newton *(__fastcall *)(void *, int, const Coord3 *direction, const Coord3 *position, const Coord3 *momentum, const Coord3 *spin, CARP::Instance *instances, int instanceCount, float mass, float lifetime))0x000b5e20)
 
 // ---- globals
@@ -54,7 +53,6 @@
 #define SimStepCount I32_AT(0x00234e34)
 #define PlayerPhysicsObject (*(PhysicsObject **)PTR_AT(0x00234e40))
 #define IdentityMatrix (*(const MATRIX4 **)0x001c4654)
-#define Debris PTR_AT(0x00202a80)
 // XBE_GLOBAL(0x001b4e3c, 4)
 static float HenchmenMuzzleFlashSize = 0.4f;
 
@@ -262,11 +260,11 @@ void ActWeapon::ManualRender() {
                 type = 0;
                 break;
             }
-            RMuzzleFlash_DrawPOV(&transform, &position, type, (float)((double)size * flash.size * fade));
+            RMuzzleFlash::DrawPOV(&transform, &position, type, (float)((double)size * flash.size * fade));
         } else {
             Coord4 direction = {0.0f, 0.0f, 1.0f, 0.0f};
-            RMuzzleFlash_Draw(&transform, &position, &direction, 0,
-                              (float)((double)HenchmenMuzzleFlashSize * flash.size * fade));
+            RMuzzleFlash::Draw(&transform, &position, &direction, 0,
+                               (float)((double)HenchmenMuzzleFlashSize * flash.size * fade));
         }
     }
 }
@@ -278,7 +276,7 @@ static_assert(std::bit_cast<uint32_t>(0.18f) == 0x3e3851ec && std::bit_cast<uint
 // FUNC_AT(0x0001b020)
 void ActWeapon::RenderShellCasings() {
     if ((flags & kPlayerOwned) && WeaponManager->unknown18 == kManagerValue18)
-        RDebris_DrawShellCasings(Debris, 0);
+        Debris->DrawShellCasings();
 }
 
 // FUNC_AT(0x0001b050)

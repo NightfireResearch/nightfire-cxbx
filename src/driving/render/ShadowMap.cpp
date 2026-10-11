@@ -22,6 +22,7 @@
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../game/Vehicle.h"           // PVehicle's car names
+#include "../game/VehicleRender.h"     // RVehicle
 #include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
@@ -33,7 +34,6 @@
 class RTextureContext;
 
 // ---- the game's code not ported here
-#define RVehicle_RenderShadowGeometry ((void (__fastcall *)(RSceneObj *, int))0x00096410)
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // ---- globals
@@ -292,7 +292,7 @@ void RShadowMap::Begin(RSceneObj *vehicle, const Coord4 *direction) {
 // FUNC_AT(0x000a60b0)
 void RShadowMap::Draw(RSceneObj *vehicle, const Coord4 *direction) {
     Begin(vehicle, direction);
-    RVehicle_RenderShadowGeometry(vehicle, 0);
+    static_cast<RVehicle *>(vehicle)->RenderShadowGeometry();
     EndView();
     data->context->EndFrame();
 }

@@ -12,6 +12,7 @@
 #include "../engine/UMemory.hpp"
 #include "../game/Helicopter.h"
 #include "../game/Vehicle.h"
+#include "../game/VehicleRender.h"
 #include "../physics/SimpleRigidBody.h"
 #include "../physics/Simulation.h"
 #include "../render/RSceneObj.hpp"
@@ -139,7 +140,7 @@ typedef int (__fastcall *HeliDamageFn)(PHelicopter *, int, const Coord3 *, const
 #define ShadowHelicoptersLast (*(PhysicsObject ***)0x00234ee4)
 #define ShadowSimpleOwners ((PhysicsObject **)0x002343a0)
 const int kSimpleBodies = 96;
-const uint32_t kRenderBytes = 0x370;    // RVehicle
+const uint32_t kRenderBytes = sizeof(RVehicle);
 const uint32_t kSoundBytes = 0x310;     // AHelicopter
 const uint32_t kAIBytes = 0x140;        // AIHelicopter
 

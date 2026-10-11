@@ -10,7 +10,7 @@
 //   DebugVariable<unsigned int> (0x0018bd00, 21 slots): the same with its own Increase, Decrease, SetToMin,
 //     SetToMax, AsString, Debounce, DebugData's IsIndexed and GetIndexer, and 20 SetFromString.
 // The Xbox has no debug menu: nothing calls these through the vtables. GetIndexer's code is also a getter the
-// linker shares with RVehicle::PostLoad, which calls it directly.
+// linker shares with RVehicle::PostLoad, which calls it directly for RSceneObj::Desc().
 
 #include "DebugVariables.h"
 

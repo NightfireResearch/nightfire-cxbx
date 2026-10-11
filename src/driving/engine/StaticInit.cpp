@@ -20,6 +20,7 @@
 #include "../data/SymbolTable.h"
 #include "../eagl/GeoPrimState.h"
 #include "../game/VehicleSound.h"       // EngineRefTree
+#include "../game/WeaponCameras.h"      // MissileCamState
 #include "../audio/Fader.h"             // FaderRefTree
 #include "../audio/Mix.h"               // MixRefTree
 #include "../audio/Stream.h"            // StreamRefTree
@@ -119,7 +120,7 @@ void DestroyStatic_001f2a34(void) {
 }
 // FUNC_AT(0x0015cf60)
 void DestroyStatic_00200f60(void) {
-    ((EAGL::GeoPrimState *)0x00200f60)->Destruct();
+    MissileCamState.Destruct();
 }
 // FUNC_AT(0x0015cfb0)
 void DestroyStatic_00201790(void) {

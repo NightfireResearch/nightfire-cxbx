@@ -202,11 +202,11 @@ where to change it.
 
 | Subsystem | Functions | Replaced | Dead | Live | Done | KB | Done (bytes) |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| **game** | 2852 | 289 | 352 | 2211 | **22%** | 474 | 24% |
-| game.ai | 522 | 0 | 30 | 492 | 6% | 109 | 1% |
+| **game** | 2852 | 414 | 404 | 2034 | **29%** | 474 | 32% |
+| game.ai | 522 | 0 | 32 | 490 | 6% | 109 | 1% |
 | game.audio | 366 | 150 | 205 | 11 | 97% | 51 | 100% |
-| game.effects | 195 | 4 | 8 | 183 | 6% | 36 | 2% |
-| game.events | 793 | 0 | 5 | 788 | 1% | 72 | 0% |
+| game.effects | 195 | 129 | 56 | 10 | 95% | 36 | 100% |
+| game.events | 793 | 0 | 7 | 786 | 1% | 72 | 0% |
 | game.frontend | 332 | 1 | 39 | 292 | 12% | 69 | 2% |
 | game.missions | 273 | 0 | 0 | 273 | 0% | 33 | 0% |
 | game.vehicles | 193 | 134 | 59 | 0 | 100% | 62 | 100% |
@@ -236,10 +236,10 @@ where to change it.
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6842 | 2767 | 1752 | 2323 | **66%** | 1000 | 64% |
+| **game + engine** | 6842 | 2892 | 1804 | 2146 | **69%** | 1000 | 67% |
 | **platform + system** | 2893 | 1527 | 1021 | 345 | **88%** | 506 | 93% |
 | **  without the C runtime** | 2473 | 1523 | 950 | 0 | **100%** | 462 | 100% |
-| **everything** | 9735 | 4294 | 2773 | 2668 | **73%** | 1506 | 74% |
+| **everything** | 9735 | 4419 | 2825 | 2491 | **74%** | 1506 | 76% |
 
 - **The engine's core and data layers are done (4 October 2026): `engine.core` and `engine.data`, 100% by bytes**
   (docs/driving/core-data.md): memory (UMemory, new/delete), reference counters, data groups, singletons, the
@@ -302,6 +302,12 @@ where to change it.
   functions, `game.audio` 100% by bytes (the 11 functions still counted live are exception funclets of replaced
   functions). Four shadow tests compare them with the originals on copies of the live sound objects (to be run in
   game). Game and engine together are now 66% done by functions, 64% by bytes.
+- **The gameplay effects are done (11 October 2026, docs/driving/game-effects.md):** RVehicle, the render object
+  every car and helicopter draws through, with its tyre tracks, debris and particles; the EMP effects; the bullet
+  and missile streaks, muzzle flashes and scorch marks; the missile camera and sniper scope - 125 functions,
+  `game.effects` 100% by bytes (the 10 functions still counted live are exception funclets of replaced functions).
+  Four shadow tests compare them with the originals on copies of the live objects and synthetic ones (to be run in
+  game). Game and engine together are now 69% done by functions, 67% by bytes.
 - **Every system library but the C runtime is done: D3D (with D3DX and XGRPH), DSOUND, XPP and XAPI at 100%.**
   The C runtime (347 live, 17%) is left to go by itself, as in the action engine: game code calls it everywhere, and
   it goes as that code becomes ours. How the rest got there (2 October 2026):
@@ -351,10 +357,10 @@ where to change it.
     side, is counted with the sound library; EA's packer (`src/driving/platform/RefPack.cpp`, checked against the
     original on every packed file in the archives) with the files. `XGetAVPack`/`XGetVideoFlags`, which sat among
     the file code, are counted with XAPI (ported in `XboxXapi.cpp`).
-- **Of the 1,000 KB of game and engine code, about 360 KB is still original:** the game tier but its vehicles and
-  gameplay audio; what else is left is exception funclets filed in finished subsystems. The game tier by size: AI
-  109 KB, mission events 72 KB, front end and HUD 68 KB, weapons 43 KB, effects 36 KB, missions 33 KB (vehicles,
-  62 KB, and gameplay audio, 51 KB, done).
+- **Of the 1,000 KB of game and engine code, about 330 KB is still original:** the game tier but its vehicles,
+  gameplay audio and effects; what else is left is exception funclets filed in finished subsystems. The game tier
+  by size: AI 109 KB, mission events 72 KB, front end and HUD 68 KB, weapons 43 KB, missions 33 KB (vehicles,
+  62 KB, gameplay audio, 51 KB, and effects, 36 KB, done).
 - **The static initialisers are done: `engine.static`, 798 functions, 100%.** The C++ initialiser table
   (0x001b3db0) is no longer walked: `RunStaticInitialisers` (`src/driving/engine/StaticInitTable.cpp`, generated
   from the XBE by `tools/static_init_driving.py`) does all 720 entries' work in table order - 585 float and double

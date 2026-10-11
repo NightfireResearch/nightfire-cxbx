@@ -9,6 +9,8 @@
 
 #include "AIVehicle.h"
 #include "BondCar.h"
+#include "TyreTrack.h"
+#include "VehicleRender.h"                  // RVehicle
 #include "../../common/xbeOverload.h"       // XbeVirtual
 #include "../../helpers.h"
 #include "VehicleSound.h"                   // AVehicle
@@ -36,10 +38,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-#define RTyreTrack_Construct ((RTyreTrack *(__fastcall *)(void *, int, float width, bool longTrack, bool unknown))0x000abfc0)
-#define RVehicle_SetEMPVictimEffect ((void (__fastcall *)(RSceneObj *, int, bool on))0x000959d0)
-#define RVehicle_TriggerTurboBoostSmoke ((void (__fastcall *)(RSceneObj *, int, int steps))0x000959f0)
-#define RVehicle_TriggerEmpBolts ((void (__fastcall *)(RSceneObj *, int))0x00095a10)
+
 #define SMissionManager_ProgrammerDefinedEvent ((void (__fastcall *)(void *, int, int event, const char *text))0x000b72f0)
 #define SMissionManager_IncShotsHit ((void (__fastcall *)(void *, int, int unknown))0x000b6720)
 
@@ -115,12 +114,6 @@ enum : int32_t {
     kSignal2 = 2,                                   // glare 4
 };
 
-// RVehicle's TriggerFX types past RSceneObj's (GlareOn's and GlareOff's)
-enum : int {
-    kFXGlareOn = 11,
-    kFXGlareOff = 12,
-};
-
 constexpr float kSnowmobileTrackScale = 9.0f;       // the third track's width
 constexpr float kResetCompression = 0.15f;          // of SPRING_COMPRESSION_LIMIT, each wheel's at a reset
 constexpr float kResetLift = 1.0f;                  // without ground under the car
@@ -185,9 +178,9 @@ void TriggerFX(RSceneObj *object, int type, uint32_t which) {
     (object->*XbeVirtual<TriggerFXMethod>(object, 15))(type, which, 0, &kZero, &kZero, -1.0f);
 }
 
-RTyreTrack *NewTyreTrack(float width, bool longTrack, bool unknown) {
-    void *block = UMemory::FastAlloc(kTyreTrackSize, "RTyreTrack");
-    return block != NULL ? RTyreTrack_Construct(block, 0, width, longTrack, unknown) : NULL;
+RTyreTrack *NewTyreTrack(float width, bool longTrack, bool snow) {
+    void *block = UMemory::FastAlloc(sizeof(RTyreTrack), "RTyreTrack");
+    return block != NULL ? static_cast<RTyreTrack *>(block)->Construct(width, longTrack, snow) : NULL;
 }
 
 } // namespace
@@ -470,12 +463,12 @@ void PBondCar::ResetCar(Coord3 *position, const Coord3 *direction) {
     }
     GetRigidBody()->ResetObject(&orientation, position);
     renderObject->UpdatePositionVirtual(true);
-    RVehicle_SetEMPVictimEffect(renderObject, 0, false);
+    static_cast<RVehicle *>(renderObject)->SetEMPVictimEffect(false);
     if (carClass == kPlayerCar)
         fgRenderHigh->views[0].camera->ResetCamera();
     for (int wheel = 0; wheel < kCarWheels; wheel++) {
         if (tyreTracks[wheel] != NULL)
-            UMemory::FastFree(tyreTracks[wheel], kTyreTrackSize);
+            UMemory::FastFree(tyreTracks[wheel], sizeof(RTyreTrack));
     }
     InitTyreTracks();
 }
@@ -528,9 +521,9 @@ void PBondCar::AttackWithEmp() {
     if (empActive)
         return;
     AMenuSound::Trigger(4, "SFX_EMPdetonate", "POV Weapons", 0);
-    RSceneObj *vehicle = renderObject;
-    RVehicle_SetEMPVictimEffect(vehicle, 0, true);
-    RVehicle_TriggerEmpBolts(vehicle, 0);
+    RVehicle *vehicle = static_cast<RVehicle *>(renderObject);
+    vehicle->SetEMPVictimEffect(true);
+    vehicle->TriggerEmpBolts();
     empActive = 1;
     empTimer = SimStepCount + BondCar_EMP_LIFETIME;
     SetInShockVirtual(this, 1.0f);
@@ -568,7 +561,7 @@ void PBondCar::DisableTargetBeacon() {
 void PBondCar::GlareOn(int glare) {
     if (!glareOn[glare]) {
         TriggerFX(renderObject, RSceneObj::kFXOn, 1u << (glare + 16));
-        TriggerFX(renderObject, kFXGlareOn, glare);
+        TriggerFX(renderObject, RVehicle::kFXSwitchOn, glare);
         glareOn[glare] = 1;
     }
 }
@@ -577,7 +570,7 @@ void PBondCar::GlareOn(int glare) {
 void PBondCar::GlareOff(int glare) {
     if (glareOn[glare] == 1) {
         TriggerFX(renderObject, RSceneObj::kFXOff, 1u << (glare + 16));
-        TriggerFX(renderObject, kFXGlareOff, glare);
+        TriggerFX(renderObject, RVehicle::kFXSwitchOff, glare);
         glareOn[glare] = 0;
     }
 }
@@ -614,7 +607,7 @@ void PBondCar::HandleTurnSignals() {
 
 // FUNC_AT(0x00062ec0)
 void PBondCar::ClearEMPState() {
-    RVehicle_SetEMPVictimEffect(renderObject, 0, false);
+    static_cast<RVehicle *>(renderObject)->SetEMPVictimEffect(false);
     empActive = 0;
     empTimer = 0;
 }
@@ -625,7 +618,7 @@ bool PBondCar::EnableRocketBoost() {
     if (rocketBoost > boostTime * kBoostLimit)
         return false;
     if (attributes.LookupInt("NUM_WHEELS", NULL) == kSmokeWheels)
-        RVehicle_TriggerTurboBoostSmoke(renderObject, 0, boostTime);
+        static_cast<RVehicle *>(renderObject)->TriggerTurboBoostSmoke(boostTime);
     rocketBoost = boostTime * kBoostSteps;
     static_cast<AVehicle *>(GetAudioVirtual(this))->boost = 1;
     return true;

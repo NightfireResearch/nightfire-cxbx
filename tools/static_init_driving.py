@@ -101,6 +101,16 @@ NAMED = {
     0x00243580: ("CARP::Resolvers", "CARP::ResolverMap"),      # data/Carp.cpp
     0x001f2c80: ("fgWorldCulling", "RRenderWorldCulling"),     # render/WorldCulling.h
     0x001e2278: ("DAudioTargets", "DAudioTargetList"),         # game/DebugAudio.cpp
+    0x00200d30: ("EmpSphereState", "EAGL::GeoPrimState"),      # game/EmpEffect.cpp
+    0x00200e30: ("EmpRingState", "EAGL::GeoPrimState"),
+    0x002012a0: ("MissileStreakState", "EAGL::GeoPrimState"),  # game/WeaponEffects.cpp
+    0x002016d0: ("MuzzleFlashPOVMaterial", "UVolatileMaterial"),
+}
+# Owned arrays of objects the initialisers construct (a vector constructor) and destroy: the name and the class.
+NAMED_OBJECT_ARRAYS = {
+    0x001f5f10: ("BulletStreakMaterials", "UVolatileMaterial"),   # game/WeaponEffects.cpp
+    0x002014f0: ("MuzzleFlashMaterials", "UVolatileMaterial"),
+    0x00233e20: ("TrackMaterials", "UVolatileMaterial"),          # game/TyreTrack.cpp
 }
 # Owned arrays of records that a loop of stores clears: the name, and the field at each record's offset 0.
 NAMED_ARRAYS = {
@@ -268,9 +278,19 @@ def gc_name(target):
     return name
 
 
-def this_call(target, obj, args=()):
+def array_element(array, size, count):
+    """The owned array of objects at `array` (NAMED_OBJECT_ARRAYS), or None for one at the game's address."""
+    if array in NAMED_OBJECT_ARRAYS:
+        return NAMED_OBJECT_ARRAYS[array]
+    if owned_global(array, size * count):
+        raise SystemExit("0x%08x: objects of %s, which is ours: add it to NAMED_OBJECT_ARRAYS" %
+                         (array, owned_global(array, size * count)["name"]))
+    return None
+
+
+def this_call(target, obj, args=(), element=None):
     """A __thiscall to target with `this` = obj (an address, or C++ text), and stack arguments (raw words, first
-    argument first)."""
+    argument first). `element` names element i of an owned array of objects (NAMED_OBJECT_ARRAYS) instead."""
     obj_text = hexw(obj) if isinstance(obj, int) else obj
     if isinstance(obj, int) and obj not in NAMED and owned_global(obj, 1):
         raise SystemExit("0x%08x: a call on %s, which is ours: add it to NAMED" % (obj, owned_global(obj, 1)["name"]))
@@ -279,12 +299,19 @@ def this_call(target, obj, args=()):
         types = METHOD_ARGS.get((cls, method), [])
         assert len(types) == len(args), (cls, method)
         arguments = ", ".join(map(argument, types, args))
+        if element is not None:
+            name, named_class = element
+            if named_class == cls:
+                return "%s[i].%s(%s)" % (name, method, arguments)
+            return "((%s *)&%s[i])->%s(%s)" % (cls, name, method, arguments)
         if isinstance(obj, int) and obj in NAMED:
             name, named_class = NAMED[obj]
             if named_class == cls:
                 return "%s.%s(%s)" % (name, method, arguments)
             return "((%s *)&%s)->%s(%s)" % (cls, name, method, arguments)
         return "((%s *)%s)->%s(%s)" % (cls, obj_text, method, arguments)
+    if element is not None:
+        raise SystemExit("an original called on the owned array %s: a case this script does not know" % element[0])
     types = ARG_TYPES.get(target, ["uint32_t"] * len(args))
     THIS_CALLS.setdefault(target, types)
     return "%s((void *)%s, 0%s)" % (callee(target), obj_text, "".join(", " + argument(t, a) for t, a in zip(types, args)))
@@ -342,7 +369,8 @@ def destructor(address):
         dtor, count, size, array = [i.operands[0].imm for i in ins[:4]]
         if dtor == EMPTY:
             return ""
-        return "for (int i = %d; i >= 0; i--) %s;" % (count - 1, this_call(dtor, "(0x%08x + i * 0x%x)" % (array, size)))
+        return "for (int i = %d; i >= 0; i--) %s;" % (count - 1, this_call(dtor, "(0x%08x + i * 0x%x)" % (array, size),
+                                                                            element=array_element(array, size, count)))
     return None
 
 
@@ -547,7 +575,8 @@ def constructor(ins):
             target = x.operands[0].imm
             if target == VEC_CTOR:
                 array, size, count, ctor, vdtor = pushed[-1], pushed[-2], pushed[-3], pushed[-4], pushed[-5]
-                out.append("for (int i = 0; i < %d; i++) %s;" % (count, this_call(ctor, "(0x%08x + i * 0x%x)" % (array, size))))
+                out.append("for (int i = 0; i < %d; i++) %s;" % (count, this_call(ctor, "(0x%08x + i * 0x%x)" % (array, size),
+                                                                                  element=array_element(array, size, count))))
             else:
                 args = list(reversed(pushed))
                 call = this_call(target, ecx, args)
@@ -655,6 +684,9 @@ def main():
             '#include "../data/StdStreams.h"',
             '#include "../data/SymbolTable.h"',
             '#include "../game/DebugAudio.h"',
+            '#include "../game/EmpEffect.h"',
+            '#include "../game/TyreTrack.h"',
+            '#include "../game/WeaponEffects.h"',
             '#include "../render/Draw.h"',
             '#include "../render/Materials.h"',
             '#include "../render/WorldCulling.h"',

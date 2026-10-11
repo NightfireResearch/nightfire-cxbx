@@ -6,6 +6,7 @@
 #include <math.h>
 
 #include "Missile.h"
+#include "VehicleRender.h"              // RVehicle
 #include "VehicleSound.h"               // AHelicopter
 #include "../../common/xbeOverload.h"   // XbeVirtual
 #include "../anim/AnimEngine.h"         // Handle
@@ -26,7 +27,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-#define RVehicle_Construct ((RSceneObj *(__fastcall *)(void *, int, void *unknown))0x000953e0)
+
 #define AIElementController_ForceVehicleToSleep ((void (__fastcall *)(void *, int, HelicopterAI *vehicle))0x000289f0)
 #define AIHelicopter_DisableTargetBeacon ((void (__fastcall *)(HelicopterAI *, int))0x000318d0)
 #define SMissionManager_IncShotsHit ((void (__fastcall *)(SMissionManager *, int, bool hit))0x000b6720)
@@ -139,8 +140,8 @@ PHelicopter* PHelicopter::Construct(const char *name, float speed, Coord3 direct
         damageZones[i].unknown00 = 0.0f;
     }
 
-    void *block = UMemory::FastAlloc(0x370, "RVehicle");
-    SetRenderObject(block != NULL ? RVehicle_Construct(block, 0, NULL) : NULL);
+    void *block = UMemory::FastAlloc(sizeof(RVehicle), "RVehicle");
+    SetRenderObject(block != NULL ? static_cast<RVehicle *>(block)->Construct(NULL) : NULL);
     const char *label = attributes.Name();
     renderObject->Load("data\\car\\model\\", PVehicle::RenderNameAttrib(&attributes), label, 0);
     renderObject->renderTypeIndex = PVehicle::NameToIndex(name);

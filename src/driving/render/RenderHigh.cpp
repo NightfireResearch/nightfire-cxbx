@@ -38,6 +38,13 @@
 #include "../engine/MissionManager.h"
 #include "../engine/StaticInit.h"
 #include "../engine/UMemory.hpp"
+#include "../game/Debris.h"
+#include "../game/EmpEffect.h"            // REmp, REmpBolts
+#include "../game/TyreTrack.h"
+#include "../game/VehicleParticle.h"
+#include "../game/VehicleRender.h"        // RVehicle::InitSharedBuffers
+#include "../game/WeaponCameras.h"        // RMissileCam, RSniperZoom
+#include "../game/WeaponEffects.h"        // RBulletStreak, RMuzzleFlash, RMissileStreak
 #include "../physics/PhysicsNamespace.h"
 #include "../physics/PhysicsObject.h"
 #include "../platform/RealPrint.h"        // MEM_fill
@@ -50,8 +57,6 @@
 // "GIOT" namespace's destructor (0x0008ba80), ported from the listing. Tested by lockstep runs: every frame is
 // drawn through Render, split screens through RearrangeSplitScreens.
 // ---------------------------------------------------------------------------------------------------------------
-
-class RDebris;
 
 namespace {
 
@@ -87,9 +92,6 @@ constexpr float kFarPlaneMax = 4000.0f;
 constexpr int kMipmapMin = -128;
 
 // The managers' sizes, as their Init copies allocate them
-constexpr uint32_t kDebrisSize = 0x90;
-constexpr uint32_t kMissileCamSize = 0x1c;
-constexpr uint32_t kSniperZoomSize = 0xc70;
 constexpr uint32_t kPlayerViewCameraSize = 0x4c;
 constexpr uint32_t kPlayerCameraSize = 0x370;
 constexpr uint32_t kHudViewSize = 0x4c;
@@ -99,29 +101,10 @@ constexpr uint32_t kPhysicsNamespaceSize = 4;
 } // namespace
 
 // ---- the game's code not ported yet
-typedef void *(__fastcall *ManagerConstructor)(void *memory, int);   // the unported managers'
-#define RDebris_Construct ((void *(__fastcall *)(void *, int))0x000a91b0)
-#define RMissileCam_Construct ((void *(__fastcall *)(void *, int))0x000a0a50)
-#define RSniperZoom_Construct ((void *(__fastcall *)(void *, int))0x000a69a0)
 #define GHud_Construct ((GHud *(__fastcall *)(void *, int))0x000dab50)
 #define GHud_Render ((void (__fastcall *)(GHud *, int))0x000e0140)
 #define Simulation_FUN_000b2d40 ((const Coord3 *(__fastcall *)(void *, int))0x000b2d40)
 #define GetParticFileForMission ((const char *(*)(void))0x000e3e50)
-#define RVehicleParticle_Init ((void (*)(void))0x000a8240)
-#define RVehicleParticle_LoadAttributes ((void (*)(void))0x000a6db0)
-#define RVehicleParticle_UpdateAll ((void (*)(void))0x000a8120)
-#define RVehicleParticle_ResetAll ((void (*)(void))0x000a7300)
-#define RVehicleParticle_Kill ((void (*)(void))0x000a8430)
-#define REmpBolts_LoadAttributes ((void (*)(void))0x0009bd50)
-#define RBulletStreak_Init ((void (*)(void))0x00099f10)
-#define RMuzzleFlash_Init ((void (*)(void))0x000a1b50)
-#define RMissileStreak_Init ((void (*)(void))0x000a1070)
-#define RMissileStreak_Kill ((void (*)(void))0x000a1460)
-#define REmp_Init ((void (*)(void))0x0009b680)
-#define REmp_Kill ((void (*)(void))0x0009bce0)
-#define RTyreTrack_Init ((void (*)(void))0x000ac050)
-#define RVehicle_InitSharedBuffers ((void (*)(void))0x000958a0)
-#define RDebris_Reset ((void (__fastcall *)(RDebris *, int))0x000a8f10)
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // ---- globals
@@ -144,10 +127,6 @@ float AspectScale = 1.0f;
 static uint32_t RenderLodBias = 0xbf800000;             // EAGL's TAR LOD bias override (-1.0f), set each frame
 // XBE_GLOBAL(0x001ec48c, 4)
 static PhysicsNamespace *PhysNamespace;
-// The managers not ported yet (the others are in their headers)
-#define Debris (*(RDebris **)0x00202a80)
-#define MissileCam (*(void **)0x00200f54)
-#define SniperZoom (*(void **)0x00201818)
 
 namespace {
 
@@ -172,12 +151,6 @@ template <class T> T *NewManager() {
 template <class T> T *NewPooledManager(const char *name) {
     void *memory = UMemory::FastAlloc(sizeof(T), name);
     return memory != NULL ? static_cast<T *>(memory)->Construct() : NULL;
-}
-
-// ... for the managers not ported yet, by their constructors' addresses
-void *NewPooledManager(uint32_t size, const char *name, ManagerConstructor construct) {
-    void *memory = UMemory::FastAlloc(size, name);
-    return memory != NULL ? construct(memory, 0) : NULL;
 }
 
 } // namespace
@@ -236,7 +209,7 @@ void RenderManagers::InitWater() {
 
 // FUNC_AT(0x0008ba10)
 void RenderManagers::InitDebris() {
-    Debris = static_cast<RDebris *>(NewPooledManager(kDebrisSize, "RDebris", RDebris_Construct));
+    Debris = NewPooledManager<RDebris>("RDebris");
 }
 
 // FUNC_AT(0x0008bc80)
@@ -256,12 +229,12 @@ void RenderManagers::InitParticulate() {
 
 // FUNC_AT(0x0008bdd0)
 void RenderManagers::InitMissileCam() {
-    MissileCam = NewPooledManager(kMissileCamSize, "RMissileCam", RMissileCam_Construct);
+    MissileCam = NewPooledManager<RMissileCam>("RMissileCam");
 }
 
 // FUNC_AT(0x0008be40)
 void RenderManagers::InitSniperZoom() {
-    SniperZoom = NewPooledManager(kSniperZoomSize, "RSniperZoom", RSniperZoom_Construct);
+    SniperZoom = NewPooledManager<RSniperZoom>("RSniperZoom");
 }
 
 // FUNC_AT(0x0008beb0)
@@ -439,7 +412,7 @@ void RRenderHigh::Render() {
     debugViewPerspective->Render();
     debugViewScreenSpace->Render();
     Fog->UpdateScale();
-    RVehicleParticle_UpdateAll();
+    RVehicleParticle::UpdateAll();
     fgLightManager->FinishLights();
     if (glbMissionManager->unknown4f0 != 0)
         Colorize->DisableMotionBlur();
@@ -458,7 +431,7 @@ void RRenderHigh::InitGameRender() {
     char fileName[0x40];
     TheTextureContextManager->NewContext(BuildFileName(fileName, 0, "data\\render\\", "common.xsh", ""), 0);
     RParticleSystemManager::Init(GetParticFileForMission());
-    RVehicleParticle_Init();
+    RVehicleParticle::Init();
 
     singletons = RenderSingletonManager();
     RenderManagers::InitStateManager();
@@ -498,15 +471,15 @@ void RRenderHigh::InitGameRender() {
     singletons = RenderSingletonManager();
     RenderManagers::InitPostProcessing();
     singletons->Register(SingletonOf(ThePostProcessing));
-    RVehicleParticle_LoadAttributes();
+    RVehicleParticle::LoadAttributes();
     TheWater->LoadAttributes();
     fgParticulate->LoadAttributes();
     TheLightning->LoadAttributes();
-    REmpBolts_LoadAttributes();
+    REmpBolts::LoadAttributes();
     RShadowMap::LoadAttributes();
     RRenderWorldCamera::LoadAttributes();
     ActWeapon::LoadAttributes();
-    RBulletStreak_Init();
+    RBulletStreak::Init();
     TuningDBMgr->CloseCurrent();
 
     TuningDBMgr->LoadDatabase("Render", Launch.missionName, 0, false);
@@ -517,11 +490,11 @@ void RRenderHigh::InitGameRender() {
     singletons = RenderSingletonManager();
     RenderManagers::InitSniperZoom();
     singletons->Register(SingletonOf(SniperZoom));
-    RMuzzleFlash_Init();
-    RMissileStreak_Init();
+    RMuzzleFlash::Init();
+    RMissileStreak::Init();
     RReflection::Init();
-    REmp_Init();
-    RTyreTrack_Init();
+    REmp::Init();
+    RTyreTrack::Init();
     singletons = RenderSingletonManager();
     RenderManagers::InitShadowMap();
     singletons->Register(TheShadowMap != NULL ? &TheShadowMap->singleton.base : NULL);
@@ -552,19 +525,19 @@ void RRenderHigh::KillGameRender() {
     Symbols->RemoveNamespace("STATE");
     GlobalSymbolTable::Kill();
     NullFunction();
-    REmp_Kill();
+    REmp::Kill();
     // RDebris's destructor does nothing; the pointer is left set
     if (Debris != NULL) {
         RDebris *debris = Debris;
         NullFunction();
-        UMemory::FastFree(debris, kDebrisSize);
+        UMemory::FastFree(debris, sizeof(RDebris));
     }
     RReflection::Kill();
     NullFunction();
     NullFunction();
     NullFunction();
-    RMissileStreak_Kill();
-    RVehicleParticle_Kill();
+    RMissileStreak::Kill();
+    RVehicleParticle::Kill();
     RParticleSystemManager::Shutdown();
     RenderSingletonManager()->KillAll();
     Colorize->DisableMotionBlur();
@@ -575,7 +548,7 @@ void RRenderHigh::InitTrackRenderPostSim() {
     WRender::Init();
     TheReflection->InitPostSim();
     RRenderSharedData::Init();
-    RVehicle_InitSharedBuffers();
+    RVehicle::InitSharedBuffers();
     RSceneObj::InitializeAllLighting();
     USingletonManager *singletons = RenderSingletonManager();
     RenderManagers::InitLensFlareManager();
@@ -590,12 +563,12 @@ void RRenderHigh::RestartTrackRender() {
         (camera->*XbeVirtual<Method>(camera, 4))();     // RestartCamera
     }
     fgParticleSystems->Reset();
-    RVehicleParticle_ResetAll();
+    RVehicleParticle::ResetAll();
     fgRenderer->frameCount = 0;
     SingletonOf(TheLightning)->vtable->reset(SingletonOf(TheLightning), 0);
     NullFunction();             // called on the shadow map
     NullFunction();             // ... and on the reflection
-    RDebris_Reset(Debris, 0);
+    Debris->Reset();
     RSceneObj::InitializeAllLighting();
     RenderSingletonManager()->ResetAll();
     FrameAnimationTime = 0;

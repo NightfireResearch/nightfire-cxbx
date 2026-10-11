@@ -38,6 +38,10 @@
 #include "../engine/CoreFoundation.h"     // NullFunction
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
+#include "../game/Debris.h"
+#include "../game/TyreTrack.h"
+#include "../game/WeaponCameras.h"        // RMissileCam, RSniperZoom
+#include "../game/WeaponEffects.h"        // RBulletStreak
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
@@ -66,7 +70,6 @@ class AIVehicle;
 class GHud;
 class Grenade;
 class Missile;
-class RTyreTrack;
 struct RigidBody;
 
 namespace {
@@ -99,13 +102,6 @@ struct SceneObjDescFields {
 #define GFX_CULL_GetNextCanvas ((int (*)(Coord4 *sphere, float *height, bool *checkFar, float *farScale))0x000d3450)
 #define GGallery_CULL_SetCanvas ((void (*)(int item, bool culled, float distance))0x000d3470)
 #define GFX_Update ((void (*)())0x000d34c0)
-#define RBulletStreak_Draw ((void (*)())0x00099e20)
-#define RBulletStreak_Add ((void (*)(const Coord3 *position, const Coord4 *direction, int kind))0x0009a3b0)
-#define RMissileCam_Draw ((void (__fastcall *)(void *, int))0x000a0b50)
-#define RSniperZoom_GrabBackBuffer ((void (__fastcall *)(void *, int))0x000a68a0)
-#define RSniperZoom_Draw ((void (__fastcall *)(void *, int))0x000a6bc0)
-#define RDebris_Draw ((void (__fastcall *)(void *, int))0x000a9660)
-#define RTyreTrack_Draw ((void (__fastcall *)(RTyreTrack *, int))0x000ac250)
 #define RayShell_DrawTracers ((void (*)())0x00071a60)
 #define RayShell_DrawFlashes ((void (*)())0x00071c80)
 #define Sentry_DrawMuzzleFlashes ((void (*)())0x00073500)
@@ -151,11 +147,7 @@ static uint32_t ParticleSystemsUnknown;
 #define Pass0Draws ((CachedDrawInfo *)0x001ef0c0)               // pass 0 of the track's draws, drawn last
 // XBE_GLOBAL(0x001ec4b8, 0x2c08)
 static CachedDrawInfo Pass1Draws;                       // pass 1, drawn after the cars (names ours)
-// The render managers not ported yet (the others are in their headers)
-#define MissileCam (*(void **)0x00200f54)
-#define SniperZoom (*(void **)0x00201818)
-#define Debris (*(void **)0x00202a80)
-#define Gallery (*(void **)0x0023f320)
+#define Gallery (*(void **)0x0023f320)                         // the gallery, not ported yet
 
 namespace {
 
@@ -756,15 +748,15 @@ void RRenderWorldCamera::DrawPostProcessingEffects() {
     if (!PostProcessingEnabled)
         return;
     ThePostProcessing->GrabBackBuffer();
-    RSniperZoom_GrabBackBuffer(SniperZoom, 0);
+    SniperZoom->GrabBackBuffer();
     fgRenderer->currentView->SetDeviceTransformMode();
     TheLensFlareManager->TestFlares(this);
     TheLensFlareManager->DrawFlares();
     Colorize->Draw();
     TheGain->Draw();
-    RSniperZoom_Draw(SniperZoom, 0);
+    SniperZoom->Draw();
     ThePostProcessing->Draw();
-    RMissileCam_Draw(MissileCam, 0);
+    MissileCam->Draw();
 }
 
 // FUNC_AT(0x0008cc70)
@@ -789,7 +781,7 @@ void RRenderWorldCamera::DrawTyreTracks() {
     for (PVehicle **car = SimCars.first; car != SimCars.last; car++) {
         for (int wheel = 0; wheel < kWheels; wheel++) {
             if (TyreTrack(*car, wheel) != NULL)
-                RTyreTrack_Draw(TyreTrack(*car, wheel), 0);
+                TyreTrack(*car, wheel)->Draw();
         }
     }
 }
@@ -801,7 +793,7 @@ void RRenderWorldCamera::DrawBulletStreaks() {
         VU0_v4unitxyz(&SimpleBodyOf(*shell)->velocity, &direction);
         int streak = (*shell)->streak;
         if (streak > -1)
-            RBulletStreak_Add(&SimpleBodyOf(*shell)->position, &direction, streak);
+            RBulletStreak::Add(&SimpleBodyOf(*shell)->position, AsCoord3(&direction), streak);
     }
     RayShell_DrawTracers();
     RayShell_DrawFlashes();
@@ -830,11 +822,11 @@ void RRenderWorldCamera::DrawEffects() {
     DrawBulletStreaks();
     RWindow::DrawBrokenWindows(kBrokenWindowsUnknown);
     TheDecalManager->DrawDecals();
-    RBulletStreak_Draw();
+    RBulletStreak::Draw();
     TheLightning->Draw();
     RSceneObj::RenderAllDeferredEffects();
     GFX_Update();
-    RDebris_Draw(Debris, 0);
+    Debris->Draw();
     TheGlareManager->DrawGlares(true);
     fgParticleSystems->UpdateSpawnAllSystems();
     ParticleSystemsUnknown = fgParticleSystems->cache.count;

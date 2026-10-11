@@ -188,8 +188,8 @@ struct WorldArticle {
         kRenderWorld = 0,               // RRenderSharedData::SendPerWorldInstance
         kRenderCar = 1,                 // SendPerCarInstance
         kRenderObject = 2,              // SendPerObjectInstance
-        kRenderType3 = 3,               // none; RVehicle::PostLoad keeps its first model
-        kRenderType4 = 4,               // none; ditto
+        kRenderType3 = 3,               // none; RVehicle::PostLoad keeps its first model (RVehicle::shadowModel)
+        kRenderType4 = 4,               // none; ditto (RVehicle::renderType4Model)
     };
     enum RenderFlags : uint8_t {
         kNoFog = 0x01,                  // drawn with the fog off

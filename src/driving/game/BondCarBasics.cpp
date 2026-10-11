@@ -1,6 +1,7 @@
 #include "BondCarBasics.h"
 
 #include "BondCar.h"
+#include "TyreTrack.h"
 #include "Vehicle.h"
 #include "../data/AttributeSet.h"
 #include "../engine/ActionQueue.hpp"
@@ -55,7 +56,7 @@ void PBondCar::Destruct() {
     }
     for (int i = 0; i < kCarWheels; i++) {
         if (tyreTracks[i] != NULL)
-            UMemory::FastFree(tyreTracks[i], kTyreTrackSize);
+            UMemory::FastFree(tyreTracks[i], sizeof(RTyreTrack));
     }
     EhVectorDestructor(wheels, sizeof(WWorldPos), kCarWheels, (void *)XbeAddress(&NullFunction));
     PhysicsObject::Destruct();

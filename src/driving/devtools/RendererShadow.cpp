@@ -17,6 +17,7 @@
 #include "../render/Renderer.h"
 #include "../render/RGlareManager.hpp"
 #include "../render/RSceneObj.hpp"
+#include "../game/VehicleRender.h"
 #include "../world/World.h"
 #include "OwnedGlobals.h"
 #include "../../common/xbeOriginal.h"
@@ -623,9 +624,8 @@ void InstallFakes() {
     HookBoth(0x0007e430, CodeOf(&RLightManager::VerticalFalloffMultiplier), PTR(FakeVerticalFalloff));
     HookBoth(0x00099610, CodeOf(&RReflection::SetReflectivity), PTR(FakeReflectivity));
     HookBoth(0x00098360, CodeOf(&RReflection::SetReflectiveSpecularStrength), PTR(FakeSpecularStrength));
-    // Not ours yet: called by address by both sides
-    HookInstall(0x00095ff0, PTR(FakeSetPerObjectBuffers));
-    HookInstall(0x00095970, PTR(FakeClearSharedBuffers));
+    HookBoth(0x00095ff0, CodeOf(&RVehicle::SetPerObjectBuffers), PTR(FakeSetPerObjectBuffers));
+    HookBoth(0x00095970, CodeOf(&RVehicle::ClearSharedBuffers), PTR(FakeClearSharedBuffers));
 }
 
 // ---- running both sides
