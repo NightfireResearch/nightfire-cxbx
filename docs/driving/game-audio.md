@@ -9,13 +9,14 @@ locale helpers, the debug menu items' virtual methods). They sit on the audio fr
 and voices, docs/driving/audio.md) and the sound library, both ours. Ported on 11 October 2026 by four packages,
 then merged (`src/driving/game/`, `src/driving/data/`). Every address is Driving.xbe's.
 
-**Status:** 154 functions ported, including five entry points no function list had (ASmackable's GetName, Play,
+**Status: tested (11 October 2026).** 154 functions ported, including five entry points no function list had (ASmackable's GetName, Play,
 PlayLanding, PlayCollision and IsStillActive, slots 2-6 of its vtable 0x001a2f38, which Ghidra had not made
 functions). `game.audio` is 100% ours by bytes: 150 replaced, 205 dead (exception funclets), 11 live - all
 exception funclets at 0x00155a10..0x001569e0 with no caller the tool can see (their owners are replaced). Four
-shadow tests compare the ports with the originals on copies of the live sound objects (to be run in game); the
-main test is the sound call trace of lockstep runs of missions 1-8, since every engine, horn, wind, weapon and
-speech sound goes through this code.
+shadow tests compare the ports with the originals on copies of the live sound objects (about 41,000 cases on every
+mission, 12 live vehicles), all with no differences; lockstep runs of missions 1-8 to tick 9000, idle and
+accelerating, match the baseline in their sound call traces and frame for frame (every engine, horn, wind, weapon
+and speech sound goes through this code).
 
 ## Layout
 
@@ -62,7 +63,14 @@ draws are provisional: nothing in a shipped run opens them, and each says so onc
 
 ## What the port taught
 
-(to be filled in after testing)
+- **The first test passed.** Four packages ported in parallel, merged by one integration pass that checked the
+  generated code against the packages' own, came through the shadows and the lockstep sound traces with no
+  differences - the sound call trace in lockstep is as exact a check for audio as the frame dumps are for drawing.
+- **Find a class's base before laying it out.** AVehicle derives from ASceneObj (vtable 0x001a2f80), which sat in
+  another package; the field names its users had (weaponFlags, flagC2...) were renamed once its own methods showed
+  what the bytes are.
+- **Linker-folded code** shows up as one function serving unrelated classes (DAudio's target list erase is WGrid's
+  mover list erase; one GetName serves three vtables): port it once and call it from both.
 
 ## Odd things in the original, kept
 
