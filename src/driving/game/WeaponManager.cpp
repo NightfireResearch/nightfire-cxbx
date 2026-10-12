@@ -11,6 +11,8 @@
 #include "AICharacter.h"                // AICharacterHands, fgHandObj
 #include "Explosion.h"                  // ExplosionType
 #include "Helicopter.h"                 // PHelicopter
+#include "MissionManager.h"
+#include "Simulation.h"
 #include "Vehicle.h"                    // PVehicle, CarPhysics
 #include "Missile.h"
 #include "WeaponEffects.h"              // RScorchWorld
@@ -25,13 +27,11 @@
 #include "../engine/CoreFoundation.h"   // NullFunction
 #include "../engine/GameInterfaces.hpp" // GHud
 #include "../engine/GameLoop.h"         // LaunchPage
-#include "../engine/MissionManager.h"
 #include "../engine/StaticInit.h"       // WeaponDefinitions
 #include "../engine/UMemory.hpp"
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../physics/RigidBodyResolve.h"    // CollisionImpact
-#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"       // the VU0 vector functions
 #include "../platform/X87.h"            // Ftol, RoundToInt
 #include "../render/Colorize.h"
@@ -53,7 +53,6 @@ class AIZoneController;
 
 namespace {
 
-constexpr int32_t kSimState3 = 3;      // the Simulation's state: no firing, no blur, no turret
 
 // The AI's element controller: the count of helicopters the distance click goes through (provisional here)
 struct WeaponAIElementFields {
@@ -87,11 +86,6 @@ constexpr uint8_t kTurretStimulus = 8;
 constexpr uint32_t kSystem36 = 0x36;
 constexpr int kStimulusMode = 2;                // ProcessStimuli's mode for every call here
 
-// Launch.flags' bits read here (names ours)
-enum WeaponLaunchFlags : uint32_t {
-    kLaunchFlag2 = 0x2,         // shots take no ammunition
-    kLaunchFlag8 = 0x8,         // doubleShot
-};
 constexpr uint32_t kLaunchCheat2 = 0x2;             // Launch.cheats: the motion blur at least 80
 
 // The view the sounds play in (AMenuSound::Trigger's last argument)
@@ -146,13 +140,6 @@ static_assert(std::bit_cast<uint32_t>(1.0f / 6.0f) == 0x3e2aaaab && std::bit_cas
 
 // ---- the game's globals
 
-#define Sim ((void *)0x00233ff0)
-#define SimState I32_AT(0x00234e24)
-#define SimTimeStep FLOAT_AT(0x00234e30)
-#define SimStepCount I32_AT(0x00234e34)
-#define playerPhysicsObject (*(PVehicle ***)0x00234e40)
-#define gPlayerCanNeverLose U8_AT(0x00239218)
-#define Launch (*(LaunchPage *)0x00243b90)
 #define fgAIElementController (*(WeaponAIElementFields **)0x001ddee4)
 // The bytes AICharacterBond reads (names ours)
 #define BondSelectPressed U8_AT(0x001dda2c)             // a select or the special fire
@@ -180,11 +167,11 @@ RPlayerCamera *PlayerCamera() {
 }
 
 PhysicsObject *PlayerObject() {
-    return Simulation_GetPlayerObject(Sim, 0);
+    return fgSimulation.GetPlayerObject();
 }
 
 RigidBody *PlayerCarBody() {
-    return Simulation_GetRigidBody(Sim, 0, (*playerPhysicsObject)->rigidBodySlot);
+    return fgSimulation.GetRigidBody(fgSimulation.cars.first[0]->rigidBodySlot);
 }
 
 bool PlayerHasTurret() {
@@ -199,7 +186,7 @@ void TriggerIlluminate(RSceneObj *object, int index, int32_t tick, int fadeTicks
 
 // The player car's switch lights: 9 for a select or the special fire, 10 for the primary and secondary fire
 void LightSwitch(int index) {
-    TriggerIlluminate((*playerPhysicsObject)->renderObject, index, SimStepCount + 10, 30);
+    TriggerIlluminate(fgSimulation.cars.first[0]->renderObject, index, fgSimulation.stepCount + 10, 30);
 }
 
 // PBondCar's virtual methods the weapons call
@@ -232,7 +219,7 @@ void DryFire(const char *mixName) {
 void FireSelection() {
     SWeaponManager *manager = WeaponManager;
     if (manager->secondary != kWeaponRemoteTorpedo)
-        SMissionManager_ProgrammerDefinedEvent(glbMissionManager, 0, kSecondaryFireEvent, "");
+        glbMissionManager->ProgrammerDefinedEvent(kSecondaryFireEvent, "");
     manager->FireWeapon(manager->secondary);
 }
 
@@ -279,7 +266,7 @@ void SWeaponManager::Destruct() {
 // FUNC_AT(0x000bad70)
 void SWeaponManager::Reset() {
     for (int i = 0; i < kWeaponCount; i++)
-        WeaponDefinitions[i].refireSteps = Ftol(double(SimStepsPerSecond) * WeaponRefireSeconds[i]);
+        WeaponDefinitions[i].refireSteps = Ftol(double(fgSimulation.stepsPerSecond) * WeaponRefireSeconds[i]);
     memcpy(weapons, WeaponDefinitions, sizeof(WeaponRecord) * kWeaponCount);
     weapons[kWeaponGun].flags |= kWeaponLoaded;
     actionQueue->Flush();
@@ -325,7 +312,7 @@ void SWeaponManager::Reset() {
 // FUNC_AT(0x000ba990)
 void SWeaponManager::SetPlayerCar(RSceneObj *car) {
     playerCar = car;
-    SMissionManager_InitPlayerCar(glbMissionManager, 0);
+    glbMissionManager->InitPlayerCar();
     bool found;
     int missiles = PlayerObject()->attributes.LookupInt("MISSILES_FIRED_SIMULTANEOUSLY", &found);
     if (found) {
@@ -379,7 +366,7 @@ void SWeaponManager::SetSpecialWeapon(int weapon, const Coord3 *trigger, float r
 // FUNC_AT(0x000bad00)
 void SWeaponManager::StartNuclearSequence(const Coord3 *position, float scale) {
     nuclearState = kNuclearCountdown;
-    nuclearStep = SimStepCount + SimStepsPerSecond;
+    nuclearStep = fgSimulation.stepCount + fgSimulation.stepsPerSecond;
     nuclearPosition = *position;
     nuclearScale = scale;
 }
@@ -469,7 +456,7 @@ void SWeaponManager::SelectSecondary(bool next) {
     int weapon = next ? GetNextSecondaryType() : GetPreviousSecondaryType();
     if (weapon != secondary) {
         secondary = weapon;
-        switchStep = SimStepsPerSecond / 3 + SimStepCount;
+        switchStep = fgSimulation.stepsPerSecond / 3 + fgSimulation.stepCount;
     }
 }
 
@@ -479,7 +466,7 @@ void SWeaponManager::SelectSecondary(bool next) {
 
 // FUNC_AT(0x000bab80)
 void SWeaponManager::DoWeaponAnim(int weapon, int stimulus, int index) {
-    playerCar->animHandle->ProcessStimuli(WeaponSystems[weapon][index], stimulus, SimStepCount, kStimulusMode);
+    playerCar->animHandle->ProcessStimuli(WeaponSystems[weapon][index], stimulus, fgSimulation.stepCount, kStimulusMode);
 }
 
 // FUNC_AT(0x000babb0)
@@ -495,7 +482,7 @@ int SWeaponManager::GetWeaponFromSystem(int system) {
 
 // FUNC_AT(0x000bb2b0)
 void SWeaponManager::FireWeapon(int weapon) {
-    int32_t step = SimStepCount;
+    int32_t step = fgSimulation.stepCount;
     WTargetable *target = TargetPicker.GetSelectedTarget();
     WeaponRecord &record = weapons[weapon];
 
@@ -510,11 +497,11 @@ void SWeaponManager::FireWeapon(int weapon) {
         return;
     }
     RPlayerCamera *camera = PlayerCamera();
-    if (glbMissionManager->unknown710 && !camera->state->lockedOn && weapon == kWeaponSniperRifle) {
+    if (glbMissionManager->superEasy && !camera->state->lockedOn && weapon == kWeaponSniperRifle) {
         DryFire("POV Weapons");
         return;
     }
-    if (switchStep >= SimStepCount)
+    if (switchStep >= fgSimulation.stepCount)
         return;
     if (record.fireSteps[record.fireSystem] + record.refireSteps > step)
         return;
@@ -576,22 +563,22 @@ void SWeaponManager::FireWeapon(int weapon) {
     }
 
     if (record.countsShots)
-        SMissionManager_IncShotsFired(glbMissionManager, 0, 1);
+        glbMissionManager->IncShotsFired(1);
     record.shotsFired++;
     if (weapon == kWeaponGun || weapon == kWeaponSnowmobileGun || weapon == kWeaponUltralightGun ||
         weapon == kWeaponFodGun) {
         if (!PlayerHasTurret() && record.countsShots)
-            SMissionManager_IncShotsFired(glbMissionManager, 0, 1);
+            glbMissionManager->IncShotsFired(1);
     }
 
     switch (weapon) {
     case kWeaponQBooster:
         AMenuSound::Trigger(kWeaponBankSlot, "SFX_boostFire", "Weapons Fire", kViewNone);
-        if (EnableRocketBoost(*playerPhysicsObject))
+        if (EnableRocketBoost(fgSimulation.cars.first[0]))
             boostBlur = 120;
         break;
     case kWeaponDetonator:
-        Simulation_DetonateRemoteMines(Sim, 0);
+        fgSimulation.DetonateRemoteMines();
         break;
     case kWeaponQSlick: {
         PlayerCarBody();
@@ -610,21 +597,21 @@ void SWeaponManager::FireWeapon(int weapon) {
         break;
     case kWeaponQWorm:
         AMenuSound::Trigger(0, "SFX_uploadcode", "Menu Sounds", kViewShared);
-        SMissionManager_IncMagicCounter(glbMissionManager, 0, 0x1f);
+        glbMissionManager->IncMagicCounter(0x1f);
         break;
     case kWeaponLaser:
-        FireLaser(*playerPhysicsObject);
+        FireLaser(fgSimulation.cars.first[0]);
         break;
     case kWeaponRadar:
         AMenuSound::Trigger(0, "SFX_downloadcode", "Menu Sounds", kViewShared);
-        SMissionManager_IncMagicCounter(glbMissionManager, 0, 0x20);
+        glbMissionManager->IncMagicCounter(0x20);
         break;
     case kWeapon2Wheels:
         AMenuSound::Trigger(kWeaponBankSlot, "SFX_twowheelfire", "Weapons Fire", kViewNone);
-        EnableTwoWheelStunt(*playerPhysicsObject);
+        EnableTwoWheelStunt(fgSimulation.cars.first[0]);
         break;
     case kWeaponQCharge:
-        SMissionManager_SetMagicCounter(glbMissionManager, 0, 0x22, 1);
+        glbMissionManager->SetMagicCounter(0x22, 1);
         break;
     default:
         break;
@@ -656,7 +643,7 @@ void SWeaponManager::FireWeapon(int weapon) {
         }
         record.ammo -= used;
         if (used > 1 && record.countsShots)
-            SMissionManager_IncShotsFired(glbMissionManager, 0, used - 1);
+            glbMissionManager->IncShotsFired(used - 1);
     }
     if (!gPlayerCanNeverLose) {
         bool reload = true;
@@ -697,7 +684,7 @@ void SWeaponManager::UpdateTurret() {
     static_assert(std::bit_cast<uint32_t>(0.15915494f) == 0x3e22f983, "1 / 2pi");
     const float kTurn = 0.0025f;    // a step's turn of the turret
 
-    if (SimState == kSimState3)
+    if (fgSimulation.simState == kSimPaused)
         return;
     if (!PlayerHasTurret())
         return;
@@ -707,16 +694,16 @@ void SWeaponManager::UpdateTurret() {
     if (target != NULL && (secondary == kWeaponGun || secondary == kWeaponCannon)) {
         int slot = playerCar->physics->rigidBodySlot;
         Coord4 direction;
-        VU0_v4sub(target, &Simulation_GetRigidBody(Sim, 0, slot)->position, &direction);
+        VU0_v4sub(target, &fgSimulation.GetRigidBody(slot)->position, &direction);
         VU0_v4unitxyz(&direction, &direction);
-        const float *forward = Simulation_GetRigidBody(Sim, 0, playerCar->physics->rigidBodySlot)->info->orientation.mtx[2];
+        const float *forward = fgSimulation.GetRigidBody(playerCar->physics->rigidBodySlot)->info->orientation.mtx[2];
         float cosine = v3dotprod(&direction, forward);
         if (cosine < -1.0f)
             cosine = -1.0f;
         if (1.0f < cosine)
             cosine = 1.0f;
         angle = float(CrtAcosTimes(cosine, &kTurnsPerRadian));
-        forward = Simulation_GetRigidBody(Sim, 0, playerCar->physics->rigidBodySlot)->info->orientation.mtx[2];
+        forward = fgSimulation.GetRigidBody(playerCar->physics->rigidBodySlot)->info->orientation.mtx[2];
         Coord4 side;
         VU0_v4crossprodxyz(&direction, forward, &side);
         if (side.y < 0.0f)
@@ -750,8 +737,8 @@ void SWeaponManager::UpdateTurret() {
 // FUNC_AT(0x000bb9b0)
 void SWeaponManager::HandleNuclearSequence() {
     if (nuclearState == kNuclearCountdown) {
-        if (SimStepCount < nuclearStep) {
-            float brightness = float(double(SimStepCount - nuclearStep) * SimTimeStep);
+        if (fgSimulation.stepCount < nuclearStep) {
+            float brightness = float(double(fgSimulation.stepCount - nuclearStep) * fgSimulation.timeStep);
             if (brightness > 1.0f)
                 brightness = 1.0f;
             Colorize->SetEnabled(RColorize::kMode3);
@@ -761,11 +748,11 @@ void SWeaponManager::HandleNuclearSequence() {
         }
 
         const Coord3 up = {0.0f, 1.0f, 0.0f};
-        Simulation_SpawnExplosion(Sim, 0, kNuclearExplosion, -1, &up, &nuclearPosition, nuclearScale * 10000.0f, 0, NULL,
-                                  DamageSourceSig);
+        fgSimulation.SpawnExplosion(kNuclearExplosion, -1, &up, &nuclearPosition, nuclearScale * 10000.0f, 0, NULL,
+                                    DamageSourceSig);
         CollisionImpact impact;
         CollisionImpact_Construct(&impact, 0);
-        RigidBody *body = Simulation_GetRigidBody(Sim, 0, PlayerObject()->rigidBodySlot);
+        RigidBody *body = fgSimulation.GetRigidBody(PlayerObject()->rigidBodySlot);
 
         // The player's car is pushed away from the blast, from a point a unit towards it at the ground's height
         Coord4 point = {body->position.x, body->position.y, body->position.z, 1.0f};
@@ -785,13 +772,13 @@ void SWeaponManager::HandleNuclearSequence() {
         body->GenerateImpulse(&impact, &push, &point, 10000.0f, false, 0, 1.0f);
 
         RPlayerCamera *camera = PlayerCamera();
-        camera->SetAnchor(*playerPhysicsObject);
+        camera->SetAnchor(fgSimulation.cars.first[0]);
         camera->TriggerFixedCamera(reinterpret_cast<Coord4 *>(camera->matrix.mtx[3]), 0, 0);
         nuclearState = kNuclearBlast;
         PlayExplosionSound("SFX_HugeExp", reinterpret_cast<const Coord3 *>(&point));
         NullFunction();     // WWorldPos's destructor
     } else if (nuclearState == kNuclearBlast) {
-        float brightness = float(double(SimStepCount - nuclearStep) * SimTimeStep * 2.0);
+        float brightness = float(double(fgSimulation.stepCount - nuclearStep) * fgSimulation.timeStep * 2.0);
         if (brightness > 1.0f)
             brightness = 1.0f;
         Colorize->SetEnabled(RColorize::kMode3);
@@ -806,14 +793,14 @@ void SWeaponManager::HandleNuclearSequence() {
 // FUNC_AT(0x000bbdc0)
 void SWeaponManager::Update() {
     SMissionManager *mission = glbMissionManager;
-    bool missionOver = mission->missionState == kMissionState3 || mission->missionState == kMissionState4;
+    bool missionOver = mission->missionState == kMissionWon || mission->missionState == kMissionLost;
     if (missionOver || mission->cinematicMode != 0) {
         firingPrimary = false;
         firingSecondary = false;
         firingSpecial = false;
         handsFired = false;
     }
-    bool paused = missionOver || SimState == kSimState3 || glbMissionManager->cinematicMode != 0;
+    bool paused = missionOver || fgSimulation.simState == kSimPaused || glbMissionManager->cinematicMode != 0;
     if (GHud::TheApp() != NULL && !paused && GHud::TheApp()->paused)
         paused = true;
 
@@ -857,7 +844,7 @@ void SWeaponManager::Update() {
         }
     }
     if (glbMissionManager->autoDrive && fgHandObj != NULL) {
-        if (AICharacterHands_GetWeapon(fgHandObj, 0) + kFirstHandsWeapon != secondary && switchStep < SimStepCount) {
+        if (AICharacterHands_GetWeapon(fgHandObj, 0) + kFirstHandsWeapon != secondary && switchStep < fgSimulation.stepCount) {
             AICharacterHands_ChangeWeapon(fgHandObj, 0, secondary - kFirstHandsWeapon);
             WeaponRecord &record = weapons[secondary];
             if (!(record.flags & kWeaponDeployed))
@@ -924,7 +911,7 @@ void SWeaponManager::Update() {
             break;
         case kActionFireGadget:
             if (!paused && special != -1 && glbMissionManager->driveMissile == NULL) {
-                if (!firingSpecial && weapons[special].ammo <= 0 && (*playerPhysicsObject)->GetPhysics()->isSub == 0)
+                if (!firingSpecial && weapons[special].ammo <= 0 && fgSimulation.cars.first[0]->GetPhysics()->isSub == 0)
                     DryFire("POV Weapons");
                 firingSpecial = true;
                 BondSelectPressed = 1;
@@ -958,7 +945,7 @@ void SWeaponManager::Update() {
             int weapon = GetNextSecondaryType();
             if (weapon != secondary) {
                 secondary = weapon;
-                switchStep = SimStepsPerSecond / 3 + SimStepCount;
+                switchStep = fgSimulation.stepsPerSecond / 3 + fgSimulation.stepCount;
             }
         }
     }
@@ -999,7 +986,7 @@ void SWeaponManager::Update() {
             bool more = true;
             bool reloadSound = false;
             while ((record.flags & kWeaponReloading) && more) {
-                if (record.fireSteps[record.reloadSystem] + record.refireSteps - 5 >= SimStepCount) {
+                if (record.fireSteps[record.reloadSystem] + record.refireSteps - 5 >= fgSimulation.stepCount) {
                     more = false;
                     continue;
                 }
@@ -1018,7 +1005,7 @@ void SWeaponManager::Update() {
                     AICharacterHands_Reload(fgHandObj, 0);
                 } else {
                     playerCar->animHandle->ProcessStimuli(WeaponSystems[weapon][record.reloadSystem], kStimulusReload,
-                                                          SimStepCount, kStimulusMode);
+                                                          fgSimulation.stepCount, kStimulusMode);
                     // The missile's even systems load only in fours
                     if (weapon == kWeaponMissile && (record.reloadSystem & 1) == 0 && record.clipSize != 4) {
                         reloadSound = true;
@@ -1051,19 +1038,19 @@ void SWeaponManager::Update() {
         }
     }
 
-    if (switchStep < SimStepCount) {
+    if (switchStep < fgSimulation.stepCount) {
         for (int id = 0; id < kAnimSystemIds; id++) {
             Handle *anim = playerCar->animHandle;
             if (anim->IsSystemPlaying(id))
                 continue;
             uint32_t state = anim->GetSystemState(id);
             if (deploy[id] && state == kSystemAtRest) {
-                anim->ProcessStimuli(id, kStimulusDeploy, SimStepCount, kStimulusMode);
+                anim->ProcessStimuli(id, kStimulusDeploy, fgSimulation.stepCount, kStimulusMode);
                 WeaponRecord &record = weapons[GetWeaponFromSystem(id)];
                 if (!(record.flags & kWeaponDeployed))
                     record.flags |= kWeaponDeploying;
             } else if (stow[id] && state == kSystemDeployed) {
-                anim->ProcessStimuli(id, kStimulusStow, SimStepCount, kStimulusMode);
+                anim->ProcessStimuli(id, kStimulusStow, fgSimulation.stepCount, kStimulusMode);
             }
         }
     }
@@ -1091,14 +1078,14 @@ void SWeaponManager::Update() {
     // The smoke screen, while its system plays after a shot, makes a zone behind the car
     const WeaponRecord &smoke = weapons[kWeaponQSmoke];
     if ((smoke.flags & kWeaponAnimating) && lastFired == kWeaponQSmoke &&
-        smoke.fireSteps[smoke.fireSystem] + smoke.refireSteps - 5 > SimStepCount) {
+        smoke.fireSteps[smoke.fireSystem] + smoke.refireSteps - 5 > fgSimulation.stepCount) {
         RigidBody *body = PlayerCarBody();
         Coord4 behind;
         VU0_v4scaleadd(body->info->orientation.mtx[2], -body->info->halfExtents.z, &body->position, &behind);
         AIZoneController_RegisterZone(AIZoneController_Get(), 0, 4, &behind);
     }
 
-    if (_stricmp((*playerPhysicsObject)->GetCarType(), "rental") == 0)
+    if (_stricmp(fgSimulation.cars.first[0]->GetCarType(), "rental") == 0)
         TargetPicker.DeactivateTargeting();
     Handle *anim = playerCar->animHandle;
     if (!anim->IsSystemPlaying(kSystem36))
@@ -1114,7 +1101,7 @@ void SWeaponManager::Update() {
     if ((Launch.cheats & kLaunchCheat2) && blur < 80)
         blur = 80;
     mission = glbMissionManager;
-    if (mission->missionState == kMissionState3 || mission->missionState == kMissionState4 || SimState == kSimState3 ||
+    if (mission->missionState == kMissionWon || mission->missionState == kMissionLost || fgSimulation.simState == kSimPaused ||
         mission->cinematicMode != 0)
         blur = 0;
     if (GHud::TheApp() != NULL && !GHud_LavaDamageEffectEnabled(GHud::TheApp(), 0))
@@ -1141,7 +1128,7 @@ void SWeaponManager::Update() {
                 nearest = distance;
         }
     }
-    if (found && nearest < SimStepsPerSecond) {
+    if (found && nearest < fgSimulation.stepsPerSecond) {
         if (++clickCount >= Ftol(nearest)) {
             clickCount = 0;
             if (!GHud::TheApp()->paused) {

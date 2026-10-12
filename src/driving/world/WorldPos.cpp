@@ -5,6 +5,7 @@
 #include "WorldMath.h"
 #include "../engine/UMemory.hpp"
 #include "../../helpers.h"
+#include "../game/Simulation.h"
 
 #include <stddef.h>
 #include <bit>
@@ -14,7 +15,6 @@
 // GetInstanceList for the instances near a point).
 // ---------------------------------------------------------------------------------------------------------------
 
-#define SimStepCount I32_AT(0x00234e34)
 
 static constexpr float kFlatFaceSize = 0.2f;
 static constexpr float kNoFace = 1e38f;
@@ -92,7 +92,7 @@ bool WWorldPos::FindClosestFace(const InstanceList *instances, const Coord3 *poi
 
 // FUNC_AT(0x000d3110)
 bool WWorldPos::FindClosestFace(const InstanceList *instances, const Coord4 *from, const Coord4 *to) {
-    lastQueryStep = SimStepCount;
+    lastQueryStep = fgSimulation.stepCount;
     valid = 0;
     alignas(16) MATRIX4 segmentSpace;
     if (!WWorldMath::MakeSegSpaceMatrix(from, to, &segmentSpace))
@@ -119,7 +119,7 @@ bool WWorldPos::FindClosestFace(const InstanceList *instances, const Coord4 *fro
 // keepCurrent and an unchanged instance. The instance list's storage goes back to the fast pool at its capacity.
 // FUNC_AT(0x000d31f0)
 bool WWorldPos::FindClosestFace(const Coord3 *point, bool keepCurrent) {
-    lastQueryStep = SimStepCount;
+    lastQueryStep = fgSimulation.stepCount;
     if (keepCurrent && valid && (instance == NULL || article != instance->article))
         keepCurrent = false;
     if (valid && PointInTriangle2D(point, face.corner) && keepCurrent)

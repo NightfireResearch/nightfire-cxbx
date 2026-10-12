@@ -16,6 +16,7 @@
 #include "../engine/CoreFoundation.h"     // ThrowLengthError
 #include "../engine/PhysicsUtil.h"        // Util_GaussRandom, Util_ApplyVariance, Util_PerturbVector
 #include "../engine/UMemory.hpp"
+#include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../world/CollisionInstance.h"   // ColStl
@@ -33,9 +34,6 @@
 class RTextureContext;
 
 // ---- globals
-#define SimTimeStep FLOAT_AT(0x00234e30)                // the simulation's step, in seconds
-#define SimStepCount I32_AT(0x00234e34)
-#define SimStepsPerSecond I32_AT(0x00234e2c)
 
 static const USingletonVtable *const kLightningVtable = (const USingletonVtable *)0x00192d20;
 static const USingletonVtable *const kSingletonVtable = (const USingletonVtable *)0x0018beb0;
@@ -92,16 +90,16 @@ void RLightningMidPoint::Respawn(float fraction, float lift) {
     const Coord4 &random = lightning->randomCoords[lightning->randomCoordIndex];
     Coord4 direction = { random.x, random.y, random.z, 0.0f };
     double speed = Util_ApplyVariance(driftSpeed, lightning->driftVariance);
-    VU0_v4scale(&direction, (float)(SimTimeStep * speed), &drift);
+    VU0_v4scale(&direction, (float)(fgSimulation.timeStep * speed), &drift);
 
-    startTick = SimStepCount;
+    startTick = fgSimulation.stepCount;
     deathTick = Ftol(Util_ApplyVariance((float)life, lightning->lifeVariance)) + startTick;
 }
 
 // FUNC_AT(0x0009eb90)
 void RLightningControlPoint::Init(const Coord3 *position, RSceneObj *object, const ArticleEffect *fxLocator) {
     base = *position;
-    startTick = SimStepCount;
+    startTick = fgSimulation.stepCount;
     drift = kZeroVector;
     life = 0;
     jitter = 0.0f;
@@ -226,9 +224,9 @@ void RLightningBolt::Destruct() {
 
 // FUNC_AT(0x0009f6b0)
 void RLightningBolt::Draw(RLightning *lightning) {
-    int elapsed = SimStepCount - startTick;
+    int elapsed = fgSimulation.stepCount - startTick;
     lightning->randomNumIndex = (lightning->randomNumIndex + kNumStride) & kRandomMask;
-    double fade = alpha - (double)elapsed * SimTimeStep * alphaDecay +
+    double fade = alpha - (double)elapsed * fgSimulation.timeStep * alphaDecay +
                   (double)lightning->randomNums[lightning->randomNumIndex] * lightning->alphaNoise;
     float drawAlpha = fade < 0.0 ? 0.0f : (float)fade;
 
@@ -469,7 +467,7 @@ void RLightning::BuildNewSegment(RLightningSegment *segment, RLightningPoint *st
 
     // The parts between them, a level down: shorter lives, everything else scaled to a part's length
     double inverse = 1.0 / segmentCount;
-    int partLife = SimStepsPerSecond >> 3;
+    int partLife = fgSimulation.stepsPerSecond >> 3;
     if (partLife <= life >> 1)
         partLife = life >> 1;
     float partDrift = (float)(driftSpeed * inverse);
@@ -488,7 +486,7 @@ void RLightning::BuildNewSegment(RLightningSegment *segment, RLightningPoint *st
 
 // FUNC_AT(0x0009fb90)
 void RLightning::Update() {
-    int now = SimStepCount;
+    int now = fgSimulation.stepCount;
     int steps = now - lastSimTick;
     if (steps <= 0) {
         lastSimTick = now;
@@ -496,7 +494,7 @@ void RLightning::Update() {
     }
     if (steps > 3)
         steps = 1;
-    for (int tick = now - steps + 1; tick <= SimStepCount; tick++) {
+    for (int tick = now - steps + 1; tick <= fgSimulation.stepCount; tick++) {
         randomCoordIndex = (tick * kCoordStride) & kRandomMask;
         randomColourIndex = (tick * kColourStride) & kRandomMask;
         randomNumIndex = (tick * kNumStride) & kRandomMask;
@@ -518,13 +516,13 @@ void RLightning::Update() {
             at++;
         }
     }
-    lastSimTick = SimStepCount;
+    lastSimTick = fgSimulation.stepCount;
 }
 
 // FUNC_AT(0x0009fd20)
 void RLightning::Draw() {
     Update();
-    int tick = SimStepCount;
+    int tick = fgSimulation.stepCount;
     randomNumIndex = (tick * kNumStride) & kRandomMask;
     randomCoordIndex = (tick * kCoordStride) & kRandomMask;
     randomColourIndex = (tick * kColourStride) & kRandomMask;
@@ -551,17 +549,17 @@ void RLightning::ClearAllBolts() {
 
 // FUNC_AT(0x0009fe30)
 void RLightning::Reset() {
-    lastSimTick = SimStepCount;
+    lastSimTick = fgSimulation.stepCount;
     nextBoltHandle = 1;
     unknown6E4 = false;
-    metricsInterval = SimStepsPerSecond;
+    metricsInterval = fgSimulation.stepsPerSecond;
     CalcRandomTables();
     ClearAllBolts();
     stripCount = 0;
     joinNext = false;
     textureCycle = 0;
     alphaScale = 1.0f;
-    nextMetricsTick = metricsInterval + SimStepCount;
+    nextMetricsTick = metricsInterval + fgSimulation.stepCount;
     lastStripCount = 0;
     unknown6F4 = 0;
     if (strip != NULL) {
@@ -620,7 +618,7 @@ int RLightning::AddBolt(const Coord3 *from, RSceneObj *fromObj, const ArticleEff
     if (bolt != NULL)
         bolt->Construct();
     bolt->handle = nextBoltHandle++;
-    bolt->startTick = SimStepCount;
+    bolt->startTick = fgSimulation.stepCount;
     bolt->life = life;
     bolt->alpha = alphaInitial;
     bolt->alphaDecay = alphaDecay;
@@ -650,7 +648,7 @@ int RLightning::AddRoundedBolt(RSceneObj *sceneObj, const ArticleEffect *fromLoc
     if (bolt != NULL)
         bolt->Construct();
     bolt->handle = nextBoltHandle++;
-    bolt->startTick = SimStepCount;
+    bolt->startTick = fgSimulation.stepCount;
     bolt->life = life;
     bolt->alpha = alphaInitial;
     bolt->alphaDecay = alphaDecay;
@@ -715,7 +713,7 @@ int RLightning::AddRoundedBolt(RSceneObj *sceneObj, const ArticleEffect *fromLoc
             outward.z = direction->z;
             double range = driftRange < 0.0f ? 0.0 : driftRange;
             double speed = range * RandomShort() * kRandomScale + driftMin;
-            double drift = Util_ApplyVariance((float)speed, driftVariance) * SimTimeStep;
+            double drift = Util_ApplyVariance((float)speed, driftVariance) * fgSimulation.timeStep;
             VU0_v4scale(&outward, (float)drift, &point->drift);
         }
     }

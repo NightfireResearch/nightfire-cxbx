@@ -10,6 +10,7 @@
 #include <bit>
 
 #include "Shell.h"                        // Shell::ApplyWorldEffects
+#include "Simulation.h"
 #include "../audio/Bank.h"                // SharedTreeMax, SharedTreeIterator
 #include "../data/AttributeContainers.h"  // AttributeMap: the rotations and steps of maps with 0x1c-byte nodes
 #include "../data/DebugVariables.h"
@@ -43,9 +44,6 @@
 #define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
 
 // ---- the simulation's globals
-#define SimStepsPerSecond I32_AT(0x00234e2c)
-#define SimTimeStep FLOAT_AT(0x00234e30)                // the simulation's step, in seconds
-#define SimStepCount I32_AT(0x00234e34)
 
 namespace {
 
@@ -869,8 +867,8 @@ void REmpBolts::LoadAttributes() {
 // FUNC_AT(0x0009dc90)
 REmpBolts* REmpBolts::Construct(RSceneObj *vehicle) {
     this->vehicle = vehicle;
-    lastUpdateTime = SimStepCount;
-    startTime = SimStepCount;
+    lastUpdateTime = fgSimulation.stepCount;
+    startTime = fgSimulation.stepCount;
     intensity = 1.0f;
     anchors = NULL;
     numAnchors = 0;
@@ -966,7 +964,7 @@ void REmpBolts::Draw() {
     if (!kGlowEnable)
         return;
 
-    double radians = double(SimStepCount) * SimTimeStep * kGlowFrequency;
+    double radians = double(fgSimulation.stepCount) * fgSimulation.timeStep * kGlowFrequency;
     uint32_t random = RandomShort();
     float wave = GlowWave(radians, kGlowAmplitude, kGlowStrength);
     float noise = float(random * double(kGlowNoiseRange) * kGlowNoiseStrength * kOneOver65536);
@@ -990,7 +988,7 @@ void REmpBolts::Draw() {
 
 // FUNC_AT(0x0009d6b0)
 void REmpBolts::Update() {
-    uint32_t steps = SimStepCount - lastUpdateTime;
+    uint32_t steps = fgSimulation.stepCount - lastUpdateTime;
     if (steps != 0) {
         uint32_t checks = numBolts < steps ? numBolts : steps;
         if (checks > 8)
@@ -1010,7 +1008,7 @@ void REmpBolts::Update() {
                 TrySpawnBolt();
         }
     }
-    lastUpdateTime = SimStepCount;
+    lastUpdateTime = fgSimulation.stepCount;
 }
 
 // FUNC_AT(0x0009d320)
@@ -1071,7 +1069,7 @@ EmpAnchor* REmpBolts::GetRandomAnchor(uint32_t group) {
 void REmpBolts::CreateVehicleBolt(EmpAnchor *from, EmpAnchor *to) {
     int pick = RandomShort();
     if (kAllowVehicleBolts) {
-        int ticks = pick * SimStepsPerSecond >> 16;
+        int ticks = pick * fgSimulation.stepsPerSecond >> 16;
         int life = Ftol(ticks * double(kScaleLifetime));
         TheLightning->AddRoundedBolt(vehicle, from->effect, to->effect, kVehicleDriftMin, kVehicleDriftMax,
                                      kVehicleDriftVariance, kVehiclePerturb, kSnapToBoundingBox != 0,
@@ -1103,5 +1101,5 @@ void REmpBolts::CreateWorldBolt(EmpAnchor *from, const Coord3 *hit) {
         bulge *= -1.0f;
     if (kAllowWorldBolts)
         TheLightning->AddBolt(&kZeroPoint, vehicle, from->effect, hit, NULL, NULL,
-                              bulge, SimStepsPerSecond / 10);
+                              bulge, fgSimulation.stepsPerSecond / 10);
 }

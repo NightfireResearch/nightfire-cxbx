@@ -74,6 +74,8 @@ draws are provisional: nothing in a shipped run opens them, and each says so onc
 
 ## Odd things in the original, kept
 
+Every area's entries, by kind and with addresses: docs/driving/original-quirks.md.
+
 - AVehicle::CalculateSpeed: with a horn, a speed between 5 and 14 becomes 14. CalculateRpm takes the log through
   FLDLN2/FYL2X as the x87 makes it. The base Play (0x00017550) is empty and its call is left out.
 - PlayCollision on paved ground plays the tyre sound when `s0 || (s1 && s2) || s3`; its search of the impact

@@ -53,6 +53,8 @@ lockstep frames matched before the fixes):
 
 ## Odd things in the original, kept
 
+Every area's entries, by kind and with addresses: docs/driving/original-quirks.md.
+
 - SetOldCameraMode constructs a whole temporary RPlayerCamera on the stack, runs the target mode's update on it and
   destroys it.
 - UpdateSplineCam eases toward an uninitialised stack vector on a one-lane road (the port uses zero).

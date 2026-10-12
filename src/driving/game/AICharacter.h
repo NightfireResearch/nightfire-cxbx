@@ -95,5 +95,7 @@ public:
 #define AICharacterHands_ChangeWeapon ((void (__fastcall *)(AICharacterHands *, int, int weapon))0x00022cc0)
 #define AICharacterHands_Fire ((void (__fastcall *)(AICharacterHands *, int))0x00022dd0)
 #define AICharacterHands_Reload ((void (__fastcall *)(AICharacterHands *, int))0x00022e20)
+#define AICharacterHands_ShowHands ((void (__fastcall *)(AICharacterHands *, int))0x00022c30)
+#define AICharacterHands_HideHands ((void (__fastcall *)(AICharacterHands *, int))0x00022c50)
 
 #endif // DRIVING_GAME_AICHARACTER_H_

@@ -12,6 +12,7 @@
 #include "../engine/PhysicsUtil.h"        // Util_Bound
 #include "../data/StdStreams.h"         // GameStd::String, GameStd::LengthError
 #include "../engine/UMemory.hpp"
+#include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../world/WorldPos.h"
 
@@ -23,16 +24,18 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-#define Simulation_GetRigidBodyInfo ((RigidBodyInfo *(__fastcall *)(void *, int, int ownerIndex))0x000b2760)
 #define Crt_CxxThrowException ((void (__stdcall *)(void *object, const void *throwInfo))0x001325ad)
 
 // ---- globals
-#define Sim ((void *)0x00233ff0)                    // the Simulation
-#define SimTimeStep FLOAT_AT(0x00234e30)            // the simulation's step, in seconds
 #define LengthErrorVtable ((void *)0x00189eec)      // std::length_error's
 #define LengthErrorThrowInfo ((const void *)0x001a89bc)
 
 namespace {
+
+// The owner of the body in slot `ownerIndex` as a vehicle (the owners of the kinds below 4 are)
+PVehicle *OwnerVehicle(int ownerIndex) {
+    return static_cast<PVehicle *>(fgSimulation.rigidBodyOwners[ownerIndex]);
+}
 
 // The warning beside the provisional port (code no shipped data reaches): said once, the first time it runs
 void RigidCoreUntested(const char *what) {
@@ -124,7 +127,7 @@ RigidBody* RigidBody::Construct(int8_t ownerIndex, int8_t kind, const Coord3 *po
     angularMomentum.y = this->angularVelocity.y / inverseInertiaY;
     angularMomentum.z = this->angularVelocity.z / inverseInertiaZ;
 
-    info = Simulation_GetRigidBodyInfo(Sim, 0, this->ownerIndex);
+    info = fgSimulation.GetRigidBodyInfo(this->ownerIndex);
     info->unknown4ff = 0;
     memset(info, 0, sizeof(RigidBodyInfo));
     info->halfExtents.x = halfExtents->x < kMinHalfExtent ? kMinHalfExtent : halfExtents->x;
@@ -207,28 +210,28 @@ void RigidBody::ApplyInitialForcesAndTorques() {
         drag.y = 0.0f;
         ResolveMassScaledForce4(&drag);
     }
-    if (kind < 4 && RigidVehicles[ownerIndex]->GetPhysics()->isBoat != 0) {
+    if (kind < 4 && OwnerVehicle(ownerIndex)->GetPhysics()->isBoat != 0) {
         gravity.y = gravity.y * kDragGravityScale;
         Coord4 drag = {velocity.x, velocity.y, velocity.z, 0.0f};
         VU0_v4scale(&drag, kDrag, &drag);
         drag.y = 0.0f;
         ResolveMassScaledForce4(&drag);
     }
-    if (kind < 4 && (kind == 1 || _stricmp(RigidVehicles[ownerIndex]->GetCarType(), "paradis_car") == 0)) {
-        if (RigidVehicles[ownerIndex]->GetNumWheelsOnGround() == 0) {
-            RigidVehicles[ownerIndex]->SetWasInAir(true);
+    if (kind < 4 && (kind == 1 || _stricmp(OwnerVehicle(ownerIndex)->GetCarType(), "paradis_car") == 0)) {
+        if (OwnerVehicle(ownerIndex)->GetNumWheelsOnGround() == 0) {
+            OwnerVehicle(ownerIndex)->SetWasInAir(true);
             gravity.x = playerGravity.x;
             gravity.y = playerGravity.y;
             gravity.z = playerGravity.z;
-        } else if (RigidVehicles[ownerIndex]->GetWasInAir()) {
-            RigidVehicles[ownerIndex]->SetWasInAir(false);
-            if (_stricmp(RigidVehicles[ownerIndex]->GetCarType(), "jungle_truck") == 0)
+        } else if (OwnerVehicle(ownerIndex)->GetWasInAir()) {
+            OwnerVehicle(ownerIndex)->SetWasInAir(false);
+            if (_stricmp(OwnerVehicle(ownerIndex)->GetCarType(), "jungle_truck") == 0)
                 RigidPlayerGravity = kJungleTruckGravity;
             else
                 RigidPlayerGravity = Rigid_BODGE_PLAYER_GRAVITY;
         }
     }
-    if (!(kind < 4 && RigidVehicles[ownerIndex]->GetPhysics()->subPhysics == 1))
+    if (!(kind < 4 && OwnerVehicle(ownerIndex)->GetPhysics()->subPhysics == 1))
         ResolveMassScaledForce4(&gravity);
 
     if ((int8_t)groundContacts > 2 && kind >= 4 && info->unknown4ff == 0 && info->unknown4fd == 0) {
@@ -260,7 +263,7 @@ void RigidBody::ResolveLeverForces(const LeverContacts *contacts, const Coord4 *
         float speed = Abs(approach);
         if (speed > Rigid_MICRO_THRESHOLD)
             speed = Rigid_MICRO_THRESHOLD;
-        double rate = kind < 4 && RigidVehicles[ownerIndex]->GetPhysics()->isSnowmobile != 0
+        double rate = kind < 4 && OwnerVehicle(ownerIndex)->GetPhysics()->isSnowmobile != 0
                           ? RigidRestitutionRateC8 : RigidGroundRestitutionRate;
         Coord4 impulse, forcePerMass, normalPart, sliding;
         VU0_v4scale(&normal, (float)(-((rate * speed + 1.0) * approach) / effectiveInverseMass), &impulse);
@@ -292,9 +295,9 @@ void RigidBody::ResolveLeverForces(const LeverContacts *contacts, const Coord4 *
 void RigidBody::CollideWithGround() {
     if (RigidUnderwater)
         return;
-    if (kind < 4 && RigidVehicles[ownerIndex]->GetPhysics()->noWorldCollisions != 0)
+    if (kind < 4 && OwnerVehicle(ownerIndex)->GetPhysics()->noWorldCollisions != 0)
         return;
-    if (kind < 4 && RigidVehicles[ownerIndex]->GetSplinePath() != NULL) {
+    if (kind < 4 && OwnerVehicle(ownerIndex)->GetSplinePath() != NULL) {
         info->ground.x = 0.0f;
         info->ground.y = 1.0f;
         info->ground.z = 0.0f;
@@ -500,7 +503,7 @@ void RigidBody::UpdatePositionAndOrientation(float unused) {
     momentum.x = Util_Bound(momentum.x, Rigid_M_LIMIT * mass, Rigid_M_LIMIT * mass);
     momentum.y = Util_Bound(momentum.y, Rigid_M_LIMIT * mass, Rigid_M_LIMIT * mass);
     momentum.z = Util_Bound(momentum.z, Rigid_M_LIMIT * mass, Rigid_M_LIMIT * mass);
-    float step = SimTimeStep;
+    float step = fgSimulation.timeStep;
     float inverseMass = 1.0f / mass;
     VU0_v4scaleadd(&force, step, &momentum, &momentum);
     VU0_v4scaleadd(&torque, step, &angularMomentum, &angularMomentum);

@@ -11,6 +11,7 @@
 #include "../camera/PlayerCamera.h"
 #include "../camera/PlayerCameraB.h"
 #include "../engine/SimRandom.h"
+#include "../game/Simulation.h"
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
@@ -908,7 +909,7 @@ void PlayerCamShadowB_Run(void) {
 
     // AdjustCamAroundObjectEllipse: points in and round every body
     for (int slot = 0; slot < 64; slot++) {
-        PhysicsObject *owner = PhysicsObjects[slot];
+        PhysicsObject *owner = fgSimulation.rigidBodyOwners[slot];
         if (owner == NULL || (owner->flags & PhysicsObject::kSimpleBody))
             continue;
         RigidBody *body = owner->GetRigidBody();
@@ -922,7 +923,7 @@ void PlayerCamShadowB_Run(void) {
         }
     }
     for (int slot = 0; slot < 96; slot++) {
-        if (SimpleBodyOwners[slot] == NULL)
+        if (fgSimulation.simpleRigidBodyOwners[slot] == NULL)
             continue;
         SimpleRigidBody *body = ShadowGetSimpleRigidBody(ShadowSim, 0, slot);
         for (int i = 0; i < 6; i++) {

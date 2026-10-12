@@ -10,6 +10,8 @@
 #include "../camera/PlayerCamera.h"
 #include "../engine/SimRandom.h"
 #include "../game/BondCar.h"
+#include "../game/MissionManager.h"
+#include "../game/Simulation.h"
 #include "../game/Vehicle.h"            // fgDamageImpulseScale
 #include "../game/VehicleRender.h"      // RVehicle::SetEMPVictimEffect
 #include "../physics/PhysicsObject.h"
@@ -95,7 +97,7 @@ struct Hook {
     uint8_t saved[5];
     bool on;
 };
-Hook g_hooks[48];
+Hook g_hooks[64];
 int g_hookCount;
 
 void HookInstall(uint32_t at, const void *to) {
@@ -425,9 +427,9 @@ void InstallFakes() {
     HookInstall(0x00035c00, (const void *)&FakeControllerGet);
     HookInstall(0x00035e90, (const void *)&FakeFindAgent);
     HookInstall(0x000289f0, (const void *)&FakeSleep);
-    HookInstall(0x000b6770, (const void *)&FakeIncKills);
-    HookInstall(0x000b6720, (const void *)&FakeIncShotsHit);
-    HookInstall(0x000b66c0, (const void *)&FakeIncPlayerDamage);
+    HookBoth(0x000b6770, XbeAddress(&SMissionManager::IncKills), (const void *)&FakeIncKills);
+    HookBoth(0x000b6720, XbeAddress(&SMissionManager::IncShotsHit), (const void *)&FakeIncShotsHit);
+    HookBoth(0x000b66c0, XbeAddress(&SMissionManager::IncPlayerDamage), (const void *)&FakeIncPlayerDamage);
     HookInstall(0x000d7c10, (const void *)&FakeTheApp);
     HookInstall(0x000d87a0, (const void *)&FakeDamageFlash);
     HookBoth(0x0011c910, XbeAddress(&ABaseSound::OperatorNew), (const void *)&FakeOperatorNew);
@@ -855,7 +857,7 @@ void BondCarShadowD_Run(void) {
     PBondCar *player = ShadowPlayerCar;
     int cars = 0;
     for (int slot = 0; slot < 64; slot++) {
-        PhysicsObject *owner = PhysicsObjects[slot];
+        PhysicsObject *owner = fgSimulation.rigidBodyOwners[slot];
         if (owner == NULL || uint32_t(uintptr_t(owner->vtable)) != kPBondCarVtable)
             continue;
         PBondCar *car = static_cast<PBondCar *>(static_cast<PVehicle *>(owner));

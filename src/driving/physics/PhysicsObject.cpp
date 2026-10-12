@@ -6,7 +6,7 @@
 
 #include "RigidBody.h"
 #include "SimpleRigidBody.h"
-#include "Simulation.h"
+#include "../game/Simulation.h"
 #include "../../common/xbeOverload.h"     // XbeVirtual
 #include "../../helpers.h"
 #include "../anim/AnimEngine.h"         // Handle
@@ -24,17 +24,9 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-#define Simulation_AssignRigidBodySlot ((int (__fastcall *)(void *, int, PhysicsObject *object, int simple))0x000b2630)
-#define Simulation_ReleaseRigidBodySlot ((void (__fastcall *)(void *, int, int slot, int simple))0x000b2980)
 
 // ---- globals
 #define PhysicsObjectVtable ((void **)0x0018f9a0)
-#define Sim ((void *)0x00233ff0)                    // the Simulation
-// XBE_GLOBAL(0x00234020, 0x100)
-#define RigidBodySigs ((uint32_t *)0x00234020)      // [64] the Simulation's signatures of its bodies, by slot
-// XBE_GLOBAL(0x00234120, 0x180)
-#define SimpleBodySigs ((uint32_t *)0x00234120)     // [96]
-#define SimStepCount U32_AT(0x00234e34)             // the Simulation's steps so far
 
 namespace {
 
@@ -44,7 +36,7 @@ static_assert(std::bit_cast<uint32_t>(kForceScale) == 0x3b5a740e, "the original'
 constexpr uint32_t kFeedbackSize = sizeof(IFeedback);
 
 SimpleRigidBody *SimpleBody(const PhysicsObject *object) {
-    return Simulation_GetSimpleRigidBody(Sim, 0, object->rigidBodySlot);
+    return fgSimulation.GetSimpleRigidBody(object->rigidBodySlot);
 }
 
 // A render object's offset (its vtable's slot 9), answered in ST0 unrounded
@@ -73,7 +65,7 @@ PhysicsObject* PhysicsObject::Construct(const AttributeSet &attributes, int type
     worldPos.Construct();
     this->type = type;
     flags = 0;
-    rigidBodySlot = Simulation_AssignRigidBodySlot(Sim, 0, this, false);
+    rigidBodySlot = fgSimulation.AssignRigidBodySlot(this, false);
     renderObject = NULL;
     audioObject = NULL;
     feedbackObject = NULL;
@@ -91,7 +83,7 @@ PhysicsObject* PhysicsObject::Construct(const char *className, const char *name,
     worldPos.Construct();
     this->type = type;
     flags = 0;
-    rigidBodySlot = Simulation_AssignRigidBodySlot(Sim, 0, this, false);
+    rigidBodySlot = fgSimulation.AssignRigidBodySlot(this, false);
     renderObject = NULL;
     audioObject = NULL;
     feedbackObject = NULL;
@@ -109,7 +101,7 @@ PhysicsObject* PhysicsObject::Construct(const char *className, const char *name,
     worldPos.Construct();
     this->type = type;
     flags = kSimpleBody;
-    rigidBodySlot = Simulation_AssignRigidBodySlot(Sim, 0, this, true);
+    rigidBodySlot = fgSimulation.AssignRigidBodySlot(this, true);
     renderObject = NULL;
     audioObject = NULL;
     feedbackObject = NULL;
@@ -150,7 +142,7 @@ void PhysicsObject::Destruct() {
         feedback->Destruct();
         UMemory::FastFree(feedback, kFeedbackSize);
     }
-    Simulation_ReleaseRigidBodySlot(Sim, 0, rigidBodySlot, flags & kSimpleBody);
+    fgSimulation.ReleaseRigidBodySlot(rigidBodySlot, flags & kSimpleBody);
     attributes.Destruct();
     NullFunction();   // ~WWorldPos
 }
@@ -170,7 +162,7 @@ PhysicsObject* PhysicsObject::Delete(unsigned flags) {
 
 // FUNC_AT(0x0001c180)
 RigidBody* PhysicsObject::GetRigidBody() {
-    return Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+    return fgSimulation.GetRigidBody(rigidBodySlot);
 }
 
 // FUNC_AT(0x0006f240)
@@ -223,9 +215,9 @@ Coord3* PhysicsObject::GetLinearVelocity() {
 // FUNC_AT(0x0006f390)
 uint32_t* PhysicsObject::GetSig(uint32_t *result) {
     if (!(flags & kSimpleBody))
-        *result = RigidBodySigs[GetRigidBody()->ownerIndex];
+        *result = fgSimulation.rigidBodySigs[GetRigidBody()->ownerIndex];
     else
-        *result = SimpleBodySigs[SimpleBody(this)->slot];
+        *result = fgSimulation.simpleRigidBodySigs[SimpleBody(this)->slot];
     return result;
 }
 
@@ -308,7 +300,7 @@ bool PhysicsObject::GetCollisionBounds(Coord4 *bounds) {
 // FUNC_AT(0x0006f560)
 void PhysicsObject::PlayAnimation(uint32_t stimulus) {
     if (renderObject != NULL)
-        renderObject->animHandle->ProcessStimuli(stimulus, SimStepCount, 2);
+        renderObject->animHandle->ProcessStimuli(stimulus, fgSimulation.stepCount, 2);
 }
 
 // FUNC_AT(0x0006f580)
@@ -329,12 +321,12 @@ bool PhysicsObject::IsOwnedBy(PhysicsObject *owner) {
     owner->GetSig(&sig);
     if (ownerSig == 0)
         return false;
-    PhysicsObject *object = Simulation_FindPhysicsObjectSignature(Sim, 0, ownerSig);
+    PhysicsObject *object = fgSimulation.FindPhysicsObjectSignature(ownerSig);
     while (object != NULL) {
         uint32_t objectSig;
         if (*object->GetSig(&objectSig) == sig)
             return true;
-        PhysicsObject *next = Simulation_FindPhysicsObjectSignature(Sim, 0, object->ownerSig);
+        PhysicsObject *next = fgSimulation.FindPhysicsObjectSignature(object->ownerSig);
         if (next == object)
             return false;
         object = next;

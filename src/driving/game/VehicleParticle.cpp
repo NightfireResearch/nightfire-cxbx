@@ -5,6 +5,7 @@
 #include <bit>
 #include <math.h>
 
+#include "Simulation.h"
 #include "Vehicle.h"                    // PVehicle, CarPhysics
 #include "WeaponCameras.h"              // ParticleTextureRect
 #include "../../common/xbeOverload.h"   // XbeVirtual
@@ -14,23 +15,25 @@
 #include "../data/Tree.h"               // TreeThrow
 #include "../engine/UMemory.hpp"
 #include "../physics/RigidBody.h"
-#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../render/Particles.h"
+#include "SimulationContainers.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // RVehicleParticle and its set (0x000a6db0-0x000a8460), ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
 
-// ---- the game's code not ported yet
-// The rotations and the iterator's decrement every set of 0x14-byte nodes shares (the Simulation's copies)
-#define SetLrotate ((void (__fastcall *)(VehicleParticleSet *, int, VehicleParticleNode *node))0x000b29f0)
-#define SetRrotate ((void (__fastcall *)(VehicleParticleSet *, int, VehicleParticleNode *node))0x000b2a50)
-#define SetIteratorDec ((void (__fastcall *)(VehicleParticleSet::Iterator *, int))0x000b2ab0)
+namespace {
+
+// The set's rotations and its iterator's decrement are the code every set with 0x14-byte nodes shares
+// (SimulationContainers.h)
+DeadObjectSet *SetCode(VehicleParticleSet *set) {
+    return reinterpret_cast<DeadObjectSet *>(set);
+}
+
+}  // namespace
 
 // ---- globals
-#define Sim ((void *)0x00233ff0)                                    // the Simulation
-#define SimStepCount U32_AT(0x00234e34)
 #define GameTick U32_AT(0x001f2a4c)
 #define OffOnNames ((const char *const *)0x001b6638)                // "Off", "On"
 
@@ -101,7 +104,7 @@ const Coord3 kUp = {0.0f, 1.0f, 0.0f};
 const Coord3 kForward = {0.0f, 0.0f, 1.0f};
 
 RigidBody *VehicleBody(PVehicle *vehicle) {
-    return Simulation_GetRigidBody(Sim, 0, vehicle->rigidBodySlot);
+    return fgSimulation.GetRigidBody(vehicle->rigidBodySlot);
 }
 
 // The emitter's body: the vehicle's rigid body slot, or none
@@ -257,7 +260,7 @@ VehicleParticleSet::Iterator* VehicleParticleSet::Erase(Iterator *result, Iterat
                 if (sibling->color == kTreeRed) {
                     sibling->color = kTreeBlack;
                     fixnodeParent->color = kTreeRed;
-                    SetLrotate(this, 0, fixnodeParent);
+                    SetCode(this)->Lrotate(reinterpret_cast<DeadObjectNode *>(fixnodeParent));
                     sibling = fixnodeParent->right;
                 }
                 if (sibling->isNil)
@@ -269,20 +272,20 @@ VehicleParticleSet::Iterator* VehicleParticleSet::Erase(Iterator *result, Iterat
                 if (sibling->right->color == kTreeBlack) {
                     sibling->left->color = kTreeBlack;
                     sibling->color = kTreeRed;
-                    SetRrotate(this, 0, sibling);
+                    SetCode(this)->Rrotate(reinterpret_cast<DeadObjectNode *>(sibling));
                     sibling = fixnodeParent->right;
                 }
                 sibling->color = fixnodeParent->color;
                 fixnodeParent->color = kTreeBlack;
                 sibling->right->color = kTreeBlack;
-                SetLrotate(this, 0, fixnodeParent);
+                SetCode(this)->Lrotate(reinterpret_cast<DeadObjectNode *>(fixnodeParent));
                 break;
             } else {
                 VehicleParticleNode *sibling = fixnodeParent->left;
                 if (sibling->color == kTreeRed) {
                     sibling->color = kTreeBlack;
                     fixnodeParent->color = kTreeRed;
-                    SetRrotate(this, 0, fixnodeParent);
+                    SetCode(this)->Rrotate(reinterpret_cast<DeadObjectNode *>(fixnodeParent));
                     sibling = fixnodeParent->left;
                 }
                 if (sibling->isNil)
@@ -294,13 +297,13 @@ VehicleParticleSet::Iterator* VehicleParticleSet::Erase(Iterator *result, Iterat
                 if (sibling->left->color == kTreeBlack) {
                     sibling->right->color = kTreeBlack;
                     sibling->color = kTreeRed;
-                    SetLrotate(this, 0, sibling);
+                    SetCode(this)->Lrotate(reinterpret_cast<DeadObjectNode *>(sibling));
                     sibling = fixnodeParent->left;
                 }
                 sibling->color = fixnodeParent->color;
                 fixnodeParent->color = kTreeBlack;
                 sibling->left->color = kTreeBlack;
-                SetRrotate(this, 0, fixnodeParent);
+                SetCode(this)->Rrotate(reinterpret_cast<DeadObjectNode *>(fixnodeParent));
                 break;
             }
         }
@@ -348,11 +351,11 @@ VehicleParticleSet::Iterator* VehicleParticleSet::Insert(Iterator *result, bool 
             } else {
                 if (x == parent->right) {
                     x = parent;
-                    SetLrotate(this, 0, x);
+                    SetCode(this)->Lrotate(reinterpret_cast<DeadObjectNode *>(x));
                 }
                 x->parent->color = kTreeBlack;
                 x->parent->parent->color = kTreeRed;
-                SetRrotate(this, 0, x->parent->parent);
+                SetCode(this)->Rrotate(reinterpret_cast<DeadObjectNode *>(x->parent->parent));
             }
         } else {
             VehicleParticleNode *uncle = grandparent->left;
@@ -364,11 +367,11 @@ VehicleParticleSet::Iterator* VehicleParticleSet::Insert(Iterator *result, bool 
             } else {
                 if (x == parent->left) {
                     x = parent;
-                    SetRrotate(this, 0, x);
+                    SetCode(this)->Rrotate(reinterpret_cast<DeadObjectNode *>(x));
                 }
                 x->parent->color = kTreeBlack;
                 x->parent->parent->color = kTreeRed;
-                SetLrotate(this, 0, x->parent->parent);
+                SetCode(this)->Lrotate(reinterpret_cast<DeadObjectNode *>(x->parent->parent));
             }
         }
     }
@@ -394,7 +397,7 @@ VehicleParticleSet::InsertResult* VehicleParticleSet::InsertUnique(InsertResult 
             result->inserted = true;
             return result;
         }
-        SetIteratorDec(&at, 0);
+        reinterpret_cast<DeadObjectSet::Iterator *>(&at)->Dec();
     }
     if (at.node->value < value) {
         Iterator inserted;
@@ -641,7 +644,7 @@ void RVehicleParticle::UpdateCar(bool active) {
 
 // FUNC_AT(0x000a8120)
 void RVehicleParticle::UpdateAll() {
-    if (SimStepCount == VehicleParticleUpdateTick)
+    if (fgSimulation.stepCount == VehicleParticleUpdateTick)
         return;
     VehicleParticleUpdateTick = GameTick;   // the game tick, though it is compared with the step count
     VehicleParticleSet *set = fgVehicleParticles;

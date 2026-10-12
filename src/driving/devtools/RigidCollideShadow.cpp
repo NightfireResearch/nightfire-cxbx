@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "../EventManager.hpp"
+#include "../game/Simulation.h"
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBodyCollide.h"
 #include "../world/Collider.h"
@@ -48,7 +49,7 @@
 // ResolveCollision (its answer and the impact's damage scales and strength), GenerateImpulse (the strength, 0 to 7,
 // so every stimulus threshold is reached), CalculateAndApplyWorldDamage, the animation stimuli, the mission event,
 // Event::operator new and ECollision's constructor (the impact compared but for +0x38..+0x3f, which the original
-// leaves as its stack had them). Every owner in PhysicsObjects is swapped for a copy whose vtable records SetInShock,
+// leaves as its stack had them). Every owner in fgSimulation.rigidBodyOwners is swapped for a copy whose vtable records SetInShock,
 // ApplyDamage, AddDamageByPlayer, SetAgainstWallFlag, GetIsInTwoWheelMode (scripted) and GetPhysics (a scripted
 // record). Vectors handed out are logged by x, y and z (the original leaves some w words as its stack had them), and
 // the lever arm CollideWithWorld hands CalculateAndApplyWorldDamage after a box hit only when a vehicle's world hit
@@ -322,9 +323,9 @@ void OwnersSwap(bool fake) {
             memcpy(g_fakes[i].bytes, g_owners[i], sizeof(PhysicsObject));
             void **vtable = g_fakeVtable;
             memcpy(g_fakes[i].bytes, &vtable, 4);
-            PhysicsObjects[i] = reinterpret_cast<PhysicsObject *>(&g_fakes[i]);
+            fgSimulation.rigidBodyOwners[i] = reinterpret_cast<PhysicsObject *>(&g_fakes[i]);
         } else {
-            PhysicsObjects[i] = g_owners[i];
+            fgSimulation.rigidBodyOwners[i] = g_owners[i];
         }
     }
 }
@@ -713,7 +714,7 @@ void RigidCollideShadow_Run(void) {
     FpControlGet(&g_x87, &g_sse);
 
     for (int i = 0; i < kSlots; i++) {
-        g_owners[i] = PhysicsObjects[i];
+        g_owners[i] = fgSimulation.rigidBodyOwners[i];
         if (g_owners[i] == NULL || (g_owners[i]->flags & PhysicsObject::kSimpleBody))
             continue;
         RigidBody *body = Game_GetRigidBody(ShadowSim, 0, i);

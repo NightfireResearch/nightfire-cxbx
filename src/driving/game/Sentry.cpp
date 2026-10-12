@@ -8,6 +8,8 @@
 
 #include "CharacterSound.h"             // MakeCoord3
 #include "Missile.h"
+#include "MissionManager.h"
+#include "Simulation.h"
 #include "Vehicle.h"                    // fgDamageLevels
 #include "WeaponEffects.h"              // RMuzzleFlash
 #include "WeaponSound.h"                // ASentry
@@ -15,11 +17,9 @@
 #include "../audio/Sound.h"             // ABaseSound
 #include "../camera/CameraSpline.h"     // CrtAcosTimes
 #include "../data/Carp.h"               // CARP::Instance
-#include "../engine/MissionManager.h"
 #include "../engine/UMemory.hpp"
-#include "../physics/RigidBody.h"       // PhysicsObjects, SimpleBodyOwners, SimStepsPerSecond
+#include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
-#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../render/RSceneObj.hpp"
@@ -34,9 +34,6 @@
 
 
 // ---- globals
-#define Sim ((void *)0x00233ff0)                                    // the Simulation
-#define SimTimeStep FLOAT_AT(0x00234e30)                            // the simulation's step, in seconds
-#define SimStepCount I32_AT(0x00234e34)
 
 // XBE_GLOBAL(0x001e9170, 0x100)
 SentryMuzzleFlash SentryMuzzleFlashes[kSentryMuzzleFlashes];
@@ -158,11 +155,11 @@ Sentry* Sentry::Construct(CARP::Instance *instance, int srbAxis, float srbSpeed,
     this->srbAxis = srbAxis;
     vtable = reinterpret_cast<void **>(kSentryVtable);
     this->animAxis = animAxis;
-    srbRate = float(double(SimTimeStep) * kDegreesToTurns * srbSpeed);
+    srbRate = float(double(fgSimulation.timeStep) * kDegreesToTurns * srbSpeed);
     this->srbLimit = srbLimit;
     srbAngle = 0.0f;
     animAngle = 0.0f;
-    animRate = float(double(SimTimeStep) * kDegreesToTurns * animSpeed);
+    animRate = float(double(fgSimulation.timeStep) * kDegreesToTurns * animSpeed);
     this->animLimit = fabsf(animLimit);
     rangeSq = range * range;
     animReversed = animLimit < 0.0f;
@@ -173,7 +170,7 @@ Sentry* Sentry::Construct(CARP::Instance *instance, int srbAxis, float srbSpeed,
     aimInstance = 0;
     this->holdSteps = holdSteps;
     holdCountdown = holdSteps;
-    shotInterval = Ftol(ceil(double(SimStepsPerSecond) * shotSeconds));
+    shotInterval = Ftol(ceil(double(fgSimulation.stepsPerSecond) * shotSeconds));
     nextShotStep = 0;
     this->targetSig = targetSig;
     targetable = NULL;
@@ -224,10 +221,10 @@ Sentry* Sentry::Construct(CARP::Instance *instance, int srbAxis, float srbSpeed,
     }
 
     Coord3 position = {instance->position[0], instance->position[1], instance->position[2]};
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     if (body != NULL)
         body->Construct(rigidBodySlot, kSimpleSentry, &position, &kZero, &kZero, &orientation, radius, kBodyMass);
-    Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);      // (its answer not used)
+    fgSimulation.GetSimpleRigidBody(rigidBodySlot);      // (its answer not used)
 
     ASentry *sound = static_cast<ASentry *>(ABaseSound::OperatorNew(sizeof(ASentry), "ASentry"));
     SetAudioObject(sound != NULL ? sound->Construct() : NULL);
@@ -271,7 +268,7 @@ WTargetable* Sentry::GetTarget() {
         return NULL;
     // The signature's owner index (bits 24-30) in the simple bodies' table (bit 31) or the rigid ones'
     uint32_t index = (targetSig >> 24) & 0x7f;
-    PhysicsObject *owner = (targetSig >> 31) ? SimpleBodyOwners[index] : PhysicsObjects[index];
+    PhysicsObject *owner = (targetSig >> 31) ? fgSimulation.simpleRigidBodyOwners[index] : fgSimulation.rigidBodyOwners[index];
     if (owner == NULL)
         return NULL;
     WTargetable *block = static_cast<WTargetable *>(UMemory::FastAlloc(sizeof(WTargetable), "WTargetable"));
@@ -373,7 +370,7 @@ bool Sentry::RotateSRB(float target) {
         break;
     }
     SetTurning(static_cast<ASceneObj *>(audioObject), srbAxis, Turned(srbAngle, previous));
-    Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->SetOrientMat(&rotation);
+    fgSimulation.GetSimpleRigidBody(rigidBodySlot)->SetOrientMat(&rotation);
     return fabs(double(srbAngle) - target) < kSRBOnTarget;
 }
 
@@ -405,7 +402,7 @@ bool Sentry::RotateAnim(float target) {
 // FUNC_AT(0x00074280)
 bool Sentry::TrackTarget(bool *inRange) {
     *inRange = false;
-    PhysicsObject *target = Simulation_FindPhysicsObjectSignature(Sim, 0, targetSig);
+    PhysicsObject *target = fgSimulation.FindPhysicsObjectSignature(targetSig);
     if (target == NULL) {
         targetSig = 0;
         return false;
@@ -414,9 +411,9 @@ bool Sentry::TrackTarget(bool *inRange) {
     renderObject->GetInstancePosition(aimInstance, &aim, true);
     const Coord3 *targetPosition;
     if (!(target->flags & PhysicsObject::kSimpleBody))
-        targetPosition = &Simulation_GetRigidBody(Sim, 0, target->rigidBodySlot)->position;
+        targetPosition = &fgSimulation.GetRigidBody(target->rigidBodySlot)->position;
     else
-        targetPosition = &Simulation_GetSimpleRigidBody(Sim, 0, target->rigidBodySlot)->position;
+        targetPosition = &fgSimulation.GetSimpleRigidBody(target->rigidBodySlot)->position;
     Coord4 offset;
     VU0_v4sub(targetPosition, aim.mtx[3], &offset);
     if (!(VU0_v3lengthsquare(&offset) <= rangeSq)) {
@@ -480,13 +477,13 @@ void Sentry::Shoot() {
         animation->GetSystemState(fireSystem) == kSystemState4)
         return;
     if (nextShotStep == 0)
-        animation->ProcessStimuli(fireSystem, kStimulusFireStart08, SimStepCount, kStimulusMode);
-    animation->ProcessStimuli(fireSystem, kStimulusFire0A, SimStepCount, kStimulusMode);
+        animation->ProcessStimuli(fireSystem, kStimulusFireStart08, fgSimulation.stepCount, kStimulusMode);
+    animation->ProcessStimuli(fireSystem, kStimulusFire0A, fgSimulation.stepCount, kStimulusMode);
     if (shotsLeft > 0) {
-        animation->ProcessStimuli(fireSystem, kStimulusShell0B, SimStepCount, kStimulusMode);
+        animation->ProcessStimuli(fireSystem, kStimulusShell0B, fgSimulation.stepCount, kStimulusMode);
         shotsLeft--;
     }
-    nextShotStep = shotInterval + SimStepCount;
+    nextShotStep = shotInterval + fgSimulation.stepCount;
 }
 
 // FUNC_AT(0x000734a0)
@@ -525,17 +522,17 @@ int Sentry::ApplyDamage(const Coord3 *, const Coord3 *, float amount, float, int
     if (hitPoints <= 0.0f)
         return kDamageDone;
     bool byPlayer = false;
-    PhysicsObject *source = Simulation_FindPhysicsObjectSignature(Sim, 0, *sourceSig);
-    if (source != NULL && source->IsOwnedBy(Simulation_GetPlayerObject(Sim, 0)))
+    PhysicsObject *source = fgSimulation.FindPhysicsObjectSignature(*sourceSig);
+    if (source != NULL && source->IsOwnedBy(fgSimulation.GetPlayerObject()))
         byPlayer = true;
     bool scoring = scoreable;
     if (!byPlayer && kind == kDamageBullet)
         scoring = false;
     else if (scoring && amount >= kScoredDamage)
-        SMissionManager_IncShotsHit(glbMissionManager, 0, kind == kDamageBullet);
+        glbMissionManager->IncShotsHit(kind == kDamageBullet);
 
     RSceneObj *render = renderObject;
-    uint32_t step = SimStepCount;
+    uint32_t step = fgSimulation.stepCount;
     Handle *animation = render->animHandle;
     LoseHitPoints(amount);
     if (hitPoints <= 0.0f) {
@@ -548,16 +545,16 @@ int Sentry::ApplyDamage(const Coord3 *, const Coord3 *, float amount, float, int
         animation->ProcessStimuliZones(kStimulusStage13, kAllZones, step, kStimulusMode);
         TriggerFX(render, RSceneObj::kFXDamage, kAllZones);
         if (scoring) {
-            SMissionManager_IncKills(glbMissionManager, 0, 1);
+            glbMissionManager->IncKills(1);
             // The missiles still homing on it count as hits
             if (targetable != NULL) {
-                for (Missile **missile = SimMissiles.first; missile != SimMissiles.last; missile++) {
+                for (Missile **missile = fgSimulation.missiles.first; missile != fgSimulation.missiles.last; missile++) {
                     if ((*missile)->target == targetable && !(*missile)->exploded)
-                        SMissionManager_IncShotsHit(glbMissionManager, 0, false);
+                        glbMissionManager->IncShotsHit(false);
                 }
             }
         }
-        Simulation_DeletePhysicsObject(Sim, 0, this);
+        fgSimulation.DeletePhysicsObjectThunk(this);
         return kDamageDone;
     }
 
@@ -609,7 +606,7 @@ void Sentry::Simulate() {
                     holdCountdown--;
                 } else if (shotsLeft > 0) {
                     firing = true;
-                    if (SimStepCount >= nextShotStep)
+                    if (fgSimulation.stepCount >= nextShotStep)
                         Shoot();
                 }
             } else if (!inRange && holdCountdown < holdSteps) {
@@ -617,7 +614,7 @@ void Sentry::Simulate() {
             }
         } else {
             uint32_t sig;
-            targetSig = *Simulation_GetPlayerObject(Sim, 0)->GetSig(&sig);
+            targetSig = *fgSimulation.GetPlayerObject()->GetSig(&sig);
         }
     } else if (targetable != NULL) {
         ReleaseTarget(targetable);

@@ -30,6 +30,7 @@
 #include "../sound/snd/System.h"        // SNDSYS_entercritical
 #include "../sound/snd/Voices.h"        // SNDplaysetdef
 #include "../world/CollisionQueries.h"  // PointerUninitializedCopy
+#include "../game/SimulationContainers.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // AStream and AStreamPriv (see Stream.h), with the compiled code of their event queue (std::deque<AStreamEntry>)
@@ -39,7 +40,6 @@
 
 // ---- originals called by address
 
-#define PointerUninitializedFill ((void (*)(AStreamEntry **, uint32_t, AStreamEntry *const *))0x000b2ec0)
 
 // The C runtime's printf (its formatting).
 #define CRT_printf ((int (*)(const char *, ...))0x00132192)
@@ -180,12 +180,12 @@ void AStreamQueue::GrowMap(uint32_t count) {
     AStreamEntry *const none = NULL;
     if (first <= count) {
         next = CopyBlocks(map, map + first, next);
-        PointerUninitializedFill(next, count - first, &none);
-        PointerUninitializedFill(newMap, first, &none);
+        UninitializedFillPointers(next, count - first, &none);
+        UninitializedFillPointers(newMap, first, &none);
     } else {
         CopyBlocks(map, map + count, next);
         next = CopyBlocks(map + count, map + first, newMap);
-        PointerUninitializedFill(next, count, &none);
+        UninitializedFillPointers(next, count, &none);
     }
     if (map != NULL)
         UMemory::FastFree(map, mapSize * sizeof(AStreamEntry *));

@@ -10,6 +10,7 @@
 #include "../eagl/RenderContext.h"
 #include "../game/DebugAudio.h"
 #include "../engine/UMemory.hpp"
+#include "../game/Simulation.h"
 #include "../physics/RigidBody.h"       // PVehicle
 #include "Draw.h"
 #include "Materials.h"
@@ -23,7 +24,6 @@
 
 // ---- the game's globals
 
-#define PlayerVehicles (*(PVehicle ***)0x00234e40)              // the player's first
 // XBE_GLOBAL(0x001ec484, 1)
 bool DebugViewEnabled;
 // XBE_GLOBAL(0x001c45d4, 4)
@@ -135,7 +135,7 @@ RRenderDebugViewScreenSpace* RRenderDebugViewScreenSpace::Delete(unsigned flags)
 
 // FUNC_AT(0x0008b530)
 void RRenderDebugViewScreenSpace::DoRender() {
-    PVehicle *car = PlayerVehicles[0];
+    PVehicle *car = fgSimulation.cars.first[0];
     double speed = (car->*XbeVirtual<GetCarSpeedMethod>(car, 20))();
     float fraction = float((speed - kSpeedFloor) * kSpeedScale);
     if (1.0f < fraction)

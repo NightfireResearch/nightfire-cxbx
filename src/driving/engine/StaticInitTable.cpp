@@ -21,7 +21,9 @@
 #include "../data/SymbolTable.h"
 #include "../game/DebugAudio.h"
 #include "../game/EmpEffect.h"
+#include "../game/MissionManager.h"
 #include "../game/Shell.h"
+#include "../game/Simulation.h"
 #include "../game/TyreTrack.h"
 #include "../game/WeaponEffects.h"
 #include "../render/Draw.h"
@@ -42,9 +44,6 @@
 #define FUN_00037160 ((void (__fastcall *)(NodeList *, int, void **, void *, void *))0x00037160)   // erase(result, first, last)
 #define FUN_0007c6e0 ((void (__fastcall *)(void *, int))0x0007c6e0)
 #define FUN_0007c7b0 ((void (__fastcall *)(void *, int))0x0007c7b0)
-#define Simulation_Construct ((void (__fastcall *)(void *, int))0x000b4fe0)
-#define Simulation_Destruct ((void (__fastcall *)(void *, int))0x000b5310)
-#define FUN_000b8490 ((void * (__fastcall *)(void *, int))0x000b8490)
 #define FUN_000c5990 ((void * (__fastcall *)(void *, int))0x000c5990)
 #define FUN_000ce900 ((void (__fastcall *)(NodeList *, int, void **, void *, void *))0x000ce900)   // erase(result, first, last)
 #define FUN_000cebc0 ((void (__fastcall *)(void *, int))0x000cebc0)
@@ -408,19 +407,19 @@ void RunStaticInitialisers(void) {
     // RigidRestitutionRateC8 = 0.0025f: ours (physics/RigidBodyBasics.cpp)                              // 0x00158ca0
     // RigidBuildingRestitutionRate = 0.0004f: ours (physics/RigidBodyBasics.cpp)                        // 0x00158cc0
     FLOAT_AT(0x00233fc8) = 1.0f / FLOAT_AT(0x001c8fb8);                                                  // 0x00158ce0
-    FLOAT_AT(0x00233fd4) = 1.0f / FLOAT_AT(0x001c8fc0);                                                  // 0x00158d00
-    FLOAT_AT(0x00233fd8) = 3.1415925f + 3.1415925f;                                                      // 0x00158d20
-    FLOAT_AT(0x00233fdc) = 1.0f / FLOAT_AT(0x00233fd8);                                                  // 0x00158d30
-    FLOAT_AT(0x00233fe0) = 180.0f / 3.1415925f;                                                          // 0x00158d50
-    FLOAT_AT(0x00233fe4) = 1.0f / FLOAT_AT(0x00233fe0);                                                  // 0x00158d70
-    Simulation_Construct((void *)0x00233ff0, 0);                                                         // 0x00158d90
-    CrtAtExit([] { Simulation_Destruct((void *)0x00233ff0, 0); });
-    FLOAT_AT(0x00239224) = 1.0f / FLOAT_AT(0x001c8fc8);                                                  // 0x00158db0
-    FLOAT_AT(0x00239228) = 3.1415925f + 3.1415925f;                                                      // 0x00158dd0
-    FLOAT_AT(0x0023922c) = 1.0f / FLOAT_AT(0x00239228);                                                  // 0x00158de0
-    FLOAT_AT(0x00239230) = 180.0f / 3.1415925f;                                                          // 0x00158e00
-    FLOAT_AT(0x00239234) = 1.0f / FLOAT_AT(0x00239230);                                                  // 0x00158e20
-    FLOAT_AT(0x00239238) = 1.0f / FLOAT_AT(0x001c8fcc);                                                  // 0x00158e40
+    // SimulationInverseFloatMin = 8.507059e+37f: ours (game/SimulationObjects.cpp)                      // 0x00158d00
+    // SimulationTwoPi = 6.283185f: ours (game/SimulationObjects.cpp)                                    // 0x00158d20
+    // SimulationInverseTwoPi = 0.15915495f: ours (game/SimulationObjects.cpp)                           // 0x00158d30
+    // SimulationDegreesPerRadian = 57.295784f: ours (game/SimulationObjects.cpp)                        // 0x00158d50
+    // SimulationRadiansPerDegree = 0.01745329f: ours (game/SimulationObjects.cpp)                       // 0x00158d70
+    fgSimulation.Construct();                                                                            // 0x00158d90
+    CrtAtExit([] { fgSimulation.Destruct(); });
+    // MissionManagerInverseFloatMin = 8.507059e+37f: ours (game/MissionManager.cpp)                     // 0x00158db0
+    // MissionManagerTwoPi = 6.283185f: ours (game/MissionManager.cpp)                                   // 0x00158dd0
+    // MissionManagerInverseTwoPi = 0.15915495f: ours (game/MissionManager.cpp)                          // 0x00158de0
+    // MissionManagerDegreesPerRadian = 57.295784f: ours (game/MissionManager.cpp)                       // 0x00158e00
+    // MissionManagerRadiansPerDegree = 0.01745329f: ours (game/MissionManager.cpp)                      // 0x00158e20
+    // MissionRulesInverseFloatMin = 8.507059e+37f: ours (game/MissionRules.cpp)                         // 0x00158e40
     FLOAT_AT(0x00239240) = 1.0f / FLOAT_AT(0x001c94d0);                                                  // 0x00158e60
     FLOAT_AT(0x00239244) = 3.1415925f + 3.1415925f;                                                      // 0x00158e80
     FLOAT_AT(0x00239248) = 1.0f / FLOAT_AT(0x00239244);                                                  // 0x00158e90
@@ -846,7 +845,7 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x002439bc) = 1.0f / FLOAT_AT(0x001d7fc4);                                                  // 0x0015c8d0
     FUN_00124710((void *)0x00243a9c, 0);                                                                 // 0x0015c8f0
     CrtAtExit([] { FUN_00124750((void *)0x00243a9c, 0); });
-    PTR_AT(0x00243aac) = FUN_000b8490((void *)0x00243aa8, 0);                                            // 0x0015c910
+    PTR_AT(0x00243aac) = ((MissionList *)0x00243aa8)->BuyHead();                                         // 0x0015c910
     U32_AT(0x00243ab0) = 0x00000000;
     CrtAtExit([] { DestroyNodeList((NodeList *)0x00243aa8, FUN_000ce900, 0xc); });
     ABank_Construct((void *)0x00243b18, 0);                                                              // 0x0015c940

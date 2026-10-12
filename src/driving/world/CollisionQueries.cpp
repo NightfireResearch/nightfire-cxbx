@@ -10,8 +10,10 @@
 #include "../engine/OBB.h"
 #include "../engine/PhysicsUtil.h"
 #include "../engine/UMemory.hpp"
+#include "../game/Simulation.h"
 #include "../physics/RigidBodyBasics.h"   // PointerVectorDeallocate, VectorXlen
 #include "../platform/RealMath.h"
+#include "../game/SimulationContainers.h"
 
 #include <bit>
 #include <math.h>
@@ -34,18 +36,13 @@
 // ---- the game's, not ported yet
 
 #define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
-#define Simulation_GetScratchPadFreeZone ((uint8_t *(__fastcall *)(void *, int))0x000b2820)
 #define BarrierList_Size ((uint32_t (__fastcall *)(const BarrierList *, int))0x00023f20)
 #define CellList_Xlen ((void (*)(void))0x00034e50)
-#define PointerUninitializedFill ((void (*)(void **, uint32_t, void *const *))0x000b2ec0)
-#define PointerCopyBackward ((void ***(*)(void ***, void **, void **, void **))0x000b2e40)
 #define PointerFill ((void (*)(void **, void **, void *const *))0x0004f3e0)
 #define ArticleMapDecrement ((void (__fastcall *)(ArticleMapNode **, int))0x00126bd0)
 
 // ---- globals
 
-#define Sim ((void *)0x00233ff0)                            // the Simulation
-#define SimTimeStep FLOAT_AT(0x00234e30)                    // the simulation's step, in seconds (as its users read it)
 #define LargeStripScratch ((StripVertex *)0x00239a80)       // FindFaceInTriStrip's vertices beyond the scratch pad's
 
 namespace {
@@ -205,7 +202,8 @@ const StripVertex* WCollisionMgr::FindFaceInTriStrip(const MATRIX4 *matrix, cons
     int triangles = vertex[0].count - 2;
     StripVertex *carried;   // the strip's vertices carried by the matrix
     if (triangles < kScratchTriangles)
-        carried = reinterpret_cast<StripVertex *>(Simulation_GetScratchPadFreeZone(Sim, 0) + kScratchOffset);
+        carried = reinterpret_cast<StripVertex *>(static_cast<uint8_t *>(Simulation::GetScratchPadFreeZone()) +
+                                                  kScratchOffset);
     else
         carried = LargeStripScratch;
     const StripVertex *best = NULL;
@@ -963,7 +961,7 @@ OBB* WCollisionMgr::PopObjectOBB(ObjectList *list, Coord3 *velocity, uint16_t *f
         if (sceneObject != NULL) {
             if (SceneObjectVelocity(sceneObject) != NULL)
                 *velocity = *SceneObjectVelocity(sceneObject);
-            v3scale(1, velocity, SimTimeStep, velocity);
+            v3scale(1, velocity, fgSimulation.timeStep, velocity);
         }
     }
     constexpr uint32_t kOBBSize = 0xb0;
@@ -1549,7 +1547,7 @@ BarrierListEntry* BarrierList::Ufill(BarrierListEntry *first, uint32_t count, co
 
 // FUNC_AT(0x000c1290)
 void** PointerVector::Ufill(void **first, uint32_t count, void *const *value) {
-    PointerUninitializedFill(first, count, value);
+    PointerUninitializedFillN(first, count, value);
     return first + count;
 }
 
@@ -1697,7 +1695,7 @@ struct PointerListOps {
         return static_cast<T *>(static_cast<void *>(PointerUninitializedCopy(Raw(first), Raw(last), Raw(dest))));
     }
     static void UninitializedFill(T *first, uint32_t count, const T *value) {
-        PointerUninitializedFill(Raw(first), count, Raw(value));
+        PointerUninitializedFillN(Raw(first), count, Raw(value));
     }
     static T *Ucopy(Vector *v, T *first, T *last, T *dest) {
         return static_cast<T *>(static_cast<void *>(Raw(v)->Ucopy(Raw(first), Raw(last), Raw(dest))));
@@ -1707,7 +1705,7 @@ struct PointerListOps {
     }
     static void CopyBackward(T *first, T *last, T *dest) {
         void **end;
-        PointerCopyBackward(&end, Raw(first), Raw(last), Raw(dest));
+        PointerCopyBackwardTo(&end, Raw(first), Raw(last), Raw(dest));
     }
     static void Fill(T *first, T *last, const T *value) {
         PointerFill(Raw(first), Raw(last), Raw(value));

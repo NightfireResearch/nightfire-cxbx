@@ -59,6 +59,8 @@ inside what the data can be (an animation index past an article's list faults bo
 
 ## Odd things in the original, kept
 
+Every area's entries, by kind and with addresses: docs/driving/original-quirks.md.
+
 - SetGlobalPoseOverride in global mode swaps rows 0 and 2 for every override, then negates row 2 for index 0 and row
   0 for index 1.
 - ActCharacterInfo leaves its type unset for a model letter other than h/p/c/a; ~ActEvents leaks its physics-off

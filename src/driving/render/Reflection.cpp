@@ -40,7 +40,6 @@
 
 // ---- globals
 #define Features (*(FeatureManagerData *)0x001f2d78)
-#define Launch (*(LaunchPage *)0x00243b90)
 // XBE_GLOBAL(0x001c4810, 4)
 uint32_t CpuType = 1;                    // CPU_detect's (names ours)
 // XBE_GLOBAL(0x001c4820, 4)

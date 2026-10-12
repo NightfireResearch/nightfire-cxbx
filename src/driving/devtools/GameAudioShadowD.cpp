@@ -26,6 +26,7 @@
 #include "../data/StdLocale.h"
 #include "../eagl/EaglFont.h"
 #include "../game/DebugAudio.h"
+#include "../game/Simulation.h"
 #include "../render/Renderer.h"
 #include "../world/Grid.h"
 #include "../../common/xbeOriginal.h"
@@ -452,7 +453,6 @@ void TestItems() {
 #define GameMixerEditing BOOL8_AT(0x001e2270)
 #define GameMixerVisible BOOL8_AT(0x001e4760)
 #define InfoVisible BOOL8_AT(0x001e4761)
-#define SimState I32_AT(0x00234e24)
 #define MixesList (*(MixList *)0x00243954)
 
 const unsigned kUpdateEntries[] = { 0x00037750, 0x00037160, 0x000376a0 };
@@ -664,7 +664,7 @@ void TestDrawing() {
     std::vector<MixCopy> mixes = SnapshotMixes();
     FNTXFont *font = fgRenderer->debugFont;
     uint32_t fontColour = font->colour;
-    int32_t simState = SimState;
+    int32_t simState = fgSimulation.simState;
     g_speech = AStream::Get("Speech");
 
     // DrawTargets over a list of random targets
@@ -736,7 +736,7 @@ void TestDrawing() {
         Both(ENTRIES(kMixerEntries), [&] {
             RestoreMixes(cased);
             font->colour = fontColour;
-            SimState = state;
+            fgSimulation.simState = state;
             GameMixerSelected = DAudioMixerSelected = selected;
             GameMixerScrollTop = DAudioMixerScrollTop = scrollTop;
             GameMixerEditing = DAudioMixerEditing = editing;
@@ -753,7 +753,7 @@ void TestDrawing() {
 
     RestoreMixes(mixes);
     font->colour = fontColour;
-    SimState = simState;
+    fgSimulation.simState = simState;
     GameMixerSelected = DAudioMixerSelected = 0;
     GameMixerScrollTop = DAudioMixerScrollTop = 0;
     GameMixerEditing = DAudioMixerEditing = false;

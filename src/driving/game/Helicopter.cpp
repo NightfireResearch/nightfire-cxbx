@@ -6,6 +6,8 @@
 #include <math.h>
 
 #include "Missile.h"
+#include "MissionManager.h"
+#include "Simulation.h"
 #include "VehicleRender.h"              // RVehicle
 #include "VehicleSound.h"               // AHelicopter
 #include "../../common/xbeOverload.h"   // XbeVirtual
@@ -13,12 +15,10 @@
 #include "../audio/Sound.h"             // ABaseSound
 #include "../data/Carp.h"               // CARP::BaseDesc
 #include "../engine/ActionQueue.hpp"
-#include "../engine/MissionManager.h"
 #include "../engine/PhysicsUtil.h"      // Util_GenerateMatrix
 #include "../engine/SimRandom.h"
 #include "../engine/UMemory.hpp"
 #include "../physics/SimpleRigidBody.h"
-#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../render/RSceneObj.hpp"
 
@@ -32,9 +32,6 @@
 #define AIHelicopter_DisableTargetBeacon ((void (__fastcall *)(HelicopterAI *, int))0x000318d0)
 
 // ---- globals
-#define Sim ((void *)0x00233ff0)                                    // the Simulation
-#define SimulationRandom (*(SimRandom **)0x00233ff0)                // the Simulation's first word
-#define SimStepCount I32_AT(0x00234e34)
 #define fgAIElementController PTR_AT(0x001ddee4)
 
 static_assert(sizeof(ActionQueue) == 0x974, "an action queue is 0x974 bytes");
@@ -141,21 +138,21 @@ PHelicopter* PHelicopter::Construct(const char *name, float speed, Coord3 direct
     proximityDestructEnabled = attributes.LookupBool("PROXIMITY_DESTRUCT", NULL);
     destructDistance = attributes.LookupFloat("DESTRUCT_DIST", NULL);
 
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     if (body != NULL)
         body->Construct(rigidBodySlot, kSimpleHelicopter, &position, &velocity, &kZero, &orientation, 3.0f,
                         500.0f);
     if (!proximityDestructEnabled)
         renderObject->ScaleBoundingRadius(3.0f);
-    Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->flags |=
+    fgSimulation.GetSimpleRigidBody(rigidBodySlot)->flags |=
         SimpleRigidBody::kMoves | SimpleRigidBody::kTouchesTriggers;
-    TriggerFX(renderObject, RSceneObj::kFXOn, kSpawnEffect, SimStepCount);
-    renderObject->animHandle->ProcessStimuli(kStartSystem, kStimulusStart08, SimStepCount, kStimulusMode);
+    TriggerFX(renderObject, RSceneObj::kFXOn, kSpawnEffect, fgSimulation.stepCount);
+    renderObject->animHandle->ProcessStimuli(kStartSystem, kStimulusStart08, fgSimulation.stepCount, kStimulusMode);
 
     AHelicopter *sound = static_cast<AHelicopter *>(ABaseSound::OperatorNew(sizeof(AHelicopter), "AHelicopter"));
     SetAudioObject(sound != NULL ? sound->Construct("Helicopter") : NULL);
     AHelicopter *audio = static_cast<AHelicopter *>(audioObject);
-    audio->pitchOffset = float(double(int32_t(SimulationRandom->Generate())) * 0.1f * kOneOver65536);
+    audio->pitchOffset = float(double(int32_t(fgSimulation.random->Generate())) * 0.1f * kOneOver65536);
     ai = NULL;
     return this;
 }
@@ -219,8 +216,8 @@ DamageZone* PHelicopter::GetDamageZones(uint32_t *count) {
 
 // FUNC_AT(0x0006dd30)
 void PHelicopter::Simulate() {
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
-    if (sleepStep != 0 && SimStepCount > sleepStep) {
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
+    if (sleepStep != 0 && fgSimulation.stepCount > sleepStep) {
         AIElementController_ForceVehicleToSleep(fgAIElementController, 0, ai);
         body->velocity = kZero;
     }
@@ -295,7 +292,7 @@ void PHelicopter::Simulate() {
     audioObject->position = body->position;
     audioObject->velocity = body->velocity;
     TriggerFX(renderObject, RSceneObj::kFXOn, kRotorEffect);
-    TriggerFX(renderObject, (SimStepCount & 0x20) ? RSceneObj::kFXOn : RSceneObj::kFXOff, kBlinkEffect);
+    TriggerFX(renderObject, (fgSimulation.stepCount & 0x20) ? RSceneObj::kFXOn : RSceneObj::kFXOff, kBlinkEffect);
     PhysicsObject::Simulate();
 }
 
@@ -304,11 +301,11 @@ void PHelicopter::Simulate() {
 // FUNC_AT(0x0006e330)
 int PHelicopter::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, float split, int kind,
                              const uint32_t *sourceSig) {
-    uint32_t step = SimStepCount;
+    uint32_t step = fgSimulation.stepCount;
     RSceneObj *render = renderObject;
     CARP::BaseDesc *desc = render->Desc();
     Handle *animation = render->animHandle;
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     Coord4 halfExtents;
     render->GetBoundingDimensions(&halfExtents);
     float renderOffset = float(render->GetRenderOffsetVirtual());
@@ -330,14 +327,14 @@ int PHelicopter::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount,
         return 0;
 
     bool byPlayer = false;
-    PhysicsObject *source = Simulation_FindPhysicsObjectSignature(Sim, 0, *sourceSig);
-    if (source != NULL && source->IsOwnedBy(Simulation_GetPlayerObject(Sim, 0)))
+    PhysicsObject *source = fgSimulation.FindPhysicsObjectSignature(*sourceSig);
+    if (source != NULL && source->IsOwnedBy(fgSimulation.GetPlayerObject()))
         byPlayer = true;
     bool scoring = scoreable;
     if (!byPlayer && kind == 2)
         scoring = false;
     else if (scoring && amount >= 5.0f)
-        SMissionManager_IncShotsHit(glbMissionManager, 0, kind == 2);
+        glbMissionManager->IncShotsHit(kind == 2);
 
     if (damageScale < 0.0f)
         damageScale = 32.0f / GetHitPoints();
@@ -346,17 +343,17 @@ int PHelicopter::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount,
 
     if (GetHitPoints() <= 0.0f) {
         if (kind == 1)
-            sleepStep = SimStepCount;
+            sleepStep = fgSimulation.stepCount;
     } else {
         LoseHitPoints(amount);
         if (GetHitPoints() <= 0.0f) {
             if (scoring) {
-                SMissionManager_IncKills(glbMissionManager, 0, 1);
+                glbMissionManager->IncKills(1);
                 WTargetable *beacon = ai->targetBeacon;
                 if (beacon != NULL) {
-                    for (Missile **missile = SimMissiles.first; missile != SimMissiles.last; missile++) {
+                    for (Missile **missile = fgSimulation.missiles.first; missile != fgSimulation.missiles.last; missile++) {
                         if ((*missile)->target == beacon && !(*missile)->exploded)
-                            SMissionManager_IncShotsHit(glbMissionManager, 0, false);
+                            glbMissionManager->IncShotsHit(false);
                     }
                 }
                 scoreable = false;
@@ -372,7 +369,7 @@ int PHelicopter::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount,
     float splitDamage = float(double(amount) * split * damageScale);
     if (kind == 0) {
         // Every zone takes the whole hit
-        SMissionManager_ProgrammerDefinedEvent(glbMissionManager, 0, kMissionEvent17, "");
+        glbMissionManager->ProgrammerDefinedEvent(kMissionEvent17, "");
         animation->ProcessStimuli(kStimulusHit02, step, kStimulusMode);
         TriggerFX(render, RSceneObj::kFXDamage, kAllZones, kind);
         for (int i = 0; i < kDamageZoneCount; i++) {
@@ -446,7 +443,7 @@ int PHelicopter::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount,
             TriggerFX(render, RSceneObj::kFXDamageEffects, effectZones);
     }
 
-    uint32_t random = SimulationRandom->Generate();
+    uint32_t random = fgSimulation.random->Generate();
     if (((1u << zone) & kRandomDamageZones) && int32_t(random) * kOneOver65536 < 0.5f)
         return 0x70;
     return 0x10;

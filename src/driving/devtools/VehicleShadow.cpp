@@ -14,7 +14,7 @@
 #include "../game/Vehicle.h"
 #include "../game/VehicleRender.h"
 #include "../physics/SimpleRigidBody.h"
-#include "../physics/Simulation.h"
+#include "../game/Simulation.h"
 #include "../render/RSceneObj.hpp"
 
 #include <windows.h>
@@ -131,7 +131,6 @@ typedef int (__fastcall *HeliDamageFn)(PHelicopter *, int, const Coord3 *, const
 
 // ---- the game's state the tests read, write and restore
 
-#define ShadowSim ((void *)0x00233ff0)
 #define ShadowRandom (*(SimRandom **)0x00233ff0)
 #define ShadowStepCount I32_AT(0x00234e34)
 #define ShadowMissilesFirst (*(PhysicsObject ***)0x00234e80)
@@ -773,7 +772,7 @@ void TestHelicopter(PHelicopter *live, PhysicsObject *renderSource, int slot, co
     RSceneObj *render = live != NULL ? live->renderObject : renderSource->renderObject;
     if (render == NULL)
         return;
-    g_body = Simulation_GetSimpleRigidBody(ShadowSim, 0, slot);
+    g_body = fgSimulation.GetSimpleRigidBody(slot);
     SimpleRigidBody savedBody = *g_body;
     SimRandom savedRandom = *ShadowRandom;
     int32_t savedStep = ShadowStepCount;
@@ -827,7 +826,7 @@ void TestHelicopter(PHelicopter *live, PhysicsObject *renderSource, int slot, co
             missileTarget = *reinterpret_cast<WTargetable **>(reinterpret_cast<uint8_t *>(*m) + 0x6c);
     static uint8_t dummyTarget[0x40];
     uint32_t playerSig = 0;
-    PhysicsObject *player = Simulation_GetPlayerObject(ShadowSim, 0);
+    PhysicsObject *player = fgSimulation.GetPlayerObject();
     if (player != NULL)
         player->GetSig(&playerSig);
 
@@ -938,7 +937,7 @@ int TestHelicopters(bool includeTemplate) {
         helicopters++;
     }
     if (includeTemplate) {
-        PhysicsObject *player = Simulation_GetPlayerObject(ShadowSim, 0);
+        PhysicsObject *player = fgSimulation.GetPlayerObject();
         int freeSlot = -1;
         for (int i = kSimpleBodies; i-- > 0;)
             if (ShadowSimpleOwners[i] == NULL && freeSlot < 0)

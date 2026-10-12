@@ -17,9 +17,10 @@
 #include "../../helpers.h"
 #include "../data/RCARPFile.h"
 #include "../engine/CoreFoundation.h"     // NullFunction, ThrowLengthError
-#include "../engine/MissionManager.h"
+#include "../game/MissionManager.h"
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
+#include "../game/Simulation.h"
 #include "../render/PathEngine.h"
 #include "../render/RSceneObj.hpp"
 
@@ -32,21 +33,11 @@
 // ---- the game's globals
 // XBE_GLOBAL(0x0023f290, 0x80)
 char TrackName[0x80];
-#define Sim ((void *)0x00233ff0)                        // the Simulation
-#define SimStepCount I32_AT(0x00234e34)
 
 // ---- the game's code not ported yet
 #define GLoadingScreen_Status ((void (*)(const char *))0x000e2ff0)
-#define SMissionManager_Construct ((void (*)(void))0x000b8ff0)
-#define SMissionManager_Destruct ((void (*)(void))0x000b9060)
-#define SMissionManager_Reset ((void (__fastcall *)(void *, int))0x000b8bf0)
-#define SMissionManager_Load ((void (__fastcall *)(void *, int, UData *rules, UData *missionSets))0x000b9140)
-#define SMissionManager_ChangeStage ((void (__fastcall *)(void *, int, int stage))0x000b64b0)
-#define SMissionManager_Start ((void (__fastcall *)(void *, int))0x000b6380)
 #define AIElementController_Construct ((void (*)(UData *elements))0x000285b0)
 #define AIElementController_Destruct ((void (*)(void))0x00028b60)
-#define Simulation_UntrackAllInstances ((void (__fastcall *)(void *, int))0x000b30c0)
-#define Simulation_TrackInstance ((void (__fastcall *)(void *, int, CARP::Instance *, int))0x000b4810)
 #define GFX_Trigger ((void *(*)(void *effect, const float *position, const Coord4 *direction, ArticleEffect *owner, void *data, int, int, int))0x000d34e0)
 
 namespace {
@@ -87,7 +78,7 @@ void DeleteSceneObj(RSceneObj *sceneObj) {
 void TrackInstance(CARP::Instance *instance) {
     const WorldModelInfo *info = ArticleOf(instance)->model->info;
     if (info == NULL || info->id != kUntrackedModel)
-        Simulation_TrackInstance(Sim, 0, instance, 0);
+        fgSimulation.TrackInstance(instance, 0);
 }
 
 }  // namespace
@@ -348,20 +339,20 @@ void WWorld::Reset() {
     UGroup *mapGroup = group->GroupLocateTag(kTagMap);
     mapGroup->DataLocateTag(kTagWorldMap);   // looked up and not used
     AIElementController_Construct(mapGroup->DataLocateTag(kTagAIElements));
-    SMissionManager_Reset(glbMissionManager, 0);
+    glbMissionManager->Reset();
     UData *rules = mapGroup->DataLocateTag(kTagRules);
     UData *missionSets = mapGroup->DataLocateTag(kTagMissionSets);
     if (missionSets == mapGroup->DataEnd())
         missionSets = NULL;
     if (rules != mapGroup->DataEnd()) {
-        SMissionManager_Load(glbMissionManager, 0, rules, missionSets);
-        SMissionManager_ChangeStage(glbMissionManager, 0, 0);
-        SMissionManager_Start(glbMissionManager, 0);
+        glbMissionManager->Load(rules, missionSets);
+        glbMissionManager->ChangeStage(0);
+        glbMissionManager->Start();
     }
     WTriggerManager::Restart();
     WCollisionMgr::Restart();
     WGrid::Restart();
-    Simulation_UntrackAllInstances(Sim, 0);
+    fgSimulation.UntrackAllInstances();
 
     // the scene objects made again from what Open saved
     if (sceneObjects != NULL && sceneObjects->first != sceneObjects->last) {
@@ -380,7 +371,7 @@ void WWorld::Reset() {
         }
     }
 
-    RPathEngine::Reset(float(SimStepCount));
+    RPathEngine::Reset(float(fgSimulation.stepCount));
 
     // the effects of the instances without a proc-anim state triggered again
     for (uint32_t i = 0; i < instanceCount; i++) {
@@ -411,7 +402,7 @@ void WWorld::Close() {
         OperatorDelete(list);
     }
     RPathEngine::Purge();
-    SMissionManager_Destruct();
+    SMissionManager::Destroy();
     AIElementController_Destruct();
     WTriggerManager *triggers = fgTriggerManager;
     if (triggers != NULL) {
@@ -443,11 +434,11 @@ bool WWorld::Open() {
     UData *missionSets = mapGroup->DataLocateTag(kTagMissionSets);
     if (missionSets == mapGroup->DataEnd())
         missionSets = NULL;
-    SMissionManager_Construct();
+    SMissionManager::Create();
     if (rules != mapGroup->DataEnd()) {
-        SMissionManager_Load(glbMissionManager, 0, rules, missionSets);
-        SMissionManager_ChangeStage(glbMissionManager, 0, 0);
-        SMissionManager_Start(glbMissionManager, 0);
+        glbMissionManager->Load(rules, missionSets);
+        glbMissionManager->ChangeStage(0);
+        glbMissionManager->Start();
     }
 
     // the track's sounds; the lookup is compared with the root group's end, not the map group's
@@ -484,7 +475,7 @@ bool WWorld::Open() {
     procAnims = NULL;
     if (procAnimData != mapGroup->DataEnd())
         procAnims = reinterpret_cast<ProcAnimState *>(procAnimData->Data());
-    RPathEngine::AddInstanceList(instances, procAnims, instanceCount, float(SimStepCount));
+    RPathEngine::AddInstanceList(instances, procAnims, instanceCount, float(fgSimulation.stepCount));
 
     // a sound, and its voice, for each path whose model has one
     for (RPathHandle *path = RPathEngine::GetFirstPathHandle(); path != NULL; path = RPathEngine::GetNextPathHandle()) {

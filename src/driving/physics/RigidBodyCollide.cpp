@@ -6,13 +6,13 @@
 
 #include "PhysicsMath.h"
 #include "PhysicsObject.h"
-#include "Simulation.h"
+#include "../game/Simulation.h"
 #include "../../helpers.h"
 #include "../anim/AnimEngine.h"         // Handle
 #include "../EventManager.hpp"            // Event::operator new
 #include "../data/Carp.h"                 // CARP::Instance
 #include "../engine/CoreFoundation.h"     // NullFunction
-#include "../engine/MissionManager.h"
+#include "../game/MissionManager.h"
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
 #include "../render/RSceneObj.hpp"
@@ -35,13 +35,15 @@
 #define ECollision_Construct ((void *(__fastcall *)(void *, int, CollisionImpact impact))0x0003f370)
 
 // ---- globals
-#define Sim ((void *)0x00233ff0)                    // the Simulation
-#define SimTimeStep FLOAT_AT(0x00234e30)            // the simulation's step, in seconds
-#define SimStepCount U32_AT(0x00234e34)             // the Simulation's steps so far
 
 namespace {
 
-constexpr unsigned kMaxPhysicsObjects = 64;      // PhysicsObjects' size
+// The owner of the body in slot `ownerIndex` as a vehicle (the owners of the kinds below 4 are)
+PVehicle *OwnerVehicle(int ownerIndex) {
+    return static_cast<PVehicle *>(fgSimulation.rigidBodyOwners[ownerIndex]);
+}
+
+constexpr unsigned kMaxPhysicsObjects = 64;      // fgSimulation.rigidBodyOwners' size
 constexpr int8_t kPlayerKind = 1;           // the damage its body does to a vehicle goes to AddDamageByPlayer
 constexpr int8_t kFirstObjectKind = 4;      // below: the owner is a vehicle (PVehicle)
 
@@ -157,7 +159,7 @@ bool RigidBody::ResolveWorldOBBCollision(const Coord4 *normal, const Coord4 *poi
 
     float speedSquared = VU0_v3lengthsquare(&velocity);
     float objectSpeedSquared = float(VU0_v3lengthsquare(objectVelocity) *
-                                     double(SimStepsPerSecond * SimStepsPerSecond));
+                                     double(fgSimulation.stepsPerSecond * fgSimulation.stepsPerSecond));
     float fastest = speedSquared > objectSpeedSquared ? speedSquared : objectSpeedSquared;
     double forceCap = double(fastest) * Rigid_BoxForceCapScale * kForceCapRate;
     if (!(forceCap > Rigid_ForceCapFloor))
@@ -214,9 +216,9 @@ void RigidBody::CollideWithObject(int index, int unknown) {
     RigidScratchPadFields *scratch = RigidScratchPad;
     scratch->bodyBoxValid = false;
     for (unsigned i = index + 1; i < kMaxPhysicsObjects; i++) {
-        if (PhysicsObjects[i] == NULL)
+        if (fgSimulation.rigidBodyOwners[i] == NULL)
             continue;
-        RigidBody *other = Simulation_GetRigidBody(Sim, 0, i);
+        RigidBody *other = fgSimulation.GetRigidBody(i);
         if (other->sleepState == kFrozen || other->sleepState == 0)
             continue;
         double reach = double(other->radius) + radius;
@@ -227,7 +229,7 @@ void RigidBody::CollideWithObject(int index, int unknown) {
 
         if (!scratch->bodyBoxValid) {
             RigidBodyInfo *bodyInfo = info;
-            if (kind == kPlayerKind && RigidVehicles[ownerIndex]->GetIsInTwoWheelMode()) {
+            if (kind == kPlayerKind && OwnerVehicle(ownerIndex)->GetIsInTwoWheelMode()) {
                 Coord4 halfExtents = bodyInfo->halfExtents;
                 halfExtents.x *= kWheelieHalfWidth;
                 halfExtents.y *= 0.25f;
@@ -258,10 +260,10 @@ void RigidBody::CollideWithObject(int index, int unknown) {
         float strength = impact.strength;
         float damageA = strength;
         float damageB = strength;
-        PhysicsObject *ownerA = PhysicsObjects[ownerIndex];
+        PhysicsObject *ownerA = fgSimulation.rigidBodyOwners[ownerIndex];
         if (strength > 0.0f)
             ownerA->SetInShock(strength);
-        PhysicsObject *ownerB = PhysicsObjects[other->ownerIndex];
+        PhysicsObject *ownerB = fgSimulation.rigidBodyOwners[other->ownerIndex];
         impact.kindA = kind;
         impact.ownerA = ownerIndex;
         if (strength > 0.0f)
@@ -280,7 +282,7 @@ void RigidBody::CollideWithObject(int index, int unknown) {
         if (kind < kFirstObjectKind) {
             damage *= 3.0f;
             if (other->kind == kPlayerKind)
-                RigidVehicles[ownerIndex]->AddDamageByPlayer(damage);
+                OwnerVehicle(ownerIndex)->AddDamageByPlayer(damage);
         }
         if (damage > 0.0f)
             impact.unknown4a = uint16_t(ownerA->ApplyDamageVirtual(&contact, &position, damage,
@@ -289,7 +291,7 @@ void RigidBody::CollideWithObject(int index, int unknown) {
         if (other->kind < kFirstObjectKind) {
             damage *= 3.0f;
             if (kind == kPlayerKind)
-                RigidVehicles[other->ownerIndex]->AddDamageByPlayer(damage);
+                OwnerVehicle(other->ownerIndex)->AddDamageByPlayer(damage);
         }
         if (damage > 0.0f)
             impact.tag = uint16_t(ownerB->ApplyDamageVirtual(&contact, &other->position, damage,
@@ -323,9 +325,9 @@ void RigidBody::CollideWithWorld() {
     if (kind == kPlayerKind)
         fgCollisionMgr->GetObjectLists(&cylinders, &boxes, &position, radius);
 
-    bool wantInstances = kind < kFirstObjectKind && RigidVehicles[ownerIndex]->GetPhysics()->subPhysics == 1;
+    bool wantInstances = kind < kFirstObjectKind && OwnerVehicle(ownerIndex)->GetPhysics()->subPhysics == 1;
     fgCollisionMgr->barrierMask = kBodyBarrierMask;
-    PhysicsObject *owner = PhysicsObjects[ownerIndex];
+    PhysicsObject *owner = fgSimulation.rigidBodyOwners[ownerIndex];
     uint32_t mask = WCollider::kCollideBarriers | (wantInstances ? WCollider::kCollideInstances : 0);
     if (owner->collider == NULL) {
         void *memory = UMemory::FastAlloc(sizeof(WCollider), "WCollider");
@@ -340,10 +342,10 @@ void RigidBody::CollideWithWorld() {
     Coord4 arm = {};
     CollisionImpact impact;
     bool wallChecked = false;
-    if (kind == kPlayerKind || (SimStepCount & stepMask) == 0) {
+    if (kind == kPlayerKind || (fgSimulation.stepCount & stepMask) == 0) {
         const Coord4 *corner = info->corners[info->cornerBank];
         if (kind < kFirstObjectKind)
-            RigidVehicles[ownerIndex]->SetAgainstWallFlag(false);
+            OwnerVehicle(ownerIndex)->SetAgainstWallFlag(false);
         Coord4 origin = *Position4(this);
         int pointCount = kind < kFirstObjectKind ? kBoxCorners + 3 : kBoxCorners;
         for (int i = 0; i < pointCount; i++, corner++) {
@@ -356,7 +358,7 @@ void RigidBody::CollideWithWorld() {
                 VU0_v4scaleadd(MatrixRow(&info->orientation, 0), info->halfExtents.x, &position, &point);
             else
                 VU0_v4scaleadd(MatrixRow(&info->orientation, 0), -info->halfExtents.x, &position, &point);
-            VU0_v4scaleadd(&velocity, SimTimeStep, &point, &point);
+            VU0_v4scaleadd(&velocity, fgSimulation.timeStep, &point, &point);
 
             Coord4 segment[2] = { origin, point };
             WorldCollisionInfo hit = {};
@@ -368,7 +370,7 @@ void RigidBody::CollideWithWorld() {
             if (!collided)
                 continue;
             if (hit.faceType == kMissionEventFace) {
-                SMissionManager_ProgrammerDefinedEvent(glbMissionManager, 0, kMissionEventFaceHit, "");
+                glbMissionManager->ProgrammerDefinedEvent(kMissionEventFaceHit, "");
                 continue;
             }
 
@@ -378,13 +380,13 @@ void RigidBody::CollideWithWorld() {
                 if (VU0_v3length(&velocity) > 7.5f)
                     wallChecked = true;
                 else if (v3dotprod(MatrixRow(&info->orientation, 2), &hit.normal) <= 0.0f)
-                    RigidVehicles[ownerIndex]->SetAgainstWallFlag(true);
+                    OwnerVehicle(ownerIndex)->SetAgainstWallFlag(true);
             }
 
             hit.normal.w = 1.0f;
             Coord4 penetration = {};
             VU0_v4sub(&segment[1], &hit.point, &penetration);
-            if (!(kind < kFirstObjectKind && RigidVehicles[ownerIndex]->GetPhysics()->subPhysics == 1))
+            if (!(kind < kFirstObjectKind && OwnerVehicle(ownerIndex)->GetPhysics()->subPhysics == 1))
                 penetration.y = 0.0f;
             float push = VU0_v3length(&penetration);
             float speedScale;
@@ -412,7 +414,7 @@ void RigidBody::CollideWithWorld() {
                         facing = -facing;
                     lift = facing > kSteepFace ? lift * Rigid_CornerLift : 0.0f;
                 }
-                if (RigidVehicles[ownerIndex]->GetPhysics()->subPhysics == 0)
+                if (OwnerVehicle(ownerIndex)->GetPhysics()->subPhysics == 0)
                     point.y = float((double(point.y) - height) + lift);
             }
 
@@ -432,7 +434,7 @@ void RigidBody::CollideWithWorld() {
                     fgWorld->GetSceneObjFromInstance(reinterpret_cast<const CARP::Instance *>(renderInstance));
                 if (sceneObject != NULL) {
                     Handle *animation = sceneObject->animHandle;
-                    uint32_t step = SimStepCount;
+                    uint32_t step = fgSimulation.stepCount;
                     animation->ProcessStimuli(kStimulusHit, step, 0);
                     if (impact.strength >= 5.0f)
                         animation->ProcessStimuli(kStimulusHit16, step, 0);

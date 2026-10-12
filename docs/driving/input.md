@@ -57,6 +57,8 @@ end of a mission.
 
 ## Odd things in the original, kept
 
+Every area's entries, by kind and with addresses: docs/driving/original-quirks.md.
+
 - GetLocaleID swaps some labels for 2721 (0xaa1) by track: 1424 off snow1a_mis3, 2708 on tracks with "uw_" in
   their name, 2712/2713 and 2723 on paris_mis01 outside the driving type (2723 becomes 1709 for POV configurations
   6 and 7), and 2719 everywhere.

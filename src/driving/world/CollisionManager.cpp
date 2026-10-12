@@ -22,6 +22,7 @@
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../render/RSceneObj.hpp"
+#include "../game/SimulationContainers.h"
 
 #pragma fp_contract(off)
 
@@ -34,8 +35,6 @@
 
 // ---- the game's code not ported yet (or ported elsewhere for other node types)
 // the pointer vectors' uninitialized_fill_n, shared with the rest of the game
-#define ObjectList_Construct ((void (*)(WCollisionObject **where, int count, WCollisionObject *const *value, ObjectList *vector, WCollisionObject *const *same))0x000b2ec0)
-#define StripList_Construct ((void (*)(const CollisionStrip **where, int count, const CollisionStrip *const *value, StripList *vector, const CollisionStrip *const *same))0x000b2ec0)
 #define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
 #define EHitWindow_Construct ((void (__fastcall *)(void *, int, Coord4 point, Coord4 normal, WindowHit hit, int flag))0x000403f0)
 // The tree helpers every map of the game shares (identical code folded by the linker), on this file's node types.
@@ -48,7 +47,6 @@
 #define WindowMap_Decrement ((void (__fastcall *)(WindowMapNode **it, int))0x00123930)
 #define WindowMap_Max ((WindowMapNode *(*)(WindowMapNode *node))0x00123850)
 #define ArticleMap_Find ((ArticleMapNode **(__fastcall *)(ArticleMap *, int, ArticleMapNode **result, WCollisionInstance *const *key))0x00118f20)
-#define ArticleMap_Increment ((void (__fastcall *)(ArticleMapNode **it, int))0x000b2920)
 
 namespace {
 
@@ -155,7 +153,7 @@ void BarrierList::PushBack(const BarrierListEntry *entry) {
 void ObjectList::PushBack(WCollisionObject *const *object) {
     size_t size = first == NULL ? 0 : last - first;
     if (first != NULL && size < size_t(end - first)) {
-        ObjectList_Construct(last, 1, object, this, object);
+        UninitializedFillPointers(last, 1, object);
         last++;
     } else {
         InsertN(last, 1, object);
@@ -165,7 +163,7 @@ void ObjectList::PushBack(WCollisionObject *const *object) {
 void StripList::PushBack(const CollisionStrip *const *strip) {
     size_t size = first == NULL ? 0 : last - first;
     if (first != NULL && size < size_t(end - first)) {
-        StripList_Construct(last, 1, strip, this, strip);
+        UninitializedFillPointers(last, 1, strip);
         last++;
     } else {
         InsertN(last, 1, strip);
@@ -1156,7 +1154,7 @@ void WCollisionMgr::Restart() {
 
     // the instances whose articles SetCollisionArticle changed get their own back
     for (ArticleMapNode *node = fgCollisionMgr->articles.head->left; node != fgCollisionMgr->articles.head;
-         ArticleMap_Increment(&node, 0))
+         reinterpret_cast<PhysicsObjIterator *>(&node)->Inc())
         node->value.instance->article = node->value.article;
     ArticleMap &articles = fgCollisionMgr->articles;
     articles.EraseSubtree(articles.head->parent);

@@ -1,0 +1,401 @@
+# The driving engine's quirks: what the port keeps, and where it differs
+
+Behaviours of the original Driving.xbe that the port keeps on purpose, and the places where it cannot or does not
+match the original. Every address is Driving.xbe's. The rule is exact behaviour first (docs/style-guide.md): an odd
+branch, a leak or a read past an array stays in the port when something could observe it. The only exception is
+uninitialised stack the original leaves in a record. The port writes zero there and lists the place below. The
+list also works as a checklist for comparing with the GameCube and PS2 builds: each entry is a question to ask of
+the other build's function.
+
+Each integration adds its round's entries; the latest are the weapons (`game.weapons`,
+docs/driving/game-weapons.md) and the missions (`game.missions`, docs/driving/game-missions.md).
+
+Differences of one ulp in floating point are accepted and not listed one by one. For example, an FSIN/FCOS result
+that is rounded through a double-returning helper is one ulp off (docs/driving/maths.md 3.2, section 8).
+
+Contents: 1 deviations (the port differs), 2 harness masks, 3 quirks kept faithfully.
+
+---------------------------------------------------------------------------------------------------------------
+
+## 1. Deviations: where the port differs from the original
+
+Almost all of these are uninitialised stack in the original. "Zero" means the port writes 0 (or 0.0f, false) there.
+
+### 1.1 Uninitialised stack in a record or a vector
+
+| Function | Address | The original | The port | What it can affect | Doc |
+|---|---|---|---|---|---|
+| REmpBolts::CreateVehicleBolt | 0x0009c0e0 | subtracts an uninitialised stack vector from the spark direction it hands Shell::ApplyWorldEffects | zero | the sparks' direction only | game-effects |
+| RScorchWorld::ScorchWorld | 0x000a50c0 | `across` w and `centre` w are uninitialised (AddDecal copies the centre's w into the corners) | zero | the decal corners' w; nothing found reads it | game-effects |
+| RTyreTrack::Add | 0x000ac4c0 | the perpendicular's w is uninitialised | zero | nothing reads it | game-effects |
+| SWeaponManager::FireWeapon | 0x000bb2b0 | the kWeaponQSlick scorch is placed from a local the function never sets | zero | the scorch's position; the shadow does not log it | game-weapons |
+| Sentry::ComputeTargetAngle | 0x000731e0 | for a `which` the switch does not cover, the invalid-axis flag is an uninitialised stack byte | 0 | that call's answer | game-weapons |
+| Sentry::RotateSRB | 0x00073730 | for an invalid axis the rotation matrix is uninitialised stack | zero | the body's orientation for an invalid axis (no placed sentry has one) | game-weapons |
+| Sentry::DrawMuzzleFlashes | 0x00073500 | the direction's w is uninitialised | zero | nothing reads it | game-weapons |
+| RayShell, Shell | 0x00071930-0x000752f0 | a vector's w that only the xyz functions touch, and WorldCollisionInfo's segment words (from its inlined constructor's stack) are uninitialised | zero | nothing found reads them | game-weapons |
+| Missile::CheckForCollision | 0x0005f6d0 | the w of the world segment's start, which VU0_v4sub (0x0005fd92) leaves alone, goes to CheckHitWorld (0x0005ff75) and into WorldCollisionInfo's copy of the segment (0x0005fed0) | zero | nothing found reads it; the shadow logs the starts' xyz only | game-weapons |
+| RShadowMap::SetCamera | 0x000a5e3a | transforms the car's box corners with a w neither it nor its callers write (a NaN there makes the fit zero) | zero | the projected shadow's fit | render |
+| RPlayerCamera::UpdateSplineCam | 0x00084a60 | on a road of one lane, eases toward an uninitialised stack offset | zero | the spline camera on a one-lane road | camera |
+| RPlayerCamera::UpdateMomentumHeliCam | 0x00087880 | `turned` w is stack garbage, copied into cameraOffset.w | zero | cameraOffset.w | camera |
+| RPlayerCamera::UpdateEllipseCam | 0x000886f0 | cameraOffset.w is set from a local whose w is never written | `offset.w = 0` | cameraOffset.w | camera |
+| RPlayerCamera::UpdateTumbleCam | 0x00088380 | as above | never writes cameraOffset.w, so the old value stays | cameraOffset.w | camera |
+| RPlayerCamera::UpdateAutoDriveCam | 0x000857d0 | the rotated offset's w is uninitialised stack, copied into cameraOffset.w | the same, from the port's own uninitialised `Coord4 offset` (the value differs) | cameraOffset.w | camera |
+| RPlayerCamera::UpdateBumperCam | 0x00080b90 | position.w is stack, copied to eye.w | zero | eye.w | camera |
+| RPlayerCamera::UpdateDashboardCam | 0x00081d10 | position.w and offset.w are stack, copied to eye.w and cameraOffset.w; the acceleration vector is stack when the anchor gives none | zero | those w words; the acceleration with no anchor value | camera |
+| RPlayerCamera::UpdateRelativeAnimationCam | 0x00082840 | heading.w is stack (not read); the `playing` byte is stack when there is no animation | zero | nothing / the no-animation case | camera |
+| RCameraIniLoader::LoadFile | 0x00078770 | heli and auto-drive arm fields the file does not give are stack; the "heights" buffer is uninitialised past the values read | zero | the arms' unset fields | camera |
+| RigidBody::CollideWithWorld | 0x000b1420 | hands its box hits the lever arm left by the last vehicle world hit (stack garbage when there was none) | zero | box-hit response with no earlier vehicle hit | physics |
+| RigidBody::CollideWithObject, ResolveWorldOBBCollision | 0x000b0510, 0x000af960 | vector w words and WorldCollisionInfo segment words are stack | zero | nothing found reads them | physics |
+| SetFrame (inlined in RigidBody::Construct, ResetObject) | 0x000b0b20, 0x000adcd0 | worldInverseInertia row 3 is stack leftovers | zero | nothing reads row 3 | physics |
+| RigidBody::CollideWithGround | 0x000ae4c0 | leverContacts.unknown00 is unset | zero | nothing reads it | physics |
+| Newton::SpawnFromEvent | 0x00061310 | `centre` is stack on paths that set neither | zero | those paths | physics |
+| Util_GenerateMatrix | 0x000bce90 | the w words of rows 0 and 1 are stack | zero | nothing found reads them | collision |
+| PBondCar::AddSnowmobileForces | 0x000632a0 | the last w of the scratch pad's axle (+0x280) is uninitialised | zero | nothing found reads it | vehicles |
+| RLightManager::AddSpecularLight | 0x0007e950 | copies an uninitialised stack word into the specular light's w | zero | specularLight.w | render |
+| RLensFlareManager::DrawFlares | 0x0009e540 | the Glare fields it does not set are stack garbage | zero | nothing found reads them | render |
+| RotateOffsetToHeading | 0x000808f0 | side.w is uninitialised (the scalings keep each destination's w) | zero | nothing reads it | render |
+| RStateManager::GetGeoPrimState | 0x00092d20 | `handled` is uninitialised before the first tag | false | the first tag's handling | render |
+| DrawInstance | 0x0007de30 | the kept draw's fourth word is stack | zero | nothing found reads it | render |
+| WWorldPos::FindClosestFace (two overloads) | 0x000d3050, 0x000d3110 | the candidate's corner[0] count word (+0x0c) is stack garbage | zero | nothing reads it (face normal, plane and point tests read x, y, z) | collision |
+| WRoadNav::InitAtPoint | 0x000cc100 | roadT is left as stack when the cell has no segments | 0.0f | that case | world |
+| WCollisionMgr::GetOBBObjectIntersection | 0x000bf8c0 | slot[0] can be read unwritten (a segment through a corner) | zero | that case | collision |
+| DAudio::InfoDraw | 0x000371b0 | prints a stack byte for a StreamHold outside 0..2 | 0 | debug page text | game-audio |
+| AIndex::Construct | 0x001276c0 | a name shorter than four characters is searched into uninitialised stack | the buffer is zeroed | that case | audio |
+| ActCharacter::LoadCharacter | 0x00014490 | ActCharacterInfo leaves its type unset for a model letter other than h/p/c/a (stack) | the stack copy is zeroed | that case | anim |
+| Schedule::AddTask | 0x0005c490 | two padding fields of the task record are stack | zero | nothing reads them | core-data |
+| UDataGroupDecodeTag | 0x001177b0 | the number is an uninitialised local when sscanf matches nothing | -1 (the four characters kept) | malformed tags only | core-data |
+| SNDI_parsetimbre, SNDI_patchtohdr | 0x00140aa0, 0x0013f1c0 | the tag reader's value before the first tag of length 0..4; patchtohdr's channel-1 azimuth offset with no 0x9d tag (stereo, output mode not 2) | zero | that azimuth | sound |
+| SNDBANKI_playtimbre | 0x00140260 | the voice range when SNDPLATFORM_getvoicerange writes none | zero | that case | sound |
+| SNDSTRMI_parseheader, SNDSTRMI_parsedata, SNDPKTPLAY_start | 0x0013bc20, 0x0013bdb0, 0x0013e980 | user-data message +0xc; packet +0 and +8; the patch header outside the channel count | zero | nothing reads them | sound |
+| dsndMixInit | 0x0013d5e0 | byte 7 of the mixer parameters is never written | zero | nothing | sound |
+| SMissionManager::UpdateObjectiveSpecial | 0x000b81a0 | the w of three Coord4s is uninitialised | zero | nothing: only x, y and z feed the dot product | game-missions |
+| SRulePlayerDir::CheckRule | 0x000ba690 | the w of three stack vectors is uninitialised | zero | nothing reads w | game-missions |
+
+### 1.2 Allocator bytes
+
+An STL map's empty allocator byte is copied from an uninitialised local. Nothing reads it.
+
+| Function | Address | The port |
+|---|---|---|
+| REmpBolts::Construct (the anchor map); REmpBolts::FindAnchors (`counts`) | 0x0009dc90, 0x0009d9a0 | 0 |
+| RVehicleParticle::Init (the set) | 0x000a8240 | 0 |
+| AIndexMap::Construct | 0x00127620 | 0 |
+| CARP::ResolverMap::Construct | 0x00119e40 | 0 |
+| WSoundGroup::Construct | 0x000cd5a0 | 0 |
+| PVehicle::BuildCarNames | 0x00071730 | 0 |
+| RParticleLibrary::RPartLibraryData::Construct, RParticleSystemManager::Construct | 0x000a2e20, 0x000a2f00 | 0 |
+| WindowPaneMap::Construct (and CheckHitWindow's local map, copied by CopyConstruct 0x000c3ab0) | 0x000c45d0, 0x000c4d70 | not written (the port's own stack) |
+| WCollisionMgr::Construct (its maps) | 0x000c5500 | not written |
+| Simulation::Construct (the object map and the dead set) | 0x000b4fe0 | 0 |
+
+### 1.3 Other differences
+
+| Function | Address | The original | The port | Doc |
+|---|---|---|---|---|
+| ROffscreenBuffer::MakeTexCopy | 0x0007f870 | asked for more than four copies, reads past its four offsets into its own stack frame | draws those copies at offset (0, 0), with an untested warning. **To revisit** if a caller ever asks for more than four (none seen) | render |
+| RayShell::CollideWithObjects | 0x00072190 | computes the first offset from the origin to the object (0x000722fe), which nothing reads before the simple-body branch overwrites it | left out. (The bottom of a rigid body's box, computed after the overlap test, is not dead: it goes into the frame GetOBBObjectIntersection takes.) | game-weapons |
+| FILESYS_allocop | 0x0010cbf0 | running out of op records crashes | the submit fails and returns 0 | filesys 7.1 |
+| FILESYS_size | 0x0010cf90 | clears worker 0's running op, so a concurrent wait can return early | leaves it | filesys 7.2 |
+| FILEDEV_opensub (subfile seek) | 0x0010d290 | the seek test compares `base - pos` | always seeks, which is what the original did in practice | filesys 7.3 |
+| Q_initshared | 0x0014a640 | the done queue's lock is a byte copy of the pending queue's critical section | its own lock | filesys 7.4 |
+| FILESYS_addbig, worker | 0x0010d030, 0x0010c110 | a failed addbig leaks the directory; an unknown archive format reads a negative size | freed; checked | filesys 7.8 |
+| FILEDEV_open; the archive and path name copies | 0x0010d2f0 | an open with no free slot fails with error 0; unbounded strcpy/strncpy/sprintf of names into 0x100-byte buffers | a real error; bounded copies | filesys 7.9, 7.10 |
+| FsWorkerThread | 0x0010c110 | a read error with no handler, or a declining one, hangs the worker | reports the error | filesys |
+| MissionList::BuyHead | 0x000b8490 | when FastAlloc fails, stores NULL at address 4 | skips that store | game-missions |
+| SMissionManager::Destruct | 0x000b8e70 | calls the empty timer destructor (NullFunction) ten times | the calls are left out | game-missions |
+| SMissionManager::Construct | 0x000b8c30 | constructs the 64 stage lists by calling 0x0011cc10 | constructs them inline (the same writes) | game-missions |
+| SimPointerVector::InsertN; the trees' throws | 0x000b3b80; 0x000b2e00-0x000b4080 | a catch block frees the new storage and rethrows; std::length_error and the trees' errors are thrown | no catch block (copying pointers cannot throw); the throws go through TreeThrow | game-missions |
+| SimPointerVector::Reserve | 0x000b4080 | past max_size, _Xlen throws | Xlen, then returns | game-missions |
+| Simulation::SpawnExplosion | 0x000b4cd0 | with no object hit, the simple flag's dword carries left-over upper bytes (only the low byte is read) | a clean bool | game-missions |
+| SRuleRange::CheckRule | 0x000ba570 | zeroes three words of its position | zeroes four | game-missions |
+| SRulePlayerDir::CheckRule | 0x000ba690 | angle * -1.0 | -angle (the sign of a NaN can differ; the result is the same) | game-missions |
+| SRuleTimer::Construct | 0x000ba080 | copies the threshold through the x87 | through QuietNaN (the same quieting) | game-missions |
+
+---------------------------------------------------------------------------------------------------------------
+
+## 2. Harness masks for these reads
+
+A shadow test masks a field, or leaves it out, when the original fills it from its own stack:
+
+- PlayerCamShadowB: UpdateSplineCam is run only on roads of several lanes. UpdateAutoDriveCam's cameraOffset.w is
+  not compared.
+- PlayerCamShadowC: cameraOffset.w of the heli, tumble and ellipse cameras.
+- CamDataShadow: the arm fields the file never gives, and the heap's padding words.
+- GameEffectsShadowC: the spark normal of REmpBolts::CreateVehicleBolt, and the anchor map's allocator byte.
+- GameEffectsShadowB: an emitter system's lastPosition, which comes from the uninitialised emitter position.
+- GameEffectsShadowD: RDecalManager::AddDecal is logged by the vectors' x, y and z only, because the centre and
+  axis w are uninitialised.
+- GameWeaponsShadowA, B: the Q-Slick scorch position and the uninitialised w values are not logged.
+- LightShadow: specularLight.w.
+- ColListShadow, ColQueryShadow, ColGridShadow: WorldCollisionInfo +0x20..+0x3f, +0x4c, +0x56 and +0x5c, and the
+  fourth words of a found face's first two corners. GeomShadow and RigidBasicsShadow: the face's +0x0c word.
+- RigidResolveShadow: GenerateImpulse's relativeVelocity.w.
+- CoreLoopShadow: the task records' two padding fields. CoreUtilShadow: the key buffers after the terminator.
+- CarpShadow: a tag that sscanf does not match after its four characters is left out.
+- TexContextShadow: the padding after `used` (CreateNewTextureElement, 0x00093ac2..0x00093ae6).
+- LoaderShadow: a symbol table's bytes +0x0d..+0x0f.
+- SndPlatformShadow: byte 7 of the mixer parameters.
+- SndTagShadow: patchtohdr's channel-1 azimuth word is counted as "masked". Inputs whose originals read
+  undefined values are kept out: a long tag before any short one, more than six channels, more than four
+  user-data tags.
+- SndStreamShadow: the channel pointers of a stream with no header parsed.
+- BondCarShadowA: AddSnowmobileForces' axle w (not covered).
+
+---------------------------------------------------------------------------------------------------------------
+
+## 3. Quirks kept faithfully
+
+### 3.1 Uninitialised or never-set values the port reproduces, or that cannot matter
+
+| Function | Address | Quirk | Doc |
+|---|---|---|---|
+| Render_InitLibRender | 0x0007d710 | hands RRenderer::Init (0x0007d5e0) an uninitialised 0x70-byte stack buffer, which is never read; the port does the same | render |
+| PBondCar::ProcessSimplePhysics, ProcessSnowmobilePhysics | 0x00069710, 0x00063ad0 | copy rollingResistance, which was not set that step; the copy is not read | vehicles |
+| ATrafficVehicle::Destruct | 0x0012d300 | reads two counted flags (TrafficCountA/B 0x00243b5c/0x00243b60) that ATrafficVehicle::Construct (0x0012cb90) never sets | game-audio |
+| AGun (+0x18) | 0x00129550 | unknown18 is never written | game-audio |
+| InputConfigManager::Shutdown | 0x00050080 | frees a pointer at +0x2c that nothing sets (only Get, 0x00050270, nulls it) | input |
+| IFeedback (records +0x2c, +0x30) | 0x0004fbc0 | two float inputs (x100 for the pulse level, x125 for the steady speed) that only the inline Reset writes | input |
+| ACharacter::Say | 0x0011dad0 | FPedLinesWrapped (0x00243960) is never set (MPedLinesWrapped 0x00243968 is) | game-audio |
+| EAGL anim frame search | 0x000fd840 | going back, it compares the time with the frame pointer's bits read as a float, so any time >= 0 stops at once | eagl |
+| Simulation::Construct | 0x000b4fe0 | leaves several fields (the owners' slots among them) unset: zero only because the one Simulation is a static | game-missions |
+| SMissionManager::Construct | 0x000b8c30 | leaves missionSets (+0x28) unset | game-missions |
+| SRuleProperty::Construct | 0x000b9960 | strncpy(8) leaves an eight-character name unterminated; the compare reads eight at most | game-missions |
+
+### 3.2 Reads and writes past an array, or before it
+
+| Function | Address | Quirk | Doc |
+|---|---|---|---|
+| AVehicle::PlayCollision | 0x0011f1a0 | its search of the impact sounds steps past busy entries with no bound, so CollisionTicks (0x00243988, 12 entries) stays at the game's address with the globals after it | game-audio |
+| SWeaponManager::Update | 0x000bbdc0 | the targeting test reads weapons[special] with special -1, and weapons[secondary] with -1 after UnloadWeapon: the heap word before the array | game-weapons |
+| SWeaponManager::FireWeapon | 0x000bb2b0 | can write fireSteps[4] (+0x34, one past the four) | game-weapons |
+| ASnowMobile::PlayCarving | 0x0012b060 | reads one word past the surfaces (previousSurfaces[0] as a fifth) | game-audio |
+| ASubmersible::PlayCreaks | 0x0012bb80 | indexes a 4-entry local by creakLevel - 1, checking only below | game-audio |
+| DAudio::MixerDraw | 0x00036d10 | a mix group above 6 reads its colour past the 7-entry table (clamped only after) | game-audio |
+| RVehicle::PostLoad | 0x000955d0 | the wheel-instance search carries `next` across wheels while each loops to `count`, so it can read past the array | game-effects |
+| REmp::Init | 0x0009b680 | its clear overruns into the sphere's first position | game-effects |
+| REmpBolts::FindAnchors | 0x0009d9a0 | a long locator name overflows `links[5]` into the next anchor | game-effects |
+| RMissileStreak::Update(const Coord4 *) | 0x000a0ea0 | with count 0 at an odd tick it writes points[-2] and, as points[-1], its own header | game-effects |
+| Handle::Stop, RAnimEngine::DeactivateSystem | 0x00077be0, 0x00077b60 | move the active list down by one entry more than it holds | anim |
+| RPlayerCamera::SetAutoDriveRotation | 0x00081540 | its 97-entry response table has no bounds check | camera |
+| RCameraIniLoader::LoadFile, RPlayerCamera::DirectorChangeCameraMode | 0x00078770, 0x00084130 | the heli "Cinematic" index is stored one past its record (read back as [index - 1]); 16 bytes are copied over Heli_Sideways, Heli_Height, Heli_Distance and the word after | camera |
+| InputToAction::LoadParseDefFile | 0x00050a20 | an unknown control name indexes the table -1; a line without a carriage return runs off the text | input |
+| InputConfigManager::ParseDefFileForFrontEnd | 0x0004ff50 | an unknown slot name writes localeIDs[-1], the configuration's text pointer (+0x20) | input |
+| RReflection::PrivateSubmitSceneObj | 0x00098520 | does not check that it found the slot ranked 3 (writes at slot -1) | render |
+| WRender::FindVisibleTreeNodesAndCurtains, SimpleDrawVisibleTreeNodes, DrawWorldAtPoint | 0x000c7330, 0x000c77f0, 0x000c8490 | the visible node list and the draws are not bounds-checked (SetCull, 0x000c7700, is) | world |
+| SNDCTRLI_getfxbus | 0x0013cc80 | the main path's buses index FxBuses (0x00244f44) from entry 0 and the hardware path's from entry 1, unchecked. They overlap from bus 1, and a bus past the array lands in the globals after it. Only bus 0 is used | sound |
+| SNDPLATFORM_setfxlevel (and the per-bus voice fields) | 0x00140070 | bus 1's send and levels are the next fields' bytes | sound |
+| SNDI_parsetimbre | 0x00140aa0 | past six channels the azimuth offsets come from the tag tables, and ChannelAzimuth[channels - 1] (0x00244f70) reads past its six rows | sound |
+| SNDI_pantoazimuth | 0x00142e90 | a pan over 127 reads past the 128-entry table (0x001d9d88) | sound |
+| SND::decodexac | 0x00149d80 | a predictor nibble above 3 reads past the four predictors into the next table | sound |
+| SNDMIXI_initfx | 0x00142fc0 | an unknown node type reads past the ten-entry size tables | sound |
+| SNDBANKI_playpatch | 0x001405d0 | past twelve timbres the handles run into the header | sound |
+| SNDI_patchtohdr | 0x0013f1c0 | past four user-data tags the pointer runs into the sizes and what follows | sound |
+| FUN_0013d550 | 0x0013d550 | with both pools' free lists empty, pops from FreeBufferLists[-1] (the PCM active list) and faults if that is empty too | sound 8.5 |
+| EAGL Model image lookup | 0x000e9010 | cuts the comparison string at four characters by writing a NUL into the file's long name, past its end when it is shorter | eagl |
+
+### 3.3 Writes through a possibly NULL pointer
+
+| Function | Address | Quirk | Doc |
+|---|---|---|---|
+| SWeaponManager::HandleNuclearSequence | 0x000bb9b0 | the explosion sounds' four fields are written whether or not the allocation succeeded | game-weapons |
+| Missile::Construct; Missile::CheckForCollision | 0x0005e8c0, 0x0005f6d0 | the transit sound and the EMP detonation sound are written through without a NULL check | game-weapons |
+| Shell::ApplyWorldEffects | 0x000749b0 | writes the impact sound's fields when the allocation is NULL | game-weapons |
+| Sentry::GetTarget | 0x00073330 | writes through NULL when an allocation fails | game-weapons |
+| Smackable::GoToSleep | 0x00075370 | no NULL check on the proc-anim state | game-weapons |
+| Simulation::Spawn*Object | 0x000b5700-0x000b5fb0 | a failed allocation hands NULL to SpawnPhysicsObject, which faults | game-missions |
+| AGun::Play | 0x00129250 | a new one-shot's fields and `voice->Play` go unchecked for NULL | game-audio |
+| ATurret::Play, ASmackable::PlayCollision, ACharacter::Say | 0x0012e2b0, 0x0012d9c0, 0x0011dad0 | ClearLoops (or the inline loop clear) on a fresh NewVoice result unchecked | game-audio |
+| ASnowMobile::PlayMotor | 0x0012aa10 | AVoice_PlayOnce(revVoice) without a NULL check | game-audio |
+| RDebris::Construct | 0x000a91b0 | calls Init(NULL) when an allocation fails | game-effects |
+| RVehicleParticle::Construct | 0x000a6de0 | writes active = 0 even when the allocation failed | game-effects |
+| REmpBolts::TrySpawnBolt | 0x0009d320 | a car with one anchor: GetRandomAnchor (0x0009d2d0) returns NULL and CreateVehicleBolt(from, NULL) faults (the shadow expects it) | game-effects |
+| WRoadNav::CalcNextSegmentDirection, CalcNextSegmentLane, CalcNextSegmentSidewalk | 0x000ca120, 0x000ca530, 0x000cad40 | use a NULL GetAttachedDirectionalSegment (0x000c9aa0) result unchecked | world |
+| WGridDynamicList::BuyHead | 0x000c5970 | tests &node->prev, never NULL, so node->prev = node runs on a failed allocation | world |
+| SFILTER_remove | 0x001444a0 | removing the head does not clear the new head's back link; an empty list with another node faults | sound |
+
+### 3.4 Leaks and wrong frees
+
+| Function | Address | Quirk | Doc |
+|---|---|---|---|
+| ActEvents::Destruct | 0x000156c0 | leaks the physics-off handler made in Construct (0x000157e0) | anim |
+| ActWeaponDatabase::Destruct | 0x0001bcb0 | frees every weapon it loaded whatever the reference count says | anim |
+| AFader::Remove | 0x00125d60 | frees the fader whatever its reference count | audio |
+| ASnowMobile::PlayMotor | 0x0012aa10 | a finished rev voice is overwritten by a new one without being freed | game-audio |
+| AWorldSound::Destruct | 0x0012e090 | does not free its pass voice | game-audio |
+| ATurret::Destruct | 0x0012e250 | uses the out-of-line AVoice destructor (0x0003f400) | game-audio |
+| RReflection::ReflPrivateData::Destruct | 0x000982a0 | frees the lighting records with delete, not delete[], and leaves their names | render |
+| RDecalManager::Destruct | 0x0009b3c0 | frees its GeoPrims and keeps their addresses in the table | render |
+| RColorize::Kill, RDecalManager::Kill, RGain::Kill, RLensFlareManager::Kill | 0x0009a480, 0x0009af50, 0x0009de80, 0x0009e1d0 | leave the instance pointer set | render |
+| RMissileStreak::Kill | 0x000a1460 | frees the GeoPrims without clearing the pointers | game-effects |
+| RSceneObj::Destruct | 0x000905a0 | writes 0xabababab into its next pointer after unlinking itself | render |
+| RVehicle::Destruct | 0x00096430 | deletes `particles` without clearing it | game-effects |
+| WRender::ShutDown | 0x000c7d50 | deletes the object without its destructor, so the curtains leak | world |
+| WWorld::Close | 0x000d1b30 | leaves the scene objects, the sound group and the trigger manager global set | world |
+| OptionParser::Construct | 0x0005b870 | a match not at a line start leaks that attempt's copy of the key | core-data |
+| EncryptDecrypt; GameStd::Numpunct::Tidy | 0x0011c5c0, 0x0003abd0 | delete where delete[] belongs | core-data |
+| EAGL::RenderMethod::Destruct | 0x000f12c0 | frees shader arrays from EAGLMalloc with __builtin_delete | eagl |
+| EAGL TAR image | 0x000ec420 | when the SHAPE has nowhere to keep a record, the one allocated here is replaced (and leaked) by Create's | eagl |
+| SNDPKTPLAY_stop | 0x0013f040 | frees the per-channel stretch data without clearing the pointers | sound |
+
+### 3.5 Dead stores, dead code, arguments ignored
+
+| Function | Address | Quirk | Doc |
+|---|---|---|---|
+| PBondCar::InitAudioObject | 0x0006cc20 | builds "SFX_<engine>LdEn" and never uses it (the port leaves the buffer out) | vehicles |
+| PBondCar::Simulate | 0x0006a840 | asks for the car's class twice and drops the first answer | vehicles |
+| PHelicopter::ApplyDamage; PHelicopter::Simulate | 0x0006e330, 0x0006dd30 | gathers the zones at damage stage 4 and does not send them; computes a dot product it does not use | vehicles |
+| Newton::Simulate | 0x00060b70 | computes a midpoint, its distance and a clamped height and uses none of them | physics |
+| RigidBody::UpdatePositionAndOrientation | 0x000b0ec0 | ignores its time-step argument and uses the global step | physics |
+| AttributeSystem::ConfigEditParameters; PVehicle::InitializeGlobals | 0x000525f0, 0x0006f930 | empty in the retail game; each CarPhysics field's range is still registered | vehicles |
+| StateTagAlphaBlendXbox | 0x00091db0 | looks source, destination and operation all up among the operations (0x001f28f8), so the first two are never found and nothing is set; the blend factor table (0x001f2878) is never looked up | render |
+| RGlareManager::DrawGlares | 0x000aa5d0 | flips GlareDrawParity (0x00209d28) every call; nothing reads it | render |
+| RLightning::BeginBoltDraw | 0x0009f520 | joining one bolt's strip to the next, jitters a pair of points into locals and throws them away (the random tables step all the same) | render |
+| RDebris::DrawShellCasings | 0x000a9680 | computes an inverse it never uses | game-effects |
+| RVehicle::StartColourDissolve, TriggerIlluminate | 0x00095e20, 0x000959b0 | ignore both arguments / the third | game-effects |
+| RVehicleParticle::TriggerSparks | 0x000a6f70 | never reads its float | game-effects |
+| REmp::Init, DrawShootingEffect | 0x0009b680, 0x0009bb30 | the sphere is never drawn (counts set, no position or texture coordinate pointers); the EmpLightParams record Init fills is read by nothing | game-effects |
+| record 0x001c54f8 | 0x001c54f8 | a particle type record nothing references | game-effects |
+| ASnowMobile::PlayCarving; ATrafficVehicle::PlaySnowmobileSpecifics | 0x0012b060, 0x0012ceb0 | the landing one-shots are built on the stack and destroyed at once, so never heard | game-audio |
+| AVehicle::Play | 0x0011f9b0 | the base Play (0x00017550) it calls is empty; the call is left out | game-audio |
+| ARaceEngine::Play | 0x0012ffb0 | asks for the mix's volume twice (in the crossfade branch) | game-audio |
+| AMenuSound::Trigger(int, const char *, const char *, int) | 0x0011e010 | looks its patch up twice | audio |
+| AFader::Create, AStream::Create | 0x00125cb0, 0x001236c0 | look a name up and ignore the answer | audio |
+| AStream::DecodeError | 0x001224d0 | adds 19 to its argument and discards it | audio |
+| RPlayerCamera::SetOldCameraMode | 0x00089200 | constructs a whole RPlayerCamera on the stack, runs the target mode's update on it and destroys it | camera |
+| RWorldCamera::GetAnchorAcceleration | 0x000972c0 | calls GetRigidBody three times | camera |
+| RPlayerCamera::UpdateDashboardCam | 0x00081d10 | repeats a look-back test it has already returned from | camera |
+| WWorld::Reset | 0x000d1750 | looks up 'Wmap' and never uses it | world |
+| WTriggerManager::Restart | 0x000cff90 | builds a "Validating stream" line (ValidateStreams, inlined) and never prints it | world |
+| WRoadNetwork::Init | 0x000c8950 | fills 32 lane-weight row pointers (from 0x001ca0c0 or 0x001ca200) | world |
+| WRoadNetwork::GetLinePointIntersect | 0x000c9000 | normalises its direction twice | world |
+| Sentry::Construct | 0x00073a90 | calls GetSimpleRigidBody once and discards the result | game-weapons |
+| Missile::Destruct | 0x0005f350 | the empty OBB and RMissileStreak destructor calls (NullFunction) are kept | game-weapons |
+| RayShell::AddFlash | 0x000720d0 | never reads `this` | game-weapons |
+| ActWeapon::Construct | 0x0001abd0 | sets the manual-render flag, so its vtable Render (0x0001ae60) never draws | anim |
+| SNDSTRMI_create | 0x0013c350 | hands STREAM_buffersize / 3 to SNDSTRM_setgreedylevel with the STREAM pointer where a stream index belongs, so the level is never set | sound |
+| EAGL runtime allocation | 0x000ed390 | GetAddr's answer is looked up and thrown away (code no shipped data reaches) | eagl |
+| Simulation::FindPhysicsObjectSignature | 0x000b27d0 | reuses its argument's slot as a bool (no effect) | game-missions |
+| Simulation::SpawnExplosion, SpawnExplosionObject, CanSpawnSimpleRigidBody | 0x000b4cd0, 0x000b5d50, 0x000b47a0 | the eighth argument, the second argument and the position are not read | game-missions |
+| SMissionManager::GetObjectiveArrowHeight, CheckObjectiveVisibleToUser | 0x000b6cd0, 0x000b6d50 | a dead load of the element's +0x77; a dead copy of the objective | game-missions |
+| SMissionManager::UpdateCharInfo | 0x000b6b20 | clears CharInfoBeforeHud (0x001c8fc4), which nothing reads | game-missions |
+| SMissionRule::RunEvents | 0x000b9500 | a dead store of -1 to the event index; re-reads the count each pass | game-missions |
+| SRuleRange::CheckRule | 0x000ba570 | stores the distance in `last` and never uses it | game-missions |
+| the SRule* constructors | 0x000b96c0-0x000ba080 | write SMissionRule's vtable, then their own | game-missions |
+
+### 3.6 Values that never change
+
+| Where | Address | Quirk | Doc |
+|---|---|---|---|
+| Missile::Construct | 0x0005e8c0 | the transit sound's pitch steps by 0.01 from 1 and wraps at 0.04, so it is always 1 | game-weapons |
+| RSniperZoom::SetupVerts | 0x000a6a80 | the outer ring's outer grey (0x00201830) is never written, so always 0 | game-effects |
+| PBondCar::ProcessPhysics and the landing gates; PBondCar::ImproveLanding | 0x00067bd0, 0x00062fe0 | the steps in the air before ImproveLanding (0x001c36c4, 50) and before it damps the spin (0x001c36c8, 10) are never written | vehicles |
+| RVehicleParticle::TriggerSparks | 0x000a6f70 | adds a static (0x0020183c) nothing writes; that turns a -0 height into +0 | game-effects |
+| REmpBolts::Update | 0x0009d6b0 | numBolts never rises, so it tries up to four spawns (one per step passed) every call | game-effects |
+| RVehicle::RenderFX | 0x00095b60 | clears empVictim; ClearEmpVictim (0x001f2c6c) is never set | game-effects |
+| SWeaponManager::Reset | 0x000bad70 | primary is -1 and nothing sets it | game-weapons |
+| SMissionManager (MissionHealthTimes100, the car-override flags, gPlayerCanNeverLose) | 0x00239218-0x0023921e | never set; ResetCharInfo, GetCarType, EPlayerLose and SWeaponManager read them | game-missions |
+| SMissionManager::CalcEndMissionScores | 0x000b6e80 | score 4 is value4 * 0.0 | game-missions |
+| DAudio | 0x00036d10 | DAudioMixerVisible (0x001e4760) and DAudioMixerEditing (0x001e2270) are never set | game-audio |
+
+### 3.7 Odd branches and data bugs
+
+| Function | Address | Quirk | Doc |
+|---|---|---|---|
+| ACharacter::Say | 0x0011dad0 | two speech lists lack a comma between two names, which join, so the lists end in NULL entries and AIndex::Lookup(NULL) is called; the "F" lines' wrapped flag is never set, so Say loops until the bank has a line | game-audio |
+| RayShell::ConsiderVictim | 0x00071e40 | the non-human second-victim test can never pass | game-weapons |
+| RayShell::Fire | 0x00072d60 | case 2 damages the second victim at the first victim's impact point; a missed shot's tracer runs muzzle to muzzle + dir x range | game-weapons |
+| RayShell::AddNewRayShellForTriggerCheck | 0x00071d80 | queues at most 63 rays | game-weapons |
+| Shell::ApplyWorldEffects | 0x000749b0 | the "straight up" test is a four-component dot with (0, 1, 0, 1) | game-weapons |
+| Shell::Simulate; Mine::Simulate; Smackable::Simulate | 0x00074e80, 0x0005e710, 0x00075420 | carry on (PhysicsObject::Simulate) after deleting the object, on two of Shell's three paths | game-weapons |
+| Grenade::Simulate | 0x0005d7d0 | the first bounce sets off a type-3 explosion | game-weapons |
+| RayShell::CollideWithWorld | 0x00072790 | the segment's w grows by one each step | game-weapons |
+| Missile::SteerMissile | 0x00060110 | overwrites detonate when there is a target; a torpedo drops its target once it faces away | game-weapons |
+| Missile::Render | 0x0005f3d0 | the light is scaled by the square of twice the steps left, compared unsigned | game-weapons |
+| Sentry::RotateSRB, RotateAnim | 0x00073730, 0x000738b0 | set the turning flags by comparing the new angle +-0.001 with the previous angle, not the target | game-weapons |
+| Sentry::ComputeNewRotation | 0x00073600 | returns `limit` on one branch and `float(1 - limit)` on the other | game-weapons |
+| Mine (every explosion) | 0x0005e180-0x0005e8c0 | always uses the proximity mine's damage (weapons[kProxMine]) | game-weapons |
+| SWeaponManager::Update | 0x000bbdc0 | the secondary-fire event 0x16 is not sent for the remote torpedo | game-weapons |
+| Simulation::CanSpawnRigidBody | 0x000b2c40 | reads the global Simulation's bodies, not this one's; only smackables not awake are candidates; at exactly the limit nothing sleeps and the answer is no | game-missions |
+| Simulation::DeleteDeadObjects | 0x000b3fc0 | reads the object's type before its NULL check (when there is a camera) | game-missions |
+| Simulation::UntrackInstance | 0x000b3000 | an inlined erase(remove(...)) that erases one element | game-missions |
+| Simulation::DeletePhysicsObject | 0x000b4250 | walks only the first `count` nodes of the type and, if the object is not among them, puts the node after them (perhaps the end) in the dead set; erases from the vectors other than the cars' without checking remove found it | game-missions |
+| Simulation::CanSpawnSimpleRigidBody | 0x000b47a0 | deletes the newtons through the global Simulation while testing this one's counts; the count only falls at DeleteDeadObjects, so every newton goes | game-missions |
+| Simulation::Construct | 0x000b4fe0 | the grenades' and the tracked instances' vectors get no reserve | game-missions |
+| SMissionManager::PassObjective | 0x000b87f0 | adds the score to glbMissionManager's scores, not this one's | game-missions |
+| SMissionManager::IncShotsHit | 0x000b6720 | the hit window is the step count / 10, a tenth of the step count rather than of a second | game-missions |
+| SMissionManager::Load | 0x000b9140 | writes 1.0 into the level's mission-set data when enemyGlueFactor[0] or missionText[0] is 0 | game-missions |
+| SMissionManager::CalcEndMissionScores | 0x000b6e80 | score 3 is the set's unknown2e0 over the shots; score 9 is the mean of the accuracy and score-3 shares | game-missions |
+| SMissionManager::AddObjective, InsertObjective | 0x000b9320, 0x000b93c0 | test size == 1 after the insert (with an unreachable NULL-head path) | game-missions |
+| SRuleDeath::CheckRule | 0x000b9850 | target types other than the player and an element read health 0, so the rule passes | game-missions |
+| SRuleDamage::CheckRule | 0x000b9770 | with the AI controller's figures compares the figure with the threshold and never updates lastHealth | game-missions |
+| SRuleRange::CheckRule | 0x000ba570 | a plain comparison, no crossing test | game-missions |
+| SMissionRuleTarget::GetSpeed, GetPos, GetMatrix, GetProperty | 0x000ba390, 0x000ba3e0, 0x000ba430, 0x000ba4a0 | an unknown target type answers 0, leaves the output alone, or answers false | game-missions |
+| CompareWithinDegrees | 0x000b9ad0 | a NaN skips the wrap and passes both tests, so it answers 1.0 | game-missions |
+| AVehicle::CalculateSpeed | 0x0011eb50 | with a horn, a speed between 5 and 14 (exclusive) becomes 14 | game-audio |
+| AVehicle::PlayCollision | 0x0011f1a0 | on paved ground plays the tyre sound when `s0 \|\| (s1 && s2) \|\| s3` | game-audio |
+| AGun::Play | 0x00129250 | fires only while the firing byte is exactly 1 | game-audio |
+| ASmackable::Play | 0x0012da90 | the roll volume rises by two steps and falls by one | game-audio |
+| DAudio::MixerDraw, InfoDraw, UpdateTargets | 0x00036d10, 0x000371b0, 0x00037750 | editing mode pauses the game every frame; mix and patch names passed as format strings; the camera's unknown50 passed as the listener's velocity | game-audio |
+| DAudioTargetList::Erase | 0x00037160 | one function for the target list and WGrid's movers (the linker kept one) | game-audio |
+| AFX::Pause | 0x00124850 | sends to bus 0x40, not AFX's own | audio |
+| ASoundManager::ClearMission | 0x00121280 | asks for the streams as "music"/"speech" in lower case | audio |
+| AIndex::Construct | 0x001276c0 | sizes its name block in a first pass and can overflow it when a prefix is not three characters; a file name with no '.' gives strncpy a negative count | audio |
+| AMix::Load | 0x0011d790 | unbounded strcpy of the name | audio |
+| ActGlobalPoseOverrideArray::SetGlobalPoseOverride | 0x00015b40 | in global mode swaps rows 0 and 2 of every override; index 0 then negates row 2 and swaps rows 1 and 2, index 1 negates row 0 and swaps rows 1 and 2 | anim |
+| LightBlock::GetLight, SetLight | 0x000148a0, 0x000148f0 | Get returns the colour rotated (y, z, w, x), Set stores it straight | anim |
+| ProcAnimSway | 0x0008af60 | reads the instance position after clearing it, so instances of one size sway in sync | anim |
+| ActCharacterInfo::Construct | 0x00015260 | leaves its type unset for a model letter other than h/p/c/a | anim |
+| RWorldCamera::GetAnchorLinearVelocity | 0x00097fc0 | uses the player car's AI spline path velocity for any rigid anchor | camera |
+| RPlayerCamera::LimitPitchYaw | 0x00083190 | reuses a stale band middle when the bands end early | camera |
+| RViewCamera::AspectRatio, SetWorldTransformMode | 0x00096960, 0x00096eb0 | the 4:3 aspect constant is 0x3faaaaaa, one unit below the nearest float to 4/3 | camera |
+| InputConfigManager::GetLocaleID | 0x000501a0 | swaps some labels for 2721 by track: 1424 off "snow1a_mis3", 2708 on tracks with "uw_" in their name, 2712/2713 and 2723 on "paris_mis01" outside the driving type (2723 becomes 1709 for configurations 6 and 7), 2719 everywhere | input |
+| InputConfigManager::ParseMasterConfigFile | 0x000502d0 | reads the first line (the .def parsers skip it); a name before any section goes to configs[2] | input |
+| IFeedback::Update, Pause; IFeedback::Construct | 0x0004fbc0, 0x0004fa00, 0x0004fe30 | Update stops the motors and zeroes the durations but leaves the levels; Pause keeps each port's user count; the thread gets a static 0x2000-byte block (0x001e2430) that THREAD_create ignores | input |
+| RigidBody::UpdatePositionAndOrientation; Construct, ResetObject | 0x000b0ec0; 0x000b0b20, 0x000adcd0 | builds the inertia matrix as transpose x scale x rotation; the constructor and ResetObject build it the other way round with 3x4 multiplies | physics |
+| RigidBody::ControlSleep | 0x000b09d0 | never puts an upright vehicle to sleep | physics |
+| PhysicsObject::ApplyForces | 0x0006f2a0 | ORs 1 into the word that also holds the body's radius; the flag tests read that bit | physics |
+| Newton::Simulate | 0x00060b70 | normalises the quaternion by its squared length, and finishes its step on a body it has just deleted | physics |
+| SimpleRigidBody::CheckCollisions | 0x000b1ff0 | a helicopter is tested higher depending on a byte of the checking body's owner; a body's own box is twice as large against rigid bodies as against simple ones | physics |
+| RigidBody::InitLevers | 0x000ad840 | divides the mass by BASE_FRICTION_MASS (0x001c36d0), the cars' tuning global, not a constant 8 | vehicles |
+| PBondCar::SetVisualDamage; InitializeCarVariables | 0x00066180, 0x00062440 | compares with the shared damage levels (0x001c3db4) that ApplyDamage uses, of which InitializeCarVariables clears `spread` | vehicles |
+| PBondCar::CalculateRPM, ProcessPhysics, ProcessSubmarinePhysics | 0x00062a60, 0x00067bd0, 0x000644c0 | the gear bytes are signed (previousGear starts at -1); CalculateRPM keeps the previous gear on a downshift while gearChangeTimer (15 steps) runs; the reverse timer, the submarine's roll and the forced roll direction are compared signed | vehicles |
+| PBondCar::Simulate | 0x0006a840 | the mission editor's switches test only bit 0 of each mask, shifted; class 3 cars beyond 0x001c36c0 (2500) simulate every other step | vehicles |
+| RVehicle::ComputeWheels | 0x00096060 | asks for the wheel spin angles of 0 and 1 only: one for the front pair, one for the rear | vehicles |
+| RaiseLandingImpact (inlined in ProcessSnowmobilePhysics, ProcessPhysics, ProcessSimplePhysics) | 0x00063ad0, 0x00067bd0, 0x00069710 | the same hard-landing code three times; one function here | vehicles |
+| RReflection::RenderView | 0x000997d0 | stores the float 4080.0 in the fog's mode word while it draws | render |
+| RVehicle::Render | 0x000965e0 | the projected shadow is drawn only when the view distance is below 0.125 | game-effects |
+| RDebrisType::Draw | 0x000a92a0 | the colours are always DebrisColours[0] (0x00202a90); a piece fades by (SimStep - lifetime) / its throw tick | game-effects |
+| RTyreTrack::Construct | 0x000abfc0 | initialises the last point's Coord3 with a four-word init, so 1.0f lands in its joined word | game-effects |
+| RVehicleParticle::UpdateAll | 0x000a8120 | skips when SimStepCount equals the last tick but stores the game tick | game-effects |
+| RVehicleParticle::UpdateCar | 0x000a7ac0 | snowmobiles throw no snow spray | game-effects |
+| REmpBolts::TrySpawnBolt | 0x0009d320 | a segment's end has w 2 | game-effects |
+| RMuzzleFlash::Init | 0x000a1b50 | turns its static model a further quarter round each run | game-effects |
+| RBulletStreak::Init | 0x00099f10 | vertices 2 and 3 get v = 0.1 (its switch on v % 6, jump table 0x0009a1ac) | game-effects |
+| RMissileCam::Draw | 0x000a0b50 | points its GeoPrim at its own stack | game-effects |
+| RSniperZoom::Draw | 0x000a6bc0 | sets the shared material's state, not its own | game-effects |
+| WWorld::Open | 0x000d21a0 | compares the 'Audi' lookup with the end of the root group, not the 'Map ' group's, so the check never fails | world |
+| WTrigger::Size; WTriggerManager::Process | 0x000cf1f0, 0x000d0630 | the only caller calls it on a CARP::Instance | world |
+| WTriggerManager::CheckCollide; WTrigger::UpdateRotPos | 0x000cf520, 0x000cf490 | box triggers keep their depth as a float in the packed-size word, never register a ray shell thinner than 0.01, and become cylinders in UpdateRotPos, which ignores its rotation | world |
+| WRoadNav::PathForwardRoadSegment | 0x000c9810 | the inner loop compares the outer index's neighbour | world |
+| WRoadNav::FindClosestSegmentInd | 0x000cbf20 | returns 0, not -1, for an empty grid cell | world |
+| WRender::PrepareForCull | 0x000c75b0 | clears the draws of the list the tree walk filled last, not of its argument | world |
+| WRender::Construct | 0x000c7a50 | an instance without an article joins the pass of the instance after it; the curtain count is left unset on a track with no 'VisC' | world |
+| DAFI_setsectionbyindex | 0x0011a390 | a key line without '=' loops forever; an empty value takes the next line as its value | core-data |
+| SNDSTRMI_parsedata | 0x0013bdb0 | writes the request id over the chunk's tag, and the chunk's address just before its first channel's data | sound |
+| EAGL::Model::ConstructCopy | 0x000e9540 | +0x08, +0x4c..+0x9b, +0xac and +0xc8 are not copied | eagl |
+| EAGL::Model::MorphModel | 0x000ea480 | an item whose element size does not match is skipped by its unrounded size in words; a group's input items are stepped as 8 bytes plus data, not 16 | eagl |
+| EAGL_RMOp_DynamicStream | 0x000f6890 | the buffer is created 4 times the array's size and the capacity stored as count x 4 | eagl |
+| EAGL view activation | 0x000e4be0 | a RenderContext's "previous" view is put back, a TextureRenderContext's left 0 | eagl |
+| EAGL::UnRegisterShapes | 0x000edf50 | looks names up by the directory name padded with spaces, so a name RegisterShapes took from the long name or cut short is never removed | eagl |
+
+### 3.8 x87 and float/double mixes kept
+
+| Function | Address | Quirk | Doc |
+|---|---|---|---|
+| AVehicle::CalculateRpm | 0x0011ec80 | the log goes through FLDLN2/FYL2X (naked helper VehicleLogX87) | game-audio |
+| ASubmersible::PlayCavitation | 0x0012bf00 | the pitch offset is the float 0.2 while playing, the double 0.2 while fading | game-audio |
+| AUltraLite::PlayMotor | 0x00129cd0 | a NaN climb fails every branch and keeps the old pitch target | game-audio |
+| RVehicleParticle::UpdateCar | 0x000a7ac0 | the spray and road-dirt clamps compare the double and keep the float | game-effects |
+| RScorchWorld::ScorchWorld | 0x000a50c0 | the level test compares with a double holding 0.85f | game-effects |
+| Sentry::ApplyDamage, Smackable::ApplyDamage, Sentry::DrawMuzzleFlashes, Sentry::Construct | 0x00073f80, 0x00075560, 0x00073500, 0x00073a90 | unrounded x87 tests: the first impact-level test, the flash fade test, the -1 clamp | game-weapons |
+| Sentry::ComputeNewRotation | 0x00073600 | `float(1 - limit)` on one branch only | game-weapons |

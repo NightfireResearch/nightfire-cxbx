@@ -15,6 +15,7 @@
 #include "../platform/RealMemory.h"     // MEM_size, MEM_free
 #include "../sound/snd/System.h"
 #include "../../helpers.h"
+#include "../game/MissionManager.h"           // MissionList::BuyHead
 
 #include <string.h>
 
@@ -25,8 +26,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // The list code every std::list of pointers shares: the head node, _Buynode(next, prev, value), the destructor
-#define SoundList_BuyHead ((PointerListNode *(__fastcall *)(ASoundList *, int))0x000b8490)
-#define StreamNameList_BuyHead ((PointerListNode *(__fastcall *)(StreamNameList *, int))0x000b8490)
 
 // The C runtime: its rand state, its output and formatting are the game's
 #define CRT_rand ((int (*)(void))0x00133ee0)
@@ -144,7 +143,7 @@ void RestoreOptionVolumes() {
 ASoundList* NewSoundList(const char *label) {
     ASoundList *list = static_cast<ASoundList *>(UMemory::FastAlloc(sizeof(ASoundList), label));
     if (list != NULL) {
-        list->head = SoundList_BuyHead(list, 0);
+        list->head = MissionList::BuyHead();
         list->size = 0;
     }
     return list;
@@ -153,7 +152,7 @@ ASoundList* NewSoundList(const char *label) {
 StreamNameList* NewStreamNameList(const char *label) {
     StreamNameList *list = static_cast<StreamNameList *>(UMemory::FastAlloc(sizeof(StreamNameList), label));
     if (list != NULL) {
-        list->head = StreamNameList_BuyHead(list, 0);
+        list->head = MissionList::BuyHead();
         list->size = 0;
     }
     return list;

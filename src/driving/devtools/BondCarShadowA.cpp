@@ -15,6 +15,8 @@
 #include "../game/BondCar.h"
 #include "../game/BondCarSnowmobile.h"
 #include "../game/BondCarState.h"
+#include "../game/MissionManager.h"
+#include "../game/Simulation.h"
 #include "../game/SoftZone.h"
 #include "../game/TyreTrack.h"
 #include "../game/VehicleRender.h"
@@ -267,8 +269,8 @@ void InstallFakes() {
     HookBoth(0x000959f0, XbeAddress(&RVehicle::TriggerTurboBoostSmoke), (const void *)&FakeBoostSmoke);
     HookBoth(0x0011e010, XbeAddress(XbeOverload<MenuTrigger>::Of(&AMenuSound::Trigger)),
              (const void *)&FakeMenuSound);
-    HookInstall(0x000b72f0, (const void *)&FakeMissionEvent);
-    HookInstall(0x000b6720, (const void *)&FakeShotsHit);
+    HookBoth(0x000b72f0, XbeAddress(&SMissionManager::ProgrammerDefinedEvent), (const void *)&FakeMissionEvent);
+    HookBoth(0x000b6720, XbeAddress(&SMissionManager::IncShotsHit), (const void *)&FakeShotsHit);
     HookBoth(0x00090a40, XbeAddress(&RSceneObj::Reset), (const void *)&FakeSceneReset);
     HookBoth(0x00081430, XbeAddress(&RPlayerCamera::ResetCamera), (const void *)&FakeResetCamera);
     HookInstall(0x0003f370, (const void *)&FakeECollision);
@@ -1263,7 +1265,7 @@ void BondCarShadowA_Run(void) {
     PBondCar *player = ShadowPlayerCar;
     int cars = 0;
     for (int slot = 0; slot < 64; slot++) {
-        PhysicsObject *owner = PhysicsObjects[slot];
+        PhysicsObject *owner = fgSimulation.rigidBodyOwners[slot];
         if (owner == NULL || uint32_t(uintptr_t(owner->vtable)) != kPBondCarVtable)
             continue;
         PBondCar *car = static_cast<PBondCar *>(static_cast<PVehicle *>(owner));

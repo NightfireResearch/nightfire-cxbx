@@ -7,6 +7,7 @@
 #include "../../common/xbeOverload.h"
 #include "../data/AttributeSystem.h"
 #include "../engine/UMemory.hpp"
+#include "../game/Simulation.h"
 #include "../physics/PhysicsNamespace.h"
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
@@ -537,7 +538,7 @@ void TestSimpleBodyMethods() {
 void TestCheckCollisions() {
     std::vector<int> rigid;
     for (int i = 0; i < kRigidBodies; i++)
-        if (PhysicsObjects[i] != NULL)
+        if (fgSimulation.rigidBodyOwners[i] != NULL)
             rigid.push_back(i);
     if (rigid.empty() || g_template == NULL)
         return;
@@ -1001,8 +1002,8 @@ void PhysObjShadow_Run(void) {
     g_freeSlots.clear();
     g_template = NULL;
     for (int i = 0; i < kRigidBodies; i++)
-        if (PhysicsObjects[i] != NULL)
-            g_objects.push_back(PhysicsObjects[i]);
+        if (fgSimulation.rigidBodyOwners[i] != NULL)
+            g_objects.push_back(fgSimulation.rigidBodyOwners[i]);
     for (int i = 0; i < kSimpleBodies; i++) {
         if (ShadowSimpleOwners[i] != NULL)
             g_objects.push_back(ShadowSimpleOwners[i]);

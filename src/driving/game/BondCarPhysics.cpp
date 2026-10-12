@@ -11,6 +11,8 @@
 #include "BondCar.h"
 #include "BondCarBasics.h"                  // GetCarColourVariation
 #include "BondCarState.h"                   // CarSurface, the BondCar_* tuning
+#include "MissionManager.h"       // glbMissionManager
+#include "Simulation.h"
 #include "TyreTrack.h"
 #include "Vehicle.h"
 #include "VehicleParticle.h"                // RVehicleParticle::kSparkLine
@@ -26,13 +28,11 @@
 #include "../camera/PlayerCamera.h"         // RPlayerCamera
 #include "../engine/ActionQueue.hpp"
 #include "../engine/GameInterfaces.hpp"     // GHud
-#include "../engine/MissionManager.h"       // glbMissionManager
 #include "../engine/PhysicsUtil.h"          // Util_Step, Util_GenerateMatrix, Util_GenerateCarTensor
 #include "../engine/UMemory.hpp"
 #include "../physics/PhysicsMath.h"         // Abs, Min, Max
 #include "../physics/RigidBody.h"
 #include "../physics/RigidBodyResolve.h"    // CollisionImpact
-#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"                // Ftol
 #include "../render/RenderHigh.h"           // fgRenderHigh
@@ -49,15 +49,11 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-#define SMissionManager_GetCurrObjective ((const Coord4 *(__fastcall *)(SMissionManager *, int, int unknown))0x000b6c70)
 
 #define CollisionImpact_Construct ((CollisionImpact *(__fastcall *)(CollisionImpact *, int))0x0003dc20)
 #define ECollision_Construct ((void *(__fastcall *)(void *, int, CollisionImpact impact))0x0003f370)
 
 // ---- globals
-#define Sim ((void *)0x00233ff0)                        // the Simulation
-#define SimStepCount U32_AT(0x00234e34)                 // the Simulation's steps so far
-#define playerPhysicsObject (*(PBondCar ***)0x00234e40) // the Simulation's cars, the player's first
 
 namespace {
 
@@ -317,7 +313,7 @@ void PBondCar::SetVisualDamage(float fromA, float toA, float fromB, float toB) {
     Handle *handle = render->animHandle;
     for (int band = kDamageBands - 1; band >= 0; band--)
         if (bandZones[band] != 0)
-            handle->ProcessStimuliZones(kStimulusDamageBand + band, bandZones[band], SimStepCount, kStimulusModeZones);
+            handle->ProcessStimuliZones(kStimulusDamageBand + band, bandZones[band], fgSimulation.stepCount, kStimulusModeZones);
     if (damagedZones != 0)
         TriggerFX(render, RSceneObj::kFXDamage, damagedZones, &kZero, &kZero, -1.0f);
     if (effectZones != 0)
@@ -331,12 +327,12 @@ void PBondCar::SetVisualDamage(float fromA, float toA, float fromB, float toB) {
 // FUNC_AT(0x00066390)
 void PBondCar::ResetCar(bool unused) {
     InitializeCarVariables(false);
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(rigidBodySlot);
     RigidBodyInfo *info = body->info;
     Coord4 position = { body->position.x, body->position.y, body->position.z, 0.0f };
     Coord4 direction = {};
 
-    const Coord4 *objective = SMissionManager_GetCurrObjective(glbMissionManager, 0, 0);
+    const Coord4 *objective = glbMissionManager->GetCurrObjective(0);
     if (objective != NULL) {
         VU0_v4sub(objective, &position, &direction);
         VU0_v4unitxyz(&direction, &direction);
@@ -389,7 +385,7 @@ void PBondCar::ResetCar(bool unused) {
 // larger of the two wins; the steering is stepped towards its input.
 // FUNC_AT(0x00066640)
 void PBondCar::GetControllerInput() {
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(rigidBodySlot);
 
     if (forceStop != 0) {
         control.steering = 0.0f;
@@ -546,7 +542,7 @@ void PBondCar::TwoWheelStunt() {
         CallDisableTwoWheelStunt(this);
         return;
     }
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(rigidBodySlot);
     RigidBodyInfo *info = body->info;
 
     // The level frame about the car's right, tilted by the angle about its z
@@ -601,12 +597,12 @@ void PBondCar::ControlTyreTracks() {
         }
         float width;
         if (unknown3FE == 0 && !snowmobile)
-            width = Abs(Simulation_GetRigidBody(Sim, 0, rigidBodySlot)->angularVelocity.y);
+            width = Abs(fgSimulation.GetRigidBody(rigidBodySlot)->angularVelocity.y);
         else
             width = 1.0f;
         Coord4 point = wheelPos[wheel];
         Coord4 velocity = {};
-        *Xyz(&velocity) = Simulation_GetRigidBody(Sim, 0, rigidBodySlot)->velocity;
+        *Xyz(&velocity) = fgSimulation.GetRigidBody(rigidBodySlot)->velocity;
         VU0_v4scaleadd(&velocity, kOneThirtieth, &point, &point);
         WWorldPos ground = wheels[wheel];
         track->Add(&point, wheelSlip[wheel], width, surface, &ground);
@@ -624,7 +620,7 @@ void PBondCar::ControlTyreTracks() {
 int8_t PBondCar::AddWheelForces(BondCarWheelInput *input, float *slips, const Coord4 *headings,
                                 const Coord4 *roadNormals, const Coord4 *wheelPos, const Coord4 *rollingResistance,
                                 bool wheelSpin) {
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(rigidBodySlot);
     BondCarScratch *step = BondCarScratchPad;
     step->forceInfo = body->info;
     step->wheelsOnGround = 0;
@@ -836,7 +832,7 @@ int8_t PBondCar::AddWheelForces(BondCarWheelInput *input, float *slips, const Co
 // player's), and the landing's dust.
 // FUNC_AT(0x00067bd0)
 void PBondCar::ProcessPhysics() {
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(rigidBodySlot);
     BondCarScratch *step = BondCarScratchPad;
     step->frontGrip = 0.5f;
     step->info = body->info;
@@ -982,7 +978,7 @@ void PBondCar::ProcessPhysics() {
     float speedXZ = VU0_sqrt((float)((double)step->velocity.x * step->velocity.x +
                                      (double)step->velocity.z * step->velocity.z));
     step->wheelSpeed = speedXZ;
-    double turns = speedXZ / ((double)SimStepsPerSecond * physics->wheelRadius * kUnitsPerTurn);
+    double turns = speedXZ / ((double)fgSimulation.stepsPerSecond * physics->wheelRadius * kUnitsPerTurn);
     step->wheelSpeed = (float)turns;
     if (turns < 0.01f && control.handBrake)
         step->wheelSpeed = 0.0f;
@@ -1216,7 +1212,7 @@ void PBondCar::ProcessPhysics() {
 // FUNC_AT(0x000690a0)
 int8_t PBondCar::AddSimpleWheelForces(BondCarWheelInput *input, const Coord4 *headings, const Coord4 *roadNormals,
                                       const Coord4 *wheelPos, float *slips) {
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(rigidBodySlot);
     BondCarScratch *step = BondCarScratchPad;
     step->forceInfo = body->info;
     step->wheelsOnGround = 0;
@@ -1330,7 +1326,7 @@ int8_t PBondCar::AddSimpleWheelForces(BondCarWheelInput *input, const Coord4 *he
 // landing's impact.
 // FUNC_AT(0x00069710)
 void PBondCar::ProcessSimplePhysics() {
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(rigidBodySlot);
     BondCarScratch *step = BondCarScratchPad;
     step->info = body->info;
     step->velocity = body->velocity;
@@ -1395,7 +1391,7 @@ void PBondCar::ProcessSimplePhysics() {
     float speedXZ = VU0_sqrt((float)((double)step->velocity.x * step->velocity.x +
                                      (double)step->velocity.z * step->velocity.z));
     step->wheelSpeed = speedXZ;
-    double turns = speedXZ / ((double)SimStepsPerSecond * physics->wheelRadius * kUnitsPerTurn);
+    double turns = speedXZ / ((double)fgSimulation.stepsPerSecond * physics->wheelRadius * kUnitsPerTurn);
     step->wheelSpeed = (float)turns;
     if (turns < 0.01f && control.handBrake)
         step->wheelSpeed = 0.0f;
@@ -1559,10 +1555,11 @@ void PBondCar::ChangeCarType(const char *newType, bool purgeModel) {
     static const char kModelDirectory[] = "data\\car\\model\\";
     if (_stricmp(carType, newType) == 0)
         return;
-    Coord3 position = Simulation_GetRigidBody(Sim, 0, rigidBodySlot)->position;
+    Coord3 position = fgSimulation.GetRigidBody(rigidBodySlot)->position;
     AttributeSet playerAttributes;
     const char *oldModel =
-        PVehicle::RenderNameAttrib(PVehicle::GetNamedAttribs(&playerAttributes, CallGetCarType(*playerPhysicsObject)));
+        PVehicle::RenderNameAttrib(PVehicle::GetNamedAttribs(
+            &playerAttributes, CallGetCarType(static_cast<PBondCar *>(fgSimulation.cars.first[0]))));
     playerAttributes.Destruct();
     attributes.SetName(newType, false);
     carType = newType;
@@ -1624,7 +1621,7 @@ void PBondCar::ChangeCarType(const char *newType, bool purgeModel) {
     Coord3 inverseInertia;
     Util_GenerateCarTensor(&inverseInertia, attributes.LookupFloat("MASS", NULL), halfExtents.x, halfExtents.y,
                            halfExtents.z);
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(rigidBodySlot);
     if (body != NULL)
         body->Construct(int8_t(rigidBodySlot), int8_t(kind), &position, &velocity, &kZero, &orientation,
                         attributes.LookupFloat("MASS", NULL), &inverseInertia, &halfExtents, this, true, false);

@@ -7,6 +7,8 @@
 
 #include "DebugAudio.h"
 
+#include "MissionManager.h"
+#include "Simulation.h"
 #include "../audio/Mix.h"
 #include "../audio/Sound.h"
 #include "../audio/SoundManager.h"
@@ -17,7 +19,6 @@
 #include "../eagl/Realgraph.h"
 #include "../engine/CoreFoundation.h"
 #include "../engine/Feedback.h"
-#include "../engine/MissionManager.h"
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
@@ -37,13 +38,9 @@
 #define GHud_TheApp ((GHud *(*)())0x000d7c10)
 #define GHud_dbDrawTarget ((void (__fastcall *)(GHud *, int, const ScreenPos *, const char *, float, uint32_t, const char *))0x000da8e0)
 #define GHud_GetScreenCoords ((void (__fastcall *)(GHud *, int, const Coord3 *, bool *, ScreenPos *))0x000dc4a0)
-#define Simulation_PauseSimState ((void (__fastcall *)(void *, int))0x000b25e0)
-#define SMissionManager_Stop ((void (__fastcall *)(SMissionManager *, int))0x000b63a0)
 
 // ---- the game's state
 
-#define Sim ((void *)0x00233ff0)                    // the Simulation
-#define SimState I32_AT(0x00234e24)                 // Sim.simState
 #define gDAudio BOOL8_AT(0x001e4761)                // the info page and the targets (GameLoop.cpp sets it)
 #define Mixes (*(MixList *)0x00243954)              // Mix.cpp's list of the mixes Load read
 #define StreamHold I32_AT(0x00243a80)               // Stream.cpp's StreamHoldState
@@ -64,7 +61,6 @@ bool DAudioMixerVisible;
 
 namespace {
 
-constexpr int32_t kSimPaused = 3;
 
 // Stream.cpp's StreamHoldState
 enum : int32_t {
@@ -176,9 +172,9 @@ void DAudio::DrawTargets() {
 void DAudio::MixerDraw() {
     DEBUGAUDIO_UNTESTED("DAudio::MixerDraw");
     const uint8_t *font = (const uint8_t *)fgRenderer->debugFont;
-    if (DAudioMixerEditing && SimState != kSimPaused) {
-        Simulation_PauseSimState(Sim, 0);
-        SMissionManager_Stop(glbMissionManager, 0);
+    if (DAudioMixerEditing && fgSimulation.simState != kSimPaused) {
+        fgSimulation.PauseSimState();
+        glbMissionManager->Stop();
         IFeedback::Pause();
         ASoundManager::Pause();
     }

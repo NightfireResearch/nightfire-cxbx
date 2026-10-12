@@ -9,6 +9,8 @@
 
 #include "AIVehicle.h"
 #include "BondCar.h"
+#include "MissionManager.h"
+#include "Simulation.h"
 #include "TyreTrack.h"
 #include "VehicleRender.h"                  // RVehicle
 #include "../../common/xbeOverload.h"       // XbeVirtual
@@ -21,7 +23,6 @@
 #include "../engine/ActionQueue.hpp"
 #include "../engine/CoreFoundation.h"       // NullFunction
 #include "../engine/GameLoop.h"             // LaunchPage
-#include "../engine/MissionManager.h"
 #include "../engine/PhysicsUtil.h"          // Util_GenerateMatrix
 #include "../engine/SimRandom.h"
 #include "../engine/UMemory.hpp"
@@ -41,9 +42,6 @@
 
 
 // ---- globals
-#define Launch (*(LaunchPage *)0x00243b90)
-#define SimulationRandom (*(SimRandom **)0x00233ff0)   // the Simulation's first word
-#define SimStepCount U32_AT(0x00234e34)                 // the Simulation's steps so far
 
 // The cars' tuning (BondCarState.h), at its starting values
 // XBE_GLOBAL(0x001c36c0, 4)
@@ -362,7 +360,7 @@ void PBondCar::InitializeCarVariables(bool initializeControls) {
         tyreDamagePoints[wheel] = tyreDamage;
     controlLockTimer = -1;
     bob = 0.0f;
-    int random = SimulationRandom->Generate();
+    int random = fgSimulation.random->Generate();
     unknown3E8 = 0.0f;
     wasInAir = 1;
     bobAngle = float(random * double(kBobAngleScale));
@@ -391,11 +389,11 @@ void PBondCar::ResetDamage() {
 // FUNC_AT(0x00062660)
 void PBondCar::AddDamageByPlayer(float damage) {
     damageByPlayer += damage;
-    damageByPlayerTimer = uint8_t(SimStepsPerSecond);
+    damageByPlayerTimer = uint8_t(fgSimulation.stepsPerSecond);
     bool police = attributes.LookupBool("IS_POLICE", NULL);
     if (carClass == kCarClass3 || police) {
         if (damageByPlayer > kPlayerDamageEvent || GetHitPoints() < damageByPlayer)
-            SMissionManager_ProgrammerDefinedEvent(glbMissionManager, 0, kMissionEvent2, "");
+            glbMissionManager->ProgrammerDefinedEvent(kMissionEvent2, "");
     }
 }
 
@@ -523,11 +521,11 @@ void PBondCar::AttackWithEmp() {
     vehicle->SetEMPVictimEffect(true);
     vehicle->TriggerEmpBolts();
     empActive = 1;
-    empTimer = SimStepCount + BondCar_EMP_LIFETIME;
+    empTimer = fgSimulation.stepCount + BondCar_EMP_LIFETIME;
     SetInShockVirtual(this, 1.0f);
     if (strncmp(GetCarTypeVirtual(this), kBombVan, sizeof(kBombVan) - 1) == 0) {
-        SMissionManager_ProgrammerDefinedEvent(glbMissionManager, 0, kMissionEvent0, "");
-        SMissionManager_IncShotsHit(glbMissionManager, 0, 0);
+        glbMissionManager->ProgrammerDefinedEvent(kMissionEvent0, "");
+        glbMissionManager->IncShotsHit(0);
     }
 }
 
@@ -592,7 +590,7 @@ void PBondCar::HandleTurnSignals() {
         return;
     }
     uint32_t period = uint32_t(turnSignalPeriod);
-    uint32_t phase = (SimStepCount - uint32_t(turnSignalStart)) % period;
+    uint32_t phase = (fgSimulation.stepCount - uint32_t(turnSignalStart)) % period;
     bool lit = (1.0 - turnSignalLit) * double(period) < double(phase);
     if (turnSignalMode == kSignal1) {
         if (lit)

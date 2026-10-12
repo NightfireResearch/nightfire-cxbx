@@ -28,7 +28,7 @@
 #include "../physics/PhysicsNamespace.h"
 #include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
-#include "../physics/Simulation.h"
+#include "../game/Simulation.h"
 #include "../render/RSceneObj.hpp"
 #include "../world/CollisionInstance.h"
 #include "../world/Targeting.h"
@@ -125,7 +125,6 @@ const uint32_t kHookEntries[kHookCount] = {
 
 // ---- the game's state
 
-#define ShadowSim ((void *)0x00233ff0)
 #define ShadowSimStepCount I32_AT(0x00234e34)
 #define ShadowSimpleOwners ((PhysicsObject **)0x002343a0)
 #define ShadowRigidOwners ((PhysicsObject **)0x002342a0)
@@ -781,7 +780,7 @@ WTargetable *SettleTarget(WTargetable *target) {
 // ---- building the synthetic objects
 
 uint32_t PlayerSig() {
-    PhysicsObject *player = Simulation_GetPlayerObject(ShadowSim, 0);
+    PhysicsObject *player = fgSimulation.GetPlayerObject();
     if (player == NULL)
         return 0;
     uint32_t sig;
@@ -847,7 +846,7 @@ Coord3 NearLiveBody(float spread) {
     Coord4 offset = RandomVector(spread, 0.0f);
     if (live.empty())
         return {offset.x, offset.y, offset.z};
-    const RigidBody *body = Simulation_GetRigidBody(ShadowSim, 0, live[size_t(Range(0, int(live.size()) - 1))]);
+    const RigidBody *body = fgSimulation.GetRigidBody(live[size_t(Range(0, int(live.size()) - 1))]);
     return {body->position.x + offset.x, body->position.y + offset.y, body->position.z + offset.z};
 }
 
@@ -897,7 +896,7 @@ void BuildSentry() {
     // The aim instance near the player (if any), in range or out of it
     memset(&g_in.aim, 0, sizeof(g_in.aim));
     g_in.aim.mtx[0][0] = g_in.aim.mtx[1][1] = g_in.aim.mtx[2][2] = g_in.aim.mtx[3][3] = 1.0f;
-    PhysicsObject *player = Simulation_GetPlayerObject(ShadowSim, 0);
+    PhysicsObject *player = fgSimulation.GetPlayerObject();
     Coord4 offset = RandomVector(Chance(50) ? 50.0f : 400.0f, 0.0f);
     if (player != NULL) {
         const Coord3 *at = player->GetPosition();
@@ -1321,9 +1320,9 @@ void FindLive(int *counts) {
         if (ShadowRigidOwners[i] == NULL)
             g_rigidSlot = i;
     if (g_simpleSlot >= 0)
-        g_simpleBody = Simulation_GetSimpleRigidBody(ShadowSim, 0, g_simpleSlot);
+        g_simpleBody = fgSimulation.GetSimpleRigidBody(g_simpleSlot);
     if (g_rigidSlot >= 0)
-        g_rigidBody = Simulation_GetRigidBody(ShadowSim, 0, g_rigidSlot);
+        g_rigidBody = fgSimulation.GetRigidBody(g_rigidSlot);
 }
 
 void BuildRegions() {

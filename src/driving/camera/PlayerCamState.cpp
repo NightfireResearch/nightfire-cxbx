@@ -6,7 +6,8 @@
 #include "../../common/xbeOverload.h"
 #include "../engine/GameInterfaces.hpp"   // GHud
 #include "../engine/GameLoop.h"         // LaunchPage
-#include "../engine/MissionManager.h"
+#include "../game/MissionManager.h"
+#include "../game/Simulation.h"
 #include "../physics/PhysicsMath.h"     // Abs
 #include "../game/VehicleSound.h"     // AVehicle
 #include "../physics/RigidBody.h"       // PVehicle
@@ -26,24 +27,19 @@
 
 namespace {
 
-constexpr int32_t kSimPaused = 3;
 constexpr int32_t kFirstSteps = 3;      // the steps in which the drive inputs are held off
 constexpr int32_t kUnknown30Time = 120;
 const char kSpinTrack[] = "snow1a_mis3";   // the one track with the spin
 
 } // namespace
 
-#define SimState I32_AT(0x00234e24)
-#define SimStepCount I32_AT(0x00234e34)
-#define playerPhysicsObject (*(PVehicle ***)0x00234e40)
-#define Launch (*(LaunchPage *)0x00243b90)
 
 namespace {
 
 // The player's car's engine sound (its GetAudio, through its vtable)
 AVehicle *CarAudio() {
     typedef AVehicle *(PVehicle::*Method)();
-    PVehicle *car = *playerPhysicsObject;
+    PVehicle *car = fgSimulation.cars.first[0];
     return (car->*XbeVirtual<Method>(car, PVehicle::kGetAudio))();
 }
 
@@ -70,7 +66,7 @@ void RPlayerCamState::ResetState() {
     unknown07 = false;
     unknown08 = false;
     unknown20 = false;
-    paused = SimState == kSimPaused;
+    paused = fgSimulation.simState == kSimPaused;
     unknown24 = 0.0f;
     unknown28 = 0.0f;
     unknown2C = false;
@@ -86,7 +82,7 @@ void RPlayerCamState::ResetStateForAnimation() {
 
 // FUNC_AT(0x00089be0)
 void RPlayerCamState::DriveCamInputHandler(int input, float value) {
-    paused = SimState == kSimPaused || SimStepCount < kFirstSteps;
+    paused = fgSimulation.simState == kSimPaused || fgSimulation.stepCount < kFirstSteps;
     switch (input) {
     case kActionChangeCamera:
     case kActionChangeCameraUp:
@@ -165,9 +161,9 @@ void RPlayerCamState::RotateX(int input, float value, bool negate) {
 
 // FUNC_AT(0x00089e10)
 void RPlayerCamState::AutoDriveCamInputHandler(int input, float value) {
-    paused = SimState == kSimPaused;
+    paused = fgSimulation.simState == kSimPaused;
     SMissionManager *mission = glbMissionManager;
-    if (mission->missionState == kMissionState4)
+    if (mission->missionState == kMissionLost)
         return;
     bool allowed = mission->driveMissile == NULL;
     switch (input) {
@@ -207,7 +203,7 @@ void RPlayerCamState::AutoDriveCamInputHandler(int input, float value) {
         break;
     case kActionAimZoomRight:
         if (!aiming) {
-            if (mission->unknown710 == 0 || lockedOn)
+            if (mission->superEasy == 0 || lockedOn)
                 CameraLockOnFlag = 1;
         } else if (Launch.unknowna44 != 0 && !lockedOn) {
             CameraLockOnFlag = 0;

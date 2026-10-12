@@ -11,6 +11,8 @@
 #include "BondCarBasics.h"          // GetCarColourVariation
 #include "BondCarState.h"           // CarSurface, the BondCar_* tuning
 #include "Missile.h"
+#include "MissionManager.h"
+#include "Simulation.h"
 #include "Vehicle.h"
 #include "VehicleRender.h"          // RVehicle
 #include "FingoDeathSound.h"
@@ -26,13 +28,11 @@
 #include "../data/StdStreams.h"
 #include "../engine/ActionQueue.hpp"
 #include "../engine/Feedback.h"
-#include "../engine/MissionManager.h"
 #include "../engine/PhysicsUtil.h"
 #include "../engine/SimRandom.h"
 #include "../engine/UMemory.hpp"
 #include "../physics/PhysicsMath.h"
 #include "../physics/RigidBody.h"
-#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../render/RenderHigh.h"
@@ -45,11 +45,6 @@
 
 // ---- the game's globals
 
-#define Sim ((void *)0x00233ff0)
-#define SimulationRandom (*(SimRandom **)0x00233ff0)        // the Simulation's first word
-#define SimStepCount I32_AT(0x00234e34)
-#define SimState I32_AT(0x00234e24)
-#define PlayerPhysicsObject (*(PhysicsObject **)PTR_AT(0x00234e40))
 
 #define ControllerPort I32_AT(0x00244520)                   // the launch page's controller port
 #define AIControllerInstance (*(void **)0x001ddee4)          // AIElementController's one instance (name ours)
@@ -65,7 +60,6 @@ const char *OverrideCarType;
 // Static in effect: ECX (the controller) is not read
 #define AIVehicleController_FindAgentGroundVehiclePtr ((AIGroundVehicle *(__fastcall *)(void *, int, PBondCar *vehicle))0x00035e90)
 #define AIElementController_ForceVehicleToSleep ((void (__fastcall *)(void *, int, AIGroundVehicle *vehicle))0x000289f0)
-#define SMissionManager_IncPlayerDamage ((void (__fastcall *)(SMissionManager *, int, float damage))0x000b66c0)
 #define GHud_TheApp ((void *(*)())0x000d7c10)
 #define GHud_TriggerDamageFlash ((void (__fastcall *)(void *, int, float damage))0x000d87a0)
 // AOneShotSound's constructor: a patch of a bank at a place
@@ -291,7 +285,7 @@ PBondCar* PBondCar::Construct(int carClass, const char *carType, uint32_t colour
     Coord3 tensor;
     Coord3 inverseInertia = *Util_GenerateCarTensor(&tensor, attributes.LookupFloat("MASS", NULL), dimensions.x,
                                                     dimensions.y, dimensions.z);
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(rigidBodySlot);
     if (body != NULL)
         body->Construct(int8_t(rigidBodySlot), kind, position, &velocity, &kZero, &orientation,
                         attributes.LookupFloat("MASS", NULL), &inverseInertia, &dimensions, this, true, false);
@@ -371,10 +365,10 @@ void PBondCar::InitAudioObject(int carClass) {
         }
         audio->volume = volume;
         if (isHeli) {
-            int roll = SimulationRandom->Generate();
+            int roll = fgSimulation.random->Generate();
             static_cast<AHelicopter *>(audio)->pitchOffset = (float)(double(roll) * 0.2f * kRandomScale);
         } else {
-            int roll = SimulationRandom->Generate();
+            int roll = fgSimulation.random->Generate();
             ATrafficVehicle *sound = static_cast<ATrafficVehicle *>(audio);
             sound->pitchOffset = (float)(double(roll) * 0.2f * kRandomScale);
             if (hasSiren)
@@ -393,7 +387,7 @@ void PBondCar::InitAudioObject(int carClass) {
         ATrafficVehicle *block = NewSound<ATrafficVehicle>("ATrafficVehicle");
         ATrafficVehicle *sound = block != NULL ? block->Construct(engine, mix) : NULL;
         audio = sound;
-        int roll = SimulationRandom->Generate();
+        int roll = fgSimulation.random->Generate();
         sound->pitchOffset = (float)(double(roll) * 0.2f * kRandomScale);
         if (hasSiren)
             sound->AddSiren("SFX_copsiren");
@@ -430,7 +424,7 @@ void PBondCar::InitAudioObject(int carClass) {
 // FUNC_AT(0x0006a840)
 void PBondCar::Simulate() {
     alignas(16) BondCarScratch scratch;
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(rigidBodySlot);
     if (body->sleepState == RigidBody::kFrozen)
         return;
     if (inShock)
@@ -440,7 +434,7 @@ void PBondCar::Simulate() {
     RPlayerCamera *camera = fgRenderHigh->views[0].camera;
     if (carClass == kCarClass3 && !(body->flags & RigidBody::kFlag0) &&
         VU0_v3distancesquare(&body->position, MatrixRow(&camera->matrix, 3)) > BondCar_FarDistanceSq &&
-        ((uint8_t(body->ownerIndex) ^ SimStepCount) & 1) != 0)
+        ((uint8_t(body->ownerIndex) ^ fgSimulation.stepCount) & 1) != 0)
         return;
 
     BondCarScratchPad = &scratch;
@@ -486,7 +480,7 @@ void PBondCar::Simulate() {
                 TriggerFX(renderObject, RSceneObj::kFXSuppress, kBubbleEffect, -1.0f);
         }
         HandleTurnSignals();
-        if (empActive && SimStepCount > empTimer) {
+        if (empActive && fgSimulation.stepCount > empTimer) {
             static_cast<RVehicle *>(renderObject)->SetEMPVictimEffect(false);
             empActive = 0;
         }
@@ -532,12 +526,12 @@ void PBondCar::Simulate() {
         control.brake = 0.0f;
         control.steering = 0.0f;
     }
-    if (SimStepCount < controlLockTimer)
+    if (fgSimulation.stepCount < controlLockTimer)
         control = lockedControl;
     if ((carClass == kPlayerCar || carClass == kCarClass1) && resetAvailable == kResetSteps) {
         typedef void (PBondCar::*ResetCarMethod)(bool unknown);
         if (carClass == kCarClass1) {
-            Simulation_GetRigidBody(Sim, 0, rigidBodySlot)->info->unknown4fc = 1;
+            fgSimulation.GetRigidBody(rigidBodySlot)->info->unknown4fc = 1;
             Virtual(this, PVehicle::kResetCar, ResetCarMethod(&PBondCar::ResetCar), true);
         } else {
             Virtual(this, PVehicle::kResetCar, ResetCarMethod(&PBondCar::ResetCar), false);
@@ -568,7 +562,7 @@ void PBondCar::Simulate() {
         frontSlip = 0.0f;
         rearSlip = 0.0f;
         throttle = 1.0f;
-        rpm = (float)(VU0_v3length(&Simulation_GetRigidBody(Sim, 0, rigidBodySlot)->velocity) * 60.0 + 2000.0);
+        rpm = (float)(VU0_v3length(&fgSimulation.GetRigidBody(rigidBodySlot)->velocity) * 60.0 + 2000.0);
     } else {
         float slip1 = Virtual(this, PVehicle::kGetCarWheelSlip, &PBondCar::GetCarWheelSlip, 1);
         frontSlip = (float)((Virtual(this, PVehicle::kGetCarWheelSlip, &PBondCar::GetCarWheelSlip, 0) +
@@ -614,7 +608,7 @@ void PBondCar::Simulate() {
     SWeaponManager *weapons = WeaponManager;
     if (Virtual(this, PVehicle::kGetCarClass, &PBondCar::GetCarClass) == kCarClass1) {
         int32_t weapon = weapons->weapons[weapons->secondary].id;
-        if ((SimStepCount >= controlLockTimer && weapon == kWeaponSnowmobileGun) || weapon == kWeaponFodGun ||
+        if ((fgSimulation.stepCount >= controlLockTimer && weapon == kWeaponSnowmobileGun) || weapon == kWeaponFodGun ||
             weapon == kWeaponUltralightGun) {
             weaponFlagC0 = 1;
             weaponFlagC1 = weapons->handsFired;
@@ -623,7 +617,7 @@ void PBondCar::Simulate() {
         WeaponRecord *slot = &weapons->weapons[weapons->secondary];
         weaponFlagC0 = 1;
         if (slot->id == kWeaponGun && slot->ammo > 0 && control.unknown1B) {
-            RSceneObj *playerRender = PlayerPhysicsObject->renderObject;
+            RSceneObj *playerRender = fgSimulation.cars.first[0]->renderObject;
             if (playerRender == NULL) {
                 weaponFlagC1 = 1;
             } else {
@@ -633,7 +627,7 @@ void PBondCar::Simulate() {
         }
     }
     SMissionManager *mission = glbMissionManager;
-    if (mission->missionState == 3 || mission->missionState == 4 || SimState == 3 || mission->cinematicMode != 0)
+    if (mission->missionState == 3 || mission->missionState == 4 || fgSimulation.simState == 3 || mission->cinematicMode != 0)
         weaponFlagC1 = 0;
 
     int surfaces[kCarWheels];
@@ -688,7 +682,7 @@ void PBondCar::Simulate() {
         if (agent != NULL) {
             AIElementController_ForceVehicleToSleep(AIControllerInstance, 0, agent);
             if (scoreable) {
-                SMissionManager_IncKills(glbMissionManager, 0, 1);
+                glbMissionManager->IncKills(1);
                 Virtual(this, PVehicle::kSetScoreable, &PBondCar::SetScoreable, false);
             }
         }
@@ -733,7 +727,7 @@ int PBondCar::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, fl
     bool immune = immunity;
     bool tyreShot = tyreBlowOuts && kind == kDamageBullet;
     if (carClass == kPlayerCar || carClass == kCarClass1) {
-        SMissionManager_IncPlayerDamage(glbMissionManager, 0, amount);
+        glbMissionManager->IncPlayerDamage(amount);
         if (glbMissionManager->cinematicMode != 0)
             immune = true;
     }
@@ -750,11 +744,11 @@ int PBondCar::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, fl
     }
 
     // Where the segment meets the car's box, in the car's frame, and the damage zone there
-    uint32_t step = SimStepCount;
+    uint32_t step = fgSimulation.stepCount;
     RSceneObj *render = renderObject;
     CARP::BaseDesc *desc = static_cast<CARP::BaseDesc *>(render->baseDesc);
     Handle *animation = render->animHandle;
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(rigidBodySlot);
     Coord4 dimensions;
     render->GetBoundingDimensions(&dimensions);
     float renderOffset = (float)render->GetRenderOffsetVirtual();
@@ -769,12 +763,12 @@ int PBondCar::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, fl
         return kDamageMissed;
 
     bool fromPlayer = false;
-    PhysicsObject *source = Simulation_FindPhysicsObjectSignature(Sim, 0, *sourceSig);
-    if (source != NULL && source->IsOwnedBy(Simulation_GetPlayerObject(Sim, 0)))
+    PhysicsObject *source = fgSimulation.FindPhysicsObjectSignature(*sourceSig);
+    if (source != NULL && source->IsOwnedBy(fgSimulation.GetPlayerObject()))
         fromPlayer = true;
     if ((fromPlayer || kind != kDamageBullet) && kind != kDamageKind1 && scoreable && carClass == kCarClass2 &&
         amount >= 5.0f && GetHitPoints() > 0.0f)
-        SMissionManager_IncShotsHit(glbMissionManager, 0, kind == kDamageBullet);
+        glbMissionManager->IncShotsHit(kind == kDamageBullet);
     if (unknown2DC < 0.0f)
         unknown2DC = (float)(32.0 / GetHitPoints());
 
@@ -810,12 +804,12 @@ int PBondCar::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, fl
                     tyreDamagePoints[wheel] -= points;
                 } else {
                     tyreDamagePoints[wheel] = 0;
-                    animation->ProcessStimuli(kTyreSystemIds[wheel], kStimulus3, SimStepCount, kQueueAll);
+                    animation->ProcessStimuli(kTyreSystemIds[wheel], kStimulus3, fgSimulation.stepCount, kQueueAll);
                     ABank *bank = fgBanks[4];
                     void *block = ABaseSound::OperatorNew(sizeof(AOneShotSound), "AOneShotSound");
                     AOneShotSound *blowout = NULL;
                     if (block != NULL) {
-                        RigidBody *playerBody = Simulation_GetRigidBody(Sim, 0, PlayerPhysicsObject->rigidBodySlot);
+                        RigidBody *playerBody = fgSimulation.GetRigidBody(fgSimulation.cars.first[0]->rigidBodySlot);
                         int patch = bank->index.Lookup("SFX_TireBlowOut");
                         blowout = AOneShotSound_Construct(block, 0, bank->handle, patch, to, &playerBody->velocity,
                                                           1.0f, "Blowout");
@@ -835,35 +829,35 @@ int PBondCar::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, fl
     bool killed = physics->subPhysics ? wasDead && kind == kDamageKind1 : GetHitPoints() <= 0.0f;
     if (!wasDead) {
         if (killed && carClass == kCarClass2 && scoreable) {
-            SMissionManager_IncKills(glbMissionManager, 0, 1);
+            glbMissionManager->IncKills(1);
             Virtual(this, PVehicle::kSetScoreable, &PBondCar::SetScoreable, false);
             if (targetBeacon != NULL) {
-                for (Missile **missile = SimMissiles.first; missile != SimMissiles.last; missile++) {
+                for (Missile **missile = fgSimulation.missiles.first; missile != fgSimulation.missiles.last; missile++) {
                     if ((*missile)->target == targetBeacon && !(*missile)->exploded)
-                        SMissionManager_IncShotsHit(glbMissionManager, 0, false);
+                        glbMissionManager->IncShotsHit(false);
                 }
             }
         }
         // A submarine that dies wanders off and sinks
         if (GetHitPoints() <= 0.0f && physics->subPhysics) {
             if (scoreable) {
-                SMissionManager_IncKills(glbMissionManager, 0, 1);
+                glbMissionManager->IncKills(1);
                 Virtual(this, PVehicle::kSetScoreable, &PBondCar::SetScoreable, false);
             }
             Virtual(this, PVehicle::kSetVisualDamage, &PBondCar::SetVisualDamage, 1.0f, 1.0f, 1.0f, 1.0f);
-            int roll = SimulationRandom->Generate();
+            int roll = fgSimulation.random->Generate();
             control.steering = (float)(double(roll) * kSteerScale + 0.7f);
-            roll = SimulationRandom->Generate();
+            roll = fgSimulation.random->Generate();
             if (double(roll) * kRandomScale > 0.5)
                 control.steering = -control.steering;
-            roll = SimulationRandom->Generate();
+            roll = fgSimulation.random->Generate();
             control.gas = 0.5f;
             control.brake = 0.0f;
             control.steeringVertical = (float)((double(roll) * kSteerScale + 0.1f) * 0.3f);
             if (attributes.LookupInt("IS_HELI", NULL)) {
                 control.gas = 1.0f;
-                RigidBody *moving = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
-                RigidBody *placed = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+                RigidBody *moving = fgSimulation.GetRigidBody(rigidBodySlot);
+                RigidBody *placed = fgSimulation.GetRigidBody(rigidBodySlot);
                 // The engine sound's vtable slot 4
                 typedef void (ABaseSound::*Method)(float volume, const Coord3 *position, const Coord3 *velocity);
                 (audio->*XbeVirtual<Method>(audio, 4))(1.0f, &placed->position, &moving->velocity);
@@ -884,12 +878,12 @@ int PBondCar::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, fl
         force.y = (float)(lift + lift);
         const Coord3 spinOffset = { -0.5f, -0.5f, -0.5f };
         const Coord3 spinScale = { 6000.0f, 7000.0f, 6000.0f };
-        uint32_t spinBits = ~SimulationRandom->Generate() << 16;
-        spinBits |= SimulationRandom->Generate();
+        uint32_t spinBits = ~fgSimulation.random->Generate() << 16;
+        spinBits |= fgSimulation.random->Generate();
         Coord4 torque;
         BytesToCoordXYZ(spinBits, &spinOffset, &spinScale, NULL, &torque);
         VU0_v4scale(&torque, amount, &torque);
-        if (this != Simulation_GetPlayerObject(Sim, 0) || !glbMissionManager->autoDrive)
+        if (this != fgSimulation.GetPlayerObject() || !glbMissionManager->autoDrive)
             ApplyForces(XYZ(&force), XYZ(&torque));
     }
 
@@ -921,7 +915,7 @@ int PBondCar::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, fl
                 AIGroundVehicle *ai = Virtual(this, PVehicle::kGetAIGroundVehiclePtr, &PBondCar::GetAIGroundVehiclePtr);
                 if (ai != NULL) {
                     AIElementController_ForceVehicleToSleep(AIControllerInstance, 0, ai);
-                    Simulation_GetRigidBody(Sim, 0, rigidBodySlot)->velocity = kZero;
+                    fgSimulation.GetRigidBody(rigidBodySlot)->velocity = kZero;
                 }
             }
         }
@@ -995,7 +989,7 @@ int PBondCar::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, fl
     if (killed)
         return kDamageDone;
     bool sideZone = (zoneBit & kSideZones) != 0;
-    int roll = SimulationRandom->Generate();
+    int roll = fgSimulation.random->Generate();
     float chance = (float)(double(roll) * kRandomScale);
     if ((zoneBit & kFrontZones) && Virtual(this, PVehicle::kGetCarClass, &PBondCar::GetCarClass) == kCarClass1 &&
         chance < 0.5f)

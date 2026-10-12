@@ -18,6 +18,7 @@
 #include "../platform/RealMemory.h"
 #include "../platform/X87.h"
 #include "../sound/snd/Voices.h"        // SNDfxmasterlevel, SNDfxinitbus
+#include "../game/MissionManager.h"           // MissionList::BuyHead
 
 #pragma fp_contract(off)
 
@@ -30,7 +31,6 @@
 
 
 // std::list<T *>'s node and head makers.
-#define PointerList_BuyHead ((PointerListNode *(__fastcall *)(PointerList *, int))0x000b8490)
 
 // The C runtime's (the names' order and the volumes' parsing are its).
 #define CRT_sscanf ((int (*)(const char *text, const char *format, ...))0x00133234)
@@ -273,7 +273,7 @@ void AMix::SetMaster(const char *name) {
 
 // FUNC_AT(0x0011cc10)
 MixList* MixList::Construct() {
-    head = PointerList_BuyHead(this, 0);
+    head = MissionList::BuyHead();
     size = 0;
     return this;
 }

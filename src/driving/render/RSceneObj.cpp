@@ -21,7 +21,7 @@
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
-#include "../physics/Simulation.h"
+#include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"        // MEM_fill
 #include "../platform/X87.h"
@@ -125,7 +125,6 @@ RSceneObj_vtbl *const kSceneObjVtable = (RSceneObj_vtbl *)0x00191be0;
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // ---- globals
-#define Sim ((void *)0x00233ff0)                                // the Simulation
 #define GameTick U32_AT(0x001f2a4c)
 #define LightingWorldPosGuard U32_AT(0x001f25f0)
 
@@ -186,8 +185,8 @@ bool HasSimpleBody(const PhysicsObject *physics) {
 
 const Coord3 *BodyPosition(const PhysicsObject *physics) {
     if (!HasSimpleBody(physics))
-        return &Simulation_GetRigidBody(Sim, 0, physics->rigidBodySlot)->position;
-    return &Simulation_GetSimpleRigidBody(Sim, 0, physics->rigidBodySlot)->position;
+        return &fgSimulation.GetRigidBody(physics->rigidBodySlot)->position;
+    return &fgSimulation.GetSimpleRigidBody(physics->rigidBodySlot)->position;
 }
 
 // The renderer's shadow brightness at a point of a collision instance, as a scene object's brightness
@@ -748,7 +747,7 @@ void RSceneObj::UpdatePosition(bool update) {
     Coord4 *position = MatrixRow(&transform, 3);
     if (physics != NULL) {
         if (!HasSimpleBody(physics)) {
-            RigidBody *body = Simulation_GetRigidBody(Sim, 0, physics->rigidBodySlot);
+            RigidBody *body = fgSimulation.GetRigidBody(physics->rigidBodySlot);
             MatrixCopy(&body->info->orientation, &transform);
             position->x = body->position.x;
             position->y = body->position.y;
@@ -763,7 +762,7 @@ void RSceneObj::UpdatePosition(bool update) {
                 VU0_v4sub(position, &lift, position);
             }
         } else {
-            SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, physics->rigidBodySlot);
+            SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(physics->rigidBodySlot);
             body->RecalcOrientMat(&transform);
             position->x = body->position.x;
             position->y = body->position.y;
@@ -796,11 +795,11 @@ void RSceneObj::SetPhysics(PhysicsObject *newPhysics) {
         const Coord4 *orientation;
         const Coord3 *bodyPosition;
         if (!HasSimpleBody(physics)) {
-            RigidBody *body = Simulation_GetRigidBody(Sim, 0, physics->rigidBodySlot);
+            RigidBody *body = fgSimulation.GetRigidBody(physics->rigidBodySlot);
             bodyPosition = &body->position;
             orientation = &body->orientation;
         } else {
-            SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, physics->rigidBodySlot);
+            SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(physics->rigidBodySlot);
             bodyPosition = &body->position;
             orientation = &body->orientation;
         }
@@ -822,8 +821,8 @@ void RSceneObj::SetPhysics(PhysicsObject *newPhysics) {
 Coord3* RSceneObj::GetVelocity() {
     if (physics != NULL) {
         if (!HasSimpleBody(physics))
-            return &Simulation_GetRigidBody(Sim, 0, physics->rigidBodySlot)->velocity;
-        return &Simulation_GetSimpleRigidBody(Sim, 0, physics->rigidBodySlot)->velocity;
+            return &fgSimulation.GetRigidBody(physics->rigidBodySlot)->velocity;
+        return &fgSimulation.GetSimpleRigidBody(physics->rigidBodySlot)->velocity;
     }
     if (pathHandle != NULL)
         return &pathHandle->velocity;

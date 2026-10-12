@@ -9,6 +9,7 @@
 
 #include <bit>
 
+#include "Simulation.h"
 #include "../../helpers.h"
 #include "../camera/Camera.h"             // RCamera, RViewCamera, AsCoord3
 #include "../camera/PlayerCamera.h"       // RPlayerCamera
@@ -43,7 +44,6 @@
 #define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
 
 // ---- globals
-#define SimState I32_AT(0x00234e24)                     // Sim.simState
 
 // The bullet streaks' batches
 // XBE_GLOBAL(0x001f5ed0, 0x10)
@@ -169,7 +169,6 @@ constexpr uint32_t kTextureWrap = 1;
 constexpr uint32_t kTextureClamp = 3;
 // GeoPrimState's shading: Gouraud
 constexpr uint32_t kShadingGouraud = 1;
-constexpr int32_t kSimPaused = 3;
 
 const char kGeoPrimNew[] = "EAGL::GeoPrim new";
 
@@ -552,7 +551,7 @@ void RMuzzleFlash::DrawPOV(const MATRIX4 *transform, const Coord4 *position, int
     request->positions.SetData(MuzzleFlashPOVPositions);
     request->colours.SetData(MuzzleFlashColours);
     EAGL::TAR *texture;
-    if (SimState != kSimPaused) {
+    if (fgSimulation.simState != kSimPaused) {
         request->texCoords.SetData(MuzzleFlashPOVUVs[RandomShort() % 4]);
         texture = MuzzleFlashPOVTypes[type].textures[RandomShort() % 3];
     } else {

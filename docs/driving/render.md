@@ -74,10 +74,14 @@ The jump-table rule held: only RColorize::SetEnabled has a table (four entries, 
 
 ## Odd things in the original, kept
 
+Every area's entries, by kind and with addresses: docs/driving/original-quirks.md.
+
 - The state manager fills a table of blend factors ("Zero", "One" ... "InvConstA", 0x001f2878) beside the blend
   operations' and never looks anything up in it; the glare manager flips a word on every DrawGlares that nothing
   reads.
 - ROffscreenBuffer::MakeTexCopy has four copy offsets; asked for more, it reads past them into its own stack frame.
+  The port does not reproduce that: it draws the extra copies at (0, 0), with an untested warning - a deviation to
+  revisit if a caller ever asks for more than four (docs/driving/original-quirks.md).
 - RReflection::RenderView stores the float 4080.0 in the fog's mode word while it draws.
 - PrivateSubmitSceneObj does not check that it found the slot ranked 3.
 - ReflPrivateData's destructor frees the lighting records with delete, not delete[], and leaves their names;

@@ -4,7 +4,7 @@
 #include "../engine/UMemory.hpp"
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
-#include "../physics/Simulation.h"
+#include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../world/World.h"               // ArticleEffect
 
@@ -20,8 +20,6 @@
 
 // ---- globals
 
-#define TheSimulation ((void *)0x00233ff0)
-#define SimTimeStep FLOAT_AT(0x00234e30)                    // the simulation's step, in seconds
 
 static RSceneObj_vtbl *const kSkeletalObjVtable = (RSceneObj_vtbl *)0x00191c78;
 
@@ -94,7 +92,7 @@ void RSkeletalObj::AllocateSkeleton(uint32_t count) {
 // a spring the torque pushes past 0 the wrong way, harder than its threshold, is released and comes to rest at 0.
 // FUNC_AT(0x00090cf0)
 bool RSkeletalObj::UpdateSpringMassSystem(RigidBody *body, CARP::Instance *, const Coord3 *point, const Coord3 *axis, float torqueThreshold, float mass, float limit, float *angle, float *angularVelocity) {
-    float timeStep = SimTimeStep;
+    float timeStep = fgSimulation.timeStep;
     Coord4 lever = {point->x, point->y, point->z, 1.0f};
     VU0_v4scale(&lever, 0.5f, &lever);
     Coord4 unitAxis = {axis->x, axis->y, axis->z, 1.0f};
@@ -217,7 +215,7 @@ void RSkeletalObj::UpdatePosition(bool force) {
         CARP::Instance *instance = &handle->Instances()[effect->instance];
         if (instance->procAnimType != kProcAnimXFormTransform)
             continue;
-        RigidBody *body = Simulation_GetRigidBody(TheSimulation, 0, physics->rigidBodySlot);
+        RigidBody *body = fgSimulation.GetRigidBody(physics->rigidBodySlot);
         ArticleSpringEffect *spring = &effect->spring;
         bool moving = UpdateSpringMassSystem(body, instance, &effect->position, &spring->axis, spring->torqueThreshold,
                                              spring->mass, spring->limit, &spring->angle, &spring->angularVelocity);

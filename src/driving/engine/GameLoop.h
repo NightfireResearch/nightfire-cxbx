@@ -31,19 +31,47 @@ struct LaunchPage {
     char loaderReady[12];       // +0x4b4 "LOADER READY": set, this image has run before (a relaunch between parts)
     uint8_t unknown4c0[0x34];
     char missionName[16];       // +0x4f4 the track to load (MissionName)
-    uint8_t unknown504[0x3c];
+    // The mission manager's score fields (SMissionManager::TallyScores, ClearScoreBuffer; names ours where the code
+    // does not say)
+    int32_t accumulatedScores[12];  // +0x504 each part's scores added, by MissionScore
+    int32_t accumulatedValues;  // +0x534 the six best scores TallyScores sums, added
+    int32_t unknown538;
+    int32_t lives;              // +0x53c RestoreLives': 3, or 2 on difficulty 2
     char localeFile[12];        // +0x540 the locale's string file, "IDL_ENG.LOC" and so on
-    uint8_t unknown54c[0x38];
+    uint8_t unknown54c[0x34];
+    int32_t unknown580;         // +0x580 the manager's unknown4fc, added
     int32_t dolbyAudio;         // +0x584 non-zero: gDAudio
-    uint8_t unknown588[0x50];
+    int32_t shotsFired;         // +0x588 added
+    int32_t shotsHit;           // +0x58c
+    int32_t kills;              // +0x590
+    int32_t unknown594;         // +0x594 the manager's unknown500, added
+    int32_t zeroScoreTime;      // +0x598 the mission sets', added
+    int32_t fullScoreTime;      // +0x59c
+    int32_t missionTime;        // +0x5a0 seconds, added; CalcEndMissionScores counts it with this part's
+    int32_t unknown5a4;         // +0x5a4 the sets' unknown2e4, added
+    int32_t damageZeroScore;    // +0x5a8 added
+    int32_t damage;             // +0x5ac added, truncated
+    int32_t stylinCount;        // +0x5b0 added
+    int32_t unknown5b4;         // +0x5b4 the sets' unknown2e8, added
+    int32_t unknown5b8[3];      // +0x5b8 the last set's unknown2d0
+    float unknown5c4;           // +0x5c4 1 - accumulated score 8 / best score 8
+    float unknown5c8;           // +0x5c8 accumulated score 3 / best score 3
+    float unknown5cc;           // +0x5cc accumulated score 2 / best score 2
+    uint8_t unknown5d0[0x8];
     int32_t unknown5d8;         // +0x5d8 non-zero lets the outro movie play after a failed mission
     int32_t driveCount;         // +0x5dc counted up by every start of the driving engine
-    uint8_t unknown5e0[0x34];
+    uint8_t unknown5e0[0x4];
+    int32_t bestScores[12];     // +0x5e4 the sets' best scores, added, by MissionScore
     int32_t unknown614;         // +0x614 2 when unknown970 is set, else 0
     int32_t bootCount;          // +0x618 counted up by every start of main; 1 on the first
-    uint8_t unknown61c[0x8];
+    float healthRatio;          // +0x61c the health left at the end of the last part (0 to 1)...
+    float shieldRatio;          // +0x620 ... and shield: ResetCharInfo carries them into the next part
     int32_t savedDifficulty;    // +0x624 the difficulty as the action engine wrote it (1-4)
-    uint8_t unknown628[0x338];
+    uint8_t unknown628[0x4];
+    int32_t restartStep;        // +0x62c above zero: the mission manager restarts the track once the step count
+                                //        passes it
+    int32_t restartCount;       // +0x630 counted up by each of those restarts
+    uint8_t unknown634[0x32c];
     uint32_t handOver;          // +0x960 non-zero: the action engine sent us here, the fields below are valid
     int32_t effectsVolume;      // +0x964 0-100
     int32_t musicVolume;        // +0x968 0-100
@@ -59,9 +87,9 @@ struct LaunchPage {
     int32_t controllerPort;     // +0x990 the player's controller: the movies' skip pad, IFeedback's port
     int32_t vibration;          // +0x994 non-zero: force feedback on (IFeedback)
     uint8_t unknown998[0x8];
-    uint32_t flags;             // +0x9a0
-    uint32_t cheats;            // +0x9a4 (name ours)
-    uint8_t unknown9a8[0x6c];
+    uint32_t flags;             // +0x9a0 LaunchFlags
+    uint32_t cheats;            // +0x9a4 (name ours) bit 0: the mission manager doubles the scheduler's time scale
+    int32_t summary[27];        // +0x9a8 TallyScores' summary of the totals
     int32_t drivingConfig;      // +0xa14 the driving control configuration chosen (InputConfigManager)
     int32_t unknowna18;         // +0xa18
     int32_t videoMode;          // +0xa1c 0 NTSC, 2 PAL, 3 PAL60, 5 (PAL as well)
@@ -69,7 +97,8 @@ struct LaunchPage {
     int32_t invertedControls;   // +0xa24 non-zero: inverted controls (InputConfigManager)
     int32_t audioMode;          // +0xa28
     int32_t subtitles;          // +0xa2c non-zero: subtitles on
-    uint8_t unknowna30[0x10];
+    uint8_t unknowna30[0xc];
+    int32_t unknowna3c;         // +0xa3c 3 or 4: SMissionManager::Load raises event 5
     int32_t autoAim;            // +0xa40 zero: no auto-drive target angles (name ours)
     int32_t unknowna44;         // +0xa44 the auto-drive camera's lock-on input reads it
     int32_t autoSwitch;         // +0xa48 non-zero: a weapon selection left empty steps on to the next (name ours)
@@ -83,6 +112,21 @@ struct LaunchPage {
     // (0x00130740). Only when the loader is present.
     void ReturnToAction(int target);
 };
+#define Launch (*(LaunchPage *)0x00243b90)
+
+// LaunchPage::flags bits the game reads (names ours, from what the code does with them)
+enum LaunchFlags : uint32_t {
+    kLaunchRegenerateHealth = 0x001,    // the mission manager: health creeps back while below a third
+    kLaunchFlag2 = 0x002,               // shots take no ammunition
+    kLaunchInvulnerable = 0x004,        // 10000 health every step; with 0x200 and 0x800 a shield multiplier
+    kLaunchFlag8 = 0x008,               // SWeaponManager::doubleShot
+    kLaunchJungleTruck = 0x100,         // SMissionManager::GetCarType answers "jungle_truck"
+    kLaunchShieldTimes2 = 0x200,
+    kLaunchShieldTimes3 = 0x400,
+    kLaunchShieldTimes4 = 0x800,
+    kLaunchFlag1000 = 0x1000,           // a GHud::CheatMsgHandler toggle: doubled damage, explosions
+};
+
 static_assert(sizeof(LaunchPage) == 0xa4c, "the launch page is 0xa4c bytes");
 static_assert(offsetof(LaunchPage, missionName) == 0x4f4 && offsetof(LaunchPage, localeFile) == 0x540 &&
                   offsetof(LaunchPage, bootCount) == 0x618 && offsetof(LaunchPage, handOver) == 0x960 &&
@@ -90,7 +134,11 @@ static_assert(offsetof(LaunchPage, missionName) == 0x4f4 && offsetof(LaunchPage,
                   offsetof(LaunchPage, flags) == 0x9a0 && offsetof(LaunchPage, subtitles) == 0xa2c &&
                   offsetof(LaunchPage, povConfig) == 0x98c && offsetof(LaunchPage, vibration) == 0x994 &&
                   offsetof(LaunchPage, drivingConfig) == 0xa14 && offsetof(LaunchPage, invertedControls) == 0xa24 &&
-                  offsetof(LaunchPage, autoAim) == 0xa40,
+                  offsetof(LaunchPage, autoAim) == 0xa40 && offsetof(LaunchPage, accumulatedScores) == 0x504 &&
+                  offsetof(LaunchPage, lives) == 0x53c && offsetof(LaunchPage, unknown580) == 0x580 &&
+                  offsetof(LaunchPage, unknown5cc) == 0x5cc && offsetof(LaunchPage, bestScores) == 0x5e4 &&
+                  offsetof(LaunchPage, healthRatio) == 0x61c && offsetof(LaunchPage, restartStep) == 0x62c &&
+                  offsetof(LaunchPage, summary) == 0x9a8 && offsetof(LaunchPage, unknowna3c) == 0xa3c,
               "launch page offsets");
 
 // A key/value line in a tuning file (Ghidra: OptionParser, 8 bytes): where the value after `key` starts in the

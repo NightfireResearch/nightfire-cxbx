@@ -11,7 +11,7 @@
 #include "../../helpers.h"
 #include "../anim/Actor.h"              // ActActorDatabase
 #include "../anim/AnimEngine.h"         // Handle
-#include "../physics/Simulation.h"
+#include "../game/Simulation.h"
 #include "../render/Colorize.h"
 #include "../render/Decals.h"
 #include "../render/Fog.h"
@@ -105,10 +105,7 @@ struct SceneObjDescFields {
 #define RWorldCameraVtable ((void **)0x001924e4)
 #define RRenderWorldCameraVtable ((void **)0x00191b2c)
 #define RPlayerViewCameraVtable ((void **)0x00191910)
-#define Sim ((void *)0x00233ff0)                                // the Simulation
-#define SimStepCount U32_AT(0x00234e34)
 // The Simulation's cars, the player's first (Ghidra's name)
-#define SimCars (*(GameVector<PVehicle *> *)0x00234e3c)
 #define GameTick U32_AT(0x001f2a4c)                             // the game's tick (RGlareManager.cpp's GlareTick)
 // GetAnchorMatrix4's matrix, made the identity on its first call (a function-local static and its guard)
 // XBE_GLOBAL(0x001f2d20, 0x40)
@@ -170,11 +167,11 @@ char inputQueueName[] = "WorldCameraQ";
 static_assert(sizeof(ActionQueue) == 0x974, "an ActionQueue is 0x974 bytes");
 
 RigidBody *RigidBodyOf(const PhysicsObject *object) {
-    return Simulation_GetRigidBody(Sim, 0, object->rigidBodySlot);
+    return fgSimulation.GetRigidBody(object->rigidBodySlot);
 }
 
 SimpleRigidBody *SimpleBodyOf(const PhysicsObject *object) {
-    return Simulation_GetSimpleRigidBody(Sim, 0, object->rigidBodySlot);
+    return fgSimulation.GetSimpleRigidBody(object->rigidBodySlot);
 }
 
 void DeleteHandle(Handle *handle) {
@@ -433,7 +430,7 @@ Coord3* RWorldCamera::GetAnchorLinearVelocity() {
         return reinterpret_cast<Coord3 *>(&AnchorNoVelocity);
     if (object->flags & PhysicsObject::kSimpleBody)
         return &SimpleBodyOf(object)->velocity;
-    AIVehicle *vehicle = AIVehicleOf(SimCars.first[0]);
+    AIVehicle *vehicle = AIVehicleOf(fgSimulation.cars.first[0]);
     if (vehicle != NULL && AIVehicle_GetSplinePath(vehicle, 0) != NULL)
         return &AIVehicle_GetSplinePath(vehicle, 0)->path->velocity;
     return &RigidBodyOf(object)->velocity;
@@ -523,7 +520,7 @@ bool RWorldCamera::LoadSingleAnimationFromList(uint32_t id) {
 bool RWorldCamera::PlayCurrentAnimation() {
     if (animHandle == NULL)
         return false;
-    animHandle->ProcessStimuli(animSystemId, kCameraStimulus, SimStepCount, 2);
+    animHandle->ProcessStimuli(animSystemId, kCameraStimulus, fgSimulation.stepCount, 2);
     return animHandle->IsSystemPlaying(animSystemId);
 }
 
@@ -612,7 +609,7 @@ void RWorldCamera::AnchorRelativeCamera(bool smooth, const Coord3 *offset) {
 
 // FUNC_AT(0x00097ee0)
 void RWorldCamera::RestartCamera() {
-    SetAnchor(SimCars.first[0]);
+    SetAnchor(fgSimulation.cars.first[0]);
     modeChangeFlags |= kAnchorChanged;
     VU0_v4Init(&eye);
     VU0_v4Init(&lookAt);
@@ -765,7 +762,7 @@ void RRenderWorldCamera::DrawVehiclesAndDeferredSceneObjects() {
 
 // FUNC_AT(0x0008cd10)
 void RRenderWorldCamera::DrawTyreTracks() {
-    for (PVehicle **car = SimCars.first; car != SimCars.last; car++) {
+    for (PVehicle **car = fgSimulation.cars.first; car != fgSimulation.cars.last; car++) {
         for (int wheel = 0; wheel < kWheels; wheel++) {
             if (TyreTrack(*car, wheel) != NULL)
                 TyreTrack(*car, wheel)->Draw();
@@ -775,7 +772,7 @@ void RRenderWorldCamera::DrawTyreTracks() {
 
 // FUNC_AT(0x0008cd60)
 void RRenderWorldCamera::DrawBulletStreaks() {
-    for (Shell **shell = SimShells.first; shell != SimShells.last; shell++) {
+    for (Shell **shell = fgSimulation.shells.first; shell != fgSimulation.shells.last; shell++) {
         Coord4 direction;
         VU0_v4unitxyz(&SimpleBodyOf(*shell)->velocity, &direction);
         int streak = (*shell)->streakKind;
@@ -784,16 +781,16 @@ void RRenderWorldCamera::DrawBulletStreaks() {
     }
     RayShell::DrawTracers();
     RayShell::DrawFlashes();
-    for (Missile **missile = SimMissiles.first; missile != SimMissiles.last; missile++)
+    for (Missile **missile = fgSimulation.missiles.first; missile != fgSimulation.missiles.last; missile++)
         (*missile)->Render(viewId == 0);
-    for (Grenade **grenade = SimGrenades.first; grenade != SimGrenades.last; grenade++)
+    for (Grenade **grenade = fgSimulation.grenades.first; grenade != fgSimulation.grenades.last; grenade++)
         (*grenade)->Render(viewId == 0);
 }
 
 // A light ahead of the player's car.
 // FUNC_AT(0x0008ce50)
 void RRenderWorldCamera::AddPlayerHeadlight() {
-    PVehicle *car = SimCars.first[0];
+    PVehicle *car = fgSimulation.cars.first[0];
     const Coord3 *position = &RigidBodyOf(car)->position;
     const Coord4 *forward = MatrixRow(&RigidBodyOf(car)->info->orientation, 2);
     Coord4 light = { position->x, position->y, position->z, kHeadlightW };
@@ -860,7 +857,7 @@ void RRenderWorldCamera::DoRender() {
         fgRenderer->DisableAlphaWrites();
     }
     DrawPostProcessingEffects();
-    if (HeadlightsEnabled && (SimCars.first[0]->renderObject->damagedZones & kHeadlightsBroken) != kHeadlightsBroken)
+    if (HeadlightsEnabled && (fgSimulation.cars.first[0]->renderObject->damagedZones & kHeadlightsBroken) != kHeadlightsBroken)
         AddPlayerHeadlight();
 }
 

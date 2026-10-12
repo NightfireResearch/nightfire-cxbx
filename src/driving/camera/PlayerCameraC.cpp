@@ -15,14 +15,15 @@
 
 #include "../../common/xbeOverload.h"
 #include "../../helpers.h"
-#include "../engine/CoreContainers.h"   // GameVector
 #include "../engine/SimRandom.h"        // Noise
 #include "../engine/UMemory.hpp"
+#include "../game/Explosion.h"
+#include "../game/Simulation.h"
+#include "../game/Vehicle.h"            // PVehicle
 #include "../physics/PhysicsMath.h"     // Abs
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
-#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"      // MEM_fill
 #include "../platform/X87.h"
@@ -38,26 +39,7 @@
 #define BlendVectors ((void (*)(Coord4 *out, const Coord4 *from, const Coord4 *to, float t))0x00022870)
 #define Instance_SetMatrix ((void (__fastcall *)(CARP::Instance *, int, const MATRIX4 *))0x00035610)     // FUN_00035610: the axes and position
 
-namespace {
-
-// The explosions the shake measures (an object with its size after PhysicsObject's fields)
-struct ShakeSource : PhysicsObject {
-    uint32_t unknown6C;
-    float size;                         // +0x70
-};
-
-}  // namespace
-
 // ---- globals
-#define Sim ((void *)0x00233ff0)                                    // the Simulation
-#define SimState I32_AT(0x00234e24)
-#define SimTimeStep FLOAT_AT(0x00234e30)                            // the simulation's step, in seconds
-#define SimStepCount I32_AT(0x00234e34)
-#define SimStepsPerSecond I32_AT(0x00234e2c)
-#define PlayerObjects (*(GameVector<PhysicsObject *> *)0x00234e3c)  // the players' objects; the first is ours
-#define Explosions (*(GameVector<ShakeSource *> *)0x00234ebc)
-// XBE_GLOBAL(0x002343a0, 0x180)
-#define SimpleBodyOwners ((PhysicsObject **)0x002343a0)             // [96] the simple bodies' owners, by slot
 
 // XBE_GLOBAL(0x001ec3e8, 4)
 int32_t HeliGroundCount;                                // the heli camera's ground-contact count, 0-80
@@ -68,7 +50,6 @@ alignas(16) MATRIX4 AimMatrix;                          // GetAimMatrix4's answe
 // XBE_GLOBAL(0x001ec3a0, 0x10)
 alignas(16) Coord4 ShakeOrigin;
 
-constexpr int32_t kSimState3 = 3;
 constexpr unsigned kVirtualUpdateCamera = 3;
 constexpr float kAnimationFieldOfView = 33.0f;
 constexpr int kMaxHeliGroundCount = 80;
@@ -132,19 +113,19 @@ static void ProbeCollision(WCollider *collider, const Coord4 *segment, WorldColl
 // FUNC_AT(0x00086bb0)
 bool RPlayerCamera::CheckObjectCollisions(Coord4 *position) {
     bool adjusted = false;
-    for (PhysicsObject **it = PlayerObjects.first; it != PlayerObjects.last; ++it) {
+    for (PVehicle **it = fgSimulation.cars.first; it != fgSimulation.cars.last; ++it) {
         PhysicsObject *object = *it;
         if (object == anchor)
             continue;
-        RigidBody *body = Simulation_GetRigidBody(Sim, 0, object->rigidBodySlot);
+        RigidBody *body = fgSimulation.GetRigidBody(object->rigidBodySlot);
         float radius = VU0_v3lengthsquare(&body->info->halfExtents) * fgCameraConstants.kCameraObjectSphereRad;
         if (VU0_v3distancesquare(&body->position, position) <= radius)
             adjusted = AdjustCamAroundObjectEllipse(position, body, NULL, 0);
     }
     for (int slot = 0; slot < 96; slot++) {
-        if (SimpleBodyOwners[slot] == NULL)
+        if (fgSimulation.simpleRigidBodyOwners[slot] == NULL)
             continue;
-        SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, slot);
+        SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(slot);
         if (body->bodyType != kSimpleHelicopter)
             continue;
         float radius = body->radius * fgCameraConstants.kCameraObjectSphereRad;
@@ -256,12 +237,12 @@ void RPlayerCamera::CheckForCameraShaking() {
     }
     float scale = fgCameraTables.modes[cameraMode].explosionShakeScale;
     float target = 0.0f;
-    for (ShakeSource **it = Explosions.first; it != Explosions.last; ++it) {
-        ShakeSource *explosion = *it;
+    for (Explosion **it = fgSimulation.explosions.first; it != fgSimulation.explosions.last; ++it) {
+        Explosion *explosion = *it;
         float size = explosion->size * 5.0f;
         if (size < 50.0f)
             continue;
-        SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, explosion->rigidBodySlot);
+        SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(explosion->rigidBodySlot);
         double distanceSquared = VU0_v3distancesquare(&eye, &body->position);
         if (distanceSquared < size) {
             double amount = (size - distanceSquared) * fgCameraConstants.kExplosionScale * scale;
@@ -272,7 +253,7 @@ void RPlayerCamera::CheckForCameraShaking() {
             target = (float)amount;
             if (amount > shakeAmount)
                 shakeAmount = (float)amount;
-            int steps = Truncate((float)((double)SimStepsPerSecond * fgCameraConstants.kExplosionTimeScale * size * scale * 0.06f));
+            int steps = Truncate((float)((double)fgSimulation.stepsPerSecond * fgCameraConstants.kExplosionTimeScale * size * scale * 0.06f));
             shakeStepsLeft = steps > shakeStepsLeft ? steps : shakeStepsLeft;
         }
     }
@@ -280,7 +261,7 @@ void RPlayerCamera::CheckForCameraShaking() {
     if (--shakeStepsLeft <= 0)
         return;
     shakeAmount = (float)(((double)target - shakeAmount) * fgCameraConstants.kExplosionAfterShock * scale + shakeAmount);
-    float time = (float)((double)SimStepCount / kExplosionShakePeriod);
+    float time = (float)((double)fgSimulation.stepCount / kExplosionShakePeriod);
     float across = (float)(Noise::Noise1(time) * shakeAmount);
     float up = (float)(Noise::Noise1(time * 3.618f) * shakeAmount);
     Coord4 *right = MatrixRow(&matrix, 0);
@@ -310,7 +291,7 @@ MATRIX4* RPlayerCamera::GetAimMatrix4(float yawScale, float pitchScale) {
         return &aimMatrix;
     if (yawScale == 0.0f && pitchScale == 1.0f)
         return &matrix;
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, PlayerObjects.first[0]->rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(fgSimulation.cars.first[0]->rigidBodySlot);
     Coord4 yawAxis = *MatrixRow(&body->info->orientation, 1);
     Coord4 pitchAxis = *MatrixRow(&body->info->orientation, 0);
     MATRIX4 pitch, yaw;
@@ -325,13 +306,13 @@ MATRIX4* RPlayerCamera::GetAimMatrix4(float yawScale, float pitchScale) {
 void RPlayerCamera::UpdateCamera() {
     if (fgCameraTables.modes == NULL || !active)
         return;
-    if (SimStepCount == lastUpdateStep && SimState != kSimState3)
+    if (fgSimulation.stepCount == lastUpdateStep && fgSimulation.simState != kSimPaused)
         return;
-    lastUpdateStep = SimStepCount;
-    if (SimState != kSimState3)
+    lastUpdateStep = fgSimulation.stepCount;
+    if (fgSimulation.simState != kSimPaused)
         directorQueue->ProcessDirectorLogic();
     (this->*XbeOriginal<decltype(&RPlayerCamera::UpdateCamera)>((size_t)fgCameraTables.modes[cameraMode].update))();
-    if ((fgCameraTables.modes[cameraMode].shake || shaking) && SimState != kSimState3)
+    if ((fgCameraTables.modes[cameraMode].shake || shaking) && fgSimulation.simState != kSimPaused)
         CheckForCameraShaking();
     modeChangeFlags = 0;
 }
@@ -342,7 +323,7 @@ void RPlayerCamera::UpdateMomentumHeliCam() {
     if (mode->index < 0 || mode->index >= fgCameraTables.heliCount)
         return;
     float previousDistance = unknown228;
-    bool replay = SimState == kSimState3;
+    bool replay = fgSimulation.simState == kSimPaused;
     const HeliCamInfo *arm = &fgCameraTables.helis[mode->index];
     const HeliArmInfo *armPosition = &arm->arms[currentArm];
     bool zoom = true;
@@ -350,7 +331,7 @@ void RPlayerCamera::UpdateMomentumHeliCam() {
     const Coord4 *anchorPosition = AsVector4(GetAnchorPosition());
 
     // The offset from the anchor, pulled in with speed and stirred by noise
-    Coord4 offset;
+    Coord4 offset = {};
     VU0_v4copy(&armPosition->sideways, &offset);
     if (state->lookingBack == 1 && mode->lookBack) {
         offset.z = -offset.z;
@@ -364,9 +345,9 @@ void RPlayerCamera::UpdateMomentumHeliCam() {
         float calm = (float)((20.0f - (double)GetAnchorSpeed()) * 0.05f);
         const Coord3 *position = GetAnchorPosition();
         Coord4 noise;
-        noise.x = (float)(Noise::Noise1((float)(((double)SimStepCount * 0.5f + position->x) * arm->noiseFrequency)) *
+        noise.x = (float)(Noise::Noise1((float)(((double)fgSimulation.stepCount * 0.5f + position->x) * arm->noiseFrequency)) *
                           calm * arm->noiseAmount);
-        noise.y = (float)(Noise::Noise1((float)(((double)SimStepCount * 0.3f + position->y) * arm->noiseFrequency)) *
+        noise.y = (float)(Noise::Noise1((float)(((double)fgSimulation.stepCount * 0.3f + position->y) * arm->noiseFrequency)) *
                           calm * arm->noiseAmount);
         noise.z = 0.0f;
         noise.w = 0.0f;
@@ -434,7 +415,7 @@ void RPlayerCamera::UpdateMomentumHeliCam() {
             smooth = !replay;
         } else {
             float rate = CameraClamp(arm->maxRate,
-                                     (float)(Abs(GetAnchorSpeed()) * ((double)SimTimeStep * 60.0f) * arm->speedRateDiff),
+                                     (float)(Abs(GetAnchorSpeed()) * ((double)fgSimulation.timeStep * 60.0f) * arm->speedRateDiff),
                                      arm->minRate);
             if (unknown13C > 0 && fgCameraTables.modes[lastSelectableCameraMode].type != kCameraDashboard) {
                 if (transitionActive == 1) {
@@ -611,7 +592,7 @@ void RPlayerCamera::UpdateEllipseCam() {
     turns = lap;
     if (lap < 0.0f)
         turns = lap + 1.0f;
-    Coord4 offset;
+    Coord4 offset = {};
     offset.x = (float)(CosineTurns(turns) * ellipse->xRad);
     offset.z = sine * ellipse->zRad;
     offset.w = 0.0f;    // stack the original leaves unset
@@ -912,7 +893,7 @@ void RPlayerCamera::EndMissileCamera() {
     if (!state->unknown20)
         return;
     state->unknown20 = false;
-    SetAnchor(PlayerObjects.first[0]);
+    SetAnchor(fgSimulation.cars.first[0]);
     SetLastSelectableCameraMode(0, 0, false, true);
     modeChangeFlags |= kNoSmoothChange;
     Colorize->SetEnabled(0);
@@ -1036,7 +1017,7 @@ void RPlayerCamera::EndCameraAnim(unsigned short delay, int b, bool c, unsigned 
     RPlayerCamState *camState = state;
     if (!camState->unknown05 && !camState->unknown06)
         return;
-    SetAnchor(PlayerObjects.first[0]);
+    SetAnchor(fgSimulation.cars.first[0]);
     int found = -1;
     if (id != 0) {
         for (int mode = 0; mode < fgCameraTables.modeCount; mode++) {

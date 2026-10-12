@@ -41,10 +41,18 @@ extern uint32_t NoiseRandomState;
 extern uint32_t NoiseRandomMultiplier;
 extern uint32_t NoiseRandomCount;
 
-// Six words: each becomes the bits of `other`'s that it did not have (0x0005cd00, Explosion::Simulate's). The
-// stray function linked after the noise.
+// A bit per body: the rigid bodies 0-63, then the simple ones 64-159 (Explosion::bodiesHit, the Simulation's
+// simpleBodyHits). Four-byte aligned.
+#pragma pack(push, 4)
 struct BitSet192 {
-    uint32_t words[6];
+    union {
+        uint32_t words[6];
+        uint64_t bits[3];               // SimpleRigidBody::CheckCollisions writes them as three
+    };
 
+    // Each word becomes the bits of `other`'s that it did not have (0x0005cd00, Explosion::Simulate's). The stray
+    // function linked after the noise.
     void AndNotFrom(const BitSet192 *other);
 };
+#pragma pack(pop)
+static_assert(sizeof(BitSet192) == 0x18 && alignof(BitSet192) == 4, "192 bits, four-byte aligned");

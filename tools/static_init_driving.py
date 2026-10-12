@@ -87,6 +87,9 @@ TARGETS = {
     0x00037640: ("method", "DAudioTargetList", "Construct"),
     0x00037660: ("method", "DAudioTargetList", "Destruct"),
     0x00037940: ("method", "GameStd::Locale", "Destruct"),
+    0x000b4fe0: ("method", "Simulation", "Construct"),
+    0x000b5310: ("method", "Simulation", "Destruct"),
+    0x000b8490: ("method", "MissionList", "BuyHead"),           # static: it does not read `this`
 }
 # Objects the initialisers construct that our code names, by address: the name and its class. A constructor or
 # destructor of that class is called on the name; for the globals we own (XBE_GLOBAL) this is what makes the
@@ -105,6 +108,7 @@ NAMED = {
     0x00200e30: ("EmpRingState", "EAGL::GeoPrimState"),
     0x002012a0: ("MissileStreakState", "EAGL::GeoPrimState"),  # game/WeaponEffects.cpp
     0x002016d0: ("MuzzleFlashPOVMaterial", "UVolatileMaterial"),
+    0x00233ff0: ("fgSimulation", "Simulation"),                # game/Simulation.h
 }
 # Owned arrays of objects the initialisers construct (a vector constructor) and destroy: the name and the class.
 NAMED_OBJECT_ARRAYS = {
@@ -688,7 +692,9 @@ def main():
             '#include "../data/SymbolTable.h"',
             '#include "../game/DebugAudio.h"',
             '#include "../game/EmpEffect.h"',
+            '#include "../game/MissionManager.h"',
             '#include "../game/Shell.h"',
+            '#include "../game/Simulation.h"',
             '#include "../game/TyreTrack.h"',
             '#include "../game/WeaponEffects.h"',
             '#include "../render/Draw.h"',

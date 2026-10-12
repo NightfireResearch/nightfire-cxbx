@@ -7,8 +7,9 @@
 
 #include "../../common/xbeOverload.h"   // XbeVirtual
 #include "../../helpers.h"
-#include "../engine/MissionManager.h"
+#include "../game/MissionManager.h"
 #include "../engine/UMemory.hpp"
+#include "../game/Simulation.h"
 #include "../physics/PhysicsMath.h"
 #include "../game/VehicleSound.h"    // AVehicle
 #include "../physics/RigidBody.h"
@@ -96,10 +97,6 @@ float PreviousRotationY;
 // XBE_GLOBAL(0x001ec3c4, 4)
 static float DiagonalBoost = 0.005f * 0.2f;             // as a static initialiser made it
 
-#define SimTimeStep FLOAT_AT(0x00234e30)                    // the simulation's step, in seconds
-#define SimStepCount I32_AT(0x00234e34)
-#define SimState I32_AT(0x00234e24)
-#define playerPhysicsObject (*(PVehicle ***)0x00234e40)
 
 // ---- calls to originals not ported
 
@@ -176,12 +173,12 @@ void EaseXYZ(const Coord4 *from, const Coord4 *to, float t, Coord4 *out) {
 }
 
 RigidBody *PlayerBody() {
-    return (*playerPhysicsObject)->GetRigidBody();
+    return fgSimulation.cars.first[0]->GetRigidBody();
 }
 
 AVehicle *PlayerCarAudio() {
     typedef AVehicle *(PVehicle::*GetAudioMethod)();
-    PVehicle *car = *playerPhysicsObject;
+    PVehicle *car = fgSimulation.cars.first[0];
     return (car->*XbeVirtual<GetAudioMethod>(car, PVehicle::kGetAudio))();
 }
 
@@ -536,7 +533,7 @@ void RPlayerCamera::ShakeCamera(int duration, float range, Coord4 *origin, int k
         amount = byRange;
     if (amount > shakeAmount)
         shakeAmount = float(amount);
-    int steps = Truncate(float(double(SimStepsPerSecond * duration) * kOneSixtieth));
+    int steps = Truncate(float(double(fgSimulation.stepsPerSecond * duration) * kOneSixtieth));
     if (steps <= shakeStepsLeft)
         steps = shakeStepsLeft;
     shakeStepsLeft = steps;
@@ -848,7 +845,7 @@ void RPlayerCamera::UpdateSplineCam() {
             along = Widened(roadNav->direction);
         }
         float roadSpeed = speed * cam.splineSpeed;
-        float step = SimTimeStep * roadSpeed;
+        float step = fgSimulation.timeStep * roadSpeed;
 
         // On a road of several lanes, 2.5 to the side of the line along the road nearest the anchor. (The
         // original leaves the offset uninitialised on a road of one lane.)
@@ -956,7 +953,7 @@ void RPlayerCamera::UpdateFixedCam() {
         // the camera's velocity, from where its frame was
         Coord4 previous = *MatrixRow(&matrix, 3);
         VU0_v4sub(&eye, &previous, &unknown50);
-        VU0_v4scale(&unknown50, float(SimStepsPerSecond), &unknown50);
+        VU0_v4scale(&unknown50, float(fgSimulation.stepsPerSecond), &unknown50);
     }
     Coord4 up = {0.0f, 1.0f, 0.0f, 0.0f};
     SetViewingTransform(&up, &unknown50, 0);
@@ -969,7 +966,7 @@ void RPlayerCamera::UpdateFixedCam() {
 // FUNC_AT(0x000853e0)
 void RPlayerCamera::UpdateADWeaponAnims() {
     MATRIX4 carOrientation = PlayerBody()->info->orientation;
-    int now = SimStepCount;
+    int now = fgSimulation.stepCount;
     if (autoDriveArm == -1) {
         int8_t arm = FindAutoDriveArmInd(cameraMode);
         autoDriveArm = arm;
@@ -1020,8 +1017,8 @@ void RPlayerCamera::UpdateADWeaponAnims() {
 
 // FUNC_AT(0x000857d0)
 void RPlayerCamera::UpdateAutoDriveCam() {
-    int now = SimStepCount;
-    if (glbMissionManager->driveMissile != NULL || SimState == 3)
+    int now = fgSimulation.stepCount;
+    if (glbMissionManager->driveMissile != NULL || fgSimulation.simState == 3)
         return;
     MATRIX4 *anchorMatrix = GetAnchorMatrix4();
     Coord3 *anchorPosition = GetAnchorPosition();
@@ -1064,7 +1061,7 @@ void RPlayerCamera::UpdateAutoDriveCam() {
     if (modeChangeFlags & RWorldCamera::kAnchorChanged) {
         Coord4 lookFrom;
         VU0_v4sub(&lookAt, &lookAtOffset, &lookFrom);
-        Coord4 offset;      // (its w is the original's uninitialised stack, copied into cameraOffset.w)
+        Coord4 offset = {};      // (w: the original's is uninitialised stack; ours is 0)
         VU0_MATRIX4_vect3rotate(&arm->relPos, GetAnchorMatrix4(), &offset);
         if (DoSmoothModeChange()) {
             AnchorCamera(true, &arm->anchor.offset);
@@ -1316,7 +1313,7 @@ void RPlayerCamera::UpdateAutoDriveCam() {
 
     // the eye: the arm's offset turned with the frame, from the anchor's point
     if (!(modeChangeFlags & RWorldCamera::kAnchorChanged)) {
-        Coord4 offset;      // (its w is the original's uninitialised stack, as above)
+        Coord4 offset = {};      // (w: the original's is uninitialised stack; ours is 0)
         VU0_MATRIX4_vect3rotate(&arm->relPos, anchorMatrix, &offset);
         if (unknown13C > 0 && transitionActive == 1)
             UpdateTransition(&cameraOffset, &offset);

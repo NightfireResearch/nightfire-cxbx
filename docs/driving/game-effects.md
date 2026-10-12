@@ -122,6 +122,8 @@ perpendicular w, RScorchWorld's centre and cross w.
 
 ## Odd things in the original, kept
 
+Every area's entries, by kind and with addresses: docs/driving/original-quirks.md.
+
 - RVehicle: PostLoad's wheel-instance search can read past the array; RenderFX clears empVictim (and
   `ClearEmpVictim`, which nothing sets); the projected shadow is drawn only when the view distance is below 0.125;
   the destructor does not clear `particles`; StartColourDissolve and TriggerIlluminate ignore arguments.

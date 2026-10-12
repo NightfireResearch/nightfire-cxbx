@@ -11,7 +11,7 @@
 #include "../engine/UMemory.hpp"
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
-#include "../physics/Simulation.h"
+#include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../../helpers.h"
@@ -25,10 +25,6 @@
 
 // ---- globals
 
-#define Sim ((void *)0x00233ff0)                    // the Simulation
-#define SimState I32_AT(0x00234e24)
-#define SimStepCount I32_AT(0x00234e34)
-#define PlayerPhysicsObject (*(PhysicsObject **)PTR_AT(0x00234e40))
 #define OffOnNames ((const char *const *)0x001b6638)    // "Off", "On"
 
 // XBE_GLOBAL(0x00201754, 4)
@@ -38,7 +34,6 @@ const USingletonVtable *const kRParticulateVtable = (const USingletonVtable *)0x
 const USingletonVtable *const kUSingletonVtable = (const USingletonVtable *)0x0018beb0;
 typedef RParticulate *(__fastcall *DeletingDestructor)(RParticulate *particulate, int, unsigned flags);
 
-constexpr int32_t kSimPaused = 3;
 constexpr int kPointList = 1;                       // Draw's primitive
 constexpr int kBatch = 512;                         // points a draw
 constexpr uint32_t kPointDirty = 0x100;             // D3D8's dirty flag for the point states
@@ -145,24 +140,24 @@ void RParticulate::LoadAttributes() {
 
 // FUNC_AT(0x000a3fd0)
 void RParticulate::Update() {
-    if (SimState == kSimPaused || !enabled)
+    if (fgSimulation.simState == kSimPaused || !enabled)
         return;
     float alphaPerDistance = alpha / range;
     float inverseShadeAngle = 1.0f / shadeAngle;
     Coord4 eye = fgRenderer->cameraPosition;
     const float *viewAxis = fgRenderer->currentView->camera->matrix.mtx[2];
-    const Coord3 *at = PlayerPhysicsObject->GetPosition();
+    const Coord3 *at = fgSimulation.cars.first[0]->GetPosition();
     Coord4 player = { at->x, at->y, at->z, 1.0f };
-    const float *carAxis = Simulation_GetRigidBody(Sim, 0, PlayerPhysicsObject->rigidBodySlot)->info->orientation.mtx[2];
+    const float *carAxis = fgSimulation.GetRigidBody(fgSimulation.cars.first[0]->rigidBodySlot)->info->orientation.mtx[2];
     Coord4 heading = { carAxis[0], carAxis[1], carAxis[2], 1.0f };
     Coord4 centre;
     VU0_v4scaleadd4(viewAxis, range, &eye, &centre);
 
     // The drift: each axis's noise at a phase moved on by the step count and by its own last value.
     if (driftAmplitude > 0.0f) {
-        drift.x = float(Noise::Noise1(float((double(SimStepCount) * driftSpeed + drift.x) * driftFrequency)) * driftAmplitude);
-        drift.y = float(Noise::Noise1(float((double(SimStepCount) * driftSpeed + drift.y) * driftFrequency)) * driftAmplitude);
-        drift.z = float(Noise::Noise1(float((double(SimStepCount) * driftSpeed + drift.z) * driftFrequency)) * driftAmplitude);
+        drift.x = float(Noise::Noise1(float((double(fgSimulation.stepCount) * driftSpeed + drift.x) * driftFrequency)) * driftAmplitude);
+        drift.y = float(Noise::Noise1(float((double(fgSimulation.stepCount) * driftSpeed + drift.y) * driftFrequency)) * driftAmplitude);
+        drift.z = float(Noise::Noise1(float((double(fgSimulation.stepCount) * driftSpeed + drift.z) * driftFrequency)) * driftAmplitude);
     }
 
     // A shaded point leaves its channels behind for the points after it.

@@ -14,6 +14,7 @@
 #include "../platform/X87.h"
 #include "../../helpers.h"
 #include "TextureContext.h"
+#include "../game/SimulationContainers.h"
 
 #include <bit>
 #include <math.h>
@@ -27,7 +28,6 @@
 // ---- originals called by address
 
 #define CRT_printf ((int (*)(const char *format, ...))0x00132192)
-#define TreeIterator_Increment ((void (__fastcall *)(TreeNode **, int))0x000b2920)
 
 // ---- globals
 
@@ -529,7 +529,7 @@ void RParticleSystemManager::UpdateSpawnAllSystems() {
     TreeNode *next = systems->Begin();
     while (next != systems->head) {
         TreeNode *node = next;
-        TreeIterator_Increment(&next, 0);
+        reinterpret_cast<PhysicsObjIterator *>(&next)->Inc();
         RParticleSystem *system = node->value.system;
         if (--system->keepAlive > 0) {
             system->vtable->update(system, 0, ticks);

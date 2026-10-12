@@ -19,8 +19,9 @@
 #include "../engine/OBB.h"
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
+#include "../game/MissionRules.h"        // MissionRuleRecord
 #include "../game/Shell.h"             // RayShell
-#include "../physics/Simulation.h"
+#include "../game/Simulation.h"
 #include "../platform/FileSys.h"          // FILE_exists
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"        // MEM_copy
@@ -48,7 +49,6 @@ static WTrigger *TriggerData;                   // the track's triggers (fgTrigg
 static void *TriggerDataCopy;                   // their state at Init, put back by Restart
 // XBE_GLOBAL(0x0023e270, 4)
 uint32_t QueryStamp;                            // the triggers' queryStamp of the current Process
-#define Sim ((void *)0x00233ff0)                    // the Simulation
 
 namespace {
 
@@ -69,14 +69,6 @@ constexpr float kParallel = 0.0001f;            // 0x38d1b717
 constexpr float kLevel = 0.01f;                 // 0x3c23d70a
 constexpr float kAlongX = 0.001f;               // 0x3a83126f
 constexpr float kMinimumBodyRadius = 1.5f;
-
-// A mission rule ('Rule' data, 0x20 bytes): only its events are read here.
-struct MissionRule {
-    uint8_t unknown00[0xc];
-    TriggerEvents *events;      // +0x0c
-    uint8_t unknown10[0x10];
-};
-static_assert(sizeof(MissionRule) == 0x20, "a mission rule is 32 bytes");
 
 void ReportShape(uint8_t shape) {
     Crt_printf("WTrigger - Unsupported trigger Shape: %d\n", shape);
@@ -211,7 +203,7 @@ void WTriggerManager::Restart() {
     }
 
     if (rules != map->DataEnd()) {
-        MissionRule *rule = reinterpret_cast<MissionRule *>(rules->Data());
+        MissionRuleRecord *rule = reinterpret_cast<MissionRuleRecord *>(rules->Data());
         for (int i = 0; i < int(rules->count); i++, rule++)
             ValidateStreams(rule->events, false);
     }
@@ -470,7 +462,7 @@ void WTriggerManager::Process(CARP::Instance *instance) {
 void WTriggerManager::Process(int index, SimpleRigidBody *body) {
     QueryStamp++;
     unsigned touch = 0;
-    PhysicsObject *player = Simulation_GetPlayerObject(Sim, 0);
+    PhysicsObject *player = fgSimulation.GetPlayerObject();
     PhysicsObject *owner = body->GetOwner();
     bool byPlayer = owner->IsOwnedBy(player);
     if (!(body->flags & SimpleRigidBody::kTouchesTriggers))
@@ -525,8 +517,8 @@ void WTriggerManager::Process(int index, SimpleRigidBody *body) {
 void WTriggerManager::Process(int rayShell) {
     ActiveRayShell *ray = RayShell::GetActiveRayShell(rayShell);
     unsigned touch = WTrigger::kOthers;
-    void *owner = Simulation_FindPhysicsObjectSignature(Sim, 0, ray->ownerSignature);
-    bool byPlayer = owner == Simulation_GetPlayerObject(Sim, 0);
+    void *owner = fgSimulation.FindPhysicsObjectSignature(ray->ownerSignature);
+    bool byPlayer = owner == fgSimulation.GetPlayerObject();
     if (byPlayer)
         touch = WTrigger::kOthers | WTrigger::kPlayer;
     alignas(16) Coord4 segment[2] = {
@@ -574,15 +566,15 @@ void WTriggerManager::Process(int rayShell) {
 void WTriggerManager::Update() {
     RayShell::SetTriggerHittingRayShell(-1);
     for (int i = 0; i < kRigidBodies; i++) {
-        if (PhysicsObjects[i] == NULL)
+        if (fgSimulation.rigidBodyOwners[i] == NULL)
             continue;
-        RigidBody *body = Simulation_GetRigidBody(Sim, 0, i);
+        RigidBody *body = fgSimulation.GetRigidBody(i);
         if (body->sleepState == RigidBody::kAwake)
             Process(i, body);
     }
     for (int i = 0; i < kSimpleBodies; i++) {
-        if (SimpleBodyOwners[i] != NULL)
-            Process(i, Simulation_GetSimpleRigidBody(Sim, 0, i));
+        if (fgSimulation.simpleRigidBodyOwners[i] != NULL)
+            Process(i, fgSimulation.GetSimpleRigidBody(i));
     }
     for (RPathHandle *path = RPathEngine::GetFirstPathHandle(); path != NULL; path = RPathEngine::GetNextPathHandle()) {
         if (path->master == NULL)

@@ -4,7 +4,7 @@
 
 #include "PhysicsObject.h"
 #include "RigidBody.h"
-#include "Simulation.h"
+#include "../game/Simulation.h"
 #include "../../helpers.h"
 #include "../engine/CoreFoundation.h"     // NullFunction
 #include "../engine/OBB.h"
@@ -17,8 +17,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- globals
-#define Sim ((void *)0x00233ff0)                    // the Simulation
-#define SimTimeStep FLOAT_AT(0x00234e30)            // the simulation's step, in seconds
 
 namespace {
 
@@ -62,7 +60,7 @@ void SimpleRigidBody::Destruct() {
 
 // FUNC_AT(0x000b1ea0)
 PhysicsObject* SimpleRigidBody::GetOwner() {
-    return SimpleBodyOwners[slot];
+    return fgSimulation.simpleRigidBodyOwners[slot];
 }
 
 // FUNC_AT(0x000b1eb0)
@@ -98,7 +96,7 @@ float SimpleRigidBody::GetScalarVelocity() {
 // FUNC_AT(0x000b1f40)
 void SimpleRigidBody::Accelerate(const Coord3 *acceleration) {
     if (flags & kMoves) {
-        double step = SimTimeStep;
+        double step = fgSimulation.timeStep;
         velocity.x = (float)(step * acceleration->x + velocity.x);
         velocity.y = (float)(step * acceleration->y + velocity.y);
         velocity.z = (float)(step * acceleration->z + velocity.z);
@@ -112,7 +110,7 @@ void SimpleRigidBody::UpdatePosition() {
         VU0_v4scale(&acceleration, 0.98f, &acceleration);
     }
     if (flags & kMoves) {
-        double step = SimTimeStep;
+        double step = fgSimulation.timeStep;
         position.x = (float)(step * velocity.x + position.x);
         position.y = (float)(step * velocity.y + position.y);
         position.z = (float)(step * velocity.z + position.z);
@@ -134,9 +132,9 @@ void SimpleRigidBody::CheckCollisions(uint64_t *hits) {
 
     if (flags & (kNearRigidHits | kBoxRigidHits)) {
         for (int i = 0; i < kRigidBodies; i++) {
-            if (PhysicsObjects[i] == NULL)
+            if (fgSimulation.rigidBodyOwners[i] == NULL)
                 continue;
-            RigidBody *body = Simulation_GetRigidBody(Sim, 0, i);
+            RigidBody *body = fgSimulation.GetRigidBody(i);
             if (body->sleepState == RigidBody::kFrozen)
                 continue;
             alignas(16) Coord4 offset;
@@ -178,9 +176,9 @@ void SimpleRigidBody::CheckCollisions(uint64_t *hits) {
 
     if (flags & (kNearSimpleHits | kBoxSimpleHits)) {
         for (int i = 0; i < kSimpleBodies; i++) {
-            if (i == slot || SimpleBodyOwners[i] == NULL)
+            if (i == slot || fgSimulation.simpleRigidBodyOwners[i] == NULL)
                 continue;
-            SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, i);
+            SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(i);
             if (body->flags & kFlag01)
                 continue;
             Coord3 centre = body->position;
@@ -188,7 +186,7 @@ void SimpleRigidBody::CheckCollisions(uint64_t *hits) {
             if (body->bodyType == kSimpleHuman)
                 centre.y = centre.y + 0.5f;
             if (body->bodyType == kSimpleHelicopter &&
-                static_cast<HelicopterTestOwner *>(SimpleBodyOwners[slot])->unknown139 == 0)
+                static_cast<HelicopterTestOwner *>(fgSimulation.simpleRigidBodyOwners[slot])->unknown139 == 0)
                 centre.y = centre.y + 3.0f;
             alignas(16) Coord4 offset;
             VU0_v4sub(&position, &centre, &offset);
@@ -218,7 +216,7 @@ void SimpleRigidBody::CheckCollisions(uint64_t *hits) {
             ownExtents.z = speed * reach;
             ownExtents.w = 1.0f;
             alignas(16) Coord4 bodyExtents;
-            if (!SimpleBodyOwners[i]->GetCollisionBounds(&bodyExtents)) {
+            if (!fgSimulation.simpleRigidBodyOwners[i]->GetCollisionBounds(&bodyExtents)) {
                 bodyExtents.x = bodyRadius;
                 bodyExtents.y = bodyRadius;
                 bodyExtents.z = bodyRadius;

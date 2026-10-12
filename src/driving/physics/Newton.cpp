@@ -3,7 +3,7 @@
 #include "PhysicsMath.h"
 #include "RigidBody.h"
 #include "SimpleRigidBody.h"
-#include "Simulation.h"
+#include "../game/Simulation.h"
 #include "../../helpers.h"
 #include "../anim/AnimEngine.h"         // Handle
 #include "../engine/PhysicsUtil.h"       // Util_GenerateMatrix
@@ -29,13 +29,10 @@
 
 // ---- the game's, not ported yet
 
-#define Simulation_SpawnNewtonObject ((Newton *(__fastcall *)(void *, int, const Coord4 *direction, const Coord4 *position, const Coord4 *momentum, const Coord4 *spin, CARP::Instance *instances, int instanceCount, float mass, float lifetime))0x000b5e20)
 #define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
 
 // ---- globals
 
-#define Sim ((void *)0x00233ff0)                            // the Simulation
-#define SimTimeStep FLOAT_AT(0x00234e30)                    // the simulation's step, in seconds
 #define IdentityMatrix (*(const MATRIX4 **)0x001c4654)
 
 namespace {
@@ -88,7 +85,7 @@ Newton* Newton::Construct(const Coord3 *direction, const Coord3 *position, const
                           CARP::Instance *instances, int instanceCount, float mass, float lifetime) {
     PhysicsObject::Construct("newton", "Newton", kObjectNewton, 0, true, false);
     vtable = kNewtonVtable;
-    stepsLeft = Ftol((double)SimStepsPerSecond * lifetime);
+    stepsLeft = Ftol((double)fgSimulation.stepsPerSecond * lifetime);
     unknown74 = 0;
     lastPosition = Coord4{position->x, position->y, position->z, 1.0f};
 
@@ -122,10 +119,10 @@ Newton* Newton::Construct(const Coord3 *direction, const Coord3 *position, const
     SetHitPointLoc(&hitPoints);
     static_cast<CARP::Instance *>(renderObject->sourceInstance)->SetDimensions(false, kInstanceSize, 0.0f, 0.0f);
 
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     if (body != NULL)
         body->Construct(rigidBodySlot, kSimpleNewton, position, &velocity, spin, &orientation, kBodyRadius, mass);
-    Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->flags |= SimpleRigidBody::kMoves;
+    fgSimulation.GetSimpleRigidBody(rigidBodySlot)->flags |= SimpleRigidBody::kMoves;
     return this;
 }
 
@@ -155,9 +152,9 @@ int Newton::ApplyDamage(const void *, const void *, float, float, int, const uin
 // gravity accelerates the body.
 // FUNC_AT(0x00060b70)
 void Newton::Simulate() {
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     if (--stepsLeft <= 0) {
-        Simulation_DeletePhysicsObject(Sim, 0, this);
+        fgSimulation.DeletePhysicsObjectThunk(this);
     } else {
         Coord4 segment[2];
         segment[0] = lastPosition;
@@ -167,7 +164,7 @@ void Newton::Simulate() {
         Coord4 spin = midpoint;
         Coord4 q = body->orientation;
         Coord4 turn;
-        VU0_v4scale(&spin, SimTimeStep, &turn);
+        VU0_v4scale(&spin, fgSimulation.timeStep, &turn);
 
         WorldCollisionInfo closest, none, ground;
         WorldCollisionInfo_Construct(&closest, 0);
@@ -273,12 +270,12 @@ void Newton::SpawnFromEvent(float mass, float lifetime, CARP::Instance *instance
     float speed = 0.0f;
     if (body >= 0) {
         if (simpleBody) {
-            SimpleRigidBody *simple = Simulation_GetSimpleRigidBody(Sim, 0, body);
+            SimpleRigidBody *simple = fgSimulation.GetSimpleRigidBody(body);
             kick = Coord4{simple->velocity.x, simple->velocity.y, simple->velocity.z, 0.0f};
             spin = Coord4{simple->acceleration.x, simple->acceleration.y, simple->acceleration.z, 0.0f};
             speed = simple->GetScalarVelocity();
         } else {
-            RigidBody *rigid = Simulation_GetRigidBody(Sim, 0, body);
+            RigidBody *rigid = fgSimulation.GetRigidBody(body);
             kick = Coord4{rigid->velocity.x, rigid->velocity.y, rigid->velocity.z, 0.0f};
             spin = Coord4{rigid->angularVelocity.x, rigid->angularVelocity.y, rigid->angularVelocity.z, 0.0f};
             speed = VU0_v3length(&rigid->velocity);
@@ -315,7 +312,7 @@ void Newton::SpawnFromEvent(float mass, float lifetime, CARP::Instance *instance
             sceneObj->GetCollisionInfo(&centre, &extents);
         } else if (!modelInstance && !simpleBody && body != -1) {
             // behind the instance as seen from the body, by the body's speed in x/z, at least 4 high
-            RigidBody *rigid = Simulation_GetRigidBody(Sim, 0, body);
+            RigidBody *rigid = fgSimulation.GetRigidBody(body);
             Coord4 away, direction;
             VU0_v4sub(MatrixRow(&matrix, 3), &rigid->position, &away);
             away.y = Max(0.0f, away.y) + kAwayLift;
@@ -349,8 +346,8 @@ void Newton::SpawnFromEvent(float mass, float lifetime, CARP::Instance *instance
         Coord4 from = {matrix.mtx[3][0], matrix.mtx[3][1], matrix.mtx[3][2], 0.0f};
         const Coord4 &view = fgRenderer->cameraPosition;
         Coord4 target = {view.x, view.y, view.z, 0.0f};
-        PhysicsObject *player = Simulation_GetPlayerObject(Sim, 0);
-        const Coord3 &playerVelocity = Simulation_GetRigidBody(Sim, 0, player->rigidBodySlot)->velocity;
+        PhysicsObject *player = fgSimulation.GetPlayerObject();
+        const Coord3 &playerVelocity = fgSimulation.GetRigidBody(player->rigidBodySlot)->velocity;
         Coord4 lead = {playerVelocity.x, playerVelocity.y, playerVelocity.z, 0.0f};
         VU0_v4scale(&lead, kFlightTime, &lead);
         VU0_v3add(&target, &lead, &target);
@@ -365,7 +362,7 @@ void Newton::SpawnFromEvent(float mass, float lifetime, CARP::Instance *instance
         VU0_v3add(&kick, &centre, &kick);
         VU0_v4scale(&kick, kickScale * mass, &kick);
     }
-    Simulation_SpawnNewtonObject(Sim, 0, MatrixRow(&matrix, 2), MatrixRow(&matrix, 3), &kick, &spin, instance,
-                                 instanceCount, mass, lifetime);
+    fgSimulation.SpawnNewtonObject(Xyz(MatrixRow(&matrix, 2)), Xyz(MatrixRow(&matrix, 3)), Xyz(&kick), Xyz(&spin),
+                                   instance, instanceCount, mass, lifetime);
     instance->flags |= kWorldInstanceSceneObj;
 }

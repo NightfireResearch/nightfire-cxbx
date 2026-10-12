@@ -5,7 +5,7 @@
 #include "../../helpers.h"
 #include "../engine/CoreFoundation.h"      // ThrowLengthError
 #include "../engine/GameInterfaces.hpp"    // GHud
-#include "../engine/MissionManager.h"
+#include "../game/MissionManager.h"
 #include "../engine/UMemory.hpp"
 #include "../game/WeaponSound.h"       // ATargeting
 #include "../game/AICharacter.h"
@@ -14,7 +14,7 @@
 #include "../camera/PlayerCamera.h"     // RCamera, RViewCamera, RPlayerCamera
 #include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
-#include "../physics/Simulation.h"
+#include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../render/Renderer.h"
 #include "../render/RenderHigh.h"
@@ -59,11 +59,6 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 
 #define ViewWidth I32_AT(0x001f2d7c)                             // the view's size in pixels (names ours)
 #define ViewHeight I32_AT(0x001f2d80)
-#define Sim ((void *)0x00233ff0)                                 // the Simulation
-#define SimState I32_AT(0x00234e24)
-#define SimTimeStep FLOAT_AT(0x00234e30)                         // the simulation's step, in seconds
-#define SimStepCount I32_AT(0x00234e34)
-#define playerPhysicsObject (*(PVehicle ***)0x00234e40)
 
 // ---- calls to originals not ported
 
@@ -71,7 +66,6 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 #define AIVehicle_GetPosition ((const Coord3 *(__fastcall *)(AIVehicle *, int))0x000359e0)
 #define GHud_SetTarget ((void (__fastcall *)(GHud *, int, const ScreenPos *cursor))0x000d9f50)
 #define GHud_SetTargetLockState ((void (__fastcall *)(GHud *, int, int state))0x000d9fb0)
-#define PointerList_BuyHead ((PointerListNode *(__fastcall *)(PointerList *, int))0x000b8490)
 #define Crt_qsort ((void (*)(void *base, size_t count, size_t size, TargetCompare compare))0x00132db0)
 
 // XBE_GLOBAL(0x0023e174, 4)
@@ -109,7 +103,6 @@ constexpr float kLockRadius = 130.0f;               // on screen, round the aim 
 constexpr float kLockedRadius = 145.0f;             // ... once it is tracking or locked
 constexpr float kLockTime = 0.25f;                  // seconds until a tracked target is locked
 constexpr float kAutoDriveTurnRate = 0.05f;         // the auto-drive turn's slerp step
-constexpr int32_t kSimState3 = 3;
 
 static_assert(std::bit_cast<uint32_t>(kBoxOuterX) == 0x3f28f5c3, "0x00193b34");
 static_assert(std::bit_cast<uint32_t>(kBoxInnerX) == 0x3e4ccccd, "0x00193b2c");
@@ -145,11 +138,11 @@ const AIVehicleFields *Fields(const AIVehicle *vehicle) {
 
 // The player's vehicle's body (always a rigid body)
 const RigidBody *PlayerBody() {
-    return (*playerPhysicsObject)->GetRigidBody();
+    return fgSimulation.cars.first[0]->GetRigidBody();
 }
 
 const CarPhysics *PlayerPhysics() {
-    return (*playerPhysicsObject)->GetPhysics();
+    return fgSimulation.cars.first[0]->GetPhysics();
 }
 
 int CurrentWeapon() {
@@ -368,12 +361,12 @@ bool WTargetable::GetVelocity(Coord3 *velocity) {
         if (vehicle == NULL || !Fields(vehicle)->unknown68)
             break;
         if (Fields(vehicle)->kind == kAIVehicleRigidBody) {
-            *velocity = Simulation_GetRigidBody(Sim, 0, AIVehicle_GetPhysicsObject(vehicle, 0)->rigidBodySlot)->velocity;
+            *velocity = fgSimulation.GetRigidBody(AIVehicle_GetPhysicsObject(vehicle, 0)->rigidBodySlot)->velocity;
             return true;
         }
         if (Fields(vehicle)->kind == kAIVehicleSimpleBody) {
             *velocity =
-                Simulation_GetSimpleRigidBody(Sim, 0, AIVehicle_GetPhysicsObject(vehicle, 0)->rigidBodySlot)->velocity;
+                fgSimulation.GetSimpleRigidBody(AIVehicle_GetPhysicsObject(vehicle, 0)->rigidBodySlot)->velocity;
             return true;
         }
         return false;
@@ -422,7 +415,7 @@ WTargetPicker* WTargetPicker::Construct() {
     autoDriveQuat = kIdentityQuat;
     PointerList *list = static_cast<PointerList *>(OperatorNew(sizeof(PointerList)));
     if (list != NULL) {
-        list->head = PointerList_BuyHead(list, 0);
+        list->head = MissionList::BuyHead();
         list->size = 0;
     }
     targets = list;
@@ -570,8 +563,8 @@ void WTargetPicker::UpdateTargets() {
         Crt_qsort(sorted, count, sizeof(sorted[0]), kSortCompares[sortMode]);
 
     SMissionManager *missions = glbMissionManager;
-    bool suspended = missions->missionState == kMissionState3 || missions->missionState == kMissionState4 ||
-                     SimState == kSimState3 || missions->cinematicMode != 0;
+    bool suspended = missions->missionState == kMissionWon || missions->missionState == kMissionLost ||
+                     fgSimulation.simState == kSimPaused || missions->cinematicMode != 0;
     if (active && !suspended) {
         UpdateSelection();
         MoveTargetingCursors();
@@ -649,13 +642,13 @@ void WTargetPicker::UpdateSelection() {
 void WTargetPicker::MoveTargetingCursors() {
     bool canLock = mode != kTargetingAutoDrive || CurrentWeapon() == kWeaponUltralightRocket;   // the only weapon auto-drive mode locks with
     if (canLock && selected != NULL && selected->onScreen) {
-        int32_t held = SimStepCount - lockStartTime;
-        lockState = held * double(SimTimeStep) > kLockTime ? kLockLocked : kLockTracking;
+        int32_t held = fgSimulation.stepCount - lockStartTime;
+        lockState = held * double(fgSimulation.timeStep) > kLockTime ? kLockLocked : kLockTracking;
         targeting->SetState(lockState);
         cursor = selected->screenPos;
         return;
     }
-    lockStartTime = SimStepCount;
+    lockStartTime = fgSimulation.stepCount;
     lockState = kLockNone;
     targeting->SetState(kLockNone);
     ScreenPos screen;

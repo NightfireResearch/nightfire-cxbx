@@ -7,6 +7,7 @@
 #include "../world/CollisionQueries.h"     // PointerUninitializedCopy
 #include "../world/CollisionTypes.h"       // PointerVector
 #include "../../helpers.h"
+#include "../game/SimulationContainers.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // USingleton and USingletonManager, ported from the listings (0x0003d5f0, 0x0007d780, 0x0011b7a0-0x0011b820,
@@ -19,8 +20,6 @@
 // throw.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define Vector_UninitializedFillN ((void (*)(USingleton **, uint32_t, USingleton *const *, SingletonVector *, uint32_t))0x000b2ec0)
-#define Vector_CopyBackward ((void (*)(USingleton ***, USingleton **, USingleton **, USingleton **))0x000b2e40)
 
 static USingleton **Vector_UninitializedCopy(USingleton **first, USingleton **last, USingleton **dest) {
     return (USingleton **)PointerUninitializedCopy((void *const *)first, (void *const *)last, (void **)dest);
@@ -81,7 +80,7 @@ void SingletonVector::InsertN(USingleton **where, uint32_t count, USingleton *co
         uint32_t bytes = grown * sizeof(USingleton *);
         USingleton **storage = static_cast<USingleton **>(UMemory::FastAlloc(bytes, "STL"));
         USingleton **at = Vector_UninitializedCopy(first, where, storage);
-        Vector_UninitializedFillN(at, count, &copy, this, count);
+        UninitializedFillPointers(at, count, &copy);
         Vector_UninitializedCopy(where, last, at + count);
         uint32_t newSize = count + (first != NULL ? uint32_t(last - first) : 0);
         if (first != NULL)
@@ -103,7 +102,7 @@ void SingletonVector::InsertN(USingleton **where, uint32_t count, USingleton *co
         last = (USingleton **)reinterpret_cast<PointerVector *>(this)->Ucopy(
             (void *const *)(oldLast - count), (void *const *)oldLast, (void **)oldLast);
         USingleton **ignored;
-        Vector_CopyBackward(&ignored, where, oldLast - count, oldLast);
+        CopyBackwardPointers(&ignored, where, oldLast - count, oldLast);
         Vector_Fill(where, where + count, &copy);
     }
 }
@@ -112,7 +111,7 @@ void SingletonVector::InsertN(USingleton **where, uint32_t count, USingleton *co
 void SingletonVector::PushBack(USingleton *const *value) {
     uint32_t size = first != NULL ? uint32_t(last - first) : 0;
     if (first != NULL && size < uint32_t(end - first)) {
-        Vector_UninitializedFillN(last, 1, value, this, uint32_t(uintptr_t(value)));
+        UninitializedFillPointers(last, 1, value);
         last++;
         return;
     }

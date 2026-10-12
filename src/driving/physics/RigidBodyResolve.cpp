@@ -5,8 +5,9 @@
 #include "PhysicsMath.h"
 #include "PhysicsObject.h"
 #include "RigidBodyBasics.h"             // ClampedForceRatio
-#include "../engine/MissionManager.h"
+#include "../game/MissionManager.h"
 #include "../engine/PhysicsUtil.h"
+#include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 
 #pragma fp_contract(off)
@@ -19,11 +20,11 @@
 namespace {
 
 PhysicsObject *Owner(const RigidBody *body) {
-    return PhysicsObjects[body->ownerIndex];
+    return fgSimulation.rigidBodyOwners[body->ownerIndex];
 }
 
 PVehicle *Vehicle(const RigidBody *body) {
-    return RigidVehicles[body->ownerIndex];
+    return static_cast<PVehicle *>(fgSimulation.rigidBodyOwners[body->ownerIndex]);
 }
 
 bool OwnerHasHitPoints(const RigidBody *body) {

@@ -7,6 +7,7 @@
 #include "InputConfig.h"
 #include "InputDevice.hpp"
 #include "UMemory.hpp"
+#include "../game/Simulation.h"
 #include "../platform/Pad.hpp"
 #include "../platform/RealSystem.h"
 
@@ -18,7 +19,6 @@ static uint32_t gIOModuleGuard;
 // The pad port input comes from: the launch page's controllerPort (GameLoop.h). Named glbIFeedback in Ghidra.
 #define glbActivePort (*(int *)0x00244520)
 // The simulation's step count, and how many steps must have run before the unplugged message is shown (2).
-#define SimStepCount (*(int *)0x00234e34)
 // XBE_GLOBAL(0x001b7028, 0x4)
 static const int kUnplugMinSimSteps = 2;
 
@@ -126,7 +126,7 @@ void IOModule::CheckUnplugged() {
         }
     } else if (!shown) {
         GHud *hud = GHud::TheApp();
-        if (hud != nullptr && SimStepCount >= kUnplugMinSimSteps) {
+        if (hud != nullptr && fgSimulation.stepCount >= kUnplugMinSimSteps) {
             ActionQueueManager::GetActionQueueManager()->FlushAllQueues();
             hud->SetControllerUnplugged(true);
             unpluggedMessageShown = true;

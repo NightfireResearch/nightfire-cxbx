@@ -178,12 +178,6 @@ struct RuleRecord {
     uint8_t unknown18[8];
 };
 
-struct AIElementRecord {
-    uint8_t unknown00[0xf8];
-    TagReference reference;
-    uint32_t unknownFc;
-};
-
 struct AICommandRecord {
     uint8_t unknown00[0x50];
     TagReference first;
@@ -202,7 +196,7 @@ struct WorldNodeEntry {
 };
 
 static_assert(sizeof(EffectRecord) == 0x40 && sizeof(ProcAnimRecord) == 0x20 && sizeof(TriggerRecord) == 0x40 &&
-              sizeof(RuleRecord) == 0x20 && sizeof(AIElementRecord) == 0x100 && sizeof(AICommandRecord) == 0xa0 &&
+              sizeof(RuleRecord) == 0x20 && sizeof(AIElement) == 0x100 && sizeof(AICommandRecord) == 0xa0 &&
               sizeof(AqRecord) == 0x20 && sizeof(AnRecord) == 0x10 && sizeof(WorldNodeEntry) == 0x10,
               "the records' strides");
 static_assert(offsetof(AsRecord, pairs) == 0x20, "'as' pairs at 0x20");
@@ -321,7 +315,7 @@ void CARP::RuleResolver(UGroup *record, UGroup *shared, UGroup *parent) {
 
 // FUNC_AT(0x00118830)
 void CARP::AIElementResolver(UGroup *record, UGroup *shared, UGroup *parent) {
-    AIElementRecord *element = Payload<AIElementRecord>(record);
+    AIElement *element = Payload<AIElement>(record);
     for (uint32_t i = 0; i < record->count; i++)
         Resolve(&element[i].reference, shared, parent);
 }

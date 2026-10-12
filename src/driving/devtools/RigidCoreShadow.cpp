@@ -6,6 +6,7 @@
 #include "FpControl.h"
 
 #include "../game/BondCar.h"
+#include "../game/Simulation.h"
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../platform/RealMath.h"
@@ -273,7 +274,7 @@ void RandomRotation(MATRIX4 *m) {
 std::vector<RigidBody *> g_live;
 
 PBondCar *Car(const RigidBody *live) {
-    PhysicsObject *owner = PhysicsObjects[live->ownerIndex];
+    PhysicsObject *owner = fgSimulation.rigidBodyOwners[live->ownerIndex];
     if (owner == NULL || uint32_t(uintptr_t(owner->vtable)) != kPBondCarVtable)
         return NULL;
     return reinterpret_cast<PBondCar *>(owner);
@@ -421,7 +422,7 @@ void TestConstruct() {
         RigidBodyInfo *liveInfo = live->info;
         static RigidBodyInfo saved;
         saved = *liveInfo;
-        PhysicsObject *owner = PhysicsObjects[live->ownerIndex];
+        PhysicsObject *owner = fgSimulation.rigidBodyOwners[live->ownerIndex];
         PBondCar *car = Car(live);
         CarPhysics physics = {};
         if (car != NULL && car->physics != NULL)
@@ -723,7 +724,7 @@ void RigidCoreShadow_Run(void) {
         return;
     g_live.clear();
     for (int i = 0; i < kRigidBodies; i++) {
-        if (PhysicsObjects[i] == NULL)
+        if (fgSimulation.rigidBodyOwners[i] == NULL)
             continue;
         RigidBody *body = Sim_GetRigidBody(ShadowSim, 0, i);
         if (body != NULL && body->info != NULL && body->ownerIndex == i)

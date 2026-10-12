@@ -6,6 +6,7 @@
 #include "FpControl.h"
 
 #include "../game/BondCar.h"
+#include "../game/Simulation.h"
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBodyResolve.h"
 #include "../../common/xbeOriginal.h"
@@ -308,7 +309,7 @@ uint8_t g_missionFlag = 0;
 void PerturbOwners() {
     g_owners.clear();
     for (RigidBody *live : g_live) {
-        PhysicsObject *owner = PhysicsObjects[live->ownerIndex];
+        PhysicsObject *owner = fgSimulation.rigidBodyOwners[live->ownerIndex];
         if (owner == NULL || uint32_t(uintptr_t(owner->vtable)) != kPBondCarVtable)
             continue;
         OwnerSave save;
@@ -446,7 +447,7 @@ void RigidResolveShadow_Run(void) {
         return;
     g_live.clear();
     for (int i = 0; i < kRigidBodies; i++) {
-        if (PhysicsObjects[i] == NULL)
+        if (fgSimulation.rigidBodyOwners[i] == NULL)
             continue;
         RigidBody *body = Sim_GetRigidBody(ShadowSim, 0, i);
         if (body != NULL && body->info != NULL && body->ownerIndex == i)

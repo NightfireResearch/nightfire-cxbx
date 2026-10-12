@@ -11,11 +11,12 @@
 #include "../game/BondCar.h"
 #include "../game/Debris.h"
 #include "../game/EmpEffect.h"               // REmpBolts
+#include "../game/Simulation.h"
 #include "../game/TyreTrack.h"
 #include "../game/Vehicle.h"
 #include "../game/VehicleRender.h"
 #include "../physics/PhysicsObject.h"
-#include "../physics/RigidBody.h"           // PhysicsObjects
+#include "../physics/RigidBody.h"
 #include "../render/Materials.h"
 #include "../render/RenderHigh.h"
 #include "../render/Renderer.h"
@@ -1588,7 +1589,7 @@ void GameEffectsShadowA_Run(void) {
 
     g_vehicles.clear();
     for (int i = 0; i < kOwners; i++) {
-        PhysicsObject *object = PhysicsObjects[i];
+        PhysicsObject *object = fgSimulation.rigidBodyOwners[i];
         if (object == NULL || object->renderObject == NULL ||
             uint32_t(uintptr_t(object->renderObject->vtable)) != kRVehicleVtable)
             continue;

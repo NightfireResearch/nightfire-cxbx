@@ -23,7 +23,7 @@
 #include "../physics/RigidBody.h"
 #include "../game/Vehicle.h"           // PVehicle's car names
 #include "../game/VehicleRender.h"     // RVehicle
-#include "../physics/Simulation.h"
+#include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 
@@ -37,7 +37,6 @@ class RTextureContext;
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // ---- globals
-#define Sim ((void *)0x00233ff0)                            // the Simulation
 // XBE_GLOBAL(0x00201768, 4)
 static CarShadowSize *CarShadowSizes;                       // one per car name, made by the first LoadAttributes
 // XBE_GLOBAL(0x00201784, 4)
@@ -209,7 +208,7 @@ void RShadowMap::Destruct() {
 
 // FUNC_AT(0x000a5c90)
 void RShadowMap::SetCamera(RSceneObj *vehicle, const Coord4 *direction) {
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, vehicle->physics->rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(vehicle->physics->rigidBodySlot);
     alignas(16) MATRIX4 orientation = body->info->orientation;
 
     // A frame looking along the direction, up as near the world's as it can be, turned into the world's
@@ -267,7 +266,7 @@ void RShadowMap::SetCamera(RSceneObj *vehicle, const Coord4 *direction) {
     viewPort->SetViewMatrix(&view.mtx[0][0]);
 
     // The texture's matrix: the world from the car's position, through the same frame and fit, into 0..1
-    body = Simulation_GetRigidBody(Sim, 0, vehicle->physics->rigidBodySlot);
+    body = fgSimulation.GetRigidBody(vehicle->physics->rigidBodySlot);
     BuildScaleXYZ(&step, scaleX, scaleY, 1.0f);
     const Coord3 *position = &body->position;
     VU0_MATRIX4_mult(&data->matrix, &data->matrix, &step);
@@ -323,7 +322,7 @@ void RShadowMap::DrawSimpleShadow(RSceneObj *vehicle) {
     PhysicsObject *physics = vehicle->physics;
     if (physics->type != kObjectVehicle)
         return;
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, physics->rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(physics->rigidBodySlot);
     RigidBodyInfo *info = body->info;
     if (info->ground.y < 0.1f)
         return;

@@ -29,7 +29,6 @@
 // ---- the game's globals
 
 #define GameTick U32_AT(0x001f2a4c)
-#define Launch (*(LaunchPage *)0x00243b90)
 #define OffOnNames ((const char *const *)0x001b6638)            // "Off", "On"
 
 // XBE_GLOBAL(0x001ec268, 0x80)

@@ -9,6 +9,8 @@
 
 #include "BondCar.h"                        // PBondCar::CalculateRPM
 #include "EmpEffect.h"
+#include "MissionManager.h"       // glbMissionManager
+#include "Simulation.h"          // Simulation_GetRigidBody
 #include "Vehicle.h"                        // PVehicle, CarPhysics, fgDamageLevels
 #include "VehicleParticle.h"
 #include "WeaponEffects.h"                  // RMuzzleFlash
@@ -23,12 +25,10 @@
 #include "../data/RCARPFile.h"
 #include "../data/Tuning.h"                 // TuningDBMgr
 #include "../eagl/Model.h"
-#include "../engine/MissionManager.h"       // glbMissionManager
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
-#include "../physics/Simulation.h"          // Simulation_GetRigidBody
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"          // MEM_copy, MEM_fill
 #include "../render/Lights.h"               // fgLightManager
@@ -47,9 +47,6 @@
 #define XapiGetLocalTime ((void (__stdcall *)(LocalTime *time))0x0010e684)
 
 // ---- globals
-#define PlayerVehicles (*(PhysicsObject ***)0x00234e40)     // the Simulation's cars, the player's first
-#define SimStepCount U32_AT(0x00234e34)                     // the Simulation's steps so far
-#define Sim ((void *)0x00233ff0)                            // the Simulation
 #define TuningLevel ((const char *)0x00244084)              // the level the tuning databases are read for
 #define WorldViewMade BOOL8_AT(0x001f2c50)                  // set by RRenderWorldCamera
 
@@ -394,7 +391,7 @@ void RVehicle::TriggerIlluminate(int index, int32_t tick, int) {
 // FUNC_AT(0x000959d0)
 void RVehicle::SetEMPVictimEffect(bool on) {
     empVictim = on;
-    empVictimTick = SimStepCount;
+    empVictimTick = fgSimulation.stepCount;
 }
 
 // FUNC_AT(0x000959f0)
@@ -634,11 +631,11 @@ void RVehicle::UpdatePosition(bool update) {
     RSkeletalObj::UpdatePosition(update);
     params[0] = (float)(double(ComputeWheels()) * kSteeringWheelTurn);
     PhysicsObject *car = physics;
-    if (car != PlayerVehicles[0])
+    if (car != fgSimulation.cars.first[0])
         return;
     float speed = (float)(double(static_cast<PVehicle *>(car)->GetCarSpeed()) * kKilometresPerHour * kSpeedoScale);
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, car->rigidBodySlot);
-    RigidBody *moving = Simulation_GetRigidBody(Sim, 0, car->rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(car->rigidBodySlot);
+    RigidBody *moving = fgSimulation.GetRigidBody(car->rigidBodySlot);
     if (v3dotprod(&moving->velocity, body->info->orientation.mtx[2]) <= 0.0f)
         speed = 0.0f;
     params[kNeedleSpeed] = (float)GetNeedlePos(kNeedleSpeed, speed);
@@ -656,7 +653,7 @@ void RVehicle::UpdatePosition(bool update) {
 // otherwise the projected one, when the car is that near.
 // FUNC_AT(0x000965e0)
 void RVehicle::Render() {
-    bool isPlayer = physics == PlayerVehicles[0];
+    bool isPlayer = physics == fgSimulation.cars.first[0];
     bool simpleShadow = WorldViewMade || (isPlayer && glbMissionManager->autoDrive);
     if (isPlayer && PlayerInBumperView())
         return;
@@ -687,7 +684,7 @@ void RVehicle::Render() {
 
 // FUNC_AT(0x00096770)
 void RVehicle::RenderDeferredEffects() {
-    if (physics == PlayerVehicles[0] && PlayerInBumperView())
+    if (physics == fgSimulation.cars.first[0] && PlayerInBumperView())
         return;
     alignas(16) MATRIX4 transform;
     GetTransform(&transform);

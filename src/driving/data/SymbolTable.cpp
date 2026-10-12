@@ -13,6 +13,7 @@
 #include "../world/SoundGroup.h"        // WSoundMap
 #include "../world/SoundMap.h"          // MapBuyHead
 #include "../render/TextureContext.h"  // TextureContextMap
+#include "../game/SimulationContainers.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -28,7 +29,6 @@
 // other maps' types: 0x000cca30 as WSoundMap::Lrotate (world/SoundGroup.h), 0x00126b70 and 0x00126cb0 as
 // SharedTree's (audio/Bank.h), 0x00093f10 as TextureContextMap::BuyNode (render/TextureContext.h), 0x0009c310 as
 // SharedTreeMin (game/EmpEffect.h). The rest are called at their addresses.
-#define TreeIterator_Increment ((void (__fastcall *)(TreeNode **, int))0x000b2920)
 
 static void Tree_Lrotate(Tree *tree, TreeNode *node) {
     reinterpret_cast<WSoundMap *>(tree)->Lrotate(reinterpret_cast<SoundMapNode *>(node));
@@ -199,7 +199,7 @@ TreeNode **Tree::EraseAt(TreeNode **result, TreeNode *where) {
         TreeThrow("invalid map/set<T> iterator", kOutOfRangeVtable, kOutOfRangeThrowInfo);
     TreeNode *erased = where;
     TreeNode *next = where;
-    TreeIterator_Increment(&next, 0);
+    reinterpret_cast<PhysicsObjIterator *>(&next)->Inc();
 
     TreeNode *pnode = where;   // the node that really leaves its place: where, or its successor
     TreeNode *fixnode;         // the node that takes pnode's place

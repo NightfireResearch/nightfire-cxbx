@@ -13,7 +13,8 @@
 #include "../eagl/GeoPrimState.h"
 #include "../eagl/RenderContext.h"
 #include "../engine/CoreFoundation.h"     // GetFoundationVideoMode
-#include "../engine/MissionManager.h"
+#include "../game/MissionManager.h"
+#include "../game/Simulation.h"
 #include "../game/WeaponCameras.h"        // MissileCam
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
@@ -28,7 +29,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- globals
-#define SimStepCount U32_AT(0x00234e34)
 // XBE_GLOBAL(0x001c487c, 4)
 float InfraredStartBrightness = 0.4f;    // the previous brightness the infrared mode starts from
 // XBE_GLOBAL(0x001c4880, 4)
@@ -101,7 +101,7 @@ void RColorize::Kill() {
 void RColorize::SetAreaBrightness(float brightness) {
     prevAreaBrightness = areaBrightness;
     areaBrightness = float(double(brightness) * brightness * 10.0f);
-    brightnessChangeTime = SimStepCount;
+    brightnessChangeTime = fgSimulation.stepCount;
 }
 
 // FUNC_AT(0x0009a4d0)
@@ -136,7 +136,7 @@ void RColorize::SetEnabled(int newMode) {
         tintColour2 = 0xff001010;
         prevAreaBrightness = InfraredStartBrightness;
         areaBrightness = 0.0f;
-        brightnessChangeTime = SimStepCount;
+        brightnessChangeTime = fgSimulation.stepCount;
         break;
     case kMode2:
         MissileCam->enabled = 1;
@@ -153,7 +153,7 @@ void RColorize::SetEnabled(int newMode) {
         tintColour2 = 0xff000000;
         prevAreaBrightness = InfraredStartBrightness;
         areaBrightness = 10.0f;
-        brightnessChangeTime = SimStepCount;
+        brightnessChangeTime = fgSimulation.stepCount;
         break;
     }
 }
@@ -212,7 +212,7 @@ void RColorize::Draw() {
     const Coord4 position = { 0.0f, 0.0f, 0.0f, 0.0f };
     uint32_t changeTime = brightnessChangeTime;
     if (changeTime != 0 && mode == kModeInfrared) {
-        uint32_t now = SimStepCount;
+        uint32_t now = fgSimulation.stepCount;
         if (int32_t(now - changeTime) > BrightnessEaseSteps) {
             brightnessChangeTime = 0;
             VU0_v4scale4(&colourA, float(double(BrightnessLightScale) * areaBrightness + 1.0f), &colourB);
@@ -255,5 +255,5 @@ void RColorize::Reset() {
     fgLightManager->forcePositionalLighting = false;
     prevAreaBrightness = areaBrightness;
     areaBrightness = 0.0f;
-    brightnessChangeTime = SimStepCount;
+    brightnessChangeTime = fgSimulation.stepCount;
 }

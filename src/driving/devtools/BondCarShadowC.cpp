@@ -19,7 +19,7 @@
 #include "../game/TyreTrack.h"
 #include "../game/VehicleRender.h"
 #include "../physics/RigidBody.h"
-#include "../physics/Simulation.h"
+#include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../render/RenderHigh.h"       // fgRenderHigh
 #include "../render/RSceneObj.hpp"
@@ -112,7 +112,6 @@ typedef int (__fastcall *WheelForcesFn)(PBondCar *, int, BondCarWheelInput *, fl
 typedef int (__fastcall *SimpleWheelForcesFn)(PBondCar *, int, BondCarWheelInput *, const Coord4 *, const Coord4 *,
                                               const Coord4 *, float *);
 
-#define ShadowSim ((void *)0x00233ff0)
 #define ShadowSimRandom (*(SimRandom **)0x00233ff0)          // the Simulation's first word
 #define ShadowRandomSeed U32_AT(0x001c45c4)
 // The original's copy of the port's BondCarScratchPad (the cars' tuning: BondCarOrigTuning.h). The animation
@@ -388,7 +387,7 @@ RPlayerCamera *Camera() {
 }
 
 RigidBody *BodyOf(PBondCar *car) {
-    return Simulation_GetRigidBody(ShadowSim, 0, car->rigidBodySlot);
+    return fgSimulation.GetRigidBody(car->rigidBodySlot);
 }
 
 struct AIView {
@@ -1126,7 +1125,7 @@ void BondCarShadowC_Run(void) {
         return;
     g_cars.clear();
     for (int i = 0; i < kOwners; i++) {
-        PhysicsObject *owner = PhysicsObjects[i];
+        PhysicsObject *owner = fgSimulation.rigidBodyOwners[i];
         if (owner == NULL || uint32_t(uintptr_t(owner->vtable)) != kBondCarVtable)
             continue;
         PBondCar *car = static_cast<PBondCar *>(static_cast<PVehicle *>(owner));

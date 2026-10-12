@@ -9,13 +9,14 @@
 #include "Feedback.h"
 #include "InputConfig.h"
 #include "IOModule.hpp"
-#include "MissionManager.h"
+#include "../game/MissionManager.h"
 #include "PlayMPC.hpp"
 #include "SimRandom.h"
 #include "UFileLoader.h"
 #include "UGroup.h"
 #include "UMemory.hpp"
 #include "USingleton.h"
+#include "../game/Simulation.h"
 #include "../render/Draw.h"
 #include "../render/RenderHigh.h"
 #include "../render/RSceneObj.hpp"
@@ -74,8 +75,6 @@ const uint32_t kTagMap = 0x4d617020;
 const uint32_t kTagAIElements = 0x4149456c;
 // The action that saves a screenshot.
 const int32_t kActionScreenCapture = 0x48;
-// The simulation's state when the level is over.
-const int32_t kSimFinished = 2;
 // The tasks RunTheGame adds, by event number.
 enum TaskEvent {
     EAIUpdate = 1,
@@ -104,7 +103,6 @@ const char kCarModels[] = "data\\car\\model\\";
 
 // ---- the game's globals
 
-#define Launch (*(LaunchPage *)0x00243b90)
 #define MissionName (Launch.missionName)
 // XBE_GLOBAL(0x00244790, 0x4)
 static int32_t LaunchInfoRead;
@@ -150,9 +148,6 @@ static const char *const missionNames[20] = {     // by mission index
 #define fgScheduler (*(Scheduler **)0x001e520c)
 // XBE_GLOBAL(0x001e4870, 0x974)
 ActionQueue GlobalActionQueue;
-#define Sim ((void *)0x00233ff0)                  // the Simulation
-#define SimState I32_AT(0x00234e24)               // Sim.simState
-#define playerPhysicsObject (*(PVehicle ***)0x00234e40)
 #define TrafficSeed I16_AT(0x001de914)
 
 // The disc error screen's: a one-byte block standing for "made", and the font
@@ -210,11 +205,6 @@ static const DiscErrorText DiscErrorMessages[7] = {   // English, French, German
 #define GSubtitles_ClearSubtitles ((void (__fastcall *)(void *, int))0x000e3630)
 #define GSystem_CURATOR_Init ((void (*)(void))0x000e3fd0)
 #define CURATOR_Shutdown ((void (*)(void))0x000e3eb0)
-#define Simulation_Reset ((void (__fastcall *)(void *, int))0x000b49f0)
-#define Simulation_CleanUpObjects ((void (__fastcall *)(void *, int))0x000b4750)
-#define Simulation_SpawnCarObject ((void *(__fastcall *)(void *, int, int, const char *, int, float *, float *))0x000b5700)
-#define SMissionManager_GetCarType ((const char *(__fastcall *)(void *, int))0x000b6140)
-#define SMissionManager_ClearScoreBuffer ((void (__fastcall *)(void *, int, LaunchPage *))0x000b63f0)
 #define AIElementController_Construct ((void (*)(void *))0x000285b0)
 #define AIVehicleController_Get ((void *(*)(void))0x00035c00)
 #define AIVehicleController_Init ((void (*)(void))0x00035c10)
@@ -230,7 +220,7 @@ static const DiscErrorText DiscErrorMessages[7] = {   // English, French, German
 
 // The car's type name (a virtual method of the player's vehicle).
 static const char *PlayerCarTypeName() {
-    return (*playerPhysicsObject)->GetCarType();
+    return fgSimulation.cars.first[0]->GetCarType();
 }
 
 // MissionName against a track name, as the original compares them: the name's bytes and its terminator.
@@ -612,7 +602,7 @@ int GameMain(int argc, char **argv) {
         Launch.flags &= 0xffffc1f9;
     if (Launch.loaderReady[0] != 0) {
         if (ExitClearScore) {
-            SMissionManager_ClearScoreBuffer(glbMissionManager, 0, &Launch);
+            glbMissionManager->ClearScoreBuffer(&Launch);
             ExitClearScore = 0;
         }
         if (ExitToDriving) {
@@ -722,7 +712,7 @@ void GameLoop_CleanUp() {
     carAttributes.Destruct();
 
     GLoadingScreen_Status("Shutdown Sim");
-    Simulation_CleanUpObjects(Sim, 0);
+    fgSimulation.CleanUpObjects();
     NullFunction();
     PVehicle::Shutdown();
     GLoadingScreen_Status("Dismiss actors");
@@ -824,7 +814,7 @@ void RunTheGame(bool simulateOncePerLoop, int unused) {
     GLoadingScreen_Status("Entering main loop");
     fgScheduler->ResetTime();
 
-    while (SimState != kSimFinished) {
+    while (fgSimulation.simState != kSimFinished) {
         while (!GlobalActionQueue.IsEmpty()) {
             ActionRef action;
             GlobalActionQueue.GetAction(&action);
@@ -876,7 +866,7 @@ void GameLoop_StartUp(int trafficSeed) {
     GLoadingScreen_Status("Reset Ray Shells");
     RayShell::Reset();
     GLoadingScreen_Status("Reset Sim");
-    Simulation_Reset(Sim, 0);
+    fgSimulation.Reset();
     GLoadingScreen_Status("Init Clock");
     RealClock_Init();
     GLoadingScreen_Status("Init Events");
@@ -946,7 +936,7 @@ void GameLoop_StartUp(int trafficSeed) {
     WRoadNetwork::Init();
 
     GLoadingScreen_Status("Init Simulation");
-    const char *carType = SMissionManager_GetCarType(glbMissionManager, 0);
+    const char *carType = glbMissionManager->GetCarType();
     float orientation[4] = { 0.0f, 0.0f, 1.0f, 0.0f };   // the fourth word is never written
     float position[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     float height = 0.0f;
@@ -971,14 +961,15 @@ void GameLoop_StartUp(int trafficSeed) {
     }
 
     GLoadingScreen_Status("Spawn player car");
-    Simulation_SpawnCarObject(Sim, 0, 0, carType, 0, orientation, position);
-    (*playerPhysicsObject)->SetHitPointLoc(&glbMissionManager->playerHealth);
+    fgSimulation.SpawnCarObject(0, carType, 0, reinterpret_cast<const Coord3 *>(orientation),
+                                reinterpret_cast<const Coord3 *>(position));
+    fgSimulation.cars.first[0]->SetHitPointLoc(&glbMissionManager->playerHealth);
     AIRoadSpawn_Init();
     AIVehicleController_Get();
     TrafficSeed = (int16_t)trafficSeed;
     AIVehicleController_CreateSimTrafficCars(AIVehicleController_Get(), 0, true);
     AIVehicleController_RegisterSimCarList(AIVehicleController_Get(), 0);
-    WeaponManager->SetPlayerCar((*playerPhysicsObject)->renderObject);
+    WeaponManager->SetPlayerCar(fgSimulation.cars.first[0]->renderObject);
     if (ActorDatabase != NULL) {
         GLoadingScreen_Status("Init AI Characters");
         AICharacter_Init();

@@ -17,7 +17,7 @@
 #include <vector>
 
 #include "../anim/AnimEngine.h"
-#include "../engine/MissionManager.h"
+#include "../game/MissionManager.h"
 #include "../engine/SimRandom.h"
 #include "../game/Explosion.h"
 #include "../game/Missile.h"
@@ -26,7 +26,7 @@
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
-#include "../physics/Simulation.h"
+#include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../render/RSceneObj.hpp"
 #include "../world/CollisionTypes.h"
@@ -326,7 +326,7 @@ void CompareLogs(const char *what, long index) {
 
 constexpr int kSlots = 8;               // the simple bodies the fakes hand out, by slot
 constexpr int kOthers = 12;             // the other objects
-constexpr int kOwnerSlot = 90;          // SimpleBodyOwners' rows lent to a signature's owner
+constexpr int kOwnerSlot = 90;          // fgSimulation.simpleRigidBodyOwners' rows lent to a signature's owner
 constexpr uint32_t kSelfSig = 0x5e1f0000;
 
 alignas(16) uint8_t g_missileBlock[sizeof(Missile)];
@@ -973,7 +973,7 @@ void SetWorld() {
     ShadowSimStepCount = Range(100, 100000);
     ShadowSimTimeStep = Chance(80) ? 1.0f / 60.0f : Uniform(0.005f, 0.05f);
     ShadowSimState = Chance(80) ? 1 : Range(0, 4);
-    SimStepsPerSecond = Chance(80) ? 60 : Range(10, 120);
+    fgSimulation.stepsPerSecond = Chance(80) ? 60 : Range(10, 120);
     memset(g_answers.ordered, 0, sizeof(g_answers.ordered));
     for (int i = 0; i < kOthers; i++) {
         PhysicsObject *other = Other(i);
@@ -1019,9 +1019,9 @@ void SetBody(int slot, const Coord4 &centre) {
     body->flags = uint16_t(Next());
 }
 
-// Bits for some of the other objects in the slot's row of SimpleBodyHits, and the ordered bodies they map to
+// Bits for some of the other objects in the slot's row of fgSimulation.simpleBodyHits, and the ordered bodies they map to
 void SetHits(int slot, int count) {
-    BitSet192 &row = SimpleBodyHits[slot];
+    BitSet192 &row = fgSimulation.simpleBodyHits[slot];
     row = {};
     for (int n = 0; n < count; n++) {
         int index = Range(0, 159);
@@ -1337,7 +1337,7 @@ void TestMissileConstruct(const Snapshot &before) {
             int row = kOwnerSlot + Range(0, 5);
             PhysicsObject *shooter = Other(Range(1, kOthers - 1));
             shooter->type = Chance(40) ? 10 : Chance(60) ? 11 : 1;
-            SimpleBodyOwners[row] = shooter;
+            fgSimulation.simpleRigidBodyOwners[row] = shooter;
             g_in.sig = 0x80000000u | uint32_t(row) << 24 | (Next() & 0xffffff);
         }
         strcpy(ShadowTuningLevel, levels[Range(0, 4)]);
@@ -1391,7 +1391,7 @@ void TestMissileRender(const Snapshot &before) {
             g_missile->renderObject = NULL;
         if (Chance(30))
             g_missile->weapon = kWeaponQPulse;
-        int quarter = SimStepsPerSecond >> 2;
+        int quarter = fgSimulation.stepsPerSecond >> 2;
         g_missile->launchStep = ShadowSimStepCount - (Chance(50) ? Range(0, quarter + 2) : Range(-5, 400));
         g_in.firstView = Chance(70);
         RunCase("Missile::Render", i, SideMissileRender, before);
@@ -1490,8 +1490,8 @@ void BuildRegions() {
     AddShared((const void *)0x00234e30, 8, "SimTimeStep, SimStepCount", false);
     AddShared((const void *)0x00234e40, 4, "the player list pointer", false);
     AddShared((const void *)0x00239220, 4, "glbMissionManager", false);
-    AddShared(SimpleBodyHits, kSlots * sizeof(BitSet192), "SimpleBodyHits");
-    AddShared(&SimpleBodyOwners[kOwnerSlot], 6 * sizeof(PhysicsObject *), "SimpleBodyOwners", false);
+    AddShared(fgSimulation.simpleBodyHits, kSlots * sizeof(BitSet192), "SimpleBodyHits");
+    AddShared(&fgSimulation.simpleRigidBodyOwners[kOwnerSlot], 6 * sizeof(PhysicsObject *), "SimpleBodyOwners", false);
     AddShared(ShadowTuningLevel, 0x20, "TuningLevel", false);
 }
 

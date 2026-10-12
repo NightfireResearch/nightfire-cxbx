@@ -201,12 +201,6 @@ extern float RigidGroundRestitutionRate;        // GROUND_RESTITUTION / MICRO_TH
 extern float RigidRestitutionRateC8;            // 0x001c8f3c's value / MICRO_THRESHOLD at start-up
 extern float RigidBuildingRestitutionRate;      // BUILDING_COEFF_RESTITUTION / BUILDING_MICRO_THRESHOLD at start-up
 #define DamageSourceSig ((const uint32_t *)0x00233fe8)  // the source world and object damage name (the name is ours)
-// XBE_GLOBAL(0x002342a0, 0x100)
-#define PhysicsObjects ((PhysicsObject **)0x002342a0)   // [64] by owner index (the Simulation's)
-#define RigidVehicles ((PVehicle **)0x002342a0)         // the same, for owners of kind below 4 (vehicles)
-// XBE_GLOBAL(0x002343a0, 0x180)
-#define SimpleBodyOwners ((PhysicsObject **)0x002343a0) // [96] the simple bodies' owners, by slot (NULL: not in use)
-#define SimStepsPerSecond I32_AT(0x00234e2c)            // the Simulation's steps a second
 extern float Rigid_GRAVITY;
 extern float Rigid_BODGE_PLAYER_GRAVITY;
 extern float Rigid_MICRO_THRESHOLD;

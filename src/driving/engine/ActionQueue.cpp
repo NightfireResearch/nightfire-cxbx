@@ -3,13 +3,14 @@
 #include "CoreFoundation.h"
 #include "InputUntested.h"
 #include "UMemory.hpp"
+#include "../game/Simulation.h"
 #include "../physics/RigidBodyBasics.h"   // PointerVectorDeallocate
 #include "../world/CollisionQueries.h"     // PointerUninitializedCopy
 #include "../world/CollisionTypes.h"       // PointerVector
 #include "../../helpers.h"
+#include "../game/SimulationContainers.h"
 
 // While this is 0, action 0x1f is not delivered to anyone (FeedQueue, 0x0004f371). Written elsewhere in the game.
-#define gAllowAction31 (*(int *)0x00234e34)
 
 // The manager, GetActionQueueManager's function-local static, and its construction guard (bit 0)
 // XBE_GLOBAL(0x001e23f0, 0x10)
@@ -25,8 +26,6 @@ uint32_t gActionQueueManagerMade;
 // The STL's helpers the vector's growth calls, in the original's order: the game's one copy for every vector of
 // pointers (the linker folded them together). Those not ours yet are called at their addresses (the extra
 // arguments are the allocator and a word the helper ignores, as the original passes them).
-#define Vector_UninitializedFillN ((void (*)(ActionQueue **, uint32_t, ActionQueue *const *, ActionQueueManager *, uint32_t))0x000b2ec0)
-#define Vector_CopyBackward ((void (*)(ActionQueue ***, ActionQueue **, ActionQueue **, ActionQueue **))0x000b2e40)
 
 static ActionQueue **Vector_UninitializedCopy(ActionQueue **first, ActionQueue **last, ActionQueue **dest) {
     return (ActionQueue **)PointerUninitializedCopy((void *const *)first, (void *const *)last, (void **)dest);
@@ -133,10 +132,10 @@ void ActionQueueManager::UnRegisterQueue(ActionQueue *queue) {
 }
 
 // Delivers the action to every queue, in the order they registered. Action ids run from 1 to 0x40; 0x1f is held
-// back while gAllowAction31 is 0.
+// back while fgSimulation.stepCount is 0.
 // AUTOINJECT
 void ActionQueueManager::FeedQueue(ActionData action) {
-    if (action.action >= 1 && action.action <= 0x40 && gAllowAction31 == 0 && action.action == 0x1f)
+    if (action.action >= 1 && action.action <= 0x40 && fgSimulation.stepCount == 0 && action.action == 0x1f)
         return;
     for (ActionQueue **it = queuesFirst; it < queuesLast; it++)
         (*it)->ReceiveAction(&action);
@@ -166,7 +165,7 @@ ActionQueueManager* ActionQueueManager::GetActionQueueManager() {
 void ActionQueueManager::PushBack(ActionQueue *const *queue) {
     uint32_t size = queuesFirst != nullptr ? uint32_t(queuesLast - queuesFirst) : 0;
     if (queuesFirst != nullptr && size < uint32_t(queuesEnd - queuesFirst)) {
-        Vector_UninitializedFillN(queuesLast, 1, queue, this, uint32_t(uintptr_t(queue)));
+        UninitializedFillPointers(queuesLast, 1, queue);
         queuesLast++;
         return;
     }
@@ -194,7 +193,7 @@ void ActionQueueManager::InsertN(ActionQueue **where, uint32_t count, ActionQueu
         uint32_t bytes = grown * sizeof(ActionQueue *);
         ActionQueue **storage = static_cast<ActionQueue **>(UMemory::FastAlloc(bytes, "STL"));
         ActionQueue **at = Vector_UninitializedCopy(queuesFirst, where, storage);
-        Vector_UninitializedFillN(at, count, &copy, this, count);
+        UninitializedFillPointers(at, count, &copy);
         Vector_UninitializedCopy(where, queuesLast, at + count);
         uint32_t newSize = size + count;
         if (queuesFirst != nullptr)
@@ -216,7 +215,7 @@ void ActionQueueManager::InsertN(ActionQueue **where, uint32_t count, ActionQueu
         queuesLast = (ActionQueue **)reinterpret_cast<PointerVector *>(this)->Ucopy(
             (void *const *)(oldLast - count), (void *const *)oldLast, (void **)oldLast);
         ActionQueue **ignored;
-        Vector_CopyBackward(&ignored, where, oldLast - count, oldLast);
+        CopyBackwardPointers(&ignored, where, oldLast - count, oldLast);
         FillQueuePointers(where, where + count, &copy);
     }
 }

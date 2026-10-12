@@ -12,6 +12,7 @@
 #include "BondCarState.h"               // CarSurface
 #include "VehicleSound.h"
 #include "WeaponSound.h"                // AGun, ATurret
+#include "MissionManager.h"             // MissionCinematicMode
 #include "../audio/Bank.h"              // ABank, fgBanks
 #include "../audio/Mix.h"               // AMix
 #include "../audio/Sound.h"             // ABaseSound, AOneShotSound, ABasic, AMenuSound
@@ -30,7 +31,6 @@
 // ---- the game's globals
 
 // SMissionManager's: set by SetCinematicMode, cleared by ClearCinematicMode, set by Win and Lose (name ours)
-#define MissionCinematicMode I32_AT(0x00243a64)
 
 // Counted down by ATrafficVehicle's destructor for a sound with countedB (or countedA) set; nothing else in the
 // game reads or writes them (names ours)

@@ -56,9 +56,9 @@ for m in $MS; do
     elif [ ! -f "$L" ]; then
         echo "== shadows, mission $m: NO LOG" >> "$SUMMARY"
     else
-        # A summary line names its differences. Passes: "0 differ", "0 of n cases differ", "same, n NaN-only
-        # differences" (the math shadows) and a "differ by kind:" list of zeros
-        grep -a ' differ' "$L" | grep -av ' 0 differ\|: 0 of [0-9]* cases differ\|: same, [0-9]* NaN-only' |
+        # A summary line names its differences or says FAILED. Passes: "0 differ", "0 of n cases differ", "same, n
+        # NaN-only differences" (the math shadows) and a "differ by kind:" list of zeros
+        grep -aE ' differ|FAILED' "$L" | grep -av ' 0 differ\|: 0 of [0-9]* cases differ\|: same, [0-9]* NaN-only' |
             awk '/differ by kind:/ { s = $0; sub(/.*differ by kind:/, "", s); if (s ~ / [1-9][0-9]*(,|$)/) print; next } { print }' > "$L.differ" || true
         echo "== shadows, mission $m: $(grep -a -c ' differ' "$L") summaries, $(wc -l < "$L.differ") with differences, $(grep -a -c 'fault at' "$L") loader faults, frame dumped: $(grep -a -c 'dumping frame' "$L")" >> "$SUMMARY"
         cat "$L.differ" >> "$SUMMARY"

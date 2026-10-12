@@ -54,6 +54,8 @@ two runs of one build diverge within a few ticks: voices end by real playback, a
 
 ## Odd things in the original, kept
 
+Every area's entries, by kind and with addresses: docs/driving/original-quirks.md.
+
 - AIndex::Construct sizes its name block in a first pass and can overflow it when a name's prefix is not three
   characters; a file name with no '.' gives strncpy a negative count; a name shorter than four characters is
   searched into uninitialised stack (the port zeroes the buffer).

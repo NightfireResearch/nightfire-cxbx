@@ -11,7 +11,7 @@
 #include "../eagl/RenderContext.h"
 #include "../eagl/View.h"
 #include "../physics/RigidBody.h"
-#include "../physics/Simulation.h"
+#include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../../helpers.h"
@@ -36,7 +36,6 @@
 // ---- globals
 
 #define GameTick U32_AT(0x001f2a4c)
-#define Sim ((void *)0x00233ff0)                    // the Simulation
 #define Gallery (*(void **)0x0023f320)              // the GFXGallery
 // XBE_GLOBAL(0x00230600, 4)
 float ParticleDrag;                  // UpdateBlock's copy of the particle's drag (name ours)
@@ -397,7 +396,7 @@ void RParticleParticleCache::RenderBlock(int block) {
         StreakPositions[streakCount].w = 1.0f;
         streakCount++;
         if (particle->body != kNoBody) {
-            const Coord3 *offset = &Simulation_GetRigidBody(Sim, 0, particle->body)->position;
+            const Coord3 *offset = &fgSimulation.GetRigidBody(particle->body)->position;
             VU0_v3add(&StreakPositions[streakCount - 1], offset, &StreakPositions[streakCount - 1]);
             VU0_v3add(&StreakPositions[streakCount - 2], offset, &StreakPositions[streakCount - 2]);
             VU0_v3add(&StreakPositions[streakCount - 3], offset, &StreakPositions[streakCount - 3]);

@@ -20,7 +20,6 @@
 // 0x00051e90..0x00052010), ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define Launch (*(LaunchPage *)0x00243b90)
 #define TuningLevel ((const char *)0x00244084)   // the track the tuning databases are read for
 
 // XBE_GLOBAL(0x001e455c, 0x30)

@@ -6,6 +6,7 @@
 #include "RigidOrigGlobals.h"
 #include "FpControl.h"
 
+#include "../game/Simulation.h"
 #include "../physics/Newton.h"
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
@@ -273,7 +274,7 @@ std::vector<RigidBody *> LiveBodies() {
         RigidBody *body = Sim_GetRigidBody(ShadowSim, 0, slot);
         if (body == NULL || body->info == NULL || body->ownerIndex < 0 || body->ownerIndex >= kRigidBodies)
             continue;
-        PhysicsObject *owner = PhysicsObjects[body->ownerIndex];
+        PhysicsObject *owner = fgSimulation.rigidBodyOwners[body->ownerIndex];
         if (owner == NULL || (owner->flags & PhysicsObject::kSimpleBody) || owner->rigidBodySlot != slot)
             continue;
         bodies.push_back(body);
@@ -283,7 +284,7 @@ std::vector<RigidBody *> LiveBodies() {
 
 int FreeOwnerSlot() {
     for (int i = kRigidBodies - 1; i >= 0; i--)
-        if (PhysicsObjects[i] == NULL)
+        if (fgSimulation.rigidBodyOwners[i] == NULL)
             return i;
     return -1;
 }
@@ -528,8 +529,8 @@ FakeState RandomFake() {
 // The stand-in owner in a free owner slot for the life of a case
 struct FakeOwnerScope {
     int slot;
-    explicit FakeOwnerScope(int s) : slot(s) { PhysicsObjects[slot] = &g_fakeOwner; }
-    ~FakeOwnerScope() { PhysicsObjects[slot] = NULL; }
+    explicit FakeOwnerScope(int s) : slot(s) { fgSimulation.rigidBodyOwners[slot] = &g_fakeOwner; }
+    ~FakeOwnerScope() { fgSimulation.rigidBodyOwners[slot] = NULL; }
 };
 
 void MakeFakeOwner(const PhysicsObject *real) {
@@ -556,7 +557,7 @@ void TestOwnerMethods(const std::vector<RigidBody *> &bodies) {
     uint32_t savedMask = manager->barrierMask;
     int index = 0;
     for (RigidBody *live : bodies) {
-        PhysicsObject *realOwner = PhysicsObjects[live->ownerIndex];
+        PhysicsObject *realOwner = fgSimulation.rigidBodyOwners[live->ownerIndex];
         for (int round = 0; round < 120; round++, index++) {
             alignas(16) BodyState snapshot;
             memcpy(&snapshot.body, live, sizeof(RigidBody));

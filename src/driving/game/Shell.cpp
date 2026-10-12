@@ -9,6 +9,7 @@
 #include "AICharacter.h"                // AICharacter, fgHandObj
 #include "Explosion.h"                  // ExplosionType
 #include "Human.h"
+#include "Simulation.h"
 #include "Vehicle.h"                    // PVehicle, CarPhysics
 #include "WeaponEffects.h"              // BulletStreakKinds, RBulletStreak, RScorchWorld
 #include "../../helpers.h"
@@ -21,9 +22,8 @@
 #include "../engine/PhysicsUtil.h"      // Util_*
 #include "../engine/SimRandom.h"
 #include "../engine/UMemory.hpp"
-#include "../physics/RigidBody.h"       // RigidBody, DamageSourceSig, SimStepsPerSecond
+#include "../physics/RigidBody.h"       // RigidBody, DamageSourceSig
 #include "../physics/SimpleRigidBody.h"
-#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../render/Lights.h"           // fgLightManager
@@ -55,13 +55,7 @@
 
 // ---- the game's globals
 
-#define Sim ((void *)0x00233ff0)                            // the Simulation
-#define SimulationRandom (*(SimRandom **)0x00233ff0)        // the Simulation's first word
-#define SimTimeStep FLOAT_AT(0x00234e30)                    // the simulation's step, in seconds
-#define SimStepCount I32_AT(0x00234e34)
 // The bits SimpleRigidBody::CheckCollisions set for each simple body, by slot (rigid bodies 0-63, simple 64-159)
-#define PlayerVehicles (*(PVehicle ***)0x00234e40)          // the Simulation's cars, the player's first
-#define Launch (*(LaunchPage *)0x00243b90)
 
 // ---- ours
 
@@ -103,7 +97,6 @@ void **const kShellVtable = (void **)0x0019006c;
 constexpr unsigned kSimulationBodies = 160;     // the ordered bodies: 64 rigid, then 96 simple
 constexpr int kDamageKindShell = 2;             // ApplyDamage's kind
 constexpr float kDamageSpread = 0.25f;          // ApplyDamage's fourth argument
-constexpr uint32_t kLaunchFlag1000 = 0x1000;    // a GHud::CheatMsgHandler toggle: doubled damage, explosions
 
 // RayShell
 constexpr float kMaxRange = 220.0f;
@@ -211,7 +204,7 @@ struct ShellFrame {
 };
 
 PhysicsObject *FindObject(uint32_t sig) {
-    return Simulation_FindPhysicsObjectSignature(Sim, 0, sig);
+    return fgSimulation.FindPhysicsObjectSignature(sig);
 }
 
 bool IsSnow(uint8_t faceType) {
@@ -220,20 +213,20 @@ bool IsSnow(uint8_t faceType) {
 
 // The player's car's physics has subPhysics set
 bool PlayerCarSubPhysics() {
-    return (*PlayerVehicles)->GetPhysics()->subPhysics != 0;
+    return fgSimulation.cars.first[0]->GetPhysics()->subPhysics != 0;
 }
 
 // With the cheat flag, a player's hit sets off an explosion at most five times a second (CollideWithWorld and
 // DamagePhysicsObject share it)
 void CheatExplosion(uint32_t ownerSig, const Coord3 *position) {
-    if (SimStepCount > SimStepsPerSecond / kCheatExplosionsPerSecond + RayShellExplosionStep ||
-        SimStepCount == RayShellExplosionStep) {
-        RayShellExplosionStep = SimStepCount;
-        PhysicsObject *player = Simulation_GetPlayerObject(Sim, 0);
+    if (fgSimulation.stepCount > fgSimulation.stepsPerSecond / kCheatExplosionsPerSecond + RayShellExplosionStep ||
+        fgSimulation.stepCount == RayShellExplosionStep) {
+        RayShellExplosionStep = fgSimulation.stepCount;
+        PhysicsObject *player = fgSimulation.GetPlayerObject();
         if (FindObject(ownerSig)->IsOwnedBy(player) && (Launch.flags & kLaunchFlag1000)) {
             Coord3 up = {0.0f, 1.0f, 0.0f};
-            Simulation_SpawnExplosion(Sim, 0, kMissileExplosion, kCheatExplosionKind, &up, position,
-                                      kCheatExplosionSize, kCheatExplosionArg6, NULL, DamageSourceSig);
+            fgSimulation.SpawnExplosion(kMissileExplosion, kCheatExplosionKind, &up, position, kCheatExplosionSize,
+                                        kCheatExplosionArg6, NULL, DamageSourceSig);
         }
     }
 }
@@ -308,11 +301,11 @@ void RayShell::ClearTracers(uint32_t before) {
 
 // FUNC_AT(0x00071a60)
 void RayShell::DrawTracers() {
-    uint32_t now = SimStepCount;
+    uint32_t now = fgSimulation.stepCount;
     ClearTracers(now - kTracerLifeSteps);
     for (int i = 0; i < RayShellTracerCount; i++) {
         RayShellTracer &tracer = RayShellTracers[i];
-        float age = (float)(double(now - tracer.time) * SimTimeStep);
+        float age = (float)(double(now - tracer.time) * fgSimulation.timeStep);
         const RayShellTracerSource &source = RayShellTracerSources[i];
         if (source.object != NULL && fgHandObj->unknown150) {
             MATRIX4 transform;
@@ -360,7 +353,7 @@ void RayShell::DrawFlashes() {
 
 // FUNC_AT(0x00071d40)
 void RayShell::Reset() {
-    ClearTracers(SimStepCount + 1);
+    ClearTracers(fgSimulation.stepCount + 1);
     ActiveRayShellCount = 0;
     RayShellFlashCount = 0;
     for (int i = 0; i < kRayShellTracers; i++)
@@ -377,7 +370,7 @@ void RayShell::StaticStoreTracer(const Coord3 *start, const Coord3 *end, int kin
     RayShellTracer &tracer = RayShellTracers[i];
     tracer.start = *start;
     tracer.end = *end;
-    tracer.time = SimStepCount;
+    tracer.time = fgSimulation.stepCount;
     tracer.kind = kind;
     RayShellTracerSources[i].object = object;
     RayShellTracerSources[i].effect = effect;
@@ -399,7 +392,7 @@ void RayShell::AddFlash(uint32_t ownerSig, const Coord3 *position) {
     if (RayShellFlashCount >= kRayShellFlashes)
         return;
     PhysicsObject *owner = FindObject(ownerSig);
-    if (owner == NULL || owner == Simulation_GetPlayerObject(Sim, 0))
+    if (owner == NULL || owner == fgSimulation.GetPlayerObject())
         return;
     if (owner->type != kObjectHuman && owner->type != kObjectSentry)
         return;
@@ -456,11 +449,11 @@ void RayShell::ConsiderVictim(uint32_t sig, const Coord3 *hitPoint, const Coord3
 // FUNC_AT(0x00072190)
 bool RayShell::CollideWithObjects() {
     for (unsigned index = 0; index < kSimulationBodies; index++) {
-        PhysicsObject *object = Simulation_GetOrderedBody(Sim, 0, index);
+        PhysicsObject *object = fgSimulation.GetOrderedBody(index);
         if (object == NULL || object->IsOwnedBy(FindObject(ownerSig)))
             continue;
         if ((object->flags & PhysicsObject::kSimpleBody) &&
-            (Simulation_GetSimpleRigidBody(Sim, 0, object->rigidBodySlot)->flags & SimpleRigidBody::kFlag01))
+            (fgSimulation.GetSimpleRigidBody(object->rigidBodySlot)->flags & SimpleRigidBody::kFlag01))
             continue;
 
         bool stretched = false;
@@ -471,7 +464,7 @@ bool RayShell::CollideWithObjects() {
         Coord4 centre = {position->x, position->y, position->z, 0.0f};
         if (object->type == kObjectHuman) {
             // only the player's shots hit humans
-            if (FindObject(ownerSig) != Simulation_GetPlayerObject(Sim, 0))
+            if (FindObject(ownerSig) != fgSimulation.GetPlayerObject())
                 continue;
             AICharacter *character = static_cast<Human *>(object)->character;
             if (character != NULL) {
@@ -510,7 +503,7 @@ bool RayShell::CollideWithObjects() {
         } else {
             // a rigid body: where the ray enters its box, if a thin box along the ray overlaps it
             bool overlaps = false;
-            RigidBody *body = Simulation_GetRigidBody(Sim, 0, object->rigidBodySlot);
+            RigidBody *body = fgSimulation.GetRigidBody(object->rigidBodySlot);
             MATRIX4 bodyFrame = body->info->orientation;
             MATRIX4 generated;
             MATRIX4 rayFrame = *Util_GenerateMatrix(&generated, Xyz(&direction));
@@ -616,7 +609,7 @@ void RayShell::DamagePhysicsObject(uint32_t sig, const Coord3 *hitPoint, const C
     AddFlash(ownerSig, Xyz(&origin));
     CheatExplosion(ownerSig, hitPoint);
     PhysicsObject *owner = FindObject(ownerSig);
-    if (owner == Simulation_GetPlayerObject(Sim, 0) && object->type == kObjectVehicle)
+    if (owner == fgSimulation.GetPlayerObject() && object->type == kObjectVehicle)
         static_cast<PVehicle *>(object)->AddDamageByPlayer(damage);
 }
 
@@ -666,7 +659,7 @@ RayShell* RayShell::Construct(int shellType, uint32_t ownerSig, const Coord3 *or
     this->streakKind = streakKind;
     this->muzzleObject = muzzleObject;
     this->muzzleEffect = muzzleEffect;
-    PhysicsObject *player = Simulation_GetPlayerObject(Sim, 0);
+    PhysicsObject *player = fgSimulation.GetPlayerObject();
     if (FindObject(this->ownerSig)->IsOwnedBy(player) && (Launch.flags & kLaunchFlag1000))
         this->damage = this->damage + this->damage;
 
@@ -749,10 +742,10 @@ Shell* Shell::Construct(int shellType, const Coord3 *direction, const Coord3 *or
     float speed;
     if (shellType == kSlowShellType) {
         speed = (float)(RandomScaled(kSpeedVariation) + kSlowShellSpeed);
-        stepsLeft = SimStepsPerSecond;
+        stepsLeft = fgSimulation.stepsPerSecond;
     } else {
         speed = (float)(RandomScaled(kSpeedVariation) + kShellSpeed);
-        stepsLeft = Ftol(double(SimStepsPerSecond) * kShellLifeSeconds);
+        stepsLeft = Ftol(double(fgSimulation.stepsPerSecond) * kShellLifeSeconds);
     }
     if (streakKind > -1)
         speed = BulletStreakKinds[streakKind].speed;
@@ -760,11 +753,11 @@ Shell* Shell::Construct(int shellType, const Coord3 *direction, const Coord3 *or
     MATRIX4 generated;
     MATRIX4 orientation = *Util_GenerateMatrix(&generated, direction);
     this->origin = *origin;
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     if (body != NULL)
         body->Construct(rigidBodySlot, kSimpleShell, origin, Xyz(&velocity), &kZero3, &orientation, kShellRadius,
                         kShellMass);
-    Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->flags |=
+    fgSimulation.GetSimpleRigidBody(rigidBodySlot)->flags |=
         SimpleRigidBody::kFlag01 | SimpleRigidBody::kMoves | SimpleRigidBody::kNearSimpleHits |
         SimpleRigidBody::kBoxRigidHits | SimpleRigidBody::kTouchesTriggers;
     return this;
@@ -784,13 +777,13 @@ void Shell::ApplyWorldDamage(float damage, WWorldPos *place, float scorchSize, i
     if (sceneObj == NULL)
         return;
     if (damage >= 500.0f)
-        sceneObj->animHandle->ProcessStimuli(kStimulusDamage500, SimStepCount, kStimulusMode);
+        sceneObj->animHandle->ProcessStimuli(kStimulusDamage500, fgSimulation.stepCount, kStimulusMode);
     if (damage >= 250.0f)
-        sceneObj->animHandle->ProcessStimuli(kStimulusDamage250, SimStepCount, kStimulusMode);
+        sceneObj->animHandle->ProcessStimuli(kStimulusDamage250, fgSimulation.stepCount, kStimulusMode);
     if (damage >= 50.0f)
-        sceneObj->animHandle->ProcessStimuli(kStimulusDamage50, SimStepCount, kStimulusMode);
+        sceneObj->animHandle->ProcessStimuli(kStimulusDamage50, fgSimulation.stepCount, kStimulusMode);
     if (damage >= 10.0f)
-        sceneObj->animHandle->ProcessStimuli(kStimulusDamage10, SimStepCount, kStimulusMode);
+        sceneObj->animHandle->ProcessStimuli(kStimulusDamage10, fgSimulation.stepCount, kStimulusMode);
 }
 
 // FUNC_AT(0x000749b0)
@@ -815,7 +808,7 @@ void Shell::ApplyWorldEffects(const Coord3 *position, const Coord4 *normal, int,
     const char *effect = "bullet";
     if (damageResult == kDamageResultFlesh || *faceType == kFaceFlesh) {
         effect = "Henbult";
-    } else if (object == Simulation_GetPlayerObject(Sim, 0)) {
+    } else if (object == fgSimulation.GetPlayerObject()) {
         effect = PlayerCarSubPhysics() ? NULL : "bullethe";
     } else if (object != NULL && (object->type == kObjectVehicle || object->type == kObjectHelicopter)) {
         effect = "bulletcar";
@@ -843,7 +836,7 @@ void Shell::ApplyWorldEffects(const Coord3 *position, const Coord4 *normal, int,
         ShellSparks = fgParticleSystems->library.FindSystemViaTag(kSparksTag);
     }
     if (ShellSparks != NULL && !IsSnow(*faceType) &&
-        (object != Simulation_GetPlayerObject(Sim, 0) || !PlayerCarSubPhysics()))
+        (object != fgSimulation.GetPlayerObject() || !PlayerCarSubPhysics()))
         fgParticleSystems->CreateParticles(ShellSparks, position, Xyz(normal), kSparksCount);
     if (effect != NULL)
         GFX_TriggerIncidental(GFX_LookupReference(effect), position, &orientation, &kZero3, &kOrigin4, 0, 0, 0);
@@ -854,14 +847,14 @@ void Shell::ApplyWorldEffects(const Coord3 *position, const Coord4 *normal, int,
     uint8_t low = *faceType & 0x0f;
     const char *patch;
     const char *mix;
-    if (int(SimulationRandom->Generate()) * kOneIn65536 < kRicochetChance) {
+    if (int(fgSimulation.random->Generate()) * kOneIn65536 < kRicochetChance) {
         patch = kRicochetSounds[ShellRicochetSound];
         if (++ShellRicochetSound >= 3)
             ShellRicochetSound = 0;
         mix = "Bullet Ricochet";
     } else {
         if (material == kSoundMetal90 || material == kSoundMetal10 || low == kLowMetal)
-            patch = kMetalSounds[int(SimulationRandom->Generate()) * 5 / 65536];
+            patch = kMetalSounds[int(fgSimulation.random->Generate()) * 5 / 65536];
         else if (low == kLowWood || material == kSoundWood)
             patch = "SFX_BulletWood";
         else if (low == kLowDirt || material == kSoundDirt)
@@ -886,18 +879,18 @@ void Shell::ApplyWorldEffects(const Coord3 *position, const Coord4 *normal, int,
 
 // FUNC_AT(0x00074e80)
 void Shell::Simulate() {
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     if (--stepsLeft <= 0) {
-        Simulation_DeletePhysicsObject(Sim, 0, this);
+        fgSimulation.DeletePhysicsObjectThunk(this);
         PhysicsObject::Simulate();
         return;
     }
 
     // the first body it touched, not its owner
     // read as three 64-bit words, as the original reads them
-    const uint64_t *hits = reinterpret_cast<const uint64_t *>(SimpleBodyHits[body->slot].words);
+    const uint64_t *hits = reinterpret_cast<const uint64_t *>(fgSimulation.simpleBodyHits[body->slot].words);
     for (unsigned index = 0; index < kSimulationBodies; index++) {
-        PhysicsObject *object = Simulation_GetOrderedBody(Sim, 0, index);
+        PhysicsObject *object = fgSimulation.GetOrderedBody(index);
         if (!((hits[index / 64] >> (index % 64)) & 1) || IsOwnedBy(object))
             continue;
         const Coord3 *at = object->GetPosition();
@@ -910,16 +903,16 @@ void Shell::Simulate() {
         if (explosionSize > kExplodesAbove) {
             Coord4 axis;
             VU0_ExtractZAxis3FromQuat(&body->orientation, &axis);
-            Simulation_SpawnExplosion(Sim, 0, kMissileExplosion, shellType, Xyz(&axis), &body->position,
-                                      explosionSize, 0, object, DamageSourceSig);
+            fgSimulation.SpawnExplosion(kMissileExplosion, shellType, Xyz(&axis), &body->position, explosionSize, 0, object,
+                                        DamageSourceSig);
             ApplyWorldEffects(Xyz(&objectPosition), &velocity, 2, shellType, noFace, 0, NULL);
         } else {
             ApplyWorldEffects(Xyz(&objectPosition), &velocity, 1, shellType, noFace, result, NULL);
         }
-        if (IsOwnedBy(Simulation_GetPlayerObject(Sim, 0)) && object->type == kObjectVehicle)
+        if (IsOwnedBy(fgSimulation.GetPlayerObject()) && object->type == kObjectVehicle)
             static_cast<PVehicle *>(object)->AddDamageByPlayer(damage);
         PhysicsObject::Simulate();
-        Simulation_DeletePhysicsObject(Sim, 0, this);
+        fgSimulation.DeletePhysicsObjectThunk(this);
         return;
     }
 
@@ -927,7 +920,7 @@ void Shell::Simulate() {
     Coord4 segment[2];
     segment[0] = Coord4{body->position.x, body->position.y, body->position.z, 1.0f};
     Coord4 step = {body->velocity.x, body->velocity.y, body->velocity.z, 1.0f};
-    VU0_v4scale4(&step, SimTimeStep, &step);
+    VU0_v4scale4(&step, fgSimulation.timeStep, &step);
     VU0_v4add4(&segment[0], &step, &segment[1]);
     WorldCollisionInfo info = {};       // its segment words zero: the original copies uninitialised stack
     info.point.w = 1.0f;
@@ -937,14 +930,14 @@ void Shell::Simulate() {
         if (explosionSize > kExplodesAbove) {
             Coord4 axis;
             VU0_ExtractZAxis3FromQuat(&body->orientation, &axis);
-            Simulation_SpawnExplosion(Sim, 0, kMissileExplosion, shellType, Xyz(&axis), Xyz(&info.point),
-                                      explosionSize, 0, NULL, DamageSourceSig);
+            fgSimulation.SpawnExplosion(kMissileExplosion, shellType, Xyz(&axis), Xyz(&info.point), explosionSize, 0, NULL,
+                                        DamageSourceSig);
             ApplyWorldEffects(Xyz(&info.point), &info.normal, 2, shellType, &info.faceType, 0, NULL);
         } else {
             ApplyWorldEffects(Xyz(&info.point), &info.normal, 1, shellType, &info.faceType, 0, NULL);
         }
         ApplyWorldDamage(damage, &worldPos, damage * kShellScorchScale, kScorchTypeShell, &info);
-        Simulation_DeletePhysicsObject(Sim, 0, this);
+        fgSimulation.DeletePhysicsObjectThunk(this);
     }
     PhysicsObject::Simulate();
 }

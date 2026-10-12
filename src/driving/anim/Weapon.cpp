@@ -16,8 +16,10 @@
 #include "../game/WeaponEffects.h"      // RMuzzleFlash
 #include "../game/WeaponManager.h"
 #include "../physics/PhysicsMath.h"     // Abs
+#include "../physics/Newton.h"
 #include "../physics/PhysicsObject.h"
-#include "../physics/Simulation.h"
+#include "../game/Simulation.h"
+#include "../game/Vehicle.h"
 #include "../platform/RealMath.h"
 #include "../render/Renderer.h"
 #include "../world/Trigger.h"             // gEventDynamicData
@@ -46,13 +48,9 @@
 
 // ---- originals called by address
 
-#define Simulation_SpawnNewtonObject ((Newton *(__fastcall *)(void *, int, const Coord3 *direction, const Coord3 *position, const Coord3 *momentum, const Coord3 *spin, CARP::Instance *instances, int instanceCount, float mass, float lifetime))0x000b5e20)
 
 // ---- globals
 
-#define Sim ((void *)0x00233ff0)                            // the Simulation
-#define SimStepCount I32_AT(0x00234e34)
-#define PlayerPhysicsObject (*(PhysicsObject **)PTR_AT(0x00234e40))
 #define IdentityMatrix (*(const MATRIX4 **)0x001c4654)
 // XBE_GLOBAL(0x001b4e3c, 4)
 static float HenchmenMuzzleFlashSize = 0.4f;
@@ -160,7 +158,7 @@ void ActWeapon::SetTransformToWorldSpace(const MATRIX4 *first, const MATRIX4 *se
 // FUNC_AT(0x0001ad70)
 void ActWeapon::SetOwner(PhysicsObject *owner) {
     this->owner = owner;
-    if (owner->IsOwnedBy(Simulation_GetPlayerObject(Sim, 0)))
+    if (owner->IsOwnedBy(fgSimulation.GetPlayerObject()))
         flags |= kPlayerOwned;
     else
         flags &= ~kPlayerOwned;
@@ -174,19 +172,20 @@ void ActWeapon::SetEventDynamicData() {
 
 // FUNC_AT(0x0001add0)
 void ActWeapon::PlayEvent(int stimulus) {
-    animHandle->ProcessStimuli(stimulus, SimStepCount, 1);
+    animHandle->ProcessStimuli(stimulus, fgSimulation.stepCount, 1);
 }
 
 // FUNC_AT(0x0001adf0)
 Newton* ActWeapon::SpawnWeapon(const Coord3 *position, const Coord3 *direction, const Coord3 *momentum,
                                const Coord3 *spin) {
-    return Simulation_SpawnNewtonObject(Sim, 0, direction, position, momentum, spin, animHandle->Instances(),
-                                        animHandle->instanceCount, kSpawnMass, kSpawnLifetime);
+    return static_cast<Newton *>(fgSimulation.SpawnNewtonObject(direction, position, momentum, spin,
+                                                                animHandle->Instances(), animHandle->instanceCount,
+                                                                kSpawnMass, kSpawnLifetime));
 }
 
 // FUNC_AT(0x0001ae30)
 double ActWeapon::CurrentMuzzleFlashStrength() {
-    int32_t remaining = muzzleFlashEndTick - SimStepCount;
+    int32_t remaining = muzzleFlashEndTick - fgSimulation.stepCount;
     if (remaining > 0)
         return remaining * (double)kOneSeventh;
     return 0.0;
@@ -207,11 +206,11 @@ void ActWeapon::ManualRender() {
     RSceneObj::Render();
     for (int i = 0; i < kFlashCount; i++) {
         const ActWeaponFlash &flash = flashes[i];
-        if (flash.endTick <= SimStepCount)
+        if (flash.endTick <= fgSimulation.stepCount)
             continue;
         Coord4 position = {flash.position.x, flash.position.y, flash.position.z, 1.0f};
         // Steps drawn so far (unsigned: a flash set further ahead fades to nothing at once)
-        uint32_t drawn = SimStepCount - flash.endTick + kFlashTicks;
+        uint32_t drawn = fgSimulation.stepCount - flash.endTick + kFlashTicks;
         float fade = (float)CrtPow(kFlashFade, (double)drawn);
         alignas(16) MATRIX4 transform;
         GetTransform(&transform);
@@ -304,18 +303,18 @@ void ActWeapon::TransformPointToWorldSpace(Coord4 *point) {
 // FUNC_AT(0x0001b270)
 void ActWeapon::StartMuzzleFlash(const Coord3 *position) {
     int slot = 0;
-    while (flashes[slot].endTick > SimStepCount) {
+    while (flashes[slot].endTick > fgSimulation.stepCount) {
         if (++slot >= kFlashCount)
             return;
     }
-    Coord3 player = *PlayerPhysicsObject->GetPosition();
+    Coord3 player = *fgSimulation.cars.first[0]->GetPosition();
     Coord3 at = *position;
     double extra = vec3distance(&player, &at) * (double)kDistanceSize;
     if (kMaxDistanceSize < extra)
         extra = kMaxDistanceSize;
     ActWeaponFlash &flash = flashes[slot];
     flash.position = *position;
-    flash.endTick = SimStepCount + kFlashTicks;
+    flash.endTick = fgSimulation.stepCount + kFlashTicks;
     flash.size = (float)(RandomShort() * 0.25 * (1.0 / 65536) + extra + 0.75);
     alignas(16) MATRIX4 transform;
     GetTransform(&transform);
@@ -323,7 +322,7 @@ void ActWeapon::StartMuzzleFlash(const Coord3 *position) {
     muzzleDirection.y = transform.mtx[2][1];
     muzzleDirection.z = transform.mtx[2][2];
     muzzleDirection.w = transform.mtx[2][3];
-    muzzleFlashEndTick = SimStepCount + kMuzzleFlashTicks;
+    muzzleFlashEndTick = fgSimulation.stepCount + kMuzzleFlashTicks;
 }
 
 // ---- ActWeaponDatabase

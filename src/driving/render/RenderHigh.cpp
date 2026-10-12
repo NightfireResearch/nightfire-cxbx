@@ -1,6 +1,8 @@
 #pragma fp_contract(off)
 
 #include "RenderHigh.h"
+#include "../game/Simulation.h"
+#include "../game/Vehicle.h"
 
 #include <bit>
 #include <intrin.h>                       // __rdtsc
@@ -35,7 +37,7 @@
 #include "../engine/CoreFoundation.h"     // NullFunction
 #include "../engine/GameLoop.h"           // LaunchPage
 #include "../engine/InputConfig.h"        // BuildFileName
-#include "../engine/MissionManager.h"
+#include "../game/MissionManager.h"
 #include "../engine/StaticInit.h"
 #include "../engine/UMemory.hpp"
 #include "../game/Debris.h"
@@ -59,11 +61,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 namespace {
-
-// The Simulation's list of cars: the first is the player's
-struct SimCarList {
-    PhysicsObject **first;
-};
 
 // Any of the game's objects with a vtable: slot 0 the scalar deleting destructor, and RShadowMap's USingleton base
 struct VirtualObject {
@@ -103,15 +100,10 @@ constexpr uint32_t kPhysicsNamespaceSize = 4;
 // ---- the game's code not ported yet
 #define GHud_Construct ((GHud *(__fastcall *)(void *, int))0x000dab50)
 #define GHud_Render ((void (__fastcall *)(GHud *, int))0x000e0140)
-#define Simulation_FUN_000b2d40 ((const Coord3 *(__fastcall *)(void *, int))0x000b2d40)
 #define GetParticFileForMission ((const char *(*)(void))0x000e3e50)
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // ---- globals
-#define Sim ((void *)0x00233ff0)                                // the Simulation
-// XBE_GLOBAL(0x00234e40, 0x4)
-#define SimCars (*(SimCarList *)0x00234e40)
-#define Launch (*(LaunchPage *)0x00243b90)
 #define CullDistance FLOAT_AT(0x001c4624)                       // "Far plane dist"
 #define FrameAnimationTime U32_AT(0x001c4668)                   // ESetFrameAnimationTime's
 #define RenderFeaturesUnknown U8_AT(0x001f2df8)                 // FeatureManager::SetUserSpecifiedRenderFeatures reads it
@@ -388,9 +380,9 @@ void RRenderHigh::ReceiveCameraInput() {
 
 // FUNC_AT(0x0008bf30)
 void RRenderHigh::Render() {
-    TheReflection->UpdateMaps(Simulation_FUN_000b2d40(Sim, 0));
+    TheReflection->UpdateMaps(fgSimulation.GetReflectiveObjectPosition());
     if (RShadowMap::ProjectedShadowsEnabled())
-        SimCars.first[0]->renderObject->RenderShadowVirtual();
+        fgSimulation.cars.first[0]->renderObject->RenderShadowVirtual();
     else
         TheShadowMap->ClearShadowMap();
     reinterpret_cast<EAGL::RenderContextExtension *>(fgRenderer->renderContext)->SetGlobal23ff0c(RenderLodBias);

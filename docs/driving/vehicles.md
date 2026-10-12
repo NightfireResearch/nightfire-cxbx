@@ -90,6 +90,8 @@ NIGHTFIRE_SNDLOCKSTEP: without it sound timing varies and mission 5 did not repe
 
 ## Odd things in the original, kept
 
+Every area's entries, by kind and with addresses: docs/driving/original-quirks.md.
+
 - ProcessSnowmobilePhysics, ProcessPhysics and ProcessSimplePhysics each raise a hard landing's collision event
   with the same inlined code; it is one function here (RaiseLandingImpact).
 - InitAudioObject builds "SFX_<engine>LdEn" in a local buffer and never uses it; Simulate asks for the car's class

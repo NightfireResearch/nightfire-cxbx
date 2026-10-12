@@ -9,8 +9,10 @@
 
 #include <bit>
 
-#include "Explosion.h"                  // ExplosionType, SimpleBodyHits
+#include "Explosion.h"                  // ExplosionType
+#include "MissionManager.h"
 #include "Shell.h"                    // Shell::ApplyWorldDamage
+#include "Simulation.h"
 #include "SoftZone.h"                   // PBondCar_PosInSoftZone
 #include "Vehicle.h"                    // PVehicle
 #include "WeaponManager.h"              // DrivingWeapon
@@ -23,14 +25,12 @@
 #include "../audio/ZoomObj.h"           // ASound
 #include "../camera/CameraSpline.h"     // RCameraMath
 #include "../engine/CoreFoundation.h"   // NullFunction, GameEmptyString
-#include "../engine/MissionManager.h"
 #include "../engine/OBB.h"
 #include "../engine/PhysicsUtil.h"      // Util_GenerateMatrix
 #include "../engine/SimRandom.h"
 #include "../engine/UMemory.hpp"
-#include "../physics/RigidBody.h"       // RigidBodyInfo, SimpleBodyOwners, SimStepsPerSecond, DamageSourceSig
+#include "../physics/RigidBody.h"       // RigidBodyInfo, DamageSourceSig
 #include "../physics/SimpleRigidBody.h"
-#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../render/Lights.h"
@@ -59,12 +59,6 @@
 
 // ---- globals
 
-#define Sim ((void *)0x00233ff0)                            // the Simulation
-#define SimulationRandom (*(SimRandom **)0x00233ff0)        // the Simulation's first word
-#define SimState I32_AT(0x00234e24)                         // Sim.simState
-#define SimTimeStep FLOAT_AT(0x00234e30)                    // the simulation's step, in seconds
-#define SimStepCount I32_AT(0x00234e34)                     // the Simulation's steps so far
-#define PlayerPhysicsObject (*(PhysicsObject **)PTR_AT(0x00234e40))     // the first player's object
 #define IdentityMatrix (*(const MATRIX4 **)0x001c4654)
 #define TuningLevel ((const char *)0x00244084)              // the level the tuning databases are read for
 
@@ -99,7 +93,6 @@ RSceneObj_vtbl *const kRAutonomousObjVtable = (RSceneObj_vtbl *)0x0018a398;
 constexpr int kBodies = 160;                        // the rigid bodies (64), then the simple ones (96)
 constexpr int kWeaponBank = 4;                      // fgBanks' slot of the weapon sounds
 constexpr int kDamageBullet = 2;                    // ApplyDamage's kind for a hit on a vehicle
-constexpr int kSimPaused = 3;                       // Sim.simState
 constexpr int kProgrammerEvent21 = 0x15;
 constexpr uint8_t kFaceType14 = 0xe;
 
@@ -173,7 +166,7 @@ bool IsDriveMissile(const Missile *missile) {
 }
 
 void EndDrive() {
-    SMissionManager_SetDriveMissile(glbMissionManager, 0, NULL);
+    glbMissionManager->SetDriveMissile(NULL);
 }
 
 // The Q-Pulse's detonation, heard at the body
@@ -212,8 +205,8 @@ Missile* Missile::Construct(int weapon, float speed, const Coord3 *direction, co
     vtable = kMissileVtable;
     this->target = target;
     unknown7C = 0.0f;
-    lingerSteps = SimStepsPerSecond * 2;
-    launchStep = SimStepCount;
+    lingerSteps = fgSimulation.stepsPerSecond * 2;
+    launchStep = fgSimulation.stepCount;
     // RMissileStreak's constructor (folded with EAGL's Property's, 0x000ed310)
     streak.count = 0;
     streak.tick = 0;
@@ -223,13 +216,13 @@ Missile* Missile::Construct(int weapon, float speed, const Coord3 *direction, co
     exploded = 0;
     fadeIn = 0.0f;
     this->damage = damage;
-    lockSoundStep = SimStepCount + 5;
+    lockSoundStep = fgSimulation.stepCount + 5;
     steerX = 0.0f;
     steerY = 0.0f;
     userSteerX = 0.0f;
     userSteerY = 0.0f;
     steerScale = MissileSteerScale;
-    armStep = SimStepCount;
+    armStep = fgSimulation.stepCount;
 
     float radius = kRadius;
     alignas(16) MATRIX4 generated;
@@ -238,9 +231,9 @@ Missile* Missile::Construct(int weapon, float speed, const Coord3 *direction, co
     // An owner that is not the player's, and the owner if it is a vehicle
     bool notPlayers = true;
     PhysicsObject *vehicleOwner = NULL;
-    PhysicsObject *owner = Simulation_FindPhysicsObjectSignature(Sim, 0, ownerSig);
+    PhysicsObject *owner = fgSimulation.FindPhysicsObjectSignature(ownerSig);
     if (owner != NULL) {
-        notPlayers = owner != Simulation_GetPlayerObject(Sim, 0);
+        notPlayers = owner != fgSimulation.GetPlayerObject();
         if (owner->type == kObjectVehicle)
             vehicleOwner = owner;
     }
@@ -255,11 +248,11 @@ Missile* Missile::Construct(int weapon, float speed, const Coord3 *direction, co
         maxSpeed = 175.0f;
         thrust = 17.5f;
         turnRate = 1.0f;
-        homingDelay = Ftol(double(SimStepsPerSecond) * kHomingDelayQPulse);
+        homingDelay = Ftol(double(fgSimulation.stepsPerSecond) * kHomingDelayQPulse);
         launchSpeed = speed + 4.0f;
         homingFull = 0;
-        lifeSteps = SimStepsPerSecond * 5;
-        lingerSteps = SimStepsPerSecond;
+        lifeSteps = fgSimulation.stepsPerSecond * 5;
+        lingerSteps = fgSimulation.stepsPerSecond;
         transitSound = "SFX_EMPtrans";
         break;
     case kWeaponRemoteTorpedo:
@@ -267,9 +260,9 @@ Missile* Missile::Construct(int weapon, float speed, const Coord3 *direction, co
         maxSpeed = 40.0f;
         thrust = 4.0f;
         turnRate = 1.0f;
-        homingDelay = Ftol(double(SimStepsPerSecond) * kHomingDelayQPulse);
+        homingDelay = Ftol(double(fgSimulation.stepsPerSecond) * kHomingDelayQPulse);
         homingFull = 0;
-        lifeSteps = SimStepsPerSecond * 10;
+        lifeSteps = fgSimulation.stepsPerSecond * 10;
         launchSpeed = 8.0f;
         transitSound = "SFX_vgtorpTrans";
         streak.type = 2;
@@ -292,20 +285,20 @@ Missile* Missile::Construct(int weapon, float speed, const Coord3 *direction, co
                     turnRate = 0.01f;
                     unknown7C = 0.8f;
                 }
-                lifeSteps = SimStepsPerSecond * 8;
+                lifeSteps = fgSimulation.stepsPerSecond * 8;
             } else {
                 maxSpeed = 20.0f;
                 thrust = 10.0f;
                 turnRate = 0.03f;
                 unknown7C = 0.8f;
-                lifeSteps = SimStepsPerSecond * 5;
+                lifeSteps = fgSimulation.stepsPerSecond * 5;
             }
         } else {
             maxSpeed = 50.0f;
             thrust = 25.0f;
             turnRate = 0.1f;
             unknown7C = -1.0f;
-            lifeSteps = SimStepsPerSecond * 5;
+            lifeSteps = fgSimulation.stepsPerSecond * 5;
         }
         launchSpeed = speed + 1.0f;
         homingDelay = 0;
@@ -319,22 +312,22 @@ Missile* Missile::Construct(int weapon, float speed, const Coord3 *direction, co
         maxSpeed = 250.0f;
         thrust = 50.0f;
         turnRate = 1.0f;
-        homingDelay = Ftol(double(SimStepsPerSecond) * kHomingDelayMissile);
+        homingDelay = Ftol(double(fgSimulation.stepsPerSecond) * kHomingDelayMissile);
         launchSpeed = speed + 7.0f;
         homingFull = 0;
-        lifeSteps = SimStepsPerSecond * 4;
+        lifeSteps = fgSimulation.stepsPerSecond * 4;
         transitSound = "SFX_MissleTrans";
         // An owner on a simple body (the signature's top bit; its slot in bits 24-30)
         if (int32_t(ownerSig) < 0) {
-            PhysicsObject *shooter = SimpleBodyOwners[ownerSig >> 24 & 0x7f];
+            PhysicsObject *shooter = fgSimulation.simpleRigidBodyOwners[ownerSig >> 24 & 0x7f];
             if (shooter->type == kObjectHelicopter) {
                 thrust = 100.0f;
-                armStep = Ftol(double(SimStepsPerSecond) * kHomingDelayLong + armStep);
+                armStep = Ftol(double(fgSimulation.stepsPerSecond) * kHomingDelayLong + armStep);
                 homingFull = 1;
             } else if (shooter->type == kObjectSentry) {
                 // A random homing delay, thrust, turn and (fired nearly straight up) heading
                 alignas(16) Coord4 spread;
-                BytesToCoordXYZW(SimRandom_Word(SimulationRandom, 0), NULL, NULL, NULL, &spread);
+                BytesToCoordXYZW(SimRandom_Word(fgSimulation.random, 0), NULL, NULL, NULL, &spread);
                 homingDelay = Ftol(double(homingDelay) * spread.w * 2.0);
                 thrust = float((double(spread.x) + 1.25) * thrust);
                 turnRate = float((double(spread.y) + 0.25) * turnRate);
@@ -354,7 +347,7 @@ Missile* Missile::Construct(int weapon, float speed, const Coord3 *direction, co
         turnRate = 1.0f;
         homingDelay = 0;
         homingFull = 1;
-        lifeSteps = SimStepsPerSecond * 5;
+        lifeSteps = fgSimulation.stepsPerSecond * 5;
         transitSound = GameEmptyString;
         break;
     case kWeaponUltralightRocket:
@@ -363,20 +356,20 @@ Missile* Missile::Construct(int weapon, float speed, const Coord3 *direction, co
         maxSpeed = 800.0f;
         thrust = 80.0f;
         turnRate = 1.0f;
-        homingDelay = Ftol(double(SimStepsPerSecond) * kHomingDelayLong);
+        homingDelay = Ftol(double(fgSimulation.stepsPerSecond) * kHomingDelayLong);
         launchSpeed = 10.0f;
         transitSound = "SFX_UMissileTrans";
         homingFull = 1;
-        lifeSteps = SimStepsPerSecond * 5;
+        lifeSteps = fgSimulation.stepsPerSecond * 5;
         break;
     case kWeaponCh6RemoteRocket:
         this->target = NULL;
         maxSpeed = RemoteRocketSpeed;
         thrust = RemoteRocketThrust;
         turnRate = RemoteRocketTurn * 0.05f;
-        homingDelay = Ftol(double(SimStepsPerSecond) * kHomingDelayShort);
+        homingDelay = Ftol(double(fgSimulation.stepsPerSecond) * kHomingDelayShort);
         homingFull = 1;
-        lifeSteps = SimStepsPerSecond * RemoteRocketLife;
+        lifeSteps = fgSimulation.stepsPerSecond * RemoteRocketLife;
         armStep += 6;
         launchSpeed = RemoteRocketLaunchSpeed + speed;
         transitSound = "SFX_MissleTrans";
@@ -386,10 +379,10 @@ Missile* Missile::Construct(int weapon, float speed, const Coord3 *direction, co
         maxSpeed = 250.0f;
         thrust = 125.0f;
         turnRate = 1.0f;
-        homingDelay = Ftol(double(SimStepsPerSecond) * kHomingDelayMissile);
+        homingDelay = Ftol(double(fgSimulation.stepsPerSecond) * kHomingDelayMissile);
         launchSpeed = speed + 5.0f;
         homingFull = 1;
-        lifeSteps = SimStepsPerSecond * 5;
+        lifeSteps = fgSimulation.stepsPerSecond * 5;
         if (_stricmp(TuningLevel, "snow1a_mis3") == 0 || _stricmp(TuningLevel, "snow1a") == 0)
             transitSound = GameEmptyString;
         else
@@ -401,9 +394,9 @@ Missile* Missile::Construct(int weapon, float speed, const Coord3 *direction, co
         thrust = 0.0f;
         maxSpeed = 300.0f;
         turnRate = 1.0f;
-        homingDelay = Ftol(double(SimStepsPerSecond) * kHomingDelayShort);
+        homingDelay = Ftol(double(fgSimulation.stepsPerSecond) * kHomingDelayShort);
         homingFull = 1;
-        lifeSteps = SimStepsPerSecond * 5;
+        lifeSteps = fgSimulation.stepsPerSecond * 5;
         launchSpeed = 300.0f;
         transitSound = "SFX_RocketTrans";
         radius = kFODRadius;
@@ -413,11 +406,11 @@ Missile* Missile::Construct(int weapon, float speed, const Coord3 *direction, co
         thrust = 0.0f;
         maxSpeed = 200.0f;
         turnRate = 1.0f;
-        homingDelay = Ftol(double(SimStepsPerSecond) * kHomingDelayShort);
+        homingDelay = Ftol(double(fgSimulation.stepsPerSecond) * kHomingDelayShort);
         launchSpeed = 200.0f;
         transitSound = "SFX_RocketTrans";
         homingFull = 1;
-        lifeSteps = SimStepsPerSecond * 5;
+        lifeSteps = fgSimulation.stepsPerSecond * 5;
         break;
     }
 
@@ -439,11 +432,11 @@ Missile* Missile::Construct(int weapon, float speed, const Coord3 *direction, co
 
     VU0_v4unitxyz(&velocity, &velocity);
     v3scale(1, &velocity, launchSpeed, &velocity);
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     if (body != NULL)
         body->Construct(rigidBodySlot, kSimpleMissile, position, reinterpret_cast<Coord3 *>(&velocity), &kZero,
                         &orientation, radius, kMass);
-    Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->flags |= kMissileBodyFlags;
+    fgSimulation.GetSimpleRigidBody(rigidBodySlot)->flags |= kMissileBodyFlags;
 
     RAutonomousObj *render = static_cast<RAutonomousObj *>(UMemory::FastAlloc(sizeof(RAutonomousObj), "RAutonomousObj"));
     if (render != NULL) {
@@ -505,17 +498,17 @@ void Missile::Render(bool firstView) {
         renderObject->LocateFX(renderObject->animHandle->effects, &locator, true);
         position = { locator.mtx[3][0], locator.mtx[3][1], locator.mtx[3][2], locator.mtx[3][3] };
     } else {
-        SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+        SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
         position = { body->position.x, body->position.y, body->position.z, 1.0f };
     }
 
     if (weapon == kWeaponQPulse) {
-        if (SimStepCount - launchStep > homingDelay) {
+        if (fgSimulation.stepCount - launchStep > homingDelay) {
             alignas(16) Coord4 lightPosition = { position.x, position.y, position.z, kQPulseLightW };
             alignas(16) Coord4 colour = kQPulseLightColour;
             if (exploded) {
                 lightPosition.w = 1.0f;
-                VU0_v4scale(&colour, float(double(lingerSteps) * SimTimeStep), &colour);
+                VU0_v4scale(&colour, float(double(lingerSteps) * fgSimulation.timeStep), &colour);
             }
             fgLightManager->AddPositionalLight(&lightPosition, &colour);
         }
@@ -526,8 +519,8 @@ void Missile::Render(bool firstView) {
         int lightType = weapon == kWeaponRocket ? kMissileLightRocket
                         : weapon == kWeaponSnowmobileRocket ? kMissileLightSnowmobileRocket : kMissileLightMissile;
         if (!exploded && weapon != kWeaponTorpedo) {
-            uint32_t age = SimStepCount - launchStep;
-            uint32_t quarterSecond = uint32_t(SimStepsPerSecond) >> 2;
+            uint32_t age = fgSimulation.stepCount - launchStep;
+            uint32_t quarterSecond = uint32_t(fgSimulation.stepsPerSecond) >> 2;
             double scale;
             if (age < quarterSecond) {
                 double fresh = double(quarterSecond - age) * 2.0;
@@ -535,9 +528,9 @@ void Missile::Render(bool firstView) {
             } else {
                 scale = double(age);
             }
-            fgLightManager->highLevel.AddMissile(&position, lightType, float(SimTimeStep * scale));
+            fgLightManager->highLevel.AddMissile(&position, lightType, float(fgSimulation.timeStep * scale));
         }
-        if (SimState != kSimPaused) {
+        if (fgSimulation.simState != kSimPaused) {
             if (exploded)
                 streak.Update();
             else
@@ -586,17 +579,17 @@ void Missile::Simulate() {
                 fadeIn = 1.0f;
         }
         sound->volume = fadeIn;
-        sound->position = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->position;
-        sound->velocity = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->velocity;
+        sound->position = fgSimulation.GetSimpleRigidBody(rigidBodySlot)->position;
+        sound->velocity = fgSimulation.GetSimpleRigidBody(rigidBodySlot)->velocity;
         return;
     }
     if (lingerSteps-- != 0) {
-        Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->velocity = kZero;
+        fgSimulation.GetSimpleRigidBody(rigidBodySlot)->velocity = kZero;
         renderObject->Hide();
         renderObject->StopFX();
         sound->volume = 0.0f;
     } else {
-        Simulation_DeletePhysicsObject(Sim, 0, this);
+        fgSimulation.DeletePhysicsObjectThunk(this);
     }
 }
 
@@ -607,7 +600,7 @@ void Missile::Simulate() {
 // player's level missiles first kept a little above the ground - and a hit breaks windows, scorches and explodes.
 // FUNC_AT(0x0005f6d0)
 void Missile::CheckForCollision() {
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     lifeSteps--;
     if (lifeSteps <= 0)
         detonate = 1;
@@ -625,8 +618,8 @@ void Missile::CheckForCollision() {
         } else {
             alignas(16) Coord4 forward;
             body->GetForwardVector(reinterpret_cast<Coord3 *>(&forward));
-            Simulation_SpawnExplosion(Sim, 0, kMissileExplosion, weapon, Xyz(&forward), &body->position, damage, 0, NULL,
-                                      DamageSourceSig);
+            fgSimulation.SpawnExplosion(kMissileExplosion, weapon, Xyz(&forward), &body->position, damage, 0, NULL,
+                                        DamageSourceSig);
         }
         if (IsDriveMissile(this))
             EndDrive();
@@ -634,10 +627,10 @@ void Missile::CheckForCollision() {
         return;
     }
 
-    const BitSet192 *touched = &SimpleBodyHits[body->slot];
-    if (SimStepCount > armStep) {
+    const BitSet192 *touched = &fgSimulation.simpleBodyHits[body->slot];
+    if (fgSimulation.stepCount > armStep) {
         for (int i = 0; i < kBodies; i++) {
-            PhysicsObject *other = Simulation_GetOrderedBody(Sim, 0, i);
+            PhysicsObject *other = fgSimulation.GetOrderedBody(i);
             if (!HitsBody(touched, i) || IsOwnedBy(other))
                 continue;
             bool hit = true;
@@ -662,8 +655,8 @@ void Missile::CheckForCollision() {
                     alignas(16) MATRIX4 ownOrientation;
                     VU0_quattom4(&ownOrientation, &body->orientation);
                     const Coord4 *otherHalfExtents =
-                        &Simulation_GetRigidBody(Sim, 0, other->rigidBodySlot)->info->halfExtents;
-                    theirs.Reset(&Simulation_GetRigidBody(Sim, 0, other->rigidBodySlot)->info->orientation,
+                        &fgSimulation.GetRigidBody(other->rigidBodySlot)->info->halfExtents;
+                    theirs.Reset(&fgSimulation.GetRigidBody(other->rigidBodySlot)->info->orientation,
                                  &otherPosition, otherHalfExtents);
                     ours.Reset(&ownOrientation, &ownPosition, &halfExtents);
                     if (!ours.CheckOBBOverlap(&theirs))
@@ -675,7 +668,7 @@ void Missile::CheckForCollision() {
                     alignas(16) Coord4 at = { body->position.x, body->position.y, body->position.z, 0.0f };
                     alignas(16) Coord4 forward;
                     VU0_ExtractZAxis3FromQuat(&body->orientation, &forward);
-                    if (IsOwnedBy(Simulation_GetPlayerObject(Sim, 0)) && other->type == kObjectVehicle) {
+                    if (IsOwnedBy(fgSimulation.GetPlayerObject()) && other->type == kObjectVehicle) {
                         static_cast<PVehicle *>(other)->AddDamageByPlayer(damage);
                         alignas(16) Coord4 heading, behind, ahead;
                         VU0_v4unitxyz(&body->velocity, &heading);
@@ -683,8 +676,8 @@ void Missile::CheckForCollision() {
                         VU0_v4scaleadd(&heading, kHitReach, &at, &ahead);
                         other->ApplyDamageVirtual(&behind, &ahead, kHitDamage, 0.0f, kDamageBullet, DamageSourceSig);
                     }
-                    Simulation_SpawnExplosion(Sim, 0, kMissileExplosion, weapon, Xyz(&forward), Xyz(&at), damage, 0, other,
-                                              DamageSourceSig);
+                    fgSimulation.SpawnExplosion(kMissileExplosion, weapon, Xyz(&forward), Xyz(&at), damage, 0, other,
+                                                DamageSourceSig);
                 }
             }
             if (IsDriveMissile(this))
@@ -703,13 +696,13 @@ void Missile::CheckForCollision() {
     float climb = body->velocity.y < 0.0f ? -body->velocity.y : body->velocity.y;
     float steep = climb * kLevelRatio;
     bool level = VU0_v3length(&step) > steep;
-    VU0_v4scale(&step, SimTimeStep, &step);
+    VU0_v4scale(&step, fgSimulation.timeStep, &step);
     segment[0].w = 0.0f;                // the original leaves the start's w as its stack had it
     VU0_v4sub(&segment[1], &step, &segment[0]);
 
     if (level && weapon != kWeaponSnowmobileRocket && weapon != kWeaponUltralightRocket &&
         weapon != kWeaponFodRocket && weapon != kWeaponTorpedo && weapon != kWeaponRemoteTorpedo &&
-        IsOwnedBy(Simulation_GetPlayerObject(Sim, 0))) {
+        IsOwnedBy(fgSimulation.GetPlayerObject())) {
         Coord3 *end = reinterpret_cast<Coord3 *>(&segment[1]);
         worldPos.FindClosestFace(end, true);
         float ground = float(worldPos.HeightAtPoint(end, false));
@@ -750,11 +743,11 @@ void Missile::CheckForCollision() {
         Shell::ApplyWorldDamage(damage, &worldPos, damage * kScorchPerDamage, kScorchType, &info);
         alignas(16) Coord4 forward;
         body->GetForwardVector(reinterpret_cast<Coord3 *>(&forward));
-        Simulation_SpawnExplosion(Sim, 0, kMissileExplosion, weapon, Xyz(&forward), Xyz(&info.point), damage, info.faceType,
-                                  NULL, DamageSourceSig);
+        fgSimulation.SpawnExplosion(kMissileExplosion, weapon, Xyz(&forward), Xyz(&info.point), damage, info.faceType,
+                                    NULL, DamageSourceSig);
     }
     if ((weapon == kWeaponTorpedo || weapon == kWeaponRemoteTorpedo) && info.faceType == kFaceType14)
-        SMissionManager_ProgrammerDefinedEvent(glbMissionManager, 0, kProgrammerEvent21, GameEmptyString);
+        glbMissionManager->ProgrammerDefinedEvent(kProgrammerEvent21, GameEmptyString);
     if (IsDriveMissile(this))
         EndDrive();
     if (weapon == kWeaponQPulse)
@@ -769,7 +762,7 @@ void Missile::CheckForCollision() {
 // it towards its top speed; the player's Missile corkscrews about its path, the corkscrew decaying.
 // FUNC_AT(0x00060110)
 void Missile::SteerMissile() {
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     float topSpeed = maxSpeed;
     float speed = body->GetScalarVelocity();
     if (target == NULL)
@@ -822,22 +815,22 @@ void Missile::SteerMissile() {
         body->velocity = { velocity.x, velocity.y, velocity.z };
     }
 
-    if (target != NULL && SimStepCount - launchStep > homingDelay) {
+    if (target != NULL && fgSimulation.stepCount - launchStep > homingDelay) {
         alignas(16) Coord4 aim = { target->position.x, target->position.y, target->position.z, 0.0f };
         alignas(16) Coord4 targetVelocity;
         if (target->GetVelocity(reinterpret_cast<Coord3 *>(&targetVelocity)))
-            VU0_v4scaleadd(&targetVelocity, SimTimeStep * kLeadTime, &aim, &aim);
+            VU0_v4scaleadd(&targetVelocity, fgSimulation.timeStep * kLeadTime, &aim, &aim);
         alignas(16) Coord4 toTarget;
         VU0_v4sub(&aim, &body->position, &toTarget);
         float distanceSquared = VU0_v3lengthsquare(&toTarget);
         VU0_v4unitxyz(&toTarget, &toTarget);
 
         // The player's own target: the lock sound, more often the closer it is
-        PVehicle *player = static_cast<PVehicle *>(PlayerPhysicsObject);
+        PVehicle *player = fgSimulation.cars.first[0];
         WTargetable *beacon = (player->*XbeVirtual<WTargetable *(PVehicle::*)()>(player, PVehicle::kGetTargetBeacon))();
-        if (target == beacon && lockSoundStep < SimStepCount) {
+        if (target == beacon && lockSoundStep < fgSimulation.stepCount) {
             AMenuSound::Trigger(0, "SFX_Htargetlock", "Tracking System", kSoundViewShared);
-            lockSoundStep += Truncate(float(double(SimStepsPerSecond) * distanceSquared * kLockSoundRate));
+            lockSoundStep += Truncate(float(double(fgSimulation.stepsPerSecond) * distanceSquared * kLockSoundRate));
         }
 
         if (distanceSquared > kMinTurnDistanceSquared) {
@@ -846,7 +839,7 @@ void Missile::SteerMissile() {
             alignas(16) Coord4 wanted;
             VU0_m4toquat(&wanted, &facing);
             double rate = homingFull ? double(turnRate) : double(turnRate) * 0.5;
-            double ramp = double(SimStepCount - launchStep - homingDelay) * SimTimeStep * 0.5;
+            double ramp = double(fgSimulation.stepCount - launchStep - homingDelay) * fgSimulation.timeStep * 0.5;
             if (1.0 < ramp)
                 ramp = 1.0;
             alignas(16) Coord4 turned;
@@ -870,7 +863,7 @@ void Missile::SteerMissile() {
             if (facing < kTorpedoFacingMin) {
                 target->RemoveReference();
                 target = NULL;
-                lifeSteps = SimStepsPerSecond >> 3;
+                lifeSteps = fgSimulation.stepsPerSecond >> 3;
             }
         } else if (target->ownerType == kTargetPoint && distanceSquared <= kPointReachedSquared) {
             target->RemoveReference();
@@ -878,7 +871,7 @@ void Missile::SteerMissile() {
         }
         if (facing > kLockedFacing)
             homingFull = 1;
-    } else if (SimStepCount - launchStep <= homingDelay) {
+    } else if (fgSimulation.stepCount - launchStep <= homingDelay) {
         alignas(16) Coord4 heading;
         VU0_v4unitxyz(&body->velocity, &heading);
         alignas(16) MATRIX4 generated;
@@ -894,11 +887,11 @@ void Missile::SteerMissile() {
     body->Accelerate(reinterpret_cast<Coord3 *>(&acceleration));
 
     if (wobbleX > kWobbleMin || wobbleX < -kWobbleMin) {
-        double age = double(SimStepCount - launchStep) * SimTimeStep;
+        double age = double(fgSimulation.stepCount - launchStep) * fgSimulation.timeStep;
         float ramp = 1.0 < age ? 1.0f : float(age);
-        wobbleX = float((1.0 - (double(SimTimeStep) + SimTimeStep)) * wobbleX);
-        wobbleY = float((1.0 - (double(SimTimeStep) + SimTimeStep)) * wobbleY);
-        wobblePhase = wobblePhase + SimTimeStep;
+        wobbleX = float((1.0 - (double(fgSimulation.timeStep) + fgSimulation.timeStep)) * wobbleX);
+        wobbleY = float((1.0 - (double(fgSimulation.timeStep) + fgSimulation.timeStep)) * wobbleY);
+        wobblePhase = wobblePhase + fgSimulation.timeStep;
         while (wobblePhase > 1.0f)
             wobblePhase = wobblePhase - 1.0f;
         alignas(16) Coord4 drift;
@@ -906,7 +899,7 @@ void Missile::SteerMissile() {
         drift.z = float(CosineTurns(wobblePhase) * wobbleX * body->velocity.x);
         drift.y = float(SineTurns(wobblePhase) * wobbleY);
         drift.w = 0.0f;
-        VU0_v4scaleadd(&drift, ramp * SimTimeStep, &body->position, &drift);
+        VU0_v4scaleadd(&drift, ramp * fgSimulation.timeStep, &body->position, &drift);
         body->position = { drift.x, drift.y, drift.z };
     }
 }

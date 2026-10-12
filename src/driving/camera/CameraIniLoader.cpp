@@ -11,6 +11,7 @@
 #include "../data/IniFiles.h"
 #include "../engine/UMemory.hpp"
 #include "../game/BondCar.h"            // OverrideCarType
+#include "../game/Simulation.h"
 #include "../game/WeaponManager.h"
 #include "../physics/RigidBody.h"       // PVehicle
 #include "../platform/RealMath.h"
@@ -31,7 +32,6 @@
 #define Crt_sprintf ((int (__cdecl *)(char *, const char *, ...))0x00132767)
 #define Crt_atof ((double (__cdecl *)(const char *))0x00133e84)
 
-#define playerPhysicsObject (*(PVehicle ***)0x00234e40)
 
 // XBE_GLOBAL(0x001ebc8c, 4)
 static RPlayerCamera *PlayerCamera;                     // RCameraIniLoader's
@@ -182,11 +182,11 @@ bool RCameraIniLoader::CheckCameraAgainstCar(char *cars) {
         if (cars[i] >= 'A' && cars[i] <= 'Z')
             cars[i] += 'a' - 'A';
     }
-    PVehicle *car = *playerPhysicsObject;
+    PVehicle *car = fgSimulation.cars.first[0];
     if (OverrideCarType != NULL && car->GetCarClass() == 0)
         return CarListContains(cars, OverrideCarType);
     const char *type = car->GetCarType();
-    const char *secondary = SecondaryType(*playerPhysicsObject);
+    const char *secondary = SecondaryType(fgSimulation.cars.first[0]);
     if (secondary != NULL && CarListContains(cars, secondary))
         return true;
     return CarListContains(cars, type);

@@ -8,6 +8,7 @@
 
 #include "AIVehicle.h"
 #include "BondCar.h"
+#include "Simulation.h"
 #include "SoftZone.h"
 #include "VehicleSound.h"               // AVehicle
 #include "../../common/xbeOverload.h"   // XbeVirtual
@@ -17,7 +18,6 @@
 #include "../camera/PlayerCamera.h"     // RPlayerCamera
 #include "../physics/PhysicsMath.h"
 #include "../physics/RigidBody.h"
-#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../render/PathEngine.h"       // RPathHandle
@@ -30,7 +30,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 
-#define Sim ((void *)0x00233ff0)        // the Simulation
 
 namespace {
 
@@ -83,7 +82,7 @@ AISplinePath *SplinePathOf(PBondCar *car) {
 
 // FUNC_AT(0x000644c0)
 void PBondCar::ProcessSubmarinePhysics() {
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(rigidBodySlot);
     float yawInput = control.steering;
     float pitchInput = control.steeringVertical;
     float brakeInput = control.brake;
@@ -365,7 +364,7 @@ void PBondCar::ProcessSubmarinePhysics() {
                     approach = 1.0f;
             }
             Coord4 out = {}, acceleration = {};
-            VU0_v4scale(&zone->plane, (float)((double)SimStepsPerSecond * scale * approach), &out);
+            VU0_v4scale(&zone->plane, (float)((double)fgSimulation.stepsPerSecond * scale * approach), &out);
             VU0_v4scaleadd(&zone->plane, (float)((double)pushIn / body->mass * scale), &out, &acceleration);
             if (!(v3dotprod(&acceleration, &zone->plane) > 0.0f))
                 continue;
@@ -404,7 +403,7 @@ void PBondCar::ProcessSubmarinePhysics() {
 void PBondCar::ProcessSplinePhysics() {
     if (physics->subPhysics != 0)
         return;
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(rigidBodySlot);
 
     // The path's frame with its position as the translation, both carried through the spline's placement
     MATRIX4 orientation;
@@ -423,7 +422,7 @@ void PBondCar::ProcessSplinePhysics() {
     float groundSpeed = VU0_sqrt((float)((double)direction.z * direction.z + (double)direction.x * direction.x));
     carWheelSpeed = groundSpeed;
     if (physics->wheelRadius > 0.0f)
-        carWheelSpeed = (float)(groundSpeed / ((double)SimStepsPerSecond * physics->wheelRadius * 6.32f));
+        carWheelSpeed = (float)(groundSpeed / ((double)fgSimulation.stepsPerSecond * physics->wheelRadius * 6.32f));
     if (carWheelSpeed < 0.01f)
         carWheelSpeed = 0.0f;
     float turn = Min(carWheelSpeed, 1.0f);

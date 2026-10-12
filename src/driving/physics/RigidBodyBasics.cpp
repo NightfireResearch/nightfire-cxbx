@@ -6,6 +6,7 @@
 #include "../engine/GameLoop.h"       // LaunchPage
 #include "../engine/UMemory.hpp"
 #include "../game/BondCarState.h"    // BondCar_BASE_FRICTION_MASS
+#include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../world/CollisionManager.h"
@@ -25,11 +26,9 @@
 
 // ---- the game's, not ported yet
 
-#define Simulation_GetScratchPadFreeZone ((RigidScratchPadFields *(*)(void))0x000b2820)
 
 // ---- globals
 
-#define Launch (*(LaunchPage *)0x00243b90)
 
 // XBE_GLOBAL(0x00233fac, 4)
 RigidScratchPadFields *RigidScratchPad;
@@ -111,6 +110,11 @@ float Rigid_VehicleWorldDamageScale = 6.0f;
 
 namespace {
 
+// The owner of the body in slot `ownerIndex` as a vehicle (the owners of the kinds below 4 are)
+PVehicle *OwnerVehicle(int ownerIndex) {
+    return static_cast<PVehicle *>(fgSimulation.rigidBodyOwners[ownerIndex]);
+}
+
 constexpr float kZoneScale = 0.2f;                  // UpdateZonalInfo: a zone is 5 units
 constexpr float kVehicleDamageThreshold = 0.2f;     // 0x00193280: kind below 4
 constexpr float kDamageThreshold = 0.05f;           // 0x00193278
@@ -131,7 +135,7 @@ constexpr int kWheels = 4;
 
 // FUNC_AT(0x000acde0)
 void RigidBody::InitRigidBodySystem() {
-    RigidScratchPad = Simulation_GetScratchPadFreeZone();
+    RigidScratchPad = static_cast<RigidScratchPadFields *>(Simulation::GetScratchPadFreeZone());
     TuningDBMgr->LoadDatabase("Physics:Rigid", Launch.missionName, 0, false);
     dbattrib_float("GRAVITY", &Rigid_GRAVITY, -100.0f, -0.001f, 4, 1.0f, NULL);
     dbattrib_float("BODGE_PLAYER_GRAVITY", &Rigid_BODGE_PLAYER_GRAVITY, -100.0f, -0.001f, 4, 1.0f, NULL);
@@ -169,7 +173,7 @@ void RigidBody::ResetRigidBodySP() {
 
 // FUNC_AT(0x000ad100)
 PhysicsObject* RigidBody::GetOwner() {
-    return PhysicsObjects[ownerIndex];
+    return fgSimulation.rigidBodyOwners[ownerIndex];
 }
 
 // The body's up axis against the world's: row 1's y, with x and z weighted by zero (a NaN or infinity there makes
@@ -322,10 +326,10 @@ void RigidBody::CalculateAndApplyWorldDamage(const Coord4 *direction, float forc
     force = (float)((double)Rigid_DamageScale * 2.0 * force);
     if (kind < kVehicleKinds) {
         force = Rigid_VehicleWorldDamageScale * force;
-        if (RigidVehicles[ownerIndex]->GetDamageByPlayerTimer())
-            RigidVehicles[ownerIndex]->AddDamageByPlayer(force);
+        if (OwnerVehicle(ownerIndex)->GetDamageByPlayerTimer())
+            OwnerVehicle(ownerIndex)->AddDamageByPlayer(force);
     }
-    if (kind == kKind1 && RigidVehicles[ownerIndex]->GetSplinePath() != NULL)
+    if (kind == kKind1 && OwnerVehicle(ownerIndex)->GetSplinePath() != NULL)
         return;
     if (force > 0.0f) {
         PhysicsObject *owner = GetOwner();
@@ -400,7 +404,7 @@ bool RigidBody::TempGetHeightInformation(bool, const Coord3 *point, Coord4 *grou
         const StripVertex &corner = worldPosition->face.corner[0];
         ground->w = (float)(bump + ((double)corner.z - point->z) * ground->z + ((double)corner.y - point->y) * ground->y +
                             ((double)corner.x - point->x) * ground->x);
-        if (kind < kVehicleKinds && RigidVehicles[ownerIndex]->GetPhysics()->isBoat != 0)
+        if (kind < kVehicleKinds && OwnerVehicle(ownerIndex)->GetPhysics()->isBoat != 0)
             ground->w += kVehicleHeightLift;
     } else {
         ground->w = 0.0f;
@@ -426,7 +430,7 @@ void RigidBody::InitLevers(PhysicsObject *owner, const Coord4 *halfExtents) {
             float rearZ = owner->attributes.LookupFloat("CAR_WHEEL_ZR_OFFSET", NULL);
             levers[0] = Coord4{wheelX - halfExtents->x, -halfExtents->y, frontZ + halfExtents->z, 0.0f};
             levers[1] = Coord4{halfExtents->x - wheelX, -halfExtents->y, frontZ + halfExtents->z, 0.0f};
-            if (RigidVehicles[ownerIndex]->GetPhysics()->isSnowmobile != 0) {
+            if (OwnerVehicle(ownerIndex)->GetPhysics()->isSnowmobile != 0) {
                 levers[2] = Coord4{0.0f, -halfExtents->y, rearZ - halfExtents->z, 0.0f};
                 levers[3] = Coord4{0.0f, -halfExtents->y, rearZ - halfExtents->z, 0.0f};
             } else {

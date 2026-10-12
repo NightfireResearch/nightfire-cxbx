@@ -6,6 +6,7 @@
 #include "../camera/CameraSpline.h"
 #include "../engine/SimRandom.h"
 #include "../engine/UMemory.hpp"
+#include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../../helpers.h"
 
@@ -25,7 +26,6 @@
 #define RoadSegments (fgRoadNetworkData.segments)
 #define RoadIntersections (fgRoadNetworkData.intersections)
 
-#define SimulationRandom (*(SimRandom **)0x00233ff0)   // the Simulation's first word
 
 #define Sprintf ((int (__cdecl *)(char *, const char *, ...))0x00132767)
 
@@ -83,7 +83,7 @@ static inline int LaneCount(int lane) {
 }
 
 static double RandomFraction() {
-    int roll = SimulationRandom->Generate();
+    int roll = fgSimulation.random->Generate();
     return roll * double(kRandomScale);
 }
 
@@ -693,7 +693,7 @@ short WRoadNav::CalcNextSegmentRandom(Coord3 *heading, uint8_t *ahead, bool *unu
             if (other == current || road->node[*ahead] == RoadSegments[other]->node[*ahead])
                 choices--;
         }
-        int roll = SimulationRandom->Generate();
+        int roll = fgSimulation.random->Generate();
         int pick = roll * choices >> 16;
         int seen = 0;
         for (int i = 0; i < node->segmentCount; i++) {

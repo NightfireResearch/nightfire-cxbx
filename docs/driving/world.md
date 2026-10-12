@@ -59,6 +59,8 @@ targeting updates are covered by the lockstep runs.
 
 ## Odd things in the original, kept
 
+Every area's entries, by kind and with addresses: docs/driving/original-quirks.md.
+
 - Open compares the 'Audi' lookup with the end of the root group instead of the 'Map ' group's, so the check never
   fails; Reset looks up 'Wmap' and never uses it; Close leaves the scene objects, the sound group and the trigger
   manager global set.

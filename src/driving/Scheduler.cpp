@@ -11,6 +11,7 @@
 #include "platform/RealSystem.h"
 #include "world/CollisionQueries.h"   // PointerUninitializedCopy
 #include "world/CollisionTypes.h"     // PointerVector
+#include "game/SimulationContainers.h"
 
 #include <windows.h>
 #include <cmath>
@@ -41,8 +42,6 @@ static uint32_t Clock;
 #define Schedule_OncePerGameLoop_vtable ((vtable_Schedule *)0x0018ea2c)
 
 // The STL algorithms the vector's _Insert_n calls, the game's copies for Schedule * that are not ours yet.
-#define Uninitialized_Fill_N ((void (*)(Schedule **, unsigned, Schedule *const *))0x000b2ec0)
-#define Copy_Backward ((Schedule ***(*)(Schedule ***, Schedule **, Schedule **, Schedule **))0x000b2e40)
 
 // The rest are ours: the game's one copy for every vector of pointers (the linker folded them together).
 static Schedule **Uninitialized_Copy(Schedule **first, Schedule **last, Schedule **dest) {
@@ -323,7 +322,7 @@ void Vector_Schedule::Insert(Schedule *const *schedule) {
     unsigned size = Size();
     if (first != NULL && size < unsigned(end - first)) {
         Schedule **at = last;
-        Uninitialized_Fill_N(at, 1, schedule);
+        UninitializedFillPointers(at, 1, schedule);
         last = at + 1;
         return;
     }
@@ -349,7 +348,7 @@ void Vector_Schedule::InsertN(Schedule **where, unsigned count, Schedule *const 
             capacity = Size() + count;
         Schedule **block = (Schedule **)UMemory::FastAlloc(capacity * sizeof(Schedule *), "STL");
         Schedule **gap = Uninitialized_Copy(first, where, block);
-        Uninitialized_Fill_N(gap, count, &copy);
+        UninitializedFillPointers(gap, count, &copy);
         Uninitialized_Copy(where, last, gap + count);
         unsigned size = Size() + count;
         if (first != NULL)
@@ -370,7 +369,7 @@ void Vector_Schedule::InsertN(Schedule **where, unsigned count, Schedule *const 
         Schedule **oldLast = last;
         last = (Schedule **)pointers->Ucopy((void *const *)(oldLast - count), (void *const *)oldLast, (void **)oldLast);
         Schedule **moved;
-        Copy_Backward(&moved, where, oldLast - count, oldLast);
+        CopyBackwardPointers(&moved, where, oldLast - count, oldLast);
         FillQueuePointers((ActionQueue **)where, (ActionQueue **)(where + count), (ActionQueue *const *)&copy);
     }
 }

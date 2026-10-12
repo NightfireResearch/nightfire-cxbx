@@ -2,14 +2,14 @@
 
 #include "Human.h"
 
+#include "MissionManager.h"
+#include "Simulation.h"
 #include "../anim/Actor.h"              // ActActor
 #include "../anim/Character.h"          // ActCharacter
 #include "../anim/Weapon.h"             // ActWeapon
-#include "../engine/MissionManager.h"
 #include "../engine/PhysicsUtil.h"      // Util_GenerateMatrix
 #include "../engine/UMemory.hpp"
 #include "../physics/SimpleRigidBody.h"
-#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -20,7 +20,6 @@
 
 
 // ---- globals
-#define Sim ((void *)0x00233ff0)                                    // the Simulation
 
 namespace {
 
@@ -53,10 +52,10 @@ Human* Human::Construct(int unknown6c, const Coord3 *direction, const Coord3 *po
     unknown8c = 0;
     MATRIX4 generated;
     MATRIX4 orientation = *Util_GenerateMatrix(&generated, direction);
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     if (body != NULL)
         body->Construct(rigidBodySlot, kSimpleHuman, position, &kZero, &kZero, &orientation, kBodyRadius, kBodyMass);
-    Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->flags |= SimpleRigidBody::kFlag01;
+    fgSimulation.GetSimpleRigidBody(rigidBodySlot)->flags |= SimpleRigidBody::kFlag01;
     return this;
 }
 
@@ -79,7 +78,7 @@ Human* Human::Delete(unsigned flags) {
 
 // The body at the character's matrix, at rest
 void Human::FollowCharacter() {
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     body->SetOrientMat(&character->transform);
     const float *origin = character->transform.mtx[3];
     body->position = {origin[0], origin[1], origin[2]};
@@ -93,7 +92,7 @@ void Human::SetAICharacter(AICharacter *character) {
     if (character->hitPoints != NULL)
         SetHitPointLoc(character->hitPoints);
     else
-        Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->flags |= SimpleRigidBody::kFlag01;
+        fgSimulation.GetSimpleRigidBody(rigidBodySlot)->flags |= SimpleRigidBody::kFlag01;
     ActCharacter *actor = character->actorLink->actor->character;
     for (int i = 0; i < ActCharacter::kWeapons; i++) {
         if (actor->weapons[i] != NULL)
@@ -104,12 +103,12 @@ void Human::SetAICharacter(AICharacter *character) {
 
 // FUNC_AT(0x0005dcc0)
 void Human::Activate() {
-    Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->flags &= ~SimpleRigidBody::kFlag01;
+    fgSimulation.GetSimpleRigidBody(rigidBodySlot)->flags &= ~SimpleRigidBody::kFlag01;
 }
 
 // FUNC_AT(0x0005dce0)
 void Human::Deactivate() {
-    Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->flags |= SimpleRigidBody::kFlag01;
+    fgSimulation.GetSimpleRigidBody(rigidBodySlot)->flags |= SimpleRigidBody::kFlag01;
 }
 
 // FUNC_AT(0x0005dd00)
@@ -135,12 +134,12 @@ int Human::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, float
         return 0;
 
     bool scoring = ai->scoreable;
-    PhysicsObject *source = Simulation_FindPhysicsObjectSignature(Sim, 0, *sourceSig);
-    if (source != NULL && !source->IsOwnedBy(Simulation_GetPlayerObject(Sim, 0)) && kind == kDamageBullet) {
+    PhysicsObject *source = fgSimulation.FindPhysicsObjectSignature(*sourceSig);
+    if (source != NULL && !source->IsOwnedBy(fgSimulation.GetPlayerObject()) && kind == kDamageBullet) {
         lastHit = *to;
     } else {
         if (scoring && amount >= kScoredDamage)
-            SMissionManager_IncShotsHit(glbMissionManager, 0, kind == kDamageBullet);
+            glbMissionManager->IncShotsHit(kind == kDamageBullet);
         if (kind == kDamageKind3 && ai->hitShape != NULL) {
             // Moved along the hit's line from where it started
             Coord4 line;
@@ -161,6 +160,6 @@ int Human::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, float
     LoseHitPoints(amount);
     dead = GetHitPoints() <= 0.0f;
     if (dead)
-        Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->flags |= SimpleRigidBody::kFlag01;
+        fgSimulation.GetSimpleRigidBody(rigidBodySlot)->flags |= SimpleRigidBody::kFlag01;
     return kDamageTaken;
 }

@@ -27,6 +27,7 @@
 #include <stdint.h>
 
 class USymbolTable;
+struct PhysicsObject;
 struct TriggerEvents;                   // world/Trigger.h
 
 namespace CARP {
@@ -44,6 +45,23 @@ public:
 };
 
 // ---- record types
+
+// An AI element (tag 'AIEl', 0x100 bytes; the AIElementController hands out its elements by their record:
+// RedirectCarpElement). Only what the ported code reads is named.
+struct AIElement {
+    uint8_t unknown00[0x30];
+    Coord4 position;                // +0x30
+    uint8_t unknown40[4];
+    int32_t type;                   // +0x44 1 with unknown48 1: `object` is a vehicle with a body
+    int32_t unknown48;              // +0x48
+    uint8_t unknown4c[0x2b];
+    uint8_t unknown77;              // +0x77
+    uint8_t unknown78[0x80];
+    TagReference reference;         // +0xf8 AIElementResolver's
+    PhysicsObject *object;          // +0xfc
+};
+static_assert(sizeof(AIElement) == 0x100 && offsetof(AIElement, type) == 0x44 && offsetof(AIElement, unknown77) == 0x77 &&
+              offsetof(AIElement, reference) == 0xf8 && offsetof(AIElement, object) == 0xfc, "AI element layout");
 
 // An article's description (tag 'Base' or 'pD', 100 bytes).
 class BaseDesc {

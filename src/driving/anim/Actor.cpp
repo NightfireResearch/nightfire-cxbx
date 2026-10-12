@@ -1,6 +1,7 @@
 #pragma fp_contract(off)
 
 #include "Actor.h"
+#include "../game/Simulation.h"
 #include "../render/Renderer.h"   // ViewProjectionMatrixPointer
 
 #include <math.h>
@@ -20,6 +21,7 @@
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
 #include "../world/Targeting.h"           // PointerList
+#include "../game/MissionManager.h"           // MissionList::BuyHead
 
 // ---------------------------------------------------------------------------------------------------------------
 // ActActor, ActActorDatabase and VU0_quatstoangvel (0x000112b0-0x00013c00, 0x0008c8d0), ported from the listing.
@@ -33,7 +35,6 @@
 // ---- the game's code not ported yet
 
 // std::list<T *>::_Buyheadnode
-#define PointerList_BuyHead ((PointerListNode *(__fastcall *)(PointerList *, int))0x000b8490)
 
 // ---- globals
 // XBE_GLOBAL(0x001dd9a4, 1)
@@ -42,10 +43,8 @@ bool CullRestart;                               // PrepareActorsForCulling's: th
 PointerListNode *CullCursor;                    // the culling walk's node
 // XBE_GLOBAL(0x001dd9e0, 4)
 static ActActor *UpdatingActor;                 // the actor updating (name ours)
-#define SimState I32_AT(0x00234e24)                     // Sim.simState
 // EAGL's pointer to the view-projection matrix (0x0023fa90)
 
-constexpr int32_t kSimPaused = 3;
 // The stimulus Fire plays on weapon 0
 constexpr uint32_t kFireStimulus = 10;
 // Moved this far across the ground (squared), an actor looks the ground up again
@@ -717,7 +716,7 @@ void VU0_quatstoangvel(Coord3 *out, const Coord4 *from, const Coord4 *to, float 
 void ActActorDatabase::StartUp() {
     ActActorDatabase *database = (ActActorDatabase *)OperatorNew(sizeof(ActActorDatabase));
     if (database != NULL) {
-        database->head = PointerList_BuyHead(database, 0);
+        database->head = MissionList::BuyHead();
         database->size = 0;
     }
     ActorDatabase = database;
@@ -783,7 +782,7 @@ void ActActorDatabase::KillActorByHandle(PointerListNode *handle) {
 
 // FUNC_AT(0x00013060)
 void ActActorDatabase::UpdateAll() {
-    if (SimState == kSimPaused)
+    if (fgSimulation.simState == kSimPaused)
         return;
     for (PointerListNode *node = Begin(); node != head; node = node->next)
         static_cast<ActActor *>(node->value)->Update();

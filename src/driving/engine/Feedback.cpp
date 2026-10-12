@@ -16,7 +16,6 @@
 // the main thread, with nothing between them but the records.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define Launch (*(LaunchPage *)0x00243b90)
 #define gSuperEasy BOOL8_AT(0x001e476c)
 // Cleared by the end-of-mission, exit, letterbox and pause events, set again by resume and restart (name ours)
 #define gFeedbackAllowed BOOL8_AT(0x001b6f50)

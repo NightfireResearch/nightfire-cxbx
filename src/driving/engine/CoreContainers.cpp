@@ -1,4 +1,5 @@
 #include "CoreContainers.h"
+#include "../game/SimulationContainers.h"   // the Simulation's copies
 
 #include "UMemory.hpp"
 #include "../../common/xbeOverload.h"
@@ -18,9 +19,6 @@
 
 // ---- originals called by address
 
-#define SimObjectMultimap_Insert ((GameTreeNode<SimObjectValue> **(__fastcall *)(GameTree<SimObjectValue> *, int, GameTreeNode<SimObjectValue> **, bool, GameTreeNode<SimObjectValue> *, const SimObjectValue *))0x000b31b0)
-#define SimObjectVector_Construct ((void (*)(void **where, int count, void *const *value, GameVector<void *> *vector, void *const *same))0x000b2ec0)   // uninitialized_fill_n with the allocator
-#define SimObjectVector_InsertN ((void (__fastcall *)(GameVector<void *> *, int, void **where, int count, void *const *value))0x000b3b80)
 #define CRT_VectorDestructorIterator ((void (__stdcall *)(void *array, uint32_t size, int32_t count, void *destructor))0x0013332e)   // ??_M
 
 static void *const kLightningSegmentDestructor = (void *)XbeAddress(&RLightningSegment::Destruct);
@@ -93,7 +91,7 @@ SimObjectInsert* SimObjectMultimap::InsertMulti(SimObjectInsert *result, const S
         addLeft = value->key < node->value.key;
     }
     GameTreeNode<SimObjectValue> *inserted;
-    result->node = *SimObjectMultimap_Insert(this, 0, &inserted, addLeft, where, value);
+    result->node = *static_cast<PhysicsObjMap *>(this)->InsertAt(&inserted, addLeft, where, value);
     result->inserted = true;
     return result;
 }
@@ -118,10 +116,10 @@ CollisionInstanceNode** CollisionInstanceMap::Find(CollisionInstanceNode **resul
 void SimObjectVector::PushBack(void *const *value) {
     size_t size = first == NULL ? 0 : last - first;
     if (first != NULL && size < size_t(end - first)) {
-        SimObjectVector_Construct(last, 1, value, this, value);
+        PointerUninitializedFillN(last, 1, value);
         last++;
     } else {
-        SimObjectVector_InsertN(this, 0, last, 1, value);
+        static_cast<SimPointerVector *>(this)->InsertN(last, 1, value);
     }
 }
 

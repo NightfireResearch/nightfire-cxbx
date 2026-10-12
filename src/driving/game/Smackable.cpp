@@ -4,6 +4,7 @@
 
 #include <string.h>
 
+#include "Simulation.h"
 #include "Vehicle.h"                    // fgDamageLevels
 #include "WeaponSound.h"                // ASmackable
 #include "../anim/AnimEngine.h"         // Handle
@@ -14,8 +15,7 @@
 #include "../engine/StaticInit.h"       // DestroyStatic_001e9294
 #include "../engine/UMemory.hpp"
 #include "../physics/PhysicsNamespace.h"    // PhysicsData
-#include "../physics/RigidBody.h"       // SimStepsPerSecond
-#include "../physics/Simulation.h"
+#include "../physics/RigidBody.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../render/RSceneObj.hpp"
@@ -31,8 +31,6 @@
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // ---- globals
-#define Sim ((void *)0x00233ff0)                                    // the Simulation
-#define SimStepCount I32_AT(0x00234e34)
 // XBE_GLOBAL(0x001e9294, 0x2c)
 PhysicsData DummyPhysicsData;
 
@@ -154,7 +152,7 @@ Smackable* Smackable::Construct(RSceneObj *render, WTrigger *trigger, const Coor
     }
     this->sleepDelay = sleepDelay;
     vtable = reinterpret_cast<void **>(kSmackableVtable);
-    moveCountdown = Ftol(double(SimStepsPerSecond) * kMoveSeconds);
+    moveCountdown = Ftol(double(fgSimulation.stepsPerSecond) * kMoveSeconds);
     this->trigger = trigger;
     data = ArticlePhysicsData(render);
     if (data == NULL) {
@@ -199,7 +197,7 @@ Smackable* Smackable::Construct(RSceneObj *render, WTrigger *trigger, const Coor
         detach = (trigger->flags & WTrigger::kFlag100) && data->forceDetach;
 
     Coord3 position = {orientation.mtx[3][0], orientation.mtx[3][1], orientation.mtx[3][2]};
-    RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+    RigidBody *body = fgSimulation.GetRigidBody(rigidBodySlot);
     if (body != NULL)
         body->Construct(int8_t(rigidBodySlot), kRigidKind, &position, velocity, &kZero, &rotation, mass,
                         &inverseInertia, &halfExtents, this, moving, detach);
@@ -230,7 +228,7 @@ Smackable* Smackable::Delete(unsigned flags) {
 void Smackable::GoToSleep() {
     RSceneObj *render = renderObject;
     if (trigger != NULL) {
-        RigidBody *body = Simulation_GetRigidBody(Sim, 0, rigidBodySlot);
+        RigidBody *body = fgSimulation.GetRigidBody(rigidBodySlot);
         bool placed;
         if (body->flags & RigidBody::kFlag1) {
             trigger->flags |= WTrigger::kFlag100;
@@ -245,12 +243,12 @@ void Smackable::GoToSleep() {
             uint32_t most = Ftol(data->hitPoints);
             uint32_t left = Ftol(hitPoints);
             procAnimState->damage = uint8_t(-uint8_t((left + most - 1) * 256 / most));
-            Simulation_DeletePhysicsObjectDirect(Sim, 0, this);
+            fgSimulation.DeletePhysicsObject(this);
             return;
         }
         render->Hide();
     }
-    Simulation_DeletePhysicsObjectDirect(Sim, 0, this);
+    fgSimulation.DeletePhysicsObject(this);
 }
 
 // FUNC_AT(0x00075420)
@@ -260,13 +258,13 @@ void Smackable::Simulate() {
         audio->position = *GetPosition();
         audioObject->velocity = *GetLinearVelocity();
     }
-    if (VU0_v3length(&Simulation_GetRigidBody(Sim, 0, rigidBodySlot)->velocity) > kMovingSpeed)
-        moveCountdown = Ftol(double(SimStepsPerSecond) * kMoveSeconds);
+    if (VU0_v3length(&fgSimulation.GetRigidBody(rigidBodySlot)->velocity) > kMovingSpeed)
+        moveCountdown = Ftol(double(fgSimulation.stepsPerSecond) * kMoveSeconds);
     if (moveCountdown != 0)
         moveCountdown--;
     bool animating = renderObject != NULL ? renderObject->animHandle->AnySystemPlaying() : false;
     bool sounding = audioObject != NULL ? IsStillActive(audioObject) : false;
-    if (Simulation_GetRigidBody(Sim, 0, rigidBodySlot)->sleepState != RigidBody::kAwake && !animating &&
+    if (fgSimulation.GetRigidBody(rigidBodySlot)->sleepState != RigidBody::kAwake && !animating &&
         !sounding) {
         if (sleepDelay > 0)
             sleepDelay--;
@@ -285,7 +283,7 @@ int Smackable::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, f
     bool killed = false;
     ABaseSound *audio = audioObject;
     RSceneObj *render = renderObject;
-    uint32_t step = SimStepCount;
+    uint32_t step = fgSimulation.stepCount;
     Handle *animation = render->animHandle;
     if (!(GetHitPoints() > 0.0f)) {
         killed = true;

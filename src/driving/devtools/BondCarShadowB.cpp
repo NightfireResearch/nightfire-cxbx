@@ -12,7 +12,7 @@
 #include "../game/BondCarModes.h"
 #include "../game/SoftZone.h"           // SoftZones
 #include "../physics/RigidBody.h"
-#include "../physics/Simulation.h"
+#include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../render/PathEngine.h"       // RPathHandle
 #include "../render/RenderHigh.h"       // fgRenderHigh
@@ -78,7 +78,6 @@ typedef void (__fastcall *SetFloatFn)(PBondCar *, int, float);
 typedef uint32_t (*ColourFn)(const char *, uint32_t);
 typedef AISplinePath *(__fastcall *SplinePathFn)(AIGroundVehicle *, int);
 
-#define ShadowSim ((void *)0x00233ff0)
 #define Shadow_GetSplinePath ((SplinePathFn)0x000359d0)
 
 // ---- results
@@ -165,7 +164,7 @@ RPlayerCamera *Camera() {
 }
 
 RigidBody *BodyOf(PBondCar *car) {
-    return Simulation_GetRigidBody(ShadowSim, 0, car->rigidBodySlot);
+    return fgSimulation.GetRigidBody(car->rigidBodySlot);
 }
 
 // The objects the state covers, taken from the car once before its cases (the cases overwrite its pointers)
@@ -872,7 +871,7 @@ void __fastcall LiveSpline(PBondCar *car, int) {
 void GatherCars() {
     g_cars.clear();
     for (int i = 0; i < kOwners; i++) {
-        PhysicsObject *owner = PhysicsObjects[i];
+        PhysicsObject *owner = fgSimulation.rigidBodyOwners[i];
         if (owner == NULL || uint32_t(uintptr_t(owner->vtable)) != kBondCarVtable)
             continue;
         PBondCar *car = static_cast<PBondCar *>(static_cast<PVehicle *>(owner));

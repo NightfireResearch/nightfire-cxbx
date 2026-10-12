@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "MissionManager.h"     // glbMissionManager
+#include "Simulation.h"
 #include "VehicleParticle.h"              // the vehicle particles' system types
 #include "../../common/xbeOverload.h"     // XbeVirtual
 #include "../../helpers.h"
@@ -16,7 +18,6 @@
 #include "../eagl/RenderContext.h"
 #include "../eagl/RenderMethod.h"
 #include "../eagl/Tar.h"
-#include "../engine/MissionManager.h"     // glbMissionManager
 #include "../engine/StaticInit.h"         // DestroyStatic_00200f60
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"         // sin_fractionalangle, cos_fractionalangle
@@ -38,7 +39,6 @@
 #define DummyNullFunction ((void (__fastcall *)(ROffscreenBuffer *, int))0x000d3580)
 
 // ---- globals
-#define SimStepCount I32_AT(0x00234e34)
 
 // XBE_GLOBAL(0x00200f60, 0x4c)
 EAGL::GeoPrimState MissileCamState;
@@ -166,7 +166,7 @@ void RMissileCam::Kill() {
 void RMissileCam::Draw() {
     if (glbMissionManager->cinematicMode != 0 || !enabled)
         return;
-    EAGL::TAR *texture = textures[SimStepCount % 3];
+    EAGL::TAR *texture = textures[fgSimulation.stepCount % 3];
     uint32_t colour = uint32_t(alpha) << 24 | kMissileCamGrey;
     uint32_t colours[kMissileCamVertices] = { colour, colour, colour, colour };
     float bottom = float(fgRenderer->screenHeight * kNoiseRepeatsPerPixel);

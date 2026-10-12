@@ -55,6 +55,8 @@ every car's motion goes through RigidBody every tick.
 
 ## Odd things in the original, kept
 
+Every area's entries, by kind and with addresses: docs/driving/original-quirks.md.
+
 - UpdatePositionAndOrientation ignores its time-step argument and uses the global step. It builds the inertia
   matrix as transpose x scale x rotation with D3DX multiplies; the constructor and ResetObject build it the other
   way round with 3x4 multiplies.

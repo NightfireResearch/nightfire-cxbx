@@ -7,15 +7,15 @@
 
 #include <bit>
 
+#include "MissionManager.h"
+#include "Simulation.h"
 #include "Vehicle.h"                    // PVehicle::GetCarType
 #include "../../helpers.h"
 #include "../engine/CoreFoundation.h"   // GetFoundationVideoModeRate
-#include "../engine/MissionManager.h"
 #include "../engine/SimRandom.h"
 #include "../engine/UMemory.hpp"
 #include "../physics/RigidBody.h"       // DamageSourceSig
 #include "../physics/SimpleRigidBody.h"
-#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -31,9 +31,6 @@
 
 // ---- globals
 
-#define Sim ((void *)0x00233ff0)                            // the Simulation
-#define SimulationRandom (*(SimRandom **)0x00233ff0)        // the Simulation's first word
-#define SimTimeStep FLOAT_AT(0x00234e30)                    // the simulation's step, in seconds
 // XBE_GLOBAL(0x001e7a60, 4)
 float ExplosionInverseScale = 0.5f;
 
@@ -70,8 +67,8 @@ constexpr float kDamageUnknown4 = 0.8f;
 
 // A random 32-bit word for BytesToCoordXYZ: the first draw inverted in the top half, the second below
 uint32_t RandomWord() {
-    uint32_t high = ~SimulationRandom->Generate() << 16;
-    return high | SimulationRandom->Generate();
+    uint32_t high = ~fgSimulation.random->Generate() << 16;
+    return high | fgSimulation.random->Generate();
 }
 
 }  // namespace
@@ -85,10 +82,10 @@ Explosion* Explosion::Construct(int type, int, const Coord3 *position, float siz
     vtable = kExplosionVtable;
     explosionType = type;
     bodiesHit = {};
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     if (body != NULL)
         body->Construct(rigidBodySlot, kSimpleExplosion, position, &kZero, &kZero, &kIdentity, 0.0f, 0.0f);
-    Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->flags |= kExplosionBodyFlags;
+    fgSimulation.GetSimpleRigidBody(rigidBodySlot)->flags |= kExplosionBodyFlags;
     return this;
 }
 
@@ -114,7 +111,7 @@ Explosion* Explosion::Delete(unsigned flags) {
 // apart. Then the body grows by the video mode's rate over the step.
 // FUNC_AT(0x0005ceb0)
 void Explosion::Simulate() {
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     Coord4 centre = { body->position.x, body->position.y, body->position.z, 0.0f };
     float grown = float(double(kScale) * 0.5 + body->radius);
     float scaled = ExplosionInverseScale * grown;
@@ -124,12 +121,12 @@ void Explosion::Simulate() {
     float capped = strength < kMaxStrength ? float(strength) : kMaxStrength;
     body->SetCanHitTrigger(strength >= kTriggerStrength);
     if (capped <= 1.0f || grown > kMaxRadius) {
-        Simulation_DeletePhysicsObject(Sim, 0, this);
+        fgSimulation.DeletePhysicsObjectThunk(this);
         PhysicsObject::Simulate();
         return;
     }
 
-    BitSet192 touched = SimpleBodyHits[body->slot];
+    BitSet192 touched = fgSimulation.simpleBodyHits[body->slot];
     BitSet192 newHits = bodiesHit;
     newHits.AndNotFrom(&touched);
     for (int i = 0; i < 6; i++)
@@ -138,7 +135,7 @@ void Explosion::Simulate() {
     for (int i = 0; i < kBodies; i++) {
         if ((newHits.words[i / 32] >> (i % 32) & 1) == 0)
             continue;
-        PhysicsObject *other = Simulation_GetOrderedBody(Sim, 0, i);
+        PhysicsObject *other = fgSimulation.GetOrderedBody(i);
 
         float thin = 1.0f;
         Coord4 bounds;
@@ -165,7 +162,7 @@ void Explosion::Simulate() {
         BytesToCoordXYZ(RandomWord(), &kSpinOffset, &kSpin, NULL, &spin);
         VU0_v4scale(&spin, pushStrength, &spin);
 
-        if ((other != Simulation_GetPlayerObject(Sim, 0) || !glbMissionManager->autoDrive) &&
+        if ((other != fgSimulation.GetPlayerObject() || !glbMissionManager->autoDrive) &&
             (other->type != kObjectVehicle || _stricmp(static_cast<PVehicle *>(other)->GetCarType(), "tunnel") != 0))
             other->ApplyForces(reinterpret_cast<Coord3 *>(&push), reinterpret_cast<Coord3 *>(&spin));
 
@@ -179,7 +176,7 @@ void Explosion::Simulate() {
     }
 
     float radius = body->radius;
-    float step = SimTimeStep;
+    float step = fgSimulation.timeStep;
     body->radius = float(double(GetFoundationVideoModeRate()) * step + radius);
     PhysicsObject::Simulate();
 }

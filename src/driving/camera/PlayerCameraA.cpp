@@ -19,13 +19,14 @@
 
 #include "../../helpers.h"
 #include "../anim/AnimEngine.h"         // Handle
+#include "../game/Simulation.h"
 #include "../render/PathEngine.h"
 #include "../world/World.h"              // WorldArticle, ArticleOf
 #include "../data/Carp.h"
 #include "../engine/CoreFoundation.h"   // NullFunction
 #include "../engine/GameLoop.h"         // LaunchPage
 #include "../engine/InputConfig.h"
-#include "../engine/MissionManager.h"
+#include "../game/MissionManager.h"
 #include "../engine/UMemory.hpp"
 #include "../game/WeaponManager.h"
 #include "../physics/PhysicsMath.h"     // Abs
@@ -49,20 +50,14 @@ enum CameraAnimFlags : uint8_t {
     kCamAnimFollowsAnchor = 0x01,       // the path is kept relative to the camera's lookAt
 };
 
-constexpr int32_t kSimState3 = 3;       // Sim.simState: the cameras stand still
 constexpr uint16_t kCarAnimationFlags = 0x44;   // TriggerCarAnimationCamera's additions to the caller's flags
 
 }  // namespace
 
 // ---- the game's globals
 
-#define Launch (*(LaunchPage *)0x00243b90)
 // XBE_GLOBAL(0x001ec3b8, 4)
 static float RadiansToTurns = 1.0f / 6.283185f; // as the static initialiser made it (0x3e22f984; this unit's copy)
-#define SimState I32_AT(0x00234e24)
-#define SimStepsPerSecond I32_AT(0x00234e2c)
-#define SimTimeStep FLOAT_AT(0x00234e30)
-#define SimStepCount I32_AT(0x00234e34)
 
 #define PlayerCameraVtable ((void **)0x001918ac)
 
@@ -102,7 +97,7 @@ static_assert(std::bit_cast<uint32_t>(kSpinSine) == 0x3d32aa3f && std::bit_cast<
               "the spin's quaternion");
 constexpr int kSpinSteps = 36;
 
-constexpr float kOneThird = 1.0f / 3.0f;        // the auto-aim limits, per step of unknown4dc
+constexpr float kOneThird = 1.0f / 3.0f;        // the auto-aim limits, per step of the difficulty
 static_assert(std::bit_cast<uint32_t>(kOneThird) == 0x3eaaaaab, "a third");
 
 // The animation cameras' blend into their path: the spline's tension
@@ -274,7 +269,7 @@ void RPlayerCamera::UpdateBumperCam() {
 // The camera along the AI spline path: the path's frame at its position, the spline's placement applied.
 // FUNC_AT(0x00080cf0)
 void RPlayerCamera::UpdateAIPathAnimationCam() {
-    if (SimState == kSimState3 || aiSplinePath == NULL)
+    if (fgSimulation.simState == kSimPaused || aiSplinePath == NULL)
         return;
     RPathHandle *path = aiSplinePath->path;
     MATRIX4 frame;
@@ -610,7 +605,7 @@ void RPlayerCamera::SetControlToCPU(bool cpu) {
 // FUNC_AT(0x00081950)
 void RPlayerCamera::WeaponFired(int weapon) {
     if (glbMissionManager->autoDrive && weapon == kWeaponUltralightRocket)
-        weaponFired = SimStepCount;
+        weaponFired = fgSimulation.stepCount;
 }
 
 // FUNC_AT(0x00081980)
@@ -709,7 +704,7 @@ void RPlayerCamera::Destruct() {
 // FUNC_AT(0x00081d10)
 void RPlayerCamera::UpdateDashboardCam() {
     const CameraModeInfo *mode = &fgCameraTables.modes[cameraMode];
-    bool stopped = SimState == kSimState3;
+    bool stopped = fgSimulation.simState == kSimPaused;
     if (mode->index < 0 || mode->index >= fgCameraTables.dashboardCount)
         return;
     const DashboardCamInfo *dashboard = &fgCameraTables.dashboards[mode->index];
@@ -762,7 +757,7 @@ void RPlayerCamera::UpdateDashboardCam() {
         VU0_v3add(anchorPosition, &offset, &eye);
     } else {
         if (!stopped) {
-            float step = SimTimeStep;
+            float step = fgSimulation.timeStep;
             float speed = Abs(GetAnchorSpeed());
             float inertia = float(double(speed) * (double(step) * kStepsPerSecond) * dashboard->intertiaScale);
             unknown25C = CameraClamp(dashboard->intertiaMax, inertia, dashboard->intertiaMin);
@@ -786,7 +781,7 @@ void RPlayerCamera::UpdateDashboardCam() {
     if (!stopped) {
         Coord4 acceleration = {};   // (the original's stack when the anchor answers nothing)
         GetAnchorAcceleration(&acceleration);
-        VU0_v4scale(&acceleration, -SimTimeStep, &acceleration);
+        VU0_v4scale(&acceleration, -fgSimulation.timeStep, &acceleration);
         VU0_v4multxyz(&acceleration, &dashboard->torqueScale, &acceleration);
         acceleration.x = CameraClamp(dashboard->torqueMax.x, acceleration.x, -dashboard->torqueMax.x);
         acceleration.z = CameraClamp(dashboard->torqueMax.z, acceleration.z, -dashboard->torqueMax.z);
@@ -827,7 +822,7 @@ void RPlayerCamera::UpdateDashboardCam() {
 // animation's first key (or the instance) over unknown26C steps, then the animation.
 // FUNC_AT(0x00082400)
 void RPlayerCamera::UpdateWorldAnimationCam() {
-    if (SimState == kSimState3 || animHandle == NULL)
+    if (fgSimulation.simState == kSimPaused || animHandle == NULL)
         return;
     Coord4 oldEye = eye;
     VU0_v3add(GetAnchorPosition(), &lookAtOffset, &lookAt);
@@ -923,7 +918,7 @@ void RPlayerCamera::UpdateWorldAnimationCam() {
         }
     }
     VU0_v4sub(&eye, &oldEye, &unknown50);
-    VU0_v4scale(&unknown50, float(SimStepsPerSecond), &unknown50);
+    VU0_v4scale(&unknown50, float(fgSimulation.stepsPerSecond), &unknown50);
     eye = *position;
 }
 
@@ -932,7 +927,7 @@ void RPlayerCamera::UpdateWorldAnimationCam() {
 // back into the world with the heading. unknown260 turns the path about y.
 // FUNC_AT(0x00082840)
 void RPlayerCamera::UpdateRelativeAnimationCam() {
-    if (SimState == kSimState3 || animHandle == NULL)
+    if (fgSimulation.simState == kSimPaused || animHandle == NULL)
         return;
     CARP::Instance *instance = AnimInstanceOf(this);
     const MATRIX4 *anchorMatrix = GetAnchorMatrix4();
@@ -1042,11 +1037,11 @@ void RPlayerCamera::UpdateRelativeAnimationCam() {
         VU0_v4sub(&eye, &lookAt, &cameraOffset);
     }
     VU0_v4sub(&eye, &oldEye, &unknown50);
-    VU0_v4scale(&unknown50, float(SimStepsPerSecond), &unknown50);
+    VU0_v4scale(&unknown50, float(fgSimulation.stepsPerSecond), &unknown50);
 }
 
 // The auto-drive camera's angles to the selected target: the pitch and yaw from the camera's forward axis, each
-// written when inside the arm's auto-aim limits (narrowed with distance and by unknown4dc). While the state holds
+// written when inside the arm's auto-aim limits (narrowed with distance and by the difficulty). While the state holds
 // a lock the angles are written until either leaves its limit, which drops the lock. True while locked, or when
 // both angles were found.
 // FUNC_AT(0x00082e00)
@@ -1056,7 +1051,7 @@ bool RPlayerCamera::UpdateADTargetAngles(float *pitchOut, float *yawOut) {
     WTargetable *target = TargetPicker.GetSelectedTarget();
     const AutoDriveArmInfo *arm = &fgCameraTables.autoDriveArms[autoDriveArm];
     bool haveTarget = target != NULL;
-    double share = double(3 - glbMissionManager->unknown4dc) * kOneThird;
+    double share = double(3 - glbMissionManager->difficulty) * kOneThird;
     bool pitchFound = false;
     bool yawFound = false;
     float pitchLimit = float(share * arm->maxAutoaimPitch);

@@ -6,11 +6,11 @@
 #include <string.h>
 
 #include "Explosion.h"                  // ExplosionType
+#include "Simulation.h"
 #include "../engine/PhysicsUtil.h"      // Util_GenerateMatrix, Util_PerturbVector
 #include "../engine/UMemory.hpp"
-#include "../physics/RigidBody.h"       // PhysicsObjects, SimStepsPerSecond, DamageSourceSig
+#include "../physics/RigidBody.h"       // DamageSourceSig
 #include "../physics/SimpleRigidBody.h"
-#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../render/RSceneObj.hpp"
@@ -27,9 +27,6 @@
 #define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
 
 // ---- globals
-#define Sim ((void *)0x00233ff0)                                    // the Simulation
-#define SimTimeStep FLOAT_AT(0x00234e30)                            // the simulation's step, in seconds
-#define SimStepCount I32_AT(0x00234e34)
 #define IdentityMatrix (*(const MATRIX4 **)0x001c4654)
 
 namespace {
@@ -72,24 +69,24 @@ Mine* Mine::Construct(int kind, const Coord3 *direction, const Coord3 *position,
     this->kind = kind;
     vtable = reinterpret_cast<void **>(kMineVtable);
     radius = 0.0f;
-    armStep = SimStepsPerSecond + SimStepCount;
+    armStep = fgSimulation.stepsPerSecond + fgSimulation.stepCount;
     detonate = 0;
     target = NULL;
     effectsStarted = 0;
     switch (kind) {
     case kWeaponTimeMine:
-        timer = SimStepsPerSecond * kTimeMineSeconds;
+        timer = fgSimulation.stepsPerSecond * kTimeMineSeconds;
         break;
     case kWeaponProxMine:
         timer = 0;
         radius = kProxMineRadius;
         break;
     case kWeaponFloatingMine:
-        timer = SimStepsPerSecond * kMineSeconds;
+        timer = fgSimulation.stepsPerSecond * kMineSeconds;
         radius = kFloatingMineRadius;
         break;
     default:
-        timer = SimStepsPerSecond * kMineSeconds;
+        timer = fgSimulation.stepsPerSecond * kMineSeconds;
         radius = kMineRadius;
         break;
     }
@@ -98,10 +95,10 @@ Mine* Mine::Construct(int kind, const Coord3 *direction, const Coord3 *position,
     VU0_v4scale(direction, speed * 0.5f, &velocity);
     MATRIX4 generated;
     MATRIX4 orientation = *Util_GenerateMatrix(&generated, direction);
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     if (body != NULL)
         body->Construct(rigidBodySlot, kSimpleMine, position, &velocity, &kZero, &orientation, kBodyRadius, kBodyMass);
-    Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->flags |=
+    fgSimulation.GetSimpleRigidBody(rigidBodySlot)->flags |=
         SimpleRigidBody::kMoves | SimpleRigidBody::kNearRigidHits | SimpleRigidBody::kTouchesTriggers;
 
     RAutonomousObj *render =
@@ -119,7 +116,7 @@ Mine* Mine::Construct(int kind, const Coord3 *direction, const Coord3 *position,
         Coord3 push = *Util_PerturbVector(&perturbed, reinterpret_cast<const Coord4 *>(direction), kThrowSpread);
         v3unit(&push, &push);
         v3scale(1, &push, kThrowAcceleration, &push);
-        Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->Accelerate(&push);
+        fgSimulation.GetSimpleRigidBody(rigidBodySlot)->Accelerate(&push);
     }
     return this;
 }
@@ -148,14 +145,13 @@ Mine* Mine::Delete(unsigned flags) {
 // An explosion of the proximity mine's damage at the body, and the mine deleted
 void Mine::Explode(SimpleRigidBody *body, const Coord3 *forward) {
     float damage = float(WeaponManager->weapons[kWeaponProxMine].damage);
-    Simulation_SpawnExplosion(Sim, 0, kMineExplosion, kind, forward, &body->position, damage, 0, NULL,
-                              DamageSourceSig);
-    Simulation_DeletePhysicsObject(Sim, 0, this);
+    fgSimulation.SpawnExplosion(kMineExplosion, kind, forward, &body->position, damage, 0, NULL, DamageSourceSig);
+    fgSimulation.DeletePhysicsObjectThunk(this);
 }
 
 // FUNC_AT(0x0005e200)
 void Mine::CheckForProximity() {
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     const Coord3 *position = &body->position;
     int cell[3] = {
         RoundToInt(position->x * kCellScale),
@@ -164,11 +160,11 @@ void Mine::CheckForProximity() {
     };
     float reachSq = radius * radius;
     for (int i = 0; i < kMaxRigidBodies; i++) {
-        PhysicsObject *object = PhysicsObjects[i];
+        PhysicsObject *object = fgSimulation.rigidBodyOwners[i];
         if (object == NULL)
             continue;
-        RigidBody *other = Simulation_GetRigidBody(Sim, 0, i);
-        if (SimStepCount < armStep)
+        RigidBody *other = fgSimulation.GetRigidBody(i);
+        if (fgSimulation.stepCount < armStep)
             continue;
         const int32_t *zone = other->info->zone;
         if (abs(cell[0] - zone[0]) > 1 || abs(cell[1] - zone[1]) > 1 || abs(cell[2] - zone[2]) > 1)
@@ -187,7 +183,7 @@ void Mine::CheckForProximity() {
 
 // FUNC_AT(0x0005e400)
 void Mine::CheckTimer() {
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     if (--timer > 0)
         return;
     Coord3 forward;
@@ -204,7 +200,7 @@ int Mine::ApplyDamage(const Coord3 *, const Coord3 *, float amount, float, int, 
 
 // FUNC_AT(0x0005e710)
 void Mine::Simulate() {
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     if (!effectsStarted) {
         TriggerFX(renderObject, RSceneObj::kFXOn, kMineEffect);
         TriggerFX(renderObject, kFXType11, kFXType11Which);
@@ -232,7 +228,7 @@ void Mine::Simulate() {
         Coord4 path[2];
         path[1] = {body->position.x, body->position.y, body->position.z, 1.0f};
         Coord4 step = {body->velocity.x, body->velocity.y, body->velocity.z, 1.0f};
-        VU0_v4scale4(&step, SimTimeStep, &step);
+        VU0_v4scale4(&step, fgSimulation.timeStep, &step);
         VU0_v4sub4(&path[1], &step, &path[0]);
         WorldCollisionInfo info;
         WorldCollisionInfo_Construct(&info, 0);

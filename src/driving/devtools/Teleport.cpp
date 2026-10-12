@@ -1,6 +1,6 @@
 #include "Teleport.h"
 #include "../Scheduler.hpp"
-#include "../engine/MissionManager.h"
+#include "../game/MissionManager.h"
 #include "../EventManager.hpp"
 #include "../sound/snd/SndGlobals.h"
 #include "CarpShadow.h"
@@ -63,6 +63,10 @@
 #include "GameWeaponsShadowB.h"
 #include "GameWeaponsShadowC.h"
 #include "GameWeaponsShadowD.h"
+#include "GameMissionsShadowA.h"
+#include "GameMissionsShadowB.h"
+#include "GameMissionsShadowC.h"
+#include "GameMissionsShadowD.h"
 #include "VehicleShadow.h"
 
 #include <windows.h>
@@ -332,6 +336,10 @@ void Teleport_Tick(void) {
         GameWeaponsShadowB_Run();   // NIGHTFIRE_GAMEWEAPONSSHADOWB=1 only
         GameWeaponsShadowC_Run();   // NIGHTFIRE_GAMEWEAPONSSHADOWC=1 only
         GameWeaponsShadowD_Run();   // NIGHTFIRE_GAMEWEAPONSSHADOWD=1 only
+        GameMissionsShadowA_Run();  // NIGHTFIRE_GAMEMISSIONSSHADOWA=1 only
+        GameMissionsShadowB_Run();  // NIGHTFIRE_GAMEMISSIONSSHADOWB=1 only
+        GameMissionsShadowC_Run();  // NIGHTFIRE_GAMEMISSIONSSHADOWC=1 only
+        GameMissionsShadowD_Run();  // NIGHTFIRE_GAMEMISSIONSSHADOWD=1 only
         if (AnyVehicleShadow()) {
             PrintQueues("before the vehicle shadows", ReadQueues());
             RunVehicleShadow("bondcarA", BondCarShadowA_Run);   // NIGHTFIRE_BONDCARSHADOWA=1 only

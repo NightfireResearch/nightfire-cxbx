@@ -202,23 +202,23 @@ where to change it.
 
 | Subsystem | Functions | Replaced | Dead | Live | Done | KB | Done (bytes) |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| **game** | 2852 | 514 | 475 | 1863 | **35%** | 474 | 41% |
+| **game** | 2852 | 713 | 548 | 1591 | **44%** | 474 | 48% |
 | game.ai | 522 | 0 | 32 | 490 | 6% | 109 | 1% |
 | game.audio | 366 | 150 | 205 | 11 | 97% | 51 | 100% |
 | game.effects | 195 | 129 | 56 | 10 | 95% | 36 | 100% |
 | game.events | 793 | 0 | 7 | 786 | 1% | 72 | 0% |
 | game.frontend | 332 | 1 | 39 | 292 | 12% | 69 | 2% |
-| game.missions | 273 | 0 | 0 | 273 | 0% | 33 | 0% |
+| game.missions | 273 | 199 | 73 | 1 | 100% | 33 | 100% |
 | game.vehicles | 193 | 134 | 59 | 0 | 100% | 62 | 100% |
 | game.weapons | 178 | 100 | 77 | 1 | 99% | 43 | 100% |
-| **engine** | 3990 | 2478 | 1400 | 112 | **97%** | 526 | 100% |
+| **engine** | 3990 | 2478 | 1403 | 109 | **97%** | 526 | 100% |
 | engine.anim | 415 | 332 | 72 | 11 | 97% | 54 | 100% |
 | engine.audio | 270 | 203 | 54 | 13 | 95% | 35 | 100% |
 | engine.camera | 273 | 224 | 41 | 8 | 97% | 60 | 99% |
 | engine.core | 213 | 155 | 56 | 2 | 99% | 25 | 100% |
 | engine.data | 554 | 454 | 80 | 20 | 96% | 79 | 100% |
 | engine.input | 107 | 79 | 23 | 5 | 95% | 12 | 100% |
-| engine.physics | 156 | 117 | 31 | 8 | 95% | 33 | 100% |
+| engine.physics | 156 | 117 | 34 | 5 | 97% | 33 | 100% |
 | engine.render | 760 | 555 | 174 | 31 | 96% | 114 | 100% |
 | engine.static | 798 | 21 | 777 | 0 | 100% | 26 | 100% |
 | engine.world | 444 | 338 | 92 | 14 | 97% | 89 | 100% |
@@ -236,10 +236,10 @@ where to change it.
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6842 | 2992 | 1875 | 1975 | **71%** | 1000 | 72% |
+| **game + engine** | 6842 | 3191 | 1951 | 1700 | **75%** | 1000 | 75% |
 | **platform + system** | 2893 | 1527 | 1022 | 344 | **88%** | 506 | 93% |
 | **  without the C runtime** | 2473 | 1523 | 950 | 0 | **100%** | 462 | 100% |
-| **everything** | 9735 | 4519 | 2897 | 2319 | **76%** | 1506 | 79% |
+| **everything** | 9735 | 4718 | 2973 | 2044 | **79%** | 1506 | 81% |
 
 - **The engine's core and data layers are done (4 October 2026): `engine.core` and `engine.data`, 100% by bytes**
   (docs/driving/core-data.md): memory (UMemory, new/delete), reference counters, data groups, singletons, the
@@ -314,6 +314,13 @@ where to change it.
   exception funclet of a replaced function). Four shadow tests compare them with the originals on synthetic objects
   and copies of the live ones (to be run in game). Game and engine together are now 71% done by functions, 72% by
   bytes.
+- **The missions are done (12 October 2026, docs/driving/game-missions.md):** the Simulation (its bodies and
+  objects, their containers, the step, the spawns), SMissionManager (the mission's state, objectives, counters and
+  scores) and the mission rules (SMissionRule, SMissionTimer, the SRule* tests) - 199 functions (202 entries with
+  the three Ghidra missed), `game.missions` 100% by bytes (the one function still counted live, FUN_00154250, is an
+  exception funclet). Four shadow tests compare them with the originals on copies of the live Simulation and
+  mission manager and on synthetic rules (to be run in game). Game and engine together are now 75% done by
+  functions and by bytes.
 - **Every system library but the C runtime is done: D3D (with D3DX and XGRPH), DSOUND, XPP and XAPI at 100%.**
   The C runtime (347 live, 17%) is left to go by itself, as in the action engine: game code calls it everywhere, and
   it goes as that code becomes ours. How the rest got there (2 October 2026):

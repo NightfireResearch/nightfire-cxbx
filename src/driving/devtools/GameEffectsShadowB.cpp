@@ -24,7 +24,7 @@
 #include "../game/Vehicle.h"
 #include "../game/VehicleParticle.h"
 #include "../physics/RigidBody.h"
-#include "../physics/Simulation.h"
+#include "../game/Simulation.h"
 #include "../render/Particles.h"
 #include "../../common/xbeOriginal.h"
 #include "../../helpers.h"
@@ -64,9 +64,6 @@
 
 namespace {
 
-#define Sim ((void *)0x00233ff0)
-#define SimCars (*(GameVector<PVehicle *> *)0x00234e3c)
-#define SimStepCount U32_AT(0x00234e34)
 #define GameTick U32_AT(0x001f2a4c)
 
 // The game's copies of the package's owned globals
@@ -589,7 +586,7 @@ void TestUpdateAll() {
     for (int i = 0; i < 120; i++) {
         int count = 1 + int(Random(3));
         bool same = Random(3) == 0;
-        uint32_t tick = same ? SimStepCount : SimStepCount + Random(5) - 2;
+        uint32_t tick = same ? fgSimulation.stepCount : fgSimulation.stepCount + Random(5) - 2;
         uint32_t smokeEnd[3];
         for (int k = 0; k < 3; k++)
             smokeEnd[k] = Random();
@@ -783,7 +780,7 @@ void GameEffectsShadowB_Run(void) {
     uint32_t savedTick = VehicleParticleUpdateTick, savedGameTick = GameTickCopy;
     bool savedSparks = VehicleSparksEnabled, savedGameSparks = GameSparksCopy;
 
-    PVehicle *live = SimCars.first != NULL && SimCars.last != SimCars.first ? SimCars.first[0] : NULL;
+    PVehicle *live = fgSimulation.cars.first != NULL && fgSimulation.cars.last != fgSimulation.cars.first ? fgSimulation.cars.first[0] : NULL;
     RVehicleParticle *source = NULL;
     if (savedSet != NULL && savedSet->size != 0)
         source = savedSet->head->left->value;
@@ -812,7 +809,7 @@ void GameEffectsShadowB_Run(void) {
     }
 
     if (source != NULL && FakeVehicle()->rigidBodySlot >= 0) {
-        g_body = Simulation_GetRigidBody(Sim, 0, FakeVehicle()->rigidBodySlot);
+        g_body = fgSimulation.GetRigidBody(FakeVehicle()->rigidBodySlot);
         g_bodySaved = *g_body;
         g_infoSaved = *g_body->info;
         g_bodyCase = g_bodySaved;

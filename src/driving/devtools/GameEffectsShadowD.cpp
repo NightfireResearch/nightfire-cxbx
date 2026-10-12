@@ -23,7 +23,7 @@
 #include "../eagl/RenderContext.h"
 #include "../eagl/RenderMethod.h"
 #include "../eagl/Tar.h"
-#include "../engine/MissionManager.h"
+#include "../game/MissionManager.h"
 #include "../engine/UMemory.hpp"
 #include "../game/WeaponCameras.h"
 #include "../game/WeaponEffects.h"

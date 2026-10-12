@@ -2,6 +2,7 @@
 
 #include "Grenade.h"
 #include "Explosion.h"                  // ExplosionType
+#include "Simulation.h"
 #include "WeaponManager.h"
 
 #include <stddef.h>
@@ -11,9 +12,8 @@
 #include "../../helpers.h"
 #include "../engine/PhysicsUtil.h"      // Util_GenerateMatrix
 #include "../engine/UMemory.hpp"
-#include "../physics/RigidBody.h"       // DamageSourceSig, SimStepsPerSecond
+#include "../physics/RigidBody.h"       // DamageSourceSig
 #include "../physics/SimpleRigidBody.h"
-#include "../physics/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../render/RSceneObj.hpp"      // RAutonomousObj
 #include "../world/Collider.h"
@@ -30,9 +30,6 @@
 
 // ---- the game's globals
 
-#define Sim ((void *)0x00233ff0)                            // the Simulation
-#define SimTimeStep FLOAT_AT(0x00234e30)                    // the simulation's step, in seconds
-#define SimStepCount I32_AT(0x00234e34)
 #define IdentityMatrix (*(const MATRIX4 **)0x001c4654)
 
 namespace {
@@ -75,7 +72,7 @@ Grenade* Grenade::Delete(unsigned flags) {
 // FUNC_AT(0x0005d550)
 void Grenade::Render(bool firstView) {
     if (firstView) {
-        SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+        SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
         Coord4 at = {body->position.x, body->position.y, body->position.z, 1.0f};
         streak.Update(&at);
     }
@@ -93,19 +90,19 @@ Grenade* Grenade::Construct(int weaponType, const Coord3 *direction, const Coord
     streak.type = 0;
     this->weaponType = weaponType;
     unknown6c4 = kUnknown6c4;
-    fuse = SimStepsPerSecond * kFuseSeconds;
+    fuse = fgSimulation.stepsPerSecond * kFuseSeconds;
     bounces = 0;
-    armedStep = SimStepCount + kArmingSteps;
+    armedStep = fgSimulation.stepCount + kArmingSteps;
     explode = 0;
     Coord4 velocity;
     VU0_v4scale(direction, speed * kThrowScale, &velocity);
     MATRIX4 generated;
     MATRIX4 orientation = *Util_GenerateMatrix(&generated, direction);
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     if (body != NULL)
         body->Construct(rigidBodySlot, kSimpleGrenade, position, Xyz(&velocity), &kZero3, &orientation, kRadius,
                         kMass);
-    Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->flags |=
+    fgSimulation.GetSimpleRigidBody(rigidBodySlot)->flags |=
         SimpleRigidBody::kFlag01 | SimpleRigidBody::kFlag04 | SimpleRigidBody::kMoves |
         SimpleRigidBody::kNearRigidHits | SimpleRigidBody::kNearSimpleHits;
 
@@ -126,11 +123,11 @@ void Grenade::Simulate() {
     explode = --fuse <= 0;
 
     // the step just taken, against the world
-    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     Coord4 segment[2];
     segment[1] = Coord4{body->position.x, body->position.y, body->position.z, 1.0f};
     Coord4 step = {body->velocity.x, body->velocity.y, body->velocity.z, 1.0f};
-    VU0_v4scale4(&step, SimTimeStep, &step);
+    VU0_v4scale4(&step, fgSimulation.timeStep, &step);
     VU0_v4sub4(&segment[1], &step, &segment[0]);
     WorldCollisionInfo info;
     WorldCollisionInfo_Construct(&info, 0);
@@ -171,8 +168,8 @@ void Grenade::Simulate() {
         } else {
             Coord3 forward;
             body->GetForwardVector(&forward);
-            Simulation_SpawnExplosion(Sim, 0, kMineExplosion, weaponType, &forward, &body->position,
-                                      ExplosionSize(), 0, NULL, DamageSourceSig);
+            fgSimulation.SpawnExplosion(kMineExplosion, weaponType, &forward, &body->position, ExplosionSize(), 0, NULL,
+                                        DamageSourceSig);
         }
     }
 
@@ -186,15 +183,15 @@ void Grenade::Simulate() {
     VU0_m4toquat(&orientation, &frame);
     body->SetOrientation(&orientation);
 
-    if (SimStepCount < armedStep)
+    if (fgSimulation.stepCount < armedStep)
         explode = 0;
     if (explode) {
-        SimpleRigidBody *exploding = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+        SimpleRigidBody *exploding = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
         Coord3 forward;
         exploding->GetForwardVector(&forward);
-        Simulation_SpawnExplosion(Sim, 0, kMissileExplosion, weaponType, &forward, &exploding->position, ExplosionSize(),
-                                  0, NULL, DamageSourceSig);
-        Simulation_DeletePhysicsObject(Sim, 0, this);
+        fgSimulation.SpawnExplosion(kMissileExplosion, weaponType, &forward, &exploding->position, ExplosionSize(), 0,
+                                    NULL, DamageSourceSig);
+        fgSimulation.DeletePhysicsObjectThunk(this);
     }
     collider.Destruct();
 }

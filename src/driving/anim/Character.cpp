@@ -3,6 +3,8 @@
 #endif
 
 #include "Character.h"
+#include "../game/Simulation.h"
+#include "../game/Vehicle.h"
 
 #include "Actor.h"
 #include "Manager.h"
@@ -48,7 +50,6 @@
 
 // ---- globals
 
-#define PlayerPhysicsObject (*(PhysicsObject **)PTR_AT(0x00234e40))
 
 // ---- constants
 
@@ -355,7 +356,7 @@ void ActCharacter::CalculateMuzzleFlashIntensity(int weapon) {
 void ActCharacter::InheritWeaponLightingFromCar() {
     for (int i = 0; i < kWeapons; i++) {
         if (weapons[i] != NULL) {
-            double level = PlayerPhysicsObject->renderObject->brightness * double(kHalfInverse255) + 0.5;
+            double level = fgSimulation.cars.first[0]->renderObject->brightness * double(kHalfInverse255) + 0.5;
             weapons[i]->brightness = BrightnessByte(level);
         }
     }
