@@ -655,6 +655,11 @@ add_library(drivinginject SHARED
 # d3d9/d3dcompiler for the shared graphics backend the D3D8 seam dispatches to.
 # XAUDIO2_LIB is xaudio2 or xaudio2_9 - see actioninject above.
 target_link_libraries(drivinginject PRIVATE d3d9 d3dcompiler winmm xinput9_1_0 ${XAUDIO2_LIB} shell32)
+if(MSVC)
+  target_link_options(drivinginject PRIVATE /MAP)   # see the symbol maps above
+else()
+  target_link_options(drivinginject PRIVATE -Wl,-Map,drivinginject.map)
+endif()
 
 target_compile_definitions(actioninject PRIVATE UNICODE _UNICODE)
 target_compile_definitions(drivinginject PRIVATE UNICODE _UNICODE)

@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include <bit>
+#include <map>
 #include <string>
 
 #include "../EventManager.hpp"
@@ -122,6 +123,12 @@ const unsigned kEntries[] = {
 
 long g_cases, g_checks, g_differ, g_faults;
 int g_reported;
+std::map<std::string, long> g_differBy;     // differences by case, listed after the summary
+
+// The first two differences of each case are printed, up to 60 in all
+bool ShouldReport(const char *what) {
+    return ++g_differBy[what] <= 2 && g_reported++ < 60;
+}
 unsigned g_x87, g_sse;
 
 void Check(bool same, const char *what, long index, const std::string &original, const std::string &port) {
@@ -129,8 +136,7 @@ void Check(bool same, const char *what, long index, const std::string &original,
     if (same)
         return;
     g_differ++;
-    if (g_reported < 10) {
-        g_reported++;
+    if (ShouldReport(what)) {
         size_t at = 0;
         while (at < original.size() && at < port.size() && original[at] == port[at])
             at++;
@@ -184,12 +190,14 @@ struct Hook {
     uint8_t saved[5];
     bool on;
 };
-Hook g_hooks[160];
+Hook g_hooks[256];          // two for each fake whose entry jumps to a port
 int g_hookCount;
 
 void HookOne(uint32_t at, const void *to) {
-    if (g_hookCount == int(sizeof(g_hooks) / sizeof(g_hooks[0])))
+    if (g_hookCount == int(sizeof(g_hooks) / sizeof(g_hooks[0]))) {
+        printf("[gameeventsshadowb] the hook table is full: 0x%08x not faked\n", at);
         return;
+    }
     Hook &h = g_hooks[g_hookCount++];
     h.at = at;
     h.on = false;
@@ -1323,8 +1331,13 @@ void RunSide(bool original, uint32_t make, unsigned flags, SideResult *result) {
         delete window;
     }
     result->log = g_log;
-    if (!ok)
+    if (!ok) {
         result->log += "<fault>";
+        // A fault inside an original destructor unwinds through its exception funclet, which puts Event's vtable
+        // back; the port (no unwinding of structured exceptions) leaves its own. Faults happen only on made-up data.
+        if (g_world.eventUsed != 0)
+            *reinterpret_cast<uint32_t *>(g_world.eventBuf) = 0x0018c3ac;
+    }
     result->event = Floats(g_world.eventBuf, 0x60 / 4);
     result->world = WorldText();
     result->globals = GlobalsText(original);
@@ -1686,6 +1699,8 @@ void GameEventsShadowB_Run(void) {
     LiveMissionManager = savedMission;
     LoadGlobals(&g_live);
 
+    for (const auto &d : g_differBy)
+        printf("[gameeventsshadowb]   %s: %ld differ\n", d.first.c_str(), d.second);
     printf("[gameeventsshadowb] events EExit..EPathSFX: %ld cases, %ld checks, %ld differ (%ld faults)\n", g_cases,
            g_checks, g_differ, g_faults);
     fflush(stdout);

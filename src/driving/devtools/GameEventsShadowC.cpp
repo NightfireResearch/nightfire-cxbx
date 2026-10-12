@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include <bit>
+#include <map>
 #include <string>
 
 #include "../anim/AnimEngine.h"
@@ -33,6 +34,8 @@
 #include "../world/CollisionInstance.h"
 #include "../world/Trigger.h"
 #include "../world/World.h"
+#include "../Scheduler.hpp"               // RealClock_InterruptHandler
+#include "../platform/RealSystem.h"      // TIMER_addtask
 #include "../../common/xbeOriginal.h"
 #include "../../helpers.h"
 
@@ -110,6 +113,12 @@ using CARP::AIElement;
 
 long g_cases, g_checks, g_differ, g_faults;
 int g_reported;
+std::map<std::string, long> g_differBy;     // differences by case, listed after the summary
+
+// The first two differences of each case are printed, up to 60 in all
+bool ShouldReport(const char *what) {
+    return ++g_differBy[what] <= 2 && g_reported++ < 60;
+}
 unsigned g_x87, g_sse;
 
 // ---- the package's entries
@@ -186,11 +195,13 @@ void Vec(const char *name, const void *v, int count) {
         return;
     }
     const float *f = static_cast<const float *>(v);
-    char line[160];
-    int at = snprintf(line, sizeof(line), " %s", name);
-    for (int i = 0; i < count; i++)
-        at += snprintf(line + at, sizeof(line) - at, " %08x", Bits(f[i]));
-    Call("%s", line);
+    std::string line = std::string(" ") + name;
+    char word[12];
+    for (int i = 0; i < count; i++) {
+        snprintf(word, sizeof(word), " %08x", Bits(f[i]));
+        line += word;
+    }
+    Call("%s", line.c_str());
 }
 
 void Text(const char *name, const char *s) {
@@ -199,8 +210,7 @@ void Text(const char *name, const char *s) {
 
 void Differ(const char *what, long index, const char *detail) {
     g_differ++;
-    if (g_reported < 10) {
-        g_reported++;
+    if (ShouldReport(what)) {
         printf("[gameeventsshadowc] DIFF %s, case %ld: %s\n", what, index, detail);
         fflush(stdout);
     }
@@ -439,6 +449,7 @@ struct Globals {
     uint8_t restartFlag, healthTimes100, pad[2];
     int32_t restartCount;
     char tuningLevel[16];
+    uint32_t randomSeed, randomMultiplier;      // RandomShort's
     EventDynamicData dynamic;
 };
 
@@ -466,6 +477,8 @@ void WriteGlobals(const Globals &g) {
     HealthTimes100Game = g.healthTimes100;
     LaunchRestartCountGame = g.restartCount;
     memcpy(TuningLevelGame, g.tuningLevel, sizeof(g.tuningLevel));
+    RandomSeed = g.randomSeed;
+    RandomMultiplier = g.randomMultiplier;
     EventDataGame = g.dynamic;
 }
 
@@ -492,6 +505,8 @@ void ReadGlobals(Globals *g, bool original) {
     g->healthTimes100 = HealthTimes100Game;
     g->restartCount = LaunchRestartCountGame;
     memcpy(g->tuningLevel, TuningLevelGame, sizeof(g->tuningLevel));
+    g->randomSeed = RandomSeed;
+    g->randomMultiplier = RandomMultiplier;
     g->dynamic = EventDataGame;
 }
 
@@ -594,9 +609,9 @@ void __fastcall FakeMissionStop(void *self, int) {
 void __fastcall FakeMissionSetAutoDrive(void *self, int, uint32_t on, uint32_t controls) {
     Call("SMissionManager::SetAutoDrive %02x %02x", on & 0xff, controls & 0xff);
 }
-bool __fastcall FakeIsSkippingCinematic(void *self, int) {
+uint32_t __fastcall FakeIsSkippingCinematic(void *self, int) {
     Call("IsSkippingCinematic");
-    return W->skipping != 0;
+    return W->skipping != 0 ? 1 : 0;            // 0 or 1 in all of EAX, as the real one answers
 }
 void __fastcall FakeBoostPlayerHealth(void *self, int, float fraction) {
     Call("BoostPlayerHealth %08x", Bits(fraction));
@@ -741,7 +756,7 @@ void FakeGfxTrigger(void *effect, const Coord3 *position, const Coord4 *rotation
 void FakeGfxTriggerByName(const char *name, const Coord3 *position, const Coord4 *rotation, const Coord3 *offset,
                           const Coord4 *offsetRotation, RSceneObj *owner, uint32_t instance,
                           const Coord3 *ownerVelocity) {
-    Call("GFX::TriggerByName %08x %08x %u %08x", Word(name), Word(owner), instance, Word(ownerVelocity));
+    Call("GFX::TriggerByName %08x %u %08x", Word(owner), instance, Word(ownerVelocity));   // the name by its text
     Text("name", name);
     Vec("position", position, 3);
     Vec("rotation", rotation, 4);
@@ -1050,8 +1065,8 @@ CarPhysics *__fastcall FakeCarGetPhysics(void *self, int) {
 void __fastcall FakeCarSetImmunity(void *self, int, uint32_t on) {
     Call("car SetImmunity %02x", on & 0xff);
 }
-void __fastcall FakeCarRollSub(void *self, int, uint32_t degrees, uint32_t subRolling) {
-    Call("car RollSub %08x %08x %08x", Word(self), degrees, subRolling);
+void __fastcall FakeCarRollSub(void *self, int, uint8_t degrees, uint8_t subRolling) {   // bytes: the rest is not passed
+    Call("car RollSub %08x %02x %02x", Word(self), degrees, subRolling);
 }
 Coord3 *__fastcall FakeSceneGetVelocity(void *self, int) {
     Call("scene GetVelocity %08x", Word(self));
@@ -1460,6 +1475,8 @@ void BuildWorld() {
     g.healthTimes100 = uint8_t(Chance(6));
     g.restartCount = int32_t(Random(10));
     strcpy(g.tuningLevel, Chance(3) ? "paris_mis01" : Chance(2) ? "PARIS_MIS01" : "mis07a");
+    g.randomSeed = Random(0x10000);
+    g.randomMultiplier = RandomMultiplier;
     g.dynamic.instance = Chance(4) ? NULL : &W->instances[Random(kInstances)];
     g.dynamic.sceneObj = Chance(8) ? NULL : &W->sceneObjs[Random(kSceneObjs)];
     g.dynamic.instanceIndex = int32_t(Random(3));
@@ -1507,10 +1524,13 @@ void Both(const char *what, long index, const Call &call) {
 
     WriteGlobals(initialGlobals);
     g_calls = &logOriginal;
+    bool originalFaulted = false;
     {
         Originals window;
-        if (!Guarded([&] { call(true); }))
+        if (!Guarded([&] { call(true); })) {
             logOriginal += "<fault>";
+            originalFaulted = true;
+        }
     }
     g_calls = NULL;
     ReadGlobals(&globalsOriginal, true);
@@ -1520,10 +1540,16 @@ void Both(const char *what, long index, const Call &call) {
     PointGameAtWorld();
     WriteGlobals(initialGlobals);
     g_calls = &logPort;
-    if (!Guarded([&] { call(false); }))
+    bool portFaulted = !Guarded([&] { call(false); });
+    if (portFaulted)
         logPort += "<fault>";
     g_calls = NULL;
     ReadGlobals(&globalsPort, false);
+    // A fault inside an original destructor unwinds through its exception funclet, which puts Event's vtable
+    // back; the port (no unwinding of structured exceptions) leaves its own. Faults happen only on made-up data.
+    if (originalFaulted && portFaulted)
+        for (int i = 0; i < 2; i++)
+            memcpy(W->events[i], g_after->events[i], 4);
 
     CheckBytes(what, index, "world", g_after, W, sizeof(FakeWorld));
     CheckBytes(what, index, "globals", &globalsOriginal, &globalsPort, sizeof(Globals));
@@ -1664,12 +1690,15 @@ void TestEvents(int round) {
         record[0] = Random();
         for (int i = 0; type.record[i] != 0; i++)
             record[1 + i] = NoNaN(RecordWord(type.record[i]));
+        // ERandomExplosion's original has RandomShort inlined: both sides run the real one
+        FakeLifted *inlined = type.make == 0x00043260 ? new FakeLifted(0x0001aab0) : NULL;
         // EPathSFXUpdate's record is the task's data: its `self` is the data itself
         Both(type.name, round, [&](bool) {
             ((void (*)(const void *))type.make)(record);
             if (type.remove != 0 && W->newCount > 0)
                 ((void *(__fastcall *)(void *, int, unsigned))type.remove)(W->events[0], 0, 1);
         });
+        delete inlined;
     }
 }
 
@@ -1679,9 +1708,11 @@ void TestOthers(int round) {
     const uint32_t resolvers[] = { 0x00041fe0, 0x00042ae0 };
     for (uint32_t resolver : resolvers) {
         BuildWorld();
-        for (uint32_t &word : record)
+        uint32_t words[0x10];
+        for (uint32_t &word : words)
             word = Random();
         Both("ResolveEvent", round, [&](bool) {
+            memcpy(record, words, sizeof(record));      // the same record for both sides
             ((void (*)(void *, void *, void *))resolver)(record, W->opaque[0], W->opaque[1]);
             Vec("record", record, 6);
         });
@@ -1746,6 +1777,8 @@ void GameEventsShadowC_Run(void) {
 
     // The live state the cases replace, put back after
     Globals live;
+    // The real clock stands still while the cases run: a tick landing in one side's run would be a difference
+    TIMER_removetask(RealClock_InterruptHandler);
     ReadGlobals(&live, true);
     uint32_t liveOurClock = LastRenderClock;
     void *livePointers[13] = {
@@ -1785,10 +1818,13 @@ void GameEventsShadowC_Run(void) {
     memcpy(SimpleOwnersGame, liveSimple, sizeof(liveSimple));
     WriteGlobals(live);
     LastRenderClock = liveOurClock;
+    TIMER_addtask(RealClock_InterruptHandler);
     VirtualFree(W, 0, MEM_RELEASE);
     VirtualFree(g_initial, 0, MEM_RELEASE);
     VirtualFree(g_after, 0, MEM_RELEASE);
 
+    for (const auto &d : g_differBy)
+        printf("[gameeventsshadowc]   %s: %ld differ\n", d.first.c_str(), d.second);
     printf("[gameeventsshadowc] the events EPathSFXUpdate..ESetRecSpeedOffset: %ld cases, %ld checks, %ld differ "
            "(%ld faults)\n", g_cases, g_checks, g_differ, g_faults);
     fflush(stdout);

@@ -124,7 +124,6 @@ An STL map's empty allocator byte is copied from an uninitialised local. Nothing
 | EFireWeapon::Process | 0x0004c544-0x0004c550 | for the guns fired by a holder other than the player (types 1, 2, 5, 0x10, 0x13 and 0x15), passes a mix-name buffer it never writes | passes "" | game-events |
 | EForceCarStop, ELavaHaze, ELetterBoxOn/Off, EObjectiveDisplayText, ESpawnSentry (Process) | 0x0004c7a4, 0x000458dd | a setne result pushed with the register's left-over upper three bytes | a clean bool (the callees read one byte) | game-events |
 | EStreamEvent::Process | 0x0004f0b2 | the "nis" case passes AFader::QueuePrimary a third argument with left-over upper bytes | a bool | game-events |
-| EMuzzleFlash::Process | 0x00040d48 | dead zero stores to its locals | left out | game-events |
 | ESetCullDistanceFactor, ESetJumpGravity (Destruct) | 0x00043fa0, 0x00044040 | the compiler dropped the first of the two vtable stores | both written | game-events |
 
 ---------------------------------------------------------------------------------------------------------------
@@ -156,7 +155,10 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
   user-data tags.
 - SndStreamShadow: the channel pointers of a stream with no header parsed.
 - BondCarShadowA: AddSnowmobileForces' axle w (not covered).
-- GameEventsShadowD: ESpawnForceEffect's effect field when it holds the address of the stack ArticleEffect it leaves there.
+- GameEventsShadowD: ESpawnForceEffect's effect field when it holds the address of the stack ArticleEffect it leaves there,
+  and the new explosion's position when ESpawnExplosionStatic has neither a position nor an instance.
+- GameEventsShadowA-D: when both sides fault (made-up data only), the event's vtable word, which the original's
+  exception funclet puts back to Event's as the fault unwinds through it.
 
 ---------------------------------------------------------------------------------------------------------------
 
@@ -431,6 +433,8 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | EActivateAIElement, EMaybeActivateAIElement (Process) | 0x000495d0, 0x0004cbc0 | print "The Helicopter hit the Trigger." through the C runtime's printf | game-events |
 | EFireWeapon::Process | 0x0004bfc9, 0x0004b276 | the snowmobile and FOD guns use the ultralight gun's damage; for the player's aim the camera's position replaces the muzzle, while ray shells keep the original origin | game-events |
 | EFireEventList::Process; EMuzzleFlash::Process | 0x0003fcd5, 0x00040db1 | compares its count unsigned; the flash's "which" is position.x < 0 | game-events |
+| EMuzzleFlash::Process | 0x00040d48-0x00040d5b | after placing the flash, zeroes the x, y and z of the instance frame's translation row, so the flash's direction is turned by the frame's rotation alone | game-events |
+| EBashCarAlongObjectAxis::Process | 0x00049bee | zeroes the w of the y row in its copy of the instance's matrix, so the impulse's direction has w 0 | game-events |
 | ERandomExplosion::Process | 0x000430e0 | y + 1.5 before the height lookup and + 1 after | game-events |
 | ERollSub, ESetAreaBrightness, ESetCollisionGeometry, EPlayEffect (Process) | 0x000435c1, 0x000439b0, 0x00043f01, 0x0004254f | write their computed values back into the event | game-events |
 | EPlayerLose::Process | 0x0004cf9f | makes an ERestart inside its own destructor | game-events |

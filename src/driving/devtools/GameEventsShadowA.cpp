@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include <bit>
+#include <map>
 #include <string>
 
 #include "../audio/Mix.h"
@@ -25,6 +26,7 @@
 #include "../engine/Feedback.h"
 #include "../game/BondCar.h"             // kCarClass3
 #include "../game/EventsA.h"
+#include "../game/EventsD.h"             // StingerChannel
 #include "../audio/Sound.h"              // AOneShotSound
 #include "../game/AIViews.h"
 #include "../game/Helicopter.h"
@@ -100,6 +102,12 @@ namespace {
 
 long g_cases, g_checks, g_differ, g_faults;
 int g_reported;
+std::map<std::string, long> g_differBy;     // differences by case, listed after the summary
+
+// The first two differences of each case are printed, up to 60 in all
+bool ShouldReport(const char *what) {
+    return ++g_differBy[what] <= 2 && g_reported++ < 60;
+}
 unsigned g_x87, g_sse;
 
 // ---- the package's entries
@@ -171,17 +179,18 @@ void Vec(const char *name, const void *v, int count) {
         return;
     }
     const float *f = static_cast<const float *>(v);
-    char line[160];
-    int at = snprintf(line, sizeof(line), " %s", name);
-    for (int i = 0; i < count; i++)
-        at += snprintf(line + at, sizeof(line) - at, " %08x", Bits(f[i]));
-    Call("%s", line);
+    std::string line = std::string(" ") + name;
+    char word[12];
+    for (int i = 0; i < count; i++) {
+        snprintf(word, sizeof(word), " %08x", Bits(f[i]));
+        line += word;
+    }
+    Call("%s", line.c_str());
 }
 
 void Differ(const char *what, long index, const char *detail) {
     g_differ++;
-    if (g_reported < 10) {
-        g_reported++;
+    if (ShouldReport(what)) {
         printf("[gameeventsshadowa] DIFF %s, case %ld: %s\n", what, index, detail);
         fflush(stdout);
     }
@@ -430,6 +439,7 @@ void WriteGlobals(const Globals &g) {
     LastIncidentalStep = g.lastIncidental;
     LastPlayerIncidentalStep = g.lastPlayerIncidental;
     memcpy(StingerGame, g.stinger, sizeof(g.stinger));
+    memcpy(StingerChannel, g.stinger, sizeof(g.stinger));
     memcpy(TuningLevelGame, g.tuningLevel, sizeof(g.tuningLevel));
     gEventDynamicData = g.dynamic;
     memcpy(PhysicsObjectsGame, W->physicsObjects, sizeof(W->physicsObjects));
@@ -450,7 +460,7 @@ void ReadGlobals(Globals *g, bool original) {
     g->framesSinceAudio = FramesSinceAudioGame;
     g->lastIncidental = original ? LastIncidentalGame : LastIncidentalStep;
     g->lastPlayerIncidental = original ? LastPlayerIncidentalGame : LastPlayerIncidentalStep;
-    memcpy(g->stinger, StingerGame, sizeof(g->stinger));
+    memcpy(g->stinger, original ? StingerGame : StingerChannel, sizeof(g->stinger));
     memcpy(g->tuningLevel, TuningLevelGame, sizeof(g->tuningLevel));
     g->dynamic = gEventDynamicData;
 }
@@ -1306,6 +1316,11 @@ void BuildWorld() {
     for (int i = 0; i < 2; i++) {
         AICommand *c = &W->commands[i];
         RandomBytes(c, sizeof(*c));
+        // No NaN words: the original copies the command's floats on the x87, which quiets a signalling NaN
+        uint32_t *words = reinterpret_cast<uint32_t *>(c);
+        for (size_t w = 0; w < sizeof(*c) / 4; w++)
+            if ((words[w] >> 23 & 0xff) == 0xff)
+                words[w] ^= 0x40000000;
         RandomMatrix(&c->orientation);
         c->position = { Uniform(-50.0f, 50.0f), Uniform(-5.0f, 5.0f), Uniform(-50.0f, 50.0f) };
         c->pushForward = RandomFloat();
@@ -1379,10 +1394,13 @@ void Both(const char *what, long index, size_t eventSize, const Call &call) {
 
     WriteGlobals(initialGlobals);
     g_calls = &logOriginal;
+    bool originalFaulted = false;
     {
         Originals window;
-        if (!Guarded([&] { call(true); }))
+        if (!Guarded([&] { call(true); })) {
             logOriginal += "<fault>";
+            originalFaulted = true;
+        }
     }
     g_calls = NULL;
     ReadGlobals(&globalsOriginal, true);
@@ -1392,10 +1410,15 @@ void Both(const char *what, long index, size_t eventSize, const Call &call) {
     memcpy(W, g_initial, sizeof(FakeWorld));
     WriteGlobals(initialGlobals);
     g_calls = &logPort;
-    if (!Guarded([&] { call(false); }))
+    bool portFaulted = !Guarded([&] { call(false); });
+    if (portFaulted)
         logPort += "<fault>";
     g_calls = NULL;
     ReadGlobals(&globalsPort, false);
+    // A fault inside an original destructor unwinds through its exception funclet, which puts Event's vtable
+    // back; the port (no unwinding of structured exceptions) leaves its own. Faults happen only on synthetic data.
+    if (originalFaulted && portFaulted)
+        memcpy(W->eventScratch, eventOriginal, 4);
 
     CheckBytes(what, index, "event", eventOriginal, W->eventScratch, eventSize);
     CheckBytes(what, index, "world", g_after, W, sizeof(FakeWorld));
@@ -1939,6 +1962,8 @@ void GameEventsShadowA_Run(void) {
     // The live state the cases replace, put back after
     Globals live;
     ReadGlobals(&live, true);
+    char liveStinger[sizeof(StingerChannel)];
+    memcpy(liveStinger, StingerChannel, sizeof(liveStinger));
     uint32_t liveOurs[2] = { LastIncidentalStep, LastPlayerIncidentalStep };
     void *liveController = fgAIElementControllerGame, *liveMission = glbMissionManagerGame;
     void *liveHigh = fgRenderHighGame, *liveWorld = fgWorldGame, *liveHands = AIHandsGame;
@@ -1973,6 +1998,7 @@ void GameEventsShadowA_Run(void) {
     AIHandsGame = liveHands;
     SimCarsGame = liveCars;
     WriteGlobals(live);
+    memcpy(StingerChannel, liveStinger, sizeof(liveStinger));
     memcpy(PhysicsObjectsGame, livePhysics, sizeof(livePhysics));
     LastIncidentalStep = liveOurs[0];
     LastPlayerIncidentalStep = liveOurs[1];
@@ -1982,6 +2008,8 @@ void GameEventsShadowA_Run(void) {
     VirtualFree(g_initial, 0, MEM_RELEASE);
     VirtualFree(g_after, 0, MEM_RELEASE);
 
+    for (const auto &d : g_differBy)
+        printf("[gameeventsshadowa]   %s: %ld differ\n", d.first.c_str(), d.second);
     printf("[gameeventsshadowa] the events E007Logo..EEndMission: %ld cases, %ld checks, %ld differ (%ld faults)\n",
            g_cases, g_checks, g_differ, g_faults);
     fflush(stdout);

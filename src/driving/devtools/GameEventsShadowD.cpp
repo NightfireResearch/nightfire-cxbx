@@ -15,6 +15,7 @@
 
 #include <bit>
 #include <initializer_list>
+#include <map>
 #include <string>
 
 #include "../audio/Sound.h"
@@ -108,6 +109,12 @@ using CARP::AIElement;
 
 long g_cases, g_checks, g_differ, g_faults;
 int g_reported;
+std::map<std::string, long> g_differBy;     // differences by case, listed after the summary
+
+// The first two differences of each case are printed, up to 60 in all
+bool ShouldReport(const char *what) {
+    return ++g_differBy[what] <= 2 && g_reported++ < 60;
+}
 unsigned g_x87, g_sse;
 
 // ---- the package's entries
@@ -175,11 +182,13 @@ void Vec(const char *name, const void *v, int count) {
         return;
     }
     const float *f = static_cast<const float *>(v);
-    char line[160];
-    int at = snprintf(line, sizeof(line), " %s", name);
-    for (int i = 0; i < count; i++)
-        at += snprintf(line + at, sizeof(line) - at, " %08x", Bits(f[i]));
-    Call("%s", line);
+    std::string line = std::string(" ") + name;
+    char word[12];
+    for (int i = 0; i < count; i++) {
+        snprintf(word, sizeof(word), " %08x", Bits(f[i]));
+        line += word;
+    }
+    Call("%s", line.c_str());
 }
 
 void Text(const char *name, const char *s) {
@@ -188,8 +197,7 @@ void Text(const char *name, const char *s) {
 
 void Differ(const char *what, long index, const char *detail) {
     g_differ++;
-    if (g_reported < 10) {
-        g_reported++;
+    if (ShouldReport(what)) {
         printf("[gameeventsshadowd] DIFF %s, case %ld: %s\n", what, index, detail);
         fflush(stdout);
     }
@@ -435,6 +443,7 @@ void WriteGlobals(const Globals &g) {
     AudioClockGame = g.audioClock;
     LimitedSoundCountGame = g.limitedSounds;
     memcpy(StingerChannelGame, g.stinger, sizeof(g.stinger));
+    memcpy(StingerChannel, g.stinger, sizeof(g.stinger));
     TrafficSpawnCountGame = g.trafficCount;
     memcpy(MissionNameGame, g.missionName, sizeof(g.missionName));
     EffectsVolumeGame = g.effectsVolume;
@@ -461,7 +470,7 @@ void ReadGlobals(Globals *g, bool original) {
     g->framesSinceAudio = FramesSinceAudioGame;
     g->audioClock = AudioClockGame;
     g->limitedSounds = LimitedSoundCountGame;
-    memcpy(g->stinger, StingerChannelGame, sizeof(g->stinger));
+    memcpy(g->stinger, original ? StingerChannelGame : StingerChannel, sizeof(g->stinger));
     g->trafficCount = TrafficSpawnCountGame;
     memcpy(g->missionName, MissionNameGame, sizeof(g->missionName));
     g->effectsVolume = EffectsVolumeGame;
@@ -541,11 +550,11 @@ void __fastcall FakeInitAtPoint(void *self, int, const Coord3 *point, const Coor
 
 uint32_t __fastcall FakeGoingToSkip(void *self, int) {
     Call("GoingToSkipCinematic");
-    return W->skippingSoon ? 1 : 0x100;         // only the low byte is read
+    return W->skippingSoon ? 1 : 0;             // 0 or 1 in all of EAX, as the real one answers
 }
 uint32_t __fastcall FakeIsSkipping(void *self, int) {
     Call("IsSkippingCinematic");
-    return W->skipping ? 0x201 : 0x200;
+    return W->skipping ? 1 : 0;
 }
 double __fastcall FakeGetPlayerHealth(void *self, int, uint32_t fraction) {
     Call("GetPlayerHealth %02x", fraction & 0xff);
@@ -806,10 +815,6 @@ UData *__fastcall FakeDataLocateTag(void *self, int, uint32_t tag) {
     Call("DataLocateTag %08x %08x", At(self), tag);
     return W->listFound ? &W->groupItems[0] : &W->groupItems[2];
 }
-UData *__fastcall FakeGetArray(void *self, int) {
-    Call("GetArray %08x", At(self));
-    return &W->groupItems[0];
-}
 void *FakeLookupReference(const char *name) {
     Text("GFX::LookupReference", name);
     return W->lookupFails ? NULL : W->opaque[2];
@@ -1061,7 +1066,6 @@ Fake g_fakes[] = {
     { 0x0008edd0, (const void *)&FakeConvertInstance },
     { 0x0008dd20, (const void *)&FakeGetInstancePosition },
     { 0x00117b50, (const void *)&FakeDataLocateTag },
-    { 0x00117940, (const void *)&FakeGetArray },
     { 0x000d35f0, (const void *)&FakeLookupReference },
     { 0x000d34e0, (const void *)&FakeGfxTrigger },
     { 0x00114750, (const void *)&FakeFastAlloc },
@@ -1240,6 +1244,8 @@ void BuildWorld() {
     uint32_t *model = reinterpret_cast<uint32_t *>(W->model);
     model[1] = uint32_t(Random(2)) << 5;        // subgroups
     model[2] = Random(2);                        // data items
+    model[3] = Word(W->groupItems);              // the items (not relative): the real GetArray, which the port
+                                                 // inlines, answers them
     W->listFound = int8_t(Random(2));
     W->groupItems[0].flags = Random(2) * kDataRelative;
     W->groupItems[0].data = W->groupItems[0].flags ? 0x10 : Word(&W->instances[Random(kInstances)]);
@@ -1380,10 +1386,13 @@ void Both(const char *what, long index, const Call &call) {
 
     WriteGlobals(initialGlobals);
     g_calls = &logOriginal;
+    bool originalFaulted = false;
     {
         Originals window;
-        if (!Guarded([&] { call(true); }))
+        if (!Guarded([&] { call(true); })) {
             logOriginal += "<fault>";
+            originalFaulted = true;
+        }
     }
     g_calls = NULL;
     ReadGlobals(&globalsOriginal, true);
@@ -1394,10 +1403,16 @@ void Both(const char *what, long index, const Call &call) {
     PointGameAtWorld();
     WriteGlobals(initialGlobals);
     g_calls = &logPort;
-    if (!Guarded([&] { call(false); }))
+    bool portFaulted = !Guarded([&] { call(false); });
+    if (portFaulted)
         logPort += "<fault>";
     g_calls = NULL;
     ReadGlobals(&globalsPort, false);
+    // A fault inside an original destructor unwinds through its exception funclet, which puts Event's vtable
+    // back; the port (no unwinding of structured exceptions) leaves its own. Faults happen only on made-up data.
+    if (originalFaulted && portFaulted)
+        for (int i = 0; i < 2; i++)
+            memcpy(W->events[i], g_after->events[i], 4);
 
     CheckBytes(what, index, "world", g_after, W, sizeof(FakeWorld));
     CheckBytes(what, index, "globals", &globalsOriginal, &globalsPort, sizeof(Globals));
@@ -1510,6 +1525,14 @@ void MaskStackPointers(const char *name) {
     }
 }
 
+// ESpawnExplosionStatic with neither a position nor an instance: the original's explosion position is what its
+// stack held (the port's is zero), so it is not compared
+void MaskUnwritten(const char *name, const uint32_t *record) {
+    if (strcmp(name, "ESpawnExplosionStatic") != 0 || record[1] != 0 || record[2] != 0 || W->newCount < 2)
+        return;
+    memset(&W->events[1][0x04], 0xee, 0x10);
+}
+
 void TestEvents(int round) {
     static uint32_t record[0x14];
     for (const EventClass &type : kClasses) {
@@ -1523,6 +1546,7 @@ void TestEvents(int round) {
             if (W->newCount > 0)
                 ((void *(__fastcall *)(void *, int, unsigned))type.remove)(W->events[0], 0, 1);
             MaskStackPointers(type.name);
+            MaskUnwritten(type.name, record);
         });
     }
 }
@@ -1532,9 +1556,11 @@ void TestOthers(int round) {
     const uint32_t resolvers[] = { 0x000446f0, 0x00045090, 0x000452a0, 0x000457a0, 0x00045d00, 0x000464b0 };
     for (uint32_t resolver : resolvers) {
         BuildWorld();
-        for (uint32_t &word : record)
+        uint32_t words[0x10];
+        for (uint32_t &word : words)
             word = Random();
         Both("ResolveEvent", round, [&](bool) {
+            memcpy(record, words, sizeof(record));      // the same record for both sides
             ((void (*)(void *, void *, void *))resolver)(record, W->opaque[0], W->opaque[1]);
             Vec("record", record, 9);
         });
@@ -1567,6 +1593,8 @@ void GameEventsShadowD_Run(void) {
     // The live state the cases replace, put back after
     Globals live;
     ReadGlobals(&live, true);
+    char liveStinger[sizeof(StingerChannel)];
+    memcpy(liveStinger, StingerChannel, sizeof(liveStinger));
     int32_t liveSoundDue[4];
     memcpy(liveSoundDue, ExplosionSoundDue, sizeof(liveSoundDue));
     uint32_t liveSoundSlot = ExplosionSoundSlot;
@@ -1612,6 +1640,7 @@ void GameEventsShadowD_Run(void) {
     memcpy(RigidSigsGame, liveRigidSigs, sizeof(liveRigidSigs));
     memcpy(SimpleSigsGame, liveSimpleSigs, sizeof(liveSimpleSigs));
     WriteGlobals(live);
+    memcpy(StingerChannel, liveStinger, sizeof(liveStinger));
     memcpy(ExplosionSoundDue, liveSoundDue, sizeof(liveSoundDue));
     ExplosionSoundSlot = liveSoundSlot;
     ExplosionEffectSlot = liveEffectSlot;
@@ -1619,6 +1648,8 @@ void GameEventsShadowD_Run(void) {
     VirtualFree(g_initial, 0, MEM_RELEASE);
     VirtualFree(g_after, 0, MEM_RELEASE);
 
+    for (const auto &d : g_differBy)
+        printf("[gameeventsshadowd]   %s: %ld differ\n", d.first.c_str(), d.second);
     printf("[gameeventsshadowd] the events ESetRecordedGameTime..EWakeupSmackable: %ld cases, %ld checks, %ld differ "
            "(%ld faults)\n", g_cases, g_checks, g_differ, g_faults);
     fflush(stdout);

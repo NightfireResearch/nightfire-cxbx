@@ -1069,7 +1069,8 @@ void EMuzzleFlash_MakeEvent_Callback(const EMuzzleFlash::Record *record) {
     }
 }
 
-// TriggerFX's second argument is whether the flash's position (in the instance's frame) has a negative x.
+// TriggerFX's second argument is whether the flash's position (in the instance's frame) has a negative x. The
+// direction is the effect's rotation turned by the instance's frame without its translation.
 void EMuzzleFlash::Process() {
     if (effect == NULL || sceneObj == NULL)
         return;
@@ -1078,6 +1079,9 @@ void EMuzzleFlash::Process() {
     sceneObj->GetInstancePosition(effect->instance, &frame, false);
     alignas(16) Coord4 position;
     MATRIX4_TransformPoint(&frame, &effect->position, &position);
+    frame.mtx[3][0] = 0.0f;
+    frame.mtx[3][1] = 0.0f;
+    frame.mtx[3][2] = 0.0f;
     alignas(16) Coord4 direction = {0.0f, 1.0f, 0.0f, 0.0f};
     alignas(16) MATRIX4 rotation;
     VU0_quattom4(&rotation, &effect->gfx.rotation);

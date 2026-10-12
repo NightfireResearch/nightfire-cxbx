@@ -79,7 +79,8 @@ static uintptr_t g_imageEnd = 0;
 //
 // Everything reported goes to two places: stdout, which is usually a file that a crash would otherwise leave
 // with its last few kilobytes still in the CRT's buffer, and crash.log in the working directory, opened and
-// closed around every line so that nothing is lost however the process dies afterwards. The first hard fault
+// closed around every line (a fault's report: around the whole report, written before the handler returns) so
+// that nothing is lost however the process dies afterwards. The first hard fault
 // also writes crash.dmp, a full-memory minidump that cdb or Visual Studio can open with the game's memory
 // exactly as it was.
 //
@@ -100,6 +101,25 @@ static const char *ModuleContaining(uintptr_t address, char *scratch, size_t scr
     return "an unknown module";
 }
 
+// A fault's report is gathered here and appended to crash.log in one go when it is complete. Opening and closing
+// the file for each of its seventy-odd lines made a fault cost up to two seconds on a loaded machine (the shadow
+// tests catch hundreds of faults on both sides), against milliseconds for one append.
+static char g_faultRecord[16384];
+static size_t g_faultRecordLength = 0;
+static bool g_faultRecordOpen = false;
+
+static void CloseFaultRecord(void) {
+    g_faultRecordOpen = false;
+    if (g_faultRecordLength == 0)
+        return;
+    FILE *log = fopen("crash.log", "a");
+    if (log != NULL) {
+        fwrite(g_faultRecord, 1, g_faultRecordLength, log);
+        fclose(log);
+    }
+    g_faultRecordLength = 0;
+}
+
 static void Report(const char *format, ...) {
     char line[1024];
     va_list args;
@@ -110,6 +130,16 @@ static void Report(const char *format, ...) {
     fputs(line, stdout);
     fflush(stdout);
 
+    if (g_faultRecordOpen) {
+        size_t length = strlen(line);
+        if (g_faultRecordLength + length < sizeof(g_faultRecord)) {
+            memcpy(g_faultRecord + g_faultRecordLength, line, length);
+            g_faultRecordLength += length;
+            return;
+        }
+        CloseFaultRecord();
+        g_faultRecordOpen = true;
+    }
     FILE *log = fopen("crash.log", "a");
     if (log != NULL) {
         fputs(line, log);
@@ -308,6 +338,7 @@ static LONG CALLBACK ReportException(EXCEPTION_POINTERS *info) {
     char scratch[MAX_PATH];
     uintptr_t at = (uintptr_t)record->ExceptionAddress;
     bool hard = IsHardFault(code);
+    g_faultRecordOpen = true;
 
     if (hard)
         ReportStamp("fault");
@@ -338,10 +369,12 @@ static LONG CALLBACK ReportException(EXCEPTION_POINTERS *info) {
         static bool dumped = false;
         if (!dumped) {
             dumped = true;
+            CloseFaultRecord();
             WriteMinidump("crash.dmp", info);
         }
     }
 
+    CloseFaultRecord();
     InterlockedDecrement(&reporting);
     return EXCEPTION_CONTINUE_SEARCH;
 }
@@ -540,11 +573,13 @@ int main(int argc, char **argv) {
 
     // The existing injection DLL, unchanged. Its DllMain calls Inject(), which patches the game code at the
     // addresses it has always used - now that the image is mapped, those addresses mean what they always did.
-    if (LoadLibraryA(injectDll) == NULL) {
+    HMODULE inject = LoadLibraryA(injectDll);
+    if (inject == NULL) {
         printf("[loader] could not load %s (error %lu)\n", injectDll, GetLastError());
         return 1;
     }
-    printf("[loader] %s loaded and patches applied\n", injectDll);
+    // Its base, so that a crash report's addresses in the DLL can be looked up in its map
+    printf("[loader] %s loaded at 0x%08x and patches applied\n", injectDll, (unsigned)(uintptr_t)inject);
 
     // Before the entry point, so that the window is already there when the game's graphics init looks for it.
     // That is too early to know what resolution the game will ask for, so this is only a starting size: the

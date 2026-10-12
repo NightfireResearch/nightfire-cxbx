@@ -1107,6 +1107,7 @@ void EBashCarAlongObjectAxis::Destruct() {
 // axis; then the damage.
 void EBashCarAlongObjectAxis::Process() {
     alignas(16) MATRIX4 axes = sceneObj->Instance()->Matrix();
+    axes.mtx[1][3] = 0.0f;
     RigidBody *body = fgSimulation.GetRigidBody(PlayerCar()->rigidBodySlot);
     const Coord3 *carPosition = PlayerCar()->GetPosition();
     alignas(16) Coord4 position = { carPosition->x, carPosition->y, carPosition->z, 1.0f };

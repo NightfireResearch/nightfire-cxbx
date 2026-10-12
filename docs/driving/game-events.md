@@ -111,7 +111,8 @@ both sides: A's AVoice::Destruct (View::Destruct, on views out of the active lis
 Event::Delete (Event's operator delete, the deletion point put back after each side). The mutations each was
 checked against (by reading): A, EActivateAIElement clearing the trigger without kRigidType1 and ECollision's
 second side testing `tag`; B, EFireWeapon's noise phase (& 0x7f) and EKickObject's +0.25; C, EPlayerLose's `< 0`
-for `<= 0` and SetRunning given a raw byte; D, EStreamEvent testing EAX for AL and ESetSimRate's clamp.
+for `<= 0` and SetRunning given a raw byte; D, ESetSimRate's clamp. (D's EStreamEvent testing EAX for AL is no longer
+caught: its fakes answer 0 or 1 in all of EAX, as the mission manager's functions do.)
 
 In game: lockstep runs of missions 1-8, idle and accelerating, to tick 9000, frames and sound traces against the
 baseline. They reach EAIUpdate, EAnimUpdate, EAudioUpdate, ECameraUpdate, ESimFrameUpdate and ESimEndFrame every
@@ -125,6 +126,43 @@ a score action, a sentry spawned and a broken window.
 ## What the port taught
 
 (To come.)
+
+## What the testing taught
+
+The first round (gev1) had all 16 lockstep runs exact, but every shadow run ended after GameWeaponsShadowB's summary,
+killed at drive_game.ps1's 20 minutes. Nothing hung or crashed for good:
+
+- **Faults cost time.** The loader opened and closed crash.log for each of a fault report's seventy-odd lines; with
+  eight runs at once that made a caught fault cost up to two seconds (30 ms in the missions round), and the new
+  shadows added about 900 faults on both sides. GameWeaponsShadowC started at minute 19. The loader now gathers a
+  fault's report and appends it once (and prints the DLL's load address, for its new map file: drivinginject.map);
+  round.sh gives a shadow run 30 minutes.
+- **A log line past its buffer.** The shadows' Vec helper formatted into 160 bytes and went on past the end
+  (snprintf's return added up); IFeedback::AddCollisionInfo's 21-word impact smashed the stack of ECollision's
+  cases, 256 faults that ran into ASCII. It appends to a string now (A, C, D).
+- **The hook table filled up again.** Shadow B had room for 160 hooks; IFeedback::SetRumble's was among those
+  dropped, so every EFireWeapon case ran the real one on a NULL feedback object (420 faults, 944 differences). It
+  has 256, and says when it is full.
+- **An owned global needs both copies set** (as in the missions round): StingerChannel, written by A and D into the
+  game's copy only, so EAddScoreAction's port took the other channel.
+- **A fault unwinds the original's destructor.** The originals' exception funclets put Event's vtable back as a
+  structured exception passes through them; the port's code has none. When both sides fault, the vtable word is
+  not compared.
+- **Harness, each in one shadow:** C's real clock (RealClock_Div2Ticks) ticked during a case, one in 30 (it stands
+  still while C runs now); C's and D's resolver cases ran the port on the record the original had already
+  resolved; C's ERandomExplosion faked RandomShort, which the original inlines; C's GFX::TriggerByName fake logged
+  the name's address (the port's literal is its own); C's RollSub fake read whole words where bytes are passed; D
+  faked UGroup::GetArray, which the port inlines (the real one runs on the stand-in group now); signalling NaNs in
+  A's AI commands, which the original copies through the x87; the skipping-cinematic fakes answered more than 0 or 1.
+- **Three port bugs.** EMuzzleFlash dropped three zero stores as dead: they clear the instance frame's translation
+  (0x00040d48-0x00040d5b), so the flash's direction came out moved by the instance's position. EBashCarAlongObjectAxis
+  kept the w of the instance's y row where the original zeroes it in its copy (0x00049bee). ESpawnSmackable asked a
+  scene object for its velocity twice where the original asks once.
+
+With these, the second round (gev2) had all 16 lockstep runs exact against the baselines and every shadow run
+finished on missions 1-8 (a frame dumped, in 14 to 25 minutes), the four events shadows with 0 differences and 80
+faults on both sides between them (62 of them A's, on made-up AI elements); only the two known differences remain
+(sndsysshadow case 0, sndstreamfileshadow case 52).
 
 ## Random calls
 
@@ -151,8 +189,9 @@ Other differences, none observable: the make callbacks copy floats as bits (the 
 signalling NaN); AVoice::Destruct calls View::Destruct directly where the original goes through the vector
 destructor iterator; EFireWeapon passes "" where it passes an unwritten mix-name buffer (0x0004c544-0x0004c550);
 setne arguments are clean bools (EForceCarStop 0x0004c7a4, ELavaHaze, ELetterBoxOn/Off, EObjectiveDisplayText,
-ESpawnSentry 0x000458dd) and EStreamEvent's "nis" case passes QueuePrimary a bool (0x0004f0b2); EMuzzleFlash's
-dead zero stores are dropped (0x00040d48); ESetCullDistanceFactor and ESetJumpGravity write the vtable store the
+ESpawnSentry 0x000458dd) and EStreamEvent's "nis" case passes QueuePrimary a bool (0x0004f0b2); ERenderFrame,
+ESetSubtitle and EStreamEvent test all of IsSkippingCinematic's and GoingToSkipCinematic's answer where the original
+tests AL (both answer 0 or 1 in all of EAX); ESetCullDistanceFactor and ESetJumpGravity write the vtable store the
 original's compiler dropped (0x00043fa0, 0x00044040).
 
 ## Odd things in the original, kept

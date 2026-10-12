@@ -1874,8 +1874,9 @@ void ESpawnSmackable::Process() {
     MATRIX4 transform;
     if (sceneObj != NULL) {
         sceneObj->GetInstancePosition(instanceIndex, &transform, true);
-        if (sceneObj->GetVelocityVirtual() != NULL)
-            velocity = *sceneObj->GetVelocityVirtual();
+        const Coord3 *moving = sceneObj->GetVelocityVirtual();
+        if (moving != NULL)
+            velocity = *moving;
     } else {
         if (instance == NULL)
             return;
