@@ -567,8 +567,11 @@ bool HookInstall(Hook *hook, uint32_t entry, const void *to) {
     if (at == 0)
         return false;
     const uint8_t *code = reinterpret_cast<const uint8_t *>(uintptr_t(at));
+    // Too short to take a jump: a return and then the padding before the next function (a 0xc3 byte inside an
+    // address or a jump's offset is not one)
     for (int i = 0; i < 5; i++)
-        if (code[i] == 0xc3 || code[i] == 0xc2 || code[i] == 0xcc)    // too short to take a jump
+        if (code[0] == 0xcc || (code[i] == 0xc3 && (code[i + 1] == 0xcc || code[i + 1] == 0x90)) ||
+            (code[i] == 0xc2 && (code[i + 3] == 0xcc || code[i + 3] == 0x90)))
             return false;
     hook->at = at;
     DWORD old;

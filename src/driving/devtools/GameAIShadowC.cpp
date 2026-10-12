@@ -185,9 +185,18 @@ long g_cases, g_checks, g_differ, g_faults, g_skipped;
 int g_reported;
 unsigned g_x87, g_sse;
 
+// The first three differences of each kind (a kind is its "what" text), up to 200 in all
 void Report(const char *what, long index, const char *detail) {
     g_differ++;
-    if (g_reported++ < 10)
+    static const char *kinds[64];
+    static int counts[64];
+    int k = 0;
+    while (k < 64 && kinds[k] != NULL && strcmp(kinds[k], what) != 0)
+        k++;
+    if (k == 64)
+        return;
+    kinds[k] = what;
+    if (counts[k]++ < 3 && g_reported++ < 200)
         printf("[gameaishadowc]   %s #%ld: %s\n", what, index, detail);
 }
 
@@ -349,9 +358,16 @@ void CompareLogs(const char *what, long index) {
     size_t at = 0;
     while (at < a.size() && at < b.size() && a[at] == b[at])
         at++;
-    char detail[128];
-    snprintf(detail, sizeof(detail), "call log word %u of %u/%u: original %08x, port %08x", unsigned(at),
-             unsigned(a.size()), unsigned(b.size()), at < a.size() ? a[at] : 0, at < b.size() ? b[at] : 0);
+    // The words from ten before the difference to one after, each side
+    char detail[400];
+    int length = snprintf(detail, sizeof(detail), "call log word %u of %u/%u:", unsigned(at), unsigned(a.size()),
+                          unsigned(b.size()));
+    for (int side = 0; side < 2; side++) {
+        const std::vector<uint32_t> &log = side == 0 ? a : b;
+        length += snprintf(detail + length, sizeof(detail) - length, side == 0 ? " original" : "; port");
+        for (size_t i = at >= 10 ? at - 10 : 0; i <= at + 1 && i < log.size() && length < 380; i++)
+            length += snprintf(detail + length, sizeof(detail) - length, i == at ? " [%08x]" : " %08x", log[i]);
+    }
     Report(what, index, detail);
 }
 
@@ -646,8 +662,11 @@ bool HookInstall(Hook *hook, uint32_t entry, const void *to) {
     if (at == 0)
         at = entry;
     const uint8_t *code = reinterpret_cast<const uint8_t *>(uintptr_t(at));
+    // Too short to take a jump: a return and then the padding before the next function (a 0xc3 byte inside an
+    // address, as at the start of our RPlayerCamera::UpdateCamera, is not one)
     for (int i = 0; i < 5; i++)
-        if (code[i] == 0xc3 || code[i] == 0xc2 || code[i] == 0xcc)    // too short to take a jump
+        if (code[0] == 0xcc || (code[i] == 0xc3 && (code[i + 1] == 0xcc || code[i + 1] == 0x90)) ||
+            (code[i] == 0xc2 && (code[i + 3] == 0xcc || code[i + 3] == 0x90)))
             return false;
     hook->at = at;
     DWORD old;
@@ -708,9 +727,11 @@ void RunCase(const char *what, long index, SideFn run, const Snapshot &before) {
     Capture(&inputs);
     g_logs[0].clear();
     g_logs[1].clear();
+    uint32_t seed = g_seed;     // a case's own draws repeat on the port's side
     RunSide(run, true);
     Capture(&original);
     Restore(inputs);
+    g_seed = seed;
     RunSide(run, false);
     Capture(&port);
     g_cases++;
@@ -1005,13 +1026,16 @@ void TestPure(const Snapshot &before) {
         PrepareCharacter();
         g_in.i0 = Range(-1, 4);
         g_in.f0 = Uniform(0.0f, 100.0f);
+        Snapshot prepared;     // the cases after the first start from the same preparation
+        Capture(&prepared);
         RunCase("AICharacter::GetZoneHitPointScale", i, [] {
             g_out.d = g_original ? Orig_GetZoneHitPointScale(g_ai, 0, g_in.i0, g_in.f0)
                                  : g_ai->GetZoneHitPointScaleBase(g_in.i0, g_in.f0);
-        }, before);
+        }, prepared);
         RunCase("AICharacter::IsAlive", i, [] {
             g_out.i = g_original ? Orig_IsAlive(g_ai, 0) : g_ai->IsAliveBase();
-        }, before);
+        }, prepared);
+        Restore(before);
     }
     RunCase("AICharacterPedestrian::GetPedBase", 0, [] {
         g_out.i = g_original ? Orig_GetPedBase() : AICharacterPedestrian::GetPedBase();
@@ -1076,12 +1100,14 @@ void TestCharacter(const Snapshot &before) {
         PrepareCharacter();
         g_in.point = Around(g_ai->Position(), 5.0f);
         g_in.i0 = Range(0, 1);
+        Snapshot prepared;     // the cases after the first start from the same preparation
+        Capture(&prepared);
         RunCase("AICharacter::MoveToPoint", i, [] {
             if (g_original)
                 Orig_MoveToPoint(g_ai, 0, &g_in.point, g_in.i0 != 0);
             else
                 g_ai->MoveToPoint(&g_in.point, g_in.i0 != 0);
-        }, before);
+        }, prepared);
         g_hitPoints = Uniform(0.0f, 100.0f);
         g_in.i1 = Chance(80);
         RunCase("AICharacter::SetHitPointLoc", i, [] {
@@ -1090,39 +1116,40 @@ void TestCharacter(const Snapshot &before) {
                 Orig_SetHitPointLoc(g_ai, 0, hitPoints);
             else
                 g_ai->SetHitPointLoc(hitPoints);
-        }, before);
+        }, prepared);
         RunCase("AICharacter::UpdateRotPos", i, [] {
             if (g_original)
                 Orig_UpdateRotPosBase(g_ai, 0);
             else
                 g_ai->UpdateRotPos();
-        }, before);
+        }, prepared);
         RunCase("AICharacter::SetActor", i, [] {
             if (g_original)
                 Orig_SetActorBase(g_ai, 0, &g_newLink);
             else
                 g_ai->SetActor(&g_newLink);
-        }, before);
+        }, prepared);
         g_ai->zoneLastHit = Range(-5, 5);
         RunCase("AICharacter::GetZoneLastHit", i, [] {
             g_out.i = g_original ? Orig_GetZoneLastHit(g_ai, 0) : g_ai->GetZoneLastHit();
-        }, before);
+        }, prepared);
         g_ai->voice = g_voice;
         RunCase("AICharacter::GetACharacter", i, [] {
             g_out.p = g_original ? Orig_GetACharacter(g_ai, 0) : g_ai->GetACharacter();
-        }, before);
+        }, prepared);
         RunCase("AICharacterPassenger::DoNeutral", i, [] {
             if (g_original)
                 Orig_PassengerDoNeutral(g_ai, 0);
             else
                 g_ai->DoNeutral();
-        }, before);
+        }, prepared);
         RunCase("AICharacterPassenger::HandleInterrupts", i, [] {
             if (g_original)
                 Orig_PassengerHandleInterrupts(g_ai, 0);
             else
                 g_ai->HandleInterrupts();
-        }, before);
+        }, prepared);
+        Restore(before);
     }
 }
 
@@ -1153,68 +1180,70 @@ void TestPedestrian(const Snapshot &before) {
         g_in.i1 = Range(0, 1);
         g_in.f0 = Chance(50) ? 3.2f : Uniform(1.0f, 6.0f);
         g_in.point = Around(g_ped->Position(), 30.0f);
+        Snapshot prepared;     // the cases after the first start from the same preparation
+        Capture(&prepared);
         RunCase("AICharacterPedestrian::FaceTarget", i, [] {
             g_out.b = g_original ? Orig_FaceTarget(g_ped, 0, g_in.i0) : g_ped->FaceTarget(g_in.i0);
-        }, before);
+        }, prepared);
         RunCase("AICharacterPedestrian::ReachedTarget", i, [] {
             g_out.b = g_original ? Orig_ReachedTarget(g_ped, 0, g_in.i1 != 0) : g_ped->ReachedTarget(g_in.i1 != 0);
-        }, before);
+        }, prepared);
         RunCase("AICharacterPedestrian::TargetIsInRange", i, [] {
             g_out.b = g_original ? Orig_TargetIsInRange(g_ped, 0) : g_ped->TargetIsInRange();
-        }, before);
+        }, prepared);
         RunCase("AICharacterPedestrian::UpdateClosestPed", i, [] {
             g_out.i = g_original ? Orig_UpdateClosestPed(g_ped, 0, g_in.i1 != 0)
                                  : g_ped->UpdateClosestPed(g_in.i1 != 0);
-        }, before);
+        }, prepared);
         RunCase("AICharacterPedestrian::UpdateThreatRelativeDirection", i, [] {
             if (g_original)
                 Orig_UpdateThreatRelativeDirection(g_ped, 0, &g_in.point, &g_out.f[0], &g_out.f[1]);
             else
                 g_ped->UpdateThreatRelativeDirection(&g_in.point, &g_out.f[0], &g_out.f[1]);
-        }, before);
+        }, prepared);
         RunCase("AICharacterPedestrian::PlayAnim", i, [] {
             g_out.i = g_original ? Orig_PlayAnim(g_ped, 0, g_in.i0 * 7, g_in.f0) : g_ped->PlayAnim(g_in.i0 * 7, g_in.f0);
-        }, before);
+        }, prepared);
         RunCase("AICharacterPedestrian::UpdateAnimSpeed", i, [] {
             g_out.d = g_original ? Orig_UpdateAnimSpeed(g_ped, 0) : g_ped->UpdateAnimSpeed();
-        }, before);
+        }, prepared);
         RunCase("AICharacterPedestrian::FindPointAgainstWall", i, [] {
             g_out.i = g_original ? Orig_FindPointAgainstWall(g_ped, 0, g_in.f0) : g_ped->FindPointAgainstWall(g_in.f0);
-        }, before);
+        }, prepared);
         RunCase("AICharacterPedestrian::SetNewTargetBasedOnThreat", i, [] {
             if (g_original)
                 Orig_SetNewTargetBasedOnThreat(g_ped, 0, g_in.i0);
             else
                 g_ped->SetNewTargetBasedOnThreat(g_in.i0);
-        }, before);
+        }, prepared);
         RunCase("AICharacterPedestrian::SetTarget", i, [] {
             if (g_original)
                 Orig_SetTarget(g_ped, 0, &g_in.point);
             else
                 g_ped->SetTarget(&g_in.point);
-        }, before);
+        }, prepared);
         RunCase("AICharacterPedestrian::SetActor", i, [] {
             if (g_original)
                 Orig_SetActor(g_ped, 0, &g_newLink);
             else
                 g_ped->SetActor(&g_newLink);
-        }, before);
+        }, prepared);
         RunCase("AICharacterPedestrian::KillSelf", i, [] {
             if (g_original)
                 Orig_KillSelf(g_ped, 0, g_in.i1 != 0);
             else
                 g_ped->KillSelf(g_in.i1 != 0);
-        }, before);
+        }, prepared);
         if (network) {
             RunCase("AICharacterPedestrian::MaintainHeading", i, [] {
                 if (g_original)
                     Orig_MaintainHeading(g_ped, 0, g_in.i0);
                 else
                     g_ped->MaintainHeading(g_in.i0);
-            }, before);
+            }, prepared);
             RunCase("AICharacterPedestrian::Recycle", i, [] {
                 g_out.b = g_original ? Orig_Recycle(g_ped, 0) : g_ped->Recycle();
-            }, before);
+            }, prepared);
         }
         if (CarCount() > 0) {
             g_in.i0 = Range(0, CarCount() - 1);
@@ -1222,21 +1251,21 @@ void TestPedestrian(const Snapshot &before) {
                 PhysicsObject *car = ShadowCars[g_in.i0];
                 g_out.i = g_original ? Orig_CheckVehicleThreat(g_ped, 0, car, g_in.i1 != 0)
                                      : g_ped->CheckVehicleThreat(car, g_in.i1 != 0);
-            }, before);
+            }, prepared);
             g_in.f0 = Chance(50) ? 1000.0f : Uniform(10.0f, 3000.0f);
             RunCase("AICharacterPedestrian::FindClosestCar", i, [] {
                 g_out.p = g_original ? Orig_FindClosestCar(g_ped, 0, g_in.f0) : g_ped->FindClosestCar(g_in.f0);
-            }, before);
+            }, prepared);
             RunCase("AICharacterPedestrian::ThreatenedByVehicle", i, [] {
                 g_out.i = g_original ? Orig_ThreatenedByVehicle(g_ped, 0) : g_ped->ThreatenedByVehicle();
-            }, before);
+            }, prepared);
         }
         if (PedCount() > 0) {
             g_in.i0 = Range(-1, PedCount() - 1);
             RunCase("AICharacterPedestrian::InvalidateFurthestPed", i, [] {
                 g_out.i = g_original ? Orig_InvalidateFurthestPed(g_in.i0)
                                      : AICharacterPedestrian::InvalidateFurthestPed(g_in.i0);
-            }, before);
+            }, prepared);
             g_in.i0 = Range(0, PedCount() - 1);
             if (Pedestrians.peds[g_in.i0] != NULL) {
                 RunCase("AICharacterPedestrian::ForceRecycle", i, [] {
@@ -1244,9 +1273,10 @@ void TestPedestrian(const Snapshot &before) {
                         Orig_ForceRecycle(g_in.i0);
                     else
                         AICharacterPedestrian::ForceRecycle(g_in.i0);
-                }, before);
+                }, prepared);
             }
         }
+        Restore(before);
     }
 }
 

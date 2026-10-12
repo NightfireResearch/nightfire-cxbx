@@ -505,16 +505,18 @@ void AIHelicopter::ControlMoveState(bool steer, bool faceForward) {
             break;
         Helicopter(this)->unknownA8 = 0;
         RPathHandle *path = spline->path;
+        // The path's position goes into the frame's translation row before the placement is applied, and the
+        // body takes that row as its position
         MATRIX4 frame;
         path->GetOrientMat(&frame);
-        Coord3 at;
-        at.x = path->GetPosition()->x;
-        at.y = path->GetPosition()->y;
-        at.z = path->GetPosition()->z;
+        Coord3 *at = Xyz(MatrixRow(&frame, 3));
+        at->x = path->GetPosition()->x;
+        at->y = path->GetPosition()->y;
+        at->z = path->GetPosition()->z;
         VU0_MATRIX4_mult(&frame, &frame, &spline->placement);
         SimpleRigidBody *body = Body(this);
         body->SetOrientMat(&frame);
-        body->position = at;
+        body->position = *at;
         body->velocity = path->velocity;
         break;
     }

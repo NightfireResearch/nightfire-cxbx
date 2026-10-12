@@ -103,7 +103,7 @@ constexpr float kAttack14Speed = 10.0f;
 constexpr float kHiddenAttack14Speed = 25.0f;
 constexpr float kAutoDriveCatchUp = 1.1f;
 constexpr float kAutoDriveSlowdown = 0.75f;
-constexpr float kAutoDriveFollow = 0.9f;
+constexpr float kAutoDriveFollow = 0.85f;
 
 constexpr float kTurretStep = 0.005f;       // turns a step
 constexpr float kInvTwoPi = 0.15915494f;
@@ -130,7 +130,7 @@ static_assert(std::bit_cast<uint32_t>(kChaseFacing) == 0x3f34fdf4 &&
               std::bit_cast<uint32_t>(kChaseSlowdown) == 0x3f19999a &&
               std::bit_cast<uint32_t>(kFollowSpeed) == 0x3f4ccccd &&
               std::bit_cast<uint32_t>(kAutoDriveCatchUp) == 0x3f8ccccd &&
-              std::bit_cast<uint32_t>(kAutoDriveFollow) == 0x3f666666 &&
+              std::bit_cast<uint32_t>(kAutoDriveFollow) == 0x3f59999a &&
               std::bit_cast<uint32_t>(kTurretStep) == 0x3ba3d70a &&
               std::bit_cast<uint32_t>(kInvTwoPi) == 0x3e22f983 &&
               std::bit_cast<uint32_t>(kNavBehind) == 0xbe19999a &&
@@ -539,16 +539,18 @@ void AIGroundVehicle::DisengageSplinePath() {
     SetSplinePath(NULL);
 }
 
-// The car put where the spline path's instance is, moving as it moves
+// The car put where the spline path's instance is, moving as it moves: the path's position goes into the
+// orientation's translation row before the placement is applied, and the body takes that row as its position
 // FUNC_AT(0x0002a8b0)
 void AIGroundVehicle::DoSplinePathUpdate() {
     AISplinePath *path = GetSplinePath();
     RPathHandle *handle = path->path;
     MATRIX4 orientation;
     handle->GetOrientMat(&orientation);
-    Coord3 position = *handle->GetPosition();
+    Coord3 *position = Xyz(MatrixRow(&orientation, 3));
+    *position = *handle->GetPosition();
     VU0_MATRIX4_mult(&orientation, &orientation, &path->placement);
-    BodyOf(this)->ResetObject(&orientation, &position);
+    BodyOf(this)->ResetObject(&orientation, position);
     BodyOf(this)->velocity = handle->velocity;
     Coord3 momentum = handle->velocity;
     VU0_v4scale(&momentum, BodyOf(this)->mass, &momentum);
@@ -880,7 +882,7 @@ void AIGroundVehicle::DoAttackMode() {
                 float reach = float(double(info->halfExtents.z) * kChaseReach +
                                     double(targetInfo->halfExtents.z) * kChaseReach);
                 range = MaxFloat(reach, attackRange);
-                if (chargeSteps != 0 && goalDistance <= range)
+                if (chargeSteps != 0 && goalDistance <= reach)     // the half lengths', not the range
                     chargeSteps = 0;
             }
             float targetFlatSpeed = VU0_v3lengthxz(&BodyOf(target)->velocity);

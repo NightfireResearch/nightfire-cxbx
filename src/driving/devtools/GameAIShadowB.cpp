@@ -116,9 +116,18 @@ long g_cases, g_checks, g_differ, g_faults;
 int g_reported;
 unsigned g_x87, g_sse;
 
+// The first three differences of each kind (a kind is its "what" text), up to 200 in all
 void Report(const char *what, long index, const char *detail) {
     g_differ++;
-    if (g_reported++ < 10)
+    static const char *kinds[64];
+    static int counts[64];
+    int k = 0;
+    while (k < 64 && kinds[k] != NULL && strcmp(kinds[k], what) != 0)
+        k++;
+    if (k == 64)
+        return;
+    kinds[k] = what;
+    if (counts[k]++ < 3 && g_reported++ < 200)
         printf("[gameaishadowb]   %s #%ld: %s\n", what, index, detail);
 }
 
@@ -287,9 +296,16 @@ void CompareLogs(const char *what, long index) {
     size_t at = 0;
     while (at < a.size() && at < b.size() && a[at] == b[at])
         at++;
-    char detail[128];
-    snprintf(detail, sizeof(detail), "call log word %u of %u/%u: original %08x, port %08x", unsigned(at),
-             unsigned(a.size()), unsigned(b.size()), at < a.size() ? a[at] : 0, at < b.size() ? b[at] : 0);
+    // The words from ten before the difference to one after, each side
+    char detail[400];
+    int length = snprintf(detail, sizeof(detail), "call log word %u of %u/%u:", unsigned(at), unsigned(a.size()),
+                          unsigned(b.size()));
+    for (int side = 0; side < 2; side++) {
+        const std::vector<uint32_t> &log = side == 0 ? a : b;
+        length += snprintf(detail + length, sizeof(detail) - length, side == 0 ? " original" : "; port");
+        for (size_t i = at >= 10 ? at - 10 : 0; i <= at + 1 && i < log.size() && length < 380; i++)
+            length += snprintf(detail + length, sizeof(detail) - length, i == at ? " [%08x]" : " %08x", log[i]);
+    }
     Report(what, index, detail);
 }
 
@@ -531,10 +547,11 @@ void __fastcall FakeNavPos(AIGroundVehicle *vehicle, int, Coord3 *point, float d
     *point = g_in.navPoint;
 }
 
-bool __fastcall FakeBarriers(AIGroundVehicle *vehicle, int, bool reversing) {
+// The original hands on the `reversing` byte raw, ours as a bool: the made-up 2 is logged as true
+bool __fastcall FakeBarriers(AIGroundVehicle *vehicle, int, uint8_t reversing) {
     Log(kTagBarriers);
     LogPointer(vehicle);
-    Log(reversing);
+    Log(reversing != 0);
     return g_in.barriers;
 }
 
@@ -866,9 +883,11 @@ void RunCase(const char *what, long index, SideFn run, const Snapshot &before) {
     Capture(&inputs);
     g_logs[0].clear();
     g_logs[1].clear();
+    uint32_t seed = g_seed;     // a case's own draws repeat on the port's side
     RunSide(run, true);
     Capture(&original);
     Restore(inputs);
+    g_seed = seed;
     RunSide(run, false);
     Capture(&port);
     g_cases++;

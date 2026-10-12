@@ -767,6 +767,18 @@ void HookInstall(uint32_t at, const void *to) {
         memcpy(&relative, entry + 1, 4);
         port = at + 5 + uint32_t(relative);
     }
+    // A port too short to take a jump (AICharacterHands::GetWeapon, the helicopter's physics) leaves its entry
+    // unhooked too, so the original's calls and our ports' direct calls both run the real one
+    if (port != 0 && port != uint32_t(uintptr_t(to))) {
+        const uint8_t *code = reinterpret_cast<const uint8_t *>(uintptr_t(port));
+        for (int i = 0; i < 5 && code[0] != 0xe9; i++) {
+            if (code[i] == 0xc3 || code[i] == 0xc2 || code[i] == 0xcc) {
+                printf("[gameweaponsshadowa]   no hook at 0x%08x (its port is too short)\n", at);
+                g_hookFailures++;
+                return;
+            }
+        }
+    }
     HookOne(at, to);
     if (port != 0 && port != uint32_t(uintptr_t(to)))
         HookOne(port, to);

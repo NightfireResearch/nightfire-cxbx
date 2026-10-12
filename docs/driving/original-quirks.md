@@ -519,6 +519,8 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | ESpawnTraffic::Process | 0x00045f16 | the spawn counter goes back to 0 past 32767 | game-events |
 | AIGroundVehicle::UpdateNavPos | 0x0002a3e0 | a sub with followTargetHeight measures in xz | game-ai |
 | AIGroundVehicle::DoAttackMode | 0x0002bf40 | modes 9, 10 and the unknown ones set speed 0 | game-ai |
+| AIGroundVehicle::DoAttackMode | 0x0002bf40 | chase calls a charge off when the target is within the two cars' half lengths (x1.25), not within the range it then uses (the larger of that and the attack range) | game-ai |
+| AIElementController::CalcMightAsWellBeDead | 0x00028730 | counts every vehicle element with the flag, awake, asleep or dead, and its riders with hit points | game-ai |
 | AIGroundVehicle::DoAgentStateUpdate | 0x0002cd80 | the zone loop has no break, so the event can fire once per zone | game-ai |
 | AIGroundVehicle::BarriersInPath, GetDirectLaneWeights | 0x0002aaf0, 0x0002b7a0 | the second probe reuses the record; CheckHitWorld <= 1 counts as clear | game-ai |
 | AIGroundVehicle::GetCollNav | 0x0002b210 | compares the lane unsigned with a signed one, so a negative lane places the navigator again on every call | game-ai |

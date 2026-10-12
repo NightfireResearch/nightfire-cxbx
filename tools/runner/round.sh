@@ -4,7 +4,7 @@
 #   lockstep: for each mission two lockstep runs to tick 9000 (idle, and the accelerator held), 16 frames each and the
 #             sound call trace, sound in lockstep too - <prefix>_m<n>_idle, <prefix>_m<n>_accelerate
 #   shadow:   every shadow test at once on each mission - <prefix>_shadow_m<n>
-#             (up to 30 minutes each: with every shadow, 14 to 25 in October 2026)
+#             (up to 45 minutes each: with every shadow, 19 to 34 in October 2026)
 #
 # Syncs and builds driving + drivinginject first, then shares the runs out with parallel.sh (RUNNER_SLOTS slots,
 # default 8): the shadow runs, then the lockstep runs, as two batches. A lockstep run repeats exactly only while the
@@ -35,7 +35,7 @@ SHADOWS=$(grep -rhoE '"NIGHTFIRE_[A-Z0-9]*SHADOW[A-Z0-9]*"' src/driving src/inje
 : > "$LOCKSTEP_LIST"
 for m in $MS; do
     if [ "$WHAT" != lockstep ]; then
-        echo "${P}_shadow_m$m -Exe 'Release\\driving.exe' -GameArgs '-mission $m' -GameEnv '$SHADOWS' -DumpAfterMs 20000 -StopPattern 'dumping frame' -StartupWaitMs 3000 -TailWaitMs 1800000" >> "$SHADOW_LIST"
+        echo "${P}_shadow_m$m -Exe 'Release\\driving.exe' -GameArgs '-mission $m' -GameEnv '$SHADOWS' -DumpAfterMs 20000 -StopPattern 'dumping frame' -StartupWaitMs 3000 -TailWaitMs 2700000" >> "$SHADOW_LIST"
     fi
     if [ "$WHAT" != shadow ]; then
         for h in idle accelerate; do

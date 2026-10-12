@@ -103,6 +103,11 @@ constexpr float kNeckLimit = 80.0f;
 constexpr float kNeckDeadZone = 1.5f;
 constexpr float kNeckWeightStep = 0.1f;
 constexpr int kMaxAimTime = 180;
+constexpr float kFaceSlowTurns = 0.048750002f;  // FaceTarget turns at its rate beyond these (modes 1, 2)
+constexpr float kFaceFastTurns = 0.081250004f;
+static_assert(std::bit_cast<uint32_t>(kFaceSlowTurns) == 0x3d47ae15 &&
+              std::bit_cast<uint32_t>(kFaceFastTurns) == 0x3da66667,
+              "the original's constants (a bit above 0.04875 and 0.08125)");
 constexpr int kSurfaceDrop6 = 6;            // the faces PreventFalling turns back from (FaceTag::type)
 constexpr int kSurfaceDrop12 = 12;
 constexpr int kVoiceDelayMin = 30;
@@ -802,10 +807,10 @@ bool AICharacterPedestrian::FaceTarget(int mode) {
     // Modes 1 and 2 turn at a rate beyond a small angle; mode 3 turns at once and answers true
     double rate = scale;
     if (mode == 1) {
-        if (turns < -0.04875f || turns > 0.04875f)
+        if (turns < -kFaceSlowTurns || turns > kFaceSlowTurns)
             rate = fgSimulation.timeStep * 7.5;
     } else if (mode == 2) {
-        if (turns < -0.08125f || turns > 0.08125f)
+        if (turns < -kFaceFastTurns || turns > kFaceFastTurns)
             rate = fgSimulation.timeStep * 12.5;
     } else if (mode == 3) {
         done = true;

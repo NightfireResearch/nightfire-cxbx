@@ -501,7 +501,7 @@ void AIElementController::CalcMightAsWellBeDead() {
     int dead = 0;
     for (int i = 0; i < count; i++) {
         const AIElement &element = elements[i];
-        if (element.state != kElementAwake || !(element.flags & kElementMightAsWellBeDead) ||
+        if (element.type != kAIElementVehicle || !(element.flags & kElementMightAsWellBeDead) ||
             (element.flags & kElementNonScoreable) || !(element.hitPoints > 0.0f))
             continue;
         dead++;

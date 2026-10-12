@@ -121,9 +121,18 @@ long g_cases, g_checks, g_differ, g_faults, g_skipped;
 int g_reported;
 unsigned g_x87, g_sse;
 
+// The first three differences of each kind (a kind is its "what" text), up to 200 in all
 void Report(const char *what, long index, const char *detail) {
     g_differ++;
-    if (g_reported++ < 10)
+    static const char *kinds[64];
+    static int counts[64];
+    int k = 0;
+    while (k < 64 && kinds[k] != NULL && strcmp(kinds[k], what) != 0)
+        k++;
+    if (k == 64)
+        return;
+    kinds[k] = what;
+    if (counts[k]++ < 3 && g_reported++ < 200)
         printf("[gameaishadowe]   %s #%ld: %s\n", what, index, detail);
 }
 
@@ -279,9 +288,16 @@ void CompareLogs(const char *what, long index) {
     size_t at = 0;
     while (at < a.size() && at < b.size() && a[at] == b[at])
         at++;
-    char detail[128];
-    snprintf(detail, sizeof(detail), "call log word %u of %u/%u: original %08x, port %08x", unsigned(at),
-             unsigned(a.size()), unsigned(b.size()), at < a.size() ? a[at] : 0, at < b.size() ? b[at] : 0);
+    // The words from ten before the difference to one after, each side
+    char detail[400];
+    int length = snprintf(detail, sizeof(detail), "call log word %u of %u/%u:", unsigned(at), unsigned(a.size()),
+                          unsigned(b.size()));
+    for (int side = 0; side < 2; side++) {
+        const std::vector<uint32_t> &log = side == 0 ? a : b;
+        length += snprintf(detail + length, sizeof(detail) - length, side == 0 ? " original" : "; port");
+        for (size_t i = at >= 10 ? at - 10 : 0; i <= at + 1 && i < log.size() && length < 380; i++)
+            length += snprintf(detail + length, sizeof(detail) - length, i == at ? " [%08x]" : " %08x", log[i]);
+    }
     Report(what, index, detail);
 }
 
@@ -552,7 +568,9 @@ bool __fastcall FakeWorldNormal(WCollider *collider, int, const Coord4 *segment,
     LogBytes(segment, 32);
     // What the constructor left (less the segment ends the original leaves as its stack had them)
     LogBytes(info, 0x10);
-    LogBytes(&info->instance, 0x20);
+    LogBytes(&info->instance, 12);         // not unknown4c, unknown56 or unknown5c, which neither side writes
+    LogBytes(&info->faceType, 6);
+    LogPointer(info->faceInstance);
     if (g_in.hit) {
         info->point = g_in.hitPoint;
         info->normal = g_in.hitNormal;
@@ -817,8 +835,11 @@ bool HookInstall(Hook *hook, uint32_t entry, const void *to) {
     if (at == 0)
         at = entry;
     const uint8_t *code = reinterpret_cast<const uint8_t *>(uintptr_t(at));
+    // Too short to take a jump: a return and then the padding before the next function (a 0xc3 byte inside an
+    // address, as at the start of our RPlayerCamera::UpdateCamera, is not one)
     for (int i = 0; i < 5; i++)
-        if (code[i] == 0xc3 || code[i] == 0xc2 || code[i] == 0xcc)    // too short to take a jump
+        if (code[0] == 0xcc || (code[i] == 0xc3 && (code[i + 1] == 0xcc || code[i + 1] == 0x90)) ||
+            (code[i] == 0xc2 && (code[i + 3] == 0xcc || code[i + 3] == 0x90)))
             return false;
     hook->at = at;
     DWORD old;
@@ -898,9 +919,11 @@ void RunCase(const char *what, long index, SideFn run) {
     Capture(&inputs);
     g_logs[0].clear();
     g_logs[1].clear();
+    uint32_t seed = g_seed;     // a case's own draws repeat on the port's side
     RunSide(run, true);
     Capture(&original);
     Restore(inputs);
+    g_seed = seed;
     RunSide(run, false);
     Capture(&port);
     g_cases++;
@@ -1674,6 +1697,8 @@ void BuildRegions() {
     AddRegion(&g_statics, sizeof(g_statics), "the statics");
     AddRegion(&g_in, sizeof(g_in), "the inputs", false);
     AddRegion(&ShadowStepCount, 4, "SimStepCount", false);
+    AddRegion(&TargetableCount, 4, "TargetableCount", false);    // the targetables' constructor, ours on both sides
+    AddRegion(&TargetableStagger, 4, "TargetableStagger", false);
     AddRegion(&OrigStaticLastHit, 4, "the original's statics", false);
     AddRegion(&OrigStaticLastDeath, 8, "the original's statics", false);
     AddRegion(OrigDriverHandIK, 0x60, "the original's driver IK", false);

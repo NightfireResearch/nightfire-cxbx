@@ -7,7 +7,7 @@ tracking and the AI zones. It drives the vehicles, weapons, missions and events 
 game-weapons.md, game-missions.md, game-events.md), all ours; the front end is still the game's. Ported on 12 October
 2026 by six packages, then merged (`src/driving/game/`). Every address is Driving.xbe's.
 
-**Status: ported, untested (12 October 2026).** 361 entries, all `FUNC_AT` but one: 67 of package C (AICharacter,
+**Status: ported and tested (12 October 2026).** 361 entries, all `FUNC_AT` but one: 67 of package C (AICharacter,
 the passenger, the pedestrians), 72 of package D (AIVehicle, AIHelicopter, AIVehicleController, AIRoadSpawn,
 AISplinePath), 30 of package A and 19 of package B (AIGroundVehicle, with its vector deleting destructor 0x00035d90,
 which Ghidra put inside AIVehicleController::Init), 102 of package E (the enemies, with Sunroof::DoAiming 0x000215b0,
@@ -16,7 +16,7 @@ AICharacterBond::GetRideRotPos 0x0001ccc0, CompareRanges 0x00028a90 and AIZone::
 missed). AIElementController::WakeUp is tagged `AUTOLTCG` (docs/driving/original-quirks.md 1.3). `game.ai` is ours by
 bytes: 356 replaced (the five other entries are members of other classes, counted there), 113 dead, 53 live - all
 exception funclets (0x00150xxx-0x00151xxx) of replaced functions. Six shadow tests compare the ports with the
-originals; the lockstep runs and the shadows are still to be run.
+originals; the lockstep runs and the shadows pass (below, "What the testing taught").
 
 ## The classes
 
@@ -130,6 +130,59 @@ unspawns (the parking offset).
 
 (To come.)
 
+## What the testing taught
+
+The first round (gai1) had 6 of the 16 lockstep runs differing (missions 1, 5 and 7, idle and accelerating, in frames
+and sound traces), GameWeaponsShadowA showing about 315 differences on every mission, and every shadow run killed at
+the old 20-minute limit before the AI's shadows had run. Bisected with NIGHTFIRE_RESTORE_RANGES and
+NIGHTFIRE_RESTORE_DIRECT (by file, then by function: every lockstep difference was in AIGroundVehicle.cpp), then a live
+per-call shadow of the function found, and the six shadows:
+
+- **Six port bugs.**
+  - AIGroundVehicle::DoSplinePathUpdate (0x0002a8b0) and AIHelicopter::ControlMoveState's spline case (0x00032b4b):
+    the original copies the path's position into the translation row of the orientation it took from GetOrientMat
+    (whose row is 0, 0, 0, 1), multiplies by the placement, and hands the body that row as its position - the
+    position goes through the placement too. The ports kept the position apart and untransformed (mission 7 from
+    tick 303: a spline car elsewhere; shadow D's simple body).
+  - AIGroundVehicle::DoAttackMode (0x0002bf40): auto-drive's follow speed is 0.85 (0x0018b8e8), not 0.9 (mission 1 from
+    tick 212, idle and accelerating); chase calls a charge off when the target is within the cars' half lengths
+    (the value compared at 0x0002c16b is the reach, not the range made from it) - mission 5 from tick 5140.
+  - AICharacterPedestrian::FaceTarget (0x00024c30): its turn limits are 0x3d47ae15 and 0x3da66667, a bit above
+    0.04875 and 0.08125, which the port's literals rounded below (mission 5 accelerating).
+  - AIElementController::CalcMightAsWellBeDead (0x00028730) tests the element's type (+0x44) for a vehicle, not its
+    state (shadow F).
+  A scan of every port's float constants against the original's (.rdata loads and immediates, both builds) found no
+  other mismatch.
+- **Harness, in the shadows.**
+  - A case's own draws (Range, Chance inside a case) ran on from the original's side to the port's: every shadow now
+    puts the input generator back before the port's side (A's deleting destructor cookie, E's constructors).
+  - Shadow C ran several cases from one preparation but restored the test's starting state after each, so the
+    second and later cases ran on a zeroed pedestrian (thousands of faults on both sides, which ran the shadow runs
+    out of time); they restore the preparation now. Shadow F forced snow2a_mis4 with NULL render names, which both
+    sides fault on and only the original's unwinding frees from.
+  - Code pointers the ports hand the C runtime's vector iterators are ours: shadows A and D log them as the
+    originals (AIGroundVehicle::Construct and Destruct). Shadow B's BarriersInPath fake logs `reversing` as a flag
+    (the original passes the made-up 2 raw, ours as a bool; the game only has 0 and 1). Shadow E no longer logs
+    WorldCollisionInfo's words neither constructor writes, and keeps TargetableStagger and TargetableCount (ours,
+    run by both sides' constructors) in its state.
+  - The fakes' "too short to hook" test read a 0xc3 inside an address (our RPlayerCamera::UpdateCamera begins
+    `cmp [0x001ec368], 0`) as a return, so shadow F ran nothing; GameWeaponsShadowB applied it to the entries' own
+    jumps too, whose offsets change with the DLL's load address, and so lost its PhysicsObject fakes (0x0006f520,
+    0x0006f5b0) in this round: the real GetCollisionBounds ran on its made-up objects and faulted about 150 times,
+    two seconds a fault with eight games running. Shadows C, E and F, GameWeaponsShadowB and D,
+    GameEffectsShadowD and GameMissionsShadowB now take a return followed by padding, and B passes an entry's jump.
+  - Each shadow prints its first three differences of each kind and the call log round a difference.
+- **GameWeaponsShadowA** faked AICharacterHands::GetWeapon at its entry, which now jumps to our port, too short to
+  hook: the original's calls reached the fake and the weapon manager's direct calls the real one. An entry whose
+  port cannot be hooked is left unhooked too, so both sides run the real one, as before the AI was ported.
+- **Time.** With the six AI shadows a shadow run takes 19 to 34 minutes on eight slots (the AI shadows about ten of
+  them, more on the missions with traffic); round.sh gives a shadow run 45 minutes now.
+
+With these, the final round (gai4) had all 16 lockstep runs exact against the baselines and every shadow run finished
+on missions 1-8 (a frame dumped, in 19 to 34 minutes), the six AI shadows and GameWeaponsShadowA with 0 differences
+(shadow B runs nothing on mission 7, which has no road network); only the two known differences remain (sndsysshadow
+case 0, sndstreamfileshadow case 52).
+
 ## Random calls
 
 Every draw is the Simulation's SimRandom (`fgSimulation.random`): Generate, or Fraction (Generate / 65536, left
@@ -191,7 +244,8 @@ measured facts read ESI on entry through the seat jump table, which the code doe
   WakeUp's ranges are x30 for ground characters and x9 for riders, and an empty slot ends the riders; Update hands
   out slots from the totals when there is not room; the element constructor turns "paris_hench" cars into
   "junglesnow" with no riders on snow2a_mis4 at difficulty 2; the hands' unarm branch switches at once and AimRelease
-  runs while firing; Bond ignores select while arming. The events' EAIElementSetNonScoreable and EKillAIElement test
+  runs while firing; Bond ignores select while arming; DoAttackMode's chase calls a charge off within the cars' half
+  lengths, not its range; CalcMightAsWellBeDead counts vehicle elements awake or not. The events' EAIElementSetNonScoreable and EKillAIElement test
   an element's helicopter flag the wrong way round.
 - Dead work: unused bodies, WWorldPos records, forward vectors and GetWeaponPosition answers; GetRigidBody called two
   to five times; arguments not read; a dead load and a dead re-test; the spline path cleared twice; the hand brake
