@@ -46,6 +46,18 @@ DATA = 0x001b3da0   # .data starts here; below it is .rdata, which holds nothing
 SKIP = {
     "gFeedbackThreadStack": "the feedback thread's stack, in use while it runs",
     "SoundMutex": "the sound library's live critical section: copying it would corrupt the lock",
+    # The C runtime's state: the shadow tests (CRuntimeShadowA/B) set both copies themselves, per side
+    "OnExitBegin": "the C runtime's exit list: CRuntimeShadowA sets the game's copy for the original",
+    "OnExitEnd": "the C runtime's exit list: CRuntimeShadowA sets the game's copy for the original",
+    "InitLocksCount": "the C++ library's state: CRuntimeShadowB sets the game's copy for the original",
+    "FacetList": "the C++ library's state: CRuntimeShadowB sets the game's copy for the original",
+    "GlobalLocale": "the C++ library's state: CRuntimeShadowB sets the game's copy for the original",
+    "ClassicImpl": "the C++ library's state: CRuntimeShadowB sets the game's copy for the original",
+    "ClassicLocale": "the C++ library's state: CRuntimeShadowB sets the game's copy for the original",
+    "GlobalTidyRegistered": "the C++ library's state: CRuntimeShadowB sets the game's copy for the original",
+    "StandardStreams": "the C++ library's state: CRuntimeShadowB sets the game's copy for the original",
+    "AtExitCount": "the C++ library's state: CRuntimeShadowB sets the game's copy for the original",
+    "AtExitFunctions": "the C++ library's state: CRuntimeShadowB sets the game's copy for the original",
 }
 # Owned globals the originals must share with the port, by name: allocator state over memory both sides use. While
 # a window is open, every original instruction naming one is pointed at ours instead (the redirects).

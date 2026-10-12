@@ -6,10 +6,10 @@
 #include "Profiler.h"
 #include "Realgraph.h"
 #include "Tar.h"
+#include "../platform/CRuntime.h"
 
 #include <stddef.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -23,8 +23,8 @@
 // call: not worth a synthetic one), and each constructor says so loudly the first time it runs. The original's
 // quirks are kept: GetAddr's answer is looked up and thrown away, the property and value arrays are freed with
 // sizes 0xc and 4, a TAR array's later elements are set up field by field and then overwritten by a copy of the
-// first, the shape names are built in the original's own static strings. The C runtime calls (strcmp, atol, atof,
-// sscanf) are the host's.
+// first, the shape names are built in the original's own static strings. Its number parsing (atol, atof, sscanf) is
+// the game's C runtime's (../platform/CRuntime.h); strcmp is the host's.
 // ---------------------------------------------------------------------------------------------------------------
 
 // (The allocator hooks, the global pool and BuiltInShapes - the SHPX file linked into the executable, a TAR's
@@ -270,7 +270,7 @@ bool EAGL_ParseTrue(const char *text) {
 // FUNC_AT(0x000f04b0)
 uint32_t EAGL_ParseHex(const char *text) {
     unsigned value = 0;
-    sscanf(text, "0x%x", &value);
+    Crt::sscanf(text, "0x%x", &value);
     return value;
 }
 
@@ -411,7 +411,7 @@ void EAGL_SetTarApi(EAGL::TAR *tar, Property *property) {
     } else if (property->Is("SetFilterMode", 1)) {
         tar->filter = EAGL_ParseTarApi(property->values[0]);
     } else if (property->Is("SetMIPMAPLODBias", 1)) {
-        tar->lodBias = (float)atof(property->values[0]);
+        tar->lodBias = (float)Crt::atof(property->values[0]);
     } else if (property->Is("SetMIPMAPMode", 1)) {
         tar->mipFilter = EAGL_ParseTarApi(property->values[0]);
     }
@@ -446,7 +446,7 @@ void* RuntimeAllocTARConstructor(const char *properties, DynamicLoader *loader, 
             if (tars != NULL)
                 continue;
             const char *shape = property->values[0];
-            count = atol(property->values[1]);
+            count = Crt::atol(property->values[1]);
             char *name = ShapeName(TarShapeName, shape);
             bool found;
             void *image = GlobalPool.Search(name, &found);
@@ -477,12 +477,12 @@ void* RuntimeAllocTARConstructor(const char *properties, DynamicLoader *loader, 
             if (property->Is("XBOXEXTOBJ_SetStage", 1)) {
                 extension->stage = EAGL_ParseTarValue(property->values[0]);
             } else if (property->Is("XBOXEXTOBJ_SetAnisotropy", 1)) {
-                extension->maxAnisotropy = atol(property->values[0]);
+                extension->maxAnisotropy = Crt::atol(property->values[0]);
             } else if (property->Is("XBOXEXTOBJ_SetBumpEnvMatrix", 4)) {
-                float m0 = (float)atof(property->values[0]);
-                float m1 = (float)atof(property->values[1]);
-                float m2 = (float)atof(property->values[2]);
-                float m3 = (float)atof(property->values[3]);
+                float m0 = (float)Crt::atof(property->values[0]);
+                float m1 = (float)Crt::atof(property->values[1]);
+                float m2 = (float)Crt::atof(property->values[2]);
+                float m3 = (float)Crt::atof(property->values[3]);
                 // called as the original does, on the extension field (its `this` is the field's address)
                 reinterpret_cast<EAGL::TARExtension *>(&tars->tar.extension)->SetBumpEnvMatrix(m0, m1, m2, m3);
             } else if (property->Is("XBOXEXTOBJ_SetClampU", 1)) {
@@ -561,7 +561,7 @@ void EAGL_SetGeoPrimState(EAGL::GeoPrimState *state, Property *property) {
     } else if (property->Is("SetAlphaTestEnable", 1)) {
         state->alphaTestEnable = EAGL_ParseTrue(property->values[0]);
     } else if (property->Is("SetAlphaCompareValue", 1)) {
-        state->alphaCompareValue = atol(property->values[0]);
+        state->alphaCompareValue = Crt::atol(property->values[0]);
     } else if (property->Is("SetAlphaTestMethod", 1)) {
         state->alphaTestMethod = EAGL_ParseGeoPrimState(property->values[0]);
     }
@@ -603,9 +603,9 @@ void* RuntimeAllocGeoPrimStateConstructor(const char *properties, DynamicLoader 
                 state->blendSource = source;
                 state->blendDestination = destination;
             } else if (property->Is("XBOXEXTOBJ_SetZOffset", 1)) {
-                state->zOffset = (float)atof(property->values[0]);
+                state->zOffset = (float)Crt::atof(property->values[0]);
             } else if (property->Is("XBOXEXTOBJ_SetZSlopeScale", 1)) {
-                state->zSlopeScale = (float)atof(property->values[0]);
+                state->zSlopeScale = (float)Crt::atof(property->values[0]);
             } else if (property->Is("XBOXEXTOBJ_SetBlendColour", 1)) {
                 state->blendColour = EAGL_ParseHex(property->values[0]);
             } else if (property->Is("XBOXEXTOBJ_SetZWritesEnable", 1)) {

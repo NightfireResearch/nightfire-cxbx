@@ -193,12 +193,13 @@ case 52).
 
 Places where the original reads stack it never wrote; the port uses zero: Get_InterpolatedKey's header bytes
 0x22-0x33, GLARE_Draw's Glare record, DEBRIS_Draw's velocity spread w. Overflows bounded: InitLoadScreen's
-"HINT_ID%d" buffer (8 bytes in the original, 24 here), Status's and the unloading screen's formatting (vsnprintf,
-snprintf). Left out, none observable: CANVAS_HasStopped's dead read of each system's type flags (which faults only on
-a NULL type), FRAME_Draw's unused maximum, DoGirl's WBINVD, the splitter's Reset's NULL test (both fault), a copy of
+"HINT_ID%d" buffer (8 bytes in the original, 24 here), the unloading screen's formatting (snprintf). Left out, none
+observable: CANVAS_HasStopped's dead read of each system's type flags (which faults only on a NULL type),
+FRAME_Draw's unused maximum, DoGirl's WBINVD, the splitter's Reset's NULL test (both fault), a copy of
 Get_InterpolatedKey's answer in DrawMissionResult, which calls QUAD_SetState where the original inlines it. The
 packages' strings, floats and tables (the cheat codes, the button markers, the languages' folders) are our
-constants; the pure C runtime calls are ours, atol and atexit the game's (atol wraps where ours saturates).
+constants; the pure C runtime calls are our DLL's, the rest the game's runtime's (docs/driving/c-runtime.md: atol wraps
+where ours saturates, Status's float formatting).
 QUAD_Interpolate's corners: with both NaN, the original's x87 leaves the NaN of larger payload, ours (SSE, MSVC's
 operand order) the first corner's; only a key that holds no quad has NaN corners.
 

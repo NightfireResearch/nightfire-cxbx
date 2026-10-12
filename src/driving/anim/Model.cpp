@@ -12,6 +12,7 @@
 #include "../engine/UFileLoader.h"
 #include "../engine/UMemory.hpp"
 #include "../../helpers.h"
+#include "../logging.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -24,10 +25,6 @@
 // "Model" symbols are the character's name and the file's number; a character of type C or A has only the first,
 // used for all three. The trees' code is RefCounterTree's (engine/URefCounter.cpp), each compiled copy an entry here.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- the C runtime's, at their addresses
-
-#define CRT_printf ((int (*)(const char *format, ...))0x00132192)
 
 static const char kActorShapes[] = "data\\Render\\Actors.xsh";
 constexpr int kSymbolFileFlags = 0x100;   // FileLoadz's flags for the symbols file, as the original passes them
@@ -213,7 +210,7 @@ void ActTextureDatabase::LoadTexture(const char *name, const char *path) {
 EAGL::TAR* ActTextureDatabase::UseTexture(const char *name) {
     ActTextureInfo *info = refs->GetReference(name);
     if (info == NULL)
-        CRT_printf("Trying to load texture %s\n", name);
+        dbg_wprintf("Trying to load texture %s\n", name);
     return info->tar;
 }
 

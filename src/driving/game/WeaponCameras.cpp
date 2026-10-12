@@ -27,6 +27,7 @@
 #include "../render/RenderHigh.h"         // fgRenderHigh
 #include "../render/Renderer.h"           // fgRenderer
 #include "../render/TextureContext.h"
+#include "../platform/CRuntime.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // RMissileCam (0x000a0a50-0x000a0e90), RSniperZoom with its ring helper (0x000a6810-0x000a6cd0) and the particle
@@ -34,7 +35,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-#define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 // The offscreen buffer's bracket round the copy and the draws: one empty function (Ghidra: dummyNullFunction)
 #define DummyNullFunction ((void (__fastcall *)(ROffscreenBuffer *, int))0x000d3580)
 
@@ -181,7 +181,7 @@ void RMissileCam::Draw() {
     if ((MissileCamStateMade & 1) == 0) {
         MissileCamStateMade |= 1;
         MissileCamState.Construct();
-        CRT_atexit(DestroyStatic_00200f60);
+        Crt::atexit(DestroyStatic_00200f60);
     }
     MissileCamPositions[1].x = float(fgRenderer->screenWidth);
     MissileCamPositions[2].y = float(fgRenderer->screenHeight);

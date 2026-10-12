@@ -9,7 +9,8 @@ the other build's function.
 
 Each integration adds its round's entries; the latest are the missions (`game.missions`,
 docs/driving/game-missions.md), the mission events (`game.events`, docs/driving/game-events.md), the AI
-(`game.ai`, docs/driving/game-ai.md) and the HUD and front end (`game.frontend`, docs/driving/game-frontend.md).
+(`game.ai`, docs/driving/game-ai.md), the HUD and front end (`game.frontend`, docs/driving/game-frontend.md) and the C
+runtime (`sys.crt`, docs/driving/c-runtime.md).
 
 Differences of one ulp in floating point are accepted and not listed one by one. For example, an FSIN/FCOS result
 that is rounded through a double-returning helper is one ulp off (docs/driving/maths.md 3.2, section 8).
@@ -151,10 +152,17 @@ An STL map's empty allocator byte is copied from an uninitialised local. Nothing
 | GFXGallery::FRAME_Draw | 0x000d55f0 | keeps a running maximum that nothing reads | left out | game-frontend |
 | GGirl::DoGirl | 0x000d7a50 | ends with WBINVD (a CPU cache flush for the GPU's sake) | left out | game-frontend |
 | GLoadingScreen::InitLoadScreen | 0x000e2390 | builds "HINT_ID%d" in an 8-byte buffer, which overflows from HINT_ID10 | a 24-byte buffer | game-frontend |
-| GLoadingScreen::Status, LoadAndDrawUnLoadingScreen | 0x000e2ff0, 0x000e2110 | unbounded vsprintf/sprintf into stack buffers | bounded vsnprintf/snprintf | game-frontend |
+| GLoadingScreen::LoadAndDrawUnLoadingScreen | 0x000e2110 | unbounded sprintf into a stack buffer | bounded snprintf (Status's formatting is the game's vsprintf and sprintf, c-runtime) | game-frontend |
 | GSubtitleSplitter::Reset | 0x000e33e0 | tests `this` for NULL before the loop only | no test (both fault on NULL) | game-frontend |
 | GHud::DrawMissionResult | 0x000df2e0 | inlines QUAD_SetState, and copies Get_InterpolatedKey's answer once more | calls QUAD_SetState (the same writes); uses the answer directly | game-frontend |
 | GFX::Trigger (the core) | 0x000d32f0 | takes the effect in ESI and the offset in EDI | not patched (no tag can name it); its three callers (0x000d34e0, 0x000d3520, 0x000d3610) are ours and call our core, so the original is dead | game-frontend |
+| mainXapiStartup (for `_rtinit`, `_cinit`) | 0x001106bb, 0x00110663 | runs `_ioinit` (0x00139acd: lowio's 0x500-byte table from the heap), `_initstdio` (0x0013594c: stdio's stream table, from the heap), `__initmbctable` (0x00139a7b) and installs the C++ unhandled-exception filter (0x001363ba) | none of them: their state is read only by the runtime's stdio, lowio and multibyte code and by XAPI's thread start, none of which runs; the heap lacks those two early blocks | c-runtime |
+| `_fpmath` | 0x00131d28 | points `_cfltcvt_tab` at the float conversions (`_cfltcvt_init` 0x00131cf0) | leaves it out: our printf and scanf call the conversions directly | c-runtime |
+| `_exit` (doexit) | 0x0013438b (0x001342e1) | walks the terminator table, whose one entry (0x001363cc) puts back XAPI's unhandled-exception filter | does not: the filter was never taken over | c-runtime |
+| `_Atexit` | 0x00131cb0 | calls abort (0x00135245) when its ten slots are full | `_amsg_exit(10)`; only two functions are registered | c-runtime |
+| `_NMSG_WRITE` | 0x001392ac | compares one entry past its message table for a code not in it | stops at the table's end; every code passed is in it | c-runtime |
+| `eh vector constructor iterator` | 0x0013326e | destroys the elements made so far if a constructor throws | does not unwind; nothing throws | c-runtime |
+| printf | 0x00132192 | formats and writes through the runtime's stdio | logging.cpp's dbg_wprintf, the host's printf: debug output only | c-runtime |
 
 ---------------------------------------------------------------------------------------------------------------
 
@@ -262,6 +270,8 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | AIElementController::WakeUp | 0x00028bb0 | an empty member slot ends the riders' loop; a seat with no rider leaves the slot as it was | game-ai |
 | AIZoneController::InZone | 0x00036b20 | uses the zone type's radius, indexed by the type's low 16 bits | game-ai |
 | GHud::DrawHealth | 0x000d81d0 | with the shield over its maximum, armPuppets[armLit] reads past the array into healthBorderPuppet (GHud +0x068) | game-frontend |
+| isdigit, isalnum, isspace, tolower | 0x0013399d, 0x001339ef, 0x001339c6, 0x001327f9 | index `_pctype` with any int, so a value outside -1..255 reads outside the class table | c-runtime |
+| ios_base::_Addstd | 0x001310fa | does not stop at eight standard streams: a ninth is written to the slots after `_Stdstr` and `_Stdopens` (kept in StandardStreamTable) | c-runtime |
 
 ### 3.3 Writes through a possibly NULL pointer
 
@@ -337,6 +347,8 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | GFX::Shutdown | 0x000d35d0 | leaves TheEffectsGallery pointing at the freed gallery | game-frontend |
 | GSubtitleSplitter::Reset, GSubtitles::ClearSubtitles, Destruct, LoadSubtitles | 0x000e33e0, 0x000e3630, 0x000e3730, 0x000e3840 | scalar delete of blocks from operator new[] | game-frontend |
 | GSubtitles::Destruct | 0x000e3730 | does not clear font and fontFile; frees through MEM_free's second copy (0x00117110; in our build the linker folds the two copies into one function) | game-frontend |
+| std::_Mutex::_Mutex | 0x001313fe | does not check its critical section's allocation | c-runtime |
+| std::exception's copy, bad_cast | 0x0013263c, 0x001326ae | a failed copy of the message leaves none but still marks one to free | c-runtime |
 
 ### 3.5 Dead stores, dead code, arguments ignored
 
@@ -422,6 +434,9 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | GOrthoHudView::DoRender | 0x000e1ce0 | calls GetFoundationVideoMode and drops the answer; keeps the view port in HudViewPort (0x0023f410), which nothing reads | game-frontend |
 | GLocale::GetSubDirectory | 0x000e3140 | calls GetFoundationVideoMode up to three times | game-frontend |
 | GSystem::LOCALE_Symbol | 0x000e3af0 | the show-symbols path is dead (nothing sets LocaleShowSymbols) | game-frontend |
+| atexit, `_onexitinit` | 0x00132a7b, 0x00132a1b | the exit list is filled (and grown) and never run: only exit() would, and nothing calls it | c-runtime |
+| `_exit` | 0x0013438b | ignores its code: doexit ends in KeBugCheck(0) | c-runtime |
+| `_Tolower`, `_Toupper` | 0x00130c00, 0x0013143d | ignore the ctype table they are handed and test the C locale's classes | c-runtime |
 
 ### 3.6 Values that never change
 
@@ -448,6 +463,9 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | AIElementController::GoToSleep | 0x000287d0 | a helicopter always counts as intact | game-ai |
 | GHud::DrawCrossHairs | 0x000e0440 | the sniper scope's tick spacing is multiplied by 0, so every tick is drawn at one place | game-frontend |
 | GGirl::UpdateTexture | 0x000d6f60 | the second palette offset never moves | game-frontend |
+| rand | 0x00133ee0 | srand is never called (the XBE has none), so each thread's sequence starts from seed 1 | c-runtime |
+| malloc, calloc, realloc | 0x001340e3, 0x0013439d, 0x00134815 | the new handler and its mode (0x00244ab8, 0x00244abc) and `__active_heap` stay 0 | c-runtime |
+| `__lc_handle`, `__lc_codepage` | 0x00244ac0, 0x00244ad8 | the C locale's; setlocale (0x001347c2) knows only "C" | c-runtime |
 
 ### 3.7 Odd branches and data bugs
 
@@ -622,6 +640,11 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | GSubtitles::SetupFMVSubtitles | 0x000e3560 | restarts the subtitle on every call, so one lasts until the next cue; 1/25 s a frame in PAL 50, 1/30 otherwise | game-frontend |
 | GSubtitles::LoadSubtitles | 0x000e3840 | assumes CR LF; the cursor counts from the file's start; the frame is read from the seventh character of the first '=' field; frames x5/6 in PAL 50 | game-frontend |
 | GHud::DrawCrossHairs | 0x000e0440 | the remote rocket's recharge bar compares its segment count unsigned (0x000e08c7, 0x000e0917): a fire step after the current one, which play never makes, gives a negative charge and about four billion segments | game-frontend |
+| malloc | 0x001340e3 | rounds every request up to 16 bytes (`__active_heap` is 0, which its "not the system heap" test takes); calloc and realloc, whose tests are "the small-block heap", do not | c-runtime |
+| `__ld12cvt` | 0x0013949a | rounds a 12-byte long double to a double or float with a tie going down, after a parse (`__strgtold12`) that is not correctly rounded either: atof, strtod, sscanf and `_Stod` can be an ulp from a modern runtime | c-runtime |
+| `_output` (sprintf, vsprintf, `_vsnprintf`) | 0x00132767, 0x00133aee, 0x001340f5 | floats through 17 rounded digits (`$I10_OUTPUT`) rounded again by the layout; `%e` prints three exponent digits, `%p` eight upper-case hex digits; 'L' is accepted and ignored; a precision over 163 takes a heap buffer; `_vsnprintf` writes no null when the text fills the count exactly | c-runtime |
+| atol, strtol | 0x00133d51, 0x00133636 | atol wraps on overflow; strtol leaves the end at the text when no digit came | c-runtime |
+| qsort | 0x00132db0 | not stable: equal elements land where its quicksort (median of three, partitions on a stack, runs of eight or fewer to a selection sort) leaves them | c-runtime |
 
 ### 3.8 x87 and float/double mixes kept
 
@@ -636,3 +659,5 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | Sentry::ComputeNewRotation | 0x00073600 | `float(1 - limit)` on one branch only | game-weapons |
 | AIHelicopter::ManeuverToPos | 0x00031cd0 | the height and climb compared unrounded, then the stored float | game-ai |
 | AICharacterEnemyGround::ThreatenedByVehicle; AICharacterEnemySSnow::DoAiming, AICharacterEnemyWindow::DoAiming, AICharacterEnemySnow::DoAiming | 0x0001e440; 0x00020a60, 0x00022150, 0x00020090 | values compared unrounded on the x87, then stored | game-ai |
+| `_CIacos`, `_CIasin`, `_CIpow` | 0x001328d0, 0x00133f94, 0x00132a94 | answer on the x87 unrounded, through FPATAN, FYL2X and F2XM1 as the runtime has them | c-runtime |
+| `_Stod` | 0x00131c45 | keeps its value at the x87's exponent range through the scaling loop and rounds it once, at the caller's store (here a power of two keeps it in range) | c-runtime |

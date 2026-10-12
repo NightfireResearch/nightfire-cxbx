@@ -34,6 +34,7 @@
 #include "../world/CollisionManager.h"  // fgCollisionMgr
 #include "../world/World.h"             // fgWorld
 #include "../world/WorldPos.h"
+#include "../logging.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // RayShell (0x00071930-0x00073150) and Shell (0x00074660-0x000752f0), ported from the listing. See Shell.h.
@@ -44,11 +45,6 @@
 // uninitialised stack) are zero here. One dead computation is left out: CollideWithObjects' first offset from the
 // origin to the object.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- the game's, not ported yet
-
-// AOneShotSound's constructor without a velocity: a patch of a bank at a place, looped or not
-#define CRT_printf ((int (*)(const char *format, ...))0x00132192)
 
 // ---- the game's globals
 
@@ -262,7 +258,7 @@ ActiveRayShell* RayShell::GetTriggerHittingRayShell() {
 // FUNC_AT(0x00071d80)
 void RayShell::AddNewRayShellForTriggerCheck(float distance) {
     if (ActiveRayShellCount + 1 >= kActiveRayShells) {
-        CRT_printf("TOO MANY RAY SHELLS\n");
+        dbg_wprintf("TOO MANY RAY SHELLS\n");
         return;
     }
     ActiveRayShell &ray = ActiveRayShells[ActiveRayShellCount];

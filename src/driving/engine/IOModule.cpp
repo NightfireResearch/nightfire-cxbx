@@ -10,6 +10,7 @@
 #include "../game/Simulation.h"
 #include "../platform/Pad.hpp"
 #include "../platform/RealSystem.h"
+#include "../platform/CRuntime.h"
 
 // The IOModule static and its construction guard (bit 0), GetIOModule's function-local static.
 // XBE_GLOBAL(0x001e45a0, 0xa4)
@@ -26,10 +27,8 @@ static const int kUnplugMinSimSteps = 2;
 #define kXBoxPadDeviceTag ((const char *)0x0018da2c)
 #define kInputToActionTag ((const char *)0x0018da1c)
 
-// The CRT's atexit, called at its address. The sync tasks are named by the originals' addresses (patched to jump
-// here), so adding and removing find the same entry whichever side registered it.
-typedef int (__cdecl *AtexitFn)(void (__cdecl *fn)());
-#define CRT_atexit ((AtexitFn)0x00132a7b)
+// The sync tasks are named by the originals' addresses (patched to jump here), so adding and removing find the same
+// entry whichever side registered it.
 #define kUpdateTask (reinterpret_cast<SyncTaskFn>(0x000516d0))
 #define kPAD_updateTask (reinterpret_cast<SyncTaskFn>(0x00108490))
 #define kIOModuleAtexit ((void (__cdecl *)())0x0015ce00)   // IOModule's trivial destructor: a bare RET
@@ -50,7 +49,7 @@ IOModule* IOModule::GetIOModule() {
         io->controllerUnplugged = false;
         io->currentTick = 0;
         io->unused98 = 0;
-        CRT_atexit(kIOModuleAtexit);
+        Crt::atexit(kIOModuleAtexit);
     }
     return &gIOModule;
 }

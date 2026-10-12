@@ -3,7 +3,6 @@
 
 #include "EaglFont.h"
 #include "EaglGlobals.h"
-#include "EaglOriginals.h"
 #include "Model.h"
 #include "Realgraph.h"
 #include "RenderContext.h"
@@ -12,6 +11,7 @@
 #include "../platform/RealSystem.h"
 #include "../platform/X87.h"
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 #include <bit>
 #include <intrin.h>
@@ -135,7 +135,7 @@ int EAGL::PrintMessage(int level, const char *format, ...) {
         va_end(arguments);
         return result;
     }
-    int written = CrtVsnprintf(PrintBuffer, 0x200, format, arguments);
+    int written = Crt::_vsnprintf(PrintBuffer, 0x200, format, arguments);
     PrintBuffer[0x1ff] = 0;
     Xbox_OutputDebugStringA(PrintBuffer);
     va_end(arguments);

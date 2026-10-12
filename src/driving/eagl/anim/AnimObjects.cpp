@@ -7,7 +7,6 @@
 #include "AnimMisc.h"
 #include "Skeleton.h"
 #include "../EaglGlobals.h"
-#include "../EaglOriginals.h"
 #include "../Loader.h"
 #include "../../engine/UMemory.hpp"
 #include "../../platform/X87.h"

@@ -8,6 +8,7 @@
 // The file is the region's bytes (0x001b3da0-0x0024b5bc), then the number of atexit entries and the entries.
 
 #include "StaticInitDump.h"
+#include "../platform/CRuntimeInternal.h"
 
 #include <windows.h>
 #include <stdio.h>
@@ -20,8 +21,6 @@
 #define DSoundSectionEnd   0x00183aa4u
 #define DataBegin 0x001b3da0u
 #define DataEnd   0x0024b5bcu
-#define OnExitBegin (*(uint32_t **)0x0024b5b4u)   // the C runtime's atexit table
-#define OnExitEnd   (*(uint32_t **)0x0024b5b0u)
 
 bool StaticInitDump_RunOriginalTable(void) {
     const char *flag = getenv("NIGHTFIRE_STATICORIG");
@@ -46,9 +45,9 @@ void StaticInitDump_Write(void) {
         printf("[staticdump] cannot write %s\n", path);
     } else {
         fwrite((const void *)DataBegin, 1, DataEnd - DataBegin, file);
-        uint32_t count = (uint32_t)(OnExitEnd - OnExitBegin);
+        uint32_t count = (uint32_t)(Crt::OnExitEnd - Crt::OnExitBegin);   // the C runtime's atexit table
         fwrite(&count, 4, 1, file);
-        fwrite(OnExitBegin, 4, count, file);
+        fwrite(Crt::OnExitBegin, 4, count, file);
         fclose(file);
         printf("[staticdump] wrote %s (%u atexit entries)\n", path, count);
     }

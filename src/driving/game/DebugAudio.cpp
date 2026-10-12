@@ -30,6 +30,7 @@
 #include "../world/Grid.h"
 #include "../../common/xbeOverload.h"
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -158,7 +159,7 @@ void DAudio::DrawTargets() {
     DEBUGAUDIO_UNTESTED("DAudio::DrawTargets");
     for (DAudioTargetNode *node = DAudioTargets.Begin(); node != DAudioTargets.head; node = node->next) {
         char label[64];
-        sprintf(label, "(%.0f)%s", double(node->value.distance), node->value.name);
+        Crt::sprintf(label, "(%.0f)%s", double(node->value.distance), node->value.name);
         GHud::TheApp()->dbDrawTarget(&node->value.screen, "", 5.0f, kTargetColour, label);
     }
 }

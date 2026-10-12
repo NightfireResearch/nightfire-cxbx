@@ -9,6 +9,7 @@
 #include "../world/CollisionTypes.h"       // PointerVector
 #include "../../helpers.h"
 #include "../game/SimulationContainers.h"
+#include "../platform/CRuntime.h"
 
 // While this is 0, action 0x1f is not delivered to anyone (FeedQueue, 0x0004f371). Written elsewhere in the game.
 
@@ -21,7 +22,6 @@ uint32_t gActionQueueManagerMade;
 // The static's destructor as the original registers it, at its address: a call of Tidy (StaticInit.cpp's
 // DestroyStatic_001e23f0).
 #define ActionQueueManager_AtExit ((void (*)(void))0x0015cde0)
-#define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // The STL's helpers the vector's growth calls, in the original's order: the game's one copy for every vector of
 // pointers (the linker folded them together). Those not ours yet are called at their addresses (the extra
@@ -156,7 +156,7 @@ ActionQueueManager* ActionQueueManager::GetActionQueueManager() {
         gActionQueueManager.queuesFirst = nullptr;
         gActionQueueManager.queuesLast = nullptr;
         gActionQueueManager.queuesEnd = nullptr;
-        CRT_atexit(ActionQueueManager_AtExit);
+        Crt::atexit(ActionQueueManager_AtExit);
     }
     return &gActionQueueManager;
 }

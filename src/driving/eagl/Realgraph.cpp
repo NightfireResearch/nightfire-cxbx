@@ -5,6 +5,7 @@
 #include "../platform/FileSys.h"
 #include "../platform/RealPrint.h"
 #include "../platform/X87.h"
+#include "../platform/CRuntime.h"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -279,7 +280,7 @@ void FONT_drawtextfa(const uint8_t *font, float x, float y, const char *format, 
     char buffer[0x2000];
     va_list arguments;
     va_start(arguments, format);
-    vsnprintf(buffer, sizeof(buffer), format, arguments);
+    Crt::vsprintf(buffer, format, arguments);
     va_end(arguments);
     FONT_drawtexta(font, x, y, (const uint8_t *)buffer);
 }

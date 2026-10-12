@@ -1,6 +1,5 @@
 #include "Skeleton.h"
 #include "AnimUntested.h"
-#include "../EaglOriginals.h"
 #include "../Transform.h"
 #include "../../platform/RealMath.h"
 

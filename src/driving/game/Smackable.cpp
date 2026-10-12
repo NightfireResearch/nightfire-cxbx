@@ -21,14 +21,11 @@
 #include "../render/RSceneObj.hpp"
 #include "../world/CollisionInstance.h" // WTrigger
 #include "../world/World.h"             // fgWorld, ProcAnimState
+#include "../platform/CRuntime.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // Smackable (0x00075300-0x00075c40), ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- the game's code not ported yet
-
-#define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // ---- globals
 // XBE_GLOBAL(0x001e9294, 0x2c)
@@ -160,7 +157,7 @@ Smackable* Smackable::Construct(RSceneObj *render, WTrigger *trigger, const Coor
         if ((DummyPhysicsDataMade & 1) == 0) {
             DummyPhysicsDataMade |= 1;
             DummyPhysicsData.Construct("Dummy");
-            CRT_atexit(DestroyStatic_001e9294);
+            Crt::atexit(DestroyStatic_001e9294);
         }
         data = &DummyPhysicsData;
     }

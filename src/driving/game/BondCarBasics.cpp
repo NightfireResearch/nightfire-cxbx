@@ -9,6 +9,7 @@
 #include "../engine/UMemory.hpp"
 #include "../world/Targeting.h"
 #include "../../common/xbeOverload.h"   // XbeAddress
+#include "../platform/CRuntimeStd.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // PBondCar's small methods (0x00065ba0-0x00066060), ported from the listing: DebugObject, the destructor,
@@ -16,9 +17,6 @@
 //
 // IsWheelOnGround's "return 0" tail (0x00066051, Ghidra's FUN_00066051) is only reached by its own branch.
 // ---------------------------------------------------------------------------------------------------------------
-
-// The C runtime's `eh vector destructor iterator`
-#define EhVectorDestructor ((void (__stdcall *)(void *array, uint32_t size, int count, void *destructor))0x0013332e)
 
 static_assert(sizeof(ActionQueue) == 0x974, "an action queue is 0x974 bytes");
 
@@ -58,7 +56,7 @@ void PBondCar::Destruct() {
         if (tyreTracks[i] != NULL)
             UMemory::FastFree(tyreTracks[i], sizeof(RTyreTrack));
     }
-    EhVectorDestructor(wheels, sizeof(WWorldPos), kCarWheels, (void *)XbeAddress(&NullFunction));
+    Crt::EhVectorDestructor(wheels, sizeof(WWorldPos), kCarWheels, reinterpret_cast<Crt::ElementFn>(&NullFunction));
     PhysicsObject::Destruct();
 }
 

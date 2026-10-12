@@ -9,6 +9,7 @@
 #include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 #include <math.h>
 #include <stddef.h>
@@ -25,9 +26,6 @@
 #define RoadNodes (fgRoadNetworkData.nodes)
 #define RoadSegments (fgRoadNetworkData.segments)
 #define RoadIntersections (fgRoadNetworkData.intersections)
-
-
-#define Sprintf ((int (__cdecl *)(char *, const char *, ...))0x00132767)
 
 static constexpr float kNoDirection = -2.0f;                // below any dot product of two unit vectors
 static constexpr float kMinCurveLength = 0.01f;
@@ -453,9 +451,9 @@ void WRoadNav::IncNavPosition(float step, Coord3 *heading, short targetSegment) 
             WRoadNode *first = RoadNodes[road->node[0]];
             WRoadNode *second = RoadNodes[road->node[1]];
             char line[256];
-            Sprintf(line, kDebugLine, mode, segment, road->index, first->position.x, first->position.z,
-                    second->position.x, second->position.z, forward, boundStart.x, boundStart.z, boundEnd.x,
-                    boundEnd.z);
+            Crt::sprintf(line, kDebugLine, mode, segment, road->index, first->position.x, first->position.z,
+                         second->position.x, second->position.z, forward, boundStart.x, boundStart.z, boundEnd.x,
+                         boundEnd.z);
         }
         if (double(fraction) + t < 1.0)
             break;

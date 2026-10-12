@@ -32,15 +32,13 @@
 #include "../world/RoadNav.h"
 #include "../world/RoadNetwork.h"
 #include "../world/Targeting.h"
+#include "../platform/CRuntimeStd.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // AIHelicopter (0x00031850-0x000347e0, and its vector deleting destructor at 0x00035df0), ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-
-// The C runtime's `eh vector destructor iterator`
-#define EhVectorDestructor ((void (__stdcall *)(void *array, uint32_t size, int count, void *destructor))0x0013332e)
 
 // ---- globals
 
@@ -1020,7 +1018,8 @@ AIHelicopter* AIHelicopter::Delete(unsigned flags) {
     if (flags & 2) {
         AIVEHICLE_UNTESTED("AIHelicopter's vector deleting destructor (an array)");
         int32_t *block = reinterpret_cast<int32_t *>(this) - 4;     // new[]'s count, 16 bytes before the array
-        EhVectorDestructor(this, sizeof(AIHelicopter), block[0], (void *)XbeAddress(&AIHelicopter::Destruct));
+        Crt::EhVectorDestructor(this, sizeof(AIHelicopter), block[0],
+                                reinterpret_cast<Crt::ElementFn>(XbeAddress(&AIHelicopter::Destruct)));
         if (flags & 1)
             OperatorDelete(block);
         return reinterpret_cast<AIHelicopter *>(block);

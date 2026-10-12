@@ -15,6 +15,7 @@
 #include "../../helpers.h"
 #include "TextureContext.h"
 #include "../game/SimulationContainers.h"
+#include "../logging.h"
 
 #include <bit>
 #include <math.h>
@@ -24,10 +25,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 // The particle systems, their manager and the library of system types. See Particles.h.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- originals called by address
-
-#define CRT_printf ((int (*)(const char *format, ...))0x00132192)
 
 // ---- globals
 
@@ -224,7 +221,7 @@ RParticleSystemData* RParticleLibrary::FindSystemViaTag(uint32_t tag) {
 // FUNC_AT(0x000a1e60)
 void RParticleLibrary::MungeData(RParticleSystemData *source, RParticleSystemData *data) {
     if (data->life > kMaxLife) {
-        CRT_printf(kLifeTooLong, data->life);
+        dbg_wprintf(kLifeTooLong, data->life);
         data->life = kMaxLife;
     }
     if (data->unknown48 != 0)
@@ -240,7 +237,7 @@ void RParticleLibrary::MungeDataForPlatform(RParticleSystemData *source, RPartic
     if (data->flags & kParticleFlag02)
         data->offTime = kRunOnceOffTime;
     if (data->life > kMaxLife) {
-        CRT_printf(kLifeTooLong, data->life);
+        dbg_wprintf(kLifeTooLong, data->life);
         data->life = kMaxLife;
     }
     data->invLife = float(1.0 / double(data->life));

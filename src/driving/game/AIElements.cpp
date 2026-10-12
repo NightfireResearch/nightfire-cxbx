@@ -38,17 +38,13 @@
 #include "../render/RSceneObj.hpp"      // RSceneObj::PreLoad
 #include "../world/Targeting.h"         // PointerListNode
 #include "../world/World.h"             // fgWorld
+#include "../platform/CRuntime.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // AIElementTracking and AIElementController (0x00027cb0-0x00029d60), AIZoneController (0x00036a00-0x00036c90), the
 // road network's count copies (0x00023990, 0x000239b0) and RCamera's field of view setter (0x00011000), ported
 // from the listing. No random numbers.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- the game's code not ported yet
-
-// The C runtime's qsort (its order of equal elements is the original's own)
-#define Crt_qsort ((void (*)(void *base, size_t count, size_t size, int (*compare)(const void *, const void *)))0x00132db0)
 
 // ---- globals
 
@@ -997,7 +993,7 @@ void AIElementController::Update() {
         } else {
             // Not all fit: the slots handed out again, the elements that must stay awake first, then the
             // closest ahead
-            Crt_qsort(rangeList, inRangeCount, sizeof(AIElementRange), CompareRanges);
+            Crt::qsort(rangeList, inRangeCount, sizeof(AIElementRange), CompareRanges);
             int charactersLeft = characterSlots;
             int carsLeft = carSlots;
             int helicoptersLeft = helicopterSlots;

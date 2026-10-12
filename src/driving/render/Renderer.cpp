@@ -42,6 +42,8 @@
 #include "../platform/XboxXapi.h"         // Xbox_XGetVideoFlags
 #include "../world/Render.h"              // kInstanceNoFarCull
 #include "../world/World.h"               // fgWorld, ArticleEffect, kWorldInstanceSceneObj
+#include "../platform/CRuntime.h"
+#include "../logging.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // RDrawGroup, RRenderer, the instance draws, the shadow maps and RRenderSharedData (0x0007c9e0..0x0007e430 but RFog,
@@ -87,11 +89,6 @@ float ObjectBrightness = 1.0f;           // SendPerCarInstance's
 bool VehiclesAllowed;
 // XBE_GLOBAL(0x001ec224, 4)
 RSceneObj *CurrentObject;                // the scene object the lighting is set up for
-
-// ---- the game's code not ported yet
-
-#define CRT_printf ((int (*)(const char *format, ...))0x00132192)
-#define CRT_sprintf ((int (*)(char *buffer, const char *format, ...))0x00132767)
 
 // XBE_GLOBAL(0x001ec010, 0x210)
 ShadowMapData ShadowMaps;
@@ -275,7 +272,7 @@ bool RRenderer::DisableAlphaWrites() {
 // FUNC_AT(0x0007d110)
 void RRenderer::DoScreenCapture() {
     char name[0x40];
-    CRT_sprintf(name, "capture.%03d.tga", CaptureCount++);
+    Crt::sprintf(name, "capture.%03d.tga", CaptureCount++);
     float width, height;
     renderContext->GetSize(&width, &height);
     int pixels = Ftol((double)width * height);
@@ -455,15 +452,15 @@ void RRenderer::Shutdown() {
 void RInstanceRender_SetShadowInformation(const ShadowMapInfo *info) {
     ShadowMaps.info = info;
     char path[0x50];
-    CRT_sprintf(path, "data\\track\\%s_S.xsh", fgWorld->trackName);
-    CRT_printf("Loading shadow textures from [%s]\n", path);
+    Crt::sprintf(path, "data\\track\\%s_S.xsh", fgWorld->trackName);
+    dbg_wprintf("Loading shadow textures from [%s]\n", path);
     RTextureContext *context = TheTextureContextManager->NewContext(path, 2);
     ShadowMaps.context = context;
     uint8_t *shapes = context->shapes;
     int count = 0;
     if (shapes != NULL) {
         for (;;) {
-            CRT_sprintf(ShadowImageName, "%04d", count);
+            Crt::sprintf(ShadowImageName, "%04d", count);
             uint8_t *image = SHAPE_locatez(shapes, ShadowImageName);
             if (image == NULL)
                 break;
@@ -472,7 +469,7 @@ void RInstanceRender_SetShadowInformation(const ShadowMapInfo *info) {
         }
     }
     ShadowMaps.count = count;
-    CRT_printf("Loaded %d shadow maps\n", count);
+    dbg_wprintf("Loaded %d shadow maps\n", count);
 }
 
 // FUNC_AT(0x0007dbc0)
@@ -520,7 +517,7 @@ void DrawArticleEffects(const WorldArticle *article, const MATRIX4 *transform, f
             }
             break;
         default:
-            CRT_printf("Unhandled effect type: %d\n", effect->type);
+            dbg_wprintf("Unhandled effect type: %d\n", effect->type);
             break;
         }
     }

@@ -13,6 +13,7 @@
 #include "../platform/RealPrint.h"      // MEM_copy
 #include "../world/SoundGroup.h"        // WSoundMap::Find
 #include "../world/SoundMap.h"          // MapBuyHead
+#include "../platform/CRuntime.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -21,9 +22,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 // AIndex and its two maps (0x00126d10..0x00127a70), ported from the listings. See Index.h.
 // ---------------------------------------------------------------------------------------------------------------
-
-// The C runtime's.
-#define Crt_sscanf ((int (*)(const char *text, const char *format, ...))0x00133234)
 
 namespace {
 
@@ -195,7 +193,7 @@ AIndex* AIndex::Construct(const char *directory, const char *file) {
     // Every definition's name, with its terminator: the size of the block of names.
     unsigned total = 0;
     for (const char *line = copy; line != NULL; line = strchr(line + 1, '#')) {
-        if (Crt_sscanf(line, kDefineFormat, name, &id) == 2)
+        if (Crt::sscanf(line, kDefineFormat, name, &id) == 2)
             total += unsigned(strlen(name)) + 1;
     }
     if (total == 0) {
@@ -206,7 +204,7 @@ AIndex* AIndex::Construct(const char *directory, const char *file) {
     char *out = static_cast<char *>(UMemory::Alloc(total, 0, file));
     names = out;
     for (const char *line = copy; line != NULL; line = strchr(line + 1, '#')) {
-        if (Crt_sscanf(line, kDefineFormat, name, &id) != 2)
+        if (Crt::sscanf(line, kDefineFormat, name, &id) != 2)
             continue;
         // The search starts at the fifth character, past a name's four-character prefix; in a shorter name it
         // reads on into what earlier names left in the buffer.

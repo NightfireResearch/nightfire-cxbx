@@ -15,6 +15,7 @@
 #include "../render/RSceneObj.hpp"
 #include "../render/TextureContext.h"
 #include "../world/SoundMap.h"          // RefCounterMapBuyHead
+#include "../platform/CRuntime.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // URefCounter<T>, ported from the listings of its 29 compiled copies (see URefCounter.h). Every AddReference copy
@@ -25,10 +26,6 @@
 // or by address where it is not ours yet. The name comparisons are _stricmp: the tree's order depends on them,
 // and ours orders as the game's does. RefCounterTree's code, every instantiation's, is at the end.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- originals called by address
-
-#define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // ---- the statics: each instance, the guard of its construction (bit 0), and the destructor its Get registers
 // with atexit (the original thunks, StaticInit.cpp)
@@ -164,7 +161,7 @@ void URefCounterMap::ConstructOnce(uint32_t *guard, RefCounterDestroyFn destroy)
     head->left = head;
     head->right = head;
     size = 0;
-    CRT_atexit(destroy);
+    Crt::atexit(destroy);
 }
 
 // ---- ActModelDatabase::ModelInfo

@@ -9,6 +9,7 @@
 #include "../../helpers.h"
 #include "../../common/xbeOverload.h"
 #include "../platform/FileSys.h"
+#include "../platform/CRuntime.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -19,9 +20,6 @@
 static char FoundValue[0x50];          // FindItem's result buffer
 // XBE_GLOBAL(0x001e2340, 0x50)
 static char FoundIndexedValue[0x50];   // FindIndexedItem's
-
-#define Sprintf ((int (__cdecl *)(char *, const char *, ...))0x00132767)
-#define Sscanf ((int (__cdecl *)(const char *, const char *, ...))0x00133234)
 
 namespace {
 
@@ -54,14 +52,14 @@ DTuningFile* DTuningFile::Construct(const char *name, const char *level, int ret
     for (char *colon = strchr(folder, ':'); colon != NULL; colon = strchr(folder, ':'))
         *colon = '\\';
     if (level != NULL) {
-        Sprintf(path, "%s%s\\%s.tun", kTuningFolder, folder, level);
+        Crt::sprintf(path, "%s%s\\%s.tun", kTuningFolder, folder, level);
         if (!skipCheck && !FILESYS_existssync(path, kFilePriority)) {
             if (retry) {
-                Sprintf(path, "%s%s\\%s.tun", kTuningFolder, folder, level);
+                Crt::sprintf(path, "%s%s\\%s.tun", kTuningFolder, folder, level);
                 if (FILESYS_existssync(path, kFilePriority))
                     return this;
             }
-            Sprintf(path, "%s%s\\default.tun", kTuningFolder, folder);
+            Crt::sprintf(path, "%s%s\\default.tun", kTuningFolder, folder);
         }
     }
     return this;
@@ -114,7 +112,7 @@ char* DTuningFile::Reader::FindIndexedItem(const char *name, const char *index) 
     if (text == NULL)
         return NULL;
     char key[256];
-    Sprintf(key, "%s{%s}", name, index);
+    Crt::sprintf(key, "%s{%s}", name, index);
     RemoveSpaces(key, key);
     OptionParser line;
     line.Construct(text, key);
@@ -124,7 +122,7 @@ char* DTuningFile::Reader::FindIndexedItem(const char *name, const char *index) 
 // FUNC_AT(0x0003d910)
 void DTuningFile::ParseData(const char *text, float *values) {
     if (text != NULL)
-        Sscanf(text, "%f,%f,%f,%f", &values[0], &values[1], &values[2], &values[3]);
+        Crt::sscanf(text, "%f,%f,%f,%f", &values[0], &values[1], &values[2], &values[3]);
 }
 
 // FUNC_AT(0x0003d940)
@@ -135,7 +133,7 @@ void DTuningFile::ParseData_Colour(const char *text, uint32_t *colour) {
     // bits; the other three it lacks are whatever its stack held (0 here).
     int alpha = int(uintptr_t(text));
     int red = 0, green = 0, blue = 0;
-    Sscanf(text, "%d,%d,%d,%d", &alpha, &red, &green, &blue);
+    Crt::sscanf(text, "%d,%d,%d,%d", &alpha, &red, &green, &blue);
     *colour = ((uint32_t(alpha) << 8 | red) << 8 | green) << 8 | blue;
 }
 

@@ -7,6 +7,7 @@
 #include "driving/platform/XboxStartup.h"
 #include "driving/platform/XboxXapi.h"
 #include "driving/devtools/MemShadow.h"
+#include "driving/devtools/CRuntimeShadowA.h"
 #include "driving/devtools/CoreLoopShadow.h"
 #include "driving/devtools/CoreUtilShadow.h"
 #include "driving/devtools/RestoreRanges.h"
@@ -206,6 +207,7 @@ void Inject()
   DumpTimer_Start();   // NIGHTFIRE_DUMP_WALL_MS=N only: a frame dump every N ms of wall-clock time
 
   MemShadow_Run();   // NIGHTFIRE_MEMSHADOW=1 only
+  CRuntimeShadowA_RunHeap();   // NIGHTFIRE_CRUNTIMESHADOWA=1 only: the heap part, before the startup thread allocates
   CoreLoopShadow_Run();   // NIGHTFIRE_CORELOOPSHADOW=1 only
   CoreUtilShadow_Run();   // NIGHTFIRE_COREUTILSHADOW=1 only
   GeomShadow_Run();   // NIGHTFIRE_GEOMSHADOW=1 only (the pure maths; its world part runs on the first tick)

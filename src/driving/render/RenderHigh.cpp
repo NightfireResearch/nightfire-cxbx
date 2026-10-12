@@ -57,6 +57,7 @@
 #include "../world/Render.h"              // WRender
 #include "../../common/xbeOverload.h"     // XbeVirtual
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // RRenderHigh (0x0008bac0-0x0008c8d0), the managers' USingleton<T>::Init copies (0x0008b5b0-0x0008bf30) and the
@@ -99,9 +100,6 @@ constexpr uint32_t kHudViewSize = 0x4c;
 constexpr uint32_t kPhysicsNamespaceSize = 4;
 
 } // namespace
-
-// ---- the C runtime's, at its own address
-#define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // ---- globals
 #define CullDistance FLOAT_AT(0x001c4624)                       // "Far plane dist"
@@ -243,7 +241,7 @@ USingletonManager* RenderSingletonManager() {
         TheRenderSingletonManager.singletons.first = NULL;
         TheRenderSingletonManager.singletons.last = NULL;
         TheRenderSingletonManager.singletons.end = NULL;
-        CRT_atexit(DestroyStatic_001ec4a4);
+        Crt::atexit(DestroyStatic_001ec4a4);
     }
     return &TheRenderSingletonManager;
 }

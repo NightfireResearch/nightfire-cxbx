@@ -14,6 +14,8 @@
 #include "../world/SoundMap.h"          // MapBuyHead
 #include "../render/TextureContext.h"  // TextureContextMap
 #include "../game/SimulationContainers.h"
+#include "../platform/CRuntime.h"
+#include "../platform/CRuntimeStd.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -48,13 +50,6 @@ static TreeNode *Tree_BuyNode(Tree *tree, TreeNode *left, TreeNode *parent, Tree
 static void NameMap_Find(Tree *tree, TreeNode **result, const char *const *key) {
     static_cast<SharedTree *>(tree)->FindName(result, key);
 }
-
-// The C runtime's: qsort (whose order of equal elements is its own) and atol (which wraps rather than saturates).
-#define Crt_qsort ((void (*)(void *, size_t, size_t, int (*)(const void *, const void *)))0x00132db0)
-#define Crt_atol ((long (*)(const char *))0x00133d51)
-
-// The STL's exception machinery.
-#define CxxThrowException ((void (__stdcall *)(void *, uint32_t))0x001325ad)
 
 constexpr uint32_t kUSymbolTableVtable = 0x001a2240;
 constexpr uint32_t kUCarpNamespaceVtable = 0x001a2244;
@@ -94,7 +89,7 @@ void TreeThrow(const char *message, uint32_t vtable, uint32_t throwInfo) {
     GameStd::LogicError exception;
     exception.Construct(&text);
     SetVtable(&exception, vtable);
-    CxxThrowException(&exception, throwInfo);
+    Crt::CxxThrowException(&exception, reinterpret_cast<const Crt::ThrowInfo *>(throwInfo));
 }
 
 TreeNode *TreeNext(TreeNode *node) {
@@ -622,7 +617,7 @@ bool UCarpNamespace::ParseNameAndTag(const char *name, char *group, uint32_t *ta
     }
     const char *offsetText = strstr(tagText, "}::");
     if (offsetText != NULL) {
-        *offset = int(Crt_atol(offsetText + 3));
+        *offset = int(Crt::atol(offsetText + 3));
         return true;
     }
     *offset = 0;
@@ -723,8 +718,8 @@ StringToNumber* StringToNumber::Construct(StringToNumberEntry *entries) {
         sortedByString[i] = entries[i];
         sortedByNumber[i] = entries[i];
     }
-    Crt_qsort(sortedByString, count, sizeof(StringToNumberEntry), CompareByString);
-    Crt_qsort(sortedByNumber, count, sizeof(StringToNumberEntry), CompareByNumber);
+    Crt::qsort(sortedByString, count, sizeof(StringToNumberEntry), CompareByString);
+    Crt::qsort(sortedByNumber, count, sizeof(StringToNumberEntry), CompareByNumber);
     return this;
 }
 

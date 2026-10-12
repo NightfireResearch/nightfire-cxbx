@@ -20,6 +20,9 @@ void __stdcall Xbox_SetLastError(DWORD error);
 // Process initialisation: the process heap and the XAPI initialiser table, without the console-only parts.
 void __stdcall Xbox_XapiInitProcess(void);
 
+// The process heap, which the C runtime's heap functions use (XapiInitProcess's, at 0x0024b218 in the game).
+extern HANDLE ProcessHeapHandle;
+
 // The C runtime's per-thread data, moved off the Xbox TLS block onto a Win32 TLS slot.
 void *__cdecl Xbox_getptd(void);
 void __cdecl Xbox_freeptd(void *ptd);

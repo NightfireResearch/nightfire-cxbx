@@ -5,6 +5,7 @@
 #include "../engine/UMemory.hpp"
 #include "../platform/RealPrint.h"        // MEM_copy, MEM_fill
 #include "../world/SoundMap.h"            // BuyMapHead
+#include "../platform/CRuntime.h"
 
 #include <string.h>
 
@@ -16,12 +17,6 @@
 // them, so they are constant tables of ours here (the address each had is in its XBE_GLOBAL tag). The handlers call
 // EAGL's GeoPrimState setters, the Xbox extension's through the same object.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- originals called by address
-
-#define CRT_isalnum ((int (*)(int))0x001339ef)                                       // the C runtime's (locale)
-#define CRT_atof ((double (*)(const char *))0x00133e84)
-#define CRT_sscanf ((int (*)(const char *text, const char *format, ...))0x00133234)
 
 // ---- vtables
 
@@ -286,7 +281,7 @@ bool StateTagZSlope(const char *, const char *value, EAGL::GeoPrimState *state, 
     if (strlen(value) == 0)
         Extension(state)->SetZSlopeScale(0.0f);
     else
-        Extension(state)->SetZSlopeScale((float)CRT_atof(value));
+        Extension(state)->SetZSlopeScale((float)Crt::atof(value));
     return false;
 }
 
@@ -295,14 +290,14 @@ bool StateTagZBias(const char *, const char *value, EAGL::GeoPrimState *state, i
     if (strlen(value) == 0)
         Extension(state)->SetZOffset(0.0f);
     else
-        Extension(state)->SetZOffset((float)CRT_atof(value));
+        Extension(state)->SetZOffset((float)Crt::atof(value));
     return false;
 }
 
 // FUNC_AT(0x00092140)
 bool StateTagChroma(const char *, const char *value, EAGL::GeoPrimState *state, int) {
     uint32_t colour;
-    if (CRT_sscanf(value, "0x%08x", &colour) > 0)
+    if (Crt::sscanf(value, "0x%08x", &colour) > 0)
         state->SetChromaColour(colour);
     return false;
 }
@@ -330,7 +325,7 @@ const char* RStateManager::ParseFirstStateTag(const char *text, EAGL::GeoPrimSta
     const size_t kMaxValue = 0x3f;
     if (text == NULL)
         return NULL;
-    while (*text != '\0' && !CRT_isalnum(*text))
+    while (*text != '\0' && !Crt::isalnum(*text))
         text++;
     const char *tagStart = text;
     while (*text != '\0' && *text != '=')

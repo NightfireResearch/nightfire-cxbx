@@ -2,6 +2,8 @@
 
 #include "../data/StdStreams.h"
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
+#include "../platform/CRuntimeStd.h"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -11,13 +13,9 @@
 // The foundation layer's odds and ends (0x00117d80-0x00117df0, and the empty functions), ported from the listings.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The C runtime's vsprintf, at its own address: its formatting is the original's
-#define CRT_vsprintf ((int (*)(char *buffer, const char *format, va_list arguments))0x00133aee)
-
 // The STL's exception machinery, the game's
-#define CxxThrowException ((void (__stdcall *)(void *, const void *))0x001325ad)
 #define LengthError_vtable ((void *)0x00189eec)
-#define LengthError_ThrowInfo ((const void *)0x001a89bc)
+#define LengthError_ThrowInfo ((const Crt::ThrowInfo *)0x001a89bc)
 
 typedef void (*AssertHandler)(const char *message);
 
@@ -49,7 +47,7 @@ void AssertMessage(const char *format, ...) {
     char message[0x400];
     va_list arguments;
     va_start(arguments, format);
-    CRT_vsprintf(message, format, arguments);
+    Crt::vsprintf(message, format, arguments);
     va_end(arguments);
     if (AssertMessageHandler != NULL)
         AssertMessageHandler(message);
@@ -83,7 +81,7 @@ void ThrowLengthError(const char *message) {
     GameStd::LengthError error;
     error.Construct(&text);
     error.vtable = LengthError_vtable;
-    CxxThrowException(&error, LengthError_ThrowInfo);
+    Crt::CxxThrowException(&error, LengthError_ThrowInfo);
 }
 
 // FUNC_AT(0x00022770)

@@ -3,7 +3,6 @@
 #include "AnimMisc.h"
 #include "AnimUntested.h"
 #include "Skeleton.h"
-#include "../EaglOriginals.h"
 #include "../Transform.h"
 #include "../../platform/X87.h"
 

@@ -7,6 +7,7 @@
 #include "../world/CollisionTypes.h"   // MatrixRow
 #include "../platform/RealMath.h"
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -83,8 +84,7 @@ void Lerp(const Coord4 *a, const Coord4 *b, float t, Coord4 *out) {
 __declspec(naked) double CrtAcosTimes(float, const float *) {
     __asm {
         fld dword ptr [esp + 4]
-        mov eax, 0x001328d0
-        call eax
+        call Crt::CIacos
         mov eax, dword ptr [esp + 8]
         fmul dword ptr [eax]
         ret
@@ -94,8 +94,7 @@ __declspec(naked) double CrtAcosTimes(float, const float *) {
 __declspec(naked) double CrtAsinTimes(float, const float *) {
     __asm {
         fld dword ptr [esp + 4]
-        mov eax, 0x00133f94
-        call eax
+        call Crt::CIasin
         mov eax, dword ptr [esp + 8]
         fmul dword ptr [eax]
         ret

@@ -34,6 +34,7 @@
 #include "../world/World.h"               // fgWorld, ArticleOf, ArticleEffect, ProcAnimState
 #include "../world/WorldPos.h"
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // RSceneObj (0x0008d6b0-0x00090b90), RAutonomousObj's destructors (0x0001aa70, 0x0001b180), and the helpers the
@@ -115,9 +116,6 @@ const MATRIX4 kIdentity = { {
 RSceneObj_vtbl *const kSceneObjVtable = (RSceneObj_vtbl *)0x00191be0;
 
 } // namespace
-
-// ---- the C runtime's, at its own address
-#define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // ---- globals
 #define GameTick U32_AT(0x001f2a4c)
@@ -644,7 +642,7 @@ void RSceneObj::InitializeLighting() {
     if ((LightingWorldPosGuard & 1) == 0) {
         LightingWorldPosGuard |= 1;
         LightingWorldPos.Construct();
-        CRT_atexit(DestroyStatic_001f25b0);
+        Crt::atexit(DestroyStatic_001f25b0);
     }
     const float *instancePosition = Instance()->position;
     Coord3 position = { instancePosition[0], instancePosition[1], instancePosition[2] };

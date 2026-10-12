@@ -15,17 +15,13 @@
 #include "../platform/RealMemory.h"
 #include "../world/World.h"             // fgWorld
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 #include <string.h>
 
 // ---------------------------------------------------------------------------------------------------------------
 // ActAnimationDatabase, its banks and ActAnimGroup (0x00013c00-0x00014440), ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- the C runtime's (sprintf and tolower as the game has them)
-
-#define Crt_sprintf ((int (__cdecl *)(char *, const char *, ...))0x00132767)
-#define Crt_tolower ((int (__cdecl *)(int))0x001327f9)
 
 // ---- globals
 
@@ -102,10 +98,10 @@ FnDefaultAnimBank* FnDefaultAnimBank::Delete(unsigned flags) {
 void BankInfo::Load(const char *bankName) {
     strcpy(name, bankName);
     char path[100];
-    Crt_sprintf(path, "%s%s.%s", kAnimDirectory, name, "dat");
+    Crt::sprintf(path, "%s%s.%s", kAnimDirectory, name, "dat");
     data = static_cast<uint8_t *>(UFileLoader::FileLoadz(path, 0));
     uint32_t size = MEM_size(data);
-    Crt_sprintf(path, "%s%s.%s", kAnimDirectory, name, "rel");
+    Crt::sprintf(path, "%s%s.%s", kAnimDirectory, name, "rel");
     void *relocations = UFileLoader::FileLoadz(path, kLoadFlags);
     void *memory = EaglMalloc(sizeof(DynamicLoader), "EAGL::DynamicLoader new");
     DynamicLoader *made = NULL;
@@ -208,7 +204,7 @@ ActAnimationDatabase* ActAnimationDatabase::Construct() {
         else if (*c == '\n')
             *c = '\0';
         else
-            *c = char(Crt_tolower(*c));
+            *c = char(Crt::tolower(*c));
     }
     char *line = text;
     while (strncmp(line, "start", 5) != 0 && line < end)

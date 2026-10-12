@@ -14,6 +14,7 @@
 #include "../platform/RealMath.h"
 #include "../../common/xbeOriginal.h"
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 #include <windows.h>
 #include <math.h>
@@ -311,7 +312,7 @@ struct Hook {
     uint8_t saved[5];
     bool on;
 };
-Hook g_randHook;
+Hook g_randHook, g_randPortHook;   // rand at the game's address, and our entry: our callers call it directly
 uint32_t g_rand;
 
 int FakeRand() {
@@ -1023,12 +1024,15 @@ void GeomShadow_Run(void) {
     Test("Util_CollideRayWithSphere", N, GenRay, BodyRaySphere);
     Test("Util_CollideRayWithStretchedSphere", N, GenRay, BodyRayStretched);
     Test("FUN_000bd690", N, GenRegion, BodyRegion);
-    if (HookInstall(&g_randHook, 0x00133ee0, (const void *)FakeRand)) {
+    if (HookInstall(&g_randHook, 0x00133ee0, (const void *)FakeRand) &&
+        HookInstall(&g_randPortHook, uint32_t(uintptr_t(&Crt::rand)), (const void *)FakeRand)) {
         Test("Util_GaussRandom", N, GenRandomState, BodyGauss);
         Test("Util_PerturbVector(random)", N, GenRandomState, BodyPerturbRandom);
         Test("Util_ApplyVariance", N, GenRandomState, BodyApplyVariance);
+        HookRemove(&g_randPortHook);
         HookRemove(&g_randHook);
     } else {
+        HookRemove(&g_randHook);
         Detail("could not jump the C runtime's rand to the fake: Util_GaussRandom and its callers not tested");
     }
     GaussRandomSpare = spare;

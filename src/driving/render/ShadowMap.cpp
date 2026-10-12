@@ -26,15 +26,13 @@
 #include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
+#include "../platform/CRuntime.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // RShadowMap (0x000a5820-0x000a6690), ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
 
 class RTextureContext;
-
-// ---- the game's code not ported here
-#define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // ---- globals
 // XBE_GLOBAL(0x00201768, 4)
@@ -307,7 +305,7 @@ void RShadowMap::DrawSimpleShadow(RSceneObj *vehicle) {
     if ((ShadowMaterialMade & 1) == 0) {
         ShadowMaterialMade |= 1;
         ShadowMaterial->Construct();
-        CRT_atexit(DestroyStatic_00201790);
+        Crt::atexit(DestroyStatic_00201790);
     }
     ShadowMaterial->SetTransparencyMethod(1);
     ShadowMaterial->Extension()->SetAlphaBlend(kGlDstColor, kGlOneMinusSrcAlpha, kGlFuncAdd);

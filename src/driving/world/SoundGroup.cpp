@@ -5,6 +5,8 @@
 #include "../audio/Bank.h"                  // ABank
 #include "../engine/CoreFoundation.h"      // NullFunction
 #include "../engine/UMemory.hpp"
+#include "../platform/CRuntime.h"
+#include "../platform/CRuntimeStd.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -14,15 +16,8 @@
 // listings. See SoundGroup.h.
 // ---------------------------------------------------------------------------------------------------------------
 
-// AVoice::View's destructor, by the address the original hands the C runtime's `eh vector destructor iterator'
-#define AVoiceView_Destruct ((void (__fastcall *)(AVoice::View *, int))0x00123c50)
-#define EhVectorDestructor ((void (__stdcall *)(void *, uint32_t, int, void (__fastcall *)(AVoice::View *, int)))0x0013332e)
-
 // The maps' shared helpers: --iterator (SharedTreeIterator::Dec, audio/Bank.h, on the data layer's node type).
 #define SoundMap_Decrement ((void (__fastcall *)(SoundMapNode **it, int))0x00126bd0)
-
-// The C runtime's.
-#define Crt_sscanf ((int (*)(const char *text, const char *format, ...))0x00133234)
 
 namespace {
 
@@ -298,7 +293,7 @@ WSound* WSoundGroup::Add(int id, int bank, int index) {
 WSound* WSoundGroup::Add(int id, const char *name) {
     char bankName[0x20] = {};
     char soundName[0x40] = {};
-    Crt_sscanf(name, "%[^:]: %s", bankName, soundName);
+    Crt::sscanf(name, "%[^:]: %s", bankName, soundName);
     ABank *bank = ABank::Get(bankName);
     int handle = bank->handle;
     return Add(id, handle, bank->index.Lookup(soundName));
@@ -328,7 +323,8 @@ void WSound::SetDelays(float minDelay, float maxDelay) {
 void WSound::SetVoice(int id) {
     if (passVoice != NULL) {
         // AVoice's destructor
-        EhVectorDestructor(passVoice->views, sizeof(AVoice::View), 3, AVoiceView_Destruct);
+        Crt::EhVectorDestructor(passVoice->views, sizeof(AVoice::View), 3,
+                                reinterpret_cast<Crt::ElementFn>(XbeAddress(&AVoice::View::Destruct)));
         UMemory::FastFree(passVoice, sizeof(AVoice));
     }
     void *memory = UMemory::FastAlloc(sizeof(AVoice), "AVoice");

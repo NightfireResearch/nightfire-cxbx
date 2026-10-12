@@ -574,6 +574,8 @@ add_library(drivinginject SHARED
   src/driving/devtools/GameFrontEndShadowB.cpp
   src/driving/devtools/GameFrontEndShadowC.cpp
   src/driving/devtools/GameFrontEndShadowD.cpp
+  src/driving/devtools/CRuntimeShadowA.cpp
+  src/driving/devtools/CRuntimeShadowB.cpp
   src/driving/devtools/VehicleShadow.cpp
   src/driving/devtools/RigidCollideShadow.cpp
   src/driving/devtools/RenderShadow.cpp
@@ -663,6 +665,11 @@ add_library(drivinginject SHARED
   src/driving/platform/XboxTimer.cpp
   src/driving/platform/XboxInput.cpp
   src/driving/platform/LaunchOptions.cpp
+  src/driving/platform/CRuntime.cpp
+  src/driving/platform/CRuntimeFloat.cpp
+  src/driving/platform/CRuntimeFormat.cpp
+  src/driving/platform/CRuntimeParse.cpp
+  src/driving/platform/CRuntimeStd.cpp
   src/driving/gfx/backendHost.cpp
   src/driving/gfx/d3dSeam.cpp
   src/driving/sound/snd/Voices.cpp

@@ -23,10 +23,11 @@
 // of them. The addresses are the functions' entry points in Driving.xbe; each is patched to jump here.
 //
 // THE HEAP. XAPI's heap (RtlCreateHeap and its siblings, 0x00110847..0x001124b8) is NT's, and so is Win32's, with
-// the same flag bits; malloc, calloc, free, realloc and _msize reach it only through the five entry points below.
-// Patched together before the heap is made (Inject_XboxXapi runs before the startup thread), every block is
-// allocated and freed by the same Win32 heap. The process heap handle stays where the C runtime looks for it
-// (0x0024b218), made by HeapCreate in XboxStartup.cpp.
+// the same flag bits; the game's malloc, calloc, free, realloc and _msize reached it only through the five entry
+// points below, and ours (CRuntime.cpp) call Win32's directly with the same arguments. Patched together before the
+// heap is made (Inject_XboxXapi runs before the startup thread), every block is allocated and freed by the same
+// Win32 heap. The process heap handle (0x0024b218 in the game) is
+// XboxStartup.cpp's ProcessHeapHandle, made by HeapCreate there.
 //
 // THE KERNEL. XPhysicalAlloc and the two kernel thunks the game calls (MmFreeContiguousMemory and
 // ExQueryNonVolatileSetting) go to the loader's kernel exports through the XBE's import table, as the

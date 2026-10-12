@@ -12,6 +12,7 @@
 #include "../platform/RealMath.h"
 #include "../../common/xbeOriginal.h"
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 #include <windows.h>
 #include <stdint.h>
@@ -682,8 +683,7 @@ void TestNoise() {
              realWords[6];
     memcpy(origNoiseWords, OrigNoiseRandomWords, sizeof(origNoiseWords));
     memcpy(realWords, RandomWords, sizeof(realWords));
-    HookInstall(0x00133ee0, (const void *)FakeRand);
-    if (!g_hooks[g_hookCount - 1].on) {
+    if (!HookBoth(0x00133ee0, (const void *)&Crt::rand, (const void *)FakeRand)) {
         printf("[coreloop] could not jump the C runtime's rand to the fake - noise not tested\n");
         HooksRemove();
         return;

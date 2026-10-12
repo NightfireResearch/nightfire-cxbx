@@ -3,6 +3,7 @@
 #include "AttributeUntested.h"
 #include "StdStreams.h"
 #include "../engine/UMemory.hpp"
+#include "../platform/CRuntimeStd.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -28,21 +29,17 @@
 // and _CxxThrowException), but nothing reaches them.
 // ---------------------------------------------------------------------------------------------------------------
 
-
-// The pieces of the game's exception machinery the STL's throws use.
-#define CxxThrowException ((void (__stdcall *)(void *, const void *))0x001325ad)
-
 // std::length_error's and std::out_of_range's vtables and throw descriptions.
 #define LengthErrorVtable ((void *)0x00189eec)
-#define LengthErrorThrowInfo ((const void *)0x001a89bc)
+#define LengthErrorThrowInfo ((const Crt::ThrowInfo *)0x001a89bc)
 #define OutOfRangeVtable ((void *)0x0018a29c)
-#define OutOfRangeThrowInfo ((const void *)0x001a8bd8)
+#define OutOfRangeThrowInfo ((const Crt::ThrowInfo *)0x001a8bd8)
 
 namespace {
 
 // _THROW(error, message): a std::string of the message, the exception constructed from it (logic_error's
 // constructor, then the derived class's vtable), thrown. Does not return.
-void ThrowStl(const char *message, void *vtable, const void *throwInfo) {
+void ThrowStl(const char *message, void *vtable, const Crt::ThrowInfo *throwInfo) {
     GameStd::String text;
     text.capacity = 15;
     text.size = 0;
@@ -51,7 +48,7 @@ void ThrowStl(const char *message, void *vtable, const void *throwInfo) {
     GameStd::LogicError error;
     error.Construct(&text);
     error.vtable = vtable;
-    CxxThrowException(&error, throwInfo);
+    Crt::CxxThrowException(&error, throwInfo);
 }
 
 // ---------------------------------------------------------------------------------------------------------------

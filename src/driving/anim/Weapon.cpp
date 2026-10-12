@@ -24,6 +24,7 @@
 #include "../render/Renderer.h"
 #include "../world/Trigger.h"             // gEventDynamicData
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 #include <bit>
 #include <math.h>
@@ -78,8 +79,7 @@ __declspec(naked) static double CrtPow(double, double) {
     __asm {
         fld qword ptr [esp + 4]
         fld qword ptr [esp + 12]
-        mov eax, 0x00132a94
-        call eax
+        call Crt::CIpow
         ret
     }
 }

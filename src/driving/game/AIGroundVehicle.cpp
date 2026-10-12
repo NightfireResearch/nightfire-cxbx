@@ -35,6 +35,7 @@
 #include "../world/RoadNav.h"
 #include "../world/RoadNetwork.h"
 #include "../world/WorldPos.h"
+#include "../platform/CRuntimeStd.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // AIGroundVehicle, part 1 (0x00029d60-0x0002c6e0, 0x0002c6e0-0x0002dc90 and the vector deleting destructor at
@@ -43,9 +44,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-
-// The C runtime's `eh vector destructor iterator`
-#define EhVectorDestructor ((void (__stdcall *)(void *array, uint32_t size, int count, void *destructor))0x0013332e)
 
 // ---- globals
 
@@ -241,7 +239,8 @@ AIGroundVehicle* AIGroundVehicle::Delete(unsigned flags) {
     if (flags & 2) {
         AIVEHICLE_UNTESTED("AIGroundVehicle's vector deleting destructor (an array)");
         int32_t *block = reinterpret_cast<int32_t *>(this) - kArrayCookieWords;
-        EhVectorDestructor(this, sizeof(AIGroundVehicle), block[0], (void *)XbeAddress(&AIGroundVehicle::Destruct));
+        Crt::EhVectorDestructor(this, sizeof(AIGroundVehicle), block[0],
+                                reinterpret_cast<Crt::ElementFn>(XbeAddress(&AIGroundVehicle::Destruct)));
         if (flags & 1)
             OperatorDelete(block);
         return reinterpret_cast<AIGroundVehicle *>(block);

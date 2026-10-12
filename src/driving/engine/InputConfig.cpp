@@ -14,6 +14,7 @@
 #include "../data/SymbolTable.h"
 #include "../platform/RealMemory.h"
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // InputConfigManager, InputToAction, InputTable and the text helpers (0x0004f190, 0x0004ff50..0x00050b80,
@@ -39,10 +40,6 @@ static StringToNumberEntry kFrontEndSlotNames[15] = {
     {6, "ButtonLThumb"}, {7, "ButtonLTrigger"}, {8, "ButtonBlack"}, {9, "ButtonRThumb"}, {10, "ButtonRTrigger"},
     {11, "ButtonWhite"}, {12, "DESCRIPTION"}, {13, "TITLE"}, {0, NULL},
 };
-
-// The C runtime's, the game's: sscanf parses floats, and atol wraps rather than saturates.
-#define Crt_atol ((long (*)(const char *))0x00133d51)
-#define Crt_sscanf ((int (*)(const char *, const char *, ...))0x00133234)
 
 static const char kSeparators[] = "\t ";
 static const int kActionCount = 0x75;   // one past ACTION_PLUGUNPLUG, the last action
@@ -204,7 +201,7 @@ void InputToAction::LoadParseDefFile(char *text) {
         if (method >= UPDATE_ABOVE && method <= UPDATE_BELOW)
             threshold = 0.5f;
         if (char *thresholdText = strtok(nullptr, kSeparators))
-            Crt_sscanf(thresholdText, "%f", &threshold);
+            Crt::sscanf(thresholdText, "%f", &threshold);
 
         InputTable *table = &tables[scalar];
         if (table->count >= table->capacity)
@@ -263,11 +260,11 @@ void InputConfigManager::ParseMasterConfigFile(char *text) {
     while (_stricmp(token, "END") != 0) {
         if (_stricmp(token, "Driving") == 0) {
             type = kInputDriving;
-            numConfigs[kInputDriving] = Crt_atol(strtok(nullptr, kSeparators));
+            numConfigs[kInputDriving] = Crt::atol(strtok(nullptr, kSeparators));
             configs[kInputDriving] = NewConfigs(numConfigs[kInputDriving]);
         } else if (_stricmp(token, "POV") == 0) {
             type = kInputPOV;
-            numConfigs[kInputPOV] = Crt_atol(strtok(nullptr, kSeparators));
+            numConfigs[kInputPOV] = Crt::atol(strtok(nullptr, kSeparators));
             configs[kInputPOV] = NewConfigs(numConfigs[kInputPOV]);
         } else {
             strcpy(configs[type][named[type]].name, token);
@@ -293,7 +290,7 @@ void InputConfigManager::ParseDefFileForFrontEnd(InputConfig *config, char *text
                 seekingFrontEnd = false;
         } else {
             int slot = frontEndSlots->ConvertStringToNumber(token);
-            config->localeIDs[slot] = Crt_atol(strtok(nullptr, kSeparators));
+            config->localeIDs[slot] = Crt::atol(strtok(nullptr, kSeparators));
         }
         AdvanceFilePtr(&text);
         CopyLine(line, text);

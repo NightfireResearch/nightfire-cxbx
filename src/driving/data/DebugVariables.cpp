@@ -24,9 +24,6 @@ using namespace GameStd;
 DebugUIntVariable *CurrentIndexer;          // the index dbindex set, until dbendindex
 #define DebugUIntVariableVtable ((const void *const *)0x0018bd00)
 
-#define OStrStream_Construct ((OStrStream *(__fastcall *)(OStrStream *, int, char *, int, int, int))0x00131b27)
-#define OStrStream_Destruct ((void (__fastcall *)(BasicIos *, int))0x00131bbb)
-
 namespace {
 
 static const int kSlotAsString = 9;   // DebugItem's vtable
@@ -138,10 +135,10 @@ char* DebugUIntVariable::AsString(char *out) {
     }
     char text[64];
     OStrStream stream;
-    OStrStream_Construct(&stream, 0, text, 0x20, kOpenOut, 1);
+    stream.Construct(text, 0x20, kOpenOut, 1);
     stream.InsertUInt(*GetValuePtr())->Put('\0');   // << value << ends
     strcpy(out, text);
-    OStrStream_Destruct(&stream.ios, 0);
+    stream.ios.DestructOStrStream();
     stream.ios.Destruct();
     return out;
 }

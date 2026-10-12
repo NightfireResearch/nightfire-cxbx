@@ -10,10 +10,11 @@
 // them (ostrstream << value), so their output - every digit, every float - is what the game's tuning data turns
 // into.
 //
-// The non-template parts stay the C runtime's, called at their addresses (0x00130xxx..0x00134xxx: ios_base,
-// locale, _Lockit, _Locinfo, strstreambuf's own members, _Stod/_Stoul, sprintf ...), as do std::string's members
-// compiled elsewhere (0x00012c80..0x00013840). The getloc/facet helpers just below this range (0x000378c0..
-// 0x000379c0) are StdLocale.cpp's.
+// The non-template parts are the C runtime's (0x00130xxx..0x00134xxx: ios_base, locale, _Lockit, _Locinfo,
+// strstreambuf's own members, _Stod ...), ported in src/driving/platform/CRuntimeStd.cpp (the members marked so
+// below) and CRuntime*.cpp (sprintf, strtol ...), as are std::string's members compiled elsewhere
+// (0x00012c80..0x00013840). The getloc/facet helpers just below this range (0x000378c0..0x000379c0) are
+// StdLocale.cpp's.
 //
 // The classes here are the game's objects, laid out as Dinkumware lays them out (sizes asserted); their vtables
 // are the game's, in the first word. MSVC lists overloaded virtuals in reverse, so num_get's slots run void*, long
@@ -69,6 +70,10 @@ struct Locale {
 
     // ~locale: the implementation deleted with its last reference (StdLocale.cpp).
     void Destruct();                                                                                    // 0x00037940
+
+    // CRuntimeStd.cpp
+    Locale* Construct();                    // locale(): the global locale                              // 0x001310bf
+    const Facet* GetFacet(uint32_t id) const;   // _Getfacet                                            // 0x00130d9b
 };
 static_assert(sizeof(Locale) == 4, "Locale");
 
@@ -81,18 +86,18 @@ struct Facet {
     Facet* Decref();                        // _Decref: one fewer; the facet itself once none are left  // 0x000378f0
     void Destruct();                                                                                    // 0x00037930
     Facet* Delete(unsigned flags);          // vtable slot 0 of the facet vtable                        // 0x00037960
+
+    // CRuntimeStd.cpp
+    void Register();                        // _Register: on the list released at exit                 // 0x00130e13
 };
 static_assert(sizeof(Facet) == 8, "Facet");
 
-// std::_Lockit: the library's lock, taken for a scope (kind 0, the locale lock).
+// std::_Lockit: the library's lock, taken for a scope (kind 0, the locale lock). CRuntimeStd.cpp.
 struct Lockit {
     int kind;
-};
 
-// std::_Locinfo: the C locale's names and tables, built from a locale name. Only its constructor, destructor and
-// _Getcvt are used here; the runtime owns the inside.
-struct Locinfo {
-    uint8_t opaque[0x74];
+    Lockit* Construct(int lockKind);                                                                    // 0x00130cef
+    void Destruct();                                                                                    // 0x00130d10
 };
 
 // std::_Ctypevec, the C runtime's ctype table.
@@ -142,17 +147,46 @@ struct String {
     bool Grow(uint32_t newSize, bool trim);                               // 0x00013300 _Grow
     void Eos(uint32_t length);                                            // 0x00012c80 _Eos
     void Tidy(bool built);                                                // 0x00013110 _Tidy
+
+    // _String_base's throws (CRuntimeStd.cpp): out_of_range, length_error
+    static void Xran();                                                   // 0x00130b80 _Xran
+    static void Xlen();                                                   // 0x00130bc0 _Xlen
 };
 static_assert(sizeof(String) == 0x1c, "String");
+
+// std::_Locinfo: the C locale's names, built from a locale name, under the locale lock while it lives.
+// CRuntimeStd.cpp.
+struct Locinfo {
+    Lockit lock;          // +0x00
+    String days;          // +0x04
+    String months;        // +0x20
+    String oldName;       // +0x3c the locale before
+    String newName;       // +0x58 the one asked for, "*" if there is none
+
+    Locinfo* Construct(const char *localeName);                           // 0x00130f8f
+    void Destruct();                                                      // 0x00130ed2
+};
+static_assert(sizeof(Locinfo) == 0x74, "Locinfo");
 
 // std::allocator<char>::deallocate (`this` is not read)
 void __stdcall AllocatorDeallocate(void *block, uint32_t count);          // 0x000125a0
 
-// std::logic_error (0x28, vtable 0x00189ee4) over the C runtime's std::exception (0x0c), and std::length_error
-// (vtable 0x00189eec). Only the STL's throws make them.
-struct LogicError {
-    const void *vtable;   // +0x00
-    uint8_t exception[8]; // +0x04 std::exception's fields
+// std::exception (the C runtime's): the message, and whether it is a copy of its own to free. CRuntimeStd.cpp.
+struct Exception {
+    const void *vtable;    // +0x00
+    const char *what;      // +0x04
+    int doFree;            // +0x08
+
+    Exception* Construct();                                            // 0x001325e6
+    Exception* ConstructMessage(const char *message);                  // exception(const char *const &)
+    Exception* ConstructCopy(const Exception *other);                  // 0x0013263c
+    void Destruct();                                                   // 0x0013268b
+};
+static_assert(sizeof(Exception) == 0xc, "Exception");
+
+// std::logic_error (0x28, vtable 0x00189ee4) over std::exception, and std::length_error (vtable 0x00189eec). Only
+// the STL's throws make them.
+struct LogicError : Exception {
     String message;       // +0x0c
 
     LogicError* Construct(const String *message);                         // 0x00013700
@@ -180,12 +214,24 @@ struct StreamPos {
 static_assert(sizeof(StreamPos) == 0x18, "StreamPos");
 
 struct BasicIos;
+struct CriticalSection;
+
+// std::_Mutex: a critical section of its own, from the game's allocator. CRuntimeStd.cpp.
+struct Mutex {
+    CriticalSection *section;
+
+    Mutex* Construct();                                                // 0x001313fe
+    void Destruct();                                                   // 0x00131416
+    void Lock();                                                       // 0x0013142b _Lock
+    void Unlock();                                                     // 0x00131434 _Unlock
+};
+static_assert(sizeof(Mutex) == 4, "Mutex");
 
 // std::basic_streambuf<char>: the get and put areas, each reached through a pointer the derived buffer may
 // redirect.
 struct Streambuf {
     const void *const *vtable;   // +0x00
-    uint32_t mutex;              // +0x04 std::_Mutex
+    Mutex mutex;                 // +0x04
     char *getFirstStore;         // +0x08
     char *putFirstStore;         // +0x0c
     char **getFirst;             // +0x10 -> getFirstStore
@@ -220,15 +266,24 @@ static_assert(sizeof(Streambuf) == 0x3c, "Streambuf");
 
 // std::strstreambuf.
 struct StrStreambuf : Streambuf {
-    int mode;           // +0x3c _Strmode
+    typedef void *(*AllocFn)(size_t size);
+    typedef void (*FreeFn)(void *block);
+
+    int allocSize;      // +0x3c _Alsize
     char *pendSave;     // +0x40
     char *seekHigh;     // +0x44
-    int allocSize;      // +0x48
-    void *allocFn;      // +0x4c
-    void *freeFn;       // +0x50
+    int mode;           // +0x48 _Strmode
+    AllocFn allocFn;    // +0x4c
+    FreeFn freeFn;      // +0x50
 
     StrStreambuf* Construct(const char *text, int count);              // 0x00038af0 strstreambuf(const char *, n)
     StrStreambuf* Delete(unsigned flags);                              // 0x00038b50
+
+    // CRuntimeStd.cpp
+    StrStreambuf* ConstructRange(char *getBuffer, int count, char *putBuffer);   // strstreambuf(char *, n, char *)
+    void Init(int count, char *getBuffer, char *putBuffer, int strMode);    // 0x00131901 _Init
+    void Destruct();                                                   // 0x00131a44
+    void Tidy();                                                       // _Tidy
 };
 static_assert(sizeof(StrStreambuf) == 0x54, "StrStreambuf");
 
@@ -236,19 +291,40 @@ struct Ostream;
 
 // std::ios_base.
 struct IosBase {
+    // _Iosarray, a word or pointer stored by index (iword/pword), and _Fnarray, a callback (register_callback).
+    struct Word {
+        Word *next;
+        int index;
+        long value;
+        void *pointer;
+    };
+    struct Callback {
+        Callback *next;
+        int index;
+        void (*function)(int event, IosBase &ios, int index);
+    };
+
     const void *const *vtable;   // +0x00
     int state;                   // +0x04 _Mystate
     int exceptions;              // +0x08
     int flags;                   // +0x0c
     int precision;               // +0x10
     int width;                   // +0x14
-    void *words;                 // +0x18 _Arr
-    void *callbacks;             // +0x1c _Calls
+    Word *words;                 // +0x18 _Arr
+    Callback *callbacks;         // +0x1c _Calls
     Locale *locale;              // +0x20
     uint32_t standardStream;     // +0x24 _Stdstr
 
     Locale* GetLoc(Locale *result);         // getloc(): a copy of the stream's locale (StdLocale.cpp)  // 0x00037980
     IosBase* Delete(unsigned flags);        // vtable slot 0 of ios_base's vtable                       // 0x000379c0
+
+    // CRuntimeStd.cpp
+    void Clear(int newState, bool reraise);                                                             // 0x00131279
+    void Init();                                                                                        // 0x001313b8
+    void AddStandard();                     // _Addstd                                                  // 0x001310fa
+    void Destruct();                                                                                    // 0x00131191
+    void Tidy();
+    void CallFunctions(int event);          // _Callfns
 };
 static_assert(sizeof(IosBase) == 0x28, "IosBase");
 
@@ -266,6 +342,8 @@ struct BasicIos : IosBase {
     void DestructIstream();                                            // 0x00037af0 ~basic_istream
     void* DeleteIstream(unsigned flags);                               // 0x000384f0
     void* DeleteIStrStream(unsigned flags);                            // 0x00038c40
+    void DestructIStrStream();              // ~istrstream (CRuntimeStd.cpp)                            // 0x00131ae1
+    void DestructOStrStream();              // ~ostrstream (CRuntimeStd.cpp)                            // 0x00131bbb
 };
 static_assert(sizeof(BasicIos) == 0x34, "BasicIos");
 
@@ -291,6 +369,7 @@ struct Ostream {
     Ostream* Flush();                                                  // 0x00038790 flush()
     Ostream* Put(char ch);                                             // 0x00039810 put()
     Ostream* InsertUInt(unsigned value);                               // 0x00039a90 operator<<(unsigned int)
+    Ostream* Construct(Streambuf *buffer, bool isStandard, int constructVirtualBase);   // (CRuntimeStd.cpp)
 };
 static_assert(sizeof(Ostream) == 4, "Ostream");
 
@@ -310,6 +389,7 @@ struct OStrStream : Ostream {
     BasicIos ios;          // +0x58
 
     void DestructAll();                                                // 0x000397f0 the `vbase destructor'
+    OStrStream* Construct(char *text, int count, int mode, int constructVirtualBase);   // (CRuntimeStd.cpp) 0x00131b27
 };
 static_assert(sizeof(OStrStream) == 0x8c, "OStrStream");
 

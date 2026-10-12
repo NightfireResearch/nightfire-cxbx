@@ -5,10 +5,10 @@
 #include "Transform.h"
 #include "D3D8State.h"
 #include "EaglGlobals.h"
-#include "EaglOriginals.h"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 #include <bit>
 #include <stddef.h>
@@ -937,12 +937,12 @@ EAGL::TextureRenderContextPrivate* EAGL::TextureRenderContextPrivate::Construct(
 
 // FUNC_AT(0x000e4f50)
 void *eagl_alloc(uint32_t size, const char *) {
-    return CRT_malloc(size);
+    return Crt::malloc(size);
 }
 
 // FUNC_AT(0x000e4f60)
 void eagl_free(void *pointer, uint32_t) {
-    CRT_free(pointer);
+    Crt::free(pointer);
 }
 
 // Registers the load-time types in the ConstructorPool, the property-built ones in the RuntimeAllocConstructorPool,

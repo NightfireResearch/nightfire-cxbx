@@ -5,6 +5,7 @@
 #include "../../common/xbeOverload.h"
 #include "../render/Lightning.h"
 #include "../render/StateManager.h"
+#include "../platform/CRuntimeStd.h"
 
 #include <string.h>
 
@@ -19,9 +20,8 @@
 
 // ---- originals called by address
 
-#define CRT_VectorDestructorIterator ((void (__stdcall *)(void *array, uint32_t size, int32_t count, void *destructor))0x0013332e)   // ??_M
-
-static void *const kLightningSegmentDestructor = (void *)XbeAddress(&RLightningSegment::Destruct);
+static const Crt::ElementFn kLightningSegmentDestructor =
+    reinterpret_cast<Crt::ElementFn>(XbeAddress(&RLightningSegment::Destruct));
 static const uint32_t kLightningSegmentBytes = 0x18;
 
 template <class Value>
@@ -127,7 +127,7 @@ void SimObjectVector::PushBack(void *const *value) {
 void LightningSegmentVec::Destruct() {
     if (data != NULL) {
         int32_t *cookie = (int32_t *)data - 1;   // new[]'s count of elements
-        CRT_VectorDestructorIterator(data, kLightningSegmentBytes, *cookie, kLightningSegmentDestructor);
+        Crt::EhVectorDestructor(data, kLightningSegmentBytes, *cookie, kLightningSegmentDestructor);
         OperatorDelete(cookie);
     }
     data = NULL;

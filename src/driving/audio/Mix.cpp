@@ -19,6 +19,7 @@
 #include "../platform/X87.h"
 #include "../sound/snd/Voices.h"        // SNDfxmasterlevel, SNDfxinitbus
 #include "../game/MissionManager.h"           // MissionList::BuyHead
+#include "../platform/CRuntime.h"
 
 #pragma fp_contract(off)
 
@@ -31,9 +32,6 @@
 
 
 // std::list<T *>'s node and head makers.
-
-// The C runtime's (the names' order and the volumes' parsing are its).
-#define CRT_sscanf ((int (*)(const char *text, const char *format, ...))0x00133234)
 
 // ---- globals
 
@@ -222,7 +220,7 @@ void AMix::Load(const char *path) {
         char name[0x80];
         float volume;
         int number;
-        if (CRT_sscanf(line, "%[^=]=%f, %d", name, &volume, &number) != 3)
+        if (Crt::sscanf(line, "%[^=]=%f, %d", name, &volume, &number) != 3)
             continue;
         for (size_t end = strlen(name); end != 0 && name[end - 1] == ' '; end = strlen(name))
             name[end - 1] = '\0';

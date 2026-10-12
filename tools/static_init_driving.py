@@ -96,6 +96,9 @@ TARGETS = {
     0x0002bd40: ("method", "AIGroundVehicle", "Construct"),
     0x0002be70: ("method", "AIGroundVehicle", "Destruct"),
     0x00036a00: ("method", "AIZone", "Construct"),
+    0x00130c99: ("method", "GameStd::InitLocks", "Construct"),
+    0x00130cc7: ("method", "GameStd::InitLocks", "Destruct"),
+    0x00131cd0: ("method", "GameStd::InitAtExit", "Destruct"),   # a thunk to the destructor
 }
 # Objects the initialisers construct that our code names, by address: the name and its class. A constructor or
 # destructor of that class is called on the name; for the globals we own (XBE_GLOBAL) this is what makes the
@@ -115,6 +118,7 @@ NAMED = {
     0x002012a0: ("MissileStreakState", "EAGL::GeoPrimState"),  # game/WeaponEffects.cpp
     0x002016d0: ("MuzzleFlashPOVMaterial", "UVolatileMaterial"),
     0x00233ff0: ("fgSimulation", "Simulation"),                # game/Simulation.h
+    0x0024483c: ("GameStd::ClassicLocale", "GameStd::Locale"),  # platform/CRuntimeStd.cpp
 }
 # Owned arrays of objects the initialisers construct (a vector constructor) and destroy: the name and the class.
 NAMED_OBJECT_ARRAYS = {
@@ -556,7 +560,7 @@ def atexit_line(dtor):
     body = destructor(dtor)
     if body is None:
         raise SystemExit("0x%08x: a destructor of a shape this script does not know" % dtor)
-    return "CrtAtExit([] { %s });" % body if body else "CrtAtExit([] {});"
+    return "Crt::atexit([] { %s });" % body if body else "Crt::atexit([] {});"
 
 
 def constructor(ins):
@@ -719,10 +723,11 @@ def main():
             '#include "FileNameList.h"',
             '#include "GameLoop.h"',
             '#include "InputConfig.h"',
+            '#include "../platform/CRuntime.h"',
+            '#include "../platform/CRuntimeStd.h"',
             '',
             '// ---- the originals the initialisers still call, by address',
-            '',
-            '#define CrtAtExit ((int (__cdecl *)(void (__cdecl *)(void)))0x%08x)   // atexit' % ATEXIT]
+            '']
     for target in sorted(NAMES):
         if target in ERASERS:
             head.append("#define %s ((void (__fastcall *)(NodeList *, int, void **, void *, void *))0x%08x)   "

@@ -26,14 +26,12 @@
 #include "../render/Materials.h"          // USimpleMaterial, SimpleRequests
 #include "../render/Renderer.h"           // fgRenderer
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // GGallery (0x000d5800-0x000d6f20, with GET_Canvas and CULL_SetCanvas in GFX's code at 0x000d3850 and 0x000d3470),
 // ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- the C runtime's, at its own address: the destructor goes into the game's exit list
-#define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // ---- globals
 
@@ -407,7 +405,7 @@ void GGallery::LINE_Draw2DStrip(const Coord4 *points, const uint32_t *colours, i
     if ((LineMaterialMade & 1) == 0) {
         LineMaterialMade |= 1;
         LineMaterial.Construct();
-        CRT_atexit(DestroyStatic_0023f330);
+        Crt::atexit(DestroyStatic_0023f330);
     }
     LineMaterial.SetDepthTestMethod(kDepthAlways);
     SimpleRequests[SimpleRequestIndex]->colours.SetData(colours);

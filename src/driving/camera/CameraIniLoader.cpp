@@ -18,6 +18,7 @@
 #include "../platform/RealPrint.h"      // MEM_copy
 #include "../platform/X87.h"
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 #include <bit>
 #include <stddef.h>
@@ -27,11 +28,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 // RCameraIniLoader. See CameraIniLoader.h.
 // ---------------------------------------------------------------------------------------------------------------
-
-// The C runtime's number formatting and parsing, kept the game's
-#define Crt_sprintf ((int (__cdecl *)(char *, const char *, ...))0x00132767)
-#define Crt_atof ((double (__cdecl *)(const char *))0x00133e84)
-
 
 // XBE_GLOBAL(0x001ebc8c, 4)
 static RPlayerCamera *PlayerCamera;                     // RCameraIniLoader's
@@ -112,9 +108,9 @@ float CursorSpeed(IniFiles *ini, const char *section, const char *key) {
 // "maxYaw" for the first limit, "maxYaw1" ... for the others
 const char *LimitKey(char *key, const char *name, int limit) {
     if (limit > 0)
-        Crt_sprintf(key, "%s%d", name, limit);
+        Crt::sprintf(key, "%s%d", name, limit);
     else
-        Crt_sprintf(key, "%s", name);
+        Crt::sprintf(key, "%s", name);
     return key;
 }
 
@@ -279,8 +275,8 @@ void RCameraIniLoader::LoadFile() {
                 autoDriveCounted = true;
             }
         } else {
-            Crt_sprintf(message, "RCameraIniLoader::LoadFile: Unknown camera type loaded: %s - check naming "
-                                 "convention\n", section);
+            Crt::sprintf(message, "RCameraIniLoader::LoadFile: Unknown camera type loaded: %s - check naming "
+                                  "convention\n", section);
         }
     }
 
@@ -352,7 +348,7 @@ void RCameraIniLoader::LoadFile() {
             }
             int arm;
             for (arm = 0; arm < kMaxCameraArms; arm++) {
-                Crt_sprintf(armSection, "%s:Arm%d", section, arm);
+                Crt::sprintf(armSection, "%s:Arm%d", section, arm);
                 if (!ini->FindSection(armSection))
                     break;
                 HeliArmInfo *armInfo = &heliArms[arm];
@@ -394,7 +390,7 @@ void RCameraIniLoader::LoadFile() {
             int count = 0;
             char *token = strtok(const_cast<char *>(ini->ReadString(section, "heights", "2.0")), " ,");
             while (token != NULL) {
-                heights[count] = int8_t(Ftol(Crt_atof(token) * 2.0));
+                heights[count] = int8_t(Ftol(Crt::atof(token) * 2.0));
                 token = strtok(NULL, " ,");
                 if (++count >= kMaxEllipseHeights)
                     break;
@@ -523,7 +519,7 @@ void RCameraIniLoader::LoadFile() {
             tables.maxWeapTransTime = Float(ini, section, "MaxWeapTransTime", 30.0f);
             int arm;
             for (arm = 0; arm < kMaxCameraArms; arm++) {
-                Crt_sprintf(armSection, "%s:Arm%d", section, arm);
+                Crt::sprintf(armSection, "%s:Arm%d", section, arm);
                 if (!ini->FindSection(armSection))
                     break;
                 AutoDriveArmInfo *armInfo = &autoDriveArms[arm];
@@ -567,8 +563,8 @@ void RCameraIniLoader::LoadFile() {
             MEM_copy(tables.autoDriveArms, autoDriveArms, arm * sizeof(AutoDriveArmInfo));
             tables.previousAutoDriveArm = 0;
         } else {
-            Crt_sprintf(message, "RCameraIniLoader::LoadFile: Unknown camera type loaded: %s - check naming "
-                                 "convention\n", section);
+            Crt::sprintf(message, "RCameraIniLoader::LoadFile: Unknown camera type loaded: %s - check naming "
+                                  "convention\n", section);
         }
 
         if (Has(section, "Pause"))

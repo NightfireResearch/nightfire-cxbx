@@ -1,7 +1,6 @@
 #include "RenderMethod.h"
 
 #include "EaglGlobals.h"
-#include "EaglOriginals.h"
 #include "Loader.h"
 #include "Model.h"
 #include "Tar.h"

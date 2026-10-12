@@ -22,12 +22,10 @@
 #include "../render/Materials.h"
 #include "../render/Renderer.h"           // fgRenderer
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 #include <bit>
 #include <string.h>
-
-// ---- the C runtime's atol, at its own address: it wraps where ours saturates
-#define CRT_atol ((long (*)(const char *))0x00133d51)
 
 // XBE_GLOBAL(0x0023f828, 0x4)
 GSubtitles *TheSubtitles;
@@ -203,7 +201,7 @@ void GSubtitles::LoadSubtitles(const char *file) {
     splitter.Reset();
 
     const char *countLine = strtok(text, "\r\n");
-    long count = CRT_atol(countLine);
+    long count = Crt::atol(countLine);
     char *next = text + strlen(countLine) + 2;      // past the line and its CR LF
     nextCue = 0;
     cueCount = count + 1;
@@ -216,8 +214,8 @@ void GSubtitles::LoadSubtitles(const char *file) {
     for (unsigned i = 1; i < cueCount; i++) {
         char *line = strtok(next, "\r\n");
         next += strlen(line) + 2;
-        long frame = CRT_atol(strtok(line, "=") + 6);
-        long cueSymbol = CRT_atol(strtok(NULL, "="));
+        long frame = Crt::atol(strtok(line, "=") + 6);
+        long cueSymbol = Crt::atol(strtok(NULL, "="));
         if (GetFoundationVideoMode() == kVideoPAL50)
             frame = frame * 5 / 6;
         cues[i].frame = frame;

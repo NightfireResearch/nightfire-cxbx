@@ -9,6 +9,7 @@
 #include "../engine/CoreFoundation.h"   // ThrowLengthError
 #include "../engine/UMemory.hpp"
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 #include <string.h>
 
@@ -18,9 +19,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // The list code every std::list of pointers shares: _Buynode(next, prev, value)
-
-// The C runtime's sprintf
-#define CRT_sprintf ((int (*)(char *, const char *, ...))0x00132767)
 
 namespace {
 
@@ -314,7 +312,7 @@ ABasic* ABasic::Construct(const char *name, const char *mixName) {
     ABaseSound::Construct(mixName, kSoundViewsActive);
     vtable = kABasicVtable;
     voice = NULL;
-    CRT_sprintf(patchName, "%s", name);
+    Crt::sprintf(patchName, "%s", name);
     return this;
 }
 

@@ -9,16 +9,13 @@
 #include "../../helpers.h"
 #include "../platform/RealMemory.h"   // MemDefaultClass
 #include "../logging.h"               // dbg_wprintf, our printf
+#include "../platform/CRuntime.h"
 
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
 #define IniFilesVtable ((const void *const *)0x001a0998)
-
-// The C runtime's, the game's: its float parsing, and atol wraps rather than saturates.
-#define Atof ((double (__cdecl *)(const char *))0x00133e84)
-#define Atol ((long (__cdecl *)(const char *))0x00133d51)
 
 namespace {
 
@@ -84,7 +81,7 @@ double IniFiles::ReadFloat(const char *section, const char *key, float fallback)
     bool found;
     const char *value = FindValue(dafi, section, key, &found);
     if (value != NULL)
-        return Atof(value);
+        return Crt::atof(value);
     return fallback;
 }
 
@@ -95,7 +92,7 @@ int IniFiles::ReadInteger(const char *section, const char *key, int fallback) {
     bool found;
     const char *value = FindValue(dafi, section, key, &found);
     if (value != NULL)
-        return Atol(value);
+        return Crt::atol(value);
     return fallback;
 }
 

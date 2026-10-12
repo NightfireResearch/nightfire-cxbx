@@ -6,7 +6,6 @@
 #include "View.h"
 #include "D3D8State.h"
 #include "EaglGlobals.h"
-#include "EaglOriginals.h"
 #include "../platform/RealPrint.h"
 #include "../platform/X87.h"
 #include "../../helpers.h"

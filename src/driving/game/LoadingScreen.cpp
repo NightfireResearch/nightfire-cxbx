@@ -29,14 +29,12 @@
 #include "../render/Draw.h"
 #include "../render/Materials.h"          // USimpleTexturedMaterial
 #include "../render/Renderer.h"           // fgRenderer
+#include "../platform/CRuntime.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // GLoadingScreen (0x000e1f90-0x000e2c20, 0x000e2ff0) and the string list's helpers beside it (0x000e2c20-0x000e2ce0),
 // ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- the C runtime's, the game's: atol wraps rather than saturates
-#define CRT_atol ((long (*)(const char *text))0x00133d51)
 
 // ---- globals
 
@@ -142,7 +140,7 @@ static uint8_t *ShapeImageOf(ShapeFile *file, int index) {
 // A layout value as a number, 0 when missing
 static int32_t LayoutValue(LoadScreenLayout *layout, const char *key) {
     const char *value = DAFI_getvalue(layout->dafi, key);
-    return value != NULL ? CRT_atol(value) : 0;
+    return value != NULL ? Crt::atol(value) : 0;
 }
 
 // ---- the loading screen
@@ -415,10 +413,10 @@ void GLoadingScreen::Status(const char *format, ...) {
     char message[512];
     va_list arguments;
     va_start(arguments, format);
-    vsnprintf(message, sizeof(message), format, arguments);
+    Crt::vsprintf(message, format, arguments);
     va_end(arguments);
     char memory[32];
-    snprintf(memory, sizeof(memory), "%2.2fMB", (double)MEM_totalunused(0) * kPerMegabyte);
+    Crt::sprintf(memory, "%2.2fMB", (double)MEM_totalunused(0) * kPerMegabyte);
     int tick = TIMER_gettick();
     char clock[32];
     snprintf(clock, sizeof(clock), "(%02d:%02d:%02d)", tick / 3600, tick % 3600 / 60, tick % 60 / 6);

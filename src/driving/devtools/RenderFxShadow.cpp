@@ -20,6 +20,7 @@
 #include "../render/SkyWater.h"
 #include "../../common/xbeOriginal.h"
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 #include <windows.h>
 #include <float.h>
@@ -241,7 +242,7 @@ struct Hook {
     uint8_t saved[5];
     bool on;
 };
-Hook g_randHook;
+Hook g_randHook, g_randPortHook;   // rand at the game's address, and our entry: our callers call it directly
 Hook g_volatileEntryHook, g_texturedEntryHook;   // our Draws' entries: our callers call them directly
 uint32_t g_rand;
 
@@ -1240,13 +1241,16 @@ void RenderFxShadow_Run(void) {
     if (texturedRequest != NULL)
         memcpy(savedRequests[1], texturedRequest, sizeof(FxRequest));
 
-    if (HookInstall(&g_randHook, kRand, (const void *)FakeRand)) {
+    if (HookInstall(&g_randHook, kRand, (const void *)FakeRand) &&
+        HookInstall(&g_randPortHook, uint32_t(uintptr_t(&Crt::rand)), (const void *)FakeRand)) {
         savedRand = g_rand;
         TestLightning();
         TestLightningConstruct();
+        HookRemove(&g_randPortHook);
         HookRemove(&g_randHook);
         g_rand = savedRand;
     } else {
+        HookRemove(&g_randHook);
         printf("[renderfx] could not jump the C runtime's rand to the fake - the lightning skipped\n");
     }
     TestGlare();

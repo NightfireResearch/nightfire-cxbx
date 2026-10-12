@@ -9,6 +9,8 @@
 #include "LaunchOptions.h"
 #include "../engine/StaticInit.h"
 #include "../devtools/StaticInitDump.h"
+#include "CRuntime.h"
+#include "CRuntimeInternal.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // The driving engine's process startup, as run by the loader - step 2 of docs/driving-engine-plan.md
@@ -42,25 +44,27 @@
 //     0x000f3ec7 getptd, f3f49 free, f405e mt    0x001356f2, 0x00135774, 0x00135889
 // ---------------------------------------------------------------------------------------------------------------
 
-// The initialiser tables the C runtime's _rtinit (0x001106bb) and _cinit (0x00110663) walk: XAPI's run-time
-// initialisers and the C initialisers (__xi), each a run of function pointers in which null and -1 are skipped,
-// which RunInitialisers below still walks. _cinit first calls the floating-point initialiser through the pointer
-// at 0x001d87dc, when one was linked. The third table, the C++ constructors (__xc, 0x001b3db0), is ours:
-// RunStaticInitialisers (src/driving/engine/StaticInitTable.cpp) does each entry's work in table order, and
-// leaves out DirectSound's four static constructors, which only point DSOUND's own globals at its vtables - every
-// DSOUND entry point is the sound seam's, so nothing reads them.
-#define RtInitTableBegin  ((void (**)(void))0x001b3da0u)
-#define RtInitTableEnd    ((void (**)(void))0x001b3dacu)
-#define CInitTableBegin   ((void (**)(void))0x001b4908u)
-#define CInitTableEnd     ((void (**)(void))0x001b491cu)
-#define FpInitPointer     (*(void (**)(void))0x001d87dcu)
+// The initialisers the C runtime's _rtinit (0x001106bb) and _cinit (0x00110663) run, from three tables, are called
+// by name in mainXapiStartup below, those whose work still matters. _rtinit's table (0x001b3da0) holds the per-thread
+// data's set-up (Xbox_mtinit below) and low-level I/O's handle table (0x00139acd). _cinit calls the floating-point
+// initialiser (Crt::_fpmath, through the pointer at 0x001d87dc), then its table (__xi, 0x001b4908): the exit list
+// (Crt::_onexitinit), stdio's stream table (0x0013594c), the multibyte code page (0x00139a7b) and the C++
+// unhandled-exception filter (0x001363ba). Of those, I/O, stdio and the code page are read only by the runtime's
+// own stdio and multibyte functions, which nothing runs, and the filter only by XAPI's thread start, which this
+// startup does not use: they are left out, with the terminator that undoes the filter (see Crt::_exit). The
+// third table, the C++ constructors (__xc, 0x001b3db0), is ours: RunStaticInitialisers
+// (src/driving/engine/StaticInitTable.cpp) does each entry's work in table order, and leaves out DirectSound's four
+// static constructors, which only point DSOUND's own globals at its vtables - every DSOUND entry point is the
+// sound seam's, so nothing reads them.
 
 // The process heap is a Win32 heap. XAPI's heap entry points - RtlCreateHeap (0x001118dd), RtlAllocateHeap,
 // RtlFreeHeap, RtlReAllocateHeap, RtlSizeHeap - go to Win32's in XboxXapi.cpp, which is how the game's malloc and
-// free reach it, so the heap is made with HeapCreate here and its handle left where the C runtime looks.
+// free reach it, so the heap is made with HeapCreate here and its handle kept for the C runtime (CRuntime.cpp).
 
-// Where XapiInitProcess leaves the process heap handle, and the table of initialisers it runs afterwards.
-#define ProcessHeapHandle (*(void **)0x0024b218u)
+// XBE_GLOBAL(0x0024b218, 4)
+HANDLE ProcessHeapHandle;
+
+// The table of initialisers XapiInitProcess runs once the heap is made.
 #define InitTableBegin    ((void (**)(void))0x001b4938u)
 #define InitTableEnd      ((void (**)(void))0x001b493cu)
 
@@ -124,18 +128,7 @@ void __stdcall Xbox_XapiInitProcess(void) {
 // raised IRQL, so there is nothing to check.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define CrtCalloc            ((void *(__cdecl *)(size_t count, size_t size))0x0013439du)
-#define CrtInitLocks         ((int (__cdecl *)(void))0x001363d8u)          // __mtinitlocks
-#define CrtLockInitFailed    ((void (__cdecl *)(void))0x00136421u)
-#define CrtFatalError        ((void (__cdecl *)(int code))0x0013566du)
-#define CrtDefaultLocaleInfo ((void *)0x001d92b0u)
-
-// Offsets into _ptiddata, as the original writes them: the owning thread, the thread handle, an
-// initialised-flag, and the pointer to the default multibyte/locale information.
-#define PTD_THREAD_ID     0
-#define PTD_THREAD_HANDLE 1
-#define PTD_INITIALISED   5
-#define PTD_LOCALE_INFO   0x15
+#define CrtDefaultMultibyteInfo ((void *)0x001d92b0u)
 
 static DWORD g_perThreadSlot = TLS_OUT_OF_INDEXES;
 
@@ -144,20 +137,20 @@ void *__cdecl Xbox_getptd(void) {
     // to turn the last error into errno. Losing it there would turn a specific failure into a silent one.
     DWORD lastError = GetLastError();
 
-    void *ptd = (g_perThreadSlot != TLS_OUT_OF_INDEXES) ? TlsGetValue(g_perThreadSlot) : NULL;
+    Crt::PerThreadData *ptd =
+        (g_perThreadSlot != TLS_OUT_OF_INDEXES) ? (Crt::PerThreadData *)TlsGetValue(g_perThreadSlot) : NULL;
     if (ptd == NULL) {
-        ptd = CrtCalloc(1, 0x84);
+        ptd = (Crt::PerThreadData *)Crt::calloc(1, sizeof(Crt::PerThreadData));
         if (ptd == NULL) {
             SetLastError(lastError);
-            CrtFatalError(0x10);   // _RT_THREAD: no way to continue without per-thread state
+            Crt::_amsg_exit(0x10);   // _RT_THREAD: no way to continue without per-thread state
             return NULL;
         }
 
-        uintptr_t *fields = (uintptr_t *)ptd;
-        fields[PTD_THREAD_ID] = GetCurrentThreadId();
-        fields[PTD_THREAD_HANDLE] = (uintptr_t)0xffffffffu;
-        fields[PTD_INITIALISED] = 1;
-        fields[PTD_LOCALE_INFO] = (uintptr_t)CrtDefaultLocaleInfo;
+        ptd->threadId = GetCurrentThreadId();
+        ptd->threadHandle = 0xffffffffu;
+        ptd->randomSeed = 1;
+        ptd->multibyteInfo = CrtDefaultMultibyteInfo;
 
         if (g_perThreadSlot != TLS_OUT_OF_INDEXES)
             TlsSetValue(g_perThreadSlot, ptd);
@@ -178,7 +171,7 @@ void __cdecl Xbox_freeptd(void *ptd) {
         TlsSetValue(g_perThreadSlot, NULL);
 }
 
-// Returns zero exactly as the original does - it is called from the _rtinit table, which ignores the result.
+// Returns zero exactly as the original does: _rtinit, which our startup stands in for, ignores the result.
 int __cdecl Xbox_mtinit(void) {
     g_perThreadSlot = TlsAlloc();
     if (g_perThreadSlot == TLS_OUT_OF_INDEXES) {
@@ -187,8 +180,8 @@ int __cdecl Xbox_mtinit(void) {
         return 0;
     }
 
-    if (CrtInitLocks() == 0) {
-        CrtLockInitFailed();
+    if (Crt::_mtinitlocks() == 0) {
+        Crt::_mtdeletelocks();
         return 0;
     }
 
@@ -414,15 +407,6 @@ static char **BuildArgvInProcessHeap(int argc, char **source) {
     return argv;
 }
 
-static void RunInitialisers(void (**begin)(void), void (**end)(void)) {
-    for (void (**entry)(void) = begin; entry < end; entry++) {
-        uintptr_t target = (uintptr_t)*entry;
-        if (target == 0 || target == (uintptr_t)-1)
-            continue;
-        (*entry)();
-    }
-}
-
 // ---------------------------------------------------------------------------------------------------------------
 // The entry point (0x0010e777), as the action engine's (Xbox_Entry in src/action/engine/XboxStartup.cpp): clamp the
 // certificate's size to what the headers hold, record the per-thread TLS block's size and index, and start the
@@ -465,10 +449,9 @@ DWORD WINAPI mainXapiStartup(LPVOID unused) {
     printf("[startup] running the C runtime and C++ constructors\n");
     fflush(stdout);
 
-    RunInitialisers(RtInitTableBegin, RtInitTableEnd);          // _rtinit
-    if (FpInitPointer != NULL)                                   // _cinit
-        FpInitPointer();
-    RunInitialisers(CInitTableBegin, CInitTableEnd);
+    Xbox_mtinit();                                               // _rtinit
+    Crt::_fpmath();                                              // _cinit
+    Crt::_onexitinit();
     if (!StaticInitDump_RunOriginalTable())                      // the C++ constructors
         RunStaticInitialisers();
     StaticInitDump_Write();

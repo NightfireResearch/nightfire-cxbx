@@ -6,13 +6,11 @@
 #include "AnimationDatabase.h"         // ActAnimGroup
 #include "Poser.h"
 #include "../engine/UMemory.hpp"
+#include "../logging.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // The animation controllers (0x00011020-0x000112b0, 0x000125c0-0x00012620), ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- the C runtime's printf (the original's formatting and output)
-#define CRT_printf ((int (*)(const char *, ...))0x00132192)
 
 // The vtables
 #define AnimationControllerVtable ((void **)0x00189e04)
@@ -115,7 +113,7 @@ CrossFadeAnimationController* CrossFadeAnimationController::Delete(unsigned flag
 void CrossFadeAnimationController::Update() {
     poser->AdvanceTime();
     if (queued == 1 && poser->mode == kPoseModeNormal) {
-        CRT_printf("blending is done...auto blending new anim\n");
+        dbg_wprintf("blending is done...auto blending new anim\n");
         poser->SetupCrossFadeBlend(queuedBlendTime, false);
         animGroup->ChangeAnimation(queuedBank, queuedIndex);
         poser->SetCrossFadeBlendAnimation(animGroup, frame);
@@ -128,13 +126,13 @@ void CrossFadeAnimationController::Update() {
 void CrossFadeAnimationController::StartNewCrossFade(int bank, int index, float blendTime) {
     int mode = poser->mode;
     if (mode == kPoseModeNormal) {
-        CRT_printf("blend is already done, setting up new blend right now\n");
+        dbg_wprintf("blend is already done, setting up new blend right now\n");
         poser->SetupCrossFadeBlend(blendTime, false);
         animGroup->ChangeAnimation(bank, index);
         poser->SetCrossFadeBlendAnimation(animGroup, frame);
         queued = 0;
     } else if (mode == kPoseModeCrossFade) {
-        CRT_printf("blending is still happening,...queueing it up\n");
+        dbg_wprintf("blending is still happening,...queueing it up\n");
         queuedBlendTime = blendTime;
         queuedBank = bank;
         queuedIndex = index;

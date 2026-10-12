@@ -8,6 +8,7 @@
 #include "../world/CollisionTypes.h"       // PointerVector
 #include "../../helpers.h"
 #include "../game/SimulationContainers.h"
+#include "../platform/CRuntime.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // USingleton and USingletonManager, ported from the listings (0x0003d5f0, 0x0007d780, 0x0011b7a0-0x0011b820,
@@ -29,8 +30,6 @@ static void Vector_Fill(USingleton **first, USingleton **last, USingleton *const
     FillQueuePointers((ActionQueue **)first, (ActionQueue **)last, (ActionQueue *const *)value);
 }
 
-// The C runtime's atexit, the game's (its table holds the destructor's address).
-#define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 // The manager's destructor as the static initialisers register it: a thunk to USingletonManager::Destruct
 // (StaticInit.cpp's DestroyStatic_001e47c0), passed at its original address as the original passes it.
 #define SingletonManager_AtExit ((void (*)(void))0x0015ce10)
@@ -165,7 +164,7 @@ USingletonManager* SingletonManager() {
         TheSingletonManager.singletons.first = NULL;
         TheSingletonManager.singletons.last = NULL;
         TheSingletonManager.singletons.end = NULL;
-        CRT_atexit(SingletonManager_AtExit);
+        Crt::atexit(SingletonManager_AtExit);
     }
     return &TheSingletonManager;
 }

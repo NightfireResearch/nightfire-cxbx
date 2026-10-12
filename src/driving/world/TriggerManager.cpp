@@ -26,6 +26,8 @@
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"        // MEM_copy
 #include "../render/PathEngine.h"
+#include "../platform/CRuntime.h"
+#include "../logging.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // WTriggerManager (0x000cf520-0x000d0d50), ported from the listing: the triggers' lifecycle, the collision tests
@@ -34,11 +36,6 @@
 // The tests are the original's x87 arithmetic: chains in double in the original's order, rounded where the original
 // stores to a float; the comparisons keep the original's sense, so a NaN fails each test as it did.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- the game's code not ported yet
-#define Crt_sprintf ((int (*)(char *, const char *, ...))0x00132767)
-#define Crt_printf ((int (*)(const char *, ...))0x00132192)
-// the y size packed in an instance's dimensions (unnamed in Ghidra; the name is ours)
 
 // ---- globals
 // XBE_GLOBAL(0x0023e264, 4)
@@ -71,7 +68,7 @@ constexpr float kAlongX = 0.001f;               // 0x3a83126f
 constexpr float kMinimumBodyRadius = 1.5f;
 
 void ReportShape(uint8_t shape) {
-    Crt_printf("WTrigger - Unsupported trigger Shape: %d\n", shape);
+    dbg_wprintf("WTrigger - Unsupported trigger Shape: %d\n", shape);
 }
 
 // Checks that the files of the stream events exist. The line is built but not printed in this build.
@@ -87,8 +84,8 @@ void ValidateStreams(TriggerEvents *events, bool notePreBuffer) {
             continue;
         char path[64];
         char line[64];
-        Crt_sprintf(path, "%s.asf", stream->name);
-        Crt_sprintf(line, "Validating stream [%s] (%s): ", path, stream->type);
+        Crt::sprintf(path, "%s.asf", stream->name);
+        Crt::sprintf(line, "Validating stream [%s] (%s): ", path, stream->type);
         if (_stricmp(stream->type, "music") == 0 || _stricmp(stream->type, "speech") == 0 ||
             _stricmp(stream->type, "nis") == 0) {
             if (FILE_exists(path)) {
@@ -536,7 +533,7 @@ void WTriggerManager::Process(int rayShell) {
     grid->FindNodes(segment, &cells);
     for (uint32_t *cell = cells.first; cell != cells.last; cell++) {
         if (*cell >= grid->rows * grid->columns) {
-            Crt_printf("Node out of range: %d\n", *cell);
+            dbg_wprintf("Node out of range: %d\n", *cell);
             continue;
         }
         WGridNode *node = grid->nodes[*cell];

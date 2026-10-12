@@ -10,6 +10,7 @@
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "World.h"
+#include "../platform/CRuntime.h"
 
 #pragma fp_contract(off)
 
@@ -17,9 +18,6 @@
 // WRoadNetwork (0x000c8940-0x000c9fe0, 0x000cb3f0-0x000cb4b0, 0x000cbe70), ported from the listing. RoadNetwork.h
 // has the records. WRoadNav's methods sit between these in the game (RoadNav.cpp).
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- the game's code not ported yet
-#define Crt_atexit ((int (*)(void (*)()))0x00132a7b)
 
 // GetSegmentCurveStep's static spline and its guard
 // XBE_GLOBAL(0x0023e100, 0x70)
@@ -425,7 +423,7 @@ void WRoadNetwork::GetSegmentCurveStep(const Coord3 *start, const Coord3 *end, W
     if (!(CurveSplineGuard & 1)) {
         CurveSplineGuard |= 1;
         CurveSpline.Construct();
-        Crt_atexit(DestroyCurveSpline);
+        Crt::atexit(DestroyCurveSpline);
     }
     CurveSpline.BuildSplineEx(start, &segment->startControl, end, &segment->endControl);
     Coord4 point;

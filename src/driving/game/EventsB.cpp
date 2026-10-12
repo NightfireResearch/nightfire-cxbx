@@ -38,14 +38,13 @@
 #include "../world/World.h"               // fgWorld, ArticleEffect
 #include "../../common/xbeOverload.h"     // XbeVirtual
 #include "../../helpers.h"
+#include "../logging.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // Mission events EExit .. EPathSFX: see EventsB.h.
 // ---------------------------------------------------------------------------------------------------------------
 
 #define gFeedbackAllowed BOOL8_AT(0x001b6f50)           // IFeedback's: clear, no force feedback
-// The C runtime's printf (the game's)
-#define CRT_printf ((int (*)(const char *, ...))0x00132192)
 #define gSoundOption BOOL8_AT(0x001b7054)               // ASoundManager::Init's second argument
 #define fgScheduler (*(Scheduler **)0x001e520c)
 
@@ -1340,7 +1339,7 @@ void EMaybeActivateAIElement::Process() {
                         if (fgSimulation.GetSimpleRigidBody(physics->rigidBodySlot) != body)
                             return;
                         trigger->flags &= ~WTrigger::kEnabled;
-                        CRT_printf("The Helicopter hit the Trigger.\n");
+                        dbg_wprintf("The Helicopter hit the Trigger.\n");
                     }
                 } else {
                     RigidBody *body = fgSimulation.GetRigidBody(index);

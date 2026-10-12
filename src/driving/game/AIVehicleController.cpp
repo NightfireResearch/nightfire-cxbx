@@ -22,6 +22,7 @@
 #include "../world/RoadNav.h"
 #include "../world/RoadNetwork.h"       // fgRoadNetworkData
 #include "../world/World.h"             // fgWorld
+#include "../platform/CRuntimeStd.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // AIVehicleController (0x00035c00-0x00036a00, without AIGroundVehicle's and AIHelicopter's vector deleting
@@ -29,9 +30,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-
-// The C runtime's `eh vector constructor iterator`
-#define EhVectorConstructor ((void (__stdcall *)(void *array, uint32_t size, int count, void *constructor, void *destructor))0x0013326e)
 
 // ---- globals
 
@@ -97,8 +95,9 @@ void AIVehicleController::Init() {
     if (block != NULL) {
         block[0] = count;
         agents = reinterpret_cast<AIGroundVehicle *>(block + kArrayCookieWords);
-        EhVectorConstructor(agents, sizeof(AIGroundVehicle), count, (void *)XbeAddress(&AIGroundVehicle::Construct),
-                            (void *)XbeAddress(&AIGroundVehicle::Destruct));
+        Crt::EhVectorConstructor(agents, sizeof(AIGroundVehicle), count,
+                                 reinterpret_cast<Crt::ElementFn>(XbeAddress(&AIGroundVehicle::Construct)),
+                                 reinterpret_cast<Crt::ElementFn>(XbeAddress(&AIGroundVehicle::Destruct)));
     }
     AgentGroundVehicles = agents;
 
@@ -108,8 +107,9 @@ void AIVehicleController::Init() {
     if (block != NULL) {
         block[0] = count;
         helicopters = reinterpret_cast<AIHelicopter *>(block + kArrayCookieWords);
-        EhVectorConstructor(helicopters, sizeof(AIHelicopter), count, (void *)XbeAddress(&AIHelicopter::Construct),
-                            (void *)XbeAddress(&AIHelicopter::Destruct));
+        Crt::EhVectorConstructor(helicopters, sizeof(AIHelicopter), count,
+                                 reinterpret_cast<Crt::ElementFn>(XbeAddress(&AIHelicopter::Construct)),
+                                 reinterpret_cast<Crt::ElementFn>(XbeAddress(&AIHelicopter::Destruct)));
     }
     AIHelicopters = helicopters;
 

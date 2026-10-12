@@ -6,6 +6,7 @@
 
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
+#include "../platform/CRuntime.h"
 
 #include <bit>
 #include <math.h>
@@ -61,8 +62,7 @@ __declspec(naked) double X87Atan2(double, double) {
 __declspec(naked) double CrtAcos(float) {
     __asm {
         fld dword ptr [esp + 4]
-        mov eax, 0x001328d0
-        call eax
+        call Crt::CIacos
         ret
     }
 }

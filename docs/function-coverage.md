@@ -202,19 +202,19 @@ where to change it.
 
 | Subsystem | Functions | Replaced | Dead | Live | Done | KB | Done (bytes) |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| **game** | 2852 | 1943 | 750 | 159 | **94%** | 474 | 99% |
+| **game** | 2852 | 1943 | 751 | 158 | **94%** | 474 | 100% |
 | game.ai | 522 | 356 | 113 | 53 | 90% | 109 | 100% |
 | game.audio | 366 | 150 | 205 | 11 | 97% | 51 | 100% |
 | game.effects | 195 | 129 | 56 | 10 | 95% | 36 | 100% |
 | game.events | 793 | 667 | 96 | 30 | 96% | 72 | 99% |
-| game.frontend | 332 | 208 | 71 | 53 | 84% | 69 | 98% |
+| game.frontend | 332 | 208 | 72 | 52 | 84% | 69 | 99% |
 | game.missions | 273 | 199 | 73 | 1 | 100% | 33 | 100% |
 | game.vehicles | 193 | 134 | 59 | 0 | 100% | 62 | 100% |
 | game.weapons | 178 | 100 | 77 | 1 | 99% | 43 | 100% |
-| **engine** | 3990 | 2478 | 1403 | 109 | **97%** | 526 | 100% |
+| **engine** | 3990 | 2478 | 1405 | 107 | **97%** | 526 | 100% |
 | engine.anim | 415 | 332 | 72 | 11 | 97% | 54 | 100% |
 | engine.audio | 270 | 203 | 54 | 13 | 95% | 35 | 100% |
-| engine.camera | 273 | 224 | 41 | 8 | 97% | 60 | 99% |
+| engine.camera | 273 | 224 | 43 | 6 | 98% | 60 | 100% |
 | engine.core | 213 | 155 | 56 | 2 | 99% | 25 | 100% |
 | engine.data | 554 | 454 | 80 | 20 | 96% | 79 | 100% |
 | engine.input | 107 | 79 | 23 | 5 | 95% | 12 | 100% |
@@ -230,16 +230,16 @@ where to change it.
 | platform.movie | 72 | 0 | 72 | 0 | 100% | 15 | 100% |
 | platform.sound | 299 | 299 | 0 | 0 | 100% | 64 | 100% |
 | platform.system | 88 | 60 | 28 | 0 | 100% | 9 | 100% |
-| **sys** | 1440 | 273 | 835 | 332 | **77%** | 244 | 86% |
-| sys.crt | 420 | 4 | 84 | 332 | 21% | 44 | 22% |
+| **sys** | 1440 | 343 | 1097 | 0 | **100%** | 244 | 100% |
+| sys.crt | 412 | 74 | 338 | 0 | 100% | 43 | 100% |
 | sys.d3d | 427 | 151 | 276 | 0 | 100% | 120 | 100% |
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
-| sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
+| sys.xapi | 115 | 45 | 70 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6842 | 4421 | 2153 | 268 | **96%** | 1000 | 100% |
-| **platform + system** | 2893 | 1527 | 1034 | 332 | **89%** | 506 | 93% |
-| **  without the C runtime** | 2473 | 1523 | 950 | 0 | **100%** | 462 | 100% |
-| **everything** | 9735 | 5948 | 3187 | 600 | **94%** | 1506 | 97% |
+| **game + engine** | 6842 | 4421 | 2156 | 265 | **96%** | 1000 | 100% |
+| **platform + system** | 2893 | 1597 | 1296 | 0 | **100%** | 506 | 100% |
+| **  without the C runtime** | 2481 | 1523 | 958 | 0 | **100%** | 463 | 100% |
+| **everything** | 9735 | 6018 | 3452 | 265 | **97%** | 1506 | 100% |
 
 - **The engine's core and data layers are done (4 October 2026): `engine.core` and `engine.data`, 100% by bytes**
   (docs/driving/core-data.md): memory (UMemory, new/delete), reference counters, data groups, singletons, the
@@ -348,13 +348,28 @@ where to change it.
   still counted live are 265 exception funclets (0x00150000-0x0015ffff), which our C++ has no use for, and three
   pieces Ghidra cut off the middle of functions we replaced and ported whole - TriggerAIPathAnimationCamera's
   0x000898ee, CameraLockOn's 0x00081619 and GSubtitles::LoadSubtitles' 0x000e384a
-  (docs/driving-injection-framework.md).**
-  The C runtime is the only original code left that runs: 332 functions live (21% done by functions, 22% by bytes),
-  all kept live by our own code, which calls the game's copies by address where the result must stay the game's
-  (the heap, `atexit`, `atol`'s wrap, `sprintf`'s float formatting, `rand`...) and through them what they call.
-- **Every system library but the C runtime is done: D3D (with D3DX and XGRPH), DSOUND, XPP and XAPI at 100%.**
-  The C runtime (332 live, 21%) is left to go by itself, as in the action engine: game code calls it everywhere, and
-  it goes as that code becomes ours. How the rest got there (2 October 2026):
+  (docs/driving-injection-framework.md; the three are now in tools/global_coverage.py's KNOWN_UNCALLED, so 265).**
+  The C runtime was then the only original code left that ran: 332 functions, kept live by our own code, which
+  called the game's copies by address where the result had to stay the game's.
+- **The C runtime is done (12 October 2026, docs/driving/c-runtime.md), and with it every function of the driving
+  engine that can still run is ours:** the C library (the heap, the exit list, the locks, rand and errno, the
+  character classes, qsort, the x87 helpers, the printf and scanf engines with the 2002 runtime's own float
+  conversions, strtol and atol) and the C++ library under the string streams (the locks, the locale and facets,
+  ios_base, strstreambuf, `_Stod`, std::exception, the throw, the `eh vector` iterators) - 70 entries in
+  `src/driving/platform/CRuntime*.cpp`, with the internals they reach. Every by-address call into the runtime in
+  `src/driving` is a direct call to `Crt::` or `GameStd::` now, and the calls our code made to our own DLL's runtime
+  where the answer could differ (float formatting and parsing, atol) go to the port too. The startup runs the
+  initialisers whose work still matters by name (`Xbox_mtinit`, `_fpmath`, `_onexitinit`) instead of walking the
+  runtime's tables, which tools/global_coverage.py no longer counts as holders, with its float conversion table
+  (read only by the dead printf and scanf cores), two pointers to a bare RET only the runtime's thread-notify
+  routine read, and terminate's pointer, which only the dead `_inconsistency` read. `sys.crt`: 74 replaced, 338
+  dead, **0 live**. **Everything live in the driving engine now is the 265 exception funclets of functions we
+  replaced (0x00150000-0x00156a35)**, reached only through their owners' unwind tables. The tool cannot pair them
+  with their owners (they are unnamed, or named after no function it knows), so it counts them live, as held in data
+  (the unwind maps) or as having no known caller.
+  Two shadow tests compare the ports with the originals (to be run in game).
+- **Every system library is done: D3D (with D3DX and XGRPH), DSOUND, XPP and XAPI at 100% since 2 October 2026, the
+  C runtime since 12 October (above).** How the rest got there (2 October 2026):
   - *D3D*: the seam's table gained 25 entry points EAGL calls directly (render-state setters, `SetIndices`,
     `SetGammaRamp`, `CreateIndexBuffer2`...), named in Ghidra after the table was last generated, and a hand-kept
     `src/driving/gfx/d3d8EntriesUnnamed.inc` covers four Ghidra has no name for (`D3DXLoadSurfaceFromMemory`,

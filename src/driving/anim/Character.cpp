@@ -22,6 +22,7 @@
 #include "../render/Lights.h"
 #include "../render/Renderer.h"
 #include "../render/RSceneObj.hpp"
+#include "../platform/CRuntime.h"
 
 #include <algorithm>
 #include <bit>
@@ -43,10 +44,6 @@
 
 // The textures' and the models' stop-using calls: one empty function (Ghidra: dummyNullFunction)
 #define DummyNullFunction ((void (__fastcall *)(void *, int, const void *))0x00017550)
-
-// ---- the C runtime's (tolower as the game has it: it is given plain, signed, chars)
-
-#define Crt_tolower ((int (__cdecl *)(int))0x001327f9)
 
 // ---- globals
 
@@ -471,7 +468,7 @@ ActCharacterInfo* ActCharacterInfo::Construct(const char *text) {
     strcpy(description, text);
     numberToken = strtok(description, kSeparator);
     name = strtok(NULL, kSeparator);
-    switch (Crt_tolower(*name)) {
+    switch (Crt::tolower(*name)) {
     case 'h':
         type = kCharacterH;
         break;

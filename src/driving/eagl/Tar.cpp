@@ -3,7 +3,6 @@
 
 #include "D3D8State.h"
 #include "EaglGlobals.h"
-#include "EaglOriginals.h"
 #include "Loader.h"
 #include "Profiler.h"
 #include "Realgraph.h"

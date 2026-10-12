@@ -23,14 +23,11 @@
 #include "../world/Grid.h"              // TheGrid
 #include "../world/RoadNav.h"
 #include "../world/RoadNetwork.h"
+#include "../platform/CRuntime.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // AIRoadSpawn (0x000347e0-0x00035610), and the grid cell list's length error (0x00034e50), ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- the game's code not ported yet
-
-#define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // ---- globals
 
@@ -343,7 +340,7 @@ bool AIRoadSpawn::GetRandomTrafficSpawn(short *segment, int8_t *lane, float *alo
     if ((SpawnNavMade & 1) == 0) {
         SpawnNavMade |= 1;
         SpawnNav.Construct();
-        CRT_atexit(DestroyStatic_001de820);
+        Crt::atexit(DestroyStatic_001de820);
     }
     SpawnNav.mode = kNavLane;
     SpawnNav.InitAtSegment(*segment, *lane, *along, *forwards);
@@ -429,5 +426,3 @@ bool AIRoadSpawn::GetRandomPedSpawn(short *segment, int8_t *side, float *along, 
     GetPedSpawnPointOnSegment(segment, side, along);
     return true;
 }
-
-

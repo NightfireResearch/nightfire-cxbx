@@ -21,6 +21,7 @@
 #include "../platform/RealMath.h"
 #include "../render/Renderer.h"
 #include "../render/RenderHigh.h"
+#include "../platform/CRuntime.h"
 
 #include <bit>
 #include <math.h>
@@ -47,10 +48,6 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 
 #define ViewWidth I32_AT(0x001f2d7c)                             // the view's size in pixels (names ours)
 #define ViewHeight I32_AT(0x001f2d80)
-
-// ---- calls to originals not ported
-
-#define Crt_qsort ((void (*)(void *base, size_t count, size_t size, TargetCompare compare))0x00132db0)
 
 // XBE_GLOBAL(0x0023e174, 4)
 int32_t TargetableCount;                        // the targets in existence (name ours)
@@ -540,7 +537,7 @@ void WTargetPicker::UpdateTargets() {
 
     sortedCount = count;
     if (count > 0)
-        Crt_qsort(sorted, count, sizeof(sorted[0]), kSortCompares[sortMode]);
+        Crt::qsort(sorted, count, sizeof(sorted[0]), kSortCompares[sortMode]);
 
     SMissionManager *missions = glbMissionManager;
     bool suspended = missions->missionState == kMissionWon || missions->missionState == kMissionLost ||

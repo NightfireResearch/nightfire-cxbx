@@ -1,6 +1,7 @@
 #include "RealPrint.h"
 
 #include "../../common/launchInfo.h"
+#include "CRuntime.h"
 
 #include <windows.h>
 #include <stdarg.h>
@@ -110,7 +111,7 @@ static void PrintLine(int channel, const char *format, va_list arguments) {
     if ((PrintChannels[channel].flags & 1) == 0)
         return;
     char text[0x2000];
-    vsnprintf(text, sizeof(text), format, arguments);
+    Crt::vsprintf(text, format, arguments);
     for (int d = 0; d < kPrintDevices; d++) {
         if ((PrintDevices[d].flags & 1) != 0 && PrintDevices[d].callback != NULL)
             PrintDevices[d].callback(channel, text);
@@ -197,7 +198,7 @@ void SYSTEM_abortmessage(const char *format, ...) {
     } else {
         va_list arguments;
         va_start(arguments, format);
-        vsnprintf(text, sizeof(text), format, arguments);
+        Crt::vsprintf(text, format, arguments);
         va_end(arguments);
     }
     PRINT_string(2, "ERROR: %s", text);
@@ -218,7 +219,7 @@ void REAL_abortmessage(const char *format, ...) {
     } else {
         va_list arguments;
         va_start(arguments, format);
-        vsnprintf(text, sizeof(text), format, arguments);
+        Crt::vsprintf(text, format, arguments);
         va_end(arguments);
     }
     AbortHandler("%s", text);

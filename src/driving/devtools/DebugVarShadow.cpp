@@ -60,8 +60,6 @@ namespace {   // this file's own types: another test's of the same name must not
 #define OrigCurrentIndexer (*(DebugUIntVariable **)0x001e22c4)   // CurrentIndexer's original copy
 #define ShadowBuiltinNew ((void *(__cdecl *)(size_t))0x001146a0)
 #define ShadowBuiltinDelete ((void (__cdecl *)(void *))0x001146e0)
-#define ShadowOStrStream_Construct ((OStrStream *(__fastcall *)(OStrStream *, int, char *, int, int, int))0x00131b27)
-#define ShadowOStrStream_Destruct ((void (__fastcall *)(BasicIos *, int))0x00131bbb)
 #define ShadowIosBase_GetLoc ((Locale *(__fastcall *)(IosBase *, int, Locale *))0x00037980)
 #define ShadowString_Tidy ((void (__fastcall *)(String *, int, bool))0x00013110)
 #define ShadowDAFI_open ((DAFI *(__cdecl *)(const char *, int))0x0011a240)
@@ -223,12 +221,12 @@ static void CloseIn() {
 
 static void OpenOut(int size) {
     memset(g_outText, 0xaa, sizeof(g_outText));
-    ShadowOStrStream_Construct(&g_out, 0, g_outText, size, 2, 1);
+    g_out.Construct(g_outText, size, 2, 1);
 }
 
 static void CloseOut() {
     if (g_closes++ & 1) {
-        ShadowOStrStream_Destruct(&g_out.ios, 0);
+        g_out.ios.DestructOStrStream();
         (g_out.ios.*At<BasicIos *(BasicIos::*)(unsigned)>(0x00037b30))(0);
     } else {
         (g_out.*At<void (OStrStream::*)()>(0x000397f0))();

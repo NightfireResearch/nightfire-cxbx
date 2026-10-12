@@ -11,12 +11,6 @@
 
 using namespace GameStd;
 
-// ---- the C runtime's, called at their addresses
-
-#define Lockit_Construct ((Lockit *(__fastcall *)(Lockit *, int, int))0x00130cef)
-#define Lockit_Destruct ((void (__fastcall *)(Lockit *, int))0x00130d10)
-#define IosBase_Destruct ((void (__fastcall *)(IosBase *, int))0x00131191)
-
 #define FacetVtable ((const void *const *)0x0018bc6c)
 
 namespace {
@@ -31,20 +25,20 @@ typedef Facet* (Facet::*FacetDeleteMethod)(unsigned flags);
 // FUNC_AT(0x000378c0)
 void GameStd::Facet::Incref() {
     Lockit lock;
-    Lockit_Construct(&lock, 0, kLockLocale);
+    lock.Construct(kLockLocale);
     if (refs < kRefsFull)
         refs++;
-    Lockit_Destruct(&lock, 0);
+    lock.Destruct();
 }
 
 // FUNC_AT(0x000378f0)
 Facet* GameStd::Facet::Decref() {
     Lockit lock;
-    Lockit_Construct(&lock, 0, kLockLocale);
+    lock.Construct(kLockLocale);
     if (refs > 0 && refs < kRefsFull)
         refs--;
     Facet *dead = refs == 0 ? this : NULL;
-    Lockit_Destruct(&lock, 0);
+    lock.Destruct();
     return dead;
 }
 
@@ -86,7 +80,7 @@ Locale* GameStd::IosBase::GetLoc(Locale *result) {
 // FUNC_AT(0x000379c0)
 IosBase* GameStd::IosBase::Delete(unsigned flags) {
     DEBUGVAR_UNTESTED("ios_base's deleting destructor");
-    IosBase_Destruct(this, 0);
+    Destruct();
     if (flags & 1)
         OperatorDelete(this);
     return this;

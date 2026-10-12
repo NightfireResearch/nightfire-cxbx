@@ -2,6 +2,7 @@
 #include "AttributeSystem.h"
 #include "AttributeUntested.h"
 #include "SymbolTable.h"
+#include "../platform/CRuntime.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -22,9 +23,6 @@
 // element from the default (0,0,0,1) or identity and parse the components over it - so a short vector keeps the
 // default's tail - but they write every element at the same place: of several vectors, the last one wins.
 // ---------------------------------------------------------------------------------------------------------------
-
-#define CRT_atol ((int32_t (*)(const char *))0x00133d51)
-#define CRT_atof ((double (*)(const char *))0x00133e84)
 
 // What a vector or matrix element starts from.
 static const AttributeVector kDefaultVector = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -76,7 +74,7 @@ AttributeParseResult *ParseIntegers(AttributeParseResult *result, AttributeType 
         char token[16];
         if (!NextToken(text, token, kAtComma) || text == NULL)
             break;
-        *out++ = CRT_atol(token);
+        *out++ = Crt::atol(token);
         parsed++;
     }
     return Finish(result, type, parsed, start);
@@ -106,7 +104,7 @@ AttributeParseResult* Bool_AttribByteOffsetParserFunc(AttributeParseResult *resu
         else if (_stricmp(token, "off") == 0)
             *out = 0;
         else
-            *out = CRT_atol(token) != 0;
+            *out = Crt::atol(token) != 0;
         out++;
         parsed++;
     }
@@ -138,7 +136,7 @@ AttributeParseResult* Float_AttribByteOffsetParserFunc(AttributeParseResult *res
         char token[32];
         if (!NextToken(text, token, kAtComma) || text == NULL)
             break;
-        *out++ = static_cast<float>(CRT_atof(token));
+        *out++ = static_cast<float>(Crt::atof(token));
         parsed++;
     }
     return Finish(result, kAttributeFloat, parsed, start);

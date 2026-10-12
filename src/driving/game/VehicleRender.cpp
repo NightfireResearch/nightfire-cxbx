@@ -37,6 +37,7 @@
 #include "../render/ShadowMap.h"            // TheShadowMap
 #include "../render/TimeData.h"             // GameTick
 #include "../world/World.h"                 // WorldArticle
+#include "../platform/CRuntime.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // RVehicle, the cars' render object (0x000953e0-0x00096820), ported from the listing.
@@ -149,8 +150,7 @@ __declspec(naked) double CrtPow(double, double) {
     __asm {
         fld qword ptr [esp + 4]
         fld qword ptr [esp + 12]
-        mov eax, 0x00132a94
-        call eax
+        call Crt::CIpow
         ret
     }
 }

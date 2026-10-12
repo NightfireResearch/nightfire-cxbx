@@ -6,7 +6,6 @@
 #include "AnimUntested.h"
 #include "Skeleton.h"
 #include "../EaglGlobals.h"
-#include "../EaglOriginals.h"
 #include "../Transform.h"                // QuatProduct
 #include "../../platform/X87.h"
 #include "../../../helpers.h"

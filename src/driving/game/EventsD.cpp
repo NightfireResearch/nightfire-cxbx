@@ -69,6 +69,7 @@
 #include "VehicleSound.h"               // AVehicle
 #include "WeaponEffects.h"              // RScorchWorld
 #include "WeaponManager.h"
+#include "../platform/CRuntime.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // The events of package D (0x00044400-0x000472c0, 0x00048ac0-0x00048ec0 and 0x0004db10-0x0004f170; Event's own
@@ -86,8 +87,6 @@
 #define gSubtitles BOOL8_AT(0x001e476d)
 #define fgFailedStreams (*(StreamNameList **)0x00243a5c)
 #define AudioClock FLOAT_AT(0x00243a6c)
-// The C runtime's _clearfp (the game's)
-#define CRT_clearfp ((unsigned (*)())0x00133c9e)
 
 // The ticks each of the explosions' four sound slots may play again at, the slot to try first, and the next of the
 // three small explosion effects (written only here; the names are ours)
@@ -791,7 +790,7 @@ void ESetVideo::Process() {
         ActionQueueManager::GetActionQueueManager()->FlushAllQueues();
         ASoundManager::Resume();
         _mm_empty();
-        CRT_clearfp();
+        Crt::_clearfp();
     }
     GLoadingScreen::Status("*** ESetVideo exit...\n");
 }

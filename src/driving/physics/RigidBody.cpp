@@ -15,6 +15,7 @@
 #include "../game/Simulation.h"
 #include "../platform/RealMath.h"
 #include "../world/WorldPos.h"
+#include "../platform/CRuntimeStd.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // RigidBody's core: construction and reset, each step's initial forces (gravity, drag), the levers against the
@@ -23,12 +24,9 @@
 // rounded where it stores to a float, comparisons keeping its sense for NaNs.
 // ---------------------------------------------------------------------------------------------------------------
 
-// ---- the game's code not ported yet
-#define Crt_CxxThrowException ((void (__stdcall *)(void *object, const void *throwInfo))0x001325ad)
-
 // ---- globals
 #define LengthErrorVtable ((void *)0x00189eec)      // std::length_error's
-#define LengthErrorThrowInfo ((const void *)0x001a89bc)
+#define LengthErrorThrowInfo ((const Crt::ThrowInfo *)0x001a89bc)
 
 namespace {
 
@@ -595,5 +593,5 @@ void VectorXlen() {
     GameStd::LengthError error;
     error.Construct(&message);
     error.vtable = LengthErrorVtable;
-    Crt_CxxThrowException(&error, LengthErrorThrowInfo);
+    Crt::CxxThrowException(&error, LengthErrorThrowInfo);
 }

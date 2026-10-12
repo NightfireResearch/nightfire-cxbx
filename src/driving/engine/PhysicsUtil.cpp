@@ -4,6 +4,7 @@
 #include "UMemory.hpp"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
+#include "../platform/CRuntime.h"
 
 #include <math.h>
 #include <bit>
@@ -15,9 +16,6 @@
 // and also stores it (FST), the unrounded value goes on and the stored float is what later loads see; both are
 // spelled out. The VU0 functions are ours (platform/VU0Math.cpp), called as the original calls them.
 // ---------------------------------------------------------------------------------------------------------------
-
-// The C runtime's rand, the game's: its state is the game's.
-#define CRT_rand ((int (*)(void))0x00133ee0)
 
 // XBE_GLOBAL(0x00239a60, 0x8)
 GaussSpare GaussRandomSpare;
@@ -150,8 +148,8 @@ double Util_GaussRandom() {
     float u, v;
     double radiusSquared;
     do {
-        u = float(double(CRT_rand()) * kRandToSigned - 1.0f);
-        double vUnrounded = double(CRT_rand()) * kRandToSigned - 1.0f;
+        u = float(double(Crt::rand()) * kRandToSigned - 1.0f);
+        double vUnrounded = double(Crt::rand()) * kRandToSigned - 1.0f;
         v = float(vUnrounded);
         radiusSquared = vUnrounded * v + double(u) * u;     // v's square from the unrounded and the stored v
     } while (radiusSquared >= 1.0f);    // a NaN would end the loop, as the original's test does

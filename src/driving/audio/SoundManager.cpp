@@ -16,6 +16,8 @@
 #include "../sound/snd/System.h"
 #include "../../helpers.h"
 #include "../game/MissionManager.h"           // MissionList::BuyHead
+#include "../platform/CRuntime.h"
+#include "../logging.h"
 
 #include <string.h>
 
@@ -26,11 +28,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // The list code every std::list of pointers shares: the head node, _Buynode(next, prev, value), the destructor
-
-// The C runtime: its rand state, its output and formatting are the game's
-#define CRT_rand ((int (*)(void))0x00133ee0)
-#define CRT_printf ((int (*)(const char *, ...))0x00132192)
-#define CRT_sprintf ((int (*)(char *, const char *, ...))0x00132767)
 
 #define fgFailedStreams (*(StreamNameList **)0x00243a5c)  // (this name and the next two ours)
 // XBE_GLOBAL(0x00243a76, 1)
@@ -180,8 +177,8 @@ double ASoundManager::NormalizedRandomNumber() {
     float u, v;
     double radiusSquared;
     do {
-        u = float(double(CRT_rand()) * kRandToSigned - 1.0f);
-        double vUnrounded = double(CRT_rand()) * kRandToSigned - 1.0f;
+        u = float(double(Crt::rand()) * kRandToSigned - 1.0f);
+        double vUnrounded = double(Crt::rand()) * kRandToSigned - 1.0f;
         v = float(vUnrounded);
         radiusSquared = vUnrounded * v + double(u) * u;     // v's square from the unrounded and the stored v
     } while (radiusSquared >= 1.0f);    // a NaN ends the loop, as the original's test does
@@ -286,14 +283,14 @@ void ASoundManager::Resume() {
 
 // FUNC_AT(0x001211d0)
 void ASoundManager::StopSoundPos(const Coord3 *position) {
-    CRT_printf("Looking for sound at (%.2f, %.2f, %.2f)\n", position->x, position->y, position->z);
+    dbg_wprintf("Looking for sound at (%.2f, %.2f, %.2f)\n", position->x, position->y, position->z);
     PointerListNode *node = fgSoundList->Begin();
     while (node != fgSoundList->head) {
         ABaseSound *sound = static_cast<ABaseSound *>(node->value);
         node = node->next;
         if (sound->position.x == position->x && sound->position.y == position->y &&
             sound->position.z == position->z) {
-            CRT_printf("Deleting sound at (%.2f, %.2f, %.2f)\n", position->x, position->y, position->z);
+            dbg_wprintf("Deleting sound at (%.2f, %.2f, %.2f)\n", position->x, position->y, position->z);
             sound->CallDelete(1);
         }
     }
@@ -368,7 +365,7 @@ void ASoundManager::Init(const char *directory, bool loadBanks, const char *stre
         strcpy(AudioDirectory, directory);
 
     AStream::SetPath("driving/");
-    CRT_sprintf(MusicStreamFile, "%s", streamFile);
+    Crt::sprintf(MusicStreamFile, "%s", streamFile);
     strncpy(MusicStreamFile + strlen(MusicStreamFile) - 2, "", 1);
     AStream::Create("Music", MusicStreamFile, kStreamBufferSize);
     AMix *fader = AMix::Get("0:Fader2");

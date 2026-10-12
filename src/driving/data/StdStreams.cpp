@@ -10,6 +10,8 @@
 
 #include "DebugVarUntested.h"
 #include "../engine/UMemory.hpp"
+#include "../platform/CRuntime.h"
+#include "../platform/CRuntimeStd.h"
 #include "../../helpers.h"
 #include "../../common/xbeOverload.h"
 
@@ -32,7 +34,7 @@ using namespace GameStd;
 #define IStrStreamVbtable ((const int *)0x0018bdfc)
 #define NumPutVtable ((const void *const *)0x0018be04)
 #define NumpunctVtable ((const void *const *)0x0018be30)
-#define BadCastThrowInfo ((const void *)0x001a952c)
+#define BadCastThrowInfo ((const Crt::ThrowInfo *)0x001a952c)
 
 // XBE_GLOBAL(0x00244838, 0x4)
 static uint32_t FacetIdCount;          // locale::id::_Id_cnt
@@ -58,64 +60,10 @@ static const Facet *NumpunctCache;
 #define ZeroStreamPos ((const uint32_t *)0x00244848)  // the fpos_t a failed seek reports
 #define InitialMbState I32_AT(0x001e22c8)             // _Stinit, the conversion state it reports
 
-// ---- the C++ runtime (the non-template library) and std::string's members compiled elsewhere
-
-#define Lockit_Construct ((Lockit *(__fastcall *)(Lockit *, int, int))0x00130cef)
-#define Lockit_Destruct ((void (__fastcall *)(Lockit *, int))0x00130d10)
-#define Locale_GetFacet ((const Facet *(__fastcall *)(const Locale *, int, uint32_t))0x00130d9b)
-#define Locale_Construct ((Locale *(__fastcall *)(Locale *, int))0x001310bf)
-#define Facet_Register ((void (__fastcall *)(Facet *, int))0x00130e13)
-#define Locinfo_Construct ((Locinfo *(__fastcall *)(Locinfo *, int, const char *))0x00130f8f)
-#define Locinfo_Destruct ((void (__fastcall *)(Locinfo *, int))0x00130ed2)
-#define Getctype ((CtypeVec *(__cdecl *)(CtypeVec *))0x00130c3c)
-#define Getcvt ((uint64_t (__cdecl *)())0x00131c31)
-#define Tolower ((int (__cdecl *)(int, const CtypeVec *))0x00130c00)
-#define Toupper ((int (__cdecl *)(int, const CtypeVec *))0x0013143d)
-#define IosBase_Clear ((void (__fastcall *)(IosBase *, int, int, bool))0x00131279)
-#define IosBase_Init ((void (__fastcall *)(IosBase *, int))0x001313b8)
-#define IosBase_AddStandard ((void (__fastcall *)(IosBase *, int))0x001310fa)
-#define IosBase_Destruct ((void (__fastcall *)(IosBase *, int))0x00131191)
-#define Mutex_Construct ((void (__fastcall *)(uint32_t *, int))0x001313fe)
-#define Mutex_Destruct ((void (__fastcall *)(uint32_t *, int))0x00131416)
-#define Mutex_Lock ((void (__fastcall *)(uint32_t *, int))0x0013142b)
-#define Mutex_Unlock ((void (__fastcall *)(uint32_t *, int))0x00131434)
-#define StrStreambuf_Init ((void (__fastcall *)(StrStreambuf *, int, int, char *, char *, int))0x00131901)
-#define StrStreambuf_Destruct ((void (__fastcall *)(StrStreambuf *, int))0x00131a44)
-#define IStrStream_Destruct ((void (__fastcall *)(BasicIos *, int))0x00131ae1)   // entered at the virtual base
-#define OStrStream_Destruct ((void (__fastcall *)(BasicIos *, int))0x00131bbb)
-#define UncaughtException ((bool (__cdecl *)())0x00131c2c)
-#define BadCast_Construct ((void *(__fastcall *)(void *, int, const char *))0x001326ae)
-#define CxxThrowException ((void (__stdcall *)(void *, const void *))0x001325ad)
-
-#define String_Xran ((void (__fastcall *)(String *, int))0x00130b80)
-#define String_Xlen ((void (__fastcall *)(String *, int))0x00130bc0)
-#define Exception_Construct ((void (__fastcall *)(void *, int))0x001325e6)
-#define Exception_ConstructCopy ((void (__fastcall *)(void *, int, const void *other))0x0013263c)
-#define Exception_Destruct ((void (__fastcall *)(void *, int))0x0013268b)
-
 #define LogicErrorVtable ((const void *)0x00189ee4)
 #define LengthErrorVtable ((const void *)0x00189eec)
 
-#define CrtFree ((void (__cdecl *)(void *))0x001331dc)
-#define Sprintf ((int (__cdecl *)(char *, const char *, ...))0x00132767)
-#define Localeconv ((Lconv *(__cdecl *)())0x001333d6)
-#define Isdigit ((int (__cdecl *)(int))0x0013399d)
-#define Errno ((int *(__cdecl *)())0x00133664)
-#define Stol ((long (__cdecl *)(const char *, char **, int))0x00133636)
-#define Stoul ((unsigned long (__cdecl *)(const char *, char **, int))0x0013364d)
-#define Stoll ((int64_t (__cdecl *)(const char *, char **, int))0x0013396f)
-#define Stoull ((uint64_t (__cdecl *)(const char *, char **, int))0x00133986)
-#define Stod ((double (__cdecl *)(const char *, char **, long))0x00131c45)
-#define Stof ((double (__cdecl *)(const char *, char **, long))0x00131c79)   // float and long double both
-
 namespace {
-
-// The start of the C runtime's struct lconv.
-struct Lconv {
-    char *decimalPoint;
-    char *thousandsSep;
-    char *grouping;
-};
 
 static const char kCharMax = 0x7f;   // CHAR_MAX: "no further grouping"
 static const uint32_t kNpos = 0xffffffff;
@@ -143,18 +91,18 @@ void ReleaseLocale(Facet *impl) {
     if (impl == NULL)
         return;
     Lockit lock;
-    Lockit_Construct(&lock, 0, 0);
+    lock.Construct(0);
     if (0 < impl->refs && impl->refs < 0xffffffff)
         --impl->refs;
     Facet *dead = impl->refs != 0 ? NULL : impl;
-    Lockit_Destruct(&lock, 0);
+    lock.Destruct();
     if (dead != NULL)
         CallVirtual<void *>(dead, kSlotDelete, 1u);
 }
 
 // basic_ios::clear(state | add), as setstate inlines it: a stream without a buffer is bad as well.
 void SetState(BasicIos *ios, int add) {
-    IosBase_Clear(ios, 0, ios->state | add | (ios->streambuf != NULL ? 0 : kBadBit), false);
+    ios->Clear(ios->state | add | (ios->streambuf != NULL ? 0 : kBadBit), false);
 }
 
 // The streambuf's inline sgetc/sbumpc tests: is there a character in the get (put) area?
@@ -202,34 +150,34 @@ inline void TidyString(String *s) {
 // use_facet<F>(locale): the locale's facet, or (made once, kept in the cache) a default one.
 const Facet *UseFacet(const Locale *locale, uint32_t &id, const Facet *&cache, uint32_t (*getCat)(const Facet **)) {
     Lockit lock;
-    Lockit_Construct(&lock, 0, 0);
+    lock.Construct(0);
     if (id == 0) {
         Lockit idLock;
-        Lockit_Construct(&idLock, 0, 0);
+        idLock.Construct(0);
         if (id == 0)
             id = ++FacetIdCount;
-        Lockit_Destruct(&idLock, 0);
+        idLock.Destruct();
     }
-    const Facet *facet = Locale_GetFacet(locale, 0, id);
+    const Facet *facet = locale->GetFacet(id);
     if (facet == NULL) {
         facet = cache;
         if (facet == NULL) {
             if (getCat(&cache) == 0xffffffff) {
-                uint32_t badCast[4];
-                BadCast_Construct(badCast, 0, "bad cast");
-                CxxThrowException(badCast, BadCastThrowInfo);
+                BadCast badCast;
+                badCast.Construct("bad cast");
+                Crt::CxxThrowException(&badCast, BadCastThrowInfo);
             }
             Facet *made = const_cast<Facet *>(cache);
             facet = made;
             Lockit refLock;
-            Lockit_Construct(&refLock, 0, 0);
+            refLock.Construct(0);
             if (made->refs < 0xffffffff)
                 made->refs++;
-            Lockit_Destruct(&refLock, 0);
-            Facet_Register(made, 0);
+            refLock.Destruct();
+            made->Register();
         }
     }
-    Lockit_Destruct(&lock, 0);
+    lock.Destruct();
     return facet;
 }
 
@@ -241,7 +189,7 @@ const Facet *UseFacet(const Locale *locale, uint32_t &id, const Facet *&cache, u
 // FUNC_AT(0x00037ae0)
 void GameStd::BasicIos::Destruct() {
     vtable = BasicIosVtable;
-    IosBase_Destruct(this, 0);
+    IosBase::Destruct();
 }
 
 // FUNC_AT(0x00037af0)
@@ -273,7 +221,7 @@ void* GameStd::BasicIos::DeleteIstream(unsigned flags) {
 // FUNC_AT(0x00038c40)
 void* GameStd::BasicIos::DeleteIStrStream(unsigned flags) {
     IStrStream *stream = (IStrStream *)((char *)this - 0x5c);   // the basic_ios is at +0x5c
-    IStrStream_Destruct(this, 0);
+    DestructIStrStream();
     Destruct();
     if (flags & 1)
         OperatorDelete(stream);
@@ -285,22 +233,22 @@ void GameStd::BasicIos::Init(Streambuf *buffer, bool isStandard) {
     streambuf = buffer;
     tie = NULL;
     fill = ' ';
-    IosBase_Init(this, 0);
+    IosBase::Init();
     if (streambuf == NULL)
-        IosBase_Clear(this, 0, state | kBadBit, false);
+        Clear(state | kBadBit, false);
     if (isStandard)
-        IosBase_AddStandard(this, 0);
+        AddStandard();
 }
 
 // FUNC_AT(0x000380c0)
 void GameStd::IStrStream::DestructAll() {
-    IStrStream_Destruct(&ios, 0);
+    ios.DestructIStrStream();
     ios.Destruct();
 }
 
 // FUNC_AT(0x000397f0)
 void GameStd::OStrStream::DestructAll() {
-    OStrStream_Destruct(&ios, 0);
+    ios.DestructOStrStream();
     ios.Destruct();
 }
 
@@ -312,13 +260,12 @@ Ctype* GameStd::Ctype::Construct(const short *table, bool deleteTable, uint32_t 
     refs = refCount;
     vtable = CtypeVtable;
     Locinfo info;
-    Locinfo_Construct(&info, 0, "C");
-    CtypeVec fromRuntime;
-    ctype = *Getctype(&fromRuntime);
-    Locinfo_Destruct(&info, 0);
+    info.Construct("C");
+    ctype = Getctype();
+    info.Destruct();
     if (table != NULL) {
         if (ctype.deleteTable > 0)
-            CrtFree((void *)ctype.table);
+            Crt::free((void *)ctype.table);
         else if (ctype.deleteTable < 0)
             OperatorDelete((void *)ctype.table);
         ctype.table = table;
@@ -394,7 +341,7 @@ Ctype* GameStd::Ctype::Delete(unsigned flags) {
 void GameStd::Ctype::Destruct() {
     vtable = CtypeVtable;
     if (ctype.deleteTable > 0)
-        CrtFree((void *)ctype.table);
+        Crt::free((void *)ctype.table);
     else if (ctype.deleteTable < 0)
         OperatorDelete((void *)ctype.table);
     vtable = FacetVtable;
@@ -411,9 +358,9 @@ const Ctype* GameStd::UseCtype(const Locale *locale) {
 // FUNC_AT(0x000387f0)
 Streambuf* GameStd::Streambuf::Construct() {
     vtable = StreambufVtable;
-    Mutex_Construct(&mutex, 0);
+    mutex.Construct();
     Locale *made = (Locale *)OperatorNew(sizeof(Locale));
-    locale = made != NULL ? Locale_Construct(made, 0) : NULL;
+    locale = made != NULL ? made->Construct() : NULL;
     InitPointers();
     return this;
 }
@@ -426,7 +373,7 @@ void GameStd::Streambuf::Destruct() {
         ReleaseLocale(owned->impl);
         OperatorDelete(owned);
     }
-    Mutex_Destruct(&mutex, 0);
+    mutex.Destruct();
 }
 
 // FUNC_AT(0x00038520)
@@ -582,13 +529,13 @@ char* GameStd::Streambuf::Pninc() {
 StrStreambuf* GameStd::StrStreambuf::Construct(const char *text, int count) {
     Streambuf::Construct();
     vtable = StrStreambufVtable;
-    StrStreambuf_Init(this, 0, count, const_cast<char *>(text), NULL, 2);   // _Constant
+    Init(count, const_cast<char *>(text), NULL, 2);   // _Constant
     return this;
 }
 
 // FUNC_AT(0x00038b50)
 StrStreambuf* GameStd::StrStreambuf::Delete(unsigned flags) {
-    StrStreambuf_Destruct(this, 0);
+    Destruct();
     if (flags & 1)
         OperatorDelete(this);
     return this;
@@ -638,9 +585,9 @@ IStrStream* GameStd::IStrStream::Construct(const char *text, int constructVirtua
     base->streambuf = &buffer;
     base->tie = NULL;
     base->fill = ' ';
-    IosBase_Init(base, 0);
+    base->IosBase::Init();
     if (base->streambuf == NULL)
-        IosBase_Clear(base, 0, base->state | kBadBit, false);
+        base->Clear(base->state | kBadBit, false);
     Ios()->vtable = IStrStreamIosVtable;
     buffer.Construct(text, 0);
     return this;
@@ -651,7 +598,7 @@ IstreamSentry* GameStd::IstreamSentry::Construct(Istream *istream, bool noSkip) 
     stream = istream;
     Streambuf *buffer = istream->Ios()->streambuf;
     if (buffer != NULL)
-        Mutex_Lock(&buffer->mutex, 0);
+        buffer->mutex.Lock();
     ok = stream->Ipfx(noSkip);
     return this;
 }
@@ -662,7 +609,7 @@ namespace {
 void DestructSentry(Istream *stream) {
     Streambuf *buffer = stream->Ios()->streambuf;
     if (buffer != NULL)
-        Mutex_Unlock(&buffer->mutex, 0);
+        buffer->mutex.Unlock();
 }
 
 // The iterators an extractor hands its facet: the stream's buffer, and the end of stream.
@@ -800,7 +747,7 @@ OstreamSentry* GameStd::OstreamSentry::ConstructBase(Ostream *ostream) {
     stream = ostream;
     Streambuf *buffer = ostream->Ios()->streambuf;
     if (buffer != NULL)
-        Mutex_Lock(&buffer->mutex, 0);
+        buffer->mutex.Lock();
     return this;
 }
 
@@ -808,7 +755,7 @@ OstreamSentry* GameStd::OstreamSentry::ConstructBase(Ostream *ostream) {
 void GameStd::OstreamSentry::DestructBase() {
     Streambuf *buffer = stream->Ios()->streambuf;
     if (buffer != NULL)
-        Mutex_Unlock(&buffer->mutex, 0);
+        buffer->mutex.Unlock();
 }
 
 // FUNC_AT(0x00039950)
@@ -932,8 +879,8 @@ NumGet* GameStd::NumGet::Construct(uint32_t refCount) {
     refs = refCount;
     vtable = NumGetVtable;
     Locinfo info;
-    Locinfo_Construct(&info, 0, "C");
-    Locinfo_Destruct(&info, 0);   // _Init(info) is empty
+    info.Construct("C");
+    info.Destruct();   // _Init(info) is empty
     return this;
 }
 
@@ -972,8 +919,8 @@ uint32_t GameStd::NumPut::GetCat(const Facet **cache) {
             made->refs = 0;
             made->vtable = NumPutVtable;
             Locinfo info;
-            Locinfo_Construct(&info, 0, "C");
-            Locinfo_Destruct(&info, 0);
+            info.Construct("C");
+            info.Destruct();
         }
         *cache = made;
     }
@@ -993,8 +940,8 @@ uint32_t GameStd::Numpunct::GetCat(const Facet **cache) {
             made->refs = 0;
             made->vtable = NumpunctVtable;
             Locinfo info;
-            made->Init(Locinfo_Construct(&info, 0, "C"));
-            Locinfo_Destruct(&info, 0);
+            made->Init(info.Construct("C"));
+            info.Destruct();
         }
         *cache = made;
     }
@@ -1036,27 +983,17 @@ void GameStd::Numpunct::Tidy() {
     OperatorDelete((void *)trueName);
 }
 
-namespace {
-
-inline CvtVec GetCvt() {
-    uint64_t both = Getcvt();
-    CvtVec cvt = { uint32_t(both), uint32_t(both >> 32) };
-    return cvt;
-}
-
-} // namespace
-
 // FUNC_AT(0x0003ac00)
 void GameStd::Numpunct::Init(const Locinfo *) {
-    Lconv *conventions = Localeconv();
+    Crt::Lconv *conventions = Crt::localeconv();
     grouping = NULL;
     falseName = NULL;
     trueName = NULL;
-    CvtVec cvt = GetCvt();
+    CvtVec cvt = Getcvt();
     grouping = MakeLocString(conventions->grouping, NULL, &cvt);
-    cvt = GetCvt();
+    cvt = Getcvt();
     falseName = MakeLocString("false", NULL, &cvt);
-    cvt = GetCvt();
+    cvt = Getcvt();
     trueName = MakeLocString("true", NULL, &cvt);
     decimalPoint = *conventions->decimalPoint;
     thousandsSep = *conventions->thousandsSep;
@@ -1129,7 +1066,7 @@ String* GameStd::String::ConstructFill(uint32_t count, char ch) {
 // FUNC_AT(0x0003bce0)
 String* GameStd::String::AssignFill(uint32_t count, char ch) {
     if (count == kNpos)
-        String_Xlen(this, 0);
+        Xlen();
     if (Grow(count, true)) {
         memset(Data(), ch, count);
         size = count;
@@ -1141,7 +1078,7 @@ String* GameStd::String::AssignFill(uint32_t count, char ch) {
 // FUNC_AT(0x0003bc20)
 String* GameStd::String::AppendFill(uint32_t count, char ch) {
     if (kNpos - size <= count)
-        String_Xlen(this, 0);
+        Xlen();
     if (count > 0) {
         uint32_t newSize = size + count;
         if (Grow(newSize, false)) {
@@ -1156,17 +1093,17 @@ String* GameStd::String::AppendFill(uint32_t count, char ch) {
 // FUNC_AT(0x0003d090)
 String* GameStd::String::AppendSub(const String *right, uint32_t offset, uint32_t count) {
     if (right->size < offset)
-        String_Xran(this, 0);
+        Xran();
     uint32_t available = right->size - offset;
     if (available < count)
         count = available;
     if (kNpos - size <= count)
-        String_Xlen(this, 0);
+        Xlen();
     if (count > 0) {
         // _Grow(newSize), inlined
         uint32_t newSize = size + count;
         if (newSize > kNpos - 1)
-            String_Xlen(this, 0);
+            Xlen();
         if (capacity < newSize) {
             Copy(newSize, size);
         } else if (newSize == 0) {
@@ -1220,7 +1157,7 @@ const char* GameStd::String::CStr() {
 // FUNC_AT(0x00013580)
 String* GameStd::String::AssignSub(const String *right, uint32_t offset, uint32_t count) {
     if (right->size < offset)
-        String_Xran(this, 0);
+        Xran();
     uint32_t length = right->size - offset;
     if (count < length)
         length = count;
@@ -1249,7 +1186,7 @@ String* GameStd::String::AssignText(const char *string, uint32_t count) {
 // FUNC_AT(0x00013480)
 String* GameStd::String::Erase(uint32_t offset, uint32_t count) {
     if (size < offset)
-        String_Xran(this, 0);
+        Xran();
     if (size - offset < count)
         count = size - offset;
     if (count > 0) {
@@ -1280,7 +1217,7 @@ void GameStd::String::Copy(uint32_t newSize, uint32_t oldLength) {
 // FUNC_AT(0x00013300)
 bool GameStd::String::Grow(uint32_t newSize, bool trim) {
     if (newSize > kMaxStringSize)
-        String_Xlen(this, 0);
+        Xlen();
     if (capacity < newSize)
         Copy(newSize, trim ? 0 : size);
     else if (trim && newSize < kStringBufferSize)
@@ -1317,7 +1254,7 @@ void __stdcall GameStd::AllocatorDeallocate(void *block, uint32_t count) {
 // FUNC_AT(0x00013700)
 LogicError* GameStd::LogicError::Construct(const String *message) {
     DEBUGVAR_UNTESTED("std::logic_error::logic_error (0x00013700)");
-    Exception_Construct(this, 0);
+    Exception::Construct();
     vtable = LogicErrorVtable;
     this->message.ConstructCopy(message);
     return this;
@@ -1326,7 +1263,7 @@ LogicError* GameStd::LogicError::Construct(const String *message) {
 // FUNC_AT(0x00013930)
 LogicError* GameStd::LogicError::ConstructCopy(const LogicError *other) {
     DEBUGVAR_UNTESTED("std::logic_error's copy constructor (0x00013930)");
-    Exception_ConstructCopy(this, 0, other);
+    Exception::ConstructCopy(other);
     vtable = LogicErrorVtable;
     message.ConstructCopy(&other->message);
     return this;
@@ -1337,7 +1274,7 @@ void GameStd::LogicError::Destruct() {
     DEBUGVAR_UNTESTED("std::logic_error::~logic_error (0x000133d0)");
     vtable = LogicErrorVtable;
     message.Tidy(true);
-    Exception_Destruct(this, 0);
+    Exception::Destruct();
 }
 
 // FUNC_AT(0x00013460)
@@ -1498,7 +1435,7 @@ OutIter* GameStd::NumPut::IntPut(OutIter *result, OutIter dest, IosBase *ios, ch
 OutIter* GameStd::NumPut::DoPutLong(OutIter *result, OutIter dest, IosBase *ios, char fill, long value) {
     char format[8];
     char text[64];
-    int count = Sprintf(text, IntFormat(format, "ld", ios->flags), value);
+    int count = Crt::sprintf(text, IntFormat(format, "ld", ios->flags), value);
     return IntPut(result, dest, ios, fill, text, count);
 }
 
@@ -1506,7 +1443,7 @@ OutIter* GameStd::NumPut::DoPutLong(OutIter *result, OutIter dest, IosBase *ios,
 OutIter* GameStd::NumPut::DoPutULong(OutIter *result, OutIter dest, IosBase *ios, char fill, unsigned long value) {
     char format[8];
     char text[64];
-    int count = Sprintf(text, IntFormat(format, "lu", ios->flags), value);
+    int count = Crt::sprintf(text, IntFormat(format, "lu", ios->flags), value);
     return IntPut(result, dest, ios, fill, text, count);
 }
 
@@ -1514,7 +1451,7 @@ OutIter* GameStd::NumPut::DoPutULong(OutIter *result, OutIter dest, IosBase *ios
 OutIter* GameStd::NumPut::DoPutInt64(OutIter *result, OutIter dest, IosBase *ios, char fill, int64_t value) {
     char format[8];
     char text[64];
-    int count = Sprintf(text, IntFormat(format, "Ld", ios->flags), value);
+    int count = Crt::sprintf(text, IntFormat(format, "Ld", ios->flags), value);
     return IntPut(result, dest, ios, fill, text, count);
 }
 
@@ -1522,7 +1459,7 @@ OutIter* GameStd::NumPut::DoPutInt64(OutIter *result, OutIter dest, IosBase *ios
 OutIter* GameStd::NumPut::DoPutUInt64(OutIter *result, OutIter dest, IosBase *ios, char fill, uint64_t value) {
     char format[8];
     char text[64];
-    int count = Sprintf(text, IntFormat(format, "Lu", ios->flags), value);
+    int count = Crt::sprintf(text, IntFormat(format, "Lu", ios->flags), value);
     return IntPut(result, dest, ios, fill, text, count);
 }
 
@@ -1585,7 +1522,7 @@ OutIter* GameStd::NumPut::DoPutDouble(OutIter *result, OutIter dest, IosBase *io
     FloatLayout layout = LayOutFloat(ios, flags, value);
     char format[8];
     char text[108];
-    int count = Sprintf(text, FloatFormat(format, '\0', flags), layout.significant, value);
+    int count = Crt::sprintf(text, FloatFormat(format, '\0', flags), layout.significant, value);
     return FloatPut(result, dest, ios, fill, text, layout.beforePoint, layout.afterPoint, layout.trailing, count);
 }
 
@@ -1595,14 +1532,14 @@ OutIter* GameStd::NumPut::DoPutLongDouble(OutIter *result, OutIter dest, IosBase
     FloatLayout layout = LayOutFloat(ios, flags, value);
     char format[8];
     char text[108];
-    int count = Sprintf(text, FloatFormat(format, 'L', flags), layout.significant, value);   // _Ffmt inlined
+    int count = Crt::sprintf(text, FloatFormat(format, 'L', flags), layout.significant, value);   // _Ffmt inlined
     return FloatPut(result, dest, ios, fill, text, layout.beforePoint, layout.afterPoint, layout.trailing, count);
 }
 
 // FUNC_AT(0x0003b5e0)
 OutIter* GameStd::NumPut::DoPutPointer(OutIter *result, OutIter dest, IosBase *ios, char fill, const void *value) {
     char text[64];
-    int count = Sprintf(text, "%p", value);
+    int count = Crt::sprintf(text, "%p", value);
     return IntPut(result, dest, ios, fill, text, count);
 }
 
@@ -1630,7 +1567,7 @@ OutIter* GameStd::NumPut::FloatPut(OutIter *result, OutIter dest, IosBase *ios, 
             out.Assign(fill);
     }
 
-    const char *point = (const char *)memchr(text, Localeconv()->decimalPoint[0], count);
+    const char *point = (const char *)memchr(text, Crt::localeconv()->decimalPoint[0], count);
     if (point != NULL) {
         Locale locale;
         const Numpunct *punct = UseNumpunct(ios->GetLoc(&locale));
@@ -1824,7 +1761,7 @@ int GameStd::NumGet::GetFloatField(char *digits, InIter *first, InIter *last, co
     for (; !first->Equal(last); first->Inc()) {
         char ch = first->Get();
         *at = ch;
-        if (!Isdigit(ch))
+        if (!Crt::isdigit(ch))
             break;
         if (significant < 36) {
             ++at;
@@ -1837,7 +1774,7 @@ int GameStd::NumGet::GetFloatField(char *digits, InIter *first, InIter *last, co
     if (!first->Equal(last)) {
         char ch = first->Get();
         if (ch == CallVirtual<char>(const_cast<Numpunct *>(punct), kNumpunctDecimalPoint)) {
-            *at++ = Localeconv()->decimalPoint[0];
+            *at++ = Crt::localeconv()->decimalPoint[0];
             first->Inc();
         }
     }
@@ -1854,7 +1791,7 @@ int GameStd::NumGet::GetFloatField(char *digits, InIter *first, InIter *last, co
     for (; !first->Equal(last); first->Inc()) {
         char ch = first->Get();
         *at = ch;
-        if (!Isdigit(ch))
+        if (!Crt::isdigit(ch))
             break;
         if (significant < 36) {
             ++at;
@@ -1884,7 +1821,7 @@ int GameStd::NumGet::GetFloatField(char *digits, InIter *first, InIter *last, co
         for (; !first->Equal(last); first->Inc()) {
             char ch = first->Get();
             *at = ch;
-            if (!Isdigit(ch))
+            if (!Crt::isdigit(ch))
                 break;
             if (significant < 8) {
                 ++at;
@@ -1911,7 +1848,7 @@ int GameStd::NumGet::GetLocText(InIter *first, InIter *last, uint32_t fieldCount
     columns.size = 0;
     columns.text.buffer[0] = '\0';
     if (fieldCount == kNpos)
-        String_Xlen(&columns, 0);
+        String::Xlen();
     if (columns.Grow(fieldCount, true)) {
         memset(columns.Data(), 0, fieldCount);
         columns.size = fieldCount;
@@ -1970,15 +1907,15 @@ InIter* GameStd::NumGet::DoGetBool(InIter *result, InIter first, InIter last, Io
         answer = GetLocText(&first, &last, 2, names.Data());
         FreeString(&names);
     } else {
-        *Errno() = 0;
+        *Crt::_errno() = 0;
         Locale locale;
         ios->GetLoc(&locale);
         char digits[32];
         char *end;
         int base = GetIntField(digits, &first, &last, ios->flags, &locale);
-        unsigned long read = Stoul(digits, &end, base);
+        unsigned long read = Crt::strtoul(digits, &end, base);
         ReleaseLocale(locale.impl);
-        if (end != digits && *Errno() == 0 && read <= 1)
+        if (end != digits && *Crt::_errno() == 0 && read <= 1)
             answer = int(read);
     }
     if (first.Equal(&last))
@@ -1994,7 +1931,7 @@ InIter* GameStd::NumGet::DoGetBool(InIter *result, InIter first, InIter last, Io
 // FUNC_AT(0x0003b630)
 InIter* GameStd::NumGet::DoGetUShort(InIter *result, InIter first, InIter last, IosBase *ios, int *state,
                                      unsigned short *value) {
-    *Errno() = 0;
+    *Crt::_errno() = 0;
     Locale locale;
     ios->GetLoc(&locale);
     char digits[32];
@@ -2002,10 +1939,10 @@ InIter* GameStd::NumGet::DoGetUShort(InIter *result, InIter first, InIter last, 
     int base = GetIntField(digits, &first, &last, ios->flags, &locale);
     ReleaseLocale(locale.impl);
     char *start = digits[0] == '-' ? digits + 1 : digits;
-    unsigned long read = Stoul(start, &end, base);
+    unsigned long read = Crt::strtoul(start, &end, base);
     if (first.Equal(&last))
         *state |= kEofBit;
-    if (end != start && *Errno() == 0 && read <= 0xffff)
+    if (end != start && *Crt::_errno() == 0 && read <= 0xffff)
         *value = (unsigned short)(digits[0] == '-' ? 0 - read : read);
     else
         *state |= kFailBit;
@@ -2016,7 +1953,7 @@ InIter* GameStd::NumGet::DoGetUShort(InIter *result, InIter first, InIter last, 
 // FUNC_AT(0x0003bd50)
 InIter* GameStd::NumGet::DoGetUInt(InIter *result, InIter first, InIter last, IosBase *ios, int *state,
                                    unsigned *value) {
-    *Errno() = 0;
+    *Crt::_errno() = 0;
     Locale locale;
     ios->GetLoc(&locale);
     char digits[32];
@@ -2024,10 +1961,10 @@ InIter* GameStd::NumGet::DoGetUInt(InIter *result, InIter first, InIter last, Io
     int base = GetIntField(digits, &first, &last, ios->flags, &locale);
     ReleaseLocale(locale.impl);
     char *start = digits[0] == '-' ? digits + 1 : digits;
-    unsigned long read = Stoul(start, &end, base);
+    unsigned long read = Crt::strtoul(start, &end, base);
     if (first.Equal(&last))
         *state |= kEofBit;
-    if (end != start && *Errno() == 0)   // (and read <= UINT_MAX, always so)
+    if (end != start && *Crt::_errno() == 0)   // (and read <= UINT_MAX, always so)
         *value = digits[0] == '-' ? 0 - read : read;
     else
         *state |= kFailBit;
@@ -2037,17 +1974,17 @@ InIter* GameStd::NumGet::DoGetUInt(InIter *result, InIter first, InIter last, Io
 
 // FUNC_AT(0x0003be90)
 InIter* GameStd::NumGet::DoGetLong(InIter *result, InIter first, InIter last, IosBase *ios, int *state, long *value) {
-    *Errno() = 0;
+    *Crt::_errno() = 0;
     Locale locale;
     ios->GetLoc(&locale);
     char digits[32];
     char *end;
     int base = GetIntField(digits, &first, &last, ios->flags, &locale);
-    long read = Stol(digits, &end, base);
+    long read = Crt::strtol(digits, &end, base);
     ReleaseLocale(locale.impl);
     if (first.Equal(&last))
         *state |= kEofBit;
-    if (end != digits && *Errno() == 0)
+    if (end != digits && *Crt::_errno() == 0)
         *value = read;
     else
         *state |= kFailBit;
@@ -2058,17 +1995,17 @@ InIter* GameStd::NumGet::DoGetLong(InIter *result, InIter first, InIter last, Io
 // FUNC_AT(0x0003bfb0)
 InIter* GameStd::NumGet::DoGetULong(InIter *result, InIter first, InIter last, IosBase *ios, int *state,
                                     unsigned long *value) {
-    *Errno() = 0;
+    *Crt::_errno() = 0;
     Locale locale;
     ios->GetLoc(&locale);
     char digits[32];
     char *end;
     int base = GetIntField(digits, &first, &last, ios->flags, &locale);
-    unsigned long read = Stoul(digits, &end, base);
+    unsigned long read = Crt::strtoul(digits, &end, base);
     ReleaseLocale(locale.impl);
     if (first.Equal(&last))
         *state |= kEofBit;
-    if (end != digits && *Errno() == 0)
+    if (end != digits && *Crt::_errno() == 0)
         *value = read;
     else
         *state |= kFailBit;
@@ -2079,17 +2016,17 @@ InIter* GameStd::NumGet::DoGetULong(InIter *result, InIter first, InIter last, I
 // FUNC_AT(0x0003c0d0)
 InIter* GameStd::NumGet::DoGetInt64(InIter *result, InIter first, InIter last, IosBase *ios, int *state,
                                     int64_t *value) {
-    *Errno() = 0;
+    *Crt::_errno() = 0;
     Locale locale;
     ios->GetLoc(&locale);
     char digits[32];
     char *end;
     int base = GetIntField(digits, &first, &last, ios->flags, &locale);
-    int64_t read = Stoll(digits, &end, base);
+    int64_t read = Crt::_strtoi64(digits, &end, base);
     ReleaseLocale(locale.impl);
     if (first.Equal(&last))
         *state |= kEofBit;
-    if (end != digits && *Errno() == 0)
+    if (end != digits && *Crt::_errno() == 0)
         *value = read;
     else
         *state |= kFailBit;
@@ -2100,17 +2037,17 @@ InIter* GameStd::NumGet::DoGetInt64(InIter *result, InIter first, InIter last, I
 // FUNC_AT(0x0003c1f0)
 InIter* GameStd::NumGet::DoGetUInt64(InIter *result, InIter first, InIter last, IosBase *ios, int *state,
                                      uint64_t *value) {
-    *Errno() = 0;
+    *Crt::_errno() = 0;
     Locale locale;
     ios->GetLoc(&locale);
     char digits[32];
     char *end;
     int base = GetIntField(digits, &first, &last, ios->flags, &locale);
-    uint64_t read = Stoull(digits, &end, base);
+    uint64_t read = Crt::_strtoui64(digits, &end, base);
     ReleaseLocale(locale.impl);
     if (first.Equal(&last))
         *state |= kEofBit;
-    if (end != digits && *Errno() == 0)
+    if (end != digits && *Crt::_errno() == 0)
         *value = read;
     else
         *state |= kFailBit;
@@ -2121,7 +2058,7 @@ InIter* GameStd::NumGet::DoGetUInt64(InIter *result, InIter first, InIter last, 
 // FUNC_AT(0x0003c310)
 InIter* GameStd::NumGet::DoGetFloat(InIter *result, InIter first, InIter last, IosBase *ios, int *state,
                                     float *value) {
-    *Errno() = 0;
+    *Crt::_errno() = 0;
     Locale locale;
     ios->GetLoc(&locale);
     char digits[60];
@@ -2131,7 +2068,7 @@ InIter* GameStd::NumGet::DoGetFloat(InIter *result, InIter first, InIter last, I
     ReleaseLocale(locale.impl);
     if (first.Equal(&last))
         *state |= kEofBit;
-    if (end != digits && *Errno() == 0)
+    if (end != digits && *Crt::_errno() == 0)
         *value = read;
     else
         *state |= kFailBit;
@@ -2142,7 +2079,7 @@ InIter* GameStd::NumGet::DoGetFloat(InIter *result, InIter first, InIter last, I
 // FUNC_AT(0x0003c790)
 InIter* GameStd::NumGet::DoGetDouble(InIter *result, InIter first, InIter last, IosBase *ios, int *state,
                                      double *value) {
-    *Errno() = 0;
+    *Crt::_errno() = 0;
     Locale locale;
     ios->GetLoc(&locale);
     char digits[60];
@@ -2152,7 +2089,7 @@ InIter* GameStd::NumGet::DoGetDouble(InIter *result, InIter first, InIter last, 
     ReleaseLocale(locale.impl);
     if (first.Equal(&last))
         *state |= kEofBit;
-    if (end != digits && *Errno() == 0)
+    if (end != digits && *Crt::_errno() == 0)
         *value = read;
     else
         *state |= kFailBit;
@@ -2163,7 +2100,7 @@ InIter* GameStd::NumGet::DoGetDouble(InIter *result, InIter first, InIter last, 
 // FUNC_AT(0x0003c8b0)
 InIter* GameStd::NumGet::DoGetLongDouble(InIter *result, InIter first, InIter last, IosBase *ios, int *state,
                                          double *value) {
-    *Errno() = 0;
+    *Crt::_errno() = 0;
     Locale locale;
     ios->GetLoc(&locale);
     char digits[60];
@@ -2173,7 +2110,7 @@ InIter* GameStd::NumGet::DoGetLongDouble(InIter *result, InIter first, InIter la
     ReleaseLocale(locale.impl);
     if (first.Equal(&last))
         *state |= kEofBit;
-    if (end != digits && *Errno() == 0)
+    if (end != digits && *Crt::_errno() == 0)
         *value = read;
     else
         *state |= kFailBit;
@@ -2184,17 +2121,17 @@ InIter* GameStd::NumGet::DoGetLongDouble(InIter *result, InIter first, InIter la
 // FUNC_AT(0x0003c9d0)
 InIter* GameStd::NumGet::DoGetPointer(InIter *result, InIter first, InIter last, IosBase *ios, int *state,
                                       void **value) {
-    *Errno() = 0;
+    *Crt::_errno() = 0;
     Locale locale;
     ios->GetLoc(&locale);
     char digits[32];
     char *end;
     int base = GetIntField(digits, &first, &last, kHex, &locale);
     ReleaseLocale(locale.impl);
-    unsigned long read = Stoul(digits, &end, base);
+    unsigned long read = Crt::strtoul(digits, &end, base);
     if (first.Equal(&last))
         *state |= kEofBit;
-    if (end != digits && *Errno() == 0)
+    if (end != digits && *Crt::_errno() == 0)
         *value = (void *)read;
     else
         *state |= kFailBit;

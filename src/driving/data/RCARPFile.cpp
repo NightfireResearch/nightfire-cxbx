@@ -25,6 +25,7 @@
 #include "../render/Renderer.h"
 #include "../render/SkyWater.h"
 #include "../render/TextureContext.h"
+#include "../platform/CRuntime.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -32,10 +33,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 // RCARPFile, its loader, the global symbol table and the symbol callbacks. See RCARPFile.h.
 // ---------------------------------------------------------------------------------------------------------------
-
-// Other packages' functions not ported yet, called at their addresses.
-
-#define Crt_atexit ((int (*)(void (*)()))0x00132a7b)
 
 // XBE_GLOBAL(0x001ebcdc, 0x4)
 USymbolTable *Symbols;
@@ -142,7 +139,7 @@ void GlobalSymbolTable::Init() {
     if (!(CharNamespaceGuard & 1)) {
         CharNamespaceGuard |= 1;
         CharNamespace.Construct();
-        Crt_atexit(reinterpret_cast<void (*)()>(uintptr_t(kCharNamespaceAtExit)));
+        Crt::atexit(reinterpret_cast<void (*)()>(uintptr_t(kCharNamespaceAtExit)));
     }
     Symbols->AddNamespace("CHAR", &CharNamespace);
     Symbols->AddNamespace("DATA", &CharNamespace);

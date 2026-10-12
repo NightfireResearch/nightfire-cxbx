@@ -63,6 +63,7 @@
 #include "../../common/launchInfo.h"
 #include "../../helpers.h"
 #include "../logging.h"             // dbg_wprintf, our printf
+#include "../platform/CRuntime.h"
 
 #include <mmintrin.h>
 #include <stdlib.h>
@@ -181,11 +182,6 @@ static const DiscErrorText DiscErrorMessages[7] = {   // English, French, German
 #define UMemoryREALFreeCallbackAt ((FileFreeFn)0x00114670)
 
 // ---- the game's functions, not ours yet
-
-// the C runtime: the heap, the atexit list and the FPU status are the game's
-#define CRT_free ((void (*)(void *))0x001331dc)
-#define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
-#define CRT_clearfp ((unsigned (*)(void))0x00133c9e)
 
 // XAPI (ours, behind the import thunk)
 #define XInitDevices ((void (__stdcall *)(unsigned, void *))0x00184bae)
@@ -531,7 +527,7 @@ int GameMain(int argc, char **argv) {
                 MissionName[15] = 0;
                 WWorld::SetTrackName(argv[i] + 2, true);
                 if (strncmp(argv[i] + 2, "mis", 3) == 0)
-                    mission = atol(argv[i] + 5) - 1;
+                    mission = Crt::atol(argv[i] + 5) - 1;
             }
         }
     } else {
@@ -539,7 +535,7 @@ int GameMain(int argc, char **argv) {
         gSubtitles = Launch.subtitles != 0;
     }
     if (argv != NULL)
-        CRT_free(argv);   // src/driving/platform/XboxStartup.cpp builds it in the game's heap for this
+        Crt::free(argv);   // src/driving/platform/XboxStartup.cpp builds it in the game's heap for this
 
     if (Launch.bootCount == 1 && Launch.difficulty == 0 && Launch.unknowna18 == 0)
         gSuperEasy = 1;
@@ -550,7 +546,7 @@ int GameMain(int argc, char **argv) {
     if (MissionName[0] != 0) {
         WWorld::SetTrackName(MissionName, true);
         if (strncmp(MissionName, "mis", 3) == 0)
-            mission = atol(MissionName + 3) - 1;
+            mission = Crt::atol(MissionName + 3) - 1;
     }
 
     Bond_StartUpSystem();
@@ -637,7 +633,7 @@ void GameLoop_PlayMovie(const char *movie, const char *subtitles) {
     ActionQueueManager::GetActionQueueManager()->FlushAllQueues();
     ASoundManager::Resume();
     _mm_empty();
-    CRT_clearfp();
+    Crt::_clearfp();
 }
 
 // The original's entry: the movie on the stack, the subtitle file in EBX (RunTheGame's two calls).

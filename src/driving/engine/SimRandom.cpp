@@ -4,6 +4,7 @@
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../../helpers.h"
+#include "../platform/CRuntime.h"
 
 #include <bit>
 
@@ -30,9 +31,6 @@ uint32_t NoiseRandomState = 987654321;
 uint32_t NoiseRandomMultiplier = 123456789;
 // XBE_GLOBAL(0x001c3500, 0x4)
 uint32_t NoiseRandomCount = 1;
-
-// The C runtime's rand, the game's: its state is the game's.
-#define CRT_rand ((int (*)(void))0x00133ee0)
 
 static const uint32_t kSimRandomSeed = 123456789;
 static const uint32_t kSimRandomResetState = 0xf874af01;
@@ -114,7 +112,7 @@ void noise_init() {
         return;
     NoiseTableMade = 1;
     for (int i = 0; i < kNoiseTableSize; i++) {
-        int r = CRT_rand() & 0x7fffffff;
+        int r = Crt::rand() & 0x7fffffff;
         NoiseTable[i] = float(double(r) * kRandScale - 1.0);
     }
     NoiseTable[kNoiseTableSize] = NoiseTable[0];

@@ -6,6 +6,7 @@
 #include "../engine/UFileLoader.h"
 #include "../engine/UMemory.hpp"
 #include "../world/SoundMap.h"            // BuyMapHead
+#include "../logging.h"
 
 #include <string.h>
 
@@ -13,10 +14,6 @@
 // RTextureContext, RTexList, RTextureContextManager and the trees under them (0x00093390..0x00095360), ported from
 // the listing. The trees' code is RenderTree.h's; URefCounter<RTextureContext>'s is URefCounter.cpp's.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- originals called by address
-
-#define CRT_printf ((int (*)(const char *format, ...))0x00132192)
 
 // ---- vtables
 
@@ -253,10 +250,10 @@ uint8_t* RTextureContext::NameLookup(const char *symbol, int *) {
     if (uint8_t *shape = FindWithoutOwning(name, flags))
         return shape;
     if (strcmp(symbol, kBadShapeReference) != 0)
-        CRT_printf("COULDN'T FIND TEXTURE [%s]\n", symbol);
+        dbg_wprintf("COULDN'T FIND TEXTURE [%s]\n", symbol);
     uint8_t *shape = RTextureContextManager::GetContext(0)->Find(kMissingShape, 0);
     if (shape == NULL)
-        CRT_printf("COULDN'T GET REPLACEMENT TEXTURE\n");
+        dbg_wprintf("COULDN'T GET REPLACEMENT TEXTURE\n");
     return shape;
 }
 

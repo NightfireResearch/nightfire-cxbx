@@ -56,6 +56,8 @@
 #include "MissionManager.h"             // glbMissionManager
 #include "Simulation.h"                 // fgSimulation
 #include "VehicleSound.h"               // AVehicle
+#include "../logging.h"
+#include "../platform/CRuntime.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // The events of package A (0x0003db80-0x0004ec40): their MakeEvent and ResolveEvent callbacks, their destructors
@@ -71,9 +73,6 @@
 // XBE_GLOBAL(0x00243030, 0x10)
 #define GameZeroVector ((const Coord3 *)0x00243030)
 #define GameDefaultVector ((const Coord4 *)0x001d4c00)
-
-// The C runtime's printf (the game's)
-#define CRT_printf ((int (*)(const char *, ...))0x00132192)
 
 // XBE_GLOBAL(0x001e23a0, 0x4)
 uint32_t LastIncidentalStep;
@@ -191,8 +190,7 @@ int SixtiethsToSteps(int32_t time) {
 __declspec(naked) double CrtAcos(float) {
     __asm {
         fld dword ptr [esp + 4]
-        mov eax, 0x001328d0
-        call eax
+        call Crt::CIacos
         ret
     }
 }
@@ -862,7 +860,7 @@ void EActivateAIElement::Process() {
                         if (fgSimulation.GetSimpleRigidBody(toucher->GetPhysicsObject()->rigidBodySlot) != body)
                             return;
                         trigger->flags &= ~WTrigger::kEnabled;
-                        CRT_printf("The Helicopter hit the Trigger.\n");
+                        dbg_wprintf("The Helicopter hit the Trigger.\n");
                     }
                 } else {
                     RigidBody *body = fgSimulation.GetRigidBody(bodySlot);

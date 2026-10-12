@@ -22,13 +22,11 @@
 #include "Draw.h"
 #include "Renderer.h"
 #include "TextureContext.h"
+#include "../logging.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // RDecalManager and its neighbours (0x0009ac40-0x0009b680), ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- the game's code not ported yet
-#define CRT_printf ((int (*)(const char *format, ...))0x00132192)
 
 // ---- globals
 // XBE_GLOBAL(0x00242de8, 0x34)
@@ -164,7 +162,7 @@ RDecalManager* RDecalManager::Construct() {
     DecalType *table = types;
     void *file = UFileLoader::FileLoadz(BuildFileName(path, 0, "data\\render\\", "decal.dat", ""), 0x100);
     if (file == NULL) {
-        CRT_printf("Unable to load lighting file for config [Decal.dat]\n");
+        dbg_wprintf("Unable to load lighting file for config [Decal.dat]\n");
         MEM_fill(table, 0, sizeof(types));
     } else {
         MEM_copy(table, file, sizeof(types));

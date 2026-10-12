@@ -31,18 +31,13 @@
 #include "../sound/snd/Voices.h"        // SNDplaysetdef
 #include "../world/CollisionQueries.h"  // PointerUninitializedCopy
 #include "../game/SimulationContainers.h"
+#include "../logging.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // AStream and AStreamPriv (see Stream.h), with the compiled code of their event queue (std::deque<AStreamEntry>)
 // and of the stream registry's map. Every SND call is made where the original makes it, under SNDSYS_entercritical
 // where it takes it.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- originals called by address
-
-
-// The C runtime's printf (its formatting).
-#define CRT_printf ((int (*)(const char *, ...))0x00132192)
 
 // ---- globals
 
@@ -544,7 +539,7 @@ void AStream::Play(ASoundPlayParams *params) {
 
 // FUNC_AT(0x001234d0)
 void AStream::Event(const char *name, float fadeTime, bool loop, bool effect, bool held) {
-    CRT_printf("event %s, %.1f, %s\n", name, double(fadeTime), loop ? "loop" : "one-shot");
+    dbg_wprintf("event %s, %.1f, %s\n", name, double(fadeTime), loop ? "loop" : "one-shot");
     AStreamEntry entry = {};   // the original leaves its stack in the name's tail and in unknown3f
     priv->queue.PushBack(*entry.Construct(name, fadeTime, loop, effect, held, priv->playTick));
     priv->over = 0;
