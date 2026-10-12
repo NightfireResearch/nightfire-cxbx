@@ -5,9 +5,10 @@
 #include <stdint.h>
 
 #include "../../common/xbeClass.h"      // offsetof on a derived class without clang's warning
-#include "AIViews.h"
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../physics/PhysicsObject.h"
+
+class AICharacter;
 
 // ---------------------------------------------------------------------------------------------------------------
 // Human (0x90 bytes, vtable 0x0018edf4: PhysicsObject's seven slots): a "human" PhysicsObject of type 4 on a simple

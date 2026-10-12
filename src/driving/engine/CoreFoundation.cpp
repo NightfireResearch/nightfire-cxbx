@@ -85,3 +85,12 @@ void ThrowLengthError(const char *message) {
     error.vtable = LengthError_vtable;
     CxxThrowException(&error, LengthError_ThrowInfo);
 }
+
+// FUNC_AT(0x00022770)
+void __stdcall VectorConstructorIterator(void *objects, uint32_t size, int count, VectorConstructorFn construct) {
+    uint8_t *object = static_cast<uint8_t *>(objects);
+    while (--count >= 0) {
+        construct(object);
+        object += size;
+    }
+}

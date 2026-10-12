@@ -428,16 +428,16 @@ struct LiveRecords {
         for (int i = 0; i < net.segmentCount; i++)
             stamps.push_back(net.segments[i]->queryStamp);
         for (int i = 0; i < net.roadCount; i++) {
-            counts.push_back(net.roads[i]->count2e);
-            counts.push_back(net.roads[i]->count2f);
+            counts.push_back(net.roads[i]->carCount);
+            counts.push_back(net.roads[i]->pedestrianCount);
         }
     }
     void Restore(const WRoadNetworkData &net) const {
         for (int i = 0; i < net.segmentCount; i++)
             net.segments[i]->queryStamp = stamps[size_t(i)];
         for (int i = 0; i < net.roadCount; i++) {
-            net.roads[i]->count2e = counts[size_t(2 * i)];
-            net.roads[i]->count2f = counts[size_t(2 * i + 1)];
+            net.roads[i]->carCount = counts[size_t(2 * i)];
+            net.roads[i]->pedestrianCount = counts[size_t(2 * i + 1)];
         }
     }
 };
@@ -460,7 +460,7 @@ void TestRestart() {
         for (int i = 0; i < net.segmentCount; i++)
             Logf(" stamp %d %u", i, net.segments[i]->queryStamp);
         for (int i = 0; i < net.roadCount; i++)
-            Logf(" road %d %u %u", i, net.roads[i]->count2e, net.roads[i]->count2f);
+            Logf(" road %d %u %u", i, net.roads[i]->carCount, net.roads[i]->pedestrianCount);
     });
     Net() = saved;
     live.Restore(saved);
@@ -493,8 +493,8 @@ void TestInitShutdown() {
                 if (net.segments[i]->queryStamp != net.queryStamp)
                     Logf(" segment %d stamp %u", i, net.segments[i]->queryStamp);
             for (int i = 0; i < net.roadCount; i++)
-                if (net.roads[i]->count2e != 0 || net.roads[i]->count2f != 0)
-                    Logf(" road %d counts %u %u", i, net.roads[i]->count2e, net.roads[i]->count2f);
+                if (net.roads[i]->carCount != 0 || net.roads[i]->pedestrianCount != 0)
+                    Logf(" road %d counts %u %u", i, net.roads[i]->carCount, net.roads[i]->pedestrianCount);
         }
         ShutdownAt();
         Logf("shutdown %p %p %p %p %p %p", static_cast<void *>(net.instance), static_cast<void *>(net.nodes),

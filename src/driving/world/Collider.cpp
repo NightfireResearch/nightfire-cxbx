@@ -63,6 +63,13 @@ BarrierListEntry* BarrierList::Ucopy(BarrierListEntry *first, BarrierListEntry *
     return BarrierUninitializedCopy(first, last, dest);
 }
 
+// FUNC_AT(0x00023f20)
+uint32_t BarrierList::Count() const {
+    if (first == NULL)
+        return 0;
+    return uint32_t(last - first);
+}
+
 // FUNC_AT(0x000bd9a0)
 void BarrierList::Tidy() {
     ColStl::Tidy(this);

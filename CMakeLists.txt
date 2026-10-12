@@ -497,6 +497,20 @@ add_library(drivinginject SHARED
   src/driving/game/FireWeaponEvent.cpp
   src/driving/game/EventsC.cpp
   src/driving/game/EventsD.cpp
+  src/driving/game/AICharacter.cpp
+  src/driving/game/AIPedestrian.cpp
+  src/driving/game/AIHands.cpp
+  src/driving/game/AIEnemy.cpp
+  src/driving/game/AIEnemyGround.cpp
+  src/driving/game/AIEnemyRiders.cpp
+  src/driving/game/AIElements.cpp
+  src/driving/game/AIVehicle.cpp
+  src/driving/game/AISplinePath.cpp
+  src/driving/game/AIHelicopter.cpp
+  src/driving/game/AIVehicleController.cpp
+  src/driving/game/AIRoadSpawn.cpp
+  src/driving/game/AIGroundVehicle.cpp
+  src/driving/game/AIGroundVehicleDriving.cpp
   src/driving/engine/OBB.cpp
   src/driving/engine/PhysicsUtil.cpp
   src/driving/devtools/ColQueryShadow.cpp
@@ -536,6 +550,12 @@ add_library(drivinginject SHARED
   src/driving/devtools/GameEventsShadowB.cpp
   src/driving/devtools/GameEventsShadowC.cpp
   src/driving/devtools/GameEventsShadowD.cpp
+  src/driving/devtools/GameAIShadowA.cpp
+  src/driving/devtools/GameAIShadowB.cpp
+  src/driving/devtools/GameAIShadowC.cpp
+  src/driving/devtools/GameAIShadowD.cpp
+  src/driving/devtools/GameAIShadowE.cpp
+  src/driving/devtools/GameAIShadowF.cpp
   src/driving/devtools/VehicleShadow.cpp
   src/driving/devtools/RigidCollideShadow.cpp
   src/driving/devtools/RenderShadow.cpp

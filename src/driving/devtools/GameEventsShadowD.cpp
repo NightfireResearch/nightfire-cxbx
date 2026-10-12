@@ -22,7 +22,12 @@
 #include "../audio/SoundManager.h"      // StreamNameList
 #include "../data/Carp.h"
 #include "../engine/CoreContainers.h"
-#include "../game/AIViews.h"
+#include "../game/AICharacter.h"
+#include "../game/AIElements.h"
+#include "../game/AIHelicopter.h"
+#include "../game/AIPedestrian.h"
+#include "../game/AIRoadSpawn.h"
+#include "../game/AIVehicleController.h"
 #include "../game/EventsD.h"
 #include "../game/Human.h"
 #include "../game/Vehicle.h"
@@ -1208,9 +1213,9 @@ void BuildWorld() {
             AIElement *element = &list[i];
             element->flags = uint8_t(Random(256));
             element->type = int32_t(Chance(5) ? 2 : Random(2));
-            element->unknown48 = int32_t(Chance(4) ? 0 : 1);
-            element->characterObject = reinterpret_cast<Human *>(W->car);
-            element->unknown77 = uint8_t(Chance(3));
+            element->state = int32_t(Chance(4) ? 0 : 1);
+            element->person.human = reinterpret_cast<Human *>(W->car);
+            element->car.helicopter = uint8_t(Chance(3));
             element->object = Chance(4) ? NULL : reinterpret_cast<PhysicsObject *>(W->car);
         }
     }

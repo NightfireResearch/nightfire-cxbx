@@ -36,7 +36,6 @@
 
 // ---- the game's code not ported yet (or ported elsewhere for other node types)
 // the pointer vectors' uninitialized_fill_n, shared with the rest of the game
-#define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
 // The tree helpers every map of the game shares (identical code folded by the linker), on this file's node types.
 // 0x00053580 and 0x000527e0, 0x00052a20 are the attribute system's ported copies (of its own node types; one warns
 // as provisional), called here at their addresses; 0x00118f20 is CARP::ResolverMap::Find's.
@@ -121,6 +120,24 @@ WindowMapNode *WindowMapNext(WindowMapNode *node) {
 }
 
 }  // namespace
+
+// The segment's ends are left as the original's stack had them; zeroed here.
+// FUNC_AT(0x0001d9f0)
+WorldCollisionInfo* WorldCollisionInfo::Construct() {
+    point = {0.0f, 0.0f, 0.0f, 1.0f};
+    segmentStart = {0.0f, 0.0f, 0.0f, 0.0f};
+    segmentEnd = {0.0f, 0.0f, 0.0f, 0.0f};
+    instance = NULL;
+    groupId = 0;
+    object = NULL;
+    faceType = 0;
+    faceSubType = 0;
+    flag52 = 0;
+    hitType = 0;
+    unknown54 = 0;
+    faceInstance = NULL;
+    return this;
+}
 
 // ---------------------------------------------------------------------------------------------------------------
 // The vectors' push_back (the 8-byte and 40-byte ones compiled once each; the others inlined)
@@ -550,7 +567,7 @@ int WCollisionMgr::CheckHitWorld(const Coord4 *segment, WorldCollisionInfo *info
     position.Construct();
     position.FindClosestFace(&instanceList, &local[0], &local[1]);
     if (position.valid) {
-        WorldCollisionInfo_Construct(&candidate, 0);
+        candidate.Construct();
         candidate.hitType = kHitWorld;
         if (position.valid) {
             position.face.GetNormal(Xyz(&candidate.normal));
@@ -595,7 +612,7 @@ int WCollisionMgr::CheckHitWorld(const Coord4 *segment, WorldCollisionInfo *info
     boxes.last = NULL;
     boxes.end = NULL;
     fgCollisionMgr->GetObjectLists(&cylinders, &boxes, local);
-    WorldCollisionInfo_Construct(&candidate, 0);
+    candidate.Construct();
     if ((cylinders.first != NULL && cylinders.last - cylinders.first != 0 &&
          fgCollisionMgr->GetCylObjectCollision(local, &cylinders, &candidate)) ||
         (boxes.first != NULL && boxes.last - boxes.first != 0 &&
@@ -627,7 +644,7 @@ int WCollisionMgr::StepCheckHitWorld(Coord4 *segment, float step) {
     VU0_v4scale4(&delta, float(length / double(steps)), &delta);
     delta.w = 1.0f;
     WorldCollisionInfo info;
-    WorldCollisionInfo_Construct(&info, 0);
+    info.Construct();
     for (int i = 0; i < steps; i++) {
         VU0_v3add(&from, &delta, &to);
         to.w = 1.0f;

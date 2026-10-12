@@ -848,7 +848,7 @@ void PerturbManager(SMissionManager *m) {
     m->skippingCinematic = uint8_t(Range(0, 1));
     m->objectiveSeenStep = g_steps - Range(-10, 400);
     m->unknown4fc = Range(0, 50);
-    m->unknown500 = Chance(4) ? 0 : Range(-2, 80);
+    m->enemyCount = Chance(4) ? 0 : Range(-2, 80);
     m->lastDamageStep = g_steps - Range(-20, 200);
     for (int c = 0; c < kMagicCounters; c++) {
         m->magicCounters[c] = Range(-2, 6);
@@ -900,13 +900,13 @@ void PerturbWorld() {
     g_selectedTarget = Chance(2) ? NULL : reinterpret_cast<WTargetable *>(g_kind2Buf);
     for (int i = 0; i < 2; i++) {
         CARP::AIElement &e = g_liveElements[i];
-        e.position.x = Uniform(-500.0f, 500.0f);
-        e.position.y = Uniform(-20.0f, 50.0f);
-        e.position.z = Uniform(-500.0f, 500.0f);
-        e.position.w = 1.0f;
+        e.Position().x = Uniform(-500.0f, 500.0f);
+        e.Position().y = Uniform(-20.0f, 50.0f);
+        e.Position().z = Uniform(-500.0f, 500.0f);
+        e.Position().w = 1.0f;
         e.type = Range(0, 2);
-        e.unknown48 = Range(0, 2);
-        e.unknown77 = uint8_t(Chance(3));
+        e.state = Range(0, 2);
+        e.car.helicopter = uint8_t(Chance(3));
         e.object = Chance(5) ? NULL : reinterpret_cast<PhysicsObject *>(g_vehicles[i]);
         g_instances[i].packedDimensions = Next() | (Next() << 24);
     }

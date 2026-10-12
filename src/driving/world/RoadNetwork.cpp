@@ -156,8 +156,8 @@ void WRoadNetwork::Init() {
         if (record == group->DataEnd())
             continue;
         data.roads[i] = reinterpret_cast<WRoad *>(record->Data());
-        data.roads[i]->count2e = 0;
-        data.roads[i]->count2f = 0;
+        data.roads[i]->carCount = 0;
+        data.roads[i]->pedestrianCount = 0;
     }
 
     data.loaded = 1;
@@ -170,8 +170,8 @@ void WRoadNetwork::Restart() {
     for (int i = 0; i < data.segmentCount; i++)
         data.segments[i]->queryStamp = data.queryStamp;
     for (int i = 0; i < data.roadCount; i++) {
-        data.roads[i]->count2e = 0;
-        data.roads[i]->count2f = 0;
+        data.roads[i]->carCount = 0;
+        data.roads[i]->pedestrianCount = 0;
     }
 }
 
@@ -465,4 +465,28 @@ void WRoadNetwork::GetPointOnSegment(WRoadSegment *segment, float t, Coord3 *out
     Coord3 start = fgRoadNetworkData.nodes[segment->node[0]]->position;
     Coord3 end = fgRoadNetworkData.nodes[segment->node[1]]->position;
     GetPointOnSegment(&start, &end, segment, t, out);
+}
+
+// FUNC_AT(0x00029c90)
+void WRoadNetwork::AddRoadCar(int road) {
+    if (road >= 0 && road < fgRoadNetworkData.roadCount)
+        fgRoadNetworkData.roads[road]->carCount++;
+}
+
+// FUNC_AT(0x00029cb0)
+void WRoadNetwork::RemoveRoadCar(int road) {
+    if (road >= 0 && road < fgRoadNetworkData.roadCount)
+        fgRoadNetworkData.roads[road]->carCount--;
+}
+
+// FUNC_AT(0x00023990)
+void WRoadNetwork::AddRoadPedestrian(int road) {
+    if (road >= 0 && road < fgRoadNetworkData.roadCount)
+        fgRoadNetworkData.roads[road]->pedestrianCount++;
+}
+
+// FUNC_AT(0x000239b0)
+void WRoadNetwork::RemoveRoadPedestrian(int road) {
+    if (road >= 0 && road < fgRoadNetworkData.roadCount)
+        fgRoadNetworkData.roads[road]->pedestrianCount--;
 }

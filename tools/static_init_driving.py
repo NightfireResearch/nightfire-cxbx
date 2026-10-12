@@ -90,6 +90,9 @@ TARGETS = {
     0x000b4fe0: ("method", "Simulation", "Construct"),
     0x000b5310: ("method", "Simulation", "Destruct"),
     0x000b8490: ("method", "MissionList", "BuyHead"),           # static: it does not read `this`
+    0x0002bd40: ("method", "AIGroundVehicle", "Construct"),
+    0x0002be70: ("method", "AIGroundVehicle", "Destruct"),
+    0x00036a00: ("method", "AIZone", "Construct"),
 }
 # Objects the initialisers construct that our code names, by address: the name and its class. A constructor or
 # destructor of that class is called on the name; for the globals we own (XBE_GLOBAL) this is what makes the
@@ -690,6 +693,8 @@ def main():
             '#include "../data/Carp.h"',
             '#include "../data/StdStreams.h"',
             '#include "../data/SymbolTable.h"',
+            '#include "../game/AIElements.h"',
+            '#include "../game/AIVehicle.h"',
             '#include "../game/DebugAudio.h"',
             '#include "../game/EmpEffect.h"',
             '#include "../game/MissionManager.h"',

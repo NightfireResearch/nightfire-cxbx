@@ -42,6 +42,12 @@
 #include "../world/World.h"             // fgWorld, ArticleOf, kUntrackedModel
 #include "../world/WorldPos.h"
 #include "../../helpers.h"
+#include "AICharacter.h"
+#include "AIElements.h"
+#include "AIHelicopter.h"
+#include "AIPedestrian.h"
+#include "AIRoadSpawn.h"
+#include "AIVehicleController.h"
 #include "BondCarState.h"               // CarSurface
 #include "EventsD.h"                    // StingerChannel
 #include "Helicopter.h"                 // PHelicopter::scoreable
@@ -52,8 +58,8 @@
 
 // ---------------------------------------------------------------------------------------------------------------
 // The events of package A (0x0003db80-0x0004ec40): their MakeEvent and ResolveEvent callbacks, their destructors
-// (where each does its work, in Process) and their scalar deleting destructors. Ported from the listing; the AI and
-// front-end calls go to the originals through game/AIViews.h and engine/GameInterfaces.hpp.
+// (where each does its work, in Process) and their scalar deleting destructors. Ported from the listing; the
+// front-end calls go to the originals through engine/GameInterfaces.hpp.
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's globals
@@ -409,7 +415,7 @@ void EAICommand::Process() {
     if (trigger != NULL) {
         if (element != NULL) {
             CARP::AIElement *toucherElement = fgAIElementController->RedirectCarpElement(element);
-            if (toucherElement->unknown48 != 1)
+            if (toucherElement->state != kElementAwake)
                 return;
             AIVehicle *toucher = toucherElement->vehicle;
             if (bySimpleBody) {
@@ -446,13 +452,13 @@ void EAICommand::Process() {
         if (target != NULL) {
             CARP::AIElement *targetElement = fgAIElementController->RedirectCarpElement(target);
             AICharacter *character = NULL;
-            if (targetElement->unknown48 == 1) {
+            if (targetElement->state == kElementAwake) {
                 if (targetElement->type == CARP::kAIElementVehicle)
                     ordered = targetElement->vehicle;
                 else if (targetElement->type == CARP::kAIElementCharacter)
                     character = targetElement->character;
             }
-            if (command->attackMode != kAttackMode9 && command->attackMode != kAttackMode10)
+            if (command->attackMode != kGroundAttackGuns && command->attackMode != kGroundAttackRockets)
                 targetElement->command = command;
             if (character != NULL) {
                 if (command->targetMode == 0) {
@@ -505,7 +511,7 @@ void EAICommand::CommandGroundVehicle(AIGroundVehicle *car) {
             ->ResetCar(&position, reinterpret_cast<const Coord3 *>(orientation.mtx[2]));
     }
 
-    car->unknown144 = command->unknown7c == 0;
+    car->useLanes = command->unknown7c == 0;
     if (car != AIVehicleController::Get()->GetPlayerGroundVehiclePtr(0))
         car->SetTargetMode(command->targetMode, &command->position);
     car->driveToNav->unknown04 = command->unknown7f;
@@ -515,12 +521,12 @@ void EAICommand::CommandGroundVehicle(AIGroundVehicle *car) {
     car->driveToNav->unknownB2 = command->unknown85;
     car->SetNavigateMode(command->navigateMode, command->navigateTarget);
     car->SetAttackMode(command->attackMode);
-    car->unknown1f0 = command->unknown4c;
-    car->unknown128 = command->unknown60;
-    car->unknown12c = command->unknown5c;
-    car->unknown13c = command->unknown68;
+    car->attackRange = command->range;
+    car->maxSpeed = command->maxSpeed;
+    car->speedScale = command->speedScale;
+    car->chargeChance = command->shotCount;
     car->unknown140 = command->unknown6c;
-    car->unknown1f8 = command->unknown64;
+    car->fireDelay = command->fireDelay;
 
     // A push along the car's heading, scaled by its mass (none for 0 or 1.5)
     if (command->pushForward != 0.0f && command->pushForward != 1.5f) {
@@ -550,9 +556,9 @@ void EAICommand::CommandGroundVehicle(AIGroundVehicle *car) {
 
     car->SetSecondaryTarget(command->secondaryTarget);
     car->unknown145 = command->unknown7d != 0;
-    car->unknown109 = command->unknown86;
-    car->unknown10c = command->unknown88;
-    car->unknown110 = command->unknown8c;
+    car->followTargetHeight = command->followTargetHeight;
+    car->maxHeight = command->maxHeight;
+    car->minHeight = command->minHeight;
     if (car->GetPhysicsObject()->attributes.LookupBool("HAS_MACHINEGUNS", NULL) ||
         car->GetPhysicsObject()->attributes.LookupBool("HAS_CANNONS", NULL))
         car->useGuns = command->unknown87 || command->unknown92;
@@ -561,9 +567,9 @@ void EAICommand::CommandGroundVehicle(AIGroundVehicle *car) {
     if (car->GetPhysicsObject()->attributes.LookupBool("HAS_MISSLES", NULL) ||
         car->GetPhysicsObject()->attributes.LookupBool("HAS_TORPEDOS", NULL))
         car->useMissiles = command->missiles;
-    car->aimScale = command->unknown94;
-    car->accuracy = command->unknown93;
-    car->unknown177 = 1;
+    car->aimScale = command->aimScale;
+    car->accuracy = command->accuracy;
+    car->newCommand = 1;
 }
 
 // FUNC_AT(0x0004ea60)
@@ -671,7 +677,7 @@ void EAIElementSetAccuracy::Process() {
         return;
     CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(element);
     if (redirected->type == CARP::kAIElementCharacter) {
-        redirected->accuracy = accuracy;
+        redirected->person.info.accuracy = accuracy;
     } else if (redirected->type == CARP::kAIElementVehicle) {
         for (int i = 0; i < redirected->memberCount; i++)
             redirected->members[i].accuracy = accuracy;
@@ -705,15 +711,15 @@ void EAIElementSetCharParams::Process() {
         return;
     CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(element);
     if (redirected->type == CARP::kAIElementCharacter) {
-        redirected->unknown64 = unknown08;
-        redirected->accuracy = accuracy;
-        redirected->unknown6c = unknown10;
-        redirected->unknown4c = unknown10;
+        redirected->person.info.aimScale = unknown08;
+        redirected->person.info.accuracy = accuracy;
+        redirected->person.info.hitPoints = unknown10;
+        redirected->hitPoints = unknown10;
     } else if (redirected->type == CARP::kAIElementVehicle) {
         for (int i = 0; i < redirected->memberCount; i++) {
-            redirected->members[i].unknown0c = unknown08;
+            redirected->members[i].aimScale = unknown08;
             redirected->members[i].accuracy = accuracy;
-            redirected->members[i].unknown14 = unknown10;
+            redirected->members[i].hitPoints = unknown10;
         }
     }
 }
@@ -749,11 +755,13 @@ void EAIElementSetNonScoreable::Process() {
     fgAIElementController->GetCarpElementTracking(element);     // the answer is not used
     switch (redirected->type) {
     case CARP::kAIElementCharacter:
-        if (redirected->characterObject != NULL)
-            redirected->characterObject->character->scoreable = 0;
+        if (redirected->person.human != NULL)
+            redirected->person.human->character->scoreable = 0;
         break;
     case CARP::kAIElementVehicle:
-        if (redirected->unknown77) {
+        // The test the wrong way round, as the original has it: a helicopter is handled as a car, a car as a
+        // helicopter
+        if (redirected->car.helicopter) {
             if (redirected->object != NULL)
                 (static_cast<PVehicle *>(redirected->object))->SetScoreable(false);
         } else {
@@ -788,7 +796,7 @@ void EAIElementSetVehicleParams::Destruct() {
 
 void EAIElementSetVehicleParams::Process() {
     if (element != NULL)
-        fgAIElementController->RedirectCarpElement(element)->unknown4c = unknown08;
+        fgAIElementController->RedirectCarpElement(element)->hitPoints = unknown08;
 }
 
 // FUNC_AT(0x00047430)
@@ -846,7 +854,7 @@ void EActivateAIElement::Process() {
     if (trigger != NULL) {
         if (toucherElement != NULL) {
             CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(toucherElement);
-            if (redirected->unknown48 == 1) {
+            if (redirected->state == kElementAwake) {
                 AIVehicle *toucher = redirected->vehicle;
                 if (bySimpleBody) {
                     SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(bodySlot);
@@ -878,8 +886,8 @@ void EActivateAIElement::Process() {
     if (element != NULL) {
         CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(element);
         if (!gLimitHenchSpawns || redirected->type != CARP::kAIElementVehicle ||
-            (redirected->flags & CARP::AIElement::kFlag04) || fgAIElementController->OkToSpawnHench())
-            redirected->flags &= ~CARP::AIElement::kAsleep;
+            (redirected->flags & kElementForceAwake) || fgAIElementController->OkToSpawnHench())
+            redirected->flags &= ~kElementDeactivated;
     }
 }
 
@@ -912,7 +920,7 @@ void EDeactivateAIElement::Process() {
     if (element == NULL)
         return;
     CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(element);
-    redirected->flags |= CARP::AIElement::kAsleep;
+    redirected->flags |= kElementDeactivated;
     if (redirected->type == CARP::kAIElementVehicle)
         fgAIElementController->ForceVehicleToSleep(redirected->vehicle);
 }
@@ -1202,12 +1210,12 @@ void EControlToSpline::Process() {
     if (spline == NULL || spline->path.value == 0)
         return;
     if (element == NULL) {
-        PlayerCar()->GetAIGroundVehiclePtr()->ControlToSpline(spline);
+        PlayerCar()->GetAIGroundVehiclePtr()->CallEngageSplinePath(spline);
         PlayerCamera()->SetControlToCPU(true);
     } else {
         CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(element);
-        if (redirected->unknown48 == 1 && redirected->type == CARP::kAIElementVehicle)
-            redirected->vehicle->ControlToSpline(spline);
+        if (redirected->state == kElementAwake && redirected->type == CARP::kAIElementVehicle)
+            redirected->vehicle->CallEngageSplinePath(spline);
     }
 }
 
@@ -1235,10 +1243,10 @@ void EEndControlToSpline::Destruct() {
 
 void EEndControlToSpline::Process() {
     if (element == NULL) {
-        PlayerCar()->GetAIGroundVehiclePtr()->EndControlToSpline();
+        PlayerCar()->GetAIGroundVehiclePtr()->CallDisengageSplinePath();
         PlayerCamera()->SetControlToCPU(false);
     } else {
-        fgAIElementController->RedirectCarpElement(element)->vehicle->EndControlToSpline();
+        fgAIElementController->RedirectCarpElement(element)->vehicle->CallDisengageSplinePath();
     }
 }
 

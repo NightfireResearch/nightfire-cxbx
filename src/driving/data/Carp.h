@@ -52,64 +52,82 @@ public:
 
 // AIElement::type (names ours)
 enum AIElementType : int32_t {
-    kAIElementCharacter = 0,        // `character` and `characterObject` are the element's
-    kAIElementVehicle = 1,          // `vehicle`, the members and `object` are
+    kAIElementCharacter = 0,        // an enemy on foot: `character`, `person`
+    kAIElementVehicle = 1,          // a car or helicopter with up to three riders: `vehicle`, `car`, the members and
+                                    //   `object`
 };
 
-// A member of a vehicle element (0x20 bytes): the character parameters each member gets
-struct AIElementMember {
-    uint8_t unknown00[0xc];
-    int32_t unknown0c;              // +0x0c EAIElementSetCharParams' first
+// A character's record (0x20 bytes): a character element's own (+0x58), and each member of a vehicle element
+struct AIElementCharacterInfo {
+    int32_t kind;                   // +0x00 AIElementSeat for a member, AIElementGroundKind for a character
+                                    //       (game/AIElements.h)
+    int32_t description;            // +0x04 an index into the character descriptions
+    int32_t weapon;                 // +0x08 an index into the weapon names
+    int32_t aimScale;               // +0x0c EAIElementSetCharParams' first: percent more or less spread, -100..100
+                                    //       (EFireWeapon)
     int32_t accuracy;               // +0x10 its second; EAIElementSetAccuracy's
-    float unknown14;                // +0x14 its third
-    uint8_t unknown18[8];
+    float hitPoints;                // +0x14 its third; a member's hit point location
+    int32_t animation;              // +0x18 a character element's starting animation: 31-48 picks one of the
+                                    //       ground enemy's (larger ones 48)
+    int32_t skill;                  // +0x1c AIElementSkill: how far the character's range reaches
 };
-static_assert(sizeof(AIElementMember) == 0x20, "an element's member is 32 bytes");
+static_assert(sizeof(AIElementCharacterInfo) == 0x20, "an element's character is 32 bytes");
 
-// An AI element (tag 'AIEl', 0x100 bytes; the AIElementController hands out the element standing for a record:
-// RedirectCarpElement). Only what the ported code reads is named; the AI's classes are game/AIViews.h's.
+// A character element's own part (+0x54)
+struct AIElementPerson {
+    Human *human;                   // +0x54 its body while awake
+    AIElementCharacterInfo info;    // +0x58
+};
+
+// A vehicle element's own part (+0x54)
+struct AIElementCar {
+    char name[0x20];                // +0x54 the car's type
+    uint8_t colour;                 // +0x74
+    uint8_t unknown75[2];
+    uint8_t helicopter;             // +0x77 a helicopter rather than a car
+};
+
+// An AI element (tag 'AIEl', 0x100 bytes): an enemy on foot, or a car or helicopter with up to three riders, placed
+// by its transform. game/AIElements.h's AIElementController copies the level's records and hands out the copy
+// standing for a record (RedirectCarpElement); it sleeps until the controller wakes it.
 struct AIElement {
-    enum Flag : uint8_t {
-        kAsleep = 0x02,             // EDeactivateAIElement sets it, EActivateAIElement clears it (names ours)
-        kFlag04 = 0x04,             // EActivateAIElement wakes it without asking OkToSpawnHench
-        kTargetBeacon = 0x08,       // ETargetBeaconOnOff's
-    };
-
-    uint8_t unknown00[0x30];
-    Coord4 position;                // +0x30
-    uint8_t flags;                  // +0x40 Flag
-    uint8_t unknown41[3];
+    MATRIX4 transform;              // +0x00 where it spawns; where it was when it last went to sleep
+    uint16_t flags;                 // +0x40 AIElementFlag (game/AIElements.h)
+    int16_t difficulty;             // +0x42 AIElementDifficulty
     int32_t type;                   // +0x44 AIElementType
-    int32_t unknown48;              // +0x48 1: the element's vehicle or character is there to command
-    float unknown4c;                // +0x4c EAIElementSetVehicleParams', EAIElementSetCharParams' third
-    union {                         // +0x50 by type
+    int32_t state;                  // +0x48 AIElementState: awake, its vehicle or character is there to command
+    float hitPoints;                // +0x4c the car's or character's hit point location
+    union {                         // +0x50 while awake
         AICharacter *character;
         AIVehicle *vehicle;
     };
-    Human *characterObject;         // +0x54 a character element's
-    uint8_t unknown58[0xc];
-    int32_t unknown64;              // +0x64 EAIElementSetCharParams' first
-    int32_t accuracy;               // +0x68 its second; EAIElementSetAccuracy's
-    float unknown6c;                // +0x6c its third
-    uint8_t unknown70[7];
-    uint8_t unknown77;              // +0x77 EKillAIElement: set, `object` is a PBondCar; clear, a PHelicopter
+    union {                         // +0x54 by type
+        AIElementPerson person;
+        AIElementCar car;
+    };
     uint8_t unknown78[4];
-    int32_t memberCount;            // +0x7c a vehicle element's members
-    AIElementMember members[3];     // +0x80
-    AICharacter *memberCharacters[4];   // +0xe0 ECameraLockOn's members, from 1
-    uint8_t unknownF0[8];
-    union {                         // +0xf8 AIElementResolver's: the element's command (EAICommand's)
-        TagReference reference;
+    int32_t memberCount;            // +0x7c a vehicle element's riders
+    AIElementCharacterInfo members[3];  // +0x80
+    AICharacter *memberCharacters[3];   // +0xe0 while awake
+    Human *memberHumans[3];         // +0xec ... and their bodies
+    union {                         // +0xf8 AIElementResolver's: the element's command, handed to an EAICommand
+        TagReference reference;     //       when it wakes
         AICommand *command;
     };
-    PhysicsObject *object;          // +0xfc a vehicle element's
+    PhysicsObject *object;          // +0xfc a vehicle element's car or helicopter, while awake
+
+    // The transform's position row
+    Coord4 &Position() { return *reinterpret_cast<Coord4 *>(transform.mtx[3]); }
 };
 static_assert(sizeof(AIElement) == 0x100, "an AI element is 0x100 bytes");
-static_assert(offsetof(AIElement, position) == 0x30 && offsetof(AIElement, type) == 0x44 &&
-              offsetof(AIElement, vehicle) == 0x50 && offsetof(AIElement, characterObject) == 0x54 &&
-              offsetof(AIElement, accuracy) == 0x68 && offsetof(AIElement, unknown77) == 0x77 &&
-              offsetof(AIElement, memberCount) == 0x7c && offsetof(AIElement, memberCharacters) == 0xe0 &&
-              offsetof(AIElement, reference) == 0xf8 && offsetof(AIElement, object) == 0xfc, "AI element layout");
+static_assert(offsetof(AIElement, flags) == 0x40 && offsetof(AIElement, type) == 0x44 &&
+              offsetof(AIElement, state) == 0x48 && offsetof(AIElement, hitPoints) == 0x4c &&
+              offsetof(AIElement, character) == 0x50 && offsetof(AIElement, person) == 0x54 &&
+              offsetof(AIElement, memberCount) == 0x7c && offsetof(AIElement, members) == 0x80 &&
+              offsetof(AIElement, memberCharacters) == 0xe0 && offsetof(AIElement, memberHumans) == 0xec &&
+              offsetof(AIElement, command) == 0xf8 && offsetof(AIElement, object) == 0xfc, "AI element layout");
+static_assert(offsetof(AIElementCar, colour) == 0x20 && offsetof(AIElementCar, helicopter) == 0x23 &&
+              offsetof(AIElementPerson, info) == 4, "AI element parts");
 
 // An article's description (tag 'Base' or 'pD', 100 bytes).
 class BaseDesc {
@@ -166,6 +184,9 @@ public:
     double SizeY() const;
     // The matrix with the rows' fourth words (0, 0, 0, 1) (Ghidra: FUN_0003db00)
     MATRIX4* GetMatrix4(MATRIX4 *matrix) const;                                         // 0x0003db00
+    // The matrix's axes and position, the words between them left as they are (FUN_00035610, placed among the
+    // AI's code; the name is ours)
+    void SetMatrix(const MATRIX4 *matrix);                                              // 0x00035610
 };
 static_assert(sizeof(Instance) == 64, "CARP::Instance is 64 bytes");
 

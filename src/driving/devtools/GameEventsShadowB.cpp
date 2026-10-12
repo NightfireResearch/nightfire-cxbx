@@ -24,7 +24,12 @@
 #include "../data/Carp.h"
 #include "../engine/SimRandom.h"
 #include "../game/EventsB.h"
-#include "../game/AIViews.h"
+#include "../game/AICharacter.h"
+#include "../game/AIElements.h"
+#include "../game/AIHelicopter.h"
+#include "../game/AIPedestrian.h"
+#include "../game/AIRoadSpawn.h"
+#include "../game/AIVehicleController.h"
 #include "../game/FireWeaponEvent.h"
 #include "../engine/GameInterfaces.hpp"
 #include "../game/MissionManager.h"
@@ -305,7 +310,7 @@ struct World {
     alignas(16) RPathHandle path;
     alignas(16) WTargetable targets[3];
     alignas(16) uint8_t weapon[0x170];
-    alignas(16) WeaponAccuracy accuracy;
+    alignas(16) CARP::AIElementCharacterInfo accuracy;
     alignas(16) WeaponRecord defs[32];
     alignas(16) uint8_t weaponManager[0x80];
     alignas(16) uint8_t missionManager[0x500];
@@ -1004,7 +1009,7 @@ void BuildWorld() {
     w.playerList[0] = Object(0);
     w.playerList[1] = Object(1);
     for (int i = 0; i < 3; i++)
-        w.elements[i].unknown48 = 1;
+        w.elements[i].state = 1;
 }
 
 // Random contents for the bytes the events read, the same for both sides
@@ -1091,15 +1096,15 @@ void Perturb() {
     for (int i = 0; i < 3; i++) {
         CARP::AIElement &e = w.elements[i];
         e.type = int32_t(Chance(10) ? 2 : Random(2));
-        e.unknown48 = int32_t(Chance(80) ? 1 : 0);
+        e.state = int32_t(Chance(80) ? 1 : 0);
         e.flags = uint8_t(Random(8));
-        e.unknown77 = uint8_t(Random(2));
+        e.car.helicopter = uint8_t(Random(2));
         if (e.type == CARP::kAIElementCharacter) {
             e.character = Chance(80) ? reinterpret_cast<AICharacter *>(w.character) : NULL;
-            e.characterObject = Chance(85) ? reinterpret_cast<Human *>(w.physics[3]) : NULL;
+            e.person.human = Chance(85) ? reinterpret_cast<Human *>(w.physics[3]) : NULL;
         } else {
             e.vehicle = reinterpret_cast<AIVehicle *>(w.aiVehicle);
-            e.object = Chance(85) ? Object(e.unknown77 ? 1 : 2) : NULL;
+            e.object = Chance(85) ? Object(e.car.helicopter ? 1 : 2) : NULL;
         }
         w.tracking[i].position.x = Uniform(-50.0f, 50.0f);
         w.tracking[i].position.y = Uniform(-5.0f, 5.0f);
@@ -1158,7 +1163,7 @@ void Perturb() {
     ActWeapon *weapon = At<ActWeapon>(w.weapon);
     weapon->flags = Random(4);
     weapon->owner = Object(3);
-    weapon->accuracy = Chance(60) ? &w.accuracy : NULL;
+    weapon->characterInfo = Chance(60) ? &w.accuracy : NULL;
     weapon->unknown160 = int32_t(Random(4));
     weapon->unknown164 = int32_t(Random(7));
     w.accuracy.aimScale = int32_t(Random(300)) - 150;
@@ -1196,7 +1201,7 @@ void SaveGlobals(Globals *g) {
     g->feedbackAllowed = LiveFeedbackAllowed;
     g->soundOption = LiveSoundOption;
     g->henchLimit = gLimitHenchSpawns;
-    g->pedFlag = gPedRespawnFlag;
+    g->pedFlag = ForceNearRespawn;
     g->simState = LiveSimState;
     memcpy(g->missionName, LiveMissionName, sizeof(g->missionName));
     for (int i = 0; i < 4; i++)
@@ -1220,7 +1225,7 @@ void LoadGlobals(const Globals *g) {
     LiveFeedbackAllowed = g->feedbackAllowed;
     LiveSoundOption = g->soundOption;
     gLimitHenchSpawns = g->henchLimit;
-    gPedRespawnFlag = g->pedFlag;
+    ForceNearRespawn = g->pedFlag;
     LiveSimState = g->simState;
     memcpy(LiveMissionName, g->missionName, sizeof(g->missionName));
     for (int i = 0; i < 4; i++)
@@ -1246,7 +1251,7 @@ std::string GlobalsText(bool original) {
              "%d %u %u",
              Name(d.instance).c_str(), Name(d.sceneObj).c_str(), d.instanceIndex, Name(d.trigger).c_str(),
              Name(d.weapon).c_str(), d.flag, d.index, fgSimulation.random->state, fgSimulation.random->lastProduct, fgSimulation.random->seed,
-             fgSimulation.random->counter, LiveRenderSeed, LiveFeedbackAllowed, LiveSimState, gPedRespawnFlag,
+             fgSimulation.random->counter, LiveRenderSeed, LiveFeedbackAllowed, LiveSimState, ForceNearRespawn,
              original ? GameGlassShatterCount : gGlassShatterCount, original ? GameStoreAlarmCount : gStoreAlarmCount,
              original ? GameCarGunShots : gCarGunShots, original ? GameHenchGunPick : gHenchGunPick,
              original ? GameHenchGunShots : gHenchGunShots);

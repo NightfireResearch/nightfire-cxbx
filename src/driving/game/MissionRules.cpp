@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "AIViews.h"                      // AIElementController
+#include "AIElements.h"
 #include "MissionManager.h"               // glbMissionManager
 #include "Simulation.h"
 #include "Vehicle.h"                      // PVehicle
@@ -95,7 +95,7 @@ int TargetHealth(const SMissionRuleTarget &target) {
     if (target.type == kTargetPlayer)
         return Ftol(glbMissionManager->playerHealth);
     if (target.type == kTargetElement)
-        return Ftol(Tracking(target.element)->object->health);
+        return Ftol(Tracking(target.element)->element->hitPoints);
     return 0;
 }
 
@@ -244,7 +244,8 @@ bool SMissionRuleTarget::GetMatrix(MATRIX4 *matrix) {
         slot = fgSimulation.cars.first[0]->rigidBodySlot;
     } else if (type == kTargetElement) {
         CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(ElementOf(element));
-        if (redirected->unknown48 != 1 || redirected->type != CARP::kAIElementVehicle || redirected->object == NULL)
+        if (redirected->state != kElementAwake || redirected->type != CARP::kAIElementVehicle ||
+            redirected->object == NULL)
             return false;
         slot = redirected->object->rigidBodySlot;
     } else {
@@ -300,7 +301,7 @@ SRuleDamage* SRuleDamage::Construct(const MissionRuleRecord *record) {
 // FUNC_AT(0x000b9770)
 bool SRuleDamage::CheckRule() {
     if (target.type == kTargetStats)
-        return Ftol(Stats()->unknown08) > threshold;
+        return Ftol(Stats()->maxDamage) > threshold;
     int health = TargetHealth(target);
     int damage = lastHealth - health;
     lastHealth = health;
@@ -518,7 +519,7 @@ bool SRuleHealth::CheckRule() {
     int value;
     if (target.type == kTargetStats) {
         AIElementStats *stats = Stats();
-        value = Ftol(health.direction != 0 ? stats->unknown00 : stats->unknown04);
+        value = Ftol(health.direction != 0 ? stats->maxHitPoints : stats->minHitPoints);
     } else {
         value = TargetHealth(target);
     }
@@ -539,7 +540,7 @@ bool SRuleRange::CheckRule() {
     int value;
     if (target.type == kTargetStats) {
         AIElementStats *stats = Stats();
-        value = Ftol(distance.direction != 0 ? stats->unknown14 : stats->unknown18);
+        value = Ftol(distance.direction != 0 ? stats->maxDistance : stats->minDistance);
     } else {
         Coord4 position = { 0.0f, 0.0f, 0.0f, 0.0f };
         target.GetPos(&position);
@@ -573,7 +574,7 @@ bool SRuleSpeed::CheckRule() {
     int value;
     if (target.type == kTargetStats) {
         AIElementStats *stats = Stats();
-        value = Ftol(speed.direction != 0 ? stats->unknown0c : stats->unknown10);
+        value = Ftol(speed.direction != 0 ? stats->maxSpeed : stats->minSpeed);
     } else {
         value = target.GetSpeed();
     }

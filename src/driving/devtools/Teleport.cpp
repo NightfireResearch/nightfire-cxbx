@@ -71,6 +71,12 @@
 #include "GameEventsShadowB.h"
 #include "GameEventsShadowC.h"
 #include "GameEventsShadowD.h"
+#include "GameAIShadowA.h"
+#include "GameAIShadowB.h"
+#include "GameAIShadowC.h"
+#include "GameAIShadowD.h"
+#include "GameAIShadowE.h"
+#include "GameAIShadowF.h"
 #include "VehicleShadow.h"
 
 #include <windows.h>
@@ -348,6 +354,12 @@ void Teleport_Tick(void) {
         GameEventsShadowB_Run();    // NIGHTFIRE_GAMEEVENTSSHADOWB=1 only
         GameEventsShadowC_Run();    // NIGHTFIRE_GAMEEVENTSSHADOWC=1 only
         GameEventsShadowD_Run();    // NIGHTFIRE_GAMEEVENTSSHADOWD=1 only
+        GameAIShadowA_Run();        // NIGHTFIRE_GAMEAISHADOWA=1 only
+        GameAIShadowB_Run();        // NIGHTFIRE_GAMEAISHADOWB=1 only
+        GameAIShadowC_Run();        // NIGHTFIRE_GAMEAISHADOWC=1 only
+        GameAIShadowD_Run();        // NIGHTFIRE_GAMEAISHADOWD=1 only
+        GameAIShadowE_Run();        // NIGHTFIRE_GAMEAISHADOWE=1 only
+        GameAIShadowF_Run();        // NIGHTFIRE_GAMEAISHADOWF=1 only
         if (AnyVehicleShadow()) {
             PrintQueues("before the vehicle shadows", ReadQueues());
             RunVehicleShadow("bondcarA", BondCarShadowA_Run);   // NIGHTFIRE_BONDCARSHADOWA=1 only

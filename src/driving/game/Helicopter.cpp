@@ -5,7 +5,8 @@
 #include <bit>
 #include <math.h>
 
-#include "AIViews.h"                    // AIHelicopter, fgAIElementController
+#include "AIElements.h"
+#include "AIHelicopter.h"
 #include "Missile.h"
 #include "MissionManager.h"
 #include "Simulation.h"

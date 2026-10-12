@@ -24,7 +24,6 @@
 
 // ---- originals called by address
 
-#define CellVector_Xlen ((void (__fastcall *)(void *, int))0x00034e50)
 
 // ---- the game's state
 
@@ -118,10 +117,15 @@ bool Beyond(double difference) {
 
 // FUNC_AT(0x000c5be0)
 void WGridCellList::InsertN(uint32_t *where, uint32_t count, const uint32_t *value) {
-    ColStl::InsertN(this, where, count, value, kMaxCells, [this] {
+    ColStl::InsertN(this, where, count, value, kMaxCells, [] {
         WORLD_UNTESTED("WGridCellList's _Xlen");
-        CellVector_Xlen(this, 0);
+        Xlen();
     });
+}
+
+// FUNC_AT(0x00034e50)
+void WGridCellList::Xlen() {
+    ThrowLengthError("vector<T> too long");
 }
 
 // FUNC_AT(0x000c5ea0)

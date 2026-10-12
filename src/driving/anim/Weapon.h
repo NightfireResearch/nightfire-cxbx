@@ -16,6 +16,10 @@
 #include "../engine/URefCounter.h"      // RefCounterTree
 #include "../render/RSceneObj.hpp"
 
+namespace CARP {
+struct AIElementCharacterInfo;
+}
+
 struct RCARPFile;
 struct PhysicsObject;
 struct Newton;
@@ -44,13 +48,6 @@ struct ActWeaponFlash {
 };
 static_assert(sizeof(ActWeaponFlash) == 0x14, "a weapon's flash is 0x14 bytes");
 
-// What a weapon's accuracy points at (names ours, from EFireWeapon's aim)
-struct WeaponAccuracy {
-    uint8_t unknown00[0xc];
-    int32_t aimScale;                 // +0x0c percent more or less spread, -100..100
-    int32_t accuracy;                 // +0x10
-};
-
 // A weapon (0x170, "ActWeapon"): an RAutonomousObj with its own vtable (0x0018a440).
 class ActWeapon : public RAutonomousObj {
 public:
@@ -71,9 +68,10 @@ public:
     PhysicsObject *owner;             // +0x144
     uint8_t unknown148[8];
     Coord3 velocity;                  // +0x150 zero (GetVelocity)
-    WeaponAccuracy *accuracy;         // +0x15c NULL from the constructor; EFireWeapon: NULL is 100 accuracy
+    CARP::AIElementCharacterInfo *characterInfo;  // +0x15c its holder's AI element record (AIElementController::
+                                      //        WakeUp's); NULL from the constructor, EFireWeapon's 100 accuracy
     int32_t unknown160;               // +0x160 0
-    int32_t unknown164;               // +0x164 0
+    int32_t unknown164;               // +0x164 0; 4 for a holder whose description has ".t_snowh." (WakeUp)
     uint8_t unknown168[8];
 
     ActWeapon* Construct(ActWeaponAux *aux, uint32_t flags);                    // 0x0001abd0

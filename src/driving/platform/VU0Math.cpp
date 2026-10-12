@@ -392,3 +392,21 @@ void VU0_v4quatrotate_xlate(const void *q, const void *v, const void *t, void *o
     S3(out, QuatRotate(q, v));
     S3(out, _mm_add_ps(L(out), L(t)));
 }
+
+static inline float Lerp(float from, float to, float t) {
+    __m128 a = _mm_set_ss(from);
+    return _mm_cvtss_f32(_mm_add_ss(_mm_mul_ss(_mm_set_ss(t), _mm_sub_ss(_mm_set_ss(to), a)), a));
+}
+
+// FUNC_AT(0x00022870)
+void BlendVectors(void *out, const void *from, const void *to, float t) {
+    const float *a = static_cast<const float *>(from);
+    const float *b = static_cast<const float *>(to);
+    float x = Lerp(a[0], b[0], t);
+    float y = Lerp(a[1], b[1], t);
+    float z = Lerp(a[2], b[2], t);
+    float *result = static_cast<float *>(out);
+    result[0] = x;
+    result[1] = y;
+    result[2] = z;
+}

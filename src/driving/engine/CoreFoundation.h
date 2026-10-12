@@ -1,12 +1,14 @@
 #ifndef DRIVING_ENGINE_COREFOUNDATION_H_
 #define DRIVING_ENGINE_COREFOUNDATION_H_
 
+#include <stdint.h>
 #include <stdio.h>
 
 // ---------------------------------------------------------------------------------------------------------------
 // Odds and ends of the engine's foundation layer: the video mode the game chose at startup and its refresh rate,
 // the assertion message hook, the empty functions the compiler left several copies of, the STL's length_error
-// throw and the core's warning for provisional ports. See CoreFoundation.cpp.
+// throw, the compiler's vector constructor iterator and the core's warning for provisional ports. See
+// CoreFoundation.cpp.
 // ---------------------------------------------------------------------------------------------------------------
 
 // The video mode (1 NTSC, 2 PAL 50 Hz, 3 PAL 60 Hz, as ApplicationMemoryHeapConfig sets it) and its rate in Hz.
@@ -29,6 +31,12 @@ int GetNullValue();                          // 0x000f7330
 // The STL's length_error throw, as the game's _Xlen functions build it: a std::string of the message,
 // logic_error's constructor, length_error's vtable, _CxxThrowException. Nothing the game does reaches it.
 void ThrowLengthError(const char *message);
+
+// The compiler's `vector constructor iterator`: the constructor run on each of `count` objects of `size` bytes
+// (Ghidra: FUN_00022770, placed among the AI's code)
+typedef void (__thiscall *VectorConstructorFn)(void *object);
+void __stdcall VectorConstructorIterator(void *objects, uint32_t size, int count,
+                                         VectorConstructorFn construct);                       // 0x00022770
 
 // The warning beside a provisional port in the core: code no shipped data reaches, ported from the listing
 // without a test. It says so once, the first time it runs.

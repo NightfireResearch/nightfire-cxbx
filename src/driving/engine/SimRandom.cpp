@@ -67,6 +67,11 @@ uint32_t SimRandom::GenerateBits() {
     return high | Generate();
 }
 
+// FUNC_AT(0x0001d9d0)
+double SimRandom::Fraction() {
+    return int32_t(Generate()) * (1.0 / 65536.0);
+}
+
 // FUNC_AT(0x0005ccb0)
 void SimRandom::Reset() {
     uint32_t steps = seed % 50;

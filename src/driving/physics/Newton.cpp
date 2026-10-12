@@ -29,7 +29,6 @@
 
 // ---- the game's, not ported yet
 
-#define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
 
 // ---- globals
 
@@ -167,9 +166,9 @@ void Newton::Simulate() {
         VU0_v4scale(&spin, fgSimulation.timeStep, &turn);
 
         WorldCollisionInfo closest, none, ground;
-        WorldCollisionInfo_Construct(&closest, 0);
-        WorldCollisionInfo_Construct(&none, 0);
-        WorldCollisionInfo_Construct(&ground, 0);
+        closest.Construct();
+        none.Construct();
+        ground.Construct();
 
         // The midpoint of the step, its distance from the last position and a clamp of its height: none is used.
         VU0_v3add(&segment[0], &segment[1], &midpoint);

@@ -364,6 +364,12 @@ void RViewCamera::SetRenderCamera() {
         viewPort->ClearViewPort(kClearAll);
 }
 
+// FUNC_AT(0x00011000)
+void RCamera::SetFieldOfView(float value) {
+    if (value > 2.0f)
+        fieldOfView = value;
+}
+
 // FUNC_AT(0x00097060)
 void RViewCamera::Render() {
     PreRenderVirtual();

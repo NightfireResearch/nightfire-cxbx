@@ -181,7 +181,7 @@ Sentry* Sentry::Construct(CARP::Instance *instance, int srbAxis, float srbSpeed,
     SetRenderObject(render);
     animFrames = -1.0f;
     if (this->scoreable)
-        glbMissionManager->unknown500++;
+        glbMissionManager->enemyCount++;
 
     bool aims = rangeSq > 0.0f;
     float radius = renderObject->GetBoundingRadius() * 0.5f;

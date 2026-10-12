@@ -10,7 +10,12 @@
 #include "../engine/GameLoop.h"           // Launch
 #include "../engine/SimRandom.h"
 #include "../engine/UMemory.hpp"          // OperatorNew
-#include "AIViews.h"
+#include "AICharacter.h"
+#include "AIElements.h"
+#include "AIHelicopter.h"
+#include "AIPedestrian.h"
+#include "AIRoadSpawn.h"
+#include "AIVehicleController.h"
 #include "BondCar.h"                     // PBondCar::scoreable
 #include "EventsC.h"                      // EPathUtil_GetFromInstanceOrAI
 #include "Helicopter.h"                  // PHelicopter::scoreable
@@ -1165,10 +1170,10 @@ EForceNearPedRespawn* EForceNearPedRespawn::Construct(float unknown04, float unk
     this->unknown04 = unknown04;
     this->unknown08 = unknown08;
     AIRoadSpawn::Get()->RefreshSpawnData(true, unknown04, unknown08);
-    for (int i = 0; i < gPedestrianCount; i++)
-        gPedestrians[i]->Recycle();
+    for (int i = 0; i < Pedestrians.count; i++)
+        Pedestrians.peds[i]->Recycle();
     AIRoadSpawn::Get();
-    gPedRespawnFlag = false;
+    ForceNearRespawn = false;
     return this;
 }
 
@@ -1195,14 +1200,14 @@ void EKickAIElement_MakeEvent_Callback(const EKickAIElement::Record *record) {
     }
 }
 
-// A vehicle element's unknown77 is read and not used.
+// A vehicle element's helicopter flag is read and not used.
 void EKickAIElement::Process() {
     CARP::AIElement *ai = fgAIElementController->RedirectCarpElement(element);
     AIElementTracking *tracking = fgAIElementController->GetCarpElementTracking(element);
     PhysicsObject *target;
     switch (ai->type) {
     case CARP::kAIElementCharacter:
-        target = ai->characterObject;
+        target = ai->person.human;
         break;
     case CARP::kAIElementVehicle:
         target = ai->object;
@@ -1260,14 +1265,16 @@ void EKillAIElement::Process() {
 
     PhysicsObject *victim;
     if (ai->type == CARP::kAIElementCharacter) {
-        victim = ai->characterObject;
+        victim = ai->person.human;
         if (scores && ai->character != NULL && ai->character->scoreable) {
             glbMissionManager->IncKills(1);
             ai->character->scoreable = false;
         }
     } else if (ai->type == CARP::kAIElementVehicle) {
         victim = ai->object;
-        if (ai->unknown77) {
+        // The test the wrong way round, as the original has it: a helicopter is handled as a car, a car as a
+        // helicopter
+        if (ai->car.helicopter) {
             if (scores) {
                 if (victim == NULL)
                     return;
@@ -1323,7 +1330,7 @@ void EMaybeActivateAIElement::Process() {
     if (trigger != NULL) {
         if (vehicleElement != NULL) {
             CARP::AIElement *ai = fgAIElementController->RedirectCarpElement(vehicleElement);
-            if (ai->unknown48 == 1) {
+            if (ai->state == kElementAwake) {
                 AIVehicle *vehicle = ai->vehicle;
                 if (flag) {
                     SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(index);
@@ -1355,12 +1362,12 @@ void EMaybeActivateAIElement::Process() {
     }
 
     CARP::AIElement *ai = fgAIElementController->RedirectCarpElement(element);
-    if (gLimitHenchSpawns && ai->type == CARP::kAIElementVehicle && !(ai->flags & CARP::AIElement::kFlag04) &&
+    if (gLimitHenchSpawns && ai->type == CARP::kAIElementVehicle && !(ai->flags & kElementForceAwake) &&
         !fgAIElementController->OkToSpawnHench())
         allowed = false;
     int roll = int32_t(fgSimulation.random->Generate() * 100) >> 16;
     if (roll >= chance && allowed)
-        ai->flags &= ~CARP::AIElement::kAsleep;
+        ai->flags &= ~kElementDeactivated;
 }
 
 // FUNC_AT(0x0004cbc0)

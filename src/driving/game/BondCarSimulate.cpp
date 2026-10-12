@@ -7,7 +7,9 @@
 #include <xmmintrin.h>
 #include <string.h>
 
-#include "AIViews.h"                // AIGroundVehicle
+#include "AIElements.h"                 // fgAIElementController
+#include "AIVehicle.h"
+#include "AIVehicleController.h"
 #include "BondCarBasics.h"          // GetCarColourVariation
 #include "BondCarState.h"           // CarSurface, the BondCar_* tuning
 #include "Missile.h"
@@ -590,7 +592,7 @@ void PBondCar::Simulate() {
     if (GetHitPoints() <= 0.0f)
         engineOn = false;
     else if (Virtual(this, PVehicle::kGetCarClass, &PBondCar::GetCarClass) > kCarClass1 && aiGroundVehicle != NULL)
-        engineOn = aiGroundVehicle->unknown88 != 1;
+        engineOn = aiGroundVehicle->navigateMode != kGroundNavigateNone;
     else
         engineOn = true;
 

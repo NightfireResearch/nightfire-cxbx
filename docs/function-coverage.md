@@ -202,8 +202,8 @@ where to change it.
 
 | Subsystem | Functions | Replaced | Dead | Live | Done | KB | Done (bytes) |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| **game** | 2852 | 1380 | 637 | 835 | **71%** | 474 | 63% |
-| game.ai | 522 | 0 | 32 | 490 | 6% | 109 | 1% |
+| **game** | 2852 | 1736 | 718 | 398 | **86%** | 474 | 85% |
+| game.ai | 522 | 356 | 113 | 53 | 90% | 109 | 100% |
 | game.audio | 366 | 150 | 205 | 11 | 97% | 51 | 100% |
 | game.effects | 195 | 129 | 56 | 10 | 95% | 36 | 100% |
 | game.events | 793 | 667 | 96 | 30 | 96% | 72 | 99% |
@@ -230,16 +230,16 @@ where to change it.
 | platform.movie | 72 | 0 | 72 | 0 | 100% | 15 | 100% |
 | platform.sound | 299 | 299 | 0 | 0 | 100% | 64 | 100% |
 | platform.system | 88 | 60 | 28 | 0 | 100% | 9 | 100% |
-| **sys** | 1440 | 273 | 823 | 344 | **76%** | 244 | 85% |
-| sys.crt | 420 | 4 | 72 | 344 | 18% | 44 | 18% |
+| **sys** | 1440 | 273 | 830 | 337 | **77%** | 244 | 86% |
+| sys.crt | 420 | 4 | 79 | 337 | 20% | 44 | 20% |
 | sys.d3d | 427 | 151 | 276 | 0 | 100% | 120 | 100% |
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6842 | 3858 | 2040 | 944 | **86%** | 1000 | 82% |
-| **platform + system** | 2893 | 1527 | 1022 | 344 | **88%** | 506 | 93% |
+| **game + engine** | 6842 | 4214 | 2121 | 507 | **93%** | 1000 | 93% |
+| **platform + system** | 2893 | 1527 | 1029 | 337 | **88%** | 506 | 93% |
 | **  without the C runtime** | 2473 | 1523 | 950 | 0 | **100%** | 462 | 100% |
-| **everything** | 9735 | 5385 | 3062 | 1288 | **87%** | 1506 | 86% |
+| **everything** | 9735 | 5741 | 3150 | 844 | **91%** | 1506 | 93% |
 
 - **The engine's core and data layers are done (4 October 2026): `engine.core` and `engine.data`, 100% by bytes**
   (docs/driving/core-data.md): memory (UMemory, new/delete), reference counters, data groups, singletons, the
@@ -328,6 +328,14 @@ where to change it.
   bytes (the 30 functions still counted live are exception funclets of replaced functions). Four shadow tests
   compare them with the originals on synthetic records in stand-in worlds (to be run in game). Game and engine
   together are now 86% done by functions, 82% by bytes.
+- **The AI is done (12 October 2026, docs/driving/game-ai.md):** the characters (pedestrians, the passenger, Bond
+  and the auto-drive hands, the enemies on foot and in cars), the vehicles' AI (AIGroundVehicle, AIHelicopter, the
+  spline paths, the vehicle controller and the road spawn), the mission's AI elements, their tracking and the AI
+  zones, and the other classes' functions placed among them: 361 entries, `game.ai` 100% by bytes (the 53 functions
+  still counted live are exception funclets of replaced functions). The events' AI views are folded into the real
+  classes and every caller goes to them directly. Six shadow tests compare them with the originals on copies of the
+  live AI and synthetic vehicles, characters and elements (to be run in game). Game and engine together are now 93%
+  done by functions and by bytes.
 - **Every system library but the C runtime is done: D3D (with D3DX and XGRPH), DSOUND, XPP and XAPI at 100%.**
   The C runtime (347 live, 17%) is left to go by itself, as in the action engine: game code calls it everywhere, and
   it goes as that code becomes ours. How the rest got there (2 October 2026):

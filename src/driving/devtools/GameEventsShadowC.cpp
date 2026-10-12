@@ -22,7 +22,12 @@
 #include "../camera/PlayerCamera.h"
 #include "../data/Carp.h"
 #include "../engine/CoreContainers.h"
-#include "../game/AIViews.h"
+#include "../game/AICharacter.h"
+#include "../game/AIElements.h"
+#include "../game/AIHelicopter.h"
+#include "../game/AIPedestrian.h"
+#include "../game/AIRoadSpawn.h"
+#include "../game/AIVehicleController.h"
 #include "../game/EventsC.h"
 #include "../game/Missile.h"
 #include "../game/MissionManager.h"
@@ -1356,13 +1361,13 @@ void BuildWorld() {
     for (int i = 0; i < kElements; i++) {
         AIElement *element = &W->elements[i];
         element->type = int32_t(Chance(5) ? 2 : Random(2));
-        element->unknown48 = int32_t(Chance(4) ? 0 : 1);
+        element->state = int32_t(Chance(4) ? 0 : 1);
         if (element->type == CARP::kAIElementCharacter)
             element->character = reinterpret_cast<AICharacter *>(W->characters[i]);
         else
             element->vehicle = reinterpret_cast<AIVehicle *>(W->vehicles[i]);
         element->object = Chance(4) ? NULL : reinterpret_cast<PhysicsObject *>(W->car);
-        W->records[i].unknown48 = int32_t(Random());
+        W->records[i].state = int32_t(Random());
     }
     W->aiSpline.path.value = Chance(3) ? 0 : 0x1234;
 

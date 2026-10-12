@@ -32,7 +32,6 @@ PathListNode *fgPathIterator;
 
 // ---- the game's code not ported yet
 
-#define Instance_SetMatrix ((void (__fastcall *)(CARP::Instance *, int, const MATRIX4 *))0x00035610)
 
 namespace {
 
@@ -76,7 +75,7 @@ void UpdateScenePosition(RSceneObj *sceneObj) {
 // The path's matrix at the handle's time: evaluated over the base matrix, then through the apply matrix, and the
 // instance (and its scene object) posed there
 void PoseInstance(RPathHandle *handle, MATRIX4 *frame) {
-    Instance_SetMatrix(handle->instance, 0, frame);
+    handle->instance->SetMatrix(frame);
     RSceneObj *sceneObj = handle->procAnim->sceneObj;
     if (sceneObj != NULL)
         UpdateScenePosition(sceneObj);

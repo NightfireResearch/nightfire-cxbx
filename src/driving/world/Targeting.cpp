@@ -8,7 +8,10 @@
 #include "../game/MissionManager.h"
 #include "../engine/UMemory.hpp"
 #include "../game/WeaponSound.h"       // ATargeting
-#include "../game/AIViews.h"
+#include "../game/AICharacter.h"
+#include "../game/AIElements.h"
+#include "../game/AIHelicopter.h"
+#include "../game/AIVehicleController.h"
 #include "../game/WeaponManager.h"
 #include "../camera/CameraSpline.h"     // RCameraMath
 #include "../camera/PlayerCamera.h"     // RCamera, RViewCamera, RPlayerCamera

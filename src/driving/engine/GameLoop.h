@@ -44,7 +44,7 @@ struct LaunchPage {
     int32_t shotsFired;         // +0x588 added
     int32_t shotsHit;           // +0x58c
     int32_t kills;              // +0x590
-    int32_t unknown594;         // +0x594 the manager's unknown500, added
+    int32_t unknown594;         // +0x594 the manager's enemyCount, added
     int32_t zeroScoreTime;      // +0x598 the mission sets', added
     int32_t fullScoreTime;      // +0x59c
     int32_t missionTime;        // +0x5a0 seconds, added; CalcEndMissionScores counts it with this part's

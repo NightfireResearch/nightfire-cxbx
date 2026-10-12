@@ -26,7 +26,6 @@
 
 // ---- the game's, not ported yet
 
-#define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
 
 // ---- the game's globals
 
@@ -130,7 +129,7 @@ void Grenade::Simulate() {
     VU0_v4scale4(&step, fgSimulation.timeStep, &step);
     VU0_v4sub4(&segment[1], &step, &segment[0]);
     WorldCollisionInfo info;
-    WorldCollisionInfo_Construct(&info, 0);
+    info.Construct();
     WCollider collider;
     collider.Construct(segment, WCollider::kCollideBarriers | WCollider::kCollideInstances);
 

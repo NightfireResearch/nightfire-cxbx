@@ -41,7 +41,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-#define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
 
 // ---- globals
 
@@ -611,7 +610,7 @@ void RScorchWorld::ScorchWorld(WWorldPos *place, const Coord4 *point, const Coor
     Coord4 across = {};     // its w is the original's uninitialised stack
     VU0_v4crossprodxyz(normal, &reference, &across);
     WorldCollisionInfo info;
-    WorldCollisionInfo_Construct(&info, 0);
+    info.Construct();
 
     // A large mark must find the surface at both ends of the axis and along the reference, through the point;
     // halved until it does, twice at most

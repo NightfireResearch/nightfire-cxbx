@@ -11,6 +11,7 @@
 #include "../platform/X87.h"
 #include "../../helpers.h"
 #include "../audio/Bank.h"              // SharedTreeIterator
+#include "../game/AIVehicle.h"          // AICommand
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
 #include "../logging.h"                 // dbg_wprintf, our printf
@@ -178,14 +179,6 @@ struct RuleRecord {
     uint8_t unknown18[8];
 };
 
-struct AICommandRecord {
-    uint8_t unknown00[0x50];
-    TagReference first;
-    uint8_t unknown54[0x2c];
-    TagReference second;
-    uint8_t unknown84[0x1c];
-};
-
 struct WorldMap {
     TagReference references[4];
 };
@@ -196,7 +189,7 @@ struct WorldNodeEntry {
 };
 
 static_assert(sizeof(EffectRecord) == 0x40 && sizeof(ProcAnimRecord) == 0x20 && sizeof(TriggerRecord) == 0x40 &&
-              sizeof(RuleRecord) == 0x20 && sizeof(AIElement) == 0x100 && sizeof(AICommandRecord) == 0xa0 &&
+              sizeof(RuleRecord) == 0x20 && sizeof(AIElement) == 0x100 && sizeof(AICommand) == 0xa0 &&
               sizeof(AqRecord) == 0x20 && sizeof(AnRecord) == 0x10 && sizeof(WorldNodeEntry) == 0x10,
               "the records' strides");
 static_assert(offsetof(AsRecord, pairs) == 0x20, "'as' pairs at 0x20");
@@ -322,10 +315,10 @@ void CARP::AIElementResolver(UGroup *record, UGroup *shared, UGroup *parent) {
 
 // FUNC_AT(0x001188c0)
 void CARP::AICommandResolver(UGroup *record, UGroup *shared, UGroup *parent) {
-    AICommandRecord *command = Payload<AICommandRecord>(record);
+    AICommand *command = Payload<AICommand>(record);
     for (uint32_t i = 0; i < record->count; i++) {
-        Resolve(&command[i].first, shared, parent);
-        Resolve(&command[i].second, shared, parent);
+        Resolve(&command[i].secondaryTargetTag, shared, parent);
+        Resolve(&command[i].navigateTargetTag, shared, parent);
     }
 }
 
@@ -887,4 +880,12 @@ MATRIX4* CARP::Instance::GetMatrix4(MATRIX4 *matrix) const {
     matrix->mtx[2][3] = 0.0f;
     matrix->mtx[3][3] = 1.0f;
     return matrix;
+}
+
+// FUNC_AT(0x00035610)
+void CARP::Instance::SetMatrix(const MATRIX4 *matrix) {
+    memcpy(axisX, matrix->mtx[0], sizeof(axisX));
+    memcpy(axisY, matrix->mtx[1], sizeof(axisY));
+    memcpy(axisZ, matrix->mtx[2], sizeof(axisZ));
+    memcpy(position, matrix->mtx[3], sizeof(position));
 }

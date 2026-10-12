@@ -28,7 +28,12 @@
 #include "../game/EventsA.h"
 #include "../game/EventsD.h"             // StingerChannel
 #include "../audio/Sound.h"              // AOneShotSound
-#include "../game/AIViews.h"
+#include "../game/AICharacter.h"
+#include "../game/AIElements.h"
+#include "../game/AIHelicopter.h"
+#include "../game/AIPedestrian.h"
+#include "../game/AIRoadSpawn.h"
+#include "../game/AIVehicleController.h"
 #include "../game/Helicopter.h"
 #include "../game/Human.h"
 #include "../game/MissionManager.h"
@@ -1202,20 +1207,20 @@ void BuildWorld() {
         CARP::AIElement *e = &W->elements[i];
         RandomBytes(e, sizeof(CARP::AIElement));
         e->type = Chance(5) ? int32_t(Random(4)) : int32_t(Random(2));
-        e->unknown48 = Chance(4) ? 0 : 1;
+        e->state = Chance(4) ? 0 : 1;
         e->flags = uint8_t(Random());
         e->memberCount = int32_t(Random(4));
         if (e->type == CARP::kAIElementCharacter)
             e->character = AnyCharacter();
         else
             e->vehicle = Chance(6) ? NULL : &W->vehicles[Random(kVehicles)];
-        e->characterObject = Chance(3) ? NULL : reinterpret_cast<Human *>(W->human);
-        for (int m = 0; m < 4; m++)
+        e->person.human = Chance(3) ? NULL : reinterpret_cast<Human *>(W->human);
+        for (int m = 0; m < 3; m++)
             e->memberCharacters[m] = AnyCharacter();
         e->object = Chance(5) ? NULL : &W->cars[Random(kCars)].car;
         e->command = NULL;
-        e->unknown77 = Chance(2) ? 0 : 1;
-        if (e->unknown77 == 0 && e->object != NULL)
+        e->car.helicopter = Chance(2) ? 0 : 1;
+        if (e->car.helicopter == 0 && e->object != NULL)
             e->object = reinterpret_cast<PhysicsObject *>(W->helicopter);
     }
     RandomBytes(W->human, sizeof(W->human));

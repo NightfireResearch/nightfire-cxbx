@@ -11,7 +11,8 @@
 #include "../../helpers.h"
 #include "../anim/Actor.h"              // ActActorDatabase
 #include "../anim/AnimEngine.h"         // Handle
-#include "../game/AIViews.h"              // AIVehicle
+#include "../game/AISplinePath.h"
+#include "../game/AIVehicle.h"
 #include "../game/Simulation.h"
 #include "../render/Colorize.h"
 #include "../render/Decals.h"
@@ -89,10 +90,6 @@ struct SceneObjDescFields {
 } // namespace
 
 // ---- the game's code not ported yet
-#define AISplinePath_Construct ((AISplinePath *(__fastcall *)(AISplinePath *, int, void *path))0x00035680)
-#define AISplinePath_Destruct ((void (__fastcall *)(AISplinePath *, int))0x00035730)
-#define AISplinePath_Reset ((void (__fastcall *)(AISplinePath *, int, void *path))0x00035740)
-#define FUN_00022870 ((void (*)(Coord4 *out, const Coord4 *a, const Coord4 *b, float t))0x00022870)
 #define GFXGallery_CULL_Start ((void (__fastcall *)(void *, int))0x000d3aa0)
 #define GFX_CULL_GetNextCanvas ((int (*)(Coord4 *sphere, float *height, bool *checkFar, float *farScale))0x000d3450)
 #define GGallery_CULL_SetCanvas ((void (*)(int item, bool culled, float distance))0x000d3470)
@@ -136,7 +133,6 @@ constexpr int32_t kTypeRigidBody = 1;           // PhysicsObject::type: its body
 constexpr int kBodySlots = 0x40;                // the slots an anchor's body may be in
 constexpr uint32_t kTagCams = 0x43616d73;       // 'Cams'
 constexpr uint32_t kHandleSize = 0x40;          // an RAnimEngine::Handle
-constexpr uint32_t kAISplinePathSize = 0xb0;
 constexpr uint32_t kCameraStimulus = 8;         // PlayCurrentAnimation's stimulus
 constexpr float kDefaultFieldOfView = 33.0f;
 constexpr float kMinZoom = 2.0f;
@@ -271,7 +267,7 @@ void RWorldCamera::Destruct() {
     if (animHandle != NULL)
         DeleteHandle(animHandle);
     if (aiSplinePath != NULL) {
-        AISplinePath_Destruct(aiSplinePath, 0);
+        aiSplinePath->Destruct();
         OperatorDelete(aiSplinePath);
     }
     if (inputQueue != NULL) {
@@ -484,10 +480,10 @@ bool RWorldCamera::LoadSingleAnimation(CARP::Instance *instance) {
 // FUNC_AT(0x000977d0)
 bool RWorldCamera::LoadAISplinePathAnimation(void *path) {
     if (aiSplinePath == NULL) {
-        AISplinePath *made = static_cast<AISplinePath *>(OperatorNew(kAISplinePathSize));
-        aiSplinePath = made != NULL ? AISplinePath_Construct(made, 0, path) : NULL;
+        AISplinePath *made = static_cast<AISplinePath *>(OperatorNew(sizeof(AISplinePath)));
+        aiSplinePath = made != NULL ? made->Construct(static_cast<CARP::AISpline *>(path)) : NULL;
     } else {
-        AISplinePath_Reset(aiSplinePath, 0, path);
+        aiSplinePath->Reset(static_cast<CARP::AISpline *>(path));
     }
     aiSplinePath->path->SetNextPath(NULL);
     return true;
@@ -563,7 +559,7 @@ bool RWorldCamera::UpdateAnimationCam(MATRIX4 *frame, uint8_t flags) {
         FlipFrameRows(frame);
     else
         TurnFrameRows(frame);
-    FUN_00022870(&eye, AsVector4(&track->keys[from].position), AsVector4(&track->keys[to].position), t);
+    BlendVectors(&eye, AsVector4(&track->keys[from].position), AsVector4(&track->keys[to].position), t);
     if (flags & kAnimMirror) {
         frame->mtx[0][0] = -frame->mtx[0][0];
         frame->mtx[1][0] = -frame->mtx[1][0];
@@ -623,7 +619,7 @@ void RWorldCamera::RestartCamera() {
         animHandle = NULL;
     }
     if (aiSplinePath != NULL) {
-        AISplinePath_Destruct(aiSplinePath, 0);
+        aiSplinePath->Destruct();
         OperatorDelete(aiSplinePath);
         aiSplinePath = NULL;
     }

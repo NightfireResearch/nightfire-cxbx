@@ -28,7 +28,6 @@
 
 // ---- the game's code not ported yet
 // out.xyz = from + (to - from) * t
-#define BlendVectors ((void (*)(float *out, const float *from, const float *to, float t))0x00022870)
 
 // ---- the game's globals
 

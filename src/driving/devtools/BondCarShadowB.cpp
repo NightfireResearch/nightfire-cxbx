@@ -4,9 +4,10 @@
 #include "BondCarShadowB.h"
 #include "FpControl.h"
 
-#include "../camera/Camera.h"           // AISplinePath
+#include "../camera/Camera.h"
 #include "../camera/CameraIniLoader.h"  // fgCameraTables
 #include "../camera/PlayerCamera.h"     // RPlayerCamera
+#include "../game/AISplinePath.h"
 #include "../game/BondCar.h"
 #include "../game/BondCarBasics.h"
 #include "../game/BondCarModes.h"

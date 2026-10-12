@@ -19,6 +19,8 @@
 #include "../data/Carp.h"
 #include "../data/StdStreams.h"
 #include "../data/SymbolTable.h"
+#include "../game/AIElements.h"
+#include "../game/AIVehicle.h"
 #include "../game/DebugAudio.h"
 #include "../game/EmpEffect.h"
 #include "../game/MissionManager.h"
@@ -38,9 +40,6 @@
 
 #define CrtAtExit ((int (__cdecl *)(void (__cdecl *)(void)))0x00132a7b)   // atexit
 #define ActActorDatabase_Destruct ((void (__fastcall *)(void *, int))0x00013540)
-#define AIGroundVehicle_Construct ((void (__fastcall *)(void *, int))0x0002bd40)
-#define AIGroundVehicle_Destruct ((void (__fastcall *)(void *, int))0x0002be70)
-#define FUN_00036a00 ((void (__fastcall *)(void *, int))0x00036a00)
 #define FUN_00037160 ((void (__fastcall *)(NodeList *, int, void **, void *, void *))0x00037160)   // erase(result, first, last)
 #define FUN_0007c6e0 ((void (__fastcall *)(void *, int))0x0007c6e0)
 #define FUN_0007c7b0 ((void (__fastcall *)(void *, int))0x0007c7b0)
@@ -152,9 +151,9 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x001ddef0) = 1.0f / FLOAT_AT(0x001ddeec);                                                  // 0x001570c0
     FLOAT_AT(0x001ddef4) = 180.0f / 3.1415925f;                                                          // 0x001570e0
     FLOAT_AT(0x001ddef8) = 1.0f / FLOAT_AT(0x001ddef4);                                                  // 0x00157100
-    FLOAT_AT(0x001ddefc) = 20.0f + 200.0f;                                                               // 0x00157120
+    // DefaultSleepRange = 220.0f: ours (game/AIElements.cpp)                                            // 0x00157120
     FLOAT_AT(0x001ddf08) = 1.0f / FLOAT_AT(0x001b64f4);                                                  // 0x00157140
-    FLOAT_AT(0x001ddf0c) = 7.5f * 0.016666668f;                                                          // 0x00157160
+    // TrafficStepDistance = 0.125f: ours (game/AIGroundVehicle.cpp)                                     // 0x00157160
     FLOAT_AT(0x001ddf20) = 1.0f / FLOAT_AT(0x001b64f8);                                                  // 0x00157180
     FLOAT_AT(0x001de818) = 1.0f / FLOAT_AT(0x001b661c);                                                  // 0x001571a0
     FLOAT_AT(0x001de8e4) = 1.0f / FLOAT_AT(0x001b6620);                                                  // 0x001571c0
@@ -164,12 +163,12 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x001de92c) = 180.0f / 3.1415925f;                                                          // 0x00157230
     FLOAT_AT(0x001de930) = 1.0f / FLOAT_AT(0x001de92c);                                                  // 0x00157250
     FLOAT_AT(0x001de934) = 1.0f / FLOAT_AT(0x001b6628);                                                  // 0x00157270
-    for (int i = 0; i < 2; i++) AIGroundVehicle_Construct((void *)(0x001de940 + i * 0x270), 0);          // 0x00157290
-    CrtAtExit([] { for (int i = 1; i >= 0; i--) AIGroundVehicle_Destruct((void *)(0x001de940 + i * 0x270), 0); });
-    for (int i = 0; i < 20; i++) AIGroundVehicle_Construct((void *)(0x001dee20 + i * 0x270), 0);         // 0x001572c0
-    CrtAtExit([] { for (int i = 19; i >= 0; i--) AIGroundVehicle_Destruct((void *)(0x001dee20 + i * 0x270), 0); });
+    for (int i = 0; i < 2; i++) ((AIGroundVehicle *)(0x001de940 + i * 0x270))->Construct();              // 0x00157290
+    CrtAtExit([] { for (int i = 1; i >= 0; i--) ((AIGroundVehicle *)(0x001de940 + i * 0x270))->Destruct(); });
+    for (int i = 0; i < 20; i++) ((AIGroundVehicle *)(0x001dee20 + i * 0x270))->Construct();             // 0x001572c0
+    CrtAtExit([] { for (int i = 19; i >= 0; i--) ((AIGroundVehicle *)(0x001dee20 + i * 0x270))->Destruct(); });
     FLOAT_AT(0x001e1f1c) = 1.0f / FLOAT_AT(0x001b662c);                                                  // 0x001572f0
-    for (int i = 0; i < 30; i++) FUN_00036a00((void *)(0x001e1f20 + i * 0x1c), 0);                       // 0x00157310
+    for (int i = 0; i < 30; i++) ((AIZone *)(0x001e1f20 + i * 0x1c))->Construct();                       // 0x00157310
     CrtAtExit([] {});
     FLOAT_AT(0x001e2274) = 1.0f / FLOAT_AT(0x001b6630);                                                  // 0x00157340
     DAudioTargets.Construct();                                                                           // 0x00157360

@@ -1077,3 +1077,23 @@ int WRoadNav::SegmentLaneCount() {
     const WRoadSegment *road = fgRoadNetworkData.segments[index];
     return road->rightLanes + road->leftLanes;
 }
+
+// The original also calls WRoadNetwork::Get twice for nothing
+// FUNC_AT(0x00029cd0)
+float WRoadNav::SegmentSpeed() {
+    return fgRoadNetworkData.segments[segment]->speed;
+}
+
+// FUNC_AT(0x00029cf0)
+double WRoadNav::LeftDrivableDist() {
+    if (forward)
+        return WRoadNetwork::Get()->GetSegmentLeftDrivableDist(int(segment));
+    return WRoadNetwork::Get()->GetSegmentRightDrivableDist(int(segment));
+}
+
+// FUNC_AT(0x00031820)
+double WRoadNav::RightDrivableDist() {
+    if (forward)
+        return WRoadNetwork::Get()->GetSegmentRightDrivableDist(int(segment));
+    return WRoadNetwork::Get()->GetSegmentLeftDrivableDist(int(segment));
+}

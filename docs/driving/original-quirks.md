@@ -8,7 +8,8 @@ list also works as a checklist for comparing with the GameCube and PS2 builds: e
 the other build's function.
 
 Each integration adds its round's entries; the latest are the missions (`game.missions`,
-docs/driving/game-missions.md) and the mission events (`game.events`, docs/driving/game-events.md).
+docs/driving/game-missions.md), the mission events (`game.events`, docs/driving/game-events.md) and the AI
+(`game.ai`, docs/driving/game-ai.md).
 
 Differences of one ulp in floating point are accepted and not listed one by one. For example, an FSIN/FCOS result
 that is rounded through a double-returning helper is one ulp off (docs/driving/maths.md 3.2, section 8).
@@ -79,6 +80,12 @@ Almost all of these are uninitialised stack in the original. "Zero" means the po
 | ESpawnExplosionStatic::Process | 0x00045199 | with neither a position nor an instance, the position is stack | zero | that explosion's position | game-events |
 | EWakeupSmackable::Process | 0x00046d10 | the ray's and the body's w are stack | zero | nothing reads them | game-events |
 | ESpawnTraffic::Process, EStartMission::Process | 0x00045d70, 0x0004e860 | the momentum's w is stack | zero | nothing: it is never stored | game-events |
+| AIGroundVehicle::GetDirectLaneWeights | 0x0002b7a0 | the inlined collision-record constructor copies stack garbage into the record | zero | nothing found reads it | game-ai |
+| WorldCollisionInfo::Construct | 0x0001d9f0 | segmentStart and segmentEnd (+0x20..+0x3f) are copied from its own uninitialised stack | zero | nothing found reads them (the collision shadows mask them) | game-ai |
+| AIElementController::WakeUp | 0x00028bb0 | a helicopter's seated riders (seats 3-17) get an uninitialised stack word as their vehicle, for the seat's attribute lookup and the rider's constructor | the helicopter | a helicopter element with seated riders (none seen); the AI shadow leaves the case out | game-ai |
+| AICharacterEnemyGround::AvoidThreat, DoRunning, HandleInterrupts | 0x0001da80, 0x0001f180, 0x0001f3c0 | local vectors' w are never written | zero | nothing reads them | game-ai |
+| AIElementController::WakeUp, Update; AIElementTracking::UpdatePosition; AIZoneController::InZone; AICharacterHands::UpdateRotPos | 0x00028bb0, 0x00029880, 0x00027f00, 0x00036b20, 0x000232b0 | local vectors' w (the player's position, the seat, the hands' offsets) are never written | zero | nothing reads them | game-ai |
+| AICharacter, AICharacterPedestrian; AIHelicopter, AIVehicleController, AIRoadSpawn | 0x0001c190-0x00027c80; 0x00031850-0x00036a00 | local vectors' w are never written | zero | nothing reads them | game-ai |
 
 ### 1.2 Allocator bytes
 
@@ -96,6 +103,7 @@ An STL map's empty allocator byte is copied from an uninitialised local. Nothing
 | WindowPaneMap::Construct (and CheckHitWindow's local map, copied by CopyConstruct 0x000c3ab0) | 0x000c45d0, 0x000c4d70 | not written (the port's own stack) |
 | WCollisionMgr::Construct (its maps) | 0x000c5500 | not written |
 | Simulation::Construct (the object map and the dead set) | 0x000b4fe0 | 0 |
+| AIRoadSpawn::RefreshSpawnData (the grid cell vector) | 0x00034ed0 | 0 |
 
 ### 1.3 Other differences
 
@@ -125,6 +133,16 @@ An STL map's empty allocator byte is copied from an uninitialised local. Nothing
 | EForceCarStop, ELavaHaze, ELetterBoxOn/Off, EObjectiveDisplayText, ESpawnSentry (Process) | 0x0004c7a4, 0x000458dd | a setne result pushed with the register's left-over upper three bytes | a clean bool (the callees read one byte) | game-events |
 | EStreamEvent::Process | 0x0004f0b2 | the "nis" case passes AFader::QueuePrimary a third argument with left-over upper bytes | a bool | game-events |
 | ESetCullDistanceFactor, ESetJumpGravity (Destruct) | 0x00043fa0, 0x00044040 | the compiler dropped the first of the two vtable stores | both written | game-events |
+| AIGroundVehicle::FireBullets, FireRockets, FireMissiles | 0x0002e910, 0x0002eb40, 0x0002ee00 | call GetPhysicsObject first and drop the answer | the pure call left out | game-ai |
+| AIGroundVehicle::CheckAgentRoadNetworkCollision | 0x0002fde0 | a floor computed and discarded | left out | game-ai |
+| AIGroundVehicle::CheckAgentDirectCollision | 0x000306b0 | an inlined copy of InCollisionRange | calls InCollisionRange (the same result) | game-ai |
+| AIGroundVehicle::DoAgentStateUpdate; AIElementController::Update | 0x0002cd80; 0x00029880 | ProgrammerDefinedEvent's text is the game's empty string (0x00189fb1) | our own "" | game-ai |
+| AICharacterPedestrian::DoDying | 0x00025fc0 | reads the table before checking the index | checks first (the same result) | game-ai |
+| AICharacterPedestrian::Init | 0x00026800 | the count's decrement inlined | calls KillSelf (the same writes) | game-ai |
+| AIVehicleController::RegisterSimCarList | 0x00036990 | RegisterSimCar's body inlined | calls RegisterSimCar | game-ai |
+| AIVehicleController, AIRoadSpawn, AIHelicopter; WRoadNav::SegmentSpeed | 0x00031850-0x00036a00; 0x00029cd0 | WRoadNetwork::Get called again for nothing | the pure calls left out | game-ai |
+| AIElementController::Construct | 0x00028190 | placement new's NULL check | left out | game-ai |
+| AIElementController::WakeUp | 0x00028bb0 | the binary's measured facts have ESI read on entry (through the seat jump table) | a plain method tagged AUTOLTCG (placed by Ghidra's name, without the register check); ESI is set before the riders' loop and the one caller passes `this` in ECX and ESI | game-ai |
 
 ---------------------------------------------------------------------------------------------------------------
 
@@ -159,6 +177,10 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
   and the new explosion's position when ESpawnExplosionStatic has neither a position nor an instance.
 - GameEventsShadowA-D: when both sides fault (made-up data only), the event's vtable word, which the original's
   exception funclet puts back to Event's as the fault unwinds through it.
+- GameEventsShadowD: ESpawnForceEffect's effect field when it holds the address of the stack ArticleEffect it leaves there.
+- GameAIShadowE: WorldCollisionInfo::Construct's segment words (+0x20..+0x3f).
+- GameAIShadowF: a helicopter element's seated riders are left out (the original's vehicle for them is uninitialised
+  stack).
 
 ---------------------------------------------------------------------------------------------------------------
 
@@ -179,6 +201,11 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | Simulation::Construct | 0x000b4fe0 | leaves several fields (the owners' slots among them) unset: zero only because the one Simulation is a static | game-missions |
 | SMissionManager::Construct | 0x000b8c30 | leaves missionSets (+0x28) unset | game-missions |
 | SRuleProperty::Construct | 0x000b9960 | strncpy(8) leaves an eight-character name unterminated; the compare reads eight at most | game-missions |
+| AIElementController::Construct | 0x00028190 | the tracking records' position, speed and lastHitPoints are left uninitialised, so the first damage figure is garbage | game-ai |
+| AICharacter::Destruct | 0x0001c1d0 | does not NULL the voice or the actor link | game-ai |
+| AIVehicle::Destruct | 0x00035b40 | does not clear driveToNav | game-ai |
+| AICharacterEnemySnow | 0x0001fd40 | aimPitchDir is never written | game-ai |
+| AICharacterEnemyGround::ThreatenedByVehicle | 0x0001e440 | unknown16c is written and never read | game-ai |
 
 ### 3.2 Reads and writes past an array, or before it
 
@@ -215,6 +242,11 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | EAIElementFireOn/Off, EAIElementSetAccuracy, EAIElementSetCharParams (Process) | 0x0003de30, 0x0003dd70, 0x0003def0, 0x0003dfb0 | run to the element's memberCount over its three members and four member characters, unbounded | game-events |
 | EInflictDamage::Process; EKickObject::Process | 0x000405b0, 0x000408f0 | checks only index < 64; the rigid-body owner index unchecked | game-events |
 | EPowerUpTimer, EPowerUpAmmo, EPlayCarCameraAnim (Process) | 0x00042fe3, 0x00042d5d, 0x0004cee4 | the timer and the weapon indexes unchecked; the body slot used without the -1 test | game-events |
+| AICharacterPedestrian::DoTurning | 0x00026290 | would read peds[-1] if turnTowards were -1 | game-ai |
+| AICharacterEnemyGround::PlayZoneInjuryAnim; AICharacterEnemySunroof::DoLeaning, DoArmed | 0x0001ea60; 0x00021740, 0x000213c0 | (pick + 1) % count; zone 4's empty death list plays animation 0; the lean table is indexed [direction - 1] (its base folded one row early) | game-ai |
+| AIElementController::RedirectCarpElement, GetCarpElementTracking | 0x000286d0, 0x00028700 | the index comes from the global controller's records, not `this`'s (an arithmetic shift of the byte difference, made positive) | game-ai |
+| AIElementController::WakeUp | 0x00028bb0 | an empty member slot ends the riders' loop; a seat with no rider leaves the slot as it was | game-ai |
+| AIZoneController::InZone | 0x00036b20 | uses the zone type's radius, indexed by the type's low 16 bits | game-ai |
 
 ### 3.3 Writes through a possibly NULL pointer
 
@@ -241,6 +273,15 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | ESpawnExplosion::Process | 0x0004e775, 0x0004e80c | writes through NULL one-shot and limited sounds | game-events |
 | ESpawnSmackable::Process | 0x00045bc2 | UseArticle on NULL when FastAlloc fails | game-events |
 | EAIElementSetWakeRange, EDropMine, EEndControlToSpline, EEnablePowerUp, EPlayActorEffect, ESetAvoidZone, the Dynamic path setters, EShowInstance, EShake, ESetTerrain, EWakeupSmackable (Process) | 0x0003e210, 0x0003f720, 0x0004abc0, 0x0003f7f0, 0x0004211c, 0x00043d50, 0x00044d00, 0x0004dcb0, 0x0004db70, 0x00046d10 | no NULL checks on what they look up (ESetAvoidZone at 0x00043d7c and 0x00043da0, EShowInstance at 0x00044d09, EShake's feedback 0x0004dcea, EWakeupSmackable's third reference 0x00046d55) | game-events |
+| AIGroundVehicle::UpdateNavPos | 0x0002a3e0 | the target's body is read unchecked in two cases | game-ai |
+| AIGroundVehicle::DoAttackMode | 0x0002bf40 | mode 14 reads the target unchecked | game-ai |
+| AIGroundVehicle::DoAgentStateUpdate | 0x0002cd80 | chase reads the target's velocity unchecked | game-ai |
+| AIGroundVehicle::DriveToPoint | 0x0002f610 | a sub reads its target unchecked | game-ai |
+| AIVehicleController::RegisterAgentGroundVehicle, RegisterHelicopter | 0x00036270, 0x00036660 | no NULL check on the slot found | game-ai |
+| AIElementController::WakeUp | 0x00028bb0 | FastAlloc unchecked before SetActor | game-ai |
+| AICharacterEnemyGround::Construct | 0x0001dc80 | registers its target even when the allocation failed | game-ai |
+| AICharacterHands::Init | 0x00022930 | no NULL check before SetOwnerObject; SetAICharacter(NULL) on allocation failure | game-ai |
+| AICharacterEnemyGround::HandleInterrupts | 0x0001f3c0 | InRegion before the NULL check | game-ai |
 
 ### 3.4 Leaks and wrong frees
 
@@ -265,6 +306,11 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | EAGL::RenderMethod::Destruct | 0x000f12c0 | frees shader arrays from EAGLMalloc with __builtin_delete | eagl |
 | EAGL TAR image | 0x000ec420 | when the SHAPE has nowhere to keep a record, the one allocated here is replaced (and leaked) by Create's | eagl |
 | SNDPKTPLAY_stop | 0x0013f040 | frees the per-channel stretch data without clearing the pointers | sound |
+| AIVehicleController::Shutdown | 0x000364d0 | the agent and helicopter arrays are destroyed but never freed; the static player and traffic AI are destroyed here and again at exit | game-ai |
+| AICharacterPedestrian::Destroy | 0x00023fd0 | frees the navigators and grounds only | game-ai |
+| AICharacterHands::Shutdown | 0x000227c0 | forgets the hands and their Human, does not delete them | game-ai |
+| AIElementController::GoToSleep | 0x000287d0 | only the Humans are deleted | game-ai |
+| AICharacterEnemyGround::Destruct, AICharacterEnemySunroof::Destruct | 0x0001dea0, 0x00020ec0 | ownerType = 0 before RemoveReference | game-ai |
 
 ### 3.5 Dead stores, dead code, arguments ignored
 
@@ -319,6 +365,27 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | ESpawnSmackable::Process | 0x00045abb, 0x00045ac3 | a 'Name' lookup and a GetArray whose answers are not used | game-events |
 | EWakeupSmackable::Process | 0x00046d95, 0x00046da1, 0x00046e77, 0x00046eb4 | GetVelocity twice; a GetScalarVelocity and a v3length thrown away | game-events |
 | ESpawnTraffic::Process; ESetRenderVariation::Process | 0x00045f16, 0x0004454b | asks for each traffic car again for every call; dereferences the model twice | game-events |
+| AIGroundVehicle::UpdateNavPos | 0x0002a3e0 | an unused WRoadNetwork::Get | game-ai |
+| AIGroundVehicle::DoAttackMode | 0x0002bf40 | chase fetches a body it does not use | game-ai |
+| AIGroundVehicle::DoAgentStateUpdate | 0x0002cd80 | a dead re-test | game-ai |
+| AIGroundVehicle::DoPlayerLogic, TestForCollision | 0x0002a7c0, 0x0002b4d0 | an unused body; the body fetched twice | game-ai |
+| AIGroundVehicle::DisengageSplinePath | 0x0002a850 | clears the spline path twice | game-ai |
+| AIGroundVehicle::DrivableVec, BarriersInPath, GetDirectLaneWeights | 0x0002a9e0, 0x0002aaf0, 0x0002b7a0 | an unused WWorldPos each | game-ai |
+| AIGroundVehicle::GetBestWeightedLane, GetLookAhead, CheckAgentRoadNetworkCollision | 0x0002b5e0, 0x0002dc90, 0x0002fde0 | the argument is not read (GetLookAhead also makes an unused heading) | game-ai |
+| AIGroundVehicle::GetTargetPos | 0x0002a3c0 | a dead load | game-ai |
+| AIGroundVehicle::Reset | 0x00029d60 | leaves the modes as they are | game-ai |
+| AIGroundVehicle::DriveToPoint | 0x0002f610 | sets the hand brake false twice | game-ai |
+| AIGroundVehicle::CheckAgentDirectCollision | 0x000306b0 | excludes the target twice | game-ai |
+| AIGroundVehicle::DoTrafficStateUpdate | 0x0002f4c0 | the road counts through the out-of-line functions when it switches roads, the first registration inlined | game-ai |
+| AIHelicopter::DoAgentLogic | 0x000331c0 | the chase fallback's rocket branch cannot run; the target's body is fetched a third time, unused; LeftDrivableDist's answer dropped | game-ai |
+| AIRoadSpawn::GetRandomTrafficSpawn | 0x00035130 | the player's body fetched and not used; dead hit-point and lane reads | game-ai |
+| AIHelicopter::ManeuverToPos | 0x00031cd0 | an unused flat-velocity unit vector | game-ai |
+| AICharacterPedestrian::UpdateThreatRelativeDirection | 0x00023e60 | fetches a forward vector it does not use | game-ai |
+| AICharacterEnemyGround::DoWandering, DoAiming, DoFiring, TargetIsAcquired | 0x0001ee60, 0x0001f000, 0x0001f0c0, 0x0001f8f0 | GetWeaponPosition called and its answer not used | game-ai |
+| AICharacterEnemy::TargetIsAcquiredBase | 0x0001ca90 | GetRigidBody called twice | game-ai |
+| AICharacterBond::GetRotPos, GetRideRotPos | 0x0001cc30, 0x0001ccc0 | GetRigidBody called 4 and 5 times; the argument is not read | game-ai |
+| AICharacterPassenger::Init | 0x00023700 | the passenger's description is loaded even for the helicopter | game-ai |
+| AICharacterEnemySnow::PlayZoneInjuryAnim | 0x00020870 | the death path makes no sound | game-ai |
 
 ### 3.6 Values that never change
 
@@ -336,6 +403,13 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | DAudio | 0x00036d10 | DAudioMixerVisible (0x001e4760) and DAudioMixerEditing (0x001e2270) are never set | game-audio |
 | gLimitHenchSpawns | 0x001b64ec | 1, and nothing writes it: vehicle elements always wake within the hench limit (EActivateAIElement, EMaybeActivateAIElement) | game-events |
 | EFireWeapon::Process | 0x001c3df0 | bullets are ray shells: the byte is 1 and nothing writes it, so the shell branch is dead | game-events |
+| AICharacterPedestrian::GetRandomPedTexture | 0x000240e0 | round-robin, not random | game-ai |
+| AIGroundVehicle::UnSpawn | 0x0002dac0 | the parking offset saturates at 5000, so after about 100 unspawns every car parks at z = 45000 | game-ai |
+| AIGroundVehicle::SetNavigateMode | 0x0002a0d0 | the height phase runs 0 to 1.25 in steps of 0.25, then back to 0 | game-ai |
+| AIZoneController::Init | 0x00036a20 | type 0's entries are never set | game-ai |
+| AIZoneController::RegisterZone | 0x00036bb0 | types 0 and 1 (mergeSteps 0 or less) never register; only the first activeCount zones are checked | game-ai |
+| AIElementController::GetProperty ("EMPTY", "BLOWOUT") | 0x00027ce0 | EMPTY is true for a vehicle with no members; NaN hit points count as alive for BLOWOUT | game-ai |
+| AIElementController::GoToSleep | 0x000287d0 | a helicopter always counts as intact | game-ai |
 
 ### 3.7 Odd branches and data bugs
 
@@ -443,6 +517,42 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | ESetReflectiveObject::Process | 0x00044475 | uses the CARP element without redirecting it | game-events |
 | EStartEffect, EStopEffect, ESuppressEffect (Process) | 0x0004609a | 1 << (zone + 16), the shift taken mod 32 | game-events |
 | ESpawnTraffic::Process | 0x00045f16 | the spawn counter goes back to 0 past 32767 | game-events |
+| AIGroundVehicle::UpdateNavPos | 0x0002a3e0 | a sub with followTargetHeight measures in xz | game-ai |
+| AIGroundVehicle::DoAttackMode | 0x0002bf40 | modes 9, 10 and the unknown ones set speed 0 | game-ai |
+| AIGroundVehicle::DoAgentStateUpdate | 0x0002cd80 | the zone loop has no break, so the event can fire once per zone | game-ai |
+| AIGroundVehicle::BarriersInPath, GetDirectLaneWeights | 0x0002aaf0, 0x0002b7a0 | the second probe reuses the record; CheckHitWorld <= 1 counts as clear | game-ai |
+| AIGroundVehicle::GetCollNav | 0x0002b210 | compares the lane unsigned with a signed one, so a negative lane places the navigator again on every call | game-ai |
+| AIGroundVehicle::DriveToPoint | 0x0002f610 | the reverse flag only changes from 0 or 1 | game-ai |
+| AIGroundVehicle::DriveToPointSub | 0x0002e0a0 | reversing zeroes steering and pitch; the pitch-limit test uses the replaced speed | game-ai |
+| AIGroundVehicle::CheckAgentRoadNetworkCollision | 0x0002fde0 | the lane span is abs(first + span), capped at 64 | game-ai |
+| AIGroundVehicle::CheckTrafficCollision | 0x00030b80 | stop points accumulate; compares ownerIndex with rigidBodySlot | game-ai |
+| AIGroundVehicle::FireRockets, FireMissiles | 0x0002eb40, 0x0002ee00 | the side toggles as (side + 1) & 1 | game-ai |
+| AIVehicleController::ApproveAdditionalAgentGroundVehicleSpawn, ApproveAdditionalHelicopterSpawn | 0x00036140, 0x00036180 | with no free slot, answer the count cast to a pointer | game-ai |
+| AIVehicleController::RegisterPlayerGroundVehicle, RegisterTrafficVehicle | 0x000361c0, 0x000362e0 | with no free slot, the car is its own AI vehicle | game-ai |
+| AIVehicleController::UpdateAgentGroundVehicles | 0x00035f10 | divides by zero with no agent cars | game-ai |
+| AIVehicleController::IntersectionGreenLight | 0x00036060 | fabs applies to the comparison (dy < 5), not to the difference | game-ai |
+| AIHelicopter::ControlMoveState | 0x00032af0 | direct mode's clamps give a speed factor of 50 outside the range | game-ai |
+| AIHelicopter::FireBullets | 0x000324d0 | flattens and normalises the caller's heading in place | game-ai |
+| AIHelicopter::Reset | 0x00032280 | clears index (only the controller's Init sets it) | game-ai |
+| AIHelicopter::NewState | 0x00032700 | a shot count of 0 in guns mode becomes 255 | game-ai |
+| AIRoadSpawn::GetTrafficSpawnPointOnSegment | 0x00034860 | a byte-wide lane-reversed test | game-ai |
+| AICharacterPedestrian::FindClosestCar | 0x00024ee0 | compares the squared distance with the range (1000) | game-ai |
+| AICharacterPedestrian::FindPointAgainstWall | 0x00024f80 | skips nearly level barriers; zeroes barrierMask only when it makes the collider again, then sets it to 0x10 | game-ai |
+| AICharacterPedestrian::Recycle | 0x000254c0 | never resets an ordinary pedestrian's specialType | game-ai |
+| AICharacterPedestrian::HandleInterrupts | 0x00027800 | the threat-3 test compares the old state with 3 | game-ai |
+| AICharacterEnemyGround::HandleInterrupts | 0x0001f3c0 | the probe scales the unit step by its own length (1 or 0); a hit moves back and sets previousPosition = 2 x previous - position; newDamage is cleared at the end | game-ai |
+| AICharacterEnemyDriver::DoNeutral | 0x0001d7f0 | the idle counter is compared unsigned | game-ai |
+| AICharacterEnemySunroof::HandleInterrupts | 0x000217e0 | actor->visible tested against 1 | game-ai |
+| AICharacterEnemySnow::DoDying | 0x000203c0 | passes the thrown matrix and velocity as GetRotPos's outputs | game-ai |
+| AICharacterEnemySunroof::PlayZoneInjuryAnim | 0x00021b70 | an empty animation list gives animation 0 | game-ai |
+| AIElementController::Construct | 0x00028190 | one `found` flag serves three lookups; on snow2a_mis4 at difficulty 2, "paris_hench" cars become "junglesnow" with no riders | game-ai |
+| AIElementController::WakeUp | 0x00028bb0 | SetHitPointLoc inlined; the range squared x30 for ground characters, x9 for riders; a no-enemy character kind still gets a body if its pointer is set | game-ai |
+| AIElementController::Update | 0x00029880 | slots handed out from the totals when there is not room; helicopters do not take their riders' slots; event 1 cleared within 120, set otherwise | game-ai |
+| AICharacterHands::ChangeWeapon | 0x00022cc0 | the unarm branch switches the weapon at once | game-ai |
+| AICharacterHands::DoArmed | 0x00022fb0 | AimRelease runs even while firing | game-ai |
+| AICharacterBond::Init | 0x0001cd80 | keeps the characters only through the actor database | game-ai |
+| AICharacterBond::HandleInterrupts | 0x0001d2a0 | select is ignored while arming; only arming clears BondSelectPressed | game-ai |
+| EAIElementSetNonScoreable::Process, EKillAIElement::Process | 0x0003e0a0, 0x00040930 | test an element's helicopter flag the wrong way round: a helicopter is called as a car (vtable slot 44) and a car written as a helicopter (+0x138) | game-events, game-ai |
 
 ### 3.8 x87 and float/double mixes kept
 
@@ -455,3 +565,5 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | RScorchWorld::ScorchWorld | 0x000a50c0 | the level test compares with a double holding 0.85f | game-effects |
 | Sentry::ApplyDamage, Smackable::ApplyDamage, Sentry::DrawMuzzleFlashes, Sentry::Construct | 0x00073f80, 0x00075560, 0x00073500, 0x00073a90 | unrounded x87 tests: the first impact-level test, the flash fade test, the -1 clamp | game-weapons |
 | Sentry::ComputeNewRotation | 0x00073600 | `float(1 - limit)` on one branch only | game-weapons |
+| AIHelicopter::ManeuverToPos | 0x00031cd0 | the height and climb compared unrounded, then the stored float | game-ai |
+| AICharacterEnemyGround::ThreatenedByVehicle; AICharacterEnemySSnow::DoAiming, AICharacterEnemyWindow::DoAiming, AICharacterEnemySnow::DoAiming | 0x0001e440; 0x00020a60, 0x00022150, 0x00020090 | values compared unrounded on the x87, then stored | game-ai |

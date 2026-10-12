@@ -10,7 +10,7 @@
 #include "../engine/ActionQueue.hpp"
 #include "../engine/SimRandom.h"
 #include "../engine/UMemory.hpp"
-#include "../game/AIViews.h"           // AIHelicopter
+#include "../game/AIHelicopter.h"
 #include "../game/Helicopter.h"
 #include "../game/Vehicle.h"
 #include "../game/VehicleRender.h"

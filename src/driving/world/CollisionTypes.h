@@ -277,6 +277,9 @@ struct WorldCollisionInfo {
     uint16_t unknown56;
     WCollisionInstance *faceInstance;   // +0x58 the face's instance (a barrier's, or WWorldPos::instance)
     uint32_t unknown5c;
+
+    // FUN_0001d9f0, placed among the AI's code. The segment's ends are zeroed here.
+    WorldCollisionInfo* Construct();                                                        // 0x0001d9f0
 };
 static_assert(sizeof(WorldCollisionInfo) == 0x60, "WorldCollisionInfo is 96 bytes");
 
@@ -339,6 +342,8 @@ struct BarrierList : ColVector<BarrierListEntry> {
     void Reserve(uint32_t count);                                                           // 0x000bde10
     void Tidy();                                                                            // 0x000bd9a0
     BarrierListEntry* Ucopy(BarrierListEntry *first, BarrierListEntry *last, BarrierListEntry *dest);   // 0x000bd970
+    // Size() out of line (FUN_00023f20, placed among the pedestrians' code; the name is ours)
+    uint32_t Count() const;                                                                 // 0x00023f20
 };
 
 struct ObjectList : ColVector<WCollisionObject *> {
@@ -362,6 +367,9 @@ struct WGridCellList : ColVector<uint32_t> {
     void InsertN(uint32_t *where, uint32_t count, const uint32_t *value);    // 0x000c5be0
     void PushBack(const uint32_t *value);                                    // 0x000c5ea0
     void Reserve(uint32_t count);                                            // 0x000c27a0
+    // length_error("vector<T> too long") (FUN_00034e50, placed among the AI's code; the callers pass the vector,
+    // which it does not read)
+    static void Xlen();                                                      // 0x00034e50
 };
 
 // A moving thing in a cell's list (std::list<...>'s node and the list, made with new)

@@ -9,6 +9,8 @@
 #include "../audio/Sound.h"
 #include "../camera/PlayerCamera.h"
 #include "../engine/SimRandom.h"
+#include "../game/AIElements.h"
+#include "../game/AIVehicleController.h"
 #include "../game/BondCar.h"
 #include "../game/MissionManager.h"
 #include "../game/Simulation.h"
@@ -70,7 +72,7 @@ constexpr unsigned kRangeLo = 0x0006a840, kRangeHi = 0x0006cc20;
 bool g_originalRun;         // the run of the originals: they set the game's copy of the scratch pad
 constexpr size_t kRenderSize = sizeof(RVehicle);
 constexpr size_t kAudioSize = 0x190;        // the engine sound, as far as Simulate writes it
-constexpr size_t kAIVehicleSize = 0x90;
+constexpr size_t kAIVehicleSize = 0x90;      // the car's AIGroundVehicle, as far as Simulate reads it (navigateMode)
 constexpr int kCarSlots = 84;
 constexpr int kRenderSlots = 19;
 constexpr int kAudioSlots = 8;
@@ -423,10 +425,10 @@ void InstallFakes() {
     HookBoth(0x0006f4c0, XbeAddress(&PhysicsObject::Simulate), (const void *)&FakeObjectSimulate);
     HookBoth(0x000cda90, XbeAddress(&WTargetable::UpdatePosition), (const void *)&FakeUpdatePosition);
     HookBoth(0x00081890, XbeAddress(&RPlayerCamera::GetForwardAimVec4), (const void *)&FakeAimVec);
-    HookInstall(0x000359d0, (const void *)&FakeSplinePath);
-    HookInstall(0x00035c00, (const void *)&FakeControllerGet);
-    HookInstall(0x00035e90, (const void *)&FakeFindAgent);
-    HookInstall(0x000289f0, (const void *)&FakeSleep);
+    HookBoth(0x000359d0, XbeAddress(&AIVehicle::GetSplinePath), (const void *)&FakeSplinePath);
+    HookBoth(0x00035c00, XbeAddress(&AIVehicleController::Get), (const void *)&FakeControllerGet);
+    HookBoth(0x00035e90, XbeAddress(&AIVehicleController::FindAgentGroundVehiclePtr), (const void *)&FakeFindAgent);
+    HookBoth(0x000289f0, XbeAddress(&AIElementController::ForceVehicleToSleep), (const void *)&FakeSleep);
     HookBoth(0x000b6770, XbeAddress(&SMissionManager::IncKills), (const void *)&FakeIncKills);
     HookBoth(0x000b6720, XbeAddress(&SMissionManager::IncShotsHit), (const void *)&FakeIncShotsHit);
     HookBoth(0x000b66c0, XbeAddress(&SMissionManager::IncPlayerDamage), (const void *)&FakeIncPlayerDamage);

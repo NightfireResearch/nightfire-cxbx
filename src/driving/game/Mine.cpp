@@ -24,7 +24,6 @@
 
 // ---- the game's code not ported yet
 
-#define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
 
 // ---- globals
 #define IdentityMatrix (*(const MATRIX4 **)0x001c4654)
@@ -231,7 +230,7 @@ void Mine::Simulate() {
         VU0_v4scale4(&step, fgSimulation.timeStep, &step);
         VU0_v4sub4(&path[1], &step, &path[0]);
         WorldCollisionInfo info;
-        WorldCollisionInfo_Construct(&info, 0);
+        info.Construct();
         if (fgCollisionMgr->CheckHitWorld(path, &info) > 0)
             detonate = 1;
     }

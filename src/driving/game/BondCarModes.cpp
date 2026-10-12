@@ -6,14 +6,15 @@
 #include <stdint.h>
 #include <bit>
 
-#include "AIViews.h"                    // AIGroundVehicle
+#include "AISplinePath.h"
+#include "AIVehicle.h"
 #include "BondCar.h"
 #include "Simulation.h"
 #include "SoftZone.h"
 #include "VehicleSound.h"               // AVehicle
 #include "../../common/xbeOverload.h"   // XbeVirtual
 #include "../../helpers.h"
-#include "../camera/Camera.h"           // AISplinePath, AsCoord3
+#include "../camera/Camera.h"           // AsCoord3
 #include "../camera/CameraIniLoader.h"  // fgCameraTables
 #include "../camera/PlayerCamera.h"     // RPlayerCamera
 #include "../physics/PhysicsMath.h"

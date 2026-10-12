@@ -8,7 +8,10 @@
 #include <math.h>
 #include <string.h>
 
-#include "AIViews.h"                    // AICharacterHands, fgHandObj
+#include "AICharacter.h"
+#include "AIElements.h"
+#include "AIHelicopter.h"
+#include "AIVehicleController.h"
 #include "Explosion.h"                  // ExplosionType
 #include "Helicopter.h"                 // PHelicopter
 #include "MissionManager.h"
@@ -121,12 +124,6 @@ const float WeaponRefireSeconds[kWeaponCount] = {
 static_assert(std::bit_cast<uint32_t>(1.0f / 6.0f) == 0x3e2aaaab && std::bit_cast<uint32_t>(2.0f / 3.0f) == 0x3f2aaaab &&
               std::bit_cast<uint32_t>(1.0f / 12.0f) == 0x3daaaaab && std::bit_cast<uint32_t>(0.05f) == 0x3d4ccccd,
               "the refire times");
-
-// ---- the game's globals
-
-// The bytes AICharacterBond reads (names ours)
-#define BondSelectPressed U8_AT(0x001dda2c)             // a select or the special fire
-#define BondFirePressed U8_AT(0x001dda2d)               // the primary or secondary fire
 
 // ---- calls to originals not ported
 
@@ -1086,7 +1083,7 @@ void SWeaponManager::Update() {
     // A click, faster the nearer the nearest proximity-destruct helicopter
     bool found = false;
     float nearest = 10000.0f;
-    for (int i = 0; i < fgAIElementController->helicopterCount; i++) {
+    for (int i = 0; i < fgAIElementController->helicopterSlots; i++) {
         AIHelicopter *helicopter = AIVehicleController::Get()->GetHelicopter(i);
         if (helicopter->active &&
             static_cast<PHelicopter *>(helicopter->GetPhysicsObject())->proximityDestructEnabled) {

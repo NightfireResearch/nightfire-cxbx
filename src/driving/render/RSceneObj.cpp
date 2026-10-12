@@ -116,7 +116,6 @@ RSceneObj_vtbl *const kSceneObjVtable = (RSceneObj_vtbl *)0x00191be0;
 } // namespace
 
 // ---- the game's code not ported yet
-#define Instance_SetMatrix ((void (__fastcall *)(CARP::Instance *, int, const MATRIX4 *))0x00035610)
 #define GFX_Trigger ((void *(*)(void *effect, const Coord3 *velocity, const Coord4 *origin, ArticleEffect *source, void *parameters, RSceneObj *owner, uint32_t instance, Coord3 *ownerVelocity))0x000d34e0)
 #define GFX_SetIntensity ((void (*)(void *triggered, float intensity))0x000d35b0)
 #define GFX_Purge ((void (*)(void *triggered))0x000d3560)
@@ -409,7 +408,7 @@ bool RSceneObj::UseArticle(UGroup *model, uint32_t article) {
         single = *Instance();
         single.flags &= ~(kInstanceSceneObj | kInstanceProcAnim);
         single.procAnimType = 0xff;
-        Instance_SetMatrix(&single, 0, &kIdentity);
+        single.SetMatrix(&kIdentity);
         count = 1;
         instances = &single;
         if (single.articleDesc.value == 0) {
@@ -475,7 +474,7 @@ void RSceneObj::UseInstance(RSceneObj *source, uint32_t index, const MATRIX4 *tr
     UseInstanceList(&sourceHandle->Instances()[index], 1, sourceHandle->states, true, kFragmentName);
     ProcAnimState *states = animHandle->states;
     CARP::Instance *instance = animHandle->Instances();
-    Instance_SetMatrix(instance, 0, transform);
+    instance->SetMatrix(transform);
     instance->flags &= ~kInstanceSceneObj;
     if (instance->flags & kInstanceProcAnim) {
         states[instance->procAnimIndex].procAnimType = procAnimType;
@@ -737,7 +736,7 @@ void RSceneObj::GetPosition(Coord3 *position) {
 void RSceneObj::SetTransform(const MATRIX4 *transform) {
     if (physics != NULL)
         return;
-    Instance_SetMatrix(Instance(), 0, transform);
+    Instance()->SetMatrix(transform);
     UpdatePositionVirtual(true);
 }
 
@@ -776,7 +775,7 @@ void RSceneObj::UpdatePosition(bool update) {
             position->z = body->position.z;
         }
         bool unmoved = VU0_v3distancesquare(Instance()->position, position) < kUnmovedDistance2;
-        Instance_SetMatrix(Instance(), 0, &transform);
+        Instance()->SetMatrix(&transform);
         if (unmoved)
             return;
     } else {
@@ -814,7 +813,7 @@ void RSceneObj::SetPhysics(PhysicsObject *newPhysics) {
         Coord4 rotation = *orientation;
         MATRIX4 transform;
         VU0_SQTquattom4(&kUnitScale, &rotation, &position, &transform);
-        Instance_SetMatrix(Instance(), 0, &transform);
+        Instance()->SetMatrix(&transform);
     }
     physics = newPhysics;
     if (target != NULL) {

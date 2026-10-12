@@ -8,7 +8,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "AIViews.h"                      // AIGroundVehicle, AIHelicopter, AICharacter
+#include "AICharacter.h"
+#include "AIElements.h"
+#include "AIHelicopter.h"
+#include "AIVehicle.h"
+#include "BondCar.h"                       // PBondCar
 #include "Helicopter.h"                   // PHelicopter::ai
 #include "Human.h"
 #include "Missile.h"
@@ -24,6 +28,7 @@
 #include "../audio/Bank.h"                // fgBanks
 #include "../audio/Sound.h"               // ABaseSound, AOneShotSound, AMenuSound
 #include "../camera/PlayerCamera.h"       // RPlayerCamera
+#include "../data/Carp.h"                 // CARP::AIElementCharacterInfo
 #include "../data/CoordConvert.h"         // Float_COORD4toCOORD3
 #include "../engine/Feedback.h"           // IFeedback
 #include "../engine/GameLoop.h"           // LaunchPage
@@ -213,7 +218,7 @@ void EFireWeapon::Process() {
 
     bool fromHelicopter = owner != NULL && owner->type == kObjectHelicopter;
     AIHelicopter *helicopterAim = NULL;
-    if (fromHelicopter)     // fields game/Helicopter.h's view of the AI does not map yet
+    if (fromHelicopter)
         helicopterAim = static_cast<PHelicopter *>(owner)->ai;
     bool fromCar = owner != NULL && owner->type == kObjectVehicle;
     bool fromPlayerCar = fromCar && owner == fgSimulation.cars.first[0];
@@ -279,9 +284,9 @@ void EFireWeapon::Process() {
     float accuracyScale = 1.0f;
     if (fromHelicopter) {
         if (weaponType == kWeaponMissile)
-            target = TemporaryTarget(&helicopterAim->target, aim);
+            target = TemporaryTarget(&helicopterAim->bulletTarget, aim);
         else if (weaponType == kWeaponGun)
-            *aim = helicopterAim->aim;
+            *aim = helicopterAim->RocketAimVector();
     } else if (playerAims) {
         RPlayerCamera *camera = fgRenderHigh->views[0].camera;
         *aim = *camera->GetForwardAimVec4(1.0f);
@@ -291,12 +296,12 @@ void EFireWeapon::Process() {
     } else if ((!playerWeapon && weapon != NULL) || fromSentry) {
         // A holder's weapon or a sentry: at the character's command target, else at the player's car (leading it
         // with weapon 1)
-        WeaponAccuracy *accuracyInfo = NULL;
+        CARP::AIElementCharacterInfo *accuracyInfo = NULL;
         AICharacter *character = NULL;
         alignas(16) Coord4 targetPoint;
         bool commanded = false;
         if (weapon != NULL) {
-            accuracyInfo = weapon->accuracy;
+            accuracyInfo = weapon->characterInfo;
             character = static_cast<Human *>(weapon->owner)->character;
             if (accuracyInfo != NULL)
                 accuracyScale = Clamp(accuracyInfo->aimScale + 100, 0, 200) * 0.01f;
@@ -333,9 +338,9 @@ void EFireWeapon::Process() {
             accuracy += glbMissionManager->GetEnemyAccuracyBoost();
             bool clamp = true;
             if (character != NULL) {
-                AICharacterAttitude *attitude = character->GetAttitude();
-                if (attitude != NULL)
-                    accuracy += (attitude->GetAccuracyGrade() - 4) * 30;
+                PBondCar *car = character->GetVehicle();
+                if (car != NULL)
+                    accuracy += (car->PVehicle::GetNumTires() - 4) * 30;
                 if (weaponType == kWeaponRocket && direction.y < -0.2f) {
                     direction.y = -0.2f;
                     VU0_v4unitxyz(&direction, &direction);

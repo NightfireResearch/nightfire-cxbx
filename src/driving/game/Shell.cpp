@@ -6,7 +6,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "AIViews.h"                    // AICharacter, fgHandObj
+#include "AICharacter.h"
+#include "AIElements.h"
 #include "Explosion.h"                  // ExplosionType
 #include "Human.h"
 #include "Simulation.h"
@@ -304,7 +305,7 @@ void RayShell::DrawTracers() {
         RayShellTracer &tracer = RayShellTracers[i];
         float age = (float)(double(now - tracer.time) * fgSimulation.timeStep);
         const RayShellTracerSource &source = RayShellTracerSources[i];
-        if (source.object != NULL && fgHandObj->unknown150) {
+        if (source.object != NULL && fgHandObj->shown) {
             MATRIX4 transform;
             source.object->LocateFX(source.effect, &transform, true);
             age = age * age;

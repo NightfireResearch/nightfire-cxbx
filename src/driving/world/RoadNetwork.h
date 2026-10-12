@@ -59,7 +59,7 @@ struct WRoadSegment {
     int16_t road;               // +0x3c the road it is part of (WRoadNetworkData::roads), -1 none
     int16_t index;              // +0x3e its own
     Coord3 forward;             // +0x40 unit, from its start node to its end node
-    float unknown4c;
+    float speed;                // +0x4c the AI's speed on it (WRoadNav::SegmentSpeed)
     uint16_t flags;             // +0x50 WRoadSegmentFlags
     int8_t leftLanes;           // +0x52
     int8_t rightLanes;          // +0x53
@@ -116,10 +116,10 @@ struct WRoad {
     char name[0x20];            // +0x0c
     uint8_t unknown2c;
     uint8_t unknown2d;
-    uint8_t count2e;            // counted up and down by 0x00029c90 / 0x00029cb0; Init and Restart zero it
-    uint8_t count2f;            // counted up and down by 0x00023990 / 0x000239b0; Init and Restart zero it
+    uint8_t carCount;           // the AI's cars on it (AddRoadCar, RemoveRoadCar); Init and Restart zero it
+    uint8_t pedestrianCount;    // the AI's pedestrians on it (AddRoadPedestrian, RemoveRoadPedestrian); the same
 };
-static_assert(sizeof(WRoad) == 0x30 && offsetof(WRoad, count2e) == 0x2e, "a road is 48 bytes");
+static_assert(sizeof(WRoad) == 0x30 && offsetof(WRoad, carCount) == 0x2e, "a road is 48 bytes");
 
 // The group's "RNhd" record: how many of each record there are.
 struct WRoadNetworkHeader {
@@ -199,6 +199,13 @@ public:
     void GetPointOnSegment(const Coord3 *start, const Coord3 *end, WRoadSegment *segment, float t, Coord3 *out);
     // The same between the segment's nodes, t clamped to 0-1                                          0x000cbe70
     void GetPointOnSegment(WRoadSegment *segment, float t, Coord3 *out);
+
+    // A road's carCount and pedestrianCount up and down; a road out of range is left (Ghidra: FUN_00029c90,
+    // FUN_00029cb0, FUN_00023990, FUN_000239b0, placed among the AI's code; the names are ours)
+    void AddRoadCar(int road);                                                              // 0x00029c90
+    void RemoveRoadCar(int road);                                                           // 0x00029cb0
+    void AddRoadPedestrian(int road);                                                       // 0x00023990
+    void RemoveRoadPedestrian(int road);                                                    // 0x000239b0
 };
 static_assert(sizeof(WRoadNetwork) == 1, "Init news one byte for the road network");
 

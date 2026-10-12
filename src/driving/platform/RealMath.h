@@ -55,6 +55,9 @@ void seedrandom(uint32_t seed);
 double rrandom();
 
 // ---- the Xbox VU0 layer (SSE)
+// out = from + (to - from) * t on x, y and z, in single precision; out's w is left (Ghidra: FUN_00022870, placed
+// among the AI's code; the name is ours)
+void BlendVectors(void *out, const void *from, const void *to, float t);
 void VU0_v3add(const void *a, const void *b, void *out);
 void VU0_v4sub(const void *a, const void *b, void *out);
 void VU0_v4add4(const void *a, const void *b, void *out);

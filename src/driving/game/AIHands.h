@@ -1,0 +1,162 @@
+#ifndef DRIVING_GAME_AIHANDS_H_
+#define DRIVING_GAME_AIHANDS_H_
+
+// ---------------------------------------------------------------------------------------------------------------
+// The player's characters (AIHands.cpp), on AICharacter (AICharacter.h, which includes this header at its end):
+//   AICharacterHands (0x160 bytes, vtable 0x0018ad28): the hands holding the auto-drive weapons, drawn from the
+//     camera - one actor per weapon the mission enables (AIC_H*_POS / _ROT on the player's car), the hands'
+//     state machine switching, firing, reloading and aiming them.
+//   AICharacterBond (0x150 bytes, vtable 0x0018a688): Bond at the wheel of the player's car (two characters, one
+//     per side), his hands on the car's steering effects, the one on the camera's side hidden.
+// ---------------------------------------------------------------------------------------------------------------
+
+#include <stddef.h>
+#include <stdint.h>
+
+#include "AICharacter.h"
+
+class AnimationController;
+struct ArticleEffect;
+class Human;
+
+// ---------------------------------------------------------------------------------------------------------------
+// AICharacterHands
+// ---------------------------------------------------------------------------------------------------------------
+
+// The hands' weapons (AICharacter::weapon), 1-7: the weapon manager's weapon 23 + it
+constexpr int kHandWeapons = 8;
+constexpr int kFirstHandWeapon = 23;
+
+class AICharacterHands : public AICharacter {
+public:
+    uint8_t reloadPending;          // +0x140 a Reload asked for while busy: made when next idle
+    uint8_t hideOnSwitch;           // +0x141 1: a weapon change hides the old weapon's actor
+    uint8_t unknown142[2];
+    int32_t nextWeapon;             // +0x144 the weapon to change to once idle; 0 none
+    float spread;                   // +0x148 the gun's kick: set to -0.025 by a shot, eased back to 0
+    float aimFraction;              // +0x14c how far the aim (or its release) animation is
+    uint8_t shown;                  // +0x150 ShowHands sets it, HideHands clears it (Shell's tracers start from a
+                                    //        gun's effect while set)
+    uint8_t unknown151[0xf];
+
+    // The hands' constructor (inlined in Init: AICharacter's, then the hands' fields)
+    void Construct(int weapon);
+    void Destruct();                                                                            // 0x00022820
+    AICharacterHands* Delete(unsigned flags);                                       // 0  0x000228b0
+
+    // The weapons the mission enables loaded, an actor for each, and the hands (fgHandObj) on the lowest
+    static void Init();                                                                         // 0x00022930
+    // The actors killed and fgHandObj forgotten
+    static void Shutdown();                                                                     // 0x000227c0
+    // fgHandObj's aimFraction; 0 without the hands
+    static float GetAimFraction();                                                              // 0x000227a0
+    // The actors' callback: the hands' transform, and the player's car's velocity
+    static void GetRotPos(AICharacterHands *hands, MATRIX4 *transform, Coord4 *velocity);       // 0x000228e0
+
+    // Idle and not waiting to reload (a byte answer)
+    bool AbleToFire();                                                                          // 0x00022830
+    int GetWeapon();                                                                            // 0x00022860
+    void ShowHands();                                                                           // 0x00022c30
+    // Hidden; an unarming in progress finished (idle, with the weapon it was changing to)
+    void HideHands();                                                                           // 0x00022c50
+    // To the weapon (1-7, else 1): unarming first if the weapon has an unarm animation; later if not idle
+    void ChangeWeapon(int weapon);                                                              // 0x00022cc0
+    // The next of the weapon's two fire animations, when idle
+    void Fire();                                                                                // 0x00022dd0
+    // The reload animation when idle, else reloadPending
+    void Reload();                                                                              // 0x00022e20
+
+    // ---- virtual (the slot in the vtable)
+    void DoNeutral();                                                               // 8  0x00022e70
+    void DoIdling();                                                                // 9  0x00022f10
+    void DoArming();                                                                // 15 0x00022f70
+    // The aim toggled: its animation, or the camera's zoom (or its release)
+    void DoArmed();                                                                 // 16 0x00022fb0
+    void DoAiming();                                                                // 17 0x000230a0
+    void DoFiring();                                                                // 18 0x00023170
+    void DoReloading();                                                             // 19 0x00023230
+    void DoUnarming();                                                              // 20 0x00023280
+    // transform: the camera's aim, swayed with the car in auto-drive (weapons 1 and 2) and kicked by firing
+    // (weapons 1, 4 and 6)
+    void UpdateRotPos();                                                            // 32 0x000232b0
+
+protected:
+    // The weapon's actor, shown if the hands are
+    void SwitchActor();
+};
+static_assert(sizeof(AICharacterHands) == 0x160, "the hands are 0x160 bytes");
+static_assert(offsetof(AICharacterHands, nextWeapon) == 0x144 && offsetof(AICharacterHands, aimFraction) == 0x14c &&
+              offsetof(AICharacterHands, shown) == 0x150, "AICharacterHands layout");
+
+constexpr uint32_t kAICharacterHandsVtable = 0x0018ad28;
+
+// The hands' statics (0x001dda70-0x001ddb30; names ours)
+struct AICharacterHandsStatics {
+    int32_t fireSide[kHandWeapons];     // +0x00 which of the weapon's two fire animations is next
+    AICharacterHands *instance;         // +0x20 fgHandObj
+    Human *human;                       // +0x24 the hands' body
+    uint8_t lockOn;                     // +0x28 the camera's lock-on (camera/PlayerCamera.h's CameraLockOnFlag)
+    uint8_t aiming;                     // +0x29 toggled by DoArmed
+    uint8_t unknown2a[2];
+    float unknown2c[5];                 // +0x2c the static initialisers' constants (not the hands')
+    MATRIX4 baseTransform;              // +0x40 the static initialisers' copy of a constant: each actor's
+                                        //       transform before its position offset, and the hands' body's
+                                        //       spawn direction (row 2) and position (row 3)
+    AICharacterActorLink *handles[kHandWeapons];    // +0x80 each weapon's actor (1-7)
+    Coord4 swayOffset;                  // +0xa0 the car's sway, eased (auto-drive, weapons 1 and 2)
+    Coord4 cameraOffset;                // +0xb0 the camera's offset from the car, eased
+};
+static_assert(sizeof(AICharacterHandsStatics) == 0xc0 && offsetof(AICharacterHandsStatics, instance) == 0x20 &&
+              offsetof(AICharacterHandsStatics, baseTransform) == 0x40 &&
+              offsetof(AICharacterHandsStatics, handles) == 0x80, "the hands' statics");
+
+#define HandsStatics (*(AICharacterHandsStatics *)0x001dda70)
+// Bond's hands' IK (ActIKSolveInfo[2]), the targets on the wheel set each step; the enemy driver hands it to its
+// actor too
+#define BondHandIK ((ActIKSolveInfo *)0x001b5240)
+#define fgHandObj (*(AICharacterHands **)0x001dda90)    // the one instance (AICharacterHands::Init's), NULL outside auto-drive
+
+
+// ---------------------------------------------------------------------------------------------------------------
+// AICharacterBond
+// ---------------------------------------------------------------------------------------------------------------
+
+class AICharacterBond : public AICharacter {
+public:
+    int32_t side;                   // +0x140 0 or 1: which of the two (1 holds the weapons' animations)
+    ArticleEffect *steerLeft;       // +0x144 the car's "steerleft" effect: the left hand's place on the wheel
+    ArticleEffect *steerRight;      // +0x148 ... "steerright"
+    uint8_t unknown14c[4];
+
+    AICharacterBond* Construct(const MATRIX4 *transform, int side);                            // 0x0001cbb0
+    void Destruct();                                                                            // 0x0001cbf0
+    AICharacterBond* Delete(unsigned flags);                                        // 0  0x0001cc00
+
+    // The two characters on the player's car (not the helicopter), if its mission set picks one (1-3) and the car
+    // has both steering effects
+    static void Init();                                                                         // 0x0001cd80
+    // The player's car's orientation and position (the character is not read)
+    static void GetRotPos(AICharacterBond *bond, MATRIX4 *transform);                           // 0x0001cc30
+    // The same as the actors' callback, and the car's velocity (Bond's and the passenger's; inside GetRotPos's
+    // range in Ghidra)
+    static void GetRideRotPos(AICharacterBond *bond, MATRIX4 *transform, Coord4 *velocity);    // 0x0001ccc0
+
+    // ---- virtual (the slot in the vtable)
+    // Neutral once the animation is done; also slot 9
+    void DoInitial();                                                               // 7  0x0001d0c0
+    void DoNeutral();                                                               // 8  0x0001d090
+    void DoArming();                                                                // 15 0x0001d0e0
+    void DoFiring();                                                                // 18 0x0001d1c0
+    // The hands on the wheel, the visibility by the camera's side, and side 1's arming and firing from the
+    // weapon buttons
+    void HandleInterrupts();                                                        // 30 0x0001d2a0
+    // transform: the actor's local matrix through the car's
+    void UpdateRotPos();                                                            // 32 0x00023950
+};
+static_assert(sizeof(AICharacterBond) == 0x150, "Bond is 0x150 bytes");
+static_assert(offsetof(AICharacterBond, side) == 0x140 && offsetof(AICharacterBond, steerRight) == 0x148,
+              "AICharacterBond layout");
+
+constexpr uint32_t kAICharacterBondVtable = 0x0018a688;
+
+#endif // DRIVING_GAME_AIHANDS_H_

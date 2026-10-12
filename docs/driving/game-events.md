@@ -73,8 +73,9 @@ WCollisionMgr, SimulationSpawn, the mission manager and the camera); the events'
 ASubmersible virtual calls are those classes' members; the cinematic masks are MissionManager.h's
 `CinematicSource`, EFireWeapon's weapon types the weapon table's `DrivingWeapon`, its weapon definitions
 `WeaponRecord` (with `pickupText` and `ammoText`), ActWeapon's accuracy pointer `WeaponAccuracy`, the environment
-description world/World.h's `EnviroDesc`. The AI the events use is in one header, game/AIViews.h (which also took
-in game/AICharacter.h, game/AIVehicle.h and Helicopter.h's HelicopterAI, now `AIHelicopter`, and the by-address AI
+description world/World.h's `EnviroDesc`. The AI the events use was in one header, game/AIViews.h (since folded
+into the AI's own classes, docs/driving/game-ai.md, with `WeaponAccuracy` now the AI element's character record; it
+also took in game/AICharacter.h, game/AIVehicle.h and Helicopter.h's HelicopterAI, now `AIHelicopter`, and the by-address AI
 calls of GameLoop, World, BondCarSimulate, Helicopter, MissionManager, MissionRules, WeaponManager, Targeting,
 Shell and WorldCamera); the AI elements are data/Carp.h's `CARP::AIElement` (type 0 a character element, 1 a
 vehicle element). The front end is in one header, engine/GameInterfaces.hpp: GHud (with the HUD calls of the

@@ -10,7 +10,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "AIViews.h"                        // fgHandObj
+#include "AICharacter.h"
+#include "AIElements.h"
 #include "EventsC.h"                        // ERestart
 #include "Missile.h"
 #include "Simulation.h"
@@ -129,7 +130,8 @@ CARP::AIElement *Redirect(CARP::AIElement *element) {
 // An objective vehicle's tyres cannot be shot out
 void ProtectObjectiveVehicle(CARP::AIElement *element) {
     CARP::AIElement *live = Redirect(element);
-    if (live->type == CARP::kAIElementVehicle && live->unknown48 == 1 && !live->unknown77 && live->object != NULL)
+    if (live->type == CARP::kAIElementVehicle && live->state == kElementAwake && !live->car.helicopter &&
+        live->object != NULL)
         DisableTyreBlowOuts(live->object);
 }
 
@@ -355,7 +357,7 @@ void SMissionManager::ClearState() {
     objectiveCheckStep = 0;
     objectiveSeenStep = 0;
     unknown4fc = 0;
-    unknown500 = 0;
+    enemyCount = 0;
     lastDamageStep = 0;
     stylinCount = 0;
     missionEndTime = 0;
@@ -843,7 +845,7 @@ const Coord4* SMissionManager::GetCurrObjective(int slot) {
     case kObjectiveElement: {
         CARP::AIElement *element = Redirect(objectiveElement[slot]);
         fgAIElementController->SyncRuleInfo(element);
-        return &element->position;
+        return &element->Position();
     }
     default:
         return NULL;

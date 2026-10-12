@@ -112,6 +112,13 @@ public:
     // The lanes of its segment, left and right (FUN_00080a30; the name is ours, and the linker placed it among the
     // renderer's code)
     int SegmentLaneCount();                                                                         // 0x00080a30
+    // The segment's speed (FUN_00029cd0, placed among the AI's code; the names here are ours)
+    float SegmentSpeed();                                                                           // 0x00029cd0
+    // The drivable width to its left and right by its direction (the segment's left going forward, its right
+    // going back, and the other way), unrounded (FUN_00029cf0, among the AI's code; FUN_00031820, among
+    // AIGroundVehicle's)
+    double LeftDrivableDist();                                                                      // 0x00029cf0
+    double RightDrivableDist();                                                                     // 0x00031820
 };
 static_assert(sizeof(WRoadNav) == 0xc0, "WRoadNav is 0xc0 bytes");
 static_assert(offsetof(WRoadNav, segment) == 0x3e && offsetof(WRoadNav, boundStart) == 0x50 &&

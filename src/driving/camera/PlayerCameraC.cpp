@@ -35,9 +35,6 @@
 #include "../world/WorldPos.h"
 
 // ---- the game's code not ported yet
-#define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
-#define BlendVectors ((void (*)(Coord4 *out, const Coord4 *from, const Coord4 *to, float t))0x00022870)
-#define Instance_SetMatrix ((void (__fastcall *)(CARP::Instance *, int, const MATRIX4 *))0x00035610)     // FUN_00035610: the axes and position
 
 // ---- globals
 
@@ -139,7 +136,7 @@ bool RPlayerCamera::CheckObjectCollisions(Coord4 *position) {
 int RPlayerCamera::ResolveAllCollisions(Coord4 *position, const Coord4 *target, bool objects) {
     collisionState = 0;
     WorldCollisionInfo info;
-    WorldCollisionInfo_Construct(&info, 0);
+    info.Construct();
     Coord4 segment[2];
     segment[0].w = 1.0f;
     segment[1].w = 1.0f;
@@ -857,7 +854,7 @@ void RPlayerCamera::SetOldCameraMode(int mode, int delay, unsigned b, bool relat
     } else {
         CARP::Instance *point = static_cast<CARP::Instance *>(OperatorNew(sizeof(CARP::Instance)));
         MEM_fill(point, 0, sizeof(CARP::Instance));
-        Instance_SetMatrix(point, 0, &scratch.matrix);
+        point->SetMatrix(&scratch.matrix);
         point->position[0] = scratch.cameraOffset.x;
         point->position[1] = scratch.cameraOffset.y;
         point->position[2] = scratch.cameraOffset.z;

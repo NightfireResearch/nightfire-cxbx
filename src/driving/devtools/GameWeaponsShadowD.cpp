@@ -20,6 +20,7 @@
 #include "../anim/AnimEngine.h"
 #include "../anim/Character.h"
 #include "../engine/UMemory.hpp"
+#include "../game/AICharacter.h"
 #include "../game/Human.h"
 #include "../game/Mine.h"
 #include "../game/Sentry.h"

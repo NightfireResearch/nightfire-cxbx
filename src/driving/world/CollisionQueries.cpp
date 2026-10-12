@@ -35,9 +35,6 @@
 
 // ---- the game's, not ported yet
 
-#define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
-#define BarrierList_Size ((uint32_t (__fastcall *)(const BarrierList *, int))0x00023f20)
-#define CellList_Xlen ((void (*)(void))0x00034e50)
 #define PointerFill ((void (*)(void **, void **, void *const *))0x0004f3e0)
 #define ArticleMapDecrement ((void (__fastcall *)(ArticleMapNode **, int))0x00126bd0)
 
@@ -846,8 +843,8 @@ bool WCollisionMgr::GetBarrierCollision(const BarrierList *list, const Coord4 *s
 bool WCollisionMgr::GetWorldNormal(const InstanceList *instances, const BarrierList *barriers, const Coord4 *segment,
                                    WorldCollisionInfo *info, bool checkGround) {
     WorldCollisionInfo ground, barrier;
-    WorldCollisionInfo_Construct(&ground, 0);
-    WorldCollisionInfo_Construct(&barrier, 0);
+    ground.Construct();
+    barrier.Construct();
     GetBarrierCollision(barriers, segment, &barrier);
     if (checkGround) {
         WWorldPos position;
@@ -1613,7 +1610,7 @@ void InsertN(Vector *v, T *where, uint32_t count, const T *value) {
 struct BarrierListOps {
     static constexpr uint32_t kMaxSize = 0x6666666;
     static void Xlen(BarrierList *) { CollisionVectorXlen(); }
-    static uint32_t Size(BarrierList *v) { return BarrierList_Size(v, 0); }   // this copy calls size()
+    static uint32_t Size(BarrierList *v) { return v->Count(); }   // this copy calls size()
     static BarrierListEntry *UninitializedCopy(BarrierListEntry *first, BarrierListEntry *last,
                                                BarrierListEntry *dest) {
         return BarrierUninitializedCopy(first, last, dest);
@@ -1766,7 +1763,7 @@ void InstanceList::InsertN(InstanceListEntry *where, uint32_t count, const Insta
 void WGridCellList::Reserve(uint32_t count) {
     if (count > 0x3fffffff) {
         COLLISION_QUERIES_UNTESTED("WGridCellList::Reserve's throw");
-        CellList_Xlen();
+        WGridCellList::Xlen();
         return;
     }
     ::Reserve<uint32_t>(this, count);

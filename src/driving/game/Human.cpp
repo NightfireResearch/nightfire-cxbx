@@ -2,6 +2,7 @@
 
 #include "Human.h"
 
+#include "AICharacter.h"
 #include "MissionManager.h"
 #include "Simulation.h"
 #include "../anim/Actor.h"              // ActActor

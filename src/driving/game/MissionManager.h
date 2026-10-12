@@ -93,7 +93,9 @@ struct ObjectiveKind2Target;
 // "vanquish", 3000 health, 1000 shield). Name ours, after the tag. Per-difficulty arrays are indexed by the
 // manager's difficulty: 1 and 2 their own entries, anything else entry 0.
 struct MissionSet {
-    char name[0x2c];            // +0x000 the car type (SetCarType)
+    char name[0x24];            // +0x000 the car type (SetCarType)
+    int32_t bond;               // +0x024 1-3: the pair of characters AICharacterBond::Init makes, else none
+    int32_t passenger;          // +0x028 1-5: the passenger AICharacterPassenger::Init makes, else none
     uint8_t weaponEnabled[32];  // +0x02c by weapon
     int32_t weaponAmmo[32];     // +0x04c loaded only up to 10000
     int32_t weaponClipSize[32]; // +0x0cc
@@ -197,7 +199,7 @@ enum MissionScore : int32_t {
     kScoreDamage = 8,
     kScore9 = 9,                // the mean of the accuracy and score 3 shares
     kScore10 = 10,              // not set here
-    kScoreKills = 11,           // kills over unknown500
+    kScoreKills = 11,           // kills over enemyCount
     kScoreCount = 12,
 };
 
@@ -278,8 +280,8 @@ public:
     uint8_t unknown4f5[3];
     int32_t objectiveSeenStep;          // +0x4f8 the step the objective was last near or ahead
     int32_t unknown4fc;                 // +0x4fc
-    int32_t unknown500;                 // +0x500 kills over it make the kills score; one more for each scoreable
-                                        //        sentry made
+    int32_t enemyCount;                 // +0x500 kills over it make the kills score: one more for each scoreable
+                                        //        sentry made and each AI element's enemy when it first wakes
     int32_t lastDamageStep;             // +0x504
     int32_t magicCounters[kMagicCounters];      // +0x508
     int32_t magicThresholds[kMagicCounters];    // +0x608 a counter reaching its threshold raises its event; -1 never

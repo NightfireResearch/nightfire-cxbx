@@ -365,8 +365,8 @@ void SMissionManager::CalcEndMissionScores() {
     scores[kScore3] = Ftol(double(set->value3) * share3);
 
     double killShare = 1.0;
-    if (unknown500 != 0)
-        killShare = Clamp01(double(kills) / unknown500);
+    if (enemyCount != 0)
+        killShare = Clamp01(double(kills) / enemyCount);
     scores[kScoreKills] = Ftol(double(set->killsValue) * killShare);
 
     scores[kScore4] = Ftol(double(set->value4) * 0.0);
@@ -447,7 +447,7 @@ void SMissionManager::TallyScores(LaunchPage *page, bool endOfMission) {
     page->shotsFired += shotsFired;
     page->shotsHit += shotsHit;
     page->kills += kills;
-    page->unknown594 += unknown500;
+    page->unknown594 += enemyCount;
     page->zeroScoreTime += set->zeroScoreTime;
     page->fullScoreTime += set->fullScoreTime;
     page->missionTime += missionEndTime;

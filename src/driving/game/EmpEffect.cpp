@@ -41,7 +41,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-#define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
 
 // ---- the simulation's globals
 
@@ -1039,7 +1038,7 @@ void REmpBolts::TrySpawnBolt() {
         VU0_v4add4(&offset, &segment[0], &segment[1]);      // the end's w is 2
 
         WorldCollisionInfo hit;
-        WorldCollisionInfo_Construct(&hit, 0);
+        hit.Construct();
         if (fgCollisionMgr->CheckHitWorld(segment, &hit) > 0) {
             CreateWorldBolt(from, Xyz(&hit.point));
             Shell::ApplyWorldEffects(Xyz(&hit.point), &hit.normal, 1, 0, &hit.faceType, 0, vehicle->physics);
@@ -1086,7 +1085,7 @@ void REmpBolts::CreateVehicleBolt(EmpAnchor *from, EmpAnchor *to) {
         VU0_v4sub4(&position, &unset, &direction);
         VU0_v4unit(&direction, &direction);
         WorldCollisionInfo hit;
-        WorldCollisionInfo_Construct(&hit, 0);
+        hit.Construct();
         Shell::ApplyWorldEffects(Xyz(&position), &direction, 1, 0, &hit.faceType, 0, vehicle->physics);
     }
 }

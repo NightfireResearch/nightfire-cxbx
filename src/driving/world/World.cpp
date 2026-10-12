@@ -18,7 +18,10 @@
 #include "../data/RCARPFile.h"
 #include "../engine/GameInterfaces.hpp"   // GLoadingScreen_Status
 #include "../engine/CoreFoundation.h"     // NullFunction, ThrowLengthError
-#include "../game/AIViews.h"              // AIElementController
+#include "../game/AICharacter.h"
+#include "../game/AIElements.h"
+#include "../game/AIRoadSpawn.h"
+#include "../game/AIVehicleController.h"
 #include "../game/MissionManager.h"
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
@@ -337,7 +340,7 @@ void WWorld::Destruct() {
 void WWorld::Reset() {
     UGroup *mapGroup = group->GroupLocateTag(kTagMap);
     mapGroup->DataLocateTag(kTagWorldMap);   // looked up and not used
-    AIElementController::Construct(mapGroup->DataLocateTag(kTagAIElements));
+    AIElementController::Create(mapGroup->DataLocateTag(kTagAIElements));
     glbMissionManager->Reset();
     UData *rules = mapGroup->DataLocateTag(kTagRules);
     UData *missionSets = mapGroup->DataLocateTag(kTagMissionSets);
@@ -402,7 +405,7 @@ void WWorld::Close() {
     }
     RPathEngine::Purge();
     SMissionManager::Destroy();
-    AIElementController::Destruct();
+    AIElementController::Destroy();
     WTriggerManager *triggers = fgTriggerManager;
     if (triggers != NULL) {
         NullFunction();   // the trigger manager's destructor, an empty function

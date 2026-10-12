@@ -10,7 +10,12 @@
 #include "Feedback.h"
 #include "InputConfig.h"
 #include "IOModule.hpp"
-#include "../game/AIViews.h"
+#include "../game/AICharacter.h"
+#include "../game/AIElements.h"
+#include "../game/AIHelicopter.h"
+#include "../game/AIPedestrian.h"
+#include "../game/AIRoadSpawn.h"
+#include "../game/AIVehicleController.h"
 #include "../game/MissionManager.h"
 #include "PlayMPC.hpp"
 #include "SimRandom.h"
@@ -898,7 +903,7 @@ void GameLoop_StartUp(int trafficSeed) {
     GLoadingScreen_Status("Init AI Elements");
     RRenderHigh::InitTrackRenderPostSim();
     UGroup *map = fgWorld->group->GroupLocateTag(kTagMap);
-    AIElementController::Construct(map->DataLocateTag(kTagAIElements));
+    AIElementController::Create(map->DataLocateTag(kTagAIElements));
     GLoadingScreen_Status("Init AI Controllers");
     AIVehicleController::Init();
     AIZoneController::Init();

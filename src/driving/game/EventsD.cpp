@@ -52,7 +52,12 @@
 #include "../world/WorldPos.h"          // WWorldPos
 #include "../../common/xbeOverload.h"   // XbeVirtual
 #include "../../helpers.h"
-#include "AIViews.h"
+#include "AICharacter.h"
+#include "AIElements.h"
+#include "AIHelicopter.h"
+#include "AIPedestrian.h"
+#include "AIRoadSpawn.h"
+#include "AIVehicleController.h"
 #include "Human.h"
 #include "MissionManager.h"             // glbMissionManager
 #include "Simulation.h"                 // fgSimulation
@@ -65,7 +70,7 @@
 // The events of package D (0x00044400-0x000472c0, 0x00048ac0-0x00048ec0 and 0x0004db10-0x0004f170; Event's own
 // destructor at 0x00043640 is EventManager.cpp's): their MakeEvent and ResolveEvent callbacks, their constructors,
 // their destructors (where each does its work, in Process) and their scalar deleting destructors. Ported from the
-// listing; the AI and front-end calls go to the originals through game/AIViews.h and engine/GameInterfaces.hpp.
+// listing; the front-end calls go to the originals through engine/GameInterfaces.hpp.
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's globals
@@ -171,13 +176,7 @@ constexpr uint32_t kTagName = 0x4e616d65;   // 'Name'
 constexpr int kTickingTimer = 1;
 constexpr int kWaypointSlot = 1;
 
-// An AI element's flag ETargetBeaconOnOff sets and clears when it has no vehicle to command (the name is ours)
-constexpr uint8_t kElementBeacon = 0x08;
-
-// ESpawnTraffic's orders, and the frames a spawned car is left alone (AIGroundVehicle::SetAttackMode's and
-// SetNavigateMode's modes)
-constexpr uint8_t kTrafficAttackMode = 12;
-constexpr uint8_t kTrafficNavigateMode = 3;
+// The seconds a car ESpawnTraffic spawns is left alone
 constexpr int kTrafficSettleSeconds = 5;
 
 // The smackables' spawn: the Simulation's fourth argument in seconds, and the random spin's range
@@ -306,7 +305,7 @@ void ESetReflectiveObject::Process() {
         if (element->object != NULL)
             signature = *element->object->GetSig(&result);
     } else if (element->type == CARP::kAIElementCharacter) {
-        signature = *element->characterObject->GetSig(&result);
+        signature = *element->person.human->GetSig(&result);
     }
     fgSimulation.SetReflectiveObject(signature);
 }
@@ -518,7 +517,7 @@ void ESetVisualDamage::Process() {
     float fraction3 = float(double(damage[3]) * kPercent);
     if (element != NULL) {
         CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(element);
-        if (redirected->type == CARP::kAIElementVehicle && !redirected->unknown77)
+        if (redirected->type == CARP::kAIElementVehicle && !redirected->car.helicopter)
             (static_cast<PVehicle *>(redirected->object))->SetVisualDamage(fraction0, fraction1, fraction2, fraction3);
     } else {
         PlayerCar()->SetVisualDamage(fraction0, fraction1, fraction2, fraction3);
@@ -1366,7 +1365,7 @@ void ETargetBeaconOnOff::Process() {
     if (element == NULL)
         return;
     CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(element);
-    if (redirected->unknown48 == 1) {
+    if (redirected->state == kElementAwake) {
         if (redirected->type != CARP::kAIElementVehicle || redirected->object == NULL)
             return;
         PVehicle *car = static_cast<PVehicle *>(redirected->object);
@@ -1375,9 +1374,9 @@ void ETargetBeaconOnOff::Process() {
         else
             car->DisableTargetBeacon();
     } else if (on != 0) {
-        redirected->flags |= kElementBeacon;
+        redirected->flags |= kElementTargetBeacon;
     } else {
-        redirected->flags &= ~kElementBeacon;
+        redirected->flags &= ~kElementTargetBeacon;
     }
 }
 
@@ -1948,14 +1947,14 @@ void ESpawnTraffic::Process() {
             continue;
         Coord3 position = trigger->position;
         Coord3 heading = trigger->forward;
-        AIVehicleController::Get()->GetTrafficVehicle(i)->SetAttackMode(kTrafficAttackMode);
-        AIVehicleController::Get()->GetTrafficVehicle(i)->SetNavigateMode(kTrafficNavigateMode, NULL);
+        AIVehicleController::Get()->GetTrafficVehicle(i)->SetAttackMode(kGroundAttack12);
+        AIVehicleController::Get()->GetTrafficVehicle(i)->SetNavigateMode(kGroundNavigateRoad, NULL);
         static_cast<PVehicle *>(AIVehicleController::Get()->GetTrafficVehicle(i)->GetPhysicsObject())->ResetDamage();
         static_cast<PVehicle *>(AIVehicleController::Get()->GetTrafficVehicle(i)->GetPhysicsObject())->ClearEMPState();
         static_cast<PVehicle *>(AIVehicleController::Get()->GetTrafficVehicle(i)->GetPhysicsObject())
             ->ResetCar(&position, &heading);
         int settled = fgSimulation.stepCount + fgSimulation.stepsPerSecond * kTrafficSettleSeconds;
-        AIVehicleController::Get()->GetTrafficVehicle(i)->settleStep = settled;
+        AIVehicleController::Get()->GetTrafficVehicle(i)->spawnStep = settled;
         AIVehicleController::Get()->GetTrafficVehicle(i)->driveToNav->InitAtPoint(&position, &heading, false);
         // the count's two members inlined, each with its own Get
         int16_t count = int16_t(TrafficSpawnCount + 1);

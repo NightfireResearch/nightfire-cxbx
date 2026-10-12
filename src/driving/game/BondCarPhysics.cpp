@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "AIViews.h"                        // AIGroundVehicle
+#include "AIVehicle.h"
 #include "BondCar.h"
 #include "BondCarBasics.h"                  // GetCarColourVariation
 #include "BondCarState.h"                   // CarSurface, the BondCar_* tuning

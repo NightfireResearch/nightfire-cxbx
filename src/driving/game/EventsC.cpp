@@ -15,7 +15,7 @@
 #include "../audio/Sound.h"             // ABaseSound, AOneShotSound, AMenuSound
 #include "../audio/SoundManager.h"      // ASoundManager
 #include "../audio/ZoomObj.h"           // ASound, AZoomObj
-#include "../camera/Camera.h"           // AISplinePath
+#include "../camera/Camera.h"
 #include "../camera/PlayerCamera.h"     // RPlayerCamera
 #include "../data/Carp.h"               // CARP::Instance, CARP::AISpline, TagReference
 #include "../eagl/anim/FnAnim.h"        // AnimPool_Init, AnimPool_Cleanup
@@ -43,7 +43,13 @@
 #include "../world/TriggerManager.h"    // fgTriggerManager
 #include "../world/World.h"             // fgWorld, ArticleEffect, ProcAnimState
 #include "../../helpers.h"
-#include "AIViews.h"
+#include "AICharacter.h"
+#include "AIElements.h"
+#include "AIHelicopter.h"
+#include "AIPedestrian.h"
+#include "AIRoadSpawn.h"
+#include "AISplinePath.h"
+#include "AIVehicleController.h"
 #include "EventsB.h"                    // PathSFXUpdateData
 #include "Missile.h"                    // Missile::detonate
 #include "MissionManager.h"             // glbMissionManager
@@ -58,8 +64,8 @@
 // ---------------------------------------------------------------------------------------------------------------
 // The events of package C (0x00041850-0x0004ee80, with 0x0003da90 and 0x0003ec60): their MakeEvent and ResolveEvent
 // callbacks, their destructors (where each does its work, in Process) and their scalar deleting destructors, and the
-// path helper placed among them. Ported from the listing; the AI and front-end calls go to the originals through
-// game/AIViews.h and engine/GameInterfaces.hpp.
+// path helper placed among them. Ported from the listing; the front-end calls go to the originals through
+// engine/GameInterfaces.hpp.
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's globals
@@ -690,7 +696,7 @@ void ESetNextAISpline::Process() {
         vehicle = PlayerCar()->GetAIGroundVehiclePtr();
     } else {
         CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(element);
-        if (redirected->unknown48 != 1 || redirected->type != CARP::kAIElementVehicle)
+        if (redirected->state != kElementAwake || redirected->type != CARP::kAIElementVehicle)
             return;
         vehicle = redirected->vehicle;
     }
@@ -725,7 +731,7 @@ void ESetRecSpeedOffset::Process() {
         return;
     }
     CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(element);
-    if (redirected->unknown48 == 1 && redirected->type == CARP::kAIElementVehicle)
+    if (redirected->state == kElementAwake && redirected->type == CARP::kAIElementVehicle)
         static_cast<AIGroundVehicle *>(redirected->vehicle)->autoDriveSpeed = speed;
 }
 
@@ -1745,7 +1751,7 @@ void ESetAvoidZone::Destruct() {
 // No check of the element or the character, as in the original
 void ESetAvoidZone::Process() {
     CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(element);
-    if (redirected->unknown48 != 1 || redirected->type != CARP::kAIElementCharacter)
+    if (redirected->state != kElementAwake || redirected->type != CARP::kAIElementCharacter)
         return;
     AICharacter *character =
         reinterpret_cast<AICharacter *>(redirected->character);
@@ -1780,7 +1786,7 @@ void ERollSub::Process() {
     if (element == NULL)
         return;
     CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(element);
-    if (redirected->unknown48 != 1 || redirected->type != CARP::kAIElementVehicle || redirected->object == NULL)
+    if (redirected->state != kElementAwake || redirected->type != CARP::kAIElementVehicle || redirected->object == NULL)
         return;
     if (degrees > kMaxRoll)
         degrees = kMaxRoll;
@@ -2200,7 +2206,7 @@ void ERestart::Process() {
     uint32_t colour = PlayerCar()->GetCarColour();
     glbMissionManager->SetAutoDrive(false, true);
     glbMissionManager->SetDriveMissile(NULL);
-    AIElementController::Destruct();
+    AIElementController::Destroy();
     AICharacter::Shutdown();
     RayShell::Reset();
     fgSimulation.Reset();
@@ -2610,7 +2616,7 @@ RPathHandle* EPathUtil_GetFromInstanceOrAI(const CARP::Instance *instance, CARP:
     AIVehicle *vehicle;
     if (element != NULL) {
         CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(element);
-        if (redirected->unknown48 != 1 || redirected->type != CARP::kAIElementVehicle)
+        if (redirected->state != kElementAwake || redirected->type != CARP::kAIElementVehicle)
             return NULL;
         vehicle = redirected->vehicle;
     } else {

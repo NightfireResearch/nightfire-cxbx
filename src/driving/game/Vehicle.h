@@ -290,6 +290,17 @@ struct PVehicle : PhysicsObject {
         (this->*XbeVirtual<void (PVehicle::*)(bool)>(this, kEnableTargetBeacon))(enable);
     }
     void DisableTargetBeacon() { (this->*XbeVirtual<void (PVehicle::*)()>(this, kDisableTargetBeacon))(); }
+    // (the AI's)
+    void SetAIGroundVehicle(AIGroundVehicle *vehicle) {
+        (this->*XbeVirtual<void (PVehicle::*)(AIGroundVehicle *)>(this, kSetAIGroundVehicle))(vehicle);
+    }
+    void SetCarClass(int carClass) { (this->*XbeVirtual<void (PVehicle::*)(int)>(this, kSetCarClass))(carClass); }
+    void InitializeCarControls() { (this->*XbeVirtual<void (PVehicle::*)()>(this, kInitializeCarControls))(); }
+    int InShock() { return (this->*XbeVirtual<int (PVehicle::*)()>(this, kInShock))(); }
+    void GlareOn(int glare) { (this->*XbeVirtual<void (PVehicle::*)(int)>(this, kGlareOn))(glare); }
+    int GetResetAvailable() { return (this->*XbeVirtual<int (PVehicle::*)()>(this, kGetResetAvailable))(); }
+    int GetNumTires() { return (this->*XbeVirtual<int (PVehicle::*)()>(this, kGetNumTires))(); }
+    uint8_t EmpActive() { return (this->*XbeVirtual<uint8_t (PVehicle::*)()>(this, kEmpActive))(); }
     void ChangeCarType(const char *carType, bool purgeModel) {
         (this->*XbeVirtual<void (PVehicle::*)(const char *, bool)>(this, kChangeCarType))(carType, purgeModel);
     }

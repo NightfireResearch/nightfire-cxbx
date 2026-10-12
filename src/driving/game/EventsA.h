@@ -20,9 +20,10 @@
 #include <stdint.h>
 
 #include "../EventManager.hpp"          // Event
+#include "../data/Carp.h"               // CARP::AIElement
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../physics/RigidBodyResolve.h"    // CollisionImpact
-#include "AIViews.h"                    // AICommand, AIVehicle, AIGroundVehicle
+#include "AIVehicle.h"
 
 namespace CARP {
 class AISpline;

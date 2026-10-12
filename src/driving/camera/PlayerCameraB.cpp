@@ -101,7 +101,6 @@ static float DiagonalBoost = 0.005f * 0.2f;             // as a static initialis
 // ---- calls to originals not ported
 
 // RCamera's field of view, if above 2 degrees (an inline the compiler sometimes kept)
-#define RCamera_SetFieldOfView ((void (__fastcall *)(RPlayerCamera *, int, float fov))0x00011000)
 
 namespace {
 
@@ -389,7 +388,7 @@ void RPlayerCamera::SetCameraZoom(int kind, float value, int steps) {
         if (steps != 0)
             RWorldCamera::SetCameraZoom(value, fgCameraConstants.kZoomIncSpeed * zoomSlope);
         else
-            RCamera_SetFieldOfView(this, 0, value);
+            SetFieldOfView(value);
         return;
 
     case kZoomBetween: {
@@ -407,7 +406,7 @@ void RPlayerCamera::SetCameraZoom(int kind, float value, int steps) {
             zoomSlope = float(slope);
             RWorldCamera::SetCameraZoom(fov, float(slope * fgCameraConstants.kZoomIncSpeed));
         } else {
-            RCamera_SetFieldOfView(this, 0, fov);
+            SetFieldOfView(fov);
         }
         return;
     }
@@ -417,21 +416,21 @@ void RPlayerCamera::SetCameraZoom(int kind, float value, int steps) {
         if (fov <= 0.0f)
             return;
         if (steps == 0) {
-            RCamera_SetFieldOfView(this, 0, fov);
+            SetFieldOfView(fov);
             return;
         }
         // at most kZoomIncSpeed degrees a step, and not past the zoom's limits
         float widest = fgCameraConstants.kZoomIncSpeed + fieldOfView;
         if (fov > widest) {
-            RCamera_SetFieldOfView(this, 0, Min(widest, zoom298));
+            SetFieldOfView(Min(widest, zoom298));
             return;
         }
         float narrowest = fieldOfView - fgCameraConstants.kZoomIncSpeed;
         if (fov < narrowest) {
-            RCamera_SetFieldOfView(this, 0, Max(narrowest, zoom29C));
+            SetFieldOfView(Max(narrowest, zoom29C));
             return;
         }
-        RCamera_SetFieldOfView(this, 0, fov);
+        SetFieldOfView(fov);
         return;
     }
     }
@@ -1052,7 +1051,7 @@ void RPlayerCamera::UpdateAutoDriveCam() {
         zoom298 = mode.defaultFov;
     }
     if (autoDriveZoom != 0.0f) {
-        RCamera_SetFieldOfView(this, 0, CameraClamp(mode.defaultFov, fieldOfView + autoDriveZoom, arm->minFov));
+        SetFieldOfView(CameraClamp(mode.defaultFov, fieldOfView + autoDriveZoom, arm->minFov));
         zoom298 = fieldOfView;
     }
     RWorldCamera::SetCameraZoom(zoom298, fgCameraConstants.kZoomIncSpeed * zoomSlope);

@@ -18,6 +18,9 @@ struct SimRandom {
     // FUNC_00040070, placed among the events; Missile::Missile's, and inlined in EKickAIElement and EKickObject;
     // the name is ours)
     uint32_t GenerateBits();    // 0x00040070
+    // The next number over 65536, left unrounded (Ghidra: FUN_0001d9d0, placed among the AI's code; the name is
+    // ours)
+    double Fraction();          // 0x0001d9d0
 };
 static_assert(sizeof(SimRandom) == 16, "SimRandom is 16 bytes");
 

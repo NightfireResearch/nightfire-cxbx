@@ -19,6 +19,7 @@
 
 #include "../../helpers.h"
 #include "../anim/AnimEngine.h"         // Handle
+#include "../game/AISplinePath.h"
 #include "../game/Simulation.h"
 #include "../render/PathEngine.h"
 #include "../world/World.h"              // WorldArticle, ArticleOf
@@ -63,7 +64,6 @@ static float RadiansToTurns = 1.0f / 6.283185f; // as the static initialiser mad
 
 // ---- calls to originals not ported
 
-#define RCamera_SetFieldOfView ((void (__fastcall *)(RCamera *, int, float))0x00011000)    // FUN_00011000: above 2 only
 
 namespace {
 
@@ -724,7 +724,7 @@ void RPlayerCamera::UpdateDashboardCam() {
         }
         VU0_v3add(&eye, &arm, &lookAt);
         SetViewingTransform(MatrixRow(anchorMatrix, 1), GetAnchorLinearVelocity(), 0);
-        RCamera_SetFieldOfView(this, 0, mode->defaultFov);
+        SetFieldOfView(mode->defaultFov);
         return;
     }
 
@@ -887,7 +887,7 @@ void RPlayerCamera::UpdateWorldAnimationCam() {
     } else if (instance->articleDesc.value != 0) {
         uint8_t animating = UpdateAnimationCam(&matrix, 0);
         matrixChanged = 1;
-        RCamera_SetFieldOfView(this, 0, zoomFovTarget);
+        SetFieldOfView(zoomFovTarget);
         playing = animating == 1;
     } else {
         playing = false;

@@ -26,6 +26,7 @@ namespace EAGL {
 struct RenderContext;
 struct ViewPort;
 }
+class AISplinePath;
 class ActionQueue;
 struct Handle;                          // RAnimEngine::Handle
 struct IniFiles;
@@ -63,6 +64,8 @@ public:
     void ConvertToRHCS();               // negates the frame's row 2                            // 0x00078500
     void SetMatrix4(const MATRIX4 *frame);                                                      // 0x00078520
     void SetActive(bool active);        // vtable slot 1                                        // 0x00078540
+    // A field of view of 2 degrees or less is ignored (FUN_00011000, at the start of the code; the name is ours)
+    void SetFieldOfView(float fieldOfView);                                                     // 0x00011000
 };
 static_assert(sizeof(RCamera) == 0xc0, "RCamera is 192 bytes");
 static_assert(offsetof(RCamera, matrix) == 0x10 && offsetof(RCamera, unknown50) == 0x50 &&
@@ -145,18 +148,6 @@ static_assert(offsetof(RViewCamera, viewPort) == 0x18 && offsetof(RViewCamera, x
 // FUN_00096e20: the field of view and aspect ratio swayed by the step count, when the player's vehicle asks for it
 void ApplyPerspectiveFunction(float *aspect, float *fieldOfView);                               // 0x00096e20
 
-// ---- what the world cameras read of other systems (not ported; only these fields, the names ours)
-
-// The AI's spline path (AISplinePath): the path it follows and where the spline is placed
-class AISplinePath {
-public:
-    uint8_t unknown00[0x60];
-    RPathHandle *path;                  // +0x60
-    uint8_t unknown64[0xc];
-    MATRIX4 placement;                  // +0x70
-};
-static_assert(offsetof(AISplinePath, path) == 0x60 && offsetof(AISplinePath, placement) == 0x70,
-              "AI spline path layout");
 
 // ---- RWorldCamera
 

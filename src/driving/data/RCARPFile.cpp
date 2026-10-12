@@ -7,6 +7,7 @@
 #include "AttributeSystem.h"
 #include "../eagl/GameCallbacks.h"
 #include "../eagl/Loader.h"
+#include "../engine/CoreFoundation.h"     // VectorConstructorIterator
 #include "../engine/UFileLoader.h"
 #include "../platform/RealMemory.h"
 #include "../platform/RealPrint.h"
@@ -34,7 +35,6 @@
 
 // Other packages' functions not ported yet, called at their addresses.
 
-#define EhVectorConstructor ((void (__stdcall *)(void *, uint32_t, uint32_t, uint32_t))0x00022770)
 #define Crt_atexit ((int (*)(void (*)()))0x00132a7b)
 
 // XBE_GLOBAL(0x001ebcdc, 0x4)
@@ -308,7 +308,8 @@ void* RCARPFile::RegisterSymbols(const char *name, bool *found) {
     if (Is(name, "EAGL::CarShadowColour")) {
         if (!(CarShadowColourGuard & 1)) {
             CarShadowColourGuard |= 1;
-            EhVectorConstructor(CarShadowColour, 4, 4, kPackedColourConstruct);   // four colours, each constructed to 0
+            // four colours, each constructed to 0
+            VectorConstructorIterator(CarShadowColour, 4, 4, reinterpret_cast<VectorConstructorFn>(kPackedColourConstruct));
         }
         CarShadowColour[0] = 0x80303030;
         value = CarShadowColour;
