@@ -3,10 +3,10 @@
 #include <string.h>
 
 #include "ActionQueue.hpp"
-#include "GameInterfaces.hpp"
 #include "InputConfig.h"
 #include "InputDevice.hpp"
 #include "UMemory.hpp"
+#include "../game/Hud.h"
 #include "../game/Simulation.h"
 #include "../platform/Pad.hpp"
 #include "../platform/RealSystem.h"

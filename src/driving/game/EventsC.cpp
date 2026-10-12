@@ -21,7 +21,6 @@
 #include "../eagl/anim/FnAnim.h"        // AnimPool_Init, AnimPool_Cleanup
 #include "../engine/CoreContainers.h"   // GameVector
 #include "../engine/Feedback.h"         // IFeedback
-#include "../engine/GameInterfaces.hpp" // GHud, GFX
 #include "../engine/GameLoop.h"         // LaunchPage
 #include "../engine/UMemory.hpp"        // OperatorDelete
 #include "../physics/PhysicsObject.h"
@@ -51,6 +50,8 @@
 #include "AISplinePath.h"
 #include "AIVehicleController.h"
 #include "EventsB.h"                    // PathSFXUpdateData
+#include "Gfx.h"
+#include "Hud.h"
 #include "Missile.h"                    // Missile::detonate
 #include "MissionManager.h"             // glbMissionManager
 #include "Sentry.h"                     // Sentry::AddMuzzleFlash
@@ -64,8 +65,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 // The events of package C (0x00041850-0x0004ee80, with 0x0003da90 and 0x0003ec60): their MakeEvent and ResolveEvent
 // callbacks, their destructors (where each does its work, in Process) and their scalar deleting destructors, and the
-// path helper placed among them. Ported from the listing; the front-end calls go to the originals through
-// engine/GameInterfaces.hpp.
+// path helper placed among them. Ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's globals
@@ -860,7 +860,7 @@ void EPlayGiottoEffect::Process() {
     position.w = 1.0f;
     Coord4 direction = place->direction;
     direction.w = 1.0f;
-    GFX::TriggerByName(effect, Xyz(&position), &direction, &kNoOffset, &kNoRotation, NULL, 0, NULL);
+    GFX::Trigger(effect, Xyz(&position), &direction, &kNoOffset, &kNoRotation, NULL, 0, NULL);
 }
 
 // FUNC_AT(0x000484e0)
@@ -1916,7 +1916,7 @@ void EPowerUp::Process() {
     alignas(16) Coord4 rotation;
     VU0_v4Init(&rotation);
     Coord3 at = { position.x, position.y + 1.0f, position.z };
-    GFX::TriggerByName("Pr_Dstry", &at, &rotation, &kNoOffset, &kNoRotation, NULL, 0, NULL);
+    GFX::Trigger("Pr_Dstry", &at, &rotation, &kNoOffset, &kNoRotation, NULL, 0, NULL);
     if (procAnimState != NULL && procAnimState->sceneObj != NULL) {
         procAnimState->sceneObj->Hide();
         if (procAnimState->sceneObj->animHandle != NULL)

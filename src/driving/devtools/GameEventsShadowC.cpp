@@ -1347,7 +1347,7 @@ void BuildWorld() {
         effect->type = Chance(4) ? uint8_t(Random(9)) : uint8_t(ArticleEffect::kTypeGfx);
         effect->instance = uint8_t(Random(3));
         effect->id = uint8_t(Random(8));
-        effect->gfx.reference = Chance(5) ? NULL : W->opaque[Random(3)];
+        effect->gfx.reference = Chance(5) ? NULL : reinterpret_cast<UGroup *>(W->opaque[Random(3)]);
         RandomVector(&effect->gfx.rotation, 1.0f);
     }
     RandomVector(&W->place.position, 80.0f);

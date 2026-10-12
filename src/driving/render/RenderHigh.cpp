@@ -35,14 +35,17 @@
 #include "../data/Tuning.h"
 #include "../eagl/RenderContext.h"
 #include "../engine/CoreFoundation.h"     // NullFunction
-#include "../engine/GameInterfaces.hpp"   // GHud
 #include "../engine/GameLoop.h"           // LaunchPage
 #include "../engine/InputConfig.h"        // BuildFileName
 #include "../game/MissionManager.h"
 #include "../engine/StaticInit.h"
 #include "../engine/UMemory.hpp"
 #include "../game/Debris.h"
+#include "../game/EffectsGallery.h"       // TheEffectsGallery
 #include "../game/EmpEffect.h"            // REmp, REmpBolts
+#include "../game/FrontEndSystem.h"       // GetParticFileForMission
+#include "../game/Gallery.h"
+#include "../game/Hud.h"
 #include "../game/TyreTrack.h"
 #include "../game/VehicleParticle.h"
 #include "../game/VehicleRender.h"        // RVehicle::InitSharedBuffers
@@ -93,13 +96,11 @@ constexpr int kMipmapMin = -128;
 constexpr uint32_t kPlayerViewCameraSize = 0x4c;
 constexpr uint32_t kPlayerCameraSize = 0x370;
 constexpr uint32_t kHudViewSize = 0x4c;
-constexpr uint32_t kHudSize = 0x4f0;
 constexpr uint32_t kPhysicsNamespaceSize = 4;
 
 } // namespace
 
-// ---- the game's code not ported yet
-#define GetParticFileForMission ((const char *(*)(void))0x000e3e50)
+// ---- the C runtime's, at its own address
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // ---- globals
@@ -258,6 +259,12 @@ GalleryNamespace* GalleryNamespace::Delete(unsigned flags) {
     return this;
 }
 
+// The effects gallery's canvas named (`size` is not read). Compiled among GFX's code, as GFX::LookupReference.
+// FUNC_AT(0x000d3670)
+UGroup* GalleryNamespace::NameLookup(const char *name, int *size) {
+    return reinterpret_cast<GGallery *>(TheEffectsGallery)->GET_Canvas(TheEffectsGallery->GET_EffectsGallery(), name);
+}
+
 // FUNC_AT(0x0008bab0)
 void FreeEAGLMaterialsThunk() {
     FreeEAGLMaterials();
@@ -291,7 +298,7 @@ RRenderHigh* RRenderHigh::Construct() {
     debugViewScreenSpace->viewId = kDebugViewId;
 
     fgRenderHigh = this;
-    memory = OperatorNew(kHudSize);
+    memory = OperatorNew(sizeof(GHud));
     hud = memory != NULL ? static_cast<GHud *>(memory)->Construct() : NULL;
     return this;
 }

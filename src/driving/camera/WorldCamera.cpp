@@ -13,6 +13,10 @@
 #include "../anim/AnimEngine.h"         // Handle
 #include "../game/AISplinePath.h"
 #include "../game/AIVehicle.h"
+#include "../game/EffectsGallery.h"
+#include "../game/Gallery.h"
+#include "../game/Gfx.h"
+#include "../game/Hud.h"
 #include "../game/Simulation.h"
 #include "../render/Colorize.h"
 #include "../render/Decals.h"
@@ -38,7 +42,6 @@
 #include "../engine/ActionQueue.hpp"
 #include "../engine/CoreContainers.h"     // GameVector
 #include "../engine/CoreFoundation.h"     // NullFunction
-#include "../engine/GameInterfaces.hpp"   // GHud
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
 #include "../game/Debris.h"
@@ -89,12 +92,6 @@ struct SceneObjDescFields {
 
 } // namespace
 
-// ---- the game's code not ported yet
-#define GFXGallery_CULL_Start ((void (__fastcall *)(void *, int))0x000d3aa0)
-#define GFX_CULL_GetNextCanvas ((int (*)(Coord4 *sphere, float *height, bool *checkFar, float *farScale))0x000d3450)
-#define GGallery_CULL_SetCanvas ((void (*)(int item, bool culled, float distance))0x000d3470)
-#define GFX_Update ((void (*)())0x000d34c0)
-
 // ---- globals
 #define RWorldCameraVtable ((void **)0x001924e4)
 #define RRenderWorldCameraVtable ((void **)0x00191b2c)
@@ -125,7 +122,6 @@ static uint32_t ParticleSystemsUnknown;
 #define Pass0Draws ((CachedDrawInfo *)0x001ef0c0)               // pass 0 of the track's draws, drawn last
 // XBE_GLOBAL(0x001ec4b8, 0x2c08)
 static CachedDrawInfo Pass1Draws;                       // pass 1, drawn after the cars (names ours)
-#define Gallery (*(void **)0x0023f320)                         // the gallery, not ported yet
 
 namespace {
 
@@ -693,8 +689,8 @@ CachedDrawInfo* RRenderWorldCamera::PerformCulling() {
     }
     RSceneObj::PrepareSceneObjsForCulling(list);
     CullModule(RSceneObj::GetNextSceneObjCullInfo, RSceneObj::SetSceneObjectCull, false);
-    GFXGallery_CULL_Start(Gallery, 0);
-    CullModule(GFX_CULL_GetNextCanvas, GGallery_CULL_SetCanvas, false);
+    TheEffectsGallery->CULL_Start();
+    CullModule(GFX::CULL_GetNextCanvas, GGallery::CULL_SetCanvas, false);
     return list;
 }
 
@@ -802,7 +798,7 @@ void RRenderWorldCamera::DrawEffects() {
     RBulletStreak::Draw();
     TheLightning->Draw();
     RSceneObj::RenderAllDeferredEffects();
-    GFX_Update();
+    GFX::Update();
     Debris->Draw();
     TheGlareManager->DrawGlares(true);
     fgParticleSystems->UpdateSpawnAllSystems();

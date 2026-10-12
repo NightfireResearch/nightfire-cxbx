@@ -13,7 +13,9 @@ objects into lists. This script reads every entry and writes it out as C++:
     rounding of exact operands, so plain C++ arithmetic gives the same bits. Constants from .rdata become
     literals; globals (.data) are read where they live, since some are written by earlier entries.
   - zero fills, copies and stores of constants;
-  - ColourConvertXBoxToPS2 of a constant colour, and float products converted with __ftol2;
+  - ColourConvertXBoxToPS2 of a constant colour (into our variable, by name, when the global is ours: the script
+    does not follow the conversion's value, so a later copy of it is by name too), and float products converted
+    with __ftol2;
   - constructors of global objects, with the destructor registered with the C runtime's atexit as the original
     did. Constructors and destructors we own are called directly (TARGETS below); the rest by address. The C
     runtime's exit never runs (nothing calls it), so the destructors never do either: they are registered so that
@@ -90,6 +92,7 @@ TARGETS = {
     0x000b4fe0: ("method", "Simulation", "Construct"),
     0x000b5310: ("method", "Simulation", "Destruct"),
     0x000b8490: ("method", "MissionList", "BuyHead"),           # static: it does not read `this`
+    0x000e2c20: ("method", "LoadScreenStringList", "NewHead"),  # static: it does not read `this`
     0x0002bd40: ("method", "AIGroundVehicle", "Construct"),
     0x0002be70: ("method", "AIGroundVehicle", "Destruct"),
     0x00036a00: ("method", "AIZone", "Construct"),
@@ -423,9 +426,10 @@ def emit(address):
     # push colour ; call ColourConvertXBoxToPS2 ; add esp, 4 ; mov [d], eax ; ret
     if mn == ["push", "call", "add", "mov", "ret"] and ins[1].operands[0].imm == COLOUR:   # ours, render/Draw.h
         colour = ins[0].operands[0].imm & 0xffffffff
-        if owned_global(ins[3].operands[0].mem.disp, 4):
-            raise SystemExit("a colour conversion into an owned global: a case this script does not know")
+        g = owned_global(ins[3].operands[0].mem.disp, 4)
         store(ins[3].operands[0].mem.disp, None)   # not followed
+        if g:   # ours: converted into our variable, in its place in the order
+            return ["%s = ColourConvertXBoxToPS2(0x%08x);" % (g["name"], colour)]
         return ["U32_AT(0x%08x) = ColourConvertXBoxToPS2(0x%08x);" % (ins[3].operands[0].mem.disp, colour)]
     # mov dword [d], imm ; ret
     if mn == ["mov", "ret"]:
@@ -448,10 +452,13 @@ def emit(address):
             data = value_bytes(source, 4)
             g = owned_global(dst.mem.disp, 4)
             store(dst.mem.disp, data)
-            if g:
+            source_global = owned_global(source, 4)
+            if data is None and source_global:   # a value not followed (a colour converted): copied by name
+                out.append("%s = %s;" % (g["name"] if g else "U32_AT(0x%08x)" % dst.mem.disp, source_global["name"]))
+            elif g:
                 out.append(left_out(g, "0x%08x" % struct.unpack("<I", known(data, g["name"]))[0], data))
-            elif owned_global(source, 4):
-                known(data, owned_global(source, 4)["name"])
+            elif source_global:
+                known(data, source_global["name"])
                 out.append("U32_AT(0x%08x) = 0x%08x;   // %s's value" % (dst.mem.disp, struct.unpack("<I", data)[0],
                                                                           owned_global(source, 4)["name"]))
             else:
@@ -697,6 +704,9 @@ def main():
             '#include "../game/AIVehicle.h"',
             '#include "../game/DebugAudio.h"',
             '#include "../game/EmpEffect.h"',
+            '#include "../game/Girl.h"',
+            '#include "../game/Hud.h"',
+            '#include "../game/LoadingScreen.h"',
             '#include "../game/MissionManager.h"',
             '#include "../game/Shell.h"',
             '#include "../game/Simulation.h"',

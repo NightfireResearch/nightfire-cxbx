@@ -23,7 +23,6 @@
 #include "../engine/CoreContainers.h"   // GameVector
 #include "../engine/CoreFoundation.h"   // NullFunction
 #include "../engine/Feedback.h"         // IFeedback
-#include "../engine/GameInterfaces.hpp" // GHud, GFX, GSubtitles
 #include "../engine/GameLoop.h"         // LaunchPage
 #include "../engine/IOModule.hpp"       // IOModule
 #include "../engine/OBB.h"              // OBB
@@ -58,9 +57,14 @@
 #include "AIPedestrian.h"
 #include "AIRoadSpawn.h"
 #include "AIVehicleController.h"
+#include "FrontEndSystem.h"
+#include "Gfx.h"
+#include "Hud.h"
 #include "Human.h"
+#include "LoadingScreen.h"
 #include "MissionManager.h"             // glbMissionManager
 #include "Simulation.h"                 // fgSimulation
+#include "Subtitles.h"
 #include "Vehicle.h"                    // PVehicle, CarPhysics
 #include "VehicleSound.h"               // AVehicle
 #include "WeaponEffects.h"              // RScorchWorld
@@ -70,7 +74,7 @@
 // The events of package D (0x00044400-0x000472c0, 0x00048ac0-0x00048ec0 and 0x0004db10-0x0004f170; Event's own
 // destructor at 0x00043640 is EventManager.cpp's): their MakeEvent and ResolveEvent callbacks, their constructors,
 // their destructors (where each does its work, in Process) and their scalar deleting destructors. Ported from the
-// listing; the front-end calls go to the originals through engine/GameInterfaces.hpp.
+// listing.
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's globals
@@ -755,7 +759,7 @@ void ESetVideo::Destruct() {
 }
 
 void ESetVideo::Process() {
-    GLoadingScreen_Status("*** ESetVideo enter...\n");
+    GLoadingScreen::Status("*** ESetVideo enter...\n");
     if (gPlayMovies && movie != NULL) {
         char path[0x80];
         sprintf(path, "%s\\%s", GLocale::GetSubDirectory(), movie);
@@ -775,7 +779,7 @@ void ESetVideo::Process() {
             char file[0x80];
             sprintf(file, "data\\loading\\%s", subtitles);
             GSubtitles::TheApp()->LoadSubtitles(file);
-            player.Play(view, fgRenderer->widescreen != 0, GSubtitles_DrawFrame);
+            player.Play(view, fgRenderer->widescreen != 0, GSubtitles::DrawFrame);
             GSubtitles::TheApp()->ClearSubtitles();
         } else {
             player.Play(view, fgRenderer->widescreen != 0, NULL);
@@ -789,7 +793,7 @@ void ESetVideo::Process() {
         _mm_empty();
         CRT_clearfp();
     }
-    GLoadingScreen_Status("*** ESetVideo exit...\n");
+    GLoadingScreen::Status("*** ESetVideo exit...\n");
 }
 
 // FUNC_AT(0x00048ba0)
@@ -1438,7 +1442,7 @@ void ESpawnExplosion::Process() {
     MATRIX4 m;
     uint32_t instanceIndex = 0xffffffff;
     bool useGfx = true;
-    void *reference = NULL;
+    UGroup *reference = NULL;
 
     if (effect != NULL) {
         instanceIndex = effect->instance;
@@ -1687,7 +1691,7 @@ void ESpawnForceEffect::Process() {
     Coord4 facing = direction;
     uint32_t instanceIndex = 0xffffffff;
     bool useGfx = true;
-    void *reference = NULL;
+    UGroup *reference = NULL;
     MATRIX4 m;
     ArticleEffect own;
     if (effect != NULL) {

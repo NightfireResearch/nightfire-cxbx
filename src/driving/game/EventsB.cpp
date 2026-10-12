@@ -6,7 +6,6 @@
 #include "../audio/Bank.h"                // fgBanks
 #include "../audio/Sound.h"               // ABaseSound, AOneShotSound
 #include "../audio/ZoomObj.h"             // ASound
-#include "../engine/GameInterfaces.hpp"   // GHud::TheApp
 #include "../engine/GameLoop.h"           // Launch
 #include "../engine/SimRandom.h"
 #include "../engine/UMemory.hpp"          // OperatorNew
@@ -18,7 +17,9 @@
 #include "AIVehicleController.h"
 #include "BondCar.h"                     // PBondCar::scoreable
 #include "EventsC.h"                      // EPathUtil_GetFromInstanceOrAI
+#include "Gfx.h"
 #include "Helicopter.h"                  // PHelicopter::scoreable
+#include "Hud.h"
 #include "Human.h"
 #include "MissionManager.h"               // glbMissionManager
 #include "Simulation.h"                   // fgSimulation
@@ -913,7 +914,7 @@ void EHitWindow::Process() {
     if (hit.hits < 1) {
         alignas(16) Coord4 rotation;
         VU0_m4toquat(&rotation, &kIdentity);
-        void *glass = GFX::LookupReference("Wd_Glass");
+        UGroup *glass = GFX::LookupReference("Wd_Glass");
         GFX::TriggerIncidental(glass, Xyz(&point), &rotation, Xyz(&kZero), &kUnitW, NULL, 0, NULL);
         if (flag) {
             alignas(16) Coord4 middle;
@@ -921,7 +922,7 @@ void EHitWindow::Process() {
             middle.y = (float)(((double)hit.corner1.y + hit.corner0.y) * 0.5);
             middle.z = (float)(((double)hit.corner1.z + hit.corner0.z) * 0.5);
             middle.w = 0.0f;    // stack garbage in the original
-            void *smoke = GFX::LookupReference("Wd_Wsmk");
+            UGroup *smoke = GFX::LookupReference("Wd_Wsmk");
             GFX::TriggerIncidental(smoke, Xyz(&middle), &rotation, Xyz(&kZero), &kUnitW, NULL, 0, NULL);
         }
     }

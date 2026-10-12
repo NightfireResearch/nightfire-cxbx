@@ -25,6 +25,7 @@
 #include "../data/DebugItem.h"
 #include "../data/StdLocale.h"
 #include "../eagl/EaglFont.h"
+#include "../engine/GameLoop.h"
 #include "../game/DebugAudio.h"
 #include "../game/Simulation.h"
 #include "../render/Renderer.h"
@@ -454,7 +455,7 @@ void TestItems() {
 #define GameMixerScrollTop I32_AT(0x001e226c)
 #define GameMixerEditing BOOL8_AT(0x001e2270)
 #define GameMixerVisible BOOL8_AT(0x001e4760)
-#define InfoVisible BOOL8_AT(0x001e4761)
+#define GameInfoVisible BOOL8_AT(0x001e4761)       // the game's copy of gDAudio
 #define MixesList (*(MixList *)0x00243954)
 
 const unsigned kUpdateEntries[] = { 0x00037750, 0x00037160, 0x000376a0 };
@@ -762,14 +763,14 @@ void TestDrawing() {
 }
 
 void TestDraw() {
-    bool info = InfoVisible;
+    bool info = gDAudio;
     HookInstall(0x000371b0, (const void *)&FakeInfoDraw);
     HookInstall(0x00036d10, (const void *)&FakeMixerDraw);
     for (int i = 0; i < 4; i++) {
         std::string original, port;
         g_cases++;
         Both(ENTRIES(kDrawEntries), [&] {
-            InfoVisible = (i & 1) != 0;
+            GameInfoVisible = gDAudio = (i & 1) != 0;
             GameMixerVisible = DAudioMixerVisible = (i & 2) != 0;
         }, [&](bool orig, std::string &log) {
             g_calls = &log;
@@ -779,7 +780,7 @@ void TestDraw() {
         Check(original == port, "DAudio::Draw", i);
     }
     HooksRemove();
-    InfoVisible = info;
+    GameInfoVisible = gDAudio = info;
     GameMixerVisible = DAudioMixerVisible = false;
 }
 

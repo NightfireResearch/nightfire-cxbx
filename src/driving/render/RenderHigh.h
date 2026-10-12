@@ -86,9 +86,11 @@ void InitShadowMap();                   // RShadowMap::Init                     
 }
 
 // The "GIOT" namespace (one, at 0x001c4610, vtable 0x00191aa0): answers a name with the gallery's effect canvas of
-// that name (slot 0, 0x000d3670). The name is ours.
+// that name. The name is ours.
 class GalleryNamespace : public SymbolNamespace {
 public:
+    // Slot 0: the effect canvas named (the effects gallery's group; `size` is not read)
+    UGroup* NameLookup(const char *name, int *size);                                            // 0x000d3670
     // The scalar deleting destructor, slot 1; nothing deletes the static
     GalleryNamespace* Delete(unsigned flags);                                                   // 0x0008ba80
 };

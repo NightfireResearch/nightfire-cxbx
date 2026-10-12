@@ -72,6 +72,9 @@ public:
     // Each view not finished and without an SND voice: AWorldSound::Play starts it again (Ghidra: FUN_0012dd80;
     // the name is ours; game/WeaponSound.cpp).
     void Rewind();                                                                  // 0x0012dd80
+    // The shared view is finished, and so is each other view fgActiveViews has (only the shared view counts while
+    // fgActiveViews has it). Compiled among GFX's code; the name ours.
+    bool IsFinished();                                                              // 0x000d36c0
 
     // Starts, updates or retires the SND voices of every active view (each audio frame).
     static void PlayVoices();                                                       // 0x00123a30

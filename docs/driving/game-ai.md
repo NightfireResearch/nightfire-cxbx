@@ -4,8 +4,9 @@ The game tier's AI: the characters (the pedestrians, the passenger, Bond at the 
 auto-drive, the enemies on foot and in cars), the vehicles' AI (every car's AIGroundVehicle, the helicopters'
 AIHelicopter, the spline paths, the vehicle controller and the road spawner) and the mission's AI elements with their
 tracking and the AI zones. It drives the vehicles, weapons, missions and events (docs/driving/vehicles.md,
-game-weapons.md, game-missions.md, game-events.md), all ours; the front end is still the game's. Ported on 12 October
-2026 by six packages, then merged (`src/driving/game/`). Every address is Driving.xbe's.
+game-weapons.md, game-missions.md, game-events.md), all ours; the front end was still the game's then
+(docs/driving/game-frontend.md). Ported on 12 October 2026 by six packages, then merged (`src/driving/game/`). Every
+address is Driving.xbe's.
 
 **Status: ported and tested (12 October 2026).** 361 entries, all `FUNC_AT` but one: 67 of package C (AICharacter,
 the passenger, the pedestrians), 72 of package D (AIVehicle, AIHelicopter, AIVehicleController, AIRoadSpawn,

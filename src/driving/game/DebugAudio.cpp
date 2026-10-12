@@ -7,6 +7,7 @@
 
 #include "DebugAudio.h"
 
+#include "Hud.h"
 #include "MissionManager.h"
 #include "Simulation.h"
 #include "../audio/Mix.h"
@@ -17,9 +18,9 @@
 #include "../camera/Camera.h"
 #include "../eagl/EaglFont.h"
 #include "../eagl/Realgraph.h"
-#include "../engine/GameInterfaces.hpp"   // GHud
 #include "../engine/CoreFoundation.h"
 #include "../engine/Feedback.h"
+#include "../engine/GameLoop.h"           // gDAudio
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
@@ -39,7 +40,6 @@
 
 // ---- the game's state
 
-#define gDAudio BOOL8_AT(0x001e4761)                // the info page and the targets (GameLoop.cpp sets it)
 #define Mixes (*(MixList *)0x00243954)              // Mix.cpp's list of the mixes Load read
 #define StreamHold I32_AT(0x00243a80)               // Stream.cpp's StreamHoldState
 

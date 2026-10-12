@@ -18,6 +18,7 @@
 #include "../engine/StaticInit.h"
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
+#include "../game/Gfx.h"
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
@@ -115,12 +116,7 @@ RSceneObj_vtbl *const kSceneObjVtable = (RSceneObj_vtbl *)0x00191be0;
 
 } // namespace
 
-// ---- the game's code not ported yet
-#define GFX_Trigger ((void *(*)(void *effect, const Coord3 *velocity, const Coord4 *origin, ArticleEffect *source, void *parameters, RSceneObj *owner, uint32_t instance, Coord3 *ownerVelocity))0x000d34e0)
-#define GFX_SetIntensity ((void (*)(void *triggered, float intensity))0x000d35b0)
-#define GFX_Purge ((void (*)(void *triggered))0x000d3560)
-#define GFX_SuppressEffect ((void (*)(void *triggered))0x000d3590)
-#define GFX_PurgeSceneObjEffects ((void (*)(RSceneObj *owner))0x000d3490)
+// ---- the C runtime's, at its own address
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
 // ---- globals
@@ -309,7 +305,7 @@ RSceneObj* RSceneObj::Construct(CARP::Instance *instance) {
 // FUNC_AT(0x000905a0)
 void RSceneObj::Destruct() {
     vtable = kSceneObjVtable;
-    GFX_PurgeSceneObjEffects(this);
+    GFX::PurgeSceneObjEffects(this);
     if (animHandle != NULL)
         DeleteHandle(animHandle);
     animHandle = NULL;
@@ -360,7 +356,7 @@ void RSceneObj::Load(const char *directory, const char *file, const char *label,
     SceneObjs.loading = this;
     RegisterCallback::Add(ResolveData);
     RCARPFile *loaded = LoadCarpFile(directory, file, label);
-    GFX_PurgeSceneObjEffects(this);
+    GFX::PurgeSceneObjEffects(this);
     if (animHandle != NULL)
         DeleteHandle(animHandle);
     animHandle = NULL;
@@ -425,7 +421,7 @@ bool RSceneObj::UseArticle(UGroup *model, uint32_t article) {
 // FUNC_AT(0x00090660)
 void RSceneObj::UseInstanceList(CARP::Instance *instances, int count, ProcAnimState *states, bool initialEffects,
                                 const char *listName) {
-    GFX_PurgeSceneObjEffects(this);
+    GFX::PurgeSceneObjEffects(this);
     if (animHandle != NULL)
         DeleteHandle(animHandle);
     animHandle = NULL;
@@ -1086,24 +1082,24 @@ void RSceneObj::ToggleEffect(bool on, uint32_t index, ArticleEffect *effect, flo
             handle->effectsOn |= EffectMask(index);
             return;
         }
-        if (effect->gfx.triggered == NULL) {
+        if (effect->gfx.triggered == 0) {
             Coord3 *velocity = GetVelocityVirtual();
-            effect->gfx.triggered = GFX_Trigger(effect->gfx.reference, &kZeroVector, &kOrigin, effect,
-                                                &effect->gfx.rotation, this, effect->instance, velocity);
-            if (effect->gfx.triggered != NULL)
+            effect->gfx.triggered = GFX::Trigger(effect->gfx.reference, &kZeroVector, &kOrigin, &effect->position,
+                                                 &effect->gfx.rotation, this, effect->instance, velocity);
+            if (effect->gfx.triggered != 0)
                 animHandle->SetEffectOn(index);
         }
-        if (!(intensity >= 0.0f) || effect->gfx.triggered == NULL)
+        if (!(intensity >= 0.0f) || effect->gfx.triggered == 0)
             return;
-        GFX_SetIntensity(effect->gfx.triggered, intensity);
+        GFX::SetIntensity(effect->gfx.triggered, intensity);
         return;
     }
     if (!EffectBit(handle->effectsOn, index))
         return;
     handle->effectsOn &= ~EffectMask(index);
-    if (EffectBit(animHandle->effectMask30, index) && effect->gfx.triggered != NULL) {
-        GFX_Purge(effect->gfx.triggered);
-        effect->gfx.triggered = NULL;
+    if (EffectBit(animHandle->effectMask30, index) && effect->gfx.triggered != 0) {
+        GFX::Purge(effect->gfx.triggered);
+        effect->gfx.triggered = 0;
     }
 }
 
@@ -1158,8 +1154,8 @@ void RSceneObj::SuppressEffects(bool byId, uint32_t which) {
         return;
     if (byId) {
         ArticleEffect *effect = animHandle->FindEffectByID(which);
-        if (effect != NULL && effect->type == ArticleEffect::kTypeGfx && effect->gfx.triggered != NULL)
-            GFX_SuppressEffect(effect->gfx.triggered);
+        if (effect != NULL && effect->type == ArticleEffect::kTypeGfx && effect->gfx.triggered != 0)
+            GFX::SuppressEffect(effect->gfx.triggered);
         return;
     }
     uint32_t count = animHandle->effectCount;
@@ -1169,8 +1165,8 @@ void RSceneObj::SuppressEffects(bool byId, uint32_t which) {
     for (uint32_t i = 0; i < count; i++, effect++) {
         Handle *handle = animHandle;
         if (EffectBit(handle->effectMask38, i) && !EffectBit(handle->effectMask28, i) &&
-            EffectBit(handle->effectMask30, i) && ZonesMatch(zones, bits[i]) && effect->gfx.triggered != NULL)
-            GFX_SuppressEffect(effect->gfx.triggered);
+            EffectBit(handle->effectMask30, i) && ZonesMatch(zones, bits[i]) && effect->gfx.triggered != 0)
+            GFX::SuppressEffect(effect->gfx.triggered);
     }
 }
 
@@ -1187,7 +1183,7 @@ void RSceneObj::DamageEffects(uint32_t zones) {
         bool on = (zones & bits[i]) != 0;
         ToggleEffect(on, i, effect, -1.0f);
         // A gallery effect that did not start is still marked on
-        if (on && EffectBit(animHandle->effectMask30, i) && effect->gfx.triggered == NULL)
+        if (on && EffectBit(animHandle->effectMask30, i) && effect->gfx.triggered == 0)
             animHandle->effectsOn |= EffectMask(i);
     }
     effectDecayTime = animHandle->effectsOn != 0 ? GameTick + kEffectDecayTicks : 0;
@@ -1236,9 +1232,9 @@ void RSceneObj::StopFX() {
         if (!EffectBit(handle->effectsOn, i))
             continue;
         handle->effectsOn &= ~EffectMask(i);
-        if (EffectBit(animHandle->effectMask30, i) && effect->gfx.triggered != NULL) {
-            GFX_Purge(effect->gfx.triggered);
-            effect->gfx.triggered = NULL;
+        if (EffectBit(animHandle->effectMask30, i) && effect->gfx.triggered != 0) {
+            GFX::Purge(effect->gfx.triggered);
+            effect->gfx.triggered = 0;
         }
     }
 }

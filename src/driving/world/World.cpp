@@ -16,12 +16,13 @@
 #include "../../common/xbeOverload.h"
 #include "../../helpers.h"
 #include "../data/RCARPFile.h"
-#include "../engine/GameInterfaces.hpp"   // GLoadingScreen_Status
 #include "../engine/CoreFoundation.h"     // NullFunction, ThrowLengthError
 #include "../game/AICharacter.h"
 #include "../game/AIElements.h"
 #include "../game/AIRoadSpawn.h"
 #include "../game/AIVehicleController.h"
+#include "../game/Gfx.h"
+#include "../game/LoadingScreen.h"
 #include "../game/MissionManager.h"
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
@@ -38,9 +39,6 @@
 // ---- the game's globals
 // XBE_GLOBAL(0x0023f290, 0x80)
 char TrackName[0x80];
-
-// ---- the game's code not ported yet
-#define GFX_Trigger ((void *(*)(void *effect, const float *position, const Coord4 *direction, ArticleEffect *owner, void *data, int, int, int))0x000d34e0)
 
 namespace {
 
@@ -386,10 +384,12 @@ void WWorld::Reset() {
         for (ArticleEffect *effect = article->effects; effect->type != ArticleEffect::kTypeEnd; effect++) {
             if (effect->flags & ArticleEffect::kStartsOn) {
                 if (effect->type == ArticleEffect::kTypeGfx && effect->gfx.reference != NULL)
-                    effect->gfx.triggered = GFX_Trigger(effect->gfx.reference, instance->position, &kDefaultVector,
-                                                        effect, &effect->gfx.rotation, 0, 0, 0);
+                    effect->gfx.triggered = GFX::Trigger(effect->gfx.reference,
+                                                         reinterpret_cast<const Coord3 *>(instance->position),
+                                                         &kDefaultVector, &effect->position, &effect->gfx.rotation,
+                                                         NULL, 0, NULL);
             } else {
-                effect->gfx.triggered = NULL;
+                effect->gfx.triggered = 0;
             }
         }
     }
@@ -426,7 +426,7 @@ bool WWorld::Open() {
     loader.Construct();
     loader.ResolveCARPFile(directory, carp);
     loader.Destruct();
-    GLoadingScreen_Status("Resolving misc world elements");
+    GLoadingScreen::Status("Resolving misc world elements");
 
     UGroup *mapGroup = group->GroupLocateTag(kTagMap);
     map = reinterpret_cast<WMapHeader *>(mapGroup->DataLocateTag(kTagWorldMap)->Data());
@@ -555,8 +555,10 @@ bool WWorld::Open() {
                 if (effect->flags & ArticleEffect::kStartsOn) {
                     effect->flags |= ArticleEffect::kFlag01;
                     if (effect->type == ArticleEffect::kTypeGfx && effect->gfx.reference != NULL)
-                        effect->gfx.triggered = GFX_Trigger(effect->gfx.reference, instance->position, &kDefaultVector,
-                                                            effect, &effect->gfx.rotation, 0, 0, 0);
+                        effect->gfx.triggered = GFX::Trigger(effect->gfx.reference,
+                                                             reinterpret_cast<const Coord3 *>(instance->position),
+                                                             &kDefaultVector, &effect->position, &effect->gfx.rotation,
+                                                             NULL, 0, NULL);
                 } else if (effect->type == ArticleEffect::kTypeGlare) {
                     effect->flags |= ArticleEffect::kFlag01;
                 }

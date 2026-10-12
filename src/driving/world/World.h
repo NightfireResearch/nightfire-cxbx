@@ -72,8 +72,8 @@ constexpr uint8_t kNoArticle = 0xff;
 
 // The per-type parts of an article effect, from its +0x18 (ArticleEffect's union)
 struct ArticleGfxEffect {               // kTypeGfx
-    void *reference;                    // +0x18 the effect GFX::Trigger plays
-    void *triggered;                    // +0x1c what GFX::Trigger answered
+    UGroup *reference;                  // +0x18 the effect GFX::Trigger plays
+    int32_t triggered;                  // +0x1c what GFX::Trigger answered: a handle, 0 for none
     Coord4 rotation;                    // +0x20 a quaternion; the start of what GFX::Trigger is handed
     uint8_t unknown30[0x10];
 };

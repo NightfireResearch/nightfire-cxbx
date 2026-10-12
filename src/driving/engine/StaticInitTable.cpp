@@ -23,6 +23,9 @@
 #include "../game/AIVehicle.h"
 #include "../game/DebugAudio.h"
 #include "../game/EmpEffect.h"
+#include "../game/Girl.h"
+#include "../game/Hud.h"
+#include "../game/LoadingScreen.h"
 #include "../game/MissionManager.h"
 #include "../game/Shell.h"
 #include "../game/Simulation.h"
@@ -46,7 +49,6 @@
 #define FUN_000c5990 ((void * (__fastcall *)(void *, int))0x000c5990)
 #define FUN_000ce900 ((void (__fastcall *)(NodeList *, int, void **, void *, void *))0x000ce900)   // erase(result, first, last)
 #define FUN_000cebc0 ((void (__fastcall *)(void *, int))0x000cebc0)
-#define FUN_000e2c20 ((void * (__fastcall *)(void *, int))0x000e2c20)
 #define FUN_000e2c80 ((void (__fastcall *)(NodeList *, int, void **, void *, void *))0x000e2c80)   // erase(result, first, last)
 #define FUN_0011cc10 ((void (__fastcall *)(void *, int))0x0011cc10)
 #define FUN_00124710 ((void (__fastcall *)(void *, int))0x00124710)
@@ -459,69 +461,69 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x0023f32c) = 1.0f / FLOAT_AT(0x001ca3e4);                                                  // 0x0015a3c0
     FLOAT_AT(0x0023f394) = 1.0f / FLOAT_AT(0x001ca3ec);                                                  // 0x0015a3e0
     FLOAT_AT(0x0023f3d8) = 1.0f / FLOAT_AT(0x001ca3f8);                                                  // 0x0015a400
-    I32_AT(0x0023f3dc) = Ftol((double)2.0f * 128.0f);                                                    // 0x0015a420
-    I32_AT(0x0023f3e0) = Ftol((double)2.0f * 128.0f);                                                    // 0x0015a440
+    // GirlWidth = 256: ours (game/Girl.cpp)                                                             // 0x0015a420
+    // GirlHeight = 256: ours (game/Girl.cpp)                                                            // 0x0015a440
     FLOAT_AT(0x0023f49c) = 1.0f / FLOAT_AT(0x001ca9fc);                                                  // 0x0015a460
     FLOAT_AT(0x0023f4a0) = 3.1415925f + 3.1415925f;                                                      // 0x0015a480
     FLOAT_AT(0x0023f4a4) = 1.0f / FLOAT_AT(0x0023f4a0);                                                  // 0x0015a490
     FLOAT_AT(0x0023f4a8) = 180.0f / 3.1415925f;                                                          // 0x0015a4b0
     FLOAT_AT(0x0023f4ac) = 1.0f / FLOAT_AT(0x0023f4a8);                                                  // 0x0015a4d0
-    U32_AT(0x0023f4b0) = ColourConvertXBoxToPS2(0xffffffff);                                             // 0x0015a4f0
-    U32_AT(0x0023f4b4) = ColourConvertXBoxToPS2(0x8cb02c25);                                             // 0x0015a500
-    U32_AT(0x0023f4b8) = ColourConvertXBoxToPS2(0x8cc6984e);                                             // 0x0015a520
-    U32_AT(0x0023f4bc) = ColourConvertXBoxToPS2(0x8c52a88b);                                             // 0x0015a540
-    U32_AT(0x0023f4c0) = ColourConvertXBoxToPS2(0x26b02c25);                                             // 0x0015a560
-    U32_AT(0x0023f4c4) = ColourConvertXBoxToPS2(0x26c6984e);                                             // 0x0015a580
-    U32_AT(0x0023f4c8) = ColourConvertXBoxToPS2(0x2652a88b);                                             // 0x0015a5a0
-    U32_AT(0x0023f4cc) = ColourConvertXBoxToPS2(0xfffadbb3);                                             // 0x0015a5c0
-    U32_AT(0x0023f4d0) = ColourConvertXBoxToPS2(0xfffecc64);                                             // 0x0015a5e0
+    HudGadgetColour = ColourConvertXBoxToPS2(0xffffffff);                                                // 0x0015a4f0
+    HudHealthCriticalColour = ColourConvertXBoxToPS2(0x8cb02c25);                                        // 0x0015a500
+    HudHealthLowColour = ColourConvertXBoxToPS2(0x8cc6984e);                                             // 0x0015a520
+    HudHealthColour = ColourConvertXBoxToPS2(0x8c52a88b);                                                // 0x0015a540
+    HudHealthCriticalDimColour = ColourConvertXBoxToPS2(0x26b02c25);                                     // 0x0015a560
+    HudHealthLowDimColour = ColourConvertXBoxToPS2(0x26c6984e);                                          // 0x0015a580
+    HudHealthDimColour = ColourConvertXBoxToPS2(0x2652a88b);                                             // 0x0015a5a0
+    HudTextColour = ColourConvertXBoxToPS2(0xfffadbb3);                                                  // 0x0015a5c0
+    HudObjectiveColour = ColourConvertXBoxToPS2(0xfffecc64);                                             // 0x0015a5e0
     U32_AT(0x0023f4d4) = ColourConvertXBoxToPS2(0x3fc37d1e);                                             // 0x0015a600
-    U32_AT(0x0023f4d8) = ColourConvertXBoxToPS2(0xffb0645c);                                             // 0x0015a620
-    U32_AT(0x0023f4dc) = ColourConvertXBoxToPS2(0x8c000000);                                             // 0x0015a640
-    U32_AT(0x0023f4e0) = ColourConvertXBoxToPS2(0xff402e0e);                                             // 0x0015a660
-    U32_AT(0x0023f4e4) = ColourConvertXBoxToPS2(0x8cffffff);                                             // 0x0015a680
-    U32_AT(0x0023f4e8) = ColourConvertXBoxToPS2(0x3fffffff);                                             // 0x0015a6a0
-    U32_AT(0x0023f4ec) = ColourConvertXBoxToPS2(0x3fa50505);                                             // 0x0015a6c0
-    U32_AT(0x0023f4f0) = ColourConvertXBoxToPS2(0xffa50505);                                             // 0x0015a6e0
-    U32_AT(0x0023f4f4) = ColourConvertXBoxToPS2(0xffb02c25);                                             // 0x0015a700
-    U32_AT(0x0023f4f8) = ColourConvertXBoxToPS2(0x3fa50505);                                             // 0x0015a720
-    U32_AT(0x0023f4fc) = ColourConvertXBoxToPS2(0xbfa50505);                                             // 0x0015a740
-    U32_AT(0x0023f500) = ColourConvertXBoxToPS2(0xffb02c25);                                             // 0x0015a760
-    U32_AT(0x0023f504) = ColourConvertXBoxToPS2(0xffffffff);                                             // 0x0015a780
-    U32_AT(0x0023f508) = ColourConvertXBoxToPS2(0xbfb02c25);                                             // 0x0015a790
-    U32_AT(0x0023f50c) = ColourConvertXBoxToPS2(0xffb02c25);                                             // 0x0015a7b0
-    U32_AT(0x0023f510) = ColourConvertXBoxToPS2(0xffb02c25);                                             // 0x0015a7d0
-    U32_AT(0x0023f514) = ColourConvertXBoxToPS2(0x5faf0020);                                             // 0x0015a7f0
-    U32_AT(0x0023f518) = ColourConvertXBoxToPS2(0xff1f7f7f);                                             // 0x0015a810
-    U32_AT(0x0023f51c) = ColourConvertXBoxToPS2(0xff1f0000);                                             // 0x0015a830
-    U32_AT(0x0023f520) = ColourConvertXBoxToPS2(0xff000000);                                             // 0x0015a850
+    HudColour4d8 = ColourConvertXBoxToPS2(0xffb0645c);                                                   // 0x0015a620
+    HudShadowColour = ColourConvertXBoxToPS2(0x8c000000);                                                // 0x0015a640
+    HudColour4e0 = ColourConvertXBoxToPS2(0xff402e0e);                                                   // 0x0015a660
+    HudCrossColour = ColourConvertXBoxToPS2(0x8cffffff);                                                 // 0x0015a680
+    HudCrossColour4e8 = ColourConvertXBoxToPS2(0x3fffffff);                                              // 0x0015a6a0
+    HudCrossColour4ec = ColourConvertXBoxToPS2(0x3fa50505);                                              // 0x0015a6c0
+    HudCrossColour4f0 = ColourConvertXBoxToPS2(0xffa50505);                                              // 0x0015a6e0
+    HudCrossColour4f4 = ColourConvertXBoxToPS2(0xffb02c25);                                              // 0x0015a700
+    HudCrossColour4f8 = ColourConvertXBoxToPS2(0x3fa50505);                                              // 0x0015a720
+    HudCrossColour4fc = ColourConvertXBoxToPS2(0xbfa50505);                                              // 0x0015a740
+    HudCrossColour500 = ColourConvertXBoxToPS2(0xffb02c25);                                              // 0x0015a760
+    HudCrossColour504 = ColourConvertXBoxToPS2(0xffffffff);                                              // 0x0015a780
+    HudCrossColour508 = ColourConvertXBoxToPS2(0xbfb02c25);                                              // 0x0015a790
+    HudCrossColour50c = ColourConvertXBoxToPS2(0xffb02c25);                                              // 0x0015a7b0
+    HudCrossColour510 = ColourConvertXBoxToPS2(0xffb02c25);                                              // 0x0015a7d0
+    HudHoleColour = ColourConvertXBoxToPS2(0x5faf0020);                                                  // 0x0015a7f0
+    HudBloodColour = ColourConvertXBoxToPS2(0xff1f7f7f);                                                 // 0x0015a810
+    HudBloodColour2 = ColourConvertXBoxToPS2(0xff1f0000);                                                // 0x0015a830
+    HudLetterBoxColour = ColourConvertXBoxToPS2(0xff000000);                                             // 0x0015a850
     U32_AT(0x0023f524) = ColourConvertXBoxToPS2(0x4f000000);                                             // 0x0015a870
     U32_AT(0x0023f528) = ColourConvertXBoxToPS2(0x7f202020);                                             // 0x0015a890
     U32_AT(0x0023f52c) = ColourConvertXBoxToPS2(0xffffff00);                                             // 0x0015a8b0
     U32_AT(0x0023f530) = ColourConvertXBoxToPS2(0xffff0000);                                             // 0x0015a8d0
     U32_AT(0x0023f534) = ColourConvertXBoxToPS2(0xff00ff00);                                             // 0x0015a8f0
     U32_AT(0x0023f538) = ColourConvertXBoxToPS2(0xff0000ff);                                             // 0x0015a910
-    U32_AT(0x0023f53c) = ColourConvertXBoxToPS2(0xfffadbb3);                                             // 0x0015a930
-    U32_AT(0x0023f540) = ColourConvertXBoxToPS2(0xffc80505);                                             // 0x0015a950
-    U32_AT(0x0023f544) = ColourConvertXBoxToPS2(0xffcfcfcf);                                             // 0x0015a970
-    U32_AT(0x0023f548) = 0x3c888889;                                                                     // 0x0015a990
-    U32_AT(0x0023f54c) = ColourConvertXBoxToPS2(0x7f000000);                                             // 0x0015a9a0
-    U32_AT(0x0023f550) = U32_AT(0x0023f4cc);                                                             // 0x0015a9c0
+    HudTimerColour = ColourConvertXBoxToPS2(0xfffadbb3);                                                 // 0x0015a930
+    HudTimerWarningColour = ColourConvertXBoxToPS2(0xffc80505);                                          // 0x0015a950
+    HudStylinColour = ColourConvertXBoxToPS2(0xffcfcfcf);                                                // 0x0015a970
+    // HudArrowFadeStep = 0x3c888889: ours (game/Hud.cpp)                                                // 0x0015a990
+    HudColour54c = ColourConvertXBoxToPS2(0x7f000000);                                                   // 0x0015a9a0
+    HudColour550 = HudTextColour;                                                                        // 0x0015a9c0
     U32_AT(0x0023f554) = ColourConvertXBoxToPS2(0xff71482f);                                             // 0x0015a9d0
-    U32_AT(0x0023f558) = ColourConvertXBoxToPS2(0x40000000);                                             // 0x0015a9f0
-    U32_AT(0x0023f55c) = ColourConvertXBoxToPS2(0x8d0f0505);                                             // 0x0015aa10
-    U32_AT(0x0023f560) = ColourConvertXBoxToPS2(0x8d0f0505);                                             // 0x0015aa30
+    HudMessageBoxColour = ColourConvertXBoxToPS2(0x40000000);                                            // 0x0015a9f0
+    HudTimerBoxColour = ColourConvertXBoxToPS2(0x8d0f0505);                                              // 0x0015aa10
+    HudCrossColour560 = ColourConvertXBoxToPS2(0x8d0f0505);                                              // 0x0015aa30
     FLOAT_AT(0x0023f7fc) = 1.0f / FLOAT_AT(0x001caee8);                                                  // 0x0015aa50
-    PTR_AT(0x0023f804) = FUN_000e2c20((void *)0x0023f800, 0);                                            // 0x0015aa70
+    PTR_AT(0x0023f804) = ((LoadScreenStringList *)0x0023f800)->NewHead();                                // 0x0015aa70
     U32_AT(0x0023f808) = 0x00000000;
     CrtAtExit([] { DestroyNodeList((NodeList *)0x0023f800, FUN_000e2c80, 0x24); });
-    U32_AT(0x0023f80c) = ColourConvertXBoxToPS2(0xfffadbb3);                                             // 0x0015aaa0
+    LoadingTextColour = ColourConvertXBoxToPS2(0xfffadbb3);                                              // 0x0015aaa0
     U32_AT(0x0023f810) = ColourConvertXBoxToPS2(0xffffcd64);                                             // 0x0015aac0
-    U32_AT(0x0023f814) = ColourConvertXBoxToPS2(0xff615746);                                             // 0x0015aae0
+    UnloadingTextColour = ColourConvertXBoxToPS2(0xff615746);                                            // 0x0015aae0
     U32_AT(0x0023f818) = ColourConvertXBoxToPS2(0x7f000000);                                             // 0x0015ab00
-    U32_AT(0x0023f81c) = ColourConvertXBoxToPS2(0xffffffff);                                             // 0x0015ab20
+    LoadingColour = ColourConvertXBoxToPS2(0xffffffff);                                                  // 0x0015ab20
     U32_AT(0x0023f820) = ColourConvertXBoxToPS2(0xff7f7f7f);                                             // 0x0015ab30
-    U32_AT(0x0023f824) = ColourConvertXBoxToPS2(0x3fffffff);                                             // 0x0015ab50
+    LoadingDimDotColour = ColourConvertXBoxToPS2(0x3fffffff);                                            // 0x0015ab50
     FLOAT_AT(0x0023f82c) = 1.0f / FLOAT_AT(0x001caf2c);                                                  // 0x0015ab70
     U32_AT(0x0023f830) = ColourConvertXBoxToPS2(0xff000000);                                             // 0x0015ab90
     U32_AT(0x0023f834) = ColourConvertXBoxToPS2(0x8c000000);                                             // 0x0015abb0

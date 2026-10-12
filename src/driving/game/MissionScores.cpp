@@ -5,9 +5,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "Hud.h"
 #include "Simulation.h"
 #include "../../helpers.h"
-#include "../engine/GameInterfaces.hpp"     // GHud
 #include "../engine/GameLoop.h"             // Launch
 #include "../platform/X87.h"                // Ftol
 
@@ -49,16 +49,6 @@ double Clamp01(double share) {
     if (share < 0.0)
         return 0.0;
     return share;
-}
-
-// The HUD's pause flag (provisional view of GHud's +0x2b0)
-struct MissionScoresHudView {
-    uint8_t unknown000[0x2b0];
-    uint8_t paused;             // +0x2b0
-};
-
-bool HudPaused(GHud *hud) {
-    return reinterpret_cast<MissionScoresHudView *>(hud)->paused != 0;
 }
 
 }  // namespace
@@ -279,7 +269,7 @@ void SMissionManager::UpdateCharInfo() {
             CharInfoBeforeHud = 0;
         return;
     }
-    if (HudPaused(GHud::TheApp()))
+    if (GHud::TheApp()->paused)
         return;
     if (Launch.flags & kLaunchRegenerateHealth) {
         if (double(playerHealth) / playerMaxHealth < 0.33f && fgSimulation.stepCount - lastDamageStep >= 0) {

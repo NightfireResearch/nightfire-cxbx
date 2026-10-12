@@ -40,6 +40,8 @@ public:
     const char* GetName();                                                          // 0x00127bd0
     // Plays the voice's view for the listener at the sound's volume times its mix's (vtable slot 3).
     void Play(ASoundPlayParams *params);                                            // 0x00127b00
+    // The voice's three views stop looping (compiled among GFX's code; the name ours)
+    void ClearLoops();                                                              // 0x000d3710
 };
 static_assert(offsetof(ASound, voice) == 0xc0, "ASound::voice");
 static_assert(sizeof(ASound) == 0x120, "ASound is 0x120 bytes");

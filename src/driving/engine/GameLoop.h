@@ -87,7 +87,8 @@ struct LaunchPage {
     int32_t povConfig;          // +0x98c the POV control configuration chosen (InputConfigManager)
     int32_t controllerPort;     // +0x990 the player's controller: the movies' skip pad, IFeedback's port
     int32_t vibration;          // +0x994 non-zero: force feedback on (IFeedback)
-    uint8_t unknown998[0x8];
+    int32_t unknown998;         // +0x998 non-zero: GHud's unknown431 at Reset (no health flash)
+    int32_t unknown99c;         // +0x99c ... and its unknown432
     uint32_t flags;             // +0x9a0 LaunchFlags
     uint32_t cheats;            // +0x9a4 (name ours) bit 0: the mission manager doubles the scheduler's time scale
     int32_t summary[27];        // +0x9a8 TallyScores' summary of the totals
@@ -112,6 +113,8 @@ struct LaunchPage {
     // Relaunches: DRIVING.XBE (next part of the mission) or DEFAULT.XBE (the action engine), with the page
     // (0x00130740). Only when the loader is present.
     void ReturnToAction(int target);
+    // Whether the mission's end state (unknown978) is 1 or 4 (0x000d7bd0, among GGirl's; the name ours)
+    bool IsEndState1Or4();
 };
 #define Launch (*(LaunchPage *)0x00243b90)
 
@@ -187,7 +190,9 @@ char DiscError_Handler();     // 0x0005c960
 void DiscError_Init();        // 0x0005c9a0
 
 // GameLoop.cpp's globals that other files use: gDVD (the launch page's dvdSource; UFileLoader adds the big file
-// without checking it exists when it is set), and the queue the main loop reads the screen-capture action from.
+// without checking it exists when it is set), gDAudio (the launch page's dolbyAudio: the debug audio pages' info
+// and targets), and the queue the main loop reads the screen-capture action from.
 extern int32_t gDVD;
+extern bool gDAudio;
 class ActionQueue;
 extern ActionQueue GlobalActionQueue;

@@ -10,10 +10,6 @@
 // ACharacter, and the code the linker placed beside its constructor: see CharacterSound.h.
 // ---------------------------------------------------------------------------------------------------------------
 
-// AVoice's destructor where it is not inlined (Ghidra: FUN_0003f400)
-// Whether the voice is done with (Ghidra: FUN_000d36c0)
-#define AVoice_IsFinished ((bool (__fastcall *)(AVoice *, int))0x000d36c0)
-
 // Each list's next line (names ours)
 // XBE_GLOBAL(0x00243964, 4)
 int32_t NextFPedLine;
@@ -169,7 +165,7 @@ void ACharacter::Play(ASoundPlayParams *params) {
         return;
     voice->Play(params->listener->view, float(mix->GetVolume() * volume * params->volume), params->pitch,
                 params->azimuth, 0.0f, 0.0f);
-    if (AVoice_IsFinished(voice, 0)) {
+    if (voice->IsFinished()) {
         voice->Destruct();
         UMemory::FastFree(voice, sizeof(AVoice));
         voice = NULL;

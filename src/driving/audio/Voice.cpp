@@ -2,6 +2,8 @@
 
 #include "Bank.h"                       // ABank::GetPatchName
 #include "Mix.h"                        // AMix, AFX
+#include "Sound.h"                      // kSoundViewShared
+#include "SoundManager.h"               // fgActiveViews
 #include "Stream.h"                     // AVoiceMapMax
 
 #include <bit>
@@ -103,6 +105,19 @@ void AVoice::Destruct() {
 void AVoice::PlayOnce() {
     for (int i = 0; i < 3; i++)
         views[i].loop = 0;
+}
+
+// FUNC_AT(0x000d36c0)
+bool AVoice::IsFinished() {
+    if (!views[kSoundViewShared].finished)
+        return false;
+    if (fgActiveViews & (1 << kSoundViewShared))
+        return true;
+    for (int i = 0; i < kSoundViewShared; i++) {
+        if ((fgActiveViews & (1 << i)) != 0 && !views[i].finished)
+            return false;
+    }
+    return true;
 }
 
 // FUNC_AT(0x00123820)

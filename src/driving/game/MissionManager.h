@@ -56,7 +56,7 @@ enum MissionObjectiveState : int32_t {
 
 struct MissionObjective {
     int32_t id;                 // +0x00 what the Pass/Fail/Set events find it by
-    int32_t unknown04;
+    int32_t hint;               // +0x04 a locale symbol: the pause menu's hint for it (GHud::DrawPauseMenu)
     int32_t score;              // +0x08 added to the objectives score when it is passed
     int32_t unknown0c;
     int32_t state;              // +0x10 MissionObjectiveState
@@ -373,8 +373,8 @@ public:
     void SetIncompleteObjective(int id);                                                // 0x000b88c0
     // EObjectiveAdd's, EObjectiveInsert's (before the objective `beforeId`) and ESetMissionMessage's (Ghidra:
     // FUN_000b9320, FUN_000b93c0, FUN_000b94a0; names ours)
-    void AddObjective(int id, int unknown04, int score, int unknown0c);                 // 0x000b9320
-    void InsertObjective(int beforeId, int id, int unknown04, int score, int unknown0c);    // 0x000b93c0
+    void AddObjective(int id, int hint, int score, int unknown0c);                      // 0x000b9320
+    void InsertObjective(int beforeId, int id, int hint, int score, int unknown0c);         // 0x000b93c0
     void AddMessage(int unknown00, int unknown04, int unknown08);                       // 0x000b94a0
 
     // ---- health, counters and the scores (MissionScores.cpp)

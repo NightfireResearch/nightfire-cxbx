@@ -44,7 +44,8 @@ SetPlayerCar are direct calls); the weapon table's record (engine/StaticInit.h's
 methods and fields the weapons use in one view (physics/Simulation.h: GetOrderedBody, DetonateRemoteMines,
 DeletePhysicsObject and the jump to it most callers use, SpawnExplosion, `SimpleBodyHits`, and the missile, grenade
 and shell vectors); AICharacter's views (Human.h's, Shell.cpp's, Targeting.cpp's) and AICharacterHands' in
-game/AICharacter.h; the HUD's `paused` byte (engine/GameInterfaces.hpp, BondCarPhysics' too); the launch page's
+game/AICharacter.h; the HUD's `paused` byte (engine/GameInterfaces.hpp then, BondCarPhysics' too; game/Hud.h's GHud since the front end's
+port); the launch page's
 `cheats` and `autoSwitch` (engine/GameLoop.h); ActiveRayShell's `damage` and `radius` (world/Trigger.h);
 ProcAnimState's `damage` byte (world/World.h); the missile light types (`MissileLightType`, render/Lights.h); one
 `Xyz` (data/CoordConvert.h). FUN_0005d3f0 is `StripTriangle::GetNormal` (world/CollisionTypes.h, beside `LowestY`

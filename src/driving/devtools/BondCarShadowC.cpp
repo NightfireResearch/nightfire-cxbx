@@ -10,10 +10,10 @@
 #include "../audio/SoundManager.h"      // fgSoundList
 #include "../camera/PlayerCamera.h"     // RPlayerCamera
 #include "../engine/ActionQueue.hpp"
-#include "../engine/GameInterfaces.hpp" // GHud
 #include "../engine/SimRandom.h"
 #include "../engine/UMemory.hpp"
 #include "../game/BondCar.h"
+#include "../game/Hud.h"
 #include "../game/BondCarPhysics.h"
 #include "../game/BondCarState.h"       // the BondCar_* tuning
 #include "../game/TyreTrack.h"

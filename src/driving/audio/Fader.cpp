@@ -16,21 +16,13 @@
 #include "../../helpers.h"
 #include "../engine/InputConfig.h"      // BuildFileName
 #include "../engine/UMemory.hpp"
+#include "../game/Hud.h"                // ScreenFade
 
 #pragma fp_contract(off)
 
 // ---------------------------------------------------------------------------------------------------------------
 // AFader and URefCounter<AFader>'s tree (0x00124c40..0x00125db0), ported from the listings. See Fader.h.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- originals called by address
-
-// Moves the sound to the mix `mixName` (Remove, then Add).
-#define ABaseSound_SetMix ((void (__fastcall *)(ABaseSound *, int, const char *mixName))0x000d3690)
-
-// ---- globals
-
-#define ScreenFade I16_AT(0x00243a74)                      // GHud's screen fade (name ours)
 
 namespace {
 
@@ -155,7 +147,7 @@ void AFader::Priv::Update() {
             fade = 0.0f;
             if (stream->IsLoop() || unknown29)
                 stream->Next();
-            ABaseSound_SetMix(stream, 0, stream->IsEffect() ? "NIS" : "Speech");
+            stream->SetMix(stream->IsEffect() ? "NIS" : "Speech");
             stream->volume = 1.0f;
             stream->SetFilter(1.0f);
             fadingOut = 0;

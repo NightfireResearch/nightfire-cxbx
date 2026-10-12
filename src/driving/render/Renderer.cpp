@@ -512,7 +512,7 @@ void DrawArticleEffects(const WorldArticle *article, const MATRIX4 *transform, f
                 TheGlareManager->AddModelGlare(reinterpret_cast<Glare *>(effect), transform, distance * distance);
             break;
         case ArticleEffect::kTypeGfx:
-            if (effect->gfx.triggered != NULL) {
+            if (effect->gfx.triggered != 0) {
                 alignas(16) Coord4 rotation;
                 alignas(16) Coord4 translation;
                 ExtractQuatTrans(transform, &rotation, &translation);

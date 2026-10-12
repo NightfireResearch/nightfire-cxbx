@@ -23,7 +23,6 @@
 #include "../engine/CoreContainers.h"   // GameVector
 #include "../engine/CoreFoundation.h"   // NullFunction
 #include "../engine/Feedback.h"         // IFeedback
-#include "../engine/GameInterfaces.hpp" // GHud, GFX
 #include "../engine/GameLoop.h"         // LaunchPage
 #include "../engine/IOModule.hpp"
 #include "../engine/UMemory.hpp"        // OperatorNew, OperatorDelete
@@ -50,7 +49,9 @@
 #include "AIVehicleController.h"
 #include "BondCarState.h"               // CarSurface
 #include "EventsD.h"                    // StingerChannel
+#include "Gfx.h"
 #include "Helicopter.h"                 // PHelicopter::scoreable
+#include "Hud.h"
 #include "Human.h"
 #include "MissionManager.h"             // glbMissionManager
 #include "Simulation.h"                 // fgSimulation
@@ -58,8 +59,7 @@
 
 // ---------------------------------------------------------------------------------------------------------------
 // The events of package A (0x0003db80-0x0004ec40): their MakeEvent and ResolveEvent callbacks, their destructors
-// (where each does its work, in Process) and their scalar deleting destructors. Ported from the listing; the
-// front-end calls go to the originals through engine/GameInterfaces.hpp.
+// (where each does its work, in Process) and their scalar deleting destructors. Ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's globals
@@ -1632,7 +1632,7 @@ void ECollision::TriggerIncidental(Zone *zone) {
     } else {
         effect = impact.strength < 0.75f ? "CR_Wasm" : "CR_WasmS";
     }
-    void *reference = GFX::LookupReference(effect);
+    UGroup *reference = GFX::LookupReference(effect);
     if (reference != NULL) {
         Coord4 up = { 0.0f, 1.0f, 0.0f, 0.0f };
         GFX::TriggerIncidental(reference, Xyz(&impact.point), &up, GameZeroVector, GameDefaultVector, NULL, 0, NULL);

@@ -4,8 +4,8 @@
 
 #include "PlayerCamera.h"
 #include "../../common/xbeOverload.h"
-#include "../engine/GameInterfaces.hpp"   // GHud
 #include "../engine/GameLoop.h"         // LaunchPage
+#include "../game/Hud.h"
 #include "../game/MissionManager.h"
 #include "../game/Simulation.h"
 #include "../physics/PhysicsMath.h"     // Abs

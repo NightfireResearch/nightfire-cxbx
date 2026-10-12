@@ -13,6 +13,7 @@
 #include "AICharacter.h"
 #include "AIElements.h"
 #include "EventsC.h"                        // ERestart
+#include "Hud.h"
 #include "Missile.h"
 #include "Simulation.h"
 #include "Vehicle.h"                        // PVehicle's slots
@@ -27,7 +28,6 @@
 #include "../data/UData.h"
 #include "../engine/ActionQueue.hpp"
 #include "../engine/CoreFoundation.h"       // ThrowLengthError
-#include "../engine/GameInterfaces.hpp"     // GHud
 #include "../engine/GameLoop.h"             // Bond_SetExitToDriving
 #include "../engine/IOModule.hpp"
 #include "../engine/InputConfig.h"
@@ -92,12 +92,6 @@ constexpr int kMaxSetAmmo = 10000;
 constexpr int kObjectiveCheckInterval = 10;     // steps between CheckObjectiveVisibleToUser's
 constexpr uint8_t kForceStopMissile = 8;        // ForceStopOn's flag while a missile is steered
 
-// The HUD's pause flag (provisional view of GHud's +0x2b0)
-struct MissionHudView {
-    uint8_t unknown000[0x2b0];
-    uint8_t paused;             // +0x2b0
-};
-
 RPlayerCamera *FirstCamera() {
     return fgRenderHigh->views[0].camera;
 }
@@ -152,11 +146,11 @@ MissionObjective *FindObjective(MissionList *objectives, int id) {
     return NULL;
 }
 
-MissionObjective *NewObjective(int id, int unknown04, int score, int unknown0c) {
+MissionObjective *NewObjective(int id, int hint, int score, int unknown0c) {
     MissionObjective *objective = static_cast<MissionObjective *>(OperatorNew(sizeof(MissionObjective)));
     if (objective != NULL) {
         objective->id = id;
-        objective->unknown04 = unknown04;
+        objective->hint = hint;
         objective->score = score;
         objective->unknown0c = unknown0c;
         objective->state = kObjectiveIncomplete;
@@ -1028,26 +1022,26 @@ void SMissionManager::SetIncompleteObjective(int id) {
 }
 
 // FUNC_AT(0x000b9320)
-void SMissionManager::AddObjective(int id, int unknown04, int score, int unknown0c) {
+void SMissionManager::AddObjective(int id, int hint, int score, int unknown0c) {
     if (objectives.size >= kMaxObjectives)
         return;
-    objectives.PushBack(NewObjective(id, unknown04, score, unknown0c));
+    objectives.PushBack(NewObjective(id, hint, score, unknown0c));
     if (objectives.size == 1)
         static_cast<MissionObjective *>(objectives.Begin()->value)->state = kObjectiveCurrent;
 }
 
 // FUNC_AT(0x000b93c0)
-void SMissionManager::InsertObjective(int beforeId, int id, int unknown04, int score, int unknown0c) {
+void SMissionManager::InsertObjective(int beforeId, int id, int hint, int score, int unknown0c) {
     if (objectives.size >= kMaxObjectives)
         return;
     PointerListNode *before = objectives.Begin();
     while (before != objectives.head && static_cast<MissionObjective *>(before->value)->id != beforeId)
         before = before->next;
     if (before == objectives.head) {
-        AddObjective(id, unknown04, score, unknown0c);
+        AddObjective(id, hint, score, unknown0c);
         return;
     }
-    void *objective = NewObjective(id, unknown04, score, unknown0c);
+    void *objective = NewObjective(id, hint, score, unknown0c);
     PointerListNode *node = objectives.BuyNode(before, before->prev, &objective);
     objectives.IncreaseSize(1);
     before->prev = node;

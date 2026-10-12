@@ -14,6 +14,7 @@
 #include "AIVehicleController.h"
 #include "Explosion.h"                  // ExplosionType
 #include "Helicopter.h"                 // PHelicopter
+#include "Hud.h"
 #include "MissionManager.h"
 #include "Simulation.h"
 #include "Vehicle.h"                    // PVehicle, CarPhysics
@@ -28,7 +29,6 @@
 #include "../data/AttributeSet.h"
 #include "../engine/ActionQueue.hpp"
 #include "../engine/CoreFoundation.h"   // NullFunction
-#include "../engine/GameInterfaces.hpp" // GHud
 #include "../engine/GameLoop.h"         // LaunchPage
 #include "../engine/StaticInit.h"       // WeaponDefinitions
 #include "../engine/UMemory.hpp"

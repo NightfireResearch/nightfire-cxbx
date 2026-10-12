@@ -9,6 +9,7 @@
 #include "AICharacter.h"
 #include "AIElements.h"
 #include "Explosion.h"                  // ExplosionType
+#include "Gfx.h"
 #include "Human.h"
 #include "Simulation.h"
 #include "Vehicle.h"                    // PVehicle, CarPhysics
@@ -46,8 +47,6 @@
 
 // ---- the game's, not ported yet
 
-#define GFX_LookupReference ((void *(*)(const char *name))0x000d35f0)
-#define GFX_TriggerIncidental ((void (*)(void *reference, const Coord3 *position, const Coord4 *orientation, const Coord3 *unknown4, const Coord4 *unknown5, int unknown6, int unknown7, int unknown8))0x000d3520)
 // AOneShotSound's constructor without a velocity: a patch of a bank at a place, looped or not
 #define CRT_printf ((int (*)(const char *format, ...))0x00132192)
 
@@ -837,7 +836,7 @@ void Shell::ApplyWorldEffects(const Coord3 *position, const Coord4 *normal, int,
         (object != fgSimulation.GetPlayerObject() || !PlayerCarSubPhysics()))
         fgParticleSystems->CreateParticles(ShellSparks, position, Xyz(normal), kSparksCount);
     if (effect != NULL)
-        GFX_TriggerIncidental(GFX_LookupReference(effect), position, &orientation, &kZero3, &kOrigin4, 0, 0, 0);
+        GFX::TriggerIncidental(GFX::LookupReference(effect), position, &orientation, &kZero3, &kOrigin4, NULL, 0, NULL);
     AIZoneController::Get()->RegisterZone(kAIZoneImpact, position);
 
     ABank *bank = fgBanks[kWeaponBankSlot];

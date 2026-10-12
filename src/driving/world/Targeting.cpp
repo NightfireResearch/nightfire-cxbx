@@ -4,7 +4,7 @@
 #include "../../common/xbeOverload.h"
 #include "../../helpers.h"
 #include "../engine/CoreFoundation.h"      // ThrowLengthError
-#include "../engine/GameInterfaces.hpp"    // GHud
+#include "../game/Hud.h"
 #include "../game/MissionManager.h"
 #include "../engine/UMemory.hpp"
 #include "../game/WeaponSound.h"       // ATargeting

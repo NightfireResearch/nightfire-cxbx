@@ -15,11 +15,6 @@
 // ASceneObj, AGun, ATurret, ASentry, ASmackable, ATargeting and AWorldSound's Play: see WeaponSound.h.
 // ---------------------------------------------------------------------------------------------------------------
 
-// AOneShotSound's constructors: a patch of a bank at a place (with a velocity; or without one, looped or not)
-// AVoice's destructor where it is not inlined (Ghidra: FUN_0003f400)
-// Whether the voice is done with (Ghidra: FUN_000d36c0)
-#define AVoice_IsFinished ((bool (__fastcall *)(AVoice *, int))0x000d36c0)
-
 // The audio frame's clock (name ours)
 #define AudioClock FLOAT_AT(0x00243a6c)
 
@@ -82,7 +77,7 @@ void PlayMotor(AVoice *&voice, AMix *mix, double scale, ASoundPlayParams *params
         return;
     voice->Play(params->listener->view, float(mix->GetVolume() * scale * params->volume), params->pitch,
                 params->azimuth, 0.0f, 0.0f);
-    if (AVoice_IsFinished(voice, 0)) {
+    if (voice->IsFinished()) {
         DeleteVoice(voice);
         voice = NULL;
     }
@@ -418,7 +413,7 @@ void ASmackable::Play(ASoundPlayParams *params) {
     if (collisionVoice != NULL) {
         collisionVoice->Play(params->listener->view, float(mix->GetVolume() * volume * params->volume),
                              params->pitch, params->azimuth, 0.0f, 0.0f);
-        if (AVoice_IsFinished(collisionVoice, 0)) {
+        if (collisionVoice->IsFinished()) {
             collisionVoice->Destruct();
             UMemory::FastFree(collisionVoice, sizeof(AVoice));
             collisionVoice = NULL;
@@ -430,7 +425,7 @@ void ASmackable::Play(ASoundPlayParams *params) {
 
 // FUNC_AT(0x0012dc50)
 void ASmackable::Detatch() {
-    if (collisionVoice != NULL && !AVoice_IsFinished(collisionVoice, 0))
+    if (collisionVoice != NULL && !collisionVoice->IsFinished())
         detached = true;
     else
         CallDelete(1);
@@ -531,7 +526,7 @@ void AWorldSound::Play(ASoundPlayParams *params) {
             voice.Rewind();
         }
     }
-    if (AVoice_IsFinished(&voice, 0))
+    if (voice.IsFinished())
         waiting = 1;
 
     float level = waiting ? 0.0f : float(mix->GetVolume() * volume * params->volume);

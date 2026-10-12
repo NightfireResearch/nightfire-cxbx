@@ -8,8 +8,8 @@ list also works as a checklist for comparing with the GameCube and PS2 builds: e
 the other build's function.
 
 Each integration adds its round's entries; the latest are the missions (`game.missions`,
-docs/driving/game-missions.md), the mission events (`game.events`, docs/driving/game-events.md) and the AI
-(`game.ai`, docs/driving/game-ai.md).
+docs/driving/game-missions.md), the mission events (`game.events`, docs/driving/game-events.md), the AI
+(`game.ai`, docs/driving/game-ai.md) and the HUD and front end (`game.frontend`, docs/driving/game-frontend.md).
 
 Differences of one ulp in floating point are accepted and not listed one by one. For example, an FSIN/FCOS result
 that is rounded through a double-returning helper is one ulp off (docs/driving/maths.md 3.2, section 8).
@@ -86,6 +86,9 @@ Almost all of these are uninitialised stack in the original. "Zero" means the po
 | AICharacterEnemyGround::AvoidThreat, DoRunning, HandleInterrupts | 0x0001da80, 0x0001f180, 0x0001f3c0 | local vectors' w are never written | zero | nothing reads them | game-ai |
 | AIElementController::WakeUp, Update; AIElementTracking::UpdatePosition; AIZoneController::InZone; AICharacterHands::UpdateRotPos | 0x00028bb0, 0x00029880, 0x00027f00, 0x00036b20, 0x000232b0 | local vectors' w (the player's position, the seat, the hands' offsets) are never written | zero | nothing reads them | game-ai |
 | AICharacter, AICharacterPedestrian; AIHelicopter, AIVehicleController, AIRoadSpawn | 0x0001c190-0x00027c80; 0x00031850-0x00036a00 | local vectors' w are never written | zero | nothing reads them | game-ai |
+| GGallery::Get_InterpolatedKey | 0x000d5910 | copies 0x34 bytes of a stack key whose header bytes 0x22-0x33 it never writes | zero | nothing found reads them (QUAD_SetState reads the position and orientation); GameFrontEndShadowC logs the first 0x22 bytes | game-frontend |
+| GFXGallery::GLARE_Draw | 0x000d4160 | the Glare record's fields it does not set are uninitialised | zero | AddGlare's copy of them | game-frontend |
+| GFXGallery::DEBRIS_Draw | 0x000d4b90 | the velocity spread's w is uninitialised | zero | nothing: RDebrisType::Add overwrites it | game-frontend |
 
 ### 1.2 Allocator bytes
 
@@ -143,6 +146,14 @@ An STL map's empty allocator byte is copied from an uninitialised local. Nothing
 | AIVehicleController, AIRoadSpawn, AIHelicopter; WRoadNav::SegmentSpeed | 0x00031850-0x00036a00; 0x00029cd0 | WRoadNetwork::Get called again for nothing | the pure calls left out | game-ai |
 | AIElementController::Construct | 0x00028190 | placement new's NULL check | left out | game-ai |
 | AIElementController::WakeUp | 0x00028bb0 | the binary's measured facts have ESI read on entry (through the seat jump table) | a plain method tagged AUTOLTCG (placed by Ghidra's name, without the register check); ESI is set before the riders' loop and the one caller passes `this` in ECX and ESI | game-ai |
+| GFXGallery::CANVAS_HasStopped | 0x000d3d90 | reads each particle system's type flags and drops them | the dead read left out (it matters only for a NULL type, where the original faults) | game-frontend |
+| GFXGallery::FRAME_Draw | 0x000d55f0 | keeps a running maximum that nothing reads | left out | game-frontend |
+| GGirl::DoGirl | 0x000d7a50 | ends with WBINVD (a CPU cache flush for the GPU's sake) | left out | game-frontend |
+| GLoadingScreen::InitLoadScreen | 0x000e2390 | builds "HINT_ID%d" in an 8-byte buffer, which overflows from HINT_ID10 | a 24-byte buffer | game-frontend |
+| GLoadingScreen::Status, LoadAndDrawUnLoadingScreen | 0x000e2ff0, 0x000e2110 | unbounded vsprintf/sprintf into stack buffers | bounded vsnprintf/snprintf | game-frontend |
+| GSubtitleSplitter::Reset | 0x000e33e0 | tests `this` for NULL before the loop only | no test (both fault on NULL) | game-frontend |
+| GHud::DrawMissionResult | 0x000df2e0 | inlines QUAD_SetState, and copies Get_InterpolatedKey's answer once more | calls QUAD_SetState (the same writes); uses the answer directly | game-frontend |
+| GFX::Trigger (the core) | 0x000d32f0 | takes the effect in ESI and the offset in EDI | not patched (no tag can name it); its three callers (0x000d34e0, 0x000d3520, 0x000d3610) are ours and call our core, so the original is dead | game-frontend |
 
 ---------------------------------------------------------------------------------------------------------------
 
@@ -206,6 +217,7 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | AIVehicle::Destruct | 0x00035b40 | does not clear driveToNav | game-ai |
 | AICharacterEnemySnow | 0x0001fd40 | aimPitchDir is never written | game-ai |
 | AICharacterEnemyGround::ThreatenedByVehicle | 0x0001e440 | unknown16c is written and never read | game-ai |
+| GGirl::UpdateTexture | 0x000d6f60 | GirlUnmirrored (0x0023f3e4) is never written, so the figure is always drawn mirrored | game-frontend |
 
 ### 3.2 Reads and writes past an array, or before it
 
@@ -247,6 +259,7 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | AIElementController::RedirectCarpElement, GetCarpElementTracking | 0x000286d0, 0x00028700 | the index comes from the global controller's records, not `this`'s (an arithmetic shift of the byte difference, made positive) | game-ai |
 | AIElementController::WakeUp | 0x00028bb0 | an empty member slot ends the riders' loop; a seat with no rider leaves the slot as it was | game-ai |
 | AIZoneController::InZone | 0x00036b20 | uses the zone type's radius, indexed by the type's low 16 bits | game-ai |
+| GHud::DrawHealth | 0x000d81d0 | with the shield over its maximum, armPuppets[armLit] reads past the array into healthBorderPuppet (GHud +0x068) | game-frontend |
 
 ### 3.3 Writes through a possibly NULL pointer
 
@@ -282,6 +295,8 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | AICharacterEnemyGround::Construct | 0x0001dc80 | registers its target even when the allocation failed | game-ai |
 | AICharacterHands::Init | 0x00022930 | no NULL check before SetOwnerObject; SetAICharacter(NULL) on allocation failure | game-ai |
 | AICharacterEnemyGround::HandleInterrupts | 0x0001f3c0 | InRegion before the NULL check | game-ai |
+| GHud::DrawPauseMenu | 0x000dd340 | a hint whose text has no button marker leaves its button NULL and dereferences it | game-frontend |
+| GFXGallery::CANVAS_Add | 0x000d47a0 | tests the canvas's address (never NULL) for NULL | game-frontend |
 
 ### 3.4 Leaks and wrong frees
 
@@ -311,6 +326,15 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | AICharacterHands::Shutdown | 0x000227c0 | forgets the hands and their Human, does not delete them | game-ai |
 | AIElementController::GoToSleep | 0x000287d0 | only the Humans are deleted | game-ai |
 | AICharacterEnemyGround::Destruct, AICharacterEnemySunroof::Destruct | 0x0001dea0, 0x00020ec0 | ownerType = 0 before RemoveReference | game-ai |
+| GHud::Destruct | 0x000dc420 | leaves fHudActionQueue and fHudView pointing at the freed objects | game-frontend |
+| GHud::DrawPauseMenu | 0x000dd340 | leaks the objectives page's line-count array when the objective has gone | game-frontend |
+| GGirl::KillGirl | 0x000d6f20 | leaves GirlMaterials pointing at the freed materials | game-frontend |
+| GLoadingScreen::Shutdown | 0x000e2a70 | clears the screen only when it is not kept, and frees the picture and font only when it is; LoadingFont and LoadingFontFile are left dangling | game-frontend |
+| GGallery::Destruct, GGallery::FONT_Load | 0x000d6e30, 0x000d5a80 | freed pointers are not cleared | game-frontend |
+| GFXGallery::Destruct | 0x000d5170 | frees a gallery loaded with FileLoad through UMemory::Free | game-frontend |
+| GFX::Shutdown | 0x000d35d0 | leaves TheEffectsGallery pointing at the freed gallery | game-frontend |
+| GSubtitleSplitter::Reset, GSubtitles::ClearSubtitles, Destruct, LoadSubtitles | 0x000e33e0, 0x000e3630, 0x000e3730, 0x000e3840 | scalar delete of blocks from operator new[] | game-frontend |
+| GSubtitles::Destruct | 0x000e3730 | does not clear font and fontFile; frees through MEM_free's second copy (0x00117110) | game-frontend |
 
 ### 3.5 Dead stores, dead code, arguments ignored
 
@@ -386,6 +410,16 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | AICharacterBond::GetRotPos, GetRideRotPos | 0x0001cc30, 0x0001ccc0 | GetRigidBody called 4 and 5 times; the argument is not read | game-ai |
 | AICharacterPassenger::Init | 0x00023700 | the passenger's description is loaded even for the helicopter | game-ai |
 | AICharacterEnemySnow::PlayZoneInjuryAnim | 0x00020870 | the death path makes no sound | game-ai |
+| GHud::TriggerTimerOff | 0x000d8810 | ignores its argument | game-frontend |
+| GHud::SetMissionPassed | 0x000dee80 | ignores its argument | game-frontend |
+| GHud::DrawFadingCrossHairs | 0x000d8ea0 | calls GetSelectedTarget and drops the answer | game-frontend |
+| GHud::dbDrawTarget | 0x000da8e0 | the spread is multiplied by 0.0; the third argument is not read | game-frontend |
+| GHud::DrawPauseMenu | 0x000dd340 | the title's y is y - 4 + 4 | game-frontend |
+| GGallery::GET_Puppet; GFXGallery::CULL_SetCanvas, PARTICLE_Add, DEBRIS_Draw | 0x000d5810; 0x000d3b30, 0x000d43a0, 0x000d4b90 | arguments not read | game-frontend |
+| GGirl::UpdateTexture | 0x000d6f60 | writes palette speeds that nothing reads | game-frontend |
+| GOrthoHudView::DoRender | 0x000e1ce0 | calls GetFoundationVideoMode and drops the answer; keeps the view port in HudViewPort (0x0023f410), which nothing reads | game-frontend |
+| GLocale::GetSubDirectory | 0x000e3140 | calls GetFoundationVideoMode up to three times | game-frontend |
+| GSystem::LOCALE_Symbol | 0x000e3af0 | the show-symbols path is dead (nothing sets LocaleShowSymbols) | game-frontend |
 
 ### 3.6 Values that never change
 
@@ -410,6 +444,8 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | AIZoneController::RegisterZone | 0x00036bb0 | types 0 and 1 (mergeSteps 0 or less) never register; only the first activeCount zones are checked | game-ai |
 | AIElementController::GetProperty ("EMPTY", "BLOWOUT") | 0x00027ce0 | EMPTY is true for a vehicle with no members; NaN hit points count as alive for BLOWOUT | game-ai |
 | AIElementController::GoToSleep | 0x000287d0 | a helicopter always counts as intact | game-ai |
+| GHud::DrawCrossHairs | 0x000e0440 | the sniper scope's tick spacing is multiplied by 0, so every tick is drawn at one place | game-frontend |
+| GGirl::UpdateTexture | 0x000d6f60 | the second palette offset never moves | game-frontend |
 
 ### 3.7 Odd branches and data bugs
 
@@ -555,6 +591,34 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | AICharacterBond::Init | 0x0001cd80 | keeps the characters only through the actor database | game-ai |
 | AICharacterBond::HandleInterrupts | 0x0001d2a0 | select is ignored while arming; only arming clears BondSelectPressed | game-ai |
 | EAIElementSetNonScoreable::Process, EKillAIElement::Process | 0x0003e0a0, 0x00040930 | test an element's helicopter flag the wrong way round: a helicopter is called as a car (vtable slot 44) and a car written as a helicopter (+0x138) | game-events, game-ai |
+| GHud::TriggerMissionMsg | 0x000da030 | sets lastStep (+0x360), which shortens the next frame's time in Render | game-frontend |
+| GHud::PauseMenuMsgHandler | 0x000dcc10 | the objectives page wraps asymmetrically; the failed page's Accept makes two CHAIN_RESTART lookups and drops them | game-frontend |
+| GHud::GetButton | 0x000da1d0 | the text before the marker is copied unterminated | game-frontend |
+| GHud::DrawStylin | 0x000da540 | fades by whole steps | game-frontend |
+| GHud::DrawWeapon | 0x000dc990 | draws the ammunition with no font state set | game-frontend |
+| GHud::DrawScreenFades | 0x000d8970 | sets the fade to 0, not 1, when it passes 1 | game-frontend |
+| GHud::TriggerDamageFlash | 0x000d87a0 | an unsigned compare | game-frontend |
+| GHud::DrawButtonMessage | 0x000def90 | with no marker draws the puppet's own text; the fade resets to 0.5, so it pulses | game-frontend |
+| GHud::DrawPauseMenu | 0x000dd340 | SPRITE_SetState before a font draw; the score page divides unsigned; the objectives and select hints share the select picture | game-frontend |
+| GHud::DrawMissionResult | 0x000df2e0 | state 2 draws at the interpolated key with key 0's quad; state 5 checks !paused again | game-frontend |
+| GHud::DrawCrossHairs | 0x000e0440 | the jungle gun's path ignores GetSelectedTarget; the recharge goes through the sound's vtable slot 9 (only AFingoDeath has it; it is reached only with the FOD weapons) | game-frontend |
+| GHud::Render | 0x000e0140 | actions 33-35 are not passed to the pause menu while paused | game-frontend |
+| GHud::UpdateTargets | 0x000e1a90 | copies the article's DESCRIPTION float as it is | game-frontend |
+| GGallery::FONT_Draw (three), GLoadingScreen::LoadAndDrawUnLoadingScreen, Update, GSubtitles::DrawFont | 0x000d6200, 0x000d63a0, 0x000d6520, 0x000e2110, 0x000e28a0, 0x000e3670 | the text is passed to FONT_drawtextfa as its format string | game-frontend |
+| GLoadingScreen::Status | 0x000e2ff0 | the line is passed to Print as a format; the clock's third field is (tick % 60) / 6 | game-frontend |
+| GGirl::UpdateTexture | 0x000d6f60 | scales real clock ticks (TIMER_gettick) by the simulation's step | game-frontend |
+| GFXGallery::PARTICLE_Draw | 0x000d4f90 | copying the particle type takes the last library index into byte 1 of unknown2C when byte 2 is above 0 | game-frontend |
+| GFXGallery::CANVAS_Draw | 0x000d51e0 | glare parts clear "stopped" even when culled; sound parts set it | game-frontend |
+| GFX::Trigger | 0x000d32f0 | with the effect's Flgs bit 0x01 the effect is added but the answer is 0; the incidental flag (flag8000) is incidental && bit 0x01 | game-frontend |
+| CANVAS_GetPosQuat | 0x000d3730 | its asserts test 16-byte alignment ("GFXGallery.cpp" lines 44-46) | game-frontend |
+| AVoice::IsFinished | 0x000d36c0 | tests the shared view's finished flag first | game-frontend |
+| GOrthoHudView::PostRender | 0x000daac0 | sends EExit and ERestart every frame while the HUD's flags are set | game-frontend |
+| GOrthoHudView::DoRender | 0x000e1ce0 | in wide PAL (video mode 2) y is neither scaled by 0.75 nor offset; the margin is 0x3d4cccd0, not 0.05f | game-frontend |
+| GLocale::GetSubDirectory | 0x000e3140 | NULL for video modes other than 1-3 | game-frontend |
+| GSubtitleSplitter::WordWrap | 0x000e31a0 | divides by the signed total length; past ten lines the rest is dropped (the last cut at the width); the times always go to this->times | game-frontend |
+| GSubtitleSplitter::GetString | 0x000e3430 | stops at line 9 but times it again; past the end answers NULL | game-frontend |
+| GSubtitles::SetupFMVSubtitles | 0x000e3560 | restarts the subtitle on every call, so one lasts until the next cue; 1/25 s a frame in PAL 50, 1/30 otherwise | game-frontend |
+| GSubtitles::LoadSubtitles | 0x000e3840 | assumes CR LF; the cursor counts from the file's start; the frame is read from the seventh character of the first '=' field; frames x5/6 in PAL 50 | game-frontend |
 
 ### 3.8 x87 and float/double mixes kept
 

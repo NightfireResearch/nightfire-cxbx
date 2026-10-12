@@ -80,7 +80,8 @@ calls of GameLoop, World, BondCarSimulate, Helicopter, MissionManager, MissionRu
 Shell and WorldCamera); the AI elements are data/Carp.h's `CARP::AIElement` (type 0 a character element, 1 a
 vehicle element). The front end is in one header, engine/GameInterfaces.hpp: GHud (with the HUD calls of the
 cameras, BondCarSimulate, DebugAudio, the mission manager and scores, the weapon manager, RenderHigh and Targeting),
-GFX, GLoadingScreen, GLocale and GSubtitles (with GameLoop's and World's). Package B's static MakeEvent members
+GFX, GLoadingScreen, GLocale and GSubtitles (with GameLoop's and World's); the front end's port folded them into its
+classes (docs/driving/game-frontend.md). Package B's static MakeEvent members
 and per-class vtable words follow the others' shape now.
 
 Schedule::AddTask (0x0005c490) returns the task number, as the original leaves it in EAX: EPathSFX stores it and

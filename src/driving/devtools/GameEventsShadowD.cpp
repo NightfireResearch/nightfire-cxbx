@@ -1191,7 +1191,7 @@ void BuildWorld() {
         effect->type = uint8_t(ArticleEffect::kTypeGfx);
         effect->instance = uint8_t(Random(3));
         effect->id = uint8_t(Random(8));
-        effect->gfx.reference = Chance(3) ? NULL : W->opaque[Random(3)];
+        effect->gfx.reference = Chance(3) ? NULL : reinterpret_cast<UGroup *>(W->opaque[Random(3)]);
         RandomVector(&effect->gfx.rotation, 1.0f);
     }
     for (int i = 0; i < kRefs; i++) {

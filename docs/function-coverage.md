@@ -202,12 +202,12 @@ where to change it.
 
 | Subsystem | Functions | Replaced | Dead | Live | Done | KB | Done (bytes) |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| **game** | 2852 | 1736 | 718 | 398 | **86%** | 474 | 85% |
+| **game** | 2852 | 1943 | 750 | 159 | **94%** | 474 | 99% |
 | game.ai | 522 | 356 | 113 | 53 | 90% | 109 | 100% |
 | game.audio | 366 | 150 | 205 | 11 | 97% | 51 | 100% |
 | game.effects | 195 | 129 | 56 | 10 | 95% | 36 | 100% |
 | game.events | 793 | 667 | 96 | 30 | 96% | 72 | 99% |
-| game.frontend | 332 | 1 | 39 | 292 | 12% | 69 | 2% |
+| game.frontend | 332 | 208 | 71 | 53 | 84% | 69 | 98% |
 | game.missions | 273 | 199 | 73 | 1 | 100% | 33 | 100% |
 | game.vehicles | 193 | 134 | 59 | 0 | 100% | 62 | 100% |
 | game.weapons | 178 | 100 | 77 | 1 | 99% | 43 | 100% |
@@ -230,16 +230,16 @@ where to change it.
 | platform.movie | 72 | 0 | 72 | 0 | 100% | 15 | 100% |
 | platform.sound | 299 | 299 | 0 | 0 | 100% | 64 | 100% |
 | platform.system | 88 | 60 | 28 | 0 | 100% | 9 | 100% |
-| **sys** | 1440 | 273 | 830 | 337 | **77%** | 244 | 86% |
-| sys.crt | 420 | 4 | 79 | 337 | 20% | 44 | 20% |
+| **sys** | 1440 | 273 | 835 | 332 | **77%** | 244 | 86% |
+| sys.crt | 420 | 4 | 84 | 332 | 21% | 44 | 22% |
 | sys.d3d | 427 | 151 | 276 | 0 | 100% | 120 | 100% |
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6842 | 4214 | 2121 | 507 | **93%** | 1000 | 93% |
-| **platform + system** | 2893 | 1527 | 1029 | 337 | **88%** | 506 | 93% |
+| **game + engine** | 6842 | 4421 | 2153 | 268 | **96%** | 1000 | 100% |
+| **platform + system** | 2893 | 1527 | 1034 | 332 | **89%** | 506 | 93% |
 | **  without the C runtime** | 2473 | 1523 | 950 | 0 | **100%** | 462 | 100% |
-| **everything** | 9735 | 5741 | 3150 | 844 | **91%** | 1506 | 93% |
+| **everything** | 9735 | 5948 | 3187 | 600 | **94%** | 1506 | 97% |
 
 - **The engine's core and data layers are done (4 October 2026): `engine.core` and `engine.data`, 100% by bytes**
   (docs/driving/core-data.md): memory (UMemory, new/delete), reference counters, data groups, singletons, the
@@ -336,8 +336,24 @@ where to change it.
   classes and every caller goes to them directly. Six shadow tests compare them with the originals on copies of the
   live AI and synthetic vehicles, characters and elements (to be run in game). Game and engine together are now 93%
   done by functions and by bytes.
+- **The HUD and front end are done (12 October 2026, docs/driving/game-frontend.md), and with them every game and
+  engine function:** GHud (construction, state, the gauges and screen effects, the messages, the pause menu and
+  cheats, the mission result, the crosshairs, the frame), the HUD and effects galleries (GGallery, GFXGallery and
+  GFX), the loading and unloading screens, the pause menu's figure (GGirl), the subtitles, the HUD's orthographic
+  view, the locale and the system helpers - 209 entries (with GSubtitles::DrawFrame, which Ghidra counts as
+  DrawSubtitles' tail, and the "GIOT" namespace's lookup, 0x000d3670, which it has no function for); `game.frontend`
+  98% by bytes. The events' front-end views are folded into the real classes and every caller goes to them directly.
+  Four shadow tests compare them with the originals on copies of the live HUD and galleries and synthetic state (to
+  be run in game). **Game and engine together are now 96% done by functions and 100% by bytes: the 268 functions
+  still counted live are 265 exception funclets (0x00150000-0x0015ffff), which our C++ has no use for, and three
+  pieces Ghidra cut off the middle of functions we replaced and ported whole - TriggerAIPathAnimationCamera's
+  0x000898ee, CameraLockOn's 0x00081619 and GSubtitles::LoadSubtitles' 0x000e384a
+  (docs/driving-injection-framework.md).**
+  The C runtime is the only original code left that runs: 332 functions live (21% done by functions, 22% by bytes),
+  all kept live by our own code, which calls the game's copies by address where the result must stay the game's
+  (the heap, `atexit`, `atol`'s wrap, `sprintf`'s float formatting, `rand`...) and through them what they call.
 - **Every system library but the C runtime is done: D3D (with D3DX and XGRPH), DSOUND, XPP and XAPI at 100%.**
-  The C runtime (347 live, 17%) is left to go by itself, as in the action engine: game code calls it everywhere, and
+  The C runtime (332 live, 21%) is left to go by itself, as in the action engine: game code calls it everywhere, and
   it goes as that code becomes ours. How the rest got there (2 October 2026):
   - *D3D*: the seam's table gained 25 entry points EAGL calls directly (render-state setters, `SetIndices`,
     `SetGammaRamp`, `CreateIndexBuffer2`...), named in Ghidra after the table was last generated, and a hand-kept

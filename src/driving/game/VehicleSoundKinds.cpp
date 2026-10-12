@@ -39,14 +39,6 @@ int32_t TrafficCountA;
 // XBE_GLOBAL(0x00243b60, 4)
 int32_t TrafficCountB;
 
-// ---- calls to originals not ported
-
-// AOneShotSound's constructors: a bank's patch at a place (and velocity), at `volume`; the second leaves the views
-// looping when `loop` is set
-// Whether the voice is done with (Ghidra: FUN_000d36c0; the name is ours, as audio/Sound.cpp's)
-#define AVoice_IsFinished ((bool (__fastcall *)(AVoice *, int))0x000d36c0)
-// Every view's loop flag cleared: the voice plays once (Ghidra: FUN_0003e6b0; the name is ours)
-
 namespace {
 
 const uint32_t kAPlayerVehicleVtable = 0x001a2abc;
@@ -570,7 +562,7 @@ void ASnowMobile::PlayMotor(ASoundPlayParams *params) {
         else if (airborneWheels != 0)
             jumped = false;
         airborneWheels = static_cast<int16_t>(GetAirborneWheels());
-        if (jumped && (revVoice == NULL || AVoice_IsFinished(revVoice, 0)) && throttle > 0.0f) {
+        if (jumped && (revVoice == NULL || revVoice->IsFinished()) && throttle > 0.0f) {
             const char *patch = NULL;
             if (suspensionCompression[0] == 0.0f && suspensionCompression[1] == 0.0f)
                 patch = "SFX_rev2";
@@ -586,7 +578,7 @@ void ASnowMobile::PlayMotor(ASoundPlayParams *params) {
         }
     }
 
-    if (revVoice != NULL && !AVoice_IsFinished(revVoice, 0)) {
+    if (revVoice != NULL && !revVoice->IsFinished()) {
         revVoice->Play(view, float(GetMixedVolume() * params->volume), motorPitch * params->pitch, params->azimuth,
                        0.0f, 0.0f);
         idleVoice->Play(view, float((1.0 - cruiseLevel) * GetMixedVolume() * params->volume * 0.0f), params->pitch,
@@ -598,7 +590,7 @@ void ASnowMobile::PlayMotor(ASoundPlayParams *params) {
                         params->azimuth, 0.0f, 0.0f);
         cruiseVoice->Play(view, float(GetMixedVolume() * cruiseLevel * cruiseGain * params->volume),
                           motorPitch * params->pitch, params->azimuth, 0.0f, 0.0f);
-        if (revVoice != NULL && AVoice_IsFinished(revVoice, 0)) {
+        if (revVoice != NULL && revVoice->IsFinished()) {
             DeleteVoice(revVoice);
             revVoice = NULL;
             revving = false;

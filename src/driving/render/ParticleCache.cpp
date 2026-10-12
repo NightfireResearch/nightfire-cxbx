@@ -10,6 +10,7 @@
 #include "../camera/Camera.h"           // RViewCamera, RCamera
 #include "../eagl/RenderContext.h"
 #include "../eagl/View.h"
+#include "../game/EffectsGallery.h"
 #include "../physics/RigidBody.h"
 #include "../game/Simulation.h"
 #include "../platform/RealMath.h"
@@ -29,14 +30,9 @@
 // streaks, three vertices a particle (the "sprk" texture of context 0), each with its own volatile material.
 // ---------------------------------------------------------------------------------------------------------------
 
-// ---- originals called by address
-
-#define GFXGallery_GET_StickyEffectPos ((bool (__fastcall *)(void *, int, int index, Coord4 *position))0x000d3ce0)
-
 // ---- globals
 
 #define GameTick U32_AT(0x001f2a4c)
-#define Gallery (*(void **)0x0023f320)              // the GFXGallery
 // XBE_GLOBAL(0x00230600, 4)
 float ParticleDrag;                  // UpdateBlock's copy of the particle's drag (name ours)
 // XBE_GLOBAL(0x001c8ed4, 4)
@@ -427,7 +423,7 @@ void RParticleParticleCache::RenderParticle(int block, int *normalCount, int *ad
     Coord4 centre = { particle->position.x, particle->position.y, particle->position.z, 1.0f };
     if (particle->body != kNoBody) {
         Coord4 offset;
-        if (GFXGallery_GET_StickyEffectPos(Gallery, 0, particle->body, &offset))
+        if (TheEffectsGallery->GET_StickyEffectPos(particle->body, &offset))
             VU0_v4add4(&centre, &offset, &centre);
         else
             particle->body = kNoBody;

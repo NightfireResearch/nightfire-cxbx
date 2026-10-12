@@ -511,6 +511,20 @@ add_library(drivinginject SHARED
   src/driving/game/AIRoadSpawn.cpp
   src/driving/game/AIGroundVehicle.cpp
   src/driving/game/AIGroundVehicleDriving.cpp
+  src/driving/game/Hud.cpp
+  src/driving/game/HudDraw.cpp
+  src/driving/game/HudText.cpp
+  src/driving/game/HudFrame.cpp
+  src/driving/game/HudMenus.cpp
+  src/driving/game/HudCrossHairs.cpp
+  src/driving/game/Gallery.cpp
+  src/driving/game/EffectsGallery.cpp
+  src/driving/game/LoadingScreen.cpp
+  src/driving/game/Girl.cpp
+  src/driving/game/FrontEndSystem.cpp
+  src/driving/game/Subtitles.cpp
+  src/driving/game/Gfx.cpp
+  src/driving/game/OrthoHudView.cpp
   src/driving/engine/OBB.cpp
   src/driving/engine/PhysicsUtil.cpp
   src/driving/devtools/ColQueryShadow.cpp
@@ -556,6 +570,10 @@ add_library(drivinginject SHARED
   src/driving/devtools/GameAIShadowD.cpp
   src/driving/devtools/GameAIShadowE.cpp
   src/driving/devtools/GameAIShadowF.cpp
+  src/driving/devtools/GameFrontEndShadowA.cpp
+  src/driving/devtools/GameFrontEndShadowB.cpp
+  src/driving/devtools/GameFrontEndShadowC.cpp
+  src/driving/devtools/GameFrontEndShadowD.cpp
   src/driving/devtools/VehicleShadow.cpp
   src/driving/devtools/RigidCollideShadow.cpp
   src/driving/devtools/RenderShadow.cpp

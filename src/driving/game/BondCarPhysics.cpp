@@ -12,6 +12,7 @@
 #include "BondCarBasics.h"                  // GetCarColourVariation
 #include "BondCarState.h"                   // CarSurface, the BondCar_* tuning
 #include "EventsA.h"                        // ECollision
+#include "Hud.h"
 #include "MissionManager.h"       // glbMissionManager
 #include "Simulation.h"
 #include "TyreTrack.h"
@@ -28,7 +29,6 @@
 #include "../camera/Camera.h"               // AsCoord3
 #include "../camera/PlayerCamera.h"         // RPlayerCamera
 #include "../engine/ActionQueue.hpp"
-#include "../engine/GameInterfaces.hpp"     // GHud
 #include "../engine/PhysicsUtil.h"          // Util_Step, Util_GenerateMatrix, Util_GenerateCarTensor
 #include "../engine/UMemory.hpp"
 #include "../physics/PhysicsMath.h"         // Abs, Min, Max

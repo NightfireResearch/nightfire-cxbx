@@ -12,6 +12,7 @@
 #include "../game/AIElements.h"
 #include "../game/AIVehicleController.h"
 #include "../game/BondCar.h"
+#include "../game/Hud.h"
 #include "../game/MissionManager.h"
 #include "../game/Simulation.h"
 #include "../game/Vehicle.h"            // fgDamageImpulseScale
@@ -432,8 +433,8 @@ void InstallFakes() {
     HookBoth(0x000b6770, XbeAddress(&SMissionManager::IncKills), (const void *)&FakeIncKills);
     HookBoth(0x000b6720, XbeAddress(&SMissionManager::IncShotsHit), (const void *)&FakeIncShotsHit);
     HookBoth(0x000b66c0, XbeAddress(&SMissionManager::IncPlayerDamage), (const void *)&FakeIncPlayerDamage);
-    HookInstall(0x000d7c10, (const void *)&FakeTheApp);
-    HookInstall(0x000d87a0, (const void *)&FakeDamageFlash);
+    HookBoth(0x000d7c10, XbeAddress(&GHud::TheApp), (const void *)&FakeTheApp);
+    HookBoth(0x000d87a0, XbeAddress(&GHud::TriggerDamageFlash), (const void *)&FakeDamageFlash);
     HookBoth(0x0011c910, XbeAddress(&ABaseSound::OperatorNew), (const void *)&FakeOperatorNew);
     HookBoth(0x000476f0, XbeAddress(&AOneShotSound::Construct), (const void *)&FakeOneShot);
     HookBoth(0x00077d70, XbeAddress(XbeOverload<StimuliId>::Of(&Handle::ProcessStimuli)), (const void *)&FakeStimuliId);

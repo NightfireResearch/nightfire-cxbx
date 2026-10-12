@@ -19,6 +19,7 @@
 #include "../data/RCARPFile.h"         // CharNamespace
 #include "../data/SymbolTable.h"
 #include "../eagl/GeoPrimState.h"
+#include "../game/Gallery.h"            // LineMaterial
 #include "../game/Smackable.h"          // DummyPhysicsData
 #include "../game/VehicleSound.h"       // EngineRefTree
 #include "../game/WeaponCameras.h"      // MissileCamState
@@ -130,7 +131,7 @@ void DestroyStatic_00201790(void) {
 }
 // FUNC_AT(0x0015d0d0)
 void DestroyStatic_0023f330(void) {
-    ((EAGL::GeoPrimState *)0x0023f330)->Destruct();
+    LineMaterial.Destruct();
 }
 // FUNC_AT(0x0015d250)
 void DestroyStatic_00243944(void) {

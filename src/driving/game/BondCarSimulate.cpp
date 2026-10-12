@@ -12,6 +12,7 @@
 #include "AIVehicleController.h"
 #include "BondCarBasics.h"          // GetCarColourVariation
 #include "BondCarState.h"           // CarSurface, the BondCar_* tuning
+#include "Hud.h"
 #include "Missile.h"
 #include "MissionManager.h"
 #include "Simulation.h"
@@ -28,7 +29,6 @@
 #include "../camera/PlayerCamera.h"
 #include "../data/Carp.h"
 #include "../data/StdStreams.h"
-#include "../engine/GameInterfaces.hpp"   // GHud
 #include "../engine/ActionQueue.hpp"
 #include "../engine/Feedback.h"
 #include "../engine/PhysicsUtil.h"

@@ -4,7 +4,6 @@
 #pragma fp_contract(off)
 
 #include "GameLoop.h"
-#include "GameInterfaces.hpp"           // GHud, GLoadingScreen, GLocale, GSubtitles
 #include "ActionQueue.hpp"
 #include "CoreFoundation.h"
 #include "Feedback.h"
@@ -41,7 +40,10 @@
 #include "../eagl/RenderContext.h"
 #include "../eagl/View.h"
 #include "../game/BondCar.h"            // PBondCar::InitializeBondCarGlobals, PVehicle
+#include "../game/FrontEndSystem.h"     // GSystem, GLocale
+#include "../game/LoadingScreen.h"
 #include "../game/Shell.h"              // RayShell::Reset
+#include "../game/Subtitles.h"
 #include "../game/WeaponManager.h"
 #include "../physics/RigidBody.h"
 #include "../platform/FileSys.h"
@@ -115,7 +117,8 @@ static char LaunchCommandLine[0x100];   // a debugger command line, if the page 
 
 // XBE_GLOBAL(0x001e47bc, 0x1)
 static bool HeapConfigured;
-#define gDAudio BOOL8_AT(0x001e4761)
+// XBE_GLOBAL(0x001e4761, 0x1)
+bool gDAudio;
 // XBE_GLOBAL(0x001e4766, 0x1)
 static bool ScreenCaptureEnabled;
 // XBE_GLOBAL(0x001e4768, 0x4)
@@ -186,12 +189,6 @@ static const DiscErrorText DiscErrorMessages[7] = {   // English, French, German
 
 // XAPI (ours, behind the import thunk)
 #define XInitDevices ((void (__stdcall *)(unsigned, void *))0x00184bae)
-
-// render
-
-// the rest of the game
-#define GSystem_CURATOR_Init ((void (*)(void))0x000e3fd0)
-#define CURATOR_Shutdown ((void (*)(void))0x000e3eb0)
 
 // The car's type name (a virtual method of the player's vehicle).
 static const char *PlayerCarTypeName() {
@@ -268,6 +265,11 @@ bool OptionParser::GetFullString(char *out) {
 // FUNC_AT(0x00059900)
 void LaunchPage::SetLoaderReady(const char *text) {
     strcpy(loaderReady, text);
+}
+
+// FUNC_AT(0x000d7bd0)
+bool LaunchPage::IsEndState1Or4() {
+    return unknown978 == 1 || unknown978 == 4;
 }
 
 // FUNC_AT(0x001306d0)
@@ -356,7 +358,7 @@ void Bond_LoadingScreen() {
     char suffix[12];
     char layout[128];
     char picture[128];
-    GLoadingScreen_Status("Show loading screen");
+    GLoadingScreen::Status("Show loading screen");
     suffix[0] = 0;
     if (fgRenderer->widescreen)
         snprintf(suffix, sizeof(suffix), "W");
@@ -401,7 +403,7 @@ void Bond_SetExitToDriving(int mission, const char *missionName, bool clearScore
 // FUNC_AT(0x00059d80)
 void Bond_StartUpSystem() {
     if (Launch.loaderReady[0] == 0) {
-        GLoadingScreen_Status("Init IOP");
+        GLoadingScreen::Status("Init IOP");
         strcpy(Launch.loaderReady, kLoaderReady);
     }
     switch (Launch.language) {
@@ -415,7 +417,7 @@ void Bond_StartUpSystem() {
     default: strcpy(Launch.localeFile, "IDL_ENG.loc"); break;
     }
 
-    GLoadingScreen_Status("Init main singletons");
+    GLoadingScreen::Status("Init main singletons");
     USingletonManager *singletons = SingletonManager();
     DTuningDBMgr::InitSingleton();
     singletons->Register(reinterpret_cast<USingleton *>(TuningDBMgr));
@@ -423,54 +425,54 @@ void Bond_StartUpSystem() {
     AttributeSystem::Init();
     singletons->Register(reinterpret_cast<USingleton *>(AttributeSystemInstance));
 
-    GLoadingScreen_Status("Init Lib Render");
+    GLoadingScreen::Status("Init Lib Render");
     Render_InitLibRender();
     GLoadingScreen::InitLoadDots(true);
     GLoadingScreen::AddLoadingScreenSyncTask();
     DiscError_Init();
 
-    GLoadingScreen_Status("Init File System");
+    GLoadingScreen::Status("Init File System");
     FILESYS_setmemcallbacks(UMemoryREALAllocCallbackAt, UMemoryREALFreeCallbackAt);
     FILESYS_init(0x10, 0x32, 0x20);
-    GLoadingScreen_Status("Init ASync File System");
+    GLoadingScreen::Status("Init ASync File System");
     ASYNCFILE_init(0x14, 0);
-    GLoadingScreen_Status("Init Threads");
+    GLoadingScreen::Status("Init Threads");
     THREAD_init();
-    GLoadingScreen_Status("CPU Detect");
+    GLoadingScreen::Status("CPU Detect");
     CPU_detect();
     UFileLoader::Startup();
 
-    GLoadingScreen_Status("Opening misc.viv");
+    GLoadingScreen::Status("Opening misc.viv");
     if (FILESYS_existssync("driving\\misc.viv", 100))
         gUsingMisc = FILESYS_addbigsync("driving\\misc.viv", 0, 100, &gHandleMisc) != 0;
     if (gUsingMisc)
-        GLoadingScreen_Status("*** misc.viv found, and being used! ***");
+        GLoadingScreen::Status("*** misc.viv found, and being used! ***");
 
-    GLoadingScreen_Status("Init Global Render");
+    GLoadingScreen::Status("Init Global Render");
     RCARPFile::LoadEAGLMaterialsThunk();
-    GLoadingScreen_Status("Init Giotto");
-    GSystem_CURATOR_Init();
-    GLoadingScreen_Status("Load debug font");
+    GLoadingScreen::Status("Init Giotto");
+    GSystem::CURATOR_Init();
+    GLoadingScreen::Status("Load debug font");
     fgRenderer->LoadDebugFont();
     Bond_LoadingScreen();
     GameLoop_StartUsingMainBigFile();
 
-    GLoadingScreen_Status("Init Attribute System");
+    GLoadingScreen::Status("Init Attribute System");
     AttributeSystemInstance->PrepareDatabase();
     AttributeSet sentryDefaults, sentry;
     sentryDefaults.Construct("sentry", "default");
     sentry.Construct("sentry", "sentry");
     RigidBody::InitRigidBodySystem();
 
-    GLoadingScreen_Status("Loading track file");
+    GLoadingScreen::Status("Loading track file");
     WWorld::InitSingleton();
     fgWorld->LoadTrackFile("data\\track\\", MissionName);
 
-    GLoadingScreen_Status("Init Controllers");
+    GLoadingScreen::Status("Init Controllers");
     IOModule::GetIOModule()->Initialize();
     InputConfigManager::Get()->InitAndPreload();
 
-    GLoadingScreen_Status("Init Noise");
+    GLoadingScreen::Status("Init Noise");
     Noise::Init();
     sentry.Destruct();
     sentryDefaults.Destruct();
@@ -552,7 +554,7 @@ int GameMain(int argc, char **argv) {
     }
 
     Bond_StartUpSystem();
-    GLoadingScreen_Status("Entering GameLoop");
+    GLoadingScreen::Status("Entering GameLoop");
     IFeedback feedback;   // in the original, the slot argv came in
     feedback.Construct(Launch.controllerPort);
     GameLoop_MainGameLoop(false, false, false, 0, mission, 0);
@@ -600,9 +602,9 @@ void GameLoop_StartUsingMainBigFile() {
     for (const char *at = MissionName; *at != 0; at++)
         if (*at == '_')
             name = at + 1;
-    GLoadingScreen_Status("Opening %s.viv", name);
+    GLoadingScreen::Status("Opening %s.viv", name);
     if (UFileLoader::StartUsingBigFile("driving", name, gUseBigFile))
-        GLoadingScreen_Status("*** %s.viv found, and being used! ***", name);
+        GLoadingScreen::Status("*** %s.viv found, and being used! ***", name);
 }
 
 // The intro or outro movie: input, rumble and sound paused, every action queue flushed before and after, the
@@ -615,7 +617,7 @@ void GameLoop_PlayMovie(const char *movie, const char *subtitles) {
     EAGL::ViewPort *view = context->NewViewPort();
     view->SetShape(0.0f, 0.0f, (float)fgRenderer->screenWidth, (float)fgRenderer->screenHeight, 0.01f, 1.0f);
     view->SetOrthographic(0.0f, 200.0f);
-    GLoadingScreen_Status("Play Movie");
+    GLoadingScreen::Status("Play Movie");
     IOModule::GetIOModule()->EnableUpdating(false);
     IFeedback::Pause();
     ASoundManager::Pause();
@@ -623,7 +625,7 @@ void GameLoop_PlayMovie(const char *movie, const char *subtitles) {
     fgRenderer->Flush(false);
     if (subtitles != NULL) {
         GSubtitles::TheApp()->LoadSubtitles(subtitles);
-        player.Play(view, fgRenderer->widescreen != 0, GSubtitles_DrawFrame);
+        player.Play(view, fgRenderer->widescreen != 0, GSubtitles::DrawFrame);
         GSubtitles::TheApp()->ClearSubtitles();
     } else {
         player.Play(view, fgRenderer->widescreen != 0, NULL);
@@ -652,28 +654,28 @@ __declspec(naked) void FUN_0005a6b0(const char *movie) {
 
 // FUNC_AT(0x0005a870)
 void GameLoop_CleanUp() {
-    GLoadingScreen_Status("---------------- Shutting Down Game ---------------");
-    GLoadingScreen_Status("Kill World Camera");
+    GLoadingScreen::Status("---------------- Shutting Down Game ---------------");
+    GLoadingScreen::Status("Kill World Camera");
     NullFunction();
-    GLoadingScreen_Status("Kill Player Camera");
+    GLoadingScreen::Status("Kill Player Camera");
     RPlayerCamera::Shutdown();
-    GLoadingScreen_Status("Kill PIP Camera");
-    GLoadingScreen_Status("Shutdown AI characters");
+    GLoadingScreen::Status("Kill PIP Camera");
+    GLoadingScreen::Status("Shutdown AI characters");
     AICharacter::Shutdown();
     RRenderHigh::KillTrackRenderPostSim();
-    GLoadingScreen_Status("Shutdown Roads");
+    GLoadingScreen::Status("Shutdown Roads");
     WRoadNetwork::Shutdown();
-    GLoadingScreen_Status("Shutdown AI Controller's");
+    GLoadingScreen::Status("Shutdown AI Controller's");
     AIRoadSpawn::Shutdown();
     AIZoneController::Shutdown();
     AIVehicleController::Shutdown();
-    GLoadingScreen_Status("Deinit world");
+    GLoadingScreen::Status("Deinit world");
     fgWorld->Close();
     GLoadingScreen::LoadAndDrawUnLoadingScreen();
     fgRenderer->Flush(true);
     GLoadingScreen::FreeUnloadingScreen();
 
-    GLoadingScreen_Status("Delete weapon manager");
+    GLoadingScreen::Status("Delete weapon manager");
     SWeaponManager *weapons = WeaponManager;
     if (weapons != NULL) {
         weapons->Destruct();
@@ -686,34 +688,34 @@ void GameLoop_CleanUp() {
                               PVehicle::RenderNameAttrib(PVehicle::GetNamedAttribs(&carAttributes, carType)));
     carAttributes.Destruct();
 
-    GLoadingScreen_Status("Shutdown Sim");
+    GLoadingScreen::Status("Shutdown Sim");
     fgSimulation.CleanUpObjects();
     NullFunction();
     PVehicle::Shutdown();
-    GLoadingScreen_Status("Dismiss actors");
+    GLoadingScreen::Status("Dismiss actors");
     ActManager::ShutDown();
     ActActorDatabase::ShutDown();
-    GLoadingScreen_Status("Cleanup render objects");
+    GLoadingScreen::Status("Cleanup render objects");
     RSceneObj::DestroyAll();
-    GLoadingScreen_Status("Deinit world");
+    GLoadingScreen::Status("Deinit world");
     WWorld *world = fgWorld;
     if (world != NULL) {
         world->Destruct();
         OperatorDelete(world);
     }
     fgWorld = NULL;
-    GLoadingScreen_Status("Kill Game Render");
+    GLoadingScreen::Status("Kill Game Render");
     RRenderHigh::KillGameRender();
-    GLoadingScreen_Status("Shutdown Scheduler");
+    GLoadingScreen::Status("Shutdown Scheduler");
     Scheduler::Shutdown();
-    GLoadingScreen_Status("Shutdown Event Manger");
+    GLoadingScreen::Status("Shutdown Event Manger");
     EventManager::Shutdown();
-    GLoadingScreen_Status("Shutdown Clock");
+    GLoadingScreen::Status("Shutdown Clock");
     RealClock_CleanUp();
     ASoundManager::Stop();
-    GLoadingScreen_Status("Unload banks");
+    GLoadingScreen::Status("Unload banks");
     ASoundManager::ClearMission();
-    GLoadingScreen_Status("------------ Finished Shutting Down Game ----------");
+    GLoadingScreen::Status("------------ Finished Shutting Down Game ----------");
 }
 
 // The level's run: its tasks, the intro movie, the loop until the simulation ends, the outro movie. With
@@ -786,7 +788,7 @@ void RunTheGame(bool simulateOncePerLoop, int unused) {
     }
     UFileLoader::DumpFileRequestList();   // the original pushes "..\\bigprocess" to both; neither reads it
     UFileLoader::StopUsingBigFile();
-    GLoadingScreen_Status("Entering main loop");
+    GLoadingScreen::Status("Entering main loop");
     fgScheduler->ResetTime();
 
     while (fgSimulation.simState != kSimFinished) {
@@ -801,7 +803,7 @@ void RunTheGame(bool simulateOncePerLoop, int unused) {
         fgScheduler->Run(0);
     }
 
-    GLoadingScreen_Status("Leaving loop");
+    GLoadingScreen::Status("Leaving loop");
     if (!ASoundManager_fgIsPaused)
         ASoundManager::Pause();
     fgRenderer->Flush(false);
@@ -838,22 +840,22 @@ void RunTheGame(bool simulateOncePerLoop, int unused) {
 // The speech file is <mission's speech name><language>, falling back to English when the language's is missing.
 // FUNC_AT(0x0005b0d0)
 void GameLoop_StartUp(int trafficSeed) {
-    GLoadingScreen_Status("Reset Ray Shells");
+    GLoadingScreen::Status("Reset Ray Shells");
     RayShell::Reset();
-    GLoadingScreen_Status("Reset Sim");
+    GLoadingScreen::Status("Reset Sim");
     fgSimulation.Reset();
-    GLoadingScreen_Status("Init Clock");
+    GLoadingScreen::Status("Init Clock");
     RealClock_Init();
-    GLoadingScreen_Status("Init Events");
+    GLoadingScreen::Status("Init Events");
     EventManager::Init();
-    GLoadingScreen_Status("Init Scheduler");
+    GLoadingScreen::Status("Init Scheduler");
     Scheduler::Init();
     PVehicle::InitializeGlobals();
     PBondCar::InitializeBondCarGlobals();
-    GLoadingScreen_Status("Init Game Render");
+    GLoadingScreen::Status("Init Game Render");
     RRenderHigh::InitGameRender();
 
-    GLoadingScreen_Status("Init Sound");
+    GLoadingScreen::Status("Init Sound");
     GameStd::String speechName;   // constructed empty, inline
     speechName.capacity = 15;
     speechName.size = 0;
@@ -881,36 +883,36 @@ void GameLoop_StartUp(int trafficSeed) {
     snprintf(speech, sizeof(speech), "%s%s", speechName.Data(), languageSuffix[GLocale::GetLanguage()]);
     snprintf(speechFile, sizeof(speechFile), "driving\\%s.spe", speech);
     if (!FILESYS_existssync(speechFile, 100)) {
-        GLoadingScreen_Status("WARNING: localized speech not found, using English");
+        GLoadingScreen::Status("WARNING: localized speech not found, using English");
         snprintf(speech, sizeof(speech), "%s%s", speechName.Data(), "en");
     }
     MusicVolumeScale = float(double(Launch.musicVolume) * 0.01f);
     EffectsVolumeScale = float(double(Launch.effectsVolume) * 0.01f);
     ASoundManager::Init("data\\audio\\", gSoundOption, speech, MissionName, Launch.audioMode);
-    GLoadingScreen_Status("Music Volume : Uber(%d) --> Driving(%f)\n", Launch.musicVolume, double(MusicVolumeScale));
-    GLoadingScreen_Status("Effects Volume : Uber(%d) --> Driving(%f)\n", Launch.effectsVolume,
+    GLoadingScreen::Status("Music Volume : Uber(%d) --> Driving(%f)\n", Launch.musicVolume, double(MusicVolumeScale));
+    GLoadingScreen::Status("Effects Volume : Uber(%d) --> Driving(%f)\n", Launch.effectsVolume,
                           double(EffectsVolumeScale));
-    GLoadingScreen_Status("Audio System Mode : %d\n", Launch.audioMode);
+    GLoadingScreen::Status("Audio System Mode : %d\n", Launch.audioMode);
 
-    GLoadingScreen_Status("Init Actors");
+    GLoadingScreen::Status("Init Actors");
     ActActorDatabase::StartUp();
     ActManager::StartUp(1.0f / GetFoundationVideoModeRate());
-    GLoadingScreen_Status("Init Weapon Manager");
+    GLoadingScreen::Status("Init Weapon Manager");
     SWeaponManager *weapons = static_cast<SWeaponManager *>(OperatorNew(0x180));     // 4 more than its size
     WeaponManager = weapons != NULL ? weapons->Construct() : NULL;
-    GLoadingScreen_Status("Init World");
+    GLoadingScreen::Status("Init World");
     fgWorld->Open();
-    GLoadingScreen_Status("Init AI Elements");
+    GLoadingScreen::Status("Init AI Elements");
     RRenderHigh::InitTrackRenderPostSim();
     UGroup *map = fgWorld->group->GroupLocateTag(kTagMap);
     AIElementController::Create(map->DataLocateTag(kTagAIElements));
-    GLoadingScreen_Status("Init AI Controllers");
+    GLoadingScreen::Status("Init AI Controllers");
     AIVehicleController::Init();
     AIZoneController::Init();
-    GLoadingScreen_Status("Init Roads");
+    GLoadingScreen::Status("Init Roads");
     WRoadNetwork::Init();
 
-    GLoadingScreen_Status("Init Simulation");
+    GLoadingScreen::Status("Init Simulation");
     const char *carType = glbMissionManager->GetCarType();
     float orientation[4] = { 0.0f, 0.0f, 1.0f, 0.0f };   // the fourth word is never written
     float position[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -918,7 +920,7 @@ void GameLoop_StartUp(int trafficSeed) {
     fgCollisionMgr->GetWorldHeightAtPoint(reinterpret_cast<const Coord3 *>(position), &height, false);
     position[1] = height + 1.0f;
 
-    GLoadingScreen_Status("Preload common models");
+    GLoadingScreen::Status("Preload common models");
     AttributeSet carAttributes;
     PVehicle::GetNamedAttribs(&carAttributes, carType);
     const char *model = PVehicle::RenderNameAttrib(&carAttributes);
@@ -935,7 +937,7 @@ void GameLoop_StartUp(int trafficSeed) {
         secondaryAttributes.Destruct();
     }
 
-    GLoadingScreen_Status("Spawn player car");
+    GLoadingScreen::Status("Spawn player car");
     fgSimulation.SpawnCarObject(0, carType, 0, reinterpret_cast<const Coord3 *>(orientation),
                                 reinterpret_cast<const Coord3 *>(position));
     fgSimulation.cars.first[0]->SetHitPointLoc(&glbMissionManager->playerHealth);
@@ -946,11 +948,11 @@ void GameLoop_StartUp(int trafficSeed) {
     AIVehicleController::Get()->RegisterSimCarList();
     WeaponManager->SetPlayerCar(fgSimulation.cars.first[0]->renderObject);
     if (ActorDatabase != NULL) {
-        GLoadingScreen_Status("Init AI Characters");
+        GLoadingScreen::Status("Init AI Characters");
         AICharacter::Init();
     }
     RCameraIniLoader::LoadFileThunk();
-    GLoadingScreen_Status("Leaving StartUp");
+    GLoadingScreen::Status("Leaving StartUp");
     IOModule::GetIOModule()->EnableUpdating(true);
     carAttributes.Destruct();
     if (speechName.capacity >= 16 && speechName.text.pointer != NULL)

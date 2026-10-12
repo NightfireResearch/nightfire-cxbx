@@ -17,11 +17,6 @@
 // written by its constructor and destructor as the original writes it.
 // ---------------------------------------------------------------------------------------------------------------
 
-// AVoice's destructor where it is not inlined (Ghidra: FUN_0003f400)
-// Whether the voice is done with (Ghidra: FUN_000d36c0; the name is ours): it has been played, and the shared view
-// is active or every active one of the other two is finished.
-#define AVoice_IsFinished ((bool (__fastcall *)(AVoice *, int))0x000d36c0)
-
 // The list code every std::list of pointers shares: _Buynode(next, prev, value)
 
 // The C runtime's sprintf
@@ -131,6 +126,12 @@ float ABaseSound::GetFade() {
     }
     fade = 1.0f;
     return fade;
+}
+
+// FUNC_AT(0x000d3690)
+void ABaseSound::SetMix(const char *mixName) {
+    mix->Remove();
+    mix = AMix::Add(mixName);
 }
 
 // FUNC_AT(0x0011c830)
@@ -257,7 +258,7 @@ AMenuSoundPriv* AMenuSoundPriv::Construct(int bank, int patch, const char *mixNa
 void AMenuSoundPriv::Play(ASoundPlayParams *params) {
     float level = float(mix->GetVolume() * volume * params->volume);
     voice.Play(params->listener->view, level, params->pitch, params->azimuth, 0.0f, 0.0f);
-    if (AVoice_IsFinished(&voice, 0))
+    if (voice.IsFinished())
         CallDelete(1);
 }
 

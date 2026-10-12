@@ -15,11 +15,6 @@
 // listings. See ZoomObj.h.
 // ---------------------------------------------------------------------------------------------------------------
 
-// AVoice's destructor, out of line (Ghidra: FUN_0003f400).
-// Whether a voice is done: set, its views that the active views include have finished (Ghidra: FUN_000d36c0;
-// the name is ours).
-#define AVoice_IsFinished ((bool (__fastcall *)(AVoice *, int))0x000d36c0)
-
 namespace {
 
 constexpr uint32_t kASoundVtable = 0x001a2a7c;
@@ -144,6 +139,12 @@ void ASound::Play(ASoundPlayParams *params) {
     PlayVoice(this, &voice, params, 0.0f);
 }
 
+// FUNC_AT(0x000d3710)
+void ASound::ClearLoops() {
+    for (int i = 0; i < kSoundViewCount; i++)
+        voice.views[i].loop = 0;
+}
+
 // =============================================================================================================
 // AOneShotSound and ALimitedSound
 // =============================================================================================================
@@ -153,7 +154,7 @@ void AOneShotSound::Play(ASoundPlayParams *params) {
     PlayVoice(this, &voice, params, fxLevel);
     if (!(timeLeft >= 0.0f))
         return;
-    if (AVoice_IsFinished(&voice, 0)) {
+    if (voice.IsFinished()) {
         CallDelete(1);
         return;
     }

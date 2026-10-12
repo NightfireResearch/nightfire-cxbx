@@ -19,9 +19,9 @@
 #include "../data/Carp.h"                   // CARP::Instance
 #include "../data/UData.h"
 #include "../engine/ActionQueue.hpp"
-#include "../engine/GameInterfaces.hpp"     // GHud
 #include "../engine/GameLoop.h"             // LaunchPage, Launch
 #include "../engine/UMemory.hpp"
+#include "../game/Hud.h"
 #include "../game/MissionManager.h"
 #include "../game/Vehicle.h"                // PVehicle
 #include "../physics/PhysicsObject.h"
@@ -569,7 +569,7 @@ void BuildLists(SMissionManager *m) {
     for (const ObjectiveDesc &d : g_objectiveDesc) {
         MissionObjective *o = static_cast<MissionObjective *>(OperatorNew(sizeof(MissionObjective)));
         o->id = d.id;
-        o->unknown04 = d.unknown04;
+        o->hint = d.unknown04;
         o->score = d.score;
         o->unknown0c = d.unknown0c;
         o->state = d.state;
@@ -618,7 +618,7 @@ void TakeLists(SMissionManager *m, std::vector<uint32_t> *out, bool freeRecords)
             void *value = node->value;
             if (k == 0 && value != NULL) {
                 const MissionObjective *o = static_cast<const MissionObjective *>(value);
-                out->insert(out->end(), { uint32_t(o->id), uint32_t(o->unknown04), uint32_t(o->score),
+                out->insert(out->end(), { uint32_t(o->id), uint32_t(o->hint), uint32_t(o->score),
                                           uint32_t(o->unknown0c), uint32_t(o->state) });
             } else if (k == 1 && value != NULL) {
                 const MissionMessage *msg = static_cast<const MissionMessage *>(value);

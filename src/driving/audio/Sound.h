@@ -106,6 +106,8 @@ public:
     void StartFade(int steps);                                                  // 0x0011c720
     // The fade's next step (1 once it is over, or without one).
     float GetFade();                                                            // 0x0011c750
+    // Out of its mix and into `mixName`'s, made if new (compiled among GFX's code; the name ours)
+    void SetMix(const char *mixName);                                           // 0x000d3690
 
     // The pool block for a sound of `size` bytes, labelled `name` and named by it less its
     // first character, appended to fgSoundList.
