@@ -86,6 +86,40 @@ and the once flag, the timers' Start/Stop/Increment/SetTicking and beeps, the Am
 the other difficulties. To test specially in game: a mission won and one lost (the end-of-mission scores and the
 launch page's totals), a cinematic skipped, the drive missile, an auto-drive section, and a remote mine detonated.
 
+## What the testing taught
+
+The first round (gm1) had every lockstep run exact, but every shadow run stopped inside shadow A, and
+GameAudioShadowB and GameAudioShadowD, clean before, differed. All of it was harness:
+
+- **A global made ours needs both copies set.** NextSignature (0x001c8fbc) and MissionCinematicMode (0x00243a64)
+  became ours in this integration. Shadow A, GameAudioShadowB and shadow C still set only the game's copy, so the
+  original read the shadow's value and the port its own: AssignRigidBodySlot's counter one apart and the new
+  signature's low byte wrong; ASnowMobile::Play with no volume on the original's side in the one case in five that
+  is cinematic (154-204 differences). The shadows now set both copies, compare each side's own and put both back.
+  NextSignature is declared in SimulationObjects.h, so tools/owned_globals.py lends it.
+- **One memset per element, each the whole array's size.** Shadow A's DetectCollisionsSRB cases filled
+  simpleBodyHits that way, up to 1.8 KB past their heap copy of the Simulation: the heap corruption (0xc0000374)
+  that ended the runs, and the faults at address 0 before it on some missions.
+- **A set ordered by address.** DeleteDeadObjects walks the dead set, which is ordered by map node address. Each side
+  builds its own map, so the two deleted in different orders. The deletions are compared by their place in the set
+  and which objects went, and the missile camera's end by the object deleted after it.
+- **A hook table that fills up quietly.** GameAudioShadowD had room for 16 hooks. With PauseSimState and Stop ported,
+  each of its nine fakes takes two (the entry and our port), so IFeedback::Pause's port went unhooked, and so did
+  ASoundManager::Pause: the port's side paused the feedback for real and logged nothing (8-15 MixerDraw cases). It
+  has room for 32 now, and a full table prints a line.
+- **A fake refused on an entry that became ours.** GameWeaponsShadowC would only fake an original whose entry had no
+  jump. With the Simulation's getters, slots and SpawnExplosion ported it gave up ("not run: fakes missing", which
+  still says 0 differ, so the summary missed it). It now hooks our port behind the jump, where the originals' calls
+  and our ports' direct calls both arrive. A port that is a five-byte tail jump counts as hookable.
+- **A heap address in a call log.** Shadow C's Create+Destroy logged calls that name the new manager, which operator
+  new places differently on each side (mission 3). They name it by offset now. round.sh now lists a shadow's
+  "- not run" line among the differences.
+
+With these, the second round (gm2) had all 16 lockstep runs exact against the baselines and every shadow run
+finished on missions 1-8 (a frame dumped), the four missions shadows, GameAudioShadowB and D and GameWeaponsShadowC
+with 0 differences; only the two known ones remain (sndsysshadow case 0, sndstreamfileshadow case 52). No game behaviour
+changed (only an extern added to SimulationObjects.h), so no quirk or deviation was added.
+
 ## Random calls
 
 | Function | Draws |

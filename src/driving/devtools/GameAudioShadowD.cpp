@@ -157,12 +157,14 @@ struct Hook {
     uint8_t saved[5];
     bool on;
 };
-Hook g_hooks[16];
+Hook g_hooks[32];       // nine fakes, each over the entry and over our port behind it
 int g_hookCount;
 
 void HookOne(uint32_t at, const void *to) {
-    if (g_hookCount == int(sizeof(g_hooks) / sizeof(g_hooks[0])))
+    if (g_hookCount == int(sizeof(g_hooks) / sizeof(g_hooks[0]))) {
+        printf("[gameaudioshadowd]   no room for a hook at 0x%08x\n", at);
         return;
+    }
     Hook &h = g_hooks[g_hookCount++];
     h.at = at;
     h.on = false;

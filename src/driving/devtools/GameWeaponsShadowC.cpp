@@ -119,7 +119,7 @@ const unsigned kEntries[] = {
 #define Orig_WorldEffects ((void (*)(const Coord3 *, const Coord4 *, int, int, const uint8_t *, int, PhysicsObject *))0x000749b0)
 #define Orig_ShellSimulate ((void (__fastcall *)(Shell *, int))0x00074e80)
 
-// The originals faked (the jump written over their own entry)
+// The originals faked (the jump written over their own entry, or over our port behind it)
 const uint32_t kGetRigidBody = 0x000b2700;
 const uint32_t kGetSimpleRigidBody = 0x000b2730;
 const uint32_t kFindSignature = 0x000b27d0;
@@ -796,13 +796,13 @@ bool WriteJump(Hook *hook, uint32_t at, const void *to) {
     return true;
 }
 
-// Over an original's own entry (it must not be one of ours; DeletePhysicsObject's own entry is a jump, kept as a
-// known exception)
+bool HookOurs(Hook *hook, uint32_t entry, const void *to);
+
+// Over an original's own entry, or over our port where it has one (the originals' calls reach it through the
+// entry's jump, our ports' calls directly)
 bool HookOriginal(Hook *hook, uint32_t entry, const void *to) {
-    if (JumpTarget(entry) != 0 && entry != kDeleteObject) {
-        hook->on = false;
-        return false;
-    }
+    if (JumpTarget(entry) != 0)
+        return HookOurs(hook, entry, to);
     return WriteJump(hook, entry, to);
 }
 
@@ -814,7 +814,7 @@ bool HookOurs(Hook *hook, uint32_t entry, const void *to) {
         return false;
     }
     const uint8_t *code = reinterpret_cast<const uint8_t *>(uintptr_t(at));
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 5 && code[0] != 0xe9; i++)     // a tail jump is five bytes itself
         if (code[i] == 0xc3 || code[i] == 0xc2 || code[i] == 0xcc) {
             hook->on = false;
             return false;

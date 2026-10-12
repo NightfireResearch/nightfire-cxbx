@@ -63,7 +63,7 @@ void OriginalWindow(bool original) {
 }
 
 #define ShSimStepCount I32_AT(0x00234e34)
-#define ShCinematic I32_AT(0x00243a64)
+#define ShCinematic I32_AT(0x00243a64)       // the game's copy of MissionCinematicMode
 #define ShScheduler (*(uint8_t **)0x001e520c)
 #define ShPlayerSlot (*(PVehicle ***)0x00234e40)
 #define ShOrigDefaultSet ((uint8_t *)0x00238f20)
@@ -490,7 +490,7 @@ Fake g_fakes[] = {
 // What a case may change outside the buffer, saved once per case and put back after each side
 struct Globals {
     std::vector<uint8_t> page;
-    int32_t cinematic;
+    int32_t cinematic, portCinematic;
     uint8_t scheduler[8];
     int32_t steps;
     PVehicle *player;
@@ -506,6 +506,7 @@ int32_t g_steps;
 void SaveGlobals(Globals *g) {
     g->page.assign(reinterpret_cast<uint8_t *>(&Launch), reinterpret_cast<uint8_t *>(&Launch) + 0xa4c);
     g->cinematic = ShCinematic;
+    g->portCinematic = MissionCinematicMode;
     memcpy(g->scheduler, ShScheduler + 0x1c, 8);
     g->steps = ShSimStepCount;
     g->player = *ShPlayerSlot;
@@ -524,6 +525,7 @@ void SaveGlobals(Globals *g) {
 void RestoreGlobals(const Globals *g) {
     memcpy(&Launch, g->page.data(), 0xa4c);
     ShCinematic = g->cinematic;
+    MissionCinematicMode = g->portCinematic;
     memcpy(ShScheduler + 0x1c, g->scheduler, 8);
     ShSimStepCount = g->steps;
     *ShPlayerSlot = g->player;
@@ -550,6 +552,7 @@ void MirrorOwned() {
     MissionHealthTimes100 = g_times100B;
     ShOrigCharInfoFlag = g_charInfoFlag;
     CharInfoBeforeHud = g_charInfoFlag;
+    ShCinematic = MissionCinematicMode = g_saved.portCinematic;
     memcpy(ShOrigDefaultSet, g_saved.defaultSet.data(), sizeof(MissionSet));
     memcpy(&DefaultMissionSet, g_saved.defaultSet.data(), sizeof(MissionSet));
 }
@@ -663,7 +666,7 @@ struct Side {
 void TakeGlobals(Side *side, bool original) {
     const uint8_t *page = reinterpret_cast<const uint8_t *>(&Launch);
     side->globals.assign(page, page + 0xa4c);
-    const uint8_t *cin = reinterpret_cast<const uint8_t *>(&ShCinematic);
+    const uint8_t *cin = reinterpret_cast<const uint8_t *>(original ? &ShCinematic : &MissionCinematicMode);
     side->globals.insert(side->globals.end(), cin, cin + 4);
     side->globals.insert(side->globals.end(), ShScheduler + 0x1c, ShScheduler + 0x24);
     if (original) {
@@ -1356,6 +1359,10 @@ void TestLifetime(const SMissionManager *live, int rounds) {
             if (o) ((void (*)())0x000b9060)(); else SMissionManager::Destroy();
             PutAnswer(x, Word(glbMissionManager));
             glbMissionManager = g_mm;
+            // the calls name the new manager (operator new's, a different block on each side) by offset
+            for (uint32_t &word : *g_log)
+                if (m != NULL && word - Word(m) < sizeof(SMissionManager))
+                    word = 0xa0000000u + (word - Word(m));
         });
     }
 }

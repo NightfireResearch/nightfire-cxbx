@@ -12,6 +12,7 @@
 #include "../audio/SoundManager.h"
 #include "../audio/Voice.h"
 #include "../data/StdStreams.h"
+#include "../game/MissionManager.h"     // MissionCinematicMode
 #include "../game/VehicleSound.h"
 #include "../game/VehicleSoundKinds.h"
 #include "../game/WeaponSound.h"
@@ -72,7 +73,7 @@ struct OriginalWindow {
     }
 };
 
-#define ShadowCinematic I32_AT(0x00243a64)
+#define OrigCinematic I32_AT(0x00243a64)       // the game's copy of MissionCinematicMode
 #define OrigTrafficCountA I32_AT(0x00243b5c)
 #define OrigTrafficCountB I32_AT(0x00243b60)
 
@@ -784,7 +785,7 @@ void RandomCase() {
     g_finishedBits = RandomWord() ^ (RandomWord() << 12);
     g_normalSeed = RandomWord();
     FramesSinceAudioUpdate = 1 + RandomInt(4);
-    ShadowCinematic = RandomInt(5) == 0;
+    OrigCinematic = MissionCinematicMode = RandomInt(5) == 0;
     static const float kDistances[] = { 0.5f, 1.0f, 1.5f, 2.0f, 2.5f };
     float distance = RandomInt(3) == 0 ? kDistances[RandomInt(5)] : RandomFloat(0.0f, 3.0f);
     g_params.volume = RandomFloat(0.0f, 1.0f);
@@ -949,7 +950,7 @@ void GameAudioShadowB_Run(void) {
     if (setting == NULL || atoi(setting) == 0)
         return;
     FpControlGet(&g_x87, &g_sse);
-    int frames = FramesSinceAudioUpdate, cinematic = ShadowCinematic;
+    int frames = FramesSinceAudioUpdate, cinematic = OrigCinematic, portCinematic = MissionCinematicMode;
 
     g_engineVtable[0] = (const void *)&FakeEnginePlay;
     g_engineVtable[1] = (const void *)&FakeSirenDelete;
@@ -977,7 +978,8 @@ void GameAudioShadowB_Run(void) {
     HooksRemove();
 
     FramesSinceAudioUpdate = frames;
-    ShadowCinematic = cinematic;
+    OrigCinematic = cinematic;
+    MissionCinematicMode = portCinematic;
     printf("[gameaudiob] the vehicle kinds' sounds (%d live): %d cases, %d checks, %d differ (%d faults)\n", live,
            g_cases, g_checks, g_differ, g_faults);
     fflush(stdout);

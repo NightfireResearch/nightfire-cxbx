@@ -60,6 +60,8 @@ for m in $MS; do
         # NaN-only differences" (the math shadows) and a "differ by kind:" list of zeros
         grep -aE ' differ|FAILED' "$L" | grep -av ' 0 differ\|: 0 of [0-9]* cases differ\|: same, [0-9]* NaN-only' |
             awk '/differ by kind:/ { s = $0; sub(/.*differ by kind:/, "", s); if (s ~ / [1-9][0-9]*(,|$)/) print; next } { print }' > "$L.differ" || true
+        # A shadow that could not run at all says "- not run" (its summary still reads "0 differ")
+        grep -a ' - not run' "$L" >> "$L.differ" || true
         echo "== shadows, mission $m: $(grep -a -c ' differ' "$L") summaries, $(wc -l < "$L.differ") with differences, $(grep -a -c 'fault at' "$L") loader faults, frame dumped: $(grep -a -c 'dumping frame' "$L")" >> "$SUMMARY"
         cat "$L.differ" >> "$SUMMARY"
         grep -a 'faulted\|with faults\|Exception\|crash' "$L" | sort | uniq -c | head -20 >> "$SUMMARY" || true

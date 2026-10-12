@@ -7,7 +7,7 @@
 #include "../camera/PlayerCamera.h"
 #include "../data/AttributeContainers.h"    // StringSet::BuyHead
 #include "../engine/UMemory.hpp"
-#include "../game/Simulation.h"
+#include "../game/SimulationObjects.h"   // NextSignature
 #include "../physics/PhysicsObject.h"
 #include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
@@ -59,7 +59,7 @@ void OriginalWindow(bool original) {
     XbeOriginal_RestoreRange(0x000b25e0, 0x000b4080, original);
 }
 
-#define NextSignatureGlobal U32_AT(0x001c8fbc)
+#define NextSignatureGlobal U32_AT(0x001c8fbc)  // the game's copy of NextSignature
 
 // ---- results
 
@@ -923,11 +923,11 @@ template <class Setup, class Run, class Capture>
 void SimCase(const char *what, int index, Setup setup, Run run, Capture capture, uint32_t nextSignature) {
     std::vector<uint32_t> results[2];
     std::vector<uint8_t> copies[2];
-    uint32_t savedSignature = NextSignatureGlobal;
+    uint32_t savedSignature = NextSignatureGlobal, savedPortSignature = NextSignature;
     for (int side = 0; side < 2; side++) {
         LoadCopy();
         setup();
-        NextSignatureGlobal = nextSignature;
+        NextSignatureGlobal = NextSignature = nextSignature;
         std::vector<uint32_t> log;
         g_log = &log;
         auto body = [&](bool original) { run(original); };
@@ -935,10 +935,11 @@ void SimCase(const char *what, int index, Setup setup, Run run, Capture capture,
         g_log = NULL;
         results[side] = log;
         capture(results[side]);
-        results[side].push_back(NextSignatureGlobal);
+        results[side].push_back(side == 0 ? NextSignatureGlobal : NextSignature);
         copies[side].assign(reinterpret_cast<uint8_t *>(g_copy), reinterpret_cast<uint8_t *>(g_copy) + sizeof(Simulation));
     }
     NextSignatureGlobal = savedSignature;
+    NextSignature = savedPortSignature;
     g_cases++;
     CheckWords(what, index, results[0], results[1]);
     CheckBytes(what, index, copies[0].data(), copies[1].data(), sizeof(Simulation));
@@ -1166,8 +1167,7 @@ void TestDetectCollisions() {
         for (int i = 0; i < Simulation::kMaxSimpleBodies && round > 0; i++)
             start[i].position.y += Uniform(-0.5f, 0.5f) * float(round);
         FreshCopy();
-        for (int i = 0; i < Simulation::kMaxSimpleBodies; i++)
-            memset(&g_copy->simpleBodyHits[i], 0x33 + round, sizeof(fgSimulation.simpleBodyHits));
+        memset(g_copy->simpleBodyHits, 0x33 + round, sizeof(g_copy->simpleBodyHits));
         g_copy->simpleRigidBodies = bodies;
         g_copy->simpleRigidBodiesScratch = bodies;
         SaveCopy();
@@ -1326,6 +1326,17 @@ void TestDeleteDeadObjects() {
             }
             for (int i = 0; i < dead; i++)
                 SetInsert(set, nodes[size_t(i)], false);
+            // the set is ordered by node address, which differs by side: the deletions are compared by their place
+            // in the set, and which objects went as a mask
+            std::vector<uint32_t> order;
+            std::vector<DeadObjectNode *> stack;
+            for (DeadObjectNode *n = set->head->parent; !n->isNil || !stack.empty(); n = n->right) {
+                for (; !n->isNil; n = n->left)
+                    stack.push_back(n);
+                n = stack.back();
+                stack.pop_back();
+                order.push_back(uint32_t(static_cast<FakeObject *>(n->value->value.object) - g_deadObjects));
+            }
             g_copy->objects = map;
             g_copy->deadObjects = set;
             PhysicsObject *savedAnchor = camera != NULL ? camera->anchor : NULL;
@@ -1341,7 +1352,25 @@ void TestDeleteDeadObjects() {
             g_log = NULL;
             if (camera != NULL)
                 camera->anchor = savedAnchor;
-            words[side] = log;
+            // the camera's end by the object deleted after it
+            std::vector<uint32_t> deletions, cameras;
+            uint32_t deleted = 0;
+            for (size_t i = 0; i < log.size(); i += log[i] == 3 ? 3 : 2) {
+                if (log[i] == 2) {
+                    uint32_t next = i + 2 < log.size() && log[i + 2] == 3 ? log[i + 3] : 0xffffffffu;
+                    cameras.insert(cameras.end(), { 2, log[i + 1], next });
+                    continue;
+                }
+                deleted |= 1u << log[i + 1];
+                uint32_t place = 0xffffffffu;
+                for (size_t p = 0; p < order.size(); p++)
+                    if (order[p] == log[i + 1])
+                        place = uint32_t(p);
+                deletions.insert(deletions.end(), { 3, place, log[i + 2] });
+            }
+            words[side] = deletions;
+            words[side].insert(words[side].end(), cameras.begin(), cameras.end());
+            words[side].push_back(deleted);
             words[side].push_back(SimDeleteInProgress);
             SimDeleteInProgress = savedFlag;
             std::vector<uint32_t> m = Serialize(map, [](PhysicsObjNode *n, std::vector<uint32_t> &out) {

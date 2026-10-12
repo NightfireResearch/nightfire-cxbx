@@ -7,4 +7,8 @@
 
 #include "Simulation.h"
 
+#include <stdint.h>
+
+extern uint32_t NextSignature;          // the counter in the low 24 bits of the next signature (name ours)
+
 #endif // DRIVING_GAME_SIMULATIONOBJECTS_H_
