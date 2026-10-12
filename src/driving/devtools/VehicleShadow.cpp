@@ -10,6 +10,7 @@
 #include "../engine/ActionQueue.hpp"
 #include "../engine/SimRandom.h"
 #include "../engine/UMemory.hpp"
+#include "../game/AIViews.h"           // AIHelicopter
 #include "../game/Helicopter.h"
 #include "../game/Vehicle.h"
 #include "../game/VehicleRender.h"
@@ -811,7 +812,7 @@ void TestHelicopter(PHelicopter *live, PhysicsObject *renderSource, int slot, co
     *reinterpret_cast<void ***>(g_work.render) = g_fakeRenderVtable;
     g_work.heli.renderObject = reinterpret_cast<RSceneObj *>(g_work.render);
     g_work.heli.audioObject = reinterpret_cast<ABaseSound *>(g_work.sound);
-    g_work.heli.ai = reinterpret_cast<HelicopterAI *>(g_work.ai);
+    g_work.heli.ai = reinterpret_cast<AIHelicopter *>(g_work.ai);
     g_work.heli.hitPointLoc = &g_work.hitPoints;
     g_work.heli.actionQueue = &g_work.queue;
     g_work.random = savedRandom;
@@ -882,7 +883,7 @@ void TestHelicopter(PHelicopter *live, PhysicsObject *renderSource, int slot, co
         g_cases++;
         memcpy(&g_before, &base, sizeof(HeliState));
         RandomiseHeli(&g_before, true);
-        HelicopterAI *ai = reinterpret_cast<HelicopterAI *>(g_before.ai);
+        AIHelicopter *ai = reinterpret_cast<AIHelicopter *>(g_before.ai);
         int target = RandomInt(3);
         ai->targetBeacon = target == 0 ? NULL : target == 1 && missileTarget != NULL
                                                     ? missileTarget

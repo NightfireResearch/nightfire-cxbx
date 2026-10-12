@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include "BondCar.h"                        // PBondCar
+#include "EventsD.h"                        // ESpawnExplosion
 #include "Explosion.h"
 #include "Grenade.h"
 #include "Helicopter.h"                     // PHelicopter
@@ -42,10 +43,6 @@
 // Simulation part 2 (0x000b4080-0x000b60a0), ported from the listing: the constructor and destructor, Reset and the
 // step, spawning and deleting objects, the tracked instances, and the vector reserve and dead set insert they use.
 // ---------------------------------------------------------------------------------------------------------------
-
-// ---- the explosion event's constructor, not ported
-
-#define ESpawnExplosion_Construct ((void *(__fastcall *)(void *, int, Coord4 position, Coord4 direction, int unknown9, bool simple, int slot, PhysicsObject *source, uint32_t, uint32_t, float force, uint32_t, int, int, int))0x00044f40)
 
 static_assert(sizeof(PBondCar) == 0x420 && sizeof(PHelicopter) == 0x140 && sizeof(Newton) == 0x90,
               "the spawned objects' allocations");
@@ -450,14 +447,15 @@ void Simulation::SpawnExplosion(int type, int weapon, const Coord3 *direction, c
         return;
     Coord4 at = { position->x, position->y, position->z, 1.0f };
     Coord4 heading = { direction->x, direction->y, direction->z, 0.0f };
-    void *event = Event::operator new(0x50);
+    void *event = Event::operator new(sizeof(ESpawnExplosion));
     if (event == NULL)
         return;
     // the object hit's body, by slot and kind; the kind's upper bytes are left over without one (only its low
     // byte is read)
     int slot = directHit != NULL ? directHit->rigidBodySlot : -1;
     bool simple = directHit != NULL ? (directHit->flags & PhysicsObject::kSimpleBody) != 0 : false;
-    ESpawnExplosion_Construct(event, 0, at, heading, 0, simple, slot, directHit, type, weapon, size, faceType, 0, 0, 0);
+    static_cast<ESpawnExplosion *>(event)->Construct(at, heading, NULL, simple, slot, directHit, type, weapon, size,
+                                                     faceType, NULL, 0, NULL);
 }
 
 // FUNC_AT(0x000b4e10)
@@ -721,12 +719,13 @@ PhysicsObject* Simulation::SpawnShellObject(int shellType, const Coord3 *directi
 }
 
 // FUNC_AT(0x000b5d50)
-PhysicsObject* Simulation::SpawnExplosionObject(int type, uint32_t unused2, int unused, const Coord3 *position,
-                                                float size, PhysicsObject *directHit, const uint32_t *ownerSig) {
+PhysicsObject* Simulation::SpawnExplosionObject(int type, uint32_t unused, const Coord3 *direction,
+                                                const Coord3 *position, float size, PhysicsObject *directHit,
+                                                const uint32_t *ownerSig) {
     if (!CanSpawnSimpleRigidBody(position, size > kBigExplosionForce))
         return NULL;
     Explosion *explosion = static_cast<Explosion *>(UMemory::FastAlloc(sizeof(Explosion), "Explosion"));
-    PhysicsObject *object = explosion != NULL ? explosion->Construct(type, unused, position, size, directHit, ownerSig)
+    PhysicsObject *object = explosion != NULL ? explosion->Construct(type, direction, position, size, directHit, ownerSig)
                                               : NULL;
     SpawnPhysicsObject(object);
     return object;

@@ -115,7 +115,7 @@ void Human::Deactivate() {
 void Human::Simulate() {
     if (character == NULL)
         return;
-    AICharacter_Execute(character, 0);
+    character->Execute();
     FollowCharacter();
     PhysicsObject::Simulate();
 }
@@ -153,7 +153,7 @@ int Human::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, float
 
     if (!dead && ai->hitShape != NULL) {
         ai->NotifyZoneDamage(&lastHit);
-        int zone = AICharacter_GetZoneLastHit(ai, 0);
+        int zone = ai->GetZoneLastHit();
         amount = float(ai->GetZoneHitPointScale(zone, amount) * amount);
         ai->PlayZoneInjuryAnim(zone, amount, kind);
     }

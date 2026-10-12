@@ -16,7 +16,9 @@
 #include "../../common/xbeOverload.h"
 #include "../../helpers.h"
 #include "../data/RCARPFile.h"
+#include "../engine/GameInterfaces.hpp"   // GLoadingScreen_Status
 #include "../engine/CoreFoundation.h"     // NullFunction, ThrowLengthError
+#include "../game/AIViews.h"              // AIElementController
 #include "../game/MissionManager.h"
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
@@ -35,9 +37,6 @@
 char TrackName[0x80];
 
 // ---- the game's code not ported yet
-#define GLoadingScreen_Status ((void (*)(const char *))0x000e2ff0)
-#define AIElementController_Construct ((void (*)(UData *elements))0x000285b0)
-#define AIElementController_Destruct ((void (*)(void))0x00028b60)
 #define GFX_Trigger ((void *(*)(void *effect, const float *position, const Coord4 *direction, ArticleEffect *owner, void *data, int, int, int))0x000d34e0)
 
 namespace {
@@ -338,7 +337,7 @@ void WWorld::Destruct() {
 void WWorld::Reset() {
     UGroup *mapGroup = group->GroupLocateTag(kTagMap);
     mapGroup->DataLocateTag(kTagWorldMap);   // looked up and not used
-    AIElementController_Construct(mapGroup->DataLocateTag(kTagAIElements));
+    AIElementController::Construct(mapGroup->DataLocateTag(kTagAIElements));
     glbMissionManager->Reset();
     UData *rules = mapGroup->DataLocateTag(kTagRules);
     UData *missionSets = mapGroup->DataLocateTag(kTagMissionSets);
@@ -403,7 +402,7 @@ void WWorld::Close() {
     }
     RPathEngine::Purge();
     SMissionManager::Destroy();
-    AIElementController_Destruct();
+    AIElementController::Destruct();
     WTriggerManager *triggers = fgTriggerManager;
     if (triggers != NULL) {
         NullFunction();   // the trigger manager's destructor, an empty function

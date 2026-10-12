@@ -5,6 +5,7 @@
 #include <bit>
 #include <math.h>
 
+#include "AIViews.h"                    // AIHelicopter, fgAIElementController
 #include "Missile.h"
 #include "MissionManager.h"
 #include "Simulation.h"
@@ -28,11 +29,8 @@
 
 // ---- the game's code not ported yet
 
-#define AIElementController_ForceVehicleToSleep ((void (__fastcall *)(void *, int, HelicopterAI *vehicle))0x000289f0)
-#define AIHelicopter_DisableTargetBeacon ((void (__fastcall *)(HelicopterAI *, int))0x000318d0)
 
 // ---- globals
-#define fgAIElementController PTR_AT(0x001ddee4)
 
 static_assert(sizeof(ActionQueue) == 0x974, "an action queue is 0x974 bytes");
 
@@ -218,7 +216,7 @@ DamageZone* PHelicopter::GetDamageZones(uint32_t *count) {
 void PHelicopter::Simulate() {
     SimpleRigidBody *body = fgSimulation.GetSimpleRigidBody(rigidBodySlot);
     if (sleepStep != 0 && fgSimulation.stepCount > sleepStep) {
-        AIElementController_ForceVehicleToSleep(fgAIElementController, 0, ai);
+        fgAIElementController->ForceVehicleToSleep(ai);
         body->velocity = kZero;
     }
 
@@ -360,7 +358,7 @@ int PHelicopter::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount,
             }
             ai->navigateMode = 1;
             ai->attackMode = 0x10;
-            AIHelicopter_DisableTargetBeacon(ai, 0);
+            ai->DisableTargetBeacon();
             animation->ProcessStimuliZones(kStimulusKilled16, kAllZones, step, kStimulusMode);
         }
     }

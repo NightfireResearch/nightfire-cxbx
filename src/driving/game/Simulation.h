@@ -173,9 +173,10 @@ public:
                                       uint32_t ownerSig);                                       // 0x000b5b80
     PhysicsObject* SpawnShellObject(int shellType, const Coord3 *direction, const Coord3 *origin, uint32_t ownerSig,
                                     float damage, float explosionSize, int streakKind);         // 0x000b5c90
-    // `unused2` is not read; `unused` is the constructor's (which does not read it either)
-    PhysicsObject* SpawnExplosionObject(int type, uint32_t unused2, int unused, const Coord3 *position, float size,
-                                        PhysicsObject *directHit, const uint32_t *ownerSig);    // 0x000b5d50
+    // `unused` is not read; the direction is the constructor's (which does not read it either)
+    PhysicsObject* SpawnExplosionObject(int type, uint32_t unused, const Coord3 *direction, const Coord3 *position,
+                                        float size, PhysicsObject *directHit,
+                                        const uint32_t *ownerSig);                              // 0x000b5d50
     PhysicsObject* SpawnNewtonObject(const Coord3 *direction, const Coord3 *position, const Coord3 *momentum,
                                      const Coord3 *spin, CARP::Instance *instances, int instanceCount,
                                      float mass, float lifetime);                               // 0x000b5e20

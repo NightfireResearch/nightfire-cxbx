@@ -15,6 +15,7 @@
 #include "../game/BondCar.h"
 #include "../game/BondCarSnowmobile.h"
 #include "../game/BondCarState.h"
+#include "../game/EventsA.h"                // ECollision
 #include "../game/MissionManager.h"
 #include "../game/Simulation.h"
 #include "../game/SoftZone.h"
@@ -273,7 +274,7 @@ void InstallFakes() {
     HookBoth(0x000b6720, XbeAddress(&SMissionManager::IncShotsHit), (const void *)&FakeShotsHit);
     HookBoth(0x00090a40, XbeAddress(&RSceneObj::Reset), (const void *)&FakeSceneReset);
     HookBoth(0x00081430, XbeAddress(&RPlayerCamera::ResetCamera), (const void *)&FakeResetCamera);
-    HookInstall(0x0003f370, (const void *)&FakeECollision);
+    HookBoth(0x0003f370, XbeAddress(&ECollision::Construct), (const void *)&FakeECollision);
     HookBoth(0x000abfc0, XbeAddress(&RTyreTrack::Construct), (const void *)&FakeTyreTrack);
 }
 
@@ -1215,7 +1216,7 @@ void Tick() {
             g_tickLimit = atoi(ticks);
         FpControlGet(&g_x87, &g_sse);
         g_snowHook.at = uint32_t(XbeAddress(&PBondCar::ProcessSnowmobilePhysics));
-        g_eventHook.at = kECollision;
+        g_eventHook.at = uint32_t(XbeAddress(&ECollision::Construct));   // the original reaches it through its jump
         Patch(&g_snowHook, (const void *)&LiveSnowmobile);
         g_on = true;
         printf("[bondcarA-live] comparing every snowmobile physics call for %d ticks from tick %d\n", g_tickLimit,

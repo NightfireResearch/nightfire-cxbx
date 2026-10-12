@@ -73,7 +73,9 @@ enum WeaponFlags : uint32_t {
 struct WeaponRecord {
     int32_t id;                 // +0x00 its index
     const char *name;           // +0x04 "Gun", "Rocket", ...
-    int32_t textIds[3];         // +0x08
+    int32_t textId;             // +0x08
+    int32_t pickupText;         // +0x0c the HUD's message when the weapon is picked up (EPowerUpAmmo; names ours)...
+    int32_t ammoText;           // +0x10 ... and when ammunition for it is, loaded and with ammunition
     uint32_t flags;             // +0x14 WeaponFlags
     int32_t ammo;               // +0x18
     int32_t loaded;             // +0x1c rounds ready: each shot takes one, each reload step adds one

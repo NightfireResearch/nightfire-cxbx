@@ -10,7 +10,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "AICharacter.h"                    // fgHandObj
+#include "AIViews.h"                        // fgHandObj
+#include "EventsC.h"                        // ERestart
 #include "Missile.h"
 #include "Simulation.h"
 #include "Vehicle.h"                        // PVehicle's slots
@@ -46,22 +47,7 @@
 // counters and scores are in MissionScores.cpp.
 // ---------------------------------------------------------------------------------------------------------------
 
-// ---- the game's code not ported yet
-#define GHud_SetAutoDrive ((void (__fastcall *)(GHud *, int, bool on))0x000d9040)
-#define GHud_GetBlackFadePct ((float (__fastcall *)(GHud *, int))0x000d7d50)
-#define GHud_GetBlackFadeAnimating ((bool (__fastcall *)(GHud *, int))0x000d7d40)
-#define GHud_FadeInFromBlack ((void (__fastcall *)(GHud *, int, int steps))0x000d7c70)
-#define GHud_FadeOutToBlack ((void (__fastcall *)(GHud *, int, int steps))0x000d7cd0)
-#define GHud_GetLetterBoxMode ((int (__fastcall *)(GHud *, int))0x000d9b90)
-#define GHud_RadarRadiusInMeters ((float (__fastcall *)(GHud *, int))0x000d7d90)
-#define AIElementController_RedirectCarpElement ((CARP::AIElement *(__fastcall *)(void *, int, CARP::AIElement *element))0x000286d0)
-#define AIElementController_SyncRuleInfo ((void (__fastcall *)(void *, int, CARP::AIElement *element))0x00028a40)
-#define AIElementController_CalcMightAsWellBeDead ((void (__fastcall *)(void *, int))0x00028730)
-#define AIElementController_GetNumMightAsWellBeDead ((int (__fastcall *)(void *, int))0x000287c0)
-#define ERestart_Construct ((void *(__fastcall *)(void *, int))0x00043460)
-
 // ---- the game's globals
-#define fgAIElementController (*(void **)0x001ddee4)
 #define fgScheduler (*(Scheduler **)0x001e520c)
 #define gSuperEasy BOOL8_AT(0x001e476c)
 
@@ -137,13 +123,13 @@ void DeleteRule(SMissionRule *rule) {
 }
 
 CARP::AIElement *Redirect(CARP::AIElement *element) {
-    return AIElementController_RedirectCarpElement(fgAIElementController, 0, element);
+    return fgAIElementController->RedirectCarpElement(element);
 }
 
 // An objective vehicle's tyres cannot be shot out
 void ProtectObjectiveVehicle(CARP::AIElement *element) {
     CARP::AIElement *live = Redirect(element);
-    if (live->type == 1 && live->unknown48 == 1 && !live->unknown77 && live->object != NULL)
+    if (live->type == CARP::kAIElementVehicle && live->unknown48 == 1 && !live->unknown77 && live->object != NULL)
         DisableTyreBlowOuts(live->object);
 }
 
@@ -564,7 +550,7 @@ void SMissionManager::SetAutoDrive(bool on, bool changeControls) {
                 IOModule::GetIOModule()->resendAll = true;
             }
             if (fgHandObj != NULL)
-                AICharacterHands_ShowHands(fgHandObj, 0);
+                fgHandObj->ShowHands();
             TargetPicker.ActivateTargeting(kTargetingAutoDrive);
         } else {
             if (changeControls) {
@@ -573,12 +559,12 @@ void SMissionManager::SetAutoDrive(bool on, bool changeControls) {
                 IOModule::GetIOModule()->resendAll = true;
             }
             if (fgHandObj != NULL)
-                AICharacterHands_HideHands(fgHandObj, 0);
+                fgHandObj->HideHands();
             TargetPicker.DeactivateTargeting();
         }
     }
     if (changeControls)
-        GHud_SetAutoDrive(GHud::TheApp(), 0, on);
+        GHud::TheApp()->SetAutoDrive(on);
     autoDrive = on;
 }
 
@@ -589,7 +575,7 @@ int SMissionManager::GoingToSkipCinematic() {
 
 // FUNC_AT(0x000b65b0)
 int SMissionManager::IsSkippingCinematic() {
-    if (skippingCinematic && cinematicMode != 0 && GHud_GetBlackFadePct(GHud::TheApp(), 0) == 1.0f)
+    if (skippingCinematic && cinematicMode != 0 && GHud::TheApp()->GetBlackFadePct() == 1.0f)
         return 1;
     return 0;
 }
@@ -602,18 +588,18 @@ void SMissionManager::ClearCinematicMode(int mask) {
     events[kEventCinematicSkipped] = 0;
     fgScheduler->cinematicModeSkipping = 0;
     MissionCinematicMode = cinematicMode;
-    if (GHud_GetBlackFadePct(GHud::TheApp(), 0) > 0.0f || GHud_GetBlackFadeAnimating(GHud::TheApp(), 0))
-        GHud_FadeInFromBlack(GHud::TheApp(), 0, fgSimulation.stepsPerSecond >> 1);
+    if (GHud::TheApp()->GetBlackFadePct() > 0.0f || GHud::TheApp()->GetBlackFadeAnimating())
+        GHud::TheApp()->FadeInFromBlack(fgSimulation.stepsPerSecond >> 1);
     skippingCinematic = 0;
 }
 
 // FUNC_AT(0x000b79d0)
 void SMissionManager::SkipCinematic() {
     if (cinematicMode != 0 && !skippingCinematic && missionState == kMissionRunning &&
-        GHud_GetLetterBoxMode(GHud::TheApp(), 0) == 0 && fgSimulation.stepCount > fgSimulation.stepsPerSecond * 2) {
+        GHud::TheApp()->GetLetterBoxMode() == 0 && fgSimulation.stepCount > fgSimulation.stepsPerSecond * 2) {
         events[kEventCinematicSkipped] = 1;
         skippingCinematic = 1;
-        GHud_FadeOutToBlack(GHud::TheApp(), 0, fgSimulation.stepsPerSecond >> 1);
+        GHud::TheApp()->FadeOutToBlack(fgSimulation.stepsPerSecond >> 1);
     }
 }
 
@@ -765,8 +751,8 @@ void SMissionManager::SetDriveMissile(Missile *missile) {
 // FUNC_AT(0x000b84b0)
 void SMissionManager::Win() {
     missionState = kMissionWon;
-    AIElementController_CalcMightAsWellBeDead(fgAIElementController, 0);
-    kills += AIElementController_GetNumMightAsWellBeDead(fgAIElementController, 0);
+    fgAIElementController->CalcMightAsWellBeDead();
+    kills += fgAIElementController->GetNumMightAsWellBeDead();
     CalcEndMissionScores();
     if (missionEndTime == 0)
         missionEndTime = Ftol(double(fgSimulation.stepCount) * fgSimulation.timeStep);
@@ -828,9 +814,9 @@ void SMissionManager::Update() {
     ProcessRules();
     if (Launch.restartStep > 0 && fgSimulation.stepCount > Launch.restartStep) {
         Launch.restartCount++;
-        void *restart = Event::operator new(4);
+        void *restart = Event::operator new(sizeof(ERestart));
         if (restart != NULL)
-            ERestart_Construct(restart, 0);
+            static_cast<ERestart *>(restart)->Construct();
     }
 }
 
@@ -856,7 +842,7 @@ const Coord4* SMissionManager::GetCurrObjective(int slot) {
         return &objectiveMarker[slot]->position;
     case kObjectiveElement: {
         CARP::AIElement *element = Redirect(objectiveElement[slot]);
-        AIElementController_SyncRuleInfo(fgAIElementController, 0, element);
+        fgAIElementController->SyncRuleInfo(element);
         return &element->position;
     }
     default:
@@ -971,7 +957,7 @@ void SMissionManager::UpdateObjectiveSpecial() {
         const Coord3 *position = fgSimulation.cars.first[0]->GetPosition();
         Coord4 car = { position->x, position->y, position->z, 0.0f };
         Coord4 target = { objective->x, objective->y, objective->z, 0.0f };
-        float radius = GHud::TheApp() != NULL ? GHud_RadarRadiusInMeters(GHud::TheApp(), 0) : 16.0f;
+        float radius = GHud::TheApp() != NULL ? GHud::TheApp()->RadarRadiusInMeters() : 16.0f;
         if (vec3distance(&car, &target) < radius) {
             objectiveSeenStep = fgSimulation.stepCount;
         } else {

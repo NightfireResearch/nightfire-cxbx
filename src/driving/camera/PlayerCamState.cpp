@@ -22,8 +22,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // The game's code not ported yet
-#define GHud_AimOn ((void (__fastcall *)(GHud *, int))0x000d9ba0)
-#define GHud_AimOff ((void (__fastcall *)(GHud *, int))0x000d9bd0)
 
 namespace {
 
@@ -250,7 +248,7 @@ void RPlayerCamState::AimZoom() {
     camera->SetAutoDriveRotationY(rotationY[0]);
     CarAudio()->aiming = 1;
     if (GHud::TheApp() != NULL)
-        GHud_AimOn(GHud::TheApp(), 0);
+        GHud::TheApp()->AimOn();
 }
 
 // FUNC_AT(0x0008a390)
@@ -260,7 +258,7 @@ void RPlayerCamState::AimRelease() {
     if (aiming) {
         CarAudio()->aiming = 0;
         if (GHud::TheApp() != NULL)
-            GHud_AimOff(GHud::TheApp(), 0);
+            GHud::TheApp()->AimOff();
     }
     aiming = false;
     unknown0B = false;

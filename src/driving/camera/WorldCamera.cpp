@@ -11,6 +11,7 @@
 #include "../../helpers.h"
 #include "../anim/Actor.h"              // ActActorDatabase
 #include "../anim/AnimEngine.h"         // Handle
+#include "../game/AIViews.h"              // AIVehicle
 #include "../game/Simulation.h"
 #include "../render/Colorize.h"
 #include "../render/Decals.h"
@@ -36,6 +37,7 @@
 #include "../engine/ActionQueue.hpp"
 #include "../engine/CoreContainers.h"     // GameVector
 #include "../engine/CoreFoundation.h"     // NullFunction
+#include "../engine/GameInterfaces.hpp"   // GHud
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
 #include "../game/Debris.h"
@@ -70,8 +72,6 @@
 // runs and draw traces.
 // ---------------------------------------------------------------------------------------------------------------
 
-class AIVehicle;
-class GHud;
 struct RigidBody;
 
 namespace {
@@ -92,14 +92,11 @@ struct SceneObjDescFields {
 #define AISplinePath_Construct ((AISplinePath *(__fastcall *)(AISplinePath *, int, void *path))0x00035680)
 #define AISplinePath_Destruct ((void (__fastcall *)(AISplinePath *, int))0x00035730)
 #define AISplinePath_Reset ((void (__fastcall *)(AISplinePath *, int, void *path))0x00035740)
-#define AIVehicle_GetSplinePath ((AISplinePath *(__fastcall *)(AIVehicle *, int))0x000359d0)
 #define FUN_00022870 ((void (*)(Coord4 *out, const Coord4 *a, const Coord4 *b, float t))0x00022870)
 #define GFXGallery_CULL_Start ((void (__fastcall *)(void *, int))0x000d3aa0)
 #define GFX_CULL_GetNextCanvas ((int (*)(Coord4 *sphere, float *height, bool *checkFar, float *farScale))0x000d3450)
 #define GGallery_CULL_SetCanvas ((void (*)(int item, bool culled, float distance))0x000d3470)
 #define GFX_Update ((void (*)())0x000d34c0)
-#define GHud_TheApp ((GHud *(*)())0x000d7c10)
-#define GHud_UpdateTargets ((void (__fastcall *)(GHud *, int))0x000e1a90)
 
 // ---- globals
 #define RWorldCameraVtable ((void **)0x001924e4)
@@ -431,8 +428,8 @@ Coord3* RWorldCamera::GetAnchorLinearVelocity() {
     if (object->flags & PhysicsObject::kSimpleBody)
         return &SimpleBodyOf(object)->velocity;
     AIVehicle *vehicle = AIVehicleOf(fgSimulation.cars.first[0]);
-    if (vehicle != NULL && AIVehicle_GetSplinePath(vehicle, 0) != NULL)
-        return &AIVehicle_GetSplinePath(vehicle, 0)->path->velocity;
+    if (vehicle != NULL && vehicle->GetSplinePath() != NULL)
+        return &vehicle->GetSplinePath()->path->velocity;
     return &RigidBodyOf(object)->velocity;
 }
 
@@ -711,7 +708,7 @@ void RRenderWorldCamera::DrawStaticWorldGeometry(CachedDrawInfo *list) {
     Fog->EnableFog();
     fgRender->DrawWorld(list, 1);
     TargetPicker.UpdateTargets();
-    GHud_UpdateTargets(GHud_TheApp(), 0);
+    GHud::TheApp()->UpdateTargets();
     Fog->DisableFog();
     fgRenderer->DisableAlphaWrites();
 }

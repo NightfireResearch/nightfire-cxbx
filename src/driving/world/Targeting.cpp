@@ -8,7 +8,7 @@
 #include "../game/MissionManager.h"
 #include "../engine/UMemory.hpp"
 #include "../game/WeaponSound.h"       // ATargeting
-#include "../game/AICharacter.h"
+#include "../game/AIViews.h"
 #include "../game/WeaponManager.h"
 #include "../camera/CameraSpline.h"     // RCameraMath
 #include "../camera/PlayerCamera.h"     // RCamera, RViewCamera, RPlayerCamera
@@ -36,21 +36,6 @@
 
 namespace {
 
-enum AIVehicleKind : int32_t {
-    kAIVehicleRigidBody = 1,    // its physics object's body is a rigid body
-    kAIVehicleSimpleBody = 2,   // ... a simple one
-};
-
-// An AI vehicle (only the fields read here)
-struct AIVehicleFields {
-    uint32_t vtable;
-    uint8_t unknown04[0xc];
-    int32_t kind;               // +0x10 AIVehicleKind
-    uint8_t unknown14[0x54];
-    uint8_t unknown68;          // +0x68 zero: GetVelocity answers zero
-};
-static_assert(offsetof(AIVehicleFields, unknown68) == 0x68, "AI vehicle layout");
-
 typedef int (*TargetCompare)(const void *a, const void *b);
 
 }  // namespace
@@ -62,10 +47,6 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 
 // ---- calls to originals not ported
 
-#define AIVehicle_GetPhysicsObject ((PhysicsObject *(__fastcall *)(AIVehicle *, int))0x00035840)
-#define AIVehicle_GetPosition ((const Coord3 *(__fastcall *)(AIVehicle *, int))0x000359e0)
-#define GHud_SetTarget ((void (__fastcall *)(GHud *, int, const ScreenPos *cursor))0x000d9f50)
-#define GHud_SetTargetLockState ((void (__fastcall *)(GHud *, int, int state))0x000d9fb0)
 #define Crt_qsort ((void (*)(void *base, size_t count, size_t size, TargetCompare compare))0x00132db0)
 
 // XBE_GLOBAL(0x0023e174, 4)
@@ -130,10 +111,6 @@ __declspec(naked) float Tangent(double radians) {
         fstp st(0)
         ret
     }
-}
-
-const AIVehicleFields *Fields(const AIVehicle *vehicle) {
-    return reinterpret_cast<const AIVehicleFields *>(vehicle);
 }
 
 // The player's vehicle's body (always a rigid body)
@@ -317,8 +294,8 @@ void WTargetable::UpdatePosition() {
         zone.SetPosition(&position);
         break;
     case kTargetVehicle:
-        position = *AIVehicle_GetPosition(vehicle, 0);
-        if (Fields(vehicle)->kind == kAIVehicleSimpleBody)
+        position = *Xyz(vehicle->GetPosition());
+        if (vehicle->vehicleType == kAIHelicopter)
             position.y += kSimpleVehicleTargetHeight;
         zone.SetPosition(&position);
         break;
@@ -358,15 +335,15 @@ bool WTargetable::GetVelocity(Coord3 *velocity) {
         *velocity = *physics->GetLinearVelocity();
         return true;
     case kTargetVehicle:
-        if (vehicle == NULL || !Fields(vehicle)->unknown68)
+        if (vehicle == NULL || !vehicle->active)
             break;
-        if (Fields(vehicle)->kind == kAIVehicleRigidBody) {
-            *velocity = fgSimulation.GetRigidBody(AIVehicle_GetPhysicsObject(vehicle, 0)->rigidBodySlot)->velocity;
+        if (vehicle->vehicleType == kAIGroundVehicle) {
+            *velocity = fgSimulation.GetRigidBody(vehicle->GetPhysicsObject()->rigidBodySlot)->velocity;
             return true;
         }
-        if (Fields(vehicle)->kind == kAIVehicleSimpleBody) {
+        if (vehicle->vehicleType == kAIHelicopter) {
             *velocity =
-                fgSimulation.GetSimpleRigidBody(AIVehicle_GetPhysicsObject(vehicle, 0)->rigidBodySlot)->velocity;
+                fgSimulation.GetSimpleRigidBody(vehicle->GetPhysicsObject()->rigidBodySlot)->velocity;
             return true;
         }
         return false;
@@ -681,16 +658,16 @@ void WTargetPicker::UpdateAutoDriveTargeting() {
 
 // FUNC_AT(0x000ce5a0)
 void WTargetPicker::DrawTargetingSystem() {
-    GHud_SetTargetLockState(GHud::TheApp(), 0, lockState);
+    GHud::TheApp()->SetTargetLockState(lockState);
     if (!active)
         return;
     if (mode == kTargetingAutoDrive) {
-        GHud_SetTarget(GHud::TheApp(), 0, &cursor);
+        GHud::TheApp()->SetTarget(&cursor);
         GHud::TheApp();         // (called again, its answer unused)
     } else if (mode == kTargetingNormal) {
         ScreenPos screen;
         TargetPicker.GetScreenPos(&screen, &TargetPicker.worldTarget);
-        GHud_SetTarget(GHud::TheApp(), 0, &screen);
+        GHud::TheApp()->SetTarget(&screen);
     }
 }
 

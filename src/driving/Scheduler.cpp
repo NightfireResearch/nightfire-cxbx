@@ -206,8 +206,8 @@ Schedule* Schedule::DeleteDerived(unsigned flags) {
 // The emptiest bucket gets the task (the first of equals). Should every bucket hold 999999 tasks or more, the
 // original reads the slot before listOfTasks - never the case.
 // FUNC_AT(0x0005c490)
-void Schedule::AddTask(int eventType, uint32_t staticData, unsigned short spacing, bool unused, int delayTicks,
-                       int repeats) {
+uint32_t Schedule::AddTask(int eventType, uint32_t staticData, unsigned short spacing, bool unused, int delayTicks,
+                           int repeats) {
     (void)unused;
     int emptiest = -1;
     uint32_t fewest = kFullBucket;
@@ -233,7 +233,7 @@ void Schedule::AddTask(int eventType, uint32_t staticData, unsigned short spacin
     list->IncSize(1);
     head->prev = node;
     node->prev->next = node;
-    numTasks++;
+    return numTasks++;
 }
 
 // Every bucket of the eight is searched, in use or not: a schedule with fewer buckets than the task's would read

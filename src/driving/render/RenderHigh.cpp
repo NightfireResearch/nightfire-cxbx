@@ -35,6 +35,7 @@
 #include "../data/Tuning.h"
 #include "../eagl/RenderContext.h"
 #include "../engine/CoreFoundation.h"     // NullFunction
+#include "../engine/GameInterfaces.hpp"   // GHud
 #include "../engine/GameLoop.h"           // LaunchPage
 #include "../engine/InputConfig.h"        // BuildFileName
 #include "../game/MissionManager.h"
@@ -98,8 +99,6 @@ constexpr uint32_t kPhysicsNamespaceSize = 4;
 } // namespace
 
 // ---- the game's code not ported yet
-#define GHud_Construct ((GHud *(__fastcall *)(void *, int))0x000dab50)
-#define GHud_Render ((void (__fastcall *)(GHud *, int))0x000e0140)
 #define GetParticFileForMission ((const char *(*)(void))0x000e3e50)
 #define CRT_atexit ((int (*)(void (*)(void)))0x00132a7b)
 
@@ -293,7 +292,7 @@ RRenderHigh* RRenderHigh::Construct() {
 
     fgRenderHigh = this;
     memory = OperatorNew(kHudSize);
-    hud = memory != NULL ? GHud_Construct(memory, 0) : NULL;
+    hud = memory != NULL ? static_cast<GHud *>(memory)->Construct() : NULL;
     return this;
 }
 
@@ -393,7 +392,7 @@ void RRenderHigh::Render() {
     RTimeData::Update();
     for (uint32_t i = 0; i < viewCount; i++)
         views[i].view->Render();
-    GHud_Render(hud, 0);
+    hud->Render();
 
     uint32_t now = uint32_t(__rdtsc());
     int32_t cycles = int32_t(now - lastTimestamp);

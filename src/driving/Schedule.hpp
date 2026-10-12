@@ -99,8 +99,8 @@ struct Schedule {
     // VIRTUAL(0)
     Schedule *DeletingDestructor(unsigned flags);
 
-    // Adds a task to the emptiest bucket (0x0005c490). `unused` is never read.
-    void AddTask(int eventType, uint32_t staticData, unsigned short spacing, bool unused, int delayTicks,
+    // Adds a task to the emptiest bucket (0x0005c490) and answers its serial number. `unused` is never read.
+    uint32_t AddTask(int eventType, uint32_t staticData, unsigned short spacing, bool unused, int delayTicks,
                  int repeats);
     // Removes the task with this serial number, wherever it is (0x0005bc70). True if there was one.
     bool RemoveTask(uint32_t taskNum);

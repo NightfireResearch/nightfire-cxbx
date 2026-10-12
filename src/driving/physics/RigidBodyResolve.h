@@ -12,8 +12,7 @@
 
 #include "RigidBody.h"
 
-// What a collision did (0x54 bytes; the name is ours). FUN_0003dc20 constructs it: the three vectors (0, 0, 0, 1),
-// the rest zero except +0x38..+0x3f, which it leaves, and unknown50, -1. CollideWithObject fills the two sides with
+// What a collision did (0x54 bytes; the name is ours; the PS2 symbols' COLLISION_INFO). CollideWithObject fills the two sides with
 // the bodies' kinds and owners; GenerateImpulse makes the body side 1 and the other 6.
 struct CollisionImpact {
     Coord4 point;               // +0x00
@@ -31,6 +30,10 @@ struct CollisionImpact {
     int8_t ownerB;              // +0x4d
     uint16_t tag;               // +0x4e GenerateImpulse's argument; in CollideWithObject, owner B's ApplyDamage answer
     int32_t unknown50;          // +0x50 CollideWithWorld: the corner of the box that hit (a vehicle's)
+
+    // The three vectors (0, 0, 0, 1), the rest zero but unknown38, which is left, and unknown50, -1 (Ghidra:
+    // FUN_0003dc20, placed among the events)
+    CollisionImpact* Construct();                                                       // 0x0003dc20
 };
 static_assert(sizeof(CollisionImpact) == 0x54, "a collision impact is 84 bytes");
 static_assert(offsetof(CollisionImpact, damageScaleA) == 0x30 && offsetof(CollisionImpact, closingSpeed) == 0x40 &&

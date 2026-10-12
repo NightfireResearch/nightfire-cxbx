@@ -14,6 +14,10 @@ struct SimRandom {
     SimRandom* Construct();     // 0x0005cc80
     uint32_t Generate();        // 0x0005cc90: 0-65535
     void Reset();               // 0x0005ccb0: a fixed state, advanced seed % 50 times
+    // Thirty-two bits: the first number's complement in the top half, the second number in the bottom (Ghidra:
+    // FUNC_00040070, placed among the events; Missile::Missile's, and inlined in EKickAIElement and EKickObject;
+    // the name is ours)
+    uint32_t GenerateBits();    // 0x00040070
 };
 static_assert(sizeof(SimRandom) == 16, "SimRandom is 16 bytes");
 

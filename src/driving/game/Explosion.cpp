@@ -74,8 +74,8 @@ uint32_t RandomWord() {
 }  // namespace
 
 // FUNC_AT(0x0005cd70)
-Explosion* Explosion::Construct(int type, int, const Coord3 *position, float size, PhysicsObject *directHit,
-                                const uint32_t *ownerSig) {
+Explosion* Explosion::Construct(int type, const Coord3 *, const Coord3 *position, float size,
+                                PhysicsObject *directHit, const uint32_t *ownerSig) {
     PhysicsObject::Construct("explosion", kExplosionNames[type], kObjectExplosion, *ownerSig, false, false);
     this->size = size;
     this->directHit = directHit;

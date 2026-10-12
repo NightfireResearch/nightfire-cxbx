@@ -220,7 +220,11 @@ inline WorldArticle *ArticleOf(const CARP::Instance *instance) {
 
 // An environment description ('Envi' records, 0x1c bytes); a render instance's is the low half of its +0x2c word
 struct EnviroDesc {
-    uint8_t unknown00[0x1c];
+    uint32_t unknown00;
+    int32_t fxMode;                     // +0x04 AFX::SetMode's mode (EAudioUpdate's; names ours)
+    char ambience[0xc];                 // +0x08 the speech fader's secondary; empty: none
+    float level;                        // +0x14 the listener's level and band width, when the band width is
+    float bandWidth;                    // +0x18 above zero
 };
 static_assert(sizeof(EnviroDesc) == 0x1c, "an environment description is 28 bytes");
 

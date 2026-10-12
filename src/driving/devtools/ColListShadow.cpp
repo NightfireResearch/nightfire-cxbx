@@ -16,10 +16,12 @@
 #include "../world/CollisionManager.h"
 #include "../world/World.h"
 #include "../EventManager.hpp"
+#include "../game/EventsB.h"                // EHitWindow
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
 #include "../../common/xbeOriginal.h"
+#include "../../common/xbeOverload.h"       // XbeAddress
 #include "../../helpers.h"
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -625,7 +627,7 @@ struct Hook {
     uint8_t saved[5];
     bool on;
 };
-Hook g_hooks[4];
+Hook g_hooks[8];
 int g_hookCount;
 
 void HookInstall(uint32_t at, const void *to) {
@@ -795,6 +797,7 @@ void TestCheckHitWindow() {
     if ((uint32_t)(uintptr_t)&Event::operator new != 0x0005a5a0)
         HookInstall((uint32_t)(uintptr_t)&Event::operator new, (const void *)&FakeEventNew);
     HookInstall(0x000403f0, (const void *)&FakeHitWindow);
+    HookInstall(uint32_t(XbeAddress(&EHitWindow::Construct)), (const void *)&FakeHitWindow);   // the port's call
     State before;
     Save(&before);
     WindowRun p, o;

@@ -17,7 +17,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-#define GHud_Stylin ((void (__fastcall *)(GHud *, int))0x000d7d60)
 
 // ---- the game's globals
 
@@ -346,7 +345,7 @@ void SMissionManager::AddScore(int score, int points) {
     scores[score] += points;
     if (points > 0 && score == kScoreStylin) {
         if (GHud::TheApp() != NULL)
-            GHud_Stylin(GHud::TheApp(), 0);
+            GHud::TheApp()->Stylin();
         stylinCount++;
     }
 }

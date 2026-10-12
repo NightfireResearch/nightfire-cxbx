@@ -22,6 +22,7 @@
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../render/RSceneObj.hpp"
+#include "../game/EventsB.h"              // EHitWindow
 #include "../game/SimulationContainers.h"
 
 #pragma fp_contract(off)
@@ -36,7 +37,6 @@
 // ---- the game's code not ported yet (or ported elsewhere for other node types)
 // the pointer vectors' uninitialized_fill_n, shared with the rest of the game
 #define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
-#define EHitWindow_Construct ((void (__fastcall *)(void *, int, Coord4 point, Coord4 normal, WindowHit hit, int flag))0x000403f0)
 // The tree helpers every map of the game shares (identical code folded by the linker), on this file's node types.
 // 0x00053580 and 0x000527e0, 0x00052a20 are the attribute system's ported copies (of its own node types; one warns
 // as provisional), called here at their addresses; 0x00118f20 is CARP::ResolverMap::Find's.
@@ -79,7 +79,6 @@ constexpr int kInstanceVariantShift = 2;             // WCollisionInstance::flag
 constexpr uint32_t kBarrierMask = 0xf0;
 constexpr uint32_t kBadWindowGroupSize = 0x8000;
 constexpr uint8_t kBrokenWindowFace = 0x70;           // WorldCollisionInfo::faceType once a window broke
-constexpr size_t kHitWindowEventSize = 0x54;          // sizeof(EHitWindow)
 
 constexpr float kStepLengthScale = -1.0f / 48.0f;     // StepCheckHitWorld: one step per 48 units
 static_assert(std::bit_cast<uint32_t>(kStepLengthScale) == 0xbcaaaaab, "the original's -1/48");
@@ -741,9 +740,9 @@ bool WCollisionMgr::CheckHitWindow(WorldCollisionInfo *info, bool create, int ki
         MATRIX4_vect4mult(&hit->corner1, &inverse, &hit->corner1);
     }
 
-    void *event = Event::operator new(kHitWindowEventSize);
+    void *event = Event::operator new(sizeof(EHitWindow));
     if (event != NULL)
-        EHitWindow_Construct(event, 0, info->point, info->normal, *hit, kind == 1);
+        static_cast<EHitWindow *>(event)->Construct(info->point, info->normal, *hit, kind == 1);
     info->faceType = kBrokenWindowFace;
     info->faceSubType = 0;
     return true;

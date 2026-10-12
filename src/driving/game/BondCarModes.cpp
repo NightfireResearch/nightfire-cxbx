@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <bit>
 
-#include "AIVehicle.h"
+#include "AIViews.h"                    // AIGroundVehicle
 #include "BondCar.h"
 #include "Simulation.h"
 #include "SoftZone.h"
@@ -75,7 +75,7 @@ CarPhysics *CallGetPhysics(PBondCar *car) {
 
 // The car's AI's spline path: the original asks for it again at each use
 AISplinePath *SplinePathOf(PBondCar *car) {
-    return AIVehicle_GetSplinePath(CallGetAIGroundVehiclePtr(car), 0);
+    return CallGetAIGroundVehiclePtr(car)->GetSplinePath();
 }
 
 } // namespace

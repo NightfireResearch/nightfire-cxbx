@@ -57,7 +57,7 @@ namespace {
 const uint32_t kPackageLo = 0x000596a0, kPackageHi = 0x0005cd60;
 
 typedef Schedule *(__fastcall *ScheduleConstructFn)(Schedule *, int, int);
-typedef void (__fastcall *AddTaskFn)(Schedule *, int, int, uint32_t, unsigned, unsigned, int, int);
+typedef uint32_t (__fastcall *AddTaskFn)(Schedule *, int, int, uint32_t, unsigned, unsigned, int, int);
 typedef bool (__fastcall *RemoveTaskFn)(Schedule *, int, uint32_t);
 typedef void (__fastcall *ScheduleVoidFn)(Schedule *, int);
 typedef void (__fastcall *RunTasksFn)(Schedule *, int, int, unsigned);
@@ -83,9 +83,9 @@ const ScheduleOps kOriginalOps = {
 };
 
 Schedule *__fastcall PortConstruct(Schedule *s, int, int buckets) { return s->Construct(buckets); }
-void __fastcall PortAddTask(Schedule *s, int, int event, uint32_t data, unsigned spacing, unsigned unused, int delay,
-                            int repeats) {
-    s->AddTask(event, data, (unsigned short)spacing, unused != 0, delay, repeats);
+uint32_t __fastcall PortAddTask(Schedule *s, int, int event, uint32_t data, unsigned spacing, unsigned unused,
+                                int delay, int repeats) {
+    return s->AddTask(event, data, (unsigned short)spacing, unused != 0, delay, repeats);
 }
 bool __fastcall PortRemoveTask(Schedule *s, int, uint32_t task) { return s->RemoveTask(task); }
 void __fastcall PortRemoveAll(Schedule *s, int) { s->RemoveAllTasks(); }
@@ -454,7 +454,7 @@ void RunScript(void *) {
     for (int i = 0; i < s->count; i++) {
         const Op &op = s->ops[i];
         switch (op.kind) {
-        case kAdd: g_ops->addTask(schedule, 0, op.a, op.data, op.b, op.e, op.c, op.d); break;
+        case kAdd: Log(0x43, g_ops->addTask(schedule, 0, op.a, op.data, op.b, op.e, op.c, op.d)); break;
         case kRun: g_ops->runTasks(schedule, 0, op.a, op.b); break;
         case kProcess: g_ops->process[op.a](schedule, 0, op.b, op.c); break;
         case kRemove: Log(0x41, g_ops->removeTask(schedule, 0, op.a)); break;

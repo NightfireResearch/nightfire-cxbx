@@ -7,10 +7,11 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "AIVehicle.h"
+#include "AIViews.h"                        // AIGroundVehicle
 #include "BondCar.h"
 #include "BondCarBasics.h"                  // GetCarColourVariation
 #include "BondCarState.h"                   // CarSurface, the BondCar_* tuning
+#include "EventsA.h"                        // ECollision
 #include "MissionManager.h"       // glbMissionManager
 #include "Simulation.h"
 #include "TyreTrack.h"
@@ -50,8 +51,6 @@
 
 // ---- the game's code not ported yet
 
-#define CollisionImpact_Construct ((CollisionImpact *(__fastcall *)(CollisionImpact *, int))0x0003dc20)
-#define ECollision_Construct ((void *(__fastcall *)(void *, int, CollisionImpact impact))0x0003f370)
 
 // ---- globals
 
@@ -79,7 +78,6 @@ constexpr uint8_t kStimulusDamageBand = 0x13;
 constexpr int kStimulusModeZones = 2;
 
 // The impact event a hard landing raises (RaiseLandingImpact)
-constexpr uint32_t kCollisionEventSize = 0x58;  // sizeof(ECollision)
 constexpr uint16_t kLandingImpactUnknown4A = 0x0e;
 constexpr uint8_t kLandingImpactKindB = 7;
 constexpr uint16_t kLandingImpactTag = 1;
@@ -144,7 +142,7 @@ bool CallIsWheelOnGround(PBondCar *car, int8_t wheel) {
 
 // The car's AI is on no spline path (the original asks the AI again at each use)
 bool OffSplinePath(PBondCar *car) {
-    return CallGetAIGroundVehiclePtr(car) != NULL && AIVehicle_GetSplinePath(CallGetAIGroundVehiclePtr(car), 0) == NULL;
+    return CallGetAIGroundVehiclePtr(car) != NULL && CallGetAIGroundVehiclePtr(car)->GetSplinePath() == NULL;
 }
 
 // ---- the scene object's virtual method
@@ -169,7 +167,7 @@ float WrapTurn(double turn) {
 
 void RaiseLandingImpact(const RigidBody *body, const Coord3 *position, float strength) {
     CollisionImpact impact;
-    CollisionImpact_Construct(&impact, 0);
+    impact.Construct();
     impact.closingSpeed = strength;
     impact.strength = strength;
     impact.kindA = body->kind;
@@ -185,9 +183,9 @@ void RaiseLandingImpact(const RigidBody *body, const Coord3 *position, float str
     impact.tag = kLandingImpactTag;
     Coord4 point;
     impact.point = *Float_COORD3toCOORD4(&point, position);
-    void *event = Event::operator new(kCollisionEventSize);
+    void *event = Event::operator new(sizeof(ECollision));
     if (event != NULL)
-        ECollision_Construct(event, 0, impact);
+        static_cast<ECollision *>(event)->Construct(impact);
 }
 
 namespace {

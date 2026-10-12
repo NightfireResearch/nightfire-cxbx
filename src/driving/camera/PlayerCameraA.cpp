@@ -64,8 +64,6 @@ static float RadiansToTurns = 1.0f / 6.283185f; // as the static initialiser mad
 // ---- calls to originals not ported
 
 #define RCamera_SetFieldOfView ((void (__fastcall *)(RCamera *, int, float))0x00011000)    // FUN_00011000: above 2 only
-// FUN_0003db00: the instance's matrix, its fourth column (0, 0, 0, 1)
-#define CARPInstance_GetMatrix4 ((void (__fastcall *)(const CARP::Instance *, int, MATRIX4 *))0x0003db00)
 
 namespace {
 
@@ -848,7 +846,7 @@ void RPlayerCamera::UpdateWorldAnimationCam() {
                 VU0_quattom4(&endFrame, &keys[0].rotation);
                 TurnFrameRows(&endFrame);
             } else {
-                CARPInstance_GetMatrix4(instance, 0, &endFrame);
+                instance->GetMatrix4(&endFrame);
                 end = MatrixRow(&endFrame, 3);
             }
             Coord4 startDirection;
@@ -961,7 +959,7 @@ void RPlayerCamera::UpdateRelativeAnimationCam() {
                 }
                 VU0_v4sub(&next, &end, &endDirection);
             } else {
-                CARPInstance_GetMatrix4(instance, 0, path);
+                instance->GetMatrix4(path);
                 end = *MatrixRow(path, 3);
             }
             MATRIX4 toHeading;

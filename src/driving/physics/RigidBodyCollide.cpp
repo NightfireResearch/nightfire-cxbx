@@ -12,6 +12,7 @@
 #include "../EventManager.hpp"            // Event::operator new
 #include "../data/Carp.h"                 // CARP::Instance
 #include "../engine/CoreFoundation.h"     // NullFunction
+#include "../game/EventsA.h"              // ECollision
 #include "../game/MissionManager.h"
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
@@ -31,8 +32,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-#define CollisionImpact_Construct ((CollisionImpact *(__fastcall *)(CollisionImpact *, int))0x0003dc20)
-#define ECollision_Construct ((void *(__fastcall *)(void *, int, CollisionImpact impact))0x0003f370)
 
 // ---- globals
 
@@ -54,7 +53,6 @@ constexpr uint32_t kDefaultBarrierMask = 0x10;
 constexpr uint8_t kMissionEventFace = 0x0e;     // a face that raises programmer-defined mission event 0x15
 constexpr int kMissionEventFaceHit = 0x15;
 
-constexpr uint32_t kCollisionEventSize = 0x58;  // sizeof(ECollision)
 constexpr float kWorldBoxForceScale = 6000.0f;  // CollideWithWorld's to ResolveWorldOBBCollision
 
 // The stimuli a hit sends the animation of the world instance it hits: always the first, then by strength
@@ -85,9 +83,9 @@ const Coord4 *Position4(const RigidBody *body) {
 }
 
 void RaiseCollisionEvent(const CollisionImpact &impact) {
-    void *event = Event::operator new(kCollisionEventSize);
+    void *event = Event::operator new(sizeof(ECollision));
     if (event != NULL)
-        ECollision_Construct(event, 0, impact);
+        static_cast<ECollision *>(event)->Construct(impact);
 }
 
 template <class T> void DestroyVector(GameVector<T> *vector) {
@@ -246,7 +244,7 @@ void RigidBody::CollideWithObject(int index, int unknown) {
         float depth = -scratch->body.penetration;
         const Coord4 *point = &scratch->body.contactPoint;
         CollisionImpact impact;
-        CollisionImpact_Construct(&impact, 0);
+        impact.Construct();
         if (!ResolveCollision(this, other, &scratch->body.normal, point, depth, &impact))
             continue;
         if (info->unknown4fc || other->info->unknown4fc) {
@@ -418,7 +416,7 @@ void RigidBody::CollideWithWorld() {
                     point.y = float((double(point.y) - height) + lift);
             }
 
-            CollisionImpact_Construct(&impact, 0);
+            impact.Construct();
             impact.ownerA = ownerIndex;
             GenerateImpulse(&impact, &hit.normal, &point, push, true, hit.faceType, speedScale);
             impact.kindA = kind;
@@ -463,7 +461,7 @@ void RigidBody::CollideWithWorld() {
         if (scratch->body.CheckOBBOverlapAndFindIntersection(box)) {
             Coord4 normal = scratch->body.normal;
             float depth = -scratch->body.penetration;
-            CollisionImpact_Construct(&impact, 0);
+            impact.Construct();
             impact.ownerA = ownerIndex;
             ResolveWorldOBBCollision(&normal, &scratch->body.contactPoint, depth, &impact, &objectVelocity,
                                      kWorldBoxForceScale);

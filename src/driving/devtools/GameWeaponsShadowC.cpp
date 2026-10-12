@@ -133,9 +133,9 @@ const uint32_t kLookupReference = 0x000d35f0;
 const uint32_t kTriggerIncidental = 0x000d3520;
 const uint32_t kZoneGet = 0x00036a10;
 const uint32_t kRegisterZone = 0x00036bb0;
-const uint32_t kOneShotConstruct = 0x000477d0;
 const uint32_t kInfoConstruct = 0x0001d9f0;
 // Ours faked (the jump at the entry followed to our code)
+const uint32_t kOneShotConstruct = 0x000477d0;
 const uint32_t kBulletAdd = 0x0009a3b0;
 const uint32_t kAddLight = 0x0007e440;
 const uint32_t kLocateFX = 0x0008eca0;
@@ -855,7 +855,7 @@ bool InstallHooks() {
         { kTriggerIncidental, (const void *)&FakeTriggerIncidental, false },
         { kZoneGet, (const void *)&FakeZoneGet, false },
         { kRegisterZone, (const void *)&FakeRegisterZone, false },
-        { kOneShotConstruct, (const void *)&FakeOneShot, false },
+        { kOneShotConstruct, (const void *)&FakeOneShot, true },
         { kInfoConstruct, (const void *)&FakeInfoConstruct, false },
         { kBulletAdd, (const void *)&FakeBulletAdd, true },
         { kAddLight, (const void *)&FakeAddLight, true },

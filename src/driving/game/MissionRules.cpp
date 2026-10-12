@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "AIViews.h"                      // AIElementController
 #include "MissionManager.h"               // glbMissionManager
 #include "Simulation.h"
 #include "Vehicle.h"                      // PVehicle
@@ -37,36 +38,6 @@
 
 namespace {
 
-// ---- views (the names are ours) of what other systems' objects hold
-
-// AIElementController::GetStats's figures, as the rules read them
-struct AIElementStats {
-    float unknown00;                    // SRuleHealth, direction non-zero
-    float unknown04;                    // SRuleHealth, direction 0
-    float unknown08;                    // SRuleDamage
-    float unknown0c;                    // SRuleSpeed, direction non-zero
-    float unknown10;                    // SRuleSpeed, direction 0
-    float unknown14;                    // SRuleRange, direction non-zero
-    float unknown18;                    // SRuleRange, direction 0
-};
-
-// What an element's tracked object holds where the rules read the player's health from the mission manager
-struct AITrackedObject {
-    uint8_t unknown00[0x4c];
-    float health;                       // +0x4c
-};
-
-// AIElementController::GetCarpElementTracking's record
-struct AIElementTracking {
-    uint8_t unknown00[0x1c];
-    AITrackedObject *object;            // +0x1c
-    uint8_t unknown20[0x10];
-    Coord3 position;                    // +0x30
-    float speed;                        // +0x3c
-};
-static_assert(offsetof(AIElementTracking, position) == 0x30 && offsetof(AIElementTracking, speed) == 0x3c,
-              "element tracking view");
-
 constexpr float kDegreesPerRadian = 57.2957763671875f;     // 0x42652ee0
 constexpr int kEventDataBytes = 0x64;
 
@@ -74,10 +45,6 @@ constexpr int kEventDataBytes = 0x64;
 
 // ---- calls to originals not ported
 
-#define AIElementController_GetStats ((AIElementStats *(__fastcall *)(void *, int))0x00028620)
-#define AIElementController_GetCarpElementTracking ((AIElementTracking *(__fastcall *)(void *, int, uint32_t element))0x00028700)
-#define AIElementController_RedirectCarpElement ((CARP::AIElement *(__fastcall *)(void *, int, uint32_t element))0x000286d0)
-#define AIElementTracking_GetProperty ((bool (__fastcall *)(AIElementTracking *, int, const char *name))0x00027ce0)
 
 // ---- globals
 // 1 / FLT_MIN, the maths header's, as the static initialisers made it for the unit after the mission manager's;
@@ -86,7 +53,6 @@ constexpr int kEventDataBytes = 0x64;
 float MissionRulesInverseFloatMin = 8.507059e+37f;
 
 
-#define fgAIElementController PTR_AT(0x001ddee4)
 
 #define SMissionRuleVtable ((void **)0x001935c0)
 #define SRuleAlwaysVtable ((void **)0x001935e0)
@@ -111,12 +77,17 @@ RigidBody *PlayerBody() {
     return fgSimulation.GetRigidBody(fgSimulation.cars.first[0]->rigidBodySlot);
 }
 
+// The AI element a target's word names (a resolved reference)
+CARP::AIElement *ElementOf(uint32_t element) {
+    return reinterpret_cast<CARP::AIElement *>(uintptr_t(element));
+}
+
 AIElementTracking *Tracking(uint32_t element) {
-    return AIElementController_GetCarpElementTracking(fgAIElementController, 0, element);
+    return fgAIElementController->GetCarpElementTracking(ElementOf(element));
 }
 
 AIElementStats *Stats() {
-    return AIElementController_GetStats(fgAIElementController, 0);
+    return fgAIElementController->GetStats();
 }
 
 // The target's health as Damage, Death and Health read it: 0 for the types other than the player and an element
@@ -272,8 +243,8 @@ bool SMissionRuleTarget::GetMatrix(MATRIX4 *matrix) {
     if (type == kTargetPlayer) {
         slot = fgSimulation.cars.first[0]->rigidBodySlot;
     } else if (type == kTargetElement) {
-        CARP::AIElement *redirected = AIElementController_RedirectCarpElement(fgAIElementController, 0, element);
-        if (redirected->unknown48 != 1 || redirected->type != 1 || redirected->object == NULL)
+        CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(ElementOf(element));
+        if (redirected->unknown48 != 1 || redirected->type != CARP::kAIElementVehicle || redirected->object == NULL)
             return false;
         slot = redirected->object->rigidBodySlot;
     } else {
@@ -295,7 +266,7 @@ bool SMissionRuleTarget::GetProperty(const char *name) {
         return false;
     }
     if (type == kTargetElement)
-        return AIElementTracking_GetProperty(Tracking(element), 0, name);
+        return Tracking(element)->GetProperty(name);
     return false;
 }
 

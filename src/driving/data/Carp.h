@@ -26,7 +26,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+class AICharacter;
+class AIVehicle;
+class Human;
 class USymbolTable;
+struct AICommand;
 struct PhysicsObject;
 struct TriggerEvents;                   // world/Trigger.h
 
@@ -46,21 +50,65 @@ public:
 
 // ---- record types
 
-// An AI element (tag 'AIEl', 0x100 bytes; the AIElementController hands out its elements by their record:
-// RedirectCarpElement). Only what the ported code reads is named.
+// AIElement::type (names ours)
+enum AIElementType : int32_t {
+    kAIElementCharacter = 0,        // `character` and `characterObject` are the element's
+    kAIElementVehicle = 1,          // `vehicle`, the members and `object` are
+};
+
+// A member of a vehicle element (0x20 bytes): the character parameters each member gets
+struct AIElementMember {
+    uint8_t unknown00[0xc];
+    int32_t unknown0c;              // +0x0c EAIElementSetCharParams' first
+    int32_t accuracy;               // +0x10 its second; EAIElementSetAccuracy's
+    float unknown14;                // +0x14 its third
+    uint8_t unknown18[8];
+};
+static_assert(sizeof(AIElementMember) == 0x20, "an element's member is 32 bytes");
+
+// An AI element (tag 'AIEl', 0x100 bytes; the AIElementController hands out the element standing for a record:
+// RedirectCarpElement). Only what the ported code reads is named; the AI's classes are game/AIViews.h's.
 struct AIElement {
+    enum Flag : uint8_t {
+        kAsleep = 0x02,             // EDeactivateAIElement sets it, EActivateAIElement clears it (names ours)
+        kFlag04 = 0x04,             // EActivateAIElement wakes it without asking OkToSpawnHench
+        kTargetBeacon = 0x08,       // ETargetBeaconOnOff's
+    };
+
     uint8_t unknown00[0x30];
     Coord4 position;                // +0x30
-    uint8_t unknown40[4];
-    int32_t type;                   // +0x44 1 with unknown48 1: `object` is a vehicle with a body
-    int32_t unknown48;              // +0x48
-    uint8_t unknown4c[0x2b];
-    uint8_t unknown77;              // +0x77
-    uint8_t unknown78[0x80];
-    TagReference reference;         // +0xf8 AIElementResolver's
-    PhysicsObject *object;          // +0xfc
+    uint8_t flags;                  // +0x40 Flag
+    uint8_t unknown41[3];
+    int32_t type;                   // +0x44 AIElementType
+    int32_t unknown48;              // +0x48 1: the element's vehicle or character is there to command
+    float unknown4c;                // +0x4c EAIElementSetVehicleParams', EAIElementSetCharParams' third
+    union {                         // +0x50 by type
+        AICharacter *character;
+        AIVehicle *vehicle;
+    };
+    Human *characterObject;         // +0x54 a character element's
+    uint8_t unknown58[0xc];
+    int32_t unknown64;              // +0x64 EAIElementSetCharParams' first
+    int32_t accuracy;               // +0x68 its second; EAIElementSetAccuracy's
+    float unknown6c;                // +0x6c its third
+    uint8_t unknown70[7];
+    uint8_t unknown77;              // +0x77 EKillAIElement: set, `object` is a PBondCar; clear, a PHelicopter
+    uint8_t unknown78[4];
+    int32_t memberCount;            // +0x7c a vehicle element's members
+    AIElementMember members[3];     // +0x80
+    AICharacter *memberCharacters[4];   // +0xe0 ECameraLockOn's members, from 1
+    uint8_t unknownF0[8];
+    union {                         // +0xf8 AIElementResolver's: the element's command (EAICommand's)
+        TagReference reference;
+        AICommand *command;
+    };
+    PhysicsObject *object;          // +0xfc a vehicle element's
 };
-static_assert(sizeof(AIElement) == 0x100 && offsetof(AIElement, type) == 0x44 && offsetof(AIElement, unknown77) == 0x77 &&
+static_assert(sizeof(AIElement) == 0x100, "an AI element is 0x100 bytes");
+static_assert(offsetof(AIElement, position) == 0x30 && offsetof(AIElement, type) == 0x44 &&
+              offsetof(AIElement, vehicle) == 0x50 && offsetof(AIElement, characterObject) == 0x54 &&
+              offsetof(AIElement, accuracy) == 0x68 && offsetof(AIElement, unknown77) == 0x77 &&
+              offsetof(AIElement, memberCount) == 0x7c && offsetof(AIElement, memberCharacters) == 0xe0 &&
               offsetof(AIElement, reference) == 0xf8 && offsetof(AIElement, object) == 0xfc, "AI element layout");
 
 // An article's description (tag 'Base' or 'pD', 100 bytes).
@@ -116,6 +164,8 @@ public:
     void SetDimensions(bool separate, float x, float y, float z);
     // Its height: y when the three dimensions were given separately, else twice x (FUN_0008d640); unrounded
     double SizeY() const;
+    // The matrix with the rows' fourth words (0, 0, 0, 1) (Ghidra: FUN_0003db00)
+    MATRIX4* GetMatrix4(MATRIX4 *matrix) const;                                         // 0x0003db00
 };
 static_assert(sizeof(Instance) == 64, "CARP::Instance is 64 bytes");
 

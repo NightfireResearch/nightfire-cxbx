@@ -7,8 +7,8 @@ uninitialised stack the original leaves in a record. The port writes zero there 
 list also works as a checklist for comparing with the GameCube and PS2 builds: each entry is a question to ask of
 the other build's function.
 
-Each integration adds its round's entries; the latest are the weapons (`game.weapons`,
-docs/driving/game-weapons.md) and the missions (`game.missions`, docs/driving/game-missions.md).
+Each integration adds its round's entries; the latest are the missions (`game.missions`,
+docs/driving/game-missions.md) and the mission events (`game.events`, docs/driving/game-events.md).
 
 Differences of one ulp in floating point are accepted and not listed one by one. For example, an FSIN/FCOS result
 that is rounded through a double-returning helper is one ulp off (docs/driving/maths.md 3.2, section 8).
@@ -70,6 +70,15 @@ Almost all of these are uninitialised stack in the original. "Zero" means the po
 | dsndMixInit | 0x0013d5e0 | byte 7 of the mixer parameters is never written | zero | nothing | sound |
 | SMissionManager::UpdateObjectiveSpecial | 0x000b81a0 | the w of three Coord4s is uninitialised | zero | nothing: only x, y and z feed the dot product | game-missions |
 | SRulePlayerDir::CheckRule | 0x000ba690 | the w of three stack vectors is uninitialised | zero | nothing reads w | game-missions |
+| ECinematicCamera::Process | 0x00049e27 | the placement's w is stack | zero | nothing found reads it | game-events |
+| ECollision::Process | 0x00049ee3 | the zone record's position and velocity w, and its third vector, are stack | zero | nothing: AIZoneController::RegisterZone reads the position's x, y and z only | game-events |
+| EBashCarAlongObjectAxis::Process | 0x00049c8b | the impulse's w is stack | zero | nothing reads it | game-events |
+| EHitWindow::Process; EKickAIElement::Process; EFireWeapon::Process | 0x00047b90, 0x00040710, 0x0004ac40 | the smoke position's w; the push and spin vectors' w; the lob's and the aim point's w | zero | nothing reads them | game-events |
+| EResetPlayerCarPos::Process | 0x0004d56e | the momentum's w is stack | zero | nothing: the body takes x, y and z | game-events |
+| EPlayActorEffect, EPlayEffect, EPowerUp (Process) | 0x0004211c, 0x0004254f, 0x00042c4e | GFX positions in stack vectors whose w (or, for EPowerUp, the rotation's x) is never written | Coord3 locals | nothing: GFX::Trigger copies x, y and z only (0x000d3343) | game-events |
+| ESpawnExplosionStatic::Process | 0x00045199 | with neither a position nor an instance, the position is stack | zero | that explosion's position | game-events |
+| EWakeupSmackable::Process | 0x00046d10 | the ray's and the body's w are stack | zero | nothing reads them | game-events |
+| ESpawnTraffic::Process, EStartMission::Process | 0x00045d70, 0x0004e860 | the momentum's w is stack | zero | nothing: it is never stored | game-events |
 
 ### 1.2 Allocator bytes
 
@@ -110,6 +119,13 @@ An STL map's empty allocator byte is copied from an uninitialised local. Nothing
 | SRuleRange::CheckRule | 0x000ba570 | zeroes three words of its position | zeroes four | game-missions |
 | SRulePlayerDir::CheckRule | 0x000ba690 | angle * -1.0 | -angle (the sign of a NaN can differ; the result is the same) | game-missions |
 | SRuleTimer::Construct | 0x000ba080 | copies the threshold through the x87 | through QuietNaN (the same quieting) | game-missions |
+| the events' MakeEvent callbacks | 0x0003dc00-0x0004f170 | copy the records' floats through the x87 (fld/fstp, which would quiet a signalling NaN) | copy the bits | game-events |
+| AVoice::Destruct | 0x0003f400 | destroys its views through the vector destructor iterator | calls View::Destruct for each, last first (the same calls) | game-events |
+| EFireWeapon::Process | 0x0004c544-0x0004c550 | for the guns fired by a holder other than the player (types 1, 2, 5, 0x10, 0x13 and 0x15), passes a mix-name buffer it never writes | passes "" | game-events |
+| EForceCarStop, ELavaHaze, ELetterBoxOn/Off, EObjectiveDisplayText, ESpawnSentry (Process) | 0x0004c7a4, 0x000458dd | a setne result pushed with the register's left-over upper three bytes | a clean bool (the callees read one byte) | game-events |
+| EStreamEvent::Process | 0x0004f0b2 | the "nis" case passes AFader::QueuePrimary a third argument with left-over upper bytes | a bool | game-events |
+| EMuzzleFlash::Process | 0x00040d48 | dead zero stores to its locals | left out | game-events |
+| ESetCullDistanceFactor, ESetJumpGravity (Destruct) | 0x00043fa0, 0x00044040 | the compiler dropped the first of the two vtable stores | both written | game-events |
 
 ---------------------------------------------------------------------------------------------------------------
 
@@ -140,6 +156,7 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
   user-data tags.
 - SndStreamShadow: the channel pointers of a stream with no header parsed.
 - BondCarShadowA: AddSnowmobileForces' axle w (not covered).
+- GameEventsShadowD: ESpawnForceEffect's effect field when it holds the address of the stack ArticleEffect it leaves there.
 
 ---------------------------------------------------------------------------------------------------------------
 
@@ -192,6 +209,10 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | SNDI_patchtohdr | 0x0013f1c0 | past four user-data tags the pointer runs into the sizes and what follows | sound |
 | FUN_0013d550 | 0x0013d550 | with both pools' free lists empty, pops from FreeBufferLists[-1] (the PCM active list) and faults if that is empty too | sound 8.5 |
 | EAGL Model image lookup | 0x000e9010 | cuts the comparison string at four characters by writing a NUL into the file's long name, past its end when it is shorter | eagl |
+| ECollision::Process | 0x0004a183 | the box corner indexes the eight-entry twist table unchecked | game-events |
+| EAIElementFireOn/Off, EAIElementSetAccuracy, EAIElementSetCharParams (Process) | 0x0003de30, 0x0003dd70, 0x0003def0, 0x0003dfb0 | run to the element's memberCount over its three members and four member characters, unbounded | game-events |
+| EInflictDamage::Process; EKickObject::Process | 0x000405b0, 0x000408f0 | checks only index < 64; the rigid-body owner index unchecked | game-events |
+| EPowerUpTimer, EPowerUpAmmo, EPlayCarCameraAnim (Process) | 0x00042fe3, 0x00042d5d, 0x0004cee4 | the timer and the weapon indexes unchecked; the body slot used without the -1 test | game-events |
 
 ### 3.3 Writes through a possibly NULL pointer
 
@@ -212,6 +233,12 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | WRoadNav::CalcNextSegmentDirection, CalcNextSegmentLane, CalcNextSegmentSidewalk | 0x000ca120, 0x000ca530, 0x000cad40 | use a NULL GetAttachedDirectionalSegment (0x000c9aa0) result unchecked | world |
 | WGridDynamicList::BuyHead | 0x000c5970 | tests &node->prev, never NULL, so node->prev = node runs on a failed allocation | world |
 | SFILTER_remove | 0x001444a0 | removing the head does not clear the new head's back link; an empty list with another node faults | sound |
+| EAudioUpdate::Process | 0x000498c5 | writes through the listener operator new returned without a NULL check | game-events |
+| EHitWindow, EPathSFX, EFireWeapon (Process) | 0x00047c3f, 0x00047cdc, 0x00047d66, 0x0004179f, 0x0004b1cc, 0x0004c410, 0x0004c507, 0x0004c605 | the new one-shot sounds and temporary targets are used without a NULL check | game-events |
+| EPathSFXUpdate::Process; EPlaySoundPos::Process | 0x00048254, 0x000485e6 | writes through a NULL one-shot (EPathSFXUpdate reads the sound before it tests it, 0x00048257 against 0x00048277) | game-events |
+| ESpawnExplosion::Process | 0x0004e775, 0x0004e80c | writes through NULL one-shot and limited sounds | game-events |
+| ESpawnSmackable::Process | 0x00045bc2 | UseArticle on NULL when FastAlloc fails | game-events |
+| EAIElementSetWakeRange, EDropMine, EEndControlToSpline, EEnablePowerUp, EPlayActorEffect, ESetAvoidZone, the Dynamic path setters, EShowInstance, EShake, ESetTerrain, EWakeupSmackable (Process) | 0x0003e210, 0x0003f720, 0x0004abc0, 0x0003f7f0, 0x0004211c, 0x00043d50, 0x00044d00, 0x0004dcb0, 0x0004db70, 0x00046d10 | no NULL checks on what they look up (ESetAvoidZone at 0x00043d7c and 0x00043da0, EShowInstance at 0x00044d09, EShake's feedback 0x0004dcea, EWakeupSmackable's third reference 0x00046d55) | game-events |
 
 ### 3.4 Leaks and wrong frees
 
@@ -281,6 +308,15 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | SMissionRule::RunEvents | 0x000b9500 | a dead store of -1 to the event index; re-reads the count each pass | game-missions |
 | SRuleRange::CheckRule | 0x000ba570 | stores the distance in `last` and never uses it | game-missions |
 | the SRule* constructors | 0x000b96c0-0x000ba080 | write SMissionRule's vtable, then their own | game-missions |
+| EAIElementSetNonScoreable and two other element events; ECustomTransition | 0x0003e0eb, 0x0003e245, 0x0003f096; 0x0004a9d0 | answers asked for and not used (GetCarpElementTracking); MEM_totalunused called twice for nothing | game-events |
+| EAICommand (CommandGroundVehicle); EKickAIElement::Process | 0x0003f769, 0x00040777 | a dead load of the element's +0x77 | game-events |
+| EFireWeapon::Process | 0x0004af3f | asks for the owner's rigid body twice and ignores the second | game-events |
+| EForceNearPedRespawn::Construct | 0x00040176 | a second AIRoadSpawn::Get, ignored | game-events |
+| ERandomExplosion; EScheduleEvent; EPlayerLose, ESetAutoDriveCamOffMovie (Process) | 0x000430e0, 0x00043740, 0x0004cf50, 0x0004d850 | the record's +4 and +8 are not read; EScheduleEvent's +0xc and EPlayerLose's +8 are not read; EPlayerLose and ESetAutoDriveCamOffMovie ask for GetPlayerHealth and GetAudio twice | game-events |
+| ESetCreakLevel::Process | 0x0004d985 | copies the car's CarPhysics (0x100 bytes) to the stack to read one field | game-events |
+| ESpawnSmackable::Process | 0x00045abb, 0x00045ac3 | a 'Name' lookup and a GetArray whose answers are not used | game-events |
+| EWakeupSmackable::Process | 0x00046d95, 0x00046da1, 0x00046e77, 0x00046eb4 | GetVelocity twice; a GetScalarVelocity and a v3length thrown away | game-events |
+| ESpawnTraffic::Process; ESetRenderVariation::Process | 0x00045f16, 0x0004454b | asks for each traffic car again for every call; dereferences the model twice | game-events |
 
 ### 3.6 Values that never change
 
@@ -296,6 +332,8 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | SMissionManager (MissionHealthTimes100, the car-override flags, gPlayerCanNeverLose) | 0x00239218-0x0023921e | never set; ResetCharInfo, GetCarType, EPlayerLose and SWeaponManager read them | game-missions |
 | SMissionManager::CalcEndMissionScores | 0x000b6e80 | score 4 is value4 * 0.0 | game-missions |
 | DAudio | 0x00036d10 | DAudioMixerVisible (0x001e4760) and DAudioMixerEditing (0x001e2270) are never set | game-audio |
+| gLimitHenchSpawns | 0x001b64ec | 1, and nothing writes it: vehicle elements always wake within the hench limit (EActivateAIElement, EMaybeActivateAIElement) | game-events |
+| EFireWeapon::Process | 0x001c3df0 | bullets are ray shells: the byte is 1 and nothing writes it, so the shell branch is dead | game-events |
 
 ### 3.7 Odd branches and data bugs
 
@@ -387,6 +425,20 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | EAGL_RMOp_DynamicStream | 0x000f6890 | the buffer is created 4 times the array's size and the capacity stored as count x 4 | eagl |
 | EAGL view activation | 0x000e4be0 | a RenderContext's "previous" view is put back, a TextureRenderContext's left 0 | eagl |
 | EAGL::UnRegisterShapes | 0x000edf50 | looks names up by the directory name padded with spaces, so a name RegisterShapes took from the long name or cut short is never removed | eagl |
+| EAudioUpdate::Process | 0x000499bf | the listener filter between the band's edges is (band width + level + y) x 0.1; the listener is allocated 0x80 bytes for an AListener of 0x78 | game-events |
+| EAICommand::Process | 0x00048ffc | disables a trigger whose flags lack kRigidType1 and carries on (to 0x00048f77) | game-events |
+| ECollision::Process | 0x0004a43d-0x0004a453, 0x0004a53a | the second side tests unknown4a for 5, 0x50 and 0x30 but `tag` for 0x40, and has no corner rotation and no rumble; a non-player collision's incidental timer is the later of the two | game-events |
+| EActivateAIElement, EMaybeActivateAIElement (Process) | 0x000495d0, 0x0004cbc0 | print "The Helicopter hit the Trigger." through the C runtime's printf | game-events |
+| EFireWeapon::Process | 0x0004bfc9, 0x0004b276 | the snowmobile and FOD guns use the ultralight gun's damage; for the player's aim the camera's position replaces the muzzle, while ray shells keep the original origin | game-events |
+| EFireEventList::Process; EMuzzleFlash::Process | 0x0003fcd5, 0x00040db1 | compares its count unsigned; the flash's "which" is position.x < 0 | game-events |
+| ERandomExplosion::Process | 0x000430e0 | y + 1.5 before the height lookup and + 1 after | game-events |
+| ERollSub, ESetAreaBrightness, ESetCollisionGeometry, EPlayEffect (Process) | 0x000435c1, 0x000439b0, 0x00043f01, 0x0004254f | write their computed values back into the event | game-events |
+| EPlayerLose::Process | 0x0004cf9f | makes an ERestart inside its own destructor | game-events |
+| EStreamEvent::Process | 0x0004efd4 | compares the name with "nis" before its NULL test (0x0004efff) | game-events |
+| ESpawnExplosion, ESpawnForceEffect (Process) | 0x0004e173, 0x000455a9, 0x000456ae | the "near up" test is a four-word dot; ESpawnForceEffect leaves its effect field pointing at a stack ArticleEffect | game-events |
+| ESetReflectiveObject::Process | 0x00044475 | uses the CARP element without redirecting it | game-events |
+| EStartEffect, EStopEffect, ESuppressEffect (Process) | 0x0004609a | 1 << (zone + 16), the shift taken mod 32 | game-events |
+| ESpawnTraffic::Process | 0x00045f16 | the spawn counter goes back to 0 past 32767 | game-events |
 
 ### 3.8 x87 and float/double mixes kept
 

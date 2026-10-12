@@ -4,11 +4,13 @@
 #pragma fp_contract(off)
 
 #include "GameLoop.h"
+#include "GameInterfaces.hpp"           // GHud, GLoadingScreen, GLocale, GSubtitles
 #include "ActionQueue.hpp"
 #include "CoreFoundation.h"
 #include "Feedback.h"
 #include "InputConfig.h"
 #include "IOModule.hpp"
+#include "../game/AIViews.h"
 #include "../game/MissionManager.h"
 #include "PlayMPC.hpp"
 #include "SimRandom.h"
@@ -66,9 +68,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 namespace {
-
-// Objects the game's constructors build on our stack, as big as the original's frames make room for.
-struct GSubtitlesStorage { uint32_t words[0x94 / 4]; };
 
 // The 'Map ' group of the track file and its 'AIEl' data.
 const uint32_t kTagMap = 0x4d617020;
@@ -148,7 +147,6 @@ static const char *const missionNames[20] = {     // by mission index
 #define fgScheduler (*(Scheduler **)0x001e520c)
 // XBE_GLOBAL(0x001e4870, 0x974)
 ActionQueue GlobalActionQueue;
-#define TrafficSeed I16_AT(0x001de914)
 
 // The disc error screen's: a one-byte block standing for "made", and the font
 // XBE_GLOBAL(0x001e5210, 0x4)
@@ -173,7 +171,6 @@ static const DiscErrorText DiscErrorMessages[7] = {   // English, French, German
 // addresses (which jump to UMemory's callbacks), as the original stores them
 #define UMemoryREALAllocCallbackAt ((FileMallocFn)0x00114630)
 #define UMemoryREALFreeCallbackAt ((FileFreeFn)0x00114670)
-#define GSubtitles_DrawFrame ((void (*)(int))0x000e3ab0)
 
 // ---- the game's functions, not ours yet
 
@@ -188,35 +185,8 @@ static const DiscErrorText DiscErrorMessages[7] = {   // English, French, German
 // render
 
 // the rest of the game
-#define GLoadingScreen_Status ((void (*)(const char *, ...))0x000e2ff0)
-#define GLoadingScreen_InitLoadScreen ((void (*)(const char *, const char *))0x000e2390)
-#define GLoadingScreen_InitLoadDots ((void (*)(bool))0x000e1f90)
-#define GLoadingScreen_AddLoadingScreenSyncTask ((void (*)(void))0x000e2b70)
-#define GLoadingScreen_DeleteLoadingScreenSyncTask ((void (*)(void))0x000e2b90)
-#define GLoadingScreen_Shutdown ((void (*)(void))0x000e2a70)
-#define GLoadingScreen_LoadAndDrawUnLoadingScreen ((void (*)(void))0x000e2110)
-#define GLoadingScreen_FreeUnloadingScreen ((void (*)(void))0x000e2ba0)
-#define GLocale_GetLanguage ((int (*)(void))0x000e30d0)
-#define GLocale_GetSubDirectory ((const char *(*)(void))0x000e3140)
-#define GSubtitles_TheApp ((void *(*)(void))0x000e3180)
-#define GSubtitles_Construct ((void *(__fastcall *)(GSubtitlesStorage *, int))0x000e34e0)
-#define GSubtitles_Destruct ((void (__fastcall *)(GSubtitlesStorage *, int))0x000e3730)
-#define GSubtitles_LoadSubtitles ((void (__fastcall *)(void *, int, const char *))0x000e3840)
-#define GSubtitles_ClearSubtitles ((void (__fastcall *)(void *, int))0x000e3630)
 #define GSystem_CURATOR_Init ((void (*)(void))0x000e3fd0)
 #define CURATOR_Shutdown ((void (*)(void))0x000e3eb0)
-#define AIElementController_Construct ((void (*)(void *))0x000285b0)
-#define AIVehicleController_Get ((void *(*)(void))0x00035c00)
-#define AIVehicleController_Init ((void (*)(void))0x00035c10)
-#define AIVehicleController_Shutdown ((void (*)(void))0x000364d0)
-#define AIVehicleController_CreateSimTrafficCars ((void (__fastcall *)(void *, int, bool))0x000366e0)
-#define AIVehicleController_RegisterSimCarList ((void (__fastcall *)(void *, int))0x00036990)
-#define AIZoneController_Init ((void (*)(void))0x00036a20)
-#define AIZoneController_Shutdown ((void (*)(void))0x00036b00)
-#define AIRoadSpawn_Init ((void (*)(void))0x000347f0)
-#define AIRoadSpawn_Shutdown ((void (*)(void))0x000349e0)
-#define AICharacter_Init ((void (*)(void))0x0001c190)
-#define AICharacter_Shutdown ((void (*)(void))0x0001c1b0)
 
 // The car's type name (a virtual method of the player's vehicle).
 static const char *PlayerCarTypeName() {
@@ -412,7 +382,7 @@ void Bond_LoadingScreen() {
         layoutFile = "data\\loading\\default.ini";
     }
     snprintf(layout, sizeof(layout), "%s", layoutFile);   // the original's sprintf(layout, layoutFile)
-    GLoadingScreen_InitLoadScreen(picture, layout);
+    GLoadingScreen::InitLoadScreen(picture, layout);
 }
 
 // FUNC_AT(0x00059bf0)
@@ -450,8 +420,8 @@ void Bond_StartUpSystem() {
 
     GLoadingScreen_Status("Init Lib Render");
     Render_InitLibRender();
-    GLoadingScreen_InitLoadDots(true);
-    GLoadingScreen_AddLoadingScreenSyncTask();
+    GLoadingScreen::InitLoadDots(true);
+    GLoadingScreen::AddLoadingScreenSyncTask();
     DiscError_Init();
 
     GLoadingScreen_Status("Init File System");
@@ -647,9 +617,9 @@ void GameLoop_PlayMovie(const char *movie, const char *subtitles) {
     ActionQueueManager::GetActionQueueManager()->FlushAllQueues();
     fgRenderer->Flush(false);
     if (subtitles != NULL) {
-        GSubtitles_LoadSubtitles(GSubtitles_TheApp(), 0, subtitles);
+        GSubtitles::TheApp()->LoadSubtitles(subtitles);
         player.Play(view, fgRenderer->widescreen != 0, GSubtitles_DrawFrame);
-        GSubtitles_ClearSubtitles(GSubtitles_TheApp(), 0);
+        GSubtitles::TheApp()->ClearSubtitles();
     } else {
         player.Play(view, fgRenderer->widescreen != 0, NULL);
     }
@@ -684,19 +654,19 @@ void GameLoop_CleanUp() {
     RPlayerCamera::Shutdown();
     GLoadingScreen_Status("Kill PIP Camera");
     GLoadingScreen_Status("Shutdown AI characters");
-    AICharacter_Shutdown();
+    AICharacter::Shutdown();
     RRenderHigh::KillTrackRenderPostSim();
     GLoadingScreen_Status("Shutdown Roads");
     WRoadNetwork::Shutdown();
     GLoadingScreen_Status("Shutdown AI Controller's");
-    AIRoadSpawn_Shutdown();
-    AIZoneController_Shutdown();
-    AIVehicleController_Shutdown();
+    AIRoadSpawn::Shutdown();
+    AIZoneController::Shutdown();
+    AIVehicleController::Shutdown();
     GLoadingScreen_Status("Deinit world");
     fgWorld->Close();
-    GLoadingScreen_LoadAndDrawUnLoadingScreen();
+    GLoadingScreen::LoadAndDrawUnLoadingScreen();
     fgRenderer->Flush(true);
-    GLoadingScreen_FreeUnloadingScreen();
+    GLoadingScreen::FreeUnloadingScreen();
 
     GLoadingScreen_Status("Delete weapon manager");
     SWeaponManager *weapons = WeaponManager;
@@ -772,31 +742,31 @@ void RunTheGame(bool simulateOncePerLoop, int unused) {
     const char *movie = movieFile;
     const char *subtitles = subtitleFile;
     if (IsMission("paris_mis01")) {
-        snprintf(movieFile, sizeof(movieFile), "%s\\paris_intro.mad", GLocale_GetSubDirectory());
+        snprintf(movieFile, sizeof(movieFile), "%s\\paris_intro.mad", GLocale::GetSubDirectory());
         strcpy(subtitleFile, "data\\loading\\paris_intro.sub");
     } else if (IsMission("uw_mis11")) {
-        snprintf(movieFile, sizeof(movieFile), "%s\\island_intro2.mad", GLocale_GetSubDirectory());
+        snprintf(movieFile, sizeof(movieFile), "%s\\island_intro2.mad", GLocale::GetSubDirectory());
         strcpy(subtitleFile, "data\\loading\\island_intro2.sub");
     } else if (IsMission("snow1a_mis3")) {
-        snprintf(movieFile, sizeof(movieFile), "%s\\snow_intro.mad", GLocale_GetSubDirectory());
+        snprintf(movieFile, sizeof(movieFile), "%s\\snow_intro.mad", GLocale::GetSubDirectory());
         strcpy(subtitleFile, "data\\loading\\snow_intro.sub");
     } else if (IsMission("snow2a_mis4")) {
-        snprintf(movieFile, sizeof(movieFile), "%s\\alps_intro.mad", GLocale_GetSubDirectory());
+        snprintf(movieFile, sizeof(movieFile), "%s\\alps_intro.mad", GLocale::GetSubDirectory());
         strcpy(subtitleFile, "data\\loading\\alps_intro.sub");
     } else if (IsMission("junglea_mis13a")) {
-        snprintf(movieFile, sizeof(movieFile), "%s\\ja_intro.mad", GLocale_GetSubDirectory());
+        snprintf(movieFile, sizeof(movieFile), "%s\\ja_intro.mad", GLocale::GetSubDirectory());
         subtitles = NULL;
     } else if (!IsMission("jungleb_mis13b") && IsMission("junglec_mis13c")) {
-        snprintf(movieFile, sizeof(movieFile), "%s\\jc_intro.mad", GLocale_GetSubDirectory());
+        snprintf(movieFile, sizeof(movieFile), "%s\\jc_intro.mad", GLocale::GetSubDirectory());
         strcpy(subtitleFile, "data\\loading\\jc_intro.sub");
     } else {
         subtitles = NULL;
         movie = NULL;
     }
-    GLoadingScreen_DeleteLoadingScreenSyncTask();
-    GLoadingScreen_Shutdown();
-    GSubtitlesStorage subtitlePlayer;
-    GSubtitles_Construct(&subtitlePlayer, 0);
+    GLoadingScreen::DeleteLoadingScreenSyncTask();
+    GLoadingScreen::Shutdown();
+    GSubtitles subtitlePlayer;
+    subtitlePlayer.Construct();
     if (!gSubtitles)
         subtitles = NULL;
     if (gPlayMovies && movie != NULL)
@@ -834,19 +804,19 @@ void RunTheGame(bool simulateOncePerLoop, int unused) {
 
     subtitles = subtitleFile;
     if (IsMission("paris_mis01")) {
-        snprintf(movieFile, sizeof(movieFile), "%s\\paris_outro.mad", GLocale_GetSubDirectory());
+        snprintf(movieFile, sizeof(movieFile), "%s\\paris_outro.mad", GLocale::GetSubDirectory());
         strcpy(subtitleFile, "data\\loading\\paris_outro.sub");
     } else if (IsMission("uw_mis11")) {
-        snprintf(movieFile, sizeof(movieFile), "%s\\island_outro.mad", GLocale_GetSubDirectory());
+        snprintf(movieFile, sizeof(movieFile), "%s\\island_outro.mad", GLocale::GetSubDirectory());
         strcpy(subtitleFile, "data\\loading\\island_outro.sub");
     } else if (IsMission("snow1a_mis3")) {
-        snprintf(movieFile, sizeof(movieFile), "%s\\snow_outro.mad", GLocale_GetSubDirectory());
+        snprintf(movieFile, sizeof(movieFile), "%s\\snow_outro.mad", GLocale::GetSubDirectory());
         strcpy(subtitleFile, "data\\loading\\snow_outro.sub");
     } else if (IsMission("junglea_mis13a")) {
-        snprintf(movieFile, sizeof(movieFile), "%s\\ja_outro.mad", GLocale_GetSubDirectory());
+        snprintf(movieFile, sizeof(movieFile), "%s\\ja_outro.mad", GLocale::GetSubDirectory());
         subtitles = NULL;
     } else if (IsMission("junglec_mis13c")) {
-        snprintf(movieFile, sizeof(movieFile), "%s\\jc_outro.mad", GLocale_GetSubDirectory());
+        snprintf(movieFile, sizeof(movieFile), "%s\\jc_outro.mad", GLocale::GetSubDirectory());
         subtitles = NULL;
     } else {
         subtitles = NULL;
@@ -856,7 +826,7 @@ void RunTheGame(bool simulateOncePerLoop, int unused) {
         subtitles = NULL;
     if (gPlayMovies && movie != NULL && (Launch.unknown978 == 0 || Launch.unknown5d8 != 0))
         GameLoop_PlayMovie(movie, subtitles);
-    GSubtitles_Destruct(&subtitlePlayer, 0);
+    subtitlePlayer.Destruct();
     render.Destruct();
 }
 
@@ -903,7 +873,7 @@ void GameLoop_StartUp(int trafficSeed) {
         speechName.Assign("mis11");
     char speech[128];
     char speechFile[84];
-    snprintf(speech, sizeof(speech), "%s%s", speechName.Data(), languageSuffix[GLocale_GetLanguage()]);
+    snprintf(speech, sizeof(speech), "%s%s", speechName.Data(), languageSuffix[GLocale::GetLanguage()]);
     snprintf(speechFile, sizeof(speechFile), "driving\\%s.spe", speech);
     if (!FILESYS_existssync(speechFile, 100)) {
         GLoadingScreen_Status("WARNING: localized speech not found, using English");
@@ -928,10 +898,10 @@ void GameLoop_StartUp(int trafficSeed) {
     GLoadingScreen_Status("Init AI Elements");
     RRenderHigh::InitTrackRenderPostSim();
     UGroup *map = fgWorld->group->GroupLocateTag(kTagMap);
-    AIElementController_Construct(map->DataLocateTag(kTagAIElements));
+    AIElementController::Construct(map->DataLocateTag(kTagAIElements));
     GLoadingScreen_Status("Init AI Controllers");
-    AIVehicleController_Init();
-    AIZoneController_Init();
+    AIVehicleController::Init();
+    AIZoneController::Init();
     GLoadingScreen_Status("Init Roads");
     WRoadNetwork::Init();
 
@@ -964,15 +934,15 @@ void GameLoop_StartUp(int trafficSeed) {
     fgSimulation.SpawnCarObject(0, carType, 0, reinterpret_cast<const Coord3 *>(orientation),
                                 reinterpret_cast<const Coord3 *>(position));
     fgSimulation.cars.first[0]->SetHitPointLoc(&glbMissionManager->playerHealth);
-    AIRoadSpawn_Init();
-    AIVehicleController_Get();
-    TrafficSeed = (int16_t)trafficSeed;
-    AIVehicleController_CreateSimTrafficCars(AIVehicleController_Get(), 0, true);
-    AIVehicleController_RegisterSimCarList(AIVehicleController_Get(), 0);
+    AIRoadSpawn::Init();
+    AIVehicleController::Get();
+    MaxTraffic = (int16_t)trafficSeed;
+    AIVehicleController::Get()->CreateSimTrafficCars(true);
+    AIVehicleController::Get()->RegisterSimCarList();
     WeaponManager->SetPlayerCar(fgSimulation.cars.first[0]->renderObject);
     if (ActorDatabase != NULL) {
         GLoadingScreen_Status("Init AI Characters");
-        AICharacter_Init();
+        AICharacter::Init();
     }
     RCameraIniLoader::LoadFileThunk();
     GLoadingScreen_Status("Leaving StartUp");

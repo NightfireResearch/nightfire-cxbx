@@ -12,6 +12,11 @@
 #include "../physics/PhysicsNamespace.h"    // PhysicsData
 #include "../physics/PhysicsObject.h"
 
+class AIGroundVehicle;
+class AVehicle;
+struct Coord4;
+struct WTargetable;
+
 // ---------------------------------------------------------------------------------------------------------------
 // PVehicle (0x74 bytes): the base of the cars (PBondCar). A PhysicsObject of type 1 in the "pvehicle" attribute
 // class, with two masks of mission editor switches; its vtable (0x0018fa00, 83 slots) keeps PhysicsObject's seven
@@ -276,6 +281,75 @@ struct PVehicle : PhysicsObject {
     bool GetIsInTwoWheelMode() { return (this->*XbeVirtual<bool (PVehicle::*)()>(this, kGetIsInTwoWheelMode))(); }
     uint8_t GetWasInAir() { return (this->*XbeVirtual<uint8_t (PVehicle::*)()>(this, kGetWasInAir))(); }
     void SetWasInAir(bool wasInAir) { (this->*XbeVirtual<void (PVehicle::*)(bool)>(this, kSetWasInAir))(wasInAir); }
+    // (the events')
+    AVehicle *GetAudio() { return (this->*XbeVirtual<AVehicle *(PVehicle::*)()>(this, kGetAudio))(); }
+    AIGroundVehicle *GetAIGroundVehiclePtr() {
+        return (this->*XbeVirtual<AIGroundVehicle *(PVehicle::*)()>(this, kGetAIGroundVehiclePtr))();
+    }
+    void EnableTargetBeacon(bool enable) {
+        (this->*XbeVirtual<void (PVehicle::*)(bool)>(this, kEnableTargetBeacon))(enable);
+    }
+    void DisableTargetBeacon() { (this->*XbeVirtual<void (PVehicle::*)()>(this, kDisableTargetBeacon))(); }
+    void ChangeCarType(const char *carType, bool purgeModel) {
+        (this->*XbeVirtual<void (PVehicle::*)(const char *, bool)>(this, kChangeCarType))(carType, purgeModel);
+    }
+    uint32_t GetCarColour() { return (this->*XbeVirtual<uint32_t (PVehicle::*)()>(this, kGetCarColour))(); }
+    void FlushCarControls() { (this->*XbeVirtual<void (PVehicle::*)()>(this, kFlushCarControls))(); }
+    void GetControllerInput() { (this->*XbeVirtual<void (PVehicle::*)()>(this, kGetControllerInput))(); }
+    void SetCarControlSteering(float steering) {
+        (this->*XbeVirtual<void (PVehicle::*)(float)>(this, kSetCarControlSteering))(steering);
+    }
+    void SetCarControlSteeringVertical(float steering) {
+        (this->*XbeVirtual<void (PVehicle::*)(float)>(this, kSetCarControlSteeringVertical))(steering);
+    }
+    void SetCarControlGas(float gas) { (this->*XbeVirtual<void (PVehicle::*)(float)>(this, kSetCarControlGas))(gas); }
+    void SetCarControlBrake(float brake) {
+        (this->*XbeVirtual<void (PVehicle::*)(float)>(this, kSetCarControlBrake))(brake);
+    }
+    void SetCarControlHandBrake(bool handBrake) {
+        (this->*XbeVirtual<void (PVehicle::*)(bool)>(this, kSetCarControlHandBrake))(handBrake);
+    }
+    void SetCarControlFirePrimary(bool fire) {
+        (this->*XbeVirtual<void (PVehicle::*)(bool)>(this, kSetCarControlFirePrimary))(fire);
+    }
+    void LockCarControlForever() { (this->*XbeVirtual<void (PVehicle::*)()>(this, kLockCarControlForever))(); }
+    void SetTargetGas(float gas) { (this->*XbeVirtual<void (PVehicle::*)(float)>(this, kSetTargetGas))(gas); }
+    void SetTargetBrake(float brake) { (this->*XbeVirtual<void (PVehicle::*)(float)>(this, kSetTargetBrake))(brake); }
+    // The car at `position` (its y set), facing `direction`
+    void ResetCar(Coord3 *position, const Coord3 *direction) {
+        (this->*XbeVirtual<void (PVehicle::*)(Coord3 *, const Coord3 *)>(this, kResetCarAt))(position, direction);
+    }
+    void ResetCar(bool unused) { (this->*XbeVirtual<void (PVehicle::*)(bool)>(this, kResetCar))(unused); }
+    void SetScoreable(bool scoreable) {
+        (this->*XbeVirtual<void (PVehicle::*)(bool)>(this, kSetScoreable))(scoreable);
+    }
+    void ResetDamage() { (this->*XbeVirtual<void (PVehicle::*)()>(this, kResetDamage))(); }
+    void SetVisualDamage(float fromA, float toA, float fromB, float toB) {
+        typedef void (PVehicle::*Method)(float, float, float, float);
+        (this->*XbeVirtual<Method>(this, kSetVisualDamage))(fromA, toA, fromB, toB);
+    }
+    void ClearEMPState() { (this->*XbeVirtual<void (PVehicle::*)()>(this, kClearEMPState))(); }
+    void EnableTwoWheelStunt() { (this->*XbeVirtual<void (PVehicle::*)()>(this, kEnableTwoWheelStunt))(); }
+    void DisableTwoWheelStunt() { (this->*XbeVirtual<void (PVehicle::*)()>(this, kDisableTwoWheelStunt))(); }
+    const Coord4 *GetWheelPos(int wheel) {
+        return (this->*XbeVirtual<const Coord4 *(PVehicle::*)(int)>(this, kGetWheelPos))(wheel);
+    }
+    void SetImmunity(bool immunity) { (this->*XbeVirtual<void (PVehicle::*)(bool)>(this, kSetImmunity))(immunity); }
+    void ForceStopOn(uint8_t flags) { (this->*XbeVirtual<void (PVehicle::*)(uint8_t)>(this, kForceStopOn))(flags); }
+    void ForceStopOff(uint8_t flags) { (this->*XbeVirtual<void (PVehicle::*)(uint8_t)>(this, kForceStopOff))(flags); }
+    // The callers pass the direction, and RollSub's two, zero-extended
+    void ForceRollDirection(uint8_t direction) {
+        (this->*XbeVirtual<void (PVehicle::*)(uint8_t)>(this, kForceRollDirection))(direction);
+    }
+    void RollSub(uint8_t degrees, uint8_t subRolling) {
+        (this->*XbeVirtual<void (PVehicle::*)(uint8_t, uint8_t)>(this, kRollSub))(degrees, subRolling);
+    }
+    const char *GetSecondaryType() {
+        return (this->*XbeVirtual<const char *(PVehicle::*)()>(this, kGetSecondaryType))();
+    }
+    WTargetable *GetTargetBeacon() {
+        return (this->*XbeVirtual<WTargetable *(PVehicle::*)()>(this, kGetTargetBeacon))();
+    }
 
     PVehicle* Construct(const char *name);                                                      // 0x0006f900
     // The scalar deleting destructor, vtable slot 0 (the destructor is PhysicsObject's)

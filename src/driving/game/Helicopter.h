@@ -17,20 +17,8 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 class ActionQueue;
+class AIHelicopter;
 struct WTargetable;
-
-// AIHelicopter (not ported): what PHelicopter uses of it, under Ghidra's names. Provisional, until the AI's own
-// class replaces it.
-struct HelicopterAI {
-    uint8_t unknown00[0x84];
-    int32_t navigateMode;           // +0x84
-    int32_t targetMode;             // +0x88
-    int32_t attackMode;             // +0x8c
-    uint8_t unknown90[8];
-    WTargetable *targetBeacon;      // +0x98
-};
-static_assert(offsetof(HelicopterAI, attackMode) == 0x8c && offsetof(HelicopterAI, targetBeacon) == 0x98,
-              "AIHelicopter layout");
 
 struct PHelicopter : PhysicsObject {
     int32_t heliClass;              // +0x6c 1 from the constructor; 0: Simulate reads the controls from actionQueue
@@ -49,7 +37,7 @@ struct PHelicopter : PhysicsObject {
     DamageZone damageZones[kDamageZoneCount];   // +0xac
     int32_t sleepStep;              // +0x12c the step after which Simulate stops it (name ours); 0 none
     float damageScale;              // +0x130 32 / hit points, set by the first ApplyDamage; -1 before
-    HelicopterAI *ai;               // +0x134
+    AIHelicopter *ai;               // +0x134
     bool scoreable;                 // +0x138 its hits and kill count for the mission
     uint8_t proximityDestructEnabled;   // +0x139 PROXIMITY_DESTRUCT (LookupBool's byte, kept raw)
     uint8_t unknown13A[2];

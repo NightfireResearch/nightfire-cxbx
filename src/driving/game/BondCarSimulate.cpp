@@ -7,7 +7,7 @@
 #include <xmmintrin.h>
 #include <string.h>
 
-#include "AIVehicle.h"
+#include "AIViews.h"                // AIGroundVehicle
 #include "BondCarBasics.h"          // GetCarColourVariation
 #include "BondCarState.h"           // CarSurface, the BondCar_* tuning
 #include "Missile.h"
@@ -26,6 +26,7 @@
 #include "../camera/PlayerCamera.h"
 #include "../data/Carp.h"
 #include "../data/StdStreams.h"
+#include "../engine/GameInterfaces.hpp"   // GHud
 #include "../engine/ActionQueue.hpp"
 #include "../engine/Feedback.h"
 #include "../engine/PhysicsUtil.h"
@@ -47,7 +48,6 @@
 
 
 #define ControllerPort I32_AT(0x00244520)                   // the launch page's controller port
-#define AIControllerInstance (*(void **)0x001ddee4)          // AIElementController's one instance (name ours)
 
 // XBE_GLOBAL(0x001e7a88, 4)
 BondCarScratch *BondCarScratchPad;
@@ -56,14 +56,8 @@ const char *OverrideCarType;
 
 // ---- calls to originals not ported
 
-#define AIVehicleController_Get ((void *(*)())0x00035c00)
 // Static in effect: ECX (the controller) is not read
-#define AIVehicleController_FindAgentGroundVehiclePtr ((AIGroundVehicle *(__fastcall *)(void *, int, PBondCar *vehicle))0x00035e90)
-#define AIElementController_ForceVehicleToSleep ((void (__fastcall *)(void *, int, AIGroundVehicle *vehicle))0x000289f0)
-#define GHud_TheApp ((void *(*)())0x000d7c10)
-#define GHud_TriggerDamageFlash ((void (__fastcall *)(void *, int, float damage))0x000d87a0)
 // AOneShotSound's constructor: a patch of a bank at a place
-#define AOneShotSound_Construct ((AOneShotSound *(__fastcall *)(void *, int, int bank, int patch, const Coord3 *position, const Coord3 *velocity, float volume, const char *mix))0x000476f0)
 
 namespace {
 
@@ -508,8 +502,8 @@ void PBondCar::Simulate() {
     if (physics->isSnowmobile) {
         bool onSpline = carClass == kCarClass2 &&
                         Virtual(this, PVehicle::kGetAIGroundVehiclePtr, &PBondCar::GetAIGroundVehiclePtr) != NULL &&
-                        AIVehicle_GetSplinePath(Virtual(this, PVehicle::kGetAIGroundVehiclePtr,
-                                                        &PBondCar::GetAIGroundVehiclePtr), 0) != NULL;
+                        Virtual(this, PVehicle::kGetAIGroundVehiclePtr,
+                                &PBondCar::GetAIGroundVehiclePtr)->GetSplinePath() != NULL;
         float speed = v3dotprod(&body->velocity, MatrixRow(&body->info->orientation, 2));
         if ((onSpline || (speed > 5.0f && (Virtual(this, PVehicle::kIsWheelOnGround, &PBondCar::IsWheelOnGround,
                                                    int8_t(2)) ||
@@ -539,8 +533,7 @@ void PBondCar::Simulate() {
     }
 
     if (Virtual(this, PVehicle::kGetAIGroundVehiclePtr, &PBondCar::GetAIGroundVehiclePtr) != NULL &&
-        AIVehicle_GetSplinePath(Virtual(this, PVehicle::kGetAIGroundVehiclePtr, &PBondCar::GetAIGroundVehiclePtr),
-                                0) != NULL &&
+        Virtual(this, PVehicle::kGetAIGroundVehiclePtr, &PBondCar::GetAIGroundVehiclePtr)->GetSplinePath() != NULL &&
         GetHitPoints() > 0.0f)
         ProcessSplinePhysics();
     else if (physics->subPhysics)
@@ -678,9 +671,9 @@ void PBondCar::Simulate() {
         (_stricmp(carType, "tunnel") == 0 || _stricmp(carType, "openheli") == 0 ||
          _stricmp(carType, "redheli") == 0) &&
         !renderObject->animHandle->AnySystemPlaying()) {
-        AIGroundVehicle *agent = AIVehicleController_FindAgentGroundVehiclePtr(AIVehicleController_Get(), 0, this);
+        AIGroundVehicle *agent = AIVehicleController::Get()->FindAgentGroundVehiclePtr(this);
         if (agent != NULL) {
-            AIElementController_ForceVehicleToSleep(AIControllerInstance, 0, agent);
+            fgAIElementController->ForceVehicleToSleep(agent);
             if (scoreable) {
                 glbMissionManager->IncKills(1);
                 Virtual(this, PVehicle::kSetScoreable, &PBondCar::SetScoreable, false);
@@ -733,7 +726,7 @@ int PBondCar::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, fl
     }
     if ((kind == kDamageBullet || kind == kDamageKind3) && amount > 1.0f &&
         (carClass == kPlayerCar || carClass == kCarClass1) && glbMissionManager->autoDrive && !immune)
-        GHud_TriggerDamageFlash(GHud_TheApp(), 0, amount);
+        GHud::TheApp()->TriggerDamageFlash(amount);
     if (shieldPointLoc != NULL) {
         if (*shieldPointLoc > amount) {
             *shieldPointLoc = *shieldPointLoc - amount;
@@ -811,8 +804,8 @@ int PBondCar::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, fl
                     if (block != NULL) {
                         RigidBody *playerBody = fgSimulation.GetRigidBody(fgSimulation.cars.first[0]->rigidBodySlot);
                         int patch = bank->index.Lookup("SFX_TireBlowOut");
-                        blowout = AOneShotSound_Construct(block, 0, bank->handle, patch, to, &playerBody->velocity,
-                                                          1.0f, "Blowout");
+                        blowout = static_cast<AOneShotSound *>(block)->Construct(bank->handle, patch, to, &playerBody->velocity,
+                                                                                 1.0f, "Blowout");
                     }
                     blowout->fxLevel = 1.0f;
                 }
@@ -914,7 +907,7 @@ int PBondCar::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, fl
             } else {
                 AIGroundVehicle *ai = Virtual(this, PVehicle::kGetAIGroundVehiclePtr, &PBondCar::GetAIGroundVehiclePtr);
                 if (ai != NULL) {
-                    AIElementController_ForceVehicleToSleep(AIControllerInstance, 0, ai);
+                    fgAIElementController->ForceVehicleToSleep(ai);
                     fgSimulation.GetRigidBody(rigidBodySlot)->velocity = kZero;
                 }
             }

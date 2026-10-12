@@ -215,6 +215,13 @@ enum MissionEvent : int32_t {
     kEventCount = 64,
 };
 
+// The sources of cinematic mode (cinematicMode's bits; names ours, after the events that set them)
+enum CinematicSource : int32_t {
+    kCinematicCameraAnim = 0x1,     // EPlayCameraAnim, EPlayCameraSpline
+    kCinematicCamera = 0x2,         // ECinematicCamera
+    kCinematicLetterBox = 0x4,      // ELetterBoxOn
+};
+
 constexpr int kMissionStages = 64;
 constexpr int kMagicCounters = 64;
 constexpr int kObjectiveSlots = 2;

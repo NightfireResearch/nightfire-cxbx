@@ -22,9 +22,7 @@
 // ---- originals called by address
 
 // AOneShotSound's constructor
-#define AOneShotSound_Construct ((AOneShotSound *(__fastcall *)(void *, int, int bank, int patch, const Coord3 *position, const Coord3 *velocity, float volume, const char *mixName))0x000476f0)
 // AVoice's destructor, out of line (Ghidra: FUN_0003f400)
-#define AVoice_Destruct ((void (__fastcall *)(AVoice *, int))0x0003f400)
 
 namespace {
 
@@ -120,7 +118,7 @@ void AVehicleWind::Stop(ASoundPlayParams *params) {
 // FUNC_AT(0x0012ea60)
 void AVehicleWind::Destruct() {
     if (voice != NULL) {
-        AVoice_Destruct(voice, 0);
+        voice->Destruct();
         UMemory::FastFree(voice, kVoiceBytes);
     }
 }
@@ -385,8 +383,9 @@ void ARaceEngine::Play(ASoundPlayParams *params) {
         if (revTime == 0.0f) {
             void *block = ABaseSound::OperatorNew(sizeof(AOneShotSound), "AOneShotSound");
             if (block != NULL)
-                AOneShotSound_Construct(block, 0, bank->handle, bank->index.Lookup("SFX_vaccuum"),
-                                        &vehicle->position, &vehicle->velocity, 0.1f, "Player Car");
+                static_cast<AOneShotSound *>(block)->Construct(bank->handle, bank->index.Lookup("SFX_vaccuum"),
+                                                               &vehicle->position, &vehicle->velocity, 0.1f,
+                                                               "Player Car");
         }
         double time = double(frames) + revTime;
         revTime = (float)time;

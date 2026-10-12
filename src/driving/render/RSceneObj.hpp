@@ -21,9 +21,9 @@
 //
 // The vtable stays the game's: RSceneObj declares no `virtual`, and calls to virtual methods go through the
 // object's vtable (the *Virtual helpers). Slots: 0 the scalar deleting destructor, 2 Render, 3 RenderSimple,
-// 4 RenderShadow, 5 RenderDeferredEffects, 7 TransformPointToWorldSpace, 8 TransformMatrixToWorldSpace,
-// 9 GetRenderOffset, 10 SetProcAnimState, 11 SetEventDynamicData, 13 GetVelocity, 14 UpdatePosition,
-// 15 TriggerFX, 17 PostLoad, 18 ResolveObjectData.
+// 4 RenderShadow, 5 RenderDeferredEffects, 6 TransformToWorldSpace, 7 TransformPointToWorldSpace,
+// 8 TransformMatrixToWorldSpace, 9 GetRenderOffset, 10 SetProcAnimState, 11 SetEventDynamicData, 13 GetVelocity,
+// 14 UpdatePosition, 15 TriggerFX, 17 PostLoad, 18 ResolveObjectData.
 // ---------------------------------------------------------------------------------------------------------------
 
 class UGroup;
@@ -251,6 +251,11 @@ public:
     void RenderVirtual() { CallSlot(2); }
     void RenderShadowVirtual() { CallSlot(4); }
     void RenderDeferredEffectsVirtual() { CallSlot(5); }
+    // A matrix in the object's instance's frame into the world's (the name is EFireWeapon's port's)
+    void TransformToWorldSpaceVirtual(MATRIX4 *matrix) {                                        // slot 6
+        typedef void (RSceneObj::*Method)(MATRIX4 *matrix);
+        (this->*XbeVirtual<Method>(this, 6))(matrix);
+    }
     void TransformPointToWorldSpaceVirtual(Coord4 *point) {                                     // slot 7
         typedef void (RSceneObj::*Method)(Coord4 *point);
         (this->*XbeVirtual<Method>(this, 7))(point);
@@ -271,6 +276,12 @@ public:
     void UpdatePositionVirtual(bool update) {                                                   // slot 14
         typedef void (RSceneObj::*Method)(bool update);
         (this->*XbeVirtual<Method>(this, 14))(update);
+    }
+    // The callers pass vectors or zero as the unread arguments
+    void TriggerFXVirtual(int type, uint32_t which, uint32_t unused3, const void *unused4, const void *unused5,
+                          float intensity) {                                                    // slot 15
+        typedef void (RSceneObj::*Method)(int, uint32_t, uint32_t, const void *, const void *, float);
+        (this->*XbeVirtual<Method>(this, 15))(type, which, unused3, unused4, unused5, intensity);
     }
     void PostLoadVirtual() { CallSlot(17); }
     void* ResolveObjectDataVirtual(const char *name, bool *found) {                             // slot 18
@@ -312,6 +323,9 @@ static_assert(sizeof(RAutonomousObj) == 0x80, "an autonomous scene object is 128
 uint32_t RandomShort();                                                                         // 0x0001aab0
 // FUN_0001aae0: RandomShort scaled into [0, scale), answered unrounded
 double RandomScaled(float scale);                                                               // 0x0001aae0
+// FUN_0003e6f0: two draws as one word, the first in the low half, the second's complement in the high half (placed
+// among the events, which use it)
+uint32_t RandomWord();                                                                          // 0x0003e6f0
 
 // URefCounter<RCARPFile>'s tree (CarpFileRefCounter's map, at 0x001f25f4): its compiled copies
 class CarpFileRefTree : public RefCounterTree {

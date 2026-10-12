@@ -202,11 +202,11 @@ where to change it.
 
 | Subsystem | Functions | Replaced | Dead | Live | Done | KB | Done (bytes) |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| **game** | 2852 | 713 | 548 | 1591 | **44%** | 474 | 48% |
+| **game** | 2852 | 1380 | 637 | 835 | **71%** | 474 | 63% |
 | game.ai | 522 | 0 | 32 | 490 | 6% | 109 | 1% |
 | game.audio | 366 | 150 | 205 | 11 | 97% | 51 | 100% |
 | game.effects | 195 | 129 | 56 | 10 | 95% | 36 | 100% |
-| game.events | 793 | 0 | 7 | 786 | 1% | 72 | 0% |
+| game.events | 793 | 667 | 96 | 30 | 96% | 72 | 99% |
 | game.frontend | 332 | 1 | 39 | 292 | 12% | 69 | 2% |
 | game.missions | 273 | 199 | 73 | 1 | 100% | 33 | 100% |
 | game.vehicles | 193 | 134 | 59 | 0 | 100% | 62 | 100% |
@@ -236,10 +236,10 @@ where to change it.
 | sys.dsound | 314 | 64 | 250 | 0 | 100% | 36 | 100% |
 | sys.xapi | 107 | 45 | 62 | 0 | 100% | 21 | 100% |
 | sys.xpp | 172 | 9 | 163 | 0 | 100% | 24 | 100% |
-| **game + engine** | 6842 | 3191 | 1951 | 1700 | **75%** | 1000 | 75% |
+| **game + engine** | 6842 | 3858 | 2040 | 944 | **86%** | 1000 | 82% |
 | **platform + system** | 2893 | 1527 | 1022 | 344 | **88%** | 506 | 93% |
 | **  without the C runtime** | 2473 | 1523 | 950 | 0 | **100%** | 462 | 100% |
-| **everything** | 9735 | 4718 | 2973 | 2044 | **79%** | 1506 | 81% |
+| **everything** | 9735 | 5385 | 3062 | 1288 | **87%** | 1506 | 86% |
 
 - **The engine's core and data layers are done (4 October 2026): `engine.core` and `engine.data`, 100% by bytes**
   (docs/driving/core-data.md): memory (UMemory, new/delete), reference counters, data groups, singletons, the
@@ -321,6 +321,13 @@ where to change it.
   exception funclet). Four shadow tests compare them with the originals on copies of the live Simulation and
   mission manager and on synthetic rules (to be run in game). Game and engine together are now 75% done by
   functions and by bytes.
+- **The mission events are done (12 October 2026, docs/driving/game-events.md):** the 223 event classes the
+  scripts, triggers and animations raise - the AI orders, cameras, controls, objectives and counters, path and
+  sound events, spawns, power-ups, timers and the per-tick update events - with their make and resolve callbacks,
+  Event's own destructor and the other classes' functions placed among them: 667 entries, `game.events` 99% by
+  bytes (the 30 functions still counted live are exception funclets of replaced functions). Four shadow tests
+  compare them with the originals on synthetic records in stand-in worlds (to be run in game). Game and engine
+  together are now 86% done by functions, 82% by bytes.
 - **Every system library but the C runtime is done: D3D (with D3DX and XGRPH), DSOUND, XPP and XAPI at 100%.**
   The C runtime (347 live, 17%) is left to go by itself, as in the action engine: game code calls it everywhere, and
   it goes as that code becomes ours. How the rest got there (2 October 2026):

@@ -16,7 +16,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // AVoice's destructor, out of line (Ghidra: FUN_0003f400).
-#define AVoice_Destruct ((void (__fastcall *)(AVoice *, int))0x0003f400)
 // Whether a voice is done: set, its views that the active views include have finished (Ghidra: FUN_000d36c0;
 // the name is ours).
 #define AVoice_IsFinished ((bool (__fastcall *)(AVoice *, int))0x000d36c0)
@@ -195,7 +194,7 @@ AZoomObj* AZoomObj::Construct(AVehicle *owner) {
 // FUNC_AT(0x00128330)
 void AZoomObj::Destruct() {
     if (voice != NULL) {
-        AVoice_Destruct(voice, 0);
+        voice->Destruct();
         UMemory::FastFree(voice, sizeof(AVoice));
     }
 }

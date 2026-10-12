@@ -254,6 +254,13 @@ double RandomScaled(float scale) {
     return double(int32_t(RandomShort())) * scale * kOneIn65536;
 }
 
+// FUNC_AT(0x0003e6f0)
+uint32_t RandomWord() {
+    uint32_t low = RandomShort();
+    uint32_t high = RandomShort();
+    return ~high << 16 | low;
+}
+
 // ---- RAutonomousObj
 
 // FUNC_AT(0x0001aa70)

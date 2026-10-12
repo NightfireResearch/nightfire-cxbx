@@ -190,6 +190,11 @@ public:
     void Play(ASoundPlayParams *params);                                        // 0x0012c510
     // Vtable slot 9.
     void SetCreakLevel(int16_t level, int32_t period);                          // 0x0012bb60
+
+    // SetCreakLevel through the vtable (slot 9), as ESetCreakLevel calls it: the level zero-extended
+    void CallSetCreakLevel(uint16_t level, int32_t period) {
+        (this->*XbeVirtual<void (ASubmersible::*)(uint16_t, int32_t)>(this, 9))(level, period);
+    }
     void PlayCreaks(ASoundPlayParams *params);                                  // 0x0012bb80
     void PlayFanMotors(ASoundPlayParams *params);                               // 0x0012bc60
     void PlayCavitation(ASoundPlayParams *params);                              // 0x0012bf00

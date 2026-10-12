@@ -155,14 +155,21 @@ static_assert(sizeof(ASoundList) == 12, "a list is 12 bytes");
 
 // ---- the kinds
 
-// A sound with a voice of its own that deletes itself (0x120 bytes; vtable 0x0018c840). Its constructors
-// (0x000476f0, 0x000477d0) are not ported; its GetName is ASound's code.
+// A sound with a voice of its own that deletes itself (0x120 bytes; vtable 0x0018c840). Its GetName is ASound's
+// code.
 class AOneShotSound : public ABaseSound {
 public:
     AVoice voice;               // +0xc0
     float fxLevel;              // +0x118 the effects level it plays at (name ours)
     float timeLeft;             // +0x11c seconds to live; negative: no limit (name ours)
 
+    // The bank's patch in the mix, at `volume`, from `position` with `velocity`; every view plays once (Ghidra:
+    // FUN_000476f0)
+    AOneShotSound* Construct(int bank, int patch, const Coord3 *position, const Coord3 *velocity, float volume,
+                             const char *mixName);                              // 0x000476f0
+    // The same without a velocity; every view plays once unless `loop` (Ghidra: FUN_000477d0)
+    AOneShotSound* ConstructAt(int bank, int patch, const Coord3 *position, float volume, const char *mixName,
+                               bool loop);                                      // 0x000477d0
     void Destruct();                                                            // 0x000478a0
     AOneShotSound* Delete(unsigned int flags);  // Ghidra: FUN_00047900          0x00047900
 

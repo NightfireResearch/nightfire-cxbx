@@ -32,6 +32,22 @@ static_assert(sizeof(SentryMuzzleFlash) == 0x20, "a sentry's muzzle flash is 32 
 
 constexpr int kSentryMuzzleFlashes = 8;
 
+// Sentry::Construct's arguments from the second to the twelfth, as ESpawnSentry's record holds them
+struct SentrySetup {
+    int32_t srbAxis;
+    float srbSpeed;
+    float srbLimit;
+    int32_t animAxis;
+    float animSpeed;
+    float animLimit;
+    uint32_t aimSystem;
+    uint32_t fireSystem;
+    uint32_t shots;
+    float shotSeconds;
+    float range;
+};
+static_assert(sizeof(SentrySetup) == 0x2c, "a sentry's setup is 11 words");
+
 class Sentry : public PhysicsObject {
 public:
     // The axes the rotations turn about (and ComputeTargetAngle's)

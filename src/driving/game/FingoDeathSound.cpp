@@ -11,7 +11,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // AOneShotSound's constructor without a velocity: a patch of a bank at a place, looped or not
-#define AOneShotSound_ConstructAt ((AOneShotSound *(__fastcall *)(void *, int, int bank, int patch, const Coord3 *position, float volume, const char *mix, bool loop))0x000477d0)
 
 namespace {
 
@@ -95,8 +94,8 @@ void AFingoDeath::Play(ASoundPlayParams *params) {
         void *memory = ABaseSound::OperatorNew(sizeof(AOneShotSound), "AOneShotSound");
         if (memory != NULL) {
             ABank *bank = fgBanks[kWeaponBankSlot];
-            AOneShotSound_ConstructAt(memory, 0, bank->handle, bank->index.Lookup("SFX_fingerReloadST"), &position,
-                                      1.0f, "Weapons Reload", false);
+            static_cast<AOneShotSound *>(memory)->ConstructAt(bank->handle, bank->index.Lookup("SFX_fingerReloadST"), &position,
+                                                              1.0f, "Weapons Reload", false);
         }
     }
 }

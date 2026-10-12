@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "AICharacter.h"                // AICharacter, fgHandObj
+#include "AIViews.h"                    // AICharacter, fgHandObj
 #include "Explosion.h"                  // ExplosionType
 #include "Human.h"
 #include "Simulation.h"
@@ -47,10 +47,7 @@
 
 #define GFX_LookupReference ((void *(*)(const char *name))0x000d35f0)
 #define GFX_TriggerIncidental ((void (*)(void *reference, const Coord3 *position, const Coord4 *orientation, const Coord3 *unknown4, const Coord4 *unknown5, int unknown6, int unknown7, int unknown8))0x000d3520)
-#define AIZoneController_Get ((void *(*)(void))0x00036a10)
-#define AIZoneController_RegisterZone ((void (__fastcall *)(void *, int, int zone, const Coord3 *position))0x00036bb0)
 // AOneShotSound's constructor without a velocity: a patch of a bank at a place, looped or not
-#define AOneShotSound_ConstructAt ((AOneShotSound *(__fastcall *)(void *, int, int bank, int patch, const Coord3 *position, float volume, const char *mix, bool loop))0x000477d0)
 #define CRT_printf ((int (*)(const char *format, ...))0x00132192)
 
 // ---- the game's globals
@@ -840,7 +837,7 @@ void Shell::ApplyWorldEffects(const Coord3 *position, const Coord4 *normal, int,
         fgParticleSystems->CreateParticles(ShellSparks, position, Xyz(normal), kSparksCount);
     if (effect != NULL)
         GFX_TriggerIncidental(GFX_LookupReference(effect), position, &orientation, &kZero3, &kOrigin4, 0, 0, 0);
-    AIZoneController_RegisterZone(AIZoneController_Get(), 0, kAIZoneImpact, position);
+    AIZoneController::Get()->RegisterZone(kAIZoneImpact, position);
 
     ABank *bank = fgBanks[kWeaponBankSlot];
     uint8_t material = *faceType & 0xf0;
@@ -870,8 +867,8 @@ void Shell::ApplyWorldEffects(const Coord3 *position, const Coord4 *normal, int,
     void *memory = ABaseSound::OperatorNew(sizeof(AOneShotSound), "AOneShotSound");
     AOneShotSound *sound = NULL;
     if (memory != NULL)
-        sound = AOneShotSound_ConstructAt(memory, 0, bank->handle, bank->index.Lookup(patch), position, 1.0f, mix,
-                                          false);
+        sound = static_cast<AOneShotSound *>(memory)->ConstructAt(bank->handle, bank->index.Lookup(patch), position, 1.0f, mix,
+                                                                  false);
     sound->minDistance = kImpactMinDistance;
     sound->maxDistance = kImpactMaxDistance;
     sound->maxDistanceSq = kImpactMaxDistance * kImpactMaxDistance;

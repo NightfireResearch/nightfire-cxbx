@@ -67,7 +67,8 @@ struct LaunchPage {
     float healthRatio;          // +0x61c the health left at the end of the last part (0 to 1)...
     float shieldRatio;          // +0x620 ... and shield: ResetCharInfo carries them into the next part
     int32_t savedDifficulty;    // +0x624 the difficulty as the action engine wrote it (1-4)
-    uint8_t unknown628[0x4];
+    uint8_t restartLost;        // +0x628 set: a lost mission restarts instead (EPlayerLose)
+    uint8_t unknown629[3];
     int32_t restartStep;        // +0x62c above zero: the mission manager restarts the track once the step count
                                 //        passes it
     int32_t restartCount;       // +0x630 counted up by each of those restarts

@@ -8,7 +8,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "AICharacter.h"                // AICharacterHands, fgHandObj
+#include "AIViews.h"                    // AICharacterHands, fgHandObj
 #include "Explosion.h"                  // ExplosionType
 #include "Helicopter.h"                 // PHelicopter
 #include "MissionManager.h"
@@ -47,24 +47,8 @@
 // SWeaponManager (0x000ba7f0-0x000bce10), ported from the listing. See WeaponManager.h.
 // ---------------------------------------------------------------------------------------------------------------
 
-class AIVehicle;
-class AIVehicleController;
-class AIZoneController;
-
 namespace {
 
-
-// The AI's element controller: the count of helicopters the distance click goes through (provisional here)
-struct WeaponAIElementFields {
-    uint8_t unknown00[8];
-    int32_t helicopterCount;    // +0x08
-};
-
-// An AI helicopter (provisional here)
-struct WeaponAIVehicleFields {
-    uint8_t unknown00[0x68];
-    uint8_t active;             // +0x68
-};
 
 // The animation stimuli and system states the weapons use (names ours)
 enum WeaponStimulus : int {
@@ -140,23 +124,13 @@ static_assert(std::bit_cast<uint32_t>(1.0f / 6.0f) == 0x3e2aaaab && std::bit_cas
 
 // ---- the game's globals
 
-#define fgAIElementController (*(WeaponAIElementFields **)0x001ddee4)
 // The bytes AICharacterBond reads (names ours)
 #define BondSelectPressed U8_AT(0x001dda2c)             // a select or the special fire
 #define BondFirePressed U8_AT(0x001dda2d)               // the primary or secondary fire
 
 // ---- calls to originals not ported
 
-#define AIVehicleController_Get ((AIVehicleController *(*)(void))0x00035c00)
-#define AIVehicleController_GetHelicopter ((AIVehicle *(__fastcall *)(AIVehicleController *, int, int index))0x00035ef0)
-#define AIVehicle_GetPhysicsObject ((PhysicsObject *(__fastcall *)(AIVehicle *, int))0x00035840)
-#define AIVehicle_GetPosition ((Coord3 *(__fastcall *)(AIVehicle *, int))0x000359e0)
-#define AIZoneController_Get ((AIZoneController *(*)(void))0x00036a10)
-#define AIZoneController_RegisterZone ((void (__fastcall *)(AIZoneController *, int, int kind, const Coord4 *position))0x00036bb0)
-#define GHud_LavaDamageEffectEnabled ((bool (__fastcall *)(GHud *, int))0x000d7c60)
-#define CollisionImpact_Construct ((CollisionImpact *(__fastcall *)(CollisionImpact *, int))0x0003dc20)
 // AOneShotSound's constructor at a place, without a velocity
-#define AOneShotSound_ConstructAt ((AOneShotSound *(__fastcall *)(void *, int, int bank, int patch, const Coord3 *position, float volume, const char *mixName, bool loop))0x000477d0)
 
 static_assert(sizeof(ActionQueue) == 0x974, "an action queue is 0x974 bytes");
 
@@ -229,8 +203,8 @@ void PlayExplosionSound(const char *patch, const Coord3 *position) {
     void *memory = ABaseSound::OperatorNew(sizeof(AOneShotSound), "AOneShotSound");
     AOneShotSound *sound = NULL;
     if (memory != NULL)
-        sound = AOneShotSound_ConstructAt(memory, 0, bank->handle, bank->index.Lookup(patch), position, 1.0f,
-                                          "Explosions", false);
+        sound = static_cast<AOneShotSound *>(memory)->ConstructAt(bank->handle, bank->index.Lookup(patch), position, 1.0f,
+                                                                  "Explosions", false);
     // As the original, written whether or not the allocation succeeded
     sound->minDistance = 30.0f;
     sound->maxDistance = 400.0f;
@@ -507,9 +481,9 @@ void SWeaponManager::FireWeapon(int weapon) {
         return;
 
     if (glbMissionManager->autoDrive && fgHandObj != NULL) {
-        if (!AICharacterHands_AbleToFire(fgHandObj, 0))
+        if (!fgHandObj->AbleToFire())
             return;
-        AICharacterHands_Fire(fgHandObj, 0);
+        fgHandObj->Fire();
         handsFired = true;
         record.fireSteps[record.fireSystem] = step;
     } else {
@@ -663,14 +637,14 @@ void SWeaponManager::FireWeapon(int weapon) {
 // FUNC_AT(0x000babf0)
 void SWeaponManager::UserReloading() {
     WeaponRecord &record = weapons[secondary];
-    if (fgHandObj == NULL || !AICharacterHands_AbleToFire(fgHandObj, 0))
+    if (fgHandObj == NULL || !fgHandObj->AbleToFire())
         return;
     if (record.loaded < record.clipSize && record.ammo > 0 && record.loaded < record.ammo) {
         reloading = true;
         if (record.soundBank > -1)
             PlayWeaponSound(record.soundBank, record.sound, "Reload", "POV Weapons");
         if (fgHandObj != NULL)
-            AICharacterHands_Reload(fgHandObj, 0);
+            fgHandObj->Reload();
     }
 }
 
@@ -751,7 +725,7 @@ void SWeaponManager::HandleNuclearSequence() {
         fgSimulation.SpawnExplosion(kNuclearExplosion, -1, &up, &nuclearPosition, nuclearScale * 10000.0f, 0, NULL,
                                     DamageSourceSig);
         CollisionImpact impact;
-        CollisionImpact_Construct(&impact, 0);
+        impact.Construct();
         RigidBody *body = fgSimulation.GetRigidBody(PlayerObject()->rigidBodySlot);
 
         // The player's car is pushed away from the blast, from a point a unit towards it at the ground's height
@@ -824,7 +798,7 @@ void SWeaponManager::Update() {
     }
     if (glbMissionManager->autoDrive) {
         WeaponRecord &record = weapons[secondary];
-        if (record.ammo > 0 && reloading && fgHandObj != NULL && AICharacterHands_AbleToFire(fgHandObj, 0) &&
+        if (record.ammo > 0 && reloading && fgHandObj != NULL && fgHandObj->AbleToFire() &&
             !(record.flags & kWeaponReloading)) {
             record.loaded = record.ammo < record.clipSize ? record.ammo : record.clipSize;
             reloading = false;
@@ -844,8 +818,8 @@ void SWeaponManager::Update() {
         }
     }
     if (glbMissionManager->autoDrive && fgHandObj != NULL) {
-        if (AICharacterHands_GetWeapon(fgHandObj, 0) + kFirstHandsWeapon != secondary && switchStep < fgSimulation.stepCount) {
-            AICharacterHands_ChangeWeapon(fgHandObj, 0, secondary - kFirstHandsWeapon);
+        if (fgHandObj->GetWeapon() + kFirstHandsWeapon != secondary && switchStep < fgSimulation.stepCount) {
+            fgHandObj->ChangeWeapon(secondary - kFirstHandsWeapon);
             WeaponRecord &record = weapons[secondary];
             if (!(record.flags & kWeaponDeployed))
                 record.flags |= kWeaponDeploying;
@@ -991,7 +965,7 @@ void SWeaponManager::Update() {
                     continue;
                 }
                 if (glbMissionManager->autoDrive && fgHandObj != NULL) {
-                    if (!AICharacterHands_AbleToFire(fgHandObj, 0) || record.ammo <= 0 || record.loaded >= 1) {
+                    if (!fgHandObj->AbleToFire() || record.ammo <= 0 || record.loaded >= 1) {
                         more = false;
                         continue;
                     }
@@ -1002,7 +976,7 @@ void SWeaponManager::Update() {
                 }
 
                 if (glbMissionManager->autoDrive && fgHandObj != NULL) {
-                    AICharacterHands_Reload(fgHandObj, 0);
+                    fgHandObj->Reload();
                 } else {
                     playerCar->animHandle->ProcessStimuli(WeaponSystems[weapon][record.reloadSystem], kStimulusReload,
                                                           fgSimulation.stepCount, kStimulusMode);
@@ -1082,7 +1056,7 @@ void SWeaponManager::Update() {
         RigidBody *body = PlayerCarBody();
         Coord4 behind;
         VU0_v4scaleadd(body->info->orientation.mtx[2], -body->info->halfExtents.z, &body->position, &behind);
-        AIZoneController_RegisterZone(AIZoneController_Get(), 0, 4, &behind);
+        AIZoneController::Get()->RegisterZone(4, Xyz(&behind));
     }
 
     if (_stricmp(fgSimulation.cars.first[0]->GetCarType(), "rental") == 0)
@@ -1104,7 +1078,7 @@ void SWeaponManager::Update() {
     if (mission->missionState == kMissionWon || mission->missionState == kMissionLost || fgSimulation.simState == kSimPaused ||
         mission->cinematicMode != 0)
         blur = 0;
-    if (GHud::TheApp() != NULL && !GHud_LavaDamageEffectEnabled(GHud::TheApp(), 0))
+    if (GHud::TheApp() != NULL && !GHud::TheApp()->LavaDamageEffectEnabled())
         Colorize->EnableMotionBlur(float(blur * double(0.0078125f)));
 
     HandleNuclearSequence();
@@ -1113,11 +1087,11 @@ void SWeaponManager::Update() {
     bool found = false;
     float nearest = 10000.0f;
     for (int i = 0; i < fgAIElementController->helicopterCount; i++) {
-        AIVehicle *helicopter = AIVehicleController_GetHelicopter(AIVehicleController_Get(), 0, i);
-        if (reinterpret_cast<WeaponAIVehicleFields *>(helicopter)->active &&
-            static_cast<PHelicopter *>(AIVehicle_GetPhysicsObject(helicopter, 0))->proximityDestructEnabled) {
+        AIHelicopter *helicopter = AIVehicleController::Get()->GetHelicopter(i);
+        if (helicopter->active &&
+            static_cast<PHelicopter *>(helicopter->GetPhysicsObject())->proximityDestructEnabled) {
             found = true;
-            const Coord3 *at = AIVehicle_GetPosition(helicopter, 0);
+            const Coord4 *at = helicopter->GetPosition();
             Coord4 helicopterPosition = {at->x, at->y, at->z, 0.0f};
             const Coord3 *player = PlayerObject()->GetPosition();
             Coord4 playerPosition = {player->x, player->y, player->z, 0.0f};

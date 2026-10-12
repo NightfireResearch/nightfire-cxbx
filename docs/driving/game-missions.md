@@ -19,8 +19,9 @@ with the originals; the lockstep runs and the shadows are still to be run.
 
 The engine and the game tier call Simulation and the mission manager directly (GameLoop's reset, clean-up and
 player car, the static initialisers' construction of the one Simulation, the world's level load and its tracked
-instances, the weapons, vehicles, cameras and effects). Still original: the mission events (about 120 calls), the AI
-(about 100) and the front end (about 20) call them by their original addresses, which jump to ours.
+instances, the weapons, vehicles, cameras and effects), and since 12 October the mission events too
+(docs/driving/game-events.md). Still original: the AI (about 100 calls) and the front end (about 20) call them by
+their original addresses, which jump to ours.
 
 ## Layout
 
@@ -44,7 +45,7 @@ mission manager's views fold into SMissionManager (`missionState` with `kMission
 one `LaunchFlags` enum, the weapons' flags among them), the timers into `SMissionTimer`, the rules' weapon slots
 into the weapons' `WeaponRecord` ("NOBOOST" and "ONEEMP" read `shotsFired`), the AI element views (the manager's,
 the rules' and data/Carp.cpp's record) into `CARP::AIElement` (data/Carp.h), the rules' mine view into `Mine`, the
-hands calls into game/AICharacter.h, and `gPlayerCanNeverLose` (0x00239218, still read by EPlayerLose) into
+hands calls into game/AIViews.h, and `gPlayerCanNeverLose` (0x00239218, still read by EPlayerLose) into
 MissionManager.h. Every call between the packages, from the missions into the weapons (the constructors, Smackable's
 GoToSleep, SWeaponManager's Reset/LoadWeapon/SetSecondary, Missile's steering) and from the rest of the tree into
 the missions is direct; `tools/static_init_driving.py` constructs `fgSimulation` and calls `MissionList::BuyHead`

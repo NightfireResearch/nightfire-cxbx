@@ -60,6 +60,10 @@ public:
     View views[3];              // +0x04
 
     AVoice* Construct(AMix *mix, int bank, int patch);                              // 0x00123ca0
+    // Its views', last first, where the destructor is not inlined (Ghidra: FUN_0003f400, placed among the events)
+    void Destruct();                                                                // 0x0003f400
+    // Every view's loop flag cleared, so that each plays once (Ghidra: FUN_0003e6b0)
+    void PlayOnce();                                                                // 0x0003e6b0
     // Every view on the bank's patch; a view that changes patch has its voice stopped. A patch of -1 only marks
     // the views finished.
     void Set(int bank, int patch);                                                  // 0x00123870

@@ -16,9 +16,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // AOneShotSound's constructors: a patch of a bank at a place (with a velocity; or without one, looped or not)
-#define AOneShotSound_Construct ((AOneShotSound *(__fastcall *)(void *, int, int bank, int patch, const Coord3 *position, const Coord3 *velocity, float volume, const char *mix))0x000476f0)
 // AVoice's destructor where it is not inlined (Ghidra: FUN_0003f400)
-#define AVoice_Destruct ((void (__fastcall *)(AVoice *, int))0x0003f400)
 // Whether the voice is done with (Ghidra: FUN_000d36c0)
 #define AVoice_IsFinished ((bool (__fastcall *)(AVoice *, int))0x000d36c0)
 
@@ -177,8 +175,10 @@ void AGun::Play(uint8_t firing, ASoundPlayParams *params, float frames) {
                 void *memory = ABaseSound::OperatorNew(sizeof(AOneShotSound), "AOneShotSound");
                 AOneShotSound *shot = NULL;
                 if (memory != NULL)
-                    shot = AOneShotSound_Construct(memory, 0, bank->handle, bank->index.Lookup(firePatch.CStr()),
-                                                   &owner->position, &owner->velocity, 1.0f, mixName.CStr());
+                    shot = static_cast<AOneShotSound *>(memory)->Construct(bank->handle,
+                                                                           bank->index.Lookup(firePatch.CStr()),
+                                                                           &owner->position, &owner->velocity, 1.0f,
+                                                                           mixName.CStr());
                 shot->minDistance = 30.0f;
                 shot->maxDistance = 500.0f;
                 shot->maxDistanceSq = 250000.0f;
@@ -187,8 +187,10 @@ void AGun::Play(uint8_t firing, ASoundPlayParams *params, float frames) {
                 ASceneObj *source = owner;
                 void *memory = ABaseSound::OperatorNew(sizeof(AOneShotSound), "AOneShotSound");
                 if (memory != NULL)
-                    AOneShotSound_Construct(memory, 0, bank->handle, bank->index.Lookup(shellPatch.CStr()),
-                                            &source->position, &source->velocity, 1.0f, "Shell Casings");
+                    static_cast<AOneShotSound *>(memory)->Construct(bank->handle,
+                                                                    bank->index.Lookup(shellPatch.CStr()),
+                                                                    &source->position, &source->velocity, 1.0f,
+                                                                    "Shell Casings");
             }
             fireTimer -= fireInterval;
         }
@@ -225,15 +227,15 @@ ATurret* ATurret::Construct() {
 // FUNC_AT(0x0012e250)
 void ATurret::Destruct() {
     if (sidewaysVoice != NULL) {
-        AVoice_Destruct(sidewaysVoice, 0);
+        sidewaysVoice->Destruct();
         UMemory::FastFree(sidewaysVoice, sizeof(AVoice));
     }
     if (upDownVoice != NULL) {
-        AVoice_Destruct(upDownVoice, 0);
+        upDownVoice->Destruct();
         UMemory::FastFree(upDownVoice, sizeof(AVoice));
     }
     if (servoVoice != NULL) {
-        AVoice_Destruct(servoVoice, 0);
+        servoVoice->Destruct();
         UMemory::FastFree(servoVoice, sizeof(AVoice));
     }
 }
@@ -417,7 +419,7 @@ void ASmackable::Play(ASoundPlayParams *params) {
         collisionVoice->Play(params->listener->view, float(mix->GetVolume() * volume * params->volume),
                              params->pitch, params->azimuth, 0.0f, 0.0f);
         if (AVoice_IsFinished(collisionVoice, 0)) {
-            AVoice_Destruct(collisionVoice, 0);
+            collisionVoice->Destruct();
             UMemory::FastFree(collisionVoice, sizeof(AVoice));
             collisionVoice = NULL;
         }

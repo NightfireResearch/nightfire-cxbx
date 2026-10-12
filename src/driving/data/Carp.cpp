@@ -878,3 +878,13 @@ double CARP::Instance::SizeY() const {
     double x = float((packedDimensions & 0x3ff) * step);
     return x + x;
 }
+
+// FUNC_AT(0x0003db00)
+MATRIX4* CARP::Instance::GetMatrix4(MATRIX4 *matrix) const {
+    *matrix = Matrix();
+    matrix->mtx[0][3] = 0.0f;
+    matrix->mtx[1][3] = 0.0f;
+    matrix->mtx[2][3] = 0.0f;
+    matrix->mtx[3][3] = 1.0f;
+    return matrix;
+}

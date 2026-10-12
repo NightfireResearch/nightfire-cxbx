@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "AIVehicle.h"
+#include "AIViews.h"                        // AIGroundVehicle
 #include "BondCar.h"
 #include "MissionManager.h"
 #include "Simulation.h"
@@ -532,7 +532,7 @@ void PBondCar::AttackWithEmp() {
 // FUNC_AT(0x00062c40)
 void* PBondCar::GetSplinePath() {
     if (aiGroundVehicle != NULL)
-        return AIVehicle_GetSplinePath(aiGroundVehicle, 0);
+        return aiGroundVehicle->GetSplinePath();
     return NULL;
 }
 

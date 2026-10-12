@@ -22,7 +22,6 @@
 
 // ---- originals called by address
 
-#define AOneShotSound_Construct ((AOneShotSound *(__fastcall *)(void *, int, int bank, int patch, const Coord3 *position, const Coord3 *velocity, float volume, const char *mixName))0x000476f0)
 
 // ---- globals
 
@@ -94,8 +93,8 @@ void PlayOneShot(ABank *bank, const char *patch, const Coord3 *position, const C
                  const char *mixName) {
     void *block = ABaseSound::OperatorNew(sizeof(AOneShotSound), "AOneShotSound");
     if (block != NULL)
-        AOneShotSound_Construct(block, 0, bank->handle, bank->index.Lookup(patch), position, velocity, volume,
-                                mixName);
+        static_cast<AOneShotSound *>(block)->Construct(bank->handle, bank->index.Lookup(patch), position, velocity, volume,
+                                                       mixName);
 }
 
 // A level moved towards `target` by at most `step`, landing on the target (as computed) when within it
@@ -444,8 +443,8 @@ void AVehicle::PlayCollision(float strength, const Coord3 *position, const Coord
         if (block != NULL) {
             float volume = speed < 5.0f ? (float)(speed * 0.2f) : 1.0f;
             const char *gate = (MetalGateCount++ & 1) != 0 ? "SFX_MetalGate3" : "SFX_MetalGate2";
-            AOneShotSound_Construct(block, 0, smackables->handle, smackables->index.Lookup(gate), position, velocity,
-                                    volume, "Smackables");
+            static_cast<AOneShotSound *>(block)->Construct(smackables->handle, smackables->index.Lookup(gate), position, velocity,
+                                                           volume, "Smackables");
         }
     }
 
@@ -480,8 +479,8 @@ void AVehicle::PlayCollision(float strength, const Coord3 *position, const Coord
     void *block = ABaseSound::OperatorNew(sizeof(AOneShotSound), "AOneShotSound");
     if (block != NULL) {
         float volume = speed < 2.0f ? (float)(speed * 0.5f) : 1.0f;
-        AOneShotSound_Construct(block, 0, bank->handle, bank->index.Lookup(table[i].patch), position, velocity,
-                                volume, mixName);
+        static_cast<AOneShotSound *>(block)->Construct(bank->handle, bank->index.Lookup(table[i].patch), position, velocity,
+                                                       volume, mixName);
     }
 }
 
@@ -608,7 +607,7 @@ void AVehicle::Play(ASoundPlayParams *params) {
                     volume = excess < 5.0f ? (float)(excess * 0.2f) : 1.0f;
                     patch = bumpPatches[kBumpWood][0];
                 }
-                AOneShotSound_Construct(block, 0, bank->handle, patch, &position, &this->velocity, volume, "Wood");
+                static_cast<AOneShotSound *>(block)->Construct(bank->handle, patch, &position, &this->velocity, volume, "Wood");
             }
             bumpDistances[kBumpWood] = (float)(bumpDistances[kBumpWood] - 150.0f);
             bumpToggles[kBumpWood] = !bumpToggles[kBumpWood];
@@ -629,7 +628,7 @@ void AVehicle::Play(ASoundPlayParams *params) {
                     volume = excess < 5.0f ? (float)(excess * 0.2f) : 1.0f;
                     patch = bumpPatches[kBumpRail][0];
                 }
-                AOneShotSound_Construct(block, 0, bank->handle, patch, &position, &this->velocity, volume, "Rail");
+                static_cast<AOneShotSound *>(block)->Construct(bank->handle, patch, &position, &this->velocity, volume, "Rail");
             }
             bumpDistances[kBumpRail] = (float)(bumpDistances[kBumpRail] - 250.0f);
             bumpToggles[kBumpRail] = !bumpToggles[kBumpRail];

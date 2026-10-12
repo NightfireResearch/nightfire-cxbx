@@ -43,12 +43,9 @@ int32_t TrafficCountB;
 
 // AOneShotSound's constructors: a bank's patch at a place (and velocity), at `volume`; the second leaves the views
 // looping when `loop` is set
-#define AOneShotSound_Construct ((AOneShotSound *(__fastcall *)(void *, int, int bank, int patch, const Coord3 *position, const Coord3 *velocity, float volume, const char *mixName))0x000476f0)
-#define AOneShotSound_ConstructAt ((AOneShotSound *(__fastcall *)(void *, int, int bank, int patch, const Coord3 *position, float volume, const char *mixName, bool loop))0x000477d0)
 // Whether the voice is done with (Ghidra: FUN_000d36c0; the name is ours, as audio/Sound.cpp's)
 #define AVoice_IsFinished ((bool (__fastcall *)(AVoice *, int))0x000d36c0)
 // Every view's loop flag cleared: the voice plays once (Ghidra: FUN_0003e6b0; the name is ours)
-#define AVoice_PlayOnce ((void (__fastcall *)(AVoice *, int))0x0003e6b0)
 
 namespace {
 
@@ -119,8 +116,8 @@ void PlayOneShot(AVehicle *sound, const char *patchName, const char *mixName) {
         return;
     ABank *bank = fgBanks[9];
     int patch = bank->index.Lookup(patchName);
-    AOneShotSound_Construct(block, 0, bank->handle, patch, &sound->position, &sound->velocity,
-                            float(sound->GetMixedVolume()), mixName);
+    static_cast<AOneShotSound *>(block)->Construct(bank->handle, patch, &sound->position, &sound->velocity,
+                                                   float(sound->GetMixedVolume()), mixName);
 }
 
 // A one-shot sound of the bank's patch constructed on the stack and destroyed straight away, as the snowmobiles'
@@ -128,8 +125,8 @@ void PlayOneShot(AVehicle *sound, const char *patchName, const char *mixName) {
 void MakeLandingSound(AVehicle *sound, ABank *bank, const char *patchName, const char *mixName) {
     int patch = bank->index.Lookup(patchName);
     AOneShotSound landing;
-    AOneShotSound_Construct(&landing, 0, bank->handle, patch, &sound->position, &sound->velocity,
-                            float(sound->GetMixedVolume()), mixName);
+    landing.Construct(bank->handle, patch, &sound->position, &sound->velocity,
+                      float(sound->GetMixedVolume()), mixName);
     landing.Destruct();
 }
 
@@ -140,7 +137,7 @@ AOneShotSound *NewCavitationShot(ASubmersible *sound, const char *patchName, flo
         return NULL;
     ABank *bank = fgBanks[9];
     int patch = bank->index.Lookup(patchName);
-    return AOneShotSound_ConstructAt(block, 0, bank->handle, patch, &sound->position, volume, "One Shots", false);
+    return static_cast<AOneShotSound *>(block)->ConstructAt(bank->handle, patch, &sound->position, volume, "One Shots", false);
 }
 
 AOneShotSound *NewServoShot(ASubmersible *sound, const char *patchName) {
@@ -149,8 +146,8 @@ AOneShotSound *NewServoShot(ASubmersible *sound, const char *patchName) {
         return NULL;
     ABank *bank = fgBanks[9];
     int patch = bank->index.Lookup(patchName);
-    return AOneShotSound_ConstructAt(block, 0, bank->handle, patch, &sound->position, float(sound->GetMixedVolume()),
-                                     "One Shots", false);
+    return static_cast<AOneShotSound *>(block)->ConstructAt(bank->handle, patch, &sound->position, float(sound->GetMixedVolume()),
+                                                            "One Shots", false);
 }
 
 // The snowmobiles' carving surfaces besides paved ground
@@ -581,7 +578,7 @@ void ASnowMobile::PlayMotor(ASoundPlayParams *params) {
                 patch = "SFX_rev1";
             if (patch != NULL) {
                 revVoice = NewVoice(motorMix, fgBanks[9], patch);
-                AVoice_PlayOnce(revVoice, 0);
+                revVoice->PlayOnce();
                 revVoice->Play(view, float(GetMixedVolume() * params->volume), params->pitch * motorPitch,
                                params->azimuth, 0.0f, 0.0f);
                 revving = true;

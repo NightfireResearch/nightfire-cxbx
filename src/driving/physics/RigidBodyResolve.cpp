@@ -17,6 +17,26 @@
 // called (through the owner's vtable).
 // ---------------------------------------------------------------------------------------------------------------
 
+// FUNC_AT(0x0003dc20)
+CollisionImpact* CollisionImpact::Construct() {
+    const Coord4 origin = { 0.0f, 0.0f, 0.0f, 1.0f };
+    point = origin;
+    normal = origin;
+    relativeVelocity = origin;
+    damageScaleA = 0.0f;
+    damageScaleB = 0.0f;
+    closingSpeed = 0.0f;
+    strength = 0.0f;
+    kindA = 0;
+    ownerA = 0;
+    unknown4a = 0;
+    kindB = 0;
+    ownerB = 0;
+    tag = 0;
+    unknown50 = -1;
+    return this;
+}
+
 namespace {
 
 PhysicsObject *Owner(const RigidBody *body) {

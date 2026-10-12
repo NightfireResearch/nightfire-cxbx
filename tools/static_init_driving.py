@@ -647,7 +647,7 @@ def weapon_lines():
 
         def num(v):
             return str(v - (1 << 32) if v >= 0x80000000 else v)
-        lines.append("    { %d, %s, { 0x%x, 0x%x, 0x%x }, %s, %s, %s, %s, { %s, %s, %s, %s }, %s, %d, %s, %s, %s, "
+        lines.append("    { %d, %s, 0x%x, 0x%x, 0x%x, %s, %s, %s, %s, { %s, %s, %s, %s }, %s, %d, %s, %s, %s, "
                      "%s, %s, %s }," %
                      (wid, c_string(name), t0, t1, t2, num(flags), num(u18), num(u1c), num(u20), num(x0), num(x1),
                       num(x2), num(x3), num(u34), u38, num(u3c), num(u40), c_string(asset) if asset else "NULL",

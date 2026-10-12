@@ -38,9 +38,9 @@ public:
     uint8_t unknown90[8];
 
     // Explosion::Explosion: at `position`, of the size, set off on `directHit` (or none) by the owner with the
-    // signature. The second argument is not read.
-    Explosion* Construct(int type, int unused, const Coord3 *position, float size, PhysicsObject *directHit,
-                         const uint32_t *ownerSig);                                             // 0x0005cd70
+    // signature. The direction is not read.
+    Explosion* Construct(int type, const Coord3 *direction, const Coord3 *position, float size,
+                         PhysicsObject *directHit, const uint32_t *ownerSig);                   // 0x0005cd70
     void Destruct();                                                                            // 0x0005cd60
     // The scalar deleting destructor, vtable slot 0 (Ghidra: FUN_0005ce80)
     Explosion* Delete(unsigned flags);                                                          // 0x0005ce80

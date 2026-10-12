@@ -52,9 +52,7 @@
 // ---- the game's, not ported yet
 
 // A random 32-bit word: the first draw inverted in the top half, the second below
-#define SimRandom_Word ((uint32_t (__fastcall *)(SimRandom *, int))0x00040070)
 // AOneShotSound's constructor: a patch of a bank at a place
-#define AOneShotSound_Construct ((AOneShotSound *(__fastcall *)(void *, int, int bank, int patch, const Coord3 *position, const Coord3 *velocity, float volume, const char *mix))0x000476f0)
 // game.weapons package C
 
 // ---- globals
@@ -175,8 +173,8 @@ void PlayEmpDetonate(const Coord3 *position, const Coord3 *velocity) {
     void *block = ABaseSound::OperatorNew(sizeof(AOneShotSound), "AOneShotSound");
     AOneShotSound *sound = NULL;
     if (block != NULL)
-        sound = AOneShotSound_Construct(block, 0, bank->handle, bank->index.Lookup("SFX_EMPdetonate"), position,
-                                        velocity, 1.0f, "POV Weapons");
+        sound = static_cast<AOneShotSound *>(block)->Construct(bank->handle, bank->index.Lookup("SFX_EMPdetonate"), position,
+                                                               velocity, 1.0f, "POV Weapons");
     sound->minDistance = kEmpMinDistance;
     sound->maxDistance = kEmpMaxDistance;
     sound->maxDistanceSq = kEmpMaxDistance * kEmpMaxDistance;
@@ -327,7 +325,7 @@ Missile* Missile::Construct(int weapon, float speed, const Coord3 *direction, co
             } else if (shooter->type == kObjectSentry) {
                 // A random homing delay, thrust, turn and (fired nearly straight up) heading
                 alignas(16) Coord4 spread;
-                BytesToCoordXYZW(SimRandom_Word(fgSimulation.random, 0), NULL, NULL, NULL, &spread);
+                BytesToCoordXYZW(fgSimulation.random->GenerateBits(), NULL, NULL, NULL, &spread);
                 homingDelay = Ftol(double(homingDelay) * spread.w * 2.0);
                 thrust = float((double(spread.x) + 1.25) * thrust);
                 turnRate = float((double(spread.y) + 0.25) * turnRate);

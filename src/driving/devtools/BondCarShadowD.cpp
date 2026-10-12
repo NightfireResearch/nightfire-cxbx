@@ -433,7 +433,7 @@ void InstallFakes() {
     HookInstall(0x000d7c10, (const void *)&FakeTheApp);
     HookInstall(0x000d87a0, (const void *)&FakeDamageFlash);
     HookBoth(0x0011c910, XbeAddress(&ABaseSound::OperatorNew), (const void *)&FakeOperatorNew);
-    HookInstall(0x000476f0, (const void *)&FakeOneShot);
+    HookBoth(0x000476f0, XbeAddress(&AOneShotSound::Construct), (const void *)&FakeOneShot);
     HookBoth(0x00077d70, XbeAddress(XbeOverload<StimuliId>::Of(&Handle::ProcessStimuli)), (const void *)&FakeStimuliId);
     HookBoth(0x00077e00, XbeAddress(XbeOverload<Stimuli>::Of(&Handle::ProcessStimuli)), (const void *)&FakeStimuli);
     HookBoth(0x00077e60, XbeAddress(&Handle::ProcessStimuliZones), (const void *)&FakeStimuliZones);

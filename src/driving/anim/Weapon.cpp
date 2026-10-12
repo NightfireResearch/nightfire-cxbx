@@ -113,7 +113,7 @@ ActWeapon* ActWeapon::Construct(ActWeaponAux *aux, uint32_t flags) {
     worldTransforms[0] = NULL;
     worldTransforms[1] = NULL;
     owner = NULL;
-    unknown15c = 0;
+    accuracy = NULL;
     unknown160 = 0;
     unknown164 = 0;
     velocity.z = 0.0f;

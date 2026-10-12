@@ -11,7 +11,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // AVoice's destructor where it is not inlined (Ghidra: FUN_0003f400)
-#define AVoice_Destruct ((void (__fastcall *)(AVoice *, int))0x0003f400)
 // Whether the voice is done with (Ghidra: FUN_000d36c0)
 #define AVoice_IsFinished ((bool (__fastcall *)(AVoice *, int))0x000d36c0)
 
@@ -171,7 +170,7 @@ void ACharacter::Play(ASoundPlayParams *params) {
     voice->Play(params->listener->view, float(mix->GetVolume() * volume * params->volume), params->pitch,
                 params->azimuth, 0.0f, 0.0f);
     if (AVoice_IsFinished(voice, 0)) {
-        AVoice_Destruct(voice, 0);
+        voice->Destruct();
         UMemory::FastFree(voice, sizeof(AVoice));
         voice = NULL;
     }

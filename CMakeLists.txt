@@ -492,6 +492,11 @@ add_library(drivinginject SHARED
   src/driving/game/MissionManager.cpp
   src/driving/game/MissionScores.cpp
   src/driving/game/MissionRules.cpp
+  src/driving/game/EventsA.cpp
+  src/driving/game/EventsB.cpp
+  src/driving/game/FireWeaponEvent.cpp
+  src/driving/game/EventsC.cpp
+  src/driving/game/EventsD.cpp
   src/driving/engine/OBB.cpp
   src/driving/engine/PhysicsUtil.cpp
   src/driving/devtools/ColQueryShadow.cpp
@@ -527,6 +532,10 @@ add_library(drivinginject SHARED
   src/driving/devtools/GameMissionsShadowB.cpp
   src/driving/devtools/GameMissionsShadowC.cpp
   src/driving/devtools/GameMissionsShadowD.cpp
+  src/driving/devtools/GameEventsShadowA.cpp
+  src/driving/devtools/GameEventsShadowB.cpp
+  src/driving/devtools/GameEventsShadowC.cpp
+  src/driving/devtools/GameEventsShadowD.cpp
   src/driving/devtools/VehicleShadow.cpp
   src/driving/devtools/RigidCollideShadow.cpp
   src/driving/devtools/RenderShadow.cpp

@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #include "../../common/xbeClass.h"      // offsetof on a derived class without clang's warning
-#include "AICharacter.h"
+#include "AIViews.h"
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../physics/PhysicsObject.h"
 

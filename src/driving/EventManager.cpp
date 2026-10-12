@@ -74,3 +74,16 @@ void Event::operator delete(void *event, size_t size) {
     (void)event;
     gDeletionPoint += EventBytes(size);
 }
+
+// FUNC_AT(0x00043640)
+void Event::Destruct() {
+    vtable = kEventVtable;
+}
+
+// FUNC_AT(0x0003db30)
+Event* Event::Delete(unsigned flags) {
+    vtable = kEventVtable;
+    if (flags & 1)
+        operator delete(this, sizeof(Event));
+    return this;
+}

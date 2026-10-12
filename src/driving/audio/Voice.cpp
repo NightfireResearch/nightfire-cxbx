@@ -93,6 +93,18 @@ AVoiceMapNode *Next(AVoiceMapNode *node) {
 // AVoice::View
 // =============================================================================================================
 
+// FUNC_AT(0x0003f400)
+void AVoice::Destruct() {
+    for (int i = 3; i-- > 0;)
+        views[i].Destruct();
+}
+
+// FUNC_AT(0x0003e6b0)
+void AVoice::PlayOnce() {
+    for (int i = 0; i < 3; i++)
+        views[i].loop = 0;
+}
+
 // FUNC_AT(0x00123820)
 AVoice::View* AVoice::View::Construct() {
     patch = -1;

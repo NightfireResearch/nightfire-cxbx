@@ -18,7 +18,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // AVoice's destructor where it is not inlined (Ghidra: FUN_0003f400)
-#define AVoice_Destruct ((void (__fastcall *)(AVoice *, int))0x0003f400)
 // Whether the voice is done with (Ghidra: FUN_000d36c0; the name is ours): it has been played, and the shared view
 // is active or every active one of the other two is finished.
 #define AVoice_IsFinished ((bool (__fastcall *)(AVoice *, int))0x000d36c0)
@@ -177,6 +176,36 @@ void ASoundList::IncreaseSize(uint32_t count) {
 // AOneShotSound, ALimitedSound
 // =============================================================================================================
 
+// FUNC_AT(0x000476f0)
+AOneShotSound* AOneShotSound::Construct(int bank, int patch, const Coord3 *position, const Coord3 *velocity,
+                                        float volume, const char *mixName) {
+    ABaseSound::Construct(mixName, kSoundViewsActive);
+    vtable = kAOneShotSoundVtable;
+    voice.Construct(mix, bank, patch);
+    this->volume = volume;
+    fxLevel = 0.0f;
+    timeLeft = 0.0f;
+    voice.PlayOnce();
+    this->position = *position;
+    this->velocity = *velocity;
+    return this;
+}
+
+// FUNC_AT(0x000477d0)
+AOneShotSound* AOneShotSound::ConstructAt(int bank, int patch, const Coord3 *position, float volume,
+                                          const char *mixName, bool loop) {
+    ABaseSound::Construct(mixName, kSoundViewsActive);
+    vtable = kAOneShotSoundVtable;
+    voice.Construct(mix, bank, patch);
+    fxLevel = 0.0f;
+    timeLeft = 0.0f;
+    this->volume = volume;
+    if (!loop)
+        voice.PlayOnce();
+    this->position = *position;
+    return this;
+}
+
 // FUNC_AT(0x000478a0)
 void AOneShotSound::Destruct() {
     vtable = kAOneShotSoundVtable;
@@ -323,7 +352,7 @@ ABasic* ABasic::Delete(unsigned int flags) {
 // FUNC_AT(0x0012fc30)
 void ABasic::Stop(ASoundPlayParams *params) {
     if (voice != NULL) {
-        AVoice_Destruct(voice, 0);
+        voice->Destruct();
         UMemory::FastFree(voice, sizeof(AVoice));
     }
     voice = NULL;

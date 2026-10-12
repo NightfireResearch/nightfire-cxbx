@@ -17,6 +17,7 @@
 #include "../camera/Camera.h"
 #include "../eagl/EaglFont.h"
 #include "../eagl/Realgraph.h"
+#include "../engine/GameInterfaces.hpp"   // GHud
 #include "../engine/CoreFoundation.h"
 #include "../engine/Feedback.h"
 #include "../engine/UMemory.hpp"
@@ -35,9 +36,6 @@
 
 // ---- originals called by address
 
-#define GHud_TheApp ((GHud *(*)())0x000d7c10)
-#define GHud_dbDrawTarget ((void (__fastcall *)(GHud *, int, const ScreenPos *, const char *, float, uint32_t, const char *))0x000da8e0)
-#define GHud_GetScreenCoords ((void (__fastcall *)(GHud *, int, const Coord3 *, bool *, ScreenPos *))0x000dc4a0)
 
 // ---- the game's state
 
@@ -161,7 +159,7 @@ void DAudio::DrawTargets() {
     for (DAudioTargetNode *node = DAudioTargets.Begin(); node != DAudioTargets.head; node = node->next) {
         char label[64];
         sprintf(label, "(%.0f)%s", double(node->value.distance), node->value.name);
-        GHud_dbDrawTarget(GHud_TheApp(), 0, &node->value.screen, "", 5.0f, kTargetColour, label);
+        GHud::TheApp()->dbDrawTarget(&node->value.screen, "", 5.0f, kTargetColour, label);
     }
 }
 
@@ -374,7 +372,7 @@ void DAudio::UpdateTargets() {
             continue;
         bool onScreen;
         ScreenPos screen;
-        GHud_GetScreenCoords(GHud_TheApp(), 0, &sound->position, &onScreen, &screen);
+        GHud::TheApp()->GetScreenCoords(&sound->position, &onScreen, &screen);
         if (!onScreen)
             continue;
         float distance = vec3distance(&listener.position, &sound->position);
