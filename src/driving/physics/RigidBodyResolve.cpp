@@ -211,7 +211,7 @@ bool RigidBody::ResolveCollision(RigidBody *a, RigidBody *b, Coord4 *normal, con
         // of a quarter and four
         float weightA = 1.0f;
         float weightB = 1.0f;
-        if (glbMissionManager->unknown478) {
+        if (glbMissionManager->autoDrive) {
             bool classedA = Vehicle(a)->GetCarClass() == 1 || Vehicle(a)->GetCarClass() == 2;
             bool classedB = Vehicle(b)->GetCarClass() == 1 || Vehicle(b)->GetCarClass() == 2;
             if (Owner(a)->GetHitPoints() <= 0.0)

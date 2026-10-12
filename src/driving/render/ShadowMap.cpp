@@ -69,7 +69,6 @@ constexpr int kTextureDepth = 0x10;
 constexpr uint32_t kAddressClamp = 3;
 constexpr uint32_t kClearAll = 7;                   // colour, depth and stencil
 constexpr uint32_t kBackground = 0x7fffffff;
-constexpr int32_t kVehicleType = 1;                 // PhysicsObject::type of the cars that get a simple shadow
 constexpr float kDefaultShadowSize = 0.8f;
 constexpr int32_t kDefaultPS2ShadowStrength = 0x18;
 constexpr float kBoxMargin = 0.15f;
@@ -233,7 +232,10 @@ void RShadowMap::SetCamera(RSceneObj *vehicle, const Coord4 *direction) {
     VU0_MATRIX4_mult(&view, &orientation, &view);
 
     // The car's box seen along it: the largest of its corners' distances across and up
+    // The original never writes the corner's w (TransformPoint at 0x000a5e3a reads its stack there): zero here. A
+    // NaN left there made every distance NaN and the fit nothing.
     Coord4 corner;
+    corner.w = 0.0f;
     vehicle->GetBoundingDimensions(&corner);
     float widest = 0.0f, highest = 0.0f;
     for (int i = 0; i < 2; i++) {
@@ -319,7 +321,7 @@ void RShadowMap::DrawSimpleShadow(RSceneObj *vehicle) {
     request->texture.SetData(data->texture);
 
     PhysicsObject *physics = vehicle->physics;
-    if (physics->type != kVehicleType)
+    if (physics->type != kObjectVehicle)
         return;
     RigidBody *body = Simulation_GetRigidBody(Sim, 0, physics->rigidBodySlot);
     RigidBodyInfo *info = body->info;

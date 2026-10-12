@@ -14,6 +14,7 @@
 #include "../engine/UMemory.hpp"
 #include "../game/Debris.h"
 #include "../game/WeaponEffects.h"      // RMuzzleFlash
+#include "../game/WeaponManager.h"
 #include "../physics/PhysicsMath.h"     // Abs
 #include "../physics/PhysicsObject.h"
 #include "../physics/Simulation.h"
@@ -55,23 +56,6 @@
 #define IdentityMatrix (*(const MATRIX4 **)0x001c4654)
 // XBE_GLOBAL(0x001b4e3c, 4)
 static float HenchmenMuzzleFlashSize = 0.4f;
-
-// The player's weapon manager (Ghidra: SWeaponManager; only the field read here)
-struct WeaponManagerFields {
-    uint8_t unknown00[0x18];
-    int32_t unknown18;                // +0x18
-};
-#define WeaponManager (*(WeaponManagerFields **)0x0023923c)
-
-// WeaponManager's unknown18 values the weapon code tests
-enum WeaponManagerValue {
-    kManagerValue18 = 0x18,
-    kManagerValue1A = 0x1a,
-    kManagerValue1B = 0x1b,
-    kManagerValue1C = 0x1c,
-    kManagerValue1D = 0x1d,
-    kManagerValue1E = 0x1e,
-};
 
 RSceneObj_vtbl *const kActWeaponVtable = (RSceneObj_vtbl *)0x0018a440;
 
@@ -234,24 +218,24 @@ void ActWeapon::ManualRender() {
         if (flags & kPlayerOwned) {
             float size;
             int type;   // RMuzzleFlash::DrawPOV's
-            switch (WeaponManager->unknown18) {
-            case kManagerValue1A:
+            switch (WeaponManager->lastFired) {
+            case kWeaponSniperRifle:
                 size = 0.18f;
                 type = 2;
                 break;
-            case kManagerValue1B:
+            case kWeaponUltralightGun:
                 size = 0.06f;
                 type = 6;
                 break;
-            case kManagerValue1C:
+            case kWeaponUltralightRocket:
                 size = 0.08f;
                 type = 3;
                 break;
-            case kManagerValue1D:
+            case kWeaponFodGun:
                 size = 0.1f;
                 type = 7;
                 break;
-            case kManagerValue1E:
+            case kWeaponFodRocket:
                 size = 0.2f;
                 type = 7;
                 break;
@@ -275,7 +259,7 @@ static_assert(std::bit_cast<uint32_t>(0.18f) == 0x3e3851ec && std::bit_cast<uint
 
 // FUNC_AT(0x0001b020)
 void ActWeapon::RenderShellCasings() {
-    if ((flags & kPlayerOwned) && WeaponManager->unknown18 == kManagerValue18)
+    if ((flags & kPlayerOwned) && WeaponManager->lastFired == kWeaponSnowmobileGun)
         Debris->DrawShellCasings();
 }
 

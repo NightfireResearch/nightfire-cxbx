@@ -16,6 +16,7 @@
 #include "FingoDeathSound.h"
 #include "VehicleSound.h"
 #include "VehicleSoundKinds.h"
+#include "WeaponManager.h"
 #include "../anim/AnimEngine.h"
 #include "../audio/Bank.h"
 #include "../audio/Sound.h"
@@ -52,7 +53,6 @@
 
 #define ControllerPort I32_AT(0x00244520)                   // the launch page's controller port
 #define AIControllerInstance (*(void **)0x001ddee4)          // AIElementController's one instance (name ours)
-#define WeaponManager (*(BondCarWeapons **)0x0023923c)
 
 // XBE_GLOBAL(0x001e7a88, 4)
 BondCarScratch *BondCarScratchPad;
@@ -66,8 +66,6 @@ const char *OverrideCarType;
 #define AIVehicleController_FindAgentGroundVehiclePtr ((AIGroundVehicle *(__fastcall *)(void *, int, PBondCar *vehicle))0x00035e90)
 #define AIElementController_ForceVehicleToSleep ((void (__fastcall *)(void *, int, AIGroundVehicle *vehicle))0x000289f0)
 #define SMissionManager_IncPlayerDamage ((void (__fastcall *)(SMissionManager *, int, float damage))0x000b66c0)
-#define SMissionManager_IncShotsHit ((void (__fastcall *)(SMissionManager *, int, bool hit))0x000b6720)
-#define SMissionManager_IncKills ((void (__fastcall *)(SMissionManager *, int, int kills))0x000b6770)
 #define GHud_TheApp ((void *(*)())0x000d7c10)
 #define GHud_TriggerDamageFlash ((void (__fastcall *)(void *, int, float damage))0x000d87a0)
 // AOneShotSound's constructor: a patch of a bank at a place
@@ -82,33 +80,6 @@ template <class Kind>
 Kind* NewSound(const char *name) {
     return static_cast<Kind *>(ABaseSound::OperatorNew(sizeof(Kind), name));
 }
-
-// The weapon manager (SWeaponManager, not ported): what Simulate reads
-struct BondCarWeaponSlot {
-    int32_t weapon;                 // +0x00
-    uint8_t unknown04[0x14];
-    int32_t unknown18;              // +0x18
-    uint8_t unknown1C[0x38];
-};
-static_assert(sizeof(BondCarWeaponSlot) == 0x54, "a weapon slot is 84 bytes");
-
-struct BondCarWeapons {
-    uint32_t unknown00;
-    int32_t current;                // +0x04
-    uint8_t unknown08[8];
-    BondCarWeaponSlot *slots;       // +0x10
-    uint8_t unknown14[0x13];
-    uint8_t unknown27;              // +0x27
-};
-static_assert(offsetof(BondCarWeapons, unknown27) == 0x27, "weapon manager layout");
-
-// The weapons Simulate tests for (neutral names)
-enum BondCarWeapon : int32_t {
-    kWeapon0 = 0,
-    kWeapon1B = 0x1b,
-    kWeapon18 = 0x18,
-    kWeapon1D = 0x1d,
-};
 
 // ApplyDamage's kinds
 enum DamageKind : int32_t {
@@ -483,7 +454,7 @@ void PBondCar::Simulate() {
     if (carClass == kPlayerCar || carClass == kCarClass1) {
         if (fgCameraTables.modes[fgRenderHigh->views[0].camera->cameraMode].interiorView)
             drawList = 2;
-        else if (glbMissionManager->unknown478)
+        else if (glbMissionManager->autoDrive)
             drawList = 5;
     }
     SetViewDrawList(renderObject, drawList);
@@ -640,18 +611,18 @@ void PBondCar::Simulate() {
     Virtual(this, PVehicle::kGetCarClass, &PBondCar::GetCarClass);
     uint8_t weaponFlagC0 = 0;
     uint8_t weaponFlagC1 = 0;
-    BondCarWeapons *weapons = WeaponManager;
+    SWeaponManager *weapons = WeaponManager;
     if (Virtual(this, PVehicle::kGetCarClass, &PBondCar::GetCarClass) == kCarClass1) {
-        int32_t weapon = weapons->slots[weapons->current].weapon;
-        if ((SimStepCount >= controlLockTimer && weapon == kWeapon18) || weapon == kWeapon1D ||
-            weapon == kWeapon1B) {
+        int32_t weapon = weapons->weapons[weapons->secondary].id;
+        if ((SimStepCount >= controlLockTimer && weapon == kWeaponSnowmobileGun) || weapon == kWeaponFodGun ||
+            weapon == kWeaponUltralightGun) {
             weaponFlagC0 = 1;
-            weaponFlagC1 = weapons->unknown27;
+            weaponFlagC1 = weapons->handsFired;
         }
     } else {
-        BondCarWeaponSlot *slot = &weapons->slots[weapons->current];
+        WeaponRecord *slot = &weapons->weapons[weapons->secondary];
         weaponFlagC0 = 1;
-        if (slot->weapon == kWeapon0 && slot->unknown18 > 0 && control.unknown1B) {
+        if (slot->id == kWeaponGun && slot->ammo > 0 && control.unknown1B) {
             RSceneObj *playerRender = PlayerPhysicsObject->renderObject;
             if (playerRender == NULL) {
                 weaponFlagC1 = 1;
@@ -662,7 +633,7 @@ void PBondCar::Simulate() {
         }
     }
     SMissionManager *mission = glbMissionManager;
-    if (mission->unknown474 == 3 || mission->unknown474 == 4 || SimState == 3 || mission->unknown4f0 != 0)
+    if (mission->missionState == 3 || mission->missionState == 4 || SimState == 3 || mission->cinematicMode != 0)
         weaponFlagC1 = 0;
 
     int surfaces[kCarWheels];
@@ -763,11 +734,11 @@ int PBondCar::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, fl
     bool tyreShot = tyreBlowOuts && kind == kDamageBullet;
     if (carClass == kPlayerCar || carClass == kCarClass1) {
         SMissionManager_IncPlayerDamage(glbMissionManager, 0, amount);
-        if (glbMissionManager->unknown4f0 != 0)
+        if (glbMissionManager->cinematicMode != 0)
             immune = true;
     }
     if ((kind == kDamageBullet || kind == kDamageKind3) && amount > 1.0f &&
-        (carClass == kPlayerCar || carClass == kCarClass1) && glbMissionManager->unknown478 && !immune)
+        (carClass == kPlayerCar || carClass == kCarClass1) && glbMissionManager->autoDrive && !immune)
         GHud_TriggerDamageFlash(GHud_TheApp(), 0, amount);
     if (shieldPointLoc != NULL) {
         if (*shieldPointLoc > amount) {
@@ -867,8 +838,8 @@ int PBondCar::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, fl
             SMissionManager_IncKills(glbMissionManager, 0, 1);
             Virtual(this, PVehicle::kSetScoreable, &PBondCar::SetScoreable, false);
             if (targetBeacon != NULL) {
-                for (Missile **missile = SimulationMissilesFirst; missile != SimulationMissilesLast; missile++) {
-                    if ((*missile)->target == targetBeacon && !(*missile)->unknown70A)
+                for (Missile **missile = SimMissiles.first; missile != SimMissiles.last; missile++) {
+                    if ((*missile)->target == targetBeacon && !(*missile)->exploded)
                         SMissionManager_IncShotsHit(glbMissionManager, 0, false);
                 }
             }
@@ -918,7 +889,7 @@ int PBondCar::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount, fl
         Coord4 torque;
         BytesToCoordXYZ(spinBits, &spinOffset, &spinScale, NULL, &torque);
         VU0_v4scale(&torque, amount, &torque);
-        if (this != Simulation_GetPlayerObject(Sim, 0) || !glbMissionManager->unknown478)
+        if (this != Simulation_GetPlayerObject(Sim, 0) || !glbMissionManager->autoDrive)
             ApplyForces(XYZ(&force), XYZ(&torque));
     }
 

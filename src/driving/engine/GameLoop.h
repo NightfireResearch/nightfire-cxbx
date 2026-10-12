@@ -60,7 +60,8 @@ struct LaunchPage {
     int32_t vibration;          // +0x994 non-zero: force feedback on (IFeedback)
     uint8_t unknown998[0x8];
     uint32_t flags;             // +0x9a0
-    uint8_t unknown9a4[0x70];
+    uint32_t cheats;            // +0x9a4 (name ours)
+    uint8_t unknown9a8[0x6c];
     int32_t drivingConfig;      // +0xa14 the driving control configuration chosen (InputConfigManager)
     int32_t unknowna18;         // +0xa18
     int32_t videoMode;          // +0xa1c 0 NTSC, 2 PAL, 3 PAL60, 5 (PAL as well)
@@ -71,7 +72,7 @@ struct LaunchPage {
     uint8_t unknowna30[0x10];
     int32_t autoAim;            // +0xa40 zero: no auto-drive target angles (name ours)
     int32_t unknowna44;         // +0xa44 the auto-drive camera's lock-on input reads it
-    uint8_t unknowna48[0x4];
+    int32_t autoSwitch;         // +0xa48 non-zero: a weapon selection left empty steps on to the next (name ours)
 
     // Copies `text` into loaderReady (0x00059900).
     void SetLoaderReady(const char *text);

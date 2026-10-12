@@ -164,7 +164,7 @@ void RMissileCam::Kill() {
 
 // FUNC_AT(0x000a0b50)
 void RMissileCam::Draw() {
-    if (glbMissionManager->unknown4f0 != 0 || !enabled)
+    if (glbMissionManager->cinematicMode != 0 || !enabled)
         return;
     EAGL::TAR *texture = textures[SimStepCount % 3];
     uint32_t colour = uint32_t(alpha) << 24 | kMissileCamGrey;
@@ -258,7 +258,7 @@ void RSniperZoom::Reset() {
 
 // FUNC_AT(0x000a68a0)
 void RSniperZoom::GrabBackBuffer() {
-    if (glbMissionManager->unknown4f0 != 0)
+    if (glbMissionManager->cinematicMode != 0)
         active = 0;
     if (!active)
         return;

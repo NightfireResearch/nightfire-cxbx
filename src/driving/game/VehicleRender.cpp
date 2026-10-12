@@ -68,8 +68,6 @@ struct NeedleRange {
     float offset;
     float scale;
 };
-
-constexpr int kVehicleType = 1;                 // PhysicsObject::type of a PVehicle
 constexpr uint8_t kProcAnimXFormTransform = 0xfe;  // an instance turned by a bone (CARP::Instance::procAnimType)
 constexpr int kInitialSwitchTick = -10000;
 constexpr float kDefaultIlluminate = 0.5f;
@@ -292,7 +290,7 @@ void RVehicle::PostLoad() {
     CARP::Instance *next = animHandle->GetInstances();
     for (int wheel = 0; wheel < kWheels; wheel++) {
         hubBone[wheel] = GetBoneIndex(HubBoneNames[wheel]);
-        if (physics->type == kVehicleType && static_cast<PVehicle *>(physics)->GetPhysics()->isSub)
+        if (physics->type == kObjectVehicle && static_cast<PVehicle *>(physics)->GetPhysics()->isSub)
             hubBone[wheel] = GetBoneIndex(FinBoneNames[wheel]);
         wheelBone[wheel] = GetBoneIndex(WheelBoneNames[wheel]);
         wheelHeight[wheel] = 0.0f;
@@ -425,7 +423,7 @@ void RVehicle::StartMuzzleFlash(const Coord3 *position, const Coord3 *direction,
     muzzleDirection[muzzle].z = direction->z;
     muzzleEndTick[muzzle] = GameTick + kFlashTicks;
     bool hasTurret = false;
-    if (physics->type == kVehicleType)
+    if (physics->type == kObjectVehicle)
         hasTurret = physics->attributes.LookupBool("HAS_TURRET", NULL);
     if (type == kLargeFlash) {
         uint32_t random = RandomShort();
@@ -556,7 +554,7 @@ double RVehicle::GetRenderOffset() {
 // FUNC_AT(0x00096060)
 float RVehicle::ComputeWheels() {
     PVehicle *car = static_cast<PVehicle *>(physics);
-    if (car == NULL || car->type != kVehicleType)
+    if (car == NULL || car->type != kObjectVehicle)
         return 0.0f;
     float spin[kWheels];
     spin[0] = spin[1] = car->GetCarWheelSpinAngle(0);
@@ -659,7 +657,7 @@ void RVehicle::UpdatePosition(bool update) {
 // FUNC_AT(0x000965e0)
 void RVehicle::Render() {
     bool isPlayer = physics == PlayerVehicles[0];
-    bool simpleShadow = WorldViewMade || (isPlayer && glbMissionManager->unknown478);
+    bool simpleShadow = WorldViewMade || (isPlayer && glbMissionManager->autoDrive);
     if (isPlayer && PlayerInBumperView())
         return;
     alignas(16) MATRIX4 transform;

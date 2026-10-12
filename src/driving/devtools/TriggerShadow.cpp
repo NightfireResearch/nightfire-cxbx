@@ -483,7 +483,7 @@ void TestProcess() {
             memset(ray, 0, sizeof(*ray));
             ray->start = { segment[0].x, segment[0].y, segment[0].z };
             ray->end = { segment[1].x, segment[1].y, segment[1].z };
-            ray->unknown1c = Uniform(0.0f, 100.0f);
+            ray->damage = Uniform(0.0f, 100.0f);
             ray->radius = RandomInt(4) == 0 ? 0.0f : Uniform(0.0f, 2.0f);
             Both([&](bool original) {
                 StartRun(manager);
@@ -548,7 +548,7 @@ void TestFireEvents(const std::vector<WTrigger> &real) {
         memset(&ray, 0, sizeof(ray));
         ray.start = { Uniform(-100.0f, 100.0f), Uniform(-100.0f, 100.0f), Uniform(-100.0f, 100.0f) };
         ray.end = { Uniform(-100.0f, 100.0f), Uniform(-100.0f, 100.0f), Uniform(-100.0f, 100.0f) };
-        ray.unknown1c = Uniform(0.0f, 100.0f);
+        ray.damage = Uniform(0.0f, 100.0f);
 
         alignas(16) WTrigger trigger;
         uint8_t data[2][sizeof(EventDynamicData)];

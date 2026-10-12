@@ -18,6 +18,7 @@
 #include "../world/Targeting.h"
 #include "../world/WorldPos.h"
 #include "../../common/xbeOriginal.h"
+#include "../game/WeaponManager.h"
 
 #include <windows.h>
 #include <math.h>
@@ -127,11 +128,6 @@ float QuietNaN() {
 
 // ---- what the tests read and write of the game
 
-struct ShadowWeaponManager {
-    uint32_t unknown00;
-    int32_t current;                    // +0x04
-};
-
 // RPlayerCamState's bytes the port reads beyond PlayerCamState.h's
 struct ShadowStateBytes {
     uint8_t bytes[0x34];
@@ -139,7 +135,6 @@ struct ShadowStateBytes {
 
 #define ShadowSimState (*(int32_t *)0x00234e24)
 #define ShadowAutoAimOption (*(int32_t *)0x002445d0)
-#define ShadowWeaponManagerPtr (*(ShadowWeaponManager **)0x0023923c)
 #define ShadowPlayerCameraVtable 0x001918ac
 
 // ---- the functions, at their original addresses
@@ -205,8 +200,8 @@ struct SavedGlobals {
         autoAim = ShadowAutoAimOption;
         handsLock = CameraLockOnFlag;
         previousArm = fgCameraTables.previousAutoDriveArm;
-        weapon = ShadowWeaponManagerPtr != NULL ? ShadowWeaponManagerPtr->current : 0;
-        missionFlag = glbMissionManager->unknown478;
+        weapon = WeaponManager != NULL ? WeaponManager->secondary : 0;
+        missionFlag = glbMissionManager->autoDrive;
         memcpy(&missionScale, reinterpret_cast<uint8_t *>(glbMissionManager) + 0x4dc, 4);
         selected = TargetPicker.selected;
         aimStatic = OrigBlendedAim;
@@ -216,9 +211,9 @@ struct SavedGlobals {
         ShadowAutoAimOption = autoAim;
         CameraLockOnFlag = handsLock;
         fgCameraTables.previousAutoDriveArm = previousArm;
-        if (ShadowWeaponManagerPtr != NULL)
-            ShadowWeaponManagerPtr->current = weapon;
-        glbMissionManager->unknown478 = missionFlag;
+        if (WeaponManager != NULL)
+            WeaponManager->secondary = weapon;
+        glbMissionManager->autoDrive = missionFlag;
         memcpy(reinterpret_cast<uint8_t *>(glbMissionManager) + 0x4dc, &missionScale, 4);
         TargetPicker.selected = selected;
         OrigBlendedAim = aimStatic;
@@ -328,7 +323,7 @@ void Finish(int mask) {
         Logf("spline points %u", spline->pointList.size);
     }
     Logf("globals %02x %d %d", CameraLockOnFlag, fgCameraTables.previousAutoDriveArm,
-         ShadowWeaponManagerPtr != NULL ? ShadowWeaponManagerPtr->current : 0);
+         WeaponManager != NULL ? WeaponManager->secondary : 0);
     FreeSpline();
     g_saved.Restore();
 }
@@ -416,8 +411,8 @@ void TestSmall(Rng *rng) {
             int8_t heli = 0, autoDrive = 0;
             uint8_t smooth = 0, aiming = 0;
             float travel = k == 0 ? 1.0f : k == 1 ? -1.0f : k == 2 ? 0.0f : k == 3 ? QuietNaN() : rng->Uniform(-1.0f, 1.0f);
-            if (ShadowWeaponManagerPtr != NULL && k == 5)
-                ShadowWeaponManagerPtr->current = -1;
+            if (WeaponManager != NULL && k == 5)
+                WeaponManager->secondary = -1;
             Guard("small", [&] {
                 zoom = AT(DoubleMethodFn, 0x00080e20)(camera, 0);
                 AT(MethodFn, 0x00080e80)(camera, 0);
@@ -476,7 +471,7 @@ void TestSmall(Rng *rng) {
         int param = rng->Range(-3, 300);
         float blend = i % 4 == 0 ? 0.0f : i % 4 == 1 ? 1.0f : i % 8 == 2 ? QuietNaN() : rng->Uniform(-0.5f, 1.5f);
         int weapon = i % 3 == 0 ? 0x1c : rng->Range(0, 40);
-        glbMissionManager->unknown478 = uint8_t(rng->Range(0, 1));
+        glbMissionManager->autoDrive = uint8_t(rng->Range(0, 1));
         if (i % 10 == 0)
             camera->state = NULL;
         Coord4 aim = {};

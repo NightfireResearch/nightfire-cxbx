@@ -11,6 +11,7 @@
 #include "../data/IniFiles.h"
 #include "../engine/UMemory.hpp"
 #include "../game/BondCar.h"            // OverrideCarType
+#include "../game/WeaponManager.h"
 #include "../physics/RigidBody.h"       // PVehicle
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"      // MEM_copy
@@ -67,21 +68,6 @@ constexpr float kMaxPitchLimit = 0.999f;
 constexpr int kMaxEllipseHeights = 30;
 constexpr int kWeaponSlots = 32;
 constexpr float kDefaultShakePeriod = 52.0f;   // kExplosionShakePeriod's default, over 2 pi
-
-// The weapon manager's slots as ResolveWeaponNames reads them
-struct WeaponSlotNames {
-    int32_t weapon;             // +0x00 its number: its bit in the mask
-    const char *name;           // +0x04
-    uint8_t unknown08[0x4c];
-};
-static_assert(sizeof(WeaponSlotNames) == 0x54, "a weapon slot is 84 bytes");
-
-struct WeaponManagerSlots {
-    uint8_t unknown00[0x10];
-    WeaponSlotNames *slots;     // +0x10 [32]
-};
-
-#define WeaponManager (*(WeaponManagerSlots **)0x0023923c)
 
 // PBondCar::GetSecondaryType, vtable slot 0x144 / 4 of the player's car
 const char *SecondaryType(PVehicle *car) {
@@ -178,10 +164,10 @@ void RCameraIniLoader::ResolveWeaponNames(const char *names, uint32_t *mask) {
     if (names == NULL)
         return;
     for (int i = 0; i < kWeaponSlots; i++) {
-        const WeaponSlotNames *slot = &WeaponManager->slots[i];
+        const WeaponRecord *slot = &WeaponManager->weapons[i];
         if (slot->name == NULL || slot->name[0] == '\0' || strstr(names, slot->name) == NULL)
             continue;
-        int weapon = slot->weapon;
+        int weapon = slot->id;
         if (weapon / 32 >= 2)
             return;
         mask[weapon / 32] |= 1u << (weapon % 32 & 31);

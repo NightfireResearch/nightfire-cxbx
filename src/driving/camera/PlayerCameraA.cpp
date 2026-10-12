@@ -27,6 +27,7 @@
 #include "../engine/InputConfig.h"
 #include "../engine/MissionManager.h"
 #include "../engine/UMemory.hpp"
+#include "../game/WeaponManager.h"
 #include "../physics/PhysicsMath.h"     // Abs
 #include "../physics/PhysicsObject.h"
 #include "../platform/RealMath.h"
@@ -48,23 +49,7 @@ enum CameraAnimFlags : uint8_t {
     kCamAnimFollowsAnchor = 0x01,       // the path is kept relative to the camera's lookAt
 };
 
-// The weapon manager: the current slot and the slots (the first word of each is its weapon)
-struct WeaponSlot {
-    int32_t weapon;
-    uint8_t unknown04[0x50];
-};
-static_assert(sizeof(WeaponSlot) == 0x54, "a weapon slot is 84 bytes");
-
-struct WeaponManagerFields {
-    uint32_t unknown00;
-    int32_t current;                    // +0x04 -1: none
-    uint8_t unknown08[8];
-    WeaponSlot *slots;                  // +0x10
-};
-
 constexpr int32_t kSimState3 = 3;       // Sim.simState: the cameras stand still
-constexpr int32_t kAnchorRigidBody = 1; // PhysicsObject::type: a rigid body (the dashboard camera's vertigo)
-constexpr int32_t kWeapon1C = 0x1c;     // the weapon WeaponFired notes
 constexpr uint16_t kCarAnimationFlags = 0x44;   // TriggerCarAnimationCamera's additions to the caller's flags
 
 }  // namespace
@@ -78,7 +63,6 @@ static float RadiansToTurns = 1.0f / 6.283185f; // as the static initialiser mad
 #define SimStepsPerSecond I32_AT(0x00234e2c)
 #define SimTimeStep FLOAT_AT(0x00234e30)
 #define SimStepCount I32_AT(0x00234e34)
-#define WeaponManager (*(WeaponManagerFields **)0x0023923c)
 
 #define PlayerCameraVtable ((void **)0x001918ac)
 
@@ -87,7 +71,6 @@ static float RadiansToTurns = 1.0f / 6.283185f; // as the static initialiser mad
 #define RCamera_SetFieldOfView ((void (__fastcall *)(RCamera *, int, float))0x00011000)    // FUN_00011000: above 2 only
 // FUN_0003db00: the instance's matrix, its fourth column (0, 0, 0, 1)
 #define CARPInstance_GetMatrix4 ((void (__fastcall *)(const CARP::Instance *, int, MATRIX4 *))0x0003db00)
-#define WWorldPos_FaceNormal ((void (__fastcall *)(const WWorldPos *, int, Coord3 *))0x0005d3f0)
 
 namespace {
 
@@ -386,7 +369,7 @@ void RPlayerCamera::GetSafeWRoadNavPosition(Coord4 *position, float *height) {
     if (worldPos->valid) {
         Coord3 normal;
         if (worldPos->valid) {
-            WWorldPos_FaceNormal(worldPos, 0, &normal);
+            worldPos->face.GetNormal(&normal);
         } else {
             normal.x = 0.0f;
             normal.y = 1.0f;
@@ -405,11 +388,11 @@ int8_t RPlayerCamera::FindHeliArmInd(int mode) {
     const CameraModeInfo *entry = &fgCameraTables.modes[mode];
     if (entry->type != kCameraHeli)
         return 0;
-    if (WeaponManager->current == -1)
+    if (WeaponManager->secondary == -1)
         return 0;
     const HeliCamInfo *heli = &fgCameraTables.helis[entry->index];
     const HeliArmInfo *arms = heli->arms;
-    int weapon = WeaponManager->slots[WeaponManager->current].weapon;
+    int weapon = WeaponManager->weapons[WeaponManager->secondary].id;
     uint32_t weapons[2] = {0, 0};
     weapons[weapon / 32] = 1u << (weapon % 32);
     for (int i = 0; i < heli->armCount; i++) {
@@ -426,9 +409,9 @@ int8_t RPlayerCamera::FindHeliArmInd(int mode) {
 int8_t RPlayerCamera::FindAutoDriveArmInd(int mode) {
     if (fgCameraTables.modes[mode].type != kCameraAutoDrive)
         return 0;
-    if (WeaponManager->current == -1)
+    if (WeaponManager->secondary == -1)
         return 0;
-    int weapon = WeaponManager->slots[WeaponManager->current].weapon;
+    int weapon = WeaponManager->weapons[WeaponManager->secondary].id;
     uint32_t weapons[2] = {0, 0};
     weapons[weapon / 32] = 1u << (weapon % 32);
     for (int i = 0; i < fgCameraTables.autoDriveArmCount; i++) {
@@ -626,7 +609,7 @@ void RPlayerCamera::SetControlToCPU(bool cpu) {
 
 // FUNC_AT(0x00081950)
 void RPlayerCamera::WeaponFired(int weapon) {
-    if (glbMissionManager->unknown478 && weapon == kWeapon1C)
+    if (glbMissionManager->autoDrive && weapon == kWeaponUltralightRocket)
         weaponFired = SimStepCount;
 }
 
@@ -755,7 +738,7 @@ void RPlayerCamera::UpdateDashboardCam() {
     Coord4 arm = dashboard->forwardArm;
     MATRIX4 *anchorMatrix = GetAnchorMatrix4();
     const Coord3 *anchorPosition = GetAnchorPosition();
-    if (modeChangeFlags == 0 && anchor->type == kAnchorRigidBody) {
+    if (modeChangeFlags == 0 && anchor->type == kObjectVehicle) {
         if (!stopped) {
             float slope = anchorMatrix->mtx[2][1];
             double vertigo;

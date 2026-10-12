@@ -198,7 +198,7 @@ void PVehicle::InitializeGlobals() {
 
 // FUNC_AT(0x0006f900)
 PVehicle* PVehicle::Construct(const char *name) {
-    PhysicsObject::Construct("pvehicle", name, 1);
+    PhysicsObject::Construct("pvehicle", name, kObjectVehicle);
     missionEditorOnMask = 0;
     missionEditorOffMask = 0;
     vtable = reinterpret_cast<void **>(kPVehicleVtable);

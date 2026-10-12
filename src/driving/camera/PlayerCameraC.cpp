@@ -377,7 +377,7 @@ void RPlayerCamera::UpdateMomentumHeliCam() {
     // ... turned with the anchor (its w, which the original leaves as stack garbage, ends up in cameraOffset.w)
     Coord4 turned = {};
     if (!arm->rigidArm) {
-        if (anchor->type == 1) {
+        if (anchor->type == kObjectVehicle) {
             float forwardY = anchorMatrix->mtx[2][1];
             if (!replay) {
                 float scale = forwardY < 0.0f ? arm->maxVertigoDownhill : arm->maxVertigoUphill;

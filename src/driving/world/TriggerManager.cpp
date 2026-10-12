@@ -19,6 +19,7 @@
 #include "../engine/OBB.h"
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
+#include "../game/Shell.h"             // RayShell
 #include "../physics/Simulation.h"
 #include "../platform/FileSys.h"          // FILE_exists
 #include "../platform/RealMath.h"
@@ -37,10 +38,6 @@
 #define Crt_sprintf ((int (*)(char *, const char *, ...))0x00132767)
 #define Crt_printf ((int (*)(const char *, ...))0x00132192)
 // the y size packed in an instance's dimensions (unnamed in Ghidra; the name is ours)
-#define RayShell_GetNumActiveRayShells ((int (*)())0x00071930)
-#define RayShell_GetActiveRayShell ((ActiveRayShell *(*)(int index))0x00071940)
-#define RayShell_ClearActiveRayShells ((void (*)())0x00071960)
-#define RayShell_SetTriggerHittingRayShell ((void (*)(int index))0x00071970)
 
 // ---- globals
 // XBE_GLOBAL(0x0023e264, 4)
@@ -526,7 +523,7 @@ void WTriggerManager::Process(int index, SimpleRigidBody *body) {
 // A queued ray shell: its segment against the triggers in the cells it crosses.
 // FUNC_AT(0x000d0a30)
 void WTriggerManager::Process(int rayShell) {
-    ActiveRayShell *ray = RayShell_GetActiveRayShell(rayShell);
+    ActiveRayShell *ray = RayShell::GetActiveRayShell(rayShell);
     unsigned touch = WTrigger::kOthers;
     void *owner = Simulation_FindPhysicsObjectSignature(Sim, 0, ray->ownerSignature);
     bool byPlayer = owner == Simulation_GetPlayerObject(Sim, 0);
@@ -562,9 +559,9 @@ void WTriggerManager::Process(int rayShell) {
             if (!byPlayer && (trigger->flags & WTrigger::kPlayer))
                 continue;
             if (CheckCollide(segment, ray->radius, trigger)) {
-                RayShell_SetTriggerHittingRayShell(rayShell);
+                RayShell::SetTriggerHittingRayShell(rayShell);
                 trigger->FireEvents(true, -1, NULL);
-                RayShell_SetTriggerHittingRayShell(-1);
+                RayShell::SetTriggerHittingRayShell(-1);
             }
         }
     }
@@ -575,7 +572,7 @@ void WTriggerManager::Process(int rayShell) {
 // own (master), and the ray shells queued since the last frame, which it then clears.
 // FUNC_AT(0x000d0c90)
 void WTriggerManager::Update() {
-    RayShell_SetTriggerHittingRayShell(-1);
+    RayShell::SetTriggerHittingRayShell(-1);
     for (int i = 0; i < kRigidBodies; i++) {
         if (PhysicsObjects[i] == NULL)
             continue;
@@ -591,8 +588,8 @@ void WTriggerManager::Update() {
         if (path->master == NULL)
             Process(path->instance);
     }
-    int rayShells = RayShell_GetNumActiveRayShells();
+    int rayShells = RayShell::GetNumActiveRayShells();
     for (int i = 0; i < rayShells; i++)
         Process(i);
-    RayShell_ClearActiveRayShells();
+    RayShell::ClearActiveRayShells();
 }

@@ -55,7 +55,7 @@
 //   - RScorchWorld::ScorchWorld and ScorchGround at random points round the first player's camera on the live
 //     world (walls, floors, random normals, sizes about the 0.33 and 6 limits, every type), from fresh and searched
 //     WWorldPos images;
-//   - RMissileCam: Draw on a copy of the live one (on, off, the mission manager's +0x4f0, every texture step);
+//   - RMissileCam: Draw on a copy of the live one (on, off, the mission manager's cinematicMode, every texture step);
 //     Construct, Delete(0) and Delete(1) on blocks of its own, Kill;
 //   - RSniperZoom: SetupVerts, Draw, GrabBackBuffer and Reset on a copy of the live one (perturbed radii, greys,
 //     alpha, aim point); Construct and Delete; Kill;
@@ -1045,7 +1045,7 @@ void TestMissileCam(const Snapshot &before) {
             g_cam->enabled = Chance(85) ? 1 : 0;
             g_cam->alpha = Chance(20) ? int32_t(Next()) : Range(0, 255);
             ShadowSimStepCount = Chance(10) ? -Range(0, 100) : Range(0, 100000);
-            glbMissionManager->unknown4f0 = Chance(10) ? 1 : 0;
+            glbMissionManager->cinematicMode = Chance(10) ? 1 : 0;
             MissileCamStateMade = 1;
             RunCase("RMissileCam::Draw", i, SideCamDraw, before);
         }
@@ -1159,7 +1159,7 @@ void TestSniperZoom(const Snapshot &before) {
                 SniperCopies = Range(0, 8);
                 SniperCopySpread = Uniform(0.0f, 2.0f);
             }
-            glbMissionManager->unknown4f0 = Chance(15) ? 1 : 0;
+            glbMissionManager->cinematicMode = Chance(15) ? 1 : 0;
             g_in.zoomOp = Range(0, 3);
             if (g_in.zoomOp == 1 && !Hooked({ kHookTextured }))
                 g_in.zoomOp = 0;
@@ -1255,7 +1255,7 @@ void BuildRegions() {
         AddShared(uint32_t(uintptr_t(SimpleTexturedMaterial)), sizeof(USimpleTexturedMaterial),
                   "SimpleTexturedMaterial");
     if (glbMissionManager != NULL)
-        AddShared(uint32_t(uintptr_t(&glbMissionManager->unknown4f0)), 4, "the mission manager's +0x4f0", false);
+        AddShared(uint32_t(uintptr_t(&glbMissionManager->cinematicMode)), 4, "the mission manager's cinematicMode", false);
     if (fgRenderer != NULL)
         AddShared(uint32_t(uintptr_t(&fgRenderer->currentView)), 4, "the renderer's view", false);
     if (fgRenderHigh != NULL && fgRenderHigh->views[0].camera != NULL)

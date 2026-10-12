@@ -1,0 +1,185 @@
+#pragma fp_contract(off)
+
+#include "Explosion.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
+#include <bit>
+
+#include "Vehicle.h"                    // PVehicle::GetCarType
+#include "../../helpers.h"
+#include "../engine/CoreFoundation.h"   // GetFoundationVideoModeRate
+#include "../engine/MissionManager.h"
+#include "../engine/SimRandom.h"
+#include "../engine/UMemory.hpp"
+#include "../physics/RigidBody.h"       // DamageSourceSig
+#include "../physics/SimpleRigidBody.h"
+#include "../physics/Simulation.h"
+#include "../platform/RealMath.h"
+
+// ---------------------------------------------------------------------------------------------------------------
+// Explosion (0x0005cd60-0x0005d3f0), ported from the listing.
+// The x87 chains are computed in double in the original's order and rounded where it stores a float; comparisons
+// fail on NaN where the original's jumps do.
+//
+// Random numbers: Simulate draws two from the Simulation's SimRandom for each body it pushes (the spin).
+// ---------------------------------------------------------------------------------------------------------------
+
+// ---- the game's, not ported yet
+
+
+// ---- globals
+
+#define Sim ((void *)0x00233ff0)                            // the Simulation
+#define SimulationRandom (*(SimRandom **)0x00233ff0)        // the Simulation's first word
+#define SimTimeStep FLOAT_AT(0x00234e30)                    // the simulation's step, in seconds
+// XBE_GLOBAL(0x001e7a60, 4)
+float ExplosionInverseScale = 0.5f;
+
+namespace {
+
+void **const kExplosionVtable = (void **)0x0018ed58;
+constexpr int kBodies = 160;                        // the rigid bodies (64), then the simple ones (96)
+constexpr int kDamageKind = 3;                      // ApplyDamage's kind
+
+const char *const kExplosionNames[] = {
+    "Explosion", "ShellExplosion", "MissileExplosion", "MineExplosion", "FireExplosion", "FlamerExplosion",
+    "FlashExplosion", "NuclearExplosion",
+};
+
+const Coord3 kZero = { 0.0f, 0.0f, 0.0f };
+const MATRIX4 kIdentity = { { { 1.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f, 0.0f },
+                              { 0.0f, 0.0f, 0.0f, 1.0f } } };
+
+constexpr uint16_t kExplosionBodyFlags = SimpleRigidBody::kFlag01 | SimpleRigidBody::kNearRigidHits |
+                                         SimpleRigidBody::kNearSimpleHits | SimpleRigidBody::kTouchesTriggers;
+
+// Simulate (the names are ours)
+constexpr float kScale = 2.0f;                      // the strength's radius: the body's plus half this, over this
+constexpr float kMaxRadius = 150.0f;
+constexpr float kMaxStrength = 50.0f;
+constexpr float kTriggerStrength = 40.0f;           // at or above it the body sets off triggers
+constexpr float kThinRatio = 20.0f;                 // a body this many times longer than thick ...
+constexpr float kThinScale = 10.0f;                 // ... is pushed by its thickness over its length, times this
+constexpr Coord4 kPush = { 8000.0f, 9000.0f, 8000.0f, 0.0f };
+constexpr float kMaxPushPerMass = 25.0f;
+constexpr Coord4 kSpinOffset = { -0.5f, -0.5f, -0.5f, 0.0f };
+constexpr Coord4 kSpin = { 16000.0f, 18000.0f, 16000.0f, 0.0f };
+constexpr float kDamageUnknown4 = 0.8f;
+
+// A random 32-bit word for BytesToCoordXYZ: the first draw inverted in the top half, the second below
+uint32_t RandomWord() {
+    uint32_t high = ~SimulationRandom->Generate() << 16;
+    return high | SimulationRandom->Generate();
+}
+
+}  // namespace
+
+// FUNC_AT(0x0005cd70)
+Explosion* Explosion::Construct(int type, int, const Coord3 *position, float size, PhysicsObject *directHit,
+                                const uint32_t *ownerSig) {
+    PhysicsObject::Construct("explosion", kExplosionNames[type], kObjectExplosion, *ownerSig, false, false);
+    this->size = size;
+    this->directHit = directHit;
+    vtable = kExplosionVtable;
+    explosionType = type;
+    bodiesHit = {};
+    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    if (body != NULL)
+        body->Construct(rigidBodySlot, kSimpleExplosion, position, &kZero, &kZero, &kIdentity, 0.0f, 0.0f);
+    Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot)->flags |= kExplosionBodyFlags;
+    return this;
+}
+
+// FUNC_AT(0x0005cd60)
+void Explosion::Destruct() {
+    vtable = kExplosionVtable;
+    PhysicsObject::Destruct();
+}
+
+// FUNC_AT(0x0005ce80)
+Explosion* Explosion::Delete(unsigned flags) {
+    Destruct();
+    if (flags & 1)
+        UMemory::FastFree(this, sizeof(Explosion));
+    return this;
+}
+
+// The step. The radius beyond the body's, over kScale, gives the strength: the size over its square (from 1 up),
+// capped. Too weak, or the body grown too large, and it is deleted. Otherwise each body touched for the first time
+// is pushed from the centre - kPush times the strength (scaled down for a thin body), capped by its mass - and
+// spun at random, unless it is the player's car while the mission manager's autoDrive is set or a vehicle of type
+// "tunnel"; and with any strength left it takes the damage (the size itself if it is the direct hit), a flash
+// apart. Then the body grows by the video mode's rate over the step.
+// FUNC_AT(0x0005ceb0)
+void Explosion::Simulate() {
+    SimpleRigidBody *body = Simulation_GetSimpleRigidBody(Sim, 0, rigidBodySlot);
+    Coord4 centre = { body->position.x, body->position.y, body->position.z, 0.0f };
+    float grown = float(double(kScale) * 0.5 + body->radius);
+    float scaled = ExplosionInverseScale * grown;
+    float extent = 1.0f < scaled ? scaled : 1.0f;
+    double strength = 1.0 / (double(extent) * extent) * size;
+    float fullStrength = float(strength);
+    float capped = strength < kMaxStrength ? float(strength) : kMaxStrength;
+    body->SetCanHitTrigger(strength >= kTriggerStrength);
+    if (capped <= 1.0f || grown > kMaxRadius) {
+        Simulation_DeletePhysicsObject(Sim, 0, this);
+        PhysicsObject::Simulate();
+        return;
+    }
+
+    BitSet192 touched = SimpleBodyHits[body->slot];
+    BitSet192 newHits = bodiesHit;
+    newHits.AndNotFrom(&touched);
+    for (int i = 0; i < 6; i++)
+        bodiesHit.words[i] |= touched.words[i];
+
+    for (int i = 0; i < kBodies; i++) {
+        if ((newHits.words[i / 32] >> (i % 32) & 1) == 0)
+            continue;
+        PhysicsObject *other = Simulation_GetOrderedBody(Sim, 0, i);
+
+        float thin = 1.0f;
+        Coord4 bounds;
+        if (other->GetCollisionBounds(&bounds)) {
+            float least = bounds.x < bounds.y ? bounds.x : bounds.y;
+            least = least < bounds.z ? least : bounds.z;
+            float most = bounds.x > bounds.y ? bounds.x : bounds.y;
+            most = most > bounds.z ? most : bounds.z;
+            if (double(least) * kThinRatio < most)
+                thin = float(double(least) / most * kThinScale);
+        }
+
+        Coord4 push, scaledPush;
+        VU0_v4sub(other->GetPosition(), &centre, &push);
+        float pushStrength = thin * capped;
+        VU0_v4scale(&kPush, pushStrength, &scaledPush);
+        VU0_v4multxyz(&push, &scaledPush, &push);
+        float maxPush = other->GetMass() * kMaxPushPerMass;
+        float pushSquared = VU0_v3lengthsquare(&push);
+        if (pushSquared > double(maxPush) * maxPush)
+            VU0_v4scale(&push, VU0_rsqrt(pushSquared) * maxPush, &push);
+
+        Coord4 spin;
+        BytesToCoordXYZ(RandomWord(), &kSpinOffset, &kSpin, NULL, &spin);
+        VU0_v4scale(&spin, pushStrength, &spin);
+
+        if ((other != Simulation_GetPlayerObject(Sim, 0) || !glbMissionManager->autoDrive) &&
+            (other->type != kObjectVehicle || _stricmp(static_cast<PVehicle *>(other)->GetCarType(), "tunnel") != 0))
+            other->ApplyForces(reinterpret_cast<Coord3 *>(&push), reinterpret_cast<Coord3 *>(&spin));
+
+        if (fullStrength > 0.0f && explosionType != kFlashExplosion) {
+            float amount = other == directHit ? size : fullStrength;
+            uint32_t sig;
+            const uint32_t *source = GetSig(&sig);
+            Coord3 *at = other->GetPosition();
+            other->ApplyDamageVirtual(&centre, at, amount, kDamageUnknown4, kDamageKind, source);
+        }
+    }
+
+    float radius = body->radius;
+    float step = SimTimeStep;
+    body->radius = float(double(GetFoundationVideoModeRate()) * step + radius);
+    PhysicsObject::Simulate();
+}

@@ -60,11 +60,6 @@ static_assert(std::bit_cast<uint32_t>(kRadiansPerDegree) == 0x3c8efa35 &&
 
 static const char kLifeTooLong[] = "ERROR IN PARTICLE DATA: lifeTime of %d is too large. Capping at 255.\n";
 
-// A vector's x, y and z
-static Coord3 *Xyz(Coord4 *v) {
-    return reinterpret_cast<Coord3 *>(v);
-}
-
 // ---- the maps
 
 // FUNC_AT(0x000a23c0)

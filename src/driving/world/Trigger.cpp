@@ -4,7 +4,8 @@
 
 #include "Grid.h"
 #include "TriggerManager.h"
-#include "../Scheduler.hpp"             // RegisterEvent
+#include "../Scheduler.hpp"
+#include "../game/Shell.h"              // RayShell             // RegisterEvent
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"      // MEM_fill
 
@@ -14,7 +15,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-#define RayShell_GetTriggerHittingRayShell ((ActiveRayShell *(*)())0x00071980)
 
 namespace {
 
@@ -39,12 +39,12 @@ void WTrigger::FireEvents(bool flag, int index, CARP::Instance *instance) {
     gEventDynamicData.position.w = 1.0f;
     gEventDynamicData.trigger = this;
 
-    ActiveRayShell *ray = RayShell_GetTriggerHittingRayShell();
+    ActiveRayShell *ray = RayShell::GetTriggerHittingRayShell();
     if (ray != NULL) {
         gEventDynamicData.hasRayShell = true;
         gEventDynamicData.rayStart = ray->start;
         gEventDynamicData.rayEnd = ray->end;
-        gEventDynamicData.rayValue = ray->unknown1c < kMinimumRayValue ? kMinimumRayValue : ray->unknown1c;
+        gEventDynamicData.rayValue = ray->damage < kMinimumRayValue ? kMinimumRayValue : ray->damage;
     } else {
         gEventDynamicData.hasRayShell = false;
     }

@@ -29,7 +29,6 @@
 
 // ---- the game's, not ported yet
 
-#define Simulation_DeletePhysicsObject ((void (__fastcall *)(void *, int, PhysicsObject *))0x000b4740)
 #define Simulation_SpawnNewtonObject ((Newton *(__fastcall *)(void *, int, const Coord4 *direction, const Coord4 *position, const Coord4 *momentum, const Coord4 *spin, CARP::Instance *instances, int instanceCount, float mass, float lifetime))0x000b5e20)
 #define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
 
@@ -43,8 +42,6 @@ namespace {
 
 void **const kNewtonVtable = (void **)0x0018ef7c;
 RSceneObj_vtbl *const kRAutonomousObjVtable = (RSceneObj_vtbl *)0x0018a398;
-
-constexpr int kNewtonType = 9;
 constexpr float kHitPointsPerMass = 10.0f;
 constexpr float kBodyRadius = 0.25f;
 constexpr float kInstanceSize = 0.25f;              // the render instance's dimensions
@@ -89,7 +86,7 @@ uint32_t RandomBytes() {
 // FUNC_AT(0x00061060)
 Newton* Newton::Construct(const Coord3 *direction, const Coord3 *position, const Coord3 *momentum, const Coord3 *spin,
                           CARP::Instance *instances, int instanceCount, float mass, float lifetime) {
-    PhysicsObject::Construct("newton", "Newton", kNewtonType, 0, true, false);
+    PhysicsObject::Construct("newton", "Newton", kObjectNewton, 0, true, false);
     vtable = kNewtonVtable;
     stepsLeft = Ftol((double)SimStepsPerSecond * lifetime);
     unknown74 = 0;

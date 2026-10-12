@@ -71,10 +71,6 @@ static_assert(std::bit_cast<uint32_t>(kStopSpeed) == 0x3dcccccd, "the original's
 static_assert(std::bit_cast<uint32_t>(kTrackLift) == 0x3c23d70a, "the original's 0.01");
 static_assert(std::bit_cast<uint32_t>(kSlipScale) == 0x3fd55555, "the original's 1.6666666");
 
-Coord3 *Xyz(Coord4 *v) {
-    return reinterpret_cast<Coord3 *>(v);
-}
-
 int IsWheelOnGroundVirtual(PBondCar *car, int8_t wheel) {
     return (car->*XbeVirtual<decltype(&PBondCar::IsWheelOnGround)>(car, 65))(wheel);
 }

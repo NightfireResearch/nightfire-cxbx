@@ -16,9 +16,6 @@
 
 #define SimStepCount I32_AT(0x00234e34)
 
-// The face's unit normal (thiscall on the face; name unknown)
-#define FUN_0005d3f0 ((void (__fastcall *)(const StripTriangle *, int, Coord3 *))0x0005d3f0)
-
 static constexpr float kFlatFaceSize = 0.2f;
 static constexpr float kNoFace = 1e38f;
 static_assert(std::bit_cast<uint32_t>(kNoFace) == 0x7e967699, "the searches' starting distance");
@@ -63,7 +60,7 @@ double WWorldPos::HeightAtPoint(const Coord3 *point, bool unusedFlag) {
     if (!valid)
         return 0.0;
     Coord3 normal;
-    FUN_0005d3f0(&face, 0, &normal);
+    face.GetNormal(&normal);
     return WWorldMath::GetPlaneY(&normal, &face.corner[0].Position(), point);
 }
 
@@ -142,7 +139,7 @@ bool WWorldPos::FindClosestFace(const Coord3 *point, bool keepCurrent) {
 void WWorldPos::GetNormal(Coord4 *normal, int unused) {
     (void)unused;
     if (valid) {
-        FUN_0005d3f0(&face, 0, reinterpret_cast<Coord3 *>(normal));   // x, y and z
+        face.GetNormal(Xyz(normal));   // x, y and z
         normal->w = 0.0f;
     } else {
         normal->z = 0.0f;

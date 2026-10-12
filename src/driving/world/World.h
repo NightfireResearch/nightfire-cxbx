@@ -50,7 +50,7 @@ struct ProcAnimState {
     uint8_t type;                       // +0x00 (2: the two references are resolved, data/Carp.cpp)
     uint8_t procAnimType;               // +0x01 ProcAnimByState's
     uint16_t parameter;                 // +0x02 the proc-anim function's (with a state)
-    uint8_t unknown04;
+    uint8_t damage;                     // +0x04 a smackable's lost hit points, in 256ths (Smackable::GoToSleep)
     uint8_t flags;                      // +0x05 ProcAnimFlags
     uint8_t unknown06;
     uint8_t article;                    // +0x07 RSceneObj::UseArticle's index; 0xff none

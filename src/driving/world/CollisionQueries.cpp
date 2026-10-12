@@ -33,7 +33,6 @@
 
 // ---- the game's, not ported yet
 
-#define WWorldPos_GetFaceNormal ((void (__fastcall *)(const WWorldPos *, int, float *))0x0005d3f0)
 #define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
 #define Simulation_GetScratchPadFreeZone ((uint8_t *(__fastcall *)(void *, int))0x000b2820)
 #define BarrierList_Size ((uint32_t (__fastcall *)(const BarrierList *, int))0x00023f20)
@@ -239,7 +238,7 @@ bool WCollisionMgr::GetWorldHeightAtPoint(const Coord3 *point, float *height, bo
     position.FindClosestFace(point, true);
     if (position.valid) {
         Coord3 normal;
-        WWorldPos_GetFaceNormal(&position, 0, &normal.x);
+        position.face.GetNormal(&normal);
         *height = float(WWorldMath::GetPlaneY(&normal, &position.face.corner[0].Position(), point));
         NullFunction();   // ~WWorldPos
         return true;
@@ -305,6 +304,36 @@ WindowMapNode* WindowMapMin(WindowMapNode *node) {
 float StripTriangle::LowestY() const {
     float lowest = corner[0].y < corner[1].y ? corner[0].y : corner[1].y;
     return lowest < corner[2].y ? lowest : corner[2].y;
+}
+
+// The face normal's y at most (0x3f7ff972). The linker placed this after Explosion (0x0005d3f0-0x0005d4f0).
+constexpr float kMaxNormalY = 0.9999f;
+static_assert(std::bit_cast<uint32_t>(kMaxNormalY) == 0x3f7ff972, "0.9999f");
+
+// FUNC_AT(0x0005d3f0)
+void StripTriangle::GetNormal(Coord3 *normal) const {
+    Coord3 along, back, cross;
+    along.x = corner[1].x - corner[0].x;
+    along.y = corner[1].y - corner[0].y;
+    along.z = corner[1].z - corner[0].z;
+    back.x = corner[0].x - corner[2].x;
+    back.y = corner[0].y - corner[2].y;
+    back.z = corner[0].z - corner[2].z;
+    v3crossprod(&along, &back, &cross);
+    if (cross.x == 0.0f && cross.y == 0.0f && cross.z == 0.0f) {
+        normal->x = 0.0f;
+        normal->y = 1.0f;
+        normal->z = 0.0f;
+    } else {
+        v3unit(&cross, normal);
+    }
+    if (normal->y < 0.0f) {
+        normal->x = -normal->x;
+        normal->y = -normal->y;
+        normal->z = -normal->z;
+    }
+    if (normal->y >= kMaxNormalY)
+        normal->y = kMaxNormalY;
 }
 
 // FUNC_AT(0x000bf4c0)
@@ -827,7 +856,7 @@ bool WCollisionMgr::GetWorldNormal(const InstanceList *instances, const BarrierL
         position.Construct();
         position.FindClosestFace(instances, &segment[0], &segment[1]);
         if (position.valid) {
-            WWorldPos_GetFaceNormal(&position, 0, &ground.normal.x);
+            position.face.GetNormal(Xyz(&ground.normal));
             float t;
             ground.normal.w = 1.0f;
             if (WWorldMath::IntersectSegPlane(&segment[0], &segment[1], &position.face.corner[0].Position(),

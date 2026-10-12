@@ -39,8 +39,6 @@
 
 // ---- the game's code not ported yet
 
-#define SMissionManager_ProgrammerDefinedEvent ((void (__fastcall *)(void *, int, int event, const char *text))0x000b72f0)
-#define SMissionManager_IncShotsHit ((void (__fastcall *)(void *, int, int unknown))0x000b6720)
 
 // ---- globals
 #define Launch (*(LaunchPage *)0x00243b90)

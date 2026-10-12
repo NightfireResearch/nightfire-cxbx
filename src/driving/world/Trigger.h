@@ -66,9 +66,9 @@ struct ActiveRayShell {
     uint32_t ownerSignature;    // +0x00 Simulation::FindPhysicsObjectSignature's argument
     uint8_t unknown04[0xc];
     Coord3 start;               // +0x10
-    float unknown1c;            // FireEvents passes it on, at least 50
+    float damage;               // +0x1c the shot's; FireEvents passes it on, at least 50
     Coord3 end;                 // +0x20
-    float radius;               // +0x2c added to the triggers' radius
+    float radius;               // +0x2c half the ray's length, added to the triggers' radius
 };
 static_assert(sizeof(ActiveRayShell) == 0x30, "an active ray shell is 48 bytes");
 
@@ -91,7 +91,7 @@ struct EventDynamicData {
     uint8_t unknown45[3];
     Coord3 rayStart;            // +0x48 its start
     Coord3 rayEnd;              // +0x54 its end
-    float rayValue;             // +0x60 its unknown1c, at least 50
+    float rayValue;             // +0x60 its damage, at least 50
 };
 static_assert(sizeof(EventDynamicData) == 0x64, "the event data is 0x64 bytes");
 static_assert(offsetof(EventDynamicData, trigger) == 0x30 && offsetof(EventDynamicData, hasRayShell) == 0x44,

@@ -28,7 +28,6 @@ namespace {
 
 constexpr int32_t kSimPaused = 3;
 constexpr int32_t kFirstSteps = 3;      // the steps in which the drive inputs are held off
-constexpr int32_t kMissionNoCameraInput = 4;
 constexpr int32_t kUnknown30Time = 120;
 const char kSpinTrack[] = "snow1a_mis3";   // the one track with the spin
 
@@ -168,9 +167,9 @@ void RPlayerCamState::RotateX(int input, float value, bool negate) {
 void RPlayerCamState::AutoDriveCamInputHandler(int input, float value) {
     paused = SimState == kSimPaused;
     SMissionManager *mission = glbMissionManager;
-    if (mission->unknown474 == kMissionNoCameraInput)
+    if (mission->missionState == kMissionState4)
         return;
-    bool allowed = mission->unknown47c == 0;
+    bool allowed = mission->driveMissile == NULL;
     switch (input) {
     case kActionCamRotateX:
         if (allowed)
@@ -195,7 +194,7 @@ void RPlayerCamState::AutoDriveCamInputHandler(int input, float value) {
             RotateX(input, value, input == kActionCamRotateY2);
         break;
     case kActionCamSpin:
-        if (mission->unknown4f0 != 0 || _stricmp(Launch.missionName, kSpinTrack) != 0)
+        if (mission->cinematicMode != 0 || _stricmp(Launch.missionName, kSpinTrack) != 0)
             break;
         CarAudio()->turningSideways = 1;
         if (allowed && !paused)
@@ -241,7 +240,7 @@ void RPlayerCamState::AutoDriveCamInputHandler(int input, float value) {
 
 // FUNC_AT(0x0008a310)
 void RPlayerCamState::AimZoom() {
-    if (aiming || glbMissionManager->unknown47c != 0)
+    if (aiming || glbMissionManager->driveMissile != NULL)
         return;
     aiming = true;
     unknown0D = false;

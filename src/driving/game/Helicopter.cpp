@@ -30,9 +30,6 @@
 
 #define AIElementController_ForceVehicleToSleep ((void (__fastcall *)(void *, int, HelicopterAI *vehicle))0x000289f0)
 #define AIHelicopter_DisableTargetBeacon ((void (__fastcall *)(HelicopterAI *, int))0x000318d0)
-#define SMissionManager_IncShotsHit ((void (__fastcall *)(SMissionManager *, int, bool hit))0x000b6720)
-#define SMissionManager_IncKills ((void (__fastcall *)(SMissionManager *, int, int kills))0x000b6770)
-#define SMissionManager_ProgrammerDefinedEvent ((void (__fastcall *)(SMissionManager *, int, int event, const char *text))0x000b72f0)
 
 // ---- globals
 #define Sim ((void *)0x00233ff0)                                    // the Simulation
@@ -94,10 +91,6 @@ __declspec(naked) float NegativeSine(double x, float scale) {
     }
 }
 
-Coord3 *Xyz(Coord4 *v) {
-    return reinterpret_cast<Coord3 *>(v);
-}
-
 // RSceneObj::TriggerFX through the render object's vtable (slot 15)
 void TriggerFX(RSceneObj *render, int type, uint32_t which, uint32_t unused3 = 0) {
     typedef void (RSceneObj::*TriggerFXMethod)(int type, uint32_t which, uint32_t unused, const Coord3 *position,
@@ -111,7 +104,7 @@ void TriggerFX(RSceneObj *render, int type, uint32_t which, uint32_t unused3 = 0
 
 // FUNC_AT(0x0006d8f0)
 PHelicopter* PHelicopter::Construct(const char *name, float speed, Coord3 direction, Coord3 position) {
-    PhysicsObject::Construct("pvehicle", name, 10, 0, true, false);
+    PhysicsObject::Construct("pvehicle", name, kObjectHelicopter, 0, true, false);
     targetPos = position;
     destPos = position;
     Coord3 velocity = direction;
@@ -361,8 +354,8 @@ int PHelicopter::ApplyDamage(const Coord3 *from, const Coord3 *to, float amount,
                 SMissionManager_IncKills(glbMissionManager, 0, 1);
                 WTargetable *beacon = ai->targetBeacon;
                 if (beacon != NULL) {
-                    for (Missile **missile = SimulationMissilesFirst; missile != SimulationMissilesLast; missile++) {
-                        if ((*missile)->target == beacon && !(*missile)->unknown70A)
+                    for (Missile **missile = SimMissiles.first; missile != SimMissiles.last; missile++) {
+                        if ((*missile)->target == beacon && !(*missile)->exploded)
                             SMissionManager_IncShotsHit(glbMissionManager, 0, false);
                     }
                 }

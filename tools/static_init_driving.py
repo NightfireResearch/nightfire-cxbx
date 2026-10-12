@@ -19,7 +19,7 @@ objects into lists. This script reads every entry and writes it out as C++:
     runtime's exit never runs (nothing calls it), so the destructors never do either: they are registered so that
     the runtime's heap sees the same allocations as before.
   - the driving engine's weapon table (0x001c94d8, 32 records), which one 4.4 KB initialiser built a store at a
-    time, as a typed table (WeaponDefinition in src/driving/engine/StaticInit.h).
+    time, as a typed table (WeaponRecord in src/driving/game/WeaponManager.h).
 
 An entry of any other shape stops the script: it is a new kind, to be added here or to HAND below.
 
@@ -112,9 +112,12 @@ NAMED_OBJECT_ARRAYS = {
     0x002014f0: ("MuzzleFlashMaterials", "UVolatileMaterial"),
     0x00233e20: ("TrackMaterials", "UVolatileMaterial"),          # game/TyreTrack.cpp
 }
-# Owned arrays of records that a loop of stores clears: the name, and the field at each record's offset 0.
+# Owned arrays of records that a loop of stores clears, by the first store's address: the name, and the field
+# each store writes.
 NAMED_ARRAYS = {
     0x001e4488: ("gFeedbackPorts", "users"),                   # engine/Feedback.cpp, FeedbackPort[4]
+    0x001e84fc: ("RayShellFlashes", "ownerSig"),               # game/Shell.cpp, RayShellFlash[8] (the field at +0xc)
+    0x001e8570: ("ActiveRayShells", "ownerSignature"),         # game/Shell.cpp, ActiveRayShell[64]
 }
 # Argument types of the originals' stack arguments, where they are not plain words.
 ARG_TYPES = {
@@ -641,7 +644,7 @@ def weapon_lines():
         def num(v):
             return str(v - (1 << 32) if v >= 0x80000000 else v)
         lines.append("    { %d, %s, { 0x%x, 0x%x, 0x%x }, %s, %s, %s, %s, { %s, %s, %s, %s }, %s, %d, %s, %s, %s, "
-                     "{ %s, %s, %s } }," %
+                     "%s, %s, %s }," %
                      (wid, c_string(name), t0, t1, t2, num(flags), num(u18), num(u1c), num(u20), num(x0), num(x1),
                       num(x2), num(x3), num(u34), u38, num(u3c), num(u40), c_string(asset) if asset else "NULL",
                       num(u48), num(u4c), num(u50)))
@@ -685,6 +688,7 @@ def main():
             '#include "../data/SymbolTable.h"',
             '#include "../game/DebugAudio.h"',
             '#include "../game/EmpEffect.h"',
+            '#include "../game/Shell.h"',
             '#include "../game/TyreTrack.h"',
             '#include "../game/WeaponEffects.h"',
             '#include "../render/Draw.h"',
@@ -719,7 +723,7 @@ def main():
         head.append("")
     head.append("// ---- the weapon table (0x%08x), as its initialiser (0x%08x) left it" % (WEAPONS, WEAPON_INIT))
     head.append("")
-    head.append("const WeaponDefinition kWeaponDefinitions[%d] = {" % WEAPON_COUNT)
+    head.append("const WeaponRecord kWeaponDefinitions[kWeaponCount] = {")
     head += weapon_lines()
     head.append("};")
     head.append("")

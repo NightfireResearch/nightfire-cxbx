@@ -9,6 +9,7 @@
 
 #include <bit>
 
+#include "Shell.h"                        // Shell::ApplyWorldEffects
 #include "../audio/Bank.h"                // SharedTreeMax, SharedTreeIterator
 #include "../data/AttributeContainers.h"  // AttributeMap: the rotations and steps of maps with 0x1c-byte nodes
 #include "../data/DebugVariables.h"
@@ -39,7 +40,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's code not ported yet
-#define Shell_ApplyWorldEffects ((void (*)(const void *position, const Coord4 *normal, int arg3, int arg4, const uint8_t *faceType, int arg6, PhysicsObject *physics))0x000749b0)
 #define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
 
 // ---- the simulation's globals
@@ -212,10 +212,6 @@ void DeleteEmpGeoPrim(EmpGeoPrim *geoPrim) {
         EaglFree(method, kRenderMethodSize);
     }
     EaglFree(geoPrim, kGeoPrimSize);
-}
-
-const Coord3 *Xyz(const Coord4 *v) {
-    return reinterpret_cast<const Coord3 *>(v);
 }
 
 EAGL::TAR *EmpTexture(uint32_t name) {
@@ -1048,7 +1044,7 @@ void REmpBolts::TrySpawnBolt() {
         WorldCollisionInfo_Construct(&hit, 0);
         if (fgCollisionMgr->CheckHitWorld(segment, &hit) > 0) {
             CreateWorldBolt(from, Xyz(&hit.point));
-            Shell_ApplyWorldEffects(&hit.point, &hit.normal, 1, 0, &hit.faceType, 0, vehicle->physics);
+            Shell::ApplyWorldEffects(Xyz(&hit.point), &hit.normal, 1, 0, &hit.faceType, 0, vehicle->physics);
             fgCollisionMgr->CheckHitWindow(&hit, true, 0);
             Coord4 flash = { hit.point.x, hit.point.y, hit.point.z, kWorldFlashSize };
             Coord4 colour = kFlashColour;
@@ -1093,7 +1089,7 @@ void REmpBolts::CreateVehicleBolt(EmpAnchor *from, EmpAnchor *to) {
         VU0_v4unit(&direction, &direction);
         WorldCollisionInfo hit;
         WorldCollisionInfo_Construct(&hit, 0);
-        Shell_ApplyWorldEffects(&position, &direction, 1, 0, &hit.faceType, 0, vehicle->physics);
+        Shell::ApplyWorldEffects(Xyz(&position), &direction, 1, 0, &hit.faceType, 0, vehicle->physics);
     }
 }
 

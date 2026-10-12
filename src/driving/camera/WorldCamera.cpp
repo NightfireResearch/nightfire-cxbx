@@ -39,6 +39,10 @@
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
 #include "../game/Debris.h"
+#include "../game/Grenade.h"
+#include "../game/Missile.h"
+#include "../game/Sentry.h"
+#include "../game/Shell.h"
 #include "../game/TyreTrack.h"
 #include "../game/WeaponCameras.h"        // RMissileCam, RSniperZoom
 #include "../game/WeaponEffects.h"        // RBulletStreak
@@ -68,8 +72,6 @@
 
 class AIVehicle;
 class GHud;
-class Grenade;
-class Missile;
 struct RigidBody;
 
 namespace {
@@ -77,12 +79,6 @@ namespace {
 // The flags of a camera animation system's first instance (CARP::Instance::flags)
 enum AnimSystemInstanceFlags : uint8_t {
     kInstanceFlag10 = 0x10,             // UpdateAnimationCam answers false
-};
-
-// A shell (an entry of the Simulation's shells): a physics object with a simple body
-struct ShellFields : PhysicsObject {
-    uint8_t unknown6C[0x20];
-    int32_t streak;                     // +0x8c the bullet streak's kind; none below 0
 };
 
 // The scene object's description, as far as SetAnchor reads it: its first word is its group
@@ -102,11 +98,6 @@ struct SceneObjDescFields {
 #define GFX_CULL_GetNextCanvas ((int (*)(Coord4 *sphere, float *height, bool *checkFar, float *farScale))0x000d3450)
 #define GGallery_CULL_SetCanvas ((void (*)(int item, bool culled, float distance))0x000d3470)
 #define GFX_Update ((void (*)())0x000d34c0)
-#define RayShell_DrawTracers ((void (*)())0x00071a60)
-#define RayShell_DrawFlashes ((void (*)())0x00071c80)
-#define Sentry_DrawMuzzleFlashes ((void (*)())0x00073500)
-#define Missile_Render ((void (__fastcall *)(Missile *, int, bool firstView))0x0005f3d0)
-#define Grenade_Render ((void (__fastcall *)(Grenade *, int, bool firstView))0x0005d550)
 #define GHud_TheApp ((GHud *(*)())0x000d7c10)
 #define GHud_UpdateTargets ((void (__fastcall *)(GHud *, int))0x000e1a90)
 
@@ -116,12 +107,8 @@ struct SceneObjDescFields {
 #define RPlayerViewCameraVtable ((void **)0x00191910)
 #define Sim ((void *)0x00233ff0)                                // the Simulation
 #define SimStepCount U32_AT(0x00234e34)
-// The Simulation's lists of physics objects (Ghidra's names): its cars, the player's first, its missiles,
-// grenades and shells
+// The Simulation's cars, the player's first (Ghidra's name)
 #define SimCars (*(GameVector<PVehicle *> *)0x00234e3c)
-#define SimMissiles (*(GameVector<Missile *> *)0x00234e7c)
-#define SimGrenades (*(GameVector<Grenade *> *)0x00234e9c)
-#define SimShells (*(GameVector<ShellFields *> *)0x00234eac)
 #define GameTick U32_AT(0x001f2a4c)                             // the game's tick (RGlareManager.cpp's GlareTick)
 // GetAnchorMatrix4's matrix, made the identity on its first call (a function-local static and its guard)
 // XBE_GLOBAL(0x001f2d20, 0x40)
@@ -788,19 +775,19 @@ void RRenderWorldCamera::DrawTyreTracks() {
 
 // FUNC_AT(0x0008cd60)
 void RRenderWorldCamera::DrawBulletStreaks() {
-    for (ShellFields **shell = SimShells.first; shell != SimShells.last; shell++) {
+    for (Shell **shell = SimShells.first; shell != SimShells.last; shell++) {
         Coord4 direction;
         VU0_v4unitxyz(&SimpleBodyOf(*shell)->velocity, &direction);
-        int streak = (*shell)->streak;
+        int streak = (*shell)->streakKind;
         if (streak > -1)
             RBulletStreak::Add(&SimpleBodyOf(*shell)->position, AsCoord3(&direction), streak);
     }
-    RayShell_DrawTracers();
-    RayShell_DrawFlashes();
+    RayShell::DrawTracers();
+    RayShell::DrawFlashes();
     for (Missile **missile = SimMissiles.first; missile != SimMissiles.last; missile++)
-        Missile_Render(*missile, 0, viewId == 0);
+        (*missile)->Render(viewId == 0);
     for (Grenade **grenade = SimGrenades.first; grenade != SimGrenades.last; grenade++)
-        Grenade_Render(*grenade, 0, viewId == 0);
+        (*grenade)->Render(viewId == 0);
 }
 
 // A light ahead of the player's car.
@@ -831,7 +818,7 @@ void RRenderWorldCamera::DrawEffects() {
     fgParticleSystems->UpdateSpawnAllSystems();
     ParticleSystemsUnknown = fgParticleSystems->cache.count;
     fgParticleSystems->UpdateAndRenderAllSystems();
-    Sentry_DrawMuzzleFlashes();
+    Sentry::DrawMuzzleFlashes();
     fgParticulate->Update();
     fgParticulate->Draw();
 }

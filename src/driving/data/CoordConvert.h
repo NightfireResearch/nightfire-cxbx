@@ -15,6 +15,14 @@ struct Coord4 {
     float x, y, z, w;
 };
 
+// A Coord4's x, y and z
+inline Coord3 *Xyz(Coord4 *v) {
+    return reinterpret_cast<Coord3 *>(v);
+}
+inline const Coord3 *Xyz(const Coord4 *v) {
+    return reinterpret_cast<const Coord3 *>(v);
+}
+
 Coord4* Float_COORD3toCOORD4(Coord4 *result, const Coord3 *v);   // 0x0005c9f0
 Coord3* Float_COORD4toCOORD3(Coord3 *result, const Coord4 *v);   // 0x0005ca40
 

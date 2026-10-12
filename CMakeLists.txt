@@ -477,6 +477,15 @@ add_library(drivinginject SHARED
   src/driving/game/EmpEffect.cpp
   src/driving/game/WeaponEffects.cpp
   src/driving/game/WeaponCameras.cpp
+  src/driving/game/WeaponManager.cpp
+  src/driving/game/Missile.cpp
+  src/driving/game/Explosion.cpp
+  src/driving/game/Shell.cpp
+  src/driving/game/Grenade.cpp
+  src/driving/game/Human.cpp
+  src/driving/game/Mine.cpp
+  src/driving/game/Sentry.cpp
+  src/driving/game/Smackable.cpp
   src/driving/engine/OBB.cpp
   src/driving/engine/PhysicsUtil.cpp
   src/driving/devtools/ColQueryShadow.cpp
@@ -504,6 +513,10 @@ add_library(drivinginject SHARED
   src/driving/devtools/GameEffectsShadowB.cpp
   src/driving/devtools/GameEffectsShadowC.cpp
   src/driving/devtools/GameEffectsShadowD.cpp
+  src/driving/devtools/GameWeaponsShadowA.cpp
+  src/driving/devtools/GameWeaponsShadowB.cpp
+  src/driving/devtools/GameWeaponsShadowC.cpp
+  src/driving/devtools/GameWeaponsShadowD.cpp
   src/driving/devtools/VehicleShadow.cpp
   src/driving/devtools/RigidCollideShadow.cpp
   src/driving/devtools/RenderShadow.cpp

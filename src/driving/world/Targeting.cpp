@@ -8,6 +8,8 @@
 #include "../engine/MissionManager.h"
 #include "../engine/UMemory.hpp"
 #include "../game/WeaponSound.h"       // ATargeting
+#include "../game/AICharacter.h"
+#include "../game/WeaponManager.h"
 #include "../camera/CameraSpline.h"     // RCameraMath
 #include "../camera/PlayerCamera.h"     // RCamera, RViewCamera, RPlayerCamera
 #include "../physics/RigidBody.h"
@@ -49,27 +51,6 @@ struct AIVehicleFields {
 };
 static_assert(offsetof(AIVehicleFields, unknown68) == 0x68, "AI vehicle layout");
 
-// An AI character (only the fields read here)
-struct AICharacterFields {
-    uint32_t vtable;
-    uint8_t unknown04[0x3c];
-    Coord3 position;            // +0x40
-};
-
-struct WeaponSlot {
-    int32_t weapon;             // +0x00
-    uint8_t unknown04[0x50];
-};
-static_assert(sizeof(WeaponSlot) == 0x54, "a weapon slot is 84 bytes");
-
-// The weapon manager (only the fields read here)
-struct SWeaponManagerFields {
-    uint32_t unknown00;
-    int32_t current;            // +0x04 the current slot
-    uint8_t unknown08[8];
-    WeaponSlot *slots;          // +0x10
-};
-
 typedef int (*TargetCompare)(const void *a, const void *b);
 
 }  // namespace
@@ -83,7 +64,6 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 #define SimTimeStep FLOAT_AT(0x00234e30)                         // the simulation's step, in seconds
 #define SimStepCount I32_AT(0x00234e34)
 #define playerPhysicsObject (*(PVehicle ***)0x00234e40)
-#define WeaponManager (*(SWeaponManagerFields **)0x0023923c)
 
 // ---- calls to originals not ported
 
@@ -129,9 +109,6 @@ constexpr float kLockRadius = 130.0f;               // on screen, round the aim 
 constexpr float kLockedRadius = 145.0f;             // ... once it is tracking or locked
 constexpr float kLockTime = 0.25f;                  // seconds until a tracked target is locked
 constexpr float kAutoDriveTurnRate = 0.05f;         // the auto-drive turn's slerp step
-constexpr int32_t kWeapon1C = 0x1c;                 // the weapon auto-drive mode locks with
-constexpr int32_t kMissionState3 = 3;
-constexpr int32_t kMissionState4 = 4;
 constexpr int32_t kSimState3 = 3;
 
 static_assert(std::bit_cast<uint32_t>(kBoxOuterX) == 0x3f28f5c3, "0x00193b34");
@@ -166,10 +143,6 @@ const AIVehicleFields *Fields(const AIVehicle *vehicle) {
     return reinterpret_cast<const AIVehicleFields *>(vehicle);
 }
 
-AICharacterFields *Fields(AICharacter *character) {
-    return reinterpret_cast<AICharacterFields *>(character);
-}
-
 // The player's vehicle's body (always a rigid body)
 const RigidBody *PlayerBody() {
     return (*playerPhysicsObject)->GetRigidBody();
@@ -179,15 +152,8 @@ const CarPhysics *PlayerPhysics() {
     return (*playerPhysicsObject)->GetPhysics();
 }
 
-// AICharacter::IsAlive (its vtable's slot 1)
-bool IsAlive(AICharacter *character) {
-    typedef bool (AICharacterFields::*IsAliveMethod)();
-    AICharacterFields *fields = Fields(character);
-    return (fields->*XbeVirtual<IsAliveMethod>(fields, 1))();
-}
-
 int CurrentWeapon() {
-    return WeaponManager->slots[WeaponManager->current].weapon;
+    return WeaponManager->weapons[WeaponManager->secondary].id;
 }
 
 // A qsort comparison's answer from the difference of the two distances (-1 for NaN)
@@ -353,7 +319,7 @@ void WTargetable::UpdatePosition() {
         zone.SetPosition(&position);
         break;
     case kTargetCharacter:
-        position = Fields(character)->position;
+        position = character->Position();
         position.y += kCharacterTargetHeight;
         zone.SetPosition(&position);
         break;
@@ -574,7 +540,7 @@ void WTargetPicker::UpdateTargets() {
             if (!(target->physics->GetHitPoints() > 0.0))
                 continue;
         } else if (target->ownerType == kTargetCharacter) {
-            if (!IsAlive(target->character))
+            if (!target->character->IsAlive())
                 continue;
         }
         target->UpdatePosition();
@@ -604,8 +570,8 @@ void WTargetPicker::UpdateTargets() {
         Crt_qsort(sorted, count, sizeof(sorted[0]), kSortCompares[sortMode]);
 
     SMissionManager *missions = glbMissionManager;
-    bool suspended = missions->unknown474 == kMissionState3 || missions->unknown474 == kMissionState4 ||
-                     SimState == kSimState3 || missions->unknown4f0 != 0;
+    bool suspended = missions->missionState == kMissionState3 || missions->missionState == kMissionState4 ||
+                     SimState == kSimState3 || missions->cinematicMode != 0;
     if (active && !suspended) {
         UpdateSelection();
         MoveTargetingCursors();
@@ -681,7 +647,7 @@ void WTargetPicker::UpdateSelection() {
 
 // FUNC_AT(0x000ce410)
 void WTargetPicker::MoveTargetingCursors() {
-    bool canLock = mode != kTargetingAutoDrive || CurrentWeapon() == kWeapon1C;
+    bool canLock = mode != kTargetingAutoDrive || CurrentWeapon() == kWeaponUltralightRocket;   // the only weapon auto-drive mode locks with
     if (canLock && selected != NULL && selected->onScreen) {
         int32_t held = SimStepCount - lockStartTime;
         lockState = held * double(SimTimeStep) > kLockTime ? kLockLocked : kLockTracking;

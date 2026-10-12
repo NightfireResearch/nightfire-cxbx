@@ -51,6 +51,15 @@ enum LightEnvironment {
     kEnvironmentCount = 4,
 };
 
+// AddMissile's types, by MissileTypes' names
+enum MissileLightType {
+    kMissileLightMissile = 0,
+    kMissileLightRocket = 1,
+    kMissileLightSnowmobileRocket = 2,
+    kMissileLightEMPInflight = 3,
+    kMissileLightEMPTarget = 4,
+};
+
 // SetLightingModel's models: the set each selects
 enum LightingModel {
     kLightingModel0 = 0,                // the world's lights

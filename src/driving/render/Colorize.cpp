@@ -177,7 +177,7 @@ void RColorize::Draw() {
         SimpleTexturedMaterial->SetDepthTestMethod(kDepthGreaterEqual);
     }
 
-    if (mode == kModeOff || glbMissionManager->unknown4f0 != 0)
+    if (mode == kModeOff || glbMissionManager->cinematicMode != 0)
         return;
 
     if (mode == kMode3) {

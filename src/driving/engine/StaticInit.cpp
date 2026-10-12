@@ -19,11 +19,13 @@
 #include "../data/RCARPFile.h"         // CharNamespace
 #include "../data/SymbolTable.h"
 #include "../eagl/GeoPrimState.h"
+#include "../game/Smackable.h"          // DummyPhysicsData
 #include "../game/VehicleSound.h"       // EngineRefTree
 #include "../game/WeaponCameras.h"      // MissileCamState
 #include "../audio/Fader.h"             // FaderRefTree
 #include "../audio/Mix.h"               // MixRefTree
 #include "../audio/Stream.h"            // StreamRefTree
+#include "../physics/PhysicsNamespace.h"  // PhysicsData
 #include "../render/RSceneObj.hpp"
 #include "../render/TextureContext.h"
 #include "../world/RoadNav.h"
@@ -35,7 +37,7 @@
 // record is initialised data in the XBE, and the stores leave it as it was apart from fields they write with the
 // same values, so the whole table can be written.
 void InitWeaponDefinitions(void) {
-    for (int i = 0; i < 32; i++)
+    for (int i = 0; i < kWeaponCount; i++)
         WeaponDefinitions[i] = kWeaponDefinitions[i];
 }
 
@@ -96,7 +98,7 @@ void DestroyStatic_001e47c0(void) {
 }
 // FUNC_AT(0x0015ce30)
 void DestroyStatic_001e9294(void) {
-    ((AttributeSet *)0x001e9294)->DestructThunk();
+    DummyPhysicsData.attributes.DestructThunk();
 }
 // FUNC_AT(0x0015ce40)
 void DestroyStatic_001ebd60(void) {

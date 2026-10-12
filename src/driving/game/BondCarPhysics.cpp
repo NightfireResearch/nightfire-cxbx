@@ -114,16 +114,6 @@ static_assert(std::bit_cast<uint32_t>(0.02f) == 0x3ca3d70a && std::bit_cast<uint
               std::bit_cast<uint32_t>(0.35f) == 0x3eb33333 && std::bit_cast<uint32_t>(0.65f) == 0x3f266666 &&
               std::bit_cast<uint32_t>(0.85f) == 0x3f59999a, "the literals");
 
-// What this file reads of the HUD (provisional here)
-struct CarHudFields {
-    uint8_t unknown000[0x2b0];
-    uint8_t unknown2B0;                 // +0x2b0 set: the fire buttons are ignored
-};
-
-const CarHudFields *Hud() {
-    return reinterpret_cast<const CarHudFields *>(GHud::TheApp());
-}
-
 // ---- PBondCar's virtual methods, called through its vtable as the original does
 AVehicle *CallGetAudio(PBondCar *car) {
     return static_cast<AVehicle *>((car->*XbeVirtual<decltype(&PBondCar::GetAudio)>(car, PVehicle::kGetAudio))());
@@ -205,10 +195,6 @@ void RaiseLandingImpact(const RigidBody *body, const Coord3 *position, float str
 }
 
 namespace {
-
-Coord3 *Xyz(Coord4 *v) {
-    return AsCoord3(v);
-}
 
 // fabs as the x87 code branches it: -0 stays -0, a NaN stays
 double AbsDouble(double x) {
@@ -484,14 +470,14 @@ void PBondCar::GetControllerInput() {
             control.handBrake = 0;
             break;
         case kActionFirePrimary:
-            if (Hud()->unknown2B0 == 0)
+            if (GHud::TheApp()->paused == 0)
                 control.firePrimary = 1;
             break;
         case kActionFirePrimaryRelease:
             control.firePrimary = 0;
             break;
         case kActionFireSecondary:
-            if (Hud()->unknown2B0 == 0)
+            if (GHud::TheApp()->paused == 0)
                 control.unknown1B = 1;
             break;
         case kActionFireSecondaryRelease:

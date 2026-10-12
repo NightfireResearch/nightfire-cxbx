@@ -33,7 +33,6 @@
 // ---- the game's code not ported yet
 #define CollisionImpact_Construct ((CollisionImpact *(__fastcall *)(CollisionImpact *, int))0x0003dc20)
 #define ECollision_Construct ((void *(__fastcall *)(void *, int, CollisionImpact impact))0x0003f370)
-#define SMissionManager_ProgrammerDefinedEvent ((void (__fastcall *)(void *, int, int event, const char *text))0x000b72f0)
 
 // ---- globals
 #define Sim ((void *)0x00233ff0)                    // the Simulation

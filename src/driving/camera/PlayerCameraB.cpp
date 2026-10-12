@@ -1021,7 +1021,7 @@ void RPlayerCamera::UpdateADWeaponAnims() {
 // FUNC_AT(0x000857d0)
 void RPlayerCamera::UpdateAutoDriveCam() {
     int now = SimStepCount;
-    if (glbMissionManager->unknown47c != 0 || SimState == 3)
+    if (glbMissionManager->driveMissile != NULL || SimState == 3)
         return;
     MATRIX4 *anchorMatrix = GetAnchorMatrix4();
     Coord3 *anchorPosition = GetAnchorPosition();

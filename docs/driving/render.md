@@ -88,3 +88,7 @@ The jump-table rule held: only RColorize::SetEnabled has a table (four entries, 
   step on all the same).
 - RLightManager::AddSpecularLight copies an uninitialised stack word into the specular light's w (the port writes
   zero), and Render_InitLibRender hands RRenderer::Init an uninitialised 0x70-byte stack buffer it never reads.
+- RShadowMap::SetCamera transforms the car's box corners with a w it never writes (TransformPoint at 0x000a5e3a).
+  The port first left it unset as well; once the weapons port changed what the stack held there, a NaN made the
+  fit zero and the projected shadow darkened the whole road (missions 3-5 from the first frame). The port writes
+  zero (docs/driving/game-weapons.md).

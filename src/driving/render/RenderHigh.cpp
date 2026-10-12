@@ -414,7 +414,7 @@ void RRenderHigh::Render() {
     Fog->UpdateScale();
     RVehicleParticle::UpdateAll();
     fgLightManager->FinishLights();
-    if (glbMissionManager->unknown4f0 != 0)
+    if (glbMissionManager->cinematicMode != 0)
         Colorize->DisableMotionBlur();
     fgRenderer->EnableAlphaWrites();
     fgRenderer->EndFrame();

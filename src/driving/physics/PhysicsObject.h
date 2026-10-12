@@ -24,6 +24,21 @@ struct IFeedback;
 struct RigidBody;
 struct SimpleRigidBody;
 
+// PhysicsObject::type: each class's (its constructor's third argument)
+enum PhysicsObjectType : int32_t {
+    kObjectVehicle = 1,         // PVehicle: a rigid body
+    kObjectSmackable = 2,
+    kObjectExplosion = 3,
+    kObjectHuman = 4,
+    kObjectMine = 5,
+    kObjectMissile = 6,
+    kObjectShell = 7,
+    kObjectGrenade = 8,
+    kObjectNewton = 9,
+    kObjectHelicopter = 10,
+    kObjectSentry = 11,
+};
+
 struct PhysicsObject {
     enum Flag : uint16_t {
         kSimpleBody = 0x1,          // its body is a SimpleRigidBody
@@ -33,7 +48,7 @@ struct PhysicsObject {
 
     void **vtable;              // +0x00
     WWorldPos worldPos;         // +0x04
-    int32_t type;               // +0x44
+    int32_t type;               // +0x44 PhysicsObjectType
     uint16_t flags;             // +0x48 Flag
     int16_t rigidBodySlot;      // +0x4a its body, in the Simulation's rigid or simple tables
     RSceneObj *renderObject;    // +0x4c

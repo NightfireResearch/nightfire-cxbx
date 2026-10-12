@@ -37,7 +37,6 @@
 #define ObjectList_Construct ((void (*)(WCollisionObject **where, int count, WCollisionObject *const *value, ObjectList *vector, WCollisionObject *const *same))0x000b2ec0)
 #define StripList_Construct ((void (*)(const CollisionStrip **where, int count, const CollisionStrip *const *value, StripList *vector, const CollisionStrip *const *same))0x000b2ec0)
 #define WorldCollisionInfo_Construct ((WorldCollisionInfo *(__fastcall *)(WorldCollisionInfo *, int))0x0001d9f0)
-#define WWorldPos_FaceNormal ((void (__fastcall *)(const WWorldPos *, int, Coord4 *normal))0x0005d3f0)
 #define EHitWindow_Construct ((void (__fastcall *)(void *, int, Coord4 point, Coord4 normal, WindowHit hit, int flag))0x000403f0)
 // The tree helpers every map of the game shares (identical code folded by the linker), on this file's node types.
 // 0x00053580 and 0x000527e0, 0x00052a20 are the attribute system's ported copies (of its own node types; one warns
@@ -557,7 +556,7 @@ int WCollisionMgr::CheckHitWorld(const Coord4 *segment, WorldCollisionInfo *info
         WorldCollisionInfo_Construct(&candidate, 0);
         candidate.hitType = kHitWorld;
         if (position.valid) {
-            WWorldPos_FaceNormal(&position, 0, &candidate.normal);
+            position.face.GetNormal(Xyz(&candidate.normal));
         } else {
             candidate.normal.z = 0.0f;
             candidate.normal.x = 0.0f;

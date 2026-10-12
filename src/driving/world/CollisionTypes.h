@@ -75,6 +75,9 @@ struct StripTriangle {
     StripVertex corner[3];
 
     float LowestY() const;      // the lowest of its three heights                              0x000bf480
+    // Its unit normal, turned to face up and kept just short of straight up; straight up when degenerate (the
+    // name is ours)                                                                             0x0005d3f0
+    void GetNormal(Coord3 *normal) const;
 };
 static_assert(sizeof(StripTriangle) == 0x30, "a strip triangle is 48 bytes");
 

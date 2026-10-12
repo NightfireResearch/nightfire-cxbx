@@ -26,7 +26,6 @@
 // ---- the game's, not ported yet
 
 #define Simulation_GetScratchPadFreeZone ((RigidScratchPadFields *(*)(void))0x000b2820)
-#define WWorldPos_FaceNormal ((void (__fastcall *)(const WWorldPos *, int, Coord4 *normal))0x0005d3f0)
 
 // ---- globals
 
@@ -388,7 +387,7 @@ bool RigidBody::TempGetHeightInformation(bool, const Coord3 *point, Coord4 *grou
     }
     if (searched) {
         if (worldPosition->valid) {
-            WWorldPos_FaceNormal(worldPosition, 0, ground);
+            worldPosition->face.GetNormal(Xyz(ground));
         } else {
             ground->x = 0.0f;
             ground->y = 1.0f;

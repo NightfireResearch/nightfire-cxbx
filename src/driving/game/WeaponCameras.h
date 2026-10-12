@@ -37,7 +37,7 @@ public:
     void Destruct();                    // the GeoPrim freed                                    // 0x000a0df0
     RMissileCam* Delete(unsigned flags);    // the scalar deleting destructor, vtable slot 0   // 0x000a0e70
     static void Kill();                     // vtable slot 2 (slot 1, Reset, is an empty function)  // 0x000a0b30
-    // The quad over the whole screen, unless the mission manager's +0x4f0 is set
+    // The quad over the whole screen, unless the mission manager's cinematicMode is set
     void Draw();                                                                                // 0x000a0b50
 };
 static_assert(sizeof(RMissileCam) == 0x1c, "RMissileCam is 0x1c bytes");

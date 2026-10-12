@@ -33,6 +33,8 @@
 #include "../eagl/RenderContext.h"
 #include "../eagl/View.h"
 #include "../game/BondCar.h"            // PBondCar::InitializeBondCarGlobals, PVehicle
+#include "../game/Shell.h"              // RayShell::Reset
+#include "../game/WeaponManager.h"
 #include "../physics/RigidBody.h"
 #include "../platform/FileSys.h"
 #include "../platform/RealMemory.h"
@@ -150,7 +152,6 @@ static const char *const missionNames[20] = {     // by mission index
 ActionQueue GlobalActionQueue;
 #define Sim ((void *)0x00233ff0)                  // the Simulation
 #define SimState I32_AT(0x00234e24)               // Sim.simState
-#define WeaponManager (*(void **)0x0023923c)
 #define playerPhysicsObject (*(PVehicle ***)0x00234e40)
 #define TrafficSeed I16_AT(0x001de914)
 
@@ -209,15 +210,11 @@ static const DiscErrorText DiscErrorMessages[7] = {   // English, French, German
 #define GSubtitles_ClearSubtitles ((void (__fastcall *)(void *, int))0x000e3630)
 #define GSystem_CURATOR_Init ((void (*)(void))0x000e3fd0)
 #define CURATOR_Shutdown ((void (*)(void))0x000e3eb0)
-#define RayShell_Reset ((void (*)(void))0x00071d40)
 #define Simulation_Reset ((void (__fastcall *)(void *, int))0x000b49f0)
 #define Simulation_CleanUpObjects ((void (__fastcall *)(void *, int))0x000b4750)
 #define Simulation_SpawnCarObject ((void *(__fastcall *)(void *, int, int, const char *, int, float *, float *))0x000b5700)
 #define SMissionManager_GetCarType ((const char *(__fastcall *)(void *, int))0x000b6140)
 #define SMissionManager_ClearScoreBuffer ((void (__fastcall *)(void *, int, LaunchPage *))0x000b63f0)
-#define SWeaponManager_Construct ((void *(__fastcall *)(void *, int))0x000bb220)
-#define SWeaponManager_Destruct ((void (__fastcall *)(void *, int))0x000bad40)
-#define SWeaponManager_SetPlayerCar ((void (__fastcall *)(void *, int, void *))0x000ba990)
 #define AIElementController_Construct ((void (*)(void *))0x000285b0)
 #define AIVehicleController_Get ((void *(*)(void))0x00035c00)
 #define AIVehicleController_Init ((void (*)(void))0x00035c10)
@@ -712,9 +709,9 @@ void GameLoop_CleanUp() {
     GLoadingScreen_FreeUnloadingScreen();
 
     GLoadingScreen_Status("Delete weapon manager");
-    void *weapons = WeaponManager;
+    SWeaponManager *weapons = WeaponManager;
     if (weapons != NULL) {
-        SWeaponManager_Destruct(weapons, 0);
+        weapons->Destruct();
         OperatorDelete(weapons);
     }
     WeaponManager = NULL;
@@ -877,7 +874,7 @@ void RunTheGame(bool simulateOncePerLoop, int unused) {
 // FUNC_AT(0x0005b0d0)
 void GameLoop_StartUp(int trafficSeed) {
     GLoadingScreen_Status("Reset Ray Shells");
-    RayShell_Reset();
+    RayShell::Reset();
     GLoadingScreen_Status("Reset Sim");
     Simulation_Reset(Sim, 0);
     GLoadingScreen_Status("Init Clock");
@@ -934,8 +931,8 @@ void GameLoop_StartUp(int trafficSeed) {
     ActActorDatabase::StartUp();
     ActManager::StartUp(1.0f / GetFoundationVideoModeRate());
     GLoadingScreen_Status("Init Weapon Manager");
-    void *weapons = OperatorNew(0x180);
-    WeaponManager = weapons != NULL ? SWeaponManager_Construct(weapons, 0) : NULL;
+    SWeaponManager *weapons = static_cast<SWeaponManager *>(OperatorNew(0x180));     // 4 more than its size
+    WeaponManager = weapons != NULL ? weapons->Construct() : NULL;
     GLoadingScreen_Status("Init World");
     fgWorld->Open();
     GLoadingScreen_Status("Init AI Elements");
@@ -981,7 +978,7 @@ void GameLoop_StartUp(int trafficSeed) {
     TrafficSeed = (int16_t)trafficSeed;
     AIVehicleController_CreateSimTrafficCars(AIVehicleController_Get(), 0, true);
     AIVehicleController_RegisterSimCarList(AIVehicleController_Get(), 0);
-    SWeaponManager_SetPlayerCar(WeaponManager, 0, (*playerPhysicsObject)->renderObject);
+    WeaponManager->SetPlayerCar((*playerPhysicsObject)->renderObject);
     if (ActorDatabase != NULL) {
         GLoadingScreen_Status("Init AI Characters");
         AICharacter_Init();
