@@ -61,36 +61,44 @@ const Redirect kRedirects[] = {
 const uint32_t kRedirectCount = sizeof(kRedirects) / sizeof(kRedirects[0]);
 
 struct RedirectPatch {
-    uint8_t *at;            // the address word inside the instruction (NULL: not found)
+    uint32_t at;            // the address word inside the instruction (0: not found)
     uint32_t original;
 };
 RedirectPatch g_redirectPatches[kRedirectCount];
+bool g_redirectsFound;
 
-// Points every redirect at ours (true) or back at the game's copy
-void PointRedirects(bool ours) {
+// The word in each redirected instruction that falls in its global's game copy, read from the original's bytes:
+// an instruction at an entry we replaced lies under the jump until the window swaps it in
+void FindRedirects() {
     for (uint32_t r = 0; r < kRedirectCount; r++) {
         const OwnedGlobal &g = kOwnedGlobals[kRedirects[r].global];
-        RedirectPatch &patch = g_redirectPatches[r];
-        if (ours) {
-            patch.at = NULL;
-            uint8_t *code = reinterpret_cast<uint8_t *>(uintptr_t(kRedirects[r].instruction));
-            for (int offset = 1; offset + 4 <= 15; offset++) {   // the word that falls in the global's game copy
-                uint32_t word;
-                memcpy(&word, code + offset, 4);
-                if (word - g.game < g.size) {
-                    patch.at = code + offset;
-                    patch.original = word;
-                    uint32_t redirected = uint32_t(uintptr_t(g.ours)) + (word - g.game);
-                    memcpy(patch.at, &redirected, 4);
-                    FlushInstructionCache(GetCurrentProcess(), code, 15);
-                    break;
-                }
+        uint8_t code[15];
+        XbeOriginal_Read(kRedirects[r].instruction, code, sizeof(code));
+        for (int offset = 1; offset + 4 <= 15; offset++) {
+            uint32_t word;
+            memcpy(&word, code + offset, 4);
+            if (word - g.game < g.size) {
+                g_redirectPatches[r].at = kRedirects[r].instruction + offset;
+                g_redirectPatches[r].original = word;
+                break;
             }
-        } else if (patch.at != NULL) {
-            memcpy(patch.at, &patch.original, 4);
-            FlushInstructionCache(GetCurrentProcess(), patch.at, 4);
-            patch.at = NULL;
         }
+    }
+    g_redirectsFound = true;
+}
+
+// Points every redirect at ours (true) or back at the game's copy, in the original's bytes whether or not they
+// are swapped in
+void PointRedirects(bool ours) {
+    if (!g_redirectsFound)
+        FindRedirects();
+    for (uint32_t r = 0; r < kRedirectCount; r++) {
+        const OwnedGlobal &g = kOwnedGlobals[kRedirects[r].global];
+        const RedirectPatch &patch = g_redirectPatches[r];
+        if (patch.at == 0)
+            continue;
+        uint32_t word = ours ? uint32_t(uintptr_t(g.ours)) + (patch.original - g.game) : patch.original;
+        XbeOriginal_Write(patch.at, &word, 4);
     }
 }
 

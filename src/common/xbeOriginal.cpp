@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 // One entry per jump the injector wrote; a few thousand at most. Kept unsorted - lookups only happen in
 // shadow tests, and a linear scan of this is nothing beside the function being tested.
@@ -79,6 +80,61 @@ int XbeOriginal_RestoreRange(unsigned lo, unsigned hi, bool original) {
     if (!original && g_windowHook != NULL)
         g_windowHook(lo, hi, false);
     return n;
+}
+
+// The records by address, sorted again whenever more have been recorded
+static PatchRecord *g_byAddress[MAX_PATCHES];
+static int g_numSorted = 0;
+
+static int ByAddress(const void *a, const void *b) {
+    unsigned x = (*(PatchRecord *const *)a)->at, y = (*(PatchRecord *const *)b)->at;
+    return x < y ? -1 : x > y;
+}
+
+// The jump written over the byte at 'at', if any (jumps never overlap)
+static PatchRecord *Covering(unsigned at) {
+    if (g_numSorted != g_numPatches) {
+        for (int i = 0; i < g_numPatches; i++)
+            g_byAddress[i] = &g_patches[i];
+        qsort(g_byAddress, g_numPatches, sizeof(g_byAddress[0]), ByAddress);
+        g_numSorted = g_numPatches;
+    }
+    int first = 0, last = g_numSorted;   // the first record above 'at'
+    while (first < last) {
+        int middle = (first + last) / 2;
+        if (g_byAddress[middle]->at <= at)
+            first = middle + 1;
+        else
+            last = middle;
+    }
+    if (first > 0 && at - g_byAddress[first - 1]->at < 5)
+        return g_byAddress[first - 1];
+    return NULL;
+}
+
+void XbeOriginal_Read(unsigned at, void *out, unsigned n) {
+    unsigned char *bytes = (unsigned char *)out;
+    for (unsigned i = 0; i < n; i++) {
+        PatchRecord *r = Covering(at + i);
+        bytes[i] = r != NULL ? r->original[at + i - r->at] : *(unsigned char *)(size_t)(at + i);
+    }
+}
+
+void XbeOriginal_Write(unsigned at, const void *in, unsigned n) {
+    const unsigned char *bytes = (const unsigned char *)in;
+    for (unsigned i = 0; i < n; i++) {
+        unsigned char *code = (unsigned char *)(size_t)(at + i);
+        PatchRecord *r = Covering(at + i);
+        if (r == NULL) {
+            *code = bytes[i];
+            continue;
+        }
+        bool restored = memcmp((void *)(size_t)r->at, r->original, 5) == 0;
+        r->original[at + i - r->at] = bytes[i];
+        if (restored)
+            *code = bytes[i];
+    }
+    FlushInstructionCache(GetCurrentProcess(), (void *)(size_t)at, n);
 }
 
 bool XbeOriginal_Redirect(unsigned at, const void *to) {

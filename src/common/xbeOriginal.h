@@ -26,6 +26,13 @@ bool XbeOriginal_Restore(unsigned at, bool original);
 // False if 'at' was never patched.
 bool XbeOriginal_Redirect(unsigned at, const void *to);
 
+// The original's bytes at [at, at + n), whether or not a jump is written over them.
+void XbeOriginal_Read(unsigned at, void *bytes, unsigned n);
+
+// Writes the original's bytes at [at, at + n): into the code where the original is in place, and into the
+// recorded bytes of any jump over them, so a later swap brings them in.
+void XbeOriginal_Write(unsigned at, const void *bytes, unsigned n);
+
 // Every patched address in [lo, hi) swapped at once; the number swapped.
 int XbeOriginal_RestoreRange(unsigned lo, unsigned hi, bool original);
 
