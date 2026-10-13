@@ -38,6 +38,11 @@
 // compared: the request generation (the port's RequestGeneration, the original's copy at 0x002475fc), and whether
 // a side faulted (SEH: counted, not fatal).
 //
+// The script stays out of three corners where the original itself runs off the ring (a fault on both sides, whose
+// wild reads and writes depend on what lies past the workspace, so the two sides can part there and the process be
+// left damaged): releasing a chunk again once the stream has reused its bytes, STREAM_kill leaving readPos behind,
+// and a filter sending the end chunk nowhere (original-quirks.md; each at its place below).
+//
 // The fake FILESYS is replaced by five-byte jumps over both the originals' entries and our FILESYS's (the port
 // calls ours directly), put back after; operations complete only when the script pumps them, in order, the
 // callback running on this thread as it would on the worker.
@@ -670,6 +675,16 @@ void Queue(int kind) {
         W->ids[W->idCount++] = id;
 }
 
+// STREAM_kill on a stream waiting for space with nothing left unreleased, its ring starting past ringBase (a file
+// request's data keeps its offset within 128 bytes): the kill moves parsePos and ringStart back to ringBase but
+// leaves readPos where it was, past them. Every later walk from readPos to parsePos (FUN_0014b730, the next
+// STREAM_kill, STREAM_destroy's) then runs off the ring, in the original as in ours (original-quirks.md). The
+// script leaves such a kill out; STREAM_destroy's own kill, the last walk, still meets it.
+bool KillLeavesReadBehind() {
+    StrmInternal *s = W->stream;
+    return s->state == 2 && s->readPos == s->parsePos && s->parsePos == s->ringStart && s->ringStart != s->ringBase;
+}
+
 // One case's script; runs the same on both sides (its random numbers are the workspace's)
 void Script() {
     StrmInternal *memory = (StrmInternal *)(W->block + g_p.offset);
@@ -691,6 +706,13 @@ void Script() {
         uint32_t mask = ScriptRange(0, 2) == 0 ? 0 : 0xffffffffu;
         uint32_t value = mask == 0 ? 0 : (ScriptRange(0, 1) ? 0x6c484353u : 0x6c444353u);
         int reader = ScriptRange(-3, readers + 1);
+        // A filter that takes every tag (mask 0: the catch-all, or one before it) sending them nowhere would take
+        // the end chunk too. SndStream_Deliver marks a chunk sent nowhere skipped before it tests for the end
+        // tag, so the request never ends and the parse runs on through what follows it in the file, taking any
+        // size word with a top byte for an end chunk and writing one there - in the original as in ours
+        // (original-quirks.md). The game never calls STREAM_setfilter; such a filter goes to reader 1 instead.
+        if (mask == 0 && (reader == -1 || reader == -2))
+            reader = 1;
         PICK(SetFilterFn, 0x0014b2a0u, &STREAM_setfilter)(handle, index, mask, value, reader);
         Log(L_SETFILTER, (uint32_t)index, mask, value, (uint32_t)reader);
     }
@@ -731,7 +753,12 @@ void Script() {
                 int index = ScriptRange(0, 4) == 0 ? ScriptRange(0, W->heldCount - 1) : 0;
                 uint32_t *chunk = W->held[index];
                 ReleaseHeld(index);
-                if (ScriptRange(0, 9) == 0) {   // again at once: STREAM_release ignores a released chunk
+                // again at once: STREAM_release ignores a released chunk - while it is still one. A release that
+                // finds the stream waiting for space reads on at once (a memory request is copied and delivered in
+                // the same call), and the chunk's bytes may then hold a new, undelivered chunk: releasing that
+                // marks it skipped with its reader byte still in the size word, and the next walk over the ring
+                // (FUN_0014b730, STREAM_kill) jumps 16 MB past it, in the original as in ours.
+                if (ScriptRange(0, 9) == 0 && chunk[0] == 0xfffffffeu) {
                     PICK(ReleaseFn, 0x0014b9f0u, &STREAM_release)(W->handle, chunk);
                     Log(L_RELEASE, P(chunk), chunk[0], chunk[1]);
                 }
@@ -768,7 +795,7 @@ void Script() {
             PICK(CancelFn, 0x0014ba80u, &STREAM_cancelrequest)(W->handle, id);
             Log(L_CANCEL, id);
         } else if (op < 97) {
-            if (ScriptRange(0, 2) == 0) {
+            if (ScriptRange(0, 2) == 0 && !KillLeavesReadBehind()) {
                 PICK(HandleFn, 0x0014bcb0u, &STREAM_kill)(W->handle);
                 W->heldCount = 0;   // every chunk is released by the kill: what was held is stale
                 Log(L_KILL);

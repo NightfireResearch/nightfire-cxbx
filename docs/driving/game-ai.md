@@ -182,7 +182,7 @@ per-call shadow of the function found, and the six shadows:
 With these, the final round (gai4) had all 16 lockstep runs exact against the baselines and every shadow run finished
 on missions 1-8 (a frame dumped, in 19 to 34 minutes), the six AI shadows and GameWeaponsShadowA with 0 differences
 (shadow B runs nothing on mission 7, which has no road network); only the two known differences remain (sndsysshadow
-case 0, sndstreamfileshadow case 52).
+case 0, sndstreamfileshadow case 52; both harness problems, fixed since: sound.md 9.6).
 
 ## Random calls
 

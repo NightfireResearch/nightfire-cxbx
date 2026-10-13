@@ -478,6 +478,9 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | Shell::ApplyWorldEffects | 0x000749b0 | the "straight up" test is a four-component dot with (0, 1, 0, 1) | game-weapons |
 | Shell::Simulate; Mine::Simulate; Smackable::Simulate | 0x00074e80, 0x0005e710, 0x00075420 | carry on (PhysicsObject::Simulate) after deleting the object, on two of Shell's three paths | game-weapons |
 | Grenade::Simulate | 0x0005d7d0 | the first bounce sets off a type-3 explosion | game-weapons |
+| STREAM_release | 0x0014b9f0 | knows a released chunk only by its tag (-2): a stale pointer to bytes the ring has since reused marks the new chunk skipped with its reader byte still in the size word, and the next walk over the ring (FUN_0014b730, STREAM_kill) jumps 16 MB past it | sound |
+| STREAM_kill | 0x0014bcb0 | on a stream waiting for space with nothing unreleased and its ring starting past ringBase, puts parsePos and ringStart back to ringBase but leaves readPos past them; the next walk from readPos to parsePos runs off the ring | sound |
+| SndStream_Deliver | 0x0014ad20 | marks a chunk no filter sends to a reader skipped before testing it for the end tag, so an end chunk sent nowhere never ends the request: the parse runs on into what follows in the file, taking any size word with a top byte for an end chunk and writing one there. Unreachable: the game never calls STREAM_setfilter, and the default catch-all sends every tag to reader 1 | sound |
 | RayShell::CollideWithWorld | 0x00072790 | the segment's w grows by one each step | game-weapons |
 | Missile::SteerMissile | 0x00060110 | overwrites detonate when there is a target; a torpedo drops its target once it faces away | game-weapons |
 | Missile::Render | 0x0005f3d0 | the light is scaled by the square of twice the steps left, compared unsigned | game-weapons |

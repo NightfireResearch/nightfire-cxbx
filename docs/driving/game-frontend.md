@@ -175,7 +175,7 @@ round a difference with `NIGHTFIRE_GFEC_WINDOW=1`, names each case before it run
 With these, the final round (gfe4) had all 16 lockstep runs exact against the baselines (frames and sound traces to
 tick 9000) and every shadow run finished on missions 1-8 (a frame dumped), the four front-end shadows and
 GameEventsShadowD with 0 differences; only the two known differences remain (sndsysshadow case 0, sndstreamfileshadow
-case 52).
+case 52; both harness problems, fixed since: sound.md 9.6).
 
 ## Random and clock calls
 

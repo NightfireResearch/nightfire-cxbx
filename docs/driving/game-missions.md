@@ -118,7 +118,7 @@ GameAudioShadowB and GameAudioShadowD, clean before, differed. All of it was har
 
 With these, the second round (gm2) had all 16 lockstep runs exact against the baselines and every shadow run
 finished on missions 1-8 (a frame dumped), the four missions shadows, GameAudioShadowB and D and GameWeaponsShadowC
-with 0 differences; only the two known ones remain (sndsysshadow case 0, sndstreamfileshadow case 52). No game behaviour
+with 0 differences; only the two known ones remain (sndsysshadow case 0, sndstreamfileshadow case 52; both harness problems, fixed since: sound.md 9.6). No game behaviour
 changed (only an extern added to SimulationObjects.h), so no quirk or deviation was added.
 
 ## Random calls

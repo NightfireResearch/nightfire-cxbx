@@ -161,7 +161,8 @@ no change.
 The final round (crt3, on the runner, 13 October 2026): all 16 lockstep runs exact against the runner's baselines,
 shadow A clean (498 heap cases; 806,118 others), shadow B clean (7,729 cases, the throws among them) on every
 mission, and every shadow run reached its frame dump, apart from mission 5's once: SndStreamFileShadow's known case 52
-went on to fault on both sides and the game stopped there; run again, mission 5 finished clean.
+went on to fault on both sides and the game stopped there; run again, mission 5 finished clean. (That case, and
+SndSystemShadow's case 0, were harness problems, fixed since: sound.md 9.6.)
 
 ## Known deviations
 

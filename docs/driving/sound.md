@@ -472,6 +472,10 @@ greedy level)*, `FUN_0014ac00` *(candidate: pop a free request)*, `FUN_0014ac70`
 completion callback), `FUN_0014b730` *(candidate: issue the next read into the ring, compacting at the wrap)*. Dead:
 `STREAM_setfilter`, `STREAM_setpriority`, `STREAM_taphandle`, `STREAM_isendofstream`, `FUN_001503b0`, `FUN_001503c0`.
 
+Quirks kept (original-quirks.md 3.7): `STREAM_release` knows a released chunk only by its tag, `STREAM_kill` can
+leave `readPos` behind `parsePos`, and an end chunk that no filter sends to a reader never ends its request. Each
+makes a later walk over the ring run off it; SndStreamFileShadow keeps out of them (9.6).
+
 ### 4.6 F platform driver (29 functions, 8.2 KB)
 
 `SNDPLATFORM_init` (`0x0013dc50`: `DirectSoundCreate`, `DownloadEffectsImage(0x001a3e80, 0x3360)`, voice array, the
@@ -832,3 +836,31 @@ are testable without the game running and are where to start.
   STREAM FILESYS callbacks and the five never-made functions (7.3, 7.4).
 - **Data-driven reach**: render mode and sample representation pick paths; the disc uses two of each. Report unknown
   ones rather than ignore them.
+
+### 9.6 The shadows' last two differences (fixed 13 October 2026)
+
+From the sound port until the C runtime's round, every round excused two shadow differences. Both were the harness,
+not the port:
+
+- **SndSystemShadow, init/restore case 0** ("byte +0x14 differs", 0x107f on the port's side). The bytes were
+  `SpeakerGains` rows 0 and 1 (the second globals region, 0x00245378), not the arena the old comment blamed. The
+  original `SNDSYSI_init` calls our `SNDI_precalcaztospkrvol`, which fills our `SpeakerGains`;
+  `OriginalStateToPort`, run after init, then copied the original's (untouched) copy over ours, so the original's
+  side lost the table. It now carries what the port's functions wrote into the original's copies first. The
+  comparison names a global's address now, not an offset into one of two regions.
+- **SndStreamFileShadow, case 52** (and 93, 105, 119, which faulted on both sides on every mission). The script
+  drove STREAM where the original runs off its ring: a fault on both sides, whose wild reads depend on what lies past
+  the workspace, so on missions 5 and 8 the two sides faulted at different places (the reported difference), and the
+  wild writes could leave the process damaged (the crt3 mission-5 run that hung until the time limit). Three causes,
+  all reproduced exactly by the port (original-quirks.md 3.7), now kept out of the script:
+  - releasing a chunk "again at once" after the release had let the stream read on into the same bytes (a memory
+    request is copied and delivered within the call): the second release marks a new, undelivered chunk skipped
+    with its reader byte in the size word (cases 52, 93);
+  - `STREAM_kill` on a stream waiting for space with nothing unreleased and its ring starting past `ringBase`, which
+    leaves `readPos` behind (case 119);
+  - a `STREAM_setfilter` filter with mask 0 sending every tag nowhere: the end chunk is marked skipped before the
+    end test, so the request never ends (case 105). The game never calls `STREAM_setfilter`.
+
+Both shadows now report 0 differences and 0 faults on every mission. The round that checked it (snd1, on the runner,
+13 October 2026): all 16 lockstep runs exact against the runner's baselines (frames and sound traces to tick 9000),
+and every shadow run on missions 1-8 reached its frame dump with 0 summaries showing differences.

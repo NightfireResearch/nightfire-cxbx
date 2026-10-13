@@ -164,7 +164,7 @@ killed at drive_game.ps1's 20 minutes. Nothing hung or crashed for good:
 With these, the second round (gev2) had all 16 lockstep runs exact against the baselines and every shadow run
 finished on missions 1-8 (a frame dumped, in 14 to 25 minutes), the four events shadows with 0 differences and 80
 faults on both sides between them (62 of them A's, on made-up AI elements); only the two known differences remain
-(sndsysshadow case 0, sndstreamfileshadow case 52).
+(sndsysshadow case 0, sndstreamfileshadow case 52; both harness problems, fixed since: sound.md 9.6).
 
 ## Random calls
 

@@ -106,7 +106,8 @@ bool Check(bool same, const char *format, ...) {
     return false;
 }
 
-bool CheckBytes(const void *a, const void *b, size_t n, const char *what, int at) {
+// base: the game address of the first byte, for globals (0: a workspace, reported by offset)
+bool CheckBytes(const void *a, const void *b, size_t n, const char *what, int at, uint32_t base = 0) {
     g_checks++;
     if (memcmp(a, b, n) == 0)
         return true;
@@ -114,8 +115,12 @@ bool CheckBytes(const void *a, const void *b, size_t n, const char *what, int at
     while (((const uint8_t *)a)[i] == ((const uint8_t *)b)[i])
         i++;
     g_differ++;
-    Detail("%s, case %d: byte +0x%x differs (original %02x, port %02x)", what, at, (unsigned)i,
-           ((const uint8_t *)a)[i], ((const uint8_t *)b)[i]);
+    if (base != 0)
+        Detail("%s, case %d: the byte at 0x%08x differs (original %02x, port %02x)", what, at, base + (unsigned)i,
+               ((const uint8_t *)a)[i], ((const uint8_t *)b)[i]);
+    else
+        Detail("%s, case %d: byte +0x%x differs (original %02x, port %02x)", what, at, (unsigned)i,
+               ((const uint8_t *)a)[i], ((const uint8_t *)b)[i]);
     size_t row = i & ~size_t(15);
     if (row + 16 <= n) {
         const uint32_t *wa = (const uint32_t *)((const uint8_t *)a + row);
@@ -783,8 +788,8 @@ void ClientSide(bool original) {
 Globals g_snapshotGlobals, g_originalGlobals, g_portGlobals;
 
 bool CompareGlobals(const char *what, int at) {
-    return CheckBytes(g_originalGlobals.r0, g_portGlobals.r0, sizeof(g_portGlobals.r0), what, at) &&
-           CheckBytes(g_originalGlobals.r1, g_portGlobals.r1, sizeof(g_portGlobals.r1), what, at) &&
+    return CheckBytes(g_originalGlobals.r0, g_portGlobals.r0, sizeof(g_portGlobals.r0), what, at, kRegions[0].lo) &&
+           CheckBytes(g_originalGlobals.r1, g_portGlobals.r1, sizeof(g_portGlobals.r1), what, at, kRegions[1].lo) &&
            Check(g_originalGlobals.author == g_portGlobals.author, "%s, case %d: the .rdata byte differs", what, at);
 }
 
@@ -793,9 +798,12 @@ bool CompareGlobals(const char *what, int at) {
 SndOwnedCopy g_carryBefore;
 
 // Mid-way through an original's run, before it calls the port's functions that read what it has just set up (the
-// 100 Hz server's voice updates read VoiceArray, which the original's init allocated): the original's copies into
-// the port's variables, and only what the port writes from here on carried back
+// 100 Hz server's voice updates read VoiceArray, which the original's init allocated): what the port's functions
+// wrote so far carried into the original's copies first (the original init's call to our SNDI_precalcaztospkrvol
+// fills our SpeakerGains), then the original's copies into the port's variables, and only what the port writes
+// from here on carried back
 void OriginalStateToPort() {
+    SndOwned_CarryWrites(g_carryBefore);
     SndOwned_ToPort();
     SndOwned_Take(&g_carryBefore);
 }
@@ -1116,11 +1124,6 @@ void TestSystem() {
         return;
     g_sysSnapshot = g_sys + 1;
     g_sysOriginal = g_sys + 2;
-    // Known limitation: case 0 differs in two halfwords of the arena (+0x16 and +0x18 are 0x107f on the port's
-    // side, untouched on the original's). Not a port difference but the two copies: the original init's own code
-    // keeps the heap and voices in the game's copies while the port's functions it calls (the 100 Hz server's voice
-    // updates) keep theirs in ours, copied across only once, after init (OriginalStateToPort). Before the globals
-    // were ours there was one copy.
     for (int c = 0; c < 120; c++) {
         LoadGlobals(&g_real);
         memset((void *)(uintptr_t)0x00244c48, 0, 0x30);
