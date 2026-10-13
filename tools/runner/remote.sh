@@ -52,6 +52,22 @@ win() { echo "$1" | sed 's#^/\(.\)/#\1:/#'; }   # /c/x -> c:/x, for Windows prog
 r() { ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 \
     -o CanonicalizeHostname=yes -o CanonicalDomains=local -o HostKeyAlias="$HOST" "$USER_@$HOST" "$@"; }
 
+# RUNNER_HOST=local: this machine is the runner - the same commands, run here without SSH, in a checkout of its own
+# (RUNNER_REPO, default /q/nf-localrun: a clone with disc/ and Release/settings.ini, saves/, tdata/ as on a runner)
+# and slot folders under /q/nightfire-slots. The desktop session is this one, so desktop jobs run directly.
+LOCAL=
+if [ "$HOST" = local ]; then
+    LOCAL=1
+    RREPO=${RUNNER_REPO:-/q/nf-localrun}
+    JOBS=/q/nightfire-runner
+    SLOTS=/q/nightfire-slots
+    JOBDIR=$JOBS${SLOT:+/slot$SLOT}
+    RUNDIR=$RREPO
+    [ -z "$SLOT" ] || RUNDIR=$SLOTS/$SLOT
+    mkdir -p "$JOBS"
+    r() { bash -c "$*"; }
+fi
+
 cmd=$1; shift || true
 case "$cmd" in
 sync)
@@ -87,6 +103,11 @@ build)
     ;;
 desktop)
     [ -n "$1" ] || { echo "desktop: no command"; exit 2; }
+    if [ -n "$LOCAL" ]; then
+        mkdir -p "$JOBDIR"
+        (cd "$RUNDIR" && sh -c "$1") > "$JOBDIR/job.log" 2>&1 && rc=0 || rc=$?
+        cat "$JOBDIR/job.log"; exit $rc
+    fi
     printf 'cd %s\n%s\n' "$RUNDIR" "$1" | r "mkdir -p $JOBDIR && rm -f $JOBDIR/done && cat > $JOBDIR/job.sh && schtasks //run //tn $TASK > /dev/null"
     # Wait for the job to finish (desktop_job.sh writes the exit code to done)
     while ! r "test -f $JOBDIR/done"; do sleep 5; done

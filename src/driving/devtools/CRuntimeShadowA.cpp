@@ -1296,6 +1296,10 @@ void CRuntimeShadowA_Run(void) {
     g_cases = g_checks = g_differ = g_faults = g_details = 0;
     // NIGHTFIRE_CRUNTIMESHADOWA=2 reports each part as it finishes
     bool verbose = getenv("NIGHTFIRE_CRUNTIMESHADOWA")[0] == '2';
+    // The original printf and scanf convert floats through the _cfltcvt pointers, which the startup no longer sets
+    // (our runtime calls the conversions directly): without them the originals stop with R6002. _cfltcvt_init writes
+    // only those pointers, which nothing of ours reads.
+    ((void (__cdecl *)(void))0x00131cf0)();
     static const struct {
         const char *name;
         void (*run)();
