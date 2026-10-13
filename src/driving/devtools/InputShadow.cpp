@@ -9,6 +9,7 @@
 #include "../engine/GameLoop.h"
 #include "../engine/IOModule.hpp"
 #include "../engine/InputConfig.h"
+#include "../platform/XboxInput.h"     // Xbox_XInputSetState
 #include "../engine/InputDevice.hpp"
 #include "../engine/UFileLoader.h"
 #include "../engine/UMemory.hpp"
@@ -149,8 +150,8 @@ typedef void (__fastcall *ConfigSetFn)(InputConfigManager *, int, int, int);
 // ---- the game's state the tests touch
 
 #define ShLaunch (*(LaunchPage *)0x00243b90)
-#define ShSuperEasy U8_AT(0x001e476c)
-#define ShFeedbackAllowed U8_AT(0x001b6f50)
+#define ShSuperEasy U8_AT(OwnedGlobals_Ours(0x001e476c))
+#define ShFeedbackAllowed U8_AT(OwnedGlobals_Ours(0x001b6f50))
 #define ShFeedbackThread (*(RealThread *)0x001e2410)
 #define ShActionNames ((const StringToNumberEntry *)0x001b6ba0)
 // The original's copy of the port's kFrontEndSlotNames (initialised data, the same names)
@@ -207,12 +208,10 @@ void Differ(const char *what, int index, const char *detail) {
 
 void CheckBytes(const char *what, int index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[96];
     snprintf(detail, sizeof(detail), "byte %u of %u: original %02x, port %02x", unsigned(at), unsigned(bytes), x[at],
              y[at]);
@@ -419,9 +418,10 @@ void RandomFeedbackState() {
 }
 
 void TestFeedbackUpdate() {
-    Hook hook;
+    Hook hook, portHook;
     hook.Install(kXInputSetState, (const void *)&FakeXInputSetState);
-    if (!hook.on) {
+    portHook.Install(uint32_t(uintptr_t(&Xbox_XInputSetState)), (const void *)&FakeXInputSetState);   // the port's call
+    if (!hook.on || !portHook.on) {
         printf("[input] could not hook XInputSetState: Update not tested\n");
         return;
     }
@@ -446,6 +446,7 @@ void TestFeedbackUpdate() {
                        originalCalls.size() * sizeof(MotorCall));
     }
     hook.Remove();
+    portHook.Remove();
 }
 
 // The constructor and destructor with enough users that neither starts nor stops the thread

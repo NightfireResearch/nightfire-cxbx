@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include "SceneObjShadow.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include "../eagl/View.h"                 // EAGL::ViewPort
@@ -115,13 +116,13 @@ typedef RRenderWorldCulling RWC;
 #define Orig_RearrangeSplitScreens ((void (__fastcall *)(RRenderHigh *, int))0x0008bb10)
 
 // ---- the game's state
-#define GameTick U32_AT(0x001f2a4c)
-#define RandomSeed U32_AT(0x001c45c4)
+#define GameTick U32_AT(OwnedGlobals_Ours(0x001f2a4c))
+#define RandomSeed U32_AT(OwnedGlobals_Ours(0x001c45c4))
 // The originals' copies of the port's SceneObjs and AspectScale (RSceneObj.hpp, RenderHigh.h)
 #define OrigSceneObjs (*(SceneObjStatics *)0x001f1cf0)
 #define OrigAspectScale (*(float *)0x001c47a0)
 const uint32_t kSceneObjStaticsBytes = sizeof(SceneObjStatics);
-#define RendererUnknown48 (*(int32_t *)(*(uint8_t **)0x001ebff4 + 0x48))   // RRenderer::unknown48
+#define RendererUnknown48 (*(int32_t *)(*(uint8_t **)OwnedGlobals_Ours(0x001ebff4) + 0x48))   // RRenderer::unknown48
 
 const uint32_t kSceneObjVtable = 0x00191be0;
 const uint32_t kAutonomousObjVtable = 0x0018a398;
@@ -139,12 +140,10 @@ void Differ(const char *what, int index, const char *detail) {
 
 void CheckBytes(const char *what, int index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[96];
     snprintf(detail, sizeof(detail), "byte %u of %u: original %02x, port %02x", unsigned(at), unsigned(bytes), x[at],
              y[at]);

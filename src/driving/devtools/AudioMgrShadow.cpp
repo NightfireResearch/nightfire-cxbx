@@ -3,6 +3,7 @@
 #endif
 
 #include "AudioMgrShadow.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -114,11 +115,11 @@ const unsigned kEntries[] = {
 #define Listener_Construct ((AListener *(__fastcall *)(AListener *, int, int))0x00124ae0)
 
 // The globals the code under test reads and writes
-#define ShadowFailedStreams (*(StreamNameList **)0x00243a5c)
-#define ShadowLimitedCount I32_AT(0x00243b30)
-#define ShadowPaused U8_AT(0x002439d0)
-#define ShadowMissionOver U8_AT(0x00243a77)
-#define ShadowUnknown6c U32_AT(0x00243a6c)
+#define ShadowFailedStreams (*(StreamNameList **)OwnedGlobals_Ours(0x00243a5c))
+#define ShadowLimitedCount I32_AT(OwnedGlobals_Ours(0x00243b30))
+#define ShadowPaused U8_AT(OwnedGlobals_Ours(0x002439d0))
+#define ShadowMissionOver U8_AT(OwnedGlobals_Ours(0x00243a77))
+#define ShadowUnknown6c U32_AT(OwnedGlobals_Ours(0x00243a6c))
 
 // The globals the port owns (RandomSpare, ASystem_fgSystem, the option volumes Resume and Restart put back) and
 // the original's copies of them
@@ -628,6 +629,9 @@ void Case(const char *what, Setup setup, Run run, Capture capture) {
         results[phase].words.push_back(ok);
         capture(results[phase].words);
         results[phase].log = g_log;
+        // vtables and callbacks alike on either side
+        OwnedGlobals_CanonicalWords(results[phase].words.data(), results[phase].words.size() * 4);
+        OwnedGlobals_CanonicalWords(results[phase].log.data(), results[phase].log.size() * 4);
     }
     char label[96];
     snprintf(label, sizeof(label), "%s (state)", what);

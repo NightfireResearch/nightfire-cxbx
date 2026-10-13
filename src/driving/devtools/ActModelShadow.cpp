@@ -3,6 +3,7 @@
 #endif
 
 #include "ActModelShadow.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -75,7 +76,7 @@ namespace {
 #define OrigIRModeOn (*(bool *)0x001dd9dd)
 #define OrigAnimationBuffer (*(MATRIX4 **)0x001dd9fc)
 #define OrigAnimationBufferBones (*(int32_t *)0x001dda00)
-#define ShadowLighting (*(uint8_t **)0x001ec260)               // the scene's LightBlock at +0xec
+#define ShadowLighting (*(uint8_t **)OwnedGlobals_Ours(0x001ec260))               // the scene's LightBlock at +0xec
 
 const char kBufferName[] = "EAGLAnimationBuffer";
 

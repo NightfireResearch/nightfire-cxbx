@@ -3,6 +3,7 @@
 #endif
 
 #include "AudioStreamShadow.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -165,9 +166,9 @@ struct Originals {
 #define Orig_IsEffect ((bool (__fastcall *)(AStream *, int))0x00121f80)
 
 // The globals the stream code reads and writes
-#define ShadowAudioFrames I32_AT(0x00243a68)
-#define ShadowMissionOver BOOL8_AT(0x00243a77)
-#define ShadowStreamHold I32_AT(0x00243a80)
+#define ShadowAudioFrames I32_AT(OwnedGlobals_Ours(0x00243a68))
+#define ShadowMissionOver BOOL8_AT(OwnedGlobals_Ours(0x00243a77))
+#define ShadowStreamHold I32_AT(OwnedGlobals_Ours(0x00243a80))
 
 // The port's StreamHoldTick, StreamPath (Stream.h) and ASystem_fgSystem (SoundManager.h), and the original's copies
 #define OrigStreamHoldTick I32_AT(0x00243a84)

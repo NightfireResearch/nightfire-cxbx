@@ -61,7 +61,6 @@ RRenderer *fgRenderer;
 #define LaunchFlags U32_AT(0x00244530)
 #define LoaderReady U8_AT(0x00244044)                 // the first byte of "LOADER READY"; with the next, no capture file
 #define Unknown2445b0 U32_AT(0x002445b0)
-#define DebugFontDriver ((void *)0x001cd114)          // EAGL's FONT driver table
 
 // XBE_GLOBAL(0x001caf5c, 4)
 const MATRIX4 *ViewProjectionMatrixPointer = reinterpret_cast<const MATRIX4 *>(ViewProjectionMatrix);
@@ -383,7 +382,7 @@ RRenderer* RRenderer::Construct(void *unused1, int unused2, bool unknown1C_) {
 
 // FUNC_AT(0x0007d560)
 void RRenderer::LoadDebugFont() {
-    FONT_installdriver(DebugFontDriver);
+    FONT_installdriver(&EaglFontDriver);
     FONT_init();
     debugFontData = UFileLoader::FileLoad("data/render/debug.xfn", 0);
     if (debugFontData == NULL)

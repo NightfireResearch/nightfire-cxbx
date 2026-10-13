@@ -145,7 +145,7 @@ struct ShadowRenderer {
     float fieldOfViewScale;     // +0x58
 };
 
-#define ShadowRendererFields (*(ShadowRenderer **)0x001ebff4)
+#define ShadowRendererFields (*(ShadowRenderer **)OwnedGlobals_Ours(0x001ebff4))
 // The originals' copies of the port's AnchorMatrix and its guard, AspectScale, PerspectiveSway, and fgRender (lent
 // to the originals)
 #define OrigAnchorMatrix (*(MATRIX4 *)0x001f2d20)
@@ -153,14 +153,14 @@ struct ShadowRenderer {
 #define OrigAspectScale (*(float *)0x001c47a0)
 #define OrigPerspectiveSway (*(bool *)0x001c47b8)
 #define OrigRender (*(WRender **)0x0023e000)
-#define ShadowWorldCulling ((uint8_t *)0x001f2c80)
+#define ShadowWorldCulling ((uint8_t *)OwnedGlobals_Ours(0x001f2c80))
 const uint32_t kWorldCullingBytes = 0xa0;
 
 #define ShadowCars (*(GameVector<PhysicsObject *> *)0x00234e3c)
 #define ShadowMissiles (*(GameVector<PhysicsObject *> *)0x00234e7c)
 #define ShadowGrenades (*(GameVector<PhysicsObject *> *)0x00234e9c)
 #define ShadowShells (*(GameVector<PhysicsObject *> *)0x00234eac)
-#define ShadowCullingEye (*(const Coord4 *)0x001f2cd0)
+#define ShadowCullingEye (*(const Coord4 *)OwnedGlobals_Ours(0x001f2cd0))
 
 const uint32_t kViewPortActive = 0x188;
 const uint32_t kFakeBytes = 0x420;      // a car (PBondCar) copied whole, its virtual methods reading their fields
@@ -474,12 +474,10 @@ bool Guarded(bool original) {
 
 void CheckBytes(const char *what, int index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     g_differ++;
     if (g_details++ < 10)
         printf("[viewcam]   %s #%d: byte %u of %u: original %02x, port %02x\n", what, index, unsigned(at),

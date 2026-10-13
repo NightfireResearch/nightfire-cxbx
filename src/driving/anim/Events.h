@@ -62,4 +62,6 @@ static_assert(offsetof(ActEvents, defaultHandler) == 0x80 && offsetof(ActEvents,
               "ActEvents layout");
 static_assert(sizeof(ActEvents) == 0x94, "an ActEvents is 0x94 bytes");
 
+extern ActActor *CurrentActor;   // SetCurrentActor's
+
 #endif // DRIVING_ANIM_EVENTS_H_

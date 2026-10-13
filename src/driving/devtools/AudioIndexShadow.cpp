@@ -3,6 +3,7 @@
 #endif
 
 #include "AudioIndexShadow.h"
+#include "OwnedGlobals.h"
 
 #include "../audio/Bank.h"             // AudioDirectory
 #include "../audio/Index.h"
@@ -629,8 +630,8 @@ double g_volumes[4];            // what the fake GetVolume answers, in turn
 int g_volumeTurn;
 bool g_done;                    // what the fake IsDone answers
 
-int &AudioFrames() { return *(int *)0x00243a68; }
-int &LimitedSounds() { return *(int *)0x00243b30; }
+int &AudioFrames() { return *(int *)OwnedGlobals_Ours(0x00243a68); }
+int &LimitedSounds() { return *(int *)OwnedGlobals_Ours(0x00243b30); }
 
 uint32_t Bits(float value) {
     uint32_t bits;
@@ -694,7 +695,8 @@ ABaseSound *__fastcall FakeBaseConstruct(ABaseSound *sound, int, const char *mix
 }
 
 void __fastcall FakeBaseDestruct(ABaseSound *sound, int) {
-    Append(g_calls, "~ABaseSound %ld vtable %08x; ", Offset(sound), sound->vtable);
+    Append(g_calls, "~ABaseSound %ld vtable %08x; ", Offset(sound),
+           OwnedGlobals_Canonical(uint32_t(uintptr_t(sound->vtable))));   // ours and the game's alike
 }
 
 void FakeOperatorDelete(void *block, unsigned size) {
@@ -809,8 +811,11 @@ std::string RunOn(SoundCase &c, uint8_t *object, bool original, F &&method) {
     });
     std::string log = ran ? g_calls : "fault " + g_calls;
     Append(log, "| ");
-    for (size_t i = 0; i < sizeof(c.object); i++)
-        Append(log, "%02x", object[i]);
+    uint8_t bytes[sizeof(c.object)];
+    memcpy(bytes, object, sizeof(bytes));
+    OwnedGlobals_CanonicalWords(bytes, sizeof(bytes));   // our vtables and the game's alike
+    for (size_t i = 0; i < sizeof(bytes); i++)
+        Append(log, "%02x", bytes[i]);
     return log;
 }
 

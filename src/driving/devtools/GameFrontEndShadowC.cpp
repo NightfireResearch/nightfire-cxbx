@@ -3,6 +3,7 @@
 #endif
 
 #include "GameFrontEndShadowC.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -243,11 +244,11 @@ const uint32_t kPrint = 0x000e2e30;
 
 // ---- the game's state
 
-#define ShadowActiveViews U32_AT(0x00243940)
+#define ShadowActiveViews U32_AT(OwnedGlobals_Ours(0x00243940))
 #define ShadowSimTimeStep FLOAT_AT(0x00234e30)
 #define ShadowDotsFile 0x001caa00
-#define ShadowEaglMalloc U32_AT(0x001caf68)
-#define ShadowEaglFree U32_AT(0x001caf6c)
+#define ShadowEaglMalloc U32_AT(OwnedGlobals_Ours(0x001caf68))
+#define ShadowEaglFree U32_AT(OwnedGlobals_Ours(0x001caf6c))
 
 // The owned globals' game copies, by name
 const uint32_t kGameLastParticleSystem = 0x0023f328;
@@ -293,12 +294,10 @@ void Report(const char *what, long index, const char *detail) {
 
 void CompareBytes(const char *what, long index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[112];
     snprintf(detail, sizeof(detail), "byte 0x%x of 0x%x: original %02x, port %02x", unsigned(at), unsigned(bytes),
              x[at], y[at]);
@@ -525,6 +524,8 @@ void LogString(const char *text) {
 
 void CompareLogs(const char *what, long index) {
     g_checks++;
+    for (std::vector<uint32_t> &log : g_logs)   // vtables and callbacks alike on either side
+        OwnedGlobals_CanonicalWords(log.data(), log.size() * 4);
     const std::vector<uint32_t> &a = g_logs[0], &b = g_logs[1];
     if (a == b)
         return;
@@ -569,7 +570,10 @@ bool HookInstall(Hook *hook, uint32_t entry, const void *to) {
     if (at == 0)
         return false;
     const uint8_t *code = reinterpret_cast<const uint8_t *>(uintptr_t(at));
-    for (int i = 0; i < 5; i++)
+    // a first instruction of five bytes (a tail jump, a load of an address: its operand may hold any byte) is room
+    bool five = code[0] == 0xe9 || code[0] == 0xe8 || code[0] == 0xa1 || code[0] == 0xa3 || code[0] == 0x68 ||
+                (code[0] >= 0xb8 && code[0] <= 0xbf);
+    for (int i = 0; i < 5 && !five; i++)
         if (code[i] == 0xc3 || code[i] == 0xc2 || code[i] == 0xcc)     // too short to take a jump
             return false;
     hook->at = at;
@@ -2395,7 +2399,7 @@ void BuildRegions() {
         AddShared(TexturedRequests[TexturedRequestIndex], sizeof(TexturedGeoPrim), "the textured request");
     if (fgRenderer != NULL)
         AddShared(&fgRenderer->screenWidth, 0x10, "the renderer's screen");
-    AddShared(reinterpret_cast<void *>(0x00243940), 4, "the active views");
+    AddShared(reinterpret_cast<void *>(OwnedGlobals_Ours(0x00243940)), 4, "the active views");
     AddShared(reinterpret_cast<void *>(0x00234e30), 4, "the simulation's step");
     AddShared(reinterpret_cast<void *>(ShadowDotsFile), 0x4e0, "the dots' file", false);
     // The owned globals (pointers to each side's own loads compared in the logs instead)

@@ -38,6 +38,7 @@ struct NormalSpare {
     uint8_t available;          // +0x04
 };
 extern NormalSpare RandomSpare;
+extern float AudioClock;   // zeroed by Stop
 
 // The streams that failed to play: std::list<char *> ("FailedStreams")
 struct StreamNameList : PointerList {
@@ -45,6 +46,7 @@ struct StreamNameList : PointerList {
     void IncreaseSize(uint32_t count);                                          // 0x00121d90
 };
 static_assert(sizeof(StreamNameList) == 12, "a list is 12 bytes");
+extern StreamNameList *fgFailedStreams;
 
 class ASoundManager {
 public:

@@ -1,4 +1,5 @@
 #include "CoreUtilShadow.h"
+#include "OwnedGlobals.h"
 
 #include "../engine/CoreContainers.h"
 #include "../engine/UGroup.h"
@@ -153,7 +154,7 @@ void CompareBytes(const char *what, const uint8_t *original, const uint8_t *port
 #define OrigPools (*(FastPool **)0x001d48c8)
 #define OrigObjectHeapClass (*(int32_t *)0x00242fc8)
 #define OrigPageSize (*(uint32_t *)0x00242fc4)
-#define ClassMemory ((void **)0x00242fd0)
+#define OrigClassMemory ((void **)0x00242fd0)   // ClassMemory's original copy
 
 MemoryFunctions *const kMemFunctions = (MemoryFunctions *)0x001d4894;
 const size_t kArenaBytes = 16 << 20;
@@ -433,7 +434,7 @@ void MemoryScenario(bool original, std::string &log, std::vector<uint8_t> &extra
         Append(log, "newclass locked %d align %u -> %d\n", locked, alignment, number);
         if (number < 0 || number > 63)
             continue;
-        uint8_t *memory = (uint8_t *)ClassMemory[number];
+        uint8_t *memory = (uint8_t *)(original ? OrigClassMemory : ClassMemory)[number];
         uint8_t *record = (uint8_t *)MemClassTable[number];
         Append(log, "  memory %d record %d", memory != NULL, record != NULL);
         if (memory != NULL && record != NULL) {
@@ -443,7 +444,8 @@ void MemoryScenario(bool original, std::string &log, std::vector<uint8_t> &extra
         }
         Append(log, " pagesize %x\n", original ? OrigPageSize : PageSize);
         api.deleteClass(number);
-        Append(log, "  deleted: record %d memory %d\n", MemClassTable[number] != NULL, ClassMemory[number] != NULL);
+        Append(log, "  deleted: record %d memory %d\n", MemClassTable[number] != NULL,
+               (original ? OrigClassMemory : ClassMemory)[number] != NULL);
     }
     (void)extra;
 }
@@ -865,7 +867,8 @@ void MiscScenario(bool original, std::string &log, std::vector<uint8_t> &extra) 
     USingleton s;
     s.vtable = &kRecordingVtable;
     singletonDestruct(&s, 0);
-    Append(log, "singleton vtable %x\n", (unsigned)(uintptr_t)s.vtable);
+    uint32_t vtable = OwnedGlobals_Game(s.vtable);   // the port's is our copy of the game's
+    Append(log, "singleton vtable %x\n", vtable != 0 ? vtable : (unsigned)(uintptr_t)s.vtable);
 
     extra.assign((const uint8_t *)&g_simVector, (const uint8_t *)&g_simVector + sizeof(g_simVector));
     extra.insert(extra.end(), (const uint8_t *)&g_singletonManager,

@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include "GeoPrimState.h"
+#include "Realgraph.h"
 
 namespace EAGL {
 struct TAR;
@@ -72,6 +73,9 @@ void* FONTEAGL_draw(const FNTXFont *font, const FNTXGlyph *glyph, float x, float
 void FONTEAGL_createfont(FNTXFont *font);                                                 // 0x000ee760 (invented name)
 void FONTEAGL_startdraw(const FNTXFont *font);                                            // 0x000ee920
 void FONTEAGL_destroyfont(FNTXFont *font);                                                // 0x000eea20 (invented name)
+
+// The driver's table (0x001cd114), which FONT_installdriver is given
+extern FontDriverTable EaglFontDriver;
 
 // 0x000eea50, unreferenced: D3DDevice_SetRenderState inlined as a routine of its own, the state in ESI and the
 // value in EDI (one of the three "render-state dump blocks").

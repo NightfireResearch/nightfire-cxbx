@@ -27,8 +27,7 @@
 // Every MUTEX_lock/unlock below is where the original has one, around exactly the same reads and writes; the
 // order of the stores inside and outside them follows the listing.
 //
-// The FILESYS callbacks are handed over as the originals' addresses (0x0014aee0, 0x0014af10, 0x0014b660), which
-// jump here: what FILESYS stores is then the same value the original stored.
+// The FILESYS callbacks handed over are ours (the originals were 0x0014aee0, 0x0014af10, 0x0014b660).
 //
 // The register-argument helpers (sound.md 7.1) are naked adaptors under Ghidra's names (AUTOLTCG), preserving
 // what the originals preserve; the ports call the C++ cores beside them directly.

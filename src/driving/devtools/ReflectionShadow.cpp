@@ -128,16 +128,16 @@ typedef void (*FeatureInitFn)(int, int, int, int);
 
 // ---- the game's state
 
-#define ShadowReflection (*(RReflection **)0x001f2dfc)
-#define ShadowColorize (*(RColorize **)0x001f6898)
-#define ShadowDecals (*(RDecalManager **)0x001fe820)
-#define ShadowMissileCam (*(uint8_t **)0x00200f54)
-#define ShadowLightManager (*(uint8_t **)0x001ec260)
-#define ShadowRendererEye ((const float *)((*(uint8_t **)0x001ebff4) + 0x30))
+#define ShadowReflection (*(RReflection **)OwnedGlobals_Ours(0x001f2dfc))
+#define ShadowColorize (*(RColorize **)OwnedGlobals_Ours(0x001f6898))
+#define ShadowDecals (*(RDecalManager **)OwnedGlobals_Ours(0x001fe820))
+#define ShadowMissileCam (*(uint8_t **)OwnedGlobals_Ours(0x00200f54))
+#define ShadowLightManager (*(uint8_t **)OwnedGlobals_Ours(0x001ec260))
+#define ShadowRendererEye ((const float *)((*(uint8_t **)OwnedGlobals_Ours(0x001ebff4)) + 0x30))
 #define ShadowFeatures ((uint8_t *)0x001f2d78)
 #define ShadowFeaturesLocked BOOL8_AT(0x001f2df8)
 #define ShadowMouseBounds ((uint8_t *)0x002420bc)
-#define ShadowDecalState ((uint8_t *)0x001ff7f0)       // after the decal arrays
+#define ShadowDecalState ((uint8_t *)OwnedGlobals_Ours(0x001ff7f0))       // after the decal arrays
 const size_t kDecalStateBytes = 0x4c;
 
 // The package's globals the port has its own of, by the original's copy (render/Reflection.h, Colorize.h,
@@ -259,12 +259,10 @@ void Differ(const char *what, int index, const char *detail) {
 
 void CheckBytes(const char *what, int index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[96];
     snprintf(detail, sizeof(detail), "byte %u of %u: original %02x, port %02x", unsigned(at), unsigned(bytes), x[at],
              y[at]);

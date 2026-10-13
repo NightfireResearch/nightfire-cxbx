@@ -3,6 +3,7 @@
 #endif
 
 #include "SndStreamShadow.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 #include "SndOwned.h"
 
@@ -276,6 +277,8 @@ void Log(uint32_t tag, uint32_t a = 0, uint32_t b = 0, uint32_t c = 0, uint32_t 
         g_stops += tag == 0x30;
     }
     uint32_t w[6] = { tag, a, b, c, d, e };
+    for (int i = 1; i < 6; i++)   // a callback the port passes is ours, where the original passes its entry
+        w[i] = OwnedGlobals_Canonical(w[i]);
     uint32_t h = g_hash[g_side];
     for (int i = 0; i < 6; i++)
         for (int k = 0; k < 4; k++) {
@@ -1439,7 +1442,7 @@ void RunCase(int kindIndex, int index) {
     size_t words = g_extent / 4, first = (size_t)-1;
     int differing = 0;
     for (size_t j = 0; j < words; j++)
-        if (a[j] != b[j]) {
+        if (!OwnedGlobals_SameWord(a[j], b[j])) {   // the port's callbacks are ours
             if (first == (size_t)-1)
                 first = j;
             differing++;

@@ -168,7 +168,7 @@ typedef void (__fastcall *RendererFn)(RRenderer *, int);
 
 // ---- the game's state
 
-#define GameTick U32_AT(0x001f2a4c)
+#define GameTick U32_AT(OwnedGlobals_Ours(0x001f2a4c))
 
 // The originals' copies of the port's DrawZ and the ring models (the rest are only in the region table below)
 #define OrigDrawZ FLOAT_AT(0x001c3e28)
@@ -187,17 +187,17 @@ struct Region {
 const Region kRegions[] = {
     {0x001e9420, &QuadBatch, sizeof(VertexBatch)},          // the two batches
     {0x001ea650, &SpriteBatch, sizeof(VertexBatch)},
-    SHARED(0x001e92d0, 8),                                  // the simple materials
+    SHARED(OwnedGlobals_OursWord(0x001e92d0), 8),                                  // the simple materials
     {0x001e92d8, &DrawModelMatrix, 4},                      // the model matrix
     {0x001c3e28, &DrawZ, 4},                                // the depth
-    SHARED(0x00243708, 0x90),                               // the rings: indices and requests ...
+    SHARED(OwnedGlobals_OursWord(0x00243708), 0x90),                               // the rings: indices and requests ...
     {0x00243798, SimpleModels, sizeof(SimpleModels)},       // ... and models
     {0x002437d8, TexturedModels, sizeof(TexturedModels)},
     SHARED(0x00243818, 0x20),
     {0x00243838, VolatileModels, sizeof(VolatileModels)},
-    SHARED(0x00243878, 0x40),
+    SHARED(OwnedGlobals_OursWord(0x00243878), 0x40),
     {0x001ec000, &CaptureCount, 4},                         // capture count ... the default info
-    SHARED(0x001ec004, 4),                                  // the fog
+    SHARED(OwnedGlobals_OursWord(0x001ec004), 4),                                  // the fog
     {0x001ec008, &FogColourFlag, 1},
     SHARED(0x001ec009, 7),
     {0x001ec010, &ShadowMaps, sizeof(ShadowMaps)},          // the shadow maps
@@ -306,12 +306,10 @@ void Differ(const char *what, int index, const char *detail) {
 
 void CheckBytes(const char *what, int index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[96];
     snprintf(detail, sizeof(detail), "byte %u of %u: original %02x, port %02x", unsigned(at), unsigned(bytes), x[at],
              y[at]);

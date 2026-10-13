@@ -265,6 +265,16 @@ void FONTEAGL_destroyfont(FNTXFont *font) {
     font->tar = NULL;
 }
 
+// The driver table. The original's words after these five, 0x1c and FONTEAGL_drawarray, are read by nothing.
+// XBE_GLOBAL(0x001cd114, 0x14)
+FontDriverTable EaglFontDriver = {
+    reinterpret_cast<FontDrawFn>(&FONTEAGL_draw),
+    reinterpret_cast<FontHookFn>(&FONTEAGL_startdraw),
+    reinterpret_cast<FontHookFn>(&D3DDevice_End),   // the XDK's inline copy at 0x000eea10
+    reinterpret_cast<FontHookFn>(&FONTEAGL_createfont),
+    reinterpret_cast<FontHookFn>(&FONTEAGL_destroyfont),
+};
+
 // ---- 0x000eea50: D3DDevice_SetRenderState(state = ESI, value = EDI) inlined. The simple states (below 0x5c) go
 // through SetRenderState_Simple with their push-buffer method from D3D8's table and are written into the
 // render-state table; the deferred ones (below 0x88) only set their dirty bits (from D3D8's table) and are

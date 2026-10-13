@@ -1,4 +1,5 @@
 #include "SndMixShadow.h"
+#include "OwnedGlobals.h"
 
 #include "../sound/snd/Mixer.h"
 #include "../sound/snd/Reverb.h"
@@ -177,7 +178,7 @@ int CompareImages(const char *what, int index, const uint8_t *o, const uint8_t *
         uint32_t a, b;
         memcpy(&a, o + i, 4);
         memcpy(&b, p + i, 4);
-        if (a == b)
+        if (OwnedGlobals_SameWord(a, b))   // a callback: ours, or the original's entry
             continue;
         if (IsNaNBits(a) && IsNaNBits(b)) {
             nan++;
@@ -737,10 +738,18 @@ void FakeUnpackerInit(SND::SFilterNode *node, SND::UnpackInfo *info) {
     params[9] = 0x5000 + params[7];   // a recognisable getFrame for the voice's +0x44 (never called)
 }
 
+// A copy with callbacks alike on either side (the mixer's hooks, the nodes' process functions)
+const void *AsGame(const void *data, size_t size) {
+    static std::vector<uint8_t> copy;
+    copy.assign((const uint8_t *)data, (const uint8_t *)data + size);
+    OwnedGlobals_CanonicalWords(copy.data(), copy.size());
+    return copy.data();
+}
+
 void Hash3(int step) {
     StepHash &h = g_hash[step];
-    h.globals = Hash((const void *)(uintptr_t)kGlobalsFrom, kGlobalsTo - kGlobalsFrom);
-    h.heap = Hash(g_mix, kMixHeap);
+    h.globals = Hash(AsGame((const void *)(uintptr_t)kGlobalsFrom, kGlobalsTo - kGlobalsFrom), kGlobalsTo - kGlobalsFrom);
+    h.heap = Hash(AsGame(g_mix, kMixHeap), kMixHeap);
     h.rings = Hash(g_mix + kMixRings, 6u * kRingFrames * 2u);
 }
 

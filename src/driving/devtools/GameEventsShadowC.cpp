@@ -3,6 +3,7 @@
 #endif
 
 #include "GameEventsShadowC.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -78,18 +79,18 @@ using CARP::AIElement;
 
 // ---- the game's globals the events read and write
 
-#define fgAIElementControllerGame (*(void **)0x001ddee4)
-#define glbMissionManagerGame (*(void **)0x00239220)
-#define WeaponManagerGame (*(void **)0x0023923c)
-#define fgRenderHighGame (*(void **)0x001ec488)
-#define fgRendererGame (*(void **)0x001ebff4)
-#define FogGame (*(void **)0x001ec004)
-#define ColorizeGame (*(void **)0x001f6898)
-#define fgCollisionMgrGame (*(void **)0x00239a70)
-#define fgWorldGame (*(void **)0x0023f310)
-#define fgSchedulerGame (*(void **)0x001e520c)
-#define fgTriggerManagerGame (*(void **)0x0023e260)
-#define AIHandsGame (*(void **)0x001dda90)
+#define fgAIElementControllerGame (*(void **)OwnedGlobals_Ours(0x001ddee4))
+#define glbMissionManagerGame (*(void **)OwnedGlobals_Ours(0x00239220))
+#define WeaponManagerGame (*(void **)OwnedGlobals_Ours(0x0023923c))
+#define fgRenderHighGame (*(void **)OwnedGlobals_Ours(0x001ec488))
+#define fgRendererGame (*(void **)OwnedGlobals_Ours(0x001ebff4))
+#define FogGame (*(void **)OwnedGlobals_Ours(0x001ec004))
+#define ColorizeGame (*(void **)OwnedGlobals_Ours(0x001f6898))
+#define fgCollisionMgrGame (*(void **)OwnedGlobals_Ours(0x00239a70))
+#define fgWorldGame (*(void **)OwnedGlobals_Ours(0x0023f310))
+#define fgSchedulerGame (*(void **)OwnedGlobals_Ours(0x001e520c))
+#define fgTriggerManagerGame (*(void **)OwnedGlobals_Ours(0x0023e260))
+#define AIHandsGame (*(void **)OwnedGlobals_Ours(0x001dda90))
 #define fgBank0Game (*(void **)0x001d8398)
 #define SimCarsGame (*(GameVector<PVehicle *> *)0x00234e3c)
 #define PhysicsObjectsGame ((PhysicsObject **)0x002342a0)
@@ -97,22 +98,22 @@ using CARP::AIElement;
 #define SimStateGame I32_AT(0x00234e24)
 #define SimStepsPerSecondGame I32_AT(0x00234e2c)
 #define SimStepCountGame U32_AT(0x00234e34)
-#define FeedbackAllowedGame U8_AT(0x001b6f50)
-#define SoundOptionGame U8_AT(0x001b7054)
-#define StreamsGame U8_AT(0x001b7056)
-#define SuperEasyGame U8_AT(0x001e476c)
-#define StreamHoldGame I32_AT(0x00243a80)
-#define RealClockGame U32_AT(0x001e5208)
+#define FeedbackAllowedGame U8_AT(OwnedGlobals_Ours(0x001b6f50))
+#define SoundOptionGame U8_AT(OwnedGlobals_Ours(0x001b7054))
+#define StreamsGame U8_AT(OwnedGlobals_Ours(0x001b7056))
+#define SuperEasyGame U8_AT(OwnedGlobals_Ours(0x001e476c))
+#define StreamHoldGame I32_AT(OwnedGlobals_Ours(0x00243a80))
+#define RealClockGame U32_AT(OwnedGlobals_Ours(0x001e5208))
 #define LastRenderClockGame U32_AT(0x001e2394)
-#define CullDistanceGame U32_AT(0x001c4624)
-#define FrameAnimationTimeGame U32_AT(0x001c4668)
-#define VideoModeRateGame FLOAT_AT(0x001f2a44)
-#define GameTickGame U32_AT(0x001f2a4c)
-#define PlayerGravityGame U32_AT(0x00233fb8)
+#define CullDistanceGame U32_AT(OwnedGlobals_Ours(0x001c4624))
+#define FrameAnimationTimeGame U32_AT(OwnedGlobals_Ours(0x001c4668))
+#define VideoModeRateGame FLOAT_AT(OwnedGlobals_Ours(0x001f2a44))
+#define GameTickGame U32_AT(OwnedGlobals_Ours(0x001f2a4c))
+#define PlayerGravityGame U32_AT(OwnedGlobals_Ours(0x00233fb8))
 #define Launch978Game I32_AT(0x00244508)
 #define LaunchRestartFlagGame U8_AT(0x002441b8)
 #define LaunchRestartCountGame I32_AT(0x002441c0)
-#define HealthTimes100Game U8_AT(0x00239218)
+#define HealthTimes100Game U8_AT(OwnedGlobals_Ours(0x00239218))
 #define TuningLevelGame ((char *)0x00244084)
 #define EventDataGame (*(EventDynamicData *)0x001e47e8)
 
@@ -223,13 +224,11 @@ void Differ(const char *what, long index, const char *detail) {
 
 void CheckBytes(const char *what, long index, const char *part, const void *a, const void *b, size_t size) {
     g_checks++;
-    if (memcmp(a, b, size) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, size);   // a vtable or callback: ours, or the game's
+    if (at == size)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a);
     const uint8_t *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[160];
     snprintf(detail, sizeof(detail), "%s at +0x%x: %02x, port %02x", part, unsigned(at), x[at], y[at]);
     Differ(what, index, detail);

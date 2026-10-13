@@ -3,6 +3,7 @@
 #endif
 
 #include "GameFrontEndShadowD.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -990,8 +991,8 @@ void ApplySubtitles(const SubtitlesCase &c) {
 // What a call left, and the blocks freed
 void LogSubtitles(bool original) {
     GSubtitles *s = g_subtitles;
-    LOG(" | vt %p sim %d dur %08x start %d font %p file %p screen %08x %08x next %u count %u symbol %d cues",
-        s->vtable, s->simClock, Bits(s->duration), s->startTick, (void *)s->font, s->fontFile, Bits(s->screenWidth),
+    LOG(" | vt %08x sim %d dur %08x start %d font %p file %p screen %08x %08x next %u count %u symbol %d cues",
+        OwnedGlobals_Canonical(uint32_t(uintptr_t(s->vtable))), s->simClock, Bits(s->duration), s->startTick, (void *)s->font, s->fontFile, Bits(s->screenWidth),
         Bits(s->screenHeight), s->nextCue, s->cueCount, s->symbol);
     if (s->cues == NULL) {
         LOG(" none");

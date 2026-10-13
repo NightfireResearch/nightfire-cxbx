@@ -160,6 +160,7 @@ static_assert(sizeof(AStream) == 0xd0, "AStream is 0xd0 bytes");
 
 extern char StreamPath[0x80];       // where the streams' files are: SetPath's
 extern int32_t StreamHoldTick;      // TIMER_gettick when the held request was queued
+extern int32_t StreamHold;   // StreamHoldState
 
 // URefCounter<AStream>'s tree (StreamRefCounter's map, at 0x00243a88): its compiled copies of RefCounterTree's code
 // (Mix.h).

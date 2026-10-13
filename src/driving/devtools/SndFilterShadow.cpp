@@ -3,6 +3,7 @@
 #endif
 
 #include "SndFilterShadow.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include "../sound/snd/Filters.h"
@@ -1056,7 +1057,7 @@ void RunCase(Kind &kind, int index, int kindIndex) {
     size_t words = sizeof(Workspace) / 4, first = (size_t)-1;
     int differing = 0, nanWords = 0;
     for (size_t j = 0; j < words; j++) {
-        if (a[j] == b[j])
+        if (OwnedGlobals_SameWord(a[j], b[j]))   // a callback: ours, or the original's entry
             continue;
         if (IsNaNBits(a[j]) && IsNaNBits(b[j])) {
             nanWords++;

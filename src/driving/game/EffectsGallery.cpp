@@ -41,7 +41,6 @@
 // ---- globals
 
 #define DefaultVector (*(const Coord4 *)0x001d4c00)     // (0,0,0,1); AttributeSet's, handed out by address
-#define ParticleCreatorVtable ((const RParticleCreatorVtable *)0x00193c64)  // RParticleSystem::RParticleCreator's
 
 // XBE_GLOBAL(0x0023f320, 0x4)
 GFXGallery *TheEffectsGallery;
@@ -644,7 +643,7 @@ bool GFXGallery::PARTICLE_Draw(UGroup *part, RParticleEmitter *emitter, GalleryK
         VU0_v4quatrotate(&turn, &kUp, &emitter->direction);
         VU0_v4quatrotate(&turn, &kSide, &emitter->side);
         if (emitter->system == NULL) {
-            RParticleSystem::RParticleCreator creator = { ParticleCreatorVtable };
+            RParticleSystem::RParticleCreator creator = { &ParticleCreatorVtable };
             system = *fgParticleSystems->AddOrRefresh(uint32_t(uintptr_t(emitter)), emitter, &creator, distance);
             emitter->system = system;
         }

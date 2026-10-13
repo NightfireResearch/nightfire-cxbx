@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include "BondCarShadowC.h"
+#include "OwnedGlobals.h"
 #include "BondCarOrigTuning.h"
 #include "FpControl.h"
 
@@ -113,7 +114,7 @@ typedef int (__fastcall *SimpleWheelForcesFn)(PBondCar *, int, BondCarWheelInput
                                               const Coord4 *, float *);
 
 #define ShadowSimRandom (*(SimRandom **)0x00233ff0)          // the Simulation's first word
-#define ShadowRandomSeed U32_AT(0x001c45c4)
+#define ShadowRandomSeed U32_AT(OwnedGlobals_Ours(0x001c45c4))
 // The original's copy of the port's BondCarScratchPad (the cars' tuning: BondCarOrigTuning.h). The animation
 // engine's active list and the event queue's points are ours on both sides: the originals reach them through
 // ported functions.
@@ -170,12 +171,10 @@ void BeginCase(const char *what) {
 
 void CheckBytes(const char *what, int index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[96];
     snprintf(detail, sizeof(detail), "byte 0x%x of 0x%x: original %02x, port %02x", unsigned(at), unsigned(bytes),
              x[at], y[at]);

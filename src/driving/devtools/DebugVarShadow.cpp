@@ -1,4 +1,5 @@
 #include "DebugVarShadow.h"
+#include "OwnedGlobals.h"
 
 #include "../data/CoordConvert.h"
 #include "../data/DebugVariables.h"
@@ -242,6 +243,7 @@ static void LogStreamObject(const char *label, const void *object, size_t size, 
     memset(copy + heap1, 0, 4);
     memset(copy + heap2, 0, 4);
     memset(copy + heap3, 0, 4);
+    OwnedGlobals_CanonicalWords(copy, size);   // our vtables and the game's alike
     LogBytes(label, copy, size);
 }
 
@@ -517,7 +519,7 @@ static void LibraryCases() {
         (text.*At<StrStreambuf *(StrStreambuf::*)(const char *, int)>(0x00038af0))("some text", 4);
         LogStreamObject("strstreambuf", &text, sizeof(text), 4, 0x38, 0x38);
         (text.*At<StrStreambuf *(StrStreambuf::*)(unsigned)>(0x00038b50))(0);
-        Logf("strstreambuf destroyed: vtable %08x", uint32_t(uintptr_t(text.vtable)));
+        Logf("strstreambuf destroyed: vtable %08x", OwnedGlobals_Canonical(uint32_t(uintptr_t(text.vtable))));
     });
 
     Run("Ctype", 0, [&] {
@@ -548,7 +550,7 @@ static void LibraryCases() {
         Logf("widen %02x narrow %02x", uint8_t((ctype.*At<char (Ctype::*)(char)>(0x00037f70))('\x93')),
              uint8_t((ctype.*At<char (Ctype::*)(char, char)>(0x00037fb0))('\x94', '?')));
         (ctype.*At<void (Ctype::*)()>(0x00038080))();
-        Logf("ctype after %08x", uint32_t(uintptr_t(ctype.vtable)));
+        Logf("ctype after %08x", OwnedGlobals_Canonical(uint32_t(uintptr_t(ctype.vtable))));
     });
 
     Run("Facets", 0, [&] {
@@ -560,7 +562,7 @@ static void LibraryCases() {
             uint32_t again = ((uint32_t (*)(const Facet **))getCats[f])(&made);   // already made: no-op
             uint32_t none = ((uint32_t (*)(const Facet **))getCats[f])(NULL);
             Logf("GetCat %d: %u %u %u vtable %08x refs %u", f, category, again, none,
-                 uint32_t(uintptr_t(made->vtable)), made->refs);
+                 OwnedGlobals_Canonical(uint32_t(uintptr_t(made->vtable))), made->refs);
             if (f == 3) {
                 Numpunct *punct = (Numpunct *)made;
                 Logf("numpunct point %02x sep %02x", uint8_t((punct->*At<char (Numpunct::*)()>(0x0003ab40))()),
@@ -583,7 +585,10 @@ static void LibraryCases() {
         }
         static NumGet numGet;
         (numGet.*At<NumGet *(NumGet::*)(uint32_t)>(0x00038700))(3);
-        LogBytes("NumGet", &numGet, sizeof(numGet));
+        uint8_t numGetBytes[sizeof(numGet)];
+        memcpy(numGetBytes, &numGet, sizeof(numGet));
+        OwnedGlobals_CanonicalWords(numGetBytes, sizeof(numGetBytes));   // our vtable and the game's alike
+        LogBytes("NumGet", numGetBytes, sizeof(numGetBytes));
         OpenIn("x");
         Locale locale;
         ShadowIosBase_GetLoc(&g_in.ios, 0, &locale);
@@ -1056,7 +1061,7 @@ static void MountedCases(const std::vector<TuningText> &inis) {
         DTuningDBMgr *saved = TuningDBMgr;
         ((void (*)())0x00059630)();
         DTuningDBMgr *made = TuningDBMgr;
-        Logf("InitSingleton vtable %08x", made != NULL ? uint32_t(uintptr_t(made->vtable)) : 0);
+        Logf("InitSingleton vtable %08x", made != NULL ? OwnedGlobals_Canonical(uint32_t(uintptr_t(made->vtable))) : 0);
         (made->*At<void (DTuningDBMgr::*)()>(0x0003d620))();   // deletes it
         Logf("DestroySingleton leaves the pointer %d", TuningDBMgr == made);
         TuningDBMgr = saved;

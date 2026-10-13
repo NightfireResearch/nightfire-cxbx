@@ -3,6 +3,7 @@
 #endif
 
 #include "ActorShadow.h"
+#include "OwnedGlobals.h"
 
 #include "../anim/Actor.h"
 #include "../anim/AnimationDatabase.h"
@@ -78,11 +79,13 @@ void Logf(const char *format, ...) {
 }
 
 void LogBytes(const char *what, const void *p, size_t n) {
+    std::vector<uint8_t> bytes(static_cast<const uint8_t *>(p), static_cast<const uint8_t *>(p) + n);
+    OwnedGlobals_CanonicalWords(bytes.data(), n);   // our vtables and the game's alike
     std::string s = what;
     s += ' ';
     char h[4];
     for (size_t i = 0; i < n; i++) {
-        snprintf(h, sizeof(h), "%02x", static_cast<const uint8_t *>(p)[i]);
+        snprintf(h, sizeof(h), "%02x", bytes[i]);
         s += h;
     }
     Logf("%s", s.c_str());
@@ -117,7 +120,7 @@ struct Rng {
 
 // ---- what the tests read of the game
 
-#define ShadowActorDatabase (*(ActActorDatabase **)0x001dd9a0)
+#define ShadowActorDatabase (*(ActActorDatabase **)OwnedGlobals_Ours(0x001dd9a0))
 // The originals' copies of the port's CullRestart and CullCursor: each pass's culling walk uses its own
 #define OrigCullRestart (*(bool *)0x001dd9a4)
 #define OrigCullCursor (*(PointerListNode **)0x001dd9bc)

@@ -119,12 +119,13 @@ using SND::Voice;
 // The low-pass coefficients: uint16 [256], indexed by cutoff >> 5 (a negative cutoff reads before it, as the
 // original's does)
 #define LowpassTable ((const uint16_t *)0x001a7350)
+
+}  // namespace
+
 // The DSP effects image, handed over by address
 // XBE_GLOBAL(0x001a3e80, 0x3360) raw
 uint8_t EffectsImage[0x3360];
 XBE_INITIAL(EffectsImage);
-
-}  // namespace
 
 // The I3DL2 listener presets, in DirectSound's order (I3dl2Preset below)
 // XBE_GLOBAL(0x001d98d8, 0x450)

@@ -3,6 +3,7 @@
 #endif
 
 #include "ColQueryShadow.h"
+#include "OwnedGlobals.h"
 
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
@@ -237,8 +238,8 @@ __declspec(naked) void CallTriangleNormal(const StripVertex *triangle, float *no
 #define WCollisionMgr_GetObjectLists ((void (__fastcall *)(WCollisionMgr *, int, ObjectList *, ObjectList *, const float *, float))0x000c37c0)
 #define WCollisionMgr_GetBarrierList ((void (__fastcall *)(WCollisionMgr *, int, BarrierList *, const InstanceList *, const float *, float))0x000c3880)
 
-#define fgCollisionMgr (*(WCollisionMgr **)0x00239a70)
-#define fgGrid (*(GridView **)0x0023b3a0)
+#define fgCollisionMgr (*(WCollisionMgr **)OwnedGlobals_Ours(0x00239a70))
+#define fgGrid (*(GridView **)OwnedGlobals_Ours(0x0023b3a0))
 #define ScratchPad ((uint8_t *)0x00234f20)      // Simulation::GetScratchPadFreeZone's answer
 #define LargeStripScratch ((uint8_t *)0x00239a80)
 

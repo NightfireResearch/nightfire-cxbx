@@ -3,6 +3,7 @@
 #endif
 
 #include "GameEffectsShadowC.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -113,7 +114,7 @@ constexpr uint32_t kOrigRingUVs = 0x001ff850;
 constexpr uint32_t kOrigRegionLo = 0x001ff840;       // REmp's statics through the debug variables in .bss
 constexpr uint32_t kOrigRegionHi = 0x00200f18;
 #define OrigRingColours ((uint32_t *)0x00200d80)
-#define ShadowSeed U32_AT(0x001c45c4)
+#define ShadowSeed U32_AT(OwnedGlobals_Ours(0x001c45c4))
 
 // The debug variables: ours and the original's address
 struct Tunable {

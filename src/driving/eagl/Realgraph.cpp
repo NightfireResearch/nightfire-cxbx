@@ -3,6 +3,7 @@
 #include "EaglGlobals.h"
 #include "../engine/CoreFoundation.h"
 #include "../platform/FileSys.h"
+#include "../platform/RealMemory.h"
 #include "../platform/RealPrint.h"
 #include "../platform/X87.h"
 #include "../platform/CRuntime.h"
@@ -513,8 +514,6 @@ enum ShapeType : uint8_t {
 
 }  // namespace
 
-#define ShapeAlloc (*(void *(**)(const char *, int, int, int, int))0x001d1874)   // MEM_allocalign
-#define ShapeFree (*(void (**)(void *))0x001d1878)                               // MEM_free
 
 static inline const ShapeFile *AsShapes(const uint8_t *shapes) {
     return reinterpret_cast<const ShapeFile *>(shapes);
@@ -766,7 +765,8 @@ uint8_t* SHAPE_create(int width, int height, int format, int clutFormat, int mip
         return NULL;
     char label[16];
     snprintf(label, sizeof(label), "SHP%dx%dx%d", width, height, format);
-    uint8_t *shape = (uint8_t *)ShapeAlloc(label, size, 0, 0x10, allocFlags);
+    // MEM_allocalign through the pointer to it at 0x001d1874 in the original
+    uint8_t *shape = (uint8_t *)MEM_allocalign(label, size, 0, 0x10, allocFlags);
     if (shape != NULL)
         SHAPE_createat(shape, width, height, format, clutFormat, mipLevels, nameBytes, infoBytes);
     return shape;
@@ -807,7 +807,7 @@ static uint8_t *LoadShapes(const char *name, int flags) {
     if (data == NULL)
         return NULL;
     if (memcmp(data, "SHPX", 4) != 0) {
-        ShapeFree(data);
+        MEM_free(data);   // through the pointer to it at 0x001d1878 in the original
         return NULL;
     }
     return data;

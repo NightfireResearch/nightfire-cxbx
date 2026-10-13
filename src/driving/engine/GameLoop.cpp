@@ -37,6 +37,7 @@
 #include "../data/RCARPFile.h"
 #include "../data/StdStreams.h"
 #include "../data/Tuning.h"
+#include "../eagl/EaglFont.h"             // EaglFontDriver
 #include "../eagl/Realgraph.h"
 #include "../eagl/RenderContext.h"
 #include "../eagl/View.h"
@@ -178,7 +179,6 @@ static const DiscErrorText DiscErrorMessages[7] = {   // English, French, German
     {"Spelskivan du anv\xe4nder", "har ett fel. Den kan vara", "smutsig eller skadad."},
     {"Er is een probleem met de cd", "die je gebruikt. De cd is", "mogelijk vuil of beschadigd."},
 };
-#define EAGLdriver ((void *)0x001cd114)
 #define DebugFontData ((const uint8_t *)0x001b7480)
 
 
@@ -1026,7 +1026,7 @@ void DiscError_Init() {
         return;
     DiscErrorMade = OperatorNew(1);
     FILEDEV_setreaderror(DiscError_Handler);
-    FONT_installdriver(EAGLdriver);
+    FONT_installdriver(&EaglFontDriver);
     FONT_init();
     DiscErrorFont = FONT_create(DebugFontData);
 }

@@ -41,6 +41,7 @@ gc.use_engine("driving")
 SRC = os.path.join(ROOT, "src", "driving")
 OUT = os.path.join(SRC, "devtools", "OwnedGlobals.inc")
 DATA = 0x001b3da0   # .data starts here; below it is .rdata, which holds nothing mutable
+DATA_START = 0x00189be0   # .rdata, the first section after the code
 
 # Owned globals never lent, by name: why.
 SKIP = {
@@ -66,6 +67,33 @@ SHARED = {
     "FactoryBlock": "shared: EAGLAnim's factory block",
     "ScratchBuffers": "shared: EAGLAnim's scratch buffers",
 }
+# The globals the standalone prep owned (13 October 2026; docs/driving/standalone.md). Every shadow test was written
+# while the game's copy was the only one - the port and the originals working on it alike, the shadows reading and
+# writing it by address - so they are shared too: the originals work on ours, and the shadows name ours. (The
+# constant ones and the code tables, kept apart above, are not: an original reading a table of the port's functions
+# would call them. Nor is ClassMemory: the originals index it by class number up to 63, past its 16 entries, which in
+# ours would run into our own variables.)
+SINGLE_COPY = set("""
+    AIZoneData ASoundManager_fgIsPaused ASoundManager_fgMissionOver ActiveViews ActorDatabase AudioClock
+    BondFirePressed BondPostGlare BondSelectPressed CollisionTicks Colorize CullDistance CurrentActor
+    Debris DecalState DefaultSystem EaglFree EaglMalloc EmpParentMethod Fog FontState ForceNearRespawn FrameRegion
+    FramesSinceAudioUpdate GainParentMethod GameTick GlareMaterial GlobalPool GridMovers HandsStatics
+    InvalidatedPed LimitedSoundCount MatDebugMethod MatVolatileTextureMethod MaxTraffic MissileCam Mixes ModelMatrix
+    ModelViewMatrix ModelViewProjectionMatrix ParticleTypeRDDF ParticleTypeRDDR ParticleTypeRDGR ParticleTypeSMRT
+    ParticleTypeSNOW ParticleTypeSPKB ParticleTypeSPRK ParticleTypeSPRL ParticleTypeWATR Pass0Draws Pedestrians
+    ProjectionMatrix RandomMultiplier RandomSeed RcmpAllocFlags RcmpAllocate RealClock_Div2Ticks RigidPlayerGravity
+    ShadowMaterial ShadowMaterialMade SimStep SimpleMaterial SimpleRequestIndex SimpleRequests
+    SimpleTexturedMaterial SniperZoom SpawnNav SpriteMaterial StreakMaterial StreamHold TargetPicker
+    TextureDofMethod TexturedParentMethod TexturedRequestIndex TexturedRequests TheConstructorPool TheDecalManager
+    TheGlareManager TheGrid TheLightning ThePostProcessing TheReflection TheRenderSingletonManager
+    TheRuntimeAllocPool TheShadowMap TheStateManager TheTextureContextManager TrafficSpawnCount TuningDBMgr
+    VehicleBuffers VideoModeRate ViewMatrix ViewMatrixPointer ViewProjectionMatrix VoiceInfoMap
+    VolatileRequestIndex VolatileRequests WeaponDefinitions WeaponManager WorldViewMade fgAIElementController
+    fgActiveViews fgCameraModeIndices fgCameraTables fgCarNameCount fgCollisionMgr fgDamageLevels fgFailedStreams
+    fgLightManager fgParticleSystems fgRenderHigh fgRenderer fgRoadNetworkData fgScheduler fgSoundList
+    fgTriggerManager fgWorld fgWorldCulling gFeedbackAllowed gLimitHenchSpawns gPlayMovies gPlayerCanNeverLose
+    gSoundOption gStreams gSubtitles gSuperEasy glbMissionManager
+""".split())
 
 
 def strip_code(text):
@@ -259,20 +287,65 @@ def touchers(entries):
     return sorted(pairs)
 
 
+def shared(g, keep):
+    return g["name"] in SHARED or (g["name"] in SINGLE_COPY and keep is not None and keep.startswith("shared"))
+
+
 def redirects(entries):
-    """(instruction, table index) for each original instruction that names an address inside a SHARED global."""
+    """(instruction, table index, kind) for each original instruction - or word of the game's data (kind 1) - that
+    names an address inside a shared global, and (kind 2) each instruction naming an address in the 64 bytes past
+    one, which OwnedGlobals.cpp points past ours if it is a loop's compare."""
     out = set()
     ranges = sorted((g["address"], g["address"] + g["size"], i) for i, (g, _, _, keep) in enumerate(entries)
-                    if g["name"] in SHARED)
+                    if shared(g, keep))
     starts = [r[0] for r in ranges]
-    for to, frm, fn, kind in json.load(open(gc.XREFS)):
-        if not fn or kind == "C":
-            continue
-        to = int(to, 16)
+    ends = sorted((r[1], r[2]) for r in ranges)
+    end_at = [e[0] for e in ends]
+
+    def add(frm, to, data):
         at = bisect.bisect_right(starts, to) - 1
         if at >= 0 and to < ranges[at][1]:
-            out.add((int(frm, 16), ranges[at][2]))
+            out.add((frm, ranges[at][2], 1 if data else 0))
+        past = bisect.bisect_right(end_at, to) - 1   # a loop's end: the global's end, a pointer's offset after it
+        if past >= 0 and to - ends[past][0] < 64 and not data:
+            out.add((frm, ends[past][1], 2))
+
+    instructions = code_references()
+    for to, frm, fn, kind in json.load(open(gc.XREFS)):
+        data = not fn and int(frm, 16) >= DATA_START   # else an instruction, in a function Ghidra made or not
+        if kind == "C":
+            continue
+        add(int(frm, 16), int(to, 16), data)
+    for frm, to in instructions or ():
+        add(frm, to, False)
     return sorted(out)
+
+
+def code_references():
+    """(instruction, address) for each address an original instruction names (an immediate or a displacement),
+    over every instruction byte the code map knows (tools/code_ranges_driving.txt) - functions Ghidra never made
+    among them. None without capstone (the redirects then come from Ghidra's references alone)."""
+    try:
+        import capstone
+    except ImportError:
+        sys.stderr.write("owned_globals: no capstone for %s - the redirects come from Ghidra's references alone, "
+                         "and miss the functions Ghidra never made (pip install capstone)\n" % sys.executable)
+        return None
+    md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
+    md.detail = True
+    _, read, _ = gc.read_xbe()
+    out = []
+    for line in open(os.path.join(HERE, "code_ranges_driving.txt")):
+        if line.startswith("#") or not line.strip():
+            continue
+        lo, hi = (int(x, 16) for x in line.split()[:2])
+        for ins in md.disasm(read(lo, hi - lo), lo):
+            for op in ins.operands:
+                if op.type == capstone.x86.X86_OP_IMM:
+                    out.append((ins.address, op.imm & 0xffffffff))
+                elif op.type == capstone.x86.X86_OP_MEM:
+                    out.append((ins.address, op.mem.disp & 0xffffffff))
+    return out
 
 
 def main():
@@ -304,6 +377,8 @@ def main():
         scope = scopes.get(g["line"], [])
         # Kept for translating addresses between the copies, but never lent or snapshotted
         keep = SKIP.get(g["name"]) or SHARED.get(g["name"]) or ("in .rdata" if g["address"] < DATA else None) or ("const" if const else None)
+        if keep is None and g["name"] in SINGLE_COPY:
+            keep = "shared: owned in the standalone prep, the shadows written for one copy"
         if any(s[0] in ("function", "other", "init") for s in scope):
             left_out.append((g, where, "a static inside a function"))
             continue
@@ -334,6 +409,15 @@ def main():
             continue
         entries.append((g, qualified, header, keep))
 
+    # Our copies of the game's vtables and code tables (tools/extract_driving_data.py), for translation only: an
+    # original stores the game's vtable where the port stores ours
+    vtables = os.path.join(SRC, "autogenerated_vtables.h")
+    if os.path.exists(vtables):
+        for m in re.finditer(r"^extern void \*(\w+)\[(\d+)\];\s*// (0x[0-9a-fA-F]+)", open(vtables).read(), re.M):
+            g = {"name": m.group(1), "address": int(m.group(3), 16), "size": 4 * int(m.group(2)),
+                 "file": "src/driving/autogenerated_vtables.h"}
+            entries.append((g, m.group(1), vtables, "a generated vtable or code table"))
+
     includes = sorted({os.path.relpath(h, os.path.dirname(OUT)).replace("\\", "/") for _, _, h, _ in entries})
     out = ["// This file is autogenerated by tools/owned_globals.py. Do not modify.",
            "// The driving engine's owned globals: the game's copy (address, size) and ours. Included by",
@@ -346,12 +430,12 @@ def main():
     out += ["#elif defined(OWNED_GLOBALS_TOUCHERS)"]
     out += ["    { 0x%08x, %d }," % pair for pair in touchers(entries)]
     out += ["#elif defined(OWNED_GLOBALS_REDIRECTS)"]
-    out += ["    { 0x%08x, %d }," % pair for pair in redirects(entries)]
+    out += ["    { 0x%08x, %d, %d }," % row for row in redirects(entries)]
     out += ["#else"]
     for g, qualified, header, keep in entries:
-        out.append("    { 0x%08x, 0x%x, %s, (void *)&%s },   // %s%s" % (
-            g["address"], g["size"], "false" if keep else "true", qualified, g["file"][len("src/driving/"):],
-            ", not lent: " + keep if keep else ""))
+        out.append("    { 0x%08x, 0x%x, %s, (void *)&%s, %s },   // %s%s" % (
+            g["address"], g["size"], "false" if keep else "true", qualified, "true" if shared(g, keep) else "false",
+            g["file"][len("src/driving/"):], ", not lent: " + keep if keep else ""))
     out += ["#endif", ""]
     text = "\n".join(out)
 

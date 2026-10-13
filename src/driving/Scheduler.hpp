@@ -69,3 +69,6 @@ public:
 void RealClock_InterruptHandler();   // 0x0005b9f0, run by the timer
 void RealClock_Init();               // 0x0005ba10
 void RealClock_CleanUp();            // 0x0005ba30
+
+extern uint32_t RealClock_Div2Ticks;   // every second tick
+extern Scheduler *fgScheduler;

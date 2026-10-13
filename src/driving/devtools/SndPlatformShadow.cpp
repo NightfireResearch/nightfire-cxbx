@@ -190,8 +190,10 @@ void Log(uint32_t id, int count, ...) {
     g_log[g_side][n++] = (uint32_t)count;
     va_list args;
     va_start(args, count);
-    for (int i = 0; i < count; i++)
-        g_log[g_side][n++] = va_arg(args, uint32_t);
+    for (int i = 0; i < count; i++) {
+        // a callback the port passes is ours, where the original passes its entry
+        g_log[g_side][n++] = OwnedGlobals_Canonical(va_arg(args, uint32_t));
+    }
     va_end(args);
 }
 void LogWords(uint32_t id, const uint32_t *words, int count) {
@@ -1248,6 +1250,9 @@ void RunCase(Kind &kind, int index, int kindIndex) {
     uint8_t r1[kRegion1Size], r2[kRegion2Size];
     static uint8_t gt[kGainTableSize];
     SaveRegions(r1, r2, gt);
+    // the hooks the original sets are its entries, where the port sets ours
+    OwnedGlobals_MatchWords(g_r1Original, r1, kRegion1Size);
+    OwnedGlobals_MatchWords(g_r2Original, r2, kRegion2Size);
     g_checks += 3;
     first = FirstDiff(g_r1Original, r1, kRegion1Size, &count);
     if (first >= 0) {

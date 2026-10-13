@@ -216,6 +216,7 @@ struct RParticleCreatorVtable {
     RParticleSystem *(__fastcall *create)(RParticleSystem::RParticleCreator *creator, int, float unknown34,
                                           RParticleEmitter *emitter);
 };
+extern const RParticleCreatorVtable ParticleCreatorVtable;
 
 // The class whose vtable RParticleSystem's constructor installs (0x00192da8: the destructor, then Update).
 class RMovableParticleSystem : public RParticleSystem {
@@ -256,5 +257,6 @@ static_assert(sizeof(RParticleSystemManager) == 0x10030, "RParticleSystemManager
 static_assert(offsetof(RParticleSystemManager, cache) == 0x10, "RParticleSystemManager layout");
 
 extern RParticleSystemManager *fgParticleSystems;
+extern RParticleSystemData DefaultSystem;   // Reload's 'dflt'
 
 #endif // DRIVING_RENDER_PARTICLES_H_

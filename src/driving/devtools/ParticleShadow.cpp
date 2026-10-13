@@ -97,8 +97,8 @@ typedef RParticleLibrary::RPartLibraryData RLibData;
 #define Orig_ParticulateUpdate ((void (__fastcall *)(RParticulate *, int))0x000a3fd0)
 #define Orig_ParticulateDraw ((void (__fastcall *)(RParticulate *, int))0x000a3e60)
 
-#define RandomSeed U32_AT(0x001c45c4)
-#define Materials ((uint8_t *)0x00230540)           // the sprite and streak materials
+#define RandomSeed U32_AT(OwnedGlobals_Ours(0x001c45c4))
+#define Materials ((uint8_t *)OwnedGlobals_Ours(0x00230540))           // the sprite and streak materials
 const size_t kMaterialBytes = 0xc0;
 const unsigned kVolatileDraw = 0x0011c290;
 const unsigned kSimpleDraw = 0x0011bbf0;
@@ -116,12 +116,10 @@ void Differ(const char *what, int index, const char *detail) {
 
 void CheckBytes(const char *what, int index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[96];
     snprintf(detail, sizeof(detail), "byte %u of %u: original %02x, port %02x", unsigned(at), unsigned(bytes), x[at],
              y[at]);
@@ -762,7 +760,7 @@ void TestCache(bool canDraw, bool haveCamera) {
         g_cache.count = op == kOpSpawn ? int32_t(Next() % (kParticleBufferSize + 1)) : int32_t(Next() % 1100) % 1025;
         g_cache.spawned = int32_t(Next() % (kParticleBufferSize - g_cache.count + 1));
         g_cache.block = -1;
-        g_cache.lastTick = U32_AT(0x001f2a4c) - Next() % 6;
+        g_cache.lastTick = U32_AT(OwnedGlobals_Ours(0x001f2a4c)) - Next() % 6;
         for (int b = 0; b < 2; b++)
             for (int k = 0; k < kParticleBufferSize; k++)
                 g_cache.particles[b][k] = RandomParticle(bodySlot);

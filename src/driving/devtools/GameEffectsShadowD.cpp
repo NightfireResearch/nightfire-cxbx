@@ -3,6 +3,7 @@
 #endif
 
 #include "GameEffectsShadowD.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -128,11 +129,11 @@ const uint32_t kDbEnd = 0x00037ad0;
 
 // ---- the game's state
 
-#define ShadowRandomSeed U32_AT(0x001c45c4)
-#define ShadowRandomMultiplier U32_AT(0x001c45c8)
+#define ShadowRandomSeed U32_AT(OwnedGlobals_Ours(0x001c45c4))
+#define ShadowRandomMultiplier U32_AT(OwnedGlobals_Ours(0x001c45c8))
 #define ShadowSimState I32_AT(0x00234e24)
 #define ShadowSimStepCount I32_AT(0x00234e34)
-#define ShadowVehicleParticleTexture3 U32_AT(0x001c525c)
+#define ShadowVehicleParticleTexture3 U32_AT(OwnedGlobals_Ours(0x001c525c))
 
 // ---- results
 
@@ -149,12 +150,10 @@ void Report(const char *what, long index, const char *detail) {
 
 void CompareBytes(const char *what, long index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[112];
     snprintf(detail, sizeof(detail), "byte 0x%x of 0x%x: original %02x, port %02x", unsigned(at), unsigned(bytes),
              x[at], y[at]);
@@ -351,6 +350,8 @@ void LogString(const char *text) {
 
 void CompareLogs(const char *what, long index) {
     g_checks++;
+    for (std::vector<uint32_t> &log : g_logs)   // vtables and callbacks alike on either side
+        OwnedGlobals_CanonicalWords(log.data(), log.size() * 4);
     const std::vector<uint32_t> &a = g_logs[0], &b = g_logs[1];
     if (a == b)
         return;
@@ -1189,8 +1190,8 @@ void TestSniperZoom(const Snapshot &before) {
 
 void TestParticleRect(const Snapshot &before) {
     const uint32_t named[] = {
-        U32_AT(0x001c50fc), U32_AT(0x001c51ac), ShadowVehicleParticleTexture3, U32_AT(0x001c53bc),
-        U32_AT(0x001c546c), U32_AT(0x001c530c),
+        U32_AT(OwnedGlobals_Ours(0x001c50fc)), U32_AT(OwnedGlobals_Ours(0x001c51ac)), ShadowVehicleParticleTexture3, U32_AT(OwnedGlobals_Ours(0x001c53bc)),
+        U32_AT(OwnedGlobals_Ours(0x001c546c)), U32_AT(OwnedGlobals_Ours(0x001c530c)),
     };
     for (long i = 0; i < 60; i++) {
         g_in.texture = i < 6 ? named[i] : Chance(30) ? named[Range(0, 5)] : Next() ^ Next() << 8;
@@ -1244,11 +1245,11 @@ void BuildRegions() {
     AddOwned(&MissileCamState, 0x00200f60, 0x4c, "MissileCamState");
     // Both sides at the game's addresses
     AddShared(0x001f2e20, 0xa8, "BulletStreakKinds");
-    AddShared(0x001c45c4, 8, "the random generator");
+    AddShared(OwnedGlobals_OursWord(0x001c45c4), 8, "the random generator");
     AddShared(0x00234e24, 4, "SimState", false);
     AddShared(0x00234e34, 4, "SimStepCount", false);
-    AddShared(0x00200f54, 4, "MissileCam", false);
-    AddShared(0x00201818, 4, "SniperZoom", false);
+    AddShared(OwnedGlobals_OursWord(0x00200f54), 4, "MissileCam", false);
+    AddShared(OwnedGlobals_OursWord(0x00201818), 4, "SniperZoom", false);
     AddShared(uint32_t(uintptr_t(g_streakBlock)), sizeof(g_streakBlock), "the streak");
     AddShared(uint32_t(uintptr_t(g_camBlock)), sizeof(g_camBlock), "the missile camera");
     AddShared(uint32_t(uintptr_t(g_zoomBlock)), sizeof(g_zoomBlock), "the sniper zoom");

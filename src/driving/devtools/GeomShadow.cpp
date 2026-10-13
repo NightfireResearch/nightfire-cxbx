@@ -4,6 +4,7 @@
 #endif
 
 #include "GeomShadow.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include "../engine/OBB.h"
@@ -809,7 +810,7 @@ void Summary(const char *what) {
 // ---- the world: a WWorldPos run by both sides from the same state, with the collision manager's bytes put back
 
 const int kManagerBytes = 0x34;
-#define CollisionManagerObject (*(uint8_t **)0x00239a70)
+#define CollisionManagerObject (*(uint8_t **)OwnedGlobals_Ours(0x00239a70))
 #define WCollisionMgr_GetInstanceList ((void (__fastcall *)(void *, int, InstanceList *, const Coord3 *, int, int, int))0x000c4510)
 
 struct WorldSide {

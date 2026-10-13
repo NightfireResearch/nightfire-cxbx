@@ -3,6 +3,7 @@
 #endif
 
 #include "GameWeaponsShadowA.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -96,21 +97,21 @@ const unsigned kEntries[] = {
 
 // ---- the game's state
 
-#define ShadowWeaponManager (*(SWeaponManager **)0x0023923c)
-#define ShadowMission (*(uint8_t **)0x00239220)
+#define ShadowWeaponManager (*(SWeaponManager **)OwnedGlobals_Ours(0x0023923c))
+#define ShadowMission (*(uint8_t **)OwnedGlobals_Ours(0x00239220))
 #define ShadowSimState I32_AT(0x00234e24)
 #define ShadowStepsPerSecond I32_AT(0x00234e2c)
 #define ShadowStepCount I32_AT(0x00234e34)
 #define ShadowPlayer (*(PVehicle ***)0x00234e40)
-#define ShadowCanNeverLose U8_AT(0x00239218)
-#define ShadowColorize (*(uint8_t **)0x001f6898)
-#define ShadowHands (*(void **)0x001dda90)
-#define ShadowAIElement (*(void **)0x001ddee4)
+#define ShadowCanNeverLose U8_AT(OwnedGlobals_Ours(0x00239218))
+#define ShadowColorize (*(uint8_t **)OwnedGlobals_Ours(0x001f6898))
+#define ShadowHands (*(void **)OwnedGlobals_Ours(0x001dda90))
+#define ShadowAIElement (*(void **)OwnedGlobals_Ours(0x001ddee4))
 const uint32_t kLaunchFlags = 0x00244530;
 const uint32_t kLaunchCheats = 0x00244534;
 const uint32_t kLaunchAutoSwitch = 0x002445d8;
-const uint32_t kBondPressed = 0x001dda2c;
-const uint32_t kWeaponTable = 0x001c94d8;
+const uint32_t kBondPressed = OwnedGlobals_OursWord(0x001dda2c);
+const uint32_t kWeaponTable = OwnedGlobals_OursWord(0x001c94d8);
 
 // The mission manager's words the manager reads (offsets)
 enum {
@@ -136,12 +137,10 @@ void Report(const char *what, long index, const char *detail) {
 
 void CompareBytes(const char *what, long index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[112];
     snprintf(detail, sizeof(detail), "byte 0x%x of 0x%x: original %02x, port %02x", unsigned(at), unsigned(bytes),
              x[at], y[at]);
@@ -277,6 +276,8 @@ uint32_t TextHash(const char *text) {
 
 void CompareLogs(const char *what, long index) {
     g_checks++;
+    for (std::vector<uint32_t> &log : g_logs)   // vtables and callbacks alike on either side
+        OwnedGlobals_CanonicalWords(log.data(), log.size() * 4);
     const std::vector<uint32_t> &a = g_logs[0], &b = g_logs[1];
     if (a == b)
         return;
@@ -728,7 +729,10 @@ void HookOne(uint32_t at, const void *to) {
         return;
     }
     const uint8_t *code = reinterpret_cast<const uint8_t *>(uintptr_t(at));
-    if (code[0] != 0xe9) {
+    // a first instruction of five bytes (a tail jump, a load of an address: its operand may hold any byte) is room
+    bool five = code[0] == 0xe9 || code[0] == 0xe8 || code[0] == 0xa1 || code[0] == 0xa3 || code[0] == 0x68 ||
+                (code[0] >= 0xb8 && code[0] <= 0xbf);
+    if (!five) {
         for (int i = 0; i < 5; i++) {
             if (code[i] == 0xc3 || code[i] == 0xc2 || code[i] == 0xcc) {    // too short to take a jump
                 printf("[gameweaponsshadowa]   no hook at 0x%08x\n", at);
@@ -771,7 +775,10 @@ void HookInstall(uint32_t at, const void *to) {
     // unhooked too, so the original's calls and our ports' direct calls both run the real one
     if (port != 0 && port != uint32_t(uintptr_t(to))) {
         const uint8_t *code = reinterpret_cast<const uint8_t *>(uintptr_t(port));
-        for (int i = 0; i < 5 && code[0] != 0xe9; i++) {
+        // a first instruction of five bytes (a tail jump, a load of an address: its operand may hold any byte)
+        bool five = code[0] == 0xe9 || code[0] == 0xe8 || code[0] == 0xa1 || code[0] == 0xa3 || code[0] == 0x68 ||
+                    (code[0] >= 0xb8 && code[0] <= 0xbf);
+        for (int i = 0; i < 5 && !five; i++) {
             if (code[i] == 0xc3 || code[i] == 0xc2 || code[i] == 0xcc) {
                 printf("[gameweaponsshadowa]   no hook at 0x%08x (its port is too short)\n", at);
                 g_hookFailures++;
@@ -1026,11 +1033,11 @@ void Prepare(uint32_t seed) {
 
     // The mission manager, the launch page, the hands, the HUD, the target, the helicopters
     uint8_t *mission = ShadowMission;
-    I32_AT(mission + kMissionState) = Chance(80) ? 0 : Range(1, 5);
-    U8_AT(mission + kMissionAutoDrive) = Chance(40);
-    PTR_AT(mission + kMissionDriveMissile) = Chance(20) ? g_missileBlock : NULL;
-    I32_AT(mission + kMissionCinematic) = Chance(10);
-    U8_AT(mission + kMission710) = Chance(30);
+    I32_AT((mission + kMissionState)) = Chance(80) ? 0 : Range(1, 5);
+    U8_AT((mission + kMissionAutoDrive)) = Chance(40);
+    PTR_AT((mission + kMissionDriveMissile)) = Chance(20) ? g_missileBlock : NULL;
+    I32_AT((mission + kMissionCinematic)) = Chance(10);
+    U8_AT((mission + kMission710)) = Chance(30);
     ShadowCanNeverLose = Chance(20);
     U32_AT(kLaunchFlags) = (U32_AT(kLaunchFlags) & ~0xau) | (Chance(20) ? 2 : 0) | (Chance(30) ? 8 : 0);
     U32_AT(kLaunchCheats) = (U32_AT(kLaunchCheats) & ~2u) | (Chance(20) ? 2 : 0);
@@ -1045,11 +1052,12 @@ void Prepare(uint32_t seed) {
                            player->z + Uniform(-80.0f, 80.0f) };
     g_target->ownerType = Range(0, 3);
     g_target->physics = Chance(80) ? reinterpret_cast<PhysicsObject *>(g_targetPhysics) : NULL;
-    I32_AT(g_aiElementBlock + 8) = Range(0, kHelicopters);
+    I32_AT((g_aiElementBlock + 8)) = Range(0, kHelicopters);
     ShadowAIElement = g_aiElementBlock;
     for (FakeHelicopter &h : g_helicopters) {
         h.ai[0x68] = Chance(70);
         h.physics[0x139] = Chance(60);
+        PTR_AT((h.ai + 0x14)) = h.physics;   // AIVehicle::physicsObject: GetPhysicsObject is too short to hook
         h.position = { player->x + Uniform(-150.0f, 150.0f), player->y + Uniform(0.0f, 40.0f),
                        player->z + Uniform(-150.0f, 150.0f) };
     }
@@ -1317,15 +1325,15 @@ void BuildRegions() {
     Add(g_newManagerBlock, sizeof(g_newManagerBlock), "the new manager");
     Add(g_newWeaponsBlock, sizeof(g_newWeaponsBlock), "the new weapons");
     Add(g_newQueueBlock, sizeof(g_newQueueBlock), "the new action queue");
-    AddGame(0x0023923c, 4, "WeaponManager");
+    AddGame(OwnedGlobals_OursWord(0x0023923c), 4, "WeaponManager");
     AddGame(0x00234e24, 4, "the simulation's state");
     AddGame(0x00234e2c, 4, "the steps a second");
     AddGame(0x00234e34, 4, "the simulation's step");
-    AddGame(0x00239218, 1, "gPlayerCanNeverLose");
+    AddGame(OwnedGlobals_OursWord(0x00239218), 1, "gPlayerCanNeverLose");
     AddGame(kLaunchFlags, 8, "the launch flags");
     AddGame(kLaunchAutoSwitch, 4, "the auto-switch option");
-    AddGame(0x001dda90, 4, "the hands");
-    AddGame(0x001ddee4, 4, "the AI element controller pointer");
+    AddGame(OwnedGlobals_OursWord(0x001dda90), 4, "the hands");
+    AddGame(OwnedGlobals_OursWord(0x001ddee4), 4, "the AI element controller pointer");
     AddGame(kBondPressed, 2, "the fire and select bytes");
     AddGame(kWeaponTable, sizeof(WeaponRecord) * kWeaponCount, "the weapon table");
     Add(ShadowMission + kMissionState, kMission710 + 4 - kMissionState, "the mission manager");

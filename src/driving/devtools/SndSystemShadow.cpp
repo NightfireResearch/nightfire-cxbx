@@ -3,6 +3,7 @@
 #endif
 
 #include "SndSystemShadow.h"
+#include "OwnedGlobals.h"
 #include "SndOwned.h"
 
 #include "../sound/snd/Platform.h"
@@ -109,11 +110,9 @@ bool Check(bool same, const char *format, ...) {
 // base: the game address of the first byte, for globals (0: a workspace, reported by offset)
 bool CheckBytes(const void *a, const void *b, size_t n, const char *what, int at, uint32_t base = 0) {
     g_checks++;
-    if (memcmp(a, b, n) == 0)
+    size_t i = OwnedGlobals_FirstDifference(a, b, n);   // a callback or vtable: ours, or the game's
+    if (i == n)
         return true;
-    size_t i = 0;
-    while (((const uint8_t *)a)[i] == ((const uint8_t *)b)[i])
-        i++;
     g_differ++;
     if (base != 0)
         Detail("%s, case %d: the byte at 0x%08x differs (original %02x, port %02x)", what, at, base + (unsigned)i,
@@ -215,9 +214,11 @@ void LogReset() {
     memset(&g_log[1], 0, sizeof(CallLog));
 }
 
-// The original names the game's copy of the critical section, the port ours: logged as ours on both sides
+// The original names the game's copy of the critical section, the port ours: logged as ours on both sides. A
+// callback the port passes is ours, where the original passes its entry: logged as ours too
 uint32_t AsPortWord(uint32_t word) {
-    return g_side == 0 && word == 0x00244fc0u ? uint32_t(uintptr_t(SoundMutex)) : word;
+    word = g_side == 0 && word == 0x00244fc0u ? uint32_t(uintptr_t(SoundMutex)) : word;
+    return OwnedGlobals_Canonical(word);
 }
 
 void Log(uint32_t a, uint32_t b = 0, uint32_t c = 0, uint32_t d = 0) {

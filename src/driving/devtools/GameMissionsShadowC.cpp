@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include "GameMissionsShadowC.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -64,7 +65,7 @@ void OriginalWindow(bool original) {
 
 #define ShSimStepCount I32_AT(0x00234e34)
 #define ShCinematic I32_AT(0x00243a64)       // the game's copy of MissionCinematicMode
-#define ShScheduler (*(uint8_t **)0x001e520c)
+#define ShScheduler (*(uint8_t **)OwnedGlobals_Ours(0x001e520c))
 #define ShPlayerSlot (*(PVehicle ***)0x00234e40)
 #define ShOrigDefaultSet ((uint8_t *)0x00238f20)
 #define ShOrigCarFlags ((uint8_t *)0x0023921a)

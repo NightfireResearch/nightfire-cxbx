@@ -3,6 +3,7 @@
 #endif
 
 #include "TargetShadow.h"
+#include "OwnedGlobals.h"
 
 #include "../engine/UMemory.hpp"
 #include "../world/SoundGroup.h"
@@ -114,8 +115,8 @@ struct RendererScreen {
     int32_t height;             // +0x44
 };
 
-#define ShadowCameraViews (*(CameraViewEntry **)0x001ec488)
-#define ShadowRenderer (*(RendererScreen **)0x001ebff4)
+#define ShadowCameraViews (*(CameraViewEntry **)OwnedGlobals_Ours(0x001ec488))
+#define ShadowRenderer (*(RendererScreen **)OwnedGlobals_Ours(0x001ebff4))
 #define ShadowPlayerPhysics (*(PhysicsObject ***)0x00234e40)
 // The originals' copies of the port's TargetableCount and TargetableStagger: each pass's counters are its side's
 #define OrigTargetableCount (*(int32_t *)0x0023e174)
@@ -123,7 +124,7 @@ struct RendererScreen {
 bool g_originalPass;
 int32_t &PassTargetableCount() { return g_originalPass ? OrigTargetableCount : TargetableCount; }
 int32_t &PassTargetableStagger() { return g_originalPass ? OrigTargetableStagger : TargetableStagger; }
-#define ShadowPicker ((WTargetPicker *)0x0023e1b0)
+#define ShadowPicker ((WTargetPicker *)OwnedGlobals_Ours(0x0023e1b0))
 
 // ---- the functions, at their original addresses
 

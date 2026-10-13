@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include "ColGridShadow.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include "../engine/UMemory.hpp"
@@ -154,8 +155,8 @@ struct ShadowCollisionArrays {
     uint32_t instanceCount;
     WCollisionObject *objects;
 };
-#define CollisionManagerObject (*(uint8_t **)0x00239a70)
-#define CollisionArrays (*(ShadowCollisionArrays **)0x00239a70)
+#define CollisionManagerObject (*(uint8_t **)OwnedGlobals_Ours(0x00239a70))
+#define CollisionArrays (*(ShadowCollisionArrays **)OwnedGlobals_Ours(0x00239a70))
 const uint32_t kCollisionManagerBytes = 0x34;
 
 
@@ -173,12 +174,10 @@ void Differ(const char *what, int index, const char *detail) {
 
 void CheckBytes(const char *what, int index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[96];
     snprintf(detail, sizeof(detail), "byte %u of %u: original %02x, port %02x", unsigned(at), unsigned(bytes), x[at],
              y[at]);

@@ -91,6 +91,7 @@ extern SndFrameCallback volatile PostFrameCallback;      // SNDDRVPostFrameCb
 
 // The driver's own globals
 extern uint32_t NextDeadline;                            // the SND thread's next deadline (ms)
+extern uint8_t EffectsImage[0x3360];                     // the DSP effects image
 extern uint32_t SetFxFunc;                               // p_setfx_func, written, never read
 extern SND::BufferNode *BufferNodes;                     // SND_BUFFER_LIST: [180]
 extern int32_t PoolSizes[2];                             // [pool]: 152, 28

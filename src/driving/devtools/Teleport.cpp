@@ -1,4 +1,5 @@
 #include "Teleport.h"
+#include "OwnedGlobals.h"
 #include "../Scheduler.hpp"
 #include "../game/MissionManager.h"
 #include "../EventManager.hpp"
@@ -210,7 +211,7 @@ static void FormatPlace(const Place *p, char *out, size_t size) {
 // PCM16 when idle; FUN_0013d550 faults once both run out). Printed around each vehicle shadow and, while anything
 // changes, for the ticks after them. Events a vehicle shadow raised are test artefacts: they are dropped.
 
-#define SOUND_LIST              0x00243a58   // -> fgSoundList (MSVC std::list: allocator, head, size)
+#define SOUND_LIST              OwnedGlobals_Ours(0x00243a58)   // -> fgSoundList (MSVC std::list: allocator, head, size)
 
 struct QueueState {
     uint32_t events;        // bytes queued

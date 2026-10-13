@@ -3,6 +3,7 @@
 #endif
 
 #include "AudioMixShadow.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -204,7 +205,7 @@ std::vector<AMix *> LiveMixes() {
     MixRefCounter *map = MixRefCounter::Get();
     for (RefCounterNode *node = map->head->left; node != map->head; node = Next(node))
         add(static_cast<AMix *>(node->value.entry.object));
-    MixList &list = *(MixList *)0x00243954;
+    MixList &list = *(MixList *)OwnedGlobals_Ours(0x00243954);
     if (list.head != NULL)
         for (PointerListNode *node = list.head->next; node != list.head; node = node->next)
             add(static_cast<AMix *>(node->value));
@@ -613,7 +614,7 @@ void TestTrees() {
 #define OrigFxLevel FLOAT_AT(0x00243af0)
 #define OrigFxPaused BOOL8_AT(0x00243af4)
 #define OrigSystem (*(ASystem **)0x00243b34)    // ASystem_fgSystem's (SoundManager.h)
-#define ShadowFrames I32_AT(0x00243a68)
+#define ShadowFrames I32_AT(OwnedGlobals_Ours(0x00243a68))
 
 // ---- hooks over the sound library's entries (ours: the original's jump and the port it leads to)
 

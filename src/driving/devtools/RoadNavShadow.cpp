@@ -465,6 +465,14 @@ void TestLifecycle(Rng &rng) {
     Put(saved);
 }
 
+// The original InitAtPoint leaves roadT as the stack holds it when the point's cell has no segments, where the port
+// has 0.0f (original-quirks.md): the stack below the caller is cleared first, so that the original reads 0.0f too
+__declspec(noinline) void ClearStackBelow() {
+    volatile uint8_t below[4096];
+    for (size_t i = 0; i < sizeof(below); i++)
+        below[i] = 0;
+}
+
 void Place(Rng &rng, WRoadSegment *segment, int mode) {
     g_nav->mode = mode;
     g_nav->unknown04 = (mode == kNavRandom && rng.Below(4) != 0) ? segment->unknown5a : uint8_t(rng.Below(4));
@@ -477,7 +485,10 @@ void Place(Rng &rng, WRoadSegment *segment, int mode) {
     bool noLane = rng.Below(5) == 0;
     snprintf(g_inputs, sizeof(g_inputs), "point (%.6g %.6g %.6g) heading (%.6g %.6g %.6g) noLane %d near segment %d",
              point.x, point.y, point.z, heading.x, heading.y, heading.z, noLane, segment->index);
-    Check("InitAtPoint", [&](Outputs *) { InitAtPointAt(g_nav, 0, &point, &heading, noLane); });
+    Check("InitAtPoint", [&](Outputs *) {
+        ClearStackBelow();
+        InitAtPointAt(g_nav, 0, &point, &heading, noLane);
+    });
 }
 
 // One random operation on a placed navigator; false to stop driving it

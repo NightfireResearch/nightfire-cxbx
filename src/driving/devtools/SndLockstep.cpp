@@ -2,6 +2,7 @@
 #include "SndLockstep.h"
 
 #include "../sound/snd/Platform.h"
+#include "../sound/snd/Stream.h"
 #include "../sound/snd/Streams.h"
 #include "../sound/snd/System.h"
 #include "../platform/RealSystem.h"
@@ -38,7 +39,7 @@
 //    keeps the position and Play resumes from it, as the XAudio2 backend does. The device still plays what it is
 //    given; it just no longer decides anything the game sees.
 //  - SNDREAL_systemtask does nothing when SYNCTASK calls it; SndLockstep_Tick calls it once, after the steps,
-//    through the original's address (so NIGHTFIRE_SNDTRACE's wrapper sees it as it would).
+//    by a direct call, which NIGHTFIRE_SNDTRACE retargets to its wrapper as it does every call into a port.
 //  - A sound stream's FILESYS ops (the open, close and read whose callbacks are STREAM's) are waited for when
 //    FILESYS_callbackop is asked to call back, and the callback - and the chain of ops it starts, read after read
 //    until the ring is full - runs there on the caller's thread before the caller goes on, whatever the disc's
@@ -55,13 +56,13 @@
 
 namespace {
 
-// SNDREAL_systemtask by the original's address, as SYNCTASK holds it
-#define SystemTask ((int (*)(int, int))0x0013d3e0)
-
-// STREAM's FILESYS callbacks, as it hands them over (Stream.cpp)
-#define StreamOpenDone ((FsCallback)0x0014aee0)
-#define StreamCloseDone ((FsCallback)0x0014af10)
-#define StreamReadDone ((FsCallback)0x0014b660)
+// STREAM's FILESYS callbacks, as it hands them over (Stream.cpp), and as the original STREAM code does (a shadow)
+#define StreamOpenDone (reinterpret_cast<FsCallback>(FUN_0014aee0))
+#define StreamCloseDone (reinterpret_cast<FsCallback>(FUN_0014af10))
+#define StreamReadDone (reinterpret_cast<FsCallback>(FUN_0014b660))
+#define OriginalStreamOpenDone ((FsCallback)0x0014aee0)
+#define OriginalStreamCloseDone ((FsCallback)0x0014af10)
+#define OriginalStreamReadDone ((FsCallback)0x0014b660)
 
 constexpr int kStepMs = 10;
 constexpr uint32_t kStatusPlaying = 1;             // DSBSTATUS_PLAYING
@@ -251,7 +252,8 @@ void RunDriverStep() {
 }
 
 bool IsStreamCallback(FsCallback callback) {
-    return callback == StreamOpenDone || callback == StreamCloseDone || callback == StreamReadDone;
+    return callback == StreamOpenDone || callback == StreamCloseDone || callback == StreamReadDone ||
+           callback == OriginalStreamOpenDone || callback == OriginalStreamCloseDone || callback == OriginalStreamReadDone;
 }
 
 // A stream's chain of file ops, run on the thread that started it (SndLockstep_FileCallback)
@@ -343,7 +345,7 @@ void SndLockstep_Tick(void) {
 
     if (SysTaskAdded != 0) {
         g_ownService = true;
-        SystemTask(0, 0);
+        SNDREAL_systemtask(0, 0);
         g_ownService = false;
     }
 

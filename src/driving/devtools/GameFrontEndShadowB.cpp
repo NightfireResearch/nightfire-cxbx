@@ -3,6 +3,7 @@
 #endif
 
 #include "GameFrontEndShadowB.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -196,10 +197,10 @@ void HooksRemove(int mark) {
 #define GameAutoAimFrame I32_AT(0x0023f56c)
 #define ShLaunch (*(LaunchPage *)0x00243b90)
 #define ShLives I32_AT(0x002440cc)
-#define ShMission (*(SMissionManager **)0x00239220)
+#define ShMission (*(SMissionManager **)OwnedGlobals_Ours(0x00239220))
 #define ShMissionState I32_AT((uintptr_t(ShMission) + 0x474))
 #define ShMissionEndTime I32_AT((uintptr_t(ShMission) + 0x70c))
-#define ShPicker (*(WTargetPicker *)0x0023e1b0)
+#define ShPicker (*(WTargetPicker *)OwnedGlobals_Ours(0x0023e1b0))
 #define GameHudOn U8_AT(0x001b7055)           // the game's copies of gHudOn and gDAudio
 #define GameDAudio U8_AT(0x001e4761)
 #define ShSimState I32_AT(0x00234e24)

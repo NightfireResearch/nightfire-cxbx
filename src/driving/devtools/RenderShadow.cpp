@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include "RenderShadow.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include "../render/Reflection.h"         // ReflWorldRadius
@@ -84,11 +85,11 @@ typedef void (__fastcall *SetupFrustumFn)(void *, int, const Coord4 *position, c
 
 // ---- the game's state
 
-#define WorldCulling ((uint8_t *)0x001f2c80)
+#define WorldCulling ((uint8_t *)OwnedGlobals_Ours(0x001f2c80))
 const uint32_t kWorldCullingBytes = 0xa0;
-#define CullingFov FLOAT_AT(0x001f2ce4)
-#define CullingFar FLOAT_AT(0x001f2ce8)
-#define CullingEye (*(const Coord4 *)0x001f2cd0)
+#define CullingFov FLOAT_AT(OwnedGlobals_Ours(0x001f2ce4))
+#define CullingFar FLOAT_AT(OwnedGlobals_Ours(0x001f2ce8))
+#define CullingEye (*(const Coord4 *)OwnedGlobals_Ours(0x001f2cd0))
 
 // Render.cpp's statics as the game lays them out. The originals run from the game's copy (OrigStatics), set from
 // the port's variables before each original run; the port's are gathered in the same layout to compare. Both
@@ -182,12 +183,10 @@ void Differ(const char *what, int index, const char *detail) {
 
 void CheckBytes(const char *what, int index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[96];
     snprintf(detail, sizeof(detail), "byte %u of %u: original %02x, port %02x", unsigned(at), unsigned(bytes), x[at],
              y[at]);

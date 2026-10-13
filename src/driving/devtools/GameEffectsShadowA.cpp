@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include "GameEffectsShadowA.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include "../anim/AnimEngine.h"             // Handle
@@ -147,20 +148,20 @@ typedef void (__fastcall *DebrisAddFn)(RDebris *, int, int, const Coord4 *, cons
 
 // ---- the game's state
 
-#define GxRandomSeed U32_AT(0x001c45c4)
-#define GxRandomMultiplier U32_AT(0x001c45c8)
-#define GxGameTick U32_AT(0x001f2a4c)
-#define GxSimStep FLOAT_AT(0x001c465c)
+#define GxRandomSeed U32_AT(OwnedGlobals_Ours(0x001c45c4))
+#define GxRandomMultiplier U32_AT(OwnedGlobals_Ours(0x001c45c8))
+#define GxGameTick U32_AT(OwnedGlobals_Ours(0x001f2a4c))
+#define GxSimStep FLOAT_AT(OwnedGlobals_Ours(0x001c465c))
 #define GxSimStepCount U32_AT(0x00234e34)
 #define GxPlayerVehicles (*(PhysicsObject ***)0x00234e40)
-#define GxSharedBuffers ((uint8_t *)0x001f2a50)              // GAME::SwitchData, EAGL::DamageZones
+#define GxSharedBuffers ((uint8_t *)OwnedGlobals_Ours(0x001f2a50))              // GAME::SwitchData, EAGL::DamageZones
 const size_t kSharedBufferBytes = 0x200;
-#define GxDamageLevelEffects FLOAT_AT(0x001c3dd8)            // fgDamageLevels.effects
+#define GxDamageLevelEffects FLOAT_AT(OwnedGlobals_Ours(0x001c3dd8))            // fgDamageLevels.effects
 const size_t kDebrisColourBytes = 0x200;
 const size_t kTrackColourBytes = 0x800;
 const size_t kTrackMaterialBytes = 4 * 0x60;
-#define GxVolatileRequestIndex U32_AT(0x00243830)
-#define GxVolatileRequests ((TexturedGeoPrim **)0x00243878)
+#define GxVolatileRequestIndex U32_AT(OwnedGlobals_Ours(0x00243830))
+#define GxVolatileRequests ((TexturedGeoPrim **)OwnedGlobals_Ours(0x00243878))
 // The game's copies of the globals the port owns
 #define OrigDebrisColours ((uint8_t *)0x00202a90)
 #define OrigTrackColours ((uint8_t *)0x00233620)
@@ -170,7 +171,7 @@ const size_t kTrackMaterialBytes = 4 * 0x60;
 #define OrigTrackVertices ((uint8_t *)0x00231610)
 #define OrigTrackTextures ((EAGL::TAR **)0x00233610)
 #define OrigTrackMaterialIndex U32_AT(0x00233fa0)
-#define GxDebris (*(RDebris **)0x00202a80)
+#define GxDebris (*(RDebris **)OwnedGlobals_Ours(0x00202a80))
 
 const int kOwners = 0x40;
 const size_t kHandleLimit = 0x10000;
@@ -188,12 +189,10 @@ void Differ(const char *what, int index, const char *detail) {
 
 void CheckBytes(const char *what, int index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[96];
     snprintf(detail, sizeof(detail), "byte %u of %u: original %02x, port %02x", unsigned(at), unsigned(bytes), x[at],
              y[at]);

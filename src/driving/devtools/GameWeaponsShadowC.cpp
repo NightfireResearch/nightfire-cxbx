@@ -3,6 +3,7 @@
 #endif
 
 #include "GameWeaponsShadowC.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -156,16 +157,16 @@ const uint32_t kStreakDraw = 0x000a1330;
 
 // ---- the game's state
 
-#define ShadowRandomSeed U32_AT(0x001c45c4)
-#define ShadowRandomMultiplier U32_AT(0x001c45c8)
+#define ShadowRandomSeed U32_AT(OwnedGlobals_Ours(0x001c45c4))
+#define ShadowRandomMultiplier U32_AT(OwnedGlobals_Ours(0x001c45c8))
 #define ShadowSimStepsPerSecond I32_AT(0x00234e2c)
 #define ShadowSimTimeStep FLOAT_AT(0x00234e30)
 #define ShadowSimStepCount I32_AT(0x00234e34)
 #define ShadowPlayerVehicles (*(PhysicsObject ***)0x00234e40)
-#define ShadowPlayerHands (*(uint8_t **)0x001dda90)
+#define ShadowPlayerHands (*(uint8_t **)OwnedGlobals_Ours(0x001dda90))
 #define ShadowLaunchFlags U32_AT(0x00244530)
 #define ShadowWeaponBank (*(void **)0x001d83a8)
-#define ShadowWeaponManager (*(void **)0x0023923c)
+#define ShadowWeaponManager (*(void **)OwnedGlobals_Ours(0x0023923c))
 #define ShadowSimRandom (*(uint8_t **)0x00233ff0)
 #define ShadowRigidSigs ((uint32_t *)0x00234020)
 #define ShadowSimpleSigs ((uint32_t *)0x00234120)
@@ -186,12 +187,10 @@ void Report(const char *what, long index, const char *detail) {
 
 void CompareBytes(const char *what, long index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[112];
     snprintf(detail, sizeof(detail), "byte 0x%x of 0x%x: original %02x, port %02x", unsigned(at), unsigned(bytes),
              x[at], y[at]);
@@ -380,6 +379,8 @@ uint32_t Hash(const char *text) {
 
 void CompareLogs(const char *what, long index) {
     g_checks++;
+    for (std::vector<uint32_t> &log : g_logs)   // vtables and callbacks alike on either side
+        OwnedGlobals_CanonicalWords(log.data(), log.size() * 4);
     const std::vector<uint32_t> &a = g_logs[0], &b = g_logs[1];
     if (a == b)
         return;
@@ -814,7 +815,10 @@ bool HookOurs(Hook *hook, uint32_t entry, const void *to) {
         return false;
     }
     const uint8_t *code = reinterpret_cast<const uint8_t *>(uintptr_t(at));
-    for (int i = 0; i < 5 && code[0] != 0xe9; i++)     // a tail jump is five bytes itself
+    // a first instruction of five bytes (a tail jump, a load of an address: its operand may hold any byte) is room
+    bool five = code[0] == 0xe9 || code[0] == 0xe8 || code[0] == 0xa1 || code[0] == 0xa3 || code[0] == 0x68 ||
+                (code[0] >= 0xb8 && code[0] <= 0xbf);
+    for (int i = 0; i < 5 && !five; i++)
         if (code[i] == 0xc3 || code[i] == 0xc2 || code[i] == 0xcc) {
             hook->on = false;
             return false;
@@ -1699,16 +1703,16 @@ void BuildRegions() {
     AddShared(&g_sparksFound, sizeof(g_sparksFound), "the sparks' answer", false);
 
     AddShared((void *)0x00234e2c, 12, "the Simulation's step globals", false);
-    AddShared((void *)0x001c45c4, 8, "the renderer's random generator");
+    AddShared((void *)OwnedGlobals_Ours(0x001c45c4), 8, "the renderer's random generator");
     AddShared(ShadowSimRandom, 16, "the Simulation's random generator");
     AddShared(ShadowRigidSigs, 0x100, "the rigid bodies' signatures");
     AddShared(ShadowSimpleSigs, 0x180, "the simple bodies' signatures");
     AddShared(ShadowSimpleHits, 0x900, "the simple bodies' hits", false);
     AddShared((void *)0x00234e40, 4, "the player's cars", false);
-    AddShared((void *)0x001dda90, 4, "the player's hands", false);
+    AddShared((void *)OwnedGlobals_Ours(0x001dda90), 4, "the player's hands", false);
     AddShared((void *)0x00244530, 4, "the launch flags", false);
     AddShared((void *)0x001d83a8, 4, "the weapon bank", false);
-    AddShared((void *)0x0023923c, 4, "the weapon manager", false);
+    AddShared((void *)OwnedGlobals_Ours(0x0023923c), 4, "the weapon manager", false);
 
     AddOwned(RayShellTracerSources, 0x001e7ad0, sizeof(RayShellTracerSources), "RayShellTracerSources");
     AddOwned(&RayShellTracerCount, 0x001e7cd0, 4, "RayShellTracerCount");

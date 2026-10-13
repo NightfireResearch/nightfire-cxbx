@@ -89,5 +89,6 @@ static_assert(offsetof(RDebris, shellCount) == 0x5c && offsetof(RDebris, shellOb
 
 extern RDebris *Debris;   // RenderManagers::InitDebris's instance
 extern uint32_t DebrisColours[RDebrisType::kMaxPieces];     // the pieces' colours as drawn
+extern const MATRIX4 *ViewMatrixPointer;
 
 #endif // DRIVING_GAME_DEBRIS_H_

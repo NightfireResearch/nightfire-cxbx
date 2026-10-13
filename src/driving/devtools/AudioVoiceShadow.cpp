@@ -3,6 +3,7 @@
 #endif
 
 #include "AudioVoiceShadow.h"
+#include "OwnedGlobals.h"
 
 #include "../audio/Bank.h"
 #include "../audio/Mix.h"
@@ -66,7 +67,7 @@
 
 namespace {   // this file's own types: another test's of the same name must not merge with them
 
-#define Shadow_ActiveViews (*(AVoiceViewList *)0x00243aa8)
+#define Shadow_ActiveViews (*(AVoiceViewList *)OwnedGlobals_Ours(0x00243aa8))
 // The port's LastPlayTick (Voice.h), Fx (Mix.h) and ASystem_fgSystem (SoundManager.h), and the original's copies
 #define Orig_LastPlayTick I32_AT(0x00243a98)
 #define Orig_FxMode I32_AT(0x001d8100)                  // Fx.currentMode

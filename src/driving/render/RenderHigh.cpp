@@ -108,13 +108,13 @@ constexpr uint32_t kPhysicsNamespaceSize = 4;
 // ---- globals
 extern float CullDistance;                                  // "Far plane dist"
 #define RenderFeaturesUnknown U8_AT(0x001f2df8)                 // FeatureManager::SetUserSpecifiedRenderFeatures reads it
-// XBE_GLOBAL(0x001c4610, 0x4)
-#define TheGalleryNamespace (*(GalleryNamespace *)0x001c4610)
 // XBE_GLOBAL(0x001ec4a4, 0x10)
 USingletonManager TheRenderSingletonManager;
 #define RenderSingletonManagerMade U32_AT(0x001ec4b4)
 #define RHUDViewVtable ((void **)Vtable_RRenderHigh)
 #define GalleryNamespaceVtable ((void *)Vtable_00191aa0)
+// XBE_GLOBAL(0x001c4610, 0x4)
+GalleryNamespace TheGalleryNamespace = {{GalleryNamespaceVtable}};   // no constructor: the vtable is initial data
 // XBE_GLOBAL(0x001c47a0, 4)
 float AspectScale = 1.0f;
 // XBE_GLOBAL(0x001c4614, 4)

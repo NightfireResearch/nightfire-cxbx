@@ -3,6 +3,7 @@
 #endif
 
 #include "CharacterShadow.h"
+#include "OwnedGlobals.h"
 
 #include "../anim/Actor.h"
 #include "../anim/AnimationDatabase.h"
@@ -69,11 +70,13 @@ void Logf(const char *format, ...) {
 }
 
 void LogBytes(const char *what, const void *p, size_t n) {
+    std::vector<uint8_t> bytes(static_cast<const uint8_t *>(p), static_cast<const uint8_t *>(p) + n);
+    OwnedGlobals_CanonicalWords(bytes.data(), n);   // our vtables and the game's alike
     std::string s = what;
     s += ' ';
     char h[4];
     for (size_t i = 0; i < n; i++) {
-        snprintf(h, sizeof(h), "%02x", static_cast<const uint8_t *>(p)[i]);
+        snprintf(h, sizeof(h), "%02x", bytes[i]);
         s += h;
     }
     Logf("%s", s.c_str());
@@ -155,8 +158,8 @@ typedef void (__fastcall *ResolverDestructFn)(ActEventResolver *, int);
 // pool is shared: inside the window the originals name ours (devtools/OwnedGlobals.h, the redirects).
 #define OrigActManager (*(ActManager **)0x001dd9cc)
 #define OrigIRModeOn (*(bool *)0x001dd9dd)
-#define ShadowActorDatabase (*(ActActorDatabase **)0x001dd9a0)
-#define ShadowCurrentActor (*(ActActor **)0x001dd9c4)
+#define ShadowActorDatabase (*(ActActorDatabase **)OwnedGlobals_Ours(0x001dd9a0))
+#define ShadowCurrentActor (*(ActActor **)OwnedGlobals_Ours(0x001dd9c4))
 #define ShadowPlayerCar (**(PhysicsObject ***)0x00234e40)
 
 PrivateData *Banks() {

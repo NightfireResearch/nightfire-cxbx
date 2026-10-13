@@ -3,6 +3,7 @@
 #endif
 
 #include "GameEventsShadowB.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -16,6 +17,7 @@
 #include <bit>
 #include <map>
 #include <string>
+#include <vector>
 
 #include "../EventManager.hpp"
 #include "../Scheduler.hpp"                  // Scheduler, Schedule
@@ -96,17 +98,17 @@ namespace {
 #define GameHenchGunPick U32_AT(0x001e23ac)
 #define GameHenchGunShots U32_AT(0x001e23b0)
 
-#define LiveFeedbackAllowed BOOL8_AT(0x001b6f50)
-#define LiveSoundOption BOOL8_AT(0x001b7054)
+#define LiveFeedbackAllowed BOOL8_AT(OwnedGlobals_Ours(0x001b6f50))
+#define LiveSoundOption BOOL8_AT(OwnedGlobals_Ours(0x001b7054))
 #define LiveSimState I32_AT(0x00234e24)
 #define LiveCarsFirst (*(PhysicsObject ***)0x00234e40)
-#define LiveMissionManager PTR_AT(0x00239220)
-#define LiveWeaponManager PTR_AT(0x0023923c)
+#define LiveMissionManager PTR_AT(OwnedGlobals_Ours(0x00239220))
+#define LiveWeaponManager PTR_AT(OwnedGlobals_Ours(0x0023923c))
 #define LiveMissionName ((char *)0x00244084)
-#define LiveRenderSeed U32_AT(0x001c45c4)
+#define LiveRenderSeed U32_AT(OwnedGlobals_Ours(0x001c45c4))
 #define LivePhysicsObjects ((PhysicsObject **)0x002342a0)
-#define LiveScheduler PTR_AT(0x001e520c)
-#define LiveRenderHigh PTR_AT(0x001ec488)
+#define LiveScheduler PTR_AT(OwnedGlobals_Ours(0x001e520c))
+#define LiveRenderHigh PTR_AT(OwnedGlobals_Ours(0x001ec488))
 
 // The package's entries (swapped back for the original's side)
 const unsigned kEntries[] = {
@@ -391,7 +393,7 @@ std::string Floats(const void *p, int n) {
     const float *f = static_cast<const float *>(p);
     char word[16];
     for (int i = 0; i < n; i++) {
-        snprintf(word, sizeof(word), "%08x ", Bits(f[i]));
+        snprintf(word, sizeof(word), "%08x ", OwnedGlobals_Canonical(Bits(f[i])));   // a vtable, ours or the game's, alike
         text += word;
     }
     return text;
@@ -1298,7 +1300,10 @@ typedef void *(__fastcall *DeleteFunction)(void *event, int, unsigned flags);
 
 std::string WorldText() {
     std::string text;
-    const uint8_t *bytes = reinterpret_cast<const uint8_t *>(&g_world);
+    static std::vector<uint8_t> copy;   // vtables and callbacks alike on either side
+    copy.assign(reinterpret_cast<const uint8_t *>(&g_world), reinterpret_cast<const uint8_t *>(&g_world) + sizeof(World));
+    OwnedGlobals_CanonicalWords(copy.data(), copy.size());
+    const uint8_t *bytes = copy.data();
     text.reserve(sizeof(World) / 8);
     // compared as a checksum per 256-byte block (the differing block's index shows where)
     char word[24];

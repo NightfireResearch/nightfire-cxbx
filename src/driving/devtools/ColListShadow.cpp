@@ -3,6 +3,7 @@
 #endif
 
 #include "ColListShadow.h"
+#include "OwnedGlobals.h"
 
 #include <windows.h>
 #include <stddef.h>
@@ -83,8 +84,8 @@ const unsigned kPackageHi = 0x000c5700;   // (0x000c5700 is GameCallbacks.cpp's)
 #define Game_ArticleMapBuyhead ((ArticleMapNode *(*)())0x00094030)
 #define Game_ArticleMapEraseRange ((ArticleMapNode **(__fastcall *)(ArticleMap *, int, ArticleMapNode **, ArticleMapNode *, ArticleMapNode *))0x000c2f30)
 
-#define RandomSeed U32_AT(0x001c45c4)       // FUN_0001aab0's state, and its multiplier
-#define RandomMultiplier U32_AT(0x001c45c8)
+#define RandomSeed U32_AT(OwnedGlobals_Ours(0x001c45c4))       // FUN_0001aab0's state, and its multiplier
+#define RandomMultiplier U32_AT(OwnedGlobals_Ours(0x001c45c8))
 
 
 long g_cases, g_checks, g_differ, g_faults;

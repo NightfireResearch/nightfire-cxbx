@@ -1,4 +1,5 @@
 #include "AnimShadow.h"
+#include "OwnedGlobals.h"
 
 #include "../eagl/EaglGlobals.h"
 #include "../eagl/Loader.h"
@@ -69,6 +70,13 @@ uint32_t Hash(const void *data, size_t size) {
     for (size_t i = 0; i < size; i++)
         h = (h ^ ((const uint8_t *)data)[i]) * 16777619u;
     return h;
+}
+
+// An object's bytes with vtables and callbacks alike on either side
+uint32_t HashObject(const void *data, size_t size) {
+    std::vector<uint8_t> copy((const uint8_t *)data, (const uint8_t *)data + size);
+    OwnedGlobals_CanonicalWords(copy.data(), copy.size());
+    return Hash(copy.data(), copy.size());
 }
 
 // ---- the arena and the hooks
@@ -396,7 +404,7 @@ void BankSide(bool original, const Bank &bank, std::vector<uint8_t> &image, Snap
                 FnAnim *anim = ((FnAnim *(*)(uint8_t *))0x00014210)(anims[i]);   // NewFnAnim
                 uint32_t size = type < kAnimTypeCount ? BlockSizes[type] : 0;
                 Logf("anim %d \"%s\" type %u at %p, %08x", i, names != NULL ? names[i] : "?", type, (void *)anim,
-                     Hash(anim, size));
+                     HashObject(anim, size));
                 if (!original) {
                     g_anims++;
                     if (type < kAnimTypeCount)

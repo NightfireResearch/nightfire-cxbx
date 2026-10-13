@@ -112,6 +112,60 @@ static PatchRecord *Covering(unsigned at) {
     return NULL;
 }
 
+unsigned XbeOriginal_Target(unsigned at) {
+    PatchRecord *r = Covering(at);
+    if (r == NULL || r->at != at)
+        return 0;
+    // The jump is in the code unless a window has the original's bytes in; then it is the one the swap captured
+    const unsigned char *jump = (const unsigned char *)(size_t)at;
+    if (memcmp(jump, r->original, 5) == 0)
+        jump = r->patched;
+    if (jump[0] != 0xE9)
+        return 0;
+    unsigned relative;
+    memcpy(&relative, jump + 1, 4);
+    return at + 5 + relative;
+}
+
+// (target, entry) for every jump, by target; made again whenever more have been recorded
+struct JumpTarget {
+    unsigned target, at;
+};
+static JumpTarget g_byTarget[MAX_PATCHES];
+static int g_numTargets = -1, g_targetsFrom = 0;
+
+static int ByTarget(const void *a, const void *b) {
+    const JumpTarget *x = (const JumpTarget *)a, *y = (const JumpTarget *)b;
+    if (x->target != y->target)
+        return x->target < y->target ? -1 : 1;
+    return x->at < y->at ? -1 : x->at > y->at;
+}
+
+unsigned XbeOriginal_EntryOf(unsigned target) {
+    if (g_numTargets < 0 || g_targetsFrom != g_numPatches) {
+        g_numTargets = 0;
+        for (int i = 0; i < g_numPatches; i++) {
+            unsigned t = XbeOriginal_Target(g_patches[i].at);
+            if (t != 0) {
+                g_byTarget[g_numTargets].target = t;
+                g_byTarget[g_numTargets].at = g_patches[i].at;
+                g_numTargets++;
+            }
+        }
+        qsort(g_byTarget, g_numTargets, sizeof(g_byTarget[0]), ByTarget);
+        g_targetsFrom = g_numPatches;
+    }
+    int first = 0, last = g_numTargets;   // the first record at or above 'target'
+    while (first < last) {
+        int middle = (first + last) / 2;
+        if (g_byTarget[middle].target < target)
+            first = middle + 1;
+        else
+            last = middle;
+    }
+    return first < g_numTargets && g_byTarget[first].target == target ? g_byTarget[first].at : 0;
+}
+
 void XbeOriginal_Read(unsigned at, void *out, unsigned n) {
     unsigned char *bytes = (unsigned char *)out;
     for (unsigned i = 0; i < n; i++) {

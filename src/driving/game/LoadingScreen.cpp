@@ -39,7 +39,6 @@
 // ---- globals
 
 #define DotsFile ((ShapeFile *)0x001caa00)             // the dots' SHPX, in the XBE's data
-#define EaglFontDriver ((void *)0x001cd114)            // EAGL's FONT driver table
 
 // XBE_GLOBAL(0x001caee0, 0x1)
 bool KeepLoadScreen = true;             // InitLoadDots's: set, Shutdown leaves the screen as it is
@@ -175,7 +174,7 @@ void GLoadingScreen::InitLoadScreen(const char *picture, const char *layoutFile)
     for (int i = 0; i < BackgroundCount; i++)
         BackgroundTextures[i] = NewClampedTar(ShapeImageOf(BackgroundFile, i));
 
-    FONT_installdriver(EaglFontDriver);
+    FONT_installdriver(&EaglFontDriver);
     FONT_init();
     LoadingFontFile = UFileLoader::FileLoad("data/loading/loading.xfn", 0);
     if (LoadingFontFile == NULL)

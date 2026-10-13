@@ -3,6 +3,7 @@
 #endif
 
 #include "GameAIShadowE.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -138,12 +139,10 @@ void Report(const char *what, long index, const char *detail) {
 
 void CompareBytes(const char *what, long index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[112];
     snprintf(detail, sizeof(detail), "byte 0x%x of 0x%x: original %02x, port %02x", unsigned(at), unsigned(bytes),
              x[at], y[at]);
@@ -282,6 +281,8 @@ void LogString(const char *s) {
 
 void CompareLogs(const char *what, long index) {
     g_checks++;
+    for (std::vector<uint32_t> &log : g_logs)   // vtables and callbacks alike on either side
+        OwnedGlobals_CanonicalWords(log.data(), log.size() * 4);
     const std::vector<uint32_t> &a = g_logs[0], &b = g_logs[1];
     if (a == b)
         return;

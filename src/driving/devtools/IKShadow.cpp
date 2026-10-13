@@ -1,4 +1,5 @@
 #include "IKShadow.h"
+#include "OwnedGlobals.h"
 
 #include "../anim/Events.h"
 #include "../anim/IK.h"
@@ -123,7 +124,7 @@ void Check(const char *what, const void *port, const void *original, size_t byte
         uint32_t a, b;
         memcpy(&a, p + i, 4);
         memcpy(&b, o + i, 4);
-        if (a == b)
+        if (OwnedGlobals_SameWord(b, a))   // a vtable: ours, or the game's
             continue;
         if (first == bytes)
             first = i;

@@ -3,6 +3,7 @@
 #endif
 
 #include "PlayerCamShadowB.h"
+#include "OwnedGlobals.h"
 #include "OrigConstants.h"
 
 #include "../camera/CameraSpline.h"
@@ -223,8 +224,8 @@ struct CameraGlobals {
 
 // The camera globals the side's code uses (the originals' copies or ours)
 void ReadGlobals(CameraGlobals *g, bool original) {
-    memcpy(&g->previousArm, (void *)0x001ec378, 4);
-    memcpy(&g->armTurn, (void *)0x001ec37c, 4);
+    memcpy(&g->previousArm, (void *)OwnedGlobals_Ours(0x001ec378), 4);
+    memcpy(&g->armTurn, (void *)OwnedGlobals_Ours(0x001ec37c), 4);
     g->armFrom = original ? OrigWeaponArmFrom : WeaponArmFrom;
     g->armBlend = original ? OrigWeaponArmBlend : WeaponArmBlend;
     g->previousRotation[0] = original ? OrigPreviousRotationX : PreviousRotationX;
@@ -234,8 +235,8 @@ void ReadGlobals(CameraGlobals *g, bool original) {
 
 // Both copies
 void WriteGlobals(const CameraGlobals *g) {
-    memcpy((void *)0x001ec378, &g->previousArm, 4);
-    memcpy((void *)0x001ec37c, &g->armTurn, 4);
+    memcpy((void *)OwnedGlobals_Ours(0x001ec378), &g->previousArm, 4);
+    memcpy((void *)OwnedGlobals_Ours(0x001ec37c), &g->armTurn, 4);
     WeaponArmFrom = OrigWeaponArmFrom = g->armFrom;
     WeaponArmBlend = OrigWeaponArmBlend = g->armBlend;
     PreviousRotationX = OrigPreviousRotationX = g->previousRotation[0];

@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include "RigidResolveShadow.h"
+#include "OwnedGlobals.h"
 #include "RigidOrigGlobals.h"
 #include "FpControl.h"
 
@@ -64,7 +65,7 @@ typedef RigidBody *(__fastcall *GetRigidBodyFn)(void *, int, int);
 #define Orig_GenerateImpulse ((ImpulseFn)0x000afdb0)
 #define Sim_GetRigidBody ((GetRigidBodyFn)0x000b2700)
 #define ShadowSim ((void *)0x00233ff0)
-#define ShadowMissionManager (*(uint8_t **)0x00239220)
+#define ShadowMissionManager (*(uint8_t **)OwnedGlobals_Ours(0x00239220))
 const int kRigidBodies = 0x40;
 
 // ---- results
@@ -80,12 +81,10 @@ void Differ(const char *what, int index, const char *detail) {
 
 void CheckBytes(const char *what, int index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[96];
     snprintf(detail, sizeof(detail), "byte 0x%x of 0x%x: original %02x, port %02x", unsigned(at), unsigned(bytes),
              x[at], y[at]);

@@ -196,3 +196,7 @@ extern int32_t gDVD;
 extern bool gDAudio;
 class ActionQueue;
 extern ActionQueue GlobalActionQueue;
+extern uint8_t gSubtitles;
+extern uint8_t gStreams;
+extern uint8_t gPlayMovies;
+extern uint8_t gSoundOption;

@@ -3,6 +3,7 @@
 #endif
 
 #include "AttribShadow.h"
+#include "OwnedGlobals.h"
 
 #include "../data/AttributeSet.h"
 #include "../data/AttributeSystem.h"
@@ -1349,7 +1350,10 @@ void TestDatabase() {
     RunSide(DestroyPhase, 0, SideSystem(0));
     RunSide(DestroyPhase, 1, SideSystem(1));
     g_cases++;
-    Check(SideSystem(0)->vtable == SideSystem(1)->vtable && SideSystem(0)->loadingEnabled == SideSystem(1)->loadingEnabled,
+    // the original leaves the game's vtable, the port our copy of it
+    Check(OwnedGlobals_SameWord(uint32_t(uintptr_t(SideSystem(0)->vtable)),
+                                uint32_t(uintptr_t(SideSystem(1)->vtable))) &&
+              SideSystem(0)->loadingEnabled == SideSystem(1)->loadingEnabled,
           "destroyed systems differ");
 }
 

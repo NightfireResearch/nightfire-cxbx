@@ -94,6 +94,7 @@ public:
     // The scalar deleting destructor, slot 1; nothing deletes the static
     GalleryNamespace* Delete(unsigned flags);                                                   // 0x0008ba80
 };
+extern GalleryNamespace TheGalleryNamespace;
 
 // The linker's thunk to FreeEAGLMaterials (camera/CameraSpline.h; Ghidra: thunk_FUN_0007aee0)
 void FreeEAGLMaterialsThunk();                                                                  // 0x0008bab0

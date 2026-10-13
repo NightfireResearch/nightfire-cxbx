@@ -51,6 +51,7 @@ extern MemoryFunctions *Functions;  // the allocator's table in use
 extern FastPool *Pools;             // the pools in use
 extern uint32_t PageSize;           // 0x1000, set by Init and NewClass
 extern int32_t ObjectHeapClass;     // the class operator new and big FastAllocs use
+extern void *ClassMemory[16];       // each class's contiguous memory, by class number
 
 class UMemory {
 public:

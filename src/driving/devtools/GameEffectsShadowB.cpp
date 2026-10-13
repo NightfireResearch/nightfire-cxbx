@@ -3,6 +3,7 @@
 #endif
 
 #include "GameEffectsShadowB.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -64,7 +65,7 @@
 
 namespace {
 
-#define GameTick U32_AT(0x001f2a4c)
+#define GameTick U32_AT(OwnedGlobals_Ours(0x001f2a4c))
 
 // The game's copies of the package's owned globals
 #define GameSetCopy (*(VehicleParticleSet **)0x00201834)
@@ -652,8 +653,9 @@ void TestConstruct() {
             RVehicleParticle *object = static_cast<RVehicleParticle *>(UMemory::FastAlloc(sizeof(RVehicleParticle),
                                                                                            "RVehicleParticle"));
             RVehicleParticle *self = orig ? Orig_Construct(object, 0, FakeVehicle()) : object->Construct(FakeVehicle());
-            Append(log, "ctor %d %p %d %08x %08x ", self == object, object->vtable, object->vehicle == FakeVehicle(),
-                   object->smokeEndTick, Bits(object->smokeFade));
+            Append(log, "ctor %d %08x %d %08x %08x ", self == object,
+                   OwnedGlobals_Canonical(uint32_t(uintptr_t(object->vtable))),   // our vtable and the game's alike
+                   object->vehicle == FakeVehicle(), object->smokeEndTick, Bits(object->smokeFade));
             for (int s = 0; s < kSystems; s++) {
                 const RParticleEmitter &emitter = object->emitters[s];
                 const RParticleSystem *system = object->systems[s];
@@ -675,11 +677,13 @@ void TestConstruct() {
                 Append(log, "delete1 %d ", deleted == object);
             } else if (how == 1) {
                 RVehicleParticle *deleted = orig ? Orig_Delete(object, 0, 0) : object->Delete(0);
-                Append(log, "delete0 %d %p %p ", deleted == object, object->vtable, (const void *)object->emitters);
+                Append(log, "delete0 %d %08x %p ", deleted == object,
+                       OwnedGlobals_Canonical(uint32_t(uintptr_t(object->vtable))), (const void *)object->emitters);
                 UMemory::FastFree(object, sizeof(RVehicleParticle));
             } else {
                 if (orig) Orig_Destruct(object, 0); else object->Destruct();
-                Append(log, "dtor %p %p ", object->vtable, (const void *)object->emitters);
+                Append(log, "dtor %08x %p ", OwnedGlobals_Canonical(uint32_t(uintptr_t(object->vtable))),
+                       (const void *)object->emitters);
                 UMemory::FastFree(object, sizeof(RVehicleParticle));
             }
             AppendSet(log, SideSet(orig));

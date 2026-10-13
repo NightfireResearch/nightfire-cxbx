@@ -3,6 +3,7 @@
 #endif
 
 #include "GameAudioShadowD.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -268,10 +269,10 @@ void TestLocale() {
             Locale *answer = orig ? Orig_GetLoc(&ios, 0, &copy) : ios.GetLoc(&copy);
             Append(log, "getloc %d %d %08x ", answer == &copy, copy.impl == &facet, facet.refs);
             if (orig) Orig_FacetDestruct(&facet, 0); else facet.Destruct();
-            Append(log, "dtor %p ", (const void *)facet.vtable);
+            Append(log, "dtor %08x ", OwnedGlobals_Canonical(uint32_t(uintptr_t(facet.vtable))));   // ours and the game's alike
             facet.vtable = (const void *const *)g_fakeFacetVtable;
             Facet *deleted = orig ? Orig_FacetDelete(&facet, 0, 0) : facet.Delete(0);
-            Append(log, "delete %d %p", deleted == &facet, (const void *)facet.vtable);
+            Append(log, "delete %d %08x", deleted == &facet, OwnedGlobals_Canonical(uint32_t(uintptr_t(facet.vtable))));
             g_calls = NULL;
         }, original, port);
         Check(original == port, "locale helpers", i);
@@ -430,10 +431,10 @@ void TestItems() {
             DebugData *indexer = orig ? Orig_GetIndexer(&item, 0) : self->GetIndexer();
             Append(log, "indexer %d ", indexer == &other ? 1 : indexer == NULL ? 0 : 2);
             if (orig) Orig_ItemDestruct(&item, 0); else self->Destruct();
-            Append(log, "dtor %p ", (const void *)item.vtable);
+            Append(log, "dtor %08x ", OwnedGlobals_Canonical(uint32_t(uintptr_t(item.vtable))));   // ours and the game's alike
             item.vtable = (const void *const *)g_fakeItemVtable;
             DebugData *deleted = orig ? Orig_ItemDelete(&item, 0, 0) : (DebugData *)self->Delete(0);
-            Append(log, "delete %d %p", deleted == &item, (const void *)item.vtable);
+            Append(log, "delete %d %08x", deleted == &item, OwnedGlobals_Canonical(uint32_t(uintptr_t(item.vtable))));
             g_calls = NULL;
         }, original, port);
         Check(original == port, "debug items", i);
@@ -456,7 +457,7 @@ void TestItems() {
 #define GameMixerEditing BOOL8_AT(0x001e2270)
 #define GameMixerVisible BOOL8_AT(0x001e4760)
 #define GameInfoVisible BOOL8_AT(0x001e4761)       // the game's copy of gDAudio
-#define MixesList (*(MixList *)0x00243954)
+#define MixesList (*(MixList *)OwnedGlobals_Ours(0x00243954))
 
 const unsigned kUpdateEntries[] = { 0x00037750, 0x00037160, 0x000376a0 };
 const unsigned kDrawTargetsEntries[] = { 0x00036c90 };

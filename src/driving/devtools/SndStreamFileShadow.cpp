@@ -3,6 +3,7 @@
 #endif
 
 #include "SndStreamFileShadow.h"
+#include "OwnedGlobals.h"
 
 #include "../sound/snd/Stream.h"
 #include "../platform/FileSys.h"
@@ -337,7 +338,9 @@ const char *LogName(uint32_t kind) {
 }
 
 void Log(uint32_t kind, uint32_t a = 0, uint32_t b = 0, uint32_t c = 0, uint32_t d = 0, uint32_t e = 0) {
-    uint32_t v[6] = { kind, a, b, c, d, e };
+    // a callback the port passes is ours, where the original passes its entry
+    uint32_t v[6] = { kind, OwnedGlobals_Canonical(a), OwnedGlobals_Canonical(b), OwnedGlobals_Canonical(c),
+                      OwnedGlobals_Canonical(d), OwnedGlobals_Canonical(e) };
     uint32_t h = W->logHash;
     for (int i = 0; i < 24; i++)
         h = (h ^ ((const uint8_t *)v)[i]) * 16777619u;
@@ -964,7 +967,7 @@ void RunCase(int index) {
     size_t words = offsetof(Workspace, log) / 4, first = (size_t)-1;
     int differing = 0;
     for (size_t j = 0; j < words; j++)
-        if (wa[j] != wb[j]) {
+        if (!OwnedGlobals_SameWord(wa[j], wb[j])) {   // the port's callbacks are ours
             if (first == (size_t)-1)
                 first = j;
             differing++;

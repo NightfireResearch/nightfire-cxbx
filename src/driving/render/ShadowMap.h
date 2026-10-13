@@ -91,5 +91,6 @@ extern Coord4 ZeroOneTwoThree;
 
 class USimpleTexturedMaterial;
 extern USimpleTexturedMaterial ShadowMaterial;   // ShadowMap.cpp
+extern uint32_t ShadowMaterialMade;
 
 #endif // DRIVING_RENDER_SHADOWMAP_H_

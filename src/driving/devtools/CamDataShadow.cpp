@@ -4,6 +4,7 @@
 
 #include "CamDataShadow.h"
 #include "OrigConstants.h"
+#include "OwnedGlobals.h"
 
 #include "../camera/CameraIniLoader.h"
 #include "../game/AIHands.h"
@@ -700,7 +701,7 @@ void SmallIniCases(Rng &rng) {
         const char *name;
         uint8_t rest[0x4c];
     };
-    uint8_t *manager = *reinterpret_cast<uint8_t **>(uintptr_t(0x0023923c));
+    uint8_t *manager = *reinterpret_cast<uint8_t **>(uintptr_t(OwnedGlobals_Ours(0x0023923c)));
     if (manager == NULL)
         return;
     SlotView *slots = *reinterpret_cast<SlotView **>(manager + 0x10);
@@ -804,14 +805,17 @@ void FreeLoaded() {
     OperatorDelete(t.fixeds);
 }
 
-void CompareTable(const char *what, int index, const std::vector<uint8_t> &a, const std::vector<uint8_t> &b,
+void CompareTable(const char *what, int index, const std::vector<uint8_t> &original, const std::vector<uint8_t> &b,
                   size_t record = 0, const uint8_t *mask = NULL) {
     g_checks++;
-    if (a.size() != b.size()) {
+    if (original.size() != b.size()) {
         g_diffs++;
-        Detail("[camdata] LoadFile %s #%d: %u bytes, port %u\n", what, index, unsigned(a.size()), unsigned(b.size()));
+        Detail("[camdata] LoadFile %s #%d: %u bytes, port %u\n", what, index, unsigned(original.size()),
+               unsigned(b.size()));
         return;
     }
+    std::vector<uint8_t> a = original;
+    OwnedGlobals_MatchWords(a.data(), b.data(), a.size());   // the modes' update methods: ours, or the game's
     if (record == 0) {
         Compare(what, index, a.data(), b.data(), a.size());
         return;
@@ -1352,7 +1356,7 @@ struct CarAudioFlagsView {
 
 #define ShadowSimState I32_AT(0x00234e24)
 #define ShadowSimStepCount I32_AT(0x00234e34)
-#define ShadowMission (*(uint8_t **)0x00239220)
+#define ShadowMission (*(uint8_t **)OwnedGlobals_Ours(0x00239220))
 #define ShadowMissionName ((char *)(0x00243b90 + 0x4f4))
 #define ShadowUnknown2445d4 I32_AT(0x002445d4)
 
@@ -1590,7 +1594,7 @@ void RendererCases(Rng &rng) {
         Compare(kNames[which], i, arrays[0], arrays[1], sizeof(arrays[0]));
     }
     // TextureDofState: only while the TextureDOF method has its shaders (a child then copies its packets)
-    EAGL::RenderMethod *parent = reinterpret_cast<EAGL::RenderMethod *>(uintptr_t(0x00241460));
+    EAGL::RenderMethod *parent = reinterpret_cast<EAGL::RenderMethod *>(uintptr_t(OwnedGlobals_Ours(0x00241460)));
     if (parent->vertexShaders == NULL) {
         printf("[camdata] the TextureDOF method has no shaders yet: TextureDofState not tested\n");
         return;

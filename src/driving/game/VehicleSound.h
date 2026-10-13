@@ -228,6 +228,7 @@ static_assert(sizeof(AVehicle) == 0x1f0, "AVehicle is 0x1f0 bytes");
 
 // PlayCollision's count of metal gate impacts: SFX_MetalGate2 and SFX_MetalGate3 by turns (name ours)
 extern uint32_t MetalGateCount;
+extern int32_t CollisionTicks[12];
 
 // ---- AHorn (0x70 bytes, from operator new): a horn that honks in bursts while asked to
 

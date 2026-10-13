@@ -3,6 +3,7 @@
 #endif
 
 #include "LightShadow.h"
+#include "OwnedGlobals.h"
 
 #include "../camera/Camera.h"
 #include "../data/Tuning.h"
@@ -73,11 +74,14 @@ void Logf(const char *format, ...) {
 void LogBytes(const char *what, const void *p, size_t n) {
     if (g_log == NULL)
         return;
+    // a handle's userData (the empty name) and other pointers into the image as the port holds them
+    std::vector<uint8_t> bytes(static_cast<const uint8_t *>(p), static_cast<const uint8_t *>(p) + n);
+    OwnedGlobals_CanonicalWords(bytes.data(), n);
     g_log->append(what);
     g_log->push_back(' ');
     char h[4];
     for (size_t i = 0; i < n; i++) {
-        snprintf(h, sizeof(h), "%02x", static_cast<const uint8_t *>(p)[i]);
+        snprintf(h, sizeof(h), "%02x", bytes[i]);
         g_log->append(h);
     }
     g_log->push_back('\n');
@@ -279,9 +283,9 @@ __declspec(naked) void CallDirections(LightBlock *, const RLightAngles *) {
 
 // ---- the game's state the tests read and write
 
-#define ColorizeMode (*(int32_t *)(*(uint8_t **)0x001f6898 + 0x30))
-#define RandomSeed (*(uint32_t *)0x001c45c4)
-#define RandomMultiplier (*(uint32_t *)0x001c45c8)
+#define ColorizeMode (*(int32_t *)(*(uint8_t **)OwnedGlobals_Ours(0x001f6898) + 0x30))
+#define RandomSeed (*(uint32_t *)OwnedGlobals_Ours(0x001c45c4))
+#define RandomMultiplier (*(uint32_t *)OwnedGlobals_Ours(0x001c45c8))
 
 // The originals' copies of the port's globals (render/Lights.h, PathEngine.h, DebugView.h): the originals' pass
 // reads and writes these, set from the port's when it starts

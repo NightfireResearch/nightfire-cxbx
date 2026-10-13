@@ -5,8 +5,8 @@ still runs inside the original image: driving.exe maps Driving.xbe at 0x10000 an
 each FUNC_AT address. The goal is a build that compiles from our C/C++ alone and runs with no original code or data
 mapped. This page is the preparation (13 October 2026): the test modes that show what still touches the image, the
 audit of the addresses left in the source, what this round made ours, and the standalone target whose compile errors
-are the remaining worklist. **Nothing here has been run yet**: the test modes and every change below are for the
-next round's lockstep runs.
+are the remaining worklist. Tested on 13 and 14 October 2026: see [Test results](#test-results-13-14-october-2026)
+for what the modes found and what was fixed.
 
 ## The game's data: taken from the user's XBE at build time
 
@@ -46,6 +46,100 @@ Caveats: TRAP_DATA misses a touch another thread makes in the one instruction it
 given a buffer in a guarded page fails rather than faulting (none is known: the file and sound buffers are heap
 blocks). TRAP_ORIGINAL cannot fill code no entry reaches (an original Ghidra never made a function that nothing
 patches): the audit lists the ones the source names.
+
+## Test results (13-14 October 2026)
+
+All on the runner (vr-desktop) against its baselines (`lbase`), all eight missions, idle and accelerating to tick
+9000, 16 frames and the sound trace each; the same modes also ran on this machine against `lloc`:
+
+| Run | Result |
+|---|---|
+| Lockstep (round sa3) | 16 of 16 exact: every frame, every sound trace line |
+| `NIGHTFIRE_TRAP_ORIGINAL=1`, `=2` | 16 of 16 exact each, no trap reached (after the fixes below) |
+| `NIGHTFIRE_HEAP_SHIFT=1048576`, `=50000` | 16 of 16 exact each |
+| Shadows (round sa4, every shadow but `CRUNTIMESHADOWB`) | all eight runs complete (frame dumped), 22-31 minutes each; 0 differences but `sndsysshadow`'s known one |
+
+**What TRAP_ORIGINAL=2 found** - code pointers left in data, each now ours:
+
+- EAGL's FONT driver table (0x001cd114: FONTEAGL_draw, startdraw, the inline D3DDevice_End, createfont, destroyfont)
+  was installed by address from GameLoop, LoadingScreen and Renderer: it is `EaglFontDriver` (eagl/EaglFont.cpp).
+- `TheGalleryNamespace` (0x001c4610), whose vtable is initial data: defined with our vtable copy; the static
+  initialiser's destructor names it (static_init_driving.py: NAMED, and a vtable-reset destructor of a named object
+  writes our copy).
+- The particle creator's one-slot vtable (0x00193c64) the effects gallery hands AddOrRefresh: `ParticleCreatorVtable`
+  (render/Particles.cpp).
+- SHAPE_create and the SHPX loader called MEM_allocalign and MEM_free through pointers at 0x001d1874/0x001d1878 that
+  nothing writes: direct calls.
+- devtools/SndLockstep.cpp called SNDREAL_systemtask by the original's address, and recognised a stream's FILESYS
+  callbacks by the originals' addresses while Stream.cpp now hands over ours - so under lockstep the stream reads ran
+  on the file system's worker at disc speed again. That was the five sound-trace differences of the first round
+  (SNDSTRM_requeststatus a tick early, a queuefile moved): it accepts both now and calls the port directly
+  (NIGHTFIRE_SNDTRACE retargets that call to its wrapper, as it does every call into a port).
+
+The first round's "hang at Init Sound" in every TRAP_DATA, HEAP_SHIFT and TRAP_ORIGINAL=1 run was its run list's
+`-TailWaitMs 120`: the driver killed each game three seconds in.
+
+**Heap shift** (1 MB and 50000 bytes): no divergence - every frame and sound trace matches the baselines on all
+eight missions, idle and accelerating. Nothing the 13 October build does depends on where the heap is.
+
+**The data worklist** (`NIGHTFIRE_TRAP_DATA=1`, missions 1 and 5 to tick 8000/9000, `tools/trap_data_summary.py`):
+what our code still reads or writes in the image after the first tick, by global, most-used first (mission 1 had 76
+globals, mission 5 62; the union is listed):
+
+| Global or page | Kind | Who |
+|---|---|---|
+| `fgSimulation` | RW | everything physical: GetRigidBody, the collision and trigger walks, the world position, rendering (410-463 sites) |
+| pages 0x00235000, 0x00234000 (`fgSimulation`'s tables beyond its tag: rigid bodies, signatures) | RW | VU0_MATRIX4_vect3mult, PointInTriangle2D, the collision code |
+| pages 0x001de000-0x001e1000 (the AI vehicles', helicopters' and pedestrians' statics not yet owned) | RW | AIVehicle::GetSplinePath/GetPhysicsObject, AIGroundVehicle, PBondCar::Simulate |
+| `gEventDynamicData` | RW | the events (MEM_fill clears it), 73-91 sites |
+| `SndMix`, `MixVoices`, `VolumeTable`, `PanAzimuth`, `XaPredictor1/2`, `MixFxHook`, page 0x001a7000 (the low-pass table), page 0x001a3000 | R/RW | the sound mixer and ADPCM decoder |
+| `Launch`, `LaunchFlags` | RW | the launch page |
+| page 0x00240000 (the EAGL profiler's frame statics around `FrameRegion`) | RW | EAGL::ProfilerFrameMark |
+| `fgBanks`, `EmptyBank`, `FsWorkers`, `MemClass`, `RootScratch`, `ScratchPadFreeZone`, `CurrentTimer`, `pFILE_malloc` | R/RW | the sound banks, the file system, the memory classes, the timer |
+| `ViewWidth`, `ViewHeight`, `Features`, `CausticControl`, `ParticleDensity`, `TuningLevel`, `TestData`, `glbActivePort`, `GameDefaultVector`, `DecimalPoint` | R | render and front end settings |
+| `PlayerGroundVehicles`, `TrafficGroundVehicles`, `PedSets`, `BondHandIK`, `DamageSourceSig`, `BulletStreakKinds`, `DebrisKinds` | R/RW | AI and effects tables |
+| `ImportRtlEnterCriticalSection`, `ImportRtlLeaveCriticalSection` | R | the kernel import slots (KernelImports.cpp) |
+| pages 0x00193000-0x0019f000, 0x001c5000-0x001c8000, 0x001ca000, 0x001b5000-0x001b7000, 0x001d4000-0x001d9000, 0x0018c000/d000 | R | constant tables read by address: the Girl palette (GGirl::UpdateTexture), 120 M reads of 0x001c6000-0x001c7fff by MEM_copy (a level's data template), the dashboard and HUD tables |
+
+## The shadows after the prep
+
+Owning 145 more globals broke about 40 of the shadow tests (every run of the first full round died in the loader's). They were
+written while the game's copy was the only one: the port and the originals worked on it, and the shadows set inputs
+and read results by its address. The fixes, in devtools and tools/owned_globals.py:
+
+- **One copy again for the prep's globals.** owned_globals.py marks them SINGLE_COPY (the mutable ones; not the
+  constant tables, the code tables, or `ClassMemory`, which the originals index past its 16 entries). Like EAGLAnim's
+  allocator state before them they are *shared*: from the first original window on, every original instruction that
+  names one - found by a capstone scan of the code map, not only Ghidra's references, which miss functions Ghidra never
+  made - names ours instead (OwnedGlobals.cpp's redirects, now left in place). Three cases are kept apart: a compare
+  with an address in a global's first 16 bytes ends the array before it and is left alone; one in the 64 bytes past a
+  global ends a loop over it and is pointed past ours; a register-based access to a global of one or two words is a
+  folded field or element of what surrounds it and is left alone (pointed at ours, those wrote into our image). The
+  globals that no header declared are now declared (Feedback.h, GameLoop.h, WorldCamera.h, Scheduler.hpp, ...).
+- **The shadows name ours.** Every literal address inside a shared global's game copy in devtools is
+  `OwnedGlobals_Ours(<address>)` (or `OwnedGlobals_OursWord` where a number is wanted).
+- **Vtables and callbacks.** The port stores our vtable copies and our functions where an original stores the
+  game's: the owned table also lists the generated vtables (translation only), `OwnedGlobals_SameWord` /
+  `OwnedGlobals_FirstDifference` / `OwnedGlobals_MatchWords` compare an original's words with the port's through
+  that, and `OwnedGlobals_Canonical(Words)` puts both sides' logs and dumps in one form (a game copy's address as
+  ours, a replaced original's entry as its replacement - the direction that collapses the several entries that jump
+  to one function, NullFunction's among them). The byte compare helpers of 40 shadows use it.
+- **Shadow bugs the move exposed** (they had written into the game's data before, harmlessly): GameAIShadowC set the
+  zones' types with `I32_AT(uintptr_t(ShadowZones) + i + 0x18)`, which scales the offset by four; GameWeaponsShadowA
+  the mission manager's fields the same way; GameEventsShadowD copied 16 bytes into the 12 of `StingerChannel`, over
+  `InvalidatedPed` (the pedestrians then indexed with 1.0f's bits); the weapons shadows took an `A1 imm32` port
+  whose address held a C3 byte for one too short to hook. InputShadow now also fakes the port's XInputSetState,
+  which IFeedback::Update calls directly. GameWeaponsShadowA's fake helicopters had no physics object: their
+  GetPhysicsObject is too short to hook, so the real one read a NULL and SWeaponManager::Update faulted on both
+  sides 1,296 times a run (about 40 minutes of fault reports on the runner) - the fakes now hold theirs.
+- **Two differences that were the tests'.** LightShadow logged path handles whose `userData` is the empty name,
+  ours or the game's: its byte logs are canonical now. RoadNavShadow's InitAtPoint case 516 on mission 6 differed
+  only after WorldShadow and TriggerShadow had run: a point whose grid cell has no segments leaves the original's
+  roadT as the stack holds it (original-quirks.md), the port's 0.0f; the shadow clears the stack below it first.
+
+`sndsysshadow`'s known difference (init/restore byte +0x14) remains. `NIGHTFIRE_CRUNTIMESHADOWB` was left out of the
+gate: on this branch's base the C runtime's shadow B still differs in ios_base::_Init and ends the run through an
+unimplemented RtlRaiseException - its fixes are on driving-crt (9c48f4a), after this branch's base.
 
 ## The audit
 
@@ -190,17 +284,13 @@ D3D8 entry table 138, GameLoop.cpp, Mixer.cpp, Reverb.cpp).
   moved tables now loads instead of folded constants, calls through `EaglFree` now `call [EaglFree]`, the kernel
   wrappers, and the devtools shadows (about 200), which see the owned globals through their headers.
 
-## What the next round must check
+## What is left for the standalone target
 
-1. Lockstep runs, all eight missions idle and accelerating, frames and sound traces against the baselines - the
-   behaviour of everything above is untested: the 145 owned globals, the 41 extracted, the vtables, the code
-   pointers, the three new ports (SoundAttribParser runs at the first physics data load).
-2. The same with `NIGHTFIRE_TRAP_ORIGINAL=1`, then `=2` (the 17 unported vtable slots fault only if a stream class's
-   virtual is reached), `NIGHTFIRE_TRAP_DATA=1` and `=2` (summarise with trap_data_summary.py), and
-   `NIGHTFIRE_HEAP_SHIFT` with two different values.
-3. The shadows that name owned globals at the game's addresses (about 40 devtools files: GameEventsShadowA-D,
-   RendererShadow, LightShadow, SceneObjShadow, ColListShadow's `RandomSeed`...) set only the game's copy now;
-   OwnedGlobals.inc lends what headers declare, not file statics. Shadows comparing stored function pointers or
-   vtables (the sound library's nodes, the camera modes, AnimEngineShadow's event table) see ours against the
-   original's addresses.
-4. That nothing compares an object's vtable with a game address it got from the XBE's initial data.
+1. The data worklist above: `fgSimulation` and its tables, the AI statics at 0x001de000-0x001e1fff, the mixer's
+   state, `gEventDynamicData`, the launch page, the profiler's statics - and the constant tables read by address,
+   which want extracting like the 41 of this round.
+2. The standalone target's compile errors (above): the D3D8 state, the seams' patch tables, the kernel imports'
+   standalone body, the 15 unported C++ library virtual functions.
+3. `NIGHTFIRE_TRAP_DATA=2` (the startup) has not been summarised.
+4. The single-copy globals' redirects stand on two heuristics (the compare windows, the register-based rule); a
+   folded access neither catches would show as a shadow difference or a write into our image, as these did.

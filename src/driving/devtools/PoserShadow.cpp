@@ -3,6 +3,7 @@
 #endif
 
 #include "PoserShadow.h"
+#include "OwnedGlobals.h"
 
 #include "../anim/AnimationDatabase.h"
 #include "../anim/IK.h"
@@ -144,13 +145,13 @@ struct ShadowActorDatabase {
     ShadowActorNode *actors;            // +0x04 the list's head
 };
 
-#define ShadowActors (*(ShadowActorDatabase **)0x001dd9a0)
+#define ShadowActors (*(ShadowActorDatabase **)OwnedGlobals_Ours(0x001dd9a0))
 // The originals' copies of the port's TheActManager and AnimationBuffer (the skin matrices), lent for the
 // originals' pass
 #define OrigActManager (*(ActManager **)0x001dd9cc)
 #define OrigAnimationBuffer (*(MATRIX4 **)0x001dd9fc)
 #define ShadowRootScratch ((void *)0x001b4a90)
-#define ShadowRandomSeed (*(uint32_t *)0x001c45c4)
+#define ShadowRandomSeed (*(uint32_t *)OwnedGlobals_Ours(0x001c45c4))
 #define ShadowStepCount (*(int32_t *)0x00234e34)
 #define ShadowPlayerPhysics (*(PhysicsObject ***)0x00234e40)
 #define ShadowEventBlock ((void *)0x001e47e8)

@@ -69,5 +69,8 @@ extern uint32_t AnchorMatrixGuard;
 // The anchor's position and velocity without one: zero, w 1
 extern Coord4 AnchorNoPosition;
 extern Coord4 AnchorNoVelocity;
+extern float CullDistance;          // ESetCullDistanceFactor's
+extern uint8_t WorldViewMade;
+extern CachedDrawInfo Pass0Draws;
 
 #endif // DRIVING_CAMERA_WORLDCAMERA_H_

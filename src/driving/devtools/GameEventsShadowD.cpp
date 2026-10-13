@@ -3,6 +3,7 @@
 #endif
 
 #include "GameEventsShadowD.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -76,18 +77,18 @@ using CARP::AIElement;
 
 // ---- the game's globals the events read and write
 
-#define fgAIElementControllerGame (*(void **)0x001ddee4)
-#define glbMissionManagerGame (*(void **)0x00239220)
-#define WeaponManagerGame (*(void **)0x0023923c)
-#define fgSchedulerGame (*(void **)0x001e520c)
-#define fgRendererGame (*(void **)0x001ebff4)
-#define fgRenderHighGame (*(void **)0x001ec488)
-#define fgWorldGame (*(void **)0x0023f310)
-#define fgTriggerManagerGame (*(void **)0x0023e260)
-#define ActorDatabaseGame (*(void **)0x001dd9a0)
-#define fgLightManagerGame (*(void **)0x001ec260)
+#define fgAIElementControllerGame (*(void **)OwnedGlobals_Ours(0x001ddee4))
+#define glbMissionManagerGame (*(void **)OwnedGlobals_Ours(0x00239220))
+#define WeaponManagerGame (*(void **)OwnedGlobals_Ours(0x0023923c))
+#define fgSchedulerGame (*(void **)OwnedGlobals_Ours(0x001e520c))
+#define fgRendererGame (*(void **)OwnedGlobals_Ours(0x001ebff4))
+#define fgRenderHighGame (*(void **)OwnedGlobals_Ours(0x001ec488))
+#define fgWorldGame (*(void **)OwnedGlobals_Ours(0x0023f310))
+#define fgTriggerManagerGame (*(void **)OwnedGlobals_Ours(0x0023e260))
+#define ActorDatabaseGame (*(void **)OwnedGlobals_Ours(0x001dd9a0))
+#define fgLightManagerGame (*(void **)OwnedGlobals_Ours(0x001ec260))
 #define fgBank4Game (*(void **)0x001d83a8)
-#define FailedStreamsGame (*(void **)0x00243a5c)
+#define FailedStreamsGame (*(void **)OwnedGlobals_Ours(0x00243a5c))
 #define SimCarsGame (*(GameVector<PVehicle *> *)0x00234e3c)
 #define PhysicsObjectsGame ((PhysicsObject **)0x002342a0)
 #define SimpleOwnersGame ((PhysicsObject **)0x002343a0)
@@ -97,14 +98,14 @@ using CARP::AIElement;
 #define SimStepsPerSecondGame I32_AT(0x00234e2c)
 #define SimTimeStepGame FLOAT_AT(0x00234e30)
 #define SimStepCountGame I32_AT(0x00234e34)
-#define StreamsGame U8_AT(0x001b7056)
-#define PlayMoviesGame U8_AT(0x001b7057)
-#define SubtitlesGame U8_AT(0x001e476d)
-#define FramesSinceAudioGame I32_AT(0x00243a68)
-#define AudioClockGame U32_AT(0x00243a6c)
-#define LimitedSoundCountGame I32_AT(0x00243b30)
+#define StreamsGame U8_AT(OwnedGlobals_Ours(0x001b7056))
+#define PlayMoviesGame U8_AT(OwnedGlobals_Ours(0x001b7057))
+#define SubtitlesGame U8_AT(OwnedGlobals_Ours(0x001e476d))
+#define FramesSinceAudioGame I32_AT(OwnedGlobals_Ours(0x00243a68))
+#define AudioClockGame U32_AT(OwnedGlobals_Ours(0x00243a6c))
+#define LimitedSoundCountGame I32_AT(OwnedGlobals_Ours(0x00243b30))
 #define StingerChannelGame ((char *)0x001d8058)
-#define TrafficSpawnCountGame I16_AT(0x001de918)
+#define TrafficSpawnCountGame I16_AT(OwnedGlobals_Ours(0x001de918))
 #define MissionNameGame ((char *)0x00244084)
 #define EffectsVolumeGame I32_AT(0x002444f4)
 #define ControllerPortGame I32_AT(0x00244520)
@@ -211,13 +212,11 @@ void Differ(const char *what, long index, const char *detail) {
 
 void CheckBytes(const char *what, long index, const char *part, const void *a, const void *b, size_t size) {
     g_checks++;
-    if (memcmp(a, b, size) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, size);   // a vtable or callback: ours, or the game's
+    if (at == size)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a);
     const uint8_t *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[160];
     snprintf(detail, sizeof(detail), "%s at +0x%x: %02x, port %02x", part, unsigned(at), x[at], y[at]);
     Differ(what, index, detail);
@@ -424,7 +423,7 @@ struct Globals {
     int32_t framesSinceAudio;
     uint32_t audioClock;
     int32_t limitedSounds;
-    char stinger[16];
+    char stinger[sizeof(StingerChannel)];   // as long as ours, which is copied whole
     int16_t trafficCount, pad2;
     char missionName[16];
     int32_t effectsVolume;

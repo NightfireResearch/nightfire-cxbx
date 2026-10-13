@@ -3,6 +3,7 @@
 #endif
 
 #include "GameMissionsShadowD.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -116,9 +117,9 @@ const int kKindCount = int(sizeof(kKinds) / sizeof(kKinds[0]));
 
 // The globals the code reads, at the game's addresses
 #define PlayerSlotPointer (*(PVehicle ***)0x00234e40)
-#define MissionManagerPointer PTR_AT(0x00239220)
-#define WeaponManagerPointer PTR_AT(0x0023923c)
-#define AIControllerPointer PTR_AT(0x001ddee4)
+#define MissionManagerPointer PTR_AT(OwnedGlobals_Ours(0x00239220))
+#define WeaponManagerPointer PTR_AT(OwnedGlobals_Ours(0x0023923c))
+#define AIControllerPointer PTR_AT(OwnedGlobals_Ours(0x001ddee4))
 #define StepCount I32_AT(0x00234e34)
 #define StepsPerSecond I32_AT(0x00234e2c)
 
@@ -431,6 +432,7 @@ void RunCase(const char *what, const O &original, const P &port) {
         memcpy(g_eventData[side], &gEventDynamicData, sizeof(g_eventData[side]));
         g_stepSaved[side] = StepCount;
         g_logs[side] = g_log;
+        OwnedGlobals_CanonicalWords(g_logs[side].data(), g_logs[side].size() * 4);   // our vtables and the game's alike
     }
     memcpy(&g_p, &g_saved, sizeof(Private));
     memcpy(&gEventDynamicData, g_eventSaved, sizeof(g_eventSaved));
@@ -440,9 +442,9 @@ void RunCase(const char *what, const O &original, const P &port) {
     snprintf(label, sizeof(label), "%s: faults", what);
     Check(ok[0] == ok[1], label, index);
     snprintf(label, sizeof(label), "%s: result", what);
-    Check(results[0] == results[1], label, index);
-    snprintf(label, sizeof(label), "%s: state", what);
-    Check(memcmp(&g_after[0], &g_after[1], sizeof(Private)) == 0, label, index);
+    Check(OwnedGlobals_SameWord(results[0], results[1]), label, index);
+    snprintf(label, sizeof(label), "%s: state", what);   // a vtable or callback: ours, or the game's
+    Check(OwnedGlobals_FirstDifference(&g_after[0], &g_after[1], sizeof(Private)) == sizeof(Private), label, index);
     snprintf(label, sizeof(label), "%s: event data", what);
     Check(memcmp(g_eventData[0], g_eventData[1], sizeof(g_eventData[0])) == 0, label, index);
     snprintf(label, sizeof(label), "%s: calls", what);

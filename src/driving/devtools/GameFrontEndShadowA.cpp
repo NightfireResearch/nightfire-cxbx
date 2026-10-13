@@ -3,6 +3,7 @@
 #endif
 
 #include "GameFrontEndShadowA.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -214,8 +215,8 @@ void HooksRemove() {
 #define GameScreenFadeLevel FLOAT_AT(0x00243a70)
 #define GameLoadState I32_AT(0x0023f574)
 #define ShLaunch (*(LaunchPage *)0x00243b90)
-#define ShScheduler (*(Scheduler **)0x001e520c)
-#define ShMission (*(SMissionManager **)0x00239220)
+#define ShScheduler (*(Scheduler **)OwnedGlobals_Ours(0x001e520c))
+#define ShMission (*(SMissionManager **)OwnedGlobals_Ours(0x00239220))
 
 struct Fakes {
     int32_t tick;

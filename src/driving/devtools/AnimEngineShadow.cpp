@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include "AnimEngineShadow.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include "../anim/AnimEngine.h"
@@ -188,7 +189,7 @@ const size_t kProcAnimListBytes = sizeof(ProcAnimLists);
 #define OrigActiveList (*(ActiveList *)0x001eb878)
 #define OrigProcAnimLists (*(ProcAnimLists *)0x001c41b0)
 #define OrigTickSeconds (*(float *)0x001f2a48)
-#define ShadowSimStep FLOAT_AT(0x001c465c)
+#define ShadowSimStep FLOAT_AT(OwnedGlobals_Ours(0x001c465c))
 
 ActiveList OurActiveList() {
     ActiveList list;
@@ -226,7 +227,7 @@ void SetOurProcAnimLists(const ProcAnimLists &lists) {
     ProcAnimXForms = lists.xforms;
     ProcAnimXFormCount = lists.xformCount;
 }
-#define ShadowRenderer PTR_AT(0x001ebff4)
+#define ShadowRenderer PTR_AT(OwnedGlobals_Ours(0x001ebff4))
 #define ShadowEventCallbacks ((void **)0x0018bf38)    // RegisterEvent's
 #define ShadowDrawOffset ((const Coord4 *)0x001d4c00) // QuickDrawInstance's offset
 
@@ -243,12 +244,10 @@ void Differ(const char *what, int index, const char *detail) {
 
 void CheckBytes(const char *what, int index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[96];
     snprintf(detail, sizeof(detail), "byte %u of %u: original %02x, port %02x", unsigned(at), unsigned(bytes), x[at],
              y[at]);

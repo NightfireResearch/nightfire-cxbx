@@ -68,8 +68,8 @@ uint32_t PageSize;                                       // 0x1000, set by Init 
 // XBE_GLOBAL(0x00242fc8, 0x4)
 int32_t ObjectHeapClass;                                 // the class operator new and big FastAllocs use
 // XBE_GLOBAL(0x00242fd0, 0x40)
-alignas(16) void *ClassMemory[16];   // each class's contiguous memory, by class number (up to 63: the game's
-                                            // room for 16 runs into the globals after it, so it stays the game's)
+alignas(16) void *ClassMemory[16];   // each class's contiguous memory, by class number (MEMCLASS_findfree's,
+                                     // up to 63: past 15 the original writes the globals after its 16)
 // XBE_GLOBAL(0x001d4830, 0x1)
 static bool OwnsRam = true;                              // class 0's memory is Init's own (and is freed with it)
 

@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include "GeoPrimShadow.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include "../eagl/D3D8State.h"
@@ -55,7 +56,7 @@ void OriginalWindow(bool original) {
     XbeOriginal_RestoreRange(0x000eec70, 0x000ef4b0, original);
 }
 
-#define FontState (*(const GeoPrimState *)0x002400f8)       // EaglFont's state
+#define FontState (*(const GeoPrimState *)OwnedGlobals_Ours(0x002400f8))       // EaglFont's state
 #define OpcodeSlot16 (*(void (**)())0x001ce740)               // the render-method opcode table's entry 16
 
 // The originals' copies of what Apply reads and writes (the port's are ApplyCache, ApplyCacheZSlopeScale,
@@ -221,12 +222,10 @@ void Differ(const char *what, int index, const char *detail) {
 
 void CheckBytes(const char *what, int index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[96];
     snprintf(detail, sizeof(detail), "byte %u of %u: original %02x, port %02x", unsigned(at), unsigned(bytes), x[at],
              y[at]);

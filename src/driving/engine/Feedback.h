@@ -110,5 +110,7 @@ static_assert(offsetof(PadFeedback, leftMotorSpeed) == 0x42 && offsetof(PadFeedb
 extern int32_t gFeedbackUsers;      // ports in use
 extern PadFeedback gPadFeedback;    // what Update last sent
 extern uint32_t gFeedbackTick;
+extern uint8_t gSuperEasy;          // -supereasy
+extern uint8_t gFeedbackAllowed;
 
 #endif // DRIVING_ENGINE_FEEDBACK_H_

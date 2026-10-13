@@ -49,3 +49,7 @@ static_assert(sizeof(PlayMPC) == 0x20, "PlayMPC is 0x20 bytes");
 // EA's task and thread services, which the original's wait loop keeps running while it waits for the next frame
 // (SYNCTASK_run, THREAD_yield: ours now, platform/RealSystem.cpp)
 #include "../platform/RealSystem.h"
+
+// The allocation settings Construct gives EA's player library
+extern uint32_t RcmpAllocate;
+extern int32_t RcmpAllocFlags;

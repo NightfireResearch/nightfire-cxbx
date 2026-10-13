@@ -3,6 +3,7 @@
 #endif
 
 #include "GameAudioShadowC.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include <windows.h>
@@ -111,9 +112,9 @@ const unsigned kEntries[] = {
 };
 
 // The globals the code reads and writes at the game's addresses
-#define ShadowFrames I32_AT(0x00243a68)
-#define ShadowClock FLOAT_AT(0x00243a6c)
-#define ShadowPaused U8_AT(0x002439d0)
+#define ShadowFrames I32_AT(OwnedGlobals_Ours(0x00243a68))
+#define ShadowClock FLOAT_AT(OwnedGlobals_Ours(0x00243a6c))
+#define ShadowPaused U8_AT(OwnedGlobals_Ours(0x002439d0))
 // The original's copies of the globals the port owns
 #define OrigNextHardCollision I32_AT(0x00243b68)
 #define OrigFPedWrapped U8_AT(0x00243960)
@@ -645,6 +646,9 @@ void Case(const char *what, const Inputs &in, size_t objectSize, Setup setup, Ru
         OwnedWords(words[phase]);
         capture(words[phase]);
         logs[phase] = g_log;
+        // vtables and callbacks alike on either side
+        OwnedGlobals_CanonicalWords(words[phase].data(), words[phase].size() * 4);
+        OwnedGlobals_CanonicalWords(logs[phase].data(), logs[phase].size() * 4);
     }
     char label[96];
     snprintf(label, sizeof(label), "%s (state)", what);

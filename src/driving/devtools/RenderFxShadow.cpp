@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include "RenderFxShadow.h"
+#include "OwnedGlobals.h"
 #include "FpControl.h"
 
 #include "../eagl/D3D8State.h"            // Shadows
@@ -119,13 +120,13 @@ const uint32_t kRand = 0x00133ee0;                  // the C runtime's rand
 
 // ---- the game's state
 
-#define FxRandomSeed U32_AT(0x001c45c4)
-#define FxRandomMultiplier U32_AT(0x001c45c8)
+#define FxRandomSeed U32_AT(OwnedGlobals_Ours(0x001c45c4))
+#define FxRandomMultiplier U32_AT(OwnedGlobals_Ours(0x001c45c8))
 #define FxSimTimeStep FLOAT_AT(0x00234e30)
 #define FxSimStepCount I32_AT(0x00234e34)
 #define FxSimStepsPerSecond I32_AT(0x00234e2c)
 #define FxPlayerPhysics (*(PhysicsObject **)PTR_AT(0x00234e40))
-#define FxGlareManager (*(RGlareManager **)0x00208cb4)
+#define FxGlareManager (*(RGlareManager **)OwnedGlobals_Ours(0x00208cb4))
 // The originals' copies of the window batch (the port's are SkyWater.h's WindowTexture ... WindowColoursCleared)
 #define OrigWindowTexture (*(EAGL::TAR **)0x00201850)
 #define OrigWindowUVs ((Coord4 *)0x00201860)
@@ -151,10 +152,10 @@ struct FxRequest {
     uint32_t unknown34;
     const void *uvs;                    // +0x38
 };
-#define FxVolatileRequestIndex I32_AT(0x00243830)
-#define FxVolatileRequests ((FxRequest **)0x00243878)
-#define FxTexturedRequestIndex I32_AT(0x00243750)
-#define FxTexturedRequests ((FxRequest **)0x00243710)
+#define FxVolatileRequestIndex I32_AT(OwnedGlobals_Ours(0x00243830))
+#define FxVolatileRequests ((FxRequest **)OwnedGlobals_Ours(0x00243878))
+#define FxTexturedRequestIndex I32_AT(OwnedGlobals_Ours(0x00243750))
+#define FxTexturedRequests ((FxRequest **)OwnedGlobals_Ours(0x00243710))
 
 // ---- results
 
@@ -169,12 +170,10 @@ void Differ(const char *what, int index, const char *detail) {
 
 void CheckBytes(const char *what, int index, const void *a, const void *b, size_t bytes) {
     g_checks++;
-    if (memcmp(a, b, bytes) == 0)
+    size_t at = OwnedGlobals_FirstDifference(a, b, bytes);   // a vtable or callback: ours, or the game's
+    if (at == bytes)
         return;
     const uint8_t *x = static_cast<const uint8_t *>(a), *y = static_cast<const uint8_t *>(b);
-    size_t at = 0;
-    while (x[at] == y[at])
-        at++;
     char detail[96];
     snprintf(detail, sizeof(detail), "byte %u of %u: original %02x, port %02x", unsigned(at), unsigned(bytes), x[at],
              y[at]);
