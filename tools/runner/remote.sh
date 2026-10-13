@@ -51,6 +51,11 @@ win() { echo "$1" | sed 's#^/\(.\)/#\1:/#'; }   # /c/x -> c:/x, for Windows prog
 # ServerAlive: a connection that drops silently fails within a minute instead of hanging the caller's wait loop.
 r() { ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 \
     -o CanonicalizeHostname=yes -o CanonicalDomains=local -o HostKeyAlias="$HOST" "$USER_@$HOST" "$@"; }
+# A wait loop's poll: ssh has been seen to hang for half an hour despite ServerAlive, so each poll is cut off after a
+# minute, counts as "not yet", and the loop polls again.
+poll() { timeout 60 ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=15 \
+    -o ServerAliveCountMax=4 -o CanonicalizeHostname=yes -o CanonicalDomains=local -o HostKeyAlias="$HOST" \
+    "$USER_@$HOST" "$@" < /dev/null; }
 
 # RUNNER_HOST=local: this machine is the runner - the same commands, run here without SSH, in a checkout of its own
 # (RUNNER_REPO, default /q/nf-localrun: a clone with disc/ and Release/settings.ini, saves/, tdata/ as on a runner)
@@ -66,6 +71,7 @@ if [ "$HOST" = local ]; then
     [ -z "$SLOT" ] || RUNDIR=$SLOTS/$SLOT
     mkdir -p "$JOBS"
     r() { bash -c "$*"; }
+    poll() { bash -c "$*"; }
 fi
 
 cmd=$1; shift || true
@@ -110,7 +116,7 @@ desktop)
     fi
     printf 'cd %s\n%s\n' "$RUNDIR" "$1" | r "mkdir -p $JOBDIR && rm -f $JOBDIR/done && cat > $JOBDIR/job.sh && schtasks //run //tn $TASK > /dev/null"
     # Wait for the job to finish (desktop_job.sh writes the exit code to done)
-    while ! r "test -f $JOBDIR/done"; do sleep 5; done
+    while ! poll "test -f $JOBDIR/done"; do sleep 5; done
     r "cat $JOBDIR/job.log; exit \$(cat $JOBDIR/done)"
     ;;
 run)

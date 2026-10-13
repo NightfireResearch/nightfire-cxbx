@@ -24,8 +24,9 @@
 // ours - and compares a description of everything the call wrote: the object's fields (pointers into the lent
 // objects as offsets, heap blocks by their contents), the library's globals (the global locale, the facet list, the
 // exit table, the standard-stream tables, the lock count), the kernel critical-section calls made on this thread
-// (which lock), and what was called back (facets deleted, ios callbacks, array elements, exit functions). Throws are
-// caught (MSVC builds) and compared by the exception record, the thrown object's vtable and message.
+// (which lock; not the allocator's), and what was called back (facets deleted, ios callbacks, array elements, exit
+// functions). Throws are caught (MSVC builds) and compared by the exception record, the thrown object's vtable and
+// message; the originals' throws reach the loader's RtlRaiseException.
 //
 // Parts: locks (_Lockit, _Mutex, _Init_locks, _Init_atexit), locale (_Getfacet, locale(), the first locale::_Init,
 // _Register and the exit functions both register), _Locinfo, ctype (_Getctype, _Getcvt, _Tolower, _Toupper),
@@ -192,13 +193,16 @@ std::string Text(const String *s) {
     return out;
 }
 
-// ---- the kernel's critical sections, recorded on this thread
+// ---- the kernel's critical sections, recorded on this thread: the library's four locks and sections set up during
+//      the side (a _Mutex's). Others are the allocator's (its locked memory classes), whose use follows the heap's
+//      state rather than the code under test.
 
 struct CsCall {
     char kind;   // I(nitialise), E(nter), L(eave)
     int lock;    // the library lock, -1 another
 };
 std::vector<CsCall> g_cs;
+std::vector<CriticalSection *> g_madeSections;
 DWORD g_thread;
 CsFn g_kernelInitialize, g_kernelEnter, g_kernelLeave;
 
@@ -210,23 +214,36 @@ int LockOf(CriticalSection *section) {
     return -1;
 }
 
+bool Recorded(CriticalSection *section) {
+    if (GetCurrentThreadId() != g_thread)
+        return false;
+    if (LockOf(section) >= 0)
+        return true;
+    for (CriticalSection *made : g_madeSections) {
+        if (made == section)
+            return true;
+    }
+    return false;
+}
+
 void __stdcall RecordInitialize(CriticalSection *section) {
     if (GetCurrentThreadId() == g_thread) {
         g_cs.push_back({ 'I', LockOf(section) });
         if (LockOf(section) >= 0)
             return;   // the live locks are not set up again
+        g_madeSections.push_back(section);
     }
     g_kernelInitialize(section);
 }
 
 void __stdcall RecordEnter(CriticalSection *section) {
-    if (GetCurrentThreadId() == g_thread)
+    if (Recorded(section))
         g_cs.push_back({ 'E', LockOf(section) });
     g_kernelEnter(section);
 }
 
 void __stdcall RecordLeave(CriticalSection *section) {
-    if (GetCurrentThreadId() == g_thread)
+    if (Recorded(section))
         g_cs.push_back({ 'L', LockOf(section) });
     g_kernelLeave(section);
 }
@@ -442,6 +459,7 @@ void Compare(const char *what, CaseFn fn, void *context) {
         g_originalSide = run.original;
         Restore(&saved);
         g_cs.clear();
+        g_madeSections.clear();
         g_calls.clear();
         Execute(&run);
         run.out += Globals() + CsLog() + Calls();
@@ -866,7 +884,7 @@ std::string IosInitCase(bool original, void *context) {
     InitLocimp(&c->global, NULL, 0, false, c->localeRefs);
     GlobalLocale = &c->global;
     if (original) {
-        XbeOriginalScope a(0x001313b8);
+        XbeOriginalScope a(0x001313b8), b(0x001310bf);   // and its locale(), which reads the game's global
         OrigIosInit(&c->ios, 0);
     } else {
         c->ios.IosBase::Init();
@@ -1083,13 +1101,15 @@ std::string StrDestructCase(bool original, void *context) {
                   c->buffer.mode);
 }
 
-std::string DescribeOStrStream(OStrStream *s) {
+// After the destructor the buffer's locale is freed: only whether the pointer is left.
+std::string DescribeOStrStream(OStrStream *s, bool destroyed) {
     BasicIos *ios = s->Ios();
     return Format("vbt %s ios at %s: ", Where(s->vbtable).c_str(), Where(ios).c_str()) + DescribeIos(ios) +
            Format(" buf %s tie %s fill %d; ", Where(ios->streambuf).c_str(), Where(ios->tie).c_str(), ios->fill) +
            DescribeStreambuf(&s->buffer) +
            Format(" mutex %s locale %s", s->buffer.mutex.section != NULL ? "set" : "null",
-                  s->buffer.locale == NULL ? "null" : Where(s->buffer.locale->impl).c_str());
+                  s->buffer.locale == NULL ? "null" : destroyed ? "left" :
+                  Where(s->buffer.locale->impl).c_str());
 }
 
 std::string OStrConstructCase(bool original, void *context) {
@@ -1107,7 +1127,7 @@ std::string OStrConstructCase(bool original, void *context) {
     } else {
         returned = c->ostream.Construct(text, c->count, c->mode, c->constructVirtualBase);
     }
-    std::string out = Format("ret %d ", returned == &c->ostream) + DescribeOStrStream(&c->ostream);
+    std::string out = Format("ret %d ", returned == &c->ostream) + DescribeOStrStream(&c->ostream, false);
     // and destroyed again: the ostrstream part, then basic_ios
     if (original) {
         XbeOriginalScope a(0x00131bbb);
@@ -1115,7 +1135,7 @@ std::string OStrConstructCase(bool original, void *context) {
     } else {
         c->ostream.ios.DestructOStrStream();
     }
-    out += "; destroyed " + DescribeOStrStream(&c->ostream);
+    out += "; destroyed " + DescribeOStrStream(&c->ostream, true);
     SetupBasicIosDestruct(&c->ostream.ios, 0);
     return out;
 }

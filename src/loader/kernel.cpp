@@ -967,6 +967,15 @@ static DWORD __stdcall Xbox_RtlTryEnterCriticalSection(CRITICAL_SECTION *section
     return TryEnterCriticalSection(section) ? 1u : 0u;
 }
 
+// Ordinal 302. XAPI's RaiseException builds the record and calls this, as Win32's does ntdll's: the C++ throw
+// (0xe06d7363) arrives here. The record's layout is Win32's, so ntdll raises it as it is, and the handlers on the
+// thread's SEH chain - the game's frame handlers and the host's - see it as they would a Win32 exception.
+static void __stdcall Xbox_RtlRaiseException(EXCEPTION_RECORD *record) {
+    typedef void (__stdcall *RaiseFn)(EXCEPTION_RECORD *);
+    static RaiseFn raise = (RaiseFn)GetProcAddress(GetModuleHandleA("ntdll.dll"), "RtlRaiseException");
+    raise(record);
+}
+
 static const struct { unsigned ordinal; void *implementation; } g_implemented[] = {
     { 14,  (void *)Xbox_ExAllocatePool },
     { 15,  (void *)Xbox_ExAllocatePoolWithTag },
@@ -1012,6 +1021,7 @@ static const struct { unsigned ordinal; void *implementation; } g_implemented[] 
     { 277, (void *)Xbox_RtlEnterCriticalSection },
     { 278, (void *)Xbox_RtlEnterCriticalSection },   // ...AndRegion: APC disabling has no meaning here
     { 291, (void *)Xbox_RtlInitializeCriticalSection },
+    { 302, (void *)Xbox_RtlRaiseException },
     { 304, (void *)Xbox_RtlTimeFieldsToTime },
     { 305, (void *)Xbox_RtlTimeToTimeFields },
     { 294, (void *)Xbox_RtlLeaveCriticalSection },

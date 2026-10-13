@@ -9,7 +9,7 @@ and the array iterators). Ported on 12 October 2026 by two packages, then merged
 last original code our code called: with it nothing of the game's runs but the exception funclets of functions we
 replaced. Every address is Driving.xbe's.
 
-**Status: ported, untested (12 October 2026).** 70 entries, all `FUNC_AT`: 28 of package A (the C library: sprintf,
+**Status: ported and tested (13 October 2026).** 70 entries, all `FUNC_AT`: 28 of package A (the C library: sprintf,
 vsprintf, `_vsnprintf`, sscanf, atof, atol, the helpers the streams hold - localeconv, strtol, strtoul, `_errno`,
 `_strtoi64`, `_strtoui64` -, tolower, isdigit, isalnum, qsort, rand, malloc, free, calloc, atexit, `_clearfp`,
 `_CIacos`, `_CIasin`, `_CIpow`, `__mtinitlocks`, `_mtdeletelocks`, `_amsg_exit`), 39 of package B (the C++ library)
@@ -17,8 +17,8 @@ and, from the integration, three the startup and the fatal stop still reached: `
 list), `_fpmath` 0x00131d28 (the x87's precision) and `_exit` 0x0013438b. What the entries reach is ported untagged
 as far as they need it: strtod 0x00135196, realloc 0x00134815, `_msize` 0x001369cc, `_lock`/`_unlock`, the 12-byte
 long double arithmetic and both float conversions, the printf and scanf engines (`_output`, `_input`). `sys.crt` is
-ours by functions: 74 replaced, 338 dead, nothing live. Two shadow tests compare the ports with the originals; the
-lockstep runs and the shadows are still to be run.
+ours by functions: 74 replaced, 338 dead, nothing live. Two shadow tests compare the ports with the originals: both
+clean in game on all eight missions, and the lockstep runs exact on all sixteen (see what the testing taught).
 
 ## Why the game's and not ours
 
@@ -125,12 +125,43 @@ the streams' `_Stod`, atol), the debug variables' ostrstream, the per-frame rand
 thread, the AI's and Targeting's qsorts, the heap under EAGL, the static initialisers' atexit and `_Init_locks`, the
 startup's `_fpmath`. The lockstep runs (all eight missions, exact frames and sound traces) are the test that matters:
 a parse one ulp off, a rand drawn on the wrong thread or a sort in another order shows there. Only the shadows reach:
-the throws (nothing the game does throws), the fatal stop, `_vsnprintf` past its count, the exit list's growth past
+the throws (nothing the game does throws; the originals' reach the loader's RtlRaiseException), the fatal stop, `_vsnprintf` past its count, the exit list's growth past
 32 entries, standard streams.
 
 ## What the port taught
 
 (To come.)
+
+## What the testing taught
+
+The first rounds (crt1, crt2) had all 16 lockstep runs exact and shadow A clean, but shadow B reported about 15
+differences in `ios_base::_Init` and one in `ostrstream` per mission, and then no shadow run reached its frame dump:
+the first throw by an original stopped the game. Every difference was the harness's or the loader's; the port needed
+no change.
+
+- **The throws (the loader).** The original `_CxxThrowException` calls XAPI's RaiseException (0x0010ea87), which hands
+  its record to the kernel's RtlRaiseException (ordinal 302). The loader had no ordinal 302, so its stub reported
+  "unimplemented kernel import ... called from 0x0010ead8" and ended the process. src/loader/kernel.cpp now passes
+  the record, unchanged, to ntdll's RtlRaiseException; the game's own frame handlers (`__CxxFrameHandler`
+  0x00131dc7) then unwind their frames when shadow B's handler catches the exception. Shadow B compares every throw
+  case in game.
+- **Originals reaching ports (`ios_base::_Init`).** The original `_Init` calls `locale::locale` (0x001310bf) by
+  address, and that is our port there, which reads our global locale rather than the case's (lent to the game's copy
+  only): the original's locale came out the live heap one and the case's reference count stayed put. The case swaps
+  the original `locale::locale` in as well.
+- **Freed memory (`ostrstream`).** The case described the buffer's locale after the destructor had freed it
+  (`~basic_streambuf` deletes it and leaves the pointer), so each side read whatever the heap had left there. It now
+  reports only that the pointer is left.
+- **The allocator's locks (`ios_base::clear`).** Once the throws ran, one case in 256 showed an extra
+  critical-section enter and leave on the original's side: the memory class a string copy (0x000136d0, ours) took its
+  block from was a locked one, which depends on the heap's state, not on the code compared. Shadow B records only the
+  library's four locks and sections set up during the side (a `_Mutex`'s).
+- `NIGHTFIRE_CRUNTIMESHADOWB=3` names each case before it runs, which found the last one (case 641).
+
+The final round (crt3, on the runner, 13 October 2026): all 16 lockstep runs exact against the runner's baselines,
+shadow A clean (498 heap cases; 806,118 others), shadow B clean (7,729 cases, the throws among them) on every
+mission, and every shadow run reached its frame dump, apart from mission 5's once: SndStreamFileShadow's known case 52
+went on to fault on both sides and the game stopped there; run again, mission 5 finished clean.
 
 ## Known deviations
 
