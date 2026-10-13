@@ -71,6 +71,7 @@ namespace {
 
 long g_cases, g_checks, g_differ, g_faults;
 int g_reported;
+bool g_verbose;     // NIGHTFIRE_GAMEFRONTENDSHADOWB=2: each case named before it runs
 unsigned g_x87, g_sse;
 
 void Check(bool same, const char *what, long index) {
@@ -413,6 +414,10 @@ void RunCase(const char *what, unsigned at, const Call &call) {
     std::string results[2];
     for (int side = 0; side < 2; side++) {
         bool original = side == 0;
+        if (g_verbose) {
+            printf("[gamefrontendshadowb] case %ld %s, %s\n", g_cases + 1, what, original ? "original" : "port");
+            fflush(stdout);
+        }
         Apply(g_case);
         std::string &log = results[side];
         g_log = &log;
@@ -955,7 +960,9 @@ void PerturbState(State &s) {
                                    kWeaponFodRocket, kWeaponFodGun, kWeaponSnowmobileGun, kWeaponSnowmobileRocket,
                                    kWeaponSniperRifle, kWeaponUltralightGun, kWeaponTimeMine};
     weapon.id = Pick(kIds);
-    weapon.fireSteps[0] = Random(2) ? 0 : int32_t(Random(3000));
+    // Fired at or before the current step, as in the game: a later step makes the rocket's charge negative, and
+    // DrawCrossHairs then draws its recharge bar's segments some four billion times on both sides
+    weapon.fireSteps[0] = Random(2) ? 0 : I32_AT(0x00234e34) - int32_t(Random(3000));
     weapon.refireSteps = int32_t(Random(200)) + 1;
     s.widescreen = Random(2) != 0;
     s.videoMode = int32_t(Random(3));
@@ -1133,6 +1140,7 @@ void GameFrontEndShadowB_Run(void) {
     const char *env = getenv("NIGHTFIRE_GAMEFRONTENDSHADOWB");
     if (env == NULL || atoi(env) == 0)
         return;
+    g_verbose = atoi(env) == 2;
     g_live = GHud::TheApp();
     if (g_live == NULL || ShMission == NULL || WeaponManager == NULL || fgRenderer == NULL || fgRenderHigh == NULL ||
         fgRenderHigh->views[0].camera == NULL || SniperZoom == NULL || ShPlayerList == NULL) {

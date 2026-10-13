@@ -27,6 +27,7 @@
 #include "../game/MissionManager.h"
 #include "../game/WeaponCameras.h"
 #include "../game/WeaponManager.h"
+#include "../platform/RealSystem.h"       // TIMER_gettick
 #include "../render/Renderer.h"
 #include "../world/Targeting.h"
 #include "../world/World.h"
@@ -383,7 +384,16 @@ void RunCase(const char *what, const Call &call) {
         AppendResult(log, original);
     }
     g_cases++;
+    int reported = g_reported;
     Check(results[0] == results[1], what, g_cases);
+    if (g_reported != reported) {     // the first difference
+        size_t at = 0;
+        while (at < results[0].size() && at < results[1].size() && results[0][at] == results[1][at])
+            at++;
+        size_t from = at > 60 ? at - 60 : 0;
+        printf("  orig: ...%.160s\n  port: ...%.160s\n", results[0].c_str() + from, results[1].c_str() + from);
+        fflush(stdout);
+    }
 }
 
 #define LOG(...) do { if (g_log != NULL) Append(*g_log, __VA_ARGS__); } while (0)
@@ -497,7 +507,13 @@ bool __fastcall FakeSubtitlesShown(void *, int) {
 void __fastcall FakeSubtitlesClear(void *, int) {
     LOG("subtitlesClear ");
 }
+// The game's other threads (the sound's) read the clock too: they get the tick of the shadow's start
+DWORD g_shadowThread;
+int g_otherThreadsTick;
+
 int __cdecl FakeTick() {
+    if (GetCurrentThreadId() != g_shadowThread)
+        return g_otherThreadsTick;
     LOG("tick ");
     int tick = g_fakes.tick;
     g_fakes.tick += g_fakes.tickStep;
@@ -520,7 +536,7 @@ bool __fastcall FakeProgrammerEvent(void *, int, int event) {
     LOG("event(%d) ", event);
     return g_fakes.programmerEvent;
 }
-bool __fastcall FakeGoingToSkip(void *, int) {
+int __fastcall FakeGoingToSkip(void *, int) {     // int: the port tests all of EAX
     LOG("goingToSkip ");
     return g_fakes.skipping;
 }
@@ -1125,6 +1141,8 @@ void GameFrontEndShadowA_Run(void) {
     }
     FpControlGet(&g_x87, &g_sse);
     Take(g_base);
+    g_shadowThread = GetCurrentThreadId();
+    g_otherThreadsTick = TIMER_gettick();
     InstallFakes();
     TestState();
     TestPauseMenu();

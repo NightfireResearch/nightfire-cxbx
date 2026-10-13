@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <bit>
 #include <initializer_list>
 #include <limits>
 #include <vector>
@@ -33,6 +34,7 @@
 #include "../eagl/Tar.h"
 #include "../eagl/View.h"
 #include "../engine/GameLoop.h"            // LaunchPage
+#include "../engine/IOModule.hpp"
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
 #include "../game/Debris.h"
@@ -280,11 +282,12 @@ namespace {
 bool g_original;
 long g_cases, g_checks, g_differ, g_faults, g_bothFaulted, g_skipped;
 int g_reported;
+bool g_verbose;     // NIGHTFIRE_GAMEFRONTENDSHADOWC=2: each case named before it runs
 unsigned g_x87, g_sse;
 
 void Report(const char *what, long index, const char *detail) {
     g_differ++;
-    if (g_reported++ < 10)
+    if (g_reported++ < 40)
         printf("[gamefrontendshadowc]   %s #%ld: %s\n", what, index, detail);
 }
 
@@ -361,6 +364,7 @@ const uint32_t kArenaBytes = 0x100000;
 alignas(16) uint8_t g_arena[kArenaBytes];
 uint32_t g_arenaUsed;
 uint32_t g_arenaHigh;
+long g_arenaFull;          // allocations the arena had no room for
 struct ArenaBlock {
     uint32_t offset, size;
 };
@@ -376,8 +380,10 @@ uint32_t ArenaWord(const void *p) {
 
 void *Bump(uint32_t size) {
     uint32_t rounded = (size + 15) & ~15u;
-    if (g_arenaUsed + rounded > kArenaBytes)
+    if (g_arenaUsed + rounded > kArenaBytes) {
+        g_arenaFull++;
         return NULL;
+    }
     uint8_t *p = g_arena + g_arenaUsed;
     memset(p, 0, rounded);
     g_arenaBlocks.push_back({ g_arenaUsed, size });
@@ -529,6 +535,10 @@ void CompareLogs(const char *what, long index) {
     snprintf(detail, sizeof(detail), "call log word %u of %u/%u: original %08x, port %08x", unsigned(at),
              unsigned(a.size()), unsigned(b.size()), at < a.size() ? a[at] : 0, at < b.size() ? b[at] : 0);
     Report(what, index, detail);
+    if (getenv("NIGHTFIRE_GFEC_WINDOW") != NULL) {
+        for (size_t i = at > 24 ? at - 24 : 0; i < at + 8 && (i < a.size() || i < b.size()); i++)
+            printf("    %5u: %08x %08x\n", unsigned(i), i < a.size() ? a[i] : 0, i < b.size() ? b[i] : 0);
+    }
 }
 
 // A global of ours or its game copy, on the side running
@@ -960,7 +970,14 @@ void __fastcall FakeVoiceSet(AVoice *voice, int, int bank, int patch) {
     Log(uint32_t(patch));
 }
 
+// The game's other threads (the sound's) read the clock too: they get the tick of the shadow's start, so the cases'
+// ticks go only to the shadow's thread
+DWORD g_shadowThread;
+int g_otherThreadsTick;
+
 int FakeGetTick() {
+    if (GetCurrentThreadId() != g_shadowThread)
+        return g_otherThreadsTick;
     if (g_fake.tickCount == 0)
         return 0;
     int tick = g_fake.ticks[g_fake.tickIndex % g_fake.tickCount];
@@ -1130,6 +1147,10 @@ std::vector<uint8_t> g_arenaAfter[2];
 
 // The inputs are in place (ours): both sides from them, the results compared, everything put back
 void RunCase(const char *what, long index, SideFn run, const Snapshot &before) {
+    if (g_verbose) {
+        printf("[gamefrontendshadowc] case %s #%ld\n", what, index);
+        fflush(stdout);
+    }
     g_caseName = what;
     g_caseIndex = index;
     Lend();
@@ -1325,7 +1346,12 @@ void SideQuery() {
             Orig_QuadInterpolate(g_gallery, 0, &g_key->quad, &g_key2->quad, out, g_in.t);
         else
             g_gallery->QUAD_Interpolate(&g_key->quad, &g_key2->quad, out, g_in.t);
-        LogBytes(out, sizeof(GalleryQuad));
+        LogBytes(out->colours, sizeof(out->colours));
+        // Two NaN corners (a real key that holds no quad) leave the x87's larger payload in the original, the
+        // operand MSVC put first in the port: any NaN is logged alike
+        for (const auto &corner : out->corners)
+            for (float c : corner)
+                Log(c != c ? 0x7fc00000u : std::bit_cast<uint32_t>(c));
         break;
     }
     case 5: {
@@ -1808,9 +1834,20 @@ void SideFxScript() {
         }
         case kFxStopped:
             if (fx->canvasCount > 0) {
-                GFXGallery::Canvas *canvas = &fx->canvases[fx->canvasSlots[step.index % fx->canvasCount]];
+                int slot = step.index % fx->canvasCount;
+                GFXGallery::Canvas *canvas = &fx->canvases[fx->canvasSlots[slot]];
                 bool stopped = g_original ? Orig_CanvasHasStopped(fx, 0, canvas) : fx->CANVAS_HasStopped(canvas);
                 Log(stopped);
+                // A stopped canvas has given its emitters back: taken off the list as FRAME_Draw does, or a later
+                // draw or purge faults on both sides on what the game never leaves
+                if (stopped) {
+                    if (canvas->sticky < kGfxStickies)
+                        fx->stickyUsed[canvas->sticky >> 5] &= ~(1u << (canvas->sticky & 31));
+                    fx->freeCanvases[fx->freeCount] = fx->canvasSlots[slot];
+                    fx->canvasSlots[slot] = fx->canvasSlots[fx->canvasCount - 1];
+                    fx->freeCount++;
+                    fx->canvasCount--;
+                }
             }
             break;
         case kFxPurgeAll:
@@ -2424,10 +2461,17 @@ void GameFrontEndShadowC_Run(void) {
     DWORD length = GetEnvironmentVariableA("NIGHTFIRE_GAMEFRONTENDSHADOWC", value, sizeof(value));
     if (length == 0 || length >= sizeof(value) || atoi(value) == 0)
         return;
+    g_verbose = atoi(value) == 2;
     FpControlGet(&g_x87, &g_sse);
 
     FindHudPuppets();
     FindEffects();
+    g_shadowThread = GetCurrentThreadId();
+    g_otherThreadsTick = TIMER_gettick();
+    // The file loads run the sync tasks as the real clock comes due, and the input's reads the clock: off for the run
+    IOModule *io = IOModule::GetIOModule();
+    bool ioUpdating = io->updatingEnabled;
+    io->updatingEnabled = false;
     InstallHooks();
     // The line material is a function-local static: made here once if no draw has made it, so that neither side
     // registers its destructor in a case
@@ -2452,12 +2496,15 @@ void GameFrontEndShadowC_Run(void) {
         HookRemove(&hook);
     ResetArena();
     ResetFpu();
+    io->updatingEnabled = ioUpdating;
     printf("[gamefrontendshadowc] galleries, effects gallery, pause figure, loading screen vs originals: %ld cases, "
            "%ld checks, %ld differ%s\n",
            g_cases, g_checks, g_differ, g_faults != 0 ? " (with faults)" : "");
     if (g_faults != 0)
         printf("[gamefrontendshadowc]   %ld calls faulted (%ld cases on both sides, not compared)\n", g_faults,
                g_bothFaulted);
+    if (g_arenaFull != 0)
+        printf("[gamefrontendshadowc]   %ld allocations found the arena full\n", g_arenaFull);
     if (g_skipped != 0)
         printf("[gamefrontendshadowc]   %ld tests skipped (the pause menu's figure was live)\n", g_skipped);
     fflush(stdout);

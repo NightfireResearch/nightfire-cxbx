@@ -116,6 +116,7 @@ An STL map's empty allocator byte is copied from an uninitialised local. Nothing
 | RayShell::CollideWithObjects | 0x00072190 | computes the first offset from the origin to the object (0x000722fe), which nothing reads before the simple-body branch overwrites it | left out. (The bottom of a rigid body's box, computed after the overlap test, is not dead: it goes into the frame GetOBBObjectIntersection takes.) | game-weapons |
 | FILESYS_allocop | 0x0010cbf0 | running out of op records crashes | the submit fails and returns 0 | filesys 7.1 |
 | FILESYS_size | 0x0010cf90 | clears worker 0's running op, so a concurrent wait can return early | leaves it | filesys 7.2 |
+| GGallery::QUAD_Interpolate | 0x000d5b70 | interpolates the corners on the x87: with both corners NaN, (b - a) x t + a leaves the NaN of larger payload | MSVC puts `a` first in the SSE add, so that NaN is `a`'s. Only a key that holds no quad has NaN corners | game-frontend |
 | FILEDEV_opensub (subfile seek) | 0x0010d290 | the seek test compares `base - pos` | always seeks, which is what the original did in practice | filesys 7.3 |
 | Q_initshared | 0x0014a640 | the done queue's lock is a byte copy of the pending queue's critical section | its own lock | filesys 7.4 |
 | FILESYS_addbig, worker | 0x0010d030, 0x0010c110 | a failed addbig leaks the directory; an unknown archive format reads a negative size | freed; checked | filesys 7.8 |
@@ -192,6 +193,7 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 - GameAIShadowE: WorldCollisionInfo::Construct's segment words (+0x20..+0x3f).
 - GameAIShadowF: a helicopter element's seated riders are left out (the original's vehicle for them is uninitialised
   stack).
+- GameFrontEndShadowC: QUAD_Interpolate's corners are logged with any NaN as one value (the payload above).
 
 ---------------------------------------------------------------------------------------------------------------
 
@@ -334,7 +336,7 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | GFXGallery::Destruct | 0x000d5170 | frees a gallery loaded with FileLoad through UMemory::Free | game-frontend |
 | GFX::Shutdown | 0x000d35d0 | leaves TheEffectsGallery pointing at the freed gallery | game-frontend |
 | GSubtitleSplitter::Reset, GSubtitles::ClearSubtitles, Destruct, LoadSubtitles | 0x000e33e0, 0x000e3630, 0x000e3730, 0x000e3840 | scalar delete of blocks from operator new[] | game-frontend |
-| GSubtitles::Destruct | 0x000e3730 | does not clear font and fontFile; frees through MEM_free's second copy (0x00117110) | game-frontend |
+| GSubtitles::Destruct | 0x000e3730 | does not clear font and fontFile; frees through MEM_free's second copy (0x00117110; in our build the linker folds the two copies into one function) | game-frontend |
 
 ### 3.5 Dead stores, dead code, arguments ignored
 
@@ -619,6 +621,7 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | GSubtitleSplitter::GetString | 0x000e3430 | stops at line 9 but times it again; past the end answers NULL | game-frontend |
 | GSubtitles::SetupFMVSubtitles | 0x000e3560 | restarts the subtitle on every call, so one lasts until the next cue; 1/25 s a frame in PAL 50, 1/30 otherwise | game-frontend |
 | GSubtitles::LoadSubtitles | 0x000e3840 | assumes CR LF; the cursor counts from the file's start; the frame is read from the seventh character of the first '=' field; frames x5/6 in PAL 50 | game-frontend |
+| GHud::DrawCrossHairs | 0x000e0440 | the remote rocket's recharge bar compares its segment count unsigned (0x000e08c7, 0x000e0917): a fire step after the current one, which play never makes, gives a negative charge and about four billion segments | game-frontend |
 
 ### 3.8 x87 and float/double mixes kept
 

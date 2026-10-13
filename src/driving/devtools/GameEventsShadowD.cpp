@@ -30,6 +30,7 @@
 #include "../game/AIVehicleController.h"
 #include "../game/EventsD.h"
 #include "../game/Human.h"
+#include "../game/Subtitles.h"
 #include "../game/Vehicle.h"
 #include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
@@ -728,6 +729,9 @@ void __fastcall FakePlayerInit(void *self, int, const char *path, uint32_t volum
     Text("path", path);
 }
 void __fastcall FakePlayerPlay(void *self, int, void *view, uint32_t widescreen, void *subtitles) {
+    // The original hands over GSubtitles::DrawFrame's game address, the port ours: both logged as the game's
+    if (subtitles == (void *)&GSubtitles::DrawFrame)
+        subtitles = (void *)0x000e3ab0;
     Call("PlayMPC::Play %08x %02x %08x", At(view), widescreen & 0xff, Word(subtitles));
 }
 void __fastcall FakePlayerDestruct(void *self, int) {

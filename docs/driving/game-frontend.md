@@ -10,7 +10,7 @@ game-events.md, game-ai.md, game-weapons.md). Ported on 12 October 2026 by four 
 (`src/driving/game/`). It is the last game-tier subsystem: with it every game and engine function is ours. Every
 address is Driving.xbe's.
 
-**Status: ported, untested (12 October 2026).** 209 entries, all `FUNC_AT`: 62 of package A (GHud's construction,
+**Status: tested (13 October 2026).** 209 entries, all `FUNC_AT`: 62 of package A (GHud's construction,
 state, gauges, screen effects and fonts), 12 of package B (GHud's large draws: the pause menu, the mission result, the
 button and objective messages, the crosshairs, Render, Draw, UpdateTargets), 82 of package C (GGallery, GFXGallery,
 GLoadingScreen with the string list's helpers, GGirl and GGirlieMaterial, and the launch page's IsEndState1Or4) and
@@ -21,7 +21,8 @@ symbol namespace's lookup, a vtable slot Ghidra has no function for, reached thr
 core 0x000d32f0 takes its effect in ESI and its offset in EDI, so no tag can name it: our three Trigger entries call
 our core and the original is dead. `game.frontend` is ours by bytes: 208 replaced, 71 dead, 53 live - 52 exception
 funclets (0x00154xxx-0x00155xxx) and 0x000e384a, a piece Ghidra cut off LoadSubtitles (ported inside it). Four shadow
-tests compare the ports with the originals; the lockstep runs and the shadows are still to be run.
+tests compare the ports with the originals; the lockstep runs and the shadows pass (below, "What the testing
+taught").
 
 ## The classes
 
@@ -128,9 +129,53 @@ from it (EExit, ERestart), a mission passed and one failed, the controller pulle
 auto-drive aim, a movie with subtitles in each language, the cheats, and effects on scene objects (the "GIOT"
 lookups, culling, sticky entries).
 
-## What the port taught
+## What the testing taught
 
-(To come.)
+The first round (gfe2) had all 16 lockstep runs exact, but no shadow run finished: each died silently in
+GameFrontEndShadowB, after A's summary, so B, C and D never reported. A showed 4 differences (FadeOutToBlack) and
+GameEventsShadowD 4 (ESetVideo) on every mission. Run one at a time on one mission, the shadows showed more (C 14,
+D about 2,470). Every difference was the harness's; the port needed no change.
+
+- **The silent death (B).** DrawCrossHairs' remote-rocket recharge bar counts its segments unsigned (0x000e08c7,
+  0x000e0917; the port the same). B's cases put the rocket's fire step up to 3,000 steps after the current one, so
+  the charge went negative and both sides drew about four billion segments, appending to the call log until memory
+  ran out, which ends the game with no fault report. B now fires at or before the current step, as the game does.
+  `NIGHTFIRE_GAMEFRONTENDSHADOWB=2` names each case before it runs, which found it.
+- **Return types (A).** The fake for SMissionManager::GoingToSkipCinematic answered a `bool`, setting AL only; the port
+  declares `int` and tests all of EAX, so on a skipping answer the stale upper bytes sent the port into
+  ClearSubtitles. The fakes in A and D answer `int`.
+- **Function pointers (GameEventsShadowD).** ESetVideo hands the movie player GSubtitles::DrawFrame: the original its
+  game address (0x000e3ab0), the port ours. The fake logs ours as the game's.
+- **Globals only the port writes (D).** The game's copy of LocaleFile (0x0023f8b8) is never loaded, since our
+  LOCALE_LoadLanguage loads ours: D lends ours to it for the run.
+- **Folded functions (D).** The linker folds our two identical MEM_free copies (0x00113f20, 0x00117110) into one, so
+  the port's calls to either reach whichever hook went in last: one fake serves both, and it logs a freed block by
+  kind (heap, static, the fake file), since the fake frees nothing and the sides' blocks differ.
+- **A case's own draws (D).** FillSplitter drew its random fields inside the case, so the port's side got other
+  values: RunCase puts the generator back before each side, as the AI round's shadows do.
+- **Clocks (C, and A and D).** The loading screen's file loads run the sync tasks whenever the real clock comes due,
+  and IOModule::Update, one of them, reads TIMER_gettick: on the shadow's thread, it took a fake tick from one side
+  or the other at random. C turns the input's updates off for its run, and the clock fakes in A, C and D give the
+  game's other threads the tick of the shadow's start.
+- **NaN payloads (C).** QUAD_Interpolate on a real key that holds no quad meets NaN corners in both inputs; the
+  original's x87 keeps the larger payload, our SSE the first operand's (Known deviations). C logs any NaN alike.
+- **Impossible states (C).** C called CANVAS_HasStopped on any canvas and left a stopped one in the list, its emitters
+  given back, for later draws, purges and intensities to fault on: about 120 cases faulted on both sides on every
+  mission (several minutes of fault reports with eight games). A stopped canvas now leaves the list as FRAME_Draw
+  takes it off. The loading screen's cases that draw the picture with none loaded still fault on both sides (about
+  16); letting them run on reaches Shutdown's frees of a kept screen's stale picture and font, which kills the game.
+- **Time.** In gfe3, with all four front-end shadows running and C's 276 faults, the shadow runs of missions 1-4 and 6
+  reached round.sh's 45 minutes before the frame dump (mission 2 before the front end's shadows). Without C's wasted
+  faults a run takes 29 to 38 minutes on eight slots; round.sh gives a shadow run 60 minutes now, for room.
+
+Other harness additions: A prints the call log round its first differences; C prints a window of its call log
+round a difference with `NIGHTFIRE_GFEC_WINDOW=1`, names each case before it runs with
+`NIGHTFIRE_GAMEFRONTENDSHADOWC=2`, and counts allocations its arena had no room for (none so far).
+
+With these, the final round (gfe4) had all 16 lockstep runs exact against the baselines (frames and sound traces to
+tick 9000) and every shadow run finished on missions 1-8 (a frame dumped), the four front-end shadows and
+GameEventsShadowD with 0 differences; only the two known differences remain (sndsysshadow case 0, sndstreamfileshadow
+case 52).
 
 ## Random and clock calls
 
@@ -154,6 +199,8 @@ a NULL type), FRAME_Draw's unused maximum, DoGirl's WBINVD, the splitter's Reset
 Get_InterpolatedKey's answer in DrawMissionResult, which calls QUAD_SetState where the original inlines it. The
 packages' strings, floats and tables (the cheat codes, the button markers, the languages' folders) are our
 constants; the pure C runtime calls are ours, atol and atexit the game's (atol wraps where ours saturates).
+QUAD_Interpolate's corners: with both NaN, the original's x87 leaves the NaN of larger payload, ours (SSE, MSVC's
+operand order) the first corner's; only a key that holds no quad has NaN corners.
 
 ## Odd things in the original, kept
 
@@ -169,6 +216,8 @@ constants; the pure C runtime calls are ours, atol and atexit the game's (atol w
 - Branches and values: TriggerMissionMsg sets the frame's last step; the objectives page wraps asymmetrically and the
   failed page's Accept drops two lookups; DrawStylin fades by whole steps; DrawScreenFades sets 0, not 1, past 1; an
   unsigned compare in TriggerDamageFlash; the button message pulses; the score page divides unsigned;
+  DrawCrossHairs compares the recharge bar's segment count unsigned (a negative charge, which play never makes, would
+  draw about four billion);
   DrawMissionResult's state 2 draws key 0's quad at the interpolated key; the sniper ticks' spacing is x 0; the
   recharge goes through the sound's slot 9; Render keeps actions 33-35 from the pause menu; the texts go to
   FONT_drawtextfa as format strings; GFX::Trigger answers 0 for an effect with Flgs bit 0x01; PostRender sends EExit
