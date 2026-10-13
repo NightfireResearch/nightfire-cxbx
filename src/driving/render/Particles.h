@@ -255,6 +255,6 @@ public:
 static_assert(sizeof(RParticleSystemManager) == 0x10030, "RParticleSystemManager is 0x10030 bytes");
 static_assert(offsetof(RParticleSystemManager, cache) == 0x10, "RParticleSystemManager layout");
 
-#define fgParticleSystems (*(RParticleSystemManager **)0x00201730)
+extern RParticleSystemManager *fgParticleSystems;
 
 #endif // DRIVING_RENDER_PARTICLES_H_

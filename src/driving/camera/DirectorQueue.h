@@ -173,4 +173,7 @@ ReverseDrawEntry* UninitializedCopyReverseDrawEntries(ReverseDrawEntry *from, Re
                                                       ReverseDrawEntry *dest);                             // 0x0007c8d0
 void UninitializedFillReverseDrawEntries(ReverseDrawEntry *dest, uint32_t count, const ReverseDrawEntry *value);   // 0x0007c900
 
+namespace EAGL { struct RenderMethod; }
+extern EAGL::RenderMethod TextureDofMethod;   // "HB_RM = TextureDOF" (DirectorQueue.cpp)
+
 #endif // DRIVING_CAMERA_DIRECTORQUEUE_H_

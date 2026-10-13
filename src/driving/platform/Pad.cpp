@@ -1,4 +1,5 @@
 #include "Pad.hpp"
+#include "XboxInput.h"
 
 #include "RealSystem.h"
 
@@ -15,7 +16,7 @@ PadData gPads[kPorts];
 // XBE_GLOBAL(0x00241e90, 1)
 static bool gPadInitialised;
 
-// XAPI, called at its entry points in the XBE, which are XboxInput.cpp's replacements. XDEVICE_TYPE_GAMEPAD is the address of the device-type table XAPI
+// XAPI's controller functions: XboxInput.cpp's. XDEVICE_TYPE_GAMEPAD is the address of the device-type table XAPI
 // keeps in the XBE.
 #define XDEVICE_TYPE_GAMEPAD ((void *)0x00183aec)
 struct XboxGamepadState {   // XINPUT_STATE
@@ -30,15 +31,12 @@ typedef void *(__stdcall *XInputOpenFn)(void *type, uint32_t port, uint32_t slot
 typedef void (__stdcall *XInputCloseFn)(void *handle);
 typedef uint32_t (__stdcall *XInputGetCapabilitiesFn)(void *handle, void *capabilities);
 typedef uint32_t (__stdcall *XInputGetStateFn)(void *handle, XboxGamepadState *state);
-#define XGetDevices ((XGetDevicesFn)0x00184bb3)
-#define XGetDeviceChanges ((XGetDeviceChangesFn)0x00184bd5)
-#define XInputOpen ((XInputOpenFn)0x001848ad)
-#define XInputClose ((XInputCloseFn)0x00184903)
-#define XInputGetCapabilities ((XInputGetCapabilitiesFn)0x0018490f)
-#define XInputGetState ((XInputGetStateFn)0x00184aed)
-
-// PAD_init adds PAD_update to the game's task list by the original's address, which IOModule::Initialize removes.
-#define kPAD_updateOriginal ((SyncTaskFn)0x00108490)   // patched to jump to PAD_update below
+#define XGetDevices (reinterpret_cast<XGetDevicesFn>(Xbox_XGetDevices))
+#define XGetDeviceChanges (reinterpret_cast<XGetDeviceChangesFn>(Xbox_XGetDeviceChanges))
+#define XInputOpen (reinterpret_cast<XInputOpenFn>(Xbox_XInputOpen))
+#define XInputClose (reinterpret_cast<XInputCloseFn>(Xbox_XInputClose))
+#define XInputGetCapabilities (reinterpret_cast<XInputGetCapabilitiesFn>(Xbox_XInputGetCapabilities))
+#define XInputGetState (reinterpret_cast<XInputGetStateFn>(Xbox_XInputGetState))
 
 // AUTOINJECT
 PadData* PAD_getdataptr(int port) {
@@ -121,6 +119,6 @@ void PAD_init() {
         gPads[port].handle = XInputOpen(XDEVICE_TYPE_GAMEPAD, port, 0, nullptr);
         XInputGetCapabilities(gPads[port].handle, gPads[port].capabilities);
     }
-    SYNCTASK_add(kPAD_updateOriginal, 0, 0);
+    SYNCTASK_add(reinterpret_cast<SyncTaskFn>(PAD_update), 0, 0);   // IOModule::Initialize removes it
     gPadInitialised = true;
 }

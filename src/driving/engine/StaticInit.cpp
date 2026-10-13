@@ -29,10 +29,16 @@
 #include "../physics/PhysicsNamespace.h"  // PhysicsData
 #include "../render/RSceneObj.hpp"
 #include "../render/TextureContext.h"
+#include "../game/AIRoadSpawn.h"         // SpawnNav
+#include "../render/RenderHigh.h"         // TheRenderSingletonManager
+#include "../render/ShadowMap.h"          // ShadowMaterial
 #include "../world/RoadNav.h"
 #include "../world/Targeting.h"
 
 // ---- the weapon table
+
+// XBE_GLOBAL(0x001c94d8, 0xa80)
+WeaponRecord WeaponDefinitions[kWeaponCount];
 
 // The initialiser at 0x00158ef0: 658 stores of constants, which leave the table as kWeaponDefinitions. The first
 // record is initialised data in the XBE, and the stores leave it as it was apart from fields they write with the
@@ -84,7 +90,7 @@ void DestroyStatic_001dda14(void) {
 }
 // FUNC_AT(0x0015cd50)
 void DestroyStatic_001de820(void) {
-    ((WRoadNav *)0x001de820)->Destruct();
+    SpawnNav.Destruct();
 }
 // FUNC_AT(0x0015cde0)
 void DestroyStatic_001e23f0(void) {
@@ -107,7 +113,7 @@ void DestroyStatic_001ebd60(void) {
 }
 // FUNC_AT(0x0015ceb0)
 void DestroyStatic_001ec4a4(void) {
-    ((USingletonManager *)0x001ec4a4)->Destruct();
+    TheRenderSingletonManager.Destruct();
 }
 // The object at 0x001f25b0 needs no destructor: the original jumped to an empty function (dummyNullFunction).
 // FUNC_AT(0x0015cec0)
@@ -127,7 +133,7 @@ void DestroyStatic_00200f60(void) {
 }
 // FUNC_AT(0x0015cfb0)
 void DestroyStatic_00201790(void) {
-    ((EAGL::GeoPrimState *)0x00201790)->Destruct();
+    ((EAGL::GeoPrimState *)&ShadowMaterial)->Destruct();
 }
 // FUNC_AT(0x0015d0d0)
 void DestroyStatic_0023f330(void) {

@@ -144,7 +144,7 @@ static_assert(sizeof(ABaseSound) == 0xc0, "ABaseSound is 192 bytes");
 bool Generic_FuncReturnsFalse();                                                // 0x0001c080
 
 // The ALimitedSounds in existence: their constructor counts up, their destructor down (name ours).
-#define LimitedSoundCount I32_AT(0x00243b30)
+extern int32_t LimitedSoundCount;
 
 // ---- the sound manager's list of every sound: std::list<ABaseSound *>, the game's list of pointers (its remove,
 // PointerList::Remove, is shared by every such list)

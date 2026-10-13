@@ -35,6 +35,7 @@
 #include "../world/SoundMap.h"            // BuyMapHead
 #include "../world/World.h"               // ArticleEffect
 #include "../../helpers.h"
+#include "../data/XbeData.h"   // XBE_INITIAL
 
 // ---------------------------------------------------------------------------------------------------------------
 // REmp, REmpBolts and the two maps between them (0x0009b680-0x0009dd40), ported from the listing.
@@ -80,12 +81,8 @@ EAGL::GeoPrimState EmpRingState;
 alignas(16) Coord4 EmpLights[8];
 
 // XBE_GLOBAL(0x001c48c0, 0x40)
-Coord4 EmpParam10Vectors[4] = {
-    { 0.005f, 0.02f, 0.0f, 0.0f },      // the sphere's
-    { -0.004f, -0.03f, 0.0f, 0.0f },    // not used
-    { 0.0078f, 0.0f, 0.0f, 0.0f },      // the ring's first draw
-    { -0.0074f, 0.0f, 0.0f, 0.0f },     // and its second
-};
+Coord4 EmpParam10Vectors[4];
+XBE_INITIAL(EmpParam10Vectors);
 // XBE_GLOBAL(0x001c4910, 0x10)
 uint32_t EmpRingVertexCount[4] = { kRingVertices, 0, 0, 0 };
 // XBE_GLOBAL(0x001c4920, 0x10)
@@ -282,7 +279,7 @@ bool IsAnchor(const ArticleEffect *effect) {
 
 // FUNC_AT(0x0009b680)
 void REmp::Init() {
-    EmpLightParams.simStep = &SimStep;
+    EmpLightParams.simStep = &SimStep.step;
     EmpLightParams.lights = EmpLights;
     for (int i = 0; i < 8; i++)
         EmpLights[i] = kZero;
@@ -329,7 +326,7 @@ void REmp::Init() {
     sphere[kEmpParamPositions].count = kSphereBandVertices;
     sphere[kEmpParamState].Set(1, &EmpSphereState);
     sphere[kEmpParam10].Set(1, &EmpParam10Vectors[0]);
-    sphere[kEmpParamSimStep].Set(1, &SimStep);
+    sphere[kEmpParamSimStep].Set(1, &SimStep.step);
     sphere[kEmpParamVertexCount].Set(1, EmpSphereVertexCount);
     EmpRingGeoPrim->params[kEmpParamFishEye].count = 1;
     EmpRingGeoPrim->params[kEmpParamFishEye].SetData(TheReflection->GetReflectionMapWarpageData());
@@ -352,7 +349,7 @@ void REmp::Init() {
     ring[kEmpParamPositions].Set(kRingVertices, EmpRingPositions);
     ring[kEmpParamState].Set(1, &EmpRingState);
     ring[kEmpParam10].Set(1, &EmpParam10Vectors[2]);
-    ring[kEmpParamSimStep].Set(1, &SimStep);
+    ring[kEmpParamSimStep].Set(1, &SimStep.step);
     ring[kEmpParamVertexCount].Set(1, EmpRingVertexCount);
     sphere[kEmpParamLights].SetData(fgLightManager->positionalLights);
     ring[kEmpParamLights].SetData(fgLightManager->positionalLights);

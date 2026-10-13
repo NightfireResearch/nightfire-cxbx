@@ -23,7 +23,6 @@
 
 // ---- the game's globals
 
-#define VideoModeRate FLOAT_AT(0x001f2a44)      // the video mode's frames per second
 
 // XBE_GLOBAL(0x001ec300, 4)
 PathList *fgPathHandles;

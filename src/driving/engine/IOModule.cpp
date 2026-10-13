@@ -1,4 +1,5 @@
 #include "IOModule.hpp"
+#include "StaticInit.h"
 
 #include <string.h>
 
@@ -24,14 +25,12 @@ static uint32_t gIOModuleGuard;
 static const int kUnplugMinSimSteps = 2;
 
 // The game's own names for its allocations, as the original passes them.
-#define kXBoxPadDeviceTag ((const char *)0x0018da2c)
-#define kInputToActionTag ((const char *)0x0018da1c)
+#define kXBoxPadDeviceTag "XBoxPadDevice"
+#define kInputToActionTag "InputToAction"
 
-// The sync tasks are named by the originals' addresses (patched to jump here), so adding and removing find the same
-// entry whichever side registered it.
-#define kUpdateTask (reinterpret_cast<SyncTaskFn>(0x000516d0))
-#define kPAD_updateTask (reinterpret_cast<SyncTaskFn>(0x00108490))
-#define kIOModuleAtexit ((void (__cdecl *)())0x0015ce00)   // IOModule's trivial destructor: a bare RET
+// The sync tasks, as SYNCTASK_add and SYNCTASK_del take them
+#define kUpdateTask (reinterpret_cast<SyncTaskFn>(IOModule::Update))
+#define kPAD_updateTask (reinterpret_cast<SyncTaskFn>(PAD_update))
 
 static const int kPorts = 4;
 static const int kInputSync = 0x73;   // ACTION_INPUTSYNC, sent after every device's batch
@@ -49,7 +48,7 @@ IOModule* IOModule::GetIOModule() {
         io->controllerUnplugged = false;
         io->currentTick = 0;
         io->unused98 = 0;
-        Crt::atexit(kIOModuleAtexit);
+        Crt::atexit(DestroyStatic_Empty);   // IOModule's trivial destructor
     }
     return &gIOModule;
 }

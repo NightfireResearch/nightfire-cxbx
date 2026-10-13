@@ -23,11 +23,11 @@ class ASystem;
 
 // The sound manager's state shared with the sounds, the mixes, the faders and the streams (names ours, but
 // ASoundManager_fgIsPaused and ASystem_fgSystem)
-#define fgSoundList (*(ASoundList **)0x00243a58)    // every sound ("ASoundList")
-#define fgActiveViews U32_AT(0x00243940)            // the views kSoundViewsActive stands for
-#define ASoundManager_fgIsPaused BOOL8_AT(0x002439d0)
-#define ASoundManager_fgMissionOver BOOL8_AT(0x00243a77)    // set by SetMissionOver, cleared by Restart
-#define FramesSinceAudioUpdate I32_AT(0x00243a68)   // the simulation's frames since the last audio update
+extern ASoundList *fgSoundList;   // every sound ("ASoundList")
+extern uint32_t fgActiveViews;   // the views kSoundViewsActive stands for
+extern uint8_t ASoundManager_fgIsPaused;
+extern uint8_t ASoundManager_fgMissionOver;   // set by SetMissionOver, cleared by Restart
+extern int32_t FramesSinceAudioUpdate;   // the simulation's frames since the last audio update
 extern float MusicVolumeScale;                  // the options' volumes
 extern float EffectsVolumeScale;
 extern ASystem *ASystem_fgSystem;               // the one ASystem, or NULL

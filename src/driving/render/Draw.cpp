@@ -11,6 +11,11 @@
 #include "../engine/UMemory.hpp"          // OperatorNew
 #include "../platform/X87.h"              // RoundToInt
 
+// XBE_GLOBAL(0x001e92d0, 0x4)
+USimpleMaterial *SimpleMaterial;
+// XBE_GLOBAL(0x001e92d4, 0x4)
+USimpleTexturedMaterial *SimpleTexturedMaterial;
+
 // ---------------------------------------------------------------------------------------------------------------
 // ColourConvertXBoxToPS2, SimpleDraw and Draw (0x00075c40..0x00076810), ported from the listing. The x87 code keeps
 // the original's order and roundings.

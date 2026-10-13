@@ -45,10 +45,10 @@ constexpr uint32_t kMagic = 0x4d525453;   // "STRM"
 constexpr uint32_t kWrap = 0xffffffff;    // chunk tag: continue at ringStart
 constexpr uint32_t kSkip = 0xfffffffe;    // chunk tag: released or skipped
 
-// The FILESYS completion callbacks, as the originals' addresses
-#define OpenDone ((FsCallback)0x0014aee0)     // FUN_0014aee0
-#define CloseDone ((FsCallback)0x0014af10)    // FUN_0014af10
-#define ReadDone ((FsCallback)0x0014b660)     // FUN_0014b660
+// The FILESYS completion callbacks
+#define OpenDone (reinterpret_cast<FsCallback>(FUN_0014aee0))     // FUN_0014aee0
+#define CloseDone (reinterpret_cast<FsCallback>(FUN_0014af10))    // FUN_0014af10
+#define ReadDone (reinterpret_cast<FsCallback>(FUN_0014b660))     // FUN_0014b660
 
 StrmInternal *Valid(StrmReader *stream) {   // the check every entry starts with
     if (stream == NULL || stream->internal->magic != kMagic)

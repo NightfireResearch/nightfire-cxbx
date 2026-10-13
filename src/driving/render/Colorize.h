@@ -59,7 +59,7 @@ static_assert(offsetof(RColorize, colourA) == 0x10 && offsetof(RColorize, mode) 
               offsetof(RColorize, tintColour) == 0x3c && offsetof(RColorize, areaBrightness) == 0x48 &&
               offsetof(RColorize, frontBuffer) == 0x58, "RColorize layout");
 
-#define Colorize (*(RColorize **)0x001f6898)
+extern RColorize *Colorize;
 
 extern float InfraredStartBrightness;       // the previous brightness the infrared mode starts from
 extern float BrightnessLightScale;

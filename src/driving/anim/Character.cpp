@@ -7,6 +7,7 @@
 #include "../game/Vehicle.h"
 
 #include "Actor.h"
+#include "../engine/CoreFoundation.h"   // NullFunctionPop4
 #include "Manager.h"
 #include "Model.h"
 #include "Weapon.h"
@@ -40,10 +41,8 @@
 // ActCharacter, ActCharacterInfo and the helpers between them (0x000143e0-0x000156c0), ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
 
-// ---- the game's code not ported yet
-
-// The textures' and the models' stop-using calls: one empty function (Ghidra: dummyNullFunction)
-#define DummyNullFunction ((void (__fastcall *)(void *, int, const void *))0x00017550)
+// The textures' and the models' stop-using calls: one empty function (Ghidra: dummyNullFunction), called with `this`
+#define DummyNullFunction (reinterpret_cast<void (__fastcall *)(void *, int, const void *)>(&NullFunctionPop4))
 
 // ---- globals
 

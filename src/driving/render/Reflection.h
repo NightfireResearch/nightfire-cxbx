@@ -239,7 +239,7 @@ void ReflHemisphereCoords(const Coord4 *direction, Coord4 *out, bool *front);   
 // height) to both sets of coordinates (FUN_00098ab0)
 void ReflMapVertex(float height, float turns, bool flip, Coord4 *position, Coord4 *uv);  // 0x00098ab0
 
-#define TheReflection (*(RReflection **)0x001f2dfc)
+extern RReflection *TheReflection;
 
 extern uint32_t CpuType;                    // CPU_detect's
 extern int32_t FeatureDefault50;            // copied to FeatureManagerData::unknown50

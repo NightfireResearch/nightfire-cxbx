@@ -77,6 +77,6 @@ struct DTuningDBMgr {
 };
 static_assert(sizeof(DTuningDBMgr) == 0x10, "DTuningDBMgr");
 
-#define TuningDBMgr (*(DTuningDBMgr **)0x001e22e8)   // fgThis: the instance
+extern DTuningDBMgr *TuningDBMgr;   // fgThis: the instance
 
 #endif // DRIVING_DATA_TUNING_H_

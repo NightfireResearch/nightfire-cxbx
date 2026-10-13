@@ -14,6 +14,9 @@
 #include "../physics/RigidBodyBasics.h"   // PointerVectorDeallocate, VectorXlen
 #include "../platform/RealMath.h"
 #include "../game/SimulationContainers.h"
+#include "../../common/xbeOverload.h"        // XbeAddress
+#include "../audio/Bank.h"                  // SharedTreeIterator
+#include "../engine/ActionQueue.hpp"        // FillQueuePointers
 
 #include <bit>
 #include <math.h>
@@ -33,10 +36,10 @@
 // box), and WorldCollisionInfo's constructor (not ported, called) leaves the segment fields as its stack had them.
 // ---------------------------------------------------------------------------------------------------------------
 
-// ---- the game's, not ported yet
-
-#define PointerFill ((void (*)(void **, void **, void *const *))0x0004f3e0)
-#define ArticleMapDecrement ((void (__fastcall *)(ArticleMapNode **, int))0x00126bd0)
+// The game's shared helpers, on this file's types: the action queues' uninitialized_fill_n and the data layer's
+// --iterator (SharedTreeIterator::Dec, audio/Bank.h)
+#define PointerFill (reinterpret_cast<void (*)(void **, void **, void *const *)>(FillQueuePointers))
+#define ArticleMapDecrement (reinterpret_cast<void (__fastcall *)(ArticleMapNode **, int)>(XbeAddress(&SharedTreeIterator::Dec)))
 
 // ---- globals
 

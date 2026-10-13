@@ -5,6 +5,9 @@
 #include "../platform/RealMemory.h"   // MEMCLASS_init, MEMCLASS_restore, MEMCLASS_findfree
 #include "../platform/RealPrint.h"    // MEM_fill, MEM_clear, PRINT_*, REAL_exit
 #include "../platform/XboxXapi.h"     // Xbox_MmFreeContiguousMemory
+#include "../audio/Sound.h"           // Generic_FuncReturnsFalse
+#include "../platform/FileSys.h"      // QueueKeyIdentity
+#include "CoreFoundation.h"           // GetNullValue
 
 // ---------------------------------------------------------------------------------------------------------------
 // UMemory, the game's memory manager (0x00114400-0x00114a50), ported from the listing. Everything the game
@@ -18,16 +21,39 @@
 // given back when that class is deleted. Entries go back on their list zero-filled; the block is never freed.
 // ---------------------------------------------------------------------------------------------------------------
 
-// ---- originals called by address
-
-#define XPhysicalAlloc ((void *(__stdcall *)(uint32_t size, uint32_t highest, uint32_t alignment, uint32_t protect))0x0010e7e9)   // ours (XboxXapi.cpp), through its jump
 
 // ---- globals
 
-// The allocator's tables, the game's: they hold its functions' addresses, some of them originals not ported.
-#define InitialFunctions (*(MemoryFunctions *)0x001d4834)   // before Init
-#define MemFunctions (*(MemoryFunctions *)0x001d4894)       // the MEM_ functions
-#define DeadFunctions (*(MemoryFunctions *)0x001d4864)      // after Shutdown: alloc answers NULL
+// The allocator's tables. The slots they fill with the library's do-nothing functions (an int 0, a bool false, the
+// argument back) are called through the slot's own type, as the original's were.
+typedef void *(*AllocFn)(const char *name, int size, unsigned flags);
+typedef bool (*FreeFn)(void *block);
+typedef void *(*ResizeFn)(void *block, int size);
+typedef void *(*BlockOfFn)(void *pointer);
+typedef size_t (*SizeFn)(void *block);
+typedef unsigned short (*TypeFn)(void *block);
+typedef int (*UnusedFn)(unsigned flags);
+typedef bool (*ValidateFn)();
+
+// XBE_GLOBAL(0x001d4834, 0x30)
+MemoryFunctions InitialFunctions = {   // before Init
+    NULL, UMemory::ConfiguredAlloc, reinterpret_cast<FreeFn>(Generic_FuncReturnsFalse),
+    reinterpret_cast<ResizeFn>(QueueKeyIdentity), reinterpret_cast<BlockOfFn>(GetNullValue), NULL,
+    reinterpret_cast<SizeFn>(GetNullValue), reinterpret_cast<void *>(GetNullValue), reinterpret_cast<TypeFn>(GetNullValue),
+    reinterpret_cast<UnusedFn>(GetNullValue), reinterpret_cast<UnusedFn>(GetNullValue), Generic_FuncReturnsFalse,
+};
+// XBE_GLOBAL(0x001d4864, 0x30)
+MemoryFunctions DeadFunctions = {      // after Shutdown: alloc answers NULL
+    NULL, reinterpret_cast<AllocFn>(GetNullValue), reinterpret_cast<FreeFn>(Generic_FuncReturnsFalse),
+    reinterpret_cast<ResizeFn>(QueueKeyIdentity), reinterpret_cast<BlockOfFn>(GetNullValue), NULL,
+    reinterpret_cast<SizeFn>(GetNullValue), reinterpret_cast<void *>(GetNullValue), reinterpret_cast<TypeFn>(GetNullValue),
+    reinterpret_cast<UnusedFn>(GetNullValue), reinterpret_cast<UnusedFn>(GetNullValue), Generic_FuncReturnsFalse,
+};
+// XBE_GLOBAL(0x001d4894, 0x30)
+MemoryFunctions MemFunctions = {       // the MEM_ functions
+    NULL, MEM_allocz, MEM_free, MEM_resize, MEM_blockof, NULL, MEM_size, reinterpret_cast<void *>(GetNullValue),
+    MEM_type, MEM_largestunused, MEM_totalunused, MEM_validate,
+};
 
 // XBE_GLOBAL(0x00242eb8, 0x108)
 static FastPool DefaultPools;
@@ -42,7 +68,7 @@ uint32_t PageSize;                                       // 0x1000, set by Init 
 // XBE_GLOBAL(0x00242fc8, 0x4)
 int32_t ObjectHeapClass;                                 // the class operator new and big FastAllocs use
 // XBE_GLOBAL(0x00242fd0, 0x40)
-#define ClassMemory ((void **)0x00242fd0)   // each class's contiguous memory, by class number (up to 63: the game's
+alignas(16) void *ClassMemory[16];   // each class's contiguous memory, by class number (up to 63: the game's
                                             // room for 16 runs into the globals after it, so it stays the game's)
 // XBE_GLOBAL(0x001d4830, 0x1)
 static bool OwnsRam = true;                              // class 0's memory is Init's own (and is freed with it)
@@ -79,7 +105,7 @@ int UMemory::NewClass(unsigned int bytes, const char *name, bool locked, unsigne
     int number = MEMCLASS_findfree();
     if (PageSize == 0)
         PageSize = 0x1000;
-    void *memory = XPhysicalAlloc(bytes, kAnyAddress, kClassAlignment, kPageReadWrite);
+    void *memory = Xbox_XPhysicalAlloc(bytes, kAnyAddress, kClassAlignment, kPageReadWrite);
     ClassMemory[number] = memory;
     if (memory == NULL)
         return -1;
@@ -238,7 +264,7 @@ void UMemory::Init(unsigned int bytes, unsigned int objectHeapBytes, void *base)
     if (memory == NULL) {
         if (PageSize == 0)   // as the original: it was set just above
             PageSize = 0x1000;
-        memory = XPhysicalAlloc(bytes, kAnyAddress, kClassAlignment, kPageReadWrite);
+        memory = Xbox_XPhysicalAlloc(bytes, kAnyAddress, kClassAlignment, kPageReadWrite);
         OwnsRam = true;
     } else {
         OwnsRam = false;

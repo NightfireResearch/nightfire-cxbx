@@ -195,7 +195,7 @@ void FUN_0007eed0();
 void SetLightDirections(LightBlock *info, const RLightAngles *angles);
 
 // The instance (RLightManager::Init makes it)
-#define fgLightManager (*(RLightManager **)0x001ec260)
+extern RLightManager *fgLightManager;
 
 extern RPositionalLights SavedPositionalLights;     // DisablePositionalLighting's
 // The tuning file's types and the indices dbindex reads them through

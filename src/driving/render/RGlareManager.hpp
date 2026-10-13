@@ -63,4 +63,7 @@ void __stdcall Add2DGlareToRender(int *count, const Glare *glare, const GlareSpr
                                   uint32_t colour, float distance);
 
 // RenderManagers::InitGlareManager's instance
-#define TheGlareManager (*(RGlareManager **)0x00208cb4)
+extern RGlareManager *TheGlareManager;class UVolatileMaterial;
+extern UVolatileMaterial GlareMaterial;   // the glares' material (RGlareManager.cpp)
+
+

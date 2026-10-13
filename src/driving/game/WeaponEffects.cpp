@@ -31,6 +31,7 @@
 #include "../render/TextureContext.h"
 #include "../world/CollisionManager.h"    // fgCollisionMgr
 #include "../world/WorldPos.h"
+#include "../data/XbeData.h"   // XBE_INITIAL
 
 // ---------------------------------------------------------------------------------------------------------------
 // RBulletStreak (0x00099e20-0x0009a420), RMissileStreak and RMuzzleFlash (0x000a0e90-0x000a1c00) and RScorchWorld
@@ -92,59 +93,18 @@ UVolatileMaterial MuzzleFlashPOVMaterial;
 // XBE_GLOBAL(0x00201450, 0x14)
 EAGL::TAR *MuzzleFlashTextures[kMuzzleFlashTypes];
 // XBE_GLOBAL(0x001c4b30, 0x1a0)
-alignas(16) Coord4 MuzzleFlashPositions[kMuzzleFlashVertices] = {
-    { -1.63281f, 1.3125f, 1.3125f, 1.0f },
-    { -1.63281f, -1.316406f, 1.3125f, 1.0f },
-    { -1.63281f, 0.0f, 0.0f, 1.0f },
-    { -1.63281f, -1.316406f, -1.316406f, 1.0f },
-    { -1.63281f, 1.3125f, -1.316406f, 1.0f },
-    { -1.63281f, 0.0f, 0.0f, 1.0f },
-    { -1.63281f, 1.3125f, -1.316406f, 1.0f },
-    { -1.63281f, 1.3125f, 1.3125f, 1.0f },
-    { -10.33593f, 0.0f, 0.0f, 1.0f },
-    { -1.63281f, 0.0f, 0.0f, 1.0f },
-    { -1.63281f, -1.316406f, -1.316406f, 1.0f },
-    { -10.33593f, 0.0f, 0.0f, 1.0f },
-    { -1.63281f, 1.3125f, 1.3125f, 1.0f },
-    { -1.63281f, 0.0f, 0.0f, 1.0f },
-    { -1.63281f, 1.3125f, -1.316406f, 1.0f },
-    { -10.33593f, 0.0f, 0.0f, 1.0f },
-    { -1.63281f, -0.003906f, 0.0f, 1.0f },
-    { -1.63281f, -1.316406f, 1.3125f, 1.0f },
-    { -3.113279f, -0.003906f, -4.84375f, 1.0f },
-    { -3.113279f, -4.84375f, -0.003906f, 1.0f },
-    { 0.0f, 0.0f, 0.0f, 1.0f },
-    { -3.113279f, -0.003906f, 4.839844f, 1.0f },
-    { -3.113279f, 4.839844f, 0.0f, 1.0f },
-    { -3.113279f, 4.839844f, 0.0f, 1.0f },
-    { -3.113279f, -0.003906f, -4.84375f, 1.0f },
-    { 0.0f, 0.0f, 0.0f, 1.0f },
-};
+alignas(16) Coord4 MuzzleFlashPositions[kMuzzleFlashVertices];
+XBE_INITIAL(MuzzleFlashPositions);
 // XBE_GLOBAL(0x001c4cd0, 0xd0)
-const EffectUV MuzzleFlashUVs[kMuzzleFlashVertices] = {
-    { 1.335938f, 1.914063f }, { 1.742188f, 1.503906f }, { 1.332031f, 1.5f }, { 1.328125f, 1.089844f },
-    { 0.925781f, 1.5f }, { 1.332031f, 1.5f }, { 0.925781f, 1.5f }, { 1.335938f, 1.914063f },
-    { 1.816406f, 1.617188f }, { 1.8125f, 1.960938f }, { 1.699219f, 1.847656f }, { 1.816406f, 1.613281f },
-    { 1.699219f, 1.847656f }, { 1.8125f, 1.960938f }, { 1.699219f, 1.847656f }, { 1.816406f, 1.617188f },
-    { 1.8125f, 1.960938f }, { 1.699219f, 1.851563f }, { 1.84375f, 1.496094f }, { 1.359375f, 0.988281f },
-    { 1.34375f, 1.5f }, { 0.886719f, 1.503906f }, { 1.34375f, 1.992188f }, { 1.34375f, 1.992188f },
-    { 1.84375f, 1.496094f }, { 1.34375f, 1.5f },
-};
+EffectUV MuzzleFlashUVs[kMuzzleFlashVertices];
+XBE_INITIAL(MuzzleFlashUVs);
 // XBE_GLOBAL(0x00201410, 0x40)
 alignas(16) Coord4 MuzzleFlashPOVPositions[4];
 // XBE_GLOBAL(0x00201390, 0x80)
 EffectUV MuzzleFlashPOVUVs[4][4];
 // XBE_GLOBAL(0x001c4dc8, 0xc0)
-MuzzleFlashPOVType MuzzleFlashPOVTypes[kMuzzleFlashPOVTypes] = {
-    { { 0x31626c66, 0x32626c66, 0x35616c66 } },     // 'flb1' 'flb2' 'fla5'
-    { { 0x49506c66, 0x49506c66, 0x49506c66 } },     // 'flPI' x3
-    { { 0x31626c66, 0x34626c66, 0x35626c66 } },     // 'flb1' 'flb4' 'flb5'
-    { { 0x41546c66, 0x31546c66, 0x32546c66 } },     // 'flTA' 'flT1' 'flT2'
-    { { 0x31626c66, 0x32626c66, 0x35616c66 } },     // 'flb1' 'flb2' 'fla5'
-    { { 0x31626c66, 0x32626c66, 0x35616c66 } },
-    { { 0x31306466, 0x32306466, 0x33306466 } },     // 'fd01' 'fd02' 'fd03'
-    { { 0x31746c75, 0x32746c75, 0x33746c75 } },     // 'ult1' 'ult2' 'ult3'
-};
+MuzzleFlashPOVType MuzzleFlashPOVTypes[kMuzzleFlashPOVTypes];
+XBE_INITIAL(MuzzleFlashPOVTypes);
 
 namespace {
 

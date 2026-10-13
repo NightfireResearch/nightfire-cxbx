@@ -52,20 +52,20 @@ static_assert(RampWeightsExact(), "the ramp weights are the original's");
 constexpr float kOneSeventeenth = 1.0f / 17;
 static_assert(std::bit_cast<uint32_t>(kOneSeventeenth) == 0x3d70f0f1, "the original's 0x001a7308");
 
-// The functions MIX_create stores: the originals' addresses, as the original stores them (they jump to ours)
-#define AllocThunk ((void *)0x00141860)               // SNDMEMI_allocthunk (CODA_New)
-#define FreeThunk ((void *)0x00141870)                // SNDMEMI_freethunk (CODA_Delete)
-#define MixcAt ((SND::MixFn)0x00143b40)               // mixc
+// The functions MIX_create stores
+#define AllocThunk (reinterpret_cast<void *>(SNDMEMI_allocthunk))               // SNDMEMI_allocthunk (CODA_New)
+#define FreeThunk (reinterpret_cast<void *>(SNDMEMI_freethunk))                // SNDMEMI_freethunk (CODA_Delete)
+#define MixcAt (reinterpret_cast<SND::MixFn>(mixc))               // mixc
 
 // The unpacker inits (module H) MIXI_initunpack* puts in the table
-#define UnpackfInit ((SND::SFilterUnpackInit)0x00146280)      // SFILTER_unpackfinit
-#define UnpacklfInit ((SND::SFilterUnpackInit)0x001461a0)     // SFILTER_unpacklfinit
-#define UnpackpfInit ((SND::SFilterUnpackInit)0x001460e0)     // SFILTER_unpackpfinit
-#define UnpackXafInit ((SND::SFilterUnpackInit)0x00145f50)    // SFILTER_unpackxafinit
-#define UnpackXalfInit ((SND::SFilterUnpackInit)0x00145e40)   // SFILTER_unpackxalfinit
-#define UnpackXapfInit ((SND::SFilterUnpackInit)0x00145c10)   // SFILTER_unpackxapfinit
-#define UnpackMtfInit ((SND::SFilterUnpackInit)0x00145a70)    // SFILTER_unpackmtfinit
-#define UnpackMtpfInit ((SND::SFilterUnpackInit)0x00145970)   // SFILTER_unpackmtpfinit
+#define UnpackfInit (reinterpret_cast<SND::SFilterUnpackInit>(SFILTER_unpackfinit))      // SFILTER_unpackfinit
+#define UnpacklfInit (reinterpret_cast<SND::SFilterUnpackInit>(SFILTER_unpacklfinit))     // SFILTER_unpacklfinit
+#define UnpackpfInit (reinterpret_cast<SND::SFilterUnpackInit>(SFILTER_unpackpfinit))     // SFILTER_unpackpfinit
+#define UnpackXafInit (reinterpret_cast<SND::SFilterUnpackInit>(SFILTER_unpackxafinit))    // SFILTER_unpackxafinit
+#define UnpackXalfInit (reinterpret_cast<SND::SFilterUnpackInit>(SFILTER_unpackxalfinit))   // SFILTER_unpackxalfinit
+#define UnpackXapfInit (reinterpret_cast<SND::SFilterUnpackInit>(SFILTER_unpackxapfinit))   // SFILTER_unpackxapfinit
+#define UnpackMtfInit (reinterpret_cast<SND::SFilterUnpackInit>(SFILTER_unpackmtfinit))    // SFILTER_unpackmtfinit
+#define UnpackMtpfInit (reinterpret_cast<SND::SFilterUnpackInit>(SFILTER_unpackmtpfinit))   // SFILTER_unpackmtpfinit
 
 // FLD dword / FSTP dword with nothing in between
 float ViaX87(float f) {

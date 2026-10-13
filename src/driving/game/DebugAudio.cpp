@@ -41,8 +41,8 @@
 
 // ---- the game's state
 
-#define Mixes (*(MixList *)0x00243954)              // Mix.cpp's list of the mixes Load read
-#define StreamHold I32_AT(0x00243a80)               // Stream.cpp's StreamHoldState
+extern MixList Mixes;   // Mix.cpp's list of the mixes Load read
+extern int32_t StreamHold;   // Stream.cpp's StreamHoldState
 
 // Constructed by the static initialisers (name ours)
 // XBE_GLOBAL(0x001e2278, 0xc)

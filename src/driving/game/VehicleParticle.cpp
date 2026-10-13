@@ -18,6 +18,36 @@
 #include "../platform/RealMath.h"
 #include "../render/Particles.h"
 #include "SimulationContainers.h"
+#include "../data/XbeData.h"
+
+// The system types it adds to the library (VehicleParticle.h)
+// XBE_GLOBAL(0x001c50d8, 0xb0)
+RParticleSystemData ParticleTypeSMRT;
+XBE_INITIAL(ParticleTypeSMRT);
+// XBE_GLOBAL(0x001c5188, 0xb0)
+RParticleSystemData ParticleTypeRDDF;
+XBE_INITIAL(ParticleTypeRDDF);
+// XBE_GLOBAL(0x001c5238, 0xb0)
+RParticleSystemData ParticleTypeRDDR;
+XBE_INITIAL(ParticleTypeRDDR);
+// XBE_GLOBAL(0x001c52e8, 0xb0)
+RParticleSystemData ParticleTypeWATR;
+XBE_INITIAL(ParticleTypeWATR);
+// XBE_GLOBAL(0x001c5398, 0xb0)
+RParticleSystemData ParticleTypeRDGR;
+XBE_INITIAL(ParticleTypeRDGR);
+// XBE_GLOBAL(0x001c5448, 0xb0)
+RParticleSystemData ParticleTypeSNOW;
+XBE_INITIAL(ParticleTypeSNOW);
+// XBE_GLOBAL(0x001c55b0, 0xb0)
+RParticleSystemData ParticleTypeSPRK;
+XBE_INITIAL(ParticleTypeSPRK);
+// XBE_GLOBAL(0x001c5660, 0xb0)
+RParticleSystemData ParticleTypeSPKB;
+XBE_INITIAL(ParticleTypeSPKB);
+// XBE_GLOBAL(0x001c5710, 0xb0)
+RParticleSystemData ParticleTypeSPRL;
+XBE_INITIAL(ParticleTypeSPRL);
 
 // ---------------------------------------------------------------------------------------------------------------
 // RVehicleParticle and its set (0x000a6db0-0x000a8460), ported from the listing.
@@ -34,8 +64,8 @@ DeadObjectSet *SetCode(VehicleParticleSet *set) {
 }  // namespace
 
 // ---- globals
-#define GameTick U32_AT(0x001f2a4c)
-#define OffOnNames ((const char *const *)0x001b6638)                // "Off", "On"
+extern uint32_t GameTick;
+extern const char *OffOnNames[2];                                // "Off", "On"
 
 // XBE_GLOBAL(0x00201834, 4)
 VehicleParticleSet *fgVehicleParticles;

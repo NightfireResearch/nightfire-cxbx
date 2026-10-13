@@ -172,6 +172,6 @@ public:
 static_assert(sizeof(RTextureContextManager) == 8, "RTextureContextManager is 8 bytes");
 
 // The singleton (made by its USingleton Init, 0x0008b5b0..0x0008bf30)
-#define TheTextureContextManager (*(RTextureContextManager **)0x001f2a30)
+extern RTextureContextManager *TheTextureContextManager;
 
 #endif // DRIVING_RENDER_TEXTURECONTEXT_H_

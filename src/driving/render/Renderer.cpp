@@ -45,6 +45,9 @@
 #include "../platform/CRuntime.h"
 #include "../logging.h"
 
+// XBE_GLOBAL(0x001ebff4, 0x4)
+RRenderer *fgRenderer;
+
 // ---------------------------------------------------------------------------------------------------------------
 // RDrawGroup, RRenderer, the instance draws, the shadow maps and RRenderSharedData (0x0007c9e0..0x0007e430 but RFog,
 // Fog.cpp), ported from the listing. The x87 code keeps the original's order and roundings.

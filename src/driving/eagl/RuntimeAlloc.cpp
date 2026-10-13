@@ -455,7 +455,7 @@ void* RuntimeAllocTARConstructor(const char *properties, DynamicLoader *loader, 
                 loader->GetAddr("SHAPE", name, &unused);
             }
             if (image == NULL)
-                image = (uint8_t *)&BuiltInShapes + BuiltInShapes.entries[0].offset;
+                image = BuiltInShapes + reinterpret_cast<const ShapeFile *>(BuiltInShapes)->entries[0].offset;
             tars = (TARSlot *)EaglMalloc(count * sizeof(TARSlot), NULL);
             if (tars != NULL)
                 tars->tar.Construct((uint8_t *)image);

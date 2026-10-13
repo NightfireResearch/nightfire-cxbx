@@ -18,7 +18,11 @@ list), `_fpmath` 0x00131d28 (the x87's precision) and `_exit` 0x0013438b. What t
 as far as they need it: strtod 0x00135196, realloc 0x00134815, `_msize` 0x001369cc, `_lock`/`_unlock`, the 12-byte
 long double arithmetic and both float conversions, the printf and scanf engines (`_output`, `_input`). `sys.crt` is
 ours by functions: 74 replaced, 338 dead, nothing live. Two shadow tests compare the ports with the originals: both
-clean in game on all eight missions, and the lockstep runs exact on all sixteen (see what the testing taught).
+clean in game on all eight missions, and the lockstep runs exact on all sixteen (see what the testing taught). Since (13 October 2026, docs/driving/standalone.md): `_purecall`
+0x00131d35 (Ghidra: `__pure_virtual`, `_amsg_exit(25)`), which 91 slots of our vtables hold, and the kernel's critical
+sections and KeBugCheck through platform/KernelImports.cpp's named wrappers. Not ported: 15 of the C++ library's
+virtual functions (five of strstreambuf's - pbackfail, seekoff, seekpos and two Ghidra does not name -, the deleting
+destructors of five facet and stream classes, five more), which 17 slots of our copies of those vtables still hold.
 
 ## Why the game's and not ours
 

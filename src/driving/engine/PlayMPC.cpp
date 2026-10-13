@@ -1,4 +1,5 @@
 #include "PlayMPC.hpp"
+#include "../platform/RealMemory.h"   // MEM_allocalign, MEM_free
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -355,9 +356,11 @@ static void ConvertFrame(const AVFrame *f) {
 // EA's player library's settings (RCMP_SYSTEM at 0x001dcd10): the allocator and the flags its allocations take,
 // which SetREALDefaults (0x0014df10) set to MEM_allocalign and MEM_free. Nothing reads them now that the player is
 // FFmpeg; they are kept as the original left them.
-#define RcmpAllocate     (*(uint32_t *)0x001dcd14u)
+// XBE_GLOBAL(0x001dcd14, 0x4)
+uint32_t RcmpAllocate;
 #define RcmpFree         (*(uint32_t *)0x001dcd18u)
-#define RcmpAllocFlags   (*(int32_t *)0x001dcd1cu)
+// XBE_GLOBAL(0x001dcd1c, 0x4)
+int32_t RcmpAllocFlags;
 // XBE_GLOBAL(0x00244798, 0x4)
 static int32_t MovieGlobal244798;   // set by the original Play, cleared here; never read
 
@@ -370,8 +373,8 @@ PlayMPC* PlayMPC::Construct(void *device_, EAGL::RenderContext *context_, int32_
     skipped = 0;
     player = NULL;
     padPort = padPort_;
-    RcmpAllocate = 0x00114340;   // MEM_allocalign
-    RcmpFree = 0x00113f20;       // MEM_free
+    RcmpAllocate = uint32_t(reinterpret_cast<uintptr_t>(MEM_allocalign));
+    RcmpFree = uint32_t(reinterpret_cast<uintptr_t>(MEM_free));
     RcmpAllocFlags = allocFlags;
     return this;
 }

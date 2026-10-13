@@ -130,6 +130,26 @@ size_t MEM_size(void *data) {
     return *(size_t *)((uint8_t *)data - 0xc);
 }
 
+// The data of the used block holding a pointer, or NULL: each class's blocks walked up from its low sentinel, a class
+// whose block holding it is free or a sentinel passed over (0x001500a0, which Ghidra has no function for; the name is
+// ours). Only UMemory's MemFunctions points at it, and nothing calls it through there.
+void *MEM_blockof(void *pointer) {
+    for (int c = 0; c < 64; c++) {
+        uint8_t *cls = MemClass[c];
+        if (cls == NULL)
+            continue;
+        for (uint8_t *block = B_NEXT(C_FIRST(cls)); block != NULL; block = B_NEXT(block)) {
+            uint8_t *data = block + 0x10;
+            if ((uint8_t *)pointer < data || (uint8_t *)pointer >= data + B_SIZE(block))
+                continue;
+            if ((B_FLAGBYTE(block) & 0xc0) == 0)
+                return data;
+            break;
+        }
+    }
+    return NULL;
+}
+
 // AUTOINJECT
 unsigned short MEM_type(void *data) {
     return *(uint16_t *)((uint8_t *)data - 0xe);

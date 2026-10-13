@@ -87,7 +87,7 @@ public:
 static_assert(sizeof(RDebris) == 0x90, "RDebris is 0x90 bytes");
 static_assert(offsetof(RDebris, shellCount) == 0x5c && offsetof(RDebris, shellObject) == 0x80, "RDebris layout");
 
-#define Debris (*(RDebris **)0x00202a80)        // RenderManagers::InitDebris's instance
+extern RDebris *Debris;   // RenderManagers::InitDebris's instance
 extern uint32_t DebrisColours[RDebrisType::kMaxPieces];     // the pieces' colours as drawn
 
 #endif // DRIVING_GAME_DEBRIS_H_

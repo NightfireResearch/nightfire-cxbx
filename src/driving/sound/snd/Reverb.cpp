@@ -45,18 +45,18 @@ using SND::ReverbTap;
 #define RouteTable ((const uint8_t *)0x001d9e85)       // [(channels + configuration x 6) x 6 + route]: the routing slot
 #define MixRows ((const int8_t (*)[6])0x001d9f88)      // per configuration and channel: the other speakers fed, or -1
 
-// The functions the tables hold: the originals' addresses, as the original stores them (they jump to ours)
-#define FxInitAt ((SND::MixFxInitFn)0x00143780)                  // SNDMIXI_fxinit
-#define Fx2HookAt ((SND::MixFxHook)0x001437e0)                   // FUN_001437e0
-#define FxAddAt ((SND::MixFxHook)0x00143970)                     // SNDMIXI_fxadd
-#define TeeProcessAt ((SND::SFilterProcess)0x00144bc0)          // FUN_00144bc0
-#define BufferRestoreAt ((SND::SFilterRestore)0x00144ca0)       // FUN_00144ca0
-#define SumProcessAt ((SND::SFilterProcess)0x00144d00)          // FUN_00144d00
-#define AllpassProcessAt ((SND::SFilterProcess)0x00144f30)      // FUN_00144f30
-#define AllpassRestoreAt ((SND::SFilterRestore)0x00144fc0)      // FUN_00144fc0
-#define GainProcessAt ((SND::SFilterProcess)0x001450b0)         // FUN_001450b0
-#define ResonatorProcessAt ((SND::SFilterProcess)0x00145390)    // FUN_00145390
-#define FirProcessAt ((SND::SFilterProcess)0x001455f0)          // FUN_001455f0
+// The functions the tables hold
+#define FxInitAt (reinterpret_cast<SND::MixFxInitFn>(SNDMIXI_fxinit))                  // SNDMIXI_fxinit
+#define Fx2HookAt (reinterpret_cast<SND::MixFxHook>(FUN_001437e0))                   // FUN_001437e0
+#define FxAddAt (reinterpret_cast<SND::MixFxHook>(SNDMIXI_fxadd))                     // SNDMIXI_fxadd
+#define TeeProcessAt (reinterpret_cast<SND::SFilterProcess>(FUN_00144bc0))          // FUN_00144bc0
+#define BufferRestoreAt (reinterpret_cast<SND::SFilterRestore>(FUN_00144ca0))       // FUN_00144ca0
+#define SumProcessAt (reinterpret_cast<SND::SFilterProcess>(FUN_00144d00))          // FUN_00144d00
+#define AllpassProcessAt (reinterpret_cast<SND::SFilterProcess>(FUN_00144f30))      // FUN_00144f30
+#define AllpassRestoreAt (reinterpret_cast<SND::SFilterRestore>(FUN_00144fc0))      // FUN_00144fc0
+#define GainProcessAt (reinterpret_cast<SND::SFilterProcess>(FUN_001450b0))         // FUN_001450b0
+#define ResonatorProcessAt (reinterpret_cast<SND::SFilterProcess>(FUN_00145390))    // FUN_00145390
+#define FirProcessAt (reinterpret_cast<SND::SFilterProcess>(FUN_001455f0))          // FUN_001455f0
 
 constexpr float kOneOver127 = 1.0f / 127;
 constexpr float kOneOver256 = 1.0f / 256;

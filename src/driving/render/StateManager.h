@@ -147,6 +147,6 @@ static_assert(sizeof(RStateManager) == 0x14, "RStateManager is 0x14 bytes");
 static_assert(offsetof(RStateManager, symbols) == 4 && offsetof(RStateManager, lookup) == 0x10, "RStateManager layout");
 
 // The singleton (made by its USingleton Init, 0x0008b5b0..0x0008bf30)
-#define TheStateManager (*(RStateManager **)0x001f2608)
+extern RStateManager *TheStateManager;
 
 #endif // DRIVING_RENDER_STATEMANAGER_H_

@@ -5,6 +5,7 @@
 #include "PlayerCamera.h"
 #include "../../common/xbeOverload.h"
 #include "../engine/GameLoop.h"         // LaunchPage
+#include "../game/AIHands.h"          // HandsStatics (CameraLockOnFlag)
 #include "../game/Hud.h"
 #include "../game/MissionManager.h"
 #include "../game/Simulation.h"

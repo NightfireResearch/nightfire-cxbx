@@ -188,4 +188,6 @@ struct ListenerView {
 };
 static_assert(sizeof(AListener) == 0x78, "AListener is 0x78 bytes");
 
+extern MixList Mixes;   // Mix.cpp
+
 #endif // DRIVING_AUDIO_MIX_H_

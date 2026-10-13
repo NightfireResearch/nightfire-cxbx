@@ -122,7 +122,7 @@ static_assert(offsetof(RRenderer, currentDrawGroup) == 0x10 && offsetof(RRendere
               offsetof(RRenderer, renderContext) == 0x64 && offsetof(RRenderer, framePending) == 0x74,
               "RRenderer layout");
 
-#define fgRenderer (*(RRenderer **)0x001ebff4)
+extern RRenderer *fgRenderer;
 extern const MATRIX4 *ViewProjectionMatrixPointer;     // EAGL's view-projection matrix
 extern uint8_t WideScreenSwitch;                        // it or the menu's option makes ConfigureRes choose 16:9
 extern int32_t CaptureCount;

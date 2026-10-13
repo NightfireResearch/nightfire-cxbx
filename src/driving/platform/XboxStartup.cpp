@@ -9,6 +9,7 @@
 #include "LaunchOptions.h"
 #include "../engine/StaticInit.h"
 #include "../devtools/StaticInitDump.h"
+#include "../devtools/StandaloneTraps.h"
 #include "CRuntime.h"
 #include "CRuntimeInternal.h"
 
@@ -108,6 +109,7 @@ void __stdcall Xbox_XapiInitProcess(void) {
         return;
     }
     printf("[startup] process heap at %p\n", ProcessHeapHandle);
+    StandaloneTraps_HeapCreated(ProcessHeapHandle);   // NIGHTFIRE_HEAP_SHIFT only: moves the heap's first block
 
     for (void (**initialiser)(void) = InitTableBegin; initialiser < InitTableEnd; initialiser++) {
         if (*initialiser != NULL)
@@ -243,7 +245,7 @@ static BOOL __stdcall Xbox_GetExitCodeThread(HANDLE thread, DWORD *exitCode) {
 // Signature from the call site: two arguments, __stdcall, no return value.
 // ---------------------------------------------------------------------------------------------------------------
 
-static void __stdcall Xbox_XInitDevices(unsigned typeCount, void *preallocTypes) {
+void __stdcall Xbox_XInitDevices(unsigned typeCount, void *preallocTypes) {
     (void)typeCount;
     (void)preallocTypes;
     printf("[startup] XInitDevices: no Xbox USB stack here, so nothing to initialise\n");

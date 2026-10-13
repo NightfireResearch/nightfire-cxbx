@@ -1,4 +1,5 @@
 #include "URefCounter.h"
+#include "StaticInit.h"
 
 #include <string.h>
 
@@ -71,16 +72,16 @@ EngineRefCounter EngineRefs;
 // XBE_GLOBAL(0x00243b80, 0x4)
 uint32_t EngineRefsGuard;
 
-static const RefCounterDestroyFn kDestroyModelInfoRefs = (RefCounterDestroyFn)0x0015cd20;
-static const RefCounterDestroyFn kDestroyTextureInfoRefs = (RefCounterDestroyFn)0x0015cd30;
-static const RefCounterDestroyFn kDestroyWeaponInfoRefs = (RefCounterDestroyFn)0x0015cd40;
-static const RefCounterDestroyFn kDestroyCarpFileRefs = (RefCounterDestroyFn)0x0015ced0;
-static const RefCounterDestroyFn kDestroyTextureContextRefs = (RefCounterDestroyFn)0x0015cef0;
-static const RefCounterDestroyFn kDestroyMixRefs = (RefCounterDestroyFn)0x0015d250;
-static const RefCounterDestroyFn kDestroyStreamRefs = (RefCounterDestroyFn)0x0015d260;
-static const RefCounterDestroyFn kDestroyFaderRefs = (RefCounterDestroyFn)0x0015d2d0;
-static const RefCounterDestroyFn kDestroyBankRefs = (RefCounterDestroyFn)0x0015d2f0;
-static const RefCounterDestroyFn kDestroyEngineRefs = (RefCounterDestroyFn)0x0015d300;
+static const RefCounterDestroyFn kDestroyModelInfoRefs = DestroyStatic_001dd9e8;
+static const RefCounterDestroyFn kDestroyTextureInfoRefs = DestroyStatic_001dda04;
+static const RefCounterDestroyFn kDestroyWeaponInfoRefs = DestroyStatic_001dda14;
+static const RefCounterDestroyFn kDestroyCarpFileRefs = DestroyStatic_001f25f4;
+static const RefCounterDestroyFn kDestroyTextureContextRefs = DestroyStatic_001f2a34;
+static const RefCounterDestroyFn kDestroyMixRefs = DestroyStatic_00243944;
+static const RefCounterDestroyFn kDestroyStreamRefs = DestroyStatic_00243a88;
+static const RefCounterDestroyFn kDestroyFaderRefs = DestroyStatic_00243af8;
+static const RefCounterDestroyFn kDestroyBankRefs = DestroyStatic_00243b08;
+static const RefCounterDestroyFn kDestroyEngineRefs = DestroyStatic_00243b74;
 
 // The game's inline strcpy into a 128-byte key (unbounded, as the original's)
 static void CopyName(char *key, const char *name) {

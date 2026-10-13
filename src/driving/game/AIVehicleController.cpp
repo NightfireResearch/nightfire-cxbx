@@ -24,6 +24,11 @@
 #include "../world/World.h"             // fgWorld
 #include "../platform/CRuntimeStd.h"
 
+// XBE_GLOBAL(0x001de914, 0x2)
+int16_t MaxTraffic;
+// XBE_GLOBAL(0x001de918, 0x2)
+int16_t TrafficSpawnCount;
+
 // ---------------------------------------------------------------------------------------------------------------
 // AIVehicleController (0x00035c00-0x00036a00, without AIGroundVehicle's and AIHelicopter's vector deleting
 // destructors at 0x00035d90 and 0x00035df0), ported from the listing.

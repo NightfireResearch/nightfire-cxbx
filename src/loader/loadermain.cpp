@@ -314,6 +314,9 @@ static bool IsHardFault(DWORD code) {
     case EXCEPTION_FLT_INVALID_OPERATION:
     case EXCEPTION_FLT_STACK_CHECK:
     case EXCEPTION_INVALID_HANDLE:
+    // With no debugger to take it, an int3 ends the process like any fault; NIGHTFIRE_TRAP_ORIGINAL fills the
+    // original code with them, and wants the caller named.
+    case EXCEPTION_BREAKPOINT:
         return true;
     default:
         return false;

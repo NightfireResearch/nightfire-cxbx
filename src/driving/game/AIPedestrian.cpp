@@ -29,6 +29,11 @@
 #include "../world/World.h"             // fgWorld
 #include "../world/WorldPos.h"
 
+// XBE_GLOBAL(0x001b6388, 0x4)
+int32_t InvalidatedPed = -1;
+// XBE_GLOBAL(0x001ddb40, 0x39c)
+alignas(16) PedestrianStatics Pedestrians;
+
 // ---------------------------------------------------------------------------------------------------------------
 // AICharacterPedestrian (0x000239d0-0x00027c80), ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------

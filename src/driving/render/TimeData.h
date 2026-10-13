@@ -10,12 +10,23 @@
 #include <stdint.h>
 
 #include "../../helpers.h"
+#include "../data/XbeData.h"
 
-#define VideoModeRate FLOAT_AT(0x001f2a44)                  // frames a second
-#define GameTick U32_AT(0x001f2a4c)                         // the simulation's step count, as of this frame
-#define SimStep FLOAT_AT(0x001c465c)                        // "GAME::SimStep"'s first float: the same, as a float
-#define CausticControl ((float *)0x001c467c)                // its [3] is its [0] times the step count
+extern float VideoModeRate;                                 // frames a second
 extern float TickSeconds;                                   // 1 / VideoModeRate
+extern uint32_t GameTick;                                   // the simulation's step count, as of this frame (camera/WorldCamera.cpp)
+
+// "GAME::SimStep": CARP data and the EMP's render methods read it as four floats
+struct SimStepBlock {
+    float step;                         // +0x0 GameTick, as a float
+    float unknown4;                     // +0x4 a constant of the XBE's
+    float unknown8;                     // +0x8
+    float frameAnimationTime;           // +0xc ESetFrameAnimationTime's tick
+};
+static_assert(sizeof(SimStepBlock) == 0x10, "GAME::SimStep is four floats");
+extern SimStepBlock SimStep;
+
+#define CausticControl ((float *)0x001c467c)                // its [3] is its [0] times the step count
 
 class RTimeData {
 public:

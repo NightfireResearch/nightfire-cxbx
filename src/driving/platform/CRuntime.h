@@ -64,6 +64,7 @@ void _lock(int lock);                                                        // 
 void _unlock(int lock);                                                      // 0x0013644a
 void _amsg_exit(int code);                                                   // 0x0013566d
 void _exit(int code);                                                        // 0x0013438b
+void _purecall();                                                            // 0x00131d35 (Ghidra: __pure_virtual)
 
 // ---- per-thread state, in the block XboxStartup.cpp's Xbox_getptd hands out (CRuntime.cpp)
 

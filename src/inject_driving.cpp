@@ -13,6 +13,7 @@
 #include "driving/devtools/RestoreRanges.h"
 #include "driving/devtools/OwnedGlobals.h"
 #include "driving/devtools/DumpTimer.h"
+#include "driving/devtools/StandaloneTraps.h"
 #include "driving/devtools/GeomShadow.h"
 #include "driving/devtools/FileSysShadow.h"
 #include "driving/devtools/FileSysTrace.h"
@@ -99,6 +100,8 @@ void Scheduler__Run(int i);
 
 void Inject()
 {
+  StandaloneTraps_BeforeInject();   // NIGHTFIRE_TRAP_ORIGINAL / NIGHTFIRE_HEAP_SHIFT only: before anything is patched
+
   // First, because it decides whether the game's own startup runs at all: it replaces the XAPI startup that
   // reaches for a KPCR this process does not have. See src/driving/platform/XboxStartup.cpp.
   Inject_XboxStartup();
@@ -228,4 +231,6 @@ void Inject()
   SndStreamFileShadow_Run();   // NIGHTFIRE_SNDSTREAMFILESHADOW=1 only
   // Last: it moves the jumps the injection table wrote, and must not see the shadow tests' calls
   SndCallTrace_Install();   // NIGHTFIRE_SNDTRACE=1 only
+  // After every patch: NIGHTFIRE_TRAP_ORIGINAL fills what no patch wrote, NIGHTFIRE_TRAP_DATA=2 guards the data
+  StandaloneTraps_AfterInject();
 }

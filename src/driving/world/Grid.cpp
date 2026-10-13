@@ -14,6 +14,11 @@
 
 #include <math.h>
 
+// XBE_GLOBAL(0x0023b3a0, 0x4)
+WGrid *TheGrid;
+// XBE_GLOBAL(0x0023b3ac, 0xc)
+WGridMoverList GridMovers;
+
 // ---------------------------------------------------------------------------------------------------------------
 // WGrid, its cells' lists and the dynamic elements (0x000c5710..0x000c7230), ported from the listings.
 //

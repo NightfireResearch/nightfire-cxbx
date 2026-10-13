@@ -276,7 +276,7 @@ static uint32_t ConnectedMask(void) {
 
 // XGetDevices(type) - which ports have a device of this type on them. The type argument names the device
 // class (gamepad, memory unit, keyboard); only gamepads are answered, and the game only asks about gamepads.
-static uint32_t __stdcall Xbox_XGetDevices(void *deviceType) {
+uint32_t __stdcall Xbox_XGetDevices(void *deviceType) {
     (void)deviceType;
     uint32_t mask = ConnectedMask();
     if (!g_maskEverRead) {
@@ -293,7 +293,7 @@ static uint32_t __stdcall Xbox_XGetDevices(void *deviceType) {
 // XGetDeviceChanges(type, &insertions, &removals) - the edges since the last call. The game polls this every
 // frame and opens or closes a handle for each change, so the two masks have to be transitions rather than
 // state, and each transition has to be reported exactly once.
-static uint32_t __stdcall Xbox_XGetDeviceChanges(void *deviceType, uint32_t *insertions, uint32_t *removals) {
+uint32_t __stdcall Xbox_XGetDeviceChanges(void *deviceType, uint32_t *insertions, uint32_t *removals) {
     (void)deviceType;
     uint32_t mask = ConnectedMask();
     uint32_t inserted = mask & ~g_lastConnectedMask;
@@ -310,7 +310,7 @@ static uint32_t __stdcall Xbox_XGetDeviceChanges(void *deviceType, uint32_t *ins
 
 // XInputOpen(type, port, slot, pollingParameters) - the slot is for the memory units in a pad's expansion
 // ports, and the polling parameters ask the kernel to poll in the background, neither of which applies.
-static void *__stdcall Xbox_XInputOpen(void *deviceType, uint32_t port, uint32_t slot,
+void *__stdcall Xbox_XInputOpen(void *deviceType, uint32_t port, uint32_t slot,
                                        void *pollingParameters) {
     (void)deviceType; (void)slot; (void)pollingParameters;
     if (port >= MAX_PORTS)
@@ -318,19 +318,19 @@ static void *__stdcall Xbox_XInputOpen(void *deviceType, uint32_t port, uint32_t
     return (void *)(intptr_t)(port + 1);
 }
 
-static void __stdcall Xbox_XInputClose(void *handle) {
+void __stdcall Xbox_XInputClose(void *handle) {
     (void)handle;   // nothing was opened, so nothing has to be closed
 }
 
 // XInputGetCapabilities(handle, capabilities) - see the note at the top: the caller has zeroed the structure
 // and zero is a truthful answer, so this reports success without writing anything.
-static uint32_t __stdcall Xbox_XInputGetCapabilities(void *handle, void *capabilities) {
+uint32_t __stdcall Xbox_XInputGetCapabilities(void *handle, void *capabilities) {
     (void)handle; (void)capabilities;
     return 0;
 }
 
 // XInputGetState(handle, state) - the translation described at the top of the file.
-static uint32_t __stdcall Xbox_XInputGetState(void *handle, XboxState *state) {
+uint32_t __stdcall Xbox_XInputGetState(void *handle, XboxState *state) {
     int port = PortOfHandle(handle);
     if (port < 0 || state == NULL)
         return XBOX_ERROR_DEVICE_NOT_CONNECTED;
@@ -370,7 +370,7 @@ static uint32_t __stdcall Xbox_XInputGetState(void *handle, XboxState *state) {
 // XInputSetState(handle, feedback) - rumble. On the console this queued a USB write and reported completion
 // through the header, which the game reads back; here the write has already happened by the time it returns,
 // so the status is set to success before returning.
-static uint32_t __stdcall Xbox_XInputSetState(void *handle, XboxFeedback *feedback) {
+uint32_t __stdcall Xbox_XInputSetState(void *handle, XboxFeedback *feedback) {
     int port = PortOfHandle(handle);
     if (port < 0 || feedback == NULL)
         return XBOX_ERROR_DEVICE_NOT_CONNECTED;

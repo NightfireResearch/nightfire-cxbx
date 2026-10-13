@@ -115,4 +115,10 @@ extern float StreakUVs[3 * kParticleBlock][2];
 extern EAGL::TAR *SpriteTexture;
 extern EAGL::TAR *StreakTexture;
 
+class UVolatileMaterial;
+
+// The cache's materials (ParticleCache.cpp)
+extern UVolatileMaterial SpriteMaterial;
+extern UVolatileMaterial StreakMaterial;
+
 #endif // DRIVING_RENDER_PARTICLECACHE_H_

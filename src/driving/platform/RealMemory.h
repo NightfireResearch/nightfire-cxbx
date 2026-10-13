@@ -14,6 +14,7 @@ int MEM_initblock(void *block, const char *name, int size, int tail, unsigned fl
 int MEM_tailsize(const char *name, int flags);
 size_t MEM_size(void *data);
 unsigned short MEM_type(void *data);
+void *MEM_blockof(void *pointer);
 void* MEM_allocalign(const char *label, int size, int alignment, int offset, unsigned flags);
 void* MEM_alloc(const char *label, int size, unsigned flags);
 void* MEM_allocz(const char *label, int size, unsigned flags);

@@ -99,6 +99,23 @@ TARGETS = {
     0x00130c99: ("method", "GameStd::InitLocks", "Construct"),
     0x00130cc7: ("method", "GameStd::InitLocks", "Destruct"),
     0x00131cd0: ("method", "GameStd::InitAtExit", "Destruct"),   # a thunk to the destructor
+    0x00013540: ("method", "PointerList", "Destruct"),
+    0x0007c6e0: ("method", "TextureDofState", "Construct"),
+    0x0007c7b0: ("method", "TextureDofState", "Destruct"),
+    0x000c5990: ("method", "WGridMoverList", "BuyHead"),
+    0x000cebc0: ("method", "WTargetPicker", "Construct"),
+    0x0011cc10: ("method", "MixList", "Construct"),
+    0x00124710: ("method", "AVoiceMap", "Construct"),
+    0x00124750: ("method", "AVoiceMap", "Destruct"),
+    0x00125db0: ("method", "ABank", "Construct"),
+    0x00125ef0: ("method", "ABank", "Destruct"),
+}
+# The lists' erase(first, last) the destructors hand DestroyNodeList, by address: ours, called as the original was
+# (this in ECX through the __fastcall pointer, the rest on the stack, popped by the callee).
+ERASER_TARGETS = {
+    0x00037160: "DAudioTargetList::Erase",
+    0x000ce900: "PointerList::Erase",
+    0x000e2c80: "LoadScreenStringList::Erase",
 }
 # Objects the initialisers construct that our code names, by address: the name and its class. A constructor or
 # destructor of that class is called on the name; for the globals we own (XBE_GLOBAL) this is what makes the
@@ -119,9 +136,31 @@ NAMED = {
     0x002016d0: ("MuzzleFlashPOVMaterial", "UVolatileMaterial"),
     0x00233ff0: ("fgSimulation", "Simulation"),                # game/Simulation.h
     0x0024483c: ("GameStd::ClassicLocale", "GameStd::Locale"),  # platform/CRuntimeStd.cpp
+    0x001ff7f0: ("DecalState", "EAGL::GeoPrimState"),          # render/Decals.h
+    0x00209cc0: ("GlareMaterial", "UVolatileMaterial"),        # render/RGlareManager.hpp
+    0x00230540: ("SpriteMaterial", "UVolatileMaterial"),       # render/ParticleCache.h
+    0x002305a0: ("StreakMaterial", "UVolatileMaterial"),
+    0x0023b3ac: ("GridMovers", "WGridMoverList"),              # world/Grid.h
+    0x0023e1b0: ("TargetPicker", "WTargetPicker"),             # world/Targeting.h
+    0x0023fb8c: ("GlobalPool", "SymbolPool"),                  # eagl/EaglGlobals.h
+    0x0023fbb8: ("TheRuntimeAllocPool", "RuntimeAllocConstructorPool"),
+    0x0023fbe0: ("TheConstructorPool", "ConstructorPool"),
+    0x002400f8: ("FontState", "EAGL::GeoPrimStateExtension"),  # eagl/EaglFont.h
+    0x00240560: ("FrameRegion", "EAGL::ProfilerRegion"),      # eagl/Profiler.h
+    0x00241460: ("TextureDofMethod", "EAGL::RenderMethod"),    # camera/DirectorQueue.h
+    0x00242de8: ("TexturedParentMethod", "EAGL::RenderMethod"),  # render/Decals.h
+    0x00242e1c: ("EmpParentMethod", "EAGL::RenderMethod"),
+    0x00242e50: ("GainParentMethod", "EAGL::RenderMethod"),    # render/Gain.h
+    0x00242e84: ("BondPostGlare", "EAGL::RenderMethod"),       # render/PostProcessing.h
+    0x0024b07c: ("MatDebugMethod", "EAGL::RenderMethod"),      # render/Materials.h
+    0x0024b0b0: ("MatVolatileTextureMethod", "EAGL::RenderMethod"),
+    0x00243954: ("Mixes", "MixList"),                          # audio/Mix.h
+    0x00243a9c: ("VoiceInfoMap", "AVoiceMap"),                 # audio/Voice.h
+    0x00243aa8: ("ActiveViews", "AVoiceViewList"),
 }
 # Owned arrays of objects the initialisers construct (a vector constructor) and destroy: the name and the class.
 NAMED_OBJECT_ARRAYS = {
+    0x001e1f20: ("AIZoneData.zones", "AIZone"),                   # game/AIElements.h
     0x001f5f10: ("BulletStreakMaterials", "UVolatileMaterial"),   # game/WeaponEffects.cpp
     0x002014f0: ("MuzzleFlashMaterials", "UVolatileMaterial"),
     0x00233e20: ("TrackMaterials", "UVolatileMaterial"),          # game/TyreTrack.cpp
@@ -132,6 +171,28 @@ NAMED_ARRAYS = {
     0x001e4488: ("gFeedbackPorts", "users"),                   # engine/Feedback.cpp, FeedbackPort[4]
     0x001e84fc: ("RayShellFlashes", "ownerSig"),               # game/Shell.cpp, RayShellFlash[8] (the field at +0xc)
     0x001e8570: ("ActiveRayShells", "ownerSignature"),         # game/Shell.cpp, ActiveRayShell[64]
+}
+# Block copies into owned globals, by destination address: the C++ lvalue copied into.
+NAMED_BLOCKS = {
+    0x001ddab0: "HandsStatics.baseTransform",                 # game/AIHands.h
+}
+# Stores into fields of owned globals that start as zero, by address: the C++ lvalue. They are made in table order,
+# as the original made them, rather than left to the owner's initialiser.
+NAMED_STORES = {
+    0x001e1f1c: "AIZoneData.unknown34",                       # game/AIElements.h
+    0x001dda9c: "HandsStatics.unknown2c[0]",                  # game/AIHands.h
+    0x001ddaa0: "HandsStatics.unknown2c[1]",
+    0x001ddaa4: "HandsStatics.unknown2c[2]",
+    0x001ddaa8: "HandsStatics.unknown2c[3]",
+    0x001ddaac: "HandsStatics.unknown2c[4]",
+    0x001ddb2c: "HandsStatics.cameraOffset.w",
+    0x00233fb8: "RigidPlayerGravity",                         # physics/RigidBody.h
+    0x0023b3b0: "GridMovers.head",                            # world/Grid.h
+    0x00243aac: "ActiveViews.head",                           # audio/Voice.h
+    0x0023b3b4: "GridMovers.size",
+    0x00243ab0: "ActiveViews.size",
+    0x00243958: "Mixes.head",                                 # audio/Mix.h
+    0x0024395c: "Mixes.size",
 }
 # Argument types of the originals' stack arguments, where they are not plain words.
 ARG_TYPES = {
@@ -309,6 +370,8 @@ def this_call(target, obj, args=(), element=None):
     """A __thiscall to target with `this` = obj (an address, or C++ text), and stack arguments (raw words, first
     argument first). `element` names element i of an owned array of objects (NAMED_OBJECT_ARRAYS) instead."""
     obj_text = hexw(obj) if isinstance(obj, int) else obj
+    if isinstance(obj, int) and obj in NAMED:
+        obj_text = "&" + NAMED[obj][0]
     if isinstance(obj, int) and obj not in NAMED and owned_global(obj, 1):
         raise SystemExit("0x%08x: a call on %s, which is ours: add it to NAMED" % (obj, owned_global(obj, 1)["name"]))
     if target in TARGETS:
@@ -370,6 +433,11 @@ def destructor(address):
         list_address, erase, node = ins[13].operands[1].imm, ins[14].operands[0].imm, ins[18].operands[0].imm
         assert ins[1].operands[1].mem.disp == list_address + 4
         ERASERS.add(erase)
+        if list_address in NAMED:
+            return "DestroyNodeList((NodeList *)&%s, %s, 0x%x);" % (NAMED[list_address][0], callee(erase), node)
+        if owned_global(list_address, 12):
+            raise SystemExit("0x%08x: a list of %s, which is ours: add it to NAMED" %
+                             (list_address, owned_global(list_address, 12)["name"]))
         return "DestroyNodeList((NodeList *)0x%08x, %s, 0x%x);" % (list_address, callee(erase), node)
     # mov ecx, obj ; jmp dtor
     if len(ins) == 2 and ins[0].mnemonic == "mov" and ins[1].mnemonic == "jmp":
@@ -411,6 +479,8 @@ def emit(address):
             float_bytes({"+": x + y, "-": x - y, "*": x * y, "/": x / y}[op], double)
         g = owned_global(d, 8 if double else 4)
         store(d, data, 8 if double else 4)
+        if g and d in NAMED_STORES:
+            return ["%s = %s %s %s;" % (NAMED_STORES[d], left, op, right)]
         if g:
             known(data, g["name"])
             return [left_out(g, float_literal(struct.unpack("<d" if double else "<f", data)[0], double), data)]
@@ -440,6 +510,8 @@ def emit(address):
         d, v = ins[0].operands[0].mem.disp, ins[0].operands[1].imm & 0xffffffff
         g = owned_global(d, 4)
         store(d, struct.pack("<I", v))
+        if g and d in NAMED_STORES:
+            return ["%s = 0x%08x;" % (NAMED_STORES[d], v)]
         if g:
             return [left_out(g, "0x%08x" % v, struct.pack("<I", v))]
         return ["U32_AT(0x%08x) = 0x%08x;" % (d, v)]
@@ -457,7 +529,10 @@ def emit(address):
             g = owned_global(dst.mem.disp, 4)
             store(dst.mem.disp, data)
             source_global = owned_global(source, 4)
-            if data is None and source_global:   # a value not followed (a colour converted): copied by name
+            if g and dst.mem.disp in NAMED_STORES:
+                out.append("%s = %s;" % (NAMED_STORES[dst.mem.disp], source_global["name"] if source_global else
+                                         "U32_AT(0x%08x)" % source))
+            elif data is None and source_global:   # a value not followed (a colour converted): copied by name
                 out.append("%s = %s;" % (g["name"] if g else "U32_AT(0x%08x)" % dst.mem.disp, source_global["name"]))
             elif g:
                 out.append(left_out(g, "0x%08x" % struct.unpack("<I", known(data, g["name"]))[0], data))
@@ -475,10 +550,11 @@ def emit(address):
     # push esi ; push edi ; mov ecx, n ; mov esi, s ; mov edi, d ; [push dtor] ; rep movsd ; [call atexit ...]
     if mn[:5] == ["push", "push", "mov", "mov", "mov"] and "rep movsd" in mn:
         n, s, d = ins[2].operands[1].imm, ins[3].operands[1].imm, ins[4].operands[1].imm
-        if owned_global(d, n * 4) or owned_global(s, n * 4):
-            raise SystemExit("a block copy to or from an owned global: a case this script does not know")
+        if (owned_global(d, n * 4) and d not in NAMED_BLOCKS) or owned_global(s, n * 4):
+            raise SystemExit("0x%08x: a block copy to or from an owned global: add it to NAMED_BLOCKS" % d)
         store(d, value_bytes(s, n * 4), n * 4)
-        out = ["memcpy((void *)0x%08x, %s, 0x%x);" % (d, source_block(s, n * 4), n * 4)]
+        target = "&" + NAMED_BLOCKS[d] if d in NAMED_BLOCKS else "(void *)0x%08x" % d
+        out = ["memcpy(%s, %s, 0x%x);" % (target, source_block(s, n * 4), n * 4)]
         if "call" in mn:
             push = ins[mn.index("rep movsd") - 1] if mn[mn.index("rep movsd") - 1] == "push" else ins[5]
             out.append(atexit_line(push.operands[0].imm))
@@ -586,10 +662,18 @@ def constructor(ins):
         elif x.mnemonic == "mov" and x.operands[0].type == X86_OP_MEM:
             src = x.operands[1]
             if src.type == X86_OP_IMM:
-                if k < calls[0]:
-                    out.append("U32_AT(0x%08x) = 0x%08x;" % (x.operands[0].mem.disp, src.imm & 0xffffffff))
+                disp = x.operands[0].mem.disp
+                if disp in NAMED_STORES:
+                    line = "%s = 0x%08x;" % (NAMED_STORES[disp], src.imm & 0xffffffff)
+                elif owned_global(disp, 4):
+                    raise SystemExit("0x%08x: a store into %s, which is ours: add it to NAMED_STORES" %
+                                     (disp, owned_global(disp, 4)["name"]))
                 else:
-                    result_stores.append("U32_AT(0x%08x) = 0x%08x;" % (x.operands[0].mem.disp, src.imm & 0xffffffff))
+                    line = "U32_AT(0x%08x) = 0x%08x;" % (disp, src.imm & 0xffffffff)
+                if k < calls[0]:
+                    out.append(line)
+                else:
+                    result_stores.append(line)
             else:
                 result_stores.append(("result", x.operands[0].mem.disp))
         elif x.mnemonic == "call":
@@ -606,7 +690,14 @@ def constructor(ins):
                     # the call's result is stored (a list's head node): mov [o+4], eax
                     for y in ins[k + 1:atexit_at]:
                         if y.mnemonic == "mov" and y.operands[0].type == X86_OP_MEM and y.operands[1].type == X86_OP_REG:
-                            call = "PTR_AT(0x%08x) = %s" % (y.operands[0].mem.disp, call)
+                            disp = y.operands[0].mem.disp
+                            if disp in NAMED_STORES:
+                                call = "%s = %s" % (NAMED_STORES[disp], call)
+                            elif owned_global(disp, 4):
+                                raise SystemExit("0x%08x: a result stored into %s, which is ours: add it to "
+                                                 "NAMED_STORES" % (disp, owned_global(disp, 4)["name"]))
+                            else:
+                                call = "PTR_AT(0x%08x) = %s" % (disp, call)
                             RETURNS_POINTER.add(target)
                 out.append(call + ";")
             pushed = []
@@ -725,10 +816,30 @@ def main():
             '#include "InputConfig.h"',
             '#include "../platform/CRuntime.h"',
             '#include "../platform/CRuntimeStd.h"',
+            '#include "../audio/Bank.h"',
+            '#include "../audio/Mix.h"',
+            '#include "../audio/Voice.h"',
+            '#include "../camera/DirectorQueue.h"',
+            '#include "../eagl/EaglFont.h"',
+            '#include "../eagl/EaglGlobals.h"',
+            '#include "../game/AIHands.h"',
+            '#include "../physics/RigidBody.h"',
+            '#include "../render/Decals.h"',
+            '#include "../render/Gain.h"',
+            '#include "../render/ParticleCache.h"',
+            '#include "../render/PostProcessing.h"',
+            '#include "../render/RGlareManager.hpp"',
+            '#include "../world/Grid.h"',
+            '#include "../world/Targeting.h"',
+            '#include "../../common/xbeOverload.h"',
             '',
             '// ---- the originals the initialisers still call, by address',
             '']
     for target in sorted(NAMES):
+        if target in ERASER_TARGETS:
+            head.append("#define %s reinterpret_cast<NodeListErase>(XbeAddress(&%s))" %
+                        (NAMES[target], ERASER_TARGETS[target]))
+            continue
         if target in ERASERS:
             head.append("#define %s ((void (__fastcall *)(NodeList *, int, void **, void *, void *))0x%08x)   "
                         "// erase(result, first, last)" % (NAMES[target], target))

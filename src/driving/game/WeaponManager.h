@@ -191,10 +191,10 @@ static_assert(offsetof(SWeaponManager, actionQueue) == 0x20 && offsetof(SWeaponM
               "SWeaponManager layout");
 
 // The one manager (GameLoop_StartUp makes it)
-#define WeaponManager (*(SWeaponManager **)0x0023923c)
+extern SWeaponManager *WeaponManager;
 
 // The weapon buttons AICharacterBond answers (names ours)
-#define BondSelectPressed U8_AT(0x001dda2c)             // a select or the special fire
-#define BondFirePressed U8_AT(0x001dda2d)               // the primary or secondary fire
+extern uint8_t BondSelectPressed;   // a select or the special fire
+extern uint8_t BondFirePressed;   // the primary or secondary fire
 
 #endif // DRIVING_GAME_WEAPONMANAGER_H_

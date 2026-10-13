@@ -105,7 +105,7 @@ extern uint32_t WindowColoursCleared;               // the colours' function-loc
 void ScaleDebrisTables();                                                                       // 0x000a8e80
 
 constexpr int kDebrisCountA = 26;
-extern const Coord4 DebrisVectorsA[kDebrisCountA];
+extern Coord4 DebrisVectorsA[kDebrisCountA];
 extern float DebrisScaleA;
 extern int32_t DebrisCountB;
 

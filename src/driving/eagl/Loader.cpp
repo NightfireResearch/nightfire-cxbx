@@ -10,6 +10,14 @@
 #include <stdio.h>
 #include <string.h>
 
+// The loader's pools (EaglGlobals.h), constructed by the static initialisers
+// XBE_GLOBAL(0x0023fb8c, 0x14)
+SymbolPool GlobalPool;
+// XBE_GLOBAL(0x0023fbb8, 0x28)
+RuntimeAllocConstructorPool TheRuntimeAllocPool;
+// XBE_GLOBAL(0x0023fbe0, 0x28)
+ConstructorPool TheConstructorPool;
+
 // ---------------------------------------------------------------------------------------------------------------
 // EAGL's dynamic loader (docs/driving/eagl.md 3.1). Every model, skeleton, animation bank and render-method library
 // on the disc is a MIPS ELF object used as a data container: the loader parses its sections, rewrites "__Class:::

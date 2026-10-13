@@ -6,6 +6,7 @@
 #include "RenderMethod.h"
 #include "Tar.h"
 #include "View.h"
+#include "../data/XbeData.h"   // XBE_INITIAL
 
 #include <bit>
 #include <stddef.h>
@@ -56,9 +57,6 @@ static_assert(sizeof(DrawParameters) == 0x30, "the driver's statics run to 0x002
 DrawParameters Params;
 // XBE_GLOBAL(0x001cd110, 4)
 uint32_t VertexColour = 0xffffffff;                         // font +0x20
-// The static initialisers construct it where it is
-// XBE_GLOBAL(0x002400f8, 0x4c)
-#define FontState (*(EAGL::GeoPrimStateExtension *)0x002400f8)
 
 // The font shaders' declaration and programs
 // XBE_GLOBAL(0x001ccfd8, 0x14)
@@ -66,26 +64,13 @@ const uint32_t FontShaderDeclaration[5] = {
     0x20000000, 0x40320000, 0x40400003, 0x40220009, 0xffffffff,
 };
 
-// XBE_GLOBAL(0x001ccfec, 0x34)
-const uint32_t FontVertexShaderFunction[13] = {
-    0x00032078, 0x00000000, 0x0020001b, 0x0836106c, 0x2070f800, 0x00000000,
-    0x0020061b, 0x0836106c, 0x2070f818, 0x00000000, 0x0020121b, 0x0836106c,
-    0x2070f849,
-};
+// XBE_GLOBAL(0x001ccfec, 0x34) raw
+uint32_t FontVertexShaderFunction[13];
+XBE_INITIAL(FontVertexShaderFunction);
 
-// XBE_GLOBAL(0x001cd020, 0xf0)
-const uint32_t FontPixelShaderDefinition[60] = {
-    0xd4d81010, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x000000c0, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xc4c80000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x000000c0, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00011101,
-    0x00000001, 0x00000000, 0x00000000, 0xffffffff, 0xffffffff, 0x000001ff,
-};
+// XBE_GLOBAL(0x001cd020, 0xf0) raw
+uint32_t FontPixelShaderDefinition[60];
+XBE_INITIAL(FontPixelShaderDefinition);
 
 enum { kVertexDiffuse = 3, kVertexTexCoord0 = 9, kVertexPosition = 0xffffffff };   // D3DVSDE_*
 enum { kDepthLessEqual = 0x203, kDepthAlways = 0x207, kAlphaGreaterEqual = 0x204 };   // OpenGL numbering
@@ -176,6 +161,10 @@ void DrawGlyph(const FNTXGlyph *glyph, float x, float y) {
 }
 
 }  // namespace
+
+// The static initialisers construct it
+// XBE_GLOBAL(0x002400f8, 0x4c)
+EAGL::GeoPrimStateExtension FontState;
 
 // The batch hook: count records of {glyph, x, y}. The font is not read.
 // FUNC_AT(0x000ee190)

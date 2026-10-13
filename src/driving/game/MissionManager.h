@@ -421,9 +421,9 @@ static_assert(offsetof(SMissionManager, stageRules) == 0x3c && offsetof(SMission
               offsetof(SMissionManager, sectionCount) == 0x1c5c && offsetof(SMissionManager, carType) == 0x1c64,
               "SMissionManager layout");
 
-#define glbMissionManager (*(SMissionManager **)0x00239220)
+extern SMissionManager *glbMissionManager;
 // Set nowhere in the game; read by EPlayerLose, SWeaponManager::FireWeapon and ResetCharInfo
-#define gPlayerCanNeverLose U8_AT(0x00239218)
+extern uint8_t gPlayerCanNeverLose;
 
 extern MissionSet DefaultMissionSet;    // the mission set without a level's
 extern uint8_t MissionHealthTimes100;  // MissionManager.cpp

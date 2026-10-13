@@ -219,7 +219,7 @@ struct CameraView {
 
 // Set by a lock-on (RPlayerCamera::CameraLockOn, RPlayerCamState's input), cleared with it; AICharacterHands'
 // DoFiring, DoIdling and DoReloading read it
-#define CameraLockOnFlag U8_AT(0x001dda98)
+#define CameraLockOnFlag (HandsStatics.lockOn)
 // Where the last shake that keeps its origin came from (ShakeCamera sets it; CheckForCameraShaking reads it)
 extern Coord4 ShakeOrigin;
 

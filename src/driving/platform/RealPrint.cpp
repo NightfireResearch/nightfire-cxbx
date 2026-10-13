@@ -1,4 +1,5 @@
 #include "RealPrint.h"
+#include "../engine/UMemory.hpp"
 
 #include "../../common/launchInfo.h"
 #include "CRuntime.h"
@@ -145,10 +146,10 @@ static const char *AbortFile;
 // XBE_GLOBAL(0x002422fc, 4)
 static int AbortLine;
 
-// The memory manager's "are we under a debugger" query, a virtual call (0x001143f0, through the object at
-// 0x001d48c4); the original breaks into the debugger when it says yes.
+// The memory manager's "are we under a debugger" query: the function at 0x001143f0 (Ghidra: dummyGetNullValue, the
+// address UMemory::Size has), called with no arguments; the original breaks into the debugger when it says yes.
 typedef int (*DebugQueryFn)(void);
-#define dummyGetNullValue ((DebugQueryFn)0x001143f0u)
+#define dummyGetNullValue (reinterpret_cast<DebugQueryFn>(UMemory::Size))
 
 // AUTOINJECT
 void REAL_addexit(ExitCallback callback) {

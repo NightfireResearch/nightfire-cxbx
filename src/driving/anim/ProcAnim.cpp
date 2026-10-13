@@ -10,6 +10,8 @@
 #include "../../helpers.h"
 #include "../platform/RealMath.h"
 #include "../world/World.h"               // ProcAnimState, kWorldInstanceProcAnim
+#include "../audio/Sound.h"               // Generic_FuncReturnsFalse
+#include "../game/MissionRules.h"         // StubError
 #include "AnimEngine.h"                   // RAnimEngine::EvaluateInstance
 #include "../render/Renderer.h"
 
@@ -21,9 +23,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's globals
-// XBE_GLOBAL(0x001c41c0, 0x400)
-#define ProcAnimFunctions ((ProcAnimFunction *)0x001c41c0)    // [256], by CARP::Instance::procAnimType
-#define SimStep FLOAT_AT(0x001c465c)                           // "GAME::SimStep": the tick, as a float
+extern ProcAnimFunction ProcAnimFunctions[256];   // by CARP::Instance::procAnimType (at the end)
 
 namespace {
 
@@ -125,7 +125,7 @@ void RotateInstance(CARP::Instance *instance, float degrees, const Coord4 *axis,
 // Spun by the parameter, signed
 bool Spin(CARP::Instance *instance, ProcAnimState *state, const Coord4 *axis, MATRIX4 *out) {
     int16_t rate = Parameter(instance, state);    // read signed
-    RotateInstance(instance, (float)((double)rate * SimStep * kSpinRate), axis, out);
+    RotateInstance(instance, (float)((double)rate * SimStep.step * kSpinRate), axis, out);
     return true;
 }
 
@@ -281,7 +281,7 @@ bool ProcAnimBillboard(CARP::Instance *instance, ProcAnimState *, const Coord4 *
 // FUNC_AT(0x0008ad40)
 bool ProcAnimSwingBillboard(CARP::Instance *instance, ProcAnimState *state, const Coord4 *offset, MATRIX4 *out) {
     uint16_t rate = Parameter(instance, state);
-    double cycle = (double)rate * TickSeconds * SimStep * kSwingRate;
+    double cycle = (double)rate * TickSeconds * SimStep.step * kSwingRate;
     double fraction = (double)(float)cycle - floor(cycle);
     float phase = (float)fraction;
     if (fraction > kHalf)
@@ -328,7 +328,7 @@ bool ProcAnimSway(CARP::Instance *instance, ProcAnimState *state, const Coord4 *
     uint16_t parameter = Parameter(instance, state);
     float amplitude = (float)((double)parameter * kSwayAmplitude);
     double inverseSize = 1.0 / (double)int32_t(instance->packedDimensions & kDimensionMask);
-    double time = ((double)translation->z + translation->x + SimStep) * inverseSize;
+    double time = ((double)translation->z + translation->x + SimStep.step) * inverseSize;
     float sineCycle = (float)(kSineRate * time);
     float cosineCycle = (float)(time * kCosineRate);
     float sine = (float)(SineTurns((float)((double)sineCycle - floor((double)sineCycle))) * amplitude);
@@ -380,3 +380,91 @@ bool ProcAnimParamScale(CARP::Instance *instance, ProcAnimState *, const Coord4 
     VU0_MATRIX4_mult(out, out, ProcAnimXForms);
     return true;
 }
+
+// ---- the table GetInstanceMatrix calls through (ProcAnim.h)
+
+// XBE_GLOBAL(0x001c41c0, 0x400)
+ProcAnimFunction ProcAnimFunctions[256] = {
+    // 0..99
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation, QuaternionStreamAnimation,
+    reinterpret_cast<ProcAnimFunction>(Generic_FuncReturnsFalse),   // 100
+    ProcAnimWidened,   // 101
+    // 102..236
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError), reinterpret_cast<ProcAnimFunction>(StubError),
+    ProcAnimBillboard,   // 237
+    ProcAnimSwingBillboard,   // 238
+    ProcAnimParamRotateZ,   // 239
+    ProcAnimParamRotateY,   // 240
+    ProcAnimParamRotateX,   // 241
+    ProcAnimSpinY2,   // 242
+    QuaternionStreamAnimation,   // 243
+    ProcAnimParamScale,   // 244
+    ProcAnimStatic,   // 245
+    ProcAnimStatic,   // 246
+    ProcAnimSway,   // 247
+    reinterpret_cast<ProcAnimFunction>(StubError),   // 248
+    ProcAnimXFormCopy,   // 249
+    ProcAnimByState,   // 250
+    ProcAnimSpinZ,   // 251
+    ProcAnimSpinY,   // 252
+    ProcAnimSpinX,   // 253
+    ProcAnimXFormTransform,   // 254
+    ProcAnimStatic,   // 255
+};

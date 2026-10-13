@@ -56,7 +56,7 @@ static_assert(offsetof(RRenderHigh, viewCount) == 0x20 && offsetof(RRenderHigh, 
               offsetof(RRenderHigh, framesPerSecond) == 0x40, "RRenderHigh layout");
 
 // The one instance (its constructor sets it)
-#define fgRenderHigh (*(RRenderHigh **)0x001ec488)
+extern RRenderHigh *fgRenderHigh;
 extern float AspectScale;                       // RViewCamera::AspectRatio's scale, set by RearrangeSplitScreens
 
 // The renderer's singleton manager: a second copy of SingletonManager (engine/USingleton.h) with its own static
@@ -97,5 +97,7 @@ public:
 
 // The linker's thunk to FreeEAGLMaterials (camera/CameraSpline.h; Ghidra: thunk_FUN_0007aee0)
 void FreeEAGLMaterialsThunk();                                                                  // 0x0008bab0
+
+extern USingletonManager TheRenderSingletonManager;   // RenderHigh.cpp
 
 #endif // DRIVING_RENDER_RENDERHIGH_H_

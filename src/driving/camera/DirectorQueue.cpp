@@ -18,7 +18,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // XBE_GLOBAL(0x00241460, 0x34)
-#define TextureDofMethod ((EAGL::RenderMethod *)0x00241460)   // "HB_RM = TextureDOF", a static initialiser's
+alignas(16) EAGL::RenderMethod TextureDofMethod;   // "HB_RM = TextureDOF", a static initialiser's
 
 // ---- RDirectorQueueData
 
@@ -196,7 +196,7 @@ void RDirectorQueue::AppendData(const RDirectorQueueData *data) {
 // FUNC_AT(0x0007c6e0)
 TextureDofState* TextureDofState::Construct() {
     void *memory = EaglMalloc(sizeof(EAGL::RenderMethod), "EAGL::Rendermethod new");
-    method = memory != NULL ? static_cast<EAGL::RenderMethod *>(memory)->ConstructChild(TextureDofMethod) : NULL;
+    method = memory != NULL ? static_cast<EAGL::RenderMethod *>(memory)->ConstructChild(&TextureDofMethod) : NULL;
     for (int i = 0; i < 8; i++)
         unknown04[i] = 0;
     bool found;

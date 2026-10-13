@@ -9,6 +9,8 @@
 #include "../../common/xbeOverload.h"
 #include "../data/Dafi.h"
 #include "../data/IniFiles.h"
+#include "PlayerCamera.h"                 // the modes' update methods
+#include "../engine/CoreFoundation.h"   // NullFunction
 #include "../engine/UMemory.hpp"
 #include "../game/BondCar.h"            // OverrideCarType
 #include "../game/Simulation.h"
@@ -19,11 +21,17 @@
 #include "../platform/X87.h"
 #include "../../helpers.h"
 #include "../platform/CRuntime.h"
+#include "../data/XbeData.h"   // XBE_INITIAL
 
 #include <bit>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+
+// XBE_GLOBAL(0x001c4194, 0xb)
+CameraModeIndices fgCameraModeIndices = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };   // none read yet
+// XBE_GLOBAL(0x001ec310, 0x8c)
+alignas(16) CameraTables fgCameraTables;
 
 // ---------------------------------------------------------------------------------------------------------------
 // RCameraIniLoader. See CameraIniLoader.h.
@@ -34,14 +42,8 @@ static RPlayerCamera *PlayerCamera;                     // RCameraIniLoader's
 
 // The tables' defaults, until LoadFile reads the file
 // XBE_GLOBAL(0x001c3e40, 0x6c)
-CameraConstants fgCameraConstants = {
-    100, 50, 60,
-    0.03f, 0.02f, 0.4f, 1.0f, 0.01f, 0.035f, 0.25f, 0.1f, 1.0f,
-    { 1.675f, 1.925f, 1.325f, 1.0f },
-    2.875f, 0.04f, 0.13f, 0.008f, 1.5f, 0.5f,
-    60, 40,
-    60.0f, 1.0f, 300.0f,
-};
+CameraConstants fgCameraConstants;
+XBE_INITIAL(fgCameraConstants);
 // XBE_GLOBAL(0x001ebc88, 4)
 int32_t kAutoDriveLatency;
 // XBE_GLOBAL(0x001ebca4, 4)
@@ -323,7 +325,7 @@ void RCameraIniLoader::LoadFile() {
             }
             mode->index = int8_t(heli);
             mode->type = kCameraHeli;
-            mode->update = kUpdateMomentumHeliCam;
+            mode->update = XbeAddress(&RPlayerCamera::UpdateMomentumHeliCam);
             HeliCamInfo *info = &tables.helis[heli++];
             info->minRate = Float(ini, section, "Min_Rate");
             info->maxRate = Float(ini, section, "Max_Rate");
@@ -365,7 +367,7 @@ void RCameraIniLoader::LoadFile() {
         } else if (Has(section, "Spline")) {
             mode->index = int8_t(spline);
             mode->type = kCameraSpline;
-            mode->update = kUpdateSplineCam;
+            mode->update = XbeAddress(&RPlayerCamera::UpdateSplineCam);
             SplineCamInfo *info = &tables.splines[spline++];
             info->splineSpeed = Float(ini, section, "splineSpeed");
             info->heightOffset = Float(ini, section, "heightOffset");
@@ -377,7 +379,7 @@ void RCameraIniLoader::LoadFile() {
         } else if (Has(section, "Ellipse")) {
             mode->index = int8_t(ellipse);
             mode->type = kCameraEllipse;
-            mode->update = kUpdateEllipseCam;
+            mode->update = XbeAddress(&RPlayerCamera::UpdateEllipseCam);
             EllipseCamInfo *info = &tables.ellipses[ellipse++];
             info->xRad = Float(ini, section, "xRad");
             info->zRad = Float(ini, section, "zRad");
@@ -401,7 +403,7 @@ void RCameraIniLoader::LoadFile() {
         } else if (Has(section, "Bumper")) {
             mode->index = int8_t(bumper);
             mode->type = kCameraBumper;
-            mode->update = kUpdateBumperCam;
+            mode->update = XbeAddress(&RPlayerCamera::UpdateBumperCam);
             BumperCamInfo *info = &tables.bumpers[bumper++];
             info->forwardArm.x = Float(ini, section, "forwardArm.x");
             info->forwardArm.y = Float(ini, section, "forwardArm.y");
@@ -420,7 +422,7 @@ void RCameraIniLoader::LoadFile() {
             }
             mode->index = int8_t(dashboard);
             mode->type = kCameraDashboard;
-            mode->update = kUpdateDashboardCam;
+            mode->update = XbeAddress(&RPlayerCamera::UpdateDashboardCam);
             DashboardCamInfo *info = &tables.dashboards[dashboard++];
             info->forwardArm.x = Float(ini, section, "forwardArm.x");
             info->forwardArm.y = Float(ini, section, "forwardArm.y");
@@ -469,7 +471,7 @@ void RCameraIniLoader::LoadFile() {
         } else if (Has(section, "Fixed")) {
             mode->index = int8_t(fixed);
             mode->type = kCameraFixed;
-            mode->update = kUpdateFixedCam;
+            mode->update = XbeAddress(&RPlayerCamera::UpdateFixedCam);
             FixedCamInfo *info = &tables.fixeds[fixed++];
             info->minZoomDist = Float(ini, section, "minZoomDist");
             info->minFov = Float(ini, section, "minFov");
@@ -479,7 +481,7 @@ void RCameraIniLoader::LoadFile() {
         } else if (Has(section, "Tumble")) {
             indices.tumble = int8_t(camera);
             mode->type = kCameraTumble;
-            mode->update = kUpdateTumbleCam;
+            mode->update = XbeAddress(&RPlayerCamera::UpdateTumbleCam);
             mode->index = 0;
             tables.tumbleRelPosLerp = Float(ini, section, "relPosLerp", 0.06f);
             tables.tumbleVectorLerp = Float(ini, section, "vectorLerp", 0.01f);
@@ -487,32 +489,32 @@ void RCameraIniLoader::LoadFile() {
         } else if (Has(section, "WorldAnim")) {
             indices.worldAnimation = int8_t(camera);
             mode->type = kCameraAnimation;
-            mode->update = kUpdateWorldAnimationCam;
+            mode->update = XbeAddress(&RPlayerCamera::UpdateWorldAnimationCam);
             mode->index = 0;
             RWorldCamera::ReadAnchorInfo(ini, section, &tables.animationAnchor);
         } else if (Has(section, "RelativeAnim")) {
             indices.relativeAnimation = int8_t(camera);
             mode->type = kCameraAnimation;
-            mode->update = kUpdateRelativeAnimationCam;
+            mode->update = XbeAddress(&RPlayerCamera::UpdateRelativeAnimationCam);
             mode->index = 0;
             RWorldCamera::ReadAnchorInfo(ini, section, &tables.animationAnchor);
         } else if (Has(section, "AIPathAnim")) {
             indices.aiPathAnimation = int8_t(camera);
             mode->type = kCameraAIPathAnimation;
-            mode->update = kUpdateAIPathAnimationCam;
+            mode->update = XbeAddress(&RPlayerCamera::UpdateAIPathAnimationCam);
             mode->index = 0;
             RWorldCamera::ReadAnchorInfo(ini, section, &tables.animationAnchor);
         } else if (Has(section, "Collision")) {
             indices.collision = int8_t(camera);
             mode->type = kCameraCollision;
-            mode->update = kUpdateNothing;
+            mode->update = XbeAddress(&NullFunction);
             mode->index = 0;
         } else if (Has(section, "AutoDrive")) {
             if (indices.autoDrive >= 0)
                 continue;
             indices.autoDrive = int8_t(camera);
             mode->type = kCameraAutoDrive;
-            mode->update = kUpdateAutoDriveCam;
+            mode->update = XbeAddress(&RPlayerCamera::UpdateAutoDriveCam);
             mode->index = 0;
             tables.autoDriveInertia = Float(ini, section, "inertia", 0.2f);
             tables.autoDriveZoomFactor = Float(ini, section, "zoomFactor", 0.1f);

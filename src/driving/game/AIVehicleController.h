@@ -82,7 +82,7 @@ extern int16_t TrafficCarTypesChosen;
 
 // The traffic: the cars allowed (the launch page's, then EChangeMaxTraffic's) and the cars spawned (ESpawnTraffic's
 // count; AIGroundVehicle::UnSpawn takes one off, reaching it through Get()). The names are ours.
-#define MaxTraffic I16_AT(0x001de914)
-#define TrafficSpawnCount I16_AT(0x001de918)
+extern int16_t MaxTraffic;
+extern int16_t TrafficSpawnCount;
 
 #endif // DRIVING_GAME_AIVEHICLECONTROLLER_H_

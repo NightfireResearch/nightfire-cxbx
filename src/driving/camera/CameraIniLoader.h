@@ -36,22 +36,8 @@ enum CameraModeType : uint16_t {
     kCameraDashboard = 0x400,
 };
 
-// The RPlayerCamera methods the modes run (CameraModeInfo::update: the original's address, called thiscall with no
-// arguments)
-enum CameraModeUpdate : uint32_t {
-    kUpdateBumperCam = 0x00080b90,
-    kUpdateAIPathAnimationCam = 0x00080cf0,
-    kUpdateDashboardCam = 0x00081d10,
-    kUpdateWorldAnimationCam = 0x00082400,
-    kUpdateRelativeAnimationCam = 0x00082840,
-    kUpdateSplineCam = 0x00084a60,
-    kUpdateFixedCam = 0x00085160,
-    kUpdateAutoDriveCam = 0x000857d0,
-    kUpdateMomentumHeliCam = 0x00087880,
-    kUpdateTumbleCam = 0x00088380,
-    kUpdateEllipseCam = 0x000886f0,
-    kUpdateNothing = 0x000d3580,        // dummyNullFunction (Collision)
-};
+// The RPlayerCamera method a mode runs (CameraModeInfo::update) is held by its address, as the original holds it, and
+// called thiscall with no arguments; a mode with none holds dummyNullFunction (CoreFoundation.h's NullFunction).
 
 // A mode (0x18 bytes). The table has one entry more than there are modes, a copy of the first.
 struct CameraModeInfo {
@@ -67,7 +53,7 @@ struct CameraModeInfo {
     uint16_t type;                      // +0x0a CameraModeType
     float defaultFov;                   // +0x0c
     float explosionShakeScale;          // +0x10
-    uint32_t update;                    // +0x14 CameraModeUpdate
+    uint32_t update;                    // +0x14 the RPlayerCamera method it runs, by address
 };
 static_assert(sizeof(CameraModeInfo) == 0x18, "a camera mode is 24 bytes");
 
@@ -316,8 +302,8 @@ struct CameraConstants {
 };
 static_assert(sizeof(CameraConstants) == 0x6c, "the camera constants are 0x6c bytes");
 
-#define fgCameraTables (*(CameraTables *)0x001ec310)
-#define fgCameraModeIndices (*(CameraModeIndices *)0x001c4194)
+extern alignas(16) CameraTables fgCameraTables;
+extern CameraModeIndices fgCameraModeIndices;
 extern CameraConstants fgCameraConstants;
 extern int32_t kExplosionShakePeriod;       // [Global]'s
 extern int32_t kAutoDriveLatency;           // [Global]'s

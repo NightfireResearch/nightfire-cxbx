@@ -29,6 +29,9 @@
 #include "../render/RSceneObj.hpp"      // LookupFXHandle, LocateFX
 #include "../world/Targeting.h"         // PointerListNode
 
+// XBE_GLOBAL(0x001dda70, 0xc0)
+alignas(16) AICharacterHandsStatics HandsStatics;
+
 // ---------------------------------------------------------------------------------------------------------------
 // AICharacterBond (0x0001cbb0-0x0001d530, 0x00023950) and AICharacterHands (0x000227a0-0x00023670; BlendVectors,
 // placed among the hands' methods, is RealMath's), ported from the listing. Random numbers: SimRandom,

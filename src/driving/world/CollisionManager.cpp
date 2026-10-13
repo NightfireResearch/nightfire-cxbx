@@ -24,6 +24,14 @@
 #include "../render/RSceneObj.hpp"
 #include "../game/EventsB.h"              // EHitWindow
 #include "../game/SimulationContainers.h"
+#include "../../common/xbeOverload.h"       // XbeAddress
+#include "../audio/Stream.h"               // AVoiceMapMax
+#include "../audio/Voice.h"                // AVoiceMap
+#include "../data/AttributeContainers.h"   // ExtensionClassMap
+#include "../data/Carp.h"                  // CARP::ResolverMap
+
+// XBE_GLOBAL(0x00239a70, 0x4)
+WCollisionMgr *fgCollisionMgr;
 
 #pragma fp_contract(off)
 
@@ -37,15 +45,15 @@
 // ---- the game's code not ported yet (or ported elsewhere for other node types)
 // the pointer vectors' uninitialized_fill_n, shared with the rest of the game
 // The tree helpers every map of the game shares (identical code folded by the linker), on this file's node types.
-// 0x00053580 and 0x000527e0, 0x00052a20 are the attribute system's ported copies (of its own node types; one warns
-// as provisional), called here at their addresses; 0x00118f20 is CARP::ResolverMap::Find's.
-#define WindowMap_Buyhead ((WindowMapNode *(*)())0x00053580)
-#define WindowMap_Lrotate ((void (__fastcall *)(WindowMap *, int, WindowMapNode *node))0x001238d0)
-#define WindowMap_Rrotate ((void (__fastcall *)(WindowMap *, int, WindowMapNode *node))0x000527e0)
-#define WindowMap_Increment ((void (__fastcall *)(WindowMapNode **it, int))0x00052a20)
-#define WindowMap_Decrement ((void (__fastcall *)(WindowMapNode **it, int))0x00123930)
-#define WindowMap_Max ((WindowMapNode *(*)(WindowMapNode *node))0x00123850)
-#define ArticleMap_Find ((ArticleMapNode **(__fastcall *)(ArticleMap *, int, ArticleMapNode **result, WCollisionInstance *const *key))0x00118f20)
+// They are the attribute system's, the voice map's and CARP::ResolverMap::Find's (of their own node types; one warns
+// as provisional), called here on this file's.
+#define WindowMap_Buyhead (reinterpret_cast<WindowMapNode *(*)()>(ExtensionClassMap::BuyHead))
+#define WindowMap_Lrotate (reinterpret_cast<void (__fastcall *)(WindowMap *, int, WindowMapNode *node)>(XbeAddress(&AVoiceMap::Lrotate)))
+#define WindowMap_Rrotate (reinterpret_cast<void (__fastcall *)(WindowMap *, int, WindowMapNode *node)>(XbeAddress(&ExtensionClassMap::Rrotate)))
+#define WindowMap_Increment (reinterpret_cast<void (__fastcall *)(WindowMapNode **it, int)>(XbeAddress(&ExtensionClassMap::Iterator::Inc)))
+#define WindowMap_Decrement (reinterpret_cast<void (__fastcall *)(WindowMapNode **it, int)>(XbeAddress(&AVoiceMap::Iterator::Dec)))
+#define WindowMap_Max (reinterpret_cast<WindowMapNode *(*)(WindowMapNode *node)>(AVoiceMapMax))
+#define ArticleMap_Find (reinterpret_cast<ArticleMapNode **(__fastcall *)(ArticleMap *, int, ArticleMapNode **result, WCollisionInstance *const *key)>(XbeAddress(&CARP::ResolverMap::Find)))
 
 namespace {
 

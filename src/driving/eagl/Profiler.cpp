@@ -92,9 +92,8 @@ float StartY = 380.0f;
 // XBE_GLOBAL(0x001ce072, 1)
 uint8_t SkipFrame = 1;
 
-// The static initialisers build the frame region, and the timer CurrentTimer starts at (0x00240688), where they are
-// XBE_GLOBAL(0x00240560, 0x128)
-#define FrameRegion ((ProfilerRegion *)0x00240560)          // the static region the frame mark times
+// The static initialisers build the frame region (FrameRegion, below) and the timer CurrentTimer starts at
+// (0x00240688), where they are
 #define CurrentTimer (*(ProfilerTimer **)0x001ce024)
 
 enum : uint32_t { kVertexDiffuse = 3, kVertexPosition = 0xffffffff };   // D3DVSDE_*
@@ -119,6 +118,9 @@ void EndPrimitive() {
 }
 
 }  // namespace
+
+// XBE_GLOBAL(0x00240560, 0x128)
+alignas(16) ProfilerRegion FrameRegion;   // the static region the frame mark times
 
 // XBE_GLOBAL(0x00240268, 4)
 EAGL::PrintHookFn EAGL::PrintHook;
@@ -314,7 +316,7 @@ void EAGL::ProfilerRegion::DrawRegion(float x, float y, int index, int pass, flo
         if (BarMode != 0) {
             // A bar up from the pen, in the region's colour
             float bar = history.valueSum;
-            if (this == FrameRegion)
+            if (this == &FrameRegion)
                 bar = float(kBarHeight - *total + bar);
             Gouraud->Begin(kQuadStrip);
             SetVertex(colour, penX, penY);
@@ -328,7 +330,7 @@ void EAGL::ProfilerRegion::DrawRegion(float x, float y, int index, int pass, flo
         } else {
             // The history as vertical lines, one a frame from the oldest, a pixel apart
             scratch = 0.0f;
-            if (this == FrameRegion)
+            if (this == &FrameRegion)
                 scratch = float((kBarHeight - *total) * kBarScale);
             Gouraud->Begin(kLineList);
             uint32_t i = HistoryIndex;
@@ -355,7 +357,7 @@ void EAGL::ProfilerRegion::DrawRegion(float x, float y, int index, int pass, flo
         return;
     // The figure: per cent of the frame, or what is left of it for the frame region
     double sum = history.valueSum;
-    if (this == FrameRegion)
+    if (this == &FrameRegion)
         sum = sum + (kBarHeight - *total);
     double percent = sum * 100.0 * kPercentScale;
     float textX = penX + 2.0f;
@@ -544,7 +546,7 @@ void EAGL::ProfilerFrameMark() {
     uint32_t frameCycles = Rdtsc() - LastFrameTsc;   // RDTSC at 0x000f52ea
     LastFrameTsc = Rdtsc();                          // RDTSC at 0x000f52f4
     ProfilerTimer timer;
-    timer.region = FrameRegion;
+    timer.region = &FrameRegion;
     timer.Enter();
     if (SkipFrame != 0)
         SkipFrame = 0;
@@ -594,7 +596,7 @@ void EAGL::ProfilerTimer::Enter() {
     child = NULL;
     running = 0;
     ProfilerTimer *current = CurrentTimer;
-    if (current->region == FrameRegion)
+    if (current->region == &FrameRegion)
         return;
     parent = current;
     parent->child = this;

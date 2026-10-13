@@ -38,9 +38,6 @@ bool IRModeOn;                                  // SetIRMode's
 
 constexpr uint32_t kAnimPoolSize = 0xc800;     // EAGLAnim's pool; the original also passes a 1 nothing reads
 
-// The resolver and the symbol callback, registered by their original addresses
-constexpr uint32_t kResolveEAGLReferences = 0x0007b8a0;
-constexpr uint32_t kSymbolResolverAt = 0x00017010;
 
 static LightBlock* NewLightBlock() {
     LightBlock *block = static_cast<LightBlock *>(EaglMalloc(sizeof(LightBlock), "EAGL::LightBlock new"));
@@ -110,7 +107,7 @@ void ActManager::Init(float frameTime) {
     EAGLAnim_InitInternal(kAnimPoolSize);
     DynamicLoader::RegisterVar("GAME::CharacterOptions", &drawOptions.alphaScale);
     RegisterCallback::AddMajorCallbacks();
-    RegisterCallback::Add(reinterpret_cast<SymbolCallback>(uintptr_t(kSymbolResolverAt)));
+    RegisterCallback::Add(reinterpret_cast<SymbolCallback>(&ActManager::SymbolResolver));
 
     ActSkeletonDatabase *skeletonMemory = static_cast<ActSkeletonDatabase *>(
         UMemory::FastAlloc(sizeof(ActSkeletonDatabase), "ActSkeletonDatabase"));
@@ -157,13 +154,13 @@ void ActManager::Destruct() {
         skeletons->Destruct();
         UMemory::FastFree(skeletons, sizeof(ActSkeletonDatabase));
     }
-    RegisterCallback::Remove(reinterpret_cast<SymbolCallback>(uintptr_t(kSymbolResolverAt)));
+    RegisterCallback::Remove(reinterpret_cast<SymbolCallback>(&ActManager::SymbolResolver));
     EAGLAnim_ShutDown();
 }
 
 // FUNC_AT(0x00016ec0)
 void* ActManager::GetSymbolResolver() {
-    return reinterpret_cast<void *>(uintptr_t(kResolveEAGLReferences));
+    return reinterpret_cast<void *>(&ResolveEAGLReferences);
 }
 
 // FUNC_AT(0x00017010)

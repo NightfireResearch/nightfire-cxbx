@@ -25,6 +25,9 @@
 #include "../world/RoadNetwork.h"
 #include "../platform/CRuntime.h"
 
+// XBE_GLOBAL(0x001de814, 0x1)
+uint8_t ForceNearRespawn;
+
 // ---------------------------------------------------------------------------------------------------------------
 // AIRoadSpawn (0x000347e0-0x00035610), and the grid cell list's length error (0x00034e50), ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
@@ -32,7 +35,8 @@
 // ---- globals
 
 // GetRandomTrafficSpawn's navigator, a function-local static (destroyed at exit by DestroyStatic_001de820)
-#define SpawnNav (*(WRoadNav *)0x001de820)
+// XBE_GLOBAL(0x001de820, 0xc0)
+alignas(16) WRoadNav SpawnNav;
 
 // XBE_GLOBAL(0x001de738, 0xc8)
 int32_t SpawnSegments[kMaxSpawnSegments];

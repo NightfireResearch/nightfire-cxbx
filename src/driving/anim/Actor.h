@@ -186,7 +186,7 @@ public:
 };
 static_assert(sizeof(ActActorDatabase) == 0xc, "an ActActorDatabase is 12 bytes");
 
-#define ActorDatabase (*(ActActorDatabase **)0x001dd9a0)
+extern ActActorDatabase *ActorDatabase;
 
 // The angular velocity that turns orientation `from` into `to` over `time` seconds (Ghidra's name; x87, not VU0).
 // Four forms of the same algebra, by the largest component of `from`.

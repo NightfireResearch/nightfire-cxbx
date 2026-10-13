@@ -14,8 +14,7 @@ void RunStaticInitialisers(void);
 
 // ---- the weapon table
 
-// XBE_GLOBAL(0x001c94d8, 0xa80)
-#define WeaponDefinitions ((WeaponRecord *)0x001c94d8)       // [kWeaponCount], game/WeaponManager.h
+extern WeaponRecord WeaponDefinitions[kWeaponCount];       // game/WeaponManager.h
 
 // The table as its initialiser left it (StaticInitTable.cpp), and the initialiser that puts it in place.
 extern const WeaponRecord kWeaponDefinitions[kWeaponCount];

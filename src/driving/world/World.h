@@ -336,7 +336,7 @@ static_assert(sizeof(WWorld) == 0x3c, "WWorld is 60 bytes");
 static_assert(offsetof(WWorld, group) == 0x14 && offsetof(WWorld, map) == 0x1c && offsetof(WWorld, instances) == 0x20 &&
               offsetof(WWorld, sceneObjects) == 0x34, "WWorld layout");
 
-#define fgWorld (*(WWorld **)0x0023f310)
+extern WWorld *fgWorld;
 
 extern char TrackName[0x80];            // SetTrackName's
 

@@ -40,22 +40,28 @@
 #include "InputConfig.h"
 #include "../platform/CRuntime.h"
 #include "../platform/CRuntimeStd.h"
+#include "../audio/Bank.h"
+#include "../audio/Mix.h"
+#include "../audio/Voice.h"
+#include "../camera/DirectorQueue.h"
+#include "../eagl/EaglFont.h"
+#include "../eagl/EaglGlobals.h"
+#include "../game/AIHands.h"
+#include "../physics/RigidBody.h"
+#include "../render/Decals.h"
+#include "../render/Gain.h"
+#include "../render/ParticleCache.h"
+#include "../render/PostProcessing.h"
+#include "../render/RGlareManager.hpp"
+#include "../world/Grid.h"
+#include "../world/Targeting.h"
+#include "../../common/xbeOverload.h"
 
 // ---- the originals the initialisers still call, by address
 
-#define ActActorDatabase_Destruct ((void (__fastcall *)(void *, int))0x00013540)
-#define FUN_00037160 ((void (__fastcall *)(NodeList *, int, void **, void *, void *))0x00037160)   // erase(result, first, last)
-#define FUN_0007c6e0 ((void (__fastcall *)(void *, int))0x0007c6e0)
-#define FUN_0007c7b0 ((void (__fastcall *)(void *, int))0x0007c7b0)
-#define FUN_000c5990 ((void * (__fastcall *)(void *, int))0x000c5990)
-#define FUN_000ce900 ((void (__fastcall *)(NodeList *, int, void **, void *, void *))0x000ce900)   // erase(result, first, last)
-#define FUN_000cebc0 ((void (__fastcall *)(void *, int))0x000cebc0)
-#define FUN_000e2c80 ((void (__fastcall *)(NodeList *, int, void **, void *, void *))0x000e2c80)   // erase(result, first, last)
-#define FUN_0011cc10 ((void (__fastcall *)(void *, int))0x0011cc10)
-#define FUN_00124710 ((void (__fastcall *)(void *, int))0x00124710)
-#define FUN_00124750 ((void (__fastcall *)(void *, int))0x00124750)
-#define ABank_Construct ((void (__fastcall *)(void *, int))0x00125db0)
-#define ABank_Destruct ((void (__fastcall *)(void *, int))0x00125ef0)
+#define FUN_00037160 reinterpret_cast<NodeListErase>(XbeAddress(&DAudioTargetList::Erase))
+#define FUN_000ce900 reinterpret_cast<NodeListErase>(XbeAddress(&PointerList::Erase))
+#define FUN_000e2c80 reinterpret_cast<NodeListErase>(XbeAddress(&LoadScreenStringList::Erase))
 
 // ---- constant blocks the initialisers copied from .rdata
 
@@ -133,14 +139,14 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x001dda60) = 1.0f / FLOAT_AT(0x001b5884);                                                  // 0x00156eb0
     FLOAT_AT(0x001dda64) = 1.0f / FLOAT_AT(0x001b59d8);                                                  // 0x00156ed0
     FLOAT_AT(0x001dda68) = 1.0f / FLOAT_AT(0x001b5e0c);                                                  // 0x00156ef0
-    FLOAT_AT(0x001dda9c) = 1.0f / FLOAT_AT(0x001b5fd0);                                                  // 0x00156f10
-    FLOAT_AT(0x001ddaa0) = 3.1415925f + 3.1415925f;                                                      // 0x00156f30
-    FLOAT_AT(0x001ddaa4) = 1.0f / FLOAT_AT(0x001ddaa0);                                                  // 0x00156f40
-    FLOAT_AT(0x001ddaa8) = 180.0f / 3.1415925f;                                                          // 0x00156f60
-    FLOAT_AT(0x001ddaac) = 1.0f / FLOAT_AT(0x001ddaa8);                                                  // 0x00156f80
-    memcpy((void *)0x001ddab0, kRdata_001a17c0, 0x40);                                                   // 0x00156fa0
-    memset((void *)0x001ddaf0, 0, 0x20);                                                                 // 0x00156fc0
-    FLOAT_AT(0x001ddb2c) = 1.0f / FLOAT_AT(0x001b6018);                                                  // 0x00156fe0
+    HandsStatics.unknown2c[0] = 1.0f / FLOAT_AT(0x001b5fd0);                                             // 0x00156f10
+    HandsStatics.unknown2c[1] = 3.1415925f + 3.1415925f;                                                 // 0x00156f30
+    HandsStatics.unknown2c[2] = 1.0f / 6.283185f;                                                        // 0x00156f40
+    HandsStatics.unknown2c[3] = 180.0f / 3.1415925f;                                                     // 0x00156f60
+    HandsStatics.unknown2c[4] = 1.0f / 57.295784f;                                                       // 0x00156f80
+    memcpy(&HandsStatics.baseTransform, kRdata_001a17c0, 0x40);                                          // 0x00156fa0
+    // HandsStatics = zero (0x20 bytes): ours (game/AIHands.cpp)                                         // 0x00156fc0
+    HandsStatics.cameraOffset.w = 1.0f / FLOAT_AT(0x001b6018);                                           // 0x00156fe0
     FLOAT_AT(0x001ddb30) = 3.1415925f + 3.1415925f;                                                      // 0x00157000
     FLOAT_AT(0x001ddb34) = 1.0f / FLOAT_AT(0x001ddb30);                                                  // 0x00157010
     FLOAT_AT(0x001ddb38) = 180.0f / 3.1415925f;                                                          // 0x00157030
@@ -167,8 +173,8 @@ void RunStaticInitialisers(void) {
     Crt::atexit([] { for (int i = 1; i >= 0; i--) ((AIGroundVehicle *)(0x001de940 + i * 0x270))->Destruct(); });
     for (int i = 0; i < 20; i++) ((AIGroundVehicle *)(0x001dee20 + i * 0x270))->Construct();             // 0x001572c0
     Crt::atexit([] { for (int i = 19; i >= 0; i--) ((AIGroundVehicle *)(0x001dee20 + i * 0x270))->Destruct(); });
-    FLOAT_AT(0x001e1f1c) = 1.0f / FLOAT_AT(0x001b662c);                                                  // 0x001572f0
-    for (int i = 0; i < 30; i++) ((AIZone *)(0x001e1f20 + i * 0x1c))->Construct();                       // 0x00157310
+    AIZoneData.unknown34 = 1.0f / FLOAT_AT(0x001b662c);                                                  // 0x001572f0
+    for (int i = 0; i < 30; i++) AIZoneData.zones[i].Construct();                                        // 0x00157310
     Crt::atexit([] {});
     FLOAT_AT(0x001e2274) = 1.0f / FLOAT_AT(0x001b6630);                                                  // 0x00157340
     DAudioTargets.Construct();                                                                           // 0x00157360
@@ -258,8 +264,8 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x001ebd6c) = 1.0f / FLOAT_AT(0x001ebd68);                                                  // 0x00157cb0
     FLOAT_AT(0x001ebd70) = 180.0f / 3.1415925f;                                                          // 0x00157cd0
     FLOAT_AT(0x001ebd74) = 1.0f / FLOAT_AT(0x001ebd70);                                                  // 0x00157cf0
-    for (int i = 0; i < 3; i++) FUN_0007c6e0((void *)(0x001ebdb8 + i * 0x4c), 0);                        // 0x00157d10
-    Crt::atexit([] { for (int i = 2; i >= 0; i--) FUN_0007c7b0((void *)(0x001ebdb8 + i * 0x4c), 0); });
+    for (int i = 0; i < 3; i++) ((TextureDofState *)(0x001ebdb8 + i * 0x4c))->Construct();               // 0x00157d10
+    Crt::atexit([] { for (int i = 2; i >= 0; i--) ((TextureDofState *)(0x001ebdb8 + i * 0x4c))->Destruct(); });
     for (int i = 0; i < 3; i++) ((EAGL::DynamicModel *)(0x001ebea0 + i * 0x58))->Construct();            // 0x00157d40
     Crt::atexit([] { for (int i = 2; i >= 0; i--) ((EAGL::DynamicModel *)(0x001ebea0 + i * 0x58))->Destruct(); });
     ((EAGL::GeoPrimState *)0x001ebfa8)->Construct();                                                     // 0x00157d70
@@ -341,8 +347,8 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x001f689c) = 1.0f / FLOAT_AT(0x001c4890);                                                  // 0x001585c0
     FLOAT_AT(0x001fe824) = 1.0f / FLOAT_AT(0x001c48b0);                                                  // 0x001585e0
     // DecalColours = zero: ours (render/Decals.cpp)                                                     // 0x00158600
-    ((EAGL::GeoPrimState *)0x001ff7f0)->Construct();                                                     // 0x00158620
-    Crt::atexit([] { ((EAGL::GeoPrimState *)0x001ff7f0)->Destruct(); });
+    DecalState.Construct();                                                                              // 0x00158620
+    Crt::atexit([] { DecalState.Destruct(); });
     FLOAT_AT(0x00200c88) = 1.0f / FLOAT_AT(0x001c4900);                                                  // 0x00158640
     // EmpSphereColours = zero: ours (game/EmpEffect.cpp)                                                // 0x00158660
     EmpSphereState.Construct();                                                                          // 0x00158680
@@ -384,16 +390,16 @@ void RunStaticInitialisers(void) {
     // DebrisColours = zero: ours (game/Debris.cpp)                                                      // 0x00158a60
     FLOAT_AT(0x00208cb8) = 1.0f / FLOAT_AT(0x001c8ed0);                                                  // 0x00158a80
     // GlareColours = zero: ours (render/RGlareManager.cpp)                                              // 0x00158aa0
-    ((UVolatileMaterial *)0x00209cc0)->Construct();                                                      // 0x00158ac0
-    Crt::atexit([] { ((EAGL::GeoPrimState *)0x00209cc0)->Destruct(); });
+    GlareMaterial.Construct();                                                                           // 0x00158ac0
+    Crt::atexit([] { ((EAGL::GeoPrimState *)&GlareMaterial)->Destruct(); });
     FLOAT_AT(0x0022ad38) = 1.0f / FLOAT_AT(0x001c8edc);                                                  // 0x00158ae0
     // NormalColours = zero: ours (render/ParticleCache.cpp)                                             // 0x00158b00
     // AdditiveColours = zero: ours (render/ParticleCache.cpp)                                           // 0x00158b20
     // StreakColours = zero: ours (render/ParticleCache.cpp)                                             // 0x00158b40
-    ((UVolatileMaterial *)0x00230540)->Construct();                                                      // 0x00158b60
-    Crt::atexit([] { ((EAGL::GeoPrimState *)0x00230540)->Destruct(); });
-    ((UVolatileMaterial *)0x002305a0)->Construct();                                                      // 0x00158b80
-    Crt::atexit([] { ((EAGL::GeoPrimState *)0x002305a0)->Destruct(); });
+    SpriteMaterial.Construct();                                                                          // 0x00158b60
+    Crt::atexit([] { ((EAGL::GeoPrimState *)&SpriteMaterial)->Destruct(); });
+    StreakMaterial.Construct();                                                                          // 0x00158b80
+    Crt::atexit([] { ((EAGL::GeoPrimState *)&StreakMaterial)->Destruct(); });
     FLOAT_AT(0x0023361c) = 1.0f / FLOAT_AT(0x001c8f20);                                                  // 0x00158ba0
     // TrackColours = zero: ours (game/TyreTrack.cpp)                                                    // 0x00158bc0
     for (int i = 0; i < 4; i++) TrackMaterials[i].Construct();                                           // 0x00158be0
@@ -401,7 +407,7 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x00233fa4) = 1.0f / FLOAT_AT(0x001c8f24);                                                  // 0x00158c10
     FLOAT_AT(0x00233fa8) = 1.0f / FLOAT_AT(0x001c8f28);                                                  // 0x00158c30
     FLOAT_AT(0x00233fb4) = 1.0f / FLOAT_AT(0x001c8fb4);                                                  // 0x00158c50
-    U32_AT(0x00233fb8) = 0xc2080000;   // Rigid_BODGE_PLAYER_GRAVITY's value                             // 0x00158c70
+    RigidPlayerGravity = Rigid_BODGE_PLAYER_GRAVITY;                                                     // 0x00158c70
     // RigidGroundRestitutionRate = 0.05f: ours (physics/RigidBodyBasics.cpp)                            // 0x00158c80
     // RigidRestitutionRateC8 = 0.0025f: ours (physics/RigidBodyBasics.cpp)                              // 0x00158ca0
     // RigidBuildingRestitutionRate = 0.0004f: ours (physics/RigidBodyBasics.cpp)                        // 0x00158cc0
@@ -430,9 +436,9 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x00239a6c) = 1.0f / FLOAT_AT(0x001c9f60);                                                  // 0x0015a0a0
     FLOAT_AT(0x00239a74) = 1.0f / FLOAT_AT(0x001c9fe8);                                                  // 0x0015a0c0
     FLOAT_AT(0x0023b3a8) = 1.0f / FLOAT_AT(0x001c9ff0);                                                  // 0x0015a0e0
-    PTR_AT(0x0023b3b0) = FUN_000c5990((void *)0x0023b3ac, 0);                                            // 0x0015a100
-    U32_AT(0x0023b3b4) = 0x00000000;
-    Crt::atexit([] { DestroyNodeList((NodeList *)0x0023b3ac, FUN_00037160, 0x34); });
+    GridMovers.head = GridMovers.BuyHead();                                                              // 0x0015a100
+    GridMovers.size = 0x00000000;
+    Crt::atexit([] { DestroyNodeList((NodeList *)&GridMovers, FUN_00037160, 0x34); });
     FLOAT_AT(0x0023e018) = 3.1415925f + 3.1415925f;                                                      // 0x0015a130
     FLOAT_AT(0x0023e01c) = 1.0f / FLOAT_AT(0x0023e018);                                                  // 0x0015a140
     FLOAT_AT(0x0023e020) = 180.0f / 3.1415925f;                                                          // 0x0015a160
@@ -449,7 +455,7 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x0023e19c) = 1.0f / FLOAT_AT(0x0023e198);                                                  // 0x0015a2a0
     FLOAT_AT(0x0023e1a0) = 180.0f / 3.1415925f;                                                          // 0x0015a2c0
     FLOAT_AT(0x0023e1a4) = 1.0f / FLOAT_AT(0x0023e1a0);                                                  // 0x0015a2e0
-    FUN_000cebc0((void *)0x0023e1b0, 0);                                                                 // 0x0015a300
+    TargetPicker.Construct();                                                                            // 0x0015a300
     Crt::atexit([] { DestroyGlobal_0023e1b0(); });
     FLOAT_AT(0x0023e274) = 1.0f / FLOAT_AT(0x001ca3a4);                                                  // 0x0015a320
     FLOAT_AT(0x0023f314) = 1.0f / FLOAT_AT(0x001ca3d0);                                                  // 0x0015a340
@@ -539,12 +545,12 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x0023fbb0) = 3.1415927f * 0.5f;                                                            // 0x0015ace0
     DOUBLE_AT(0x0023fba8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015ad00
     DOUBLE_AT(0x0023fba0) = 3.141592653589793 * 0.5;                                                     // 0x0015ad10
-    ((SymbolPool *)0x0023fb8c)->Construct();                                                             // 0x0015ad30
-    Crt::atexit([] { ((SymbolPool *)0x0023fb8c)->Destruct(); });
-    ((ConstructorPool *)0x0023fbe0)->Construct();                                                        // 0x0015ad50
-    Crt::atexit([] { ((ConstructorPool *)0x0023fbe0)->Destruct(); });
-    ((ConstructorPool *)0x0023fbb8)->Construct();                                                        // 0x0015ad70
-    Crt::atexit([] { ((RuntimeAllocConstructorPool *)0x0023fbb8)->Destruct(); });
+    GlobalPool.Construct();                                                                              // 0x0015ad30
+    Crt::atexit([] { GlobalPool.Destruct(); });
+    TheConstructorPool.Construct();                                                                      // 0x0015ad50
+    Crt::atexit([] { TheConstructorPool.Destruct(); });
+    ((ConstructorPool *)&TheRuntimeAllocPool)->Construct();                                              // 0x0015ad70
+    Crt::atexit([] { TheRuntimeAllocPool.Destruct(); });
     FLOAT_AT(0x0023ff3c) = 3.1415927f + 3.1415927f;                                                      // 0x0015ad90
     FLOAT_AT(0x0023ff38) = 3.1415927f * 0.5f;                                                            // 0x0015ada0
     DOUBLE_AT(0x0023ff30) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015adc0
@@ -573,8 +579,8 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x00240144) = 3.1415927f * 0.5f;                                                            // 0x0015afe0
     DOUBLE_AT(0x002400f0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b000
     DOUBLE_AT(0x002400e8) = 3.141592653589793 * 0.5;                                                     // 0x0015b010
-    ((EAGL::GeoPrimState *)0x002400f8)->Construct();                                                     // 0x0015b030
-    Crt::atexit([] { ((EAGL::GeoPrimState *)0x002400f8)->Destruct(); });
+    ((EAGL::GeoPrimState *)&FontState)->Construct();                                                     // 0x0015b030
+    Crt::atexit([] { ((EAGL::GeoPrimState *)&FontState)->Destruct(); });
     FLOAT_AT(0x00240174) = 3.1415927f + 3.1415927f;                                                      // 0x0015b050
     FLOAT_AT(0x00240170) = 3.1415927f * 0.5f;                                                            // 0x0015b060
     DOUBLE_AT(0x00240168) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b080
@@ -611,8 +617,8 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x0024069c) = 3.1415927f * 0.5f;                                                            // 0x0015b360
     DOUBLE_AT(0x00240558) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b380
     DOUBLE_AT(0x00240550) = 3.141592653589793 * 0.5;                                                     // 0x0015b390
-    ((EAGL::ProfilerRegion *)0x00240560)->Construct((const char *)0x001ce028 /* "PROFILER" */, 0xff00aaaa); // 0x0015b3b0
-    Crt::atexit([] { ((EAGL::ProfilerRegion *)0x00240560)->UnlinkThunk(); });
+    FrameRegion.Construct((const char *)0x001ce028 /* "PROFILER" */, 0xff00aaaa);                        // 0x0015b3b0
+    Crt::atexit([] { FrameRegion.UnlinkThunk(); });
     ((EAGL::ProfilerRegion *)0x002406a8)->Construct((const char *)0x001ce034 /* "UNPROFILED" */, 0xffffff50); // 0x0015b3d0
     Crt::atexit([] { ((EAGL::ProfilerRegion *)0x002406a8)->UnlinkThunk(); });
     U32_AT(0x00240688) = 0x002406a8;                                                                     // 0x0015b3f0
@@ -634,8 +640,8 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x00241458) = 3.1415927f * 0.5f;                                                            // 0x0015b540
     DOUBLE_AT(0x00241450) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b560
     DOUBLE_AT(0x00241448) = 3.141592653589793 * 0.5;                                                     // 0x0015b570
-    ((EAGL::RenderMethod *)0x00241460)->Construct((EAGL::Packet *)0x001ce958, 1, (const void *)0x001cea04, (const void **)0x001ce950, NULL, (const uint8_t **)0x001ce954, NULL, (const char **)0x001cea74, 0x00000001, (const char *)0x001cea9c /* "HB_RM = TextureDOF" */); // 0x0015b590
-    Crt::atexit([] { ((EAGL::RenderMethod *)0x00241460)->Destruct(); });
+    TextureDofMethod.Construct((EAGL::Packet *)0x001ce958, 1, (const void *)0x001cea04, (const void **)0x001ce950, NULL, (const uint8_t **)0x001ce954, NULL, (const char **)0x001cea74, 0x00000001, (const char *)0x001cea9c /* "HB_RM = TextureDOF" */); // 0x0015b590
+    Crt::atexit([] { TextureDofMethod.Destruct(); });
     FLOAT_AT(0x002414ac) = 3.1415927f + 3.1415927f;                                                      // 0x0015b5d0
     FLOAT_AT(0x002414a8) = 3.1415927f * 0.5f;                                                            // 0x0015b5e0
     DOUBLE_AT(0x002414a0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b600
@@ -743,14 +749,14 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x00241bd8) = 3.1415927f * 0.5f;                                                            // 0x0015bf80
     DOUBLE_AT(0x00241bd0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015bfa0
     DOUBLE_AT(0x00241bc8) = 3.141592653589793 * 0.5;                                                     // 0x0015bfb0
-    ((EAGL::RenderMethod *)0x00242de8)->Construct((EAGL::Packet *)0x001d37a0, 1, (const void *)0x001d3834, (const void **)0x001d3798, NULL, (const uint8_t **)0x001d379c, NULL, (const char **)0x001d38a0, 0x00000001, (const char *)0x001d38c0 /* "HB_RM = MatDebugTexture" */); // 0x0015bfd0
-    Crt::atexit([] { ((EAGL::RenderMethod *)0x00242de8)->Destruct(); });
-    ((EAGL::RenderMethod *)0x00242e1c)->Construct((EAGL::Packet *)0x001d3cf8, 1, (const void *)0x001d3dfc, (const void **)0x001d3cf0, NULL, (const uint8_t **)0x001d3cf4, NULL, (const char **)0x001d3eb8, 0x00000001, (const char *)0x001d3ef8 /* "HB_RM = BondScrollTex1" */); // 0x0015c010
-    Crt::atexit([] { ((EAGL::RenderMethod *)0x00242e1c)->Destruct(); });
-    ((EAGL::RenderMethod *)0x00242e50)->Construct((EAGL::Packet *)0x001d4090, 1, (const void *)0x001d414c, (const void **)0x001d4088, NULL, (const uint8_t **)0x001d408c, NULL, (const char **)0x001d41c4, 0x00000001, (const char *)0x001d41f0 /* "HB_RM = BondGouraudGain" */); // 0x0015c050
-    Crt::atexit([] { ((EAGL::RenderMethod *)0x00242e50)->Destruct(); });
-    ((EAGL::RenderMethod *)0x00242e84)->Construct((EAGL::Packet *)0x001d43d8, 1, (const void *)0x001d4460, (const void **)0x001d43d0, NULL, (const uint8_t **)0x001d43d4, NULL, (const char **)0x001d44cc, 0x00000001, (const char *)0x001d44ec /* "HB_RM = BondPostGlare" */); // 0x0015c090
-    Crt::atexit([] { ((EAGL::RenderMethod *)0x00242e84)->Destruct(); });
+    TexturedParentMethod.Construct((EAGL::Packet *)0x001d37a0, 1, (const void *)0x001d3834, (const void **)0x001d3798, NULL, (const uint8_t **)0x001d379c, NULL, (const char **)0x001d38a0, 0x00000001, (const char *)0x001d38c0 /* "HB_RM = MatDebugTexture" */); // 0x0015bfd0
+    Crt::atexit([] { TexturedParentMethod.Destruct(); });
+    EmpParentMethod.Construct((EAGL::Packet *)0x001d3cf8, 1, (const void *)0x001d3dfc, (const void **)0x001d3cf0, NULL, (const uint8_t **)0x001d3cf4, NULL, (const char **)0x001d3eb8, 0x00000001, (const char *)0x001d3ef8 /* "HB_RM = BondScrollTex1" */); // 0x0015c010
+    Crt::atexit([] { EmpParentMethod.Destruct(); });
+    GainParentMethod.Construct((EAGL::Packet *)0x001d4090, 1, (const void *)0x001d414c, (const void **)0x001d4088, NULL, (const uint8_t **)0x001d408c, NULL, (const char **)0x001d41c4, 0x00000001, (const char *)0x001d41f0 /* "HB_RM = BondGouraudGain" */); // 0x0015c050
+    Crt::atexit([] { GainParentMethod.Destruct(); });
+    BondPostGlare.Construct((EAGL::Packet *)0x001d43d8, 1, (const void *)0x001d4460, (const void **)0x001d43d0, NULL, (const uint8_t **)0x001d43d4, NULL, (const char **)0x001d44cc, 0x00000001, (const char *)0x001d44ec /* "HB_RM = BondPostGlare" */); // 0x0015c090
+    Crt::atexit([] { BondPostGlare.Destruct(); });
     FLOAT_AT(0x00243024) = 3.1415927f + 3.1415927f;                                                      // 0x0015c0d0
     FLOAT_AT(0x00243020) = 3.1415927f * 0.5f;                                                            // 0x0015c0e0
     DOUBLE_AT(0x00243018) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c100
@@ -839,16 +845,16 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x00243938) = 3.1415927f * 0.5f;                                                            // 0x0015c860
     DOUBLE_AT(0x00243930) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c880
     DOUBLE_AT(0x00243928) = 3.141592653589793 * 0.5;                                                     // 0x0015c890
-    FUN_0011cc10((void *)0x00243954, 0);                                                                 // 0x0015c8b0
-    Crt::atexit([] { ActActorDatabase_Destruct((void *)0x00243954, 0); });
+    Mixes.Construct();                                                                                   // 0x0015c8b0
+    Crt::atexit([] { ((PointerList *)&Mixes)->Destruct(); });
     FLOAT_AT(0x002439bc) = 1.0f / FLOAT_AT(0x001d7fc4);                                                  // 0x0015c8d0
-    FUN_00124710((void *)0x00243a9c, 0);                                                                 // 0x0015c8f0
-    Crt::atexit([] { FUN_00124750((void *)0x00243a9c, 0); });
-    PTR_AT(0x00243aac) = ((MissionList *)0x00243aa8)->BuyHead();                                         // 0x0015c910
-    U32_AT(0x00243ab0) = 0x00000000;
-    Crt::atexit([] { DestroyNodeList((NodeList *)0x00243aa8, FUN_000ce900, 0xc); });
-    ABank_Construct((void *)0x00243b18, 0);                                                              // 0x0015c940
-    Crt::atexit([] { ABank_Destruct((void *)0x00243b18, 0); });
+    VoiceInfoMap.Construct();                                                                            // 0x0015c8f0
+    Crt::atexit([] { VoiceInfoMap.Destruct(); });
+    ActiveViews.head = ((MissionList *)&ActiveViews)->BuyHead();                                         // 0x0015c910
+    ActiveViews.size = 0x00000000;
+    Crt::atexit([] { DestroyNodeList((NodeList *)&ActiveViews, FUN_000ce900, 0xc); });
+    ((ABank *)0x00243b18)->Construct();                                                                  // 0x0015c940
+    Crt::atexit([] { ((ABank *)0x00243b18)->Destruct(); });
     FLOAT_AT(0x00243b38) = 1.0f / FLOAT_AT(0x001d83c0);                                                  // 0x0015c960
     FLOAT_AT(0x00243b3c) = 1.0f / FLOAT_AT(0x001d83c4);                                                  // 0x0015c980
     FLOAT_AT(0x00243b40) = 1.0f / FLOAT_AT(0x001d83c8);                                                  // 0x0015c9a0
@@ -879,10 +885,10 @@ void RunStaticInitialisers(void) {
     DOUBLE_AT(0x00247610) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015cc00
     DOUBLE_AT(0x00247608) = 3.141592653589793 * 0.5;                                                     // 0x0015cc10
     Crt::atexit([] { U32_AT(0x001dcd10) = 0x001a772c; });                                                // 0x0015cc30
-    ((EAGL::RenderMethod *)0x0024b07c)->Construct((EAGL::Packet *)0x001dd2e0, 1, (const void *)0x001dd34c, (const void **)0x001dd2d8, NULL, (const uint8_t **)0x001dd2dc, NULL, (const char **)0x001dd38c, 0x00000001, (const char *)0x001dd3a4 /* "HB_RM = MatDebug" */); // 0x0015cc40
-    Crt::atexit([] { ((EAGL::RenderMethod *)0x0024b07c)->Destruct(); });
-    ((EAGL::RenderMethod *)0x0024b0b0)->Construct((EAGL::Packet *)0x001dd538, 1, (const void *)0x001dd5cc, (const void **)0x001dd530, NULL, (const uint8_t **)0x001dd534, NULL, (const char **)0x001dd638, 0x00000001, (const char *)0x001dd658 /* "HB_RM = MatVolatileTexture" */); // 0x0015cc80
-    Crt::atexit([] { ((EAGL::RenderMethod *)0x0024b0b0)->Destruct(); });
+    MatDebugMethod.Construct((EAGL::Packet *)0x001dd2e0, 1, (const void *)0x001dd34c, (const void **)0x001dd2d8, NULL, (const uint8_t **)0x001dd2dc, NULL, (const char **)0x001dd38c, 0x00000001, (const char *)0x001dd3a4 /* "HB_RM = MatDebug" */); // 0x0015cc40
+    Crt::atexit([] { MatDebugMethod.Destruct(); });
+    MatVolatileTextureMethod.Construct((EAGL::Packet *)0x001dd538, 1, (const void *)0x001dd5cc, (const void **)0x001dd530, NULL, (const uint8_t **)0x001dd534, NULL, (const char **)0x001dd638, 0x00000001, (const char *)0x001dd658 /* "HB_RM = MatVolatileTexture" */); // 0x0015cc80
+    Crt::atexit([] { MatVolatileTextureMethod.Destruct(); });
     FLOAT_AT(0x0024b0fc) = 3.1415927f + 3.1415927f;                                                      // 0x0015ccc0
     FLOAT_AT(0x0024b0f8) = 3.1415927f * 0.5f;                                                            // 0x0015ccd0
     DOUBLE_AT(0x0024b0f0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015ccf0

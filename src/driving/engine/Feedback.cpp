@@ -1,4 +1,5 @@
 #include "Feedback.h"
+#include "../platform/XboxInput.h"
 
 #include <math.h>
 
@@ -16,14 +17,17 @@
 // the main thread, with nothing between them but the records.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define gSuperEasy BOOL8_AT(0x001e476c)
+// XBE_GLOBAL(0x001e476c, 0x1)
+uint8_t gSuperEasy;
 // Cleared by the end-of-mission, exit, letterbox and pause events, set again by resume and restart (name ours)
-#define gFeedbackAllowed BOOL8_AT(0x001b6f50)
+// XBE_GLOBAL(0x001b6f50, 0x1)
+uint8_t gFeedbackAllowed = 1;
 
 #define gFeedbackThread (*(RealThread *)0x001e2410)
-#define gFeedbackThreadStop BOOL8_AT(0x001e241c)
+// XBE_GLOBAL(0x001e241c, 0x1)
+uint8_t gFeedbackThreadStop;
 // XBE_GLOBAL(0x001e2420, 0x10)
-#define gFeedbackSignal (*(RealSignal *)0x001e2420)
+alignas(16) RealSignal gFeedbackSignal;
 // XBE_GLOBAL(0x001e2430, 0x2000)
 static uint8_t gFeedbackThreadStack[0x2000];   // the PS2's thread stack
 // XBE_GLOBAL(0x001e4430, 0x4)
@@ -35,7 +39,7 @@ FeedbackPort gFeedbackPorts[4];
 // XBE_GLOBAL(0x001e4558, 0x4)
 uint32_t gFeedbackTick;
 
-#define XInputSetState ((uint32_t (__stdcall *)(void *, PadFeedback *))0x00184b59)
+#define XInputSetState (reinterpret_cast<uint32_t (__stdcall *)(void *, PadFeedback *)>(Xbox_XInputSetState))
 
 static const int kPorts = 4;
 static const int kMaxLevel = 255;

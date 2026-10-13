@@ -161,7 +161,7 @@ struct WRoadNetworkData {
 static_assert(sizeof(WRoadNetworkData) == 0xcc && offsetof(WRoadNetworkData, instance) == 0xb0 &&
               offsetof(WRoadNetworkData, queryStamp) == 0xc8, "the road network's statics");
 
-#define fgRoadNetworkData (*(WRoadNetworkData *)0x0023e030)
+extern alignas(16) WRoadNetworkData fgRoadNetworkData;
 
 // Distances and offsets the original leaves on the x87 stack are answered as double. A segment's points: t 0 at its
 // start node, 1 at its end node.

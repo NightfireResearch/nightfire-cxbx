@@ -39,19 +39,18 @@ namespace {
 
 constexpr float kRatioScale = 1.0f / 4096;   // the time stretch's 4.12 ratio
 
-// The process and frame-getter functions a node stores: the originals' addresses (which jump to the ports here),
-// so a node's bytes are the original's
-#define UnpackXafAt ((SFilterProcess)0x00145ed0)          // SFILTER_unpackxaf
-#define XapfRestoreAt ((SFilterRestore)0x00145bf0)        // SFILTER_unpackxapfrestore
-#define GetFrameXafAt ((SFilterGetFrame)0x00145f40)       // SFILTER_unpackgetframexaf
-#define UnpackXalfAt ((SFilterProcess)0x00145cc0)         // SFILTER_unpackxalf
-#define UnpackMtpfAt ((SFilterProcess)0x00145830)         // SFILTER_unpackmtpf
-#define UnpackMtfAt ((SFilterProcess)0x001459c0)          // SFILTER_unpackmtf
-#define UnpackPfAt ((SFilterProcess)0x00146000)           // SFILTER_unpackpf
-#define UnpackLfAt ((SFilterProcess)0x00146130)           // SFILTER_unpacklf
-#define GetFrameAt ((SFilterGetFrame)0x001461e0)          // SFILTER_unpackfgetframe_unpacklfgetframe
-#define UnpackFAt ((SFilterProcess)0x001461f0)            // SFILTER_unpackf
-#define TimeStretchAt ((SFilterProcess)0x00144340)        // SFILTER_timestretch
+// The process and frame-getter functions a node stores, as the node's types hold them
+#define UnpackXafAt (reinterpret_cast<SFilterProcess>(SFILTER_unpackxaf))          // SFILTER_unpackxaf
+#define XapfRestoreAt (reinterpret_cast<SFilterRestore>(SFILTER_unpackxapfrestore))        // SFILTER_unpackxapfrestore
+#define GetFrameXafAt (reinterpret_cast<SFilterGetFrame>(SFILTER_unpackgetframexaf))       // SFILTER_unpackgetframexaf
+#define UnpackXalfAt (reinterpret_cast<SFilterProcess>(SFILTER_unpackxalf))         // SFILTER_unpackxalf
+#define UnpackMtpfAt (reinterpret_cast<SFilterProcess>(SFILTER_unpackmtpf))         // SFILTER_unpackmtpf
+#define UnpackMtfAt (reinterpret_cast<SFilterProcess>(SFILTER_unpackmtf))          // SFILTER_unpackmtf
+#define UnpackPfAt (reinterpret_cast<SFilterProcess>(SFILTER_unpackpf))           // SFILTER_unpackpf
+#define UnpackLfAt (reinterpret_cast<SFilterProcess>(SFILTER_unpacklf))           // SFILTER_unpacklf
+#define GetFrameAt (reinterpret_cast<SFilterGetFrame>(SFILTER_unpackfgetframe_unpacklfgetframe))          // SFILTER_unpackfgetframe_unpacklfgetframe
+#define UnpackFAt (reinterpret_cast<SFilterProcess>(SFILTER_unpackf))            // SFILTER_unpackf
+#define TimeStretchAt (reinterpret_cast<SFilterProcess>(SFILTER_timestretch))        // SFILTER_timestretch
 
 
 // The original's REP MOVSD: count floats, front to back (a float copy keeps the bits)

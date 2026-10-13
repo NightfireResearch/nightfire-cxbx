@@ -8,6 +8,7 @@
 
 #include "../../helpers.h"
 #include "../eagl/RenderContext.h"
+#include "../eagl/EaglGlobals.h"            // ViewMatrix
 #include "../eagl/View.h"                   // EAGL::ViewPort
 #include "../engine/UMemory.hpp"
 #include "../platform/RealMath.h"
@@ -17,6 +18,9 @@
 #include "../render/SkyWater.h"             // ScaleDebrisTables
 #include "../render/TextureContext.h"
 #include "../render/TimeData.h"             // GameTick, SimStep
+
+// XBE_GLOBAL(0x00202a80, 0x4)
+RDebris *Debris;
 
 // ---------------------------------------------------------------------------------------------------------------
 // RDebris and RDebrisType (0x000a8f10-0x000a9870), ported from the listing.
@@ -63,8 +67,9 @@ alignas(16) const MATRIX4 kIdentity = { {
 // The pieces' colours as drawn: every draw points the request at the first
 // XBE_GLOBAL(0x00202a90, 0x200)
 uint32_t DebrisColours[RDebrisType::kMaxPieces];
-// The XBE's pointer to EAGL's view matrix (gpViewMatrix; eagl/EaglGlobals.h's ViewMatrix)
-#define ViewMatrixPointer (*(const MATRIX4 **)0x001caf50)
+// EAGL's pointer to its view matrix (gpViewMatrix; eagl/EaglGlobals.h's ViewMatrix)
+// XBE_GLOBAL(0x001caf50, 0x4)
+const MATRIX4 *ViewMatrixPointer = reinterpret_cast<const MATRIX4 *>(ViewMatrix);
 
 // ---- RDebrisType
 
@@ -105,7 +110,7 @@ void RDebrisType::Add(const Coord4 *position, const Coord4 *velocity, uint32_t c
 void RDebrisType::Draw() {
     if (count == 0)
         return;
-    float oldest = (float)(double(SimStep) - double(lifetime));
+    float oldest = (float)(double(SimStep.step) - double(lifetime));
     for (uint32_t i = 0; i < count; i++) {
         if (oldest > velocity[i].w) {
             count--;
@@ -117,7 +122,7 @@ void RDebrisType::Draw() {
         }
     }
     for (uint32_t i = 0; i < count; i++) {
-        double age = double(SimStep) - velocity[i].w;
+        double age = double(SimStep.step) - velocity[i].w;
         Coord3 at = { position[i].x, position[i].y, position[i].z };
         at.x = (float)(age * velocity[i].x + at.x);
         double rise = age * velocity[i].y + at.y;

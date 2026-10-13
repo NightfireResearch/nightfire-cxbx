@@ -235,6 +235,6 @@ static_assert(offsetof(RLightning, randomCoords) == 0x50 && offsetof(RLightning,
               offsetof(RLightning, material) == 0x660 && offsetof(RLightning, textures) == 0x6cc &&
               offsetof(RLightning, metricsInterval) == 0x6e8, "RLightning layout");
 
-#define TheLightning (*(RLightning **)0x00200f4c)    // RLightning::Init's instance
+extern RLightning *TheLightning;   // RLightning::Init's instance
 
 #endif // DRIVING_RENDER_LIGHTNING_H_

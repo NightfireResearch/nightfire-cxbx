@@ -44,7 +44,7 @@ static_assert(sizeof(RMissileCam) == 0x1c, "RMissileCam is 0x1c bytes");
 static_assert(offsetof(RMissileCam, enabled) == 0x10 && offsetof(RMissileCam, alpha) == 0x14 &&
               offsetof(RMissileCam, geoPrim) == 0x18, "RMissileCam layout");
 
-#define MissileCam (*(RMissileCam **)0x00200f54)     // RMissileCam::Init's instance
+extern RMissileCam *MissileCam;   // RMissileCam::Init's instance
 extern EAGL::GeoPrimState MissileCamState;          // Draw's static; DestroyStatic_00200f60 at exit
 extern uint32_t MissileCamStateMade;                // its guard
 extern uint32_t MissileCamVertexCount[4];           // the GeoPrim's vertex count record
@@ -92,7 +92,7 @@ static_assert(offsetof(RSniperZoom, backBuffer) == 0x0c && offsetof(RSniperZoom,
               offsetof(RSniperZoom, outerColours) == 0xb60 && offsetof(RSniperZoom, material) == 0xc10,
               "RSniperZoom layout");
 
-#define SniperZoom (*(RSniperZoom **)0x00201818)     // RSniperZoom::Init's instance
+extern RSniperZoom *SniperZoom;   // RSniperZoom::Init's instance
 extern float SniperCopySpread;          // MakeTexCopy's
 extern int32_t SniperCopies;
 extern float SniperOuterRadius;         // the rings' radii, in pixels: inner to middle, middle to outer

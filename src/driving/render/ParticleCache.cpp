@@ -32,7 +32,7 @@
 
 // ---- globals
 
-#define GameTick U32_AT(0x001f2a4c)
+extern uint32_t GameTick;
 // XBE_GLOBAL(0x00230600, 4)
 float ParticleDrag;                  // UpdateBlock's copy of the particle's drag (name ours)
 // XBE_GLOBAL(0x001c8ed4, 4)
@@ -66,9 +66,9 @@ EAGL::TAR *SpriteTexture;
 // XBE_GLOBAL(0x0022ad34, 4)
 EAGL::TAR *StreakTexture;
 // XBE_GLOBAL(0x00230540, 0x60)
-#define SpriteMaterial ((UVolatileMaterial *)0x00230540)
+alignas(16) UVolatileMaterial SpriteMaterial;
 // XBE_GLOBAL(0x002305a0, 0x60)
-#define StreakMaterial ((UVolatileMaterial *)0x002305a0)
+alignas(16) UVolatileMaterial StreakMaterial;
 
 constexpr uint32_t kTextureMain = 0x4e49414d;       // "MAIN" in memory
 constexpr uint32_t kTextureSpark = 0x6b727073;      // "sprk"
@@ -235,18 +235,18 @@ RParticleParticleCache* RParticleParticleCache::Construct() {
     StreakTexture = RTextureContextManager::GetContext(0)->FindOrCreateTexture(kTextureSpark, 0);
     lastTick = 0;
 
-    SpriteMaterial->SetTextureEnable(true);
-    SpriteMaterial->SetShading(kShadingGouraud);
-    SpriteMaterial->SetAlphaCompareValue(kAlphaCompare);
-    SpriteMaterial->SetAlphaTestEnable(false);
-    SpriteMaterial->SetTransparencyMethod(kTransparent);
-    SpriteMaterial->SetAlphaBlendMode(kBlendNormal);
+    SpriteMaterial.SetTextureEnable(true);
+    SpriteMaterial.SetShading(kShadingGouraud);
+    SpriteMaterial.SetAlphaCompareValue(kAlphaCompare);
+    SpriteMaterial.SetAlphaTestEnable(false);
+    SpriteMaterial.SetTransparencyMethod(kTransparent);
+    SpriteMaterial.SetAlphaBlendMode(kBlendNormal);
 
-    StreakMaterial->SetTextureEnable(true);
-    StreakMaterial->SetShading(kShadingGouraud);
-    StreakMaterial->SetTransparencyMethod(kTransparent);
-    StreakMaterial->SetAlphaBlendMode(kBlendAdditive);
-    StreakMaterial->SetAlphaTestEnable(false);
+    StreakMaterial.SetTextureEnable(true);
+    StreakMaterial.SetShading(kShadingGouraud);
+    StreakMaterial.SetTransparencyMethod(kTransparent);
+    StreakMaterial.SetAlphaBlendMode(kBlendAdditive);
+    StreakMaterial.SetAlphaTestEnable(false);
 
     for (int i = 0; i < kStreakVertices; i++) {
         switch (i % 3) {
@@ -401,16 +401,16 @@ void RParticleParticleCache::RenderBlock(int block) {
 
     fgRenderer->renderContext->SetZWritesEnable(0);
     if (normalCount > 0) {
-        SpriteMaterial->SetAlphaBlendMode(kBlendNormal);
-        DrawVertices(SpriteMaterial, kQuadList, normalCount, NormalPositions, NormalColours, NormalUVs, SpriteTexture);
+        SpriteMaterial.SetAlphaBlendMode(kBlendNormal);
+        DrawVertices(&SpriteMaterial, kQuadList, normalCount, NormalPositions, NormalColours, NormalUVs, SpriteTexture);
     }
     if (additiveCount > 0) {
-        SpriteMaterial->Extension()->SetAlphaBlend(kGLSrcAlpha, kGLOne, kGLFuncAdd);
-        DrawVertices(SpriteMaterial, kQuadList, additiveCount, AdditivePositions, AdditiveColours, AdditiveUVs,
+        SpriteMaterial.Extension()->SetAlphaBlend(kGLSrcAlpha, kGLOne, kGLFuncAdd);
+        DrawVertices(&SpriteMaterial, kQuadList, additiveCount, AdditivePositions, AdditiveColours, AdditiveUVs,
                      SpriteTexture);
     }
     if (streakCount > 0)
-        DrawVertices(StreakMaterial, kTriangleList, streakCount, StreakPositions, StreakColours, StreakUVs,
+        DrawVertices(&StreakMaterial, kTriangleList, streakCount, StreakPositions, StreakColours, StreakUVs,
                      StreakTexture);
     fgRenderer->renderContext->SetZWritesEnable(1);
 }

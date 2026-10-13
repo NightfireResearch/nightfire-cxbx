@@ -210,10 +210,10 @@ extern float DefaultSleepRange;
 // The range list's order for qsort: the closest ahead first (never equal)
 int CompareRanges(const void *a, const void *b);                                                // 0x00028a90
 
-#define fgAIElementController (*(AIElementController **)0x001ddee4)
+extern AIElementController *fgAIElementController;
 // 1; no code writes it: EActivateAIElement and EAIElementForceAwake wake a vehicle element only within the hench
 // limit (OkToSpawnHench). The name is ours.
-#define gLimitHenchSpawns BOOL8_AT(0x001b64ec)
+extern uint8_t gLimitHenchSpawns;
 
 // ---- the zones
 
@@ -275,7 +275,7 @@ struct AIZoneStatics {
 static_assert(sizeof(AIZoneStatics) == 0x380 && offsetof(AIZoneStatics, instance) == 0x2c &&
               offsetof(AIZoneStatics, zones) == 0x38, "the zone statics");
 
-#define AIZoneData (*(AIZoneStatics *)0x001e1ee8)
+extern AIZoneStatics AIZoneData;
 
 // ---- functions placed among the controller's
 

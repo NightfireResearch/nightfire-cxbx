@@ -8,6 +8,9 @@
 #include "../camera/WorldCamera.h"        // TransformPointXZ
 #include "../platform/RealMath.h"
 
+// XBE_GLOBAL(0x001f2c80, 0xa0)
+alignas(16) RRenderWorldCulling fgWorldCulling;
+
 // ---------------------------------------------------------------------------------------------------------------
 // RRenderWorldCulling (0x0008d180-0x0008d610), ported from the listing. The x87 chains are written in double in the
 // original's order. Tested by devtools/SceneObjShadow on random frustums.

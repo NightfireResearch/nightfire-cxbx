@@ -32,7 +32,6 @@ uint8_t NextKey;                                     // SNDBANKI_findfreekey's r
 namespace {
 
 const int32_t kDefaultEnvelope = 0x001d9d28;         // the default envelope's address, in the original's .rdata
-const uint32_t kBankRemoveAddress = 0x0013cf60;      // SNDbankremove, as the exit hook holds it
 
 inline uint8_t *AddBytes(const void *p, int32_t n) {   // pointer + value, as the original's 32-bit ADD
     return (uint8_t *)(uintptr_t)((uint32_t)(uintptr_t)p + (uint32_t)n);
@@ -123,7 +122,7 @@ void SNDBANKI_userdatacallback(SND::PatchHeader *header, int operation) {
 // Always 8; the slot is not checked.
 // FUNC_AT(0x0013cef0)
 int SNDbankadd(int *bank, SND::BankHeader *data) {
-    BankExitHook = (int (*)(int))kBankRemoveAddress;
+    BankExitHook = SNDbankremove;
     int index = SNDBANKI_alloc();
     *bank = index;
     BankSlot *slot = &BankArray[index];

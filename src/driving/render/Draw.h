@@ -96,7 +96,7 @@ extern VertexBatch SpriteBatch;             // DrawBatchedSprite's
 extern MATRIX4 *DrawModelMatrix;
 extern float DrawZ;
 
-#define SimpleMaterial (*(USimpleMaterial **)0x001e92d0)
-#define SimpleTexturedMaterial (*(USimpleTexturedMaterial **)0x001e92d4)
+extern USimpleMaterial *SimpleMaterial;
+extern USimpleTexturedMaterial *SimpleTexturedMaterial;
 
 #endif // DRIVING_RENDER_DRAW_H_

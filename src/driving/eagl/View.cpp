@@ -9,11 +9,35 @@
 #include "../platform/X87.h"
 #include "../../helpers.h"
 #include "../platform/CRuntime.h"
+#include "../data/XbeData.h"
+#include "Model.h"                   // ModelConstructor, ModelDestructor
+#include "RenderMethod.h"            // the render method and vertex buffer constructors
+#include "RuntimeAlloc.h"            // the property-built constructors
 
 #include <bit>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+
+// The render methods' constant vectors, registered by name: gReflectionConstants, gSkinningConstants,
+// gZeroOneTwoThree, gShadowColour, gEnvMapConstants
+// XBE_GLOBAL(0x001cdab0, 0x50)
+alignas(16) static float RenderMethodConstants[5][4];
+XBE_INITIAL(RenderMethodConstants);
+
+// The matrices render methods read by name (EaglGlobals.h)
+// XBE_GLOBAL(0x0023f950, 0x40)
+alignas(16) float ViewMatrix[16];
+// XBE_GLOBAL(0x0023f990, 0x40)
+alignas(16) float ModelViewMatrix[16];
+// XBE_GLOBAL(0x0023f9d0, 0x40)
+alignas(16) float ModelViewProjectionMatrix[16];
+// XBE_GLOBAL(0x0023fa10, 0x40)
+alignas(16) float ProjectionMatrix[16];
+// XBE_GLOBAL(0x0023fa50, 0x40)
+alignas(16) float ModelMatrix[16];
+// XBE_GLOBAL(0x0023fa90, 0x40)
+alignas(16) float ViewProjectionMatrix[16];
 
 // ---------------------------------------------------------------------------------------------------------------
 // EAGL's device, its texture render contexts, the RenderContext's viewport list, and the viewports
@@ -935,6 +959,12 @@ EAGL::TextureRenderContextPrivate* EAGL::TextureRenderContextPrivate::Construct(
 // Device
 // ---------------------------------------------------------------------------------------------------------------
 
+// The allocator hooks (EaglGlobals.h), EAGL's own pair until RRenderer overrides them
+// XBE_GLOBAL(0x001caf68, 4)
+EaglMallocFn EaglMalloc = eagl_alloc;
+// XBE_GLOBAL(0x001caf6c, 4)
+EaglFreeFn EaglFree = eagl_free;
+
 // FUNC_AT(0x000e4f50)
 void *eagl_alloc(uint32_t size, const char *) {
     return Crt::malloc(size);
@@ -946,24 +976,29 @@ void eagl_free(void *pointer, uint32_t) {
 }
 
 // Registers the load-time types in the ConstructorPool, the property-built ones in the RuntimeAllocConstructorPool,
-// the viewport matrices and the render-method constants by name (docs 2.1). The constructors and destructors are
-// registered by their original addresses, as the original stores them.
+// the viewport matrices and the render-method constants by name (docs 2.1).
 // FUNC_AT(0x000e4f70)
 bool EAGL::Device::Init() {
     initialised = 1;
     CurrentDevice = this;
-    TheConstructorPool.AddType("EAGL::TAR", (void *)0x000ed070, (void *)0x000ed2b0);
-    TheConstructorPool.AddType("RenderMethod", (void *)0x000f11c0, (void *)0x000f1390);
-    TheConstructorPool.AddType("Model", (void *)0x000ea1d0, (void *)0x000e8b40);
-    TheConstructorPool.AddType("VertexBuffer", (void *)0x000f0ee0, (void *)0x000f0f10);
-    TheRuntimeAllocPool.AddType("EAGL::GeoPrimState", (void *)0x000ef4c0, (void *)0x000ef780);
-    TheRuntimeAllocPool.AddType("EAGL::TAR", (void *)0x000ecbe0, (void *)0x000ed2d0);
+    TheConstructorPool.AddType("EAGL::TAR", reinterpret_cast<void *>(EAGL_TARConstructor),
+                               reinterpret_cast<void *>(EAGL_TARDestructor));
+    TheConstructorPool.AddType("RenderMethod", reinterpret_cast<void *>(EAGL_RenderMethodConstructor),
+                               reinterpret_cast<void *>(EAGL_RenderMethodDestructor));
+    TheConstructorPool.AddType("Model", reinterpret_cast<void *>(EAGLInternal::ModelConstructor),
+                               reinterpret_cast<void *>(EAGLInternal::ModelDestructor));
+    TheConstructorPool.AddType("VertexBuffer", reinterpret_cast<void *>(EAGL_VertexBufferConstructor),
+                               reinterpret_cast<void *>(EAGL_VertexBufferDestructor));
+    TheRuntimeAllocPool.AddType("EAGL::GeoPrimState", reinterpret_cast<void *>(RuntimeAllocGeoPrimStateConstructor),
+                                reinterpret_cast<void *>(RuntimeAllocGeoPrimStateDestructor));
+    TheRuntimeAllocPool.AddType("EAGL::TAR", reinterpret_cast<void *>(RuntimeAllocTARConstructor),
+                                reinterpret_cast<void *>(RuntimeAllocTARDestructor));
     EAGL_SymbolInit();
-    DynamicLoader::RegisterVar("&EAGL::RenderMethodConstants::gReflectionConstants", (void *)0x001cdab0);
-    DynamicLoader::RegisterVar("&EAGL::RenderMethodConstants::gSkinningConstants", (void *)0x001cdac0);
-    DynamicLoader::RegisterVar("&EAGL::RenderMethodConstants::gZeroOneTwoThree", (void *)0x001cdad0);
-    DynamicLoader::RegisterVar("&EAGL::RenderMethodConstants::gShadowColour", (void *)0x001cdae0);
-    DynamicLoader::RegisterVar("&EAGL::RenderMethodConstants::gEnvMapConstants", (void *)0x001cdaf0);
+    DynamicLoader::RegisterVar("&EAGL::RenderMethodConstants::gReflectionConstants", RenderMethodConstants[0]);
+    DynamicLoader::RegisterVar("&EAGL::RenderMethodConstants::gSkinningConstants", RenderMethodConstants[1]);
+    DynamicLoader::RegisterVar("&EAGL::RenderMethodConstants::gZeroOneTwoThree", RenderMethodConstants[2]);
+    DynamicLoader::RegisterVar("&EAGL::RenderMethodConstants::gShadowColour", RenderMethodConstants[3]);
+    DynamicLoader::RegisterVar("&EAGL::RenderMethodConstants::gEnvMapConstants", RenderMethodConstants[4]);
     uint32_t answer = D3D_ReturnsTrue(0);
     ReturnsTrueAnswer = answer;
     return answer != 0;

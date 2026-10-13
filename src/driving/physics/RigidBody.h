@@ -196,7 +196,7 @@ static_assert(offsetof(RigidScratchPadFields, contactGrounds) == 0x100 &&
 // named as its attribute); the names of the tuning block's floats with no attribute are ours.
 extern RigidScratchPadFields *RigidScratchPad;  // Simulation::GetScratchPadFreeZone's, set by InitRigidBodySystem
 extern bool RigidUnderwater;                    // the track's name holds "uw_"
-#define RigidPlayerGravity FLOAT_AT(0x00233fb8)         // BODGE_PLAYER_GRAVITY at start; -34 for "jungle_truck"
+extern float RigidPlayerGravity;   // BODGE_PLAYER_GRAVITY at start; -34 for "jungle_truck"
 extern float RigidGroundRestitutionRate;        // GROUND_RESTITUTION / MICRO_THRESHOLD at start-up
 extern float RigidRestitutionRateC8;            // 0x001c8f3c's value / MICRO_THRESHOLD at start-up
 extern float RigidBuildingRestitutionRate;      // BUILDING_COEFF_RESTITUTION / BUILDING_MICRO_THRESHOLD at start-up

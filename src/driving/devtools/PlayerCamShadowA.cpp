@@ -6,6 +6,7 @@
 #include "OrigConstants.h"
 
 #include "../camera/CameraIniLoader.h"
+#include "../game/AIHands.h"
 #include "../camera/CameraSpline.h"
 #include "../camera/DirectorQueue.h"
 #include "../camera/PlayerCamState.h"

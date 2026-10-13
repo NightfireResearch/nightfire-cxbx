@@ -13,6 +13,14 @@
 #include "../data/AttributeSystem.h"
 #include "../engine/UMemory.hpp"
 #include "../platform/RealPrint.h"      // MEM_fill
+#include "../data/XbeData.h"
+
+// XBE_GLOBAL(0x001c3db4, 0x2c)
+DamageLevels fgDamageLevels;
+XBE_INITIAL(fgDamageLevels);
+
+// XBE_GLOBAL(0x001e7ac8, 0x4)
+uint32_t fgCarNameCount;
 
 // ---------------------------------------------------------------------------------------------------------------
 // PVehicle (0x0006f810-0x00071930) and PhysicsData's constructor, ported from the listing.

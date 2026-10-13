@@ -88,4 +88,6 @@ void __stdcall ProfilerVertex(const float *vertex, const uint32_t *colour);  // 
 
 }  // namespace EAGL
 
+extern EAGL::ProfilerRegion FrameRegion;   // the static region the frame mark times (Profiler.cpp)
+
 #endif // DRIVING_EAGL_PROFILER_H_

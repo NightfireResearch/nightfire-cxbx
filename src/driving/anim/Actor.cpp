@@ -23,6 +23,9 @@
 #include "../world/Targeting.h"           // PointerList
 #include "../game/MissionManager.h"           // MissionList::BuyHead
 
+// XBE_GLOBAL(0x001dd9a0, 0x4)
+ActActorDatabase *ActorDatabase;
+
 // ---------------------------------------------------------------------------------------------------------------
 // ActActor, ActActorDatabase and VU0_quatstoangvel (0x000112b0-0x00013c00, 0x0008c8d0), ported from the listing.
 //

@@ -1162,7 +1162,7 @@ TimeState CaptureTime(bool original = false) {
     TimeState s;
     s.videoModeRate = VideoModeRate;
     s.tickSeconds = original ? OrigTickSeconds : TickSeconds;
-    s.simStep = SimStep;
+    s.simStep = SimStep.step;
     s.gameTick = GameTick;
     memcpy(s.caustic, CausticControl, sizeof(s.caustic));
     return s;
@@ -1171,7 +1171,7 @@ TimeState CaptureTime(bool original = false) {
 void PutTime(const TimeState &s, bool original = false) {
     VideoModeRate = s.videoModeRate;
     (original ? OrigTickSeconds : TickSeconds) = s.tickSeconds;
-    SimStep = s.simStep;
+    SimStep.step = s.simStep;
     GameTick = s.gameTick;
     memcpy(CausticControl, s.caustic, sizeof(s.caustic));
 }

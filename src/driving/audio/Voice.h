@@ -162,4 +162,8 @@ inline void AudioVoiceUntested(const char *what) {
         } \
     } while (0)
 
+// Voice.cpp
+extern AVoiceMap VoiceInfoMap;
+extern AVoiceViewList ActiveViews;
+
 #endif // DRIVING_AUDIO_VOICE_H_

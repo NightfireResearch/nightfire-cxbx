@@ -1,6 +1,7 @@
 #pragma fp_contract(off)
 
 #include "VehicleRender.h"
+#include "../platform/XboxXapi.h"
 
 #include <bit>
 #include <stddef.h>
@@ -38,18 +39,21 @@
 #include "../render/TimeData.h"             // GameTick
 #include "../world/World.h"                 // WorldArticle
 #include "../platform/CRuntime.h"
+#include "../data/XbeData.h"   // XBE_INITIAL
+
+// XBE_GLOBAL(0x001f2a50, 0x200)
+alignas(16) VehicleSharedBuffers VehicleBuffers;
 
 // ---------------------------------------------------------------------------------------------------------------
 // RVehicle, the cars' render object (0x000953e0-0x00096820), ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
 
-// ---- the game's code not ported yet
-// XAPI's GetLocalTime (ours: the platform layer's jump to the host's)
-#define XapiGetLocalTime ((void (__stdcall *)(LocalTime *time))0x0010e684)
+// XAPI's GetLocalTime (the platform layer's)
+#define XapiGetLocalTime (reinterpret_cast<void (__stdcall *)(LocalTime *time)>(Xbox_GetLocalTime))
 
 // ---- globals
 #define TuningLevel ((const char *)0x00244084)              // the level the tuning databases are read for
-#define WorldViewMade BOOL8_AT(0x001f2c50)                  // set by RRenderWorldCamera
+extern uint8_t WorldViewMade;   // set by RRenderWorldCamera
 
 namespace {
 
@@ -126,15 +130,8 @@ const char *const HubBoneNames[RVehicle::kWheels] = {
     "leftfronthub", "rightfronthub", "leftrearhub", "rightrearhub",
 };
 // XBE_GLOBAL(0x001c4730, 0x70)
-const NeedleRange NeedleRanges[7] = {
-    { 0.0f, 1.0f, 0.0f, 0.0f },
-    { 0.0f, 330.0f, 120.0f, -225.0f },          // kNeedleSpeed
-    { 0.0f, 7000.0f, 121.0f, -210.0f },         // kNeedleRevs
-    { 0.0f, 1.0f, 0.0f, 0.0f },
-    { 0.0f, 1.0f, 0.0f, 0.0f },
-    { 0.0f, 12.0f, 0.0f, -360.0f },             // kNeedleHours
-    { 0.0f, 60.0f, 0.0f, -360.0f },             // kNeedleMinutes
-};
+NeedleRange NeedleRanges[7];
+XBE_INITIAL(NeedleRanges);
 
 }  // namespace
 

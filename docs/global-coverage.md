@@ -113,6 +113,18 @@ and 195 in `.data` whose size the source does not give (strings, pointer tables)
 Check a driving global you own with lockstep runs (`NIGHTFIRE_LOCKSTEP`, frames compared against a build from
 before the change) as well as `--driving --check`.
 
+Two refinements came with the standalone preparation (13 October 2026, [driving/standalone.md](driving/standalone.md)),
+after `--driving --check` had failed on four globals no live code touched:
+
+- A reference Ghidra hung on no function, from code a replaced function reaches before the next entry (its walk of
+  the control flow decides), is the replaced function's. Such code is a FUNC_AT at an address Ghidra left outside any
+  function, or a body Ghidra cut short; it used to count as data, and so as live.
+- A power of two or one less (a flag, a mask: `test esi, 0x200000`, a `.rdata` word 0x200000) is not taken for an
+  address, from an instruction that names it as an immediate only or from data.
+
+A global whose initial value is game data is defined without one and filled from the XBE at build time:
+`XBE_INITIAL(name)` beside it (data/XbeData.h, tools/extract_driving_data.py).
+
 ## Reading the report
 
 ```

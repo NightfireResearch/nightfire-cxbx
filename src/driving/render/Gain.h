@@ -54,4 +54,6 @@ extern Coord4 GainPositions[4];
 extern uint32_t GainColours[4];
 extern uint32_t GainColoursGuard;
 
+extern EAGL::RenderMethod GainParentMethod;   // the render method the GeoPrim inherits (Gain.cpp)
+
 #endif // DRIVING_RENDER_GAIN_H_

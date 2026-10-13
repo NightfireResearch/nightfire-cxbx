@@ -11,6 +11,7 @@
 #include "../platform/RealPrint.h"
 #include "../platform/X87.h"
 #include "../../helpers.h"
+#include "../data/XbeData.h"   // XBE_INITIAL
 
 #include <emmintrin.h>
 #include <stddef.h>
@@ -70,10 +71,48 @@ namespace {
 
 #define D3DPushBufferCursor (*(const uint16_t **)0x00175420)   // D3D8's push-buffer pointer
 
-// The handlers, called by opcode: the game's table, which points at the originals' entries
+// The handlers, called by opcode
 typedef void (*OpcodeHandler)();
 // XBE_GLOBAL(0x001ce700, 0x94)
-#define OpcodeTable ((const OpcodeHandler *)0x001ce700)
+const OpcodeHandler OpcodeTable[37] = {
+    EAGL_RMOp_Skip,                      // 0
+    EAGL_RMOp_Skip1,                     // 1
+    EAGL_RMOp_Stream,                    // 2
+    EAGL_RMOp_SelectShaders,             // 3
+    EAGL_RMOp_DefaultShaders,            // 4
+    EAGL_RMOp_VSConstants5,              // 5
+    EAGL_RMOp_VSConstants6,              // 6
+    EAGL_RMOp_VSConstants7,              // 7
+    EAGL_RMOp_VSConstants8,              // 8
+    EAGL_RMOp_InlineStreamSource,        // 9
+    EAGL_RMOp_Skip,                      // 10
+    EAGL_RMOp_DynamicStream,             // 11
+    EAGL_RMOp_Skip,                      // 12
+    EAGL_RMOp_Skip,                      // 13
+    EAGL_RMOp_IndexData,                 // 14
+    EAGL_RMOp_TAR,                       // 15
+    EAGL_RMOp_GeoPrimState,              // 16
+    EAGL_RMOp_VSConstantPair17,          // 17
+    EAGL_RMOp_VSConstantPair18,          // 18
+    EAGL_RMOp_VSMatrix19,                // 19
+    EAGL_RMOp_VSMatrix20,                // 20
+    EAGL_RMOp_MatrixPalette21,           // 21
+    EAGL_RMOp_MatrixPalette22,           // 22
+    EAGL_RMOp_Skip23,                    // 23
+    EAGL_RMOp_Skip24,                    // 24
+    EAGL_RMOp_DrawVertices,              // 25
+    EAGL_RMOp_DrawIndexedVertices,       // 26
+    EAGL_RMOp_VSMatrix27,                // 27
+    EAGL_RMOp_VSMatrix28,                // 28
+    EAGL_RMOp_Skin29,                    // 29
+    EAGL_RMOp_Skin30,                    // 30
+    EAGL_RMOp_SkinSource,                // 31
+    EAGL_RMOp_PSMatrix32,                // 32
+    EAGL_RMOp_PSMatrix33,                // 33
+    EAGL_RMOp_PSConstants34,             // 34
+    EAGL_RMOp_PSConstants35,             // 35
+    EAGL_RMOp_RunPushBuffer,             // 36
+};
 
 // DrawGouraud's and DrawTextured's shaders
 // XBE_GLOBAL(0x001ce218, 0x10)
@@ -81,59 +120,26 @@ const uint32_t GouraudVSDeclaration[4] = {
     0x20000000, 0x40320000, 0x40400003, 0xffffffff,
 };
 
-// XBE_GLOBAL(0x001ce228, 0x88)
-const uint32_t GouraudVSFunction[34] = {
-    0x00082078, 0x00000000, 0x00ec001b, 0x0836186c, 0x20708800, 0x00000000,
-    0x00ec201b, 0x0836186c, 0x20704800, 0x00000000, 0x00ec401b, 0x0836186c,
-    0x20702800, 0x00000000, 0x00ec601b, 0x0836186c, 0x20701800, 0x00000000,
-    0x0020061b, 0x0836106c, 0x2070f818, 0x00000000, 0x002000ff, 0xc436106c,
-    0x20708828, 0x00000000, 0x0647401b, 0xc4361bff, 0x1078e800, 0x00000000,
-    0x0087601b, 0xc400286c, 0x3070e801, 0x00000000,
-};
+// XBE_GLOBAL(0x001ce228, 0x88) raw
+uint32_t GouraudVSFunction[34];
+XBE_INITIAL(GouraudVSFunction);
 
-// XBE_GLOBAL(0x001ce2b0, 0xf0)
-const uint32_t GouraudPSDefinition[60] = {
-    0xd4301010, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x000000c0, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xc4200000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x000000c0, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00011101,
-    0x00000000, 0x00000000, 0x00000000, 0xffffffff, 0xffffffff, 0x000001ff,
-};
+// XBE_GLOBAL(0x001ce2b0, 0xf0) raw
+uint32_t GouraudPSDefinition[60];
+XBE_INITIAL(GouraudPSDefinition);
 
 // XBE_GLOBAL(0x001ce078, 0x18)
 const uint32_t TexturedVSDeclaration[6] = {
     0x20000000, 0x40320000, 0x40400003, 0x40220009, 0xffffffff, 0x00000000,
 };
 
-// XBE_GLOBAL(0x001ce090, 0x98)
-const uint32_t TexturedVSFunction[38] = {
-    0x00092078, 0x00000000, 0x00ec001b, 0x0836186c, 0x20708800, 0x00000000,
-    0x00ec201b, 0x0836186c, 0x20704800, 0x00000000, 0x00ec401b, 0x0836186c,
-    0x20702800, 0x00000000, 0x00ec601b, 0x0836186c, 0x20701800, 0x00000000,
-    0x0020121b, 0x0836106c, 0x2070f848, 0x00000000, 0x0020061b, 0x0836106c,
-    0x2070f818, 0x00000000, 0x002000ff, 0xc436106c, 0x20708828, 0x00000000,
-    0x0647401b, 0xc4361bff, 0x1078e800, 0x00000000, 0x0087601b, 0xc400286c,
-    0x3070e801, 0x00000000,
-};
+// XBE_GLOBAL(0x001ce090, 0x98) raw
+uint32_t TexturedVSFunction[38];
+XBE_INITIAL(TexturedVSFunction);
 
-// XBE_GLOBAL(0x001ce128, 0xf0)
-const uint32_t TexturedPSDefinition[60] = {
-    0xd4d81010, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x000000c0, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xc4c80000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x000000c0, 0x00000000, 0x00000000,
-    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00011101,
-    0x00000001, 0x00000000, 0x00000000, 0xffffffff, 0xffffffff, 0x000001ff,
-};
+// XBE_GLOBAL(0x001ce128, 0xf0) raw
+uint32_t TexturedPSDefinition[60];
+XBE_INITIAL(TexturedPSDefinition);
 
 // An opcode-11 packet's slots while it has no buffer: all bits set
 template <class T> T *Unset() {

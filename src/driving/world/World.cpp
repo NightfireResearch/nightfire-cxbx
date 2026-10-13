@@ -30,6 +30,9 @@
 #include "../render/PathEngine.h"
 #include "../render/RSceneObj.hpp"
 
+// XBE_GLOBAL(0x0023f310, 0x4)
+WWorld *fgWorld;
+
 // ---------------------------------------------------------------------------------------------------------------
 // WWorld (0x000d1210-0x000d2860 and its InitSingleton at 0x000595c0), ported from the listing, with the compiled
 // copy of std::vector<WorldSceneObject> the linker put among its methods. The systems the world starts and stops

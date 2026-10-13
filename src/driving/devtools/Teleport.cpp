@@ -22,6 +22,7 @@
 #include "RenderShadow.h"
 #include "GeoPrimShadow.h"
 #include "SndCallTrace.h"
+#include "StandaloneTraps.h"
 #include "ViewCamShadow.h"
 #include "CamDataShadow.h"
 #include "PlayerCamShadowA.h"
@@ -372,6 +373,7 @@ void Teleport_Tick(void) {
         GameFrontEndShadowD_Run();  // NIGHTFIRE_GAMEFRONTENDSHADOWD=1 only
         CRuntimeShadowA_Run();  // NIGHTFIRE_CRUNTIMESHADOWA=1 only
         CRuntimeShadowB_Run();  // NIGHTFIRE_CRUNTIMESHADOWB=1 only
+        StandaloneTraps_FirstTick();   // NIGHTFIRE_TRAP_DATA=1 only: after the shadows
         if (AnyVehicleShadow()) {
             PrintQueues("before the vehicle shadows", ReadQueues());
             RunVehicleShadow("bondcarA", BondCarShadowA_Run);   // NIGHTFIRE_BONDCARSHADOWA=1 only

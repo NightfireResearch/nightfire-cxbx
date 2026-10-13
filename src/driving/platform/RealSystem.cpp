@@ -1,4 +1,5 @@
 #include "RealSystem.h"
+#include "KernelImports.h"
 
 #include "XboxTimer.h"
 #include "../devtools/SndLockstep.h"
@@ -98,12 +99,10 @@ void TIMER_removetask(TimerTask task) {
     }
 }
 
-// The kernel's tick count, an imported variable (KeTickCount, through the import slot at 0x00189bfc).
-#define KeTickCountImport (*(volatile int **)0x00189bfcu)
 
 // AUTOINJECT
 int getTickCount() {
-    return *KeTickCountImport;
+    return *KernelKeTickCount();   // the kernel's tick count, an imported variable
 }
 
 // ---- SYNCTASK: tasks run from the game loop (SYNCTASK_run), each every so many ticks
@@ -331,9 +330,6 @@ DWORD SIGNAL_wait(RealSignal *signal) {
 
 // ---- MUTEX: a critical section at +4, through the kernel's imports
 
-#define KernelRtlInitializeCriticalSection (*(void (__stdcall **)(void *))0x00189cf0u)
-#define KernelRtlEnterCriticalSection      (*(void (__stdcall **)(void *))0x00189c40u)
-#define KernelRtlLeaveCriticalSection      (*(void (__stdcall **)(void *))0x00189c3cu)
 
 // Returns 0 in AL, as the original does whatever happens.
 // AUTOINJECT

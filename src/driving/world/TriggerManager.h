@@ -49,7 +49,7 @@ public:
 };
 static_assert(sizeof(WTriggerManager) == 0xc, "the trigger manager is 12 bytes");
 
-#define fgTriggerManager (*(WTriggerManager **)0x0023e260)
+extern WTriggerManager *fgTriggerManager;
 
 extern uint32_t QueryStamp;             // the triggers' queryStamp of the current Process
 

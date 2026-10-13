@@ -14,6 +14,7 @@
 
 #include "../data/CoordConvert.h"       // Coord3
 #include "../../helpers.h"
+#include "../world/RoadNav.h"           // WRoadNav
 
 constexpr int kMaxSpawnSegments = 50;
 
@@ -61,6 +62,8 @@ extern uint32_t SpawnNavMade;                   // GetRandomTrafficSpawn's stati
 
 // Set: every spawn place passes the checks, and a pedestrian spawns without its crowding check (RefreshSpawnData
 // when forced, EForceNearPedRespawn)
-#define ForceNearRespawn BOOL8_AT(0x001de814)
+extern uint8_t ForceNearRespawn;
+
+extern WRoadNav SpawnNav;   // AIRoadSpawn.cpp
 
 #endif // DRIVING_GAME_AIROADSPAWN_H_

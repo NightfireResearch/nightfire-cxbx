@@ -14,6 +14,12 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "../data/XbeData.h"
+
+// XBE_GLOBAL(0x001cbdd0, 0xba0) raw
+alignas(16) uint8_t BuiltInShapes[0xba0];   // EaglGlobals.h
+XBE_INITIAL(BuiltInShapes);
+
 #pragma float_control(precise, on)
 #pragma fp_contract(off)
 
@@ -85,7 +91,7 @@ inline ShapeImage *Image(uint8_t *shape) {
 
 // The first image of EAGL's built-in SHPX
 inline uint8_t *DefaultShape() {
-    return reinterpret_cast<uint8_t *>(&BuiltInShapes) + BuiltInShapes.entries[0].offset;
+    return BuiltInShapes + reinterpret_cast<const ShapeFile *>(BuiltInShapes)->entries[0].offset;
 }
 
 // The inlined D3DDevice_SetTextureStageState: the stage's dirty bit, then the value into D3D8's table.

@@ -12,6 +12,9 @@
 #include "World.h"
 #include "../platform/CRuntime.h"
 
+// XBE_GLOBAL(0x0023e030, 0xcc)
+alignas(16) WRoadNetworkData fgRoadNetworkData;
+
 #pragma fp_contract(off)
 
 // ---------------------------------------------------------------------------------------------------------------

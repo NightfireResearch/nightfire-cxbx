@@ -4,6 +4,7 @@
 #pragma fp_contract(off)
 
 #include "GameLoop.h"
+#include "../platform/XboxStartup.h"
 #include "ActionQueue.hpp"
 #include "CoreFoundation.h"
 #include "Feedback.h"
@@ -124,8 +125,9 @@ bool gDAudio;
 static bool ScreenCaptureEnabled;
 // XBE_GLOBAL(0x001e4768, 0x4)
 int32_t gDVD;
-#define gSuperEasy BOOL8_AT(0x001e476c)
-#define gSubtitles BOOL8_AT(0x001e476d)
+extern uint8_t gSuperEasy;
+// XBE_GLOBAL(0x001e476d, 0x1)
+uint8_t gSubtitles;
 // XBE_GLOBAL(0x001e476e, 0x1)
 static bool gUsingMisc;
 // XBE_GLOBAL(0x001e4658, 0x4)
@@ -140,9 +142,12 @@ static int32_t ExitMission;
 // XBE_GLOBAL(0x001e4778, 0x40)
 static char ExitMissionName[0x40];
 
-#define gStreams BOOL8_AT(0x001b7056)             // -streams / +streams
-#define gPlayMovies BOOL8_AT(0x001b7057)
-#define gSoundOption BOOL8_AT(0x001b7054)         // ASoundManager::Init's second argument
+// XBE_GLOBAL(0x001b7056, 0x1)
+uint8_t gStreams = 1;                         // -streams / +streams
+// XBE_GLOBAL(0x001b7057, 0x1)
+uint8_t gPlayMovies = 1;
+// XBE_GLOBAL(0x001b7054, 0x1)
+uint8_t gSoundOption = 1;                     // ASoundManager::Init's second argument
 // XBE_GLOBAL(0x001e4854, 0x1)
 static bool gUseBigFile;                          // UFileLoader::StartUsingBigFile's third
 // XBE_GLOBAL(0x001e4850, 0x4)
@@ -153,7 +158,7 @@ static const char *const missionNames[20] = {     // by mission index
     "mis11", "mis12", "mis13", "mis14", "mis15", "mis16", "mis17", "e_map", "a_map", "hk_map",
 };
 
-#define fgScheduler (*(Scheduler **)0x001e520c)
+extern Scheduler *fgScheduler;
 // XBE_GLOBAL(0x001e4870, 0x974)
 ActionQueue GlobalActionQueue;
 
@@ -176,15 +181,6 @@ static const DiscErrorText DiscErrorMessages[7] = {   // English, French, German
 #define EAGLdriver ((void *)0x001cd114)
 #define DebugFontData ((const uint8_t *)0x001b7480)
 
-// Game code passed as a pointer, not called: the file system keeps the pointers, so they are the original's
-// addresses (which jump to UMemory's callbacks), as the original stores them
-#define UMemoryREALAllocCallbackAt ((FileMallocFn)0x00114630)
-#define UMemoryREALFreeCallbackAt ((FileFreeFn)0x00114670)
-
-// ---- the game's functions, not ours yet
-
-// XAPI (ours, behind the import thunk)
-#define XInitDevices ((void (__stdcall *)(unsigned, void *))0x00184bae)
 
 // The car's type name (a virtual method of the player's vehicle).
 static const char *PlayerCarTypeName() {
@@ -325,7 +321,7 @@ bool ApplicationMemoryHeapConfig() {
         Launch.GetLaunchInfo(LaunchCommandLine);
         if (Launch.handOver != 0 && Launch.loaderReady[0] == 0)
             Launch.SetLoaderReady(kLoaderReady);
-        XInitDevices(0, NULL);
+        Xbox_XInitDevices(0, NULL);
         if (Launch.loaderReady[0] != 0)
             gDVD = Launch.dvdSource;
         int mode;
@@ -428,7 +424,8 @@ void Bond_StartUpSystem() {
     DiscError_Init();
 
     GLoadingScreen::Status("Init File System");
-    FILESYS_setmemcallbacks(UMemoryREALAllocCallbackAt, UMemoryREALFreeCallbackAt);
+    FILESYS_setmemcallbacks(reinterpret_cast<FileMallocFn>(UMemoryREALAllocCallback),
+                            reinterpret_cast<FileFreeFn>(UMemoryREALFreeCallback));
     FILESYS_init(0x10, 0x32, 0x20);
     GLoadingScreen::Status("Init ASync File System");
     ASYNCFILE_init(0x14, 0);

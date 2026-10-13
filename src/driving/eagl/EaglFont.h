@@ -87,4 +87,6 @@ static_assert(sizeof(GeoPrimStateCopy) == 0x4c, "the copy is the GeoPrimState it
 
 }  // namespace EAGL
 
+extern EAGL::GeoPrimStateExtension FontState;   // the font's render state (EaglFont.cpp)
+
 #endif // DRIVING_EAGL_EAGLFONT_H_

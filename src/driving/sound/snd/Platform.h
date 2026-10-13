@@ -101,7 +101,7 @@ extern int16_t *RingMemory[6];                           // their memory blocks
 extern int32_t RingFrames;                               // 2400
 extern int32_t MixLead;                                  // 960
 extern int32_t MixPosition;                              // the next frame to mix
-extern const DsI3dl2Listener ListenerPresets[23];        // the I3DL2 listener presets
+extern DsI3dl2Listener ListenerPresets[23];        // the I3DL2 listener presets
 extern const uint8_t DefaultReverb[0x18];                // the mixer's default reverb description
 
 // The driver's setters and queries (voice = logical voice index)

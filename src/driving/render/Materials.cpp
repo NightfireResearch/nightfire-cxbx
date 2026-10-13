@@ -8,6 +8,19 @@
 #include "../eagl/RenderMethod.h"
 #include "../platform/RealMath.h"         // VU0_MATRIX4Init
 
+// XBE_GLOBAL(0x00243708, 0x4)
+uint32_t SimpleRequestIndex;
+// XBE_GLOBAL(0x00243710, 0x40)
+alignas(16) TexturedGeoPrim *TexturedRequests[16];
+// XBE_GLOBAL(0x00243750, 0x4)
+uint32_t TexturedRequestIndex;
+// XBE_GLOBAL(0x00243758, 0x40)
+SimpleGeoPrim *SimpleRequests[16];
+// XBE_GLOBAL(0x00243830, 0x4)
+uint32_t VolatileRequestIndex;
+// XBE_GLOBAL(0x00243878, 0x40)
+TexturedGeoPrim *VolatileRequests[16];
+
 // ---------------------------------------------------------------------------------------------------------------
 // USimpleMaterial, USimpleTexturedMaterial and UVolatileMaterial (0x0011bb60..0x0011c5c0), ported from the listing.
 // See Materials.h.
@@ -15,9 +28,9 @@
 
 // The render methods the requests' methods are children of (static initialisers')
 // XBE_GLOBAL(0x0024b07c, 0x34)
-#define MatDebugMethod ((EAGL::RenderMethod *)0x0024b07c)               // "HB_RM = MatDebug"
+EAGL::RenderMethod MatDebugMethod;   // "HB_RM = MatDebug"
 // XBE_GLOBAL(0x0024b0b0, 0x34)
-#define MatVolatileTextureMethod ((EAGL::RenderMethod *)0x0024b0b0)     // "HB_RM = MatVolatileTexture"
+alignas(16) EAGL::RenderMethod MatVolatileTextureMethod;   // "HB_RM = MatVolatileTexture"
 
 // The rings' models
 // XBE_GLOBAL(0x00243798, 0x40)
@@ -99,7 +112,7 @@ void SetUpTexturedRing(EAGL::DynamicModel **models, TexturedGeoPrim **requests) 
 
 // FUNC_AT(0x0011be40)
 SimpleGeoPrim* SimpleGeoPrim::Construct() {
-    method = NewChildRenderMethod(MatDebugMethod);
+    method = NewChildRenderMethod(&MatDebugMethod);
     state.data = NULL;
     state.count = 0;
     vertexCount.data = NULL;
@@ -117,7 +130,7 @@ SimpleGeoPrim* SimpleGeoPrim::Construct() {
 
 // FUNC_AT(0x0011c380)
 TexturedGeoPrim* TexturedGeoPrim::ConstructVolatile() {
-    method = NewChildRenderMethod(MatVolatileTextureMethod);
+    method = NewChildRenderMethod(&MatVolatileTextureMethod);
     state.data = NULL;
     state.count = 0;
     texture.data = NULL;

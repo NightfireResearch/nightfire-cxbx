@@ -28,6 +28,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// XBE_GLOBAL(0x0023e1b0, 0xb0)
+alignas(16) WTargetPicker TargetPicker;
+
 #pragma fp_contract(off)
 
 // ---------------------------------------------------------------------------------------------------------------

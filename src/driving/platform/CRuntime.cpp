@@ -1,4 +1,5 @@
 #include "CRuntime.h"
+#include "KernelImports.h"
 #include "CRuntimeInternal.h"
 
 #include <windows.h>
@@ -41,15 +42,10 @@ struct LockSlot {
 #define StaticLocks    ((CriticalSection *)0x00244920u)
 static const int kLockCount = 36;
 
-#define KernelRtlInitializeCriticalSection (*(void (__stdcall **)(CriticalSection *))0x00189cf0u)
-#define KernelRtlEnterCriticalSection      (*(void (__stdcall **)(CriticalSection *))0x00189c40u)
-#define KernelRtlLeaveCriticalSection      (*(void (__stdcall **)(CriticalSection *))0x00189c3cu)
 
 // _aexit_rtn: what _amsg_exit ends in, _exit. Nothing changes it.
 #define ExitRoutine (*(void (__cdecl **)(int))0x001d8b50u)
 
-// The kernel's KeBugCheck, through the import table: where _exit ends.
-#define KernelKeBugCheck (*(void (__stdcall **)(uint32_t))0x00189d54u)
 
 // __lconv: the C locale's conventions, the game's table of them (0x001d8844).
 // XBE_GLOBAL(0x001d8874, 4)
@@ -350,6 +346,12 @@ void Crt::_unlock(int lock) {
 }
 
 // ---- the fatal stop
+
+// A pure virtual method's slot: calling one is the runtime's error 25 (R6025).
+// FUNC_AT(0x00131d35)
+void Crt::_purecall() {
+    _amsg_exit(25);
+}
 
 // The banner, the message, and the runtime's exit, which does not return.
 // FUNC_AT(0x0013566d)

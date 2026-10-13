@@ -277,6 +277,6 @@ static_assert(offsetof(WCollisionMgr, windows) == 0x14 && offsetof(WCollisionMgr
               "WCollisionMgr layout");
 
 // The manager (WCollisionMgr's static instance; NULL before Init and after Shutdown).
-#define fgCollisionMgr (*(WCollisionMgr **)0x00239a70)
+extern WCollisionMgr *fgCollisionMgr;
 
 #endif // DRIVING_WORLD_COLLISIONMANAGER_H_

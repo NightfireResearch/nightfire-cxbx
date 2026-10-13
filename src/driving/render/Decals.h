@@ -91,7 +91,7 @@ typedef float CylinderUV[2];
 void CylinderSection(Coord3 *positions, CylinderUV *uvs, float radiusB, float radiusA, float zA,
                      float zB);                                                         // 0x0009b470
 
-#define TheDecalManager (*(RDecalManager **)0x001fe820)
+extern RDecalManager *TheDecalManager;
 
 // The quads: eight GeoPrims of 21, six vertices each (two triangles), and per quad its alpha and delay
 extern TexturedGeoPrim *DecalGeoPrims[8];
@@ -101,5 +101,10 @@ extern Coord4 DecalPositions[8 * 21 * 6];
 extern Coord4 DecalUVs[8 * 21 * 6];
 extern uint32_t DecalColours[8 * 21 * 6];
 extern uint32_t DecalVertexCount[4];        // the GeoPrims' vertex count record
+
+// The decals' render state and the render methods their GeoPrims inherit (Decals.cpp)
+extern EAGL::GeoPrimState DecalState;
+extern EAGL::RenderMethod TexturedParentMethod;
+extern EAGL::RenderMethod EmpParentMethod;
 
 #endif // DRIVING_RENDER_DECALS_H_

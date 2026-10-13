@@ -79,16 +79,15 @@ static_assert(std::bit_cast<uint32_t>(kRsfScale) == 0x30000000, "the original's 
 
 #define MixVoices (*(SND::MixVoice **)0x00245be4)   // MixList: SndMix.voices
 
-// The process, restore and kernel functions a node stores: the originals' addresses (which jump to the ports
-// here), so a node's bytes are the original's
-#define LpfRCAt ((SFilterProcess)0x001436c0)              // SFILTER_lpfRC
-#define HpfFIR8At ((SFilterProcess)0x00145560)            // SFILTER_hpfFIR8
-#define RsfAt ((SFilterProcess)0x00144710)                // SFILTER_rsf
-#define RsfKernelAt ((RsfKernel)0x001462b0)               // FUN_001462b0
-#define SrcAt ((SFilterProcess)0x001456b0)                // SFILTER_src
-#define Ft24At ((SFilterProcess)0x00144590)               // SFILTER_ft24_32
-#define UnpackXapfAt ((SFilterProcess)0x00145ab0)         // SFILTER_unpackxapf
-#define XapfRestoreAt ((SFilterRestore)0x00145bf0)        // SFILTER_unpackxapfrestore
+// The process, restore and kernel functions a node stores, as the node's types hold them
+#define LpfRCAt (reinterpret_cast<SFilterProcess>(SFILTER_lpfRC))              // SFILTER_lpfRC
+#define HpfFIR8At (reinterpret_cast<SFilterProcess>(SFILTER_hpfFIR8))            // SFILTER_hpfFIR8
+#define RsfAt (reinterpret_cast<SFilterProcess>(SFILTER_rsf))                // SFILTER_rsf
+#define RsfKernelAt (reinterpret_cast<RsfKernel>(FUN_001462b0))               // FUN_001462b0
+#define SrcAt (reinterpret_cast<SFilterProcess>(SFILTER_src))                // SFILTER_src
+#define Ft24At (reinterpret_cast<SFilterProcess>(SFILTER_ft24_32))               // SFILTER_ft24_32
+#define UnpackXapfAt (reinterpret_cast<SFilterProcess>(SFILTER_unpackxapf))         // SFILTER_unpackxapf
+#define XapfRestoreAt (reinterpret_cast<SFilterRestore>(SFILTER_unpackxapfrestore))        // SFILTER_unpackxapfrestore
 
 
 // FST of a value FLD loaded: the x87 quiets a signalling NaN on the way

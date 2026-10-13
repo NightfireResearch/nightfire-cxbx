@@ -103,6 +103,8 @@ public:
 };
 static_assert(sizeof(RPostProcessing) == 8, "RPostProcessing is 8 bytes");
 
-#define ThePostProcessing (*(RPostProcessing **)0x0020175c)     // RPostProcessing::Init's instance
+extern RPostProcessing *ThePostProcessing;   // RPostProcessing::Init's instance
+
+extern EAGL::RenderMethod BondPostGlare;   // "HB_RM = BondPostGlare" (PostProcessing.cpp)
 
 #endif // DRIVING_RENDER_POSTPROCESSING_H_

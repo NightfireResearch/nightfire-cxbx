@@ -86,11 +86,11 @@ constexpr int kStateSize = 0x138;
 constexpr int kRequestSize = 0x28;
 static_assert(sizeof(SND::StreamState) == kStateSize && sizeof(SND::StreamRequest) == kRequestSize);
 
-// The entries this module registers, as the originals' addresses (their entries jump to the ports)
-#define ServiceEntry ((SndServerClient)0x0013bf10)            // SNDSTRMI_service, as the server client list holds it
-#define DestroyAllEntry ((SndRestoreHook)0x0013c320)          // SNDSTRMI_destroyall, the on-exit function
-#define ReleaseEntry ((SND::PacketReleaseFn)0x0013bb20)       // SNDSTRMI_releasecallback
-#define FramesEntry ((SND::PacketFramesFn)0x0013bb50)         // SNDSTRMI_framescallback
+// The entries this module registers
+#define ServiceEntry (reinterpret_cast<SndServerClient>(SNDSTRMI_service))            // SNDSTRMI_service, as the server client list holds it
+#define DestroyAllEntry (reinterpret_cast<SndRestoreHook>(SNDSTRMI_destroyall))          // SNDSTRMI_destroyall, the on-exit function
+#define ReleaseEntry (reinterpret_cast<SND::PacketReleaseFn>(SNDSTRMI_releasecallback))       // SNDSTRMI_releasecallback
+#define FramesEntry (reinterpret_cast<SND::PacketFramesFn>(SNDSTRMI_framescallback))         // SNDSTRMI_framescallback
 
 // ---- SNDLINKI on the request lists: a request's first two words are the list's links
 static_assert(offsetof(SND::StreamRequest, next) == offsetof(SND::LinkNode, next) &&

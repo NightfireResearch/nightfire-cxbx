@@ -21,6 +21,18 @@
 
 #include <string.h>
 
+// XBE_GLOBAL(0x00243a68, 0x4)
+int32_t FramesSinceAudioUpdate;
+
+// XBE_GLOBAL(0x00243940, 0x4)
+uint32_t fgActiveViews;
+// XBE_GLOBAL(0x002439d0, 0x1)
+uint8_t ASoundManager_fgIsPaused;
+// XBE_GLOBAL(0x00243a58, 0x4)
+ASoundList *fgSoundList;
+// XBE_GLOBAL(0x00243a77, 0x1)
+uint8_t ASoundManager_fgMissionOver;
+
 // ---------------------------------------------------------------------------------------------------------------
 // ASoundManager and ASystem: see SoundManager.h. The sound list holds every sound; the views a sound plays to are
 // the listeners, and each sound keeps the volume each view last played it at, so that BuildPaths, Stop and Pause
@@ -29,12 +41,14 @@
 
 // The list code every std::list of pointers shares: the head node, _Buynode(next, prev, value), the destructor
 
-#define fgFailedStreams (*(StreamNameList **)0x00243a5c)  // (this name and the next two ours)
+// XBE_GLOBAL(0x00243a5c, 0x4)
+StreamNameList *fgFailedStreams;   // (this name and the next two ours)
 // XBE_GLOBAL(0x00243a76, 1)
 static bool fgInitialised;
 // XBE_GLOBAL(0x00243a78, 8)
 NormalSpare RandomSpare;
-#define SoundManagerUnknown243a6c U32_AT(0x00243a6c)    // zeroed by Stop
+// XBE_GLOBAL(0x00243a6c, 0x4)
+float AudioClock;   // zeroed by Stop
 // XBE_GLOBAL(0x00243a18, 0x40)
 static char MusicStreamFile[64];                        // (name ours)
 
@@ -244,7 +258,7 @@ void ASoundManager::Stop() {
         }
     }
     AVoice::PlayVoices();
-    SoundManagerUnknown243a6c = 0;
+    AudioClock = 0;
 }
 
 // FUNC_AT(0x00121070)

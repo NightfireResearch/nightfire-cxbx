@@ -1,4 +1,5 @@
 #include "ActionQueue.hpp"
+#include "StaticInit.h"
 
 #include "CoreFoundation.h"
 #include "InputUntested.h"
@@ -21,7 +22,6 @@ uint32_t gActionQueueManagerMade;
 
 // The static's destructor as the original registers it, at its address: a call of Tidy (StaticInit.cpp's
 // DestroyStatic_001e23f0).
-#define ActionQueueManager_AtExit ((void (*)(void))0x0015cde0)
 
 // The STL's helpers the vector's growth calls, in the original's order: the game's one copy for every vector of
 // pointers (the linker folded them together). Those not ours yet are called at their addresses (the extra
@@ -156,7 +156,7 @@ ActionQueueManager* ActionQueueManager::GetActionQueueManager() {
         gActionQueueManager.queuesFirst = nullptr;
         gActionQueueManager.queuesLast = nullptr;
         gActionQueueManager.queuesEnd = nullptr;
-        Crt::atexit(ActionQueueManager_AtExit);
+        Crt::atexit(DestroyStatic_001e23f0);
     }
     return &gActionQueueManager;
 }

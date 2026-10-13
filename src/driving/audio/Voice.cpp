@@ -30,8 +30,10 @@
 // XBE_GLOBAL(0x00243a98, 4)
 int32_t LastPlayTick;                               // TIMER_gettick at the last PlayVoices
 // Constructed by the static initialisers (engine/StaticInitTable.cpp)
-#define VoiceInfoMap (*(AVoiceMap *)0x00243a9c)
-#define ActiveViews (*(AVoiceViewList *)0x00243aa8)
+// XBE_GLOBAL(0x00243a9c, 0xc)
+AVoiceMap VoiceInfoMap;
+// XBE_GLOBAL(0x00243aa8, 0xc)
+AVoiceViewList ActiveViews;
 
 namespace {
 

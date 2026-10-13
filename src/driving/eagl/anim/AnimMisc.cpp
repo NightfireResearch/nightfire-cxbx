@@ -29,9 +29,9 @@
 namespace {
 
 // XBE_GLOBAL(0x00241a58, 0x10)
-#define ScratchQuat ((float *)0x00241a58)            // the lerps' first quaternion: ScratchQuat[4]
+alignas(16) float ScratchQuat[4];                    // the lerps' first quaternion
 // XBE_GLOBAL(0x00241a68, 0xc)
-#define ScratchTrans ((float *)0x00241a68)           // the translation lerp's first vector: ScratchTrans[3]
+float ScratchTrans[3];                               // the translation lerp's first vector
 
 // The original's .rdata constants (0x001a1228, 0x0018a138; 180, 1 and 0 are exact; kPhaseScale: AnimMisc.h)
 constexpr float kPi = 3.14159274f;
@@ -373,19 +373,17 @@ bool FnRawStateChan::FindTime(void *test, float from, float *time) {
 
 namespace {
 
-// The channel functions' original addresses, as InitAnimMemoryMap writes them into the signature tables (each
-// jumps to ours below).
-enum RawPoseFunctionAddress : uint32_t {
-    kCopyQuatAddress = 0x000fdf20,
-    kEulF3Address = 0x000fdec0,
-    kCopyTransAddress = 0x000fdf60,
-    kLerpQuatAddress = 0x000fdfd0,
-    kLerpEulerAddress = 0x000fdf90,
-    kLerpTransAddress = 0x000fe060,
-};
-
 typedef void (*FrameFn)(float **cursor, float *out);
 typedef void (*LerpFn)(float t, float **cursor0, float **cursor1, float *out);
+
+// The channel functions as InitAnimMemoryMap writes them into the signature tables: their addresses
+uint32_t Address(FrameFn function) {
+    return uint32_t(reinterpret_cast<uintptr_t>(function));
+}
+
+uint32_t Address(LerpFn function) {
+    return uint32_t(reinterpret_cast<uintptr_t>(function));
+}
 
 FrameFn FrameFunction(uint32_t address) {
     return reinterpret_cast<FrameFn>(uintptr_t(address));
@@ -412,9 +410,9 @@ void RawPoseChannel_InitAnimMemoryMap(uint8_t *data) {
         i += n;
         for (; n > 0; n--, e++) {
             switch (*e) {
-            case kSignatureQuat: *e = kCopyQuatAddress; break;
-            case kSignatureEuler: *e = kEulF3Address; break;
-            case kSignatureTrans: *e = kCopyTransAddress; break;
+            case kSignatureQuat: *e = Address(RawPose_CopyQuat); break;
+            case kSignatureEuler: *e = Address(EAGLAnim_EulF3); break;
+            case kSignatureTrans: *e = Address(RawPose_CopyTrans); break;
             default: printf("Bad signature channel type\n"); break;
             }
         }
@@ -428,9 +426,9 @@ void RawPoseChannel_InitAnimMemoryMap(uint8_t *data) {
         i += n;
         for (; n > 0; n--, e++) {
             switch (*e) {
-            case kSignatureQuat: *e = kLerpQuatAddress; break;
-            case kSignatureEuler: *e = kLerpEulerAddress; break;
-            case kSignatureTrans: *e = kLerpTransAddress; break;
+            case kSignatureQuat: *e = Address(RawPose_LerpQuat); break;
+            case kSignatureEuler: *e = Address(RawPose_LerpEuler); break;
+            case kSignatureTrans: *e = Address(RawPose_LerpTrans); break;
             default: printf("Bad signature channel type\n"); break;
             }
         }
@@ -450,11 +448,11 @@ void RawPoseChannel::RestoreSignatures() {
             continue;
         i += n;
         for (; n > 0; n--, e++) {
-            if (*e == kEulF3Address)
+            if (*e == Address(EAGLAnim_EulF3))
                 *e = kSignatureEuler;
-            else if (*e == kCopyQuatAddress)
+            else if (*e == Address(RawPose_CopyQuat))
                 *e = kSignatureQuat;
-            else if (*e == kCopyTransAddress)
+            else if (*e == Address(RawPose_CopyTrans))
                 *e = kSignatureTrans;
             else
                 printf("Bad signature channel type\n");
@@ -468,11 +466,11 @@ void RawPoseChannel::RestoreSignatures() {
             continue;
         i += n;
         for (; n > 0; n--, e++) {
-            if (*e == kLerpEulerAddress)
+            if (*e == Address(RawPose_LerpEuler))
                 *e = kSignatureEuler;
-            else if (*e == kLerpQuatAddress)
+            else if (*e == Address(RawPose_LerpQuat))
                 *e = kSignatureQuat;
-            else if (*e == kLerpTransAddress)
+            else if (*e == Address(RawPose_LerpTrans))
                 *e = kSignatureTrans;
             else
                 printf("Bad signature channel type\n");
@@ -505,9 +503,9 @@ void RawPoseChannel::EvalFrame(int frame, float *out, void *mask) {
         } else {
             for (; n > 0; n--) {
                 uint32_t fn = *e++;
-                if (fn == kEulF3Address || fn == kCopyTransAddress)
+                if (fn == Address(EAGLAnim_EulF3) || fn == Address(RawPose_CopyTrans))
                     cursor += 3;
-                else if (fn == kCopyQuatAddress)
+                else if (fn == Address(RawPose_CopyQuat))
                     cursor += 4;
             }
         }
@@ -562,10 +560,10 @@ void RawPoseChannel::Lerp(float t, int frame0, int frame1, float *out, void *mas
         } else {
             for (; n > 0; n--) {
                 uint32_t fn = *e++;
-                if (fn == kLerpEulerAddress || fn == kLerpTransAddress) {
+                if (fn == Address(RawPose_LerpEuler) || fn == Address(RawPose_LerpTrans)) {
                     cursor0 += 3;
                     cursor1 += 3;
-                } else if (fn == kLerpQuatAddress) {
+                } else if (fn == Address(RawPose_LerpQuat)) {
                     cursor0 += 4;
                     cursor1 += 4;
                 }

@@ -29,6 +29,9 @@
 #include "../platform/CRuntime.h"
 #include "../logging.h"
 
+// XBE_GLOBAL(0x0023e260, 0x4)
+WTriggerManager *fgTriggerManager;
+
 // ---------------------------------------------------------------------------------------------------------------
 // WTriggerManager (0x000cf520-0x000d0d50), ported from the listing: the triggers' lifecycle, the collision tests
 // against what can touch them, and the frame's processing.

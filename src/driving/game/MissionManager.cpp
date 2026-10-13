@@ -43,14 +43,19 @@
 #include "../world/Targeting.h"             // TargetPicker
 #include "../world/World.h"                 // fgWorld
 
+// XBE_GLOBAL(0x00239218, 0x1)
+uint8_t gPlayerCanNeverLose;
+// XBE_GLOBAL(0x00239220, 0x4)
+SMissionManager *glbMissionManager;
+
 // ---------------------------------------------------------------------------------------------------------------
 // SMissionManager (0x000b60a0-0x000b9500): its state, the rules, the objectives and its lifetime. The health,
 // counters and scores are in MissionScores.cpp.
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- the game's globals
-#define fgScheduler (*(Scheduler **)0x001e520c)
-#define gSuperEasy BOOL8_AT(0x001e476c)
+extern Scheduler *fgScheduler;
+extern uint8_t gSuperEasy;
 
 // XBE_GLOBAL(0x00238f20, 0x2f8)
 MissionSet DefaultMissionSet;

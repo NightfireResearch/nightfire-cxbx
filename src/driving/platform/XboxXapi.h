@@ -20,6 +20,10 @@ HANDLE __stdcall Xbox_CreateThread(SECURITY_ATTRIBUTES *security, SIZE_T stackSi
 
 // MmFreeContiguousMemory (0x0010e82c), XGetVideoFlags (0x0010e02b) and OutputDebugStringA (0x0010e832), for EAGL.
 void __stdcall Xbox_MmFreeContiguousMemory(void *base);
+
+// XPhysicalAlloc (0x0010e7e9), for UMemory, and GetLocalTime (0x0010e684), for the dashboard clock
+void *__stdcall Xbox_XPhysicalAlloc(ULONG size, ULONG address, ULONG alignment, ULONG protect);
+void __stdcall Xbox_GetLocalTime(SYSTEMTIME *time);
 DWORD Xbox_XGetVideoFlags(void);
 void __stdcall Xbox_OutputDebugStringA(const char *text);
 

@@ -1,4 +1,6 @@
 #include "System.h"
+#include "../../platform/KernelImports.h"
+#include "../../engine/CoreFoundation.h"   // NullFunction
 #include "Platform.h"
 #include "Voices.h"
 #include "../../platform/RealPrint.h"
@@ -108,10 +110,6 @@ namespace {
 // The random generator's starting words, + the seed (0x001d9d30 in the original's .rdata)
 const uint32_t kRandomSeeds[6] = { 0xf22d0e56, 0x883126e9, 0xc624dd2f, 0x0702c49c, 0x9e353f7d, 0x6fdf3b64 };
 
-// The functions the library keeps the addresses of: the originals', which jump to ours
-const uint32_t kSystemTaskAddress = 0x0013d3e0;   // SNDREAL_systemtask
-const uint32_t kExitHookAddress = 0x001413d0;     // ~ASystem
-const uint32_t kDummyNullAddress = 0x000d3580;    // dummyNullFunction
 
 int32_t Mul(int32_t a, int32_t b) {   // IMUL r32: wraps
     return int32_t(uint32_t(a) * uint32_t(b));
@@ -130,11 +128,6 @@ void CopyDwords(void *to, const void *from, size_t bytes) {
 // too short to carry a jump of its own
 #define DummyNull ((void (*)(void))0x000d3580)
 
-// The kernel's critical-section calls, through the XBE's import table
-typedef void (__stdcall *CriticalSectionCall)(void *section);
-#define ImportRtlInitializeCriticalSection (*(CriticalSectionCall *)0x00189cf0)
-#define ImportRtlEnterCriticalSection (*(CriticalSectionCall *)0x00189c40)
-#define ImportRtlLeaveCriticalSection (*(CriticalSectionCall *)0x00189c3c)
 
 }  // namespace
 
@@ -263,12 +256,12 @@ int SNDREAL_systemtask(int argument, int ticksLate) {
 // FUNC_AT(0x0013d3f0)
 int SNDSYS_vectortoreal(void) {
     uint32_t added = SysTaskAdded;
-    SndOptions.vectors.functions[3] = kDummyNullAddress;   // 0x00244ddc
+    SndOptions.vectors.functions[3] = uint32_t(reinterpret_cast<uintptr_t>(NullFunction));   // 0x00244ddc
     if (added == 0) {
-        SYNCTASK_add(reinterpret_cast<SyncTaskFn>(kSystemTaskAddress), 0, 1);
+        SYNCTASK_add(reinterpret_cast<SyncTaskFn>(SNDREAL_systemtask), 0, 1);
         SysTaskAdded = 1;
     }
-    REAL_addexit(reinterpret_cast<ExitCallback>(kExitHookAddress));
+    REAL_addexit(reinterpret_cast<ExitCallback>(SNDSYSI_exithook));
     return 0;
 }
 
@@ -290,17 +283,17 @@ void SNDSYS_leavecritical(void) {
 
 // FUNC_AT(0x0013e7a0)
 void SNDI_mutexalloc(void) {
-    ImportRtlInitializeCriticalSection(SoundMutex);
+    KernelRtlInitializeCriticalSection(SoundMutex);
 }
 
 // FUNC_AT(0x0013e7b0)
 void SNDI_mutexlock(void) {
-    ImportRtlEnterCriticalSection(SoundMutex);
+    KernelRtlEnterCriticalSection(SoundMutex);
 }
 
 // FUNC_AT(0x0013e7c0)
 void SNDI_mutexunlock(void) {
-    ImportRtlLeaveCriticalSection(SoundMutex);
+    KernelRtlLeaveCriticalSection(SoundMutex);
 }
 
 // ---------------------------------------------------------------------------------------------------------------

@@ -317,8 +317,8 @@ static_assert(sizeof(RAutonomousObj) == 0x80, "an autonomous scene object is 128
 // ---- helpers the linker placed among the scene objects' code (the names are ours)
 
 // The renderer's random sequence's state (RRandom::StartUp seeds it)
-#define RandomSeed U32_AT(0x001c45c4)
-#define RandomMultiplier U32_AT(0x001c45c8)
+extern uint32_t RandomSeed;
+extern uint32_t RandomMultiplier;
 // FUN_0001aab0: the next 16 bits of the sequence; the game's code inlines it in many places
 uint32_t RandomShort();                                                                         // 0x0001aab0
 // FUN_0001aae0: RandomShort scaled into [0, scale), answered unrounded

@@ -1,4 +1,5 @@
 #include "XboxXapi.h"
+#include "KernelImports.h"
 
 #include "../../common/xboxPath.h"
 #include "../devtools/Teleport.h"
@@ -34,12 +35,6 @@
 // originals did: contiguous memory is allocated and freed by the loader, which keeps the two paired.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The kernel imports, as the loader bound them into the XBE's import table.
-#define KernelMmAllocateContiguousMemoryEx \
-    (*(void *(__stdcall **)(ULONG size, ULONG lowest, ULONG highest, ULONG alignment, ULONG protect))0x00189c04u)
-#define KernelMmFreeContiguousMemory      (*(void (__stdcall **)(void *base))0x00189c10u)
-#define KernelExQueryNonVolatileSetting \
-    (*(LONG (__stdcall **)(ULONG index, ULONG *type, void *value, ULONG length, ULONG *resultLength))0x00189becu)
 
 // ---- the heap
 
@@ -78,7 +73,7 @@ static SIZE_T __stdcall Xbox_RtlSizeHeap(HANDLE heap, ULONG flags, void *block) 
 // XPhysicalAlloc (0x0010e7e9): MmAllocateContiguousMemoryEx(size, lowest, highest, alignment, protect). As the
 // original: with no particular address asked for (-1) the block may go anywhere; with one, exactly that range,
 // unaligned. ERROR_NOT_ENOUGH_MEMORY when it fails.
-static void *__stdcall Xbox_XPhysicalAlloc(ULONG size, ULONG address, ULONG alignment, ULONG protect) {
+void *__stdcall Xbox_XPhysicalAlloc(ULONG size, ULONG address, ULONG alignment, ULONG protect) {
     ULONG lowest = 0, highest = 0xffffffffu;
     if (address != 0xffffffffu) {
         alignment = 0;
@@ -101,8 +96,7 @@ static LONG __stdcall Xbox_ExQueryNonVolatileSetting(ULONG index, ULONG *type, v
     return KernelExQueryNonVolatileSetting(index, type, value, length, resultLength);
 }
 
-// HalBootSMCVideoMode (kernel ordinal 356), a data export: 1 when the console booted into an HD-capable mode.
-#define KernelHalBootSMCVideoMode (*(ULONG **)0x00189bf0u)
+// HalBootSMCVideoMode (kernel ordinal 356), a data export, is 1 when the console booted into an HD-capable mode.
 
 // XGetAVPack (0x0010e002): the cable plugged in (setting 0x103, its second byte; 3 is HDTV component), 0 if the
 // setting cannot be read.
@@ -118,7 +112,7 @@ static DWORD Xbox_XGetAVPack(void) {
 DWORD Xbox_XGetVideoFlags(void) {
     ULONG type, value;
     DWORD flags = Xbox_ExQueryNonVolatileSetting(8, &type, &value, 4, NULL) < 0 ? 0 : value >> 16 & 0x5f;
-    if (*KernelHalBootSMCVideoMode != 1 || Xbox_XGetAVPack() != 3)
+    if (*KernelHalBootSMCVideoMode() != 1 || Xbox_XGetAVPack() != 3)
         flags &= 0xfffffff1;
     return flags;
 }
@@ -245,7 +239,7 @@ static DWORD __stdcall Xbox_GetTimeZoneInformation(TIME_ZONE_INFORMATION *zone) 
 }
 
 // Its one caller is the dashboard clock (RVehicle::UpdatePosition, 0x000964b0).
-static void __stdcall Xbox_GetLocalTime(SYSTEMTIME *time) {
+void __stdcall Xbox_GetLocalTime(SYSTEMTIME *time) {
     if (Teleport_LockstepLocalTime(time))   // NIGHTFIRE_LOCKSTEP: the same time in every run
         return;
     GetLocalTime(time);

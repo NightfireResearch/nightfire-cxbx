@@ -20,6 +20,9 @@ void __stdcall Xbox_SetLastError(DWORD error);
 // Process initialisation: the process heap and the XAPI initialiser table, without the console-only parts.
 void __stdcall Xbox_XapiInitProcess(void);
 
+// XInitDevices (0x00183dfd, and the import thunk 0x00184bae), for GameLoop
+void __stdcall Xbox_XInitDevices(unsigned typeCount, void *preallocTypes);
+
 // The process heap, which the C runtime's heap functions use (XapiInitProcess's, at 0x0024b218 in the game).
 extern HANDLE ProcessHeapHandle;
 

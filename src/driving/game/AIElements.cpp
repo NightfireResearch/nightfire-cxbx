@@ -40,6 +40,13 @@
 #include "../world/World.h"             // fgWorld
 #include "../platform/CRuntime.h"
 
+// XBE_GLOBAL(0x001b64ec, 0x1)
+uint8_t gLimitHenchSpawns = 1;
+// XBE_GLOBAL(0x001ddee4, 0x4)
+AIElementController *fgAIElementController;
+// XBE_GLOBAL(0x001e1ee8, 0x380)
+AIZoneStatics AIZoneData;
+
 // ---------------------------------------------------------------------------------------------------------------
 // AIElementTracking and AIElementController (0x00027cb0-0x00029d60), AIZoneController (0x00036a00-0x00036c90), the
 // road network's count copies (0x00023990, 0x000239b0) and RCamera's field of view setter (0x00011000), ported
