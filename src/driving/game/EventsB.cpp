@@ -774,7 +774,7 @@ void EInflictDamage::Process() {
     if (flag || index >= kMaxRigidBodies)
         return;
     PhysicsObject *object = fgSimulation.rigidBodyOwners[index];
-    object->ApplyDamageVirtual(trigger, object->GetPosition(), amount, 0.0f, kDamageInflicted, DamageSourceSig);
+    object->ApplyDamageVirtual(trigger, object->GetPosition(), amount, 0.0f, kDamageInflicted, &DamageSourceSig);
 }
 
 // FUNC_AT(0x00040530)
@@ -983,7 +983,7 @@ void EKickObject::Process() {
     offset.w = 0.0f;
     body->GenerateImpulse(&impact, &kUp, &offset, push, false, 0, 1.0f);
     fgSimulation.rigidBodyOwners[index]->ApplyDamageVirtual(&body->position, &body->position, 1000000.0f, 0.5f,
-                                                            kDamageKick, DamageSourceSig);
+                                                            kDamageKick, &DamageSourceSig);
 }
 
 // FUNC_AT(0x0004c7f0)
@@ -1297,7 +1297,7 @@ void EKillAIElement::Process() {
         return;
     }
     if (victim != NULL)
-        victim->ApplyDamageVirtual(&position, &direction, 1000000.0f, 0.5f, kDamageKick, DamageSourceSig);
+        victim->ApplyDamageVirtual(&position, &direction, 1000000.0f, 0.5f, kDamageKick, &DamageSourceSig);
 }
 
 // FUNC_AT(0x0004ca20)

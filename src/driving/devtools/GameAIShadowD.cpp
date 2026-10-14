@@ -172,16 +172,16 @@ typedef bool (__fastcall *BoolMethodFn)(void *, int);
 
 // ---- the game's state
 
-#define ShadowSim ((void *)0x00233ff0)
-#define ShadowRandom (*(SimRandom **)0x00233ff0)
-#define ShadowStepCount I32_AT(0x00234e34)
-#define ShadowCars (*(GameVector<PVehicle *> *)0x00234e3c)
+#define ShadowSim ((void *)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowRandom (*(SimRandom **)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowStepCount I32_AT(OwnedGlobals_Ours(0x00234e34))
+#define ShadowCars (*(GameVector<PVehicle *> *)OwnedGlobals_Ours(0x00234e3c))
 #define ShadowElements PTR_AT(OwnedGlobals_Ours(0x001ddee4))
 #define ShadowForceRespawn BOOL8_AT(OwnedGlobals_Ours(0x001de814))
 #define ShadowSpawnNav ((uint8_t *)OwnedGlobals_Ours(0x001de820))
 #define ShadowGetSimpleBody ((SimpleRigidBody *(__fastcall *)(void *, int, int))0x000b2730)
-#define ShadowStaticVehicles ((uint8_t *)0x001de940)
-constexpr uint32_t kStaticVehicleBytes = 0x001e1ee0 - 0x001de940;
+#define ShadowPlayerVehicles ((uint8_t *)OwnedGlobals_Ours(0x001de940))    // [2] of 0x270
+#define ShadowTrafficVehicles ((uint8_t *)OwnedGlobals_Ours(0x001dee20))   // [20]
 
 // Our statics and the game's copies the original uses
 struct Mirror {
@@ -1959,7 +1959,8 @@ void BuildRegions() {
     AddRegion(g_body, sizeof(SimpleRigidBody), "the simple body");
     for (const Mirror &m : kMirrors)
         AddRegion(m.ours, m.size, m.name);
-    AddRegion(ShadowStaticVehicles, kStaticVehicleBytes, "the player and traffic AI");
+    AddRegion(ShadowPlayerVehicles, 2 * 0x270, "the player AI");
+    AddRegion(ShadowTrafficVehicles, 20 * 0x270, "the traffic AI");
     AddRegion(ShadowSpawnNav, sizeof(WRoadNav), "the spawn navigator");
     AddRegion(&ShadowForceRespawn, 1, "ForceNearRespawn");
     AddRegion(&ShadowElements, 4, "the AI elements' pointer", false);

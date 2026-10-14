@@ -867,7 +867,7 @@ void AIHelicopter::DoAgentLogic() {
             }
             if (crashed) {
                 GetPhysicsObject()->ApplyDamageVirtual(&kZero, &position, kCrashDamage, kCrashDamageSpread, 0,
-                                                       DamageSourceSig);
+                                                       &DamageSourceSig);
                 crashStep++;
                 Coord4 velocity;
                 *Xyz(&velocity) = Body(this)->velocity;

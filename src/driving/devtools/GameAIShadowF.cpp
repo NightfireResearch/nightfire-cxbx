@@ -112,11 +112,11 @@ const unsigned kEntries[] = {
 
 // ---- the game's state
 
-#define ShadowSim ((void *)0x00233ff0)
-#define ShadowRandom (*(SimRandom **)0x00233ff0)
-#define ShadowStepCount I32_AT(0x00234e34)
-#define ShadowCars (*(GameVector<PVehicle *> *)0x00234e3c)
-#define ShadowLaunch (*(LaunchPage *)0x00243b90)
+#define ShadowSim ((void *)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowRandom (*(SimRandom **)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowStepCount I32_AT(OwnedGlobals_Ours(0x00234e34))
+#define ShadowCars (*(GameVector<PVehicle *> *)OwnedGlobals_Ours(0x00234e3c))
+#define ShadowLaunch (*(LaunchPage *)OwnedGlobals_Ours(0x00243b90))
 #define ShadowWeaponManager (*(SWeaponManager **)OwnedGlobals_Ours(0x0023923c))
 #define ShadowGetRigidBody ((RigidBody *(__fastcall *)(void *, int, int))0x000b2700)
 #define ShadowBondButtons ((uint8_t *)OwnedGlobals_Ours(0x001dda2c))

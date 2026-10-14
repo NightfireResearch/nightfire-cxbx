@@ -271,8 +271,7 @@ method constants.
 
 | What | Why it is not ours yet |
 |---|---|
-| `fgSimulation`, `fgBanks`/`EmptyBank`, `MemClass`, `FsWorkers`, `gEventDynamicData`, `RootScratch`, the Debris tables, `BuiltInFont`... (19 "still used") | a reference from code or data the coverage tool cannot place (a jump table, a stale data word, the original 0x6ecd0 parser's body); each wants a look before owning |
-| `Launch` (0x00243b90, 0xa4c), `Features`, `SndMix` | reached through raw offsets in other files (LaunchOptions.cpp's launch page, the Features fields defined separately, SndMix's members): the fields need converting first |
+| `fgBanks`/`EmptyBank`, `MemClass`, `FsWorkers`, `RootScratch`, the Debris tables, `BuiltInFont`... (19 "still used") | a reference from code or data the coverage tool cannot place (a jump table, a stale data word, the original 0x6ecd0 parser's body); each wants a look before owning |
 | `_pctype` (CRuntime.cpp's `CtypeTable`) | read out of bounds into its neighbours on purpose (as the original): it moves only as one block with them, as the mixer's tables and the Girl palette did on 14 October |
 | D3D8's state in its section (D3DRenderState, D3DTextureState, the dirty flags, the push-buffer cursor) and its method tables | the D3D seam's area: one structure for the next round |
 | `TheGalleryNamespace`, the 0x001dcd10 object | objects whose vtable is the XBE's initial data, not a constructor's |
@@ -397,11 +396,57 @@ Each wants its own look. Sizes in bytes.
 
 | What | Where, size | Who reads it | Options |
 |---|---|---|---|
-| `fgSimulation` | 0x00233ff0, 0xf24 + the tables past its tag (pages 0x00234000-0x00235fff: rigid bodies, signatures, `ScratchPadFreeZone`, `DamageSourceSig` before it) | everything physical (410-463 sites); one data word at 0x0001fc00 still points at it | size the tail in Ghidra, check that word, own as one structure (header used everywhere: 1060 uses) |
-| The AI statics, 0x001de000-0x001e1fff | `PlayerGroundVehicles`, `TrafficGroundVehicles` (above), the files' constant sets | AIVehicle, AIGroundVehicle, PBondCar | own as arrays; the static initialisers construct them by name |
-| `gEventDynamicData` | 0x001e47e8, 0x64 (.bss) | the events (73-91 sites); a data word at 0x00040330 | check the word (a jump table?), own |
-| `SndMix` (with `MixFxInitFunc`, `MixFxHook`, `MixVoices`) | 0x00245990, 0x1c6c (.bss) | the mixer | "ready" but for 5 raw offsets: convert to fields, own |
-| `Launch` (with `LaunchFlags`, `glbActivePort`, `WideScreenOption`, `LoaderReady`, `TuningLevel`) | 0x00243b90, 0xa4c (.bss) | the launch page: 20 raw addresses | convert, own; standalone, the command line fills it |
-| `Features` (with `ViewWidth`, `ViewHeight`, `ParticleDensity`) | 0x001f2d78, 0x84 (.bss) | render settings: 9 raw addresses | convert, own |
+| `fgSimulation`, the AI vehicle arrays, `gEventDynamicData`, `SndMix`, `Launch`, `Features` | | | ours since the state round (below) |
 | D3D8's constant tables | `D3DSimpleStateMethods` 0x0018e888, `D3DTextureStateDirty` 0x0018e780, `D3DDeferredStateDirty` 0x0018e668 | the inline D3D state setters (RenderContext.cpp) | typed method and dirty-bit tables, with the D3D8 state structure (the seam's round) |
 | The C runtime's data | the throw infos (0x001a89bc, 0x001a8bd8, 0x001a952c, 0x001b3c08), the ios vbtables (inside `CLocaleCtype`'s block, below), `LockTable`, `CrtDefaultMultibyteInfo`, `XbeTls`, the kernel import slots, `InitialMbState` and `ZeroStreamPos` (read by the C++ library's fpos constructor, which the 15 unported library virtual functions reach) | CRuntime*, KernelImports.cpp, XboxStartup.cpp, StdStreams.cpp | our own ThrowInfo records (they name type descriptors and copy constructors) or the host's C++ exceptions; the import slots and TLS belong to the standalone startup |
+
+## The state round (14 October 2026)
+
+The mutable state still at the game's addresses, owned (branch driving-sa-state). No content changed: raw offsets
+became struct fields, and each global a definition of ours. All are SINGLE_COPY in tools/owned_globals.py, and every
+literal address inside them in devtools names ours (`OwnedGlobals_Ours`, `OwnedGlobals_OursWord`).
+
+| Global | Where now | Size | What it took |
+|---|---|---:|---|
+| `fgSimulation` | game/SimulationObjects.cpp (Simulation.h) | 0xf24 | the define in the header became an `extern`; the static initialisers already constructed it by name |
+| `ScratchPadFreeZone` | game/SimulationObjects.cpp | 0x4000 | the "tables past its tag" of the TRAP_DATA log: pages 0x00234000-0x00235fff are the Simulation and this buffer. It runs from 0x00234f20 (the Simulation's end rounded to 16) to the mission manager's default set at 0x00238f20 exactly, and nothing in Ghidra references its inside (one `.rdata` word, 0x001b73f4, is a pair of Shift-JIS codes). GetScratchPadFreeZone's callers use at most 0xf00 of it (the rigid bodies' 0x39a fields, FindFaceInTriStrip's 181 vertices at +0x3b0) |
+| `DamageSourceSig` | game/SimulationObjects.cpp | 4 | a zero word the damage calls pass by address (`&DamageSourceSig` now) |
+| `PlayerGroundVehicles` [2], `TrafficGroundVehicles` [20] | game/AIVehicleController.cpp | 0x4e0, 0x30c0 | AIGroundVehicle arrays; static_init_driving.py's NAMED_OBJECT_ARRAYS constructs them by name (the CONTENT agent's change) |
+| `gEventDynamicData` | world/Trigger.cpp | 0x64 | the define became an `extern` |
+| `SndMix` | sound/snd/Mixer.cpp | 0x1c6c | `MixVoices`, `MixFxInitFunc`/`MixFxHook` and CODA's two allocator words are its fields (`voices`, `fxInit`, `fxHook`, `codaNew`, `codaDelete`, the last two typed `CodaNewFn`/`CodaDeleteFn`) |
+| `Launch` | engine/GameLoop.cpp | 0xa4c | `TuningLevel` is `missionName`, `glbActivePort` `controllerPort`, `LaunchFlags` `flags`, `LoaderReady` `loaderReady[0]`, `Unknown2445b0` `dvdSource`, `WideScreenOption` the field `wideScreen` (+0x614); LaunchOptions.cpp writes the page through `LaunchPage`'s fields |
+| `Features` | render/Reflection.cpp | 0x84 | `ResolutionStamp`, `ViewWidth`, `ViewHeight` are `resolutionStamp`, `width`, `height`; `ParticleDensity` the field `particleDensity` (+0x60); RenderHigh's `RenderFeaturesUnknown` is `locked` |
+
+The two stale data words were operands: 0x0001fc00 is the immediate of `mov ecx, 0x00233ff0` inside
+AICharacterEnemySnow::GetRotPos (0x0001fb70; Ghidra ends its body at 0x0001fbfe), and 0x00040330 the address in
+`mov ecx, [0x001e47e8]`. global_coverage.py's walk of a replaced function's body now counts every byte of each
+instruction, not only its first, and both globals read as ready. Owning the traffic array then turned up a third
+false reference: 0x001d30c0 is a UNICODE_STRING's length pair (29, 30), which reads as an address inside it; the
+NOT_POINTERS range for that table now starts at 0x001d30b0.
+
+Devtools: GameAIShadowD's region over both vehicle arrays is two regions (ours need not be adjacent); SndSystemShadow's
+second region ended 16 bytes inside SndMix and now ends at its start; SndMixShadow's offline mixer zeroed, saved and
+hashed 0x00245978..0x00247600 at the game's addresses, and now takes it in three parts (the random words before
+SndMix, ours, the stream counter after it); Teleport's and SndCallTrace's player-car, simulation and mission-number
+addresses name ours (lockstep's dump ticks count from the player car).
+
+One redirect bug, found by SndMixShadow's fx2 scenario: OwnedGlobals.cpp pointed only the first word of an
+instruction at ours, and `mov dword ptr [0x002475d8], 0x00245d90` (the reverb setup storing `fx2Desc =
+&fx2Header`) names SndMix twice, so the original read the description from the game's stale copy. An immediate
+right after a displacement inside the same global is now redirected too.
+
+**Checks.** `driving_data_check.py`: 308 match, 0 differ. `owned_globals.py --check` (1260 globals in the table),
+`global_coverage.py --driving --check` and `static_init_driving.py --check` pass; global_coverage: 1114 owned, 4
+ready, 17 still used (1105, 7, 19 before). The audit's worklist: 1216 (1263 before; four of those are the
+generator's vehicle constructions). The standalone target: 676 uses of XBE addresses, 400 distinct names (data.global
+199, from 1800 in the first count).
+
+**Tests** on the runner against `lbase` (slots 9-16): lockstep 16 of 16 exact, every frame and sound-trace line to
+tick 9000 (round ss1, and again on the final build, ss4); `NIGHTFIRE_TRAP_ORIGINAL=2` lockstep 16 of 16 exact, no
+trap reached (ss1t); every shadow on all eight missions (ss3, after the two devtools fixes above): frame dumped, 0
+differences, the summary and loader-fault counts of sd1 exactly. The first shadow round (ss1) shared the runner with
+another round's 8 games and six of its runs hit the 60-minute limit; ss2 showed the redirect bug.
+
+**After the merge with driving-sa-content** (untested in game): `driving_data_check.py` 323 match, 0 differ;
+`owned_globals.py --check` (1279 globals), `global_coverage.py --driving --check` (1142 owned, 2 ready, 2 still used)
+and `static_init_driving.py --check` pass. The audit's worklist: 383.

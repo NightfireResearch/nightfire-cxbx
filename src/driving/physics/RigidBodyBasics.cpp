@@ -333,7 +333,7 @@ void RigidBody::CalculateAndApplyWorldDamage(const Coord4 *direction, float forc
         return;
     if (force > 0.0f) {
         PhysicsObject *owner = GetOwner();
-        owner->ApplyDamageVirtual(direction, &position, force, Rigid_WorldDamageFactor, 1, DamageSourceSig);
+        owner->ApplyDamageVirtual(direction, &position, force, Rigid_WorldDamageFactor, 1, &DamageSourceSig);
     }
 }
 

@@ -118,7 +118,9 @@ after `--driving --check` had failed on four globals no live code touched:
 
 - A reference Ghidra hung on no function, from code a replaced function reaches before the next entry (its walk of
   the control flow decides), is the replaced function's. Such code is a FUNC_AT at an address Ghidra left outside any
-  function, or a body Ghidra cut short; it used to count as data, and so as live.
+  function, or a body Ghidra cut short; it used to count as data, and so as live. Ghidra hangs such a reference on
+  the operand's address, inside the instruction, so the walk counts every byte of each instruction (14 October 2026:
+  `fgSimulation`'s 0x0001fc00 and `gEventDynamicData`'s 0x00040330 were two such operands).
 - A power of two or one less (a flag, a mask: `test esi, 0x200000`, a `.rdata` word 0x200000) is not taken for an
   address, from an instruction that names it as an immediate only or from data.
 

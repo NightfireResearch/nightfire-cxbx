@@ -107,7 +107,6 @@ constexpr uint32_t kPhysicsNamespaceSize = 4;
 
 // ---- globals
 extern float CullDistance;                                  // "Far plane dist"
-#define RenderFeaturesUnknown U8_AT(0x001f2df8)                 // FeatureManager::SetUserSpecifiedRenderFeatures reads it
 // XBE_GLOBAL(0x001ec4a4, 0x10)
 USingletonManager TheRenderSingletonManager;
 // XBE_GLOBAL(0x001ec4b4, 4)
@@ -424,7 +423,7 @@ void RRenderHigh::Render() {
 
 // FUNC_AT(0x0008c3d0)
 void RRenderHigh::InitGameRender() {
-    RenderFeaturesUnknown = 0;
+    Features.locked = 0;
     FeatureManager::SetUserSpecifiedRenderFeatures();
     USingletonManager *singletons = RenderSingletonManager();
     RenderManagers::InitTextureContextManager();

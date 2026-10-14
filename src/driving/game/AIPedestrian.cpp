@@ -12,6 +12,7 @@
 #include "Human.h"
 #include "Simulation.h"                 // fgSimulation
 #include "Vehicle.h"                    // PVehicle
+#include "../engine/GameLoop.h"      // Launch
 #include "../anim/Actor.h"              // ActActor, ActActorDatabase
 #include "../anim/Character.h"          // ActCharacter
 #include "../anim/Controllers.h"        // AnimationController
@@ -45,7 +46,6 @@ alignas(16) PedestrianStatics Pedestrians;
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- globals
-#define TuningLevel ((const char *)0x00244084)                     // the level the tuning databases are read for
 
 namespace {
 
@@ -362,17 +362,17 @@ void AICharacterPedestrian::Manage() {
 
 // FUNC_AT(0x000239d0)
 int AICharacterPedestrian::GetPedBase() {
-    if (strstr(TuningLevel, "snow1a") != NULL)
+    if (strstr(Launch.missionName, "snow1a") != NULL)
         return 1;
-    if (strstr(TuningLevel, "snow2a") != NULL)
+    if (strstr(Launch.missionName, "snow2a") != NULL)
         return 2;
-    if (strstr(TuningLevel, "junglea") != NULL)
+    if (strstr(Launch.missionName, "junglea") != NULL)
         return 3;
-    if (strstr(TuningLevel, "jungleb") != NULL)
+    if (strstr(Launch.missionName, "jungleb") != NULL)
         return 4;
-    if (strstr(TuningLevel, "uw_") != NULL)
+    if (strstr(Launch.missionName, "uw_") != NULL)
         return 5;
-    if (strstr(TuningLevel, "junglec") != NULL)
+    if (strstr(Launch.missionName, "junglec") != NULL)
         return 6;
     return 0;
 }

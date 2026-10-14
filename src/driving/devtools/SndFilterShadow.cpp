@@ -735,7 +735,7 @@ void SetupAdd(int i) {
     (void)i;
     static const uint32_t inits[][2] = { { 0x00144920, 0x3c }, { 0x00143710, 0x28 }, { 0x001454d0, 0x58 },
                                          { 0x00144610, 0x1c }, { 0x001456e0, 0x20 }, { 0x00145700, 0x20 } };
-    *(uint8_t **)0x00245be4u = W->mix;   // MixList, put back at the end of the run
+    *(uint8_t **)OwnedGlobals_Ours(0x00245be4u) = W->mix;   // MixList, put back at the end of the run
     for (int k = 0; k < 6; k++) {
         const uint32_t *init = inits[Next() % 6];
         SFilterDesc &d = W->desc[k];
@@ -1281,13 +1281,13 @@ void SndFilterShadow_Run(void) {
     }
 
     // the fakes, and the globals the run borrows
-    uint32_t savedNew = *(uint32_t *)0x002475f4u, savedDelete = *(uint32_t *)0x002475f8u;
-    uint8_t *savedMixList = *(uint8_t **)0x00245be4u;
+    uint32_t savedNew = *(uint32_t *)OwnedGlobals_Ours(0x002475f4u), savedDelete = *(uint32_t *)OwnedGlobals_Ours(0x002475f8u);
+    uint8_t *savedMixList = *(uint8_t **)OwnedGlobals_Ours(0x00245be4u);
     uint8_t savedKernelGlobals[kKernelGlobalsSize], savedOrigKernelGlobals[kKernelGlobalsSize];
     memcpy(savedKernelGlobals, &KernelScratch, kKernelGlobalsSize);
     memcpy(savedOrigKernelGlobals, OrigKernelScratch, kKernelGlobalsSize);
-    *(uint32_t *)0x002475f4u = P((void *)&FakeCodaNew);
-    *(uint32_t *)0x002475f8u = P((void *)&FakeCodaDelete);
+    *(uint32_t *)OwnedGlobals_Ours(0x002475f4u) = P((void *)&FakeCodaNew);
+    *(uint32_t *)OwnedGlobals_Ours(0x002475f8u) = P((void *)&FakeCodaDelete);
     HookBoth(0x0013ee00, (const void *)&SNDPKTPLAYI_get, (const void *)&FakeGetPacket);
     HookBoth(0x0013ef80, (const void *)&SNDPKTPLAYI_freeframes, (const void *)&FakeFreeFrames);
     HookBoth(0x00142420, (const void *)&SNDDRV_getmastervoice, (const void *)&FakeGetMasterVoice);
@@ -1304,9 +1304,9 @@ void SndFilterShadow_Run(void) {
     }
 
     HooksRemove();
-    *(uint32_t *)0x002475f4u = savedNew;
-    *(uint32_t *)0x002475f8u = savedDelete;
-    *(uint8_t **)0x00245be4u = savedMixList;
+    *(uint32_t *)OwnedGlobals_Ours(0x002475f4u) = savedNew;
+    *(uint32_t *)OwnedGlobals_Ours(0x002475f8u) = savedDelete;
+    *(uint8_t **)OwnedGlobals_Ours(0x00245be4u) = savedMixList;
     memcpy(&KernelScratch, savedKernelGlobals, kKernelGlobalsSize);
     memcpy(OrigKernelScratch, savedOrigKernelGlobals, kKernelGlobalsSize);
     VirtualFree(W, 0, MEM_RELEASE);

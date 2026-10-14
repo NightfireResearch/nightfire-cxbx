@@ -99,6 +99,8 @@ SINGLE_COPY = set("""
     BondHandIK CausticControl ReflStretch SwayData TestData
     BuiltInFont CurrentTimer DebrisStrips DebugFont DotsFile EmptyBank fgBanks PedSets RootScratch UnprofiledRegion
     UnprofiledTimer DefaultEnvelope MemClass RenderSingletonManagerMade
+    DamageSourceSig Features Launch PlayerGroundVehicles ScratchPadFreeZone SndMix TrafficGroundVehicles fgSimulation
+    gEventDynamicData
 """.split())
 
 

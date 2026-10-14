@@ -19,6 +19,7 @@
 #include "../physics/SimpleRigidBody.h"
 #include "../game/Simulation.h"
 #include "../platform/RealMath.h"
+#include "../render/Reflection.h"     // Features
 #include "../render/Renderer.h"
 #include "../render/RenderHigh.h"
 #include "../platform/CRuntime.h"
@@ -49,8 +50,6 @@ typedef int (*TargetCompare)(const void *a, const void *b);
 
 // ---- the game's globals
 
-#define ViewWidth I32_AT(0x001f2d7c)                             // the view's size in pixels (names ours)
-#define ViewHeight I32_AT(0x001f2d80)
 
 // XBE_GLOBAL(0x0023e174, 4)
 int32_t TargetableCount;                        // the targets in existence (name ours)
@@ -600,8 +599,8 @@ void WTargetPicker::UpdateSelection() {
     }
 
     if (PlayerPhysics()->isSub != 0) {
-        worldTargetScreen.x = float(double(ViewWidth) * kHalf);
-        worldTargetScreen.y = float(double(ViewHeight) * kHalf);
+        worldTargetScreen.x = float(double(Features.width) * kHalf);
+        worldTargetScreen.y = float(double(Features.height) * kHalf);
     } else {
         ScreenPos screen;
         worldTargetScreen = *GetScreenPos(&screen, &worldTarget);
@@ -692,9 +691,9 @@ ScreenPos* WTargetPicker::GetScreenPos(ScreenPos *result, const Coord3 *point) {
     if (fgRenderer->widescreen)
         aspect *= kWidescreenAspect;
     double depth = fabs(local.z);
-    float width = float(ViewWidth);
+    float width = float(Features.width);
     float x = float(local.x / (double(kTwo) / width * depth * tangent));
-    float height = float(ViewHeight);
+    float height = float(Features.height);
     double y = aspect * (local.y / (double(kTwo) / height * depth * tangent));
     result->x = float(width * double(kHalf) + x);
     result->y = float(height * double(kHalf) - y);

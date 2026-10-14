@@ -89,7 +89,7 @@ typedef RigidBodyInfo *(__fastcall *GetRigidBodyInfoFn)(void *, int, int);
 #define Orig_UpdatePosition ((UpdateFn)0x000b0ec0)
 #define Sim_GetRigidBody ((GetRigidBodyFn)0x000b2700)
 #define Sim_GetRigidBodyInfo ((GetRigidBodyInfoFn)0x000b2760)
-#define ShadowSim ((void *)0x00233ff0)
+#define ShadowSim ((void *)OwnedGlobals_Ours(0x00233ff0))
 
 // ---- results
 

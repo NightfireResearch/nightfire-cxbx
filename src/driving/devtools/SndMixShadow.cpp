@@ -668,6 +668,37 @@ void PureFunctions() {
 
 const uint32_t kGlobalsFrom = 0x00245978, kGlobalsTo = 0x00247600;
 
+// The globals the mixer uses, in the game's order: the random words before SndMix (the game's copy), SndMix (ours,
+// which the originals are pointed at), the stream counter after it (the game's copy)
+struct GlobalsSpan {
+    uint8_t *at;
+    uint32_t size;
+};
+const GlobalsSpan *MixGlobals() {
+    static const GlobalsSpan spans[3] = {
+        { (uint8_t *)(uintptr_t)kGlobalsFrom, 0x00245990 - kGlobalsFrom },
+        { (uint8_t *)&SndMix, sizeof(SndMix) },
+        { (uint8_t *)(uintptr_t)0x002475fc, kGlobalsTo - 0x002475fc },
+    };
+    return spans;
+}
+void ReadMixGlobals(uint8_t *out) {
+    for (int i = 0; i < 3; i++) {
+        memcpy(out, MixGlobals()[i].at, MixGlobals()[i].size);
+        out += MixGlobals()[i].size;
+    }
+}
+void WriteMixGlobals(const uint8_t *in) {
+    for (int i = 0; i < 3; i++) {
+        memcpy(MixGlobals()[i].at, in, MixGlobals()[i].size);
+        in += MixGlobals()[i].size;
+    }
+}
+void ZeroMixGlobals() {
+    for (int i = 0; i < 3; i++)
+        memset(MixGlobals()[i].at, 0, MixGlobals()[i].size);
+}
+
 // The original's copies of the port's PlatformRate (SndOptions') and MixQuality (SndGlobals.h)
 #define OrigPlatformRate (*(uint16_t *)0x00244cf2)
 #define OrigMixQuality (*(uint8_t *)0x00244ed7)
@@ -748,7 +779,9 @@ const void *AsGame(const void *data, size_t size) {
 
 void Hash3(int step) {
     StepHash &h = g_hash[step];
-    h.globals = Hash(AsGame((const void *)(uintptr_t)kGlobalsFrom, kGlobalsTo - kGlobalsFrom), kGlobalsTo - kGlobalsFrom);
+    static uint8_t globals[kGlobalsTo - kGlobalsFrom];
+    ReadMixGlobals(globals);
+    h.globals = Hash(AsGame(globals, sizeof(globals)), sizeof(globals));
     h.heap = Hash(AsGame(g_mix, kMixHeap), kMixHeap);
     h.rings = Hash(g_mix + kMixRings, 6u * kRingFrames * 2u);
 }
@@ -886,7 +919,7 @@ void MixerScenario(int index) {
     const Scenario &s = kScenarios[index];
     g_scenario = &s;
     // the starting state: zeroed globals, a fresh heap, the description, quiet rings
-    memset((void *)(uintptr_t)kGlobalsFrom, 0, kGlobalsTo - kGlobalsFrom);
+    ZeroMixGlobals();
     memset(g_mix, 0, kMixWorld);
     HeapInit(g_mix, kMixHeap);
     BuildDescription(s.reverb);
@@ -916,7 +949,7 @@ void MixerScenario(int index) {
         total += n;
     }
     memcpy(g_mixStart, g_mix, kMixWorld);
-    memcpy(g_globalsStart, (const void *)(uintptr_t)kGlobalsFrom, sizeof(g_globalsStart));
+    ReadMixGlobals(g_globalsStart);
 
     g_hash = g_hashO;
     memset(g_hashO, 0, sizeof(g_hashO));
@@ -924,10 +957,10 @@ void MixerScenario(int index) {
     bool okO = Guarded(BodyMixer);
     UseOriginals(false);
     memcpy(g_mixOrig, g_mix, kMixWorld);
-    memcpy(g_globalsOrig, (const void *)(uintptr_t)kGlobalsFrom, sizeof(g_globalsOrig));
+    ReadMixGlobals(g_globalsOrig);
 
     memcpy(g_mix, g_mixStart, kMixWorld);
-    memcpy((void *)(uintptr_t)kGlobalsFrom, g_globalsStart, sizeof(g_globalsStart));
+    WriteMixGlobals(g_globalsStart);
     memcpy(g_dry, dry, sizeof(dry));
     memcpy(g_fx, fx, sizeof(fx));
     g_hash = g_hashP;
@@ -950,8 +983,9 @@ void MixerScenario(int index) {
             break;
         }
     }
-    int bad = CompareImages(what, 0, g_globalsOrig, (const uint8_t *)(uintptr_t)kGlobalsFrom,
-                            sizeof(g_globalsOrig), kGlobalsFrom);
+    static uint8_t globals[kGlobalsTo - kGlobalsFrom];
+    ReadMixGlobals(globals);
+    int bad = CompareImages(what, 0, g_globalsOrig, globals, sizeof(g_globalsOrig), kGlobalsFrom);
     bad += CompareImages(what, 1, g_mixOrig, g_mix, kMixWorld, (uint32_t)(uintptr_t)g_mix);
     if (bad != 0 || okO != okP)
         g_differ++;
@@ -985,7 +1019,8 @@ void SndMixShadow_Run(void) {
     // the state this touches, put back at the end. The heap and the critical section are the port's on both sides
     // (the originals call SNDMEMI and SNDSYS through their addresses, which lead to the port); the rate and the
     // quality are set in the port's variables and in the original's copies.
-    std::vector<uint8_t> savedGlobals((uint8_t *)(uintptr_t)kGlobalsFrom, (uint8_t *)(uintptr_t)kGlobalsTo);
+    std::vector<uint8_t> savedGlobals(kGlobalsTo - kGlobalsFrom);
+    ReadMixGlobals(savedGlobals.data());
     SND::MemHeap *savedHeap = SndHeap;
     uint16_t savedRate = PlatformRate, savedOrigRate = OrigPlatformRate;
     uint8_t savedQuality = MixQuality, savedOrigQuality = OrigMixQuality;
@@ -998,7 +1033,7 @@ void SndMixShadow_Run(void) {
     for (int i = 0; i < (int)(sizeof(kScenarios) / sizeof(kScenarios[0])); i++)
         MixerScenario(i);
 
-    memcpy((void *)(uintptr_t)kGlobalsFrom, savedGlobals.data(), savedGlobals.size());
+    WriteMixGlobals(savedGlobals.data());
     SndHeap = savedHeap;
     PlatformRate = savedRate;
     OrigPlatformRate = savedOrigRate;

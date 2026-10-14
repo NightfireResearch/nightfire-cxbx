@@ -101,10 +101,6 @@ using SND::DsWaveFormat;
 using SND::PlatformVoice;
 using SND::Voice;
 
-// The mixer's (SndMix, still at the original's address)
-#define MixFxInitFunc U32_AT(0x002459a0)               // the mixer's FX init (SNDMIXI_fxinit)
-#define MixFxHook U32_AT(0x002459a4)                   // unpackerInitFuncs[0]: the per-slice FX hook
-
 // The voice counts the options configure (SNDPLATFORM_outputcaps): the hardware voices first, the 0x10 mode's
 // next (none), the mixer's last
 #define HardwareVoices (SndOptions.set.hardwareVoices)   // 0x00244cfa mixVoiceOffset2: 192
@@ -968,8 +964,8 @@ void SNDDRV_setfx(int path) {
     SNDSYS_entercritical();
     uint16_t mode = FxBusMainCpu[0].mode;
     if (mode == 0) {
-        MixFxInitFunc = 0;
-        MixFxHook = 0;
+        SndMix.fxInit = NULL;
+        SndMix.fxHook = NULL;
         MIX_restorereverb();
         SNDSYS_leavecritical();
         return;

@@ -29,6 +29,9 @@
 // mixc is SSE: the same intrinsics in the same lanes and order.
 // ---------------------------------------------------------------------------------------------------------------
 
+// XBE_GLOBAL(0x00245990, 0x1c6c)
+alignas(16) SND::MixState SndMix;
+
 namespace {
 
 using SND::SFilterNode;
@@ -53,8 +56,6 @@ constexpr float kOneSeventeenth = 1.0f / 17;
 static_assert(std::bit_cast<uint32_t>(kOneSeventeenth) == 0x3d70f0f1, "the original's 0x001a7308");
 
 // The functions MIX_create stores
-#define AllocThunk (reinterpret_cast<void *>(SNDMEMI_allocthunk))               // SNDMEMI_allocthunk (CODA_New)
-#define FreeThunk (reinterpret_cast<void *>(SNDMEMI_freethunk))                // SNDMEMI_freethunk (CODA_Delete)
 #define MixcAt (reinterpret_cast<SND::MixFn>(mixc))               // mixc
 
 // The unpacker inits (module H) MIXI_initunpack* puts in the table
@@ -323,8 +324,8 @@ void MIX_setfxlevel(int voice, int send, float level) {
 
 // FUNC_AT(0x00141c20)
 void MIX_create(const SND::MixCreateParams *params) {
-    SND::CODASetNew(AllocThunk);
-    SND::CODASetDelete(FreeThunk);
+    SND::CODASetNew(SNDMEMI_allocthunk);
+    SND::CODASetDelete(SNDMEMI_freethunk);
     SndMix.reverbState = SND::kReverbOff;
     SndMix.outputRate = params->rate;
     SndMix.counts = params->counts;
@@ -529,12 +530,12 @@ void MIXI_initunpack16(void) {
 }
 
 // FUNC_AT(0x001446e0)
-void SND::CODASetNew(void *allocate) {
+void SND::CODASetNew(SND::CodaNewFn allocate) {
     SndMix.codaNew = allocate;
 }
 
 // FUNC_AT(0x001446f0)
-void SND::CODASetDelete(void *release) {
+void SND::CODASetDelete(SND::CodaDeleteFn release) {
     SndMix.codaDelete = release;
 }
 

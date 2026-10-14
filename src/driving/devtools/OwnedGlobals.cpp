@@ -69,8 +69,8 @@ const Redirect kRedirects[] = {
 const uint32_t kRedirectCount = sizeof(kRedirects) / sizeof(kRedirects[0]);
 
 struct RedirectPatch {
-    uint32_t at;            // the address word inside the instruction (0: not found)
-    uint32_t original;
+    uint32_t at[2];         // the address words inside the instruction (0: none): a displacement and an immediate
+    uint32_t original[2];   // may both name the global (mov [field], offset another field)
 };
 RedirectPatch g_redirectPatches[kRedirectCount];
 bool g_redirectsFound;
@@ -123,14 +123,23 @@ void FindRedirects() {
             continue;
         if (kind != 1 && g.size <= 8 && IndexedOperand(code))
             continue;
-        int last = kind == 1 ? 4 : 15;
+        int last = kind == 1 ? 4 : 15, found = 0;
         for (int offset = kind == 1 ? 0 : 1; offset + 4 <= last; offset++) {
             uint32_t word;
             memcpy(&word, code + offset, 4);
             bool past = word - (g.game + g.size) < 64, inside = word - g.game < g.size;
             if (kind == 2 ? past : inside && !(compare && word - g.game < 16)) {
-                g_redirectPatches[r].at = kRedirects[r].instruction + offset;
-                g_redirectPatches[r].original = word;
+                g_redirectPatches[r].at[found] = kRedirects[r].instruction + offset;
+                g_redirectPatches[r].original[found] = word;
+                found++;
+                // only an immediate right after the displacement (mov [address], imm32) is a second word
+                if (kind != 0 || offset + 8 > last)
+                    break;
+                memcpy(&word, code + offset + 4, 4);
+                if (word - g.game < g.size) {
+                    g_redirectPatches[r].at[found] = kRedirects[r].instruction + offset + 4;
+                    g_redirectPatches[r].original[found] = word;
+                }
                 break;
             }
         }
@@ -146,10 +155,10 @@ void PointRedirects(bool ours) {
     for (uint32_t r = 0; r < kRedirectCount; r++) {
         const OwnedGlobal &g = kOwnedGlobals[kRedirects[r].global];
         const RedirectPatch &patch = g_redirectPatches[r];
-        if (patch.at == 0)
-            continue;
-        uint32_t word = ours ? uint32_t(uintptr_t(g.ours)) + (patch.original - g.game) : patch.original;
-        XbeOriginal_Write(patch.at, &word, 4);
+        for (int i = 0; i < 2 && patch.at[i] != 0; i++) {
+            uint32_t word = ours ? uint32_t(uintptr_t(g.ours)) + (patch.original[i] - g.game) : patch.original[i];
+            XbeOriginal_Write(patch.at[i], &word, 4);
+        }
     }
 }
 

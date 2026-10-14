@@ -52,6 +52,10 @@ AIGroundVehicle *AgentGroundVehicles;
 AIVehicleController *AIVehicleControllerInstance;
 // XBE_GLOBAL(0x001de920, 2)
 int16_t TrafficCarTypesChosen;
+// XBE_GLOBAL(0x001de940, 0x4e0)
+alignas(16) AIGroundVehicle PlayerGroundVehicles[kPlayerGroundVehicles];
+// XBE_GLOBAL(0x001dee20, 0x30c0)
+alignas(16) AIGroundVehicle TrafficGroundVehicles[kTrafficVehicles];
 // XBE_GLOBAL(0x001e1ee0, 4)
 int32_t AgentUpdateTurn;
 

@@ -626,7 +626,7 @@ void TestAccessors() {
 // then the port on the car's state exactly as the game hands it over, compares, and leaves the port's result (so
 // the game goes on as the port build does).
 
-#define LiveSimStepCount (*(const int32_t *)0x00234e34)
+#define LiveSimStepCount (*(const int32_t *)OwnedGlobals_Ours(0x00234e34))
 
 struct LiveHook {
     uint32_t at;            // the port's entry

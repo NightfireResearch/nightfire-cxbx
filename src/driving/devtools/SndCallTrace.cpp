@@ -1,4 +1,5 @@
 #include "SndCallTrace.h"
+#include "OwnedGlobals.h"
 
 #include "../sound/snd/System.h"
 #include "../sound/snd/Voices.h"
@@ -104,7 +105,7 @@ std::unordered_map<int, unsigned> g_voices;   // voice handle -> n of the SNDBAN
 unsigned g_voiceCount;
 thread_local int t_depth;              // entries in progress on this thread
 
-#define PLAYER_CAR_HANDLE 0x00234e40   // -> -> the player's PBondCar
+#define PLAYER_CAR_HANDLE OwnedGlobals_OursWord(0x00234e40)  // -> -> the player's PBondCar
 
 bool PlayerCarExists() {
     uint8_t **handle = *(uint8_t ***)PLAYER_CAR_HANDLE;

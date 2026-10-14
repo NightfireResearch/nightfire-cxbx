@@ -13,6 +13,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "AIGroundVehicle.h"   // the vehicle arrays
 #include "AIVehicle.h"
 #include "../../helpers.h"
 
@@ -77,8 +78,9 @@ extern int32_t AgentUpdateTurn;                 // the agent car updated in full
 extern int16_t TrafficCarTypes[8];              // each traffic car type's name (CreateSimTrafficCars), chosen once
 extern int16_t TrafficCarTypesChosen;
 
-#define PlayerGroundVehicles ((AIGroundVehicle *)0x001de940)   // [kPlayerGroundVehicles]
-#define TrafficGroundVehicles ((AIGroundVehicle *)0x001dee20)  // [kTrafficVehicles]
+// Constructed by the static initialisers
+alignas(16) extern AIGroundVehicle PlayerGroundVehicles[kPlayerGroundVehicles];
+alignas(16) extern AIGroundVehicle TrafficGroundVehicles[kTrafficVehicles];
 
 // The traffic: the cars allowed (the launch page's, then EChangeMaxTraffic's) and the cars spawned (ESpawnTraffic's
 // count; AIGroundVehicle::UnSpawn takes one off, reaching it through Get()). The names are ours.

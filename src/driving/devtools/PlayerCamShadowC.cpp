@@ -3,6 +3,7 @@
 #endif
 
 #include "PlayerCamShadowC.h"
+#include "OwnedGlobals.h"
 
 #include "../camera/CameraIniLoader.h"  // fgCameraConstants, kExplosionShakePeriod
 #include "../camera/PlayerCamera.h"
@@ -56,7 +57,7 @@ struct Rng {
     int Range(int lo, int hi) { return lo + int(Next() % uint32_t(hi - lo + 1)); }
 };
 
-#define ShadowPlayerObject (**(PhysicsObject ***)0x00234e40)
+#define ShadowPlayerObject (**(PhysicsObject ***)OwnedGlobals_Ours(0x00234e40))
 
 // The originals' copies of the camera globals the functions write (ours: ShakeOrigin, HeliGroundCount,
 // HeliGroundPoint, AimMatrix), and of fgCameraConstants and kExplosionShakePeriod, which they read

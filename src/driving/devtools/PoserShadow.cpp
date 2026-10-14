@@ -151,9 +151,9 @@ struct ShadowActorDatabase {
 #define OrigActManager (*(ActManager **)0x001dd9cc)
 #define OrigAnimationBuffer (*(MATRIX4 **)0x001dd9fc)
 #define ShadowRandomSeed (*(uint32_t *)OwnedGlobals_Ours(0x001c45c4))
-#define ShadowStepCount (*(int32_t *)0x00234e34)
-#define ShadowPlayerPhysics (*(PhysicsObject ***)0x00234e40)
-#define ShadowEventBlock ((void *)0x001e47e8)
+#define ShadowStepCount (*(int32_t *)OwnedGlobals_Ours(0x00234e34))
+#define ShadowPlayerPhysics (*(PhysicsObject ***)OwnedGlobals_Ours(0x00234e40))
+#define ShadowEventBlock ((void *)OwnedGlobals_Ours(0x001e47e8))
 
 constexpr unsigned kEventBlockSize = 0x68;
 

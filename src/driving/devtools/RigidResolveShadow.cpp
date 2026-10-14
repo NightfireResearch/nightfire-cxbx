@@ -64,7 +64,7 @@ typedef RigidBody *(__fastcall *GetRigidBodyFn)(void *, int, int);
 #define Orig_ResolveCollision ((ResolveFn)0x000aec10)
 #define Orig_GenerateImpulse ((ImpulseFn)0x000afdb0)
 #define Sim_GetRigidBody ((GetRigidBodyFn)0x000b2700)
-#define ShadowSim ((void *)0x00233ff0)
+#define ShadowSim ((void *)OwnedGlobals_Ours(0x00233ff0))
 #define ShadowMissionManager (*(uint8_t **)OwnedGlobals_Ours(0x00239220))
 const int kRigidBodies = 0x40;
 

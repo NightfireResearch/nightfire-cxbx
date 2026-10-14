@@ -1,5 +1,6 @@
 #include "Filters.h"
 #include "Decode.h"
+#include "Mixer.h"                      // SndMix
 #include "Reverb.h"
 #include "Platform.h"
 #include "Streams.h"
@@ -77,7 +78,6 @@ static_assert(std::bit_cast<uint32_t>(kSin13) == 0x2f309211, "the original's 1/1
 static_assert(std::bit_cast<uint32_t>(kRsfScale) == 0x30000000, "the original's 2^-31");
 
 
-#define MixVoices (*(SND::MixVoice **)0x00245be4)   // MixList: SndMix.voices
 
 // The process, restore and kernel functions a node stores, as the node's types hold them
 #define LpfRCAt (reinterpret_cast<SFilterProcess>(SFILTER_lpfRC))              // SFILTER_lpfRC
@@ -119,7 +119,7 @@ void ShiftHistory(float *h) {
 // the voice's list. The answer is whatever addtofilterlist leaves in EAX (nobody reads it).
 // FUNC_AT(0x00144a30)
 SND::SFilterNode* SFILTER_add(int voice, uint32_t arg, const SND::SFilterDesc *desc) {
-    MixVoice *mix = &MixVoices[voice];
+    MixVoice *mix = &SndMix.voices[voice];
     SFilterNode *node = static_cast<SFilterNode *>(SNDMEMI_alloc(desc->size));
     desc->init(node, desc->param, arg);
     node->priority = desc->priority;

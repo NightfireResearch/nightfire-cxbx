@@ -97,6 +97,6 @@ static_assert(sizeof(EventDynamicData) == 0x64, "the event data is 0x64 bytes");
 static_assert(offsetof(EventDynamicData, trigger) == 0x30 && offsetof(EventDynamicData, hasRayShell) == 0x44,
               "event data layout");
 
-#define gEventDynamicData (*(EventDynamicData *)0x001e47e8)
+extern EventDynamicData gEventDynamicData;
 
 #endif // DRIVING_WORLD_TRIGGER_H_

@@ -170,11 +170,11 @@ const uint32_t kHookEntries[kHookCount] = {
 
 // ---- the game's state
 
-#define ShadowSim ((void *)0x00233ff0)
-#define ShadowRandom (*(SimRandom **)0x00233ff0)
-#define ShadowStepCount I32_AT(0x00234e34)
-#define ShadowCars (*(PVehicle ***)0x00234e40)
-#define ShadowCarsEnd (*(PVehicle ***)0x00234e44)
+#define ShadowSim ((void *)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowRandom (*(SimRandom **)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowStepCount I32_AT(OwnedGlobals_Ours(0x00234e34))
+#define ShadowCars (*(PVehicle ***)OwnedGlobals_Ours(0x00234e40))
+#define ShadowCarsEnd (*(PVehicle ***)OwnedGlobals_Ours(0x00234e44))
 #define ShadowZones ((uint8_t *)OwnedGlobals_Ours(0x001e1f20))
 #define ShadowGetRigidBody ((RigidBody *(__fastcall *)(void *, int, int))0x000b2700)
 constexpr uint32_t kZoneBytes = 30 * 0x1c;

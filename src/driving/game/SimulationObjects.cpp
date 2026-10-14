@@ -41,8 +41,14 @@ float SimulationInverseTwoPi = 0.15915495f;
 float SimulationDegreesPerRadian = 57.295784f;
 // XBE_GLOBAL(0x00233fe4, 4)
 float SimulationRadiansPerDegree = 0.01745329f;
+// The signature the world and the events' damage names as its source (nothing writes it; the name is ours)
+// XBE_GLOBAL(0x00233fe8, 4)
+uint32_t DamageSourceSig;
+// XBE_GLOBAL(0x00233ff0, 0xf24)
+alignas(16) Simulation fgSimulation;
 // The scratch pad's free zone, after the Simulation (the name is ours)
-#define ScratchPadFreeZone ((void *)0x00234f20)
+// XBE_GLOBAL(0x00234f20, 0x4000)
+alignas(16) uint8_t ScratchPadFreeZone[0x4000];
 
 namespace {
 

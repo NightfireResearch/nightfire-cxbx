@@ -132,7 +132,7 @@ typedef GameStd::String *(__fastcall *AssignFn)(GameStd::String *, int, const ch
 
 #define fgScheduler (*(Scheduler **)OwnedGlobals_Ours(0x001e520c))
 #define EventTable ((TaskCallback *)0x0018bf38)
-#define LaunchBytes ((uint8_t *)0x00243b90)
+#define LaunchBytes ((uint8_t *)OwnedGlobals_Ours(0x00243b90))
 // The noise's state is the port's (SimRandom.h); the original keeps its copy at the game's addresses, the tables
 // and the flag in one block. The platform generator's words (RandomWords) are the port's on both sides: the
 // originals reach REAL_random and seedrandom through their addresses.

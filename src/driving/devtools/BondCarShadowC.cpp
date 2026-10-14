@@ -113,7 +113,7 @@ typedef int (__fastcall *WheelForcesFn)(PBondCar *, int, BondCarWheelInput *, fl
 typedef int (__fastcall *SimpleWheelForcesFn)(PBondCar *, int, BondCarWheelInput *, const Coord4 *, const Coord4 *,
                                               const Coord4 *, float *);
 
-#define ShadowSimRandom (*(SimRandom **)0x00233ff0)          // the Simulation's first word
+#define ShadowSimRandom (*(SimRandom **)OwnedGlobals_Ours(0x00233ff0))          // the Simulation's first word
 #define ShadowRandomSeed U32_AT(OwnedGlobals_Ours(0x001c45c4))
 // The original's copy of the port's BondCarScratchPad (the cars' tuning: BondCarOrigTuning.h). The animation
 // engine's active list and the event queue's points are ours on both sides: the originals reach them through

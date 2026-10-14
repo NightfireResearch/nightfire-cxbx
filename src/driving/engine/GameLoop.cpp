@@ -112,6 +112,8 @@ const char kCarModels[] = "data\\car\\model\\";
 }  // namespace
 
 // ---- the game's globals
+// XBE_GLOBAL(0x00243b90, 0xa4c)
+LaunchPage Launch;
 
 #define MissionName (Launch.missionName)
 // XBE_GLOBAL(0x00244790, 0x4)
@@ -312,7 +314,7 @@ void MissionNumToString() {
     default: strcpy(MissionName, "paris_map"); break;
     }
     strcpy(Launch.localeFile, "IDL_ENG.LOC");
-    Launch.unknown614 = Launch.unknown970 != 0 ? 2 : 0;
+    Launch.wideScreen = Launch.unknown970 != 0 ? 2 : 0;
 }
 
 // FUNC_AT(0x00059920)

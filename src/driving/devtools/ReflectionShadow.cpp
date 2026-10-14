@@ -134,8 +134,8 @@ typedef void (*FeatureInitFn)(int, int, int, int);
 #define ShadowMissileCam (*(uint8_t **)OwnedGlobals_Ours(0x00200f54))
 #define ShadowLightManager (*(uint8_t **)OwnedGlobals_Ours(0x001ec260))
 #define ShadowRendererEye ((const float *)((*(uint8_t **)OwnedGlobals_Ours(0x001ebff4)) + 0x30))
-#define ShadowFeatures ((uint8_t *)0x001f2d78)
-#define ShadowFeaturesLocked BOOL8_AT(0x001f2df8)
+#define ShadowFeatures ((uint8_t *)OwnedGlobals_Ours(0x001f2d78))
+#define ShadowFeaturesLocked BOOL8_AT(OwnedGlobals_Ours(0x001f2df8))
 #define ShadowMouseBounds ((uint8_t *)0x002420bc)
 #define ShadowDecalState ((uint8_t *)OwnedGlobals_Ours(0x001ff7f0))       // after the decal arrays
 const size_t kDecalStateBytes = 0x4c;

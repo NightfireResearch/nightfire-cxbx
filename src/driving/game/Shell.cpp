@@ -220,7 +220,7 @@ void CheatExplosion(uint32_t ownerSig, const Coord3 *position) {
         if (FindObject(ownerSig)->IsOwnedBy(player) && (Launch.flags & kLaunchFlag1000)) {
             Coord3 up = {0.0f, 1.0f, 0.0f};
             fgSimulation.SpawnExplosion(kMissileExplosion, kCheatExplosionKind, &up, position, kCheatExplosionSize,
-                                        kCheatExplosionArg6, NULL, DamageSourceSig);
+                                        kCheatExplosionArg6, NULL, &DamageSourceSig);
         }
     }
 }
@@ -889,7 +889,7 @@ void Shell::Simulate() {
             continue;
         const Coord3 *at = object->GetPosition();
         int result = object->ApplyDamageVirtual(&origin, &body->position, kHitDamageScale * damage, kDamageSpread,
-                                                kDamageKindShell, DamageSourceSig);
+                                                kDamageKindShell, &DamageSourceSig);
         Coord4 objectPosition = {at->x, at->y, at->z, 1.0f};
         const Coord3 *moving = object->GetLinearVelocity();
         Coord4 velocity = {moving->x, moving->y, moving->z, 1.0f};
@@ -898,7 +898,7 @@ void Shell::Simulate() {
             Coord4 axis;
             VU0_ExtractZAxis3FromQuat(&body->orientation, &axis);
             fgSimulation.SpawnExplosion(kMissileExplosion, shellType, Xyz(&axis), &body->position, explosionSize, 0, object,
-                                        DamageSourceSig);
+                                        &DamageSourceSig);
             ApplyWorldEffects(Xyz(&objectPosition), &velocity, 2, shellType, noFace, 0, NULL);
         } else {
             ApplyWorldEffects(Xyz(&objectPosition), &velocity, 1, shellType, noFace, result, NULL);
@@ -925,7 +925,7 @@ void Shell::Simulate() {
             Coord4 axis;
             VU0_ExtractZAxis3FromQuat(&body->orientation, &axis);
             fgSimulation.SpawnExplosion(kMissileExplosion, shellType, Xyz(&axis), Xyz(&info.point), explosionSize, 0, NULL,
-                                        DamageSourceSig);
+                                        &DamageSourceSig);
             ApplyWorldEffects(Xyz(&info.point), &info.normal, 2, shellType, &info.faceType, 0, NULL);
         } else {
             ApplyWorldEffects(Xyz(&info.point), &info.normal, 1, shellType, &info.faceType, 0, NULL);

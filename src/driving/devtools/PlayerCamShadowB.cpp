@@ -73,10 +73,10 @@ struct Rng {
     bool Chance(int percent) { return int(Next() % 100) < percent; }
 };
 
-#define ShadowSimStepCount I32_AT(0x00234e34)
-#define ShadowPlayerCar (**(PVehicle ***)0x00234e40)
+#define ShadowSimStepCount I32_AT(OwnedGlobals_Ours(0x00234e34))
+#define ShadowPlayerCar (**(PVehicle ***)OwnedGlobals_Ours(0x00234e40))
 #define ShadowGetSimpleRigidBody ((SimpleRigidBody *(__fastcall *)(void *, int, int slot))0x000b2730)
-#define ShadowSim ((void *)0x00233ff0)
+#define ShadowSim ((void *)OwnedGlobals_Ours(0x00233ff0))
 
 constexpr unsigned kNavSplineSize = 0x70;           // RCameraSpline
 
@@ -201,7 +201,7 @@ void InstallFakes() {
 
 // ---- the world outside the camera that a call can write
 
-SimRandom *Random() { return *reinterpret_cast<SimRandom **>(0x00233ff0); }
+SimRandom *Random() { return *reinterpret_cast<SimRandom **>(OwnedGlobals_Ours(0x00233ff0)); }
 
 // The originals' copies of the port's WeaponArmFrom, WeaponArmBlend, PreviousRotationX/Y, ShakeOrigin and
 // fgCameraConstants. GetSegmentCurveStep's spline is ours on both sides: the originals reach it through the

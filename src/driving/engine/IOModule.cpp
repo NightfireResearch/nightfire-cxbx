@@ -1,4 +1,5 @@
 #include "IOModule.hpp"
+#include "GameLoop.h"                 // Launch
 #include "StaticInit.h"
 
 #include <string.h>
@@ -19,7 +20,6 @@ static IOModule gIOModule;
 // XBE_GLOBAL(0x001e4644, 0x4)
 static uint32_t gIOModuleGuard;
 // The pad port input comes from: the launch page's controllerPort (GameLoop.h). Named glbIFeedback in Ghidra.
-#define glbActivePort (*(int *)0x00244520)
 // The simulation's step count, and how many steps must have run before the unplugged message is shown (2).
 // XBE_GLOBAL(0x001b7028, 0x4)
 static const int kUnplugMinSimSteps = 2;
@@ -70,7 +70,7 @@ void IOModule::Initialize() {
 // failed allocation is not checked before Initialize.
 // AUTOINJECT
 void IOModule::CreateDevices() {
-    int port = glbActivePort;
+    int port = Launch.controllerPort;
     for (int i = 0; i < kPorts; i++) {
         XBoxPadDevice *device = nullptr;
         if (i == port) {
@@ -109,7 +109,7 @@ int IOModule::Update() {
 void IOModule::CheckUnplugged() {
     checkUnpluggedCount++;
     padStable = true;
-    bool connected = PAD_getpadtype(glbActivePort) != 0;
+    bool connected = PAD_getpadtype(Launch.controllerPort) != 0;
     if (!padStable)   // the PS2's debounce, always passed on Xbox
         return;
     bool shown = unpluggedMessageShown;
@@ -246,8 +246,8 @@ void IOModule::SendGameMessages(InputDevice *device, InputToAction *mapping) {
 // configuration the caller has switched to.
 // AUTOINJECT
 void IOModule::ReleaseAllButtons() {
-    InputToAction *mapping = inputActionMappings[glbActivePort];
-    XBoxPadDevice *device = padDevices[glbActivePort];
+    InputToAction *mapping = inputActionMappings[Launch.controllerPort];
+    XBoxPadDevice *device = padDevices[Launch.controllerPort];
     int scalarCount = ((InputDevice *)device)->GetNumDeviceScalar();
     ActionData message;
     message.action = 0;

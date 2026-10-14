@@ -43,7 +43,8 @@ RReflection *TheReflection;
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- globals
-#define Features (*(FeatureManagerData *)0x001f2d78)
+// XBE_GLOBAL(0x001f2d78, 0x84)
+FeatureManagerData Features;
 // XBE_GLOBAL(0x001c4810, 4)
 uint32_t CpuType = 1;                    // CPU_detect's (names ours)
 // XBE_GLOBAL(0x001c4820, 4)
@@ -142,7 +143,7 @@ void FeatureManager::SetUserSpecifiedRenderFeatures() {
     Features.unknown42 = 0;
     Features.unknown78 = 0;
     Features.unknown65 = 0;
-    Features.unknown60 = 0x100;
+    Features.particleDensity = 0x100;
     Features.unknown66 = 1;
     Features.unknown7C = 1;
     Features.unknown67 = 1;

@@ -50,6 +50,8 @@ enum MixReverbState : uint8_t {
 typedef void (*MixVoiceFreeFn)(int voice);
 typedef void (*MixFxHook)(int frames);                                   // run once a slice
 typedef void (*MixFxInitFn)(const uint8_t *description);
+typedef void *(*CodaNewFn)(int size);                                    // CODA_New
+typedef void (*CodaDeleteFn)(void *block);                               // CODA_Delete
 typedef void (*MixFn)(int count, float gain, const float *in, float *out);
 
 // NUM_MIXES: written as a dword (MIX_create), read as bytes
@@ -148,8 +150,8 @@ struct MixState {
     const Fx2Connection *fx2ConnCursor;    // +0x1c58 0x002475e8
     const uint8_t *fx2EntryCursor;   // +0x1c5c 0x002475ec
     int32_t fx2ConfigCopy;           // +0x1c60 0x002475f0
-    void *codaNew;                   // +0x1c64 0x002475f4 CODA_New: SNDMEMI_alloc's thunk
-    void *codaDelete;                // +0x1c68 0x002475f8 CODA_Delete
+    CodaNewFn codaNew;               // +0x1c64 0x002475f4 CODA_New: SNDMEMI_alloc's thunk
+    CodaDeleteFn codaDelete;         // +0x1c68 0x002475f8 CODA_Delete
 };
 static_assert(offsetof(MixState, scratchRaw) == 0x120, "the scratch allocations are at 0x00245ab0");
 static_assert(offsetof(MixState, voices) == 0x254, "MixList is at 0x00245be4");
@@ -158,13 +160,13 @@ static_assert(offsetof(MixState, fxSend) == 0x440, "sndfx is at 0x00245dd0");
 static_assert(offsetof(MixState, fxIdle) == 0x1c40, "the FX idle count is at 0x002475d0");
 static_assert(sizeof(MixState) == 0x1c6c, "the mixer's globals end at 0x002475fc");
 
-void CODASetNew(void *allocate);                                             // 0x001446e0
-void CODASetDelete(void *release);                                           // 0x001446f0
+void CODASetNew(CodaNewFn allocate);                                         // 0x001446e0
+void CODASetDelete(CodaDeleteFn release);                                    // 0x001446f0
 
 }  // namespace SND
 
-// The mixer's globals, where the original keeps them (the filters, the decoders and the platform driver read some)
-#define SndMix (*(SND::MixState *)0x00245990)
+// The mixer's globals (the filters, the decoders and the platform driver read some)
+alignas(16) extern SND::MixState SndMix;
 
 void MIXI_interpolateto0(float *gain, float *buffer);                       // 0x001413e0
 void MIXI_interpolatemix(float from, float to, float *in, float *out);      // 0x001414d0

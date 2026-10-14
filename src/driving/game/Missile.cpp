@@ -1,6 +1,7 @@
 #pragma fp_contract(off)
 
 #include "Missile.h"
+#include "../engine/GameLoop.h"      // Launch
 #include "../Vtables.h"   // our copies of the game's vtables
 
 #include <math.h>
@@ -59,7 +60,6 @@
 // ---- globals
 
 extern const MATRIX4 *IdentityMatrix;
-#define TuningLevel ((const char *)0x00244084)              // the level the tuning databases are read for
 
 // The tuning (Missile.h)
 // XBE_GLOBAL(0x001c3680, 0x4)
@@ -382,7 +382,7 @@ Missile* Missile::Construct(int weapon, float speed, const Coord3 *direction, co
         launchSpeed = speed + 5.0f;
         homingFull = 1;
         lifeSteps = fgSimulation.stepsPerSecond * 5;
-        if (_stricmp(TuningLevel, "snow1a_mis3") == 0 || _stricmp(TuningLevel, "snow1a") == 0)
+        if (_stricmp(Launch.missionName, "snow1a_mis3") == 0 || _stricmp(Launch.missionName, "snow1a") == 0)
             transitSound = GameEmptyString;
         else
             transitSound = "SFX_RocketTrans";
@@ -618,7 +618,7 @@ void Missile::CheckForCollision() {
             alignas(16) Coord4 forward;
             body->GetForwardVector(reinterpret_cast<Coord3 *>(&forward));
             fgSimulation.SpawnExplosion(kMissileExplosion, weapon, Xyz(&forward), &body->position, damage, 0, NULL,
-                                        DamageSourceSig);
+                                        &DamageSourceSig);
         }
         if (IsDriveMissile(this))
             EndDrive();
@@ -673,10 +673,10 @@ void Missile::CheckForCollision() {
                         VU0_v4unitxyz(&body->velocity, &heading);
                         VU0_v4scaleadd(&heading, -kHitReach, &at, &behind);
                         VU0_v4scaleadd(&heading, kHitReach, &at, &ahead);
-                        other->ApplyDamageVirtual(&behind, &ahead, kHitDamage, 0.0f, kDamageBullet, DamageSourceSig);
+                        other->ApplyDamageVirtual(&behind, &ahead, kHitDamage, 0.0f, kDamageBullet, &DamageSourceSig);
                     }
                     fgSimulation.SpawnExplosion(kMissileExplosion, weapon, Xyz(&forward), Xyz(&at), damage, 0, other,
-                                                DamageSourceSig);
+                                                &DamageSourceSig);
                 }
             }
             if (IsDriveMissile(this))
@@ -743,7 +743,7 @@ void Missile::CheckForCollision() {
         alignas(16) Coord4 forward;
         body->GetForwardVector(reinterpret_cast<Coord3 *>(&forward));
         fgSimulation.SpawnExplosion(kMissileExplosion, weapon, Xyz(&forward), Xyz(&info.point), damage, info.faceType,
-                                    NULL, DamageSourceSig);
+                                    NULL, &DamageSourceSig);
     }
     if ((weapon == kWeaponTorpedo || weapon == kWeaponRemoteTorpedo) && info.faceType == kFaceType14)
         glbMissionManager->ProgrammerDefinedEvent(kProgrammerEvent21, GameEmptyString);

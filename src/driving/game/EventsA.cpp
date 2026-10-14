@@ -1129,7 +1129,7 @@ void EBashCarAlongObjectAxis::Process() {
     body->GenerateImpulse(&impact, &normal, &point, 0.025f, false, 0, 1.0f);
     fgSimulation.rigidBodyOwners[PlayerCar()->rigidBodySlot]->ApplyDamageVirtual(&body->position, &body->position,
                                                                                  damage, 0.05f, kDamageKind1,
-                                                                                 DamageSourceSig);
+                                                                                 &DamageSourceSig);
 }
 
 // FUNC_AT(0x0004eb00)
@@ -1296,7 +1296,7 @@ void EDamagePlayer::Destruct() {
 void EDamagePlayer::Process() {
     Coord3 direction = { 0.0f, 0.0f, 1.0f };
     PVehicle *car = PlayerCar();
-    car->ApplyDamageVirtual(car->GetPosition(), &direction, damage, unknown08, kDamageKind3, DamageSourceSig);
+    car->ApplyDamageVirtual(car->GetPosition(), &direction, damage, unknown08, kDamageKind3, &DamageSourceSig);
 }
 
 // FUNC_AT(0x0004ebe0)

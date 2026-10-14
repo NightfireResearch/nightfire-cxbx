@@ -1534,7 +1534,7 @@ void ESpawnExplosion::Process() {
         double strength = kJoltDistance / double(distance);
         PlayerCar()->feedbackObject->ApplyJolt(strength > 1.0 ? 1.0f : float(strength));
     }
-    fgSimulation.SpawnExplosionObject(kind, damageKind, Xyz(&up), Xyz(&at), force, owner, DamageSourceSig);
+    fgSimulation.SpawnExplosionObject(kind, damageKind, Xyz(&up), Xyz(&at), force, owner, &DamageSourceSig);
 
     WWorldPos ground;
     ground.Construct();
@@ -1712,7 +1712,7 @@ void ESpawnForceEffect::Process() {
         if (!useGfx) {
             sceneObj->TriggerFXVirtual(RSceneObj::kFXOnById, effect->id, 0, &kZero, &kZero, -1.0f);
             fgSimulation.SpawnExplosionObject(kForceExplosionType, kForceExplosionKind, Xyz(&facing), Xyz(&at), force,
-                                              NULL, DamageSourceSig);
+                                              NULL, &DamageSourceSig);
             return;
         }
     } else {
@@ -1730,7 +1730,7 @@ void ESpawnForceEffect::Process() {
         GFX::Trigger(reference, &effect->position, &effect->gfx.rotation, Xyz(&kZero), &kNoRotation,
                      sceneObj, instanceIndex, NULL);
     fgSimulation.SpawnExplosionObject(kForceExplosionType, kForceExplosionKind, Xyz(&facing), Xyz(&at), force, NULL,
-                                      DamageSourceSig);
+                                      &DamageSourceSig);
 }
 
 // FUNC_AT(0x00048c80)
@@ -2093,7 +2093,7 @@ void EWakeupSmackable::Process() {
     bodyBox.Reset(&bodyMatrix, &bodyCentre, &bodyExtents);
     rayBox.Reset(&rayMatrix, &rayCentre, &rayExtents);
     if (rayBox.CheckOBBOverlap(&bodyBox))
-        object->ApplyDamageVirtual(&start, &end, damage, kRayDamageScale, kRayDamageKind, DamageSourceSig);
+        object->ApplyDamageVirtual(&start, &end, damage, kRayDamageScale, kRayDamageKind, &DamageSourceSig);
     NullFunction();     // the boxes' destructors
     NullFunction();
 }

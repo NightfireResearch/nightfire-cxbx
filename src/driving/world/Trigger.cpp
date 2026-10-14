@@ -14,7 +14,9 @@
 // test, and moving a trigger with the object it follows.
 // ---------------------------------------------------------------------------------------------------------------
 
-// ---- the game's code not ported yet
+// ---- globals
+// XBE_GLOBAL(0x001e47e8, 0x64)
+EventDynamicData gEventDynamicData;
 
 namespace {
 

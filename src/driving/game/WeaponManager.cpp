@@ -727,7 +727,7 @@ void SWeaponManager::HandleNuclearSequence() {
 
         const Coord3 up = {0.0f, 1.0f, 0.0f};
         fgSimulation.SpawnExplosion(kNuclearExplosion, -1, &up, &nuclearPosition, nuclearScale * 10000.0f, 0, NULL,
-                                    DamageSourceSig);
+                                    &DamageSourceSig);
         CollisionImpact impact;
         impact.Construct();
         RigidBody *body = fgSimulation.GetRigidBody(PlayerObject()->rigidBodySlot);

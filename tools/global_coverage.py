@@ -106,7 +106,7 @@ def use_engine(engine):
                                              "references (docs/driving/maths.md, section 6)"),
                     (0x00193B8C, 0x00193B94, "the strings \"FAILED \" and \"OK \""),
                     (0x001B73E8, 0x001B73F8, "a Shift-JIS to ASCII table: {code, character} pairs"),
-                    (0x001D30D0, 0x001D30E4, "UNICODE_STRING length/maximum-length pairs"),
+                    (0x001D30B0, 0x001D30E4, "UNICODE_STRING length/maximum-length pairs"),
                     (0x001A1BE8, 0x001A1BEC, "a STRING's length/maximum-length pair (0x1c, 0x1d)"),
                     (0x001C4960, 0x001C4980, "a run of 16-bit values (0x18, 0x19 ... 0x27)"),
                     (0x001B3DA0, 0x001B3DAC, "the C runtime's _rtinit table, which our startup no longer walks: "
@@ -462,7 +462,7 @@ class CallGraph:
                 md.detail = True
                 k = bisect.bisect_right(entries, start)
                 end = min(entries[k] if k < len(entries) else start + 0x1000, start + 0x4000)
-                seen, work = set(), [start]
+                seen, covered, work = set(), set(), [start]
                 while work:
                     at = work.pop()
                     while start <= at < end and at not in seen:
@@ -470,6 +470,7 @@ class CallGraph:
                         if ins is None:
                             break
                         seen.add(at)
+                        covered.update(range(at, at + ins.size))
                         ops = ins.operands
                         if ins.mnemonic in ("ret", "int3", "jmp"):
                             if ins.mnemonic == "jmp" and ops and ops[0].type == x86.X86_OP_IMM:
@@ -478,7 +479,7 @@ class CallGraph:
                         if ins.group(x86.X86_GRP_JUMP) and ops and ops[0].type == x86.X86_OP_IMM:
                             work.append(ops[0].imm)
                         at += ins.size
-                bodies[start] = seen
+                bodies[start] = covered     # every byte of its instructions: Ghidra may hang a reference on an operand
             return bodies[start]
 
         def owner(frm):

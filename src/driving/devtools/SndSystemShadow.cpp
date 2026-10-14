@@ -48,7 +48,7 @@
 //   exit-hook thunk), SNDSYS_inited, the critical section: one script per case on random options and states, with
 //   the platform driver, SYNCTASK_add, REAL_addexit, dummyNullFunction and the kernel's critical-section imports
 //   (the import table's slots) replaced by recording fakes; the globals (0x00244ba8..0x00244fc0,
-//   0x00245364..0x002459a0), the heap arena and the byte SNDSYSI_init writes into .rdata compared.
+//   0x00245364..0x00245990), the heap arena and the byte SNDSYSI_init writes into .rdata compared.
 //
 // The platform driver's entries are replaced for the run by five-byte jumps to the fakes, put back afterwards;
 // every global the test touches is saved first and put back at the end.
@@ -154,14 +154,14 @@ bool Chance(int percent) {
 struct Region {
     uint32_t lo, hi;
 };
-const Region kRegions[] = { { 0x00244ba8, 0x00244fc0 }, { 0x00245364, 0x002459a0 } };
+const Region kRegions[] = { { 0x00244ba8, 0x00244fc0 }, { 0x00245364, 0x00245990 } };
 const int kRegionCount = 2;
 const uint32_t kAuthorByte = 0x001d9d48;
 const uint32_t kImportSlots[3] = { 0x00189cf0, 0x00189c40, 0x00189c3c };   // RtlInitialize/Enter/LeaveCriticalSection
 
 struct Globals {
     uint8_t r0[0x00244fc0 - 0x00244ba8];
-    uint8_t r1[0x002459a0 - 0x00245364];
+    uint8_t r1[0x00245990 - 0x00245364];   // up to SndMix, ours
     uint8_t author;
 };
 

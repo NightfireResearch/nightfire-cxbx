@@ -121,8 +121,8 @@ typedef void (*TimeFn)(void);
 #define Orig_TimeInit ((TimeFn)0x00095380)
 #define Orig_TimeUpdate ((TimeFn)0x000953a0)
 
-#define ShadowSimTimeStep FLOAT_AT(0x00234e30)
-#define ShadowSimStepCount U32_AT(0x00234e34)
+#define ShadowSimTimeStep FLOAT_AT(OwnedGlobals_Ours(0x00234e30))
+#define ShadowSimStepCount U32_AT(OwnedGlobals_Ours(0x00234e34))
 #define OrigTickSeconds FLOAT_AT(0x001f2a48)    // the original's copy of the port's TickSeconds
 
 // FUN_000914f0's convention: EDX the name, the table on the stack. Answers the result, or (the second) EDX after.

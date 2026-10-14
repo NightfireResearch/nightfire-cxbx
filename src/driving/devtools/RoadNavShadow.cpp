@@ -3,6 +3,7 @@
 #endif
 
 #include "RoadNavShadow.h"
+#include "OwnedGlobals.h"
 
 #include "../world/RoadNav.h"
 #include "../camera/CameraSpline.h"     // RCameraSpline
@@ -117,7 +118,7 @@ typedef short (__fastcall *CalcLaneFn)(void *, int, float *, uint8_t *, bool *);
 #define FindClosestAt ((FindClosestFn)0x000cbf20)
 #define InitAtPointAt ((InitAtPointFn)0x000cc100)
 
-SimRandom *Random() { return *reinterpret_cast<SimRandom **>(0x00233ff0); }
+SimRandom *Random() { return *reinterpret_cast<SimRandom **>(OwnedGlobals_Ours(0x00233ff0)); }
 
 
 const size_t kSplineSize = 0x70;

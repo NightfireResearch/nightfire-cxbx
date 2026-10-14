@@ -114,9 +114,9 @@ typedef PhysicsObject *(__fastcall *GetPlayerFn)(void *, int);
 #define Sim_GetSimpleBody ((GetSimpleBodyFn)0x000b2730)
 #define Sim_GetPlayerObject ((GetPlayerFn)0x000b2d30)
 
-#define ShadowSim ((void *)0x00233ff0)
-#define ShadowSimpleOwners ((void **)0x002343a0)
-#define ShadowDamageSourceSig ((const uint32_t *)0x00233fe8)
+#define ShadowSim ((void *)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowSimpleOwners ((void **)OwnedGlobals_Ours(0x002343a0))
+#define ShadowDamageSourceSig ((const uint32_t *)OwnedGlobals_Ours(0x00233fe8))
 const int kRigidBodies = 0x40;
 const int kSimpleBodies = 0x60;
 

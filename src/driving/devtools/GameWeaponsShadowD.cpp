@@ -127,9 +127,9 @@ const uint32_t kHookEntries[kHookCount] = {
 
 // ---- the game's state
 
-#define ShadowSimStepCount I32_AT(0x00234e34)
-#define ShadowSimpleOwners ((PhysicsObject **)0x002343a0)
-#define ShadowRigidOwners ((PhysicsObject **)0x002342a0)
+#define ShadowSimStepCount I32_AT(OwnedGlobals_Ours(0x00234e34))
+#define ShadowSimpleOwners ((PhysicsObject **)OwnedGlobals_Ours(0x002343a0))
+#define ShadowRigidOwners ((PhysicsObject **)OwnedGlobals_Ours(0x002342a0))
 
 const uint32_t kHumanVtableAddress = 0x0018edf4;
 const uint32_t kMineVtableAddress = 0x0018ee28;

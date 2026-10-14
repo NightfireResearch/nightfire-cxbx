@@ -100,13 +100,13 @@ const unsigned kEntries[] = {
 
 // ---- the game's state both sides read
 
-#define ShadowSimTimeStep FLOAT_AT(0x00234e30)
-#define ShadowSimStepCount I32_AT(0x00234e34)
-#define ShadowSimState I32_AT(0x00234e24)
-#define ShadowPlayerObjects PTR_AT(0x00234e40)
+#define ShadowSimTimeStep FLOAT_AT(OwnedGlobals_Ours(0x00234e30))
+#define ShadowSimStepCount I32_AT(OwnedGlobals_Ours(0x00234e34))
+#define ShadowSimState I32_AT(OwnedGlobals_Ours(0x00234e24))
+#define ShadowPlayerObjects PTR_AT(OwnedGlobals_Ours(0x00234e40))
 #define ShadowMissionManager PTR_AT(OwnedGlobals_Ours(0x00239220))
-#define ShadowSimulationRandom (*(SimRandom **)0x00233ff0)
-#define ShadowTuningLevel ((char *)0x00244084)
+#define ShadowSimulationRandom (*(SimRandom **)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowTuningLevel ((char *)OwnedGlobals_Ours(0x00244084))
 
 // ---- results
 
@@ -1491,10 +1491,10 @@ void BuildRegions() {
     if (ShadowSimulationRandom != NULL)
         AddShared(ShadowSimulationRandom, sizeof(SimRandom), "the Simulation's SimRandom");
     // Both sides read these at the game's addresses: put back, not compared
-    AddShared((const void *)0x00234e24, 4, "SimState", false);
-    AddShared((const void *)0x00234e2c, 4, "SimStepsPerSecond", false);
-    AddShared((const void *)0x00234e30, 8, "SimTimeStep, SimStepCount", false);
-    AddShared((const void *)0x00234e40, 4, "the player list pointer", false);
+    AddShared((const void *)OwnedGlobals_Ours(0x00234e24), 4, "SimState", false);
+    AddShared((const void *)OwnedGlobals_Ours(0x00234e2c), 4, "SimStepsPerSecond", false);
+    AddShared((const void *)OwnedGlobals_Ours(0x00234e30), 8, "SimTimeStep, SimStepCount", false);
+    AddShared((const void *)OwnedGlobals_Ours(0x00234e40), 4, "the player list pointer", false);
     AddShared((const void *)OwnedGlobals_Ours(0x00239220), 4, "glbMissionManager", false);
     AddShared(fgSimulation.simpleBodyHits, kSlots * sizeof(BitSet192), "SimpleBodyHits");
     AddShared(&fgSimulation.simpleRigidBodyOwners[kOwnerSlot], 6 * sizeof(PhysicsObject *), "SimpleBodyOwners", false);

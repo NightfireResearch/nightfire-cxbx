@@ -62,7 +62,7 @@ struct LaunchPage {
     int32_t driveCount;         // +0x5dc counted up by every start of the driving engine
     uint8_t unknown5e0[0x4];
     int32_t bestScores[12];     // +0x5e4 the sets' best scores, added, by MissionScore
-    int32_t unknown614;         // +0x614 2 when unknown970 is set, else 0
+    int32_t wideScreen;         // +0x614 2 when unknown970 is set, else 0; non-zero: ConfigureRes chooses 16:9
     int32_t bootCount;          // +0x618 counted up by every start of main; 1 on the first
     float healthRatio;          // +0x61c the health left at the end of the last part (0 to 1)...
     float shieldRatio;          // +0x620 ... and shield: ResetCharInfo carries them into the next part
@@ -116,7 +116,7 @@ struct LaunchPage {
     // Whether the mission's end state (unknown978) is 1 or 4 (0x000d7bd0, among GGirl's; the name ours)
     bool IsEndState1Or4();
 };
-#define Launch (*(LaunchPage *)0x00243b90)
+extern LaunchPage Launch;
 
 // LaunchPage::flags bits the game reads (names ours, from what the code does with them)
 enum LaunchFlags : uint32_t {

@@ -240,7 +240,7 @@ __declspec(naked) void CallTriangleNormal(const StripVertex *triangle, float *no
 
 #define fgCollisionMgr (*(WCollisionMgr **)OwnedGlobals_Ours(0x00239a70))
 #define fgGrid (*(GridView **)OwnedGlobals_Ours(0x0023b3a0))
-#define ScratchPad ((uint8_t *)0x00234f20)      // Simulation::GetScratchPadFreeZone's answer
+#define ScratchPad ((uint8_t *)OwnedGlobals_Ours(0x00234f20))      // Simulation::GetScratchPadFreeZone's answer
 #define LargeStripScratch ((uint8_t *)0x00239a80)
 
 struct GridView {               // WGrid

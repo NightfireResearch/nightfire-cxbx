@@ -3,6 +3,7 @@
 #endif
 
 #include "RigidCollideShadow.h"
+#include "OwnedGlobals.h"
 #include "RigidOrigGlobals.h"
 #include "FpControl.h"
 
@@ -68,8 +69,8 @@ namespace {
 #define Orig_ResolveWorldOBBCollision ((bool (__fastcall *)(RigidBody *, int, const Coord4 *, const Coord4 *, float, CollisionImpact *, const Coord3 *, float))0x000af960)
 #define Game_GetRigidBody ((RigidBody *(__fastcall *)(void *, int, int slot))0x000b2700)
 
-#define ShadowSim ((void *)0x00233ff0)
-#define ShadowStepCount U32_AT(0x00234e34)
+#define ShadowSim ((void *)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowStepCount U32_AT(OwnedGlobals_Ours(0x00234e34))
 
 const unsigned kEntries[] = { 0x000af960, 0x000b0510, 0x000b1420 };
 const int kSlots = 64;

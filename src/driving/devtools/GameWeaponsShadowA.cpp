@@ -99,17 +99,17 @@ const unsigned kEntries[] = {
 
 #define ShadowWeaponManager (*(SWeaponManager **)OwnedGlobals_Ours(0x0023923c))
 #define ShadowMission (*(uint8_t **)OwnedGlobals_Ours(0x00239220))
-#define ShadowSimState I32_AT(0x00234e24)
-#define ShadowStepsPerSecond I32_AT(0x00234e2c)
-#define ShadowStepCount I32_AT(0x00234e34)
-#define ShadowPlayer (*(PVehicle ***)0x00234e40)
+#define ShadowSimState I32_AT(OwnedGlobals_Ours(0x00234e24))
+#define ShadowStepsPerSecond I32_AT(OwnedGlobals_Ours(0x00234e2c))
+#define ShadowStepCount I32_AT(OwnedGlobals_Ours(0x00234e34))
+#define ShadowPlayer (*(PVehicle ***)OwnedGlobals_Ours(0x00234e40))
 #define ShadowCanNeverLose U8_AT(OwnedGlobals_Ours(0x00239218))
 #define ShadowColorize (*(uint8_t **)OwnedGlobals_Ours(0x001f6898))
 #define ShadowHands (*(void **)OwnedGlobals_Ours(0x001dda90))
 #define ShadowAIElement (*(void **)OwnedGlobals_Ours(0x001ddee4))
-const uint32_t kLaunchFlags = 0x00244530;
-const uint32_t kLaunchCheats = 0x00244534;
-const uint32_t kLaunchAutoSwitch = 0x002445d8;
+const uint32_t kLaunchFlags = OwnedGlobals_OursWord(0x00244530);
+const uint32_t kLaunchCheats = OwnedGlobals_OursWord(0x00244534);
+const uint32_t kLaunchAutoSwitch = OwnedGlobals_OursWord(0x002445d8);
 const uint32_t kBondPressed = OwnedGlobals_OursWord(0x001dda2c);
 const uint32_t kWeaponTable = OwnedGlobals_OursWord(0x001c94d8);
 
@@ -1326,9 +1326,9 @@ void BuildRegions() {
     Add(g_newWeaponsBlock, sizeof(g_newWeaponsBlock), "the new weapons");
     Add(g_newQueueBlock, sizeof(g_newQueueBlock), "the new action queue");
     AddGame(OwnedGlobals_OursWord(0x0023923c), 4, "WeaponManager");
-    AddGame(0x00234e24, 4, "the simulation's state");
-    AddGame(0x00234e2c, 4, "the steps a second");
-    AddGame(0x00234e34, 4, "the simulation's step");
+    AddGame(OwnedGlobals_OursWord(0x00234e24), 4, "the simulation's state");
+    AddGame(OwnedGlobals_OursWord(0x00234e2c), 4, "the steps a second");
+    AddGame(OwnedGlobals_OursWord(0x00234e34), 4, "the simulation's step");
     AddGame(OwnedGlobals_OursWord(0x00239218), 1, "gPlayerCanNeverLose");
     AddGame(kLaunchFlags, 8, "the launch flags");
     AddGame(kLaunchAutoSwitch, 4, "the auto-switch option");

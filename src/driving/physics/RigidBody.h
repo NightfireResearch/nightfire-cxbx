@@ -200,7 +200,7 @@ extern float RigidPlayerGravity;   // BODGE_PLAYER_GRAVITY at start; -34 for "ju
 extern float RigidGroundRestitutionRate;        // GROUND_RESTITUTION / MICRO_THRESHOLD at start-up
 extern float RigidRestitutionRateC8;            // 0x001c8f3c's value / MICRO_THRESHOLD at start-up
 extern float RigidBuildingRestitutionRate;      // BUILDING_COEFF_RESTITUTION / BUILDING_MICRO_THRESHOLD at start-up
-#define DamageSourceSig ((const uint32_t *)0x00233fe8)  // the source world and object damage name (the name is ours)
+extern uint32_t DamageSourceSig;                // the source world and object damage name (the name is ours)
 extern float Rigid_GRAVITY;
 extern float Rigid_BODGE_PLAYER_GRAVITY;
 extern float Rigid_MICRO_THRESHOLD;

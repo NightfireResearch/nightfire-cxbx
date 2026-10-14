@@ -1,5 +1,6 @@
 #include "LaunchOptions.h"
 #include "../../common/launchInfo.h"
+#include "../engine/GameLoop.h"      // LaunchPage
 
 #include <windows.h>
 #include <shellapi.h>
@@ -13,7 +14,7 @@
 // The driving engine is told which mission to run by the launch data page the action engine hands it
 // (psiLaunch.bin here, see src/common/launchInfo.cpp). main (0x0005a1b0) reads it through
 // ApplicationMemoryHeapConfig, then MissionNumToString (0x000596a0) turns the page's MissionNum into the track
-// to load - provided the page's hand-over flag (0x002444f0) is set:
+// to load - provided the page's hand-over flag (handOver) is set:
 //
 //     1 paris_mis01     "Paris Prelude"
 //     2 uw_mis11        "Deep Descent"
@@ -39,7 +40,7 @@
 // Both change the page as it is read and nothing else, so everything downstream - the loading screen, the
 // mission scripts, ReturnToAction's hand-back - sees the same page the action engine would have written. With
 // no psiLaunch.bin, a clean hand-over page stands in (below). A page left by a between-parts relaunch has
-// "LOADER READY" at 0x00244044, which main takes to mean "second boot" and skips its own argument parsing for;
+// "LOADER READY" in loaderReady, which main takes to mean "second boot" and skips its own argument parsing for;
 // -mission clears it, since the point is a first boot into the named mission.
 //
 // Any other argument beginning with '-' or '+' is passed to the game's own main, which knows -ntsc, -pal,
@@ -50,12 +51,6 @@
 // beginning with '-' or '+' ends them (src/loader/loadermain.cpp), and everything from there on is read here.
 // ---------------------------------------------------------------------------------------------------------------
 
-// Offsets into the page, which the game reads at 0x00243b90 (uberBondScoreBuffer).
-static const unsigned PAGE_HANDOVER    = 0x002444f0 - 0x00243b90;   // non-zero: the action engine sent us
-static const unsigned PAGE_MISSION     = 0x00244504 - 0x00243b90;   // MissionNum
-static const unsigned PAGE_DIFFICULTY  = 0x00244514 - 0x00243b90;
-static const unsigned PAGE_SECOND_BOOT = 0x00244044 - 0x00243b90;   // "LOADER READY", 12 bytes
-static const unsigned PAGE_SECOND_BOOT_BYTES = 12;
 
 static const char *const MISSION_TRACKS[] = {
     NULL, "paris_mis01", "uw_mis11", "junglea_mis13a", "jungleb_mis13b",
@@ -99,14 +94,15 @@ static bool ApplyToPage(void *page, bool fromFile) {
             SetWord(page, DEFAULT_PAGE[i].offset, DEFAULT_PAGE[i].value);
         printf("[launch] no psiLaunch.bin - starting from a clean hand-over page\n");
     }
+    LaunchPage *launch = static_cast<LaunchPage *>(page);
     if (g_mission != 0) {
-        SetWord(page, PAGE_HANDOVER, 1);
-        SetWord(page, PAGE_MISSION, (unsigned)g_mission);
-        memset((unsigned char *)page + PAGE_SECOND_BOOT, 0, PAGE_SECOND_BOOT_BYTES);
+        launch->handOver = 1;
+        launch->missionNum = g_mission;
+        memset(launch->loaderReady, 0, sizeof(launch->loaderReady));
         printf("[launch] -mission: mission %d, %s\n", g_mission, MISSION_TRACKS[g_mission]);
     }
     if (g_difficulty != 0) {
-        SetWord(page, PAGE_DIFFICULTY, (unsigned)g_difficulty);
+        launch->difficulty = g_difficulty;
         printf("[launch] -difficulty: %d\n", g_difficulty);
     }
     fflush(stdout);

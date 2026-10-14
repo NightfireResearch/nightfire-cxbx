@@ -284,7 +284,7 @@ void RigidBody::CollideWithObject(int index, int unknown) {
         }
         if (damage > 0.0f)
             impact.unknown4a = uint16_t(ownerA->ApplyDamageVirtual(&contact, &position, damage,
-                                                                   Rigid_ObjectDamageFactor, 1, DamageSourceSig));
+                                                                   Rigid_ObjectDamageFactor, 1, &DamageSourceSig));
         damage = float(double(impact.damageScaleB) * Rigid_DamageScale * damageB);
         if (other->kind < kFirstObjectKind) {
             damage *= 3.0f;
@@ -293,7 +293,7 @@ void RigidBody::CollideWithObject(int index, int unknown) {
         }
         if (damage > 0.0f)
             impact.tag = uint16_t(ownerB->ApplyDamageVirtual(&contact, &other->position, damage,
-                                                             Rigid_ObjectDamageFactor, 1, DamageSourceSig));
+                                                             Rigid_ObjectDamageFactor, 1, &DamageSourceSig));
         RaiseCollisionEvent(impact);
     }
 }

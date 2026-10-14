@@ -156,10 +156,10 @@ struct ShadowRenderer {
 #define ShadowWorldCulling ((uint8_t *)OwnedGlobals_Ours(0x001f2c80))
 const uint32_t kWorldCullingBytes = 0xa0;
 
-#define ShadowCars (*(GameVector<PhysicsObject *> *)0x00234e3c)
-#define ShadowMissiles (*(GameVector<PhysicsObject *> *)0x00234e7c)
-#define ShadowGrenades (*(GameVector<PhysicsObject *> *)0x00234e9c)
-#define ShadowShells (*(GameVector<PhysicsObject *> *)0x00234eac)
+#define ShadowCars (*(GameVector<PhysicsObject *> *)OwnedGlobals_Ours(0x00234e3c))
+#define ShadowMissiles (*(GameVector<PhysicsObject *> *)OwnedGlobals_Ours(0x00234e7c))
+#define ShadowGrenades (*(GameVector<PhysicsObject *> *)OwnedGlobals_Ours(0x00234e9c))
+#define ShadowShells (*(GameVector<PhysicsObject *> *)OwnedGlobals_Ours(0x00234eac))
 #define ShadowCullingEye (*(const Coord4 *)OwnedGlobals_Ours(0x001f2cd0))
 
 const uint32_t kViewPortActive = 0x188;
@@ -669,7 +669,7 @@ bool ReadsMissingInfo(PhysicsObject *anchor, Op op) {
         return false;
     if (op == kOpAnchorAcceleration && anchor->type != 1)
         return false;
-    RigidBodyFields *body = ShadowGetRigidBody((void *)0x00233ff0, 0, anchor->rigidBodySlot);
+    RigidBodyFields *body = ShadowGetRigidBody((void *)OwnedGlobals_Ours(0x00233ff0), 0, anchor->rigidBodySlot);
     return body == NULL || body->info == NULL;
 }
 

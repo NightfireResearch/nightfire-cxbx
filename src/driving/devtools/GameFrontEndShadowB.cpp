@@ -195,16 +195,16 @@ void HooksRemove(int mark) {
 // ---- the state a case sets, and the fakes' answers
 
 #define GameAutoAimFrame I32_AT(0x0023f56c)
-#define ShLaunch (*(LaunchPage *)0x00243b90)
-#define ShLives I32_AT(0x002440cc)
+#define ShLaunch (*(LaunchPage *)OwnedGlobals_Ours(0x00243b90))
+#define ShLives I32_AT(OwnedGlobals_Ours(0x002440cc))
 #define ShMission (*(SMissionManager **)OwnedGlobals_Ours(0x00239220))
 #define ShMissionState I32_AT((uintptr_t(ShMission) + 0x474))
 #define ShMissionEndTime I32_AT((uintptr_t(ShMission) + 0x70c))
 #define ShPicker (*(WTargetPicker *)OwnedGlobals_Ours(0x0023e1b0))
 #define GameHudOn U8_AT(0x001b7055)           // the game's copies of gHudOn and gDAudio
 #define GameDAudio U8_AT(0x001e4761)
-#define ShSimState I32_AT(0x00234e24)
-#define ShPlayerList PTR_AT(0x00234e40)
+#define ShSimState I32_AT(OwnedGlobals_Ours(0x00234e24))
+#define ShPlayerList PTR_AT(OwnedGlobals_Ours(0x00234e40))
 
 struct Fakes {
     int selected;                       // the target GetSelectedTarget answers, -1 for none
@@ -963,7 +963,7 @@ void PerturbState(State &s) {
     weapon.id = Pick(kIds);
     // Fired at or before the current step, as in the game: a later step makes the rocket's charge negative, and
     // DrawCrossHairs then draws its recharge bar's segments some four billion times on both sides
-    weapon.fireSteps[0] = Random(2) ? 0 : I32_AT(0x00234e34) - int32_t(Random(3000));
+    weapon.fireSteps[0] = Random(2) ? 0 : I32_AT(OwnedGlobals_Ours(0x00234e34)) - int32_t(Random(3000));
     weapon.refireSteps = int32_t(Random(200)) + 1;
     s.widescreen = Random(2) != 0;
     s.videoMode = int32_t(Random(3));

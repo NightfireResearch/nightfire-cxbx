@@ -734,7 +734,7 @@ RParticle RandomParticle(int bodySlot) {
 void TestCache(bool canDraw, bool haveCamera) {
     RLibData *types = Library()->data;
     int bodySlot = -1;
-    PhysicsObject *player = PTR_AT(0x00234e40) != NULL ? *static_cast<PhysicsObject **>(PTR_AT(0x00234e40)) : NULL;
+    PhysicsObject *player = PTR_AT(OwnedGlobals_Ours(0x00234e40)) != NULL ? *static_cast<PhysicsObject **>(PTR_AT(OwnedGlobals_Ours(0x00234e40))) : NULL;
     if (player != NULL)
         bodySlot = player->rigidBodySlot;
     Watch("cache", &g_cache, sizeof(g_cache));

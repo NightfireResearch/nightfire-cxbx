@@ -1052,7 +1052,7 @@ void ERandomExplosion::Process() {
         point.y += 1.0f;
         const Coord3 direction = { 0.0f, 0.0f, 1.0f };
         fgSimulation.SpawnExplosion(kRandomExplosionKind, kRandomExplosionKind, &direction, Xyz(&point),
-                                    kRandomExplosionForce, 0, NULL, DamageSourceSig);
+                                    kRandomExplosionForce, 0, NULL, &DamageSourceSig);
     }
 }
 

@@ -100,13 +100,13 @@ namespace {
 
 #define LiveFeedbackAllowed BOOL8_AT(OwnedGlobals_Ours(0x001b6f50))
 #define LiveSoundOption BOOL8_AT(OwnedGlobals_Ours(0x001b7054))
-#define LiveSimState I32_AT(0x00234e24)
-#define LiveCarsFirst (*(PhysicsObject ***)0x00234e40)
+#define LiveSimState I32_AT(OwnedGlobals_Ours(0x00234e24))
+#define LiveCarsFirst (*(PhysicsObject ***)OwnedGlobals_Ours(0x00234e40))
 #define LiveMissionManager PTR_AT(OwnedGlobals_Ours(0x00239220))
 #define LiveWeaponManager PTR_AT(OwnedGlobals_Ours(0x0023923c))
-#define LiveMissionName ((char *)0x00244084)
+#define LiveMissionName ((char *)OwnedGlobals_Ours(0x00244084))
 #define LiveRenderSeed U32_AT(OwnedGlobals_Ours(0x001c45c4))
-#define LivePhysicsObjects ((PhysicsObject **)0x002342a0)
+#define LivePhysicsObjects ((PhysicsObject **)OwnedGlobals_Ours(0x002342a0))
 #define LiveScheduler PTR_AT(OwnedGlobals_Ours(0x001e520c))
 #define LiveRenderHigh PTR_AT(OwnedGlobals_Ours(0x001ec488))
 
@@ -381,7 +381,7 @@ std::string Name(const void *p) {
         return "simrate";
     if (LiveRenderHigh != NULL && p == *reinterpret_cast<void **>(uintptr_t(LiveRenderHigh) + 4))
         return "camera";
-    if (p == reinterpret_cast<const void *>(0x00243b90))
+    if (p == reinterpret_cast<const void *>(OwnedGlobals_Ours(0x00243b90)))
         return "launch";
     return "?";
 }
@@ -827,7 +827,7 @@ int __fastcall FakeApplyDamage(PhysicsObject *self, int, const void *a, const vo
                                int kind, const uint32_t *source) {
     Log("ApplyDamage %s %s [%s] [%s] %08x %08x %d %s", Name(self).c_str(), Name(a).c_str(), Floats(a, 3).c_str(),
         Floats(b, 3).c_str(), Bits(amount), Bits(split), kind,
-        source == reinterpret_cast<const uint32_t *>(0x00233fe8) ? "damagesig" : Name(source).c_str());
+        source == reinterpret_cast<const uint32_t *>(OwnedGlobals_Ours(0x00233fe8)) ? "damagesig" : Name(source).c_str());
     return 0x20;
 }
 void *__fastcall FakeGetAIGroundVehicle(PhysicsObject *self, int) {

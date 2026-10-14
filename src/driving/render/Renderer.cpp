@@ -15,6 +15,7 @@
 #include "RSceneObj.hpp"
 #include "TextureContext.h"
 #include "TimeData.h"
+#include "../engine/GameLoop.h"      // Launch
 #include "../../helpers.h"
 #include "../anim/Character.h"            // RSceneObjBrightness
 #include "../anim/ProcAnim.h"             // GetInstanceMatrix
@@ -55,12 +56,6 @@ RRenderer *fgRenderer;
 
 // ---- the game's globals
 
-#define ViewWidth I32_AT(0x001f2d7c)                  // the screen's size in pixels
-#define ViewHeight I32_AT(0x001f2d80)
-#define WideScreenOption I32_AT(0x002441a4)           // it or WideScreenSwitch makes ConfigureRes choose 16:9 (names ours)
-#define LaunchFlags U32_AT(0x00244530)
-#define LoaderReady U8_AT(0x00244044)                 // the first byte of "LOADER READY"; with the next, no capture file
-#define Unknown2445b0 U32_AT(0x002445b0)
 
 // XBE_GLOBAL(0x001caf5c, 4)
 const MATRIX4 *ViewProjectionMatrixPointer = reinterpret_cast<const MATRIX4 *>(ViewProjectionMatrix);
@@ -208,7 +203,7 @@ void RDrawGroup::AddToTranslucentList(const ReverseDrawEntry *draw) {
 
 // FUNC_AT(0x0007cfb0)
 void RRenderer::ConfigureRes() {
-    bool wide = WideScreenOption != 0 || WideScreenSwitch != 0;
+    bool wide = Launch.wideScreen != 0 || WideScreenSwitch != 0;
     if (Xbox_XGetVideoFlags() & kVideoFlagsWidescreen)
         wide = true;
     screenWidth = 640;
@@ -300,7 +295,7 @@ void RRenderer::DoScreenCapture() {
         out[2] = (source[2] + source[6]) >> 1;
     }
     int size = (Ftol(width) * Ftol(height) + 6) * 3;
-    if (!LoaderReady || Unknown2445b0 == 0)
+    if (!Launch.loaderReady[0] || Launch.dvdSource == 0)
         FILE_save(name, file, size);
     UMemory::Free(file);
     UMemory::Free(samples);
@@ -358,17 +353,17 @@ RRenderer* RRenderer::Construct(void *unused1, int unused2, bool unknown1C_) {
 
     FeatureManager::Init(screenWidth, screenHeight, 32, 0);
     FeatureManager::SetUserSpecifiedRenderFeatures();
-    ScreenWidthCopy = ViewWidth;
-    ScreenHeightCopy = ViewHeight;
+    ScreenWidthCopy = Features.width;
+    ScreenHeightCopy = Features.height;
     FeatureManager::SetTexelsAreOffset(false, false);
-    renderContext->SetSyncToVBL(!VBlankSyncOff && !(LaunchFlags & kLaunchNoSync));
+    renderContext->SetSyncToVBL(!VBlankSyncOff && !(Launch.flags & kLaunchNoSync));
     GetFoundationVideoMode();
     InitAllSimpleMaterials();
 
     // The full-screen viewport: (0, 0) the top left, a pixel a unit, z from -0.5 to -10 mapped to 0..1
     viewPort = renderContext->NewViewPort();
-    float width = (float)ViewWidth;
-    float height = (float)ViewHeight;
+    float width = (float)Features.width;
+    float height = (float)Features.height;
     viewPort->SetShape(0.0f, 0.0f, width, height, 0.01f, 1.0f);
     viewPort->SetOrthographicScreenSpace(1.0f, 0.5f, 10.0f);
     alignas(16) MATRIX4 view;

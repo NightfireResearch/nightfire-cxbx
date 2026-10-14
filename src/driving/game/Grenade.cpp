@@ -169,7 +169,7 @@ void Grenade::Simulate() {
             Coord3 forward;
             body->GetForwardVector(&forward);
             fgSimulation.SpawnExplosion(kMineExplosion, weaponType, &forward, &body->position, ExplosionSize(), 0, NULL,
-                                        DamageSourceSig);
+                                        &DamageSourceSig);
         }
     }
 
@@ -190,7 +190,7 @@ void Grenade::Simulate() {
         Coord3 forward;
         exploding->GetForwardVector(&forward);
         fgSimulation.SpawnExplosion(kMissileExplosion, weaponType, &forward, &exploding->position, ExplosionSize(), 0,
-                                    NULL, DamageSourceSig);
+                                    NULL, &DamageSourceSig);
         fgSimulation.DeletePhysicsObjectThunk(this);
     }
     collider.Destruct();
