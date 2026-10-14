@@ -1,11 +1,11 @@
 #include "dsndSeam.h"
 #include "DirectSound.h"
-#include "xaudio2Driving.h"
+#include "DrivingAudio.h"
 #include "../devtools/SndLockstep.h"
+#include "../platform/Host.h"
 
 #include "../../common/xbeEntrySeam.h"
 
-#include <windows.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,11 +30,11 @@
 // group is enough to keep the other two from ever running, and the rest of the table is stubbed so that
 // anything unexpected is reported rather than reaching the registers.
 //
-// WHAT IS BEHIND IT. XAudio2, through xaudio2Driving.cpp, which streams every buffer out of the game's own
-// memory a few milliseconds at a time - the only arrangement that works for EA's software mixer, whose six
+// WHAT IS BEHIND IT. The sound output (DrivingAudio.h: XAudio2, or SDL3 with NIGHTFIRE_SDL), which streams every
+// buffer out of the game's own memory a few milliseconds at a time - the only arrangement that works for EA's software mixer, whose six
 // looping 50 ms rings (one per 5.1 speaker) are rewritten twenty milliseconds at a time by its 100 Hz thread
 // with nothing said to DirectSound, because the console's hardware simply read the memory. The pooled
-// one-shot and looping buffers go the same way. If XAudio2 cannot start, the bookkeeping below stands on
+// one-shot and looping buffers go the same way. If the output cannot start, the bookkeeping below stands on
 // its own: buffers are created, given their data, played and stopped, and a buffer that has played for as
 // long as its data lasts reports itself stopped. EA's voice allocator reclaims buffers only when GetStatus
 // says they have finished (SNDDRV's 100 Hz thread polls it), so a seam that reported everything as
@@ -87,7 +87,7 @@ struct IDirectSoundBuffer {   // the seam's buffer
     // The silent bookkeeping, used only when there is no voice.
     bool     playing;
     bool     looping;
-    uint32_t startedAtMs;      // timeGetTime when Play was called, adjusted by SetCurrentPosition
+    uint32_t startedAtMs;      // HostTimeMs when Play was called, adjusted by SetCurrentPosition
     uint32_t durationMs;       // how long its data lasts, 0 if it has none yet
     uint32_t position;         // where SetCurrentPosition last put it
 };
@@ -97,7 +97,7 @@ struct IDirectSound {
     uint32_t unused;
 };
 static IDirectSound g_device = {};
-static bool g_audio = false;   // XAudio2 started
+static bool g_audio = false;   // the output started
 
 // How long a block of this format lasts. Xbox ADPCM packs 64 samples into each 36-byte block; PCM is the
 // obvious division. Both are per channel, and the game's buffers are mono.
@@ -127,7 +127,7 @@ static bool StillPlaying(IDirectSoundBuffer *buffer) {
         return false;
     if (buffer->looping || buffer->durationMs == 0)
         return true;
-    if (timeGetTime() - buffer->startedAtMs < buffer->durationMs)
+    if (HostTimeMs() - buffer->startedAtMs < buffer->durationMs)
         return true;
     buffer->playing = false;
     return false;
@@ -191,8 +191,8 @@ uint32_t __stdcall DirectSoundCreate(void *guid, IDirectSound **returnedDevice, 
     if (returnedDevice != NULL)
         *returnedDevice = &g_device;
     g_audio = DrivingAudio_Start();
-    printf(g_audio ? "[dsnd] DirectSound opened, XAudio2 behind it\n"
-                   : "[dsnd] DirectSound opened (silent: XAudio2 could not start)\n");
+    printf(g_audio ? "[dsnd] DirectSound opened, the output device behind it\n"
+                   : "[dsnd] DirectSound opened (silent: the output could not start)\n");
     fflush(stdout);
     return 0;
 }
@@ -235,7 +235,7 @@ uint32_t __stdcall IDirectSoundBuffer_Play(IDirectSoundBuffer *buffer, uint32_t 
         return 0;
     buffer->playing = true;
     buffer->looping = (flags & DSBPLAY_LOOPING) != 0;
-    buffer->startedAtMs = timeGetTime();
+    buffer->startedAtMs = HostTimeMs();
     DrivingAudio_Play(buffer->voice, buffer->looping);
     SndLockstep_BufferPlay(buffer, buffer->looping);   // NIGHTFIRE_SNDLOCKSTEP only
     return 0;
@@ -279,7 +279,7 @@ uint32_t __stdcall IDirectSoundBuffer_GetCurrentPosition(IDirectSoundBuffer *buf
     }
     uint32_t position = 0;
     if (buffer != NULL && buffer->dataBytes != 0 && StillPlaying(buffer) && buffer->durationMs != 0) {
-        uint32_t elapsed = timeGetTime() - buffer->startedAtMs;
+        uint32_t elapsed = HostTimeMs() - buffer->startedAtMs;
         if (buffer->looping)
             elapsed %= buffer->durationMs;
         position = (uint32_t)(((uint64_t)elapsed * buffer->dataBytes) / buffer->durationMs);
@@ -303,7 +303,7 @@ uint32_t __stdcall IDirectSoundBuffer_SetCurrentPosition(IDirectSoundBuffer *buf
     // Playing from part-way through means the rest is what is left to play, so the clock starts back there.
     if (buffer->dataBytes != 0 && buffer->durationMs != 0) {
         uint32_t into = (uint32_t)(((uint64_t)position * buffer->durationMs) / buffer->dataBytes);
-        buffer->startedAtMs = timeGetTime() - into;
+        buffer->startedAtMs = HostTimeMs() - into;
     }
     DrivingAudio_SetPosition(buffer->voice, position);
     SndLockstep_BufferPosition(buffer, position);   // NIGHTFIRE_SNDLOCKSTEP only

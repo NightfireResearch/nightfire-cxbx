@@ -66,6 +66,10 @@ BASE=lbase tools/runner/round.sh new                 # the full round: sync, bui
 python tools/runner/compare.py build/baselines/lbase_m1_idle build/remote/new_m1_idle
 ```
 
+`RUNNER_CMAKE_ARGS` makes `build` (and so `round.sh`) configure the runner's checkout again with those options before
+building: `-DNIGHTFIRE_SDL=ON`, for example (docs/driving/portable.md). The options stay in that checkout's cache, so
+set `-DNIGHTFIRE_SDL=OFF` afterwards.
+
 `round.sh <prefix> [lockstep|shadow|all] [missions]` runs the lockstep runs (each mission to tick 9000, idle and
 accelerating, 16 frames and the sound call trace, sound in lockstep) and the shadow runs (every shadow at once, per
 mission). It runs the shadow runs and the lockstep runs as two separate batches, and writes the summary to

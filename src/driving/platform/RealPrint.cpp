@@ -3,6 +3,7 @@
 
 #include "../../common/launchInfo.h"
 #include "CRuntime.h"
+#include "Host.h"                         // HostDebugBreak
 #include "XboxXapi.h"                     // Xbox_OutputDebugStringA, Xbox_WriteFile
 
 #include <windows.h>
@@ -213,7 +214,7 @@ void REAL_exit() {
         ExitCallbacks[i] = NULL;
     }
     if (dummyGetNullValue() != 0) {
-        DebugBreak();
+        HostDebugBreak();
         return;
     }
     XLaunchNewImageA(NULL, NULL);

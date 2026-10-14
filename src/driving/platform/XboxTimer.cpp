@@ -1,4 +1,5 @@
 #include "XboxTimer.h"
+#include "Host.h"
 #include <windows.h>
 #include <mmsystem.h>
 #include <stdio.h>
@@ -46,14 +47,14 @@ unsigned __stdcall Xbox_timeSetEvent(unsigned delayMs, unsigned resolutionMs,
     // scheduler's 15.6 ms quantum, which at a 20 ms period would deliver ticks in visible pairs; asking for
     // 1 ms costs a little power and is what every game of this era did.
     if (!g_periodRaised) {
-        if (timeBeginPeriod(1) == TIMERR_NOERROR)
+        if (HostRaiseTimerResolution())
             g_periodRaised = true;
         else
             printf("[timer] timeBeginPeriod(1) refused - ticks will be as coarse as the scheduler's quantum\n");
     }
 
     unsigned resolution = resolutionMs != 0 ? resolutionMs : 1;
-    unsigned id = timeSetEvent(delayMs, resolution, callback, user, flags);
+    unsigned id = HostSetTimerEvent(delayMs, resolution, callback, user, flags);
     if (id == 0) {
         printf("[timer] timeSetEvent(%u ms) failed - the game's clock will never advance\n", delayMs);
         fflush(stdout);
@@ -110,18 +111,18 @@ static const unsigned long long XBOX_CPU_HZ = 733333333ull;
 // The host counter converted to the console's cycle rate. Split into whole seconds and a remainder so that
 // the multiply cannot overflow: counter * 733e6 would overflow 64 bits within an hour of uptime at 10 MHz.
 static unsigned long long __cdecl Xbox_ReadCycleCounter(void) {
-    static LARGE_INTEGER frequency = { 0 };
-    if (frequency.QuadPart == 0) {
-        LARGE_INTEGER f;
-        if (!QueryPerformanceFrequency(&f) || f.QuadPart == 0)
-            f.QuadPart = 10000000;   // being wrong beats a divide by zero
+    static int64_t frequency = 0;
+    if (frequency == 0) {
+        int64_t f;
+        if (!HostQueryPerformanceFrequency(&f) || f == 0)
+            f = 10000000;   // being wrong beats a divide by zero
         frequency = f;
     }
 
-    LARGE_INTEGER now;
-    QueryPerformanceCounter(&now);
-    unsigned long long ticks = (unsigned long long)now.QuadPart;
-    unsigned long long hz = (unsigned long long)frequency.QuadPart;
+    int64_t now;
+    HostQueryPerformanceCounter(&now);
+    unsigned long long ticks = (unsigned long long)now;
+    unsigned long long hz = (unsigned long long)frequency;
     return (ticks / hz) * XBOX_CPU_HZ + ((ticks % hz) * XBOX_CPU_HZ) / hz;
 }
 
@@ -154,12 +155,12 @@ static void __declspec(naked) Xbox_RdtscHelper(void) {
 // XAPILIB::QueryPerformanceCounter and QueryPerformanceFrequency: __stdcall, one pointer, return 1 (each ends
 // RET 4). Replaced as a pair, because consistency between the two is all a caller can depend on.
 static BOOL __stdcall Xbox_QueryPerformanceCounter(LARGE_INTEGER *counter) {
-    QueryPerformanceCounter(counter);
+    HostQueryPerformanceCounter(&counter->QuadPart);
     return TRUE;
 }
 
 static BOOL __stdcall Xbox_QueryPerformanceFrequency(LARGE_INTEGER *frequency) {
-    if (!QueryPerformanceFrequency(frequency) || frequency->QuadPart == 0)
+    if (!HostQueryPerformanceFrequency(&frequency->QuadPart) || frequency->QuadPart == 0)
         frequency->QuadPart = 10000000;
     return TRUE;
 }

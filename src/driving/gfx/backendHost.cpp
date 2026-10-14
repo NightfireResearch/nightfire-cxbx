@@ -1,9 +1,10 @@
 #include "../../common/gfx/backendHost.h"
 
 #include "d3dSeam.h"
+#include "../platform/HostWindow.h"
 #include "../sound/dsndSeam.h"
 
-// The driving engine's answers to the three questions the shared D3D9 backend asks.
+// The driving engine's answers to the questions the shared D3D9 backend asks.
 //
 // Both settings are the action engine's settings.ini in that engine (XboxSettings.cpp); the driving engine
 // has no settings file yet, so these are the defaults that file would have given. The frame-timing line is
@@ -25,3 +26,13 @@ void GfxHost_ReportPeriodic(void) {
     D3dSeam_ReportMissing();
     DsndSeam_ReportMissing();
 }
+
+#ifdef NIGHTFIRE_SDL
+void *GfxHost_Window(void) {
+    return HostWindow_Native();
+}
+
+void GfxHost_SizeWindow(uint32_t width, uint32_t height) {
+    HostWindow_SetClientSize(width, height);
+}
+#endif

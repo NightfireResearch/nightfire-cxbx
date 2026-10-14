@@ -1,6 +1,7 @@
-#include "xaudio2Driving.h"
+#include "DrivingAudio.h"
 
 #include "../../common/sound/xadpcm.h"
+#include "../platform/Host.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -16,7 +17,15 @@
 #pragma comment(lib, "xaudio2.lib")
 #endif
 
-// See the header for the shape of this. The numbers that matter:
+// See the header for the shape of this. With XAudio2 each voice is a source voice of its own: it copies the next
+// chunk out of the game's memory each time XAudio2 finishes one, and reports as its play cursor the start of the
+// chunk playing now. A buffer it never rewrites costs a copy it did not need, which is nothing.
+//
+// Threads: XAudio2's own thread calls back when a chunk ends. The lock is never held across an XAudio2 call, so
+// that the callback thread - which XAudio2 calls with its own lock held - cannot deadlock against the game thread
+// inside Stop.
+//
+// The numbers that matter:
 //
 //  - a chunk is 192 samples per channel: four milliseconds at 48 kHz, and exactly three Xbox ADPCM blocks,
 //    so an ADPCM chunk is 108 bytes of the game's memory and never straddles a block;
@@ -62,7 +71,7 @@ static void AudioLog(const char *fmt, ...) {
 static IXAudio2 *g_xaudio = NULL;
 static IXAudio2MasteringVoice *g_master = NULL;
 static bool g_startAttempted = false;
-static CRITICAL_SECTION g_lock;
+static HostLock g_lock;
 
 static uint32_t g_statChunks = 0, g_statChunksWithSound = 0;   // since the last report
 static int g_voicesAlive = 0;
@@ -74,7 +83,7 @@ bool DrivingAudio_Start(void) {
     if (g_startAttempted)
         return g_xaudio != NULL;
     g_startAttempted = true;
-    InitializeCriticalSection(&g_lock);
+    HostInitLock(&g_lock);
 
     // XAudio2 is COM underneath, and nobody has initialised it on this thread. RPC_E_CHANGED_MODE
     // only means it was already up in the other model, which XAudio2 does not mind.
@@ -201,10 +210,10 @@ static void ComputeMatrix(const DrivingVoice *v, float matrix[OUTPUT_CHANNELS]) 
 
 static void ApplyMatrix(DrivingVoice *v) {
     float matrix[OUTPUT_CHANNELS];
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     ComputeMatrix(v, matrix);
     IXAudio2SourceVoice *voice = v->voice;
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
     if (voice != NULL)
         voice->SetOutputMatrix(NULL, v->channels, OUTPUT_CHANNELS, matrix);
 }
@@ -259,10 +268,10 @@ DrivingVoice *DrivingAudio_CreateVoice(uint32_t sampleRate, uint16_t formatTag, 
         return NULL;
     }
     ApplyMatrix(v);
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     if (g_voiceCount < MAX_VOICES) g_voices[g_voiceCount++] = v;
     g_voicesAlive++;
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
     return v;
 }
 
@@ -270,7 +279,7 @@ void DrivingAudio_Release(DrivingVoice *v) {
     if (v == NULL)
         return;
     IXAudio2SourceVoice *voice;
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     v->playing = false;
     v->generation++;
     voice = v->voice;
@@ -278,7 +287,7 @@ void DrivingAudio_Release(DrivingVoice *v) {
     for (int i = 0; i < g_voiceCount; i++)
         if (g_voices[i] == v) { g_voices[i] = g_voices[--g_voiceCount]; break; }
     g_voicesAlive--;
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
     if (voice != NULL) {
         voice->Stop(0);
         voice->FlushSourceBuffers();
@@ -291,7 +300,7 @@ void DrivingAudio_SetData(DrivingVoice *v, const void *data, uint32_t bytes) {
     if (v == NULL)
         return;
     IXAudio2SourceVoice *voice;
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     v->data = (const uint8_t *)data;
     v->dataBytes = (data != NULL) ? bytes : 0;
     v->readPos = v->playPos = v->stoppedAt = 0;
@@ -300,7 +309,7 @@ void DrivingAudio_SetData(DrivingVoice *v, const void *data, uint32_t bytes) {
     v->playing = false;
     v->generation++;
     voice = v->voice;
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
     // Whatever is queued is the old sound, and plays out - at most eight milliseconds of it - before the
     // new one, rather than being flushed (see the note at the top).
     if (wasPlaying && voice != NULL)
@@ -380,7 +389,7 @@ static bool SubmitNextChunk(DrivingVoice *v) {
     bool last = false;
     IXAudio2SourceVoice *voice = NULL;
     uint32_t samples = 0;
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     if (v->playing && v->voice != NULL && v->queued < CHUNK_QUEUE) {
         for (int i = 0; i < CHUNK_SLOTS; i++)
             if (!v->chunks[i].queued) { c = &v->chunks[i]; break; }
@@ -393,7 +402,7 @@ static bool SubmitNextChunk(DrivingVoice *v) {
             c = NULL;
         }
     }
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
     if (c == NULL)
         return false;
 
@@ -405,10 +414,10 @@ static bool SubmitNextChunk(DrivingVoice *v) {
     buffer.Flags = last ? XAUDIO2_END_OF_STREAM : 0;
     HRESULT hr = voice->SubmitSourceBuffer(&buffer);
     if (FAILED(hr)) {
-        EnterCriticalSection(&g_lock);
+        HostEnterLock(&g_lock);
         c->queued = false;
         v->queued--;
-        LeaveCriticalSection(&g_lock);
+        HostLeaveLock(&g_lock);
         return false;
     }
     return true;
@@ -421,28 +430,28 @@ static void FillQueue(DrivingVoice *v) {
 
 void __stdcall DrivingVoice::OnBufferStart(void *context) {
     Chunk *c = (Chunk *)context;
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     if (c != NULL && c->generation == generation)
         playPos = c->srcOffset;
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
 }
 
 void __stdcall DrivingVoice::OnBufferEnd(void *context) {
     Chunk *c = (Chunk *)context;
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     if (c != NULL && c->queued) { c->queued = false; queued--; }
     bool alive = voice != NULL;
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
     if (alive)
         FillQueue(this);   // does nothing unless the voice is playing
 }
 
 void __stdcall DrivingVoice::OnStreamEnd() {
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     playing = false;
     ending = false;
     stoppedAt = 0;
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
 }
 
 void DrivingAudio_Play(DrivingVoice *v, bool looping) {
@@ -450,7 +459,7 @@ void DrivingAudio_Play(DrivingVoice *v, bool looping) {
         return;
     IXAudio2SourceVoice *voice;
     bool restart;
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     restart = v->playing;
     v->statPlays++;
     v->playing = true;
@@ -461,7 +470,7 @@ void DrivingAudio_Play(DrivingVoice *v, bool looping) {
     if (v->readPos >= v->dataBytes) v->readPos = 0;
     v->playPos = v->readPos;
     voice = v->voice;
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
     if (voice == NULL)
         return;
     (void)restart;       // the chunks already queued play out first; nothing is flushed
@@ -473,13 +482,13 @@ void DrivingAudio_Stop(DrivingVoice *v) {
     if (v == NULL)
         return;
     IXAudio2SourceVoice *voice;
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     v->stoppedAt = v->playing ? v->playPos : v->stoppedAt;
     v->playing = false;
     v->ending = false;
     v->generation++;
     voice = v->voice;
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
     if (voice != NULL)
         voice->Stop(0);   // what is queued stays queued, for the resume
 }
@@ -487,19 +496,19 @@ void DrivingAudio_Stop(DrivingVoice *v) {
 bool DrivingAudio_IsPlaying(DrivingVoice *v) {
     if (v == NULL)
         return false;
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     bool playing = v->playing;
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
     return playing;
 }
 
 void DrivingAudio_GetPosition(DrivingVoice *v, uint32_t *playCursor, uint32_t *writeCursor) {
     uint32_t play = 0, write = 0;
     if (v != NULL) {
-        EnterCriticalSection(&g_lock);
+        HostEnterLock(&g_lock);
         play = v->playing ? v->playPos : v->stoppedAt;
         write = v->playing ? v->readPos : v->stoppedAt;
-        LeaveCriticalSection(&g_lock);
+        HostLeaveLock(&g_lock);
     }
     if (playCursor != NULL) *playCursor = play;
     if (writeCursor != NULL) *writeCursor = write;
@@ -510,7 +519,7 @@ void DrivingAudio_SetPosition(DrivingVoice *v, uint32_t bytes) {
         return;
     bool playing;
     IXAudio2SourceVoice *voice;
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     if (v->formatTag == WAVE_FORMAT_XBOX_ADPCM) {
         uint32_t block = (uint32_t)XAdpcm_BlockBytes(v->channels);
         bytes -= bytes % block;
@@ -524,7 +533,7 @@ void DrivingAudio_SetPosition(DrivingVoice *v, uint32_t bytes) {
         v->ending = false;
         v->generation++;
     }
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
     if (playing && voice != NULL)
         FillQueue(v);   // the new position follows the chunks already queued
 }
@@ -532,21 +541,21 @@ void DrivingAudio_SetPosition(DrivingVoice *v, uint32_t bytes) {
 void DrivingAudio_SetLoopRegion(DrivingVoice *v, uint32_t startBytes, uint32_t lengthBytes) {
     if (v == NULL)
         return;
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     v->loopStart = startBytes;
     v->loopLength = lengthBytes;
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
 }
 
 void DrivingAudio_SetVolume(DrivingVoice *v, int32_t hundredthsDb) {
     if (v == NULL)
         return;
     IXAudio2SourceVoice *voice;
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     bool changed = v->volume != hundredthsDb;
     v->volume = hundredthsDb;
     voice = v->voice;
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
     if (changed && voice != NULL)
         voice->SetVolume(HundredthsDbToAmplitude(hundredthsDb));
 }
@@ -555,12 +564,12 @@ void DrivingAudio_SetFrequency(DrivingVoice *v, uint32_t hz) {
     if (v == NULL || hz == 0)
         return;
     IXAudio2SourceVoice *voice;
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     bool changed = v->frequency != hz;
     v->frequency = hz;
     voice = v->voice;
     float ratio = (float)hz / (float)v->sampleRate;
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
     if (ratio > 4.0f) ratio = 4.0f;
     if (ratio < 0.0005f) ratio = 0.0005f;
     if (changed && voice != NULL)
@@ -570,14 +579,14 @@ void DrivingAudio_SetFrequency(DrivingVoice *v, uint32_t hz) {
 void DrivingAudio_SetMixBins(DrivingVoice *v, const uint32_t *bins, const int32_t *volumes, uint32_t count) {
     if (v == NULL)
         return;
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     v->binCount = 0;
     for (uint32_t i = 0; i < count && v->binCount < MAX_MIXBINS; i++) {
         v->bins[v->binCount] = bins[i];
         v->binVolumes[v->binCount] = volumes != NULL ? volumes[i] : 0;
         v->binCount++;
     }
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
     ApplyMatrix(v);
 }
 
@@ -585,7 +594,7 @@ void DrivingAudio_SetMixBinVolumes(DrivingVoice *v, const uint32_t *bins, const 
     if (v == NULL)
         return;
     bool changed = false;
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     for (uint32_t i = 0; i < count; i++) {
         bool found = false;
         for (uint32_t k = 0; k < v->binCount; k++) {
@@ -601,7 +610,7 @@ void DrivingAudio_SetMixBinVolumes(DrivingVoice *v, const uint32_t *bins, const 
             changed = true;
         }
     }
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
     if (changed)
         ApplyMatrix(v);
 }
@@ -610,14 +619,14 @@ void DrivingAudio_Report(void) {
     if (g_xaudio == NULL)
         return;
     int playing = 0;
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     for (int i = 0; i < g_voiceCount; i++) if (g_voices[i]->playing) playing++;
     uint32_t chunks = g_statChunks, withSound = g_statChunksWithSound;
     g_statChunks = g_statChunksWithSound = 0;
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
     AudioLog("[xa2] %u chunks streamed, %u with sound; %d voices, %d playing\n", chunks, withSound, g_voicesAlive, playing);
     // The three busiest voices: a voice churning through chunks names itself here.
-    EnterCriticalSection(&g_lock);
+    HostEnterLock(&g_lock);
     for (int n = 0; n < 3; n++) {
         DrivingVoice *top = NULL;
         for (int i = 0; i < g_voiceCount; i++)
@@ -630,5 +639,5 @@ void DrivingAudio_Report(void) {
         top->statChunks = 0;
     }
     for (int i = 0; i < g_voiceCount; i++) g_voices[i]->statChunks = g_voices[i]->statSeeks = g_voices[i]->statPlays = 0;
-    LeaveCriticalSection(&g_lock);
+    HostLeaveLock(&g_lock);
 }

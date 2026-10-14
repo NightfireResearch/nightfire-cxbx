@@ -690,7 +690,11 @@ static IDirect3DTexture9 *GetHostTexture(const void *headerPtr) {
 // The loader creates the render window itself and pumps its messages - see CreateRenderWindow in
 // src/loader/loadermain.cpp.
 static HWND FindRenderWindow(void) {
+#ifdef NIGHTFIRE_SDL
+    return (HWND)GfxHost_Window();
+#else
     return FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
+#endif
 }
 
 // The loader has to create its window before the game starts running, so at that point it cannot know what
@@ -700,6 +704,11 @@ static HWND FindRenderWindow(void) {
 //
 // Only a window of our own class is touched.
 static void SizeWindowToBackBuffer(HWND window, uint32_t width, uint32_t height) {
+#ifdef NIGHTFIRE_SDL
+    (void)window;
+    GfxHost_SizeWindow(width, height);
+    return;
+#endif
     char className[64];
     if (GetClassNameA(window, className, sizeof(className)) == 0 ||
         strcmp(className, NIGHTFIRE_RENDER_WINDOW_CLASS) != 0)

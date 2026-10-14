@@ -4,6 +4,7 @@
 #include "RealPrint.h"
 #include "RealSystem.h"
 #include "RefPack.h"
+#include "XboxStartup.h"
 #include "XboxXapi.h"
 #include "../devtools/SndLockstep.h"
 
@@ -343,7 +344,7 @@ static int Q_foreachlocked(LockQueue *q, QueueMatchFn fn, int argument) {   // 0
 
 static FileSlot *SlotOf(int slot) {
     if (slot >= 0 || ~slot >= SlotCount || Slots == NULL || Slots[~slot].handle == NULL) {
-        SetLastError(ERROR_INVALID_HANDLE);
+        Xbox_SetLastError(ERROR_INVALID_HANDLE);
         return NULL;
     }
     return &Slots[~slot];
@@ -379,7 +380,7 @@ static bool FILEDEV_opensub(int archiveSlot, int base, int size, int *out) {   /
     int i = FILEDEV_claim();
     *out = 0;
     if (i < 0) {
-        SetLastError(ERROR_TOO_MANY_OPEN_FILES);
+        Xbox_SetLastError(ERROR_TOO_MANY_OPEN_FILES);
         return false;
     }
     Slots[i].handle = Slots[~archiveSlot].handle;
@@ -404,9 +405,9 @@ static void FullPath(char *full, size_t size, const char *path) {
 static bool FILEDEV_open(const char *path, int mode, int *out) {   // 0x0010d2f0
     int i = FILEDEV_claim();
     *out = 0;
-    SetLastError(0);
+    Xbox_SetLastError(0);
     if (i < 0) {
-        SetLastError(ERROR_TOO_MANY_OPEN_FILES);
+        Xbox_SetLastError(ERROR_TOO_MANY_OPEN_FILES);
         return false;
     }
     DWORD access = (mode & MODE_READ) ? GENERIC_READ : GENERIC_READ | GENERIC_WRITE;
@@ -427,7 +428,7 @@ static bool FILEDEV_open(const char *path, int mode, int *out) {   // 0x0010d2f0
     Slots[i].handle = handle;
     Slots[i].pos = 0;
     Slots[i].base = 0;
-    Slots[i].size = (int)GetFileSize(handle, NULL);
+    Slots[i].size = (int)Xbox_GetFileSize(handle, NULL);
     *out = ~i;
     return true;
 }
@@ -447,20 +448,20 @@ static int FILEDEV_read(int slot, void *buffer, int offset, int count) {   // 0x
     FileSlot *s = SlotOf(slot);
     if (s == NULL)
         return 0;
-    SetLastError(0);
+    Xbox_SetLastError(0);
     int start = s->base, end = s->base + s->size;
     if (s->base != 0 || s->pos != offset) {
         s->pos = Clamp(s->base + offset, start, end);
-        s->pos = (int)SetFilePointer(s->handle, s->pos, NULL, FILE_BEGIN);
+        s->pos = (int)Xbox_SetFilePointer(s->handle, s->pos, NULL, FILE_BEGIN);
     }
     if ((int64_t)s->pos + count > end)
         count = end - s->pos;
     DWORD got = 0;
-    if (count > 0 && !ReadFile(s->handle, buffer, (DWORD)count, &got, NULL)) {
-        DWORD error = GetLastError();
+    if (count > 0 && !Xbox_ReadFile(s->handle, buffer, (DWORD)count, &got, NULL)) {
+        DWORD error = Xbox_GetLastError();
         if (ReadErrorHandler == NULL || !ReadErrorHandler())
             printf("FILESYS: read error %lu\n", error);   // the original slept forever here
-        SetLastError(error != 0 ? error : ERROR_READ_FAULT);
+        Xbox_SetLastError(error != 0 ? error : ERROR_READ_FAULT);
     }
     s->pos += (int)got;
     if (s->pos > end)
@@ -472,13 +473,13 @@ static int FILEDEV_write(int slot, const void *buffer, int offset, int count) { 
     FileSlot *s = SlotOf(slot);
     if (s == NULL)
         return 0;
-    SetLastError(0);
+    Xbox_SetLastError(0);
     if (s->pos != offset) {
         s->pos = Clamp(offset, 0, s->size);
-        s->pos = (int)SetFilePointer(s->handle, s->pos, NULL, FILE_BEGIN);
+        s->pos = (int)Xbox_SetFilePointer(s->handle, s->pos, NULL, FILE_BEGIN);
     }
     DWORD put = 0;
-    WriteFile(s->handle, buffer, (DWORD)count, &put, NULL);
+    Xbox_WriteFile(s->handle, buffer, (DWORD)count, &put, NULL);
     s->pos += (int)put;
     if (s->pos > s->size)
         s->size = s->pos;
@@ -490,16 +491,16 @@ static bool FILEDEV_close(int slot) {                              // 0x0010d760
     FileSlot *s = SlotOf(slot);
     if (s == NULL)
         return false;
-    SetLastError(0);
+    Xbox_SetLastError(0);
     if (s->base == 0 && s->handle != INVALID_HANDLE_VALUE)
-        CloseHandle(s->handle);
+        Xbox_CloseHandle(s->handle);
     memset(s, 0, sizeof(*s));
     return true;
 }
 
 static BOOL FILEDEV_delete(const char *path) {                     // 0x0010d7d0
     char full[256];
-    SetLastError(0);
+    Xbox_SetLastError(0);
     FullPath(full, sizeof(full), path);
     return Xbox_DeleteFileA(full);
 }
@@ -699,13 +700,13 @@ static void FILESYS_startworker(int index) {                       // 0x0010cae0
     Q_init(&w->pending, FsOpKey, 0);
     Q_init(&w->done, NULL, 0);   // the original copied the pending queue's lock
     SIGNAL_create(&w->signal);
-    w->doneEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
+    w->doneEvent = Xbox_CreateEventA(NULL, TRUE, FALSE, NULL);
     MUTEX_create(&w->atomicMutex);
     w->seq = 1;
     w->ceiling = 0xff;
     if (THREAD_createparam(&w->thread, FsWorkerThread, (void *)(intptr_t)index, 0, 0, 1)) {
-        WaitForSingleObject(w->doneEvent, INFINITE);
-        ResetEvent(w->doneEvent);
+        Xbox_WaitForSingleObject(w->doneEvent, INFINITE);
+        Xbox_ResetEvent(w->doneEvent);
     }
     Q_unlock(&FreeOps);
 }
@@ -742,7 +743,7 @@ static FsOp *FILESYS_allocop(int type, int priority, int userData, int index) { 
 
 static void Fail(FsOp *op) {
     op->status = ST_FAILED;
-    op->error = (int)GetLastError();
+    op->error = (int)Xbox_GetLastError();
 }
 
 static void Execute(FsOp *op) {
@@ -762,7 +763,7 @@ static void Execute(FsOp *op) {
         op->arg1 = op->type == OP_READ ? FILEDEV_read(op->slot, (void *)op->arg2, op->arg0, op->arg1)
                                        : FILEDEV_write(op->slot, (const void *)op->arg2, op->arg0, op->arg1);
         op->status = ST_OK;
-        op->error = (int)GetLastError();
+        op->error = (int)Xbox_GetLastError();
         if (op->error != 0)
             op->status = ST_FAILED;
         break;
@@ -810,13 +811,13 @@ static void Execute(FsOp *op) {
         }
         big->dirSize = BIG_dirsize(header);
         if (big->dirSize < 16) {
-            SetLastError(ERROR_BAD_FORMAT);
+            Xbox_SetLastError(ERROR_BAD_FORMAT);
             Fail(op);
             break;
         }
         big->dir = (uint8_t *)pFILE_malloc("BF Header", big->dirSize, 0);
         if (big->dir == NULL) {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            Xbox_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             Fail(op);
             break;
         }
@@ -837,7 +838,7 @@ FsTraceFn FsTrace = NULL;
 static void FsWorkerThread(void *parameter) {                      // 0x0010c110
     FsWorker *w = &FsWorkers[(intptr_t)parameter];
     w->alive = 1;
-    SetEvent(w->doneEvent);
+    Xbox_SetEvent(w->doneEvent);
     while (!WorkerExit) {
         Q_lock(&w->pending);
         FsOp *op = w->current = (FsOp *)Q_popfront(&w->pending);
@@ -865,7 +866,7 @@ static void FsWorkerThread(void *parameter) {                      // 0x0010c110
             op->flags = flags | OPF_CALLEDBACK;
             op->callback(op->handle, (flags & OPF_CANCELLED) ? ST_CANCELLED : op->status, op->userData);
         }
-        SetEvent(w->doneEvent);
+        Xbox_SetEvent(w->doneEvent);
     }
     w->alive = 0;
 }
@@ -1054,8 +1055,8 @@ int FILESYS_waitop(unsigned handle) {
             SYNCTASK_run(0);
             THREAD_yield(1);
         } else {
-            WaitForSingleObject(w->doneEvent, INFINITE);
-            ResetEvent(w->doneEvent);
+            Xbox_WaitForSingleObject(w->doneEvent, INFINITE);
+            Xbox_ResetEvent(w->doneEvent);
         }
     }
     return FILESYS_opstatus(handle);

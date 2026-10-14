@@ -1,4 +1,5 @@
 #include "PlayMPC.hpp"
+#include "../platform/Host.h"         // HostFindFirstFile
 #include "../platform/RealMemory.h"   // MEM_allocalign, MEM_free
 
 #define WIN32_LEAN_AND_MEAN
@@ -15,7 +16,7 @@
 #include "../eagl/RenderContext.h"
 #include "../eagl/View.h"
 #include "../platform/Pad.hpp"
-#include "../sound/xaudio2Driving.h"
+#include "../sound/DrivingAudio.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // The driving engine's movies, on FFmpeg - the counterpart of the action engine's engine/Fmv.cpp.
@@ -133,18 +134,18 @@ static FILE *OpenMovieFile(const char *path, long *base, long *size) {
     char pattern[MAX_PATH];
     if (!Xbox_ResolvePath("d:\\driving\\*.viv", pattern, sizeof(pattern)))
         return NULL;
-    WIN32_FIND_DATAA found;
-    HANDLE search = FindFirstFileA(pattern, &found);
-    if (search == INVALID_HANDLE_VALUE)
+    char found[HOST_MAX_PATH];
+    HostHandle search = HostFindFirstFile(pattern, found);
+    if (search == HOST_INVALID_HANDLE)
         return NULL;
     FILE *result = NULL;
     do {
         char archive[MAX_PATH];
-        snprintf(xboxPath, sizeof(xboxPath), "d:\\driving\\%s", found.cFileName);
+        snprintf(xboxPath, sizeof(xboxPath), "d:\\driving\\%s", found);
         if (Xbox_ResolvePath(xboxPath, archive, sizeof(archive)) && FindInBig(archive, rel, base, size))
             result = fopen(archive, "rb");
-    } while (result == NULL && FindNextFileA(search, &found));
-    FindClose(search);
+    } while (result == NULL && HostFindNextFile(search, found));
+    HostFindClose(search);
     return result;
 }
 

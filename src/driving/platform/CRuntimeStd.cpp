@@ -8,6 +8,7 @@
 
 #include "CRuntime.h"
 #include "CRuntimeInternal.h"
+#include "Host.h"
 #include "../data/StdStreams.h"
 #include "../engine/UMemory.hpp"
 #include "../../common/xbeOverload.h"
@@ -222,7 +223,7 @@ void ThrowFailure(const char *what) {
 
 // FUNC_AT(0x00130c99)
 InitLocks* GameStd::InitLocks::Construct() {
-    if (InterlockedIncrement(&InitLocksCount) == 0) {
+    if (HostInterlockedIncrement(&InitLocksCount) == 0) {
         for (int i = 0; i < kLibraryLocks; i++)
             KernelRtlInitializeCriticalSection(&LibraryLocks[i]);
     }
@@ -232,7 +233,7 @@ InitLocks* GameStd::InitLocks::Construct() {
 // The last destruction would destroy the locks, which on the Xbox (_Mtxdst) leaves nothing to do.
 // FUNC_AT(0x00130cc7)
 void GameStd::InitLocks::Destruct() {
-    InterlockedDecrement(&InitLocksCount);
+    HostInterlockedDecrement(&InitLocksCount);
 }
 
 // FUNC_AT(0x00130cef)
@@ -696,7 +697,7 @@ void GameStd::String::Xlen() {
 // FUNC_AT(0x001325ad)
 void __stdcall Crt::CxxThrowException(void *object, const ThrowInfo *info) {
     ULONG_PTR parameters[3] = { kCxxMagic, ULONG_PTR(object), ULONG_PTR(info) };
-    RaiseException(kCxxExceptionCode, EXCEPTION_NONCONTINUABLE, 3, parameters);
+    HostRaiseException(kCxxExceptionCode, EXCEPTION_NONCONTINUABLE, 3, parameters);
 }
 
 // The original destroys the elements made so far if a constructor throws; none here does.

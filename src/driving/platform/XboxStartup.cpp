@@ -1,4 +1,5 @@
 #include "XboxStartup.h"
+#include "Host.h"
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
@@ -58,9 +59,10 @@
 // static constructors, which only point DSOUND's own globals at its vtables - every DSOUND entry point is the
 // sound seam's, so nothing reads them.
 
-// The process heap is a Win32 heap. XAPI's heap entry points - RtlCreateHeap (0x001118dd), RtlAllocateHeap,
-// RtlFreeHeap, RtlReAllocateHeap, RtlSizeHeap - go to Win32's in XboxXapi.cpp, which is how the game's malloc and
-// free reach it, so the heap is made with HeapCreate here and its handle kept for the C runtime (CRuntime.cpp).
+// The process heap is the host's (Win32's on Windows). XAPI's heap entry points - RtlCreateHeap (0x001118dd),
+// RtlAllocateHeap, RtlFreeHeap, RtlReAllocateHeap, RtlSizeHeap - go to the host's in XboxXapi.cpp, which is how the
+// game's malloc and free reach it, so the heap is made with HeapCreate here and its handle kept for the C runtime
+// (CRuntime.cpp).
 
 // XBE_GLOBAL(0x0024b218, 4)
 HANDLE ProcessHeapHandle;
@@ -79,11 +81,11 @@ HANDLE ProcessHeapHandle;
 // ---------------------------------------------------------------------------------------------------------------
 
 DWORD __stdcall Xbox_GetLastError(void) {
-    return GetLastError();
+    return HostGetLastError();
 }
 
 void __stdcall Xbox_SetLastError(DWORD error) {
-    SetLastError(error);
+    HostSetLastError(error);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -102,7 +104,7 @@ void __stdcall Xbox_SetLastError(DWORD error) {
 void __stdcall Xbox_XapiInitProcess(void) {
     // The original asks for a growable heap (HEAP_GROWABLE) reserving 1 MB with 4 KB committed; a Win32 heap with
     // no maximum is growable.
-    ProcessHeapHandle = HeapCreate(0, 0x1000, 0);
+    ProcessHeapHandle = HostHeapCreate(0, 0x1000, 0);
     if (ProcessHeapHandle == NULL) {
         printf("[startup] the process heap could not be created - nothing can allocate\n");
         fflush(stdout);
@@ -132,33 +134,33 @@ void __stdcall Xbox_XapiInitProcess(void) {
 
 #define CrtDefaultMultibyteInfo ((void *)0x001d92b0u)
 
-static DWORD g_perThreadSlot = TLS_OUT_OF_INDEXES;
+static DWORD g_perThreadSlot = HOST_TLS_OUT_OF_INDEXES;
 
 void *__cdecl Xbox_getptd(void) {
     // TlsGetValue clears the last error on success, and this is reached from __dosmaperr, whose whole job is
     // to turn the last error into errno. Losing it there would turn a specific failure into a silent one.
-    DWORD lastError = GetLastError();
+    DWORD lastError = HostGetLastError();
 
     Crt::PerThreadData *ptd =
-        (g_perThreadSlot != TLS_OUT_OF_INDEXES) ? (Crt::PerThreadData *)TlsGetValue(g_perThreadSlot) : NULL;
+        (g_perThreadSlot != HOST_TLS_OUT_OF_INDEXES) ? (Crt::PerThreadData *)HostTlsGetValue(g_perThreadSlot) : NULL;
     if (ptd == NULL) {
         ptd = (Crt::PerThreadData *)Crt::calloc(1, sizeof(Crt::PerThreadData));
         if (ptd == NULL) {
-            SetLastError(lastError);
+            HostSetLastError(lastError);
             Crt::_amsg_exit(0x10);   // _RT_THREAD: no way to continue without per-thread state
             return NULL;
         }
 
-        ptd->threadId = GetCurrentThreadId();
+        ptd->threadId = HostGetCurrentThreadId();
         ptd->threadHandle = 0xffffffffu;
         ptd->randomSeed = 1;
         ptd->multibyteInfo = CrtDefaultMultibyteInfo;
 
-        if (g_perThreadSlot != TLS_OUT_OF_INDEXES)
-            TlsSetValue(g_perThreadSlot, ptd);
+        if (g_perThreadSlot != HOST_TLS_OUT_OF_INDEXES)
+            HostTlsSetValue(g_perThreadSlot, ptd);
     }
 
-    SetLastError(lastError);
+    HostSetLastError(lastError);
     return ptd;
 }
 
@@ -169,14 +171,14 @@ void *__cdecl Xbox_getptd(void) {
 // exercises is not. The cost if that ever changes is a leak of about 132 bytes per thread that exits.
 void __cdecl Xbox_freeptd(void *ptd) {
     (void)ptd;
-    if (g_perThreadSlot != TLS_OUT_OF_INDEXES)
-        TlsSetValue(g_perThreadSlot, NULL);
+    if (g_perThreadSlot != HOST_TLS_OUT_OF_INDEXES)
+        HostTlsSetValue(g_perThreadSlot, NULL);
 }
 
 // Returns zero exactly as the original does: _rtinit, which our startup stands in for, ignores the result.
 int __cdecl Xbox_mtinit(void) {
-    g_perThreadSlot = TlsAlloc();
-    if (g_perThreadSlot == TLS_OUT_OF_INDEXES) {
+    g_perThreadSlot = HostTlsAlloc();
+    if (g_perThreadSlot == HOST_TLS_OUT_OF_INDEXES) {
         printf("[startup] no Win32 TLS slot for the C runtime's per-thread data\n");
         fflush(stdout);
         return 0;
@@ -204,8 +206,8 @@ int __cdecl Xbox_mtinit(void) {
 // functions above, which are replaced whole.
 // ---------------------------------------------------------------------------------------------------------------
 
-static DWORD __stdcall Xbox_GetCurrentThreadId(void) {
-    return GetCurrentThreadId();
+DWORD __stdcall Xbox_GetCurrentThreadId(void) {
+    return HostGetCurrentThreadId();
 }
 
 // XAPI's SetThreadPriority (0x0010ea0f) turns the handle into a KTHREAD with ObReferenceObjectByHandle and
@@ -214,7 +216,7 @@ static DWORD __stdcall Xbox_GetCurrentThreadId(void) {
 // on both systems (the Xbox's own function only special-cases the two extremes, which Win32 handles), so the
 // whole thing is the Win32 function.
 BOOL __stdcall Xbox_SetThreadPriority(HANDLE thread, int priority) {
-    return SetThreadPriority(thread, priority);
+    return HostSetThreadPriority(thread, priority);
 }
 
 // XAPI's GetExitCodeThread (0x0010eaef) does the same: ObReferenceObjectByHandle, then the ETHREAD's
@@ -222,8 +224,8 @@ BOOL __stdcall Xbox_SetThreadPriority(HANDLE thread, int priority) {
 // read of address 0x650 - which is how the first part of a mission ended, in IFeedback's destructor waiting
 // for the force-feedback thread to finish (0x0010a8f0 polls it for STILL_ACTIVE, 0x103). The Win32 function
 // returns the same values: STILL_ACTIVE while the thread runs, its exit code after.
-static BOOL __stdcall Xbox_GetExitCodeThread(HANDLE thread, DWORD *exitCode) {
-    return GetExitCodeThread(thread, exitCode);
+BOOL __stdcall Xbox_GetExitCodeThread(HANDLE thread, DWORD *exitCode) {
+    return HostGetExitCodeThread(thread, exitCode);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -393,7 +395,7 @@ static char **BuildArgvInProcessHeap(int argc, char **source) {
     for (int i = 0; i < argc; i++)
         size += (unsigned)strlen(source[i]) + 1;
 
-    char **argv = (char **)HeapAlloc(ProcessHeapHandle, 0, size);
+    char **argv = (char **)HostHeapAlloc(ProcessHeapHandle, 0, size);
     if (argv == NULL) {
         printf("[startup] could not allocate the game's argv - starting it without arguments\n");
         return NULL;
@@ -431,13 +433,13 @@ static void __cdecl Xbox_Entry(void) {
     XapiThreadTlsSize = (uint32_t)tlsSize;
     **(int32_t **)(XbeTls + 2) = tlsSize / -4;
 
-    HANDLE thread = CreateThread(NULL, XbeStackCommit, mainXapiStartup, NULL, 0, NULL);
+    HANDLE thread = HostCreateThread(XbeStackCommit, mainXapiStartup, NULL, 0, NULL);
     if (thread == NULL) {
-        printf("[startup] the game's thread could not be created (error %lu)\n", GetLastError());
+        printf("[startup] the game's thread could not be created (error %lu)\n", HostGetLastError());
         fflush(stdout);
-        ExitProcess(1);
+        HostExitProcess(1);
     }
-    CloseHandle(thread);
+    HostCloseHandle(thread);
 }
 
 DWORD WINAPI mainXapiStartup(LPVOID unused) {

@@ -1,4 +1,5 @@
 #include "XboxXapi.h"
+#include "Host.h"
 #include "KernelImports.h"
 
 #include "../../common/xboxPath.h"
@@ -10,22 +11,23 @@
 #include <string.h>
 
 // ---------------------------------------------------------------------------------------------------------------
-// XAPI, the Xbox's cut-down Win32, replaced by the host's own.
+// XAPI, the Xbox's cut-down Win32, replaced by the host's own (Host.h; on Windows, Win32 itself).
 //
 // The driving engine reaches XAPI from EA's platform layer - THREAD and SIGNAL (threads and events), FILESYS and
 // FILE (files), MEM and UMemory (contiguous memory), the sound driver's threads - and from the C runtime, whose
 // malloc, free and realloc sit on XAPI's heap. Each of those XAPI functions is a thin wrapper over a kernel call
 // the loader already implements with the host's Win32 (src/loader/kernel.cpp, file.cpp), and every handle the
-// loader hands out is a Win32 handle. So each can be replaced by its Win32 namesake directly: the arguments are
-// the same, a handle made by one side can be used or closed by the other, and the game reads errors through
-// GetLastError, which is the host's already (Xbox_GetLastError in XboxStartup.cpp).
+// loader hands out is a Win32 handle. So each can be replaced by its Win32 namesake, through the host layer whose
+// Windows body is exactly those calls: the arguments are the same, a handle made by one side can be used or closed
+// by the other, and the game reads errors through GetLastError, which is the host's already (Xbox_GetLastError in
+// XboxStartup.cpp).
 //
 // What each was is from its code: the kernel calls it makes and its callers, since Ghidra has names for only some
 // of them. The addresses are the functions' entry points in Driving.xbe; each is patched to jump here.
 //
 // THE HEAP. XAPI's heap (RtlCreateHeap and its siblings, 0x00110847..0x001124b8) is NT's, and so is Win32's, with
 // the same flag bits; the game's malloc, calloc, free, realloc and _msize reached it only through the five entry
-// points below, and ours (CRuntime.cpp) call Win32's directly with the same arguments. Patched together before the
+// points below, and ours (CRuntime.cpp) call the host's directly with the same arguments. Patched together before the
 // heap is made (Inject_XboxXapi runs before the startup thread), every block is allocated and freed by the same
 // Win32 heap. The process heap handle (0x0024b218 in the game) is
 // XboxStartup.cpp's ProcessHeapHandle, made by HeapCreate there.
@@ -44,28 +46,28 @@
 static void *__stdcall Xbox_XapiCreateHeap(ULONG flags, void *base, ULONG reserve, ULONG commit, void *lock,
                                            void *parameters) {
     (void)base; (void)lock; (void)parameters;
-    return HeapCreate(0, commit, (flags & 2) ? 0 : reserve);
+    return HostHeapCreate(0, commit, (flags & 2) ? 0 : reserve);
 }
 
 // RtlAllocateHeap (0x00111d01), RtlFreeHeap (0x001124b8), RtlReAllocateHeap (0x001126ac), RtlSizeHeap
 // (0x0011135f): HEAP_NO_SERIALIZE (1), HEAP_GENERATE_EXCEPTIONS (4), HEAP_ZERO_MEMORY (8) and
 // HEAP_REALLOC_IN_PLACE_ONLY (0x10) are the same bits on both. Freeing null succeeds, as NT's does.
 static void *__stdcall Xbox_RtlAllocateHeap(HANDLE heap, ULONG flags, SIZE_T size) {
-    return HeapAlloc(heap, flags, size);
+    return HostHeapAlloc(heap, flags, size);
 }
 
 static BOOLEAN __stdcall Xbox_RtlFreeHeap(HANDLE heap, ULONG flags, void *block) {
     if (block == NULL)
         return TRUE;
-    return HeapFree(heap, flags, block) ? TRUE : FALSE;
+    return HostHeapFree(heap, flags, block) ? TRUE : FALSE;
 }
 
 static void *__stdcall Xbox_RtlReAllocateHeap(HANDLE heap, ULONG flags, void *block, SIZE_T size) {
-    return HeapReAlloc(heap, flags, block, size);
+    return HostHeapReAlloc(heap, flags, block, size);
 }
 
 static SIZE_T __stdcall Xbox_RtlSizeHeap(HANDLE heap, ULONG flags, void *block) {
-    return HeapSize(heap, flags, block);
+    return HostHeapSize(heap, flags, block);
 }
 
 // ---- contiguous memory and the kernel thunks
@@ -82,7 +84,7 @@ void *__stdcall Xbox_XPhysicalAlloc(ULONG size, ULONG address, ULONG alignment, 
     }
     void *block = KernelMmAllocateContiguousMemoryEx(size, lowest, highest, alignment, protect);
     if (block == NULL)
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        HostSetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return block;
 }
 
@@ -126,48 +128,51 @@ HANDLE __stdcall Xbox_CreateFileA(const char *path, DWORD access, DWORD share, S
     (void)security; (void)templateFile;
     char hostPath[MAX_PATH];
     if (path == NULL || !Xbox_ResolvePath(path, hostPath, sizeof(hostPath))) {
-        SetLastError(ERROR_PATH_NOT_FOUND);
+        HostSetLastError(ERROR_PATH_NOT_FOUND);
         return INVALID_HANDLE_VALUE;
     }
     if (share == 0)
         share = FILE_SHARE_READ | FILE_SHARE_WRITE;
-    return CreateFileA(hostPath, access, share, NULL, disposition, flags, NULL);
+    return HostCreateFile(hostPath, access, share, disposition, flags);
 }
 
 // DeleteFileA (0x0010fd88).
 BOOL __stdcall Xbox_DeleteFileA(const char *path) {
     char hostPath[MAX_PATH];
     if (path == NULL || !Xbox_ResolvePath(path, hostPath, sizeof(hostPath))) {
-        SetLastError(ERROR_PATH_NOT_FOUND);
+        HostSetLastError(ERROR_PATH_NOT_FOUND);
         return FALSE;
     }
-    return DeleteFileA(hostPath);
+    return HostDeleteFile(hostPath);
 }
 
 // ReadFile (0x0010f2c3), WriteFile (0x0010f3b0), SetFilePointer (0x0010f50a), GetFileSizeEx (0x0010f6f3),
-// GetFileSize (0x0010f731), CloseHandle (0x0010e9b9).
-static BOOL __stdcall Xbox_ReadFile(HANDLE file, void *buffer, DWORD bytes, DWORD *read, OVERLAPPED *overlapped) {
-    return ReadFile(file, buffer, bytes, read, overlapped);
+// GetFileSize (0x0010f731), CloseHandle (0x0010e9b9). Nothing reads or writes asynchronously: no caller passes an
+// OVERLAPPED.
+BOOL __stdcall Xbox_ReadFile(HANDLE file, void *buffer, DWORD bytes, DWORD *read, OVERLAPPED *overlapped) {
+    (void)overlapped;
+    return HostReadFile(file, buffer, bytes, read);
 }
 
 BOOL __stdcall Xbox_WriteFile(HANDLE file, const void *buffer, DWORD bytes, DWORD *written, OVERLAPPED *overlapped) {
-    return WriteFile(file, buffer, bytes, written, overlapped);
+    (void)overlapped;
+    return HostWriteFile(file, buffer, bytes, written);
 }
 
-static DWORD __stdcall Xbox_SetFilePointer(HANDLE file, LONG distance, LONG *distanceHigh, DWORD method) {
-    return SetFilePointer(file, distance, distanceHigh, method);
+DWORD __stdcall Xbox_SetFilePointer(HANDLE file, LONG distance, LONG *distanceHigh, DWORD method) {
+    return HostSetFilePointer(file, distance, distanceHigh, method);
 }
 
 static BOOL __stdcall Xbox_GetFileSizeEx(HANDLE file, LARGE_INTEGER *size) {
-    return GetFileSizeEx(file, size);
+    return HostGetFileSizeEx(file, &size->QuadPart);
 }
 
-static DWORD __stdcall Xbox_GetFileSize(HANDLE file, DWORD *sizeHigh) {
-    return GetFileSize(file, sizeHigh);
+DWORD __stdcall Xbox_GetFileSize(HANDLE file, DWORD *sizeHigh) {
+    return HostGetFileSize(file, sizeHigh);
 }
 
-static BOOL __stdcall Xbox_CloseHandle(HANDLE handle) {
-    return CloseHandle(handle);
+BOOL __stdcall Xbox_CloseHandle(HANDLE handle) {
+    return HostCloseHandle(handle);
 }
 
 // ---- events, waits and sleeping
@@ -175,34 +180,34 @@ static BOOL __stdcall Xbox_CloseHandle(HANDLE handle) {
 // CreateEventA (0x0010e864), SetEvent (0x0010e8c5), ResetEvent (0x0010e8e5), WaitForSingleObjectEx (0x0010e903),
 // WaitForSingleObject (0x0010e999), SleepEx (0x0010e947, "SleepMs" in Ghidra), Sleep (0x0010e9ab,
 // "SleepMilliseconds"). Event names are ignored, as nothing here opens one by name.
-static HANDLE __stdcall Xbox_CreateEventA(SECURITY_ATTRIBUTES *security, BOOL manualReset, BOOL initialState,
-                                          const char *name) {
+HANDLE __stdcall Xbox_CreateEventA(SECURITY_ATTRIBUTES *security, BOOL manualReset, BOOL initialState,
+                                   const char *name) {
     (void)security; (void)name;
-    return CreateEventA(NULL, manualReset, initialState, NULL);
+    return HostCreateEvent(manualReset, initialState);
 }
 
-static BOOL __stdcall Xbox_SetEvent(HANDLE event) {
-    return SetEvent(event);
+BOOL __stdcall Xbox_SetEvent(HANDLE event) {
+    return HostSetEvent(event);
 }
 
-static BOOL __stdcall Xbox_ResetEvent(HANDLE event) {
-    return ResetEvent(event);
+BOOL __stdcall Xbox_ResetEvent(HANDLE event) {
+    return HostResetEvent(event);
 }
 
 static DWORD __stdcall Xbox_WaitForSingleObjectEx(HANDLE handle, DWORD milliseconds, BOOL alertable) {
-    return WaitForSingleObjectEx(handle, milliseconds, alertable);
+    return HostWaitForObjectEx(handle, milliseconds, alertable);
 }
 
-static DWORD __stdcall Xbox_WaitForSingleObject(HANDLE handle, DWORD milliseconds) {
-    return WaitForSingleObject(handle, milliseconds);
+DWORD __stdcall Xbox_WaitForSingleObject(HANDLE handle, DWORD milliseconds) {
+    return HostWaitForObject(handle, milliseconds);
 }
 
-static DWORD __stdcall Xbox_SleepEx(DWORD milliseconds, BOOL alertable) {
-    return SleepEx(milliseconds, alertable);
+DWORD __stdcall Xbox_SleepEx(DWORD milliseconds, BOOL alertable) {
+    return HostSleepEx(milliseconds, alertable);
 }
 
 void __stdcall Xbox_Sleep(DWORD milliseconds) {
-    Sleep(milliseconds);
+    HostSleep(milliseconds);
 }
 
 // ---- threads
@@ -216,17 +221,17 @@ HANDLE __stdcall Xbox_CreateThread(SECURITY_ATTRIBUTES *security, SIZE_T stackSi
                                    LPTHREAD_START_ROUTINE start, void *parameter, DWORD flags,
                                    DWORD *threadId) {
     (void)security;
-    return CreateThread(NULL, stackSize, start, parameter, flags & CREATE_SUSPENDED, threadId);
+    return HostCreateThread(stackSize, start, parameter, flags & CREATE_SUSPENDED, threadId);
 }
 
-static void __stdcall Xbox_ExitThread(DWORD exitCode) {
-    ExitThread(exitCode);
+void __stdcall Xbox_ExitThread(DWORD exitCode) {
+    HostExitThread(exitCode);
 }
 
 // ResumeThread (0x0010ea61, "THREAD_resume" in Ghidra, though it is XAPI's: NtResumeThread, then the previous
 // suspend count, or -1 with the error set). EA's THREAD_create starts its threads suspended and resumes them here.
-static DWORD __stdcall Xbox_ResumeThread(HANDLE thread) {
-    return ResumeThread(thread);
+DWORD __stdcall Xbox_ResumeThread(HANDLE thread) {
+    return HostResumeThread(thread);
 }
 
 // ---- time
@@ -234,26 +239,26 @@ static DWORD __stdcall Xbox_ResumeThread(HANDLE thread) {
 // GetTimeZoneInformation (0x0010e4d2) and GetLocalTime (0x0010e684, which goes through the time-zone helper at
 // 0x0010e62e). The original reads the zone from the console's settings; the host's own is the user's.
 static DWORD __stdcall Xbox_GetTimeZoneInformation(TIME_ZONE_INFORMATION *zone) {
-    return GetTimeZoneInformation(zone);
+    return HostGetTimeZoneInformation(reinterpret_cast<HostTimeZone *>(zone));   // the same layout
 }
 
 // Its one caller is the dashboard clock (RVehicle::UpdatePosition, 0x000964b0).
 void __stdcall Xbox_GetLocalTime(SYSTEMTIME *time) {
     if (Teleport_LockstepLocalTime(time))   // NIGHTFIRE_LOCKSTEP: the same time in every run
         return;
-    GetLocalTime(time);
+    HostGetLocalTime(reinterpret_cast<HostSystemTime *>(time));   // the same layout
 }
 
 // ---- the rest
 
 // IsBadReadPtr (0x0014bf05) and IsBadWritePtr (0x0014bf6a): the original touches every page of the range under
 // a structured exception handler. Win32's does the same.
-static BOOL __stdcall Xbox_IsBadReadPtr(const void *pointer, UINT_PTR bytes) {
-    return IsBadReadPtr(pointer, bytes);
+BOOL __stdcall Xbox_IsBadReadPtr(const void *pointer, UINT_PTR bytes) {
+    return HostIsBadReadPtr(pointer, bytes);
 }
 
 static BOOL __stdcall Xbox_IsBadWritePtr(void *pointer, UINT_PTR bytes) {
-    return IsBadWritePtr(pointer, bytes);
+    return HostIsBadWritePtr(pointer, bytes);
 }
 
 // OutputDebugStringA (0x0010e832): the original hands the string to the kernel debugger (INT 2D), which a
@@ -284,7 +289,7 @@ void Inject_XboxXapi(void) {
     // loader takes it for its own copy (ApplyDiscPathSetting in src/loader/loadermain.cpp): a ';' or '#' starts
     // a comment, trailing whitespace goes, and empty leaves the default ("../disc" beside the executables).
     char discPath[MAX_PATH];
-    GetPrivateProfileStringA("Settings", "DiscPath", "", discPath, sizeof(discPath), ".\\settings.ini");
+    HostGetProfileString("Settings", "DiscPath", "", discPath, sizeof(discPath), ".\\settings.ini");
     discPath[strcspn(discPath, ";#")] = '\0';
     for (size_t length = strlen(discPath); length > 0 && (discPath[length - 1] == ' ' || discPath[length - 1] == '\t');)
         discPath[--length] = '\0';

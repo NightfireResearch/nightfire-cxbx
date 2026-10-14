@@ -625,7 +625,6 @@ add_library(drivinginject SHARED
   src/driving/data/AttributeSet.cpp
   src/driving/devtools/AttribShadow.cpp
   src/common/fmv/Ffmpeg.cpp
-  src/common/fmv/FmvAudio.cpp
   src/driving/engine/ActionQueue.cpp
   src/driving/engine/InputDevice.cpp
   src/driving/engine/IOModule.cpp
@@ -637,6 +636,7 @@ add_library(drivinginject SHARED
   src/driving/platform/XboxXapi.cpp
   src/driving/platform/RealSystem.cpp
   src/driving/platform/KernelImports.cpp
+  src/driving/platform/HostWin32.cpp
   src/driving/platform/RealPrint.cpp
   src/driving/platform/RealMemory.cpp
   src/driving/platform/FileSys.cpp
@@ -690,7 +690,6 @@ add_library(drivinginject SHARED
   src/driving/sound/snd/Platform.cpp
   src/driving/sound/snd/Stream.cpp
   src/driving/sound/dsndSeam.cpp
-  src/driving/sound/xaudio2Driving.cpp
   src/common/sound/xadpcm.cpp
   src/common/xbeEntrySeam.cpp
   src/common/xbeProfiler.cpp
@@ -705,6 +704,49 @@ add_library(drivinginject SHARED
 # d3d9/d3dcompiler for the shared graphics backend the D3D8 seam dispatches to.
 # XAUDIO2_LIB is xaudio2 or xaudio2_9 - see actioninject above.
 target_link_libraries(drivinginject PRIVATE d3d9 d3dcompiler winmm xinput9_1_0 ${XAUDIO2_LIB} shell32)
+
+# The driving engine's window, input and sound output (docs/driving/portable.md). Off: the loader's Win32 window,
+# XInput and the keyboard through Win32, XAudio2. On: SDL3 for all three - the window opened by the injection DLL
+# for the loader (src/inject_driving.cpp), SDL's gamepads and keyboard, and a voice mixer of ours on an SDL audio
+# stream (src/driving/sound/sdlAudioDriving.cpp); the movies' sound goes to the same device.
+#
+# SDL3 is built from source, pinned to a release tag, so that every host (MSVC, the mingw cross build, a Linux -m32
+# build) gets the same version from the same place, with no prebuilt to keep per toolchain; NF_SDL3_DIR takes an
+# installed SDL3's CMake package instead (SDL3Config.cmake's directory), for a machine without network access.
+option(NIGHTFIRE_SDL "Driving engine window, input and sound output through SDL3" OFF)
+if(NIGHTFIRE_SDL)
+  set(NF_SDL3_DIR "" CACHE PATH "An installed SDL3's CMake package directory; empty to build the pinned release")
+  if(NF_SDL3_DIR)
+    find_package(SDL3 REQUIRED CONFIG PATHS ${NF_SDL3_DIR} NO_DEFAULT_PATH)
+  else()
+    include(FetchContent)
+    set(SDL_SHARED ON CACHE BOOL "" FORCE)
+    set(SDL_STATIC OFF CACHE BOOL "" FORCE)
+    set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+    foreach(subsystem RENDER GPU CAMERA SENSOR DIALOG TRAY)   # what the game does not use
+      set(SDL_${subsystem} OFF CACHE BOOL "" FORCE)
+    endforeach()
+    FetchContent_Declare(SDL3
+                         GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+                         GIT_TAG release-3.2.30
+                         GIT_SHALLOW TRUE)
+    FetchContent_MakeAvailable(SDL3)
+  endif()
+  target_sources(drivinginject PRIVATE
+    src/driving/platform/HostWindowSdl.cpp
+    src/driving/platform/HostInputSdl.cpp
+    src/driving/sound/sdlAudioDriving.cpp
+    src/common/fmv/FmvAudioSdl.cpp)
+  target_compile_definitions(drivinginject PRIVATE NIGHTFIRE_SDL)
+  target_link_libraries(drivinginject PRIVATE SDL3::SDL3)
+  add_custom_command(TARGET drivinginject POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:SDL3::SDL3> $<TARGET_FILE_DIR:drivinginject>)
+else()
+  target_sources(drivinginject PRIVATE
+    src/driving/platform/HostInputWin32.cpp
+    src/driving/sound/xaudio2Driving.cpp
+    src/common/fmv/FmvAudio.cpp)
+endif()
 if(MSVC)
   target_link_options(drivinginject PRIVATE /MAP)   # see the symbol maps above
 else()
@@ -758,6 +800,9 @@ add_dependencies(drivinginject preprocess)
 set(NF_STANDALONE_SRC ${CMAKE_BINARY_DIR}/standalone.dir)
 get_target_property(nf_driving_sources drivinginject SOURCES)
 set(nf_standalone_sources src/driving/standalone/StandaloneMain.cpp)
+if(NOT NIGHTFIRE_SDL)
+  list(APPEND nf_standalone_sources src/driving/platform/HostWindowWin32.cpp)   # the SDL build's is in drivinginject
+endif()
 foreach(source ${nf_driving_sources})
   if(source MATCHES "src/driving/devtools/" OR source MATCHES "src/(inject_driving|dllmain)\.cpp$" OR
      source MATCHES "src/common/(xbeOriginal|xbeEntrySeam|xbeProfiler)\.cpp$")
@@ -777,3 +822,7 @@ add_dependencies(driving_standalone standalone_poison)
 target_include_directories(driving_standalone PRIVATE ${NF_FFMPEG_DIR}/include)
 target_compile_definitions(driving_standalone PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_STANDALONE)
 target_link_libraries(driving_standalone PRIVATE d3d9 d3dcompiler winmm xinput9_1_0 ${XAUDIO2_LIB} shell32)
+if(NIGHTFIRE_SDL)
+  target_compile_definitions(driving_standalone PRIVATE NIGHTFIRE_SDL)
+  target_link_libraries(driving_standalone PRIVATE SDL3::SDL3)
+endif()
