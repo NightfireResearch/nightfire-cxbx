@@ -32,7 +32,15 @@ a Linux runner makes its own). Dependencies: SDL3 and dxvk-native, both of which
 pin 32-bit layouts, and the game's data files (CARP, the TAR shape and font files...) are loaded into memory with their
 32-bit pointers fixed up in place, so every such structure needs offset-based loading; the x87 code would become
 portable C, which loses bit-exactness with the original (and so lockstep against the baselines) unless x87 arithmetic
-is emulated; and DXVK on macOS goes through MoltenVK, whose D3D9 coverage is incomplete. Not planned.
+is emulated; and DXVK on macOS goes through MoltenVK, whose D3D9 coverage is incomplete. Planned after level 1, in
+two steps (see the roadmap below).
+
+## Roadmap (the user's order, 14 October 2026)
+
+1. Driving runs 100% standalone on Windows with no dependence on Driving.xbe; then the stack merges back to dev.
+2. Platform independence, still 32-bit x86 (level 1 above: Linux with dxvk-native and SDL3).
+3. 64-bit: pointer-sized layouts and offset-based loading of the data files.
+4. Architecture independence (Apple Silicon and other non-x86 hosts): the x87 code as portable C, and graphics there.
 
 ## Order of work for level 1
 
