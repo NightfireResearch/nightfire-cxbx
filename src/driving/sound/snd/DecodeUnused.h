@@ -23,7 +23,26 @@ struct MutState {                      // 0xd40
 };
 static_assert(sizeof(MutState) == 0xd40, "a MicroTalk state is 0xd40 bytes");
 
+// The MicroTalk decoder's tables (in the original's order): the reflection coefficients' levels - the first
+// four's 64, the other eight's 32 being levels 16-47 of the same table - and the fixed codebook's two-state
+// Huffman code: the code for each state and next 8 bits, and each code's next state, length and sample
+struct MutCode {                       // 12 bytes
+    int32_t next;                      // +0 the state for the next code
+    int32_t length;                    // +4 bits the code takes
+    float value;                       // +8 the sample (codes 4 and up)
+};
+static_assert(sizeof(MutCode) == 12, "a MicroTalk code is 12 bytes");
+
+struct MutTables {                     // 0x45c
+    float coefs[64];                   // +0x000
+    uint8_t huffStart[2][256];         // +0x100 [state][next 8 bits] -> code
+    MutCode huffCodes[29];             // +0x300
+};
+static_assert(sizeof(MutTables) == 0x45c, "the MicroTalk tables are 0x45c bytes");
+
 }   // namespace SND
+
+extern const SND::MutTables MicroTalkTables;
 
 int initmut(const uint8_t *src, SND::MutState *state);                     // 0x001493e0: 0
 void decodemut(SND::MutState *state);                                      // 0x00149500: 432 samples

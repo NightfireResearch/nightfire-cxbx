@@ -10,8 +10,9 @@ table order - the order matters where one entry reads what an earlier one wrote,
 objects into lists. This script reads every entry and writes it out as C++:
 
   - float and double arithmetic (585): one x87 operation on two constants or globals, stored. Each is a single
-    rounding of exact operands, so plain C++ arithmetic gives the same bits. Constants from .rdata become
-    literals; globals (.data) are read where they live, since some are written by earlier entries.
+    rounding of exact operands, so plain C++ arithmetic gives the same bits. An operand whose value at that point
+    the script knows (a constant in .rdata or .data, or what an earlier entry stored) becomes a literal; the rest
+    (values the script does not follow) are read where they live.
   - zero fills, copies and stores of constants;
   - ColourConvertXBoxToPS2 of a constant colour (into our variable, by name, when the global is ours: the script
     does not follow the conversion's value, so a later copy of it is by name too), and float products converted
@@ -24,6 +25,12 @@ objects into lists. This script reads every entry and writes it out as C++:
     time, as a typed table (WeaponRecord in src/driving/game/WeaponManager.h).
 
 An entry of any other shape stops the script: it is a new kind, to be added here or to HAND below.
+
+A store of a value (arithmetic, a conversion, a constant, a copy, a fill) into a global that is not ours and that
+nothing reads - no instruction outside the initialisers and their destructors names it (tools/xrefs_driving.json),
+nor a later entry that is kept - is left out, with a comment saying what it stored: most of them are a header's
+constants each translation unit computed for itself (1/FLT_MIN, 2 pi, 1/(2 pi), 180/pi, pi/180) and colours
+converted for code that folded them away. NOT_READS lists references that do not read the global they name.
 
 Globals we own (an XBE_GLOBAL tag above our own definition, see docs/global-coverage.md) are read from the source
 each run. An object of ours the initialisers construct is named in NAMED below and constructed there. Any other
@@ -148,6 +155,8 @@ NAMED = {
     0x0023fbe0: ("TheConstructorPool", "ConstructorPool"),
     0x002400f8: ("FontState", "EAGL::GeoPrimStateExtension"),  # eagl/EaglFont.h
     0x00240560: ("FrameRegion", "EAGL::ProfilerRegion"),      # eagl/Profiler.h
+    0x002406a8: ("UnprofiledRegion", "EAGL::ProfilerRegion"),
+    0x00240688: ("UnprofiledTimer", "EAGL::ProfilerTimer"),
     0x00241460: ("TextureDofMethod", "EAGL::RenderMethod"),    # camera/DirectorQueue.h
     0x00242de8: ("TexturedParentMethod", "EAGL::RenderMethod"),  # render/Decals.h
     0x00242e1c: ("EmpParentMethod", "EAGL::RenderMethod"),
@@ -156,11 +165,14 @@ NAMED = {
     0x0024b07c: ("MatDebugMethod", "EAGL::RenderMethod"),      # render/Materials.h
     0x0024b0b0: ("MatVolatileTextureMethod", "EAGL::RenderMethod"),
     0x00243954: ("Mixes", "MixList"),                          # audio/Mix.h
+    0x00243b18: ("EmptyBank", "ABank"),                        # audio/Bank.h
     0x00243a9c: ("VoiceInfoMap", "AVoiceMap"),                 # audio/Voice.h
     0x00243aa8: ("ActiveViews", "AVoiceViewList"),
 }
 # Owned arrays of objects the initialisers construct (a vector constructor) and destroy: the name and the class.
 NAMED_OBJECT_ARRAYS = {
+    0x001de940: ("PlayerGroundVehicles", "AIGroundVehicle"),     # game/AIVehicleController.h
+    0x001dee20: ("TrafficGroundVehicles", "AIGroundVehicle"),
     0x001e1f20: ("AIZoneData.zones", "AIZone"),                   # game/AIElements.h
     0x001f5f10: ("BulletStreakMaterials", "UVolatileMaterial"),   # game/WeaponEffects.cpp
     0x002014f0: ("MuzzleFlashMaterials", "UVolatileMaterial"),
@@ -194,6 +206,7 @@ NAMED_STORES = {
     0x00243ab0: "ActiveViews.size",
     0x00243958: "Mixes.head",                                 # audio/Mix.h
     0x0024395c: "Mixes.size",
+    0x00240688: "UnprofiledTimer.region",                     # eagl/Profiler.h
 }
 # Argument types of the originals' stack arguments, where they are not plain words.
 ARG_TYPES = {
@@ -217,12 +230,20 @@ HAND = {
 HAND_DTORS = {
     0x0015d080: "DestroyGlobal_0023e1b0();",
 }
+# References that name a global without reading it, by the global's address: why.
+NOT_READS = {
+    0x001e7acc: "RayShell::DrawTracers's [index * 8 + 0x001e7acc] is RayShellTracerSources[last].effect folded, last >= 1",
+    0x00200f12: "SHAPE_type compares a format code with 0x200f12",
+    0x00201290: "the end of RMissileStreak::Init's loop over the array before it, and RDebrisType::Draw's "
+                "DebrisColours - 0x1800 (its colour[] offset) folded",
+}
 FAST_FREE = 0x001147d0
 EMPTY = 0x000d3580   # dummyNullFunction: a bare RET, the destructor of objects that need none
 
 md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
 md.detail = True
 nonzero, read, entry = gc.read_xbe()
+INIT_CODE = (TEXT_INIT, 0x0015d370)   # the initialisers and the destructors they register, which never run
 NAMES = {}
 OWNED = [g for g in gc.read_source()[0] if g["owned"]]
 WRITTEN = {}    # address -> byte: what the entries so far have stored
@@ -257,6 +278,37 @@ def known(data, what):
 def store(address, data, size=4):
     for k in range(size if data is None else len(data)):
         WRITTEN[address + k] = None if data is None else data[k]
+
+
+def read_outside(address, size):
+    """Whether anything but the initialisers and their destructors reads [address, address + size): a reference
+    from data (a pointer to it), or one from code that is not a write."""
+    if not READERS:
+        import json
+        for to, frm, fn, kind in json.load(open(gc.XREFS)):
+            to, frm = int(to, 16), int(frm, 16)
+            fn = int(fn, 16) if fn else None
+            if kind == "W" or (fn is not None and INIT_CODE[0] <= fn < INIT_CODE[1]) or to in NOT_READS:
+                continue
+            if fn is not None and not gc.touches_memory(frm, read, md):
+                continue
+            READERS.add(to)
+        READERS.add(None)
+    return any(a in READERS for a in range(address, address + size))
+
+
+READERS = set()
+KEPT_READS = set()   # the globals the kept entries read, from the table's own pass (table_reads)
+
+
+def droppable(address, size):
+    """A store into a global not ours that nothing reads."""
+    return not owned_global(address, size) and address not in NAMED_STORES and address not in NAMED_BLOCKS and \
+        not read_outside(address, size) and not any(a in KEPT_READS for a in range(address, address + size))
+
+
+def dropped(address, text):
+    return "// unread: 0x%08x = %s" % (address, text)
 
 
 def left_out(g, text, data):
@@ -304,12 +356,31 @@ def float_literal(value, double):
     return text if double else text + "f"
 
 
+# Operands by name: the constants the driving engine's headers have each translation unit compute at start-up
+# (pi as they round it, 2 pi, 180 / pi) and FLT_MIN (1 / FLT_MIN is exactly 2^126). The names are ours.
+CONSTANT_NAMES = {
+    "1.1754944e-38f": "FLT_MIN",
+    "3.1415925f": "kHeaderPi",
+    "6.283185f": "kHeaderTwoPi",
+    "57.295784f": "kHeaderDegreesPerRadian",
+}
+CONSTANT_DEFINITIONS = [
+    "constexpr float kHeaderPi = 3.1415925f;                     // pi as the headers round it",
+    "constexpr float kHeaderTwoPi = kHeaderPi + kHeaderPi;",
+    "constexpr float kHeaderDegreesPerRadian = 180.0f / kHeaderPi;",
+    "static_assert(std::bit_cast<uint32_t>(kHeaderPi) == 0x40490fda && std::bit_cast<uint32_t>(kHeaderTwoPi) == 0x40c90fda &&",
+    "              std::bit_cast<uint32_t>(kHeaderDegreesPerRadian) == 0x42652ee2, \"the headers' constants\");",
+]
+
+
 def operand(address, double):
-    """A float operand: a literal when it is a constant in .rdata or a global we own (the value it holds then),
-    otherwise the global."""
+    """A float operand: a literal when the script knows the value it holds then (a constant in .rdata, the XBE's
+    .data, an earlier entry's store), otherwise the global. Nothing but earlier initialisers runs before them."""
+    if value_bytes(address, 8 if double else 4) is not None:
+        text = float_literal(operand_value(address, double), double)
+        return CONSTANT_NAMES.get(text, text)
     if RDATA <= address < DATA or owned_global(address, 8 if double else 4):
-        known(value_bytes(address, 8 if double else 4), "0x%08x" % address)
-        return float_literal(operand_value(address, double), double)
+        known(None, "0x%08x" % address)
     return "%s(0x%08x)" % ("DOUBLE_AT" if double else "FLOAT_AT", address)
 
 
@@ -410,9 +481,12 @@ def argument(type_, value):
     if type_.endswith("*"):
         if value == 0:
             return "NULL"
+        g = owned_global(value, 1)
+        if g and g["address"] == value:   # a table of ours
+            return g["name"]
         text = read(value, 64).split(b"\0")[0] if "char" in type_ else b""
         printable = text and all(32 <= c < 127 for c in text) and b'"' not in text
-        if printable and RDATA <= value < DATA:   # a string constant: ours
+        if printable and (RDATA <= value < DATA or not read_outside(value, len(text) + 1)):   # a string constant: ours
             return '"%s"' % text.decode() if type_.startswith("const") else '(%s)"%s"' % (type_, text.decode())
         comment = ' /* "%s" */' % text.decode() if printable else ""
         return "(%s)%s%s" % (type_, hexw(value), comment)
@@ -499,6 +573,8 @@ def emit(address):
         if g:
             known(data, g["name"])
             return [left_out(g, float_literal(struct.unpack("<d" if double else "<f", data)[0], double), data)]
+        if droppable(d, 8 if double else 4):
+            return [dropped(d, "%s %s %s" % (left, op, right))]
         return ["%s(0x%08x) = %s %s %s;" % ("DOUBLE_AT" if double else "FLOAT_AT", d, left, op, right)]
     # fld a ; f<op> b ; call __ftol2 ; mov [d], eax ; ret
     if len(ins) == 5 and mn[0] == "fld" and mn[2] == "call" and ins[2].operands[0].imm == FTOL:
@@ -511,6 +587,8 @@ def emit(address):
         if g:
             known(data, g["name"])
             return [left_out(g, str(struct.unpack("<i", data)[0]), data)]
+        if droppable(d, 4):
+            return [dropped(d, "Ftol((double)%s %s %s)" % (operand(a, False), op, operand(b, False)))]
         return ["I32_AT(0x%08x) = Ftol((double)%s %s %s);" % (d, operand(a, False), op, operand(b, False))]
     # push colour ; call ColourConvertXBoxToPS2 ; add esp, 4 ; mov [d], eax ; ret
     if mn == ["push", "call", "add", "mov", "ret"] and ins[1].operands[0].imm == COLOUR:   # ours, render/Draw.h
@@ -519,6 +597,8 @@ def emit(address):
         store(ins[3].operands[0].mem.disp, None)   # not followed
         if g:   # ours: converted into our variable, in its place in the order
             return ["%s = ColourConvertXBoxToPS2(0x%08x);" % (g["name"], colour)]
+        if droppable(ins[3].operands[0].mem.disp, 4):
+            return [dropped(ins[3].operands[0].mem.disp, "ColourConvertXBoxToPS2(0x%08x)" % colour)]
         return ["U32_AT(0x%08x) = ColourConvertXBoxToPS2(0x%08x);" % (ins[3].operands[0].mem.disp, colour)]
     # mov dword [d], imm ; ret
     if mn == ["mov", "ret"]:
@@ -529,6 +609,8 @@ def emit(address):
             return ["%s = 0x%08x;" % (NAMED_STORES[d], v)]
         if g:
             return [left_out(g, "0x%08x" % v, struct.pack("<I", v))]
+        if droppable(d, 4):
+            return [dropped(d, "0x%08x" % v)]
         return ["U32_AT(0x%08x) = 0x%08x;" % (d, v)]
     # mov eax, [s] ; mov [d], eax ; ret   (and the four-word copy)
     if all(m == "mov" for m in mn[:-1]) and mn[-1] == "ret" and \
@@ -551,10 +633,15 @@ def emit(address):
                 out.append("%s = %s;" % (g["name"] if g else "U32_AT(0x%08x)" % dst.mem.disp, source_global["name"]))
             elif g:
                 out.append(left_out(g, "0x%08x" % struct.unpack("<I", known(data, g["name"]))[0], data))
+            elif droppable(dst.mem.disp, 4):
+                out.append(dropped(dst.mem.disp, "0x%08x" % struct.unpack("<I", data)[0] if data is not None else
+                                   "U32_AT(0x%08x)" % source))
             elif source_global:
                 known(data, source_global["name"])
                 out.append("U32_AT(0x%08x) = 0x%08x;   // %s's value" % (dst.mem.disp, struct.unpack("<I", data)[0],
                                                                           owned_global(source, 4)["name"]))
+            elif data is not None:
+                out.append("U32_AT(0x%08x) = 0x%08x;" % (dst.mem.disp, struct.unpack("<I", data)[0]))
             else:
                 out.append("U32_AT(0x%08x) = U32_AT(0x%08x);" % (dst.mem.disp, source))
         return out
@@ -605,6 +692,8 @@ def zero_fill(address, size):
     store(address, bytes(size))
     if g:
         return [left_out(g, "zero" if size == g["size"] else "zero (0x%x bytes)" % size, bytes(size))]
+    if droppable(address, size):
+        return [dropped(address, "zero (0x%x bytes)" % size)]
     return ["memset((void *)0x%08x, 0, 0x%x);" % (address, size)]
 
 
@@ -679,7 +768,8 @@ def constructor(ins):
             if src.type == X86_OP_IMM:
                 disp = x.operands[0].mem.disp
                 if disp in NAMED_STORES:
-                    line = "%s = 0x%08x;" % (NAMED_STORES[disp], src.imm & 0xffffffff)
+                    value = src.imm & 0xffffffff
+                    line = "%s = %s;" % (NAMED_STORES[disp], "&" + NAMED[value][0] if value in NAMED else hexw(value))
                 elif owned_global(disp, 4):
                     raise SystemExit("0x%08x: a store into %s, which is ours: add it to NAMED_STORES" %
                                      (disp, owned_global(disp, 4)["name"]))
@@ -775,8 +865,52 @@ def weapon_lines():
     return lines
 
 
+def entry_reads(address):
+    """(target, size, the globals it reads) for an entry that stores a value read from globals - an arithmetic
+    entry, a product converted with __ftol2, a copy - or None."""
+    if address in HAND:
+        return None
+    ins = instructions(address)
+    mn = [i.mnemonic for i in ins]
+    if len(ins) == 4 and mn[0] == "fld" and mn[2] == "fstp" and mn[1] in ("fadd", "fsub", "fmul", "fdiv"):
+        size = ins[0].operands[0].size
+        reads = [ins[0].operands[0].mem.disp]
+        if ins[1].operands[0].type == X86_OP_MEM:
+            reads.append(ins[1].operands[0].mem.disp)
+        return [(ins[2].operands[0].mem.disp, size, reads)]
+    if len(ins) == 5 and mn[0] == "fld" and mn[2] == "call" and ins[2].operands[0].imm == FTOL:
+        return [(ins[3].operands[0].mem.disp, 4, [ins[0].operands[0].mem.disp, ins[1].operands[0].mem.disp])]
+    if len(ins) > 1 and all(m == "mov" for m in mn[:-1]) and mn[-1] == "ret" and \
+            all(i.operands[0].type in (X86_OP_REG, X86_OP_MEM) for i in ins[:-1]) and \
+            all(i.operands[1].type in (X86_OP_REG, X86_OP_MEM) for i in ins[:-1]):
+        regs, out = {}, []
+        for i in ins[:-1]:
+            dst, src = i.operands
+            if dst.type == X86_OP_REG:
+                regs[dst.reg] = src.mem.disp
+            else:
+                out.append((dst.mem.disp, 4, [regs[src.reg]]))
+        return out
+    return None
+
+
+def table_reads(entries):
+    """The globals the kept entries read: an entry that stores into a global something reads is kept, and what it
+    reads is then read too, back through the table until nothing changes."""
+    stores = [s for address in entries for s in (entry_reads(address) or [])]
+    while True:
+        before = len(KEPT_READS)
+        for target, size, reads in stores:
+            # an owned global's store is left out (its definition holds the value), so it reads nothing
+            if (not owned_global(target, size) or target in NAMED_STORES) and not droppable(target, size):
+                KEPT_READS.update(a + k for a in reads for k in range(size))
+        if len(KEPT_READS) == before:
+            return
+
+
 def main():
     words = struct.unpack("<%dI" % ((TABLE_END - TABLE) // 4), read(TABLE, TABLE_END - TABLE))
+    table_reads([a for a in words if a not in (0, 0xffffffff) and not DSOUND[0] <= a < DSOUND[1]])
     body = []
     for address in words:
         if address in (0, 0xffffffff):
@@ -795,6 +929,8 @@ def main():
             '// walked: every entry, in table order, each commented with the original it replaces. The script\'s docstring',
             '// says how each kind is turned into C++.',
             '',
+            '#include <bit>',
+            '#include <float.h>',
             '#include <stdint.h>',
             '#include <string.h>',
             '',
@@ -812,6 +948,7 @@ def main():
             '#include "../data/SymbolTable.h"',
             '#include "../game/AIElements.h"',
             '#include "../game/AIVehicle.h"',
+            '#include "../game/AIVehicleController.h"',
             '#include "../game/DebugAudio.h"',
             '#include "../game/EmpEffect.h"',
             '#include "../game/Girl.h"',
@@ -875,6 +1012,10 @@ def main():
                 head.append("    " + ", ".join(float_literal(f, False) for f in floats[k:k + 4]) + ",")
             head.append("};")
         head.append("")
+    head.append("// ---- constants")
+    head.append("")
+    head += CONSTANT_DEFINITIONS
+    head.append("")
     head.append("// ---- the weapon table (0x%08x), as its initialiser (0x%08x) left it" % (WEAPONS, WEAPON_INIT))
     head.append("")
     head.append("const WeaponRecord kWeaponDefinitions[kWeaponCount] = {")

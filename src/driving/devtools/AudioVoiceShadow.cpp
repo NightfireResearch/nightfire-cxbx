@@ -72,7 +72,7 @@ namespace {   // this file's own types: another test's of the same name must not
 #define Orig_LastPlayTick I32_AT(0x00243a98)
 #define Orig_FxMode I32_AT(0x001d8100)                  // Fx.currentMode
 #define Orig_fgSystem (*(ASystem **)0x00243b34)
-#define Shadow_EmptyBank ((ABank *)0x00243b18)
+#define Shadow_EmptyBank (&EmptyBank)
 
 // ---- the originals
 typedef AVoice::View *(__fastcall *ViewConstructFn)(AVoice::View *, int);

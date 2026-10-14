@@ -65,5 +65,6 @@ USingletonManager* SingletonManager();
 
 // The static (USingleton.cpp), emptied by its first Get.
 extern USingletonManager TheSingletonManager;
+extern uint32_t SingletonManagerMade;
 
 #endif // DRIVING_ENGINE_USINGLETON_H_

@@ -40,20 +40,50 @@ static_assert(offsetof(SND::MutState, coefs) == 0x110, "MutState layout");
 static_assert(offsetof(SND::MutState, synth) == 0x140, "MutState layout");
 static_assert(offsetof(SND::MutState, signal) == 0x170, "MutState layout");
 
-namespace {
-
-struct MutCode {                       // 12 bytes
-    int32_t next;                      // +0 the state for the next code
-    int32_t length;                    // +4 bits the code takes
-    float value;                       // +8 the sample (codes 4 and up)
+// XBE_GLOBAL(0x001da558, 0x45c) readonly
+const SND::MutTables MicroTalkTables = {
+    {
+        0.0f, -0.996776f, -0.990327f, -0.983879f, -0.977431f, -0.970982f, -0.964534f, -0.958085f, -0.951637f,
+        -0.930754f, -0.90496f, -0.879167f, -0.853373f, -0.827579f, -0.801786f, -0.775992f, -0.750198f, -0.724405f,
+        -0.698611f, -0.670635f, -0.619048f, -0.56746f, -0.515873f, -0.464286f, -0.412698f, -0.361111f, -0.309524f,
+        -0.257937f, -0.206349f, -0.154762f, -0.103175f, -0.051587f, 0.0f, 0.051587f, 0.103175f, 0.154762f, 0.206349f,
+        0.257937f, 0.309524f, 0.361111f, 0.412698f, 0.464286f, 0.515873f, 0.56746f, 0.619048f, 0.670635f, 0.698611f,
+        0.724405f, 0.750198f, 0.775992f, 0.801786f, 0.827579f, 0.853373f, 0.879167f, 0.90496f, 0.930754f, 0.951637f,
+        0.958085f, 0.964534f, 0.970982f, 0.977431f, 0.983879f, 0.990327f, 0.996776f,
+    },
+    {
+        {
+            4, 6, 5, 9, 4, 6, 5, 13, 4, 6, 5, 10, 4, 6, 5, 17, 4, 6, 5, 9, 4, 6, 5, 14, 4, 6, 5, 10, 4, 6, 5, 21, 4,
+            6, 5, 9, 4, 6, 5, 13, 4, 6, 5, 10, 4, 6, 5, 18, 4, 6, 5, 9, 4, 6, 5, 14, 4, 6, 5, 10, 4, 6, 5, 25, 4, 6,
+            5, 9, 4, 6, 5, 13, 4, 6, 5, 10, 4, 6, 5, 17, 4, 6, 5, 9, 4, 6, 5, 14, 4, 6, 5, 10, 4, 6, 5, 22, 4, 6, 5,
+            9, 4, 6, 5, 13, 4, 6, 5, 10, 4, 6, 5, 18, 4, 6, 5, 9, 4, 6, 5, 14, 4, 6, 5, 10, 4, 6, 5, 0, 4, 6, 5, 9, 4,
+            6, 5, 13, 4, 6, 5, 10, 4, 6, 5, 17, 4, 6, 5, 9, 4, 6, 5, 14, 4, 6, 5, 10, 4, 6, 5, 21, 4, 6, 5, 9, 4, 6,
+            5, 13, 4, 6, 5, 10, 4, 6, 5, 18, 4, 6, 5, 9, 4, 6, 5, 14, 4, 6, 5, 10, 4, 6, 5, 26, 4, 6, 5, 9, 4, 6, 5,
+            13, 4, 6, 5, 10, 4, 6, 5, 17, 4, 6, 5, 9, 4, 6, 5, 14, 4, 6, 5, 10, 4, 6, 5, 22, 4, 6, 5, 9, 4, 6, 5, 13,
+            4, 6, 5, 10, 4, 6, 5, 18, 4, 6, 5, 9, 4, 6, 5, 14, 4, 6, 5, 10, 4, 6, 5, 2,
+        },
+        {
+            4, 11, 7, 15, 4, 12, 8, 19, 4, 11, 7, 16, 4, 12, 8, 23, 4, 11, 7, 15, 4, 12, 8, 20, 4, 11, 7, 16, 4, 12,
+            8, 27, 4, 11, 7, 15, 4, 12, 8, 19, 4, 11, 7, 16, 4, 12, 8, 24, 4, 11, 7, 15, 4, 12, 8, 20, 4, 11, 7, 16,
+            4, 12, 8, 1, 4, 11, 7, 15, 4, 12, 8, 19, 4, 11, 7, 16, 4, 12, 8, 23, 4, 11, 7, 15, 4, 12, 8, 20, 4, 11, 7,
+            16, 4, 12, 8, 28, 4, 11, 7, 15, 4, 12, 8, 19, 4, 11, 7, 16, 4, 12, 8, 24, 4, 11, 7, 15, 4, 12, 8, 20, 4,
+            11, 7, 16, 4, 12, 8, 3, 4, 11, 7, 15, 4, 12, 8, 19, 4, 11, 7, 16, 4, 12, 8, 23, 4, 11, 7, 15, 4, 12, 8,
+            20, 4, 11, 7, 16, 4, 12, 8, 27, 4, 11, 7, 15, 4, 12, 8, 19, 4, 11, 7, 16, 4, 12, 8, 24, 4, 11, 7, 15, 4,
+            12, 8, 20, 4, 11, 7, 16, 4, 12, 8, 1, 4, 11, 7, 15, 4, 12, 8, 19, 4, 11, 7, 16, 4, 12, 8, 23, 4, 11, 7,
+            15, 4, 12, 8, 20, 4, 11, 7, 16, 4, 12, 8, 28, 4, 11, 7, 15, 4, 12, 8, 19, 4, 11, 7, 16, 4, 12, 8, 24, 4,
+            11, 7, 15, 4, 12, 8, 20, 4, 11, 7, 16, 4, 12, 8, 3,
+        },
+    },
+    {
+        { 1, 8, 0.0f }, { 1, 7, 0.0f }, { 0, 8, 0.0f }, { 0, 7, 0.0f }, { 0, 2, 0.0f }, { 0, 2, -1.0f },
+        { 0, 2, 1.0f }, { 0, 3, -1.0f }, { 0, 3, 1.0f }, { 1, 4, -2.0f }, { 1, 4, 2.0f }, { 1, 3, -2.0f },
+        { 1, 3, 2.0f }, { 1, 5, -3.0f }, { 1, 5, 3.0f }, { 1, 4, -3.0f }, { 1, 4, 3.0f }, { 1, 6, -4.0f },
+        { 1, 6, 4.0f }, { 1, 5, -4.0f }, { 1, 5, 4.0f }, { 1, 7, -5.0f }, { 1, 7, 5.0f }, { 1, 6, -5.0f },
+        { 1, 6, 5.0f }, { 1, 8, -6.0f }, { 1, 8, 6.0f }, { 1, 7, -6.0f }, { 1, 7, 6.0f },
+    },
 };
-static_assert(sizeof(MutCode) == 12, "a MicroTalk code is 12 bytes");
 
-// The tables, in the original's .rdata
-#define MutCoefs6 ((const float *)0x001da558)              // the first four coefficients' 64 levels
-#define MutCoefs5 ((const float *)0x001da598)              // the other eight's 32 levels
-#define MutHuffStart ((const uint8_t (*)[256])0x001da658)  // [state][next 8 bits] -> code
-#define MutHuffCodes ((const MutCode *)0x001da858)
+namespace {
 
 // The constants (the original's .rdata values)
 constexpr float kEight = 8.0f;
@@ -146,11 +176,11 @@ void readsamples(SND::MutState *s, int mode, float *out) {
     int32_t state = 0;
     int i = 0;
     while (i < 108) {
-        int code = MutHuffStart[state][s->bits & 0xff];
-        state = MutHuffCodes[code].next;
-        MutSkip(s, MutHuffCodes[code].length);
+        int code = MicroTalkTables.huffStart[state][s->bits & 0xff];
+        state = MicroTalkTables.huffCodes[code].next;
+        MutSkip(s, MicroTalkTables.huffCodes[code].length);
         if (code > 3) {
-            out[i] = MutHuffCodes[code].value;
+            out[i] = MicroTalkTables.huffCodes[code].value;
             i += 2;
         } else if (code > 1) {
             int32_t run = int32_t(MutBits(s, 6)) + 7;
@@ -679,14 +709,14 @@ void decodemut(SND::MutState *s) {
     float gainA, gainB;
     uint32_t a = MutBits(s, 6);
     int flag = int32_t(a) < s->threshold;
-    K[0] = float((double(MutCoefs6[a]) - s->coefs[0]) * kQuarter);
+    K[0] = float((double(MicroTalkTables.coefs[a]) - s->coefs[0]) * kQuarter);
     for (int i = 1; i < 4; i++) {
         a = MutBits(s, 6);
-        K[i] = float((double(MutCoefs6[a]) - s->coefs[i]) * kQuarter);
+        K[i] = float((double(MicroTalkTables.coefs[a]) - s->coefs[i]) * kQuarter);
     }
     for (int i = 4; i < 12; i++) {
         a = MutBits(s, 5);
-        K[i] = float((double(MutCoefs5[a]) - s->coefs[i]) * kQuarter);
+        K[i] = float((double(MicroTalkTables.coefs[16 + a]) - s->coefs[i]) * kQuarter);
     }
     float *to = &s->signal[324];       // the frame's 432 outputs, a subframe of 108 at a time
     for (int j = 216; j < 648; j += 108) {

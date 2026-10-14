@@ -25,22 +25,17 @@
 
 // ---- globals
 
-
-// DoMainPose's scratch for moving a root bone: a scale, quaternion and translation (each w 1), and a pointer to
-// each that the pose is copied in and out through.
-struct RootPoseScratch {
-    float scale[4];                   // +0x00
-    float rotation[4];                // +0x10
-    float translation[4];             // +0x20
-    float *translationRef;            // +0x30 -> translation
-    uint32_t unknown34[3];
-    float *rotationRef;               // +0x40 -> rotation
-    uint32_t unknown44[3];
-    float *scaleRef;                  // +0x50 -> scale
-};
-static_assert(offsetof(RootPoseScratch, scaleRef) == 0x50, "the scratch's pointers are at +0x30..+0x50");
 // XBE_GLOBAL(0x001b4a90, 0x54)
-#define RootScratch (*(RootPoseScratch *)0x001b4a90)
+RootPoseScratch RootScratch = {
+    { 0.0f, 0.0f, 0.0f, 1.0f },
+    { 0.0f, 0.0f, 0.0f, 1.0f },
+    { 0.0f, 0.0f, 0.0f, 1.0f },
+    RootScratch.translation,
+    {},
+    RootScratch.rotation,
+    {},
+    RootScratch.scale,
+};
 
 // A bone of a pose
 struct BonePose {

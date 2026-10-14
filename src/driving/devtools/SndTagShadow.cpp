@@ -14,6 +14,7 @@
 
 #include <windows.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -690,6 +691,8 @@ void TestGettag(const Input &in) {
     }
 }
 
+const uintptr_t kOrigDefaultEnvelope = 0x001d9d28;
+
 void TestParse(const Input &in) {
     uint8_t *co = in.pt + 4, *cp = in.pt + 4;
     for (int timbre = 0; timbre < 32; timbre++) {
@@ -701,6 +704,12 @@ void TestParse(const Input &in) {
         g_cases++;
         if (!BothRan("SNDI_parsetimbre", in.name.c_str(), okO, okP))
             return;
+        // A timbre without an envelope table points at the default envelope: ours, and the original's own copy.
+        uintptr_t envO, envP;
+        memcpy(&envO, ho + offsetof(SND::PatchHeader, envTable), sizeof(envO));
+        memcpy(&envP, hp + offsetof(SND::PatchHeader, envTable), sizeof(envP));
+        if (envO - kOrigDefaultEnvelope == envP - uintptr_t(&DefaultEnvelope))
+            memcpy(ho + offsetof(SND::PatchHeader, envTable), &envP, sizeof(envP));
         if (!SameInt("SNDI_parsetimbre return", in.name.c_str(), o.result, p.result) ||
             !SameInt("SNDI_parsetimbre cursor", in.name.c_str(), (intptr_t)co, (intptr_t)cp) ||
             !Same("SNDI_parsetimbre header", in.name.c_str(), ho, hp, sizeof(ho)))

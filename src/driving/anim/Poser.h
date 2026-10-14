@@ -164,4 +164,19 @@ static_assert(offsetof(ActPoser, crossFade) == 0x40, "ActPoser::crossFade is at 
 static_assert(offsetof(ActPoser, mode) == 0x50, "ActPoser::mode is at +0x50");
 static_assert(sizeof(ActPoser) == 0x70, "an ActPoser is 0x70 bytes");
 
+// DoMainPose's scratch for moving a root bone: a scale, quaternion and translation (each w 1), and a pointer to
+// each that the pose is copied in and out through.
+struct RootPoseScratch {
+    float scale[4];                   // +0x00
+    float rotation[4];                // +0x10
+    float translation[4];             // +0x20
+    float *translationRef;            // +0x30 -> translation
+    uint32_t unknown34[3];
+    float *rotationRef;               // +0x40 -> rotation
+    uint32_t unknown44[3];
+    float *scaleRef;                  // +0x50 -> scale
+};
+static_assert(offsetof(RootPoseScratch, scaleRef) == 0x50, "the scratch's pointers are at +0x30..+0x50");
+extern RootPoseScratch RootScratch;
+
 #endif // DRIVING_ANIM_POSER_H_

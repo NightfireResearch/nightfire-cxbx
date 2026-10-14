@@ -61,8 +61,8 @@ static_assert(offsetof(ABank, index) == 0x10, "ABank::index");
 
 enum { kBankSlotCount = 10 };
 
-// XBE_GLOBAL(0x001d8398, 0x28)
-#define fgBanks ((ABank **)0x001d8398)              // the banks by slot (ABank::Load's second argument)
+extern ABank *fgBanks[kBankSlotCount];              // the banks by slot (ABank::Load's second argument)
+extern ABank EmptyBank;                             // each slot's bank until one is loaded
 extern char AudioDirectory[0x80];                   // where the banks and banks.ini are; "./" until
                                                     // ASoundManager::Init (name ours)
 

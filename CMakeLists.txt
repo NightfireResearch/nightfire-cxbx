@@ -393,6 +393,7 @@ add_library(drivinginject SHARED
   src/driving/engine/CoreContainers.cpp
   src/driving/engine/CoreFoundation.cpp
   src/driving/engine/GameLoop.cpp
+  src/driving/engine/DebugFont.cpp
   src/driving/engine/SimRandom.cpp
   src/driving/devtools/CoreLoopShadow.cpp
   src/driving/devtools/CoreUtilShadow.cpp

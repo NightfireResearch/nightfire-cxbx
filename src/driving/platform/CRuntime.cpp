@@ -52,9 +52,62 @@ static const int kLockCount = 36;
 static Crt::Lconv *LocaleConventions = (Crt::Lconv *)0x001d8844u;
 
 namespace Crt {
-// _pctype, one entry into the C locale's class table (0x001a32e8) so that EOF indexes the first.
+// _pctype, one entry into the C locale's class table so that EOF indexes the first. A class test indexes it with
+// whatever int it is given - a negative signed char reads the 127 words before the table, which in the original
+// are its exception records - so the table is kept as one block with them.
+struct CtypeBlock {
+    unsigned short before[127];
+    unsigned short eof;
+    unsigned short classes[256];
+};
+
+constexpr unsigned short CLocaleClass(int c) {
+    unsigned short classes = 0;
+    if (c < 0x20 || c == 0x7f)
+        classes |= kControl;
+    if (c >= '\t' && c <= '\r')
+        classes |= kSpace;
+    if (c == ' ')
+        classes |= kSpace | kBlank;
+    if (c >= '0' && c <= '9')
+        classes |= kDigit | kHexDigit;
+    else if (c >= 'A' && c <= 'Z')
+        classes |= kUpper | (c <= 'F' ? kHexDigit : 0);
+    else if (c >= 'a' && c <= 'z')
+        classes |= kLower | (c <= 'f' ? kHexDigit : 0);
+    else if (c > ' ' && c < 0x7f)
+        classes |= kPunct;
+    return classes;
+}
+
+constexpr CtypeBlock MakeCtypeBlock() {
+    CtypeBlock block = {
+        {
+        0x6f65, 0x6266, 0x7469, 0x7320, 0x7465, 0x0000, 0x0000, 0x6f69, 0x5f73, 0x6162, 0x6573, 0x3a3a, 0x6166,
+        0x6c69, 0x6962, 0x2074, 0x6573, 0x0074, 0x0000, 0x6f69, 0x5f73, 0x6162, 0x6573, 0x3a3a, 0x6162, 0x6264,
+        0x7469, 0x7320, 0x7465, 0x0000, 0x0000, 0x19e7, 0x0013, 0x0000, 0x0000, 0x0004, 0x0000, 0x1c01, 0x0013,
+        0x0000, 0x0000, 0x0058, 0x0000, 0xffff, 0xffff, 0x0000, 0x0000, 0x21e8, 0x0013, 0x7363, 0xe06d, 0x0001,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0003, 0x0000, 0x0520, 0x1993, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x26ea, 0x0013, 0x26a1, 0x0013, 0x6e55, 0x6e6b, 0x776f, 0x206e, 0x7865, 0x6563, 0x7470, 0x6f69, 0x006e,
+        0x0000, 0x2706, 0x0013, 0x26a1, 0x0013, 0x274b, 0x0013, 0x0000, 0x0000, 0xffff, 0xffff, 0x0000, 0x0000,
+        0x2a75, 0x0013, 0x0000, 0x0000, 0xffff, 0xffff, 0x0000, 0x0000, 0x3229, 0x0013, 0x0000, 0x0000, 0xffff,
+        0xffff, 0x0000, 0x0000, 0x32b8, 0x0013, 0x0000, 0x0000, 0xffff, 0xffff, 0x32ff, 0x0013, 0x3323, 0x0013,
+        0x0000, 0x0000, 0xffff, 0xffff, 0x0000, 0x0000, 0x3376, 0x0013, 0x0000, 0x0000,
+        },
+        0,
+        {},
+    };
+    for (int c = 0; c < 256; c++)
+        block.classes[c] = CLocaleClass(c);
+    return block;
+}
+
+// XBE_GLOBAL(0x001a31ea, 0x300) readonly
+const CtypeBlock CLocaleCtype = MakeCtypeBlock();
 // XBE_GLOBAL(0x001d8a00, 4)
-const unsigned short *CtypeTable = (const unsigned short *)0x001a32eau;
+const unsigned short *CtypeTable = CLocaleCtype.classes;
+// XBE_GLOBAL(0x001d8a0c, 1)
+extern const char DecimalPoint = '.';                     // __decimal_point
 } // namespace Crt
 
 namespace Crt {

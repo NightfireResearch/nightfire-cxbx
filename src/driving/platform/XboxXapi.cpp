@@ -150,8 +150,7 @@ static BOOL __stdcall Xbox_ReadFile(HANDLE file, void *buffer, DWORD bytes, DWOR
     return ReadFile(file, buffer, bytes, read, overlapped);
 }
 
-static BOOL __stdcall Xbox_WriteFile(HANDLE file, const void *buffer, DWORD bytes, DWORD *written,
-                                     OVERLAPPED *overlapped) {
+BOOL __stdcall Xbox_WriteFile(HANDLE file, const void *buffer, DWORD bytes, DWORD *written, OVERLAPPED *overlapped) {
     return WriteFile(file, buffer, bytes, written, overlapped);
 }
 

@@ -14,6 +14,7 @@
 #include <stdint.h>
 
 #include "../../helpers.h"
+#include "../eagl/Realgraph.h"        // ShapeFile
 
 struct DAFI;
 
@@ -54,12 +55,30 @@ public:
     static void Status(const char *format, ...);                                                // 0x000e2ff0
 };
 
+// The dots' SHPX, linked into the executable: one 16x16 A8R8G8B8 image "dot " (swizzled), with an 'i' and a 'p'
+// attachment
+struct DotsShapeFile {               // 0x4e0
+    ShapeFile file;                  // +0x000
+    char comment[0x58];              // +0x018
+    uint32_t imageHeader;            // +0x070 type 0x7d, the 'i' attachment next
+    int16_t width;                   // +0x074
+    int16_t height;                  // +0x076
+    uint32_t unknown78;              // +0x078
+    uint32_t flags;                  // +0x07c ShapeImage::flags: swizzled
+    uint32_t pixels[16 * 16];        // +0x080
+    ShapeInfoAttachment info;        // +0x480 the 'p' attachment next
+    ShapeNameAttachment longName;    // +0x4d0 the last
+};
+static_assert(sizeof(DotsShapeFile) == 0x4e0, "the dots' SHPX is 0x4e0 bytes");
+static_assert(offsetof(DotsShapeFile, info) == 0x480, "DotsShapeFile layout");
+
 // The screens' state (LoadingScreen.cpp)
 struct FNTXFont;
 struct ShapeFile;
 namespace EAGL {
 struct TAR;
 }
+extern DotsShapeFile DotsFile;
 extern bool KeepLoadScreen;
 extern float DotDirection, LoadScale, DotTime;
 extern ShapeFile *BackgroundFile, *Dots;

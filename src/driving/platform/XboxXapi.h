@@ -26,5 +26,7 @@ void *__stdcall Xbox_XPhysicalAlloc(ULONG size, ULONG address, ULONG alignment, 
 void __stdcall Xbox_GetLocalTime(SYSTEMTIME *time);
 DWORD Xbox_XGetVideoFlags(void);
 void __stdcall Xbox_OutputDebugStringA(const char *text);
+// WriteFile (0x0010f3b0), for PRINT's file log
+BOOL __stdcall Xbox_WriteFile(HANDLE file, const void *buffer, DWORD bytes, DWORD *written, OVERLAPPED *overlapped);
 
 #endif // DRIVING_PLATFORM_XBOXXAPI_H_

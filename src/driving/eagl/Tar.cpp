@@ -112,12 +112,8 @@ alignas(16) BuiltInShapeFile BuiltInShapes = {   // EaglGlobals.h
     { { { 0xd0a0, 0xd8a0, 0xfffff5f6 } } },   // 2x2
     { { { 0xd8a0, 0xd8a1, 0xfffffffc } } },   // 1x1
     {},
-    ShapeHeaderWord('i', 0x50),
-    0x00100040,
-    {},
-    "EAGL64 metal bin attachment for runtime texture management",
-    ShapeHeaderWord('p', 0),
-    "failed",
+    { ShapeHeaderWord('i', 0x50), 0x40, 0x10, {}, "EAGL64 metal bin attachment for runtime texture management" },
+    { ShapeHeaderWord('p', 0), "failed" },
 };
 
 #pragma float_control(precise, on)

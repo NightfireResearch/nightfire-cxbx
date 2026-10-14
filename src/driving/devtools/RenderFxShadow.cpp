@@ -11,6 +11,7 @@
 #include "../eagl/View.h"
 #include "../engine/PhysicsUtil.h"      // GaussRandomSpare
 #include "../engine/UMemory.hpp"
+#include "../game/Debris.h"               // DebrisStrips
 #include "../physics/PhysicsObject.h"
 #include "../render/Lightning.h"
 #include "../render/PostProcessing.h"
@@ -134,12 +135,9 @@ const uint32_t kRand = 0x00133ee0;                  // the C runtime's rand
 #define OrigWindowVertexCount (*(int32_t *)0x00202860)
 #define OrigWindowColours ((uint32_t *)0x00202870)
 #define OrigWindowColoursCleared (*(uint32_t *)0x00202a70)
-// The debris vectors and their scaled copies, among them the originals' copies of DebrisVectorsA and DebrisScaleA
-#define FxDebrisState ((uint8_t *)0x001c59e0)
-const uint32_t kDebrisStateBytes = 0x001c6bb0 - 0x001c59e0;
+// The originals' copies of DebrisVectorsA and DebrisScaleA (DebrisStrips is shared: the originals work on ours)
 #define OrigDebrisVectorsA ((Coord4 *)0x001c59e0)
 #define OrigDebrisScaleA (*(float *)0x001c5b84)
-#define OrigDebrisCountB (*(int32_t *)0x001c8e44)
 
 // The draw-request rings (the renderer core's): the slot fields the drawing code fills
 struct FxRequest {
@@ -990,39 +988,39 @@ void RunDebris(void *context, bool original) {
 }
 
 void TestDebris() {
-    static uint8_t saved[kDebrisStateBytes], start[kDebrisStateBytes], after[2][kDebrisStateBytes];
-    memcpy(saved, FxDebrisState, kDebrisStateBytes);
+    static DebrisTables saved, start, after[2];
+    memcpy(&saved, &DebrisStrips, sizeof(DebrisTables));
     float savedScale = DebrisScaleA;
-    int32_t savedCount = DebrisCountB, savedOrigCount = OrigDebrisCountB;
+    DebrisKind &countB = DebrisStrips.kinds[kDebrisScaledB];
     for (int c = 0; c < 12; c++) {
-        memcpy(FxDebrisState, saved, kDebrisStateBytes);
+        memcpy(&DebrisStrips, &saved, sizeof(DebrisTables));
         DebrisScaleA = savedScale;
-        DebrisCountB = savedCount;
         if (c > 0) {
-            float *vectors = reinterpret_cast<float *>(FxDebrisState);
-            for (uint32_t i = 0; i < kDebrisStateBytes / 4; i++)
-                if (Next() % 3 == 0)
-                    vectors[i] = Uniform(-10.0f, 10.0f);
+            Coord4 *const vectors[3] = { DebrisStrips.vectorsB, DebrisStrips.scaledB, DebrisStrips.scaledA };
+            const int counts[3] = { 30, 30, kDebrisCountA };
+            for (int v = 0; v < 3; v++) {
+                float *words = &vectors[v]->x;
+                for (int i = 0; i < counts[v] * 4; i++)
+                    if (Next() % 3 == 0)
+                        words[i] = Uniform(-10.0f, 10.0f);
+            }
             DebrisScaleA = Uniform(-2.0f, 2.0f);
-            DebrisCountB = Range(0, 30);
+            countB.vertexCount = Range(0, 30);
         }
         // the original reads its copies of what the port reads (the port's DebrisVectorsA is constant)
         memcpy(OrigDebrisVectorsA, DebrisVectorsA, sizeof(DebrisVectorsA));
         OrigDebrisScaleA = DebrisScaleA;
-        OrigDebrisCountB = DebrisCountB;
-        memcpy(start, FxDebrisState, kDebrisStateBytes);
+        memcpy(&start, &DebrisStrips, sizeof(DebrisTables));
         for (int side = 0; side < 2; side++) {
-            memcpy(FxDebrisState, start, kDebrisStateBytes);
+            memcpy(&DebrisStrips, &start, sizeof(DebrisTables));
             Guarded(RunDebris, NULL, side == 0);
-            memcpy(after[side], FxDebrisState, kDebrisStateBytes);
+            memcpy(&after[side], &DebrisStrips, sizeof(DebrisTables));
         }
         g_cases++;
-        CheckBytes("debris tables", c, after[0], after[1], kDebrisStateBytes);
+        CheckBytes("debris tables", c, &after[0], &after[1], sizeof(DebrisTables));
     }
-    memcpy(FxDebrisState, saved, kDebrisStateBytes);
+    memcpy(&DebrisStrips, &saved, sizeof(DebrisTables));
     DebrisScaleA = savedScale;
-    DebrisCountB = savedCount;
-    OrigDebrisCountB = savedOrigCount;
 }
 
 // ---- the shadow map

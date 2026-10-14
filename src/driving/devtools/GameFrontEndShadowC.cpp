@@ -246,7 +246,6 @@ const uint32_t kPrint = 0x000e2e30;
 
 #define ShadowActiveViews U32_AT(OwnedGlobals_Ours(0x00243940))
 #define ShadowSimTimeStep FLOAT_AT(0x00234e30)
-#define ShadowDotsFile 0x001caa00
 #define ShadowEaglMalloc U32_AT(OwnedGlobals_Ours(0x001caf68))
 #define ShadowEaglFree U32_AT(OwnedGlobals_Ours(0x001caf6c))
 
@@ -2401,7 +2400,7 @@ void BuildRegions() {
         AddShared(&fgRenderer->screenWidth, 0x10, "the renderer's screen");
     AddShared(reinterpret_cast<void *>(OwnedGlobals_Ours(0x00243940)), 4, "the active views");
     AddShared(reinterpret_cast<void *>(0x00234e30), 4, "the simulation's step");
-    AddShared(reinterpret_cast<void *>(ShadowDotsFile), 0x4e0, "the dots' file", false);
+    AddShared(&DotsFile, sizeof(DotsFile), "the dots' file", false);
     // The owned globals (pointers to each side's own loads compared in the logs instead)
     AddOwned(&LastParticleSystem, kGameLastParticleSystem, 4, "LastParticleSystem");
     AddOwned(&LineMaterial, kGameLineMaterial, sizeof(LineMaterial), "LineMaterial");

@@ -104,7 +104,8 @@ static_assert(offsetof(PedestrianStatics, specialRoadCount) == 0x300 &&
               offsetof(PedestrianStatics, count) == 0x398, "PedestrianStatics layout");
 
 alignas(16) extern PedestrianStatics Pedestrians;
-#define PedSets ((PedestrianSet *)0x001b6078)           // [7], by GetPedBase
+constexpr int kPedestrianSets = 7;
+extern PedestrianSet PedSets[kPedestrianSets];         // by GetPedBase
 extern int32_t InvalidatedPed;                          // the pedestrian about to be recycled, -1 none
 
 class AICharacterPedestrian : public AICharacter {

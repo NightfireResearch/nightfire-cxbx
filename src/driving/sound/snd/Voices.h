@@ -108,7 +108,7 @@ struct PatchHeader {
     uint8_t panMult;             // +0x1f [0x25] (default 1; MW: panmult)
     int8_t *volTable;            // +0x20 [0x12] data pointer + value
     int8_t *bendTable;           // +0x24 [0x17]
-    EnvSegment *envTable;        // +0x28 [0x19] (default 0x001d9d28)
+    EnvSegment *envTable;        // +0x28 [0x19] (default DefaultEnvelope)
     int8_t *volLfo;              // +0x2c [0x1d]
     int8_t *pitchLfo;            // +0x30 [0x20]
     uint8_t *userData[4];        // +0x34 [0x14]

@@ -6,6 +6,7 @@
 
 #include <string.h>
 
+#include "ActionQueue.hpp"            // GameAction
 #include "GameLoop.h"
 #include "IOModule.hpp"
 #include "InputDevice.hpp"
@@ -28,12 +29,141 @@ InputConfigManager gInputConfigManager;
 // XBE_GLOBAL(0x001e458c, 0x4)
 uint32_t gInputConfigManagerMade;
 
-// The names the .def files use, built by static initialisers: the actions (over the table at 0x001b6ba0) and the
-// update methods (0x001b6fd0); and the front end's slot names.
+// The names the .def files use, built by static initialisers: the actions and the update methods; and the front
+// end's slot names.
 // XBE_GLOBAL(0x001e23e0, 0x10)
 StringToNumber gActionNames;
 // XBE_GLOBAL(0x001e4590, 0x10)
 StringToNumber gUpdateMethodNames;
+// The tables the static initialisers build them over: the action names (getActionID's), by GameAction, and the
+// update methods' letters
+// XBE_GLOBAL(0x001b6ba0, 0x3b0)
+StringToNumberEntry ActionNameTable[kActionNameEntries] = {
+    { kNullAction, "NULL_ACTION" },
+    { kActionSteer, "GAMEACTION_STEER" },
+    { kActionSteerVertical, "GAMEACTION_STEERVERTICAL" },
+    { kActionSteerVerticalInv, "GAMEACTION_STEERVERTICALINV" },
+    { kActionSteerLeft, "GAMEACTION_STEERLEFT" },
+    { kActionSteerRight, "GAMEACTION_STEERRIGHT" },
+    { kActionSteerUp, "GAMEACTION_STEERUP" },
+    { kActionSteerDown, "GAMEACTION_STEERDOWN" },
+    { kActionSteerLeftDigital, "GAMEACTION_STEERLEFTDIGITAL" },
+    { kActionSteerRightDigital, "GAMEACTION_STEERRIGHTDIGITAL" },
+    { kActionSteerUpDigital, "GAMEACTION_STEERUPDIGITAL" },
+    { kActionSteerDownDigital, "GAMEACTION_STEERDOWNDIGITAL" },
+    { kActionSoundSteerLeft, "GAMEACTION_SOUND_STEERLEFT" },
+    { kActionSoundSteerRight, "GAMEACTION_SOUND_STEERRIGHT" },
+    { kActionSoundSteerUp, "GAMEACTION_SOUND_STEERUP" },
+    { kActionSoundSteerDown, "GAMEACTION_SOUND_STEERDOWN" },
+    { kActionSoundSteerHorizontalRelease, "GAMEACTION_SOUND_STEERHORIZONTALRELEASE" },
+    { kActionSoundSteerVerticalRelease, "GAMEACTION_SOUND_STEERVERTICALRELEASE" },
+    { kActionSoundSteerPadLeft, "GAMEACTION_SOUND_STEERPADLEFT" },
+    { kActionSoundSteerPadRight, "GAMEACTION_SOUND_STEERPADRIGHT" },
+    { kActionSoundSteerPadUp, "GAMEACTION_SOUND_STEERPADUP" },
+    { kActionSoundSteerPadDown, "GAMEACTION_SOUND_STEERPADDOWN" },
+    { kActionGas, "GAMEACTION_GAS" },
+    { kActionGasBrake, "GAMEACTION_GASBRAKE" },
+    { kActionWheelSpin, "GAMEACTION_WHEELSPIN" },
+    { kActionWheelSpinRelease, "GAMEACTION_WHEELSPINRELEASE" },
+    { kActionBrake, "GAMEACTION_BRAKE" },
+    { kActionHandbrake, "GAMEACTION_HANDBRAKE" },
+    { kActionHandbrakeRelease, "GAMEACTION_HANDBRAKERELEASE" },
+    { kActionFirePrimary, "GAMEACTION_FIREPRIMARY" },
+    { kActionFirePrimaryRelease, "GAMEACTION_FIREPRIMARYRELEASE" },
+    { kActionFireSecondary, "GAMEACTION_FIRESECONDARY" },
+    { kActionFireSecondaryRelease, "GAMEACTION_FIRESECONDARYRELEASE" },
+    { kActionToggleSecondary, "GAMEACTION_TOGGLESECONDARY" },
+    { kActionToggleSecondaryUp, "GAMEACTION_TOGGLESECONDARYUP" },
+    { kActionToggleSecondaryDown, "GAMEACTION_TOGGLESECONDARYDOWN" },
+    { kActionFireGadget, "GAMEACTION_FIREGADGET" },
+    { kActionFireGadgetRelease, "GAMEACTION_FIREGADGETRELEASE" },
+    { kActionChangeCamera, "GAMEACTION_CHANGECAMERA" },
+    { kActionChangeCameraUp, "GAMEACTION_CHANGECAMERAUP" },
+    { kActionChangeCameraDown, "GAMEACTION_CHANGECAMERADOWN" },
+    { kActionCamLookBack, "GAMEACTION_CAMLOOKBACK" },
+    { kActionCamLookBackRelease, "GAMEACTION_CAMLOOKBACKRELEASE" },
+    { kActionCamZoomButton, "GAMEACTION_CAMZOOMBUTTON" },
+    { kActionCamRotateX, "GAMEACTION_CAMROTATEX" },
+    { kActionCamRotateY, "GAMEACTION_CAMROTATEY" },
+    { kActionCamRotateYInv, "GAMEACTION_CAMROTATEYINV" },
+    { kActionCamRotateX2, "GAMEACTION_CAMROTATEX2" },
+    { kActionCamRotateY2, "GAMEACTION_CAMROTATEY2" },
+    { kActionCamRotateY2Inv, "GAMEACTION_CAMROTATEY2INV" },
+    { kActionCamSpin, "GAMEACTION_CAMSPIN" },
+    { kActionCamCentre, "GAMEACTION_CAMCENTRE" },
+    { kActionCamZoomInOut, "GAMEACTION_CAMZOOMINOUT" },
+    { kActionCamZoomIn, "GAMEACTION_CAMZOOMIN" },
+    { kActionCamZoomOut, "GAMEACTION_CAMZOOMOUT" },
+    { kActionAimZoomLeft, "GAMEACTION_AIMZOOMLEFT" },
+    { kActionAimZoomRight, "GAMEACTION_AIMZOOMRIGHT" },
+    { kActionAimZoomNone, "GAMEACTION_AIMZOOMNONE" },
+    { kActionAimRelease, "GAMEACTION_AIMRELEASE" },
+    { kActionAutoDriveLock, "GAMEACTION_AUTODRIVELOCK" },
+    { kActionAutoDriveLockRelease, "GAMEACTION_AUTODRIVELOCKRELEASE" },
+    { kActionLeanRight, "GAMEACTION_LEANRIGHT" },
+    { kActionLeanLeft, "GAMEACTION_LEANLEFT" },
+    { kActionPovReload, "GAMEACTION_POVRELOAD" },
+    { kActionResumeAutoDrive, "GAMEACTION_RESUMEAUTODRIVE" },
+    { kFrontEndUp, "FRONTENDACTION_UP" },
+    { kFrontEndDown, "FRONTENDACTION_DOWN" },
+    { kFrontEndLeft, "FRONTENDACTION_LEFT" },
+    { kFrontEndRight, "FRONTENDACTION_RIGHT" },
+    { kFrontEndAccept, "FRONTENDACTION_ACCEPT" },
+    { kFrontEndCancel, "FRONTENDACTION_CANCEL" },
+    { kFrontEndStart, "FRONTENDACTION_START" },
+    { kFrontEndScreenshot, "FRONTENDACTION_SCREENSHOT" },
+    { kFrontEndInvert, "FRONTENDACTION_INVERT" },
+    { kFrontEndSkipMovie, "FRONTENDACTION_SKIPMOVIE" },
+    { kDebugAxisX, "DEBUGACTION_AXISX" },
+    { kDebugAxisY, "DEBUGACTION_AXISY" },
+    { kDebugAxisRX, "DEBUGACTION_AXISRX" },
+    { kDebugAxisRY, "DEBUGACTION_AXISRY" },
+    { kDebugScreenshot, "DEBUGACTION_SCREENSHOT" },
+    { kDebugStopRecordPath, "DEBUGACTION_STOPRECORDPATH" },
+    { kCheatDpadLeft, "CHEATACTION_DPAD_LEFT" },
+    { kCheatDpadLeftRelease, "CHEATACTION_DPAD_LEFT_RELEASE" },
+    { kCheatDpadUp, "CHEATACTION_DPAD_UP" },
+    { kCheatDpadUpRelease, "CHEATACTION_DPAD_UP_RELEASE" },
+    { kCheatDpadRight, "CHEATACTION_DPAD_RIGHT" },
+    { kCheatDpadRightRelease, "CHEATACTION_DPAD_RIGHT_RELEASE" },
+    { kCheatDpadDown, "CHEATACTION_DPAD_DOWN" },
+    { kCheatDpadDownRelease, "CHEATACTION_DPAD_DOWN_RELEASE" },
+    { kCheatButLeft, "CHEATACTION_BUT_LEFT" },
+    { kCheatButLeftRelease, "CHEATACTION_BUT_LEFT_RELEASE" },
+    { kCheatButUp, "CHEATACTION_BUT_UP" },
+    { kCheatButUpRelease, "CHEATACTION_BUT_UP_RELEASE" },
+    { kCheatButRight, "CHEATACTION_BUT_RIGHT" },
+    { kCheatButRightRelease, "CHEATACTION_BUT_RIGHT_RELEASE" },
+    { kCheatButDown, "CHEATACTION_BUT_DOWN" },
+    { kCheatButDownRelease, "CHEATACTION_BUT_DOWN_RELEASE" },
+    { kCheatTriggerLeft, "CHEATACTION_TRIGGER_LEFT" },
+    { kCheatTriggerLeftRelease, "CHEATACTION_TRIGGER_LEFT_RELEASE" },
+    { kCheatTriggerRight, "CHEATACTION_TRIGGER_RIGHT" },
+    { kCheatTriggerRightRelease, "CHEATACTION_TRIGGER_RIGHT_RELEASE" },
+    { kActionExitApplication, "ACTION_EXITAPPLICATION" },
+    { kActionMinimizeApplication, "ACTION_MINIMIZEAPPLICATION" },
+    { kActionRestoreApplication, "ACTION_RESTOREAPPLICATION" },
+    { kActionMouseMoveX, "ACTION_MOUSEMOVE_X" },
+    { kActionMouseMoveY, "ACTION_MOUSEMOVE_Y" },
+    { kActionMouseMove, "ACTION_MOUSEMOVE" },
+    { kActionMouseLButtonDown, "ACTION_MOUSELBUTTONDOWN" },
+    { kActionMouseLButtonUp, "ACTION_MOUSELBUTTONUP" },
+    { kActionMouseRButtonDown, "ACTION_MOUSERBUTTONDOWN" },
+    { kActionMouseRButtonUp, "ACTION_MOUSERBUTTONUP" },
+    { kActionKeyDown, "ACTION_KEYDOWN" },
+    { kActionKeyUp, "ACTION_KEYUP" },
+    { kActionChar, "ACTION_CHAR" },
+    { kActionCenter, "ACTION_CENTER" },
+    { kActionInputSync, "ACTION_INPUTSYNC" },
+    { kActionPlugUnplug, "ACTION_PLUGUNPLUG" },
+    { 0, NULL },
+};
+// XBE_GLOBAL(0x001b6fd0, 0x58)
+StringToNumberEntry UpdateMethodNameTable[kUpdateMethodNameEntries] = {
+    { UPDATE_ON_CHANGE, "U" }, { UPDATE_DOWN, "+" }, { UPDATE_UP, "-" }, { UPDATE_ABOVE, ">" }, { UPDATE_BELOW, "<" },
+    { UPDATE_CENTRED, "=" }, { UPDATE_IF_INVERTED, "I" }, { UPDATE_NOT_INVERTED, "N" }, { UPDATE_REPEAT_DOWN, "R" },
+    { UPDATE_REPEAT_UP, "M" }, { 0, NULL },
+};
 // XBE_GLOBAL(0x001b6f58, 0x78)
 static StringToNumberEntry kFrontEndSlotNames[15] = {
     {0, "ButtonA"}, {1, "ButtonB"}, {2, "ButtonY"}, {3, "ButtonX"}, {4, "DPadLeftRight"}, {5, "DPadUpDown"},

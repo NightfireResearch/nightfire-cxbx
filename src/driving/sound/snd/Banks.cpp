@@ -28,10 +28,10 @@ using namespace SND;   // the tags
 
 // XBE_GLOBAL(0x00245374, 1)
 uint8_t NextKey;                                     // SNDBANKI_findfreekey's running counter
+// XBE_GLOBAL(0x001d9d28, 8)
+EnvSegment DefaultEnvelope = { 0x7fffffff, 0x7f };   // a timbre's envelope when it has none
 
 namespace {
-
-const int32_t kDefaultEnvelope = 0x001d9d28;         // the default envelope's address, in the original's .rdata
 
 inline uint8_t *AddBytes(const void *p, int32_t n) {   // pointer + value, as the original's 32-bit ADD
     return (uint8_t *)(uintptr_t)((uint32_t)(uintptr_t)p + (uint32_t)n);
@@ -428,7 +428,7 @@ int SNDI_parsetimbre(uint8_t **cursor, SND::PatchHeader *header) {
     f.low[kTagEnvCount] = 1;
     f.low[kTagPan] = 0x40;
     header->userDataCount = 0;
-    f.low[kTagEnvTable] = kDefaultEnvelope;
+    f.low[kTagEnvTable] = int32_t(uintptr_t(&DefaultEnvelope));   // the address itself: the tag has no data pointer
     f.low[kTag1a] = -1;
     f.low[kTagPanMult] = 1;
     f.Sample(kTagPlatformVersion) = 2;
