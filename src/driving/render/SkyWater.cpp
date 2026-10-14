@@ -25,6 +25,7 @@
 #include "../engine/CoreContainers.h"     // CollisionInstanceMap
 #include "../engine/CoreFoundation.h"     // ThrowLengthError
 #include "../engine/UMemory.hpp"
+#include "../game/Debris.h"               // DebrisStrips
 #include "../platform/RealMath.h"
 #include "../world/CollisionInstance.h"   // ColStl, WCollisionInstance
 #include "../world/Render.h"              // fgRender, kInstanceSky
@@ -74,7 +75,8 @@ uint32_t WindowColours[kWindowVertices];
 // XBE_GLOBAL(0x00202a70, 4)
 uint32_t WindowColoursCleared;               // the colours' function-local static guard
 
-// The debris tables ScaleDebrisTables scales: two lists of vectors, each scaled into a copy
+// The debris tables ScaleDebrisTables scales: two lists of vectors, each scaled into a copy (the second list, the
+// copies and the second's count are game/Debris.h's DebrisStrips)
 // XBE_GLOBAL(0x001c59e0, 0x1a0)
 const Coord4 DebrisVectorsA[kDebrisCountA] = {
     { -0.011719f, 0.0f, -0.023438f, 1.0f },
@@ -104,16 +106,8 @@ const Coord4 DebrisVectorsA[kDebrisCountA] = {
     { 0.007813f, 0.0f, 0.023438f, 1.0f },
     { 0.011719f, 0.0f, -0.023438f, 1.0f },
 };
-// XBE_GLOBAL(0x001c6a10, 0x1a0)
-#define DebrisScaledA ((Coord4 *)0x001c6a10)
 // XBE_GLOBAL(0x001c5b84, 4)
 float DebrisScaleA = 0.52f;
-// XBE_GLOBAL(0x001c5d80, 0x1e0)
-#define DebrisVectorsB ((const Coord4 *)0x001c5d80)
-// XBE_GLOBAL(0x001c5f60, 0x1e0)
-#define DebrisScaledB ((Coord4 *)0x001c5f60)
-// XBE_GLOBAL(0x001c8e44, 4)
-int32_t DebrisCountB = 30;
 
 // GeoPrimState's depth comparison, in OpenGL's numbering
 constexpr uint32_t kDepthLessEqual = 0x203;
@@ -346,13 +340,13 @@ void RWindow::DrawBrokenWindows(float radius) {
 // FUNC_AT(0x000a8e80)
 void ScaleDebrisTables() {
     for (int i = 0; i < kDebrisCountA; i++) {
-        DebrisScaledA[i].x = DebrisScaleA * DebrisVectorsA[i].x;
-        DebrisScaledA[i].y = DebrisScaleA * DebrisVectorsA[i].y;
-        DebrisScaledA[i].z = DebrisScaleA * DebrisVectorsA[i].z;
+        DebrisStrips.scaledA[i].x = DebrisScaleA * DebrisVectorsA[i].x;
+        DebrisStrips.scaledA[i].y = DebrisScaleA * DebrisVectorsA[i].y;
+        DebrisStrips.scaledA[i].z = DebrisScaleA * DebrisVectorsA[i].z;
     }
-    for (int i = 0; i < DebrisCountB; i++) {
-        DebrisScaledB[i].x = DebrisVectorsB[i].x * kDebrisScaleB;
-        DebrisScaledB[i].y = DebrisVectorsB[i].y * kDebrisScaleB;
-        DebrisScaledB[i].z = DebrisVectorsB[i].z * kDebrisScaleB;
+    for (int i = 0; i < int(DebrisStrips.kinds[kDebrisScaledB].vertexCount); i++) {
+        DebrisStrips.scaledB[i].x = DebrisStrips.vectorsB[i].x * kDebrisScaleB;
+        DebrisStrips.scaledB[i].y = DebrisStrips.vectorsB[i].y * kDebrisScaleB;
+        DebrisStrips.scaledB[i].z = DebrisStrips.vectorsB[i].z * kDebrisScaleB;
     }
 }

@@ -3,6 +3,7 @@
 
 #include "../../common/launchInfo.h"
 #include "CRuntime.h"
+#include "XboxXapi.h"                     // Xbox_OutputDebugStringA, Xbox_WriteFile
 
 #include <windows.h>
 #include <stdarg.h>
@@ -19,12 +20,11 @@
 // ---- PRINT
 //
 // Sixty-four channels, each a name and a flags word (bit 0: on; bit 1: in the group that channel 1 switches), and
-// eight output devices, each a callback(channel, text), a flags word (bit 0: on) and a word nothing here uses. A
-// line goes out when its channel is on, to every device that is on. The device table is the game's, initialised in
-// the XBE with the originals' callbacks, so it is used where it is.
+// eight output devices, each a name, a callback(channel, text) and a flags word (bit 0: on). A line goes out when
+// its channel is on, to every device that is on.
 
 struct PrintChannel { const char *name; uint32_t flags; };
-struct PrintDevice { void (*callback)(int channel, const char *text); uint32_t flags; uint32_t unused; };
+struct PrintDevice { const char *name; void (*callback)(int channel, const char *text); uint32_t flags; };
 static const int kPrintChannels = 64, kPrintDevices = 8;
 
 // XBE_GLOBAL(0x001d1990, 0x200)
@@ -33,9 +33,10 @@ static PrintChannel PrintChannels[kPrintChannels] = {
     {"file", 2}, {"input", 2}, {"system", 2}, {"3d", 2}, {"font", 2}, {"codec", 2}, {"math", 2}, {"eagl", 2},
     {"capture", 2},
 };
-// The last device's unused word is the next global (FileSys.cpp's SyncPriority); nothing reads it.
-// XBE_GLOBAL(0x001d1ba4, 0x5c)
-#define PrintDevices     ((PrintDevice *)0x001d1ba4u)    // 8
+// XBE_GLOBAL(0x001d1ba0, 0x60)
+static PrintDevice PrintDevices[kPrintDevices] = {
+    {}, {"console", PrintToConsole, 0}, {"debugger", PrintToDebugger, 1}, {"file log", PRINTFILE_print, 0},
+};
 // XBE_GLOBAL(0x002422d8, 4)
 static int PrintInitialised;
 
@@ -48,10 +49,8 @@ void PRINT_init() {
     PrintInitialised = 1;
     for (int c = 0; c < kPrintChannels; c++)
         PrintChannels[c].flags &= ~1u;
-    // Devices four to seven lose their callbacks, and with them the word before each (the previous device's
-    // unused word), exactly as the original's loop over 0x001d1bd0..0x001d1c04 clears them.
     for (int d = 4; d < kPrintDevices; d++) {
-        PrintDevices[d - 1].unused = 0;
+        PrintDevices[d].name = NULL;
         PrintDevices[d].callback = NULL;
     }
     for (int c = 14; c < kPrintChannels; c++) {
@@ -127,12 +126,41 @@ void PRINT_string(int channel, const char *format, ...) {
     va_end(arguments);
 }
 
-// The console device (0x0010b3a0, the callback in the device table at 0x001d1bb0): printf("%s", text).
+// The console device (0x0010b3a0): printf("%s", text).
 // FUNC_AT(0x0010b3a0)
 void PrintToConsole(int channel, const char *text) {
     (void)channel;
     fputs(text, stdout);
     fflush(stdout);
+}
+
+// XBE_GLOBAL(0x00242438, 0x400)
+static char DebuggerLine[0x400];
+
+// The debugger device (0x0010b3b0, which Ghidra has no function for; the name is ours): the text gathered until
+// a line ends, then the line to the debugger.
+void PrintToDebugger(int channel, const char *text) {
+    (void)channel;
+    strcat(DebuggerLine, text);
+    if (strchr(DebuggerLine, '\n') != NULL) {
+        Xbox_OutputDebugStringA(DebuggerLine);
+        DebuggerLine[0] = '\0';
+    }
+}
+
+// XBE_GLOBAL(0x001d1b98, 4)
+static HANDLE PrintFile = INVALID_HANDLE_VALUE;     // nothing opens it
+
+// The file log device (0x0010b410, which Ghidra has no function for; named after its message): the text written
+// to the log file, if one is open.
+void PRINTFILE_print(int channel, const char *text) {
+    (void)channel;
+    DWORD length = DWORD(strlen(text));
+    DWORD written;
+    if (PrintFile == INVALID_HANDLE_VALUE)
+        return;
+    if (!Xbox_WriteFile(PrintFile, text, length, &written, NULL) || written != length)
+        Xbox_OutputDebugStringA("PRINTFILE_print: write failed.\n");
 }
 
 // ---- exit and abort

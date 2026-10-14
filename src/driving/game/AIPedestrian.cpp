@@ -29,6 +29,12 @@
 #include "../world/World.h"             // fgWorld
 #include "../world/WorldPos.h"
 
+// XBE_GLOBAL(0x001b6078, 0x310)
+PedestrianSet PedSets[kPedestrianSets] = {
+    { 16, { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }, 0, {} },
+    { 1, { 16 }, 6, { 1, 2, 3, 4, 5, 6 } },
+    { 6, { 16, 17, 18, 19, 20, 21 }, 0, {} },
+};
 // XBE_GLOBAL(0x001b6388, 0x4)
 int32_t InvalidatedPed = -1;
 // XBE_GLOBAL(0x001ddb40, 0x39c)

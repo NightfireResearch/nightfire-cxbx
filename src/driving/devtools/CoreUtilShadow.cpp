@@ -145,7 +145,7 @@ void CompareBytes(const char *what, const uint8_t *original, const uint8_t *port
 // The scratch world
 // ===============================================================================================================
 
-#define MemClassTable ((void **)0x00242ce0)
+#define MemClassTable (reinterpret_cast<void **>(MemClass))
 // The world's globals are the ports' (MemOutOfMemory, MemDefaultClass: RealMemory.h; Functions, Pools,
 // ObjectHeapClass, PageSize: UMemory.hpp) and the originals' copies of them, set alike
 #define OrigMemOutOfMemory (*(MemOutOfMemoryFn *)0x00242cd8)

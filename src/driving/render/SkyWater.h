@@ -107,7 +107,6 @@ void ScaleDebrisTables();                                                       
 constexpr int kDebrisCountA = 26;
 extern const Coord4 DebrisVectorsA[kDebrisCountA];
 extern float DebrisScaleA;
-extern int32_t DebrisCountB;
 
 // Among RWindow's code the linker placed compiled library code too: WindowPaneMap::Min,
 // WindowPaneIterator::Increment (world/CollisionManager.h) and InstanceList's Deallocate, Tidy and Xlen

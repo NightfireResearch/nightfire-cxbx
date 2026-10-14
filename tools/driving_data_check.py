@@ -56,6 +56,8 @@ CODE_TABLES = [
 ALLOWED = {
     "FontDriver": "points at our NullFontDriver (Realgraph.cpp), the game's null driver table at 0x001d1770 written "
                   "with our functions",
+    "DebugFont": "a font of our own design in the original's FNTX layout and size (engine/DebugFont.cpp): the "
+                 "game's debug font is not ours to ship",
 }
 
 

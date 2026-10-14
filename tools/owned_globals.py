@@ -97,6 +97,8 @@ SINGLE_COPY = set("""
     fgTriggerManager fgWorld fgWorldCulling gFeedbackAllowed gLimitHenchSpawns gPlayMovies gPlayerCanNeverLose
     gSoundOption gStreams gSubtitles gSuperEasy glbMissionManager
     BondHandIK CausticControl ReflStretch SwayData TestData
+    BuiltInFont CurrentTimer DebrisStrips DebugFont DotsFile EmptyBank fgBanks PedSets RootScratch UnprofiledRegion
+    UnprofiledTimer DefaultEnvelope MemClass RenderSingletonManagerMade
 """.split())
 
 

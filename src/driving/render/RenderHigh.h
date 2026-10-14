@@ -100,5 +100,6 @@ extern GalleryNamespace TheGalleryNamespace;
 void FreeEAGLMaterialsThunk();                                                                  // 0x0008bab0
 
 extern USingletonManager TheRenderSingletonManager;   // RenderHigh.cpp
+extern uint32_t RenderSingletonManagerMade;
 
 #endif // DRIVING_RENDER_RENDERHIGH_H_

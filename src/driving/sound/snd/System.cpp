@@ -107,7 +107,8 @@ alignas(4) uint8_t SoundMutex[0x1c];          // the CRITICAL_SECTION
 
 namespace {
 
-// The random generator's starting words, + the seed (0x001d9d30 in the original's .rdata)
+// The random generator's starting words, + the seed
+// XBE_GLOBAL(0x001d9d30, 0x18) readonly
 const uint32_t kRandomSeeds[6] = { 0xf22d0e56, 0x883126e9, 0xc624dd2f, 0x0702c49c, 0x9e353f7d, 0x6fdf3b64 };
 
 

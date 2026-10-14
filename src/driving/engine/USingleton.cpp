@@ -37,7 +37,8 @@ static void Vector_Fill(USingleton **first, USingleton **last, USingleton *const
 
 // XBE_GLOBAL(0x001e47c0, 0x10)
 USingletonManager TheSingletonManager;
-#define SingletonManagerMade U32_AT(0x001e47d0)
+// XBE_GLOBAL(0x001e47d0, 4)
+uint32_t SingletonManagerMade;          // TheSingletonManager's construction guard (bit 0)
 
 static const USingletonVtable *const kSingletonVtable = (const USingletonVtable *)Vtable_0018beb0;
 

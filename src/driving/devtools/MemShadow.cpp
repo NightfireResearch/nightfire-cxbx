@@ -28,7 +28,6 @@ static const int kArenaBytes = 1 << 20;
 static const int kOperations = 20000;
 static const int kLive = 400;
 
-#define MemClass        ((uint8_t **)0x00242ce0u)
 #define OrigMemOutOfMemory (*(MemOutOfMemoryFn *)0x00242cd8u)   // MemOutOfMemory's original copy
 
 // The originals, by address. Each runs inside a scope that puts its entry bytes back.

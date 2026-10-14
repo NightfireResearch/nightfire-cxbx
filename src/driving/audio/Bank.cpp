@@ -18,7 +18,13 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- globals
-#define EmptyBank (*(ABank *)0x00243b18)
+// XBE_GLOBAL(0x00243b18, 0x18)
+ABank EmptyBank;
+// XBE_GLOBAL(0x001d8398, 0x28)
+ABank *fgBanks[kBankSlotCount] = {
+    &EmptyBank, &EmptyBank, &EmptyBank, &EmptyBank, &EmptyBank, &EmptyBank, &EmptyBank, &EmptyBank, &EmptyBank,
+    &EmptyBank,
+};
 
 // XBE_GLOBAL(0x001d8318, 0x80)
 char AudioDirectory[0x80] = "./";

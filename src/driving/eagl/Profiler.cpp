@@ -92,10 +92,6 @@ float StartY = 380.0f;
 // XBE_GLOBAL(0x001ce072, 1)
 uint8_t SkipFrame = 1;
 
-// The static initialisers build the frame region (FrameRegion, below) and the timer CurrentTimer starts at
-// (0x00240688), where they are
-#define CurrentTimer (*(ProfilerTimer **)0x001ce024)
-
 enum : uint32_t { kVertexDiffuse = 3, kVertexPosition = 0xffffffff };   // D3DVSDE_*
 enum { kLineList = 2, kQuadStrip = 6 };             // D3DPT_*
 
@@ -121,6 +117,14 @@ void EndPrimitive() {
 
 // XBE_GLOBAL(0x00240560, 0x128)
 alignas(16) ProfilerRegion FrameRegion;   // the static region the frame mark times
+// The region "UNPROFILED" and the timer the static initialisers start in it, the first current timer (the names
+// are ours)
+// XBE_GLOBAL(0x002406a8, 0x128)
+ProfilerRegion UnprofiledRegion;
+// XBE_GLOBAL(0x00240688, 0x14)
+ProfilerTimer UnprofiledTimer;
+// XBE_GLOBAL(0x001ce024, 4)
+ProfilerTimer *CurrentTimer = &UnprofiledTimer;
 
 // XBE_GLOBAL(0x00240268, 4)
 EAGL::PrintHookFn EAGL::PrintHook;

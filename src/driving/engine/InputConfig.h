@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../data/SymbolTable.h"   // StringToNumber
+
 // ---------------------------------------------------------------------------------------------------------------
 // The control configurations: which action each control of a device sends, and when.
 //
@@ -19,8 +21,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 class InputDevice;
-struct StringToNumber;
-struct StringToNumberEntry;
 
 // InputTableEntry::updateMethod - how a mapping entry decides to send its action (the table at 0x001b6fd0, the
 // letters the .def files use).
@@ -151,10 +151,13 @@ char* __fastcall BuildFileName(char *buffer, int unused, const char *directory, 
 char* __fastcall BuildPath(char *buffer, int unused, const char *directory, const char *subdirectory,
                            const char *name, const char *extension);
 
-// The action and update-method names (InputConfig.cpp), constructed by the static initialisers.
-struct StringToNumber;
+// The action and update-method names (InputConfig.cpp), constructed by the static initialisers over the tables.
 extern StringToNumber gActionNames;
 extern StringToNumber gUpdateMethodNames;
+constexpr int kActionNameEntries = 118;         // every action and the null string
+constexpr int kUpdateMethodNameEntries = 11;
+extern StringToNumberEntry ActionNameTable[kActionNameEntries];
+extern StringToNumberEntry UpdateMethodNameTable[kUpdateMethodNameEntries];
 
 // The configurations and the guard of their construction (bit 0)
 extern InputConfigManager gInputConfigManager;

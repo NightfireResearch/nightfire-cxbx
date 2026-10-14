@@ -150,14 +150,12 @@ struct ShadowActorDatabase {
 // originals' pass
 #define OrigActManager (*(ActManager **)0x001dd9cc)
 #define OrigAnimationBuffer (*(MATRIX4 **)0x001dd9fc)
-#define ShadowRootScratch ((void *)0x001b4a90)
 #define ShadowRandomSeed (*(uint32_t *)OwnedGlobals_Ours(0x001c45c4))
 #define ShadowStepCount (*(int32_t *)0x00234e34)
 #define ShadowPlayerPhysics (*(PhysicsObject ***)0x00234e40)
 #define ShadowEventBlock ((void *)0x001e47e8)
 
 constexpr unsigned kEventBlockSize = 0x68;
-constexpr unsigned kRootScratchSize = 0x60;
 
 // ---- the functions, at their original addresses
 
@@ -268,7 +266,7 @@ void AddPoserRegions(ActPoser *poser, Saved *saved) {
     saved->Add(skeleton->pose, bones * 12 * sizeof(float));
     saved->Add(skeleton->matrices, bones * sizeof(MATRIX4));
     saved->Add(AnimationBuffer, bones * sizeof(MATRIX4));
-    saved->Add(ShadowRootScratch, kRootScratchSize);
+    saved->Add(&RootScratch, sizeof(RootScratch));
     if (poser->crossFade != NULL) {
         saved->Add(poser->crossFade, sizeof(ActCrossFadeBlendData));
         saved->Add(poser->crossFade->matrices.buffer, poser->crossFade->matrices.count * sizeof(MATRIX4));

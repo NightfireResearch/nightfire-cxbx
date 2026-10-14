@@ -1225,8 +1225,7 @@ files, `src/driving/devtools/`). Suggested internal pieces, in the file's order:
    `BigFile` (0x118), `FileSlot` (0x10), `ChunkCtx`, `FileReq`, `ResolveCtx`; reuse `RealMutex`, `RealSignal`,
    `RealThread` from `RealSystem.h`.
 2. **Globals by address** during the port (`#define FsOperations (*(FsWorker **)0x00242870u)` etc.); since
-   October 2026's ownership sweep they are our own variables tagged `// XBE_GLOBAL(address, size)`, except
-   `FsWorkers`, which unported FILESYS_write reaches through data.
+   October 2026's ownership sweep they are our own variables tagged `// XBE_GLOBAL(address, size)`.
 3. **Queue helpers** as plain C++ functions (no need to patch them: no outside callers), `Q_unlink` taking
    `(q, node)` normally. Keep `FUN_0014a540` the original.
 4. **File device** (slot table, `FILEDEV_*`, `BIG_*`, the resolver) - pure functions over the slot table and a

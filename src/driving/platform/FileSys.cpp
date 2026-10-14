@@ -122,10 +122,8 @@ struct AsyncRequest;
 
 // XBE_GLOBAL(0x001d1c00, 4)
 static const int SyncPriority = 100;   // every FILE_ helper's
-// The game's while the tools count the original at 0x0010da00 as live (FILE_loadsizez's callback, which Ghidra
-// has no function for; only the replaced FILE_loadsizez refers to it).
 // XBE_GLOBAL(0x001d1c0c, 4)
-#define pFILE_malloc       (*(FileMallocFn *)0x001d1c0cu)
+static FileMallocFn pFILE_malloc;
 // XBE_GLOBAL(0x001d1c10, 4)
 static FileFreeFn pFILE_mfree;
 // XBE_GLOBAL(0x001d1c14, 4)
@@ -144,7 +142,8 @@ static AsyncRequest *AsyncFreeTail;
 static int AsyncCount;
 // XBE_GLOBAL(0x00242868, 4)
 static AsyncRequest *AsyncRequests;
-#define FsWorkers          (*(FsWorker **)0x00242870u)      // non-zero once initialised
+// XBE_GLOBAL(0x00242870, 4)
+static FsWorker *FsWorkers;              // non-zero once initialised
 // XBE_GLOBAL(0x00242874, 0x38)
 static LockQueue FreeOps;
 // XBE_GLOBAL(0x002428ac, 0x20)

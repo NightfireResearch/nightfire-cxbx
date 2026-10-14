@@ -15,6 +15,8 @@ void PRINT_setchannelstate(int channel, int state);
 void PRINT_setchannelname(int channel, const char *name);
 void PRINT_string(int channel, const char *format, ...);
 void PrintToConsole(int channel, const char *text);
+void PrintToDebugger(int channel, const char *text);
+void PRINTFILE_print(int channel, const char *text);
 
 void REAL_addexit(ExitCallback callback);
 void REAL_removeexit(ExitCallback callback);

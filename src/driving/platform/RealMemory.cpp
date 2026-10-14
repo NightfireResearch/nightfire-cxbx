@@ -29,10 +29,9 @@
 // +0x38 whether it has a lock, +0x3c the lock (a MUTEX).
 // ---------------------------------------------------------------------------------------------------------------
 
-// The class records stay the game's: the original at 0x001500a0 (the block holding a pointer), which UMemory still
-// calls through its table of MEM_ functions, reads them.
+// The class records
 // XBE_GLOBAL(0x00242ce0, 0x100)
-#define MemClass         ((uint8_t **)0x00242ce0u)   // 64
+uint8_t *MemClass[kMemClasses];
 // XBE_GLOBAL(0x00242cd4, 4)
 static int MemError;                   // what MEM_validate last found wrong
 // XBE_GLOBAL(0x00242cd8, 4)

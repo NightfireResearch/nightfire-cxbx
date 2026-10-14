@@ -120,7 +120,8 @@ RSceneObj_vtbl *const kSceneObjVtable = (RSceneObj_vtbl *)Vtable_RSceneObj;
 
 // ---- globals
 extern uint32_t GameTick;
-#define LightingWorldPosGuard U32_AT(0x001f25f0)
+// XBE_GLOBAL(0x001f25f0, 4)
+static uint32_t LightingWorldPosGuard;   // LightingWorldPos's construction guard (bit 0)
 
 // The renderer's random sequence (RSceneObj.hpp), as the XBE starts it; RRandom::StartUp seeds it
 // XBE_GLOBAL(0x001c45c4, 0x4)

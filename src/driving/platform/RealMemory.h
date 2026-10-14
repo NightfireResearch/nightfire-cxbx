@@ -4,10 +4,13 @@
 // EA's block allocator, the MEM_ functions of its portable library, as the driving engine has it. See RealMemory.cpp.
 
 #include <stddef.h>
+#include <stdint.h>
 
 typedef int (*MemOutOfMemoryFn)(int unused, int size, unsigned flags);   // 1: try the allocation again
 
 extern unsigned MemDefaultClass;   // the flags a request with none takes
+constexpr int kMemClasses = 64;
+extern uint8_t *MemClass[kMemClasses];   // the class records, by the flags' low six bits
 extern MemOutOfMemoryFn MemOutOfMemory;   // asked when an allocation fails
 
 int MEM_initblock(void *block, const char *name, int size, int tail, unsigned flags, void *previous, void *next);

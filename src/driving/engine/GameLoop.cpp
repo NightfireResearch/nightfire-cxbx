@@ -7,6 +7,7 @@
 #include "../platform/XboxStartup.h"
 #include "ActionQueue.hpp"
 #include "CoreFoundation.h"
+#include "DebugFont.h"
 #include "Feedback.h"
 #include "InputConfig.h"
 #include "IOModule.hpp"
@@ -179,7 +180,6 @@ static const DiscErrorText DiscErrorMessages[7] = {   // English, French, German
     {"Spelskivan du anv\xe4nder", "har ett fel. Den kan vara", "smutsig eller skadad."},
     {"Er is een probleem met de cd", "die je gebruikt. De cd is", "mogelijk vuil of beschadigd."},
 };
-#define DebugFontData ((const uint8_t *)0x001b7480)
 
 
 // The car's type name (a virtual method of the player's vehicle).
@@ -1028,5 +1028,5 @@ void DiscError_Init() {
     FILEDEV_setreaderror(DiscError_Handler);
     FONT_installdriver(&EaglFontDriver);
     FONT_init();
-    DiscErrorFont = FONT_create(DebugFontData);
+    DiscErrorFont = FONT_create(reinterpret_cast<const uint8_t *>(&DebugFont));
 }

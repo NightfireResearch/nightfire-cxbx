@@ -8,6 +8,7 @@
 #include "../data/Dafi.h"
 #include "../data/SymbolTable.h"
 #include "../data/UData.h"
+#include "../engine/InputConfig.h"   // ActionNameTable, UpdateMethodNameTable
 #include "../engine/UGroup.h"
 #include "../engine/UMemory.hpp"
 #include "../platform/FileSys.h"
@@ -591,9 +592,8 @@ void StnCheck(const char *what, StringToNumberEntry *table, const std::vector<st
 }
 
 void RunStringToNumber() {
-    const uint32_t kTables[] = { 0x001b6ba0, 0x001b6fd0 };
-    for (uint32_t address : kTables) {
-        StringToNumberEntry *table = reinterpret_cast<StringToNumberEntry *>(uintptr_t(address));
+    StringToNumberEntry *const kTables[] = { ActionNameTable, UpdateMethodNameTable };
+    for (StringToNumberEntry *table : kTables) {
         std::vector<std::string> probes = { "", "zzz", "A", "a" };
         for (int i = 0; table[i].string != NULL; i++) {
             probes.push_back(Flipped(table[i].string));
@@ -601,7 +601,7 @@ void RunStringToNumber() {
             probes.push_back(std::string(table[i].string).substr(0, strlen(table[i].string) / 2));
         }
         char what[64];
-        snprintf(what, sizeof(what), "StringToNumber %08x", address);
+        snprintf(what, sizeof(what), "StringToNumber %s", table == ActionNameTable ? "actions" : "update methods");
         StnCheck(what, table, probes);
     }
     for (int round = 0; round < 40; round++) {

@@ -48,13 +48,16 @@ enum {
 // indexes it with whatever int it is given, so out-of-range values read what the original reads. __mb_cur_max is 1
 // and nothing in the game changes the locale, so the multibyte branch each test also has is never taken.
 extern const unsigned short *CtypeTable;                   // _pctype (CRuntime.cpp)
-#define DecimalPoint  (*(const char *)0x001d8a0cu)           // __decimal_point, "."
+extern const char DecimalPoint;                            // __decimal_point (CRuntime.cpp)
 
 enum CtypeClass {
     kUpper = 0x1,
     kLower = 0x2,
     kDigit = 0x4,
     kSpace = 0x8,
+    kPunct = 0x10,
+    kControl = 0x20,
+    kBlank = 0x40,
     kHexDigit = 0x80,
     kAlpha = 0x103,       // _ALPHA with _UPPER and _LOWER
     kLeadByte = 0x8000

@@ -4,6 +4,8 @@
 // walked: every entry, in table order, each commented with the original it replaces. The script's docstring
 // says how each kind is turned into C++.
 
+#include <bit>
+#include <float.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -21,6 +23,7 @@
 #include "../data/SymbolTable.h"
 #include "../game/AIElements.h"
 #include "../game/AIVehicle.h"
+#include "../game/AIVehicleController.h"
 #include "../game/DebugAudio.h"
 #include "../game/EmpEffect.h"
 #include "../game/Girl.h"
@@ -74,6 +77,14 @@ static const float kRdata_001a17c0[16] = {
     0.0f, 0.0f, 0.0f, 1.0f,
 };
 
+// ---- constants
+
+constexpr float kHeaderPi = 3.1415925f;                     // pi as the headers round it
+constexpr float kHeaderTwoPi = kHeaderPi + kHeaderPi;
+constexpr float kHeaderDegreesPerRadian = 180.0f / kHeaderPi;
+static_assert(std::bit_cast<uint32_t>(kHeaderPi) == 0x40490fda && std::bit_cast<uint32_t>(kHeaderTwoPi) == 0x40c90fda &&
+              std::bit_cast<uint32_t>(kHeaderDegreesPerRadian) == 0x42652ee2, "the headers' constants");
+
 // ---- the weapon table (0x001c94d8), as its initialiser (0x00158ef0) left it
 
 const WeaponRecord kWeaponDefinitions[kWeaponCount] = {
@@ -115,286 +126,286 @@ void RunStaticInitialisers(void) {
     ((GameStd::InitLocks *)0x002448d4)->Construct();                                                     // 0x0015cba2
     Crt::atexit([] { ((GameStd::InitLocks *)0x002448d4)->Destruct(); });
     Crt::atexit([] { ((GameStd::InitAtExit *)0x002448d5)->Destruct(); });                                // 0x0015cbb8
-    FLOAT_AT(0x001dd9a8) = 1.0f / FLOAT_AT(0x001b49a8);                                                  // 0x00156c00
-    FLOAT_AT(0x001dd9ac) = 3.1415925f + 3.1415925f;                                                      // 0x00156c20
-    FLOAT_AT(0x001dd9b0) = 1.0f / FLOAT_AT(0x001dd9ac);                                                  // 0x00156c30
-    FLOAT_AT(0x001dd9b4) = 180.0f / 3.1415925f;                                                          // 0x00156c50
-    FLOAT_AT(0x001dd9b8) = 1.0f / FLOAT_AT(0x001dd9b4);                                                  // 0x00156c70
-    FLOAT_AT(0x001dd9c0) = 1.0f / FLOAT_AT(0x001b49ac);                                                  // 0x00156c90
-    FLOAT_AT(0x001dd9c8) = 1.0f / FLOAT_AT(0x001b4a40);                                                  // 0x00156cb0
-    FLOAT_AT(0x001dd9e4) = 1.0f / FLOAT_AT(0x001b4a6c);                                                  // 0x00156cd0
-    FLOAT_AT(0x001dd9f8) = 1.0f / FLOAT_AT(0x001b4ae4);                                                  // 0x00156cf0
-    FLOAT_AT(0x001dda24) = 1.0f / FLOAT_AT(0x001b4e40);                                                  // 0x00156d10
-    FLOAT_AT(0x001dda28) = 1.0f / FLOAT_AT(0x001b51f0);                                                  // 0x00156d30
-    FLOAT_AT(0x001dda30) = 1.0f / FLOAT_AT(0x001b52a8);                                                  // 0x00156d50
-    FLOAT_AT(0x001dda34) = 3.1415925f + 3.1415925f;                                                      // 0x00156d70
-    FLOAT_AT(0x001dda38) = 1.0f / FLOAT_AT(0x001dda34);                                                  // 0x00156d80
-    FLOAT_AT(0x001dda3c) = 180.0f / 3.1415925f;                                                          // 0x00156da0
-    FLOAT_AT(0x001dda40) = 1.0f / FLOAT_AT(0x001dda3c);                                                  // 0x00156dc0
-    FLOAT_AT(0x001dda44) = 1.0f / FLOAT_AT(0x001b5328);                                                  // 0x00156de0
-    FLOAT_AT(0x001dda48) = 1.0f / FLOAT_AT(0x001b54a0);                                                  // 0x00156e00
-    FLOAT_AT(0x001dda4c) = 3.1415925f + 3.1415925f;                                                      // 0x00156e20
-    FLOAT_AT(0x001dda50) = 1.0f / FLOAT_AT(0x001dda4c);                                                  // 0x00156e30
-    FLOAT_AT(0x001dda54) = 180.0f / 3.1415925f;                                                          // 0x00156e50
-    FLOAT_AT(0x001dda58) = 1.0f / FLOAT_AT(0x001dda54);                                                  // 0x00156e70
-    FLOAT_AT(0x001dda5c) = 1.0f / FLOAT_AT(0x001b5858);                                                  // 0x00156e90
-    FLOAT_AT(0x001dda60) = 1.0f / FLOAT_AT(0x001b5884);                                                  // 0x00156eb0
-    FLOAT_AT(0x001dda64) = 1.0f / FLOAT_AT(0x001b59d8);                                                  // 0x00156ed0
-    FLOAT_AT(0x001dda68) = 1.0f / FLOAT_AT(0x001b5e0c);                                                  // 0x00156ef0
-    HandsStatics.unknown2c[0] = 1.0f / FLOAT_AT(0x001b5fd0);                                             // 0x00156f10
-    HandsStatics.unknown2c[1] = 3.1415925f + 3.1415925f;                                                 // 0x00156f30
-    HandsStatics.unknown2c[2] = 1.0f / 6.283185f;                                                        // 0x00156f40
-    HandsStatics.unknown2c[3] = 180.0f / 3.1415925f;                                                     // 0x00156f60
-    HandsStatics.unknown2c[4] = 1.0f / 57.295784f;                                                       // 0x00156f80
+    // unread: 0x001dd9a8 = 1.0f / FLT_MIN                                                               // 0x00156c00
+    // unread: 0x001dd9ac = kHeaderPi + kHeaderPi                                                        // 0x00156c20
+    // unread: 0x001dd9b0 = 1.0f / kHeaderTwoPi                                                          // 0x00156c30
+    // unread: 0x001dd9b4 = 180.0f / kHeaderPi                                                           // 0x00156c50
+    // unread: 0x001dd9b8 = 1.0f / kHeaderDegreesPerRadian                                               // 0x00156c70
+    // unread: 0x001dd9c0 = 1.0f / FLT_MIN                                                               // 0x00156c90
+    // unread: 0x001dd9c8 = 1.0f / FLT_MIN                                                               // 0x00156cb0
+    // unread: 0x001dd9e4 = 1.0f / FLT_MIN                                                               // 0x00156cd0
+    // unread: 0x001dd9f8 = 1.0f / FLT_MIN                                                               // 0x00156cf0
+    // unread: 0x001dda24 = 1.0f / FLT_MIN                                                               // 0x00156d10
+    // unread: 0x001dda28 = 1.0f / FLT_MIN                                                               // 0x00156d30
+    // unread: 0x001dda30 = 1.0f / FLT_MIN                                                               // 0x00156d50
+    // unread: 0x001dda34 = kHeaderPi + kHeaderPi                                                        // 0x00156d70
+    // unread: 0x001dda38 = 1.0f / kHeaderTwoPi                                                          // 0x00156d80
+    // unread: 0x001dda3c = 180.0f / kHeaderPi                                                           // 0x00156da0
+    // unread: 0x001dda40 = 1.0f / kHeaderDegreesPerRadian                                               // 0x00156dc0
+    // unread: 0x001dda44 = 1.0f / FLT_MIN                                                               // 0x00156de0
+    // unread: 0x001dda48 = 1.0f / FLT_MIN                                                               // 0x00156e00
+    // unread: 0x001dda4c = kHeaderPi + kHeaderPi                                                        // 0x00156e20
+    // unread: 0x001dda50 = 1.0f / kHeaderTwoPi                                                          // 0x00156e30
+    // unread: 0x001dda54 = 180.0f / kHeaderPi                                                           // 0x00156e50
+    // unread: 0x001dda58 = 1.0f / kHeaderDegreesPerRadian                                               // 0x00156e70
+    // unread: 0x001dda5c = 1.0f / FLT_MIN                                                               // 0x00156e90
+    // unread: 0x001dda60 = 1.0f / FLT_MIN                                                               // 0x00156eb0
+    // unread: 0x001dda64 = 1.0f / FLT_MIN                                                               // 0x00156ed0
+    // unread: 0x001dda68 = 1.0f / FLT_MIN                                                               // 0x00156ef0
+    HandsStatics.unknown2c[0] = 1.0f / FLT_MIN;                                                          // 0x00156f10
+    HandsStatics.unknown2c[1] = kHeaderPi + kHeaderPi;                                                   // 0x00156f30
+    HandsStatics.unknown2c[2] = 1.0f / kHeaderTwoPi;                                                     // 0x00156f40
+    HandsStatics.unknown2c[3] = 180.0f / kHeaderPi;                                                      // 0x00156f60
+    HandsStatics.unknown2c[4] = 1.0f / kHeaderDegreesPerRadian;                                          // 0x00156f80
     memcpy(&HandsStatics.baseTransform, kRdata_001a17c0, 0x40);                                          // 0x00156fa0
     // HandsStatics = zero (0x20 bytes): ours (game/AIHands.cpp)                                         // 0x00156fc0
-    HandsStatics.cameraOffset.w = 1.0f / FLOAT_AT(0x001b6018);                                           // 0x00156fe0
-    FLOAT_AT(0x001ddb30) = 3.1415925f + 3.1415925f;                                                      // 0x00157000
-    FLOAT_AT(0x001ddb34) = 1.0f / FLOAT_AT(0x001ddb30);                                                  // 0x00157010
-    FLOAT_AT(0x001ddb38) = 180.0f / 3.1415925f;                                                          // 0x00157030
-    FLOAT_AT(0x001ddb3c) = 1.0f / FLOAT_AT(0x001ddb38);                                                  // 0x00157050
-    FLOAT_AT(0x001ddee0) = 1.0f / FLOAT_AT(0x001b638c);                                                  // 0x00157070
-    FLOAT_AT(0x001ddee8) = 1.0f / FLOAT_AT(0x001b64f0);                                                  // 0x00157090
-    FLOAT_AT(0x001ddeec) = 3.1415925f + 3.1415925f;                                                      // 0x001570b0
-    FLOAT_AT(0x001ddef0) = 1.0f / FLOAT_AT(0x001ddeec);                                                  // 0x001570c0
-    FLOAT_AT(0x001ddef4) = 180.0f / 3.1415925f;                                                          // 0x001570e0
-    FLOAT_AT(0x001ddef8) = 1.0f / FLOAT_AT(0x001ddef4);                                                  // 0x00157100
+    HandsStatics.cameraOffset.w = 1.0f / FLT_MIN;                                                        // 0x00156fe0
+    // unread: 0x001ddb30 = kHeaderPi + kHeaderPi                                                        // 0x00157000
+    // unread: 0x001ddb34 = 1.0f / kHeaderTwoPi                                                          // 0x00157010
+    // unread: 0x001ddb38 = 180.0f / kHeaderPi                                                           // 0x00157030
+    // unread: 0x001ddb3c = 1.0f / kHeaderDegreesPerRadian                                               // 0x00157050
+    // unread: 0x001ddee0 = 1.0f / FLT_MIN                                                               // 0x00157070
+    // unread: 0x001ddee8 = 1.0f / FLT_MIN                                                               // 0x00157090
+    // unread: 0x001ddeec = kHeaderPi + kHeaderPi                                                        // 0x001570b0
+    // unread: 0x001ddef0 = 1.0f / kHeaderTwoPi                                                          // 0x001570c0
+    // unread: 0x001ddef4 = 180.0f / kHeaderPi                                                           // 0x001570e0
+    // unread: 0x001ddef8 = 1.0f / kHeaderDegreesPerRadian                                               // 0x00157100
     // DefaultSleepRange = 220.0f: ours (game/AIElements.cpp)                                            // 0x00157120
-    FLOAT_AT(0x001ddf08) = 1.0f / FLOAT_AT(0x001b64f4);                                                  // 0x00157140
+    // unread: 0x001ddf08 = 1.0f / FLT_MIN                                                               // 0x00157140
     // TrafficStepDistance = 0.125f: ours (game/AIGroundVehicle.cpp)                                     // 0x00157160
-    FLOAT_AT(0x001ddf20) = 1.0f / FLOAT_AT(0x001b64f8);                                                  // 0x00157180
-    FLOAT_AT(0x001de818) = 1.0f / FLOAT_AT(0x001b661c);                                                  // 0x001571a0
-    FLOAT_AT(0x001de8e4) = 1.0f / FLOAT_AT(0x001b6620);                                                  // 0x001571c0
-    FLOAT_AT(0x001de8e8) = 1.0f / FLOAT_AT(0x001b6624);                                                  // 0x001571e0
-    FLOAT_AT(0x001de924) = 3.1415925f + 3.1415925f;                                                      // 0x00157200
-    FLOAT_AT(0x001de928) = 1.0f / FLOAT_AT(0x001de924);                                                  // 0x00157210
-    FLOAT_AT(0x001de92c) = 180.0f / 3.1415925f;                                                          // 0x00157230
-    FLOAT_AT(0x001de930) = 1.0f / FLOAT_AT(0x001de92c);                                                  // 0x00157250
-    FLOAT_AT(0x001de934) = 1.0f / FLOAT_AT(0x001b6628);                                                  // 0x00157270
-    for (int i = 0; i < 2; i++) ((AIGroundVehicle *)(0x001de940 + i * 0x270))->Construct();              // 0x00157290
-    Crt::atexit([] { for (int i = 1; i >= 0; i--) ((AIGroundVehicle *)(0x001de940 + i * 0x270))->Destruct(); });
-    for (int i = 0; i < 20; i++) ((AIGroundVehicle *)(0x001dee20 + i * 0x270))->Construct();             // 0x001572c0
-    Crt::atexit([] { for (int i = 19; i >= 0; i--) ((AIGroundVehicle *)(0x001dee20 + i * 0x270))->Destruct(); });
-    AIZoneData.unknown34 = 1.0f / FLOAT_AT(0x001b662c);                                                  // 0x001572f0
+    // unread: 0x001ddf20 = 1.0f / FLT_MIN                                                               // 0x00157180
+    // unread: 0x001de818 = 1.0f / FLT_MIN                                                               // 0x001571a0
+    // unread: 0x001de8e4 = 1.0f / FLT_MIN                                                               // 0x001571c0
+    // unread: 0x001de8e8 = 1.0f / FLT_MIN                                                               // 0x001571e0
+    // unread: 0x001de924 = kHeaderPi + kHeaderPi                                                        // 0x00157200
+    // unread: 0x001de928 = 1.0f / kHeaderTwoPi                                                          // 0x00157210
+    // unread: 0x001de92c = 180.0f / kHeaderPi                                                           // 0x00157230
+    // unread: 0x001de930 = 1.0f / kHeaderDegreesPerRadian                                               // 0x00157250
+    // unread: 0x001de934 = 1.0f / FLT_MIN                                                               // 0x00157270
+    for (int i = 0; i < 2; i++) PlayerGroundVehicles[i].Construct();                                     // 0x00157290
+    Crt::atexit([] { for (int i = 1; i >= 0; i--) PlayerGroundVehicles[i].Destruct(); });
+    for (int i = 0; i < 20; i++) TrafficGroundVehicles[i].Construct();                                   // 0x001572c0
+    Crt::atexit([] { for (int i = 19; i >= 0; i--) TrafficGroundVehicles[i].Destruct(); });
+    AIZoneData.unknown34 = 1.0f / FLT_MIN;                                                               // 0x001572f0
     for (int i = 0; i < 30; i++) AIZoneData.zones[i].Construct();                                        // 0x00157310
     Crt::atexit([] {});
-    FLOAT_AT(0x001e2274) = 1.0f / FLOAT_AT(0x001b6630);                                                  // 0x00157340
+    // unread: 0x001e2274 = 1.0f / FLT_MIN                                                               // 0x00157340
     DAudioTargets.Construct();                                                                           // 0x00157360
     Crt::atexit([] { DAudioTargets.Destruct(); });
-    FLOAT_AT(0x001e22b0) = 3.1415925f + 3.1415925f;                                                      // 0x00157380
-    FLOAT_AT(0x001e22b4) = 1.0f / FLOAT_AT(0x001e22b0);                                                  // 0x00157390
-    FLOAT_AT(0x001e22b8) = 180.0f / 3.1415925f;                                                          // 0x001573b0
-    FLOAT_AT(0x001e22bc) = 1.0f / FLOAT_AT(0x001e22b8);                                                  // 0x001573d0
-    FLOAT_AT(0x001e22c0) = 1.0f / FLOAT_AT(0x001b6634);                                                  // 0x001573f0
-    FLOAT_AT(0x001e2390) = 1.0f / FLOAT_AT(0x001b6658);                                                  // 0x00157410
-    FLOAT_AT(0x001e23cc) = 1.0f / FLOAT_AT(0x001b6acc);                                                  // 0x00157430
-    FLOAT_AT(0x001e23d0) = 3.1415925f + 3.1415925f;                                                      // 0x00157450
-    FLOAT_AT(0x001e23d4) = 1.0f / FLOAT_AT(0x001e23d0);                                                  // 0x00157460
-    FLOAT_AT(0x001e23d8) = 180.0f / 3.1415925f;                                                          // 0x00157480
-    FLOAT_AT(0x001e23dc) = 1.0f / FLOAT_AT(0x001e23d8);                                                  // 0x001574a0
-    gActionNames.Construct((StringToNumberEntry *)0x001b6ba0);                                           // 0x001574c0
+    // unread: 0x001e22b0 = kHeaderPi + kHeaderPi                                                        // 0x00157380
+    // unread: 0x001e22b4 = 1.0f / kHeaderTwoPi                                                          // 0x00157390
+    // unread: 0x001e22b8 = 180.0f / kHeaderPi                                                           // 0x001573b0
+    // unread: 0x001e22bc = 1.0f / kHeaderDegreesPerRadian                                               // 0x001573d0
+    // unread: 0x001e22c0 = 1.0f / FLT_MIN                                                               // 0x001573f0
+    // unread: 0x001e2390 = 1.0f / FLT_MIN                                                               // 0x00157410
+    // unread: 0x001e23cc = 1.0f / FLT_MIN                                                               // 0x00157430
+    // unread: 0x001e23d0 = kHeaderPi + kHeaderPi                                                        // 0x00157450
+    // unread: 0x001e23d4 = 1.0f / kHeaderTwoPi                                                          // 0x00157460
+    // unread: 0x001e23d8 = 180.0f / kHeaderPi                                                           // 0x00157480
+    // unread: 0x001e23dc = 1.0f / kHeaderDegreesPerRadian                                               // 0x001574a0
+    gActionNames.Construct(ActionNameTable);                                                             // 0x001574c0
     Crt::atexit([] { gActionNames.Destruct(); });
-    FLOAT_AT(0x001e4480) = 1.0f / FLOAT_AT(0x001b6f54);                                                  // 0x001574e0
+    // unread: 0x001e4480 = 1.0f / FLT_MIN                                                               // 0x001574e0
     for (int i = 0; i < 4; i++) gFeedbackPorts[i].users = 0;                                             // 0x00157500
-    gUpdateMethodNames.Construct((StringToNumberEntry *)0x001b6fd0);                                     // 0x00157520
+    gUpdateMethodNames.Construct(UpdateMethodNameTable);                                                 // 0x00157520
     Crt::atexit([] { gUpdateMethodNames.Destruct(); });
-    FLOAT_AT(0x001e4648) = 1.0f / FLOAT_AT(0x001b702c);                                                  // 0x00157540
-    FLOAT_AT(0x001e4650) = 1.0f / FLOAT_AT(0x001b7050);                                                  // 0x00157560
-    FLOAT_AT(0x001e47b8) = 1.0f / FLOAT_AT(0x001b7058);                                                  // 0x00157580
-    FLOAT_AT(0x001e4858) = 3.1415925f + 3.1415925f;                                                      // 0x001575a0
-    FLOAT_AT(0x001e485c) = 1.0f / FLOAT_AT(0x001e4858);                                                  // 0x001575b0
-    FLOAT_AT(0x001e4860) = 180.0f / 3.1415925f;                                                          // 0x001575d0
-    FLOAT_AT(0x001e4864) = 1.0f / FLOAT_AT(0x001e4860);                                                  // 0x001575f0
-    FLOAT_AT(0x001e4868) = 1.0f / FLOAT_AT(0x001b70b0);                                                  // 0x00157610
+    // unread: 0x001e4648 = 1.0f / FLT_MIN                                                               // 0x00157540
+    // unread: 0x001e4650 = 1.0f / FLT_MIN                                                               // 0x00157560
+    // unread: 0x001e47b8 = 1.0f / FLT_MIN                                                               // 0x00157580
+    // unread: 0x001e4858 = kHeaderPi + kHeaderPi                                                        // 0x001575a0
+    // unread: 0x001e485c = 1.0f / kHeaderTwoPi                                                          // 0x001575b0
+    // unread: 0x001e4860 = 180.0f / kHeaderPi                                                           // 0x001575d0
+    // unread: 0x001e4864 = 1.0f / kHeaderDegreesPerRadian                                               // 0x001575f0
+    // unread: 0x001e4868 = 1.0f / FLT_MIN                                                               // 0x00157610
     GlobalActionQueue.Construct((char *)"GLOB");                                                         // 0x00157630
     Crt::atexit([] { GlobalActionQueue.Destruct(); });
-    FLOAT_AT(0x001e51fc) = 3.1415927f + 3.1415927f;                                                      // 0x00157650
-    FLOAT_AT(0x001e51f8) = 3.1415927f * 0.5f;                                                            // 0x00157660
-    DOUBLE_AT(0x001e51f0) = 3.141592653589793 + 3.141592653589793;                                       // 0x00157680
-    DOUBLE_AT(0x001e51e8) = 3.141592653589793 * 0.5;                                                     // 0x00157690
-    FLOAT_AT(0x001e5200) = 1.0f / FLOAT_AT(0x001b73e0);                                                  // 0x001576b0
-    FLOAT_AT(0x001e5218) = 1.0f / FLOAT_AT(0x001c34f0);                                                  // 0x001576d0
-    FLOAT_AT(0x001e7a5c) = 1.0f / FLOAT_AT(0x001c3658);                                                  // 0x001576f0
+    // unread: 0x001e51fc = 3.1415927f + 3.1415927f                                                      // 0x00157650
+    // unread: 0x001e51f8 = 3.1415927f * 0.5f                                                            // 0x00157660
+    // unread: 0x001e51f0 = 3.141592653589793 + 3.141592653589793                                        // 0x00157680
+    // unread: 0x001e51e8 = 3.141592653589793 * 0.5                                                      // 0x00157690
+    // unread: 0x001e5200 = 1.0f / FLT_MIN                                                               // 0x001576b0
+    // unread: 0x001e5218 = 1.0f / FLT_MIN                                                               // 0x001576d0
+    // unread: 0x001e7a5c = 1.0f / FLT_MIN                                                               // 0x001576f0
     // ExplosionInverseScale = 0.5f: ours (game/Explosion.cpp)                                           // 0x00157710
-    FLOAT_AT(0x001e7a64) = 1.0f / FLOAT_AT(0x001c365c);                                                  // 0x00157730
-    FLOAT_AT(0x001e7a68) = 1.0f / FLOAT_AT(0x001c3660);                                                  // 0x00157750
-    FLOAT_AT(0x001e7a6c) = 1.0f / FLOAT_AT(0x001c3664);                                                  // 0x00157770
-    FLOAT_AT(0x001e7a70) = 1.0f / FLOAT_AT(0x001c36a4);                                                  // 0x00157790
-    FLOAT_AT(0x001e7a74) = 3.1415925f + 3.1415925f;                                                      // 0x001577b0
-    FLOAT_AT(0x001e7a78) = 1.0f / FLOAT_AT(0x001e7a74);                                                  // 0x001577c0
-    FLOAT_AT(0x001e7a7c) = 180.0f / 3.1415925f;                                                          // 0x001577e0
-    FLOAT_AT(0x001e7a80) = 1.0f / FLOAT_AT(0x001e7a7c);                                                  // 0x00157800
-    FLOAT_AT(0x001e7a84) = 1.0f / FLOAT_AT(0x001c36b0);                                                  // 0x00157820
-    FLOAT_AT(0x001e7a9c) = 1.0f / FLOAT_AT(0x001c3da0);                                                  // 0x00157840
-    FLOAT_AT(0x001e7aa0) = 3.1415925f + 3.1415925f;                                                      // 0x00157860
-    FLOAT_AT(0x001e7aa4) = 1.0f / FLOAT_AT(0x001e7aa0);                                                  // 0x00157870
-    FLOAT_AT(0x001e7aa8) = 180.0f / 3.1415925f;                                                          // 0x00157890
-    FLOAT_AT(0x001e7aac) = 1.0f / FLOAT_AT(0x001e7aa8);                                                  // 0x001578b0
-    FLOAT_AT(0x001e7ab0) = 1.0f / FLOAT_AT(0x001c3da8);                                                  // 0x001578d0
-    FLOAT_AT(0x001e7ab4) = 1.0f / FLOAT_AT(0x001c3db0);                                                  // 0x001578f0
-    FLOAT_AT(0x001e7ab8) = 1.0f / FLOAT_AT(0x001c3de0);                                                  // 0x00157910
-    FLOAT_AT(0x001e7abc) = 1.0f / FLOAT_AT(0x001c3de4);                                                  // 0x00157930
-    FLOAT_AT(0x001e7acc) = 1.0f / FLOAT_AT(0x001c3dec);                                                  // 0x00157950
-    FLOAT_AT(0x001e84ec) = 1.0f / FLOAT_AT(0x001c3df8);                                                  // 0x00157970
+    // unread: 0x001e7a64 = 1.0f / FLT_MIN                                                               // 0x00157730
+    // unread: 0x001e7a68 = 1.0f / FLT_MIN                                                               // 0x00157750
+    // unread: 0x001e7a6c = 1.0f / FLT_MIN                                                               // 0x00157770
+    // unread: 0x001e7a70 = 1.0f / FLT_MIN                                                               // 0x00157790
+    // unread: 0x001e7a74 = kHeaderPi + kHeaderPi                                                        // 0x001577b0
+    // unread: 0x001e7a78 = 1.0f / kHeaderTwoPi                                                          // 0x001577c0
+    // unread: 0x001e7a7c = 180.0f / kHeaderPi                                                           // 0x001577e0
+    // unread: 0x001e7a80 = 1.0f / kHeaderDegreesPerRadian                                               // 0x00157800
+    // unread: 0x001e7a84 = 1.0f / FLT_MIN                                                               // 0x00157820
+    // unread: 0x001e7a9c = 1.0f / FLT_MIN                                                               // 0x00157840
+    // unread: 0x001e7aa0 = kHeaderPi + kHeaderPi                                                        // 0x00157860
+    // unread: 0x001e7aa4 = 1.0f / kHeaderTwoPi                                                          // 0x00157870
+    // unread: 0x001e7aa8 = 180.0f / kHeaderPi                                                           // 0x00157890
+    // unread: 0x001e7aac = 1.0f / kHeaderDegreesPerRadian                                               // 0x001578b0
+    // unread: 0x001e7ab0 = 1.0f / FLT_MIN                                                               // 0x001578d0
+    // unread: 0x001e7ab4 = 1.0f / FLT_MIN                                                               // 0x001578f0
+    // unread: 0x001e7ab8 = 1.0f / FLT_MIN                                                               // 0x00157910
+    // unread: 0x001e7abc = 1.0f / FLT_MIN                                                               // 0x00157930
+    // unread: 0x001e7acc = 1.0f / FLT_MIN                                                               // 0x00157950
+    // unread: 0x001e84ec = 1.0f / FLT_MIN                                                               // 0x00157970
     for (int i = 0; i < 8; i++) RayShellFlashes[i].ownerSig = 0;                                         // 0x00157990
     for (int i = 0; i < 64; i++) ActiveRayShells[i].ownerSignature = 0;                                  // 0x001579b0
-    FLOAT_AT(0x001e927c) = 1.0f / FLOAT_AT(0x001c3dfc);                                                  // 0x001579d0
-    FLOAT_AT(0x001e9290) = 1.0f / FLOAT_AT(0x001c3e20);                                                  // 0x001579f0
-    FLOAT_AT(0x001e92c4) = 1.0f / FLOAT_AT(0x001c3e24);                                                  // 0x00157a10
-    FLOAT_AT(0x001e92dc) = 1.0f / FLOAT_AT(0x001c3e2c);                                                  // 0x00157a30
-    memset((void *)0x001e92e0, 0, 0x140);                                                                // 0x00157a50
-    FLOAT_AT(0x001ebc80) = 1.0f / FLOAT_AT(0x001c3e30);                                                  // 0x00157a70
-    FLOAT_AT(0x001ebc84) = 1.0f / FLOAT_AT(0x001c3e34);                                                  // 0x00157a90
+    // unread: 0x001e927c = 1.0f / FLT_MIN                                                               // 0x001579d0
+    // unread: 0x001e9290 = 1.0f / FLT_MIN                                                               // 0x001579f0
+    // unread: 0x001e92c4 = 1.0f / FLT_MIN                                                               // 0x00157a10
+    // unread: 0x001e92dc = 1.0f / FLT_MIN                                                               // 0x00157a30
+    // unread: 0x001e92e0 = zero (0x140 bytes)                                                           // 0x00157a50
+    // unread: 0x001ebc80 = 1.0f / FLT_MIN                                                               // 0x00157a70
+    // unread: 0x001ebc84 = 1.0f / FLT_MIN                                                               // 0x00157a90
     // TwoPi = 6.283185f: ours (camera/CameraIniLoader.cpp)                                              // 0x00157ab0
     // TurnsPerRadian = 0.15915495f: ours (camera/CameraIniLoader.cpp)                                   // 0x00157ac0
-    FLOAT_AT(0x001ebc98) = 180.0f / 3.1415925f;                                                          // 0x00157ae0
-    FLOAT_AT(0x001ebc9c) = 1.0f / FLOAT_AT(0x001ebc98);                                                  // 0x00157b00
-    FLOAT_AT(0x001ebca0) = 1.0f / FLOAT_AT(0x001c3eac);                                                  // 0x00157b20
+    // unread: 0x001ebc98 = 180.0f / kHeaderPi                                                           // 0x00157ae0
+    // unread: 0x001ebc9c = 1.0f / kHeaderDegreesPerRadian                                               // 0x00157b00
+    // unread: 0x001ebca0 = 1.0f / FLT_MIN                                                               // 0x00157b20
     // kExplosionShakePeriod = 8: ours (camera/CameraIniLoader.cpp)                                      // 0x00157b40
-    FLOAT_AT(0x001ebca8) = 1.0f / FLOAT_AT(0x001c3eb0);                                                  // 0x00157b60
-    FLOAT_AT(0x001ebcac) = 3.1415925f + 3.1415925f;                                                      // 0x00157b80
+    // unread: 0x001ebca8 = 1.0f / FLT_MIN                                                               // 0x00157b60
+    // unread: 0x001ebcac = kHeaderPi + kHeaderPi                                                        // 0x00157b80
     // RadiansToTurns = 0.15915495f: ours (camera/CameraSpline.cpp)                                      // 0x00157b90
-    FLOAT_AT(0x001ebcb4) = 180.0f / 3.1415925f;                                                          // 0x00157bb0
-    FLOAT_AT(0x001ebcb8) = 1.0f / FLOAT_AT(0x001ebcb4);                                                  // 0x00157bd0
-    FLOAT_AT(0x001ebcbc) = 1.0f / FLOAT_AT(0x001c3eb4);                                                  // 0x00157bf0
-    FLOAT_AT(0x001ebcc0) = 3.1415925f + 3.1415925f;                                                      // 0x00157c10
-    FLOAT_AT(0x001ebcc4) = 1.0f / FLOAT_AT(0x001ebcc0);                                                  // 0x00157c20
-    FLOAT_AT(0x001ebcc8) = 180.0f / 3.1415925f;                                                          // 0x00157c40
-    FLOAT_AT(0x001ebccc) = 1.0f / FLOAT_AT(0x001ebcc8);                                                  // 0x00157c60
-    FLOAT_AT(0x001ebd28) = 1.0f / FLOAT_AT(0x001c3f00);                                                  // 0x00157c80
-    FLOAT_AT(0x001ebd68) = 3.1415925f + 3.1415925f;                                                      // 0x00157ca0
-    FLOAT_AT(0x001ebd6c) = 1.0f / FLOAT_AT(0x001ebd68);                                                  // 0x00157cb0
-    FLOAT_AT(0x001ebd70) = 180.0f / 3.1415925f;                                                          // 0x00157cd0
-    FLOAT_AT(0x001ebd74) = 1.0f / FLOAT_AT(0x001ebd70);                                                  // 0x00157cf0
+    // unread: 0x001ebcb4 = 180.0f / kHeaderPi                                                           // 0x00157bb0
+    // unread: 0x001ebcb8 = 1.0f / kHeaderDegreesPerRadian                                               // 0x00157bd0
+    // unread: 0x001ebcbc = 1.0f / FLT_MIN                                                               // 0x00157bf0
+    // unread: 0x001ebcc0 = kHeaderPi + kHeaderPi                                                        // 0x00157c10
+    // unread: 0x001ebcc4 = 1.0f / kHeaderTwoPi                                                          // 0x00157c20
+    // unread: 0x001ebcc8 = 180.0f / kHeaderPi                                                           // 0x00157c40
+    // unread: 0x001ebccc = 1.0f / kHeaderDegreesPerRadian                                               // 0x00157c60
+    // unread: 0x001ebd28 = 1.0f / FLT_MIN                                                               // 0x00157c80
+    // unread: 0x001ebd68 = kHeaderPi + kHeaderPi                                                        // 0x00157ca0
+    // unread: 0x001ebd6c = 1.0f / kHeaderTwoPi                                                          // 0x00157cb0
+    // unread: 0x001ebd70 = 180.0f / kHeaderPi                                                           // 0x00157cd0
+    // unread: 0x001ebd74 = 1.0f / kHeaderDegreesPerRadian                                               // 0x00157cf0
     for (int i = 0; i < 3; i++) ((TextureDofState *)(0x001ebdb8 + i * 0x4c))->Construct();               // 0x00157d10
     Crt::atexit([] { for (int i = 2; i >= 0; i--) ((TextureDofState *)(0x001ebdb8 + i * 0x4c))->Destruct(); });
     for (int i = 0; i < 3; i++) ((EAGL::DynamicModel *)(0x001ebea0 + i * 0x58))->Construct();            // 0x00157d40
     Crt::atexit([] { for (int i = 2; i >= 0; i--) ((EAGL::DynamicModel *)(0x001ebea0 + i * 0x58))->Destruct(); });
     ((EAGL::GeoPrimState *)0x001ebfa8)->Construct();                                                     // 0x00157d70
     Crt::atexit([] { ((EAGL::GeoPrimState *)0x001ebfa8)->Destruct(); });
-    FLOAT_AT(0x001ebffc) = 1.0f / FLOAT_AT(0x001c3fec);                                                  // 0x00157d90
-    FLOAT_AT(0x001ec240) = 1.0f / FLOAT_AT(0x001c4040);                                                  // 0x00157db0
-    FLOAT_AT(0x001ec264) = 1.0f / FLOAT_AT(0x001c4170);                                                  // 0x00157dd0
-    FLOAT_AT(0x001ec2fc) = 1.0f / FLOAT_AT(0x001c4174);                                                  // 0x00157df0
-    FLOAT_AT(0x001ec304) = 1.0f / FLOAT_AT(0x001c4178);                                                  // 0x00157e10
-    FLOAT_AT(0x001ec30c) = 1.0f / FLOAT_AT(0x001c417c);                                                  // 0x00157e30
-    FLOAT_AT(0x001ec3b0) = 1.0f / FLOAT_AT(0x001c41a0);                                                  // 0x00157e50
-    FLOAT_AT(0x001ec3b4) = 3.1415925f + 3.1415925f;                                                      // 0x00157e70
+    // unread: 0x001ebffc = 1.0f / FLT_MIN                                                               // 0x00157d90
+    // unread: 0x001ec240 = 1.0f / FLT_MIN                                                               // 0x00157db0
+    // unread: 0x001ec264 = 1.0f / FLT_MIN                                                               // 0x00157dd0
+    // unread: 0x001ec2fc = 1.0f / FLT_MIN                                                               // 0x00157df0
+    // unread: 0x001ec304 = 1.0f / FLT_MIN                                                               // 0x00157e10
+    // unread: 0x001ec30c = 1.0f / FLT_MIN                                                               // 0x00157e30
+    // unread: 0x001ec3b0 = 1.0f / FLT_MIN                                                               // 0x00157e50
+    // unread: 0x001ec3b4 = kHeaderPi + kHeaderPi                                                        // 0x00157e70
     // RadiansToTurns = 0.15915495f: ours (camera/PlayerCameraA.cpp)                                     // 0x00157e80
-    FLOAT_AT(0x001ec3bc) = 180.0f / 3.1415925f;                                                          // 0x00157ea0
-    FLOAT_AT(0x001ec3c0) = 1.0f / FLOAT_AT(0x001ec3bc);                                                  // 0x00157ec0
+    // unread: 0x001ec3bc = 180.0f / kHeaderPi                                                           // 0x00157ea0
+    // unread: 0x001ec3c0 = 1.0f / kHeaderDegreesPerRadian                                               // 0x00157ec0
     // DiagonalBoost = 0.001f: ours (camera/PlayerCameraB.cpp)                                           // 0x00157ee0
-    FLOAT_AT(0x001ec440) = 3.1415925f + 3.1415925f;                                                      // 0x00157f00
-    FLOAT_AT(0x001ec444) = 1.0f / FLOAT_AT(0x001ec440);                                                  // 0x00157f10
-    FLOAT_AT(0x001ec448) = 180.0f / 3.1415925f;                                                          // 0x00157f30
-    FLOAT_AT(0x001ec44c) = 1.0f / FLOAT_AT(0x001ec448);                                                  // 0x00157f50
-    FLOAT_AT(0x001ec450) = 1.0f / FLOAT_AT(0x001c41a4);                                                  // 0x00157f70
-    FLOAT_AT(0x001ec454) = 1.0f / FLOAT_AT(0x001c41a8);                                                  // 0x00157f90
-    FLOAT_AT(0x001ec458) = 3.1415925f + 3.1415925f;                                                      // 0x00157fb0
-    FLOAT_AT(0x001ec45c) = 1.0f / FLOAT_AT(0x001ec458);                                                  // 0x00157fc0
-    FLOAT_AT(0x001ec460) = 180.0f / 3.1415925f;                                                          // 0x00157fe0
-    FLOAT_AT(0x001ec464) = 1.0f / FLOAT_AT(0x001ec460);                                                  // 0x00158000
-    FLOAT_AT(0x001ec468) = 1.0f / FLOAT_AT(0x001c45c0);                                                  // 0x00158020
-    FLOAT_AT(0x001ec470) = 3.1415925f + 3.1415925f;                                                      // 0x00158040
-    FLOAT_AT(0x001ec474) = 1.0f / FLOAT_AT(0x001ec470);                                                  // 0x00158050
-    FLOAT_AT(0x001ec478) = 180.0f / 3.1415925f;                                                          // 0x00158070
-    FLOAT_AT(0x001ec47c) = 1.0f / FLOAT_AT(0x001ec478);                                                  // 0x00158090
-    FLOAT_AT(0x001ec480) = 1.0f / FLOAT_AT(0x001c45e0);                                                  // 0x001580b0
-    FLOAT_AT(0x001ec490) = 1.0f / FLOAT_AT(0x001c460c);                                                  // 0x001580d0
-    FLOAT_AT(0x001ec494) = 3.1415925f + 3.1415925f;                                                      // 0x001580f0
-    FLOAT_AT(0x001ec498) = 1.0f / FLOAT_AT(0x001ec494);                                                  // 0x00158100
-    FLOAT_AT(0x001ec49c) = 180.0f / 3.1415925f;                                                          // 0x00158120
-    FLOAT_AT(0x001ec4a0) = 1.0f / FLOAT_AT(0x001ec49c);                                                  // 0x00158140
+    // unread: 0x001ec440 = kHeaderPi + kHeaderPi                                                        // 0x00157f00
+    // unread: 0x001ec444 = 1.0f / kHeaderTwoPi                                                          // 0x00157f10
+    // unread: 0x001ec448 = 180.0f / kHeaderPi                                                           // 0x00157f30
+    // unread: 0x001ec44c = 1.0f / kHeaderDegreesPerRadian                                               // 0x00157f50
+    // unread: 0x001ec450 = 1.0f / FLT_MIN                                                               // 0x00157f70
+    // unread: 0x001ec454 = 1.0f / FLT_MIN                                                               // 0x00157f90
+    // unread: 0x001ec458 = kHeaderPi + kHeaderPi                                                        // 0x00157fb0
+    // unread: 0x001ec45c = 1.0f / kHeaderTwoPi                                                          // 0x00157fc0
+    // unread: 0x001ec460 = 180.0f / kHeaderPi                                                           // 0x00157fe0
+    // unread: 0x001ec464 = 1.0f / kHeaderDegreesPerRadian                                               // 0x00158000
+    // unread: 0x001ec468 = 1.0f / FLT_MIN                                                               // 0x00158020
+    // unread: 0x001ec470 = kHeaderPi + kHeaderPi                                                        // 0x00158040
+    // unread: 0x001ec474 = 1.0f / kHeaderTwoPi                                                          // 0x00158050
+    // unread: 0x001ec478 = 180.0f / kHeaderPi                                                           // 0x00158070
+    // unread: 0x001ec47c = 1.0f / kHeaderDegreesPerRadian                                               // 0x00158090
+    // unread: 0x001ec480 = 1.0f / FLT_MIN                                                               // 0x001580b0
+    // unread: 0x001ec490 = 1.0f / FLT_MIN                                                               // 0x001580d0
+    // unread: 0x001ec494 = kHeaderPi + kHeaderPi                                                        // 0x001580f0
+    // unread: 0x001ec498 = 1.0f / kHeaderTwoPi                                                          // 0x00158100
+    // unread: 0x001ec49c = 180.0f / kHeaderPi                                                           // 0x00158120
+    // unread: 0x001ec4a0 = 1.0f / kHeaderDegreesPerRadian                                               // 0x00158140
     Crt::atexit([] { TheGalleryNamespace.vtable = Vtable_00191aa0; });                                   // 0x00158160
-    FLOAT_AT(0x001f1cc8) = 1.0f / FLOAT_AT(0x001c461c);                                                  // 0x00158170
-    FLOAT_AT(0x001f1ccc) = 3.1415925f + 3.1415925f;                                                      // 0x00158190
-    FLOAT_AT(0x001f1cd0) = 1.0f / FLOAT_AT(0x001f1ccc);                                                  // 0x001581a0
-    FLOAT_AT(0x001f1cd4) = 180.0f / 3.1415925f;                                                          // 0x001581c0
-    FLOAT_AT(0x001f1cd8) = 1.0f / FLOAT_AT(0x001f1cd4);                                                  // 0x001581e0
-    FLOAT_AT(0x001f1cdc) = 3.1415925f + 3.1415925f;                                                      // 0x00158200
-    FLOAT_AT(0x001f1ce0) = 1.0f / FLOAT_AT(0x001f1cdc);                                                  // 0x00158210
-    FLOAT_AT(0x001f1ce4) = 180.0f / 3.1415925f;                                                          // 0x00158230
-    FLOAT_AT(0x001f1ce8) = 1.0f / FLOAT_AT(0x001f1ce4);                                                  // 0x00158250
-    FLOAT_AT(0x001f2598) = 3.1415925f + 3.1415925f;                                                      // 0x00158270
-    FLOAT_AT(0x001f259c) = 1.0f / FLOAT_AT(0x001f2598);                                                  // 0x00158280
-    FLOAT_AT(0x001f25a0) = 180.0f / 3.1415925f;                                                          // 0x001582a0
-    FLOAT_AT(0x001f25a4) = 1.0f / FLOAT_AT(0x001f25a0);                                                  // 0x001582c0
-    FLOAT_AT(0x001f25a8) = 1.0f / FLOAT_AT(0x001c4650);                                                  // 0x001582e0
-    FLOAT_AT(0x001f2604) = 1.0f / FLOAT_AT(0x001c4658);                                                  // 0x00158300
+    // unread: 0x001f1cc8 = 1.0f / FLT_MIN                                                               // 0x00158170
+    // unread: 0x001f1ccc = kHeaderPi + kHeaderPi                                                        // 0x00158190
+    // unread: 0x001f1cd0 = 1.0f / kHeaderTwoPi                                                          // 0x001581a0
+    // unread: 0x001f1cd4 = 180.0f / kHeaderPi                                                           // 0x001581c0
+    // unread: 0x001f1cd8 = 1.0f / kHeaderDegreesPerRadian                                               // 0x001581e0
+    // unread: 0x001f1cdc = kHeaderPi + kHeaderPi                                                        // 0x00158200
+    // unread: 0x001f1ce0 = 1.0f / kHeaderTwoPi                                                          // 0x00158210
+    // unread: 0x001f1ce4 = 180.0f / kHeaderPi                                                           // 0x00158230
+    // unread: 0x001f1ce8 = 1.0f / kHeaderDegreesPerRadian                                               // 0x00158250
+    // unread: 0x001f2598 = kHeaderPi + kHeaderPi                                                        // 0x00158270
+    // unread: 0x001f259c = 1.0f / kHeaderTwoPi                                                          // 0x00158280
+    // unread: 0x001f25a0 = 180.0f / kHeaderPi                                                           // 0x001582a0
+    // unread: 0x001f25a4 = 1.0f / kHeaderDegreesPerRadian                                               // 0x001582c0
+    // unread: 0x001f25a8 = 1.0f / FLT_MIN                                                               // 0x001582e0
+    // unread: 0x001f2604 = 1.0f / FLT_MIN                                                               // 0x00158300
     ((EAGL::GeoPrimState *)0x001f2610)->Construct();                                                     // 0x00158320
     Crt::atexit([] { ((EAGL::GeoPrimState *)0x001f2610)->Destruct(); });
-    FLOAT_AT(0x001f2c54) = 1.0f / FLOAT_AT(0x001c46f8);                                                  // 0x00158340
-    FLOAT_AT(0x001f2c58) = 3.1415925f + 3.1415925f;                                                      // 0x00158360
-    FLOAT_AT(0x001f2c5c) = 1.0f / FLOAT_AT(0x001f2c58);                                                  // 0x00158370
-    FLOAT_AT(0x001f2c60) = 180.0f / 3.1415925f;                                                          // 0x00158390
-    FLOAT_AT(0x001f2c64) = 1.0f / FLOAT_AT(0x001f2c60);                                                  // 0x001583b0
-    FLOAT_AT(0x001f2c70) = 1.0f / FLOAT_AT(0x001c47a4);                                                  // 0x001583d0
+    // unread: 0x001f2c54 = 1.0f / FLT_MIN                                                               // 0x00158340
+    // unread: 0x001f2c58 = kHeaderPi + kHeaderPi                                                        // 0x00158360
+    // unread: 0x001f2c5c = 1.0f / kHeaderTwoPi                                                          // 0x00158370
+    // unread: 0x001f2c60 = 180.0f / kHeaderPi                                                           // 0x00158390
+    // unread: 0x001f2c64 = 1.0f / kHeaderDegreesPerRadian                                               // 0x001583b0
+    // unread: 0x001f2c70 = 1.0f / FLT_MIN                                                               // 0x001583d0
     fgWorldCulling.Construct(33.0f, 400.0f);                                                             // 0x001583f0
     Crt::atexit([] {});
-    FLOAT_AT(0x001f2d64) = 1.0f / FLOAT_AT(0x001c47e4);                                                  // 0x00158410
-    FLOAT_AT(0x001f2d68) = 3.1415925f + 3.1415925f;                                                      // 0x00158430
-    FLOAT_AT(0x001f2d6c) = 1.0f / FLOAT_AT(0x001f2d68);                                                  // 0x00158440
-    FLOAT_AT(0x001f2d70) = 180.0f / 3.1415925f;                                                          // 0x00158460
-    FLOAT_AT(0x001f2d74) = 1.0f / FLOAT_AT(0x001f2d70);                                                  // 0x00158480
-    FLOAT_AT(0x001f2e04) = 1.0f / FLOAT_AT(0x001c4828);                                                  // 0x001584a0
-    FLOAT_AT(0x001f2e14) = 1.0f / FLOAT_AT(0x001c4848);                                                  // 0x001584c0
-    FLOAT_AT(0x001f5ef0) = 1.0f / FLOAT_AT(0x001c4878);                                                  // 0x001584e0
-    FLOAT_AT(0x001f5ef4) = 3.1415925f + 3.1415925f;                                                      // 0x00158500
-    FLOAT_AT(0x001f5ef8) = 1.0f / FLOAT_AT(0x001f5ef4);                                                  // 0x00158510
-    FLOAT_AT(0x001f5efc) = 180.0f / 3.1415925f;                                                          // 0x00158530
-    FLOAT_AT(0x001f5f00) = 1.0f / FLOAT_AT(0x001f5efc);                                                  // 0x00158550
+    // unread: 0x001f2d64 = 1.0f / FLT_MIN                                                               // 0x00158410
+    // unread: 0x001f2d68 = kHeaderPi + kHeaderPi                                                        // 0x00158430
+    // unread: 0x001f2d6c = 1.0f / kHeaderTwoPi                                                          // 0x00158440
+    // unread: 0x001f2d70 = 180.0f / kHeaderPi                                                           // 0x00158460
+    // unread: 0x001f2d74 = 1.0f / kHeaderDegreesPerRadian                                               // 0x00158480
+    // unread: 0x001f2e04 = 1.0f / FLT_MIN                                                               // 0x001584a0
+    // unread: 0x001f2e14 = 1.0f / FLT_MIN                                                               // 0x001584c0
+    // unread: 0x001f5ef0 = 1.0f / FLT_MIN                                                               // 0x001584e0
+    // unread: 0x001f5ef4 = kHeaderPi + kHeaderPi                                                        // 0x00158500
+    // unread: 0x001f5ef8 = 1.0f / kHeaderTwoPi                                                          // 0x00158510
+    // unread: 0x001f5efc = 180.0f / kHeaderPi                                                           // 0x00158530
+    // unread: 0x001f5f00 = 1.0f / kHeaderDegreesPerRadian                                               // 0x00158550
     for (int i = 0; i < 4; i++) BulletStreakMaterials[i].Construct();                                    // 0x00158570
     Crt::atexit([] { for (int i = 3; i >= 0; i--) ((EAGL::GeoPrimState *)&BulletStreakMaterials[i])->Destruct(); });
     // BulletStreakColours = zero: ours (game/WeaponEffects.cpp)                                         // 0x001585a0
-    FLOAT_AT(0x001f689c) = 1.0f / FLOAT_AT(0x001c4890);                                                  // 0x001585c0
-    FLOAT_AT(0x001fe824) = 1.0f / FLOAT_AT(0x001c48b0);                                                  // 0x001585e0
+    // unread: 0x001f689c = 1.0f / FLT_MIN                                                               // 0x001585c0
+    // unread: 0x001fe824 = 1.0f / FLT_MIN                                                               // 0x001585e0
     // DecalColours = zero: ours (render/Decals.cpp)                                                     // 0x00158600
     DecalState.Construct();                                                                              // 0x00158620
     Crt::atexit([] { DecalState.Destruct(); });
-    FLOAT_AT(0x00200c88) = 1.0f / FLOAT_AT(0x001c4900);                                                  // 0x00158640
+    // unread: 0x00200c88 = 1.0f / FLT_MIN                                                               // 0x00158640
     // EmpSphereColours = zero: ours (game/EmpEffect.cpp)                                                // 0x00158660
     EmpSphereState.Construct();                                                                          // 0x00158680
     Crt::atexit([] { EmpSphereState.Destruct(); });
     // EmpRingColours = zero: ours (game/EmpEffect.cpp)                                                  // 0x001586a0
     EmpRingState.Construct();                                                                            // 0x001586c0
     Crt::atexit([] { EmpRingState.Destruct(); });
-    FLOAT_AT(0x00200f10) = 1.0f / FLOAT_AT(0x001c4a0c);                                                  // 0x001586e0
-    FLOAT_AT(0x00200f1c) = 1.0f / FLOAT_AT(0x001c4a10);                                                  // 0x00158700
-    FLOAT_AT(0x00200f24) = 1.0f / FLOAT_AT(0x001c4a80);                                                  // 0x00158720
-    FLOAT_AT(0x00200f48) = 1.0f / FLOAT_AT(0x001c4a88);                                                  // 0x00158740
-    FLOAT_AT(0x00200f50) = 1.0f / FLOAT_AT(0x001c4a9c);                                                  // 0x00158760
-    FLOAT_AT(0x00200f58) = 1.0f / FLOAT_AT(0x001c4aac);                                                  // 0x00158780
-    FLOAT_AT(0x00201290) = 1.0f / FLOAT_AT(0x001c4b18);                                                  // 0x001587a0
+    // unread: 0x00200f10 = 1.0f / FLT_MIN                                                               // 0x001586e0
+    // unread: 0x00200f1c = 1.0f / FLT_MIN                                                               // 0x00158700
+    // unread: 0x00200f24 = 1.0f / FLT_MIN                                                               // 0x00158720
+    // unread: 0x00200f48 = 1.0f / FLT_MIN                                                               // 0x00158740
+    // unread: 0x00200f50 = 1.0f / FLT_MIN                                                               // 0x00158760
+    // unread: 0x00200f58 = 1.0f / FLT_MIN                                                               // 0x00158780
+    // unread: 0x00201290 = 1.0f / FLT_MIN                                                               // 0x001587a0
     MissileStreakState.Construct();                                                                      // 0x001587c0
     Crt::atexit([] { MissileStreakState.Destruct(); });
     // MissileStreakColours = zero: ours (game/WeaponEffects.cpp)                                        // 0x001587e0
-    FLOAT_AT(0x00201474) = 1.0f / FLOAT_AT(0x001c4e88);                                                  // 0x00158800
+    // unread: 0x00201474 = 1.0f / FLT_MIN                                                               // 0x00158800
     // MuzzleFlashColours = zero: ours (game/WeaponEffects.cpp)                                          // 0x00158820
     for (int i = 0; i < 5; i++) MuzzleFlashMaterials[i].Construct();                                     // 0x00158840
     Crt::atexit([] { for (int i = 4; i >= 0; i--) ((EAGL::GeoPrimState *)&MuzzleFlashMaterials[i])->Destruct(); });
     MuzzleFlashPOVMaterial.Construct();                                                                  // 0x00158870
     Crt::atexit([] { ((EAGL::GeoPrimState *)&MuzzleFlashPOVMaterial)->Destruct(); });
-    FLOAT_AT(0x00201734) = 1.0f / FLOAT_AT(0x001c4f40);                                                  // 0x00158890
-    FLOAT_AT(0x00201758) = 1.0f / FLOAT_AT(0x001c4f44);                                                  // 0x001588b0
-    FLOAT_AT(0x00201760) = 1.0f / FLOAT_AT(0x001c5020);                                                  // 0x001588d0
-    FLOAT_AT(0x00201764) = 1.0f / FLOAT_AT(0x001c5074);                                                  // 0x001588f0
-    FLOAT_AT(0x00201780) = 1.0f / FLOAT_AT(0x001c5090);                                                  // 0x00158910
-    FLOAT_AT(0x00201814) = 1.0f / FLOAT_AT(0x001c50a4);                                                  // 0x00158930
-    FLOAT_AT(0x0020181c) = 3.1415925f + 3.1415925f;                                                      // 0x00158950
-    FLOAT_AT(0x00201820) = 1.0f / FLOAT_AT(0x0020181c);                                                  // 0x00158960
-    FLOAT_AT(0x00201824) = 180.0f / 3.1415925f;                                                          // 0x00158980
-    FLOAT_AT(0x00201828) = 1.0f / FLOAT_AT(0x00201824);                                                  // 0x001589a0
-    FLOAT_AT(0x0020182c) = 1.0f / FLOAT_AT(0x001c50ac);                                                  // 0x001589c0
-    FLOAT_AT(0x00201840) = 1.0f / FLOAT_AT(0x001c57c0);                                                  // 0x001589e0
-    FLOAT_AT(0x00201848) = 1.0f / FLOAT_AT(0x001c57d4);                                                  // 0x00158a00
-    FLOAT_AT(0x00201854) = 1.0f / FLOAT_AT(0x001c59d8);                                                  // 0x00158a20
-    FLOAT_AT(0x00202a84) = 1.0f / FLOAT_AT(0x001c5b80);                                                  // 0x00158a40
+    // unread: 0x00201734 = 1.0f / FLT_MIN                                                               // 0x00158890
+    // unread: 0x00201758 = 1.0f / FLT_MIN                                                               // 0x001588b0
+    // unread: 0x00201760 = 1.0f / FLT_MIN                                                               // 0x001588d0
+    // unread: 0x00201764 = 1.0f / FLT_MIN                                                               // 0x001588f0
+    // unread: 0x00201780 = 1.0f / FLT_MIN                                                               // 0x00158910
+    // unread: 0x00201814 = 1.0f / FLT_MIN                                                               // 0x00158930
+    // unread: 0x0020181c = kHeaderPi + kHeaderPi                                                        // 0x00158950
+    // unread: 0x00201820 = 1.0f / kHeaderTwoPi                                                          // 0x00158960
+    // unread: 0x00201824 = 180.0f / kHeaderPi                                                           // 0x00158980
+    // unread: 0x00201828 = 1.0f / kHeaderDegreesPerRadian                                               // 0x001589a0
+    // unread: 0x0020182c = 1.0f / FLT_MIN                                                               // 0x001589c0
+    // unread: 0x00201840 = 1.0f / FLT_MIN                                                               // 0x001589e0
+    // unread: 0x00201848 = 1.0f / FLT_MIN                                                               // 0x00158a00
+    // unread: 0x00201854 = 1.0f / FLT_MIN                                                               // 0x00158a20
+    // unread: 0x00202a84 = 1.0f / FLT_MIN                                                               // 0x00158a40
     // DebrisColours = zero: ours (game/Debris.cpp)                                                      // 0x00158a60
-    FLOAT_AT(0x00208cb8) = 1.0f / FLOAT_AT(0x001c8ed0);                                                  // 0x00158a80
+    // unread: 0x00208cb8 = 1.0f / FLT_MIN                                                               // 0x00158a80
     // GlareColours = zero: ours (render/RGlareManager.cpp)                                              // 0x00158aa0
     GlareMaterial.Construct();                                                                           // 0x00158ac0
     Crt::atexit([] { ((EAGL::GeoPrimState *)&GlareMaterial)->Destruct(); });
-    FLOAT_AT(0x0022ad38) = 1.0f / FLOAT_AT(0x001c8edc);                                                  // 0x00158ae0
+    // unread: 0x0022ad38 = 1.0f / FLT_MIN                                                               // 0x00158ae0
     // NormalColours = zero: ours (render/ParticleCache.cpp)                                             // 0x00158b00
     // AdditiveColours = zero: ours (render/ParticleCache.cpp)                                           // 0x00158b20
     // StreakColours = zero: ours (render/ParticleCache.cpp)                                             // 0x00158b40
@@ -402,18 +413,18 @@ void RunStaticInitialisers(void) {
     Crt::atexit([] { ((EAGL::GeoPrimState *)&SpriteMaterial)->Destruct(); });
     StreakMaterial.Construct();                                                                          // 0x00158b80
     Crt::atexit([] { ((EAGL::GeoPrimState *)&StreakMaterial)->Destruct(); });
-    FLOAT_AT(0x0023361c) = 1.0f / FLOAT_AT(0x001c8f20);                                                  // 0x00158ba0
+    // unread: 0x0023361c = 1.0f / FLT_MIN                                                               // 0x00158ba0
     // TrackColours = zero: ours (game/TyreTrack.cpp)                                                    // 0x00158bc0
     for (int i = 0; i < 4; i++) TrackMaterials[i].Construct();                                           // 0x00158be0
     Crt::atexit([] { for (int i = 3; i >= 0; i--) ((EAGL::GeoPrimState *)&TrackMaterials[i])->Destruct(); });
-    FLOAT_AT(0x00233fa4) = 1.0f / FLOAT_AT(0x001c8f24);                                                  // 0x00158c10
-    FLOAT_AT(0x00233fa8) = 1.0f / FLOAT_AT(0x001c8f28);                                                  // 0x00158c30
-    FLOAT_AT(0x00233fb4) = 1.0f / FLOAT_AT(0x001c8fb4);                                                  // 0x00158c50
+    // unread: 0x00233fa4 = 1.0f / FLT_MIN                                                               // 0x00158c10
+    // unread: 0x00233fa8 = 1.0f / FLT_MIN                                                               // 0x00158c30
+    // unread: 0x00233fb4 = 1.0f / FLT_MIN                                                               // 0x00158c50
     RigidPlayerGravity = Rigid_BODGE_PLAYER_GRAVITY;                                                     // 0x00158c70
     // RigidGroundRestitutionRate = 0.05f: ours (physics/RigidBodyBasics.cpp)                            // 0x00158c80
     // RigidRestitutionRateC8 = 0.0025f: ours (physics/RigidBodyBasics.cpp)                              // 0x00158ca0
     // RigidBuildingRestitutionRate = 0.0004f: ours (physics/RigidBodyBasics.cpp)                        // 0x00158cc0
-    FLOAT_AT(0x00233fc8) = 1.0f / FLOAT_AT(0x001c8fb8);                                                  // 0x00158ce0
+    // unread: 0x00233fc8 = 1.0f / FLT_MIN                                                               // 0x00158ce0
     // SimulationInverseFloatMin = 8.507059e+37f: ours (game/SimulationObjects.cpp)                      // 0x00158d00
     // SimulationTwoPi = 6.283185f: ours (game/SimulationObjects.cpp)                                    // 0x00158d20
     // SimulationInverseTwoPi = 0.15915495f: ours (game/SimulationObjects.cpp)                           // 0x00158d30
@@ -427,53 +438,53 @@ void RunStaticInitialisers(void) {
     // MissionManagerDegreesPerRadian = 57.295784f: ours (game/MissionManager.cpp)                       // 0x00158e00
     // MissionManagerRadiansPerDegree = 0.01745329f: ours (game/MissionManager.cpp)                      // 0x00158e20
     // MissionRulesInverseFloatMin = 8.507059e+37f: ours (game/MissionRules.cpp)                         // 0x00158e40
-    FLOAT_AT(0x00239240) = 1.0f / FLOAT_AT(0x001c94d0);                                                  // 0x00158e60
-    FLOAT_AT(0x00239244) = 3.1415925f + 3.1415925f;                                                      // 0x00158e80
-    FLOAT_AT(0x00239248) = 1.0f / FLOAT_AT(0x00239244);                                                  // 0x00158e90
-    FLOAT_AT(0x0023924c) = 180.0f / 3.1415925f;                                                          // 0x00158eb0
-    FLOAT_AT(0x00239250) = 1.0f / FLOAT_AT(0x0023924c);                                                  // 0x00158ed0
+    // unread: 0x00239240 = 1.0f / FLT_MIN                                                               // 0x00158e60
+    // unread: 0x00239244 = kHeaderPi + kHeaderPi                                                        // 0x00158e80
+    // unread: 0x00239248 = 1.0f / kHeaderTwoPi                                                          // 0x00158e90
+    // unread: 0x0023924c = 180.0f / kHeaderPi                                                           // 0x00158eb0
+    // unread: 0x00239250 = 1.0f / kHeaderDegreesPerRadian                                               // 0x00158ed0
     InitWeaponDefinitions();                                                                             // 0x00158ef0
-    FLOAT_AT(0x00239a5c) = 1.0f / FLOAT_AT(0x001c9f58);                                                  // 0x0015a060
-    FLOAT_AT(0x00239a68) = 1.0f / FLOAT_AT(0x001c9f5c);                                                  // 0x0015a080
-    FLOAT_AT(0x00239a6c) = 1.0f / FLOAT_AT(0x001c9f60);                                                  // 0x0015a0a0
-    FLOAT_AT(0x00239a74) = 1.0f / FLOAT_AT(0x001c9fe8);                                                  // 0x0015a0c0
-    FLOAT_AT(0x0023b3a8) = 1.0f / FLOAT_AT(0x001c9ff0);                                                  // 0x0015a0e0
+    // unread: 0x00239a5c = 1.0f / FLT_MIN                                                               // 0x0015a060
+    // unread: 0x00239a68 = 1.0f / FLT_MIN                                                               // 0x0015a080
+    // unread: 0x00239a6c = 1.0f / FLT_MIN                                                               // 0x0015a0a0
+    // unread: 0x00239a74 = 1.0f / FLT_MIN                                                               // 0x0015a0c0
+    // unread: 0x0023b3a8 = 1.0f / FLT_MIN                                                               // 0x0015a0e0
     GridMovers.head = GridMovers.BuyHead();                                                              // 0x0015a100
     GridMovers.size = 0x00000000;
     Crt::atexit([] { DestroyNodeList((NodeList *)&GridMovers, FUN_00037160, 0x34); });
-    FLOAT_AT(0x0023e018) = 3.1415925f + 3.1415925f;                                                      // 0x0015a130
-    FLOAT_AT(0x0023e01c) = 1.0f / FLOAT_AT(0x0023e018);                                                  // 0x0015a140
-    FLOAT_AT(0x0023e020) = 180.0f / 3.1415925f;                                                          // 0x0015a160
-    FLOAT_AT(0x0023e024) = 1.0f / FLOAT_AT(0x0023e020);                                                  // 0x0015a180
-    FLOAT_AT(0x0023e028) = 1.0f / FLOAT_AT(0x001c9ff8);                                                  // 0x0015a1a0
-    FLOAT_AT(0x0023e0fc) = 1.0f / FLOAT_AT(0x001ca340);                                                  // 0x0015a1c0
-    FLOAT_AT(0x0023e17c) = 1.0f / FLOAT_AT(0x001ca344);                                                  // 0x0015a1e0
-    FLOAT_AT(0x0023e180) = 3.1415925f + 3.1415925f;                                                      // 0x0015a200
-    FLOAT_AT(0x0023e184) = 1.0f / FLOAT_AT(0x0023e180);                                                  // 0x0015a210
-    FLOAT_AT(0x0023e188) = 180.0f / 3.1415925f;                                                          // 0x0015a230
-    FLOAT_AT(0x0023e18c) = 1.0f / FLOAT_AT(0x0023e188);                                                  // 0x0015a250
-    FLOAT_AT(0x0023e194) = 1.0f / FLOAT_AT(0x001ca368);                                                  // 0x0015a270
-    FLOAT_AT(0x0023e198) = 3.1415925f + 3.1415925f;                                                      // 0x0015a290
-    FLOAT_AT(0x0023e19c) = 1.0f / FLOAT_AT(0x0023e198);                                                  // 0x0015a2a0
-    FLOAT_AT(0x0023e1a0) = 180.0f / 3.1415925f;                                                          // 0x0015a2c0
-    FLOAT_AT(0x0023e1a4) = 1.0f / FLOAT_AT(0x0023e1a0);                                                  // 0x0015a2e0
+    // unread: 0x0023e018 = kHeaderPi + kHeaderPi                                                        // 0x0015a130
+    // unread: 0x0023e01c = 1.0f / kHeaderTwoPi                                                          // 0x0015a140
+    // unread: 0x0023e020 = 180.0f / kHeaderPi                                                           // 0x0015a160
+    // unread: 0x0023e024 = 1.0f / kHeaderDegreesPerRadian                                               // 0x0015a180
+    // unread: 0x0023e028 = 1.0f / FLT_MIN                                                               // 0x0015a1a0
+    // unread: 0x0023e0fc = 1.0f / FLT_MIN                                                               // 0x0015a1c0
+    // unread: 0x0023e17c = 1.0f / FLT_MIN                                                               // 0x0015a1e0
+    // unread: 0x0023e180 = kHeaderPi + kHeaderPi                                                        // 0x0015a200
+    // unread: 0x0023e184 = 1.0f / kHeaderTwoPi                                                          // 0x0015a210
+    // unread: 0x0023e188 = 180.0f / kHeaderPi                                                           // 0x0015a230
+    // unread: 0x0023e18c = 1.0f / kHeaderDegreesPerRadian                                               // 0x0015a250
+    // unread: 0x0023e194 = 1.0f / FLT_MIN                                                               // 0x0015a270
+    // unread: 0x0023e198 = kHeaderPi + kHeaderPi                                                        // 0x0015a290
+    // unread: 0x0023e19c = 1.0f / kHeaderTwoPi                                                          // 0x0015a2a0
+    // unread: 0x0023e1a0 = 180.0f / kHeaderPi                                                           // 0x0015a2c0
+    // unread: 0x0023e1a4 = 1.0f / kHeaderDegreesPerRadian                                               // 0x0015a2e0
     TargetPicker.Construct();                                                                            // 0x0015a300
     Crt::atexit([] { DestroyGlobal_0023e1b0(); });
-    FLOAT_AT(0x0023e274) = 1.0f / FLOAT_AT(0x001ca3a4);                                                  // 0x0015a320
-    FLOAT_AT(0x0023f314) = 1.0f / FLOAT_AT(0x001ca3d0);                                                  // 0x0015a340
-    FLOAT_AT(0x0023f318) = 1.0f / FLOAT_AT(0x001ca3d4);                                                  // 0x0015a360
-    FLOAT_AT(0x0023f31c) = 1.0f / FLOAT_AT(0x001ca3d8);                                                  // 0x0015a380
-    FLOAT_AT(0x0023f324) = 1.0f / FLOAT_AT(0x001ca3dc);                                                  // 0x0015a3a0
-    FLOAT_AT(0x0023f32c) = 1.0f / FLOAT_AT(0x001ca3e4);                                                  // 0x0015a3c0
-    FLOAT_AT(0x0023f394) = 1.0f / FLOAT_AT(0x001ca3ec);                                                  // 0x0015a3e0
-    FLOAT_AT(0x0023f3d8) = 1.0f / FLOAT_AT(0x001ca3f8);                                                  // 0x0015a400
+    // unread: 0x0023e274 = 1.0f / FLT_MIN                                                               // 0x0015a320
+    // unread: 0x0023f314 = 1.0f / FLT_MIN                                                               // 0x0015a340
+    // unread: 0x0023f318 = 1.0f / FLT_MIN                                                               // 0x0015a360
+    // unread: 0x0023f31c = 1.0f / FLT_MIN                                                               // 0x0015a380
+    // unread: 0x0023f324 = 1.0f / FLT_MIN                                                               // 0x0015a3a0
+    // unread: 0x0023f32c = 1.0f / FLT_MIN                                                               // 0x0015a3c0
+    // unread: 0x0023f394 = 1.0f / FLT_MIN                                                               // 0x0015a3e0
+    // unread: 0x0023f3d8 = 1.0f / FLT_MIN                                                               // 0x0015a400
     // GirlWidth = 256: ours (game/Girl.cpp)                                                             // 0x0015a420
     // GirlHeight = 256: ours (game/Girl.cpp)                                                            // 0x0015a440
-    FLOAT_AT(0x0023f49c) = 1.0f / FLOAT_AT(0x001ca9fc);                                                  // 0x0015a460
-    FLOAT_AT(0x0023f4a0) = 3.1415925f + 3.1415925f;                                                      // 0x0015a480
-    FLOAT_AT(0x0023f4a4) = 1.0f / FLOAT_AT(0x0023f4a0);                                                  // 0x0015a490
-    FLOAT_AT(0x0023f4a8) = 180.0f / 3.1415925f;                                                          // 0x0015a4b0
-    FLOAT_AT(0x0023f4ac) = 1.0f / FLOAT_AT(0x0023f4a8);                                                  // 0x0015a4d0
+    // unread: 0x0023f49c = 1.0f / FLT_MIN                                                               // 0x0015a460
+    // unread: 0x0023f4a0 = kHeaderPi + kHeaderPi                                                        // 0x0015a480
+    // unread: 0x0023f4a4 = 1.0f / kHeaderTwoPi                                                          // 0x0015a490
+    // unread: 0x0023f4a8 = 180.0f / kHeaderPi                                                           // 0x0015a4b0
+    // unread: 0x0023f4ac = 1.0f / kHeaderDegreesPerRadian                                               // 0x0015a4d0
     HudGadgetColour = ColourConvertXBoxToPS2(0xffffffff);                                                // 0x0015a4f0
     HudHealthCriticalColour = ColourConvertXBoxToPS2(0x8cb02c25);                                        // 0x0015a500
     HudHealthLowColour = ColourConvertXBoxToPS2(0x8cc6984e);                                             // 0x0015a520
@@ -483,7 +494,7 @@ void RunStaticInitialisers(void) {
     HudHealthDimColour = ColourConvertXBoxToPS2(0x2652a88b);                                             // 0x0015a5a0
     HudTextColour = ColourConvertXBoxToPS2(0xfffadbb3);                                                  // 0x0015a5c0
     HudObjectiveColour = ColourConvertXBoxToPS2(0xfffecc64);                                             // 0x0015a5e0
-    U32_AT(0x0023f4d4) = ColourConvertXBoxToPS2(0x3fc37d1e);                                             // 0x0015a600
+    // unread: 0x0023f4d4 = ColourConvertXBoxToPS2(0x3fc37d1e)                                           // 0x0015a600
     HudColour4d8 = ColourConvertXBoxToPS2(0xffb0645c);                                                   // 0x0015a620
     HudShadowColour = ColourConvertXBoxToPS2(0x8c000000);                                                // 0x0015a640
     HudColour4e0 = ColourConvertXBoxToPS2(0xff402e0e);                                                   // 0x0015a660
@@ -503,378 +514,378 @@ void RunStaticInitialisers(void) {
     HudBloodColour = ColourConvertXBoxToPS2(0xff1f7f7f);                                                 // 0x0015a810
     HudBloodColour2 = ColourConvertXBoxToPS2(0xff1f0000);                                                // 0x0015a830
     HudLetterBoxColour = ColourConvertXBoxToPS2(0xff000000);                                             // 0x0015a850
-    U32_AT(0x0023f524) = ColourConvertXBoxToPS2(0x4f000000);                                             // 0x0015a870
-    U32_AT(0x0023f528) = ColourConvertXBoxToPS2(0x7f202020);                                             // 0x0015a890
-    U32_AT(0x0023f52c) = ColourConvertXBoxToPS2(0xffffff00);                                             // 0x0015a8b0
-    U32_AT(0x0023f530) = ColourConvertXBoxToPS2(0xffff0000);                                             // 0x0015a8d0
-    U32_AT(0x0023f534) = ColourConvertXBoxToPS2(0xff00ff00);                                             // 0x0015a8f0
-    U32_AT(0x0023f538) = ColourConvertXBoxToPS2(0xff0000ff);                                             // 0x0015a910
+    // unread: 0x0023f524 = ColourConvertXBoxToPS2(0x4f000000)                                           // 0x0015a870
+    // unread: 0x0023f528 = ColourConvertXBoxToPS2(0x7f202020)                                           // 0x0015a890
+    // unread: 0x0023f52c = ColourConvertXBoxToPS2(0xffffff00)                                           // 0x0015a8b0
+    // unread: 0x0023f530 = ColourConvertXBoxToPS2(0xffff0000)                                           // 0x0015a8d0
+    // unread: 0x0023f534 = ColourConvertXBoxToPS2(0xff00ff00)                                           // 0x0015a8f0
+    // unread: 0x0023f538 = ColourConvertXBoxToPS2(0xff0000ff)                                           // 0x0015a910
     HudTimerColour = ColourConvertXBoxToPS2(0xfffadbb3);                                                 // 0x0015a930
     HudTimerWarningColour = ColourConvertXBoxToPS2(0xffc80505);                                          // 0x0015a950
     HudStylinColour = ColourConvertXBoxToPS2(0xffcfcfcf);                                                // 0x0015a970
     // HudArrowFadeStep = 0x3c888889: ours (game/Hud.cpp)                                                // 0x0015a990
     HudColour54c = ColourConvertXBoxToPS2(0x7f000000);                                                   // 0x0015a9a0
     HudColour550 = HudTextColour;                                                                        // 0x0015a9c0
-    U32_AT(0x0023f554) = ColourConvertXBoxToPS2(0xff71482f);                                             // 0x0015a9d0
+    // unread: 0x0023f554 = ColourConvertXBoxToPS2(0xff71482f)                                           // 0x0015a9d0
     HudMessageBoxColour = ColourConvertXBoxToPS2(0x40000000);                                            // 0x0015a9f0
     HudTimerBoxColour = ColourConvertXBoxToPS2(0x8d0f0505);                                              // 0x0015aa10
     HudCrossColour560 = ColourConvertXBoxToPS2(0x8d0f0505);                                              // 0x0015aa30
-    FLOAT_AT(0x0023f7fc) = 1.0f / FLOAT_AT(0x001caee8);                                                  // 0x0015aa50
+    // unread: 0x0023f7fc = 1.0f / FLT_MIN                                                               // 0x0015aa50
     PTR_AT(0x0023f804) = ((LoadScreenStringList *)0x0023f800)->NewHead();                                // 0x0015aa70
     U32_AT(0x0023f808) = 0x00000000;
     Crt::atexit([] { DestroyNodeList((NodeList *)0x0023f800, FUN_000e2c80, 0x24); });
     LoadingTextColour = ColourConvertXBoxToPS2(0xfffadbb3);                                              // 0x0015aaa0
-    U32_AT(0x0023f810) = ColourConvertXBoxToPS2(0xffffcd64);                                             // 0x0015aac0
+    // unread: 0x0023f810 = ColourConvertXBoxToPS2(0xffffcd64)                                           // 0x0015aac0
     UnloadingTextColour = ColourConvertXBoxToPS2(0xff615746);                                            // 0x0015aae0
-    U32_AT(0x0023f818) = ColourConvertXBoxToPS2(0x7f000000);                                             // 0x0015ab00
+    // unread: 0x0023f818 = ColourConvertXBoxToPS2(0x7f000000)                                           // 0x0015ab00
     LoadingColour = ColourConvertXBoxToPS2(0xffffffff);                                                  // 0x0015ab20
-    U32_AT(0x0023f820) = ColourConvertXBoxToPS2(0xff7f7f7f);                                             // 0x0015ab30
+    // unread: 0x0023f820 = ColourConvertXBoxToPS2(0xff7f7f7f)                                           // 0x0015ab30
     LoadingDimDotColour = ColourConvertXBoxToPS2(0x3fffffff);                                            // 0x0015ab50
-    FLOAT_AT(0x0023f82c) = 1.0f / FLOAT_AT(0x001caf2c);                                                  // 0x0015ab70
-    U32_AT(0x0023f830) = ColourConvertXBoxToPS2(0xff000000);                                             // 0x0015ab90
-    U32_AT(0x0023f834) = ColourConvertXBoxToPS2(0x8c000000);                                             // 0x0015abb0
-    FLOAT_AT(0x0023f8c0) = 1.0f / FLOAT_AT(0x001caf3c);                                                  // 0x0015abd0
-    FLOAT_AT(0x0023f948) = 1.0f / FLOAT_AT(0x001caf4c);                                                  // 0x0015abf0
-    FLOAT_AT(0x0023fae4) = 3.1415927f + 3.1415927f;                                                      // 0x0015ac10
-    FLOAT_AT(0x0023fae0) = 3.1415927f * 0.5f;                                                            // 0x0015ac20
-    DOUBLE_AT(0x0023fad8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015ac40
-    DOUBLE_AT(0x0023fad0) = 3.141592653589793 * 0.5;                                                     // 0x0015ac50
-    FLOAT_AT(0x0023fb84) = 3.1415927f + 3.1415927f;                                                      // 0x0015ac70
-    FLOAT_AT(0x0023fb80) = 3.1415927f * 0.5f;                                                            // 0x0015ac80
-    DOUBLE_AT(0x0023fb78) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015aca0
-    DOUBLE_AT(0x0023fb70) = 3.141592653589793 * 0.5;                                                     // 0x0015acb0
-    FLOAT_AT(0x0023fbb4) = 3.1415927f + 3.1415927f;                                                      // 0x0015acd0
-    FLOAT_AT(0x0023fbb0) = 3.1415927f * 0.5f;                                                            // 0x0015ace0
-    DOUBLE_AT(0x0023fba8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015ad00
-    DOUBLE_AT(0x0023fba0) = 3.141592653589793 * 0.5;                                                     // 0x0015ad10
+    // unread: 0x0023f82c = 1.0f / FLT_MIN                                                               // 0x0015ab70
+    // unread: 0x0023f830 = ColourConvertXBoxToPS2(0xff000000)                                           // 0x0015ab90
+    // unread: 0x0023f834 = ColourConvertXBoxToPS2(0x8c000000)                                           // 0x0015abb0
+    // unread: 0x0023f8c0 = 1.0f / FLT_MIN                                                               // 0x0015abd0
+    // unread: 0x0023f948 = 1.0f / FLT_MIN                                                               // 0x0015abf0
+    // unread: 0x0023fae4 = 3.1415927f + 3.1415927f                                                      // 0x0015ac10
+    // unread: 0x0023fae0 = 3.1415927f * 0.5f                                                            // 0x0015ac20
+    // unread: 0x0023fad8 = 3.141592653589793 + 3.141592653589793                                        // 0x0015ac40
+    // unread: 0x0023fad0 = 3.141592653589793 * 0.5                                                      // 0x0015ac50
+    // unread: 0x0023fb84 = 3.1415927f + 3.1415927f                                                      // 0x0015ac70
+    // unread: 0x0023fb80 = 3.1415927f * 0.5f                                                            // 0x0015ac80
+    // unread: 0x0023fb78 = 3.141592653589793 + 3.141592653589793                                        // 0x0015aca0
+    // unread: 0x0023fb70 = 3.141592653589793 * 0.5                                                      // 0x0015acb0
+    // unread: 0x0023fbb4 = 3.1415927f + 3.1415927f                                                      // 0x0015acd0
+    // unread: 0x0023fbb0 = 3.1415927f * 0.5f                                                            // 0x0015ace0
+    // unread: 0x0023fba8 = 3.141592653589793 + 3.141592653589793                                        // 0x0015ad00
+    // unread: 0x0023fba0 = 3.141592653589793 * 0.5                                                      // 0x0015ad10
     GlobalPool.Construct();                                                                              // 0x0015ad30
     Crt::atexit([] { GlobalPool.Destruct(); });
     TheConstructorPool.Construct();                                                                      // 0x0015ad50
     Crt::atexit([] { TheConstructorPool.Destruct(); });
     ((ConstructorPool *)&TheRuntimeAllocPool)->Construct();                                              // 0x0015ad70
     Crt::atexit([] { TheRuntimeAllocPool.Destruct(); });
-    FLOAT_AT(0x0023ff3c) = 3.1415927f + 3.1415927f;                                                      // 0x0015ad90
-    FLOAT_AT(0x0023ff38) = 3.1415927f * 0.5f;                                                            // 0x0015ada0
-    DOUBLE_AT(0x0023ff30) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015adc0
-    DOUBLE_AT(0x0023ff28) = 3.141592653589793 * 0.5;                                                     // 0x0015add0
-    FLOAT_AT(0x0023ff5c) = 3.1415927f + 3.1415927f;                                                      // 0x0015adf0
-    FLOAT_AT(0x0023ff58) = 3.1415927f * 0.5f;                                                            // 0x0015ae00
-    DOUBLE_AT(0x0023ff50) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015ae20
-    DOUBLE_AT(0x0023ff48) = 3.141592653589793 * 0.5;                                                     // 0x0015ae30
-    FLOAT_AT(0x0023ff7c) = 3.1415927f + 3.1415927f;                                                      // 0x0015ae50
-    FLOAT_AT(0x0023ff78) = 3.1415927f * 0.5f;                                                            // 0x0015ae60
-    DOUBLE_AT(0x0023ff70) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015ae80
-    DOUBLE_AT(0x0023ff68) = 3.141592653589793 * 0.5;                                                     // 0x0015ae90
-    FLOAT_AT(0x0024007c) = 3.1415927f + 3.1415927f;                                                      // 0x0015aeb0
-    FLOAT_AT(0x00240078) = 3.1415927f * 0.5f;                                                            // 0x0015aec0
-    DOUBLE_AT(0x00240070) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015aee0
-    DOUBLE_AT(0x00240068) = 3.141592653589793 * 0.5;                                                     // 0x0015aef0
-    FLOAT_AT(0x0024009c) = 3.1415927f + 3.1415927f;                                                      // 0x0015af10
-    FLOAT_AT(0x00240098) = 3.1415927f * 0.5f;                                                            // 0x0015af20
-    DOUBLE_AT(0x00240090) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015af40
-    DOUBLE_AT(0x00240088) = 3.141592653589793 * 0.5;                                                     // 0x0015af50
-    FLOAT_AT(0x002400b4) = 3.1415927f + 3.1415927f;                                                      // 0x0015af70
-    FLOAT_AT(0x002400b0) = 3.1415927f * 0.5f;                                                            // 0x0015af80
-    DOUBLE_AT(0x002400a8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015afa0
-    DOUBLE_AT(0x002400a0) = 3.141592653589793 * 0.5;                                                     // 0x0015afb0
-    FLOAT_AT(0x00240148) = 3.1415927f + 3.1415927f;                                                      // 0x0015afd0
-    FLOAT_AT(0x00240144) = 3.1415927f * 0.5f;                                                            // 0x0015afe0
-    DOUBLE_AT(0x002400f0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b000
-    DOUBLE_AT(0x002400e8) = 3.141592653589793 * 0.5;                                                     // 0x0015b010
+    // unread: 0x0023ff3c = 3.1415927f + 3.1415927f                                                      // 0x0015ad90
+    // unread: 0x0023ff38 = 3.1415927f * 0.5f                                                            // 0x0015ada0
+    // unread: 0x0023ff30 = 3.141592653589793 + 3.141592653589793                                        // 0x0015adc0
+    // unread: 0x0023ff28 = 3.141592653589793 * 0.5                                                      // 0x0015add0
+    // unread: 0x0023ff5c = 3.1415927f + 3.1415927f                                                      // 0x0015adf0
+    // unread: 0x0023ff58 = 3.1415927f * 0.5f                                                            // 0x0015ae00
+    // unread: 0x0023ff50 = 3.141592653589793 + 3.141592653589793                                        // 0x0015ae20
+    // unread: 0x0023ff48 = 3.141592653589793 * 0.5                                                      // 0x0015ae30
+    // unread: 0x0023ff7c = 3.1415927f + 3.1415927f                                                      // 0x0015ae50
+    // unread: 0x0023ff78 = 3.1415927f * 0.5f                                                            // 0x0015ae60
+    // unread: 0x0023ff70 = 3.141592653589793 + 3.141592653589793                                        // 0x0015ae80
+    // unread: 0x0023ff68 = 3.141592653589793 * 0.5                                                      // 0x0015ae90
+    // unread: 0x0024007c = 3.1415927f + 3.1415927f                                                      // 0x0015aeb0
+    // unread: 0x00240078 = 3.1415927f * 0.5f                                                            // 0x0015aec0
+    // unread: 0x00240070 = 3.141592653589793 + 3.141592653589793                                        // 0x0015aee0
+    // unread: 0x00240068 = 3.141592653589793 * 0.5                                                      // 0x0015aef0
+    // unread: 0x0024009c = 3.1415927f + 3.1415927f                                                      // 0x0015af10
+    // unread: 0x00240098 = 3.1415927f * 0.5f                                                            // 0x0015af20
+    // unread: 0x00240090 = 3.141592653589793 + 3.141592653589793                                        // 0x0015af40
+    // unread: 0x00240088 = 3.141592653589793 * 0.5                                                      // 0x0015af50
+    // unread: 0x002400b4 = 3.1415927f + 3.1415927f                                                      // 0x0015af70
+    // unread: 0x002400b0 = 3.1415927f * 0.5f                                                            // 0x0015af80
+    // unread: 0x002400a8 = 3.141592653589793 + 3.141592653589793                                        // 0x0015afa0
+    // unread: 0x002400a0 = 3.141592653589793 * 0.5                                                      // 0x0015afb0
+    // unread: 0x00240148 = 3.1415927f + 3.1415927f                                                      // 0x0015afd0
+    // unread: 0x00240144 = 3.1415927f * 0.5f                                                            // 0x0015afe0
+    // unread: 0x002400f0 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b000
+    // unread: 0x002400e8 = 3.141592653589793 * 0.5                                                      // 0x0015b010
     ((EAGL::GeoPrimState *)&FontState)->Construct();                                                     // 0x0015b030
     Crt::atexit([] { ((EAGL::GeoPrimState *)&FontState)->Destruct(); });
-    FLOAT_AT(0x00240174) = 3.1415927f + 3.1415927f;                                                      // 0x0015b050
-    FLOAT_AT(0x00240170) = 3.1415927f * 0.5f;                                                            // 0x0015b060
-    DOUBLE_AT(0x00240168) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b080
-    DOUBLE_AT(0x00240160) = 3.141592653589793 * 0.5;                                                     // 0x0015b090
-    FLOAT_AT(0x002401ec) = 3.1415927f + 3.1415927f;                                                      // 0x0015b0b0
-    FLOAT_AT(0x002401e8) = 3.1415927f * 0.5f;                                                            // 0x0015b0c0
-    DOUBLE_AT(0x002401e0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b0e0
-    DOUBLE_AT(0x002401d8) = 3.141592653589793 * 0.5;                                                     // 0x0015b0f0
-    FLOAT_AT(0x00240204) = 3.1415927f + 3.1415927f;                                                      // 0x0015b110
-    FLOAT_AT(0x00240200) = 3.1415927f * 0.5f;                                                            // 0x0015b120
-    DOUBLE_AT(0x002401f8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b140
-    DOUBLE_AT(0x002401f0) = 3.141592653589793 * 0.5;                                                     // 0x0015b150
-    FLOAT_AT(0x0024021c) = 3.1415927f + 3.1415927f;                                                      // 0x0015b170
-    FLOAT_AT(0x00240218) = 3.1415927f * 0.5f;                                                            // 0x0015b180
-    DOUBLE_AT(0x00240210) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b1a0
-    DOUBLE_AT(0x00240208) = 3.141592653589793 * 0.5;                                                     // 0x0015b1b0
-    FLOAT_AT(0x00240234) = 3.1415927f + 3.1415927f;                                                      // 0x0015b1d0
-    FLOAT_AT(0x00240230) = 3.1415927f * 0.5f;                                                            // 0x0015b1e0
-    DOUBLE_AT(0x00240228) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b200
-    DOUBLE_AT(0x00240220) = 3.141592653589793 * 0.5;                                                     // 0x0015b210
-    FLOAT_AT(0x0024024c) = 3.1415927f + 3.1415927f;                                                      // 0x0015b230
-    FLOAT_AT(0x00240248) = 3.1415927f * 0.5f;                                                            // 0x0015b240
-    DOUBLE_AT(0x00240240) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b260
-    DOUBLE_AT(0x00240238) = 3.141592653589793 * 0.5;                                                     // 0x0015b270
-    FLOAT_AT(0x00240264) = 3.1415927f + 3.1415927f;                                                      // 0x0015b290
-    FLOAT_AT(0x00240260) = 3.1415927f * 0.5f;                                                            // 0x0015b2a0
-    DOUBLE_AT(0x00240258) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b2c0
-    DOUBLE_AT(0x00240250) = 3.141592653589793 * 0.5;                                                     // 0x0015b2d0
-    FLOAT_AT(0x00240524) = 3.1415927f + 3.1415927f;                                                      // 0x0015b2f0
-    FLOAT_AT(0x00240520) = 3.1415927f * 0.5f;                                                            // 0x0015b300
-    DOUBLE_AT(0x00240518) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b320
-    DOUBLE_AT(0x00240510) = 3.141592653589793 * 0.5;                                                     // 0x0015b330
-    FLOAT_AT(0x002406a0) = 3.1415927f + 3.1415927f;                                                      // 0x0015b350
-    FLOAT_AT(0x0024069c) = 3.1415927f * 0.5f;                                                            // 0x0015b360
-    DOUBLE_AT(0x00240558) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b380
-    DOUBLE_AT(0x00240550) = 3.141592653589793 * 0.5;                                                     // 0x0015b390
-    FrameRegion.Construct((const char *)0x001ce028 /* "PROFILER" */, 0xff00aaaa);                        // 0x0015b3b0
+    // unread: 0x00240174 = 3.1415927f + 3.1415927f                                                      // 0x0015b050
+    // unread: 0x00240170 = 3.1415927f * 0.5f                                                            // 0x0015b060
+    // unread: 0x00240168 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b080
+    // unread: 0x00240160 = 3.141592653589793 * 0.5                                                      // 0x0015b090
+    // unread: 0x002401ec = 3.1415927f + 3.1415927f                                                      // 0x0015b0b0
+    // unread: 0x002401e8 = 3.1415927f * 0.5f                                                            // 0x0015b0c0
+    // unread: 0x002401e0 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b0e0
+    // unread: 0x002401d8 = 3.141592653589793 * 0.5                                                      // 0x0015b0f0
+    // unread: 0x00240204 = 3.1415927f + 3.1415927f                                                      // 0x0015b110
+    // unread: 0x00240200 = 3.1415927f * 0.5f                                                            // 0x0015b120
+    // unread: 0x002401f8 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b140
+    // unread: 0x002401f0 = 3.141592653589793 * 0.5                                                      // 0x0015b150
+    // unread: 0x0024021c = 3.1415927f + 3.1415927f                                                      // 0x0015b170
+    // unread: 0x00240218 = 3.1415927f * 0.5f                                                            // 0x0015b180
+    // unread: 0x00240210 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b1a0
+    // unread: 0x00240208 = 3.141592653589793 * 0.5                                                      // 0x0015b1b0
+    // unread: 0x00240234 = 3.1415927f + 3.1415927f                                                      // 0x0015b1d0
+    // unread: 0x00240230 = 3.1415927f * 0.5f                                                            // 0x0015b1e0
+    // unread: 0x00240228 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b200
+    // unread: 0x00240220 = 3.141592653589793 * 0.5                                                      // 0x0015b210
+    // unread: 0x0024024c = 3.1415927f + 3.1415927f                                                      // 0x0015b230
+    // unread: 0x00240248 = 3.1415927f * 0.5f                                                            // 0x0015b240
+    // unread: 0x00240240 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b260
+    // unread: 0x00240238 = 3.141592653589793 * 0.5                                                      // 0x0015b270
+    // unread: 0x00240264 = 3.1415927f + 3.1415927f                                                      // 0x0015b290
+    // unread: 0x00240260 = 3.1415927f * 0.5f                                                            // 0x0015b2a0
+    // unread: 0x00240258 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b2c0
+    // unread: 0x00240250 = 3.141592653589793 * 0.5                                                      // 0x0015b2d0
+    // unread: 0x00240524 = 3.1415927f + 3.1415927f                                                      // 0x0015b2f0
+    // unread: 0x00240520 = 3.1415927f * 0.5f                                                            // 0x0015b300
+    // unread: 0x00240518 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b320
+    // unread: 0x00240510 = 3.141592653589793 * 0.5                                                      // 0x0015b330
+    // unread: 0x002406a0 = 3.1415927f + 3.1415927f                                                      // 0x0015b350
+    // unread: 0x0024069c = 3.1415927f * 0.5f                                                            // 0x0015b360
+    // unread: 0x00240558 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b380
+    // unread: 0x00240550 = 3.141592653589793 * 0.5                                                      // 0x0015b390
+    FrameRegion.Construct("PROFILER", 0xff00aaaa);                                                       // 0x0015b3b0
     Crt::atexit([] { FrameRegion.UnlinkThunk(); });
-    ((EAGL::ProfilerRegion *)0x002406a8)->Construct((const char *)0x001ce034 /* "UNPROFILED" */, 0xffffff50); // 0x0015b3d0
-    Crt::atexit([] { ((EAGL::ProfilerRegion *)0x002406a8)->UnlinkThunk(); });
-    U32_AT(0x00240688) = 0x002406a8;                                                                     // 0x0015b3f0
-    ((EAGL::ProfilerTimer *)0x00240688)->Enter();
-    Crt::atexit([] { ((EAGL::ProfilerTimer *)0x00240688)->Destruct(); });
-    FLOAT_AT(0x002407e4) = 3.1415927f + 3.1415927f;                                                      // 0x0015b410
-    FLOAT_AT(0x002407e0) = 3.1415927f * 0.5f;                                                            // 0x0015b420
-    DOUBLE_AT(0x002407d8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b440
-    DOUBLE_AT(0x002407d0) = 3.141592653589793 * 0.5;                                                     // 0x0015b450
-    FLOAT_AT(0x002407fc) = 3.1415927f + 3.1415927f;                                                      // 0x0015b470
-    FLOAT_AT(0x002407f8) = 3.1415927f * 0.5f;                                                            // 0x0015b480
-    DOUBLE_AT(0x002407f0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b4a0
-    DOUBLE_AT(0x002407e8) = 3.141592653589793 * 0.5;                                                     // 0x0015b4b0
-    FLOAT_AT(0x00241444) = 3.1415927f + 3.1415927f;                                                      // 0x0015b4d0
-    FLOAT_AT(0x00241440) = 3.1415927f * 0.5f;                                                            // 0x0015b4e0
-    DOUBLE_AT(0x00241438) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b500
-    DOUBLE_AT(0x00241430) = 3.141592653589793 * 0.5;                                                     // 0x0015b510
-    FLOAT_AT(0x0024145c) = 3.1415927f + 3.1415927f;                                                      // 0x0015b530
-    FLOAT_AT(0x00241458) = 3.1415927f * 0.5f;                                                            // 0x0015b540
-    DOUBLE_AT(0x00241450) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b560
-    DOUBLE_AT(0x00241448) = 3.141592653589793 * 0.5;                                                     // 0x0015b570
-    TextureDofMethod.Construct((EAGL::Packet *)0x001ce958, 1, (const void *)0x001cea04, (const void **)0x001ce950, NULL, (const uint8_t **)0x001ce954, NULL, (const char **)0x001cea74, 0x00000001, (const char *)0x001cea9c /* "HB_RM = TextureDOF" */); // 0x0015b590
+    UnprofiledRegion.Construct("UNPROFILED", 0xffffff50);                                                // 0x0015b3d0
+    Crt::atexit([] { UnprofiledRegion.UnlinkThunk(); });
+    UnprofiledTimer.region = &UnprofiledRegion;                                                          // 0x0015b3f0
+    UnprofiledTimer.Enter();
+    Crt::atexit([] { UnprofiledTimer.Destruct(); });
+    // unread: 0x002407e4 = 3.1415927f + 3.1415927f                                                      // 0x0015b410
+    // unread: 0x002407e0 = 3.1415927f * 0.5f                                                            // 0x0015b420
+    // unread: 0x002407d8 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b440
+    // unread: 0x002407d0 = 3.141592653589793 * 0.5                                                      // 0x0015b450
+    // unread: 0x002407fc = 3.1415927f + 3.1415927f                                                      // 0x0015b470
+    // unread: 0x002407f8 = 3.1415927f * 0.5f                                                            // 0x0015b480
+    // unread: 0x002407f0 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b4a0
+    // unread: 0x002407e8 = 3.141592653589793 * 0.5                                                      // 0x0015b4b0
+    // unread: 0x00241444 = 3.1415927f + 3.1415927f                                                      // 0x0015b4d0
+    // unread: 0x00241440 = 3.1415927f * 0.5f                                                            // 0x0015b4e0
+    // unread: 0x00241438 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b500
+    // unread: 0x00241430 = 3.141592653589793 * 0.5                                                      // 0x0015b510
+    // unread: 0x0024145c = 3.1415927f + 3.1415927f                                                      // 0x0015b530
+    // unread: 0x00241458 = 3.1415927f * 0.5f                                                            // 0x0015b540
+    // unread: 0x00241450 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b560
+    // unread: 0x00241448 = 3.141592653589793 * 0.5                                                      // 0x0015b570
+    TextureDofMethod.Construct((EAGL::Packet *)0x001ce958, 1, (const void *)0x001cea04, (const void **)0x001ce950, NULL, (const uint8_t **)0x001ce954, NULL, (const char **)0x001cea74, 0x00000001, "HB_RM = TextureDOF"); // 0x0015b590
     Crt::atexit([] { TextureDofMethod.Destruct(); });
-    FLOAT_AT(0x002414ac) = 3.1415927f + 3.1415927f;                                                      // 0x0015b5d0
-    FLOAT_AT(0x002414a8) = 3.1415927f * 0.5f;                                                            // 0x0015b5e0
-    DOUBLE_AT(0x002414a0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b600
-    DOUBLE_AT(0x00241498) = 3.141592653589793 * 0.5;                                                     // 0x0015b610
-    FLOAT_AT(0x00241944) = 3.1415927f + 3.1415927f;                                                      // 0x0015b630
-    FLOAT_AT(0x00241940) = 3.1415927f * 0.5f;                                                            // 0x0015b640
-    DOUBLE_AT(0x00241938) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b660
-    DOUBLE_AT(0x00241930) = 3.141592653589793 * 0.5;                                                     // 0x0015b670
-    FLOAT_AT(0x00241924) = 3.1415927f - -3.1415927f;                                                     // 0x0015b690
-    FLOAT_AT(0x00241928) = 0.06666667f + 0.06666667f;                                                    // 0x0015b6b0
-    FLOAT_AT(0x00241948) = 0.003921569f + 0.003921569f;                                                  // 0x0015b6c0
-    FLOAT_AT(0x00241920) = 1.5259022e-05f + 1.5259022e-05f;                                              // 0x0015b6d0
-    FLOAT_AT(0x00241964) = 3.1415927f + 3.1415927f;                                                      // 0x0015b6e0
-    FLOAT_AT(0x00241960) = 3.1415927f * 0.5f;                                                            // 0x0015b6f0
-    DOUBLE_AT(0x00241958) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b710
-    DOUBLE_AT(0x00241950) = 3.141592653589793 * 0.5;                                                     // 0x0015b720
-    FLOAT_AT(0x0024197c) = 3.1415927f + 3.1415927f;                                                      // 0x0015b740
-    FLOAT_AT(0x00241978) = 3.1415927f * 0.5f;                                                            // 0x0015b750
-    DOUBLE_AT(0x00241970) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b770
-    DOUBLE_AT(0x00241968) = 3.141592653589793 * 0.5;                                                     // 0x0015b780
-    FLOAT_AT(0x00241994) = 3.1415927f + 3.1415927f;                                                      // 0x0015b7a0
-    FLOAT_AT(0x00241990) = 3.1415927f * 0.5f;                                                            // 0x0015b7b0
-    DOUBLE_AT(0x00241988) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b7d0
-    DOUBLE_AT(0x00241980) = 3.141592653589793 * 0.5;                                                     // 0x0015b7e0
-    FLOAT_AT(0x002419ac) = 3.1415927f + 3.1415927f;                                                      // 0x0015b800
-    FLOAT_AT(0x002419a8) = 3.1415927f * 0.5f;                                                            // 0x0015b810
-    DOUBLE_AT(0x002419a0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b830
-    DOUBLE_AT(0x00241998) = 3.141592653589793 * 0.5;                                                     // 0x0015b840
-    FLOAT_AT(0x002419c4) = 3.1415927f + 3.1415927f;                                                      // 0x0015b860
-    FLOAT_AT(0x002419c0) = 3.1415927f * 0.5f;                                                            // 0x0015b870
-    DOUBLE_AT(0x002419b8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b890
-    DOUBLE_AT(0x002419b0) = 3.141592653589793 * 0.5;                                                     // 0x0015b8a0
-    FLOAT_AT(0x002419dc) = 3.1415927f + 3.1415927f;                                                      // 0x0015b8c0
-    FLOAT_AT(0x002419d8) = 3.1415927f * 0.5f;                                                            // 0x0015b8d0
-    DOUBLE_AT(0x002419d0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b8f0
-    DOUBLE_AT(0x002419c8) = 3.141592653589793 * 0.5;                                                     // 0x0015b900
-    FLOAT_AT(0x002419f4) = 3.1415927f + 3.1415927f;                                                      // 0x0015b920
-    FLOAT_AT(0x002419f0) = 3.1415927f * 0.5f;                                                            // 0x0015b930
-    DOUBLE_AT(0x002419e8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b950
-    DOUBLE_AT(0x002419e0) = 3.141592653589793 * 0.5;                                                     // 0x0015b960
-    FLOAT_AT(0x00241a0c) = 3.1415927f + 3.1415927f;                                                      // 0x0015b980
-    FLOAT_AT(0x00241a08) = 3.1415927f * 0.5f;                                                            // 0x0015b990
-    DOUBLE_AT(0x00241a00) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015b9b0
-    DOUBLE_AT(0x002419f8) = 3.141592653589793 * 0.5;                                                     // 0x0015b9c0
-    FLOAT_AT(0x00241a24) = 3.1415927f + 3.1415927f;                                                      // 0x0015b9e0
-    FLOAT_AT(0x00241a20) = 3.1415927f * 0.5f;                                                            // 0x0015b9f0
-    DOUBLE_AT(0x00241a18) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015ba10
-    DOUBLE_AT(0x00241a10) = 3.141592653589793 * 0.5;                                                     // 0x0015ba20
-    FLOAT_AT(0x00241a3c) = 3.1415927f + 3.1415927f;                                                      // 0x0015ba40
-    FLOAT_AT(0x00241a38) = 3.1415927f * 0.5f;                                                            // 0x0015ba50
-    DOUBLE_AT(0x00241a30) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015ba70
-    DOUBLE_AT(0x00241a28) = 3.141592653589793 * 0.5;                                                     // 0x0015ba80
-    FLOAT_AT(0x00241a54) = 3.1415927f + 3.1415927f;                                                      // 0x0015baa0
-    FLOAT_AT(0x00241a50) = 3.1415927f * 0.5f;                                                            // 0x0015bab0
-    DOUBLE_AT(0x00241a48) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015bad0
-    DOUBLE_AT(0x00241a40) = 3.141592653589793 * 0.5;                                                     // 0x0015bae0
-    FLOAT_AT(0x00241a8c) = 3.1415927f + 3.1415927f;                                                      // 0x0015bb00
-    FLOAT_AT(0x00241a88) = 3.1415927f * 0.5f;                                                            // 0x0015bb10
-    DOUBLE_AT(0x00241a80) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015bb30
-    DOUBLE_AT(0x00241a78) = 3.141592653589793 * 0.5;                                                     // 0x0015bb40
-    FLOAT_AT(0x00241aac) = 3.1415927f + 3.1415927f;                                                      // 0x0015bb60
-    FLOAT_AT(0x00241aa8) = 3.1415927f * 0.5f;                                                            // 0x0015bb70
-    DOUBLE_AT(0x00241aa0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015bb90
-    DOUBLE_AT(0x00241a98) = 3.141592653589793 * 0.5;                                                     // 0x0015bba0
-    FLOAT_AT(0x00241a90) = 3.1415927f - -3.1415927f;                                                     // 0x0015bbc0
-    FLOAT_AT(0x00241ad4) = 3.1415927f + 3.1415927f;                                                      // 0x0015bbe0
-    FLOAT_AT(0x00241ad0) = 3.1415927f * 0.5f;                                                            // 0x0015bbf0
-    DOUBLE_AT(0x00241ac8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015bc10
-    DOUBLE_AT(0x00241ac0) = 3.141592653589793 * 0.5;                                                     // 0x0015bc20
-    FLOAT_AT(0x00241ab4) = 3.1415927f - -3.1415927f;                                                     // 0x0015bc40
-    FLOAT_AT(0x00241ab8) = 0.06666667f + 0.06666667f;                                                    // 0x0015bc60
-    FLOAT_AT(0x00241ad8) = 0.003921569f + 0.003921569f;                                                  // 0x0015bc70
-    FLOAT_AT(0x00241ab0) = 1.5259022e-05f + 1.5259022e-05f;                                              // 0x0015bc80
-    FLOAT_AT(0x00241afc) = 3.1415927f + 3.1415927f;                                                      // 0x0015bc90
-    FLOAT_AT(0x00241af8) = 3.1415927f * 0.5f;                                                            // 0x0015bca0
-    DOUBLE_AT(0x00241af0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015bcc0
-    DOUBLE_AT(0x00241ae8) = 3.141592653589793 * 0.5;                                                     // 0x0015bcd0
+    // unread: 0x002414ac = 3.1415927f + 3.1415927f                                                      // 0x0015b5d0
+    // unread: 0x002414a8 = 3.1415927f * 0.5f                                                            // 0x0015b5e0
+    // unread: 0x002414a0 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b600
+    // unread: 0x00241498 = 3.141592653589793 * 0.5                                                      // 0x0015b610
+    // unread: 0x00241944 = 3.1415927f + 3.1415927f                                                      // 0x0015b630
+    // unread: 0x00241940 = 3.1415927f * 0.5f                                                            // 0x0015b640
+    // unread: 0x00241938 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b660
+    // unread: 0x00241930 = 3.141592653589793 * 0.5                                                      // 0x0015b670
+    // unread: 0x00241924 = 3.1415927f - -3.1415927f                                                     // 0x0015b690
+    // unread: 0x00241928 = 0.06666667f + 0.06666667f                                                    // 0x0015b6b0
+    // unread: 0x00241948 = 0.003921569f + 0.003921569f                                                  // 0x0015b6c0
+    // unread: 0x00241920 = 1.5259022e-05f + 1.5259022e-05f                                              // 0x0015b6d0
+    // unread: 0x00241964 = 3.1415927f + 3.1415927f                                                      // 0x0015b6e0
+    // unread: 0x00241960 = 3.1415927f * 0.5f                                                            // 0x0015b6f0
+    // unread: 0x00241958 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b710
+    // unread: 0x00241950 = 3.141592653589793 * 0.5                                                      // 0x0015b720
+    // unread: 0x0024197c = 3.1415927f + 3.1415927f                                                      // 0x0015b740
+    // unread: 0x00241978 = 3.1415927f * 0.5f                                                            // 0x0015b750
+    // unread: 0x00241970 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b770
+    // unread: 0x00241968 = 3.141592653589793 * 0.5                                                      // 0x0015b780
+    // unread: 0x00241994 = 3.1415927f + 3.1415927f                                                      // 0x0015b7a0
+    // unread: 0x00241990 = 3.1415927f * 0.5f                                                            // 0x0015b7b0
+    // unread: 0x00241988 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b7d0
+    // unread: 0x00241980 = 3.141592653589793 * 0.5                                                      // 0x0015b7e0
+    // unread: 0x002419ac = 3.1415927f + 3.1415927f                                                      // 0x0015b800
+    // unread: 0x002419a8 = 3.1415927f * 0.5f                                                            // 0x0015b810
+    // unread: 0x002419a0 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b830
+    // unread: 0x00241998 = 3.141592653589793 * 0.5                                                      // 0x0015b840
+    // unread: 0x002419c4 = 3.1415927f + 3.1415927f                                                      // 0x0015b860
+    // unread: 0x002419c0 = 3.1415927f * 0.5f                                                            // 0x0015b870
+    // unread: 0x002419b8 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b890
+    // unread: 0x002419b0 = 3.141592653589793 * 0.5                                                      // 0x0015b8a0
+    // unread: 0x002419dc = 3.1415927f + 3.1415927f                                                      // 0x0015b8c0
+    // unread: 0x002419d8 = 3.1415927f * 0.5f                                                            // 0x0015b8d0
+    // unread: 0x002419d0 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b8f0
+    // unread: 0x002419c8 = 3.141592653589793 * 0.5                                                      // 0x0015b900
+    // unread: 0x002419f4 = 3.1415927f + 3.1415927f                                                      // 0x0015b920
+    // unread: 0x002419f0 = 3.1415927f * 0.5f                                                            // 0x0015b930
+    // unread: 0x002419e8 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b950
+    // unread: 0x002419e0 = 3.141592653589793 * 0.5                                                      // 0x0015b960
+    // unread: 0x00241a0c = 3.1415927f + 3.1415927f                                                      // 0x0015b980
+    // unread: 0x00241a08 = 3.1415927f * 0.5f                                                            // 0x0015b990
+    // unread: 0x00241a00 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b9b0
+    // unread: 0x002419f8 = 3.141592653589793 * 0.5                                                      // 0x0015b9c0
+    // unread: 0x00241a24 = 3.1415927f + 3.1415927f                                                      // 0x0015b9e0
+    // unread: 0x00241a20 = 3.1415927f * 0.5f                                                            // 0x0015b9f0
+    // unread: 0x00241a18 = 3.141592653589793 + 3.141592653589793                                        // 0x0015ba10
+    // unread: 0x00241a10 = 3.141592653589793 * 0.5                                                      // 0x0015ba20
+    // unread: 0x00241a3c = 3.1415927f + 3.1415927f                                                      // 0x0015ba40
+    // unread: 0x00241a38 = 3.1415927f * 0.5f                                                            // 0x0015ba50
+    // unread: 0x00241a30 = 3.141592653589793 + 3.141592653589793                                        // 0x0015ba70
+    // unread: 0x00241a28 = 3.141592653589793 * 0.5                                                      // 0x0015ba80
+    // unread: 0x00241a54 = 3.1415927f + 3.1415927f                                                      // 0x0015baa0
+    // unread: 0x00241a50 = 3.1415927f * 0.5f                                                            // 0x0015bab0
+    // unread: 0x00241a48 = 3.141592653589793 + 3.141592653589793                                        // 0x0015bad0
+    // unread: 0x00241a40 = 3.141592653589793 * 0.5                                                      // 0x0015bae0
+    // unread: 0x00241a8c = 3.1415927f + 3.1415927f                                                      // 0x0015bb00
+    // unread: 0x00241a88 = 3.1415927f * 0.5f                                                            // 0x0015bb10
+    // unread: 0x00241a80 = 3.141592653589793 + 3.141592653589793                                        // 0x0015bb30
+    // unread: 0x00241a78 = 3.141592653589793 * 0.5                                                      // 0x0015bb40
+    // unread: 0x00241aac = 3.1415927f + 3.1415927f                                                      // 0x0015bb60
+    // unread: 0x00241aa8 = 3.1415927f * 0.5f                                                            // 0x0015bb70
+    // unread: 0x00241aa0 = 3.141592653589793 + 3.141592653589793                                        // 0x0015bb90
+    // unread: 0x00241a98 = 3.141592653589793 * 0.5                                                      // 0x0015bba0
+    // unread: 0x00241a90 = 3.1415927f - -3.1415927f                                                     // 0x0015bbc0
+    // unread: 0x00241ad4 = 3.1415927f + 3.1415927f                                                      // 0x0015bbe0
+    // unread: 0x00241ad0 = 3.1415927f * 0.5f                                                            // 0x0015bbf0
+    // unread: 0x00241ac8 = 3.141592653589793 + 3.141592653589793                                        // 0x0015bc10
+    // unread: 0x00241ac0 = 3.141592653589793 * 0.5                                                      // 0x0015bc20
+    // unread: 0x00241ab4 = 3.1415927f - -3.1415927f                                                     // 0x0015bc40
+    // unread: 0x00241ab8 = 0.06666667f + 0.06666667f                                                    // 0x0015bc60
+    // unread: 0x00241ad8 = 0.003921569f + 0.003921569f                                                  // 0x0015bc70
+    // unread: 0x00241ab0 = 1.5259022e-05f + 1.5259022e-05f                                              // 0x0015bc80
+    // unread: 0x00241afc = 3.1415927f + 3.1415927f                                                      // 0x0015bc90
+    // unread: 0x00241af8 = 3.1415927f * 0.5f                                                            // 0x0015bca0
+    // unread: 0x00241af0 = 3.141592653589793 + 3.141592653589793                                        // 0x0015bcc0
+    // unread: 0x00241ae8 = 3.141592653589793 * 0.5                                                      // 0x0015bcd0
     // SingleQAngleRange = 6.2831855f: ours (eagl/anim/AnimDeltaQ.cpp)                                   // 0x0015bcf0
-    FLOAT_AT(0x00241b14) = 3.1415927f + 3.1415927f;                                                      // 0x0015bd10
-    FLOAT_AT(0x00241b10) = 3.1415927f * 0.5f;                                                            // 0x0015bd20
-    DOUBLE_AT(0x00241b08) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015bd40
-    DOUBLE_AT(0x00241b00) = 3.141592653589793 * 0.5;                                                     // 0x0015bd50
-    FLOAT_AT(0x00241b2c) = 3.1415927f + 3.1415927f;                                                      // 0x0015bd70
-    FLOAT_AT(0x00241b28) = 3.1415927f * 0.5f;                                                            // 0x0015bd80
-    DOUBLE_AT(0x00241b20) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015bda0
-    DOUBLE_AT(0x00241b18) = 3.141592653589793 * 0.5;                                                     // 0x0015bdb0
-    FLOAT_AT(0x00241b4c) = 3.1415927f + 3.1415927f;                                                      // 0x0015bdd0
-    FLOAT_AT(0x00241b48) = 3.1415927f * 0.5f;                                                            // 0x0015bde0
-    DOUBLE_AT(0x00241b40) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015be00
-    DOUBLE_AT(0x00241b38) = 3.141592653589793 * 0.5;                                                     // 0x0015be10
-    FLOAT_AT(0x00241b64) = 3.1415927f + 3.1415927f;                                                      // 0x0015be30
-    FLOAT_AT(0x00241b60) = 3.1415927f * 0.5f;                                                            // 0x0015be40
-    DOUBLE_AT(0x00241b58) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015be60
-    DOUBLE_AT(0x00241b50) = 3.141592653589793 * 0.5;                                                     // 0x0015be70
-    FLOAT_AT(0x00241b7c) = 3.1415927f + 3.1415927f;                                                      // 0x0015be90
-    FLOAT_AT(0x00241b78) = 3.1415927f * 0.5f;                                                            // 0x0015bea0
-    DOUBLE_AT(0x00241b70) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015bec0
-    DOUBLE_AT(0x00241b68) = 3.141592653589793 * 0.5;                                                     // 0x0015bed0
-    FLOAT_AT(0x00241b9c) = 3.1415927f + 3.1415927f;                                                      // 0x0015bef0
-    FLOAT_AT(0x00241b98) = 3.1415927f * 0.5f;                                                            // 0x0015bf00
-    DOUBLE_AT(0x00241b90) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015bf20
-    DOUBLE_AT(0x00241b88) = 3.141592653589793 * 0.5;                                                     // 0x0015bf30
+    // unread: 0x00241b14 = 3.1415927f + 3.1415927f                                                      // 0x0015bd10
+    // unread: 0x00241b10 = 3.1415927f * 0.5f                                                            // 0x0015bd20
+    // unread: 0x00241b08 = 3.141592653589793 + 3.141592653589793                                        // 0x0015bd40
+    // unread: 0x00241b00 = 3.141592653589793 * 0.5                                                      // 0x0015bd50
+    // unread: 0x00241b2c = 3.1415927f + 3.1415927f                                                      // 0x0015bd70
+    // unread: 0x00241b28 = 3.1415927f * 0.5f                                                            // 0x0015bd80
+    // unread: 0x00241b20 = 3.141592653589793 + 3.141592653589793                                        // 0x0015bda0
+    // unread: 0x00241b18 = 3.141592653589793 * 0.5                                                      // 0x0015bdb0
+    // unread: 0x00241b4c = 3.1415927f + 3.1415927f                                                      // 0x0015bdd0
+    // unread: 0x00241b48 = 3.1415927f * 0.5f                                                            // 0x0015bde0
+    // unread: 0x00241b40 = 3.141592653589793 + 3.141592653589793                                        // 0x0015be00
+    // unread: 0x00241b38 = 3.141592653589793 * 0.5                                                      // 0x0015be10
+    // unread: 0x00241b64 = 3.1415927f + 3.1415927f                                                      // 0x0015be30
+    // unread: 0x00241b60 = 3.1415927f * 0.5f                                                            // 0x0015be40
+    // unread: 0x00241b58 = 3.141592653589793 + 3.141592653589793                                        // 0x0015be60
+    // unread: 0x00241b50 = 3.141592653589793 * 0.5                                                      // 0x0015be70
+    // unread: 0x00241b7c = 3.1415927f + 3.1415927f                                                      // 0x0015be90
+    // unread: 0x00241b78 = 3.1415927f * 0.5f                                                            // 0x0015bea0
+    // unread: 0x00241b70 = 3.141592653589793 + 3.141592653589793                                        // 0x0015bec0
+    // unread: 0x00241b68 = 3.141592653589793 * 0.5                                                      // 0x0015bed0
+    // unread: 0x00241b9c = 3.1415927f + 3.1415927f                                                      // 0x0015bef0
+    // unread: 0x00241b98 = 3.1415927f * 0.5f                                                            // 0x0015bf00
+    // unread: 0x00241b90 = 3.141592653589793 + 3.141592653589793                                        // 0x0015bf20
+    // unread: 0x00241b88 = 3.141592653589793 * 0.5                                                      // 0x0015bf30
     // ScratchBuffers = zero: ours (eagl/anim/AnimDecode.cpp)                                            // 0x0015bf50
-    FLOAT_AT(0x00241bdc) = 3.1415927f + 3.1415927f;                                                      // 0x0015bf70
-    FLOAT_AT(0x00241bd8) = 3.1415927f * 0.5f;                                                            // 0x0015bf80
-    DOUBLE_AT(0x00241bd0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015bfa0
-    DOUBLE_AT(0x00241bc8) = 3.141592653589793 * 0.5;                                                     // 0x0015bfb0
-    TexturedParentMethod.Construct((EAGL::Packet *)0x001d37a0, 1, (const void *)0x001d3834, (const void **)0x001d3798, NULL, (const uint8_t **)0x001d379c, NULL, (const char **)0x001d38a0, 0x00000001, (const char *)0x001d38c0 /* "HB_RM = MatDebugTexture" */); // 0x0015bfd0
+    // unread: 0x00241bdc = 3.1415927f + 3.1415927f                                                      // 0x0015bf70
+    // unread: 0x00241bd8 = 3.1415927f * 0.5f                                                            // 0x0015bf80
+    // unread: 0x00241bd0 = 3.141592653589793 + 3.141592653589793                                        // 0x0015bfa0
+    // unread: 0x00241bc8 = 3.141592653589793 * 0.5                                                      // 0x0015bfb0
+    TexturedParentMethod.Construct((EAGL::Packet *)0x001d37a0, 1, (const void *)0x001d3834, (const void **)0x001d3798, NULL, (const uint8_t **)0x001d379c, NULL, (const char **)0x001d38a0, 0x00000001, "HB_RM = MatDebugTexture"); // 0x0015bfd0
     Crt::atexit([] { TexturedParentMethod.Destruct(); });
-    EmpParentMethod.Construct((EAGL::Packet *)0x001d3cf8, 1, (const void *)0x001d3dfc, (const void **)0x001d3cf0, NULL, (const uint8_t **)0x001d3cf4, NULL, (const char **)0x001d3eb8, 0x00000001, (const char *)0x001d3ef8 /* "HB_RM = BondScrollTex1" */); // 0x0015c010
+    EmpParentMethod.Construct((EAGL::Packet *)0x001d3cf8, 1, (const void *)0x001d3dfc, (const void **)0x001d3cf0, NULL, (const uint8_t **)0x001d3cf4, NULL, (const char **)0x001d3eb8, 0x00000001, "HB_RM = BondScrollTex1"); // 0x0015c010
     Crt::atexit([] { EmpParentMethod.Destruct(); });
-    GainParentMethod.Construct((EAGL::Packet *)0x001d4090, 1, (const void *)0x001d414c, (const void **)0x001d4088, NULL, (const uint8_t **)0x001d408c, NULL, (const char **)0x001d41c4, 0x00000001, (const char *)0x001d41f0 /* "HB_RM = BondGouraudGain" */); // 0x0015c050
+    GainParentMethod.Construct((EAGL::Packet *)0x001d4090, 1, (const void *)0x001d414c, (const void **)0x001d4088, NULL, (const uint8_t **)0x001d408c, NULL, (const char **)0x001d41c4, 0x00000001, "HB_RM = BondGouraudGain"); // 0x0015c050
     Crt::atexit([] { GainParentMethod.Destruct(); });
-    BondPostGlare.Construct((EAGL::Packet *)0x001d43d8, 1, (const void *)0x001d4460, (const void **)0x001d43d0, NULL, (const uint8_t **)0x001d43d4, NULL, (const char **)0x001d44cc, 0x00000001, (const char *)0x001d44ec /* "HB_RM = BondPostGlare" */); // 0x0015c090
+    BondPostGlare.Construct((EAGL::Packet *)0x001d43d8, 1, (const void *)0x001d4460, (const void **)0x001d43d0, NULL, (const uint8_t **)0x001d43d4, NULL, (const char **)0x001d44cc, 0x00000001, "HB_RM = BondPostGlare"); // 0x0015c090
     Crt::atexit([] { BondPostGlare.Destruct(); });
-    FLOAT_AT(0x00243024) = 3.1415927f + 3.1415927f;                                                      // 0x0015c0d0
-    FLOAT_AT(0x00243020) = 3.1415927f * 0.5f;                                                            // 0x0015c0e0
-    DOUBLE_AT(0x00243018) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c100
-    DOUBLE_AT(0x00243010) = 3.141592653589793 * 0.5;                                                     // 0x0015c110
-    FLOAT_AT(0x00243074) = 3.1415927f + 3.1415927f;                                                      // 0x0015c130
-    FLOAT_AT(0x00243070) = 3.1415927f * 0.5f;                                                            // 0x0015c140
-    DOUBLE_AT(0x00243068) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c160
-    DOUBLE_AT(0x00243060) = 3.141592653589793 * 0.5;                                                     // 0x0015c170
-    FLOAT_AT(0x002430b8) = 1.0f / FLOAT_AT(0x001d4c74);                                                  // 0x0015c190
+    // unread: 0x00243024 = 3.1415927f + 3.1415927f                                                      // 0x0015c0d0
+    // unread: 0x00243020 = 3.1415927f * 0.5f                                                            // 0x0015c0e0
+    // unread: 0x00243018 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c100
+    // unread: 0x00243010 = 3.141592653589793 * 0.5                                                      // 0x0015c110
+    // unread: 0x00243074 = 3.1415927f + 3.1415927f                                                      // 0x0015c130
+    // unread: 0x00243070 = 3.1415927f * 0.5f                                                            // 0x0015c140
+    // unread: 0x00243068 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c160
+    // unread: 0x00243060 = 3.141592653589793 * 0.5                                                      // 0x0015c170
+    // unread: 0x002430b8 = 1.0f / FLT_MIN                                                               // 0x0015c190
     memcpy((void *)0x00243078, (const void *)0x001d4c10, 0x40);                                          // 0x0015c1b0
     Crt::atexit([] {});
-    U32_AT(0x00243050) = U32_AT(0x00243040);                                                             // 0x0015c1e0
-    U32_AT(0x00243054) = U32_AT(0x00243044);
-    U32_AT(0x00243058) = U32_AT(0x00243048);
-    U32_AT(0x0024305c) = U32_AT(0x0024304c);
-    FLOAT_AT(0x002430d4) = 3.1415927f + 3.1415927f;                                                      // 0x0015c210
-    FLOAT_AT(0x002430d0) = 3.1415927f * 0.5f;                                                            // 0x0015c220
-    DOUBLE_AT(0x002430c8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c240
-    DOUBLE_AT(0x002430c0) = 3.141592653589793 * 0.5;                                                     // 0x0015c250
-    FLOAT_AT(0x00243504) = 3.1415927f + 3.1415927f;                                                      // 0x0015c270
-    FLOAT_AT(0x00243500) = 3.1415927f * 0.5f;                                                            // 0x0015c280
-    DOUBLE_AT(0x002434f8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c2a0
-    DOUBLE_AT(0x002434f0) = 3.141592653589793 * 0.5;                                                     // 0x0015c2b0
+    // unread: 0x00243050 = 0x00000000                                                                   // 0x0015c1e0
+    // unread: 0x00243054 = 0x00000000
+    // unread: 0x00243058 = 0x00000000
+    // unread: 0x0024305c = 0x00000000
+    // unread: 0x002430d4 = 3.1415927f + 3.1415927f                                                      // 0x0015c210
+    // unread: 0x002430d0 = 3.1415927f * 0.5f                                                            // 0x0015c220
+    // unread: 0x002430c8 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c240
+    // unread: 0x002430c0 = 3.141592653589793 * 0.5                                                      // 0x0015c250
+    // unread: 0x00243504 = 3.1415927f + 3.1415927f                                                      // 0x0015c270
+    // unread: 0x00243500 = 3.1415927f * 0.5f                                                            // 0x0015c280
+    // unread: 0x002434f8 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c2a0
+    // unread: 0x002434f0 = 3.141592653589793 * 0.5                                                      // 0x0015c2b0
     RequestedFiles.Construct();                                                                          // 0x0015c2d0
     Crt::atexit([] { RequestedFiles.Destruct(); });
     FilesInBigFile.Construct();                                                                          // 0x0015c2f0
     Crt::atexit([] { FilesInBigFile.Destruct(); });
     FilesNotInBigFile.Construct();                                                                       // 0x0015c310
     Crt::atexit([] { FilesNotInBigFile.Destruct(); });
-    FLOAT_AT(0x0024353c) = 3.1415927f + 3.1415927f;                                                      // 0x0015c330
-    FLOAT_AT(0x00243538) = 3.1415927f * 0.5f;                                                            // 0x0015c340
-    DOUBLE_AT(0x00243530) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c360
-    DOUBLE_AT(0x00243528) = 3.141592653589793 * 0.5;                                                     // 0x0015c370
-    FLOAT_AT(0x0024355c) = 3.1415927f + 3.1415927f;                                                      // 0x0015c390
-    FLOAT_AT(0x00243558) = 3.1415927f * 0.5f;                                                            // 0x0015c3a0
-    DOUBLE_AT(0x00243550) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c3c0
-    DOUBLE_AT(0x00243548) = 3.141592653589793 * 0.5;                                                     // 0x0015c3d0
-    FLOAT_AT(0x0024357c) = 3.1415927f + 3.1415927f;                                                      // 0x0015c3f0
-    FLOAT_AT(0x00243578) = 3.1415927f * 0.5f;                                                            // 0x0015c400
-    DOUBLE_AT(0x00243570) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c420
-    DOUBLE_AT(0x00243568) = 3.141592653589793 * 0.5;                                                     // 0x0015c430
-    FLOAT_AT(0x0024358c) = 1.0f / FLOAT_AT(0x001d5c48);                                                  // 0x0015c450
+    // unread: 0x0024353c = 3.1415927f + 3.1415927f                                                      // 0x0015c330
+    // unread: 0x00243538 = 3.1415927f * 0.5f                                                            // 0x0015c340
+    // unread: 0x00243530 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c360
+    // unread: 0x00243528 = 3.141592653589793 * 0.5                                                      // 0x0015c370
+    // unread: 0x0024355c = 3.1415927f + 3.1415927f                                                      // 0x0015c390
+    // unread: 0x00243558 = 3.1415927f * 0.5f                                                            // 0x0015c3a0
+    // unread: 0x00243550 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c3c0
+    // unread: 0x00243548 = 3.141592653589793 * 0.5                                                      // 0x0015c3d0
+    // unread: 0x0024357c = 3.1415927f + 3.1415927f                                                      // 0x0015c3f0
+    // unread: 0x00243578 = 3.1415927f * 0.5f                                                            // 0x0015c400
+    // unread: 0x00243570 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c420
+    // unread: 0x00243568 = 3.141592653589793 * 0.5                                                      // 0x0015c430
+    // unread: 0x0024358c = 1.0f / FLT_MIN                                                               // 0x0015c450
     CARP::Resolvers.Construct();                                                                         // 0x0015c470
     Crt::atexit([] { CARP::Resolvers.Destruct(); });
-    FLOAT_AT(0x002436a4) = 3.1415927f + 3.1415927f;                                                      // 0x0015c490
-    FLOAT_AT(0x002436a0) = 3.1415927f * 0.5f;                                                            // 0x0015c4a0
-    DOUBLE_AT(0x00243698) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c4c0
-    DOUBLE_AT(0x00243690) = 3.141592653589793 * 0.5;                                                     // 0x0015c4d0
-    FLOAT_AT(0x002436bc) = 3.1415927f + 3.1415927f;                                                      // 0x0015c4f0
-    FLOAT_AT(0x002436b8) = 3.1415927f * 0.5f;                                                            // 0x0015c500
-    DOUBLE_AT(0x002436b0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c520
-    DOUBLE_AT(0x002436a8) = 3.141592653589793 * 0.5;                                                     // 0x0015c530
-    FLOAT_AT(0x002436d4) = 3.1415927f + 3.1415927f;                                                      // 0x0015c550
-    FLOAT_AT(0x002436d0) = 3.1415927f * 0.5f;                                                            // 0x0015c560
-    DOUBLE_AT(0x002436c8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c580
-    DOUBLE_AT(0x002436c0) = 3.141592653589793 * 0.5;                                                     // 0x0015c590
-    FLOAT_AT(0x002436ec) = 3.1415927f + 3.1415927f;                                                      // 0x0015c5b0
-    FLOAT_AT(0x002436e8) = 3.1415927f * 0.5f;                                                            // 0x0015c5c0
-    DOUBLE_AT(0x002436e0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c5e0
-    DOUBLE_AT(0x002436d8) = 3.141592653589793 * 0.5;                                                     // 0x0015c5f0
-    FLOAT_AT(0x00243704) = 3.1415927f + 3.1415927f;                                                      // 0x0015c610
-    FLOAT_AT(0x00243700) = 3.1415927f * 0.5f;                                                            // 0x0015c620
-    DOUBLE_AT(0x002436f8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c640
-    DOUBLE_AT(0x002436f0) = 3.141592653589793 * 0.5;                                                     // 0x0015c650
-    FLOAT_AT(0x0024382c) = 3.1415927f + 3.1415927f;                                                      // 0x0015c670
-    FLOAT_AT(0x00243828) = 3.1415927f * 0.5f;                                                            // 0x0015c680
-    DOUBLE_AT(0x00243820) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c6a0
-    DOUBLE_AT(0x00243818) = 3.141592653589793 * 0.5;                                                     // 0x0015c6b0
-    FLOAT_AT(0x002438cc) = 3.1415927f + 3.1415927f;                                                      // 0x0015c6d0
-    FLOAT_AT(0x002438c8) = 3.1415927f * 0.5f;                                                            // 0x0015c6e0
-    DOUBLE_AT(0x002438c0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c700
-    DOUBLE_AT(0x002438b8) = 3.141592653589793 * 0.5;                                                     // 0x0015c710
-    FLOAT_AT(0x002438e4) = 3.1415927f + 3.1415927f;                                                      // 0x0015c730
-    FLOAT_AT(0x002438e0) = 3.1415927f * 0.5f;                                                            // 0x0015c740
-    DOUBLE_AT(0x002438d8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c760
-    DOUBLE_AT(0x002438d0) = 3.141592653589793 * 0.5;                                                     // 0x0015c770
-    FLOAT_AT(0x002438fc) = 3.1415927f + 3.1415927f;                                                      // 0x0015c790
-    FLOAT_AT(0x002438f8) = 3.1415927f * 0.5f;                                                            // 0x0015c7a0
-    DOUBLE_AT(0x002438f0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c7c0
-    DOUBLE_AT(0x002438e8) = 3.141592653589793 * 0.5;                                                     // 0x0015c7d0
-    FLOAT_AT(0x0024391c) = 3.1415927f + 3.1415927f;                                                      // 0x0015c7f0
-    FLOAT_AT(0x00243918) = 3.1415927f * 0.5f;                                                            // 0x0015c800
-    DOUBLE_AT(0x00243910) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c820
-    DOUBLE_AT(0x00243908) = 3.141592653589793 * 0.5;                                                     // 0x0015c830
-    FLOAT_AT(0x0024393c) = 3.1415927f + 3.1415927f;                                                      // 0x0015c850
-    FLOAT_AT(0x00243938) = 3.1415927f * 0.5f;                                                            // 0x0015c860
-    DOUBLE_AT(0x00243930) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015c880
-    DOUBLE_AT(0x00243928) = 3.141592653589793 * 0.5;                                                     // 0x0015c890
+    // unread: 0x002436a4 = 3.1415927f + 3.1415927f                                                      // 0x0015c490
+    // unread: 0x002436a0 = 3.1415927f * 0.5f                                                            // 0x0015c4a0
+    // unread: 0x00243698 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c4c0
+    // unread: 0x00243690 = 3.141592653589793 * 0.5                                                      // 0x0015c4d0
+    // unread: 0x002436bc = 3.1415927f + 3.1415927f                                                      // 0x0015c4f0
+    // unread: 0x002436b8 = 3.1415927f * 0.5f                                                            // 0x0015c500
+    // unread: 0x002436b0 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c520
+    // unread: 0x002436a8 = 3.141592653589793 * 0.5                                                      // 0x0015c530
+    // unread: 0x002436d4 = 3.1415927f + 3.1415927f                                                      // 0x0015c550
+    // unread: 0x002436d0 = 3.1415927f * 0.5f                                                            // 0x0015c560
+    // unread: 0x002436c8 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c580
+    // unread: 0x002436c0 = 3.141592653589793 * 0.5                                                      // 0x0015c590
+    // unread: 0x002436ec = 3.1415927f + 3.1415927f                                                      // 0x0015c5b0
+    // unread: 0x002436e8 = 3.1415927f * 0.5f                                                            // 0x0015c5c0
+    // unread: 0x002436e0 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c5e0
+    // unread: 0x002436d8 = 3.141592653589793 * 0.5                                                      // 0x0015c5f0
+    // unread: 0x00243704 = 3.1415927f + 3.1415927f                                                      // 0x0015c610
+    // unread: 0x00243700 = 3.1415927f * 0.5f                                                            // 0x0015c620
+    // unread: 0x002436f8 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c640
+    // unread: 0x002436f0 = 3.141592653589793 * 0.5                                                      // 0x0015c650
+    // unread: 0x0024382c = 3.1415927f + 3.1415927f                                                      // 0x0015c670
+    // unread: 0x00243828 = 3.1415927f * 0.5f                                                            // 0x0015c680
+    // unread: 0x00243820 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c6a0
+    // unread: 0x00243818 = 3.141592653589793 * 0.5                                                      // 0x0015c6b0
+    // unread: 0x002438cc = 3.1415927f + 3.1415927f                                                      // 0x0015c6d0
+    // unread: 0x002438c8 = 3.1415927f * 0.5f                                                            // 0x0015c6e0
+    // unread: 0x002438c0 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c700
+    // unread: 0x002438b8 = 3.141592653589793 * 0.5                                                      // 0x0015c710
+    // unread: 0x002438e4 = 3.1415927f + 3.1415927f                                                      // 0x0015c730
+    // unread: 0x002438e0 = 3.1415927f * 0.5f                                                            // 0x0015c740
+    // unread: 0x002438d8 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c760
+    // unread: 0x002438d0 = 3.141592653589793 * 0.5                                                      // 0x0015c770
+    // unread: 0x002438fc = 3.1415927f + 3.1415927f                                                      // 0x0015c790
+    // unread: 0x002438f8 = 3.1415927f * 0.5f                                                            // 0x0015c7a0
+    // unread: 0x002438f0 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c7c0
+    // unread: 0x002438e8 = 3.141592653589793 * 0.5                                                      // 0x0015c7d0
+    // unread: 0x0024391c = 3.1415927f + 3.1415927f                                                      // 0x0015c7f0
+    // unread: 0x00243918 = 3.1415927f * 0.5f                                                            // 0x0015c800
+    // unread: 0x00243910 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c820
+    // unread: 0x00243908 = 3.141592653589793 * 0.5                                                      // 0x0015c830
+    // unread: 0x0024393c = 3.1415927f + 3.1415927f                                                      // 0x0015c850
+    // unread: 0x00243938 = 3.1415927f * 0.5f                                                            // 0x0015c860
+    // unread: 0x00243930 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c880
+    // unread: 0x00243928 = 3.141592653589793 * 0.5                                                      // 0x0015c890
     Mixes.Construct();                                                                                   // 0x0015c8b0
     Crt::atexit([] { ((PointerList *)&Mixes)->Destruct(); });
-    FLOAT_AT(0x002439bc) = 1.0f / FLOAT_AT(0x001d7fc4);                                                  // 0x0015c8d0
+    // unread: 0x002439bc = 1.0f / FLT_MIN                                                               // 0x0015c8d0
     VoiceInfoMap.Construct();                                                                            // 0x0015c8f0
     Crt::atexit([] { VoiceInfoMap.Destruct(); });
     ActiveViews.head = ((MissionList *)&ActiveViews)->BuyHead();                                         // 0x0015c910
     ActiveViews.size = 0x00000000;
     Crt::atexit([] { DestroyNodeList((NodeList *)&ActiveViews, FUN_000ce900, 0xc); });
-    ((ABank *)0x00243b18)->Construct();                                                                  // 0x0015c940
-    Crt::atexit([] { ((ABank *)0x00243b18)->Destruct(); });
-    FLOAT_AT(0x00243b38) = 1.0f / FLOAT_AT(0x001d83c0);                                                  // 0x0015c960
-    FLOAT_AT(0x00243b3c) = 1.0f / FLOAT_AT(0x001d83c4);                                                  // 0x0015c980
-    FLOAT_AT(0x00243b40) = 1.0f / FLOAT_AT(0x001d83c8);                                                  // 0x0015c9a0
-    FLOAT_AT(0x00243b44) = 1.0f / FLOAT_AT(0x001d83cc);                                                  // 0x0015c9c0
-    FLOAT_AT(0x00243b48) = 1.0f / FLOAT_AT(0x001d83d0);                                                  // 0x0015c9e0
-    FLOAT_AT(0x00243b4c) = 1.0f / FLOAT_AT(0x001d83d4);                                                  // 0x0015ca00
-    FLOAT_AT(0x00243b50) = 1.0f / FLOAT_AT(0x001d83d8);                                                  // 0x0015ca20
-    FLOAT_AT(0x00243b54) = 1.0f / FLOAT_AT(0x001d83dc);                                                  // 0x0015ca40
-    FLOAT_AT(0x00243b58) = 1.0f / FLOAT_AT(0x001d83e0);                                                  // 0x0015ca60
-    FLOAT_AT(0x00243b64) = 1.0f / FLOAT_AT(0x001d83e4);                                                  // 0x0015ca80
-    FLOAT_AT(0x00243b6c) = 1.0f / FLOAT_AT(0x001d83e8);                                                  // 0x0015caa0
-    FLOAT_AT(0x00243b70) = 1.0f / FLOAT_AT(0x001d83ec);                                                  // 0x0015cac0
-    FLOAT_AT(0x00243b84) = 1.0f / FLOAT_AT(0x001d83f0);                                                  // 0x0015cae0
-    FLOAT_AT(0x00243b88) = 1.0f / FLOAT_AT(0x001d83f4);                                                  // 0x0015cb00
-    FLOAT_AT(0x002447b4) = 3.1415927f + 3.1415927f;                                                      // 0x0015cb20
-    FLOAT_AT(0x002447b0) = 3.1415927f * 0.5f;                                                            // 0x0015cb30
-    DOUBLE_AT(0x002447a8) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015cb50
-    DOUBLE_AT(0x002447a0) = 3.141592653589793 * 0.5;                                                     // 0x0015cb60
+    EmptyBank.Construct();                                                                               // 0x0015c940
+    Crt::atexit([] { EmptyBank.Destruct(); });
+    // unread: 0x00243b38 = 1.0f / FLT_MIN                                                               // 0x0015c960
+    // unread: 0x00243b3c = 1.0f / FLT_MIN                                                               // 0x0015c980
+    // unread: 0x00243b40 = 1.0f / FLT_MIN                                                               // 0x0015c9a0
+    // unread: 0x00243b44 = 1.0f / FLT_MIN                                                               // 0x0015c9c0
+    // unread: 0x00243b48 = 1.0f / FLT_MIN                                                               // 0x0015c9e0
+    // unread: 0x00243b4c = 1.0f / FLT_MIN                                                               // 0x0015ca00
+    // unread: 0x00243b50 = 1.0f / FLT_MIN                                                               // 0x0015ca20
+    // unread: 0x00243b54 = 1.0f / FLT_MIN                                                               // 0x0015ca40
+    // unread: 0x00243b58 = 1.0f / FLT_MIN                                                               // 0x0015ca60
+    // unread: 0x00243b64 = 1.0f / FLT_MIN                                                               // 0x0015ca80
+    // unread: 0x00243b6c = 1.0f / FLT_MIN                                                               // 0x0015caa0
+    // unread: 0x00243b70 = 1.0f / FLT_MIN                                                               // 0x0015cac0
+    // unread: 0x00243b84 = 1.0f / FLT_MIN                                                               // 0x0015cae0
+    // unread: 0x00243b88 = 1.0f / FLT_MIN                                                               // 0x0015cb00
+    // unread: 0x002447b4 = 3.1415927f + 3.1415927f                                                      // 0x0015cb20
+    // unread: 0x002447b0 = 3.1415927f * 0.5f                                                            // 0x0015cb30
+    // unread: 0x002447a8 = 3.141592653589793 + 3.141592653589793                                        // 0x0015cb50
+    // unread: 0x002447a0 = 3.141592653589793 * 0.5                                                      // 0x0015cb60
     ((GameStd::InitLocks *)0x00244828)->Construct();                                                     // 0x0015cb80
     Crt::atexit([] { ((GameStd::InitLocks *)0x00244828)->Destruct(); });
     Crt::atexit([] { GameStd::ClassicLocale.Destruct(); });                                              // 0x0015cb96
@@ -882,17 +893,17 @@ void RunStaticInitialisers(void) {
     // 0x0017c540: DirectSound's, left out (every DSOUND entry point is the seam's)
     // 0x0018040a: DirectSound's, left out (every DSOUND entry point is the seam's)
     // 0x00180415: DirectSound's, left out (every DSOUND entry point is the seam's)
-    FLOAT_AT(0x0024761c) = 3.1415927f + 3.1415927f;                                                      // 0x0015cbd0
-    FLOAT_AT(0x00247618) = 3.1415927f * 0.5f;                                                            // 0x0015cbe0
-    DOUBLE_AT(0x00247610) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015cc00
-    DOUBLE_AT(0x00247608) = 3.141592653589793 * 0.5;                                                     // 0x0015cc10
+    // unread: 0x0024761c = 3.1415927f + 3.1415927f                                                      // 0x0015cbd0
+    // unread: 0x00247618 = 3.1415927f * 0.5f                                                            // 0x0015cbe0
+    // unread: 0x00247610 = 3.141592653589793 + 3.141592653589793                                        // 0x0015cc00
+    // unread: 0x00247608 = 3.141592653589793 * 0.5                                                      // 0x0015cc10
     Crt::atexit([] { U32_AT(0x001dcd10) = 0x001a772c; });                                                // 0x0015cc30
-    MatDebugMethod.Construct((EAGL::Packet *)0x001dd2e0, 1, (const void *)0x001dd34c, (const void **)0x001dd2d8, NULL, (const uint8_t **)0x001dd2dc, NULL, (const char **)0x001dd38c, 0x00000001, (const char *)0x001dd3a4 /* "HB_RM = MatDebug" */); // 0x0015cc40
+    MatDebugMethod.Construct((EAGL::Packet *)0x001dd2e0, 1, (const void *)0x001dd34c, (const void **)0x001dd2d8, NULL, (const uint8_t **)0x001dd2dc, NULL, (const char **)0x001dd38c, 0x00000001, "HB_RM = MatDebug"); // 0x0015cc40
     Crt::atexit([] { MatDebugMethod.Destruct(); });
-    MatVolatileTextureMethod.Construct((EAGL::Packet *)0x001dd538, 1, (const void *)0x001dd5cc, (const void **)0x001dd530, NULL, (const uint8_t **)0x001dd534, NULL, (const char **)0x001dd638, 0x00000001, (const char *)0x001dd658 /* "HB_RM = MatVolatileTexture" */); // 0x0015cc80
+    MatVolatileTextureMethod.Construct((EAGL::Packet *)0x001dd538, 1, (const void *)0x001dd5cc, (const void **)0x001dd530, NULL, (const uint8_t **)0x001dd534, NULL, (const char **)0x001dd638, 0x00000001, "HB_RM = MatVolatileTexture"); // 0x0015cc80
     Crt::atexit([] { MatVolatileTextureMethod.Destruct(); });
-    FLOAT_AT(0x0024b0fc) = 3.1415927f + 3.1415927f;                                                      // 0x0015ccc0
-    FLOAT_AT(0x0024b0f8) = 3.1415927f * 0.5f;                                                            // 0x0015ccd0
-    DOUBLE_AT(0x0024b0f0) = 3.141592653589793 + 3.141592653589793;                                       // 0x0015ccf0
-    DOUBLE_AT(0x0024b0e8) = 3.141592653589793 * 0.5;                                                     // 0x0015cd00
+    // unread: 0x0024b0fc = 3.1415927f + 3.1415927f                                                      // 0x0015ccc0
+    // unread: 0x0024b0f8 = 3.1415927f * 0.5f                                                            // 0x0015ccd0
+    // unread: 0x0024b0f0 = 3.141592653589793 + 3.141592653589793                                        // 0x0015ccf0
+    // unread: 0x0024b0e8 = 3.141592653589793 * 0.5                                                      // 0x0015cd00
 }

@@ -45,7 +45,7 @@ struct ProfilerRegion {              // 0x128; the regions are a list at 0x00240
 static_assert(sizeof(ProfilerRegion) == 0x128, "a ProfilerRegion is 0x128 bytes");
 
 // A scoped timer: charges the cycles between its start and stop to its region, pausing its parent meanwhile
-// (invented name; the current one is at 0x001ce024)
+// (invented name; the current one is CurrentTimer)
 struct ProfilerTimer {               // 0x14
     ProfilerRegion *region;          // +0x00
     ProfilerTimer *parent;           // +0x04
@@ -89,5 +89,8 @@ void __stdcall ProfilerVertex(const float *vertex, const uint32_t *colour);  // 
 }  // namespace EAGL
 
 extern EAGL::ProfilerRegion FrameRegion;   // the static region the frame mark times (Profiler.cpp)
+extern EAGL::ProfilerRegion UnprofiledRegion;
+extern EAGL::ProfilerTimer UnprofiledTimer;
+extern EAGL::ProfilerTimer *CurrentTimer;
 
 #endif // DRIVING_EAGL_PROFILER_H_

@@ -358,7 +358,8 @@ static void ConvertFrame(const AVFrame *f) {
 // FFmpeg; they are kept as the original left them.
 // XBE_GLOBAL(0x001dcd14, 0x4)
 uint32_t RcmpAllocate;
-#define RcmpFree         (*(uint32_t *)0x001dcd18u)
+// XBE_GLOBAL(0x001dcd18, 0x4)
+uint32_t RcmpFree;
 // XBE_GLOBAL(0x001dcd1c, 0x4)
 int32_t RcmpAllocFlags;
 // XBE_GLOBAL(0x00244798, 0x4)
