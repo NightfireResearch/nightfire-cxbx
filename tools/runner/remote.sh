@@ -49,11 +49,15 @@ win() { echo "$1" | sed 's#^/\(.\)/#\1:/#'; }   # /c/x -> c:/x, for Windows prog
 # and falls back to the bare name, so either works. HostKeyAlias checks the host key under the configured name
 # whichever of the two it connected by, so one known_hosts entry serves both (BatchMode cannot ask about a new one).
 # ServerAlive: a connection that drops silently fails within a minute instead of hanging the caller's wait loop.
-r() { ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 \
+# Every call is also cut off after RUNNER_SSH_TIMEOUT seconds (default an hour: a full build fits): ssh has hung for
+# hours across a runner reboot. timeout's -k follows the TERM with a KILL, which a hung ssh.exe does not ignore.
+SSH_TIMEOUT=${RUNNER_SSH_TIMEOUT:-3600}
+r() { timeout -k 10 "$SSH_TIMEOUT" ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 \
     -o CanonicalizeHostname=yes -o CanonicalDomains=local -o HostKeyAlias="$HOST" "$USER_@$HOST" "$@"; }
 # A wait loop's poll: ssh has been seen to hang for half an hour despite ServerAlive, so each poll is cut off after a
-# minute, counts as "not yet", and the loop polls again.
-poll() { timeout 60 ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=15 \
+# minute (a KILL ten seconds after the TERM: polls stuck through a runner reboot ignored the TERM alone), counts as
+# "not yet", and the loop polls again.
+poll() { timeout -k 10 60 ssh -i "$KEY" -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=15 \
     -o ServerAliveCountMax=4 -o CanonicalizeHostname=yes -o CanonicalDomains=local -o HostKeyAlias="$HOST" \
     "$USER_@$HOST" "$@" < /dev/null; }
 
