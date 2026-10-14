@@ -282,8 +282,9 @@ points the seam answers itself (`d3dGetDisplayMode`, `d3dGetRasterStatus`, `d3dG
 Everything named `d3d*` in 0xe3a20-0xe75f0 is ours (70 of 73 `d3d*`-named functions replaced; the two dead ones
 are `d3dComputeSwizzleMasks` and `FUN_000e64c0`; `d3dMatrixIdentity` 0xe81c0 is still original), as is `Gfx`,
 the graphics global (originally 0x2c5750, 0x39ce4 bytes, now defined in `d3dSeam.cpp`). Under the standalone
-loader the seam drives `src/common/gfx/d3d9Backend.cpp`, translating NV2A vertex programs to HLSL
-(`nv2aPixelShader.cpp` for the combiners) with optional FXAA and texture replacement. The calls the layer above
+loader the seam drives `src/common/gfx/d3d9Backend.cpp`, translating NV2A vertex programs and register
+combiners to D3D9 shader bytecode (`nv2aVertexShader.cpp`, `nv2aPixelShader.cpp`, through `shaderBuilder.cpp`;
+see `docs/architecture/shader-bytecode.md`) with optional FXAA and texture replacement. The calls the layer above
 makes are few and stable:
 
 | group | seam entry points used from above |
