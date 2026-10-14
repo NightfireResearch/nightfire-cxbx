@@ -2,6 +2,7 @@
 
 #include "RealSystem.h"   // MUTEX_lock, MUTEX_unlock, MUTEX_create, REALMUTEX_destroy
 #include "RealPrint.h"    // MEM_fill, MEM_move
+#include "XboxXapi.h"     // IsBadReadPtr
 
 #include <windows.h>
 #include <stdint.h>
@@ -423,7 +424,7 @@ int MEM_totalunused(unsigned flags) {
 
 // 0x00113b10 (the pointer in ESI): readable, and a free block or a sentinel.
 static bool FreeLinkOk(uint8_t *link) {
-    if (!IsBadReadPtr(link, 0x18) && (B_MAGIC(link) == MAGIC_FREE || B_MAGIC(link) == MAGIC_SENTINEL))
+    if (!Xbox_IsBadReadPtr(link, 0x18) && (B_MAGIC(link) == MAGIC_FREE || B_MAGIC(link) == MAGIC_SENTINEL))
         return true;
     MemError = 1;
     return false;

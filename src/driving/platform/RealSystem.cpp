@@ -1,7 +1,9 @@
 #include "RealSystem.h"
 #include "KernelImports.h"
 
+#include "XboxStartup.h"
 #include "XboxTimer.h"
+#include "XboxXapi.h"
 #include "../devtools/SndLockstep.h"
 
 #include <windows.h>
@@ -13,7 +15,7 @@
 // EA's portable system library ("REAL"), the part the driving engine's game and engine code calls for time,
 // threads, events, periodic tasks and locks: TIMER, THREAD, SIGNAL, SYNCTASK, MUTEX, CPU. Each function here is
 // the original at the same address, ported from it (Ghidra's Driving.xbe; the PS2 build's symbols name them).
-// The XAPI calls the originals made are Win32's now (platform/XboxXapi.cpp), so these call Win32 directly; the
+// The XAPI calls the originals made are ours (platform/XboxXapi.cpp, XboxStartup.cpp, over the host layer); the
 // critical sections go through the kernel imports, as the originals do, because the loader's
 // RtlEnterCriticalSection also initialises a section that was only ever zero-filled (src/loader/kernel.cpp).
 // ---------------------------------------------------------------------------------------------------------------
@@ -185,7 +187,7 @@ static DWORD MainThreadId;
 // AUTOINJECT
 void THREAD_init() {
     MainThreadHandle = (HANDLE)(intptr_t)-2;   // the current thread's pseudo-handle, as the original stores it
-    MainThreadId = GetCurrentThreadId();
+    MainThreadId = Xbox_GetCurrentThreadId();
 }
 
 // The block a new thread starts with (on its creator's stack): a started flag the creator waits on, then either
@@ -229,18 +231,18 @@ int THREAD_setpriority(RealThread *thread, int priority) {
         case -1: value = THREAD_PRIORITY_BELOW_NORMAL; break;
         default: value = THREAD_PRIORITY_NORMAL; break;
     }
-    SetThreadPriority(handle, value);
+    Xbox_SetThreadPriority(handle, value);
     return 1;
 }
 
 static int StartThread(RealThread *thread, ThreadStart *start, unsigned stackSize, int priority) {
-    thread->handle = CreateThread(NULL, stackSize, ThreadEntry, start, CREATE_SUSPENDED, &thread->id);
+    thread->handle = Xbox_CreateThread(NULL, stackSize, ThreadEntry, start, CREATE_SUSPENDED, &thread->id);
     if (thread->handle == NULL)
         return 0;
     THREAD_setpriority(thread, priority);
-    ResumeThread(thread->handle);
+    Xbox_ResumeThread(thread->handle);
     while (start->started == 0)
-        SleepEx(1, TRUE);
+        Xbox_SleepEx(1, TRUE);
     return 1;
 }
 
@@ -264,48 +266,48 @@ int THREAD_createparam(RealThread *thread, ThreadParamFn function, void *paramet
 // AUTOINJECT
 void THREAD_destroy(RealThread *thread) {
     if (thread == (RealThread *)(intptr_t)-1) {
-        CloseHandle((HANDLE)(intptr_t)-2);
+        Xbox_CloseHandle((HANDLE)(intptr_t)-2);
         return;
     }
     if (thread->handle != NULL) {
-        CloseHandle(thread->handle);
+        Xbox_CloseHandle(thread->handle);
         thread->handle = NULL;
     }
 }
 
 // AUTOINJECT
 void THREAD_yield(unsigned milliseconds) {
-    SleepEx(milliseconds, TRUE);
+    Xbox_SleepEx(milliseconds, TRUE);
 }
 
 // Zero asks about the main thread, -1 always answers yes.
 // AUTOINJECT
 bool THREAD_iscurrent(RealThread *thread) {
     if (thread == NULL)
-        return GetCurrentThreadId() == MainThreadId;
+        return Xbox_GetCurrentThreadId() == MainThreadId;
     if (thread == (RealThread *)(intptr_t)-1)
         return true;
-    return thread->id == GetCurrentThreadId();
+    return thread->id == Xbox_GetCurrentThreadId();
 }
 
 // AUTOINJECT
 bool THREAD_testexit(RealThread *thread) {
     DWORD code = 0;
-    if (!GetExitCodeThread(thread->handle, &code))
+    if (!Xbox_GetExitCodeThread(thread->handle, &code))
         return false;
     return code != STILL_ACTIVE;
 }
 
 // AUTOINJECT
 void THREAD_exit() {
-    ExitThread(0);
+    Xbox_ExitThread(0);
 }
 
 // ---- SIGNAL: an auto-reset event
 
 // AUTOINJECT
 int SIGNAL_create(RealSignal *signal) {
-    HANDLE event = CreateEventA(NULL, FALSE, FALSE, NULL);
+    HANDLE event = Xbox_CreateEventA(NULL, FALSE, FALSE, NULL);
     if (event == NULL)
         return 0;
     signal->event = event;
@@ -314,18 +316,18 @@ int SIGNAL_create(RealSignal *signal) {
 
 // AUTOINJECT
 void SIGNAL_destroy(RealSignal *signal) {
-    CloseHandle(signal->event);
+    Xbox_CloseHandle(signal->event);
 }
 
 // Ghidra's iFILE_maybeExecCommand: FILESYS raises its worker's signal with it, IFeedback its own.
 // FUNC_AT(0x0010a700)
 BOOL SIGNAL_post(RealSignal *signal) {
-    return SetEvent(signal->event);
+    return Xbox_SetEvent(signal->event);
 }
 
 // FUNC_AT(0x0010a710)
 DWORD SIGNAL_wait(RealSignal *signal) {
-    return WaitForSingleObject(signal->event, INFINITE);
+    return Xbox_WaitForSingleObject(signal->event, INFINITE);
 }
 
 // ---- MUTEX: a critical section at +4, through the kernel's imports

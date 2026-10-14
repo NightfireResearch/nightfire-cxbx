@@ -1,9 +1,8 @@
 #include "LaunchOptions.h"
 #include "../../common/launchInfo.h"
 #include "../engine/GameLoop.h"      // LaunchPage
+#include "Host.h"                    // HostCommandLine
 
-#include <windows.h>
-#include <shellapi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -125,28 +124,20 @@ static void PrintMissions(void) {
            "[launch]           6 snow2a_mis4, 7 junglec_mis13c, 8 snow2a_race\n");
 }
 
-static char *Narrow(const wchar_t *wide) {
-    int length = WideCharToMultiByte(CP_ACP, 0, wide, -1, NULL, 0, NULL, NULL);
-    char *text = (char *)malloc(length > 0 ? length : 1);
-    if (length <= 0 || WideCharToMultiByte(CP_ACP, 0, wide, -1, text, length, NULL, NULL) <= 0)
-        text[0] = '\0';
-    return text;
-}
-
 void Inject_LaunchOptions(void) {
     g_gameArgv[0] = (char *)"D:\\DRIVING.XBE";
     g_gameArgc = 1;
     int count = 0;
-    wchar_t **wide = CommandLineToArgvW(GetCommandLineW(), &count);
-    if (wide == NULL)
+    char **arguments = HostCommandLine(&count);
+    if (arguments == NULL)
         return;
 
     int first = 1;
-    while (first < count && wide[first][0] != L'-' && wide[first][0] != L'+')
+    while (first < count && arguments[first][0] != '-' && arguments[first][0] != '+')
         first++;   // the loader's positional XBE and DLL
 
     for (int i = first; i < count; i++) {
-        char *arg = Narrow(wide[i]);
+        char *arg = arguments[i];
         if (arg[0] != '-' && arg[0] != '+') {
             printf("[launch] %s: not an option - ignored\n", arg);
             continue;
@@ -154,7 +145,7 @@ void Inject_LaunchOptions(void) {
 
         if (_stricmp(arg, "-mission") == 0 || _stricmp(arg, "-difficulty") == 0) {
             bool mission = _stricmp(arg, "-mission") == 0;
-            const char *value = (i + 1 < count) ? Narrow(wide[++i]) : "";
+            const char *value = (i + 1 < count) ? arguments[++i] : "";
             if (mission) {
                 g_mission = ParseMission(value);
                 if (g_mission == 0) {
@@ -177,7 +168,6 @@ void Inject_LaunchOptions(void) {
             printf("[launch] too many arguments for the game; %s dropped\n", arg);
     }
     g_gameArgv[g_gameArgc] = NULL;
-    LocalFree(wide);
 
     LaunchInfo_SetPageHook(ApplyToPage);
 }

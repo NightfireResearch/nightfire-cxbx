@@ -33,8 +33,11 @@ int __cdecl Xbox_mtinit(void);
 
 // Installs everything above, and the instruction-level patches. Called first thing in Inject(), by hand rather
 // than through AUTOINJECT.
-// SetThreadPriority (0x0010ea0f), for the ports that call it (the sound library's driver thread).
+// SetThreadPriority (0x0010ea0f), for the ports that call it (the sound library's driver thread, THREAD), and
+// GetCurrentThreadId (0x0010ecd8) and GetExitCodeThread (0x0010eaef), for THREAD.
 BOOL __stdcall Xbox_SetThreadPriority(HANDLE thread, int priority);
+DWORD __stdcall Xbox_GetCurrentThreadId(void);
+BOOL __stdcall Xbox_GetExitCodeThread(HANDLE thread, DWORD *exitCode);
 
 void Inject_XboxStartup(void);
 

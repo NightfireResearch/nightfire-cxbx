@@ -588,8 +588,19 @@ int main(int argc, char **argv) {
     // That is too early to know what resolution the game will ask for, so this is only a starting size: the
     // D3D9 backend resizes the window to match the back buffer when it creates the device. The window stays
     // resizable after that, and D3D9 presents scaled into whatever size the user drags it to.
-    if (CreateRenderWindow(640, 480) == NULL)
+    //
+    // An injection DLL can provide the window itself (the driving engine's SDL3 build, src/inject_driving.cpp): then
+    // this thread runs its events instead of pumping a window of ours.
+    typedef int(__cdecl *OpenWindowFn)(int width, int height, const char *title);
+    typedef void(__cdecl *RunWindowFn)(void);
+    OpenWindowFn openWindow = (OpenWindowFn)GetProcAddress(inject, "NightfireHost_OpenWindow");
+    RunWindowFn runWindow = (RunWindowFn)GetProcAddress(inject, "NightfireHost_RunWindow");
+    if (openWindow != NULL && runWindow != NULL) {
+        if (!openWindow(640, 480, "007: Nightfire"))
+            return 1;
+    } else if (CreateRenderWindow(640, 480) == NULL) {
         return 1;
+    }
 
     printf("[loader] calling entry point at 0x%08x\n", image.entryPoint);
     fflush(stdout);
@@ -603,6 +614,13 @@ int main(int argc, char **argv) {
     printf("[loader] entry point returned; the game is running on its own thread\n");
     fflush(stdout);
 
+    if (openWindow != NULL && runWindow != NULL) {
+        runWindow();
+        printf("[loader] the render window was closed\n");   // as RenderWindowProc does for a window of ours
+        fflush(stdout);
+        ReportThreads();
+        ExitProcess(0);
+    }
     MSG message;
     while (GetMessageA(&message, NULL, 0, 0) > 0) {
         TranslateMessage(&message);

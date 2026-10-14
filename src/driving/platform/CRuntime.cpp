@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "Host.h"
 #include "XboxStartup.h"
 #include "XboxXapi.h"
 
@@ -14,8 +15,8 @@
 // The C runtime's heap, exit list, locks, per-thread state, character classes, qsort and x87 helpers.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The process heap (XboxStartup.h's ProcessHeapHandle). XAPI's heap calls are Win32's (XboxXapi.cpp), so the
-// runtime's malloc reaches HeapAlloc with the same arguments as through them.
+// The process heap (XboxStartup.h's ProcessHeapHandle). XAPI's heap calls are the host's (XboxXapi.cpp, Host.h),
+// so the runtime's malloc reaches HeapAlloc with the same arguments as through them.
 
 // The exit list atexit appends to, made by _onexitinit (32 entries). Only exit() would run it, and nothing calls
 // exit(): _exit, the one way out, leaves it alone.
@@ -164,7 +165,7 @@ void* HeapAllocate(size_t size) {                                           // _
     if (size == 0)
         size = 1;
     size = (size + 15) & ~size_t(15);
-    return HeapAlloc(ProcessHeapHandle, 0, size);
+    return HostHeapAlloc(ProcessHeapHandle, 0, size);
 }
 
 void* NewHandlerMalloc(size_t size, int callNewHandler) {                   // _nh_malloc
@@ -265,7 +266,7 @@ void* Crt::malloc(size_t size) {
 // FUNC_AT(0x001331dc)
 void Crt::free(void *block) {
     if (block != NULL)
-        HeapFree(ProcessHeapHandle, 0, block);
+        HostHeapFree(ProcessHeapHandle, 0, block);
 }
 
 // FUNC_AT(0x0013439d)
@@ -276,7 +277,7 @@ void* Crt::calloc(size_t count, size_t size) {
     for (;;) {
         void *block = NULL;
         if (total <= kMaxRequest) {
-            block = HeapAlloc(ProcessHeapHandle, HEAP_ZERO_MEMORY, total);
+            block = HostHeapAlloc(ProcessHeapHandle, HOST_HEAP_ZERO_MEMORY, total);
             if (block != NULL)
                 return block;
         }
@@ -297,7 +298,7 @@ void* Crt::realloc(void *block, size_t size) {
     for (;;) {
         void *moved = NULL;
         if (size <= kMaxRequest)
-            moved = HeapReAlloc(ProcessHeapHandle, 0, block, size);
+            moved = HostHeapReAlloc(ProcessHeapHandle, 0, block, size);
         if (moved != NULL || NewMode == 0)
             return moved;
         if (!CallNewHandler(size))
@@ -306,7 +307,7 @@ void* Crt::realloc(void *block, size_t size) {
 }
 
 size_t Crt::_msize(void *block) {
-    return HeapSize(ProcessHeapHandle, 0, block);
+    return HostHeapSize(ProcessHeapHandle, 0, block);
 }
 
 // ---- the exit list

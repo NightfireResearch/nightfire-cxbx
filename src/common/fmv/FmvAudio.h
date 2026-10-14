@@ -6,11 +6,19 @@
 
 #include "Ffmpeg.h"
 
+// The device a movie plays on: XAudio2's, or with NIGHTFIRE_SDL (the driving engine's SDL3 build) an SDL audio
+// device id, whose stream of the game's own sound the movie's stream joins (FmvAudioSdl.cpp).
+#ifdef NIGHTFIRE_SDL
+struct SDL_AudioStream;
+typedef uint32_t FmvAudioDevice;
+#else
 struct IXAudio2;
 struct IXAudio2SourceVoice;
+typedef IXAudio2 *FmvAudioDevice;
+#endif
 
-// A movie's audio for both engines' players: decoded frames queued to an XAudio2 voice of its own, a fraction of
-// a second ahead, and the movie's clock, which follows the samples played. Without audio, or once the audio has
+// A movie's audio for both engines' players: decoded frames queued to an XAudio2 voice (or SDL audio stream) of its
+// own, a fraction of a second ahead, and the movie's clock, which follows the samples played. Without audio, or once the audio has
 // played out (a track shorter than its video), the clock runs on the wall clock, so the picture never waits for
 // sound that is not coming.
 class FmvAudio {
@@ -18,7 +26,7 @@ public:
     // A voice on the device for `channels` channels of 16-bit PCM at `sampleRate`. outputMatrix, if not null, is
     // XAudio2's: outputChannels rows of `channels` levels (each output's level of each input). False if there is no
     // device or the voice cannot be made, in which case the movie plays silently on the wall clock.
-    bool Open(IXAudio2 *device, int channels, int sampleRate, const float *outputMatrix, int outputChannels);
+    bool Open(FmvAudioDevice device, int channels, int sampleRate, const float *outputMatrix, int outputChannels);
     void Close();
     bool IsOpen() const { return voice_ != nullptr; }
 
@@ -44,7 +52,16 @@ private:
     void Submit();
     void Reap();
 
+#ifdef NIGHTFIRE_SDL
+    SDL_AudioStream *voice_ = nullptr;
+    uint32_t device_ = 0;
+    float matrix_[2 * 8] = {};          // the output matrix, when there is one
+    bool folding_ = false;
+    int outputChannels_ = 0;
+    int64_t framesQueued_ = 0;          // put into the stream since Open
+#else
     IXAudio2SourceVoice *voice_ = nullptr;
+#endif
     std::deque<int16_t *> chunks_;      // submitted, in order; freed once played
     int16_t *pending_ = nullptr;        // the chunk being filled
     int pendingFrames_ = 0;

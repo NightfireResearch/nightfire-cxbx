@@ -1,10 +1,12 @@
-#ifndef DRIVING_SOUND_XAUDIO2DRIVING_H_
-#define DRIVING_SOUND_XAUDIO2DRIVING_H_
+#ifndef DRIVING_SOUND_DRIVINGAUDIO_H_
+#define DRIVING_SOUND_DRIVINGAUDIO_H_
 
 #include <stdint.h>
 
 // ---------------------------------------------------------------------------------------------------------------
-// The driving engine's XAudio2 backend, behind the DirectSound seam (dsndSeam.cpp).
+// The driving engine's sound output, behind the DirectSound seam (dsndSeam.cpp). Two bodies: xaudio2Driving.cpp
+// (XAudio2 source voices) and sdlAudioDriving.cpp (a voice mixer of ours feeding an SDL3 audio stream, with
+// NIGHTFIRE_SDL).
 //
 // Everything the game plays is a DirectSound buffer whose samples live in the game's own memory and are read
 // by the console's audio hardware as it goes. Two kinds matter here, and this backend treats them as one:
@@ -17,33 +19,35 @@
 //    their sample data by pointer, played once or looping, pitched with SetFrequency, mixed with per-bin
 //    volumes.
 //
-// So a voice here streams: it copies the next few milliseconds out of the game's memory each time XAudio2
-// finishes a chunk, decoding ADPCM on the way, and reports as its play cursor the start of the chunk playing
-// now. A buffer the game rewrites behind that cursor is picked up within a chunk; a buffer it never rewrites
-// costs a copy it did not need, which is nothing. The read-ahead is two chunks of four milliseconds, well
-// inside the mixer's lead, and the mastering voice runs at 48 kHz so the mixer's output is never resampled.
+// So a voice here streams: it reads the next few milliseconds out of the game's memory as the output needs
+// them, decoding ADPCM on the way, and reports as its play cursor the start of the chunk it reached last. A
+// buffer the game rewrites behind that cursor is picked up within a chunk, well inside the mixer's lead, and
+// the output runs at 48 kHz so the mixer's rings are never resampled.
 //
 // The output is stereo. A buffer's mixbins - the 5.1 speaker each one feeds, at what level - become an output
 // matrix onto that pair, which is how the six mixer rings land on left and right and how a pooled sound gets
 // its pan. Nothing in this library does 3D: the driving engine's DirectSound has no 3D voice entry points at
 // all, EA positions sounds itself through the bin volumes.
 //
-// Threads: the game's threads call everything below; XAudio2's own thread calls back when a chunk ends. One
-// lock covers the voice state, and it is never held across an XAudio2 call, so that the callback thread -
-// which XAudio2 calls with its own lock held - cannot deadlock against the game thread inside Stop.
+// Threads: the game's threads call everything below; the output's own thread asks for audio as it needs it. One
+// lock covers the voice state.
 // ---------------------------------------------------------------------------------------------------------------
 
 struct DrivingVoice;
 
-// Starts XAudio2. False if there is no audio device, in which case every call below is a no-op and the seam
+// Starts the output. False if there is no audio device, in which case every call below is a no-op and the seam
 // keeps its silent bookkeeping.
 bool DrivingAudio_Start(void);
 
-// The XAudio2 device itself (its mastering voice is stereo at 48 kHz), or null if audio did not start. The movie
-// player (src/driving/engine/PlayMPC.cpp) makes its own 5.1 voice on it, folded to stereo with the same gains as the
-// mixbins below (DrivingAudio_StereoFold).
+// The output device (stereo at 48 kHz), or none if audio did not start: the XAudio2 device, or SDL's audio device
+// id. The movie player (src/driving/engine/PlayMPC.cpp) plays its own 5.1 stream on it (src/common/fmv/FmvAudio.h),
+// folded to stereo with the same gains as the mixbins below (DrivingAudio_StereoFold).
+#ifdef NIGHTFIRE_SDL
+uint32_t DrivingAudio_GetDevice(void);
+#else
 struct IXAudio2;
 IXAudio2 *DrivingAudio_GetDevice(void);
+#endif
 
 // Where each of the six 5.1 speakers (FL, FR, C, LFE, BL, BR) lands on the stereo output: matrix[speaker * 2] left,
 // matrix[speaker * 2 + 1] right - the levels the six mixer rings get, which is how the game's own audio sounds.
@@ -84,4 +88,4 @@ void DrivingAudio_SetMixBinVolumes(DrivingVoice *voice, const uint32_t *bins, co
 // flowing without anyone listening.
 void DrivingAudio_Report(void);
 
-#endif // DRIVING_SOUND_XAUDIO2DRIVING_H_
+#endif // DRIVING_SOUND_DRIVINGAUDIO_H_

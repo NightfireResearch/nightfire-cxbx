@@ -35,6 +35,7 @@
 #include "driving/gfx/d3dSeam.h"
 #include "driving/platform/XboxInput.h"
 #include "driving/platform/LaunchOptions.h"
+#include "driving/platform/HostWindow.h"
 #include "driving/sound/dsndSeam.h"
 #include "common/fmv/Ffmpeg.h"
 #include "common/launchInfo.h"
@@ -234,3 +235,19 @@ void Inject()
   // After every patch: NIGHTFIRE_TRAP_ORIGINAL fills what no patch wrote, NIGHTFIRE_TRAP_DATA=2 guards the data
   StandaloneTraps_AfterInject();
 }
+
+#ifdef NIGHTFIRE_SDL
+// The loader (src/loader/loadermain.cpp) asks for these by name: with them, the render window is this DLL's SDL3
+// one (src/driving/platform/HostWindowSdl.cpp), opened on the loader's main thread before the entry point, which
+// then runs its events until it is closed. Without them (the default build, the action engine) the loader makes
+// its own Win32 window.
+extern "C" __declspec(dllexport) int __cdecl NightfireHost_OpenWindow(int width, int height, const char *title)
+{
+  return HostWindow_Open(width, height, title);
+}
+
+extern "C" __declspec(dllexport) void __cdecl NightfireHost_RunWindow(void)
+{
+  HostWindow_Run();
+}
+#endif

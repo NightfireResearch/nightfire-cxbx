@@ -106,9 +106,10 @@ sync)
     ;;
 build)
     targets=${*:-action actioninject driving drivinginject}
-    # In-source configure, as here (Release/ beside disc/); once, then incremental
+    # In-source configure, as here (Release/ beside disc/); once, then incremental. RUNNER_CMAKE_ARGS configures
+    # again with those options (-DNIGHTFIRE_SDL=ON, say; they stay in the cache until set otherwise).
     r "cd $RREPO && CMAKE=\$(ls -d '/c/Program Files/Microsoft Visual Studio/2022/'*/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin | head -1)/cmake.exe && \
-       { [ -f CMakeCache.txt ] || \"\$CMAKE\" -B . -A Win32 > /dev/null; } && \
+       { [ -f CMakeCache.txt ] && [ -z '$RUNNER_CMAKE_ARGS' ] || \"\$CMAKE\" -B . -A Win32 $RUNNER_CMAKE_ARGS > /dev/null; } && \
        \"\$CMAKE\" --build . --config Release --target $targets -- -m -v:m 2>&1 | grep -E ' error |-> '"
     ;;
 desktop)

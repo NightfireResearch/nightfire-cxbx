@@ -9,12 +9,12 @@
 #include "engine/CoreFoundation.h"
 #include "engine/UMemory.hpp"
 #include "physics/RigidBodyBasics.h"   // PointerVectorDeallocate
+#include "platform/Host.h"
 #include "platform/RealSystem.h"
 #include "world/CollisionQueries.h"   // PointerUninitializedCopy
 #include "world/CollisionTypes.h"     // PointerVector
 #include "game/SimulationContainers.h"
 
-#include <windows.h>
 #include <cmath>
 #include <cstdio>
 
@@ -554,7 +554,7 @@ void Scheduler::Run(int unused) {
             // Nothing to simulate until the clock moves (every 20 ms at 50 Hz). The console spun here - the game
             // loop has no sleep - which on a PC holds a core at 100% for nothing; a millisecond's yield changes
             // nothing about the game (winmm's 1 ms timer period makes it a millisecond).
-            Sleep(1);
+            HostSleep(1);
             return;
         }
 
@@ -565,7 +565,7 @@ void Scheduler::Run(int unused) {
         if (ticks >= 12) {
             g_pendingTicks = 0.0;   // the stall guard drops the time, fraction and all
         } else if (ticks == 0) {
-            Sleep(1);   // slow motion, and not yet a whole tick: as above
+            HostSleep(1);   // slow motion, and not yet a whole tick: as above
         } else {
             for (int k = 1; k <= ticks; k++)
                 RunTick(this, this->lastTickCount + k, k == ticks, &teleportDone);

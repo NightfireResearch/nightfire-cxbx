@@ -19,4 +19,12 @@ int GfxHost_FpsOverride(void);
 // Called once per timing report, for whatever the engine wants to say alongside it.
 void GfxHost_ReportPeriodic(void);
 
+#ifdef NIGHTFIRE_SDL
+#include <stdint.h>
+// The window to present into (an HWND on Windows), and sizing its client area to the back buffer: an engine whose
+// window is SDL3's, not the loader's, says which it is and does the sizing on the window's own thread.
+void *GfxHost_Window(void);
+void GfxHost_SizeWindow(uint32_t width, uint32_t height);
+#endif
+
 #endif // COMMON_GFX_BACKENDHOST_H_
