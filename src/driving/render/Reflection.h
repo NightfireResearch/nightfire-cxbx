@@ -48,7 +48,7 @@ struct FeatureManagerData {
     float unknown54;                    // +0x54 400
     int32_t unknown58;                  // +0x58 8
     int32_t unknown5C;                  // +0x5c 1
-    int32_t unknown60;                  // +0x60 0x100; RParticleSystem reads it
+    int32_t particleDensity;            // +0x60 0x100: in 256ths (RParticleSystem; name ours)
     uint8_t unknown64;                  // +0x64 0
     uint8_t unknown65;                  // +0x65 0
     uint8_t unknown66;                  // +0x66 1
@@ -65,9 +65,10 @@ struct FeatureManagerData {
 static_assert(sizeof(FeatureManagerData) == 0x84, "the feature manager's statics end at the reflection pointer");
 static_assert(offsetof(FeatureManagerData, initialised) == 0x1a &&
               offsetof(FeatureManagerData, texelsAreOffset) == 0x2b &&
-              offsetof(FeatureManagerData, unknown40) == 0x40 && offsetof(FeatureManagerData, unknown60) == 0x60 &&
+              offsetof(FeatureManagerData, unknown40) == 0x40 && offsetof(FeatureManagerData, particleDensity) == 0x60 &&
               offsetof(FeatureManagerData, unknown6C) == 0x6c && offsetof(FeatureManagerData, locked) == 0x80,
               "FeatureManagerData layout");
+extern FeatureManagerData Features;
 
 class FeatureManager {
 public:

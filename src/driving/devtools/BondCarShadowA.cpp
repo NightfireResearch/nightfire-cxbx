@@ -90,10 +90,10 @@ struct Rng {
     bool Chance(int percent) { return int(Next() % 100) < percent; }
 };
 
-#define ShadowPlayerCar (**(PBondCar ***)0x00234e40)
+#define ShadowPlayerCar (**(PBondCar ***)OwnedGlobals_Ours(0x00234e40))
 #define ShadowGetRigidBody ((RigidBody *(__fastcall *)(void *, int, int slot))0x000b2700)
-#define ShadowSim ((void *)0x00233ff0)
-#define ShadowRandom (*(SimRandom **)0x00233ff0)
+#define ShadowSim ((void *)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowRandom (*(SimRandom **)OwnedGlobals_Ours(0x00233ff0))
 // The original's copy of the port's BondCarScratchPad (the cars' tuning: BondCarOrigTuning.h). The event queue's
 // creation point is ours on both sides: the originals reach it through EventManager's ported functions.
 #define OrigBondCarScratchPad (*(BondCarScratch **)0x001e7a88)
@@ -959,7 +959,7 @@ constexpr uint32_t kECollision = 0x0003f370;
 constexpr size_t kPadAxleW = 0x28c;     // AddSnowmobileForces' torque local's w: the original's stack, ours zero
 constexpr int kMaxImpacts = 4;
 
-#define LiveSimStepCount (*(const int32_t *)0x00234e34)
+#define LiveSimStepCount (*(const int32_t *)OwnedGlobals_Ours(0x00234e34))
 
 typedef void *(__fastcall *ECollisionFn)(void *, int, CollisionImpact);
 

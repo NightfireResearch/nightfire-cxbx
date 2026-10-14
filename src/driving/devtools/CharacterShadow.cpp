@@ -160,7 +160,7 @@ typedef void (__fastcall *ResolverDestructFn)(ActEventResolver *, int);
 #define OrigIRModeOn (*(bool *)0x001dd9dd)
 #define ShadowActorDatabase (*(ActActorDatabase **)OwnedGlobals_Ours(0x001dd9a0))
 #define ShadowCurrentActor (*(ActActor **)OwnedGlobals_Ours(0x001dd9c4))
-#define ShadowPlayerCar (**(PhysicsObject ***)0x00234e40)
+#define ShadowPlayerCar (**(PhysicsObject ***)OwnedGlobals_Ours(0x00234e40))
 
 PrivateData *Banks() {
     if (TheActManager == NULL || TheActManager->animations == NULL)

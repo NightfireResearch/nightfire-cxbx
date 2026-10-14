@@ -145,7 +145,7 @@ Mine* Mine::Delete(unsigned flags) {
 // An explosion of the proximity mine's damage at the body, and the mine deleted
 void Mine::Explode(SimpleRigidBody *body, const Coord3 *forward) {
     float damage = float(WeaponManager->weapons[kWeaponProxMine].damage);
-    fgSimulation.SpawnExplosion(kMineExplosion, kind, forward, &body->position, damage, 0, NULL, DamageSourceSig);
+    fgSimulation.SpawnExplosion(kMineExplosion, kind, forward, &body->position, damage, 0, NULL, &DamageSourceSig);
     fgSimulation.DeletePhysicsObjectThunk(this);
 }
 

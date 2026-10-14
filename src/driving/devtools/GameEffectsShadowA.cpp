@@ -152,8 +152,8 @@ typedef void (__fastcall *DebrisAddFn)(RDebris *, int, int, const Coord4 *, cons
 #define GxRandomMultiplier U32_AT(OwnedGlobals_Ours(0x001c45c8))
 #define GxGameTick U32_AT(OwnedGlobals_Ours(0x001f2a4c))
 #define GxSimStep FLOAT_AT(OwnedGlobals_Ours(0x001c465c))
-#define GxSimStepCount U32_AT(0x00234e34)
-#define GxPlayerVehicles (*(PhysicsObject ***)0x00234e40)
+#define GxSimStepCount U32_AT(OwnedGlobals_Ours(0x00234e34))
+#define GxPlayerVehicles (*(PhysicsObject ***)OwnedGlobals_Ours(0x00234e40))
 #define GxSharedBuffers ((uint8_t *)OwnedGlobals_Ours(0x001f2a50))              // GAME::SwitchData, EAGL::DamageZones
 const size_t kSharedBufferBytes = 0x200;
 #define GxDamageLevelEffects FLOAT_AT(OwnedGlobals_Ours(0x001c3dd8))            // fgDamageLevels.effects

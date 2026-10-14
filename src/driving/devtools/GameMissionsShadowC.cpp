@@ -63,10 +63,10 @@ void OriginalWindow(bool original) {
     XbeOriginal_RestoreRange(0x000b60a0, 0x000b9500, original);
 }
 
-#define ShSimStepCount I32_AT(0x00234e34)
+#define ShSimStepCount I32_AT(OwnedGlobals_Ours(0x00234e34))
 #define ShCinematic I32_AT(0x00243a64)       // the game's copy of MissionCinematicMode
 #define ShScheduler (*(uint8_t **)OwnedGlobals_Ours(0x001e520c))
-#define ShPlayerSlot (*(PVehicle ***)0x00234e40)
+#define ShPlayerSlot (*(PVehicle ***)OwnedGlobals_Ours(0x00234e40))
 #define ShOrigDefaultSet ((uint8_t *)0x00238f20)
 #define ShOrigCarFlags ((uint8_t *)0x0023921a)
 #define ShOrigTimes100B U8_AT(0x00239219)

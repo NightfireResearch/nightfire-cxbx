@@ -198,7 +198,7 @@ static_assert(offsetof(Simulation, rigidBodySigs) == 0x030 && offsetof(Simulatio
               "Simulation layout");
 
 // The one Simulation (constructed by the static initialisers; the name is ours)
-#define fgSimulation (*(Simulation *)0x00233ff0)
+alignas(16) extern Simulation fgSimulation;
 
 // Set while DeleteDeadObjects runs (the PS2 build's Simulation::DeleteInProgress reads it; the name is ours)
 extern bool SimDeleteInProgress;

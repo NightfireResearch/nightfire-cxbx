@@ -3,6 +3,7 @@
 #endif
 
 #include "PlayerCamShadowA.h"
+#include "OwnedGlobals.h"
 #include "OrigConstants.h"
 
 #include "../camera/CameraIniLoader.h"
@@ -134,8 +135,8 @@ struct ShadowStateBytes {
     uint8_t bytes[0x34];
 };
 
-#define ShadowSimState (*(int32_t *)0x00234e24)
-#define ShadowAutoAimOption (*(int32_t *)0x002445d0)
+#define ShadowSimState (*(int32_t *)OwnedGlobals_Ours(0x00234e24))
+#define ShadowAutoAimOption (*(int32_t *)OwnedGlobals_Ours(0x002445d0))
 #define ShadowPlayerCameraVtable 0x001918ac
 
 // ---- the functions, at their original addresses

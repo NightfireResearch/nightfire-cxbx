@@ -131,8 +131,8 @@ const uint32_t kDbEnd = 0x00037ad0;
 
 #define ShadowRandomSeed U32_AT(OwnedGlobals_Ours(0x001c45c4))
 #define ShadowRandomMultiplier U32_AT(OwnedGlobals_Ours(0x001c45c8))
-#define ShadowSimState I32_AT(0x00234e24)
-#define ShadowSimStepCount I32_AT(0x00234e34)
+#define ShadowSimState I32_AT(OwnedGlobals_Ours(0x00234e24))
+#define ShadowSimStepCount I32_AT(OwnedGlobals_Ours(0x00234e34))
 #define ShadowVehicleParticleTexture3 U32_AT(OwnedGlobals_Ours(0x001c525c))
 
 // ---- results
@@ -1246,8 +1246,8 @@ void BuildRegions() {
     // Both sides at the game's addresses
     AddShared(0x001f2e20, 0xa8, "BulletStreakKinds");
     AddShared(OwnedGlobals_OursWord(0x001c45c4), 8, "the random generator");
-    AddShared(0x00234e24, 4, "SimState", false);
-    AddShared(0x00234e34, 4, "SimStepCount", false);
+    AddShared(OwnedGlobals_OursWord(0x00234e24), 4, "SimState", false);
+    AddShared(OwnedGlobals_OursWord(0x00234e34), 4, "SimStepCount", false);
     AddShared(OwnedGlobals_OursWord(0x00200f54), 4, "MissileCam", false);
     AddShared(OwnedGlobals_OursWord(0x00201818), 4, "SniperZoom", false);
     AddShared(uint32_t(uintptr_t(g_streakBlock)), sizeof(g_streakBlock), "the streak");

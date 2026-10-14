@@ -584,7 +584,7 @@ const char *__fastcall FakeGetSecondaryType(void *, int) {
 
 // The player's car's vtable pointer
 void **&PlayerCarVtable() {
-    PVehicle *car = **reinterpret_cast<PVehicle ***>(uintptr_t(0x00234e40));
+    PVehicle *car = **reinterpret_cast<PVehicle ***>(uintptr_t(OwnedGlobals_Ours(0x00234e40)));
     return *reinterpret_cast<void ***>(car);
 }
 
@@ -864,7 +864,7 @@ void LoadFileCases(Rng &rng) {
     int32_t liveShake = kExplosionShakePeriod, liveLatency = kAutoDriveLatency;
     CameraConstants origConstants = OrigCameraConstants;
     int32_t origShake = OrigExplosionShakePeriod, origLatency = OrigAutoDriveLatency;
-    PVehicle *car = *(*reinterpret_cast<PVehicle ***>(uintptr_t(0x00234e40)));
+    PVehicle *car = *(*reinterpret_cast<PVehicle ***>(uintptr_t(OwnedGlobals_Ours(0x00234e40))));
     const char *realType = car->GetCarType();
     int realClass = car->GetCarClass();
     const char *realSecondary = reinterpret_cast<const char *(__fastcall *)(void *, int)>((*reinterpret_cast<void ***>(car))[0x144 / 4])(car, 0);
@@ -1354,18 +1354,18 @@ struct CarAudioFlagsView {
     uint8_t flags[3];
 };
 
-#define ShadowSimState I32_AT(0x00234e24)
-#define ShadowSimStepCount I32_AT(0x00234e34)
+#define ShadowSimState I32_AT(OwnedGlobals_Ours(0x00234e24))
+#define ShadowSimStepCount I32_AT(OwnedGlobals_Ours(0x00234e34))
 #define ShadowMission (*(uint8_t **)OwnedGlobals_Ours(0x00239220))
-#define ShadowMissionName ((char *)(0x00243b90 + 0x4f4))
-#define ShadowUnknown2445d4 I32_AT(0x002445d4)
+#define ShadowMissionName ((char *)(OwnedGlobals_OursWord(0x00243b90) + 0x4f4))
+#define ShadowUnknown2445d4 I32_AT(OwnedGlobals_Ours(0x002445d4))
 
 void StateCases(Rng &rng) {
     static const char *const kNames[] = { "Construct", "ResetState", "ResetStateForAnimation", "DriveCamInputHandler",
                                           "AutoDriveCamInputHandler", "AimZoom", "AimRelease" };
     static const int kInputs[] = { 1, 27, 28, 33, 34, 35, 38, 39, 40, 41, 42, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53,
                                    54, 56, 58, 0, 2, 36, 43, 55, 57, 60 };
-    PVehicle *car = *(*reinterpret_cast<PVehicle ***>(uintptr_t(0x00234e40)));
+    PVehicle *car = *(*reinterpret_cast<PVehicle ***>(uintptr_t(OwnedGlobals_Ours(0x00234e40))));
     typedef CarAudioFlagsView *(PVehicle::*AudioFn)();
     CarAudioFlagsView *audio = (car->*XbeVirtual<AudioFn>(car, 0x1c / 4))();
     uint8_t *mission = ShadowMission;

@@ -97,6 +97,8 @@ SINGLE_COPY = set("""
     fgTriggerManager fgWorld fgWorldCulling gFeedbackAllowed gLimitHenchSpawns gPlayMovies gPlayerCanNeverLose
     gSoundOption gStreams gSubtitles gSuperEasy glbMissionManager
     BondHandIK CausticControl ReflStretch SwayData TestData
+    DamageSourceSig Features Launch PlayerGroundVehicles ScratchPadFreeZone SndMix TrafficGroundVehicles fgSimulation
+    gEventDynamicData
 """.split())
 
 

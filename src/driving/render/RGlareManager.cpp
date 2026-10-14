@@ -1,4 +1,5 @@
 #include "RGlareManager.hpp"
+#include "../engine/GameLoop.h"      // Launch
 #include "../Vtables.h"   // our copies of the game's vtables
 #include "Materials.h"
 #include "Renderer.h"
@@ -298,7 +299,6 @@ static uint32_t GlareID;                                    // "Glare ID"
 static uint8_t HaloColourUnused;
 // XBE_GLOBAL(0x00209d20, 1)
 static uint8_t SpikeColourUnused;
-#define TuningLevel ((const char *)0x00244084)              // the level the tuning databases are read for
 
 static void *const kGlareManagerVtable = (void *)Vtable_RGlareManager;
 constexpr uint32_t kGlareTexture = 0x72616c66;      // 'flar'
@@ -347,7 +347,7 @@ RGlareManager* RGlareManager::Construct() {
     for (int type : kLowZBiasTypes)
         types[type].zBias = kLowZBias;
 
-    TuningDBMgr->LoadDatabase("Render:Glare", TuningLevel, 0, false);
+    TuningDBMgr->LoadDatabase("Render:Glare", Launch.missionName, 0, false);
     dbindex("Glare ID", &GlareID, 0, kGlareTypes - 1, NULL);
     dbattrib_u8("Halo Tex", &types[0].haloTexture, 0, 9, sizeof(GlareType), -1.0f, NULL);
     dbattrib_float("Halo Spin", &types[0].halo.spin, 0.0f, 0.25f, sizeof(GlareType), 1.0f, NULL);

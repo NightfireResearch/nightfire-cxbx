@@ -15,6 +15,7 @@
 #include "../engine/UMemory.hpp"
 #include "../physics/RigidBody.h"       // PVehicle
 #include "../platform/RealMath.h"
+#include "../render/Reflection.h"     // Features
 #include "../render/Renderer.h"
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -29,9 +30,6 @@ using EAGL::ViewPort;
 // ---- globals
 #define RCameraVtable ((void **)Vtable_RCamera)
 #define RViewCameraVtable ((void **)Vtable_RViewCamera)
-#define ResolutionStamp I32_AT(0x001f2d78)              // changes with the screen's resolution (names ours)
-#define ViewWidth I32_AT(0x001f2d7c)                    // the screen's size in pixels
-#define ViewHeight I32_AT(0x001f2d80)
 // ApplyPerspectiveFunction's sway (names ours): on, and the period in steps and amplitude of each part
 // XBE_GLOBAL(0x001c47b8, 1)
 bool PerspectiveSway = true;
@@ -165,7 +163,7 @@ void RCamera::SetActive(bool active) {
 RViewCamera* RViewCamera::Construct(RCamera *camera) {
     vtable = RViewCameraVtable;
     transformMode = kWorldTransform;
-    resolutionStamp = ResolutionStamp;
+    resolutionStamp = Features.resolutionStamp;
     xMin = 0.0f;
     yMin = 0.0f;
     nearZ = kDefaultNearZ;
@@ -217,8 +215,8 @@ void RViewCamera::SetGuardBandSize(float size) {
 
 // FUNC_AT(0x00096860)
 void RViewCamera::UpdateForResolution() {
-    double width = ViewWidth;
-    double height = ViewHeight;
+    double width = Features.width;
+    double height = Features.height;
     viewPort->SetShape((float)(width * xMin), (float)(height * yMin), (float)(((double)xMax - xMin) * width),
                        (float)(((double)yMax - yMin) * height), kShapeMinZ, kShapeMaxZ);
 }
@@ -291,8 +289,8 @@ void RViewCamera::SetExtents(float x, float y, float width, float height) {
     yMax = (float)bottom;
     float viewWidth = (float)(right - x);
     lodMultiplier = (float)((double)camera->fieldOfView * kLodFovScale * viewWidth * kLodScale);
-    float screenWidth = (float)ViewWidth;     // FILD, rounded to a float
-    float screenHeight = (float)ViewHeight;
+    float screenWidth = (float)Features.width;     // FILD, rounded to a float
+    float screenHeight = (float)Features.height;
     viewPort->SetShape(screenWidth * x, screenHeight * y, viewWidth * screenWidth,
                        (float)((bottom - y) * screenHeight), kShapeMinZ, kShapeMaxZ);
 }
@@ -346,7 +344,7 @@ void RViewCamera::SetWorldTransformMode() {
 // FUNC_AT(0x00096fc0)
 void RViewCamera::SetRenderCamera() {
     fgRenderer->SetCurrentView(this);
-    int stamp = ResolutionStamp;
+    int stamp = Features.resolutionStamp;
     if (resolutionStamp != stamp) {
         resolutionStamp = stamp;
         UpdateForResolution();

@@ -114,11 +114,11 @@ typedef void (__fastcall *MethodFn)(void *, int);
 
 // ---- the game's state
 
-#define ShadowSim ((uint8_t *)0x00233ff0)
-#define ShadowRandom (*(SimRandom **)0x00233ff0)
-#define ShadowStepCount I32_AT(0x00234e34)
-#define ShadowStepsPerSecond I32_AT(0x00234e2c)
-#define ShadowCars (*(GameVector<PVehicle *> *)0x00234e3c)
+#define ShadowSim ((uint8_t *)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowRandom (*(SimRandom **)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowStepCount I32_AT(OwnedGlobals_Ours(0x00234e34))
+#define ShadowStepsPerSecond I32_AT(OwnedGlobals_Ours(0x00234e2c))
+#define ShadowCars (*(GameVector<PVehicle *> *)OwnedGlobals_Ours(0x00234e3c))
 #define ShadowSpawnCount I16_AT(OwnedGlobals_Ours(0x001de918))
 #define ShadowZones ((uint8_t *)OwnedGlobals_Ours(0x001e1f20))
 constexpr uint32_t kZoneTableBytes = 30 * 0x1c;

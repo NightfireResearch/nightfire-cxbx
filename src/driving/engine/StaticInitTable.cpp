@@ -21,6 +21,7 @@
 #include "../data/SymbolTable.h"
 #include "../game/AIElements.h"
 #include "../game/AIVehicle.h"
+#include "../game/AIVehicleController.h"
 #include "../game/DebugAudio.h"
 #include "../game/EmpEffect.h"
 #include "../game/Girl.h"
@@ -171,10 +172,10 @@ void RunStaticInitialisers(void) {
     FLOAT_AT(0x001de92c) = 180.0f / 3.1415925f;                                                          // 0x00157230
     FLOAT_AT(0x001de930) = 1.0f / FLOAT_AT(0x001de92c);                                                  // 0x00157250
     FLOAT_AT(0x001de934) = 1.0f / FLOAT_AT(0x001b6628);                                                  // 0x00157270
-    for (int i = 0; i < 2; i++) ((AIGroundVehicle *)(0x001de940 + i * 0x270))->Construct();              // 0x00157290
-    Crt::atexit([] { for (int i = 1; i >= 0; i--) ((AIGroundVehicle *)(0x001de940 + i * 0x270))->Destruct(); });
-    for (int i = 0; i < 20; i++) ((AIGroundVehicle *)(0x001dee20 + i * 0x270))->Construct();             // 0x001572c0
-    Crt::atexit([] { for (int i = 19; i >= 0; i--) ((AIGroundVehicle *)(0x001dee20 + i * 0x270))->Destruct(); });
+    for (int i = 0; i < 2; i++) PlayerGroundVehicles[i].Construct();                                     // 0x00157290
+    Crt::atexit([] { for (int i = 1; i >= 0; i--) PlayerGroundVehicles[i].Destruct(); });
+    for (int i = 0; i < 20; i++) TrafficGroundVehicles[i].Construct();                                   // 0x001572c0
+    Crt::atexit([] { for (int i = 19; i >= 0; i--) TrafficGroundVehicles[i].Destruct(); });
     AIZoneData.unknown34 = 1.0f / FLOAT_AT(0x001b662c);                                                  // 0x001572f0
     for (int i = 0; i < 30; i++) AIZoneData.zones[i].Construct();                                        // 0x00157310
     Crt::atexit([] {});

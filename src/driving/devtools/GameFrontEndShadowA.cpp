@@ -214,7 +214,7 @@ void HooksRemove() {
 #define GameScreenFade I16_AT(0x00243a74)
 #define GameScreenFadeLevel FLOAT_AT(0x00243a70)
 #define GameLoadState I32_AT(0x0023f574)
-#define ShLaunch (*(LaunchPage *)0x00243b90)
+#define ShLaunch (*(LaunchPage *)OwnedGlobals_Ours(0x00243b90))
 #define ShScheduler (*(Scheduler **)OwnedGlobals_Ours(0x001e520c))
 #define ShMission (*(SMissionManager **)OwnedGlobals_Ours(0x00239220))
 

@@ -1,4 +1,5 @@
 #include "Decode.h"
+#include "Mixer.h"                      // SndMix
 #include "SndUntested.h"
 
 #include <stddef.h>
@@ -53,8 +54,6 @@ namespace {
 #define XaNibbles (XaTables.nibbles)
 
 // CODA_New/CODA_Delete: SNDMEMI_alloc's and SNDMEMI_free's thunks, set by MIX_create
-#define CodaNew (*(void *(**)(size_t size))0x002475f4)
-#define CodaDelete (*(void (**)(void *block))0x002475f8)
 
 constexpr int kBlockFrames = 28;
 constexpr int kBlockBytes = 15;
@@ -100,12 +99,12 @@ void SND::decodexac(DecodeXacParams *params) {
 
 // FUNC_AT(0x00149e50)
 void* SND::CEAXABLKDecf::operator new(size_t size) {
-    return CodaNew(size);
+    return SndMix.codaNew(size);
 }
 
 // FUNC_AT(0x00149e60)
 void SND::CEAXABLKDecf::operator delete(void *block) {
-    CodaDelete(block);
+    SndMix.codaDelete(block);
 }
 
 // FUNC_AT(0x00149e70)

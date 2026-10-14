@@ -84,7 +84,7 @@ void Originals(bool original) {
 
 // ---- the driver's globals the cases set (sound.md 2.2-2.6)
 const uint32_t kRegion1 = 0x00244ba8, kRegion1Size = 0x00244fc0 - 0x00244ba8;
-const uint32_t kRegion2 = 0x002459a0, kRegion2Size = 8;
+const uint32_t kRegion2 = OwnedGlobals_OursWord(0x002459a0), kRegion2Size = 8;
 const uint32_t kGainTable = 0x00245378, kGainTableSize = 256 * 6;
 
 inline uint8_t &U8(uint32_t address) {
@@ -896,8 +896,8 @@ void SetupFx(int index) {
     g_p.arg2 = Range(0, 3);
     U16(0x00244f44) = (uint16_t)(Chance(80) ? Range(0, 3) : Next());
     U32(0x00244f48) = Next();
-    U32(0x002459a0) = Next();
-    U32(0x002459a4) = Next();
+    U32(OwnedGlobals_OursWord(0x002459a0)) = Next();
+    U32(OwnedGlobals_OursWord(0x002459a4)) = Next();
     BuildLists();
 }
 void RunListener() {

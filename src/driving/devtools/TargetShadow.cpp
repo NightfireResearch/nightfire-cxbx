@@ -117,7 +117,7 @@ struct RendererScreen {
 
 #define ShadowCameraViews (*(CameraViewEntry **)OwnedGlobals_Ours(0x001ec488))
 #define ShadowRenderer (*(RendererScreen **)OwnedGlobals_Ours(0x001ebff4))
-#define ShadowPlayerPhysics (*(PhysicsObject ***)0x00234e40)
+#define ShadowPlayerPhysics (*(PhysicsObject ***)OwnedGlobals_Ours(0x00234e40))
 // The originals' copies of the port's TargetableCount and TargetableStagger: each pass's counters are its side's
 #define OrigTargetableCount (*(int32_t *)0x0023e174)
 #define OrigTargetableStagger (*(int32_t *)0x0023e178)

@@ -979,12 +979,12 @@ void WorldCompare(WorldCase *c, const WWorldPos *start, int index) {
 }
 
 bool PlayerPosition(float *out) {
-    uint8_t **handle = *(uint8_t ***)0x00234e40;
+    uint8_t **handle = *(uint8_t ***)OwnedGlobals_Ours(0x00234e40);
     uint8_t *car = handle != NULL ? *handle : NULL;
     if (car == NULL)
         return false;
     typedef uint8_t *(__fastcall *GetRigidBodyFn)(void *, int, int);
-    uint8_t *body = (Original<GetRigidBodyFn>(0x000b2700))((void *)0x00233ff0, 0, *(int16_t *)(car + 0x4a));
+    uint8_t *body = (Original<GetRigidBodyFn>(0x000b2700))((void *)OwnedGlobals_Ours(0x00233ff0), 0, *(int16_t *)(car + 0x4a));
     if (body == NULL)
         return false;
     memcpy(out, body + 0x10, 12);

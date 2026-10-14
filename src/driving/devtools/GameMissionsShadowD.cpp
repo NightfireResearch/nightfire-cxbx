@@ -116,12 +116,12 @@ const Kind kKinds[] = {
 const int kKindCount = int(sizeof(kKinds) / sizeof(kKinds[0]));
 
 // The globals the code reads, at the game's addresses
-#define PlayerSlotPointer (*(PVehicle ***)0x00234e40)
+#define PlayerSlotPointer (*(PVehicle ***)OwnedGlobals_Ours(0x00234e40))
 #define MissionManagerPointer PTR_AT(OwnedGlobals_Ours(0x00239220))
 #define WeaponManagerPointer PTR_AT(OwnedGlobals_Ours(0x0023923c))
 #define AIControllerPointer PTR_AT(OwnedGlobals_Ours(0x001ddee4))
-#define StepCount I32_AT(0x00234e34)
-#define StepsPerSecond I32_AT(0x00234e2c)
+#define StepCount I32_AT(OwnedGlobals_Ours(0x00234e34))
+#define StepsPerSecond I32_AT(OwnedGlobals_Ours(0x00234e2c))
 
 bool g_original;
 long g_cases, g_checks, g_differ, g_faults;

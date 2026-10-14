@@ -159,18 +159,18 @@ const uint32_t kStreakDraw = 0x000a1330;
 
 #define ShadowRandomSeed U32_AT(OwnedGlobals_Ours(0x001c45c4))
 #define ShadowRandomMultiplier U32_AT(OwnedGlobals_Ours(0x001c45c8))
-#define ShadowSimStepsPerSecond I32_AT(0x00234e2c)
-#define ShadowSimTimeStep FLOAT_AT(0x00234e30)
-#define ShadowSimStepCount I32_AT(0x00234e34)
-#define ShadowPlayerVehicles (*(PhysicsObject ***)0x00234e40)
+#define ShadowSimStepsPerSecond I32_AT(OwnedGlobals_Ours(0x00234e2c))
+#define ShadowSimTimeStep FLOAT_AT(OwnedGlobals_Ours(0x00234e30))
+#define ShadowSimStepCount I32_AT(OwnedGlobals_Ours(0x00234e34))
+#define ShadowPlayerVehicles (*(PhysicsObject ***)OwnedGlobals_Ours(0x00234e40))
 #define ShadowPlayerHands (*(uint8_t **)OwnedGlobals_Ours(0x001dda90))
-#define ShadowLaunchFlags U32_AT(0x00244530)
+#define ShadowLaunchFlags U32_AT(OwnedGlobals_Ours(0x00244530))
 #define ShadowWeaponBank (*(void **)0x001d83a8)
 #define ShadowWeaponManager (*(void **)OwnedGlobals_Ours(0x0023923c))
-#define ShadowSimRandom (*(uint8_t **)0x00233ff0)
-#define ShadowRigidSigs ((uint32_t *)0x00234020)
-#define ShadowSimpleSigs ((uint32_t *)0x00234120)
-#define ShadowSimpleHits ((uint64_t (*)[3])0x00234520)
+#define ShadowSimRandom (*(uint8_t **)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowRigidSigs ((uint32_t *)OwnedGlobals_Ours(0x00234020))
+#define ShadowSimpleSigs ((uint32_t *)OwnedGlobals_Ours(0x00234120))
+#define ShadowSimpleHits ((uint64_t (*)[3])OwnedGlobals_Ours(0x00234520))
 
 // ---- results
 
@@ -1702,15 +1702,15 @@ void BuildRegions() {
     AddShared(&g_in, sizeof(g_in), "the inputs");
     AddShared(&g_sparksFound, sizeof(g_sparksFound), "the sparks' answer", false);
 
-    AddShared((void *)0x00234e2c, 12, "the Simulation's step globals", false);
+    AddShared((void *)OwnedGlobals_Ours(0x00234e2c), 12, "the Simulation's step globals", false);
     AddShared((void *)OwnedGlobals_Ours(0x001c45c4), 8, "the renderer's random generator");
     AddShared(ShadowSimRandom, 16, "the Simulation's random generator");
     AddShared(ShadowRigidSigs, 0x100, "the rigid bodies' signatures");
     AddShared(ShadowSimpleSigs, 0x180, "the simple bodies' signatures");
     AddShared(ShadowSimpleHits, 0x900, "the simple bodies' hits", false);
-    AddShared((void *)0x00234e40, 4, "the player's cars", false);
+    AddShared((void *)OwnedGlobals_Ours(0x00234e40), 4, "the player's cars", false);
     AddShared((void *)OwnedGlobals_Ours(0x001dda90), 4, "the player's hands", false);
-    AddShared((void *)0x00244530, 4, "the launch flags", false);
+    AddShared((void *)OwnedGlobals_Ours(0x00244530), 4, "the launch flags", false);
     AddShared((void *)0x001d83a8, 4, "the weapon bank", false);
     AddShared((void *)OwnedGlobals_Ours(0x0023923c), 4, "the weapon manager", false);
 

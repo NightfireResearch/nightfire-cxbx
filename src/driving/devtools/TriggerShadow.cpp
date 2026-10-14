@@ -107,9 +107,9 @@ typedef SimpleRigidBody *(__fastcall *GetSimpleBodyFn)(void *, int, int);
 #define OrigQueryStamp (*(uint32_t *)0x0023e270)
 #define ShadowHittingRay I32_AT(0x001c3df4)
 #define ShadowRayShells ((ActiveRayShell *)0x001e8570)
-#define ShadowRigidOwners ((void **)0x002342a0)
-#define ShadowSimpleOwners ((void **)0x002343a0)
-#define ShadowSim ((void *)0x00233ff0)
+#define ShadowRigidOwners ((void **)OwnedGlobals_Ours(0x002342a0))
+#define ShadowSimpleOwners ((void **)OwnedGlobals_Ours(0x002343a0))
+#define ShadowSim ((void *)OwnedGlobals_Ours(0x00233ff0))
 const int kRigidBodies = 0x40;
 const int kSimpleBodies = 0x60;
 

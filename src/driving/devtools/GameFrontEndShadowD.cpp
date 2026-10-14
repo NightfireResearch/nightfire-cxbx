@@ -254,9 +254,9 @@ void HooksRemove() {
 
 // ---- the game's state, and the game's copies of the globals the package owns
 
-#define ShLaunch (*(LaunchPage *)0x00243b90)
-#define ShSimStepCount I32_AT(0x00234e34)
-#define ShSimTimeStep FLOAT_AT(0x00234e30)
+#define ShLaunch (*(LaunchPage *)OwnedGlobals_Ours(0x00243b90))
+#define ShSimStepCount I32_AT(OwnedGlobals_Ours(0x00234e34))
+#define ShSimTimeStep FLOAT_AT(OwnedGlobals_Ours(0x00234e30))
 #define GameHudOn BOOL8_AT(0x001b7055)              // the game's copies of gHudOn and fHudApp
 #define GameHudApp (*(GHud **)0x0023f44c)
 #define GameTheSubtitles (*(GSubtitles **)0x0023f828)

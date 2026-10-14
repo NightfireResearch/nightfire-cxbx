@@ -89,9 +89,9 @@ struct Rng {
     bool Chance(int percent) { return int(Next() % 100) < percent; }
 };
 
-#define ShadowPlayerCar (**(PBondCar ***)0x00234e40)
-#define ShadowRandom (*(SimRandom **)0x00233ff0)
-#define ShadowDamageSourceSig U32_AT(0x00233fe8)
+#define ShadowPlayerCar (**(PBondCar ***)OwnedGlobals_Ours(0x00234e40))
+#define ShadowRandom (*(SimRandom **)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowDamageSourceSig U32_AT(OwnedGlobals_Ours(0x00233fe8))
 
 // ---- five-byte jumps over the callees the fakes stand in for
 

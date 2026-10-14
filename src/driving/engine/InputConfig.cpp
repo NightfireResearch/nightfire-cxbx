@@ -21,7 +21,6 @@
 // 0x00051e90..0x00052010), ported from the listing.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define TuningLevel ((const char *)0x00244084)   // the track the tuning databases are read for
 
 // XBE_GLOBAL(0x001e455c, 0x30)
 InputConfigManager gInputConfigManager;
@@ -415,23 +414,23 @@ int InputConfigManager::GetLocaleID(int type, int config, int slot) {
     int id = configs[type][config].localeIDs[slot];
     switch (id) {
     case 0x590:
-        if (_stricmp(TuningLevel, "snow1a_mis3") != 0)
+        if (_stricmp(Launch.missionName, "snow1a_mis3") != 0)
             id = 0xaa1;
         break;
     case 0xa94:
-        if (strstr(TuningLevel, "uw_") != nullptr)
+        if (strstr(Launch.missionName, "uw_") != nullptr)
             id = 0xaa1;
         break;
     case 0xa98:
     case 0xa99:
-        if (_stricmp(TuningLevel, "paris_mis01") == 0 && type != kInputDriving)
+        if (_stricmp(Launch.missionName, "paris_mis01") == 0 && type != kInputDriving)
             id = 0xaa1;
         break;
     case 0xa9f:
         id = 0xaa1;
         break;
     case 0xaa3:
-        if (_stricmp(TuningLevel, "paris_mis01") == 0 && type != kInputDriving)
+        if (_stricmp(Launch.missionName, "paris_mis01") == 0 && type != kInputDriving)
             id = config == 6 || config == 7 ? 0x6ad : 0xaa1;
         break;
     }

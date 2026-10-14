@@ -15,6 +15,7 @@
 #include "../platform/RealPrint.h"      // MEM_copy
 #include "../platform/X87.h"
 #include "../../helpers.h"
+#include "Reflection.h"           // Features
 #include "TextureContext.h"
 #include "../game/SimulationContainers.h"
 #include "../logging.h"
@@ -34,7 +35,6 @@ RParticleSystemManager *fgParticleSystems;
 // ---- globals
 
 extern uint32_t GameTick;
-#define ParticleDensity U32_AT(0x001f2dd8)          // FeatureManager's, in 256ths (name ours)
 // XBE_GLOBAL(0x0020174c, 4)
 static RParticleSystem *LastSystem;                 // AddOrRefresh's answer
 // XBE_GLOBAL(0x00201750, 1)
@@ -320,7 +320,7 @@ static float EmissionRate(const RParticleSystemData *data, int32_t count) {
 
 // The type's count, scaled by the density setting
 static int32_t ScaledCount(const RParticleSystemData *data) {
-    return int32_t(uint32_t(data->count) * ParticleDensity >> 8);
+    return int32_t(uint32_t(data->count) * Features.particleDensity >> 8);
 }
 
 // FUNC_AT(0x000a2140)

@@ -103,10 +103,10 @@ typedef void (__fastcall *DriveFn)(void *, int, Coord3 *, float);
 
 // ---- the game's state
 
-#define ShadowSim ((uint8_t *)0x00233ff0)
-#define ShadowStepCount I32_AT(0x00234e34)
-#define ShadowStepsPerSecond I32_AT(0x00234e2c)
-#define ShadowCars (*(GameVector<PhysicsObject *> *)0x00234e3c)
+#define ShadowSim ((uint8_t *)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowStepCount I32_AT(OwnedGlobals_Ours(0x00234e34))
+#define ShadowStepsPerSecond I32_AT(OwnedGlobals_Ours(0x00234e2c))
+#define ShadowCars (*(GameVector<PhysicsObject *> *)OwnedGlobals_Ours(0x00234e3c))
 #define ShadowSpawnCount I16_AT(OwnedGlobals_Ours(0x001de918))
 #define ShadowMaxTraffic I16_AT(OwnedGlobals_Ours(0x001de914))
 

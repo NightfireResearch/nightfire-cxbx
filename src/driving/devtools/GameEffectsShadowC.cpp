@@ -1149,7 +1149,7 @@ std::vector<uint32_t> Snapshot(REmpBolts *bolts) {
 }
 
 int32_t SimStepCountNow() {
-    return I32_AT(0x00234e34);
+    return I32_AT(OwnedGlobals_Ours(0x00234e34));
 }
 
 // One method case: the same state on both objects, then the original on the first and the port on the second

@@ -133,13 +133,13 @@ typedef int (__fastcall *HeliDamageFn)(PHelicopter *, int, const Coord3 *, const
 
 // ---- the game's state the tests read, write and restore
 
-#define ShadowRandom (*(SimRandom **)0x00233ff0)
-#define ShadowStepCount I32_AT(0x00234e34)
-#define ShadowMissilesFirst (*(PhysicsObject ***)0x00234e80)
-#define ShadowMissilesLast (*(PhysicsObject ***)0x00234e84)
-#define ShadowHelicoptersFirst (*(PhysicsObject ***)0x00234ee0)
-#define ShadowHelicoptersLast (*(PhysicsObject ***)0x00234ee4)
-#define ShadowSimpleOwners ((PhysicsObject **)0x002343a0)
+#define ShadowRandom (*(SimRandom **)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowStepCount I32_AT(OwnedGlobals_Ours(0x00234e34))
+#define ShadowMissilesFirst (*(PhysicsObject ***)OwnedGlobals_Ours(0x00234e80))
+#define ShadowMissilesLast (*(PhysicsObject ***)OwnedGlobals_Ours(0x00234e84))
+#define ShadowHelicoptersFirst (*(PhysicsObject ***)OwnedGlobals_Ours(0x00234ee0))
+#define ShadowHelicoptersLast (*(PhysicsObject ***)OwnedGlobals_Ours(0x00234ee4))
+#define ShadowSimpleOwners ((PhysicsObject **)OwnedGlobals_Ours(0x002343a0))
 const int kSimpleBodies = 96;
 const uint32_t kRenderBytes = sizeof(RVehicle);
 const uint32_t kSoundBytes = 0x310;     // AHelicopter

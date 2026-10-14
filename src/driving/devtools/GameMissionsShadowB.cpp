@@ -128,7 +128,7 @@ const uint32_t kNewtonConstruct = 0x00061060;
 const uint32_t kHelicopterConstruct = 0x0006d8f0;
 const uint32_t kSentryConstruct = 0x00073a90;
 
-#define ShadowLaunch (*(LaunchPage *)0x00243b90)
+#define ShadowLaunch (*(LaunchPage *)OwnedGlobals_Ours(0x00243b90))
 
 // ---- results
 

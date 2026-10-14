@@ -1,6 +1,7 @@
 #pragma fp_contract(off)
 
 #include "Fog.h"
+#include "../engine/GameLoop.h"      // Launch
 #include "../Vtables.h"   // our copies of the game's vtables
 
 #include <bit>
@@ -23,7 +24,6 @@ RFog *Fog;
 // ---------------------------------------------------------------------------------------------------------------
 
 extern uint32_t GameTick;
-#define TuningLevel ((const char *)0x00244084)          // the name of the level the tuning databases are read for
 // XBE_GLOBAL(0x001ec008, 1)
 uint8_t FogColourFlag;                   // the flag byte dbattrib_argb is handed (and does not use)
 
@@ -120,7 +120,7 @@ RFog* RFog::Construct() {
     params->mode = kDefaultMode;
     params->density = kDefaultDensity;
 
-    TuningDBMgr->LoadDatabase("Render:Fog", TuningLevel, 0, false);
+    TuningDBMgr->LoadDatabase("Render:Fog", Launch.missionName, 0, false);
     dbattrib_float("fog START", &params->start, kDistanceMin, kDistanceMax, 0, 1.0f, NULL);
     dbattrib_float("fog END", &params->baseEnd, kDistanceMin, kDistanceMax, 0, 1.0f, NULL);
     dbattrib_u8("fog mode", &params->mode, 0, kModeMax, 0, -1.0f, NULL);

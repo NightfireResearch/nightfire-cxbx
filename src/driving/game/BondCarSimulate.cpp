@@ -22,6 +22,7 @@
 #include "VehicleSound.h"
 #include "VehicleSoundKinds.h"
 #include "WeaponManager.h"
+#include "../engine/GameLoop.h"      // Launch
 #include "../anim/AnimEngine.h"
 #include "../audio/Bank.h"
 #include "../audio/Sound.h"
@@ -49,7 +50,6 @@
 // ---- the game's globals
 
 
-#define ControllerPort I32_AT(0x00244520)                   // the launch page's controller port
 
 // XBE_GLOBAL(0x001e7a88, 4)
 BondCarScratch *BondCarScratchPad;
@@ -291,7 +291,7 @@ PBondCar* PBondCar::Construct(int carClass, const char *carType, uint32_t colour
 
     if (carClass == kPlayerCar) {
         IFeedback *feedback = static_cast<IFeedback *>(UMemory::FastAlloc(sizeof(IFeedback), "IFeedback"));
-        SetFeedbackObject(feedback != NULL ? feedback->Construct(ControllerPort) : NULL);
+        SetFeedbackObject(feedback != NULL ? feedback->Construct(Launch.controllerPort) : NULL);
     }
     aiGroundVehicle = NULL;
     if (carClass == kPlayerCar)
@@ -497,7 +497,7 @@ void PBondCar::Simulate() {
         // Upside down, the car damages itself
         if (resetAvailable != 0 && GetHitPoints() > 0.0f) {
             const Coord4 origin = { 0.0f, 0.0f, 0.0f, 0.0f };
-            ApplyDamageVirtual(&origin, GetPosition(), 100.0f, 0.5f, kDamageKind3, DamageSourceSig);
+            ApplyDamageVirtual(&origin, GetPosition(), 100.0f, 0.5f, kDamageKind3, &DamageSourceSig);
         }
     }
 

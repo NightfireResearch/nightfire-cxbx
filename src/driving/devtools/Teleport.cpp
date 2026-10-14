@@ -131,9 +131,9 @@
 // EResetPlayerCarPos would have run: on the game thread, between simulation steps.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define PLAYER_CAR_HANDLE   0x00234e40   // -> -> the player's PBondCar
-#define SIMULATION          0x00233ff0   // Sim
-#define MISSION_NUMBER      0x00244504   // from the launch data (1 paris, 2 uw_mis11, ... - see inject_driving.cpp)
+#define PLAYER_CAR_HANDLE   OwnedGlobals_OursWord(0x00234e40)  // -> -> the player's PBondCar
+#define SIMULATION          OwnedGlobals_OursWord(0x00233ff0)  // Sim
+#define MISSION_NUMBER      OwnedGlobals_OursWord(0x00244504)  // from the launch data (1 paris, 2 uw_mis11, ... - see inject_driving.cpp)
 
 typedef uint8_t *(__thiscall *GetRigidBodyFunc)(void *simulation, int rigidBodyId);
 typedef void (__thiscall *PlaceRigidBodyFunc)(void *simulation, float *position, float *direction);

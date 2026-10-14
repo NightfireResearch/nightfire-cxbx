@@ -161,6 +161,8 @@ NAMED = {
 }
 # Owned arrays of objects the initialisers construct (a vector constructor) and destroy: the name and the class.
 NAMED_OBJECT_ARRAYS = {
+    0x001de940: ("PlayerGroundVehicles", "AIGroundVehicle"),     # game/AIVehicleController.h
+    0x001dee20: ("TrafficGroundVehicles", "AIGroundVehicle"),
     0x001e1f20: ("AIZoneData.zones", "AIZone"),                   # game/AIElements.h
     0x001f5f10: ("BulletStreakMaterials", "UVolatileMaterial"),   # game/WeaponEffects.cpp
     0x002014f0: ("MuzzleFlashMaterials", "UVolatileMaterial"),
@@ -812,6 +814,7 @@ def main():
             '#include "../data/SymbolTable.h"',
             '#include "../game/AIElements.h"',
             '#include "../game/AIVehicle.h"',
+            '#include "../game/AIVehicleController.h"',
             '#include "../game/DebugAudio.h"',
             '#include "../game/EmpEffect.h"',
             '#include "../game/Girl.h"',

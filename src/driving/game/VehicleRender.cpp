@@ -1,6 +1,7 @@
 #pragma fp_contract(off)
 
 #include "VehicleRender.h"
+#include "../engine/GameLoop.h"      // Launch
 #include "../platform/XboxXapi.h"
 
 #include <bit>
@@ -51,7 +52,6 @@ alignas(16) VehicleSharedBuffers VehicleBuffers;
 #define XapiGetLocalTime (reinterpret_cast<void (__stdcall *)(LocalTime *time)>(Xbox_GetLocalTime))
 
 // ---- globals
-#define TuningLevel ((const char *)0x00244084)              // the level the tuning databases are read for
 extern uint8_t WorldViewMade;   // set by RRenderWorldCamera
 
 namespace {
@@ -331,7 +331,7 @@ void RVehicle::InitSharedBuffers() {
         effect.illuminate = kDefaultIlluminate;
         effect.intensity = 0.0f;
     }
-    TuningDBMgr->LoadDatabase("Render:SwitchEffects", TuningLevel, 0, false);
+    TuningDBMgr->LoadDatabase("Render:SwitchEffects", Launch.missionName, 0, false);
     dbindex("Switch Effect", &SwitchEffectIndex, 0, kSwitchEffects - 1, SwitchEffectNames);
     dbattrib_float("V Scroll", &VehicleBuffers.switches[0].vScroll, 0.0f, 1.0f, sizeof(SwitchEffectData), 1.0f, NULL);
     dbattrib_float("Glow", &VehicleBuffers.switches[0].glow, 0.0f, 1.0f, sizeof(SwitchEffectData), 1.0f, NULL);

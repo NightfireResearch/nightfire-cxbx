@@ -128,10 +128,10 @@ typedef RigidBody *(__fastcall *GetRigidBodyFn)(void *, int, int);
 
 // ---- the game's state the tests read, write and restore
 
-#define ShadowSim ((void *)0x00233ff0)
-#define ShadowTimeStep FLOAT_AT(0x00234e30)
-#define ShadowSimpleOwners ((PhysicsObject **)0x002343a0)
-#define ShadowSimpleSigs ((uint32_t *)0x00234120)
+#define ShadowSim ((void *)OwnedGlobals_Ours(0x00233ff0))
+#define ShadowTimeStep FLOAT_AT(OwnedGlobals_Ours(0x00234e30))
+#define ShadowSimpleOwners ((PhysicsObject **)OwnedGlobals_Ours(0x002343a0))
+#define ShadowSimpleSigs ((uint32_t *)OwnedGlobals_Ours(0x00234120))
 const int kRigidBodies = 64;
 const int kSimpleBodies = 96;
 
