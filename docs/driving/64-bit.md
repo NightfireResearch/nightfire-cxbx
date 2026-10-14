@@ -326,8 +326,12 @@ Packages 3a-5 are independent once 2 has landed; 6 and 8 can run beside them. Tw
 
 - In-memory structures: **native pointers**, with their layout checks made 32-bit-only (a documented exception to the
   style guide's same-allocation-sizes rule; package 0's heap-padding lockstep checks first that nothing depends on them).
-- x87 on x86-64: **assembly stubs** with the same instructions (exact against the 32-bit build on the same CPU).
+- x87: **superseded the same day** - the user is not concerned by last-bit differences (the original's own platforms
+  differed), only by keeping validation exact. So the x87 code becomes portable C, as Apple Silicon needs anyway, in a
+  step of its own **on the 32-bit build, before the 64-bit work**: convert, measure the divergence against the x87
+  baselines, make new baselines from the converted build once, and from then on every step (64-bit included) is exact
+  against those. No MASM stubs.
 - The bar for step 3: **exact lockstep against the 32-bit standalone build** on the same machine.
-- 64-bit Windows toolchain: **MSVC x64 plus a MASM file** for the stubs.
+- 64-bit Windows toolchain: **MSVC x64** (no MASM needed once the x87 code is C).
 - Not asked, taken as recommended: the host layer allocates the game window low (decision 2); `Ptr32<T>` members and the
   32-bit-only check form become named exceptions in the style guide (decision 5).
