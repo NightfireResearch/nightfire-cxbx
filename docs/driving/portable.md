@@ -128,3 +128,5 @@ copied beside drivinginject.dll. With the option on:
 - The movie stream's clock ignores the device's own buffer (about 10 ms).
 - `HostPosix`'s `IsBadReadPtr` makes two system calls per page, and MEM_validate calls it for every free block once
   a loop.
+
+The user's listening check of the SDL build (14 October 2026) passed after one fix: the movies' 5.1 was folded in FFmpeg's channel order rather than EA's, so their dialogue played on the right speaker only - in the XAudio2 build too (74b43b0, docs/driving-fmv.md).
