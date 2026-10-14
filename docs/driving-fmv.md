@@ -69,7 +69,7 @@ Tested with FFmpeg 8.0 on the extracted files (**test**):
   with two of the six channels (header patched to 2, the per-channel offset table rebuilt) decodes all three
   pairs to smooth, plausible audio of the right length. Channel 2 is loud and the other pairs carry less,
   channel 3 has almost no high-frequency content, so the order is very likely the usual L, R, C, LFE, Ls, Rs
-  (inference).
+  (inference). **Wrong**: see "As built" - the order is EA's, L, C, R, Ls, Rs, C.
 - The demuxer packetises exactly as a hand-written walker would: a video packet is the whole chunk *including*
   its 8-byte header, an audio packet is the `SCDl` body after the header, whose first 4 bytes are the sample
   count (FFmpeg source).
@@ -306,9 +306,9 @@ and the subtitles' timing.
 - **FFmpeg's `eamad` against EA's decoder.** It is a reverse-engineered decoder; it decoded every frame here
   without error, but it has not been compared with the original's pictures. The comparison will also include
   EA's dithered 565, so "matches" needs a tolerance.
-- **Channel order and downmix.** L, R, C, LFE, Ls, Rs is inferred from levels, not documented. The original
-  mixes the six channels into six rings that our backend folds to stereo, so matching its output means using
-  the same fold.
+- **Channel order and downmix.** L, R, C, LFE, Ls, Rs is inferred from levels, not documented (and turned out
+  wrong, see "As built"). The original mixes the six channels into six rings that our backend folds to stereo, so
+  matching its output means using the same fold.
 - **The archive.** Movies have to be read from inside `misc.viv`, with the engine's loose-file-first rule if
   overrides are to keep working. Reading the BIG directory ourselves is simple; going through the game's
   `FILESYS` instead would keep one source of truth but means an asynchronous API.
@@ -359,6 +359,16 @@ Where it differs from the plan above:
   audio queue and the clock (samples played, with the wall clock once the audio has run out), and the action engine's
   player now uses it too. The 5.1 voice is folded to stereo with `DrivingAudio_StereoFold`, the gains the mixer rings
   get.
+- **The channels are in EA's order**, which `adpcm_ea_r1` keeps (its comment: front left, centre, front right, rear
+  left, rear right, sub), whatever layout it is opened with - `PlayMPC` gives it FFmpeg's default 5.1 (L, R, C, LFE, Ls,
+  Rs). The game's sound library places a six-channel sound's channels at front left, centre, front right, back left,
+  back right and centre (`SNDSYS_init`'s `ChannelAzimuth[5]`), and `PlayMPC` folds them by that (`kChannelSpeakers`).
+  Folded in FFmpeg's order the centre channel, which carries the voices, went to the right speaker only. Measured with
+  `fmvaudiocheck disc/driving/misc.viv` (`src/driving/devtools/FmvAudioCheck.cpp`): all 48 movies are 6 channels at 48
+  kHz, decoded as `s16p`. Channel 1 is the one that differs between languages: in `jc_intro`, `snow_intro` and
+  `island_intro2`, whose languages line up sample for sample (the Spanish `island_intro2` less so), its difference from
+  the English is 7100-13000 RMS against 200-3900 on the others (6400 at most). Folded, that difference comes out at L
+  2400-6300, R 7500-12800 in FFmpeg's order, and level (L 5600-9900, R 5700-9600) in EA's.
 - **The FFmpeg build** gained `eamad` and `adpcm_ea_r1`. `avcodec-62.dll` grew by 14 KB.
 
 Checked in the running game. `jc_intro` (mission 7) plays at 25 fps on the audio clock: 6 channels at 48 kHz, half a

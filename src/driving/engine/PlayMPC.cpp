@@ -187,6 +187,14 @@ static AVCodecContext *OpenDecoder(enum AVCodecID id, int channels, int sampleRa
     return ctx;
 }
 
+// The 5.1 speakers in DrivingAudio_StereoFold's order
+enum Speaker { FRONT_LEFT, FRONT_RIGHT, CENTRE, LFE, BACK_LEFT, BACK_RIGHT };
+
+// The speaker each of a movie's six channels plays on. The decoder keeps EA's channel order, which is not FFmpeg's
+// 5.1 order: the game's sound library places a six-channel sound's channels front left, centre, front right, back
+// left, back right and centre (SNDSYS_init's ChannelAzimuth[5]).
+static const Speaker kChannelSpeakers[6] = { FRONT_LEFT, CENTRE, FRONT_RIGHT, BACK_LEFT, BACK_RIGHT, CENTRE };
+
 // The audio header: "PT", the platform (7 here) and a zero, then byte tags, each with a length-prefixed big-endian
 // value. 0xFD opens the audio subheader, in which 0x82 is the channel count and 0x84 the sample rate; 0x8A closes it
 // and 0xFF ends the header. The movies' say 6 channels, 48000 Hz, revision2 10 (EA-XA R1).
@@ -268,8 +276,8 @@ static bool ReadChunk(void) {
             float fold[12], matrix[12];
             DrivingAudio_StereoFold(fold);
             for (int s = 0; s < 6; s++) {      // XAudio2 wants each output's row of input levels
-                matrix[0 * 6 + s] = fold[s * 2];
-                matrix[1 * 6 + s] = fold[s * 2 + 1];
+                matrix[0 * 6 + s] = fold[kChannelSpeakers[s] * 2];
+                matrix[1 * 6 + s] = fold[kChannelSpeakers[s] * 2 + 1];
             }
             bool fiveOne = channels == 6;
             if (M.audio == NULL ||

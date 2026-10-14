@@ -781,7 +781,14 @@ if(NOT EXISTS ${NF_FFMPEG_DIR}/include/libavformat/avformat.h)
                       "and tools/fmv/build_ffmpeg.sh rebuilds it")
 endif()
 file(GLOB NF_FFMPEG_FILES ${NF_FFMPEG_DIR}/bin/*.dll ${NF_FFMPEG_DIR}/FFmpeg-*.txt)
-foreach(target actioninject drivinginject)
+# The movies' sound as the driving engine's player decodes and folds it, without the game
+# (src/driving/devtools/FmvAudioCheck.cpp): "fmvaudiocheck disc/driving/misc.viv".
+add_executable(fmvaudiocheck EXCLUDE_FROM_ALL
+  src/driving/devtools/FmvAudioCheck.cpp
+  src/common/fmv/Ffmpeg.cpp
+)
+target_link_libraries(fmvaudiocheck PRIVATE user32)
+foreach(target actioninject drivinginject fmvaudiocheck)
   target_include_directories(${target} PRIVATE ${NF_FFMPEG_DIR}/include)
   add_custom_command(TARGET ${target} POST_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:${target}>)
