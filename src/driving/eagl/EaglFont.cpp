@@ -6,7 +6,7 @@
 #include "RenderMethod.h"
 #include "Tar.h"
 #include "View.h"
-#include "../data/XbeData.h"   // XBE_INITIAL
+#include "../gfx/D3D8Shaders.h"
 
 #include <bit>
 #include <stddef.h>
@@ -61,16 +61,45 @@ uint32_t VertexColour = 0xffffffff;                         // font +0x20
 // The font shaders' declaration and programs
 // XBE_GLOBAL(0x001ccfd8, 0x14)
 const uint32_t FontShaderDeclaration[5] = {
-    0x20000000, 0x40320000, 0x40400003, 0x40220009, 0xffffffff,
+    D3DVSD_STREAM(0),
+    D3DVSD_REG(D3DVSDE_POSITION, D3DVSDT_FLOAT3),
+    D3DVSD_REG(D3DVSDE_DIFFUSE, D3DVSDT_D3DCOLOR),
+    D3DVSD_REG(D3DVSDE_TEXCOORD0, D3DVSDT_FLOAT2),
+    D3DVSD_END(),
 };
 
-// XBE_GLOBAL(0x001ccfec, 0x34) raw
-uint32_t FontVertexShaderFunction[13];
-XBE_INITIAL(FontVertexShaderFunction);
+// Screen space: the position passes through. The game's copy ends at the last instruction's third word.
+// XBE_GLOBAL(0x001ccfec, 0x34)
+const std::array<uint32_t, 13> FontVertexShaderFunction = [] {
+    using namespace Vsh;
+    return Function<13>({
+        Mov(oPos, v(0)),
+        Mov(oD0, v(3)),
+        Mov(oT0, v(9)),
+    });
+}();
 
-// XBE_GLOBAL(0x001cd020, 0xf0) raw
-uint32_t FontPixelShaderDefinition[60];
-XBE_INITIAL(FontPixelShaderDefinition);
+// The diffuse colour times texture 0
+// XBE_GLOBAL(0x001cd020, 0xf0)
+const D3DPixelShaderDef FontPixelShaderDefinition = {
+    .alphaInputs = { PS_COMBINERINPUTS(PS_REGISTER_V0 | PS_CHANNEL_ALPHA | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                       PS_REGISTER_T0 | PS_CHANNEL_ALPHA | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                       PS_REGISTER_ZERO | PS_CHANNEL_ALPHA, PS_REGISTER_ZERO | PS_CHANNEL_ALPHA) },
+    .alphaOutputs = { PS_COMBINEROUTPUTS(PS_REGISTER_R0, PS_REGISTER_DISCARD, PS_REGISTER_DISCARD,
+                                         PS_COMBINEROUTPUT_IDENTITY) },
+    .rgbInputs = { PS_COMBINERINPUTS(PS_REGISTER_V0 | PS_CHANNEL_RGB | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                     PS_REGISTER_T0 | PS_CHANNEL_RGB | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                     PS_REGISTER_ZERO, PS_REGISTER_ZERO) },
+    .rgbOutputs = { PS_COMBINEROUTPUTS(PS_REGISTER_R0, PS_REGISTER_DISCARD, PS_REGISTER_DISCARD,
+                                       PS_COMBINEROUTPUT_IDENTITY) },
+    .combinerCount = PS_COMBINERCOUNT(1, PS_COMBINERCOUNT_MUX_MSB | PS_COMBINERCOUNT_UNIQUE_C0 |
+                                             PS_COMBINERCOUNT_UNIQUE_C1),
+    .textureModes = PS_TEXTUREMODES(PS_TEXTUREMODES_PROJECT2D, PS_TEXTUREMODES_NONE, PS_TEXTUREMODES_NONE,
+                                    PS_TEXTUREMODES_NONE),
+    .c0Mapping = PS_CONSTANTMAPPING(15, 15, 15, 15, 15, 15, 15, 15),
+    .c1Mapping = PS_CONSTANTMAPPING(15, 15, 15, 15, 15, 15, 15, 15),
+    .finalCombinerConstants = PS_FINALCOMBINERCONSTANTS(15, 15, PS_GLOBALFLAGS_TEXMODE_ADJUST),
+};
 
 enum { kVertexDiffuse = 3, kVertexTexCoord0 = 9, kVertexPosition = 0xffffffff };   // D3DVSDE_*
 enum { kDepthLessEqual = 0x203, kDepthAlways = 0x207, kAlphaGreaterEqual = 0x204 };   // OpenGL numbering
@@ -215,12 +244,12 @@ void FONTEAGL_createfont(FNTXFont *font) {
     if (Params.vertexShader == NULL) {
         EAGL::VertexShader *shader =
             (EAGL::VertexShader *)EaglMalloc(sizeof(EAGL::VertexShader), "EAGL::VertexShader new");
-        shader = shader != NULL ? shader->Construct(FontShaderDeclaration, FontVertexShaderFunction) : NULL;
+        shader = shader != NULL ? shader->Construct(FontShaderDeclaration, FontVertexShaderFunction.data()) : NULL;
         Params.vertexShader = shader;
     }
     if (Params.pixelShader == NULL) {
         EAGL::PixelShader *shader = (EAGL::PixelShader *)EaglMalloc(sizeof(EAGL::PixelShader), "EAGL::PixelShader new");
-        shader = shader != NULL ? shader->Construct(FontPixelShaderDefinition) : NULL;
+        shader = shader != NULL ? shader->Construct(&FontPixelShaderDefinition) : NULL;
         Params.pixelShader = shader;
     }
 }

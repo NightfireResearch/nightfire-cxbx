@@ -120,7 +120,7 @@ const unsigned kEntries[] = {
 #define ShadowWeaponManager (*(SWeaponManager **)OwnedGlobals_Ours(0x0023923c))
 #define ShadowGetRigidBody ((RigidBody *(__fastcall *)(void *, int, int))0x000b2700)
 #define ShadowBondButtons ((uint8_t *)OwnedGlobals_Ours(0x001dda2c))
-#define ShadowBondHandIK ((uint8_t *)0x001b5240)
+#define ShadowBondHandIK (reinterpret_cast<uint8_t *>(BondHandIK))   // ours, shared with the originals
 
 // ---- results
 

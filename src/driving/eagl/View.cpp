@@ -9,7 +9,6 @@
 #include "../platform/X87.h"
 #include "../../helpers.h"
 #include "../platform/CRuntime.h"
-#include "../data/XbeData.h"
 #include "Model.h"                   // ModelConstructor, ModelDestructor
 #include "RenderMethod.h"            // the render method and vertex buffer constructors
 #include "RuntimeAlloc.h"            // the property-built constructors
@@ -22,8 +21,13 @@
 // The render methods' constant vectors, registered by name: gReflectionConstants, gSkinningConstants,
 // gZeroOneTwoThree, gShadowColour, gEnvMapConstants
 // XBE_GLOBAL(0x001cdab0, 0x50)
-alignas(16) static float RenderMethodConstants[5][4];
-XBE_INITIAL(RenderMethodConstants);
+alignas(16) float RenderMethodConstants[5][4] = {
+    { 1.0f, -1.0f, 1.0f, 1.0f },
+    { 1.0f, 2.0f, 3.0f, 4.0f },
+    { 0.0f, 1.0f, 2.0f, 3.0f },
+    { 1.0f, 0.01f, 0.01f, 0.01f },
+    { 1.0f, 0.25f, 0.5f, 0.75f },
+};
 
 // The matrices render methods read by name (EaglGlobals.h)
 // XBE_GLOBAL(0x0023f950, 0x40)

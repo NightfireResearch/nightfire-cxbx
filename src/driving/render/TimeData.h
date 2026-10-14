@@ -10,7 +10,6 @@
 #include <stdint.h>
 
 #include "../../helpers.h"
-#include "../data/XbeData.h"
 
 extern float VideoModeRate;                                 // frames a second
 extern float TickSeconds;                                   // 1 / VideoModeRate
@@ -26,7 +25,7 @@ struct SimStepBlock {
 static_assert(sizeof(SimStepBlock) == 0x10, "GAME::SimStep is four floats");
 extern SimStepBlock SimStep;
 
-#define CausticControl ((float *)0x001c467c)                // its [3] is its [0] times the step count
+extern float CausticControl[4];                             // its [3] is its [0] times the step count
 
 class RTimeData {
 public:

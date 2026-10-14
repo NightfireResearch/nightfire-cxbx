@@ -70,6 +70,7 @@ extern uint8_t *GirlStream, *GirlData;
 extern float PaletteX, PaletteY, PaletteSpeedX, PaletteSpeedY, PaletteX2, PaletteY2, PaletteSpeedX2, PaletteSpeedY2;
 extern int32_t GirlFrameStart, GirlCursor, GirlTick, GirlFrames, GirlFrame;
 extern float GirlTime;
+extern const int8_t GirlPalette[128][128][3];   // GirlPalette.cpp
 
 // The quad's size on the screen (the static initialisers compute them: 2 x 128)
 extern int32_t GirlWidth;

@@ -13,11 +13,14 @@
 #include "../data/AttributeSystem.h"
 #include "../engine/UMemory.hpp"
 #include "../platform/RealPrint.h"      // MEM_fill
-#include "../data/XbeData.h"
 
 // XBE_GLOBAL(0x001c3db4, 0x2c)
-DamageLevels fgDamageLevels;
-XBE_INITIAL(fgDamageLevels);
+DamageLevels fgDamageLevels = {
+    { 0.75f, 0.5f, 0.25f, 0.001f },
+    { 0.05f, 0.15f, 0.35f, 0.65f, 0.85f },
+    0.75f,
+    0.75f,
+};
 
 // XBE_GLOBAL(0x001e7ac8, 0x4)
 uint32_t fgCarNameCount;

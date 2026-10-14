@@ -49,4 +49,14 @@ void decodexac(DecodeXacParams *params);
 
 }   // namespace SND
 
+// The EA-XA predictors and nibble values, one after the other (Decode.cpp)
+struct XaTableBlock {                // 0x420
+    float predictor1[4];             // +0x000
+    float predictor2[4];             // +0x010
+    float nibbles[16][16];           // +0x020 [shift][nibble]: the signed nibble << (12 - shift), 0 past shift 12
+};
+static_assert(sizeof(XaTableBlock) == 0x420, "the EA-XA tables are 0x420 bytes");
+
+extern const XaTableBlock XaTables;
+
 #endif // DRIVING_SOUND_SND_DECODE_H_

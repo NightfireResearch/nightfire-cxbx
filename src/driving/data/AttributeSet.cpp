@@ -13,7 +13,9 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 
-#define DefaultVector (*(AttributeVector *)0x001d4c00)   // (0,0,0,1); its address is handed out, so the game's
+// What LookupVector answers for a missing key, by address
+// XBE_GLOBAL(0x001d4c00, 0x10)
+alignas(16) const AttributeVector DefaultVector = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 // FUNC_AT(0x00058f00)
 AttributeSet* AttributeSet::Construct(const char *className, const char *name) {

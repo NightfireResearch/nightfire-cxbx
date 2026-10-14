@@ -21,6 +21,7 @@
 
 #include "SymbolTable.h"
 #include "UData.h"
+#include "CoordConvert.h"   // Coord4
 
 #include <stdint.h>
 
@@ -104,5 +105,6 @@ extern uint32_t *Colours;
 extern float ShadowAnim[3];
 extern uint32_t CarShadowColour[4];
 extern uint32_t CarShadowColourGuard;
+extern Coord4 SwayData, TestData, ReflStretch;   // the CARP data RegisterSymbols hands out
 
 #endif // DRIVING_DATA_RCARPFILE_H_

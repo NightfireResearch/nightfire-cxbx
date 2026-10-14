@@ -13,7 +13,6 @@
 #include "../platform/RealMath.h"
 #include "../render/RSceneObj.hpp"      // LookupFXHandle, LocateFX
 #include "../../helpers.h"
-#include "../data/XbeData.h"   // XBE_INITIAL
 
 // ---------------------------------------------------------------------------------------------------------------
 // AICharacterEnemy (0x0001c5e0, 0x0001ca50-0x0001cb9a), AICharacterEnemyRider's folded methods (0x0001d530,
@@ -22,7 +21,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 // ---- globals
-#define DefaultVector (*(const Coord4 *)0x001d4c00)                 // (0, 0, 0, 1); its address is handed out
 
 namespace {
 
@@ -61,8 +59,12 @@ const char kEnemyZoneMap[60] = {
 
 // The driver's hands' IK, the targets on the wheel set each step (initial values the original's)
 // XBE_GLOBAL(0x001b52c0, 0x60)
-ActIKSolveInfo DriverHandIK[2];
-XBE_INITIAL(DriverHandIK);
+ActIKSolveInfo DriverHandIK[2] = {
+    {{std::bit_cast<float>(0xbf239581u), std::bit_cast<float>(0x3d89374cu), std::bit_cast<float>(0x3ea4dd2fu), 1.0f},
+     {std::bit_cast<float>(0x3f5db22du), -0.5f, 0.0f, 1.0f}, 1.0f, false, {}},
+    {{std::bit_cast<float>(0xbe4fdf3bu), std::bit_cast<float>(0x3d48b439u), std::bit_cast<float>(0x3ea66666u), 1.0f},
+     {std::bit_cast<float>(0x3f5db22du), -0.5f, 0.0f, 1.0f}, 1.0f, false, {}},
+};
 
 // ---------------------------------------------------------------------------------------------------------------
 // Shared helpers

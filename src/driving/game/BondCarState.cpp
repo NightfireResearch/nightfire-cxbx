@@ -33,7 +33,6 @@
 #include "../render/RSceneObj.hpp"
 #include "../world/CollisionManager.h"      // fgCollisionMgr
 #include "../world/Targeting.h"             // WTargetable, TargetPicker
-#include "../data/XbeData.h"   // XBE_INITIAL
 
 // ---------------------------------------------------------------------------------------------------------------
 // PBondCar's set-up and state (0x00061a50-0x00062fe0), ported from the listing.
@@ -90,11 +89,15 @@ float BondCar_POST_BRAKE_ACCEL_SCALE = 0.2f;
 // XBE_GLOBAL(0x001c3720, 4)
 float BondCar_POST_BRAKE_ACCEL_MIN = 0.1f;
 // XBE_GLOBAL(0x001c3728, 0x40)
-float BondCar_friction[kCarSurfaces];
-XBE_INITIAL(BondCar_friction);
+float BondCar_friction[kCarSurfaces] = {
+    1.0f, 1.0f, 1.0f, 0.8f, 1.0f, 0.9f, 1.0f, 1.0f,
+    1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+};
 // XBE_GLOBAL(0x001c3768, 0x40)
-float BondCar_lateralLoss[kCarSurfaces];
-XBE_INITIAL(BondCar_lateralLoss);
+float BondCar_lateralLoss[kCarSurfaces] = {
+    1.0f, 1.0f, 1.0f, 0.75f, 1.0f, 0.9f, 1.0f, 1.0f,
+    0.6f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+};
 
 namespace {
 

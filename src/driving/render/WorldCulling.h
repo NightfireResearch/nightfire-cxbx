@@ -55,6 +55,6 @@ static_assert(offsetof(RRenderWorldCulling, eye) == 0x50 && offsetof(RRenderWorl
               offsetof(RRenderWorldCulling, centre) == 0x70 && offsetof(RRenderWorldCulling, edgeX) == 0x90 &&
               offsetof(RRenderWorldCulling, eyeY) == 0x9c, "RRenderWorldCulling layout");
 
-extern alignas(16) RRenderWorldCulling fgWorldCulling;
+alignas(16) extern RRenderWorldCulling fgWorldCulling;
 
 #endif // DRIVING_RENDER_WORLDCULLING_H_

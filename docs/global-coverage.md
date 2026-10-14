@@ -122,8 +122,8 @@ after `--driving --check` had failed on four globals no live code touched:
 - A power of two or one less (a flag, a mask: `test esi, 0x200000`, a `.rdata` word 0x200000) is not taken for an
   address, from an instruction that names it as an immediate only or from data.
 
-A global whose initial value is game data is defined without one and filled from the XBE at build time:
-`XBE_INITIAL(name)` beside it (data/XbeData.h, tools/extract_driving_data.py).
+A global whose initial value is game data carries it as a typed initialiser; `python tools/driving_data_check.py`
+compares every owned global's compiled bytes with the XBE's (docs/driving/standalone.md).
 
 ## Reading the report
 

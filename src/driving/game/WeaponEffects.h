@@ -135,7 +135,7 @@ public:
 
 extern EAGL::TAR *MuzzleFlashTextures[kMuzzleFlashTypes];
 extern Coord4 MuzzleFlashPositions[kMuzzleFlashVertices];          // turned by every Init
-extern EffectUV MuzzleFlashUVs[kMuzzleFlashVertices];
+extern const EffectUV MuzzleFlashUVs[kMuzzleFlashVertices];
 extern uint32_t MuzzleFlashColours[kMuzzleFlashVertices];
 extern UVolatileMaterial MuzzleFlashMaterials[kMuzzleFlashTypes];  // the static initialisers construct them
 extern UVolatileMaterial MuzzleFlashPOVMaterial;                   // ... and this

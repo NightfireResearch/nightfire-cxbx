@@ -10,6 +10,8 @@
 
 #include "../../helpers.h"
 
+struct BuiltInShapeFile;
+
 namespace EAGL {
 struct Device;
 struct RenderContext;
@@ -40,12 +42,12 @@ extern EAGL::RenderMethod *WaitingMethods;
 // ---- the matrices render methods read by name (gpViewMatrix ...), written by View.cpp and registered
 // by EAGL_SymbolInit (Loader.cpp)
 
-extern alignas(16) float ViewMatrix[16];
-extern alignas(16) float ModelViewMatrix[16];
-extern alignas(16) float ModelViewProjectionMatrix[16];
-extern alignas(16) float ProjectionMatrix[16];
-extern alignas(16) float ModelMatrix[16];
-extern alignas(16) float ViewProjectionMatrix[16];
+alignas(16) extern float ViewMatrix[16];
+alignas(16) extern float ModelViewMatrix[16];
+alignas(16) extern float ModelViewProjectionMatrix[16];
+alignas(16) extern float ProjectionMatrix[16];
+alignas(16) extern float ModelMatrix[16];
+alignas(16) extern float ViewProjectionMatrix[16];
 
 // ---- the loader's pools, which the static initialisers construct (Loader.cpp)
 
@@ -62,7 +64,7 @@ extern float LodBiasOverride;                               // 0 = each TAR's ow
 extern uint32_t FilterOverride;                             // 0xffffffff = each TAR's own
 extern uint8_t YuvEnable;                                   // the TAR code's YUV-enable shadow
 extern uint8_t ResourceRegistered;                          // a resource was registered: opcode 15 flushes the cache
-extern uint8_t BuiltInShapes[0xba0];                        // EAGL's own SHPX (a ShapeFile), linked into the executable
+extern BuiltInShapeFile BuiltInShapes;                      // EAGL's own SHPX, linked into the executable (Realgraph.h)
 
 // ---- fonts and animation (Realgraph.cpp, anim/AnimDeltaF.cpp)
 

@@ -250,7 +250,9 @@ records (0xc), reader records (0x10) and a ring of chunks aligned to 128 bytes (
 | `0x00244fc0` | `SoundMutex` | the CRITICAL_SECTION (`RtlInitializeCriticalSection`, kernel imports `0x00189cf0`/`0x00189c40`/`0x00189c3c`) |
 | `0x00245364..0x00245370` | | `SNDVOICEI_alloc` scratch and the handle generation |
 
-Constant tables: volume table `0x001a71e0` (128 shorts, hundredths of a dB: -10000, -4200, -3700 ... -7, 0),
+Constant tables, ours since the standalone data round (docs/driving/standalone.md); the ones read past their ends
+are kept as blocks in the original's order (`VolumeLowpassTables` with the 256 bytes before the volume table,
+`PanReverbTables`, `XaTables`, whose nibble values are computed at compile time): volume table `0x001a71e0` (128 shorts, hundredths of a dB: -10000, -4200, -3700 ... -7, 0),
 ring mix bins `0x001a72e0` (2, 1, 5, 4, 0, 3: ring i feeds FC, FR, BR, BL, FL, LFE), DirectSound low-pass
 coefficients `0x001a7350` (256 shorts, index = cutoff >> 5), the effects image `0x001a3e80` (0x3360 bytes: the
 size `SNDPLATFORM_init` passes; `docs/audio-inventory.md` derived 13,472 for the driving image from its container,
@@ -535,12 +537,14 @@ float).
 
 platform.sound calls 19 DirectSound entry points directly, all from module F; the seam
 (`src/driving/sound/dsndSeam.cpp`) replaces each of them (20 with `DSound_CRefCount_AddRef`), so nothing in this
-library reaches the real DirectSound:
+library reaches the real DirectSound. The DSP effects image is not downloaded at all: the seam's
+`DownloadEffectsImage` ignored it (no DSP stands behind the host's audio), so `SNDPLATFORM_init` leaves the call and
+the 13 KB image out of the port, a deviation listed in original-quirks.md 1.3:
 
 | entry point | callers | what |
 |---|---|---|
 | `DirectSoundCreate` `0x0017c259` | `SNDPLATFORM_init` | the device |
-| `IDirectSound_DownloadEffectsImage` `0x0017b59d` | `SNDPLATFORM_init` | the DSP image (0x3360 bytes) |
+| `IDirectSound_DownloadEffectsImage` `0x0017b59d` | `SNDPLATFORM_init` | the DSP image (0x3360 bytes); our port leaves the call out (below) |
 | `DirectSoundCreateBuffer` `0x0017c2a0` | `dsndCreateBufferAndMixBins` | the 180 pooled buffers |
 | `IDirectSound_CreateSoundBuffer` `0x0017c09f` | `dsndMixInit` | the six rings |
 | `IDirectSound_SetI3DL2Listener` `0x0017be1b` | `DirectSound_SetListenerRelated` | the hardware bus's reverb preset (the seam ignores it) |

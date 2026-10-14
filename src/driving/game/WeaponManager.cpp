@@ -45,7 +45,6 @@
 #include "../camera/CameraSpline.h"     // CrtAcosTimes
 #include "../../helpers.h"
 #include "../../common/xbeOverload.h"   // XbeVirtual
-#include "../data/XbeData.h"   // XBE_INITIAL
 
 // XBE_GLOBAL(0x001dda2c, 0x1)
 uint8_t BondSelectPressed;
@@ -103,18 +102,32 @@ int ActionId(const ActionRef &ref) {
 
 // Each weapon's animation systems on the player car, in firing order, ended by 0
 // XBE_GLOBAL(0x001c9050, 0x400)
-int32_t WeaponSystems[kWeaponCount][kMaxWeaponSystems];
-XBE_INITIAL(WeaponSystems);
+const int32_t WeaponSystems[kWeaponCount][kMaxWeaponSystems] = {
+    { 9 }, { 5, 6 }, { 7, 8, 52, 53 }, { 13 }, { 25 }, { 25 }, { 25 }, { 65 },
+    { 0 }, { 23 }, { 12 }, { 14 }, { 0 }, { 22 }, { 36 }, { 54 },
+    { 72 }, { 0 }, { 0 }, { 38 }, { 0 }, { 61, 62 }, { 63, 64 }, { 33 },
+    { 34 }, { 35 }, { 37 }, { 46 }, { 45 }, { 70 }, { 71 }, { 47 },
+};
 
 // The weapons in the order the selection steps through them
 // XBE_GLOBAL(0x001c9450, 0x80)
-int32_t WeaponSelectionOrder[kWeaponCount];
-XBE_INITIAL(WeaponSelectionOrder);
+const int32_t WeaponSelectionOrder[kWeaponCount] = {
+    kWeaponGun, kWeaponRocket, kWeaponMissile, kWeaponQBooster, kWeaponQPulse, kWeaponTimeMine, kWeaponProxMine,
+    kWeaponRemMine, kWeaponFloatingMine, kWeaponDetonator, kWeaponSpikes, kWeaponQSlick, kWeaponQSmoke,
+    kWeaponQWorm, kWeaponLaser, kWeaponRadar, kWeaponCannon, kWeaponQVision, kWeapon2Wheels, kWeaponGrenade,
+    kWeaponQCharge, kWeaponTorpedo, kWeaponRemoteTorpedo, kWeaponP2K, kWeaponSnowmobileGun,
+    kWeaponSnowmobileRocket, kWeaponSniperRifle, kWeaponUltralightGun, kWeaponUltralightRocket, kWeaponFodGun,
+    kWeaponFodRocket, kWeaponCh6RemoteRocket,
+};
 
 // Each weapon's time between shots, in seconds
 // XBE_GLOBAL(0x001c8fd0, 0x80)
-float WeaponRefireSeconds[kWeaponCount];
-XBE_INITIAL(WeaponRefireSeconds);
+const float WeaponRefireSeconds[kWeaponCount] = {
+    1.0f / 6.0f, 0.25f, 2.0f / 3.0f, 4.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+    1.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 1.0f, 1.0f,
+    1.0f, 2.0f, 2.0f, 1.0f, 1.0f, 3.0f, 0.25f, 1.0f / 12.0f,
+    1.0f / 12.0f, 1.0f / 12.0f, 1.0f / 12.0f, 0.05f, 1.0f, 1.0f / 12.0f, 5.0f, 1.0f / 12.0f,
+};
 static_assert(std::bit_cast<uint32_t>(1.0f / 6.0f) == 0x3e2aaaab && std::bit_cast<uint32_t>(2.0f / 3.0f) == 0x3f2aaaab &&
               std::bit_cast<uint32_t>(1.0f / 12.0f) == 0x3daaaaab && std::bit_cast<uint32_t>(0.05f) == 0x3d4ccccd,
               "the refire times");

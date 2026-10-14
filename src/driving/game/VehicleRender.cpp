@@ -39,7 +39,6 @@
 #include "../render/TimeData.h"             // GameTick
 #include "../world/World.h"                 // WorldArticle
 #include "../platform/CRuntime.h"
-#include "../data/XbeData.h"   // XBE_INITIAL
 
 // XBE_GLOBAL(0x001f2a50, 0x200)
 alignas(16) VehicleSharedBuffers VehicleBuffers;
@@ -130,8 +129,15 @@ const char *const HubBoneNames[RVehicle::kWheels] = {
     "leftfronthub", "rightfronthub", "leftrearhub", "rightrearhub",
 };
 // XBE_GLOBAL(0x001c4730, 0x70)
-NeedleRange NeedleRanges[7];
-XBE_INITIAL(NeedleRanges);
+const NeedleRange NeedleRanges[7] = {
+    { 0.0f, 1.0f, 0.0f, 0.0f },
+    { 0.0f, 330.0f, 120.0f, -225.0f },          // kNeedleSpeed
+    { 0.0f, 7000.0f, 121.0f, -210.0f },         // kNeedleRevs
+    { 0.0f, 1.0f, 0.0f, 0.0f },
+    { 0.0f, 1.0f, 0.0f, 0.0f },
+    { 0.0f, 12.0f, 0.0f, -360.0f },             // kNeedleHours
+    { 0.0f, 60.0f, 0.0f, -360.0f },             // kNeedleMinutes
+};
 
 }  // namespace
 

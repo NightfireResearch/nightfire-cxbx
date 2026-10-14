@@ -29,6 +29,7 @@
 #include "../render/RSceneObj.hpp"
 #include "../render/Renderer.h"           // fgRenderer
 #include "../../helpers.h"
+#include "../data/AttributeSet.h"   // DefaultVector
 
 // ---------------------------------------------------------------------------------------------------------------
 // GFXGallery (0x000d3840, 0x000d38f0-0x000d57a0), ported from the listing.
@@ -40,7 +41,7 @@
 
 // ---- globals
 
-#define DefaultVector (*(const Coord4 *)0x001d4c00)     // (0,0,0,1); AttributeSet's, handed out by address
+#define DefaultVector (reinterpret_cast<const Coord4 &>(::DefaultVector))   // AttributeSet's (0, 0, 0, 1)
 
 // XBE_GLOBAL(0x0023f320, 0x4)
 GFXGallery *TheEffectsGallery;

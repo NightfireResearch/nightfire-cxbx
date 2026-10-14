@@ -44,7 +44,7 @@ struct FeatureManagerData {
     int32_t unknown44;                  // +0x44 2
     uint8_t unknown48[4];               // +0x48 1, 1, 1, 1
     float unknown4C;                    // +0x4c 400
-    int32_t unknown50;                  // +0x50 copied from 0x001c4820
+    float unknown50;                    // +0x50 FeatureDefault50 (1.0f); not read
     float unknown54;                    // +0x54 400
     int32_t unknown58;                  // +0x58 8
     int32_t unknown5C;                  // +0x5c 1
@@ -242,7 +242,7 @@ void ReflMapVertex(float height, float turns, bool flip, Coord4 *position, Coord
 extern RReflection *TheReflection;
 
 extern uint32_t CpuType;                    // CPU_detect's
-extern int32_t FeatureDefault50;            // copied to FeatureManagerData::unknown50
+extern float FeatureDefault50;              // copied to FeatureManagerData::unknown50
 extern float WarpageX;
 extern float WarpageY;
 extern float ReflNearZ;

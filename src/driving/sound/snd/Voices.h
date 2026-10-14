@@ -217,4 +217,19 @@ int SNDI_validrendermode(int *index, SND::PatchHeader *header);              // 
 int SND_attrsetdef(SND::Attributes *attributes);                             // 0x00142970
 int SNDI_pantoazimuth(int pan);                                              // 0x00142e90
 
+// The pan -> azimuth table and the reverb's description tables, one block in the original's data. SNDI_pantoazimuth
+// reads past the pan table for a pan over 127, a node type past the ten reads on past NodeSizes and EntrySizes, and
+// the route and mix-row tables are indexed from a base before their first row (Reverb.cpp): as the original's, so the
+// tables stay together in its order.
+struct PanReverbTableBlock {         // 0x758
+    uint16_t panAzimuth[128];        // +0x000 a quarter turn left, 0xc000, through 0 to a quarter turn right
+    uint32_t nodeSizes[10];          // +0x100 [type] bytes per node
+    uint8_t routes[36][6];           // +0x128 [channels + configuration x 6 - 7][route - 1]: the routing slot
+    int8_t mixRows[216][6];          // +0x200 per configuration, channel and bus: the other speakers fed, or -1
+    uint32_t entrySizes[10];         // +0x710 [type] bytes per node entry
+    uint32_t afterEntrySizes[8];     // +0x738 the reverb taps' guard (1e-30f), then zeros
+};
+static_assert(sizeof(PanReverbTableBlock) == 0x758, "the pan and reverb tables are 0x758 bytes");
+extern const PanReverbTableBlock PanReverbTables;
+
 #endif // DRIVING_SOUND_SND_VOICES_H_

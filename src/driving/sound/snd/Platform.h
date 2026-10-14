@@ -91,7 +91,6 @@ extern SndFrameCallback volatile PostFrameCallback;      // SNDDRVPostFrameCb
 
 // The driver's own globals
 extern uint32_t NextDeadline;                            // the SND thread's next deadline (ms)
-extern uint8_t EffectsImage[0x3360];                     // the DSP effects image
 extern uint32_t SetFxFunc;                               // p_setfx_func, written, never read
 extern SND::BufferNode *BufferNodes;                     // SND_BUFFER_LIST: [180]
 extern int32_t PoolSizes[2];                             // [pool]: 152, 28
@@ -102,7 +101,17 @@ extern int16_t *RingMemory[6];                           // their memory blocks
 extern int32_t RingFrames;                               // 2400
 extern int32_t MixLead;                                  // 960
 extern int32_t MixPosition;                              // the next frame to mix
-extern DsI3dl2Listener ListenerPresets[23];        // the I3DL2 listener presets
+extern const DsI3dl2Listener ListenerPresets[23];  // the I3DL2 listener presets
+// The volume and low-pass tables, with what lies between and before them in the original's .rdata (Platform.cpp)
+struct VolumeLowpassTableBlock {     // 0x470
+    int16_t beforeVolume[128];       // +0x000 the end of the DSP effects image
+    int16_t volume[128];             // +0x100 hundredths of a dB, -10000 at 0 up to 0 at 127
+    uint32_t between[28];            // +0x200
+    uint16_t lowpass[256];           // +0x270 the coefficients, by cutoff >> 5
+};
+static_assert(sizeof(VolumeLowpassTableBlock) == 0x470, "the volume and low-pass tables are 0x470 bytes");
+
+extern const VolumeLowpassTableBlock VolumeLowpassTables;
 extern const uint8_t DefaultReverb[0x18];                // the mixer's default reverb description
 
 // The driver's setters and queries (voice = logical voice index)

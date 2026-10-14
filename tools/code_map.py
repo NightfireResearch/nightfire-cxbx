@@ -11,7 +11,7 @@ From every function in tools/functions_driving.json, and every address the injec
 functions Ghidra does not have), the walk follows the function's own control flow, as tools/abi_facts.py does:
 straight on, both ways at a conditional jump, into a jump table's targets, past a call, and it stops at a RET, a jump
 out of the function (a tail call) or an int3. Each instruction reached is a range; ranges are merged.
-tools/extract_driving_data.py turns the file into the table the injection DLL is built with. Code no entry reaches
+tools/preprocess.py turns the file into the table the injection DLL is built with. Code no entry reaches
 (an original Ghidra never made a function, that nothing patches) is not in it, so not trapped.
 """
 import json

@@ -302,7 +302,7 @@ struct CameraConstants {
 };
 static_assert(sizeof(CameraConstants) == 0x6c, "the camera constants are 0x6c bytes");
 
-extern alignas(16) CameraTables fgCameraTables;
+alignas(16) extern CameraTables fgCameraTables;
 extern CameraModeIndices fgCameraModeIndices;
 extern CameraConstants fgCameraConstants;
 extern int32_t kExplosionShakePeriod;       // [Global]'s

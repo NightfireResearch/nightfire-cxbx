@@ -11,7 +11,7 @@
 #include "../platform/RealPrint.h"
 #include "../platform/X87.h"
 #include "../../helpers.h"
-#include "../data/XbeData.h"   // XBE_INITIAL
+#include "../gfx/D3D8Shaders.h"
 
 #include <emmintrin.h>
 #include <stddef.h>
@@ -117,29 +117,96 @@ const OpcodeHandler OpcodeTable[37] = {
 // DrawGouraud's and DrawTextured's shaders
 // XBE_GLOBAL(0x001ce218, 0x10)
 const uint32_t GouraudVSDeclaration[4] = {
-    0x20000000, 0x40320000, 0x40400003, 0xffffffff,
+    D3DVSD_STREAM(0),
+    D3DVSD_REG(D3DVSDE_POSITION, D3DVSDT_FLOAT3),
+    D3DVSD_REG(D3DVSDE_DIFFUSE, D3DVSDT_D3DCOLOR),
+    D3DVSD_END(),
 };
 
-// XBE_GLOBAL(0x001ce228, 0x88) raw
-uint32_t GouraudVSFunction[34];
-XBE_INITIAL(GouraudVSFunction);
+// The position by the matrix in c0..c3, the fog from its w, then the XDK's viewport transform (c-38, c-37)
+// XBE_GLOBAL(0x001ce228, 0x88)
+const std::array<uint32_t, 34> GouraudVSFunction = [] {
+    using namespace Vsh;
+    return Function<34>({
+        Dp4(oPos.x(), v(0), c(0)),
+        Dp4(oPos.y(), v(0), c(1)),
+        Dp4(oPos.z(), v(0), c(2)),
+        Dp4(oPos.w(), v(0), c(3)),
+        Mov(oD0, v(3)),
+        Mov(oFog.x(), r(12).w()),
+        Mul(oPos.xyz(), r(12), c(-38)) + Rcc(r1.x(), r(12).w()),
+        Mad(oPos.xyz(), r(12), r(1).x(), c(-37)),
+    });
+}();
 
-// XBE_GLOBAL(0x001ce2b0, 0xf0) raw
-uint32_t GouraudPSDefinition[60];
-XBE_INITIAL(GouraudPSDefinition);
-
-// XBE_GLOBAL(0x001ce078, 0x18)
-const uint32_t TexturedVSDeclaration[6] = {
-    0x20000000, 0x40320000, 0x40400003, 0x40220009, 0xffffffff, 0x00000000,
+// The diffuse colour
+// XBE_GLOBAL(0x001ce2b0, 0xf0)
+const D3DPixelShaderDef GouraudPSDefinition = {
+    .alphaInputs = { PS_COMBINERINPUTS(PS_REGISTER_V0 | PS_CHANNEL_ALPHA | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                       PS_REGISTER_ONE | PS_CHANNEL_ALPHA,
+                                       PS_REGISTER_ZERO | PS_CHANNEL_ALPHA, PS_REGISTER_ZERO | PS_CHANNEL_ALPHA) },
+    .alphaOutputs = { PS_COMBINEROUTPUTS(PS_REGISTER_R0, PS_REGISTER_DISCARD, PS_REGISTER_DISCARD,
+                                         PS_COMBINEROUTPUT_IDENTITY) },
+    .rgbInputs = { PS_COMBINERINPUTS(PS_REGISTER_V0 | PS_CHANNEL_RGB | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                     PS_REGISTER_ONE | PS_CHANNEL_RGB,
+                                     PS_REGISTER_ZERO, PS_REGISTER_ZERO) },
+    .rgbOutputs = { PS_COMBINEROUTPUTS(PS_REGISTER_R0, PS_REGISTER_DISCARD, PS_REGISTER_DISCARD,
+                                       PS_COMBINEROUTPUT_IDENTITY) },
+    .combinerCount = PS_COMBINERCOUNT(1, PS_COMBINERCOUNT_MUX_MSB | PS_COMBINERCOUNT_UNIQUE_C0 |
+                                             PS_COMBINERCOUNT_UNIQUE_C1),
+    .textureModes = PS_TEXTUREMODES(PS_TEXTUREMODES_NONE, PS_TEXTUREMODES_NONE, PS_TEXTUREMODES_NONE,
+                                    PS_TEXTUREMODES_NONE),
+    .c0Mapping = PS_CONSTANTMAPPING(15, 15, 15, 15, 15, 15, 15, 15),
+    .c1Mapping = PS_CONSTANTMAPPING(15, 15, 15, 15, 15, 15, 15, 15),
+    .finalCombinerConstants = PS_FINALCOMBINERCONSTANTS(15, 15, PS_GLOBALFLAGS_TEXMODE_ADJUST),
 };
 
-// XBE_GLOBAL(0x001ce090, 0x98) raw
-uint32_t TexturedVSFunction[38];
-XBE_INITIAL(TexturedVSFunction);
+// XBE_GLOBAL(0x001ce078, 0x14)
+const uint32_t TexturedVSDeclaration[5] = {
+    D3DVSD_STREAM(0),
+    D3DVSD_REG(D3DVSDE_POSITION, D3DVSDT_FLOAT3),
+    D3DVSD_REG(D3DVSDE_DIFFUSE, D3DVSDT_D3DCOLOR),
+    D3DVSD_REG(D3DVSDE_TEXCOORD0, D3DVSDT_FLOAT2),
+    D3DVSD_END(),
+};
 
-// XBE_GLOBAL(0x001ce128, 0xf0) raw
-uint32_t TexturedPSDefinition[60];
-XBE_INITIAL(TexturedPSDefinition);
+// XBE_GLOBAL(0x001ce090, 0x98)
+const std::array<uint32_t, 38> TexturedVSFunction = [] {
+    using namespace Vsh;
+    return Function<38>({
+        Dp4(oPos.x(), v(0), c(0)),
+        Dp4(oPos.y(), v(0), c(1)),
+        Dp4(oPos.z(), v(0), c(2)),
+        Dp4(oPos.w(), v(0), c(3)),
+        Mov(oT0, v(9)),
+        Mov(oD0, v(3)),
+        Mov(oFog.x(), r(12).w()),
+        Mul(oPos.xyz(), r(12), c(-38)) + Rcc(r1.x(), r(12).w()),
+        Mad(oPos.xyz(), r(12), r(1).x(), c(-37)),
+    });
+}();
+
+// The diffuse colour times texture 0
+// XBE_GLOBAL(0x001ce128, 0xf0)
+const D3DPixelShaderDef TexturedPSDefinition = {
+    .alphaInputs = { PS_COMBINERINPUTS(PS_REGISTER_V0 | PS_CHANNEL_ALPHA | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                       PS_REGISTER_T0 | PS_CHANNEL_ALPHA | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                       PS_REGISTER_ZERO | PS_CHANNEL_ALPHA, PS_REGISTER_ZERO | PS_CHANNEL_ALPHA) },
+    .alphaOutputs = { PS_COMBINEROUTPUTS(PS_REGISTER_R0, PS_REGISTER_DISCARD, PS_REGISTER_DISCARD,
+                                         PS_COMBINEROUTPUT_IDENTITY) },
+    .rgbInputs = { PS_COMBINERINPUTS(PS_REGISTER_V0 | PS_CHANNEL_RGB | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                     PS_REGISTER_T0 | PS_CHANNEL_RGB | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                     PS_REGISTER_ZERO, PS_REGISTER_ZERO) },
+    .rgbOutputs = { PS_COMBINEROUTPUTS(PS_REGISTER_R0, PS_REGISTER_DISCARD, PS_REGISTER_DISCARD,
+                                       PS_COMBINEROUTPUT_IDENTITY) },
+    .combinerCount = PS_COMBINERCOUNT(1, PS_COMBINERCOUNT_MUX_MSB | PS_COMBINERCOUNT_UNIQUE_C0 |
+                                             PS_COMBINERCOUNT_UNIQUE_C1),
+    .textureModes = PS_TEXTUREMODES(PS_TEXTUREMODES_PROJECT2D, PS_TEXTUREMODES_NONE, PS_TEXTUREMODES_NONE,
+                                    PS_TEXTUREMODES_NONE),
+    .c0Mapping = PS_CONSTANTMAPPING(15, 15, 15, 15, 15, 15, 15, 15),
+    .c1Mapping = PS_CONSTANTMAPPING(15, 15, 15, 15, 15, 15, 15, 15),
+    .finalCombinerConstants = PS_FINALCOMBINERCONSTANTS(15, 15, PS_GLOBALFLAGS_TEXMODE_ADJUST),
+};
 
 // An opcode-11 packet's slots while it has no buffer: all bits set
 template <class T> T *Unset() {
@@ -812,10 +879,10 @@ EAGL::DrawGouraud* EAGL::DrawGouraud::Construct() {
     primitiveType = 1;
     state.Construct();
     VertexShader *vs = static_cast<VertexShader *>(EaglMalloc(4, "EAGL::VertexShader new"));
-    vs = vs != NULL ? vs->Construct(GouraudVSDeclaration, GouraudVSFunction) : NULL;
+    vs = vs != NULL ? vs->Construct(GouraudVSDeclaration, GouraudVSFunction.data()) : NULL;
     vertexShader = vs;
     PixelShader *ps = static_cast<PixelShader *>(EaglMalloc(4, "EAGL::PixelShader new"));
-    ps = ps != NULL ? ps->Construct(GouraudPSDefinition) : NULL;
+    ps = ps != NULL ? ps->Construct(&GouraudPSDefinition) : NULL;
     pixelShader = ps;
     return this;
 }
@@ -854,10 +921,10 @@ bool EAGL::DrawTextured::Init() {
     state.SetAlphaBlendMode(0);
     state.SetCullEnable(false);
     VertexShader *vs = static_cast<VertexShader *>(EaglMalloc(4, "EAGL::VertexShader new"));
-    vs = vs != NULL ? vs->Construct(TexturedVSDeclaration, TexturedVSFunction) : NULL;
+    vs = vs != NULL ? vs->Construct(TexturedVSDeclaration, TexturedVSFunction.data()) : NULL;
     vertexShader = vs;
     PixelShader *ps = static_cast<PixelShader *>(EaglMalloc(4, "EAGL::PixelShader new"));
-    ps = ps != NULL ? ps->Construct(TexturedPSDefinition) : NULL;
+    ps = ps != NULL ? ps->Construct(&TexturedPSDefinition) : NULL;
     pixelShader = ps;
     tar = NULL;
     begun = 0;

@@ -8,7 +8,6 @@
 #include "../DirectSound.h"
 #include "../../platform/RealPrint.h"
 #include "../../platform/RealSystem.h"
-#include "../../data/XbeData.h"
 #include "../../platform/XboxStartup.h"
 #include "../../platform/XboxXapi.h"
 #include "SndUntested.h"
@@ -112,25 +111,89 @@ using SND::Voice;
 #define MiddleVoices (SndOptions.set.middleVoices)       // 0x00244cf9 mixVoiceOffset1: 0
 #define MixerVoices (SndOptions.set.mixerVoices)         // 0x00244cf6: 32
 
-// ---- tables in the original's .rdata, read in place
-// The volume table: int16 [128], hundredths of a dB (-10000 at 0 up to 0 at 127). Read where it is: the callers'
-// indices are not clamped (a negative programmed volume makes a negative one), as in the original.
-#define VolumeTable ((const int16_t *)0x001a71e0)
-// The low-pass coefficients: uint16 [256], indexed by cutoff >> 5 (a negative cutoff reads before it, as the
-// original's does)
-#define LowpassTable ((const uint16_t *)0x001a7350)
-
 }  // namespace
 
-// The DSP effects image, handed over by address
-// XBE_GLOBAL(0x001a3e80, 0x3360) raw
-uint8_t EffectsImage[0x3360];
-XBE_INITIAL(EffectsImage);
+// The volume and low-pass tables (Platform.h): the callers' volume indices are not clamped (a negative programmed
+// volume makes a negative one) and a negative cutoff reads before the low-pass table, as in the original. A cutoff
+// below -9984 would read before the block.
+// XBE_GLOBAL(0x001a70e0, 0x470) readonly
+const VolumeLowpassTableBlock VolumeLowpassTables = {
+    {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -12288, 5, 2072, 0, 4844, 0,
+        6920, 0, 2216, 0, 0, 0, 0, 0, -16384, 0, -13216, 5, -11656, 10337, 17302, -14301,
+    },
+    {
+        -10000, -4200, -3700, -3300, -3000, -2800, -2615, -2458, -2353, -2260, -2175, -2098, -2027, -1962, -1901, -1843,
+        -1790, -1739, -1691, -1646, -1602, -1561, -1522, -1484, -1448, -1413, -1380, -1347, -1316, -1286, -1257, -1229,
+        -1202, -1175, -1150, -1125, -1100, -1077, -1054, -1031, -1009, -988, -967, -947, -927, -907, -888, -870,
+        -851, -834, -816, -799, -782, -765, -749, -733, -717, -702, -687, -672, -657, -643, -629, -615,
+        -601, -588, -574, -561, -548, -535, -523, -510, -498, -486, -474, -462, -451, -439, -428, -417,
+        -406, -395, -384, -374, -363, -353, -343, -333, -323, -313, -303, -293, -284, -274, -265, -255,
+        -246, -237, -228, -219, -210, -202, -193, -185, -176, -168, -159, -151, -143, -135, -127, -119,
+        -111, -103, -95, -88, -80, -73, -65, -58, -50, -43, -36, -29, -22, -14, -7, 0,
+    },
+    {
+        0x00000002, 0x00000001, 0x00000005, 0x00000004, 0x00000000, 0x00000003, 0x0000000b, 0x31020714,
+        0x39800000, 0x34810306, 0x3d70f0f1, 0x3df0f0f1, 0x3e34b4b5, 0x3e70f0f1, 0x3e969697, 0x3eb4b4b5,
+        0x3ed2d2d3, 0x3ef0f0f1, 0x3f078788, 0x3f169697, 0x3f25a5a6, 0x3f34b4b5, 0x3f43c3c4, 0x3f52d2d3,
+        0x3f61e1e2, 0x3f70f0f1, 0x41300000, 0x00000000,
+    },
+    {
+        32768, 33181, 37277, 39673, 41373, 42692, 43769, 44680, 45469, 46165, 46787, 47350, 47865, 48337, 48775, 49183,
+        49564, 49922, 50260, 50579, 50882, 51170, 51445, 51707, 51959, 52200, 52431, 52654, 52869, 53076, 53276, 53469,
+        53657, 53838, 54014, 54185, 54352, 54513, 54670, 54824, 54973, 55118, 55260, 55399, 55535, 55667, 55797, 55923,
+        56047, 56169, 56288, 56404, 56518, 56631, 56741, 56849, 56955, 57059, 57161, 57261, 57360, 57457, 57553, 57647,
+        57739, 57831, 57920, 58008, 58095, 58181, 58266, 58349, 58431, 58512, 58591, 58670, 58748, 58824, 58900, 58974,
+        59048, 59121, 59193, 59264, 59334, 59403, 59471, 59539, 59606, 59672, 59737, 59801, 59865, 59928, 59991, 60052,
+        60113, 60174, 60233, 60293, 60351, 60409, 60466, 60523, 60579, 60635, 60690, 60745, 60799, 60852, 60905, 60958,
+        61010, 61061, 61112, 61163, 61213, 61263, 61312, 61361, 61409, 61457, 61505, 61552, 61599, 61645, 61691, 61737,
+        61782, 61827, 61872, 61916, 61960, 62003, 62046, 62089, 62131, 62173, 62215, 62257, 62298, 62339, 62379, 62419,
+        62459, 62499, 62538, 62577, 62616, 62655, 62693, 62731, 62769, 62806, 62843, 62880, 62917, 62953, 62989, 63025,
+        63061, 63096, 63131, 63166, 63201, 63236, 63270, 63304, 63338, 63371, 63405, 63438, 63471, 63504, 63536, 63568,
+        63601, 63633, 63664, 63696, 63727, 63758, 63789, 63820, 63851, 63881, 63911, 63941, 63971, 64001, 64031, 64060,
+        64089, 64118, 64147, 64176, 64204, 64232, 64261, 64289, 64317, 64344, 64372, 64399, 64427, 64454, 64481, 64507,
+        64534, 64561, 64587, 64613, 64639, 64665, 64691, 64717, 64742, 64768, 64793, 64818, 64843, 64868, 64893, 64917,
+        64942, 64966, 64990, 65014, 65038, 65062, 65086, 65110, 65133, 65156, 65180, 65203, 65226, 65249, 65272, 65294,
+        65317, 65339, 65362, 65384, 65406, 65428, 65450, 65472, 65493, 65515, 0, 0, 0, 0, 0, 0,
+    },
+};
+
+#define VolumeTable (VolumeLowpassTables.volume)
+#define LowpassTable (VolumeLowpassTables.lowpass)
 
 // The I3DL2 listener presets, in DirectSound's order (I3dl2Preset below)
 // XBE_GLOBAL(0x001d98d8, 0x450)
-DsI3dl2Listener ListenerPresets[23];
-XBE_INITIAL(ListenerPresets);
+const DsI3dl2Listener ListenerPresets[23] = {
+    { -1000, -100, 0.0f, 1.49f, 0.83f, -2602, 0.007f, 200, 0.011f, 100.0f, 100.0f, 5000.0f },   // Generic
+    { -1000, -6000, 0.0f, 0.17f, 0.1f, -1204, 0.001f, 207, 0.002f, 100.0f, 100.0f, 5000.0f },   // PaddedCell
+    { -1000, -454, 0.0f, 0.4f, 0.83f, -1646, 0.002f, 53, 0.003f, 100.0f, 100.0f, 5000.0f },   // Room
+    { -1000, -1200, 0.0f, 1.49f, 0.54f, -370, 0.007f, 1030, 0.011f, 100.0f, 60.0f, 5000.0f },   // Bathroom
+    { -1000, -6000, 0.0f, 0.5f, 0.1f, -1376, 0.003f, -1104, 0.004f, 100.0f, 100.0f, 5000.0f },   // LivingRoom
+    { -1000, -300, 0.0f, 2.31f, 0.64f, -711, 0.012f, 83, 0.017f, 100.0f, 100.0f, 5000.0f },   // StoneRoom
+    { -1000, -476, 0.0f, 4.32f, 0.59f, -789, 0.02f, -289, 0.03f, 100.0f, 100.0f, 5000.0f },   // Auditorium
+    { -1000, -500, 0.0f, 3.92f, 0.7f, -1230, 0.02f, -2, 0.029f, 100.0f, 100.0f, 5000.0f },   // ConcertHall
+    { -1000, 0, 0.0f, 2.91f, 1.3f, -602, 0.015f, -302, 0.022f, 100.0f, 100.0f, 5000.0f },   // Cave
+    { -1000, -698, 0.0f, 7.24f, 0.33f, -1166, 0.02f, 16, 0.03f, 100.0f, 100.0f, 5000.0f },   // Arena
+    { -1000, -1000, 0.0f, 10.05f, 0.23f, -602, 0.02f, 198, 0.03f, 100.0f, 100.0f, 5000.0f },   // Hangar
+    { -1000, -4000, 0.0f, 0.3f, 0.1f, -1831, 0.002f, -1630, 0.03f, 100.0f, 100.0f, 5000.0f },   // CarpetedHallway
+    { -1000, -300, 0.0f, 1.49f, 0.59f, -1219, 0.007f, 441, 0.011f, 100.0f, 100.0f, 5000.0f },   // Hallway
+    { -1000, -237, 0.0f, 2.7f, 0.79f, -1214, 0.013f, 395, 0.02f, 100.0f, 100.0f, 5000.0f },   // StoneCorridor
+    { -1000, -270, 0.0f, 1.49f, 0.86f, -1204, 0.007f, -4, 0.011f, 100.0f, 100.0f, 5000.0f },   // Alley
+    { -1000, -3300, 0.0f, 1.49f, 0.54f, -2560, 0.162f, -613, 0.088f, 79.0f, 100.0f, 5000.0f },   // Forest
+    { -1000, -800, 0.0f, 1.49f, 0.67f, -2273, 0.007f, -2217, 0.011f, 50.0f, 100.0f, 5000.0f },   // City
+    { -1000, -2500, 0.0f, 1.49f, 0.21f, -2780, 0.3f, -2014, 0.1f, 27.0f, 100.0f, 5000.0f },   // Mountains
+    { -1000, -1000, 0.0f, 1.49f, 0.83f, -10000, 0.061f, 500, 0.025f, 100.0f, 100.0f, 5000.0f },   // Quarry
+    { -1000, -2000, 0.0f, 1.49f, 0.5f, -2466, 0.179f, -2514, 0.1f, 21.0f, 100.0f, 5000.0f },   // Plain
+    { -1000, 0, 0.0f, 1.65f, 1.5f, -1363, 0.008f, -1153, 0.012f, 100.0f, 100.0f, 5000.0f },   // ParkingLot
+    { -1000, -1000, 0.0f, 2.81f, 0.14f, 429, 0.014f, 648, 0.021f, 80.0f, 60.0f, 5000.0f },   // SewerPipe
+    { -1000, -4000, 0.0f, 1.49f, 0.1f, -449, 0.007f, 1700, 0.011f, 100.0f, 100.0f, 5000.0f },   // Underwater
+};
 
 // The mixer's default reverb description: "FX", mode 0, four taps in the first group, damping -6, the taps
 // XBE_GLOBAL(0x001d98c0, 0x18)
@@ -628,15 +691,12 @@ int SNDPLATFORM_outputset(void) {
     return 0;
 }
 
-// The device, the effects image, the platform voices, the 180 pooled buffers, the mixer's rings, the thread.
+// The device, the platform voices, the 180 pooled buffers, the mixer's rings, the thread. The original downloads
+// its DSP effects image (0x3360 bytes at 0x001a3e80) after creating the device; ours has no DSP to run it, so that
+// call is left out (docs/driving/sound.md).
 // FUNC_AT(0x0013dc50)
 int SNDPLATFORM_init(void) {
-    void *imageDesc;
-    uint32_t location[2];        // DSEFFECTIMAGELOC: the I3DL2 reverb's index, the crosstalk's (none)
     DirectSoundCreate(NULL, &Device, NULL);
-    location[0] = 0;
-    location[1] = 0xffffffff;
-    IDirectSound_DownloadEffectsImage(Device, EffectsImage, 0x3360, location, &imageDesc);
     SNDSYS_entercritical();
     void *voices = SNDMEMI_alloc(NumVoices * int32_t(sizeof(PlatformVoice)));
     PlatformVoices = static_cast<PlatformVoice *>(voices);

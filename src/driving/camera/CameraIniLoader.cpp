@@ -21,7 +21,6 @@
 #include "../platform/X87.h"
 #include "../../helpers.h"
 #include "../platform/CRuntime.h"
-#include "../data/XbeData.h"   // XBE_INITIAL
 
 #include <bit>
 #include <stddef.h>
@@ -42,8 +41,14 @@ static RPlayerCamera *PlayerCamera;                     // RCameraIniLoader's
 
 // The tables' defaults, until LoadFile reads the file
 // XBE_GLOBAL(0x001c3e40, 0x6c)
-CameraConstants fgCameraConstants;
-XBE_INITIAL(fgCameraConstants);
+CameraConstants fgCameraConstants = {
+    100, 50, 60,
+    0.03f, 0.02f, 0.4f, 1.0f, 0.01f, 0.035f, 0.25f, 0.1f, 1.0f,
+    { 1.675f, 1.925f, 1.325f, 1.0f },
+    2.875f, 0.04f, 0.13f, 0.008f, 1.5f, 0.5f,
+    60, 40,
+    60.0f, 1.0f, 300.0f,
+};
 // XBE_GLOBAL(0x001ebc88, 4)
 int32_t kAutoDriveLatency;
 // XBE_GLOBAL(0x001ebca4, 4)

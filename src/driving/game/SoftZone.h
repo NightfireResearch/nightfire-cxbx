@@ -20,7 +20,7 @@ static_assert(sizeof(SoftZone) == 0x50, "a soft zone is 0x50 bytes");
 
 constexpr int kSoftZones = 19;
 
-extern SoftZone SoftZones[kSoftZones];
+extern const SoftZone SoftZones[kSoftZones];
 
 // Whether the point is on the inner side of each of the quad's four edges, seen along the normal
 // (Ghidra: FUN_000643b0; the name is ours)

@@ -938,7 +938,8 @@ void SortPhase(int side) {
 #define Orig_LookupValidString ((const char *(__fastcall *)(AttributeSet *, int, const char *, bool *))0x000583e0)
 #define Orig_LookupStruct ((void *(__fastcall *)(AttributeSet *, int, const char *, uint32_t, bool *))0x00058420)
 
-#define DefaultVector (*(AttributeVector *)0x001d4c00)
+// LookupVector's default: the port answers ours, the original the game's copy
+#define IsDefaultVector(v) ((v) == &::DefaultVector || (v) == reinterpret_cast<const AttributeVector *>(0x001d4c00))
 #define CRT_stricmp ((int (*)(const char *, const char *))0x00134537)
 
 alignas(8) uint8_t g_systemStorage[2][sizeof(AttributeSystem)];
@@ -1204,7 +1205,7 @@ void DatabasePhase(int side) {
                 u = 0;
                 fbits = 0;
             }
-            std::string vector = v == &DefaultVector ? "default" : Pointed(value, v, sizeof(AttributeVector));
+            std::string vector = IsDefaultVector(v) ? "default" : Pointed(value, v, sizeof(AttributeVector));
             std::string valid = value == NULL ? std::string(vs) : Pointed(value, vs, 1);
             Log(side, Format("%s %s: b %02x i %d u %u f %08x v ", CollectionKeyOf(set->collection).c_str(), k, b, n, u, fbits)
                       + vector + " s " + Pointed(value, s, 1) + " vs " + valid + " found " + Hex(found, sizeof(found)));

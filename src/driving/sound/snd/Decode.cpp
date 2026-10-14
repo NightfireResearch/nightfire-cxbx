@@ -30,13 +30,27 @@ static_assert(offsetof(SND::CEAXABLKDecf, xac) == 0x94, "CEAXABLKDecf layout");
 
 namespace {
 
-// The tables stay in the original's .rdata, one after the other: a predictor nibble above 3 (no stream has one)
-// reads past the four predictors into the next table, as the original does.
-// XBE_GLOBAL(0x001da9b8, 0x10)
-#define XaPredictor1 ((const float *)0x001da9b8)          // 0, 0.9375, 1.796875, 1.53125
-// XBE_GLOBAL(0x001da9c8, 0x10)
-#define XaPredictor2 ((const float *)0x001da9c8)          // 0, 0, -0.8125, -0.859375
-#define XaNibbles ((const float (*)[16])0x001da9d8)       // [shift][nibble]: signed nibble << (12 - shift)
+}  // namespace
+
+// The predictors and the nibble values, one after the other: a predictor nibble above 3 (no stream has one) reads
+// past the four predictors into the next table, as the original does
+constexpr XaTableBlock MakeXaTables() {
+    XaTableBlock tables = { { 0.0f, 0.9375f, 1.796875f, 1.53125f }, { 0.0f, 0.0f, -0.8125f, -0.859375f }, {} };
+    for (int shift = 0; shift <= 12; shift++) {
+        for (int nibble = 0; nibble < 16; nibble++)
+            tables.nibbles[shift][nibble] = float((nibble < 8 ? nibble : nibble - 16) * (1 << (12 - shift)));
+    }
+    return tables;
+}
+
+// XBE_GLOBAL(0x001da9b8, 0x420) readonly
+const XaTableBlock XaTables = MakeXaTables();
+
+namespace {
+
+#define XaPredictor1 (XaTables.predictor1)
+#define XaPredictor2 (XaTables.predictor2)
+#define XaNibbles (XaTables.nibbles)
 
 // CODA_New/CODA_Delete: SNDMEMI_alloc's and SNDMEMI_free's thunks, set by MIX_create
 #define CodaNew (*(void *(**)(size_t size))0x002475f4)

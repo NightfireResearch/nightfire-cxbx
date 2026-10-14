@@ -2,6 +2,7 @@
 
 #include "AIHands.h"
 
+#include <bit>
 #include <string.h>
 #include <xmmintrin.h>
 
@@ -12,6 +13,15 @@
 #include "WeaponManager.h"              // SWeaponManager
 #include "../../common/xbeOverload.h"   // XbeVirtual
 #include "../../helpers.h"
+
+// Bond's hands' IK, the targets on the wheel set each step (initial values the original's)
+// XBE_GLOBAL(0x001b5240, 0x60)
+ActIKSolveInfo BondHandIK[2] = {
+    {{std::bit_cast<float>(0xbf239581u), std::bit_cast<float>(0x3d89374cu), std::bit_cast<float>(0x3ea4dd2fu), 1.0f},
+     {std::bit_cast<float>(0x3f5db22du), -0.5f, 0.0f, 1.0f}, 1.0f, false, {}},
+    {{std::bit_cast<float>(0xbe4fdf3bu), std::bit_cast<float>(0x3d48b439u), std::bit_cast<float>(0x3ea66666u), 1.0f},
+     {std::bit_cast<float>(0x3f5db22du), -0.5f, 0.0f, 1.0f}, 1.0f, false, {}},
+};
 #include "../anim/Actor.h"              // ActActor, ActActorDatabase
 #include "../anim/Character.h"          // ActCharacter::LoadCharacter
 #include "../anim/Controllers.h"        // AnimationController

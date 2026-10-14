@@ -116,7 +116,7 @@ constexpr int kMaterialRequests = 16;
 extern uint32_t SimpleRequestIndex;
 extern SimpleGeoPrim *SimpleRequests[16];
 extern uint32_t TexturedRequestIndex;
-extern alignas(16) TexturedGeoPrim *TexturedRequests[16];
+alignas(16) extern TexturedGeoPrim *TexturedRequests[16];
 extern uint32_t VolatileRequestIndex;
 extern TexturedGeoPrim *VolatileRequests[16];
 extern EAGL::DynamicModel *SimpleModels[kMaterialRequests];

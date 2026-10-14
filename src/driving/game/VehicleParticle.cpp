@@ -18,36 +18,116 @@
 #include "../platform/RealMath.h"
 #include "../render/Particles.h"
 #include "SimulationContainers.h"
-#include "../data/XbeData.h"
 
 // The system types it adds to the library (VehicleParticle.h)
 // XBE_GLOBAL(0x001c50d8, 0xb0)
-RParticleSystemData ParticleTypeSMRT;
-XBE_INITIAL(ParticleTypeSMRT);
+RParticleSystemData ParticleTypeSMRT = {
+    0.0f, 0.015f, 0.0f, 30,
+    0.0f, 0.0f, 0.0f, 0x8,
+    0.96f, 0x736d6b35, 0, 0,   // 'smk5'
+    0.0f, 0.2f, 0.7f, 60,
+    60, 0, 0, -0.2f,
+    0.0f, 180.0f, 0.5f, 0.0f,
+    0.0f, 0.0f, 0.25f, 0x3e800000,
+    { { 0.0f, 512.0f, 512.0f, 512.0f }, { 32.0f, 512.0f, 512.0f, 512.0f }, { 0.0f, 512.0f, 512.0f, 512.0f } },
+    0.0f, 0.0f, 0, 0,
+};
 // XBE_GLOBAL(0x001c5188, 0xb0)
-RParticleSystemData ParticleTypeRDDF;
-XBE_INITIAL(ParticleTypeRDDF);
+RParticleSystemData ParticleTypeRDDF = {
+    0.0f, 0.0f, 0.0f, 20,
+    0.0f, 0.0f, 0.0f, 0x8,
+    0.96f, 0x70756666, 0, 0,   // 'puff'
+    0.0f, 0.3f, 0.8f, 20,
+    20, 0, 0, -0.1f,
+    0.01f, 180.0f, 0.5f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0x3f800000,
+    { { 80.0f, 55.0f, 46.75f, 26.95f }, { 80.0f, 102.3f, 95.700005f, 68.200005f }, { 0.0f, 102.3f, 95.700005f, 68.200005f } },
+    0.0f, 0.0f, 0, 0,
+};
 // XBE_GLOBAL(0x001c5238, 0xb0)
-RParticleSystemData ParticleTypeRDDR;
-XBE_INITIAL(ParticleTypeRDDR);
+RParticleSystemData ParticleTypeRDDR = {
+    0.0f, 0.0f, 0.0f, 20,
+    0.0f, 0.0f, 0.0f, 0x8,
+    0.96f, 0x70756666, 0, 0,   // 'puff'
+    0.0f, 0.2f, 1.5f, 15,
+    15, 0, 0, -0.3f,
+    0.01f, 180.0f, 0.5f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0x3f800000,
+    { { 80.0f, 55.0f, 46.75f, 26.95f }, { 40.0f, 102.3f, 95.700005f, 68.200005f }, { 0.0f, 102.3f, 95.700005f, 68.200005f } },
+    0.0f, 0.0f, 0, 0,
+};
 // XBE_GLOBAL(0x001c52e8, 0xb0)
-RParticleSystemData ParticleTypeWATR;
-XBE_INITIAL(ParticleTypeWATR);
+RParticleSystemData ParticleTypeWATR = {
+    0.0f, 0.0f, 0.0f, 30,
+    0.0f, 0.0f, 0.0f, 0x8,
+    1.0f, 0x6772766c, 0, 0,   // 'grvl'
+    0.0f, 0.2f, 0.7f, 80,
+    80, 0, 0, 4.0f,
+    0.0f, 180.0f, 0.5f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0x3f800000,
+    { { 128.0f, 128.0f, 128.0f, 128.0f }, { 128.0f, 128.0f, 128.0f, 128.0f }, { 0.0f, 128.0f, 128.0f, 128.0f } },
+    0.0f, 0.0f, 0, 0,
+};
 // XBE_GLOBAL(0x001c5398, 0xb0)
-RParticleSystemData ParticleTypeRDGR;
-XBE_INITIAL(ParticleTypeRDGR);
+RParticleSystemData ParticleTypeRDGR = {
+    0.0f, 0.013f, 0.0f, 30,
+    0.0f, 0.0f, 0.0f, 0x8,
+    1.0f, 0x67726173, 0, 0,   // 'gras'
+    0.0f, 0.4f, 0.5f, 60,
+    60, 0, 0, 4.0f,
+    0.0f, 180.0f, 0.5f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0x3f800000,
+    { { 64.0f, 35.0f, 66.0f, 20.0f }, { 128.0f, 35.0f, 66.0f, 20.0f }, { 0.0f, 35.0f, 66.0f, 20.0f } },
+    0.0f, 0.0f, 0, 0,
+};
 // XBE_GLOBAL(0x001c5448, 0xb0)
-RParticleSystemData ParticleTypeSNOW;
-XBE_INITIAL(ParticleTypeSNOW);
+RParticleSystemData ParticleTypeSNOW = {
+    0.0f, 0.0f, 0.0f, 40,
+    0.0f, 0.0f, 0.0f, 0x8,
+    0.96f, 0x70756666, 0, 0,   // 'puff'
+    0.0f, 0.5f, 1.5f, 15,
+    15, 0, 0, -0.3f,
+    0.01f, 180.0f, 0.5f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0x3f800000,
+    { { 60.0f, 180.0f, 180.0f, 220.0f }, { 40.0f, 180.0f, 180.0f, 220.0f }, { 0.0f, 180.0f, 180.0f, 220.0f } },
+    0.0f, 0.0f, 0, 0,
+};
 // XBE_GLOBAL(0x001c55b0, 0xb0)
-RParticleSystemData ParticleTypeSPRK;
-XBE_INITIAL(ParticleTypeSPRK);
+RParticleSystemData ParticleTypeSPRK = {
+    0.0f, 0.013f, 0.0f, 40,
+    0.1f, 0.005f, 0.1f, 0x22,
+    1.0f, 0x736d6b35, 0, 0,   // 'smk5'
+    0.0f, 0.0363f, 2.45f, 24,
+    3, 1, 0, 30.0f,
+    0.0f, 0.0f, 0.5f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0x3f800000,
+    { { 255.0f, 512.0f, 512.0f, 192.0f }, { 200.0f, 496.0f, 320.0f, 0.0f }, { 16.0f, 300.0f, 200.0f, 0.0f } },
+    0.0f, 0.0f, 0, 0,
+};
 // XBE_GLOBAL(0x001c5660, 0xb0)
-RParticleSystemData ParticleTypeSPKB;
-XBE_INITIAL(ParticleTypeSPKB);
+RParticleSystemData ParticleTypeSPKB = {
+    0.0f, 0.013f, 0.0f, 60,
+    0.1f, 0.005f, 0.1f, 0x22,
+    1.0f, 0x736d6b35, 0, 0,   // 'smk5'
+    0.0f, 0.035f, 2.6f, 24,
+    3, 1, 0, 30.0f,
+    0.0f, 0.0f, 0.5f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0x3f800000,
+    { { 255.0f, 512.0f, 512.0f, 192.0f }, { 200.0f, 496.0f, 320.0f, 0.0f }, { 16.0f, 300.0f, 200.0f, 0.0f } },
+    0.0f, 0.0f, 0, 0,
+};
 // XBE_GLOBAL(0x001c5710, 0xb0)
-RParticleSystemData ParticleTypeSPRL;
-XBE_INITIAL(ParticleTypeSPRL);
+RParticleSystemData ParticleTypeSPRL = {
+    0.0f, 0.013f, 0.0f, 200,
+    0.1f, 0.005f, 0.1f, 0x22,
+    1.0f, 0x736d6b35, 0, 0,   // 'smk5'
+    0.0f, 0.0363f, 2.45f, 24,
+    3, 1, 0, 30.0f,
+    0.0f, 0.0f, 0.5f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0x3f800000,
+    { { 255.0f, 512.0f, 512.0f, 192.0f }, { 200.0f, 496.0f, 320.0f, 0.0f }, { 16.0f, 300.0f, 200.0f, 0.0f } },
+    0.0f, 0.0f, 0, 0,
+};
 
 // ---------------------------------------------------------------------------------------------------------------
 // RVehicleParticle and its set (0x000a6db0-0x000a8460), ported from the listing.

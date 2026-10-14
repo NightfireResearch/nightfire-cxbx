@@ -4,6 +4,7 @@
 // EA's realgraph library as the driving engine has it: FONT (text drawn through a driver EAGL installs), SHAPE
 // (the SHPX image container) and LOCALE (LOCH string tables). See Realgraph.cpp and docs/driving/eagl.md 4.13.
 
+#include <stddef.h>
 #include <stdint.h>
 
 // A SHPX file (.xsh): the header and its directory, one entry per image (docs/driving/eagl.md 2.12)
@@ -19,6 +20,46 @@ struct ShapeFile {
     int8_t id[4];                    // +0x0c directory id: a letter and three digits ("G344", SHAPE_version)
     ShapeDirectoryEntry entries[1];  // +0x10 count of them
 };
+
+// An image's or attachment's first word: its type, and the offset from it to the next attachment (0 at the last)
+constexpr uint32_t ShapeHeaderWord(uint32_t type, uint32_t next) { return type | next << 8; }
+
+// A DXT1 block: 4x4 texels, two RGB565 colours and two bits a texel
+struct DxtBlock {
+    uint16_t colour0;
+    uint16_t colour1;
+    uint32_t indices;
+};
+static_assert(sizeof(DxtBlock) == 8, "a DXT1 block is 8 bytes");
+
+// EAGL's own SHPX, linked into the executable: one 64x64 DXT1 image "fail", with its mipmaps and an 'i' and a 'p'
+// attachment, the image a TAR falls back on when its shape is missing
+struct BuiltInShapeFile {            // 0xba0
+    ShapeFile file;                  // +0x000
+    char comment[0x58];              // +0x018
+    uint32_t imageHeader;            // +0x070 type 0x60, the 'i' attachment next
+    int16_t width;                   // +0x074
+    int16_t height;                  // +0x076
+    uint32_t unknown78;              // +0x078
+    uint32_t flags;                  // +0x07c ShapeImage::flags: seven mip levels
+    DxtBlock level0[16][16];         // +0x080 64x64
+    DxtBlock level1[8][8];           // +0x880 32x32
+    DxtBlock level2[4][4];           // +0xa80
+    DxtBlock level3[2][2];           // +0xb00
+    DxtBlock level4[1][1];           // +0xb20
+    DxtBlock level5[1][1];           // +0xb28
+    DxtBlock level6[1][1];           // +0xb30 1x1
+    uint8_t padding[8];              // +0xb38
+    uint32_t infoHeader;             // +0xb40 'i', the 'p' attachment next
+    uint32_t infoB44;                // +0xb44
+    uint8_t infoB48[8];              // +0xb48
+    char infoText[0x40];             // +0xb50 an "EAGL" block, room for the TAR's shared data
+    uint32_t nameHeader;             // +0xb90 'p', the last
+    char name[12];                   // +0xb94
+};
+static_assert(sizeof(BuiltInShapeFile) == 0xba0, "EAGL's built-in SHPX is 0xba0 bytes");
+static_assert(offsetof(BuiltInShapeFile, level0) == 0x80 && offsetof(BuiltInShapeFile, infoHeader) == 0xb40 &&
+              offsetof(BuiltInShapeFile, nameHeader) == 0xb90, "BuiltInShapeFile layout");
 
 typedef void (*FontDrawFn)(const uint8_t *font, const uint8_t *glyph, float x, float y);
 typedef void (*FontHookFn)(const uint8_t *font);

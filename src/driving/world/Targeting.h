@@ -199,7 +199,7 @@ public:
 };
 static_assert(sizeof(WTargetPicker) == 0xb0, "WTargetPicker is 176 bytes");
 
-extern alignas(16) WTargetPicker TargetPicker;   // the one picker (name ours)
+alignas(16) extern WTargetPicker TargetPicker;   // the one picker (name ours)
 
 extern int32_t TargetableCount;         // the targets in existence (name ours)
 extern int32_t TargetableStagger;       // staggers new targets' first refresh (name ours)

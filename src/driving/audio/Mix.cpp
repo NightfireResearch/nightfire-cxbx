@@ -20,7 +20,6 @@
 #include "../sound/snd/Voices.h"        // SNDfxmasterlevel, SNDfxinitbus
 #include "../game/MissionManager.h"           // MissionList::BuyHead
 #include "../platform/CRuntime.h"
-#include "../data/XbeData.h"   // XBE_INITIAL
 
 #pragma fp_contract(off)
 
@@ -62,8 +61,9 @@ static const FxMode FxModes[AFX::kModeCount] = {
 
 // The sound library's reverb for each FxMode::reverb
 // XBE_GLOBAL(0x001d8118, 0x74)
-static int32_t FxBusModes[29];
-XBE_INITIAL(FxBusModes);
+static const int32_t FxBusModes[29] = {
+    2, 3, 5, 10, 13, 15, 17, 20, 23, 25, 27, 30, 32, 33, 34, 35, 36, 37, 38, 40, 50, 55, 60, 55, 55, 55, 55, 55, 55,
+};
 
 // XBE_GLOBAL(0x00243ab4, 4)
 int32_t FxBus;

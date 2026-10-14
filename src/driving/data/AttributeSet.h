@@ -41,4 +41,6 @@ public:
 };
 static_assert(sizeof(AttributeSet) == 4, "an AttributeSet is a pointer");
 
+extern const AttributeVector DefaultVector;   // (0, 0, 0, 1): LookupVector's answer for a missing key
+
 #endif // DRIVING_DATA_ATTRIBUTESET_H_

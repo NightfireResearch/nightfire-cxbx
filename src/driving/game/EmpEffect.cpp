@@ -35,7 +35,6 @@
 #include "../world/SoundMap.h"            // BuyMapHead
 #include "../world/World.h"               // ArticleEffect
 #include "../../helpers.h"
-#include "../data/XbeData.h"   // XBE_INITIAL
 
 // ---------------------------------------------------------------------------------------------------------------
 // REmp, REmpBolts and the two maps between them (0x0009b680-0x0009dd40), ported from the listing.
@@ -81,8 +80,12 @@ EAGL::GeoPrimState EmpRingState;
 alignas(16) Coord4 EmpLights[8];
 
 // XBE_GLOBAL(0x001c48c0, 0x40)
-Coord4 EmpParam10Vectors[4];
-XBE_INITIAL(EmpParam10Vectors);
+Coord4 EmpParam10Vectors[4] = {
+    { 0.005f, 0.02f, 0.0f, 0.0f },      // the sphere's
+    { -0.004f, -0.03f, 0.0f, 0.0f },    // not used
+    { 0.0078f, 0.0f, 0.0f, 0.0f },      // the ring's first draw
+    { -0.0074f, 0.0f, 0.0f, 0.0f },     // and its second
+};
 // XBE_GLOBAL(0x001c4910, 0x10)
 uint32_t EmpRingVertexCount[4] = { kRingVertices, 0, 0, 0 };
 // XBE_GLOBAL(0x001c4920, 0x10)

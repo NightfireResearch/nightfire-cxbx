@@ -282,10 +282,10 @@ uint32_t __stdcall FakeDirectSoundCreate(void *guid, void **device, void *outer)
     *device = W->device;
     return 0;
 }
+// Only the original downloads the DSP effects image: the port leaves the call out (Platform.cpp), so it is not logged
 uint32_t __stdcall FakeDownloadEffectsImage(void *device, const void *image, uint32_t size, uint32_t *location,
                                             void **desc) {
-    (void)desc;
-    Log(L_EFFECTS, 5, P(device), P(image), size, location[0], location[1]);
+    (void)device; (void)image; (void)size; (void)location; (void)desc;
     return 0;
 }
 uint32_t __stdcall FakeCreateBuffer(const DsBufferDesc *desc, void **buffer) {
