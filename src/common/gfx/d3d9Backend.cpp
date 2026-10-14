@@ -4,12 +4,12 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <d3d9.h>
-#include <d3dcompiler.h>
 #include <mmsystem.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vector>
 
 // See d3d9Backend.h for the overview.
 //
@@ -18,7 +18,7 @@
 //   lazily at bind time with unswizzling and format conversion (YUY2 movie frames included), the 11 NV2A
 //   render-state methods plus cull/fog/border colour, texture-stage state read from D3D8's own deferred state
 //   arrays at draw time, and the immediate-mode quad path (menus, HUD, FMV, screen blur).
-// Checkpoint 3: the game's NV2A vertex programs translated to HLSL at first use (see "Vertex shader
+// Checkpoint 3: the game's NV2A vertex programs translated to shader bytecode at first use (see "Vertex shader
 //   translation" below), Xbox vertex declarations turned into D3D9 ones, vertex/index buffers uploaded from the
 //   game's memory on first bind, the indexed-strip mesh path, shard triangle lists and the point-sprite
 //   overlay. Draws issued while an off-screen render target is selected are skipped for now.
@@ -26,6 +26,10 @@
 
 #include "backendHost.h"   // the engine this is compiled into provides these three; see the header
 #include "nv2aPixelShader.h"
+#include "nv2aVertexShader.h"
+#ifndef NIGHTFIRE_STANDALONE
+#include "devtools/shaderCheck.h"   // NIGHTFIRE_SHADERCHECK: the bytecode against the HLSL it replaced
+#endif
 #include "textureReplace.h"
 #ifdef NF_ANTIALIASING
 #include "fxaa.h"   // experimental - see fxaa.cpp
@@ -1445,15 +1449,14 @@ static float g_texCoordScale[4][2] = { { 1, 1 }, { 1, 1 }, { 1, 1 }, { 1, 1 } };
 // Pixel shaders.
 //
 // An Xbox pixel shader is a 240-byte block of NV2A combiner register values (nv2aPixelShader.h). Each one the
-// game creates is kept here and translated to HLSL on its first draw; the draw then binds the program, the
-// textures it samples - to samplers numbered by Xbox stage, with no packing, since the program addresses
-// them itself - and the constant block built from the definition and the current state. A shader that
-// cannot be translated falls back to the fixed-function stage state, which is what every draw used before
-// there was a translator, and the log says which one.
+// game creates is kept here and translated to ps_2_0 bytecode on its first draw; the draw then binds the
+// program, the textures it samples - to samplers numbered by Xbox stage, with no packing, since the program
+// addresses them itself - and the constant block built from the definition and the current state. A shader
+// that cannot be translated falls back to the fixed-function stage state, which is what every draw used
+// before there was a translator, and the log says which one.
 //
 // Nothing here is shared with the vertex-shader side except the habit: the definitions are dumped to
-// d3d9_pixel_shaders.log with the HLSL each became, and tools/nv2a_psh_dump.py reads the raw words back into
-// the XDK's notation.
+// d3d9_pixel_shaders.log, and tools/nv2a_psh_dump.py reads the raw words back into the XDK's notation.
 // ---------------------------------------------------------------------------------------------------------------
 #define PS_HANDLE_TAG 0x50530000u   // 'PS'
 
@@ -1474,7 +1477,7 @@ static int g_currentPixelShader = -1;
 // register 0 draws with its literal until the game says otherwise, not with whatever register 0 holds.
 static float g_pixelShaderFactors[NV2A_PS_FACTOR_COUNT][4];
 
-static void DumpPixelShader(int index, const TranslatedPixelShader *ps, const char *hlsl) {
+static void DumpPixelShader(int index, const TranslatedPixelShader *ps, const char *result) {
     static FILE *f = NULL;
     static bool opened = false;
     if (!opened) { opened = true; f = fopen("d3d9_pixel_shaders.log", "w"); }
@@ -1482,49 +1485,59 @@ static void DumpPixelShader(int index, const TranslatedPixelShader *ps, const ch
         return;
     fprintf(f, "==== pixel shader %d at %p\n", index, (const void*)ps->def);
     for (int i = 0; i < 60; i++) fprintf(f, "%s%08x", (i % 8) ? " " : "\n  ", ps->def[i]);
-    fprintf(f, "\nhlsl:\n%s\n", hlsl);
+    fprintf(f, "\n%s\n", result);
     fflush(f);
 }
 
-// Compiles translated HLSL at the lowest ps_2_x profile that takes it. NULL, logged, on failure.
-static IDirect3DPixelShader9 *CompileTranslatedPixelShader(const char *hlsl, int index, const char *what) {
-    static const char *profiles[3] = { "ps_2_0", "ps_2_b", "ps_2_a" };
-    ID3DBlob *code = NULL, *errors = NULL;
-    HRESULT hr = E_FAIL;
-    for (int p = 0; p < 3 && FAILED(hr); p++) {
-        if (errors != NULL) { errors->Release(); errors = NULL; }
-        hr = D3DCompile(hlsl, strlen(hlsl), NULL, NULL, NULL, "main", profiles[p], D3DCOMPILE_OPTIMIZATION_LEVEL3, 0, &code, &errors);
-    }
-    if (FAILED(hr)) {
-        D3D9Log("[d3d9] pixel shader %d%s: HLSL compile failed (0x%08lx):\n%s\n", index, what, hr, errors ? (const char*)errors->GetBufferPointer() : "(no message)");
-        if (errors) errors->Release();
-        return NULL;
-    }
-    if (errors) errors->Release();
-    IDirect3DPixelShader9 *shader = NULL;
-    hr = g_device->CreatePixelShader((const DWORD*)code->GetBufferPointer(), &shader);
-    code->Release();
-    if (FAILED(hr)) { D3D9Log("[d3d9] pixel shader %d%s: CreatePixelShader failed 0x%08lx\n", index, what, hr); return NULL; }
-    return shader;
+#ifndef NIGHTFIRE_STANDALONE
+// NIGHTFIRE_SHADERCHECK=1: each translated program checked against the HLSL it replaced (devtools/shaderCheck.h),
+// a line each in the backend log and the whole report in d3d9_shadercheck.log.
+static bool ShaderCheckWanted(void) {
+    static int wanted = -1;
+    if (wanted < 0) { const char *v = getenv("NIGHTFIRE_SHADERCHECK"); wanted = v != NULL && v[0] == '1'; }
+    return wanted != 0;
 }
+
+static void ShaderCheckLog(const char *kind, int index, bool same, const char *report) {
+    static FILE *f = NULL;
+    static int checked = 0, differ = 0;
+    if (f == NULL) f = fopen("d3d9_shadercheck.log", "w");
+    checked++;
+    if (!same) differ++;
+    if (f != NULL) { fprintf(f, "%s %d: %s", kind, index, report); fflush(f); }
+    const char *nl = strchr(report, '\n');
+    D3D9Log("[shadercheck] %s %d: %.*s (%d checked, %d differ)\n", kind, index, nl ? (int)(nl - report) : (int)strlen(report),
+            report, checked, differ);
+}
+#endif
 
 static void BuildPixelShader(TranslatedPixelShader *ps, int index) {
     ps->attempted = true;
     ps->failed = true;
     if (g_device == NULL)
         return;
-    static char hlsl[32768];
-    if (!Nv2aPixelShader_Translate(ps->def, hlsl, sizeof(hlsl), &ps->info)) {
-        D3D9Log("[d3d9] pixel shader %d: translation failed\n", index);
+    std::vector<uint32_t> code;
+    char error[256];
+    if (!Nv2aPixelShader_Translate(ps->def, &code, &ps->info, error, sizeof(error))) {
+        D3D9Log("[d3d9] pixel shader %d: translation failed: %s\n", index, error);
         DumpPixelShader(index, ps, "(translation failed)");
         return;
     }
-    DumpPixelShader(index, ps, hlsl);
+    DumpPixelShader(index, ps, "(translated)");
+#ifndef NIGHTFIRE_STANDALONE
+    if (ShaderCheckWanted()) {
+        static char report[32768];
+        ShaderCheckLog("pixel shader", index, ShaderCheck_Pixel(ps->def, report, sizeof(report)), report);
+    }
+#endif
     if (ps->info.unsupportedMode != 0)
         D3D9Log("[d3d9] pixel shader %d: texture mode %u is not translated; sampling it as 2D\n", index, ps->info.unsupportedMode);
-    ps->shader = CompileTranslatedPixelShader(hlsl, index, "");
-    if (ps->shader == NULL)
+    HRESULT hr = g_device->CreatePixelShader((const DWORD*)code.data(), &ps->shader);
+    if (FAILED(hr)) {
+        D3D9Log("[d3d9] pixel shader %d: CreatePixelShader failed 0x%08lx\n", index, hr);
+        ps->shader = NULL;
         return;
+    }
     D3D9Log("[d3d9] pixel shader %d translated: %u stages, texture modes %u/%u/%u/%u%s\n", index, ps->info.stageCount,
             ps->info.textureMode[0], ps->info.textureMode[1], ps->info.textureMode[2], ps->info.textureMode[3],
             ps->info.fogByHost ? ", fog by the host" : "");
@@ -1699,272 +1712,9 @@ static void ApplyTextureStageState(bool shaderDraw) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Vertex shader translation
-//
-// The game's vertex shaders are NV2A vertex programs (the XDK's D3DVS binary: an 8-byte header {0x78, 0x20,
-// instruction count, 0} then 16 bytes per instruction, three meaningful words and one unused). Each is
-// decoded here with the field layout documented by Erik Abair's nv2a-vsh (Unlicense) and re-emitted as
-// HLSL, compiled with D3DCompile to vs_2_0 on first use. vs_2_0 rather than 3_0 because D3D9 refuses to
-// pair a shader-model-3 vertex shader with the fixed-function pixel pipeline, and the game's texture
-// combining still goes through texture-stage states.
-//
-// Two things differ from the hardware. First, an NV2A program ends by doing its own perspective divide and
-// viewport transform (MUL oPos.xyz, R12, c[58] + RCC R1.x, R12.w; MAD oPos.xyz, R12, R1.x, c[59]), with c58/
-// c59 written by the Xbox D3D runtime from the viewport. D3D9 wants clip-space positions, so c58 is pinned to
-// (1,1,1,1) and c59 to zero - making the program's own epilogue produce plain NDC - and the translated shader
-// multiplies xy back up by w on output. Depth is taken from w rather than the program's z: the game W-buffers
-// (ZEnable(2)) with a projection scaled so w is the 24-bit depth, and clips w against SetDepthClipPlanes, so
-// the emitted z is (w - near) / (far - near), which reproduces both the clipping and the depth order. Second,
-// Xbox's NORMPACKED3 vertex type (11:11:10 signed normalised) has no D3D9 declaration type; it is declared as
-// UBYTE4 and unpacked with float arithmetic in the prologue. Third, oFog is a fog coordinate on the NV2A and a
-// factor on D3D9, so the render-state fog table function is applied in the shader epilogue.
+// Vertex shaders: NV2A vertex programs translated to vs_2_0 bytecode on first use (nv2aVertexShader.h, which
+// also says how the translation differs from the hardware), with the Xbox declaration turned into a D3D9 one.
 // ---------------------------------------------------------------------------------------------------------------
-
-enum { VSH_MAC_NOP, VSH_MAC_MOV, VSH_MAC_MUL, VSH_MAC_ADD, VSH_MAC_MAD, VSH_MAC_DP3, VSH_MAC_DPH, VSH_MAC_DP4,
-       VSH_MAC_DST, VSH_MAC_MIN, VSH_MAC_MAX, VSH_MAC_SLT, VSH_MAC_SGE, VSH_MAC_ARL };
-enum { VSH_ILU_NOP, VSH_ILU_MOV, VSH_ILU_RCP, VSH_ILU_RCC, VSH_ILU_RSQ, VSH_ILU_EXP, VSH_ILU_LOG, VSH_ILU_LIT };
-enum { VSH_PARAM_R = 1, VSH_PARAM_V = 2, VSH_PARAM_C = 3 };
-
-struct VshSource { int mux, tempReg, swz[4]; bool negate; };
-struct VshDecoded {
-    int mac, ilu, input, constIndex;
-    bool a0x, final, outIsOutput;
-    int outMux, outAddress, outOMask, outIluMask, outTempReg, outMacMask;
-    VshSource a, b, c;
-};
-
-static void DecodeVshInstruction(const uint32_t *w, VshDecoded *d) {
-    uint32_t b = w[0], c = w[1], e = w[2];
-    d->a.swz[3] = b & 3; d->a.swz[2] = (b >> 2) & 3; d->a.swz[1] = (b >> 4) & 3; d->a.swz[0] = (b >> 6) & 3;
-    d->a.negate = (b >> 8) & 1;
-    d->input = (b >> 9) & 0xF;
-    d->constIndex = (b >> 13) & 0xFF;
-    d->mac = (b >> 21) & 0xF;
-    d->ilu = (b >> 25) & 7;
-    d->c.tempReg = (c & 3) << 2;
-    d->c.swz[3] = (c >> 2) & 3; d->c.swz[2] = (c >> 4) & 3; d->c.swz[1] = (c >> 6) & 3; d->c.swz[0] = (c >> 8) & 3;
-    d->c.negate = (c >> 10) & 1;
-    d->b.mux = (c >> 11) & 3;
-    d->b.tempReg = (c >> 13) & 0xF;
-    d->b.swz[3] = (c >> 17) & 3; d->b.swz[2] = (c >> 19) & 3; d->b.swz[1] = (c >> 21) & 3; d->b.swz[0] = (c >> 23) & 3;
-    d->b.negate = (c >> 25) & 1;
-    d->a.mux = (c >> 26) & 3;
-    d->a.tempReg = (c >> 28) & 0xF;
-    d->final = e & 1;
-    d->a0x = (e >> 1) & 1;
-    d->outMux = (e >> 2) & 1;
-    d->outAddress = (e >> 3) & 0xFF;
-    d->outIsOutput = (e >> 11) & 1;
-    d->outOMask = (e >> 12) & 0xF;
-    d->outIluMask = (e >> 16) & 0xF;
-    d->outTempReg = (e >> 20) & 0xF;
-    d->outMacMask = (e >> 24) & 0xF;
-    d->c.mux = (e >> 28) & 3;
-    d->c.tempReg |= (e >> 30) & 3;
-}
-
-struct HlslWriter {
-    char *buf; size_t size, len; bool overflow;
-    void printf(const char *fmt, ...) {
-        va_list ap; va_start(ap, fmt);
-        int n = vsnprintf(buf + len, size > len ? size - len : 0, fmt, ap);
-        va_end(ap);
-        if (n < 0 || (size_t)n >= size - len) { overflow = true; len = size - 1; }
-        else len += (size_t)n;
-    }
-};
-
-static const char *VshOutputName(int address) {
-    switch (address) {
-        case 0: return "oPos"; case 3: return "oD0"; case 4: return "oD1"; case 5: return "oFog"; case 6: return "oPts";
-        case 7: return "oB0"; case 8: return "oB1"; case 9: return "oT0"; case 10: return "oT1"; case 11: return "oT2"; case 12: return "oT3";
-        default: return NULL;
-    }
-}
-
-// Writes "R3.xyzz" / "-(c[a0 + 96].xyzw)" / "v3.zzzz" for one source operand.
-static void EmitVshSource(HlslWriter *w, const VshDecoded *d, const VshSource *s, uint32_t *inputsUsed) {
-    static const char swzName[4] = { 'x', 'y', 'z', 'w' };
-    if (s->negate) w->printf("-(");
-    switch (s->mux) {
-        case VSH_PARAM_R: if (s->tempReg == 12) w->printf("oPos"); else w->printf("R%d", s->tempReg); break;
-        case VSH_PARAM_V: w->printf("v%d", d->input); *inputsUsed |= 1u << d->input; break;
-        case VSH_PARAM_C: if (d->a0x) w->printf("c[a0 + %d]", d->constIndex); else w->printf("c[%d]", d->constIndex); break;
-        default: w->printf("float4(0,0,0,0)"); break;
-    }
-    w->printf(".%c%c%c%c", swzName[s->swz[0]], swzName[s->swz[1]], swzName[s->swz[2]], swzName[s->swz[3]]);
-    if (s->negate) w->printf(")");
-}
-
-static void VshMaskString(int vshMask, char out[5]) { // NV2A mask bits: 8 = x, 4 = y, 2 = z, 1 = w
-    int n = 0;
-    if (vshMask & 8) out[n++] = 'x';
-    if (vshMask & 4) out[n++] = 'y';
-    if (vshMask & 2) out[n++] = 'z';
-    if (vshMask & 1) out[n++] = 'w';
-    out[n] = 0;
-}
-
-// Translates one XDK vertex shader function blob to HLSL. Returns false if something isn't handled.
-// inputsUsed/outputsWritten come back as register bitmasks (v0..v15 / the oX output addresses).
-static bool TranslateVshToHlsl(const uint8_t *function, const uint32_t *normPackedInputs,
-                               const uint8_t *inputComponents, char *out, size_t outSize,
-                               uint32_t *inputsUsed, uint32_t *outputsWritten, int *instructionCountOut) {
-    if (function[0] != 0x78 || function[1] != 0x20)
-        return false;
-    int count = function[2];
-    *instructionCountOut = count;
-    const uint32_t *words = (const uint32_t*)(function + 8);
-
-    // Body first (so we know which inputs/outputs the header needs), into the second half of the buffer.
-    char *body = out + outSize / 2;
-    HlslWriter w = { body, outSize / 2, 0, false };
-    *inputsUsed = 0; *outputsWritten = 1;
-    for (int i = 0; i < count; i++) {
-        VshDecoded d;
-        DecodeVshInstruction(words + i * 4, &d);
-        if (d.mac == VSH_MAC_NOP && d.ilu == VSH_ILU_NOP)
-            continue;
-        w.printf("    { // %d\n", i);
-        w.printf("        float4 A = "); EmitVshSource(&w, &d, &d.a, inputsUsed); w.printf(";\n");
-        w.printf("        float4 B = "); EmitVshSource(&w, &d, &d.b, inputsUsed); w.printf(";\n");
-        w.printf("        float4 C = "); EmitVshSource(&w, &d, &d.c, inputsUsed); w.printf(";\n");
-        // Both units read their operands before either writes (they execute in parallel on the hardware).
-        if (d.mac != VSH_MAC_NOP) {
-            w.printf("        float4 M = ");
-            switch (d.mac) {
-                case VSH_MAC_MOV: w.printf("A"); break;
-                case VSH_MAC_MUL: w.printf("A * B"); break;
-                case VSH_MAC_ADD: w.printf("A + C"); break;
-                case VSH_MAC_MAD: w.printf("A * B + C"); break;
-                case VSH_MAC_DP3: w.printf("dot(A.xyz, B.xyz).xxxx"); break;
-                case VSH_MAC_DPH: w.printf("(dot(A.xyz, B.xyz) + B.w).xxxx"); break;
-                case VSH_MAC_DP4: w.printf("dot(A, B).xxxx"); break;
-                case VSH_MAC_DST: w.printf("float4(1.0, A.y * B.y, A.z, B.w)"); break;
-                case VSH_MAC_MIN: w.printf("min(A, B)"); break;
-                case VSH_MAC_MAX: w.printf("max(A, B)"); break;
-                case VSH_MAC_SLT: w.printf("(float4)(A < B)"); break;
-                case VSH_MAC_SGE: w.printf("(float4)(A >= B)"); break;
-                case VSH_MAC_ARL: w.printf("A"); break;
-                default: return false;
-            }
-            w.printf(";\n");
-        }
-        if (d.ilu != VSH_ILU_NOP) {
-            w.printf("        float4 I = ");
-            switch (d.ilu) {
-                case VSH_ILU_MOV: w.printf("C"); break;
-                case VSH_ILU_RCP: w.printf("(1.0 / C.x).xxxx"); break;
-                case VSH_ILU_RCC: w.printf("((1.0 / C.x) >= 0 ? clamp(1.0 / C.x, 5.42101e-20, 1.884467e19) : clamp(1.0 / C.x, -1.884467e19, -5.42101e-20)).xxxx"); break;
-                case VSH_ILU_RSQ: w.printf("(1.0 / sqrt(abs(C.x))).xxxx"); break;
-                case VSH_ILU_EXP: w.printf("float4(exp2(floor(C.x)), frac(C.x), exp2(C.x), 1.0)"); break;
-                case VSH_ILU_LOG: w.printf("float4(floor(log2(abs(C.x))), abs(C.x) / exp2(floor(log2(abs(C.x)))), log2(abs(C.x)), 1.0)"); break;
-                case VSH_ILU_LIT: w.printf("lit(C.x, C.y, C.w)"); break;
-                default: return false;
-            }
-            w.printf(";\n");
-        }
-        char mask[5];
-        if (d.mac == VSH_MAC_ARL) {
-            w.printf("        a0 = (int)floor(M.x);\n");
-        } else if (d.mac != VSH_MAC_NOP) {
-            if (d.outMacMask) { VshMaskString(d.outMacMask, mask); w.printf("        R%d.%s = M.%s;\n", d.outTempReg, mask, mask); }
-            if (d.outOMask && d.outMux == 0) {
-                const char *name = d.outIsOutput ? VshOutputName(d.outAddress) : NULL;
-                if (name == NULL) return false;
-                VshMaskString(d.outOMask, mask); w.printf("        %s.%s = M.%s;\n", name, mask, mask);
-                *outputsWritten |= 1u << d.outAddress;
-            }
-        }
-        if (d.ilu != VSH_ILU_NOP) {
-            if (d.outIluMask) {
-                int reg = (d.mac != VSH_MAC_NOP) ? 1 : d.outTempReg; // paired ILU results land in R1
-                VshMaskString(d.outIluMask, mask); w.printf("        R%d.%s = I.%s;\n", reg, mask, mask);
-            }
-            if (d.outOMask && d.outMux == 1) {
-                const char *name = d.outIsOutput ? VshOutputName(d.outAddress) : NULL;
-                if (name == NULL) return false;
-                VshMaskString(d.outOMask, mask); w.printf("        %s.%s = I.%s;\n", name, mask, mask);
-                *outputsWritten |= 1u << d.outAddress;
-            }
-        }
-        w.printf("    }\n");
-        if (d.final) break;
-    }
-    if (w.overflow) return false;
-
-    HlslWriter h = { out, outSize / 2, 0, false };
-    h.printf("float4 c[192] : register(c0);\n");
-    h.printf("float4 hostAdjust : register(c200); // .xy = D3D9's half-pixel offset in NDC\n");
-    h.printf("float4 depthClip : register(c201);  // .xy: the W-buffer depth mapping; .z: use the shader's own z instead; .w: reverse it\n");
-    h.printf("float4 fogParams : register(c202);  // .x = start, .y = end, .z = density, .w = table mode (0 none, 1 exp, 2 exp2, 3 linear)\n");
-    h.printf("float4 texScale01 : register(c203); // 1/size for linear textures on coordinate sets 0 (.xy) and 1 (.zw), else 1\n");
-    h.printf("float4 texScale23 : register(c204); // same for sets 2 and 3\n");
-    h.printf("struct VS_IN {\n");
-    for (int r = 0; r < 16; r++)
-        if ((*inputsUsed & (1u << r)) && inputComponents[r] != 0)
-            h.printf("    float4 v%d : %s%d;\n", r, r == 0 ? "POSITION" : "TEXCOORD", r == 0 ? 0 : r);
-    h.printf("};\nstruct VS_OUT {\n    float4 oPos : POSITION;\n    float4 oD0 : COLOR0;\n    float4 oD1 : COLOR1;\n");
-    if (*outputsWritten & (1u << 5)) h.printf("    float oFog : FOG;\n");
-    if (*outputsWritten & (1u << 6)) h.printf("    float oPts : PSIZE;\n");
-    h.printf("    float4 oT0 : TEXCOORD0;\n    float4 oT1 : TEXCOORD1;\n    float4 oT2 : TEXCOORD2;\n    float4 oT3 : TEXCOORD3;\n};\n");
-    h.printf("VS_OUT main(VS_IN vin) {\n");
-    for (int r = 0; r < 16; r++) {
-        if (!(*inputsUsed & (1u << r))) continue;
-        if (inputComponents[r] == 0) {
-            // Not in the declaration: the NV2A reads the register's default, (0, 0, 0, 1). D3D9 leaves an input
-            // with no element undefined, so it is not an input here at all. (Shader 129, the particles, takes
-            // its positions' w from v3.w, which its declaration does not supply.)
-            h.printf("    float4 v%d = float4(0, 0, 0, 1);\n", r);
-        } else if (*normPackedInputs & (1u << r)) {
-            // 11:11:10 signed normalised, arriving as four raw bytes (UBYTE4): rebuild the fields with exact float maths.
-            h.printf("    float4 v%d;\n    {\n        float4 b = vin.v%d;\n        float lo = b.x + 256.0 * b.y;\n", r, r);
-            h.printf("        float x = fmod(lo, 2048.0);\n        float y = floor(lo / 2048.0) + 32.0 * fmod(b.z, 64.0);\n        float z = floor(b.z / 64.0) + 4.0 * b.w;\n");
-            h.printf("        x = (x >= 1024.0) ? x - 2048.0 : x;\n        y = (y >= 1024.0) ? y - 2048.0 : y;\n        z = (z >= 512.0) ? z - 1024.0 : z;\n");
-            h.printf("        v%d = float4(x / 1023.0, y / 1023.0, z / 511.0, 1.0);\n    }\n", r);
-        } else if (inputComponents[r] < 4) {
-            // The declaration gave fewer components than the host type reads: put the NV2A's
-            // defaults back, so a neighbouring vertex's bytes cannot arrive as this one's .y.
-            static const char *shapes[3] = { "vin.v%d.x, 0, 0, 1", "vin.v%d.xy, 0, 1", "vin.v%d.xyz, 1" };
-            char shape[48];
-            snprintf(shape, sizeof(shape), shapes[inputComponents[r] - 1], r);
-            h.printf("    float4 v%d = float4(%s);\n", r, shape);
-        } else {
-            h.printf("    float4 v%d = vin.v%d;\n", r, r);
-        }
-    }
-    h.printf("    float4 R0 = 0, R1 = 0, R2 = 0, R3 = 0, R4 = 0, R5 = 0, R6 = 0, R7 = 0, R8 = 0, R9 = 0, R10 = 0, R11 = 0;\n");
-    // Output registers start as (0,0,0,1) on the hardware; the w matters because texture stages divide by q.
-    h.printf("    float4 oPos = 0, oD0 = 0, oD1 = 0, oFog = 0, oPts = 0, oB0 = 0, oB1 = 0;\n");
-    h.printf("    float4 oT0 = float4(0,0,0,1), oT1 = float4(0,0,0,1), oT2 = float4(0,0,0,1), oT3 = float4(0,0,0,1);\n");
-    h.printf("    int a0 = 0;\n");
-    if (h.overflow || h.len + w.len + 512 > outSize / 2) return false;
-    memmove(out + h.len, body, w.len);
-    h.len += w.len;
-    h.printf("    VS_OUT o;\n");
-    // Position: xy back to clip space; z from w (the W-buffer depth) in the a + b/w form the rasteriser
-    // interpolates exactly, mapped so the depth-clip planes land on D3D9's 0..1 z range (reversed when the
-    // float depth buffer is in use) - which both clips where the NV2A clipped and keeps the depth ordering.
-    h.printf("    float zFromW = depthClip.x * (oPos.w - depthClip.y);\n");
-    h.printf("    float zFromShader = lerp(oPos.z, 1.0 - oPos.z, depthClip.w) * oPos.w;\n");
-    h.printf("    o.oPos = float4((oPos.xy + hostAdjust.xy) * oPos.w, lerp(zFromW, zFromShader, depthClip.z), oPos.w);\n");
-    h.printf("    o.oD0 = oD0;\n    o.oD1 = oD1;\n");
-    // Fog: on the Xbox the shader's oFog is the fog coordinate (the game emits its normalised near..far
-    // distance) and the fog table mode turns it into the factor; D3D9 takes the factor straight from the
-    // shader, so apply the table function here. Written as arithmetic selects, since vs_2_0 can't branch.
-    if (*outputsWritten & (1u << 5)) {
-        h.printf("    {\n        float d = oFog.x;\n");
-        h.printf("        float fLinear = (fogParams.y - d) / max(fogParams.y - fogParams.x, 1e-6);\n");
-        h.printf("        float fExp = exp(-d * fogParams.z);\n");
-        h.printf("        float fExp2 = exp(-(d * d * fogParams.z * fogParams.z));\n");
-        h.printf("        float f = (fogParams.w == 1.0) ? fExp : (fogParams.w == 2.0) ? fExp2 : (fogParams.w == 3.0) ? fLinear : d;\n");
-        h.printf("        o.oFog = saturate(f);\n    }\n");
-    }
-    if (*outputsWritten & (1u << 6)) h.printf("    o.oPts = oPts.x;\n");
-    h.printf("    o.oT0 = oT0 * float4(texScale01.xy, 1, 1);\n    o.oT1 = oT1 * float4(texScale01.zw, 1, 1);\n");
-    h.printf("    o.oT2 = oT2 * float4(texScale23.xy, 1, 1);\n    o.oT3 = oT3 * float4(texScale23.zw, 1, 1);\n    return o;\n}\n");
-    return !h.overflow;
-}
 
 // Xbox D3DVSD declaration tokens: 0x2000000s selects stream s, 0x40tt00rr declares register rr of type tt at the
 // running offset, 0xffffffff ends. Type codes are the Xbox D3DVSDT_* values.
@@ -2049,10 +1799,11 @@ static void MarkAllConstantsDirty(void) {
 #define VS_HANDLE_TAG 0x56530000u
 
 // Every translated shader is written to d3d9_shaders.log: the declaration tokens as the game gave them, the
-// D3D9 elements they became, and the HLSL. It is how a wrong vertex format or a program that does not end
-// the way the translator expects gets found - from the file, after the run, rather than by guessing.
+// D3D9 elements they became, and the program. It is how a wrong vertex format or a program that does not end
+// the way the translator expects gets found - from the file, after the run, rather than by guessing - and
+// what shadercheck (devtools/shaderCheckMain.cpp) reads to check the translation without the game.
 static void DumpTranslatedShader(int index, const TranslatedVertexShader *vs, const D3DVERTEXELEMENT9 *elements,
-                                 int elementCount, const char *hlsl) {
+                                 int elementCount, const char *result) {
     static FILE *f = NULL;
     static bool opened = false;
     if (!opened) { opened = true; f = fopen("d3d9_shaders.log", "w"); }
@@ -2075,7 +1826,7 @@ static void DumpTranslatedShader(int index, const TranslatedVertexShader *vs, co
     fprintf(f, "microcode (%d instructions):\n", count);
     for (int i = 0; i < count; i++)
         fprintf(f, "  %2d: %08x %08x %08x\n", i, words[i * 4], words[i * 4 + 1], words[i * 4 + 2]);
-    fputs(hlsl, f);
+    fputs(result, f);
     fputs("\n", f);
     fflush(f);
 }
@@ -2116,31 +1867,26 @@ static bool BuildVertexShader(TranslatedVertexShader *vs, int index) {
     D3DVERTEXELEMENT9 end = D3DDECL_END();
     elements[elementCount++] = end;
 
-    static char hlsl[65536];
-    int instructionCount = 0;
-    if (!TranslateVshToHlsl((const uint8_t*)vs->function, &normPacked, inputComponents, hlsl, sizeof(hlsl),
-                            &vs->inputsUsed, &vs->outputsWritten, &instructionCount)) {
-        D3D9Log("[d3d9] shader %d: translation failed\n", index);
+    std::vector<uint32_t> code;
+    Nv2aVertexShaderInfo info;
+    char error[256];
+    if (!Nv2aVertexShader_Translate((const uint8_t*)vs->function, normPacked, inputComponents, &code, &info, error, sizeof(error))) {
+        D3D9Log("[d3d9] shader %d: translation failed: %s\n", index, error);
         DumpTranslatedShader(index, vs, elements, elementCount, "(translation failed)");
         return false;
     }
-    DumpTranslatedShader(index, vs, elements, elementCount, hlsl);
-    ID3DBlob *code = NULL, *errors = NULL;
-    HRESULT hr = D3DCompile(hlsl, strlen(hlsl), NULL, NULL, NULL, "main", "vs_2_0", D3DCOMPILE_OPTIMIZATION_LEVEL3, 0, &code, &errors);
-    if (FAILED(hr)) {
-        if (errors != NULL) { errors->Release(); errors = NULL; }
-        hr = D3DCompile(hlsl, strlen(hlsl), NULL, NULL, NULL, "main", "vs_2_a", D3DCOMPILE_OPTIMIZATION_LEVEL3, 0, &code, &errors);
+    vs->inputsUsed = info.inputsUsed;
+    vs->outputsWritten = info.outputsWritten;
+    int instructionCount = info.instructionCount;
+    DumpTranslatedShader(index, vs, elements, elementCount, "(translated)");
+#ifndef NIGHTFIRE_STANDALONE
+    if (ShaderCheckWanted()) {
+        static char report[65536];
+        ShaderCheckLog("vertex shader", index, ShaderCheck_Vertex((const uint8_t*)vs->function, normPacked, inputComponents,
+                                                                  report, sizeof(report)), report);
     }
-    if (FAILED(hr)) {
-        D3D9Log("[d3d9] shader %d: HLSL compile failed (0x%08lx):\n%s\n", index, hr, errors ? (const char*)errors->GetBufferPointer() : "(no message)");
-        static bool dumped = false;
-        if (!dumped) { dumped = true; FILE *f = fopen("d3d9_failed_shader.hlsl", "w"); if (f) { fputs(hlsl, f); fclose(f); } }
-        if (errors) errors->Release();
-        return false;
-    }
-    if (errors) errors->Release();
-    hr = g_device->CreateVertexShader((const DWORD*)code->GetBufferPointer(), &vs->shader);
-    code->Release();
+#endif
+    HRESULT hr = g_device->CreateVertexShader((const DWORD*)code.data(), &vs->shader);
     if (FAILED(hr)) { D3D9Log("[d3d9] shader %d: CreateVertexShader failed 0x%08lx\n", index, hr); return false; }
     if (FAILED(g_device->CreateVertexDeclaration(elements, &vs->decl))) { D3D9Log("[d3d9] shader %d: CreateVertexDeclaration failed\n", index); return false; }
     D3D9Log("[d3d9] shader %d translated: %d NV2A instructions, inputs 0x%04x, outputs 0x%04x, streams 0x%03x\n",

@@ -108,6 +108,10 @@ add_library(actioninject SHARED
   src/action/engine/Direct3D/backendHost.cpp
   src/common/gfx/d3d9Backend.cpp
   src/common/gfx/nv2aPixelShader.cpp
+  src/common/gfx/nv2aVertexShader.cpp
+  src/common/gfx/shaderBuilder.cpp
+  src/common/gfx/devtools/shaderCheck.cpp
+  src/common/gfx/devtools/shaderHlsl.cpp
   src/common/gfx/fxaa.cpp
   src/common/gfx/textureReplace.cpp
   src/action/game/Autoaim.cpp
@@ -695,13 +699,18 @@ add_library(drivinginject SHARED
   src/common/xbeProfiler.cpp
   src/common/gfx/d3d9Backend.cpp
   src/common/gfx/nv2aPixelShader.cpp
+  src/common/gfx/nv2aVertexShader.cpp
+  src/common/gfx/shaderBuilder.cpp
+  src/common/gfx/devtools/shaderCheck.cpp
+  src/common/gfx/devtools/shaderHlsl.cpp
   src/common/gfx/fxaa.cpp
   src/common/gfx/textureReplace.cpp
 )
 
 
 # winmm for the multimedia timer the game's tick now comes from (src/driving/platform/XboxTimer.cpp);
-# d3d9/d3dcompiler for the shared graphics backend the D3D8 seam dispatches to.
+# d3d9 for the shared graphics backend the D3D8 seam dispatches to; d3dcompiler for its shader check
+# (src/common/gfx/devtools/shaderCheck.cpp).
 # XAUDIO2_LIB is xaudio2 or xaudio2_9 - see actioninject above.
 target_link_libraries(drivinginject PRIVATE d3d9 d3dcompiler winmm xinput9_1_0 ${XAUDIO2_LIB} shell32)
 if(MSVC)
@@ -758,7 +767,7 @@ set(NF_STANDALONE_SRC ${CMAKE_BINARY_DIR}/standalone.dir)
 get_target_property(nf_driving_sources drivinginject SOURCES)
 set(nf_standalone_sources src/driving/standalone/StandaloneMain.cpp)
 foreach(source ${nf_driving_sources})
-  if(source MATCHES "src/driving/devtools/" OR source MATCHES "src/(inject_driving|dllmain)\.cpp$" OR
+  if(source MATCHES "src/(driving|common/gfx)/devtools/" OR source MATCHES "src/(inject_driving|dllmain)\.cpp$" OR
      source MATCHES "src/common/(xbeOriginal|xbeEntrySeam|xbeProfiler)\.cpp$")
     continue()
   endif()
@@ -775,4 +784,17 @@ set_source_files_properties(${nf_standalone_sources} PROPERTIES GENERATED TRUE)
 add_dependencies(driving_standalone standalone_poison)
 target_include_directories(driving_standalone PRIVATE ${NF_FFMPEG_DIR}/include)
 target_compile_definitions(driving_standalone PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_STANDALONE)
-target_link_libraries(driving_standalone PRIVATE d3d9 d3dcompiler winmm xinput9_1_0 ${XAUDIO2_LIB} shell32)
+target_link_libraries(driving_standalone PRIVATE d3d9 winmm xinput9_1_0 ${XAUDIO2_LIB} shell32)
+
+
+# The shader check without the game (src/common/gfx/devtools/shaderCheck.h): the bytecode translators against
+# the HLSL they replaced, over shader logs and the XBEs' vertex programs. "shadercheck -v disc/Driving.xbe ...".
+add_executable(shadercheck EXCLUDE_FROM_ALL
+  src/common/gfx/devtools/shaderCheckMain.cpp
+  src/common/gfx/devtools/shaderCheck.cpp
+  src/common/gfx/devtools/shaderHlsl.cpp
+  src/common/gfx/shaderBuilder.cpp
+  src/common/gfx/nv2aVertexShader.cpp
+  src/common/gfx/nv2aPixelShader.cpp
+)
+target_link_libraries(shadercheck PRIVATE d3d9 d3dcompiler user32)

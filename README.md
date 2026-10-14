@@ -162,7 +162,8 @@ DLL is compiled with the shared backends in it, so a change under `src/common/` 
 | `tools/symbolise.py` | Names the XBE functions in a loader crash report (`Release/crash.log`). |
 | `tools/bmp2png.py` | Converts the backend's frame and texture dumps to PNG. |
 | `tools/nv2a_psh_dump.py` | Decodes the NV2A register-combiner programs the driving engine creates (`--summary` tabulates what they use). |
-| `tools/vsh_dump.py`, `tools/vsh_translate_test.ps1` | Dumps the action engine's vertex shaders, and compile-checks the translator over all of them. |
+| `tools/vsh_dump.py` | Dumps the action engine's vertex shaders. |
+| `shadercheck` (CMake target, `src/common/gfx/devtools/shaderCheckMain.cpp`) | Checks the shader translators' bytecode against the HLSL they replaced, over the backend's shader logs and the XBEs' vertex programs. |
 | `tools/xbe_entry_points.py` | Regenerates the driving engine's D3D8 and DirectSound entry-point tables, with the stack bytes each pops, out of the binary. |
 | `tools/abi_facts.py` | Measures every function's calling convention from the binary - bytes popped, registers read on entry - into `tools/abi_*.json`, which the injection table checks each tagged declaration against at compile time. Re-run after re-syncing from Ghidra. |
 | `tools/vtables.py` | Finds the driving engine's vtables and which classes (and derived classes) they belong to, into `tools/vtables_driving.json`, which checks `// VIRTUAL(n)` declarations against every override. Re-run after re-syncing from Ghidra. |

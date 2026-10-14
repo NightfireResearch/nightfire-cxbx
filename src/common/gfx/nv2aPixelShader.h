@@ -3,9 +3,10 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <vector>
 
 // ---------------------------------------------------------------------------------------------------------------
-// NV2A register combiner programs, translated to HLSL.
+// NV2A register combiner programs, translated to ps_2_0 bytecode.
 //
 // An Xbox pixel shader is not a program but a set of register values: the 240-byte D3DPIXELSHADERDEF the game
 // hands to D3DDevice_CreatePixelShader, which the console's D3D8 writes straight into the NV2A's combiner
@@ -46,8 +47,12 @@ enum {
     NV2A_PS_K_COUNT = 29
 };
 
-// Translates a definition to HLSL. False if the program could not be expressed (the info says why).
-bool Nv2aPixelShader_Translate(const uint32_t def[60], char *hlsl, size_t hlslSize, Nv2aPixelShaderInfo *info);
+// What a definition uses: its stages, texture modes and fog.
+void Nv2aPixelShader_Analyse(const uint32_t def[60], Nv2aPixelShaderInfo *info);
+
+// Translates a definition to ps_2_0 tokens. False, with the reason in error, if the program cannot be expressed.
+bool Nv2aPixelShader_Translate(const uint32_t def[60], std::vector<uint32_t> *bytecode, Nv2aPixelShaderInfo *info,
+                               char *error, size_t errorSize);
 
 // The factors a program draws with: each stage's C0 and C1, then the final combiner's two. LoadFactors is
 // what setting the shader does - the definition's literals; SetConstant is what D3DDevice_SetPixelShaderConstant

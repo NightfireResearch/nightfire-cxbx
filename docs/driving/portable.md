@@ -14,7 +14,7 @@ concentrated.
 | Window, keyboard, pads (Win32 window, XInput) | platform/XboxInput.cpp, Pad.cpp, standalone/StandaloneMain.cpp, src/common/renderWindow.h | SDL3 |
 | Sound output (XAudio2 source voices behind the DirectSound seam) | sound/xaudio2Driving.cpp, sound/dsndSeam.cpp | SDL3 audio (or miniaudio) and a small voice mixer of our own; the SND mixer above it is already ours |
 | Direct3D 9 | src/common/gfx/d3d9Backend.cpp | kept: DXVK's native build (dxvk-native, formerly D9VK) runs D3D9 over Vulkan on Linux without Wine |
-| HLSL compiler (D3DCompile) | src/common/gfx/d3d9Backend.cpp, fxaa.cpp | the NV2A translator emits D3D9 shader bytecode itself (vs_3_0/ps_3_0 tokens) - DXVK has no compiler |
+| HLSL compiler (D3DCompile) | none since step 1: only devtools/shaderCheck.cpp | the NV2A translators emit D3D9 shader bytecode themselves (vs_2_0/ps_2_0 tokens) - DXVK has no compiler |
 | Movies | src/common/fmv (FFmpeg) | already portable |
 
 Already portable: no structured exception handling outside devtools; four `__thiscall`s (GCC and Clang support the
@@ -38,9 +38,10 @@ is emulated; and DXVK on macOS goes through MoltenVK, whose D3D9 coverage is inc
 
 Each step keeps the Windows build working and is tested by the lockstep runs and shadows on the existing runner.
 
-1. **Shader bytecode.** The translator (src/common/gfx/nv2aPixelShader.cpp, TranslateVshToHlsl) and fxaa.cpp produce
-   D3D9 bytecode directly; D3DCompile is used only by a devtools check comparing the two. Testable on Windows now:
-   lockstep frames against the baselines.
+1. **Shader bytecode.** Done (14 October 2026, docs/architecture/shader-bytecode.md): the translators
+   (nv2aVertexShader.cpp, nv2aPixelShader.cpp, through shaderBuilder.cpp) write D3D9 bytecode and FXAA's is
+   committed; D3DCompile is used only by the devtools check comparing the two. Lockstep frames are exact against
+   the baselines.
 2. **Platform layer.** One interface (threads, TLS, locks, events, heap, files, time) with the Win32 implementation the
    code uses today, then a POSIX implementation. Behaviour-neutral on Windows: lockstep and shadows unchanged.
 3. **Window, input and sound output on SDL3**, behind a build option on Windows first; the sound traces and frames of the
