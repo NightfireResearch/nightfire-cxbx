@@ -178,8 +178,12 @@ static void ReportFrameTiming(double arrivedAtPacer, double leftPacer) {
 static void PaceFrame(void) {
     if (g_targetFrameRate <= 0)
         return;
-    double period = 1.0 / (double)g_targetFrameRate;
     double now = NowSeconds();
+    if (GfxHost_PresentEvery() != 0) {   // a run nobody watches in real time
+        ReportFrameTiming(now, now);
+        return;
+    }
+    double period = 1.0 / (double)g_targetFrameRate;
     double arrived = now;
     if (g_nextFrameDeadline == 0 || now > g_nextFrameDeadline + 0.25) // first frame, or we fell far behind (a load)
         g_nextFrameDeadline = now;
@@ -1255,7 +1259,10 @@ void D3D9_Swap(uint32_t type) {
         ApplyAntiAliasing();
     g_aaSceneDrawn = g_aaApplied = false;
 #endif
-    HRESULT hr = g_device->Present(NULL, NULL, NULL, NULL);
+    int presentEvery = GfxHost_PresentEvery();
+    HRESULT hr = D3D_OK;
+    if (presentEvery == 0 || g_frameCount % (uint32_t)presentEvery == 0)
+        hr = g_device->Present(NULL, NULL, NULL, NULL);
     PaceFrame();
     if (hr == D3DERR_DEVICELOST) {
         if (g_device->TestCooperativeLevel() == D3DERR_DEVICENOTRESET) {

@@ -367,6 +367,7 @@ add_library(drivinginject SHARED
   src/driving/devtools/SceneObjShadow.cpp
   src/driving/devtools/TexContextShadow.cpp
   src/driving/devtools/Teleport.cpp
+  src/driving/devtools/FaultGuard.cpp
   src/driving/devtools/MemShadow.cpp
   src/driving/devtools/FileSysShadow.cpp
   src/driving/devtools/FileSysTrace.cpp

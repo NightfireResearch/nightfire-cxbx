@@ -94,6 +94,7 @@
 #include <string.h>
 
 #include "../../common/renderWindow.h"
+#include "../platform/RealSystem.h"
 #include "../../common/gfx/d3d9Backend.h"
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -558,9 +559,18 @@ static bool LockstepOn(void) {
 // The scheduler's own one-tick mode, on before each call decides how many ticks to run. Scheduler::Run otherwise
 // simulates as many ticks as the clock moved since its last call, which on the first call after the scheduler is
 // made, and the first after an ERestart's Scheduler::Reset, is however long the host took to get there.
+//
+// Unpaced (Teleport_LockstepPresentEvery), the clock is taken off the 50 Hz timer and moved one tick here instead, so
+// that every call simulates a tick without waiting for the timer. Its only other reader, RealClock_Div2Ticks, feeds
+// ERenderFrame's LastRenderClock.
 void Teleport_BeforeRun(Scheduler *scheduler) {
-    if (LockstepOn())
-        scheduler->oneTickPerRun = 1;
+    if (!LockstepOn())
+        return;
+    scheduler->oneTickPerRun = 1;
+    if (Teleport_LockstepPresentEvery() != 0) {
+        TIMER_removetask(RealClock_InterruptHandler);   // again after any RealClock_Init
+        RealClock_InterruptHandler();
+    }
 }
 
 // The dashboard clock reads the host's local time, which no two runs share.
@@ -569,4 +579,24 @@ bool Teleport_LockstepLocalTime(SYSTEMTIME *time) {
         return false;
     *time = SYSTEMTIME{ 2002, 11, 2, 26, 12, 0, 0, 0 };   // year, month, weekday, day, 12:00:00.000
     return true;
+}
+
+// A lockstep run simulates one tick per frame whatever the time, and its frames are dumped from the back buffer
+// before Present, so neither presenting a frame nor waiting for its time (the backend's pacing, the scheduler's 50 Hz
+// clock: Teleport_BeforeRun) changes the run - only how long it takes.
+int Teleport_LockstepPresentEvery(void) {
+    static int every = -1;
+    if (every < 0) {
+        every = 0;
+        if (LockstepOn()) {
+            char text[16] = "";
+            every = GetEnvironmentVariableA("NIGHTFIRE_PRESENT_EVERY", text, sizeof(text)) ? atoi(text) : 50;
+            if (every < 0)
+                every = 0;
+            printf("[lockstep] %s\n", every == 0 ? "every frame presented and paced"
+                                                : "frames not paced; every so many presented (NIGHTFIRE_PRESENT_EVERY)");
+            fflush(stdout);
+        }
+    }
+    return every;
 }

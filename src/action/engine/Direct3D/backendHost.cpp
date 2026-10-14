@@ -18,3 +18,7 @@ int GfxHost_FpsOverride(void) {
 void GfxHost_ReportPeriodic(void) {
     XboxFile_ReportStreamingIfDue();
 }
+
+int GfxHost_PresentEvery(void) {
+    return 0;
+}
