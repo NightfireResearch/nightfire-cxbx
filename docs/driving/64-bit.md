@@ -321,3 +321,13 @@ Packages 3a-5 are independent once 2 has landed; 6 and 8 can run beside them. Tw
    both are new forms the style guide should name.
 6. **The bar for step 3**: exact lockstep against the 32-bit build on the same machine (recommended), or "runs and
    plays" with new 64-bit baselines.
+
+### Decided (15 October 2026)
+
+- In-memory structures: **native pointers**, with their layout checks made 32-bit-only (a documented exception to the
+  style guide's same-allocation-sizes rule; package 0's heap-padding lockstep checks first that nothing depends on them).
+- x87 on x86-64: **assembly stubs** with the same instructions (exact against the 32-bit build on the same CPU).
+- The bar for step 3: **exact lockstep against the 32-bit standalone build** on the same machine.
+- 64-bit Windows toolchain: **MSVC x64 plus a MASM file** for the stubs.
+- Not asked, taken as recommended: the host layer allocates the game window low (decision 2); `Ptr32<T>` members and the
+  32-bit-only check form become named exceptions in the style guide (decision 5).
