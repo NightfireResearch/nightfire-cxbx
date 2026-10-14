@@ -69,7 +69,6 @@ uint8_t ResourceRegistered;
 
 namespace {
 
-#define D3DPushBufferCursor (*(const uint16_t **)0x00175420)   // D3D8's push-buffer pointer
 
 // The handlers, called by opcode
 typedef void (*OpcodeHandler)();

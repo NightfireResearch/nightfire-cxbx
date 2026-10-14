@@ -471,6 +471,9 @@ void GLoadingScreen::Status(const char *format, ...) {
 
 // ---- the string list
 
+// XBE_GLOBAL(0x0023f800, 0xc)
+LoadScreenStringList LoadScreenStrings;
+
 // FUNC_AT(0x000e2c20)
 LoadScreenStringNode* LoadScreenStringList::NewHead() {
     LoadScreenStringNode *node = static_cast<LoadScreenStringNode *>(UMemory::FastAlloc(sizeof(LoadScreenStringNode), "STL"));

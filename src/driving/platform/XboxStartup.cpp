@@ -67,9 +67,6 @@
 // XBE_GLOBAL(0x0024b218, 4)
 HANDLE ProcessHeapHandle;
 
-// The table of initialisers XapiInitProcess runs once the heap is made.
-#define InitTableBegin    ((void (**)(void))0x001b4938u)
-#define InitTableEnd      ((void (**)(void))0x001b493cu)
 
 // ---------------------------------------------------------------------------------------------------------------
 // XAPI's last-error pair.
@@ -91,9 +88,9 @@ void __stdcall Xbox_SetLastError(DWORD error) {
 // ---------------------------------------------------------------------------------------------------------------
 // Process initialisation, in place of XapiInitProcess.
 //
-// Two of the original's jobs still mean something and are kept: creating the process heap with the reserve and
-// commit sizes out of the XBE header and leaving the handle where the game's allocator looks for it, and
-// running the initialiser table through which parts of XAPI register themselves.
+// One of the original's jobs still means something and is kept: creating the process heap with the reserve and
+// commit sizes out of the XBE header and leaving the handle where the game's allocator looks for it. The
+// initialiser table it runs next, through which parts of XAPI register themselves, is empty in this game.
 //
 // The rest are console concerns that each end in XapiBootToDash: mounting D: and the title's save directories,
 // the utility drive, the allowed-media check and the parental-control check. The auto-power-down timer goes
@@ -112,11 +109,7 @@ void __stdcall Xbox_XapiInitProcess(void) {
     }
     printf("[startup] process heap at %p\n", ProcessHeapHandle);
     StandaloneTraps_HeapCreated(ProcessHeapHandle);   // NIGHTFIRE_HEAP_SHIFT only: moves the heap's first block
-
-    for (void (**initialiser)(void) = InitTableBegin; initialiser < InitTableEnd; initialiser++) {
-        if (*initialiser != NULL)
-            (*initialiser)();
-    }
+    // The original then runs XAPI's table of initialisers (0x001b4938), which in this game holds none.
     fflush(stdout);
 }
 
@@ -131,8 +124,6 @@ void __stdcall Xbox_XapiInitProcess(void) {
 // The original also bug-checks above APC level on FS:[0x24], the Xbox's IRQL. A Win32 thread is never at a
 // raised IRQL, so there is nothing to check.
 // ---------------------------------------------------------------------------------------------------------------
-
-#define CrtDefaultMultibyteInfo ((void *)0x001d92b0u)
 
 static DWORD g_perThreadSlot = HOST_TLS_OUT_OF_INDEXES;
 
@@ -154,7 +145,7 @@ void *__cdecl Xbox_getptd(void) {
         ptd->threadId = HostGetCurrentThreadId();
         ptd->threadHandle = 0xffffffffu;
         ptd->randomSeed = 1;
-        ptd->multibyteInfo = CrtDefaultMultibyteInfo;
+        ptd->exceptionActions = Crt::ExceptionActions;
 
         if (g_perThreadSlot != HOST_TLS_OUT_OF_INDEXES)
             HostTlsSetValue(g_perThreadSlot, ptd);
@@ -254,6 +245,7 @@ void __stdcall Xbox_XInitDevices(unsigned typeCount, void *preallocTypes) {
     fflush(stdout);
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: the original's entry points patched to these
 // ---------------------------------------------------------------------------------------------------------------
 // The allocation-notification hook, patched out.
 //
@@ -383,6 +375,7 @@ void Inject_XboxStartup(void) {
         memset(site + 2, 0x90, sizeof(NOTIFICATION_HOOK_BYTES) - 2);   // nop
     }
 }
+#endif   // NIGHTFIRE_STANDALONE
 
 // The game's main frees argv when it has parsed it (0x0005a353, the C runtime's free, into the process heap) -
 // on the console XAPI built it there from the launch data's command line. So it is built there here too: one
@@ -411,6 +404,7 @@ static char **BuildArgvInProcessHeap(int argc, char **source) {
     return argv;
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: the original's entry points patched to these
 // ---------------------------------------------------------------------------------------------------------------
 // The entry point (0x0010e777), as the action engine's (Xbox_Entry in src/action/engine/XboxStartup.cpp): clamp the
 // certificate's size to what the headers hold, record the per-thread TLS block's size and index, and start the
@@ -441,6 +435,7 @@ static void __cdecl Xbox_Entry(void) {
     }
     HostCloseHandle(thread);
 }
+#endif   // NIGHTFIRE_STANDALONE
 
 DWORD WINAPI mainXapiStartup(LPVOID unused) {
     (void)unused;

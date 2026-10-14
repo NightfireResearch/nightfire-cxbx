@@ -12,10 +12,13 @@
 # shadow runs are the heavy ones, so the two never share the machine. Results in build/remote/<name>; the summary in
 # build/remote/<prefix>.summary. Settings (environment): BASE=<prefix> compares each lockstep run with
 # build/baselines/<BASE>_m<n>_<idle|accelerate> (tools/runner/compare.py), SKIP=<regex> leaves out shadow variables
-# matching it. Missions default to 1-8.
+# matching it, EXE=<path> runs another executable (Release\driving_standalone_test.exe: the standalone build's
+# lockstep runs; it has no shadows) and TARGETS the targets built (default: driving drivinginject, or
+# driving_standalone_test with that EXE), and ENV=<VAR=value;...> adds variables to the lockstep runs
+# (NIGHTFIRE_TRAP_ORIGINAL=2, say). Missions default to 1-8.
 set -e
 P=$1; WHAT=${2:-all}; MS=${3:-1 2 3 4 5 6 7 8}
-[ -n "$P" ] || { sed -n '2,14p' "$0"; exit 2; }
+[ -n "$P" ] || { sed -n '2,18p' "$0"; exit 2; }
 HERE=$(cd "$(dirname "$0")" && pwd)
 REPO=$(cd "$HERE/../.." && pwd)
 cd "$REPO"
@@ -24,9 +27,11 @@ SHADOW_LIST=build/remote/$P.shadow.list
 LOCKSTEP_LIST=build/remote/$P.lockstep.list
 SUMMARY=build/remote/$P.summary
 export RUNNER_SLOTS=${RUNNER_SLOTS:-8}
+EXE=${EXE:-'Release\driving.exe'}
+case "$EXE" in *standalone*) TARGETS=${TARGETS:-driving_standalone_test} ;; *) TARGETS=${TARGETS:-driving drivinginject} ;; esac
 
 "$HERE/remote.sh" sync > /dev/null
-"$HERE/remote.sh" build driving drivinginject | grep " error " && exit 1
+"$HERE/remote.sh" build $TARGETS | grep " error " && exit 1
 
 TICKS=500,1000,1500,2000,2500,3000,3500,4000,4500,5000,5500,6000,6500,7000,8000,9000
 SHADOWS=$(grep -rhoE '"NIGHTFIRE_[A-Z0-9]*SHADOW[A-Z0-9]*"' src/driving src/inject_driving.cpp | tr -d '"' | sort -u |
@@ -35,12 +40,12 @@ SHADOWS=$(grep -rhoE '"NIGHTFIRE_[A-Z0-9]*SHADOW[A-Z0-9]*"' src/driving src/inje
 : > "$LOCKSTEP_LIST"
 for m in $MS; do
     if [ "$WHAT" != lockstep ]; then
-        echo "${P}_shadow_m$m -Exe 'Release\\driving.exe' -GameArgs '-mission $m' -GameEnv '$SHADOWS' -DumpAfterMs 20000 -StopPattern 'dumping frame' -StartupWaitMs 3000 -TailWaitMs 3600000" >> "$SHADOW_LIST"
+        echo "${P}_shadow_m$m -Exe '$EXE' -GameArgs '-mission $m' -GameEnv '$SHADOWS' -DumpAfterMs 20000 -StopPattern 'dumping frame' -StartupWaitMs 3000 -TailWaitMs 3600000" >> "$SHADOW_LIST"
     fi
     if [ "$WHAT" != shadow ]; then
         for h in idle accelerate; do
             hold=""; [ $h = accelerate ] && hold="-GameHold accelerate"
-            echo "${P}_m${m}_$h -Exe 'Release\\driving.exe' -GameArgs '-mission $m' $hold -GameEnv 'NIGHTFIRE_LOCKSTEP=1;NIGHTFIRE_DUMP_TICKS=$TICKS;NIGHTFIRE_SNDTRACE=1;NIGHTFIRE_SNDLOCKSTEP=1' -StopPattern 'the last' -StartupWaitMs 3000 -TailWaitMs 1200000" >> "$LOCKSTEP_LIST"
+            echo "${P}_m${m}_$h -Exe '$EXE' -GameArgs '-mission $m' $hold -GameEnv 'NIGHTFIRE_LOCKSTEP=1;NIGHTFIRE_DUMP_TICKS=$TICKS;NIGHTFIRE_SNDTRACE=1;NIGHTFIRE_SNDLOCKSTEP=1${ENV:+;$ENV}' -StopPattern 'the last' -StartupWaitMs 3000 -TailWaitMs 1200000" >> "$LOCKSTEP_LIST"
         done
     fi
 done

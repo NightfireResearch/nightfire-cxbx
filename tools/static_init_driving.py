@@ -168,6 +168,12 @@ NAMED = {
     0x00243b18: ("EmptyBank", "ABank"),                        # audio/Bank.h
     0x00243a9c: ("VoiceInfoMap", "AVoiceMap"),                 # audio/Voice.h
     0x00243aa8: ("ActiveViews", "AVoiceViewList"),
+    0x00244828: ("GameStd::InitLocksFirst", "GameStd::InitLocks"),   # platform/CRuntimeStd.h
+    0x002448d4: ("GameStd::InitLocksSecond", "GameStd::InitLocks"),
+    0x002448d5: ("GameStd::TheInitAtExit", "GameStd::InitAtExit"),
+    0x001ebfa8: ("InitialiserGeoPrimState", "EAGL::GeoPrimState"),  # camera/DirectorQueue.h
+    0x001f2610: ("WorldCameraGeoPrimState", "EAGL::GeoPrimState"),  # camera/WorldCamera.h
+    0x0023f800: ("LoadScreenStrings", "LoadScreenStringList"),      # game/LoadingScreen.h
 }
 # Owned arrays of objects the initialisers construct (a vector constructor) and destroy: the name and the class.
 NAMED_OBJECT_ARRAYS = {
@@ -177,6 +183,8 @@ NAMED_OBJECT_ARRAYS = {
     0x001f5f10: ("BulletStreakMaterials", "UVolatileMaterial"),   # game/WeaponEffects.cpp
     0x002014f0: ("MuzzleFlashMaterials", "UVolatileMaterial"),
     0x00233e20: ("TrackMaterials", "UVolatileMaterial"),          # game/TyreTrack.cpp
+    0x001ebdb8: ("InitialiserDofStates", "TextureDofState"),      # camera/DirectorQueue.h
+    0x001ebea0: ("InitialiserModels", "EAGL::DynamicModel"),
 }
 # Owned arrays of records that a loop of stores clears, by the first store's address: the name, and the field
 # each store writes.
@@ -207,6 +215,8 @@ NAMED_STORES = {
     0x00243958: "Mixes.head",                                 # audio/Mix.h
     0x0024395c: "Mixes.size",
     0x00240688: "UnprofiledTimer.region",                     # eagl/Profiler.h
+    0x0023f804: "LoadScreenStrings.head",                     # game/LoadingScreen.h
+    0x0023f808: "LoadScreenStrings.size",
 }
 # Argument types of the originals' stack arguments, where they are not plain words.
 ARG_TYPES = {
@@ -229,6 +239,10 @@ HAND = {
 # Destructors written by hand there, by address.
 HAND_DTORS = {
     0x0015d080: "DestroyGlobal_0023e1b0();",
+}
+# Objects whose vtable a destructor resets but nothing calls through, by address: why. The reset is left out.
+UNCALLED_VTABLES = {
+    0x001dcd10: "RCMP_SYSTEM, the movie player's settings: the player is FFmpeg (engine/PlayMPC.cpp)",
 }
 # References that name a global without reading it, by the global's address: why.
 NOT_READS = {
@@ -483,7 +497,7 @@ def argument(type_, value):
             return "NULL"
         g = owned_global(value, 1)
         if g and g["address"] == value:   # a table of ours
-            return g["name"]
+            return "reinterpret_cast<EAGL::Packet *>(%s)" % g["name"] if type_ == "EAGL::Packet *" else g["name"]
         text = read(value, 64).split(b"\0")[0] if "char" in type_ else b""
         printable = text and all(32 <= c < 127 for c in text) and b'"' not in text
         if printable and (RDATA <= value < DATA or not read_outside(value, len(text) + 1)):   # a string constant: ours
@@ -537,6 +551,8 @@ def destructor(address):
             return "%s.vtable = %s;" % (NAMED[obj][0], vtable_name(vtable))
         if owned_global(obj, 4):
             raise SystemExit("0x%08x: the vtable of %s, which is ours: add it to NAMED" % (obj, owned_global(obj, 4)["name"]))
+        if droppable(obj, 4) or obj in UNCALLED_VTABLES:
+            return "/* unread: 0x%08x = 0x%08x */" % (obj, vtable)
         return "U32_AT(0x%08x) = 0x%08x;" % (obj, vtable)
     # push dtor ; push count ; push size ; push array ; call ??_M ; ret
     if [m for m, _ in ops] == ["push"] * 4 + ["call", "ret"] and ins[4].operands[0].imm == VEC_DTOR:
@@ -656,7 +672,10 @@ def emit(address):
             raise SystemExit("0x%08x: a block copy to or from an owned global: add it to NAMED_BLOCKS" % d)
         store(d, value_bytes(s, n * 4), n * 4)
         target = "&" + NAMED_BLOCKS[d] if d in NAMED_BLOCKS else "(void *)0x%08x" % d
-        out = ["memcpy(%s, %s, 0x%x);" % (target, source_block(s, n * 4), n * 4)]
+        if droppable(d, n * 4):
+            out = [dropped(d, "0x%x bytes from 0x%08x" % (n * 4, s))]
+        else:
+            out = ["memcpy(%s, %s, 0x%x);" % (target, source_block(s, n * 4), n * 4)]
         if "call" in mn:
             push = ins[mn.index("rep movsd") - 1] if mn[mn.index("rep movsd") - 1] == "push" else ins[5]
             out.append(atexit_line(push.operands[0].imm))
@@ -972,6 +991,7 @@ def main():
             '#include "../audio/Mix.h"',
             '#include "../audio/Voice.h"',
             '#include "../camera/DirectorQueue.h"',
+            '#include "../camera/WorldCamera.h"',
             '#include "../eagl/EaglFont.h"',
             '#include "../eagl/EaglGlobals.h"',
             '#include "../game/AIHands.h"',

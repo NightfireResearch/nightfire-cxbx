@@ -99,7 +99,7 @@ class Xbe:
 
     def string_at(self, address):
         s = self.section(address)
-        if s is None or s[0] != ".rdata":
+        if s is None or s[0] not in (".rdata", ".data"):   # .data: the render methods' parameter names
             return None
         raw = self.read(address, min(1024, s[2] - address))
         end = raw.find(b"\0")

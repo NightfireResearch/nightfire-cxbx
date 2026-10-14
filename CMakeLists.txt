@@ -367,6 +367,7 @@ add_library(drivinginject SHARED
   src/driving/devtools/SceneObjShadow.cpp
   src/driving/devtools/TexContextShadow.cpp
   src/driving/devtools/Teleport.cpp
+  src/driving/devtools/ShadowTicks.cpp
   src/driving/devtools/MemShadow.cpp
   src/driving/devtools/FileSysShadow.cpp
   src/driving/devtools/FileSysTrace.cpp
@@ -808,14 +809,16 @@ add_custom_target(preprocess
 add_dependencies(actioninject preprocess)
 add_dependencies(drivinginject preprocess)
 
-# The standalone driving engine (docs/driving/standalone.md): our code alone, no Driving.xbe mapped, no injection,
-# no devtools or shadow tests. It is built from a mirror of src/ in the build tree in which tools/standalone_poison.py
-# has replaced every Driving.xbe address left in src/driving with an identifier nothing declares, so compiling it
-# lists, use by use, what still depends on the XBE ("python tools/standalone_poison.py --count <build log>" sums
-# them up). It is not part of the default build: until that list is empty it does not compile.
-set(NF_STANDALONE_SRC ${CMAKE_BINARY_DIR}/standalone.dir)
+# The standalone driving engine (docs/driving/standalone.md): our code alone, with no Driving.xbe mapped or read, no
+# injection and no shadow tests - drivinginject's sources less the devtools, the injection and the XBE's patching
+# (each seam's and the start-up's patching is #ifndef NIGHTFIRE_STANDALONE). driving_standalone has none of the
+# devtools (standalone/NoDevtools.cpp and StandaloneHooks.cpp answer the hooks game code calls);
+# driving_standalone_test links the lockstep and dump harness (NIGHTFIRE_LOCKSTEP, DUMP_TICKS, SNDTRACE, SNDLOCKSTEP,
+# the teleports), so that a standalone run can be compared with the injected build's baselines.
+# tools/standalone_poison.py (the standalone_poison target) mirrors src/ with every Driving.xbe address still in the
+# worklist poisoned, to list what would stop this compiling.
 get_target_property(nf_driving_sources drivinginject SOURCES)
-set(nf_standalone_sources src/driving/standalone/StandaloneMain.cpp)
+set(nf_standalone_sources src/driving/standalone/StandaloneMain.cpp src/driving/standalone/StandaloneHooks.cpp)
 if(NOT NIGHTFIRE_SDL)
   list(APPEND nf_standalone_sources src/driving/platform/HostWindowWin32.cpp)   # the SDL build's is in drivinginject
 endif()
@@ -826,22 +829,33 @@ foreach(source ${nf_driving_sources})
   endif()
   list(APPEND nf_standalone_sources ${source})
 endforeach()
-list(TRANSFORM nf_standalone_sources PREPEND ${NF_STANDALONE_SRC}/)
+set(nf_standalone_harness
+  src/driving/devtools/Teleport.cpp
+  src/driving/devtools/SndLockstep.cpp
+  src/driving/devtools/SndCallTrace.cpp)
+add_executable(driving_standalone ${nf_standalone_sources} src/driving/standalone/NoDevtools.cpp)
+add_executable(driving_standalone_test EXCLUDE_FROM_ALL ${nf_standalone_sources} ${nf_standalone_harness})
+target_compile_definitions(driving_standalone_test PRIVATE NIGHTFIRE_STANDALONE_TEST)
+foreach(target driving_standalone driving_standalone_test)
+  add_dependencies(${target} preprocess)
+  target_include_directories(${target} PRIVATE ${NF_FFMPEG_DIR}/include)
+  target_compile_definitions(${target} PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_STANDALONE)
+  target_link_libraries(${target} PRIVATE d3d9 winmm xinput9_1_0 ${XAUDIO2_LIB} shell32)
+  if(NIGHTFIRE_SDL)
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_SDL)
+    target_link_libraries(${target} PRIVATE SDL3::SDL3)
+  endif()
+  if(MSVC)
+    target_link_options(${target} PRIVATE /MAP)
+  else()
+    target_link_options(${target} PRIVATE -Wl,-Map,${target}.map)
+  endif()
+endforeach()
+set(NF_STANDALONE_SRC ${CMAKE_BINARY_DIR}/standalone.dir)
 add_custom_target(standalone_poison
                   COMMAND ${Python3_EXECUTABLE} tools/standalone_poison.py ${NF_STANDALONE_SRC}
                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                   COMMENT "Mirroring src/ with the XBE's addresses poisoned (tools/standalone_poison.py)")
-add_dependencies(standalone_poison preprocess)
-add_executable(driving_standalone EXCLUDE_FROM_ALL ${nf_standalone_sources})
-set_source_files_properties(${nf_standalone_sources} PROPERTIES GENERATED TRUE)
-add_dependencies(driving_standalone standalone_poison)
-target_include_directories(driving_standalone PRIVATE ${NF_FFMPEG_DIR}/include)
-target_compile_definitions(driving_standalone PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_STANDALONE)
-target_link_libraries(driving_standalone PRIVATE d3d9 winmm xinput9_1_0 ${XAUDIO2_LIB} shell32)
-if(NIGHTFIRE_SDL)
-  target_compile_definitions(driving_standalone PRIVATE NIGHTFIRE_SDL)
-  target_link_libraries(driving_standalone PRIVATE SDL3::SDL3)
-endif()
 
 
 # The shader check without the game (src/common/gfx/devtools/shaderCheck.h): the bytecode translators against

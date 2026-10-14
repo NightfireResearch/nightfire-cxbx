@@ -21,7 +21,7 @@ struct PerThreadData {
     uint32_t fpds;
     uint32_t randomSeed;   // rand's: 1 when the block is made
     uint8_t unknown18[0x3c];
-    void *multibyteInfo;   // +0x54 the multibyte code page's, the runtime's default when the block is made
+    const void *exceptionActions;   // +0x54 _pxcptacttab: the runtime's table when the block is made
     uint8_t unknown58[0x24];
     int processingThrow;   // +0x7c _ProcessingThrow: a thrown object is on its way to a handler
     uint32_t unknown80;
@@ -29,6 +29,29 @@ struct PerThreadData {
 static_assert(sizeof(PerThreadData) == 0x84, "_tiddata");
 
 PerThreadData* PerThread();
+
+// _XcptActTab: what the runtime's exception filter does for each exception (the signal raised and its action, 0
+// for the default). Only that filter and the per-thread block's release read it, and nothing runs either.
+struct ExceptionAction {
+    uint32_t code;
+    int signal;
+    void (*action)(int);
+};
+extern ExceptionAction ExceptionActions[10];
+
+// The runtime's locks (CRuntime.cpp): 36 slots of a critical section and whether _mtinitlocks points it at one of
+// the static sections; the others are made on first use. The sections are the Xbox's 28-byte ones.
+struct CriticalSection {
+    uint8_t bytes[0x1c];
+};
+struct LockSlot {
+    CriticalSection *section;
+    int preallocated;
+};
+const int kLockCount = 36;
+const int kPreallocatedLocks = 14;
+extern LockSlot LockTable[kLockCount];
+extern CriticalSection StaticLocks[kPreallocatedLocks];
 
 // The exit list (CRuntime.cpp), for the shadow test.
 extern AtExitFn *OnExitBegin;
@@ -48,6 +71,20 @@ enum {
 // indexes it with whatever int it is given, so out-of-range values read what the original reads. __mb_cur_max is 1
 // and nothing in the game changes the locale, so the multibyte branch each test also has is never taken.
 extern const unsigned short *CtypeTable;                   // _pctype (CRuntime.cpp)
+
+// _pctype's table as one block with the 127 words before it, which negative signed chars read: in the original the
+// C++ library's strings, vtables and vbtables, two of which the streams use (CRuntimeStd.cpp).
+struct CtypeBlock {
+    unsigned short before[33];
+    unsigned short ostreamVbtable[4];      // 0x001a322c
+    unsigned short between[2];
+    unsigned short ostrstreamVbtable[4];   // 0x001a3238
+    unsigned short after[84];
+    unsigned short eof;
+    unsigned short classes[256];
+};
+static_assert(sizeof(CtypeBlock) == 0x300, "the C locale's class block");
+extern const CtypeBlock CLocaleCtype;
 extern const char DecimalPoint;                            // __decimal_point (CRuntime.cpp)
 
 enum CtypeClass {

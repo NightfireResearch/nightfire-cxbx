@@ -31,6 +31,8 @@ of our source). A literal is a hex number of five to eight digits whose value li
   data.raw           another address in .data/.bss: a raw access, or an offset into a global another line defines
   image.header       the XBE's header and certificate (0x00010000-0x00011000)
   image.other        DOLBY's DSP image and $$XTIMAGE
+  injected           anything in code the standalone build leaves out: inside #ifndef NIGHTFIRE_STANDALONE (the seams'
+                     and the start-up's patching), or an .inc only included there (the seams' entry tables)
 """
 import bisect
 import json
@@ -56,10 +58,44 @@ PATCH_CALLS = re.compile(r"\b(WriteJump|WriteJmpTo|WriteCall|PatchSite|WriteMemo
                          r"XBE_ENTRY\w*|XbeOriginal_\w+|WriteBytes|FillBytes)\s*\(")
 FN_CAST = re.compile(r"\(\s*(?:__cdecl|__stdcall|__fastcall|__thiscall)?\s*\*\s*\)|XbeOriginal\s*<|\bmov\s+e[a-d]x\s*,")
 
-CLASSES = ["tag.func_at", "tag.global", "tag.comment", "patch.site", "code.called", "code.pointer", "code.other",
+CLASSES = ["tag.func_at", "tag.global", "tag.comment", "injected", "patch.site", "code.called", "code.pointer", "code.other",
            "constant", "import.slot", "vtable", "rdata.string", "rdata.constant", "data.owned", "data.global", "data.raw",
            "image.header", "image.other"]
-WORKLIST = [c for c in CLASSES if not c.startswith("tag.") and c != "constant"]
+WORKLIST = [c for c in CLASSES if not c.startswith("tag.") and c not in ("constant", "injected")]
+GUARD = re.compile(r"\s*#\s*(?:ifndef\s+NIGHTFIRE_STANDALONE|if\s+!\s*defined\s*\(?\s*NIGHTFIRE_STANDALONE)")
+STANDALONE_ONLY = re.compile(r"\s*#\s*(?:ifdef\s+NIGHTFIRE_STANDALONE|if\s+defined\s*\(?\s*NIGHTFIRE_STANDALONE)")
+
+
+def injected_lines(lines):
+    """Per line: whether the standalone build leaves it out (inside #ifndef NIGHTFIRE_STANDALONE, or the #else of an
+    #ifdef NIGHTFIRE_STANDALONE)."""
+    stack, out = [], []
+    for line in lines:
+        if re.match(r"\s*#\s*if", line):
+            stack.append("injected" if GUARD.match(line) else "standalone" if STANDALONE_ONLY.match(line) else "")
+        elif re.match(r"\s*#\s*else", line) and stack:
+            stack[-1] = {"injected": "standalone", "standalone": "injected"}.get(stack[-1], "")
+        elif re.match(r"\s*#\s*endif", line) and stack:
+            stack.pop()
+            out.append(True if "injected" in stack else False)
+            continue
+        out.append("injected" in stack)
+    return out
+
+
+def injected_includes():
+    """The .inc files every #include of which is in code the standalone build leaves out."""
+    seen = defaultdict(list)
+    for path in source_files():
+        if path.endswith(".inc"):
+            continue
+        lines = open(path, encoding="utf-8", errors="replace").read().splitlines()
+        for line, injected in zip(lines, injected_lines(lines)):
+            m = re.match(r'\s*#\s*include\s+"([^"]+\.inc)"', line)
+            if m:
+                target = os.path.normpath(os.path.join(os.path.dirname(path), m.group(1)))
+                seen[target].append(injected)
+    return {t for t, flags in seen.items() if all(flags)}
 
 
 def xbe_sections():
@@ -166,9 +202,11 @@ def audit():
         return funcs[entries[i]] if i >= 0 else "?"
 
     hits = []   # (class, file, line, address, detail, text)
+    injected_files = injected_includes()
     for path in source_files():
         rel = os.path.relpath(path, ROOT).replace("\\", "/")
         lines = open(path, encoding="utf-8", errors="replace").read().splitlines()
+        injected = [True] * len(lines) if os.path.normpath(path) in injected_files else injected_lines(lines)
         for i, (code, comment) in enumerate(strip_comments(lines), 1):
             text = lines[i - 1].strip()
             for m in HEX.finditer(comment):
@@ -188,7 +226,9 @@ def audit():
                 if not IMAGE_START <= a < IMAGE_END:
                     continue
                 detail = ""
-                if PATCH_CALLS.search(code):
+                if injected[i - 1]:
+                    cls = "injected"
+                elif PATCH_CALLS.search(code):
                     cls = "patch.site"
                     detail = funcs.get(a, function_containing(a) + "+")
                 elif len(m.group(1)) < 8 or re.fullmatch(r"[\s{},]*((0x[0-9a-fA-F]+u?|\d+|k\w+)[\s{},]*)+", code):

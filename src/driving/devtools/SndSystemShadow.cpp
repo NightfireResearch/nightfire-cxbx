@@ -921,9 +921,6 @@ void FakeSyncTaskAdd(uint32_t task, int interval, int delay) {
 void FakeAddExit(uint32_t callback) {
     Log(11, callback);
 }
-void FakeDummyNull(void) {
-    Log(12);
-}
 void __stdcall FakeRtlInit(void *section) {
     Log(13, (uint32_t)(uintptr_t)section);
 }
@@ -960,7 +957,6 @@ void InstallFakes() {
     bool syncTaskAdd = HookBoth(0x0010aa50, (const void *)&SYNCTASK_add, (const void *)&FakeSyncTaskAdd);
     bool addExit = HookBoth(0x0010b310, (const void *)&REAL_addexit, (const void *)&FakeAddExit);
     g_canVector = syncTaskAdd && addExit;
-    HookInstall(0x000d3580, (const void *)&FakeDummyNull);
     for (int i = 0; i < 3; i++)
         g_importSaved[i] = U32(kImportSlots[i]);
     uint32_t fakes[3] = { (uint32_t)(uintptr_t)&FakeRtlInit, (uint32_t)(uintptr_t)&FakeRtlEnter,

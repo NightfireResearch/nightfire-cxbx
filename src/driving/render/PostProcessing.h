@@ -105,6 +105,13 @@ static_assert(sizeof(RPostProcessing) == 8, "RPostProcessing is 8 bytes");
 
 extern RPostProcessing *ThePostProcessing;   // RPostProcessing::Init's instance
 
+extern const std::array<uint32_t, 54> BondPostGlareVSFunction;
+extern const D3DPixelShaderDef BondPostGlarePSDefinition;
+extern const void *BondPostGlareVSFunctions[1];
+extern const uint8_t *BondPostGlarePSDefinitions[1];
+extern uint32_t BondPostGlarePackets[34];
+extern const uint32_t BondPostGlareVSDeclaration[5];
+extern const char *BondPostGlareParamNames[8];
 extern EAGL::RenderMethod BondPostGlare;   // "HB_RM = BondPostGlare" (PostProcessing.cpp)
 
 #endif // DRIVING_RENDER_POSTPROCESSING_H_

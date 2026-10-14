@@ -165,6 +165,7 @@ static BOOL __stdcall Xbox_QueryPerformanceFrequency(LARGE_INTEGER *frequency) {
     return TRUE;
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: the original's entry points patched to these
 // Each site is checked against the bytes the audit read before it is written, so that a different build of
 // the XBE is reported rather than patched in the middle of an instruction.
 static bool PatchSite(unsigned address, const unsigned char *expected, size_t length,
@@ -196,3 +197,4 @@ void Inject_XboxCycleCounter(void) {
     PatchSite(0x0014bee0, QPC, sizeof(QPC), 0xE9, (const void *)Xbox_QueryPerformanceCounter);
     PatchSite(0x0014bef1, QPF, sizeof(QPF), 0xE9, (const void *)Xbox_QueryPerformanceFrequency);
 }
+#endif   // NIGHTFIRE_STANDALONE

@@ -31,37 +31,53 @@ AtExitFn *OnExitEnd;
 // _mtinitlocks points at static sections; the others are made on first use. Original code (stdio, low-level I/O)
 // still takes them. The sections are the Xbox's 28-byte ones, worked by the kernel's calls through the import table.
 namespace Crt {
-struct CriticalSection {
-    uint8_t bytes[0x1c];
+
+// The 14 locks _mtinitlocks points at the static sections are marked 1.
+// XBE_GLOBAL(0x001d8de0, 0x120)
+LockSlot LockTable[kLockCount] = {
+    { NULL, 1 }, { NULL, 1 }, { NULL, 0 }, { NULL, 1 }, { NULL, 1 }, { NULL, 0 }, { NULL, 1 }, { NULL, 1 },
+    { NULL, 1 }, { NULL, 0 }, { NULL, 1 }, { NULL, 0 }, { NULL, 1 }, { NULL, 1 }, { NULL, 1 }, { NULL, 0 },
+    { NULL, 1 }, { NULL, 1 }, { NULL, 1 },
 };
-struct LockSlot {
-    CriticalSection *section;
-    int preallocated;
+// XBE_GLOBAL(0x00244920, 0x188)
+CriticalSection StaticLocks[kPreallocatedLocks];
+} // namespace Crt
+
+
+namespace Crt {
+// SIGSEGV for an access violation, SIGILL for an illegal or privileged instruction, SIGFPE for the x87's faults.
+// XBE_GLOBAL(0x001d92b0, 0x78)
+ExceptionAction ExceptionActions[10] = {
+    { 0xc0000005, 11, NULL }, { 0xc000001d, 4, NULL }, { 0xc0000096, 4, NULL }, { 0xc000008d, 8, NULL },
+    { 0xc000008e, 8, NULL }, { 0xc000008f, 8, NULL }, { 0xc0000090, 8, NULL }, { 0xc0000091, 8, NULL },
+    { 0xc0000092, 8, NULL }, { 0xc0000093, 8, NULL },
 };
 } // namespace Crt
-#define LockTable      ((LockSlot *)0x001d8de0u)
-#define StaticLocks    ((CriticalSection *)0x00244920u)
-static const int kLockCount = 36;
+
+// _aexit_rtn: what _amsg_exit ends in. Nothing changes it.
+typedef void (__cdecl *ExitFn)(int);
+// XBE_GLOBAL(0x001d8b50, 4)
+static ExitFn ExitRoutine = Crt::_exit;
 
 
-// _aexit_rtn: what _amsg_exit ends in, _exit. Nothing changes it.
-#define ExitRoutine (*(void (__cdecl **)(int))0x001d8b50u)
-
-
-// __lconv: the C locale's conventions, the game's table of them (0x001d8844).
+// The C locale's conventions: "." and empty strings, and CHAR_MAX for each count.
+// XBE_GLOBAL(0x001d8840, 2)
+static char LconvDecimalPoint[] = ".";
+// XBE_GLOBAL(0x002448ec, 1)
+static char LconvEmpty[1];
+// XBE_GLOBAL(0x001d8844, 0x30)
+static Crt::Lconv CLocaleConventions = {
+    LconvDecimalPoint, LconvEmpty, LconvEmpty, LconvEmpty, LconvEmpty, LconvEmpty, LconvEmpty, LconvEmpty,
+    LconvEmpty, LconvEmpty, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f,
+};
+// __lconv
 // XBE_GLOBAL(0x001d8874, 4)
-static Crt::Lconv *LocaleConventions = (Crt::Lconv *)0x001d8844u;
+static Crt::Lconv *LocaleConventions = &CLocaleConventions;
 
 namespace Crt {
 // _pctype, one entry into the C locale's class table so that EOF indexes the first. A class test indexes it with
 // whatever int it is given - a negative signed char reads the 127 words before the table, which in the original
 // are its exception records - so the table is kept as one block with them.
-struct CtypeBlock {
-    unsigned short before[127];
-    unsigned short eof;
-    unsigned short classes[256];
-};
-
 constexpr unsigned short CLocaleClass(int c) {
     unsigned short classes = 0;
     if (c < 0x20 || c == 0x7f)
@@ -86,14 +102,25 @@ constexpr CtypeBlock MakeCtypeBlock() {
         {
         0x6f65, 0x6266, 0x7469, 0x7320, 0x7465, 0x0000, 0x0000, 0x6f69, 0x5f73, 0x6162, 0x6573, 0x3a3a, 0x6166,
         0x6c69, 0x6962, 0x2074, 0x6573, 0x0074, 0x0000, 0x6f69, 0x5f73, 0x6162, 0x6573, 0x3a3a, 0x6162, 0x6264,
-        0x7469, 0x7320, 0x7465, 0x0000, 0x0000, 0x19e7, 0x0013, 0x0000, 0x0000, 0x0004, 0x0000, 0x1c01, 0x0013,
-        0x0000, 0x0000, 0x0058, 0x0000, 0xffff, 0xffff, 0x0000, 0x0000, 0x21e8, 0x0013, 0x7363, 0xe06d, 0x0001,
-        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0003, 0x0000, 0x0520, 0x1993, 0x0000, 0x0000, 0x0000, 0x0000,
-        0x26ea, 0x0013, 0x26a1, 0x0013, 0x6e55, 0x6e6b, 0x776f, 0x206e, 0x7865, 0x6563, 0x7470, 0x6f69, 0x006e,
-        0x0000, 0x2706, 0x0013, 0x26a1, 0x0013, 0x274b, 0x0013, 0x0000, 0x0000, 0xffff, 0xffff, 0x0000, 0x0000,
-        0x2a75, 0x0013, 0x0000, 0x0000, 0xffff, 0xffff, 0x0000, 0x0000, 0x3229, 0x0013, 0x0000, 0x0000, 0xffff,
-        0xffff, 0x0000, 0x0000, 0x32b8, 0x0013, 0x0000, 0x0000, 0xffff, 0xffff, 0x32ff, 0x0013, 0x3323, 0x0013,
-        0x0000, 0x0000, 0xffff, 0xffff, 0x0000, 0x0000, 0x3376, 0x0013, 0x0000, 0x0000,
+        0x7469, 0x7320, 0x7465, 0x0000, 0x0000, 0x19e7, 0x0013,
+        },
+        {
+        0x0000, 0x0000, 0x0004, 0x0000,
+        },
+        {
+        0x1c01, 0x0013,
+        },
+        {
+        0x0000, 0x0000, 0x0058, 0x0000,
+        },
+        {
+        0xffff, 0xffff, 0x0000, 0x0000, 0x21e8, 0x0013, 0x7363, 0xe06d, 0x0001, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0003, 0x0000, 0x0520, 0x1993, 0x0000, 0x0000, 0x0000, 0x0000, 0x26ea, 0x0013, 0x26a1, 0x0013,
+        0x6e55, 0x6e6b, 0x776f, 0x206e, 0x7865, 0x6563, 0x7470, 0x6f69, 0x006e, 0x0000, 0x2706, 0x0013, 0x26a1,
+        0x0013, 0x274b, 0x0013, 0x0000, 0x0000, 0xffff, 0xffff, 0x0000, 0x0000, 0x2a75, 0x0013, 0x0000, 0x0000,
+        0xffff, 0xffff, 0x0000, 0x0000, 0x3229, 0x0013, 0x0000, 0x0000, 0xffff, 0xffff, 0x0000, 0x0000, 0x32b8,
+        0x0013, 0x0000, 0x0000, 0xffff, 0xffff, 0x32ff, 0x0013, 0x3323, 0x0013, 0x0000, 0x0000, 0xffff, 0xffff,
+        0x0000, 0x0000, 0x3376, 0x0013, 0x0000, 0x0000,
         },
         0,
         {},
@@ -104,6 +131,7 @@ constexpr CtypeBlock MakeCtypeBlock() {
 }
 
 // XBE_GLOBAL(0x001a31ea, 0x300) readonly
+extern const CtypeBlock CLocaleCtype;
 const CtypeBlock CLocaleCtype = MakeCtypeBlock();
 // XBE_GLOBAL(0x001d8a00, 4)
 const unsigned short *CtypeTable = CLocaleCtype.classes;
@@ -716,7 +744,7 @@ __declspec(naked) void Crt::CIacos() {
     aboveInside:
         ja domainError
         mov eax, dword ptr [esp + 4]
-        and eax, 0x000fffff
+        and eax, 0xfffff
         or eax, dword ptr [esp]
         jnz domainError
         fstp st(0)
@@ -759,7 +787,7 @@ __declspec(naked) void Crt::CIasin() {
     aboveInside:
         ja domainError
         mov eax, dword ptr [esp + 4]
-        and eax, 0x000fffff
+        and eax, 0xfffff
         or eax, dword ptr [esp]
         jnz domainError
         fstp st(0)
@@ -861,7 +889,7 @@ __declspec(naked) void Crt::CIpow() {
         fxch st(1)
         fscale
         fstp st(1)
-        mov dword ptr [esp + 4], 0x00100000
+        mov dword ptr [esp + 4], 0x100000
         fld st(0)
         fabs
         fcomp qword ptr [esp]

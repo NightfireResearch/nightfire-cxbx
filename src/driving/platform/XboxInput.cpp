@@ -205,6 +205,9 @@ static uint32_t ConnectedMask(void) {
 
 // Ordinal-free: these are XAPI functions in the XBE, patched at their own addresses by Inject_XboxInput.
 
+// XBE_GLOBAL(0x00183aec, 4)
+XboxDeviceType XboxGamepadType;
+
 // XGetDevices(type) - which ports have a device of this type on them. The type argument names the device
 // class (gamepad, memory unit, keyboard); only gamepads are answered, and the game only asks about gamepads.
 uint32_t __stdcall Xbox_XGetDevices(void *deviceType) {
@@ -314,6 +317,7 @@ uint32_t __stdcall Xbox_XInputSetState(void *handle, XboxFeedback *feedback) {
 // Installing them.
 // ---------------------------------------------------------------------------------------------------------------
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: the original's entry points patched to these
 static void WriteJump(unsigned address, const void *target) {
     unsigned char *site = (unsigned char *)address;
     DWORD previous = 0;
@@ -334,3 +338,4 @@ void Inject_XboxInput(void) {
     WriteJump(0x00184bb3, (void *)Xbox_XGetDevices);
     WriteJump(0x00184bd5, (void *)Xbox_XGetDeviceChanges);
 }
+#endif   // NIGHTFIRE_STANDALONE

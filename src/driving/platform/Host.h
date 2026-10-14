@@ -88,6 +88,11 @@ int HostHeapFree(HostHandle heap, unsigned long flags, void *block);
 void *HostHeapReAlloc(HostHandle heap, unsigned long flags, void *block, size_t size);
 size_t HostHeapSize(HostHandle heap, unsigned long flags, const void *block);
 
+// ---- pages: memory of its own, aligned to at least a page, zeroed, readable, writable and executable; placed at the
+// lowest free address at or above `lowest` that ends below `limit`, or anywhere if there is none
+void *HostAllocatePages(size_t size, uintptr_t lowest, uintptr_t limit);
+void HostFreePages(void *block);
+
 // ---- files, by host path. Access, share, disposition and attributes are CreateFile's.
 HostHandle HostCreateFile(const char *path, unsigned long access, unsigned long share, unsigned long disposition,
                           unsigned long attributes);

@@ -16,6 +16,8 @@
 
 class DynamicLoader;
 
+#include "../gfx/D3D8Shaders.h"   // the shaders a method carries
+
 namespace EAGL {
 
 struct RenderMethod;
@@ -86,6 +88,13 @@ enum PacketOpcode : uint32_t {
 
 // A packet: a header dword (opcode << 16 | length in dwords, the header counted) and its operands. A zero header
 // ends the stream. A Packet is the header alone, so a Packet pointer steps in dwords: packet + Length() is the next.
+constexpr uint32_t PacketHeader(PacketOpcode opcode, uint32_t length) {
+    return opcode << 16 | length;
+}
+
+// An opcode-11 packet's buffer, capacity and source while it has none
+constexpr uint32_t kNoBuffer = 0xffffffff;
+
 struct Packet {
     uint32_t header;                 // +0x00
 

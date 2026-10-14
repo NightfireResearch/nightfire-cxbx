@@ -318,7 +318,7 @@ static void EAGLFont_SetRenderState(int32_t state, uint32_t value) {
         return;
     }
     if (state < 0x88) {
-        D3DDirtyFlags = D3DDirtyFlags | D3DDeferredStateDirty[state];
+        D3DDirtyFlags = D3DDirtyFlags | D3DDeferredStateDirty[state - kD3DFirstDeferredState];
         D3DRenderState[state] = value;
         return;
     }

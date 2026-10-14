@@ -1244,7 +1244,7 @@ void BuildRegions() {
     AddOwned(&MuzzleFlashPOVMaterial, 0x002016d0, 0x60, "MuzzleFlashPOVMaterial");
     AddOwned(&MissileCamState, 0x00200f60, 0x4c, "MissileCamState");
     // Both sides at the game's addresses
-    AddShared(0x001f2e20, 0xa8, "BulletStreakKinds");
+    AddShared(OwnedGlobals_OursWord(0x001f2e20), 0xa8, "BulletStreakKinds");
     AddShared(OwnedGlobals_OursWord(0x001c45c4), 8, "the random generator");
     AddShared(OwnedGlobals_OursWord(0x00234e24), 4, "SimState", false);
     AddShared(OwnedGlobals_OursWord(0x00234e34), 4, "SimStepCount", false);

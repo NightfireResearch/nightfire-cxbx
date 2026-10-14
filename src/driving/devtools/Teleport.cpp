@@ -1,91 +1,12 @@
 #include "Teleport.h"
-#include "OwnedGlobals.h"
+#include "ShadowTicks.h"
+#include "../engine/GameLoop.h"            // Launch
+#include "../game/Simulation.h"
 #include "../Scheduler.hpp"
 #include "../game/MissionManager.h"
 #include "../EventManager.hpp"
 #include "../sound/snd/SndGlobals.h"
-#include "CarpShadow.h"
-#include "DebugVarShadow.h"
-#include "AttribShadow.h"
-#include "ColQueryShadow.h"
-#include "ColListShadow.h"
-#include "ColGridShadow.h"
-#include "WorldShadow.h"
-#include "TriggerShadow.h"
-#include "RoadNetShadow.h"
-#include "RoadNavShadow.h"
-#include "TargetShadow.h"
-#include "PhysObjShadow.h"
-#include "RigidBasicsShadow.h"
-#include "RigidCoreShadow.h"
-#include "RigidResolveShadow.h"
-#include "RigidCollideShadow.h"
-#include "RenderShadow.h"
-#include "GeoPrimShadow.h"
 #include "SndCallTrace.h"
-#include "StandaloneTraps.h"
-#include "ViewCamShadow.h"
-#include "CamDataShadow.h"
-#include "PlayerCamShadowA.h"
-#include "PlayerCamShadowB.h"
-#include "PlayerCamShadowC.h"
-#include "GeomShadow.h"
-#include "AudioMgrShadow.h"
-#include "AudioMixShadow.h"
-#include "AudioStreamShadow.h"
-#include "AudioVoiceShadow.h"
-#include "AudioIndexShadow.h"
-#include "ActorShadow.h"
-#include "CharacterShadow.h"
-#include "IKShadow.h"
-#include "ActModelShadow.h"
-#include "PoserShadow.h"
-#include "AnimEngineShadow.h"
-#include "RendererShadow.h"
-#include "LightShadow.h"
-#include "SceneObjShadow.h"
-#include "TexContextShadow.h"
-#include "ReflectionShadow.h"
-#include "RenderFxShadow.h"
-#include "ParticleShadow.h"
-#include "InputShadow.h"
-#include "BondCarShadowA.h"
-#include "BondCarShadowB.h"
-#include "BondCarShadowC.h"
-#include "BondCarShadowD.h"
-#include "GameAudioShadowA.h"
-#include "GameAudioShadowB.h"
-#include "GameAudioShadowC.h"
-#include "GameAudioShadowD.h"
-#include "GameEffectsShadowA.h"
-#include "GameEffectsShadowB.h"
-#include "GameEffectsShadowC.h"
-#include "GameEffectsShadowD.h"
-#include "GameWeaponsShadowA.h"
-#include "GameWeaponsShadowB.h"
-#include "GameWeaponsShadowC.h"
-#include "GameWeaponsShadowD.h"
-#include "GameMissionsShadowA.h"
-#include "GameMissionsShadowB.h"
-#include "GameMissionsShadowC.h"
-#include "GameMissionsShadowD.h"
-#include "GameEventsShadowA.h"
-#include "GameEventsShadowB.h"
-#include "GameEventsShadowC.h"
-#include "GameEventsShadowD.h"
-#include "GameAIShadowA.h"
-#include "GameAIShadowB.h"
-#include "GameAIShadowC.h"
-#include "GameAIShadowD.h"
-#include "GameAIShadowE.h"
-#include "GameAIShadowF.h"
-#include "GameFrontEndShadowA.h"
-#include "GameFrontEndShadowB.h"
-#include "GameFrontEndShadowC.h"
-#include "GameFrontEndShadowD.h"
-#include "CRuntimeShadowA.h"
-#include "CRuntimeShadowB.h"
-#include "VehicleShadow.h"
 
 #include <windows.h>
 #include <stdio.h>
@@ -131,16 +52,7 @@
 // EResetPlayerCarPos would have run: on the game thread, between simulation steps.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define PLAYER_CAR_HANDLE   OwnedGlobals_OursWord(0x00234e40)  // -> -> the player's PBondCar
-#define SIMULATION          OwnedGlobals_OursWord(0x00233ff0)  // Sim
-#define MISSION_NUMBER      OwnedGlobals_OursWord(0x00244504)  // from the launch data (1 paris, 2 uw_mis11, ... - see inject_driving.cpp)
-
-typedef uint8_t *(__thiscall *GetRigidBodyFunc)(void *simulation, int rigidBodyId);
-typedef void (__thiscall *PlaceRigidBodyFunc)(void *simulation, float *position, float *direction);
 typedef void (__thiscall *ResetCarFunc)(void *car, float *position, float *direction);
-
-static const GetRigidBodyFunc Simulation_GetRigidBody = (GetRigidBodyFunc)0x000b2700;
-static const PlaceRigidBodyFunc Simulation_PlacePlayer = (PlaceRigidBodyFunc)0x000b2b50;
 
 #define VK_F8_  0x77
 #define VK_F9_  0x78
@@ -152,12 +64,12 @@ struct Place {
 };
 
 static uint8_t *PlayerCar(void) {
-    uint8_t **handle = *(uint8_t ***)PLAYER_CAR_HANDLE;
-    return handle != NULL ? *handle : NULL;
+    PVehicle **cars = fgSimulation.cars.first;
+    return cars != NULL ? reinterpret_cast<uint8_t *>(*cars) : NULL;
 }
 
 static uint8_t *PlayerRigidBody(uint8_t *car) {
-    return Simulation_GetRigidBody((void *)SIMULATION, *(int16_t *)(car + 0x4a));
+    return reinterpret_cast<uint8_t *>(fgSimulation.GetRigidBody(*(int16_t *)(car + 0x4a)));
 }
 
 static bool ParsePlace(const char *text, Place *place) {
@@ -178,7 +90,8 @@ static void Teleport(uint8_t *car, const Place *place) {
     // port's VU0 helpers, which may assume both.
     alignas(16) float position[4] = { place->x, place->y, place->z, 1.0f };
     alignas(16) float direction[4] = { place->dx, place->dy, place->dz, 1.0f };
-    Simulation_PlacePlayer((void *)SIMULATION, position, direction);
+    fgSimulation.SetStartConditions(reinterpret_cast<const Coord3 *>(position),
+                                    reinterpret_cast<const Coord3 *>(direction));
     ResetCarFunc resetCar = *(ResetCarFunc *)(*(uint8_t **)car + 0xa8);
     resetCar(car, position, direction);
     float *velocity = (float *)(PlayerRigidBody(car) + 0x40);
@@ -205,86 +118,6 @@ static void FormatPlace(const Place *p, char *out, size_t size) {
     snprintf(out, size, "%.3f,%.3f,%.3f,%.4f,%.4f,%.4f", p->x, p->y, p->z, p->dx, p->dy, p->dz);
 }
 
-// ---- the vehicle shadows' footprint on the game's queues
-// What a shadow leaves behind that the next ticks act on: events still queued (they run right after this, in
-// Scheduler::Run), sounds in the sound list, and the sound driver's free DirectSound buffers (152 ADPCM and 28
-// PCM16 when idle; FUN_0013d550 faults once both run out). Printed around each vehicle shadow and, while anything
-// changes, for the ticks after them. Events a vehicle shadow raised are test artefacts: they are dropped.
-
-#define SOUND_LIST              OwnedGlobals_Ours(0x00243a58)   // -> fgSoundList (MSVC std::list: allocator, head, size)
-
-struct QueueState {
-    uint32_t events;        // bytes queued
-    uint32_t sounds;
-    int32_t freeAdpcm, freePcm16;
-};
-
-static QueueState ReadQueues(void) {
-    QueueState q;
-    q.events = gCreationPoint != NULL && gDeletionPoint != NULL ? uint32_t(gCreationPoint - gDeletionPoint) : 0;
-    uint32_t *list = *(uint32_t **)SOUND_LIST;
-    q.sounds = list != NULL ? list[2] : 0;
-    q.freeAdpcm = FreeBufferLists[SND::kPoolAdpcm].count;
-    q.freePcm16 = FreeBufferLists[SND::kPoolPcm16].count;
-    return q;
-}
-
-static void PrintQueues(const char *when, const QueueState &q) {
-    printf("[vshadowq] %s: %u event bytes queued, %u sounds, free buffers %d ADPCM + %d PCM16\n", when, q.events,
-           q.sounds, q.freeAdpcm, q.freePcm16);
-    fflush(stdout);
-}
-
-static bool AnyVehicleShadow(void) {
-    static const char *const kNames[] = { "NIGHTFIRE_BONDCARSHADOWA", "NIGHTFIRE_BONDCARSHADOWB",
-                                          "NIGHTFIRE_BONDCARSHADOWC", "NIGHTFIRE_BONDCARSHADOWD",
-                                          "NIGHTFIRE_VEHICLESHADOW" };
-    for (const char *name : kNames) {
-        char value[16] = "";
-        DWORD length = GetEnvironmentVariableA(name, value, sizeof(value));
-        if (length != 0 && length < sizeof(value) && atoi(value) != 0)
-            return true;
-    }
-    return false;
-}
-
-// One vehicle shadow, its leftover events dropped and its footprint printed
-static void RunVehicleShadow(const char *name, void (*run)(void)) {
-    char *creation = gCreationPoint;
-    run();
-    QueueState after = ReadQueues();
-    char when[96];
-    snprintf(when, sizeof(when), "after %s (%d event bytes it left dropped)", name, int(gCreationPoint - creation));
-    gCreationPoint = creation;
-    after.events = ReadQueues().events;
-    PrintQueues(when, after);
-}
-
-// The ticks after the vehicle shadows, while the footprint changes
-static void WatchQueues(void) {
-    static int ticks = -1;
-    static QueueState last;
-    if (ticks < 0) {
-        if (!AnyVehicleShadow()) {
-            ticks = 0;
-            return;
-        }
-        ticks = 200;
-        last = ReadQueues();
-        return;
-    }
-    if (ticks == 0)
-        return;
-    ticks--;
-    QueueState now = ReadQueues();
-    if (memcmp(&now, &last, sizeof(now)) == 0)
-        return;
-    last = now;
-    char when[32];
-    snprintf(when, sizeof(when), "tick +%d", 200 - ticks);
-    PrintQueues(when, now);
-}
-
 void Teleport_Tick(void) {
     SndCallTrace_Tick();   // NIGHTFIRE_SNDTRACE=1 only: marks the tick boundary in the sound call trace
     static bool loaded = false;
@@ -297,92 +130,7 @@ void Teleport_Tick(void) {
 
     if (!loaded) {
         loaded = true;
-        // The data-layer shadows need the game started (UMemory, the static initialisers, a mounted archive):
-        // the first simulation tick is the first point after GameLoop_StartUp that devtools code sees.
-        CarpShadow_Run();   // NIGHTFIRE_CARPSHADOW=1 only
-        DebugVarShadow_Run();   // NIGHTFIRE_DBVARSHADOW=1 only
-        AttribShadow_Run();   // NIGHTFIRE_ATTRIBSHADOW=1 only
-        ColQueryShadow_Run();   // NIGHTFIRE_COLQUERYSHADOW=1 only
-        ColListShadow_Run();   // NIGHTFIRE_COLLISTSHADOW=1 only
-        ColGridShadow_Run();   // NIGHTFIRE_COLGRIDSHADOW=1 only
-        GeomShadow_RunWorld();   // NIGHTFIRE_GEOMSHADOW=1 only
-        WorldShadow_Run();   // NIGHTFIRE_WORLDSHADOW=1 only
-        TriggerShadow_Run();   // NIGHTFIRE_TRIGGERSHADOW=1 only
-        RoadNetShadow_Run();   // NIGHTFIRE_ROADNETSHADOW=1 only
-        RoadNavShadow_Run();   // NIGHTFIRE_ROADNAVSHADOW=1 only
-        TargetShadow_Run();   // NIGHTFIRE_TARGETSHADOW=1 only
-        PhysObjShadow_Run();   // NIGHTFIRE_PHYSOBJSHADOW=1 only
-        RigidBasicsShadow_Run();   // NIGHTFIRE_RIGIDBASICSSHADOW=1 only
-        RigidCoreShadow_Run();   // NIGHTFIRE_RIGIDCORESHADOW=1 only
-        RigidResolveShadow_Run();   // NIGHTFIRE_RIGIDRESOLVESHADOW=1 only
-        RigidCollideShadow_Run();   // NIGHTFIRE_RIGIDCOLLIDESHADOW=1 only
-        RenderShadow_Run();   // NIGHTFIRE_RENDERSHADOW=1 only
-        GeoPrimShadow_Run();   // NIGHTFIRE_GEOPRIMSHADOW=1 only
-        ViewCamShadow_Run();   // NIGHTFIRE_VIEWCAMSHADOW=1 only
-        CamDataShadow_Run();   // NIGHTFIRE_CAMDATASHADOW=1 only
-        PlayerCamShadowA_Run();   // NIGHTFIRE_PLAYERCAMSHADOWA=1 only
-        PlayerCamShadowB_Run();   // NIGHTFIRE_PLAYERCAMSHADOWB=1 only
-        PlayerCamShadowC_Run();   // NIGHTFIRE_PLAYERCAMSHADOWC=1 only
-        AudioMgrShadow_Run();   // NIGHTFIRE_AUDIOMGRSHADOW=1 only
-        AudioMixShadow_Run();   // NIGHTFIRE_AUDIOMIXSHADOW=1 only
-        AudioStreamShadow_Run();   // NIGHTFIRE_AUDIOSTREAMSHADOW=1 only
-        AudioVoiceShadow_Run();   // NIGHTFIRE_AUDIOVOICESHADOW=1 only
-        AudioIndexShadow_Run();   // NIGHTFIRE_AUDIOINDEXSHADOW=1 only
-        ActorShadow_Run();   // NIGHTFIRE_ACTORSHADOW=1 only
-        CharacterShadow_Run();   // NIGHTFIRE_CHARACTERSHADOW=1 only
-        IKShadow_Run();   // NIGHTFIRE_IKSHADOW=1 only
-        ActModelShadow_Run();   // NIGHTFIRE_ACTMODELSHADOW=1 only
-        PoserShadow_Run();   // NIGHTFIRE_POSERSHADOW=1 only
-        AnimEngineShadow_Run();   // NIGHTFIRE_ANIMENGINESHADOW=1 only
-        RendererShadow_Run();   // NIGHTFIRE_RENDERERSHADOW=1 only
-        LightShadow_Run();   // NIGHTFIRE_LIGHTSHADOW=1 only
-        SceneObjShadow_Run();   // NIGHTFIRE_SCENEOBJSHADOW=1 only
-        TexContextShadow_Run();   // NIGHTFIRE_TEXCONTEXTSHADOW=1 only
-        ReflectionShadow_Run();   // NIGHTFIRE_REFLECTIONSHADOW=1 only
-        RenderFxShadow_Run();   // NIGHTFIRE_RENDERFXSHADOW=1 only
-        ParticleShadow_Run();   // NIGHTFIRE_PARTICLESHADOW=1 only
-        InputShadow_Run();   // NIGHTFIRE_INPUTSHADOW=1 only
-        GameAudioShadowA_Run();   // NIGHTFIRE_GAMEAUDIOSHADOWA=1 only
-        GameAudioShadowB_Run();   // NIGHTFIRE_GAMEAUDIOSHADOWB=1 only
-        GameAudioShadowC_Run();   // NIGHTFIRE_GAMEAUDIOSHADOWC=1 only
-        GameAudioShadowD_Run();   // NIGHTFIRE_GAMEAUDIOSHADOWD=1 only
-        GameEffectsShadowA_Run();   // NIGHTFIRE_GAMEEFFECTSSHADOWA=1 only
-        GameEffectsShadowB_Run();   // NIGHTFIRE_GAMEEFFECTSSHADOWB=1 only
-        GameEffectsShadowC_Run();   // NIGHTFIRE_GAMEEFFECTSSHADOWC=1 only
-        GameEffectsShadowD_Run();   // NIGHTFIRE_GAMEEFFECTSSHADOWD=1 only
-        GameWeaponsShadowA_Run();   // NIGHTFIRE_GAMEWEAPONSSHADOWA=1 only
-        GameWeaponsShadowB_Run();   // NIGHTFIRE_GAMEWEAPONSSHADOWB=1 only
-        GameWeaponsShadowC_Run();   // NIGHTFIRE_GAMEWEAPONSSHADOWC=1 only
-        GameWeaponsShadowD_Run();   // NIGHTFIRE_GAMEWEAPONSSHADOWD=1 only
-        GameMissionsShadowA_Run();  // NIGHTFIRE_GAMEMISSIONSSHADOWA=1 only
-        GameMissionsShadowB_Run();  // NIGHTFIRE_GAMEMISSIONSSHADOWB=1 only
-        GameMissionsShadowC_Run();  // NIGHTFIRE_GAMEMISSIONSSHADOWC=1 only
-        GameMissionsShadowD_Run();  // NIGHTFIRE_GAMEMISSIONSSHADOWD=1 only
-        GameEventsShadowA_Run();    // NIGHTFIRE_GAMEEVENTSSHADOWA=1 only
-        GameEventsShadowB_Run();    // NIGHTFIRE_GAMEEVENTSSHADOWB=1 only
-        GameEventsShadowC_Run();    // NIGHTFIRE_GAMEEVENTSSHADOWC=1 only
-        GameEventsShadowD_Run();    // NIGHTFIRE_GAMEEVENTSSHADOWD=1 only
-        GameAIShadowA_Run();        // NIGHTFIRE_GAMEAISHADOWA=1 only
-        GameAIShadowB_Run();        // NIGHTFIRE_GAMEAISHADOWB=1 only
-        GameAIShadowC_Run();        // NIGHTFIRE_GAMEAISHADOWC=1 only
-        GameAIShadowD_Run();        // NIGHTFIRE_GAMEAISHADOWD=1 only
-        GameAIShadowE_Run();        // NIGHTFIRE_GAMEAISHADOWE=1 only
-        GameAIShadowF_Run();        // NIGHTFIRE_GAMEAISHADOWF=1 only
-        GameFrontEndShadowA_Run();  // NIGHTFIRE_GAMEFRONTENDSHADOWA=1 only
-        GameFrontEndShadowB_Run();  // NIGHTFIRE_GAMEFRONTENDSHADOWB=1 only
-        GameFrontEndShadowC_Run();  // NIGHTFIRE_GAMEFRONTENDSHADOWC=1 only
-        GameFrontEndShadowD_Run();  // NIGHTFIRE_GAMEFRONTENDSHADOWD=1 only
-        CRuntimeShadowA_Run();  // NIGHTFIRE_CRUNTIMESHADOWA=1 only
-        CRuntimeShadowB_Run();  // NIGHTFIRE_CRUNTIMESHADOWB=1 only
-        StandaloneTraps_FirstTick();   // NIGHTFIRE_TRAP_DATA=1 only: after the shadows
-        if (AnyVehicleShadow()) {
-            PrintQueues("before the vehicle shadows", ReadQueues());
-            RunVehicleShadow("bondcarA", BondCarShadowA_Run);   // NIGHTFIRE_BONDCARSHADOWA=1 only
-            RunVehicleShadow("bondcarB", BondCarShadowB_Run);   // NIGHTFIRE_BONDCARSHADOWB=1 only
-            RunVehicleShadow("bondcarC", BondCarShadowC_Run);   // NIGHTFIRE_BONDCARSHADOWC=1 only
-            RunVehicleShadow("bondcarD", BondCarShadowD_Run);   // NIGHTFIRE_BONDCARSHADOWD=1 only
-            RunVehicleShadow("vehicle", VehicleShadow_Run);     // NIGHTFIRE_VEHICLESHADOW=1 only
-        }
+        ShadowTicks_FirstTick();   // the shadow tests (devtools/ShadowTicks.cpp)
         char text[256] = "";
         DWORD fromEnv = GetEnvironmentVariableA("NIGHTFIRE_TELEPORT", text, sizeof(text));
         if (fromEnv == 0 || fromEnv >= sizeof(text))
@@ -400,18 +148,7 @@ void Teleport_Tick(void) {
             printf("[teleport] will teleport to %s %lu ms after the car appears\n", formatted, delayMs);
         }
     }
-    {
-        // NIGHTFIRE_VEHICLESHADOW=1 only: the helicopter tests again once one is live (events it raises dropped)
-        char *creation = gCreationPoint;
-        VehicleShadow_Tick();
-        BondCarShadowB_Tick();   // NIGHTFIRE_BONDCARSHADOWB=3 only: the live submarine/spline comparison
-        BondCarShadowA_Tick();   // NIGHTFIRE_BONDCARSHADOWA=3 only: the live snowmobile physics comparison
-        if (gCreationPoint != creation) {
-            printf("[vshadowq] the live helicopter tests left %d event bytes: dropped\n", int(gCreationPoint - creation));
-            gCreationPoint = creation;
-        }
-    }
-    WatchQueues();         // any vehicle shadow on: the event queue, sound list and sound buffers as they change
+    ShadowTicks_Tick();    // the live vehicle shadows (devtools/ShadowTicks.cpp)
 
     // NIGHTFIRE_LOCKSTEP=1: exactly one simulation tick per rendered frame (Teleport_BeforeRun), so that a run's Nth
     // frame is the same whatever the host's timing - the frame dumps and traces of two builds can then be compared
@@ -484,13 +221,13 @@ void Teleport_Tick(void) {
         haveRecorded = true;
         char formatted[128];
         FormatPlace(&recorded, formatted, sizeof(formatted));
-        printf("[teleport] Teleport=%s   (mission %u)\n", formatted, *(uint32_t *)MISSION_NUMBER);
+        printf("[teleport] Teleport=%s   (mission %u)\n", formatted, Launch.missionNum);
         FILE *f = fopen("teleports.txt", "a");
         if (f != NULL) {
             SYSTEMTIME t;
             GetLocalTime(&t);
             fprintf(f, "Teleport=%s   ; mission %u, recorded %04u-%02u-%02u %02u:%02u:%02u\n", formatted,
-                    *(uint32_t *)MISSION_NUMBER, t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond);
+                    Launch.missionNum, t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond);
             fclose(f);
         }
     }

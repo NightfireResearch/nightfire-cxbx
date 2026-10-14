@@ -1086,7 +1086,18 @@ void RunCharacters() {
     conventions[1] = Crt::localeconv();
     errors[1] = Crt::_errno();
     g_cases += 2;
-    Check(conventions[0] == conventions[1], "localeconv", "%p, port %p", (void *)conventions[0], (void *)conventions[1]);
+    // The C locale's table: the game's copy of it for the original, ours for the port - compared by what it holds
+    const Crt::Lconv &o = *conventions[0], &p = *conventions[1];
+    const char *const strings[2][10] = {
+        { o.decimalPoint, o.thousandsSep, o.grouping, o.intCurrencySymbol, o.currencySymbol, o.monDecimalPoint,
+          o.monThousandsSep, o.monGrouping, o.positiveSign, o.negativeSign },
+        { p.decimalPoint, p.thousandsSep, p.grouping, p.intCurrencySymbol, p.currencySymbol, p.monDecimalPoint,
+          p.monThousandsSep, p.monGrouping, p.positiveSign, p.negativeSign } };
+    bool same = memcmp(&o.intFracDigits, &p.intFracDigits, 8) == 0;
+    for (int i = 0; i < 10; i++)
+        same = same && strcmp(strings[0][i], strings[1][i]) == 0;
+    Check(same, "localeconv", "the tables at %p and, port, %p hold different conventions", (void *)conventions[0],
+          (void *)conventions[1]);
     Check(errors[0] == errors[1], "_errno", "%p, port %p", (void *)errors[0], (void *)errors[1]);
 }
 

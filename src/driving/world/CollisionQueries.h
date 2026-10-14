@@ -52,6 +52,8 @@ void MakeStripFace(StripTriangle *face, const StripVertex *triangle, const MATRI
 // A triangle's unit normal, pointing up (y at most 0.9999; (0, 1, 0) for a degenerate one). 0x000beff0 takes the
 // triangle in EAX and the normal in ESI: FUN_000beff0 is the adapter.
 void StripTriangleNormal(const StripVertex *triangle, Coord3 *normal);
+
+extern StripVertex LargeStripScratch[402];
 void FUN_000beff0();
 
 #endif // DRIVING_WORLD_COLLISIONQUERIES_H_

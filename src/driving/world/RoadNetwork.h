@@ -137,6 +137,17 @@ static_assert(sizeof(WRoadNetworkHeader) == 0x10, "the road network's header is 
 class WRoadNetwork;
 
 // WRoadNetwork's statics (0x0023e030-0x0023e0fc), as Init sets them
+// The lane tables: lane offsets, rows of six by lane type, and lane weights, rows of 32 - one set for the tracks
+// snow2a_mis4 and snow2a_race, one for the others. Init points six offset rows and 32 weight rows into them, the
+// later ones into the next table and past the last, as the original does; nothing reads those rows.
+struct LaneTables {
+    float snowOffsets[4][6];
+    float offsets[4][6];
+    int8_t snowWeights[10][32];
+    int8_t weights[10][32];
+};
+extern const LaneTables kLaneTables;   // (RoadNetwork.cpp)
+
 struct WRoadNetworkData {
     const int8_t *laneWeights[32];  // +0x00 rows of 32: GetSegmentLaneWeights's rows 0-9
     const float *laneOffsets[6];    // +0x80 rows of six: lane n's offset from the middle, by lane type (rows 0-3)

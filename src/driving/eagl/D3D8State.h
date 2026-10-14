@@ -10,11 +10,7 @@
 #include "../../helpers.h"
 #include "../gfx/D3D8.h"
 
-// ---- D3D8's deferred state
-
-#define D3DDirtyFlags U32_AT(0x00175424)
-#define D3DTextureState ((uint32_t (*)[32])0x00175428)    // D3DTextureState[stage][state]: 32 dwords a stage
-#define D3DRenderState ((uint32_t *)0x00175628)           // D3DRenderState[slot]
+// ---- D3D8's deferred state (D3DDirtyFlags, D3DTextureState, D3DRenderState: ../gfx/D3D8.h)
 
 // The render-state slots EAGL writes, as the Xbox's D3D8 numbers D3DRENDERSTATETYPE (57..83 the "simple" states,
 // each paired with a push-buffer method; the rest deferred, flushed through the dirty flags).
@@ -30,11 +26,6 @@ enum D3DRenderStateIndex {
     kRsPointScaleC, kRsPointSizeMax,
     kRsPresentationInterval = 127,
 };
-
-// D3D8's .rdata tables behind its inlined SetRenderState / SetTextureStageState
-#define D3DSimpleStateMethods ((const uint32_t *)0x0018e888)   // the push-buffer method per simple render state
-#define D3DDeferredStateDirty ((const uint32_t *)0x0018e668)   // the dirty bits per deferred render state
-#define D3DTextureStateDirty ((const uint32_t *)0x0018e780)    // the dirty bits per texture state from 0xc
 
 // A simple render state through its push-buffer method, then into D3D8's table
 static inline void SendState(uint32_t method, D3DRenderStateIndex index, uint32_t value) {

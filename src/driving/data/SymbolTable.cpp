@@ -80,7 +80,7 @@ static UData *DataEnd(UGroup *group) {
 // The tree
 // =============================================================================================================
 
-void TreeThrow(const char *message, uint32_t vtable, uint32_t throwInfo) {
+void TreeThrow(const char *message, uint32_t vtable, const Crt::ThrowInfo *throwInfo) {
     DATA_UNTESTED("an STL container's throw");
     GameStd::String text;
     text.capacity = 15;
@@ -90,7 +90,7 @@ void TreeThrow(const char *message, uint32_t vtable, uint32_t throwInfo) {
     GameStd::LogicError exception;
     exception.Construct(&text);
     SetVtable(&exception, vtable);
-    Crt::CxxThrowException(&exception, reinterpret_cast<const Crt::ThrowInfo *>(throwInfo));
+    Crt::CxxThrowException(&exception, throwInfo);
 }
 
 TreeNode *TreeNext(TreeNode *node) {

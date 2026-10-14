@@ -152,7 +152,7 @@ typedef void (__fastcall *ConfigSetFn)(InputConfigManager *, int, int, int);
 #define ShLaunch (*(LaunchPage *)OwnedGlobals_Ours(0x00243b90))
 #define ShSuperEasy U8_AT(OwnedGlobals_Ours(0x001e476c))
 #define ShFeedbackAllowed U8_AT(OwnedGlobals_Ours(0x001b6f50))
-#define ShFeedbackThread (*(RealThread *)0x001e2410)
+#define ShFeedbackThread (*(RealThread *)OwnedGlobals_Ours(0x001e2410))
 #define ShActionNames ActionNameTable
 // The original's copy of the port's kFrontEndSlotNames (initialised data, the same names)
 #define OrigSlotNames ((StringToNumberEntry *)0x001b6f58)

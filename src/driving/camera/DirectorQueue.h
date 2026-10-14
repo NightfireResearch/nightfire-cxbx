@@ -13,6 +13,9 @@
 
 #include "CameraSpline.h"               // CameraList
 #include "../data/CoordConvert.h"       // Coord4
+#include "../eagl/GeoPrimState.h"
+#include "../eagl/Model.h"                // DynamicModel
+#include "../eagl/RenderMethod.h"
 
 class RPlayerCamera;
 class RSceneObj;
@@ -130,6 +133,11 @@ struct TextureDofState {
 };
 static_assert(sizeof(TextureDofState) == 0x4c, "the DOF state is 0x4c bytes");
 
+// Objects only the static initialisers construct and destroy (DirectorQueue.cpp)
+extern TextureDofState InitialiserDofStates[3];
+extern EAGL::DynamicModel InitialiserModels[3];
+extern EAGL::GeoPrimState InitialiserGeoPrimState;
+
 // RDrawGroup's reverse draw list ("RReverseDrawList", 0x10 bytes): a std::vector of the translucent instances a
 // view's draw keeps for its end (DrawInstance's), with its compiled members.
 struct ReverseDrawEntry {
@@ -174,6 +182,13 @@ ReverseDrawEntry* UninitializedCopyReverseDrawEntries(ReverseDrawEntry *from, Re
 void UninitializedFillReverseDrawEntries(ReverseDrawEntry *dest, uint32_t count, const ReverseDrawEntry *value);   // 0x0007c900
 
 namespace EAGL { struct RenderMethod; }
+extern const std::array<uint32_t, 38> TextureDofVSFunction;
+extern const D3DPixelShaderDef TextureDofPSDefinition;
+extern const void *TextureDofVSFunctions[1];
+extern const uint8_t *TextureDofPSDefinitions[1];
+extern uint32_t TextureDofPackets[43];
+extern const uint32_t TextureDofVSDeclaration[7];
+extern const char *TextureDofParamNames[10];
 extern EAGL::RenderMethod TextureDofMethod;   // "HB_RM = TextureDOF" (DirectorQueue.cpp)
 
 #endif // DRIVING_CAMERA_DIRECTORQUEUE_H_

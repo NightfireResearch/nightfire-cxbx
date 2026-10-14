@@ -44,7 +44,7 @@ gc.use_engine("driving")
 SRC = os.path.join(ROOT, "src", "driving")
 OUT = os.path.join(SRC, "devtools", "OwnedGlobals.inc")
 DATA = 0x001b3da0   # .data starts here; below it is .rdata, which holds nothing mutable
-DATA_START = 0x00189be0   # .rdata, the first section after the code
+DATA_START = 0x00189be0   # .rdata, the first section after the code (D3D8's state and XPP's lie in theirs)
 
 # Owned globals never lent, by name: why.
 SKIP = {
@@ -101,6 +101,8 @@ SINGLE_COPY = set("""
     UnprofiledTimer DefaultEnvelope MemClass RenderSingletonManagerMade
     DamageSourceSig Features Launch PlayerGroundVehicles ScratchPadFreeZone SndMix TrafficGroundVehicles fgSimulation
     gEventDynamicData
+    D3DDirtyFlags D3DPushBufferCursor D3DRenderState D3DTextureState LockTable StaticLocks LibraryLocks
+    BulletStreakKinds LargeStripScratch gFeedbackThread gMouseBounds
 """.split())
 
 
@@ -397,7 +399,7 @@ def main():
         name, prefix, static, const = info
         scope = scopes.get(g["line"], [])
         # Kept for translating addresses between the copies, but never lent or snapshotted
-        keep = SKIP.get(g["name"]) or SHARED.get(g["name"]) or ("in .rdata" if g["address"] < DATA else None) or ("const" if const else None)
+        keep = SKIP.get(g["name"]) or SHARED.get(g["name"]) or ("in .rdata" if DATA_START <= g["address"] < DATA else None) or ("const" if const else None)
         if keep is None and g["name"] in SINGLE_COPY:
             keep = "shared: owned in the standalone prep, the shadows written for one copy"
         if any(s[0] in ("function", "other", "init") for s in scope):

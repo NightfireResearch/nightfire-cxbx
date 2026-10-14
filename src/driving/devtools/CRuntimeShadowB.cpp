@@ -100,7 +100,7 @@ template <class T> T &Side(T &ours, uint32_t game) {
     return g_originalSide ? *reinterpret_cast<T *>(uintptr_t(game)) : ours;
 }
 
-#define LibraryLocks ((CriticalSection *)0x002447b8u)    // the game's, both sides
+#define LibraryLocks ((CriticalSection *)OwnedGlobals_Ours(0x002447b8u))    // ours, both sides (shared)
 #define InitLocksCount Side(GameStd::InitLocksCount, 0x001d8720u)
 #define FacetList Side(GameStd::FacetList, 0x0024482cu)
 #define GlobalLocale Side(GameStd::GlobalLocale, 0x00244830u)

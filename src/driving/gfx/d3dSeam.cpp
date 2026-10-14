@@ -41,6 +41,61 @@
 // the arguments on the stack.
 // ---------------------------------------------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------------------------------------------
+// D3D8's state: the deferred state the XDK code EAGL inlined writes, and the hardware's tables it reads.
+
+// A push-buffer method header: one data word for the register.
+constexpr uint32_t PushMethod(uint32_t reg) {
+    return 1u << 18 | reg;
+}
+
+// XBE_GLOBAL(0x00175420, 4)
+const uint16_t *D3DPushBufferCursor;
+// XBE_GLOBAL(0x00175424, 4)
+uint32_t D3DDirtyFlags;
+// XBE_GLOBAL(0x00175428, 0x200)
+uint32_t D3DTextureState[4][32];
+// XBE_GLOBAL(0x00175628, 0x298)
+uint32_t D3DRenderState[kD3DRenderStateCount];
+
+// XBE_GLOBAL(0x0018e888, 0x170) readonly
+const uint32_t D3DSimpleStateMethods[kD3DSimpleStates] = {
+    PushMethod(0x0260), PushMethod(0x0264), PushMethod(0x0268), PushMethod(0x026c), PushMethod(0x0270),
+    PushMethod(0x0274), PushMethod(0x0278), PushMethod(0x027c), PushMethod(0x0288), PushMethod(0x028c),
+    PushMethod(0x0a60), PushMethod(0x0a64), PushMethod(0x0a68), PushMethod(0x0a6c), PushMethod(0x0a70),
+    PushMethod(0x0a74), PushMethod(0x0a78), PushMethod(0x0a7c), PushMethod(0x0a80), PushMethod(0x0a84),
+    PushMethod(0x0a88), PushMethod(0x0a8c), PushMethod(0x0a90), PushMethod(0x0a94), PushMethod(0x0a98),
+    PushMethod(0x0a9c), PushMethod(0x0aa0), PushMethod(0x0aa4), PushMethod(0x0aa8), PushMethod(0x0aac),
+    PushMethod(0x0ab0), PushMethod(0x0ab4), PushMethod(0x0ab8), PushMethod(0x0abc), PushMethod(0x0ac0),
+    PushMethod(0x0ac4), PushMethod(0x0ac8), PushMethod(0x0acc), PushMethod(0x0ad0), PushMethod(0x0ad4),
+    PushMethod(0x0ad8), PushMethod(0x0adc), PushMethod(0x17f8), PushMethod(0x1e20), PushMethod(0x1e24),
+    PushMethod(0x1e40), PushMethod(0x1e44), PushMethod(0x1e48), PushMethod(0x1e4c), PushMethod(0x1e50),
+    PushMethod(0x1e54), PushMethod(0x1e58), PushMethod(0x1e5c), PushMethod(0x1e60), PushMethod(0x1d90),
+    PushMethod(0x1e74), PushMethod(0x1e78), PushMethod(0x0354), PushMethod(0x033c), PushMethod(0x0304),
+    PushMethod(0x0300), PushMethod(0x0340), PushMethod(0x0344), PushMethod(0x0348), PushMethod(0x035c),
+    PushMethod(0x0310), PushMethod(0x037c), PushMethod(0x0358), PushMethod(0x0374), PushMethod(0x0378),
+    PushMethod(0x0364), PushMethod(0x0368), PushMethod(0x036c), PushMethod(0x0360), PushMethod(0x0350),
+    PushMethod(0x034c), PushMethod(0x09f8), PushMethod(0x0384), PushMethod(0x0388), PushMethod(0x0330),
+    PushMethod(0x0334), PushMethod(0x0338), PushMethod(0x1d78), PushMethod(0x147c), PushMethod(0x1d90),
+    PushMethod(0x1d90), PushMethod(0x1d90), PushMethod(0x1d90), PushMethod(0x1d90), PushMethod(0x1d90),
+    PushMethod(0x1d90), PushMethod(0x1d90),
+};
+// XBE_GLOBAL(0x0018e7d8, 0xb0) readonly
+const uint32_t D3DDeferredStateDirty[0x88 - kD3DFirstDeferredState] = {
+    0x2000, 0x2000, 0x2000, 0x2000, 0x2000, 0x2000, 0x000f, 0x000f,
+    0x000f, 0x000f, 0x1200, 0x3000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000, 0x1000,
+    0x0100, 0x0100, 0x0900, 0x0100, 0x0100, 0x0100, 0x0100, 0x0100,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000,
+};
+// XBE_GLOBAL(0x0018e7b0, 0x28) readonly
+const uint32_t D3DTextureStateDirty[0x16 - kD3DFirstDirtyTextureState] = {
+    0x0800, 0x0800, 0x0800, 0x0800, 0x0800, 0x0800, 0x0800, 0x0800,
+    0x0800, 0x0400,
+};
+
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: the original's entry points patched to these
 static XbeEntry g_entries[] = {
 #define XBE_ENTRY(name, address, stack)        { #name, address, stack, 0, 0, false },
 #define XBE_ENTRY_UNKNOWN_STACK(name, address) { #name, address, XBE_ENTRY_STACK_UNKNOWN, 0, 0, false },
@@ -51,6 +106,7 @@ static XbeEntry g_entries[] = {
 };
 
 static XbeEntrySeam g_seam = { g_entries, sizeof(g_entries) / sizeof(g_entries[0]), "d3dSeam" };
+#endif   // NIGHTFIRE_STANDALONE
 
 // ---------------------------------------------------------------------------------------------------------------
 // The entry points that do have an implementation.
@@ -1069,6 +1125,7 @@ void __stdcall D3DDevice_SetTextureState_BumpEnv(uint32_t stage, uint32_t type, 
     *(uint32_t *)(g_xboxTextureStateTable + stage * TEXTURE_STAGE_WORDS * 4 + type * 4) = value;
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: the original's entry points patched to these
 // The vertex shader constant family, all register-argument functions like SetRenderState_Simple: ECX is the
 // first constant register to write and EDX points at the values. Constant1 writes one register (four floats),
 // Constant4 writes four (a matrix), and NotInline writes a run whose length - in dwords - is its one stack
@@ -1120,6 +1177,7 @@ static void __declspec(naked) Seam_D3DDevice_SetRenderState_Simple(void) {
         ret
     }
 }
+#endif   // NIGHTFIRE_STANDALONE
 
 // The four register-argument entry points for our own code to call (D3D8.h): __fastcall is exactly their
 // convention - the first two arguments in ECX and EDX, anything further on the stack and popped by the callee - so
@@ -1148,6 +1206,7 @@ void __fastcall D3DDevice_SetVertexShaderConstantNotInline(int reg, const void *
 // ---------------------------------------------------------------------------------------------------------------
 
 static void ReachedUnimplemented(const char *name) {
+#ifndef NIGHTFIRE_STANDALONE
     for (XbeEntry &entry : g_entries) {
         if (strcmp(entry.name, name) != 0)
             continue;
@@ -1159,6 +1218,19 @@ static void ReachedUnimplemented(const char *name) {
         }
         return;
     }
+#else
+    static const char *reported[32];
+    for (const char *&seen : reported) {
+        if (seen == name)
+            return;
+        if (seen == NULL) {
+            seen = name;
+            printf("[d3dSeam] not implemented: %s\n", name);
+            fflush(stdout);
+            return;
+        }
+    }
+#endif
 }
 
 int32_t __stdcall D3DDevice_Reset(void *presentationParameters) {
@@ -1225,6 +1297,7 @@ void __stdcall D3DDevice_RunPushBuffer(D3DPushBuffer *pushBuffer, void *fixup) {
 
 // Name, not address: the addresses live in the generated table, and a name that is not in it is a mistake
 // worth hearing about rather than a patch that silently lands nowhere.
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: the original's entry points patched to these
 static const struct { const char *name; void *replacement; unsigned stackBytes; } g_replacements[] = {
     { "Direct3D_CreateDevice",                (void *)Direct3D_CreateDevice, 24 },
     { "D3D_SetPushBufferSize",                (void *)D3D_SetPushBufferSize, 8 },
@@ -1337,6 +1410,7 @@ static const struct { const char *name; void *replacement; unsigned stackBytes; 
     { "D3DDevice_DeleteVertexShader",         (void *)D3DDevice_DeleteVertexShader, 4 },
     { "D3DDevice_RunPushBuffer",              (void *)D3DDevice_RunPushBuffer, 8 },
 };
+#endif   // NIGHTFIRE_STANDALONE
 
 // ---------------------------------------------------------------------------------------------------------------
 // Installing it.
@@ -1346,23 +1420,30 @@ static const struct { const char *name; void *replacement; unsigned stackBytes; 
 // Only entry points that have actually been reached appear, which is the list that decides what to write
 // next.
 void D3dSeam_ReportMissing(void) {
+#ifndef NIGHTFIRE_STANDALONE
     XbeSeam_ReportMissing(&g_seam);
+#endif
 }
 
-void Inject_D3dSeam(void) {
-    // Where this build's D3D8 keeps the deferred state the backend reads back at draw time. Read out of
-    // D3DDevice_SetRenderStateNotInline (0x00167410) and D3DDevice_SetTextureStageStateNotInline
-    // (0x00167e40), which are the functions that write them.
-    g_xboxTextureStateTable = 0x00175428u;
-    g_xboxRenderStateTable = 0x00175628u;
+void D3dSeam_Init(void) {
+    // Where D3D8 keeps the deferred state the backend reads back at draw time (D3D8.h). In the original, the
+    // functions that write them are D3DDevice_SetRenderStateNotInline (0x00167410) and
+    // D3DDevice_SetTextureStageStateNotInline (0x00167e40).
+    g_xboxTextureStateTable = uint32_t(uintptr_t(D3DTextureState));
+    g_xboxRenderStateTable = uint32_t(uintptr_t(D3DRenderState));
 
     // EAGL rewrites its vertex buffers between draws - its dynamic buffer is three Xbox buffers behind one
     // object, refilled per draw - and nothing here is told. Every draw copies what it reads, at the draw.
     g_streamsVolatile = true;
+}
 
+#ifndef NIGHTFIRE_STANDALONE
+void Inject_D3dSeam(void) {
+    D3dSeam_Init();
     for (size_t i = 0; i < sizeof(g_replacements) / sizeof(g_replacements[0]); i++)
         XbeSeam_Replace(&g_seam, g_replacements[i].name, g_replacements[i].replacement,
                         g_replacements[i].stackBytes);
 
     XbeSeam_Install(&g_seam);
 }
+#endif   // NIGHTFIRE_STANDALONE

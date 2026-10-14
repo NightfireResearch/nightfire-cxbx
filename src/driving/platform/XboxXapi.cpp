@@ -272,6 +272,7 @@ void __stdcall Xbox_OutputDebugStringA(const char *text) {
 
 // ---------------------------------------------------------------------------------------------------------------
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: the original's entry points patched to these
 static void WriteJump(unsigned address, const void *target) {
     unsigned char *site = (unsigned char *)address;
     DWORD previous = 0;
@@ -283,18 +284,23 @@ static void WriteJump(unsigned address, const void *target) {
     *(int *)(site + 1) = (int)((const unsigned char *)target - (site + 5));
     VirtualProtect(site, 5, previous, &previous);
 }
+#endif   // NIGHTFIRE_STANDALONE
 
-void Inject_XboxXapi(void) {
-    // The files here are resolved by this DLL's copy of xboxPath.cpp, so it takes settings.ini's DiscPath as the
-    // loader takes it for its own copy (ApplyDiscPathSetting in src/loader/loadermain.cpp): a ';' or '#' starts
-    // a comment, trailing whitespace goes, and empty leaves the default ("../disc" beside the executables).
+// The files here are resolved by this module's copy of xboxPath.cpp, so it takes settings.ini's DiscPath as the
+// loader takes it for its own copy (ApplyDiscPathSetting in src/loader/loadermain.cpp): a ';' or '#' starts a
+// comment, trailing whitespace goes, and empty leaves the default ("../disc" beside the executables).
+void Xbox_ApplyDiscPathSetting(void) {
     char discPath[MAX_PATH];
     HostGetProfileString("Settings", "DiscPath", "", discPath, sizeof(discPath), ".\\settings.ini");
     discPath[strcspn(discPath, ";#")] = '\0';
     for (size_t length = strlen(discPath); length > 0 && (discPath[length - 1] == ' ' || discPath[length - 1] == '\t');)
         discPath[--length] = '\0';
     Xbox_SetDiscRoot(discPath);
+}
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: the original's entry points patched to these
+void Inject_XboxXapi(void) {
+    Xbox_ApplyDiscPathSetting();
     WriteJump(0x001118dd, (const void *)Xbox_XapiCreateHeap);
     WriteJump(0x00111d01, (const void *)Xbox_RtlAllocateHeap);
     WriteJump(0x001124b8, (const void *)Xbox_RtlFreeHeap);
@@ -330,3 +336,4 @@ void Inject_XboxXapi(void) {
     WriteJump(0x0010e832, (const void *)Xbox_OutputDebugStringA);
     printf("[xapi] %d XAPI functions replaced by the host's\n", 31);
 }
+#endif   // NIGHTFIRE_STANDALONE

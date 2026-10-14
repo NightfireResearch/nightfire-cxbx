@@ -14,6 +14,7 @@
 #include <stdint.h>
 
 #include "Camera.h"
+#include "../eagl/GeoPrimState.h"
 
 struct CachedDrawInfo;
 
@@ -64,6 +65,7 @@ int FloorToInt(float value);                                                    
 void TransformPointXZ(const Coord3 *point, const MATRIX4 *matrix, Coord4 *out);                 // 0x0008d120
 
 // GetAnchorMatrix4's matrix, made the identity on its first call (a function-local static and its guard)
+extern EAGL::GeoPrimState WorldCameraGeoPrimState;   // only the static initialisers make it (WorldCamera.cpp)
 extern MATRIX4 AnchorMatrix;
 extern uint32_t AnchorMatrixGuard;
 // The anchor's position and velocity without one: zero, w 1

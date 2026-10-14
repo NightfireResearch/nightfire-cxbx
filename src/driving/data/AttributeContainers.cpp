@@ -30,11 +30,9 @@
 // and _CxxThrowException), but nothing reaches them.
 // ---------------------------------------------------------------------------------------------------------------
 
-// std::length_error's and std::out_of_range's vtables and throw descriptions.
+// std::length_error's and std::out_of_range's vtables.
 #define LengthErrorVtable ((void *)Vtable_00189eec)
-#define LengthErrorThrowInfo ((const Crt::ThrowInfo *)0x001a89bc)
 #define OutOfRangeVtable ((void *)Vtable_0018a29c)
-#define OutOfRangeThrowInfo ((const Crt::ThrowInfo *)0x001a8bd8)
 
 namespace {
 
@@ -288,7 +286,7 @@ typename Tree::Node *TreeInsert(Tree *tree, bool addLeft, typename Tree::Node *w
     typedef typename Tree::Node Node;
     if (tree->size >= 0xffffffffu / sizeof(Value) - 1) {
         ATTRIBUTE_UNTESTED("an attribute tree's insert past max_size");
-        ThrowStl("map/set<T> too long", LengthErrorVtable, LengthErrorThrowInfo);
+        ThrowStl("map/set<T> too long", LengthErrorVtable, &Crt::LengthErrorThrowInfo);
     }
     Node *node = TreeBuynode<Tree>(tree->head, where, tree->head, value, kTreeRed);
     tree->size++;
@@ -350,7 +348,7 @@ typename Tree::Node *TreeErase(Tree *tree, typename Tree::Node *erased) {
     typedef typename Tree::Node Node;
     if (erased->isNil) {
         ATTRIBUTE_UNTESTED("an attribute tree's erase at end()");
-        ThrowStl("invalid map/set<T> iterator", OutOfRangeVtable, OutOfRangeThrowInfo);
+        ThrowStl("invalid map/set<T> iterator", OutOfRangeVtable, &Crt::OutOfRangeThrowInfo);
     }
     Node *next = TreeNext(erased);
     Node *fix;          // the node to recolour as needed
@@ -1216,7 +1214,7 @@ AttributeStoreBlock *StoreBlockUninitializedFill(AttributeStoreBlock *first, uin
 // FUNC_AT(0x00054640)
 void StoreBlockList::Xlen() {
     ATTRIBUTE_UNTESTED("StoreBlockList::Xlen");
-    ThrowStl("vector<T> too long", LengthErrorVtable, LengthErrorThrowInfo);
+    ThrowStl("vector<T> too long", LengthErrorVtable, &Crt::LengthErrorThrowInfo);
 }
 
 // _Insert_n: room made by moving the tail, or a new array half as large again (or as large as needed).

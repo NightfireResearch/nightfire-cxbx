@@ -446,7 +446,13 @@ void LogStatics(const char *what, const WRoadNetworkData &net) {
     Logf("%s counts %d %d %d %d %d flags %d %d %d stamp %u", what, net.nodeCount, net.segmentCount,
          net.intersectionCount, net.junctionCount, net.roadCount, net.unknownAC, net.unknownAD, net.loaded,
          net.queryStamp);
-    LogBytes(" lane tables", &net, offsetof(WRoadNetworkData, junctionCount));
+    // The row pointers, an original's as ours: rows past the four tables point past them in both copies
+    uint32_t rows[38];
+    memcpy(rows, &net, sizeof(rows));
+    for (uint32_t &row : rows)
+        if (row >= 0x001ca000 && row < 0x001ca600)
+            row = uint32_t(uintptr_t(&kLaneTables)) + (row - 0x001ca000);
+    LogBytes(" lane tables", rows, sizeof(rows));
 }
 
 void TestRestart() {

@@ -135,4 +135,6 @@ struct LoadScreenStringList {
                                  LoadScreenStringNode *last);                                   // 0x000e2c80
 };
 
+extern LoadScreenStringList LoadScreenStrings;   // (name ours)
+
 #endif // DRIVING_GAME_LOADINGSCREEN_H_

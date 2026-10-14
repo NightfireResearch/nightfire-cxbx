@@ -20,9 +20,15 @@ long double arithmetic and both float conversions, the printf and scanf engines 
 ours by functions: 74 replaced, 338 dead, nothing live. Two shadow tests compare the ports with the originals: both
 clean in game on all eight missions, and the lockstep runs exact on all sixteen (see what the testing taught). Since (13 October 2026, docs/driving/standalone.md): `_purecall`
 0x00131d35 (Ghidra: `__pure_virtual`, `_amsg_exit(25)`), which 91 slots of our vtables hold, and the kernel's critical
-sections and KeBugCheck through platform/KernelImports.cpp's named wrappers. Not ported: 15 of the C++ library's
-virtual functions (five of strstreambuf's - pbackfail, seekoff, seekpos and two Ghidra does not name -, the deleting
-destructors of five facet and stream classes, five more), which 17 slots of our copies of those vtables still hold.
+sections and KeBugCheck through platform/KernelImports.cpp's named wrappers. Since 14 October 2026 (the standalone executable, standalone.md) the C++
+library's last 15 virtual functions are ported too (untested in game: nothing the game does reaches them):
+strstreambuf's overflow, pbackfail, underflow, seekoff and seekpos (and fpos(streamoff) 0x00131488), the deleting
+destructors of `_Locimp`, runtime_error, ios_base::failure, exception, bad_cast and the ostream and ostrstream ios
+entries, with the destructors and copy constructors they and the throw information name (runtime_error, failure,
+bad_cast, type_info), exception::what, runtime_error::what and failure's `_Doraise`. The throw information of the
+four types thrown (length_error, out_of_range, bad_cast, ios_base::failure) is ours as typed records (`Crt::ThrowInfo`,
+`CatchableType`, `TypeDescriptor`, CRuntimeStd.cpp, checked against the XBE by driving_data_check.py), and the
+lock table, its static sections, the library's four locks, `__lconv`'s table and `_XcptActTab` are owned globals.
 
 ## Why the game's and not ours
 
@@ -93,11 +99,12 @@ The globals only the runtime touches are ours: the exit list (0x0024b5b0/0x0024b
 `_pctype` (0x001d8a00, likewise), the process heap's handle (0x0024b218), and the C++ library's state: `_Init_cnt`
 (0x001d8720), the facet list, the global and classic locales (0x0024482c-0x00244840), `_Stdstr` and `_Stdopens`
 with the slots past them (0x00244854, StandardStreamTable), `_Atcount` and `_Atfuns` (0x001d8770, 0x002448ac), the
-locale handles and code page (0x00244ac0, 0x00244ad8). Still at the game's address: the runtime's lock table and its
-static critical sections (0x001d8de0, 0x00244920) and the library's four locks (0x002447b8) - the shadows' originals
-take the same kernel locks, and a lock copied or left uninitialised for them would hang or corrupt -,
-`__decimal_point` (0x001d8a0c, referenced from inside the dead `__forcdecpt`, which the global report counts) and the
-multibyte information the per-thread block points at (0x001d92b0).
+locale handles and code page (0x00244ac0, 0x00244ad8). Since the standalone executable (14 October 2026) the rest are ours too: the runtime's lock
+table and its static critical sections (0x001d8de0, 0x00244920) and the library's four locks (0x002447b8), shared
+with the shadows' originals (tools/owned_globals.py's SINGLE_COPY: they take our locks), `__lconv`'s table
+(0x001d8844), `_aexit_rtn` (0x001d8b50), and the exception-action table the per-thread block points at (0x001d92b0,
+`_XcptActTab`, which the old notes called multibyte information: `_freeptd` frees the field unless it is that
+table). `__decimal_point` (0x001d8a0c) was already ours.
 
 ## The startup and the exit
 

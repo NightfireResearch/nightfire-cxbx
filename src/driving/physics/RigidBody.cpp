@@ -30,7 +30,6 @@ float RigidPlayerGravity;
 
 // ---- globals
 #define LengthErrorVtable ((void *)Vtable_00189eec)      // std::length_error's
-#define LengthErrorThrowInfo ((const Crt::ThrowInfo *)0x001a89bc)
 
 namespace {
 
@@ -597,5 +596,5 @@ void VectorXlen() {
     GameStd::LengthError error;
     error.Construct(&message);
     error.vtable = LengthErrorVtable;
-    Crt::CxxThrowException(&error, LengthErrorThrowInfo);
+    Crt::CxxThrowException(&error, &Crt::LengthErrorThrowInfo);
 }

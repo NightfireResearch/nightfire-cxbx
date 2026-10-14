@@ -415,23 +415,4 @@ extern void *Vtable_001a3288[2];   // 0x001a3288
 extern void *MakeEventCallbacks[283];   // 0x0018bf38, each event's MakeEvent callback
 extern void *ResolveEventCallbacks[283];   // 0x001b6660, each event's CARP resolver
 
-// Slots still holding an original's address (no port of it):
-//   Vtable_0018bdc4[1] 0x001314ae FUN_001314ae
-//   Vtable_0018bdc4[2] 0x0013166a ?pbackfail@strstreambuf@std@@MAEHH@Z
-//   Vtable_0018bdc4[4] 0x001316b3 ?
-//   Vtable_0018bdc4[8] 0x00131702 ?seekoff@strstreambuf@std@@MAE?AV?$fpos@H@2@JHH@Z
-//   Vtable_0018bdc4[9] 0x0013183b ?seekpos@strstreambuf@std@@MAE?AV?$fpos@H@2@V32@H@Z
-//   Vtable_001a31c0[0] 0x00130f23 FUN_00130f23
-//   Vtable_001a31cc[0] 0x001311fa FUN_001311fa
-//   Vtable_001a31cc[1] 0x001311ec ?
-//   Vtable_001a31d4[0] 0x00131252 FUN_00131252
-//   Vtable_001a31d4[1] 0x001311ec ?
-//   Vtable_001a31d4[2] 0x0013139a FUN_0013139a
-//   Vtable_001a3228[0] 0x001319e7 ?
-//   Vtable_001a3234[0] 0x00131c01 ?
-//   Vtable_001a326c[0] 0x001326ea FUN_001326ea
-//   Vtable_001a326c[1] 0x001326a1 ?
-//   Vtable_001a3288[0] 0x00132706 FUN_00132706
-//   Vtable_001a3288[1] 0x001326a1 ?
-
 #endif // DRIVING_VTABLES_H_

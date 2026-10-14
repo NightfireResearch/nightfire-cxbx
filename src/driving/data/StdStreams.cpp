@@ -32,10 +32,8 @@ using namespace GameStd;
 #define NumGetVtable ((const void *const *)Vtable_0018bd94)
 #define StrStreambufVtable ((const void *const *)Vtable_0018bdc4)
 #define IStrStreamIosVtable ((const void *const *)Vtable_0018bdf8)    // basic_ios inside an istrstream
-#define IStrStreamVbtable ((const int *)0x0018bdfc)
 #define NumPutVtable ((const void *const *)Vtable_0018be04)
 #define NumpunctVtable ((const void *const *)Vtable_0018be30)
-#define BadCastThrowInfo ((const Crt::ThrowInfo *)0x001a952c)
 
 // XBE_GLOBAL(0x00244838, 0x4)
 static uint32_t FacetIdCount;          // locale::id::_Id_cnt
@@ -57,9 +55,15 @@ static const Facet *NumGetCache;
 static const Facet *NumPutCache;
 // XBE_GLOBAL(0x001e22d8, 0x4)
 static const Facet *NumpunctCache;
+// _Fpz, the fpos_t a failed seek reports, and _Stinit, the conversion state: zero, and nothing writes either
 // XBE_GLOBAL(0x00244848, 0x8)
-#define ZeroStreamPos ((const uint32_t *)0x00244848)  // the fpos_t a failed seek reports
-#define InitialMbState I32_AT(0x001e22c8)             // _Stinit, the conversion state it reports
+static const uint32_t ZeroStreamPos[2] = { 0, 0 };
+// XBE_GLOBAL(0x001e22c8, 4)
+static const int32_t InitialMbState = 0;
+
+// istrstream's vbtable: the basic_ios at +0x5c
+// XBE_GLOBAL(0x0018bdfc, 8) readonly
+const int IStrStreamVbtable[2] = { 0, 0x5c };
 
 #define LogicErrorVtable ((const void *)Vtable_00189ee4)
 #define LengthErrorVtable ((const void *)Vtable_00189eec)
@@ -166,7 +170,7 @@ const Facet *UseFacet(const Locale *locale, uint32_t &id, const Facet *&cache, u
             if (getCat(&cache) == 0xffffffff) {
                 BadCast badCast;
                 badCast.Construct("bad cast");
-                Crt::CxxThrowException(&badCast, BadCastThrowInfo);
+                Crt::CxxThrowException(&badCast, &Crt::BadCastThrowInfo);
             }
             Facet *made = const_cast<Facet *>(cache);
             facet = made;
@@ -484,6 +488,15 @@ StreamPos* GameStd::Streambuf::SeekOff(StreamPos *result, int, int, int) {
     result->position[1] = ZeroStreamPos[1];
     result->state = InitialMbState;
     return result;
+}
+
+// FUNC_AT(0x00131488)
+StreamPos* GameStd::StreamPos::Construct(int position) {
+    offset = position;
+    this->position[0] = ZeroStreamPos[0];
+    this->position[1] = ZeroStreamPos[1];
+    state = InitialMbState;
+    return this;
 }
 
 // FUNC_AT(0x00038460)

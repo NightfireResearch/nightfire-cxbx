@@ -121,6 +121,11 @@ def use_engine(engine):
                                              "cores: ours call the conversions directly"),
                     (0x001D8B54, 0x001D8B58, "the C runtime's __pInconsistency (terminate), read only by "
                                              "_inconsistency (0x001356c5), which nothing live calls"),
+                    (0x00183B28, 0x00183B38, "XPP's device-type table, read only by its own device functions "
+                                             "(GetTypeInformation, XInitDevices), which platform/XboxInput.cpp and "
+                                             "XboxStartup.cpp replace"),
+                    (0x00183B98, 0x00183BB8, "XPP's gamepad class-driver records, read only by XInitDevices "
+                                             "(platform/XboxStartup.cpp replaces it)"),
                     (0x001CAF54, 0x001CAF68, "EAGL's gpProjectionMatrix to gpModelViewProjectionMatrix, which nothing "
                                              "reads: EAGL_SymbolInit (eagl/Loader.cpp) registers the matrices "
                                              "themselves (gpViewMatrix, 0x001caf50, is ours: game/Debris.cpp)")]
@@ -147,6 +152,8 @@ def use_engine(engine):
                    (0x001500A0, 0x001500F0, 0, "MEM's block-of-pointer, which only the game's copy of MemFunctions "
                                                "(engine/UMemory.cpp's, ours) names: dead"),
                    (0x001352B5, 0x0013531A, 0x00131CF0, "the C runtime's _cropzeros, which only FUN_00131cf0 names"),
+                   (0x0013594C, 0x001359F5, 0, "the C runtime's _initstdio, which only the __xi initialiser table "
+                                               "names, and our startup leaves it out: dead"),
                    (0x0014E110, 0x0014E130, 0x0014E310, "RCMP's deleting destructor, in the vtable (0x001a7734) "
                                                         "FUN_0014e310 installs")]
     NOT_CALLS = [(0x0014BFE1, 0x0014BFE9, "SUB ECX,8 / JMP 0x17d475: a this-adjusting thunk in a DSOUND vtable "

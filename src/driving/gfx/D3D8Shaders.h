@@ -16,6 +16,7 @@ enum : uint32_t {
     D3DVSDT_FLOAT2 = 0x22,
     D3DVSDT_FLOAT3 = 0x32,
     D3DVSDT_D3DCOLOR = 0x40,
+    D3DVSDT_FLOAT4 = 0x42,
 };
 
 enum : uint32_t {
@@ -31,7 +32,8 @@ constexpr uint32_t D3DVSD_END() { return 0xffffffff; }
 // ---- Vertex shader functions
 
 // A program is written in the XDK's assembly language with these, inside a function that says
-// `using namespace Vsh;`: `Dp4(oPos.x(), v(0), c(0))` for "dp4 oPos.x, v0, c0".
+// `using namespace Vsh;`: `Dp4(oPos.x(), v(0), c(0))` for "dp4 oPos.x, v0, c0", `Add(r2.z(), r(2).y(), -r(11).z())`
+// for "add r2.z, r2.y, -r11.z". A temporary is r(n) when read and rn when written.
 namespace Vsh {
 
 // The NV2A's instruction set: a MAC operation and an ILU operation, which one instruction may pair
@@ -39,25 +41,35 @@ enum Mac : uint32_t { kMacNop, kMacMov, kMacMul, kMacAdd, kMacMad, kMacDp3, kMac
                       kMacMax, kMacSlt, kMacSge, kMacArl };
 enum Ilu : uint32_t { kIluNop, kIluMov, kIluRcp, kIluRcc, kIluRsq, kIluExp, kIluLog, kIluLit };
 
-// A source operand: a temporary (r), an input (v) or a constant (c), swizzled
+// A source operand: a temporary (r), an input (v) or a constant (c), swizzled, perhaps negated. A swizzle of fewer
+// than four components repeats its last.
 struct Source {
     enum Mux : uint32_t { kTemporary = 1, kInput = 2, kConstant = 3 };
     uint32_t mux;
     uint32_t index;
     uint32_t swizzle[4];             // the component each of x, y, z and w reads: 0 x .. 3 w
+    bool negated;
 
-    constexpr Source Replicate(uint32_t component) const {
-        return { mux, index, { component, component, component, component } };
+    constexpr Source Swizzled(uint32_t x, uint32_t y, uint32_t z, uint32_t w) const {
+        return { mux, index, { x, y, z, w }, negated };
     }
-    constexpr Source x() const { return Replicate(0); }
-    constexpr Source w() const { return Replicate(3); }
+    constexpr Source x() const { return Swizzled(0, 0, 0, 0); }
+    constexpr Source y() const { return Swizzled(1, 1, 1, 1); }
+    constexpr Source z() const { return Swizzled(2, 2, 2, 2); }
+    constexpr Source w() const { return Swizzled(3, 3, 3, 3); }
+    constexpr Source xy() const { return Swizzled(0, 1, 1, 1); }
+    constexpr Source zw() const { return Swizzled(2, 3, 3, 3); }
+    constexpr Source xyz() const { return Swizzled(0, 1, 2, 2); }
+    constexpr Source operator-() const {
+        return { mux, index, { swizzle[0], swizzle[1], swizzle[2], swizzle[3] }, !negated };
+    }
 };
 
-constexpr Source r(uint32_t n) { return { Source::kTemporary, n, { 0, 1, 2, 3 } }; }
-constexpr Source v(uint32_t n) { return { Source::kInput, n, { 0, 1, 2, 3 } }; }
-constexpr Source c(int n) { return { Source::kConstant, uint32_t(n + 96), { 0, 1, 2, 3 } }; }   // c-96..c95
+constexpr Source r(uint32_t n) { return { Source::kTemporary, n, { 0, 1, 2, 3 }, false }; }
+constexpr Source v(uint32_t n) { return { Source::kInput, n, { 0, 1, 2, 3 }, false }; }
+constexpr Source c(int n) { return { Source::kConstant, uint32_t(n + 96), { 0, 1, 2, 3 }, false }; }   // c-96..c95
 
-// A destination: an output register, or the temporary the ILU writes, with a write mask (x 8, y 4, z 2, w 1)
+// A destination: an output register or a temporary, with a write mask (x 8, y 4, z 2, w 1). No mask: none.
 struct Destination {
     bool output;
     uint32_t index;
@@ -68,6 +80,8 @@ struct Destination {
     constexpr Destination y() const { return Masked(4); }
     constexpr Destination z() const { return Masked(2); }
     constexpr Destination w() const { return Masked(1); }
+    constexpr Destination xy() const { return Masked(12); }
+    constexpr Destination zw() const { return Masked(3); }
     constexpr Destination xyz() const { return Masked(14); }
 };
 
@@ -75,25 +89,54 @@ constexpr Destination oPos = { true, 0, 15 };
 constexpr Destination oD0 = { true, 3, 15 };
 constexpr Destination oFog = { true, 5, 15 };
 constexpr Destination oT0 = { true, 9, 15 };
-constexpr Destination r1 = { false, 1, 15 };
+constexpr Destination oT3 = { true, 12, 15 };
+constexpr Destination r0 = { false, 0, 15 }, r1 = { false, 1, 15 }, r2 = { false, 2, 15 }, r3 = { false, 3, 15 },
+                      r4 = { false, 4, 15 }, r5 = { false, 5, 15 }, r6 = { false, 6, 15 }, r7 = { false, 7, 15 },
+                      r8 = { false, 8, 15 }, r9 = { false, 9, 15 }, r10 = { false, 10, 15 }, r11 = { false, 11, 15 };
+
+// The field naming the temporary written: 7 when the MAC writes none (a lone ILU names its own)
+constexpr uint32_t kNoTemporary = 7;
+constexpr uint32_t kTemporaryFromDestinations = 0xffffffff;
 
 struct Instruction {
     Mac mac;
     Ilu ilu;
-    Destination macOut;              // an output register
-    Destination iluOut;              // r1
-    Source a, b, c;                  // the MAC reads a, b and c; the ILU reads c
+    Destination macOut;
+    Destination iluOut;              // paired with a MAC operation, a temporary is r1
+    Source a, b, c;                  // the MAC reads a, b and c (ADD a and c); the ILU reads c
+    uint32_t temporary = kTemporaryFromDestinations;
+
+    // Some programs' assembler also wrote r1 into the temporary field of a MAC-and-ILU pair that writes no other
+    constexpr Instruction TempRegister(uint32_t n) const {
+        return { mac, ilu, macOut, iluOut, a, b, c, n };
+    }
 };
 
 constexpr Source kUnused = v(0);     // an operand the operation does not read
 
-constexpr Instruction Mov(Destination out, Source a) { return { kMacMov, kIluNop, out, {}, a, kUnused, kUnused }; }
-constexpr Instruction Mul(Destination out, Source a, Source b) { return { kMacMul, kIluNop, out, {}, a, b, kUnused }; }
-constexpr Instruction Mad(Destination out, Source a, Source b, Source c) { return { kMacMad, kIluNop, out, {}, a, b, c }; }
-constexpr Instruction Dp4(Destination out, Source a, Source b) { return { kMacDp4, kIluNop, out, {}, a, b, kUnused }; }
-constexpr Instruction Rcc(Destination out, Source c) { return { kMacNop, kIluRcc, {}, out, kUnused, kUnused, c }; }
-// "mul ... + rcc ...": a MAC operation and an ILU operation in one instruction
+constexpr Instruction MacOp(Mac op, Destination out, Source a, Source b, Source c) {
+    return { op, kIluNop, out, {}, a, b, c };
+}
+constexpr Instruction IluOp(Ilu op, Destination out, Source c) {
+    return { kMacNop, op, {}, out, kUnused, kUnused, c };
+}
+constexpr Instruction Mov(Destination out, Source a) { return MacOp(kMacMov, out, a, kUnused, kUnused); }
+constexpr Instruction Mul(Destination out, Source a, Source b) { return MacOp(kMacMul, out, a, b, kUnused); }
+constexpr Instruction Add(Destination out, Source a, Source b) { return MacOp(kMacAdd, out, a, kUnused, b); }
+constexpr Instruction Mad(Destination out, Source a, Source b, Source c) { return MacOp(kMacMad, out, a, b, c); }
+constexpr Instruction Dp3(Destination out, Source a, Source b) { return MacOp(kMacDp3, out, a, b, kUnused); }
+constexpr Instruction Dp4(Destination out, Source a, Source b) { return MacOp(kMacDp4, out, a, b, kUnused); }
+constexpr Instruction Max(Destination out, Source a, Source b) { return MacOp(kMacMax, out, a, b, kUnused); }
+constexpr Instruction Slt(Destination out, Source a, Source b) { return MacOp(kMacSlt, out, a, b, kUnused); }
+constexpr Instruction Rcp(Destination out, Source c) { return IluOp(kIluRcp, out, c); }
+constexpr Instruction Rcc(Destination out, Source c) { return IluOp(kIluRcc, out, c); }
+constexpr Instruction Rsq(Destination out, Source c) { return IluOp(kIluRsq, out, c); }
+constexpr Instruction Exp(Destination out, Source c) { return IluOp(kIluExp, out, c); }
+
+// "mul ... + rcc ...": a MAC operation and an ILU operation in one instruction. A mov on the right is the ILU's.
 constexpr Instruction operator+(Instruction mac, Instruction ilu) {
+    if (ilu.mac == kMacMov)
+        return { mac.mac, kIluMov, mac.macOut, ilu.macOut, mac.a, mac.b, ilu.a };
     return { mac.mac, ilu.ilu, mac.macOut, ilu.iluOut, mac.a, mac.b, ilu.c };
 }
 
@@ -111,11 +154,28 @@ constexpr std::array<uint32_t, 3> Encode(const Instruction &in, bool final) {
         return s.swizzle[0] << shift | s.swizzle[1] << (shift - 2) | s.swizzle[2] << (shift - 4) |
                s.swizzle[3] << (shift - 6);
     };
-    uint32_t word1 = in.ilu << 25 | in.mac << 21 | constant << 13 | input << 9 | swizzle(in.a, 6);
-    uint32_t word2 = temp(in.a) << 28 | in.a.mux << 26 | swizzle(in.b, 23) | temp(in.b) << 13 | in.b.mux << 11 |
-                     swizzle(in.c, 8) | temp(in.c) >> 2;
-    uint32_t word3 = (temp(in.c) & 3) << 30 | in.c.mux << 28 | 7u << 20 | in.iluOut.mask << 16 |
-                     in.macOut.mask << 12 | 1u << 11 | in.macOut.index << 3 | (final ? 1u : 0u);
+    auto negated = [](const Source &s) { return s.negated ? 1u : 0u; };
+
+    bool macTemporary = !in.macOut.output && in.macOut.mask != 0;
+    bool iluTemporary = !in.iluOut.output && in.iluOut.mask != 0;
+    bool macOutput = in.macOut.output && in.macOut.mask != 0;
+    bool iluOutput = in.iluOut.output && in.iluOut.mask != 0;
+    uint32_t temporary = macTemporary ? in.macOut.index :
+                         iluTemporary && in.mac == kMacNop ? in.iluOut.index : kNoTemporary;
+    if (in.temporary != kTemporaryFromDestinations)
+        temporary = in.temporary;
+    const Destination &out = macOutput ? in.macOut : in.iluOut;
+    uint32_t outputMask = macOutput || iluOutput ? out.mask : 0;
+    uint32_t address = macOutput || iluOutput ? out.index : 0xff;
+    uint32_t outputFromIlu = !macOutput && iluOutput ? 1 : 0;
+
+    uint32_t word1 = in.ilu << 25 | in.mac << 21 | constant << 13 | input << 9 | negated(in.a) << 8 |
+                     swizzle(in.a, 6);
+    uint32_t word2 = temp(in.a) << 28 | in.a.mux << 26 | negated(in.b) << 25 | swizzle(in.b, 23) |
+                     temp(in.b) << 13 | in.b.mux << 11 | negated(in.c) << 10 | swizzle(in.c, 8) | temp(in.c) >> 2;
+    uint32_t word3 = (temp(in.c) & 3) << 30 | in.c.mux << 28 | (macTemporary ? in.macOut.mask : 0) << 24 |
+                     temporary << 20 | (iluTemporary ? in.iluOut.mask : 0) << 16 | outputMask << 12 | 1u << 11 |
+                     address << 3 | outputFromIlu << 2 | (final ? 1u : 0u);
     return { word1, word2, word3 };
 }
 
@@ -192,7 +252,12 @@ enum : uint32_t {
     PS_INPUTMAPPING_SIGNED_IDENTITY = 0xc0,
 };
 
-enum : uint32_t { PS_COMBINEROUTPUT_IDENTITY = 0x00 };
+enum : uint32_t {
+    PS_COMBINEROUTPUT_IDENTITY = 0x00,
+    PS_COMBINEROUTPUT_SHIFTLEFT_1 = 0x10,
+};
+
+enum : uint32_t { PS_FINALCOMBINERSETTING_CLAMP_SUM = 0x80 };
 
 enum : uint32_t {
     PS_COMBINERCOUNT_MUX_MSB = 0x0001,
@@ -212,6 +277,13 @@ constexpr uint32_t PS_COMBINERINPUTS(uint32_t a, uint32_t b, uint32_t c, uint32_
 }
 constexpr uint32_t PS_COMBINEROUTPUTS(uint32_t ab, uint32_t cd, uint32_t sum, uint32_t flags) {
     return flags << 12 | sum << 8 | ab << 4 | cd;
+}
+// The final combiner: A * B + (1 - A) * C + D for the colour, G the alpha; E and F the product E * F it can read
+constexpr uint32_t PS_FINALCOMBINERINPUTS_ABCD(uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
+    return a << 24 | b << 16 | c << 8 | d;
+}
+constexpr uint32_t PS_FINALCOMBINERINPUTS_EFG(uint32_t e, uint32_t f, uint32_t g, uint32_t flags) {
+    return e << 24 | f << 16 | g << 8 | flags;
 }
 constexpr uint32_t PS_COMBINERCOUNT(uint32_t count, uint32_t flags) { return flags << 8 | count; }
 constexpr uint32_t PS_TEXTUREMODES(uint32_t t0, uint32_t t1, uint32_t t2, uint32_t t3) {

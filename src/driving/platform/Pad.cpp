@@ -16,9 +16,8 @@ PadData gPads[kPorts];
 // XBE_GLOBAL(0x00241e90, 1)
 static bool gPadInitialised;
 
-// XAPI's controller functions: XboxInput.cpp's. XDEVICE_TYPE_GAMEPAD is the address of the device-type table XAPI
-// keeps in the XBE.
-#define XDEVICE_TYPE_GAMEPAD ((void *)0x00183aec)
+// XAPI's controller functions: XboxInput.cpp's. XDEVICE_TYPE_GAMEPAD is XAPI's table for the type, which names it.
+#define XDEVICE_TYPE_GAMEPAD (&XboxGamepadType)
 struct XboxGamepadState {   // XINPUT_STATE
     uint32_t packetNumber;
     uint16_t buttons;

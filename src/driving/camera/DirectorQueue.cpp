@@ -17,8 +17,93 @@
 // RDirectorQueue and RDirectorQueueData, and the renderer pieces after them. See DirectorQueue.h.
 // ---------------------------------------------------------------------------------------------------------------
 
+// The render method's compiled data (its .rm): the shaders, the packets the interpreter runs, the parameters' names
+// XBE_GLOBAL(0x001ce7c8, 0x98)
+const std::array<uint32_t, 38> TextureDofVSFunction = [] {
+    using namespace Vsh;
+    return Function<38>({
+        Dp4(oPos.x(), v(0), c(-96)),
+        Dp4(oPos.y(), v(0), c(-95)),
+        Dp4(oPos.z(), v(0), c(-94)),
+        Dp4(oPos.w(), v(0), c(-93)),
+        Mov(oT0, v(1)),
+        Mov(oD0, v(2)),
+        (Mul(oPos.xyz(), r(12), c(-38)) + Rcc(r1.x(), r(12).w())).TempRegister(1),
+        Mad(oPos.xyz(), r(12), r(1).x(), c(-37)),
+        Add(oPos, c(-92), r(12)),
+    });
+}();
+
+// XBE_GLOBAL(0x001ce860, 0xf0)
+const D3DPixelShaderDef TextureDofPSDefinition = {
+    .alphaInputs = { PS_COMBINERINPUTS(PS_REGISTER_V0 | PS_CHANNEL_ALPHA | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                       PS_REGISTER_T0 | PS_CHANNEL_ALPHA | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                       PS_REGISTER_ZERO | PS_CHANNEL_ALPHA, PS_REGISTER_ZERO | PS_CHANNEL_ALPHA) },
+    .alphaOutputs = { PS_COMBINEROUTPUTS(PS_REGISTER_R0, PS_REGISTER_DISCARD, PS_REGISTER_DISCARD,
+                                         PS_COMBINEROUTPUT_IDENTITY) },
+    .rgbInputs = { PS_COMBINERINPUTS(PS_REGISTER_V0 | PS_CHANNEL_RGB | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                     PS_REGISTER_T0 | PS_CHANNEL_RGB | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                     PS_REGISTER_ZERO, PS_REGISTER_ZERO) },
+    .rgbOutputs = { PS_COMBINEROUTPUTS(PS_REGISTER_R0, PS_REGISTER_DISCARD, PS_REGISTER_DISCARD,
+                                       PS_COMBINEROUTPUT_IDENTITY) },
+    .combinerCount = PS_COMBINERCOUNT(1, PS_COMBINERCOUNT_MUX_MSB | PS_COMBINERCOUNT_UNIQUE_C0 |
+                                             PS_COMBINERCOUNT_UNIQUE_C1),
+    .textureModes = PS_TEXTUREMODES(PS_TEXTUREMODES_PROJECT2D, PS_TEXTUREMODES_NONE, PS_TEXTUREMODES_NONE,
+                                    PS_TEXTUREMODES_NONE),
+    .c0Mapping = PS_CONSTANTMAPPING(15, 15, 15, 15, 15, 15, 15, 15),
+    .c1Mapping = PS_CONSTANTMAPPING(15, 15, 15, 15, 15, 15, 15, 15),
+    .finalCombinerConstants = PS_FINALCOMBINERCONSTANTS(15, 15, PS_GLOBALFLAGS_TEXMODE_ADJUST),
+};
+
+// XBE_GLOBAL(0x001ce950, 4)
+const void *TextureDofVSFunctions[1] = { TextureDofVSFunction.data() };
+// XBE_GLOBAL(0x001ce954, 4)
+const uint8_t *TextureDofPSDefinitions[1] = {
+    reinterpret_cast<const uint8_t *>(&TextureDofPSDefinition),
+};
+// XBE_GLOBAL(0x001ce958, 0xac)
+uint32_t TextureDofPackets[43] = {
+    EAGL::PacketHeader(EAGL::kOpDefaultShaders, 2), 0,
+    EAGL::PacketHeader(EAGL::kOpGeoPrimState, 2), 0,   // State
+    EAGL::PacketHeader(EAGL::kOpTAR, 3), 0, 0,   // Texture
+    EAGL::PacketHeader(EAGL::kOpStream, 2), 0,   // Parameters
+    EAGL::PacketHeader(EAGL::kOpIndexData, 2), 0,   // Indices
+    EAGL::PacketHeader(EAGL::kOpVSMatrix20, 3), 0, uint32_t(-96),   // MyMatrix
+    EAGL::PacketHeader(EAGL::kOpVSConstants5, 4), 0, uint32_t(-92), 4,   // DOFOffset
+    // Coordinates
+    EAGL::PacketHeader(EAGL::kOpDynamicStream, 7), 0, 0, 0xc, EAGL::kNoBuffer, EAGL::kNoBuffer, EAGL::kNoBuffer,
+    // UV
+    EAGL::PacketHeader(EAGL::kOpDynamicStream, 7), 0, 1, 8, EAGL::kNoBuffer, EAGL::kNoBuffer, EAGL::kNoBuffer,
+    // Colours
+    EAGL::PacketHeader(EAGL::kOpDynamicStream, 7), 0, 2, 4, EAGL::kNoBuffer, EAGL::kNoBuffer, EAGL::kNoBuffer,
+    EAGL::PacketHeader(EAGL::kOpDrawIndexedVertices, 3), 0, 3,
+    0,
+};
+// XBE_GLOBAL(0x001cea04, 0x1c)
+const uint32_t TextureDofVSDeclaration[7] = {
+    D3DVSD_STREAM(0),
+    D3DVSD_REG(0, D3DVSDT_FLOAT3),
+    D3DVSD_STREAM(1),
+    D3DVSD_REG(1, D3DVSDT_FLOAT2),
+    D3DVSD_STREAM(2),
+    D3DVSD_REG(2, D3DVSDT_D3DCOLOR),
+    D3DVSD_END(),
+};
+// XBE_GLOBAL(0x001cea74, 0x28)
+const char *TextureDofParamNames[10] = {
+    "State", "Texture", "Parameters", "Indices", "MyMatrix", "DOFOffset", "Coordinates", "UV", "Colours", NULL,
+};
+
 // XBE_GLOBAL(0x00241460, 0x34)
-alignas(16) EAGL::RenderMethod TextureDofMethod;   // "HB_RM = TextureDOF", a static initialiser's
+alignas(16) EAGL::RenderMethod TextureDofMethod;
+
+// Objects the static initialisers construct and destroy, which nothing else uses (names ours)
+// XBE_GLOBAL(0x001ebdb8, 0xe4)
+alignas(16) TextureDofState InitialiserDofStates[3];
+// XBE_GLOBAL(0x001ebea0, 0x108)
+alignas(16) EAGL::DynamicModel InitialiserModels[3];
+// XBE_GLOBAL(0x001ebfa8, 0x4c)
+alignas(16) EAGL::GeoPrimState InitialiserGeoPrimState;   // "HB_RM = TextureDOF", a static initialiser's
 
 // ---- RDirectorQueueData
 

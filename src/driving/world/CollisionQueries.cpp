@@ -43,7 +43,9 @@
 
 // ---- globals
 
-#define LargeStripScratch ((StripVertex *)0x00239a80)       // FindFaceInTriStrip's vertices beyond the scratch pad's
+// FindFaceInTriStrip's vertices beyond the scratch pad's
+// XBE_GLOBAL(0x00239a80, 0x1920)
+StripVertex LargeStripScratch[402];
 
 namespace {
 

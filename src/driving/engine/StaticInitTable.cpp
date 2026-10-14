@@ -47,6 +47,7 @@
 #include "../audio/Mix.h"
 #include "../audio/Voice.h"
 #include "../camera/DirectorQueue.h"
+#include "../camera/WorldCamera.h"
 #include "../eagl/EaglFont.h"
 #include "../eagl/EaglGlobals.h"
 #include "../game/AIHands.h"
@@ -123,9 +124,9 @@ const WeaponRecord kWeaponDefinitions[kWeaponCount] = {
 };
 
 void RunStaticInitialisers(void) {
-    ((GameStd::InitLocks *)0x002448d4)->Construct();                                                     // 0x0015cba2
-    Crt::atexit([] { ((GameStd::InitLocks *)0x002448d4)->Destruct(); });
-    Crt::atexit([] { ((GameStd::InitAtExit *)0x002448d5)->Destruct(); });                                // 0x0015cbb8
+    GameStd::InitLocksSecond.Construct();                                                                // 0x0015cba2
+    Crt::atexit([] { GameStd::InitLocksSecond.Destruct(); });
+    Crt::atexit([] { GameStd::TheInitAtExit.Destruct(); });                                              // 0x0015cbb8
     // unread: 0x001dd9a8 = 1.0f / FLT_MIN                                                               // 0x00156c00
     // unread: 0x001dd9ac = kHeaderPi + kHeaderPi                                                        // 0x00156c20
     // unread: 0x001dd9b0 = 1.0f / kHeaderTwoPi                                                          // 0x00156c30
@@ -277,12 +278,12 @@ void RunStaticInitialisers(void) {
     // unread: 0x001ebd6c = 1.0f / kHeaderTwoPi                                                          // 0x00157cb0
     // unread: 0x001ebd70 = 180.0f / kHeaderPi                                                           // 0x00157cd0
     // unread: 0x001ebd74 = 1.0f / kHeaderDegreesPerRadian                                               // 0x00157cf0
-    for (int i = 0; i < 3; i++) ((TextureDofState *)(0x001ebdb8 + i * 0x4c))->Construct();               // 0x00157d10
-    Crt::atexit([] { for (int i = 2; i >= 0; i--) ((TextureDofState *)(0x001ebdb8 + i * 0x4c))->Destruct(); });
-    for (int i = 0; i < 3; i++) ((EAGL::DynamicModel *)(0x001ebea0 + i * 0x58))->Construct();            // 0x00157d40
-    Crt::atexit([] { for (int i = 2; i >= 0; i--) ((EAGL::DynamicModel *)(0x001ebea0 + i * 0x58))->Destruct(); });
-    ((EAGL::GeoPrimState *)0x001ebfa8)->Construct();                                                     // 0x00157d70
-    Crt::atexit([] { ((EAGL::GeoPrimState *)0x001ebfa8)->Destruct(); });
+    for (int i = 0; i < 3; i++) InitialiserDofStates[i].Construct();                                     // 0x00157d10
+    Crt::atexit([] { for (int i = 2; i >= 0; i--) InitialiserDofStates[i].Destruct(); });
+    for (int i = 0; i < 3; i++) InitialiserModels[i].Construct();                                        // 0x00157d40
+    Crt::atexit([] { for (int i = 2; i >= 0; i--) InitialiserModels[i].Destruct(); });
+    InitialiserGeoPrimState.Construct();                                                                 // 0x00157d70
+    Crt::atexit([] { InitialiserGeoPrimState.Destruct(); });
     // unread: 0x001ebffc = 1.0f / FLT_MIN                                                               // 0x00157d90
     // unread: 0x001ec240 = 1.0f / FLT_MIN                                                               // 0x00157db0
     // unread: 0x001ec264 = 1.0f / FLT_MIN                                                               // 0x00157dd0
@@ -332,8 +333,8 @@ void RunStaticInitialisers(void) {
     // unread: 0x001f25a4 = 1.0f / kHeaderDegreesPerRadian                                               // 0x001582c0
     // unread: 0x001f25a8 = 1.0f / FLT_MIN                                                               // 0x001582e0
     // unread: 0x001f2604 = 1.0f / FLT_MIN                                                               // 0x00158300
-    ((EAGL::GeoPrimState *)0x001f2610)->Construct();                                                     // 0x00158320
-    Crt::atexit([] { ((EAGL::GeoPrimState *)0x001f2610)->Destruct(); });
+    WorldCameraGeoPrimState.Construct();                                                                 // 0x00158320
+    Crt::atexit([] { WorldCameraGeoPrimState.Destruct(); });
     // unread: 0x001f2c54 = 1.0f / FLT_MIN                                                               // 0x00158340
     // unread: 0x001f2c58 = kHeaderPi + kHeaderPi                                                        // 0x00158360
     // unread: 0x001f2c5c = 1.0f / kHeaderTwoPi                                                          // 0x00158370
@@ -531,9 +532,9 @@ void RunStaticInitialisers(void) {
     HudTimerBoxColour = ColourConvertXBoxToPS2(0x8d0f0505);                                              // 0x0015aa10
     HudCrossColour560 = ColourConvertXBoxToPS2(0x8d0f0505);                                              // 0x0015aa30
     // unread: 0x0023f7fc = 1.0f / FLT_MIN                                                               // 0x0015aa50
-    PTR_AT(0x0023f804) = ((LoadScreenStringList *)0x0023f800)->NewHead();                                // 0x0015aa70
-    U32_AT(0x0023f808) = 0x00000000;
-    Crt::atexit([] { DestroyNodeList((NodeList *)0x0023f800, FUN_000e2c80, 0x24); });
+    LoadScreenStrings.head = LoadScreenStrings.NewHead();                                                // 0x0015aa70
+    LoadScreenStrings.size = 0x00000000;
+    Crt::atexit([] { DestroyNodeList((NodeList *)&LoadScreenStrings, FUN_000e2c80, 0x24); });
     LoadingTextColour = ColourConvertXBoxToPS2(0xfffadbb3);                                              // 0x0015aaa0
     // unread: 0x0023f810 = ColourConvertXBoxToPS2(0xffffcd64)                                           // 0x0015aac0
     UnloadingTextColour = ColourConvertXBoxToPS2(0xff615746);                                            // 0x0015aae0
@@ -653,7 +654,7 @@ void RunStaticInitialisers(void) {
     // unread: 0x00241458 = 3.1415927f * 0.5f                                                            // 0x0015b540
     // unread: 0x00241450 = 3.141592653589793 + 3.141592653589793                                        // 0x0015b560
     // unread: 0x00241448 = 3.141592653589793 * 0.5                                                      // 0x0015b570
-    TextureDofMethod.Construct((EAGL::Packet *)0x001ce958, 1, (const void *)0x001cea04, (const void **)0x001ce950, NULL, (const uint8_t **)0x001ce954, NULL, (const char **)0x001cea74, 0x00000001, "HB_RM = TextureDOF"); // 0x0015b590
+    TextureDofMethod.Construct(reinterpret_cast<EAGL::Packet *>(TextureDofPackets), 1, TextureDofVSDeclaration, TextureDofVSFunctions, NULL, TextureDofPSDefinitions, NULL, TextureDofParamNames, 0x00000001, "HB_RM = TextureDOF"); // 0x0015b590
     Crt::atexit([] { TextureDofMethod.Destruct(); });
     // unread: 0x002414ac = 3.1415927f + 3.1415927f                                                      // 0x0015b5d0
     // unread: 0x002414a8 = 3.1415927f * 0.5f                                                            // 0x0015b5e0
@@ -762,13 +763,13 @@ void RunStaticInitialisers(void) {
     // unread: 0x00241bd8 = 3.1415927f * 0.5f                                                            // 0x0015bf80
     // unread: 0x00241bd0 = 3.141592653589793 + 3.141592653589793                                        // 0x0015bfa0
     // unread: 0x00241bc8 = 3.141592653589793 * 0.5                                                      // 0x0015bfb0
-    TexturedParentMethod.Construct((EAGL::Packet *)0x001d37a0, 1, (const void *)0x001d3834, (const void **)0x001d3798, NULL, (const uint8_t **)0x001d379c, NULL, (const char **)0x001d38a0, 0x00000001, "HB_RM = MatDebugTexture"); // 0x0015bfd0
+    TexturedParentMethod.Construct(reinterpret_cast<EAGL::Packet *>(TexturedParentPackets), 1, TexturedParentVSDeclaration, TexturedParentVSFunctions, NULL, TexturedParentPSDefinitions, NULL, TexturedParentParamNames, 0x00000001, "HB_RM = MatDebugTexture"); // 0x0015bfd0
     Crt::atexit([] { TexturedParentMethod.Destruct(); });
-    EmpParentMethod.Construct((EAGL::Packet *)0x001d3cf8, 1, (const void *)0x001d3dfc, (const void **)0x001d3cf0, NULL, (const uint8_t **)0x001d3cf4, NULL, (const char **)0x001d3eb8, 0x00000001, "HB_RM = BondScrollTex1"); // 0x0015c010
+    EmpParentMethod.Construct(reinterpret_cast<EAGL::Packet *>(EmpParentPackets), 1, EmpParentVSDeclaration, EmpParentVSFunctions, NULL, EmpParentPSDefinitions, NULL, EmpParentParamNames, 0x00000001, "HB_RM = BondScrollTex1"); // 0x0015c010
     Crt::atexit([] { EmpParentMethod.Destruct(); });
-    GainParentMethod.Construct((EAGL::Packet *)0x001d4090, 1, (const void *)0x001d414c, (const void **)0x001d4088, NULL, (const uint8_t **)0x001d408c, NULL, (const char **)0x001d41c4, 0x00000001, "HB_RM = BondGouraudGain"); // 0x0015c050
+    GainParentMethod.Construct(reinterpret_cast<EAGL::Packet *>(GainParentPackets), 1, GainParentVSDeclaration, GainParentVSFunctions, NULL, GainParentPSDefinitions, NULL, GainParentParamNames, 0x00000001, "HB_RM = BondGouraudGain"); // 0x0015c050
     Crt::atexit([] { GainParentMethod.Destruct(); });
-    BondPostGlare.Construct((EAGL::Packet *)0x001d43d8, 1, (const void *)0x001d4460, (const void **)0x001d43d0, NULL, (const uint8_t **)0x001d43d4, NULL, (const char **)0x001d44cc, 0x00000001, "HB_RM = BondPostGlare"); // 0x0015c090
+    BondPostGlare.Construct(reinterpret_cast<EAGL::Packet *>(BondPostGlarePackets), 1, BondPostGlareVSDeclaration, BondPostGlareVSFunctions, NULL, BondPostGlarePSDefinitions, NULL, BondPostGlareParamNames, 0x00000001, "HB_RM = BondPostGlare"); // 0x0015c090
     Crt::atexit([] { BondPostGlare.Destruct(); });
     // unread: 0x00243024 = 3.1415927f + 3.1415927f                                                      // 0x0015c0d0
     // unread: 0x00243020 = 3.1415927f * 0.5f                                                            // 0x0015c0e0
@@ -779,7 +780,7 @@ void RunStaticInitialisers(void) {
     // unread: 0x00243068 = 3.141592653589793 + 3.141592653589793                                        // 0x0015c160
     // unread: 0x00243060 = 3.141592653589793 * 0.5                                                      // 0x0015c170
     // unread: 0x002430b8 = 1.0f / FLT_MIN                                                               // 0x0015c190
-    memcpy((void *)0x00243078, (const void *)0x001d4c10, 0x40);                                          // 0x0015c1b0
+    // unread: 0x00243078 = 0x40 bytes from 0x001d4c10                                                   // 0x0015c1b0
     Crt::atexit([] {});
     // unread: 0x00243050 = 0x00000000                                                                   // 0x0015c1e0
     // unread: 0x00243054 = 0x00000000
@@ -886,8 +887,8 @@ void RunStaticInitialisers(void) {
     // unread: 0x002447b0 = 3.1415927f * 0.5f                                                            // 0x0015cb30
     // unread: 0x002447a8 = 3.141592653589793 + 3.141592653589793                                        // 0x0015cb50
     // unread: 0x002447a0 = 3.141592653589793 * 0.5                                                      // 0x0015cb60
-    ((GameStd::InitLocks *)0x00244828)->Construct();                                                     // 0x0015cb80
-    Crt::atexit([] { ((GameStd::InitLocks *)0x00244828)->Destruct(); });
+    GameStd::InitLocksFirst.Construct();                                                                 // 0x0015cb80
+    Crt::atexit([] { GameStd::InitLocksFirst.Destruct(); });
     Crt::atexit([] { GameStd::ClassicLocale.Destruct(); });                                              // 0x0015cb96
     // 0x0017c535: DirectSound's, left out (every DSOUND entry point is the seam's)
     // 0x0017c540: DirectSound's, left out (every DSOUND entry point is the seam's)
@@ -897,10 +898,10 @@ void RunStaticInitialisers(void) {
     // unread: 0x00247618 = 3.1415927f * 0.5f                                                            // 0x0015cbe0
     // unread: 0x00247610 = 3.141592653589793 + 3.141592653589793                                        // 0x0015cc00
     // unread: 0x00247608 = 3.141592653589793 * 0.5                                                      // 0x0015cc10
-    Crt::atexit([] { U32_AT(0x001dcd10) = 0x001a772c; });                                                // 0x0015cc30
-    MatDebugMethod.Construct((EAGL::Packet *)0x001dd2e0, 1, (const void *)0x001dd34c, (const void **)0x001dd2d8, NULL, (const uint8_t **)0x001dd2dc, NULL, (const char **)0x001dd38c, 0x00000001, "HB_RM = MatDebug"); // 0x0015cc40
+    Crt::atexit([] { /* unread: 0x001dcd10 = 0x001a772c */ });                                           // 0x0015cc30
+    MatDebugMethod.Construct(reinterpret_cast<EAGL::Packet *>(MatDebugPackets), 1, MatDebugVSDeclaration, MatDebugVSFunctions, NULL, MatDebugPSDefinitions, NULL, MatDebugParamNames, 0x00000001, "HB_RM = MatDebug"); // 0x0015cc40
     Crt::atexit([] { MatDebugMethod.Destruct(); });
-    MatVolatileTextureMethod.Construct((EAGL::Packet *)0x001dd538, 1, (const void *)0x001dd5cc, (const void **)0x001dd530, NULL, (const uint8_t **)0x001dd534, NULL, (const char **)0x001dd638, 0x00000001, "HB_RM = MatVolatileTexture"); // 0x0015cc80
+    MatVolatileTextureMethod.Construct(reinterpret_cast<EAGL::Packet *>(MatVolatileTexturePackets), 1, MatVolatileTextureVSDeclaration, MatVolatileTextureVSFunctions, NULL, MatVolatileTexturePSDefinitions, NULL, MatVolatileTextureParamNames, 0x00000001, "HB_RM = MatVolatileTexture"); // 0x0015cc80
     Crt::atexit([] { MatVolatileTextureMethod.Destruct(); });
     // unread: 0x0024b0fc = 3.1415927f + 3.1415927f                                                      // 0x0015ccc0
     // unread: 0x0024b0f8 = 3.1415927f * 0.5f                                                            // 0x0015ccd0

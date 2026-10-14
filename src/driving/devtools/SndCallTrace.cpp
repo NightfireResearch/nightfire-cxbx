@@ -1,11 +1,13 @@
 #include "SndCallTrace.h"
-#include "OwnedGlobals.h"
+#include "../game/Simulation.h"
 
 #include "../sound/snd/System.h"
 #include "../sound/snd/Voices.h"
 #include "../sound/snd/Banks.h"
 #include "../sound/snd/Streams.h"
+#ifndef NIGHTFIRE_STANDALONE
 #include "../../common/xbeOriginal.h"
+#endif
 
 #include <windows.h>
 #include <limits.h>
@@ -105,11 +107,9 @@ std::unordered_map<int, unsigned> g_voices;   // voice handle -> n of the SNDBAN
 unsigned g_voiceCount;
 thread_local int t_depth;              // entries in progress on this thread
 
-#define PLAYER_CAR_HANDLE OwnedGlobals_OursWord(0x00234e40)  // -> -> the player's PBondCar
-
 bool PlayerCarExists() {
-    uint8_t **handle = *(uint8_t ***)PLAYER_CAR_HANDLE;
-    return handle != NULL && *handle != NULL;
+    PVehicle **cars = fgSimulation.cars.first;
+    return cars != NULL && *cars != NULL;
 }
 
 void Flush() {
@@ -882,6 +882,7 @@ void SndCallTrace_Install(void) {
         g_ports[i] = g_entries[i].port;
 
     int originals = 0;
+#ifndef NIGHTFIRE_STANDALONE   // the originals' entries, in the injected build
     for (Entry &e : g_entries) {
         const uint8_t *at = (const uint8_t *)(uintptr_t)e.original;
         int32_t displacement;
@@ -906,6 +907,7 @@ void SndCallTrace_Install(void) {
             printf("[sndtrace] 0x%08x jumps to %s's port too: our code's calls to it are logged as %s\n", at,
                    e->name, e->name);
     }
+#endif
     int sites = MoveCallSites();
 
     atexit(Shutdown);

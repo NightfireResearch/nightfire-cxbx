@@ -74,7 +74,9 @@ set `-DNIGHTFIRE_SDL=OFF` afterwards.
 accelerating, 16 frames and the sound call trace, sound in lockstep) and the shadow runs (every shadow at once, per
 mission). It runs the shadow runs and the lockstep runs as two separate batches, and writes the summary to
 `build/remote/<prefix>.summary`. With `BASE=<prefix>`, it compares each lockstep run against
-`build/baselines/<BASE>_m<n>_<idle|accelerate>`.
+`build/baselines/<BASE>_m<n>_<idle|accelerate>`. `EXE='Release\driving_standalone_test.exe'` runs the standalone executable's lockstep
+runs instead (it builds that target; it has no shadows), and `ENV='NIGHTFIRE_TRAP_ORIGINAL=2'` adds variables to the
+lockstep runs.
 
 Only runs that send no keys can share the desktop. A lockstep run simulates exactly one tick per rendered frame,
 holds the sound in lockstep, and applies `-GameHold` inside the game, so neither focus nor load matters: a starved

@@ -12,6 +12,7 @@
 #include "../data/StdStreams.h"
 #include "../engine/UMemory.hpp"
 #include "../../common/xbeOverload.h"
+#include "../anim/Model.h"   // OutOfRangeError
 
 #include <windows.h>
 #include <limits.h>
@@ -30,9 +31,9 @@ using namespace GameStd;
 #define StrStreambufVtable ((const void *const *)Vtable_0018bdc4)
 #define IStrStreamIosVtable ((const void *const *)Vtable_0018bdf8)   // basic_ios inside an istrstream
 #define OstreamIosVtable ((const void *const *)Vtable_001a3228)      // basic_ios inside a basic_ostream
-#define OstreamVbtable ((const int *)0x001a322cu)
+#define OstreamVbtable ((const int *)Crt::CLocaleCtype.ostreamVbtable)
 #define OStrStreamIosVtable ((const void *const *)Vtable_001a3234)   // basic_ios inside an ostrstream
-#define OStrStreamVbtable ((const int *)0x001a3238u)
+#define OStrStreamVbtable ((const int *)Crt::CLocaleCtype.ostrstreamVbtable)
 #define LocimpVtable ((const void *const *)Vtable_001a31c0)
 #define ExceptionVtable ((const void *)Vtable_001a326c)
 #define BadCastVtable ((const void *)Vtable_001a3288)
@@ -40,16 +41,22 @@ using namespace GameStd;
 #define FailureVtable ((const void *)Vtable_001a31d4)                // ios_base::failure
 #define OutOfRangeVtable ((const void *)Vtable_0018a29c)
 #define LengthErrorVtable ((const void *)Vtable_00189eec)
-#define FailureThrowInfo ((const Crt::ThrowInfo *)0x001b3c08u)
-#define OutOfRangeThrowInfo ((const Crt::ThrowInfo *)0x001a8bd8u)
-#define LengthErrorThrowInfo ((const Crt::ThrowInfo *)0x001a89bcu)
+#define FacetVtable ((const void *const *)Vtable_0018bc6c)
+extern void *TypeInfoVtable[1];
 
 // ---- the library's globals
 
-// [4], one per _Lockit kind. Left at the game's address: the shadow test's originals take the same kernel locks.
-#define LibraryLocks ((CriticalSection *)0x002447b8u)
-
 namespace GameStd {
+// The library's static _Init_locks objects and its _Init_atexit, which the static initialisers construct (names ours)
+// XBE_GLOBAL(0x00244828, 1)
+InitLocks InitLocksFirst;
+// XBE_GLOBAL(0x002448d4, 1)
+InitLocks InitLocksSecond;
+// XBE_GLOBAL(0x002448d5, 1)
+InitAtExit TheInitAtExit;
+// One per _Lockit kind
+// XBE_GLOBAL(0x002447b8, 0x70)
+CriticalSection LibraryLocks[4];
 // XBE_GLOBAL(0x001d8720, 4)
 volatile long InitLocksCount = -1;         // _Init_locks::_Init_cnt
 // XBE_GLOBAL(0x0024482c, 4)
@@ -102,6 +109,9 @@ enum {
 enum { kEraseEvent = 0 };      // ios_base::erase_event
 enum { kStateMask = kEofBit | kFailBit | kBadBit };
 enum { kAppend = 0x8 };        // ios_base::app
+enum { kIn = 0x1, kOut = 0x2 };                     // ios_base::in, ios_base::out
+enum { kSeekBeg = 0, kSeekCur = 1, kSeekEnd = 2 };  // ios_base::beg, cur, end
+enum { kTypeInfoLock = 14 };   // _TYPEINFO_LOCK
 
 // strstreambuf::_Strstate
 enum {
@@ -213,7 +223,7 @@ void ThrowFailure(const char *what) {
     RuntimeError failure;
     failure.Construct(&message);
     failure.vtable = FailureVtable;
-    Crt::CxxThrowException(&failure, FailureThrowInfo);
+    Crt::CxxThrowException(&failure, &Crt::FailureThrowInfo);
 }
 
 } // namespace
@@ -290,6 +300,33 @@ Locimp* GameStd::Locimp::Construct(bool isTransparent) {
     vtable = LocimpVtable;
     transparent = isTransparent;
     name.ConstructText("*");
+    return this;
+}
+
+// FUNC_AT(0x00130e4c)
+void GameStd::Locimp::Destruct() {
+    vtable = LocimpVtable;
+    Lockit lock;
+    lock.Construct(kLockLocale);
+    for (uint32_t i = facetCount; i > 0;) {
+        --i;
+        if (facets[i] != NULL) {
+            Facet *dead = facets[i]->Decref();
+            if (dead != NULL)
+                DeleteFacet(dead);
+        }
+    }
+    Crt::free(facets);
+    lock.Destruct();
+    name.Tidy(true);
+    vtable = FacetVtable;
+}
+
+// FUNC_AT(0x00130f23)
+Locimp* GameStd::Locimp::Delete(unsigned flags) {
+    Destruct();
+    if (flags & 1)
+        OperatorDelete(this);
     return this;
 }
 
@@ -537,6 +574,171 @@ void GameStd::StrStreambuf::Destruct() {
     Streambuf::Destruct();
 }
 
+// A dynamic buffer grows by half its size (at least the allocation size asked for, then 32), halved while that
+// would overflow, and keeps its pointers' places in the new block.
+// FUNC_AT(0x001314ae)
+int GameStd::StrStreambuf::Overflow(int ch) {
+    if (ch == kEof)
+        return 0;
+    if (*putNext != NULL && *putNext < *putNext + *putCount) {
+        --*putCount;
+        *(*putNext)++ = char(ch);
+        return uint8_t(ch);
+    }
+    if (!(mode & kDynamic) || (mode & (kConstant | kFrozen)))
+        return kEof;
+    int oldSize = *getNext == NULL ? 0 : int(*putNext + *putCount - *getFirst);
+    int increment = oldSize / 2;
+    if (increment < allocSize)
+        increment = allocSize;
+    allocSize = kMinAllocSize;
+    while (increment > 0 && INT_MAX - increment < oldSize)
+        increment /= 2;
+    if (increment <= 0)
+        return kEof;
+    int newSize = oldSize + increment;
+    char *buffer = allocFn != NULL ? (char *)allocFn(newSize) : (char *)OperatorNewArray(newSize);
+    if (buffer == NULL)
+        return kEof;
+    if (oldSize > 0)
+        memcpy(buffer, *getFirst, oldSize);
+    if (mode & kAllocated) {
+        if (freeFn != NULL)
+            freeFn(*getFirst);
+        else
+            OperatorDelete(*getFirst);
+    }
+    mode |= kAllocated;
+    if (oldSize == 0) {
+        seekHigh = buffer;
+        *putFirst = buffer;   // setp(buffer, buffer + newSize)
+        *putNext = buffer;
+        *putCount = newSize;
+        *getFirst = buffer;   // setg(buffer, buffer, buffer)
+        *getNext = buffer;
+        *getCount = 0;
+    } else {
+        char *oldBuffer = *getFirst;
+        seekHigh = buffer + (seekHigh - oldBuffer);
+        char *next = buffer + (*putNext - oldBuffer);
+        *putFirst = buffer + (*putFirst - oldBuffer);   // setp(pbase, pptr, buffer + newSize)
+        *putNext = next;
+        *putCount = int(buffer + newSize - next);
+        char *getAt = buffer + (*getNext - oldBuffer);
+        *getFirst = buffer;                              // setg(buffer, gptr, pptr + 1)
+        *getNext = getAt;
+        *getCount = int(*putNext - getAt) + 1;
+    }
+    --*putCount;
+    *(*putNext)++ = char(ch);
+    return uint8_t(ch);
+}
+
+// FUNC_AT(0x0013166a)
+int GameStd::StrStreambuf::Pbackfail(int ch) {
+    char *next = *getNext;
+    if (next == NULL || next <= *getFirst || (ch != kEof && char(ch) != next[-1] && (mode & kConstant)))
+        return kEof;
+    ++*getCount;
+    --*getNext;
+    if (ch == kEof)
+        return 0;
+    **getNext = char(ch);
+    return uint8_t(ch);
+}
+
+// The get area reaches as far as anything has been written.
+// FUNC_AT(0x001316b3)
+int GameStd::StrStreambuf::Underflow() {
+    char *next = *getNext;
+    if (next == NULL)
+        return kEof;
+    if (next < next + *getCount)
+        return uint8_t(*next);
+    char *written = *putNext;
+    if (written == NULL || (written <= next && seekHigh <= next))
+        return kEof;
+    if (seekHigh < written)
+        seekHigh = written;
+    *getCount = int(seekHigh - *getNext);
+    return uint8_t(**getNext);
+}
+
+// FUNC_AT(0x00131702)
+StreamPos* GameStd::StrStreambuf::SeekOff(StreamPos *result, int offset, int way, int which) {
+    if (*putNext != NULL && seekHigh < *putNext)
+        seekHigh = *putNext;
+    if ((which & kIn) && *getNext != NULL) {
+        if (way == kSeekEnd)
+            offset += int(seekHigh - *getFirst);
+        else if (way == kSeekCur && !(which & kOut))
+            offset += int(*getNext - *getFirst);
+        else if (way != kSeekBeg || offset == -1)
+            offset = -1;
+        if (offset < 0 || seekHigh - *getFirst < offset) {
+            offset = -1;
+        } else {
+            int move = int(*getFirst - *getNext) + offset;
+            *getCount -= move;   // gbump
+            *getNext += move;
+            if ((which & kOut) && *putNext != NULL) {
+                char *next = *putNext;   // setp(gptr, epptr)
+                int count = *putCount;
+                *putNext = *getNext;
+                *putCount = int(next + count - *putNext);
+            }
+        }
+    } else if ((which & kOut) && *putNext != NULL) {
+        char *next = *putNext;
+        if (way == kSeekEnd)
+            offset += int(seekHigh - *getFirst);
+        else if (way == kSeekCur)
+            offset += int(next - *getFirst);
+        else if (way != kSeekBeg || offset == -1)
+            offset = -1;
+        if (offset < 0 || seekHigh - *getFirst < offset) {
+            offset = -1;
+        } else {
+            int move = int(*getFirst - next) + offset;
+            *putCount -= move;   // pbump
+            *putNext += move;
+        }
+    } else {
+        offset = -1;
+    }
+    return result->Construct(offset);
+}
+
+// FUNC_AT(0x0013183b)
+StreamPos* GameStd::StrStreambuf::SeekPos(StreamPos *result, StreamPos position, int which) {
+    int offset = position.offset + int(position.position[0]);
+    if (*putNext != NULL && seekHigh < *putNext)
+        seekHigh = *putNext;
+    if (offset != -1) {
+        if ((which & kIn) && *getNext != NULL) {
+            if (offset >= 0 && offset <= seekHigh - *getFirst) {
+                int move = int(*getFirst - *getNext) + offset;
+                *getCount -= move;
+                *getNext += move;
+                if ((which & kOut) && *putNext != NULL) {
+                    char *next = *putNext;
+                    int count = *putCount;
+                    *putNext = *getNext;
+                    *putCount = int(next + count - *putNext);
+                }
+                return result->Construct(offset);
+            }
+        } else if ((which & kOut) && *putNext != NULL && offset >= 0 && offset <= seekHigh - *getFirst) {
+            int move = int(*getFirst - *putNext) + offset;
+            *putCount -= move;
+            *putNext += move;
+            return result->Construct(offset);
+        }
+        offset = -1;
+    }
+    return result->Construct(offset);
+}
+
 // Entered at the virtual base; ~basic_istream inlined after the buffer's destructor.
 // FUNC_AT(0x00131ae1)
 void GameStd::BasicIos::DestructIStrStream() {
@@ -553,6 +755,33 @@ void GameStd::BasicIos::DestructOStrStream() {
     stream->Ios()->vtable = OStrStreamIosVtable;
     stream->buffer.Destruct();
     stream->Ios()->vtable = OstreamIosVtable;
+}
+
+// Entered at the virtual base, as each of these.
+// FUNC_AT(0x00131a06)
+void GameStd::BasicIos::DestructOstream() {
+    Ostream *stream = (Ostream *)((char *)this - 4);   // the basic_ios is at +4
+    stream->Ios()->vtable = OstreamIosVtable;
+    Destruct();
+}
+
+// FUNC_AT(0x001319e7)
+void* GameStd::BasicIos::DeleteOstream(unsigned flags) {
+    Ostream *stream = (Ostream *)((char *)this - 4);
+    DestructOstream();
+    if (flags & 1)
+        OperatorDelete(stream);
+    return stream;
+}
+
+// FUNC_AT(0x00131c01)
+void* GameStd::BasicIos::DeleteOStrStream(unsigned flags) {
+    OStrStream *stream = (OStrStream *)((char *)this - offsetof(OStrStream, ios));
+    DestructOStrStream();
+    Destruct();
+    if (flags & 1)
+        OperatorDelete(stream);
+    return stream;
 }
 
 // basic_ostream(buffer, isStandard). With its virtual base (a plain basic_ostream, which the game never makes) the
@@ -653,6 +882,19 @@ void GameStd::Exception::Destruct() {
         Crt::free((void *)what);
 }
 
+// FUNC_AT(0x001326ea)
+Exception* GameStd::Exception::Delete(unsigned flags) {
+    Destruct();
+    if (flags & 1)
+        OperatorDelete(this);
+    return this;
+}
+
+// FUNC_AT(0x001326a1)
+const char* GameStd::Exception::What() {
+    return what != NULL ? what : "Unknown exception";
+}
+
 // FUNC_AT(0x001326ae)
 BadCast* GameStd::BadCast::Construct(const char *message) {
     ConstructMessage(message);
@@ -660,10 +902,105 @@ BadCast* GameStd::BadCast::Construct(const char *message) {
     return this;
 }
 
+// FUNC_AT(0x001326c7)
+BadCast* GameStd::BadCast::ConstructCopy(const BadCast *other) {
+    Exception::ConstructCopy(other);
+    vtable = BadCastVtable;
+    return this;
+}
+
+// FUNC_AT(0x001326df)
+void GameStd::BadCast::Destruct() {
+    vtable = BadCastVtable;
+    Exception::Destruct();
+}
+
+// FUNC_AT(0x00132706)
+BadCast* GameStd::BadCast::Delete(unsigned flags) {
+    Destruct();
+    if (flags & 1)
+        OperatorDelete(this);
+    return this;
+}
+
 RuntimeError* GameStd::RuntimeError::Construct(const String *text) {
     Exception::Construct();
     vtable = RuntimeErrorVtable;
     message.ConstructCopy(text);
+    return this;
+}
+
+// FUNC_AT(0x0013133f)
+RuntimeError* GameStd::RuntimeError::ConstructCopy(const RuntimeError *other) {
+    Exception::ConstructCopy(other);
+    vtable = RuntimeErrorVtable;
+    message.ConstructCopy(&other->message);
+    return this;
+}
+
+// FUNC_AT(0x001311d1)
+void GameStd::RuntimeError::Destruct() {
+    vtable = RuntimeErrorVtable;
+    message.Tidy(true);
+    Exception::Destruct();
+}
+
+// FUNC_AT(0x001311fa)
+RuntimeError* GameStd::RuntimeError::Delete(unsigned flags) {
+    Destruct();
+    if (flags & 1)
+        OperatorDelete(this);
+    return this;
+}
+
+// FUNC_AT(0x001311ec)
+const char* GameStd::RuntimeError::What() {
+    return message.CStr();
+}
+
+// FUNC_AT(0x00131382)
+Failure* GameStd::Failure::ConstructCopy(const Failure *other) {
+    RuntimeError::ConstructCopy(other);
+    vtable = FailureVtable;
+    return this;
+}
+
+// FUNC_AT(0x0013126e)
+void GameStd::Failure::Destruct() {
+    vtable = FailureVtable;
+    RuntimeError::Destruct();
+}
+
+// FUNC_AT(0x00131252)
+Failure* GameStd::Failure::Delete(unsigned flags) {
+    Destruct();
+    if (flags & 1)
+        OperatorDelete(this);
+    return this;
+}
+
+// throw *this
+// FUNC_AT(0x0013139a)
+void GameStd::Failure::Raise() {
+    Failure copy;
+    copy.ConstructCopy(this);
+    Crt::CxxThrowException(&copy, &Crt::FailureThrowInfo);
+}
+
+// FUNC_AT(0x00132722)
+void GameStd::TypeInfo::Destruct() {
+    vtable = TypeInfoVtable;
+    Crt::_lock(kTypeInfoLock);
+    if (undecoratedName != NULL)
+        Crt::free(undecoratedName);
+    Crt::_unlock(kTypeInfoLock);
+}
+
+// FUNC_AT(0x0013274b)
+TypeInfo* GameStd::TypeInfo::Delete(unsigned flags) {
+    Destruct();
+    if (flags & 1)
+        OperatorDelete(this);
     return this;
 }
 
@@ -679,7 +1016,7 @@ void GameStd::String::Xran() {
     LogicError error;
     error.Construct(&message);
     error.vtable = OutOfRangeVtable;
-    Crt::CxxThrowException(&error, OutOfRangeThrowInfo);
+    Crt::CxxThrowException(&error, &Crt::OutOfRangeThrowInfo);
 }
 
 // FUNC_AT(0x00130bc0)
@@ -689,8 +1026,68 @@ void GameStd::String::Xlen() {
     LogicError error;
     error.Construct(&message);
     error.vtable = LengthErrorVtable;
-    Crt::CxxThrowException(&error, LengthErrorThrowInfo);
+    Crt::CxxThrowException(&error, &Crt::LengthErrorThrowInfo);
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// The throw information of the types thrown: what the frame handlers match a catch against and how they copy and
+// destroy the object (the compiler's records, typed).
+
+// type_info's vtable
+// XBE_GLOBAL(0x001a3290, 4) readonly
+void *TypeInfoVtable[1] = {
+    (void *)XbeAddress(&TypeInfo::Delete),
+};
+
+// XBE_GLOBAL(0x001b4950, 0x18)
+static TypeDescriptor<16> ExceptionType = { { TypeInfoVtable, NULL }, ".?AVexception@@" };
+// XBE_GLOBAL(0x001b4968, 0x1e)
+static TypeDescriptor<22> LogicErrorType = { { TypeInfoVtable, NULL }, ".?AVlogic_error@std@@" };
+// XBE_GLOBAL(0x001b4988, 0x1f)
+static TypeDescriptor<23> LengthErrorType = { { TypeInfoVtable, NULL }, ".?AVlength_error@std@@" };
+// XBE_GLOBAL(0x001b4a70, 0x1f)
+static TypeDescriptor<23> OutOfRangeType = { { TypeInfoVtable, NULL }, ".?AVout_of_range@std@@" };
+// XBE_GLOBAL(0x001b6640, 0x17)
+static TypeDescriptor<15> BadCastType = { { TypeInfoVtable, NULL }, ".?AVbad_cast@@" };
+// XBE_GLOBAL(0x001d8728, 0x20)
+static TypeDescriptor<24> RuntimeErrorType = { { TypeInfoVtable, NULL }, ".?AVruntime_error@std@@" };
+// XBE_GLOBAL(0x001d8748, 0x23)
+static TypeDescriptor<27> FailureType = { { TypeInfoVtable, NULL }, ".?AVfailure@ios_base@std@@" };
+
+// XBE_GLOBAL(0x001a8958, 0x1c) readonly
+static const Crt::CatchableType ExceptionCatch = { 0, &ExceptionType, 0, -1, 0, 0xc, (void *)XbeAddress(&Exception::ConstructCopy) };
+// XBE_GLOBAL(0x001a8974, 0x1c) readonly
+static const Crt::CatchableType LogicErrorCatch = { 0, &LogicErrorType, 0, -1, 0, 0x28, (void *)XbeAddress(&LogicError::ConstructCopy) };
+// XBE_GLOBAL(0x001a8990, 0x1c) readonly
+static const Crt::CatchableType LengthErrorCatch = { 0, &LengthErrorType, 0, -1, 0, 0x28, (void *)XbeAddress(&LengthError::ConstructCopy) };
+// XBE_GLOBAL(0x001a8bac, 0x1c) readonly
+static const Crt::CatchableType OutOfRangeCatch = { 0, &OutOfRangeType, 0, -1, 0, 0x28, (void *)XbeAddress(&OutOfRangeError::ConstructCopy) };
+// XBE_GLOBAL(0x001a9504, 0x1c) readonly
+static const Crt::CatchableType BadCastCatch = { 0, &BadCastType, 0, -1, 0, 0xc, (void *)XbeAddress(&BadCast::ConstructCopy) };
+// XBE_GLOBAL(0x001b3bc0, 0x1c) readonly
+static const Crt::CatchableType RuntimeErrorCatch = { 0, &RuntimeErrorType, 0, -1, 0, 0x28, (void *)XbeAddress(&RuntimeError::ConstructCopy) };
+// XBE_GLOBAL(0x001b3bdc, 0x1c) readonly
+static const Crt::CatchableType FailureCatch = { 0, &FailureType, 0, -1, 0, 0x28, (void *)XbeAddress(&Failure::ConstructCopy) };
+
+// XBE_GLOBAL(0x001a89ac, 0x10) readonly
+static const Crt::CatchableTypeArray<3> LengthErrorCatches = { 3, { &LengthErrorCatch, &LogicErrorCatch, &ExceptionCatch } };
+// XBE_GLOBAL(0x001a8bc8, 0x10) readonly
+static const Crt::CatchableTypeArray<3> OutOfRangeCatches = { 3, { &OutOfRangeCatch, &LogicErrorCatch, &ExceptionCatch } };
+// XBE_GLOBAL(0x001a9520, 0xc) readonly
+static const Crt::CatchableTypeArray<2> BadCastCatches = { 2, { &BadCastCatch, &ExceptionCatch } };
+// XBE_GLOBAL(0x001b3bf8, 0x10) readonly
+static const Crt::CatchableTypeArray<3> FailureCatches = { 3, { &FailureCatch, &RuntimeErrorCatch, &ExceptionCatch } };
+
+namespace Crt {
+// XBE_GLOBAL(0x001a89bc, 0x10) readonly
+extern const ThrowInfo LengthErrorThrowInfo = { 0, (void *)XbeAddress(&LengthError::Destruct), NULL, &LengthErrorCatches };
+// XBE_GLOBAL(0x001a8bd8, 0x10) readonly
+extern const ThrowInfo OutOfRangeThrowInfo = { 0, (void *)XbeAddress(&OutOfRangeError::Destruct), NULL, &OutOfRangeCatches };
+// XBE_GLOBAL(0x001a952c, 0x10) readonly
+extern const ThrowInfo BadCastThrowInfo = { 0, (void *)XbeAddress(&BadCast::Destruct), NULL, &BadCastCatches };
+// XBE_GLOBAL(0x001b3c08, 0x10) readonly
+extern const ThrowInfo FailureThrowInfo = { 0, (void *)XbeAddress(&Failure::Destruct), NULL, &FailureCatches };
+} // namespace Crt
 
 // XAPI's RaiseException, which the original calls, is Win32's: the same record, raised by the kernel's
 // RtlRaiseException.

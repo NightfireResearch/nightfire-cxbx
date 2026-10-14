@@ -26,6 +26,150 @@ TexturedGeoPrim *VolatileRequests[16];
 // See Materials.h.
 // ---------------------------------------------------------------------------------------------------------------
 
+// The render methods' compiled data (their .rm): the shaders, the packets the interpreter runs, the parameters'
+// names
+// XBE_GLOBAL(0x001dd170, 0x78)
+const std::array<uint32_t, 30> MatDebugVSFunction = [] {
+    using namespace Vsh;
+    return Function<30>({
+        Dp4(oPos.x(), v(0), c(-96)),
+        Dp4(oPos.y(), v(0), c(-95)),
+        Dp4(oPos.z(), v(0), c(-94)),
+        Dp4(oPos.w(), v(0), c(-93)),
+        Mov(oD0, v(1)),
+        Mul(oPos.xyz(), r(12), c(-38)) + Rcc(r1.x(), r(12).w()),
+        Mad(oPos.xyz(), r(12), r(1).x(), c(-37)),
+    });
+}();
+
+// XBE_GLOBAL(0x001dd1e8, 0xf0)
+const D3DPixelShaderDef MatDebugPSDefinition = {
+    .alphaInputs = { PS_COMBINERINPUTS(PS_REGISTER_V0 | PS_CHANNEL_ALPHA | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                       PS_REGISTER_ONE | PS_CHANNEL_ALPHA, PS_REGISTER_ZERO | PS_CHANNEL_ALPHA,
+                                       PS_REGISTER_ZERO | PS_CHANNEL_ALPHA) },
+    .alphaOutputs = { PS_COMBINEROUTPUTS(PS_REGISTER_R0, PS_REGISTER_DISCARD, PS_REGISTER_DISCARD,
+                                         PS_COMBINEROUTPUT_IDENTITY) },
+    .rgbInputs = { PS_COMBINERINPUTS(PS_REGISTER_V0 | PS_CHANNEL_RGB | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                     PS_REGISTER_ONE | PS_CHANNEL_RGB, PS_REGISTER_ZERO, PS_REGISTER_ZERO) },
+    .rgbOutputs = { PS_COMBINEROUTPUTS(PS_REGISTER_R0, PS_REGISTER_DISCARD, PS_REGISTER_DISCARD,
+                                       PS_COMBINEROUTPUT_IDENTITY) },
+    .combinerCount = PS_COMBINERCOUNT(1, PS_COMBINERCOUNT_MUX_MSB | PS_COMBINERCOUNT_UNIQUE_C0 |
+                                             PS_COMBINERCOUNT_UNIQUE_C1),
+    .c0Mapping = PS_CONSTANTMAPPING(15, 15, 15, 15, 15, 15, 15, 15),
+    .c1Mapping = PS_CONSTANTMAPPING(15, 15, 15, 15, 15, 15, 15, 15),
+    .finalCombinerConstants = PS_FINALCOMBINERCONSTANTS(15, 15, PS_GLOBALFLAGS_TEXMODE_ADJUST),
+};
+
+// XBE_GLOBAL(0x001dd2d8, 4)
+const void *MatDebugVSFunctions[1] = { MatDebugVSFunction.data() };
+// XBE_GLOBAL(0x001dd2dc, 4)
+const uint8_t *MatDebugPSDefinitions[1] = {
+    reinterpret_cast<const uint8_t *>(&MatDebugPSDefinition),
+};
+// XBE_GLOBAL(0x001dd2e0, 0x6c)
+uint32_t MatDebugPackets[27] = {
+    EAGL::PacketHeader(EAGL::kOpDefaultShaders, 2), 0,
+    EAGL::PacketHeader(EAGL::kOpGeoPrimState, 2), 0,   // State
+    EAGL::PacketHeader(EAGL::kOpStream, 2), 0,   // Parameters
+    EAGL::PacketHeader(EAGL::kOpVSMatrix20, 3), 0, uint32_t(-96),   // WVP
+    // Coordinates
+    EAGL::PacketHeader(EAGL::kOpDynamicStream, 7), 0, 0, 0x10, EAGL::kNoBuffer, EAGL::kNoBuffer, EAGL::kNoBuffer,
+    // Colours
+    EAGL::PacketHeader(EAGL::kOpDynamicStream, 7), 0, 1, 4, EAGL::kNoBuffer, EAGL::kNoBuffer, EAGL::kNoBuffer,
+    EAGL::PacketHeader(EAGL::kOpDrawVertices, 3), 0, 2,
+    0,
+};
+// XBE_GLOBAL(0x001dd34c, 0x14)
+const uint32_t MatDebugVSDeclaration[5] = {
+    D3DVSD_STREAM(0),
+    D3DVSD_REG(0, D3DVSDT_FLOAT4),
+    D3DVSD_STREAM(1),
+    D3DVSD_REG(1, D3DVSDT_D3DCOLOR),
+    D3DVSD_END(),
+};
+// XBE_GLOBAL(0x001dd38c, 0x18)
+const char *MatDebugParamNames[6] = {
+    "State", "Parameters", "WVP", "Coordinates", "Colours", NULL,
+};
+
+// XBE_GLOBAL(0x001dd3b8, 0x88)
+const std::array<uint32_t, 34> MatVolatileTextureVSFunction = [] {
+    using namespace Vsh;
+    return Function<34>({
+        Dp4(oPos.x(), v(0), c(-96)),
+        Dp4(oPos.y(), v(0), c(-95)),
+        Dp4(oPos.z(), v(0), c(-94)),
+        Dp4(oPos.w(), v(0), c(-93)),
+        Mov(oT3, v(2)),
+        Mov(oD0, v(1)),
+        Mul(oPos.xyz(), r(12), c(-38)) + Rcc(r1.x(), r(12).w()),
+        Mad(oPos.xyz(), r(12), r(1).x(), c(-37)),
+    });
+}();
+
+// XBE_GLOBAL(0x001dd440, 0xf0)
+const D3DPixelShaderDef MatVolatileTexturePSDefinition = {
+    .alphaInputs = { PS_COMBINERINPUTS(PS_REGISTER_V0 | PS_CHANNEL_ALPHA | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                       PS_REGISTER_T3 | PS_CHANNEL_ALPHA | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                       PS_REGISTER_ZERO | PS_CHANNEL_ALPHA, PS_REGISTER_ZERO | PS_CHANNEL_ALPHA) },
+    .finalCombinerInputsABCD = PS_FINALCOMBINERINPUTS_ABCD(PS_REGISTER_ZERO, PS_REGISTER_ZERO,
+                                                           PS_REGISTER_R0 | PS_CHANNEL_RGB, PS_REGISTER_ZERO),
+    .finalCombinerInputsEFG = PS_FINALCOMBINERINPUTS_EFG(PS_REGISTER_ZERO, PS_REGISTER_ZERO,
+                                                         PS_REGISTER_R0 | PS_CHANNEL_ALPHA,
+                                                         PS_FINALCOMBINERSETTING_CLAMP_SUM),
+    .alphaOutputs = { PS_COMBINEROUTPUTS(PS_REGISTER_R0, PS_REGISTER_DISCARD, PS_REGISTER_DISCARD,
+                                         PS_COMBINEROUTPUT_IDENTITY) },
+    .rgbInputs = { PS_COMBINERINPUTS(PS_REGISTER_V0 | PS_CHANNEL_RGB | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                     PS_REGISTER_T3 | PS_CHANNEL_RGB | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                     PS_REGISTER_ZERO, PS_REGISTER_ZERO) },
+    .rgbOutputs = { PS_COMBINEROUTPUTS(PS_REGISTER_R0, PS_REGISTER_DISCARD, PS_REGISTER_DISCARD,
+                                       PS_COMBINEROUTPUT_IDENTITY) },
+    .combinerCount = PS_COMBINERCOUNT(1, PS_COMBINERCOUNT_MUX_MSB | PS_COMBINERCOUNT_UNIQUE_C0 |
+                                             PS_COMBINERCOUNT_UNIQUE_C1),
+    .textureModes = PS_TEXTUREMODES(PS_TEXTUREMODES_NONE, PS_TEXTUREMODES_NONE, PS_TEXTUREMODES_NONE,
+                                    PS_TEXTUREMODES_PROJECT2D),
+    .c0Mapping = PS_CONSTANTMAPPING(15, 15, 15, 15, 15, 15, 15, 15),
+    .c1Mapping = PS_CONSTANTMAPPING(15, 15, 15, 15, 15, 15, 15, 15),
+    .finalCombinerConstants = PS_FINALCOMBINERCONSTANTS(15, 15, PS_GLOBALFLAGS_TEXMODE_ADJUST),
+};
+
+// XBE_GLOBAL(0x001dd530, 4)
+const void *MatVolatileTextureVSFunctions[1] = { MatVolatileTextureVSFunction.data() };
+// XBE_GLOBAL(0x001dd534, 4)
+const uint8_t *MatVolatileTexturePSDefinitions[1] = {
+    reinterpret_cast<const uint8_t *>(&MatVolatileTexturePSDefinition),
+};
+// XBE_GLOBAL(0x001dd538, 0x94)
+uint32_t MatVolatileTexturePackets[37] = {
+    EAGL::PacketHeader(EAGL::kOpDefaultShaders, 2), 0,
+    EAGL::PacketHeader(EAGL::kOpGeoPrimState, 2), 0,   // State
+    EAGL::PacketHeader(EAGL::kOpTAR, 3), 0, 3,   // Texture
+    EAGL::PacketHeader(EAGL::kOpStream, 2), 0,   // Parameters
+    EAGL::PacketHeader(EAGL::kOpVSMatrix20, 3), 0, uint32_t(-96),   // ModelViewProjectionMatrix
+    // Coordinates
+    EAGL::PacketHeader(EAGL::kOpDynamicStream, 7), 0, 0, 0x10, EAGL::kNoBuffer, EAGL::kNoBuffer, EAGL::kNoBuffer,
+    // Colours
+    EAGL::PacketHeader(EAGL::kOpDynamicStream, 7), 0, 1, 4, EAGL::kNoBuffer, EAGL::kNoBuffer, EAGL::kNoBuffer,
+    // UV
+    EAGL::PacketHeader(EAGL::kOpDynamicStream, 7), 0, 2, 8, EAGL::kNoBuffer, EAGL::kNoBuffer, EAGL::kNoBuffer,
+    EAGL::PacketHeader(EAGL::kOpDrawVertices, 3), 0, 3,
+    0,
+};
+// XBE_GLOBAL(0x001dd5cc, 0x1c)
+const uint32_t MatVolatileTextureVSDeclaration[7] = {
+    D3DVSD_STREAM(0),
+    D3DVSD_REG(0, D3DVSDT_FLOAT4),
+    D3DVSD_STREAM(1),
+    D3DVSD_REG(1, D3DVSDT_D3DCOLOR),
+    D3DVSD_STREAM(2),
+    D3DVSD_REG(2, D3DVSDT_FLOAT2),
+    D3DVSD_END(),
+};
+// XBE_GLOBAL(0x001dd638, 0x20)
+const char *MatVolatileTextureParamNames[8] = {
+    "State", "Texture", "Parameters", "ModelViewProjectionMatrix", "Coordinates", "Colours", "UV", NULL,
+};
+
 // The render methods the requests' methods are children of (static initialisers')
 // XBE_GLOBAL(0x0024b07c, 0x34)
 EAGL::RenderMethod MatDebugMethod;   // "HB_RM = MatDebug"

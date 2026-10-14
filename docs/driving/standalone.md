@@ -8,6 +8,11 @@ audit of the addresses left in the source, what this round made ours, and the st
 are the remaining worklist. Tested on 13 and 14 October 2026: see [Test results](#test-results-13-14-october-2026)
 for what the modes found and what was fixed. The game data moved into our source on 14 October 2026 (below).
 
+**Since 14 October 2026 the standalone executable links and runs** (`driving_standalone`, and
+`driving_standalone_test` with the lockstep harness): nothing of Driving.xbe is mapped or read, and its lockstep runs
+match the injected build's baselines exactly on all eight missions. See [The standalone
+executable](#the-standalone-executable-14-october-2026) at the end.
+
 ## The game's data: in our source, checked against the XBE by hand
 
 The build needs neither Driving.xbe nor any Python package: it runs only tools/preprocess.py, which reads committed
@@ -282,15 +287,13 @@ method constants.
 
 ## The standalone target
 
-`cmake --build . --config Release --target driving_standalone` (not in the default build). CMake builds it from
-`standalone.dir/` (in the build tree), a mirror of src/ that `tools/standalone_poison.py` writes before each build:
-src/driving/devtools is left out but for its headers, and every worklist literal in src/driving is replaced by an
-identifier nothing declares - `XBE_ADDRESS_<Name>` for the address in a `#define Name`, `XBE_<KIND>_<address>` for the
-rest, `XBE_UNPORTED_<address>` for a generated vtable slot - so each use is a compile error naming it. The target
-links our driving code with no injection, no devtools and no shadows; its main
-(`src/driving/standalone/StandaloneMain.cpp`) makes the window and starts `mainXapiStartup`. It does not link yet:
-the devtools hooks game code still calls, the kernel the loader provided, the seams' installation.
-`python tools/standalone_poison.py --count <build log>` sums the errors up.
+Since 14 October 2026 `driving_standalone` builds from src/ directly, in the default build, and runs: see [The
+standalone executable](#the-standalone-executable-14-october-2026). What follows is how the worklist was counted
+while it did not compile. The `standalone_poison` target (`tools/standalone_poison.py OUTDIR`) still writes
+`standalone.dir/`, a mirror of src/ in which every worklist literal is replaced by an identifier nothing declares -
+`XBE_ADDRESS_<Name>` for the address in a `#define Name`, `XBE_<KIND>_<address>` for the rest, `XBE_UNPORTED_<address>`
+for a generated vtable slot - so that compiling it names each use (`python tools/standalone_poison.py --count <build
+log>` sums them up); with the worklist empty, the mirror is src/ itself.
 
 First count (13 October 2026): **2300 uses of XBE addresses, 457 distinct names** (426 further errors follow from
 them); five files stop at MSVC's 100 errors, so their counts are a floor (StaticInitTable.cpp has 868 literals, the
@@ -323,11 +326,9 @@ D3D8 entry table 138, GameLoop.cpp, Mixer.cpp, Reverb.cpp).
 
 ## What is left for the standalone target
 
-1. The data worklist above: `fgSimulation` and its tables, the AI statics at 0x001de000-0x001e1fff, the mixer's
-   state, `gEventDynamicData`, the launch page, the profiler's statics - and the constant tables read by address,
-   which want extracting like the 41 of this round.
-2. The standalone target's compile errors (above): the D3D8 state, the seams' patch tables, the kernel imports'
-   standalone body, the 15 unported C++ library virtual functions.
+Items 1 and 2 of the 13 October list (the data worklist, the compile errors) are done: see the rounds below and [The
+standalone executable](#the-standalone-executable-14-october-2026). Still open:
+
 3. `NIGHTFIRE_TRAP_DATA=2` (the startup) has not been summarised.
 4. The single-copy globals' redirects stand on two heuristics (the compare windows, the register-based rule); a
    folded access neither catches would show as a shadow difference or a write into our image, as these did.
@@ -450,3 +451,110 @@ another round's 8 games and six of its runs hit the 60-minute limit; ss2 showed 
 **After the merge with driving-sa-content** (untested in game): `driving_data_check.py` 323 match, 0 differ;
 `owned_globals.py --check` (1279 globals), `global_coverage.py --driving --check` (1142 owned, 2 ready, 2 still used)
 and `static_init_driving.py --check` pass. The audit's worklist: 383.
+
+## The standalone executable (14 October 2026)
+
+`driving_standalone.exe` links our driving code and nothing else of the game: no loader image at 0x10000, no
+injection DLL, no FUNC_AT patching, no Driving.xbe read at build or run time. `driving_standalone_test.exe` is the same
+with the lockstep and dump harness. Both are built by `cmake --build . --config Release --target driving_standalone
+driving_standalone_test` (driving_standalone is in the default build, so the CI presets build it; the test variant is
+EXCLUDE_FROM_ALL). The injected build (driving + drivinginject) is unchanged in behaviour and stays the test build with
+the shadows.
+
+### The worklist, owned or redirected
+
+Before this round: tools/standalone_audit.py 383 worklist literals; the poisoned build 466 uses of 340 names (the
+13 October count was 2300). After: **0** (`python tools/standalone_audit.py`). The audit has a new class, `injected`:
+any literal inside `#ifndef NIGHTFIRE_STANDALONE` (or the `#else` of an `#ifdef`), and every literal of an .inc that is
+only included there - the seams' entry tables and the start-up's and XAPI's patching, 295 literals, none of which the
+standalone build compiles.
+
+| What | Now | How |
+|---|---|---|
+| D3D8's state in its section (0x00175420-0x001758c0) | gfx/d3dSeam.cpp, declared in gfx/D3D8.h | `D3DPushBufferCursor`, `D3DDirtyFlags`, `D3DTextureState[4][32]`, `D3DRenderState[0xa6]` (D3DRS_MAX: the complex states' entry table at 0x00173ee0 ends at 0xa5) owned; `D3dSeam_Init` points the backend at them. The method and dirty-bit tables are ours: `D3DSimpleStateMethods[0x5c]` as `PushMethod(register)` words, `D3DDeferredStateDirty` (states 0x5c-0x87) and `D3DTextureStateDirty` (texture states 0xc-0x15) - one block in the XBE (0x0018e7b0-0x0018e9f8), the callers' tables indexed from the first state each covers |
+| The seven render methods' compiled data (TextureDOF, MatDebugTexture, BondScrollTex1, BondGouraudGain, BondPostGlare, MatDebug, MatVolatileTexture) | beside each method (camera/DirectorQueue.cpp, render/Decals.cpp, Gain.cpp, PostProcessing.cpp, Materials.cpp) | each its vertex program in the XDK's assembly (`Vsh::Function`), its pixel shader as a `D3DPixelShaderDef`, the one-entry program and definition lists, the packet stream (`PacketHeader(kOp..., length)` and operands, the parameter each packet reads beside it; opcode 11's buffer words `kNoBuffer`), the vertex declaration and the parameter names. `Vsh` grew the rest of the NV2A encoding the programs use (temporaries written, negation, swizzles, ADD/DP3/MAX/SLT, RCP/RSQ/EXP, an ILU MOV paired with a MAC operation writing an output, and TextureDOF's assembler writing r1 into the temporary field of its RCC pair: `TempRegister(1)`); gfx/D3D8Shaders.h has the final combiner's macros |
+| The static initialisers' objects at raw addresses | owned, constructed by name | the C++ library's two `_Init_locks` and its `_Init_atexit` (`GameStd::InitLocksFirst`, `InitLocksSecond`, `TheInitAtExit`), three `TextureDofState`s, three `DynamicModel`s and two `GeoPrimState`s only the initialisers make (`InitialiserDofStates`, `InitialiserModels`, `InitialiserGeoPrimState`, `WorldCameraGeoPrimState`; names ours), the loading screen's string list (`LoadScreenStrings`). static_init_driving.py: NAMED, NAMED_OBJECT_ARRAYS, NAMED_STORES entries; a block copy into a global nothing reads is an `// unread:` comment like the stores; `UNCALLED_VTABLES` leaves out the destructor that resets RCMP_SYSTEM's vtable (the movie player is FFmpeg); a render method's packets are passed as `reinterpret_cast<EAGL::Packet *>(...)` |
+| The C++ library's 15 unported virtual functions | platform/CRuntimeStd.cpp | ported (c-runtime.md); Vtables.cpp regenerated: 0 slots without a port |
+| The throw information | platform/CRuntimeStd.cpp | `Crt::ThrowInfo`, `CatchableTypeArray<N>`, `CatchableType`, `GameStd::TypeDescriptor<N>` for length_error, out_of_range, bad_cast and ios_base::failure, with our destructors and copy constructors and a `TypeInfoVtable` of our type_info's deleting destructor; every user (the STL throws, Tree.h's `TreeThrow`) passes `&Crt::...ThrowInfo` |
+| The C runtime's data | platform/CRuntime.cpp | the lock table (with which 14 locks are preallocated) and its static sections, `_aexit_rtn`, `__lconv`'s table and strings, `_XcptActTab` (`Crt::ExceptionActions`, the per-thread block's +0x54); the ostream and ostrstream vbtables are named fields of `CLocaleCtype`'s block (they lie inside it); istrstream's vbtable (0x0018bdfc), `_Fpz` and `_Stinit` owned in data/StdStreams.cpp |
+| Smaller tables and state | their files | `BulletStreakKinds` (game/WeaponEffects.cpp), the lane tables as one `LaneTables` block (world/RoadNetwork.cpp: Init's row pointers past the four tables run on into the next as before; nothing reads those rows), `LargeStripScratch[402]` (world/CollisionQueries.cpp), `gFeedbackThread`, the mouse driver's bounds (`gMouseBounds`, platform/RealPrint.cpp), XPP's `XboxGamepadType`; Carp's mask and two x87 masks in CRuntime.cpp written with fewer digits (constants, not addresses) |
+| The kernel imports | platform/KernelImports.cpp | the injected build's body (the XBE's import slots) under `#ifndef NIGHTFIRE_STANDALONE`; the standalone body implements the nine exports over the host layer (below) |
+| XAPI's initialiser table (0x001b4938) | XboxStartup.cpp | empty in this game: its loop is gone from both builds |
+| `DummyNull` (System.cpp) | `NullFunction()` | SndSystemShadow no longer records dummyNullFunction's calls (it hooked 0x000d3580; the call does nothing) |
+
+All the new mutable globals the shadows' originals touch are SINGLE_COPY in tools/owned_globals.py (the D3D state,
+the lock table and sections, the library's locks, `BulletStreakKinds`, `LargeStripScratch`, `gFeedbackThread`,
+`gMouseBounds`), and the shadows that named the game's copies name ours (CRuntimeShadowB's library locks,
+ColQueryShadow, InputShadow, ReflectionShadow, GameEffectsShadowD). driving_data_check.py: 456 initialised owned
+globals, 403 match the XBE, 0 differ (it now compares text in .data too: the render methods' parameter names).
+global_coverage.py learned XPP's device-type and class-driver tables (NOT_POINTERS) and `_initstdio` (ORPHAN_CODE),
+and passes: 1245 owned, 2 ready, 0 still used.
+
+### Start-up and seams
+
+src/driving/standalone/StandaloneMain.cpp does what the loader and `Inject()` did, by calling our code directly:
+`HostSetCommandLine`, `KernelStart` (the standalone kernel's millisecond count), `Xbox_ApplyDiscPathSetting`
+(settings.ini's DiscPath, default ../disc, for the paths XAPI's file calls resolve), `D3dSeam_Init` (where the backend
+reads D3D8's state, and the volatile streams), `Inject_LaunchOptions` (the command line's -mission and friends, which
+patches nothing), `Ffmpeg_Require`, `SndCallTrace_Install` (the test variant), then `HostWindow_Open` and the game's
+thread at `mainXapiStartup` with the XBE header's 0x10000 stack, and `HostWindow_Run`. Nothing is patched: our code
+already calls the seams' D3D8, DirectSound, XInput and XAPI functions directly, so in the standalone build the seams'
+entry tables, the naked register adaptors for originals, and every `Inject_*` patching function are left out
+(`#ifndef NIGHTFIRE_STANDALONE` in d3dSeam.cpp, dsndSeam.cpp, XboxXapi.cpp, XboxInput.cpp, XboxTimer.cpp,
+XboxStartup.cpp - the XBE entry point's header and TLS reads among them).
+
+The standalone kernel (KernelImports.cpp's `#else`): the Xbox's 28-byte critical sections hold a `HostLock`,
+initialised on first entry unless initialised before, as the loader's kernel does for the statically laid-out ones;
+KeBugCheck reports and exits; MmAllocateContiguousMemoryEx/MmFreeContiguousMemory are `HostAllocatePages`/
+`HostFreePages` (new in Host.h: VirtualAlloc at the lowest free address below 0x10000000, as the loader placed
+contiguous memory; mmap on POSIX); ExQueryNonVolatileSetting answers the loader's EEPROM constants (PAL-I, English,
+settings.ini's Widescreen); KeTickCount is a millisecond count one thread advances; HalBootSMCVideoMode is 0 (the
+injected build reads the bytes of the loader's stub there, which are not 1 either: the same branch).
+
+The devtools hooks game code calls: standalone/StandaloneHooks.cpp answers the ones neither standalone build has
+(StaticInitDump, StandaloneTraps, FileDump, the XBE profiler, devtools/ShadowTicks.cpp's shadow dispatch);
+standalone/NoDevtools.cpp the harness's, in driving_standalone only. driving_standalone_test links
+devtools/Teleport.cpp, SndLockstep.cpp and SndCallTrace.cpp themselves: the first-tick shadow runs moved out of
+Teleport.cpp into devtools/ShadowTicks.cpp (drivinginject only), Teleport.cpp and SndCallTrace.cpp name the player's
+car, the simulation and the mission number by our globals and call `Simulation::GetRigidBody`/`SetStartConditions`
+directly, and SndCallTrace's redirect of the originals' entries is `#ifndef NIGHTFIRE_STANDALONE`.
+
+**What it needs at run time:** the disc's game files (../disc, or settings.ini's DiscPath) - not Driving.xbe -,
+settings.ini and saves/ beside it as the injected build has them, the FFmpeg DLLs, and the host's Direct3D 9,
+XInput (xinput9_1_0.dll) and XAudio2 (with NIGHTFIRE_SDL, SDL3 for the window, input and sound output).
+
+### Tests (14 October 2026, runner, against `lbase`)
+
+| Run | Result |
+|---|---|
+| driving_standalone_test, lockstep (round sa1, slots 9-16; `EXE='Release\driving_standalone_test.exe' tools/runner/round.sh`) | **16 of 16 exact**: every frame, every sound-trace line to tick 9000, all eight missions idle and accelerating |
+| driving_standalone_test after the merge of 74b43b0 (the FMV audio fix), lockstep (round sa2) | 16 of 16 exact (run beside round ig2's shadow runs on the other eight slots: still exact) |
+| driving_standalone.exe on its own, no harness, `-mission 5 -GameHold accelerate`, settings.ini's DumpEvery=1500 | boots, loads and drives: frames 1500-6000 dumped, the last in the level's gameplay |
+| The injected build, lockstep (rounds ig1, ig2) | 16 of 16 exact each |
+| The injected build, `NIGHTFIRE_TRAP_ORIGINAL=2` lockstep (round it1, `ENV=NIGHTFIRE_TRAP_ORIGINAL=2`) | 16 of 16 exact, no trap reached (no loader fault in any run) |
+| The injected build, every shadow (round ig3) | all eight runs complete with the frame dumped, 0 differences; summaries (165, 165, 164, 165, 165, 165, 162, 165) and loader faults per mission as in the main session's sm1 round exactly |
+
+The first shadow round (ig1) found four things, all the harness's or the tools': CamDataShadow faulted on a NULL from
+`OwnedGlobals_Ours(0x00241460)` - the render method data had been inserted between `TextureDofMethod`'s XBE_GLOBAL tag
+and its definition, so the table had lost it -; GeoPrimShadow differed on D3D8's render-state slots, because
+owned_globals.py took every owned global below .data for .rdata and so neither lent nor redirected the D3D state
+(D3D8's section is code; only 0x00189be0-0x001b3d98 is .rdata now); RoadNetShadow logged the lane row pointers raw
+(it now writes the original's as ours, rows past the tables included); and DebugVarShadow's istrstream dump saw the
+vbtable as a difference until it was in the table (exported from StdStreams.h, as `kLaneTables` from RoadNetwork.h).
+The second (ig2) left CRuntimeShadowA's localeconv check, which compared the returned pointers: it compares the two
+tables' conventions now. ig2's loader fault counts per mission (714, 1080, 1076, 924, 690, 754, 652, 632) are the
+main session's sm1 round's exactly.
+
+Heap addresses differ (the process heap and contiguous memory are the host's, and the statics are the exe's rather
+than the DLL's), and nothing seen depends on them, as the heap-shift tests had shown.
+
+tools/runner/round.sh takes `EXE=` (another executable; the targets built follow it), `TARGETS=` and `ENV=` (variables
+added to the lockstep runs, `NIGHTFIRE_TRAP_ORIGINAL=2` say).
+
+### Left
+
+- The standalone exe has no crash reporter (the loader's crash.log and crash.dmp): a fault ends it with Windows'
+  own report.
+- The C++ library ports of this round (strstreambuf's five virtuals, the exception classes' destructors and copies,
+  the throw information's copies) are untested: nothing the game does reaches them, and they have no shadow yet.
+- `NIGHTFIRE_TRAP_DATA=2` (the startup) is still unsummarised; with the exe running, TRAP_DATA's purpose is served.

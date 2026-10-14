@@ -23,7 +23,8 @@ uint8_t gSuperEasy;
 // XBE_GLOBAL(0x001b6f50, 0x1)
 uint8_t gFeedbackAllowed = 1;
 
-#define gFeedbackThread (*(RealThread *)0x001e2410)
+// XBE_GLOBAL(0x001e2410, 0xc)
+RealThread gFeedbackThread;
 // XBE_GLOBAL(0x001e241c, 0x1)
 uint8_t gFeedbackThreadStop;
 // XBE_GLOBAL(0x001e2420, 0x10)

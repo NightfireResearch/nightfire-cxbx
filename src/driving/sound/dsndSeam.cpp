@@ -42,6 +42,7 @@
 // says it crashes.
 // ---------------------------------------------------------------------------------------------------------------
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: the original's entry points patched to these
 static XbeEntry g_entries[] = {
 #define XBE_ENTRY(name, address, stack)        { #name, address, stack, 0, 0, false },
 #define XBE_ENTRY_UNKNOWN_STACK(name, address) { #name, address, XBE_ENTRY_STACK_UNKNOWN, 0, 0, false },
@@ -51,6 +52,7 @@ static XbeEntry g_entries[] = {
 };
 
 static XbeEntrySeam g_seam = { g_entries, sizeof(g_entries) / sizeof(g_entries[0]), "dsnd" };
+#endif   // NIGHTFIRE_STANDALONE
 
 // ---------------------------------------------------------------------------------------------------------------
 // The objects the game is handed.
@@ -388,6 +390,7 @@ uint32_t __stdcall IDirectSound_Release(IDirectSound *device) {
     return 0;
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: the original's entry points patched to these
 // DirectSound's reference-counted base class: AddRef (0x0017acb3) bumps the count at +4 and returns it. It has
 // no direct callers - it is reached through a vtable - so it is ported as it is rather than left to a stub.
 static uint32_t __stdcall Seam_DSound_CRefCount_AddRef(uint32_t *object) {
@@ -416,12 +419,16 @@ static const struct { const char *name; void *replacement; unsigned stackBytes; 
     { "IDirectSoundBuffer_Release",            (void *)IDirectSoundBuffer_Release, 4 },
     { "IDirectSound_Release",                  (void *)IDirectSound_Release, 4 },
 };
+#endif   // NIGHTFIRE_STANDALONE
 
 void DsndSeam_ReportMissing(void) {
+#ifndef NIGHTFIRE_STANDALONE
     XbeSeam_ReportMissing(&g_seam);
+#endif
     DrivingAudio_Report();
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 void Inject_DsndSeam(void) {
     for (size_t i = 0; i < sizeof(g_replacements) / sizeof(g_replacements[0]); i++)
         XbeSeam_Replace(&g_seam, g_replacements[i].name, g_replacements[i].replacement,
@@ -429,3 +436,4 @@ void Inject_DsndSeam(void) {
 
     XbeSeam_Install(&g_seam);
 }
+#endif   // NIGHTFIRE_STANDALONE

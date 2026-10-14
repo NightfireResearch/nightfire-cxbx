@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../platform/RealSystem.h"   // RealThread
+
 // ---------------------------------------------------------------------------------------------------------------
 // Force feedback (Ghidra: IFeedback): the pads' motors. An IFeedback is one word, a pointer to its port's record;
 // any number of them share a port (the game's main function holds one for the player's controller, PBondCar's
@@ -110,6 +112,7 @@ static_assert(offsetof(PadFeedback, leftMotorSpeed) == 0x42 && offsetof(PadFeedb
 extern int32_t gFeedbackUsers;      // ports in use
 extern PadFeedback gPadFeedback;    // what Update last sent
 extern uint32_t gFeedbackTick;
+extern RealThread gFeedbackThread;   // the force-feedback thread
 extern uint8_t gSuperEasy;          // -supereasy
 extern uint8_t gFeedbackAllowed;
 

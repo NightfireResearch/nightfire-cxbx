@@ -1067,7 +1067,7 @@ static void ModelSetRenderStateBody(uint32_t state, uint32_t value) {
         return;
     }
     if ((int32_t)state < 0x88) {
-        D3DDirtyFlags |= D3DDeferredStateDirty[state];
+        D3DDirtyFlags |= D3DDeferredStateDirty[state - kD3DFirstDeferredState];
         D3DRenderState[state] = value;
         return;
     }
@@ -1113,7 +1113,7 @@ static void ModelSetRenderStateBody(uint32_t state, uint32_t value) {
 // entry points.
 static void ModelSetTextureStateBody(uint32_t state, uint32_t stage, uint32_t value) {
     if ((int32_t)state < 0x16) {
-        uint32_t dirty = (int32_t)state < 0xc ? 1u << (stage & 31) : D3DTextureStateDirty[state];
+        uint32_t dirty = (int32_t)state < 0xc ? 1u << (stage & 31) : D3DTextureStateDirty[state - kD3DFirstDirtyTextureState];
         D3DDirtyFlags |= dirty;
         D3DTextureState[stage][state] = value;
         return;

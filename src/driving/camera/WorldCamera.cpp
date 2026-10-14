@@ -98,6 +98,9 @@ struct SceneObjDescFields {
 #define RRenderWorldCameraVtable ((void **)Vtable_RRenderWorldCamera)
 #define RPlayerViewCameraVtable ((void **)Vtable_RPlayerViewCamera)
 // The Simulation's cars, the player's first (Ghidra's name)
+// An object only the static initialisers construct and destroy (name ours)
+// XBE_GLOBAL(0x001f2610, 0x4c)
+alignas(16) EAGL::GeoPrimState WorldCameraGeoPrimState;
 // XBE_GLOBAL(0x001f2a4c, 0x4)
 uint32_t GameTick;   // the game's tick (RGlareManager.cpp's GlareTick)
 // GetAnchorMatrix4's matrix, made the identity on its first call (a function-local static and its guard)

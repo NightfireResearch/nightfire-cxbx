@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
@@ -529,6 +530,27 @@ size_t HostHeapSize(HostHandle heap, unsigned long flags, const void *block) {
     (void)heap;
     (void)flags;
     return HeaderOf(block)->size;
+}
+
+// ---- pages: the mapping's length is kept in a page before the block
+
+void *HostAllocatePages(size_t size, uintptr_t lowest, uintptr_t limit) {
+    (void)lowest;
+    (void)limit;
+    size_t page = size_t(sysconf(_SC_PAGESIZE));
+    size_t length = page + size;
+    void *mapping = mmap(NULL, length, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (mapping == MAP_FAILED)
+        return NULL;
+    *static_cast<size_t *>(mapping) = length;
+    return static_cast<char *>(mapping) + page;
+}
+
+void HostFreePages(void *block) {
+    if (block == NULL)
+        return;
+    char *mapping = static_cast<char *>(block) - size_t(sysconf(_SC_PAGESIZE));
+    munmap(mapping, *reinterpret_cast<size_t *>(mapping));
 }
 
 // ---- files

@@ -38,6 +38,87 @@ class RTextureContext;
 static const USingletonVtable *const kPostProcessingVtable = (const USingletonVtable *)Vtable_RPostProcessing;
 static const USingletonVtable *const kSingletonVtable = (const USingletonVtable *)Vtable_0018beb0;
 
+// The render method's compiled data (its .rm): the shaders, the packets the interpreter runs, the parameters' names
+// XBE_GLOBAL(0x001d4208, 0xd8)
+const std::array<uint32_t, 54> BondPostGlareVSFunction = [] {
+    using namespace Vsh;
+    return Function<54>({
+        Dp4(r9.x(), v(0), c(-96)),
+        Dp4(r9.y(), v(0), c(-95)),
+        Dp4(r9.w(), v(0), c(-93)),
+        Mov(r10, v(1)),
+        Slt(r8.w(), c(-92).x(), r(10).w()),
+        Add(r9.zw(), r(9).zw(), -r(8).w()),
+        Add(r8.w(), c(-92).x(), -r(10).w()),
+        Mul(r8.w(), r(8), c(-92)) + Mov(oPos, r(9)),
+        Mul(r10.xyz(), r(10).xyz(), r(8).w()),
+        Mul(oPos.xyz(), r(12), c(-38)) + Rcc(r1.x(), r(12).w()),
+        Mul(r10.xyz(), r(10).xyz(), c(-92).y()),
+        Mov(oD0, r(10)),
+        Mad(oPos.xyz(), r(12), r(1).x(), c(-37)),
+    });
+}();
+
+// XBE_GLOBAL(0x001d42e0, 0xf0)
+const D3DPixelShaderDef BondPostGlarePSDefinition = {
+    .alphaInputs = { PS_COMBINERINPUTS(PS_REGISTER_V0 | PS_CHANNEL_ALPHA | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                       PS_REGISTER_T3 | PS_CHANNEL_ALPHA | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                       PS_REGISTER_ZERO | PS_CHANNEL_ALPHA, PS_REGISTER_ZERO | PS_CHANNEL_ALPHA) },
+    .finalCombinerInputsABCD = PS_FINALCOMBINERINPUTS_ABCD(PS_REGISTER_ZERO, PS_REGISTER_ZERO,
+                                                           PS_REGISTER_R0 | PS_CHANNEL_RGB, PS_REGISTER_ZERO),
+    .finalCombinerInputsEFG = PS_FINALCOMBINERINPUTS_EFG(PS_REGISTER_ZERO, PS_REGISTER_ZERO,
+                                                         PS_REGISTER_ONE | PS_CHANNEL_RGB,
+                                                         PS_FINALCOMBINERSETTING_CLAMP_SUM),
+    .alphaOutputs = { PS_COMBINEROUTPUTS(PS_REGISTER_R0, PS_REGISTER_DISCARD, PS_REGISTER_DISCARD,
+                                         PS_COMBINEROUTPUT_IDENTITY) },
+    .rgbInputs = { PS_COMBINERINPUTS(PS_REGISTER_V0 | PS_CHANNEL_RGB | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                     PS_REGISTER_T3 | PS_CHANNEL_RGB | PS_INPUTMAPPING_SIGNED_IDENTITY,
+                                     PS_REGISTER_ZERO, PS_REGISTER_ZERO) },
+    .rgbOutputs = { PS_COMBINEROUTPUTS(PS_REGISTER_R0, PS_REGISTER_DISCARD, PS_REGISTER_DISCARD,
+                                       PS_COMBINEROUTPUT_IDENTITY) },
+    .combinerCount = PS_COMBINERCOUNT(1, PS_COMBINERCOUNT_MUX_MSB | PS_COMBINERCOUNT_UNIQUE_C0 |
+                                             PS_COMBINERCOUNT_UNIQUE_C1),
+    .textureModes = PS_TEXTUREMODES(PS_TEXTUREMODES_NONE, PS_TEXTUREMODES_NONE, PS_TEXTUREMODES_NONE,
+                                    PS_TEXTUREMODES_PROJECT2D),
+    .c0Mapping = PS_CONSTANTMAPPING(15, 15, 15, 15, 15, 15, 15, 15),
+    .c1Mapping = PS_CONSTANTMAPPING(15, 15, 15, 15, 15, 15, 15, 15),
+    .finalCombinerConstants = PS_FINALCOMBINERCONSTANTS(15, 15, PS_GLOBALFLAGS_TEXMODE_ADJUST),
+};
+
+// XBE_GLOBAL(0x001d43d0, 4)
+const void *BondPostGlareVSFunctions[1] = { BondPostGlareVSFunction.data() };
+// XBE_GLOBAL(0x001d43d4, 4)
+const uint8_t *BondPostGlarePSDefinitions[1] = {
+    reinterpret_cast<const uint8_t *>(&BondPostGlarePSDefinition),
+};
+// XBE_GLOBAL(0x001d43d8, 0x88)
+uint32_t BondPostGlarePackets[34] = {
+    EAGL::PacketHeader(EAGL::kOpDefaultShaders, 2), 0,
+    EAGL::PacketHeader(EAGL::kOpGeoPrimState, 2), 0,   // State
+    EAGL::PacketHeader(EAGL::kOpTAR, 3), 0, 3,   // Texture
+    EAGL::PacketHeader(EAGL::kOpStream, 2), 0,   // Parameters
+    EAGL::PacketHeader(EAGL::kOpVSMatrix19, 3), 0, uint32_t(-96),   // ModelViewProjectionMatrix
+    EAGL::PacketHeader(EAGL::kOpVSConstants6, 4), 0, uint32_t(-92), 4,   // GlareParams
+    // Coordinates
+    EAGL::PacketHeader(EAGL::kOpDynamicStream, 7), 0, 0, 0xc, EAGL::kNoBuffer, EAGL::kNoBuffer, EAGL::kNoBuffer,
+    // Colours
+    EAGL::PacketHeader(EAGL::kOpDynamicStream, 7), 0, 1, 4, EAGL::kNoBuffer, EAGL::kNoBuffer, EAGL::kNoBuffer,
+    EAGL::PacketHeader(EAGL::kOpDrawVertices, 3), 0, 2,
+    0,
+};
+// XBE_GLOBAL(0x001d4460, 0x14)
+const uint32_t BondPostGlareVSDeclaration[5] = {
+    D3DVSD_STREAM(0),
+    D3DVSD_REG(0, D3DVSDT_FLOAT3),
+    D3DVSD_STREAM(1),
+    D3DVSD_REG(1, D3DVSDT_D3DCOLOR),
+    D3DVSD_END(),
+};
+// XBE_GLOBAL(0x001d44cc, 0x20)
+const char *BondPostGlareParamNames[8] = {
+    "State", "Texture", "Parameters", "ModelViewProjectionMatrix", "GlareParams", "Coordinates", "Colours", NULL,
+};
+
 // XBE_GLOBAL(0x00242e84, 0x34)
 EAGL::RenderMethod BondPostGlare;   // "HB_RM = BondPostGlare", made by a static initialiser
 extern const char *OffOnNames[2];                        // "Off", "On"

@@ -50,6 +50,8 @@ struct Locimp : Facet {
     String name;           // +0x18
 
     Locimp* Construct(bool isTransparent);
+    void Destruct();                                                       // 0x00130e4c
+    Locimp* Delete(unsigned flags);         // vtable slot 0               // 0x00130f23
 };
 static_assert(sizeof(Locimp) == 0x34, "Locimp");
 
@@ -63,6 +65,9 @@ struct FacetNode {
 
 struct BadCast : Exception {
     BadCast* Construct(const char *message);                               // 0x001326ae
+    BadCast* ConstructCopy(const BadCast *other);                          // 0x001326c7
+    void Destruct();                                                       // 0x001326df
+    BadCast* Delete(unsigned flags);        // vtable slot 0               // 0x00132706
 };
 
 // std::runtime_error, and ios_base::failure over it (another vtable).
@@ -70,8 +75,34 @@ struct RuntimeError : Exception {
     String message;        // +0x0c
 
     RuntimeError* Construct(const String *text);
+    RuntimeError* ConstructCopy(const RuntimeError *other);                // 0x0013133f
+    void Destruct();                                                       // 0x001311d1
+    RuntimeError* Delete(unsigned flags);   // vtable slot 0               // 0x001311fa
+    const char* What();                     // vtable slot 1               // 0x001311ec
 };
 static_assert(sizeof(RuntimeError) == 0x28, "RuntimeError");
+
+// ios_base::failure.
+struct Failure : RuntimeError {
+    Failure* ConstructCopy(const Failure *other);                          // 0x00131382
+    void Destruct();                                                       // 0x0013126e
+    Failure* Delete(unsigned flags);        // vtable slot 0               // 0x00131252
+    void Raise();                           // vtable slot 2, _Doraise     // 0x0013139a
+};
+
+// type_info: its vtable, the undecorated name once asked for (from the C runtime's heap), the decorated name.
+struct TypeInfo {
+    const void *const *vtable;
+    char *undecoratedName;
+
+    void Destruct();                                                       // 0x00132722
+    TypeInfo* Delete(unsigned flags);       // vtable slot 0               // 0x0013274b
+};
+
+// A type_info as the compiler lays one out for a throw: the name follows.
+template <size_t N> struct TypeDescriptor : TypeInfo {
+    char name[N];
+};
 
 // ios_base::_Stdstr and _Stdopens as the game lays them out: the eight standard streams and how often each was
 // opened, each with the slot after it that a ninth standard stream reaches (AddStandard does not stop at eight).
@@ -86,6 +117,10 @@ static_assert(sizeof(StandardStreamTable) == 0x34, "StandardStreamTable");
 typedef void (*AtExitFn)(void);
 
 // The library's state (CRuntimeStd.cpp), for the shadow test.
+extern CriticalSection LibraryLocks[4];
+extern InitLocks InitLocksFirst;
+extern InitLocks InitLocksSecond;
+extern InitAtExit TheInitAtExit;
 extern volatile long InitLocksCount;
 extern FacetNode *FacetList;
 extern Locimp *GlobalLocale;
@@ -112,7 +147,35 @@ double Stof(const char *text, char **end, long powerOfTen);                // 0x
 
 namespace Crt {
 
-struct ThrowInfo;
+// What a throw tells the frame handlers about the thrown type: each class it can be caught as (the type, how to
+// copy it), and its destructor.
+struct CatchableType {
+    uint32_t properties;
+    const GameStd::TypeInfo *type;
+    int32_t memberOffset;          // this-displacement: offset, vbtable offset, displacement in the vbtable
+    int32_t vbtableOffset;
+    int32_t vbtableDisplacement;
+    int32_t size;
+    void *copyFunction;
+};
+
+template <size_t N> struct CatchableTypeArray {
+    int32_t count;
+    const CatchableType *types[N];
+};
+
+struct ThrowInfo {
+    uint32_t attributes;
+    void *destructor;
+    void *forwardCompat;
+    const void *catchableTypes;    // a CatchableTypeArray
+};
+
+// The throw information of each type the game throws.
+extern const ThrowInfo LengthErrorThrowInfo;
+extern const ThrowInfo OutOfRangeThrowInfo;
+extern const ThrowInfo BadCastThrowInfo;
+extern const ThrowInfo FailureThrowInfo;
 
 // A method of the array's class (this in ECX, nothing else).
 typedef void (__thiscall *ElementFn)(void *element);

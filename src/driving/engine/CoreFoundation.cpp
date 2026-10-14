@@ -19,7 +19,6 @@ const char GameEmptyString[1] = "";
 
 // The STL's exception machinery, the game's
 #define LengthError_vtable ((void *)Vtable_00189eec)
-#define LengthError_ThrowInfo ((const Crt::ThrowInfo *)0x001a89bc)
 
 typedef void (*AssertHandler)(const char *message);
 
@@ -85,7 +84,7 @@ void ThrowLengthError(const char *message) {
     GameStd::LengthError error;
     error.Construct(&text);
     error.vtable = LengthError_vtable;
-    Crt::CxxThrowException(&error, LengthError_ThrowInfo);
+    Crt::CxxThrowException(&error, &Crt::LengthErrorThrowInfo);
 }
 
 // FUNC_AT(0x00022770)

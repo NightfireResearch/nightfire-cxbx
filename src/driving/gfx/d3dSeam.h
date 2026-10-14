@@ -6,6 +6,9 @@
 // why the seam is at that boundary rather than inside EAGL, and docs/driving-engine-plan.md section 6.1.
 void Inject_D3dSeam(void);
 
+// What both builds set up before the device is made: where the backend reads D3D8's state.
+void D3dSeam_Init(void);
+
 // Which patched entry points have been reached without an implementation, and how often. Printed with the
 // backend's periodic frame-timing report; this is the list that says what to implement next.
 void D3dSeam_ReportMissing(void);

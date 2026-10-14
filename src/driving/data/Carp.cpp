@@ -645,7 +645,7 @@ void CARP::Instance::SetDimensions(bool separate, float x, float y, float z) {
     packed = (packed & ~0x3ff00000u) | (steps << 20 & 0x3ff00000);
     packedDimensions = packed;
     steps = uint32_t(Ftol(ceil(double(scaleStored) * y)));
-    packed = (packed & ~0x000ffc00u) | (steps << 10 & 0x000ffc00);
+    packed = (packed & ~0xffc00u) | (steps << 10 & 0xffc00);
     packedDimensions = packed;
 }
 

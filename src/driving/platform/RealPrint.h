@@ -30,6 +30,19 @@ void MEM_clear(void *destination, int bytes);
 void memclr(void *destination, unsigned bytes);
 void MEM_move(void *destination, const void *source, int bytes);
 
+// The mouse driver's bounds, which nothing else reads (name ours)
+struct MouseBounds {
+    uint32_t unknown00;
+    uint32_t unknown04;
+    uint32_t unknown08[3];
+    uint32_t unknown14;
+    uint32_t unknown18;
+    uint32_t unknown1c;
+    uint32_t unknown20;
+};
+static_assert(sizeof(MouseBounds) == 0x24, "the mouse bounds are 9 words");
+extern MouseBounds gMouseBounds;
+
 void MOUSE_setbounds(uint32_t a, uint32_t b, uint32_t unused, uint32_t d, uint32_t e);
 float REAL_sqrtf(float value);
 

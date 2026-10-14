@@ -668,15 +668,15 @@ void *Vtable_0018bd94[12] = {   // 0x0018bd94
 
 void *Vtable_0018bdc4[13] = {   // 0x0018bdc4
     (void *)XbeAddress(&GameStd::StrStreambuf::Delete),   // 0
-    (void *)0x001314ae,   // 1: FUN_001314ae, not ours
-    (void *)0x0013166a,   // 2: ?pbackfail@strstreambuf@std@@MAEHH@Z, not ours
+    (void *)XbeAddress(&GameStd::StrStreambuf::Overflow),   // 1
+    (void *)XbeAddress(&GameStd::StrStreambuf::Pbackfail),   // 2
     (void *)XbeAddress(&GetNullValue),   // 3
-    (void *)0x001316b3,   // 4: ?, not ours
+    (void *)XbeAddress(&GameStd::StrStreambuf::Underflow),   // 4
     (void *)XbeAddress(&GameStd::Streambuf::Uflow),   // 5
     (void *)XbeAddress(&GameStd::Streambuf::Xsgetn),   // 6
     (void *)XbeAddress(&GameStd::Streambuf::Xsputn),   // 7
-    (void *)0x00131702,   // 8: ?seekoff@strstreambuf@std@@MAE?AV?$fpos@H@2@JHH@Z, not ours
-    (void *)0x0013183b,   // 9: ?seekpos@strstreambuf@std@@MAE?AV?$fpos@H@2@V32@H@Z, not ours
+    (void *)XbeAddress(&GameStd::StrStreambuf::SeekOff),   // 8
+    (void *)XbeAddress(&GameStd::StrStreambuf::SeekPos),   // 9
     (void *)XbeAddress(&GameStd::Streambuf::SetBuf),   // 10
     (void *)XbeAddress(&GetNullValue),   // 11
     (void *)XbeAddress(&NullFunctionPop4),   // 12
@@ -3109,36 +3109,36 @@ void *Vtable_ARaceEngine[2] = {   // 0x001a310c
 };
 
 void *Vtable_001a31c0[1] = {   // 0x001a31c0
-    (void *)0x00130f23,   // 0: FUN_00130f23, not ours
+    (void *)XbeAddress(&GameStd::Locimp::Delete),   // 0
 };
 
 void *Vtable_001a31cc[2] = {   // 0x001a31cc
-    (void *)0x001311fa,   // 0: FUN_001311fa, not ours
-    (void *)0x001311ec,   // 1: ?, not ours
+    (void *)XbeAddress(&GameStd::RuntimeError::Delete),   // 0
+    (void *)XbeAddress(&GameStd::RuntimeError::What),   // 1
 };
 
 void *Vtable_001a31d4[3] = {   // 0x001a31d4
-    (void *)0x00131252,   // 0: FUN_00131252, not ours
-    (void *)0x001311ec,   // 1: ?, not ours
-    (void *)0x0013139a,   // 2: FUN_0013139a, not ours
+    (void *)XbeAddress(&GameStd::Failure::Delete),   // 0
+    (void *)XbeAddress(&GameStd::RuntimeError::What),   // 1
+    (void *)XbeAddress(&GameStd::Failure::Raise),   // 2
 };
 
 void *Vtable_001a3228[1] = {   // 0x001a3228
-    (void *)0x001319e7,   // 0: ?, not ours
+    (void *)XbeAddress(&GameStd::BasicIos::DeleteOstream),   // 0
 };
 
 void *Vtable_001a3234[1] = {   // 0x001a3234
-    (void *)0x00131c01,   // 0: ?, not ours
+    (void *)XbeAddress(&GameStd::BasicIos::DeleteOStrStream),   // 0
 };
 
 void *Vtable_001a326c[2] = {   // 0x001a326c
-    (void *)0x001326ea,   // 0: FUN_001326ea, not ours
-    (void *)0x001326a1,   // 1: ?, not ours
+    (void *)XbeAddress(&GameStd::Exception::Delete),   // 0
+    (void *)XbeAddress(&GameStd::Exception::What),   // 1
 };
 
 void *Vtable_001a3288[2] = {   // 0x001a3288
-    (void *)0x00132706,   // 0: FUN_00132706, not ours
-    (void *)0x001326a1,   // 1: ?, not ours
+    (void *)XbeAddress(&GameStd::BadCast::Delete),   // 0
+    (void *)XbeAddress(&GameStd::Exception::What),   // 1
 };
 
 void *MakeEventCallbacks[283] = {   // 0x0018bf38, each event's MakeEvent callback

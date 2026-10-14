@@ -62,6 +62,8 @@ uint32_t BulletStreakKindIndex;
 // XBE_GLOBAL(0x001f6890, 0x1)
 uint8_t BulletStreakColourFlag;
 // XBE_GLOBAL(0x001c485c, 0x1c)
+// XBE_GLOBAL(0x001f2e20, 0xa8)
+BulletStreakKind BulletStreakKinds[kBulletStreakKinds];
 const char *const BulletStreakKindNames[kBulletStreakKinds] = {
     "Henchmen", "Vanquish", "SuperSnowmobile", "SUV", "Captain", "Ultralight", "Sentinel",
 };

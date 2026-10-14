@@ -325,14 +325,17 @@ void MEM_move(void *destination, const void *source, int bytes) {
 
 // ---- leftovers
 
+// XBE_GLOBAL(0x002420bc, 0x24)
+MouseBounds gMouseBounds;
+
 // The third argument is unused; the others go where the original puts them.
 // AUTOINJECT
 void MOUSE_setbounds(uint32_t a, uint32_t b, uint32_t unused, uint32_t d, uint32_t e) {
     (void)unused;
-    *(uint32_t *)0x002420bcu = a;
-    *(uint32_t *)0x002420c0u = b;
-    *(uint32_t *)0x002420dcu = d;
-    *(uint32_t *)0x002420d4u = e;
+    gMouseBounds.unknown00 = a;
+    gMouseBounds.unknown04 = b;
+    gMouseBounds.unknown20 = d;
+    gMouseBounds.unknown18 = e;
 }
 
 // 0x00108780: FLD the float, FSQRT, return - the root left on the x87 stack at full precision, not rounded to a

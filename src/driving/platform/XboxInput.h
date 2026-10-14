@@ -8,6 +8,12 @@
 // the translation between the two, and for what is deliberately not implemented. Called from Inject().
 void Inject_XboxInput(void);
 
+// XDEVICE_TYPE_GAMEPAD's table, which only names the type here
+struct XboxDeviceType {
+    uint32_t unknown00;
+};
+extern XboxDeviceType XboxGamepadType;
+
 // The XInput entry points (XAPILIB's, at 0x001848ad-0x00184bd5), for the ports that call them
 struct XboxState;
 struct XboxFeedback;

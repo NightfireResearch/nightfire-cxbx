@@ -124,10 +124,6 @@ void CopyDwords(void *to, const void *from, size_t bytes) {
         d[i] = s[i];
 }
 
-// ---- engine.core's dummyNullFunction (CoreFoundation.cpp's NullFunction), called at its address on purpose:
-// SndSystemShadow.cpp records these calls by jumping that address to a fake, and our NullFunction is a lone RET,
-// too short to carry a jump of its own
-#define DummyNull ((void (*)(void))0x000d3580)
 
 
 }  // namespace
@@ -356,7 +352,7 @@ int SNDSYSI_init(void *memory, int size) {
     int result = SNDPLATFORM_init();
     if (result < 0) {
         SNDPLATFORM_restore();
-        DummyNull();
+        NullFunction();
         return result;
     }
     // the channels' default azimuths (65536ths of a turn) for sounds of 2 (by the output mode), 3 (from the
@@ -426,7 +422,7 @@ int SNDSYS_restore(void) {
     SNDSYS_leavecritical();
     int used = SNDMEMI_restore();
     SystemInited = 0;
-    DummyNull();
+    NullFunction();
     return used;
 }
 

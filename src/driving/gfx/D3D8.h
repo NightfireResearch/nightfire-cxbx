@@ -13,6 +13,25 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// ---- D3D8's state (d3dSeam.cpp), where the XDK code inlined into EAGL reads and writes it and the backend reads it
+// back at draw time
+
+const uint32_t kD3DRenderStateCount = 0xa6;     // D3DRS_MAX
+const uint32_t kD3DSimpleStates = 0x5c;         // render states below this go straight to the push buffer
+const uint32_t kD3DFirstDeferredState = 0x5c;   // these, to 0x87, are kept until a draw (the dirty flags)
+const uint32_t kD3DFirstDirtyTextureState = 0xc;   // texture states from here to 0x15 have dirty bits of their own
+
+extern const uint16_t *D3DPushBufferCursor;      // the push buffer's write pointer
+extern uint32_t D3DDirtyFlags;
+extern uint32_t D3DTextureState[4][32];          // [stage][state]
+extern uint32_t D3DRenderState[kD3DRenderStateCount];
+
+// The push-buffer method of each simple render state, and the dirty bits of each deferred render state and of the
+// texture states from 0xc
+extern const uint32_t D3DSimpleStateMethods[kD3DSimpleStates];
+extern const uint32_t D3DDeferredStateDirty[0x88 - kD3DFirstDeferredState];
+extern const uint32_t D3DTextureStateDirty[0x16 - kD3DFirstDirtyTextureState];
+
 // ---- Xbox D3D8 structures
 
 // D3DResource: the header every D3D8 object starts with.

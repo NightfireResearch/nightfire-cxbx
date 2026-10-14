@@ -59,8 +59,8 @@ public:
     static void Add(const Coord3 *position, const Coord3 *direction, int kind);                 // 0x0009a3b0
 };
 
-// The kinds' tuning (game code still reads it at its address)
-#define BulletStreakKinds ((BulletStreakKind *)0x001f2e20)
+// The kinds' tuning (WeaponEffects.cpp)
+extern BulletStreakKind BulletStreakKinds[kBulletStreakKinds];
 // The batches: their vertex counts, textures, texture coordinates, positions, colours and materials
 extern int32_t BulletStreakCounts[kBulletStreakTextures];
 extern EAGL::TAR *BulletStreakTextures[kBulletStreakTextures];

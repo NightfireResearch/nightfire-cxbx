@@ -181,6 +181,8 @@ struct Exception {
     Exception* ConstructMessage(const char *message);                  // exception(const char *const &)
     Exception* ConstructCopy(const Exception *other);                  // 0x0013263c
     void Destruct();                                                   // 0x0013268b
+    Exception* Delete(unsigned flags);      // vtable slot 0           // 0x001326ea
+    const char* What();                     // vtable slot 1           // 0x001326a1
 };
 static_assert(sizeof(Exception) == 0xc, "Exception");
 
@@ -210,6 +212,8 @@ struct StreamPos {
     uint32_t position[2]; // +0x08 fpos_t (an __int64, kept as two words so the struct stays 4-aligned)
     int32_t state;        // +0x10
     uint32_t pad14;
+
+    StreamPos* Construct(int position);     // fpos(streamoff)         // 0x00131488
 };
 static_assert(sizeof(StreamPos) == 0x18, "StreamPos");
 
@@ -284,6 +288,11 @@ struct StrStreambuf : Streambuf {
     void Init(int count, char *getBuffer, char *putBuffer, int strMode);    // 0x00131901 _Init
     void Destruct();                                                   // 0x00131a44
     void Tidy();                                                       // _Tidy
+    int Overflow(int ch);                                              // 0x001314ae
+    int Pbackfail(int ch);                                             // 0x0013166a
+    int Underflow();                                                   // 0x001316b3
+    StreamPos* SeekOff(StreamPos *result, int offset, int way, int mode);   // 0x00131702
+    StreamPos* SeekPos(StreamPos *result, StreamPos position, int mode);    // 0x0013183b
 };
 static_assert(sizeof(StrStreambuf) == 0x54, "StrStreambuf");
 
@@ -344,6 +353,9 @@ struct BasicIos : IosBase {
     void* DeleteIStrStream(unsigned flags);                            // 0x00038c40
     void DestructIStrStream();              // ~istrstream (CRuntimeStd.cpp)                            // 0x00131ae1
     void DestructOStrStream();              // ~ostrstream (CRuntimeStd.cpp)                            // 0x00131bbb
+    void DestructOstream();                 // ~basic_ostream (CRuntimeStd.cpp)                         // 0x00131a06
+    void* DeleteOstream(unsigned flags);    // (CRuntimeStd.cpp)                                        // 0x001319e7
+    void* DeleteOStrStream(unsigned flags); // (CRuntimeStd.cpp)                                        // 0x00131c01
 };
 static_assert(sizeof(BasicIos) == 0x34, "BasicIos");
 
@@ -545,5 +557,7 @@ const Numpunct* UseNumpunct(const Locale *locale);                     // 0x0003
 Istream* ExtractChar(Istream *stream, char *value);                    // 0x00038ce0
 
 } // namespace GameStd
+
+extern const int IStrStreamVbtable[2];   // istrstream's vbtable (StdStreams.cpp)
 
 #endif // DRIVING_DATA_STDSTREAMS_H_

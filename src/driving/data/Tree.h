@@ -79,12 +79,18 @@ TreeNode *TreeNext(TreeNode *node);
 
 // Throws a standard exception the way the game's STL does (std::string then the exception object, its vtable
 // set, _CxxThrowException): the "too long" and "invalid iterator" errors no shipped data reaches.
-void TreeThrow(const char *message, uint32_t vtable, uint32_t throwInfo);
+namespace Crt {
+struct ThrowInfo;
+extern const ThrowInfo LengthErrorThrowInfo;
+extern const ThrowInfo OutOfRangeThrowInfo;
+}
+
+void TreeThrow(const char *message, uint32_t vtable, const Crt::ThrowInfo *throwInfo);
 
 // The game's std::length_error / std::out_of_range vtables and throw descriptions.
 const uint32_t kLengthErrorVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_00189eec));
-constexpr uint32_t kLengthErrorThrowInfo = 0x001a89bc;
+constexpr const Crt::ThrowInfo *kLengthErrorThrowInfo = &Crt::LengthErrorThrowInfo;
 const uint32_t kOutOfRangeVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_0018a29c));
-constexpr uint32_t kOutOfRangeThrowInfo = 0x001a8bd8;
+constexpr const Crt::ThrowInfo *kOutOfRangeThrowInfo = &Crt::OutOfRangeThrowInfo;
 
 #endif // DRIVING_DATA_TREE_H_

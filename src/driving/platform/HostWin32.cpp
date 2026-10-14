@@ -149,6 +149,33 @@ size_t HostHeapSize(HostHandle heap, unsigned long flags, const void *block) {
     return HeapSize(heap, flags, block);
 }
 
+// ---- pages
+
+void *HostAllocatePages(size_t size, uintptr_t lowest, uintptr_t limit) {
+    const uintptr_t granularity = 0x10000;
+    uintptr_t address = (lowest + granularity - 1) & ~(granularity - 1);
+    if (address < granularity)
+        address = granularity;
+    while (address < limit && size <= limit - address) {
+        MEMORY_BASIC_INFORMATION region;
+        if (VirtualQuery((void *)address, &region, sizeof(region)) != sizeof(region))
+            break;
+        uintptr_t end = (uintptr_t)region.BaseAddress + region.RegionSize;
+        if (region.State == MEM_FREE && end - address >= size) {
+            void *block = VirtualAlloc((void *)address, size, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+            if (block != NULL)
+                return block;
+        }
+        address = (end + granularity - 1) & ~(granularity - 1);
+    }
+    return VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+}
+
+void HostFreePages(void *block) {
+    if (block != NULL)
+        VirtualFree(block, 0, MEM_RELEASE);
+}
+
 // ---- files
 
 HostHandle HostCreateFile(const char *path, unsigned long access, unsigned long share, unsigned long disposition,
