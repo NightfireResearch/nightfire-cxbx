@@ -439,6 +439,8 @@ size_t OwnedGlobals_FirstDifference(const void *original, const void *port, size
 uint32_t OwnedGlobals_Canonical(uint32_t word) {
     if (word < kImageStart || word >= kImageEnd)   // most words: no address in the image
         return word;
+    if (word == kDummyNullFunction)   // the original's bare RET, too short for a jump: ours is NullFunction
+        return uint32_t(uintptr_t(&NullFunction));
     uint32_t ours = OwnedGlobals_AsOurs(word);
     if (ours != word)
         return ours;

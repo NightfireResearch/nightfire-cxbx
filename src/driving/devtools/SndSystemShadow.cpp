@@ -894,9 +894,9 @@ int FakeOutputCaps(void) {
 int FakeOutputSet(void) {
     uint32_t h = 0;
     for (uint32_t a = 0x00244ce8; a < 0x00244de8; a += 4)
-        h = h * 31 + Sided<uint32_t>(a);
-    for (uint32_t a = 0x00244dd0; a < 0x00244de8; a += 4)
-        h = h * 31 + Sided<uint32_t>(a);
+        h = h * 31 + AsPortWord(Sided<uint32_t>(a));
+    for (uint32_t a = 0x00244dd0; a < 0x00244de8; a += 4)   // the vectors: the original's dummyNullFunction is ours
+        h = h * 31 + AsPortWord(Sided<uint32_t>(a));
     Log(5, h);
     Sided<int16_t>(0x00244ed8) = (int16_t)g_voicesToSet;   // NUM_VOICES, as the real one sets it
     return 0;

@@ -5,6 +5,7 @@
 #include "../platform/CRuntimeStd.h"
 #include "../data/StdStreams.h"
 #include "../engine/UMemory.hpp"
+#include "OwnedGlobals.h"
 #include "../../common/xbeOriginal.h"
 #include "../../common/xbeOverload.h"
 
@@ -180,8 +181,10 @@ std::string Where(const void *p) {
         if (at >= base && at <= base + region.size)
             return Format("%s+%x", region.name, unsigned(at - base));
     }
-    if (uintptr_t(p) >= 0x00010000 && uintptr_t(p) < 0x00260000)
-        return Format("@%08x", unsigned(uintptr_t(p)));   // the image: vtables, globals, code
+    // the image: vtables, globals, code; our copies of its vtables and our replacements as the game's
+    const uint32_t game = OwnedGlobals_AsGame(uint32_t(uintptr_t(p)));
+    if (game >= 0x00010000 && game < 0x00260000)
+        return Format("@%08x", unsigned(game));
     return "heap";
 }
 
@@ -400,7 +403,7 @@ int CatchFilter(EXCEPTION_POINTERS *pointers) {
     g_throw.message.clear();
     if (g_throw.object != NULL) {
         g_throw.vtable = *(const void *const *)g_throw.object;
-        const uintptr_t vtable = uintptr_t(g_throw.vtable);
+        const uint32_t vtable = OwnedGlobals_AsGame(uint32_t(uintptr_t(g_throw.vtable)));
         // runtime_error, ios_base::failure, out_of_range, length_error: the message string after the exception
         if (vtable == 0x001a31d4 || vtable == 0x001a31cc || vtable == 0x0018a29c || vtable == 0x00189eec)
             g_throw.message = Text((const String *)((const char *)g_throw.object + 0xc));
