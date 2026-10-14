@@ -71,6 +71,10 @@ bool Teleport_LockstepLocalTime(struct _SYSTEMTIME *) {
     return false;
 }
 
+int Teleport_LockstepPresentEvery(void) {
+    return 0;
+}
+
 void SndCallTrace_Install(void) {
 }
 

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "xbe.h"
@@ -78,14 +79,22 @@ static uintptr_t g_imageEnd = 0;
 // operation and which module the code was in - which is the difference between a fix and a guess.
 //
 // Everything reported goes to two places: stdout, which is usually a file that a crash would otherwise leave
-// with its last few kilobytes still in the CRT's buffer, and crash.log in the working directory, opened and
-// closed around every line (a fault's report: around the whole report, written before the handler returns) so
-// that nothing is lost however the process dies afterwards. The first hard fault
-// also writes crash.dmp, a full-memory minidump that cdb or Visual Studio can open with the game's memory
-// exactly as it was.
+// with its last few kilobytes still in the CRT's buffer, and crash.log in the working directory, written with
+// WriteFile as each line (a fault's report: the whole report, before the handler returns) is complete, so that
+// nothing is lost however the process dies afterwards. The first hard fault also writes crash.dmp, a full-memory
+// minidump that cdb or Visual Studio can open with the game's memory exactly as it was.
+//
+// A fault that a __try in the inject DLL will catch - the shadow tests run the original and the port inside one,
+// and a case that faults on both sides passes, so a shadow run catches hundreds - gets a one-line report after
+// the first few full ones (NIGHTFIRE_FULL_FAULT_REPORTS, default 10). Every other fault, and any fault that
+// nothing catches after all (ReportUnhandled), gets the full report.
 //
 // This only reports; it never handles. EXCEPTION_CONTINUE_SEARCH leaves the real handling exactly as it was.
 // ---------------------------------------------------------------------------------------------------------------
+
+// The inject DLL's range, for offsets that its map file (/MAP) can look up
+static uintptr_t g_injectStart = 0;
+static uintptr_t g_injectEnd = 0;
 
 static const char *ModuleContaining(uintptr_t address, char *scratch, size_t scratchSize) {
     if (g_imageStart != 0 && address >= g_imageStart && address < g_imageEnd)
@@ -101,9 +110,24 @@ static const char *ModuleContaining(uintptr_t address, char *scratch, size_t scr
     return "an unknown module";
 }
 
-// A fault's report is gathered here and appended to crash.log in one go when it is complete. Opening and closing
-// the file for each of its seventy-odd lines made a fault cost up to two seconds on a loaded machine (the shadow
-// tests catch hundreds of faults on both sides), against milliseconds for one append.
+// crash.log stays open from the first line written to it. WriteFile hands each write to the system at once, so it
+// is as safe as reopening the file for each write, which made a fault cost up to two seconds on a loaded machine.
+static HANDLE g_crashLog = INVALID_HANDLE_VALUE;
+
+static void AppendToCrashLog(const char *text, size_t length) {
+    if (g_crashLog == INVALID_HANDLE_VALUE) {
+        HANDLE log = CreateFileA("crash.log", FILE_APPEND_DATA, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                 NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (log == INVALID_HANDLE_VALUE)
+            return;
+        if (InterlockedCompareExchangePointer(&g_crashLog, log, INVALID_HANDLE_VALUE) != INVALID_HANDLE_VALUE)
+            CloseHandle(log);   // another thread opened it first
+    }
+    DWORD written;
+    WriteFile(g_crashLog, text, (DWORD)length, &written, NULL);
+}
+
+// A fault's report is gathered here and appended to crash.log in one go when it is complete.
 static char g_faultRecord[16384];
 static size_t g_faultRecordLength = 0;
 static bool g_faultRecordOpen = false;
@@ -112,11 +136,7 @@ static void CloseFaultRecord(void) {
     g_faultRecordOpen = false;
     if (g_faultRecordLength == 0)
         return;
-    FILE *log = fopen("crash.log", "a");
-    if (log != NULL) {
-        fwrite(g_faultRecord, 1, g_faultRecordLength, log);
-        fclose(log);
-    }
+    AppendToCrashLog(g_faultRecord, g_faultRecordLength);
     g_faultRecordLength = 0;
 }
 
@@ -140,11 +160,7 @@ static void Report(const char *format, ...) {
         CloseFaultRecord();
         g_faultRecordOpen = true;
     }
-    FILE *log = fopen("crash.log", "a");
-    if (log != NULL) {
-        fputs(line, log);
-        fclose(log);
-    }
+    AppendToCrashLog(line, strlen(line));
 }
 
 static void ReportStamp(const char *what) {
@@ -323,6 +339,59 @@ static bool IsHardFault(DWORD code) {
     }
 }
 
+// An address as "module+offset" when it is in the inject DLL (its map file names the function), else as its module.
+static const char *Where(uintptr_t address, char *scratch, size_t scratchSize) {
+    if (g_injectStart != 0 && address >= g_injectStart && address < g_injectEnd) {
+        snprintf(scratch, scratchSize, "%s+0x%x", LOADER_INJECT_DLL, (unsigned)(address - g_injectStart));
+        return scratch;
+    }
+    return ModuleContaining(address, scratch, scratchSize);
+}
+
+// An MSVC __try frame on the stack, as _except_handler3 and _except_handler4 find it through the thread's SEH
+// chain: the link, the handler, the scope table, which __try of the function is running, and above them the
+// function's saved ebp and return address.
+struct TryFrame {
+    const TryFrame *next;
+    uintptr_t handler;
+    uintptr_t scopeTable;
+    int32_t tryLevel;          // negative (-1 for handler 3, -2 for 4): outside all of the function's __try blocks
+    uintptr_t savedEbp;
+    uintptr_t returnAddress;
+};
+
+static uintptr_t g_guardHandler = 0;        // the inject DLL's __except handler (NightfireHost_GuardHandler), or 0
+static LONG g_fullGuardedReports = 10;      // NIGHTFIRE_FULL_FAULT_REPORTS
+static volatile LONG g_guardedFaults = 0;
+
+// The frame of the innermost inject-DLL function whose __try the faulting thread is inside, or NULL. Only devtools
+// code in the inject DLL uses __try.
+static const TryFrame *GuardingFrame(void) {
+    if (g_guardHandler == 0)
+        return NULL;
+    const NT_TIB *tib = (const NT_TIB *)NtCurrentTeb();
+    uintptr_t low = (uintptr_t)tib->StackLimit;
+    uintptr_t high = (uintptr_t)tib->StackBase;
+    const TryFrame *frame = (const TryFrame *)tib->ExceptionList;
+    for (int depth = 0; depth < 256; depth++) {
+        uintptr_t at = (uintptr_t)frame;
+        if (at < low || at + sizeof(TryFrame) > high || (at & 3) != 0)
+            return NULL;   // the chain's end (0xffffffff), or something that is not a frame on this stack
+        if (frame->handler == g_guardHandler && frame->tryLevel >= 0)
+            return frame;
+        frame = frame->next;
+    }
+    return NULL;
+}
+
+// The fault last reported, so that ReportUnhandled can tell whether the one ending the process was reported in full
+// and dumped.
+static const EXCEPTION_RECORD *g_lastRecord = NULL;
+static DWORD g_lastCode = 0;
+static PVOID g_lastAddress = NULL;
+static bool g_lastFull = false;
+static bool g_lastDumped = false;
+
 static LONG CALLBACK ReportException(EXCEPTION_POINTERS *info) {
     const EXCEPTION_RECORD *record = info->ExceptionRecord;
     DWORD code = record->ExceptionCode;
@@ -341,12 +410,38 @@ static LONG CALLBACK ReportException(EXCEPTION_POINTERS *info) {
     char scratch[MAX_PATH];
     uintptr_t at = (uintptr_t)record->ExceptionAddress;
     bool hard = IsHardFault(code);
-    g_faultRecordOpen = true;
+    const TryFrame *guard = hard ? GuardingFrame() : NULL;
+    LONG guarded = guard != NULL ? InterlockedIncrement(&g_guardedFaults) : 0;
+    g_lastRecord = record;
+    g_lastCode = code;
+    g_lastAddress = record->ExceptionAddress;
+    g_lastFull = guarded <= g_fullGuardedReports;
+    g_lastDumped = false;
 
+    if (!g_lastFull) {
+        static const char *operations[] = { "read", "write", "execute" };
+        char target[48] = "";
+        if (code == EXCEPTION_ACCESS_VIOLATION && record->NumberParameters >= 2) {
+            ULONG_PTR operation = record->ExceptionInformation[0];
+            snprintf(target, sizeof(target), ", tried to %s 0x%08x", operation <= 2 ? operations[operation] : "access",
+                     (unsigned)record->ExceptionInformation[1]);
+        }
+        char guardScratch[MAX_PATH];
+        Report("[loader] guarded fault at 0x%08x (%s): exception 0x%08x%s; the __try's function returns to %s\n",
+               (unsigned)at, Where(at, scratch, sizeof(scratch)), (unsigned)code, target,
+               Where(guard->returnAddress, guardScratch, sizeof(guardScratch)));
+        InterlockedDecrement(&reporting);
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
+    g_faultRecordOpen = true;
     if (hard)
         ReportStamp("fault");
     Report("[loader] exception 0x%08x at 0x%08x, in %s\n",
-           (unsigned)code, (unsigned)at, ModuleContaining(at, scratch, sizeof(scratch)));
+           (unsigned)code, (unsigned)at, Where(at, scratch, sizeof(scratch)));
+    if (guard != NULL)
+        Report("[loader]   inside a __try in %s (guarded fault %ld; after %ld, guarded faults get one line)\n",
+               LOADER_INJECT_DLL, guarded, g_fullGuardedReports);
 
     if (code == EXCEPTION_ACCESS_VIOLATION && record->NumberParameters >= 2) {
         // Parameter 0 says what was attempted; 1 is the address it was attempted on. A write fault inside the
@@ -372,6 +467,7 @@ static LONG CALLBACK ReportException(EXCEPTION_POINTERS *info) {
         static bool dumped = false;
         if (!dumped) {
             dumped = true;
+            g_lastDumped = true;
             CloseFaultRecord();
             WriteMinidump("crash.dmp", info);
         }
@@ -379,6 +475,27 @@ static LONG CALLBACK ReportException(EXCEPTION_POINTERS *info) {
 
     CloseFaultRecord();
     InterlockedDecrement(&reporting);
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+// An exception nothing caught, about to end the process. If it was a guarded fault reported in one line (a __try
+// whose filter declined it), or not the fault crash.dmp holds, this is where it gets the full report and the dump.
+static LONG WINAPI ReportUnhandled(EXCEPTION_POINTERS *info) {
+    const EXCEPTION_RECORD *record = info->ExceptionRecord;
+    bool reported = record == g_lastRecord && record->ExceptionCode == g_lastCode &&
+                    record->ExceptionAddress == g_lastAddress;
+    char scratch[MAX_PATH];
+    uintptr_t at = (uintptr_t)record->ExceptionAddress;
+
+    g_faultRecordOpen = true;
+    ReportStamp("unhandled fault");
+    Report("[loader] exception 0x%08x at 0x%08x (%s) was not handled: the process ends\n",
+           (unsigned)record->ExceptionCode, (unsigned)at, Where(at, scratch, sizeof(scratch)));
+    if (!reported || !g_lastFull)
+        ReportContext(info->ContextRecord);
+    CloseFaultRecord();
+    if (!reported || !g_lastDumped)
+        WriteMinidump("crash.dmp", info);
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
@@ -583,6 +700,20 @@ int main(int argc, char **argv) {
     }
     // Its base, so that a crash report's addresses in the DLL can be looked up in its map
     printf("[loader] %s loaded at 0x%08x and patches applied\n", injectDll, (unsigned)(uintptr_t)inject);
+    const IMAGE_NT_HEADERS *injectHeaders =
+        (const IMAGE_NT_HEADERS *)((const char *)inject + ((const IMAGE_DOS_HEADER *)inject)->e_lfanew);
+    g_injectStart = (uintptr_t)inject;
+    g_injectEnd = g_injectStart + injectHeaders->OptionalHeader.SizeOfImage;
+
+    // The DLL's __except handler, by which a fault its devtools expect is told from one they do not (above)
+    typedef void *(__cdecl *GuardHandlerFn)(void);
+    GuardHandlerFn guardHandler = (GuardHandlerFn)GetProcAddress(inject, "NightfireHost_GuardHandler");
+    if (guardHandler != NULL)
+        g_guardHandler = (uintptr_t)guardHandler();
+    char fullReports[16];
+    if (GetEnvironmentVariableA("NIGHTFIRE_FULL_FAULT_REPORTS", fullReports, sizeof(fullReports)) != 0)
+        g_fullGuardedReports = atol(fullReports);
+    SetUnhandledExceptionFilter(ReportUnhandled);
 
     // Before the entry point, so that the window is already there when the game's graphics init looks for it.
     // That is too early to know what resolution the game will ask for, so this is only a starting size: the

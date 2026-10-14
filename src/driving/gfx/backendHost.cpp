@@ -1,6 +1,7 @@
 #include "../../common/gfx/backendHost.h"
 
 #include "d3dSeam.h"
+#include "../devtools/Teleport.h"
 #include "../platform/HostWindow.h"
 #include "../sound/dsndSeam.h"
 
@@ -25,6 +26,10 @@ void GfxHost_ReportPeriodic(void) {
     // game has reached that the seam does not implement yet.
     D3dSeam_ReportMissing();
     DsndSeam_ReportMissing();
+}
+
+int GfxHost_PresentEvery(void) {
+    return Teleport_LockstepPresentEvery();   // NIGHTFIRE_LOCKSTEP only
 }
 
 #ifdef NIGHTFIRE_SDL

@@ -75,8 +75,48 @@ accelerating, 16 frames and the sound call trace, sound in lockstep) and the sha
 mission). It runs the shadow runs and the lockstep runs as two separate batches, and writes the summary to
 `build/remote/<prefix>.summary`. With `BASE=<prefix>`, it compares each lockstep run against
 `build/baselines/<BASE>_m<n>_<idle|accelerate>`. `EXE='Release\driving_standalone_test.exe'` runs the standalone executable's lockstep
-runs instead (it builds that target; it has no shadows), and `ENV='NIGHTFIRE_TRAP_ORIGINAL=2'` adds variables to the
+runs instead (it builds that target, or the ones `TARGETS` names; it has no shadows, so the round skips them), and `ENV='NIGHTFIRE_TRAP_ORIGINAL=2'` adds variables to the
 lockstep runs.
+
+### Quick rounds and full rounds
+
+- **Full round** (`round.sh <prefix> all`): every shadow on every mission and every lockstep run to tick 9000. It is the
+  gate: run it before a merge or a push, and after anything wide (a platform layer, a shared header, a global's
+  ownership).
+- **Quick round** (`round.sh <prefix> quick [shadow-regex] [missions]`): the lockstep runs to tick 4500 (9 frames;
+  `compare.py` compares them as a prefix of the 9000-tick baselines, frames paired by the tick `drive.log` gives) and
+  only the shadows whose variable matches the regex (case aside; `''` for none, `.` for all). Use it while working on
+  a package: name the package's shadows (`'gameai'`, `'snd(mix|filter)'`) and any missions that reach the change. A
+  quick round never replaces the full one before a merge.
+- **Sharding** (`SHARDS=k`): each mission's shadow variables are split into k groups (every kth variable), one run
+  each, named `<prefix>_shadow_m<n>_s<i>`. The summary merges them per mission and says how many dumped their frame
+  ("frame dumped: 2 of 2"). Default 1. Measured 15 October 2026: 16 half-runs on 8 slots took 6 min against 5 for
+  the 8 whole runs, because each run's boot and load (about a minute) is paid twice; sharding only pays once the
+  shadow runs are long again.
+
+`TICKS_TO=<tick>` sets the lockstep runs' last tick for either kind; `BASELINES=<folder>` says where the `BASE` runs
+are (default `build/baselines`).
+
+**Fault reports in shadow runs.** A shadow test runs the original and the port inside a `__try`; a case that faults
+on both sides passes, and a full shadow run catches several hundred faults. The loader
+(src/loader/loadermain.cpp) gives a fault inside a `__try` of the inject DLL (its handler is
+`NightfireHost_GuardHandler`'s, src/driving/devtools/FaultGuard.cpp) one line, `[loader] guarded fault at ...`, naming
+the address and where the guarding function returns to, after the first 10 such faults have had the full report
+(`NIGHTFIRE_FULL_FAULT_REPORTS=<n>` changes the 10). A fault outside every such `__try` gets the full report as
+before, crash.dmp is still written for the first hard fault, and a fault that nothing catches gets the full report
+and the dump from the unhandled-exception filter before the process ends. crash.log is kept open rather than
+reopened per report. Measured on 15 October 2026 on the same shadows (8 slots, 630 to 1080 faults a mission):
+before, a shadow run took 25 to 31 minutes, almost all of it faults, about 2 s each under the load of 8 runs (30 ms
+alone). After, it takes 4.5 to 6 minutes. Even the full reports (now about 15 to 50 ms apart) became cheap once
+crash.log stopped being reopened, which points at the open and close of a growing file as the cost.
+
+**Lockstep runs are not paced.** A lockstep run simulates one tick per frame whatever the time, and its frames are
+dumped from the back buffer before `Present`, so it neither waits for a frame's time nor presents every frame: every
+50th is presented (`NIGHTFIRE_PRESENT_EVERY=<n>`; 0 presents and paces every frame, as before). The scheduler's
+clock comes off the 50 Hz timer as well (`Teleport_BeforeRun`, one tick per call), since the game loop otherwise
+waits for it. All 16 runs match lbase exactly (frames and sound traces to
+tick 9000, 15 October 2026), and the batch takes 4 minutes, down from 8 (play runs at 150 to 300 frames a second;
+what is left is mostly the load and the intro, which follow real time).
 
 Only runs that send no keys can share the desktop. A lockstep run simulates exactly one tick per rendered frame,
 holds the sound in lockstep, and applies `-GameHold` inside the game, so neither focus nor load matters: a starved

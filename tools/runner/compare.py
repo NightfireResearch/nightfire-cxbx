@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""Compares two runs' results (build/remote/<name> folders): the dumped frames, in order, pixel by pixel, and the
-sound call traces (sndtrace.log) up to a tick. One line per pair; the first differing trace lines when they differ.
+"""Compares two runs' results (build/remote/<name> folders): the dumped frames up to a tick, pixel by pixel, and the
+sound call traces (sndtrace.log) up to the same tick. One line per pair; the first differing trace lines when they
+differ.
 
     python tools/runner/compare.py build/baselines/lbase_m1_idle build/remote/new_m1_idle [maxtick]
 
-maxtick defaults to 9000, where tools/runner/round.sh's lockstep runs stop.
+maxtick defaults to 9000, where tools/runner/round.sh's lockstep runs stop. A shorter run (round.sh's quick rounds)
+compares as a prefix of a longer baseline: frames are paired by the tick drive.log says each was dumped at, and
+only those at or before maxtick count. Without a drive.log, frames pair in order.
 """
 import glob
 import os
@@ -19,13 +22,40 @@ def frames(folder):
     return sorted(found, key=lambda f: int(re.findall(r"_(\d+)\.bmp$", f)[0]))
 
 
-def compare_frames(base, new):
-    a, b = frames(base), frames(new)
+def dump_ticks(folder):
+    """{frame number: tick} from the run's drive.log ("dumping frame N (...), T ticks after the car appeared")."""
+    path = os.path.join(folder, "drive.log")
+    if not os.path.exists(path):
+        return None
+    ticks = {}
+    for line in open(path, encoding="utf-8", errors="replace"):
+        m = re.search(r"dumping frame (\d+) .*?, (\d+) ticks after", line)
+        if m:
+            ticks[int(m.group(1))] = int(m.group(2))
+    return ticks
+
+
+def frames_to(folder, maxtick):
+    """The run's frames dumped at or before maxtick, as {key: file}: keyed by tick, or by order without a drive.log."""
+    found = frames(folder)
+    ticks = dump_ticks(folder)
+    if not ticks:
+        return {i: f for i, f in enumerate(found)}
+    by_tick = {}
+    for f in found:
+        tick = ticks.get(int(re.findall(r"_(\d+)\.bmp$", f)[0]))
+        if tick is not None and tick <= maxtick:
+            by_tick[tick] = f
+    return by_tick
+
+
+def compare_frames(base, new, maxtick):
+    a, b = frames_to(base, maxtick), frames_to(new, maxtick)
     differ = 0
-    for fa, fb in zip(a, b):
-        d = ImageChops.difference(Image.open(fa).convert("RGB"), Image.open(fb).convert("RGB")).convert("L")
+    for key in sorted(set(a) & set(b)):
+        d = ImageChops.difference(Image.open(a[key]).convert("RGB"), Image.open(b[key]).convert("RGB")).convert("L")
         differ += d.width * d.height - d.histogram()[0]
-    mismatch = "" if len(a) == len(b) else " (COUNT MISMATCH)"
+    mismatch = "" if set(a) == set(b) else " (COUNT MISMATCH)"
     return "frames %d vs %d, %d px differ%s" % (len(a), len(b), differ, mismatch), differ == 0 and not mismatch
 
 
@@ -59,7 +89,7 @@ def main():
         return 2
     base, new = sys.argv[1], sys.argv[2]
     maxtick = int(sys.argv[3]) if len(sys.argv) > 3 else 9000
-    frame_text, frames_same = compare_frames(base, new)
+    frame_text, frames_same = compare_frames(base, new, maxtick)
     trace_text, traces_same, context = compare_traces(base, new, maxtick)
     print("%s: %s; %s" % (os.path.basename(os.path.normpath(new)), frame_text, trace_text))
     for line in context:
