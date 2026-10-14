@@ -3,7 +3,8 @@
 
 // The originals' copies of the constants our ports give directly, whose static initialisers no longer run (see
 // engine/StaticInitTable.cpp): a shadow that runs an original reading one fills it first by running the original
-// initialiser, as the game's start-up did.
+// initialiser, as the game's start-up did. An initialiser that reads an unread global (one whose store
+// StaticInitTable.cpp leaves out) runs the initialiser of that global first.
 
 typedef void (*StaticInitialiserFn)();
 
@@ -12,7 +13,9 @@ typedef void (*StaticInitialiserFn)();
 inline void FillOrigCameraConstants() {
     ((StaticInitialiserFn)0x00157ab0)();    // TwoPi, 0x001ebc90
     ((StaticInitialiserFn)0x00157ac0)();    // TurnsPerRadian, 0x001ebc94
+    ((StaticInitialiserFn)0x00157b80)();    // 2 pi, 0x001ebcac (unread), which the next divides by
     ((StaticInitialiserFn)0x00157b90)();    // RadiansToTurns, 0x001ebcb0 (CameraSpline.cpp)
+    ((StaticInitialiserFn)0x00157e70)();    // 2 pi, 0x001ec3b4 (unread), which the next divides by
     ((StaticInitialiserFn)0x00157e80)();    // RadiansToTurns, 0x001ec3b8 (PlayerCameraA.cpp)
     ((StaticInitialiserFn)0x00157ee0)();    // DiagonalBoost, 0x001ec3c4
 }

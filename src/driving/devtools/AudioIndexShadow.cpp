@@ -324,6 +324,14 @@ void CompareLookups(const char *what, AIndex *index) {
 
 std::string g_loadLog;
 
+// The original's name buffer starts as whatever the stack held, and a name under four characters reads on past its
+// terminator (ours starts zeroed): zero the stack the original's frame will take.
+__declspec(noinline) void ZeroStackBelow() {
+    volatile uint8_t area[0x2000];
+    for (size_t i = 0; i < sizeof(area); i++)
+        area[i] = 0;
+}
+
 void CompareIndex(const char *what, const char *directory, const char *file) {
     g_cases++;
     AIndex original = {}, port = {};
@@ -331,6 +339,7 @@ void CompareIndex(const char *what, const char *directory, const char *file) {
     g_loadLog.clear();
     bool okO = Guarded([&] {
         Originals originals;
+        ZeroStackBelow();
         OriginalConstruct(&original, 0, directory, file);
     });
     loadO = g_loadLog;
