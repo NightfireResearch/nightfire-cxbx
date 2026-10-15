@@ -61,9 +61,9 @@ const D3DPixelShaderDef MatDebugPSDefinition = {
 };
 
 // XBE_GLOBAL(0x001dd2d8, 4)
-const void *MatDebugVSFunctions[1] = { MatDebugVSFunction.data() };
+Ptr32<const void> MatDebugVSFunctions[1] = { MatDebugVSFunction.data() };
 // XBE_GLOBAL(0x001dd2dc, 4)
-const uint8_t *MatDebugPSDefinitions[1] = {
+Ptr32<const uint8_t> MatDebugPSDefinitions[1] = {
     reinterpret_cast<const uint8_t *>(&MatDebugPSDefinition),
 };
 // XBE_GLOBAL(0x001dd2e0, 0x6c)
@@ -88,7 +88,7 @@ const uint32_t MatDebugVSDeclaration[5] = {
     D3DVSD_END(),
 };
 // XBE_GLOBAL(0x001dd38c, 0x18)
-const char *MatDebugParamNames[6] = {
+Ptr32<const char> MatDebugParamNames[6] = {
     "State", "Parameters", "WVP", "Coordinates", "Colours", NULL,
 };
 
@@ -134,9 +134,9 @@ const D3DPixelShaderDef MatVolatileTexturePSDefinition = {
 };
 
 // XBE_GLOBAL(0x001dd530, 4)
-const void *MatVolatileTextureVSFunctions[1] = { MatVolatileTextureVSFunction.data() };
+Ptr32<const void> MatVolatileTextureVSFunctions[1] = { MatVolatileTextureVSFunction.data() };
 // XBE_GLOBAL(0x001dd534, 4)
-const uint8_t *MatVolatileTexturePSDefinitions[1] = {
+Ptr32<const uint8_t> MatVolatileTexturePSDefinitions[1] = {
     reinterpret_cast<const uint8_t *>(&MatVolatileTexturePSDefinition),
 };
 // XBE_GLOBAL(0x001dd538, 0x94)
@@ -166,7 +166,7 @@ const uint32_t MatVolatileTextureVSDeclaration[7] = {
     D3DVSD_END(),
 };
 // XBE_GLOBAL(0x001dd638, 0x20)
-const char *MatVolatileTextureParamNames[8] = {
+Ptr32<const char> MatVolatileTextureParamNames[8] = {
     "State", "Texture", "Parameters", "ModelViewProjectionMatrix", "Coordinates", "Colours", "UV", NULL,
 };
 

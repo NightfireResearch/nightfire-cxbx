@@ -19,11 +19,11 @@ struct DrawArray;
 // A model's morph weights (invented name; e8b50..e8bc0 work on its first three words, MorphModel on the rest).
 struct MorphWeights {
     uint32_t count;                  // +0x00 the accessors accept an index up to and including it
-    Ptr32<void *> pointers;          // +0x04
+    Ptr32<Ptr32<void>> pointers;     // +0x04
     Ptr32<float> weights;            // +0x08
     uint32_t unknown0c;              // +0x0c
     uint32_t groupCount;             // +0x10 number of morph groups
-    uint32_t groups[1];              // +0x14 per group: its name, then its sub-blocks (MorphModel)
+    uint32_t groups[1];              // +0x14 per group: its name's address, then its sub-blocks (MorphModel)
 
     void* GetPointer(uint32_t index);                                        // 0x000e8b50
     void SetWeight(uint32_t index, float weight);                            // 0x000e8b70
@@ -39,7 +39,8 @@ struct MorphRecord {                 // 0x10
     int16_t elementSize;             // +0x04
     int16_t strideFlags;             // +0x06 the base stride * 2; bit 0: one copy per variation
     uint32_t variationStride;        // +0x08
-    uint32_t target;                 // +0x0c the data's address; the rest copy is variationStride before it
+    uint32_t target;                 // +0x0c the data's address (a word: added to in 32 bits); the rest copy is
+                                     //       variationStride before it
 };
 static_assert(sizeof(MorphRecord) == 0x10, "a morph record is 16 bytes");
 
@@ -47,7 +48,7 @@ static_assert(sizeof(MorphRecord) == 0x10, "a morph record is 16 bytes");
 struct TARList {
     int32_t variation;               // +0x00 the model's variation, or -1 when the name is not found
     int32_t count;                   // +0x04
-    TAR **tars;                      // +0x08 each the first of an array of variations
+    Ptr32<TAR> *tars;                // +0x08 each the first of an array of variations (the model's list)
 };
 
 // Model::DrawInstances' argument (invented name)
@@ -90,7 +91,7 @@ struct Model {                       // 0xd8; built by the loader from a "Model"
     float sphereRadius;              // +0x98
     int32_t geometryCount;           // +0x9c
     union {                          // +0xa0
-        Ptr32<const char *> geometryNames; //       the geometry names
+        Ptr32<Ptr32<const char>> geometryNames; //  the geometry names
         GeometryEnable defaultEnable;  //     a model built by Construct: its one enable entry {0, 1}
     };
     Ptr32<Model> sameMatrixChildren; // +0xa4 drawn with the parent's matrix (Ghidra: numChildren)
@@ -143,8 +144,8 @@ struct DynamicModel {                // 0x58; the game builds these for effects,
     uint32_t unknown40;              // +0x40
     int32_t capacity;                // +0x44
     int32_t count;                   // +0x48
-    GeoPrim **geoPrims;              // +0x4c
-    DrawArray **drawArrays;          // +0x50 one per GeoPrim, filled only by the dead vertex-array API
+    Ptr32<Ptr32<GeoPrim>> geoPrims;  // +0x4c
+    Ptr32<Ptr32<DrawArray>> drawArrays; // +0x50 one per GeoPrim, filled only by the dead vertex-array API
     uint32_t unknown54;              // +0x54
 
     DynamicModel* Construct();                                               // 0x000e9760

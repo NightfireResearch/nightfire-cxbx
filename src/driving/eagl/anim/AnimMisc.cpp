@@ -3,6 +3,7 @@
 #include "AnimDecode.h"
 #include "AnimUntested.h"
 #include "Skeleton.h"
+#include "../../platform/Ptr32.h"
 #include "../../platform/X87.h"
 
 #include <bit>
@@ -337,7 +338,7 @@ bool FnRawStateChan::EvalState(float time, void *state) {
     }
     for (f = f - 1; f >= 0; f--) {
         uint8_t *p = frames + stride * f;
-        float pointerAsFloat = std::bit_cast<float>(uint32_t(reinterpret_cast<uintptr_t>(p)));
+        float pointerAsFloat = std::bit_cast<float>(PtrTo32(p));
         if (time >= pointerAsFloat) {   // test ah,1 / je
             Decode(p + 4, out);
             frame = f;
@@ -379,19 +380,19 @@ typedef void (*LerpFn)(float t, float **cursor0, float **cursor1, float *out);
 
 // The channel functions as InitAnimMemoryMap writes them into the signature tables: their addresses
 uint32_t Address(FrameFn function) {
-    return uint32_t(reinterpret_cast<uintptr_t>(function));
+    return PtrTo32(reinterpret_cast<const void *>(function));
 }
 
 uint32_t Address(LerpFn function) {
-    return uint32_t(reinterpret_cast<uintptr_t>(function));
+    return PtrTo32(reinterpret_cast<const void *>(function));
 }
 
 FrameFn FrameFunction(uint32_t address) {
-    return reinterpret_cast<FrameFn>(uintptr_t(address));
+    return reinterpret_cast<FrameFn>(PtrFrom32<void>(address));
 }
 
 LerpFn LerpFunction(uint32_t address) {
-    return reinterpret_cast<LerpFn>(uintptr_t(address));
+    return reinterpret_cast<LerpFn>(PtrFrom32<void>(address));
 }
 
 }  // namespace

@@ -524,7 +524,7 @@ void* RuntimeAllocTARConstructor(const char *properties, DynamicLoader *loader, 
         memcpy(e, &tars->tar, offsetof(EAGL::TAR, extension));
         e->data->refCount++;
     }
-    *context = (void *)count;
+    *context = (void *)(intptr_t)count;
     p.Destruct();
     return tars;
 }

@@ -86,9 +86,9 @@ const D3DPixelShaderDef BondPostGlarePSDefinition = {
 };
 
 // XBE_GLOBAL(0x001d43d0, 4)
-const void *BondPostGlareVSFunctions[1] = { BondPostGlareVSFunction.data() };
+Ptr32<const void> BondPostGlareVSFunctions[1] = { BondPostGlareVSFunction.data() };
 // XBE_GLOBAL(0x001d43d4, 4)
-const uint8_t *BondPostGlarePSDefinitions[1] = {
+Ptr32<const uint8_t> BondPostGlarePSDefinitions[1] = {
     reinterpret_cast<const uint8_t *>(&BondPostGlarePSDefinition),
 };
 // XBE_GLOBAL(0x001d43d8, 0x88)
@@ -115,7 +115,7 @@ const uint32_t BondPostGlareVSDeclaration[5] = {
     D3DVSD_END(),
 };
 // XBE_GLOBAL(0x001d44cc, 0x20)
-const char *BondPostGlareParamNames[8] = {
+Ptr32<const char> BondPostGlareParamNames[8] = {
     "State", "Texture", "Parameters", "ModelViewProjectionMatrix", "GlareParams", "Coordinates", "Colours", NULL,
 };
 

@@ -107,18 +107,18 @@ extern uint32_t DecalVertexCount[4];        // the GeoPrims' vertex count record
 extern EAGL::GeoPrimState DecalState;
 extern const std::array<uint32_t, 34> TexturedParentVSFunction;
 extern const D3DPixelShaderDef TexturedParentPSDefinition;
-extern const void *TexturedParentVSFunctions[1];
-extern const uint8_t *TexturedParentPSDefinitions[1];
+extern Ptr32<const void> TexturedParentVSFunctions[1];
+extern Ptr32<const uint8_t> TexturedParentPSDefinitions[1];
 extern uint32_t TexturedParentPackets[37];
 extern const uint32_t TexturedParentVSDeclaration[7];
-extern const char *TexturedParentParamNames[8];
+extern Ptr32<const char> TexturedParentParamNames[8];
 extern const std::array<uint32_t, 202> EmpParentVSFunction;
 extern const D3DPixelShaderDef EmpParentPSDefinition;
-extern const void *EmpParentVSFunctions[1];
-extern const uint8_t *EmpParentPSDefinitions[1];
+extern Ptr32<const void> EmpParentVSFunctions[1];
+extern Ptr32<const uint8_t> EmpParentPSDefinitions[1];
 extern uint32_t EmpParentPackets[65];
 extern const uint32_t EmpParentVSDeclaration[7];
-extern const char *EmpParentParamNames[16];
+extern Ptr32<const char> EmpParentParamNames[16];
 extern EAGL::RenderMethod TexturedParentMethod;
 extern EAGL::RenderMethod EmpParentMethod;
 

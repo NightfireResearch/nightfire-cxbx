@@ -209,7 +209,7 @@ const D3DPixelShaderDef TexturedPSDefinition = {
 
 // An opcode-11 packet's slots while it has no buffer: all bits set
 template <class T> T *Unset() {
-    return reinterpret_cast<T *>(0xffffffff);
+    return PtrFrom32<T>(0xffffffff);
 }
 
 // ---- the interpreter's state
@@ -348,7 +348,7 @@ void EAGL_CopyParentPackets(EAGL::RenderMethod *method) {
 void EAGL_VertexBufferConstructor(EAGL::LoadedVertexBuffer *buffer, DynamicLoader *loader) {
     uint32_t offset = buffer->fileOffset;
     void *base = loader->GetElfData();
-    buffer->header->data = offset - reinterpret_cast<uintptr_t>(base);
+    buffer->header->data = offset - PtrTo32(base);
     D3DResource_Register(buffer->header, base);
     ResourceRegistered = 1;
 }
@@ -362,10 +362,11 @@ void EAGL_VertexBufferDestructor(EAGL::LoadedVertexBuffer *buffer) {
 // The static initialisers' constructor (bondrm render methods the game builds in code)
 // FUNC_AT(0x000f0f60)
 EAGL::RenderMethod* EAGL::RenderMethod::Construct(Packet *packets_, int numVariants_, const void *declaration_,
-                                                  const void **vsMicrocode_, VertexShader **vertexShaders_,
-                                                  const uint8_t **psDefinitions_, PixelShader **pixelShaders_,
-                                                  const char **paramNames_, uint32_t variantHalf_,
-                                                  const char *name_) {
+                                                  Ptr32<const void> *vsMicrocode_,
+                                                  Ptr32<VertexShader> *vertexShaders_,
+                                                  Ptr32<const uint8_t> *psDefinitions_,
+                                                  Ptr32<PixelShader> *pixelShaders_, Ptr32<const char> *paramNames_,
+                                                  uint32_t variantHalf_, const char *name_) {
     packets = packets_;
     numVariants = numVariants_;
     declaration = declaration_;
@@ -420,8 +421,8 @@ void EAGL::RenderMethod::Nop1040(uint32_t) {
 // FUNC_AT(0x000f1050)
 void EAGL::RenderMethod::CreateShaders() {
     int half = variantHalf == 0 ? 1 : 0;
-    vertexShaders = static_cast<VertexShader **>(EaglMalloc(numVariants << 2, "EAGL::VertexShader *"));
-    pixelShaders = static_cast<PixelShader **>(EaglMalloc(numVariants * 4, "EAGL::PixelShader *"));
+    vertexShaders = static_cast<Ptr32<VertexShader> *>(EaglMalloc(numVariants << 2, "EAGL::VertexShader *"));
+    pixelShaders = static_cast<Ptr32<PixelShader> *>(EaglMalloc(numVariants * 4, "EAGL::PixelShader *"));
     for (int i = 0; i < numVariants; i++) {
         VertexShader *vs = static_cast<VertexShader *>(EaglMalloc(4, "EAGL::VertexShader new"));
         vs = vs != NULL ? vs->Construct(declaration, vsMicrocode[i]) : NULL;
@@ -433,22 +434,22 @@ void EAGL::RenderMethod::CreateShaders() {
 }
 
 // FUNC_AT(0x000f1180)
-void EAGL::RenderMethod::SetVertexShaderTable(VertexShader **const *table) {
+void EAGL::RenderMethod::SetVertexShaderTable(Ptr32<VertexShader> *const *table) {
     vertexShaders = *table;
 }
 
 // FUNC_AT(0x000f1190)
-Ptr32<EAGL::VertexShader *>* EAGL::RenderMethod::GetVertexShaderTable() {
+Ptr32<Ptr32<EAGL::VertexShader>>* EAGL::RenderMethod::GetVertexShaderTable() {
     return &vertexShaders;
 }
 
 // FUNC_AT(0x000f11a0)
-void EAGL::RenderMethod::SetPixelShaderTable(PixelShader **const *table) {
+void EAGL::RenderMethod::SetPixelShaderTable(Ptr32<PixelShader> *const *table) {
     pixelShaders = *table;
 }
 
 // FUNC_AT(0x000f11b0)
-Ptr32<EAGL::PixelShader *>* EAGL::RenderMethod::GetPixelShaderTable() {
+Ptr32<Ptr32<EAGL::PixelShader>>* EAGL::RenderMethod::GetPixelShaderTable() {
     return &pixelShaders;
 }
 
@@ -718,7 +719,7 @@ bool EAGL::DrawArray::SetGeoPrim(GeoPrim *prim) {
     paramCount = 0;
     while (geoPrim->method->paramNames[paramCount] != NULL)
         paramCount++;
-    userVars = static_cast<UserVar *>(EaglMalloc(paramCount << 3, "mUserVarData"));
+    userVars = static_cast<UserVar *>(EaglMalloc(paramCount * sizeof(UserVar), "mUserVarData"));
     if (userVars == NULL)
         return false;
     for (int i = 0; i < paramCount; i++) {
@@ -758,7 +759,7 @@ int EAGL::DrawArray::GetIndexFromName(const char *name_) {
     int count = paramCount;
     if (count <= 0)
         return -1;
-    const char **names = geoPrim->method->paramNames;
+    const Ptr32<const char> *names = geoPrim->method->paramNames;
     for (int i = 0; i < count; i++)
         if (strcmp(name_, names[i]) == 0)
             return i;
@@ -1176,7 +1177,7 @@ void EAGL_RMOp_Stream() {
 void EAGL_RMOp_SelectShaders() {
     int index = *VariationData<int16_t>();
     RenderMethod *method = Interp.method;
-    PixelShader **ps = method->pixelShaders + index;
+    Ptr32<PixelShader> *ps = method->pixelShaders + index;
     EAGL_SetVertexShader(method->vertexShaders[index]);
     EAGL_SetPixelShader(*ps);
     NextParam();
@@ -1186,7 +1187,7 @@ void EAGL_RMOp_SelectShaders() {
 // FUNC_AT(0x000f60f0)
 void EAGL_RMOp_DefaultShaders() {
     RenderMethod *method = Interp.method;
-    PixelShader **ps = method->pixelShaders;
+    Ptr32<PixelShader> *ps = method->pixelShaders;
     EAGL_SetVertexShader(method->vertexShaders[0]);
     EAGL_SetPixelShader(*ps);
 }
@@ -1503,7 +1504,7 @@ EAGL::DynamicVertexBuffer* EAGL::DynamicVertexBuffer::ConstructUser(void *data, 
     userHeader.common = 0;
     userHeader.data = 0;
     userHeader.lock = 0;
-    XGSetVertexBufferHeader(0, 0, 0, 0, &userHeader, reinterpret_cast<uintptr_t>(data) + 0x80000000);
+    XGSetVertexBufferHeader(0, 0, 0, 0, &userHeader, PtrTo32(data) + 0x80000000);
     current = &userHeader;
     return this;
 }
@@ -1601,7 +1602,7 @@ uint32_t EAGL::IndexBuffer::GetSize() {
 // The resource's data address plus the offset
 // FUNC_AT(0x000f6f60)
 void EAGL::IndexBuffer::Lock(uint32_t offset, uint32_t, uint8_t **out) {
-    *out = reinterpret_cast<uint8_t *>(buffer->data + offset);
+    *out = PtrFrom32<uint8_t>(buffer->data + offset);
 }
 
 // FUNC_AT(0x000f6f80)

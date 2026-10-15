@@ -10,10 +10,10 @@
 struct AttributeBlock;
 
 struct CompoundData : AnimData {     // a compound channel's data (type 15)
-    AttributeBlock *attributes;      // +0x04
+    Ptr32<AttributeBlock> attributes; // +0x04
     uint16_t count;                  // +0x08 sub-anims
     uint16_t frames;                 // +0x0a
-    uint8_t *subs[1];                // +0x0c [count] their data
+    Ptr32<uint8_t> subs[1];          // +0x0c [count] their data
 };
 static_assert(offsetof(CompoundData, subs) == 0xc, "a compound's sub-anims are at +0xc");
 
@@ -21,8 +21,8 @@ struct AnimBank {                    // an AnimationBank symbol
     uint32_t unknown00;
     int32_t count;                   // +0x04
     uint32_t unknown08;
-    Ptr32<uint8_t *> anims;          // +0x0c the anim data
-    Ptr32<const char *> names;       // +0x10 sorted, for FindAnim
+    Ptr32<Ptr32<uint8_t>> anims;     // +0x0c the anim data
+    Ptr32<Ptr32<const char>> names;  // +0x10 sorted, for FindAnim
 
     int FindAnim(const char *name);                              // 0x000f71b0
 };
