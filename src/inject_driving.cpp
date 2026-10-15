@@ -31,6 +31,8 @@
 #include "driving/devtools/SndPlatformShadow.h"
 #include "driving/devtools/SndStreamFileShadow.h"
 #include "driving/devtools/SndCallTrace.h"
+#include "driving/devtools/HeapPad.h"
+#include "driving/devtools/X87Count.h"
 #include "common/xbeOriginal.h"
 #include "driving/gfx/d3dSeam.h"
 #include "driving/platform/XboxInput.h"
@@ -230,6 +232,8 @@ void Inject()
   SndStreamShadow_Run();   // NIGHTFIRE_SNDSTREAMSHADOW=1 only
   SndPlatformShadow_Run();   // NIGHTFIRE_SNDPLATFORMSHADOW=1 only
   SndStreamFileShadow_Run();   // NIGHTFIRE_SNDSTREAMFILESHADOW=1 only
+  HeapPad_Install();   // NIGHTFIRE_HEAP_PAD=<bytes> only
+  X87Count_Install();   // NIGHTFIRE_X87COUNT=1 only
   // Last: it moves the jumps the injection table wrote, and must not see the shadow tests' calls
   SndCallTrace_Install();   // NIGHTFIRE_SNDTRACE=1 only
   // After every patch: NIGHTFIRE_TRAP_ORIGINAL fills what no patch wrote, NIGHTFIRE_TRAP_DATA=2 guards the data

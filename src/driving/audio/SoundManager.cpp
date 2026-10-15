@@ -19,6 +19,7 @@
 #include "../platform/CRuntime.h"
 #include "../logging.h"
 
+#include <math.h>
 #include <string.h>
 
 // XBE_GLOBAL(0x00243a68, 0x4)
@@ -131,6 +132,7 @@ const MixMaster kMixMasters[] = {
     { "World Sounds", "0:Fader2" },
 };
 
+#if NIGHTFIRE_X87
 // FLDLN2, FYL2X: the natural logarithm exactly as the x87 makes it (the C runtime's log need not agree in the last
 // bit).
 __declspec(naked) double LogX87(double) {
@@ -141,6 +143,11 @@ __declspec(naked) double LogX87(double) {
         ret
     }
 }
+#else
+double LogX87(double x) {
+    return log(x);
+}
+#endif
 
 // The music and effects mixes back at the volumes the options set.
 void RestoreOptionVolumes() {

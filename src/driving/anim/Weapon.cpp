@@ -84,6 +84,7 @@ static_assert(std::bit_cast<uint32_t>(kOneSeventh) == 0x3e124925 && std::bit_cas
               std::bit_cast<uint32_t>(kDistanceSize) == 0x3b23d70a && std::bit_cast<uint32_t>(kUnitHigh) == 0x3f800001 &&
               std::bit_cast<uint32_t>(kUnitLow) == 0x3f7ffffe, "the original's constants");
 
+#if NIGHTFIRE_X87
 // The C runtime's pow (_CIpow at 0x00132a94, the game's own), which takes its operands (the base below the exponent)
 // and answers on the x87 stack
 __declspec(naked) static double CrtPow(double, double) {
@@ -94,6 +95,12 @@ __declspec(naked) static double CrtPow(double, double) {
         ret
     }
 }
+#else
+// The C runtime's pow (_CIpow at 0x00132a94, the game's own)
+static double CrtPow(double base, double exponent) {
+    return Crt::CIpow(base, exponent);
+}
+#endif
 
 // ---- ActWeaponAux
 

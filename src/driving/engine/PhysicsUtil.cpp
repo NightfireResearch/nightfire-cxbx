@@ -31,14 +31,7 @@ static_assert(std::bit_cast<uint32_t>(kOneTwelfth) == 0x3daaa8eb, "the tensors' 
 static_assert(std::bit_cast<uint32_t>(kOneThird) == 0x3eaaa64c, "the car tensor's 1/3");
 static constexpr float kRayLength = 1000.0f;
 
-// FPATAN's result is returned unrounded (atan_turns is assembly that leaves it in ST0); the original subtracts it
-// straight from 1, so it is read here as the double it is rather than through the float declaration, which would
-// round it.
-typedef double (*UnroundedTurnsFn)(float, float);
-static double AtanTurnsUnrounded(float y, float x) {
-    return reinterpret_cast<UnroundedTurnsFn>(&atan_turns)(y, x);
-}
-
+#if NIGHTFIRE_X87
 // FLDLN2, FYL2X: the natural logarithm exactly as the x87 makes it (the C runtime's log need not agree in the last
 // bit).
 __declspec(naked) static double LogX87(double) {
@@ -49,6 +42,11 @@ __declspec(naked) static double LogX87(double) {
         ret
     }
 }
+#else
+static double LogX87(double x) {
+    return log(x);
+}
+#endif
 
 // FUNC_AT(0x000bce10)
 double Util_Step(float current, float target, float step) {
@@ -195,7 +193,7 @@ Coord3* Util_PerturbVector(Coord3 *result, const Coord4 *direction, float spread
 void Util_VecToPoleDepthAndLong(const Coord3 *direction, float *depth, float *longitude) {
     const float x = direction->x, y = direction->y, z = direction->z;
     *depth = float(1.0f - (double(y) + 1.0f) * 0.5f);
-    double turns = 1.0f - AtanTurnsUnrounded(x, z);
+    double turns = 1.0f - AtanTurns(x, z);
     *longitude = float(turns);
     if (turns < 0.0f) {
         double wrapped = *longitude;

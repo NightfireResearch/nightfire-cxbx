@@ -14,6 +14,7 @@
 #include "RuntimeAlloc.h"            // the property-built constructors
 
 #include <bit>
+#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -115,6 +116,7 @@ void IdentityOnesFirst(float *m) {
     m[7] = 0.0f; m[6] = 0.0f; m[4] = 0.0f; m[3] = 0.0f; m[2] = 0.0f; m[1] = 0.0f;
 }
 
+#if NIGHTFIRE_X87
 // SetPerspective's frustum planes (0x000e478e..0x000e486b), the original instructions: the half field of view's
 // tangent, the four guard-band-adjusted angles through FPATAN, then each plane's tangent and sine, all unrounded
 // on the x87 stack except where the original stores a float. ESI is the ViewPort as in the original; the
@@ -197,6 +199,26 @@ __declspec(naked) void __stdcall PerspectivePlanes(ViewPort *view, float fov, fl
         ret 0xc
     }
 }
+#else
+// SetPerspective's frustum planes (0x000e478e..0x000e486b) in double: the half field of view's tangent, the four
+// guard-band-adjusted angles (the first three stored as floats, the last kept), then each plane's tangent and the
+// sine of its complement.
+void __stdcall PerspectivePlanes(ViewPort *view, float fov, float aspect) {
+    double halfTan = tan(double(kPi) * kOneOver180 * fov * kHalf);
+    float angle[3];
+    angle[0] = float(atan2(-(halfTan * view->guardBand[0]), 1.0));
+    angle[1] = float(atan2(halfTan * view->guardBand[1], 1.0));
+    angle[2] = float(atan2(double(view->guardBand[2]) / aspect * halfTan, 1.0));
+    double angle3 = atan2(halfTan * (double(kMinusOne) / aspect * view->guardBand[3]), 1.0);
+    double quarterTurn = double(kPi) * kHalf;
+    for (int i = 0; i < 3; i++) {
+        view->planes[i * 2] = float(tan(double(angle[i])));
+        view->planes[i * 2 + 1] = float(sin(quarterTurn - angle[i]));
+    }
+    view->planes[6] = float(tan(angle3));
+    view->planes[7] = float(sin(quarterTurn - angle3));
+}
+#endif
 
 }  // namespace
 

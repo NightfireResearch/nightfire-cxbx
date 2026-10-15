@@ -411,13 +411,14 @@ void EAGL_RotationToQuat(const float *rotation9, float *quaternion) {
     RealQuatFromRot(rotation9, quaternion);
 }
 
-// ---- BuildRotate: the original instructions (FSIN and FCOS are used unrounded)
+// ---- BuildRotate: the original instructions (FSIN and FCOS are used unrounded), or the same arithmetic in C
 
 static const float kPi = 3.14159274f;            // 0x40490fdb
 static const float kOneOver180 = 0.00555555569f; // 0x3bb60b61
 static const float kZero = 0.0f;
 static const float kOne = 1.0f;
 
+#if NIGHTFIRE_X87
 // FUNC_AT(0x000f32e0)
 __declspec(naked) void __fastcall EAGL_BuildRotate(Transform *self, int unusedEdx, float degrees, float x, float y,
                                                    float z) {
@@ -537,6 +538,53 @@ __declspec(naked) void __fastcall EAGL_BuildRotate(Transform *self, int unusedEd
         ret 0x10
     }
 }
+#else
+// The original's arithmetic in double: the axis normalised (x unrounded, y and z stored as floats), the sine and
+// cosine and the products the original keeps on the x87 unrounded, the rest rounded where it stores a float.
+void __fastcall EAGL_BuildRotate(Transform *self, int unusedEdx, float degrees, float x, float y, float z) {
+    float *m = self->m;
+    double radians = double(kPi) * kOneOver180 * degrees;
+    if (radians == kZero) {
+        m[0] = 1.0f;
+        m[1] = 0.0f;
+        m[2] = 0.0f;
+        m[4] = 0.0f;
+        m[5] = 1.0f;
+        m[6] = 0.0f;
+        m[8] = 0.0f;
+        m[9] = 0.0f;
+        m[10] = 1.0f;
+        m[15] = 1.0f;
+    } else {
+        float angle = float(radians);
+        double s = sin(double(angle)), c = cos(double(angle));
+        double scale = kOne / sqrt(double(x) * x + double(y) * y + double(z) * z);
+        double nx = x * scale;
+        y = float(scale * y);
+        z = float(scale * z);
+        double t = kOne - c;
+        double tx = t * nx;
+        float ty = float(t * y), tz = float(t * z);
+        float sx = float(s * nx), sy = float(s * y), sz = float(s * z);
+        m[0] = float(tx * nx + c);
+        m[1] = float(y * tx + sz);
+        m[2] = float(tx * z - sy);
+        m[4] = float(ty * nx - sz);
+        m[5] = float(double(ty) * y + c);
+        m[6] = float(double(ty) * z + sx);
+        m[8] = float(tz * nx + sy);
+        m[9] = float(double(tz) * y - sx);
+        m[10] = float(double(tz) * z + c);
+        m[15] = 1.0f;
+    }
+    m[3] = 0.0f;
+    m[7] = 0.0f;
+    m[11] = 0.0f;
+    m[12] = 0.0f;
+    m[13] = 0.0f;
+    m[14] = 0.0f;
+}
+#endif
 
 // ---- BuildSQT and TransformPoint
 
@@ -597,6 +645,7 @@ void Transform::TransformPoint(const float *in, float *out) const {
 
 namespace {
 
+#if NIGHTFIRE_X87
 // FSIN, FCOS and FPATAN (atan2(y, x)) as the originals use them, their results unrounded
 __declspec(naked) double X87Sin(double) {
     __asm {
@@ -622,6 +671,20 @@ __declspec(naked) double X87Atan2(double, double) {
         ret
     }
 }
+#else
+// sin, cos and atan2(y, x) where the originals use FSIN, FCOS and FPATAN
+double X87Sin(double x) {
+    return sin(x);
+}
+
+double X87Cos(double x) {
+    return cos(x);
+}
+
+double X87Atan2(double y, double x) {
+    return atan2(y, x);
+}
+#endif
 
 } // namespace
 

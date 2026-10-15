@@ -4,14 +4,16 @@
 // launch options, load FFmpeg - then opens the window, starts the game's thread at mainXapiStartup
 // (platform/XboxStartup.cpp) with the stack the XBE asked for, and runs the window's events. The crash reporter
 // (CrashReport.h) is installed first; closing the window reports every thread and ends the process, as the loader
-// does. driving_standalone_test also installs the sound call trace and the crash test there (the rest of its harness
-// is called from the game's own hooks).
+// does. driving_standalone_test also installs the heap padding, the x87 call counter, the sound call trace and the
+// crash test there (the rest of its harness is called from the game's own hooks).
 
 #include <stdio.h>
 
 #include "CrashReport.h"
 #include "../devtools/CrashTest.h"
+#include "../devtools/HeapPad.h"
 #include "../devtools/SndCallTrace.h"
+#include "../devtools/X87Count.h"
 #include "../gfx/d3dSeam.h"
 #include "../platform/Host.h"
 #include "../platform/HostWindow.h"
@@ -37,6 +39,8 @@ int main(int argc, char **argv) {
     D3dSeam_Init();
     Inject_LaunchOptions();
     Ffmpeg_Require();
+    HeapPad_Install();        // NIGHTFIRE_HEAP_PAD=<bytes>, driving_standalone_test only
+    X87Count_Install();       // NIGHTFIRE_X87COUNT=1, driving_standalone_test only
     SndCallTrace_Install();   // NIGHTFIRE_SNDTRACE=1, driving_standalone_test only
     CrashTest_Start();        // NIGHTFIRE_CRASHTEST=<ms>, the same
 

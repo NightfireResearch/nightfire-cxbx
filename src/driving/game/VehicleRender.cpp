@@ -148,6 +148,7 @@ int32_t ClearEmpVictim;
 
 namespace {
 
+#if NIGHTFIRE_X87
 // The C runtime's pow (_CIpow at 0x00132a94, the game's own): the base below the exponent, answered on the x87;
 // times factor there, before the power is rounded
 __declspec(naked) double CrtPowTimes(double, double, double factor) {
@@ -159,6 +160,12 @@ __declspec(naked) double CrtPowTimes(double, double, double factor) {
         ret
     }
 }
+#else
+// The C runtime's pow (_CIpow at 0x00132a94, the game's own), times factor
+double CrtPowTimes(double base, double exponent, double factor) {
+    return Crt::CIpow(base, exponent) * factor;
+}
+#endif
 
 // ---- the car's virtual methods (PBondCar's)
 DamageZone *GetDamageZones(PhysicsObject *object, uint32_t *count) {

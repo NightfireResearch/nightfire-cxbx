@@ -106,12 +106,6 @@ constexpr float kLeanAccelerationSide = 40.0f;
 constexpr int kDeathFadeSeconds = 4;
 constexpr int kWindowArmSeconds = 300;
 
-// atan_turns answers in ST0 unrounded; read as the double it is rather than through its float declaration
-typedef double (*UnroundedTurnsFn)(float y, float x);
-double AtanTurns(float y, float x) {
-    return reinterpret_cast<UnroundedTurnsFn>(&atan_turns)(y, x);
-}
-
 RigidBody *BodyOf(PhysicsObject *object) {
     return fgSimulation.GetRigidBody(object->rigidBodySlot);
 }

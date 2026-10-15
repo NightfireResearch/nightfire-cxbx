@@ -7,6 +7,7 @@
 #include "XboxXapi.h"                     // Xbox_OutputDebugStringA, Xbox_WriteFile
 
 #include "Win32Types.h"
+#include <math.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -338,6 +339,7 @@ void MOUSE_setbounds(uint32_t a, uint32_t b, uint32_t unused, uint32_t d, uint32
     gMouseBounds.unknown18 = e;
 }
 
+#if NIGHTFIRE_X87
 // 0x00108780: FLD the float, FSQRT, return - the root left on the x87 stack at full precision, not rounded to a
 // float, which a C body would do. Name invented.
 // FUNC_AT(0x00108780)
@@ -348,3 +350,10 @@ __declspec(naked) float REAL_sqrtf(float value) {
         ret
     }
 }
+#else
+// The root, rounded to a float (FSQRT's 53-bit root rounds to the same float). Untagged: the tag is on the x87
+// form above.
+float REAL_sqrtf(float value) {
+    return float(sqrt(double(value)));
+}
+#endif

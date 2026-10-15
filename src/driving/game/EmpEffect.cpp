@@ -2,6 +2,7 @@
 
 #include "EmpEffect.h"
 
+#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -215,6 +216,7 @@ EAGL::TAR *EmpTexture(uint32_t name) {
     return RTextureContextManager::GetContext(0)->FindOrCreateTexture(name, 0);
 }
 
+#if NIGHTFIRE_X87
 // strength + amplitude * FSIN(radians), on the x87 as the original keeps it (FSIN's result is not rounded)
 __declspec(naked) float GlowWave(double radians, float amplitude, float strength) {
     __asm {
@@ -225,6 +227,12 @@ __declspec(naked) float GlowWave(double radians, float amplitude, float strength
         ret
     }
 }
+#else
+// strength + amplitude * sin(radians) in double
+float GlowWave(double radians, float amplitude, float strength) {
+    return float(sin(radians) * amplitude + strength);
+}
+#endif
 
 // The rotations and iterator steps of the maps with 0x1c-byte nodes are AttributeMap's (the same compiled code)
 AttributeMap *AsAttributeMap(EmpAnchorMap *map) {

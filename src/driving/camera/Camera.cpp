@@ -6,6 +6,7 @@
 #include "../render/RenderHigh.h"   // AspectScale
 
 #include <bit>
+#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -64,6 +65,7 @@ static_assert(std::bit_cast<uint32_t>(kDefaultNearZ) == 0x3e2e147b && std::bit_c
               std::bit_cast<uint32_t>(kTwoPi) == 0x40c90fda && std::bit_cast<uint32_t>(kDeviceNearZ) == 0x3dcccccd,
               "the original's constants");
 
+#if NIGHTFIRE_X87
 // value + amplitude * FSIN(radians), on the x87 as the original keeps it (FSIN's result is not rounded)
 __declspec(naked) float AddSine(double radians, float amplitude, float value) {
     __asm {
@@ -74,6 +76,12 @@ __declspec(naked) float AddSine(double radians, float amplitude, float value) {
         ret
     }
 }
+#else
+// value + amplitude * sin(radians) in double
+float AddSine(double radians, float amplitude, float value) {
+    return float(sin(radians) * amplitude + value);
+}
+#endif
 
 } // namespace
 

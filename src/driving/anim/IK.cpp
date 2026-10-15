@@ -32,6 +32,7 @@ static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb && std::bit_cast<uint32
               std::bit_cast<uint32_t>(kQuatEpsilon) == 0x3727c5ac &&
               std::bit_cast<uint32_t>(kCosineLimit) == 0x3f7d70a4, "the original's constants");
 
+#if NIGHTFIRE_X87
 // FSIN, FCOS and FPATAN (atan2(y, x)) as the original uses them
 __declspec(naked) double X87Sin(double) {
     __asm {
@@ -66,6 +67,25 @@ __declspec(naked) double CrtAcos(float) {
         ret
     }
 }
+#else
+// sin, cos and atan2(y, x) where the original uses FSIN, FCOS and FPATAN
+double X87Sin(double x) {
+    return sin(x);
+}
+
+double X87Cos(double x) {
+    return cos(x);
+}
+
+double X87Atan2(double y, double x) {
+    return atan2(y, x);
+}
+
+// The C runtime's arc cosine (_CIacos at 0x001328d0, the game's own)
+double CrtAcos(float x) {
+    return Crt::CIacos(x);
+}
+#endif
 
 Coord4& Row(Transform *matrix, int row) {
     return *reinterpret_cast<Coord4 *>(&matrix->m[row * 4]);

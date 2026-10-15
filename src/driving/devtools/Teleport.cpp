@@ -7,6 +7,8 @@
 #include "../EventManager.hpp"
 #include "../sound/snd/SndGlobals.h"
 #include "SndCallTrace.h"
+#include "HeapPad.h"
+#include "X87Count.h"
 
 #include "Win32Harness.h"
 #include <stdio.h>
@@ -109,6 +111,8 @@ static void FormatPlace(const Place *p, char *out, size_t size) {
 
 void Teleport_Tick(void) {
     SndCallTrace_Tick();   // NIGHTFIRE_SNDTRACE=1 only: marks the tick boundary in the sound call trace
+    X87Count_Tick();       // NIGHTFIRE_X87COUNT=1 only
+    HeapPad_Tick();        // NIGHTFIRE_PARTICLE_ORDER=1 only
     static bool loaded = false;
     static Place configured, recorded;
     static bool haveConfigured = false, haveRecorded = false;

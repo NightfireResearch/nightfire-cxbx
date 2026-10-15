@@ -3,6 +3,7 @@
 #include "WeaponCameras.h"
 #include "../Vtables.h"   // our copies of the game's vtables
 
+#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -118,6 +119,7 @@ uint32_t ShadeColour(int32_t alpha, int32_t grey) {
     return colour << 8 | uint32_t(grey);
 }
 
+#if NIGHTFIRE_X87
 // sin or cos of `turns` times `scale` on the x87, as the original multiplies FSIN's and FCOS's unrounded results
 __declspec(naked) double ScaledSine(float turns, float scale) {
     __asm {
@@ -138,6 +140,16 @@ __declspec(naked) double ScaledCosine(float turns, float scale) {
         ret
     }
 }
+#else
+// sin or cos of `turns` times `scale`, the product rounded to double
+double ScaledSine(float turns, float scale) {
+    return SineTurns(turns) * scale;
+}
+
+double ScaledCosine(float turns, float scale) {
+    return CosineTurns(turns) * scale;
+}
+#endif
 
 }  // namespace
 

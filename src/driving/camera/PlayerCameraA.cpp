@@ -131,12 +131,6 @@ void Lerp4(Coord4 *v, const Coord4 *to, float t) {
     _mm_storeu_ps(&v->x, _mm_add_ps(_mm_mul_ps(_mm_set1_ps(t), _mm_sub_ps(_mm_loadu_ps(&to->x), from)), from));
 }
 
-// atan_turns answers in ST0 unrounded; read as the double it is rather than through its float declaration
-double AtanTurnsUnrounded(float y, float x) {
-    typedef double (*UnroundedTurnsFn)(float, float);
-    return reinterpret_cast<UnroundedTurnsFn>(&atan_turns)(y, x);
-}
-
 }  // namespace
 
 // ---- the free functions
@@ -1099,11 +1093,11 @@ bool RPlayerCamera::UpdateADTargetAngles(float *pitchOut, float *yawOut) {
         camState->unknown0B = 0;
 
     if (haveTarget && (camState->unknown0B || pitchFound)) {
-        double cameraTurns = AtanTurnsUnrounded(forward->z, forward->x);
+        double cameraTurns = AtanTurns(forward->z, forward->x);
         float cameraYaw = float(cameraTurns);
         if (cameraTurns < 0.0)
             cameraYaw = cameraYaw + 1.0f;
-        double targetYaw = AtanTurnsUnrounded(toTarget.z, toTarget.x);
+        double targetYaw = AtanTurns(toTarget.z, toTarget.x);
         if (targetYaw < 0.0)
             targetYaw = targetYaw + 1.0;
         float yaw = float(cameraYaw - targetYaw);

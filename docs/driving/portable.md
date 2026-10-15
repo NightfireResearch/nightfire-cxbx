@@ -40,7 +40,7 @@ two steps (see the roadmap below).
 
 1. Driving runs 100% standalone on Windows with no dependence on Driving.xbe; then the stack merges back to dev.
 2. Platform independence, still 32-bit x86 (level 1 above: Linux with dxvk-native and SDL3).
-3. 64-bit: pointer-sized layouts and offset-based loading of the data files.
+3. 64-bit: pointer-sized layouts and offset-based loading of the data files (audit and plan: [64-bit.md](64-bit.md)).
 4. Architecture independence (Apple Silicon and other non-x86 hosts): the x87 code as portable C, and graphics there.
 
 ## Order of work for level 1
@@ -295,36 +295,32 @@ PBondCar's boat and submarine bobbing, ECollision::ProcessSideA, BuildRotate, VU
 ProcAnimSway, RSky, the reflection map's vertices, the HUD's stylin wobble, the decal cylinder, REmp::Init and the
 muzzle flash size. A new call site of these functions needs the same check (the disassembly of both builds).
 
-**The sync tasks follow the wall clock.** SYNCTASK_run runs its tasks by LibTicks, the real 50 Hz timer's count,
-and IOModule::Update (the pads into the action queues) is one of them, every second count. A paced lockstep run on
-Windows renders at 50 frames a second, so that is every second tick there; on lavapipe (13 to 24 frames a second)
-it is every tick, and Linux m8 accelerate never sees the held trigger (its trace is m8 idle's; lloc's accelerate run
-parts from idle at tick 203). Counting simulation ticks in lockstep instead (SYNCTASK_add and SYNCTASK_run reading
-SndLockstep_TimerTick(LibTicks), as TIMER_gettick does) makes Linux m8 accelerate match lloc, but changes Windows:
-m2, m3 and m6 accelerate then differ from lbase (injected and standalone alike), because the baselines hold
-IOModule::Update's wall-clock timing. On Linux with it, the same three runs part from lloc at the same trace lines
-(78, 1002 and 101) and the other 13, m8 accelerate among them, are identical: the change makes the two platforms
-agree with each other, not with today's baselines. So it waits for a baseline regeneration and is not applied.
-
-**Unpaced lockstep is still not exact on Linux.** With dev's default `NIGHTFIRE_PRESENT_EVERY=50`, two Linux runs
-of m3 accelerate differ from each other and from lloc from tick 25 or 26, in the player's engine pitch (v2, v3),
-with and without the sync-task change; with `NIGHTFIRE_PRESENT_EVERY=1` three short runs agreed with lloc at tick
-25, and with 0 (paced) the 16 runs below match lloc. The scheduler's clock at the first Scheduler::Run varied by
-one between runs (485 or 486 ticks, so the half- and quarter-rate schedules' phase), but two runs with the same
-value still differed, so there is another leak. The Linux runs here are paced.
+**The sync tasks followed the wall clock.** SYNCTASK_run ran its tasks by LibTicks, the real 50 Hz timer's count,
+and IOModule::Update (the pads into the action queues) is one of them, every second count. On lavapipe (13 to 24
+frames a second) that was every tick, and Linux m8 accelerate never saw the held trigger (its trace was m8 idle's).
+dev's fix (729ebd3, docs/test-runner.md) counts simulation ticks under `NIGHTFIRE_SNDLOCKSTEP` with every task due
+at the first tick, and is exact against lbase without new baselines. It also closed the unpaced leak seen here
+(m3 accelerate parting from lloc at tick 25 or 26 with `NIGHTFIRE_PRESENT_EVERY=50`), so unpaced is the default for
+Linux runs as for Windows ones.
 
 **The exit crash** is gone with dev's StandaloneMain, which ends with HostExitProcess once the window closes;
 HostPosix's is `fflush(NULL)` then `_exit`, so no static destructor runs beside the game's thread (SIGINT, which
 SDL turns into the window closing, exits with status 0).
 
-| Linux, paced (`NIGHTFIRE_PRESENT_EVERY=0`), 16 runs to tick 9000 | Against lloc |
-|---|---|
-| m1-m7 idle and accelerate, m8 idle | identical: every line (62,158 to 1,345,342 lines a run); m3 accelerate (300,846) included |
-| m8 accelerate | the trace of m8 idle: the held trigger never reaches the car (the sync tasks, above) |
+After merging dev (portable maths, the sync-task fix), X87 on, 16 runs to tick 9000 each way:
 
-On the runner (slots 9-16), with the x87 changes and without the sync-task one: the injected build's full round
-against lbase (16 lockstep runs and the shadows) and `EXE='Release\driving_standalone_test.exe'`'s 16 lockstep runs
-are exact, the shadows clean.
+| Linux (WSL2, `RUNNER_HOST=wsl`, 3 slots) | Against lloc |
+|---|---|
+| unpaced (default `NIGHTFIRE_PRESENT_EVERY=50`) | all 16 identical: every line (62,158 to 1,345,342 lines a run), m8 accelerate included |
+| paced (`NIGHTFIRE_PRESENT_EVERY=0`) | all 16 identical |
+
+On the runner: the injected build's full round against lbase (16 lockstep runs and the shadows) and
+`EXE='Release\driving_standalone_test.exe'`'s 16 lockstep runs are exact, the shadows clean; with
+`-DNIGHTFIRE_X87=OFF` the standalone's 16 lockstep runs are exact against lbase_c.
+
+The lockstep harness's package-0 tools need the Windows build: CodeRetarget moves references in the PE image and
+X87Count reads MSVC's link map, so on Linux devtools/RetargetPosix.cpp stands in for both (`NIGHTFIRE_HEAP_PAD` and
+`NIGHTFIRE_X87COUNT` say they are unavailable and change nothing); `NIGHTFIRE_PARTICLE_ORDER` works.
 
 Frames are not comparable with the Windows baselines (another renderer, and 640x480 here), but match them by eye:
 the level, the cars, the HUD and its text, the Mission Failed screen.
@@ -332,5 +328,25 @@ the level, the cars, the HUD and its text, the Mission Failed screen.
 **Left**:
 - A run with a window (WSLg, or a Linux desktop with a GPU) - not tried: game windows on this PC need the user.
 - A Linux runner (step 5), with its own baselines.
-- Lockstep's input timing (the sync tasks, above) and unpaced lockstep's other leak on Linux, before a Linux runner
-  keeps baselines; m8 accelerate is the one Linux run that differs from lloc until then.
+- The Linux build with `-DNIGHTFIRE_X87=OFF`: not built or run yet (its baselines would be new, as lbase_c is).
+
+## The x87 option (15 October 2026)
+
+`-DNIGHTFIRE_X87=OFF` builds the driving targets with no x87 transcendentals: the 43 functions of
+[64-bit.md](64-bit.md) 4.1 (FSIN, FCOS, FPTAN, FPATAN, FYL2X and the runtime's `_CIacos`/`_CIasin`/`_CIpow`) each get
+a C form in double from `<math.h>`. It is ON by default, which leaves every target exactly as before: the injected
+build's shadows compare our code with the original's, and they need the original instructions. The 64-bit build
+will use OFF; the Linux build is tested with ON so far (its traces against lloc). The C forms sit next to the assembly in the same files, under `#if NIGHTFIRE_X87` (`X87.h` refuses to
+compile without the definition). The injection tags stay on the assembly. A caller that keeps an unrounded result
+calls `SineTurns`, `CosineTurns`, `TangentTurns` or `AtanTurns` (RealMath.h), which return double in both builds.
+The helpers that spell out MSVC's handling of such a result (step 4's follow-ups: `SineTurnsTimes`, `CosineTurnsTimes`,
+`MinusSineTurns`, `LogTimes`, `CosTurnsPlus`, `CrtAcosMinus`, `CrtPowTimes`) do the same operation in double with OFF,
+and `AsFloat` and `AsDouble` are plain conversions there.
+With OFF the particle systems' map also stops using emitter addresses as keys (original-quirks.md 1.3), so the frames
+no longer depend on the heap.
+
+OFF is a different game run, so it has its own runner baselines, `lbase_c_*` (build/baselines). Against `lbase` the
+simulation does not change: all 16 sound traces are identical to tick 9000. Frames differ in particles on missions
+1, 2, 5, 6 and 7, and by 43 pixels on mission 8 (64-bit.md 4.4). Compilers still emit some x87 code of their own: MSVC returns floats in ST0 and
+sometimes multiplies there, under Windows' 53-bit precision control. A Linux `-m32` build should therefore use
+`-msse2 -mfpmath=sse`, or set the precision control on each game thread (64-bit.md 4.2).

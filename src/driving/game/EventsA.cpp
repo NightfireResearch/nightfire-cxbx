@@ -187,6 +187,7 @@ int SixtiethsToSteps(int32_t time) {
     return Truncate(float(double(time * fgSimulation.stepsPerSecond) * kOneSixtieth));
 }
 
+#if NIGHTFIRE_X87
 // The C runtime's arc cosine (_CIacos at 0x001328d0, the game's own), which takes and answers on the x87 stack,
 // less value: the subtraction stays on the x87, before the arc cosine is rounded
 __declspec(naked) double CrtAcosMinus(float, double value) {
@@ -197,6 +198,12 @@ __declspec(naked) double CrtAcosMinus(float, double value) {
         ret
     }
 }
+#else
+// The C runtime's arc cosine (_CIacos at 0x001328d0, the game's own), less value
+double CrtAcosMinus(float x, double value) {
+    return Crt::CIacos(x) - value;
+}
+#endif
 
 } // namespace
 

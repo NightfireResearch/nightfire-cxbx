@@ -57,6 +57,7 @@ const Coord3 *SceneObjectVelocity(void *sceneObject) {
     return reinterpret_cast<VelocityFn *>(*static_cast<void **>(sceneObject))[13](sceneObject, 0);
 }
 
+#if NIGHTFIRE_X87
 // cos_fractionalangle(turns) + value: FCOS's result is not rounded before the add, which stays on the x87.
 __declspec(naked) double CosTurnsPlus(float turns, float value) {
     __asm {
@@ -67,6 +68,11 @@ __declspec(naked) double CosTurnsPlus(float turns, float value) {
         ret
     }
 }
+#else
+double CosTurnsPlus(float turns, float value) {
+    return CosineTurns(turns) + value;
+}
+#endif
 
 // The cheap distance the barrier and cylinder searches rank hits by: the larger of |dx| and |dz| plus a quarter of
 // the smaller (the smaller is |dx| unless |dx| > |dz|).

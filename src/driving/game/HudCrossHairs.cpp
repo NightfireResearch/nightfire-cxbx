@@ -28,6 +28,7 @@
 #include "../../common/xbeOverload.h"     // XbeVirtual
 
 #include <bit>
+#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -65,6 +66,7 @@ constexpr uint32_t kWhite = 0xfefefefe;
 const MATRIX4 kIdentity = {{{1.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 0.0f},
                             {0.0f, 0.0f, 0.0f, 1.0f}}};
 
+#if NIGHTFIRE_X87
 // FPATAN: atan2(y, x), as the x87 leaves it
 __declspec(naked) double X87Atan2(double, double) {
     __asm {
@@ -74,6 +76,11 @@ __declspec(naked) double X87Atan2(double, double) {
         ret
     }
 }
+#else
+double X87Atan2(double y, double x) {
+    return atan2(y, x);
+}
+#endif
 
 // A colour with its alpha scaled
 uint32_t ScaleAlpha(uint32_t colour, float scale) {

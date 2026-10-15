@@ -394,6 +394,9 @@ set(nf_driving_sources
   src/driving/devtools/SndStreamFileShadow.cpp
   src/driving/devtools/StaticInitDump.cpp
   src/driving/devtools/StandaloneTraps.cpp
+  src/driving/devtools/CodeRetarget.cpp
+  src/driving/devtools/HeapPad.cpp
+  src/driving/devtools/X87Count.cpp
   src/driving/Vtables.cpp
   src/common/xbeOriginal.cpp
   src/driving/engine/UFileLoader.cpp
@@ -920,9 +923,15 @@ set(nf_standalone_harness
   src/driving/devtools/Teleport.cpp
   src/driving/devtools/SndLockstep.cpp
   src/driving/devtools/SndCallTrace.cpp
+  src/driving/devtools/CodeRetarget.cpp
+  src/driving/devtools/HeapPad.cpp
+  src/driving/devtools/X87Count.cpp
   src/driving/devtools/CrashTest.cpp)
 if(NOT WIN32)
   list(REMOVE_ITEM nf_standalone_sources src/driving/platform/HostWin32.cpp ${nf_host_abi_sources})
+  # Moving code references reads the PE image and the x87 counts MSVC's link map
+  list(REMOVE_ITEM nf_standalone_harness src/driving/devtools/CodeRetarget.cpp src/driving/devtools/X87Count.cpp)
+  list(APPEND nf_standalone_harness src/driving/devtools/RetargetPosix.cpp)
   set_source_files_properties(${nf_standalone_sources} ${nf_standalone_harness} src/driving/standalone/NoDevtools.cpp
                               PROPERTIES COMPILE_OPTIONS "${NF_XBOX_ABI_OPTIONS}")
   add_library(drivinghost SHARED ${nf_host_abi_sources})
@@ -957,6 +966,23 @@ foreach(target driving_standalone driving_standalone_test)
     target_link_options(${target} PRIVATE /MAP)
   else()
     target_link_options(${target} PRIVATE -Wl,-Map,${target}.map)
+  endif()
+endforeach()
+# The driving engine's x87 code (docs/driving/64-bit.md 4.1, docs/driving/portable.md). On: the 43 functions
+# whose results come from FSIN, FCOS, FPTAN, FPATAN and the like stay the original instructions, so the injected
+# build's shadow tests and the lockstep baselines (lbase) stay exact. Off: each is C in double (<math.h>), as any
+# host without an x87 needs, and the particle systems are ordered by a number given to each emitter rather than by
+# its address (docs/driving/original-quirks.md); the baselines of that build are lbase_c. The injected build's
+# shadows of these functions differ with it off.
+option(NIGHTFIRE_X87 "Driving engine: keep the original x87 instructions (off: portable C)" ON)
+foreach(target drivinginject driving_standalone driving_standalone_test)
+  if(NOT TARGET ${target})   # drivinginject is Windows-only
+    continue()
+  endif()
+  if(NIGHTFIRE_X87)
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=1)
+  else()
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=0)
   endif()
 endforeach()
 if(WIN32)

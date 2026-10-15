@@ -14,25 +14,42 @@
 
 #include <stdint.h>
 
-// ---- trig in turns (x87; the results are FSIN/FCOS/FPATAN's own, so these are assembly)
+#include "X87.h"
+
+// ---- trig in turns (with NIGHTFIRE_X87 the original instructions, whose FSIN/FCOS/FPTAN/FPATAN results no C
+// can reproduce; without it <math.h> in double)
 float sin_fractionalangle(float turns);
 float cos_fractionalangle(float turns);
 void sincos_fractionalangle(const float *turns, float *sinOut, float *cosOut);
 float tan_fractionalangle(float turns);
 float atan_turns(float y, float x);
-// sin_fractionalangle and cos_fractionalangle leave FSIN's and FCOS's results unrounded in ST0: these read
-// them as doubles, for callers that keep computing with them as the original does
+// The same results before the caller's rounding to float, for callers that keep computing with them as the
+// original does. The x87 forms leave them unrounded in ST0, so these read them as doubles.
+#if NIGHTFIRE_X87
 inline double SineTurns(float turns) {
     return reinterpret_cast<double (*)(float)>(&sin_fractionalangle)(turns);
 }
 inline double CosineTurns(float turns) {
     return reinterpret_cast<double (*)(float)>(&cos_fractionalangle)(turns);
 }
+inline double TangentTurns(float turns) {
+    return reinterpret_cast<double (*)(float)>(&tan_fractionalangle)(turns);
+}
+inline double AtanTurns(float y, float x) {
+    return reinterpret_cast<double (*)(float, float)>(&atan_turns)(y, x);
+}
+#else
+double SineTurns(float turns);
+double CosineTurns(float turns);
+double TangentTurns(float turns);
+double AtanTurns(float y, float x);
+#endif
+
 // What a caller does with such a result is the compiler's choice, and MSVC and clang choose differently: MSVC
 // rounds it where the code stores a float (directly, or through a double), and otherwise multiplies, adds or
 // subtracts on the x87 before rounding, or rounds it to a double first; clang keeps the x87's value for whatever
 // follows in double. Where the two differ, the call site spells out MSVC's choice with these (names ours). The
-// products and the difference are rounded once, as on the x87:
+// products and the difference are rounded once, as on the x87 (without NIGHTFIRE_X87, in double like the trig):
 double SineTurnsTimes(float turns, double factor);
 double CosineTurnsTimes(float turns, double factor);
 double MinusSineTurns(double value, float turns);   // value - sin(turns)

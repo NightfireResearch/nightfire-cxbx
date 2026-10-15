@@ -105,6 +105,7 @@ const TargetCompare kSortCompares[] = {
     WTargetPicker::CompareDistFromCamera,
 };
 
+#if NIGHTFIRE_X87
 // FPTAN: the x87's own tangent, which keeps 64 bits whatever the precision.
 __declspec(naked) float Tangent(double radians) {
     __asm {
@@ -114,6 +115,12 @@ __declspec(naked) float Tangent(double radians) {
         ret
     }
 }
+#else
+// The tangent, rounded once by the float return.
+float Tangent(double radians) {
+    return float(tan(radians));
+}
+#endif
 
 // The player's vehicle's body (always a rigid body)
 const RigidBody *PlayerBody() {

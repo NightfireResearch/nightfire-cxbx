@@ -124,12 +124,6 @@ constexpr int kSurfaceDrop12 = 12;
 constexpr int kVoiceDelayMin = 30;
 constexpr int kSpawnRoadEnd = 1;            // special roads start at their segment's end node
 
-// atan_turns answers in ST0 unrounded; read as the double it is rather than through its float declaration
-typedef double (*UnroundedTurnsFn)(float y, float x);
-double AtanTurns(float y, float x) {
-    return reinterpret_cast<UnroundedTurnsFn>(&atan_turns)(y, x);
-}
-
 Coord4 ToCoord4(const Coord3 &v) {
     Coord4 out;
     out.x = v.x;

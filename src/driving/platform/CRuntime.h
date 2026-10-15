@@ -83,11 +83,18 @@ Lconv* localeconv();                                                         // 
 void qsort(void *base, size_t count, size_t width, CompareFn compare);       // 0x00132db0
 
 // ---- the x87 (CRuntime.cpp). The _CI functions take their operands and answer on the FPU stack: acos and asin
-//      the value in ST0, pow the base in ST1 and the exponent in ST0. _clearfp answers the x87 status, abstracted.
+//      the value in ST0, pow the base in ST1 and the exponent in ST0. Without NIGHTFIRE_X87 they are C functions
+//      taking and answering doubles. _clearfp answers the x87 status, abstracted.
 
+#if NIGHTFIRE_X87
 void CIacos();                                                               // 0x001328d0
 void CIasin();                                                               // 0x00133f94
 void CIpow();                                                                // 0x00132a94
+#else
+double CIacos(double x);
+double CIasin(double x);
+double CIpow(double x, double y);
+#endif
 unsigned _clearfp();                                                         // 0x00133c9e
 
 // ---- formatting (CRuntimeFormat.cpp)

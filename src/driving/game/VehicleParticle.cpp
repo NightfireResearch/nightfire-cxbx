@@ -153,6 +153,30 @@ VehicleParticleSet *fgVehicleParticles;
 uint32_t VehicleParticleUpdateTick;
 // XBE_GLOBAL(0x001c50d0, 1)
 bool VehicleSparksEnabled = true;
+#if !NIGHTFIRE_X87
+// The objects UpdateCar put in the set since the last UpdateAll, in that order (ours; see UpdateAll). Past
+// kMaxInOrder, UpdateAll falls back to the set's order.
+static const int kMaxInOrder = 128;
+static RVehicleParticle *UpdatedInOrder[kMaxInOrder];
+static int UpdatedCount;
+static bool UpdatedOverflow;
+
+static void NoteUpdated(RVehicleParticle *object) {
+    if (UpdatedCount < kMaxInOrder)
+        UpdatedInOrder[UpdatedCount++] = object;
+    else
+        UpdatedOverflow = true;
+}
+
+static void ForgetUpdated(RVehicleParticle *object) {
+    for (int n = 0; n < UpdatedCount; n++)
+        if (UpdatedInOrder[n] == object) {
+            for (UpdatedCount--; n < UpdatedCount; n++)
+                UpdatedInOrder[n] = UpdatedInOrder[n + 1];
+            return;
+        }
+}
+#endif
 
 namespace {
 
@@ -657,6 +681,9 @@ void RVehicleParticle::Destruct() {
     OperatorDelete(emitters);
     emitters = NULL;
     fgVehicleParticles->EraseKey(this);
+#if !NIGHTFIRE_X87
+    ForgetUpdated(this);
+#endif
 }
 
 // FUNC_AT(0x000a7ac0)
@@ -750,6 +777,10 @@ void RVehicleParticle::UpdateCar(bool active) {
     }
     VehicleParticleSet::InsertResult inserted;
     fgVehicleParticles->InsertUnique(&inserted, this);
+#if !NIGHTFIRE_X87
+    if (inserted.inserted)
+        NoteUpdated(this);
+#endif
 }
 
 // FUNC_AT(0x000a8120)
@@ -757,12 +788,33 @@ void RVehicleParticle::UpdateAll() {
     if (fgSimulation.stepCount == VehicleParticleUpdateTick)
         return;
     VehicleParticleUpdateTick = GameTick;   // the game tick, though it is compared with the step count
+#if NIGHTFIRE_X87
     VehicleParticleSet *set = fgVehicleParticles;
     for (VehicleParticleNode *node = set->Begin(); node != fgVehicleParticles->End(); node = Next(node))
         for (int i = 0; i < kSystemCount; i++) {
             RParticleSystem *system = node->value->systems[i];
             system->vtable->update(system, 0, 1);
         }
+#else
+    // Deliberately not the set's order, the objects' addresses, which spawns their particles into the shared cache
+    // in the heap's order: the order UpdateCar put them there (docs/driving/original-quirks.md).
+    if (!UpdatedOverflow) {
+        for (int n = 0; n < UpdatedCount; n++)
+            for (int i = 0; i < kSystemCount; i++) {
+                RParticleSystem *system = UpdatedInOrder[n]->systems[i];
+                system->vtable->update(system, 0, 1);
+            }
+    } else {
+        for (VehicleParticleNode *node = fgVehicleParticles->Begin(); node != fgVehicleParticles->End();
+             node = Next(node))
+            for (int i = 0; i < kSystemCount; i++) {
+                RParticleSystem *system = node->value->systems[i];
+                system->vtable->update(system, 0, 1);
+            }
+    }
+    UpdatedCount = 0;
+    UpdatedOverflow = false;
+#endif
     VehicleParticleSet::Iterator erased;
     fgVehicleParticles->EraseRange(&erased, VehicleParticleSet::Iterator{fgVehicleParticles->Begin()},
                                    VehicleParticleSet::Iterator{fgVehicleParticles->End()});
@@ -813,5 +865,9 @@ void RVehicleParticle::Kill() {
         fgVehicleParticles->Destruct();
         OperatorDelete(fgVehicleParticles);
         fgVehicleParticles = NULL;
+#if !NIGHTFIRE_X87
+        UpdatedCount = 0;
+        UpdatedOverflow = false;
+#endif
     }
 }

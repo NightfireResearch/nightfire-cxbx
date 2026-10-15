@@ -8,6 +8,11 @@ differ.
 maxtick defaults to 9000, where tools/runner/round.sh's lockstep runs stop. A shorter run (round.sh's quick rounds)
 compares as a prefix of a longer baseline: frames are paired by the tick drive.log says each was dumped at, and
 only those at or before maxtick count. Without a drive.log, frames pair in order.
+
+    python tools/runner/compare.py --sound build/baselines/lloc_m1_idle build/remote/lwsl_m1_idle
+
+--sound compares the sound traces only: for a pair whose frames cannot match - a Linux build against a Windows
+baseline (another renderer) made on the same machine - but whose simulation should.
 """
 import glob
 import os
@@ -84,12 +89,15 @@ def compare_traces(base, new, maxtick):
 
 
 def main():
-    if len(sys.argv) < 3:
+    args = sys.argv[1:]
+    sound_only = "--sound" in args
+    args = [a for a in args if a != "--sound"]
+    if len(args) < 2:
         print(__doc__)
         return 2
-    base, new = sys.argv[1], sys.argv[2]
-    maxtick = int(sys.argv[3]) if len(sys.argv) > 3 else 9000
-    frame_text, frames_same = compare_frames(base, new, maxtick)
+    base, new = args[0], args[1]
+    maxtick = int(args[2]) if len(args) > 2 else 9000
+    frame_text, frames_same = ("frames not compared", True) if sound_only else compare_frames(base, new, maxtick)
     trace_text, traces_same, context = compare_traces(base, new, maxtick)
     print("%s: %s; %s" % (os.path.basename(os.path.normpath(new)), frame_text, trace_text))
     for line in context:
