@@ -30,10 +30,11 @@ bool HostWindow_Open(int width, int height, const char *title) {
         fflush(stdout);
         return false;
     }
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(NIGHTFIRE_GFX_SDLGPU) || defined(__APPLE__)
+    // Direct3D 9 presents into the window as it is; SDL's Metal driver makes a Metal view of it when it claims it
     Window = SDL_CreateWindow(title, width, height, SDL_WINDOW_RESIZABLE);
 #else
-    // D3D9 is dxvk-native's, which presents through a Vulkan surface of this window
+    // Presented through a Vulkan surface of this window: dxvk-native's D3D9, or SDL's GPU API on its Vulkan driver
     Window = SDL_CreateWindow(title, width, height, SDL_WINDOW_RESIZABLE | SDL_WINDOW_VULKAN);
 #endif
     if (Window == NULL) {
@@ -85,6 +86,10 @@ void HostWindow_SetClientSize(uint32_t width, uint32_t height) {
         return;
     ClientSize size = { (int)width, (int)height };
     SDL_RunOnMainThread(ApplyClientSize, &size, true);
+}
+
+SDL_Window *HostWindowSdl_Window(void) {
+    return Window;
 }
 
 bool HostWindowSdl_HasKeyboard(void) {

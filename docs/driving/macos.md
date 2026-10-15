@@ -1,7 +1,8 @@
 # The driving engine on Apple Silicon macOS
 
-Status: plan (15 October 2026), step 4 of the roadmap in [portable.md](portable.md). Research and design only:
-nothing here is built yet. It follows the 64-bit work ([64-bit.md](64-bit.md)), which it assumes is finished:
+Status: plan (15 October 2026), step 4 of the roadmap in [portable.md](portable.md). Done on x86: M0 (the portable
+SSE header, 3.1), M3, G1 and G2 ([sdl-gpu.md](sdl-gpu.md)), and what of G3 runs without a Mac. It follows the 64-bit work ([64-bit.md](64-bit.md)), which
+it assumes is finished:
 packages 3a-5, 8 and 9 (the 64-bit standalone executable exact in lockstep against `lbase_c`) and 10 (Linux
 x86-64, LP64). The macOS branch for an agent running on the Mac is drafted from this once those land.
 
@@ -119,6 +120,24 @@ What changes, all in platform/:
 - **Build arm64, not arm64e.** Without pointer authentication the game's tables of raw function addresses
   (`XbeVirtual`, 265 uses, the vtable constants) are called as they are.
 
+**Done on x86 (package M1, 15 October 2026; 64-bit.md 7.11).** `NIGHTFIRE_WINDOW_BASE` (CMake, 0 by default) sets
+`kGameWindowBase`; with `0x100000000` the image is linked at base + 4 MB, null is the word 0 both ways, the window's
+first 64 KB stays free, the host's page and reservation ranges are window offsets, and the arena's set-up stops the
+game if the image is outside the window. Windows x64 (runner) is exact against `lbase_c` in all 16 lockstep runs with
+the base at 4 GB and at 0, and Linux x86-64 (this PC's WSL2) 16/16 exact against `lwsl_c`, the i386 portable-C
+build's baselines, with either base. What the Mac needs beyond the plan above, found there:
+
+- **The game's thread stacks must be in the window**: its data holds stack addresses (a sprite's vertex arrays go into
+  an EAGL request's `Ptr32` parameters). HostPosix gives every thread it starts a stack mapped in the window
+  (`pthread_attr_setstack`), which Darwin takes as Linux does; the first thread runs no game code.
+- **A resolver's answer may be a number** (event ids for the animation banks' `event.` names): `AnswerTo32` keeps
+  values below 4 GB as they are when the window is above it.
+- **A `Ptr32` through `...` is its word**; one site (a `Crt::sprintf`), found by making the class non-trivial.
+- **Toolchain**: on Linux the executable is `-fPIE` code linked `-no-pie` at the fixed address, with the PIC start-up
+  files and lld's `--no-relax` (it turns GOT loads into 32-bit immediates). On the Mac the executable is PIE anyway
+  and slides: the window base is the constant 4 GB, so the image must land within 4 GB of it - the start-up check
+  says so if it does not (then the base becomes a variable, as planned).
+
 ## 3. ABI and what is still x86
 
 **One ABI.** The Linux port compiled the game for `i686-pc-windows-gnu-elf` because 32-bit x86 has `__thiscall`,
@@ -148,6 +167,49 @@ are allowed.
 | `_mm_empty` | GameLoop.cpp, EventsD.cpp | nothing (no MMX) |
 | `fldcw` (Windows' x87 control word on each thread) | HostPosix.cpp | x86 only |
 | `_BitScan*64` | GameWindow.cpp (MSVC only) | `__builtin_clzll`/`ctzll` already the non-MSVC path |
+
+### 3.1 The portable SSE header (package M0, done 15 October 2026)
+
+- **Sse.h** (src/driving/platform) is the one place the game's ports get their x86 intrinsics from: the 30 `_mm_*`
+  intrinsics the driving engine uses outside devtools, `__rdtsc`, `__movsd`, `__movsb` (`_mm_getcsr`/`_mm_setcsr`
+  are devtools-only and stay out). `NIGHTFIRE_SSE` (CMake option, on by default, forced off when the target is
+  arm/aarch64) chooses: 1 includes the system headers, so the game's code compiles to exactly what it did; 0 maps
+  each name by macro onto **SseC.h**'s C forms (`namespace sse`). On x86 the system headers are included first even
+  with 0, so a system header that pulls in `<xmmintrin.h>` later adds nothing the macros would clash with; and on
+  x86 `__rdtsc`, `__movsd` and `__movsb` stay the instructions with 0 (winnt.h declares them again, which a macro
+  would break; none of them feeds the simulation, and sse_test checks their C forms).
+- **The C forms** keep SSE's results: lane-wise IEEE single operations, then SSE's NaN choice made explicitly
+  (an operand's NaN quieted, the first's when both are NaN, otherwise the negative default NaN `0xffc00000`), which
+  ARM would otherwise answer differently; `SQRTSS` of a negative gives the default NaN; `CVTTSS2SI`/`CVTSS2SI`
+  give `0x80000000` out of range (round to nearest even spelled out, so no libm and no host rounding mode);
+  REP MOVSD/MOVSB copy upwards element by element; `__rdtsc` counts 733,333,333 Hz from `std::chrono::steady_clock`
+  (as XboxTimer.cpp does on Windows); `_mm_empty` is nothing.
+- **RSQRTSS** is a table: the runner's Intel i7-9700K reads only the exponent's parity and the mantissa's top 10
+  bits (this PC's AMD reads 12), and every two exponent steps halve the result exactly; zero and denormals give
+  infinity of their sign, other negatives the default NaN, +infinity +0. `sse_test --rsqrt-table` (the devtools
+  target of src/driving/devtools/SseTest.cpp) finds the bits by sweep, checks the exponent rule on every normal
+  input and prints SseRsqrtTable.h (2 x 1024 words). The committed table is the runner's.
+- **Tests.** `sse_test` compares every C form with the instruction: all 2^32 inputs for `RSQRTSS`, `SQRTSS`,
+  `CVTTSS2SI`, `CVTSS2SI` and `CVTSI2SS`; 6,034^2 operand pairs (edges: zeros, denormals, limits, infinities,
+  quiet and signalling NaNs of both signs, integer limits, half-way values; plus random) through the arithmetic in
+  every lane; every shuffle selector; loads, stores, sets, `CVTDQ2PS`, overlapping string moves. On the runner, x64
+  and Win32 MSVC builds: 22,494,486,810 checks, 0 differ. 3,104 lanes are counted apart: an addition or
+  multiplication of two NaNs, where MSVC swapped the instruction's operands (it treats them as commutative), so
+  the hardware gave the second NaN; the compiled game is subject to the same choice, so the C form cannot be "more
+  exact" there. On this PC (AMD, clang x86-64, with an AMD table) also 0 differ; mutations (a positive default NaN,
+  ties rounded away from zero) are caught.
+- **The builds.** The Win32 targets (driving, drivinginject, driving_standalone, driving_standalone_test) and the
+  x64 standalone ones compile to the same objects as before: every section of every object identical, bytes and
+  relocations (the object comparison of the 64-bit packages). The Linux i386 build uses REP MOVSD/MOVSB from Sse.h
+  now (src/common/linux/intrin.h no longer has them). **The Windows x64 build with `-DNIGHTFIRE_SSE=OFF`** (every
+  SSE intrinsic of the game as C, RSQRTSS from the table) on the runner: 16 of 16 lockstep runs exact against
+  `lbase_c` (round m0ssec: 0 px differ, sound traces identical to tick 9000). Linux x86-64 with the C forms forced
+  on waits for package M1/10's preset; with `-DNIGHTFIRE_SSE=OFF` it compiles cleanly file by file already (clang
+  x86_64 `-fsyntax-only` on the users of Sse.h). Its lockstep comparison has to be on one machine: in this PC's WSL
+  against WSL baselines made the same way (`lwsl_c`), with this PC's AMD table in place of the Intel one (print it
+  with `sse_test --rsqrt-table` there), since `lbase_c` is the runner's Intel.
+- **Left for the Mac.** Nothing in M0: on arm64 the option is forced off. The aarch64 compile of the game itself is
+  package M2's probe.
 
 **Memory ordering.** x86 is TSO; arm64 is weakly ordered. The game's thread hand-offs (the sound thread, the 100 Hz
 server, the multimedia timer, 39 `volatile`s in platform/, sound/snd/Platform, the D3D backend) were written for
@@ -254,14 +316,14 @@ the runner) before or beside the last 64-bit packages; A1-A4 and G3 run on the M
 
 | # | Package | Where | Size | Test |
 |---|---|---|---|---|
-| M0 | **Portable SSE**: platform/Sse.h with the 34 intrinsics the game uses (x86: the intrinsics themselves; elsewhere: C with SSE's exact semantics); RSQRTSS by a table generated on the runner from its own instruction (the input bits it depends on found by sweep); `Truncate`/`RoundToInt` in C; `__rdtsc` as a 733 MHz host cycle count; `__movsd`, `_mm_empty`, `fldcw` guarded | x86 | M | 32-bit and x64 MSVC: per-function asm identical; a devtools test of the C forms against the instructions (random and edge inputs, all four RSQRTSS exponent parities); Linux x86-64 built with the C forms forced on: lockstep exact against `lbase_c` on the runner |
-| M1 | **A non-zero window base**: `kGameWindowBase` configurable, null as the word 0, the window [4 GB, 8 GB) on Linux x86-64 (executable linked into it) and Windows x64 (`/BASE:0x140000000` is already there); AnimMisc's pointer-as-float through the word | x86 | S-M | `gamewindow_test`; lockstep exact against `lbase_c` with the base at 4 GB |
+| M0 | **Done 15 Oct 2026 (3.1)**: asm identical on Win32 and x64 MSVC; sse_test 0 differ on the runner (x64, Win32); x64 with `-DNIGHTFIRE_SSE=OFF` 16/16 exact against `lbase_c`; Linux x86-64 forced-C lockstep waits for M1. **Portable SSE**: platform/Sse.h with the 34 intrinsics the game uses (x86: the intrinsics themselves; elsewhere: C with SSE's exact semantics); RSQRTSS by a table generated on the runner from its own instruction (the input bits it depends on found by sweep); `Truncate`/`RoundToInt` in C; `__rdtsc` as a 733 MHz host cycle count; `__movsd`, `_mm_empty`, `fldcw` guarded | x86 | M | 32-bit and x64 MSVC: per-function asm identical; a devtools test of the C forms against the instructions (random and edge inputs, all four RSQRTSS exponent parities); Linux x86-64 built with the C forms forced on: lockstep exact against `lbase_c` on the runner |
+| M1 | **A non-zero window base**: `kGameWindowBase` configurable, null as the word 0, the window [4 GB, 8 GB) on Linux x86-64 (executable linked into it) and Windows x64 (`/BASE:0x140000000` is already there); AnimMisc's pointer-as-float through the word. **Done 15 October 2026** with 64-bit package 10 (64-bit.md 7.11, section 2 above): `NIGHTFIRE_WINDOW_BASE`, thread stacks in the window, resolver numbers | x86 | S-M | `gamewindow_test`; lockstep exact against `lbase_c` with the base at 4 GB. **Passed**: gamewindow_test 0 differ on Windows x64 and Linux x86-64, both bases; Windows x64 16/16 exact against `lbase_c` at 4 GB and at 0; Linux x86-64 16/16 exact against `lwsl_c` at 4 GB and at 0 |
 | M2 | **FP and thread audit**: `-ffp-contract=off` in the non-MSVC builds; an arm64 compile probe in the nf-cross image (`--target=aarch64-linux-gnu`, Ubuntu's arm64 headers) for both standalone targets, with the fused-op count; UBSan float-cast-overflow and ThreadSanitizer lockstep runs on Linux x86-64; the races and conversions fixed. **In progress** (15 Oct 2026): `-ffp-contract=off` for every non-MSVC target (CMakeLists.txt). On Linux i386 it changes no operation, only instruction order, in 167 of 7,115 functions (no FMA there), and m1/m2 lockstep to tick 4500 are identical to the build without it (traces and frames). `NIGHTFIRE_SANITIZE=<sanitizer>` (cache option) adds `-fsanitize` everywhere. An `nf-cross-arm64` image (nf-cross plus g++-aarch64-linux-gnu, lld) is ready for the probe. The probe and the sanitizer runs wait for M1's Linux x86-64 build | x86 | M | probe: 0 errors, 0 fused ops; UBSan/TSan clean; lockstep exact against `lbase_c` |
 | M3 | **Trace redirection without code patching** (6). **Done** 15 Oct 2026: SndCallTraceRedirect.h, a forced include on driving_standalone_test's sources outside sound/snd (a per-source option conditional on the target, CMakeLists.txt); the standalone build's call-site moving (PE and `dl_iterate_phdr`) removed. One difference by design: a call to an entry the linker folded with another (SNDSYS_restore/SNDSYSI_exithook under MSVC) is now traced, where the moving left it alone; no run reaches it | x86 | S | traces identical to the patched ones on Windows and Linux: runner, 32-bit X87=OFF 16/16 and x64 16/16 exact against `lbase_c` (frames and traces), drivinginject (unchanged mechanism) 8/8 against `lbase`; WSL2 Linux i386 (lavapipe, X87=ON), the patched build (60f3014) against this one: m1/m2 idle and accelerating to tick 4500, traces and frames identical |
-| G1 | **SPIR-V lowering** of shaderBuilder's graph (`NoContraction`, `Fma` for NV2A MADs), the fixed-function shaders (pretransformed, immediate, movie quad), FXAA's SPIR-V | x86 | M | `spirv-val` on every program the 16 runs create (a dump mode like shadercheck's) |
-| G2 | **The SDL GPU backend** behind d3d9Backend.h (`NIGHTFIRE_GFX=sdlgpu`): pipeline and sampler caches, formats, streams and the ring buffer, palettes, YUV, render targets, readback for the dumps, gamma, offscreen mode for lockstep; on Windows/Linux through SDL's Vulkan backend | x86 | L | lockstep sound traces unchanged (the renderer is below them); frames against the D3D9 build's by eye and by a pixel-difference threshold; two runs identical |
+| G1 | **SPIR-V lowering** of shaderBuilder's graph (`NoContraction`, `Fma` for NV2A MADs), the fixed-function shaders (pretransformed, immediate, movie quad), FXAA's SPIR-V | x86 | M | `spirv-val` on every program the 16 runs create (a dump mode like shadercheck's) **Done 16 Oct 2026** ([sdl-gpu.md](sdl-gpu.md)): 99 programs from the logs and Driving.xbe (178 modules with point-sprite variants) and every module a mission-1 run creates (47) pass `spirv-val --target-env vulkan1.0`; the D3D9 tokens of all 99 unchanged by the shared `ShaderBuilder::Fuse`; `Fma` where the D3D9 lowering writes a mad (the compiler-fusion rule), not only NV2A MADs |
+| G2 | **The SDL GPU backend** behind d3d9Backend.h (`NIGHTFIRE_GFX=sdlgpu`): pipeline and sampler caches, formats, streams and the ring buffer, palettes, YUV, render targets, readback for the dumps, gamma, offscreen mode for lockstep; on Windows/Linux through SDL's Vulkan backend | x86 | L | lockstep sound traces unchanged (the renderer is below them); frames against the D3D9 build's by eye and by a pixel-difference threshold; two runs identical **Done 16 Oct 2026** ([sdl-gpu.md](sdl-gpu.md)): Windows x64 on the runner (Vulkan, RTX 3090): 16/16 lockstep runs with sound traces identical to `lbase_c` to tick 9000, frames within 1-17k px of the D3D9 build over 16 frames (by eye: the same), a second round 0 px different; Linux i386 in WSL2 (lavapipe): m1/m2 idle and accelerating traces identical to `lwsl`, two runs identical. Windowed presenting is untested (needs a window) |
 | A1 | **macOS bring-up**: the `macos-arm64` preset; HostPosix's Darwin rows (5); xboxPath/launchInfo; CrashReportPosix for arm64; build_ffmpeg.sh macos-arm64; `kGameWindowBase` 0x100000000 with its start-up check | Mac | M | `gamewindow_test` (1,000,000 operations, everything inside the window); the test executable boots to the first tick headless |
-| G3 | **The Metal leg**: SPIRV-Cross to MSL with the `math_mode(safe)` prefix, Apple formats (D32F_S8, swizzles), swapchain on the main thread if needed | Mac | S-M | the first frames dumped; two runs identical |
+| G3 | **The Metal leg**: SPIRV-Cross to MSL with the `math_mode(safe)` prefix, Apple formats (D32F_S8, swizzles), swapchain on the main thread if needed. **Prepared on x86 (16 October 2026, [sdl-gpu.md](sdl-gpu.md) "G3 on x86")**: SPIRV-Cross `vulkan-sdk-1.4.363.0` by FetchContent in every sdlgpu build; the backend hands SDL MSL when the device takes it (SDL's slots kept, the pragma first, NoContraction as SPIRV-Cross's fma helpers, the multiply's -0 fixed); `spirvmsl` checks all 178 modules (0 differ); vertex streams padded to 4-byte elements and strides on every host (runner x64 Vulkan 16/16: traces identical to `lbase_c`, frames 0 px against G2's); no `SDL_WINDOW_VULKAN` on macOS; formats and the swapchain needed nothing. **Left for the Mac**: compiling the MSL (no Metal compiler on x86), the first frames, two runs identical, the helpers' speed - the checklist in sdl-gpu.md | Mac | S | the first frames dumped; two runs identical |
 | A2 | **Mac test tooling**: drive_game.sh/remote.sh on macOS, local slots, `lmac_c` baselines, the comparison with `lbase_c` traces | Mac | S | 16 runs to tick 9000 twice, identical; the trace comparison reported |
 | A3 | **Play**: windowed SDL/Metal, CoreAudio, pads (background events), keyboard; the user's playing and listening check | Mac | S | the user |
 | A4 | (only if A2's traces differ from `lbase_c`) **Portable libm**: correctly rounded functions for the C trig on every host; new `lbase_c`/`lloc_c`/`lmac_c` once | x86 + Mac | M | traces identical across the runner, Linux and the Mac |
@@ -309,7 +371,7 @@ Read this file, docs/driving/64-bit.md, docs/driving/portable.md, docs/test-runn
 branch (driving-macos), committing as you go and pushing it when a package passes its test; the user merges.
 Start with section 8's first steps. Packages, in order: whichever of M0-M3, G1 and G2 are not marked done in section 7
 (they can run on the Mac too - the x86-only tests become "x64 build unchanged" checks you cannot run there, so note
-them for the PC), then A1, G3, A2, A3. The bar: `driving_standalone_test` runs all 16 lockstep runs headless on the
+them for the PC), then A1, G3 (what is left of it: sdl-gpu.md, "For the agent on the Mac"), A2, A3. The bar: `driving_standalone_test` runs all 16 lockstep runs headless on the
 Mac, twice, identical to each other; `lmac_c` baselines made from them; the sound-trace comparison with `lbase_c`
 reported; then a windowed run for the user (A3) only when the user asks. Keep the Windows, Linux and x64 builds
 building (CI). Never open a window while the user works unless asked.

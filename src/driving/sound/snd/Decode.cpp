@@ -5,7 +5,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <xmmintrin.h>
+#include "../../platform/Sse.h"
 
 #ifdef _MSC_VER
 #pragma float_control(precise, on)

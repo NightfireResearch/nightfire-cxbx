@@ -27,7 +27,7 @@ CRASHTEST_NOINLINE void FaultCaller(int value) {
     printf("[crashtest] no fault\n");
 }
 
-unsigned long __stdcall CrashThread(void *) {
+HostDword __stdcall CrashThread(void *) {
     HostSleep(g_delayMs);
     printf("[crashtest] writing to 0x10 after %lu ms\n", g_delayMs);
     fflush(stdout);

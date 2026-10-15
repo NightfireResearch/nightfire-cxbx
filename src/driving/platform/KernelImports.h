@@ -7,17 +7,19 @@
 
 #include <stdint.h>
 
+#include "Host.h"   // HostDword, HostLong: the kernel's ULONG and LONG
+
 void __stdcall KernelRtlInitializeCriticalSection(void *section);                                // ordinal 291
 void __stdcall KernelRtlEnterCriticalSection(void *section);                                     // 277
 void __stdcall KernelRtlLeaveCriticalSection(void *section);                                     // 294
 void __stdcall KernelKeBugCheck(uint32_t code);                                                  // 95
-void *__stdcall KernelMmAllocateContiguousMemoryEx(unsigned long size, unsigned long lowest, unsigned long highest,
-                                                   unsigned long alignment, unsigned long protect);   // 166
+void *__stdcall KernelMmAllocateContiguousMemoryEx(HostDword size, HostDword lowest, HostDword highest,
+                                                   HostDword alignment, HostDword protect);   // 166
 void __stdcall KernelMmFreeContiguousMemory(void *base);                                         // 171
-long __stdcall KernelExQueryNonVolatileSetting(unsigned long index, unsigned long *type, void *value,
-                                               unsigned long length, unsigned long *resultLength);   // 24
+HostLong __stdcall KernelExQueryNonVolatileSetting(HostDword index, HostDword *type, void *value,
+                                                   HostDword length, HostDword *resultLength);   // 24
 volatile int *KernelKeTickCount();                                                               // 156
-unsigned long *KernelHalBootSMCVideoMode();                                                      // 356
+HostDword *KernelHalBootSMCVideoMode();                                                      // 356
 
 // What the kernel does before the game starts: the standalone build's starts its millisecond count (the loader's
 // kernel has started its own)

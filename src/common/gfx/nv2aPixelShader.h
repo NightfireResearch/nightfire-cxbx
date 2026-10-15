@@ -54,6 +54,12 @@ void Nv2aPixelShader_Analyse(const uint32_t def[60], Nv2aPixelShaderInfo *info);
 bool Nv2aPixelShader_Translate(const uint32_t def[60], std::vector<uint32_t> *bytecode, Nv2aPixelShaderInfo *info,
                                char *error, size_t errorSize);
 
+// The same translation as a SPIR-V module (shaderSpirv.h).
+struct ShaderSpirvOptions;
+struct ShaderSpirvInfo;
+bool Nv2aPixelShader_TranslateSpirv(const uint32_t def[60], const ShaderSpirvOptions &options, std::vector<uint32_t> *words,
+                                    Nv2aPixelShaderInfo *info, ShaderSpirvInfo *spirvInfo, char *error, size_t errorSize);
+
 // The factors a program draws with: each stage's C0 and C1, then the final combiner's two. LoadFactors is
 // what setting the shader does - the definition's literals; SetConstant is what D3DDevice_SetPixelShaderConstant
 // does afterwards - one float4, packed to bytes as the original packs it, written into every factor whose

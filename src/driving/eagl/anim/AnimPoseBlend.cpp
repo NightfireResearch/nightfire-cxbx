@@ -8,7 +8,6 @@
 
 #include <bit>
 #include <string.h>
-#include <xmmintrin.h>
 
 #ifdef _MSC_VER
 #pragma float_control(precise, on)

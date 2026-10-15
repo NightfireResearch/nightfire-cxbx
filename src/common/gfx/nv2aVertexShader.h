@@ -60,4 +60,11 @@ struct Nv2aVertexShaderInfo {
 bool Nv2aVertexShader_Translate(const uint8_t *function, uint32_t normPackedInputs, const uint8_t inputComponents[16],
                                 std::vector<uint32_t> *bytecode, Nv2aVertexShaderInfo *info, char *error, size_t errorSize);
 
+// The same translation as a SPIR-V module (shaderSpirv.h), with options.inputKind saying how each input arrives.
+struct ShaderSpirvOptions;
+struct ShaderSpirvInfo;
+bool Nv2aVertexShader_TranslateSpirv(const uint8_t *function, uint32_t normPackedInputs, const uint8_t inputComponents[16],
+                                     const ShaderSpirvOptions &options, std::vector<uint32_t> *words,
+                                     Nv2aVertexShaderInfo *info, ShaderSpirvInfo *spirvInfo, char *error, size_t errorSize);
+
 #endif // COMMON_GFX_NV2AVERTEXSHADER_H_

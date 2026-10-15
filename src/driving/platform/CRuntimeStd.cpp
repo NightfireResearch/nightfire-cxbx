@@ -72,7 +72,7 @@ InitAtExit TheInitAtExit;
 // XBE_GLOBAL(0x002447b8, 0x70)
 CriticalSection LibraryLocks[4];
 // XBE_GLOBAL(0x001d8720, 4)
-volatile long InitLocksCount = -1;         // _Init_locks::_Init_cnt
+volatile HostLong InitLocksCount = -1;         // _Init_locks::_Init_cnt
 // XBE_GLOBAL(0x0024482c, 4)
 FacetNode *FacetList;                      // _Fac_head
 // XBE_GLOBAL(0x00244830, 4)

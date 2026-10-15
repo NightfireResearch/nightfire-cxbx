@@ -129,17 +129,17 @@ void __stdcall KernelKeBugCheck(uint32_t code) {
 
 // ---- contiguous memory: pages of their own, below 0x10000000 where there is room, as the loader places them
 
-void *__stdcall KernelMmAllocateContiguousMemoryEx(unsigned long size, unsigned long lowest, unsigned long highest,
-                                                   unsigned long alignment, unsigned long protect) {
+void *__stdcall KernelMmAllocateContiguousMemoryEx(HostDword size, HostDword lowest, HostDword highest,
+                                                   HostDword alignment, HostDword protect) {
     (void)protect;
     uintptr_t limit = 0x10000000;
     if (uintptr_t(highest) < limit - 1)
         limit = uintptr_t(highest) + 1;
     void *block = HostAllocatePages(size, lowest, limit);
     if (block == NULL)
-        printf("[kernel] MmAllocateContiguousMemoryEx: %lu bytes refused\n", size);
+        printf("[kernel] MmAllocateContiguousMemoryEx: %lu bytes refused\n", (unsigned long)size);
     else if (alignment > 1 && (uintptr_t(block) & (alignment - 1)) != 0)
-        printf("[kernel] MmAllocateContiguousMemoryEx: %p is not aligned to 0x%lx\n", block, alignment);
+        printf("[kernel] MmAllocateContiguousMemoryEx: %p is not aligned to 0x%lx\n", block, (unsigned long)alignment);
     return block;
 }
 
@@ -149,11 +149,11 @@ void __stdcall KernelMmFreeContiguousMemory(void *base) {
 
 // ---- the EEPROM's settings: PAL-I, English, 4:3 unless settings.ini says Widescreen, stereo, no parental control
 
-long __stdcall KernelExQueryNonVolatileSetting(unsigned long index, unsigned long *type, void *value,
-                                               unsigned long length, unsigned long *resultLength) {
-    const long kSuccess = 0, kInvalidParameter = long(0xc000000d), kNotFound = long(0xc0000034);
-    const unsigned long kRegBinary = 3, kRegDword = 4;
-    unsigned long setting = 0;
+HostLong __stdcall KernelExQueryNonVolatileSetting(HostDword index, HostDword *type, void *value,
+                                                   HostDword length, HostDword *resultLength) {
+    const HostLong kSuccess = 0, kInvalidParameter = HostLong(0xc000000d), kNotFound = HostLong(0xc0000034);
+    const HostDword kRegBinary = 3, kRegDword = 4;
+    HostDword setting = 0;
     switch (index) {
     case 0x07: setting = 1; break;                          // XC_LANGUAGE: English
     case 0x08: {                                            // XC_VIDEO: bit 0 widescreen
@@ -178,11 +178,11 @@ long __stdcall KernelExQueryNonVolatileSetting(unsigned long index, unsigned lon
             *resultLength = length;
         return kSuccess;
     default:
-        printf("[kernel] ExQueryNonVolatileSetting: no answer for setting 0x%lx\n", index);
+        printf("[kernel] ExQueryNonVolatileSetting: no answer for setting 0x%lx\n", (unsigned long)index);
         fflush(stdout);
         return kNotFound;
     }
-    if (value == NULL || length < sizeof(unsigned long))
+    if (value == NULL || length < sizeof(HostDword))
         return kInvalidParameter;
     memcpy(value, &setting, sizeof(setting));
     if (type != NULL)
@@ -196,11 +196,11 @@ long __stdcall KernelExQueryNonVolatileSetting(unsigned long index, unsigned lon
 // an HD-capable mode.
 
 static volatile int TickCount;
-static unsigned long BootSMCVideoMode;
+static HostDword BootSMCVideoMode;
 
-static unsigned long __stdcall TickCountThread(void *) {
+static HostDword __stdcall TickCountThread(void *) {
     HostRaiseTimerResolution();
-    unsigned long start = HostTimeMs();
+    HostDword start = HostTimeMs();
     for (;;) {
         TickCount = int(HostTimeMs() - start);
         HostSleep(1);
@@ -211,7 +211,7 @@ volatile int *KernelKeTickCount() {
     return &TickCount;
 }
 
-unsigned long *KernelHalBootSMCVideoMode() {
+HostDword *KernelHalBootSMCVideoMode() {
     return &BootSMCVideoMode;
 }
 

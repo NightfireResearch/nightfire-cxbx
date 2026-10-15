@@ -24,8 +24,9 @@
 # ~/nightfire-cxbx, "build" is the linux-i386 preset (default targets driving_standalone driving_standalone_test,
 # installed into the checkout's Release/), slots are ~/nightfire-slots/<n> (a disc symlink), "setup" makes the
 # checkout and folders, and "desktop" runs the command directly - no scheduled task - with tools/drive_game.sh for
-# "drive", headless unless RUNNER_DISPLAY names a display (:0). Under RUNNER_HOST=wsl all of it lives in ~/nf/runner.
-# Its own settings: RUNNER_BUILD (a build folder made elsewhere on it: "build" only installs from that),
+# "drive", headless unless RUNNER_DISPLAY names a display (:0). Under RUNNER_HOST=wsl all of it lives in ~/nf/runner
+# (RUNNER_WSL_ROOT names another folder). Its own settings: RUNNER_PRESET (linux-x64: the 64-bit build, installed
+# into Release/ in the same way), RUNNER_BUILD (a build folder made elsewhere on it: "build" only installs from that),
 # RUNNER_FFMPEG_LIB and RUNNER_DXVK_DIR (the preset's FFmpeg and dxvk-native, for the first configure),
 # RUNNER_BUILD_JOBS (parallel compiles), RUNNER_WSL_DISTRO (Ubuntu). See docs/test-runner.md.
 #
@@ -106,17 +107,20 @@ elif [ -z "$OS" ]; then
 fi
 if [ "$OS" = linux ]; then
     ROOT='$HOME'
-    [ "$HOST" = wsl ] && ROOT='$HOME/nf/runner'
+    [ "$HOST" = wsl ] && ROOT=${RUNNER_WSL_ROOT:-'$HOME/nf/runner'}
+    LPRESET=${RUNNER_PRESET:-linux-i386}
+    ARCH=i386
+    [ "$LPRESET" = linux-x64 ] && ARCH=x64
     RREPO=${RUNNER_REPO:-$ROOT/nightfire-cxbx}
     JOBS=$ROOT/nightfire-runner
     SLOTS=$ROOT/nightfire-slots
     JOBDIR=$JOBS${SLOT:+/slot$SLOT}
     RUNDIR=$RREPO
     [ -z "$SLOT" ] || RUNDIR=$SLOTS/$SLOT
-    FFMPEG=${RUNNER_FFMPEG_LIB:-'$HOME/ffmpeg-i386/lib'}
+    FFMPEG=${RUNNER_FFMPEG_LIB:-"\$HOME/ffmpeg-$ARCH/lib"}
     DXVK=${RUNNER_DXVK_DIR:-}
     if [ "$HOST" = wsl ]; then   # where the Linux port's setup on this PC keeps them
-        FFMPEG=${RUNNER_FFMPEG_LIB:-'$HOME/nf/ffmpeg-i386/lib'}
+        FFMPEG=${RUNNER_FFMPEG_LIB:-"\$HOME/nf/ffmpeg-$ARCH/lib"}
         DXVK=${RUNNER_DXVK_DIR:-'$HOME/nf/dl/dxvk-native/x/usr'}
     fi
 fi
@@ -160,17 +164,18 @@ sync)
     ;;
 build)
     if [ "$OS" = linux ]; then
-        # The linux-i386 preset (docs/driving/portable.md), configured once (again with RUNNER_CMAKE_ARGS), then
-        # incremental; the executables and the libraries beside them go to Release/, where runs and "slots" take
-        # them from, as on Windows. RUNNER_BUILD=<folder>: a build made elsewhere on the runner, installed as it is.
+        # The linux-i386 preset (docs/driving/portable.md), or RUNNER_PRESET's (linux-x64), configured once (again
+        # with RUNNER_CMAKE_ARGS), then incremental; the executables and the libraries beside them go to Release/,
+        # where runs and "slots" take them from, as on Windows. RUNNER_BUILD=<folder>: a build made elsewhere on the
+        # runner, installed as it is.
         targets=${*:-driving_standalone driving_standalone_test}
-        from=${RUNNER_BUILD:-build/linux-i386}
+        from=${RUNNER_BUILD:-build/$LPRESET}
         compile="true"
         if [ -z "$RUNNER_BUILD" ]; then
-            compile="{ [ -f build/linux-i386/CMakeCache.txt ] && [ -z '$RUNNER_CMAKE_ARGS' ] || \
-                       cmake --preset linux-i386 -DNF_FFMPEG_LIB_DIR=$FFMPEG ${DXVK:+-DNF_DXVK_DIR=$DXVK} $RUNNER_CMAKE_ARGS > $JOBS/configure.log 2>&1 || \
+            compile="{ [ -f build/$LPRESET/CMakeCache.txt ] && [ -z '$RUNNER_CMAKE_ARGS' ] || \
+                       cmake --preset $LPRESET -DNF_FFMPEG_LIB_DIR=$FFMPEG ${DXVK:+-DNF_DXVK_DIR=$DXVK} $RUNNER_CMAKE_ARGS > $JOBS/configure.log 2>&1 || \
                        { echo 'FAILED: configure, the end of $JOBS/configure.log:'; tail -20 $JOBS/configure.log; exit 1; }; } && \
-                     nice cmake --build build/linux-i386 --target $targets -j ${RUNNER_BUILD_JOBS:-\$(nproc)} 2>&1 | grep -E 'error:|^FAILED|Linking'; \
+                     nice cmake --build build/$LPRESET --target $targets -j ${RUNNER_BUILD_JOBS:-\$(nproc)} 2>&1 | grep -E 'error:|^FAILED|Linking'; \
                      [ \${PIPESTATUS[0]} = 0 ]"
         fi
         r "mkdir -p $JOBS && cd $RREPO && $compile && mkdir -p Release && cd $from && \
@@ -275,7 +280,7 @@ setup)
         r "mkdir -p $JOBS $SLOTS && { [ -d $RREPO/.git ] || { git init -q $RREPO && git -C $RREPO remote add origin $(git -C "$REPO" remote get-url origin); }; } && \
            for t in git cmake ninja clang lld nice; do command -v \$t > /dev/null || echo \"missing: \$t\"; done; \
            [ -e /usr/share/vulkan/icd.d/lvp_icd.json ] || echo 'missing: lavapipe (mesa-vulkan-drivers:i386)'; \
-           [ -e $FFMPEG/libavcodec.so.62 ] || echo \"missing: FFmpeg in $FFMPEG (tools/fmv/build_ffmpeg.sh linux-i386)\"; \
+           [ -e $FFMPEG/libavcodec.so.62 ] || echo \"missing: FFmpeg in $FFMPEG (tools/fmv/build_ffmpeg.sh linux-i386 or linux-x86_64)\"; \
            for f in disc Release/settings.ini Release/saves; do [ -e $RREPO/\$f ] || echo \"missing: $RREPO/\$f (copy it over: docs/test-runner.md)\"; done; \
            echo \"checkout $RREPO, slots in $SLOTS\""
         exit

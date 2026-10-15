@@ -9,14 +9,7 @@
 // Assemble lowers it in the order the nodes were made, which is the source program's order, packing the
 // lanes of one source instruction back into one vector instruction where their operands allow.
 
-enum NodeOp {
-    // leaves: read straight from a register, never computed
-    kLiteral, kInput, kTexCoord, kConstant, kRelative,
-    // instructions
-    kAdd, kMul, kMad, kDp3, kDp4, kMin, kMax, kSlt, kSge, kCmp, kRcp, kRsq, kFrc, kAbs, kExp, kLog, kSat, kLit, kTex,
-    kNrm,   // a component of x * rsq(dot(x, x)), which the compiler makes an nrm
-    kLrp,   // only made by Assemble, from a mad of a difference
-};
+using namespace ShaderOp;
 
 static bool IsLeaf(int op) { return op <= kRelative; }
 static bool IsLiteralOp(int op) { return op == kLiteral; }
@@ -537,10 +530,14 @@ public:
     Lowering(const std::vector<Node> &nodes, bool pixel) : m_nodes(nodes), m_pixel(pixel) {}
     bool Run(const std::vector<OutputValue> &outputs, const std::vector<InputDecl> &inputs,
              std::vector<uint32_t> *tokens, char *error, size_t errorSize);
+    // The first step of Run on its own: products fused into the sums that read them.
+    void Fuse(const std::vector<OutputValue> &outputs, std::vector<ShaderBuilder::FusedNode> *fused);
 
 private:
     // A node as it is lowered: a mad of a difference may become an lrp, an instruction may take a _sat.
     struct Work { int op; bool sat; int argCount; ShaderValue args[8]; };
+
+    void FuseProducts(const std::vector<OutputValue> &outputs);
 
     bool Fail(const char *what, int n = 0);
     float LiteralValue(ShaderValue v) const;
@@ -1394,31 +1391,12 @@ bool Lowering::EmitGroup(const int *members, int count) {
     return !m_failed;
 }
 
-bool Lowering::Run(const std::vector<OutputValue> &outputs, const std::vector<InputDecl> &inputs,
-                   std::vector<uint32_t> *tokens, char *error, size_t errorSize) {
+// The nodes as Run lowers them, before its later rewrites: m_work, with each product the compiler fuses into a
+// sum made a mad, and m_live, the nodes the outputs read.
+void Lowering::FuseProducts(const std::vector<OutputValue> &outputs) {
     size_t n = m_nodes.size();
-    m_failed = false;
-    m_error[0] = 0;
     m_work.resize(n);
-    m_uses.assign(n, 0);
     m_live.assign(n, false);
-    m_done.assign(n, false);
-    m_outputUses.assign(n, std::vector<OutputUse>());
-    for (int r = 0; r < kMaxTemps; r++) for (int c = 0; c < 4; c++) m_temp[r][c] = kNone;
-    m_pinned = 0;
-    m_avoid = 0;
-    m_wantDepth = 1 << 20;
-    for (int r = 0; r < kMaxTemps; r++) m_registerDepth[r] = 0;
-    for (int v = 0; v < 64; v++) m_variableTemp[v] = kNone;
-    for (int v = 0; v < 64; v++) for (int c = 0; c < 4; c++) m_compilerLanes[v][c] = kNone;
-    m_compilerComponent.assign(n, kNone);
-    memset(m_constRead, 0, sizeof(m_constRead));
-    m_relative = false;
-    m_address = kNone;
-    memset(m_inputMask, 0, sizeof(m_inputMask));
-    memset(m_texMask, 0, sizeof(m_texMask));
-    memset(m_samplerType, 0, sizeof(m_samplerType));
-    m_arithmetic = m_texture = 0;
     for (size_t i = 0; i < n; i++) {
         m_work[i].op = m_nodes[i].op;
         m_work[i].sat = false;
@@ -1513,6 +1491,44 @@ bool Lowering::Run(const std::vector<OutputValue> &outputs, const std::vector<In
             }
         }
     }
+}
+
+void Lowering::Fuse(const std::vector<OutputValue> &outputs, std::vector<ShaderBuilder::FusedNode> *fused) {
+    FuseProducts(outputs);
+    fused->resize(m_work.size());
+    for (size_t i = 0; i < m_work.size(); i++) {
+        (*fused)[i].op = (uint8_t)m_work[i].op;
+        (*fused)[i].argCount = (uint8_t)m_work[i].argCount;
+        memcpy((*fused)[i].args, m_work[i].args, sizeof((*fused)[i].args));
+    }
+}
+
+bool Lowering::Run(const std::vector<OutputValue> &outputs, const std::vector<InputDecl> &inputs,
+                   std::vector<uint32_t> *tokens, char *error, size_t errorSize) {
+    size_t n = m_nodes.size();
+    m_failed = false;
+    m_error[0] = 0;
+    m_work.resize(n);
+    m_uses.assign(n, 0);
+    m_live.assign(n, false);
+    m_done.assign(n, false);
+    m_outputUses.assign(n, std::vector<OutputUse>());
+    for (int r = 0; r < kMaxTemps; r++) for (int c = 0; c < 4; c++) m_temp[r][c] = kNone;
+    m_pinned = 0;
+    m_avoid = 0;
+    m_wantDepth = 1 << 20;
+    for (int r = 0; r < kMaxTemps; r++) m_registerDepth[r] = 0;
+    for (int v = 0; v < 64; v++) m_variableTemp[v] = kNone;
+    for (int v = 0; v < 64; v++) for (int c = 0; c < 4; c++) m_compilerLanes[v][c] = kNone;
+    m_compilerComponent.assign(n, kNone);
+    memset(m_constRead, 0, sizeof(m_constRead));
+    m_relative = false;
+    m_address = kNone;
+    memset(m_inputMask, 0, sizeof(m_inputMask));
+    memset(m_texMask, 0, sizeof(m_texMask));
+    memset(m_samplerType, 0, sizeof(m_samplerType));
+    m_arithmetic = m_texture = 0;
+    FuseProducts(outputs);
 
     std::vector<int> uses(n, 0);
     for (size_t i = 0; i < n; i++) m_live[i] = false;
@@ -1780,4 +1796,14 @@ bool ShaderBuilder::Assemble(std::vector<uint32_t> *tokens, char *error, size_t 
     }
     Lowering lowering(m_nodes, m_profile == kPixelShader);
     return lowering.Run(outputs, inputs, tokens, error, errorSize);
+}
+
+void ShaderBuilder::Fuse(std::vector<FusedNode> *fused) const {
+    std::vector<Lowering::OutputValue> outputs;
+    for (size_t i = 0; i < m_outputs.size(); i++) {
+        Lowering::OutputValue o = { m_outputs[i].output, m_outputs[i].component, m_outputs[i].value };
+        outputs.push_back(o);
+    }
+    Lowering lowering(m_nodes, m_profile == kPixelShader);
+    lowering.Fuse(outputs, fused);
 }

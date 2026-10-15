@@ -21,8 +21,8 @@
 #
 # The Linux build (docs/driving/portable.md) needs the same release as shared libraries for the host, which are not
 # committed: "sh tools/fmv/build_ffmpeg.sh linux-i386 <prefix>" builds them for 32-bit x86 Linux with gcc -m32, make
-# and nasm into <prefix>/lib, for the linux-i386 preset's NF_FFMPEG_LIB_DIR. FFMPEG_SOURCE names another checkout of
-# the submodule's commit.
+# and nasm into <prefix>/lib, for the linux-i386 preset's NF_FFMPEG_LIB_DIR; "linux-x86_64 <prefix>" builds them for
+# x86-64 Linux, for the linux-x64 preset's. FFMPEG_SOURCE names another checkout of the submodule's commit.
 set -e
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
 SRC=third_party/ffmpeg
@@ -32,15 +32,19 @@ COMMON='--enable-shared --disable-static --disable-programs --disable-doc --disa
     --disable-everything --enable-protocol=file --enable-demuxer=xmv --enable-decoder=wmv2,adpcm_ima_xbox,adpcm_ima_wav,eamad,adpcm_ea_r1
     --disable-avdevice --disable-avfilter --disable-swscale --disable-swresample'
 
-if [ "$1" = linux-i386 ]; then
-    PREFIX=${2:?usage: build_ffmpeg.sh linux-i386 <prefix>}
+if [ "$1" = linux-i386 ] || [ "$1" = linux-x86_64 ]; then
+    PREFIX=${2:?usage: build_ffmpeg.sh linux-i386|linux-x86_64 <prefix>}
     SOURCE=${FFMPEG_SOURCE:-$REPO/$SRC}
     mkdir -p "$PREFIX/build"
     PREFIX=$(cd "$PREFIX" && pwd)
     cd "$PREFIX/build"
-    # -mstackrealign: the game calls in with Windows' 4-byte stack alignment (cmake/xbox-abi-linux.cmake)
-    "$SOURCE/configure" --prefix="$PREFIX" --arch=x86 --cc='gcc -m32' --extra-cflags=-mstackrealign \
-        --extra-ldflags=-m32 $COMMON --enable-pthreads >/dev/null
+    if [ "$1" = linux-i386 ]; then
+        # -mstackrealign: the game calls in with Windows' 4-byte stack alignment (cmake/xbox-abi-linux.cmake)
+        "$SOURCE/configure" --prefix="$PREFIX" --arch=x86 --cc='gcc -m32' --extra-cflags=-mstackrealign \
+            --extra-ldflags=-m32 $COMMON --enable-pthreads >/dev/null
+    else
+        "$SOURCE/configure" --prefix="$PREFIX" --arch=x86_64 --cc=gcc $COMMON --enable-pthreads >/dev/null
+    fi
     make -j"${JOBS:-4}" >/dev/null
     make install >/dev/null
     ls -la "$PREFIX/lib"

@@ -1,13 +1,14 @@
 #include "Host.h"
 #include "Ptr32.h"
 
-// The game window on a 64-bit host (docs/driving/64-bit.md 7.1): the low 4 GB of the address space, where every
-// address the game may keep in its files' data must lie, so that it fits the 32-bit words of Ptr32.h. (Address
-// space - not the display window of HostWindow.h.) The executable is linked low (CMakeLists.txt), so its statics are
-// inside; contiguous memory comes from HostAllocatePages, which keeps below 4 GB; and the heaps are here: Host.h's
-// heap functions over one arena the host reserves low (HostReserveLow) and commits as it fills (HostCommit). The
-// standalone executable's operator new uses a heap of its own here too, for the host-side objects the game's data
-// can point at.
+// The game window on a 64-bit host (docs/driving/64-bit.md 7.1): the 4 GB of address space from kGameWindowBase (0,
+// or 4 GB: Ptr32.h), where every address the game may keep in its files' data must lie, so that it fits the 32-bit
+// words of Ptr32.h. (Address space - not the display window of HostWindow.h.) The executable is linked into it
+// (CMakeLists.txt), so its statics are inside, which the arena's set-up checks; contiguous memory comes from
+// HostAllocatePages and the game's thread stacks from HostCreateThread, both kept in the window; and the heaps are
+// here: Host.h's heap functions over one arena the host reserves (HostReserveLow) and commits as it fills
+// (HostCommit). The standalone executable's operator new uses a heap of its own here too, for the host-side objects
+// the game's data can point at.
 //
 // A 32-bit host keeps the system's heaps (HostWin32.cpp, HostPosix.cpp): every address is in the window there.
 //
@@ -28,7 +29,7 @@
 namespace {
 
 constexpr size_t kArenaSize = size_t(1) << 30;
-constexpr uintptr_t kArenaLowest = 0x20000000;   // above where contiguous memory goes first (KernelImports.cpp)
+constexpr uintptr_t kArenaLowest = 0x20000000;   // an offset: above where contiguous memory and the stacks go first
 constexpr size_t kCommitStep = size_t(1) << 20;
 constexpr size_t kHeaderSize = 16;
 constexpr size_t kMinBlock = 32;
@@ -37,8 +38,8 @@ constexpr uint32_t kPrevInUse = 2;
 constexpr uint32_t kFlags = 15;
 constexpr int kLists = 160;
 constexpr int kMaxHeaps = 64;
-constexpr unsigned long kZeroMemory = HOST_HEAP_ZERO_MEMORY;
-constexpr unsigned long kReallocInPlaceOnly = 0x10;
+constexpr HostDword kZeroMemory = HOST_HEAP_ZERO_MEMORY;
+constexpr HostDword kReallocInPlaceOnly = 0x10;
 
 struct Block {
     uint32_t prevSize;    // the size of the block before, while that one is free
@@ -71,12 +72,23 @@ struct Arena {
     int heapCount;
 };
 
+bool InWindow(const void *address) {
+    return uintptr_t(address) - kGameWindowBase < kGameWindowEnd - kGameWindowBase;
+}
+
 Arena *TheArena() {
     static Arena *arena = [] {
         static Arena a;
+        // The statics and functions the game's data names (registered variables, vtables, channel functions)
+        if (!InWindow(&a) || !InWindow(reinterpret_cast<const void *>(&TheArena))) {
+            printf("[window] the executable (%p) is not in the game window at 0x%llx\n", static_cast<void *>(&a),
+                   static_cast<unsigned long long>(kGameWindowBase));
+            fflush(stdout);
+            HostExitProcess(3);
+        }
         a.start = static_cast<char *>(HostReserveLow(kArenaSize, kArenaLowest));
         if (a.start == NULL) {
-            printf("[window] could not reserve %zu MB below 4 GB for the game's heaps\n", kArenaSize >> 20);
+            printf("[window] could not reserve %zu MB in the game window for its heaps\n", kArenaSize >> 20);
             fflush(stdout);
             HostExitProcess(3);
         }
@@ -240,7 +252,7 @@ void MarkInUse(Block *block, Heap *heap, int index, size_t requested) {
     heap->used += block->Size();
 }
 
-void *Allocate(Arena *a, Heap *heap, unsigned long flags, size_t bytes) {
+void *Allocate(Arena *a, Heap *heap, HostDword flags, size_t bytes) {
     uint32_t size = BlockSize(bytes);
     if (size == 0 || (heap->maximum != 0 && heap->used + size > heap->maximum))
         return NULL;
@@ -266,7 +278,7 @@ Block *BlockOf(const void *data) {
 
 } // namespace
 
-HostHandle HostHeapCreate(unsigned long flags, size_t initialSize, size_t maximumSize) {
+HostHandle HostHeapCreate(HostDword flags, size_t initialSize, size_t maximumSize) {
     (void)flags;
     (void)initialSize;
     Arena *a = TheArena();
@@ -281,7 +293,7 @@ HostHandle HostHeapCreate(unsigned long flags, size_t initialSize, size_t maximu
     return heap;
 }
 
-void *HostHeapAlloc(HostHandle heap, unsigned long flags, size_t size) {
+void *HostHeapAlloc(HostHandle heap, HostDword flags, size_t size) {
     Arena *a = TheArena();
     HostEnterLock(&a->lock);
     void *data = Allocate(a, static_cast<Heap *>(heap), flags, size);
@@ -289,7 +301,7 @@ void *HostHeapAlloc(HostHandle heap, unsigned long flags, size_t size) {
     return data;
 }
 
-int HostHeapFree(HostHandle heap, unsigned long flags, void *data) {
+int HostHeapFree(HostHandle heap, HostDword flags, void *data) {
     (void)heap;
     (void)flags;
     if (data == NULL)
@@ -303,7 +315,7 @@ int HostHeapFree(HostHandle heap, unsigned long flags, void *data) {
 
 // In place where the block shrinks or the space after it is free; otherwise moved, unless
 // HEAP_REALLOC_IN_PLACE_ONLY. HEAP_ZERO_MEMORY zeroes what the block gains.
-void *HostHeapReAlloc(HostHandle heap, unsigned long flags, void *data, size_t size) {
+void *HostHeapReAlloc(HostHandle heap, HostDword flags, void *data, size_t size) {
     if (data == NULL)
         return HostHeapAlloc(heap, flags, size);
     Arena *a = TheArena();
@@ -349,13 +361,15 @@ void *HostHeapReAlloc(HostHandle heap, unsigned long flags, void *data, size_t s
     return result;
 }
 
-size_t HostHeapSize(HostHandle heap, unsigned long flags, const void *data) {
+size_t HostHeapSize(HostHandle heap, HostDword flags, const void *data) {
     (void)heap;
     (void)flags;
     return BlockOf(data)->requested;
 }
 
-// The executable's own C++ allocations (the seams' objects, the host side's containers) in the window as well.
+// The executable's own C++ allocations (the seams' objects, the host side's containers) in the window as well. (An
+// ELF executable's serve the shared libraries it loads too: what the C++ library allocates, the executable's inline
+// code may free.)
 static HostHandle OperatorNewHeap() {
     static HostHandle heap = HostHeapCreate(0, 0, 0);
     return heap;

@@ -132,6 +132,7 @@ add_library(actioninject SHARED
   src/common/gfx/nv2aPixelShader.cpp
   src/common/gfx/nv2aVertexShader.cpp
   src/common/gfx/shaderBuilder.cpp
+  src/common/gfx/shaderSpirv.cpp
   src/common/gfx/devtools/shaderCheck.cpp
   src/common/gfx/devtools/shaderHlsl.cpp
   src/common/gfx/fxaa.cpp
@@ -340,6 +341,49 @@ else()
   target_link_options(driving PRIVATE -Wl,-Map,driving.map)
 endif()
 endif()   # WIN32: the action engine and both loaders
+
+# The driving engine's graphics backend behind the D3D8 seam's D3D9_* entry points (src/common/gfx/d3d9Backend.h):
+# d3d9, Direct3D 9 (Windows' own, or dxvk-native's on Linux), or sdlgpu, SDL3's GPU API (its Vulkan driver on Windows
+# and Linux; Metal on macOS) - src/common/gfx/sdlGpuBackend.cpp, docs/driving/macos.md packages G1 and G2. sdlgpu
+# needs NIGHTFIRE_SDL. The action engine stays on Direct3D 9.
+set(NIGHTFIRE_GFX d3d9 CACHE STRING "Driving engine graphics backend: d3d9 or sdlgpu")
+set_property(CACHE NIGHTFIRE_GFX PROPERTY STRINGS d3d9 sdlgpu)
+if(NIGHTFIRE_GFX STREQUAL "sdlgpu")
+  set(nf_gfx_backend src/common/gfx/sdlGpuBackend.cpp src/common/gfx/fixedFunction.cpp src/common/gfx/shaderMsl.cpp)
+  set(nf_gfx_devtools)
+  set(nf_gfx_host_sources ${nf_gfx_backend})
+elseif(NIGHTFIRE_GFX STREQUAL "d3d9")
+  set(nf_gfx_backend src/common/gfx/d3d9Backend.cpp)
+  set(nf_gfx_devtools src/common/gfx/devtools/shaderCheck.cpp src/common/gfx/devtools/shaderHlsl.cpp
+                      src/common/gfx/fxaa.cpp src/common/gfx/textureReplace.cpp)
+  set(nf_gfx_host_sources src/common/gfx/d3d9Backend.cpp src/common/gfx/fxaa.cpp src/common/gfx/textureReplace.cpp)
+else()
+  message(FATAL_ERROR "NIGHTFIRE_GFX is d3d9 or sdlgpu, not ${NIGHTFIRE_GFX}")
+endif()
+if(NIGHTFIRE_GFX STREQUAL "sdlgpu")
+  add_compile_definitions(NIGHTFIRE_GFX_SDLGPU)   # the driving targets, all made below
+  # SDL's Metal driver takes MSL, not SPIR-V: SPIRV-Cross translates each module (src/common/gfx/shaderMsl.cpp). It is
+  # built on every host, so that the Vulkan builds compile and can exercise it too: a release tag, static, its MSL
+  # backend (and the GLSL one that derives from) only, with C++ exceptions for its errors.
+  include(FetchContent)
+  foreach(part CLI ENABLE_TESTS ENABLE_HLSL ENABLE_CPP ENABLE_REFLECT ENABLE_C_API ENABLE_UTIL SHARED)
+    set(SPIRV_CROSS_${part} OFF CACHE BOOL "" FORCE)
+  endforeach()
+  foreach(part STATIC ENABLE_GLSL ENABLE_MSL SKIP_INSTALL FORCE_PIC)
+    set(SPIRV_CROSS_${part} ON CACHE BOOL "" FORCE)
+  endforeach()
+  FetchContent_Declare(spirv_cross
+                       GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Cross.git
+                       GIT_TAG vulkan-sdk-1.4.363.0
+                       GIT_SHALLOW TRUE)
+  FetchContent_MakeAvailable(spirv_cross)
+  if(NOT MSVC)
+    foreach(target spirv-cross-core spirv-cross-glsl spirv-cross-msl)
+      target_compile_options(${target} PRIVATE -fexceptions)
+    endforeach()
+    set_property(SOURCE src/common/gfx/shaderMsl.cpp APPEND PROPERTY COMPILE_OPTIONS -fexceptions)
+  endif()
+endif()
 
 set(nf_driving_sources
   src/dllmain.cpp
@@ -726,14 +770,12 @@ set(nf_driving_sources
   src/common/sound/xadpcm.cpp
   src/common/xbeEntrySeam.cpp
   src/common/xbeProfiler.cpp
-  src/common/gfx/d3d9Backend.cpp
+  ${nf_gfx_backend}
   src/common/gfx/nv2aPixelShader.cpp
   src/common/gfx/nv2aVertexShader.cpp
   src/common/gfx/shaderBuilder.cpp
-  src/common/gfx/devtools/shaderCheck.cpp
-  src/common/gfx/devtools/shaderHlsl.cpp
-  src/common/gfx/fxaa.cpp
-  src/common/gfx/textureReplace.cpp
+  src/common/gfx/shaderSpirv.cpp
+  ${nf_gfx_devtools}
 )
 
 if(WIN32)
@@ -767,6 +809,9 @@ if(NIGHTFIRE_SDL)
     foreach(subsystem RENDER GPU CAMERA SENSOR DIALOG TRAY)   # what the game does not use
       set(SDL_${subsystem} OFF CACHE BOOL "" FORCE)
     endforeach()
+    if(NIGHTFIRE_GFX STREQUAL "sdlgpu")
+      set(SDL_GPU ON CACHE BOOL "" FORCE)
+    endif()
     FetchContent_Declare(SDL3
                          GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
                          GIT_TAG release-3.2.30
@@ -786,6 +831,9 @@ elseif(WIN32)
 else()
   message(FATAL_ERROR "A build for ${CMAKE_SYSTEM_NAME} needs NIGHTFIRE_SDL=ON: the other window, input and sound "
                       "output are Win32's")
+endif()
+if(NIGHTFIRE_GFX STREQUAL "sdlgpu" AND NOT NIGHTFIRE_SDL)
+  message(FATAL_ERROR "NIGHTFIRE_GFX=sdlgpu needs NIGHTFIRE_SDL=ON: SDL owns the window the GPU API presents into")
 endif()
 if(WIN32)
 target_sources(drivinginject PRIVATE ${nf_output_sources})
@@ -895,11 +943,18 @@ if(NOT WIN32)
   find_package(Threads REQUIRED)
   # The executable finds SDL3, dxvk and FFmpeg beside itself.
   set(CMAKE_BUILD_RPATH "\$ORIGIN")
-  include(cmake/xbox-abi-linux.cmake)
+  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    include(cmake/xbox-abi-linux.cmake)
+  else()
+    # x86-64 has one ABI (docs/driving/64-bit.md 7.11): the game's sources are ordinary Linux code, with MSVC's
+    # <intrin.h> from src/common/linux
+    set(NF_XBOX_ABI_OPTIONS -isystem ${CMAKE_SOURCE_DIR}/src/common/linux)
+  endif()
   # The sources on the host's side of cmake/xbox-abi-linux.cmake: the host layer, SDL, FFmpeg and the D3D9 backend.
-  # They are a shared library of their own, bound to its own definitions (-Bsymbolic-functions): an inline function
-  # or template instance both sides compile has the same name on both, and each side must call its own, compiled
-  # for its own conventions. A class whose methods both sides call (FmvAudio) stays on the game's side.
+  # On 32-bit x86 they are a shared library of their own, bound to its own definitions (-Bsymbolic-functions): an
+  # inline function or template instance both sides compile has the same name on both, and each side must call its
+  # own, compiled for its own conventions. A class whose methods both sides call (FmvAudio) stays on the game's side.
+  # On x86-64 they are part of the executable, as on Windows.
   set(nf_host_abi_sources
     src/driving/platform/HostPosix.cpp
     src/common/linux/win32Calls.cpp
@@ -908,12 +963,11 @@ if(NOT WIN32)
     src/driving/sound/sdlAudioDriving.cpp
     src/common/fmv/Ffmpeg.cpp
     src/common/xboxPath.cpp
-    src/common/gfx/d3d9Backend.cpp
     src/common/gfx/nv2aPixelShader.cpp
     src/common/gfx/nv2aVertexShader.cpp
     src/common/gfx/shaderBuilder.cpp
-    src/common/gfx/fxaa.cpp
-    src/common/gfx/textureReplace.cpp)
+    src/common/gfx/shaderSpirv.cpp
+    ${nf_gfx_host_sources})
 endif()
 
 # The standalone driving engine (docs/driving/standalone.md): our code alone, with no Driving.xbe mapped or read, no
@@ -957,17 +1011,66 @@ if(NOT WIN32)
   list(APPEND nf_standalone_harness src/driving/devtools/RetargetPosix.cpp)
   set_source_files_properties(${nf_standalone_sources} ${nf_standalone_harness} src/driving/standalone/NoDevtools.cpp
                               PROPERTIES COMPILE_OPTIONS "${NF_XBOX_ABI_OPTIONS}")
+endif()
+if(NOT WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+  list(APPEND nf_standalone_sources ${nf_host_abi_sources})
+elseif(NOT WIN32)
   add_library(drivinghost SHARED ${nf_host_abi_sources})
   target_include_directories(drivinghost PRIVATE ${NF_FFMPEG_DIR}/include)
   target_compile_definitions(drivinghost PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_STANDALONE NIGHTFIRE_SDL)
   # Called with the game's 4-byte stack alignment: each function realigns to the 16 Linux libraries expect
   target_compile_options(drivinghost PRIVATE -mstackrealign -include ${CMAKE_SOURCE_DIR}/src/common/linux/msvcNames.h)
-  target_link_libraries(drivinghost PRIVATE SDL3::SDL3 dxvk_d3d9 ${CMAKE_DL_LIBS} Threads::Threads)
+  if(NIGHTFIRE_GFX STREQUAL "sdlgpu")
+    # dxvk's headers only: win32Calls.cpp's Win32 types are its windows.h
+    set(nf_host_d3d9)
+    target_include_directories(drivinghost PRIVATE ${NF_DXVK_DIR}/include/dxvk)
+  else()
+    set(nf_host_d3d9 dxvk_d3d9)
+  endif()
+  target_link_libraries(drivinghost PRIVATE SDL3::SDL3 ${nf_host_d3d9} ${CMAKE_DL_LIBS} Threads::Threads)
   target_link_options(drivinghost PRIVATE -Wl,-Bsymbolic-functions)
   add_custom_command(TARGET drivinghost POST_BUILD   # beside it and the executables
-                     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_SONAME_FILE:SDL3::SDL3> ${NF_DXVK_D3D9}
-                             ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:drivinghost>)
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_SONAME_FILE:SDL3::SDL3>
+                             $<$<STREQUAL:${NIGHTFIRE_GFX},d3d9>:${NF_DXVK_D3D9}> ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:drivinghost>)
 endif()
+# The 64-bit build (docs/driving/64-bit.md 7.1): the game window, the 4 GB from NIGHTFIRE_WINDOW_BASE that holds every
+# address the game's data may keep (platform/Ptr32.h). 0 by default; 0x100000000 as macOS needs it (macos.md 2), where
+# nothing of the process may lie below 4 GB. The image is linked at a fixed address 4 MB into the window, so that the
+# statics and vtables the data points at lie in it.
+set(NIGHTFIRE_WINDOW_BASE 0 CACHE STRING "64-bit driving engine: the game window's base address (0 or 0x100000000)")
+function(nf_game_window target)
+  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    math(EXPR image_base "${NIGHTFIRE_WINDOW_BASE} + 0x400000" OUTPUT_FORMAT HEXADECIMAL)
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_WINDOW_BASE=${NIGHTFIRE_WINDOW_BASE})
+    if(MSVC)
+      target_link_options(${target} PRIVATE /BASE:${image_base} /DYNAMICBASE:NO /HIGHENTROPYVA:NO)
+    elseif(WIN32)
+      target_link_options(${target} PRIVATE -Wl,--image-base,${image_base} -Wl,--disable-dynamicbase
+                                            -Wl,--disable-high-entropy-va)
+    else()
+      # Not position-independent (the toolchain), with the position-independent start-up files: the C library's
+      # others hold 32-bit absolute addresses, which a window above 4 GB does not reach
+      target_link_options(${target} PRIVATE -Wl,--image-base=${image_base} -nostartfiles ${NF_START_FILES})
+      target_link_libraries(${target} PRIVATE ${NF_END_FILES})
+      if(NOT NIGHTFIRE_WINDOW_BASE EQUAL 0)
+        # lld turns a GOT load into a 32-bit immediate address in an executable that is not position-independent
+        target_link_options(${target} PRIVATE -Wl,--no-relax)
+      endif()
+    endif()
+  endif()
+endfunction()
+if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT WIN32)
+  foreach(file Scrt1.o crti.o crtbeginS.o crtendS.o crtn.o)
+    execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=${file} OUTPUT_VARIABLE path
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(file MATCHES "^crt(endS|n)")
+      list(APPEND NF_END_FILES ${path})
+    else()
+      list(APPEND NF_START_FILES ${path})
+    endif()
+  endforeach()
+endif()
+
 add_executable(driving_standalone ${nf_standalone_sources} src/driving/standalone/NoDevtools.cpp)
 add_executable(driving_standalone_test EXCLUDE_FROM_ALL ${nf_standalone_sources} ${nf_standalone_harness})
 target_compile_definitions(driving_standalone_test PRIVATE NIGHTFIRE_STANDALONE_TEST)
@@ -993,6 +1096,12 @@ foreach(target driving_standalone driving_standalone_test)
   target_compile_definitions(${target} PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_STANDALONE)
   if(WIN32)
     target_link_libraries(${target} PRIVATE d3d9 winmm xinput9_1_0 ${XAUDIO2_LIB} shell32)
+  elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    target_link_libraries(${target} PRIVATE dxvk_d3d9 ${CMAKE_DL_LIBS} Threads::Threads)
+    target_compile_options(${target} PRIVATE -include ${CMAKE_SOURCE_DIR}/src/common/linux/msvcNames.h)
+    add_custom_command(TARGET ${target} POST_BUILD   # beside the executable
+                       COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_SONAME_FILE:SDL3::SDL3> ${NF_DXVK_D3D9}
+                               ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:${target}>)
   else()
     target_link_libraries(${target} PRIVATE drivinghost)
     target_compile_options(${target} PRIVATE -include ${CMAKE_SOURCE_DIR}/src/common/linux/msvcNames.h)
@@ -1000,28 +1109,58 @@ foreach(target driving_standalone driving_standalone_test)
   if(NIGHTFIRE_SDL)
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_SDL)
     target_link_libraries(${target} PRIVATE SDL3::SDL3)
+    if(WIN32)   # beside the executable (the 32-bit Release folder also gets one from drivinginject)
+      add_custom_command(TARGET ${target} POST_BUILD
+                         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:SDL3::SDL3> $<TARGET_FILE_DIR:${target}>)
+    endif()
   endif()
   if(MSVC)
     target_link_options(${target} PRIVATE /MAP)
   else()
     target_link_options(${target} PRIVATE -Wl,-Map,${target}.map)
   endif()
-  # The 64-bit build (docs/driving/64-bit.md 7.1): the image low and fixed, so that the statics and vtables the
-  # game's data points at lie in the game window (the low 4 GB) with its heaps; the FFmpeg DLLs beside it.
+  # The 64-bit build: in the game window, with the FFmpeg DLLs beside it
+  nf_game_window(${target})
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     if(MSVC)
-      target_link_options(${target} PRIVATE /BASE:0x400000 /DYNAMICBASE:NO /HIGHENTROPYVA:NO)
       # A PDB, so that a crash.dmp from a run reads with cdb (folding and dead-code removal kept as without it)
       target_compile_options(${target} PRIVATE /Zi)
       target_link_options(${target} PRIVATE /DEBUG /OPT:REF /OPT:ICF)
-    else()
-      target_link_options(${target} PRIVATE -Wl,--image-base,0x400000 -Wl,--disable-dynamicbase
-                                            -Wl,--disable-high-entropy-va)
     endif()
-    add_custom_command(TARGET ${target} POST_BUILD
-                       COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:${target}>)
+    if(WIN32)
+      add_custom_command(TARGET ${target} POST_BUILD
+                         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:${target}>)
+    endif()
   endif()
 endforeach()
+if(NIGHTFIRE_GFX STREQUAL "sdlgpu")
+  if(WIN32)
+    set(nf_msl_users drivinginject driving_standalone driving_standalone_test)
+  else()
+    set(nf_msl_users drivinghost)
+  endif()
+  foreach(target ${nf_msl_users})
+    target_link_libraries(${target} PRIVATE spirv-cross-msl)
+  endforeach()
+  # Every .spv of a folder (spirvdump's, or a run's NIGHTFIRE_SPIRVDUMP=1 spirv/) translated to MSL as the backend
+  # translates it, written beside it as .metal, and checked: "spirvmsl <folder>" (src/common/gfx/devtools/spirvMslMain.cpp).
+  add_executable(spirvmsl EXCLUDE_FROM_ALL src/common/gfx/devtools/spirvMslMain.cpp src/common/gfx/shaderMsl.cpp)
+  target_link_libraries(spirvmsl PRIVATE spirv-cross-msl)
+endif()
+# The x86 instructions the driving engine's ports use by intrinsics: SSE's, RDTSC, REP MOVSD/MOVSB, EMMS
+# (src/driving/platform/Sse.h, docs/driving/macos.md 3). On: the instructions. Off: C with their results
+# (src/driving/platform/SseC.h; RSQRTSS from the runner's table), which a host without them needs; an x86 build can be
+# made with it off to test those forms against the baselines. A host that is not x86 is always off.
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|ARM|aarch64)" OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+  set(NIGHTFIRE_SSE OFF CACHE BOOL "Driving engine: the x86 intrinsics as the instructions (off: C forms)" FORCE)
+else()
+  # The C forms against the instructions (src/driving/devtools/SseTest.cpp): "sse_test", or "sse_test --rsqrt-table"
+  # to print src/driving/platform/SseRsqrtTable.h from this CPU's RSQRTSS.
+  find_package(Threads REQUIRED)
+  add_executable(sse_test EXCLUDE_FROM_ALL src/driving/devtools/SseTest.cpp)
+  target_link_libraries(sse_test PRIVATE Threads::Threads)
+endif()
+option(NIGHTFIRE_SSE "Driving engine: the x86 intrinsics as the instructions (off: C forms)" ON)
 # The driving engine's x87 code (docs/driving/64-bit.md 4.1, docs/driving/portable.md). On: the 43 functions
 # whose results come from FSIN, FCOS, FPTAN, FPATAN and the like stay the original instructions, so the injected
 # build's shadow tests and the lockstep baselines (lbase) stay exact. Off: each is C in double (<math.h>), as any
@@ -1042,21 +1181,25 @@ foreach(target drivinginject driving_standalone driving_standalone_test)
   else()
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=0)
   endif()
+  if(NIGHTFIRE_SSE)
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_SSE=1)
+  else()
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_SSE=0)
+  endif()
 endforeach()
-if(WIN32)
 # The game window and Ptr32 without the game (src/driving/devtools/GameWindowTest.cpp): "gamewindow_test [operations]",
 # linked as the standalone executables are.
-add_executable(gamewindow_test EXCLUDE_FROM_ALL src/driving/devtools/GameWindowTest.cpp
-               src/driving/platform/GameWindow.cpp src/driving/platform/HostWin32.cpp)
-target_link_libraries(gamewindow_test PRIVATE winmm shell32)
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  if(MSVC)
-    target_link_options(gamewindow_test PRIVATE /BASE:0x400000 /DYNAMICBASE:NO /HIGHENTROPYVA:NO)
-  else()
-    target_link_options(gamewindow_test PRIVATE -Wl,--image-base,0x400000 -Wl,--disable-dynamicbase
-                                                -Wl,--disable-high-entropy-va)
-  endif()
+if(WIN32)
+  add_executable(gamewindow_test EXCLUDE_FROM_ALL src/driving/devtools/GameWindowTest.cpp
+                 src/driving/platform/GameWindow.cpp src/driving/platform/HostWin32.cpp)
+  target_link_libraries(gamewindow_test PRIVATE winmm shell32)
+else()
+  add_executable(gamewindow_test EXCLUDE_FROM_ALL src/driving/devtools/GameWindowTest.cpp
+                 src/driving/platform/GameWindow.cpp src/driving/platform/HostPosix.cpp)
+  target_link_libraries(gamewindow_test PRIVATE Threads::Threads)
 endif()
+nf_game_window(gamewindow_test)
+if(WIN32)
 set(NF_STANDALONE_SRC ${CMAKE_BINARY_DIR}/standalone.dir)
 add_custom_target(standalone_poison
                   COMMAND ${Python3_EXECUTABLE} tools/standalone_poison.py ${NF_STANDALONE_SRC}
@@ -1071,6 +1214,7 @@ add_executable(shadercheck EXCLUDE_FROM_ALL
   src/common/gfx/devtools/shaderCheck.cpp
   src/common/gfx/devtools/shaderHlsl.cpp
   src/common/gfx/shaderBuilder.cpp
+  src/common/gfx/shaderSpirv.cpp
   src/common/gfx/nv2aVertexShader.cpp
   src/common/gfx/nv2aPixelShader.cpp
 )

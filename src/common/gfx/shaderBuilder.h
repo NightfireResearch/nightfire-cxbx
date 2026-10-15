@@ -27,6 +27,21 @@ struct ShaderValue {
     bool negate;
 };
 
+// What a node is (ShaderBuilder::Node::op).
+namespace ShaderOp {
+enum {
+    // leaves: read straight from a register, never computed
+    kLiteral, kInput, kTexCoord, kConstant, kRelative,
+    // instructions
+    kAdd, kMul, kMad, kDp3, kDp4, kMin, kMax, kSlt, kSge, kCmp, kRcp, kRsq, kFrc, kAbs, kExp, kLog, kSat, kLit, kTex,
+    kNrm,   // a component of x * rsq(dot(x, x)), which the compiler makes an nrm
+    kLrp,   // only made by Assemble, from a mad of a difference
+};
+}
+
+struct ShaderSpirvOptions;
+struct ShaderSpirvInfo;
+
 class ShaderBuilder {
 public:
     enum Profile { kVertexShader, kPixelShader };
@@ -90,9 +105,14 @@ public:
     // Writes the program. False, with the reason in error, if it does not fit the profile.
     bool Assemble(std::vector<uint32_t> *tokens, char *error, size_t errorSize);
 
+    // Writes the program as a SPIR-V module for SDL's GPU API (shaderSpirv.h). False, with the reason in error,
+    // if it cannot be written.
+    bool AssembleSpirv(const ShaderSpirvOptions &options, std::vector<uint32_t> *words, ShaderSpirvInfo *info,
+                       char *error, size_t errorSize) const;
+
     // A node of the program: a leaf (a register component or a literal) or an operation on other nodes.
     struct Node {
-        uint8_t op;          // NodeOp, shaderBuilder.cpp
+        uint8_t op;          // ShaderOp
         uint8_t component;   // leaves: the register component; lit, texld: the result channel
         uint8_t argCount;
         int16_t reg;         // leaves: the register; a relative constant: the base; texld: the sampler
@@ -103,6 +123,15 @@ public:
         int8_t lane;         // the vector lane it was made for, or -1: where a pixel shader keeps it
         int16_t variable;    // the source register it was first written to, or -1: values of one share a temporary
     };
+
+    // A node as Assemble writes it: where the compiler fuses a product into the sum that reads it, the sum is a
+    // kMad of the product's operands and the other term. Every other node is as made.
+    struct FusedNode {
+        uint8_t op;
+        uint8_t argCount;
+        ShaderValue args[8];
+    };
+    void Fuse(std::vector<FusedNode> *fused) const;
 
 private:
     ShaderValue Make(int op, int component, int reg, uint32_t bits, int argCount, const ShaderValue *args);

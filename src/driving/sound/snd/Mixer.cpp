@@ -6,7 +6,7 @@
 #include <bit>
 #include <math.h>
 #include <stddef.h>
-#include <xmmintrin.h>
+#include "../../platform/Sse.h"
 
 #ifdef _MSC_VER
 #pragma float_control(precise, on)

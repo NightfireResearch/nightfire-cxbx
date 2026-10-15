@@ -462,7 +462,7 @@ static int FILEDEV_read(int slot, void *buffer, int offset, int count) {   // 0x
     if (count > 0 && !Xbox_ReadFile(s->handle, buffer, (DWORD)count, &got, NULL)) {
         DWORD error = Xbox_GetLastError();
         if (ReadErrorHandler == NULL || !ReadErrorHandler())
-            printf("FILESYS: read error %lu\n", error);   // the original slept forever here
+            printf("FILESYS: read error %lu\n", (unsigned long)error);   // the original slept forever here
         Xbox_SetLastError(error != 0 ? error : ERROR_READ_FAULT);
     }
     s->pos += (int)got;

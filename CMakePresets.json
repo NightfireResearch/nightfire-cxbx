@@ -49,6 +49,16 @@
       "toolchainFile": "${sourceDir}/cmake/toolchain-linux-i386.cmake",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "NIGHTFIRE_SDL": "ON" },
       "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" }
+    },
+    {
+      "name": "linux-x64",
+      "displayName": "Linux - native x86-64 with clang, the standalone driving engine",
+      "description": "64-bit: SDL3 and dxvk-native; FFmpeg 8.0 from tools/fmv/build_ffmpeg.sh linux-x86_64. See docs/driving/64-bit.md.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/linux-x64",
+      "toolchainFile": "${sourceDir}/cmake/toolchain-linux-x64.cmake",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "NIGHTFIRE_SDL": "ON" },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" }
     }
   ],
   "buildPresets": [
@@ -57,6 +67,7 @@
       "targets": [ "driving_standalone", "driving_standalone_test" ] },
     { "name": "macos", "configurePreset": "macos" },
     { "name": "linux", "configurePreset": "linux" },
-    { "name": "linux-i386", "configurePreset": "linux-i386", "targets": [ "driving_standalone", "driving_standalone_test" ] }
+    { "name": "linux-i386", "configurePreset": "linux-i386", "targets": [ "driving_standalone", "driving_standalone_test" ] },
+    { "name": "linux-x64", "configurePreset": "linux-x64", "targets": [ "driving_standalone", "driving_standalone_test" ] }
   ]
 }

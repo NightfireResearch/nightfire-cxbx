@@ -13,10 +13,9 @@
 #include "../../helpers.h"
 #include "../gfx/D3D8Shaders.h"
 
-#include <emmintrin.h>
+#include "../platform/Sse.h"
 #include <stddef.h>
 #include <string.h>
-#include <xmmintrin.h>
 
 // ---------------------------------------------------------------------------------------------------------------
 // EAGL's render methods (docs/driving/eagl.md 2.8, 2.9, 3.3, 4.6). A RenderMethod is a packet stream - a header
