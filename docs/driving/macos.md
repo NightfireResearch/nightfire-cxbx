@@ -214,8 +214,28 @@ are allowed.
 **Memory ordering.** x86 is TSO; arm64 is weakly ordered. The game's thread hand-offs (the sound thread, the 100 Hz
 server, the multimedia timer, 39 `volatile`s in platform/, sound/snd/Platform, the D3D backend) were written for
 x86 and may rely on store order. The host's interlocked calls must be sequentially consistent atomics, and each
-`volatile` flag that publishes data needs acquire/release. Package M2 runs ThreadSanitizer on Linux x86-64 to list
-the races before the Mac.
+`volatile` flag that publishes data needs acquire/release. Package M2 ran ThreadSanitizer on Linux x86-64 (below).
+
+**Package M2's findings (16 October 2026).** ThreadSanitizer (`-DNIGHTFIRE_SANITIZE=thread`, Linux x86-64 in WSL2,
+16 lockstep runs to tick 1000) reported about 30 races a run, in 20 places. Four handed data from one thread to
+another through a plain or `volatile` variable, so that on arm64 the reader could see the flag before the data;
+those are now `std::atomic` (sequentially consistent, a plain `mov` load on x86):
+
+- THREAD (RealSystem.cpp): the start block's `started` flag, after which the creator's stack frame is reused.
+- TIMER (RealSystem.cpp): the task list, which the timer thread runs while the game adds tasks whose state (the
+  rumble's signal, the clock) was written just before. The timer thread reads each slot once (the original reads
+  it again to call it).
+- FILESYS (FileSys.cpp): a chunked transfer's `remaining` and `op`, which its caller waits on before reading the
+  byte count and the data; and the worker, which now takes an op's callback, flags, handle, status and argument
+  under the queue's lock before filing it as done (the original read them after, when another thread may already
+  have completed the op and reused it for a new one).
+- SndLockstep (devtools): the driver thread's "alive" flag.
+
+The rest share a value and nothing else - the tick counts, the rumble speeds and flag, the sound buffers' samples
+that the device reads behind the mixer as DirectSound's hardware did, and the worker's unlocked test of a cancel
+bit - and are suppressed with their reasons in tools/tsan_suppressions.txt, as are lavapipe's and dxvk's own.
+UBSan's float-cast-overflow (`-DNIGHTFIRE_SANITIZE=float-cast-overflow`) found no out-of-range conversion in 16
+runs to tick 9000, nor with `-DNIGHTFIRE_SSE=OFF` (the C forms arm64 uses) in missions 1, 5 and 6 to tick 4500.
 
 ## 4. Floating point
 
@@ -318,7 +338,7 @@ the runner) before or beside the last 64-bit packages; A1-A4 and G3 run on the M
 |---|---|---|---|---|
 | M0 | **Done 15 Oct 2026 (3.1)**: asm identical on Win32 and x64 MSVC; sse_test 0 differ on the runner (x64, Win32); x64 with `-DNIGHTFIRE_SSE=OFF` 16/16 exact against `lbase_c`; Linux x86-64 forced-C lockstep waits for M1. **Portable SSE**: platform/Sse.h with the 34 intrinsics the game uses (x86: the intrinsics themselves; elsewhere: C with SSE's exact semantics); RSQRTSS by a table generated on the runner from its own instruction (the input bits it depends on found by sweep); `Truncate`/`RoundToInt` in C; `__rdtsc` as a 733 MHz host cycle count; `__movsd`, `_mm_empty`, `fldcw` guarded | x86 | M | 32-bit and x64 MSVC: per-function asm identical; a devtools test of the C forms against the instructions (random and edge inputs, all four RSQRTSS exponent parities); Linux x86-64 built with the C forms forced on: lockstep exact against `lbase_c` on the runner |
 | M1 | **A non-zero window base**: `kGameWindowBase` configurable, null as the word 0, the window [4 GB, 8 GB) on Linux x86-64 (executable linked into it) and Windows x64 (`/BASE:0x140000000` is already there); AnimMisc's pointer-as-float through the word. **Done 15 October 2026** with 64-bit package 10 (64-bit.md 7.11, section 2 above): `NIGHTFIRE_WINDOW_BASE`, thread stacks in the window, resolver numbers | x86 | S-M | `gamewindow_test`; lockstep exact against `lbase_c` with the base at 4 GB. **Passed**: gamewindow_test 0 differ on Windows x64 and Linux x86-64, both bases; Windows x64 16/16 exact against `lbase_c` at 4 GB and at 0; Linux x86-64 16/16 exact against `lwsl_c` at 4 GB and at 0 |
-| M2 | **FP and thread audit**: `-ffp-contract=off` in the non-MSVC builds; an arm64 compile probe in the nf-cross image (`--target=aarch64-linux-gnu`, Ubuntu's arm64 headers) for both standalone targets, with the fused-op count; UBSan float-cast-overflow and ThreadSanitizer lockstep runs on Linux x86-64; the races and conversions fixed. **In progress** (15 Oct 2026): `-ffp-contract=off` for every non-MSVC target (CMakeLists.txt). On Linux i386 it changes no operation, only instruction order, in 167 of 7,115 functions (no FMA there), and m1/m2 lockstep to tick 4500 are identical to the build without it (traces and frames). `NIGHTFIRE_SANITIZE=<sanitizer>` (cache option) adds `-fsanitize` everywhere. An `nf-cross-arm64` image (nf-cross plus g++-aarch64-linux-gnu, lld) is ready for the probe. The probe and the sanitizer runs wait for M1's Linux x86-64 build | x86 | M | probe: 0 errors, 0 fused ops; UBSan/TSan clean; lockstep exact against `lbase_c` |
+| M2 | **FP and thread audit**: `-ffp-contract=off` in the non-MSVC builds; an arm64 compile probe in the nf-cross image (`--target=aarch64-linux-gnu`, Ubuntu's arm64 headers) for both standalone targets, with the fused-op count; UBSan float-cast-overflow and ThreadSanitizer lockstep runs on Linux x86-64; the races and conversions fixed. **Done 16 Oct 2026** (3, 4 and the notes below): contraction off; probe 0 errors, no unexpected fused operations; UBSan 0 reports; the TSan races that hand data over fixed, the value-only ones listed (tools/tsan_suppressions.txt) | x86 | M | probe: 0 errors, 0 fused ops; UBSan/TSan clean; lockstep exact against `lbase_c`. **Passed**: see the notes below the table |
 | M3 | **Trace redirection without code patching** (6). **Done** 15 Oct 2026: SndCallTraceRedirect.h, a forced include on driving_standalone_test's sources outside sound/snd (a per-source option conditional on the target, CMakeLists.txt); the standalone build's call-site moving (PE and `dl_iterate_phdr`) removed. One difference by design: a call to an entry the linker folded with another (SNDSYS_restore/SNDSYSI_exithook under MSVC) is now traced, where the moving left it alone; no run reaches it | x86 | S | traces identical to the patched ones on Windows and Linux: runner, 32-bit X87=OFF 16/16 and x64 16/16 exact against `lbase_c` (frames and traces), drivinginject (unchanged mechanism) 8/8 against `lbase`; WSL2 Linux i386 (lavapipe, X87=ON), the patched build (60f3014) against this one: m1/m2 idle and accelerating to tick 4500, traces and frames identical |
 | G1 | **SPIR-V lowering** of shaderBuilder's graph (`NoContraction`, `Fma` for NV2A MADs), the fixed-function shaders (pretransformed, immediate, movie quad), FXAA's SPIR-V | x86 | M | `spirv-val` on every program the 16 runs create (a dump mode like shadercheck's) **Done 16 Oct 2026** ([sdl-gpu.md](sdl-gpu.md)): 99 programs from the logs and Driving.xbe (178 modules with point-sprite variants) and every module a mission-1 run creates (47) pass `spirv-val --target-env vulkan1.0`; the D3D9 tokens of all 99 unchanged by the shared `ShaderBuilder::Fuse`; `Fma` where the D3D9 lowering writes a mad (the compiler-fusion rule), not only NV2A MADs |
 | G2 | **The SDL GPU backend** behind d3d9Backend.h (`NIGHTFIRE_GFX=sdlgpu`): pipeline and sampler caches, formats, streams and the ring buffer, palettes, YUV, render targets, readback for the dumps, gamma, offscreen mode for lockstep; on Windows/Linux through SDL's Vulkan backend | x86 | L | lockstep sound traces unchanged (the renderer is below them); frames against the D3D9 build's by eye and by a pixel-difference threshold; two runs identical **Done 16 Oct 2026** ([sdl-gpu.md](sdl-gpu.md)): Windows x64 on the runner (Vulkan, RTX 3090): 16/16 lockstep runs with sound traces identical to `lbase_c` to tick 9000, frames within 1-17k px of the D3D9 build over 16 frames (by eye: the same), a second round 0 px different; Linux i386 in WSL2 (lavapipe): m1/m2 idle and accelerating traces identical to `lwsl`, two runs identical. Windowed presenting is untested (needs a window) |
@@ -327,6 +347,31 @@ the runner) before or beside the last 64-bit packages; A1-A4 and G3 run on the M
 | A2 | **Mac test tooling**: drive_game.sh/remote.sh on macOS, local slots, `lmac_c` baselines, the comparison with `lbase_c` traces | Mac | S | 16 runs to tick 9000 twice, identical; the trace comparison reported |
 | A3 | **Play**: windowed SDL/Metal, CoreAudio, pads (background events), keyboard; the user's playing and listening check | Mac | S | the user |
 | A4 | (only if A2's traces differ from `lbase_c`) **Portable libm**: correctly rounded functions for the C trig on every host; new `lbase_c`/`lloc_c`/`lmac_c` once | x86 + Mac | M | traces identical across the runner, Linux and the Mac |
+
+**Package M2's tests (16 October 2026).**
+
+- **Contraction off.** On Linux i386, `-ffp-contract=off` changes instruction order only, in 167 of 7,115
+  functions. There was no FMA there to begin with. m1/m2 to tick 4500 gave the same traces and frames as before.
+- **The arm64 probe.** tools/arm64_probe.sh in the `nf-cross-arm64` image (nf-cross plus g++-aarch64-linux-gnu,
+  binutils-aarch64-linux-gnu and lld) compiles both targets' 571 objects for aarch64-linux-gnu with 0 errors, after
+  `YieldProcessor` became `YIELD` there (src/common/linux/win32Calls.h). The objects hold 6 fused operations, all
+  in code that asks for one: `ShaderBuilder::Mad`'s literal folding by `fmaf`, and `Crt::CIpow`'s inlined
+  `fmod(y, 2.0)`, which LLVM expands exactly with one FMADD.
+- **Sanitizers.** `-DNIGHTFIRE_SANITIZE=<sanitizer>` instruments the standalone executables only. The runtime
+  comes from Clang's shared library, so that the game's `operator new` and `delete` take precedence. Under
+  ThreadSanitizer, the WSL2 runs also need `LD_LIBRARY_PATH=.:Release`, because its `dlopen` misses the
+  executable's run path for FFmpeg. Rounds use `RUNNER_BUILD` pointing at the sanitizer build, with
+  `ENV='UBSAN_OPTIONS=log_path=...'` or `ENV='LD_LIBRARY_PATH=.:Release;TSAN_OPTIONS=log_path=...:suppressions=<checkout>/tools/tsan_suppressions.txt'`.
+- **Lockstep after the fixes.**
+  - Linux x86-64 in WSL2: 16/16 exact against `lwsl_c` to tick 9000, as were the UBSan build (16/16, 0 reports)
+    and the ThreadSanitizer build (16/16 to tick 1000, 0 reports after the fixes and suppressions).
+  - On the runner: the 32-bit standalone build with `NIGHTFIRE_X87=OFF` and the x64 one, each 16/16 exact against
+    `lbase_c`.
+  - The full injected round: shadows on all 8 missions with 0 differences, and 16/16 exact against `lbase`.
+- **Built.** MSVC Win32 (all four driving targets), MSVC x64, clang linux-i386 and linux-x64, the mingw cross build
+  (nf-cross, `linux` preset), and the arm64 probe.
+- **Left for the Mac.** Real weak-memory behaviour can only show on arm64 itself. ThreadSanitizer on x86-64 finds
+  the C++ races, which is what matters there, but its runs reach only tick 1000.
 
 M0, M1 and M3 can start now (they touch only 32-bit-neutral code and the x64 build); M2 after package 10; G1 and G2
 any time (G2 needs SDL's GPU subsystem in the Windows build, off by default). A1 needs M0-M2; G3 needs G2.
@@ -341,7 +386,8 @@ any time (G2 needs SDL's GPU subsystem in the Windows build, off by default). A1
    allocations land, which proves or breaks decision 2 before anything else is built. Print the image's address
    over a few launches (ASLR).
 4. Build FFmpeg (`build_ffmpeg.sh macos-arm64 ~/ffmpeg-arm64`), then `cmake --preset macos-arm64
-   -DNF_FFMPEG_LIB_DIR=...` and `driving_standalone_test`; count fused operations in its objects (must be 0).
+   -DNF_FFMPEG_LIB_DIR=...` and `driving_standalone_test`; count fused operations in its objects (tools/arm64_probe.sh's
+   count: only `ShaderBuilder::Mad`'s fmaf and `Crt::CIpow`'s inlined fmod are expected).
 5. Boot mission 1 headless with lockstep on to tick 500, dump frames; then the full A2 round.
 6. Never open a window while the user works on the Mac unless asked; headless runs need no window.
 
