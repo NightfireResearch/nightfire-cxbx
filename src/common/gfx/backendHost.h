@@ -2,7 +2,7 @@
 #define COMMON_GFX_BACKENDHOST_H_
 
 // ---------------------------------------------------------------------------------------------------------------
-// The three things the D3D9 backend needs from the engine it is compiled into.
+// What the D3D9 backend needs from the engine it is compiled into.
 //
 // The backend itself is engine-agnostic - it translates Xbox D3D8 calls into Direct3D 9 and knows nothing
 // about either game - but it prints a frame-timing line, and what belongs on that line, and whether it is
@@ -18,6 +18,10 @@ int GfxHost_FpsOverride(void);
 
 // Called once per timing report, for whatever the engine wants to say alongside it.
 void GfxHost_ReportPeriodic(void);
+
+// 0 for a game shown as it plays: every frame presented and paced. N for a run nobody watches in real time (the
+// driving engine's lockstep test runs): only every Nth frame presented, and none paced.
+int GfxHost_PresentEvery(void);
 
 #ifdef NIGHTFIRE_SDL
 #include <stdint.h>

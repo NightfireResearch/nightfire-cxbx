@@ -21,7 +21,8 @@ ours by functions: 74 replaced, 338 dead, nothing live. Two shadow tests compare
 clean in game on all eight missions, and the lockstep runs exact on all sixteen (see what the testing taught). Since (13 October 2026, docs/driving/standalone.md): `_purecall`
 0x00131d35 (Ghidra: `__pure_virtual`, `_amsg_exit(25)`), which 91 slots of our vtables hold, and the kernel's critical
 sections and KeBugCheck through platform/KernelImports.cpp's named wrappers. Since 14 October 2026 (the standalone executable, standalone.md) the C++
-library's last 15 virtual functions are ported too (untested in game: nothing the game does reaches them):
+library's last 15 virtual functions are ported too (nothing the game does reaches them; shadow B compares them with
+the originals since 15 October, standalone.md's follow-ups):
 strstreambuf's overflow, pbackfail, underflow, seekoff and seekpos (and fpos(streamoff) 0x00131488), the deleting
 destructors of `_Locimp`, runtime_error, ios_base::failure, exception, bad_cast and the ostream and ostrstream ios
 entries, with the destructors and copy constructors they and the throw information name (runtime_error, failure,

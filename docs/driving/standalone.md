@@ -329,7 +329,8 @@ D3D8 entry table 138, GameLoop.cpp, Mixer.cpp, Reverb.cpp).
 Items 1 and 2 of the 13 October list (the data worklist, the compile errors) are done: see the rounds below and [The
 standalone executable](#the-standalone-executable-14-october-2026). Still open:
 
-3. `NIGHTFIRE_TRAP_DATA=2` (the startup) has not been summarised.
+3. `NIGHTFIRE_TRAP_DATA=2` (the startup): summarised in [the follow-ups](#follow-ups-15-october-2026); nothing the
+   standalone executable compiles reads the image.
 4. The single-copy globals' redirects stand on two heuristics (the compare windows, the register-based rule); a
    folded access neither catches would show as a shadow difference or a write into our image, as these did.
 
@@ -551,10 +552,73 @@ than the DLL's), and nothing seen depends on them, as the heap-shift tests had s
 tools/runner/round.sh takes `EXE=` (another executable; the targets built follow it), `TARGETS=` and `ENV=` (variables
 added to the lockstep runs, `NIGHTFIRE_TRAP_ORIGINAL=2` say).
 
-### Left
+### Follow-ups (15 October 2026)
 
-- The standalone exe has no crash reporter (the loader's crash.log and crash.dmp): a fault ends it with Windows'
-  own report.
-- The C++ library ports of this round (strstreambuf's five virtuals, the exception classes' destructors and copies,
-  the throw information's copies) are untested: nothing the game does reaches them, and they have no shadow yet.
-- `NIGHTFIRE_TRAP_DATA=2` (the startup) is still unsummarised; with the exe running, TRAP_DATA's purpose is served.
+The three items left above are closed.
+
+**A crash reporter** (standalone/CrashReport.h): what the loader gives the injected build, in our own code.
+- CrashReport.cpp writes the report: a time-stamped heading, then the line `<exe> loaded at 0x...` (the executable is
+  rebased: 0x00830000 in the test), the registers, the bytes at eip and esp, the frame chain and every return address
+  on the stack, each named by its module. The loader's format with `[standalone]` for `[loader]`. Lines go to stdout,
+  and each report is appended to crash.log in one write.
+- CrashReportWin32.cpp catches the faults. A vectored handler reports every hard fault as it is raised, as the loader
+  does. The unhandled-exception filter writes crash.dmp (the full-memory minidump) for the fault that ends the process.
+  The loader writes it for the first fault: in a standalone run that is the same fault, and a fault some library
+  takes care of costs no 350 MB dump.
+- Closing the window now reports every other thread (`CrashReport_Threads`, the record of a freeze) and ends the
+  process with HostExitProcess, as the loader does. Before, main returned with the game's thread still running.
+- CrashReportPosix.cpp is the Linux body: signal handlers (SIGSEGV, SIGBUS, SIGILL, SIGFPE, SIGTRAP, SIGABRT, on an
+  alternate stack). They write the same text report (registers from the ucontext, readable and executable memory from
+  /proc/self/maps, module names from dladdr), then let the signal take its default course. There is no minidump and no
+  thread snapshot. It compiles for i386 Linux in the nf-cross image with the HostPosix.cpp recipe (portable.md) and
+  no warnings.
+- `NIGHTFIRE_CRASHTEST=<ms>` (devtools/CrashTest.cpp, driving_standalone_test only) writes to address 0x10 on a
+  thread of its own after that many milliseconds.
+- `python tools/symbolise.py --map Release/driving_standalone_test.map crash.log` names our functions. It rebases the
+  map by the report's "loaded at" line, and `--base module=0x...` gives a base the report lacks. The same works for
+  the injected build's DLL, with drivinginject.map and the drive log, where the loader prints the DLL's base.
+  Undecorated names are shortened (`Scheduler::Run`, `` `anonymous namespace'::Fault ``). symbolise.py also had a
+  bug: its pattern only matched XBE addresses below 0x00100000. It now names any address in the image, except in a
+  standalone report.
+- The test (runner, mission 1, 15 s): the report and a 343 MB crash.dmp. Symbolised, the report reads Fault+0x6,
+  FaultCaller+0xd, CrashThread+0x34.
+
+**Shadow coverage for the C++ library's last ports**: two new parts of CRuntimeShadowB, beside the old ones.
+- "strstreambuf virtuals" covers overflow, pbackfail, underflow, seekoff and seekpos (and fpos(streamoff) through
+  them). It uses ten buffer layouts over a lent text, eight _Strstate modes and the characters each function treats
+  apart. Overflow is tried with operator new[] (the new block lent while it is described), with a recording
+  allocator over a lent arena, and with a recording free function, at five allocation sizes, one of them too big for
+  the arena. Seekoff and seekpos get every way and openmode, with positions inside and outside the buffer.
+- "other virtuals" covers the deleting destructors of exception, bad_cast, runtime_error, ios_base::failure,
+  type_info and `_Locimp` (with fake facets whose references run out), each in place (flags 0) and on the heap
+  (flags 1). It also covers the copy constructors and destructors of bad_cast, runtime_error and failure, the two
+  what()s, failure's `_Doraise` (the throw caught and compared) and the deleting destructors of a basic_ostream and an
+  ostrstream entered at their basic_ios.
+- Two input classes are left out: they fault on both sides alike. A dynamic buffer with a get area and no put area
+  sizes its growth from a null pointer, and copying an exception that owns a null message calls strlen on it.
+- A mutated build showed the parts can see a difference: pbackfail returning the character unmasked, and
+  exception::what's default string one letter short. Both were caught (60 and 3 differences).
+- One finding, fixed: `~basic_ostream`'s vbase destructor (0x00131a06) is entered at the basic_ostream (its one
+  caller, the deleting destructor 0x001319e7, passes this - 4). The port had taken it at the basic_ios. It is
+  `Ostream::DestructAll` now. Nothing reached it by the original's address (Ghidra: that one caller, now ours), so no
+  behaviour changed.
+- Results (runner, slots 9-16, against `lbase`). Shadow B on all eight missions: 14,040 cases, 0 differences; the
+  loader's fault counts per mission are ig2's exactly, so the new cases fault on neither side. Every other shadow was
+  clean too (round sp1, every frame dumped). The injected build's lockstep runs were 16 of 16 exact (sp1), and so were
+  driving_standalone_test's with the crash reporter installed (sp2): every frame, and every sound-trace line to
+  tick 9000.
+
+**What the injected build still reads in the image** (`NIGHTFIRE_TRAP_DATA=2`, every data page guarded from the end
+of `Inject()`, so the startup and the static initialisers are logged; lockstep, missions 1 and 5, idle and
+accelerating, to tick 9000; `tools/trap_data_summary.py`). All four runs logged the same 12 sites, and every frame was
+dumped. Each is a path only the injected build compiles (`#ifndef NIGHTFIRE_STANDALONE`), so the standalone executable
+reads none of them:
+
+| What | Reads | Who |
+|---|---|---|
+| The kernel import slots (`ImportRtlEnterCriticalSection` 288,847, `ImportRtlLeaveCriticalSection` 287,594, `ImportRtlInitializeCriticalSection` 2,558, `ImportKeTickCount`, `ImportHalBootSMCVideoMode`, and the slots the MmAllocateContiguousMemoryEx and ExQueryNonVolatileSetting wrappers read, once each) | R | KernelImports.cpp's injected body: each wrapper calls through the XBE's slot, which the loader filled with its kernel. The standalone body implements them over the host layer |
+| `XbeTls` (0x001a1ddc-0x001a1dec: the TLS directory's template, end and index address) | R, 5 | Xbox_Entry, the XBE entry point's port: it reads the header and TLS directory the loader mapped |
+| 0x00242b0c (the word the directory's index address names) | W, 1 | Xbox_Entry, storing the TLS block's index there as the original does; nothing reads it afterwards |
+
+Nothing else of .rdata, .data or .bss is touched from the end of `Inject()` to tick 9000: no static initialiser, no
+game code and no seam. (The 13 October TRAP_DATA=1 list above was before the data round and the standalone round.)
