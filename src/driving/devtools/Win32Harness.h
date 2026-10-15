@@ -9,10 +9,14 @@
 #ifndef _WIN32
 
 #include <errno.h>
-#include <semaphore.h>
 #include <stdlib.h>
 #include <sys/random.h>
 #include <time.h>
+#ifdef __APPLE__
+#include <dispatch/dispatch.h>   // Darwin has no unnamed POSIX semaphores
+#else
+#include <semaphore.h>
+#endif
 
 #include "../platform/Host.h"
 
@@ -83,6 +87,27 @@ static inline void LeaveCriticalSection(CRITICAL_SECTION *section) {
 }
 
 // Semaphores are the only objects the harness waits on
+#ifdef __APPLE__
+static inline HANDLE CreateSemaphoreA(SECURITY_ATTRIBUTES *, LONG initialCount, LONG, const char *) {
+    return dispatch_semaphore_create(initialCount);
+}
+
+static inline BOOL ReleaseSemaphore(HANDLE semaphore, LONG count, LONG *) {
+    while (count-- > 0)
+        dispatch_semaphore_signal(static_cast<dispatch_semaphore_t>(semaphore));
+    return TRUE;
+}
+
+static inline DWORD WaitForSingleObject(HANDLE semaphore, DWORD milliseconds) {
+    dispatch_time_t until = dispatch_time(DISPATCH_TIME_NOW, int64_t(milliseconds) * 1000000);
+    return dispatch_semaphore_wait(static_cast<dispatch_semaphore_t>(semaphore), until) == 0 ? WAIT_OBJECT_0
+                                                                                            : WAIT_TIMEOUT;
+}
+
+static inline int rand_s(unsigned *value) {
+    return getentropy(value, sizeof(*value)) == 0 ? 0 : EINVAL;
+}
+#else
 static inline HANDLE CreateSemaphoreA(SECURITY_ATTRIBUTES *, LONG initialCount, LONG, const char *) {
     sem_t *semaphore = new sem_t;
     sem_init(semaphore, 0, (unsigned)initialCount);
@@ -114,6 +139,7 @@ static inline DWORD WaitForSingleObject(HANDLE semaphore, DWORD milliseconds) {
 static inline int rand_s(unsigned *value) {
     return getrandom(value, sizeof(*value), 0) == sizeof(*value) ? 0 : EINVAL;
 }
+#endif
 
 #endif // !_WIN32
 

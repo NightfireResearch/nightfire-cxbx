@@ -43,11 +43,11 @@ typedef long LONG_PTR;
 typedef unsigned long ULONG_PTR, DWORD_PTR, SIZE_T;
 #else
 // LP64: long is 64 bits, so DWORD and LONG are the fixed-width types (Host.h's HostDword and HostLong), and the
-// pointer-sized ones are 64-bit Windows'
+// pointer-sized ones are long (Host.h's HostUlongPtr; uint64_t is unsigned long long on macOS)
 typedef uint32_t DWORD, ULONG;
 typedef int32_t LONG;
-typedef int64_t INT_PTR, LONG_PTR;
-typedef uint64_t UINT_PTR, ULONG_PTR, DWORD_PTR, SIZE_T;
+typedef long INT_PTR, LONG_PTR;
+typedef unsigned long UINT_PTR, ULONG_PTR, DWORD_PTR, SIZE_T;
 #endif
 static_assert(sizeof(DWORD) == 4 && sizeof(LONG) == 4 && sizeof(ULONG_PTR) == sizeof(void *), "Win32's sizes");
 

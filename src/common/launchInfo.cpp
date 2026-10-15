@@ -10,6 +10,9 @@
 #include <limits.h>
 #include <strings.h>
 #include <unistd.h>
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
 #endif
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -152,10 +155,16 @@ static bool StartLoaderFor(const char *executableName) {
     }
 
     char path[PATH_MAX];
+#ifdef __APPLE__
+    uint32_t capacity = sizeof(path);
+    if (_NSGetExecutablePath(path, &capacity) != 0)
+        return false;
+#else
     ssize_t length = readlink("/proc/self/exe", path, sizeof(path) - 1);
     if (length <= 0)
         return false;
     path[length] = '\0';
+#endif
 
     fflush(stdout);
     pid_t process = fork();

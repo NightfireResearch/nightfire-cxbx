@@ -22,6 +22,10 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef __APPLE__
+#include <mach/mach.h>
+#include <mach/mach_vm.h>
+#endif
 
 // The host layer on a POSIX system (docs/driving/portable.md): pthreads, clock_gettime and POSIX files behind the
 // Win32 shapes Host.h describes. Handles are objects of ours; errors are Win32's numbers, kept per thread.
@@ -32,6 +36,9 @@
 //   - IsBadWritePtr answers whether the memory can be read;
 //   - RaiseException has no structured exception handling to raise into: it reports and aborts;
 //   - the time zone is the C library's current offset, with no transition dates.
+//
+// Darwin (docs/driving/macos.md 5) has no MAP_FIXED_NOREPLACE, /proc, clock_nanosleep or monotonic condition
+// waits: the pages are placed by Mach's VM calls and the waits are relative. Its pages are never executable (W^X).
 
 // The Win32 numbers this file produces or takes
 enum : unsigned long {
@@ -116,7 +123,9 @@ static void InitSignal(Signal *signal, bool manualReset, bool signaled) {
     pthread_mutex_init(&signal->mutex, NULL);
     pthread_condattr_t attributes;
     pthread_condattr_init(&attributes);
+#ifndef __APPLE__
     pthread_condattr_setclock(&attributes, CLOCK_MONOTONIC);
+#endif
     pthread_cond_init(&signal->cond, &attributes);
     pthread_condattr_destroy(&attributes);
     signal->manualReset = manualReset;
@@ -138,6 +147,32 @@ static void Raise(Signal *signal) {
     pthread_mutex_unlock(&signal->mutex);
 }
 
+#ifdef __APPLE__
+// The CLOCK_MONOTONIC time from now to `deadline`, or false if it has passed
+static bool TimeLeft(const timespec *deadline, timespec *left) {
+    timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    left->tv_sec = deadline->tv_sec - now.tv_sec;
+    left->tv_nsec = deadline->tv_nsec - now.tv_nsec;
+    if (left->tv_nsec < 0) {
+        left->tv_sec--;
+        left->tv_nsec += 1000000000;
+    }
+    return left->tv_sec >= 0;
+}
+#endif
+
+static int TimedWait(Signal *signal, const timespec *deadline) {
+#ifdef __APPLE__
+    timespec left;
+    if (!TimeLeft(deadline, &left))
+        return ETIMEDOUT;
+    return pthread_cond_timedwait_relative_np(&signal->cond, &signal->mutex, &left);
+#else
+    return pthread_cond_timedwait(&signal->cond, &signal->mutex, deadline);
+#endif
+}
+
 static HostDword WaitFor(Signal *signal, HostDword milliseconds) {
     timespec deadline;
     clock_gettime(CLOCK_MONOTONIC, &deadline);
@@ -153,7 +188,7 @@ static HostDword WaitFor(Signal *signal, HostDword milliseconds) {
     while (!signal->signaled) {
         if (milliseconds == HOST_INFINITE) {
             pthread_cond_wait(&signal->cond, &signal->mutex);
-        } else if (pthread_cond_timedwait(&signal->cond, &signal->mutex, &deadline) == ETIMEDOUT) {
+        } else if (TimedWait(signal, &deadline) == ETIMEDOUT) {
             result = signal->signaled ? HOST_WAIT_OBJECT_0 : HOST_WAIT_TIMEOUT;
             break;
         }
@@ -581,7 +616,7 @@ size_t HostHeapSize(HostHandle heap, HostDword flags, const void *block) {
 #endif
 
 // ---- pages: placed as the Win32 body places them, at the lowest free 64 KB boundary in the range, which the
-// process's map (/proc/self/maps) shows; each mapping's length is kept for its release.
+// process's map (/proc/self/maps, Darwin's mach_vm_region) shows; each mapping's length is kept for its release.
 
 struct PageMapping {
     void *block;
@@ -590,13 +625,63 @@ struct PageMapping {
 static PageMapping PageMappings[1024];
 static pthread_mutex_t PageMappingsLock = PTHREAD_MUTEX_INITIALIZER;
 
+#ifdef __APPLE__
+const int kPageProtection = PROT_READ | PROT_WRITE;
+#define MAP_STACK 0
+#else
+const int kPageProtection = PROT_READ | PROT_WRITE | PROT_EXEC;
+#endif
+
+// `length` bytes at `address`, or MAP_FAILED where anything is mapped already
+static void *MapFixed(uintptr_t address, size_t length, int protection, int flags) {
+#ifdef __APPLE__
+    (void)flags;
+    mach_vm_address_t at = address;
+    if (mach_vm_allocate(mach_task_self(), &at, length, VM_FLAGS_FIXED) != KERN_SUCCESS)
+        return MAP_FAILED;
+    if (protection != (PROT_READ | PROT_WRITE))
+        mprotect(reinterpret_cast<void *>(at), length, protection);
+    return reinterpret_cast<void *>(at);
+#else
+    return mmap(reinterpret_cast<void *>(address), length, protection,
+                MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE | flags, -1, 0);
+#endif
+}
+
 static void *MapAt(uintptr_t address, size_t size) {
-    int flags = MAP_PRIVATE | MAP_ANONYMOUS | (address != 0 ? MAP_FIXED_NOREPLACE : 0);
-    void *block = mmap((void *)address, size, PROT_READ | PROT_WRITE | PROT_EXEC, flags, -1, 0);
+    void *block = address != 0 ? MapFixed(address, size, kPageProtection, 0)
+                               : mmap(NULL, size, kPageProtection, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     return block == MAP_FAILED || (address != 0 && block != (void *)address) ? NULL : block;
 }
 
 // The lowest gap between the mappings that holds `size` bytes from a 64 KB boundary in [lowest, limit)
+#ifdef __APPLE__
+static void *MapLowest(size_t size, uintptr_t lowest, uintptr_t limit) {
+    const uintptr_t granularity = 0x10000;
+    uintptr_t address = (lowest + granularity - 1) & ~(granularity - 1);
+    if (address < granularity)
+        address = granularity;
+    while (address < limit && size <= limit - address) {
+        mach_vm_address_t start = address;   // the first mapping that ends above the address
+        mach_vm_size_t length = 0;
+        vm_region_basic_info_data_64_t info;
+        mach_msg_type_number_t count = VM_REGION_BASIC_INFO_COUNT_64;
+        mach_port_t object;
+        if (mach_vm_region(mach_task_self(), &start, &length, VM_REGION_BASIC_INFO_64,
+                           reinterpret_cast<vm_region_info_t>(&info), &count, &object) != KERN_SUCCESS) {
+            start = limit;   // past the last mapping, the gap runs to the limit
+            length = 0;
+        }
+        if (start > address && start - address >= size) {
+            void *block = MapAt(address, size);
+            if (block != NULL)
+                return block;
+        }
+        address = (start + length + granularity - 1) & ~(granularity - 1);
+    }
+    return NULL;
+}
+#else
 static void *MapLowest(size_t size, uintptr_t lowest, uintptr_t limit) {
     const uintptr_t granularity = 0x10000;
     FILE *maps = fopen("/proc/self/maps", "r");
@@ -620,6 +705,7 @@ static void *MapLowest(size_t size, uintptr_t lowest, uintptr_t limit) {
     fclose(maps);
     return block;
 }
+#endif
 
 #if UINTPTR_MAX > 0xffffffffu
 // The lowest free range of `length` bytes at or above the window offset `lowest` that ends in the game window,
@@ -630,15 +716,30 @@ static void *MapLow(size_t length, uintptr_t lowest, int protection, int flags) 
         lowest = step;
     for (uintptr_t address = kGameWindowBase + ((lowest + step - 1) & ~(step - 1)); address + length <= kGameWindowEnd;
          address += step) {
-        void *mapping = mmap(reinterpret_cast<void *>(address), length, protection,
-                             MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE | flags, -1, 0);
+        void *mapping = MapFixed(address, length, protection, flags);
         if (mapping != MAP_FAILED)
             return mapping;
     }
     return MAP_FAILED;
 }
 
+#ifdef __APPLE__
+// Before main, Darwin puts mappings of its own (malloc's regions, the main thread's stack) at random in the window's
+// only free space, the 2 GB between the image and the shared cache, so that 1 GB in one piece is often not left. The
+// image holds the reservations instead, as a zero-fill section, whose pages cost nothing until they are used.
+alignas(0x4000) static char ImageReserve[size_t(1) << 30];
+static size_t ImageReserveUsed;
+#endif
+
 void *HostReserveLow(size_t size, uintptr_t lowest) {
+#ifdef __APPLE__
+    if (size <= sizeof(ImageReserve) - ImageReserveUsed) {
+        char *block = ImageReserve + ImageReserveUsed;
+        ImageReserveUsed += (size + 0x3fff) & ~size_t(0x3fff);   // in pages
+        if (mprotect(block, size, PROT_NONE) == 0)
+            return block;
+    }
+#endif
     void *mapping = MapLow(size, lowest, PROT_NONE, MAP_NORESERVE);
     return mapping != MAP_FAILED ? mapping : NULL;
 }
@@ -661,7 +762,7 @@ void *HostAllocatePages(size_t size, uintptr_t lowest, uintptr_t limit) {
 #if UINTPTR_MAX > 0xffffffffu   // offsets in the game window, whose first 64 KB stays free; else anywhere in it
     void *block = MapLowest(size, kGameWindowBase + (lowest > 0x10000 ? lowest : 0x10000), kGameWindowBase + limit);
     if (block == NULL) {
-        block = MapLow(size, 0x10000, PROT_READ | PROT_WRITE | PROT_EXEC, 0);
+        block = MapLow(size, 0x10000, kPageProtection, 0);
         if (block == MAP_FAILED)
             block = NULL;
     }
@@ -1050,8 +1151,13 @@ static void *TimerMain(void *argument) {
             due.tv_sec++;
             due.tv_nsec -= 1000000000;
         }
+#ifdef __APPLE__
+        for (timespec left; TimeLeft(&due, &left) && (left.tv_sec != 0 || left.tv_nsec != 0);)
+            nanosleep(&left, NULL);
+#else
         while (clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &due, NULL) == EINTR) {
         }
+#endif
         timer->callback(timer->id, 0, timer->user, 0, 0);
         if (!timer->periodic)
             break;
@@ -1194,10 +1300,23 @@ int HostIsBadReadPtr(const void *pointer, size_t bytes) {
     static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     static int pipeEnds[2] = { -1, -1 };
     pthread_mutex_lock(&mutex);
+#ifdef __APPLE__   // pipe2 is macOS 27's
+    if (pipeEnds[0] < 0) {
+        if (pipe(pipeEnds) != 0) {
+            pthread_mutex_unlock(&mutex);
+            return 0;
+        }
+        for (int end : pipeEnds) {
+            fcntl(end, F_SETFD, FD_CLOEXEC);
+            fcntl(end, F_SETFL, O_NONBLOCK);
+        }
+    }
+#else
     if (pipeEnds[0] < 0 && pipe2(pipeEnds, O_CLOEXEC | O_NONBLOCK) != 0) {
         pthread_mutex_unlock(&mutex);
         return 0;
     }
+#endif
     const long page = sysconf(_SC_PAGESIZE);
     uintptr_t first = (uintptr_t)pointer, last = first + bytes - 1;
     int bad = 0;

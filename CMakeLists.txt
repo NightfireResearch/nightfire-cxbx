@@ -874,11 +874,16 @@ foreach(target actioninject drivinginject fmvaudiocheck)
 endforeach()
 else()
   # The same release's shared libraries for the host, which the committed headers fit: built by
-  # "tools/fmv/build_ffmpeg.sh linux-i386 <prefix>" and named here by <prefix>/lib.
+  # "tools/fmv/build_ffmpeg.sh linux-i386 <prefix>" (or macos-arm64) and named here by <prefix>/lib.
   set(NF_FFMPEG_LIB_DIR "" CACHE PATH "The host's FFmpeg shared libraries (libavutil.so.60...)")
-  if(NF_FFMPEG_LIB_DIR)
+  if(NF_FFMPEG_LIB_DIR AND APPLE)
+    set(NF_FFMPEG_FILES ${NF_FFMPEG_LIB_DIR}/libavutil.60.dylib ${NF_FFMPEG_LIB_DIR}/libavcodec.62.dylib
+                        ${NF_FFMPEG_LIB_DIR}/libavformat.62.dylib)
+  elseif(NF_FFMPEG_LIB_DIR)
     set(NF_FFMPEG_FILES ${NF_FFMPEG_LIB_DIR}/libavutil.so.60 ${NF_FFMPEG_LIB_DIR}/libavcodec.so.62
                         ${NF_FFMPEG_LIB_DIR}/libavformat.so.62)
+  endif()
+  if(NF_FFMPEG_LIB_DIR)
     file(GLOB nf_ffmpeg_notes ${NF_FFMPEG_DIR}/FFmpeg-*.txt)
     list(APPEND NF_FFMPEG_FILES ${nf_ffmpeg_notes})
   else()
@@ -905,8 +910,12 @@ endif()
 
 # Direct3D 9 on a host without it: dxvk-native, D3D9 over Vulkan with SDL3 as its window system. Its release
 # tarball carries i386 libraries (lib32) as well as x86-64 ones, built for the Steam runtime, so the build takes
-# that, pinned by version and hash; NF_DXVK_DIR takes an extracted release (its usr directory) instead.
-if(NOT WIN32)
+# that, pinned by version and hash; NF_DXVK_DIR takes an extracted release (its usr directory) instead. macOS has
+# none (docs/driving/macos.md 1.1): only the SDL GPU backend.
+if(APPLE AND NOT NIGHTFIRE_GFX STREQUAL "sdlgpu")
+  message(FATAL_ERROR "A build for macOS needs NIGHTFIRE_GFX=sdlgpu: there is no dxvk-native for it")
+endif()
+if(NOT WIN32 AND NOT APPLE)
   set(NF_DXVK_DIR "" CACHE PATH "An extracted dxvk-native release's usr directory; empty to fetch the pinned one")
   if(NOT NF_DXVK_DIR)
     include(FetchContent)
@@ -924,11 +933,20 @@ if(NOT WIN32)
   add_library(dxvk_d3d9 SHARED IMPORTED)
   set_target_properties(dxvk_d3d9 PROPERTIES IMPORTED_LOCATION ${NF_DXVK_D3D9}
                                              INTERFACE_INCLUDE_DIRECTORIES ${NF_DXVK_DIR}/include/dxvk)
+endif()
+if(NOT WIN32)
   find_package(Threads REQUIRED)
   # The executable finds SDL3, dxvk and FFmpeg beside itself.
-  set(CMAKE_BUILD_RPATH "\$ORIGIN")
+  if(APPLE)
+    set(CMAKE_BUILD_RPATH "@executable_path")
+  else()
+    set(CMAKE_BUILD_RPATH "\$ORIGIN")
+  endif()
   if(CMAKE_SIZEOF_VOID_P EQUAL 4)
     include(cmake/xbox-abi-linux.cmake)
+  elseif(APPLE)
+    # arm64 has one ABI too, and no x86 intrinsics: the game's sources are ordinary macOS code
+    set(NF_XBOX_ABI_OPTIONS)
   else()
     # x86-64 has one ABI (docs/driving/64-bit.md 7.11): the game's sources are ordinary Linux code, with MSVC's
     # <intrin.h> from src/common/linux
@@ -952,6 +970,9 @@ if(NOT WIN32)
     src/common/gfx/shaderBuilder.cpp
     src/common/gfx/shaderSpirv.cpp
     ${nf_gfx_host_sources})
+  if(APPLE)   # the D3D9 backend's Win32 calls, whose types are dxvk's
+    list(REMOVE_ITEM nf_host_abi_sources src/common/linux/win32Calls.cpp)
+  endif()
 endif()
 
 # The standalone driving engine (docs/driving/standalone.md): our code alone, with no Driving.xbe mapped or read, no
@@ -1031,6 +1052,9 @@ function(nf_game_window target)
     elseif(WIN32)
       target_link_options(${target} PRIVATE -Wl,--image-base,${image_base} -Wl,--disable-dynamicbase
                                             -Wl,--disable-high-entropy-va)
+    elseif(APPLE)
+      # Position-independent, at 4 GB plus the slide: __PAGEZERO cannot be made smaller on arm64, and the image
+      # cannot be placed (docs/driving/macos.md 2). The arena's set-up stops the game if the image is outside.
     else()
       # Not position-independent (the toolchain), with the position-independent start-up files: the C library's
       # others hold 32-bit absolute addresses, which a window above 4 GB does not reach
@@ -1043,7 +1067,7 @@ function(nf_game_window target)
     endif()
   endif()
 endfunction()
-if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT WIN32)
+if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT WIN32 AND NOT APPLE)
   foreach(file Scrt1.o crti.o crtbeginS.o crtendS.o crtn.o)
     execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=${file} OUTPUT_VARIABLE path
                     OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -1081,7 +1105,10 @@ foreach(target driving_standalone driving_standalone_test)
   if(WIN32)
     target_link_libraries(${target} PRIVATE d3d9 winmm xinput9_1_0 ${XAUDIO2_LIB} shell32)
   elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    target_link_libraries(${target} PRIVATE dxvk_d3d9 ${CMAKE_DL_LIBS} Threads::Threads)
+    if(NOT APPLE)
+      target_link_libraries(${target} PRIVATE dxvk_d3d9)
+    endif()
+    target_link_libraries(${target} PRIVATE ${CMAKE_DL_LIBS} Threads::Threads)
     target_compile_options(${target} PRIVATE -include ${CMAKE_SOURCE_DIR}/src/common/linux/msvcNames.h)
     add_custom_command(TARGET ${target} POST_BUILD   # beside the executable
                        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_SONAME_FILE:SDL3::SDL3> ${NF_DXVK_D3D9}
@@ -1100,6 +1127,8 @@ foreach(target driving_standalone driving_standalone_test)
   endif()
   if(MSVC)
     target_link_options(${target} PRIVATE /MAP)
+  elseif(APPLE)
+    target_link_options(${target} PRIVATE -Wl,-map,${target}.map)
   else()
     target_link_options(${target} PRIVATE -Wl,-Map,${target}.map)
   endif()
@@ -1120,6 +1149,8 @@ endforeach()
 if(NIGHTFIRE_GFX STREQUAL "sdlgpu")
   if(WIN32)
     set(nf_msl_users drivinginject driving_standalone driving_standalone_test)
+  elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)   # the host's sources are the executables' own
+    set(nf_msl_users driving_standalone driving_standalone_test)
   else()
     set(nf_msl_users drivinghost)
   endif()

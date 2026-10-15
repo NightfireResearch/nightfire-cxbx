@@ -11,6 +11,9 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
 #define MAX_PATH PATH_MAX
 #endif
 
@@ -42,9 +45,14 @@ static void ResolveAgainstOwnFolder(const char *path, char *out, size_t outSize)
         length = GetModuleFileNameA(self, exe, sizeof(exe));
 #else
     // The executable's folder, which this library shares
+#ifdef __APPLE__
+    uint32_t capacity = sizeof(exe);
+    ssize_t length = !absolute && _NSGetExecutablePath(exe, &capacity) == 0 ? (ssize_t)strlen(exe) : 0;
+#else
     ssize_t length = absolute ? 0 : readlink("/proc/self/exe", exe, sizeof(exe) - 1);
     if (length > 0)
         exe[length] = '\0';
+#endif
 #endif
     char *lastSeparator = NULL;
     if (length > 0 && (size_t)length < sizeof(exe)) {

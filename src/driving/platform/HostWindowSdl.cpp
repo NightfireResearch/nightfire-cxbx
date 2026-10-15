@@ -7,6 +7,8 @@
 #include <SDL3/SDL_main.h>
 #endif
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "../../common/renderWindow.h"
 
@@ -25,13 +27,35 @@ bool HostWindow_Open(int width, int height, const char *title) {
 #endif
     // Pads are read whether or not the window is in front, as XInput reads them.
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+#ifdef __APPLE__
+    // SDL's Metal GPU driver needs a video driver that makes Metal views, which the offscreen one does not: a headless
+    // run (SDL_VIDEO_DRIVER=offscreen) has Cocoa's instead, as a background application whose window is never shown.
+    const char *driver = getenv("SDL_VIDEO_DRIVER");
+    bool headless = driver != NULL && strcmp(driver, "offscreen") == 0;
+    if (headless) {
+        SDL_SetHintWithPriority(SDL_HINT_VIDEO_DRIVER, "cocoa", SDL_HINT_OVERRIDE);
+        SDL_SetHint(SDL_HINT_MAC_BACKGROUND_APP, "1");
+    }
+#endif
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_AUDIO)) {
         printf("[sdl] SDL could not start: %s\n", SDL_GetError());
         fflush(stdout);
         return false;
     }
-#if defined(_WIN32) && !defined(NIGHTFIRE_GFX_SDLGPU) || defined(__APPLE__)
-    // Direct3D 9 presents into the window as it is; SDL's Metal driver makes a Metal view of it when it claims it
+#if defined(__APPLE__)
+    // SDL's Metal driver makes a Metal view of the window when it claims it. A window with no graphics flags would be
+    // made for OpenGL on macOS: the context is said to be external instead, so that none is loaded.
+    SDL_PropertiesID properties = SDL_CreateProperties();
+    SDL_SetStringProperty(properties, SDL_PROP_WINDOW_CREATE_TITLE_STRING, title);
+    SDL_SetNumberProperty(properties, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, width);
+    SDL_SetNumberProperty(properties, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, height);
+    SDL_SetBooleanProperty(properties, SDL_PROP_WINDOW_CREATE_RESIZABLE_BOOLEAN, true);
+    SDL_SetBooleanProperty(properties, SDL_PROP_WINDOW_CREATE_HIDDEN_BOOLEAN, headless);
+    SDL_SetBooleanProperty(properties, SDL_PROP_WINDOW_CREATE_EXTERNAL_GRAPHICS_CONTEXT_BOOLEAN, true);
+    Window = SDL_CreateWindowWithProperties(properties);
+    SDL_DestroyProperties(properties);
+#elif defined(_WIN32) && !defined(NIGHTFIRE_GFX_SDLGPU)
+    // Direct3D 9 presents into the window as it is
     Window = SDL_CreateWindow(title, width, height, SDL_WINDOW_RESIZABLE);
 #else
     // Presented through a Vulkan surface of this window: dxvk-native's D3D9, or SDL's GPU API on its Vulkan driver

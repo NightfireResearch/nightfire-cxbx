@@ -19,9 +19,15 @@ typedef HMODULE Library;
 typedef void *Library;
 #define OpenLibrary(name) dlopen(name, RTLD_NOW)
 #define LibrarySymbol(library, name) dlsym(library, name)
+#ifdef __APPLE__
+#define AVUTIL "@rpath/libavutil.60.dylib"
+#define AVCODEC "@rpath/libavcodec.62.dylib"
+#define AVFORMAT "@rpath/libavformat.62.dylib"
+#else
 #define AVUTIL "libavutil.so.60"
 #define AVCODEC "libavcodec.so.62"
 #define AVFORMAT "libavformat.so.62"
+#endif
 #endif
 
 FfmpegApi ff;

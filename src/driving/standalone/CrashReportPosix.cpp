@@ -6,12 +6,20 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ucontext.h>
 #include <unistd.h>
+#ifdef __APPLE__
+#include <mach/mach.h>
+#include <mach/mach_vm.h>
+#include <sys/ucontext.h>
+#else
+#include <ucontext.h>
+#endif
 
 // Signal handlers for the faults, each writing the text report and then letting the signal take its default course
 // (a core dump, if the system keeps them): there is no minidump here. Readable memory and code are found from
-// /proc/self/maps, read once a report.
+// /proc/self/maps (Darwin's mach_vm_region), read once a report. On arm64 the report's registers are x0-x5, pc, sp,
+// fp and cpsr in place of eax-edi, eip, esp, ebp and eflags, and x8-x15 in place of r8-r15: fp's frame records are
+// laid out as ebp's.
 
 namespace {
 
@@ -35,6 +43,26 @@ uintptr_t Hex(const char **p) {
     }
 }
 
+#ifdef __APPLE__
+void ReadMappings(void) {
+    g_mappingCount = 0;
+    for (mach_vm_address_t address = 0; g_mappingCount < 1024;) {
+        mach_vm_size_t length = 0;
+        vm_region_basic_info_data_64_t info;
+        mach_msg_type_number_t count = VM_REGION_BASIC_INFO_COUNT_64;
+        mach_port_t object;
+        if (mach_vm_region(mach_task_self(), &address, &length, VM_REGION_BASIC_INFO_64,
+                           reinterpret_cast<vm_region_info_t>(&info), &count, &object) != KERN_SUCCESS)
+            break;
+        Mapping &m = g_mappings[g_mappingCount++];
+        m.start = address;
+        m.end = address + length;
+        m.readable = (info.protection & VM_PROT_READ) != 0;
+        m.executable = (info.protection & VM_PROT_EXECUTE) != 0;
+        address += length;
+    }
+}
+#else
 // Each line: "start-end perms offset dev inode path"
 void ReadMappings(void) {
     g_mappingCount = 0;
@@ -61,6 +89,7 @@ void ReadMappings(void) {
             p++;
     }
 }
+#endif
 
 const Mapping *MappingOf(uintptr_t address) {
     for (int i = 0; i < g_mappingCount; i++) {
@@ -105,6 +134,14 @@ void ReportSignal(int signal, siginfo_t *info, void *context) {
                              { uintptr_t(g[REG_R8]), uintptr_t(g[REG_R9]), uintptr_t(g[REG_R10]), uintptr_t(g[REG_R11]),
                                uintptr_t(g[REG_R12]), uintptr_t(g[REG_R13]), uintptr_t(g[REG_R14]),
                                uintptr_t(g[REG_R15]) } };
+#elif defined(__APPLE__) && defined(__aarch64__)
+        const __darwin_arm_thread_state64 &g = uc->uc_mcontext->__ss;
+        CrashRegisters r = { uintptr_t(g.__x[0]), uintptr_t(g.__x[1]), uintptr_t(g.__x[2]), uintptr_t(g.__x[3]),
+                             uintptr_t(g.__x[4]), uintptr_t(g.__x[5]), uintptr_t(g.__pc), uintptr_t(g.__sp),
+                             uintptr_t(g.__fp), uintptr_t(g.__cpsr),
+                             { uintptr_t(g.__x[8]), uintptr_t(g.__x[9]), uintptr_t(g.__x[10]), uintptr_t(g.__x[11]),
+                               uintptr_t(g.__x[12]), uintptr_t(g.__x[13]), uintptr_t(g.__x[14]),
+                               uintptr_t(g.__x[15]) } };
 #else
         (void)uc;
         CrashRegisters r = {};

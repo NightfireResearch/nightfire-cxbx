@@ -47,6 +47,17 @@ bool ShaderMsl_Translate(const uint32_t *words, size_t wordCount, std::string *s
             slot.msl_sampler = binding;
             compiler.add_msl_resource_binding(slot);
         }
+        // Metal matches a pixel program's inputs to the vertex program's outputs by type as well as location, where
+        // Vulkan takes fewer components: each input is declared as the interface's output (shaderSpirv.h), float4 but
+        // for the fog factor, and the program reads what it reads of it
+        if (stage == spv::ExecutionModelFragment) {
+            for (const spirv_cross::Resource &input : resources.stage_inputs) {
+                spirv_cross::MSLShaderInterfaceVariable variable;
+                variable.location = compiler.get_decoration(input.id, spv::DecorationLocation);
+                variable.vecsize = variable.location == 6 ? 1 : 4;
+                compiler.add_msl_shader_input(variable);
+            }
+        }
         if (!resources.separate_images.empty() || !resources.separate_samplers.empty() ||
             !resources.storage_buffers.empty() || !resources.storage_images.empty()) {
             *error = "resources other than uniform buffers and combined samplers";

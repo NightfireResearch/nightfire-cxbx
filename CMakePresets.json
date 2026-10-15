@@ -59,6 +59,17 @@
       "toolchainFile": "${sourceDir}/cmake/toolchain-linux-x64.cmake",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "NIGHTFIRE_SDL": "ON" },
       "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" }
+    },
+    {
+      "name": "macos-arm64",
+      "displayName": "macOS - Apple clang, native arm64, the standalone driving engine",
+      "description": "SDL3, its GPU API on Metal; FFmpeg 8.0 from tools/fmv/build_ffmpeg.sh macos-arm64. See docs/driving/macos.md.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/macos-arm64",
+      "toolchainFile": "${sourceDir}/cmake/toolchain-macos-arm64.cmake",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "NIGHTFIRE_SDL": "ON", "NIGHTFIRE_GFX": "sdlgpu",
+                          "NIGHTFIRE_WINDOW_BASE": "0x100000000" },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" }
     }
   ],
   "buildPresets": [
@@ -68,6 +79,7 @@
     { "name": "macos", "configurePreset": "macos" },
     { "name": "linux", "configurePreset": "linux" },
     { "name": "linux-i386", "configurePreset": "linux-i386", "targets": [ "driving_standalone", "driving_standalone_test" ] },
-    { "name": "linux-x64", "configurePreset": "linux-x64", "targets": [ "driving_standalone", "driving_standalone_test" ] }
+    { "name": "linux-x64", "configurePreset": "linux-x64", "targets": [ "driving_standalone", "driving_standalone_test" ] },
+    { "name": "macos-arm64", "configurePreset": "macos-arm64", "targets": [ "driving_standalone", "driving_standalone_test" ] }
   ]
 }
