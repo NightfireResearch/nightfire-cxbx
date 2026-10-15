@@ -3,6 +3,7 @@
 #include "CRuntimeInternal.h"
 
 #include <windows.h>
+#include <fenv.h>
 #include <math.h>
 #include <stdint.h>
 #include <string.h>
@@ -638,6 +639,7 @@ double DomainError(double x) {
     return result;
 }
 
+#if NIGHTFIRE_X87
 // A NaN operand's NaN, as the x87 picks it from two (the larger significand, quietened).
 __declspec(naked) double X87NaN(double, double) {
     __asm {
@@ -646,6 +648,25 @@ __declspec(naked) double X87NaN(double, double) {
         ret
     }
 }
+#else
+// A NaN operand's NaN, as the x87 picks it from two: FLD quietens the first; of two quiet NaNs the larger
+// significand, and a signalling second loses to the quiet first.
+double X87NaN(double x, double y) {
+    const uint64_t kQuiet = 0x0008000000000000ull, kSignificand = 0x000fffffffffffffull;
+    uint64_t a, b;
+    memcpy(&a, &x, 8);
+    memcpy(&b, &y, 8);
+    uint64_t pick;
+    if (x != x && y != y)
+        pick = (b & kQuiet) == 0 || ((a | kQuiet) & kSignificand) >= (b & kSignificand) ? a : b;
+    else
+        pick = x != x ? a : b;
+    pick |= kQuiet;
+    double result;
+    memcpy(&result, &pick, 8);
+    return result;
+}
+#endif
 
 // pow where the x87 path does not apply: a zero, infinite or NaN operand, or a negative base with a fractional
 // exponent. As the runtime: a NaN operand gives a NaN and +-1 to an infinite power the indefinite NaN, both domain
@@ -680,6 +701,7 @@ double PowOverflow(double answer) {
     return answer;
 }
 
+#if NIGHTFIRE_X87
 // pow's answer below the normal doubles, as the runtime's masked-underflow handling (_handle_exc) makes it from the
 // answer scaled up by 2^1536 and rounded to a double: the mantissa shifted down to a denormal, the bits shifted out
 // dropped rather than rounded.
@@ -698,6 +720,7 @@ double PowUnderflow(double scaled) {
     memcpy(&result, &mantissa, 8);
     return scaled < 0.0 ? -result : result;
 }
+#endif
 
 // The x87 status word's exception flags as the runtime's _SW_ bits (__abstract_sw).
 unsigned AbstractStatus(unsigned status) {
@@ -720,6 +743,7 @@ unsigned AbstractStatus(unsigned status) {
 } // namespace
 } // namespace Crt
 
+#if NIGHTFIRE_X87
 // The arc cosine of ST0, answered in ST0 unrounded: atan2(sqrt((1 + x)(1 - x)), x) on the x87, as the runtime
 // computes it (with the FPU at the game's 53-bit precision); exactly pi or 0 at -1 and 1.
 // FUNC_AT(0x001328d0)
@@ -920,7 +944,32 @@ __declspec(naked) void Crt::CIpow() {
         ret
     }
 }
+#else
+// The runtime's arc cosine, arc sine and pow in C: the same domain errors, overflows and edge cases, the answers
+// <math.h>'s. Untagged: the injection's tags are on the x87 forms above.
+double Crt::CIacos(double x) {
+    if (!(fabs(x) <= 1.0))
+        return DomainError(x);
+    return acos(x);
+}
 
+double Crt::CIasin(double x) {
+    if (!(fabs(x) <= 1.0))
+        return DomainError(x);
+    return asin(x);
+}
+
+double Crt::CIpow(double x, double y) {
+    if (x == 0.0 || !isfinite(x) || !isfinite(y) || (x < 0.0 && floor(y) != y))
+        return PowEdge(x, y);
+    double answer = pow(x, y);
+    if (isinf(answer))
+        return PowOverflow(answer);
+    return answer;
+}
+#endif
+
+#if NIGHTFIRE_X87
 // _fpmath, which _cinit calls first: the conversion pointers printf and scanf would go through (_cfltcvt_init: left
 // out, our printf and scanf call the conversions directly), then the x87 at 53-bit precision (_setdefaultprecision:
 // _controlfp(_PC_53, _MCW_PC), which leaves the other control bits as they are) and its exceptions cleared.
@@ -950,3 +999,27 @@ __declspec(naked) unsigned Crt::_clearfp() {
         ret
     }
 }
+#else
+// _fpmath without an x87: no precision to set (double is double), the exceptions cleared.
+void Crt::_fpmath() {
+    feclearexcept(FE_ALL_EXCEPT);
+}
+
+// The floating-point exceptions raised, as the runtime abstracts the x87 status, then cleared.
+unsigned Crt::_clearfp() {
+    int raised = fetestexcept(FE_ALL_EXCEPT);
+    feclearexcept(FE_ALL_EXCEPT);
+    unsigned status = 0;          // as the x87 status word's flags
+    if (raised & FE_INVALID)
+        status |= 0x01;
+    if (raised & FE_DIVBYZERO)
+        status |= 0x04;
+    if (raised & FE_OVERFLOW)
+        status |= 0x08;
+    if (raised & FE_UNDERFLOW)
+        status |= 0x10;
+    if (raised & FE_INEXACT)
+        status |= 0x20;
+    return AbstractStatus(status);
+}
+#endif

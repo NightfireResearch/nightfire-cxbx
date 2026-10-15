@@ -104,6 +104,7 @@ static float DiagonalBoost = 0.005f * 0.2f;             // as a static initialis
 
 namespace {
 
+#if NIGHTFIRE_X87
 double (*const SinTurnsUnrounded)(float) = SinTurnsWrapped;
 double (*const TanTurnsUnrounded)(float) = TanTurnsWrapped;
 
@@ -149,12 +150,25 @@ __declspec(naked) double DivideByTanTurns(float value, float turns) {
         ret
     }
 }
-
-// FPATAN's result times 1/2pi, unrounded: atan_turns is assembly that leaves it in ST0.
-typedef double (*UnroundedTurnsFn)(float, float);
-double AtanTurnsUnrounded(float y, float x) {
-    return reinterpret_cast<UnroundedTurnsFn>(&atan_turns)(y, x);
+#else
+// The sine, cosine and tangent multiplied or divided straight away, rounded to double only then
+double SinTurnsTimes(float turns, float factor) {
+    return SinTurnsWrapped(turns) * factor;
 }
+
+double CosTurnsTimes(float turns, float factor) {
+    return CosineTurns(turns) * factor;
+}
+
+double TanTurnsTimes(float turns, int factor) {
+    return TanTurnsWrapped(turns) * factor;
+}
+
+// value / tan(turns)
+double DivideByTanTurns(float value, float turns) {
+    return value / TanTurnsWrapped(turns);
+}
+#endif
 
 Coord4 Widened(const Coord3 &v) {
     Coord4 out = {v.x, v.y, v.z, 0.0f};
@@ -692,7 +706,7 @@ void RPlayerCamera::DirectorChangeCameraMode(RDirectorQueueData *data) {
         matrixChanged = 1;
         VU0_v4copy(MatrixRow(&matrix, 2), &forwardAimVec);
         targetAngleX = float(-CameraAsinTurns(matrix.mtx[2][1]));
-        double heading = AtanTurnsUnrounded(matrix.mtx[2][0], matrix.mtx[2][2]);
+        double heading = AtanTurns(matrix.mtx[2][0], matrix.mtx[2][2]);
         if (heading < 0.0)
             heading += 1.0;
         heading -= anchorYaw;
@@ -1008,7 +1022,7 @@ void RPlayerCamera::UpdateADWeaponAnims() {
     }
     matrixChanged = 1;
     targetAngleX = float(-CameraAsinTurns(matrix.mtx[2][1]));
-    double heading = AtanTurnsUnrounded(matrix.mtx[2][0], matrix.mtx[2][2]);
+    double heading = AtanTurns(matrix.mtx[2][0], matrix.mtx[2][2]);
     if (heading < 0.0)
         heading += 1.0;
     targetAngleY = float(heading);

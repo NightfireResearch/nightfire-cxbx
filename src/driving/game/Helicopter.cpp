@@ -76,6 +76,7 @@ static_assert(std::bit_cast<uint32_t>(kGravity) == 0xc11ccccd && std::bit_cast<u
               std::bit_cast<uint32_t>(0.1f) == 0x3dcccccd && std::bit_cast<uint32_t>(kOneOver65536) == 0x37800000,
               "the original's constants");
 
+#if NIGHTFIRE_X87
 // -FSIN(x * scale) as the x87 computes it (FSIN's result is rounded only by the caller's store)
 __declspec(naked) float NegativeSine(double x, float scale) {
     __asm {
@@ -86,6 +87,12 @@ __declspec(naked) float NegativeSine(double x, float scale) {
         ret
     }
 }
+#else
+// -sin(x * scale), rounded once by the float return
+float NegativeSine(double x, float scale) {
+    return float(-sin(x * scale));
+}
+#endif
 
 // RSceneObj::TriggerFX through the render object's vtable (slot 15)
 void TriggerFX(RSceneObj *render, int type, uint32_t which, uint32_t unused3 = 0) {

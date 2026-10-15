@@ -866,6 +866,20 @@ foreach(target driving_standalone driving_standalone_test)
     target_link_options(${target} PRIVATE -Wl,-Map,${target}.map)
   endif()
 endforeach()
+# The driving engine's x87 code (docs/driving/64-bit.md 4.1, docs/driving/portable.md). On: the 43 functions
+# whose results come from FSIN, FCOS, FPTAN, FPATAN and the like stay the original instructions, so the injected
+# build's shadow tests and the lockstep baselines (lbase) stay exact. Off: each is C in double (<math.h>), as any
+# host without an x87 needs, and the particle systems are ordered by a number given to each emitter rather than by
+# its address (docs/driving/original-quirks.md); the baselines of that build are lbase_c. The injected build's
+# shadows of these functions differ with it off.
+option(NIGHTFIRE_X87 "Driving engine: keep the original x87 instructions (off: portable C)" ON)
+foreach(target drivinginject driving_standalone driving_standalone_test)
+  if(NIGHTFIRE_X87)
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=1)
+  else()
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=0)
+  endif()
+endforeach()
 set(NF_STANDALONE_SRC ${CMAKE_BINARY_DIR}/standalone.dir)
 add_custom_target(standalone_poison
                   COMMAND ${Python3_EXECUTABLE} tools/standalone_poison.py ${NF_STANDALONE_SRC}

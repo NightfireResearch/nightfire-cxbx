@@ -187,6 +187,7 @@ int SixtiethsToSteps(int32_t time) {
     return Truncate(float(double(time * fgSimulation.stepsPerSecond) * kOneSixtieth));
 }
 
+#if NIGHTFIRE_X87
 // The C runtime's arc cosine (_CIacos at 0x001328d0, the game's own), which takes and answers on the x87 stack
 __declspec(naked) double CrtAcos(float) {
     __asm {
@@ -195,6 +196,12 @@ __declspec(naked) double CrtAcos(float) {
         ret
     }
 }
+#else
+// The C runtime's arc cosine (_CIacos at 0x001328d0, the game's own)
+double CrtAcos(float x) {
+    return Crt::CIacos(x);
+}
+#endif
 
 } // namespace
 

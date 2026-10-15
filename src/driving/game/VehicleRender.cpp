@@ -148,6 +148,7 @@ int32_t ClearEmpVictim;
 
 namespace {
 
+#if NIGHTFIRE_X87
 // The C runtime's pow (_CIpow at 0x00132a94, the game's own): the base below the exponent, answered on the x87
 __declspec(naked) double CrtPow(double, double) {
     __asm {
@@ -157,6 +158,12 @@ __declspec(naked) double CrtPow(double, double) {
         ret
     }
 }
+#else
+// The C runtime's pow (_CIpow at 0x00132a94, the game's own)
+double CrtPow(double base, double exponent) {
+    return Crt::CIpow(base, exponent);
+}
+#endif
 
 // ---- the car's virtual methods (PBondCar's)
 DamageZone *GetDamageZones(PhysicsObject *object, uint32_t *count) {

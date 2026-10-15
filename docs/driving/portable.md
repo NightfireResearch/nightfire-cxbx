@@ -138,3 +138,21 @@ copied beside drivinginject.dll. With the option on:
   a loop.
 
 The user's listening check of the SDL build (14 October 2026) passed after one fix: the movies' 5.1 was folded in FFmpeg's channel order rather than EA's, so their dialogue played on the right speaker only - in the XAudio2 build too (74b43b0, docs/driving-fmv.md).
+
+## The x87 option (15 October 2026)
+
+`-DNIGHTFIRE_X87=OFF` builds the driving targets with no x87 transcendentals: the 43 functions of
+[64-bit.md](64-bit.md) 4.1 (FSIN, FCOS, FPTAN, FPATAN, FYL2X and the runtime's `_CIacos`/`_CIasin`/`_CIpow`) each get
+a C form in double from `<math.h>`. It is ON by default, which leaves every target exactly as before: the injected
+build's shadows compare our code with the original's, and they need the original instructions. The Linux and 64-bit
+builds use OFF. The C forms sit next to the assembly in the same files, under `#if NIGHTFIRE_X87` (`X87.h` refuses to
+compile without the definition). The injection tags stay on the assembly. A caller that keeps an unrounded result
+calls `SineTurns`, `CosineTurns`, `TangentTurns` or `AtanTurns` (RealMath.h), which return double in both builds.
+With OFF the particle systems' map also stops using emitter addresses as keys (original-quirks.md 1.3), so the frames
+no longer depend on the heap.
+
+OFF is a different game run, so it has its own runner baselines, `lbase_c_*` (build/baselines). Against `lbase` the
+simulation does not change: all 16 sound traces are identical to tick 9000. Frames differ in particles on missions
+1, 2, 5, 6 and 7, and by 43 pixels on mission 8 (64-bit.md 4.4). Compilers still emit some x87 code of their own: MSVC returns floats in ST0 and
+sometimes multiplies there, under Windows' 53-bit precision control. A Linux `-m32` build should therefore use
+`-msse2 -mfpmath=sse`, or set the precision control on each game thread (64-bit.md 4.2).

@@ -56,6 +56,10 @@ int32_t LastParticleSystem;
 // A sound part's patch name for none
 // XBE_GLOBAL(0x001ca3e0, 0x4)
 const char *NoPatchName = "(null)";
+#if !NIGHTFIRE_X87
+// The particle systems made so far: the key of the next in the manager's map (ours; see PARTICLE_Draw)
+static uint32_t ParticleSystemsMade;
+#endif
 
 // ---- constants
 
@@ -645,7 +649,14 @@ bool GFXGallery::PARTICLE_Draw(UGroup *part, RParticleEmitter *emitter, GalleryK
         VU0_v4quatrotate(&turn, &kSide, &emitter->side);
         if (emitter->system == NULL) {
             RParticleSystem::RParticleCreator creator = { &ParticleCreatorVtable };
-            system = *fgParticleSystems->AddOrRefresh(uint32_t(uintptr_t(emitter)), emitter, &creator, distance);
+#if NIGHTFIRE_X87
+            uint32_t key = uint32_t(uintptr_t(emitter));
+#else
+            // Deliberately not the original's key, the emitter's address, which steps (and draws) the systems in
+            // the heap's order: a number in the order they are made (docs/driving/original-quirks.md).
+            uint32_t key = ++ParticleSystemsMade;
+#endif
+            system = *fgParticleSystems->AddOrRefresh(key, emitter, &creator, distance);
             emitter->system = system;
         }
         system->keepAlive = kKeepAlive;

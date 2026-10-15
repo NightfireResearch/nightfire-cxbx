@@ -1195,6 +1195,7 @@ double X87Operand(bool unit) {
 }
 
 void RunX87() {
+#if NIGHTFIRE_X87   // off, the runtime's _CI functions are C taking doubles: nothing here to compare
     static const uint32_t kAddress[3] = { 0x001328d0, 0x00133f94, 0x00132a94 };
     static const char *const kNames[3] = { "_CIacos", "_CIasin", "_CIpow" };
     void (*ours[3])() = { Crt::CIacos, Crt::CIasin, Crt::CIpow };
@@ -1241,6 +1242,7 @@ void RunX87() {
         Check(results[0] == results[1] && after[0] == after[1], "_clearfp", "exception %d: %08x (then %02x), port %08x "
               "(then %02x)", which, results[0], after[0], results[1], after[1]);
     }
+#endif
 }
 
 bool Enabled() {

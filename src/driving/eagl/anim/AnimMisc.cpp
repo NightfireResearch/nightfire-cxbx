@@ -6,6 +6,7 @@
 #include "../../platform/X87.h"
 
 #include <bit>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <xmmintrin.h>
@@ -576,10 +577,11 @@ void RawPoseChannel::Lerp(float t, int frame0, int frame1, float *out, void *mas
 // results (of the second and third half angles) on the x87 stack and multiplies them unrounded, at the 64-bit
 // mantissa FSIN returns whatever the precision control (docs/driving/maths.md 3.1-3.2); C++ double cannot hold
 // that, so, as Transform.cpp's EAGL_BuildRotate, the arithmetic is the original's instructions in assembly (the
-// 0.5 from 0x00189eb0 as a constant). The wrapper only adds the untested warning. Called by EulF3 and by
-// FnDeltaSingleQ::InitBuffersAsRequired.
+// 0.5 from 0x00189eb0 as a constant), or without NIGHTFIRE_X87 the same arithmetic in double. The wrapper only adds
+// the untested warning. Called by EulF3 and by FnDeltaSingleQ::InitBuffersAsRequired.
 static const float kHalf = 0.5f;   // 0x3f000000
 
+#if NIGHTFIRE_X87
 __declspec(naked) static void __cdecl EulerToQuatX87(const float *angles, float *quat) {
     __asm {
         sub esp, 0x10
@@ -645,6 +647,24 @@ __declspec(naked) static void __cdecl EulerToQuatX87(const float *angles, float 
         ret
     }
 }
+#else
+// The same in double: the third half angle and four of the sines and cosines stored as floats as the original stores
+// them, the other two sines and the products the original keeps unrounded.
+static void EulerToQuatX87(const float *angles, float *quat) {
+    double half0 = double(angles[0]) * kHalf, half1 = double(angles[1]) * kHalf;
+    float half2 = float(double(angles[2]) * kHalf);
+    float c0 = float(cos(half0)), c1 = float(cos(half1)), c2 = float(cos(double(half2))), s0 = float(sin(half0));
+    double s1 = sin(half1), s2 = sin(double(half2));
+    float c2c0 = float(double(c2) * c0);
+    double c0s2 = c0 * s2;
+    double s0c2 = double(s0) * c2;
+    float s0s2 = float(s2 * s0);
+    quat[0] = float(c1 * s0c2 - c0s2 * s1);
+    quat[1] = float(c2c0 * s1 + double(s0s2) * c1);
+    quat[2] = float(c0s2 * c1 - s0c2 * s1);
+    quat[3] = float(s0s2 * s1 + double(c2c0) * c1);
+}
+#endif
 
 // FUNC_AT(0x000fde00)
 void EAGLAnim_EulerToQuat(const float *angles, float *quat) {

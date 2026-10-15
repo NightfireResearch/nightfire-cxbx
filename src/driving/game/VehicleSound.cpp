@@ -3,6 +3,7 @@
 
 #pragma fp_contract(off)
 
+#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <bit>
@@ -328,6 +329,7 @@ void AVehicleVoicePair::Destruct() {
 
 namespace {
 
+#if NIGHTFIRE_X87
 // FLDLN2, FYL2X: the natural logarithm exactly as the x87 makes it (the C runtime's log need not agree in the last
 // bit).
 __declspec(naked) double VehicleLogX87(double) {
@@ -338,6 +340,11 @@ __declspec(naked) double VehicleLogX87(double) {
         ret
     }
 }
+#else
+double VehicleLogX87(double x) {
+    return log(x);
+}
+#endif
 
 }  // namespace
 

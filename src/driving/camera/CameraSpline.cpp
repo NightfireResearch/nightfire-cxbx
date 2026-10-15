@@ -10,6 +10,7 @@
 #include "../../helpers.h"
 #include "../platform/CRuntime.h"
 
+#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -82,6 +83,7 @@ void Lerp(const Coord4 *a, const Coord4 *b, float t, Coord4 *out) {
 
 // ---- the C runtime's arc cosine and sine
 
+#if NIGHTFIRE_X87
 __declspec(naked) double CrtAcosTimes(float, const float *) {
     __asm {
         fld dword ptr [esp + 4]
@@ -101,6 +103,15 @@ __declspec(naked) double CrtAsinTimes(float, const float *) {
         ret
     }
 }
+#else
+double CrtAcosTimes(float value, const float *scale) {
+    return Crt::CIacos(value) * *scale;
+}
+
+double CrtAsinTimes(float value, const float *scale) {
+    return Crt::CIasin(value) * *scale;
+}
+#endif
 
 // ---- RCameraMath
 

@@ -39,12 +39,6 @@ const Coord4 kDriverShoulderAxes[2] = {
 // ... and its wrists' pose weights
 const float kDriverWristWeights[2] = {1.0f, 1.0f};
 
-// atan_turns answers in ST0 unrounded; read as the double it is rather than through its float declaration
-typedef double (*UnroundedTurnsFn)(float y, float x);
-double AtanTurns(float y, float x) {
-    return reinterpret_cast<UnroundedTurnsFn>(&atan_turns)(y, x);
-}
-
 const Coord3 &BodyPosition(PhysicsObject *object) {
     return fgSimulation.GetRigidBody(object->rigidBodySlot)->position;
 }

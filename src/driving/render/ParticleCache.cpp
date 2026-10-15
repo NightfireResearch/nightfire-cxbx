@@ -110,12 +110,6 @@ static_assert(std::bit_cast<uint32_t>(kPerSecond) == 0x3c888889 && std::bit_cast
 static const float kCorner[4][2] = { { 1, -1 }, { 1, 1 }, { -1, 1 }, { -1, -1 } };
 static const float kCornerUV[4][2] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
 
-// atan_turns answers in ST0 unrounded; read as the double it is rather than through its float declaration
-static double AtanTurnsUnrounded(float y, float x) {
-    typedef double (*UnroundedTurnsFn)(float, float);
-    return reinterpret_cast<UnroundedTurnsFn>(&atan_turns)(y, x);
-}
-
 // a + t (b - a) in four lanes: the lerp the original inlines (SSE, so each step rounds to a float)
 static Coord4 Lerp(const Coord4 *a, const Coord4 *b, float t) {
     __m128 from = _mm_loadu_ps(&a->x);
@@ -186,7 +180,7 @@ void RParticle::ResetParticle(const Coord3 *start, const RParticleSystemData *da
         Coord4 moving = { velocity.x, velocity.y, velocity.z, 0.0f };
         Coord4 seen = { velocity.x, velocity.y, velocity.z, 0.0f };
         TransformPoint(fgRenderer->renderContext->GetCurrentViewPort()->GetViewMatrix(), &moving, &seen);
-        double turns = AtanTurnsUnrounded(seen.x, seen.y);
+        double turns = AtanTurns(seen.x, seen.y);
         if (turns < kHalfTurnBack)
             turns += 1.0f;
         spin = int8_t(Ftol(turns * kTwoPi * kSpinScale));

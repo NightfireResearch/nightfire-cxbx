@@ -13,7 +13,8 @@
 // is exactly C++ double, so the arithmetic is done in double in the original's order and rounded to float exactly
 // where the original stores a float. A value the original leaves on the x87 stack comes back as a double. FSIN,
 // FCOS, FPTAN and FPATAN keep 64 bits whatever the precision, which nothing in C++ can, so the trig functions are
-// the original instructions; callers that only store their results call them as float functions.
+// the original instructions (NIGHTFIRE_X87; without it they are <math.h> in double); callers that only store their
+// results call them as float functions.
 // devtools/MathShadow.cpp compares every function here with the original.
 // ---------------------------------------------------------------------------------------------------------------
 
@@ -30,6 +31,8 @@ typedef float F;
 
 static const float kTwoPi = 6.28318548f;       // 0x40c90fdb
 static const float kOneOverTwoPi = 0.159154937f; // 0x3e22f983
+
+#if NIGHTFIRE_X87
 
 // ---- trig in turns: the original instructions
 
@@ -93,6 +96,50 @@ __declspec(naked) float atan_turns(float y, float x) {
         ret
     }
 }
+
+#else
+
+// ---- trig in turns in C: the angle in double as the x87 makes it (float times float is exact), the result rounded
+// once where the caller stores a float. Untagged: the injection's tags are on the x87 forms above.
+
+double SineTurns(float turns) {
+    return sin(double(kTwoPi) * turns);
+}
+
+double CosineTurns(float turns) {
+    return cos(double(kTwoPi) * turns);
+}
+
+double TangentTurns(float turns) {
+    return tan(double(kTwoPi) * turns);
+}
+
+double AtanTurns(float y, float x) {
+    return atan2(double(y), double(x)) * kOneOverTwoPi;
+}
+
+float sin_fractionalangle(float turns) {
+    return float(SineTurns(turns));
+}
+
+float cos_fractionalangle(float turns) {
+    return float(CosineTurns(turns));
+}
+
+void sincos_fractionalangle(const float *turns, float *sinOut, float *cosOut) {
+    *sinOut = float(SineTurns(*turns));
+    *cosOut = float(CosineTurns(*turns));
+}
+
+float tan_fractionalangle(float turns) {
+    return float(TangentTurns(turns));
+}
+
+float atan_turns(float y, float x) {
+    return float(AtanTurns(y, x));
+}
+
+#endif
 
 // ---- the x87 helpers the v3 functions call (EBP-framed in the original)
 
@@ -1005,6 +1052,7 @@ double Inverse(void *matrix) {
     return det;
 }
 
+#if NIGHTFIRE_X87
 // sin(turns) - FSIN's 64-bit result, which the original never stores - times four floats, each product rounded
 // to 53 bits as the x87 does at this precision, so each is exactly a double: f = { c0, s0, c1, s1 }.
 static __declspec(naked) void SinTimes(float turns, const float *f, double *products) {
@@ -1028,6 +1076,14 @@ static __declspec(naked) void SinTimes(float turns, const float *f, double *prod
         ret
     }
 }
+
+#else
+static void SinTimes(float turns, const float *f, double *products) {
+    double s = SineTurns(turns);
+    for (int i = 0; i < 4; i++)
+        products[i] = s * f[i];
+}
+#endif
 
 // Euler angles (turns about x, y, z) to a quaternion, through the rotation matrix D3DX turns into one. Only the
 // nine elements D3DXQuaternionRotationMatrix reads are filled. sin(z) is used unrounded in four products.

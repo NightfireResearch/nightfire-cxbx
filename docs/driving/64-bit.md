@@ -1,7 +1,7 @@
 # The driving engine on 64-bit
 
-Status: plan (15 October 2026), step 3 of the roadmap in [portable.md](portable.md): an audit and a design, no game
-code changed. It applies to the standalone executables (`driving_standalone`, `driving_standalone_test`) only. The
+Status: plan (15 October 2026), step 3 of the roadmap in [portable.md](portable.md): an audit and a design. Done so
+far: package 0 (7.4, 4.3) and the x87 code as C behind `NIGHTFIRE_X87` (4.4), both on the 32-bit build. It applies to the standalone executables (`driving_standalone`, `driving_standalone_test`) only. The
 injected build (driving.exe mapping Driving.xbe, drivinginject.dll, every shadow test) stays 32-bit: it shares the
 original's address space by construction, and it stays the oracle.
 
@@ -15,7 +15,7 @@ original's address space by construction, and it stays the oracle.
 | Pointers made 32-bit integers explicitly (silent on 64-bit) | 108 (63 of them vtable constants) | typed pointers; the file words through `Ptr32` |
 | 32-bit integers made pointers | 48, and 72 clang warnings | the same |
 | Objects allocated by a literal size / pointer arrays sized `* 4` | 26 / 6 | `sizeof` |
-| Naked functions | 108: 43 x87, 59 register adaptors, 4 injected-only, 2 others | x87: the same instructions in x86-64 assembly (exact against the 32-bit build on the same CPU); adaptors: left out of the standalone build |
+| Naked functions | 108: 43 x87, 59 register adaptors, 4 injected-only, 2 others | x87: C in double behind `NIGHTFIRE_X87=OFF`, done (4.4); adaptors: left out of the standalone build |
 | Calling conventions | 413 `__stdcall`, 72 `__fastcall`, 7 `__thiscall` | nothing: x86-64 has one convention; only the injection's ABI templates (19 errors) need an x86-only guard |
 | Third-party | FFmpeg DLLs are i686 builds | build x86-64 DLLs with the same script; SDL3, D3D9, XAudio2, XInput, dxvk-native are fine |
 
@@ -246,6 +246,63 @@ functions, `DivideByTanTurns`, `CrtPow`) round twice on the x87 too, so their fl
 So the conversion changes the results of every caller above; how much shows in the lockstep runs once, before the
 new baselines are made.
 
+### 4.4 Done: the x87 code as C (15 October 2026)
+
+**The option.** `NIGHTFIRE_X87` (CMake, ON by default; [portable.md](portable.md)) applies to drivinginject and both
+standalone targets. ON compiles exactly what was there before. MSVC's per-function assembly of every changed object
+file, in drivinginject and in driving_standalone_test, matches the build before the change instruction for
+instruction. OFF gives each of the 43 functions a C form beside its assembly, under `#if NIGHTFIRE_X87`:
+
+- **The trig in turns** (RealMath.cpp): `sin(double(kTwoPi) * turns)` and the like. The float functions round once.
+  `SineTurns`, `CosineTurns`, `TangentTurns` and `AtanTurns` give the double for callers that keep computing, as
+  section 4.3 lists. Thirteen local `reinterpret_cast`s of the float functions to double-returning pointers are now
+  calls to these four.
+- **The runtime's `_CIacos`, `_CIasin` and `_CIpow`** become `double CIacos(double)` and so on. They keep the
+  original's domain errors, poles and overflow, but underflow is `pow`'s. `X87NaN` picks the NaN as the x87 does.
+  `_fpmath` and `_clearfp` work through `<fenv.h>`.
+- **The local helpers** (`X87Sin`, `CrtPow`, `LogX87`, `ScaledSine`, `NegativeSine`, `Tangent`...) keep their names
+  and return types. A product the original makes on the x87 stack, such as `SinTurnsTimes`, is the same product in
+  double.
+- **`EAGL_BuildRotate`, `PerspectivePlanes` and `EulerToQuatX87`** are written out in C++ from their instructions. A
+  value the original stores as a float is rounded there, and every other value stays double.
+
+The OFF executable has no FSIN, FCOS, FSINCOS, FPTAN, FPATAN, FYL2X, F2XM1, FSCALE, FRNDINT or FLDCW left. What
+remains is MSVC's own x87 use (returns in ST0, some multiplies there). The mingw cross build (nf-cross `linux` preset)
+compiles drivinginject and both standalone targets with OFF.
+
+**Two address orders made heap-independent (OFF only).** The particle systems' map key (7.4) becomes a count of the
+systems made. Heap padding then showed one more dependency: `RVehicleParticle::UpdateAll` steps the cars' systems in
+the order of a set of object pointers, which is address order again. With OFF it uses the order `UpdateCar` added
+them. Both are in original-quirks.md 1.3. With them, OFF is exact under `NIGHTFIRE_HEAP_PAD` 16 and 52.
+
+**Distance from `lbase`** (driving_standalone_test with OFF, runner, to tick 9000):
+
+| Mission | Sound traces | Frames (pixels differing over 16 frames, idle / accelerating) |
+|---|---|---|
+| 1 | identical | 42,583 / 42,583 (a light and a small effect, about 4,000 px a frame from tick 3000) |
+| 2 | identical | 0 / 3,514,113 (underwater bubbles and smoke behind the Mission Failed box: about 278,000 px a frame from tick 2000) |
+| 3, 4 | identical | 0 / 0 |
+| 5 | identical | 332,205 / 581,216 (particles in some frames; others exact) |
+| 6 | identical | 0 / 760,444 |
+| 7 | identical | 406,559 / 689,331 (fire and lava particles) |
+| 8 | identical | 0 / 43 |
+
+All 16 sound traces are identical to tick 9000, so nothing the simulation does changed. The C results differ from
+FSIN's and FCOS's only in the last bits, and most results are stored as floats. The frames that differ do so in
+particles: the new order and the C trig, through the particles' spawn angles.
+
+**New baselines `lbase_c_*`** (build/baselines, 16 runs, the runner): from the final OFF build (round pmc1). Results:
+
+- A second run in the other checkout and slot half matched them exactly in all 16 runs.
+- `NIGHTFIRE_HEAP_PAD=16` and `=52` (rounds pmq16, pmq52) matched them exactly in all 16 runs each.
+- With ON, `BASE=lbase round.sh all` (injected: 16 lockstep runs exact, shadows on all eight missions with 0
+  differences) and the standalone test executable's 16 lockstep runs were exact against `lbase`. A final quick ON
+  round of the standalone build after the last change was exact too.
+
+From here on, the portable and 64-bit builds compare with `lbase_c` (BASE=lbase_c with
+`EXE='Release\driving_standalone_test.exe'` and `RUNNER_CMAKE_ARGS=-DNIGHTFIRE_X87=OFF`). Package 7 (x87 on
+x86-64) is no longer needed. Package 9 compares the 64-bit build with `lbase_c`.
+
 ## 5. Calling conventions and the naked adaptors
 
 On x86-64 there is one calling convention: MSVC and clang accept `__stdcall`, `__fastcall`, `__thiscall` and ignore
@@ -367,7 +424,7 @@ shift keeps the addresses' order.
 A 64-bit build with native pointers lays the heap out differently, so its particles would differ from the 32-bit
 build's the same way. Before package 9's exact comparison, the key wants a value that does not depend on the heap - a
 number given to each emitter when it is made, say - in both builds; that changes the 32-bit frames once, so it belongs
-with the x87 conversion's new baselines. The other address keys of section 3 (the broken windows' instance key,
+with the x87 conversion's new baselines. Done with `NIGHTFIRE_X87=OFF`, together with the cars' particle set (4.4). The other address keys of section 3 (the broken windows' instance key,
 WRender's instance pointers into one array) are lookups or keep their order.
 
 ## 8. Work packages
@@ -385,7 +442,7 @@ agent time, M 1-2, L 3+.
 | 4 | **CARP**: `UData`/`UGroup`/`TagReference` decoding, the payload records (`AIElement`, `AnimInfo`, `WorldArticle`, ...), the 80 event `Record`s, the vtable constants of the data layer | L | the same digest over each track's resolved CARP |
 | 5 | **realgraph, sound banks and streams, FILESYS and the int handles** (FNTX slots, timbre words, `AddBytes`, stream/filter handles, FILESYS user data, actor ids, address keys) | M | 32-bit asm diff; 64-bit sound traces |
 | 6 | **Memory-only structures**: the 32-bit-only check form (and the generator's), the literal allocation sizes, the `* 4` arrays, the remaining vtable constants, the 66 narrowings - by directory, in two or three agents | L | 32-bit asm diff (nothing may change), checks still all true on 32-bit |
-| 7 | **x87 on x86-64**: the 43 functions as x86-64 stubs (option A), float-returning variants where package 0 found float stores, the control word on every game thread, the conversion edge cases | M | a host-side test comparing each stub with the 32-bit function on a sweep of inputs (same machine), then lockstep |
+| 7 | ~~x87 on x86-64~~: replaced by the C forms (`NIGHTFIRE_X87=OFF`, **done 15 October 2026**, 4.4); left: the conversion edge cases (out-of-range float-to-unsigned and float-to-64-bit) | S | lockstep against `lbase_c` |
 | 8 | **The D3D seam and backend**: the state tables' bases, resource `data` words, push-buffer and stream words as window words; kept working for the action engine's 32-bit build | M | 32-bit lockstep frames (driving) and the action engine's menu replays |
 | 9 | **Bring-up**: first boot of the 64-bit test executable, then lockstep on all missions against the 32-bit standalone's baselines on the same machine; a per-tick state trace (rigid bodies, AI elements; canonical, no addresses) to find the first divergent tick | M | the 16 lockstep runs, frames and sound traces |
 | 10 | **Linux x86-64** (after step 2): the LP64 `long`s, the Win32-types header with fixed-width types, the runner's Linux baselines | S-M | Linux lockstep |
@@ -399,8 +456,8 @@ Packages 3a-5 are independent once 2 has landed; 6 and 8 can run beside them. Tw
   (`cl /O2 /FA`, as the style cleanups did) and a lockstep round against `lbase` - since `Ptr32` is a plain pointer
   there.
 - **The 64-bit build against it**: lockstep frames and sound traces on the same machine (the 32-bit standalone
-  test executable matches `lbase` on the runner already, so `lbase` serves; this PC uses `lloc`). Exact is the goal
-  with x87 option A and either 7.2 option, provided package 0's pad test is exact.
+  test executable with `NIGHTFIRE_X87=OFF` has its own baselines, `lbase_c`, on the runner (4.4); this PC would need
+  its own). Exact is the goal; the OFF build is already exact under heap padding.
 - **Before boot**: the probe's counts and the tool's (`--list assert.size`, `cast.`) as the burn-down; the loader
   digests of packages 3-4 compare every loaded object and resolved CARP file with the 32-bit build's, offline, with
   no game window.

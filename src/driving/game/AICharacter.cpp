@@ -54,12 +54,6 @@ const char *const kPassengerDescriptions[5] = {
 constexpr int kFirstPassenger = 1;
 constexpr int kLastPassenger = 5;
 
-// atan_turns answers in ST0 unrounded; read as the double it is rather than through its float declaration
-typedef double (*UnroundedTurnsFn)(float y, float x);
-double AtanTurns(float y, float x) {
-    return reinterpret_cast<UnroundedTurnsFn>(&atan_turns)(y, x);
-}
-
 PointerListNode *ActorHandle(AICharacterActorLink *link) {
     return reinterpret_cast<PointerListNode *>(link);
 }

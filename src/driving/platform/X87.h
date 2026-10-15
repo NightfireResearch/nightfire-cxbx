@@ -4,6 +4,13 @@
 // The conversions the driving engine's x87 code makes, for the ports that reproduce it bit for bit (docs/driving/
 // maths.md 3.2). One copy for every port: before this header each file carried its own.
 
+// NIGHTFIRE_X87 (the CMake option of that name, 1 or 0) chooses the x87 functions' forms: 1 keeps the original
+// instructions (docs/driving/64-bit.md 4.1), exact against the original and its baselines; 0 gives each a C form in
+// double, for hosts without an x87 (docs/driving/portable.md).
+#if !defined(NIGHTFIRE_X87)
+#error "NIGHTFIRE_X87 must be defined as 1 or 0 (CMakeLists.txt)"
+#endif
+
 #include <math.h>
 #include <stdint.h>
 #include <bit>

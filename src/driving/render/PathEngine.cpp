@@ -111,10 +111,6 @@ void AddPaths(CARP::Instance *instances, ProcAnimState *states, uint32_t count, 
     }
 }
 
-// The sine and tangent in turns and atan_turns are assembly that leave their results unrounded in ST0
-typedef double (*UnroundedTurnsFn)(float);
-typedef double (*UnroundedAtanFn)(float, float);
-
 }  // namespace
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -542,19 +538,19 @@ double WrapTurns(float turns) {
 double SinTurnsWrapped(float turns) {
     if (turns < 0.0f)
         turns = turns + 1.0f;
-    return reinterpret_cast<UnroundedTurnsFn>(&sin_fractionalangle)(turns);
+    return SineTurns(turns);
 }
 
 // FUNC_AT(0x00080890)
 double TanTurnsWrapped(float turns) {
     if (turns < 0.0f)
         turns = turns + 1.0f;
-    return reinterpret_cast<UnroundedTurnsFn>(&tan_fractionalangle)(turns);
+    return TangentTurns(turns);
 }
 
 // FUNC_AT(0x000808c0)
 double HeadingTurns(float x, float z) {
-    double heading = reinterpret_cast<UnroundedAtanFn>(&atan_turns)(x, z);
+    double heading = AtanTurns(x, z);
     if (heading < 0.0)
         heading += 1.0f;
     return heading;

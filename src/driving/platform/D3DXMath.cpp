@@ -153,6 +153,7 @@ void *__stdcall D3DXQuaternionMultiply(void *out, const void *q1, const void *q2
     return out;
 }
 
+#if NIGHTFIRE_X87
 // FSINCOS of a float, each result stored as a float (one rounding from the 64-bit result).
 static __declspec(naked) void SinCosFloat(float angle, float *cosOut, float *sinOut) {
     __asm {
@@ -165,6 +166,13 @@ static __declspec(naked) void SinCosFloat(float angle, float *cosOut, float *sin
         ret
     }
 }
+#else
+// The cosine and sine of a float, each rounded once to a float.
+static void SinCosFloat(float angle, float *cosOut, float *sinOut) {
+    *cosOut = float(cos(double(angle)));
+    *sinOut = float(sin(double(angle)));
+}
+#endif
 
 // D3DXMatrixPerspectiveFovRH.
 // FUNC_AT(0x001136e5)
