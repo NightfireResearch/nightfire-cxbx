@@ -70,7 +70,7 @@ def load_map(path):
         if m:
             preferred = int(m.group(1), 16)
             continue
-        m = re.match(r"\s*[0-9a-fA-F]{4}:[0-9a-fA-F]{8}\s+(\S+)\s+([0-9a-fA-F]{8})\s+f\s", line)   # MSVC
+        m = re.match(r"\s*[0-9a-fA-F]{4}:[0-9a-fA-F]{8}\s+(\S+)\s+([0-9a-fA-F]{8,16})\s+f\s", line)   # MSVC
         if m:
             symbols.append((int(m.group(2), 16), undecorate(m.group(1))))
             continue
@@ -105,7 +105,7 @@ def main(argv):
     lines = list(open(files[0], errors="replace") if files else sys.stdin)
     standalone = any("[standalone]" in line for line in lines)
     for line in lines:
-        m = re.search(r"(\S+)\s+loaded at 0x([0-9a-fA-F]{8})", line)
+        m = re.search(r"(\S+)\s+loaded at 0x([0-9a-fA-F]{8,16})", line)
         if m:
             bases.setdefault(os.path.splitext(os.path.basename(m.group(1)))[0].lower(), int(m.group(2), 16))
 
@@ -131,7 +131,7 @@ def main(argv):
         name = name_for(starts, names, address)
         return match.group(0) if name is None else "%s %s" % (match.group(0), name)
 
-    pattern = re.compile(r"0x[0-9a-fA-F]{8}\b")
+    pattern = re.compile(r"0x(?:[0-9a-fA-F]{16}|[0-9a-fA-F]{8})\b")   # a 32-bit or a 64-bit report's
     for line in lines:
         sys.stdout.write(pattern.sub(annotate_ours, line))
 

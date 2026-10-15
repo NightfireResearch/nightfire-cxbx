@@ -19,9 +19,12 @@ void CrashReport_Install(void);
 void CrashReport_Threads(void);
 
 // ---- the report, shared by both hosts
-struct CrashRegisters {   // on x86-64 the 64-bit registers (rax...)
+struct CrashRegisters {   // on x86-64 the 64-bit registers (rax...) and r8-r15
     uintptr_t eax, ebx, ecx, edx, esi, edi;
     uintptr_t eip, esp, ebp, eflags;
+#if UINTPTR_MAX > 0xffffffffu
+    uintptr_t r[8];
+#endif
 };
 
 void CrashReport_Begin(const char *what);   // a record, under a time-stamped heading and the executable's base

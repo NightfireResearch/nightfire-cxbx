@@ -1,5 +1,6 @@
 #include "CrashReport.h"
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -36,6 +37,11 @@ CrashRegisters RegistersOf(const CONTEXT *context) {
     r.esp = context->Esp;
     r.ebp = context->Ebp;
     r.eflags = context->EFlags;
+#ifdef _WIN64
+    const DWORD64 *high = &context->R8;   // R8-R15 lie in order
+    for (int i = 0; i < 8; i++)
+        r.r[i] = high[i];
+#endif
     return r;
 }
 
@@ -108,18 +114,18 @@ LONG CALLBACK ReportException(EXCEPTION_POINTERS *info) {
     char scratch[MAX_PATH];
     uintptr_t at = (uintptr_t)record->ExceptionAddress;
     CrashReport_Begin("fault");
-    CrashReport_Line("[standalone] exception 0x%08x at 0x%08x, in %s\n", (unsigned)code, (unsigned)at,
+    CrashReport_Line("[standalone] exception 0x%08x at 0x%" PRIxPTR ", in %s\n", (unsigned)code, at,
                      CrashHost_Module(at, scratch, sizeof(scratch)));
     if (code == EXCEPTION_ACCESS_VIOLATION && record->NumberParameters >= 2) {
         static const char *const operations[] = { "read", "write", "execute" };
         ULONG_PTR operation = record->ExceptionInformation[0];
         uintptr_t target = (uintptr_t)record->ExceptionInformation[1];
-        CrashReport_Line("[standalone]   tried to %s 0x%08x\n", operation <= 2 ? operations[operation] : "access",
-                         (unsigned)target);
+        CrashReport_Line("[standalone]   tried to %s 0x%" PRIxPTR "\n", operation <= 2 ? operations[operation] : "access",
+                         target);
         MEMORY_BASIC_INFORMATION mbi;
         memset(&mbi, 0, sizeof(mbi));
         if (VirtualQuery((LPCVOID)target, &mbi, sizeof(mbi)) == sizeof(mbi))
-            CrashReport_Line("[standalone]   0x%08x is state 0x%x, protection 0x%x\n", (unsigned)target,
+            CrashReport_Line("[standalone]   0x%" PRIxPTR " is state 0x%x, protection 0x%x\n", target,
                              (unsigned)mbi.State, (unsigned)mbi.Protect);
     }
     CrashRegisters registers = RegistersOf(info->ContextRecord);
@@ -134,8 +140,9 @@ LONG WINAPI ReportUnhandled(EXCEPTION_POINTERS *info) {
     static volatile LONG dumped = 0;
     if (InterlockedIncrement(&dumped) == 1) {
         CrashReport_Begin("unhandled: the process ends");
-        CrashReport_Line("[standalone] exception 0x%08x at 0x%08x\n", (unsigned)info->ExceptionRecord->ExceptionCode,
-                         (unsigned)(uintptr_t)info->ExceptionRecord->ExceptionAddress);
+        CrashReport_Line("[standalone] exception 0x%08x at 0x%" PRIxPTR "\n",
+                         (unsigned)info->ExceptionRecord->ExceptionCode,
+                         (uintptr_t)info->ExceptionRecord->ExceptionAddress);
         WriteMinidump("crash.dmp", info);
         CrashReport_End();
     }
@@ -175,8 +182,8 @@ void CrashReport_Threads(void) {
         memset(&context, 0, sizeof(context));
         context.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER;
         if (GetThreadContext(thread, &context)) {
-            CrashReport_Line("[standalone] thread %lu at 0x%08x (%s)\n", entry.th32ThreadID, (unsigned)context.Eip,
-                             CrashHost_Module(context.Eip, scratch, sizeof(scratch)));
+            CrashReport_Line("[standalone] thread %lu at 0x%" PRIxPTR " (%s)\n", entry.th32ThreadID,
+                             (uintptr_t)context.Eip, CrashHost_Module(context.Eip, scratch, sizeof(scratch)));
             CrashReport_ScanStack(context.Esp, 12);
         }
         CloseHandle(thread);

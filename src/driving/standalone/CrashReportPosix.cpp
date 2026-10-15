@@ -1,5 +1,6 @@
 #include "CrashReport.h"
 
+#include <inttypes.h>
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -96,15 +97,23 @@ void ReportSignal(int signal, siginfo_t *info, void *context) {
         CrashRegisters r = { uint32_t(g[REG_EAX]), uint32_t(g[REG_EBX]), uint32_t(g[REG_ECX]), uint32_t(g[REG_EDX]),
                              uint32_t(g[REG_ESI]), uint32_t(g[REG_EDI]), uint32_t(g[REG_EIP]), uint32_t(g[REG_ESP]),
                              uint32_t(g[REG_EBP]), uint32_t(g[REG_EFL]) };
+#elif defined(__x86_64__)
+        const greg_t *g = uc->uc_mcontext.gregs;
+        CrashRegisters r = { uintptr_t(g[REG_RAX]), uintptr_t(g[REG_RBX]), uintptr_t(g[REG_RCX]), uintptr_t(g[REG_RDX]),
+                             uintptr_t(g[REG_RSI]), uintptr_t(g[REG_RDI]), uintptr_t(g[REG_RIP]), uintptr_t(g[REG_RSP]),
+                             uintptr_t(g[REG_RBP]), uintptr_t(g[REG_EFL]),
+                             { uintptr_t(g[REG_R8]), uintptr_t(g[REG_R9]), uintptr_t(g[REG_R10]), uintptr_t(g[REG_R11]),
+                               uintptr_t(g[REG_R12]), uintptr_t(g[REG_R13]), uintptr_t(g[REG_R14]),
+                               uintptr_t(g[REG_R15]) } };
 #else
         (void)uc;
         CrashRegisters r = {};
 #endif
         CrashReport_Begin("fault");
-        CrashReport_Line("[standalone] %s (code %d) at 0x%08x, in %s\n", SignalName(signal), info->si_code, r.eip,
-                         CrashHost_Module(r.eip, scratch, sizeof(scratch)));
+        CrashReport_Line("[standalone] %s (code %d) at 0x%" PRIxPTR ", in %s\n", SignalName(signal), info->si_code,
+                         r.eip, CrashHost_Module(r.eip, scratch, sizeof(scratch)));
         if (signal == SIGSEGV || signal == SIGBUS)
-            CrashReport_Line("[standalone]   address 0x%08x\n", (unsigned)(uintptr_t)info->si_addr);
+            CrashReport_Line("[standalone]   address 0x%" PRIxPTR "\n", (uintptr_t)info->si_addr);
         CrashReport_Context(&r);
         CrashReport_End();
     }

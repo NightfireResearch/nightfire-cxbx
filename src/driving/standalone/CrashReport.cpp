@@ -1,5 +1,6 @@
 #include "CrashReport.h"
 
+#include <inttypes.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -10,7 +11,12 @@
 // milliseconds, a file opened per line was seconds a fault on a loaded machine. Lines outside a record (and those
 // past a full buffer) go to the file one by one.
 
+// Addresses, registers and stack words print at the host's width: 8 digits on a 32-bit host, 16 on a 64-bit one
+#define ADDR "%0*" PRIxPTR
+
 namespace {
+
+const int kAddrDigits = int(sizeof(uintptr_t) * 2);
 
 char g_record[16384];
 size_t g_recordLength = 0;
@@ -76,8 +82,8 @@ void CrashReport_Begin(const char *what) {
                      now.second, now.milliseconds, HostGetCurrentThreadId());
     char scratch[HOST_MAX_PATH];
     uintptr_t base = CrashHost_ExecutableBase();
-    CrashReport_Line("[standalone] %s loaded at 0x%08x\n", CrashHost_Module(base, scratch, sizeof(scratch)),
-                     (unsigned)base);
+    CrashReport_Line("[standalone] %s loaded at 0x" ADDR "\n", CrashHost_Module(base, scratch, sizeof(scratch)),
+                     kAddrDigits, base);
 }
 
 void CrashReport_End(void) {
@@ -92,13 +98,14 @@ void CrashReport_End(void) {
 void CrashReport_ScanStack(uintptr_t esp, int limit) {
     char scratch[HOST_MAX_PATH];
     int found = 0;
-    for (uintptr_t at = esp & ~(uintptr_t)3; at - esp < 256 * 1024 && found < limit; at += 4) {
-        if (!CrashHost_Readable(at, 4))
+    const uintptr_t step = sizeof(uintptr_t);
+    for (uintptr_t at = esp & ~(step - 1); at - esp < 256 * 1024 && found < limit; at += step) {
+        if (!CrashHost_Readable(at, step))
             break;
         uintptr_t word = *(const uintptr_t *)at;
         if (word < 0x10000 || !CrashHost_IsCode(word) || !PrecededByCall(word))
             continue;
-        CrashReport_Line("[standalone]     esp+%05x  0x%08x  (%s)\n", (unsigned)(at - esp), (unsigned)word,
+        CrashReport_Line("[standalone]     esp+%05x  0x" ADDR "  (%s)\n", (unsigned)(at - esp), kAddrDigits, word,
                          CrashHost_Module(word, scratch, sizeof(scratch)));
         found++;
     }
@@ -106,33 +113,41 @@ void CrashReport_ScanStack(uintptr_t esp, int limit) {
 
 void CrashReport_Context(const CrashRegisters *r) {
     char scratch[HOST_MAX_PATH];
-    CrashReport_Line("[standalone]   eax %08x ebx %08x ecx %08x edx %08x esi %08x edi %08x\n", r->eax, r->ebx, r->ecx,
-                     r->edx, r->esi, r->edi);
-    CrashReport_Line("[standalone]   eip %08x esp %08x ebp %08x eflags %08x\n", r->eip, r->esp, r->ebp, r->eflags);
+    const int w = kAddrDigits;
+    CrashReport_Line("[standalone]   eax " ADDR " ebx " ADDR " ecx " ADDR " edx " ADDR "\n", w, r->eax, w, r->ebx, w,
+                     r->ecx, w, r->edx);
+    CrashReport_Line("[standalone]   esi " ADDR " edi " ADDR " ebp " ADDR " esp " ADDR "\n", w, r->esi, w, r->edi, w,
+                     r->ebp, w, r->esp);
+#if UINTPTR_MAX > 0xffffffffu
+    for (int i = 0; i < 8; i += 4)
+        CrashReport_Line("[standalone]   r%-2d " ADDR " r%-2d " ADDR " r%-2d " ADDR " r%-2d " ADDR "\n", 8 + i, w,
+                         r->r[i], 9 + i, w, r->r[i + 1], 10 + i, w, r->r[i + 2], 11 + i, w, r->r[i + 3]);
+#endif
+    CrashReport_Line("[standalone]   eip " ADDR " eflags %08x\n", w, r->eip, (unsigned)r->eflags);
 
     if (CrashHost_Readable(r->eip, 16)) {
-        const uint8_t *code = (const uint8_t *)(uintptr_t)r->eip;
+        const uint8_t *code = (const uint8_t *)r->eip;
         CrashReport_Line("[standalone]   code at eip: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x "
                          "%02x %02x %02x\n", code[0], code[1], code[2], code[3], code[4], code[5], code[6], code[7],
                          code[8], code[9], code[10], code[11], code[12], code[13], code[14], code[15]);
     }
-    if (CrashHost_Readable(r->esp, 32)) {
-        const uint32_t *stack = (const uint32_t *)(uintptr_t)r->esp;
-        CrashReport_Line("[standalone]   stack at esp: %08x %08x %08x %08x %08x %08x %08x %08x\n", stack[0], stack[1],
-                         stack[2], stack[3], stack[4], stack[5], stack[6], stack[7]);
+    if (CrashHost_Readable(r->esp, 4 * sizeof(uintptr_t))) {
+        const uintptr_t *stack = (const uintptr_t *)r->esp;
+        CrashReport_Line("[standalone]   stack at esp: " ADDR " " ADDR " " ADDR " " ADDR "\n", w, stack[0], w, stack[1],
+                         w, stack[2], w, stack[3]);
     }
 
-    // The frame-pointer chain while each frame is sensibly above the last
+    // The frame-pointer chain while each frame is sensibly above the last (x86-64 code seldom keeps one)
     CrashReport_Line("[standalone]   called from (frame chain):\n");
     uintptr_t frame = r->ebp;
     for (int depth = 0; depth < 16; depth++) {
-        if (frame == 0 || (frame & 3) != 0 || !CrashHost_Readable(frame, 8))
+        if (frame == 0 || (frame & (sizeof(uintptr_t) - 1)) != 0 || !CrashHost_Readable(frame, 2 * sizeof(uintptr_t)))
             break;
         uintptr_t returnAddress = ((const uintptr_t *)frame)[1];
         uintptr_t next = ((const uintptr_t *)frame)[0];
         if (returnAddress == 0)
             break;
-        CrashReport_Line("[standalone]     0x%08x  (%s)\n", (unsigned)returnAddress,
+        CrashReport_Line("[standalone]     0x" ADDR "  (%s)\n", w, returnAddress,
                          CrashHost_Module(returnAddress, scratch, sizeof(scratch)));
         if (next <= frame)
             break;
