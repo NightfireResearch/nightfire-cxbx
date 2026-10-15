@@ -5,9 +5,9 @@
 // third_party/ffmpeg-prebuilt, loaded at run time rather than linked, so no import library has to suit three
 // toolchains. docs/fmv.md describes the build.
 
-// Off Windows the libraries have the System V layout, 64-bit fields 4-aligned, which the game's sources (built with
-// Windows' layout, cmake/xbox-abi-linux.cmake) must use for FFmpeg's structures too.
-#ifndef _WIN32
+// On 32-bit x86 Linux the libraries have the System V layout, 64-bit fields 4-aligned, which the game's sources (built
+// with Windows' layout, cmake/xbox-abi-linux.cmake) must use for FFmpeg's structures too. A 64-bit host has one layout.
+#if !defined(_WIN32) && defined(__i386__)
 #pragma pack(push, 4)
 #endif
 extern "C" {
@@ -16,7 +16,7 @@ extern "C" {
 #include <libavutil/avutil.h>
 #include <libavutil/channel_layout.h>
 }
-#ifndef _WIN32
+#if !defined(_WIN32) && defined(__i386__)
 #pragma pack(pop)
 #endif
 
