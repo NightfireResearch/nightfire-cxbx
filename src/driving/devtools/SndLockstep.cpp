@@ -39,7 +39,7 @@
 //    keeps the position and Play resumes from it, as the XAudio2 backend does. The device still plays what it is
 //    given; it just no longer decides anything the game sees.
 //  - SNDREAL_systemtask does nothing when SYNCTASK calls it; SndLockstep_Tick calls it once, after the steps,
-//    by a direct call, which NIGHTFIRE_SNDTRACE retargets to its wrapper as it does every call into a port.
+//    by a direct call, which NIGHTFIRE_SNDTRACE sends to its wrapper as it does every call into a port.
 //  - A sound stream's FILESYS ops (the open, close and read whose callbacks are STREAM's) are waited for when
 //    FILESYS_callbackop is asked to call back, and the callback - and the chain of ops it starts, read after read
 //    until the ring is full - runs there on the caller's thread before the caller goes on, whatever the disc's

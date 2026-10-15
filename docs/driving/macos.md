@@ -235,11 +235,13 @@ saves/ and the disc as on Linux. A `.app` bundle is not needed for development.
   hw.ncpu`); bash is 3.2 unless Homebrew's is used. No `NF_VK_ICD`/lavapipe/DXVK settings: the real GPU, headless
   (SDL's offscreen video driver, the dummy audio driver, the backend's offscreen target). `caffeinate -i` around a
   round keeps the Mac awake. Slots: 4-6 on the M2 Max to start.
-- **The sound call trace.** SndCallTrace moves `call rel32` sites in the executable's code at start-up; arm64 has
-  no such encoding and signed code pages cannot be made writable. Replacement (package M3, done on x86 first): the
-  test executable's game sources outside sound/snd are compiled with a forced include that names the SND entries'
-  trace wrappers in place of the entries, so the redirection is made by the compiler. `NIGHTFIRE_HEAP_PAD` and
-  `NIGHTFIRE_X87COUNT` stay unavailable, as on Linux.
+- **The sound call trace.** SndCallTrace moved `call rel32` sites in the executable's code at start-up; arm64 has
+  no such encoding and signed code pages cannot be made writable. Since package M3 (done) the test executable's
+  sources outside sound/snd (and SndCallTrace.cpp) are compiled with a forced include, devtools/SndCallTraceRedirect.h,
+  that names the SND entries' trace wrappers (`Traced_<entry>`) in place of the entries, so the redirection is made
+  by the compiler and nothing is patched; with the trace off a wrapper only calls its entry. drivinginject keeps
+  the run-time redirection (its originals' entries are the game's). `NIGHTFIRE_HEAP_PAD` and `NIGHTFIRE_X87COUNT`
+  stay unavailable, as on Linux.
 - **Baselines.** `lmac_c_*` (build/baselines), from the first build whose 16 runs match each other twice (two
   checkouts, as `lbase_c` was made). Each round also compares the sound traces with `lbase_c`'s (compare.py's
   trace comparison) and reports the first differing line, if any.
@@ -255,7 +257,7 @@ the runner) before or beside the last 64-bit packages; A1-A4 and G3 run on the M
 | M0 | **Portable SSE**: platform/Sse.h with the 34 intrinsics the game uses (x86: the intrinsics themselves; elsewhere: C with SSE's exact semantics); RSQRTSS by a table generated on the runner from its own instruction (the input bits it depends on found by sweep); `Truncate`/`RoundToInt` in C; `__rdtsc` as a 733 MHz host cycle count; `__movsd`, `_mm_empty`, `fldcw` guarded | x86 | M | 32-bit and x64 MSVC: per-function asm identical; a devtools test of the C forms against the instructions (random and edge inputs, all four RSQRTSS exponent parities); Linux x86-64 built with the C forms forced on: lockstep exact against `lbase_c` on the runner |
 | M1 | **A non-zero window base**: `kGameWindowBase` configurable, null as the word 0, the window [4 GB, 8 GB) on Linux x86-64 (executable linked into it) and Windows x64 (`/BASE:0x140000000` is already there); AnimMisc's pointer-as-float through the word | x86 | S-M | `gamewindow_test`; lockstep exact against `lbase_c` with the base at 4 GB |
 | M2 | **FP and thread audit**: `-ffp-contract=off` in the non-MSVC builds; an arm64 compile probe in the nf-cross image (`--target=aarch64-linux-gnu`, Ubuntu's arm64 headers) for both standalone targets, with the fused-op count; UBSan float-cast-overflow and ThreadSanitizer lockstep runs on Linux x86-64; the races and conversions fixed | x86 | M | probe: 0 errors, 0 fused ops; UBSan/TSan clean; lockstep exact against `lbase_c` |
-| M3 | **Trace redirection without code patching** (6) | x86 | S | traces identical to the patched ones on Windows and Linux |
+| M3 | **Trace redirection without code patching** (6). **Done** 15 Oct 2026: SndCallTraceRedirect.h, a forced include on driving_standalone_test's sources outside sound/snd (a per-source option conditional on the target, CMakeLists.txt); the standalone build's call-site moving (PE and `dl_iterate_phdr`) removed. One difference by design: a call to an entry the linker folded with another (SNDSYS_restore/SNDSYSI_exithook under MSVC) is now traced, where the moving left it alone; no run reaches it | x86 | S | traces identical to the patched ones on Windows and Linux: runner, 32-bit X87=OFF 16/16 and x64 16/16 exact against `lbase_c` (frames and traces), drivinginject (unchanged mechanism) 8/8 against `lbase`; WSL2 Linux i386 (lavapipe, X87=ON), the patched build (60f3014) against this one: m1/m2 idle and accelerating to tick 4500, traces and frames identical |
 | G1 | **SPIR-V lowering** of shaderBuilder's graph (`NoContraction`, `Fma` for NV2A MADs), the fixed-function shaders (pretransformed, immediate, movie quad), FXAA's SPIR-V | x86 | M | `spirv-val` on every program the 16 runs create (a dump mode like shadercheck's) |
 | G2 | **The SDL GPU backend** behind d3d9Backend.h (`NIGHTFIRE_GFX=sdlgpu`): pipeline and sampler caches, formats, streams and the ring buffer, palettes, YUV, render targets, readback for the dumps, gamma, offscreen mode for lockstep; on Windows/Linux through SDL's Vulkan backend | x86 | L | lockstep sound traces unchanged (the renderer is below them); frames against the D3D9 build's by eye and by a pixel-difference threshold; two runs identical |
 | A1 | **macOS bring-up**: the `macos-arm64` preset; HostPosix's Darwin rows (5); xboxPath/launchInfo; CrashReportPosix for arm64; build_ffmpeg.sh macos-arm64; `kGameWindowBase` 0x100000000 with its start-up check | Mac | M | `gamewindow_test` (1,000,000 operations, everything inside the window); the test executable boots to the first tick headless |

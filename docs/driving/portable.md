@@ -221,8 +221,9 @@ and the x87 helpers' results would differ.
   and its callers use, as 32-bit Windows defines them (DWORD unsigned long, BOOL int...). It replaces `<windows.h>`
   in PlayMPC, d3dSeam, CRuntime, CRuntimeStd, FileSys and the Real* and Xbox* platform files.
 - `devtools/Win32Harness.h`: the Win32 calls of the lockstep harness (Teleport, SndLockstep, SndCallTrace) over the
-  host layer, POSIX semaphores and atomics off Windows. SndCallTrace's moving of call sites finds the executable's
-  code segments with dl_iterate_phdr where Windows reads the PE sections. Teleport's F8/F9 go through
+  host layer, POSIX semaphores and atomics off Windows. SndCallTrace's wrappers are reached by name in the test
+  executable (devtools/SndCallTraceRedirect.h, a forced include; before package M3 of macos.md it moved call sites in
+  the code segments dl_iterate_phdr found). Teleport's F8/F9 go through
   HostInput_KeyHeld (new kKeyF8, kKeyF9) and HostInput_WindowHasFocus.
 - HostPosix: paths take either separator and are matched without regard to case component by component (a disc
   copied onto a Linux file system keeps its own case); contiguous pages are placed at the lowest free 64 KB

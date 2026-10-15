@@ -955,6 +955,22 @@ endif()
 add_executable(driving_standalone ${nf_standalone_sources} src/driving/standalone/NoDevtools.cpp)
 add_executable(driving_standalone_test EXCLUDE_FROM_ALL ${nf_standalone_sources} ${nf_standalone_harness})
 target_compile_definitions(driving_standalone_test PRIVATE NIGHTFIRE_STANDALONE_TEST)
+# NIGHTFIRE_SNDTRACE's wrappers by name (devtools/SndCallTraceRedirect.h): the test executable's sources outside the
+# sound library and the wrappers' own file are compiled with that header first. The sources are driving_standalone's
+# too, hence the condition on the target.
+set(nf_test_only "$<STREQUAL:$<TARGET_PROPERTY:NAME>,driving_standalone_test>")
+foreach(source ${nf_standalone_sources} ${nf_standalone_harness})
+  if(source MATCHES "src/driving/sound/snd/" OR source MATCHES "devtools/SndCallTrace\\.cpp$")
+    continue()
+  endif()
+  if(MSVC)
+    set_property(SOURCE ${source} APPEND PROPERTY COMPILE_OPTIONS
+                 "$<${nf_test_only}:/FI${CMAKE_SOURCE_DIR}/src/driving/devtools/SndCallTraceRedirect.h>")
+  else()
+    set_property(SOURCE ${source} APPEND PROPERTY COMPILE_OPTIONS "$<${nf_test_only}:-include>"
+                 "$<${nf_test_only}:${CMAKE_SOURCE_DIR}/src/driving/devtools/SndCallTraceRedirect.h>")
+  endif()
+endforeach()
 foreach(target driving_standalone driving_standalone_test)
   add_dependencies(${target} preprocess)
   target_include_directories(${target} PRIVATE ${NF_FFMPEG_DIR}/include)

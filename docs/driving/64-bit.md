@@ -110,7 +110,8 @@ pointers. No other format crosses the process boundary.
 The shadow tests run originals and exist only in the injected (32-bit) build: they need no port. The test
 executable's three harness files (Teleport.cpp, SndLockstep.cpp, SndCallTrace.cpp) have one pointer-bearing
 structure and nothing else the tool flags outside `#ifndef NIGHTFIRE_STANDALONE`; SndCallTrace's `call rel32`
-retargeting is the same encoding on x86-64 (within one image). The sound trace prints no heap addresses (it already
+retargeting was the same encoding on x86-64 (within one image), and since macos.md's package M3 the standalone
+build names the wrappers at compile time instead. The sound trace prints no heap addresses (it already
 matched across the injected and standalone builds, whose heaps differ).
 
 ### 2.5 LP64 (Linux and macOS)

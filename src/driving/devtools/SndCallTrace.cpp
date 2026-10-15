@@ -19,11 +19,6 @@
 
 #include <vector>
 #include <map>
-#ifndef _WIN32
-#include <link.h>
-#include <sys/mman.h>
-#include <unistd.h>
-#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // NIGHTFIRE_SNDTRACE=1 logs every call the game makes into the sound library's API (docs/driving/sound.md 6.1):
@@ -50,7 +45,8 @@
 // Threads: only the game thread's calls follow the simulation under NIGHTFIRE_LOCKSTEP. The game thread is the
 // one ticks run on (the first to call the library until the first tick); every other thread's outermost calls -
 // the 100 Hz server's SNDstop on a finished fade - go to path.others with their thread, the game tick they fell
-// in, and every value shown, and are counted per entry.
+// in, and every value shown, and are counted per entry. (In driving_standalone_test only calls from outside the
+// library reach a wrapper, so the library's own threads add nothing there.)
 //
 // Timing: whether a voice has finished, and how far a stream has played, is the sound thread's doing. SNDover,
 // the voice controls' results (the voice index, or an error once the server has reclaimed it) and the stream
@@ -58,12 +54,17 @@
 // which depends on what the server has freed, hence the v<n> numbering. Game logic that waits on a stream's end
 // (sound.md 6.1) still makes a real difference between runs, which the log then shows.
 //
-// How: both ways into a port are moved to a wrapper that logs and calls the port. The original's entry, which
-// the injection table made a jump to our port, is pointed at the wrapper (XbeOriginal_Redirect) - the game's own
-// code and the stored addresses (SYNCTASK, the exit hooks) come in there. Our code calls the port directly, so
-// every call or jump instruction in this module whose target is a port is retargeted to the wrapper; the
-// wrappers themselves reach the port through a pointer, never by a direct call. Both happen at injection time,
-// before any game thread exists.
+// How: every way into a port goes through a wrapper (Traced_<entry>) that logs and calls the port.
+//
+//   - driving_standalone_test: by name. Every source but the library's and this one is compiled with
+//     SndCallTraceRedirect.h first, which names the wrappers in place of the entries, so our code calls the
+//     wrappers and the wrappers call the ports. Nothing is patched; with NIGHTFIRE_SNDTRACE off a wrapper only
+//     calls its port.
+//   - drivinginject: at injection time, before any game thread exists. The original's entry, which the injection
+//     table made a jump to our port, is pointed at the wrapper (XbeOriginal_Redirect) - the game's own code and
+//     the stored addresses (SYNCTASK, the exit hooks) come in there. Our code calls the port directly, so every
+//     call or jump instruction in this module whose target is a port is retargeted to the wrapper; the wrappers
+//     themselves reach the port through a pointer, never by a direct call.
 // ---------------------------------------------------------------------------------------------------------------
 
 namespace {
@@ -91,12 +92,19 @@ struct Entry {
 
 extern Entry g_entries[kApiCount];
 
+#ifdef NIGHTFIRE_STANDALONE
+// The ports, as the wrappers call them: directly, since nothing moves call sites in this build
+template <class F> F Port(F port, Api) {
+    return port;
+}
+#else
 // The ports, as the wrappers call them: read at run time, so that no wrapper holds a direct call to a port.
 const void *volatile g_ports[kApiCount];
 
 template <class F> F Port(F, Api api) {
     return reinterpret_cast<F>(const_cast<void *>(g_ports[api]));
 }
+#endif
 
 bool g_showTiming;
 bool g_windowed;
@@ -169,7 +177,7 @@ private:
 };
 
 Call::Call(Api api) : top(t_depth++ == 0), game(false), write(false), length_(0), args_(0), closed_(false) {
-    if (!top)
+    if (!top || g_log == NULL)   // not tracing: the wrapper only calls its port
         return;
     DWORD thread = GetCurrentThreadId();
     if (g_gameThread == 0)
@@ -367,7 +375,9 @@ bool Call::Masked() {
     return true;
 }
 
-// ---- the wrappers, one per entry, in the order of sound.md 6.1
+}  // namespace
+
+// ---- the wrappers, one per entry, in the order of sound.md 6.1 (SndCallTraceRedirect.h names them)
 
 int Traced_SNDSYS_vectortoreal(void) {
     Call call(kSysVectorToReal);
@@ -726,6 +736,8 @@ int Traced_SNDSTRM_autovol(int stream, int time, int vol) {
     return result;
 }
 
+namespace {
+
 #define ENTRY(api, function, original) \
     { api, #function, original, (const void *)&Traced_##function, (const void *)&function, 0, 0, false }
 
@@ -773,6 +785,7 @@ Entry g_entries[kApiCount] = {
 
 // ---- installing
 
+#ifndef NIGHTFIRE_STANDALONE
 Entry *EntryForPort(uintptr_t target) {
     for (Entry &e : g_entries)
         if ((uintptr_t)e.port == target)
@@ -808,7 +821,6 @@ int MoveCallSitesIn(uint8_t *code, size_t size) {
     return moved;
 }
 
-#ifdef _WIN32
 // This module's executable sections
 int MoveCallSites() {
     HMODULE module = NULL;
@@ -831,29 +843,6 @@ int MoveCallSites() {
         VirtualProtect(code, size, old, &old);
         FlushInstructionCache(GetCurrentProcess(), code, size);
     }
-    return moved;
-}
-#else
-// The executable's code segments: the game's code is all in the executable, the first object dl_iterate_phdr
-// reports
-int MoveCallSites() {
-    int moved = 0;
-    dl_iterate_phdr([](dl_phdr_info *info, size_t, void *data) {
-        for (int i = 0; i < info->dlpi_phnum; i++) {
-            const ElfW(Phdr) &segment = info->dlpi_phdr[i];
-            if (segment.p_type != PT_LOAD || (segment.p_flags & PF_X) == 0)
-                continue;
-            uintptr_t page = (uintptr_t)sysconf(_SC_PAGESIZE);
-            uintptr_t start = info->dlpi_addr + segment.p_vaddr;
-            uintptr_t first = start & ~(page - 1);
-            size_t span = (start + segment.p_memsz - first + page - 1) & ~(page - 1);
-            if (mprotect((void *)first, span, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
-                continue;
-            *static_cast<int *>(data) += MoveCallSitesIn((uint8_t *)start, segment.p_memsz);
-            mprotect((void *)first, span, PROT_READ | PROT_EXEC);
-        }
-        return 1;
-    }, &moved);
     return moved;
 }
 #endif
@@ -886,6 +875,7 @@ void SndCallTrace_Install(void) {
             printf("[sndtrace] entry %d is %s, out of order - not installed\n", i, g_entries[i].name);
             return;
         }
+#ifndef NIGHTFIRE_STANDALONE
     // Identical functions folded into one by the linker share a port: their originals still have their own
     // wrappers, but a call site in our code to the port could be either, so it is left alone.
     for (Entry &e : g_entries) {
@@ -897,6 +887,7 @@ void SndCallTrace_Install(void) {
                    first->name, e.name);
         }
     }
+#endif
 
     char text[MAX_PATH];
     if (GetEnvironmentVariableA("NIGHTFIRE_SNDTRACE_TICKS", text, sizeof(text)) &&
@@ -906,8 +897,8 @@ void SndCallTrace_Install(void) {
 
     char path[MAX_PATH] = "sndtrace.log";
     GetEnvironmentVariableA("NIGHTFIRE_SNDTRACE_FILE", path, sizeof(path));
-    g_log = fopen(path, "w");
-    if (g_log == NULL) {
+    FILE *log = fopen(path, "w");
+    if (log == NULL) {
         printf("[sndtrace] could not open %s\n", path);
         return;
     }
@@ -915,11 +906,18 @@ void SndCallTrace_Install(void) {
     snprintf(othersPath, sizeof(othersPath), "%s.others", path);
     g_others = fopen(othersPath, "w");
     InitializeCriticalSection(&g_othersLock);
+    g_log = log;   // the wrappers log from here on
+
+#ifdef NIGHTFIRE_STANDALONE
+    atexit(Shutdown);
+    printf("[sndtrace] %d sound entries traced to %s (calls named at compile time)%s\n", int(kApiCount), path,
+           g_windowed ? ", within the ticks asked for" : "");
+#else
     for (int i = 0; i < kApiCount; i++)
         g_ports[i] = g_entries[i].port;
 
+    // The originals' entries
     int originals = 0;
-#ifndef NIGHTFIRE_STANDALONE   // the originals' entries, in the injected build
     for (Entry &e : g_entries) {
         const uint8_t *at = (const uint8_t *)(uintptr_t)e.original;
         int32_t displacement;
@@ -944,12 +942,12 @@ void SndCallTrace_Install(void) {
             printf("[sndtrace] 0x%08x jumps to %s's port too: our code's calls to it are logged as %s\n", at,
                    e->name, e->name);
     }
-#endif
     int sites = MoveCallSites();
 
     atexit(Shutdown);
     printf("[sndtrace] %d sound entries traced to %s (%d original entries, %d call sites in our code)%s\n",
            int(kApiCount), path, originals, sites, g_windowed ? ", within the ticks asked for" : "");
+#endif
 }
 
 void SndCallTrace_Tick(void) {

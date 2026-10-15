@@ -100,7 +100,7 @@ All on the runner (vr-desktop) against its baselines (`lbase`), all eight missio
   callbacks by the originals' addresses while Stream.cpp now hands over ours - so under lockstep the stream reads ran
   on the file system's worker at disc speed again. That was the five sound-trace differences of the first round
   (SNDSTRM_requeststatus a tick early, a queuefile moved): it accepts both now and calls the port directly
-  (NIGHTFIRE_SNDTRACE retargets that call to its wrapper, as it does every call into a port).
+  (NIGHTFIRE_SNDTRACE sends that call to its wrapper, as it does every call into a port).
 
 The first round's "hang at Init Sound" in every TRAP_DATA, HEAP_SHIFT and TRAP_ORIGINAL=1 run was its run list's
 `-TailWaitMs 120`: the driver killed each game three seconds in.
@@ -518,7 +518,10 @@ standalone/NoDevtools.cpp the harness's, in driving_standalone only. driving_sta
 devtools/Teleport.cpp, SndLockstep.cpp and SndCallTrace.cpp themselves: the first-tick shadow runs moved out of
 Teleport.cpp into devtools/ShadowTicks.cpp (drivinginject only), Teleport.cpp and SndCallTrace.cpp name the player's
 car, the simulation and the mission number by our globals and call `Simulation::GetRigidBody`/`SetStartConditions`
-directly, and SndCallTrace's redirect of the originals' entries is `#ifndef NIGHTFIRE_STANDALONE`.
+directly, and SndCallTrace's redirect of the originals' entries is `#ifndef NIGHTFIRE_STANDALONE`. In the test
+executable our calls reach SndCallTrace's wrappers by name: every source but the sound library's and SndCallTrace.cpp
+is compiled with devtools/SndCallTraceRedirect.h first (docs/driving/macos.md, package M3), so nothing is patched at
+run time; drivinginject still moves its call sites at injection.
 
 **What it needs at run time:** the disc's game files (../disc, or settings.ini's DiscPath) - not Driving.xbe -,
 settings.ini and saves/ beside it as the injected build has them, the FFmpeg DLLs, and the host's Direct3D 9,
