@@ -604,6 +604,12 @@ of their sections. The 64-bit syntax check (`--probe-script`, 277 sources, disti
   particle key of the `NIGHTFIRE_X87=ON` build, `DTuningFile::ParseData_Colour`'s use of a pointer's low bits as
   the original does, `NumGet::DoGetPointer`'s `strtoul`.
 
+**With packages 1 and 2** (driving-64, both merged with the Linux port): the probe's distinct error lines are 18, every
+one a failed `static_assert` on a structure package 6 added to the `LOADERS` table (`WTrigger`, `WCollisionInstance`,
+`WMapHeader`, `ArticleEffect`, `PushBufferPacket`, `DynamicModel`, the anim data, the game's GeoPrims), whose pointer
+members become `Ptr32` in packages 3a and 4. MSVC x64 fails the same 18 and, now that it gets past them, the two
+`_mm_empty()` calls (GameLoop.cpp, EventsD.cpp), an MMX intrinsic x64 does not have.
+
 ## 8. Work packages
 
 In order; each keeps the Windows 32-bit build unchanged (Ptr32 is `T *` there) and is tested by it. Sizes: S < 1 day of

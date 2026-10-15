@@ -112,7 +112,7 @@ FILE_HINT = re.compile(r"\b(file|files|record|records|loader|ELF|CARP|on the dis
 
 def standalone_sources():
     text = open(os.path.join(ROOT, "CMakeLists.txt"), encoding="utf-8").read()
-    m = re.search(r"add_library\(drivinginject SHARED(.*?)\n\)", text, re.S)
+    m = re.search(r"set\(nf_driving_sources(.*?)\n\)", text, re.S)   # drivinginject's list
     sources = [l.strip() for l in m.group(1).split("\n") if l.strip().endswith(".cpp")]
     sources.append("src/common/fmv/FmvAudio.cpp")
     for line in re.findall(r"set\(nf_standalone_sources ([^)]*)\)", text):
