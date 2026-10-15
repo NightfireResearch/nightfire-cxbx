@@ -25,7 +25,8 @@
 #   TARGETS=<targets>   the targets built (default driving drivinginject, or driving_standalone_test with that EXE)
 #   ENV=<VAR=value;...> add variables to the lockstep runs (NIGHTFIRE_TRAP_ORIGINAL=2, say)
 # Missions default to 1-8. On a Linux runner (tools/runner/remote.sh: RUNNER_OS, RUNNER_HOST=wsl) the round is the
-# standalone test executable's lockstep runs (EXE defaults to Release/driving_standalone_test), with tools/drive_game.sh.
+# standalone test executable's lockstep runs (EXE defaults to Release/driving_standalone_test), with tools/drive_game.sh;
+# so on a Mac (RUNNER_HOST=local there).
 set -e
 P=$1; WHAT=${2:-all}
 if [ "$WHAT" = quick ]; then
@@ -44,7 +45,8 @@ SUMMARY=build/remote/$P.summary
 export RUNNER_SLOTS=${RUNNER_SLOTS:-8}
 # The runner's system, asked once for every remote.sh call of the round
 export RUNNER_OS=${RUNNER_OS:-$("$HERE/remote.sh" os)}
-if [ "$RUNNER_OS" = linux ]; then EXE=${EXE:-Release/driving_standalone_test}; else EXE=${EXE:-'Release\driving.exe'}; fi
+if [ "$RUNNER_OS" != windows ]; then EXE=${EXE:-Release/driving_standalone_test}; else EXE=${EXE:-'Release\driving.exe'}; fi
+PYTHON=python; command -v python > /dev/null || PYTHON=python3   # macOS has only python3
 case "$EXE" in
     Release64*) export RUNNER_PRESET=${RUNNER_PRESET:-windows-x64} ;;   # the 64-bit build (remote.sh build)
 esac
@@ -118,7 +120,7 @@ for m in $MS; do
         for h in idle accelerate; do
             D=build/remote/${P}_m${m}_$h
             if [ -n "$BASE" ]; then
-                python "$HERE/compare.py" "${BASELINES:-build/baselines}/${BASE}_m${m}_$h" "$D" "$TO" >> "$SUMMARY" || true
+                $PYTHON "$HERE/compare.py" "${BASELINES:-build/baselines}/${BASE}_m${m}_$h" "$D" "$TO" >> "$SUMMARY" || true
             else
                 echo "${P}_m${m}_$h: $(ls "$D" | grep -c 'bmp$') frames, $(wc -l < "$D/sndtrace.log" 2>/dev/null || echo no) trace lines" >> "$SUMMARY"
             fi

@@ -1161,6 +1161,14 @@ if(NIGHTFIRE_GFX STREQUAL "sdlgpu")
   # translates it, written beside it as .metal, and checked: "spirvmsl <folder>" (src/common/gfx/devtools/spirvMslMain.cpp).
   add_executable(spirvmsl EXCLUDE_FROM_ALL src/common/gfx/devtools/spirvMslMain.cpp src/common/gfx/shaderMsl.cpp)
   target_link_libraries(spirvmsl PRIVATE spirv-cross-msl)
+  if(APPLE)
+    # spirvmsl's .metal files compiled by this Mac's Metal framework, as SDL's Metal driver compiles them: "mslcompile
+    # <folder>" (src/common/gfx/devtools/mslCompileMain.mm)
+    set_source_files_properties(src/common/gfx/devtools/mslCompileMain.mm PROPERTIES LANGUAGE CXX
+                                COMPILE_OPTIONS "-xobjective-c++;-fobjc-arc")
+    add_executable(mslcompile EXCLUDE_FROM_ALL src/common/gfx/devtools/mslCompileMain.mm)
+    target_link_libraries(mslcompile PRIVATE "-framework Metal" "-framework Foundation")
+  endif()
 endif()
 # The x86 instructions the driving engine's ports use by intrinsics: SSE's, RDTSC, REP MOVSD/MOVSB, EMMS
 # (src/driving/platform/Sse.h, docs/driving/macos.md 3). On: the instructions. Off: C with their results

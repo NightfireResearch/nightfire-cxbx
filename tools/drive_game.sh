@@ -17,7 +17,8 @@
 # driver NF_VK_ICD names - "lvp" (the default: Mesa's lavapipe, Vulkan on the CPU, the only choice in WSL2), a path
 # to an ICD's JSON file, or "system" for whatever the Vulkan loader finds (a GPU's driver). LP_NUM_THREADS (default
 # 3) is lavapipe's thread count. -Display runs it on the display in DISPLAY instead (:0 when unset), with SDL's X11
-# video driver, its default audio and the system's Vulkan driver unless NF_VK_ICD says otherwise.
+# video driver, its default audio and the system's Vulkan driver unless NF_VK_ICD says otherwise. On macOS the game
+# renders through Metal on the GPU, its window hidden unless -Display.
 set -u
 
 Exe=Release/driving_standalone_test
@@ -64,7 +65,11 @@ cd "$WorkingDirectory" || exit 1
 case "$LogPath" in /*) ;; *) LogPath=$OLDPWD/$LogPath ;; esac
 rm -f "$LogPath" "$LogPath.err"
 
-if [ -n "$Display" ]; then
+if [ "$(uname -s)" = Darwin ]; then
+    # Metal, on the GPU: headless, the game takes "offscreen" as Cocoa with its window hidden (HostWindowSdl.cpp)
+    [ -n "$Display" ] || export SDL_VIDEO_DRIVER=offscreen SDL_AUDIO_DRIVER=dummy
+    icd=system
+elif [ -n "$Display" ]; then
     export DISPLAY=${DISPLAY:-:0}
     export SDL_VIDEO_DRIVER=${SDL_VIDEO_DRIVER:-x11}   # the 32-bit SDL is built without Wayland
     icd=${NF_VK_ICD:-system}
@@ -86,7 +91,7 @@ unset NIGHTFIRE_TELEPORT NIGHTFIRE_HOLD NIGHTFIRE_DUMP_MS
 [ -z "$GameHold" ] || export NIGHTFIRE_HOLD=$GameHold
 [ "$DumpAfterMs" -lt 0 ] || export NIGHTFIRE_DUMP_MS=$DumpAfterMs
 IFS=';' read -ra pairs <<< "$GameEnv"
-for pair in "${pairs[@]}"; do
+for pair in ${pairs[@]+"${pairs[@]}"}; do   # bash 3.2 (macOS) calls an empty array unbound
     [ -n "$pair" ] && export "${pair%%=*}=${pair#*=}"
 done
 
@@ -97,7 +102,11 @@ pid=$!
 trap 'kill -KILL $pid 2> /dev/null; exit 1' HUP INT TERM
 
 running() { kill -0 "$pid" 2> /dev/null; }
-ms() { echo $(( $(date +%s%N) / 1000000 )); }
+if [ "$(date +%N)" != N ]; then
+    ms() { echo $(( $(date +%s%N) / 1000000 )); }
+else   # BSD date (macOS) has no %N
+    ms() { perl -MTime::HiRes=time -e 'printf "%d\n", time() * 1000'; }
+fi
 sleep_ms() { sleep "$(awk -v ms="$1" 'BEGIN { printf "%.3f", ms / 1000 }')"; }
 
 sleep_ms "$StartupWaitMs"

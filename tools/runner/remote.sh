@@ -10,7 +10,7 @@
 #   tools/runner/remote.sh ssh '<command>'             # any command over SSH (no desktop: fine for builds, not for D3D)
 #   tools/runner/remote.sh slots [n]                   # n run folders (default 8), each a copy of the built Release/
 #   tools/runner/remote.sh setup [n]                   # the scheduled tasks: the serial one and one per slot
-#   tools/runner/remote.sh os                          # windows or linux: the runner's system
+#   tools/runner/remote.sh os                          # windows, linux or macos: the runner's system
 #
 # Settings (environment): RUNNER_HOST (vr-desktop), RUNNER_USER (Charlie), RUNNER_KEY (~/.ssh/nightfire_runner),
 # RUNNER_REPO (/c/nightfire-cxbx, the checkout there), RUNNER_SLOT (unset: "desktop", "drive" and "run" use the
@@ -29,6 +29,10 @@
 # into Release/ in the same way), RUNNER_BUILD (a build folder made elsewhere on it: "build" only installs from that),
 # RUNNER_FFMPEG_LIB and RUNNER_DXVK_DIR (the preset's FFmpeg and dxvk-native, for the first configure),
 # RUNNER_BUILD_JOBS (parallel compiles), RUNNER_WSL_DISTRO (Ubuntu). See docs/test-runner.md.
+#
+# A Mac runs its own rounds as a local runner (RUNNER_HOST=local on macOS: OS macos, docs/driving/macos.md 6), the
+# Linux way: its checkout, job and slot folders under ~/nf/runner, the macos-arm64 preset (FFmpeg from
+# ~/ffmpeg-arm64/lib), headless runs on the GPU with tools/drive_game.sh.
 #
 # A runner is only a speed-up: everything here also runs locally (tools/ui/run_menu.sh, cmake), and nothing may
 # require one. The defaults are Charlie's runner, reachable only on Charlie's home LAN - not a public machine, so not usable by
@@ -86,7 +90,7 @@ if [ "$HOST" = local ]; then
     JOBDIR=$JOBS${SLOT:+/slot$SLOT}
     RUNDIR=$RREPO
     [ -z "$SLOT" ] || RUNDIR=$SLOTS/$SLOT
-    mkdir -p "$JOBS"
+    [ "$(uname -s)" = Darwin ] || mkdir -p "$JOBS"   # a Mac's are under ~/nf/runner (below)
     r() { bash -c "$*"; }
     poll() { bash -c "$*"; }
 fi
@@ -101,16 +105,25 @@ if [ "$HOST" = wsl ]; then
           "eval \"\$(echo $(printf '%s' "$*" | base64 -w0) | base64 -d)\""; }
     poll() { r "$@" < /dev/null; }
 elif [ -z "$OS" ]; then
-    if [ -n "$LOCAL" ]; then OS=windows
+    if [ -n "$LOCAL" ]; then case $(uname -s) in Darwin) OS=macos ;; Linux) OS=linux ;; *) OS=windows ;; esac
     else case $(r uname -s < /dev/null 2> /dev/null) in Linux*) OS=linux ;; *) OS=windows ;; esac
     fi
 fi
-if [ "$OS" = linux ]; then
+if [ "$OS" != windows ]; then
     ROOT='$HOME'
     [ "$HOST" = wsl ] && ROOT=${RUNNER_WSL_ROOT:-'$HOME/nf/runner'}
     LPRESET=${RUNNER_PRESET:-linux-i386}
     ARCH=i386
     [ "$LPRESET" = linux-x64 ] && ARCH=x64
+    LIBS='lib*.so*'
+    NPROC='$(nproc)'
+    if [ "$OS" = macos ]; then
+        ROOT=${RUNNER_MAC_ROOT:-'$HOME/nf/runner'}
+        LPRESET=${RUNNER_PRESET:-macos-arm64}
+        ARCH=arm64
+        LIBS='lib*.dylib'
+        NPROC='$(sysctl -n hw.ncpu)'
+    fi
     RREPO=${RUNNER_REPO:-$ROOT/nightfire-cxbx}
     JOBS=$ROOT/nightfire-runner
     SLOTS=$ROOT/nightfire-slots
@@ -133,7 +146,7 @@ sync)
     upstream=${RUNNER_SYNC_BASE:-'@{upstream}'}
     base=$(git merge-base HEAD "$upstream")
     head=$(git rev-parse HEAD)
-    if [ "$OS" = linux ]; then
+    if [ "$OS" != windows ]; then
         # A Linux runner may have no access to the origin (WSL2 has no GitHub key): without the base commit it gets
         # the whole history as a bundle
         r "cd $RREPO && { GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND='ssh -o BatchMode=yes -o ConnectTimeout=15' git fetch -q origin < /dev/null 2> /dev/null || true; }"
@@ -163,7 +176,7 @@ sync)
     echo "runner at $(r "cd $RREPO && git rev-parse --short HEAD") plus $(git diff --stat HEAD | tail -1)"
     ;;
 build)
-    if [ "$OS" = linux ]; then
+    if [ "$OS" != windows ]; then
         # The linux-i386 preset (docs/driving/portable.md), or RUNNER_PRESET's (linux-x64), configured once (again
         # with RUNNER_CMAKE_ARGS), then incremental; the executables and the libraries beside them go to Release/,
         # where runs and "slots" take them from, as on Windows. RUNNER_BUILD=<folder>: a build made elsewhere on the
@@ -175,11 +188,11 @@ build)
             compile="{ [ -f build/$LPRESET/CMakeCache.txt ] && [ -z '$RUNNER_CMAKE_ARGS' ] || \
                        cmake --preset $LPRESET -DNF_FFMPEG_LIB_DIR=$FFMPEG ${DXVK:+-DNF_DXVK_DIR=$DXVK} $RUNNER_CMAKE_ARGS > $JOBS/configure.log 2>&1 || \
                        { echo 'FAILED: configure, the end of $JOBS/configure.log:'; tail -20 $JOBS/configure.log; exit 1; }; } && \
-                     nice cmake --build build/$LPRESET --target $targets -j ${RUNNER_BUILD_JOBS:-\$(nproc)} 2>&1 | grep -E 'error:|^FAILED|Linking'; \
+                     nice cmake --build build/$LPRESET --target $targets -j ${RUNNER_BUILD_JOBS:-$NPROC} 2>&1 | grep -E 'error:|^FAILED|Linking'; \
                      [ \${PIPESTATUS[0]} = 0 ]"
         fi
         r "mkdir -p $JOBS && cd $RREPO && $compile && mkdir -p Release && cd $from && \
-           cp -f \$(ls -d driving_standalone driving_standalone_test driving_standalone*.map lib*.so* 2>/dev/null) $RREPO/Release/ && \
+           cp -f \$(ls -d driving_standalone driving_standalone_test driving_standalone*.map $LIBS 2>/dev/null) $RREPO/Release/ && \
            echo \"-> \$(cd $RREPO/Release && ls driving_standalone driving_standalone_test 2>/dev/null | tr '\n' ' ')in $RREPO/Release from $from\""
         exit
     fi
@@ -203,7 +216,7 @@ build)
     ;;
 desktop)
     [ -n "$1" ] || { echo "desktop: no command"; exit 2; }
-    if [ "$OS" = linux ]; then
+    if [ "$OS" != windows ]; then
         # No session to reach: the command runs here and now, on RUNNER_DISPLAY's display when that is set
         r "mkdir -p $JOBDIR && cd $RUNDIR && { ${RUNNER_DISPLAY:+export DISPLAY=$RUNNER_DISPLAY; }$1
            } > $JOBDIR/job.log 2>&1; rc=\$?; cat $JOBDIR/job.log; exit \$rc"
@@ -234,7 +247,7 @@ drive)
     # the frame's textures and draw trace, which stay on the runner.
     name=$1; args=$2
     [ -n "$name" ] && [ -n "$args" ] || { echo "drive: tools/runner/remote.sh drive <name> \"<drive_game.ps1 arguments>\""; exit 2; }
-    if [ "$OS" = linux ]; then
+    if [ "$OS" != windows ]; then
         "$0" desktop "rm -f Release/d3d9_dump_* Release/d3d9_trace_*.log Release/sndtrace.log*; bash $RREPO/tools/drive_game.sh $args ${RUNNER_DISPLAY:+-Display} -LogPath $JOBDIR/drive.log > /dev/null 2>&1; true" > /dev/null
     else
         "$0" desktop "rm -f Release/d3d9_dump_* Release/d3d9_trace_*.log Release/sndtrace.log; powershell -NoProfile -ExecutionPolicy Bypass -File '$(win $RREPO)/tools/drive_game.ps1' $args -LogPath '$(win $JOBDIR)/drive.log' > /dev/null 2>&1; true" > /dev/null
@@ -254,9 +267,9 @@ slots)
     n=${1:-8}; first=${RUNNER_SLOT_FIRST:-1}
     for i in $(seq "$first" $((first + n - 1))); do
         d=$SLOTS/$i
-        if [ "$OS" = linux ]; then
+        if [ "$OS" != windows ]; then
             r "mkdir -p $d/Release && cd $d/Release && find . -maxdepth 1 -type f -delete && rm -rf saves tdata cache && \
-               cp $RREPO/Release/driving_standalone* $RREPO/Release/lib*.so* $RREPO/Release/settings.ini . && \
+               cp $RREPO/Release/driving_standalone* $RREPO/Release/$LIBS $RREPO/Release/settings.ini . && \
                cp -r $RREPO/Release/saves . && { [ ! -d $RREPO/Release/tdata ] || cp -r $RREPO/Release/tdata .; } && \
                { [ -e $d/disc ] || ln -s $RREPO/disc $d/disc; }"
             continue
@@ -274,6 +287,14 @@ setup)
     # NightfireRunner1... Run only when the user is logged on (/IT), so they start in their interactive session.
     # Started on demand by "desktop"; the trigger date is never reached.
     n=${1:-8}
+    if [ "$OS" = macos ]; then
+        r "mkdir -p $JOBS $SLOTS && { [ -d $RREPO/.git ] || { git init -q $RREPO && git -C $RREPO remote add origin $(git -C "$REPO" remote get-url origin); }; } && \
+           for t in git cmake ninja clang python3 nice; do command -v \$t > /dev/null || echo \"missing: \$t\"; done; \
+           [ -e $FFMPEG/libavcodec.62.dylib ] || echo \"missing: FFmpeg in $FFMPEG (tools/fmv/build_ffmpeg.sh macos-arm64)\"; \
+           for f in disc Release/settings.ini Release/saves; do [ -e $RREPO/\$f ] || echo \"missing: $RREPO/\$f (copy it over: docs/test-runner.md)\"; done; \
+           echo \"checkout $RREPO, slots in $SLOTS\""
+        exit
+    fi
     if [ "$OS" = linux ]; then
         # No tasks: the checkout (filled by "sync"; its origin is ours), the job and slot folders, and a check of what
         # a build and the runs need
