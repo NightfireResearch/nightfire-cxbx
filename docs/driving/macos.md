@@ -1,6 +1,6 @@
 # The driving engine on Apple Silicon macOS
 
-Status: plan (15 October 2026), step 4 of the roadmap in [portable.md](portable.md). Done on x86: M0 (the portable
+Status: in progress on the Mac (15 October 2026: A1 done, G3 done but for two runs' frames, A2 partly - section 7.1), step 4 of the roadmap in [portable.md](portable.md). Done on x86: M0 (the portable
 SSE header, 3.1), M3, G1 and G2 ([sdl-gpu.md](sdl-gpu.md)), and what of G3 runs without a Mac. It follows the 64-bit work ([64-bit.md](64-bit.md)), which
 it assumes is finished:
 packages 3a-5, 8 and 9 (the 64-bit standalone executable exact in lockstep against `lbase_c`) and 10 (Linux
@@ -322,14 +322,44 @@ the runner) before or beside the last 64-bit packages; A1-A4 and G3 run on the M
 | M3 | **Trace redirection without code patching** (6). **Done** 15 Oct 2026: SndCallTraceRedirect.h, a forced include on driving_standalone_test's sources outside sound/snd (a per-source option conditional on the target, CMakeLists.txt); the standalone build's call-site moving (PE and `dl_iterate_phdr`) removed. One difference by design: a call to an entry the linker folded with another (SNDSYS_restore/SNDSYSI_exithook under MSVC) is now traced, where the moving left it alone; no run reaches it | x86 | S | traces identical to the patched ones on Windows and Linux: runner, 32-bit X87=OFF 16/16 and x64 16/16 exact against `lbase_c` (frames and traces), drivinginject (unchanged mechanism) 8/8 against `lbase`; WSL2 Linux i386 (lavapipe, X87=ON), the patched build (60f3014) against this one: m1/m2 idle and accelerating to tick 4500, traces and frames identical |
 | G1 | **SPIR-V lowering** of shaderBuilder's graph (`NoContraction`, `Fma` for NV2A MADs), the fixed-function shaders (pretransformed, immediate, movie quad), FXAA's SPIR-V | x86 | M | `spirv-val` on every program the 16 runs create (a dump mode like shadercheck's) **Done 16 Oct 2026** ([sdl-gpu.md](sdl-gpu.md)): 99 programs from the logs and Driving.xbe (178 modules with point-sprite variants) and every module a mission-1 run creates (47) pass `spirv-val --target-env vulkan1.0`; the D3D9 tokens of all 99 unchanged by the shared `ShaderBuilder::Fuse`; `Fma` where the D3D9 lowering writes a mad (the compiler-fusion rule), not only NV2A MADs |
 | G2 | **The SDL GPU backend** behind d3d9Backend.h (`NIGHTFIRE_GFX=sdlgpu`): pipeline and sampler caches, formats, streams and the ring buffer, palettes, YUV, render targets, readback for the dumps, gamma, offscreen mode for lockstep; on Windows/Linux through SDL's Vulkan backend | x86 | L | lockstep sound traces unchanged (the renderer is below them); frames against the D3D9 build's by eye and by a pixel-difference threshold; two runs identical **Done 16 Oct 2026** ([sdl-gpu.md](sdl-gpu.md)): Windows x64 on the runner (Vulkan, RTX 3090): 16/16 lockstep runs with sound traces identical to `lbase_c` to tick 9000, frames within 1-17k px of the D3D9 build over 16 frames (by eye: the same), a second round 0 px different; Linux i386 in WSL2 (lavapipe): m1/m2 idle and accelerating traces identical to `lwsl`, two runs identical. Windowed presenting is untested (needs a window) |
-| A1 | **macOS bring-up**: the `macos-arm64` preset; HostPosix's Darwin rows (5); xboxPath/launchInfo; CrashReportPosix for arm64; build_ffmpeg.sh macos-arm64; `kGameWindowBase` 0x100000000 with its start-up check | Mac | M | `gamewindow_test` (1,000,000 operations, everything inside the window); the test executable boots to the first tick headless |
-| G3 | **The Metal leg**: SPIRV-Cross to MSL with the `math_mode(safe)` prefix, Apple formats (D32F_S8, swizzles), swapchain on the main thread if needed. **Prepared on x86 (16 October 2026, [sdl-gpu.md](sdl-gpu.md) "G3 on x86")**: SPIRV-Cross `vulkan-sdk-1.4.363.0` by FetchContent in every sdlgpu build; the backend hands SDL MSL when the device takes it (SDL's slots kept, the pragma first, NoContraction as SPIRV-Cross's fma helpers, the multiply's -0 fixed); `spirvmsl` checks all 178 modules (0 differ); vertex streams padded to 4-byte elements and strides on every host (runner x64 Vulkan 16/16: traces identical to `lbase_c`, frames 0 px against G2's); no `SDL_WINDOW_VULKAN` on macOS; formats and the swapchain needed nothing. **Left for the Mac**: compiling the MSL (no Metal compiler on x86), the first frames, two runs identical, the helpers' speed - the checklist in sdl-gpu.md | Mac | S | the first frames dumped; two runs identical |
-| A2 | **Mac test tooling**: drive_game.sh/remote.sh on macOS, local slots, `lmac_c` baselines, the comparison with `lbase_c` traces | Mac | S | 16 runs to tick 9000 twice, identical; the trace comparison reported |
+| A1 | **macOS bring-up**: the `macos-arm64` preset; HostPosix's Darwin rows (5); xboxPath/launchInfo; CrashReportPosix for arm64; build_ffmpeg.sh macos-arm64; `kGameWindowBase` 0x100000000 with its start-up check | Mac | M | `gamewindow_test` (1,000,000 operations, everything inside the window); the test executable boots to the first tick headless. **Done 15 Oct 2026 (7.1)**: 0 differ, image at 4 GB plus 2-75 MB over 12 launches; all 16 lockstep runs to tick 9000 |
+| G3 | **The Metal leg**: SPIRV-Cross to MSL with the `math_mode(safe)` prefix, Apple formats (D32F_S8, swizzles), swapchain on the main thread if needed. **Prepared on x86 (16 October 2026, [sdl-gpu.md](sdl-gpu.md) "G3 on x86")**: SPIRV-Cross `vulkan-sdk-1.4.363.0` by FetchContent in every sdlgpu build; the backend hands SDL MSL when the device takes it (SDL's slots kept, the pragma first, NoContraction as SPIRV-Cross's fma helpers, the multiply's -0 fixed); `spirvmsl` checks all 178 modules (0 differ); vertex streams padded to 4-byte elements and strides on every host (runner x64 Vulkan 16/16: traces identical to `lbase_c`, frames 0 px against G2's); no `SDL_WINDOW_VULKAN` on macOS; formats and the swapchain needed nothing. **Left for the Mac**: compiling the MSL (no Metal compiler on x86), the first frames, two runs identical, the helpers' speed - the checklist in sdl-gpu.md | Mac | S | the first frames dumped; two runs identical. **15 Oct 2026 (7.1)**: every module compiles (`mslcompile`), frames right by eye; two runs' frames differ by up to ~500 scattered pixels a run (left open) |
+| A2 | **Mac test tooling**: drive_game.sh/remote.sh on macOS, local slots, `lmac_c` baselines, the comparison with `lbase_c` traces | Mac | S | 16 runs to tick 9000 twice, identical; the trace comparison reported. **15 Oct 2026 (7.1)**: the tooling works (test-runner.md); sound traces identical round to round; no `lmac_c` yet (the frames), and `lbase_c` is not on the Mac for the comparison |
 | A3 | **Play**: windowed SDL/Metal, CoreAudio, pads (background events), keyboard; the user's playing and listening check | Mac | S | the user |
 | A4 | (only if A2's traces differ from `lbase_c`) **Portable libm**: correctly rounded functions for the C trig on every host; new `lbase_c`/`lloc_c`/`lmac_c` once | x86 + Mac | M | traces identical across the runner, Linux and the Mac |
 
 M0, M1 and M3 can start now (they touch only 32-bit-neutral code and the x64 build); M2 after package 10; G1 and G2
 any time (G2 needs SDL's GPU subsystem in the Windows build, off by default). A1 needs M0-M2; G3 needs G2.
+
+### 7.1 Done on the Mac (15 October 2026, M2 Max, macOS 27.0.1, Apple clang 21)
+
+- **Built**: `cmake --preset macos-arm64 -DNF_FFMPEG_LIB_DIR=$HOME/ffmpeg-arm64/lib` (FFmpeg from
+  `build_ffmpeg.sh macos-arm64`), then both standalone executables, `gamewindow_test`, `spirvmsl` and `mslcompile`.
+  The whole game compiled for arm64 with 13 errors, all in the platform layer and the harness. Fused operations in the
+  test executable: 3, none of them a contraction (ShaderBuilder's explicit `fmaf` twice; `fmod(y, 2.0)` in `CIpow`,
+  whose product by 2 is exact).
+- **The window at 4 GB** works as planned, with one change: the arena's 1 GB is a zero-fill section of the image
+  (HostPosix.cpp), because before `main` Darwin puts its malloc regions and the main thread's stack at random in the
+  ~1.9 GB between the image and the shared cache (0x1'8000'0000), and 1 GB in one piece was missing in 2 launches of 3.
+- **Headless**: SDL's Metal GPU driver needs a video driver that makes Metal views, which the offscreen one does not.
+  A run with `SDL_VIDEO_DRIVER=offscreen` gets Cocoa instead, as a background application whose window is never
+  shown (HostWindowSdl.cpp), so the scripts are the same on every host. Such a run needs the user's login session.
+- **Metal**: the MSL compiles; Metal also matches a pixel program's inputs to the vertex outputs by type, so the pixel
+  inputs are declared as the interface's float4s (FXAA's float2 had its pipeline refused). Every module compiles with
+  Metal's run-time compiler (`mslcompile`, 184 from the logs and Driving.xbe, 47 from a run). Frames are right by eye.
+- **SDL 3.4.18**: 3.2.30's Metal driver never reused a command buffer's transfer and uniform buffers once the backend
+  released the fence it had waited for, so every batch took new GPU memory - 307 GB of footprint after 100 s, which
+  twice made the Mac unusable when games were left running. 3.4's fences fixed it; the pin moved for every host
+  (untested on Windows and Linux so far). A round on 3.4.18: sound traces identical to the 3.2.30 round's in all 16.
+- **Rounds**: the 16 lockstep runs take 7-9 minutes on 3 slots. **Run at most 3 at once, at background priority**
+  (drive_game.sh does): 6 unpaced games starved the desktop. Sound traces are identical round to round. Frames are
+  not: 1-524 scattered pixels a run over its 16 frames, by up to ~20 levels, on foliage and snow (mission 5 most) -
+  probably alpha-tested edges falling either side of the test. The Vulkan build gives 0 between rounds; the Mac is the
+  only host whose addresses change from run to run (the image slides), which is the first thing to rule out.
+  Left open by the user's decision (small, by eye invisible); `lmac_c` waits for it, or for frames to be compared
+  with a threshold here.
+- **Not done**: the comparison of the Mac's traces with `lbase_c` (the baselines are on the PC: copy
+  build/baselines/lbase_c_* over), A3, and the x86 checks of these changes (the Windows and Linux builds, CI).
 
 ## 8. The agent on the Mac: first steps
 

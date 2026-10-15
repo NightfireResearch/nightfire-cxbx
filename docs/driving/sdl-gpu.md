@@ -182,6 +182,17 @@ thread (`SDL_RunOnMainThread`); SDL's backend order puts Metal before Vulkan, so
 
 So the padding changes no frame: the components it zeroes are ones the programs never read.
 
+### On the Mac (15 October 2026, M2 Max; macos.md 7.1)
+
+| Checklist item | Result |
+|---|---|
+| 1. Build, the driver | `sdlgpu_backend.log`: "GPU device on SDL's metal driver, shaders as MSL". Headless runs need Cocoa (SDL's offscreen video driver makes no Metal views): HostWindowSdl.cpp takes `SDL_VIDEO_DRIVER=offscreen` as a hidden window in a background application |
+| 2. The MSL compiles | No Xcode here, so `mslcompile` (devtools, macOS: the Metal framework's run-time compiler, as SDL compiles): spirvdump's 184 modules and the 47 of a mission 1 run, all compile, no warnings - the pragma, `optnone` and `precise::clamp` included. One fix first: Metal matches pixel inputs to vertex outputs by type, so shaderMsl.cpp declares them as the interface's float4s (fog a float); FXAA's float2 input had its pipeline refused, and Flush faulted on the null pipeline |
+| 3. Frames, two runs | Right by eye. Two rounds of 16: sound traces identical, frames not - 1-524 scattered pixels a run, up to ~20 levels, on foliage and snow. Left open (macos.md 7.1) |
+| 4. Speed | 300-355 frames a second for one lockstep run offscreen at 640x480; a round of 16 in 7-9 minutes on 3 slots. The `optnone` helpers are not a problem |
+| 5. Frames against Vulkan | Not compared: no Vulkan frames of this build on the Mac |
+| (found) A leak | SDL 3.2.30's Metal driver never reused a command buffer's buffers once its waited fence was released: every batch's 16 MB ring, 32 MB uploads and uniform buffers were new GPU memory (307 GB footprint after 100 s). Fixed by SDL 3.4.18, now the pin |
+
 ### For the agent on the Mac
 
 1. Build with the `macos-arm64` preset (A1) and `-DNIGHTFIRE_GFX=sdlgpu`: SPIRV-Cross comes by FetchContent (git)

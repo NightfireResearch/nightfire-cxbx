@@ -271,6 +271,24 @@ RUNNER_HOST=linux-box RUNNER_USER=charlie BASE=llin tools/runner/round.sh new   
 - **Display:** none needed. For runs on a real display, a logged-in X session and `RUNNER_DISPLAY=:0` (plus
   `XAUTHORITY` in the runner's environment if its X server asks for one).
 
+### A Mac as its own runner
+
+On a Mac, `RUNNER_HOST=local` makes it a runner of its own (docs/driving/macos.md 6): `remote.sh` sees Darwin and runs
+the Linux runner's way, locally - the checkout, job and slot folders under `~/nf/runner` (`RUNNER_MAC_ROOT`), the
+`macos-arm64` preset with FFmpeg from `~/ffmpeg-arm64/lib`, the `.dylib`s beside the executables, and drive_game.sh,
+whose headless runs render with Metal on the GPU (the game's window hidden; the user's login session is needed).
+compare.py needs Pillow, which macOS's Python lacks: a venv (`python3 -m venv ~/nf/venv; ~/nf/venv/bin/pip install
+pillow`) and that venv's python on the PATH, or round.sh's comparisons fail.
+
+```
+RUNNER_HOST=local tools/runner/remote.sh setup        # then disc/ (a folder; its entries may be links), Release/settings.ini, Release/saves
+RUNNER_HOST=local RUNNER_SLOTS=3 tools/runner/round.sh new lockstep
+```
+
+**At most 3 slots, and drive_game.sh's background priority** (`taskpolicy -b`): lockstep games are unpaced, and 6 at
+once on the M2 Max starved the desktop until it needed a forced restart. Never leave a game running past its run: kill
+it by its process id (`pkill -x` does not match, the name being cut to 16 characters).
+
 ### Baselines for a Linux runner
 
 Lockstep results are exact run to run on one machine and differ between machines (and between the Windows and Linux
