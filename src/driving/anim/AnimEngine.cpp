@@ -356,7 +356,7 @@ uint32_t RAnimEngine::System::Update(uint32_t index, uint32_t frame) {
                 TriggerEvent *event = &events->Events()[e];
                 TaskCallback callback = RegisterEvent::LookupEvent(event->type);
                 if (callback != NULL)
-                    callback(reinterpret_cast<uintptr_t>(event->Data()));
+                    callback(event->Data());
             }
         }
     }

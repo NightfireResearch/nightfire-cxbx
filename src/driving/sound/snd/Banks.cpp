@@ -1,6 +1,7 @@
 #include "Banks.h"
 #include "Platform.h"
 #include "System.h"
+#include "../../platform/Ptr32.h"
 #include "../../platform/RealPrint.h"
 #include "SndGlobals.h"
 
@@ -34,7 +35,7 @@ EnvSegment DefaultEnvelope = { 0x7fffffff, 0x7f };   // a timbre's envelope when
 namespace {
 
 inline uint8_t *AddBytes(const void *p, int32_t n) {   // pointer + value, as the original's 32-bit ADD
-    return (uint8_t *)(uintptr_t)((uint32_t)(uintptr_t)p + (uint32_t)n);
+    return PtrFrom32<uint8_t>(PtrTo32(p) + uint32_t(n));
 }
 
 int32_t Mul(int32_t a, int32_t b) {   // IMUL r32: wraps
@@ -428,7 +429,7 @@ int SNDI_parsetimbre(uint8_t **cursor, SND::PatchHeader *header) {
     f.low[kTagEnvCount] = 1;
     f.low[kTagPan] = 0x40;
     header->userDataCount = 0;
-    f.low[kTagEnvTable] = int32_t(uintptr_t(&DefaultEnvelope));   // the address itself: the tag has no data pointer
+    f.low[kTagEnvTable] = int32_t(PtrTo32(&DefaultEnvelope));   // the address itself: the tag has no data pointer
     f.low[kTag1a] = -1;
     f.low[kTagPanMult] = 1;
     f.Sample(kTagPlatformVersion) = 2;

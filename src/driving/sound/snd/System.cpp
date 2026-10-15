@@ -253,7 +253,7 @@ int SNDREAL_systemtask(int argument, int ticksLate) {
 // FUNC_AT(0x0013d3f0)
 int SNDSYS_vectortoreal(void) {
     uint32_t added = SysTaskAdded;
-    SndOptions.vectors.functions[3] = uint32_t(reinterpret_cast<uintptr_t>(NullFunction));   // 0x00244ddc
+    SndOptions.vectors.functions[3] = NullFunction;   // 0x00244ddc
     if (added == 0) {
         SYNCTASK_add(reinterpret_cast<SyncTaskFn>(SNDREAL_systemtask), 0, 1);
         SysTaskAdded = 1;

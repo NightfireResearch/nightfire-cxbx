@@ -44,7 +44,7 @@ AISplinePath* AISplinePath::Construct(CARP::AISpline *spline) {
     procAnim.parameter = 0;
     procAnim.article = 0;
     procAnim.sceneObj = NULL;
-    procAnim.path = reinterpret_cast<CARP::PathInfo *>(uintptr_t(spline->path.value));
+    procAnim.path = PtrFrom32<CARP::PathInfo>(spline->path.value);
     procAnim.master = NULL;
     procAnim.startTime = 0.0f;
     procAnim.speed = kSplinePathSpeed;
@@ -65,7 +65,7 @@ void AISplinePath::Destruct() {
 
 // FUNC_AT(0x00035740)
 void AISplinePath::Reset(CARP::AISpline *spline) {
-    procAnim.path = reinterpret_cast<CARP::PathInfo *>(uintptr_t(spline->path.value));
+    procAnim.path = PtrFrom32<CARP::PathInfo>(spline->path.value);
     path->Init(float(fgSimulation.stepCount));
     path->userData = spline->unknown44;
     spline->GetApplyTransform(&placement.mtx[0][0]);
@@ -73,5 +73,5 @@ void AISplinePath::Reset(CARP::AISpline *spline) {
 
 // FUNC_AT(0x00035780)
 void AISplinePath::SetNext(CARP::AISpline *spline) {
-    path->SetNextPath(reinterpret_cast<CARP::PathInfo *>(uintptr_t(spline->path.value)));
+    path->SetNextPath(PtrFrom32<CARP::PathInfo>(spline->path.value));
 }

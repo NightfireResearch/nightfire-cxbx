@@ -180,6 +180,8 @@ struct Attributes {
 };
 static_assert(sizeof(Attributes) == 0x68, "the stream attributes are 0x68 bytes");
 
+struct SFilterDesc;              // Filters.h
+
 }  // namespace SND
 
 extern int16_t AllocScratch[6];                 // SNDVOICEI_alloc's chosen voices
@@ -198,7 +200,7 @@ SND::FxBus* SNDCTRLI_getfxbus(int bus, int renderMode);                      // 
 int SNDfxmasterlevel(int bus, int level);                                    // 0x0013ccc0
 int SNDfxinitbus(int bus, int level, int mode, int delay, int feedback);     // 0x0013cd50
 int SNDautovol(int handle, int ticks, int vol);                              // 0x0013e7d0
-int SNDCTRL_filteradd(int handle, int filter);                               // 0x0013e860
+int SNDCTRL_filteradd(int handle, const SND::SFilterDesc *filter);           // 0x0013e860
 int SNDCTRL_lowpass(int handle, int cutoff);                                 // 0x0013fa80
 
 // The voice manager

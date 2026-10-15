@@ -80,7 +80,7 @@ RigidBody *PlayerBody() {
 
 // The AI element a target's word names (a resolved reference)
 CARP::AIElement *ElementOf(uint32_t element) {
-    return reinterpret_cast<CARP::AIElement *>(uintptr_t(element));
+    return PtrFrom32<CARP::AIElement>(element);
 }
 
 AIElementTracking *Tracking(uint32_t element) {
@@ -152,7 +152,7 @@ void SMissionRule::RunEvents() {
     for (uint32_t i = 0; i < uint32_t(events->count); i++, event++) {
         TaskCallback callback = RegisterEvent::LookupEvent(event->type);
         if (callback != NULL)
-            callback(reinterpret_cast<uintptr_t>(event->Data()));
+            callback(event->Data());
     }
 }
 

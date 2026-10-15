@@ -417,7 +417,7 @@ bool RSceneObj::UseArticle(UGroup *model, uint32_t article) {
             UData *first = model->DataLocateFirst(kTagAs, 0, 0xffff);
             if (first == model->DataEnd())
                 return false;
-            single.articleDesc.value = uint32_t(uintptr_t(first->Data()));
+            single.articleDesc.value = PtrTo32(first->Data());
         }
     }
     UseInstanceList(instances, int(count), states, false, modelName);
@@ -1196,7 +1196,7 @@ void RSceneObj::DamageEffects(uint32_t zones) {
 }
 
 // FUNC_AT(0x0008ea70)
-void RSceneObj::TriggerFX(int type, uint32_t which, uint32_t, uint32_t, uint32_t, float intensity) {
+void RSceneObj::TriggerFX(int type, uint32_t which, uint32_t, const Coord3 *, const Coord3 *, float intensity) {
     switch (type) {
     case kFXOn:
     case kFXOnById:

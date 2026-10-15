@@ -132,7 +132,7 @@ public:
     CARP::Instance *Instance() const { return static_cast<CARP::Instance *>(sourceInstance); }
     CARP::BaseDesc *Desc() const { return static_cast<CARP::BaseDesc *>(baseDesc); }
     // The article's model group (its description's first word)
-    UGroup *ModelGroup() const { return reinterpret_cast<UGroup *>(uintptr_t(Desc()->model.value)); }
+    UGroup *ModelGroup() const { return PtrFrom32<UGroup>(Desc()->model.value); }
 
     RSceneObj* Construct(CARP::Instance *instance);                                             // 0x0008eec0
     void Destruct();                                                                            // 0x000905a0
@@ -226,7 +226,7 @@ public:
     void SuppressEffects(bool byId, uint32_t which);                                            // 0x0008e7d0
     void DamageEffects(uint32_t zones);                                                         // 0x0008e900
     // vtable slot 15; the third to fifth arguments are not read
-    void TriggerFX(int type, uint32_t which, uint32_t unused3, uint32_t unused4, uint32_t unused5,
+    void TriggerFX(int type, uint32_t which, uint32_t extra, const Coord3 *point, const Coord3 *direction,
                    float intensity);                                                            // 0x0008ea70
     void StopFX();                                                                              // 0x0008eb60
     ArticleEffect* LookupFXHandle(const char *name, int instance);                              // 0x0008ec20

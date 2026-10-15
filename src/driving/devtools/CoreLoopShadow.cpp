@@ -88,7 +88,8 @@ const ScheduleOps kOriginalOps = {
 Schedule *__fastcall PortConstruct(Schedule *s, int, int buckets) { return s->Construct(buckets); }
 uint32_t __fastcall PortAddTask(Schedule *s, int, int event, uint32_t data, unsigned spacing, unsigned unused,
                                 int delay, int repeats) {
-    return s->AddTask(event, data, (unsigned short)spacing, unused != 0, delay, repeats);
+    return s->AddTask(event, reinterpret_cast<const void *>(data), (unsigned short)spacing, unused != 0, delay,
+                      repeats);
 }
 bool __fastcall PortRemoveTask(Schedule *s, int, uint32_t task) { return s->RemoveTask(task); }
 void __fastcall PortRemoveAll(Schedule *s, int) { s->RemoveAllTasks(); }
@@ -395,8 +396,8 @@ void TaskRan(int event, uint32_t data) {
         Log(0x30, g_ops->removeTask(g_schedule, 0, data >> 16));
 }
 
-template <int E> void FakeTask(uint32_t data) {
-    TaskRan(E, data);
+template <int E> void FakeTask(const void *data) {
+    TaskRan(E, uint32_t(uintptr_t(data)));
 }
 const TaskCallback kFakeTasks[10] = { FakeTask<0>, FakeTask<1>, FakeTask<2>, FakeTask<3>, FakeTask<4>,
                                       FakeTask<5>, FakeTask<6>, FakeTask<7>, FakeTask<8>, FakeTask<9> };

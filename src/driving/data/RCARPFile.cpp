@@ -347,9 +347,9 @@ void* RCARPFile::RegisterSymbols(const char *name, bool *found) {
     // RReflection's two EnvMapState getters are the shared empty function that answers 0 (dummyGetNullValue,
     // called on the reflection object, which it ignores).
     if (Is(name, "EAGL::EnvMapState2C"))
-        value = reinterpret_cast<void *>(GetNullValue());
+        value = reinterpret_cast<void *>(intptr_t(GetNullValue()));
     if (Is(name, "EAGL::EnvMapState2G"))
-        value = reinterpret_cast<void *>(GetNullValue());
+        value = reinterpret_cast<void *>(intptr_t(GetNullValue()));
     if (Is(name, "GAME::CameraPos") || Is(name, "EAGL::CameraPos"))
         value = &fgRenderer->cameraPosition;
     if (Is(name, "GAME::SpecularMat"))

@@ -216,7 +216,7 @@ static_assert(offsetof(WorldArticle, animInfos) == 8 && offsetof(WorldArticle, s
               offsetof(WorldArticle, lods) == 0x20, "WorldArticle layout");
 
 inline WorldArticle *ArticleOf(const CARP::Instance *instance) {
-    return reinterpret_cast<WorldArticle *>(uintptr_t(instance->articleDesc.value));
+    return PtrFrom32<WorldArticle>(instance->articleDesc.value);
 }
 
 // An environment description ('Envi' records, 0x1c bytes); a render instance's is the low half of its +0x2c word

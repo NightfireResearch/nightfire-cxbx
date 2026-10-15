@@ -631,7 +631,9 @@ void GameLoop_PlayMovie(const char *movie, const char *subtitles) {
     IOModule::GetIOModule()->EnableUpdating(true);
     ActionQueueManager::GetActionQueueManager()->FlushAllQueues();
     ASoundManager::Resume();
+#if defined(_M_IX86) || defined(__i386__)   // EMMS; MSVC has no MMX intrinsics on x86-64, where nothing uses MMX
     _mm_empty();
+#endif
     Crt::_clearfp();
 }
 

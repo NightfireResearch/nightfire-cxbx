@@ -210,7 +210,7 @@ Schedule* Schedule::DeleteDerived(unsigned flags) {
 // The emptiest bucket gets the task (the first of equals). Should every bucket hold 999999 tasks or more, the
 // original reads the slot before listOfTasks - never the case.
 // FUNC_AT(0x0005c490)
-uint32_t Schedule::AddTask(int eventType, uint32_t staticData, unsigned short spacing, bool unused, int delayTicks,
+uint32_t Schedule::AddTask(int eventType, const void *staticData, unsigned short spacing, bool unused, int delayTicks,
                            int repeats) {
     (void)unused;
     int emptiest = -1;

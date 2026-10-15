@@ -6,12 +6,14 @@
 // A deserialised file is a tree of 16-byte records. Each record has a four-character tag, flags, a count and
 // a data word. A group's data word leads to its array of records, its child groups first and its data records
 // after them (UGroup::GetArray, ported with the rest of UGroup in another package). A data record's data word is
-// its payload: an offset from the record itself while kDataRelative is set, a plain pointer once something has
-// adopted new data for it (UData::AdoptData). Tags compare as big-endian character codes ('Base' is 0x42617365);
-// an indexed tag (kDataIndexedTag) keeps a 16-bit number in its low half and compares with that half read as
-// two spaces - "sn" plus a texture-file number, "as" plus an index.
+// its payload: an offset from the record itself while kDataRelative is set, an address (a Ptr32 word) once
+// something has adopted new data for it (UData::AdoptData). Tags compare as big-endian character codes ('Base' is
+// 0x42617365); an indexed tag (kDataIndexedTag) keeps a 16-bit number in its low half and compares with that half
+// read as two spaces - "sn" plus a texture-file number, "as" plus an index.
 //
 // UGroup (engine/UGroup.h) derives from UData.
+
+#include "../platform/Ptr32.h"
 
 #include <stdint.h>
 
@@ -37,7 +39,7 @@ public:
     int TagIndex() const { return (flags & kDataIndexedTag) ? int(tag & 0xffff) : -1; }
     uint8_t *Data() {
         return (flags & kDataRelative) ? reinterpret_cast<uint8_t *>(this) + data
-                                       : reinterpret_cast<uint8_t *>(uintptr_t(data));
+                                       : PtrFrom32<uint8_t>(data);
     }
     uint32_t Size() const { return flags >> 8; }
 

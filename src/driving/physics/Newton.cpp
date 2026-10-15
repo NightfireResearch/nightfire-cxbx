@@ -251,7 +251,7 @@ void Newton::SpawnFromEvent(float mass, float lifetime, CARP::Instance *instance
             instance = handle->Instances();
         } else {
             CARP::BaseDesc *desc = static_cast<CARP::BaseDesc *>(sceneObj->baseDesc);
-            UGroup *model = reinterpret_cast<UGroup *>(uintptr_t(desc->model.value));
+            UGroup *model = PtrFrom32<UGroup>(desc->model.value);
             UData *data = model->DataLocateTag(kInstanceDataTag);
             if (data == model->DataEnd())
                 return;

@@ -52,7 +52,7 @@ void WTrigger::FireEvents(bool flag, int index, CARP::Instance *instance) {
     }
 
     for (int i = 0; i < events->count; i++, event++)
-        RegisterEvent::LookupEvent(event->type)(reinterpret_cast<uintptr_t>(event->Data()));
+        RegisterEvent::LookupEvent(event->type)(event->Data());
     if (flags & kOnce)
         flags &= ~kEnabled;
 }

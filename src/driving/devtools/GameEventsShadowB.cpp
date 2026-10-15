@@ -663,8 +663,8 @@ uint32_t __fastcall FakeAddTask(Schedule *self, int, int type, uint32_t data, un
 void __fastcall FakeFireEvents(WTrigger *self, int, bool flag, int index, CARP::Instance *instance) {
     Log("FireEvents %s %d %d %s", Name(self).c_str(), flag, index, Name(instance).c_str());
 }
-void FakeEventCallback(uint32_t data) {
-    Log("event callback %s", Name((void *)(uintptr_t)data).c_str());
+void FakeEventCallback(const void *data) {
+    Log("event callback %s", Name((void *)data).c_str());
 }
 TaskCallback FakeLookupEvent(int event) {
     Log("LookupEvent %d", event);

@@ -235,7 +235,7 @@ void GHud::UpdateTargets() {
                     instanceTarget = screen;
                     instanceTargetShown = true;
                     const PhysicsData *data =
-                        reinterpret_cast<const PhysicsData *>(uintptr_t(object->Desc()->physicsAttributes.value));
+                        PtrFrom32<const PhysicsData>(object->Desc()->physicsAttributes.value);
                     instanceTargetDescription = data != NULL ? data->description : 0.0f;
                     nearest = distance;
                 }
