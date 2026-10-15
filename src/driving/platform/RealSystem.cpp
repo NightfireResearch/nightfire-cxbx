@@ -118,12 +118,27 @@ static int SyncTaskSkip;      // free slots for SYNCTASK_add to pass over before
 // XBE_GLOBAL(0x002422cc, 4)
 static int LastSystemTask;
 
+// LibTicks as the sync tasks read it. NIGHTFIRE_SNDLOCKSTEP: from the first simulation tick it counts those ticks
+// instead, as TIMER_gettick does, and every task falls due at that tick's first pass, so that each runs on the same
+// ticks in every run (SndLockstep_SyncTick). `pass` is SYNCTASK_run's first read.
+static int SyncTaskTick(bool pass) {
+    if (!SndLockstep_Enabled())
+        return LibTicks;
+    bool restart = false;
+    int tick = SndLockstep_SyncTick(LibTicks, pass, &restart);
+    if (restart) {
+        for (int i = 0; i < kSyncTasks; i++)
+            SyncTasks[i].nextTick = tick;
+    }
+    return tick;
+}
+
 // interval: -1 means every tick (0), 0 means every other (1); first run `delay` ticks from now. A task already
 // in the list has its slot rewritten (the last such slot, as the original's scan leaves it); otherwise the first
 // free slot after SyncTaskSkip of them. With neither, nothing happens.
 // AUTOINJECT
 void SYNCTASK_add(SyncTaskFn task, int interval, int delay) {
-    int now = LibTicks;
+    int now = SyncTaskTick(false);
     if (interval == -1)
         interval = 0;
     else if (interval == 0)
@@ -163,14 +178,14 @@ void SYNCTASK_del(SyncTaskFn task) {
 // AUTOINJECT
 unsigned SYNCTASK_run(int argument) {
     unsigned result = 0;
-    LastSystemTask = LibTicks;
+    LastSystemTask = SyncTaskTick(true);
     for (int i = 0; i < kSyncTasks; i++) {
         SyncTask *task = &SyncTasks[i];
-        if (task->function != NULL && task->nextTick <= LibTicks && task->running == 0) {
-            int late = LibTicks - task->nextTick;
+        if (task->function != NULL && task->nextTick <= SyncTaskTick(false) && task->running == 0) {
+            int late = SyncTaskTick(false) - task->nextTick;
             task->running = 1;
             result |= task->function(argument, late);
-            task->nextTick = LibTicks + task->interval;
+            task->nextTick = SyncTaskTick(false) + task->interval;
             task->running = 0;
         }
     }

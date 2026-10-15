@@ -28,6 +28,10 @@ bool SndLockstep_FileCallback(unsigned handle, FsCallback callback);
 // From TIMER_gettick: the tick count to answer, given the real one.
 int SndLockstep_TimerTick(int realTick);
 
+// From SYNCTASK_add and SYNCTASK_run: LibTicks to use, given the real one - TIMER_gettick's count from the first tick.
+// `pass` marks SYNCTASK_run's first read; *restart is set once, at the first tick, when every task should fall due.
+int SndLockstep_SyncTick(int realTick, bool pass, bool *restart);
+
 // From the DirectSound seam: what each buffer is told, and its status and cursors from the simulated playback.
 struct IDirectSoundBuffer;
 void SndLockstep_BufferCreated(const IDirectSoundBuffer *buffer, uint32_t sampleRate, uint16_t formatTag,

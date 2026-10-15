@@ -49,6 +49,12 @@
 //    value for everything that reads it during a tick. Only something waiting on it reads it a thousand times with
 //    no tick in between (a load or a movie outside the loop); from that read on it follows the real clock, so the
 //    wait cannot hang. The switch is counted in reads, not time: a slow frame on a busy host is still one tick.
+//  - The sync tasks (SYNCTASK_run, first thing in each pass of the game loop) read the same count in place of
+//    LibTicks, the timer's other count, so IOModule::Update polls the pad every second tick rather than every 40 ms:
+//    unpaced, a fast host ran it every ten frames or so and a slow one every frame, and the game takes a held
+//    button it asks to have resent (resendAll) on whichever tick polls it. At the first tick every task falls
+//    due, so the phase does not depend on when each last ran during the load. A thousand passes with no tick (a
+//    wait loop that runs the sync tasks) follow the clock as above.
 //
 // Before the first tick (the loads) nothing on the sound side moves: no driver steps, no service, playback
 // frozen, file ops already synchronous - so every run reaches the first tick with the same sound state.
@@ -70,6 +76,7 @@ constexpr uint32_t kStatusLooping = 4;             // DSBSTATUS_LOOPING
 constexpr uint16_t kFormatXboxAdpcm = 0x69;        // 64 frames to a block of 36 bytes a channel
 constexpr DWORD kFileOpPatienceMs = 10000;
 constexpr LONG kReadsWithoutTick = 1000;           // TIMER_gettick reads in one tick before it follows the clock
+constexpr int kPassesWithoutTick = 1000;           // the same in SYNCTASK_run passes
 constexpr DWORD kDriverPatienceMs = 10000;
 
 // ---- the mode's state
@@ -91,6 +98,8 @@ volatile int g_virtualTick;            // TIMER_gettick at the last lockstep tic
 volatile LONG g_readsSinceTick;        // TIMER_gettick reads since then
 volatile bool g_followingClock;        // so many that it follows the real count again
 volatile int g_realWhenFollowed;       // the real count when it started to
+bool g_syncTicking;                    // the sync tasks have been given the lockstep count (game thread)
+int g_passesSinceTick;                 // SYNCTASK_run passes since the last tick (game thread)
 
 // NIGHTFIRE_LOCKSTEP_JITTER=<ms>: random delays on the game thread, as a starved CPU gives them - before each pass
 // of the game loop (from SYNCTASK), at the start of each tick (now and then a stall of over a second instead), and
@@ -314,6 +323,7 @@ void SndLockstep_Tick(void) {
     g_virtualTick = virtualTick;
     g_followingClock = false;
     g_readsSinceTick = 0;
+    g_passesSinceTick = 0;
     g_ticking = true;
 
     int rate = TIMER_getfrequency();
@@ -429,6 +439,22 @@ int SndLockstep_TimerTick(int realTick) {
         g_followingClock = true;
     }
     return g_virtualTick + (realTick - g_realWhenFollowed);
+}
+
+int SndLockstep_SyncTick(int realTick, bool pass, bool *restart) {
+    if (!g_ticking)
+        return realTick;
+    if (!g_syncTicking) {
+        g_syncTicking = true;
+        *restart = true;
+    }
+    if (pass && !g_followingClock && ++g_passesSinceTick > kPassesWithoutTick) {
+        g_realWhenFollowed = realTick;
+        g_followingClock = true;
+    }
+    if (g_followingClock)
+        return g_virtualTick + (realTick - g_realWhenFollowed);
+    return g_virtualTick;
 }
 
 void SndLockstep_BufferCreated(const IDirectSoundBuffer *buffer, uint32_t sampleRate, uint16_t formatTag,

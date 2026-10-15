@@ -165,6 +165,20 @@ lockstep runs; with the fix, all 16 matched them exactly. GetLocalTime, read by 
 fixed time in lockstep. A starved run also showed a harness race: `drive_game.ps1` stopped the game a second after
 "the last" dump was announced, before a slow game had written it. It now waits for the named file.
 
+Unpaced, a third leak showed (15 October 2026, first on Linux under lavapipe): the sync tasks that `SYNCTASK_run`
+runs at the top of each loop pass were still scheduled by `LibTicks`, the 50 Hz timer's count. `IOModule::Update`,
+which polls the pad and sends its actions, is one of them, every second timer tick: a fast host ran it every ten
+frames or so, a slow one every frame, so a held button the game asks to have resent (`resendAll`) reached the car
+on a tick that depended on the host - mission 3 accelerating differed from tick 25, and mission 2's engine voice
+started two ticks late in one run of four. With `NIGHTFIRE_SNDLOCKSTEP` the sync tasks now read `TIMER_gettick`'s
+lockstep count instead (`SndLockstep_SyncTick`), every task falls due at the first tick (so their phase does not
+depend on when each last ran during the load), and a thousand passes with no tick follow the clock as
+`TIMER_gettick` does. What still reads real time in lockstep, and why it does not matter: the scheduler's `Clock`
+until the first `Scheduler::Run` (the tick numbers start from wherever it got to, but only the half- and
+quarter-rate schedules look at them, and nothing adds tasks to those), the loop pass before the first tick (input
+there is a poll of a held button that has not changed), the rumble thread's timer task (motors only), the
+render frame-rate counter (`RRenderHigh::Render`'s RDTSC, statistics only), and loads and movies.
+
 `parallel.sh` reads its list on a file descriptor of its own and gives `remote.sh` an empty stdin. `ssh` reads its
 stdin, so inside a plain `while read` loop it swallows the rest of the list: the first try ran 4 of 24 runs and
 reported success. Scripts that loop over `remote.sh` calls need the same care.
