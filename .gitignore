@@ -6,6 +6,7 @@ CMakeCache.txt
 CMakeFiles/
 *.dir/
 Release/
+Release64/
 Debug/
 cmake_install.cmake
 **/.DS_Store

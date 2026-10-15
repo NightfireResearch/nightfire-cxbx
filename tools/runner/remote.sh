@@ -16,7 +16,8 @@
 # RUNNER_REPO (/c/nightfire-cxbx, the checkout there), RUNNER_SLOT (unset: "desktop", "drive" and "run" use the
 # checkout's Release/ and the serial task; a number: that slot's run folder and task, so several run at once -
 # tools/runner/parallel.sh shares a list of drive runs out over the slots), RUNNER_SLOT_FIRST (1: the first slot
-# "slots" and parallel.sh use, so that two users of the runner can take separate slots - 1-8 and 9-16, say).
+# "slots" and parallel.sh use, so that two users of the runner can take separate slots - 1-8 and 9-16, say),
+# RUNNER_PRESET (windows-x64: "build" builds the 64-bit standalone executables into Release64/, which "slots" copies).
 #
 # A Linux runner (RUNNER_OS=linux; asked with uname when unset, and implied by RUNNER_HOST=wsl, which is this PC's
 # WSL2 - commands go through wsl.exe instead of ssh) runs the same commands its own way: its checkout is
@@ -177,6 +178,17 @@ build)
            echo \"-> \$(cd $RREPO/Release && ls driving_standalone driving_standalone_test 2>/dev/null | tr '\n' ' ')in $RREPO/Release from $from\""
         exit
     fi
+    if [ "$RUNNER_PRESET" = windows-x64 ]; then
+        # The 64-bit standalone executables (docs/driving/64-bit.md): the preset's build, installed with its x86-64
+        # DLLs into Release64/ beside Release/ (so ../disc is the disc), run as 'Release64\driving_standalone_test.exe'
+        # with Release/ as the working folder
+        targets=${*:-driving_standalone driving_standalone_test}
+        r "cd $RREPO && CMAKE=\$(ls -d '/c/Program Files/Microsoft Visual Studio/2022/'*/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin | head -1)/cmake.exe && \
+           { [ -f build/windows-x64/CMakeCache.txt ] && [ -z '$RUNNER_CMAKE_ARGS' ] || \"\$CMAKE\" --preset windows-x64 $RUNNER_CMAKE_ARGS > /dev/null; } && \
+           \"\$CMAKE\" --build build/windows-x64 --config Release --target $targets -- -m -v:m 2>&1 | grep -E ' error |-> '; \
+           mkdir -p Release64 && cp -f build/windows-x64/Release/*.exe build/windows-x64/Release/*.dll build/windows-x64/Release/*.map Release64/"
+        exit
+    fi
     targets=${*:-action actioninject driving drivinginject}
     # In-source configure, as here (Release/ beside disc/); once, then incremental. RUNNER_CMAKE_ARGS configures
     # again with those options (-DNIGHTFIRE_SDL=ON, say; they stay in the cache until set otherwise).
@@ -247,6 +259,7 @@ slots)
         r "mkdir -p $d/Release && cd $d/Release && find . -maxdepth 1 -type f -delete && rm -rf saves tdata cache && \
            cp $RREPO/Release/*.exe $RREPO/Release/*.dll $RREPO/Release/*.map $RREPO/Release/settings.ini . && \
            cp -r $RREPO/Release/saves $RREPO/Release/tdata . && \
+           { [ ! -d $RREPO/Release64 ] || { rm -rf $d/Release64 && cp -r $RREPO/Release64 $d/Release64; }; } && \
            { [ -e $d/disc ] || powershell -NoProfile -Command \"New-Item -ItemType Junction -Path '$(win $d)/disc' -Target '$(win $RREPO)/disc'\" > /dev/null; }"
     done
     echo "slots $first-$((first + n - 1)) refreshed from $RREPO/Release"

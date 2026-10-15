@@ -21,6 +21,7 @@
 #   TICKS_TO=<tick>     the lockstep runs' last tick (default 9000; quick 4500)
 #   EXE=<path>          run another executable (Release\driving_standalone_test.exe: the standalone build's lockstep
 #                       runs; it has no shadows, so they are skipped)
+#                       ('Release64\driving_standalone_test.exe': the 64-bit build's, from the windows-x64 preset)
 #   TARGETS=<targets>   the targets built (default driving drivinginject, or driving_standalone_test with that EXE)
 #   ENV=<VAR=value;...> add variables to the lockstep runs (NIGHTFIRE_TRAP_ORIGINAL=2, say)
 # Missions default to 1-8. On a Linux runner (tools/runner/remote.sh: RUNNER_OS, RUNNER_HOST=wsl) the round is the
@@ -44,6 +45,9 @@ export RUNNER_SLOTS=${RUNNER_SLOTS:-8}
 # The runner's system, asked once for every remote.sh call of the round
 export RUNNER_OS=${RUNNER_OS:-$("$HERE/remote.sh" os)}
 if [ "$RUNNER_OS" = linux ]; then EXE=${EXE:-Release/driving_standalone_test}; else EXE=${EXE:-'Release\driving.exe'}; fi
+case "$EXE" in
+    Release64*) export RUNNER_PRESET=${RUNNER_PRESET:-windows-x64} ;;   # the 64-bit build (remote.sh build)
+esac
 case "$EXE" in
     *standalone*) TARGETS=${TARGETS:-driving_standalone_test}; ONLY="" ;;   # no shadows in the standalone build
     *) TARGETS=${TARGETS:-driving drivinginject} ;;
