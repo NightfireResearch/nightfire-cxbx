@@ -375,6 +375,7 @@ set(nf_driving_sources
   src/driving/devtools/TexContextShadow.cpp
   src/driving/devtools/Teleport.cpp
   src/driving/devtools/ShadowTicks.cpp
+  src/driving/devtools/FaultGuard.cpp
   src/driving/devtools/MemShadow.cpp
   src/driving/devtools/FileSysShadow.cpp
   src/driving/devtools/FileSysTrace.cpp
@@ -894,10 +895,17 @@ endif()
 # (each seam's and the start-up's patching is #ifndef NIGHTFIRE_STANDALONE). driving_standalone has none of the
 # devtools (standalone/NoDevtools.cpp and StandaloneHooks.cpp answer the hooks game code calls);
 # driving_standalone_test links the lockstep and dump harness (NIGHTFIRE_LOCKSTEP, DUMP_TICKS, SNDTRACE, SNDLOCKSTEP,
-# the teleports), so that a standalone run can be compared with the injected build's baselines.
+# the teleports) and the crash test (NIGHTFIRE_CRASHTEST), so that a standalone run can be compared with the injected
+# build's baselines. Both have the crash reporter (standalone/CrashReport.h).
 # tools/standalone_poison.py (the standalone_poison target) mirrors src/ with every Driving.xbe address still in the
 # worklist poisoned, to list what would stop this compiling.
-set(nf_standalone_sources src/driving/standalone/StandaloneMain.cpp src/driving/standalone/StandaloneHooks.cpp)
+set(nf_standalone_sources src/driving/standalone/StandaloneMain.cpp src/driving/standalone/StandaloneHooks.cpp
+                          src/driving/standalone/CrashReport.cpp)
+if(WIN32)
+  list(APPEND nf_standalone_sources src/driving/standalone/CrashReportWin32.cpp)
+else()
+  list(APPEND nf_standalone_sources src/driving/standalone/CrashReportPosix.cpp)
+endif()
 if(NOT NIGHTFIRE_SDL)
   list(APPEND nf_standalone_sources src/driving/platform/HostWindowWin32.cpp)   # the SDL build's is in drivinginject
 endif()
@@ -911,7 +919,8 @@ endforeach()
 set(nf_standalone_harness
   src/driving/devtools/Teleport.cpp
   src/driving/devtools/SndLockstep.cpp
-  src/driving/devtools/SndCallTrace.cpp)
+  src/driving/devtools/SndCallTrace.cpp
+  src/driving/devtools/CrashTest.cpp)
 if(NOT WIN32)
   list(REMOVE_ITEM nf_standalone_sources src/driving/platform/HostWin32.cpp ${nf_host_abi_sources})
   set_source_files_properties(${nf_standalone_sources} ${nf_standalone_harness} src/driving/standalone/NoDevtools.cpp

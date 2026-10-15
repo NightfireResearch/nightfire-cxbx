@@ -1,6 +1,8 @@
 // driving_standalone's answers to the lockstep and dump harness's hooks (devtools/Teleport.cpp, SndLockstep.cpp,
-// SndCallTrace.cpp), which driving_standalone_test links instead: each as the harness behaves with its setting off.
+// SndCallTrace.cpp, CrashTest.cpp), which driving_standalone_test links instead: each as the harness behaves with its
+// setting off.
 
+#include "../devtools/CrashTest.h"
 #include "../devtools/SndCallTrace.h"
 #include "../devtools/SndLockstep.h"
 #include "../devtools/Teleport.h"
@@ -71,8 +73,15 @@ bool Teleport_LockstepLocalTime(struct _SYSTEMTIME *) {
     return false;
 }
 
+int Teleport_LockstepPresentEvery(void) {
+    return 0;
+}
+
 void SndCallTrace_Install(void) {
 }
 
 void SndCallTrace_Tick(void) {
+}
+
+void CrashTest_Start(void) {
 }

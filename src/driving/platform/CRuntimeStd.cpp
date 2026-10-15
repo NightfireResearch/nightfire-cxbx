@@ -757,18 +757,18 @@ void GameStd::BasicIos::DestructOStrStream() {
     stream->Ios()->vtable = OstreamIosVtable;
 }
 
-// Entered at the virtual base, as each of these.
+// The `vbase destructor': entered at the basic_ostream, whose basic_ios it takes to be at +4.
 // FUNC_AT(0x00131a06)
-void GameStd::BasicIos::DestructOstream() {
-    Ostream *stream = (Ostream *)((char *)this - 4);   // the basic_ios is at +4
-    stream->Ios()->vtable = OstreamIosVtable;
-    Destruct();
+void GameStd::Ostream::DestructAll() {
+    Ios()->vtable = OstreamIosVtable;
+    ((BasicIos *)((char *)this + 4))->Destruct();
 }
 
+// Entered at the virtual base.
 // FUNC_AT(0x001319e7)
 void* GameStd::BasicIos::DeleteOstream(unsigned flags) {
     Ostream *stream = (Ostream *)((char *)this - 4);
-    DestructOstream();
+    stream->DestructAll();
     if (flags & 1)
         OperatorDelete(stream);
     return stream;

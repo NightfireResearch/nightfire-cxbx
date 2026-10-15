@@ -34,13 +34,17 @@
 // ios_base (_Init, clear with and without throws, _Addstd, ~ios_base), streams (strstreambuf::_Init and its
 // destructor, ostrstream's constructor and destructor, istrstream's destructor), _Stod/_Stof (random numerals with
 // powers of ten), exceptions (std::exception, bad_cast, _CxxThrowException, _Xran, _Xlen, uncaught_exception, the
-// eh vector iterators).
+// eh vector iterators), and the virtual functions nothing in game reaches (strstreambuf's overflow, pbackfail,
+// underflow, seekoff and seekpos; the exceptions' deleting destructors, copies, what() and failure's _Doraise;
+// type_info's and _Locimp's deleting destructors; basic_ostream's and ostrstream's, entered at the basic_ios).
 //
 // One summary line: "[crtshadowb] ...: N cases, M checks, D differ", first differences detailed
 // (NIGHTFIRE_CRUNTIMESHADOWB=2: a line per part as well).
 // ---------------------------------------------------------------------------------------------------------------
 
 using namespace GameStd;
+
+extern void *TypeInfoVtable[1];   // CRuntimeStd.cpp: type_info's vtable
 
 namespace {
 
@@ -85,6 +89,28 @@ namespace {
 #define OrigVectorDestructor ((void (__stdcall *)(void *, size_t, int, Crt::ElementFn))0x0013332e)
 #define OrigXran ((void (__cdecl *)())0x00130b80)
 #define OrigXlen ((void (__cdecl *)())0x00130bc0)
+#define OrigStrOverflow ((int (__fastcall *)(StrStreambuf *, int, int))0x001314ae)
+#define OrigStrPbackfail ((int (__fastcall *)(StrStreambuf *, int, int))0x0013166a)
+#define OrigStrUnderflow ((int (__fastcall *)(StrStreambuf *, int))0x001316b3)
+#define OrigStrSeekOff ((StreamPos *(__fastcall *)(StrStreambuf *, int, StreamPos *, int, int, int))0x00131702)
+#define OrigStrSeekPos ((StreamPos *(__fastcall *)(StrStreambuf *, int, StreamPos *, StreamPos, int))0x0013183b)
+#define OrigLocimpDelete ((void *(__fastcall *)(Locimp *, int, unsigned))0x00130f23)
+#define OrigExceptionDelete ((void *(__fastcall *)(void *, int, unsigned))0x001326ea)
+#define OrigExceptionWhat ((const char *(__fastcall *)(void *, int))0x001326a1)
+#define OrigBadCastDelete ((void *(__fastcall *)(void *, int, unsigned))0x00132706)
+#define OrigBadCastCopy ((void *(__fastcall *)(void *, int, const void *))0x001326c7)
+#define OrigBadCastDestruct ((void (__fastcall *)(void *, int))0x001326df)
+#define OrigRuntimeErrorDelete ((void *(__fastcall *)(void *, int, unsigned))0x001311fa)
+#define OrigRuntimeErrorWhat ((const char *(__fastcall *)(void *, int))0x001311ec)
+#define OrigRuntimeErrorCopy ((void *(__fastcall *)(void *, int, const void *))0x0013133f)
+#define OrigRuntimeErrorDestruct ((void (__fastcall *)(void *, int))0x001311d1)
+#define OrigFailureDelete ((void *(__fastcall *)(void *, int, unsigned))0x00131252)
+#define OrigFailureCopy ((void *(__fastcall *)(void *, int, const void *))0x00131382)
+#define OrigFailureDestruct ((void (__fastcall *)(void *, int))0x0013126e)
+#define OrigFailureRaise ((void (__fastcall *)(void *, int))0x0013139a)
+#define OrigTypeInfoDelete ((void *(__fastcall *)(TypeInfo *, int, unsigned))0x0013274b)
+#define OrigDeleteOstream ((void *(__fastcall *)(BasicIos *, int, unsigned))0x001319e7)
+#define OrigDeleteOStrStream ((void *(__fastcall *)(BasicIos *, int, unsigned))0x00131c01)
 
 // Set-up and tidy-up by address: whatever runs there (ours in game), the same on both sides.
 #define SetupStreambufConstruct ((Streambuf *(__fastcall *)(Streambuf *, int))0x000387f0)
@@ -1503,6 +1529,592 @@ void RunExceptions() {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
+// strstreambuf's virtual functions: overflow, pbackfail, underflow, seekoff, seekpos, on a buffer laid out over a lent
+// text, its allocations from a lent arena (or the game's operator new[], the new block lent once made)
+
+struct BufferLayout {
+    int getFirst, getNext, getEnd;   // offsets into the text, -1 null
+    int putFirst, putNext, putEnd;
+    int seekHigh;
+};
+
+struct BufferCase {
+    char text[48];
+    char arena[256];
+    int arenaUsed;
+    union {
+        StrStreambuf buffer;
+        uint8_t bufferBytes[sizeof(StrStreambuf)];
+    };
+    BufferLayout layout;
+    int mode, allocSize;
+    int alloc;                       // 0 operator new[], 1 the recording allocator, 2 it and the recording free
+    int op;                          // 0 overflow, 1 pbackfail, 2 underflow, 3 seekoff, 4 seekpos
+    int ch;                          // -3: the character before the get pointer
+    int offset, way, which;
+    StreamPos position;
+};
+
+BufferCase *g_bufferCase;
+
+void *RecordAlloc(size_t size) {
+    BufferCase *c = g_bufferCase;
+    g_calls.push_back(Format("alloc %u", unsigned(size)));
+    if (c->arenaUsed + size > sizeof(c->arena))
+        return NULL;
+    void *block = c->arena + c->arenaUsed;
+    c->arenaUsed += int((size + 15) & ~size_t(15));
+    return block;
+}
+
+char *BufferAt(BufferCase *c, int at) {
+    return at < 0 ? NULL : c->text + at;
+}
+
+void LayBuffer(BufferCase *c) {
+    for (int i = 0; i < int(sizeof(c->text)); i++)
+        c->text[i] = char('a' + i % 26);
+    memset(c->arena, 0, sizeof(c->arena));
+    c->arenaUsed = 0;
+    memset(c->bufferBytes, 0, sizeof(c->bufferBytes));
+    StrStreambuf *b = &c->buffer;
+    const BufferLayout &l = c->layout;
+    b->vtable = (const void *const *)uintptr_t(0x0018bdc4);
+    b->getFirst = &b->getFirstStore;
+    b->putFirst = &b->putFirstStore;
+    b->getNext = &b->getNextStore;
+    b->putNext = &b->putNextStore;
+    b->getCount = &b->getCountStore;
+    b->putCount = &b->putCountStore;
+    b->getFirstStore = BufferAt(c, l.getFirst);
+    b->getNextStore = BufferAt(c, l.getNext);
+    b->getCountStore = l.getNext < 0 ? 0 : l.getEnd - l.getNext;
+    b->putFirstStore = BufferAt(c, l.putFirst);
+    b->putNextStore = BufferAt(c, l.putNext);
+    b->putCountStore = l.putNext < 0 ? 0 : l.putEnd - l.putNext;
+    b->seekHigh = BufferAt(c, l.seekHigh);
+    b->mode = c->mode;
+    b->allocSize = c->allocSize;
+    b->allocFn = c->alloc != 0 ? RecordAlloc : NULL;
+    b->freeFn = c->alloc == 2 ? RecordFree : NULL;
+}
+
+std::string Bytes(const char *p, int n) {
+    std::string out;
+    for (int i = 0; i < n; i++)
+        out += Format("%02x", uint8_t(p[i]));
+    return out;
+}
+
+std::string BufferOpCase(bool original, void *context) {
+    BufferCase *c = (BufferCase *)context;
+    g_bufferCase = c;
+    LayBuffer(c);
+    StrStreambuf *b = &c->buffer;
+    int ch = c->ch;
+    if (ch == -3)
+        ch = *b->getNext != NULL && *b->getNext > *b->getFirst ? uint8_t((*b->getNext)[-1]) : 'q';
+    StreamPos result;
+    memset(&result, 0x5a, sizeof(result));
+    int returned = 0;
+    StreamPos *returnedPos = NULL;
+    if (original) {
+        XbeOriginalScope a(0x001314ae), p(0x0013166a), u(0x001316b3), o(0x00131702), s(0x0013183b);
+        switch (c->op) {
+        case 0: returned = OrigStrOverflow(b, 0, ch); break;
+        case 1: returned = OrigStrPbackfail(b, 0, ch); break;
+        case 2: returned = OrigStrUnderflow(b, 0); break;
+        case 3: returnedPos = OrigStrSeekOff(b, 0, &result, c->offset, c->way, c->which); break;
+        case 4: returnedPos = OrigStrSeekPos(b, 0, &result, c->position, c->which); break;
+        }
+    } else {
+        switch (c->op) {
+        case 0: returned = b->Overflow(ch); break;
+        case 1: returned = b->Pbackfail(ch); break;
+        case 2: returned = b->Underflow(); break;
+        case 3: returnedPos = b->SeekOff(&result, c->offset, c->way, c->which); break;
+        case 4: returnedPos = b->SeekPos(&result, c->position, c->which); break;
+        }
+    }
+    // a block from operator new[]: lent while described, then freed
+    char *made = NULL;
+    int madeSize = 0;
+    if (c->alloc == 0 && (b->mode & 1) && !(c->mode & 1) && *b->getFirst != NULL) {
+        made = *b->getFirst;
+        madeSize = int(*b->putNext + *b->putCount - made);
+        Lend(made, size_t(madeSize), "new");
+    }
+    std::string out = Format("ret %d pos ", returned);
+    if (c->op >= 3)
+        out += Format("%s %d %08x%08x %d ", returnedPos == &result ? "result" : Where(returnedPos).c_str(),
+                      result.offset, result.position[1], result.position[0], result.state);
+    out += DescribeStreambuf(b) + " text " + Bytes(c->text, sizeof(c->text));
+    if (c->arenaUsed > 0)
+        out += " arena " + Bytes(c->arena, c->arenaUsed);
+    if (made != NULL) {
+        out += Format(" new %d ", madeSize) + Bytes(made, madeSize);
+        g_regions.pop_back();
+        OperatorDelete(made);
+    }
+    return out;
+}
+
+void RunBufferVirtuals() {
+    BufferCase *c = new BufferCase;
+    memset(c, 0, sizeof(*c));
+    Lend(c->text, sizeof(c->text), "text");
+    Lend(c->arena, sizeof(c->arena), "arena");
+    Lend(c->bufferBytes, sizeof(c->bufferBytes), "buf");
+    static const BufferLayout kLayouts[] = {
+        { -1, -1, -1, -1, -1, -1, -1 },
+        { 0, 4, 20, -1, -1, -1, 20 },
+        { 0, 0, 10, -1, -1, -1, 10 },
+        { -1, -1, -1, 0, 5, 30, 0 },
+        { -1, -1, -1, 0, 5, 30, -1 },
+        { 0, 0, 0, 0, 10, 32, 5 },
+        { 0, 6, 10, 0, 10, 32, 12 },
+        { 0, 20, 20, 0, 25, 40, 22 },
+        { 0, 2, 40, 0, 40, 40, 40 },
+        { 8, 9, 12, 8, 14, 14, 30 },
+    };
+    static const int kModes[] = { 0, 1, 2, 4, 5, 6, 12, 8 };
+    static const int kAllocSizes[] = { 0, 4, 32, 100, 400 };
+    static const int kOverflowChars[] = { kEof, 'A', 0xff, 0, -2 };
+    static const int kPutBackChars[] = { kEof, -3, 'x', 0x80, -2, 0x141 };   // -3: the character before the get pointer
+    for (const BufferLayout &layout : kLayouts) {
+        c->layout = layout;
+        for (int mode : kModes) {
+            c->mode = mode;
+            // a dynamic buffer with a get area and no put area (none is made so) sizes its growth from a null pointer
+            bool growable = !(mode & 4) || layout.getNext < 0 || layout.putNext >= 0;
+            // overflow: the allocation only matters for a dynamic buffer
+            for (int ch : kOverflowChars) {
+                if (!growable)
+                    break;
+                c->op = 0;
+                c->ch = ch;
+                for (int alloc = 0; alloc < 3; alloc++) {
+                    if (alloc > 0 && !(mode & 4))
+                        break;
+                    if ((mode & 5) == 5 && alloc != 2)
+                        continue;   // a dynamic buffer's own block freed: only through the recorded free
+                    for (int allocSize : kAllocSizes) {
+                        if (allocSize != 0 && !(mode & 4))
+                            break;
+                        c->alloc = alloc;
+                        c->allocSize = allocSize;
+                        Compare("strstreambuf::overflow", BufferOpCase, c);
+                    }
+                }
+            }
+            c->alloc = 2;
+            c->allocSize = 0;
+            for (int ch : kPutBackChars) {
+                c->op = 1;
+                c->ch = ch;
+                Compare("strstreambuf::pbackfail", BufferOpCase, c);
+            }
+            c->op = 2;
+            Compare("strstreambuf::underflow", BufferOpCase, c);
+            if (mode != 0 && mode != 6)
+                continue;
+            for (int offset : { -1, 0, 3, 10, 40, 100, -5 }) {
+                for (int way = 0; way < 4; way++) {
+                    for (int which = 0; which < 4; which++) {
+                        c->op = 3;
+                        c->offset = offset;
+                        c->way = way;
+                        c->which = which;
+                        Compare("strstreambuf::seekoff", BufferOpCase, c);
+                    }
+                }
+            }
+            static const int kPositions[][2] = { { -1, 0 }, { 0, 0 }, { 3, 0 }, { 0, 5 }, { 10, 0 }, { 2, -3 },
+                                                 { 41, 0 }, { -2, 1 }, { 0, -1 } };
+            for (const auto &position : kPositions) {
+                for (int which = 0; which < 4; which++) {
+                    c->op = 4;
+                    memset(&c->position, 0, sizeof(c->position));
+                    c->position.offset = position[0];
+                    c->position.position[0] = uint32_t(position[1]);
+                    c->position.position[1] = position[1] < 0 ? 0xffffffffu : 0;
+                    c->which = which;
+                    Compare("strstreambuf::seekpos", BufferOpCase, c);
+                }
+            }
+        }
+    }
+    g_regions.resize(g_regions.size() - 3);
+    delete c;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The other virtual functions with no caller in game, and what they call: the exceptions' deleting destructors,
+// copies and what(), ios_base::failure's _Doraise, type_info's destructor, _Locimp's deleting destructor, and the
+// deleting destructors of a basic_ostream and an ostrstream entered at their basic_ios
+
+struct VirtualCase {
+    union {
+        RuntimeError error;       // the largest: a runtime_error or failure, or an exception or bad_cast in front
+        uint8_t errorBytes[sizeof(RuntimeError)];
+    };
+    union {
+        RuntimeError other;
+        uint8_t otherBytes[sizeof(RuntimeError)];
+    };
+    Locimp impl;
+    Facet *facets[6];
+    FakeFacet fakes[6];
+    TypeInfo type;
+    struct {
+        Ostream stream;
+        BasicIos ios;
+    } ostream;
+    union {
+        OStrStream ostrstream;
+        uint8_t ostrstreamBytes[sizeof(OStrStream)];
+    };
+    Streambuf buffer;
+    char text[40];
+    const char *message;
+    int doFree;
+    bool onHeap;                  // deleted with flags 1: a heap object, described only by what it returned
+    unsigned flags;
+    int kind;
+    int facetCount;
+    uint32_t refs[6];
+};
+
+// An exception's what(), by text only where the pointer is the library's own string
+std::string WhatText(const char *what) {
+    if (what == NULL)
+        return "null";
+    std::string where = Where(what);
+    return (where[0] == '@' || where == "heap" ? std::string("const") : where) + "=" + what;
+}
+
+// The message a destructor may free: a C runtime block of its own when doFree is set
+const char *OwnMessage(const char *message, int doFree) {
+    if (!doFree || message == NULL)
+        return message;
+    char *own = (char *)Crt::malloc(strlen(message) + 1);
+    strcpy(own, message);
+    return own;
+}
+
+std::string ExceptionDeleteCase(bool original, void *context) {
+    VirtualCase *c = (VirtualCase *)context;
+    // kind: 0 exception, 1 bad_cast, 2 runtime_error, 3 failure
+    static const uint32_t kVtables[] = { 0x001a326c, 0x001a3288, 0x001a31cc, 0x001a31d4 };
+    Exception *object = c->onHeap ? (Exception *)OperatorNew(sizeof(RuntimeError)) : &c->error;
+    memset(object, 0, sizeof(RuntimeError));
+    object->vtable = (const void *)uintptr_t(kVtables[c->kind]);
+    object->what = OwnMessage(c->message, c->doFree);
+    object->doFree = c->doFree;
+    if (c->kind >= 2)
+        ((RuntimeError *)object)->message.ConstructText(c->text);
+    void *returned;
+    if (original) {
+        XbeOriginalScope a(0x001326ea), b(0x00132706), r(0x001311fa), f(0x00131252), d(0x0013268b), e(0x001326df),
+            g(0x001311d1), h(0x0013126e);
+        switch (c->kind) {
+        case 0: returned = OrigExceptionDelete(object, 0, c->flags); break;
+        case 1: returned = OrigBadCastDelete(object, 0, c->flags); break;
+        case 2: returned = OrigRuntimeErrorDelete(object, 0, c->flags); break;
+        default: returned = OrigFailureDelete(object, 0, c->flags); break;
+        }
+    } else {
+        switch (c->kind) {
+        case 0: returned = object->Delete(c->flags); break;
+        case 1: returned = ((BadCast *)object)->Delete(c->flags); break;
+        case 2: returned = ((RuntimeError *)object)->Delete(c->flags); break;
+        default: returned = ((Failure *)object)->Delete(c->flags); break;
+        }
+    }
+    std::string out = Format("ret %d", returned == object);
+    if (!(c->flags & 1)) {
+        out += Format(" vt %s free %d", Where(object->vtable).c_str(), object->doFree);
+        if (c->kind >= 2)   // left as _Tidy leaves it
+            out += Format(" message size %u capacity %u", ((RuntimeError *)object)->message.size,
+                          ((RuntimeError *)object)->message.capacity);
+        if (c->onHeap)
+            OperatorDelete(object);
+    }
+    return out;
+}
+
+std::string ExceptionWhatCase(bool original, void *context) {
+    VirtualCase *c = (VirtualCase *)context;
+    memset(c->errorBytes, 0, sizeof(c->errorBytes));
+    c->error.vtable = (const void *)uintptr_t(c->kind == 0 ? 0x001a326c : 0x001a31cc);
+    c->error.what = c->message;
+    if (c->kind != 0)
+        c->error.message.ConstructText(c->text);
+    const char *what;
+    if (original) {
+        XbeOriginalScope a(0x001326a1), b(0x001311ec);
+        what = c->kind == 0 ? OrigExceptionWhat(&c->error, 0) : OrigRuntimeErrorWhat(&c->error, 0);
+    } else {
+        what = c->kind == 0 ? c->error.Exception::What() : c->error.What();
+    }
+    std::string out = WhatText(what);
+    if (c->kind != 0)
+        c->error.message.Tidy(true);
+    return out;
+}
+
+std::string DescribeError(RuntimeError *e, int kind) {
+    std::string out = Format("vt %s free %d what %s", Where(e->vtable).c_str(), e->doFree,
+                             e->what == NULL ? "null" : (Where(e->what) + "=" + e->what).c_str());
+    if (kind >= 2)
+        out += " message " + Text(&e->message);
+    return out;
+}
+
+// Copy constructors, then destructors: bad_cast, runtime_error, failure
+std::string ErrorCopyCase(bool original, void *context) {
+    VirtualCase *c = (VirtualCase *)context;
+    static const uint32_t kVtables[] = { 0, 0x001a3288, 0x001a31cc, 0x001a31d4 };
+    memset(c->errorBytes, 0x77, sizeof(c->errorBytes));
+    memset(c->otherBytes, 0, sizeof(c->otherBytes));
+    c->other.vtable = (const void *)uintptr_t(kVtables[c->kind]);
+    c->other.what = OwnMessage(c->message, c->doFree);
+    c->other.doFree = c->doFree;
+    if (c->kind >= 2)
+        c->other.message.ConstructText(c->text);
+    void *returned;
+    std::string out;
+    if (original) {
+        XbeOriginalScope a(0x001326c7), b(0x0013133f), f(0x00131382), d(0x001326df), e(0x001311d1), g(0x0013126e),
+            x(0x0013263c), y(0x0013268b);
+        switch (c->kind) {
+        case 1: returned = OrigBadCastCopy(&c->error, 0, &c->other); break;
+        case 2: returned = OrigRuntimeErrorCopy(&c->error, 0, &c->other); break;
+        default: returned = OrigFailureCopy(&c->error, 0, &c->other); break;
+        }
+        out = Format("ret %d shared %d ", returned == &c->error, c->error.what == c->other.what) +
+              DescribeError(&c->error, c->kind);
+        switch (c->kind) {
+        case 1: OrigBadCastDestruct(&c->error, 0); break;
+        case 2: OrigRuntimeErrorDestruct(&c->error, 0); break;
+        default: OrigFailureDestruct(&c->error, 0); break;
+        }
+    } else {
+        switch (c->kind) {
+        case 1: returned = ((BadCast *)&c->error)->ConstructCopy((BadCast *)&c->other); break;
+        case 2: returned = c->error.ConstructCopy(&c->other); break;
+        default: returned = ((Failure *)&c->error)->ConstructCopy((Failure *)&c->other); break;
+        }
+        out = Format("ret %d shared %d ", returned == &c->error, c->error.what == c->other.what) +
+              DescribeError(&c->error, c->kind);
+        switch (c->kind) {
+        case 1: ((BadCast *)&c->error)->Destruct(); break;
+        case 2: c->error.Destruct(); break;
+        default: ((Failure *)&c->error)->Destruct(); break;
+        }
+    }
+    out += Format("; vt %s", Where(c->error.vtable).c_str());
+    if (c->kind >= 2)
+        out += Format(" message size %u capacity %u", c->error.message.size, c->error.message.capacity);
+    if (c->other.what != c->message && out.find("shared 1") == std::string::npos)
+        Crt::free((void *)c->other.what);
+    if (c->kind >= 2)
+        c->other.message.Tidy(true);
+    return out;
+}
+
+// _Doraise: throws a copy of the failure (MSVC builds catch it)
+std::string FailureRaiseCase(bool original, void *context) {
+    VirtualCase *c = (VirtualCase *)context;
+    memset(c->otherBytes, 0, sizeof(c->otherBytes));
+    c->other.vtable = (const void *)uintptr_t(0x001a31d4);
+    c->other.what = c->message;
+    c->other.doFree = 0;
+    c->other.message.ConstructText(c->text);
+    if (original) {
+        XbeOriginalScope a(0x0013139a), b(0x00131382), d(0x0013126e);
+        OrigFailureRaise(&c->other, 0);
+    } else {
+        ((Failure *)&c->other)->Raise();
+    }
+    return "returned";
+}
+
+std::string TypeInfoCase(bool original, void *context) {
+    VirtualCase *c = (VirtualCase *)context;
+    TypeInfo *type = c->onHeap ? (TypeInfo *)OperatorNew(sizeof(TypeInfo)) : &c->type;
+    type->vtable = (const void *const *)uintptr_t(0x001a3290);
+    type->undecoratedName = NULL;
+    if (c->message != NULL) {
+        type->undecoratedName = (char *)Crt::malloc(strlen(c->message) + 1);
+        strcpy(type->undecoratedName, c->message);
+    }
+    void *returned;
+    if (original) {
+        XbeOriginalScope a(0x0013274b), b(0x00132722);
+        returned = OrigTypeInfoDelete(type, 0, c->flags);
+    } else {
+        returned = type->Delete(c->flags);
+    }
+    std::string out = Format("ret %d", returned == type);
+    if (!(c->flags & 1)) {
+        // our copy of the vtable is not a lent global: named by its game address here
+        out += Format(" vt %s name %s", type->vtable == TypeInfoVtable ? "@001a3290" : Where(type->vtable).c_str(),
+                      type->undecoratedName == NULL ? "null" : "left");
+        if (c->onHeap)
+            OperatorDelete(type);
+    }
+    return out;
+}
+
+std::string LocimpDeleteCase(bool original, void *context) {
+    VirtualCase *c = (VirtualCase *)context;
+    Locimp *impl = c->onHeap ? (Locimp *)OperatorNew(sizeof(Locimp)) : &c->impl;
+    Facet **facets = NULL;
+    if (c->facetCount > 0) {
+        facets = (Facet **)Crt::malloc(c->facetCount * sizeof(Facet *));
+        for (int i = 0; i < c->facetCount; i++) {
+            InitFake(&c->fakes[i], c->refs[i]);
+            facets[i] = i == 2 ? NULL : (Facet *)&c->fakes[i];
+        }
+    }
+    InitLocimp(impl, facets, uint32_t(c->facetCount), false, 1);
+    impl->name.ConstructText(c->text);
+    void *returned;
+    if (original) {
+        XbeOriginalScope a(0x00130f23), b(0x00130e4c);
+        returned = OrigLocimpDelete(impl, 0, c->flags);
+    } else {
+        returned = impl->Delete(c->flags);
+    }
+    std::string out = Format("ret %d refs", returned == impl);
+    for (int i = 0; i < c->facetCount; i++)
+        out += Format(" %u", c->fakes[i].refs);
+    if (!(c->flags & 1)) {
+        out += Format(" vt %s name size %u capacity %u", Where(impl->vtable).c_str(), impl->name.size,
+                      impl->name.capacity);
+        if (c->onHeap)
+            OperatorDelete(impl);
+    }
+    return out;
+}
+
+// A basic_ostream (the basic_ios after its vbptr, as the game's vbtable has it) or an ostrstream, made by our
+// constructors and deleted through the basic_ios's vtable slot
+std::string IosDeleteCase(bool original, void *context) {
+    VirtualCase *c = (VirtualCase *)context;
+    void *object;
+    BasicIos *ios;
+    if (c->kind == 0) {
+        Ostream *stream = c->onHeap ? (Ostream *)OperatorNew(sizeof(c->ostream)) : &c->ostream.stream;
+        memset(stream, 0, sizeof(c->ostream));
+        memset(&c->buffer, 0, sizeof(c->buffer));
+        SetupStreambufConstruct(&c->buffer, 0);
+        stream->Construct(&c->buffer, false, 1);
+        object = stream;
+        ios = stream->Ios();
+    } else {
+        OStrStream *stream = c->onHeap ? (OStrStream *)OperatorNew(sizeof(OStrStream)) : &c->ostrstream;
+        memset(stream, 0, sizeof(OStrStream));
+        stream->Construct(c->text, int(sizeof(c->text)), 2, 1);
+        object = stream;
+        ios = &stream->ios;
+    }
+    void *returned;
+    if (original) {
+        XbeOriginalScope a(0x001319e7), b(0x00131a06), d(0x00131c01), e(0x00131bbb);
+        returned = c->kind == 0 ? OrigDeleteOstream(ios, 0, c->flags) : OrigDeleteOStrStream(ios, 0, c->flags);
+    } else {
+        returned = c->kind == 0 ? ios->DeleteOstream(c->flags) : ios->DeleteOStrStream(c->flags);
+    }
+    std::string out = Format("ret %d", returned == object);
+    if (!(c->flags & 1)) {
+        out += Format(" ios vt %s words %s calls %s", Where(ios->vtable).c_str(), Where(ios->words).c_str(),
+                      Where(ios->callbacks).c_str());
+        if (c->kind == 1)
+            out += " " + DescribeStreambuf(&c->ostrstream.buffer);
+        if (c->onHeap)
+            OperatorDelete(object);
+    }
+    if (c->kind == 0)
+        c->buffer.Destruct();
+    return out;
+}
+
+void RunVirtuals() {
+    VirtualCase *c = new VirtualCase;
+    memset(c, 0, sizeof(*c));
+    Lend(c->errorBytes, sizeof(c->errorBytes), "error");
+    Lend(c->otherBytes, sizeof(c->otherBytes), "other");
+    Lend(&c->impl, sizeof(c->impl), "impl");
+    Lend(c->fakes, sizeof(c->fakes), "fakes");
+    Lend(&c->type, sizeof(c->type), "type");
+    Lend(&c->ostream, sizeof(c->ostream), "ostream");
+    Lend(c->ostrstreamBytes, sizeof(c->ostrstreamBytes), "ostrstream");
+    Lend(&c->buffer, sizeof(c->buffer), "buffer");
+    Lend(c->text, sizeof(c->text), "text");
+    static char longMessage[300];
+    memset(longMessage, 'm', sizeof(longMessage) - 1);
+    static const char *const kMessages[] = { NULL, "", "bad cast", longMessage };
+    static const char *const kTexts[] = { "", "short", "a text of more than fifteen characters" };
+    for (const char *text : kTexts) {
+        strcpy(c->text, text);
+        for (const char *message : kMessages) {
+            c->message = message;
+            if (message != NULL)
+                Lend(message, strlen(message) + 1, "message");
+            for (int kind = 0; kind < 4; kind++) {
+                c->kind = kind;
+                for (int doFree = 0; doFree < 2; doFree++) {
+                    c->doFree = doFree;
+                    for (unsigned flags : { 0u, 1u, 2u, 3u }) {
+                        c->flags = flags;
+                        c->onHeap = (flags & 1) != 0;
+                        Compare("exceptions' deleting destructors", ExceptionDeleteCase, c);
+                    }
+                    if (kind > 0 && (message != NULL || !doFree))   // a copy strlens a message it must free
+                        Compare("exceptions' copies and destructors", ErrorCopyCase, c);
+                }
+                if (kind < 2)
+                    Compare("what()", ExceptionWhatCase, c);
+            }
+            if (kCanCatch)
+                Compare("ios_base::failure::_Doraise", FailureRaiseCase, c);
+            for (unsigned flags : { 0u, 1u }) {
+                c->flags = flags;
+                c->onHeap = flags != 0;
+                Compare("type_info's deleting destructor", TypeInfoCase, c);
+            }
+            if (message != NULL)
+                g_regions.pop_back();
+        }
+        static const uint32_t kRefs[][6] = { { 1, 1, 1, 1, 1, 1 }, { 2, 0, 1, 5, 1, 3 }, { 0, 0, 0, 0, 0, 0 } };
+        for (int count : { 0, 1, 3, 6 }) {
+            for (const auto &refs : kRefs) {
+                for (unsigned flags : { 0u, 1u }) {
+                    c->facetCount = count;
+                    memcpy(c->refs, refs, sizeof(c->refs));
+                    c->flags = flags;
+                    c->onHeap = flags != 0;
+                    Compare("_Locimp's deleting destructor", LocimpDeleteCase, c);
+                }
+            }
+        }
+        for (int kind = 0; kind < 2; kind++) {
+            for (unsigned flags : { 0u, 1u }) {
+                c->kind = kind;
+                c->flags = flags;
+                c->onHeap = flags != 0;
+                Compare(kind == 0 ? "basic_ostream's deleting destructor" : "ostrstream's deleting destructor",
+                        IosDeleteCase, c);
+            }
+        }
+    }
+    g_regions.resize(g_regions.size() - 9);
+    delete c;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
 
 bool Enabled() {
     const char *value = getenv("NIGHTFIRE_CRUNTIMESHADOWB");
@@ -1538,6 +2150,7 @@ void CRuntimeShadowB_Run(void) {
     } parts[] = {
         { "locks", RunLocks }, { "locale", RunLocale }, { "_Locinfo", RunLocinfo }, { "ctype", RunCtype },
         { "ios_base", RunIos }, { "streams", RunStreams }, { "_Stod", RunStod }, { "exceptions", RunExceptions },
+        { "strstreambuf virtuals", RunBufferVirtuals }, { "other virtuals", RunVirtuals },
     };
     for (const auto &part : parts) {
         part.run();
@@ -1547,5 +2160,6 @@ void CRuntimeShadowB_Run(void) {
     KernelInitializeSlot = g_kernelInitialize;
     KernelEnterSlot = g_kernelEnter;
     KernelLeaveSlot = g_kernelLeave;
-    Summary("locks, locale, _Locinfo, ctype, ios_base, strstreams, _Stod, exceptions, throws, array iterators");
+    Summary("locks, locale, _Locinfo, ctype, ios_base, strstreams, _Stod, exceptions, throws, array iterators, "
+            "virtuals");
 }

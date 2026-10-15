@@ -353,7 +353,6 @@ struct BasicIos : IosBase {
     void* DeleteIStrStream(unsigned flags);                            // 0x00038c40
     void DestructIStrStream();              // ~istrstream (CRuntimeStd.cpp)                            // 0x00131ae1
     void DestructOStrStream();              // ~ostrstream (CRuntimeStd.cpp)                            // 0x00131bbb
-    void DestructOstream();                 // ~basic_ostream (CRuntimeStd.cpp)                         // 0x00131a06
     void* DeleteOstream(unsigned flags);    // (CRuntimeStd.cpp)                                        // 0x001319e7
     void* DeleteOStrStream(unsigned flags); // (CRuntimeStd.cpp)                                        // 0x00131c01
 };
@@ -382,6 +381,7 @@ struct Ostream {
     Ostream* Put(char ch);                                             // 0x00039810 put()
     Ostream* InsertUInt(unsigned value);                               // 0x00039a90 operator<<(unsigned int)
     Ostream* Construct(Streambuf *buffer, bool isStandard, int constructVirtualBase);   // (CRuntimeStd.cpp)
+    void DestructAll();                     // the `vbase destructor' (CRuntimeStd.cpp)               // 0x00131a06
 };
 static_assert(sizeof(Ostream) == 4, "Ostream");
 
