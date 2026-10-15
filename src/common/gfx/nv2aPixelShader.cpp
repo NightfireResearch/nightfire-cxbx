@@ -1,6 +1,7 @@
 #include "nv2aPixelShader.h"
 
 #include "shaderBuilder.h"
+#include "shaderSpirv.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -95,7 +96,7 @@ typedef ShaderValue Vec[4];
 
 class PixelTranslator {
 public:
-    PixelTranslator() : b(ShaderBuilder::kPixelShader) {}
+    PixelTranslator() : b(ShaderBuilder::kPixelShader), spirv(NULL), spirvInfo(NULL) {}
     bool Translate(const uint32_t def[60], std::vector<uint32_t> *bytecode, Nv2aPixelShaderInfo *info,
                    char *error, size_t errorSize);
 
@@ -108,6 +109,10 @@ private:
 
     ShaderBuilder b;
     Vec v0, v1, fog, t[4], r0, r1, efprod, v1r0sum;
+
+public:
+    const ShaderSpirvOptions *spirv;   // SPIR-V rather than ps_2_0 tokens, when set
+    ShaderSpirvInfo *spirvInfo;
 };
 
 // The register an input byte names. Stage constants are indexed by stage; in the final combiner they are the
@@ -345,6 +350,8 @@ bool PixelTranslator::Translate(const uint32_t def[60], std::vector<uint32_t> *b
         colour[3] = b.Saturate(Input((finalEfg >> 8) & 0xFF, true, 3, 0, true));
     }
     for (int c = 0; c < 4; c++) b.SetOutput(ShaderBuilder::kOutColour, c, colour[c]);
+    if (spirv != NULL)
+        return b.AssembleSpirv(*spirv, bytecode, spirvInfo, error, errorSize);
     return b.Assemble(bytecode, error, errorSize);
 }
 
@@ -354,6 +361,16 @@ bool Nv2aPixelShader_Translate(const uint32_t def[60], std::vector<uint32_t> *by
                                char *error, size_t errorSize) {
     PixelTranslator *t = new PixelTranslator();
     bool ok = t->Translate(def, bytecode, info, error, errorSize);
+    delete t;
+    return ok;
+}
+
+bool Nv2aPixelShader_TranslateSpirv(const uint32_t def[60], const ShaderSpirvOptions &options, std::vector<uint32_t> *words,
+                                    Nv2aPixelShaderInfo *info, ShaderSpirvInfo *spirvInfo, char *error, size_t errorSize) {
+    PixelTranslator *t = new PixelTranslator();
+    t->spirv = &options;
+    t->spirvInfo = spirvInfo;
+    bool ok = t->Translate(def, words, info, error, errorSize);
     delete t;
     return ok;
 }

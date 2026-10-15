@@ -1,6 +1,7 @@
 #include "nv2aVertexShader.h"
 
 #include "shaderBuilder.h"
+#include "shaderSpirv.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -54,7 +55,7 @@ enum { USAGE_POSITION = 0, USAGE_TEXCOORD = 5 };
 
 class VertexTranslator {
 public:
-    VertexTranslator() : b(ShaderBuilder::kVertexShader) {}
+    VertexTranslator() : b(ShaderBuilder::kVertexShader), spirv(NULL), spirvInfo(NULL) {}
     bool Translate(const uint8_t *function, uint32_t normPacked, const uint8_t inputComponents[16],
                    std::vector<uint32_t> *bytecode, Nv2aVertexShaderInfo *info, char *error, size_t errorSize);
 
@@ -77,6 +78,10 @@ private:
     ShaderValue a0;
     bool a0Set;
     uint32_t inputsUsed, outputsWritten;
+
+public:
+    const ShaderSpirvOptions *spirv;   // SPIR-V rather than vs_2_0 tokens, when set
+    ShaderSpirvInfo *spirvInfo;
 };
 
 // Reading an input register is where its value is made: the declaration's components, with the NV2A's
@@ -353,6 +358,8 @@ bool VertexTranslator::Translate(const uint8_t *function, uint32_t normPackedInp
     Epilogue();
     info->inputsUsed = inputsUsed;
     info->outputsWritten = outputsWritten;
+    if (spirv != NULL)
+        return b.AssembleSpirv(*spirv, bytecode, spirvInfo, error, errorSize);
     return b.Assemble(bytecode, error, errorSize);
 }
 
@@ -362,6 +369,17 @@ bool Nv2aVertexShader_Translate(const uint8_t *function, uint32_t normPackedInpu
                                 std::vector<uint32_t> *bytecode, Nv2aVertexShaderInfo *info, char *error, size_t errorSize) {
     VertexTranslator *t = new VertexTranslator();   // the builder's tables are large for the stack
     bool ok = t->Translate(function, normPackedInputs, inputComponents, bytecode, info, error, errorSize);
+    delete t;
+    return ok;
+}
+
+bool Nv2aVertexShader_TranslateSpirv(const uint8_t *function, uint32_t normPackedInputs, const uint8_t inputComponents[16],
+                                     const ShaderSpirvOptions &options, std::vector<uint32_t> *words,
+                                     Nv2aVertexShaderInfo *info, ShaderSpirvInfo *spirvInfo, char *error, size_t errorSize) {
+    VertexTranslator *t = new VertexTranslator();
+    t->spirv = &options;
+    t->spirvInfo = spirvInfo;
+    bool ok = t->Translate(function, normPackedInputs, inputComponents, words, info, error, errorSize);
     delete t;
     return ok;
 }

@@ -29,6 +29,8 @@ int GfxHost_PresentEvery(void);
 // window is SDL3's, not the loader's, says which it is and does the sizing on the window's own thread.
 void *GfxHost_Window(void);
 void GfxHost_SizeWindow(uint32_t width, uint32_t height);
+// The SDL_Window itself, for the SDL GPU backend (sdlGpuBackend.cpp) to present into.
+void *GfxHost_SdlWindow(void);
 #endif
 
 #endif // COMMON_GFX_BACKENDHOST_H_

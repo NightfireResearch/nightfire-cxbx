@@ -10,4 +10,8 @@ void HostInputSdl_Event(const SDL_Event *event);
 // Whether the window has the keyboard (true before there is one)
 bool HostWindowSdl_HasKeyboard(void);
 
+// The SDL_Window (null before it is open), for the SDL GPU backend to present into
+struct SDL_Window;
+SDL_Window *HostWindowSdl_Window(void);
+
 #endif // DRIVING_PLATFORM_HOSTSDL_H_

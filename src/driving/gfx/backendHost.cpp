@@ -3,6 +3,9 @@
 #include "d3dSeam.h"
 #include "../devtools/Teleport.h"
 #include "../platform/HostWindow.h"
+#ifdef NIGHTFIRE_SDL
+#include "../platform/HostSdl.h"
+#endif
 #include "../sound/dsndSeam.h"
 
 // The driving engine's answers to the questions the shared D3D9 backend asks.
@@ -39,5 +42,9 @@ void *GfxHost_Window(void) {
 
 void GfxHost_SizeWindow(uint32_t width, uint32_t height) {
     HostWindow_SetClientSize(width, height);
+}
+
+void *GfxHost_SdlWindow(void) {
+    return HostWindowSdl_Window();
 }
 #endif
