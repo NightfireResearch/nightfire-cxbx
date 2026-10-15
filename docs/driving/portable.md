@@ -41,7 +41,8 @@ two steps (see the roadmap below).
 1. Driving runs 100% standalone on Windows with no dependence on Driving.xbe; then the stack merges back to dev.
 2. Platform independence, still 32-bit x86 (level 1 above: Linux with dxvk-native and SDL3).
 3. 64-bit: pointer-sized layouts and offset-based loading of the data files (audit and plan: [64-bit.md](64-bit.md)).
-4. Architecture independence (Apple Silicon and other non-x86 hosts): the x87 code as portable C, and graphics there.
+4. Architecture independence (Apple Silicon and other non-x86 hosts): the x87 code as portable C, and graphics there
+   (plan for macOS: [macos.md](macos.md)).
 
 ## Order of work for level 1
 
