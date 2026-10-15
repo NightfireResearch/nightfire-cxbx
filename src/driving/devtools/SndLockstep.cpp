@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <atomic>
 #include <map>
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -85,7 +86,7 @@ bool g_enabled;
 CRITICAL_SECTION g_playbackLock;
 HANDLE g_stepGranted;                  // one count per step handed to the driver thread
 HANDLE g_stepDone;                     // one count per step it has run
-volatile LONG g_driverAlive;
+std::atomic<LONG> g_driverAlive;
 
 // The game thread's
 int g_stepRemainder;                   // in steps x timer rate: a tick is 100 / rate steps
@@ -367,7 +368,7 @@ void SndLockstep_Tick(void) {
 
 uint32_t SndLockstep_DriverThread(void) {
     Init();
-    InterlockedExchange(&g_driverAlive, 1);
+    g_driverAlive = 1;
     volatile uint8_t &keepRunning = KeepRunning;   // cleared by SNDPLATFORM_restore on the game thread
     while (keepRunning != 0) {
         if (WaitForSingleObject(g_stepGranted, 1) != WAIT_OBJECT_0)
@@ -375,7 +376,7 @@ uint32_t SndLockstep_DriverThread(void) {
         RunDriverStep();
         ReleaseSemaphore(g_stepDone, 1, NULL);
     }
-    InterlockedExchange(&g_driverAlive, 0);
+    g_driverAlive = 0;
     static_cast<volatile uint8_t &>(IsRunning) = 0;
     return 0;
 }

@@ -42,6 +42,14 @@ if(MINGW)
   add_link_options(-static -static-libgcc -static-libstdc++ -pthread)
 endif()
 
+# No fused multiply-adds, as in MSVC's code and the original's. Clang fuses a * b + c within an expression by default
+# (GCC across expressions): the x86 builds target no FMA, so there it only reorders instructions, but arm64 has it
+# (docs/driving/macos.md 4). The game's `#pragma fp_contract(off)` lines are MSVC's spelling of the same.
+if(NOT MSVC)
+  add_compile_options(-ffp-contract=off)
+endif()
+
+
 # Statically link UCRT, improves ability to run on XP when compiled with v141_xp
 #set(CMAKE_CXX_FLAGS_RELEASE "/MT")
 #set(CMAKE_CXX_FLAGS_DEBUG "/MTd")
@@ -1098,8 +1106,22 @@ foreach(source ${nf_standalone_sources} ${nf_standalone_harness})
                  "$<${nf_test_only}:${CMAKE_SOURCE_DIR}/src/driving/devtools/SndCallTraceRedirect.h>")
   endif()
 endforeach()
+# Sanitizer runs of the standalone executables (docs/driving/macos.md, package M2): -DNIGHTFIRE_SANITIZE=
+# float-cast-overflow (out-of-range float-to-integer conversions, which x86 and arm64 answer differently) or thread
+# (data races), for the Linux x86-64 build, whose host code is in the executables too; SDL and the other libraries
+# are left uninstrumented. Reports go where UBSAN_OPTIONS / TSAN_OPTIONS log_path says.
+set(NIGHTFIRE_SANITIZE "" CACHE STRING "Clang sanitizers for the standalone executables (-fsanitize=<value>); empty for none")
 foreach(target driving_standalone driving_standalone_test)
   add_dependencies(${target} preprocess)
+  if(NIGHTFIRE_SANITIZE AND NOT MSVC)
+    target_compile_options(${target} PRIVATE -fsanitize=${NIGHTFIRE_SANITIZE} -fno-omit-frame-pointer -g)
+    # The runtime as a shared library, so that the game's own operator new and delete win over its; found where
+    # Clang keeps it
+    execute_process(COMMAND ${CMAKE_CXX_COMPILER} --print-runtime-dir OUTPUT_VARIABLE nf_sanitizer_dir
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+    target_link_options(${target} PRIVATE -fsanitize=${NIGHTFIRE_SANITIZE} -shared-libsan
+                                          -Wl,-rpath,${nf_sanitizer_dir})
+  endif()
   target_include_directories(${target} PRIVATE ${NF_FFMPEG_DIR}/include)
   target_compile_definitions(${target} PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_STANDALONE)
   if(WIN32)

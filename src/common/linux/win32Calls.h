@@ -13,7 +13,11 @@ DWORD GetPrivateProfileStringA(LPCSTR section, LPCSTR key, LPCSTR defaultValue, 
 BOOL QueryPerformanceCounter(LARGE_INTEGER *counter);
 BOOL QueryPerformanceFrequency(LARGE_INTEGER *frequency);
 void Sleep(DWORD milliseconds);
+#if defined(__aarch64__)
+#define YieldProcessor() __builtin_arm_yield()
+#else
 #define YieldProcessor() __builtin_ia32_pause()
+#endif
 #define timeBeginPeriod(milliseconds) 0   // the scheduler's resolution is already fine enough
 
 BOOL CreateDirectoryA(LPCSTR path, SECURITY_ATTRIBUTES *security);
