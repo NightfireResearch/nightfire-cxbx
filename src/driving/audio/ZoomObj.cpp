@@ -18,7 +18,7 @@
 
 namespace {
 
-const uint32_t kASoundVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_ASound));
+void **const kASoundVtable = Vtable_ASound;
 
 constexpr float kFrameSeconds = 1.0f / 60.0f;
 static_assert(std::bit_cast<uint32_t>(kFrameSeconds) == 0x3c888889, "1/60 as the original's .rdata has it");

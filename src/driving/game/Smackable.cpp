@@ -148,7 +148,7 @@ Smackable* Smackable::Construct(RSceneObj *render, WTrigger *trigger, const Coor
         defaults.Destruct();
     }
     this->sleepDelay = sleepDelay;
-    vtable = reinterpret_cast<void **>(kSmackableVtable);
+    vtable = kSmackableVtable;
     moveCountdown = Ftol(double(fgSimulation.stepsPerSecond) * kMoveSeconds);
     this->trigger = trigger;
     data = ArticlePhysicsData(render);
@@ -203,7 +203,7 @@ Smackable* Smackable::Construct(RSceneObj *render, WTrigger *trigger, const Coor
 
 // FUNC_AT(0x00075300)
 void Smackable::Destruct() {
-    vtable = reinterpret_cast<void **>(kSmackableVtable);
+    vtable = kSmackableVtable;
     sound->Detatch();
     SetAudioObject(NULL);
     if (trigger != NULL)

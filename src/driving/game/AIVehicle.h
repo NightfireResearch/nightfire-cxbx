@@ -167,13 +167,13 @@ public:
     // rotPos's position row: GetPosition's answer when it was last asked
     Coord4 &Position() { return *reinterpret_cast<Coord4 *>(rotPos.mtx[3]); }
 };
-static_assert(sizeof(AIVehicle) == 0x80, "an AI vehicle is 0x80 bytes");
-static_assert(offsetof(AIVehicle, vehicleType) == 0x10 && offsetof(AIVehicle, physicsObject) == 0x14 &&
-              offsetof(AIVehicle, rotPos) == 0x20 && offsetof(AIVehicle, splinePath) == 0x60 &&
-              offsetof(AIVehicle, driveToNav) == 0x64 && offsetof(AIVehicle, active) == 0x68 &&
-              offsetof(AIVehicle, index) == 0x6c, "AIVehicle layout");
+LAYOUT_32(sizeof(AIVehicle) == 0x80, "an AI vehicle is 0x80 bytes");
+LAYOUT_32(offsetof(AIVehicle, vehicleType) == 0x10 && offsetof(AIVehicle, physicsObject) == 0x14 &&
+          offsetof(AIVehicle, rotPos) == 0x20 && offsetof(AIVehicle, splinePath) == 0x60 &&
+          offsetof(AIVehicle, driveToNav) == 0x64 && offsetof(AIVehicle, active) == 0x68 &&
+          offsetof(AIVehicle, index) == 0x6c, "AIVehicle layout");
 
-const uint32_t kAIVehicleVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_AIVehicle));
+void **const kAIVehicleVtable = Vtable_AIVehicle;
 
 // AIGroundVehicle, derived from AIVehicle
 #include "AIGroundVehicle.h"

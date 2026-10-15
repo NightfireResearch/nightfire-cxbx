@@ -5,6 +5,7 @@
 // streams use, and the stream side's header parser SNDI_patchtohdr (4.4). See Banks.cpp.
 
 #include "Voices.h"
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 #include <stdint.h>
 
@@ -102,7 +103,7 @@ struct BankSlot {
     uint8_t flag;                // +0x04 set: the bank is not playable (SNDBANKI_valid answers -18)
     uint8_t pad05[3];
 };
-static_assert(sizeof(BankSlot) == 8, "a bank slot is 8 bytes");
+LAYOUT_32(sizeof(BankSlot) == 8, "a bank slot is 8 bytes");
 
 // What a user-data client gets (MW: SNDUSERDATACBINFO); none is ever registered
 struct UserDataInfo {
@@ -112,7 +113,7 @@ struct UserDataInfo {
     int32_t handle;              // +0x0c } the streams' (SNDSTRMI_parseheader); the bank module leaves them unset
     int32_t request;             // +0x10 }
 };
-static_assert(sizeof(UserDataInfo) == 0x14, "SNDUSERDATACBINFO is 0x14 bytes");
+LAYOUT_32(sizeof(UserDataInfo) == 0x14, "SNDUSERDATACBINFO is 0x14 bytes");
 typedef void (*UserDataClient)(UserDataInfo *info);
 
 // The PT tag stream reader's state (SNDI_gettag)
@@ -123,7 +124,7 @@ struct TagReader {
     uint8_t *data;               // +0x0c
     int32_t length;              // +0x10
 };
-static_assert(sizeof(TagReader) == 0x14, "the tag reader is 0x14 bytes");
+LAYOUT_32(sizeof(TagReader) == 0x14, "the tag reader is 0x14 bytes");
 
 // SNDI_patchtohdr's format (4 bytes, MW: SNDSAMPLEFORMAT) and sample layout (0x1c, MW: SNDSAMPLEDESC)
 struct StreamFormat {

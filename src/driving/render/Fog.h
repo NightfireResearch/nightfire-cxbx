@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #include "../engine/USingleton.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // The fog's settings (0x1c bytes, new'd by the constructor; the name is ours)
 struct FogParams {
@@ -51,9 +52,9 @@ public:
     // A step of the fade, and the settings handed over again
     void UpdateScale();                                                                         // 0x0007d8c0
 };
-static_assert(sizeof(RFog) == 0x1c, "RFog is 0x1c bytes");
-static_assert(offsetof(RFog, params) == 4 && offsetof(RFog, fadeEndTick) == 0xc && offsetof(RFog, fadeTarget) == 0x18,
-              "RFog layout");
+LAYOUT_32(sizeof(RFog) == 0x1c, "RFog is 0x1c bytes");
+LAYOUT_32(offsetof(RFog, params) == 4 && offsetof(RFog, fadeEndTick) == 0xc && offsetof(RFog, fadeTarget) == 0x18,
+          "RFog layout");
 
 extern RFog *Fog;
 extern uint8_t FogColourFlag;                   // the flag byte dbattrib_argb is handed (and does not use)

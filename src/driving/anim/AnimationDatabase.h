@@ -10,6 +10,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 struct AnimBank;
 struct FnAnim;
@@ -32,7 +33,7 @@ public:
     uint32_t GetUnknown08();            // the bank's +0x08 (name ours)          // 0x00013d00 slot 6
     FnDefaultAnimBank* Delete(unsigned flags);                                  // 0x00013d10 slot 7
 };
-static_assert(sizeof(FnDefaultAnimBank) == 8, "an FnDefaultAnimBank is 8 bytes");
+LAYOUT_32(sizeof(FnDefaultAnimBank) == 8, "an FnDefaultAnimBank is 8 bytes");
 
 enum FnAnimBankSlot {
     kBankInit = 0, kBankGetNumAnims, kBankGetAnimByName, kBankGetAnim, kBankGetAnimName, kBankGetAnimIndex,
@@ -51,8 +52,8 @@ struct BankInfo {                       // 0x3c
     void Load(const char *bankName);                                            // 0x00013d30
     void Destruct();                    // inline in the original
 };
-static_assert(offsetof(BankInfo, name) == 0x14, "a bank's name is at +0x14");
-static_assert(sizeof(BankInfo) == 0x3c, "a BankInfo is 0x3c bytes");
+LAYOUT_32(offsetof(BankInfo, name) == 0x14, "a bank's name is at +0x14");
+LAYOUT_32(sizeof(BankInfo) == 0x3c, "a BankInfo is 0x3c bytes");
 
 // ActAnimationDatabase::PrivateData (operator new)
 struct PrivateData {                    // 0x448
@@ -74,8 +75,8 @@ struct PrivateData {                    // 0x448
     // second from its first - or NULL for an index of -1
     void GetAnimation(int bank, int index, uint8_t **anim, uint8_t **second);  // 0x00013c00
 };
-static_assert(offsetof(PrivateData, bankCount) == 0x438, "the bank count is at +0x438");
-static_assert(sizeof(PrivateData) == 0x448, "a PrivateData is 0x448 bytes");
+LAYOUT_32(offsetof(PrivateData, bankCount) == 0x438, "the bank count is at +0x438");
+LAYOUT_32(sizeof(PrivateData) == 0x448, "a PrivateData is 0x448 bytes");
 
 class ActAnimationDatabase {            // 4
 public:
@@ -87,7 +88,7 @@ public:
     void Destruct();                                                            // 0x000141b0
     void GetAnimation(int bank, int index, uint8_t **anim, uint8_t **second);  // 0x00013c70
 };
-static_assert(sizeof(ActAnimationDatabase) == 4, "an ActAnimationDatabase is 4 bytes");
+LAYOUT_32(sizeof(ActAnimationDatabase) == 4, "an ActAnimationDatabase is 4 bytes");
 
 // The FnAnims of one animation, made in EAGLAnim's pool from the database's anim data.
 class ActAnimGroup {                    // 0x20 ("ActAnimGroup")
@@ -107,7 +108,7 @@ public:
     void Destruct();                                                            // 0x00014310
     void ChangeAnimation(int bank, int index);                                  // 0x00014240
 };
-static_assert(offsetof(ActAnimGroup, bank) == 0x1c, "an ActAnimGroup's bank is at +0x1c");
-static_assert(sizeof(ActAnimGroup) == 0x20, "an ActAnimGroup is 0x20 bytes");
+LAYOUT_32(offsetof(ActAnimGroup, bank) == 0x1c, "an ActAnimGroup's bank is at +0x1c");
+LAYOUT_32(sizeof(ActAnimGroup) == 0x20, "an ActAnimGroup is 0x20 bytes");
 
 #endif // DRIVING_ANIM_ANIMATIONDATABASE_H_

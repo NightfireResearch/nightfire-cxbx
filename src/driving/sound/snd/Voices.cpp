@@ -3,6 +3,8 @@
 #include "System.h"
 #include "../DirectSound.h"
 #include "SndGlobals.h"
+#include "Filters.h"     // the filter node sizes
+#include "Reverb.h"      // the reverb node sizes
 
 #include <stddef.h>
 #include <stdint.h>
@@ -36,7 +38,11 @@ const PanReverbTableBlock PanReverbTables = {
         0x38ee, 0x39a4, 0x3a51, 0x3af4, 0x3b8e, 0x3c1f, 0x3ca6, 0x3d24, 0x3d97, 0x3e01, 0x3e61, 0x3eb7,
         0x3f04, 0x3f46, 0x3f7e, 0x3fac, 0x3fd0, 0x3fea, 0x3ff9, 0x3fff,
     },
-    { 32, 40, 88, 88, 88, 64, 32, 52, 36, 40 },
+    {
+        sizeof(SND::SFilterSource), sizeof(SND::SFilterLPFRC), sizeof(SND::SFilterFIR8), sizeof(SND::SFilterFIR8),
+        sizeof(SND::SFilterFIR8), sizeof(SND::FxResonatorNode), sizeof(SND::FxGainNode), sizeof(SND::FxAllpassNode),
+        sizeof(SND::FxSumNode), sizeof(SND::FxTeeNode),
+    },
     {
         { 1, 0, 0, 0, 0, 0 }, { 1, 0, 0, 0, 0, 0 }, { 1, 0, 0, 0, 0, 0 },
         { 1, 0, 0, 0, 0, 0 }, { 1, 0, 0, 0, 0, 0 }, { 1, 0, 0, 0, 0, 0 },

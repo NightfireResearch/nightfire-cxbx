@@ -10,6 +10,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 struct D3DPixelContainer;
 namespace EAGL {
@@ -42,8 +43,8 @@ public:
     // `spread` along one of the four diagonals
     void MakeTexCopy(EAGL::TAR *source, int copies, float spread);                              // 0x0007f870
 };
-static_assert(sizeof(ROffscreenBuffer) == 0x20, "ROffscreenBuffer is 0x20 bytes");
-static_assert(offsetof(ROffscreenBuffer, colourTarget) == 0x0c && offsetof(ROffscreenBuffer, bitDepth) == 0x1c,
-              "ROffscreenBuffer layout");
+LAYOUT_32(sizeof(ROffscreenBuffer) == 0x20, "ROffscreenBuffer is 0x20 bytes");
+LAYOUT_32(offsetof(ROffscreenBuffer, colourTarget) == 0x0c && offsetof(ROffscreenBuffer, bitDepth) == 0x1c,
+          "ROffscreenBuffer layout");
 
 #endif // DRIVING_RENDER_OFFSCREENBUFFER_H_

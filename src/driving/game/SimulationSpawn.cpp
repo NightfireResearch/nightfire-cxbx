@@ -38,14 +38,15 @@
 #include "../world/CollisionManager.h"      // fgCollisionMgr
 #include "../world/CollisionQueries.h"      // PointerUninitializedCopy
 #include "../world/SoundMap.h"              // MapBuyHead
+#include "../../common/xbeClass.h"          // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // Simulation part 2 (0x000b4080-0x000b60a0), ported from the listing: the constructor and destructor, Reset and the
 // step, spawning and deleting objects, the tracked instances, and the vector reserve and dead set insert they use.
 // ---------------------------------------------------------------------------------------------------------------
 
-static_assert(sizeof(PBondCar) == 0x420 && sizeof(PHelicopter) == 0x140 && sizeof(Newton) == 0x90,
-              "the spawned objects' allocations");
+LAYOUT_32(sizeof(PBondCar) == 0x420 && sizeof(PHelicopter) == 0x140 && sizeof(Newton) == 0x90,
+          "the spawned objects' allocations");
 
 namespace {
 

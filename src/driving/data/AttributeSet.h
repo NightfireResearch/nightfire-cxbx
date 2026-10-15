@@ -7,6 +7,7 @@
 // mark the value used. See AttributeSet.cpp.
 
 #include "AttributeSystem.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 #include <stdint.h>
 
@@ -39,7 +40,7 @@ public:
     // The extension structure of `type` kept under `key`, made in this collection if it has none.
     void *LookupStruct(const char *key, uint32_t type, bool *found);                            // 0x00058420
 };
-static_assert(sizeof(AttributeSet) == 4, "an AttributeSet is a pointer");
+LAYOUT_32(sizeof(AttributeSet) == 4, "an AttributeSet is a pointer");
 
 extern const AttributeVector DefaultVector;   // (0, 0, 0, 1): LookupVector's answer for a missing key
 

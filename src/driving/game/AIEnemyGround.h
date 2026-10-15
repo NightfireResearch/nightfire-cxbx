@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 #include "AIEnemy.h"
+#include "../../common/xbeClass.h" // LAYOUT_32
 
 class WCollider;
 struct WTargetable;
@@ -96,15 +97,15 @@ public:
     // bearing's side and bucket (targetSide, targetBearing) and targetAbove
     int TargetIsAcquired();                                                         // 35 0x0001f8f0
 };
-static_assert(sizeof(AICharacterEnemyGround) == 0x1c0, "a ground enemy is 0x1c0 bytes");
-static_assert(offsetof(AICharacterEnemyGround, threatSide) == 0x14c &&
-              offsetof(AICharacterEnemyGround, threatForward) == 0x160 &&
-              offsetof(AICharacterEnemyGround, targetAbove) == 0x174 &&
-              offsetof(AICharacterEnemyGround, claustrophobic) == 0x180 &&
-              offsetof(AICharacterEnemyGround, groundHeight) == 0x190 &&
-              offsetof(AICharacterEnemyGround, previousPosition) == 0x1a0 &&
-              offsetof(AICharacterEnemyGround, collider) == 0x1b0, "AICharacterEnemyGround layout");
+LAYOUT_32(sizeof(AICharacterEnemyGround) == 0x1c0, "a ground enemy is 0x1c0 bytes");
+LAYOUT_32(offsetof(AICharacterEnemyGround, threatSide) == 0x14c &&
+          offsetof(AICharacterEnemyGround, threatForward) == 0x160 &&
+          offsetof(AICharacterEnemyGround, targetAbove) == 0x174 &&
+          offsetof(AICharacterEnemyGround, claustrophobic) == 0x180 &&
+          offsetof(AICharacterEnemyGround, groundHeight) == 0x190 &&
+          offsetof(AICharacterEnemyGround, previousPosition) == 0x1a0 &&
+          offsetof(AICharacterEnemyGround, collider) == 0x1b0, "AICharacterEnemyGround layout");
 
-const uint32_t kAICharacterEnemyGroundVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_AICharacterEnemyGround));
+void **const kAICharacterEnemyGroundVtable = Vtable_AICharacterEnemyGround;
 
 #endif // DRIVING_GAME_AIENEMYGROUND_H_

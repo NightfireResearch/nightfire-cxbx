@@ -11,6 +11,7 @@
 
 #include "RenderContext.h"
 #include "RuntimeAlloc.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 class DynamicLoader;
 
@@ -101,7 +102,7 @@ struct TARExtension {
     void SwapShape(uint8_t *shape);                                          // 0x000ec420 (invented)
     void Share(TAR *other);                                                  // 0x000ec530 (invented)
 };
-static_assert(sizeof(TARExtension) == 4, "the extension handle is one pointer");
+LAYOUT_32(sizeof(TARExtension) == 4, "the extension handle is one pointer");
 
 struct TAR {                         // 0x4c ("EAGL::TAR new"); arrays of them are 0x50 apart
     uint32_t stage;                  // +0x00 texture stage

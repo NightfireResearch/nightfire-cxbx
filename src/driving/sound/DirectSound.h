@@ -8,6 +8,7 @@
 // original entry points.
 
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // The objects: opaque to the game, the seam's own (dsndSeam.cpp)
 struct IDirectSound;
@@ -53,7 +54,7 @@ struct DsBufferDesc {
     DsMixBins *mixBins;          // +0x10
     uint32_t inputMixBin;        // +0x14
 };
-static_assert(sizeof(DsBufferDesc) == 0x18, "the buffer description is 0x18 bytes here");
+LAYOUT_32(sizeof(DsBufferDesc) == 0x18, "the buffer description is 0x18 bytes here");
 
 // DSI3DL2LISTENER (0x30): an I3DL2 reverb's listener properties
 struct DsI3dl2Listener {

@@ -4,6 +4,7 @@
 #include "Profiler.h"
 #include "Realgraph.h"
 #include "../../helpers.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 #include <ctype.h>
 #include <stdint.h>
@@ -366,7 +367,7 @@ struct HashTable {          // 0x428, "EAGL::HashPointer new"
     int32_t *chain;         // +0x420
     LoaderResolver resolver;   // +0x424
 };
-static_assert(sizeof(HashTable) == 0x428, "a HashTable is 0x428 bytes");
+LAYOUT_32(sizeof(HashTable) == 0x428, "a HashTable is 0x428 bytes");
 
 // The ELF hash of a symbol name, to 8 bits (0x000e51d0: name in EDX).
 static uint32_t ElfHash(const char *name) {

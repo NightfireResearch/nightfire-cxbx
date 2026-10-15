@@ -7,6 +7,7 @@
 
 #include "Filters.h"
 #include "FiltersUnused.h"
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 #include <stddef.h>
 #include <stdint.h>
@@ -32,7 +33,7 @@ struct MixVoice {
     SFilterLPFRC *lowpass;           // +0x58
     SFilterFIR8 *highpass;           // +0x5c
 };
-static_assert(sizeof(MixVoice) == 0x60, "a MIX voice is 0x60 bytes");
+LAYOUT_32(sizeof(MixVoice) == 0x60, "a MIX voice is 0x60 bytes");
 
 enum MixVoiceState : uint8_t {
     kMixVoiceFree = 0,
@@ -81,7 +82,7 @@ struct ReverbTap {
     float lowpassKeep;               // +0x1c
     float lowpassInput;              // +0x20
 };
-static_assert(sizeof(ReverbTap) == 0x24, "a reverb tap is 0x24 bytes");
+LAYOUT_32(sizeof(ReverbTap) == 0x24, "a reverb tap is 0x24 bytes");
 
 // The head of an fx2 description (sound.md 3.6), copied to SndMix.fx2Header: per output configuration (the
 // channel count - 1) the number of node entries and of connections, big-endian
@@ -153,12 +154,12 @@ struct MixState {
     CodaNewFn codaNew;               // +0x1c64 0x002475f4 CODA_New: SNDMEMI_alloc's thunk
     CodaDeleteFn codaDelete;         // +0x1c68 0x002475f8 CODA_Delete
 };
-static_assert(offsetof(MixState, scratchRaw) == 0x120, "the scratch allocations are at 0x00245ab0");
-static_assert(offsetof(MixState, voices) == 0x254, "MixList is at 0x00245be4");
-static_assert(offsetof(MixState, taps) == 0x270, "the reverb taps are at 0x00245c00");
-static_assert(offsetof(MixState, fxSend) == 0x440, "sndfx is at 0x00245dd0");
-static_assert(offsetof(MixState, fxIdle) == 0x1c40, "the FX idle count is at 0x002475d0");
-static_assert(sizeof(MixState) == 0x1c6c, "the mixer's globals end at 0x002475fc");
+LAYOUT_32(offsetof(MixState, scratchRaw) == 0x120, "the scratch allocations are at 0x00245ab0");
+LAYOUT_32(offsetof(MixState, voices) == 0x254, "MixList is at 0x00245be4");
+LAYOUT_32(offsetof(MixState, taps) == 0x270, "the reverb taps are at 0x00245c00");
+LAYOUT_32(offsetof(MixState, fxSend) == 0x440, "sndfx is at 0x00245dd0");
+LAYOUT_32(offsetof(MixState, fxIdle) == 0x1c40, "the FX idle count is at 0x002475d0");
+LAYOUT_32(sizeof(MixState) == 0x1c6c, "the mixer's globals end at 0x002475fc");
 
 void CODASetNew(CodaNewFn allocate);                                         // 0x001446e0
 void CODASetDelete(CodaDeleteFn release);                                    // 0x001446f0

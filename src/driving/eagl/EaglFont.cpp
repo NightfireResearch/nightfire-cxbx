@@ -7,6 +7,7 @@
 #include "Tar.h"
 #include "View.h"
 #include "../gfx/D3D8Shaders.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 #include <bit>
 #include <stddef.h>
@@ -51,7 +52,7 @@ struct DrawParameters {
     uint32_t z;                      // +0x28 font +0x28 (float bits)
     uint32_t w;                      // +0x2c font +0x2c
 };
-static_assert(sizeof(DrawParameters) == 0x30, "the driver's statics run to 0x002400e8");
+LAYOUT_32(sizeof(DrawParameters) == 0x30, "the driver's statics run to 0x002400e8");
 
 // XBE_GLOBAL(0x002400b8, 0x30)
 DrawParameters Params;

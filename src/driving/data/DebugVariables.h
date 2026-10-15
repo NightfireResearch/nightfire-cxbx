@@ -24,6 +24,7 @@
 #include <stdint.h>
 
 #include "Carp.h"                       // CARP::CountedString
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 struct DebugData;
 
@@ -43,7 +44,7 @@ struct DebugItem {
     char* Name();                                                       // slot 15              // 0x00037a60
     int IsHidden();                                                     // slot 17: flag bit 1  // 0x00037a80
 };
-static_assert(sizeof(DebugItem) == 0x10, "DebugItem");
+LAYOUT_32(sizeof(DebugItem) == 0x10, "DebugItem");
 
 // A debug-menu item with a value (Ghidra: DebugData): where its value is - indexed by another variable when
 // `indexer` is set.
@@ -62,7 +63,7 @@ struct DebugData : DebugItem {
     int IsIndexed();                            // slot 18 (DebugItem.cpp)                              // 0x00037ac0
     DebugData* GetIndexer();                    // slot 19 (DebugItem.cpp)                              // 0x00037ab0
 };
-static_assert(offsetof(DebugData, indexer) == 0x10 && sizeof(DebugData) == 0x1c, "DebugData");
+LAYOUT_32(offsetof(DebugData, indexer) == 0x10 && sizeof(DebugData) == 0x1c, "DebugData");
 
 // DebugVariable<unsigned int> (0x2c bytes): an index variable, with its range, step and value names.
 struct DebugUIntVariable : DebugData {
@@ -79,7 +80,7 @@ struct DebugUIntVariable : DebugData {
     char* AsString(char *out);                     // 0x000396d0 slot 9
     void SetFromString(const char *text);          // 0x0003a3f0 slot 20
 };
-static_assert(sizeof(DebugUIntVariable) == 0x2c, "DebugUIntVariable");
+LAYOUT_32(sizeof(DebugUIntVariable) == 0x2c, "DebugUIntVariable");
 
 extern DebugUIntVariable *CurrentIndexer;   // the index dbindex set, until dbendindex
 

@@ -24,10 +24,10 @@ int32_t NextHardCollision;
 
 namespace {
 
-const uint32_t kASceneObjVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_ASceneObj));
-const uint32_t kASentryVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_ASentry));
-const uint32_t kASmackableVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_ASmackable));
-const uint32_t kAWorldSoundVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_00193ae8));
+void **const kASceneObjVtable = Vtable_ASceneObj;
+void **const kASentryVtable = Vtable_ASentry;
+void **const kASmackableVtable = Vtable_ASmackable;
+void **const kAWorldSoundVtable = Vtable_00193ae8;
 
 // The banks these sounds take their patches from (names ours)
 enum {

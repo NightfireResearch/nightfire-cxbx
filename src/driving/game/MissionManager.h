@@ -18,6 +18,7 @@
 #include "../data/Carp.h"               // CARP::AIElement
 #include "../data/CoordConvert.h"       // Coord4
 #include "../world/Targeting.h"         // PointerList
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class ActionQueue;
 struct LaunchPage;
@@ -408,18 +409,18 @@ public:
     // and accumulated
     void TallyScores(LaunchPage *page, bool endOfMission);                              // 0x000b7470
 };
-static_assert(sizeof(SMissionManager) == 0x1c70, "SMissionManager is 0x1c70 bytes");
-static_assert(offsetof(SMissionManager, stageRules) == 0x3c && offsetof(SMissionManager, timers) == 0x360 &&
-              offsetof(SMissionManager, events) == 0x434 && offsetof(SMissionManager, missionState) == 0x474 &&
-              offsetof(SMissionManager, autoDrive) == 0x478 && offsetof(SMissionManager, driveMissile) == 0x47c &&
-              offsetof(SMissionManager, actionQueue) == 0x490 && offsetof(SMissionManager, playerHealth) == 0x49c &&
-              offsetof(SMissionManager, difficulty) == 0x4dc && offsetof(SMissionManager, cinematicMode) == 0x4f0 &&
-              offsetof(SMissionManager, magicCounters) == 0x508 && offsetof(SMissionManager, stylinCount) == 0x708 &&
-              offsetof(SMissionManager, superEasy) == 0x710 && offsetof(SMissionManager, objectiveTarget) == 0x71c &&
-              offsetof(SMissionManager, startScores) == 0x738 && offsetof(SMissionManager, scores) == 0x768 &&
-              offsetof(SMissionManager, timedActions) == 0x79c && offsetof(SMissionManager, sections) == 0x85c &&
-              offsetof(SMissionManager, sectionCount) == 0x1c5c && offsetof(SMissionManager, carType) == 0x1c64,
-              "SMissionManager layout");
+LAYOUT_32(sizeof(SMissionManager) == 0x1c70, "SMissionManager is 0x1c70 bytes");
+LAYOUT_32(offsetof(SMissionManager, stageRules) == 0x3c && offsetof(SMissionManager, timers) == 0x360 &&
+          offsetof(SMissionManager, events) == 0x434 && offsetof(SMissionManager, missionState) == 0x474 &&
+          offsetof(SMissionManager, autoDrive) == 0x478 && offsetof(SMissionManager, driveMissile) == 0x47c &&
+          offsetof(SMissionManager, actionQueue) == 0x490 && offsetof(SMissionManager, playerHealth) == 0x49c &&
+          offsetof(SMissionManager, difficulty) == 0x4dc && offsetof(SMissionManager, cinematicMode) == 0x4f0 &&
+          offsetof(SMissionManager, magicCounters) == 0x508 && offsetof(SMissionManager, stylinCount) == 0x708 &&
+          offsetof(SMissionManager, superEasy) == 0x710 && offsetof(SMissionManager, objectiveTarget) == 0x71c &&
+          offsetof(SMissionManager, startScores) == 0x738 && offsetof(SMissionManager, scores) == 0x768 &&
+          offsetof(SMissionManager, timedActions) == 0x79c && offsetof(SMissionManager, sections) == 0x85c &&
+          offsetof(SMissionManager, sectionCount) == 0x1c5c && offsetof(SMissionManager, carType) == 0x1c64,
+          "SMissionManager layout");
 
 extern SMissionManager *glbMissionManager;
 // Set nowhere in the game; read by EPlayerLose, SWeaponManager::FireWeapon and ResetCharInfo

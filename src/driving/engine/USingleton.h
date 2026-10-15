@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // USingleton: the base of the renderer's and the game's managers (the fog, the light, state, texture context and
@@ -46,7 +47,7 @@ struct SingletonVector {
     // _Xlen (0x00059ca0): throws std::length_error("vector<T> too long").
     static void Xlen();
 };
-static_assert(sizeof(SingletonVector) == 0x10, "a vector is 16 bytes");
+LAYOUT_32(sizeof(SingletonVector) == 0x10, "a vector is 16 bytes");
 
 class USingletonManager {
 public:
@@ -58,7 +59,7 @@ public:
     // The static's destructor, registered with atexit (0x00059c30): kills them all, frees the vector.
     void Destruct();
 };
-static_assert(sizeof(USingletonManager) == 0x10, "the singleton manager is a vector");
+LAYOUT_32(sizeof(USingletonManager) == 0x10, "the singleton manager is a vector");
 
 // The singleton manager, made on first use (0x00059d20).
 USingletonManager* SingletonManager();

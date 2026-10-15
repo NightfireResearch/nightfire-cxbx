@@ -16,6 +16,7 @@
 #include "ParticleCache.h"
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../data/Tree.h"               // Tree, TreeNode, TreePair
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class RParticleSystem;
 struct RParticleCreatorVtable;
@@ -76,10 +77,10 @@ struct RParticleEmitter {
     int32_t body;                       // +0x3c a rigid body slot, 0xff (or -1) for none; its low byte is handed
                                         //       to the particles (RParticle::body)
 };
-static_assert(sizeof(RParticleEmitter) == 0x40, "an emitter is 0x40 bytes");
-static_assert(offsetof(RParticleEmitter, system) == 0x18 && offsetof(RParticleEmitter, side) == 0x20 &&
-              offsetof(RParticleEmitter, systemTag) == 0x2c && offsetof(RParticleEmitter, direction) == 0x30 &&
-              offsetof(RParticleEmitter, body) == 0x3c, "RParticleEmitter layout");
+LAYOUT_32(sizeof(RParticleEmitter) == 0x40, "an emitter is 0x40 bytes");
+LAYOUT_32(offsetof(RParticleEmitter, system) == 0x18 && offsetof(RParticleEmitter, side) == 0x20 &&
+          offsetof(RParticleEmitter, systemTag) == 0x2c && offsetof(RParticleEmitter, direction) == 0x30 &&
+          offsetof(RParticleEmitter, body) == 0x3c, "RParticleEmitter layout");
 
 // The two maps of the particle code, std::map<uint32_t, T *> as the game compiled it (data/Tree.h's layout): the
 // manager's systems by key, and the library's types by tag. Most of their code is one compiled copy for both; the
@@ -97,7 +98,7 @@ public:
 
     TreeNode** Find(TreeNode **result, const uint32_t *key);
 };
-static_assert(sizeof(ParticleMap) == 12, "a map is 12 bytes");
+LAYOUT_32(sizeof(ParticleMap) == 12, "a map is 12 bytes");
 
 // One pointer, constructed from it: the constructor every such class shares, the linker having folded them (Ghidra
 // files it under ActionRef, engine/ActionQueue.hpp's). The original manager's destructor, which inlines the
@@ -144,10 +145,10 @@ public:
     // source copied to data, then data's values put in the form the Xbox code reads.
     static void MungeDataForPlatform(RParticleSystemData *source, RParticleSystemData *data);   // 0x000ab460
 };
-static_assert(sizeof(RParticleLibrary) == 8, "RParticleLibrary is 8 bytes");
-static_assert(offsetof(RParticleLibrary::RPartLibraryData, count) == 0xb000 &&
-              offsetof(RParticleLibrary::RPartLibraryData, types) == 0xb004 &&
-              sizeof(RParticleLibrary::RPartLibraryData) == 0xb010, "RPartLibraryData layout");
+LAYOUT_32(sizeof(RParticleLibrary) == 8, "RParticleLibrary is 8 bytes");
+LAYOUT_32(offsetof(RParticleLibrary::RPartLibraryData, count) == 0xb000 &&
+          offsetof(RParticleLibrary::RPartLibraryData, types) == 0xb004 &&
+          sizeof(RParticleLibrary::RPartLibraryData) == 0xb010, "RPartLibraryData layout");
 
 // RParticleSystem's vtable (RMovableParticleSystem's, 0x00192da8)
 struct RParticleSystemVtable {
@@ -205,11 +206,11 @@ public:
     // Vtable slot 1: `ticks` ticks of spawning.
     void Update(int ticks);                                                                     // 0x000a1f00
 };
-static_assert(sizeof(RParticleSystem) == 0x70, "RParticleSystem is 0x70 bytes");
-static_assert(offsetof(RParticleSystem, axis) == 0x10 && offsetof(RParticleSystem, keepAlive) == 0x2c &&
-              offsetof(RParticleSystem, data) == 0x40 && offsetof(RParticleSystem, systemFlags) == 0x4a &&
-              offsetof(RParticleSystem, rate) == 0x54 && offsetof(RParticleSystem, index) == 0x68,
-              "RParticleSystem layout");
+LAYOUT_32(sizeof(RParticleSystem) == 0x70, "RParticleSystem is 0x70 bytes");
+LAYOUT_32(offsetof(RParticleSystem, axis) == 0x10 && offsetof(RParticleSystem, keepAlive) == 0x2c &&
+          offsetof(RParticleSystem, data) == 0x40 && offsetof(RParticleSystem, systemFlags) == 0x4a &&
+          offsetof(RParticleSystem, rate) == 0x54 && offsetof(RParticleSystem, index) == 0x68,
+          "RParticleSystem layout");
 
 // RParticleSystem::RParticleCreator's vtable (0x00193c64)
 struct RParticleCreatorVtable {
@@ -253,8 +254,8 @@ public:
     // `count` particles of `data` at `position`, going `direction` (the manager is fgParticleSystems, not this).
     void CreateParticles(RParticleSystemData *data, const Coord3 *position, const Coord3 *direction, int count);  // 0x000a1c60
 };
-static_assert(sizeof(RParticleSystemManager) == 0x10030, "RParticleSystemManager is 0x10030 bytes");
-static_assert(offsetof(RParticleSystemManager, cache) == 0x10, "RParticleSystemManager layout");
+LAYOUT_32(sizeof(RParticleSystemManager) == 0x10030, "RParticleSystemManager is 0x10030 bytes");
+LAYOUT_32(offsetof(RParticleSystemManager, cache) == 0x10, "RParticleSystemManager layout");
 
 extern RParticleSystemManager *fgParticleSystems;
 extern RParticleSystemData DefaultSystem;   // Reload's 'dflt'

@@ -8,6 +8,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 namespace SND {
 
@@ -41,7 +42,7 @@ struct SFilterNode {                 // 0x1c (MW: SFILTERNODE)
     uint8_t requester;               // +0x1a passed upstream as the fifth argument (the connection's slot)
     uint8_t flags;                   // +0x1b
 };
-static_assert(sizeof(SFilterNode) == 0x1c, "SFilterNode");
+LAYOUT_32(sizeof(SFilterNode) == 0x1c, "SFilterNode");
 
 // What SFILTER_add takes (SNDPLATFORM_filteradd's filter description)
 struct SFilterDesc {
@@ -53,7 +54,7 @@ struct SFilterDesc {
     SFilterProcess process;          // +0x10
     SFilterRestore restore;          // +0x14
 };
-static_assert(sizeof(SFilterDesc) == 0x18, "SFilterDesc");
+LAYOUT_32(sizeof(SFilterDesc) == 0x18, "SFilterDesc");
 
 struct SFilterLPFRC {                // 0x28, SFILTER_lpfRC: y = y * a + b * x
     SFilterNode node;
@@ -61,7 +62,7 @@ struct SFilterLPFRC {                // 0x28, SFILTER_lpfRC: y = y * a + b * x
     float a;                         // +0x20 feedback
     float b;                         // +0x24 input gain
 };
-static_assert(sizeof(SFilterLPFRC) == 0x28, "SFilterLPFRC");
+LAYOUT_32(sizeof(SFilterLPFRC) == 0x28, "SFilterLPFRC");
 
 // The FIR state the design and the filter take (SFilterFIR8 from +0x1c)
 struct FirState {
@@ -77,7 +78,7 @@ struct SFilterFIR8 {                 // 0x58
     SFilterNode node;
     FirState fir;                    // +0x1c
 };
-static_assert(sizeof(SFilterFIR8) == 0x58, "SFilterFIR8");
+LAYOUT_32(sizeof(SFilterFIR8) == 0x58, "SFilterFIR8");
 
 // The resampler kernel: cdecl, seven stack arguments (FUN_001462b0)
 typedef void (*RsfKernel)(int count, const float *src, float *dst, int *index, uint32_t *fraction, int stepInt,
@@ -92,13 +93,13 @@ struct SFilterRSF {                  // 0x3c, SFILTER_rsf
     int16_t offset;                  // +0x2a history offset (always 0: only rsfinit writes it)
     float history[4];                // +0x2c the last four input samples
 };
-static_assert(sizeof(SFilterRSF) == 0x3c, "SFilterRSF");
+LAYOUT_32(sizeof(SFilterRSF) == 0x3c, "SFilterRSF");
 
 struct SFilterSource {               // 0x20, PS2: SFILTER_src
     SFilterNode node;
     const float *data;               // +0x1c the next sample
 };
-static_assert(sizeof(SFilterSource) == 0x20, "SFilterSource");
+LAYOUT_32(sizeof(SFilterSource) == 0x20, "SFilterSource");
 
 // What the unpacker inits take (MIX_playinit's description of the sample, built from its arguments)
 struct UnpackInfo {
@@ -113,7 +114,7 @@ struct UnpackInfo {
     uint32_t quality;                // +0x20 MixQuality
     SFilterGetFrame getFrame;        // +0x24 written by the bank unpackers' inits (the original's address)
 };
-static_assert(sizeof(UnpackInfo) == 0x28, "UnpackInfo");
+LAYOUT_32(sizeof(UnpackInfo) == 0x28, "UnpackInfo");
 
 // SND::CEAXABLKDecf (module I), only its size and address matter here
 struct CEAXABLKDecf;
@@ -129,7 +130,7 @@ struct SFilterXAPF {                 // 0x38, SFILTER_unpackxapf: EA-XA from str
     uint8_t channel;                 // +0x34 the sample channel
     uint8_t pad35[3];
 };
-static_assert(sizeof(SFilterXAPF) == 0x38, "SFilterXAPF");
+LAYOUT_32(sizeof(SFilterXAPF) == 0x38, "SFilterXAPF");
 
 }  // namespace SND
 

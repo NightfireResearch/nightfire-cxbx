@@ -102,7 +102,7 @@ protected:
     // The animation from the bank, blended in a quarter of a second through the cross-fade (made if there is none)
     void CrossFadeTo(int bank, int index);
 };
-static_assert(sizeof(AICharacterEnemy) == 0x140, "the enemies' base adds no fields");
+LAYOUT_32(sizeof(AICharacterEnemy) == 0x140, "the enemies' base adds no fields");
 
 // ---------------------------------------------------------------------------------------------------------------
 // AICharacterEnemyRider (the name is ours): an enemy in a car
@@ -128,7 +128,7 @@ public:
 protected:
     RigidBody *VehicleBody();
 };
-static_assert(offsetof(AICharacterEnemyRider, vehicle) == 0x140, "AICharacterEnemyRider layout");
+LAYOUT_32(offsetof(AICharacterEnemyRider, vehicle) == 0x140, "AICharacterEnemyRider layout");
 
 // ---------------------------------------------------------------------------------------------------------------
 // AICharacterEnemyDriver
@@ -151,8 +151,8 @@ public:
     // The hands kept on the wheel: the IK targets and the wrists' poses from the effects
     void HandleInterrupts();                                                        // 30 0x0001d840
 };
-static_assert(sizeof(AICharacterEnemyDriver) == 0x150, "a driver is 0x150 bytes");
+LAYOUT_32(sizeof(AICharacterEnemyDriver) == 0x150, "a driver is 0x150 bytes");
 
-const uint32_t kAICharacterEnemyDriverVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_AICharacterEnemyDriver));
+void **const kAICharacterEnemyDriverVtable = Vtable_AICharacterEnemyDriver;
 
 #endif // DRIVING_GAME_AIENEMY_H_

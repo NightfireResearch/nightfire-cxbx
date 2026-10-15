@@ -17,6 +17,7 @@
 #include "../../common/xbeOverload.h"        // XbeAddress
 #include "../audio/Bank.h"                  // SharedTreeIterator
 #include "../engine/ActionQueue.hpp"        // FillQueuePointers
+#include "../../common/xbeClass.h"          // LAYOUT_32
 
 #include <bit>
 #include <math.h>
@@ -727,8 +728,8 @@ bool WCollisionMgr::GetClosestIntersectingBarrier(const BarrierList *list, const
         }
     }
     if (best != NULL) {
-        static_assert(offsetof(WorldCollisionInfo, groupId) + 4 - offsetof(WorldCollisionInfo, segmentStart) ==
-                      sizeof(BarrierListEntry), "a barrier hit carries the list's entry");
+        LAYOUT_32(offsetof(WorldCollisionInfo, groupId) + 4 - offsetof(WorldCollisionInfo, segmentStart) ==
+                  sizeof(BarrierListEntry), "a barrier hit carries the list's entry");
         memcpy(&info->segmentStart, best, sizeof(BarrierListEntry));
         info->hitType = kHitBarrier;
     }

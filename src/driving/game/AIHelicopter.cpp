@@ -994,7 +994,7 @@ void AIHelicopter::Update() {
 // FUNC_AT(0x00032a60)
 AIHelicopter* AIHelicopter::Construct() {
     AIVehicle::Construct();
-    vtable = reinterpret_cast<void **>(kAIHelicopterVtable);
+    vtable = kAIHelicopterVtable;
     targetBeacon = NULL;
     WRoadNav *nav = static_cast<WRoadNav *>(UMemory::FastAlloc(sizeof(WRoadNav), "WRoadNav"));
     localNav = nav != NULL ? nav->Construct() : NULL;
@@ -1004,7 +1004,7 @@ AIHelicopter* AIHelicopter::Construct() {
 
 // FUNC_AT(0x000321d0)
 void AIHelicopter::Destruct() {
-    vtable = reinterpret_cast<void **>(kAIHelicopterVtable);
+    vtable = kAIHelicopterVtable;
     DisableTargetBeacon();
     if (localNav != NULL) {
         localNav->Destruct();

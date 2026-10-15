@@ -7,6 +7,7 @@
 #include "XboxStartup.h"
 #include "XboxXapi.h"
 #include "../devtools/SndLockstep.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 #include <windows.h>
 #include <stdint.h>
@@ -58,7 +59,7 @@ struct LockQueue {           // 0x38
     int keyArg;              // +0x14
     RealMutex mutex;         // +0x18
 };
-static_assert(sizeof(LockQueue) == 0x38, "LockQueue is 0x38 bytes");
+LAYOUT_32(sizeof(LockQueue) == 0x38, "LockQueue is 0x38 bytes");
 
 struct FsOp {                // 0x30, numOps of them in the FILESYS block
     FsOp *next;              // +0x00 queue link
@@ -76,7 +77,7 @@ struct FsOp {                // 0x30, numOps of them in the FILESYS block
     int arg1;                // +0x28
     int arg2;                // +0x2c
 };
-static_assert(sizeof(FsOp) == 0x30, "FsOp is 0x30 bytes");
+LAYOUT_32(sizeof(FsOp) == 0x30, "FsOp is 0x30 bytes");
 
 struct FsWorker {            // 0xb8; two in the FILESYS block, only worker 0 ever used
     int alive;               // +0x00 set by the worker thread when it starts
@@ -90,7 +91,7 @@ struct FsWorker {            // 0xb8; two in the FILESYS block, only worker 0 ev
     unsigned seq;            // +0xb0 24 bits, never 0
     int ceiling;             // +0xb4 the worker only starts ops with priority <= this
 };
-static_assert(sizeof(FsWorker) == 0xb8, "FsWorker is 0xb8 bytes");
+LAYOUT_32(sizeof(FsWorker) == 0xb8, "FsWorker is 0xb8 bytes");
 
 struct BigFile {             // 0x118, FILE_malloc'd "BigFile"
     BigFile *next;           // +0x00 link in the big list
@@ -101,7 +102,7 @@ struct BigFile {             // 0x118, FILE_malloc'd "BigFile"
     int dirSize;             // +0x14
     char name[0x100];        // +0x18 the archive's path as given, matched against the part of a path before '|'
 };
-static_assert(sizeof(BigFile) == 0x118, "BigFile is 0x118 bytes");
+LAYOUT_32(sizeof(BigFile) == 0x118, "BigFile is 0x118 bytes");
 
 struct FileSlot {            // 16 bytes; a slot handle is ~index
     HANDLE handle;           // +0x00 1 while claimed but not yet open, 0 free
@@ -109,7 +110,7 @@ struct FileSlot {            // 16 bytes; a slot handle is ~index
     int size;                // +0x08
     int base;                // +0x0c 0 for a loose file, the entry's offset for a file inside an archive
 };
-static_assert(sizeof(FileSlot) == 16, "FileSlot is 16 bytes");
+LAYOUT_32(sizeof(FileSlot) == 16, "FileSlot is 16 bytes");
 
 #pragma pack(pop)
 
@@ -1513,7 +1514,7 @@ struct AsyncRequest {        // 0x30
     int remaining;           // +0x28
     uint8_t *write;          // +0x2c
 };
-static_assert(sizeof(AsyncRequest) == 0x30, "AsyncRequest is 0x30 bytes");
+LAYOUT_32(sizeof(AsyncRequest) == 0x30, "AsyncRequest is 0x30 bytes");
 #pragma pack(pop)
 
 // The original returns whatever was left in EAX; nobody reads it.

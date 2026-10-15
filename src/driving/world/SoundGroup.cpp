@@ -22,8 +22,8 @@
 
 namespace {
 
-const uint32_t kAWorldSoundVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_00193ae8));
-const uint32_t kWSoundVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_00193ac4));
+void **const kAWorldSoundVtable = Vtable_00193ae8;
+void **const kWSoundVtable = Vtable_00193ac4;
 
 SoundMapNode *Next(SoundMapNode *node) {
     return reinterpret_cast<SoundMapNode *>(TreeNext(reinterpret_cast<TreeNode *>(node)));

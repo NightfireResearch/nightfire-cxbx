@@ -35,7 +35,7 @@ bool FPedLinesWrapped;
 
 namespace {
 
-const uint32_t kACharacterVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_ACharacter));
+void **const kACharacterVtable = Vtable_ACharacter;
 
 const int kSpeechBankSlot = 7;  // (name ours)
 

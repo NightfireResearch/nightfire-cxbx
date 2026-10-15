@@ -17,6 +17,7 @@
 #include "../eagl/GeoPrimState.h"
 #include "../engine/CoreContainers.h"     // StateRefSet, StateRefValue: the set of states in use
 #include "../engine/USingleton.h"
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 class RStateManager;
 
@@ -98,7 +99,7 @@ struct StateRefTree : StateRefSet {
                           const StateRefValue *value, uint8_t color);                               // 0x00093260
     StateRefNode* BuyHead();                                                                        // 0x00093310
 };
-static_assert(sizeof(StateRefTree) == 0xc, "a set is 12 bytes");
+LAYOUT_32(sizeof(StateRefTree) == 0xc, "a set is 12 bytes");
 
 struct StateRefIterator {
     StateRefNode *node;
@@ -143,8 +144,8 @@ public:
     // Answers the text after the pair, or NULL when there is no text or no tag.
     const char* ParseFirstStateTag(const char *text, EAGL::GeoPrimState *state, int pass, bool *handled);  // 0x00092280
 };
-static_assert(sizeof(RStateManager) == 0x14, "RStateManager is 0x14 bytes");
-static_assert(offsetof(RStateManager, symbols) == 4 && offsetof(RStateManager, lookup) == 0x10, "RStateManager layout");
+LAYOUT_32(sizeof(RStateManager) == 0x14, "RStateManager is 0x14 bytes");
+LAYOUT_32(offsetof(RStateManager, symbols) == 4 && offsetof(RStateManager, lookup) == 0x10, "RStateManager layout");
 
 // The singleton (made by its USingleton Init, 0x0008b5b0..0x0008bf30)
 extern RStateManager *TheStateManager;

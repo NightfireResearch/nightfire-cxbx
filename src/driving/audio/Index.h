@@ -19,6 +19,7 @@
 
 #include "../data/Tree.h"
 #include "../engine/RbTree.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // ---- std::map<int, const char *>
 
@@ -83,7 +84,7 @@ struct AIndexMap {
     AIndexMap* Construct();                                                             // 0x00127620
     void Destruct();                                                                    // 0x00127580
 };
-static_assert(sizeof(AIndexMap) == 0x18, "AIndexMap is 24 bytes");
+LAYOUT_32(sizeof(AIndexMap) == 0x18, "AIndexMap is 24 bytes");
 
 // ---- the index
 
@@ -103,7 +104,7 @@ public:
     // The number of `name`, or -1 (also for NULL).
     int Lookup(const char *name);                                                       // 0x00126d40
 };
-static_assert(sizeof(AIndex) == 8, "AIndex is 8 bytes");
+LAYOUT_32(sizeof(AIndex) == 8, "AIndex is 8 bytes");
 
 // ---- the warning beside a provisional port: code no shipped data reaches, said once, the first time it runs
 

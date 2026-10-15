@@ -196,7 +196,7 @@ struct ActionQueueManager {
     // _Tidy (0x0004f400): frees the storage and empties the vector.
     void Tidy();
 };
-static_assert(sizeof(ActionQueueManager) == 0x10, "the manager is a vector, 16 bytes");
+LAYOUT_32(sizeof(ActionQueueManager) == 0x10, "the manager is a vector, 16 bytes");
 
 // std::fill over a range of pointers (Ghidra: maybe_memset_ptr2, 0x0004f3e0).
 void FillQueuePointers(ActionQueue **first, ActionQueue **last, ActionQueue *const *value);

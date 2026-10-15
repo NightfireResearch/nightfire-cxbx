@@ -597,7 +597,7 @@ void RVehicleParticle::LoadAttributes() {
 
 // FUNC_AT(0x000a6de0)
 RVehicleParticle* RVehicleParticle::Construct(PVehicle *vehicle) {
-    vtable = reinterpret_cast<const void *>(kRVehicleParticleVtable);
+    vtable = kRVehicleParticleVtable;
     this->vehicle = vehicle;
     smokeEndTick = 0;
     smokeFade = 1.0f;
@@ -674,7 +674,7 @@ void RVehicleParticle::ResetAll() {
 
 // FUNC_AT(0x000a79f0)
 void RVehicleParticle::Destruct() {
-    vtable = reinterpret_cast<const void *>(kRVehicleParticleVtable);
+    vtable = kRVehicleParticleVtable;
     for (int i = 0; i < kSystemCount; i++)
         if (systems[i] != NULL)
             systems[i]->vtable->destroy(systems[i], 0, 1);

@@ -117,13 +117,13 @@ public:
                     const uint32_t *sourceSig);                                                 // 2  0x00073f80
     void Simulate();                                                                            // 4  0x000744d0
 };
-static_assert(sizeof(Sentry) == 0xc8, "a sentry is 0xc8 bytes");
-static_assert(offsetof(Sentry, srbLimit) == 0x7c && offsetof(Sentry, hitPoints) == 0x88 &&
-              offsetof(Sentry, srbAngle) == 0x90 && offsetof(Sentry, animReversed) == 0x9c &&
-              offsetof(Sentry, shotsLeft) == 0xa0 && offsetof(Sentry, holdSteps) == 0xb0 &&
-              offsetof(Sentry, targetSig) == 0xc0 && offsetof(Sentry, targetable) == 0xc4, "Sentry layout");
+LAYOUT_32(sizeof(Sentry) == 0xc8, "a sentry is 0xc8 bytes");
+LAYOUT_32(offsetof(Sentry, srbLimit) == 0x7c && offsetof(Sentry, hitPoints) == 0x88 &&
+          offsetof(Sentry, srbAngle) == 0x90 && offsetof(Sentry, animReversed) == 0x9c &&
+          offsetof(Sentry, shotsLeft) == 0xa0 && offsetof(Sentry, holdSteps) == 0xb0 &&
+          offsetof(Sentry, targetSig) == 0xc0 && offsetof(Sentry, targetable) == 0xc4, "Sentry layout");
 
-const uint32_t kSentryVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_Sentry));
+void **const kSentryVtable = Vtable_Sentry;
 
 extern SentryMuzzleFlash SentryMuzzleFlashes[kSentryMuzzleFlashes];
 extern int32_t SentryMuzzleFlashCount;

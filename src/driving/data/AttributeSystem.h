@@ -23,6 +23,7 @@
 // compared by content. The system is a singleton made by Init (Bond_StartUpSystem) at 0x001e464c.
 
 #include "AttributeContainers.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 #include <stdint.h>
 
@@ -84,7 +85,7 @@ public:
     // entry.
     AttributeExtension &ExtensionType(uint32_t type);
 };
-static_assert(sizeof(AttributeSystem) == 0x68, "AttributeSystem is 0x68 bytes");
+LAYOUT_32(sizeof(AttributeSystem) == 0x68, "AttributeSystem is 0x68 bytes");
 
 extern AttributeSystem *AttributeSystemInstance;   // AttributeSystem::fgThis (AttributeSystem.cpp)
 

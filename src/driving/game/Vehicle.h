@@ -134,7 +134,7 @@ public:
     // operator[] (inlined by its callers): the name's index, a new entry of 0 if it has none
     int &operator[](const char *name);
 };
-static_assert(sizeof(CarNameMap) == 12, "a map is 12 bytes");
+LAYOUT_32(sizeof(CarNameMap) == 12, "a map is 12 bytes");
 
 // The car's controls (CarControl, 0x20 bytes: GetCarControl copies them out)
 struct BondCarControl {
@@ -387,10 +387,10 @@ struct PVehicle : PhysicsObject {
     static void BuildCarNames();                                                                // 0x00071730
 };
 static_assert(PVehicle::kGetTargetBeacon == 82 && PVehicle::kSlotCount == 83, "PVehicle's vtable slots");
-static_assert(sizeof(PVehicle) == 0x74, "a vehicle is 0x74 bytes");
-static_assert(offsetof(PVehicle, missionEditorOnMask) == 0x6c, "PVehicle layout");
+LAYOUT_32(sizeof(PVehicle) == 0x74, "a vehicle is 0x74 bytes");
+LAYOUT_32(offsetof(PVehicle, missionEditorOnMask) == 0x6c, "PVehicle layout");
 
-const uint32_t kPVehicleVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_PVehicle));
+void **const kPVehicleVtable = Vtable_PVehicle;
 
 extern CarNameMap *fgCarNameMap;                        // BuildCarNames' map
 extern const char **fgCarNames;                         // ... and list

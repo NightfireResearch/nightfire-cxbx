@@ -35,10 +35,15 @@
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
 #endif
 
+// A layout check that holds on 32-bit only. A structure that lives only in memory has native pointers, so on 64-bit
+// it grows; structures read in place from the game's files keep plain static_asserts (docs/driving/64-bit.md).
+#define LAYOUT_32(condition, message) static_assert(sizeof(void *) != 4 || (condition), message)
+
+// Overlay classes are the game's objects in memory: their checks are LAYOUT_32's.
 #define XBE_CLASS_SIZE(Class, size)                                                                          \
-    static_assert(sizeof(Class) == (size), #Class " is not the size of the game's (" #size " bytes)")
+    LAYOUT_32(sizeof(Class) == (size), #Class " is not the size of the game's (" #size " bytes)")
 
 #define XBE_FIELD(Class, field, offset)                                                                      \
-    static_assert(offsetof(Class, field) == (offset), #Class "::" #field " is not at the game's offset (" #offset ")")
+    LAYOUT_32(offsetof(Class, field) == (offset), #Class "::" #field " is not at the game's offset (" #offset ")")
 
 #endif // COMMON_XBECLASS_H_

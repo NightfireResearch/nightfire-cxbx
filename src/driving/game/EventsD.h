@@ -22,6 +22,7 @@
 #include "../data/Carp.h"               // CARP::AIElement, CARP::Instance
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "Sentry.h"                     // SentrySetup
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class RSceneObj;
 class UGroup;
@@ -53,7 +54,7 @@ public:
     void Destruct();                                                                    // 0x00044400
     ESetRecordedGameTime* Delete(unsigned flags);                                       // 0x00048ac0
 };
-static_assert(sizeof(ESetRecordedGameTime) == 4, "ESetRecordedGameTime is 4 bytes");
+LAYOUT_32(sizeof(ESetRecordedGameTime) == 4, "ESetRecordedGameTime is 4 bytes");
 
 // The Simulation's reflective object: the AI element's object (its car, or its character's body), or the player's
 class ESetReflectiveObject : public Event {
@@ -68,7 +69,7 @@ public:
     void Destruct();                                                                    // 0x00044450
     ESetReflectiveObject* Delete(unsigned flags);                                       // 0x00048ae0
 };
-static_assert(sizeof(ESetReflectiveObject) == 8, "ESetReflectiveObject is 8 bytes");
+LAYOUT_32(sizeof(ESetReflectiveObject) == 8, "ESetReflectiveObject is 8 bytes");
 
 // An instance's article variation: its scene object uses the model's instance list of that variation; without a
 // scene object, the instance takes the first instance's article
@@ -86,7 +87,7 @@ public:
     void Destruct();                                                                    // 0x00044510
     ESetRenderVariation* Delete(unsigned flags);                                        // 0x00048b00
 };
-static_assert(sizeof(ESetRenderVariation) == 0xc, "ESetRenderVariation is 12 bytes");
+LAYOUT_32(sizeof(ESetRenderVariation) == 0xc, "ESetRenderVariation is 12 bytes");
 
 // The scheduler's time scale, at most 4
 class ESetSimRate : public Event {
@@ -101,7 +102,7 @@ public:
     void Destruct();                                                                    // 0x00044610
     ESetSimRate* Delete(unsigned flags);                                                // 0x00048b20
 };
-static_assert(sizeof(ESetSimRate) == 8, "ESetSimRate is 8 bytes");
+LAYOUT_32(sizeof(ESetSimRate) == 8, "ESetSimRate is 8 bytes");
 
 // The weapons' special weapon
 class ESetSpecialWeapon : public Event {
@@ -120,7 +121,7 @@ public:
     void Destruct();                                                                    // 0x00044660
     ESetSpecialWeapon* Delete(unsigned flags);                                          // 0x00048b40
 };
-static_assert(sizeof(ESetSpecialWeapon) == 0x10, "ESetSpecialWeapon is 16 bytes");
+LAYOUT_32(sizeof(ESetSpecialWeapon) == 0x10, "ESetSpecialWeapon is 16 bytes");
 
 // The player's car's roll direction (PVehicle's ForceRollDirection)
 class ESetSubRollDirection : public Event {
@@ -135,7 +136,7 @@ public:
     void Destruct();                                                                    // 0x0004db10
     ESetSubRollDirection* Delete(unsigned flags);                                       // 0x0004ee80
 };
-static_assert(sizeof(ESetSubRollDirection) == 8, "ESetSubRollDirection is 8 bytes");
+LAYOUT_32(sizeof(ESetSubRollDirection) == 8, "ESetSubRollDirection is 8 bytes");
 
 // A subtitle, with the subtitles on, unless a cinematic is being skipped or there is no HUD
 class ESetSubtitle : public Event {
@@ -152,7 +153,7 @@ public:
     void Destruct();                                                                    // 0x00044760
     ESetSubtitle* Delete(unsigned flags);                                               // 0x00048b60
 };
-static_assert(sizeof(ESetSubtitle) == 0xc, "ESetSubtitle is 12 bytes");
+LAYOUT_32(sizeof(ESetSubtitle) == 0xc, "ESetSubtitle is 12 bytes");
 
 // The player's car's sound's terrain
 class ESetTerrain : public Event {
@@ -167,7 +168,7 @@ public:
     void Destruct();                                                                    // 0x0004db70
     ESetTerrain* Delete(unsigned flags);                                                // 0x0004eea0
 };
-static_assert(sizeof(ESetTerrain) == 8, "ESetTerrain is 8 bytes");
+LAYOUT_32(sizeof(ESetTerrain) == 8, "ESetTerrain is 8 bytes");
 
 // The car's visual damage, by percent: the AI element's car (a vehicle element whose object is a car), or the
 // player's
@@ -185,7 +186,7 @@ public:
     void Destruct();                                                                    // 0x0004dbd0
     ESetVisualDamage* Delete(unsigned flags);                                           // 0x0004eec0
 };
-static_assert(sizeof(ESetVisualDamage) == 0x18, "ESetVisualDamage is 24 bytes");
+LAYOUT_32(sizeof(ESetVisualDamage) == 0x18, "ESetVisualDamage is 24 bytes");
 
 // The HUD's waypoint (objective slot 1): the first of the three references there is, or none
 class ESetWaypoint : public Event {
@@ -204,7 +205,7 @@ public:
     void Destruct();                                                                    // 0x00044c20
     ESetWaypoint* Delete(unsigned flags);                                               // 0x00048bc0
 };
-static_assert(sizeof(ESetWaypoint) == 0x10, "ESetWaypoint is 16 bytes");
+LAYOUT_32(sizeof(ESetWaypoint) == 0x10, "ESetWaypoint is 16 bytes");
 
 // ---- the timers (the mission manager's ten)
 
@@ -226,7 +227,7 @@ public:
     void Destruct();                                                                    // 0x000448b0
     ESetTimer* Delete(unsigned flags);                                                  // 0x00048b80
 };
-static_assert(sizeof(ESetTimer) == 0x10, "ESetTimer is 16 bytes");
+LAYOUT_32(sizeof(ESetTimer) == 0x10, "ESetTimer is 16 bytes");
 
 // (0xc bytes; vtable 0x0018c7fc, whose destructor is EForceNearPedRespawn's: Event's) The timer started when the
 // event is made, ticking if it is timer 1
@@ -242,7 +243,7 @@ public:
     int32_t rate;                       // +0x08 SMissionTimer::Start's
     EStartTimer* Construct(int timer, int rate);                                        // 0x00046290
 };
-static_assert(sizeof(EStartTimer) == 0xc, "EStartTimer is 12 bytes");
+LAYOUT_32(sizeof(EStartTimer) == 0xc, "EStartTimer is 12 bytes");
 
 // (8 bytes; vtable 0x0018c80c, whose destructor is EBeginDownloadCode's: Event's) The timer stopped when the event
 // is made
@@ -256,7 +257,7 @@ public:
     int32_t timer;                      // +0x04
     EStopTimer* Construct(int timer);                                                   // 0x00046620
 };
-static_assert(sizeof(EStopTimer) == 8, "EStopTimer is 8 bytes");
+LAYOUT_32(sizeof(EStopTimer) == 8, "EStopTimer is 8 bytes");
 
 // (0x18 bytes; vtable 0x0018c7f8, whose destructor is EInsertObjective's: Event's) A timed action started when the
 // event is made
@@ -279,7 +280,7 @@ public:
     EStartTimedAction* Construct(int action, float timeLimit, float fullPointsTime, int minPoints,
                                  int maxPoints);                                        // 0x000461b0
 };
-static_assert(sizeof(EStartTimedAction) == 0x18, "EStartTimedAction is 24 bytes");
+LAYOUT_32(sizeof(EStartTimedAction) == 0x18, "EStartTimedAction is 24 bytes");
 
 class EStopTimedAction : public Event {
 public:
@@ -293,7 +294,7 @@ public:
     void Destruct();                                                                    // 0x000465b0
     EStopTimedAction* Delete(unsigned flags);                                           // 0x00048d80
 };
-static_assert(sizeof(EStopTimedAction) == 8, "EStopTimedAction is 8 bytes");
+LAYOUT_32(sizeof(EStopTimedAction) == 8, "EStopTimedAction is 8 bytes");
 
 class ETimerDrawOff : public Event {
 public:
@@ -307,7 +308,7 @@ public:
     void Destruct();                                                                    // 0x00046ae0
     ETimerDrawOff* Delete(unsigned flags);                                              // 0x00048e40
 };
-static_assert(sizeof(ETimerDrawOff) == 8, "ETimerDrawOff is 8 bytes");
+LAYOUT_32(sizeof(ETimerDrawOff) == 8, "ETimerDrawOff is 8 bytes");
 
 class ETimerDrawOn : public Event {
 public:
@@ -321,7 +322,7 @@ public:
     void Destruct();                                                                    // 0x00046b60
     ETimerDrawOn* Delete(unsigned flags);                                               // 0x00048e60
 };
-static_assert(sizeof(ETimerDrawOn) == 8, "ETimerDrawOn is 8 bytes");
+LAYOUT_32(sizeof(ETimerDrawOn) == 8, "ETimerDrawOn is 8 bytes");
 
 // ---- movies, streams and stingers
 
@@ -341,7 +342,7 @@ public:
     void Destruct();                                                                    // 0x00044970
     ESetVideo* Delete(unsigned flags);                                                  // 0x00048ba0
 };
-static_assert(sizeof(ESetVideo) == 0xc, "ESetVideo is 12 bytes");
+LAYOUT_32(sizeof(ESetVideo) == 0xc, "ESetVideo is 12 bytes");
 
 // A stream's event, with the streams on: speech through the "SpeechVsAmbience" fader (unless a cinematic is being
 // skipped), "nis" likewise at once, any other stream directly; nothing for a sound that failed to play before, or
@@ -368,7 +369,7 @@ public:
     void Destruct();                                                                    // 0x0004ef60
     EStreamEvent* Delete(unsigned flags);                                               // 0x0004f150
 };
-static_assert(sizeof(EStreamEvent) == 0x1c, "EStreamEvent is 28 bytes");
+LAYOUT_32(sizeof(EStreamEvent) == 0x1c, "EStreamEvent is 28 bytes");
 
 // The stinger channel ("music" or "speech"; any other name is ignored)
 class ESwitchStingerChannel : public Event {
@@ -383,7 +384,7 @@ public:
     void Destruct();                                                                    // 0x00046990
     ESwitchStingerChannel* Delete(unsigned flags);                                      // 0x00048e00
 };
-static_assert(sizeof(ESwitchStingerChannel) == 8, "ESwitchStingerChannel is 8 bytes");
+LAYOUT_32(sizeof(ESwitchStingerChannel) == 8, "ESwitchStingerChannel is 8 bytes");
 
 class EStopSoundPos : public Event {
 public:
@@ -397,7 +398,7 @@ public:
     void Destruct();                                                                    // 0x00046540
     EStopSoundPos* Delete(unsigned flags);                                              // 0x00048d60
 };
-static_assert(sizeof(EStopSoundPos) == 8, "EStopSoundPos is 8 bytes");
+LAYOUT_32(sizeof(EStopSoundPos) == 8, "EStopSoundPos is 8 bytes");
 
 // ---- the player's car
 
@@ -407,7 +408,7 @@ public:
     void Destruct();                                                                    // 0x0004dcb0
     EShake* Delete(unsigned flags);                                                     // 0x0004eee0
 };
-static_assert(sizeof(EShake) == 4, "EShake is 4 bytes");
+LAYOUT_32(sizeof(EShake) == 4, "EShake is 4 bytes");
 
 class ETwoWheelsOff : public Event {
 public:
@@ -415,7 +416,7 @@ public:
     void Destruct();                                                                    // 0x0004e9c0
     ETwoWheelsOff* Delete(unsigned flags);                                              // 0x0004f110
 };
-static_assert(sizeof(ETwoWheelsOff) == 4, "ETwoWheelsOff is 4 bytes");
+LAYOUT_32(sizeof(ETwoWheelsOff) == 4, "ETwoWheelsOff is 4 bytes");
 
 class ETwoWheelsOn : public Event {
 public:
@@ -423,7 +424,7 @@ public:
     void Destruct();                                                                    // 0x0004ea10
     ETwoWheelsOn* Delete(unsigned flags);                                               // 0x0004f130
 };
-static_assert(sizeof(ETwoWheelsOn) == 4, "ETwoWheelsOn is 4 bytes");
+LAYOUT_32(sizeof(ETwoWheelsOn) == 4, "ETwoWheelsOn is 4 bytes");
 
 class EUnloadWeapon : public Event {
 public:
@@ -437,7 +438,7 @@ public:
     void Destruct();                                                                    // 0x00046c20
     EUnloadWeapon* Delete(unsigned flags);                                              // 0x00048e80
 };
-static_assert(sizeof(EUnloadWeapon) == 8, "EUnloadWeapon is 8 bytes");
+LAYOUT_32(sizeof(EUnloadWeapon) == 8, "EUnloadWeapon is 8 bytes");
 
 // The player's car put at the trigger, facing along it, and pushed along it at `speed`
 class EStartMission : public Event {
@@ -453,7 +454,7 @@ public:
     void Destruct();                                                                    // 0x0004e860
     EStartMission* Delete(unsigned flags);                                              // 0x0004ef40
 };
-static_assert(sizeof(EStartMission) == 0xc, "EStartMission is 12 bytes");
+LAYOUT_32(sizeof(EStartMission) == 0xc, "EStartMission is 12 bytes");
 
 // ---- the simulation's frame
 
@@ -465,7 +466,7 @@ public:
     void Destruct();                                                                    // 0x0004dd10
     ESimFrameUpdate* Delete(unsigned flags);                                            // 0x0004ef00
 };
-static_assert(sizeof(ESimFrameUpdate) == 4, "ESimFrameUpdate is 4 bytes");
+LAYOUT_32(sizeof(ESimFrameUpdate) == 4, "ESimFrameUpdate is 4 bytes");
 
 // The Simulation's end of frame (an empty function)
 class ESimEndFrame : public Event {
@@ -474,7 +475,7 @@ public:
     void Destruct();                                                                    // 0x00044df0
     ESimEndFrame* Delete(unsigned flags);                                               // 0x00048c20
 };
-static_assert(sizeof(ESimEndFrame) == 4, "ESimEndFrame is 4 bytes");
+LAYOUT_32(sizeof(ESimEndFrame) == 4, "ESimEndFrame is 4 bytes");
 
 // ---- instances
 
@@ -486,7 +487,7 @@ public:
     void Destruct();                                                                    // 0x00044d00
     EShowInstance* Delete(unsigned flags);                                              // 0x00048be0
 };
-static_assert(sizeof(EShowInstance) == 8, "EShowInstance is 8 bytes");
+LAYOUT_32(sizeof(EShowInstance) == 8, "EShowInstance is 8 bytes");
 
 // The record's instance shown: its scene object's, else the instance among the raising scene object's; then its flag
 // 0x01 cleared
@@ -503,7 +504,7 @@ public:
     void Destruct();                                                                    // 0x00044d40
     EShowInstanceStatic* Delete(unsigned flags);                                        // 0x00048c00
 };
-static_assert(sizeof(EShowInstanceStatic) == 0xc, "EShowInstanceStatic is 12 bytes");
+LAYOUT_32(sizeof(EShowInstanceStatic) == 0xc, "EShowInstanceStatic is 12 bytes");
 
 // ---- the scene objects' effects
 
@@ -531,7 +532,7 @@ public:
 
     void Trigger(int typeById, int typeByZone);
 };
-static_assert(sizeof(EEffectEvent) == 0x20, "the effect events are 32 bytes");
+LAYOUT_32(sizeof(EEffectEvent) == 0x20, "the effect events are 32 bytes");
 
 class EStartEffect : public EEffectEvent {
 public:
@@ -569,7 +570,7 @@ public:
     void Destruct();                                                                    // 0x00046850
     ESwitchEffectOff* Delete(unsigned flags);                                           // 0x00048dc0
 };
-static_assert(sizeof(ESwitchEffectOff) == 0xc, "ESwitchEffectOff is 12 bytes");
+LAYOUT_32(sizeof(ESwitchEffectOff) == 0xc, "ESwitchEffectOff is 12 bytes");
 
 class ESwitchEffectOn : public Event {
 public:
@@ -585,7 +586,7 @@ public:
     void Destruct();                                                                    // 0x000468f0
     ESwitchEffectOn* Delete(unsigned flags);                                            // 0x00048de0
 };
-static_assert(sizeof(ESwitchEffectOn) == 0xc, "ESwitchEffectOn is 12 bytes");
+LAYOUT_32(sizeof(ESwitchEffectOn) == 0xc, "ESwitchEffectOn is 12 bytes");
 
 // The target beacon of the AI element's vehicle on or off; for an element without one there to command, its flag
 // 0x08
@@ -603,7 +604,7 @@ public:
     void Destruct();                                                                    // 0x00046a10
     ETargetBeaconOnOff* Delete(unsigned flags);                                         // 0x00048e20
 };
-static_assert(sizeof(ETargetBeaconOnOff) == 0xc, "ETargetBeaconOnOff is 12 bytes");
+LAYOUT_32(sizeof(ETargetBeaconOnOff) == 0xc, "ETargetBeaconOnOff is 12 bytes");
 
 // ---- the spawns
 
@@ -648,9 +649,9 @@ public:
     void Destruct();                                                                    // 0x0004de70
     ESpawnExplosion* Delete(unsigned flags);                                            // 0x0004ef20
 };
-static_assert(sizeof(ESpawnExplosion) == 0x50, "ESpawnExplosion is 0x50 bytes");
-static_assert(offsetof(ESpawnExplosion, sceneObj) == 0x24 && offsetof(ESpawnExplosion, source) == 0x30 &&
-              offsetof(ESpawnExplosion, effectName) == 0x4c, "ESpawnExplosion layout");
+LAYOUT_32(sizeof(ESpawnExplosion) == 0x50, "ESpawnExplosion is 0x50 bytes");
+LAYOUT_32(offsetof(ESpawnExplosion, sceneObj) == 0x24 && offsetof(ESpawnExplosion, source) == 0x30 &&
+          offsetof(ESpawnExplosion, effectName) == 0x4c, "ESpawnExplosion layout");
 
 // An ESpawnExplosion at the record's position, or its instance's, facing (0, 0, 1)
 class ESpawnExplosionStatic : public Event {
@@ -677,7 +678,7 @@ public:
     void Destruct();                                                                    // 0x00045120
     ESpawnExplosionStatic* Delete(unsigned flags);                                      // 0x00048c60
 };
-static_assert(sizeof(ESpawnExplosionStatic) == 0x20, "ESpawnExplosionStatic is 32 bytes");
+LAYOUT_32(sizeof(ESpawnExplosionStatic) == 0x20, "ESpawnExplosionStatic is 32 bytes");
 
 // A force explosion (type 6): the article effect's GFX on the raising scene object's instance, or "Ex_Snow" or
 // "Ex_Small" at the position
@@ -703,7 +704,7 @@ public:
     void Destruct();                                                                    // 0x000453a0
     ESpawnForceEffect* Delete(unsigned flags);                                          // 0x00048c80
 };
-static_assert(sizeof(ESpawnForceEffect) == 0x34, "ESpawnForceEffect is 0x34 bytes");
+LAYOUT_32(sizeof(ESpawnForceEffect) == 0x34, "ESpawnForceEffect is 0x34 bytes");
 
 // A sentry on the instance, owned by the raising body
 class ESpawnSentry : public Event {
@@ -732,7 +733,7 @@ public:
     void Destruct();                                                                    // 0x00045880
     ESpawnSentry* Delete(unsigned flags);                                               // 0x00048ca0
 };
-static_assert(sizeof(ESpawnSentry) == 0x48, "ESpawnSentry is 0x48 bytes");
+LAYOUT_32(sizeof(ESpawnSentry) == 0x48, "ESpawnSentry is 0x48 bytes");
 
 // A newton of the instance (Newton::SpawnFromEvent), thrown towards the view
 class ESpawnDramaticSmackable : public Event {
@@ -755,7 +756,7 @@ public:
     void Destruct();                                                                    // 0x00044e80
     ESpawnDramaticSmackable* Delete(unsigned flags);                                    // 0x00048c40
 };
-static_assert(sizeof(ESpawnDramaticSmackable) == 0x1c, "ESpawnDramaticSmackable is 28 bytes");
+LAYOUT_32(sizeof(ESpawnDramaticSmackable) == 0x1c, "ESpawnDramaticSmackable is 28 bytes");
 
 // A newton of the instance (Newton::SpawnFromEvent)
 class ESpawnSimplePhysics : public Event {
@@ -778,7 +779,7 @@ public:
     void Destruct();                                                                    // 0x000459b0
     ESpawnSimplePhysics* Delete(unsigned flags);                                        // 0x00048cc0
 };
-static_assert(sizeof(ESpawnSimplePhysics) == 0x1c, "ESpawnSimplePhysics is 28 bytes");
+LAYOUT_32(sizeof(ESpawnSimplePhysics) == 0x1c, "ESpawnSimplePhysics is 28 bytes");
 
 // A smackable of the model's article, placed at the raising scene object's instance (moving with it) or at the
 // record's instance, given a random spin
@@ -800,7 +801,7 @@ public:
     void Destruct();                                                                    // 0x00045a70
     ESpawnSmackable* Delete(unsigned flags);                                            // 0x00048ce0
 };
-static_assert(sizeof(ESpawnSmackable) == 0x18, "ESpawnSmackable is 24 bytes");
+LAYOUT_32(sizeof(ESpawnSmackable) == 0x18, "ESpawnSmackable is 24 bytes");
 
 // The first frozen traffic car of the twenty put at the trigger, facing along it, set to attack mode 12 and
 // navigate mode 3, its damage and EMP cleared, and pushed along its heading at `speed`
@@ -817,7 +818,7 @@ public:
     void Destruct();                                                                    // 0x00045d70
     ESpawnTraffic* Delete(unsigned flags);                                              // 0x00048d00
 };
-static_assert(sizeof(ESpawnTraffic) == 0xc, "ESpawnTraffic is 12 bytes");
+LAYOUT_32(sizeof(ESpawnTraffic) == 0xc, "ESpawnTraffic is 12 bytes");
 
 // The scene object woken: a smackable (with the third reference's kSmackable) or a newton of the instance (with
 // kNewton, moving as the raising body moved); a smackable a ray shell raised the event for is damaged if the
@@ -851,9 +852,9 @@ public:
     void Destruct();                                                                    // 0x00046d10
     EWakeupSmackable* Delete(unsigned flags);                                           // 0x00048ea0
 };
-static_assert(sizeof(EWakeupSmackable) == 0x3c, "EWakeupSmackable is 0x3c bytes");
-static_assert(offsetof(EWakeupSmackable, damage) == 0x2c && offsetof(EWakeupSmackable, bodySlot) == 0x38,
-              "EWakeupSmackable layout");
+LAYOUT_32(sizeof(EWakeupSmackable) == 0x3c, "EWakeupSmackable is 0x3c bytes");
+LAYOUT_32(offsetof(EWakeupSmackable, damage) == 0x2c && offsetof(EWakeupSmackable, bodySlot) == 0x38,
+          "EWakeupSmackable layout");
 
 // The ticks each of the explosions' four sound slots may play again at, the slot to try first, and the next of the
 // three small explosion effects (EventsD.cpp; written only by ESpawnExplosion; the names are ours)

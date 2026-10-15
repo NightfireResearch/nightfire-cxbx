@@ -19,6 +19,7 @@
 #include "VisCurtain.h"
 #include "World.h"                        // ProcAnimState; CARP::Instance
 #include "../camera/Camera.h"             // RCamera
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 constexpr int kMaxVisibleNodes = 0x300;
 constexpr int kMaxDraws = 0x400;
@@ -31,8 +32,8 @@ struct CachedDrawInfo {
     WMapNode *nodes[kMaxVisibleNodes];          // +0x008
     WRenderSortEntry draws[kMaxDraws];          // +0xc08
 };
-static_assert(sizeof(CachedDrawInfo) == 0x2c08, "CachedDrawInfo is 0x2c08 bytes");
-static_assert(offsetof(CachedDrawInfo, draws) == 0xc08, "CachedDrawInfo::draws");
+LAYOUT_32(sizeof(CachedDrawInfo) == 0x2c08, "CachedDrawInfo is 0x2c08 bytes");
+LAYOUT_32(offsetof(CachedDrawInfo, draws) == 0xc08, "CachedDrawInfo::draws");
 
 // CARP::Instance::flags as WRender reads them (World.h has the ones the world sets)
 enum WRenderInstanceFlags : uint8_t {
@@ -75,9 +76,9 @@ public:
     static void PrepareForCull(CachedDrawInfo *list);                                           // 0x000c75b0
     // The next instance (its address) and its bounding sphere, the curtain test's margin and the far-plane test
     // to use; kNoMorePoints at the end.
-    static int GetNextPoint(Coord4 *sphere, float *height, bool *checkFar, float *farScale);   // 0x000c75e0
+    static intptr_t GetNextPoint(Coord4 *sphere, float *height, bool *checkFar, float *farScale);   // 0x000c75e0
     // Adds the instance to the draws unless it is culled (at most kMaxDraws - 1 of them)
-    static void SetCull(int item, bool culled, float distance);                                 // 0x000c7700
+    static void SetCull(intptr_t item, bool culled, float distance);                            // 0x000c7700
     // The draws of passes lastPass down to firstPass, in that order
     void CopyDrawPasses(const CachedDrawInfo *from, CachedDrawInfo *to, int firstPass, int lastPass);   // 0x000c7750
     // DrawWorldAtPoint's tree walk: the visible nodes by DistanceCheck2d, no curtains
@@ -90,9 +91,9 @@ public:
     void DrawWorld(CachedDrawInfo *list, int sort);                                             // 0x000c8450
     void DrawWorldAtPoint(CachedDrawInfo *list, const Coord3 *eye, float radius, float ambient, Coord4 facing);   // 0x000c8490
 };
-static_assert(sizeof(WRender) == 0xe0, "WRender is 224 bytes");
-static_assert(offsetof(WRender, procAnims) == 0x2c && offsetof(WRender, curtains) == 0x34 &&
-              offsetof(WRender, camera) == 0xd4, "WRender layout");
+LAYOUT_32(sizeof(WRender) == 0xe0, "WRender is 224 bytes");
+LAYOUT_32(offsetof(WRender, procAnims) == 0x2c && offsetof(WRender, curtains) == 0x34 &&
+          offsetof(WRender, camera) == 0xd4, "WRender layout");
 
 extern WRender *fgRender;               // the name is ours
 

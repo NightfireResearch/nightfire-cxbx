@@ -549,7 +549,7 @@ void RSceneObj::PrepareSceneObjsForCulling(CachedDrawInfo *list) {
 }
 
 // FUNC_AT(0x0008d860)
-int RSceneObj::GetNextSceneObjCullInfo(Coord4 *sphere, float *height, bool *checkFar, float *farScale) {
+intptr_t RSceneObj::GetNextSceneObjCullInfo(Coord4 *sphere, float *height, bool *checkFar, float *farScale) {
     CachedDrawInfo *list = SceneObjs.cullList;
     if (list->nodeCount == 0)
         return -1;
@@ -584,13 +584,13 @@ int RSceneObj::GetNextSceneObjCullInfo(Coord4 *sphere, float *height, bool *chec
     }
     *checkFar = (SceneObjs.cullObject->flags & kStatic) == 0;
     *farScale = (SceneObjs.cullObject->flags & kFarScaled) ? kFarScale : 1.0f;
-    return int(uintptr_t(SceneObjs.cullObject));
+    return intptr_t(SceneObjs.cullObject);
 }
 
 // FUNC_AT(0x0008f000)
-void RSceneObj::SetSceneObjectCull(int item, bool culled, float) {
+void RSceneObj::SetSceneObjectCull(intptr_t item, bool culled, float) {
     if (!culled)
-        reinterpret_cast<RSceneObj *>(uintptr_t(item))->SetNowVisible();
+        reinterpret_cast<RSceneObj *>(item)->SetNowVisible();
 }
 
 // FUNC_AT(0x0008dbc0)
@@ -1196,7 +1196,7 @@ void RSceneObj::DamageEffects(uint32_t zones) {
 }
 
 // FUNC_AT(0x0008ea70)
-void RSceneObj::TriggerFX(int type, uint32_t which, uint32_t, uint32_t, uint32_t, float intensity) {
+void RSceneObj::TriggerFX(int type, uint32_t which, uint32_t, const Coord3 *, const Coord3 *, float intensity) {
     switch (type) {
     case kFXOn:
     case kFXOnById:

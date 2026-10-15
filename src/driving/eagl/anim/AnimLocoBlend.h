@@ -6,6 +6,7 @@
 // names are NFS Most Wanted's EAGL4Anim headers (same lineage, layouts checked against the Xbox code).
 
 #include "FnAnim.h"
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 struct Skeleton;
 
@@ -63,7 +64,7 @@ struct FnRunBlender : FnAnim {       // 0x80, type 8: blends neighbouring run cy
     bool EvalSQT(float time, float *sqt, void *mask);            // 0x00106050
     bool EvalVel2D(float time, float *vel);                      // 0x001061f0
 };
-static_assert(sizeof(FnRunBlender) == 0x80, "FnRunBlender is 0x80 bytes (the factory's block, the delete size)");
+LAYOUT_32(sizeof(FnRunBlender) == 0x80, "FnRunBlender is 0x80 bytes (the factory's block, the delete size)");
 
 struct FnTurnBlender : FnAnim {      // 0x5c, type 9: blends neighbouring run blenders by a turn weight
     FnRunBlender **anims;            // +0x0c [numAnims], from the pool
@@ -102,7 +103,7 @@ struct FnTurnBlender : FnAnim {      // 0x5c, type 9: blends neighbouring run bl
     bool EvalSQT(float time, float *sqt, void *mask);            // 0x00104bf0
     bool EvalVel2D(float time, float *vel);                      // 0x00104d60
 };
-static_assert(sizeof(FnTurnBlender) == 0x5c, "FnTurnBlender is 0x5c bytes (the factory's block, the delete size)");
+LAYOUT_32(sizeof(FnTurnBlender) == 0x5c, "FnTurnBlender is 0x5c bytes (the factory's block, the delete size)");
 
 // out = v rotated by the quaternion q (out[3] = 1); invented name, Ghidra's FUN_00104eb0.
 void AnimQuatRotateVector(const float *q, const float *v, float *out);   // 0x00104eb0

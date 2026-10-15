@@ -17,6 +17,7 @@
 #include <stdint.h>
 
 #include "../data/CoordConvert.h"       // Coord3
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 // ---- the records
 
@@ -169,8 +170,8 @@ struct WRoadNetworkData {
     WRoad **roads;                  // +0xc4
     uint32_t queryStamp;            // +0xc8 a search counts it up and stamps the segments it visits
 };
-static_assert(sizeof(WRoadNetworkData) == 0xcc && offsetof(WRoadNetworkData, instance) == 0xb0 &&
-              offsetof(WRoadNetworkData, queryStamp) == 0xc8, "the road network's statics");
+LAYOUT_32(sizeof(WRoadNetworkData) == 0xcc && offsetof(WRoadNetworkData, instance) == 0xb0 &&
+          offsetof(WRoadNetworkData, queryStamp) == 0xc8, "the road network's statics");
 
 alignas(16) extern WRoadNetworkData fgRoadNetworkData;
 

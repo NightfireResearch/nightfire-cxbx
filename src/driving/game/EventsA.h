@@ -24,6 +24,7 @@
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../physics/RigidBodyResolve.h"    // CollisionImpact
 #include "AIVehicle.h"
+#include "../../common/xbeClass.h"          // LAYOUT_32
 
 namespace CARP {
 class AISpline;
@@ -42,7 +43,7 @@ public:
     void Destruct();                                                                    // 0x0003e2b0
     EAIUpdate* Delete(unsigned flags);                                                  // 0x00047470
 };
-static_assert(sizeof(EAIUpdate) == 4, "EAIUpdate is 4 bytes");
+LAYOUT_32(sizeof(EAIUpdate) == 4, "EAIUpdate is 4 bytes");
 
 class EAnimUpdate : public Event {
 public:
@@ -50,7 +51,7 @@ public:
     void Destruct();                                                                    // 0x0003e620
     EAnimUpdate* Delete(unsigned flags);                                                // 0x00047510
 };
-static_assert(sizeof(EAnimUpdate) == 4, "EAnimUpdate is 4 bytes");
+LAYOUT_32(sizeof(EAnimUpdate) == 4, "EAnimUpdate is 4 bytes");
 
 class EAudioUpdate : public Event {
 public:
@@ -58,7 +59,7 @@ public:
     void Destruct();                                                                    // 0x00049790
     EAudioUpdate* Delete(unsigned flags);                                               // 0x0004eaa0
 };
-static_assert(sizeof(EAudioUpdate) == 4, "EAudioUpdate is 4 bytes");
+LAYOUT_32(sizeof(EAudioUpdate) == 4, "EAudioUpdate is 4 bytes");
 
 class ECameraUpdate : public Event {
 public:
@@ -66,7 +67,7 @@ public:
     void Destruct();                                                                    // 0x0003ed70
     ECameraUpdate* Delete(unsigned flags);                                              // 0x00047650
 };
-static_assert(sizeof(ECameraUpdate) == 4, "ECameraUpdate is 4 bytes");
+LAYOUT_32(sizeof(ECameraUpdate) == 4, "ECameraUpdate is 4 bytes");
 
 // ---- the AI
 
@@ -102,8 +103,8 @@ public:
 private:
     void CommandGroundVehicle(AIGroundVehicle *vehicle);
 };
-static_assert(sizeof(EAICommand) == 0x20 && offsetof(EAICommand, trigger) == 0x14 &&
-              offsetof(EAICommand, bodySlot) == 0x1c, "EAICommand layout");
+LAYOUT_32(sizeof(EAICommand) == 0x20 && offsetof(EAICommand, trigger) == 0x14 &&
+          offsetof(EAICommand, bodySlot) == 0x1c, "EAICommand layout");
 
 class EAIElementFireOff : public Event {
 public:
@@ -118,7 +119,7 @@ public:
     void Destruct();                                                                    // 0x0003dd70
     EAIElementFireOff* Delete(unsigned flags);                                          // 0x00047390
 };
-static_assert(sizeof(EAIElementFireOff) == 8, "EAIElementFireOff is 8 bytes");
+LAYOUT_32(sizeof(EAIElementFireOff) == 8, "EAIElementFireOff is 8 bytes");
 
 class EAIElementFireOn : public Event {
 public:
@@ -130,7 +131,7 @@ public:
     void Destruct();                                                                    // 0x0003de30
     EAIElementFireOn* Delete(unsigned flags);                                           // 0x000473b0
 };
-static_assert(sizeof(EAIElementFireOn) == 8, "EAIElementFireOn is 8 bytes");
+LAYOUT_32(sizeof(EAIElementFireOn) == 8, "EAIElementFireOn is 8 bytes");
 
 class EAIElementSetAccuracy : public Event {
 public:
@@ -147,7 +148,7 @@ public:
     void Destruct();                                                                    // 0x0003def0
     EAIElementSetAccuracy* Delete(unsigned flags);                                      // 0x000473d0
 };
-static_assert(sizeof(EAIElementSetAccuracy) == 0xc, "EAIElementSetAccuracy is 12 bytes");
+LAYOUT_32(sizeof(EAIElementSetAccuracy) == 0xc, "EAIElementSetAccuracy is 12 bytes");
 
 class EAIElementSetCharParams : public Event {
 public:
@@ -168,7 +169,7 @@ public:
     void Destruct();                                                                    // 0x0003dfb0
     EAIElementSetCharParams* Delete(unsigned flags);                                    // 0x000473f0
 };
-static_assert(sizeof(EAIElementSetCharParams) == 0x14, "EAIElementSetCharParams is 20 bytes");
+LAYOUT_32(sizeof(EAIElementSetCharParams) == 0x14, "EAIElementSetCharParams is 20 bytes");
 
 class EAIElementSetNonScoreable : public Event {
 public:
@@ -180,7 +181,7 @@ public:
     void Destruct();                                                                    // 0x0003e0a0
     EAIElementSetNonScoreable* Delete(unsigned flags);                                  // 0x00047410
 };
-static_assert(sizeof(EAIElementSetNonScoreable) == 8, "EAIElementSetNonScoreable is 8 bytes");
+LAYOUT_32(sizeof(EAIElementSetNonScoreable) == 8, "EAIElementSetNonScoreable is 8 bytes");
 
 class EAIElementSetVehicleParams : public Event {
 public:
@@ -197,7 +198,7 @@ public:
     void Destruct();                                                                    // 0x0003e180
     EAIElementSetVehicleParams* Delete(unsigned flags);                                 // 0x00047430
 };
-static_assert(sizeof(EAIElementSetVehicleParams) == 0xc, "EAIElementSetVehicleParams is 12 bytes");
+LAYOUT_32(sizeof(EAIElementSetVehicleParams) == 0xc, "EAIElementSetVehicleParams is 12 bytes");
 
 class EAIElementSetWakeRange : public Event {
 public:
@@ -214,7 +215,7 @@ public:
     void Destruct();                                                                    // 0x0003e210
     EAIElementSetWakeRange* Delete(unsigned flags);                                     // 0x00047450
 };
-static_assert(sizeof(EAIElementSetWakeRange) == 0xc, "EAIElementSetWakeRange is 12 bytes");
+LAYOUT_32(sizeof(EAIElementSetWakeRange) == 0xc, "EAIElementSetWakeRange is 12 bytes");
 
 // Wakes an element; with a trigger, only when the trigger's toucher is `toucherElement`'s vehicle (or the player's
 // car without one).
@@ -236,8 +237,8 @@ public:
     void Destruct();                                                                    // 0x000495d0
     EActivateAIElement* Delete(unsigned flags);                                         // 0x0004ea80
 };
-static_assert(sizeof(EActivateAIElement) == 0x18 && offsetof(EActivateAIElement, bodySlot) == 0x14,
-              "EActivateAIElement layout");
+LAYOUT_32(sizeof(EActivateAIElement) == 0x18 && offsetof(EActivateAIElement, bodySlot) == 0x14,
+          "EActivateAIElement layout");
 
 class EDeactivateAIElement : public Event {
 public:
@@ -249,7 +250,7 @@ public:
     void Destruct();                                                                    // 0x0003f470
     EDeactivateAIElement* Delete(unsigned flags);                                       // 0x00047930
 };
-static_assert(sizeof(EDeactivateAIElement) == 8, "EDeactivateAIElement is 8 bytes");
+LAYOUT_32(sizeof(EDeactivateAIElement) == 8, "EDeactivateAIElement is 8 bytes");
 
 // Sends a vehicle element's object two animation stimuli
 class EDropMine : public Event {
@@ -267,7 +268,7 @@ public:
     void Destruct();                                                                    // 0x0003f720
     EDropMine* Delete(unsigned flags);                                                  // 0x000479d0
 };
-static_assert(sizeof(EDropMine) == 0xc, "EDropMine is 12 bytes");
+LAYOUT_32(sizeof(EDropMine) == 0xc, "EDropMine is 12 bytes");
 
 // A point a muzzle flash starts from (a CARP record; name ours): in the frame of one of the scene object's instances
 struct MuzzleFlashPoint {
@@ -291,7 +292,7 @@ public:
     void Destruct();                                                                    // 0x0003e410
     EActorMuzzleFlash* Delete(unsigned flags);                                          // 0x000474b0
 };
-static_assert(sizeof(EActorMuzzleFlash) == 0x10, "EActorMuzzleFlash is 16 bytes");
+LAYOUT_32(sizeof(EActorMuzzleFlash) == 0x10, "EActorMuzzleFlash is 16 bytes");
 
 // ---- the player's car and its controls
 
@@ -308,7 +309,7 @@ public:
     void Destruct();                                                                    // 0x0003e730
     EAutoDrive* Delete(unsigned flags);                                                 // 0x00047530
 };
-static_assert(sizeof(EAutoDrive) == 8, "EAutoDrive is 8 bytes");
+LAYOUT_32(sizeof(EAutoDrive) == 8, "EAutoDrive is 8 bytes");
 
 class EAutoDriveSpeedChange : public Event {
 public:
@@ -323,7 +324,7 @@ public:
     void Destruct();                                                                    // 0x00049a80
     EAutoDriveSpeedChange* Delete(unsigned flags);                                      // 0x0004eac0
 };
-static_assert(sizeof(EAutoDriveSpeedChange) == 8, "EAutoDriveSpeedChange is 8 bytes");
+LAYOUT_32(sizeof(EAutoDriveSpeedChange) == 8, "EAutoDriveSpeedChange is 8 bytes");
 
 class EAutoDriveSteering : public Event {
 public:
@@ -338,7 +339,7 @@ public:
     void Destruct();                                                                    // 0x00049ae0
     EAutoDriveSteering* Delete(unsigned flags);                                         // 0x0004eae0
 };
-static_assert(sizeof(EAutoDriveSteering) == 8, "EAutoDriveSteering is 8 bytes");
+LAYOUT_32(sizeof(EAutoDriveSteering) == 8, "EAutoDriveSteering is 8 bytes");
 
 // Pushes the player's car along the scene object's y axis, and damages it
 class EBashCarAlongObjectAxis : public Event {
@@ -355,7 +356,7 @@ public:
     void Destruct();                                                                    // 0x00049b90
     EBashCarAlongObjectAxis* Delete(unsigned flags);                                    // 0x0004eb00
 };
-static_assert(sizeof(EBashCarAlongObjectAxis) == 0xc, "EBashCarAlongObjectAxis is 12 bytes");
+LAYOUT_32(sizeof(EBashCarAlongObjectAxis) == 0xc, "EBashCarAlongObjectAxis is 12 bytes");
 
 class EControlToCPU : public Event {
 public:
@@ -363,7 +364,7 @@ public:
     void Destruct();                                                                    // 0x0004a820
     EControlToCPU* Delete(unsigned flags);                                              // 0x0004eb60
 };
-static_assert(sizeof(EControlToCPU) == 4, "EControlToCPU is 4 bytes");
+LAYOUT_32(sizeof(EControlToCPU) == 4, "EControlToCPU is 4 bytes");
 
 class EControlToPlayer : public Event {
 public:
@@ -371,7 +372,7 @@ public:
     void Destruct();                                                                    // 0x0004a890
     EControlToPlayer* Delete(unsigned flags);                                           // 0x0004eb80
 };
-static_assert(sizeof(EControlToPlayer) == 4, "EControlToPlayer is 4 bytes");
+LAYOUT_32(sizeof(EControlToPlayer) == 4, "EControlToPlayer is 4 bytes");
 
 // Puts a vehicle element (or, without one, the player's car) on an AI spline
 class EControlToSpline : public Event {
@@ -389,7 +390,7 @@ public:
     void Destruct();                                                                    // 0x0004a920
     EControlToSpline* Delete(unsigned flags);                                           // 0x0004eba0
 };
-static_assert(sizeof(EControlToSpline) == 0xc, "EControlToSpline is 12 bytes");
+LAYOUT_32(sizeof(EControlToSpline) == 0xc, "EControlToSpline is 12 bytes");
 
 class EEndControlToSpline : public Event {
 public:
@@ -401,7 +402,7 @@ public:
     void Destruct();                                                                    // 0x0004abc0
     EEndControlToSpline* Delete(unsigned flags);                                        // 0x0004ec20
 };
-static_assert(sizeof(EEndControlToSpline) == 8, "EEndControlToSpline is 8 bytes");
+LAYOUT_32(sizeof(EEndControlToSpline) == 8, "EEndControlToSpline is 8 bytes");
 
 class EEndCarStop : public Event {
 public:
@@ -409,7 +410,7 @@ public:
     void Destruct();                                                                    // 0x0004ab60
     EEndCarStop* Delete(unsigned flags);                                                // 0x0004ec00
 };
-static_assert(sizeof(EEndCarStop) == 4, "EEndCarStop is 4 bytes");
+LAYOUT_32(sizeof(EEndCarStop) == 4, "EEndCarStop is 4 bytes");
 
 class EDamagePlayer : public Event {
 public:
@@ -426,7 +427,7 @@ public:
     void Destruct();                                                                    // 0x0004aad0
     EDamagePlayer* Delete(unsigned flags);                                              // 0x0004ebe0
 };
-static_assert(sizeof(EDamagePlayer) == 0xc, "EDamagePlayer is 12 bytes");
+LAYOUT_32(sizeof(EDamagePlayer) == 0xc, "EDamagePlayer is 12 bytes");
 
 // Swaps the player's car for its secondary type and reloads the weapons (only for the transition "paris")
 class ECustomTransition : public Event {
@@ -442,7 +443,7 @@ public:
     void Destruct();                                                                    // 0x0004a9d0
     ECustomTransition* Delete(unsigned flags);                                          // 0x0004ebc0
 };
-static_assert(sizeof(ECustomTransition) == 8, "ECustomTransition is 8 bytes");
+LAYOUT_32(sizeof(ECustomTransition) == 8, "ECustomTransition is 8 bytes");
 
 // The collision event: what a collision did, for the sounds, rumble, effects and AI of the bodies on both sides
 class ECollision : public Event {
@@ -471,7 +472,7 @@ private:
     void ProcessSideB(Zone *zone, float strength);
     void TriggerIncidental(Zone *zone);
 };
-static_assert(sizeof(ECollision) == 0x58, "ECollision is 0x58 bytes");
+LAYOUT_32(sizeof(ECollision) == 0x58, "ECollision is 0x58 bytes");
 
 // ---- the camera
 
@@ -481,7 +482,7 @@ public:
     void Destruct();                                                                    // 0x0003e340
     EAbortCinematic* Delete(unsigned flags);                                            // 0x00047490
 };
-static_assert(sizeof(EAbortCinematic) == 4, "EAbortCinematic is 4 bytes");
+LAYOUT_32(sizeof(EAbortCinematic) == 4, "EAbortCinematic is 4 bytes");
 
 // Locks the camera on to a point, an element's character or vehicle, a vehicle element's member or one of its
 // object's wheels
@@ -514,7 +515,7 @@ public:
     void Destruct();                                                                    // 0x0003eb50
     ECameraLockOn* Delete(unsigned flags);                                              // 0x00047610
 };
-static_assert(sizeof(ECameraLockOn) == 0x28, "ECameraLockOn is 0x28 bytes");
+LAYOUT_32(sizeof(ECameraLockOn) == 0x28, "ECameraLockOn is 0x28 bytes");
 
 class ECameraShake : public Event {
 public:
@@ -533,7 +534,7 @@ public:
     void Destruct();                                                                    // 0x0003ecc0
     ECameraShake* Delete(unsigned flags);                                               // 0x00047630
 };
-static_assert(sizeof(ECameraShake) == 0x10, "ECameraShake is 16 bytes");
+LAYOUT_32(sizeof(ECameraShake) == 0x10, "ECameraShake is 16 bytes");
 
 class ECameraZoom : public Event {
 public:
@@ -550,7 +551,7 @@ public:
     void Destruct();                                                                    // 0x0003ee00
     ECameraZoom* Delete(unsigned flags);                                                // 0x00047670
 };
-static_assert(sizeof(ECameraZoom) == 0xc, "ECameraZoom is 12 bytes");
+LAYOUT_32(sizeof(ECameraZoom) == 0xc, "ECameraZoom is 12 bytes");
 
 class EChangeCarCameraView : public Event {
 public:
@@ -571,7 +572,7 @@ public:
     void Destruct();                                                                    // 0x0003ef10
     EChangeCarCameraView* Delete(unsigned flags);                                       // 0x00047690
 };
-static_assert(sizeof(EChangeCarCameraView) == 0x14, "EChangeCarCameraView is 20 bytes");
+LAYOUT_32(sizeof(EChangeCarCameraView) == 0x14, "EChangeCarCameraView is 20 bytes");
 
 class ECinematicCamera : public Event {
 public:
@@ -594,7 +595,7 @@ public:
     void Destruct();                                                                    // 0x00049d40
     ECinematicCamera* Delete(unsigned flags);                                           // 0x0004eb20
 };
-static_assert(sizeof(ECinematicCamera) == 0x20, "ECinematicCamera is 32 bytes");
+LAYOUT_32(sizeof(ECinematicCamera) == 0x20, "ECinematicCamera is 32 bytes");
 
 class EEndCameraAnim : public Event {
 public:
@@ -615,7 +616,7 @@ public:
     void Destruct();                                                                    // 0x0003f900
     EEndCameraAnim* Delete(unsigned flags);                                             // 0x00047a30
 };
-static_assert(sizeof(EEndCameraAnim) == 0x14, "EEndCameraAnim is 20 bytes");
+LAYOUT_32(sizeof(EEndCameraAnim) == 0x14, "EEndCameraAnim is 20 bytes");
 
 // ---- the world's power-ups and triggers
 
@@ -634,7 +635,7 @@ public:
     void Destruct();                                                                    // 0x0003f550
     EDisablePowerUp* Delete(unsigned flags);                                            // 0x00047950
 };
-static_assert(sizeof(EDisablePowerUp) == 0xc, "EDisablePowerUp is 12 bytes");
+LAYOUT_32(sizeof(EDisablePowerUp) == 0xc, "EDisablePowerUp is 12 bytes");
 
 class EEnablePowerUp : public Event {
 public:
@@ -647,7 +648,7 @@ public:
     void Destruct();                                                                    // 0x0003f7f0
     EEnablePowerUp* Delete(unsigned flags);                                             // 0x000479f0
 };
-static_assert(sizeof(EEnablePowerUp) == 0xc, "EEnablePowerUp is 12 bytes");
+LAYOUT_32(sizeof(EEnablePowerUp) == 0xc, "EEnablePowerUp is 12 bytes");
 
 class EDisableTrigger : public Event {
 public:
@@ -662,7 +663,7 @@ public:
     void Destruct();                                                                    // 0x0003f610
     EDisableTrigger* Delete(unsigned flags);                                            // 0x00047970
 };
-static_assert(sizeof(EDisableTrigger) == 8, "EDisableTrigger is 8 bytes");
+LAYOUT_32(sizeof(EDisableTrigger) == 8, "EDisableTrigger is 8 bytes");
 
 class EEnableTrigger : public Event {
 public:
@@ -674,7 +675,7 @@ public:
     void Destruct();                                                                    // 0x0003f8c0
     EEnableTrigger* Delete(unsigned flags);                                             // 0x00047a10
 };
-static_assert(sizeof(EEnableTrigger) == 8, "EEnableTrigger is 8 bytes");
+LAYOUT_32(sizeof(EEnableTrigger) == 8, "EEnableTrigger is 8 bytes");
 
 // ---- the mission
 
@@ -684,7 +685,7 @@ public:
     void Destruct();                                                                    // 0x0003db80
     E007Logo* Delete(unsigned flags);                                                   // 0x000472c0
 };
-static_assert(sizeof(E007Logo) == 4, "E007Logo is 4 bytes");
+LAYOUT_32(sizeof(E007Logo) == 4, "E007Logo is 4 bytes");
 
 // No work of its own (its destructor is Event's)
 class EAddObjective : public Event {
@@ -704,7 +705,7 @@ public:
 
     EAddObjective* Delete(unsigned flags);                                              // 0x000474d0
 };
-static_assert(sizeof(EAddObjective) == 0x14, "EAddObjective is 20 bytes");
+LAYOUT_32(sizeof(EAddObjective) == 0x14, "EAddObjective is 20 bytes");
 
 class EAddScoreAction : public Event {
 public:
@@ -719,7 +720,7 @@ public:
     void Destruct();                                                                    // 0x0003e520
     EAddScoreAction* Delete(unsigned flags);                                            // 0x000474f0
 };
-static_assert(sizeof(EAddScoreAction) == 8, "EAddScoreAction is 8 bytes");
+LAYOUT_32(sizeof(EAddScoreAction) == 8, "EAddScoreAction is 8 bytes");
 
 // No work of its own (its destructor is Event's; its scalar deleting destructor is EBeginDownloadCode's)
 class EAddScoreObjective : public Event {
@@ -731,7 +732,7 @@ public:
 
     int32_t unknown04;                  // +0x04
 };
-static_assert(sizeof(EAddScoreObjective) == 8, "EAddScoreObjective is 8 bytes");
+LAYOUT_32(sizeof(EAddScoreObjective) == 8, "EAddScoreObjective is 8 bytes");
 
 class EAwardHitToPlayer : public Event {
 public:
@@ -746,7 +747,7 @@ public:
     void Destruct();                                                                    // 0x0003e800
     EAwardHitToPlayer* Delete(unsigned flags);                                          // 0x00047550
 };
-static_assert(sizeof(EAwardHitToPlayer) == 8, "EAwardHitToPlayer is 8 bytes");
+LAYOUT_32(sizeof(EAwardHitToPlayer) == 8, "EAwardHitToPlayer is 8 bytes");
 
 class EAwardKillToPlayer : public Event {
 public:
@@ -761,7 +762,7 @@ public:
     void Destruct();                                                                    // 0x0003e870
     EAwardKillToPlayer* Delete(unsigned flags);                                         // 0x00047570
 };
-static_assert(sizeof(EAwardKillToPlayer) == 8, "EAwardKillToPlayer is 8 bytes");
+LAYOUT_32(sizeof(EAwardKillToPlayer) == 8, "EAwardKillToPlayer is 8 bytes");
 
 // No work of its own (its destructor is Event's). Its scalar deleting destructor is the linker's one copy for every
 // 8-byte event whose destructor is Event's: EAddScoreObjective, EBeginDownloadCode, EChangeMaxTraffic, EChangeStage,
@@ -777,7 +778,7 @@ public:
 
     EBeginDownloadCode* Delete(unsigned flags);                                         // 0x00048680
 };
-static_assert(sizeof(EBeginDownloadCode) == 8, "EBeginDownloadCode is 8 bytes");
+LAYOUT_32(sizeof(EBeginDownloadCode) == 8, "EBeginDownloadCode is 8 bytes");
 
 class EButtonMsgOff : public Event {
 public:
@@ -785,7 +786,7 @@ public:
     void Destruct();                                                                    // 0x0003e940
     EButtonMsgOff* Delete(unsigned flags);                                              // 0x00047590
 };
-static_assert(sizeof(EButtonMsgOff) == 4, "EButtonMsgOff is 4 bytes");
+LAYOUT_32(sizeof(EButtonMsgOff) == 4, "EButtonMsgOff is 4 bytes");
 
 class EButtonMsgOn : public Event {
 public:
@@ -808,7 +809,7 @@ public:
     void Destruct();                                                                    // 0x0003e9b0
     EButtonMsgOn* Delete(unsigned flags);                                               // 0x000475b0
 };
-static_assert(sizeof(EButtonMsgOn) == 0x18, "EButtonMsgOn is 24 bytes");
+LAYOUT_32(sizeof(EButtonMsgOn) == 0x18, "EButtonMsgOn is 24 bytes");
 
 class ECall911 : public Event {
 public:
@@ -816,7 +817,7 @@ public:
     void Destruct();                                                                    // 0x0003ea60
     ECall911* Delete(unsigned flags);                                                   // 0x000475d0
 };
-static_assert(sizeof(ECall911) == 4, "ECall911 is 4 bytes");
+LAYOUT_32(sizeof(ECall911) == 4, "ECall911 is 4 bytes");
 
 class ECallStage : public Event {
 public:
@@ -831,7 +832,7 @@ public:
     void Destruct();                                                                    // 0x0003eae0
     ECallStage* Delete(unsigned flags);                                                 // 0x000475f0
 };
-static_assert(sizeof(ECallStage) == 8, "ECallStage is 8 bytes");
+LAYOUT_32(sizeof(ECallStage) == 8, "ECallStage is 8 bytes");
 
 // Works in its constructor (its destructor is Event's)
 class EChangeMaxTraffic : public Event {
@@ -845,7 +846,7 @@ public:
 
     EChangeMaxTraffic* Construct(int maxTraffic);                                       // 0x0003f060
 };
-static_assert(sizeof(EChangeMaxTraffic) == 8, "EChangeMaxTraffic is 8 bytes");
+LAYOUT_32(sizeof(EChangeMaxTraffic) == 8, "EChangeMaxTraffic is 8 bytes");
 
 // Works in its constructor (its destructor is Event's)
 class EChangeStage : public Event {
@@ -859,7 +860,7 @@ public:
 
     EChangeStage* Construct(int stage);                                                 // 0x0003f110
 };
-static_assert(sizeof(EChangeStage) == 8, "EChangeStage is 8 bytes");
+LAYOUT_32(sizeof(EChangeStage) == 8, "EChangeStage is 8 bytes");
 
 class EClearBitMagicCounter : public Event {
 public:
@@ -876,7 +877,7 @@ public:
     void Destruct();                                                                    // 0x0003f260
     EClearBitMagicCounter* Delete(unsigned flags);                                      // 0x000476b0
 };
-static_assert(sizeof(EClearBitMagicCounter) == 0xc, "EClearBitMagicCounter is 12 bytes");
+LAYOUT_32(sizeof(EClearBitMagicCounter) == 0xc, "EClearBitMagicCounter is 12 bytes");
 
 class EClearProgrammerEvent : public Event {
 public:
@@ -891,7 +892,7 @@ public:
     void Destruct();                                                                    // 0x0003f300
     EClearProgrammerEvent* Delete(unsigned flags);                                      // 0x000476d0
 };
-static_assert(sizeof(EClearProgrammerEvent) == 8, "EClearProgrammerEvent is 8 bytes");
+LAYOUT_32(sizeof(EClearProgrammerEvent) == 8, "EClearProgrammerEvent is 8 bytes");
 
 // No work of its own (its destructor is Event's)
 class EDisplayObjectiveText : public Event {
@@ -909,7 +910,7 @@ public:
 
     EDisplayObjectiveText* Delete(unsigned flags);                                      // 0x00047990
 };
-static_assert(sizeof(EDisplayObjectiveText) == 0x10, "EDisplayObjectiveText is 16 bytes");
+LAYOUT_32(sizeof(EDisplayObjectiveText) == 0x10, "EDisplayObjectiveText is 16 bytes");
 
 class EDisplayText : public Event {
 public:
@@ -926,7 +927,7 @@ public:
     void Destruct();                                                                    // 0x0003f690
     EDisplayText* Delete(unsigned flags);                                               // 0x000479b0
 };
-static_assert(sizeof(EDisplayText) == 0xc, "EDisplayText is 12 bytes");
+LAYOUT_32(sizeof(EDisplayText) == 0xc, "EDisplayText is 12 bytes");
 
 class EEndMission : public Event {
 public:
@@ -934,7 +935,7 @@ public:
     void Destruct();                                                                    // 0x0003fab0
     EEndMission* Delete(unsigned flags);                                                // 0x00047a50
 };
-static_assert(sizeof(EEndMission) == 4, "EEndMission is 4 bytes");
+LAYOUT_32(sizeof(EEndMission) == 4, "EEndMission is 4 bytes");
 
 // ECollision's steps of its last incidental effects: by anything, and by the player's car (names ours)
 extern uint32_t LastIncidentalStep;

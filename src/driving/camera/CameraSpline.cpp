@@ -24,7 +24,7 @@
 // XBE_GLOBAL(0x001ebcb0, 4)
 static float RadiansToTurns = 1.0f / 6.283185f;         // as the static initialiser made it (0x3e22f984)
 
-const uint32_t kGameSymbolTableVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_00190e18));
+void **const kGameSymbolTableVtable = Vtable_00190e18;
 
 namespace {
 
@@ -406,7 +406,7 @@ GameSymbolTable* GameSymbolTable::Delete(unsigned flags) {
 
 // FUNC_AT(0x0007ae60)
 void GameSymbolTable::Destruct() {
-    vtable = reinterpret_cast<void *>(uintptr_t(kGameSymbolTableVtable));
+    vtable = kGameSymbolTableVtable;
     USymbolTable::Destruct();
 }
 

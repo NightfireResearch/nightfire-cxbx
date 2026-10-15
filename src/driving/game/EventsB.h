@@ -526,7 +526,7 @@ private:
     void Process();
 };
 XBE_CLASS_SIZE(EHitWindow, 0x54);
-static_assert(offsetof(EHitWindow, hit) == 0x24 && offsetof(EHitWindow, flag) == 0x50, "EHitWindow layout");
+LAYOUT_32(offsetof(EHitWindow, hit) == 0x24 && offsetof(EHitWindow, flag) == 0x50, "EHitWindow layout");
 
 // (0x14 bytes; vtable 0x0018c55c) Kicks the rigid body that raised the event: an impulse straight up at one of
 // its first four levers, scaled at random, and a damage of 1000000 to its owner. Nothing for a body of kind 1.
@@ -854,7 +854,7 @@ struct PathSFXUpdateData {
     const char *unknown10;              // +0x10 the event's
     uint32_t taskNum;                   // +0x14 Schedule::AddTask's
 };
-static_assert(sizeof(PathSFXUpdateData) == 0x18, "the path sound's task data is 0x18 bytes");
+LAYOUT_32(sizeof(PathSFXUpdateData) == 0x18, "the path sound's task data is 0x18 bytes");
 
 // (0x18 bytes; vtable 0x0018c5b8) With sound on, a sound of the patch from bank slot 0 for the instance's running
 // path, and an EPathSFXUpdate task (event 0x10f) every tick to follow it.

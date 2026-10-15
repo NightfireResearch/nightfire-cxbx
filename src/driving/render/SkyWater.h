@@ -21,6 +21,7 @@
 #include "../engine/USingleton.h"
 #include "../world/CollisionManager.h"    // WindowPaneNode, WindowPaneIterator
 #include "../world/CollisionTypes.h"      // InstanceList
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 namespace EAGL {
 struct TAR;
@@ -73,9 +74,9 @@ public:
     static void Kill();                     // vtable slot 2                                     // 0x000a8470
     void LoadAttributes();                                                                      // 0x000a8490
 };
-static_assert(sizeof(RWater) == 0x120, "RWater is 0x120 bytes");
-static_assert(offsetof(RWater, scales) == 0x50 && offsetof(RWater, scrolls) == 0xb0 &&
-              offsetof(RWater, sunDirection) == 0x110, "RWater layout");
+LAYOUT_32(sizeof(RWater) == 0x120, "RWater is 0x120 bytes");
+LAYOUT_32(offsetof(RWater, scales) == 0x50 && offsetof(RWater, scrolls) == 0xb0 &&
+          offsetof(RWater, sunDirection) == 0x110, "RWater layout");
 
 extern RWater *TheWater;                                    // RWater::Init's instance
 

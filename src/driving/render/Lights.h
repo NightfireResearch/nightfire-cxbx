@@ -19,6 +19,7 @@
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../engine/USingleton.h"
 #include "../world/CollisionTypes.h"    // MATRIX4
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 struct ArticleEffect;                   // world/World.h: a dynamic light is one of type kTypeLight
 
@@ -181,13 +182,13 @@ public:
     void SetLightingModel(int model);                                                           // 0x0007f470
     void FinishLights();                // the frame's positional lights become last frame's     // 0x0007f540
 };
-static_assert(sizeof(RLightManager) == 0x3f0, "RLightManager is 0x3f0 bytes");
-static_assert(offsetof(RLightManager, specularMatrix) == 0x20 && offsetof(RLightManager, lightBlock) == 0x78 &&
-              offsetof(RLightManager, lightInfos) == 0x7c && offsetof(RLightManager, angles) == 0x23c &&
-              offsetof(RLightManager, pendingLights) == 0x29c && offsetof(RLightManager, currentAmbient) == 0x2a4 &&
-              offsetof(RLightManager, verticalFalloff) == 0x2c4 && offsetof(RLightManager, falloffCutin) == 0x2c8 &&
-              offsetof(RLightManager, lightMapLightingBias) == 0x2d4 && offsetof(RLightManager, highLevel) == 0x2d8,
-              "RLightManager layout");
+LAYOUT_32(sizeof(RLightManager) == 0x3f0, "RLightManager is 0x3f0 bytes");
+LAYOUT_32(offsetof(RLightManager, specularMatrix) == 0x20 && offsetof(RLightManager, lightBlock) == 0x78 &&
+          offsetof(RLightManager, lightInfos) == 0x7c && offsetof(RLightManager, angles) == 0x23c &&
+          offsetof(RLightManager, pendingLights) == 0x29c && offsetof(RLightManager, currentAmbient) == 0x2a4 &&
+          offsetof(RLightManager, verticalFalloff) == 0x2c4 && offsetof(RLightManager, falloffCutin) == 0x2c8 &&
+          offsetof(RLightManager, lightMapLightingBias) == 0x2d4 && offsetof(RLightManager, highLevel) == 0x2d8,
+          "RLightManager layout");
 
 // FUN_0007eed0: a light set's first three directions from its angles (the original takes the set in EAX and the
 // angles in EBX: FUN_0007eed0 is the adaptor, SetLightDirections the C++ under it)

@@ -18,6 +18,7 @@
 
 #include "../engine/RbTree.h"
 #include "../world/Targeting.h"         // PointerList
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class AMix;
 struct AVoiceMap;
@@ -85,7 +86,7 @@ static_assert(sizeof(AVoice::View) == 0x1c, "a voice's view is 28 bytes");
 static_assert(offsetof(AVoice::View, handle) == 0x0c, "View::handle");
 static_assert(offsetof(AVoice::View, delay) == 0x14, "View::delay");
 static_assert(offsetof(AVoice::View, finished) == 0x19, "View::finished");
-static_assert(sizeof(AVoice) == 0x58, "AVoice is 88 bytes");
+LAYOUT_32(sizeof(AVoice) == 0x58, "AVoice is 88 bytes");
 
 extern int32_t LastPlayTick;        // TIMER_gettick at the last PlayVoices
 
@@ -95,7 +96,7 @@ struct AVoiceViewList : PointerList {
     // _Incsize: this list's compiled copy of PointerList's.
     void IncreaseSize(uint32_t count);                                              // 0x00123ec0
 };
-static_assert(sizeof(AVoiceViewList) == 12, "a list is 12 bytes");
+LAYOUT_32(sizeof(AVoiceViewList) == 12, "a list is 12 bytes");
 
 // ---- the debug map: std::map<const char *, AVoiceMapInfo> (0x00243a9c), keyed by the patch name's address
 
@@ -113,7 +114,7 @@ struct AVoiceMapValue {
 };
 
 struct AVoiceMapNode : RbTreeNode<AVoiceMapNode, AVoiceMapValue> {};
-static_assert(sizeof(AVoiceMapNode) == 0x20, "a voice map node is 32 bytes");
+LAYOUT_32(sizeof(AVoiceMapNode) == 0x20, "a voice map node is 32 bytes");
 
 struct AVoiceMapInsert {
     AVoiceMapNode *node;
@@ -142,7 +143,7 @@ struct AVoiceMap : RbTree<AVoiceMapNode> {
     AVoiceMapInsert* InsertUnique(AVoiceMapInsert *result, const AVoiceMapValue *value);   // 0x00124240
     AVoiceMapNode** EraseRange(AVoiceMapNode **result, AVoiceMapNode *first, AVoiceMapNode *last);   // 0x00124300
 };
-static_assert(sizeof(AVoiceMap) == 12, "a map is 12 bytes");
+LAYOUT_32(sizeof(AVoiceMap) == 12, "a map is 12 bytes");
 
 // ---- the warning beside a provisional port: code no shipped data reaches (the containers' length and iterator
 // errors), said once, the first time it runs

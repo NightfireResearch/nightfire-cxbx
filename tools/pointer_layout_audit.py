@@ -28,6 +28,8 @@ Kinds (--list):
   assert.size           a static_assert on the size of a pointer-bearing structure: fails on 64-bit
   assert.offset         a static_assert on the offset of a member after a pointer-sized one: fails on 64-bit
   assert.unknown        a size or offset check on a type the parser cannot place (a template parameter, a typedef)
+  assert.layout32       a check that holds on 32-bit only (LAYOUT_32, and XBE_CLASS_SIZE/XBE_FIELD, which expand to
+                        it): a structure that lives only in memory; on one read from a file it would be a mistake
   cast.ptr_to_u32       a pointer made a 32-bit integer explicitly ((uint32_t)(uintptr_t)p, int(uintptr_t(p))...):
                         compiles silently on 64-bit and truncates
   cast.u32_to_ptr       a 32-bit integer made a pointer through uintptr_t: right only below 4 GB
@@ -63,7 +65,12 @@ LOADERS = [
      ["ElfSection", "ElfSymbol", "ElfRel", "ElfHeader", "Model", "GeoPrim", "TAR", "RenderMethod", "VertexBuffer",
       "DrawArray", "GeometryEnable", "MorphRecord", "MorphWeights", "AnimBank", "FnAnimBank", "Skeleton", "BoneMask",
       "AnimData", "DeltaFData", "DeltaSingleQData", "DeltaQFastHeader", "DeltaQHeader", "TARSharedData",
-      "TARAtlasEntry", "LoadedVertexBuffer", "D3DResource", "ParamPacket", "DynamicStreamPacket", "GeoPrimParam"]),
+      "TARAtlasEntry", "LoadedVertexBuffer", "D3DResource", "ParamPacket", "DynamicStreamPacket", "GeoPrimParam",
+      # found by package 6: file layouts the loader's data is read through, and the game's GeoPrims, which EAGL
+      # draws as its own
+      "PushBufferPacket", "TARAtlas", "TARSlot", "TARSymbolData", "DeltaChanData", "KeyChanData", "CompoundData",
+      "AttributeEntry", "DynamicModel", "GainGeoPrim", "EmpGeoPrim", "SimpleGeoPrim", "TexturedGeoPrim",
+      "GlowGeoPrim"]),
     ("CARP data groups (engine/UGroup.cpp, data/UData.h, data/Carp.cpp, data/RCARPFile.cpp)",
      "a record's data word, an offset from the record, made a 32-bit address (ResolveOffsets); tags made addresses "
      "(TagReference); 'rs' names swapped for what the symbol table answers (AdoptData); the payload records the "
@@ -71,11 +78,14 @@ LOADERS = [
      ["UData", "UGroup", "TagReference", "Instance", "WorldArticle", "AIElement", "AICharacterRecord",
       "AICommand", "AISpline", "PathInfo", "AnimKey", "AnimInfo", "Trigger", "TriggerRecord", "Rule",
       "CarpSections", "EventListHeader", "EventEntry", "WorldNode", "WorldMap", "Record", "MissionRuleRecord",
-      "WMapNode", "ProcAnimState", "WGridNode", "BaseDesc", "AsRecord", "ArticleLod"]),
+      "WMapNode", "ProcAnimState", "WGridNode", "BaseDesc", "AsRecord", "ArticleLod",
+      # found by package 6: records read straight from a group's data
+      "WTrigger", "WCollisionInstance", "WMapHeader", "ArticleEffect"]),
     ("realgraph SHAPE/FONT/LOCALE (eagl/Realgraph.cpp, eagl/Tar.cpp)",
      "offsets kept as offsets, except the slots a loaded font holds the game's pointers in (FNTXFont +0x70 tar, +0x74 "
      "shape) and TARs built over a file's image in place",
-     ["FNTXFont", "FontHeader", "FNTXGlyph", "ShapeFile", "ShapeImage", "ShapeEntry"]),
+     ["FNTXFont", "FontHeader", "FNTXGlyph", "ShapeFile", "ShapeImage", "ShapeEntry",
+      "LinkedFontFile"]),   # package 6: the built-in fonts, laid out as font files
     ("EA sound banks (sound/snd/Banks.cpp)",
      "bank headers read in place; the timbre table's words hold addresses (DefaultEnvelope's) as 32-bit integers",
      ["BankHeader", "Timbre", "Envelope"]),
@@ -238,9 +248,15 @@ class Source:
         # XBE_FIELDS(Name) expanded on its own line; XBE_CLASS_SIZE and XBE_FIELD read as the checks they are
         self.code = re.sub(r"\bXBE_FIELDS\s*\(\s*(\w+)\s*\)",
                            lambda m: " ".join(OVERLAYS.get(m.group(1), "").split()), self.code)
-        self.code = re.sub(r"\bXBE_CLASS_SIZE\s*\(\s*([\w:]+)\s*,", r"static_assert(sizeof(\1) ==", self.code)
+        self.code = re.sub(r"\bXBE_CLASS_SIZE\s*\(\s*([\w:]+)\s*,", r"LAYOUT_32(sizeof(\1) ==", self.code)
         self.code = re.sub(r"\bXBE_FIELD\s*\(\s*([\w:]+)\s*,\s*([\w.\[\]]+)\s*,",
-                           r"static_assert(offsetof(\1, \2) ==", self.code)
+                           r"LAYOUT_32(offsetof(\1, \2) ==", self.code)
+        self.line_starts = [0]
+        for m in re.finditer("\n", self.code):
+            self.line_starts.append(m.end())
+        # LAYOUT_32 (src/common/xbeClass.h; XBE_CLASS_SIZE and XBE_FIELD expand to it): checks that hold on 32-bit only
+        self.layout32 = {self.line_of(m.start()) for m in re.finditer(r"\bLAYOUT_32\s*\(", self.code)}
+        self.code = re.sub(r"\bLAYOUT_32\s*\(", "static_assert(", self.code)
         self.line_starts = [0]
         for m in re.finditer("\n", self.code):
             self.line_starts.append(m.end())
@@ -564,6 +580,7 @@ def preceding_pointer(s, field, by_name, seen=None):
 
 SPANS = {}                             # a check's first line -> its last
 FILE_CHECKS = set()                    # failing checks on a structure read from a file: these must hold on 64-bit
+FILE32 = set()                         # LAYOUT_32 checks on such a structure: wrong, they must hold on 64-bit
 
 
 def layout_checks(sources, by_name):
@@ -621,7 +638,13 @@ def layout_checks(sources, by_name):
             if kinds and not any(k[1] in fixed for k in kinds) and len(re.findall(r"\bsizeof\s*\(", inner)) >= 2 and \
                     not re.search(r"\b(0x[0-9a-fA-F]+|\d+)\b", outside):
                 kinds = []                      # sizes compared with each other: both change alike
-            if kinds:
+            if line in src.layout32:
+                if re.search(r"\b(sizeof|offsetof)\s*\(", inner):
+                    findings.append(("assert.layout32", src.rel, line,
+                                     ", ".join(sorted(set(k[1] for k in kinds))) or "(holds on 64-bit too)"))
+                    if file_layout:
+                        FILE32.add((src.rel, line))
+            elif kinds:
                 order = ["assert.size", "assert.offset", "assert.unknown"]
                 kinds.sort(key=lambda k: order.index(k[0]))
                 findings.append((kinds[0][0], src.rel, line, ", ".join(sorted(set(k[1] for k in kinds)))))
@@ -860,7 +883,8 @@ def main():
     n_struct = len(structs)
     n_bearing = sum(1 for s in structs if bearing(s))
     member_kinds = Counter(m.kind for s in structs for m in s.members)
-    asserts_total = sum(count[k] for k in ("assert.size", "assert.offset", "assert.unknown", "assert.stable"))
+    asserts_total = sum(count[k] for k in ("assert.size", "assert.offset", "assert.unknown", "assert.stable",
+                                           "assert.layout32"))
     x87_ops = Counter(o for kind, _, _, _, x87 in asm if kind == "asm.x87" for o in x87)
     x87_names = [(name, callers[name.split("::")[-1]]) for kind, _, _, name, _ in asm if kind == "asm.x87"]
     cc = Counter(f[3] for f in findings if f[0] == "callconv")
@@ -894,6 +918,8 @@ def main():
                 if m.kind in ("pointer", "funcptr", "handle", "vtable", "sizevar")))], ("Structures", "Count"))
     table([("static_asserts on sizes and offsets", asserts_total),
            ("stay true (no pointer-sized member involved)", count["assert.stable"]),
+           ("32-bit only (LAYOUT_32, XBE_CLASS_SIZE, XBE_FIELD)", count["assert.layout32"]),
+           ("  of those, on structures read from files (should not be)", len(FILE32)),
            ("fail: size of a pointer-bearing structure", count["assert.size"]),
            ("fail: offset after a pointer-sized member", count["assert.offset"]),
            ("  of those failing, on structures read from files", len(FILE_CHECKS)),

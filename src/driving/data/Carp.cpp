@@ -46,8 +46,8 @@ bool CarpVerbose;                        // report references the symbol table c
 // XBE_GLOBAL(0x00243590, 0x100)
 char CountedStringBuffer[0x100];
 
-const uint32_t kSymbolicResolverVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_001a20cc));
-const uint32_t kTagResolverVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_001a20c0));
+void **const kSymbolicResolverVtable = Vtable_001a20cc;
+void **const kTagResolverVtable = Vtable_001a20c0;
 
 // Record and group tags.
 constexpr uint32_t kTagSymbolic = 0x73722020;   // 'rs  '
@@ -522,9 +522,9 @@ uint32_t CARP::ResolveSymbolicReferences(UGroup *root, USymbolTable *symbols) {
     InitResolvers();
     SymbolicResolver symbolic;
     TagResolver tags;
-    symbolic.vtable = reinterpret_cast<void *>(uintptr_t(kSymbolicResolverVtable));
+    symbolic.vtable = kSymbolicResolverVtable;
     symbolic.symbols = symbols;
-    tags.vtable = reinterpret_cast<void *>(uintptr_t(kTagResolverVtable));
+    tags.vtable = kTagResolverVtable;
     tags.root = root;
     tags.shared = root->GroupLocateTag(kTagShared);
     if (tags.shared == tags.root->GetArray() + tags.root->GroupCount())

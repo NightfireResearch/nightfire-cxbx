@@ -98,7 +98,7 @@ SimObjectInsert* SimObjectMultimap::InsertMulti(SimObjectInsert *result, const S
 
 // lower_bound, then the end unless the key is there
 // FUNC_AT(0x000a8ae0)
-CollisionInstanceNode** CollisionInstanceMap::Find(CollisionInstanceNode **result, const uint32_t *key) {
+CollisionInstanceNode** CollisionInstanceMap::Find(CollisionInstanceNode **result, const uintptr_t *key) {
     CollisionInstanceNode *where = head;
     for (CollisionInstanceNode *node = head->parent; !node->isNil;) {
         if (node->value.key < *key) {

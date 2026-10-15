@@ -15,13 +15,14 @@
 
 #include "Camera.h"
 #include "../eagl/GeoPrimState.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 struct CachedDrawInfo;
 
 // What the culling steps through: each module's next item (its key, or -1 at the end) with its bounding sphere,
 // the curtain test's margin and the far-plane test, and where it is told whether the item is culled
-typedef int (*CullNextItem)(Coord4 *sphere, float *height, bool *checkFar, float *farScale);
-typedef void (*CullSetItem)(int item, bool culled, float distance);
+typedef intptr_t (*CullNextItem)(Coord4 *sphere, float *height, bool *checkFar, float *farScale);
+typedef void (*CullSetItem)(intptr_t item, bool culled, float distance);
 
 class RRenderWorldCamera : public RViewCamera {
 public:
@@ -45,7 +46,7 @@ public:
     void DrawEffects();                                                                         // 0x0008cf10
     void DoRender();                    // vtable slot 4                                        // 0x0008cfa0
 };
-static_assert(sizeof(RRenderWorldCamera) == 0x4c, "RRenderWorldCamera is 76 bytes");
+LAYOUT_32(sizeof(RRenderWorldCamera) == 0x4c, "RRenderWorldCamera is 76 bytes");
 
 class RPlayerViewCamera : public RRenderWorldCamera {
 public:
@@ -55,7 +56,7 @@ public:
     // The 2D culling frustum from the camera; vtable slot 5
     void ConfigureView();                                                                       // 0x0008a420
 };
-static_assert(sizeof(RPlayerViewCamera) == 0x4c, "RPlayerViewCamera is 76 bytes");
+LAYOUT_32(sizeof(RPlayerViewCamera) == 0x4c, "RPlayerViewCamera is 76 bytes");
 
 // FUN_000970a0 (the name is ours): the largest whole number not above the value, by __ftol2's truncation
 int FloorToInt(float value);                                                                    // 0x000970a0

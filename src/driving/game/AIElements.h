@@ -24,6 +24,7 @@
 #include "../data/Carp.h"               // CARP::AIElement
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../../helpers.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class AICharacter;
 class AIElementController;
@@ -145,10 +146,10 @@ public:
     // sleepRange
     void Update(const Coord4 *player);                                                          // 0x00028ab0
 };
-static_assert(sizeof(AIElementTracking) == 0x50, "an element's tracking is 0x50 bytes");
-static_assert(offsetof(AIElementTracking, inRange) == 0x18 && offsetof(AIElementTracking, element) == 0x1c &&
-              offsetof(AIElementTracking, position) == 0x30 && offsetof(AIElementTracking, lastHitPoints) == 0x40,
-              "element tracking layout");
+LAYOUT_32(sizeof(AIElementTracking) == 0x50, "an element's tracking is 0x50 bytes");
+LAYOUT_32(offsetof(AIElementTracking, inRange) == 0x18 && offsetof(AIElementTracking, element) == 0x1c &&
+          offsetof(AIElementTracking, position) == 0x30 && offsetof(AIElementTracking, lastHitPoints) == 0x40,
+          "element tracking layout");
 
 class AIElementController {
 public:
@@ -199,10 +200,10 @@ public:
     // else the nearest ahead first - and those left out sent to sleep
     void Update();                                                                              // 0x00029880
 };
-static_assert(sizeof(AIElementController) == 0x58, "the element controller is 0x58 bytes");
-static_assert(offsetof(AIElementController, stats) == 0x1c && offsetof(AIElementController, wakeList) == 0x38 &&
-              offsetof(AIElementController, count) == 0x40 && offsetof(AIElementController, cars) == 0x50 &&
-              offsetof(AIElementController, mightAsWellBeDead) == 0x54, "element controller layout");
+LAYOUT_32(sizeof(AIElementController) == 0x58, "the element controller is 0x58 bytes");
+LAYOUT_32(offsetof(AIElementController, stats) == 0x1c && offsetof(AIElementController, wakeList) == 0x38 &&
+          offsetof(AIElementController, count) == 0x40 && offsetof(AIElementController, cars) == 0x50 &&
+          offsetof(AIElementController, mightAsWellBeDead) == 0x54, "element controller layout");
 
 // A new element's sleepRange
 extern float DefaultSleepRange;
@@ -272,8 +273,8 @@ struct AIZoneStatics {
     float unknown34;                    // +0x34 a static initialiser's constant (not the controller's)
     AIZone zones[kZones];               // +0x38
 };
-static_assert(sizeof(AIZoneStatics) == 0x380 && offsetof(AIZoneStatics, instance) == 0x2c &&
-              offsetof(AIZoneStatics, zones) == 0x38, "the zone statics");
+LAYOUT_32(sizeof(AIZoneStatics) == 0x380 && offsetof(AIZoneStatics, instance) == 0x2c &&
+          offsetof(AIZoneStatics, zones) == 0x38, "the zone statics");
 
 extern AIZoneStatics AIZoneData;
 

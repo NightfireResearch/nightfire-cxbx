@@ -12,6 +12,7 @@
 #include "../eagl/Realgraph.h"          // ShapeFile
 #include "../data/StdStreams.h"         // GameStd::LogicError
 #include "../engine/URefCounter.h"      // RefCounterTree
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class DynamicLoader;
 namespace EAGL {
@@ -45,14 +46,14 @@ public:
     // Model `model`'s TAR `tar` draws the image of `texture` (nothing when texture is NULL).
     void SetTexture(int model, int tar, EAGL::TAR *texture);                    // 0x00017450
 };
-static_assert(sizeof(ActModel) == 0x4c, "an ActModel is 0x4c bytes");
+LAYOUT_32(sizeof(ActModel) == 0x4c, "an ActModel is 0x4c bytes");
 
 // ActModelDatabase::ModelInfo (operator new)
 struct ActModelInfo {                 // 0x18
     ActModel *model;                  // +0x00
     char name[0x14];                  // +0x04 the character's name
 };
-static_assert(sizeof(ActModelInfo) == 0x18, "a ModelInfo is 0x18 bytes");
+LAYOUT_32(sizeof(ActModelInfo) == 0x18, "a ModelInfo is 0x18 bytes");
 
 class ActModelDatabase {              // 0xb0 ("ActModelDatabase")
 public:
@@ -69,8 +70,8 @@ public:
     void LoadModel(ActCharacterInfo *info);                                     // 0x000181a0
     ActModel* UseModel(ActCharacterInfo *info);                                 // 0x00017840
 };
-static_assert(offsetof(ActModelDatabase, count) == 0xa4, "the model database's count is at +0xa4");
-static_assert(sizeof(ActModelDatabase) == 0xb0, "an ActModelDatabase is 0xb0 bytes");
+LAYOUT_32(offsetof(ActModelDatabase, count) == 0xa4, "the model database's count is at +0xa4");
+LAYOUT_32(sizeof(ActModelDatabase) == 0xb0, "an ActModelDatabase is 0xb0 bytes");
 
 // ActTextureDatabase::TextureInfo (operator new)
 struct ActTextureInfo {               // 0x28
@@ -78,7 +79,7 @@ struct ActTextureInfo {               // 0x28
     ShapeFile *file;                  // +0x04
     char name[0x20];                  // +0x08
 };
-static_assert(sizeof(ActTextureInfo) == 0x28, "a TextureInfo is 0x28 bytes");
+LAYOUT_32(sizeof(ActTextureInfo) == 0x28, "a TextureInfo is 0x28 bytes");
 
 class ActTextureDatabase {            // 0xac ("ActTextureDatabase")
 public:
@@ -95,8 +96,8 @@ public:
     void LoadTexture(const char *name, const char *path);                       // 0x0001a770
     EAGL::TAR* UseTexture(const char *name);                                    // 0x00019e30
 };
-static_assert(offsetof(ActTextureDatabase, count) == 0xa8, "the texture database's count is at +0xa8");
-static_assert(sizeof(ActTextureDatabase) == 0xac, "an ActTextureDatabase is 0xac bytes");
+LAYOUT_32(offsetof(ActTextureDatabase, count) == 0xa8, "the texture database's count is at +0xa8");
+LAYOUT_32(sizeof(ActTextureDatabase) == 0xac, "an ActTextureDatabase is 0xac bytes");
 
 // ---- the two URefCounters' trees: their compiled copies of RefCounterTree's code (engine/URefCounter.h)
 
@@ -134,6 +135,6 @@ struct OutOfRangeError : GameStd::LogicError {
     void Destruct();                                                            // 0x000178d0
     OutOfRangeError* Delete(unsigned flags);                                    // 0x000178b0
 };
-static_assert(sizeof(OutOfRangeError) == 0x28, "an out_of_range is 0x28 bytes");
+LAYOUT_32(sizeof(OutOfRangeError) == 0x28, "an out_of_range is 0x28 bytes");
 
 #endif // DRIVING_ANIM_MODEL_H_

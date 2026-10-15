@@ -482,7 +482,7 @@ void RVehicle::TriggerFX(int type, uint32_t which, uint32_t extra, const Coord3 
         switchIntensity[which] = 0.0f;
         return;
     }
-    RSceneObj::TriggerFX(type, which, extra, uint32_t(uintptr_t(point)), uint32_t(uintptr_t(direction)), intensity);
+    RSceneObj::TriggerFX(type, which, extra, point, direction, intensity);
 }
 
 // FUNC_AT(0x00095b60)

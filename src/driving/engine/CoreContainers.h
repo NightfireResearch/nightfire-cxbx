@@ -5,10 +5,12 @@
 #include <stdint.h>
 
 #include "RbTree.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 namespace EAGL {
 struct GeoPrimState;
 }
+struct WindowPaneNode;
 
 // ---------------------------------------------------------------------------------------------------------------
 // Compiled copies of the C++ library's containers that the engine's core owns: a few red-black tree methods
@@ -50,9 +52,9 @@ struct StateRefValue {              // StateRef: ordered by the 0x4c bytes of th
     char name[0x10];                // the first 15 characters of the state's string
 };
 
-struct CollisionInstanceValue {     // keyed by a WCollisionInstance pointer (compared unsigned)
-    uint32_t key;
-    uint8_t unknown04[0xc];
+struct CollisionInstanceValue {     // world/CollisionManager.h's WindowMapValue, keyed by its instance's address
+    uintptr_t key;
+    RbTree<WindowPaneNode> panes;
 };
 
 struct SimObjectValue {             // Simulation::SpawnPhysicsObject's multimap
@@ -60,10 +62,10 @@ struct SimObjectValue {             // Simulation::SpawnPhysicsObject's multimap
     void *object;
 };
 
-static_assert(sizeof(GameTreeNode<StateRefValue>) == 0x24, "the StateRef set's node");
-static_assert(sizeof(GameTreeNode<CollisionInstanceValue>) == 0x20, "the WCollisionInstance map's node");
-static_assert(sizeof(GameTree<StateRefValue>) == 0xc, "a tree is 0xc bytes");
-static_assert(sizeof(GameVector<void *>) == 0x10, "a vector is 0x10 bytes");
+LAYOUT_32(sizeof(GameTreeNode<StateRefValue>) == 0x24, "the StateRef set's node");
+LAYOUT_32(sizeof(GameTreeNode<CollisionInstanceValue>) == 0x20, "the WCollisionInstance map's node");
+LAYOUT_32(sizeof(GameTree<StateRefValue>) == 0xc, "a tree is 0xc bytes");
+LAYOUT_32(sizeof(GameVector<void *>) == 0x10, "a vector is 0x10 bytes");
 
 typedef GameTreeInsertResult<StateRefValue> StateRefInsert;
 typedef GameTreeInsertResult<SimObjectValue> SimObjectInsert;
@@ -78,7 +80,7 @@ struct StateRefSet : GameTree<StateRefValue> {
 
 // _Rb_tree<WCollisionInstance *, WCollisionInstance>::find (0x000a8ae0)
 struct CollisionInstanceMap : GameTree<CollisionInstanceValue> {
-    CollisionInstanceNode** Find(CollisionInstanceNode **result, const uint32_t *key);
+    CollisionInstanceNode** Find(CollisionInstanceNode **result, const uintptr_t *key);
 };
 
 // std::__tree<>::insert_multi (0x000b3930)

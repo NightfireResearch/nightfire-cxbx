@@ -12,6 +12,7 @@
 #include <stdint.h>
 
 #include "../eagl/anim/EventTarget.h"   // EventHandler
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class ActActor;
 struct RawEvent;
@@ -40,7 +41,7 @@ public:
     ActEventResolver* Construct();                                              // 0x00015710
     void Destruct();                                                            // 0x00015750
 };
-static_assert(sizeof(ActEventResolver) == 4, "an ActEventResolver is 4 bytes");
+LAYOUT_32(sizeof(ActEventResolver) == 4, "an ActEventResolver is 4 bytes");
 
 class ActEvents {                       // 0x94
 public:
@@ -58,9 +59,9 @@ public:
     void Destruct();                                                            // 0x000156c0
     void SetCurrentActor(ActActor *actor);                                      // 0x000156f0
 };
-static_assert(offsetof(ActEvents, defaultHandler) == 0x80 && offsetof(ActEvents, currentActor) == 0x90,
-              "ActEvents layout");
-static_assert(sizeof(ActEvents) == 0x94, "an ActEvents is 0x94 bytes");
+LAYOUT_32(offsetof(ActEvents, defaultHandler) == 0x80 && offsetof(ActEvents, currentActor) == 0x90,
+          "ActEvents layout");
+LAYOUT_32(sizeof(ActEvents) == 0x94, "an ActEvents is 0x94 bytes");
 
 extern ActActor *CurrentActor;   // SetCurrentActor's
 

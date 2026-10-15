@@ -17,6 +17,7 @@
 #include "../data/CoordConvert.h"         // Coord4
 #include "../render/Materials.h"          // TexturedGeoPrim, USimpleTexturedMaterial
 #include "../render/OffscreenBuffer.h"
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 namespace EAGL {
 struct TAR;
@@ -40,9 +41,9 @@ public:
     // The quad over the whole screen, unless the mission manager's cinematicMode is set
     void Draw();                                                                                // 0x000a0b50
 };
-static_assert(sizeof(RMissileCam) == 0x1c, "RMissileCam is 0x1c bytes");
-static_assert(offsetof(RMissileCam, enabled) == 0x10 && offsetof(RMissileCam, alpha) == 0x14 &&
-              offsetof(RMissileCam, geoPrim) == 0x18, "RMissileCam layout");
+LAYOUT_32(sizeof(RMissileCam) == 0x1c, "RMissileCam is 0x1c bytes");
+LAYOUT_32(offsetof(RMissileCam, enabled) == 0x10 && offsetof(RMissileCam, alpha) == 0x14 &&
+          offsetof(RMissileCam, geoPrim) == 0x18, "RMissileCam layout");
 
 extern RMissileCam *MissileCam;   // RMissileCam::Init's instance
 extern EAGL::GeoPrimState MissileCamState;          // Draw's static; DestroyStatic_00200f60 at exit
@@ -85,12 +86,12 @@ public:
     // The rings, the outer first, through the offscreen buffer's texture, when active
     void Draw();                                                                                // 0x000a6bc0
 };
-static_assert(sizeof(RSniperZoom) == 0xc70, "RSniperZoom is 0xc70 bytes");
-static_assert(offsetof(RSniperZoom, backBuffer) == 0x0c && offsetof(RSniperZoom, innerPositions) == 0x30 &&
-              offsetof(RSniperZoom, outerPositions) == 0x2d0 && offsetof(RSniperZoom, innerUVs) == 0x570 &&
-              offsetof(RSniperZoom, outerUVs) == 0x810 && offsetof(RSniperZoom, innerColours) == 0xab0 &&
-              offsetof(RSniperZoom, outerColours) == 0xb60 && offsetof(RSniperZoom, material) == 0xc10,
-              "RSniperZoom layout");
+LAYOUT_32(sizeof(RSniperZoom) == 0xc70, "RSniperZoom is 0xc70 bytes");
+LAYOUT_32(offsetof(RSniperZoom, backBuffer) == 0x0c && offsetof(RSniperZoom, innerPositions) == 0x30 &&
+          offsetof(RSniperZoom, outerPositions) == 0x2d0 && offsetof(RSniperZoom, innerUVs) == 0x570 &&
+          offsetof(RSniperZoom, outerUVs) == 0x810 && offsetof(RSniperZoom, innerColours) == 0xab0 &&
+          offsetof(RSniperZoom, outerColours) == 0xb60 && offsetof(RSniperZoom, material) == 0xc10,
+          "RSniperZoom layout");
 
 extern RSniperZoom *SniperZoom;   // RSniperZoom::Init's instance
 extern float SniperCopySpread;          // MakeTexCopy's

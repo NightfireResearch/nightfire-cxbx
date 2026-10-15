@@ -14,6 +14,7 @@
 #include "Materials.h"                  // USimpleMaterial
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../engine/USingleton.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 constexpr int kParticulateCount = 200;
 
@@ -54,14 +55,14 @@ public:
     void Update();                                                                              // 0x000a3fd0
     void Draw();                                                                                // 0x000a3e60
 };
-static_assert(sizeof(RParticulate) == 0x1070, "RParticulate is 0x1070 bytes");
+LAYOUT_32(sizeof(RParticulate) == 0x1070, "RParticulate is 0x1070 bytes");
 // The material is not standard-layout, so neither is RParticulate: its offsets are checked under MSVC only.
 #ifdef _MSC_VER
-static_assert(offsetof(RParticulate, positions) == 0x10 && offsetof(RParticulate, colours) == 0xc90 &&
-              offsetof(RParticulate, range) == 0xfb0 && offsetof(RParticulate, colour) == 0xfc0 &&
-              offsetof(RParticulate, driftAmplitude) == 0xfd0 && offsetof(RParticulate, drift) == 0xff0 &&
-              offsetof(RParticulate, enabled) == 0xffc && offsetof(RParticulate, fullBatches) == 0x1000 &&
-              offsetof(RParticulate, material) == 0x1010, "RParticulate layout");
+LAYOUT_32(offsetof(RParticulate, positions) == 0x10 && offsetof(RParticulate, colours) == 0xc90 &&
+          offsetof(RParticulate, range) == 0xfb0 && offsetof(RParticulate, colour) == 0xfc0 &&
+          offsetof(RParticulate, driftAmplitude) == 0xfd0 && offsetof(RParticulate, drift) == 0xff0 &&
+          offsetof(RParticulate, enabled) == 0xffc && offsetof(RParticulate, fullBatches) == 0x1000 &&
+          offsetof(RParticulate, material) == 0x1010, "RParticulate layout");
 #endif
 
 extern RParticulate *fgParticulate;

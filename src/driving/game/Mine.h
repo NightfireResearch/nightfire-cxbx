@@ -51,10 +51,10 @@ public:
 private:
     void Explode(SimpleRigidBody *body, const Coord3 *forward);
 };
-static_assert(sizeof(Mine) == 0x88, "a mine is 0x88 bytes");
-static_assert(offsetof(Mine, radius) == 0x6c && offsetof(Mine, armStep) == 0x78 && offsetof(Mine, target) == 0x80 &&
-              offsetof(Mine, effectsStarted) == 0x84, "Mine layout");
+LAYOUT_32(sizeof(Mine) == 0x88, "a mine is 0x88 bytes");
+LAYOUT_32(offsetof(Mine, radius) == 0x6c && offsetof(Mine, armStep) == 0x78 && offsetof(Mine, target) == 0x80 &&
+          offsetof(Mine, effectsStarted) == 0x84, "Mine layout");
 
-const uint32_t kMineVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_0018ee28));
+void **const kMineVtable = Vtable_0018ee28;
 
 #endif // DRIVING_GAME_MINE_H_

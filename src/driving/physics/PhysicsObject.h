@@ -8,6 +8,7 @@
 #include "../data/AttributeSet.h"
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../world/WorldPos.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // PhysicsObject (0x6c bytes): the game object that owns one of the Simulation's bodies - a RigidBody, or with
@@ -112,11 +113,11 @@ struct PhysicsObject {
                                                                                    unknown4, kind, sourceSig);
     }
 };
-static_assert(sizeof(PhysicsObject) == 0x6c, "a physics object is 108 bytes");
-static_assert(offsetof(PhysicsObject, worldPos) == 0x04 && offsetof(PhysicsObject, type) == 0x44 &&
-              offsetof(PhysicsObject, flags) == 0x48 && offsetof(PhysicsObject, rigidBodySlot) == 0x4a &&
-              offsetof(PhysicsObject, renderObject) == 0x4c && offsetof(PhysicsObject, hitPointLoc) == 0x58 &&
-              offsetof(PhysicsObject, attributes) == 0x60 && offsetof(PhysicsObject, collider) == 0x64,
-              "physics object layout");
+LAYOUT_32(sizeof(PhysicsObject) == 0x6c, "a physics object is 108 bytes");
+LAYOUT_32(offsetof(PhysicsObject, worldPos) == 0x04 && offsetof(PhysicsObject, type) == 0x44 &&
+          offsetof(PhysicsObject, flags) == 0x48 && offsetof(PhysicsObject, rigidBodySlot) == 0x4a &&
+          offsetof(PhysicsObject, renderObject) == 0x4c && offsetof(PhysicsObject, hitPointLoc) == 0x58 &&
+          offsetof(PhysicsObject, attributes) == 0x60 && offsetof(PhysicsObject, collider) == 0x64,
+          "physics object layout");
 
 #endif // DRIVING_PHYSICS_PHYSICSOBJECT_H_

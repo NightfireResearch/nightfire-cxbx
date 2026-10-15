@@ -119,7 +119,7 @@ void SNDMIX_setmasterlowpass(float cutoff) {
     for (uint32_t i = 0; i < SndMix.counts.channels; i++) {
         if (cutoff < 1.0f) {
             if (SndMix.masterFilter[i] == NULL) {
-                SND::SFilterLPFRC *node = static_cast<SND::SFilterLPFRC *>(SNDMEMI_alloc(0x28));
+                SND::SFilterLPFRC *node = static_cast<SND::SFilterLPFRC *>(SNDMEMI_alloc(sizeof(SND::SFilterLPFRC)));
                 SndMix.masterFilter[i] = node;
                 SFILTER_createLPFRC(node);
                 SndMix.masterFilter[i]->node.input = NULL;
@@ -259,7 +259,9 @@ void MIX_playinit(int voice, int sampleRep, int kind, const void *data, int p4, 
         int owner = voice;
         if (kind != 0)
             owner = -1;
-        SND::SFilterStretch *node = static_cast<SND::SFilterStretch *>(SNDMEMI_alloc(0x1828));
+        // the filter and its output buffer, 1020 floats
+        SND::SFilterStretch *node =
+            static_cast<SND::SFilterStretch *>(SNDMEMI_alloc(sizeof(SND::SFilterStretch) + 1020 * sizeof(float)));
         m->stretch = node;
         node->node.restore = NULL;
         m->stretch->node.priority = 200;
@@ -448,7 +450,7 @@ void MIX_setpitch(int voice, int pitch) {
         pitch = 0x40000;
     int mode = 0;
     if (m->resampler == NULL) {
-        SND::SFilterRSF *node = static_cast<SND::SFilterRSF *>(SNDMEMI_alloc(0x3c));
+        SND::SFilterRSF *node = static_cast<SND::SFilterRSF *>(SNDMEMI_alloc(sizeof(SND::SFilterRSF)));
         m->resampler = node;
         if (SndMix.resamplerMode >= 50)
             mode = 1;
@@ -553,7 +555,7 @@ void MIX_setlowpass(int voice, float cutoff) {
         return;
     }
     if (m->lowpass == NULL) {
-        SND::SFilterLPFRC *node = static_cast<SND::SFilterLPFRC *>(SNDMEMI_alloc(0x28));
+        SND::SFilterLPFRC *node = static_cast<SND::SFilterLPFRC *>(SNDMEMI_alloc(sizeof(SND::SFilterLPFRC)));
         m->lowpass = node;
         node->node.restore = NULL;
         m->lowpass->node.priority = 0x28;
@@ -571,7 +573,7 @@ void MIX_sethighpass(int voice, int cutoff) {
     MixVoice *m = &SndMix.voices[voice];
     if (cutoff > 0) {
         if (m->highpass == NULL) {
-            SND::SFilterFIR8 *node = static_cast<SND::SFilterFIR8 *>(SNDMEMI_alloc(0x58));
+            SND::SFilterFIR8 *node = static_cast<SND::SFilterFIR8 *>(SNDMEMI_alloc(sizeof(SND::SFilterFIR8)));
             m->highpass = node;
             node->node.restore = NULL;
             m->highpass->node.priority = 0x50;

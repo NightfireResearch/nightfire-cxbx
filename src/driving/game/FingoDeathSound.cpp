@@ -15,7 +15,7 @@
 
 namespace {
 
-const uint32_t kAFingoDeathVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_AFingoDeath));
+void **const kAFingoDeathVtable = Vtable_AFingoDeath;
 
 const int kWeaponBankSlot = 4;  // (name ours)
 

@@ -19,6 +19,7 @@
 #include "../engine/RbTree.h"
 #include "AttributeValue.h"
 #include "AttributeParsers.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 #include <stddef.h>
 #include <stdint.h>
@@ -36,7 +37,7 @@ struct AttributeMapValue {        // the map's value_type, 0xc
 struct AttributeNode : RbTreeNode<AttributeNode, AttributeMapValue> {
     void DestroyValue();   // the value's destructor, called on the node                        // 0x00056230
 };
-static_assert(sizeof(AttributeNode) == 0x1c, "an attribute map node is 0x1c bytes");
+LAYOUT_32(sizeof(AttributeNode) == 0x1c, "an attribute map node is 0x1c bytes");
 
 struct AttributeMap : RbTree<AttributeNode> {
     struct Iterator {
@@ -73,7 +74,7 @@ struct AttributeMap : RbTree<AttributeNode> {
         head->right = head;
     }
 };
-static_assert(sizeof(AttributeMap) == 0xc, "a map is 12 bytes");
+LAYOUT_32(sizeof(AttributeMap) == 0xc, "a map is 12 bytes");
 
 // ---------------------------------------------------------------------------------------------------------------
 // An extension class's fields: key -> AttributeField.
@@ -84,7 +85,7 @@ struct AttributeFieldEntry {   // 0x1c
 };
 
 struct AttributeFieldNode : RbTreeNode<AttributeFieldNode, AttributeFieldEntry> {};
-static_assert(sizeof(AttributeFieldNode) == 0x2c, "a field map node is 0x2c bytes");
+LAYOUT_32(sizeof(AttributeFieldNode) == 0x2c, "a field map node is 0x2c bytes");
 
 struct AttributeFieldMap : RbTree<AttributeFieldNode> {
     struct Iterator {
@@ -117,7 +118,7 @@ struct AttributeFieldMap : RbTree<AttributeFieldNode> {
     AttributeFieldMap *ConstructCopy(const AttributeFieldMap &other);                           // 0x00055c60
     void Destruct();                                                                            // 0x00055af0
 };
-static_assert(sizeof(AttributeFieldMap) == 0xc, "a map is 12 bytes");
+LAYOUT_32(sizeof(AttributeFieldMap) == 0xc, "a map is 12 bytes");
 
 // ---------------------------------------------------------------------------------------------------------------
 // Extension classes: class name -> its fields.
@@ -132,7 +133,7 @@ struct ExtensionClassEntry {   // 0x10
 struct ExtensionClassNode : RbTreeNode<ExtensionClassNode, ExtensionClassEntry> {
     void DestroyValue();                                                                        // 0x00055fa0
 };
-static_assert(sizeof(ExtensionClassNode) == 0x20, "an extension class map node is 0x20 bytes");
+LAYOUT_32(sizeof(ExtensionClassNode) == 0x20, "an extension class map node is 0x20 bytes");
 
 struct ExtensionClassMap : RbTree<ExtensionClassNode> {
     struct Iterator {
@@ -158,7 +159,7 @@ struct ExtensionClassMap : RbTree<ExtensionClassNode> {
     // operator[]: the fields of `className`, a new empty map if it had none.
     AttributeFieldMap *Lookup(const char *const &className);                                    // 0x00056f70
 };
-static_assert(sizeof(ExtensionClassMap) == 0xc, "a map is 12 bytes");
+LAYOUT_32(sizeof(ExtensionClassMap) == 0xc, "a map is 12 bytes");
 
 // ---------------------------------------------------------------------------------------------------------------
 // Extension types: id -> AttributeExtension.
@@ -180,7 +181,7 @@ struct ExtensionTypeEntry {         // 0x18
 };
 
 struct ExtensionTypeNode : RbTreeNode<ExtensionTypeNode, ExtensionTypeEntry> {};
-static_assert(sizeof(ExtensionTypeNode) == 0x28, "an extension type map node is 0x28 bytes");
+LAYOUT_32(sizeof(ExtensionTypeNode) == 0x28, "an extension type map node is 0x28 bytes");
 
 struct ExtensionTypeMap : RbTree<ExtensionTypeNode> {
     struct Iterator {
@@ -208,7 +209,7 @@ struct ExtensionTypeMap : RbTree<ExtensionTypeNode> {
     InsertResult *InsertUnique(InsertResult *result, const ExtensionTypeEntry &value);          // 0x000552d0
     Iterator *EraseRange(Iterator *result, Iterator first, Iterator last);                      // 0x00055560
 };
-static_assert(sizeof(ExtensionTypeMap) == 0xc, "a map is 12 bytes");
+LAYOUT_32(sizeof(ExtensionTypeMap) == 0xc, "a map is 12 bytes");
 
 // ---------------------------------------------------------------------------------------------------------------
 // The edit configuration: the retail game registers nothing in it (ConfigEditParameters is empty), so only its
@@ -220,7 +221,7 @@ struct EditConfigEntry {            // 0x20
 };
 
 struct EditConfigNode : RbTreeNode<EditConfigNode, EditConfigEntry> {};
-static_assert(sizeof(EditConfigNode) == 0x30, "an edit configuration map node is 0x30 bytes");
+LAYOUT_32(sizeof(EditConfigNode) == 0x30, "an edit configuration map node is 0x30 bytes");
 
 struct EditConfigMap : RbTree<EditConfigNode> {
     struct Iterator {
@@ -237,7 +238,7 @@ struct EditConfigMap : RbTree<EditConfigNode> {
     Iterator *Erase(Iterator *result, Iterator where);                                          // 0x000546c0
     Iterator *EraseRange(Iterator *result, Iterator first, Iterator last);                      // 0x000554a0
 };
-static_assert(sizeof(EditConfigMap) == 0xc, "a map is 12 bytes");
+LAYOUT_32(sizeof(EditConfigMap) == 0xc, "a map is 12 bytes");
 
 // ---------------------------------------------------------------------------------------------------------------
 // A collection: the attributes of one name of one class, with the class's "default" collection behind it.
@@ -264,7 +265,7 @@ struct AttributeCollection {         // 0x20
             attributes.Clear();
     }
 };
-static_assert(sizeof(AttributeCollection) == 0x20, "an attribute collection is 0x20 bytes");
+LAYOUT_32(sizeof(AttributeCollection) == 0x20, "an attribute collection is 0x20 bytes");
 
 struct CollectionKey {               // 8
     const char *className;
@@ -279,7 +280,7 @@ struct CollectionEntry {             // 0x28
 struct CollectionNode : RbTreeNode<CollectionNode, CollectionEntry> {
     void DestroyValue();                                                                        // 0x000585b0
 };
-static_assert(sizeof(CollectionNode) == 0x38, "a collection map node is 0x38 bytes");
+LAYOUT_32(sizeof(CollectionNode) == 0x38, "a collection map node is 0x38 bytes");
 
 struct CollectionMap : RbTree<CollectionNode> {
     struct Iterator {
@@ -308,13 +309,13 @@ struct CollectionMap : RbTree<CollectionNode> {
     void EraseSubtree(CollectionNode *node);                                                    // 0x00058c70
     Iterator *EraseRange(Iterator *result, Iterator first, Iterator last);                      // 0x00058fd0
 };
-static_assert(sizeof(CollectionMap) == 0xc, "a map is 12 bytes");
+LAYOUT_32(sizeof(CollectionMap) == 0xc, "a map is 12 bytes");
 
 // ---------------------------------------------------------------------------------------------------------------
 // The string set: every string the system has stored, compared with strcmp.
 
 struct StringNode : RbTreeNode<StringNode, const char *> {};
-static_assert(sizeof(StringNode) == 0x14, "a string set node is 0x14 bytes");
+LAYOUT_32(sizeof(StringNode) == 0x14, "a string set node is 0x14 bytes");
 
 struct StringSet : RbTree<StringNode> {
     struct Iterator {
@@ -340,7 +341,7 @@ struct StringSet : RbTree<StringNode> {
     InsertResult *InsertUnique(InsertResult *result, const char *const &value);                 // 0x00055390
     Iterator *EraseRange(Iterator *result, Iterator first, Iterator last);                      // 0x00055620
 };
-static_assert(sizeof(StringSet) == 0xc, "a set is 12 bytes");
+LAYOUT_32(sizeof(StringSet) == 0xc, "a set is 12 bytes");
 
 // ---------------------------------------------------------------------------------------------------------------
 // The string store: 4 KB blocks (new[]), each filled from the front. The list is kept sorted by free space,
@@ -370,7 +371,7 @@ struct StoreBlockList {
     void InsertN(AttributeStoreBlock *where, uint32_t count, const AttributeStoreBlock &value);  // 0x000556e0
     void PushBack(const AttributeStoreBlock &value);                                            // 0x00055bf0
 };
-static_assert(sizeof(StoreBlockList) == 0x10, "a vector is 16 bytes");
+LAYOUT_32(sizeof(StoreBlockList) == 0x10, "a vector is 16 bytes");
 
 // The vector's helpers and std::sort's, at their addresses. The iterators are plain pointers; the trailing
 // arguments some callers push (the iterator category, a distance type) are not read.

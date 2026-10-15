@@ -23,6 +23,7 @@
 #include "CollisionTypes.h"
 #include "../data/Tree.h"               // Tree: the article map's compiled code is the data layer's maps'
 #include "../engine/RbTree.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 namespace CARP {
 class Instance;
@@ -39,7 +40,7 @@ struct WindowPaneValue {
 };
 
 struct WindowPaneNode : RbTreeNode<WindowPaneNode, WindowPaneValue> {};
-static_assert(sizeof(WindowPaneNode) == 0x40, "a pane map node is 64 bytes");
+LAYOUT_32(sizeof(WindowPaneNode) == 0x40, "a pane map node is 64 bytes");
 
 struct WindowPaneInsert {       // std::pair<iterator, bool>
     WindowPaneNode *node;
@@ -76,7 +77,7 @@ struct WindowPaneMap : RbTree<WindowPaneNode> {
     WindowPaneInsert* InsertUnique(WindowPaneInsert *result, const WindowPaneValue *value);   // 0x000c28b0
     WindowPaneNode** EraseRange(WindowPaneNode **result, WindowPaneNode *first, WindowPaneNode *last);   // 0x000c2bb0
 };
-static_assert(sizeof(WindowPaneMap) == 0xc, "a map is 12 bytes");
+LAYOUT_32(sizeof(WindowPaneMap) == 0xc, "a map is 12 bytes");
 
 struct WindowMapValue {
     WCollisionInstance *instance;   // the key
@@ -89,7 +90,7 @@ struct WindowMapValue {
 struct WindowMapNode : RbTreeNode<WindowMapNode, WindowMapValue> {
     void DestroyValue();                                                        // 0x000c4690
 };
-static_assert(sizeof(WindowMapNode) == 0x20, "a window map node is 32 bytes");
+LAYOUT_32(sizeof(WindowMapNode) == 0x20, "a window map node is 32 bytes");
 
 // The tree's minimum, for the maps with 0x20-byte nodes (the window map's, and two elsewhere the linker folded in).
 WindowMapNode* WindowMapMin(WindowMapNode *node);                               // 0x000bf460
@@ -110,7 +111,7 @@ struct WindowMap : RbTree<WindowMapNode> {
     void EraseSubtree(WindowMapNode *node);                                               // 0x000c4d20
     WindowMapNode** EraseRange(WindowMapNode **result, WindowMapNode *first, WindowMapNode *last);   // 0x000c52c0
 };
-static_assert(sizeof(WindowMap) == 0xc, "a map is 12 bytes");
+LAYOUT_32(sizeof(WindowMap) == 0xc, "a map is 12 bytes");
 
 // ---- std::map<WCollisionInstance *, CollisionArticle *>: the article each instance had before SetCollisionArticle
 // first changed it, put back by Restart. Its node is the data layer's maps' (0x18 bytes), and so is its compiled
@@ -272,9 +273,9 @@ public:
     static void Restart();                                                                // 0x000c5380
     static void Shutdown();                                                               // 0x000c56d0
 };
-static_assert(sizeof(WCollisionMgr) == 0x34, "WCollisionMgr is 52 bytes");
-static_assert(offsetof(WCollisionMgr, windows) == 0x14 && offsetof(WCollisionMgr, barrierMask) == 0x2c,
-              "WCollisionMgr layout");
+LAYOUT_32(sizeof(WCollisionMgr) == 0x34, "WCollisionMgr is 52 bytes");
+LAYOUT_32(offsetof(WCollisionMgr, windows) == 0x14 && offsetof(WCollisionMgr, barrierMask) == 0x2c,
+          "WCollisionMgr layout");
 
 // The manager (WCollisionMgr's static instance; NULL before Init and after Shutdown).
 extern WCollisionMgr *fgCollisionMgr;

@@ -207,7 +207,7 @@ uint8_t AddLanePenalty(uint8_t weight, float penalty) {
 // FUNC_AT(0x0002bd40)
 AIGroundVehicle* AIGroundVehicle::Construct() {
     AIVehicle::Construct();
-    vtable = reinterpret_cast<void **>(kAIGroundVehicleVtable);
+    vtable = kAIGroundVehicleVtable;
     type = kAIGroundNone;
     WRoadNav *nav = static_cast<WRoadNav *>(UMemory::FastAlloc(sizeof(WRoadNav), "WRoadNav"));
     collNav = nav != NULL ? nav->Construct() : NULL;
@@ -223,7 +223,7 @@ AIGroundVehicle* AIGroundVehicle::Construct() {
 
 // FUNC_AT(0x0002be70)
 void AIGroundVehicle::Destruct() {
-    vtable = reinterpret_cast<void **>(kAIGroundVehicleVtable);
+    vtable = kAIGroundVehicleVtable;
     WRoadNav *navs[] = {collNav, laneCollNav, heliCollNav, targetNav};
     for (WRoadNav *nav : navs) {
         if (nav != NULL) {

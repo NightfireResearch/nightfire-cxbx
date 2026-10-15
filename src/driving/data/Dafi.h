@@ -14,6 +14,7 @@
 // loop forever, and an empty value takes the next line as its value. The game's files have neither.
 
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 constexpr int kDafiMaxSections = 1000;
 constexpr int kDafiMaxKeys = 1000;
@@ -29,7 +30,7 @@ struct DAFI {
     char *text;                               // the copy, terminated
     char *textEnd;
 };
-static_assert(sizeof(DAFI) == 0x3e94, "DAFI is 0x3e94 bytes");
+LAYOUT_32(sizeof(DAFI) == 0x3e94, "DAFI is 0x3e94 bytes");
 
 DAFI* DAFI_open(const char *text, int size);              // 0x0011a240: null if out of memory
 void DAFI_close(DAFI *dafi);                              // 0x0011a370

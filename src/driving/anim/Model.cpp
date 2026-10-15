@@ -278,8 +278,6 @@ void TextureInfoRefTree::DestroyRange() {
 
 // ---- std::out_of_range: only a throw reaches these (provisional, untested)
 
-#define OutOfRangeVtable ((const void *)kOutOfRangeVtable)
-
 static void ActModelUntested(const char *what) {
     printf("[anim] WARNING: %s ran - a provisional port that no shipped data reaches, UNTESTED. Check what it "
            "computes against the original.\n", what);
@@ -299,14 +297,14 @@ static void ActModelUntested(const char *what) {
 OutOfRangeError* OutOfRangeError::ConstructCopy(const OutOfRangeError *other) {
     ACTMODEL_UNTESTED("out_of_range copy constructor");
     LogicError::ConstructCopy(other);
-    vtable = OutOfRangeVtable;
+    vtable = kOutOfRangeVtable;
     return this;
 }
 
 // FUNC_AT(0x000178d0)
 void OutOfRangeError::Destruct() {
     ACTMODEL_UNTESTED("out_of_range destructor");
-    vtable = OutOfRangeVtable;
+    vtable = kOutOfRangeVtable;
     LogicError::Destruct();
 }
 

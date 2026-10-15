@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include "RenderMethod.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 namespace EAGL {
 
@@ -42,7 +43,7 @@ struct ProfilerRegion {              // 0x128; the regions are a list at 0x00240
     static void DrawRegions();                                               // 0x000f5020
     static void ProcessRegions(uint32_t frameCycles);                        // 0x000f5280
 };
-static_assert(sizeof(ProfilerRegion) == 0x128, "a ProfilerRegion is 0x128 bytes");
+LAYOUT_32(sizeof(ProfilerRegion) == 0x128, "a ProfilerRegion is 0x128 bytes");
 
 // A scoped timer: charges the cycles between its start and stop to its region, pausing its parent meanwhile
 // (invented name; the current one is CurrentTimer)
@@ -61,7 +62,7 @@ struct ProfilerTimer {               // 0x14
     void Stop();                                                             // 0x000f4ef0 (invented)
     void Destruct();                                                         // 0x000f4f30 (invented)
 };
-static_assert(sizeof(ProfilerTimer) == 0x14, "a profiler timer is 0x14 bytes");
+LAYOUT_32(sizeof(ProfilerTimer) == 0x14, "a profiler timer is 0x14 bytes");
 
 // EAGL::DrawGouraud's Begin, which lies in the profiler's range (the class is RenderMethod.h's)
 struct ProfilerDrawGouraud : DrawGouraud {

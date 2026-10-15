@@ -26,6 +26,7 @@
 #include "../data/Tree.h"               // Tree, TreeNode, TreePair, TreeInsertResult
 #include "../engine/RbTree.h"
 #include "../render/Decals.h"           // EmpGeoPrim, CylinderUV
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class RSceneObj;
 struct ArticleEffect;
@@ -133,7 +134,7 @@ struct EmpAnchor {                      // 0x20
     int32_t links[5];                   // +0x0c each of them, sign-extended (a longer name runs on into the next
                                         //       anchor, as in the original)
 };
-static_assert(sizeof(EmpAnchor) == 0x20, "an anchor is 32 bytes");
+LAYOUT_32(sizeof(EmpAnchor) == 0x20, "an anchor is 32 bytes");
 
 // The anchors of one group: an array and its length (the game's pointer-and-count array; the name is ours)
 struct EmpAnchorList {
@@ -156,7 +157,7 @@ struct EmpAnchorGroup {                 // the map's value_type
 struct EmpAnchorNode : RbTreeNode<EmpAnchorNode, EmpAnchorGroup> {
     void DestroyValue();                // the list freed                                        // 0x0009c4a0
 };
-static_assert(sizeof(EmpAnchorNode) == 0x1c, "an anchor map node is 0x1c bytes");
+LAYOUT_32(sizeof(EmpAnchorNode) == 0x1c, "an anchor map node is 0x1c bytes");
 
 // The map's compiled code. The rotations and iterator steps are the ones every map with 0x1c-byte nodes shares
 // (data/AttributeContainers.h's AttributeMap); the minimum and maximum here are shared with AttributeMap too.
@@ -185,7 +186,7 @@ struct EmpAnchorMap : RbTree<EmpAnchorNode> {
     EmpAnchorList* Lookup(const uint32_t *group);                                               // 0x0009d240
     void Destruct();                                                                            // 0x0009d5f0
 };
-static_assert(sizeof(EmpAnchorMap) == 12, "a map is 12 bytes");
+LAYOUT_32(sizeof(EmpAnchorMap) == 12, "a map is 12 bytes");
 
 // ---- std::map<uint32_t, int>: FindAnchors' count of anchors per group (the data layer's tree, its key the
 // TreePair's tag and its count the index). Its _Erase, _Insert, erase and erase(first, last) are the data layer's
@@ -200,7 +201,7 @@ public:
     TreeNode** EraseRange(TreeNode **result, TreeNode *first, TreeNode *last);                  // 0x0009d180
     void Destroy();                     // only an exception unwind calls it                     // 0x0009d960
 };
-static_assert(sizeof(EmpGroupCountMap) == 12, "a map is 12 bytes");
+LAYOUT_32(sizeof(EmpGroupCountMap) == 12, "a map is 12 bytes");
 
 // The leftmost node under `node` (_Min), for every map with 0x18-byte nodes (the linker folded the copies)
 TreeNode* SharedTreeMin(TreeNode *node);                                                        // 0x0009c310
@@ -248,9 +249,9 @@ public:
     // The anchors from the car's handle's locators, and the groups
     void FindAnchors();                                                                         // 0x0009d9a0
 };
-static_assert(sizeof(REmpBolts) == 0x22c, "REmpBolts is 0x22c bytes");
-static_assert(offsetof(REmpBolts, groups) == 0x18 && offsetof(REmpBolts, bolts) == 0x24 &&
-              offsetof(REmpBolts, numBolts) == 0x224 && offsetof(REmpBolts, boltCursor) == 0x228,
-              "REmpBolts layout");
+LAYOUT_32(sizeof(REmpBolts) == 0x22c, "REmpBolts is 0x22c bytes");
+LAYOUT_32(offsetof(REmpBolts, groups) == 0x18 && offsetof(REmpBolts, bolts) == 0x24 &&
+          offsetof(REmpBolts, numBolts) == 0x224 && offsetof(REmpBolts, boltCursor) == 0x228,
+          "REmpBolts layout");
 
 #endif // DRIVING_GAME_EMPEFFECT_H_

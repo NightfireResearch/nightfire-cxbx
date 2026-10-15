@@ -59,12 +59,12 @@ struct PHelicopter : PhysicsObject {
     DamageZone* GetDamageZones(uint32_t *count);                                                // 3  0x0006dd10
     void Simulate();                                                                            // 4  0x0006dd30
 };
-static_assert(sizeof(PHelicopter) == 0x140, "a helicopter is 0x140 bytes");
-static_assert(offsetof(PHelicopter, targetPos) == 0x7c && offsetof(PHelicopter, controlGas) == 0x94 &&
-              offsetof(PHelicopter, actionQueue) == 0xa4 && offsetof(PHelicopter, damageZones) == 0xac &&
-              offsetof(PHelicopter, sleepStep) == 0x12c && offsetof(PHelicopter, ai) == 0x134 &&
-              offsetof(PHelicopter, destructDistance) == 0x13c, "PHelicopter layout");
+LAYOUT_32(sizeof(PHelicopter) == 0x140, "a helicopter is 0x140 bytes");
+LAYOUT_32(offsetof(PHelicopter, targetPos) == 0x7c && offsetof(PHelicopter, controlGas) == 0x94 &&
+          offsetof(PHelicopter, actionQueue) == 0xa4 && offsetof(PHelicopter, damageZones) == 0xac &&
+          offsetof(PHelicopter, sleepStep) == 0x12c && offsetof(PHelicopter, ai) == 0x134 &&
+          offsetof(PHelicopter, destructDistance) == 0x13c, "PHelicopter layout");
 
-const uint32_t kPHelicopterVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_PHelicopter));
+void **const kPHelicopterVtable = Vtable_PHelicopter;
 
 #endif // DRIVING_GAME_HELICOPTER_H_

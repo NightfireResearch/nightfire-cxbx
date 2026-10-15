@@ -19,6 +19,7 @@
 
 #include "../data/Carp.h"               // CARP::Instance, CARP::PathInfo; MATRIX4
 #include "../data/CoordConvert.h"       // Coord3, Coord4
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class RSceneObj;
 struct ProcAnimState;                   // world/World.h: a path's is of type kPathAnimType
@@ -74,10 +75,10 @@ struct RPathHandle {
     Coord3* GetPosition();              // the instance's                                       // 0x0007ff50
     void GetOrientMat(MATRIX4 *out);    // the instance's axes, without the position            // 0x0007ff60
 };
-static_assert(sizeof(RPathHandle) == 0xd4, "a path handle is 0xd4 bytes");
-static_assert(offsetof(RPathHandle, velocity) == 0x88 && offsetof(RPathHandle, master) == 0xa0 &&
-              offsetof(RPathHandle, positionKey) == 0xb0 && offsetof(RPathHandle, running) == 0xcc &&
-              offsetof(RPathHandle, userData) == 0xd0, "path handle layout");
+LAYOUT_32(sizeof(RPathHandle) == 0xd4, "a path handle is 0xd4 bytes");
+LAYOUT_32(offsetof(RPathHandle, velocity) == 0x88 && offsetof(RPathHandle, master) == 0xa0 &&
+          offsetof(RPathHandle, positionKey) == 0xb0 && offsetof(RPathHandle, running) == 0xcc &&
+          offsetof(RPathHandle, userData) == 0xd0, "path handle layout");
 
 // ---- std::list<RPathHandle> as the game compiled it (MSVC 7): the allocator's byte, the head node (end()), the
 //      size; a node is the links, then the value
@@ -87,7 +88,7 @@ struct PathListNode {
     PathListNode *prev;                 // +0x04
     RPathHandle value;                  // +0x08
 };
-static_assert(sizeof(PathListNode) == 0xdc, "a path list node is 0xdc bytes");
+LAYOUT_32(sizeof(PathListNode) == 0xdc, "a path list node is 0xdc bytes");
 
 struct PathList {
     static constexpr uint32_t kMaxSize = 0xffffffffu / sizeof(RPathHandle);
@@ -109,7 +110,7 @@ struct PathList {
     // begin(), as the compiled code reads it: NULL without a head
     PathListNode* Begin() const { return head != NULL ? head->next : NULL; }
 };
-static_assert(sizeof(PathList) == 0xc, "a list is 12 bytes");
+LAYOUT_32(sizeof(PathList) == 0xc, "a list is 12 bytes");
 
 // ---- RPathEngine: the handles, all static
 

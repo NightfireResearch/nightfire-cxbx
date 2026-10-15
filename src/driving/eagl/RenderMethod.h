@@ -17,6 +17,7 @@
 class DynamicLoader;
 
 #include "../gfx/D3D8Shaders.h"   // the shaders a method carries
+#include "../../common/xbeClass.h" // LAYOUT_32
 
 namespace EAGL {
 
@@ -259,7 +260,7 @@ struct StaticVertexBuffer {
     void Unlock();                                                             // 0x000f6ce0 (empty)
     bool IsBusy();                                                             // 0x000f6cf0
 };
-static_assert(sizeof(StaticVertexBuffer) == 0x14, "a StaticVertexBuffer is 0x14 bytes");
+LAYOUT_32(sizeof(StaticVertexBuffer) == 0x14, "a StaticVertexBuffer is 0x14 bytes");
 
 // The dynamic vertex buffer (0x30, "EAGL::VertexBuffer new"): three D3D8 buffers rotated per lock, or a header over
 // the caller's memory. Opcode 11 keeps one per packet (packet +0x10).
@@ -283,7 +284,7 @@ struct DynamicVertexBuffer {
     void Unlock();                                                             // 0x000f6ed0 (empty)
     bool IsBusy();                                                             // 0x000f6ee0
 };
-static_assert(sizeof(DynamicVertexBuffer) == 0x30, "a DynamicVertexBuffer is 0x30 bytes");
+LAYOUT_32(sizeof(DynamicVertexBuffer) == 0x30, "a DynamicVertexBuffer is 0x30 bytes");
 
 // An index buffer (0xc). Unreferenced in this game.
 struct IndexBuffer {
@@ -300,7 +301,7 @@ struct IndexBuffer {
     void Unlock();                                                             // 0x000f6f80 (empty)
     bool IsBusy();                                                             // 0x000f6f90
 };
-static_assert(sizeof(IndexBuffer) == 0xc, "an IndexBuffer is 0xc bytes");
+LAYOUT_32(sizeof(IndexBuffer) == 0xc, "an IndexBuffer is 0xc bytes");
 
 // A push buffer built in place and run (0x24). Unreferenced.
 struct PushBuffer {
@@ -390,7 +391,7 @@ struct DrawGouraud {
     void InternalFlush();                                                      // 0x000f59f0
     void Destruct();                                                           // 0x000f5cf0 (invented: ~DrawGouraud)
 };
-static_assert(sizeof(DrawGouraud) == 0x9c, "the fields DrawGouraud's code touches end at 0x9c");
+LAYOUT_32(sizeof(DrawGouraud) == 0x9c, "the fields DrawGouraud's code touches end at 0x9c");
 
 // Immediate-mode textured quads (the movie player's, dead since it became ours).
 struct DrawTextured {
@@ -410,7 +411,7 @@ struct DrawTextured {
     void SetTAR(TAR *tar);                                                     // 0x000f5c00 (invented)
     void Begin(uint32_t primitiveType);                                        // 0x0014cf10
 };
-static_assert(sizeof(DrawTextured) == 0xa0, "the fields DrawTextured's code touches end at 0xa0");
+LAYOUT_32(sizeof(DrawTextured) == 0xa0, "the fields DrawTextured's code touches end at 0xa0");
 
 }  // namespace EAGL
 
@@ -425,7 +426,7 @@ struct InterpreterState {
     uint32_t streamNoCopy;           // +0x10   nonzero: opcode 11 does not copy the vertices
     uint32_t streamUser;             // +0x14   nonzero: opcode 11 draws from the caller's memory
 };
-static_assert(sizeof(InterpreterState) == 0x18, "the interpreter's globals are 0x18 bytes");
+LAYOUT_32(sizeof(InterpreterState) == 0x18, "the interpreter's globals are 0x18 bytes");
 
 // What EAGL last sent D3D8: the wrappers skip a call that would send the same again
 struct DeviceCache {
@@ -439,9 +440,9 @@ struct DeviceCache {
     uint32_t indexBase;              // +0x94
 };
 static_assert(offsetof(DeviceCache, streams) == 0x10, "the stream sources at +0x10");
-static_assert(offsetof(DeviceCache, strides) == 0x50, "the strides at +0x50");
-static_assert(offsetof(DeviceCache, indexData) == 0x90, "the index data at +0x90");
-static_assert(sizeof(DeviceCache) == 0x98, "the device cache is 0x98 bytes");
+LAYOUT_32(offsetof(DeviceCache, strides) == 0x50, "the strides at +0x50");
+LAYOUT_32(offsetof(DeviceCache, indexData) == 0x90, "the index data at +0x90");
+LAYOUT_32(sizeof(DeviceCache) == 0x98, "the device cache is 0x98 bytes");
 
 extern InterpreterState Interp;
 extern DeviceCache Cache;

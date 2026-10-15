@@ -26,11 +26,11 @@ int32_t LimitedSoundCount;
 
 namespace {
 
-const uint32_t kABaseSoundVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_ABaseSound));
-const uint32_t kAOneShotSoundVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_0018c840));
-const uint32_t kALimitedSoundVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_0018c8c8));
-const uint32_t kAMenuSoundPrivVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_AMenuSoundPriv));
-const uint32_t kABasicVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_ABasic));
+void **const kABaseSoundVtable = Vtable_ABaseSound;
+void **const kAOneShotSoundVtable = Vtable_0018c840;
+void **const kALimitedSoundVtable = Vtable_0018c8c8;
+void **const kAMenuSoundPrivVtable = Vtable_AMenuSoundPriv;
+void **const kABasicVtable = Vtable_ABasic;
 
 constexpr float kDefaultMinDistance = 3.0f;
 constexpr float kDefaultMaxDistance = 350.0f;

@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // The driving engine's top: main, the system start-up and clean-up around the game loop (Bond_*), the loop
@@ -157,7 +158,7 @@ struct OptionParser {
     // The value into `out`, terminated (0x0005b9c0). False if the key was not found.
     bool GetFullString(char *out);
 };
-static_assert(sizeof(OptionParser) == 8, "OptionParser is 8 bytes");
+LAYOUT_32(sizeof(OptionParser) == 8, "OptionParser is 8 bytes");
 
 // Mission number to track name (0x000596a0), if the action engine handed over.
 void MissionNumToString();

@@ -95,8 +95,8 @@ IFeedback* IFeedback::Construct(int port) {
             if (gFeedbackUsers == 0) {
                 gFeedbackThreadStop = false;
                 SIGNAL_create(&gFeedbackSignal);
-                THREAD_create(&gFeedbackThread, IFeedback_Thread, int(uintptr_t(gFeedbackThreadStack)),
-                              kThreadStackBytes, kThreadPriority);
+                THREAD_create(&gFeedbackThread, IFeedback_Thread, gFeedbackThreadStack, kThreadStackBytes,
+                              kThreadPriority);
                 TIMER_addtask(IFeedback_Timer_Callback);
             }
             gFeedbackUsers++;

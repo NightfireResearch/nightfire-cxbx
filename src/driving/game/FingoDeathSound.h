@@ -31,8 +31,8 @@ public:
     // vtable slot 9
     void SetRechargePercent(float percent);                                         // 0x00129820
 };
-static_assert(offsetof(AFingoDeath, reloadVoice) == 0x1f0 && offsetof(AFingoDeath, recharging) == 0x1f8,
-              "AFingoDeath layout");
-static_assert(sizeof(AFingoDeath) == 0x200, "AFingoDeath is 0x200 bytes");
+LAYOUT_32(offsetof(AFingoDeath, reloadVoice) == 0x1f0 && offsetof(AFingoDeath, recharging) == 0x1f8,
+          "AFingoDeath layout");
+LAYOUT_32(sizeof(AFingoDeath) == 0x200, "AFingoDeath is 0x200 bytes");
 
 #endif // DRIVING_GAME_FINGODEATHSOUND_H_

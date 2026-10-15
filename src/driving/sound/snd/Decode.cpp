@@ -1,6 +1,7 @@
 #include "Decode.h"
 #include "Mixer.h"                      // SndMix
 #include "SndUntested.h"
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 #include <stddef.h>
 #include <stdint.h>
@@ -26,8 +27,8 @@ static_assert(offsetof(SND::CEAXABLKDecf, buffered) == 0x04, "CEAXABLKDecf layou
 static_assert(offsetof(SND::CEAXABLKDecf, framesLeft) == 0x08, "CEAXABLKDecf layout");
 static_assert(offsetof(SND::CEAXABLKDecf, bytes) == 0x0c, "CEAXABLKDecf layout");
 static_assert(offsetof(SND::CEAXABLKDecf, bufferRead) == 0x10, "CEAXABLKDecf layout");
-static_assert(offsetof(SND::CEAXABLKDecf, buffer) == 0x24, "CEAXABLKDecf layout");
-static_assert(offsetof(SND::CEAXABLKDecf, xac) == 0x94, "CEAXABLKDecf layout");
+LAYOUT_32(offsetof(SND::CEAXABLKDecf, buffer) == 0x24, "CEAXABLKDecf layout");
+LAYOUT_32(offsetof(SND::CEAXABLKDecf, xac) == 0x94, "CEAXABLKDecf layout");
 
 namespace {
 

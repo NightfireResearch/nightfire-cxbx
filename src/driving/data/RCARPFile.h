@@ -22,6 +22,7 @@
 #include "SymbolTable.h"
 #include "UData.h"
 #include "CoordConvert.h"   // Coord4
+#include "../../common/xbeClass.h" // LAYOUT_32
 
 #include <stdint.h>
 
@@ -53,7 +54,7 @@ struct RCARPFile {
     // The registered callback for "GAME::" and "EAGL::" names (0x0007b020).
     static void *RegisterSymbols(const char *name, bool *found);
 };
-static_assert(sizeof(RCARPFile) == 0x38, "RCARPFile is 0x38 bytes");
+LAYOUT_32(sizeof(RCARPFile) == 0x38, "RCARPFile is 0x38 bytes");
 
 class RCARPFileLoader : public UCarpNamespace {
 public:
@@ -66,7 +67,7 @@ public:
     // Resolves a file loaded without (0x0007bd40).
     void ResolveCARPFile(const char *directory, RCARPFile *file);
 };
-static_assert(sizeof(RCARPFileLoader) == 8, "RCARPFileLoader is a UCarpNamespace");
+LAYOUT_32(sizeof(RCARPFileLoader) == 8, "RCARPFileLoader is a UCarpNamespace");
 
 // The one symbol table (at 0x001ebcdc), made with "CHAR" and "DATA" in it.
 class GlobalSymbolTable {

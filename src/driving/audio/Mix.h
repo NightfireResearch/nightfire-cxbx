@@ -23,6 +23,7 @@
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../engine/URefCounter.h"
 #include "../world/Targeting.h"         // PointerList: std::list<T *>
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 // A mix (0x50 bytes, from UMemory::FastAlloc "AMix").
 class AMix {
@@ -71,10 +72,10 @@ public:
         volume = to;
     }
 };
-static_assert(offsetof(AMix, target) == 0x14, "AMix::target is at +0x14");
-static_assert(offsetof(AMix, transitioning) == 0x1c, "AMix::transitioning is at +0x1c");
-static_assert(offsetof(AMix, name) == 0x30, "AMix::name is at +0x30");
-static_assert(sizeof(AMix) == 0x50, "AMix is 0x50 bytes");
+LAYOUT_32(offsetof(AMix, target) == 0x14, "AMix::target is at +0x14");
+LAYOUT_32(offsetof(AMix, transitioning) == 0x1c, "AMix::transitioning is at +0x1c");
+LAYOUT_32(offsetof(AMix, name) == 0x30, "AMix::name is at +0x30");
+LAYOUT_32(sizeof(AMix) == 0x50, "AMix is 0x50 bytes");
 
 // The list of the mixes Load read (std::list<AMix *>, at 0x00243954), with two of its compiled functions.
 struct MixList : PointerList {
@@ -110,7 +111,7 @@ struct FxMode {
     int32_t delay;              // +0x0c
     int32_t feedback;           // +0x10
 };
-static_assert(sizeof(FxMode) == 0x14, "an effect mode is 0x14 bytes");
+LAYOUT_32(sizeof(FxMode) == 0x14, "an effect mode is 0x14 bytes");
 
 // A request for a mode, in one of two slots; the higher priority wins (the later mode at the same).
 struct FxRequest {

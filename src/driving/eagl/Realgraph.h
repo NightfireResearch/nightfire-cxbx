@@ -6,6 +6,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // A SHPX file (.xsh): the header and its directory, one entry per image (docs/driving/eagl.md 2.12)
 struct ShapeDirectoryEntry {
@@ -165,7 +166,7 @@ struct FontBatchEntry {
     float x;
     float y;
 };
-static_assert(sizeof(FontBatchEntry) == 12, "a batch entry is three words");
+LAYOUT_32(sizeof(FontBatchEntry) == 12, "a batch entry is three words");
 
 typedef void (*FontBatchFn)(const uint8_t *font, FontBatchEntry *entries, int count);
 typedef void (*FontBatchExFn)(const uint8_t *font, FontBatchEntry *entries, int count, int argument, int first);

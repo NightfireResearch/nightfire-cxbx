@@ -37,7 +37,7 @@ struct TaskNode {
     TaskNode *prev;             // +0x04
     TaskRecord record;          // +0x08
 };
-static_assert(sizeof(TaskNode) == 0x1c, "TaskNode is 0x1c bytes");
+LAYOUT_32(sizeof(TaskNode) == 0x1c, "TaskNode is 0x1c bytes");
 
 // One bucket: an MSVC std::list<TaskRecord> - its allocator byte, the head node (a sentinel: the list is circular
 // through it) and the count (12 bytes, from the pools under the name "TaskList"). Schedule's generated layout calls
@@ -63,7 +63,7 @@ struct TaskRecord_LListEntry {
     void IncSize(uint32_t count);
 };
 typedef TaskRecord_LListEntry TaskList;
-static_assert(sizeof(TaskList) == 0xc, "a task list is 12 bytes");
+LAYOUT_32(sizeof(TaskList) == 0xc, "a task list is 12 bytes");
 
 // What a task runs: the callback RegisterEvent::LookupEvent gives for its event number, called with the task's data.
 typedef void (*TaskCallback)(uint32_t staticData);

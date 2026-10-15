@@ -21,6 +21,7 @@
 
 #include "../../common/xbeOverload.h"   // XbeVirtual
 #include "../world/CollisionTypes.h"    // MATRIX4, Coord3, Coord4
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 namespace EAGL {
 struct RenderContext;
@@ -67,10 +68,10 @@ public:
     // A field of view of 2 degrees or less is ignored (FUN_00011000, at the start of the code; the name is ours)
     void SetFieldOfView(float fieldOfView);                                                     // 0x00011000
 };
-static_assert(sizeof(RCamera) == 0xc0, "RCamera is 192 bytes");
-static_assert(offsetof(RCamera, matrix) == 0x10 && offsetof(RCamera, unknown50) == 0x50 &&
-              offsetof(RCamera, matrixChanged) == 0x60 && offsetof(RCamera, inverse) == 0x70 &&
-              offsetof(RCamera, active) == 0xb0 && offsetof(RCamera, fieldOfView) == 0xb4, "RCamera layout");
+LAYOUT_32(sizeof(RCamera) == 0xc0, "RCamera is 192 bytes");
+LAYOUT_32(offsetof(RCamera, matrix) == 0x10 && offsetof(RCamera, unknown50) == 0x50 &&
+          offsetof(RCamera, matrixChanged) == 0x60 && offsetof(RCamera, inverse) == 0x70 &&
+          offsetof(RCamera, active) == 0xb0 && offsetof(RCamera, fieldOfView) == 0xb4, "RCamera layout");
 
 // ---- RViewCamera
 
@@ -140,10 +141,10 @@ private:
         (this->*XbeVirtual<Method>(this, slot))();
     }
 };
-static_assert(sizeof(RViewCamera) == 0x4c, "RViewCamera is 76 bytes");
-static_assert(offsetof(RViewCamera, viewPort) == 0x18 && offsetof(RViewCamera, xMin) == 0x1c &&
-              offsetof(RViewCamera, farZ) == 0x30 && offsetof(RViewCamera, active) == 0x3c &&
-              offsetof(RViewCamera, guardBandSize) == 0x48, "RViewCamera layout");
+LAYOUT_32(sizeof(RViewCamera) == 0x4c, "RViewCamera is 76 bytes");
+LAYOUT_32(offsetof(RViewCamera, viewPort) == 0x18 && offsetof(RViewCamera, xMin) == 0x1c &&
+          offsetof(RViewCamera, farZ) == 0x30 && offsetof(RViewCamera, active) == 0x3c &&
+          offsetof(RViewCamera, guardBandSize) == 0x48, "RViewCamera layout");
 
 // FUN_00096e20: the field of view and aspect ratio swayed by the step count, when the player's vehicle asks for it
 void ApplyPerspectiveFunction(float *aspect, float *fieldOfView);                               // 0x00096e20
@@ -259,11 +260,11 @@ private:
     // The anchor if its body is valid, else NULL, dropping it (inlined in the game; the name is ours)
     PhysicsObject* ValidAnchor();
 };
-static_assert(sizeof(RWorldCamera) == 0x130, "RWorldCamera is 304 bytes");
-static_assert(offsetof(RWorldCamera, eye) == 0xc0 && offsetof(RWorldCamera, modeChangeFlags) == 0xf0 &&
-              offsetof(RWorldCamera, unknown100) == 0x100 && offsetof(RWorldCamera, animSystemId) == 0x110 &&
-              offsetof(RWorldCamera, inputQueue) == 0x124 && offsetof(RWorldCamera, anchor) == 0x128,
-              "RWorldCamera layout");
+LAYOUT_32(sizeof(RWorldCamera) == 0x130, "RWorldCamera is 304 bytes");
+LAYOUT_32(offsetof(RWorldCamera, eye) == 0xc0 && offsetof(RWorldCamera, modeChangeFlags) == 0xf0 &&
+          offsetof(RWorldCamera, unknown100) == 0x100 && offsetof(RWorldCamera, animSystemId) == 0x110 &&
+          offsetof(RWorldCamera, inputQueue) == 0x124 && offsetof(RWorldCamera, anchor) == 0x128,
+          "RWorldCamera layout");
 
 extern bool PerspectiveSway;            // ApplyPerspectiveFunction's sway of the aspect and field of view
 

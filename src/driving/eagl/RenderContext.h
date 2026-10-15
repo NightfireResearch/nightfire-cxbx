@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 #include "../gfx/D3D8.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 namespace EAGL {
 
@@ -168,7 +169,7 @@ struct RenderContext {                   // 0x14c, "EAGL::RenderContext"
     void DeleteViewPort(ViewPort *viewPort);                                 // 0x000ee0a0
     uint8_t* OffsetSelf();                                                   // 0x000ee160 (invented; no callers)
 };
-static_assert(sizeof(RenderContext) == 0x14c, "a RenderContext is 0x14c bytes");
+LAYOUT_32(sizeof(RenderContext) == 0x14c, "a RenderContext is 0x14c bytes");
 
 // The Xbox extension: the object's first word. Every method reaches the object through it.
 struct RenderContextExtension {

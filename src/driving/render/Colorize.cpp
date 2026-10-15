@@ -48,7 +48,7 @@ bool VideoModeChecked;                   // a function-local static's guard
 
 namespace {
 
-const uintptr_t kRColorizeVtable = reinterpret_cast<uintptr_t>(Vtable_RColorize);
+void **const kRColorizeVtable = Vtable_RColorize;
 constexpr int32_t kMotionBlurDrawn = 2;
 constexpr int kVideoMode1 = 1;
 
@@ -82,7 +82,7 @@ void SetLight(RColorize *colorize, float level) {
 
 // FUNC_AT(0x0009a420)
 RColorize* RColorize::Construct() {
-    vtable = reinterpret_cast<const void *>(kRColorizeVtable);
+    vtable = kRColorizeVtable;
     mode = kModeOff;
     brightnessChangeTime = 0;
     areaBrightness = 0.0f;

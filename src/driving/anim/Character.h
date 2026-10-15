@@ -18,6 +18,7 @@
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../render/RSceneObj.hpp"
 #include "../world/CollisionTypes.h"    // MATRIX4
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class ActActor;
 class ActModel;
@@ -63,10 +64,10 @@ public:
     char* GetModelFileName(int lod);                                            // 0x00015640
     char* GetModelSymbolFileName(int lod);                                      // 0x00015680
 };
-static_assert(offsetof(ActCharacterInfo, numberToken) == 0x48 && offsetof(ActCharacterInfo, scale) == 0x60 &&
-              offsetof(ActCharacterInfo, modelPath) == 0x68 && offsetof(ActCharacterInfo, texturePath) == 0xcc,
-              "ActCharacterInfo layout");
-static_assert(sizeof(ActCharacterInfo) == 0xdc, "an ActCharacterInfo is 0xdc bytes");
+LAYOUT_32(offsetof(ActCharacterInfo, numberToken) == 0x48 && offsetof(ActCharacterInfo, scale) == 0x60 &&
+          offsetof(ActCharacterInfo, modelPath) == 0x68 && offsetof(ActCharacterInfo, texturePath) == 0xcc,
+          "ActCharacterInfo layout");
+LAYOUT_32(sizeof(ActCharacterInfo) == 0xdc, "an ActCharacterInfo is 0xdc bytes");
 
 // A character's alpha and shadow settings (operator new; the name is ours). ActManager holds the copy at +0x20
 // that the draws use; from its +0x20 on, that copy is what EAGL knows as "GAME::CharacterOptions".
@@ -146,9 +147,9 @@ public:
     // level (before a one-model character's is taken as 0), or 2 when it is not drawn
     int Draw(const MATRIX4 *cullMatrix, const MATRIX4 *matrix);                 // 0x00014c50
 };
-static_assert(offsetof(ActCharacter, weaponNames) == 0x2c && offsetof(ActCharacter, options) == 0x68 &&
-              offsetof(ActCharacter, muzzleFlashDirection) == 0x74, "ActCharacter layout");
-static_assert(sizeof(ActCharacter) == 0x84, "an ActCharacter is 0x84 bytes");
+LAYOUT_32(offsetof(ActCharacter, weaponNames) == 0x2c && offsetof(ActCharacter, options) == 0x68 &&
+          offsetof(ActCharacter, muzzleFlashDirection) == 0x74, "ActCharacter layout");
+LAYOUT_32(sizeof(ActCharacter) == 0x84, "an ActCharacter is 0x84 bytes");
 
 // ---- helpers the linker placed among the character's code (names ours)
 

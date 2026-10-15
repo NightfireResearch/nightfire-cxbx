@@ -1,5 +1,6 @@
 #include "launchInfo.h"
 #include <windows.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,7 +40,7 @@ void LaunchInfo_SetPageHook(LaunchPageHook hook) {
 
 // Replaces XAPILIB::XGetLaunchInfo
 int __stdcall XGetLaunchInfo(int *launchDataType, void *data) {
-    printf("[launch] XGetLaunchInfo: data at 0x%08x\n", (unsigned)(uintptr_t)data);
+    printf("[launch] XGetLaunchInfo: data at 0x%08" PRIxPTR "\n", uintptr_t(data));
 
     FILE *file = fopen(LAUNCH_FILE, "rb");
     if (file == NULL) {

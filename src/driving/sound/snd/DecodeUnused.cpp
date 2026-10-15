@@ -1,5 +1,6 @@
 #include "DecodeUnused.h"
 #include "SndUntested.h"
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 #include <bit>
 #include <stddef.h>
@@ -34,11 +35,11 @@
 // multiple of 8 - a count of 0 converts the eight samples before the buffers, as the original does.
 // ---------------------------------------------------------------------------------------------------------------
 
-static_assert(offsetof(SND::MutState, threshold) == 0x00c, "MutState layout");
-static_assert(offsetof(SND::MutState, gainTable) == 0x010, "MutState layout");
-static_assert(offsetof(SND::MutState, coefs) == 0x110, "MutState layout");
-static_assert(offsetof(SND::MutState, synth) == 0x140, "MutState layout");
-static_assert(offsetof(SND::MutState, signal) == 0x170, "MutState layout");
+LAYOUT_32(offsetof(SND::MutState, threshold) == 0x00c, "MutState layout");
+LAYOUT_32(offsetof(SND::MutState, gainTable) == 0x010, "MutState layout");
+LAYOUT_32(offsetof(SND::MutState, coefs) == 0x110, "MutState layout");
+LAYOUT_32(offsetof(SND::MutState, synth) == 0x140, "MutState layout");
+LAYOUT_32(offsetof(SND::MutState, signal) == 0x170, "MutState layout");
 
 // XBE_GLOBAL(0x001da558, 0x45c) readonly
 const SND::MutTables MicroTalkTables = {

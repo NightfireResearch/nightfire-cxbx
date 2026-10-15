@@ -1,6 +1,7 @@
 #include "XboxInput.h"
 #include "Host.h"
 #include "HostInput.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 #include <windows.h>
 #include <stdio.h>
@@ -69,7 +70,7 @@ struct XboxFeedback {
 #pragma pack(pop)
 
 static_assert(sizeof(XboxState) == 22, "the game unpacks XINPUT_STATE by offset");
-static_assert(offsetof(XboxFeedback, wLeftMotorSpeed) == 0x42, "the game writes the motor speeds at 0x42");
+LAYOUT_32(offsetof(XboxFeedback, wLeftMotorSpeed) == 0x42, "the game writes the motor speeds at 0x42");
 
 #define XBOX_ERROR_DEVICE_NOT_CONNECTED 0x48F
 

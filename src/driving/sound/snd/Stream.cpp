@@ -526,17 +526,22 @@ void FUN_0014b730(StrmInternal *s, int priority) {
 
 // ---- the API
 
-// The header (0x190), the readers, 0x80 for aligning the ring, the requests and the filters
+constexpr int kHeaderBytes = sizeof(StrmInternal);
+constexpr int kRequestBytes = sizeof(StrmRequest);
+constexpr int kFilterBytes = sizeof(StrmFilter);
+constexpr int kReaderBytes = sizeof(StrmReader);
+
+// The header, the readers, 0x80 for aligning the ring, the requests and the filters
 // FUNC_AT(0x0014b090)
 int STREAM_overhead(int requests, int filters, int readers) {
-    return (readers + 0x21) * 16 + requests * 0x124 + filters * 12;
+    return (kHeaderBytes + 0x80 + readers * kReaderBytes) + requests * kRequestBytes + filters * kFilterBytes;
 }
 
 // FUNC_AT(0x0014b0c0)
 SND::StrmReader* STREAM_create(int requests, int filters, int readers, StrmInternal *memory, int size) {
-    int requestBytes = requests * 0x124;
-    int filterBytes = filters * 12;
-    int ring = size - ((readers + 0x21) * 16 + filterBytes + requestBytes);
+    int requestBytes = requests * kRequestBytes;
+    int filterBytes = filters * kFilterBytes;
+    int ring = size - ((kHeaderBytes + 0x80 + readers * kReaderBytes) + filterBytes + requestBytes);
     if (ring < 0x1800 || requests < 2 || requests > 0x100 || filters < 1 || filters > 0x10 || readers < 1 ||
         readers > filters)
         return NULL;
@@ -549,7 +554,7 @@ SND::StrmReader* STREAM_create(int requests, int filters, int readers, StrmInter
     StrmFilter *filterRecords = (StrmFilter *)(requestRecords + requests);
     s->filters = filterRecords;
     StrmReader *readerRecords = (StrmReader *)(filterRecords + filters);
-    uint8_t *ringBase = (uint8_t *)((uintptr_t(readerRecords + readers) & 0xffffff80) + 0x80);   // 128-aligned
+    uint8_t *ringBase = (uint8_t *)((uintptr_t(readerRecords + readers) & ~uintptr_t(0x7f)) + 0x80);   // 128-aligned
     s->readers = readerRecords;
     s->ringBase = ringBase;
     s->ringStart = ringBase;

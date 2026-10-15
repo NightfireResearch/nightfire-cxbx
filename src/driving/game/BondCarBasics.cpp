@@ -10,6 +10,7 @@
 #include "../world/Targeting.h"
 #include "../../common/xbeOverload.h"   // XbeAddress
 #include "../platform/CRuntimeStd.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // PBondCar's small methods (0x00065ba0-0x00066060), ported from the listing: DebugObject, the destructor,
@@ -18,7 +19,7 @@
 // IsWheelOnGround's "return 0" tail (0x00066051, Ghidra's FUN_00066051) is only reached by its own branch.
 // ---------------------------------------------------------------------------------------------------------------
 
-static_assert(sizeof(ActionQueue) == 0x974, "an action queue is 0x974 bytes");
+LAYOUT_32(sizeof(ActionQueue) == 0x974, "an action queue is 0x974 bytes");
 
 // FUNC_AT(0x00065ba0)
 void PBondCar::DebugObject() {
@@ -42,7 +43,7 @@ uint32_t GetCarColourVariation(const char *carType, uint32_t colour) {
 
 // FUNC_AT(0x00065c70)
 void PBondCar::Destruct() {
-    vtable = reinterpret_cast<void **>(kPBondCarVtable);
+    vtable = kPBondCarVtable;
     if (actionQueue != NULL) {
         actionQueue->Destruct();
         UMemory::FastFree(actionQueue, sizeof(ActionQueue));

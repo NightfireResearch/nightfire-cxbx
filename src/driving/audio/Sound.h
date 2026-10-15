@@ -32,6 +32,7 @@
 #include "../world/Targeting.h"         // PointerList
 #include "../../common/xbeOverload.h"   // XbeVirtual
 #include "../../helpers.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 // The listeners a sound can be heard by
 enum SoundView {
@@ -57,12 +58,12 @@ struct ASoundPlayParams {
     // game/VehicleSoundEngine.cpp)
     ASoundPlayParams* Compute(ABaseSound *sound);                               // 0x0012eab0
 };
-static_assert(sizeof(ASoundPlayParams) == 0x1c, "a sound's play parameters are 0x1c bytes");
+LAYOUT_32(sizeof(ASoundPlayParams) == 0x1c, "a sound's play parameters are 0x1c bytes");
 
 // The base sound (0xc0 bytes; vtable 0x0018a510). Field names from Ghidra's structure where it has them.
 class ABaseSound {
 public:
-    uint32_t vtable;            // +0x00
+    void **vtable;              // +0x00
     uint8_t unknown04[0xc];
     Coord3 position;            // +0x10
     uint32_t unknown1c;
@@ -133,12 +134,12 @@ private:
     typedef bool (ABaseSound::*IsTransientMethod)();
     typedef void (ABaseSound::*PlayMethod)(ASoundPlayParams *params);
 };
-static_assert(offsetof(ABaseSound, minDistance) == 0x6c, "ABaseSound::minDistance");
-static_assert(offsetof(ABaseSound, lastVolumes) == 0x84, "ABaseSound::lastVolumes");
-static_assert(offsetof(ABaseSound, mix) == 0x94, "ABaseSound::mix");
-static_assert(offsetof(ABaseSound, name) == 0x9c, "ABaseSound::name");
-static_assert(offsetof(ABaseSound, fading) == 0xb8, "ABaseSound::fading");
-static_assert(sizeof(ABaseSound) == 0xc0, "ABaseSound is 192 bytes");
+LAYOUT_32(offsetof(ABaseSound, minDistance) == 0x6c, "ABaseSound::minDistance");
+LAYOUT_32(offsetof(ABaseSound, lastVolumes) == 0x84, "ABaseSound::lastVolumes");
+LAYOUT_32(offsetof(ABaseSound, mix) == 0x94, "ABaseSound::mix");
+LAYOUT_32(offsetof(ABaseSound, name) == 0x9c, "ABaseSound::name");
+LAYOUT_32(offsetof(ABaseSound, fading) == 0xb8, "ABaseSound::fading");
+LAYOUT_32(sizeof(ABaseSound) == 0xc0, "ABaseSound is 192 bytes");
 
 // The base's slot 1, and the same answer in many unrelated vtables (the linker kept one copy).
 bool Generic_FuncReturnsFalse();                                                // 0x0001c080
@@ -153,7 +154,7 @@ struct ASoundList : PointerList {
     // _Incsize: throws length_error("list<T> too long") past 0x3fffffff nodes.
     void IncreaseSize(uint32_t count);                                          // 0x0011c860
 };
-static_assert(sizeof(ASoundList) == 12, "a list is 12 bytes");
+LAYOUT_32(sizeof(ASoundList) == 12, "a list is 12 bytes");
 
 // ---- the kinds
 
@@ -180,8 +181,8 @@ public:
     // ZoomObj.cpp). (Ghidra: FUN_00127cb0)
     void Play(ASoundPlayParams *params);                                        // 0x00127cb0
 };
-static_assert(offsetof(AOneShotSound, fxLevel) == 0x118, "AOneShotSound::fxLevel");
-static_assert(sizeof(AOneShotSound) == 0x120, "AOneShotSound is 0x120 bytes");
+LAYOUT_32(offsetof(AOneShotSound, fxLevel) == 0x118, "AOneShotSound::fxLevel");
+LAYOUT_32(sizeof(AOneShotSound) == 0x120, "AOneShotSound is 0x120 bytes");
 
 // A one-shot sound counted while it exists (vtable 0x0018c8c8)
 class ALimitedSound : public AOneShotSound {
@@ -192,7 +193,7 @@ public:
     // The volume becomes one over the number of limited sounds, then AOneShotSound's Play (in ZoomObj.cpp).
     void Play(ASoundPlayParams *params);                                        // 0x00127da0
 };
-static_assert(sizeof(ALimitedSound) == 0x120, "ALimitedSound is 0x120 bytes");
+LAYOUT_32(sizeof(ALimitedSound) == 0x120, "ALimitedSound is 0x120 bytes");
 
 // The world's sound (0x150 bytes; vtable 0x00193ae8; WSound's base): its voice played in bursts of repeats with
 // random waits between, and a pass voice heard while it comes close. Construct and Delete are in
@@ -225,7 +226,7 @@ public:
     // vtable slot 3
     void Play(ASoundPlayParams *params);                                        // 0x0012dda0
 };
-static_assert(sizeof(AWorldSound) == 0x150, "AWorldSound is 336 bytes");
+LAYOUT_32(sizeof(AWorldSound) == 0x150, "AWorldSound is 336 bytes");
 
 // The sound AMenuSound::Trigger makes (0x120 bytes; vtable 0x001a250c): heard at any distance, deleted by its
 // own Play once its voice is done.
@@ -240,7 +241,7 @@ public:
 
     void Play(ASoundPlayParams *params);                                        // 0x0011dee0
 };
-static_assert(sizeof(AMenuSoundPriv) == 0x120, "AMenuSoundPriv is 0x120 bytes");
+LAYOUT_32(sizeof(AMenuSoundPriv) == 0x120, "AMenuSoundPriv is 0x120 bytes");
 
 class AMenuSound {
 public:
@@ -268,7 +269,7 @@ public:
     // Frees the voice (vtable slot 4; the parameters are not read).
     void Stop(ASoundPlayParams *params);                                        // 0x0012fc30
 };
-static_assert(sizeof(ABasic) == 0xf0, "ABasic is 0xf0 bytes");
+LAYOUT_32(sizeof(ABasic) == 0xf0, "ABasic is 0xf0 bytes");
 
 // ---- the warning beside a provisional port: code no shipped data reaches, said once, the first time it runs
 

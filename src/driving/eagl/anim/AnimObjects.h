@@ -4,6 +4,7 @@
 // EAGLAnim's object layer: the pool, the factory, the objects (FnAnim.h) and AnimationBank. See AnimObjects.cpp.
 
 #include "FnAnim.h"
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 struct AttributeBlock;
 
@@ -43,8 +44,8 @@ struct MemoryPool {
     uint32_t unknown6c;
     FreeBlock *freeBySize[256];      // +0x70 free blocks per 16-byte size class
 };
-static_assert(offsetof(MemoryPool, base) == 0x60, "the pool's base is at +0x60");
-static_assert(sizeof(MemoryPool) == 0x470, "the pool is 0x470 bytes");
+LAYOUT_32(offsetof(MemoryPool, base) == 0x60, "the pool's base is at +0x60");
+LAYOUT_32(sizeof(MemoryPool) == 0x470, "the pool is 0x470 bytes");
 
 extern MemoryPool Pool;
 extern void *FactoryBlock;

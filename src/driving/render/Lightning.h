@@ -22,6 +22,7 @@
 #include "../engine/USingleton.h"
 #include "../world/CollisionTypes.h"      // ColVector
 #include "Materials.h"
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 namespace EAGL {
 struct TAR;
@@ -83,7 +84,7 @@ struct RLightningControlPoint : RLightningPoint {
     void Init(const Coord3 *position, RSceneObj *sceneObj, const ArticleEffect *locator);           // 0x0009eb90
     void CalcWorldPos();                                                                        // 0x0009ebf0
 };
-static_assert(sizeof(RLightningControlPoint) == 0x60, "a control point is 0x60 bytes");
+LAYOUT_32(sizeof(RLightningControlPoint) == 0x60, "a control point is 0x60 bytes");
 
 struct RLightningSegment;
 
@@ -108,7 +109,7 @@ struct RLightningSegment {
     void Update(int tick);                                                                      // 0x0009f250
     void Draw(RLightning *lightning);                                                           // 0x0009f2f0
 };
-static_assert(sizeof(RLightningSegment) == 0x18, "a segment is 0x18 bytes");
+LAYOUT_32(sizeof(RLightningSegment) == 0x18, "a segment is 0x18 bytes");
 
 // A bolt (Ghidra: RLightning::Bolt, 0x24 bytes): its control points and the segments between them, its handle, when
 // it started, how long it lives and how it fades
@@ -130,7 +131,7 @@ struct RLightningBolt {
     void Destruct();                                                                            // 0x0009f4c0
     void Draw(RLightning *lightning);                                                           // 0x0009f6b0
 };
-static_assert(sizeof(RLightningBolt) == 0x24, "a bolt is 0x24 bytes");
+LAYOUT_32(sizeof(RLightningBolt) == 0x24, "a bolt is 0x24 bytes");
 
 // std::vector<RLightning::Bolt *>
 struct RLightningBoltVector : ColVector<RLightningBolt *> {
@@ -138,7 +139,7 @@ struct RLightningBoltVector : ColVector<RLightningBolt *> {
     void InsertN(RLightningBolt **where, uint32_t count, RLightningBolt *const *value);         // 0x000a0020
     static void Xlen();                 // length_error("vector<T> too long")                   // 0x0009ff80
 };
-static_assert(sizeof(RLightningBoltVector) == 0x10, "a vector is 16 bytes");
+LAYOUT_32(sizeof(RLightningBoltVector) == 0x10, "a vector is 16 bytes");
 
 // The strip the bolts are drawn as, rebuilt every frame (0xe000 bytes, the name is ours)
 constexpr int kLightningStripVertices = 0x800;
@@ -230,10 +231,10 @@ public:
     // The strip drawn in batches of up to 512 vertices
     void RenderBolts();                                                                         // 0x0009f020
 };
-static_assert(sizeof(RLightning) == 0x700, "RLightning is 0x700 bytes");
-static_assert(offsetof(RLightning, randomCoords) == 0x50 && offsetof(RLightning, randomNums) == 0x550 &&
-              offsetof(RLightning, material) == 0x660 && offsetof(RLightning, textures) == 0x6cc &&
-              offsetof(RLightning, metricsInterval) == 0x6e8, "RLightning layout");
+LAYOUT_32(sizeof(RLightning) == 0x700, "RLightning is 0x700 bytes");
+LAYOUT_32(offsetof(RLightning, randomCoords) == 0x50 && offsetof(RLightning, randomNums) == 0x550 &&
+          offsetof(RLightning, material) == 0x660 && offsetof(RLightning, textures) == 0x6cc &&
+          offsetof(RLightning, metricsInterval) == 0x6e8, "RLightning layout");
 
 extern RLightning *TheLightning;   // RLightning::Init's instance
 

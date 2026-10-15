@@ -802,7 +802,7 @@ void BuildRender() {
 
 void BuildSound() {
     memset(g_soundBlock, 0, sizeof(g_soundBlock));
-    g_sound->vtable = uint32_t(uintptr_t(g_soundVtable));
+    g_sound->vtable = g_soundVtable;
     for (int i = 0; i < 6; i++)
         g_soundBlock[0xc0 + i] = uint8_t(Range(0, 2));
 }

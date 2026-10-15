@@ -7,6 +7,7 @@
 
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../engine/RbTree.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // RVehicleParticle (0x4c bytes, vtable 0x001930b0: the deleting destructor only): a car's particle systems - tyre
@@ -27,7 +28,7 @@ struct RParticleSystemData;
 // rotations and the iterator's decrement the Simulation's (called at their addresses), and the minimum and maximum
 // here are called by the others.
 struct VehicleParticleNode : RbTreeNode<VehicleParticleNode, RVehicleParticle *> {};
-static_assert(sizeof(VehicleParticleNode) == 0x14, "a set node is 0x14 bytes");
+LAYOUT_32(sizeof(VehicleParticleNode) == 0x14, "a set node is 0x14 bytes");
 
 struct VehicleParticleSet : RbTree<VehicleParticleNode> {
     struct Iterator {
@@ -60,7 +61,7 @@ struct VehicleParticleSet : RbTree<VehicleParticleNode> {
     // erase(key), inlined in RVehicleParticle's destructor: the number erased
     uint32_t EraseKey(RVehicleParticle *key);
 };
-static_assert(sizeof(VehicleParticleSet) == 0xc, "a set is 12 bytes");
+LAYOUT_32(sizeof(VehicleParticleSet) == 0xc, "a set is 12 bytes");
 
 class RVehicleParticle {
 public:
@@ -104,12 +105,12 @@ public:
     // The extra tyre smoke of every object in the set ended
     static void ResetAll();                                                                     // 0x000a7300
 };
-static_assert(sizeof(RVehicleParticle) == 0x4c, "RVehicleParticle is 0x4c bytes");
-static_assert(offsetof(RVehicleParticle, systems) == 0x08 && offsetof(RVehicleParticle, vehicle) == 0x40 &&
-              offsetof(RVehicleParticle, smokeEndTick) == 0x44 && offsetof(RVehicleParticle, smokeFade) == 0x48,
-              "RVehicleParticle layout");
+LAYOUT_32(sizeof(RVehicleParticle) == 0x4c, "RVehicleParticle is 0x4c bytes");
+LAYOUT_32(offsetof(RVehicleParticle, systems) == 0x08 && offsetof(RVehicleParticle, vehicle) == 0x40 &&
+          offsetof(RVehicleParticle, smokeEndTick) == 0x44 && offsetof(RVehicleParticle, smokeFade) == 0x48,
+          "RVehicleParticle layout");
 
-const uint32_t kRVehicleParticleVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_RVehicleParticle));
+void **const kRVehicleParticleVtable = Vtable_RVehicleParticle;
 
 extern VehicleParticleSet *fgVehicleParticles;  // Init's set (the name is ours)
 extern uint32_t VehicleParticleUpdateTick;      // UpdateAll's last tick (the name is ours)

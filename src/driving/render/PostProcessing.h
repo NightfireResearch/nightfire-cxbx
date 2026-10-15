@@ -17,6 +17,7 @@
 #include "../eagl/RenderMethod.h"         // RenderMethod, GeoPrimParam
 #include "../engine/USingleton.h"
 #include "../world/WorldPos.h"
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 class ROffscreenBuffer;
 namespace EAGL {
@@ -82,10 +83,10 @@ struct RPostProcessingData {
     // The copy's texture locked once, the constants set, the glow drawn (FUN_000a4ee0, the name is ours)
     void UpdateGlow();                                                                          // 0x000a4ee0
 };
-static_assert(sizeof(RPostProcessingData) == 0x30128, "the post-processing data is 0x30128 bytes");
-static_assert(offsetof(RPostProcessingData, state) == 0x18 && offsetof(RPostProcessingData, model) == 0x84 &&
-              offsetof(RPostProcessingData, prim) == 0xe0 && offsetof(RPostProcessingData, points) == 0x124 &&
-              offsetof(RPostProcessingData, doGlow) == 0x30124, "RPostProcessingData layout");
+LAYOUT_32(sizeof(RPostProcessingData) == 0x30128, "the post-processing data is 0x30128 bytes");
+LAYOUT_32(offsetof(RPostProcessingData, state) == 0x18 && offsetof(RPostProcessingData, model) == 0x84 &&
+          offsetof(RPostProcessingData, prim) == 0xe0 && offsetof(RPostProcessingData, points) == 0x124 &&
+          offsetof(RPostProcessingData, doGlow) == 0x30124, "RPostProcessingData layout");
 
 class RPostProcessing {
 public:
@@ -101,7 +102,7 @@ public:
     void GrabBackBuffer();                                                                      // 0x000a5020
     EAGL::TAR* GetSubsampledBackBuffer();                                                       // 0x000a4560
 };
-static_assert(sizeof(RPostProcessing) == 8, "RPostProcessing is 8 bytes");
+LAYOUT_32(sizeof(RPostProcessing) == 8, "RPostProcessing is 8 bytes");
 
 extern RPostProcessing *ThePostProcessing;   // RPostProcessing::Init's instance
 

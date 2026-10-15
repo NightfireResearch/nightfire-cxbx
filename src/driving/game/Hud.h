@@ -18,6 +18,7 @@
 #include "../data/CoordConvert.h"         // Coord3
 #include "../world/Targeting.h"           // ScreenPos
 #include "../../helpers.h"
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 class ATargeting;
 class GHud;
@@ -518,24 +519,24 @@ public:
     void Draw();                                                                                // 0x000e1970
     void UpdateTargets();                                                                       // 0x000e1a90
 };
-static_assert(sizeof(GHud) == 0x4f0, "GHud is 0x4f0 bytes");
-static_assert(offsetof(GHud, gallery) == 0x18 && offsetof(GHud, healthBorderPuppet) == 0x68 &&
-              offsetof(GHud, stylinPuppet) == 0x84 && offsetof(GHud, pauseCanvas) == 0x100 &&
-              offsetof(GHud, controlsPuppet) == 0x128 && offsetof(GHud, controlsXBOXAPuppet) == 0x168 &&
-              offsetof(GHud, objCheckPuppet) == 0x1c4 && offsetof(GHud, hudMsgCanvas) == 0x268 &&
-              offsetof(GHud, aredPuppet) == 0x2a4 && offsetof(GHud, paused) == 0x2b0 &&
-              offsetof(GHud, letterBoxMode) == 0x2b4 && offsetof(GHud, healthShowTime) == 0x2d0 &&
-              offsetof(GHud, buttonMsg) == 0x2fc && offsetof(GHud, missionResultText) == 0x310 &&
-              offsetof(GHud, blackFadePct) == 0x34c && offsetof(GHud, lastStep) == 0x360 &&
-              offsetof(GHud, target) == 0x380 && offsetof(GHud, targeting) == 0x39c &&
-              offsetof(GHud, objectiveMsgTime) == 0x3b0 && offsetof(GHud, instanceTargetShown) == 0x3c4 &&
-              offsetof(GHud, objectiveTargetShown) == 0x3dc && offsetof(GHud, objectiveTarget) == 0x3f0 &&
-              offsetof(GHud, missionMsg) == 0x404 && offsetof(GHud, gadget) == 0x41c &&
-              offsetof(GHud, levelLoadText) == 0x430 && offsetof(GHud, pauseConfig) == 0x438 &&
-              offsetof(GHud, screenWidth) == 0x440 && offsetof(GHud, superEasy) == 0x454 &&
-              offsetof(GHud, timer) == 0x458 && offsetof(GHud, pausePage) == 0x470 &&
-              offsetof(GHud, pauseConfirm) == 0x484 && offsetof(GHud, cheatInput) == 0x49c &&
-              offsetof(GHud, frameRate) == 0x4e0, "GHud layout");
+LAYOUT_32(sizeof(GHud) == 0x4f0, "GHud is 0x4f0 bytes");
+LAYOUT_32(offsetof(GHud, gallery) == 0x18 && offsetof(GHud, healthBorderPuppet) == 0x68 &&
+          offsetof(GHud, stylinPuppet) == 0x84 && offsetof(GHud, pauseCanvas) == 0x100 &&
+          offsetof(GHud, controlsPuppet) == 0x128 && offsetof(GHud, controlsXBOXAPuppet) == 0x168 &&
+          offsetof(GHud, objCheckPuppet) == 0x1c4 && offsetof(GHud, hudMsgCanvas) == 0x268 &&
+          offsetof(GHud, aredPuppet) == 0x2a4 && offsetof(GHud, paused) == 0x2b0 &&
+          offsetof(GHud, letterBoxMode) == 0x2b4 && offsetof(GHud, healthShowTime) == 0x2d0 &&
+          offsetof(GHud, buttonMsg) == 0x2fc && offsetof(GHud, missionResultText) == 0x310 &&
+          offsetof(GHud, blackFadePct) == 0x34c && offsetof(GHud, lastStep) == 0x360 &&
+          offsetof(GHud, target) == 0x380 && offsetof(GHud, targeting) == 0x39c &&
+          offsetof(GHud, objectiveMsgTime) == 0x3b0 && offsetof(GHud, instanceTargetShown) == 0x3c4 &&
+          offsetof(GHud, objectiveTargetShown) == 0x3dc && offsetof(GHud, objectiveTarget) == 0x3f0 &&
+          offsetof(GHud, missionMsg) == 0x404 && offsetof(GHud, gadget) == 0x41c &&
+          offsetof(GHud, levelLoadText) == 0x430 && offsetof(GHud, pauseConfig) == 0x438 &&
+          offsetof(GHud, screenWidth) == 0x440 && offsetof(GHud, superEasy) == 0x454 &&
+          offsetof(GHud, timer) == 0x458 && offsetof(GHud, pausePage) == 0x470 &&
+          offsetof(GHud, pauseConfirm) == 0x484 && offsetof(GHud, cheatInput) == 0x49c &&
+          offsetof(GHud, frameRate) == 0x4e0, "GHud layout");
 
 // Splits `text` at spaces into lines of at most `width` characters (at most five lines, the last cut short);
 // *lines gets an array of five, from operator new[], each line from operator new[] too. Answers the count.

@@ -262,7 +262,7 @@ static int StartThread(RealThread *thread, ThreadStart *start, unsigned stackSiz
 }
 
 // AUTOINJECT
-int THREAD_create(RealThread *thread, ThreadFn function, int unused, unsigned stackSize, int priority) {
+int THREAD_create(RealThread *thread, ThreadFn function, void *unused, unsigned stackSize, int priority) {
     (void)unused;
     ThreadStart start = { 0, function, NULL, NULL };
     return StartThread(thread, &start, stackSize, priority);

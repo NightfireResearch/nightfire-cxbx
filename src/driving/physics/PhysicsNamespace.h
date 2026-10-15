@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "../data/AttributeSet.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // PhysicsNamespace (4 bytes, a vtable; RRenderHigh::InitGameRender makes one and adds it to the symbol table as
@@ -31,7 +32,7 @@ struct PhysicsData {
     // among PVehicle's, and is ported in game/Vehicle.cpp)
     PhysicsData* Construct(const char *name);                                                   // 0x0006ec80
 };
-static_assert(sizeof(PhysicsData) == 0x2c, "PhysicsData is 0x2c bytes");
+LAYOUT_32(sizeof(PhysicsData) == 0x2c, "PhysicsData is 0x2c bytes");
 
 // A new PhysicsData's defaults (the type's AttributeExtensionInit)                               0x0006ee10
 void InitPhysicsData(const char *className, const char *collectionName, const char *attributeName, uint32_t type,
@@ -46,7 +47,7 @@ public:
     void* NameLookup(const char *name, uint32_t *size);                                         // 0x0006ed40
     PhysicsNamespace* Delete(unsigned flags);   // the scalar deleting destructor, slot 1        // 0x0006f050
 };
-static_assert(sizeof(PhysicsNamespace) == 4, "a physics namespace is a vtable");
+LAYOUT_32(sizeof(PhysicsNamespace) == 4, "a physics namespace is a vtable");
 
 extern int32_t PhysicsDataType;         // the extension type's id; -1 until the first constructor
 

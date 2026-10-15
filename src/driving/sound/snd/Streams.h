@@ -9,6 +9,7 @@
 #include "Banks.h"
 #include "Voices.h"
 #include "System.h"
+#include "../../../common/xbeClass.h" // LAYOUT_32
 
 #include <stddef.h>
 #include <stdint.h>
@@ -33,7 +34,7 @@ struct StreamRequest {
     uint8_t started;             // +0x24 its first data chunk has been submitted
     uint8_t pad25[3];
 };
-static_assert(sizeof(StreamRequest) == 0x28, "a stream request is 0x28 bytes");
+LAYOUT_32(sizeof(StreamRequest) == 0x28, "a stream request is 0x28 bytes");
 
 // SNDSTRMI (0x138): sndss[32] at 0x00244ba8 (NUM_STREAMS at 0x00244d0f)
 struct StreamState {
@@ -56,7 +57,7 @@ struct StreamState {
     LinkList freeRequests;       // +0x128
     StreamRequest *current;      // +0x134 the request whose chunks are being parsed
 };
-static_assert(sizeof(StreamState) == 0x138, "SNDSTRMI is 0x138 bytes");
+LAYOUT_32(sizeof(StreamState) == 0x138, "SNDSTRMI is 0x138 bytes");
 
 // A packet as SNDSTRMI_parsedata builds it on its stack for SNDPKTPLAY_submit (0x24)
 struct Packet {
@@ -65,7 +66,7 @@ struct Packet {
     uint32_t unused08;           // +0x08 never read
     uint8_t *channels[6];        // +0x0c per channel: its data in the chunk
 };
-static_assert(sizeof(Packet) == 0x24, "a packet is 0x24 bytes");
+LAYOUT_32(sizeof(Packet) == 0x24, "a packet is 0x24 bytes");
 
 // A packet in the player's ring (0x20)
 struct PacketSlot {
@@ -73,7 +74,7 @@ struct PacketSlot {
     uint32_t frames;             // +0x04 as submitted (bit 31 included)
     uint8_t *channels[6];        // +0x08
 };
-static_assert(sizeof(PacketSlot) == 0x20, "a packet slot is 0x20 bytes");
+LAYOUT_32(sizeof(PacketSlot) == 0x20, "a packet slot is 0x20 bytes");
 
 typedef int (*PacketReleaseFn)(uint8_t *data, void *context);              // SNDSTRMI_releasecallback
 typedef void (*PacketFramesFn)(int player, uint32_t frames, void *context);  // SNDSTRMI_framescallback
@@ -99,7 +100,7 @@ struct PacketPlayer {
     uint8_t *stretchData[6];     // +0x44 the attributes' per-channel time-stretch data (freed by SNDPKTPLAY_stop)
     PacketSlot slot[1];          // +0x5c [slots]
 };
-static_assert(offsetof(PacketPlayer, slot) == 0x5c, "the packet slots start at +0x5c");
+LAYOUT_32(offsetof(PacketPlayer, slot) == 0x5c, "the packet slots start at +0x5c");
 
 // A queued packet callback: count at 0x00244fe0, entries at 0x00244fe4 (96 of them before sndpps)
 struct PacketCallback {
@@ -110,7 +111,7 @@ struct PacketCallback {
         uint32_t frames;         //       frames: the frames consumed
     };
 };
-static_assert(sizeof(PacketCallback) == 8, "a packet callback is 8 bytes");
+LAYOUT_32(sizeof(PacketCallback) == 8, "a packet callback is 8 bytes");
 
 // SNDSTRM_status's answer
 struct StreamStatus {

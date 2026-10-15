@@ -27,8 +27,8 @@
 
 namespace {
 
-const uint32_t kAEngineVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_AEngine));
-const uint32_t kARaceEngineVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_ARaceEngine));
+void **const kAEngineVtable = Vtable_AEngine;
+void **const kARaceEngineVtable = Vtable_ARaceEngine;
 
 enum { kVoiceBytes = 0x58 };
 

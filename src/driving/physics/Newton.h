@@ -7,6 +7,7 @@
 #include "PhysicsObject.h"
 #include "../data/Carp.h"               // CARP::Instance
 #include "../data/CoordConvert.h"       // Coord3, Coord4
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // Newton (0x90 bytes, "Newton", physics object type 9): a render instance (or a model's instances) drawn on a
@@ -47,6 +48,6 @@ struct Newton : PhysicsObject {
     static void SpawnFromEvent(float mass, float lifetime, CARP::Instance *instance, bool simpleBody, int body,
                                RSceneObj *sceneObj, uint8_t flags);                             // 0x00061310
 };
-static_assert(sizeof(Newton) == 0x90, "a Newton is 0x90 bytes");
+LAYOUT_32(sizeof(Newton) == 0x90, "a Newton is 0x90 bytes");
 
 #endif // DRIVING_PHYSICS_NEWTON_H_

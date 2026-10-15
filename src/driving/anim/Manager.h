@@ -13,6 +13,7 @@
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../../helpers.h"              // BOOL8_AT
 #include "../engine/UGroup.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class ActTextureDatabase;
 class ActModelDatabase;
@@ -49,8 +50,8 @@ public:
     // Answers the names "event.*" with their event ids (a symbol callback).
     static int SymbolResolver(const char *name, bool *found);                   // 0x00017010
 };
-static_assert(offsetof(ActManager, drawOptions) == 0x20, "the character options are at +0x20");
-static_assert(sizeof(ActManager) == 0x80, "an ActManager is 0x80 bytes");
+LAYOUT_32(offsetof(ActManager, drawOptions) == 0x20, "the character options are at +0x20");
+LAYOUT_32(sizeof(ActManager) == 0x80, "an ActManager is 0x80 bytes");
 
 extern ActManager *TheActManager;
 extern bool IRModeOn;                   // SetIRMode's
