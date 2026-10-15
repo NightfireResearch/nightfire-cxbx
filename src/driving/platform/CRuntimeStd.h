@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "Host.h"   // HostLong
 #include "../data/StdStreams.h"
 #include "../../common/xbeClass.h"   // LAYOUT_32
 
@@ -122,7 +123,7 @@ extern CriticalSection LibraryLocks[4];
 extern InitLocks InitLocksFirst;
 extern InitLocks InitLocksSecond;
 extern InitAtExit TheInitAtExit;
-extern volatile long InitLocksCount;
+extern volatile HostLong InitLocksCount;
 extern FacetNode *FacetList;
 extern Locimp *GlobalLocale;
 extern Locimp *ClassicImpl;

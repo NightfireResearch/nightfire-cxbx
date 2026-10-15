@@ -1,4 +1,5 @@
 #include "Host.h"
+#include "Ptr32.h"
 
 #include <windows.h>
 #include <mmsystem.h>
@@ -34,8 +35,22 @@ void HostSetLastError(unsigned long error) {
 
 // ---- threads
 
+#if UINTPTR_MAX > 0xffffffffu
+static void ReserveBelowWindow(void **ranges, int count);
+static void ReleaseBelowWindow(void **ranges, int count);
+#endif
+
 HostHandle HostCreateThread(size_t stackSize, HostThreadStart start, void *parameter, unsigned long flags,
                             unsigned long *threadId) {
+#if UINTPTR_MAX > 0xffffffffu
+    if (kGameWindowBase != 0) {
+        void *ranges[256] = {};
+        ReserveBelowWindow(ranges, 256);
+        HostHandle thread = CreateThread(NULL, stackSize, start, parameter, flags, threadId);
+        ReleaseBelowWindow(ranges, 256);
+        return thread;
+    }
+#endif
     return CreateThread(NULL, stackSize, start, parameter, flags, threadId);
 }
 
@@ -223,18 +238,46 @@ static void *AllocateLowest(size_t size, uintptr_t lowest, uintptr_t limit, DWOR
     return NULL;
 }
 
-static const uintptr_t kWindowEnd = uintptr_t(1) << 32;
-
-// Where asked if there is room there, else anywhere in the game window.
+// Where asked if there is room there, else anywhere in the game window (offsets in the window, whose first 64 KB
+// stays free).
 void *HostAllocatePages(size_t size, uintptr_t lowest, uintptr_t limit) {
-    void *block = AllocateLowest(size, lowest, limit, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    const uintptr_t kFirst = 0x10000;
+    void *block = AllocateLowest(size, kGameWindowBase + (lowest > kFirst ? lowest : kFirst), kGameWindowBase + limit,
+                                 MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     if (block == NULL)
-        block = AllocateLowest(size, 0, kWindowEnd, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+        block = AllocateLowest(size, kGameWindowBase + kFirst, kGameWindowEnd, MEM_RESERVE | MEM_COMMIT,
+                               PAGE_EXECUTE_READWRITE);
     return block;
 }
 
 void *HostReserveLow(size_t size, uintptr_t lowest) {
-    return AllocateLowest(size, lowest, kWindowEnd, MEM_RESERVE, PAGE_NOACCESS);
+    return AllocateLowest(size, kGameWindowBase + (lowest > 0x10000 ? lowest : 0x10000), kGameWindowEnd, MEM_RESERVE,
+                          PAGE_NOACCESS);
+}
+
+// The game's data may hold addresses on its threads' stacks (a draw's vertex arrays), so their stacks must lie in the
+// window. Windows gives a new thread's stack the lowest free range: with the window at 0 that is in it; above 4 GB,
+// every free range below the window is reserved while the thread is made, and released after.
+static void ReserveBelowWindow(void **ranges, int count) {
+    int n = 0;
+    uintptr_t address = 0x10000;
+    MEMORY_BASIC_INFORMATION region;
+    while (n < count && address < kGameWindowBase && VirtualQuery((void *)address, &region, sizeof(region)) != 0) {
+        uintptr_t end = (uintptr_t)region.BaseAddress + region.RegionSize;
+        if (end > kGameWindowBase)
+            end = kGameWindowBase;
+        if (region.State == MEM_FREE) {
+            uintptr_t start = (address + 0xffff) & ~uintptr_t(0xffff);
+            if (start < end && (ranges[n] = VirtualAlloc((void *)start, end - start, MEM_RESERVE, PAGE_NOACCESS)) != NULL)
+                n++;
+        }
+        address = end;
+    }
+}
+
+static void ReleaseBelowWindow(void **ranges, int count) {
+    for (int i = 0; i < count && ranges[i] != NULL; i++)
+        VirtualFree(ranges[i], 0, MEM_RELEASE);
 }
 
 int HostCommit(void *address, size_t size) {

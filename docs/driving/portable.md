@@ -330,7 +330,8 @@ the level, the cars, the HUD and its text, the Mission Failed screen.
 **Left**:
 - A run with a window (WSLg, or a Linux desktop with a GPU) - not tried: game windows on this PC need the user.
 - A Linux runner (step 5), with its own baselines.
-- The Linux build with `-DNIGHTFIRE_X87=OFF`: not built or run yet (its baselines would be new, as lbase_c is).
+- The Linux build with `-DNIGHTFIRE_X87=OFF`: done 15 October 2026, with baselines of its own for this PC's WSL2,
+  `lwsl_c_*` (16 runs, lavapipe, 640x480), against which the x86-64 Linux build is compared (64-bit.md 7.11).
 
 ## The x87 option (15 October 2026)
 

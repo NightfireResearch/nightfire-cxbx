@@ -87,8 +87,9 @@ void ValidateStreams(TriggerEvents *events, bool notePreBuffer) {
             continue;
         char path[64];
         char line[64];
-        Crt::sprintf(path, "%s.asf", stream->name);
-        Crt::sprintf(line, "Validating stream [%s] (%s): ", path, stream->type);
+        // As pointers: a Ptr32 through "..." would be its word
+        Crt::sprintf(path, "%s.asf", static_cast<const char *>(stream->name));
+        Crt::sprintf(line, "Validating stream [%s] (%s): ", path, static_cast<const char *>(stream->type));
         if (_stricmp(stream->type, "music") == 0 || _stricmp(stream->type, "speech") == 0 ||
             _stricmp(stream->type, "nis") == 0) {
             if (FILE_exists(path)) {

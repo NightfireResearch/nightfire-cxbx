@@ -671,7 +671,7 @@ void DynamicLoader::Resolve() {
                     }
                 }
                 sym->shndx = 1;
-                sym->value = PtrTo32(address) - SectionBase(t, 1);
+                sym->value = AnswerTo32(address) - SectionBase(t, 1);
             }
             if (!understood)
                 PrintMessage(0, "dlopen: Relocation to a symbol type I don't understand! (symbol %s type %d)\n",

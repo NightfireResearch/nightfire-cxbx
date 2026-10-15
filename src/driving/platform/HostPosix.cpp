@@ -4,6 +4,7 @@
 #endif
 
 #include "Host.h"
+#include "Ptr32.h"
 
 #include <ctype.h>
 #include <dirent.h>
@@ -31,8 +32,6 @@
 //   - IsBadWritePtr answers whether the memory can be read;
 //   - RaiseException has no structured exception handling to raise into: it reports and aborts;
 //   - the time zone is the C library's current offset, with no transition dates.
-
-static_assert(sizeof(pthread_mutex_t) <= sizeof(HostLock), "a pthread mutex fits a HostLock");
 
 // The Win32 numbers this file produces or takes
 enum : unsigned long {
@@ -68,17 +67,17 @@ enum : unsigned long {
 
 // ---- errors
 
-static thread_local unsigned long LastError;
+static thread_local HostDword LastError;
 
-unsigned long HostGetLastError(void) {
+HostDword HostGetLastError(void) {
     return LastError;
 }
 
-void HostSetLastError(unsigned long error) {
+void HostSetLastError(HostDword error) {
     LastError = error;
 }
 
-static unsigned long ErrorFromErrno(int error) {
+static HostDword ErrorFromErrno(int error) {
     switch (error) {
         case ENOENT:       return kErrorFileNotFound;
         case ENOTDIR:      return kErrorPathNotFound;
@@ -139,7 +138,7 @@ static void Raise(Signal *signal) {
     pthread_mutex_unlock(&signal->mutex);
 }
 
-static unsigned long WaitFor(Signal *signal, unsigned long milliseconds) {
+static HostDword WaitFor(Signal *signal, HostDword milliseconds) {
     timespec deadline;
     clock_gettime(CLOCK_MONOTONIC, &deadline);
     deadline.tv_sec += milliseconds / 1000;
@@ -149,7 +148,7 @@ static unsigned long WaitFor(Signal *signal, unsigned long milliseconds) {
         deadline.tv_nsec -= 1000000000;
     }
 
-    unsigned long result = HOST_WAIT_OBJECT_0;
+    HostDword result = HOST_WAIT_OBJECT_0;
     pthread_mutex_lock(&signal->mutex);
     while (!signal->signaled) {
         if (milliseconds == HOST_INFINITE) {
@@ -174,8 +173,8 @@ struct Thread : Object {
     pthread_t thread;
     HostThreadStart start;
     void *parameter;
-    unsigned long id;
-    unsigned long exitCode;
+    HostDword id;
+    HostDword exitCode;
     Signal finished;             // manual reset: raised once, when the thread ends
     pthread_mutex_t resumeMutex;
     pthread_cond_t resumeCond;
@@ -193,7 +192,7 @@ struct Search : Object {
 };
 
 struct Heap : Object {
-    unsigned long flags;
+    HostDword flags;
 };
 
 static long Release(Thread *thread) {
@@ -222,15 +221,15 @@ static Object *ObjectOf(HostHandle handle, ObjectKind kind) {
 
 // ---- threads
 
-static unsigned long NextThreadId = 0;
-static thread_local unsigned long CurrentThreadId;
+static HostDword NextThreadId = 0;
+static thread_local HostDword CurrentThreadId;
 static thread_local Thread *CurrentThread;
 
-static unsigned long NewThreadId(void) {
+static HostDword NewThreadId(void) {
     return __atomic_add_fetch(&NextThreadId, 1, __ATOMIC_RELAXED) * 4;   // Win32's are multiples of four
 }
 
-static void FinishThread(Thread *thread, unsigned long exitCode) {
+static void FinishThread(Thread *thread, HostDword exitCode) {
     thread->exitCode = exitCode;
     Raise(&thread->finished);
     Release(thread);
@@ -256,13 +255,17 @@ static void *ThreadMain(void *argument) {
         pthread_cond_wait(&thread->resumeCond, &thread->resumeMutex);
     pthread_mutex_unlock(&thread->resumeMutex);
 
-    unsigned long exitCode = thread->start(thread->parameter);
+    HostDword exitCode = thread->start(thread->parameter);
     FinishThread(thread, exitCode);
     return NULL;
 }
 
-HostHandle HostCreateThread(size_t stackSize, HostThreadStart start, void *parameter, unsigned long flags,
-                            unsigned long *threadId) {
+#if UINTPTR_MAX > 0xffffffffu
+static bool SetWindowStack(pthread_attr_t *attributes, size_t size);
+#endif
+
+HostHandle HostCreateThread(size_t stackSize, HostThreadStart start, void *parameter, HostDword flags,
+                            HostDword *threadId) {
     Thread *thread = new Thread();
     thread->kind = kThread;
     thread->start = start;
@@ -281,8 +284,15 @@ HostHandle HostCreateThread(size_t stackSize, HostThreadStart start, void *param
     // CreateThread's size is what is committed at first; the stack reserved is at least the executable's default,
     // 1 MB in an MSVC build, and the game's threads ask for less than they use (64 KB for the main one)
     const size_t kDefaultStackReserve = 0x100000;
-    pthread_attr_setstacksize(&attributes, stackSize > kDefaultStackReserve ? stackSize : kDefaultStackReserve);
+    size_t stackReserve = stackSize > kDefaultStackReserve ? stackSize : kDefaultStackReserve;
+#if UINTPTR_MAX > 0xffffffffu
+    int error = SetWindowStack(&attributes, stackReserve) ? 0 : ENOMEM;
+    if (error == 0)
+        error = pthread_create(&thread->thread, &attributes, ThreadMain, thread);
+#else
+    pthread_attr_setstacksize(&attributes, stackReserve);
     int error = pthread_create(&thread->thread, &attributes, ThreadMain, thread);
+#endif
     pthread_attr_destroy(&attributes);
     if (error != 0) {
         thread->references = 1;
@@ -295,19 +305,19 @@ HostHandle HostCreateThread(size_t stackSize, HostThreadStart start, void *param
     return thread;
 }
 
-unsigned long HostResumeThread(HostHandle handle) {
+HostDword HostResumeThread(HostHandle handle) {
     Thread *thread = static_cast<Thread *>(ObjectOf(handle, kThread));
     if (thread == NULL)
         return 0xffffffffu;
     pthread_mutex_lock(&thread->resumeMutex);
-    unsigned long previous = thread->suspended ? 1 : 0;
+    HostDword previous = thread->suspended ? 1 : 0;
     thread->suspended = false;
     pthread_cond_signal(&thread->resumeCond);
     pthread_mutex_unlock(&thread->resumeMutex);
     return previous;
 }
 
-void HostExitThread(unsigned long exitCode) {
+void HostExitThread(HostDword exitCode) {
     if (CurrentThread != NULL)
         FinishThread(CurrentThread, exitCode);
     pthread_exit(NULL);
@@ -319,7 +329,7 @@ int HostSetThreadPriority(HostHandle thread, int priority) {
     return 1;
 }
 
-int HostGetExitCodeThread(HostHandle handle, unsigned long *exitCode) {
+int HostGetExitCodeThread(HostHandle handle, HostDword *exitCode) {
     Thread *thread = static_cast<Thread *>(ObjectOf(handle, kThread));
     if (thread == NULL)
         return 0;
@@ -329,7 +339,7 @@ int HostGetExitCodeThread(HostHandle handle, unsigned long *exitCode) {
     return 1;
 }
 
-unsigned long HostGetCurrentThreadId(void) {
+HostDword HostGetCurrentThreadId(void) {
     if (CurrentThreadId == 0)
         CurrentThreadId = NewThreadId();
     return CurrentThreadId;
@@ -337,35 +347,59 @@ unsigned long HostGetCurrentThreadId(void) {
 
 // ---- thread-local storage
 
-unsigned long HostTlsAlloc(void) {
+HostDword HostTlsAlloc(void) {
     pthread_key_t key;
     if (pthread_key_create(&key, NULL) != 0)
         return HOST_TLS_OUT_OF_INDEXES;
     return key;
 }
 
-void *HostTlsGetValue(unsigned long slot) {
+void *HostTlsGetValue(HostDword slot) {
     LastError = 0;
     return pthread_getspecific((pthread_key_t)slot);
 }
 
-int HostTlsSetValue(unsigned long slot, void *value) {
+int HostTlsSetValue(HostDword slot, void *value) {
     return pthread_setspecific((pthread_key_t)slot, value) == 0;
 }
 
 // ---- locks
+
+static void InitRecursiveMutex(pthread_mutex_t *mutex) {
+    pthread_mutexattr_t attributes;
+    pthread_mutexattr_init(&attributes);
+    pthread_mutexattr_settype(&attributes, PTHREAD_MUTEX_RECURSIVE);   // a critical section is recursive
+    pthread_mutex_init(mutex, &attributes);
+    pthread_mutexattr_destroy(&attributes);
+}
+
+#if UINTPTR_MAX == 0xffffffffu
+static_assert(sizeof(pthread_mutex_t) <= sizeof(HostLock), "a pthread mutex fits a HostLock");
 
 static pthread_mutex_t *MutexOf(HostLock *lock) {
     return reinterpret_cast<pthread_mutex_t *>(lock->storage);
 }
 
 void HostInitLock(HostLock *lock) {
-    pthread_mutexattr_t attributes;
-    pthread_mutexattr_init(&attributes);
-    pthread_mutexattr_settype(&attributes, PTHREAD_MUTEX_RECURSIVE);   // a critical section is recursive
-    pthread_mutex_init(MutexOf(lock), &attributes);
-    pthread_mutexattr_destroy(&attributes);
+    InitRecursiveMutex(MutexOf(lock));
 }
+#else
+// A 64-bit mutex is 40 bytes, more than the lock's place in the game's records: the lock holds a pointer to one of its
+// own from the C library's heap, which is never freed (nothing deletes a lock).
+static_assert(sizeof(pthread_mutex_t *) <= sizeof(HostLock), "a HostLock holds a pointer to its mutex");
+
+static pthread_mutex_t *MutexOf(HostLock *lock) {
+    pthread_mutex_t *mutex;
+    memcpy(&mutex, lock->storage, sizeof(mutex));
+    return mutex;
+}
+
+void HostInitLock(HostLock *lock) {
+    pthread_mutex_t *mutex = static_cast<pthread_mutex_t *>(malloc(sizeof(pthread_mutex_t)));
+    InitRecursiveMutex(mutex);
+    memcpy(lock->storage, &mutex, sizeof(mutex));
+}
+#endif
 
 void HostEnterLock(HostLock *lock) {
     pthread_mutex_lock(MutexOf(lock));
@@ -375,11 +409,11 @@ void HostLeaveLock(HostLock *lock) {
     pthread_mutex_unlock(MutexOf(lock));
 }
 
-long HostInterlockedIncrement(volatile long *value) {
+HostLong HostInterlockedIncrement(volatile HostLong *value) {
     return __atomic_add_fetch(value, 1, __ATOMIC_SEQ_CST);
 }
 
-long HostInterlockedDecrement(volatile long *value) {
+HostLong HostInterlockedDecrement(volatile HostLong *value) {
     return __atomic_sub_fetch(value, 1, __ATOMIC_SEQ_CST);
 }
 
@@ -410,7 +444,7 @@ int HostResetEvent(HostHandle handle) {
     return 1;
 }
 
-unsigned long HostWaitForObject(HostHandle handle, unsigned long milliseconds) {
+HostDword HostWaitForObject(HostHandle handle, HostDword milliseconds) {
     if (handle != NULL && handle != HOST_INVALID_HANDLE && handle != HOST_CURRENT_THREAD) {
         Object *object = static_cast<Object *>(handle);
         if (object->kind == kEvent)
@@ -423,7 +457,7 @@ unsigned long HostWaitForObject(HostHandle handle, unsigned long milliseconds) {
 }
 
 // Nothing queues an asynchronous procedure call here, so an alertable wait is an ordinary one.
-unsigned long HostWaitForObjectEx(HostHandle handle, unsigned long milliseconds, int alertable) {
+HostDword HostWaitForObjectEx(HostHandle handle, HostDword milliseconds, int alertable) {
     (void)alertable;
     return HostWaitForObject(handle, milliseconds);
 }
@@ -460,7 +494,7 @@ int HostCloseHandle(HostHandle handle) {
 
 // ---- sleeping
 
-void HostSleep(unsigned long milliseconds) {
+void HostSleep(HostDword milliseconds) {
     if (milliseconds == 0) {
         sched_yield();
         return;
@@ -470,7 +504,7 @@ void HostSleep(unsigned long milliseconds) {
     }
 }
 
-unsigned long HostSleepEx(unsigned long milliseconds, int alertable) {
+HostDword HostSleepEx(HostDword milliseconds, int alertable) {
     (void)alertable;
     HostSleep(milliseconds);
     return 0;
@@ -491,7 +525,7 @@ static BlockHeader *HeaderOf(const void *block) {
     return const_cast<BlockHeader *>(static_cast<const BlockHeader *>(block) - 1);
 }
 
-HostHandle HostHeapCreate(unsigned long flags, size_t initialSize, size_t maximumSize) {
+HostHandle HostHeapCreate(HostDword flags, size_t initialSize, size_t maximumSize) {
     (void)initialSize;
     (void)maximumSize;
     Heap *heap = new Heap();
@@ -500,7 +534,7 @@ HostHandle HostHeapCreate(unsigned long flags, size_t initialSize, size_t maximu
     return heap;
 }
 
-void *HostHeapAlloc(HostHandle heap, unsigned long flags, size_t size) {
+void *HostHeapAlloc(HostHandle heap, HostDword flags, size_t size) {
     (void)heap;
     BlockHeader *header = static_cast<BlockHeader *>((flags & HOST_HEAP_ZERO_MEMORY) != 0
                                                          ? calloc(1, sizeof(BlockHeader) + size)
@@ -511,7 +545,7 @@ void *HostHeapAlloc(HostHandle heap, unsigned long flags, size_t size) {
     return header + 1;
 }
 
-int HostHeapFree(HostHandle heap, unsigned long flags, void *block) {
+int HostHeapFree(HostHandle heap, HostDword flags, void *block) {
     (void)heap;
     (void)flags;
     if (block != NULL)
@@ -520,7 +554,7 @@ int HostHeapFree(HostHandle heap, unsigned long flags, void *block) {
 }
 
 // HEAP_REALLOC_IN_PLACE_ONLY (0x10): only shrinking can be done in place here.
-void *HostHeapReAlloc(HostHandle heap, unsigned long flags, void *block, size_t size) {
+void *HostHeapReAlloc(HostHandle heap, HostDword flags, void *block, size_t size) {
     (void)heap;
     BlockHeader *header = HeaderOf(block);
     size_t old = header->size;
@@ -539,7 +573,7 @@ void *HostHeapReAlloc(HostHandle heap, unsigned long flags, void *block, size_t 
     return header + 1;
 }
 
-size_t HostHeapSize(HostHandle heap, unsigned long flags, const void *block) {
+size_t HostHeapSize(HostHandle heap, HostDword flags, const void *block) {
     (void)heap;
     (void)flags;
     return HeaderOf(block)->size;
@@ -588,11 +622,13 @@ static void *MapLowest(size_t size, uintptr_t lowest, uintptr_t limit) {
 }
 
 #if UINTPTR_MAX > 0xffffffffu
-// The lowest free range of `length` bytes at or above `lowest` that ends below 4 GB, mapped; MAP_FAILED if none.
-// Tried at each 64 KB step: MAP_FIXED_NOREPLACE fails where anything is mapped already.
+// The lowest free range of `length` bytes at or above the window offset `lowest` that ends in the game window,
+// mapped; MAP_FAILED if none. Tried at each 64 KB step: MAP_FIXED_NOREPLACE fails where anything is mapped already.
 static void *MapLow(size_t length, uintptr_t lowest, int protection, int flags) {
     const uintptr_t step = 0x10000;
-    for (uintptr_t address = (lowest + step - 1) & ~(step - 1); address + length <= (uintptr_t(1) << 32);
+    if (lowest < step)
+        lowest = step;
+    for (uintptr_t address = kGameWindowBase + ((lowest + step - 1) & ~(step - 1)); address + length <= kGameWindowEnd;
          address += step) {
         void *mapping = mmap(reinterpret_cast<void *>(address), length, protection,
                              MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE | flags, -1, 0);
@@ -610,17 +646,27 @@ void *HostReserveLow(size_t size, uintptr_t lowest) {
 int HostCommit(void *address, size_t size) {
     return mprotect(address, size, PROT_READ | PROT_WRITE) == 0;
 }
+
+// The game's data may hold addresses on its threads' stacks (a draw's vertex arrays), so the threads it runs on have
+// their stacks in the window, above where contiguous memory goes first. Never unmapped: the game starts its few
+// threads once.
+static bool SetWindowStack(pthread_attr_t *attributes, size_t size) {
+    const uintptr_t kStacksLowest = 0x10000000;
+    void *stack = MapLow(size, kStacksLowest, PROT_READ | PROT_WRITE, MAP_STACK);
+    return stack != MAP_FAILED && pthread_attr_setstack(attributes, stack, size) == 0;
+}
 #endif
 
 void *HostAllocatePages(size_t size, uintptr_t lowest, uintptr_t limit) {
-    void *block = MapLowest(size, lowest, limit);
-#if UINTPTR_MAX > 0xffffffffu   // else anywhere in the game window
+#if UINTPTR_MAX > 0xffffffffu   // offsets in the game window, whose first 64 KB stays free; else anywhere in it
+    void *block = MapLowest(size, kGameWindowBase + (lowest > 0x10000 ? lowest : 0x10000), kGameWindowBase + limit);
     if (block == NULL) {
         block = MapLow(size, 0x10000, PROT_READ | PROT_WRITE | PROT_EXEC, 0);
         if (block == MAP_FAILED)
             block = NULL;
     }
 #else
+    void *block = MapLowest(size, lowest, limit);
     if (block == NULL)
         block = MapAt(0, size);
 #endif
@@ -694,8 +740,8 @@ static void HostPath(const char *path, char *out) {
     }
 }
 
-HostHandle HostCreateFile(const char *path, unsigned long desiredAccess, unsigned long share,
-                          unsigned long disposition, unsigned long attributes) {
+HostHandle HostCreateFile(const char *path, HostDword desiredAccess, HostDword share,
+                          HostDword disposition, HostDword attributes) {
     (void)share;
     (void)attributes;
     int mode;
@@ -745,13 +791,13 @@ int HostDeleteFile(const char *path) {
     return 1;
 }
 
-int HostReadFile(HostHandle handle, void *buffer, unsigned long bytes, unsigned long *read) {
+int HostReadFile(HostHandle handle, void *buffer, HostDword bytes, HostDword *read) {
     File *file = static_cast<File *>(ObjectOf(handle, kFile));
     if (read != NULL)
         *read = 0;
     if (file == NULL)
         return 0;
-    unsigned long done = 0;
+    HostDword done = 0;
     while (done < bytes) {
         ssize_t got = ::read(file->fd, static_cast<char *>(buffer) + done, bytes - done);
         if (got < 0) {
@@ -764,20 +810,20 @@ int HostReadFile(HostHandle handle, void *buffer, unsigned long bytes, unsigned 
         }
         if (got == 0)
             break;   // the end of the file: success, with fewer bytes
-        done += (unsigned long)got;
+        done += (HostDword)got;
     }
     if (read != NULL)
         *read = done;
     return 1;
 }
 
-int HostWriteFile(HostHandle handle, const void *buffer, unsigned long bytes, unsigned long *written) {
+int HostWriteFile(HostHandle handle, const void *buffer, HostDword bytes, HostDword *written) {
     File *file = static_cast<File *>(ObjectOf(handle, kFile));
     if (written != NULL)
         *written = 0;
     if (file == NULL)
         return 0;
-    unsigned long done = 0;
+    HostDword done = 0;
     while (done < bytes) {
         ssize_t put = write(file->fd, static_cast<const char *>(buffer) + done, bytes - done);
         if (put < 0) {
@@ -788,14 +834,14 @@ int HostWriteFile(HostHandle handle, const void *buffer, unsigned long bytes, un
                 *written = done;
             return 0;
         }
-        done += (unsigned long)put;
+        done += (HostDword)put;
     }
     if (written != NULL)
         *written = done;
     return 1;
 }
 
-unsigned long HostSetFilePointer(HostHandle handle, long distance, long *distanceHigh, unsigned long method) {
+HostDword HostSetFilePointer(HostHandle handle, HostLong distance, HostLong *distanceHigh, HostDword method) {
     File *file = static_cast<File *>(ObjectOf(handle, kFile));
     if (file == NULL)
         return 0xffffffffu;
@@ -808,19 +854,19 @@ unsigned long HostSetFilePointer(HostHandle handle, long distance, long *distanc
         return 0xffffffffu;
     }
     if (distanceHigh != NULL)
-        *distanceHigh = (long)((uint64_t)position >> 32);
+        *distanceHigh = (HostLong)((uint64_t)position >> 32);
     LastError = 0;
-    return (unsigned long)(uint32_t)position;
+    return (HostDword)(uint32_t)position;
 }
 
-unsigned long HostGetFileSize(HostHandle handle, unsigned long *sizeHigh) {
+HostDword HostGetFileSize(HostHandle handle, HostDword *sizeHigh) {
     int64_t size;
     if (!HostGetFileSizeEx(handle, &size))
         return 0xffffffffu;
     if (sizeHigh != NULL)
-        *sizeHigh = (unsigned long)((uint64_t)size >> 32);
+        *sizeHigh = (HostDword)((uint64_t)size >> 32);
     LastError = 0;
-    return (unsigned long)(uint32_t)size;
+    return (HostDword)(uint32_t)size;
 }
 
 int HostGetFileSizeEx(HostHandle handle, int64_t *size) {
@@ -916,8 +962,8 @@ static char *Trim(char *text) {
 
 // GetPrivateProfileString's reading: [section] and key=value lines, both names without regard to case, the value
 // trimmed and unquoted.
-unsigned long HostGetProfileString(const char *section, const char *key, const char *defaultValue, char *value,
-                                   unsigned long size, const char *file) {
+HostDword HostGetProfileString(const char *section, const char *key, const char *defaultValue, char *value,
+                               HostDword size, const char *file) {
     if (size == 0)
         return 0;
     const char *found = defaultValue != NULL ? defaultValue : "";
@@ -953,7 +999,7 @@ unsigned long HostGetProfileString(const char *section, const char *key, const c
     if (ini != NULL)
         fclose(ini);
     snprintf(value, size, "%s", found);
-    return (unsigned long)strlen(value);
+    return (HostDword)strlen(value);
 }
 
 // ---- time
@@ -974,8 +1020,8 @@ int HostQueryPerformanceFrequency(int64_t *frequency) {
     return 1;
 }
 
-unsigned long HostTimeMs(void) {
-    return (unsigned long)(uint32_t)(MonotonicNs() / 1000000);
+HostDword HostTimeMs(void) {
+    return (HostDword)(uint32_t)(MonotonicNs() / 1000000);
 }
 
 // A sleeping thread already wakes to the millisecond.
@@ -988,7 +1034,7 @@ struct Timer {
     unsigned delayMs;
     bool periodic;
     HostTimerCallback callback;
-    unsigned long user;
+    HostUlongPtr user;
 };
 
 // Each due time follows the last by the period, as winmm's periodic timer keeps its rate; a timer that has fallen
@@ -1018,7 +1064,7 @@ static void *TimerMain(void *argument) {
     return NULL;
 }
 
-unsigned HostSetTimerEvent(unsigned delayMs, unsigned resolutionMs, HostTimerCallback callback, unsigned long user,
+unsigned HostSetTimerEvent(unsigned delayMs, unsigned resolutionMs, HostTimerCallback callback, HostUlongPtr user,
                            unsigned flags) {
     (void)resolutionMs;
     static unsigned nextId = 0;
@@ -1033,7 +1079,13 @@ unsigned HostSetTimerEvent(unsigned delayMs, unsigned resolutionMs, HostTimerCal
     pthread_attr_t attributes;
     pthread_attr_init(&attributes);
     pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_DETACHED);
+#if UINTPTR_MAX > 0xffffffffu
+    int error = SetWindowStack(&attributes, 0x100000) ? 0 : ENOMEM;   // the callback is the game's
+    if (error == 0)
+        error = pthread_create(&thread, &attributes, TimerMain, timer);
+#else
     int error = pthread_create(&thread, &attributes, TimerMain, timer);
+#endif
     pthread_attr_destroy(&attributes);
     if (error != 0) {
         delete timer;
@@ -1068,13 +1120,13 @@ static void Widen(const char *text, uint16_t *wide, size_t count) {
     wide[i] = 0;
 }
 
-unsigned long HostGetTimeZoneInformation(HostTimeZone *zone) {
+HostDword HostGetTimeZoneInformation(HostTimeZone *zone) {
     memset(zone, 0, sizeof(*zone));
     time_t now = time(NULL);
     tm local;
     localtime_r(&now, &local);
     tzset();
-    long offsetMinutes = local.tm_gmtoff / 60;
+    HostLong offsetMinutes = local.tm_gmtoff / 60;
     Widen(tzname[0], zone->standardName, 32);
     Widen(tzname[1], zone->daylightName, 32);
     if (local.tm_isdst > 0) {
@@ -1103,13 +1155,13 @@ void HostSetCommandLine(int count, char **arguments) {
     CommandLineArguments = arguments;
 }
 
-unsigned long HostGetEnvironment(const char *name, char *value, unsigned long size) {
+HostDword HostGetEnvironment(const char *name, char *value, HostDword size) {
     const char *text = getenv(name);
     if (text == NULL) {
         LastError = kErrorEnvironmentNotFound;
         return 0;
     }
-    unsigned long length = (unsigned long)strlen(text);
+    HostDword length = (HostDword)strlen(text);
     if (length + 1 > size)
         return length + 1;   // the size it needs, as Win32 answers
     memcpy(value, text, length + 1);
@@ -1125,10 +1177,10 @@ void HostDebugBreak(void) {
     raise(SIGTRAP);
 }
 
-void HostRaiseException(unsigned long code, unsigned long flags, unsigned long count, const unsigned long *arguments) {
+void HostRaiseException(HostDword code, HostDword flags, HostDword count, const HostUlongPtr *arguments) {
     (void)flags;
-    fprintf(stderr, "[host] exception 0x%08lx raised (%lu arguments, first 0x%08lx): no handler on this host\n", code,
-            count, count > 0 ? arguments[0] : 0ul);
+    fprintf(stderr, "[host] exception 0x%08lx raised (%lu arguments, first 0x%08lx): no handler on this host\n",
+            (unsigned long)code, (unsigned long)count, count > 0 ? arguments[0] : 0ul);
     fflush(NULL);
     abort();
 }

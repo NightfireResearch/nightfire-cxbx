@@ -4,8 +4,8 @@
 // The Win32 types and numbers the driving engine still speaks. XAPI is Win32's API on the console - the same types,
 // error numbers and flags - so the XAPI layer (XboxXapi.cpp, XboxStartup.cpp) and the game code above it are written
 // in them, and the host layer (Host.h) passes them through. On Windows they are windows.h's. Elsewhere this header
-// defines the ones in use, as windows.h defines them for 32-bit code: DWORD is an unsigned long, BOOL an int, a
-// handle a pointer. The Win32 functions themselves are not here: the code calls the host layer for those.
+// defines the ones in use, as windows.h defines them: DWORD is 32 bits (an unsigned long on a 32-bit host), BOOL an
+// int, a handle a pointer. The Win32 functions themselves are not here: the code calls the host layer for those.
 
 #ifdef _WIN32
 
@@ -28,19 +28,28 @@
 
 typedef unsigned char BYTE, UCHAR, BOOLEAN;
 typedef unsigned short WORD, USHORT;
-typedef unsigned long DWORD, ULONG;
 typedef char CHAR;
 typedef short SHORT;
 typedef int INT, BOOL;
 typedef unsigned int UINT;
-typedef long LONG;
 typedef int64_t LONGLONG;
 typedef uint64_t ULONGLONG;
+#if UINTPTR_MAX == 0xffffffffu
+typedef unsigned long DWORD, ULONG;
+typedef long LONG;
 typedef int INT_PTR;
 typedef unsigned int UINT_PTR;
 typedef long LONG_PTR;
 typedef unsigned long ULONG_PTR, DWORD_PTR, SIZE_T;
-static_assert(sizeof(DWORD) == 4 && sizeof(ULONG_PTR) == sizeof(void *), "a 32-bit build");
+#else
+// LP64: long is 64 bits, so DWORD and LONG are the fixed-width types (Host.h's HostDword and HostLong), and the
+// pointer-sized ones are 64-bit Windows'
+typedef uint32_t DWORD, ULONG;
+typedef int32_t LONG;
+typedef int64_t INT_PTR, LONG_PTR;
+typedef uint64_t UINT_PTR, ULONG_PTR, DWORD_PTR, SIZE_T;
+#endif
+static_assert(sizeof(DWORD) == 4 && sizeof(LONG) == 4 && sizeof(ULONG_PTR) == sizeof(void *), "Win32's sizes");
 
 typedef void *PVOID, *LPVOID, *HANDLE, *HMODULE, *HWND;
 typedef const void *LPCVOID;

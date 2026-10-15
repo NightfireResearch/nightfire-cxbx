@@ -163,8 +163,9 @@ void* ActManager::GetSymbolResolver() {
     return reinterpret_cast<void *>(&ResolveEAGLReferences);
 }
 
+// Answers a number where the resolvers answer addresses: pointer-sized, so that it travels as one
 // FUNC_AT(0x00017010)
-int ActManager::SymbolResolver(const char *name, bool *found) {
+intptr_t ActManager::SymbolResolver(const char *name, bool *found) {
     *found = true;
     int id;
     if (strncmp(name, "event.", 6) == 0 && EventResolver->target->ResolveEventId(name, &id))

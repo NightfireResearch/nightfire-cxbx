@@ -48,7 +48,7 @@ public:
     // The resolver the actors' object files are loaded with: ResolveEAGLReferences. Its callers pass no `this`.
     static void* GetSymbolResolver();                                           // 0x00016ec0
     // Answers the names "event.*" with their event ids (a symbol callback).
-    static int SymbolResolver(const char *name, bool *found);                   // 0x00017010
+    static intptr_t SymbolResolver(const char *name, bool *found);              // 0x00017010
 };
 LAYOUT_32(offsetof(ActManager, drawOptions) == 0x20, "the character options are at +0x20");
 LAYOUT_32(sizeof(ActManager) == 0x80, "an ActManager is 0x80 bytes");

@@ -576,7 +576,7 @@ long Crt::atol(const char *text) {
     }
     if (sign == '-')
         total = 0u - total;
-    return long(total);
+    return long(int32_t(total));   // the game's long is 32 bits
 }
 
 double Crt::strtod(const char *text, char **end) {
@@ -700,7 +700,7 @@ Number StringToNumber(const char *text, char **end, int base, int flags, Number 
 
 // FUNC_AT(0x00133636)
 long Crt::strtol(const char *text, char **end, int base) {
-    return long(StringToNumber<uint32_t>(text, end, base, 0, 0x7fffffff));
+    return long(int32_t(StringToNumber<uint32_t>(text, end, base, 0, 0x7fffffff)));   // the game's long is 32 bits
 }
 
 // FUNC_AT(0x0013364d)
