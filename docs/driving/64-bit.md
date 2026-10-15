@@ -1,11 +1,12 @@
 # The driving engine on 64-bit
 
-Status (15 October 2026): step 3 of the roadmap in [portable.md](portable.md) is done on Windows. The x86-64
+Status (15 October 2026): step 3 of the roadmap in [portable.md](portable.md) is done on Windows and Linux. The x86-64
 standalone test executable runs every mission exactly as the 32-bit portable-C build does: all 16 lockstep runs match
 `lbase_c` in frames and sound traces to tick 9000 (7.10). Done: package 0 (7.4, 4.3), the x87 code as C behind
 `NIGHTFIRE_X87` (4.4), packages 1 and 2 (7.5: the x86-64 configuration, `Ptr32<T>` and the game window), 6 (7.6:
 the memory-only structures), 3a and 3b (7.7: EAGL), 8 (7.8: D3D), 4 and 5 (7.9: CARP, sound, FILESYS), and 9
-(7.10: integration and bring-up). Left: Linux x86-64 (package 10). It applies to the standalone executables (`driving_standalone`, `driving_standalone_test`) only. The
+(7.10: integration and bring-up), and 10 (7.11: Linux x86-64, with the game window above 4 GB as macOS needs it). It
+applies to the standalone executables (`driving_standalone`, `driving_standalone_test`) only. The
 injected build (driving.exe mapping Driving.xbe, drivinginject.dll, every shadow test) stays 32-bit: it shares the
 original's address space by construction, and it stays the oracle.
 
@@ -812,7 +813,93 @@ here, so `lbase_c` needed no regeneration.
 every frame difference was found from the draw traces, so it was not needed to reach exactness. The per-tick state
 trace was not needed either. Not checked: the sound heap's and the other fixed pools' high-water marks on x86-64 (no
 allocation failed in the 16 runs), a throw through the C++ library's own exception records (`ThrowInfo` holds 32-bit
-layouts; no throw is reached in these runs), and Linux x86-64 (package 10).
+layouts; no throw is reached in these runs), and Linux x86-64 (package 10, 7.11).
+
+### 7.11 Done: package 10, Linux x86-64, and a game window above 4 GB (macos.md M1, 15 October 2026)
+
+**The preset.** `linux-x64` (cmake/toolchain-linux-x64.cmake): clang, Ninja, `NIGHTFIRE_SDL` on, x87 off as on every
+64-bit host, SDL3 by the same FetchContent, dxvk-native's x86-64 libraries from the same release (`lib/` beside
+`lib32/`), and FFmpeg from `tools/fmv/build_ffmpeg.sh linux-x86_64 <prefix>` (gcc, no `-m32`, no stack realignment).
+x86-64 has one ABI, so the two-ABI split of the i386 build (cmake/xbox-abi-linux.cmake, `libdrivinghost.so`) is not
+used: every source, the host layer, SDL's window and sound, FFmpeg's loader and the D3D9 backend included, is
+ordinary Linux code linked into the executable, as on Windows x64. MSVC's `<intrin.h>` still comes from
+src/common/linux. The executable is position-independent code linked at a fixed address (`-fPIE` with `-no-pie`), so
+that it can lie in a window above 4 GB.
+
+```
+sh tools/fmv/build_ffmpeg.sh linux-x86_64 ~/ffmpeg-x64
+cmake --preset linux-x64 -DNF_FFMPEG_LIB_DIR=$HOME/ffmpeg-x64/lib    # -DNIGHTFIRE_WINDOW_BASE=0x100000000 for 4 GB
+cmake --build --preset linux-x64                                       # driving_standalone, driving_standalone_test
+```
+
+SDL's windows and sound need the x86-64 development packages (portable.md's list without `:i386`); a headless-only
+machine without them (this PC's WSL2, where nothing could be installed) configures with `-DSDL_UNIX_CONSOLE_BUILD=ON`
+and keeps SDL's offscreen video and dummy audio, which is all lockstep runs use.
+
+**LP64.** `long` is 8 bytes on Linux. Win32Types.h's `DWORD`/`ULONG` and `LONG` are `uint32_t` and `int32_t` there
+(`unsigned long` and `long` on 32-bit hosts, as before), the pointer-sized ones 64-bit Windows'. Host.h speaks
+`HostDword` and `HostLong`, which are `unsigned long` and `long` on Windows and on 32-bit hosts (so the Windows and
+i386 objects are unchanged) and the fixed-width types on LP64; HostPosix, KernelImports' kernel calls, the game
+window's heap functions and the C++ library's `_Init_locks` count follow. The C runtime's `atol` and `strtol`
+accumulate in 32 bits and now sign-extend their result into the `long` they return (on LP64 a negative number had
+come back as a large positive one). The other `long`s in game code are locals or memory-only members holding values
+that fit (PlayMPC's movie offsets, iostream's word, `FloatIn`), so nothing else changed.
+
+**HostLock.** A pthread mutex is 40 bytes on x86-64; as on Win64, the lock's 24 bytes hold a pointer to a recursive
+mutex of its own from the C library's heap, never freed.
+
+**`operator new`.** The executable's window heap serves the shared libraries too (dxvk, lavapipe, libstdc++), since an
+ELF executable's definition interposes: hiding it was tried, and libstdc++'s own `std::string` code then allocated
+with its `new` what the game's inline code freed with ours.
+
+**A non-zero window base (`NIGHTFIRE_WINDOW_BASE`).** A CMake setting, 0 by default, `0x100000000` as macOS needs it.
+`kGameWindowBase` stays a compile-time constant (platform/Ptr32.h): with base 0 `PtrFrom32`/`PtrTo32` compile to what
+they did; with another base a decode adds it and an encode subtracts it, and null is the word 0 both ways (a select
+each way). The window's first 64 KB is never allocated, so no object has the word 0. The image is linked 4 MB into
+the window (`/BASE:0x100400000` on Windows, `--image-base` on Linux), so the words of the executable's statics are the
+same as with base 0. `HostAllocatePages`' range and `HostReserveLow`'s lowest address are offsets in the window. The
+game window's set-up stops the game if the executable is not inside it. Found and fixed by running with the base at
+4 GB, where a word decoded as a plain address points 4 GB too low:
+
+| What | Where |
+|---|---|
+| The game's data holds addresses on its threads' stacks (a sprite's vertex, colour and UV arrays go into an EAGL request's parameters, which are `Ptr32` words) | every thread HostCreateThread starts has its stack in the window: on Linux (and the multimedia timer's thread) a mapping from offset 0x10000000 given with `pthread_attr_setstack`; on Windows, which places a new stack at the lowest free address, every free range below the window is reserved while the thread is made. With base 0 on Linux this was already wrong (stacks lie near 0x7fff...), so it is needed for package 10 itself |
+| A resolver's answer is an address or a number (the animation banks' `event.` names resolve to event ids) | EAGL's loader encodes it with `AnswerTo32` (below 4 GB, with the window above it, it is the number); `ActManager::SymbolResolver` returns `intptr_t`, since it is called as a pointer-returning resolver |
+| A `Ptr32` passed through `...` is the 4-byte word, not a pointer (`Crt::sprintf` of a stream event's name) | `ValidateStreams` casts to `const char *`; a build with a non-trivial `Ptr32` copy constructor (clang refuses such a class through `...`) found no other site |
+| A word decoded with a plain cast | `RSceneObj::ModelGroup` (the article's model `TagReference`) uses `PtrFrom32` |
+| lld relaxes a GOT load (`add foo@GOTPCREL(%rip), %reg`) into a 32-bit immediate address in a non-PIE executable, without checking that the address fits | `-Wl,--no-relax` when the base is not 0 |
+| The C library's non-PIC start-up files (crt1.o, crtbegin.o) hold 32-bit absolute addresses | linked with `-nostartfiles` and the PIC ones (Scrt1.o, crti.o, crtbeginS.o; crtendS.o, crtn.o) |
+
+Left as it is: `SNDPLATFORM`'s reverb mode 1 reads an effects bus's `delay` (a number) as a description pointer, as
+the original does; no run selects mode 1. `gamewindow_test` now runs its checks on a thread of the host's (the
+process's first thread's stack need not be in the window) and also checks null both ways, the window's first 64 KB
+and a thread's stack.
+
+**Tests.**
+
+- `gamewindow_test 1000000`: Windows x64 base 0 and base 4 GB, Linux x86-64 base 0 and base 4 GB, 1,000,029 checks,
+  0 differ (image at 0x407000 / 0x100408000 on Windows, 0x40b648 / 0x10040b7a8 on Linux); Win32 300,000 operations,
+  0 differ.
+- Windows x64 on the runner, to tick 9000 against `lbase_c`: base 4 GB (round m1w4, the executable at 0x100400000)
+  and base 0 (round m1w0) both 16 of 16 exact, frames and sound traces.
+- The 32-bit build: every object of drivinginject, driving_standalone and driving_standalone_test compared with the
+  build of 60f3014 (objdiff_anon): identical except `RSceneObj::GetViewDrawList`, whose inlined `ModelGroup` swaps one
+  `lea`'s operands (`[edi+ecx]` for `[ecx+edi]`), as in 7.9.
+- Linux, this PC's WSL2 (lavapipe, 640x480, 2 slots, `RUNNER_HOST=wsl RUNNER_PRESET=linux-x64`): new baselines
+  `lwsl_c_*` from the i386 build with `NIGHTFIRE_X87=OFF` (round lwsl_c), then the x86-64 build against them, to tick
+  9000: base 0 (round lx64w0) 16 of 16 exact, frames and sound traces; base 4 GB (round lx64w4, the executable at
+  0x100400000) 16 of 16 exact (three runs timed out at 20 minutes while WSL2 was overloaded by other processes, exact as far as they went, and were exact when run again). So the i386 and x86-64 builds simulate and draw alike on one machine, although glibc's
+  i386 and x86-64 `sin`, `cos`, `atan2`, `log`, `pow`, `acos`, `asin` and `exp` differ in the last bit for about one
+  argument in a thousand (measured, 200,000 random arguments each): as with the x87 conversion (4.4), the game's
+  results are not sensitive to those bits in these runs.
+- Built: MSVC Win32 (drivinginject, driving, both standalone executables, gamewindow_test), MSVC x64 (both standalone
+  executables, gamewindow_test, both bases), clang linux-i386 and linux-x64 (both standalone executables, both bases),
+  the mingw cross build (nf-cross, `linux` preset, every target).
+
+**Not done.** A windowed Linux x86-64 run (no x86-64 X11/Wayland development packages in this WSL2, and game windows
+need the user). The x86-64 runs were slower than the i386 ones (8-12 minutes against 4-7), but
+WSL2's CPU was then shared with other processes' lavapipe runs (a load average near 100), and the reruns on an idle
+WSL2 took 5 minutes, as the i386 build's do.
 
 ## 8. Work packages
 
@@ -832,7 +919,7 @@ agent time, M 1-2, L 3+.
 | 7 | ~~x87 on x86-64~~: replaced by the C forms (`NIGHTFIRE_X87=OFF`, **done 15 October 2026**, 4.4); left: the conversion edge cases (out-of-range float-to-unsigned and float-to-64-bit) | S | lockstep against `lbase_c` |
 | 8 | **The D3D seam and backend**: the state tables' bases, resource `data` words, push-buffer and stream words as window words; kept working for the action engine's 32-bit build. **Done 15 October 2026** (7.8) | M | 32-bit lockstep frames (driving) and the action engine's menu replays |
 | 9 | **Bring-up**: first boot of the 64-bit test executable, then lockstep on all missions against the 32-bit standalone's baselines on the same machine; a per-tick state trace (rigid bodies, AI elements; canonical, no addresses) to find the first divergent tick. **Done 15 October 2026** (7.10): 16 of 16 exact against `lbase_c` | M | the 16 lockstep runs, frames and sound traces |
-| 10 | **Linux x86-64** (after step 2): the LP64 `long`s, the Win32-types header with fixed-width types, the runner's Linux baselines | S-M | Linux lockstep |
+| 10 | **Linux x86-64** (after step 2): the LP64 `long`s, the Win32-types header with fixed-width types, the runner's Linux baselines. **Done 15 October 2026** (7.11), with macos.md's M1 (the window at 4 GB) | S-M | Linux lockstep |
 
 Packages 3a-5 are independent once 2 has landed; 6 and 8 can run beside them. Two agents at a time fit them
 (3a + 4, then 3b + 5, then 6 + 8).

@@ -879,11 +879,18 @@ if(NOT WIN32)
   find_package(Threads REQUIRED)
   # The executable finds SDL3, dxvk and FFmpeg beside itself.
   set(CMAKE_BUILD_RPATH "\$ORIGIN")
-  include(cmake/xbox-abi-linux.cmake)
+  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    include(cmake/xbox-abi-linux.cmake)
+  else()
+    # x86-64 has one ABI (docs/driving/64-bit.md 7.11): the game's sources are ordinary Linux code, with MSVC's
+    # <intrin.h> from src/common/linux
+    set(NF_XBOX_ABI_OPTIONS -isystem ${CMAKE_SOURCE_DIR}/src/common/linux)
+  endif()
   # The sources on the host's side of cmake/xbox-abi-linux.cmake: the host layer, SDL, FFmpeg and the D3D9 backend.
-  # They are a shared library of their own, bound to its own definitions (-Bsymbolic-functions): an inline function
-  # or template instance both sides compile has the same name on both, and each side must call its own, compiled
-  # for its own conventions. A class whose methods both sides call (FmvAudio) stays on the game's side.
+  # On 32-bit x86 they are a shared library of their own, bound to its own definitions (-Bsymbolic-functions): an
+  # inline function or template instance both sides compile has the same name on both, and each side must call its
+  # own, compiled for its own conventions. A class whose methods both sides call (FmvAudio) stays on the game's side.
+  # On x86-64 they are part of the executable, as on Windows.
   set(nf_host_abi_sources
     src/driving/platform/HostPosix.cpp
     src/common/linux/win32Calls.cpp
@@ -941,6 +948,10 @@ if(NOT WIN32)
   list(APPEND nf_standalone_harness src/driving/devtools/RetargetPosix.cpp)
   set_source_files_properties(${nf_standalone_sources} ${nf_standalone_harness} src/driving/standalone/NoDevtools.cpp
                               PROPERTIES COMPILE_OPTIONS "${NF_XBOX_ABI_OPTIONS}")
+endif()
+if(NOT WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+  list(APPEND nf_standalone_sources ${nf_host_abi_sources})
+elseif(NOT WIN32)
   add_library(drivinghost SHARED ${nf_host_abi_sources})
   target_include_directories(drivinghost PRIVATE ${NF_FFMPEG_DIR}/include)
   target_compile_definitions(drivinghost PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_STANDALONE NIGHTFIRE_SDL)
@@ -952,6 +963,44 @@ if(NOT WIN32)
                      COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_SONAME_FILE:SDL3::SDL3> ${NF_DXVK_D3D9}
                              ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:drivinghost>)
 endif()
+# The 64-bit build (docs/driving/64-bit.md 7.1): the game window, the 4 GB from NIGHTFIRE_WINDOW_BASE that holds every
+# address the game's data may keep (platform/Ptr32.h). 0 by default; 0x100000000 as macOS needs it (macos.md 2), where
+# nothing of the process may lie below 4 GB. The image is linked at a fixed address 4 MB into the window, so that the
+# statics and vtables the data points at lie in it.
+set(NIGHTFIRE_WINDOW_BASE 0 CACHE STRING "64-bit driving engine: the game window's base address (0 or 0x100000000)")
+function(nf_game_window target)
+  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    math(EXPR image_base "${NIGHTFIRE_WINDOW_BASE} + 0x400000" OUTPUT_FORMAT HEXADECIMAL)
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_WINDOW_BASE=${NIGHTFIRE_WINDOW_BASE})
+    if(MSVC)
+      target_link_options(${target} PRIVATE /BASE:${image_base} /DYNAMICBASE:NO /HIGHENTROPYVA:NO)
+    elseif(WIN32)
+      target_link_options(${target} PRIVATE -Wl,--image-base,${image_base} -Wl,--disable-dynamicbase
+                                            -Wl,--disable-high-entropy-va)
+    else()
+      # Not position-independent (the toolchain), with the position-independent start-up files: the C library's
+      # others hold 32-bit absolute addresses, which a window above 4 GB does not reach
+      target_link_options(${target} PRIVATE -Wl,--image-base=${image_base} -nostartfiles ${NF_START_FILES})
+      target_link_libraries(${target} PRIVATE ${NF_END_FILES})
+      if(NOT NIGHTFIRE_WINDOW_BASE EQUAL 0)
+        # lld turns a GOT load into a 32-bit immediate address in an executable that is not position-independent
+        target_link_options(${target} PRIVATE -Wl,--no-relax)
+      endif()
+    endif()
+  endif()
+endfunction()
+if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT WIN32)
+  foreach(file Scrt1.o crti.o crtbeginS.o crtendS.o crtn.o)
+    execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=${file} OUTPUT_VARIABLE path
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(file MATCHES "^crt(endS|n)")
+      list(APPEND NF_END_FILES ${path})
+    else()
+      list(APPEND NF_START_FILES ${path})
+    endif()
+  endforeach()
+endif()
+
 add_executable(driving_standalone ${nf_standalone_sources} src/driving/standalone/NoDevtools.cpp)
 add_executable(driving_standalone_test EXCLUDE_FROM_ALL ${nf_standalone_sources} ${nf_standalone_harness})
 target_compile_definitions(driving_standalone_test PRIVATE NIGHTFIRE_STANDALONE_TEST)
@@ -961,6 +1010,12 @@ foreach(target driving_standalone driving_standalone_test)
   target_compile_definitions(${target} PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_STANDALONE)
   if(WIN32)
     target_link_libraries(${target} PRIVATE d3d9 winmm xinput9_1_0 ${XAUDIO2_LIB} shell32)
+  elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    target_link_libraries(${target} PRIVATE dxvk_d3d9 ${CMAKE_DL_LIBS} Threads::Threads)
+    target_compile_options(${target} PRIVATE -include ${CMAKE_SOURCE_DIR}/src/common/linux/msvcNames.h)
+    add_custom_command(TARGET ${target} POST_BUILD   # beside the executable
+                       COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_SONAME_FILE:SDL3::SDL3> ${NF_DXVK_D3D9}
+                               ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:${target}>)
   else()
     target_link_libraries(${target} PRIVATE drivinghost)
     target_compile_options(${target} PRIVATE -include ${CMAKE_SOURCE_DIR}/src/common/linux/msvcNames.h)
@@ -974,20 +1029,18 @@ foreach(target driving_standalone driving_standalone_test)
   else()
     target_link_options(${target} PRIVATE -Wl,-Map,${target}.map)
   endif()
-  # The 64-bit build (docs/driving/64-bit.md 7.1): the image low and fixed, so that the statics and vtables the
-  # game's data points at lie in the game window (the low 4 GB) with its heaps; the FFmpeg DLLs beside it.
+  # The 64-bit build: in the game window, with the FFmpeg DLLs beside it
+  nf_game_window(${target})
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     if(MSVC)
-      target_link_options(${target} PRIVATE /BASE:0x400000 /DYNAMICBASE:NO /HIGHENTROPYVA:NO)
       # A PDB, so that a crash.dmp from a run reads with cdb (folding and dead-code removal kept as without it)
       target_compile_options(${target} PRIVATE /Zi)
       target_link_options(${target} PRIVATE /DEBUG /OPT:REF /OPT:ICF)
-    else()
-      target_link_options(${target} PRIVATE -Wl,--image-base,0x400000 -Wl,--disable-dynamicbase
-                                            -Wl,--disable-high-entropy-va)
     endif()
-    add_custom_command(TARGET ${target} POST_BUILD
-                       COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:${target}>)
+    if(WIN32)
+      add_custom_command(TARGET ${target} POST_BUILD
+                         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:${target}>)
+    endif()
   endif()
 endforeach()
 # The driving engine's x87 code (docs/driving/64-bit.md 4.1, docs/driving/portable.md). On: the 43 functions
@@ -1011,20 +1064,19 @@ foreach(target drivinginject driving_standalone driving_standalone_test)
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=0)
   endif()
 endforeach()
-if(WIN32)
 # The game window and Ptr32 without the game (src/driving/devtools/GameWindowTest.cpp): "gamewindow_test [operations]",
 # linked as the standalone executables are.
-add_executable(gamewindow_test EXCLUDE_FROM_ALL src/driving/devtools/GameWindowTest.cpp
-               src/driving/platform/GameWindow.cpp src/driving/platform/HostWin32.cpp)
-target_link_libraries(gamewindow_test PRIVATE winmm shell32)
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  if(MSVC)
-    target_link_options(gamewindow_test PRIVATE /BASE:0x400000 /DYNAMICBASE:NO /HIGHENTROPYVA:NO)
-  else()
-    target_link_options(gamewindow_test PRIVATE -Wl,--image-base,0x400000 -Wl,--disable-dynamicbase
-                                                -Wl,--disable-high-entropy-va)
-  endif()
+if(WIN32)
+  add_executable(gamewindow_test EXCLUDE_FROM_ALL src/driving/devtools/GameWindowTest.cpp
+                 src/driving/platform/GameWindow.cpp src/driving/platform/HostWin32.cpp)
+  target_link_libraries(gamewindow_test PRIVATE winmm shell32)
+else()
+  add_executable(gamewindow_test EXCLUDE_FROM_ALL src/driving/devtools/GameWindowTest.cpp
+                 src/driving/platform/GameWindow.cpp src/driving/platform/HostPosix.cpp)
+  target_link_libraries(gamewindow_test PRIVATE Threads::Threads)
 endif()
+nf_game_window(gamewindow_test)
+if(WIN32)
 set(NF_STANDALONE_SRC ${CMAKE_BINARY_DIR}/standalone.dir)
 add_custom_target(standalone_poison
                   COMMAND ${Python3_EXECUTABLE} tools/standalone_poison.py ${NF_STANDALONE_SRC}

@@ -119,6 +119,24 @@ What changes, all in platform/:
 - **Build arm64, not arm64e.** Without pointer authentication the game's tables of raw function addresses
   (`XbeVirtual`, 265 uses, the vtable constants) are called as they are.
 
+**Done on x86 (package M1, 15 October 2026; 64-bit.md 7.11).** `NIGHTFIRE_WINDOW_BASE` (CMake, 0 by default) sets
+`kGameWindowBase`; with `0x100000000` the image is linked at base + 4 MB, null is the word 0 both ways, the window's
+first 64 KB stays free, the host's page and reservation ranges are window offsets, and the arena's set-up stops the
+game if the image is outside the window. Windows x64 (runner) is exact against `lbase_c` in all 16 lockstep runs with
+the base at 4 GB and at 0, and Linux x86-64 (this PC's WSL2) 16/16 exact against `lwsl_c`, the i386 portable-C
+build's baselines, with either base. What the Mac needs beyond the plan above, found there:
+
+- **The game's thread stacks must be in the window**: its data holds stack addresses (a sprite's vertex arrays go into
+  an EAGL request's `Ptr32` parameters). HostPosix gives every thread it starts a stack mapped in the window
+  (`pthread_attr_setstack`), which Darwin takes as Linux does; the first thread runs no game code.
+- **A resolver's answer may be a number** (event ids for the animation banks' `event.` names): `AnswerTo32` keeps
+  values below 4 GB as they are when the window is above it.
+- **A `Ptr32` through `...` is its word**; one site (a `Crt::sprintf`), found by making the class non-trivial.
+- **Toolchain**: on Linux the executable is `-fPIE` code linked `-no-pie` at the fixed address, with the PIC start-up
+  files and lld's `--no-relax` (it turns GOT loads into 32-bit immediates). On the Mac the executable is PIE anyway
+  and slides: the window base is the constant 4 GB, so the image must land within 4 GB of it - the start-up check
+  says so if it does not (then the base becomes a variable, as planned).
+
 ## 3. ABI and what is still x86
 
 **One ABI.** The Linux port compiled the game for `i686-pc-windows-gnu-elf` because 32-bit x86 has `__thiscall`,
@@ -253,7 +271,7 @@ the runner) before or beside the last 64-bit packages; A1-A4 and G3 run on the M
 | # | Package | Where | Size | Test |
 |---|---|---|---|---|
 | M0 | **Portable SSE**: platform/Sse.h with the 34 intrinsics the game uses (x86: the intrinsics themselves; elsewhere: C with SSE's exact semantics); RSQRTSS by a table generated on the runner from its own instruction (the input bits it depends on found by sweep); `Truncate`/`RoundToInt` in C; `__rdtsc` as a 733 MHz host cycle count; `__movsd`, `_mm_empty`, `fldcw` guarded | x86 | M | 32-bit and x64 MSVC: per-function asm identical; a devtools test of the C forms against the instructions (random and edge inputs, all four RSQRTSS exponent parities); Linux x86-64 built with the C forms forced on: lockstep exact against `lbase_c` on the runner |
-| M1 | **A non-zero window base**: `kGameWindowBase` configurable, null as the word 0, the window [4 GB, 8 GB) on Linux x86-64 (executable linked into it) and Windows x64 (`/BASE:0x140000000` is already there); AnimMisc's pointer-as-float through the word | x86 | S-M | `gamewindow_test`; lockstep exact against `lbase_c` with the base at 4 GB |
+| M1 | **A non-zero window base**: `kGameWindowBase` configurable, null as the word 0, the window [4 GB, 8 GB) on Linux x86-64 (executable linked into it) and Windows x64 (`/BASE:0x140000000` is already there); AnimMisc's pointer-as-float through the word. **Done 15 October 2026** with 64-bit package 10 (64-bit.md 7.11, section 2 above): `NIGHTFIRE_WINDOW_BASE`, thread stacks in the window, resolver numbers | x86 | S-M | `gamewindow_test`; lockstep exact against `lbase_c` with the base at 4 GB. **Passed**: gamewindow_test 0 differ on Windows x64 and Linux x86-64, both bases; Windows x64 16/16 exact against `lbase_c` at 4 GB and at 0; Linux x86-64 16/16 exact against `lwsl_c` at 4 GB and at 0 |
 | M2 | **FP and thread audit**: `-ffp-contract=off` in the non-MSVC builds; an arm64 compile probe in the nf-cross image (`--target=aarch64-linux-gnu`, Ubuntu's arm64 headers) for both standalone targets, with the fused-op count; UBSan float-cast-overflow and ThreadSanitizer lockstep runs on Linux x86-64; the races and conversions fixed | x86 | M | probe: 0 errors, 0 fused ops; UBSan/TSan clean; lockstep exact against `lbase_c` |
 | M3 | **Trace redirection without code patching** (6) | x86 | S | traces identical to the patched ones on Windows and Linux |
 | G1 | **SPIR-V lowering** of shaderBuilder's graph (`NoContraction`, `Fma` for NV2A MADs), the fixed-function shaders (pretransformed, immediate, movie quad), FXAA's SPIR-V | x86 | M | `spirv-val` on every program the 16 runs create (a dump mode like shadercheck's) |

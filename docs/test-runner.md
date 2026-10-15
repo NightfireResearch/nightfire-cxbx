@@ -225,7 +225,11 @@ and the same commands drive a Linux runner: `remote.sh` asks the runner's system
 `round.sh` on a Linux runner runs the standalone test executable's lockstep runs (`EXE` defaults to
 `Release/driving_standalone_test`; there are no shadows), and `compare.py` compares them with a baseline as on
 Windows. `RUNNER_BUILD=<folder on the runner>` makes `build` install a build made elsewhere instead of compiling
-(another branch's, say), and `RUNNER_BUILD_JOBS` limits the compile's parallelism.
+(another branch's, say), and `RUNNER_BUILD_JOBS` limits the compile's parallelism. `RUNNER_PRESET=linux-x64` builds
+the 64-bit executables (docs/driving/64-bit.md 7.11) into `Release/` in their place, run under the same name; FFmpeg
+then defaults to `~/ffmpeg-x64/lib` (`~/nf/ffmpeg-x64/lib` under WSL2). `RUNNER_WSL_ROOT` puts the WSL2 runner's tree
+somewhere other than `~/nf/runner`, so that two agents can each have one. Since `sync` cleans the checkout with
+`git clean`, the disc there must be a folder (`disc/driving` may be a symbolic link), not a link named `disc`.
 
 **drive_game.sh** takes drive_game.ps1's parameters, so the run lists are the same (`'Release\driving_standalone_test.exe'`
 is read as `Release/driving_standalone_test`), but sends no keys: `-Keys`, `-HoldKey` and `-AfterHoldKeys` are
@@ -246,7 +250,9 @@ RUNNER_HOST=linux-box RUNNER_USER=charlie BASE=llin tools/runner/round.sh new   
 
 - **Packages and FFmpeg:** as docs/driving/portable.md's "Building" lists them (Ubuntu 24.04: the i386 architecture,
   clang, lld, cmake, ninja, the i386 X11/Wayland/sound development packages, `mesa-vulkan-drivers:i386`), and FFmpeg
-  built once with `tools/fmv/build_ffmpeg.sh linux-i386 ~/ffmpeg-i386`. `build` configures with
+  built once with `tools/fmv/build_ffmpeg.sh linux-i386 ~/ffmpeg-i386` (and `linux-x86_64 ~/ffmpeg-x64` for the
+  64-bit build, whose SDL needs the x86-64 development packages, or `-DSDL_UNIX_CONSOLE_BUILD=ON` in
+  `RUNNER_CMAKE_ARGS` for a headless-only runner without them). `build` configures with
   `-DNF_FFMPEG_LIB_DIR` set to `RUNNER_FFMPEG_LIB` (default `~/ffmpeg-i386/lib`) and, when `RUNNER_DXVK_DIR` is set,
   an extracted dxvk-native release (otherwise CMake downloads it); SDL3 comes by FetchContent. Under `RUNNER_HOST=wsl`
   these default to the Linux port's folders on this PC, `~/nf/ffmpeg-i386/lib` and `~/nf/dl/dxvk-native/x/usr`.

@@ -138,7 +138,7 @@ void Teleport_Tick(void) {
         if (haveConfigured) {
             char formatted[128];
             FormatPlace(&configured, formatted, sizeof(formatted));
-            printf("[teleport] will teleport to %s %lu ms after the car appears\n", formatted, delayMs);
+            printf("[teleport] will teleport to %s %lu ms after the car appears\n", formatted, (unsigned long)delayMs);
         }
     }
     ShadowTicks_Tick();    // the live vehicle shadows (devtools/ShadowTicks.cpp)

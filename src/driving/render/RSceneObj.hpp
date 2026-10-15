@@ -133,7 +133,7 @@ public:
     CARP::Instance *Instance() const { return static_cast<CARP::Instance *>(sourceInstance); }
     CARP::BaseDesc *Desc() const { return static_cast<CARP::BaseDesc *>(baseDesc); }
     // The article's model group (its description's first word)
-    UGroup *ModelGroup() const { return reinterpret_cast<UGroup *>(uintptr_t(Desc()->model.value)); }
+    UGroup *ModelGroup() const { return PtrFrom32<UGroup>(Desc()->model.value); }
 
     RSceneObj* Construct(CARP::Instance *instance);                                             // 0x0008eec0
     void Destruct();                                                                            // 0x000905a0

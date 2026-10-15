@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 
     HostHandle thread = HostCreateThread(kGameStackSize, mainXapiStartup, NULL, 0, NULL);
     if (thread == NULL) {
-        printf("[standalone] the game's thread could not be created (error %lu)\n", HostGetLastError());
+        printf("[standalone] the game's thread could not be created (error %lu)\n", (unsigned long)HostGetLastError());
         return 1;
     }
     HostCloseHandle(thread);

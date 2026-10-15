@@ -1,9 +1,9 @@
 // The game window and Ptr32 without the game (docs/driving/64-bit.md 7.1): "gamewindow_test [operations]". Checks that
 // file structures keep their 32-bit layout, that a Ptr32 converts both ways, and that Host.h's heaps (GameWindow.cpp's
 // on a 64-bit host) give blocks that hold their contents through a random mix of allocations, frees and reallocations,
-// answer their sizes, honour HEAP_ZERO_MEMORY, HEAP_REALLOC_IN_PLACE_ONLY and a heap's maximum, and lie below 4 GB
-// with the executable's statics, the pages and operator new's blocks. One summary line; the exit code is the
-// number of failed checks (capped at 100).
+// answer their sizes, honour HEAP_ZERO_MEMORY, HEAP_REALLOC_IN_PLACE_ONLY and a heap's maximum, and lie in the game
+// window (the 4 GB from NIGHTFIRE_WINDOW_BASE) with the executable's statics, the pages, operator new's blocks and a
+// thread's stack. One summary line; the exit code is the number of failed checks (capped at 100).
 
 #include "../platform/Host.h"
 #include "../platform/Ptr32.h"
@@ -27,8 +27,14 @@ void Check(bool ok, const char *what, long long detail = 0) {
     }
 }
 
+#if UINTPTR_MAX > 0xffffffffu
+const uintptr_t kBase = kGameWindowBase;
+#else
+const uintptr_t kBase = 0;
+#endif
+
 bool InWindow(const void *pointer) {
-    return uintptr_t(pointer) <= 0xffffffffu;
+    return uintptr_t(pointer) - kBase <= 0xffffffffu;
 }
 
 struct Node;
@@ -65,8 +71,11 @@ void TestPtr32() {
     Check(record.node->value == 7 && (*record.node).value == 7, "-> and * through a static");
     Node *back = record.node;
     Check(back == &g_staticNode, "back to the pointer");
-    Check(PtrTo32(&g_staticNode) == uint32_t(uintptr_t(&g_staticNode)), "the word is the address (base 0)");
+    Check(PtrTo32(&g_staticNode) == uint32_t(uintptr_t(&g_staticNode) - kBase), "the word is the offset in the window");
     Check(PtrFrom32<Node>(PtrTo32(&g_staticNode)) == &g_staticNode, "PtrFrom32 undoes PtrTo32");
+    Check(PtrTo32(NULL) == 0 && PtrFrom32<Node>(0) == NULL, "null is the word 0 both ways");
+    record.node = NULL;
+    Check(record.node == NULL && PtrTo32(record.node) == 0, "a null Ptr32 holds 0");
     record.name = "name";
     Check(strcmp(record.name, "name") == 0, "a string through a Ptr32");
     Node nodes[4] = { { 0 }, { 1 }, { 2 }, { 3 } };
@@ -155,7 +164,7 @@ void TestHeap(int operations) {
             size_t size = RandomSize();
             bool zeroed = (Random() & 1) != 0;
             bool inPlace = (Random() % 4) == 0;
-            unsigned long flags = (zeroed ? HOST_HEAP_ZERO_MEMORY : 0) | (inPlace ? 0x10 : 0);
+            HostDword flags = (zeroed ? HOST_HEAP_ZERO_MEMORY : 0) | (inPlace ? 0x10 : 0);
             uint8_t *moved = static_cast<uint8_t *>(HostHeapReAlloc(heap, flags, l.block, size));
             if (moved == NULL) {
                 Check(inPlace, "a reallocation fails only in place", (long long)(size));
@@ -180,7 +189,7 @@ void TestHeap(int operations) {
         sizes += HostHeapSize(heap, 0, l.block) != l.size;
         HostHeapFree(heap, 0, l.block);
     }
-    Check(outside == 0, "every block below 4 GB", outside);
+    Check(outside == 0, "every block in the window", outside);
     Check(lost == 0, "every block keeps its contents", lost);
     Check(sizes == 0, "HostHeapSize answers the size asked for", sizes);
     Check(zero == 0, "HEAP_ZERO_MEMORY zeroes", zero);
@@ -202,7 +211,7 @@ void TestLimits() {
     Check(HostHeapAlloc(fixed, 0, 0x1000) != NULL, "and has room again once emptied");
 
     void *pages = HostAllocatePages(0x30000, 0, 0x10000000);
-    Check(pages != NULL && InWindow(pages), "contiguous pages in the window");
+    Check(pages != NULL && InWindow(pages) && uintptr_t(pages) - kBase >= 0x10000, "contiguous pages in the window");
     HostFreePages(pages);
     int *object = new int[100];
     Check(InWindow(object), "operator new's blocks in the window");
@@ -210,14 +219,46 @@ void TestLimits() {
     Check(InWindow(&g_staticNode) && InWindow((const void *)&TestLimits), "the statics and code in the window");
 }
 
+HostDword __stdcall StackThread(void *parameter) {
+    int local = 0;
+    *static_cast<void **>(parameter) = &local;
+    return 0;
+}
+
+void TestThreadStack() {
+    void *local = NULL;
+    HostHandle thread = HostCreateThread(0x10000, StackThread, &local, 0, NULL);
+    Check(thread != NULL, "a thread");
+    if (thread == NULL)
+        return;
+    HostWaitForObject(thread, HOST_INFINITE);
+    HostCloseHandle(thread);
+    Check(local != NULL && InWindow(local), "a thread's stack in the window", (long long)uintptr_t(local));
+}
+
+int g_operations;
+
+// On a thread of the host's, as the game runs: its locals are in the window (the process's first thread's need not be)
+HostDword __stdcall Tests(void *) {
+    TestPtr32();
+    TestHeap(g_operations);
+    TestLimits();
+    TestThreadStack();
+    return 0;
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
     int operations = argc > 1 ? atoi(argv[1]) : 200000;
-    TestPtr32();
-    TestHeap(operations);
-    TestLimits();
-    printf("[window] gamewindow_test: %d operations, %d checks, %d differ (%d-bit)\n", operations, g_checks,
-           g_failed, int(sizeof(void *) * 8));
+    g_operations = operations;
+    HostHandle thread = HostCreateThread(0x10000, Tests, NULL, 0, NULL);
+    Check(thread != NULL, "the tests' thread");
+    if (thread != NULL) {
+        HostWaitForObject(thread, HOST_INFINITE);
+        HostCloseHandle(thread);
+    }
+    printf("[window] gamewindow_test: %d operations, %d checks, %d differ (%d-bit, window at 0x%llx, image at %p)\n",
+           operations, g_checks, g_failed, int(sizeof(void *) * 8), (unsigned long long)kBase, (void *)&g_staticNode);
     return g_failed < 100 ? g_failed : 100;
 }
