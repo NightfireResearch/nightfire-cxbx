@@ -3289,7 +3289,7 @@ void xboxInitGraphics(void) {
     // sets its own (src/driving/gfx/d3dSeam.cpp).
     g_xboxTextureStateTable = 0x001117D0u;
     g_xboxRenderStateTable = 0x001119D0u;
-    g_overlayTableBase = (uint32_t)(uintptr_t)&Gfx.overlayQuads[0];
+    g_overlayTableBase = (uintptr_t)&Gfx.overlayQuads[0];
     g_overlayTableEnd = g_overlayTableBase + sizeof(Gfx.overlayQuads);
 
     memset(&Gfx, 0, sizeof(Gfx));

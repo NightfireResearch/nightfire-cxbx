@@ -5,6 +5,8 @@
 #include "../../common/xbeEntrySeam.h"
 #include "../../common/xbeProfiler.h"
 #include "../../common/xboxPath.h"   // XGWriteSurfaceToFile
+#include "../platform/Host.h"   // the resources' heap on a 64-bit host
+#include "../platform/Ptr32.h"
 #include "../platform/RealSystem.h"   // TimerFrequency: 50 on a PAL video mode, 60 on an NTSC one (TIMER_init)
 
 #include "../platform/Win32Types.h"
@@ -246,7 +248,7 @@ void __stdcall D3DDevice_SetTexture(uint32_t stage, D3DPixelContainer *texture) 
 }
 
 void __stdcall D3DResource_Register(D3DResource *resource, void *base) {
-    D3D9_ResourceRegister(resource, uint32_t(uintptr_t(base)));
+    D3D9_ResourceRegister(resource, PtrTo32(base));
 }
 
 uint32_t __stdcall D3DResource_Release(D3DResource *resource) {
@@ -396,26 +398,57 @@ uint32_t __stdcall D3DResource_IsBusy(D3DResource *resource) {
     return 0;
 }
 
+// The resources made here, headers and memory: a header's data word holds its memory's address, and the game keeps
+// some headers' addresses in its files' data (a TAR's texture and palette), so on a 64-bit host both come from the
+// game window (Ptr32.h).
+#if UINTPTR_MAX > 0xffffffffu
+static HostHandle ResourceHeap() {
+    static HostHandle heap = HostHeapCreate(0, 0, 0);
+    return heap;
+}
+
+static void *ResourceAlloc(size_t count, size_t size) {
+    return HostHeapAlloc(ResourceHeap(), HOST_HEAP_ZERO_MEMORY, count * size);
+}
+
+static void ResourceFree(void *block) {
+    if (block != NULL)
+        HostHeapFree(ResourceHeap(), 0, block);
+}
+#else
+static void *ResourceAlloc(size_t count, size_t size) {
+    return calloc(count, size);
+}
+
+static void ResourceFree(void *block) {
+    free(block);
+}
+#endif
+
 // An index buffer: as the original (0x0016b430) makes it, one block of 12 header bytes followed by the indices -
 // Common = 0x01010001 (an index buffer, one reference), Data = the indices, Lock = 0. The original takes the
 // block from the XAPI heap; Release never frees an index buffer (the backend frees only the surfaces it made),
 // so neither did the original path.
 D3DResource *__stdcall D3DDevice_CreateIndexBuffer2(uint32_t length) {
-    D3DResource *buffer = (D3DResource *)calloc(1, sizeof(D3DResource) + length);
+    D3DResource *buffer = (D3DResource *)ResourceAlloc(1, sizeof(D3DResource) + length);
     if (buffer == NULL) {
         printf("[d3dSeam] out of memory for a %u-byte index buffer\n", length);
         return NULL;
     }
     buffer->common = 0x01010001u;
-    buffer->data = (uint32_t)(uintptr_t)(buffer + 1);
+    buffer->data = PtrTo32(buffer + 1);
     buffer->lock = 0;
     return buffer;
 }
 
-// The handle is a DWORD on the Xbox; the backend writes its own (a pointer, the same four bytes) through it.
+// The handle is a DWORD on the Xbox; the backend's is a tagged index in a pointer, written only on success.
 int32_t __stdcall D3DDevice_CreateVertexShader(const void *declaration, const void *function, uint32_t *handle,
                                                uint32_t usage) {
-    return D3D9_CreateVertexShader(declaration, function, reinterpret_cast<void **>(handle), usage);
+    void *backendHandle;
+    int32_t result = D3D9_CreateVertexShader(declaration, function, &backendHandle, usage);
+    if (result == 0)
+        *handle = uint32_t(uintptr_t(backendHandle));
+    return result;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -473,20 +506,20 @@ D3DPixelContainer *__stdcall D3DDevice_CreateTexture2(uint32_t width, uint32_t h
     uint32_t bytes = pitch * height;
     bytes += bytes / 2;
 
-    D3DPixelContainer *texture = (D3DPixelContainer *)calloc(1, sizeof(D3DPixelContainer));
-    void *pixels = calloc(1, bytes);
+    D3DPixelContainer *texture = (D3DPixelContainer *)ResourceAlloc(1, sizeof(D3DPixelContainer));
+    void *pixels = ResourceAlloc(1, bytes);
     if (texture == NULL || pixels == NULL) {
-        free(texture);
-        free(pixels);
+        ResourceFree(texture);
+        ResourceFree(pixels);
         printf("[d3dSeam] out of memory for a %ux%u texture\n", width, height);
         return NULL;
     }
 
     // The header the backend reads, built by the same function the game would have called itself.
     D3D9_XGSetTextureHeader(width, height, levels, usage, (int)format, 0, texture,
-                            (uint32_t)(uintptr_t)pixels, 0);
+                            PtrTo32(pixels), 0);
     texture->common = XBOX_TEXTURE_COMMON_WORD;
-    texture->data = (uint32_t)(uintptr_t)pixels;
+    texture->data = PtrTo32(pixels);
     return texture;
 }
 
@@ -555,7 +588,7 @@ static void LockPixels(D3DPixelContainer *container, D3DLockedRect *lockedRect) 
             D3D9_ReadBackBuffer(lockedRect->bits, lockedRect->pitch, width, height);
         return;
     }
-    lockedRect->bits = (void *)(uintptr_t)header->data;
+    lockedRect->bits = PtrFrom32<void>(header->data);
 
     // Whatever is about to be written lands in memory the backend has already uploaded from, so tell it the
     // copy it holds is stale. The re-upload happens at the next bind, which is after the write.
@@ -583,27 +616,27 @@ D3DResource *__stdcall D3DDevice_CreatePalette2(uint32_t size) {
     if (size > 3)
         return NULL;
 
-    D3DPixelContainer *palette = (D3DPixelContainer *)calloc(1, sizeof(D3DPixelContainer));
-    void *entries = calloc(entriesForSize[size], sizeof(uint32_t));
+    D3DPixelContainer *palette = (D3DPixelContainer *)ResourceAlloc(1, sizeof(D3DPixelContainer));
+    void *entries = ResourceAlloc(entriesForSize[size], sizeof(uint32_t));
     if (palette == NULL || entries == NULL) {
-        free(palette);
-        free(entries);
+        ResourceFree(palette);
+        ResourceFree(entries);
         return NULL;
     }
 
     palette->common = (size << 30) | XBOX_PALETTE_COMMON_WORD;
-    palette->data = (uint32_t)(uintptr_t)entries;
+    palette->data = PtrTo32(entries);
     return palette;
 }
 
 uint32_t *__stdcall D3DPalette_Lock2(D3DResource *palette, uint32_t flags) {
     (void)flags;
-    return (palette != NULL) ? (uint32_t *)(uintptr_t)palette->data : NULL;
+    return (palette != NULL) ? PtrFrom32<uint32_t>(palette->data) : NULL;
 }
 
 // Binding a palette, which the backend expands paletted textures through at upload.
 void __stdcall D3DDevice_SetPalette(uint32_t stage, D3DResource *palette) {
-    D3D9_SetPalette(stage, (palette != NULL) ? (const void *)(uintptr_t)palette->data : NULL);
+    D3D9_SetPalette(stage, (palette != NULL) ? PtrFrom32<const void>(palette->data) : NULL);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -688,19 +721,19 @@ D3DPixelContainer *__stdcall D3D_CreateStandAloneSurface(uint32_t width, uint32_
     uint32_t pitch = (((width * bits) / 8) + 63) & ~63u;
     uint32_t bytes = pitch * height;
 
-    D3DPixelContainer *surface = (D3DPixelContainer *)calloc(1, sizeof(D3DPixelContainer) + 4);
-    void *pixels = calloc(1, bytes);
+    D3DPixelContainer *surface = (D3DPixelContainer *)ResourceAlloc(1, sizeof(D3DPixelContainer) + 4);
+    void *pixels = ResourceAlloc(1, bytes);
     if (surface == NULL || pixels == NULL) {
-        free(surface);
-        free(pixels);
+        ResourceFree(surface);
+        ResourceFree(pixels);
         printf("[d3dSeam] out of memory for a %ux%u surface\n", width, height);
         return NULL;
     }
 
     D3D9_XGSetTextureHeader(width, height, levels, 0, (int)format, 0, surface,
-                            (uint32_t)(uintptr_t)pixels, 0);
+                            PtrTo32(pixels), 0);
     surface->common = XBOX_STANDALONE_SURFACE_COMMON;
-    surface->data = (uint32_t)(uintptr_t)pixels;
+    surface->data = PtrTo32(pixels);
     return surface;
 }
 
@@ -993,17 +1026,17 @@ D3DResource *__stdcall D3DDevice_CreateVertexBuffer2(uint32_t length) {
     if (length == 0)
         return NULL;
 
-    SeamVertexBuffer *buffer = (SeamVertexBuffer *)calloc(1, sizeof(SeamVertexBuffer));
-    void *data = calloc(1, length);
+    SeamVertexBuffer *buffer = (SeamVertexBuffer *)ResourceAlloc(1, sizeof(SeamVertexBuffer));
+    void *data = ResourceAlloc(1, length);
     if (buffer == NULL || data == NULL) {
-        free(buffer);
-        free(data);
+        ResourceFree(buffer);
+        ResourceFree(data);
         printf("[d3dSeam] out of memory for a %u-byte vertex buffer\n", length);
         return NULL;
     }
 
     buffer->common = XBOX_VERTEXBUFFER_COMMON;
-    buffer->data = (uint32_t)(uintptr_t)data;
+    buffer->data = PtrTo32(data);
     buffer->size = length;
     return buffer;
 }
@@ -1012,7 +1045,7 @@ D3DResource *__stdcall D3DDevice_CreateVertexBuffer2(uint32_t length) {
 // reads the block when something draws from it.
 uint8_t *__stdcall D3DVertexBuffer_Lock2(D3DResource *buffer, uint32_t flags) {
     (void)flags;
-    return (buffer != NULL) ? (uint8_t *)(uintptr_t)buffer->data : NULL;
+    return (buffer != NULL) ? PtrFrom32<uint8_t>(buffer->data) : NULL;
 }
 
 // A vertex buffer header the game wraps around memory it already has, which the original writes as three
@@ -1429,8 +1462,8 @@ void D3dSeam_Init(void) {
     // Where D3D8 keeps the deferred state the backend reads back at draw time (D3D8.h). In the original, the
     // functions that write them are D3DDevice_SetRenderStateNotInline (0x00167410) and
     // D3DDevice_SetTextureStageStateNotInline (0x00167e40).
-    g_xboxTextureStateTable = uint32_t(uintptr_t(D3DTextureState));
-    g_xboxRenderStateTable = uint32_t(uintptr_t(D3DRenderState));
+    g_xboxTextureStateTable = uintptr_t(D3DTextureState);
+    g_xboxRenderStateTable = uintptr_t(D3DRenderState);
 
     // EAGL rewrites its vertex buffers between draws - its dynamic buffer is three Xbox buffers behind one
     // object, refilled per draw - and nothing here is told. Every draw copies what it reads, at the draw.

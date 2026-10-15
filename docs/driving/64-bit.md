@@ -652,6 +652,48 @@ cleanly onto driving-64.
 against driving-64 once this is merged. Also not done: the loader digest (every disc object loaded on 64-bit and
 compared with the 32-bit build's), which belongs with package 9's first boot.
 
+### 7.8 Done: package 8, the D3D seam and backend (15 October 2026)
+
+**What the words hold.** A resource header's `data` word (`D3DResource`, the backend's `XboxPixelContainer`,
+`XboxSurface`) is an address in a 32-bit word: the relocated headers in EAGL's files, and the headers the seam makes
+itself. The backend's vertex and index buffers read it at word 1, surfaces keep their texture at `Parent` (word 5).
+These go through `PtrTo32`/`PtrFrom32` now: the seam's encodes (`D3DResource_Register`'s base, which the backend
+adds to the word in 32 bits as the original does; each Create's `data`), its decodes (the locks, the palette), and
+the backend's decodes, all through its one `XboxDataPointer` (the backend includes driving/platform/Ptr32.h; on the
+action engine's 32-bit build that is the same cast). No push-buffer word holds an address: `D3DPushBufferCursor` is
+an ordinary pointer and `RunPushBuffer` is not implemented.
+
+**Where the seam's resources live.** A TAR keeps its texture and palette in `Ptr32` members (Tar.h), and every header's
+`data` word holds its memory's address, so on a 64-bit host the seam allocates headers, pixels, palettes and vertex and
+index data from a window heap of its own (`ResourceAlloc`: `HostHeapAlloc` with zeroing; `calloc` on 32-bit). The
+backend's own surface objects (`GetSurfaceLevel2`, the stand-ins) are not placed: nothing found keeps one in file
+data, and `PtrTo32` would stop the first store that did.
+
+**Fixed for x86-64.**
+- The state tables' bases (`g_xboxTextureStateTable`, `g_xboxRenderStateTable`) and the action engine's overlay table
+  bounds are `uintptr_t`, not `uint32_t` (the same type on 32-bit): the 26 int-to-pointer warnings of the two files.
+- `D3DDevice_CreateVertexShader` passed the game's DWORD handle to the backend as a `void **`, which on x86-64 writes 8
+  bytes over the next member of `EAGL::VertexShader`; the handle (a tagged index) now comes back through a local and
+  is stored as 32 bits, on success only, as before.
+- `GetSurfaceLevel2` strips the top nibble of the texture's word as D3D8 does; the window's heaps lie above 28 bits,
+  so on a 64-bit host the mask keeps the whole word (`kSurfaceDataMask`).
+
+Left as they are, correct on both: the vertex shader handles' casts (tagged indices, not addresses), and
+`XGSetVertexBufferHeader`'s `& 0x7fffffff` on the word EAGL computes (`FUN_000f6d50`), right while that memory lies
+below 2 GB (the window's heap arena ends near 0x60000000).
+
+**32-bit unchanged.** Object diff against the build before the change (code bytes and relocations per section, data by
+variable): actioninject 134 of 134 objects identical (so the action engine needs no replays); drivinginject,
+driving_standalone and driving_standalone_test identical except `D3DDevice_CreateVertexShader` in d3dSeam.obj, the
+handle's local. On the runner (rounds p8a, p8s, p8c, to tick 9000): the injected build against `lbase` (16 lockstep
+runs exact, shadows on all eight missions with 0 differences), driving_standalone_test against `lbase` (16 of 16
+exact) and, with `NIGHTFIRE_X87=OFF`, against `lbase_c` (16 of 16 exact).
+
+**x86-64.** The probe: 993 error lines before and after (all package 6's failed checks; the two in d3dSeam.cpp's
+translation unit are `D3DTile` and RealSystem.h's `SyncTask`), warning lines 242 before, 217 after; none left in
+src/common/gfx or src/driving/gfx. MSVC x64 compiles the backend, the shader translators, FXAA and texture replacement
+with no diagnostic; d3dSeam.cpp stops only on D3D8.h's `D3DTile` check (package 6).
+
 ## 8. Work packages
 
 In order; each keeps the Windows 32-bit build unchanged (Ptr32 is `T *` there) and is tested by it. Sizes: S < 1 day of
@@ -668,7 +710,7 @@ agent time, M 1-2, L 3+.
 | 5 | **realgraph, sound banks and streams, FILESYS and the int handles** (FNTX slots, timbre words, `AddBytes`, stream/filter handles, FILESYS user data, actor ids, address keys) | M | 32-bit asm diff; 64-bit sound traces |
 | 6 | **Memory-only structures**: the 32-bit-only check form (and the generator's), the literal allocation sizes, the `* 4` arrays, the remaining vtable constants, the 66 narrowings - by directory, in two or three agents. **Done 15 October 2026** (7.6) | L | 32-bit asm diff (nothing may change), checks still all true on 32-bit |
 | 7 | ~~x87 on x86-64~~: replaced by the C forms (`NIGHTFIRE_X87=OFF`, **done 15 October 2026**, 4.4); left: the conversion edge cases (out-of-range float-to-unsigned and float-to-64-bit) | S | lockstep against `lbase_c` |
-| 8 | **The D3D seam and backend**: the state tables' bases, resource `data` words, push-buffer and stream words as window words; kept working for the action engine's 32-bit build | M | 32-bit lockstep frames (driving) and the action engine's menu replays |
+| 8 | **The D3D seam and backend**: the state tables' bases, resource `data` words, push-buffer and stream words as window words; kept working for the action engine's 32-bit build. **Done 15 October 2026** (7.8) | M | 32-bit lockstep frames (driving) and the action engine's menu replays |
 | 9 | **Bring-up**: first boot of the 64-bit test executable, then lockstep on all missions against the 32-bit standalone's baselines on the same machine; a per-tick state trace (rigid bodies, AI elements; canonical, no addresses) to find the first divergent tick | M | the 16 lockstep runs, frames and sound traces |
 | 10 | **Linux x86-64** (after step 2): the LP64 `long`s, the Win32-types header with fixed-width types, the runner's Linux baselines | S-M | Linux lockstep |
 
