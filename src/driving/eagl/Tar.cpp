@@ -937,7 +937,7 @@ static uint8_t *SurfaceShape(TARSharedData *d, int32_t width, int32_t height, in
     image->width = width;
     image->height = height;
     image->flags |= EAGL::kShapeDataAtOffset;
-    image->dataOffset = d->texture->data - (uintptr_t)s - 0x80000000;
+    image->dataOffset = d->texture->data - PtrTo32(s) - 0x80000000;
     return s;
 }
 

@@ -153,7 +153,7 @@ static_assert(sizeof(DrawPacket) == 0xc, "a draw packet is 3 dwords");
 // Opcode 36: a push buffer run (no parameter).
 struct PushBufferPacket : Packet {
     uint32_t enabled;                // +0x04 0: not run
-    PushBuffer *pushBuffer;          // +0x08
+    Ptr32<PushBuffer> pushBuffer;    // +0x08
 };
 static_assert(sizeof(PushBufferPacket) == 0xc, "a push buffer packet is 3 dwords");
 
@@ -202,30 +202,31 @@ struct RenderMethod {                // 0x34 (PS2: EAGL::RenderMethod)
     Ptr32<Packet> packets;           // +0x00 packet stream; an owned copy when cloned (its size in bytes at [-1])
     int numVariants;                 // +0x04 number of shader variants
     Ptr32<const void> declaration;   // +0x08 vertex declaration
-    Ptr32<const void *> vsMicrocode; // +0x0c vertex shader programs, one per variant
-    Ptr32<VertexShader *> vertexShaders; // +0x10 created vertex shaders
-    Ptr32<const uint8_t *> psDefinitions; // +0x14 pixel shader definitions
-    Ptr32<PixelShader *> pixelShaders; // +0x18 created pixel shaders
+    Ptr32<Ptr32<const void>> vsMicrocode; // +0x0c vertex shader programs, one per variant
+    Ptr32<Ptr32<VertexShader>> vertexShaders; // +0x10 created vertex shaders
+    Ptr32<Ptr32<const uint8_t>> psDefinitions; // +0x14 pixel shader definitions
+    Ptr32<Ptr32<PixelShader>> pixelShaders; // +0x18 created pixel shaders
     Ptr32<RenderMethod> next;        // +0x1c list at 0x0023ff20 (constructed) / 0x0023ff24 (children waiting)
-    Ptr32<const char *> paramNames;  // +0x20 parameter names, NULL-terminated (DrawArray looks them up)
+    Ptr32<Ptr32<const char>> paramNames; // +0x20 parameter names, NULL-terminated (DrawArray looks them up)
     uint32_t variantHalf;            // +0x24 0: the second half of each pixel shader definition is created
     uint32_t cloned;                 // +0x28 1 when made from a parent
     Ptr32<RenderMethod> parent;      // +0x2c
     Ptr32<const char> name;          // +0x30
 
-    RenderMethod* Construct(Packet *packets, int numVariants, const void *declaration, const void **vsMicrocode,
-                            VertexShader **vertexShaders, const uint8_t **psDefinitions,
-                            PixelShader **pixelShaders, const char **paramNames, uint32_t variantHalf,
+    RenderMethod* Construct(Packet *packets, int numVariants, const void *declaration,
+                            Ptr32<const void> *vsMicrocode, Ptr32<VertexShader> *vertexShaders,
+                            Ptr32<const uint8_t> *psDefinitions, Ptr32<PixelShader> *pixelShaders,
+                            Ptr32<const char> *paramNames, uint32_t variantHalf,
                             const char *name);                                 // 0x000f0f60
     void Draw(GeoPrim *prim);                                                  // 0x000f0fc0 (PS2: Draw(GeoPrim *))
     void Nop1020(uint32_t unused);                                             // 0x000f1020 (empty, unreferenced)
     bool CanOptimize(void *geoPrim, uint32_t unused);                          // 0x000f1030 (invented; true)
     void Nop1040(uint32_t unused);                                             // 0x000f1040 (empty, unreferenced)
     void CreateShaders();                                                      // 0x000f1050 (invented)
-    void SetVertexShaderTable(VertexShader **const *table);                    // 0x000f1180 (invented, unreferenced)
-    Ptr32<VertexShader *> *GetVertexShaderTable();                             // 0x000f1190 (invented, unreferenced)
-    void SetPixelShaderTable(PixelShader **const *table);                      // 0x000f11a0 (invented, unreferenced)
-    Ptr32<PixelShader *> *GetPixelShaderTable();                               // 0x000f11b0 (invented, unreferenced)
+    void SetVertexShaderTable(Ptr32<VertexShader> *const *table);              // 0x000f1180 (invented, unreferenced)
+    Ptr32<Ptr32<VertexShader>> *GetVertexShaderTable();                        // 0x000f1190 (invented, unreferenced)
+    void SetPixelShaderTable(Ptr32<PixelShader> *const *table);                // 0x000f11a0 (invented, unreferenced)
+    Ptr32<Ptr32<PixelShader>> *GetPixelShaderTable();                          // 0x000f11b0 (invented, unreferenced)
     RenderMethod* ConstructChild(RenderMethod *parent);                        // 0x000f1270 (invented)
     void Destruct();                                                           // 0x000f12c0
     void DeleteShaders();                                                      // 0x000f1300 (invented)
@@ -239,9 +240,9 @@ struct LoadedVertexBuffer {
     uint32_t fileOffset;             // +0x10 the data's offset in the ELF image
 };
 
-// A vertex buffer the CPU fills once (0x14). Unreferenced in this game.
+// A vertex buffer the CPU fills once (0x14). Unreferenced in this game, but opcode 9 reads one in parameter data.
 struct StaticVertexBuffer {
-    D3DResource *buffer;             // +0x00 D3D8 vertex buffer (or a 0xc-byte stand-in for user memory)
+    Ptr32<D3DResource> buffer;       // +0x00 D3D8 vertex buffer (or a 0xc-byte stand-in for user memory)
     uint32_t size;                   // +0x04
     uint32_t stride;                 // +0x08 read by EAGL_SetStreamSource
     uint8_t user;                    // +0x0c

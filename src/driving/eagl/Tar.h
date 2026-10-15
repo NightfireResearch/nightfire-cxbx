@@ -87,7 +87,7 @@ enum TARSharedFlag : uint32_t {
 // The Xbox extension's methods work through the TAR's +0x48 field: their `this` is the field's address, the field
 // points at the TAR (itself). Opcode 15 calls SetStage that way.
 struct TARExtension {
-    TAR *tar;                        // +0x00
+    Ptr32<TAR> tar;                  // +0x00
 
     TARExtension* Construct(TAR *owner);                                     // 0x000ebd40
     void DumpState();                                                        // 0x000ebd50 (empty)

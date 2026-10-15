@@ -77,7 +77,7 @@ void WalkDrawList(const EAGL::Model *model) {
     uint32_t block = 0;
     do {
         if (entry == 0xffff) {
-            GeoPrim *geoPrim = (GeoPrim *)*p++;
+            GeoPrim *geoPrim = PtrFrom32<GeoPrim>(*p++);
             if (geoPrim != NULL)
                 geoPrim->method->Draw(geoPrim);
         } else {
@@ -275,7 +275,7 @@ uint8_t* EAGL::ModelFindShape(uint8_t *shapes, const char *imageName) {
 // FUNC_AT(0x000e90f0)
 void EAGL::Model::SwapShapes(uint8_t *shapes) {
     const uint32_t *p = tarList;
-    const char *listName = (const char *)*p++;
+    const char *listName = PtrFrom32<const char>(*p++);
     while (listName != NULL) {
         uint8_t *image = NULL;
         if (shapes != NULL)
@@ -283,14 +283,14 @@ void EAGL::Model::SwapShapes(uint8_t *shapes) {
         uint32_t n = *p++;
         if (n != 0) {
             do {
-                TAR *tar = VariationOf((TAR *)*p++, variation);
+                TAR *tar = VariationOf(PtrFrom32<TAR>(*p++), variation);
                 if (image != NULL)
                     tar->SwapShape(image);
                 else if (shapes == NULL)
                     tar->SwapShape(NULL);
             } while (--n != 0);
         }
-        listName = (const char *)*p++;
+        listName = PtrFrom32<const char>(*p++);
     }
 }
 
@@ -298,16 +298,16 @@ void EAGL::Model::SwapShapes(uint8_t *shapes) {
 EAGL::TARList* EAGL::Model::GetTARList(TARList *out, const char *listName) {
     if (listName != NULL) {
         const uint32_t *p = tarList;
-        const char *entryName = (const char *)*p++;
+        const char *entryName = PtrFrom32<const char>(*p++);
         while (entryName != NULL) {
             if (strcmp(entryName, listName) == 0) {
                 out->variation = variation;
                 out->count = *p;
-                out->tars = (TAR **)(p + 1);
+                out->tars = (Ptr32<TAR> *)(p + 1);
                 return out;
             }
             p = p + *p + 1;
-            entryName = (const char *)*p++;
+            entryName = PtrFrom32<const char>(*p++);
         }
     }
     out->variation = -1;
@@ -377,7 +377,7 @@ void EAGL::Model::Optimize() {
                 return;
             header |= 0x10000000;
             in[-1] = header;
-            GeoPrim *geoPrim = (GeoPrim *)*in;
+            GeoPrim *geoPrim = PtrFrom32<GeoPrim>(*in);
             RenderMethod *renderMethod = geoPrim->method;
             in++;
             bool keep = renderMethod->CanOptimize(geoPrim, index);
@@ -440,7 +440,7 @@ void EAGL::Model::Patch(const uint32_t *patchList) {
         return;
     const uint32_t *p = patchList + 1;
     do {
-        *(uint32_t *)p[0] = p[1];   // {address, value}
+        *PtrFrom32<uint32_t>(p[0]) = p[1];   // {address, value}
         p += 2;
     } while (--n != 0);
 }
@@ -513,10 +513,10 @@ void EAGL::Model::ClearMorphModel() {
                 const MorphRecord *record = (const MorphRecord *)p;
                 p += sizeof(MorphRecord) / 4;
                 uint32_t bytes = (record->strideFlags >> 1) * record->elementSize;
-                const uint8_t *source = (const uint8_t *)(record->target - record->variationStride);
+                const uint8_t *source = PtrFrom32<const uint8_t>(record->target - record->variationStride);
                 uint8_t *destination = (record->strideFlags & 1) != 0
-                                           ? (uint8_t *)(variation * record->variationStride + record->target)
-                                           : (uint8_t *)record->target;
+                                           ? PtrFrom32<uint8_t>(variation * record->variationStride + record->target)
+                                           : PtrFrom32<uint8_t>(record->target);
                 __movsd((unsigned long *)destination, (const unsigned long *)source, bytes >> 2);   // REP MOVSD
                 __movsb(destination + (bytes & ~3u), source + (bytes & ~3u), bytes & 3);           // REP MOVSB
             } while (--n != 0);
@@ -574,9 +574,9 @@ void EAGL::Model::MorphModel() {
     if (groups == 0)
         return;
     do {
-        const char *groupName = (const char *)*s;
+        const char *groupName = PtrFrom32<const char>(*s);
         const uint32_t *m = (const uint32_t *)(morphData + 4);
-        const char *target = (const char *)*m++;
+        const char *target = PtrFrom32<const char>(*m++);
         s++;
         bool found = false;
         while (target != NULL) {
@@ -585,7 +585,7 @@ void EAGL::Model::MorphModel() {
                 break;
             }
             uint32_t n = *m;
-            target = (const char *)m[n * 4 + 1];
+            target = PtrFrom32<const char>(m[n * 4 + 1]);
             m = m + n * 4 + 2;
         }
         if (!found) {
@@ -665,7 +665,7 @@ void EAGL::Model::MorphModel() {
                     int32_t recordElementSize = record->elementSize;
                     if ((int32_t)elementSize == recordElementSize) {
                         skipWords = (size + 3) >> 2;
-                        uint8_t *base = (uint8_t *)(record->variationStride * variation + record->target);
+                        uint8_t *base = PtrFrom32<uint8_t>(record->variationStride * variation + record->target);
                         if (type == 1)
                             ModelMorphAddBytes(base, (const uint8_t *)s, components, elementSize, baseStride, weight,
                                                baseOffset, perElement);
@@ -806,13 +806,13 @@ void EAGL::DynamicModel::Reserve(int newCapacity) {
     if (newCapacity <= oldCapacity)
         return;
     capacity = newCapacity;
-    GeoPrim **prims = (GeoPrim **)EaglMalloc(newCapacity * 4, "Dynamic Model Geoprim list");
+    Ptr32<GeoPrim> *prims = (Ptr32<GeoPrim> *)EaglMalloc(newCapacity * 4, "Dynamic Model Geoprim list");
     for (int i = 0; i < count; i++)
         prims[i] = geoPrims[i];
     if (geoPrims != NULL)
         EaglFree(geoPrims, oldCapacity * 4);
     geoPrims = prims;
-    DrawArray **arrays = (DrawArray **)EaglMalloc(capacity * 4, "Dynamic Model DrawArray list");
+    Ptr32<DrawArray> *arrays = (Ptr32<DrawArray> *)EaglMalloc(capacity * 4, "Dynamic Model DrawArray list");
     memset(arrays, 0, capacity * 4);
     for (int i = 0; i < count; i++)
         arrays[i] = drawArrays[i];
@@ -826,13 +826,13 @@ int EAGL::DynamicModel::AddGeoPrim(GeoPrim *geoPrim) {
     int oldCapacity = capacity;
     if (count >= oldCapacity) {
         capacity = oldCapacity < 0x10 ? 0x10 : oldCapacity * 2;
-        GeoPrim **prims = (GeoPrim **)EaglMalloc(capacity * 4, "Dynamic Model Geoprim list");
+        Ptr32<GeoPrim> *prims = (Ptr32<GeoPrim> *)EaglMalloc(capacity * 4, "Dynamic Model Geoprim list");
         for (int i = 0; i < count; i++)
             prims[i] = geoPrims[i];
         if (geoPrims != NULL)
             EaglFree(geoPrims, oldCapacity * 4);
         geoPrims = prims;
-        DrawArray **arrays = (DrawArray **)EaglMalloc(capacity * 4, "Dynamic Model Draw Array list");
+        Ptr32<DrawArray> *arrays = (Ptr32<DrawArray> *)EaglMalloc(capacity * 4, "Dynamic Model Draw Array list");
         memset(arrays, 0, capacity * 4);
         for (int i = 0; i < count; i++)
             arrays[i] = drawArrays[i];
@@ -1024,14 +1024,14 @@ EAGL::ModelNameEntry** EAGL::ModelNameTable::FindLast(ModelNameEntry **out, cons
 // FUNC_AT(0x000eb020)
 uint8_t* EAGL::ModelShapeImage::Data0() {
     if ((flags & kShapeDataAtOffset) != 0)
-        return (uint8_t *)this + (uint32_t)dataOffset;
+        return (uint8_t *)this + dataOffset;
     return (uint8_t *)&dataOffset;   // the pixels straight after the 0x10-byte header
 }
 
 // FUNC_AT(0x000eb040)
 uint8_t* EAGL::ModelShapeImage::Data1() {
     if ((flags & kShapeDataAtOffset) != 0)
-        return (uint8_t *)this + (uint32_t)dataOffset;
+        return (uint8_t *)this + dataOffset;
     return (uint8_t *)&dataOffset;   // the pixels straight after the 0x10-byte header
 }
 

@@ -126,18 +126,18 @@ extern EAGL::DynamicModel *VolatileModels[kMaterialRequests];
 // The render methods the requests' methods are children of (Materials.cpp)
 extern const std::array<uint32_t, 30> MatDebugVSFunction;
 extern const D3DPixelShaderDef MatDebugPSDefinition;
-extern const void *MatDebugVSFunctions[1];
-extern const uint8_t *MatDebugPSDefinitions[1];
+extern Ptr32<const void> MatDebugVSFunctions[1];
+extern Ptr32<const uint8_t> MatDebugPSDefinitions[1];
 extern uint32_t MatDebugPackets[27];
 extern const uint32_t MatDebugVSDeclaration[5];
-extern const char *MatDebugParamNames[6];
+extern Ptr32<const char> MatDebugParamNames[6];
 extern const std::array<uint32_t, 34> MatVolatileTextureVSFunction;
 extern const D3DPixelShaderDef MatVolatileTexturePSDefinition;
-extern const void *MatVolatileTextureVSFunctions[1];
-extern const uint8_t *MatVolatileTexturePSDefinitions[1];
+extern Ptr32<const void> MatVolatileTextureVSFunctions[1];
+extern Ptr32<const uint8_t> MatVolatileTexturePSDefinitions[1];
 extern uint32_t MatVolatileTexturePackets[37];
 extern const uint32_t MatVolatileTextureVSDeclaration[7];
-extern const char *MatVolatileTextureParamNames[8];
+extern Ptr32<const char> MatVolatileTextureParamNames[8];
 extern EAGL::RenderMethod MatDebugMethod;
 extern EAGL::RenderMethod MatVolatileTextureMethod;
 

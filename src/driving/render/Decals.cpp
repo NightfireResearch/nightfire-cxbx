@@ -77,9 +77,9 @@ const D3DPixelShaderDef TexturedParentPSDefinition = {
 };
 
 // XBE_GLOBAL(0x001d3798, 4)
-const void *TexturedParentVSFunctions[1] = { TexturedParentVSFunction.data() };
+Ptr32<const void> TexturedParentVSFunctions[1] = { TexturedParentVSFunction.data() };
 // XBE_GLOBAL(0x001d379c, 4)
-const uint8_t *TexturedParentPSDefinitions[1] = {
+Ptr32<const uint8_t> TexturedParentPSDefinitions[1] = {
     reinterpret_cast<const uint8_t *>(&TexturedParentPSDefinition),
 };
 // XBE_GLOBAL(0x001d37a0, 0x94)
@@ -109,7 +109,7 @@ const uint32_t TexturedParentVSDeclaration[7] = {
     D3DVSD_END(),
 };
 // XBE_GLOBAL(0x001d38a0, 0x20)
-const char *TexturedParentParamNames[8] = {
+Ptr32<const char> TexturedParentParamNames[8] = {
     "State", "Texture", "Parameters", "ModelViewProjectionMatrix", "Coordinates", "Colours", "STQ", NULL,
 };
 
@@ -200,9 +200,9 @@ const D3DPixelShaderDef EmpParentPSDefinition = {
 };
 
 // XBE_GLOBAL(0x001d3cf0, 4)
-const void *EmpParentVSFunctions[1] = { EmpParentVSFunction.data() };
+Ptr32<const void> EmpParentVSFunctions[1] = { EmpParentVSFunction.data() };
 // XBE_GLOBAL(0x001d3cf4, 4)
-const uint8_t *EmpParentPSDefinitions[1] = {
+Ptr32<const uint8_t> EmpParentPSDefinitions[1] = {
     reinterpret_cast<const uint8_t *>(&EmpParentPSDefinition),
 };
 // XBE_GLOBAL(0x001d3cf8, 0x104)
@@ -240,7 +240,7 @@ const uint32_t EmpParentVSDeclaration[7] = {
     D3DVSD_END(),
 };
 // XBE_GLOBAL(0x001d3eb8, 0x40)
-const char *EmpParentParamNames[16] = {
+Ptr32<const char> EmpParentParamNames[16] = {
     "State", "Texture", "Parameters", "Indices", "ModelMatrix", "MV", "Proj", "FishEyeParams", "PositionalLights",
     "ScalarConsts", "ScrollUV", "SimStep", "Coordinates", "UV", "Colours", NULL,
 };

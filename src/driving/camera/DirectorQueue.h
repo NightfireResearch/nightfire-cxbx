@@ -184,11 +184,11 @@ void UninitializedFillReverseDrawEntries(ReverseDrawEntry *dest, uint32_t count,
 namespace EAGL { struct RenderMethod; }
 extern const std::array<uint32_t, 38> TextureDofVSFunction;
 extern const D3DPixelShaderDef TextureDofPSDefinition;
-extern const void *TextureDofVSFunctions[1];
-extern const uint8_t *TextureDofPSDefinitions[1];
+extern Ptr32<const void> TextureDofVSFunctions[1];
+extern Ptr32<const uint8_t> TextureDofPSDefinitions[1];
 extern uint32_t TextureDofPackets[43];
 extern const uint32_t TextureDofVSDeclaration[7];
-extern const char *TextureDofParamNames[10];
+extern Ptr32<const char> TextureDofParamNames[10];
 extern EAGL::RenderMethod TextureDofMethod;   // "HB_RM = TextureDOF" (DirectorQueue.cpp)
 
 #endif // DRIVING_CAMERA_DIRECTORQUEUE_H_

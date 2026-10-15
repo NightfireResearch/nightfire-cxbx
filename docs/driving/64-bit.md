@@ -515,6 +515,48 @@ remaining vtable constants, the narrowings. 8: the D3D seam and backend's resour
 include defining `static_assert` away), the clang x86-64 build of both standalone executables already compiles and
 links (image base 0x400000, no dynamic base); nothing has run.
 
+### 7.7 Done: packages 3a and 3b, EAGL's loader, models, render methods and anim data (15 October 2026)
+
+**The loader** (Loader.cpp). `FileAddress` encodes with `PtrTo32`. The section table, `.symtab`, `.strtab`, the
+relocations and their targets decode with `PtrFrom32`, and so do the symbol values `GetAddr`, `GetSymbol` and
+`EAGL_LookupInObject` answer. A resolved external's value is `PtrTo32(address)` less section 1's base, and the
+R_MIPS_26 range check uses `PtrTo32(P + 1)`. Every address the resolvers answer (other objects, the game's resolver,
+the global pool) is therefore range-checked when it is written. The symbol pool's table and the destructor list are
+sized with `sizeof`.
+
+**Word streams** (Model.cpp). The draw list's GeoPrims, the TAR lists' names and TARs, the patch list's addresses,
+the morph groups' names and the morph records' targets are decoded with `PtrFrom32`. A morph target's arithmetic
+stays in 32 bits on the word, as the original does it. `TARList::tars` is a `Ptr32<TAR> *` into the list. Arrays of
+file words are `Ptr32<Ptr32<T>>` (`Model::geometryNames`, `MorphWeights::pointers`, `RenderMethod`'s `vsMicrocode`,
+`psDefinitions` and `paramNames`, `AnimBank`'s `anims` and `names`). That changes the static render methods'
+description arrays too (DirectorQueue, Decals, Gain, Materials, PostProcessing). The shader tables
+(`vertexShaders`, `pixelShaders`) and `DynamicModel`'s GeoPrim and DrawArray lists hold `Ptr32` elements, so their
+`* 4` allocations stay right. DrawArray's user variables are sized with `sizeof`.
+
+**Structures laid over file data that still held native pointers**, now `Ptr32`: `PushBufferPacket::pushBuffer`,
+`StaticVertexBuffer::buffer` (opcode 9 reads one inside parameter data), `TARExtension::tar` (laid over a TAR's
++0x48), `DeltaChanData::info`, `KeyChanData::info` and `times`, `CompoundData::attributes` and `subs`,
+`AttributeEntry::pointer`, and `DynamicModel`'s lists.
+
+**Resource words and the rest.** A loaded vertex buffer's data word (`offset - PtrTo32(base)`), the user vertex
+buffer's physical address, `IndexBuffer::Lock` and the render-target SHAPE's data offset now go through
+`PtrTo32`/`PtrFrom32`. An opcode-11 packet's all-ones slots are `PtrFrom32<T>(0xffffffff)`. `ModelShapeImage`'s data
+offsets are added signed. EAGLAnim's channel-function words and its pointer-as-float go through
+`PtrTo32`/`PtrFrom32`, and RUNTIME_ALLOC's TAR count travels in its context as `intptr_t`.
+
+**Result.** Every object file of drivinginject, driving_standalone and driving_standalone_test (394, 281 and 287)
+matches the 0cdc670 build exactly: code bytes, relocations and data. The probe's distinct lines on this branch go
+from 993 to 985 errors and from 242 to 207 warnings. The 8 errors fixed are file-structure checks. What is left in
+eagl/ is 7 `size_t` narrowings (strlen sizes, the anim pool's pointer difference). Every failure left is a check on a
+memory-only structure, which package 6's `LAYOUT_32` removes. MSVC x64 (static assertions forced off) compiles every
+source but the two `_mm_empty` ones, with no C4311/C4312/C4302 left in eagl/, render/ or camera/. The patch applies
+cleanly onto driving-64.
+
+**Left.** From package 6's list of unconditional checks: the game's own GeoPrims (`GainGeoPrim`, `EmpGeoPrim`,
+`SimpleGeoPrim`, `TexturedGeoPrim`, `GlowGeoPrim`) and `TARAtlas`/`TARSlot`/`TARSymbolData`. Those need checking
+against driving-64 once this is merged. Also not done: the loader digest (every disc object loaded on 64-bit and
+compared with the 32-bit build's), which belongs with package 9's first boot.
+
 ## 8. Work packages
 
 In order; each keeps the Windows 32-bit build unchanged (Ptr32 is `T *` there) and is tested by it. Sizes: S < 1 day of
@@ -525,8 +567,8 @@ agent time, M 1-2, L 3+.
 | 0 | **Pre-checks on 32-bit**: `NIGHTFIRE_HEAP_PAD` (devtools, beside HEAP_SHIFT) in lockstep on all missions; an x87 call counter (devtools, calls per tick per function) on one mission; the float-store trap's caller list from the 32-bit listings. **Done 15 October 2026** (4.3, 7.4): the particle map's address key is the one size-dependent behaviour | S | runner round, lockstep 16/16 against lbase |
 | 1 | **Scaffolding**: an x86-64 configuration for the standalone targets only (MSVC x64 and the nf-cross clang); `NIGHTFIRE_STANDALONE` guards round the 61 adaptors; x86-only guards in xbeAbi.h/xbeOverload.h; x86-64 FFmpeg DLLs; the probe (`--probe-script`) in CI, its counts falling to 0 as the packages land. **Done 15 October 2026** (7.5) | M | 32-bit: asm diff identical, lockstep exact; 64-bit: the probe's counts |
 | 2 | **`Ptr32<T>` and the game window** in the host layer (heaps, pages, thread stacks, `operator new`), the range check, `PtrFrom32`/`PtrTo32`. **Done 15 October 2026** (7.5), with the 110 file structures' members retyped; thread stacks not placed | M | 32-bit: unchanged; 64-bit: a unit test of the window and the encoder |
-| 3a | **EAGL loader and models**: Loader.cpp (sections, relocations, symbol values), `Model`, `TAR`, `GeoPrim`, `DrawArray`, `LoadedVertexBuffer`, the word streams of Model.cpp | L | 32-bit asm diff and LoaderShadow (injected build); 64-bit: loading every object on the disc (a devtools mode of the test executable comparing a digest of each loaded object with the 32-bit one's, pointers canonicalised) |
-| 3b | **Render methods and EAGLAnim data**: `RenderMethod`, the packets, the anim banks and delta data, skeletons | M | same |
+| 3a | **EAGL loader and models**: Loader.cpp (sections, relocations, symbol values), `Model`, `TAR`, `GeoPrim`, `DrawArray`, `LoadedVertexBuffer`, the word streams of Model.cpp. **Done 15 October 2026** (7.7) | L | 32-bit asm diff and LoaderShadow (injected build); 64-bit: loading every object on the disc (a devtools mode of the test executable comparing a digest of each loaded object with the 32-bit one's, pointers canonicalised) |
+| 3b | **Render methods and EAGLAnim data**: `RenderMethod`, the packets, the anim banks and delta data, skeletons. **Done 15 October 2026** (7.7) | M | same |
 | 4 | **CARP**: `UData`/`UGroup`/`TagReference` decoding, the payload records (`AIElement`, `AnimInfo`, `WorldArticle`, ...), the 80 event `Record`s, the vtable constants of the data layer | L | the same digest over each track's resolved CARP |
 | 5 | **realgraph, sound banks and streams, FILESYS and the int handles** (FNTX slots, timbre words, `AddBytes`, stream/filter handles, FILESYS user data, actor ids, address keys) | M | 32-bit asm diff; 64-bit sound traces |
 | 6 | **Memory-only structures**: the 32-bit-only check form (and the generator's), the literal allocation sizes, the `* 4` arrays, the remaining vtable constants, the 66 narrowings - by directory, in two or three agents | L | 32-bit asm diff (nothing may change), checks still all true on 32-bit |

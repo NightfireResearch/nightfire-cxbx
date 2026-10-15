@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../../platform/Ptr32.h"
+
 struct DofInfo {                     // per value: 12 bytes
     float min;
     float range;                     // a step of the delta
@@ -46,7 +48,7 @@ struct AttributeEntry {              // 8 bytes, sorted by id
     uint16_t size;                   // +0x02 bytes
     union {                          // +0x04
         uint32_t value;              // up to four bytes: the value itself
-        const void *pointer;         // more: where it is
+        Ptr32<const void> pointer;   // more: where it is
     };
 };
 static_assert(sizeof(AttributeEntry) == 8, "an attribute entry is 8 bytes");

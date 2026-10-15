@@ -55,9 +55,9 @@ const D3DPixelShaderDef GainParentPSDefinition = {
 };
 
 // XBE_GLOBAL(0x001d4088, 4)
-const void *GainParentVSFunctions[1] = { GainParentVSFunction.data() };
+Ptr32<const void> GainParentVSFunctions[1] = { GainParentVSFunction.data() };
 // XBE_GLOBAL(0x001d408c, 4)
-const uint8_t *GainParentPSDefinitions[1] = {
+Ptr32<const uint8_t> GainParentPSDefinitions[1] = {
     reinterpret_cast<const uint8_t *>(&GainParentPSDefinition),
 };
 // XBE_GLOBAL(0x001d4090, 0xbc)
@@ -90,7 +90,7 @@ const uint32_t GainParentVSDeclaration[7] = {
     D3DVSD_END(),
 };
 // XBE_GLOBAL(0x001d41c4, 0x2c)
-const char *GainParentParamNames[11] = {
+Ptr32<const char> GainParentParamNames[11] = {
     "State", "Texture", "Parameters", "Indices", "ModelViewMatrix", "Gain", "Offset", "Coordinates", "UV", "Colours",
     NULL,
 };

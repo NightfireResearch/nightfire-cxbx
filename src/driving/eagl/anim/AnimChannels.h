@@ -5,6 +5,7 @@
 // AnimChannels.cpp.
 
 #include "FnAnim.h"
+#include "../../platform/Ptr32.h"
 
 struct DeltaCompressedData;
 
@@ -26,7 +27,7 @@ static_assert(offsetof(RawEventData, events) == 8, "the raw events are at +8");
 
 // DeltaLerp and DeltaQuat data: a value set per frame, delta compressed.
 struct DeltaChanData : AnimData {
-    DeltaCompressedData *info;       // +0x04
+    Ptr32<DeltaCompressedData> info; // +0x04
     uint16_t frames;                 // +0x08
     uint16_t index[1];               // +0x0a the output index of each group of four values (a quaternion)
 };
@@ -34,8 +35,8 @@ static_assert(offsetof(DeltaChanData, index) == 0xa, "the DeltaQuat indexes are 
 
 // KeyLerp and KeyQuat data: a value set per key, delta compressed, at the key times.
 struct KeyChanData : AnimData {
-    DeltaCompressedData *info;       // +0x04
-    uint16_t *times;                 // +0x08 [keys - 1]: key k is reached at times[k - 1]
+    Ptr32<DeltaCompressedData> info; // +0x04
+    Ptr32<uint16_t> times;           // +0x08 [keys - 1]: key k is reached at times[k - 1]
     uint16_t keys;                   // +0x0c
     uint16_t index[1];               // +0x0e the output index of each group of four values
 };

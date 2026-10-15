@@ -56,9 +56,9 @@ const D3DPixelShaderDef TextureDofPSDefinition = {
 };
 
 // XBE_GLOBAL(0x001ce950, 4)
-const void *TextureDofVSFunctions[1] = { TextureDofVSFunction.data() };
+Ptr32<const void> TextureDofVSFunctions[1] = { TextureDofVSFunction.data() };
 // XBE_GLOBAL(0x001ce954, 4)
-const uint8_t *TextureDofPSDefinitions[1] = {
+Ptr32<const uint8_t> TextureDofPSDefinitions[1] = {
     reinterpret_cast<const uint8_t *>(&TextureDofPSDefinition),
 };
 // XBE_GLOBAL(0x001ce958, 0xac)
@@ -90,7 +90,7 @@ const uint32_t TextureDofVSDeclaration[7] = {
     D3DVSD_END(),
 };
 // XBE_GLOBAL(0x001cea74, 0x28)
-const char *TextureDofParamNames[10] = {
+Ptr32<const char> TextureDofParamNames[10] = {
     "State", "Texture", "Parameters", "Indices", "MyMatrix", "DOFOffset", "Coordinates", "UV", "Colours", NULL,
 };
 

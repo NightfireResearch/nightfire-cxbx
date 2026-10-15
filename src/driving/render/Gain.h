@@ -56,11 +56,11 @@ extern uint32_t GainColoursGuard;
 
 extern const std::array<uint32_t, 34> GainParentVSFunction;
 extern const D3DPixelShaderDef GainParentPSDefinition;
-extern const void *GainParentVSFunctions[1];
-extern const uint8_t *GainParentPSDefinitions[1];
+extern Ptr32<const void> GainParentVSFunctions[1];
+extern Ptr32<const uint8_t> GainParentPSDefinitions[1];
 extern uint32_t GainParentPackets[47];
 extern const uint32_t GainParentVSDeclaration[7];
-extern const char *GainParentParamNames[11];
+extern Ptr32<const char> GainParentParamNames[11];
 extern EAGL::RenderMethod GainParentMethod;   // the render method the GeoPrim inherits (Gain.cpp)
 
 #endif // DRIVING_RENDER_GAIN_H_
