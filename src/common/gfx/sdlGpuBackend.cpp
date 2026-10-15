@@ -342,20 +342,6 @@ static uint32_t RecordDownload(SDL_GPUTexture *texture, uint32_t width, uint32_t
 static SDL_GPUFence *g_frameFence = NULL;   // the last frame's batch, waited for before the next is submitted
 static bool g_fenceNextFlush = false;
 
-// A fence that has been waited for. SDL 3.2's Metal driver makes a finished command buffer's transfer and uniform
-// buffers reusable only in a later submission, and only while its fence still reads complete; a fence released before
-// then goes back to the pool and is reset for the next command buffer, and the finished one's buffers are never
-// reused - every batch's ring and uploads were new GPU memory, gigabytes a minute. An empty submission first cleans up
-// behind it.
-static void ReleaseFence(SDL_GPUFence *fence) {
-#ifdef __APPLE__
-    SDL_GPUCommandBuffer *cb = SDL_AcquireGPUCommandBuffer(g_device);
-    if (cb != NULL)
-        SDL_SubmitGPUCommandBuffer(cb);
-#endif
-    SDL_ReleaseGPUFence(g_device, fence);
-}
-
 static void Flush(void) {
     if (g_device == NULL)
         return;
@@ -475,7 +461,7 @@ static void Flush(void) {
             SDL_GPUFence *fence = SDL_SubmitGPUCommandBufferAndAcquireFence(cb);
             if (fence != NULL) {
                 SDL_WaitForGPUFences(g_device, true, &fence, 1);
-                ReleaseFence(fence);
+                SDL_ReleaseGPUFence(g_device, fence);
             }
             g_downloaded.resize(g_downloadUsed);
             const uint8_t *mapped = (const uint8_t *)SDL_MapGPUTransferBuffer(g_device, g_downloadTransfer, false);
@@ -488,7 +474,7 @@ static void Flush(void) {
             SDL_GPUFence *fence = SDL_SubmitGPUCommandBufferAndAcquireFence(cb);
             if (g_frameFence != NULL) {
                 SDL_WaitForGPUFences(g_device, true, &g_frameFence, 1);
-                ReleaseFence(g_frameFence);
+                SDL_ReleaseGPUFence(g_device, g_frameFence);
             }
             g_frameFence = fence;
         } else {

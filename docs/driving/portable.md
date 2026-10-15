@@ -97,7 +97,7 @@ Outside src/driving, src/common still uses Win32: `xboxPath.cpp` (module path, `
 are the injected build's own and are not part of a standalone or Linux build.
 
 **SDL3** (`-DNIGHTFIRE_SDL=ON`; the default is off, and off builds exactly as before) is built from source:
-FetchContent of SDL's git repository at the tag `release-3.2.30`, shallow, with SDL's render, GPU, camera, sensor,
+FetchContent of SDL's git repository at the tag `release-3.4.18` (`release-3.2.30` until 15 October 2026: 3.2's Metal driver leaks, macos.md), shallow, with SDL's render, GPU, camera, sensor,
 dialog and tray subsystems off. One source serves MSVC, the mingw cross build and a future Linux `-m32` build alike.
 `NF_SDL3_DIR` takes an installed SDL3 CMake package instead, for a machine without network access. `SDL3.dll` is
 copied beside drivinginject.dll. With the option on:
@@ -168,7 +168,7 @@ loaded from beside the executable. The output folder (build/linux-i386) holds th
 `libSDL3.so.0`, `libdxvk_d3d9.so.0` and FFmpeg's three libraries, found through the executables' run path
 (`$ORIGIN`). Beside them at run time: settings.ini and saves/ as on Windows, and the disc where DiscPath says.
 
-- **SDL3**: the same FetchContent of `release-3.2.30` as on Windows, built here for i386 (`NIGHTFIRE_SDL` is on in
+- **SDL3**: the same FetchContent of `release-3.4.18` as on Windows, built here for i386 (`NIGHTFIRE_SDL` is on in
   the preset; a build without it is refused, the other backends being Win32's).
 - **dxvk-native**: the release tarball `dxvk-native-3.1.1-steamrt-sniper.tar.gz` (15 September 2026), fetched by
   CMake and checked by its SHA-256. It carries i386 libraries (`usr/lib32`) beside the x86-64 ones, built for the

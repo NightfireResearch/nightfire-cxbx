@@ -264,7 +264,7 @@ pthreads, `clock_gettime(CLOCK_MONOTONIC)`, `nanosleep` and POSIX files are the 
 accepted and not applied, as on Linux. APFS is case-insensitive by default; HostPosix's component-by-component
 case matching works either way. Paths are as on Linux.
 
-**SDL3** (3.2.30, FetchContent as today): Cocoa window, CoreAudio output (the voice mixer and the movie stream are
+**SDL3** (3.4.18, FetchContent as today): Cocoa window, CoreAudio output (the voice mixer and the movie stream are
 unchanged), and pads through Apple's GameController framework and HID (Xbox and PlayStation pads over Bluetooth or
 USB). Pads read while the window is in the background need `SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS` (GameController
 delivers background events only when asked) - to confirm on the Mac. The keyboard pad works unchanged; F8/F9 need

@@ -331,7 +331,7 @@ meaning. Two things fail to compile:
 | Piece | 64-bit |
 |---|---|
 | FFmpeg (third_party/ffmpeg-prebuilt) | the committed DLLs are i686 (`--arch=x86`); tools/fmv/build_ffmpeg.sh builds x86-64 ones with `x86_64-w64-mingw32-` and `--arch=x86_64` (and Linux/macOS shared libraries for later) |
-| SDL3 | built from source at release-3.2.30: any architecture |
+| SDL3 | built from source at release-3.4.18: any architecture |
 | Direct3D 9, XAudio2, XInput (Windows) | native x64 DLLs |
 | dxvk-native (Linux) | its main target is x86-64 |
 | xadpcm, the shader translators, FXAA (src/common) | ours; the backend's `uint32_t` addresses are section 3's |
