@@ -44,9 +44,26 @@ namespace {
 
 // The object size of each anim type (a table only the pool reads)
 constexpr uint16_t kBlockSizes[kAnimTypeCount] = {
-    0x14, 0x18, 0x14, 0x1c, 0x2c, 0x14, 0x80, 0x1c, 0x80, 0x5c, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x14, 0x30, 0x40,
-    0x30, 0x30, 0x30,
+    sizeof(FnRawPoseChannel), sizeof(FnRawEventChannel), sizeof(FnRawLinearChannel), sizeof(FnCycle),
+    sizeof(FnEventBlender), sizeof(FnGraft), sizeof(FnPoseBlender), sizeof(FnPoseMirror), sizeof(FnRunBlender),
+    sizeof(FnTurnBlender), sizeof(FnDeltaChan), sizeof(FnDeltaChan), sizeof(FnKeyDeltaChan), sizeof(FnKeyDeltaChan),
+    sizeof(FnPhaseChan), sizeof(FnCompoundChannel), sizeof(FnRawStateChan), sizeof(FnDeltaQ), sizeof(FnDeltaQFast),
+    sizeof(FnDeltaSingleQ), sizeof(FnDeltaF), sizeof(FnDeltaF),
 };
+constexpr bool OriginalBlockSizes() {
+    constexpr uint16_t original[kAnimTypeCount] = {
+        0x14, 0x18, 0x14, 0x1c, 0x2c, 0x14, 0x80, 0x1c, 0x80, 0x5c, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x14, 0x30,
+        0x40, 0x30, 0x30, 0x30,
+    };
+    for (int i = 0; i < kAnimTypeCount; i++)
+        if (kBlockSizes[i] != original[i])
+            return false;
+    return true;
+}
+LAYOUT_32(OriginalBlockSizes(), "the anim objects' sizes");
+
+// A 64-bit host's objects are larger (native pointers), so its pool is too
+constexpr uint32_t kPoolScale = sizeof(void *) / 4;
 
 // The game's vtables, which the objects keep
 #define VtFnAnim ((const void *)Vtable_001a0c6c)
@@ -161,8 +178,8 @@ void AnimPool_ResetPool() {
 
 // FUNC_AT(0x000f7d00)
 void AnimPool_Init(uint32_t size) {
-    Pool.size = size;
-    Pool.base = static_cast<uint8_t *>(EaglMalloc(size, "EAGLAnim Memory Pool"));
+    Pool.size = size * kPoolScale;
+    Pool.base = static_cast<uint8_t *>(EaglMalloc(size * kPoolScale, "EAGLAnim Memory Pool"));
     Pool.cursor = Pool.base;
     memset(Pool.freeBySize, 0, sizeof(Pool.freeBySize));
     memset(Pool.freeByType, 0, sizeof(Pool.freeByType));

@@ -186,7 +186,7 @@ build)
         r "cd $RREPO && CMAKE=\$(ls -d '/c/Program Files/Microsoft Visual Studio/2022/'*/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin | head -1)/cmake.exe && \
            { [ -f build/windows-x64/CMakeCache.txt ] && [ -z '$RUNNER_CMAKE_ARGS' ] || \"\$CMAKE\" --preset windows-x64 $RUNNER_CMAKE_ARGS > /dev/null; } && \
            \"\$CMAKE\" --build build/windows-x64 --config Release --target $targets -- -m -v:m 2>&1 | grep -E ' error |-> '; \
-           mkdir -p Release64 && cp -f build/windows-x64/Release/*.exe build/windows-x64/Release/*.dll build/windows-x64/Release/*.map Release64/"
+           mkdir -p Release64 && cp -f build/windows-x64/Release/*.exe build/windows-x64/Release/*.dll build/windows-x64/Release/*.map Release64/ && cp -f build/windows-x64/Release/*.pdb Release64/ 2>/dev/null; true"
         exit
     fi
     targets=${*:-action actioninject driving drivinginject}

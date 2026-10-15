@@ -17,6 +17,14 @@
 #include <xmmintrin.h>
 #include <emmintrin.h>
 
+// What a method answering a float in ST0 is read as where the caller keeps it unrounded: a double on x86 (ST0 holds
+// whatever the method left there), the float itself on x86-64, which returns it in XMM0.
+#if defined(_M_IX86) || defined(__i386__)
+typedef double X87Float;
+#else
+typedef float X87Float;
+#endif
+
 // CVTTSS2SI: truncation towards zero; out of range and NaN give 0x80000000.
 inline int Truncate(float f) {
     return _mm_cvtt_ss2si(_mm_set_ss(f));

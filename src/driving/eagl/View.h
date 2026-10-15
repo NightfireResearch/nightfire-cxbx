@@ -104,7 +104,7 @@ struct ViewPort {                        // 0x1a0
 LAYOUT_32(sizeof(ViewPort) == 0x1a0, "a ViewPort is 0x1a0 bytes");
 
 inline ViewPort* ViewPortPrivate::Object() {
-    return reinterpret_cast<ViewPort *>(reinterpret_cast<uint8_t *>(this) - 0x10);
+    return reinterpret_cast<ViewPort *>(reinterpret_cast<uint8_t *>(this) - offsetof(ViewPort, viewport));
 }
 
 struct TextureRenderContextExtension;
@@ -166,9 +166,10 @@ struct TextureRenderContextExtension {
 struct TextureRenderContextPrivate {
     TextureRenderContext *owner;
 
-    // The object this is the private part of: the one 4 bytes below, as the constructor addresses it
+    // The object this is the private part of: the one 4 bytes below (on 32-bit), as the constructor addresses it
     TextureRenderContext* Object() {
-        return reinterpret_cast<TextureRenderContext *>(reinterpret_cast<uint8_t *>(this) - 4);
+        return reinterpret_cast<TextureRenderContext *>(reinterpret_cast<uint8_t *>(this) -
+                                                        offsetof(TextureRenderContext, privateOwner));
     }
 
     TextureRenderContextPrivate* Construct(TextureRenderContext *context);   // 0x000f3790
@@ -227,8 +228,8 @@ struct DeviceExtension {
 
 // EAGLInternal::DevicePrivate, at Device +0x04. The setters keep the current contexts in globals.
 struct DevicePrivate {
-    // The Device this is the private part of: the one 4 bytes below
-    Device* Object() { return reinterpret_cast<Device *>(reinterpret_cast<uint8_t *>(this) - 4); }
+    // The Device this is the private part of: the one 4 bytes below (on 32-bit)
+    Device* Object() { return reinterpret_cast<Device *>(reinterpret_cast<uint8_t *>(this) - offsetof(Device, privatePart)); }
 
     DevicePrivate* Construct();                                              // 0x000e5080 (invented; no callers)
     void Destruct();                                                         // 0x000e5090 (empty; no callers)

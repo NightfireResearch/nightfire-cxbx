@@ -17,6 +17,7 @@
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../data/Tree.h"               // Tree, TreeNode, TreePair
 #include "../../common/xbeClass.h"      // LAYOUT_32
+#include "../platform/MethodPointer.h"
 
 class RParticleSystem;
 struct RParticleCreatorVtable;
@@ -152,8 +153,8 @@ LAYOUT_32(offsetof(RParticleLibrary::RPartLibraryData, count) == 0xb000 &&
 
 // RParticleSystem's vtable (RMovableParticleSystem's, 0x00192da8)
 struct RParticleSystemVtable {
-    RParticleSystem *(__fastcall *destroy)(RParticleSystem *system, int, unsigned flags);   // slot 0
-    void (__fastcall *update)(RParticleSystem *system, int, int ticks);                      // slot 1
+    RParticleSystem *(METHOD_CALL *destroy)(RParticleSystem *system, METHOD_EDX unsigned flags);   // slot 0
+    void (METHOD_CALL *update)(RParticleSystem *system, METHOD_EDX int ticks);                      // slot 1
 };
 
 // RParticleSystem::systemFlags
@@ -214,7 +215,7 @@ LAYOUT_32(offsetof(RParticleSystem, axis) == 0x10 && offsetof(RParticleSystem, k
 
 // RParticleSystem::RParticleCreator's vtable (0x00193c64)
 struct RParticleCreatorVtable {
-    RParticleSystem *(__fastcall *create)(RParticleSystem::RParticleCreator *creator, int, float unknown34,
+    RParticleSystem *(METHOD_CALL *create)(RParticleSystem::RParticleCreator *creator, METHOD_EDX float unknown34,
                                           RParticleEmitter *emitter);
 };
 extern const RParticleCreatorVtable ParticleCreatorVtable;

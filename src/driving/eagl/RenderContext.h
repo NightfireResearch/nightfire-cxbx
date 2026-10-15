@@ -10,6 +10,7 @@
 // methods are called with the object's address and reach the fields through that first word. The viewport-list
 // methods (0x000ee010..0x000ee160) are View.cpp's.
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "../gfx/D3D8.h"
@@ -261,8 +262,10 @@ struct RenderContextExtension {
 struct RenderContextPrivate {
     RenderContext *owner;                // +0x00 (object +0x004)
 
-    // The object this is the private part of: the one 4 bytes below, as the constructor addresses it
-    RenderContext* Object() { return reinterpret_cast<RenderContext *>(reinterpret_cast<uint8_t *>(this) - 4); }
+    // The object this is the private part of: the one 4 bytes below (on 32-bit), as the constructor addresses it
+    RenderContext* Object() {
+        return reinterpret_cast<RenderContext *>(reinterpret_cast<uint8_t *>(this) - offsetof(RenderContext, privateOwner));
+    }
 
     RenderContextPrivate* Construct(RenderContext *owner);                   // 0x000e86f0 (unreferenced)
     void SetCurrentViewPort(ViewPort *viewPort);                             // 0x000ee090

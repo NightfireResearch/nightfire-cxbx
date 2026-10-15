@@ -191,7 +191,7 @@ public:
     void GetTransform(MATRIX4 *transform);                                                      // 0x0008dc60
     void GetPosition(Coord3 *position);                                                         // 0x0008dc90
     void SetTransform(const MATRIX4 *transform);    // only without physics                     // 0x0008dcb0
-    float GetRenderOffset();            // vtable slot 9: none                                  // 0x0008dce0
+    double GetRenderOffset();           // vtable slot 9: none (in ST0, as RVehicle's)          // 0x0008dce0
     // vtable slot 14: follows the physics, refiles the object and relights it
     void UpdatePosition(bool update);                                                           // 0x0008f270
     void SetPhysics(PhysicsObject *physics);                                                    // 0x0008f580

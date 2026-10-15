@@ -53,7 +53,7 @@ void InitWeaponDefinitions(void) {
 void DestroyNodeList(NodeList *list, NodeListErase erase, uint32_t nodeSize) {
     void *after;
     void **head = list->head;
-    erase(list, 0, &after, head != NULL ? *head : NULL, head);
+    erase(list, METHOD_EDX_ARG &after, head != NULL ? *head : NULL, head);
     if (list->head != NULL)
         UMemory::FastFree(list->head, nodeSize);
     list->head = NULL;

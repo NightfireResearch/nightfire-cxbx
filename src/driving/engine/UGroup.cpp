@@ -99,15 +99,15 @@ UData* UGroup::DataLocateTag(uint32_t tag) {
 
 // The processor's virtual methods, through its vtable
 static bool StartGroup(UGroup::Processor *processor, UGroup *group) {
-    return processor->vtable->startGroup(processor, 0, group);
+    return processor->vtable->startGroup(processor, METHOD_EDX_ARG group);
 }
 
 static bool ProcessData(UGroup::Processor *processor, UGroup *group, UData *data) {
-    return processor->vtable->processData(processor, 0, group, data);
+    return processor->vtable->processData(processor, METHOD_EDX_ARG group, data);
 }
 
 static void EndGroup(UGroup::Processor *processor, UGroup *group) {
-    processor->vtable->endGroup(processor, 0, group);
+    processor->vtable->endGroup(processor, METHOD_EDX_ARG group);
 }
 
 // The group's data items, then each subgroup the same way; EndGroup for every group StartGroup was asked about.

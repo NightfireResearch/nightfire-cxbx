@@ -172,7 +172,7 @@ static FileSlot *Slots;
 static const int kChunk = 0x2000;   // a sync read or write goes as ops of this size
 
 static int BlockBytes(int numFiles, int numOps) {
-    return (numOps * 3 + 0x17 + numFiles) * 16;
+    return int(numFiles * sizeof(FileSlot) + 2 * sizeof(FsWorker) + numOps * sizeof(FsOp));
 }
 
 // ---- the locked queue (0x0014a540..0x0014aa0f)
@@ -661,7 +661,7 @@ bool FILESYS_initadr(int numFiles, int cdBuffer, int numOps, void *block) {
         FILEDEV_init(files, (FileSlot *)block);
         Q_init(&FreeOps, NULL, 0);
         Q_init(&BigFiles, NULL, 0);
-        FsWorkers = (FsWorker *)((uint8_t *)block + files * 16);
+        FsWorkers = (FsWorker *)((uint8_t *)block + files * sizeof(FileSlot));
         FsOp *op = OpRecords = (FsOp *)((uint8_t *)FsWorkers + 2 * sizeof(FsWorker));
         for (int i = 0; i < ops; i++, op++)
             Q_pushfront(&FreeOps, op);

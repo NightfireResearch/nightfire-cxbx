@@ -56,10 +56,12 @@ constexpr int kForcedSimpleBodies = 96;
 constexpr float kBigExplosionForce = 500.0f;            // a bigger explosion may take the forced bodies
 constexpr float kTrackedInstanceRange = 100.0f;
 constexpr float kTrackedInstanceStep = 16.0f;           // StepCheckHitWorld's step (not read)
-constexpr uint32_t kRigidBodyBytes = 0x2000;            // the pool: 64 RigidBodies, 96 SimpleRigidBodies, then infos
-constexpr uint32_t kSimpleBodyBytes = 0x1800;
+// The pool: 64 RigidBodies, 96 SimpleRigidBodies, then 64 infos
+constexpr uint32_t kRigidBodyBytes = 0x40 * sizeof(RigidBody);
+constexpr uint32_t kSimpleBodyBytes = 0x60 * sizeof(SimpleRigidBody);
 constexpr uint32_t kScratchPadSize = 0x3800;
-constexpr uint32_t kBodyPoolSize = 0x17800;
+constexpr uint32_t kBodyPoolSize = kRigidBodyBytes + kSimpleBodyBytes + 0x40 * sizeof(RigidBodyInfo);
+LAYOUT_32(kRigidBodyBytes == 0x2000 && kSimpleBodyBytes == 0x1800 && kBodyPoolSize == 0x17800, "the body pool");
 
 const char kStlName[] = "STL";
 

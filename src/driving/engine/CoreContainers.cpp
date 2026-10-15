@@ -22,7 +22,7 @@
 
 static const Crt::ElementFn kLightningSegmentDestructor =
     reinterpret_cast<Crt::ElementFn>(XbeAddress(&RLightningSegment::Destruct));
-static const uint32_t kLightningSegmentBytes = 0x18;
+static const uint32_t kLightningSegmentBytes = sizeof(RLightningSegment);
 
 template <class Value>
 using InsertFn = GameTreeNode<Value> **(__fastcall *)(GameTree<Value> *, int, GameTreeNode<Value> **, bool,

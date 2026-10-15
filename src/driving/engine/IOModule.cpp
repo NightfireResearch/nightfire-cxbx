@@ -304,7 +304,7 @@ void IOModule::ReleaseDevices() {
     for (int i = 0; i < numControllers; i++) {
         if (InputToAction *mapping = inputActionMappings[i]) {
             mapping->Destruct();
-            UMemory::FastFree(mapping, 0x10);
+            UMemory::FastFree(mapping, sizeof(InputToAction));
             inputActionMappings[i] = nullptr;
         }
         if (XBoxPadDevice *device = padDevices[i]) {

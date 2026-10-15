@@ -100,7 +100,7 @@ void SymbolPool::Insert(const char *name, SymbolEntry *entry) {
 // AUTOINJECT
 void* SymbolPool::AddSymbol(const char *name, void *value) {
     size_t n = strlen(name);
-    SymbolEntry *entry = (SymbolEntry *)EaglMalloc(n + 5, "EAGL::SymbolEntry");
+    SymbolEntry *entry = (SymbolEntry *)EaglMalloc(offsetof(SymbolEntry, name) + n + 1, "EAGL::SymbolEntry");
     entry->value = value;
     memcpy(entry->name, name, n + 1);
     Insert(name, entry);
@@ -116,7 +116,7 @@ void SymbolPool::RemoveSymbol(const char *name) {
     for (uint32_t probes = 0;; probes++) {
         SymbolEntry *e = table[i];
         if (e != NULL && strcmp(name, e->name) == 0) {
-            EaglFree(e, strlen(e->name) + 5);
+            EaglFree(e, offsetof(SymbolEntry, name) + strlen(e->name) + 1);
             table[i] = NULL;
             count--;
             return;
@@ -167,7 +167,7 @@ void SymbolPool::Empty() {
         for (uint32_t i = 0; i < size; i++) {
             SymbolEntry *e = table[i];
             if (e != NULL)
-                EaglFree(e, strlen(e->name) + 5);
+                EaglFree(e, offsetof(SymbolEntry, name) + strlen(e->name) + 1);
             table[i] = NULL;
         }
     }

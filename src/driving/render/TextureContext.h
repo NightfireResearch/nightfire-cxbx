@@ -19,6 +19,7 @@
 #include "../engine/URefCounter.h"        // RefCounterTree, TextureContextRefCounter
 #include "../engine/USingleton.h"         // USingletonVtable
 #include "../../common/xbeClass.h"        // LAYOUT_32
+#include "../platform/MethodPointer.h"
 
 class RTextureContext;
 
@@ -71,7 +72,7 @@ LAYOUT_32(sizeof(RTexList) == 0xc, "RTexList is a map");
 
 struct RTextureContextVtable {            // 0x0019219c
     void *nameLookup;
-    RTextureContext *(__fastcall *deleteObject)(RTextureContext *context, int, unsigned flags);
+    RTextureContext *(METHOD_CALL *deleteObject)(RTextureContext *context, METHOD_EDX unsigned flags);
 };
 
 class RTextureContext {

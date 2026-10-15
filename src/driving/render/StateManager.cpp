@@ -7,6 +7,7 @@
 #include "../platform/RealPrint.h"        // MEM_copy, MEM_fill
 #include "../world/SoundMap.h"            // BuyMapHead
 #include "../platform/CRuntime.h"
+#include "../platform/MethodPointer.h"
 
 #include <string.h>
 
@@ -29,7 +30,7 @@ static const USingletonVtable *const kSingletonVtable = (const USingletonVtable 
 static const void *const kNamespaceBaseVtable = (const void *)Vtable_0018f8f8;    // the namespace base class's
 static const void *const kStateNamespaceVtable = (const void *)Vtable_0019212c;
 
-typedef void *(__fastcall *DeletingDestructor)(void *object, int, unsigned flags);
+typedef void *(METHOD_CALL *DeletingDestructor)(void *object, METHOD_EDX unsigned flags);
 
 // ---- the default state's settings, and the values the handlers use
 
@@ -482,7 +483,7 @@ RStateManager* RStateManager::Delete(unsigned flags) {
 void RStateManager::Kill() {
     RStateManager *manager = TheStateManager;
     if (manager != NULL)
-        reinterpret_cast<DeletingDestructor>(manager->vtable->slot0)(manager, 0, 1);
+        reinterpret_cast<DeletingDestructor>(manager->vtable->slot0)(manager, METHOD_EDX_ARG 1);
 }
 
 // =============================================================================================================

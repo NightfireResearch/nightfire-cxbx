@@ -114,7 +114,7 @@ struct StateRefIterator {
 struct RStateNamespace {
     const void *vtable;
 
-    RStateManager *Owner() { return reinterpret_cast<RStateManager *>(reinterpret_cast<uint8_t *>(this) - 4); }
+    RStateManager *Owner();   // the manager, 4 bytes below (on 32-bit)
 
     // The state of `name`; *size the state's 0x4c bytes.
     void* NameLookup(const char *name, int *size);                                                  // 0x00092f30
@@ -146,6 +146,10 @@ public:
 };
 LAYOUT_32(sizeof(RStateManager) == 0x14, "RStateManager is 0x14 bytes");
 LAYOUT_32(offsetof(RStateManager, symbols) == 4 && offsetof(RStateManager, lookup) == 0x10, "RStateManager layout");
+
+inline RStateManager *RStateNamespace::Owner() {
+    return reinterpret_cast<RStateManager *>(reinterpret_cast<uint8_t *>(this) - offsetof(RStateManager, symbols));
+}
 
 // The singleton (made by its USingleton Init, 0x0008b5b0..0x0008bf30)
 extern RStateManager *TheStateManager;

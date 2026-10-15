@@ -442,7 +442,7 @@ static void DeleteSystems(ParticleMap *systems) {
         node = TreeNext(node);
         RParticleSystem *system = erased->value.system;
         if (system != NULL)
-            system->vtable->destroy(system, 0, 1);
+            system->vtable->destroy(system, METHOD_EDX_ARG 1);
         TreeNode *ignored;
         systems->EraseAt(&ignored, erased);
     }
@@ -518,7 +518,7 @@ RParticleSystem** RParticleSystemManager::AddOrRefresh(uint32_t key, RParticleEm
     systems->Find(&found, &key);
     RParticleSystem *system;
     if (found == systems->head) {
-        system = creator->vtable->create(creator, 0, unknown34, emitter);
+        system = creator->vtable->create(creator, METHOD_EDX_ARG unknown34, emitter);
         TreePair value;
         value.tag = key;
         value.system = system;
@@ -550,9 +550,9 @@ void RParticleSystemManager::UpdateSpawnAllSystems() {
         reinterpret_cast<PhysicsObjIterator *>(&next)->Inc();
         RParticleSystem *system = node->value.system;
         if (--system->keepAlive > 0) {
-            system->vtable->update(system, 0, ticks);
+            system->vtable->update(system, METHOD_EDX_ARG ticks);
         } else {
-            system->vtable->destroy(system, 0, 1);
+            system->vtable->destroy(system, METHOD_EDX_ARG 1);
             TreeNode *ignored;
             systems->EraseAt(&ignored, node);
         }

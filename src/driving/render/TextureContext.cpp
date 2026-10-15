@@ -25,7 +25,7 @@ static const RTextureContextVtable *const kTextureContextVtable = (const RTextur
 static const USingletonVtable *const kManagerVtable = (const USingletonVtable *)Vtable_RTextureContextManager;
 static const USingletonVtable *const kSingletonVtable = (const USingletonVtable *)Vtable_0018beb0;   // USingleton's
 
-typedef void *(__fastcall *DeletingDestructor)(void *object, int, unsigned flags);
+typedef void *(METHOD_CALL *DeletingDestructor)(void *object, METHOD_EDX unsigned flags);
 
 // The shared context's stand-in for a shape not found, and the reference that is never reported
 constexpr uint32_t kMissingShape = 0x7373696d;   // 'miss'
@@ -382,7 +382,7 @@ void RTextureContextManager::Destruct() {
     ContextsAdded = 0;
     for (TextureContextNode *node = map->head->left; node != map->head; node = RenderTree::Next(node)) {
         if (TextureContextRefCounter::Get()->RemoveReference(node->value.context) && node->value.context != NULL)
-            node->value.context->vtable->deleteObject(node->value.context, 0, 1);
+            node->value.context->vtable->deleteObject(node->value.context, METHOD_EDX_ARG 1);
     }
     if (map != NULL) {
         TextureContextNode *after;
@@ -408,7 +408,7 @@ RTextureContextManager* RTextureContextManager::Delete(unsigned flags) {
 void RTextureContextManager::Kill() {
     RTextureContextManager *manager = TheTextureContextManager;
     if (manager != NULL)
-        reinterpret_cast<DeletingDestructor>(manager->vtable->slot0)(manager, 0, 1);
+        reinterpret_cast<DeletingDestructor>(manager->vtable->slot0)(manager, METHOD_EDX_ARG 1);
 }
 
 // FUNC_AT(0x00093fb0)

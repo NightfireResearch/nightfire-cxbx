@@ -80,9 +80,9 @@ constexpr uint8_t kInitialBrightness = 100;
 constexpr uint8_t kStimulusDamage = 0x12;       // TriggerFX kFXDamage's (the name is ours)
 constexpr int kStimulusMode = 2;
 constexpr uint32_t kEffectDecayTicks = 600;
-constexpr uint32_t kHandleSize = 0x40;
-constexpr uint32_t kCarpFileSize = 0x38;
-constexpr uint32_t kTargetableSize = 0x50;
+constexpr uint32_t kHandleSize = sizeof(Handle);
+constexpr uint32_t kCarpFileSize = sizeof(RCARPFile);
+constexpr uint32_t kTargetableSize = sizeof(WTargetable);
 constexpr uint32_t kDimensionMask = 0x3ff;
 constexpr uint32_t kDimensionsSeparate = 0x80000000;
 constexpr int kDimensionCoarseShift = 30;
@@ -743,8 +743,8 @@ void RSceneObj::SetTransform(const MATRIX4 *transform) {
 }
 
 // FUNC_AT(0x0008dce0)
-float RSceneObj::GetRenderOffset() {
-    return 0.0f;
+double RSceneObj::GetRenderOffset() {
+    return 0.0;
 }
 
 // FUNC_AT(0x0008f270)

@@ -144,8 +144,8 @@ namespace {
 
 void **const kHudViewVtable = Vtable_0019ff84;     // GOrthoHudView
 void **const kHudVtable = Vtable_001a06c0;
-constexpr uint32_t kActionQueueSize = 0x974;
-constexpr uint32_t kGallerySize = 0xc0;
+constexpr uint32_t kActionQueueSize = sizeof(ActionQueue);
+constexpr uint32_t kGallerySize = sizeof(GGallery);
 constexpr int kPuppetKind = 3;
 
 // GLocale::GetLanguage's answers with their own trigger puppets (names after the puppets')

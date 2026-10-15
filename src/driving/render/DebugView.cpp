@@ -17,6 +17,7 @@
 #include "Materials.h"
 #include "Renderer.h"
 #include "RSceneObj.hpp"           // RandomSeed, RandomMultiplier
+#include "../platform/X87.h"           // X87Float
 
 // ---------------------------------------------------------------------------------------------------------------
 // RRandom::StartUp and the debug views (0x0008b2b0..0x0008b5b0), ported from the listing. The camera assignment
@@ -58,7 +59,7 @@ constexpr uint32_t kRandomStep = 0xffffcd15;
 constexpr uint32_t kRandomMultiplier = 123456789;
 
 // PBondCar::GetCarSpeed (vtable slot 20), its result unrounded
-typedef double (PVehicle::*GetCarSpeedMethod)();
+typedef X87Float (PVehicle::*GetCarSpeedMethod)();
 
 }  // namespace
 

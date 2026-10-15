@@ -29,6 +29,7 @@
 #include "../audio/Voice.h"                // AVoiceMap
 #include "../data/AttributeContainers.h"   // ExtensionClassMap
 #include "../data/Carp.h"                  // CARP::ResolverMap
+#include "../platform/MethodPointer.h"
 
 // XBE_GLOBAL(0x00239a70, 0x4)
 WCollisionMgr *fgCollisionMgr;
@@ -48,12 +49,12 @@ WCollisionMgr *fgCollisionMgr;
 // They are the attribute system's, the voice map's and CARP::ResolverMap::Find's (of their own node types; one warns
 // as provisional), called here on this file's.
 #define WindowMap_Buyhead (reinterpret_cast<WindowMapNode *(*)()>(ExtensionClassMap::BuyHead))
-#define WindowMap_Lrotate (reinterpret_cast<void (__fastcall *)(WindowMap *, int, WindowMapNode *node)>(XbeAddress(&AVoiceMap::Lrotate)))
-#define WindowMap_Rrotate (reinterpret_cast<void (__fastcall *)(WindowMap *, int, WindowMapNode *node)>(XbeAddress(&ExtensionClassMap::Rrotate)))
+#define WindowMap_Lrotate (reinterpret_cast<void (METHOD_CALL *)(WindowMap *, METHOD_EDX WindowMapNode *node)>(XbeAddress(&AVoiceMap::Lrotate)))
+#define WindowMap_Rrotate (reinterpret_cast<void (METHOD_CALL *)(WindowMap *, METHOD_EDX WindowMapNode *node)>(XbeAddress(&ExtensionClassMap::Rrotate)))
 #define WindowMap_Increment (reinterpret_cast<void (__fastcall *)(WindowMapNode **it, int)>(XbeAddress(&ExtensionClassMap::Iterator::Inc)))
 #define WindowMap_Decrement (reinterpret_cast<void (__fastcall *)(WindowMapNode **it, int)>(XbeAddress(&AVoiceMap::Iterator::Dec)))
 #define WindowMap_Max (reinterpret_cast<WindowMapNode *(*)(WindowMapNode *node)>(AVoiceMapMax))
-#define ArticleMap_Find (reinterpret_cast<ArticleMapNode **(__fastcall *)(ArticleMap *, int, ArticleMapNode **result, WCollisionInstance *const *key)>(XbeAddress(&CARP::ResolverMap::Find)))
+#define ArticleMap_Find (reinterpret_cast<ArticleMapNode **(METHOD_CALL *)(ArticleMap *, METHOD_EDX ArticleMapNode **result, WCollisionInstance *const *key)>(XbeAddress(&CARP::ResolverMap::Find)))
 
 namespace {
 
@@ -212,7 +213,7 @@ bool WCollisionMgr::SetCollisionArticle(CARP::Instance *renderInstance, uint32_t
 
     // the first change of an instance remembers its own article, for Restart
     ArticleMapNode *found;
-    ArticleMap_Find(&articles, 0, &found, &instance);
+    ArticleMap_Find(&articles, METHOD_EDX_ARG &found, &instance);
     if (found == articles.head) {
         ArticleMapValue original = {instance, instance->article};
         ArticleMapInsert inserted;
@@ -881,11 +882,11 @@ WindowMapNode** WindowMap::Insert(WindowMapNode **result, bool addLeft, WindowMa
             } else {
                 if (x == parent->right) {
                     x = parent;
-                    WindowMap_Lrotate(this, 0, x);
+                    WindowMap_Lrotate(this, METHOD_EDX_ARG x);
                 }
                 x->parent->color = kTreeBlack;
                 x->parent->parent->color = kTreeRed;
-                WindowMap_Rrotate(this, 0, x->parent->parent);
+                WindowMap_Rrotate(this, METHOD_EDX_ARG x->parent->parent);
             }
         } else {
             WindowMapNode *uncle = grandparent->left;
@@ -897,11 +898,11 @@ WindowMapNode** WindowMap::Insert(WindowMapNode **result, bool addLeft, WindowMa
             } else {
                 if (x == parent->left) {
                     x = parent;
-                    WindowMap_Rrotate(this, 0, x);
+                    WindowMap_Rrotate(this, METHOD_EDX_ARG x);
                 }
                 x->parent->color = kTreeBlack;
                 x->parent->parent->color = kTreeRed;
-                WindowMap_Lrotate(this, 0, x->parent->parent);
+                WindowMap_Lrotate(this, METHOD_EDX_ARG x->parent->parent);
             }
         }
     }
@@ -980,7 +981,7 @@ WindowMapNode** WindowMap::EraseAt(WindowMapNode **result, WindowMapNode *where)
                 if (pnode->color == kTreeRed) {
                     pnode->color = kTreeBlack;
                     fixparent->color = kTreeRed;
-                    WindowMap_Lrotate(this, 0, fixparent);
+                    WindowMap_Lrotate(this, METHOD_EDX_ARG fixparent);
                     pnode = fixparent->right;
                 }
                 if (pnode->isNil)
@@ -992,20 +993,20 @@ WindowMapNode** WindowMap::EraseAt(WindowMapNode **result, WindowMapNode *where)
                 if (pnode->right->color == kTreeBlack) {
                     pnode->left->color = kTreeBlack;
                     pnode->color = kTreeRed;
-                    WindowMap_Rrotate(this, 0, pnode);
+                    WindowMap_Rrotate(this, METHOD_EDX_ARG pnode);
                     pnode = fixparent->right;
                 }
                 pnode->color = fixparent->color;
                 fixparent->color = kTreeBlack;
                 pnode->right->color = kTreeBlack;
-                WindowMap_Lrotate(this, 0, fixparent);
+                WindowMap_Lrotate(this, METHOD_EDX_ARG fixparent);
                 break;
             } else {
                 pnode = fixparent->left;
                 if (pnode->color == kTreeRed) {
                     pnode->color = kTreeBlack;
                     fixparent->color = kTreeRed;
-                    WindowMap_Rrotate(this, 0, fixparent);
+                    WindowMap_Rrotate(this, METHOD_EDX_ARG fixparent);
                     pnode = fixparent->left;
                 }
                 if (pnode->isNil)
@@ -1017,13 +1018,13 @@ WindowMapNode** WindowMap::EraseAt(WindowMapNode **result, WindowMapNode *where)
                 if (pnode->left->color == kTreeBlack) {
                     pnode->right->color = kTreeBlack;
                     pnode->color = kTreeRed;
-                    WindowMap_Lrotate(this, 0, pnode);
+                    WindowMap_Lrotate(this, METHOD_EDX_ARG pnode);
                     pnode = fixparent->left;
                 }
                 pnode->color = fixparent->color;
                 fixparent->color = kTreeBlack;
                 pnode->left->color = kTreeBlack;
-                WindowMap_Rrotate(this, 0, fixparent);
+                WindowMap_Rrotate(this, METHOD_EDX_ARG fixparent);
                 break;
             }
         }

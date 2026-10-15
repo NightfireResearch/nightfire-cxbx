@@ -40,6 +40,7 @@
 #include "../render/TimeData.h"             // GameTick
 #include "../world/World.h"                 // WorldArticle
 #include "../platform/CRuntime.h"
+#include "../platform/MethodPointer.h"
 
 // XBE_GLOBAL(0x001f2a50, 0x200)
 alignas(16) VehicleSharedBuffers VehicleBuffers;
@@ -174,9 +175,9 @@ DamageZone *GetDamageZones(PhysicsObject *object, uint32_t *count) {
 
 // The particles' scalar deleting destructor, their vtable's slot 0
 void DeleteParticles(RVehicleParticle *particles) {
-    typedef void *(__fastcall *DeleteFn)(RVehicleParticle *, int, unsigned flags);
+    typedef void *(METHOD_CALL *DeleteFn)(RVehicleParticle *, METHOD_EDX unsigned flags);
     DeleteFn deleteParticles = reinterpret_cast<DeleteFn>((*reinterpret_cast<void ***>(particles))[0]);
-    deleteParticles(particles, 0, 1);
+    deleteParticles(particles, METHOD_EDX_ARG 1);
 }
 
 // The mode the player's first camera is in

@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "../data/UData.h"   // UData
+#include "../platform/MethodPointer.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // UGroup: a data group, the container format of the game's data files (CARP level data .crp, galleries .gal,
@@ -31,9 +32,9 @@ public:
     // The callbacks of ProcessBreadthFirst: the game's object, its vtable's first three slots.
     struct Processor;
     struct ProcessorVtable {
-        bool (__fastcall *startGroup)(Processor *processor, int, UGroup *group);   // false: skip the group
-        bool (__fastcall *processData)(Processor *processor, int, UGroup *group, UData *data);   // false: stop
-        void (__fastcall *endGroup)(Processor *processor, int, UGroup *group);
+        bool (METHOD_CALL *startGroup)(Processor *processor, METHOD_EDX UGroup *group);   // false: skip the group
+        bool (METHOD_CALL *processData)(Processor *processor, METHOD_EDX UGroup *group, UData *data);   // false: stop
+        void (METHOD_CALL *endGroup)(Processor *processor, METHOD_EDX UGroup *group);
     };
     struct Processor {
         const ProcessorVtable *vtable;

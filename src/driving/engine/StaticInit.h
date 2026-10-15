@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "../game/WeaponManager.h"    // WeaponRecord
+#include "../platform/MethodPointer.h"
 
 // The driving engine's C++ static initialisers: the constructors of its global objects and the globals computed
 // at startup. The XBE lists them in the C++ initialiser table (0x001b3db0), which the C runtime's _cinit walked;
@@ -31,7 +32,7 @@ struct NodeList {
 };
 
 // The list's erase(first, last), returning the iterator after the range through `result` (__thiscall).
-typedef void (__fastcall *NodeListErase)(NodeList *list, int, void **result, void *first, void *last);
+typedef void (METHOD_CALL *NodeListErase)(NodeList *list, METHOD_EDX void **result, void *first, void *last);
 
 // A global list's destructor: erase every node, free the head node, clear the head and the size.
 void DestroyNodeList(NodeList *list, NodeListErase erase, uint32_t nodeSize);

@@ -61,9 +61,9 @@ static const uint32_t ZeroStreamPos[2] = { 0, 0 };
 // XBE_GLOBAL(0x001e22c8, 4)
 static const int32_t InitialMbState = 0;
 
-// istrstream's vbtable: the basic_ios at +0x5c
+// istrstream's vbtable: the basic_ios at +0x5c (on 32-bit)
 // XBE_GLOBAL(0x0018bdfc, 8) readonly
-const int IStrStreamVbtable[2] = { 0, 0x5c };
+const int IStrStreamVbtable[2] = { 0, int(offsetof(GameStd::IStrStream, ios)) };
 
 #define LogicErrorVtable ((const void *)Vtable_00189ee4)
 #define LengthErrorVtable ((const void *)Vtable_00189eec)
@@ -200,7 +200,7 @@ void GameStd::BasicIos::Destruct() {
 // FUNC_AT(0x00037af0)
 void GameStd::BasicIos::DestructIstream() {
     DEBUGVAR_UNTESTED("basic_istream<char>::~basic_istream");   // only exception unwinding calls it
-    Istream *stream = (Istream *)((char *)this - 8);
+    Istream *stream = (Istream *)((char *)this - sizeof(Istream));
     stream->Ios()->vtable = IstreamIosVtable;
 }
 
@@ -215,7 +215,7 @@ BasicIos* GameStd::BasicIos::Delete(unsigned flags) {
 // FUNC_AT(0x000384f0)
 void* GameStd::BasicIos::DeleteIstream(unsigned flags) {
     DEBUGVAR_UNTESTED("basic_istream<char> deleting destructor");   // no plain istream is ever made
-    Istream *stream = (Istream *)((char *)this - 8);
+    Istream *stream = (Istream *)((char *)this - sizeof(Istream));
     stream->Ios()->vtable = IstreamIosVtable;
     Destruct();
     if (flags & 1)
@@ -225,7 +225,7 @@ void* GameStd::BasicIos::DeleteIstream(unsigned flags) {
 
 // FUNC_AT(0x00038c40)
 void* GameStd::BasicIos::DeleteIStrStream(unsigned flags) {
-    IStrStream *stream = (IStrStream *)((char *)this - 0x5c);   // the basic_ios is at +0x5c
+    IStrStream *stream = (IStrStream *)((char *)this - offsetof(IStrStream, ios));
     DestructIStrStream();
     Destruct();
     if (flags & 1)

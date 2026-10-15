@@ -84,7 +84,7 @@ constexpr uint32_t kGlFuncAdd = 0x8006;
 
 // A lever's height, the physics object's virtual method; unrounded
 static double LeverHeight(PhysicsObject *physics, int lever) {
-    typedef double (PhysicsObject::*LeverHeightMethod)(int lever);
+    typedef X87Float (PhysicsObject::*LeverHeightMethod)(int lever);
     return (physics->*XbeVirtual<LeverHeightMethod>(physics, kLeverMethod))(lever);
 }
 

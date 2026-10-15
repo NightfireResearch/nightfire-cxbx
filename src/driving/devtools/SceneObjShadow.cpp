@@ -414,7 +414,7 @@ void RunQueries(void *context, bool original) {
     memset(r, 0xa5, sizeof(*r));
     original ? Orig_GetTransform(o, 0, &r->transform) : o->GetTransform(&r->transform);
     original ? Orig_GetPosition(o, 0, &r->position) : o->GetPosition(&r->position);
-    r->renderOffset = original ? Orig_GetRenderOffset(o, 0) : o->GetRenderOffset();
+    r->renderOffset = original ? Orig_GetRenderOffset(o, 0) : float(o->GetRenderOffset());
     r->velocity = uintptr_t(original ? Orig_GetVelocity(o, 0) : o->GetVelocity());
     r->viewDistance = original ? Orig_GetViewDistance(o, 0) : o->GetViewDistance();
     if (o->baseDesc != NULL) {

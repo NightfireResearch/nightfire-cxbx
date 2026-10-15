@@ -504,31 +504,31 @@ void mixc(int count, float gain, const float *in, float *out) {
 // FUNC_AT(0x00144630)
 void MIXI_initunpackmt(void) {
     SndMix.unpackerInit[9] = UnpackMtfInit;      // slot 10
-    SndMix.unpackerSize[9] = 0xd68;
+    SndMix.unpackerSize[9] = sizeof(SND::SFilterMTF);
     SndMix.unpackerInit[11] = UnpackMtpfInit;    // slot 12
-    SndMix.unpackerSize[11] = 0xd74;
+    SndMix.unpackerSize[11] = sizeof(SND::SFilterMTPF);
 }
 
 // EA-XA plain, looping, packet
 // FUNC_AT(0x00144660)
 void MIXI_initunpackxa(void) {
     SndMix.unpackerInit[6] = UnpackXafInit;      // slot 7
-    SndMix.unpackerSize[6] = 0x2c;
-    SndMix.unpackerSize[7] = 0x44;
+    SndMix.unpackerSize[6] = sizeof(SND::SFilterXAF);
+    SndMix.unpackerSize[7] = sizeof(SND::SFilterXALF);
     SndMix.unpackerInit[7] = UnpackXalfInit;     // slot 8
     SndMix.unpackerInit[8] = UnpackXapfInit;     // slot 9
-    SndMix.unpackerSize[8] = 0x38;
+    SndMix.unpackerSize[8] = sizeof(SND::SFilterXAPF);
 }
 
 // PCM16 plain, looping, packet
 // FUNC_AT(0x001446a0)
 void MIXI_initunpack16(void) {
     SndMix.unpackerInit[3] = UnpackfInit;        // slot 4
-    SndMix.unpackerSize[3] = 0x2c;
+    SndMix.unpackerSize[3] = sizeof(SND::SFilterF);
     SndMix.unpackerInit[4] = UnpacklfInit;       // slot 5
-    SndMix.unpackerSize[4] = 0x30;
+    SndMix.unpackerSize[4] = sizeof(SND::SFilterLF);
     SndMix.unpackerInit[5] = UnpackpfInit;       // slot 6
-    SndMix.unpackerSize[5] = 0x34;
+    SndMix.unpackerSize[5] = sizeof(SND::SFilterPF);
 }
 
 // FUNC_AT(0x001446e0)

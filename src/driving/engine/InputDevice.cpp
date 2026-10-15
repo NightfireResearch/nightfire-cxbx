@@ -100,7 +100,7 @@ void InputDevice::Destruct() {
 InputDevice* InputDevice::DeletingDestructor(unsigned int flags) {
     vtable = kInputDeviceVtable;
     if (flags & 1)
-        UMemory::FastFree(this, 0x1c);
+        UMemory::FastFree(this, sizeof(InputDevice));
     return this;
 }
 
@@ -148,7 +148,7 @@ void XBoxPadDevice::Destruct() {
 XBoxPadDevice* XBoxPadDevice::DeletingDestructor(unsigned int flags) {
     Destruct();
     if (flags & 1)
-        UMemory::FastFree(this, 0x56c);
+        UMemory::FastFree(this, sizeof(XBoxPadDevice));
     return this;
 }
 

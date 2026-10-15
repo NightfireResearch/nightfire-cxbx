@@ -170,12 +170,13 @@ static_assert(offsetof(WorldModelInfo, id) == 0x28, "WorldModelInfo::id");
 constexpr int32_t kUntrackedModel = 0x696;
 
 struct WorldModel {
-    UGroup *group;                      // +0x00 the model's CARP data group (RSceneObj::UseArticle's)
+    Ptr32<UGroup> group;                // +0x00 the model's CARP data group (RSceneObj::UseArticle's)
     uint8_t unknown04[8];
-    WorldModelInfo *info;               // +0x0c
+    Ptr32<WorldModelInfo> info;         // +0x0c
     uint8_t unknown10[0x24];
-    const void *pathUserData;           // +0x34 RPathEngine::CreatePathHandle's RPathHandle::userData
+    Ptr32<const void> pathUserData;     // +0x34 RPathEngine::CreatePathHandle's RPathHandle::userData
 };
+static_assert(sizeof(WorldModel) == 0x38, "a WorldModel is 0x38 bytes");
 
 // An article's model for view distances up to `distance` (the last one's beyond it too)
 struct ArticleLod {
@@ -260,14 +261,14 @@ struct WorldSceneObject {
     uint8_t targetable;                 // +0x1c
     uint8_t unknown1d[3];
     float forward[3];                   // +0x20
-    ProcAnimState *procAnim;            // +0x2c
+    Ptr32<ProcAnimState> procAnim;      // +0x2c in the transform's fourth column
     float position[3];                  // +0x30
     float one;                          // +0x3c 1
     uint8_t savedState[0xc];            // +0x40
 
     const MATRIX4 *Transform() const { return reinterpret_cast<const MATRIX4 *>(this); }
 };
-LAYOUT_32(sizeof(WorldSceneObject) == 0x4c, "a world scene object is 0x4c bytes");
+static_assert(sizeof(WorldSceneObject) == 0x4c, "a world scene object is 0x4c bytes");
 LAYOUT_32(offsetof(WorldSceneObject, procAnim) == 0x2c && offsetof(WorldSceneObject, savedState) == 0x40,
           "WorldSceneObject layout");
 

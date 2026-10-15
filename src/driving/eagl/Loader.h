@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include "../../common/xbeClass.h"   // LAYOUT_32
 
-struct SymbolEntry {        // EAGL::SymbolEntry, FILE_malloc'd strlen(name) + 5
+struct SymbolEntry {        // EAGL::SymbolEntry, FILE_malloc'd strlen(name) + 5 (on 32-bit)
     void *value;
     char name[1];
 };

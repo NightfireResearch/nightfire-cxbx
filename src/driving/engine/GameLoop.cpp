@@ -897,7 +897,7 @@ void GameLoop_StartUp(int trafficSeed) {
     ActActorDatabase::StartUp();
     ActManager::StartUp(1.0f / GetFoundationVideoModeRate());
     GLoadingScreen::Status("Init Weapon Manager");
-    SWeaponManager *weapons = static_cast<SWeaponManager *>(OperatorNew(0x180));     // 4 more than its size
+    SWeaponManager *weapons = static_cast<SWeaponManager *>(OperatorNew(sizeof(SWeaponManager) + 4));   // 0x180
     WeaponManager = weapons != NULL ? weapons->Construct() : NULL;
     GLoadingScreen::Status("Init World");
     fgWorld->Open();

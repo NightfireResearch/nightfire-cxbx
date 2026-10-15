@@ -16,6 +16,7 @@
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
 #include "../../helpers.h"
+#include "../platform/MethodPointer.h"
 
 #include <bit>
 #include <string.h>
@@ -33,7 +34,7 @@ RParticulate *fgParticulate;
 
 const USingletonVtable *const kRParticulateVtable = (const USingletonVtable *)Vtable_RParticulate;
 const USingletonVtable *const kUSingletonVtable = (const USingletonVtable *)Vtable_0018beb0;
-typedef RParticulate *(__fastcall *DeletingDestructor)(RParticulate *particulate, int, unsigned flags);
+typedef RParticulate *(METHOD_CALL *DeletingDestructor)(RParticulate *particulate, METHOD_EDX unsigned flags);
 
 constexpr int kPointList = 1;                       // Draw's primitive
 constexpr int kBatch = 512;                         // points a draw
@@ -108,7 +109,7 @@ RParticulate* RParticulate::Delete(unsigned flags) {
 void RParticulate::Kill() {
     RParticulate *particulate = fgParticulate;
     if (particulate != NULL)
-        reinterpret_cast<DeletingDestructor>(particulate->vtable->slot0)(particulate, 0, 1);
+        reinterpret_cast<DeletingDestructor>(particulate->vtable->slot0)(particulate, METHOD_EDX_ARG 1);
 }
 
 // FUNC_AT(0x000a32b0)

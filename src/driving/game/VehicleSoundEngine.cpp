@@ -30,7 +30,7 @@ namespace {
 void **const kAEngineVtable = Vtable_AEngine;
 void **const kARaceEngineVtable = Vtable_ARaceEngine;
 
-enum { kVoiceBytes = 0x58 };
+constexpr uint32_t kVoiceBytes = sizeof(AVoice);
 
 // The bank slots
 enum { kWindBank = 4, kEngineBank = 9 };

@@ -979,7 +979,7 @@ OBB* WCollisionMgr::PopObjectOBB(ObjectList *list, Coord3 *velocity, uint16_t *f
             v3scale(1, velocity, fgSimulation.timeStep, velocity);
         }
     }
-    constexpr uint32_t kOBBSize = 0xb0;
+    constexpr uint32_t kOBBSize = sizeof(OBB);
     void *memory = UMemory::FastAlloc(kOBBSize, "OBB");
     if (memory == NULL)
         return NULL;

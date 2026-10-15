@@ -89,7 +89,7 @@ enum AnimSystemInstanceFlags : uint8_t {
 
 // The scene object's description, as far as SetAnchor reads it: its first word is its group
 struct SceneObjDescFields {
-    UGroup *group;
+    Ptr32<UGroup> group;
 };
 
 } // namespace
@@ -136,7 +136,7 @@ namespace {
 constexpr int32_t kTypeRigidBody = 1;           // PhysicsObject::type: its body is a RigidBody
 constexpr int kBodySlots = 0x40;                // the slots an anchor's body may be in
 constexpr uint32_t kTagCams = 0x43616d73;       // 'Cams'
-constexpr uint32_t kHandleSize = 0x40;          // an RAnimEngine::Handle
+constexpr uint32_t kHandleSize = sizeof(Handle);   // an RAnimEngine::Handle
 constexpr uint32_t kCameraStimulus = 8;         // PlayCurrentAnimation's stimulus
 constexpr float kDefaultFieldOfView = 33.0f;
 constexpr float kMinZoom = 2.0f;

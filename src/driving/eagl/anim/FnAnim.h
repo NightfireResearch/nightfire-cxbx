@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "../../../common/xbeClass.h"   // LAYOUT_32
+#include "../../platform/MethodPointer.h"
 
 #ifndef _MSC_VER
 #ifndef __fastcall
@@ -16,12 +17,12 @@
 #endif
 #endif
 
-// A virtual call through the object's own (game) vtable: thiscall, called as __fastcall with a dummy EDX.
+// A virtual call through the object's own (game) vtable (MethodPointer.h)
 template <typename R, typename... A>
 static inline R AnimVCall(const void *object, int slot, A... args) {
-    typedef R (__fastcall *Method)(const void *, int, A...);
+    typedef R (METHOD_CALL *Method)(const void *, METHOD_EDX A...);
     Method const *vtable = *static_cast<Method const *const *>(object);
-    return vtable[slot](object, 0, args...);
+    return vtable[slot](object, METHOD_EDX_ARG args...);
 }
 
 enum FnAnimSlot {                    // the 15 FnAnim slots; FnAnimMemoryMap adds 15-17

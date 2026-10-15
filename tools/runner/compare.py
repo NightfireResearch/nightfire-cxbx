@@ -64,13 +64,18 @@ def compare_frames(base, new, maxtick):
     return "frames %d vs %d, %d px differ%s" % (len(a), len(b), differ, mismatch), differ == 0 and not mismatch
 
 
+# The stream's memory overhead is the size of the library's records, which hold pointers: it differs between 32-
+# and 64-bit builds, and nothing else in the trace depends on it (docs/driving/64-bit.md)
+OVERHEAD = re.compile(r"(SNDSTRM_overhead\([^)]*\) = |SNDSTRM_create\(.*, mem, )0x[0-9a-f]+")
+
+
 def trace(path, maxtick):
     lines = []
     for line in open(path, encoding="utf-8", errors="replace"):
         tick = line.split(" ", 1)[0]
         if tick.isdigit() and int(tick) > maxtick:
             break
-        lines.append(line.rstrip("\n"))
+        lines.append(OVERHEAD.sub(r"\1<overhead>", line.rstrip("\n")))
     return lines
 
 

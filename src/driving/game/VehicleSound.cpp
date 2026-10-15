@@ -41,7 +41,7 @@ namespace {
 
 void **const kAVehicleVtable = Vtable_AVehicle;
 
-enum { kVoiceBytes = 0x58 };
+constexpr uint32_t kVoiceBytes = sizeof(AVoice);
 
 // The bank slots
 enum { kCommonBank = 0, kVehicleBank = 1, kSmackablesBank = 2 };

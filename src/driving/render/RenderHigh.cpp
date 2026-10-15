@@ -98,9 +98,9 @@ constexpr float kFarPlaneMax = 4000.0f;
 constexpr int kMipmapMin = -128;
 
 // The managers' sizes, as their Init copies allocate them
-constexpr uint32_t kPlayerViewCameraSize = 0x4c;
-constexpr uint32_t kPlayerCameraSize = 0x370;
-constexpr uint32_t kHudViewSize = 0x4c;
+constexpr uint32_t kPlayerViewCameraSize = sizeof(RPlayerViewCamera);
+constexpr uint32_t kPlayerCameraSize = sizeof(RPlayerCamera);
+constexpr uint32_t kHudViewSize = sizeof(RViewCamera);
 constexpr uint32_t kPhysicsNamespaceSize = 4;
 
 } // namespace

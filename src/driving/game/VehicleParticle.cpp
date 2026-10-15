@@ -677,7 +677,7 @@ void RVehicleParticle::Destruct() {
     vtable = kRVehicleParticleVtable;
     for (int i = 0; i < kSystemCount; i++)
         if (systems[i] != NULL)
-            systems[i]->vtable->destroy(systems[i], 0, 1);
+            systems[i]->vtable->destroy(systems[i], METHOD_EDX_ARG 1);
     OperatorDelete(emitters);
     emitters = NULL;
     fgVehicleParticles->EraseKey(this);
@@ -793,7 +793,7 @@ void RVehicleParticle::UpdateAll() {
     for (VehicleParticleNode *node = set->Begin(); node != fgVehicleParticles->End(); node = Next(node))
         for (int i = 0; i < kSystemCount; i++) {
             RParticleSystem *system = node->value->systems[i];
-            system->vtable->update(system, 0, 1);
+            system->vtable->update(system, METHOD_EDX_ARG 1);
         }
 #else
     // Deliberately not the set's order, the objects' addresses, which spawns their particles into the shared cache
@@ -802,14 +802,14 @@ void RVehicleParticle::UpdateAll() {
         for (int n = 0; n < UpdatedCount; n++)
             for (int i = 0; i < kSystemCount; i++) {
                 RParticleSystem *system = UpdatedInOrder[n]->systems[i];
-                system->vtable->update(system, 0, 1);
+                system->vtable->update(system, METHOD_EDX_ARG 1);
             }
     } else {
         for (VehicleParticleNode *node = fgVehicleParticles->Begin(); node != fgVehicleParticles->End();
              node = Next(node))
             for (int i = 0; i < kSystemCount; i++) {
                 RParticleSystem *system = node->value->systems[i];
-                system->vtable->update(system, 0, 1);
+                system->vtable->update(system, METHOD_EDX_ARG 1);
             }
     }
     UpdatedCount = 0;

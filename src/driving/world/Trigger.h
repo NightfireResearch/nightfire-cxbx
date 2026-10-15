@@ -55,11 +55,12 @@ static_assert(sizeof(TriggerEvents) == 0x10, "the events' head is 16 bytes");
 // The data of an EStreamEvent, as far as WTriggerManager::Restart reads it.
 struct StreamEventData {
     uint32_t unknown00;
-    const char *type;           // +0x04 "music", "speech", "nis" (Restart checks those three)
-    const char *name;           // +0x08 the file's, without ".asf"
+    Ptr32<const char> type;     // +0x04 "music", "speech", "nis" (Restart checks those three)
+    Ptr32<const char> name;     // +0x08 the file's, without ".asf"
     uint8_t unknown0c[0xc];
     int32_t preBuffer;          // +0x18
 };
+static_assert(sizeof(StreamEventData) == 0x1c, "a stream event's data is 0x1c bytes");
 
 // A ray shell queued for the trigger test (RayShell's table at 0x001e8570, 0x30 bytes each; RayShell::
 // GetActiveRayShell answers one).

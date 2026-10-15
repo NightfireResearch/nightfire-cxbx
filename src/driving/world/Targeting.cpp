@@ -58,7 +58,7 @@ int32_t TargetableStagger;                      // staggers new targets' first r
 
 namespace {
 
-constexpr int32_t kTargetableBytes = 0x50;
+constexpr int32_t kTargetableBytes = sizeof(WTargetable);
 constexpr float kSightRange = 240.0f;               // UpdateVisibility's
 constexpr float kSightStep = 16.0f;                 // passed to StepCheckHitWorld, which ignores it
 constexpr float kCharacterTargetHeight = 0.2f;      // above a character's position

@@ -43,8 +43,9 @@ struct EventSceneRef {
 
     uint32_t unknown00;
     uint32_t flags;                     // +0x04 Flag
-    RSceneObj *sceneObj;                // +0x08
+    Ptr32<RSceneObj> sceneObj;          // +0x08
 };
+static_assert(sizeof(EventSceneRef) == 0xc, "an EventSceneRef is 12 bytes");
 
 // ---- the mission's settings
 

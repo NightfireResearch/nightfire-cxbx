@@ -31,9 +31,23 @@ using namespace GameStd;
 #define StrStreambufVtable ((const void *const *)Vtable_0018bdc4)
 #define IStrStreamIosVtable ((const void *const *)Vtable_0018bdf8)   // basic_ios inside an istrstream
 #define OstreamIosVtable ((const void *const *)Vtable_001a3228)      // basic_ios inside a basic_ostream
+#if UINTPTR_MAX > 0xffffffffu
+#define OstreamVbtable OstreamVbtableNative
+#else
 #define OstreamVbtable ((const int *)Crt::CLocaleCtype.ostreamVbtable)
+#endif
 #define OStrStreamIosVtable ((const void *const *)Vtable_001a3234)   // basic_ios inside an ostrstream
+#if UINTPTR_MAX > 0xffffffffu
+#define OStrStreamVbtable OStrStreamVbtableNative
+#else
 #define OStrStreamVbtable ((const int *)Crt::CLocaleCtype.ostrstreamVbtable)
+#endif
+#if UINTPTR_MAX > 0xffffffffu
+// A 64-bit host lays the virtual bases out further on, so the streams take vbtables of their own; the class block
+// keeps the original's words, which negative characters read
+static const int OstreamVbtableNative[2] = { 0, int(sizeof(GameStd::Ostream)) };
+static const int OStrStreamVbtableNative[2] = { 0, int(offsetof(GameStd::OStrStream, ios)) };
+#endif
 #define LocimpVtable ((const void *const *)Vtable_001a31c0)
 #define ExceptionVtable ((const void *)Vtable_001a326c)
 #define BadCastVtable ((const void *)Vtable_001a3288)
@@ -757,17 +771,17 @@ void GameStd::BasicIos::DestructOStrStream() {
     stream->Ios()->vtable = OstreamIosVtable;
 }
 
-// The `vbase destructor': entered at the basic_ostream, whose basic_ios it takes to be at +4.
+// The `vbase destructor': entered at the basic_ostream, whose basic_ios it takes to follow it (+4).
 // FUNC_AT(0x00131a06)
 void GameStd::Ostream::DestructAll() {
     Ios()->vtable = OstreamIosVtable;
-    ((BasicIos *)((char *)this + 4))->Destruct();
+    ((BasicIos *)((char *)this + sizeof(Ostream)))->Destruct();
 }
 
 // Entered at the virtual base.
 // FUNC_AT(0x001319e7)
 void* GameStd::BasicIos::DeleteOstream(unsigned flags) {
-    Ostream *stream = (Ostream *)((char *)this - 4);
+    Ostream *stream = (Ostream *)((char *)this - sizeof(Ostream));
     stream->DestructAll();
     if (flags & 1)
         OperatorDelete(stream);

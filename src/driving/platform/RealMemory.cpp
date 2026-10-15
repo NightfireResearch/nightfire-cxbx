@@ -4,6 +4,7 @@
 #include "RealPrint.h"    // MEM_fill, MEM_move
 #include "XboxXapi.h"     // IsBadReadPtr
 
+#include "Ptr32.h"        // the headers' links: 32-bit words in the game window
 #include "Win32Types.h"
 #include <stdint.h>
 #include <string.h>
@@ -47,13 +48,13 @@ enum : uint16_t { MAGIC_USED = 0x424d, MAGIC_FREE = 0x4246, MAGIC_SENTINEL = 0x4
 #define B_FLAGS(b)     (*(uint16_t *)((uint8_t *)(b) + 0x2))
 #define B_FLAGBYTE(b)  (*(uint8_t *)((uint8_t *)(b) + 0x3))
 #define B_SIZE(b)      (*(int32_t *)((uint8_t *)(b) + 0x4))
-#define B_NEXT(b)      (*(uint8_t **)((uint8_t *)(b) + 0x8))
-#define B_PREV(b)      (*(uint8_t **)((uint8_t *)(b) + 0xc))
-#define B_NEXTFREE(b)  (*(uint8_t **)((uint8_t *)(b) + 0x10))
-#define B_PREVFREE(b)  (*(uint8_t **)((uint8_t *)(b) + 0x14))
+#define B_NEXT(b)      (*(Ptr32<uint8_t> *)((uint8_t *)(b) + 0x8))
+#define B_PREV(b)      (*(Ptr32<uint8_t> *)((uint8_t *)(b) + 0xc))
+#define B_NEXTFREE(b)  (*(Ptr32<uint8_t> *)((uint8_t *)(b) + 0x10))
+#define B_PREVFREE(b)  (*(Ptr32<uint8_t> *)((uint8_t *)(b) + 0x14))
 
 // A class record, by its fields
-#define C_FIRST(c)     (*(uint8_t **)((c) + 0x08))
+#define C_FIRST(c)     (*(Ptr32<uint8_t> *)((c) + 0x08))
 #define C_FREELIST(c)  ((c) + 0x10)
 #define C_ALIGN(c)     (*(int32_t *)((c) + 0x28))
 #define C_ALTALIGN(c)  (*(int32_t *)((c) + 0x2c))
@@ -127,7 +128,7 @@ int MEM_tailsize(const char *name, int flags) {
 
 // AUTOINJECT
 size_t MEM_size(void *data) {
-    return *(size_t *)((uint8_t *)data - 0xc);
+    return *(uint32_t *)((uint8_t *)data - 0xc);
 }
 
 // The data of the used block holding a pointer, or NULL: each class's blocks walked up from its low sentinel, a class
@@ -289,7 +290,7 @@ static bool Free(void *data) {
     Lock(cls);
 
     uint8_t *below = B_PREV(block);
-    uint8_t **belowLink = &B_PREV(block);
+    Ptr32<uint8_t> *belowLink = &B_PREV(block);
     uint8_t *above = B_NEXT(block);
     if ((B_FLAGS(below) & 0x4000) != 0) {
         UnlinkFree(below);
@@ -566,7 +567,7 @@ int MEMCLASS_init(unsigned number, const char *name, void *base, int size, int a
             break;
     }
     C_FIRST(cls) = low;
-    *(uint8_t **)(cls + 0xc) = high;
+    *(Ptr32<uint8_t> *)(cls + 0xc) = high;
     B_MAGIC(low) = MAGIC_SENTINEL;
     B_MAGIC(high) = MAGIC_SENTINEL;
     uint8_t *sentinel = C_FREELIST(cls);

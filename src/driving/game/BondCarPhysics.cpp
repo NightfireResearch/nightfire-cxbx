@@ -82,7 +82,7 @@ constexpr uint16_t kLandingImpactUnknown4A = 0x0e;
 constexpr uint8_t kLandingImpactKindB = 7;
 constexpr uint16_t kLandingImpactTag = 1;
 
-constexpr uint32_t kBondCarSize = 0x420;        // sizeof(PBondCar)
+constexpr uint32_t kBondCarSize = sizeof(PBondCar);
 
 constexpr float kUnitsPerTurn = 6.32f;          // the wheels' speed: the body's over steps a second x WHEEL_RADIUS x it
 constexpr float kOneThirtieth = 1.0f / 30.0f;

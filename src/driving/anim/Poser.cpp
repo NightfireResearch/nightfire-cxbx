@@ -49,7 +49,7 @@ static_assert(sizeof(BonePose) == 48, "a pose is 12 floats a bone");
 
 constexpr float kFramesPerSecond = 20.0f;
 constexpr float kSecondsPerFrame = 0.05f;
-constexpr unsigned kAnimGroupSize = 0x20;      // ActAnimGroup, from the pools
+constexpr unsigned kAnimGroupSize = sizeof(ActAnimGroup);   // from the pools
 constexpr float kEventTimeBeforeZero = -0.0001f;
 static_assert(std::bit_cast<uint32_t>(kFramesPerSecond) == 0x41a00000 &&
               std::bit_cast<uint32_t>(kSecondsPerFrame) == 0x3d4ccccd &&
