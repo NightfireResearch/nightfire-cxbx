@@ -116,6 +116,7 @@ add_library(actioninject SHARED
   src/common/gfx/nv2aPixelShader.cpp
   src/common/gfx/nv2aVertexShader.cpp
   src/common/gfx/shaderBuilder.cpp
+  src/common/gfx/shaderSpirv.cpp
   src/common/gfx/devtools/shaderCheck.cpp
   src/common/gfx/devtools/shaderHlsl.cpp
   src/common/gfx/fxaa.cpp
@@ -324,6 +325,28 @@ else()
   target_link_options(driving PRIVATE -Wl,-Map,driving.map)
 endif()
 endif()   # WIN32: the action engine and both loaders
+
+# The driving engine's graphics backend behind the D3D8 seam's D3D9_* entry points (src/common/gfx/d3d9Backend.h):
+# d3d9, Direct3D 9 (Windows' own, or dxvk-native's on Linux), or sdlgpu, SDL3's GPU API (its Vulkan driver on Windows
+# and Linux; Metal on macOS) - src/common/gfx/sdlGpuBackend.cpp, docs/driving/macos.md packages G1 and G2. sdlgpu
+# needs NIGHTFIRE_SDL. The action engine stays on Direct3D 9.
+set(NIGHTFIRE_GFX d3d9 CACHE STRING "Driving engine graphics backend: d3d9 or sdlgpu")
+set_property(CACHE NIGHTFIRE_GFX PROPERTY STRINGS d3d9 sdlgpu)
+if(NIGHTFIRE_GFX STREQUAL "sdlgpu")
+  set(nf_gfx_backend src/common/gfx/sdlGpuBackend.cpp src/common/gfx/fixedFunction.cpp)
+  set(nf_gfx_devtools)
+  set(nf_gfx_host_sources src/common/gfx/sdlGpuBackend.cpp src/common/gfx/fixedFunction.cpp)
+elseif(NIGHTFIRE_GFX STREQUAL "d3d9")
+  set(nf_gfx_backend src/common/gfx/d3d9Backend.cpp)
+  set(nf_gfx_devtools src/common/gfx/devtools/shaderCheck.cpp src/common/gfx/devtools/shaderHlsl.cpp
+                      src/common/gfx/fxaa.cpp src/common/gfx/textureReplace.cpp)
+  set(nf_gfx_host_sources src/common/gfx/d3d9Backend.cpp src/common/gfx/fxaa.cpp src/common/gfx/textureReplace.cpp)
+else()
+  message(FATAL_ERROR "NIGHTFIRE_GFX is d3d9 or sdlgpu, not ${NIGHTFIRE_GFX}")
+endif()
+if(NIGHTFIRE_GFX STREQUAL "sdlgpu")
+  add_compile_definitions(NIGHTFIRE_GFX_SDLGPU)   # the driving targets, all made below
+endif()
 
 set(nf_driving_sources
   src/dllmain.cpp
@@ -710,14 +733,12 @@ set(nf_driving_sources
   src/common/sound/xadpcm.cpp
   src/common/xbeEntrySeam.cpp
   src/common/xbeProfiler.cpp
-  src/common/gfx/d3d9Backend.cpp
+  ${nf_gfx_backend}
   src/common/gfx/nv2aPixelShader.cpp
   src/common/gfx/nv2aVertexShader.cpp
   src/common/gfx/shaderBuilder.cpp
-  src/common/gfx/devtools/shaderCheck.cpp
-  src/common/gfx/devtools/shaderHlsl.cpp
-  src/common/gfx/fxaa.cpp
-  src/common/gfx/textureReplace.cpp
+  src/common/gfx/shaderSpirv.cpp
+  ${nf_gfx_devtools}
 )
 
 if(WIN32)
@@ -751,6 +772,9 @@ if(NIGHTFIRE_SDL)
     foreach(subsystem RENDER GPU CAMERA SENSOR DIALOG TRAY)   # what the game does not use
       set(SDL_${subsystem} OFF CACHE BOOL "" FORCE)
     endforeach()
+    if(NIGHTFIRE_GFX STREQUAL "sdlgpu")
+      set(SDL_GPU ON CACHE BOOL "" FORCE)
+    endif()
     FetchContent_Declare(SDL3
                          GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
                          GIT_TAG release-3.2.30
@@ -770,6 +794,9 @@ elseif(WIN32)
 else()
   message(FATAL_ERROR "A build for ${CMAKE_SYSTEM_NAME} needs NIGHTFIRE_SDL=ON: the other window, input and sound "
                       "output are Win32's")
+endif()
+if(NIGHTFIRE_GFX STREQUAL "sdlgpu" AND NOT NIGHTFIRE_SDL)
+  message(FATAL_ERROR "NIGHTFIRE_GFX=sdlgpu needs NIGHTFIRE_SDL=ON: SDL owns the window the GPU API presents into")
 endif()
 if(WIN32)
 target_sources(drivinginject PRIVATE ${nf_output_sources})
@@ -892,12 +919,11 @@ if(NOT WIN32)
     src/driving/sound/sdlAudioDriving.cpp
     src/common/fmv/Ffmpeg.cpp
     src/common/xboxPath.cpp
-    src/common/gfx/d3d9Backend.cpp
     src/common/gfx/nv2aPixelShader.cpp
     src/common/gfx/nv2aVertexShader.cpp
     src/common/gfx/shaderBuilder.cpp
-    src/common/gfx/fxaa.cpp
-    src/common/gfx/textureReplace.cpp)
+    src/common/gfx/shaderSpirv.cpp
+    ${nf_gfx_host_sources})
 endif()
 
 # The standalone driving engine (docs/driving/standalone.md): our code alone, with no Driving.xbe mapped or read, no
@@ -946,11 +972,18 @@ if(NOT WIN32)
   target_compile_definitions(drivinghost PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_STANDALONE NIGHTFIRE_SDL)
   # Called with the game's 4-byte stack alignment: each function realigns to the 16 Linux libraries expect
   target_compile_options(drivinghost PRIVATE -mstackrealign -include ${CMAKE_SOURCE_DIR}/src/common/linux/msvcNames.h)
-  target_link_libraries(drivinghost PRIVATE SDL3::SDL3 dxvk_d3d9 ${CMAKE_DL_LIBS} Threads::Threads)
+  if(NIGHTFIRE_GFX STREQUAL "sdlgpu")
+    # dxvk's headers only: win32Calls.cpp's Win32 types are its windows.h
+    set(nf_host_d3d9)
+    target_include_directories(drivinghost PRIVATE ${NF_DXVK_DIR}/include/dxvk)
+  else()
+    set(nf_host_d3d9 dxvk_d3d9)
+  endif()
+  target_link_libraries(drivinghost PRIVATE SDL3::SDL3 ${nf_host_d3d9} ${CMAKE_DL_LIBS} Threads::Threads)
   target_link_options(drivinghost PRIVATE -Wl,-Bsymbolic-functions)
   add_custom_command(TARGET drivinghost POST_BUILD   # beside it and the executables
-                     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_SONAME_FILE:SDL3::SDL3> ${NF_DXVK_D3D9}
-                             ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:drivinghost>)
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_SONAME_FILE:SDL3::SDL3>
+                             $<$<STREQUAL:${NIGHTFIRE_GFX},d3d9>:${NF_DXVK_D3D9}> ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:drivinghost>)
 endif()
 add_executable(driving_standalone ${nf_standalone_sources} src/driving/standalone/NoDevtools.cpp)
 add_executable(driving_standalone_test EXCLUDE_FROM_ALL ${nf_standalone_sources} ${nf_standalone_harness})
@@ -984,6 +1017,10 @@ foreach(target driving_standalone driving_standalone_test)
   if(NIGHTFIRE_SDL)
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_SDL)
     target_link_libraries(${target} PRIVATE SDL3::SDL3)
+    if(WIN32)   # beside the executable (the 32-bit Release folder also gets one from drivinginject)
+      add_custom_command(TARGET ${target} POST_BUILD
+                         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:SDL3::SDL3> $<TARGET_FILE_DIR:${target}>)
+    endif()
   endif()
   if(MSVC)
     target_link_options(${target} PRIVATE /MAP)
@@ -1074,6 +1111,7 @@ add_executable(shadercheck EXCLUDE_FROM_ALL
   src/common/gfx/devtools/shaderCheck.cpp
   src/common/gfx/devtools/shaderHlsl.cpp
   src/common/gfx/shaderBuilder.cpp
+  src/common/gfx/shaderSpirv.cpp
   src/common/gfx/nv2aVertexShader.cpp
   src/common/gfx/nv2aPixelShader.cpp
 )
