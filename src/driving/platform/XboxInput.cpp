@@ -3,7 +3,7 @@
 #include "HostInput.h"
 #include "../../common/xbeClass.h"   // LAYOUT_32
 
-#include <windows.h>
+#include "Win32Types.h"
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>

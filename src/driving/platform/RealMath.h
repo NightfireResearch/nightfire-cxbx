@@ -45,6 +45,18 @@ double TangentTurns(float turns);
 double AtanTurns(float y, float x);
 #endif
 
+// What a caller does with such a result is the compiler's choice, and MSVC and clang choose differently: MSVC
+// rounds it where the code stores a float (directly, or through a double), and otherwise multiplies, adds or
+// subtracts on the x87 before rounding, or rounds it to a double first; clang keeps the x87's value for whatever
+// follows in double. Where the two differ, the call site spells out MSVC's choice with these (names ours). The
+// products and the difference are rounded once, as on the x87 (without NIGHTFIRE_X87, in double like the trig):
+double SineTurnsTimes(float turns, double factor);
+double CosineTurnsTimes(float turns, double factor);
+double MinusSineTurns(double value, float turns);   // value - sin(turns)
+// An x87 result passed through these is rounded to the argument's type
+float AsFloat(float value);
+double AsDouble(double value);
+
 // ---- EA's portable vector and matrix routines (x87)
 void v3add_x87(const float *a, const float *b, float *out);       // the EBP-framed helpers the v3 functions call
 const float *v3sub_x87(const float *a, const float *b, float *out);

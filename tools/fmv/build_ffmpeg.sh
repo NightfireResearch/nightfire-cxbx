@@ -18,9 +18,34 @@
 # "sh tools/fmv/build_ffmpeg.sh windows-x86_64" builds the same DLLs for x86-64, for the 64-bit standalone driving
 # engine (docs/driving/64-bit.md), into third_party/ffmpeg-prebuilt/bin-x64 (committed too); the headers, licence
 # and README stay the i686 build's, which they match.
+#
+# The Linux build (docs/driving/portable.md) needs the same release as shared libraries for the host, which are not
+# committed: "sh tools/fmv/build_ffmpeg.sh linux-i386 <prefix>" builds them for 32-bit x86 Linux with gcc -m32, make
+# and nasm into <prefix>/lib, for the linux-i386 preset's NF_FFMPEG_LIB_DIR. FFMPEG_SOURCE names another checkout of
+# the submodule's commit.
 set -e
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
 SRC=third_party/ffmpeg
+
+# Everything but the target, shared by every build
+COMMON='--enable-shared --disable-static --disable-programs --disable-doc --disable-network --disable-autodetect
+    --disable-everything --enable-protocol=file --enable-demuxer=xmv --enable-decoder=wmv2,adpcm_ima_xbox,adpcm_ima_wav,eamad,adpcm_ea_r1
+    --disable-avdevice --disable-avfilter --disable-swscale --disable-swresample'
+
+if [ "$1" = linux-i386 ]; then
+    PREFIX=${2:?usage: build_ffmpeg.sh linux-i386 <prefix>}
+    SOURCE=${FFMPEG_SOURCE:-$REPO/$SRC}
+    mkdir -p "$PREFIX/build"
+    PREFIX=$(cd "$PREFIX" && pwd)
+    cd "$PREFIX/build"
+    # -mstackrealign: the game calls in with Windows' 4-byte stack alignment (cmake/xbox-abi-linux.cmake)
+    "$SOURCE/configure" --prefix="$PREFIX" --arch=x86 --cc='gcc -m32' --extra-cflags=-mstackrealign \
+        --extra-ldflags=-m32 $COMMON --enable-pthreads >/dev/null
+    make -j"${JOBS:-4}" >/dev/null
+    make install >/dev/null
+    ls -la "$PREFIX/lib"
+    exit 0
+fi
 
 if [ ! -f "$REPO/$SRC/configure" ]; then
     echo "$SRC is empty: run git submodule update --init $SRC" >&2
@@ -42,11 +67,9 @@ if [ "$1" = windows-x86_64 ]; then
 fi
 
 # The configuration, also written into the README beside the DLLs
-OPTIONS="--target-os=mingw32 --arch=$ARCH --cross-prefix=$TRIPLE- --enable-cross-compile"'
-    --enable-shared --disable-static --disable-programs --disable-doc --disable-network --disable-autodetect
-    --disable-everything --enable-protocol=file --enable-demuxer=xmv --enable-decoder=wmv2,adpcm_ima_xbox,adpcm_ima_wav,eamad,adpcm_ea_r1
-    --disable-avdevice --disable-avfilter --disable-swscale --disable-swresample
-    --enable-w32threads --extra-ldflags=-static-libgcc'
+OPTIONS="--target-os=mingw32 --arch=$ARCH --cross-prefix=$TRIPLE- --enable-cross-compile
+    $COMMON
+    --enable-w32threads --extra-ldflags=-static-libgcc"
 
 BUILD='
 set -e

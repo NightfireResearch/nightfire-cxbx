@@ -9,7 +9,7 @@
 #include "../devtools/SndLockstep.h"
 #include "../../common/xbeClass.h"   // LAYOUT_32
 
-#include <windows.h>
+#include "Win32Types.h"
 #include <stdint.h>
 #include <ctype.h>
 #include <stdio.h>

@@ -5,7 +5,7 @@
 #include "../../common/xboxPath.h"
 #include "../devtools/Teleport.h"
 
-#include <windows.h>
+#include "Win32Types.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>

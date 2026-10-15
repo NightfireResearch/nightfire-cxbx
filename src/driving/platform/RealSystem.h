@@ -4,7 +4,7 @@
 // EA's portable system library ("REAL") - TIMER, THREAD, SIGNAL, SYNCTASK, MUTEX, CPU - as the driving engine has
 // it. See RealSystem.cpp.
 
-#include <windows.h>
+#include "Win32Types.h"
 #include <stdint.h>
 #include "../../common/xbeClass.h"   // LAYOUT_32
 

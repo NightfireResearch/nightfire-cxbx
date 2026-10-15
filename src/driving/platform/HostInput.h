@@ -40,6 +40,7 @@ enum HostKey {
     kKeyA, kKeyD, kKeyS, kKeyW,
     kKeyLeft, kKeyRight, kKeyUp, kKeyDown,
     kKeySpace, kKeyShift, kKeyEnter, kKeyEscape,
+    kKeyF8, kKeyF9,
 };
 
 // A pad on port 0-3: false when there is none.

@@ -9,7 +9,7 @@
 #include "../../common/xbeOriginal.h"
 #endif
 
-#include <windows.h>
+#include "Win32Harness.h"
 #include <limits.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -17,8 +17,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <string>
-#include <unordered_map>
+#include <vector>
+#include <map>
+#ifndef _WIN32
+#include <link.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // NIGHTFIRE_SNDTRACE=1 logs every call the game makes into the sound library's API (docs/driving/sound.md 6.1):
@@ -102,8 +107,8 @@ DWORD volatile g_gameThread;
 FILE *g_log;
 FILE *g_others;
 CRITICAL_SECTION g_othersLock;
-std::string g_pending;                 // the game thread's lines since the last tick
-std::unordered_map<int, unsigned> g_voices;   // voice handle -> n of the SNDBANK_play that returned it
+std::vector<char> g_pending;           // the game thread's lines since the last tick
+std::map<int, unsigned> g_voices;              // voice handle -> n of the SNDBANK_play that returned it
 unsigned g_voiceCount;
 thread_local int t_depth;              // entries in progress on this thread
 
@@ -194,7 +199,7 @@ Call::~Call() {
             Put(")");
         text_[length_++] = '\n';
         if (game) {
-            g_pending.append(text_, length_);
+            g_pending.insert(g_pending.end(), text_, text_ + length_);
             if (g_pending.size() > (1u << 20))
                 Flush();
         } else {
@@ -775,9 +780,36 @@ Entry *EntryForPort(uintptr_t target) {
     return NULL;
 }
 
-// Every rel32 call, jump or conditional jump in this module's code whose target is a port now goes to its
-// wrapper. A byte pattern, not a disassembly: an E8/E9 inside another instruction would have to hold the exact
-// displacement of one of these few addresses to be taken for one.
+// Every rel32 call, jump or conditional jump in this code whose target is a port now goes to its wrapper. A byte
+// pattern, not a disassembly: an E8/E9 inside another instruction would have to hold the exact displacement of one
+// of these few addresses to be taken for one.
+int MoveCallSitesIn(uint8_t *code, size_t size) {
+    int moved = 0;
+    for (size_t i = 0; i + 6 <= size; i++) {
+        size_t length;
+        if (code[i] == 0xe8 || code[i] == 0xe9)
+            length = 5;
+        else if (code[i] == 0x0f && (code[i + 1] & 0xf0) == 0x80)
+            length = 6;
+        else
+            continue;
+        uint8_t *next = code + i + length;
+        int32_t displacement;
+        memcpy(&displacement, next - 4, 4);
+        Entry *e = EntryForPort((uintptr_t)next + displacement);
+        if (e == NULL || e->folded)
+            continue;
+        displacement = (int32_t)((uintptr_t)e->wrapper - (uintptr_t)next);
+        memcpy(next - 4, &displacement, 4);
+        e->sites++;
+        moved++;
+        i += length - 1;
+    }
+    return moved;
+}
+
+#ifdef _WIN32
+// This module's executable sections
 int MoveCallSites() {
     HMODULE module = NULL;
     if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
@@ -795,31 +827,36 @@ int MoveCallSites() {
         DWORD old;
         if (!VirtualProtect(code, size, PAGE_EXECUTE_READWRITE, &old))
             continue;
-        for (size_t i = 0; i + 6 <= size; i++) {
-            size_t length;
-            if (code[i] == 0xe8 || code[i] == 0xe9)
-                length = 5;
-            else if (code[i] == 0x0f && (code[i + 1] & 0xf0) == 0x80)
-                length = 6;
-            else
-                continue;
-            uint8_t *next = code + i + length;
-            int32_t displacement;
-            memcpy(&displacement, next - 4, 4);
-            Entry *e = EntryForPort((uintptr_t)next + displacement);
-            if (e == NULL || e->folded)
-                continue;
-            displacement = (int32_t)((uintptr_t)e->wrapper - (uintptr_t)next);
-            memcpy(next - 4, &displacement, 4);
-            e->sites++;
-            moved++;
-            i += length - 1;
-        }
+        moved += MoveCallSitesIn(code, size);
         VirtualProtect(code, size, old, &old);
         FlushInstructionCache(GetCurrentProcess(), code, size);
     }
     return moved;
 }
+#else
+// The executable's code segments: the game's code is all in the executable, the first object dl_iterate_phdr
+// reports
+int MoveCallSites() {
+    int moved = 0;
+    dl_iterate_phdr([](dl_phdr_info *info, size_t, void *data) {
+        for (int i = 0; i < info->dlpi_phnum; i++) {
+            const ElfW(Phdr) &segment = info->dlpi_phdr[i];
+            if (segment.p_type != PT_LOAD || (segment.p_flags & PF_X) == 0)
+                continue;
+            uintptr_t page = (uintptr_t)sysconf(_SC_PAGESIZE);
+            uintptr_t start = info->dlpi_addr + segment.p_vaddr;
+            uintptr_t first = start & ~(page - 1);
+            size_t span = (start + segment.p_memsz - first + page - 1) & ~(page - 1);
+            if (mprotect((void *)first, span, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
+                continue;
+            *static_cast<int *>(data) += MoveCallSitesIn((uint8_t *)start, segment.p_memsz);
+            mprotect((void *)first, span, PROT_READ | PROT_EXEC);
+        }
+        return 1;
+    }, &moved);
+    return moved;
+}
+#endif
 
 void Shutdown() {
     Flush();

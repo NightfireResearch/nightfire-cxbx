@@ -236,7 +236,16 @@ static void FinishThread(Thread *thread, unsigned long exitCode) {
     Release(thread);
 }
 
+// The x87 as Windows starts a thread: 53-bit precision, rounding to nearest, every exception masked. Linux starts
+// threads at 64-bit precision, which the game's x87 results would differ by; its own start-up sets 53-bit on one
+// thread only (the C runtime's _fpmath).
+static void SetWindowsFpuControl(void) {
+    const unsigned short kWindowsControl = 0x027f;
+    __asm__ __volatile__("fldcw %0" : : "m"(kWindowsControl));
+}
+
 static void *ThreadMain(void *argument) {
+    SetWindowsFpuControl();
     Thread *thread = static_cast<Thread *>(argument);
     CurrentThread = thread;
     CurrentThreadId = thread->id;
@@ -267,11 +276,10 @@ HostHandle HostCreateThread(size_t stackSize, HostThreadStart start, void *param
     pthread_attr_t attributes;
     pthread_attr_init(&attributes);
     pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_DETACHED);
-    if (stackSize != 0) {
-        if (stackSize < (size_t)PTHREAD_STACK_MIN)
-            stackSize = PTHREAD_STACK_MIN;
-        pthread_attr_setstacksize(&attributes, stackSize);
-    }
+    // CreateThread's size is what is committed at first; the stack reserved is at least the executable's default,
+    // 1 MB in an MSVC build, and the game's threads ask for less than they use (64 KB for the main one)
+    const size_t kDefaultStackReserve = 0x100000;
+    pthread_attr_setstacksize(&attributes, stackSize > kDefaultStackReserve ? stackSize : kDefaultStackReserve);
     int error = pthread_create(&thread->thread, &attributes, ThreadMain, thread);
     pthread_attr_destroy(&attributes);
     if (error != 0) {
@@ -536,7 +544,46 @@ size_t HostHeapSize(HostHandle heap, unsigned long flags, const void *block) {
 }
 #endif
 
-// ---- pages: the mapping's length is kept in a page before the block
+// ---- pages: placed as the Win32 body places them, at the lowest free 64 KB boundary in the range, which the
+// process's map (/proc/self/maps) shows; each mapping's length is kept for its release.
+
+struct PageMapping {
+    void *block;
+    size_t length;
+};
+static PageMapping PageMappings[1024];
+static pthread_mutex_t PageMappingsLock = PTHREAD_MUTEX_INITIALIZER;
+
+static void *MapAt(uintptr_t address, size_t size) {
+    int flags = MAP_PRIVATE | MAP_ANONYMOUS | (address != 0 ? MAP_FIXED_NOREPLACE : 0);
+    void *block = mmap((void *)address, size, PROT_READ | PROT_WRITE | PROT_EXEC, flags, -1, 0);
+    return block == MAP_FAILED || (address != 0 && block != (void *)address) ? NULL : block;
+}
+
+// The lowest gap between the mappings that holds `size` bytes from a 64 KB boundary in [lowest, limit)
+static void *MapLowest(size_t size, uintptr_t lowest, uintptr_t limit) {
+    const uintptr_t granularity = 0x10000;
+    FILE *maps = fopen("/proc/self/maps", "r");
+    if (maps == NULL)
+        return NULL;
+    uintptr_t address = (lowest + granularity - 1) & ~(granularity - 1);
+    if (address < granularity)
+        address = granularity;
+    void *block = NULL;
+    char line[512];
+    for (bool more = true; block == NULL && more && address < limit && size <= limit - address;) {
+        unsigned long start = ~0ul, end = ~0ul;   // past the last mapping, the gap runs to the limit
+        more = fgets(line, sizeof(line), maps) != NULL && sscanf(line, "%lx-%lx", &start, &end) == 2;
+        if (!more)
+            start = limit;
+        if (start > address && start - address >= size)
+            block = MapAt(address, size);
+        if (more && end > address)
+            address = (end + granularity - 1) & ~(granularity - 1);
+    }
+    fclose(maps);
+    return block;
+}
 
 #if UINTPTR_MAX > 0xffffffffu
 // The lowest free range of `length` bytes at or above `lowest` that ends below 4 GB, mapped; MAP_FAILED if none.
@@ -564,29 +611,86 @@ int HostCommit(void *address, size_t size) {
 #endif
 
 void *HostAllocatePages(size_t size, uintptr_t lowest, uintptr_t limit) {
-    (void)lowest;
-    (void)limit;
-    size_t page = size_t(sysconf(_SC_PAGESIZE));
-    size_t length = page + size;
-#if UINTPTR_MAX > 0xffffffffu   // in the game window
-    void *mapping = MapLow(length, 0x10000, PROT_READ | PROT_WRITE | PROT_EXEC, 0);
+    void *block = MapLowest(size, lowest, limit);
+#if UINTPTR_MAX > 0xffffffffu   // else anywhere in the game window
+    if (block == NULL) {
+        block = MapLow(size, 0x10000, PROT_READ | PROT_WRITE | PROT_EXEC, 0);
+        if (block == MAP_FAILED)
+            block = NULL;
+    }
 #else
-    void *mapping = mmap(NULL, length, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (block == NULL)
+        block = MapAt(0, size);
 #endif
-    if (mapping == MAP_FAILED)
+    if (block == NULL)
         return NULL;
-    *static_cast<size_t *>(mapping) = length;
-    return static_cast<char *>(mapping) + page;
+    pthread_mutex_lock(&PageMappingsLock);
+    for (PageMapping &mapping : PageMappings) {
+        if (mapping.block == NULL) {
+            mapping.block = block;
+            mapping.length = size;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&PageMappingsLock);
+    return block;
 }
 
 void HostFreePages(void *block) {
     if (block == NULL)
         return;
-    char *mapping = static_cast<char *>(block) - size_t(sysconf(_SC_PAGESIZE));
-    munmap(mapping, *reinterpret_cast<size_t *>(mapping));
+    pthread_mutex_lock(&PageMappingsLock);
+    for (PageMapping &mapping : PageMappings) {
+        if (mapping.block == block) {
+            munmap(block, mapping.length);
+            mapping.block = NULL;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&PageMappingsLock);
 }
 
 // ---- files
+
+// A path as Windows takes it, on this file system: either separator, and names matched without regard to case. Each
+// component that is not there as spelt is looked up in its directory; one that is in no case is left as it is, for
+// the call to fail on (or create).
+static void HostPath(const char *path, char *out) {
+    snprintf(out, HOST_MAX_PATH, "%s", path);
+    for (char *c = out; *c != '\0'; c++)
+        if (*c == '\\')
+            *c = '/';
+    if (access(out, F_OK) == 0)
+        return;
+    char *component = out[0] == '/' ? out + 1 : out;
+    while (*component != '\0') {
+        char *end = strchr(component, '/');
+        if (end != NULL)
+            *end = '\0';
+        if (access(out, F_OK) != 0) {
+            char *slash = strrchr(out, '/');
+            const char *directory = slash == NULL ? "." : slash == out ? "/" : out;
+            if (slash != NULL && slash != out)
+                *slash = '\0';
+            DIR *opened = opendir(directory);
+            if (slash != NULL && slash != out)
+                *slash = '/';
+            if (opened != NULL) {
+                while (dirent *entry = readdir(opened)) {
+                    if (strcasecmp(entry->d_name, component) == 0 && strlen(entry->d_name) == strlen(component)) {
+                        memcpy(component, entry->d_name, strlen(component));
+                        break;
+                    }
+                }
+                closedir(opened);
+            }
+        }
+        if (end == NULL)
+            break;
+        *end = '/';
+        component = end + 1;
+    }
+}
 
 HostHandle HostCreateFile(const char *path, unsigned long desiredAccess, unsigned long share,
                           unsigned long disposition, unsigned long attributes) {
@@ -608,8 +712,10 @@ HostHandle HostCreateFile(const char *path, unsigned long desiredAccess, unsigne
             return HOST_INVALID_HANDLE;
     }
 
-    bool existed = (disposition == kCreateAlways || disposition == kOpenAlways) && access(path, F_OK) == 0;
-    int fd = open(path, mode | O_CLOEXEC, 0644);
+    char host[HOST_MAX_PATH];
+    HostPath(path, host);
+    bool existed = (disposition == kCreateAlways || disposition == kOpenAlways) && access(host, F_OK) == 0;
+    int fd = open(host, mode | O_CLOEXEC, 0644);
     if (fd < 0) {
         LastError = ErrorFromErrno(errno);
         return HOST_INVALID_HANDLE;
@@ -628,7 +734,9 @@ HostHandle HostCreateFile(const char *path, unsigned long desiredAccess, unsigne
 }
 
 int HostDeleteFile(const char *path) {
-    if (unlink(path) != 0) {
+    char host[HOST_MAX_PATH];
+    HostPath(path, host);
+    if (unlink(host) != 0) {
         LastError = ErrorFromErrno(errno);
         return 0;
     }
@@ -755,7 +863,9 @@ HostHandle HostFindFirstFile(const char *pattern, char *name) {
         snprintf(directory, sizeof(directory), ".");
     }
 
-    DIR *opened = opendir(directory);
+    char host[HOST_MAX_PATH];
+    HostPath(directory, host);
+    DIR *opened = opendir(host);
     if (opened == NULL) {
         LastError = errno == ENOENT ? kErrorPathNotFound : ErrorFromErrno(errno);
         return HOST_INVALID_HANDLE;
@@ -809,8 +919,9 @@ unsigned long HostGetProfileString(const char *section, const char *key, const c
     if (size == 0)
         return 0;
     const char *found = defaultValue != NULL ? defaultValue : "";
-    char line[1024], copy[1024];
-    FILE *ini = fopen(file, "r");
+    char line[1024], copy[1024], host[HOST_MAX_PATH];
+    HostPath(file, host);
+    FILE *ini = fopen(host, "r");
     bool inSection = false;
     while (ini != NULL && fgets(line, sizeof(line), ini) != NULL) {
         char *text = Trim(line);
@@ -881,6 +992,7 @@ struct Timer {
 // Each due time follows the last by the period, as winmm's periodic timer keeps its rate; a timer that has fallen
 // a second behind starts again from now rather than firing to catch up.
 static void *TimerMain(void *argument) {
+    SetWindowsFpuControl();
     Timer *timer = static_cast<Timer *>(argument);
     timespec due;
     clock_gettime(CLOCK_MONOTONIC, &due);
@@ -982,7 +1094,9 @@ char **HostCommandLine(int *count) {
     return CommandLineArguments;
 }
 
+// Called first thing by main, which makes this the main thread's start
 void HostSetCommandLine(int count, char **arguments) {
+    SetWindowsFpuControl();
     CommandLineCount = count;
     CommandLineArguments = arguments;
 }

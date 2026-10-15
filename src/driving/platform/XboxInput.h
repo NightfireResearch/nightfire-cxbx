@@ -1,7 +1,7 @@
 #ifndef DRIVING_PLATFORM_XBOXINPUT_H_
 #define DRIVING_PLATFORM_XBOXINPUT_H_
 
-#include <windows.h>
+#include "Win32Types.h"
 #include <stdint.h>
 
 // Replaces XAPI's controller API with Win32's XInput, so that IOModule reads real pads. See XboxInput.cpp for

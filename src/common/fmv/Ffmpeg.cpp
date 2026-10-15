@@ -1,20 +1,40 @@
 #include "Ffmpeg.h"
 
+#include <stdio.h>
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <stdio.h>
+
+typedef HMODULE Library;
+#define OpenLibrary(name) LoadLibraryA(name)
+#define LibrarySymbol(library, name) ((void *)GetProcAddress(library, name))
+#define AVUTIL "avutil-60.dll"
+#define AVCODEC "avcodec-62.dll"
+#define AVFORMAT "avformat-62.dll"
+#else
+#include <dlfcn.h>
+#include <stdlib.h>
+
+// Beside the executable (its run path), or wherever the system's loader finds them
+typedef void *Library;
+#define OpenLibrary(name) dlopen(name, RTLD_NOW)
+#define LibrarySymbol(library, name) dlsym(library, name)
+#define AVUTIL "libavutil.so.60"
+#define AVCODEC "libavcodec.so.62"
+#define AVFORMAT "libavformat.so.62"
+#endif
 
 FfmpegApi ff;
 
 static bool Load(void) {
-    HMODULE avutil = LoadLibraryA("avutil-60.dll");
-    HMODULE avcodec = LoadLibraryA("avcodec-62.dll");
-    HMODULE avformat = LoadLibraryA("avformat-62.dll");
+    Library avutil = OpenLibrary(AVUTIL);
+    Library avcodec = OpenLibrary(AVCODEC);
+    Library avformat = OpenLibrary(AVFORMAT);
     if (avutil == NULL || avcodec == NULL || avformat == NULL)
         return false;
     bool ok = true;
 #define FF_LOAD(module, field, name) \
-    if ((*(FARPROC *)&ff.field = GetProcAddress(module, name)) == NULL) { printf("[ffmpeg] %s missing\n", name); ok = false; }
+    if ((*(void **)&ff.field = LibrarySymbol(module, name)) == NULL) { printf("[ffmpeg] %s missing\n", name); ok = false; }
     FF_LOAD(avformat, open_input, "avformat_open_input");
     FF_LOAD(avformat, find_stream_info, "avformat_find_stream_info");
     FF_LOAD(avformat, close_input, "avformat_close_input");
@@ -48,10 +68,14 @@ void Ffmpeg_Require(void) {
         loaded = true;
         return;
     }
-    printf("[ffmpeg] the FFmpeg DLLs (avutil-60, avcodec-62, avformat-62) are missing or incomplete\n");
+    printf("[ffmpeg] the FFmpeg libraries (" AVUTIL ", " AVCODEC ", " AVFORMAT ") are missing or incomplete\n");
+#ifdef _WIN32
     MessageBoxA(NULL, "The FFmpeg DLLs (avutil-60.dll, avcodec-62.dll, avformat-62.dll) are missing from the game's "
                 "folder, or are not the version it was built with. They come with every build, from "
                 "third_party/ffmpeg-prebuilt.",
                 "Nightfire", MB_ICONERROR | MB_OK);
     ExitProcess(1);
+#else
+    exit(1);
+#endif
 }
