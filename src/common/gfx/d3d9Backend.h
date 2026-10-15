@@ -20,13 +20,13 @@
 // Where the XBE's statically linked D3D8 keeps the state the backend reads back at draw time: the deferred
 // texture stage states (four stages of 32 dwords) and the render states. Both addresses belong to the XBE
 // being run, so the engine sets them before the device is created - see the note in d3d9Backend.cpp.
-extern uint32_t g_xboxTextureStateTable;
-extern uint32_t g_xboxRenderStateTable;
+extern uintptr_t g_xboxTextureStateTable;
+extern uintptr_t g_xboxRenderStateTable;
 
 // The action engine's overlay quad table, whose slots carry a vertex count rather than a byte size. Left
 // empty by an engine that has no such table.
-extern uint32_t g_overlayTableBase;
-extern uint32_t g_overlayTableEnd;
+extern uintptr_t g_overlayTableBase;
+extern uintptr_t g_overlayTableEnd;
 // True when the game writes into memory the GPU reads with no signal to the backend - EAGL does: its dynamic
 // vertex buffer is triple-buffered and refilled per draw, and its linear textures (the video window, the
 // things it draws on the CPU) are written in place. Every draw then streams the vertex range it reads

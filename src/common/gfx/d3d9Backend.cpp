@@ -31,6 +31,7 @@
 #include "devtools/shaderCheck.h"   // NIGHTFIRE_SHADERCHECK: the bytecode against the HLSL it replaced
 #endif
 #include "textureReplace.h"
+#include "../../driving/platform/Ptr32.h"   // PtrFrom32, PtrTo32: the address words in the resource headers
 #ifdef NF_ANTIALIASING
 #include "fxaa.h"   // experimental - see fxaa.cpp
 // settings.ini [Settings] AntiAliasing: which post-process anti-aliasing runs over the 3D scene.
@@ -245,8 +246,8 @@ static void PrintMissingSummary(void) {
 // which crashed compiling a shader for it.
 // ---------------------------------------------------------------------------------------------------------------
 
-uint32_t g_xboxTextureStateTable = 0;   // D3D__TextureState[4][32], four stages of 0x80 bytes
-uint32_t g_xboxRenderStateTable = 0;    // D3D__RenderState[]
+uintptr_t g_xboxTextureStateTable = 0;   // D3D__TextureState[4][32], four stages of 0x80 bytes
+uintptr_t g_xboxRenderStateTable = 0;    // D3D__RenderState[]
 
 #define XBOX_TEXTURE_STATE(stage, index) (*(const uint32_t*)(g_xboxTextureStateTable + (stage) * 0x80u + (index) * 4u))
 #define XBOX_RENDER_STATE(index)         (*(const uint32_t*)(g_xboxRenderStateTable + (index) * 4u))
@@ -409,7 +410,7 @@ void D3D9_NotifyTextureModified(void *pTextureOrSurface) {
     if ((obj[0] & 0x70000u) == 0x50000u) { // a surface object - modify its parent texture
         const XboxSurface *s = (const XboxSurface*)obj;
         if (s->Parent != 0)
-            MarkTextureDirty((const void*)(uintptr_t)s->Parent);
+            MarkTextureDirty(PtrFrom32<const void>(s->Parent));
         return;
     }
     MarkTextureDirty(pTextureOrSurface);
@@ -417,9 +418,10 @@ void D3D9_NotifyTextureModified(void *pTextureOrSurface) {
 
 // The CPU-visible address of a resource's Data word. The seam registers every texture, vertex and index buffer
 // with a real host pointer (RegisterTexture forces the texture Data word back to the unmasked pointer), so the
-// word is used as-is here; only surface objects carry the Xbox-style stripped address.
+// word is used as-is here (on a 64-bit host, as an offset in the game window); only surface objects carry the
+// Xbox-style stripped address.
 static const uint8_t *XboxDataPointer(uint32_t dataWord) {
-    return (const uint8_t*)(uintptr_t)dataWord;
+    return PtrFrom32<const uint8_t>(dataWord);
 }
 
 // Morton-order unswizzle of one level, bytesPerPixel wide texels, into a tightly packed linear buffer.
@@ -1144,7 +1146,7 @@ static void DumpBoundTexture(const void *header, IDirect3DTexture9 *texture) {
             uint32_t pitch = ((h->Size >> 24) + 1) * 64, rows = ((h->Size >> 12) & 0xFFF) + 1;
             snprintf(path, sizeof(path), "d3d9_dump_tex_%u_%02d_%08x_%08x.raw", g_dumpFrame, seenCount - 1, h->Format, h->Size);
             FILE *rf = fopen(path, "wb");
-            if (rf != NULL) { fwrite((const void*)(uintptr_t)h->Data, 1, (size_t)pitch * rows, rf); fclose(rf); }
+            if (rf != NULL) { fwrite(XboxDataPointer(h->Data), 1, (size_t)pitch * rows, rf); fclose(rf); }
         }
     }
     free(colour); free(alpha); free(bgra);
@@ -1982,8 +1984,8 @@ static void InitPinnedConstants(void) {
 // object gets a host copy on first bind; D3DResource_Register on the same slot (a level reload) drops it.
 // The overlay quad table (0x2CAFE8, 20-byte slots) has no byte size, only a vertex count at +0x10 with the
 // point-sprite stride of 0x24; the vertex-buffer table (0x2DECEC, 36-byte slots) has its byte size at +0x14.
-uint32_t g_overlayTableBase = 0;   // the action engine's overlay quad table; empty means "no such table"
-uint32_t g_overlayTableEnd = 0;
+uintptr_t g_overlayTableBase = 0;   // the action engine's overlay quad table; empty means "no such table"
+uintptr_t g_overlayTableEnd = 0;
 
 struct HostVertexBuffer { const void *obj; const void *data; uint32_t size; uint32_t uploadedFrame; IDirect3DVertexBuffer9 *vb; };
 struct HostIndexBuffer  { const void *obj; const void *data; uint32_t size; IDirect3DIndexBuffer9 *ib; };
@@ -2021,7 +2023,7 @@ static void InvalidateHostBuffers(const void *obj) {
 // know their own extent (DrawVerticesUP, which binds no stream) and for the action engine's overlay quads.
 static IDirect3DVertexBuffer9 *GetHostVertexBuffer(const void *obj, uint32_t neededBytes, uint32_t *sizeOut) {
     const uint32_t *slot = (const uint32_t*)obj;
-    const void *data = (const void*)(uintptr_t)slot[1];
+    const void *data = XboxDataPointer(slot[1]);
     uint32_t size = neededBytes;
     if (g_overlayTableEnd != 0 && (uintptr_t)obj >= g_overlayTableBase && (uintptr_t)obj < g_overlayTableEnd) {
         if (slot[4] * 0x24 > size) size = slot[4] * 0x24;
@@ -2088,7 +2090,7 @@ static IDirect3DVertexBuffer9 *GetHostVertexBuffer(const void *obj, uint32_t nee
 
 static IDirect3DIndexBuffer9 *GetHostIndexBuffer(const void *obj, const void **dataOut, uint32_t *sizeOut) {
     const uint32_t *slot = (const uint32_t*)obj;
-    const void *data = (const void*)(uintptr_t)slot[1];
+    const void *data = XboxDataPointer(slot[1]);
     uint32_t size = slot[5]; // D3DIndexBufferSlotRaw::byteSize
     if (data == NULL || size == 0)
         return NULL;
@@ -2178,7 +2180,7 @@ static void VertexRingReserve(uint32_t totalBytes) {
 static IDirect3DVertexBuffer9 *StreamThroughVertexRing(const void *obj, uint32_t firstByte, uint32_t bytes,
                                                        uint32_t *offsetOut) {
     const uint32_t *slot = (const uint32_t*)obj;
-    const uint8_t *data = (const uint8_t*)(uintptr_t)slot[1];
+    const uint8_t *data = XboxDataPointer(slot[1]);
     if (data == NULL || bytes == 0 || bytes + VERTEX_RING_SLACK > VERTEX_RING_BYTES)
         return NULL;
     if (g_vertexRing == NULL) {
@@ -2310,7 +2312,7 @@ void D3D9_SetRenderTarget(void *pRenderTarget, void *pDepthStencil) {
     bool toBackBuffer = (pRenderTarget == NULL || pRenderTarget == &g_dummyBackBuffer || pRenderTarget == &g_dummyRenderTarget);
     if (!toBackBuffer) {
         const XboxSurface *surface = (const XboxSurface*)pRenderTarget;
-        HostTexture *t = (surface->Parent != 0) ? EnsureRenderTargetTexture((const void*)(uintptr_t)surface->Parent) : NULL;
+        HostTexture *t = (surface->Parent != 0) ? EnsureRenderTargetTexture(PtrFrom32<const void>(surface->Parent)) : NULL;
         if (t != NULL) {
             D3DSURFACE_DESC desc;
             t->rtSurface->GetDesc(&desc);
@@ -2479,9 +2481,9 @@ static void TraceDraw(const char *kind, uint32_t primType, uint32_t count, uint3
         for (int s = 0; s < 16; s++) {
             if (!(vs->streamsUsed & (1u << s))) continue;
             const uint32_t *slot = (const uint32_t*)g_streams[s];
-            fprintf(f, "  stream %d: obj %p data %p stride %d", s, g_streams[s], slot ? (void*)(uintptr_t)slot[1] : NULL, g_streamStrides[s]);
+            fprintf(f, "  stream %d: obj %p data %p stride %d", s, g_streams[s], slot ? XboxDataPointer(slot[1]) : NULL, g_streamStrides[s]);
             if (slot != NULL && slot[1] != 0 && limit > first) {
-                const uint8_t *data = (const uint8_t*)(uintptr_t)slot[1];
+                const uint8_t *data = XboxDataPointer(slot[1]);
                 uint32_t stride = g_streamStrides[s] > 0 ? g_streamStrides[s] : 6;
                 if (s == 0 && stride >= 12) {
                     float lo[3] = { 1e30f, 1e30f, 1e30f }, hi[3] = { -1e30f, -1e30f, -1e30f };
@@ -2582,7 +2584,7 @@ static void CheckDrawVertices(const char *kind, uint32_t primType, uint32_t coun
     if (vs->positionComponents < 3)
         return;   // positions that are not floats are not checked
     uint32_t stride = g_streamStrides[0] > 0 ? (uint32_t)g_streamStrides[0] : 12;
-    const uint8_t *data = (const uint8_t*)(uintptr_t)slot[1];
+    const uint8_t *data = XboxDataPointer(slot[1]);
     for (uint32_t v = first; v < limit; v++) {
         const float *p = (const float*)(data + (size_t)v * stride);
         bool bad = false;
@@ -2598,7 +2600,7 @@ static void CheckDrawVertices(const char *kind, uint32_t primType, uint32_t coun
         for (int s = 1; s < 16; s++)
             if ((vs->streamsUsed & (1u << s)) && g_streams[s] != NULL)
                 D3D9Log("[d3d9]   stream %d object %p data %p stride %d\n", s, g_streams[s],
-                        (const void*)(uintptr_t)((const uint32_t*)g_streams[s])[1], g_streamStrides[s]);
+                        XboxDataPointer(((const uint32_t*)g_streams[s])[1]), g_streamStrides[s]);
         if (g_dumpFrame == 0) { g_dumpFrame = g_frameCount + 1; g_dumpRtCount = 0; }   // dump this frame at its swap
         return;
     }
@@ -3060,7 +3062,14 @@ uint32_t *D3D9_GetBackBuffer2(int32_t backBufferIndex) {
 }
 
 // Same construction as D3D8's own GetSurfaceLevel2 (FUN_0010ba80): a fresh surface object aliasing the
-// texture's level-0 data, with the top nibble of Data stripped, and the caller owns one reference.
+// texture's level-0 data, with the top nibble of Data stripped, and the caller owns one reference. On a 64-bit
+// host the word is an offset in the game window (Ptr32.h), whose heaps lie above 28 bits, so it is kept whole.
+#if UINTPTR_MAX > 0xffffffffu
+const uint32_t kSurfaceDataMask = 0xFFFFFFFFu;
+#else
+const uint32_t kSurfaceDataMask = 0x0FFFFFFFu;
+#endif
+
 void *D3D9_GetSurfaceLevel2(void *pTexture, uint32_t level) {
     (void)level; // only level 0 is ever asked for
     const uint32_t *header = (const uint32_t*)pTexture;
@@ -3068,11 +3077,11 @@ void *D3D9_GetSurfaceLevel2(void *pTexture, uint32_t level) {
     if (s == NULL)
         return NULL;
     s->Common = XBOX_SURFACE_COMMON;
-    s->Data = header[1] & 0x0FFFFFFFu;
+    s->Data = header[1] & kSurfaceDataMask;
     s->Lock = 0;
     s->Format = header[3];
     s->Size = header[4];
-    s->Parent = (uint32_t)(uintptr_t)pTexture;
+    s->Parent = PtrTo32(pTexture);
     if (g_allocatedSurfaceCount < (int)(sizeof(g_allocatedSurfaces) / sizeof(g_allocatedSurfaces[0])))
         g_allocatedSurfaces[g_allocatedSurfaceCount++] = s;
     return s;
