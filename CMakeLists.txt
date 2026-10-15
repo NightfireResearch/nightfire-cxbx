@@ -42,6 +42,22 @@ if(MINGW)
   add_link_options(-static -static-libgcc -static-libstdc++ -pthread)
 endif()
 
+# No fused multiply-adds, as in MSVC's code and the original's. Clang fuses a * b + c within an expression by default
+# (GCC across expressions): the x86 builds target no FMA, so there it only reorders instructions, but arm64 has it
+# (docs/driving/macos.md 4). The game's `#pragma fp_contract(off)` lines are MSVC's spelling of the same.
+if(NOT MSVC)
+  add_compile_options(-ffp-contract=off)
+endif()
+
+# Sanitizer runs of the standalone build (docs/driving/macos.md, package M2): -DNIGHTFIRE_SANITIZE=float-cast-overflow
+# (out-of-range float-to-integer conversions, which x86 and arm64 answer differently) or =thread (data races), for
+# the Linux x86-64 build. Reports go where UBSAN_OPTIONS / TSAN_OPTIONS log_path says.
+set(NIGHTFIRE_SANITIZE "" CACHE STRING "Clang sanitizers for every target (-fsanitize=<value>); empty for none")
+if(NIGHTFIRE_SANITIZE AND NOT MSVC)
+  add_compile_options(-fsanitize=${NIGHTFIRE_SANITIZE} -fno-omit-frame-pointer -g)
+  add_link_options(-fsanitize=${NIGHTFIRE_SANITIZE})
+endif()
+
 # Statically link UCRT, improves ability to run on XP when compiled with v141_xp
 #set(CMAKE_CXX_FLAGS_RELEASE "/MT")
 #set(CMAKE_CXX_FLAGS_DEBUG "/MTd")
