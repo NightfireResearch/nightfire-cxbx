@@ -16,6 +16,10 @@ bool SndLockstep_Enabled(void) {
 void SndLockstep_Tick(void) {
 }
 
+int SndLockstep_SyncTick(int realTick, bool, bool *) {
+    return realTick;
+}
+
 uint32_t SndLockstep_DriverThread(void) {
     return 0;
 }
