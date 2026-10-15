@@ -21,6 +21,7 @@
 #include "../world/CollisionTypes.h"    // MATRIX4
 #include "../world/Targeting.h"         // PointerList
 #include "../world/WorldPos.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class ActAnimGroup;
 class ActCharacter;
@@ -31,7 +32,7 @@ struct ActIKSolveInfo;
 
 // What an actor that rides on something is handed each frame: its owner's transform (the actor's matrices are
 // multiplied by it) and velocity (the weapons inherit it). `id` is the actor's callbackId.
-typedef void (*ActActorTransformCallback)(int id, MATRIX4 *transform, Coord4 *velocity);
+typedef void (*ActActorTransformCallback)(void *id, MATRIX4 *transform, Coord4 *velocity);
 
 // An actor's matrices (0x394, operator new; the name is ours). Its constructor is WWorldPos's, its destructor
 // WWorldPos's empty one.
@@ -55,10 +56,10 @@ struct ActActorMatrices {
     Coord3 groundQueryPoint;            // +0x384 where the ground was last looked up
     float groundHeight;                 // +0x390
 };
-static_assert(sizeof(ActActorMatrices) == 0x394, "an actor's matrices are 0x394 bytes");
-static_assert(offsetof(ActActorMatrices, world) == 0x140 && offsetof(ActActorMatrices, weapon) == 0x200 &&
-              offsetof(ActActorMatrices, callbackFrame) == 0x340 &&
-              offsetof(ActActorMatrices, groundHeight) == 0x390, "ActActorMatrices layout");
+LAYOUT_32(sizeof(ActActorMatrices) == 0x394, "an actor's matrices are 0x394 bytes");
+LAYOUT_32(offsetof(ActActorMatrices, world) == 0x140 && offsetof(ActActorMatrices, weapon) == 0x200 &&
+          offsetof(ActActorMatrices, callbackFrame) == 0x340 &&
+          offsetof(ActActorMatrices, groundHeight) == 0x390, "ActActorMatrices layout");
 
 // The parts ActActor::drawFlags draws
 enum ActActorDrawFlags : int32_t {
@@ -75,7 +76,7 @@ public:
     ActActorTransformCallback callback; // +0x10
     bool hasCallback;                   // +0x14
     uint8_t unknown15[3];
-    int32_t callbackId;                 // +0x18
+    void *callbackId;                   // +0x18
     bool hasWeapon[2];                  // +0x1c
     // Bytes, not bools: the original tests these both as flags and against 1
     uint8_t weaponVisible[2];           // +0x1e
@@ -99,7 +100,7 @@ public:
                                         //       weaponVisible)
     uint8_t unknown4d[3];
 
-    ActActor* Construct(int id, const char *characterName, const char *weapon1, const char *weapon2,
+    ActActor* Construct(void *id, const char *characterName, const char *weapon1, const char *weapon2,
                         ActActorTransformCallback callback, const MATRIX4 *transform, bool mirrored);    // 0x00012ca0
     void Destruct();                                                                            // 0x00012ec0
 
@@ -146,10 +147,10 @@ public:
     // Weapon 0 thrown from its matrix, with the velocity and spin it had over the last frame
     void SpawnWeapon();                                                                         // 0x00011ff0
 };
-static_assert(sizeof(ActActor) == 0x50, "an ActActor is 0x50 bytes");
-static_assert(offsetof(ActActor, callbackId) == 0x18 && offsetof(ActActor, controller) == 0x20 &&
-              offsetof(ActActor, alpha) == 0x28 && offsetof(ActActor, scale) == 0x34 &&
-              offsetof(ActActor, culled) == 0x40 && offsetof(ActActor, fovConversion) == 0x4c, "ActActor layout");
+LAYOUT_32(sizeof(ActActor) == 0x50, "an ActActor is 0x50 bytes");
+LAYOUT_32(offsetof(ActActor, callbackId) == 0x18 && offsetof(ActActor, controller) == 0x20 &&
+          offsetof(ActActor, alpha) == 0x28 && offsetof(ActActor, scale) == 0x34 &&
+          offsetof(ActActor, culled) == 0x40 && offsetof(ActActor, fovConversion) == 0x4c, "ActActor layout");
 
 // Every actor: a std::list<ActActor *> (the list code is every such list's, PointerList's); an actor's handle is its
 // node
@@ -161,10 +162,10 @@ public:
     // A new actor at the front of the list; its handle through `result` (the original returns the iterator
     // through a hidden pointer). The second form takes a second weapon; the first has none. The actor is
     // mirrored when `unmirrored` is false.
-    static PointerListNode** GetNewActorHandle(PointerListNode **result, int id, const char *characterName,
+    static PointerListNode** GetNewActorHandle(PointerListNode **result, void *id, const char *characterName,
                                                const char *weapon1, ActActorTransformCallback callback,
                                                const MATRIX4 *transform, bool unmirrored);     // 0x000139c0
-    static PointerListNode** GetNewActorHandle(PointerListNode **result, int id, const char *characterName,
+    static PointerListNode** GetNewActorHandle(PointerListNode **result, void *id, const char *characterName,
                                                const char *weapon1, const char *weapon2,
                                                ActActorTransformCallback callback, const MATRIX4 *transform,
                                                bool unmirrored);                                // 0x00013ab0
@@ -178,13 +179,13 @@ public:
 
     // The culling's walk: each actor's position, a sphere of radius 2
     static void PrepareActorsForCulling();                                                      // 0x00012580
-    static int GetNextActorCullInfo(Coord4 *sphere, float *height, bool *checkFar, float *farScale);   // 0x00012f40
-    static void SetActorCull(int item, bool culled, float distance);                            // 0x0008c8d0
+    static intptr_t GetNextActorCullInfo(Coord4 *sphere, float *height, bool *checkFar, float *farScale);   // 0x00012f40
+    static void SetActorCull(intptr_t item, bool culled, float distance);                       // 0x0008c8d0
 
     // _Incsize: this list's compiled copy of PointerList::IncreaseSize
     void IncreaseSize(uint32_t count);                                                          // 0x00013880
 };
-static_assert(sizeof(ActActorDatabase) == 0xc, "an ActActorDatabase is 12 bytes");
+LAYOUT_32(sizeof(ActActorDatabase) == 0xc, "an ActActorDatabase is 12 bytes");
 
 extern ActActorDatabase *ActorDatabase;
 

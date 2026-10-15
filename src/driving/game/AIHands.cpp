@@ -167,7 +167,7 @@ bool HandWeaponLoaded(int weapon) {
 // FUNC_AT(0x0001cbb0)
 AICharacterBond* AICharacterBond::Construct(const MATRIX4 *transform, int side) {
     AICharacter::Construct();
-    vtable = reinterpret_cast<void **>(kAICharacterBondVtable);
+    vtable = kAICharacterBondVtable;
     this->transform = *transform;
     this->side = side;
     animBank = kBondBank;
@@ -176,7 +176,7 @@ AICharacterBond* AICharacterBond::Construct(const MATRIX4 *transform, int side) 
 
 // FUNC_AT(0x0001cbf0)
 void AICharacterBond::Destruct() {
-    vtable = reinterpret_cast<void **>(kAICharacterBondVtable);
+    vtable = kAICharacterBondVtable;
     AICharacter::Destruct();
 }
 
@@ -239,7 +239,7 @@ void AICharacterBond::Init() {
         Human *human = static_cast<Human *>(fgSimulation.SpawnHumanObject(
             0, reinterpret_cast<const Coord3 *>(transform.mtx[2]), reinterpret_cast<const Coord3 *>(transform.mtx[3]), 0));
         PointerListNode *handle;
-        ActActorDatabase::GetNewActorHandle(&handle, reinterpret_cast<int>(character), descriptions[side], NULL,
+        ActActorDatabase::GetNewActorHandle(&handle, character, descriptions[side], NULL,
                                             reinterpret_cast<ActActorTransformCallback>(&GetRideRotPos), &transform,
                                             false);
         character->steerLeft = left;
@@ -403,7 +403,7 @@ void AICharacterBond::UpdateRotPos() {
 void AICharacterHands::Construct(int weapon) {
     AICharacter::Construct();
     this->weapon = weapon;
-    vtable = reinterpret_cast<void **>(kAICharacterHandsVtable);
+    vtable = kAICharacterHandsVtable;
     reloadPending = 0;
     hideOnSwitch = 1;
     nextWeapon = 0;
@@ -415,7 +415,7 @@ void AICharacterHands::Construct(int weapon) {
 
 // FUNC_AT(0x00022820)
 void AICharacterHands::Destruct() {
-    vtable = reinterpret_cast<void **>(kAICharacterHandsVtable);
+    vtable = kAICharacterHandsVtable;
     AICharacter::Destruct();
 }
 
@@ -468,7 +468,7 @@ void AICharacterHands::Init() {
         transform.mtx[3][1] = transform.mtx[3][1] + offset->y;
         transform.mtx[3][2] = transform.mtx[3][2] + offset->z;
         PointerListNode *handle;
-        ActActorDatabase::GetNewActorHandle(&handle, reinterpret_cast<int>(hands), kHandDescriptions[weapon],
+        ActActorDatabase::GetNewActorHandle(&handle, hands, kHandDescriptions[weapon],
                                             kHandWeaponNames[weapon], NULL,
                                             reinterpret_cast<ActActorTransformCallback>(&GetRotPos), &transform,
                                             false);

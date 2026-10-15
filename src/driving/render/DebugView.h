@@ -16,6 +16,7 @@
 #include <stdint.h>
 
 #include "../camera/Camera.h"           // RViewCamera, RCamera
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class RRenderDebugViewPerspective : public RViewCamera {
 public:
@@ -26,7 +27,7 @@ public:
     // Vtable slot 2: the source's camera copied into this view's, and its extents taken
     void PreRender();                                                                           // 0x0008b4f0
 };
-static_assert(sizeof(RRenderDebugViewPerspective) == 0x50, "RRenderDebugViewPerspective is 0x50 bytes");
+LAYOUT_32(sizeof(RRenderDebugViewPerspective) == 0x50, "RRenderDebugViewPerspective is 0x50 bytes");
 
 class RRenderDebugViewScreenSpace : public RViewCamera {
 public:
@@ -37,7 +38,7 @@ public:
     // Vtable slot 4
     void DoRender();                                                                            // 0x0008b530
 };
-static_assert(sizeof(RRenderDebugViewScreenSpace) == 0x4c, "RRenderDebugViewScreenSpace is 0x4c bytes");
+LAYOUT_32(sizeof(RRenderDebugViewScreenSpace) == 0x4c, "RRenderDebugViewScreenSpace is 0x4c bytes");
 
 class RRandom {
 public:

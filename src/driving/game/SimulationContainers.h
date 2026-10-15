@@ -13,12 +13,13 @@
 
 #include "../engine/CoreContainers.h"   // GameVector, GameTreeNode, SimObjectValue, SimObjectMultimap, SimObjectVector
 #include "../engine/RbTree.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 // ---- std::multimap<int, PhysicsObject *>: the Simulation's objects by type (SimObjectValue's key the type,
 // its object the object)
 
 typedef GameTreeNode<SimObjectValue> PhysicsObjNode;
-static_assert(sizeof(PhysicsObjNode) == 0x18, "a map node is 0x18 bytes");
+LAYOUT_32(sizeof(PhysicsObjNode) == 0x18, "a map node is 0x18 bytes");
 
 struct PhysicsObjIterator {
     PhysicsObjNode *node;
@@ -44,7 +45,7 @@ struct PhysicsObjMap : SimObjectMultimap {
     PhysicsObjIterator* EraseRange(PhysicsObjIterator *result, PhysicsObjIterator first,
                                    PhysicsObjIterator last);                                    // 0x000b3e40
 };
-static_assert(sizeof(PhysicsObjMap) == 0xc, "a map is 12 bytes");
+LAYOUT_32(sizeof(PhysicsObjMap) == 0xc, "a map is 12 bytes");
 
 // std::_Distance over the map's iterators: adds the number of nodes from first to last to *count
 void PhysicsObjDistance(PhysicsObjIterator first, PhysicsObjIterator last, uint32_t *count);   // 0x000b2e00
@@ -53,7 +54,7 @@ void PhysicsObjDistance(PhysicsObjIterator first, PhysicsObjIterator last, uint3
 // object each node holds (unsigned)
 
 struct DeadObjectNode : RbTreeNode<DeadObjectNode, PhysicsObjNode *> {};
-static_assert(sizeof(DeadObjectNode) == 0x14, "a set node is 0x14 bytes");
+LAYOUT_32(sizeof(DeadObjectNode) == 0x14, "a set node is 0x14 bytes");
 
 struct DeadObjectSet : RbTree<DeadObjectNode> {
     struct Iterator {
@@ -81,7 +82,7 @@ struct DeadObjectSet : RbTree<DeadObjectNode> {
     // SimulationSpawn.cpp's
     InsertResult* InsertUnique(InsertResult *result, PhysicsObjNode *const &value);             // 0x000b4190
 };
-static_assert(sizeof(DeadObjectSet) == 0xc, "a set is 12 bytes");
+LAYOUT_32(sizeof(DeadObjectSet) == 0xc, "a set is 12 bytes");
 
 // ---- std::vector<T *>: the Simulation's vectors. One compiled copy of the code serves them all; the free
 // functions below serve every vector of pointers in the game.
@@ -102,7 +103,7 @@ struct SimPointerVector : SimObjectVector {
     // erase(iterator): answers `where`
     void*** Erase(void ***result, void **where);                                                // 0x000b2fc0
 };
-static_assert(sizeof(SimPointerVector) == 0x10, "a vector is 16 bytes");
+LAYOUT_32(sizeof(SimPointerVector) == 0x10, "a vector is 16 bytes");
 
 // std::copy_backward: [first, last) to the range ending at destEnd; answers its start
 void*** PointerCopyBackwardTo(void ***result, void **first, void **last, void **destEnd);       // 0x000b2e40

@@ -77,11 +77,11 @@ public:
     void CheckForCollision();                                                                   // 0x0005f6d0
     void SteerMissile();                                                                        // 0x00060110
 };
-static_assert(sizeof(Missile) == 0x730, "a missile is 0x730 bytes");
-static_assert(offsetof(Missile, target) == 0x6c && offsetof(Missile, launchStep) == 0x94 &&
-              offsetof(Missile, streak) == 0xa0 && offsetof(Missile, sound) == 0x6f0 &&
-              offsetof(Missile, homingFull) == 0x708 && offsetof(Missile, exploded) == 0x70a &&
-              offsetof(Missile, damage) == 0x710 && offsetof(Missile, wobblePhase) == 0x720, "Missile layout");
+LAYOUT_32(sizeof(Missile) == 0x730, "a missile is 0x730 bytes");
+LAYOUT_32(offsetof(Missile, target) == 0x6c && offsetof(Missile, launchStep) == 0x94 &&
+          offsetof(Missile, streak) == 0xa0 && offsetof(Missile, sound) == 0x6f0 &&
+          offsetof(Missile, homingFull) == 0x708 && offsetof(Missile, exploded) == 0x70a &&
+          offsetof(Missile, damage) == 0x710 && offsetof(Missile, wobblePhase) == 0x720, "Missile layout");
 
 // The missiles' tuning (Missile.cpp; the names are ours): the user steering's scale and rate, the CH-6 remote
 // rocket's speed, thrust, launch speed, turn (times 0.05) and life in seconds, the player's level flight's

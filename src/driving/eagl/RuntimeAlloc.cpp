@@ -318,9 +318,10 @@ Properties* Properties::Construct(const char *text) {
         }
     }
     for (int i = 0; i < properties; i++) {
-        const char **values = (const char **)EaglMalloc(widest * 4, "EAGLInternal::PropertyValue new[]");
+        const char **values =
+            (const char **)EaglMalloc(widest * int(sizeof(const char *)), "EAGLInternal::PropertyValue new[]");
         if (values != NULL)
-            memset(values, 0, widest * 4);
+            memset(values, 0, widest * sizeof(const char *));
         list[i].values = values;
     }
 

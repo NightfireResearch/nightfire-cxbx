@@ -85,7 +85,7 @@ UGroup* GFX::LookupReference(const char *name) {
 // The playing effects
 
 // FUNC_AT(0x000d3450)
-int GFX::CULL_GetNextCanvas(Coord4 *sphere, float *height, bool *checkFar, float *farScale) {
+intptr_t GFX::CULL_GetNextCanvas(Coord4 *sphere, float *height, bool *checkFar, float *farScale) {
     return TheEffectsGallery->CULL_GetNextCanvas(sphere, height, checkFar, farScale);
 }
 

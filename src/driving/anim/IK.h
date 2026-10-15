@@ -18,6 +18,7 @@
 #include "../eagl/Transform.h"
 #include "../eagl/anim/Skeleton.h"
 #include "../data/CoordConvert.h"   // Coord4
+#include "../../common/xbeClass.h"  // LAYOUT_32
 
 // The vector and quaternion helpers the solver uses (quaternions x, y, z, w; AngleBetweenVectors and QuatProduct,
 // which EAGL uses too, are in eagl/Transform.h). Names ours.
@@ -46,8 +47,8 @@ public:
     // Name ours (FUN_000168b0).                                                                     0x000168b0
     double JointAngle(float upper, float lower, const float *target);
 };
-static_assert(sizeof(ActIK) == 0x28, "an ActIK is 0x28 bytes");
-static_assert(offsetof(ActIK, axis) == 0x18, "ActIK's axis is at +0x18");
+LAYOUT_32(sizeof(ActIK) == 0x28, "an ActIK is 0x28 bytes");
+LAYOUT_32(offsetof(ActIK, axis) == 0x18, "ActIK's axis is at +0x18");
 
 // ---- ActIKSolver
 
@@ -77,8 +78,8 @@ public:
     void BlendMatrices(Transform *matrix, const Transform *other, float weight);                 // 0x00015900
     void Solve(Transform *globals, Transform *locals);                                            // 0x00016d80
 };
-static_assert(sizeof(ActIKSolver) == 0x50, "an ActIKSolver is 0x50 bytes");
-static_assert(offsetof(ActIKSolver, info) == 0x20, "ActIKSolver's info is at +0x20");
+LAYOUT_32(sizeof(ActIKSolver) == 0x50, "an ActIKSolver is 0x50 bytes");
+LAYOUT_32(offsetof(ActIKSolver, info) == 0x20, "ActIKSolver's info is at +0x20");
 
 class ActIKSolverArray {            // 0x18
 public:
@@ -98,7 +99,7 @@ public:
     void Destruct();                                                                              // 0x00016e90
     void Solve(int index);                                                                        // 0x00016ea0
 };
-static_assert(sizeof(ActIKSolverArray) == 0x18, "an ActIKSolverArray is 0x18 bytes");
+LAYOUT_32(sizeof(ActIKSolverArray) == 0x18, "an ActIKSolverArray is 0x18 bytes");
 
 // ---- ActGlobalPoseOverrideArray
 
@@ -121,6 +122,6 @@ public:
     void DoGlobalOverrides(bool mirrored, Transform *locals);                                    // 0x00015d40
     void Destruct();                                                                              // 0x00016940
 };
-static_assert(sizeof(ActGlobalPoseOverrideArray) == 0x1c, "an ActGlobalPoseOverrideArray is 0x1c bytes");
+LAYOUT_32(sizeof(ActGlobalPoseOverrideArray) == 0x1c, "an ActGlobalPoseOverrideArray is 0x1c bytes");
 
 #endif // DRIVING_ANIM_IK_H_

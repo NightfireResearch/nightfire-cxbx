@@ -16,6 +16,7 @@
 #include "../camera/Camera.h"             // RViewCamera
 #include "../data/CoordConvert.h"         // Coord4
 #include "../engine/USingleton.h"
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 namespace EAGL {
 struct TAR;
@@ -35,9 +36,9 @@ struct ShadowPrivateData {
 
     ShadowPrivateData* Construct();                                                             // 0x000a5a50
 };
-static_assert(sizeof(ShadowPrivateData) == 0x60, "the shadow map's data is 0x60 bytes");
-static_assert(offsetof(ShadowPrivateData, context) == 0x40 && offsetof(ShadowPrivateData, texture) == 0x4c,
-              "ShadowPrivateData layout");
+LAYOUT_32(sizeof(ShadowPrivateData) == 0x60, "the shadow map's data is 0x60 bytes");
+LAYOUT_32(offsetof(ShadowPrivateData, context) == 0x40 && offsetof(ShadowPrivateData, texture) == 0x4c,
+          "ShadowPrivateData layout");
 
 class RShadowMap;
 
@@ -79,7 +80,7 @@ public:
     // the name is ours)
     static void* LookupVariable(const char *name, bool *found);                                 // 0x000a59c0
 };
-static_assert(sizeof(RShadowMap) == 0x58, "RShadowMap is 0x58 bytes");
+LAYOUT_32(sizeof(RShadowMap) == 0x58, "RShadowMap is 0x58 bytes");
 
 extern RShadowMap *TheShadowMap;   // RShadowMap::Init's instance
 

@@ -18,6 +18,7 @@
 #include "../engine/RbTree.h"
 #include "../engine/URefCounter.h"        // RefCounterTree, TextureContextRefCounter
 #include "../engine/USingleton.h"         // USingletonVtable
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 class RTextureContext;
 
@@ -35,10 +36,10 @@ struct TexListValue {
     uint8_t used;                         // +0x10 set by Find
     uint8_t pad11[3];
 };
-static_assert(sizeof(TexListValue) == 0x14, "a texture list entry is 0x14 bytes");
+LAYOUT_32(sizeof(TexListValue) == 0x14, "a texture list entry is 0x14 bytes");
 
 struct TexListNode : RbTreeNode<TexListNode, TexListValue> {};
-static_assert(sizeof(TexListNode) == 0x24, "a texture list node is 0x24 bytes");
+LAYOUT_32(sizeof(TexListNode) == 0x24, "a texture list node is 0x24 bytes");
 
 struct TexListInsert {
     TexListNode *node;
@@ -64,7 +65,7 @@ public:
     // The destructor: everything erased, the head freed.
     void Destruct();                                                                                // 0x00093d90
 };
-static_assert(sizeof(RTexList) == 0xc, "RTexList is a map");
+LAYOUT_32(sizeof(RTexList) == 0xc, "RTexList is a map");
 
 // ---- RTextureContext
 
@@ -96,7 +97,7 @@ public:
     // context 0's 'miss' (both reported when that fails too). `size` is not touched.
     uint8_t* NameLookup(const char *symbol, int *size);                                             // 0x00093cd0
 };
-static_assert(sizeof(RTextureContext) == 0x10, "RTextureContext is 0x10 bytes");
+LAYOUT_32(sizeof(RTextureContext) == 0x10, "RTextureContext is 0x10 bytes");
 
 // ---- the manager's multimap, int key -> context
 
@@ -106,7 +107,7 @@ struct TextureContextEntry {
 };
 
 struct TextureContextNode : RbTreeNode<TextureContextNode, TextureContextEntry> {};
-static_assert(sizeof(TextureContextNode) == 0x18, "a context map node is 0x18 bytes");
+LAYOUT_32(sizeof(TextureContextNode) == 0x18, "a context map node is 0x18 bytes");
 
 struct TextureContextInsert {
     TextureContextNode *node;
@@ -128,7 +129,7 @@ public:
     // insert for a multimap: always inserts, after any node of the same key.
     TextureContextInsert* InsertEqual(TextureContextInsert *result, const TextureContextEntry *value);   // 0x00094d10
 };
-static_assert(sizeof(TextureContextMap) == 0xc, "a map is 12 bytes");
+LAYOUT_32(sizeof(TextureContextMap) == 0xc, "a map is 12 bytes");
 
 // ---- URefCounter<RTextureContext>'s tree (TextureContextRefCounter's map, at 0x001f2a34): its compiled copies
 
@@ -169,7 +170,7 @@ public:
     // entered under `key`); otherwise a new one, registered and entered under `key`.
     RTextureContext* NewContext(const char *path, int32_t key);                                     // 0x000951e0
 };
-static_assert(sizeof(RTextureContextManager) == 8, "RTextureContextManager is 8 bytes");
+LAYOUT_32(sizeof(RTextureContextManager) == 8, "RTextureContextManager is 8 bytes");
 
 // The singleton (made by its USingleton Init, 0x0008b5b0..0x0008bf30)
 extern RTextureContextManager *TheTextureContextManager;

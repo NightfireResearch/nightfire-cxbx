@@ -6,6 +6,7 @@
 
 #include "CollisionInstance.h"
 #include "CollisionTypes.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // WGrid: the collision system's spatial grid over the track (the CARP collision data's 'CGrd' record). Square
@@ -34,14 +35,14 @@ struct WGridMover {
 
     void Update();                                                           // 0x000c6fd0
 };
-static_assert(sizeof(WGridMover) == 0x2c, "a dynamic element is 0x2c bytes");
+LAYOUT_32(sizeof(WGridMover) == 0x2c, "a dynamic element is 0x2c bytes");
 
 struct WGridMoverNode {
     WGridMoverNode *next;
     WGridMoverNode *prev;
     WGridMover value;
 };
-static_assert(sizeof(WGridMoverNode) == 0x34, "the dynamic elements' node is 0x34 bytes");
+LAYOUT_32(sizeof(WGridMoverNode) == 0x34, "the dynamic elements' node is 0x34 bytes");
 
 // The dynamic elements (a static std::list at 0x0023b3ac)
 struct WGridMoverList {
@@ -89,7 +90,7 @@ public:
     static void AddGridNodeDynamicElement(Coord4 *last, const Coord4 *position, uint32_t type, uint32_t index);   // 0x000c6d70
     static void UpdateDynamicNodes();                                                        // 0x000c7200
 };
-static_assert(sizeof(WGrid) == 0x24, "the grid is 0x24 bytes");
+LAYOUT_32(sizeof(WGrid) == 0x24, "the grid is 0x24 bytes");
 
 extern WGrid *TheGrid;
 extern WGridMoverList GridMovers;

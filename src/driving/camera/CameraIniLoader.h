@@ -16,6 +16,7 @@
 #include "Camera.h"                     // CameraAnchorInfo
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../../helpers.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class RPlayerCamera;
 
@@ -53,9 +54,9 @@ struct CameraModeInfo {
     uint16_t type;                      // +0x0a CameraModeType
     float defaultFov;                   // +0x0c
     float explosionShakeScale;          // +0x10
-    uint32_t update;                    // +0x14 the RPlayerCamera method it runs, by address
+    uintptr_t update;                   // +0x14 the RPlayerCamera method it runs, by address
 };
-static_assert(sizeof(CameraModeInfo) == 0x18, "a camera mode is 24 bytes");
+LAYOUT_32(sizeof(CameraModeInfo) == 0x18, "a camera mode is 24 bytes");
 
 // ---- the types' tables
 
@@ -107,7 +108,7 @@ struct HeliCamInfo {
     float upRate;                       // +0x44
     float lookUp;                       // +0x48
 };
-static_assert(sizeof(HeliCamInfo) == 0x4c, "a heli camera is 76 bytes");
+LAYOUT_32(sizeof(HeliCamInfo) == 0x4c, "a heli camera is 76 bytes");
 
 // A Spline mode (0x30 bytes)
 struct SplineCamInfo {
@@ -130,7 +131,7 @@ struct EllipseCamInfo {
     int32_t heightCount;                // +0x24
     int8_t *heights;                    // +0x28 new[heightCount]: "heights", each doubled (at most 30)
 };
-static_assert(sizeof(EllipseCamInfo) == 0x2c, "an ellipse camera is 44 bytes");
+LAYOUT_32(sizeof(EllipseCamInfo) == 0x2c, "an ellipse camera is 44 bytes");
 
 // A Fixed mode (0x28 bytes)
 struct FixedCamInfo {
@@ -253,9 +254,9 @@ struct CameraTables {
     int32_t dashboardCount;             // +0x84
     int32_t modeCount;                  // +0x88
 };
-static_assert(sizeof(CameraTables) == 0x8c, "the camera tables are 0x8c bytes");
-static_assert(offsetof(CameraTables, modes) == 0x58 && offsetof(CameraTables, previousAutoDriveArm) == 0x68 &&
-              offsetof(CameraTables, modeCount) == 0x88, "camera tables layout");
+LAYOUT_32(sizeof(CameraTables) == 0x8c, "the camera tables are 0x8c bytes");
+LAYOUT_32(offsetof(CameraTables, modes) == 0x58 && offsetof(CameraTables, previousAutoDriveArm) == 0x68 &&
+          offsetof(CameraTables, modeCount) == 0x88, "camera tables layout");
 
 // The modes found by name, -1 for none (at 0x001c4194)
 struct CameraModeIndices {

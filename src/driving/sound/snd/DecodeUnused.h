@@ -6,6 +6,7 @@
 // listing, provisional and untested against shipped data. See DecodeUnused.cpp.
 
 #include <stdint.h>
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 namespace SND {
 
@@ -21,7 +22,7 @@ struct MutState {                      // 0xd40
     float synth[12];                   // +0x140 the synthesis filter's memory (FUN_00146f00)
     float signal[756];                 // +0x170 324 samples of excitation history, then the frame's 432 outputs
 };
-static_assert(sizeof(MutState) == 0xd40, "a MicroTalk state is 0xd40 bytes");
+LAYOUT_32(sizeof(MutState) == 0xd40, "a MicroTalk state is 0xd40 bytes");
 
 // The MicroTalk decoder's tables (in the original's order): the reflection coefficients' levels - the first
 // four's 64, the other eight's 32 being levels 16-47 of the same table - and the fixed codebook's two-state

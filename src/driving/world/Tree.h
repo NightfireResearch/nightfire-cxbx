@@ -78,7 +78,7 @@ int DistanceCheck2d(const Coord4 *position, float radius);                      
 
 // An entry of the renderer's sorted lists: a key, and a distance
 struct WRenderSortEntry {
-    uint32_t key;
+    uintptr_t key;
     float distance;
 };
 

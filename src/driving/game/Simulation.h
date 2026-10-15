@@ -15,6 +15,7 @@
 #include "SimulationContainers.h"
 #include "../data/CoordConvert.h"       // Coord3
 #include "../engine/SimRandom.h"        // SimRandom, BitSet192
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 namespace CARP {
 class Instance;
@@ -51,7 +52,7 @@ struct TrackedInstance {
     bool visible;                       // +0x08 UpdateTrackedInstanceVisibility's
     uint8_t unknown09[3];
 };
-static_assert(sizeof(TrackedInstance) == 0xc, "a tracked instance is 12 bytes");
+LAYOUT_32(sizeof(TrackedInstance) == 0xc, "a tracked instance is 12 bytes");
 
 // A body's signature: the counter's low 24 bits, the slot in bits 24-30, and bit 31 set for a simple body
 constexpr uint32_t kSignatureSimple = 0x80000000;
@@ -188,14 +189,14 @@ public:
                                      uint32_t targetSig, float hitPoints, uint32_t holdSteps,
                                      uint8_t scoreable);                                        // 0x000b5fb0
 };
-static_assert(sizeof(Simulation) == 0xf24, "the Simulation is 0xf24 bytes");
-static_assert(offsetof(Simulation, rigidBodySigs) == 0x030 && offsetof(Simulation, simpleRigidBodySigs) == 0x130 &&
-              offsetof(Simulation, rigidBodyOwners) == 0x2b0 && offsetof(Simulation, simpleRigidBodyOwners) == 0x3b0 &&
-              offsetof(Simulation, simpleBodyHits) == 0x530 && offsetof(Simulation, savedSimState) == 0xe30 &&
-              offsetof(Simulation, stepCount) == 0xe44 && offsetof(Simulation, cars) == 0xe4c &&
-              offsetof(Simulation, missiles) == 0xe8c && offsetof(Simulation, helicopters) == 0xeec &&
-              offsetof(Simulation, trackedInstances) == 0xf0c && offsetof(Simulation, objects) == 0xf1c,
-              "Simulation layout");
+LAYOUT_32(sizeof(Simulation) == 0xf24, "the Simulation is 0xf24 bytes");
+LAYOUT_32(offsetof(Simulation, rigidBodySigs) == 0x030 && offsetof(Simulation, simpleRigidBodySigs) == 0x130 &&
+          offsetof(Simulation, rigidBodyOwners) == 0x2b0 && offsetof(Simulation, simpleRigidBodyOwners) == 0x3b0 &&
+          offsetof(Simulation, simpleBodyHits) == 0x530 && offsetof(Simulation, savedSimState) == 0xe30 &&
+          offsetof(Simulation, stepCount) == 0xe44 && offsetof(Simulation, cars) == 0xe4c &&
+          offsetof(Simulation, missiles) == 0xe8c && offsetof(Simulation, helicopters) == 0xeec &&
+          offsetof(Simulation, trackedInstances) == 0xf0c && offsetof(Simulation, objects) == 0xf1c,
+          "Simulation layout");
 
 // The one Simulation (constructed by the static initialisers; the name is ours)
 alignas(16) extern Simulation fgSimulation;

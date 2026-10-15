@@ -45,6 +45,7 @@
 #include "../camera/CameraSpline.h"     // CrtAcosTimes
 #include "../../helpers.h"
 #include "../../common/xbeOverload.h"   // XbeVirtual
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 // XBE_GLOBAL(0x001dda2c, 0x1)
 uint8_t BondSelectPressed;
@@ -136,7 +137,7 @@ static_assert(std::bit_cast<uint32_t>(1.0f / 6.0f) == 0x3e2aaaab && std::bit_cas
 
 // AOneShotSound's constructor at a place, without a velocity
 
-static_assert(sizeof(ActionQueue) == 0x974, "an action queue is 0x974 bytes");
+LAYOUT_32(sizeof(ActionQueue) == 0x974, "an action queue is 0x974 bytes");
 
 namespace {
 

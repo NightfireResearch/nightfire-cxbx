@@ -12,6 +12,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // The file reader the Xbox never makes (mode 1): a file system slot, closed with the object if it was opened.
 struct TextFile {
@@ -58,7 +59,7 @@ struct DTuningFile {
     static void ParseData(const char *text, float *values);
     static void ParseData_Colour(const char *text, uint32_t *colour);
 };
-static_assert(sizeof(DTuningFile) == 0x110, "DTuningFile");
+LAYOUT_32(sizeof(DTuningFile) == 0x110, "DTuningFile");
 
 // The tuning database manager (Ghidra: DTuningDBManager / DTuningDBMgr, 16 bytes), a USingleton.
 struct DTuningDBMgr {
@@ -75,7 +76,7 @@ struct DTuningDBMgr {
     // Deletes the file object; the loaded text stays (0x0003d6c0).
     void CloseCurrent();
 };
-static_assert(sizeof(DTuningDBMgr) == 0x10, "DTuningDBMgr");
+LAYOUT_32(sizeof(DTuningDBMgr) == 0x10, "DTuningDBMgr");
 
 extern DTuningDBMgr *TuningDBMgr;   // fgThis: the instance
 

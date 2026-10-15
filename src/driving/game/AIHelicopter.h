@@ -16,6 +16,7 @@
 #include <stdint.h>
 
 #include "AIVehicle.h"
+#include "../../common/xbeClass.h" // LAYOUT_32
 
 struct WTargetable;
 
@@ -126,15 +127,15 @@ public:
     void EngageSplinePath(CARP::AISpline *spline);  // 3                                        // 0x00031c80
     void DisengageSplinePath();                 // 4                                            // 0x00031ca0
 };
-static_assert(sizeof(AIHelicopter) == 0x140, "an AI helicopter is 0x140 bytes");
-static_assert(offsetof(AIHelicopter, navigateMode) == 0x84 && offsetof(AIHelicopter, targetBeacon) == 0x98 &&
-              offsetof(AIHelicopter, targetPosition) == 0xa0 && offsetof(AIHelicopter, destination) == 0xb0 &&
-              offsetof(AIHelicopter, range) == 0xcc && offsetof(AIHelicopter, targetSegment) == 0xe4 &&
-              offsetof(AIHelicopter, shotsLeft) == 0xec && offsetof(AIHelicopter, rocketAim) == 0x100 &&
-              offsetof(AIHelicopter, bulletDelay) == 0x110 && offsetof(AIHelicopter, bulletTarget) == 0x120 &&
-              offsetof(AIHelicopter, fireDelay) == 0x130, "AIHelicopter layout");
+LAYOUT_32(sizeof(AIHelicopter) == 0x140, "an AI helicopter is 0x140 bytes");
+LAYOUT_32(offsetof(AIHelicopter, navigateMode) == 0x84 && offsetof(AIHelicopter, targetBeacon) == 0x98 &&
+          offsetof(AIHelicopter, targetPosition) == 0xa0 && offsetof(AIHelicopter, destination) == 0xb0 &&
+          offsetof(AIHelicopter, range) == 0xcc && offsetof(AIHelicopter, targetSegment) == 0xe4 &&
+          offsetof(AIHelicopter, shotsLeft) == 0xec && offsetof(AIHelicopter, rocketAim) == 0x100 &&
+          offsetof(AIHelicopter, bulletDelay) == 0x110 && offsetof(AIHelicopter, bulletTarget) == 0x120 &&
+          offsetof(AIHelicopter, fireDelay) == 0x130, "AIHelicopter layout");
 
-const uint32_t kAIHelicopterVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_AIHelicopter));
+void **const kAIHelicopterVtable = Vtable_AIHelicopter;
 
 // GetPlayerLaneOffsets' record
 extern AIHelicopterLaneOffsets PlayerLaneOffsets;

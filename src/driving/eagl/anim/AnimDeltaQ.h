@@ -7,6 +7,7 @@
 
 #include "FnAnim.h"
 #include "../../platform/Ptr32.h"
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 // ---- FnDeltaSingleQ (type 19): one rotation axis per bone, between a fixed pre- and post-rotation
 
@@ -76,7 +77,7 @@ struct FnDeltaSingleQ : FnAnimMemoryMap {      // 0x30
     void InitBuffersAsRequired();                                // 0x00101c90 (name from MW)
     FnDeltaSingleQ* ScalarDelete(unsigned flags);                // 0x00101f00
 };
-static_assert(sizeof(FnDeltaSingleQ) == 0x30, "FnDeltaSingleQ is 0x30 bytes");
+LAYOUT_32(sizeof(FnDeltaSingleQ) == 0x30, "FnDeltaSingleQ is 0x30 bytes");
 
 // ---- FnDeltaQFast (type 18): 12-bit keys, 6-bit deltas, linear interpolation between keys
 
@@ -161,7 +162,7 @@ struct FnDeltaQFast : FnAnimMemoryMap {        // 0x40
     FnDeltaQFast* ScalarDelete(unsigned flags);                  // 0x001032b0
     void InitBuffers();                                          // 0x001032e0 (name from MW)
 };
-static_assert(sizeof(FnDeltaQFast) == 0x40, "FnDeltaQFast is 0x40 bytes");
+LAYOUT_32(sizeof(FnDeltaQFast) == 0x40, "FnDeltaQFast is 0x40 bytes");
 
 // ---- FnDeltaQ (type 17): 15-bit keys, 7/8-bit deltas, w recovered from xyz, normalised lerp between keys
 
@@ -227,7 +228,7 @@ struct FnDeltaQ : FnAnimMemoryMap {  // 0x30
     FnDeltaQ* ScalarDelete(unsigned flags);                      // 0x00104200
     void InitBuffersAsRequired();                                // 0x00104230 (name from MW)
 };
-static_assert(sizeof(FnDeltaQ) == 0x30, "FnDeltaQ is 0x30 bytes");
+LAYOUT_32(sizeof(FnDeltaQ) == 0x30, "FnDeltaQ is 0x30 bytes");
 
 // ---- free helpers (cdecl)
 

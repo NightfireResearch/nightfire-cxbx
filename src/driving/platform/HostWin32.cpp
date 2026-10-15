@@ -12,6 +12,8 @@
 
 #ifndef _WIN64
 static_assert(sizeof(CRITICAL_SECTION) <= sizeof(HostLock), "a critical section fits a HostLock");
+#else
+static_assert(sizeof(CRITICAL_SECTION *) <= sizeof(HostLock), "a HostLock holds a pointer to its critical section");
 #endif
 static_assert(sizeof(HostSystemTime) == sizeof(SYSTEMTIME), "HostSystemTime is SYSTEMTIME");
 static_assert(sizeof(HostTimeZone) == sizeof(TIME_ZONE_INFORMATION), "HostTimeZone is TIME_ZONE_INFORMATION");

@@ -14,6 +14,7 @@
 #include "SndGlobals.h"
 #include "../../devtools/SndLockstep.h"
 #include "../../../helpers.h"
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 #include <bit>
 #include <stddef.h>
@@ -308,8 +309,8 @@ inline int32_t Ftol(double d) {
 }
 
 // ---- SNDLINKI on the buffer lists: a BufferList is an SNDLINKLIST whose nodes are BufferNodes (the links first)
-static_assert(offsetof(BufferNode, next) == offsetof(SND::LinkNode, next) &&
-              offsetof(BufferNode, prev) == offsetof(SND::LinkNode, prev), "a buffer node starts with the links");
+LAYOUT_32(offsetof(BufferNode, next) == offsetof(SND::LinkNode, next) &&
+          offsetof(BufferNode, prev) == offsetof(SND::LinkNode, prev), "a buffer node starts with the links");
 static_assert(sizeof(BufferList) == sizeof(SND::LinkList), "a buffer list is an SNDLINKLIST");
 inline SND::LinkList *AsLinkList(BufferList *list) {
     return reinterpret_cast<SND::LinkList *>(list);

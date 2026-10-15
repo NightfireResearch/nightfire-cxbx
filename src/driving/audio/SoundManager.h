@@ -18,6 +18,7 @@
 #include "../data/CoordConvert.h"       // Coord3
 #include "../world/Targeting.h"         // PointerList
 #include "../../helpers.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class ASystem;
 
@@ -45,7 +46,7 @@ struct StreamNameList : PointerList {
     // _Incsize: this list's compiled copy of PointerList's.
     void IncreaseSize(uint32_t count);                                          // 0x00121d90
 };
-static_assert(sizeof(StreamNameList) == 12, "a list is 12 bytes");
+LAYOUT_32(sizeof(StreamNameList) == 12, "a list is 12 bytes");
 extern StreamNameList *fgFailedStreams;
 
 class ASoundManager {
@@ -94,6 +95,6 @@ public:
     // The library restored, its heap freed, the ASystem deleted.
     static void Shutdown();                                                     // 0x00128470
 };
-static_assert(sizeof(ASystem) == 8, "ASystem is 8 bytes");
+LAYOUT_32(sizeof(ASystem) == 8, "ASystem is 8 bytes");
 
 #endif // DRIVING_AUDIO_SOUNDMANAGER_H_

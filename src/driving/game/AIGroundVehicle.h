@@ -18,6 +18,7 @@
 #include <stdint.h>
 
 #include "AIVehicle.h"
+#include "../../common/xbeClass.h" // LAYOUT_32
 
 class WRoadNav;
 struct PhysicsObject;
@@ -267,27 +268,27 @@ public:
     void FireRockets();                                                                         // 0x0002eb40
     void FireMissiles();                                                                        // 0x0002ee00
 };
-static_assert(sizeof(AIGroundVehicle) == 0x270, "an AI ground vehicle is 0x270 bytes");
-static_assert(offsetof(AIGroundVehicle, type) == 0x80 && offsetof(AIGroundVehicle, navigateMode) == 0x88 &&
-              offsetof(AIGroundVehicle, attackMode) == 0x94 && offsetof(AIGroundVehicle, command) == 0x98 &&
-              offsetof(AIGroundVehicle, road) == 0xa0 && offsetof(AIGroundVehicle, skipFullUpdate) == 0xa4 &&
-              offsetof(AIGroundVehicle, laneWeights) == 0xa8 && offsetof(AIGroundVehicle, laneSpan) == 0xe8 &&
-              offsetof(AIGroundVehicle, collNav) == 0xf0 && offsetof(AIGroundVehicle, targetNav) == 0x104 &&
-              offsetof(AIGroundVehicle, isSub) == 0x108 && offsetof(AIGroundVehicle, hasTurret) == 0x11c &&
-              offsetof(AIGroundVehicle, autoDriveSpeed) == 0x124 && offsetof(AIGroundVehicle, useLanes) == 0x144 &&
-              offsetof(AIGroundVehicle, zoneStopSteps) == 0x14e && offsetof(AIGroundVehicle, stopped) == 0x152 &&
-              offsetof(AIGroundVehicle, navPosition) == 0x15c && offsetof(AIGroundVehicle, newCommand) == 0x177 &&
-              offsetof(AIGroundVehicle, target) == 0x178 && offsetof(AIGroundVehicle, goal) == 0x190 &&
-              offsetof(AIGroundVehicle, goalDistance) == 0x1a0 && offsetof(AIGroundVehicle, goalDirection) == 0x1b0 &&
-              offsetof(AIGroundVehicle, steerPoint) == 0x1c0 && offsetof(AIGroundVehicle, targetSegment) == 0x1cc &&
-              offsetof(AIGroundVehicle, goalHidden) == 0x1d8 && offsetof(AIGroundVehicle, navHeading) == 0x1e0 &&
-              offsetof(AIGroundVehicle, attackRange) == 0x1f0 && offsetof(AIGroundVehicle, turretAngle) == 0x204 &&
-              offsetof(AIGroundVehicle, aimPoint) == 0x210 && offsetof(AIGroundVehicle, leadPoint) == 0x220 &&
-              offsetof(AIGroundVehicle, stuckSteps) == 0x230 && offsetof(AIGroundVehicle, stuckPosition) == 0x240 &&
-              offsetof(AIGroundVehicle, facingNav) == 0x24c && offsetof(AIGroundVehicle, spawnStep) == 0x260,
-              "AIGroundVehicle layout");
+LAYOUT_32(sizeof(AIGroundVehicle) == 0x270, "an AI ground vehicle is 0x270 bytes");
+LAYOUT_32(offsetof(AIGroundVehicle, type) == 0x80 && offsetof(AIGroundVehicle, navigateMode) == 0x88 &&
+          offsetof(AIGroundVehicle, attackMode) == 0x94 && offsetof(AIGroundVehicle, command) == 0x98 &&
+          offsetof(AIGroundVehicle, road) == 0xa0 && offsetof(AIGroundVehicle, skipFullUpdate) == 0xa4 &&
+          offsetof(AIGroundVehicle, laneWeights) == 0xa8 && offsetof(AIGroundVehicle, laneSpan) == 0xe8 &&
+          offsetof(AIGroundVehicle, collNav) == 0xf0 && offsetof(AIGroundVehicle, targetNav) == 0x104 &&
+          offsetof(AIGroundVehicle, isSub) == 0x108 && offsetof(AIGroundVehicle, hasTurret) == 0x11c &&
+          offsetof(AIGroundVehicle, autoDriveSpeed) == 0x124 && offsetof(AIGroundVehicle, useLanes) == 0x144 &&
+          offsetof(AIGroundVehicle, zoneStopSteps) == 0x14e && offsetof(AIGroundVehicle, stopped) == 0x152 &&
+          offsetof(AIGroundVehicle, navPosition) == 0x15c && offsetof(AIGroundVehicle, newCommand) == 0x177 &&
+          offsetof(AIGroundVehicle, target) == 0x178 && offsetof(AIGroundVehicle, goal) == 0x190 &&
+          offsetof(AIGroundVehicle, goalDistance) == 0x1a0 && offsetof(AIGroundVehicle, goalDirection) == 0x1b0 &&
+          offsetof(AIGroundVehicle, steerPoint) == 0x1c0 && offsetof(AIGroundVehicle, targetSegment) == 0x1cc &&
+          offsetof(AIGroundVehicle, goalHidden) == 0x1d8 && offsetof(AIGroundVehicle, navHeading) == 0x1e0 &&
+          offsetof(AIGroundVehicle, attackRange) == 0x1f0 && offsetof(AIGroundVehicle, turretAngle) == 0x204 &&
+          offsetof(AIGroundVehicle, aimPoint) == 0x210 && offsetof(AIGroundVehicle, leadPoint) == 0x220 &&
+          offsetof(AIGroundVehicle, stuckSteps) == 0x230 && offsetof(AIGroundVehicle, stuckPosition) == 0x240 &&
+          offsetof(AIGroundVehicle, facingNav) == 0x24c && offsetof(AIGroundVehicle, spawnStep) == 0x260,
+          "AIGroundVehicle layout");
 
-const uint32_t kAIGroundVehicleVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_0018b8d4));
+void **const kAIGroundVehicleVtable = Vtable_0018b8d4;
 
 // The heightPhase SetNavigateMode hands the next car, and how far along UnSpawn parks the next car (names ours)
 extern float NextHeightPhase;

@@ -7,6 +7,7 @@
 
 #include "Mixer.h"
 #include "Filters.h"
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 #include <stddef.h>
 #include <stdint.h>
@@ -43,14 +44,14 @@ struct FxTeeNode : SFilterNode {     // process 0x00144bc0, restore 0x00144ca0
     uint16_t served;                 // +0x24 the copy was handed out: pull again next time
     uint16_t fetch;                  // +0x26 pull upstream on the next call
 };
-static_assert(sizeof(FxTeeNode) == 0x28, "the tee node is 0x28 bytes");
+LAYOUT_32(sizeof(FxTeeNode) == 0x28, "the tee node is 0x28 bytes");
 
 // fx2 node type 8: the sum of its two inputs (0x24)
 struct FxSumNode : SFilterNode {     // process 0x00144d00, restore 0x00144ca0
     float *buffer;                   // +0x1c the second input
     int32_t capacity;                // +0x20 frames
 };
-static_assert(sizeof(FxSumNode) == 0x24, "the sum node is 0x24 bytes");
+LAYOUT_32(sizeof(FxSumNode) == 0x24, "the sum node is 0x24 bytes");
 
 // fx2 node type 7: an allpass delay (0x34)
 struct FxAllpassNode : SFilterNode {   // process 0x00144f30, restore 0x00144fc0
@@ -61,13 +62,13 @@ struct FxAllpassNode : SFilterNode {   // process 0x00144f30, restore 0x00144fc0
     float gain;                      // +0x2c
     float negGain;                   // +0x30
 };
-static_assert(sizeof(FxAllpassNode) == 0x34, "the allpass node is 0x34 bytes");
+LAYOUT_32(sizeof(FxAllpassNode) == 0x34, "the allpass node is 0x34 bytes");
 
 // fx2 node type 6: a gain (0x20)
 struct FxGainNode : SFilterNode {    // process 0x001450b0
     float gain;                      // +0x1c
 };
-static_assert(sizeof(FxGainNode) == 0x20, "the gain node is 0x20 bytes");
+LAYOUT_32(sizeof(FxGainNode) == 0x20, "the gain node is 0x20 bytes");
 
 // fx2 node type 5: a two-pole resonator (0x40)
 struct FxResonatorNode : SFilterNode {   // process 0x00145390
@@ -81,7 +82,7 @@ struct FxResonatorNode : SFilterNode {   // process 0x00145390
     float y1;                        // +0x38
     float y2;                        // +0x3c
 };
-static_assert(sizeof(FxResonatorNode) == 0x40, "the resonator node is 0x40 bytes");
+LAYOUT_32(sizeof(FxResonatorNode) == 0x40, "the resonator node is 0x40 bytes");
 
 // fx2 node types 2 and 4 are module H's FIR node, SND::SFilterFIR8 (Filters.h): process 0x001455f0 (type 2),
 // module H's SFILTER_hpfFIR8 (type 4)

@@ -15,6 +15,7 @@
 #include "Camera.h"                     // RWorldCamera
 #include "CameraIniLoader.h"            // the tuning file's tables
 #include "DirectorQueue.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 struct PhysicsObject;
 struct RigidBody;
@@ -207,7 +208,7 @@ public:
     void ForceCameraChange(unsigned id, int delay, int b, int unused);                          // 0x00089a40
     void EndCameraAnim(unsigned short delay, int b, bool c, unsigned id);                       // 0x00089ac0
 };
-static_assert(sizeof(RPlayerCamera) == 0x370, "RPlayerCamera is 880 bytes");
+LAYOUT_32(sizeof(RPlayerCamera) == 0x370, "RPlayerCamera is 880 bytes");
 
 // One of the renderer's camera views (RRenderHigh::views, render/RenderHigh.h): the view and its camera
 struct CameraView {

@@ -10,6 +10,7 @@
 #include "../engine/OBB.h"
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"        // MEM_fill
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // SimpleRigidBody (0x000b1e10-0x000b25e0), ported from the listing. The x87 arithmetic is the original's: chains in
@@ -29,7 +30,7 @@ struct HelicopterTestOwner : PhysicsObject {
     uint8_t unknown6c[0xcd];
     uint8_t unknown139;         // +0x139 zero: the helicopter's body is tested 3 higher
 };
-static_assert(offsetof(HelicopterTestOwner, unknown139) == 0x139, "owner layout");
+LAYOUT_32(offsetof(HelicopterTestOwner, unknown139) == 0x139, "owner layout");
 
 void SetHit(uint64_t *hits, int bit) {
     hits[bit / 64] |= uint64_t(1) << (bit % 64);

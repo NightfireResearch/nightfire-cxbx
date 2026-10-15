@@ -47,11 +47,11 @@ public:
                     const uint32_t *sourceSig);                                                 // 2  0x00075560
     void Simulate();                                                                            // 4  0x00075420
 };
-static_assert(sizeof(Smackable) == 0x88, "a smackable is 0x88 bytes");
-static_assert(offsetof(Smackable, sleepDelay) == 0x6c && offsetof(Smackable, hitPoints) == 0x74 &&
-              offsetof(Smackable, trigger) == 0x7c && offsetof(Smackable, sound) == 0x84, "Smackable layout");
+LAYOUT_32(sizeof(Smackable) == 0x88, "a smackable is 0x88 bytes");
+LAYOUT_32(offsetof(Smackable, sleepDelay) == 0x6c && offsetof(Smackable, hitPoints) == 0x74 &&
+          offsetof(Smackable, trigger) == 0x7c && offsetof(Smackable, sound) == 0x84, "Smackable layout");
 
-const uint32_t kSmackableVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_Smackable));
+void **const kSmackableVtable = Vtable_Smackable;
 
 // The PhysicsData of an article without one ("Dummy", a function-local static of the constructor's), and its guard
 // (bit 0: constructed)

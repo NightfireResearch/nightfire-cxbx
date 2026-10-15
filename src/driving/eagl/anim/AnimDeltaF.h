@@ -5,6 +5,7 @@
 
 #include "FnAnim.h"
 #include "../../platform/Ptr32.h"
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 // The F1 and F3 data: this header, a range record per value (F3: per 3-vector), the key blocks, the constants.
 struct DeltaFData : AnimData {
@@ -83,7 +84,7 @@ struct FnDeltaF : FnAnimMemoryMap {  // 0x30, FnDeltaF1 (type 21) and FnDeltaF3 
     void InitBuffersF3();                                        // 0x000ffd20
     bool EvalSQTF3(float time, float *sqt, void *mask);          // 0x000fff10
 };
-static_assert(sizeof(FnDeltaF) == 0x30, "FnDeltaF is 0x30 bytes");
+LAYOUT_32(sizeof(FnDeltaF) == 0x30, "FnDeltaF is 0x30 bytes");
 
 struct DeltaF3Header : DeltaFData {  // the F3 data (thiscall on it)
     uint8_t* ConstantsPointer();                                 // 0x00100800

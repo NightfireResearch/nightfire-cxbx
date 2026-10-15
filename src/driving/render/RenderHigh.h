@@ -16,6 +16,7 @@
 #include "../camera/PlayerCamera.h"       // CameraView, RPlayerCamera
 #include "../data/SymbolTable.h"          // SymbolNamespace
 #include "../engine/USingleton.h"
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 class GHud;
 class RRenderDebugViewPerspective;
@@ -51,9 +52,9 @@ public:
     static void RestartTrackRender();                                                           // 0x0008c840
     static void KillTrackRenderPostSim();                                                       // 0x0008bac0
 };
-static_assert(sizeof(RRenderHigh) == 0x44, "RRenderHigh is 0x44 bytes");
-static_assert(offsetof(RRenderHigh, viewCount) == 0x20 && offsetof(RRenderHigh, debugViewPerspective) == 0x30 &&
-              offsetof(RRenderHigh, framesPerSecond) == 0x40, "RRenderHigh layout");
+LAYOUT_32(sizeof(RRenderHigh) == 0x44, "RRenderHigh is 0x44 bytes");
+LAYOUT_32(offsetof(RRenderHigh, viewCount) == 0x20 && offsetof(RRenderHigh, debugViewPerspective) == 0x30 &&
+          offsetof(RRenderHigh, framesPerSecond) == 0x40, "RRenderHigh layout");
 
 // The one instance (its constructor sets it)
 extern RRenderHigh *fgRenderHigh;

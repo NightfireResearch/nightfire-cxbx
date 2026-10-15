@@ -23,6 +23,7 @@
 #include "../data/Carp.h"                // CARP::Instance, CARP::AnimInfo
 #include "../data/CoordConvert.h"        // Coord3, Coord4
 #include "../../helpers.h"               // FLOAT_AT
+#include "../../common/xbeClass.h"       // LAYOUT_32
 
 class RSceneObj;
 struct ArticleEffect;                    // world/World.h
@@ -85,10 +86,10 @@ struct System {
     // passed, the end. The index of the system the caller's loop goes on after.
     uint32_t Update(uint32_t index, uint32_t frame);                                            // 0x00077ed0
 };
-static_assert(sizeof(System) == 0x40, "a system is 64 bytes");
-static_assert(offsetof(System, zones) == 0x0c && offsetof(System, queue) == 0x10 &&
-              offsetof(System, state) == 0x16 && offsetof(System, playing) == 0x19 &&
-              offsetof(System, instances) == 0x1e, "System layout");
+LAYOUT_32(sizeof(System) == 0x40, "a system is 64 bytes");
+LAYOUT_32(offsetof(System, zones) == 0x0c && offsetof(System, queue) == 0x10 &&
+          offsetof(System, state) == 0x16 && offsetof(System, playing) == 0x19 &&
+          offsetof(System, instances) == 0x1e, "System layout");
 
 // Steps every active system, once per frame (`tick` the game's)
 void Update(uint32_t tick);                                                                     // 0x00078190
@@ -182,10 +183,10 @@ private:
     // The system of the id, or NULL (inlined in the game; PS2: Handle::FindSystem)
     RAnimEngine::System *FindSystem(uint32_t id);
 };
-static_assert(sizeof(Handle) == 0x40, "a handle's header is 64 bytes");
-static_assert(offsetof(Handle, systems) == 0x0c && offsetof(Handle, effectBits) == 0x18 &&
-              offsetof(Handle, instanceCount) == 0x1c && offsetof(Handle, effectMask28) == 0x28 &&
-              offsetof(Handle, effectMask38) == 0x38, "Handle layout");
+LAYOUT_32(sizeof(Handle) == 0x40, "a handle's header is 64 bytes");
+LAYOUT_32(offsetof(Handle, systems) == 0x0c && offsetof(Handle, effectBits) == 0x18 &&
+          offsetof(Handle, instanceCount) == 0x1c && offsetof(Handle, effectMask28) == 0x28 &&
+          offsetof(Handle, effectMask38) == 0x38, "Handle layout");
 
 // ---- the standard library's sort and lower_bound, as compiled for the handle's system ids (Dinkumware's;
 // Handle::Create sorts them)

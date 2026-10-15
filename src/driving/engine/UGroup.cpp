@@ -1,6 +1,7 @@
 #include "UGroup.h"
 
 #include "../data/UData.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // UGroup, the data group (0x00117940-0x00117e50, with 0x0003db60 and 0x0008d6e0), ported from the listing. See
@@ -12,7 +13,7 @@
 // stopped at (0 if none).
 // ---------------------------------------------------------------------------------------------------------------
 
-static_assert(sizeof(void *) == sizeof(uint32_t), "a group's offsets become pointers in place");
+LAYOUT_32(sizeof(void *) == sizeof(uint32_t), "a group's offsets become pointers in place");
 
 // The items as an address: the code tests the address of the first data item for zero (a group with no items),
 // arithmetic a pointer would not be allowed to do.

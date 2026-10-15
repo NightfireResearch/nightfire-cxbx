@@ -25,6 +25,7 @@
 #include "../data/Carp.h"               // CARP::Instance
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../render/SkeletalObj.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 namespace EAGL {
 struct Model;
@@ -33,7 +34,7 @@ class REmpBolts;
 class RVehicleParticle;
 struct PVehicle;
 
-const uint32_t kRVehicleVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_RVehicle));
+void **const kRVehicleVtable = Vtable_RVehicle;
 
 class RVehicle : public RSkeletalObj {
 public:
@@ -152,15 +153,15 @@ public:
     float ComputeWheels();                                                                      // 0x00096060
     void RenderShadowGeometry();                // shadowModel, if any                          // 0x00096410
 };
-static_assert(sizeof(RVehicle) == 0x370, "RVehicle is 0x370 bytes");
-static_assert(offsetof(RVehicle, instance) == 0xa0 && offsetof(RVehicle, damageZones) == 0xe0 &&
-              offsetof(RVehicle, muzzlePosition) == 0x1e0 && offsetof(RVehicle, muzzleEndTick) == 0x220 &&
-              offsetof(RVehicle, muzzleSize) == 0x230 && offsetof(RVehicle, wheelHeight) == 0x238 &&
-              offsetof(RVehicle, hubBone) == 0x258 && offsetof(RVehicle, switchIntensity) == 0x268 &&
-              offsetof(RVehicle, switchStartTick) == 0x2a8 && offsetof(RVehicle, steer) == 0x328 &&
-              offsetof(RVehicle, rudder) == 0x338 && offsetof(RVehicle, viewDrawList) == 0x348 &&
-              offsetof(RVehicle, particles) == 0x358 && offsetof(RVehicle, empVictim) == 0x360 &&
-              offsetof(RVehicle, empBolts) == 0x368, "RVehicle layout");
+LAYOUT_32(sizeof(RVehicle) == 0x370, "RVehicle is 0x370 bytes");
+LAYOUT_32(offsetof(RVehicle, instance) == 0xa0 && offsetof(RVehicle, damageZones) == 0xe0 &&
+          offsetof(RVehicle, muzzlePosition) == 0x1e0 && offsetof(RVehicle, muzzleEndTick) == 0x220 &&
+          offsetof(RVehicle, muzzleSize) == 0x230 && offsetof(RVehicle, wheelHeight) == 0x238 &&
+          offsetof(RVehicle, hubBone) == 0x258 && offsetof(RVehicle, switchIntensity) == 0x268 &&
+          offsetof(RVehicle, switchStartTick) == 0x2a8 && offsetof(RVehicle, steer) == 0x328 &&
+          offsetof(RVehicle, rudder) == 0x338 && offsetof(RVehicle, viewDrawList) == 0x348 &&
+          offsetof(RVehicle, particles) == 0x358 && offsetof(RVehicle, empVictim) == 0x360 &&
+          offsetof(RVehicle, empBolts) == 0x368, "RVehicle layout");
 
 // A switch effect's entry in GAME::SwitchData, what the article's render methods read
 struct SwitchEffectData {

@@ -12,6 +12,7 @@
 #include <stdint.h>
 
 #include "../data/CoordConvert.h"       // Coord4
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 namespace EAGL {
 struct TAR;
@@ -45,10 +46,10 @@ struct LensFlareData {
     uint8_t testPending[kTests];        // +0x21e4 a test ended whose result is not read yet
     uint8_t unknown21F4[0xc];
 };
-static_assert(sizeof(LensFlareData) == 0x2200, "the lens flare data is 0x2200 bytes");
-static_assert(offsetof(LensFlareData, counts) == 0x21c0 && offsetof(LensFlareData, texture) == 0x21d8 &&
-              offsetof(LensFlareData, testIndex) == 0x21e0 && offsetof(LensFlareData, testPending) == 0x21e4,
-              "LensFlareData layout");
+LAYOUT_32(sizeof(LensFlareData) == 0x2200, "the lens flare data is 0x2200 bytes");
+LAYOUT_32(offsetof(LensFlareData, counts) == 0x21c0 && offsetof(LensFlareData, texture) == 0x21d8 &&
+          offsetof(LensFlareData, testIndex) == 0x21e0 && offsetof(LensFlareData, testPending) == 0x21e4,
+          "LensFlareData layout");
 
 class RLensFlareManager {
 public:
@@ -70,7 +71,7 @@ public:
     void DrawFlares();                                                                  // 0x0009e540
     void TestFlares(RViewCamera *view);                                                 // 0x0009e720
 };
-static_assert(sizeof(RLensFlareManager) == 8, "RLensFlareManager is 8 bytes");
+LAYOUT_32(sizeof(RLensFlareManager) == 8, "RLensFlareManager is 8 bytes");
 
 extern RLensFlareManager *TheLensFlareManager;
 extern float FlareTestDepth;                // the test sprites' depth

@@ -10,6 +10,7 @@
 #include <stdio.h>
 
 #include "SndUntested.h"
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 namespace SND {
 
@@ -26,7 +27,7 @@ struct LinkList {
     LinkNode *tail;              // +0x04
     int32_t count;               // +0x08
 };
-static_assert(sizeof(LinkList) == 0xc, "SNDLINKLIST is 0xc bytes");
+LAYOUT_32(sizeof(LinkList) == 0xc, "SNDLINKLIST is 0xc bytes");
 
 // An SNDMEMI allocation record: offset from the heap's base, rounded size (MW: SNDMEMREC)
 struct MemEntry {
@@ -45,7 +46,7 @@ struct MemHeap {
     int32_t lowWater;            // +0x10 the least ever left past the last block
     int32_t count;               // +0x14 minus the number of records
 };
-static_assert(sizeof(MemHeap) == 0x18, "the SNDMEMI header is 0x18 bytes");
+LAYOUT_32(sizeof(MemHeap) == 0x18, "the SNDMEMI header is 0x18 bytes");
 
 // The options (0x120 at 0x00244cc8, sound.md 2.6; MW: SNDSYSOPTS): the platform's caps, the settable part (saved at
 // 0x00244de8) and the vector table. MW's names where its layout agrees with how this build uses a field; the

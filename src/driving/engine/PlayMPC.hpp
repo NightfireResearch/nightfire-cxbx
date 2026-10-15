@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 namespace EAGL {
 struct RenderContext;
@@ -44,12 +45,12 @@ public:
     // is called with the frame number once per frame drawn, between the picture and the end of the frame (0x001308a0).
     void Play(EAGL::ViewPort *viewport, bool widescreen, SubtitleCallback subtitles);
 };
-static_assert(sizeof(PlayMPC) == 0x20, "PlayMPC is 0x20 bytes");
+LAYOUT_32(sizeof(PlayMPC) == 0x20, "PlayMPC is 0x20 bytes");
 
 // EA's task and thread services, which the original's wait loop keeps running while it waits for the next frame
 // (SYNCTASK_run, THREAD_yield: ours now, platform/RealSystem.cpp)
 #include "../platform/RealSystem.h"
 
 // The allocation settings Construct gives EA's player library
-extern uint32_t RcmpAllocate;
+extern void *(*RcmpAllocate)(const char *label, int size, int alignment, int offset, unsigned flags);
 extern int32_t RcmpAllocFlags;

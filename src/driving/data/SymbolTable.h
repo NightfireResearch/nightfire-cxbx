@@ -21,6 +21,7 @@
 
 #include "Tree.h"
 #include "UData.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 #include <stdint.h>
 
@@ -46,7 +47,7 @@ struct StringToNumber {
     // The number for `name`, -1 for an unknown one (0x0011a110).
     int ConvertStringToNumber(const char *name);
 };
-static_assert(sizeof(StringToNumber) == 16, "StringToNumber is 16 bytes");
+LAYOUT_32(sizeof(StringToNumber) == 16, "StringToNumber is 16 bytes");
 
 // qsort's comparisons for the sorted copies (0x00119ef0, 0x00119f40).
 int CompareByString(const void *a, const void *b);
@@ -108,7 +109,7 @@ public:
     // did not add; a missing name would throw from erase.
     SymbolNamespace* RemoveNamespace(const char *name);
 };
-static_assert(sizeof(USymbolTable) == 8, "USymbolTable is 8 bytes");
+LAYOUT_32(sizeof(USymbolTable) == 8, "USymbolTable is 8 bytes");
 
 // "CHAR" and "DATA": a name is its own value, its size its length with the terminator.
 class UCharNamespace : public SymbolNamespace {
@@ -118,7 +119,7 @@ public:
     void *NameLookup(const char *name, int *size);     // 0x0011a820, slot 0
     UCharNamespace *Delete(unsigned flags);            // 0x0011a850, slot 1
 };
-static_assert(sizeof(UCharNamespace) == 4, "UCharNamespace is 4 bytes");
+LAYOUT_32(sizeof(UCharNamespace) == 4, "UCharNamespace is 4 bytes");
 
 // "CARP": loaded files' groups by name.
 class UCarpNamespace : public SymbolNamespace {
@@ -138,6 +139,6 @@ public:
     // A name starting with '{' is a tag alone, with an empty group name. Always true.
     static bool ParseNameAndTag(const char *name, char *group, uint32_t *tag, int *offset);
 };
-static_assert(sizeof(UCarpNamespace) == 8, "UCarpNamespace is 8 bytes");
+LAYOUT_32(sizeof(UCarpNamespace) == 8, "UCarpNamespace is 8 bytes");
 
 #endif // DRIVING_DATA_SYMBOLTABLE_H_

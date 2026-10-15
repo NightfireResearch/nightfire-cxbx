@@ -49,7 +49,7 @@ struct PedestrianSpecial {
     int32_t walksAway;              // +0x44 zero: dead once its sequence ends, else it walks to homeTarget
     const char *description;        // +0x48 ActCharacter::LoadCharacter's
 };
-static_assert(sizeof(PedestrianSpecial) == 0x4c, "a special pedestrian kind is 0x4c bytes");
+LAYOUT_32(sizeof(PedestrianSpecial) == 0x4c, "a special pedestrian kind is 0x4c bytes");
 
 // A level's pedestrians (0x70 bytes; PedSets, by GetPedBase)
 struct PedestrianSet {
@@ -97,11 +97,11 @@ struct PedestrianStatics {
     AICharacterPedestrian *peds[kMaxPedestrians];   // +0x358
     int32_t count;                  // +0x398 16, or 0 for a level without pedestrians
 };
-static_assert(sizeof(PedestrianStatics) == 0x39c, "the pedestrians' statics are 0x39c bytes");
-static_assert(offsetof(PedestrianStatics, specialRoadCount) == 0x300 &&
-              offsetof(PedestrianStatics, pendingSpecialRoad) == 0x32c &&
-              offsetof(PedestrianStatics, playerPosition) == 0x340 && offsetof(PedestrianStatics, peds) == 0x358 &&
-              offsetof(PedestrianStatics, count) == 0x398, "PedestrianStatics layout");
+LAYOUT_32(sizeof(PedestrianStatics) == 0x39c, "the pedestrians' statics are 0x39c bytes");
+LAYOUT_32(offsetof(PedestrianStatics, specialRoadCount) == 0x300 &&
+          offsetof(PedestrianStatics, pendingSpecialRoad) == 0x32c &&
+          offsetof(PedestrianStatics, playerPosition) == 0x340 && offsetof(PedestrianStatics, peds) == 0x358 &&
+          offsetof(PedestrianStatics, count) == 0x398, "PedestrianStatics layout");
 
 alignas(16) extern PedestrianStatics Pedestrians;
 constexpr int kPedestrianSets = 7;
@@ -250,16 +250,16 @@ private:
     void SetState(int newState);
     void Speak();
 };
-static_assert(sizeof(AICharacterPedestrian) == 0x290, "a pedestrian is 0x290 bytes");
-static_assert(offsetof(AICharacterPedestrian, index) == 0x140 && offsetof(AICharacterPedestrian, pedFlags) == 0x150 &&
-              offsetof(AICharacterPedestrian, homeTarget) == 0x170 && offsetof(AICharacterPedestrian, target) == 0x190 &&
-              offsetof(AICharacterPedestrian, active) == 0x1b4 && offsetof(AICharacterPedestrian, nav) == 0x1c0 &&
-              offsetof(AICharacterPedestrian, wallPoint) == 0x1d0 && offsetof(AICharacterPedestrian, threat) == 0x1f4 &&
-              offsetof(AICharacterPedestrian, threatPosition) == 0x210 &&
-              offsetof(AICharacterPedestrian, threatRight) == 0x230 &&
-              offsetof(AICharacterPedestrian, turnTowards) == 0x24c && offsetof(AICharacterPedestrian, aimTarget) == 0x260 &&
-              offsetof(AICharacterPedestrian, neckWeightStep) == 0x280, "AICharacterPedestrian layout");
+LAYOUT_32(sizeof(AICharacterPedestrian) == 0x290, "a pedestrian is 0x290 bytes");
+LAYOUT_32(offsetof(AICharacterPedestrian, index) == 0x140 && offsetof(AICharacterPedestrian, pedFlags) == 0x150 &&
+          offsetof(AICharacterPedestrian, homeTarget) == 0x170 && offsetof(AICharacterPedestrian, target) == 0x190 &&
+          offsetof(AICharacterPedestrian, active) == 0x1b4 && offsetof(AICharacterPedestrian, nav) == 0x1c0 &&
+          offsetof(AICharacterPedestrian, wallPoint) == 0x1d0 && offsetof(AICharacterPedestrian, threat) == 0x1f4 &&
+          offsetof(AICharacterPedestrian, threatPosition) == 0x210 &&
+          offsetof(AICharacterPedestrian, threatRight) == 0x230 &&
+          offsetof(AICharacterPedestrian, turnTowards) == 0x24c && offsetof(AICharacterPedestrian, aimTarget) == 0x260 &&
+          offsetof(AICharacterPedestrian, neckWeightStep) == 0x280, "AICharacterPedestrian layout");
 
-const uint32_t kAICharacterPedestrianVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_0018b470));
+void **const kAICharacterPedestrianVtable = Vtable_0018b470;
 
 #endif // DRIVING_GAME_AIPEDESTRIAN_H_

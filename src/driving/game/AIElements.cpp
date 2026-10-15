@@ -729,9 +729,9 @@ void AIElementController::WakeUp(AIElement *element) {
                 seat.mtx[3][1] = offset->y;
                 seat.mtx[3][2] = offset->z;
                 seat.mtx[3][3] = offset->w;
-                block = UMemory::FastAlloc(0x160, "AICharacter");
+                block = UMemory::FastAlloc(sizeof(AICharacterEnemyWindow), "AICharacter");
                 rider = block != NULL ? static_cast<AICharacterEnemyWindow *>(block)->Construct(&seat, riderCar) : NULL;
-                ActActorDatabase::GetNewActorHandle(&handle, reinterpret_cast<int>(rider), description,
+                ActActorDatabase::GetNewActorHandle(&handle, rider, description,
                                                     kElementWeapons[member.weapon], RiderCallback(),
                                                     &seat, false);
                 SetActorOf(rider, handle);
@@ -745,11 +745,11 @@ void AIElementController::WakeUp(AIElement *element) {
                 seat.mtx[3][1] = offset->y;
                 seat.mtx[3][2] = offset->z;
                 seat.mtx[3][3] = offset->w;
-                block = UMemory::FastAlloc(0x170, "AICharacter");
+                block = UMemory::FastAlloc(sizeof(AICharacterEnemySunroof), "AICharacter");
                 rider = block != NULL
                             ? static_cast<AICharacterEnemySunroof *>(block)->Construct(&seat, member.weapon, 0, riderCar)
                             : NULL;
-                ActActorDatabase::GetNewActorHandle(&handle, reinterpret_cast<int>(rider), description,
+                ActActorDatabase::GetNewActorHandle(&handle, rider, description,
                                                     kElementWeapons[member.weapon], RiderCallback(),
                                                     &seat, false);
                 SetActorOf(rider, handle);
@@ -763,11 +763,11 @@ void AIElementController::WakeUp(AIElement *element) {
                 seat.mtx[3][1] = offset->y;
                 seat.mtx[3][2] = offset->z;
                 seat.mtx[3][3] = offset->w;
-                block = UMemory::FastAlloc(0x170, "AICharacter");
+                block = UMemory::FastAlloc(sizeof(AICharacterEnemySnow), "AICharacter");
                 rider = block != NULL
                             ? static_cast<AICharacterEnemySnow *>(block)->Construct(&seat, member.weapon, riderCar)
                             : NULL;
-                ActActorDatabase::GetNewActorHandle(&handle, reinterpret_cast<int>(rider), description,
+                ActActorDatabase::GetNewActorHandle(&handle, rider, description,
                                                     kElementWeapons[member.weapon], SnowCallback(),
                                                     &seat, false);
                 SetActorOf(rider, handle);
@@ -781,10 +781,10 @@ void AIElementController::WakeUp(AIElement *element) {
                 seat.mtx[3][1] = offset->y;
                 seat.mtx[3][2] = offset->z;
                 seat.mtx[3][3] = offset->w;
-                block = UMemory::FastAlloc(0x150, "AICharacter");
+                block = UMemory::FastAlloc(sizeof(AICharacterEnemySSnow), "AICharacter");
                 rider = block != NULL ? static_cast<AICharacterEnemySSnow *>(block)->Construct(&seat, 1, riderCar)
                                       : NULL;
-                ActActorDatabase::GetNewActorHandle(&handle, reinterpret_cast<int>(rider), description, NULL,
+                ActActorDatabase::GetNewActorHandle(&handle, rider, description, NULL,
                                                     RiderCallback(), &seat, false);
                 SetActorOf(rider, handle);
                 ActorOf(handle)->SetNewAnimation(kBankSSnow, 6);
@@ -797,10 +797,10 @@ void AIElementController::WakeUp(AIElement *element) {
                 seat.mtx[3][1] = offset->y;
                 seat.mtx[3][2] = offset->z;
                 seat.mtx[3][3] = offset->w;
-                block = UMemory::FastAlloc(0x150, "AICharacter");
+                block = UMemory::FastAlloc(sizeof(AICharacterEnemySSnow), "AICharacter");
                 rider = block != NULL ? static_cast<AICharacterEnemySSnow *>(block)->Construct(&seat, 0, riderCar)
                                       : NULL;
-                ActActorDatabase::GetNewActorHandle(&handle, reinterpret_cast<int>(rider), description, NULL,
+                ActActorDatabase::GetNewActorHandle(&handle, rider, description, NULL,
                                                     RiderCallback(), &seat, false);
                 SetActorOf(rider, handle);
                 ActorOf(handle)->SetNewAnimation(kBankSSnow, 1);
@@ -813,9 +813,9 @@ void AIElementController::WakeUp(AIElement *element) {
                 seat.mtx[3][1] = offset->y;
                 seat.mtx[3][2] = offset->z;
                 seat.mtx[3][3] = offset->w;
-                block = UMemory::FastAlloc(0x150, "AICharacter");
+                block = UMemory::FastAlloc(sizeof(AICharacterEnemyDriver), "AICharacter");
                 rider = block != NULL ? static_cast<AICharacterEnemyDriver *>(block)->Construct(&seat, riderCar) : NULL;
-                ActActorDatabase::GetNewActorHandle(&handle, reinterpret_cast<int>(rider), description, NULL,
+                ActActorDatabase::GetNewActorHandle(&handle, rider, description, NULL,
                                                     RiderCallback(), &seat, false);
                 SetActorOf(rider, handle);
                 ActorOf(handle)->SetNewAnimation(kBankDriver, 8);
@@ -874,13 +874,13 @@ void AIElementController::WakeUp(AIElement *element) {
             }
             int unknown17c = info.kind == kGroundEnemy10 ? 1 : 0;
             bool registerTarget = (element->flags & kElementTargetBeacon) != 0;
-            void *block = UMemory::FastAlloc(0x1c0, "AICharacter");
+            void *block = UMemory::FastAlloc(sizeof(AICharacterEnemyGround), "AICharacter");
             AICharacter *character =
                 block != NULL ? static_cast<AICharacterEnemyGround *>(block)->Construct(&element->transform, info.weapon, 0,
                                                                                          unknown17c, registerTarget)
                               : NULL;
             PointerListNode *handle;
-            ActActorDatabase::GetNewActorHandle(&handle, reinterpret_cast<int>(character),
+            ActActorDatabase::GetNewActorHandle(&handle, character,
                                                 kElementDescriptions[info.description], kElementWeapons[info.weapon],
                                                 NULL, &element->transform, false);
             if (strstr(kElementDescriptions[info.description], kSnowHeavyDescription) != NULL) {

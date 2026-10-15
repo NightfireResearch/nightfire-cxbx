@@ -142,8 +142,8 @@ int32_t HudDebugMessageEndStep;
 
 namespace {
 
-const uint32_t kHudViewVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_0019ff84));     // GOrthoHudView
-const uint32_t kHudVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_001a06c0));
+void **const kHudViewVtable = Vtable_0019ff84;     // GOrthoHudView
+void **const kHudVtable = Vtable_001a06c0;
 constexpr uint32_t kActionQueueSize = 0x974;
 constexpr uint32_t kGallerySize = 0xc0;
 constexpr int kPuppetKind = 3;
@@ -239,7 +239,7 @@ void PlayMenuSound(const char *patch) {
 
 // FUNC_AT(0x000dab50)
 GHud* GHud::Construct() {
-    vtable = reinterpret_cast<const void *>(kHudVtable);
+    vtable = kHudVtable;
     lockFramesShown = 0;
     targeting = NULL;
 
@@ -247,7 +247,7 @@ GHud* GHud::Construct() {
     RViewCamera *view = static_cast<RViewCamera *>(UMemory::FastAlloc(sizeof(RViewCamera), "RViewCamera"));
     if (view != NULL) {
         view->Construct(NULL);
-        view->vtable = reinterpret_cast<void **>(kHudViewVtable);
+        view->vtable = kHudViewVtable;
         view->transformMode = RViewCamera::kDeviceTransform;
     }
     fHudView = view;
@@ -512,7 +512,7 @@ GHud* GHud::Construct() {
 // The view is destroyed through its own vtable; the action queue and the gallery are not cleared.
 // FUNC_AT(0x000dc420)
 void GHud::Destruct() {
-    vtable = reinterpret_cast<const void *>(kHudVtable);
+    vtable = kHudVtable;
     fHudApp = NULL;
     if (bloodTar != NULL) {
         bloodTar->Destruct();

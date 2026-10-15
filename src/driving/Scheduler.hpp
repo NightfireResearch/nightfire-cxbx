@@ -27,7 +27,7 @@ struct Vector_Schedule {
     // _Xlen (0x0005c090): throws length_error("vector<T> too long").
     static void Xlen();
 };
-static_assert(sizeof(Vector_Schedule) == 0x10, "Vector_Schedule is 16 bytes");
+LAYOUT_32(sizeof(Vector_Schedule) == 0x10, "Vector_Schedule is 16 bytes");
 
 // The game's scheduler (Ghidra: Scheduler, 36 bytes), an overlay class - see src/common/xbeClass.h. Its fields
 // are Ghidra's, generated from tools/structs_driving.json and checked: the four schedules, listOfSchedules,

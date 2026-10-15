@@ -428,7 +428,7 @@ void FakeSoundDelete(void *block, unsigned size) {
 AVehicle *__fastcall FakeVehicleConstruct(AVehicle *vehicle, int, const char *mixName, int skidVoices) {
     Log(kVehicleConstruct, { Word(vehicle), HashString(mixName), uint32_t(skidVoices) });
     memset(vehicle, 0x11, sizeof(AVehicle));
-    vehicle->vtable = 0x001a2680;
+    vehicle->vtable = reinterpret_cast<void **>(0x001a2680);
     vehicle->mix = MixByName(mixName);
     vehicle->gun = NULL;
     vehicle->turret = NULL;
@@ -706,7 +706,7 @@ void RandomBase(ABaseSound *sound, uint32_t vtable) {
     uint8_t *b = reinterpret_cast<uint8_t *>(sound);
     for (size_t i = 0; i < sizeof(ABaseSound); i++)
         b[i] = uint8_t(NextRandom() >> 24);
-    sound->vtable = vtable;
+    sound->vtable = reinterpret_cast<void **>(uintptr_t(vtable));
     sound->position = {Uniform(-20.0f, 20.0f), Uniform(-5.0f, 5.0f), Uniform(-20.0f, 20.0f)};
     sound->velocity = {Uniform(-4.0f, 4.0f), Uniform(-1.0f, 1.0f), Uniform(-4.0f, 4.0f)};
     sound->volume = Uniform(0.0f, 1.2f);
@@ -1277,7 +1277,7 @@ void TestLive() {
         sounds.push_back(static_cast<ABaseSound *>(node->value));
     int counts[6] = {};
     for (ABaseSound *sound : sounds) {
-        uint32_t vtable = sound->vtable;
+        uint32_t vtable = uint32_t(uintptr_t(sound->vtable));
         int kind = vtable == 0x001a2f08 ? 0 : vtable == 0x001a2f38 ? 1 : vtable == 0x0018a520 ? 2
                  : vtable == 0x00193ae8 || vtable == 0x00193ac4 ? 3 : IsVehicle(vtable) ? 4 : -1;
         if (kind < 0 || counts[kind] >= 6)

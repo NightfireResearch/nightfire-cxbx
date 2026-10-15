@@ -76,8 +76,8 @@ alignas(16) Coord4 TestData = { 0.03f, 0.85f, 4.0f, 0.0f };
 // XBE_GLOBAL(0x001c3ef0, 0x10)
 alignas(16) Coord4 ReflStretch = { 0.5f, 1.0f, 0.2f, 1.0f };
 
-const uint32_t kGlobalSymbolTableVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_00190e18));   // GameSymbolTable's (camera/CameraSpline.h)
-const uint32_t kEAGLNamespaceVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_001913b4));
+void **const kGlobalSymbolTableVtable = Vtable_00190e18;   // GameSymbolTable's (camera/CameraSpline.h)
+void **const kEAGLNamespaceVtable = Vtable_001913b4;
 constexpr int kCallbackSlots = 16;
 
 constexpr uint32_t kTagTextureFile = 0x736e2020;   // 'sn  ' (indexed: the TEXn number)
@@ -129,7 +129,7 @@ void GlobalSymbolTable::Init() {
     USymbolTable *table = static_cast<USymbolTable *>(UMemory::FastAlloc(sizeof(USymbolTable), "USymbolTable"));
     if (table != NULL) {
         table->Construct();
-        table->vtable = reinterpret_cast<void *>(uintptr_t(kGlobalSymbolTableVtable));
+        table->vtable = kGlobalSymbolTableVtable;
     }
     Symbols = table;
     if (!(CharNamespaceGuard & 1)) {
@@ -431,7 +431,7 @@ void RCARPFile::Resolve(const char *directory, UCarpNamespace *carp) {
                 created = static_cast<DynamicLoader *>(memory)->Construct(elf, model->Size(), resolver);
         }
         loader = created;
-        eagl.vtable = reinterpret_cast<const void *>(uintptr_t(kEAGLNamespaceVtable));
+        eagl.vtable = kEAGLNamespaceVtable;
         eagl.loader = created;
         Symbols->AddNamespace("EAGL", reinterpret_cast<SymbolNamespace *>(&eagl));
     }

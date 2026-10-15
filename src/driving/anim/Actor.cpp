@@ -68,7 +68,7 @@ constexpr uint32_t kMaxListSize = 0x3fffffff;
 // ---- ActActor
 
 // FUNC_AT(0x00012ca0)
-ActActor* ActActor::Construct(int id, const char *characterName, const char *weapon1, const char *weapon2,
+ActActor* ActActor::Construct(void *id, const char *characterName, const char *weapon1, const char *weapon2,
                               ActActorTransformCallback callback, const MATRIX4 *transform, bool mirrored) {
     this->callback = callback;
     callbackId = id;
@@ -736,7 +736,7 @@ void ActActorDatabase::ShutDown() {
 }
 
 // FUNC_AT(0x000139c0)
-PointerListNode** ActActorDatabase::GetNewActorHandle(PointerListNode **result, int id, const char *characterName, const char *weapon1, ActActorTransformCallback callback, const MATRIX4 *transform, bool unmirrored) {
+PointerListNode** ActActorDatabase::GetNewActorHandle(PointerListNode **result, void *id, const char *characterName, const char *weapon1, ActActorTransformCallback callback, const MATRIX4 *transform, bool unmirrored) {
     ActActor *actor = (ActActor *)UMemory::FastAlloc(sizeof(ActActor), "ActActor");
     if (actor != NULL)
         actor = actor->Construct(id, characterName, weapon1, NULL, callback, transform, !unmirrored);
@@ -752,7 +752,7 @@ PointerListNode** ActActorDatabase::GetNewActorHandle(PointerListNode **result, 
 }
 
 // FUNC_AT(0x00013ab0)
-PointerListNode** ActActorDatabase::GetNewActorHandle(PointerListNode **result, int id, const char *characterName, const char *weapon1, const char *weapon2, ActActorTransformCallback callback, const MATRIX4 *transform, bool unmirrored) {
+PointerListNode** ActActorDatabase::GetNewActorHandle(PointerListNode **result, void *id, const char *characterName, const char *weapon1, const char *weapon2, ActActorTransformCallback callback, const MATRIX4 *transform, bool unmirrored) {
     ActActor *actor = (ActActor *)UMemory::FastAlloc(sizeof(ActActor), "ActActor");
     if (actor != NULL)
         actor = actor->Construct(id, characterName, weapon1, weapon2, callback, transform, !unmirrored);
@@ -824,7 +824,7 @@ void ActActorDatabase::PrepareActorsForCulling() {
 }
 
 // FUNC_AT(0x00012f40)
-int ActActorDatabase::GetNextActorCullInfo(Coord4 *sphere, float *height, bool *checkFar, float *farScale) {
+intptr_t ActActorDatabase::GetNextActorCullInfo(Coord4 *sphere, float *height, bool *checkFar, float *farScale) {
     ActActorDatabase *database = ActorDatabase;
     PointerListNode *node;
     if (CullRestart) {
@@ -845,12 +845,12 @@ int ActActorDatabase::GetNextActorCullInfo(Coord4 *sphere, float *height, bool *
     *height = 2.0f;
     *checkFar = true;
     *farScale = 1.0f;
-    return (int)(intptr_t)actor;
+    return intptr_t(actor);
 }
 
 // FUNC_AT(0x0008c8d0)
-void ActActorDatabase::SetActorCull(int item, bool culled, float distance) {
-    ((ActActor *)(intptr_t)item)->culled = culled;
+void ActActorDatabase::SetActorCull(intptr_t item, bool culled, float distance) {
+    reinterpret_cast<ActActor *>(item)->culled = culled;
 }
 
 // FUNC_AT(0x00013880)

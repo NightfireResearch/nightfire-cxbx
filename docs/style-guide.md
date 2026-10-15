@@ -46,6 +46,10 @@ What Ghidra and MSVC produce is not what anyone wrote. Undo it wherever behaviou
   array fields.
 - **Pointers inside data read in place from a file** are `Ptr32<T>` members (src/driving/platform/Ptr32.h): a
   `T *` on 32-bit hosts, the file's 32-bit word on 64-bit ones (docs/driving/64-bit.md 7.1).
+- **Layout checks and 64-bit.** A structure that lives only in memory takes native pointers, so its 32-bit
+  layout is checked with `LAYOUT_32(condition, message)` (src/common/xbeClass.h; `XBE_CLASS_SIZE` and `XBE_FIELD`
+  are that form), which holds on 32-bit only. A structure read in place from the game's files keeps plain
+  `static_assert`s: its layout is the file's on every target (docs/driving/64-bit.md).
 - **Index arrays as arrays:** `voices[i].pitch`, never `*(float *)(base + i * 0x88 + 0x14)`.
 - **Globals by name:** the `TYPE_AT` macros in `src/helpers.h` (`U32_AT`, `FLOAT_AT`, `PTR_AT`...), each global
   named once near the top of the file (`#define Clock U32_AT(0x001e5204)`); a block of globals that is one record

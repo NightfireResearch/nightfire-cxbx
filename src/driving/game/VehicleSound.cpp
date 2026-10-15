@@ -39,7 +39,7 @@ uint32_t MetalGateCount;
 
 namespace {
 
-const uint32_t kAVehicleVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_AVehicle));
+void **const kAVehicleVtable = Vtable_AVehicle;
 
 enum { kVoiceBytes = 0x58 };
 

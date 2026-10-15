@@ -114,8 +114,8 @@ RGain *TheGain;
 
 namespace {
 
-const uintptr_t kRGainVtable = reinterpret_cast<uintptr_t>(Vtable_RGain);
-const uintptr_t kUSingletonVtable = reinterpret_cast<uintptr_t>(Vtable_0018beb0);
+void **const kRGainVtable = Vtable_RGain;
+void **const kUSingletonVtable = Vtable_0018beb0;
 constexpr uint32_t kPrimitiveTriangleStrip = 6;
 constexpr uint32_t kDepthAlways = 0x207;
 constexpr int kQuadVertices = 4;
@@ -148,7 +148,7 @@ GainGeoPrim* GainGeoPrim::Construct() {
 
 // FUNC_AT(0x0009dfe0)
 RGain* RGain::Construct() {
-    vtable = reinterpret_cast<const void *>(kRGainVtable);
+    vtable = kRGainVtable;
     state.Construct();
     model.Construct();
     geoPrim.Construct();
@@ -179,7 +179,7 @@ RGain* RGain::Construct() {
 
 // FUNC_AT(0x0009de00)
 void RGain::Destruct() {
-    vtable = reinterpret_cast<const void *>(kRGainVtable);
+    vtable = kRGainVtable;
     EAGL::RenderMethod *method = geoPrim.method;
     if (method != NULL) {
         method->Destruct();
@@ -187,7 +187,7 @@ void RGain::Destruct() {
     }
     model.Destruct();
     state.Destruct();
-    vtable = reinterpret_cast<const void *>(kUSingletonVtable);
+    vtable = kUSingletonVtable;
 }
 
 // FUNC_AT(0x0009e120)

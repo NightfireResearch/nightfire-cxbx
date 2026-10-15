@@ -6,6 +6,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 struct DofInfo {                     // per value: 12 bytes
     float min;
@@ -36,7 +37,7 @@ struct ScratchBuffer {               // three at 0x00241ba0
     void AllocateBuffer(uint32_t bytes);                         // 0x00106710
     void FreeBuffer();                                           // 0x00106750
 };
-static_assert(sizeof(ScratchBuffer) == 0xc, "a ScratchBuffer is 0xc bytes");
+LAYOUT_32(sizeof(ScratchBuffer) == 0xc, "a ScratchBuffer is 0xc bytes");
 extern ScratchBuffer ScratchBuffers[3];
 ScratchBuffer* ScratchBuffer_GetScratchBuffer(int index);        // 0x00106780
 void ScratchBuffer_FreeScratchBuffers();                         // 0x00106790

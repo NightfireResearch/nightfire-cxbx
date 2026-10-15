@@ -951,7 +951,7 @@ void TestPlay() {
         uint8_t start[0x120];
         FillRandom(start, sizeof(start));
         ABaseSound *s = reinterpret_cast<ABaseSound *>(start);
-        s->vtable = FakeVtable();
+        s->vtable = reinterpret_cast<void **>(uintptr_t(FakeVtable()));
         s->volume = Uniform(0.0f, 1.5f);
         s->pitch = Uniform(0.5f, 2.0f);
         ASoundPlayParams params;
@@ -1072,7 +1072,7 @@ void TestTriggers() {
 // The manager over private sounds
 void RandomSound(ABaseSound *s, const AListener *around) {
     FillRandom(s, sizeof(*s));
-    s->vtable = FakeVtable();
+    s->vtable = reinterpret_cast<void **>(uintptr_t(FakeVtable()));
     s->unknown04[0] = uint8_t(NextRandom());
     s->position.x = around->position.x + Uniform(-500.0f, 500.0f);
     s->position.y = around->position.y + Uniform(-20.0f, 20.0f);

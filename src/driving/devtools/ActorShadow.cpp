@@ -274,7 +274,8 @@ ActActorDatabase g_cullDatabase;
 
 Coord3 g_anchor;            // a live actor's position, else the origin: where our actors stand
 
-void ShadowCallback(int id, MATRIX4 *transform, Coord4 *velocity) {
+void ShadowCallback(void *callbackId, MATRIX4 *transform, Coord4 *velocity) {
+    int id = int(uintptr_t(callbackId));
     float a = float(id) * 0.37f;
     float c = cosf(a), s = sinf(a);
     memset(transform, 0, sizeof(*transform));
@@ -348,7 +349,7 @@ void BuildFakeActor(int i, Rng *rng) {
         actor->callback = ShadowCallback;
         actor->hasCallback = true;
     }
-    actor->callbackId = i * 7 + 1;
+    actor->callbackId = reinterpret_cast<void *>(uintptr_t(i * 7 + 1));
     actor->hasWeapon[0] = rng->Range(0, 3) != 0;
     actor->hasWeapon[1] = rng->Range(0, 2) == 0;
     actor->weaponVisible[0] = actor->hasWeapon[0];

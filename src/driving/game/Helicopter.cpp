@@ -23,6 +23,7 @@
 #include "../physics/SimpleRigidBody.h"
 #include "../platform/RealMath.h"
 #include "../render/RSceneObj.hpp"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // PHelicopter (0x0006d8f0-0x0006e330 and 0x0006e330-0x0006ec80), ported from the listing.
@@ -33,7 +34,7 @@
 
 // ---- globals
 
-static_assert(sizeof(ActionQueue) == 0x974, "an action queue is 0x974 bytes");
+LAYOUT_32(sizeof(ActionQueue) == 0x974, "an action queue is 0x974 bytes");
 
 namespace {
 
@@ -111,7 +112,7 @@ PHelicopter* PHelicopter::Construct(const char *name, float speed, Coord3 direct
     targetPos = position;
     destPos = position;
     Coord3 velocity = direction;
-    vtable = reinterpret_cast<void **>(kPHelicopterVtable);
+    vtable = kPHelicopterVtable;
     heliClass = 1;
     roll = 0.0f;
     unknown74 = 0.0f;
@@ -165,7 +166,7 @@ PHelicopter* PHelicopter::Construct(const char *name, float speed, Coord3 direct
 
 // FUNC_AT(0x0006e290)
 void PHelicopter::Destruct() {
-    vtable = reinterpret_cast<void **>(kPHelicopterVtable);
+    vtable = kPHelicopterVtable;
     ActionQueue *queue = actionQueue;
     if (queue != NULL) {
         queue->Destruct();

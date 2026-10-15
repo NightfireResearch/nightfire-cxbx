@@ -153,7 +153,7 @@ Sentry* Sentry::Construct(CARP::Instance *instance, int srbAxis, float srbSpeed,
                           uint32_t holdSteps, uint8_t scoreable) {
     PhysicsObject::Construct("sentry", "Sentry", kObjectSentry, 0, false, false);
     this->srbAxis = srbAxis;
-    vtable = reinterpret_cast<void **>(kSentryVtable);
+    vtable = kSentryVtable;
     this->animAxis = animAxis;
     srbRate = float(double(fgSimulation.timeStep) * kDegreesToTurns * srbSpeed);
     this->srbLimit = srbLimit;
@@ -243,7 +243,7 @@ Sentry* Sentry::Construct(CARP::Instance *instance, int srbAxis, float srbSpeed,
 
 // FUNC_AT(0x00073150)
 void Sentry::Destruct() {
-    vtable = reinterpret_cast<void **>(kSentryVtable);
+    vtable = kSentryVtable;
     SetRenderObject(NULL);
     if (targetable != NULL) {
         ReleaseTarget(targetable);

@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // The game's C runtime: the multithreaded CRT the XDK linked into Driving.xbe in 2002, as far as our code and
@@ -43,7 +44,7 @@ struct Lconv {
     char pSignPosn;
     char nSignPosn;
 };
-static_assert(sizeof(Lconv) == 0x30, "lconv");
+LAYOUT_32(sizeof(Lconv) == 0x30, "lconv");
 
 // ---- the heap, on the process heap XAPI made (CRuntime.cpp)
 

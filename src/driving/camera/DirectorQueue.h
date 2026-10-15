@@ -16,6 +16,7 @@
 #include "../eagl/GeoPrimState.h"
 #include "../eagl/Model.h"                // DynamicModel
 #include "../eagl/RenderMethod.h"
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 class RPlayerCamera;
 class RSceneObj;
@@ -56,9 +57,9 @@ public:
     RDirectorQueueData* ConstructCopy(const RDirectorQueueData *other);                         // 0x0007c1c0
     void Destruct();                    // every field cleared, the position (0, 0, 0, 1)        // 0x0007c220
 };
-static_assert(sizeof(RDirectorQueueData) == 0x28, "a director change is 40 bytes");
-static_assert(offsetof(RDirectorQueueData, delay) == 0x10 && offsetof(RDirectorQueueData, data18) == 0x18 &&
-              offsetof(RDirectorQueueData, unknown24) == 0x24, "director change layout");
+LAYOUT_32(sizeof(RDirectorQueueData) == 0x28, "a director change is 40 bytes");
+LAYOUT_32(offsetof(RDirectorQueueData, delay) == 0x10 && offsetof(RDirectorQueueData, data18) == 0x18 &&
+          offsetof(RDirectorQueueData, unknown24) == 0x24, "director change layout");
 
 // The queue's node: its value is destroyed by a method of the node's own
 template <>
@@ -70,7 +71,7 @@ struct CameraListNode<RDirectorQueueData> {
     void DestroyValue();                // value.Destruct() (name ours)                        // 0x0007c250
 };
 typedef CameraListNode<RDirectorQueueData> DirectorQueueNode;
-static_assert(sizeof(DirectorQueueNode) == 0x30, "a queue node is 48 bytes");
+LAYOUT_32(sizeof(DirectorQueueNode) == 0x30, "a queue node is 48 bytes");
 
 // The queue's nodes hold copies, destroyed as they go
 inline void ConstructListValue(RDirectorQueueData *slot, const RDirectorQueueData *value) {
@@ -97,7 +98,7 @@ public:
         void PopFront();                                                                        // 0x0007c340
         void IncreaseSize(uint32_t count);                                                      // 0x0007c5f0
     };
-    static_assert(sizeof(Queue) == 0xc, "a list is 12 bytes");
+    LAYOUT_32(sizeof(Queue) == 0xc, "a list is 12 bytes");
 
     Queue queue;                        // +0x00
     RPlayerCamera *camera;              // +0x0c
@@ -110,7 +111,7 @@ public:
     void RestartDirectorQueue();                                                                // 0x0007c5e0
     void AppendData(const RDirectorQueueData *data);                                            // 0x0007c6a0
 };
-static_assert(sizeof(RDirectorQueue) == 0x14, "RDirectorQueue is 20 bytes");
+LAYOUT_32(sizeof(RDirectorQueue) == 0x14, "RDirectorQueue is 20 bytes");
 
 // ---- placed here by the linker: renderer pieces
 
@@ -131,7 +132,7 @@ struct TextureDofState {
     TextureDofState* Construct();                                                               // 0x0007c6e0
     void Destruct();                                                                            // 0x0007c7b0
 };
-static_assert(sizeof(TextureDofState) == 0x4c, "the DOF state is 0x4c bytes");
+LAYOUT_32(sizeof(TextureDofState) == 0x4c, "the DOF state is 0x4c bytes");
 
 // Objects only the static initialisers construct and destroy (DirectorQueue.cpp)
 extern TextureDofState InitialiserDofStates[3];
@@ -147,9 +148,9 @@ struct ReverseDrawEntry {
     uint32_t distance;                  // +0x48 the view distance * 65536
     uint32_t unknown4C;                 // +0x4c never written: DrawInstance's stack
 };
-static_assert(sizeof(ReverseDrawEntry) == 0x50, "a reverse draw entry is 80 bytes");
-static_assert(offsetof(ReverseDrawEntry, instance) == 0x40 && offsetof(ReverseDrawEntry, distance) == 0x48,
-              "ReverseDrawEntry layout");
+LAYOUT_32(sizeof(ReverseDrawEntry) == 0x50, "a reverse draw entry is 80 bytes");
+LAYOUT_32(offsetof(ReverseDrawEntry, instance) == 0x40 && offsetof(ReverseDrawEntry, distance) == 0x48,
+          "ReverseDrawEntry layout");
 
 struct ReverseDrawList {
     uint32_t allocator;                 // +0x00
@@ -169,7 +170,7 @@ struct ReverseDrawList {
                                                                                                 // 0x0007ce30
     void PushBack(const ReverseDrawEntry *value);                                               // 0x0007ceb0
 };
-static_assert(sizeof(ReverseDrawList) == 0x10, "a vector is 16 bytes");
+LAYOUT_32(sizeof(ReverseDrawList) == 0x10, "a vector is 16 bytes");
 
 // The algorithms its members use, each as compiled for the entries (the iterators answered through `result`)
 void FillReverseDrawEntries(ReverseDrawEntry *from, ReverseDrawEntry *to, const ReverseDrawEntry *value);   // 0x0007c820

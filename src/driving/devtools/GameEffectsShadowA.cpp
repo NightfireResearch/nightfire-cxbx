@@ -1590,12 +1590,12 @@ void GameEffectsShadowA_Run(void) {
     for (int i = 0; i < kOwners; i++) {
         PhysicsObject *object = fgSimulation.rigidBodyOwners[i];
         if (object == NULL || object->renderObject == NULL ||
-            uint32_t(uintptr_t(object->renderObject->vtable)) != kRVehicleVtable)
+            uintptr_t(object->renderObject->vtable) != uintptr_t(kRVehicleVtable))
             continue;
         LiveVehicle v;
         v.object = object;
         v.render = static_cast<RVehicle *>(object->renderObject);
-        v.isBondCar = uint32_t(uintptr_t(object->vtable)) == kPBondCarVtable;
+        v.isBondCar = object->vtable == kPBondCarVtable;
         g_vehicles.push_back(v);
     }
 

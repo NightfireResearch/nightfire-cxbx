@@ -9,6 +9,7 @@
 
 #include "GeoPrimState.h"
 #include "Realgraph.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // FNTXFont and FNTXGlyph are realgraph's (Realgraph.h).
 
@@ -18,7 +19,7 @@ struct FNTXBatchEntry {              // 0xc
     float x;                         // +0x04
     float y;                         // +0x08
 };
-static_assert(sizeof(FNTXBatchEntry) == 0xc, "a batch record is 12 bytes");
+LAYOUT_32(sizeof(FNTXBatchEntry) == 0xc, "a batch record is 12 bytes");
 
 // The driver's entries, all cdecl. The draw functions return Device::Get() (their tail call).
 void* FONTEAGL_drawarray(const FNTXFont *font, const FNTXBatchEntry *batch, int count);   // 0x000ee190 (invented name)

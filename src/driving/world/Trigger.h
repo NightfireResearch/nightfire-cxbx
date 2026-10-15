@@ -7,6 +7,7 @@
 #include "CollisionInstance.h"   // WTrigger
 #include "CollisionTypes.h"
 #include "../data/Carp.h"         // CARP::Instance
+#include "../../common/xbeClass.h" // LAYOUT_32
 
 class ActWeapon;
 class RSceneObj;
@@ -93,9 +94,9 @@ struct EventDynamicData {
     Coord3 rayEnd;              // +0x54 its end
     float rayValue;             // +0x60 its damage, at least 50
 };
-static_assert(sizeof(EventDynamicData) == 0x64, "the event data is 0x64 bytes");
-static_assert(offsetof(EventDynamicData, trigger) == 0x30 && offsetof(EventDynamicData, hasRayShell) == 0x44,
-              "event data layout");
+LAYOUT_32(sizeof(EventDynamicData) == 0x64, "the event data is 0x64 bytes");
+LAYOUT_32(offsetof(EventDynamicData, trigger) == 0x30 && offsetof(EventDynamicData, hasRayShell) == 0x44,
+          "event data layout");
 
 extern EventDynamicData gEventDynamicData;
 

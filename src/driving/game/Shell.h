@@ -57,7 +57,7 @@ struct RayShellTracerSource {
     RSceneObj *object;                  // +0x00 NULL: the tracer keeps its start
     const ArticleEffect *effect;        // +0x04
 };
-static_assert(sizeof(RayShellTracerSource) == 8, "a tracer source is 8 bytes");
+LAYOUT_32(sizeof(RayShellTracerSource) == 8, "a tracer source is 8 bytes");
 
 // A shooter's muzzle flash, lit at the next draw (0x10 bytes)
 struct RayShellFlash {
@@ -140,11 +140,11 @@ public:
     static void SetTriggerHittingRayShell(int index);   // -1: none                              // 0x00071970
     static ActiveRayShell* GetTriggerHittingRayShell(); // NULL: none                            // 0x00071980
 };
-static_assert(sizeof(RayShell) == 0xe0, "a ray shell is 0xe0 bytes");
-static_assert(offsetof(RayShell, origin) == 0x10 && offsetof(RayShell, damage) == 0x2c &&
-              offsetof(RayShell, direction) == 0x30 && offsetof(RayShell, range) == 0x4c &&
-              offsetof(RayShell, shellType) == 0x5c && offsetof(RayShell, ownerSig) == 0x64 &&
-              offsetof(RayShell, victims) == 0x70 && offsetof(RayShell, streakKind) == 0xd0, "RayShell layout");
+LAYOUT_32(sizeof(RayShell) == 0xe0, "a ray shell is 0xe0 bytes");
+LAYOUT_32(offsetof(RayShell, origin) == 0x10 && offsetof(RayShell, damage) == 0x2c &&
+          offsetof(RayShell, direction) == 0x30 && offsetof(RayShell, range) == 0x4c &&
+          offsetof(RayShell, shellType) == 0x5c && offsetof(RayShell, ownerSig) == 0x64 &&
+          offsetof(RayShell, victims) == 0x70 && offsetof(RayShell, streakKind) == 0xd0, "RayShell layout");
 
 // The tables (names ours)
 extern RayShellTracerSource RayShellTracerSources[kRayShellTracers];
@@ -188,9 +188,9 @@ public:
     static void ApplyWorldEffects(const Coord3 *position, const Coord4 *normal, int unused, int shellType,
                                   const uint8_t *faceType, int damageResult, PhysicsObject *object);  // 0x000749b0
 };
-static_assert(sizeof(Shell) == 0x90, "a shell is 0x90 bytes");
-static_assert(offsetof(Shell, shellType) == 0x6c && offsetof(Shell, stepsLeft) == 0x78 &&
-              offsetof(Shell, origin) == 0x80 && offsetof(Shell, streakKind) == 0x8c, "Shell layout");
+LAYOUT_32(sizeof(Shell) == 0x90, "a shell is 0x90 bytes");
+LAYOUT_32(offsetof(Shell, shellType) == 0x6c && offsetof(Shell, stepsLeft) == 0x78 &&
+          offsetof(Shell, origin) == 0x80 && offsetof(Shell, streakKind) == 0x8c, "Shell layout");
 
 // ApplyWorldEffects' state (names ours)
 extern uint32_t ShellConcreteSounds;            // alternates the two concrete sounds

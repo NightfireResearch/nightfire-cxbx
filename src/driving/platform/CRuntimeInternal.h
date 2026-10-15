@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "CRuntime.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // What the C runtime's own files share and nothing else uses: the per-thread block, the character classes, and
 // the floating-point conversions of CRuntimeFloat.cpp behind printf's %e/%f/%g and scanf's, atof's and strtod's
@@ -26,7 +27,7 @@ struct PerThreadData {
     int processingThrow;   // +0x7c _ProcessingThrow: a thrown object is on its way to a handler
     uint32_t unknown80;
 };
-static_assert(sizeof(PerThreadData) == 0x84, "_tiddata");
+LAYOUT_32(sizeof(PerThreadData) == 0x84, "_tiddata");
 
 PerThreadData* PerThread();
 

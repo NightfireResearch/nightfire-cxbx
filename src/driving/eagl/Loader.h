@@ -7,6 +7,7 @@
 // namespace left off as elsewhere; constructors and destructors as Construct/Destruct.
 
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 struct SymbolEntry {        // EAGL::SymbolEntry, FILE_malloc'd strlen(name) + 5
     void *value;
@@ -36,7 +37,7 @@ public:
     void *Search(const char *name, bool *found);
     void Empty();
 };
-static_assert(sizeof(SymbolPool) == 0x14, "SymbolPool is 0x14 bytes");
+LAYOUT_32(sizeof(SymbolPool) == 0x14, "SymbolPool is 0x14 bytes");
 
 typedef void *(*PoolConstructor)(void *data, void *loader);
 
@@ -117,7 +118,7 @@ public:
     static void RegisterShapes(uint8_t *shapes);
     static void UnRegisterShapes(uint8_t *shapes);
 };
-static_assert(sizeof(DynamicLoader) == 0x1c, "DynamicLoader is 0x1c bytes");
+LAYOUT_32(sizeof(DynamicLoader) == 0x1c, "DynamicLoader is 0x1c bytes");
 
 void *EAGL_LookupInObject(HashTable *table, const char *name);   // 0x000e5af0 (invented)
 

@@ -20,6 +20,7 @@
 #include "../data/Carp.h"                 // CARP::Instance
 #include "../render/RPathHandle.hpp"
 #include "../platform/Ptr32.h"
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 class RSceneObj;
 class UGroup;
@@ -266,9 +267,9 @@ struct WorldSceneObject {
 
     const MATRIX4 *Transform() const { return reinterpret_cast<const MATRIX4 *>(this); }
 };
-static_assert(sizeof(WorldSceneObject) == 0x4c, "a world scene object is 0x4c bytes");
-static_assert(offsetof(WorldSceneObject, procAnim) == 0x2c && offsetof(WorldSceneObject, savedState) == 0x40,
-              "WorldSceneObject layout");
+LAYOUT_32(sizeof(WorldSceneObject) == 0x4c, "a world scene object is 0x4c bytes");
+LAYOUT_32(offsetof(WorldSceneObject, procAnim) == 0x2c && offsetof(WorldSceneObject, savedState) == 0x40,
+          "WorldSceneObject layout");
 
 // std::vector<WorldSceneObject>, Dinkumware's as the game compiled it
 struct WorldSceneObjectList : GameVector<WorldSceneObject> {
@@ -287,7 +288,7 @@ struct WorldSceneObjectList : GameVector<WorldSceneObject> {
     WorldSceneObject** Insert(WorldSceneObject **result, WorldSceneObject *where, const WorldSceneObject *value);   // 0x000d20a0
     void PushBack(const WorldSceneObject *value);                                               // 0x000d2110
 };
-static_assert(sizeof(WorldSceneObjectList) == 0x10, "a vector is 16 bytes");
+LAYOUT_32(sizeof(WorldSceneObjectList) == 0x10, "a vector is 16 bytes");
 
 // The vector's algorithm copies: std::fill, copy_backward (the iterator answered through `result`), and the
 // uninitialized copy and fill
@@ -333,9 +334,9 @@ public:
     void Close();                                                                   // 0x000d1b30
     bool Open();                                                                    // 0x000d21a0
 };
-static_assert(sizeof(WWorld) == 0x3c, "WWorld is 60 bytes");
-static_assert(offsetof(WWorld, group) == 0x14 && offsetof(WWorld, map) == 0x1c && offsetof(WWorld, instances) == 0x20 &&
-              offsetof(WWorld, sceneObjects) == 0x34, "WWorld layout");
+LAYOUT_32(sizeof(WWorld) == 0x3c, "WWorld is 60 bytes");
+LAYOUT_32(offsetof(WWorld, group) == 0x14 && offsetof(WWorld, map) == 0x1c && offsetof(WWorld, instances) == 0x20 &&
+          offsetof(WWorld, sceneObjects) == 0x34, "WWorld layout");
 
 extern WWorld *fgWorld;
 

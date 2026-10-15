@@ -12,6 +12,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // ---- D3D8's state (d3dSeam.cpp), where the XDK code inlined into EAGL reads and writes it and the backend reads it
 // back at draw time
@@ -99,7 +100,7 @@ struct D3DTile {                     // D3DTILE
     uint32_t zStartTag;              // +0x10
     uint32_t zOffset;                // +0x14
 };
-static_assert(sizeof(D3DTile) == 0x18, "D3DTILE is 0x18 bytes");
+LAYOUT_32(sizeof(D3DTile) == 0x18, "D3DTILE is 0x18 bytes");
 
 struct D3DGammaRamp {                // D3DGAMMARAMP
     uint8_t red[256], green[256], blue[256];

@@ -779,24 +779,24 @@ RPlayerCamera* RPlayerCamera::Construct() {
     unknown144 = false;
     unknown145 = false;
 
-    void *block = UMemory::FastAlloc(0x40, "WWorldPos");
+    void *block = UMemory::FastAlloc(sizeof(WWorldPos), "WWorldPos");
     worldPos = block != NULL ? static_cast<WWorldPos *>(block)->Construct() : NULL;
-    block = UMemory::FastAlloc(0xc0, "WRoadNav");
+    block = UMemory::FastAlloc(sizeof(WRoadNav), "WRoadNav");
     roadNav = block != NULL ? static_cast<WRoadNav *>(block)->Construct() : NULL;
     roadNav->mode = kNavDirection;
-    block = UMemory::FastAlloc(0x14, "RDirectorQueue");
+    block = UMemory::FastAlloc(sizeof(RDirectorQueue), "RDirectorQueue");
     directorQueue = NULL;
     if (block != NULL) {
         directorQueue = static_cast<RDirectorQueue *>(block);
         directorQueue->Construct(this);
     }
-    block = UMemory::FastAlloc(0x70, "RCameraSpline");
+    block = UMemory::FastAlloc(sizeof(RCameraSpline), "RCameraSpline");
     spline = NULL;
     if (block != NULL) {
         spline = static_cast<RCameraSpline *>(block);
         spline->Construct();
     }
-    block = UMemory::FastAlloc(0x34, "RPlayerCamState");
+    block = UMemory::FastAlloc(sizeof(RPlayerCamState), "RPlayerCamState");
     state = NULL;
     if (block != NULL) {
         state = static_cast<RPlayerCamState *>(block);
@@ -827,7 +827,7 @@ void RPlayerCamera::SetOldCameraMode(int mode, int delay, unsigned b, bool relat
         return;
     }
 
-    uint32_t update = entry->update;
+    uintptr_t update = entry->update;
     alignas(16) RPlayerCamera scratch;
     scratch.Construct();
     scratch.SetAnchor(anchor);

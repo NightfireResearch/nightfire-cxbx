@@ -6,6 +6,7 @@
 // a string in the system's string store, a field in an extension structure). See AttributeValue.cpp.
 
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // What a value holds. The negative codes are the built-in types; an extension structure's type is its id,
 // counted from 1 (AttributeSystem::RegisterExtensionType). A key's suffix in an .atr file picks a built-in type:
@@ -60,6 +61,6 @@ struct AttributeValue {   // 8 bytes
     // type's initialiser fills in for the collection named `collectionName`.
     AttributeValue *ConstructStruct(void *structure, const char *collectionName, int8_t extensionType); // 0x00056190
 };
-static_assert(sizeof(AttributeValue) == 8, "an AttributeValue is 8 bytes");
+LAYOUT_32(sizeof(AttributeValue) == 8, "an AttributeValue is 8 bytes");
 
 #endif // DRIVING_DATA_ATTRIBUTEVALUE_H_

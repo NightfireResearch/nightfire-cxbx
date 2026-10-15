@@ -298,6 +298,9 @@ void InstanceList::Xlen() {
     ThrowLengthError("vector<T> too long");
 }
 
+// The window map is searched through the core's compiled find, which sees its nodes as CollisionInstanceNode
+static_assert(sizeof(CollisionInstanceNode) == sizeof(WindowMapNode), "the window map's nodes as the find sees them");
+
 // FUNC_AT(0x000a8c10)
 void RWindow::DrawBrokenWindows(float radius) {
     SimpleMaterial->SetDepthTestMethod(kDepthLessEqual);
@@ -318,7 +321,7 @@ void RWindow::DrawBrokenWindows(float radius) {
 
         WindowMap *windows = &fgCollisionMgr->windows;
         CollisionInstanceNode *found;
-        uint32_t key = uint32_t(uintptr_t(instance));
+        uintptr_t key = uintptr_t(instance);
         reinterpret_cast<CollisionInstanceMap *>(windows)->Find(&found, &key);
         WindowMapNode *hits = reinterpret_cast<WindowMapNode *>(found);
         if (hits == windows->head)

@@ -419,7 +419,7 @@ void EFireWeapon::Process() {
                                                        : WeaponManager->weapons[kWeaponGun].damage;
         power = (float)(basePower * accuracyScale);
         if (kRayShellBullets) {
-            void *memory = UMemory::FastAlloc(0xe0, "RayShell");
+            void *memory = UMemory::FastAlloc(sizeof(RayShell), "RayShell");
             if (memory != NULL)
                 static_cast<RayShell *>(memory)->Construct(weaponType, ownerSig, Xyz(position), Xyz(aim), Xyz(&origin),
                                                            gfxSceneObj, gfxEffect, 220.0f, power, 1, 0.0f, streakType);
@@ -536,7 +536,7 @@ void EFireWeapon::Process() {
     case kWeaponFodGun: {
         // the ultralight gun's damage for all three
         float rayPower = (float)WeaponManager->weapons[kWeaponUltralightGun].damage;
-        void *memory = UMemory::FastAlloc(0xe0, "RayShell");
+        void *memory = UMemory::FastAlloc(sizeof(RayShell), "RayShell");
         if (memory != NULL)
             static_cast<RayShell *>(memory)->Construct(weaponType, ownerSig, Xyz(position), Xyz(aim), Xyz(&origin),
                                                        gfxSceneObj, gfxEffect, 220.0f, rayPower, 1, 0.0f, streakType);
@@ -544,7 +544,7 @@ void EFireWeapon::Process() {
     }
     case kWeaponSniperRifle: {
         float rayPower = (float)WeaponManager->weapons[kWeaponSniperRifle].damage;
-        void *memory = UMemory::FastAlloc(0xe0, "RayShell");
+        void *memory = UMemory::FastAlloc(sizeof(RayShell), "RayShell");
         if (memory != NULL)
             static_cast<RayShell *>(memory)->Construct(kWeaponSniperRifle, ownerSig, Xyz(position), Xyz(aim),
                                                        Xyz(&origin), gfxSceneObj, gfxEffect, 400.0f, rayPower, 1, 0.0f,

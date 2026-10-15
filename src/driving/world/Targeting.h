@@ -13,6 +13,7 @@
 
 #include "CollisionTypes.h"     // Coord3, Coord4
 #include "SimpleZone.h"
+#include "../../common/xbeClass.h" // LAYOUT_32
 
 class AICharacter;
 class AIVehicle;
@@ -32,7 +33,7 @@ struct PointerListNode {
     PointerListNode *prev;      // +0x04
     void *value;                // +0x08
 };
-static_assert(sizeof(PointerListNode) == 12, "a list node is 12 bytes");
+LAYOUT_32(sizeof(PointerListNode) == 12, "a list node is 12 bytes");
 
 struct PointerList {
     uint8_t allocator;          // +0x00
@@ -53,7 +54,7 @@ struct PointerList {
     // _Incsize: throws length_error("list<T> too long") past 0x3fffffff nodes.
     void IncreaseSize(uint32_t count);                                                                  // 0x000ceca0
 };
-static_assert(sizeof(PointerList) == 12, "a list is 12 bytes");
+LAYOUT_32(sizeof(PointerList) == 12, "a list is 12 bytes");
 
 // ---- WTargetable
 
@@ -114,7 +115,7 @@ struct WTargetable {
     double DistFromScreenPos(const ScreenPos *point);                           // 0x000cd890
     double DistFromScreenCenter();                                              // 0x000cd8d0
 };
-static_assert(sizeof(WTargetable) == 0x50, "WTargetable is 80 bytes");
+LAYOUT_32(sizeof(WTargetable) == 0x50, "WTargetable is 80 bytes");
 
 // ---- WTargetPicker
 
@@ -197,7 +198,7 @@ public:
     static int CompareDistFromCamera(const void *a, const void *b);             // 0x000ce0a0
     static int CompareDistFromScreenPos(const void *a, const void *b);          // 0x000ce4f0
 };
-static_assert(sizeof(WTargetPicker) == 0xb0, "WTargetPicker is 176 bytes");
+LAYOUT_32(sizeof(WTargetPicker) == 0xb0, "WTargetPicker is 176 bytes");
 
 alignas(16) extern WTargetPicker TargetPicker;   // the one picker (name ours)
 

@@ -212,7 +212,7 @@ PVehicle* PVehicle::Construct(const char *name) {
     PhysicsObject::Construct("pvehicle", name, kObjectVehicle);
     missionEditorOnMask = 0;
     missionEditorOffMask = 0;
-    vtable = reinterpret_cast<void **>(kPVehicleVtable);
+    vtable = kPVehicleVtable;
     return this;
 }
 

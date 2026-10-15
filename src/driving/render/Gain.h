@@ -14,6 +14,7 @@
 #include "../eagl/GeoPrimState.h"
 #include "../eagl/Model.h"              // DynamicModel
 #include "../eagl/RenderMethod.h"       // GeoPrimParam
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 // The gain's GeoPrim (0x54), built by Construct over a child of the render method at 0x00242e50:
 // parameter 4 is the model-view-projection matrix; RGain fills 0 the render state, 1 the texture, 2 the vertex
@@ -44,9 +45,9 @@ public:
     void Reset();                                                                       // 0x0009dea0
     void Draw();                                                                        // 0x0009dec0
 };
-static_assert(sizeof(RGain) == 0x12c, "RGain is 0x12c bytes");
-static_assert(offsetof(RGain, state) == 0x24 && offsetof(RGain, model) == 0x70 &&
-              offsetof(RGain, vertexCount) == 0xc8 && offsetof(RGain, geoPrim) == 0xd8, "RGain layout");
+LAYOUT_32(sizeof(RGain) == 0x12c, "RGain is 0x12c bytes");
+LAYOUT_32(offsetof(RGain, state) == 0x24 && offsetof(RGain, model) == 0x70 &&
+          offsetof(RGain, vertexCount) == 0xc8 && offsetof(RGain, geoPrim) == 0xd8, "RGain layout");
 
 extern RGain *TheGain;
 // The screen quad's corners and colours, and the colours' guard

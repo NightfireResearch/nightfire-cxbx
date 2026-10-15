@@ -34,8 +34,8 @@ RLensFlareManager *TheLensFlareManager;
 
 namespace {
 
-const uintptr_t kRLensFlareManagerVtable = reinterpret_cast<uintptr_t>(Vtable_RLensFlareManager);
-const uintptr_t kUSingletonVtable = reinterpret_cast<uintptr_t>(Vtable_0018beb0);
+void **const kRLensFlareManagerVtable = Vtable_RLensFlareManager;
+void **const kUSingletonVtable = Vtable_0018beb0;
 constexpr uint32_t kTextureMoon = 0x6e6f6f6d;   // 'moon'
 constexpr uint32_t kTextureSunf = 0x666e7573;   // 'sunf'
 constexpr uint32_t kDepthLess = 0x201;
@@ -51,7 +51,7 @@ EAGL::RenderContextExtension *Extension(EAGL::RenderContext *context) {
 
 // FUNC_AT(0x0009e460)
 RLensFlareManager* RLensFlareManager::Construct() {
-    vtable = reinterpret_cast<const void *>(kRLensFlareManagerVtable);
+    vtable = kRLensFlareManagerVtable;
     data = static_cast<LensFlareData *>(OperatorNew(sizeof(LensFlareData)));
     data->texture = TheTextureContextManager->FindOrCreateTexture(kTextureMoon, 4);
     if (data->texture == NULL) {
@@ -67,9 +67,9 @@ RLensFlareManager* RLensFlareManager::Construct() {
 
 // FUNC_AT(0x0009e1b0)
 void RLensFlareManager::Destruct() {
-    vtable = reinterpret_cast<const void *>(kRLensFlareManagerVtable);
+    vtable = kRLensFlareManagerVtable;
     OperatorDelete(data);
-    vtable = reinterpret_cast<const void *>(kUSingletonVtable);
+    vtable = kUSingletonVtable;
 }
 
 // FUNC_AT(0x0009e520)

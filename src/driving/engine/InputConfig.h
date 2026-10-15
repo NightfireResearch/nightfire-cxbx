@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "../data/SymbolTable.h"   // StringToNumber
+#include "../../common/xbeClass.h" // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // The control configurations: which action each control of a device sends, and when.
@@ -59,7 +60,7 @@ struct InputTable {
     // Room for four more (0x000507e0)
     void GrowArrayForOneElement();
 };
-static_assert(sizeof(InputTable) == 0x3c, "an input table is 0x3c bytes");
+LAYOUT_32(sizeof(InputTable) == 0x3c, "an input table is 0x3c bytes");
 
 // A device's mappings (Ghidra: InputToAction, 0x10 bytes): one InputTable per control, and a lookup of the
 // controls by name
@@ -78,7 +79,7 @@ struct InputToAction {
     // Adds the mappings of a .def file's text, up to its FRONTEND or END line (0x00050a20)
     void LoadParseDefFile(char *text);
 };
-static_assert(sizeof(InputToAction) == 0x10, "InputToAction is 16 bytes");
+LAYOUT_32(sizeof(InputToAction) == 0x10, "InputToAction is 16 bytes");
 
 // The two types of configuration, as InputConfigManager's arrays index them
 enum : int32_t {
@@ -93,7 +94,7 @@ struct InputConfig {
     char *definition;       // +0x20 the file's text
     int32_t localeIDs[14];  // +0x24 the front end's label for each slot
 };
-static_assert(sizeof(InputConfig) == 0x5c, "a configuration is 0x5c bytes");
+LAYOUT_32(sizeof(InputConfig) == 0x5c, "a configuration is 0x5c bytes");
 
 // The configurations (Ghidra: InputConfigManager, 0x30 bytes; a function-local static at 0x001e455c)
 class InputConfigManager {
@@ -130,10 +131,10 @@ public:
     // mappings (0x00050720).
     void SetConfig(int type, int config);
 };
-static_assert(sizeof(InputConfigManager) == 0x30, "the configuration manager is 0x30 bytes");
-static_assert(offsetof(InputConfigManager, configs) == 0x18 && offsetof(InputConfigManager, inverted) == 0x20 &&
+LAYOUT_32(sizeof(InputConfigManager) == 0x30, "the configuration manager is 0x30 bytes");
+LAYOUT_32(offsetof(InputConfigManager, configs) == 0x18 && offsetof(InputConfigManager, inverted) == 0x20 &&
                   offsetof(InputConfigManager, unknown2C) == 0x2c,
-              "configuration manager layout");
+          "configuration manager layout");
 
 // ---- the text helpers
 

@@ -34,14 +34,14 @@ static const char BankNames[PrivateData::kMaxBanks][45] = {
     "sniper", "tfod", "ul", "worker",
 };
 
-const uint32_t kFnDefaultAnimBankVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_00189f44));
+void **const kFnDefaultAnimBankVtable = Vtable_00189f44;
 constexpr int kLoadFlags = 0x100;       // UFileLoader's flags for the bank list and the .rel files (the .dat: 0)
 static const char kAnimDirectory[] = "data\\actors\\anims\\";
 
 // ---- FnDefaultAnimBank
 
 void FnDefaultAnimBank::Construct() {
-    vtable = reinterpret_cast<const void *>(uintptr_t(kFnDefaultAnimBankVtable));
+    vtable = kFnDefaultAnimBankVtable;
     bank = NULL;
 }
 
@@ -86,7 +86,7 @@ uint32_t FnDefaultAnimBank::GetUnknown08() {
 
 // FUNC_AT(0x00013d10)
 FnDefaultAnimBank* FnDefaultAnimBank::Delete(unsigned flags) {
-    vtable = reinterpret_cast<const void *>(uintptr_t(kFnDefaultAnimBankVtable));
+    vtable = kFnDefaultAnimBankVtable;
     if (flags & 1)
         OperatorDelete(this);
     return this;

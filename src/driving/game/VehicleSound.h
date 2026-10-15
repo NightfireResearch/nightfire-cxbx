@@ -224,7 +224,7 @@ XBE_FIELD(AVehicle, voices, 0x198);
 XBE_FIELD(AVehicle, unknown1d0, 0x1d0);
 XBE_FIELD(AVehicle, horn, 0x1dc);
 XBE_FIELD(AVehicle, scrapesMix, 0x1ec);
-static_assert(sizeof(AVehicle) == 0x1f0, "AVehicle is 0x1f0 bytes");
+LAYOUT_32(sizeof(AVehicle) == 0x1f0, "AVehicle is 0x1f0 bytes");
 
 // PlayCollision's count of metal gate impacts: SFX_MetalGate2 and SFX_MetalGate3 by turns (name ours)
 extern uint32_t MetalGateCount;
@@ -249,7 +249,7 @@ public:
 };
 XBE_FIELD(AHorn, voice, 0xc);
 XBE_FIELD(AHorn, honks, 0x64);
-static_assert(sizeof(AHorn) == 0x70, "AHorn is 0x70 bytes");
+LAYOUT_32(sizeof(AHorn) == 0x70, "AHorn is 0x70 bytes");
 
 // ---- AVehicleWind (0x24 bytes, from operator new): bank slot 4's SFX_windy, its level and pitch drifting at
 // random, louder with speed
@@ -273,7 +273,7 @@ public:
     // Silent.
     void Stop(ASoundPlayParams *params);                                        // 0x0012ea30
 };
-static_assert(sizeof(AVehicleWind) == 0x24, "AVehicleWind is 0x24 bytes");
+LAYOUT_32(sizeof(AVehicleWind) == 0x24, "AVehicleWind is 0x24 bytes");
 
 // ---- the engine models: AEngine (0x24 bytes; vtable 0x001a3058) and its one kind, ARaceEngine (0x54 bytes,
 // from operator new; vtable 0x001a310c), shared by name through URefCounter<AEngine> (AEngine::Get).
@@ -281,7 +281,7 @@ static_assert(sizeof(AVehicleWind) == 0x24, "AVehicleWind is 0x24 bytes");
 
 class AEngine {
 public:
-    uint32_t vtable;                // +0x00
+    void **vtable;                  // +0x00
     float pitch;                    // +0x04 (names ours)
     float loadVolume;               // +0x08 the square root of the throttle
     float idleVolume;               // +0x0c the square root of one less the throttle
@@ -313,7 +313,7 @@ private:
     typedef void (AEngine::*PlayMethod)(ASoundPlayParams *params);
     typedef AEngine* (AEngine::*DeleteMethod)(unsigned int flags);
 };
-static_assert(sizeof(AEngine) == 0x24, "AEngine is 0x24 bytes");
+LAYOUT_32(sizeof(AEngine) == 0x24, "AEngine is 0x24 bytes");
 
 // ARaceEngine::voices, each an "IN" and an "OUT" patch of bank slot 9
 enum RaceEngineVoice { kEngineIdle, kEngineLowLoad, kEngineMidLoad, kEngineHighLoad, kEngineCruise, kRaceEngineVoices };
@@ -331,7 +331,7 @@ public:
     void Play(ASoundPlayParams *params);                                        // 0x0012ffb0
 };
 XBE_FIELD(ARaceEngine, voices, 0x24);
-static_assert(sizeof(ARaceEngine) == 0x54, "ARaceEngine is 0x54 bytes");
+LAYOUT_32(sizeof(ARaceEngine) == 0x54, "ARaceEngine is 0x54 bytes");
 
 // URefCounter<AEngine>'s tree (EngineRefCounter's map, at 0x00243b74): its compiled copies of RefCounterTree's code
 // (engine/URefCounter.h). Ghidra leaves them unnamed (0x0012ef80..0x0012f820).
@@ -348,7 +348,7 @@ public:
     void DestroyRange();                                                        // 0x0012f7e0
     void Destruct();                                                            // 0x0012f820
 };
-static_assert(sizeof(EngineRefTree) == 0xc, "a map is 12 bytes");
+LAYOUT_32(sizeof(EngineRefTree) == 0xc, "a map is 12 bytes");
 
 // The value every URefCounter's insert copies (the pair's constructor: the 128-byte key and the entry). The
 // linker kept one copy, among the engines' (Ghidra: FUN_0012ef50); URefCounter.cpp calls it.
@@ -404,7 +404,7 @@ XBE_FIELD(ATrafficVehicle, pitchOffset, 0x218);
 XBE_FIELD(ATrafficVehicle, airborneWheels, 0x220);
 XBE_FIELD(ATrafficVehicle, restCompression, 0x224);
 XBE_FIELD(ATrafficVehicle, frontCompression, 0x238);
-static_assert(sizeof(ATrafficVehicle) == 0x240, "ATrafficVehicle is 0x240 bytes");
+LAYOUT_32(sizeof(ATrafficVehicle) == 0x240, "ATrafficVehicle is 0x240 bytes");
 
 // A helicopter's engine sound (0x310 bytes; vtable 0x001a2e58): a rotor and a machine gun
 class AHelicopter : public AVehicle {
@@ -429,6 +429,6 @@ XBE_FIELD(AHelicopter, gunVoice, 0x248);
 XBE_FIELD(AHelicopter, unknownVoice2A0, 0x2a0);
 XBE_FIELD(AHelicopter, rotorLevel, 0x2f8);
 XBE_FIELD(AHelicopter, pitchOffset, 0x300);
-static_assert(sizeof(AHelicopter) == 0x310, "AHelicopter is 0x310 bytes");
+LAYOUT_32(sizeof(AHelicopter) == 0x310, "AHelicopter is 0x310 bytes");
 
 #endif // DRIVING_GAME_VEHICLESOUND_H_

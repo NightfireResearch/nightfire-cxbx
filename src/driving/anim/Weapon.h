@@ -15,6 +15,7 @@
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../engine/URefCounter.h"      // RefCounterTree
 #include "../render/RSceneObj.hpp"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 namespace CARP {
 struct AIElementCharacterInfo;
@@ -31,14 +32,14 @@ struct ActWeaponAux {
     // Loads data\actors\weapons\<name>.crp, resolved (Ghidra's name; it is the record's constructor).
     void Load(const char *name);                                                // 0x0001ab50
 };
-static_assert(sizeof(ActWeaponAux) == 4, "an ActWeaponAux is 4 bytes");
+LAYOUT_32(sizeof(ActWeaponAux) == 4, "an ActWeaponAux is 4 bytes");
 
 // ActWeaponDatabase::WeaponInfo (0x18, operator new): what URefCounter<WeaponInfo> counts.
 struct ActWeaponInfo {
     ActWeaponAux *aux;                // +0x00
     char name[0x14];                  // +0x04
 };
-static_assert(sizeof(ActWeaponInfo) == 0x18, "a WeaponInfo is 0x18 bytes");
+LAYOUT_32(sizeof(ActWeaponInfo) == 0x18, "a WeaponInfo is 0x18 bytes");
 
 // A muzzle flash (Ghidra: ActShellCasing)
 struct ActWeaponFlash {
@@ -102,11 +103,11 @@ public:
     Coord3* GetVelocity();                              // slot 13              // 0x0001b130
     void ManualRender();                                // slot 19              // 0x0001ae70
 };
-static_assert(offsetof(ActWeapon, aux) == 0x80, "ActWeapon::aux is at +0x80");
-static_assert(offsetof(ActWeapon, muzzleDirection) == 0x124, "ActWeapon::muzzleDirection is at +0x124");
-static_assert(offsetof(ActWeapon, flags) == 0x138, "ActWeapon::flags is at +0x138");
-static_assert(offsetof(ActWeapon, velocity) == 0x150, "ActWeapon::velocity is at +0x150");
-static_assert(sizeof(ActWeapon) == 0x170, "an ActWeapon is 0x170 bytes");
+LAYOUT_32(offsetof(ActWeapon, aux) == 0x80, "ActWeapon::aux is at +0x80");
+LAYOUT_32(offsetof(ActWeapon, muzzleDirection) == 0x124, "ActWeapon::muzzleDirection is at +0x124");
+LAYOUT_32(offsetof(ActWeapon, flags) == 0x138, "ActWeapon::flags is at +0x138");
+LAYOUT_32(offsetof(ActWeapon, velocity) == 0x150, "ActWeapon::velocity is at +0x150");
+LAYOUT_32(sizeof(ActWeapon) == 0x170, "an ActWeapon is 0x170 bytes");
 
 class ActWeaponDatabase {             // 0x40 (ActManager's)
 public:
@@ -126,8 +127,8 @@ public:
     ActWeapon* UseWeapon(const char *name, uint32_t flags);                     // 0x0001b3d0
     void StopUsingWeapon(const char *name, ActWeapon *weapon);                  // 0x0001b140
 };
-static_assert(offsetof(ActWeaponDatabase, count) == 0x3c, "ActWeaponDatabase::count is at +0x3c");
-static_assert(sizeof(ActWeaponDatabase) == 0x40, "an ActWeaponDatabase is 0x40 bytes");
+LAYOUT_32(offsetof(ActWeaponDatabase, count) == 0x3c, "ActWeaponDatabase::count is at +0x3c");
+LAYOUT_32(sizeof(ActWeaponDatabase) == 0x40, "an ActWeaponDatabase is 0x40 bytes");
 
 // URefCounter<WeaponInfo>'s tree (WeaponInfoRefCounter's map, at 0x001dda14): its compiled copies of
 // RefCounterTree's code (engine/URefCounter.h).

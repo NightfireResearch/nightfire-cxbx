@@ -21,6 +21,7 @@
 #include "Mix.h"                        // RefCounterTree
 #include "../engine/URefCounter.h"
 #include "../sound/snd/Streams.h"       // SND::StreamStatus, SND::RequestStatus
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 struct AVoiceMapNode;
 
@@ -65,7 +66,7 @@ private:
             offset = 0;
     }
 };
-static_assert(sizeof(AStreamQueue) == 0x14, "a deque is 0x14 bytes");
+LAYOUT_32(sizeof(AStreamQueue) == 0x14, "a deque is 0x14 bytes");
 
 // The stream's own state (0x128 bytes, "AStreamPriv" from the pools; the field names are ours)
 class AStreamPriv {
@@ -99,14 +100,14 @@ public:
     AStreamPriv* Construct(const char *file, const char *extension, unsigned int bufferSize);   // 0x00122190
     void Destruct();                                                                           // 0x001222f0
 };
-static_assert(sizeof(AStreamPriv) == 0x128, "AStreamPriv is 0x128 bytes");
-static_assert(offsetof(AStreamPriv, status) == 0x14, "AStreamPriv::status");
-static_assert(offsetof(AStreamPriv, request) == 0x20, "AStreamPriv::request");
-static_assert(offsetof(AStreamPriv, file) == 0x30, "AStreamPriv::file");
-static_assert(offsetof(AStreamPriv, stream) == 0x44, "AStreamPriv::stream");
-static_assert(offsetof(AStreamPriv, over) == 0x5c, "AStreamPriv::over");
-static_assert(offsetof(AStreamPriv, memory) == 0x64, "AStreamPriv::memory");
-static_assert(offsetof(AStreamPriv, name) == 0xe8, "AStreamPriv::name");
+LAYOUT_32(sizeof(AStreamPriv) == 0x128, "AStreamPriv is 0x128 bytes");
+LAYOUT_32(offsetof(AStreamPriv, status) == 0x14, "AStreamPriv::status");
+LAYOUT_32(offsetof(AStreamPriv, request) == 0x20, "AStreamPriv::request");
+LAYOUT_32(offsetof(AStreamPriv, file) == 0x30, "AStreamPriv::file");
+LAYOUT_32(offsetof(AStreamPriv, stream) == 0x44, "AStreamPriv::stream");
+LAYOUT_32(offsetof(AStreamPriv, over) == 0x5c, "AStreamPriv::over");
+LAYOUT_32(offsetof(AStreamPriv, memory) == 0x64, "AStreamPriv::memory");
+LAYOUT_32(offsetof(AStreamPriv, name) == 0xe8, "AStreamPriv::name");
 
 class AStream : public ABaseSound {
 public:
@@ -156,7 +157,7 @@ public:
     // One reference fewer to the stream `name`, and the stream deleted.
     static void Remove(const char *name);                                       // 0x001237f0
 };
-static_assert(sizeof(AStream) == 0xd0, "AStream is 0xd0 bytes");
+LAYOUT_32(sizeof(AStream) == 0xd0, "AStream is 0xd0 bytes");
 
 extern char StreamPath[0x80];       // where the streams' files are: SetPath's
 extern int32_t StreamHoldTick;      // TIMER_gettick when the held request was queued
@@ -179,7 +180,7 @@ public:
     // The static's destructor (at exit).
     void Destruct();                                                            // 0x001235a0
 };
-static_assert(sizeof(StreamRefTree) == 0xc, "a map is 12 bytes");
+LAYOUT_32(sizeof(StreamRefTree) == 0xc, "a map is 12 bytes");
 
 // The rightmost node under `node`, for the maps with 0x20-byte nodes (the voice debug map's, the collision
 // manager's window map, ...): the linker kept one copy, here.

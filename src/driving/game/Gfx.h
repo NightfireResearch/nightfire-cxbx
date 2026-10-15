@@ -30,7 +30,7 @@ public:
     static void Init();                                                                         // 0x000d33f0
     // The gallery freed (TheEffectsGallery is left as it was)
     static void Shutdown();                                                                     // 0x000d35d0
-    static int CULL_GetNextCanvas(Coord4 *sphere, float *height, bool *checkFar, float *farScale); // 0x000d3450
+    static intptr_t CULL_GetNextCanvas(Coord4 *sphere, float *height, bool *checkFar, float *farScale); // 0x000d3450
     static void PurgeSceneObjEffects(RSceneObj *sceneObj);                                      // 0x000d3490
     static void PurgeAllEffects();                                                              // 0x000d34b0
     // The canvases drawn, unless the HUD is paused

@@ -175,7 +175,7 @@ uint8_t WheelSurface(const PBondCar *car, int wheel) {
 PBondCar* PBondCar::Construct(int carClass, const char *carType, uint32_t colour, const Coord3 *direction,
                               const Coord3 *position) {
     PVehicle::Construct(carType);
-    vtable = reinterpret_cast<void **>(kPBondCarVtable);
+    vtable = kPBondCarVtable;
     for (int wheel = 0; wheel < kCarWheels; wheel++)
         wheels[wheel].Construct();
 
@@ -252,7 +252,7 @@ PBondCar* PBondCar::Construct(int carClass, const char *carType, uint32_t colour
     immunity = 0;
 
     if (carClass == kPlayerCar) {
-        ActionQueue *queue = static_cast<ActionQueue *>(UMemory::FastAlloc(0x974, "ActionQueue"));
+        ActionQueue *queue = static_cast<ActionQueue *>(UMemory::FastAlloc(sizeof(ActionQueue), "ActionQueue"));
         actionQueue = queue != NULL ? queue->Construct((char *)"CarQ") : NULL;
     } else {
         actionQueue = NULL;

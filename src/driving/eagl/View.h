@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #include "RenderContext.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 namespace EAGL {
 
@@ -100,7 +101,7 @@ struct ViewPort {                        // 0x1a0
     float* GetProjectionMatrix();                                            // 0x000f39a0 (no callers)
     float* GetViewProjectionMatrix();                                        // 0x000f39b0
 };
-static_assert(sizeof(ViewPort) == 0x1a0, "a ViewPort is 0x1a0 bytes");
+LAYOUT_32(sizeof(ViewPort) == 0x1a0, "a ViewPort is 0x1a0 bytes");
 
 inline ViewPort* ViewPortPrivate::Object() {
     return reinterpret_cast<ViewPort *>(reinterpret_cast<uint8_t *>(this) - 0x10);
@@ -152,7 +153,7 @@ struct TextureRenderContext {
     bool UnsupportedF36D0(uint32_t value);
     uint32_t SetupFrameBuffers(const TAR *colourTexture, const TAR *depthTexture);  // 0x000f36e0
 };
-static_assert(sizeof(TextureRenderContext) == 0xd4, "a TextureRenderContext is 0xd4 bytes");
+LAYOUT_32(sizeof(TextureRenderContext) == 0xd4, "a TextureRenderContext is 0xd4 bytes");
 
 struct TextureRenderContextExtension {
     TextureRenderContext *owner;
@@ -212,7 +213,7 @@ struct Device {
     static void SetDeleteOverride(void *deallocator);                        // 0x000e8a30
     static Device* Get();                                                    // 0x000e8a40
 };
-static_assert(sizeof(Device) == 0x1c, "a Device is 0x1c bytes");
+LAYOUT_32(sizeof(Device) == 0x1c, "a Device is 0x1c bytes");
 
 // EAGL::DeviceExtension, the Device itself (its first word is the Device).
 struct DeviceExtension {

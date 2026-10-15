@@ -847,7 +847,7 @@ void BondCarShadowD_Run(void) {
     g_verbose = atoi(setting) >= 2;
     g_cases = g_checks = g_differ = g_faults = g_details = 0;
 
-    memcpy(g_carVtable, (const void *)uintptr_t(kPBondCarVtable), sizeof(g_carVtable));
+    memcpy(g_carVtable, kPBondCarVtable, sizeof(g_carVtable));
     g_carVtable[2] = (void *)&FakeApplyDamageSlot;
     g_carVtable[PVehicle::kDisableTargetBeacon] = (void *)&FakeDisableBeacon;
     g_carVtable[PVehicle::kGetControllerInput] = (void *)&FakeControllerInput;
@@ -861,7 +861,7 @@ void BondCarShadowD_Run(void) {
     int cars = 0;
     for (int slot = 0; slot < 64; slot++) {
         PhysicsObject *owner = fgSimulation.rigidBodyOwners[slot];
-        if (owner == NULL || uint32_t(uintptr_t(owner->vtable)) != kPBondCarVtable)
+        if (owner == NULL || owner->vtable != kPBondCarVtable)
             continue;
         PBondCar *car = static_cast<PBondCar *>(static_cast<PVehicle *>(owner));
         if (car->physics == NULL || car->renderObject == NULL || car->audio == NULL)
