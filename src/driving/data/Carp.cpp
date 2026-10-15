@@ -67,17 +67,13 @@ static UData *DataEnd(UGroup *group) {
     return group->GetArray() + (group->GroupCount() + group->count);
 }
 
-static uint32_t Address(const void *p) {
-    return uint32_t(uintptr_t(p));
-}
-
 // FUNC_AT(0x00117e50)
 CARP::TagReference* CARP::TagReference::Construct(UGroup *shared, UGroup *local) {
     uint32_t tag = value;
     if (tag == 0)
         return this;
     if (tag == 0xffffffff) {
-        value = Address(local);
+        value = PtrTo32(local);
         return this;
     }
     UData *record = local->DataLocateTag(tag);
@@ -88,7 +84,7 @@ CARP::TagReference* CARP::TagReference::Construct(UGroup *shared, UGroup *local)
             return this;
         }
     }
-    value = Address(record->Data());
+    value = PtrTo32(record->Data());
     return this;
 }
 
@@ -850,7 +846,7 @@ void CARP::RotateSplineAboutBase(const float *base, const float *evaluated, cons
 
 // FUNC_AT(0x001193c0)
 void CARP::AISpline::GetApplyTransform(float *out) {
-    PathInfo *pathInfo = reinterpret_cast<PathInfo *>(uintptr_t(path.value));
+    PathInfo *pathInfo = PtrFrom32<PathInfo>(path.value);
     if (disabled == 0 && pathInfo != NULL) {
         uint32_t positionKey = 0;
         uint32_t rotationKey = 0;

@@ -17,8 +17,8 @@
 // FUNC_AT(0x001178f0)
 void UData::AdoptData(void *newData, uint32_t size, uint32_t newCount, bool own) {
     if ((flags & kDataOwned) && data != 0)
-        UMemory::Free(reinterpret_cast<void *>(uintptr_t(data)));
-    data = uint32_t(uintptr_t(newData));
+        UMemory::Free(PtrFrom32<void>(data));
+    data = PtrTo32(newData);
     // kDataRelative and kDataOwned cleared, the size's bits above them replaced - flags & 0xf9 keeps only the
     // low byte's other bits
     flags = (flags & 0xf9) | (((own & 1) | (size << 6)) << 2);

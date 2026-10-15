@@ -11,8 +11,8 @@
 
 typedef void *(*FileMallocFn)(const char *name, int size, int flags);
 typedef void (*FileFreeFn)(void *data);
-typedef void (*FsCallback)(unsigned handle, int status, int userData);   // an op's completion, on the worker
-typedef int (*FsAtomicFn)(int priority, void *argument);
+typedef void (*FsCallback)(unsigned handle, int status, intptr_t userData);   // an op's completion, on the worker
+typedef intptr_t (*FsAtomicFn)(int priority, void *argument);
 typedef char (*FsReadErrorFn)(void);
 
 unsigned QueueKeyIdentity(void *node);   // 0x0014a540, shared beyond FILESYS
@@ -22,14 +22,14 @@ bool FILESYS_init(int numFiles, int cdBuffer, int numOps);
 bool FILESYS_initadr(int numFiles, int cdBuffer, int numOps, void *block);
 void FILEDEV_setreaderror(FsReadErrorFn handler);
 
-unsigned FILESYS_open(const char *name, int mode, int priority, int userData);
-unsigned FILESYS_close(int slot, int priority, int userData);
-unsigned FILESYS_read(int slot, int offset, void *buffer, int count, int priority, int userData);
-unsigned FILESYS_write(int slot, int offset, const void *buffer, int count, int priority, int userData);
-unsigned FILESYS_size(int slot, int priority, int userData);
-unsigned FILESYS_exists(const char *name, int priority, int userData);
-unsigned FILESYS_addbig(const char *name, int allocFlags, int priority, int userData);
-unsigned FILESYS_delbig(int bigId, int priority, int userData);
+unsigned FILESYS_open(const char *name, int mode, int priority, intptr_t userData);
+unsigned FILESYS_close(int slot, int priority, intptr_t userData);
+unsigned FILESYS_read(int slot, int offset, void *buffer, int count, int priority, intptr_t userData);
+unsigned FILESYS_write(int slot, int offset, const void *buffer, int count, int priority, intptr_t userData);
+unsigned FILESYS_size(int slot, int priority, intptr_t userData);
+unsigned FILESYS_exists(const char *name, int priority, intptr_t userData);
+unsigned FILESYS_addbig(const char *name, int allocFlags, int priority, intptr_t userData);
+unsigned FILESYS_delbig(int bigId, int priority, intptr_t userData);
 
 int FILESYS_opstatus(unsigned handle);
 int FILESYS_waitop(unsigned handle);
@@ -37,7 +37,7 @@ int FILESYS_completeop(unsigned handle);
 void FILESYS_callbackop(unsigned handle, FsCallback callback);
 void FILESYS_cancelop(unsigned handle);
 void FILESYS_priorityop(unsigned handle, int priority);
-int FILESYS_atomic(FsAtomicFn function, int worker, int priority, void *argument);
+intptr_t FILESYS_atomic(FsAtomicFn function, int worker, int priority, void *argument);
 
 bool FILESYS_opensync(const char *name, int mode, int priority, int *outSlot);
 bool FILESYS_closesync(int slot, int priority);

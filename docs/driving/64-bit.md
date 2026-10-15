@@ -694,6 +694,57 @@ translation unit are `D3DTile` and RealSystem.h's `SyncTask`), warning lines 242
 src/common/gfx or src/driving/gfx. MSVC x64 compiles the backend, the shader translators, FXAA and texture replacement
 with no diagnostic; d3dSeam.cpp stops only on D3D8.h's `D3DTile` check (package 6).
 
+### 7.9 Done: packages 4 and 5, CARP, task data, sound and FILESYS (15 October 2026)
+
+**CARP.** A record's data word and a `TagReference` are window words: `UData::Data` and `AdoptData`,
+`UGroup::GetArray` and `ResolveOffsets`, and `TagReference::Construct` decode and encode them with
+`PtrFrom32`/`PtrTo32`. A relative offset still becomes an address by the original's 32-bit add on the word
+(`item->data += PtrTo32(item)`). The readers of resolved references (`model`, `physicsAttributes`, `articleDesc`,
+`path`, the triggers of `EFireRandomTrigger`, the mission rules' element words, the HUD's button message) decode with
+`PtrFrom32<T>`. The payload records' pointer slots and the 80 event `Record`s were already `Ptr32` (package 2), and
+the events' resolvers write them as `TagReference`s, so nothing more was needed there.
+`EScheduleEvent::Record::staticData` is a reference too (event 81's resolver is `EDeactivateAIElement`'s, which
+resolves the word at +4), now a `Ptr32<const void>`.
+
+**Task data.** A scheduler task's data is a pointer: an event list's data or a heap record (`EPathSFX`'s update). So
+`TaskCallback`, `Schedule::AddTask` and `TaskRecord::staticData` take `const void *`, as the event callbacks already
+did. `TaskRecord` grows on 64-bit (a memory structure: its size check is `LAYOUT_32`).
+
+**Package 5.** The banks' `AddBytes` adds on window words (`PtrFrom32(PtrTo32(p) + n)`), and the envelope tag's
+default is `PtrTo32(&DefaultEnvelope)`. FILESYS passes user data, an op's name, buffer or archive, and the match
+functions' argument as `intptr_t` (`int` on 32-bit, so the code is the same), and the atomic functions return
+`intptr_t`. The sort key of its queues, the node's address, is `PtrTo32(node)`. The STREAM's user data is `intptr_t`.
+A filter description is a `const SFilterDesc *` through `SNDCTRL_filteradd` and `SNDPLATFORM_filteradd`. `SetFxFunc`
+and the sound options' vector table are typed function pointers (`SysOpts` grows on 64-bit; its check is `LAYOUT_32`).
+`SNDSTRM_setgreedylevel`'s stream (the original passes the STREAM's address where it wants an index, and is refused)
+is `PtrTo32` of it. realgraph needed nothing beyond package 2's `Ptr32` slots. Package 6 took the vtable constants,
+the actor ids, the address keys (SkyWater, WRender, the cull items), the stream ring's mask, PlayMPC's allocators and
+Feedback's stack; both packages gave `RSceneObj::TriggerFX` the `const Coord3 *` arguments of `RVehicle`'s override.
+
+**The CARP records package 6 found** (in the tool's `LOADERS` table): `WTrigger::events`, `WCollisionInstance`'s
+`article`/`articleGroup`, `WMapHeader::root` and `ArticleGfxEffect::reference` are `Ptr32`, and so is what a
+collider's stamp points at (`ColliderStamp::source`, the address of an instance's `article`). The emitter key in
+EffectsGallery is only used with `NIGHTFIRE_X87=1`, which a 64-bit build never has.
+
+**The 32-bit build is unchanged.** Every object file of drivinginject, driving_standalone and driving_standalone_test
+was compared with the build of 0cdc670 (p64_objdiff's comparison, renamed symbols mapped). 958 of 967 are identical.
+The others differ only in symbol names: the signatures above, and the devtools fakes that follow them. One more
+difference: in `ESetRenderVariation::Process`, `RSceneObj::GetViewDrawList` and `UseArticle`, the inlined
+`UData::Data` swaps one `lea`'s operands (`[edi+ecx]` becomes `[ecx+edi]`), which computes the same address. The
+runner rounds wait for the combined round after the 64-bit packages are integrated.
+
+The world records' change, after the merge with driving-64, leaves the Collider and CollisionManager objects
+identical.
+
+**The x86-64 counts.** The probe, on this package alone (from 0cdc670): 993 to 995 distinct error lines (`TaskRecord`
+and `SysOpts`, now `LAYOUT_32`), 242 to 212 warning lines. Merged with driving-64 (packages 1, 2 and 6): 11 error
+lines, every one a check on an EAGL structure or one of the game's GeoPrims (packages 3a, 3b), and 182 warning lines.
+Every int/pointer cast it still reports is in EAGL (Loader.cpp, Model.cpp, RuntimeAlloc.cpp), the D3D seam and
+backend, or `NumGet::DoGetPointer` (StdStreams.cpp). The movie's two `_mm_empty` calls (GameLoop.cpp, EventsD.cpp:
+EMMS after the player) are x86-32 only: MSVC has no MMX intrinsics on x86-64, and nothing there uses MMX. MSVC x64,
+with static assertions disabled, then compiles and links both standalone executables, merged with driving-64 too
+(LNK4281 aside, the low base); nothing has run.
+
 ## 8. Work packages
 
 In order; each keeps the Windows 32-bit build unchanged (Ptr32 is `T *` there) and is tested by it. Sizes: S < 1 day of
@@ -706,8 +757,8 @@ agent time, M 1-2, L 3+.
 | 2 | **`Ptr32<T>` and the game window** in the host layer (heaps, pages, thread stacks, `operator new`), the range check, `PtrFrom32`/`PtrTo32`. **Done 15 October 2026** (7.5), with the 110 file structures' members retyped; thread stacks not placed | M | 32-bit: unchanged; 64-bit: a unit test of the window and the encoder |
 | 3a | **EAGL loader and models**: Loader.cpp (sections, relocations, symbol values), `Model`, `TAR`, `GeoPrim`, `DrawArray`, `LoadedVertexBuffer`, the word streams of Model.cpp. **Done 15 October 2026** (7.7) | L | 32-bit asm diff and LoaderShadow (injected build); 64-bit: loading every object on the disc (a devtools mode of the test executable comparing a digest of each loaded object with the 32-bit one's, pointers canonicalised) |
 | 3b | **Render methods and EAGLAnim data**: `RenderMethod`, the packets, the anim banks and delta data, skeletons. **Done 15 October 2026** (7.7) | M | same |
-| 4 | **CARP**: `UData`/`UGroup`/`TagReference` decoding, the payload records (`AIElement`, `AnimInfo`, `WorldArticle`, ...), the 80 event `Record`s, the vtable constants of the data layer | L | the same digest over each track's resolved CARP |
-| 5 | **realgraph, sound banks and streams, FILESYS and the int handles** (FNTX slots, timbre words, `AddBytes`, stream/filter handles, FILESYS user data, actor ids, address keys) | M | 32-bit asm diff; 64-bit sound traces |
+| 4 | **CARP**: `UData`/`UGroup`/`TagReference` decoding, the payload records (`AIElement`, `AnimInfo`, `WorldArticle`, ...), the 80 event `Record`s, the vtable constants of the data layer | L | the same digest over each track's resolved CARP. **Done 15 October 2026** (7.9), the vtable constants with package 6 |
+| 5 | **realgraph, sound banks and streams, FILESYS and the int handles** (FNTX slots, timbre words, `AddBytes`, stream/filter handles, FILESYS user data, actor ids, address keys) | M | 32-bit asm diff; 64-bit sound traces. **Done 15 October 2026** (7.9); actor ids and address keys with package 6 |
 | 6 | **Memory-only structures**: the 32-bit-only check form (and the generator's), the literal allocation sizes, the `* 4` arrays, the remaining vtable constants, the 66 narrowings - by directory, in two or three agents. **Done 15 October 2026** (7.6) | L | 32-bit asm diff (nothing may change), checks still all true on 32-bit |
 | 7 | ~~x87 on x86-64~~: replaced by the C forms (`NIGHTFIRE_X87=OFF`, **done 15 October 2026**, 4.4); left: the conversion edge cases (out-of-range float-to-unsigned and float-to-64-bit) | S | lockstep against `lbase_c` |
 | 8 | **The D3D seam and backend**: the state tables' bases, resource `data` words, push-buffer and stream words as window words; kept working for the action engine's 32-bit build. **Done 15 October 2026** (7.8) | M | 32-bit lockstep frames (driving) and the action engine's menu replays |

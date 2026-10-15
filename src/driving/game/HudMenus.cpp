@@ -838,7 +838,7 @@ void GHud::DrawButtonMessage() {
     if (buttonMsgUnknown > 0)
         text = GSystem::LOCALE_Symbol(buttonMsgUnknown);
     else
-        text = reinterpret_cast<const char *>(uintptr_t(buttonMsg));
+        text = PtrFrom32<const char>(buttonMsg);
     if (text == NULL) {
         buttonMsg = 0;
         buttonMsgTime = 0.0f;

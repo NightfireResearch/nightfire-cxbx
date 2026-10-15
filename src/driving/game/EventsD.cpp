@@ -338,11 +338,11 @@ void ESetRenderVariation::Destruct() {
 void ESetRenderVariation::Process() {
     if (instance == NULL)
         return;
-    CARP::BaseDesc *desc = reinterpret_cast<CARP::BaseDesc *>(uintptr_t(instance->articleDesc.value));
+    CARP::BaseDesc *desc = PtrFrom32<CARP::BaseDesc>(instance->articleDesc.value);
     if (desc == NULL)
         return;
     // the model's reference leads to a pointer to its group
-    UGroup *model = *reinterpret_cast<UGroup **>(uintptr_t(desc->model.value));
+    UGroup *model = *PtrFrom32<UGroup *>(desc->model.value);
     UData *list = model->DataLocateTag(variation == kNoVariation ? kTagIn : (variation | (kTagIn & kTagTypeMask)));
     if (list == model->DataEnd())
         return;
@@ -790,7 +790,9 @@ void ESetVideo::Process() {
         IOModule::GetIOModule()->EnableUpdating(true);
         ActionQueueManager::GetActionQueueManager()->FlushAllQueues();
         ASoundManager::Resume();
+#if defined(_M_IX86) || defined(__i386__)   // EMMS; MSVC has no MMX intrinsics on x86-64, where nothing uses MMX
         _mm_empty();
+#endif
         Crt::_clearfp();
     }
     GLoadingScreen::Status("*** ESetVideo exit...\n");

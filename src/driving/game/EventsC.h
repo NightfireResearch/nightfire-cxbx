@@ -1189,12 +1189,12 @@ class EScheduleEvent : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        uint32_t staticData;
+        Ptr32<const void> staticData;
         int32_t delayTicks;
         int32_t unknown0c;
     };
 
-    uint32_t staticData;                // +0x04 the task's (a CARP reference)
+    const void *staticData;             // +0x04 the task's (a CARP reference)
     int32_t delayTicks;                 // +0x08
     int32_t unknown0c;                  // +0x0c not read
 

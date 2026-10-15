@@ -56,8 +56,8 @@ StrmInternal *Valid(StrmReader *stream) {   // the check every entry starts with
 }
 
 // The FILESYS operations' user data: the STREAM
-int UserData(StrmInternal *s) {
-    return int(uintptr_t(s));
+intptr_t UserData(StrmInternal *s) {
+    return intptr_t(s);
 }
 
 StrmChunk *ChunkAt(uint8_t *p) {

@@ -92,7 +92,7 @@ extern SndFrameCallback volatile PostFrameCallback;      // SNDDRVPostFrameCb
 
 // The driver's own globals
 extern uint32_t NextDeadline;                            // the SND thread's next deadline (ms)
-extern uint32_t SetFxFunc;                               // p_setfx_func, written, never read
+extern void (*SetFxFunc)(int path);                      // p_setfx_func, written, never read
 extern SND::BufferNode *BufferNodes;                     // SND_BUFFER_LIST: [180]
 extern int32_t PoolSizes[2];                             // [pool]: 152, 28
 extern SND::PlatformVoice *PlatformVoices;               // [NumVoices]
@@ -141,7 +141,7 @@ int SNDDRV_getmastervoice(int mixVoice);                                     // 
 int SNDDRV_getsamplechan(int mixVoice);                                      // 0x00142460
 int SNDPLATFORM_packetplay(int player, int voice, int timeMult, int distort, int lowpass, int highpass,
                            const SND::PacketFormat *format, uint8_t *const *data);   // 0x001424c0
-int SNDPLATFORM_filteradd(int voice, int filter);                            // 0x001427d0
+int SNDPLATFORM_filteradd(int voice, const SND::SFilterDesc *filter);        // 0x001427d0
 void SNDPLATFORM_lowpass(int voice, int cutoff);                             // 0x001429f0
 int SNDPLATFORM_playtimbre(SND::PatchHeader *header, uint8_t *base, int voice, int timeMult, int distort,
                            int lowpass, int highpass);                        // 0x00142b10

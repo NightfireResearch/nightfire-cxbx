@@ -417,7 +417,7 @@ bool RSceneObj::UseArticle(UGroup *model, uint32_t article) {
             UData *first = model->DataLocateFirst(kTagAs, 0, 0xffff);
             if (first == model->DataEnd())
                 return false;
-            single.articleDesc.value = uint32_t(uintptr_t(first->Data()));
+            single.articleDesc.value = PtrTo32(first->Data());
         }
     }
     UseInstanceList(instances, int(count), states, false, modelName);

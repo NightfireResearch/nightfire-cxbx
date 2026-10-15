@@ -102,7 +102,7 @@ static_assert(offsetof(SysSet, speakerAzimuth) == 0x4c, "the speaker azimuths ar
 static_assert(sizeof(SysSet) == 0xe8, "the settable options are 0xe8 bytes");
 
 struct SysVectors {              // sndopts2 (MW: SNDSYSVEC), every one dummyNullFunction
-    uint32_t functions[6];       // the functions' addresses
+    void (*functions[6])();
 };
 
 struct SysOpts {
@@ -110,7 +110,7 @@ struct SysOpts {
     SysSet set;                  // +0x020
     SysVectors vectors;          // +0x108
 };
-static_assert(sizeof(SysOpts) == 0x120, "the options are 0x120 bytes");
+LAYOUT_32(sizeof(SysOpts) == 0x120, "the options are 0x120 bytes");
 
 }  // namespace SND
 

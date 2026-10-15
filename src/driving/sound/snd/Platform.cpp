@@ -69,7 +69,7 @@ SND::BufferList BufferLists[4];                        // SndGlobals.h
 // XBE_GLOBAL(0x00244c38, 4)
 uint32_t NextDeadline;                                 // the SND thread's next deadline (ms)
 // XBE_GLOBAL(0x00244c40, 4)
-uint32_t SetFxFunc;                                    // p_setfx_func, written, never read
+void (*SetFxFunc)(int path);                           // p_setfx_func, written, never read
 // XBE_GLOBAL(0x00244c44, 4)
 SND::BufferNode *BufferNodes;                          // SND_BUFFER_LIST: [180]
 // XBE_GLOBAL(0x00244c78, 8)
@@ -971,7 +971,8 @@ void SNDDRV_setfx(int path) {
         SNDSYS_leavecritical();
         return;
     }
-    const uint8_t *description = mode == 1 ? reinterpret_cast<const uint8_t *>(FxBusMainCpu[0].delay) : DefaultReverb;
+    const uint8_t *description = mode == 1 ? reinterpret_cast<const uint8_t *>(intptr_t(FxBusMainCpu[0].delay))
+                                             : DefaultReverb;
     MIX_initreverb(PlatformRate, description);
     SNDSYS_leavecritical();
 }
@@ -979,7 +980,7 @@ void SNDDRV_setfx(int path) {
 // FUNC_AT(0x00140a80)
 int SNDPLATFORM_fxinit(int bus, int path) {
     (void)bus;
-    SetFxFunc = uint32_t(reinterpret_cast<uintptr_t>(SNDDRV_setfx));
+    SetFxFunc = SNDDRV_setfx;
     SNDDRV_setfx(path);
     return 0;
 }
@@ -1158,12 +1159,12 @@ int SNDPLATFORM_packetplay(int player, int voice, int timeMult, int distort, int
 
 // A user filter on a MIX voice's chains (-7 on a hardware voice)
 // FUNC_AT(0x001427d0)
-int SNDPLATFORM_filteradd(int voice, int filter) {
+int SNDPLATFORM_filteradd(int voice, const SND::SFilterDesc *filter) {
     Voice *v = &VoiceArray[voice];
     if ((v->renderMode & SND::kRenderMainCpu) == 0)
         return -7;
     for (int ch = 0; ch < ChannelCount(v); ch++)
-        SFILTER_add(v->platformVoices[ch], ch, reinterpret_cast<const SND::SFilterDesc *>(filter));
+        SFILTER_add(v->platformVoices[ch], ch, filter);
     return 0;
 }
 

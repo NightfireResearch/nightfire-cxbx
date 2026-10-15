@@ -1,5 +1,6 @@
 #include "FileSys.h"
 
+#include "Ptr32.h"
 #include "RealMemory.h"
 #include "RealPrint.h"
 #include "RealSystem.h"
@@ -48,7 +49,7 @@
 #pragma pack(push, 4)
 
 typedef unsigned (*QueueKeyFn)(void *node, int argument);
-typedef int (*QueueMatchFn)(void *node, int argument);
+typedef int (*QueueMatchFn)(void *node, intptr_t argument);
 
 struct LockQueue {           // 0x38
     int count;               // +0x00
@@ -71,11 +72,11 @@ struct FsOp {                // 0x30, numOps of them in the FILESYS block
     uint16_t pad12;
     int error;               // +0x14 GetLastError() after the operation
     int slot;                // +0x18 file slot handle: the input of close/read/write, the output of open
-    int userData;            // +0x1c
+    intptr_t userData;       // +0x1c
     FsCallback callback;     // +0x20
     int arg0;                // +0x24
     int arg1;                // +0x28
-    int arg2;                // +0x2c
+    intptr_t arg2;           // +0x2c a name, buffer or BigFile for some types
 };
 LAYOUT_32(sizeof(FsOp) == 0x30, "FsOp is 0x30 bytes");
 
@@ -180,7 +181,7 @@ static int BlockBytes(int numFiles, int numOps) {
 // render code (0x000a2fc0) and two vtables (0x001d4840, 0x001d4870) call it too.
 // FUNC_AT(0x0014a540)
 unsigned QueueKeyIdentity(void *node) {
-    return (unsigned)node;
+    return PtrTo32(node);
 }
 
 static int Q_unlink(LockQueue *q, void *node) {             // 0x0014a550 (ECX = q, ESI = node); caller locks
@@ -295,7 +296,7 @@ static int Q_remove(LockQueue *q, void *node) {                     // 0x0014a80
     return removed;
 }
 
-static void *Q_find(LockQueue *q, QueueMatchFn match, int argument) {   // 0x0014a840
+static void *Q_find(LockQueue *q, QueueMatchFn match, intptr_t argument) {   // 0x0014a840
     Q_lock(q);
     void *node = q->head;
     while (node != NULL && match != NULL && !match(node, argument))
@@ -304,7 +305,7 @@ static void *Q_find(LockQueue *q, QueueMatchFn match, int argument) {   // 0x001
     return node;
 }
 
-static void *Q_findremove(LockQueue *q, QueueMatchFn match, int argument) {   // 0x0014a890
+static void *Q_findremove(LockQueue *q, QueueMatchFn match, intptr_t argument) {   // 0x0014a890
     Q_lock(q);
     void *node = q->head;
     while (node != NULL && match != NULL && !match(node, argument))
@@ -316,7 +317,7 @@ static void *Q_findremove(LockQueue *q, QueueMatchFn match, int argument) {   //
 }
 
 // Walks the queue until fn answers 0 or the queue changes; -1 if it ran to the end, else how many it visited.
-static int Q_foreach(LockQueue *q, QueueMatchFn fn, int argument) {   // 0x0014a910
+static int Q_foreach(LockQueue *q, QueueMatchFn fn, intptr_t argument) {   // 0x0014a910
     int count = 0;
     Q_lock(q);
     unsigned saved = q->flags & 1;
@@ -334,7 +335,7 @@ static int Q_foreach(LockQueue *q, QueueMatchFn fn, int argument) {   // 0x0014a
     return count;
 }
 
-static int Q_foreachlocked(LockQueue *q, QueueMatchFn fn, int argument) {   // 0x0014a9b0
+static int Q_foreachlocked(LockQueue *q, QueueMatchFn fn, intptr_t argument) {   // 0x0014a9b0
     Q_lock(q);
     int count = Q_foreach(q, fn, argument);
     Q_unlock(q);
@@ -597,7 +598,7 @@ struct ResolveCtx {
     int found;
 };
 
-static int FILEDEV_bigmatch(void *node, int argument) {            // 0x0010bf60; 0 stops the walk
+static int FILEDEV_bigmatch(void *node, intptr_t argument) {            // 0x0010bf60; 0 stops the walk
     BigFile *big = (BigFile *)node;
     ResolveCtx *c = (ResolveCtx *)argument;
     bool anyBig = c->bigName[0] == 0;
@@ -627,7 +628,7 @@ static int FILEDEV_resolveopen(const char *path, int mode, int searchBig) {   //
         name[0] = 0;
     }
     if (searchBig && !c.found)
-        Q_foreachlocked(&BigFiles, FILEDEV_bigmatch, (int)&c);
+        Q_foreachlocked(&BigFiles, FILEDEV_bigmatch, (intptr_t)&c);
     return c.slot;
 }
 
@@ -678,11 +679,11 @@ static unsigned FsOpKey(void *node, int unused) {                  // 0x0010c030
     return (op->handle >> 5 & 0xffffff) | (unsigned)op->priority << 24;
 }
 
-static int FsOpHandleIs(void *node, int handle) {                  // 0x0010c010
+static int FsOpHandleIs(void *node, intptr_t handle) {                  // 0x0010c010
     return ((FsOp *)node)->handle == (unsigned)handle;
 }
 
-static int BigIdIs(void *node, int id) {                           // 0x0010c050
+static int BigIdIs(void *node, intptr_t id) {                           // 0x0010c050
     return ((BigFile *)node)->id == id;
 }
 
@@ -713,7 +714,7 @@ static void FILESYS_startworker(int index) {                       // 0x0010cae0
 }
 
 // A record off the free list, numbered; NULL when all are in use (the original crashed).
-static FsOp *FILESYS_allocop(int type, int priority, int userData, int index) {   // 0x0010cbf0
+static FsOp *FILESYS_allocop(int type, int priority, intptr_t userData, int index) {   // 0x0010cbf0
     FsOp *op = (FsOp *)Q_popfront(&FreeOps);
     if (op == NULL) {
         printf("FILESYS: out of operation records\n");
@@ -881,19 +882,19 @@ static unsigned Submit(FsOp *op) {
 }
 
 // A copy of a name for an op to own (freed in FILESYS_completeop).
-static int CopyName(const char *name) {
+static intptr_t CopyName(const char *name) {
     if (name == NULL)
         name = "";
     size_t length = strlen(name) + 1;
     char *copy = (char *)pFILE_malloc("FileName", (int)length, 0);
     memcpy(copy, name, length);
-    return (int)copy;
+    return (intptr_t)copy;
 }
 
 // ---- the asynchronous API: each returns the op's handle, or 0
 
 // AUTOINJECT
-unsigned FILESYS_open(const char *name, int mode, int priority, int userData) {
+unsigned FILESYS_open(const char *name, int mode, int priority, intptr_t userData) {
     FsOp *op = FILESYS_allocop(OP_OPEN, priority, userData, 0);
     if (op == NULL)
         return 0;
@@ -904,7 +905,7 @@ unsigned FILESYS_open(const char *name, int mode, int priority, int userData) {
 }
 
 // AUTOINJECT
-unsigned FILESYS_close(int slot, int priority, int userData) {
+unsigned FILESYS_close(int slot, int priority, intptr_t userData) {
     FsOp *op = FILESYS_allocop(OP_CLOSE, priority, userData, 0);
     if (op == NULL)
         return 0;
@@ -913,32 +914,32 @@ unsigned FILESYS_close(int slot, int priority, int userData) {
 }
 
 // AUTOINJECT
-unsigned FILESYS_read(int slot, int offset, void *buffer, int count, int priority, int userData) {
+unsigned FILESYS_read(int slot, int offset, void *buffer, int count, int priority, intptr_t userData) {
     FsOp *op = FILESYS_allocop(OP_READ, priority, userData, 0);
     if (op == NULL)
         return 0;
     op->slot = slot;
     op->arg0 = offset;
     op->arg1 = count;
-    op->arg2 = (int)buffer;
+    op->arg2 = (intptr_t)buffer;
     return Submit(op);
 }
 
 // Not a Ghidra function (Ghidra runs FILESYS_read into it); only FILESYS_writesync uses it.
-unsigned FILESYS_write(int slot, int offset, const void *buffer, int count, int priority, int userData) {   // 0x0010cf20
+unsigned FILESYS_write(int slot, int offset, const void *buffer, int count, int priority, intptr_t userData) {   // 0x0010cf20
     FsOp *op = FILESYS_allocop(OP_WRITE, priority, userData, 0);
     if (op == NULL)
         return 0;
     op->slot = slot;
     op->arg0 = offset;
     op->arg1 = count;
-    op->arg2 = (int)buffer;
+    op->arg2 = (intptr_t)buffer;
     return Submit(op);
 }
 
 // Done here, on the caller's thread, and filed as done at once.
 // AUTOINJECT
-unsigned FILESYS_size(int slot, int priority, int userData) {
+unsigned FILESYS_size(int slot, int priority, intptr_t userData) {
     FsOp *op = FILESYS_allocop(OP_SIZE, priority, userData, 0);
     if (op == NULL)
         return 0;
@@ -957,7 +958,7 @@ unsigned FILESYS_size(int slot, int priority, int userData) {
 }
 
 // AUTOINJECT
-unsigned FILESYS_exists(const char *name, int priority, int userData) {
+unsigned FILESYS_exists(const char *name, int priority, intptr_t userData) {
     FsOp *op = FILESYS_allocop(OP_EXISTS, priority, userData, 0);
     if (op == NULL)
         return 0;
@@ -968,7 +969,7 @@ unsigned FILESYS_exists(const char *name, int priority, int userData) {
 
 // The archive is opened and its directory read on the worker; it is searched once the op is completed.
 // AUTOINJECT
-unsigned FILESYS_addbig(const char *name, int allocFlags, int priority, int userData) {
+unsigned FILESYS_addbig(const char *name, int allocFlags, int priority, intptr_t userData) {
     BigFile *big = (BigFile *)pFILE_malloc("BigFile", sizeof(BigFile), allocFlags);
     if (big == NULL)
         return 0;
@@ -985,19 +986,19 @@ unsigned FILESYS_addbig(const char *name, int allocFlags, int priority, int user
         pFILE_mfree(big);
         return 0;
     }
-    op->arg2 = (int)big;
+    op->arg2 = (intptr_t)big;
     return Submit(op);
 }
 
 // AUTOINJECT
-unsigned FILESYS_delbig(int bigId, int priority, int userData) {
+unsigned FILESYS_delbig(int bigId, int priority, intptr_t userData) {
     BigFile *big = (BigFile *)Q_find(&BigFiles, BigIdIs, bigId);
     if (big == NULL)
         return 0;
     FsOp *op = FILESYS_allocop(OP_DELBIG, priority, userData, 0);
     if (op == NULL)
         return 0;
-    op->arg2 = (int)big;
+    op->arg2 = (intptr_t)big;
     return Submit(op);
 }
 
@@ -1193,13 +1194,13 @@ void FILESYS_priorityop(unsigned handle, int priority) {
 // number), and with every other FILESYS_atomic on that worker waiting its turn. 0 without running it if a
 // higher priority is already being held.
 // AUTOINJECT
-int FILESYS_atomic(FsAtomicFn function, int worker, int priority, void *argument) {
+intptr_t FILESYS_atomic(FsAtomicFn function, int worker, int priority, void *argument) {
     if (worker < 0 || worker > 0x1f)
         return 0;
     FsWorker *w = &FsWorkers[worker];
     if (!w->alive)
         FILESYS_startworker(worker);
-    int result = 0;
+    intptr_t result = 0;
     MUTEX_lock(&w->atomicMutex);
     int old = w->ceiling;
     if (priority <= old) {
@@ -1278,7 +1279,7 @@ bool FILESYS_existssync(const char *name, int priority) {
 
 // A transfer in ops of kChunk bytes, each submitted by the previous one's callback on the worker, until a
 // short one, an error or the end. The original took its arguments in five registers (0x0010b5f0).
-typedef unsigned (*ChunkOpFn)(int slot, int offset, void *buffer, int count, int priority, int userData);
+typedef unsigned (*ChunkOpFn)(int slot, int offset, void *buffer, int count, int priority, intptr_t userData);
 
 struct ChunkCtx {
     int priority;
@@ -1292,7 +1293,7 @@ struct ChunkCtx {
     volatile unsigned op;    // the current op
 };
 
-static void ChunkDone(unsigned handle, int status, int userData) { // 0x0010b550
+static void ChunkDone(unsigned handle, int status, intptr_t userData) { // 0x0010b550
     ChunkCtx *c = (ChunkCtx *)userData;
     int n = FILESYS_completeop(handle);
     if (status != ST_OK) {
@@ -1307,7 +1308,7 @@ static void ChunkDone(unsigned handle, int status, int userData) { // 0x0010b550
     if (remaining > 0) {
         c->chunk = remaining < kChunk ? remaining : kChunk;
         c->remaining = remaining;
-        unsigned next = c->opfn(c->slot, c->offset, c->buffer, c->chunk, c->priority, (int)c);
+        unsigned next = c->opfn(c->slot, c->offset, c->buffer, c->chunk, c->priority, (intptr_t)c);
         c->op = next;
         if (next != 0) {
             FILESYS_callbackop(next, ChunkDone);
@@ -1320,7 +1321,7 @@ static void ChunkDone(unsigned handle, int status, int userData) { // 0x0010b550
 
 static int ChunkedSync(int slot, int count, int priority, int offset, void *buffer, ChunkOpFn opfn) {
     ChunkCtx c = { priority, slot, offset, count, 0, count < kChunk ? count : kChunk, (char *)buffer, opfn, 0 };
-    unsigned first = opfn(slot, offset, buffer, c.chunk, priority, (int)&c);
+    unsigned first = opfn(slot, offset, buffer, c.chunk, priority, (intptr_t)&c);
     if (first != 0) {
         c.op = first;
         FILESYS_callbackop(first, ChunkDone);
@@ -1352,7 +1353,7 @@ struct FileReq {
     int allocFlags;
 };
 
-static int SizeInternal(int priority, void *argument) {            // 0x0010d870
+static intptr_t SizeInternal(int priority, void *argument) {            // 0x0010d870
     FileReq *r = (FileReq *)argument;
     int slot;
     if (!FILESYS_opensync(r->path, MODE_READ, priority, &slot))
@@ -1378,15 +1379,15 @@ static void *LoadInternal(int priority, FileReq *r, bool keepSize) {
     return buffer;
 }
 
-static int FILE_load_internal(int priority, void *argument) {      // 0x0010d900
-    return (int)LoadInternal(priority, (FileReq *)argument, false);
+static intptr_t FILE_load_internal(int priority, void *argument) {      // 0x0010d900
+    return (intptr_t)LoadInternal(priority, (FileReq *)argument, false);
 }
 
-static int FILE_loadsize_internal(int priority, void *argument) {  // 0x0010da00
-    return (int)LoadInternal(priority, (FileReq *)argument, true);
+static intptr_t FILE_loadsize_internal(int priority, void *argument) {  // 0x0010da00
+    return (intptr_t)LoadInternal(priority, (FileReq *)argument, true);
 }
 
-static int FILE_loadat_internal(int priority, void *argument) {    // 0x0010dae0
+static intptr_t FILE_loadat_internal(int priority, void *argument) {    // 0x0010dae0
     FileReq *r = (FileReq *)argument;
     int count = r->size > 0 ? r->size : 0x7fffffff;
     int slot;
@@ -1397,7 +1398,7 @@ static int FILE_loadat_internal(int priority, void *argument) {    // 0x0010dae0
     return got;
 }
 
-static int FILE_save_internal(int priority, void *argument) {      // 0x0010dbe0
+static intptr_t FILE_save_internal(int priority, void *argument) {      // 0x0010dbe0
     FileReq *r = (FileReq *)argument;
     int slot;
     if (!FILESYS_opensync(r->path, MODE_CREATE | MODE_TRUNCATE, priority, &slot))
@@ -1407,10 +1408,10 @@ static int FILE_save_internal(int priority, void *argument) {      // 0x0010dbe0
     return put == r->size;
 }
 
-static int Atomic(FsAtomicFn function, char *path, void *buffer, int size, int zflag, int allocFlags,
+static intptr_t Atomic(FsAtomicFn function, char *path, void *buffer, int size, int zflag, int allocFlags,
                   FileReq *out = NULL) {
     FileReq request = { path, buffer, size, zflag, allocFlags };
-    int result = FILESYS_atomic(function, 0, SyncPriority, &request);
+    intptr_t result = FILESYS_atomic(function, 0, SyncPriority, &request);
     if (out != NULL)
         *out = request;
     return result;
@@ -1424,7 +1425,7 @@ bool FILE_exists(char *path) {
 
 // AUTOINJECT
 int FILE_sizez(char *path) {
-    return Atomic(SizeInternal, path, NULL, 0, 0, 0);
+    return int(Atomic(SizeInternal, path, NULL, 0, 0, 0));
 }
 
 // AUTOINJECT
@@ -1448,12 +1449,12 @@ void* FILE_loadsizez(char *path, int *outSize, int flags) {
 
 // AUTOINJECT
 int FILE_loadat(char *path, void *buffer, int size) {
-    return Atomic(FILE_loadat_internal, path, buffer, size, 1, 0);
+    return int(Atomic(FILE_loadat_internal, path, buffer, size, 1, 0));
 }
 
 // AUTOINJECT
 int FILE_loadatz(char *path, void *buffer, int size) {
-    return Atomic(FILE_loadat_internal, path, buffer, size, 0, 0);
+    return int(Atomic(FILE_loadat_internal, path, buffer, size, 0, 0));
 }
 
 // AUTOINJECT

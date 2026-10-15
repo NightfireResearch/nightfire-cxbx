@@ -203,9 +203,9 @@ public:
     uint8_t unknown19;
     uint16_t renderIndex;       // +0x1a its render instance (fgWorld->instances), and its name
     union {                     // +0x1c
-        CollisionArticle *article;  // its geometry, from WCollisionMgr::Init on (colliders and WWorldPos keep it
-                                    // to see that it has not changed)
-        UGroup *articleGroup;       // before: the CARP group of its article, as the loader resolved it
+        Ptr32<CollisionArticle> article;    // its geometry, from WCollisionMgr::Init on (colliders and WWorldPos
+                                            // keep it to see that it has not changed)
+        Ptr32<UGroup> articleGroup;         // before: the CARP group of its article, as the loader resolved it
     };
     Coord3 forward;             // +0x20
     float halfSizeZ;            // +0x2c

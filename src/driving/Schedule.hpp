@@ -20,7 +20,7 @@
 // A scheduled task (Ghidra: TaskRecord, 20 bytes). AddTask fills it on the stack and copies it into the list's node.
 struct TaskRecord {
     int32_t eventType;          // +0x00 which callback: an index into RegisterEvent's table
-    uint32_t staticData;        // +0x04 handed to the callback
+    const void *staticData;     // +0x04 handed to the callback
     uint8_t spacing;            // +0x08 the priority (0-7) the task runs at
     uint8_t unknown09;          // +0x09 never written: whatever was on AddTask's stack
     uint16_t delayTicks;        // +0x0a runs of its bucket to skip before the first call
@@ -28,7 +28,7 @@ struct TaskRecord {
     uint16_t unknown0e;         // +0x0e never written
     uint32_t taskNum;           // +0x10 the schedule's serial number for it, what RemoveTask looks for
 };
-static_assert(sizeof(TaskRecord) == 0x14, "TaskRecord is 20 bytes");
+LAYOUT_32(sizeof(TaskRecord) == 0x14, "TaskRecord is 20 bytes");
 
 // A node of a bucket's list (Ghidra's TaskRecord_LListEntry layout: next, previous, the record; 0x1c bytes, from
 // the fixed-size pools under the name "STL").
@@ -66,7 +66,7 @@ typedef TaskRecord_LListEntry TaskList;
 LAYOUT_32(sizeof(TaskList) == 0xc, "a task list is 12 bytes");
 
 // What a task runs: the callback RegisterEvent::LookupEvent gives for its event number, called with the task's data.
-typedef void (*TaskCallback)(uint32_t staticData);
+typedef void (*TaskCallback)(const void *staticData);
 
 // A schedule's vtable, the game's: slot 0 the scalar deleting destructor, slot 1 Process.
 struct vtable_Schedule {
@@ -100,7 +100,7 @@ struct Schedule {
     Schedule *DeletingDestructor(unsigned flags);
 
     // Adds a task to the emptiest bucket (0x0005c490) and answers its serial number. `unused` is never read.
-    uint32_t AddTask(int eventType, uint32_t staticData, unsigned short spacing, bool unused, int delayTicks,
+    uint32_t AddTask(int eventType, const void *staticData, unsigned short spacing, bool unused, int delayTicks,
                  int repeats);
     // Removes the task with this serial number, wherever it is (0x0005bc70). True if there was one.
     bool RemoveTask(uint32_t taskNum);

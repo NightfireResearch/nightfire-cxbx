@@ -19,7 +19,7 @@
 // What a barrier list was made from: an instance's article then, and where the instance keeps it
 struct ColliderStamp {
     CollisionArticle *article;
-    CollisionArticle *const *source;
+    const Ptr32<CollisionArticle> *source;
 };
 
 // The barrier stamps' vector (the instance and barrier lists are CollisionTypes.h's; their reserve and copies

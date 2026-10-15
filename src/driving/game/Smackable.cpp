@@ -128,7 +128,7 @@ void SendStageStimuli(RSceneObj *render, Handle *animation, uint32_t step, float
 
 // The article's "smackable" PhysicsData, if it has one
 PhysicsData *ArticlePhysicsData(RSceneObj *render) {
-    return reinterpret_cast<PhysicsData *>(uintptr_t(render->Desc()->physicsAttributes.value));
+    return PtrFrom32<PhysicsData>(render->Desc()->physicsAttributes.value);
 }
 
 } // namespace

@@ -3,6 +3,7 @@
 #include "Stream.h"
 #include "System.h"
 #include "../../engine/CoreFoundation.h"
+#include "../../platform/Ptr32.h"
 #include "../../platform/RealPrint.h"
 #include "SndGlobals.h"
 #include "../../../common/xbeClass.h"   // LAYOUT_32
@@ -406,7 +407,7 @@ int SNDSTRM_createtap(SND::StrmReader *stream, SND::PlayOpts *opts, int requests
 void SNDSTRMI_startstream(SND::StreamState *ss) {
     ss->voice = SNDPKTPLAY_start(ss->player, &ss->format, &ss->attributes, &ss->opts);
     if (ss->hasFilter != 0)
-        SNDCTRL_filteradd(ss->voice, int(uintptr_t(ss->filter)));
+        SNDCTRL_filteradd(ss->voice, reinterpret_cast<const SND::SFilterDesc *>(ss->filter));
     ss->state = 1;
 }
 
@@ -550,7 +551,7 @@ int SNDSTRMI_parseheader(int stream, uint32_t *chunk) {
     if (ss->state != 1) {   // SNDSTRMI_startstream, inlined (it sets the state twice)
         ss->voice = SNDPKTPLAY_start(ss->player, &ss->format, &ss->attributes, &ss->opts);
         if (ss->hasFilter != 0)
-            SNDCTRL_filteradd(ss->voice, int(uintptr_t(ss->filter)));
+            SNDCTRL_filteradd(ss->voice, reinterpret_cast<const SND::SFilterDesc *>(ss->filter));
         ss->state = 1;
         ss->state = 1;
     }
@@ -739,7 +740,7 @@ int SNDSTRMI_create(SND::PlayOpts *opts, int requests, int packets, void *memory
         ss->external = 0;
         int bytes = STREAM_buffersize(s);
         // the STREAM pointer where SNDSTRM_setgreedylevel wants a stream index: it answers -8 and sets nothing
-        SNDSTRM_setgreedylevel(int(uintptr_t(ss->stream)), bytes / 3);
+        SNDSTRM_setgreedylevel(int(PtrTo32(ss->stream)), bytes / 3);
     }
     ss->generation = 0;
     ss->voice = -1;

@@ -400,7 +400,7 @@ int SNDautovol(int handle, int ticks, int vol) {
 }
 
 // FUNC_AT(0x0013e860)
-int SNDCTRL_filteradd(int handle, int filter) {
+int SNDCTRL_filteradd(int handle, const SND::SFilterDesc *filter) {
     int index = SNDVOICEI_get(handle);
     if (index >= 0) {
         int voice = -1;

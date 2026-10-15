@@ -653,7 +653,7 @@ void EFireEventList_MakeEvent_Callback(const EFireEventList::Record *record) {
 void EFireEventList::Process() {
     for (uint32_t i = 0; i < uint32_t(events->count); i++) {
         TriggerEvent *event = &events->Events()[i];
-        RegisterEvent::LookupEvent(event->type)(reinterpret_cast<uintptr_t>(event->Data()));
+        RegisterEvent::LookupEvent(event->type)(event->Data());
     }
 }
 
@@ -675,7 +675,7 @@ void EFireRandomTrigger_MakeEvent_Callback(const EFireRandomTrigger::Record *rec
     if (event != NULL) {
         event->vtable = kEFireRandomTriggerVtable;
         for (int i = 0; i < 4; i++) {
-            event->choices[i].trigger = reinterpret_cast<WTrigger *>(uintptr_t(record->choices[i].trigger.value));
+            event->choices[i].trigger = PtrFrom32<WTrigger>(record->choices[i].trigger.value);
             event->choices[i].weight = record->choices[i].weight;
         }
         event->flag = gEventDynamicData.flag;
@@ -1572,8 +1572,7 @@ void EPathSFX::Process() {
     update->path = path;
     update->sound = sound;
     update->unknown10 = unknown0c;
-    update->taskNum = fgScheduler->s_SimRate->AddTask(kEventPathSFXUpdate, reinterpret_cast<uintptr_t>(update), 0,
-                                                      true, 0, 0);
+    update->taskNum = fgScheduler->s_SimRate->AddTask(kEventPathSFXUpdate, update, 0, true, 0, 0);
 }
 
 // FUNC_AT(0x000416e0)

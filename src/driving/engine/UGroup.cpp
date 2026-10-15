@@ -25,7 +25,7 @@ static uintptr_t ItemsAddress(UGroup *group) {
 UGroup* UGroup::GetArray() {
     if ((flags & kDataRelative) != 0)
         return this + data;
-    return (UGroup *)(uintptr_t)data;
+    return PtrFrom32<UGroup>(data);
 }
 
 // FUNC_AT(0x0003db60)
@@ -130,13 +130,13 @@ void UGroup::ProcessBreadthFirst(Processor *processor) {
 // Every relative offset made a pointer: the group's items, its subgroups' (recursively), its data items' data.
 // FUNC_AT(0x00117cb0)
 void UGroup::ResolveOffsets() {
-    data = (uint32_t)(uintptr_t)GetArray();
+    data = PtrTo32(GetArray());
     flags &= ~kDataRelative;
     for (UGroup *group = GetArray(); group != GetArray() + GroupCount(); group++)
         group->ResolveOffsets();
     for (UData *item = GetArray() + GroupCount(); item != DataEnd(); item++) {
         if ((item->flags & kDataRelative) != 0)
-            item->data += (uint32_t)(uintptr_t)item;
+            item->data += PtrTo32(item);
         item->flags &= ~kDataRelative;
     }
 }

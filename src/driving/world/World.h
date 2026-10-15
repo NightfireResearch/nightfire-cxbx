@@ -74,7 +74,7 @@ constexpr uint8_t kNoArticle = 0xff;
 
 // The per-type parts of an article effect, from its +0x18 (ArticleEffect's union)
 struct ArticleGfxEffect {               // kTypeGfx
-    UGroup *reference;                  // +0x18 the effect GFX::Trigger plays
+    Ptr32<UGroup> reference;            // +0x18 the effect GFX::Trigger plays
     int32_t triggered;                  // +0x1c what GFX::Trigger answered: a handle, 0 for none
     Coord4 rotation;                    // +0x20 a quaternion; the start of what GFX::Trigger is handed
     uint8_t unknown30[0x10];
@@ -217,7 +217,7 @@ static_assert(offsetof(WorldArticle, animInfos) == 8 && offsetof(WorldArticle, s
               offsetof(WorldArticle, lods) == 0x20, "WorldArticle layout");
 
 inline WorldArticle *ArticleOf(const CARP::Instance *instance) {
-    return reinterpret_cast<WorldArticle *>(uintptr_t(instance->articleDesc.value));
+    return PtrFrom32<WorldArticle>(instance->articleDesc.value);
 }
 
 // An environment description ('Envi' records, 0x1c bytes); a render instance's is the low half of its +0x2c word
