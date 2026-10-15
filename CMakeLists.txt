@@ -386,6 +386,9 @@ add_library(drivinginject SHARED
   src/driving/devtools/SndStreamFileShadow.cpp
   src/driving/devtools/StaticInitDump.cpp
   src/driving/devtools/StandaloneTraps.cpp
+  src/driving/devtools/CodeRetarget.cpp
+  src/driving/devtools/HeapPad.cpp
+  src/driving/devtools/X87Count.cpp
   src/driving/Vtables.cpp
   src/common/xbeOriginal.cpp
   src/driving/engine/UFileLoader.cpp
@@ -832,7 +835,10 @@ endforeach()
 set(nf_standalone_harness
   src/driving/devtools/Teleport.cpp
   src/driving/devtools/SndLockstep.cpp
-  src/driving/devtools/SndCallTrace.cpp)
+  src/driving/devtools/SndCallTrace.cpp
+  src/driving/devtools/CodeRetarget.cpp
+  src/driving/devtools/HeapPad.cpp
+  src/driving/devtools/X87Count.cpp)
 add_executable(driving_standalone ${nf_standalone_sources} src/driving/standalone/NoDevtools.cpp)
 add_executable(driving_standalone_test EXCLUDE_FROM_ALL ${nf_standalone_sources} ${nf_standalone_harness})
 target_compile_definitions(driving_standalone_test PRIVATE NIGHTFIRE_STANDALONE_TEST)

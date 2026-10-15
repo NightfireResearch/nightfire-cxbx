@@ -154,7 +154,7 @@ are used by BondCarPhysics and BondCarModes, the collision queries, the actors a
 vehicles, MissionRules, Sentry and WeaponManager; `NegativeSine` by the helicopter. Any change in a last bit reaches
 the simulation, and the lockstep runs diverge from there - not a 1-ulp cosmetic difference: the user's 1-ulp
 tolerance (memory: one-ulp-acceptable) covers rare cosmetic cases, not a whole run against its baselines.
-The number of calls per tick is not measured yet (package 0 counts them on the runner).
+Package 0 measured the calls and listed the callers (4.3).
 
 The x87 transcendentals already differ between Intel and AMD in the last bits (why baselines are per machine:
 lockstep-machine-baselines), so no software version can match "the x87": it can match one vendor's at most.
@@ -183,6 +183,68 @@ chains the style guide prescribes compile to the same SSE2 scalar operations on 
 through `X87.h` (`Truncate`, `RoundToInt`, `Ftol`) use SSE intrinsics that exist on x86-64. Out-of-range
 float-to-unsigned and float-to-64-bit conversions use helpers on x86 and single instructions on x86-64: a check
 item for package 7.
+
+### 4.3 Package 0: calls, callers and what C changes
+
+**Calls.** `NIGHTFIRE_X87COUNT=1` (src/driving/devtools/X87Count.cpp) moves every call to the 43 functions (found
+in the link map) to a counting stub that keeps the registers, XMM0-7 and the x87 environment; it counts per function
+and per call site and keeps a few arguments. Its 16 lockstep runs matched `lbase` exactly. From the car's appearance
+to tick 8,900:
+
+| | Per tick |
+|---|---:|
+| all 43, by mission (idle / accelerating) | m1 1,259 / 1,259, m2 1,101 / 1,823, m3 881 / 930, m4 902 / 902, m5 1,267 / 1,425, m6 940 / 1,078, m7 1,381 / 1,471, m8 1,009 / 1,003 |
+| `sin_fractionalangle`, `cos_fractionalangle` | 565 each on average (436-903): 99% of all calls |
+| `atan_turns` | 9 (1-24) |
+| `Tangent`, `SinCosFloat`, `PerspectivePlanes`, `X87Sin`, `X87Cos` | 3 each |
+| `X87Atan2`, `Crt::CIacos`, `CrtAcos` | 1-2 |
+| `tan_fractionalangle`, `CrtAcosTimes`, `AddSine`, `CrtAsinTimes`/`CIasin`, `TanTurnsTimes`, `DivideByTanTurns`, `sincos_fractionalangle`, `LogX87`, `CrtPow`/`CIpow` | under 1 |
+| `_fpmath`, `_clearfp` | once each, at start-up and at a movie |
+| `SinTurnsTimes`, `CosTurnsTimes`, `ScaledSine`, `SinTimes`, `NegativeSine`, `EulerToQuatX87`, `X87NaN` | never in these runs |
+| `EAGL_BuildRotate`, `REAL_sqrtf` | never: nothing in the standalone build calls them (the linker drops them) |
+
+The sine and cosine traffic is drawing and animation: about 420 calls a tick each from `ReflMapVertex` (the
+reflection mapping), then `BuildRotate` (actors, poses, the riders' aim: 120-480), the `VU0_MATRIX4set*rot`
+matrices and `RDebris::Draw`. The simulation's own calls (`PBondCar` physics, the AI's `atan_turns`, `CrtAcosTimes`)
+are tens a tick. Folded by the linker into one function each: the three `X87Atan2`, the two `X87Sin`, `X87Cos`,
+`CrtAcos`, `CrtPow`, the three logarithms, `AddSine` with `GlowWave`, `CosTurnsTimes` with `ScaledCosine`.
+
+**Where C must round once.** The x87 rounds to 53 bits only in the operations the precision control governs (FADD,
+FMUL, FDIV, FSQRT...); a function whose last operation is FSIN, FCOS, FPTAN or FPATAN, or FYL2X, hands back a
+64-bit mantissa, and a caller that stores it with `fstp dword` rounds it to a float once. A C version that computes in
+`double` and then converts rounds twice. From a disassembly of `driving_standalone.exe` (every call, including the
+calls through function pointers and through the C wrappers that only pass ST0 on), the stores of an unrounded result
+straight to a float are:
+
+| Function (last operation) | Callers that store it to a float |
+|---|---|
+| `sin_fractionalangle` (FSIN) | 21: `BuildRotate`, `RCameraMath::BuildRotationMat4`, `RDebris::Draw`, `RDebrisType::Draw`, `REmp::Init`, `PBondCar::ProcessSimplePhysics`, `PBondCar::ProcessSubmarinePhysics`, `ActPoser::Rotate`, `RotateX`, `ActActor::RotateActor`, `RotateActorX`, `RPlayerCamera::SetCinematicCamera` (2), `UpdateEllipseCam`, `WCollisionMgr::SurfaceBumpHeight`, `RSkeletalObj::UpdatePosition`, `VU0_EulerToQuat` (2), `VU0_MATRIX4setxrot`, `setyrot`, `setzrot` |
+| `cos_fractionalangle` (FCOS) | 21: the same less the physics, `SurfaceBumpHeight`, `UpdateEllipseCam` and one `SetCinematicCamera`, plus `RRenderWorldCulling::Construct` and `Setup2dFrustrum`, `REmp::Init` (3), `VU0_EulerToQuat` (3) |
+| `X87Cos` (FCOS) | `QuatFromTo`, `ActIK::Solve` |
+| `X87Atan2` (FPATAN), through `AngleBetweenVectors` | `ActIK::Solve` |
+| `NegativeSine` (FSIN, FCHS) | `PHelicopter::Simulate` (2) |
+| `Tangent` (FPTAN) | `WTargetPicker`: `CompareDistFromScreenPos`, `DrawTargetingSystem`, `MoveTargetingCursors`, `UpdateSelection`, `UpdateTargets` |
+| inside the assembly | `sincos_fractionalangle` (2 stores), `SinCosFloat` (2), `EulerToQuatX87` (each sine and cosine, and products of them), `PerspectivePlanes` (each FPTAN, FSIN and FPATAN result) |
+
+A second kind cannot be matched in `double` at all: the caller keeps the unrounded result on the x87 stack for one
+more operation, rounded once at the end. `sin_fractionalangle` (7: `ScaledSine`, `ProcAnimSway`, `ReflMapVertex`,
+`REmp::Init` (3), `RSky::Draw`), `cos_fractionalangle` (8: `ScaledCosine`, `SurfaceBumpHeight`, `CylinderSection`,
+`GHud::DrawStylin`, `ProcAnimSway`, `ReflMapVertex`, `REmp::Init`, `RSky::Draw`), `CrtAcos` (`ECollision::ProcessSideA`),
+`LogX87` (`AVehicle::CalculateRpm`), and inside the assembly `SinTimes`, `SinTurnsTimes`, `TanTurnsTimes`,
+`DivideByTanTurns`, `CrtAcosTimes`, `CrtAsinTimes`, `ScaledSine`/`ScaledCosine`, `AddSine`/`GlowWave`, `EulerToQuatX87`.
+
+Results the precision control has already rounded to 53 bits (`atan_turns`, `AddSine`, `CrtAcosTimes`, the `*Times`
+functions, `DivideByTanTurns`, `CrtPow`) round twice on the x87 too, so their float stores need nothing special.
+
+**Which functions C reproduces exactly** (with SSE2 `double`, no FMA):
+
+| Bit-identical in C | Functions |
+|---|---|
+| yes | `REAL_sqrtf` (FSQRT and SSE `sqrtsd` are both correctly rounded; dead in the standalone build anyway), `X87NaN` (one FADD at 53 bits; C must pick the NaN as the x87 does - the larger significand), `Crt::_fpmath` and `Crt::_clearfp` (control and status words, no arithmetic) |
+| no | the other 39: each depends on FSIN, FCOS, FSINCOS, FPTAN, FPATAN, FYL2X or F2XM1 (`CIpow`), whose results C's `sin`, `cos`, `tan`, `atan2`, `log` and `pow` do not reproduce (the x87 reduces arguments with a 66-bit pi and does not round correctly; it also differs between Intel and AMD) |
+
+So the conversion changes the results of every caller above; how much shows in the lockstep runs once, before the
+new baselines are made.
 
 ## 5. Calling conventions and the naked adaptors
 
@@ -256,6 +318,10 @@ that now fills - can differ. Package 0 tests this on the 32-bit build before any
 against the baselines. Exact means native growth is safe for behaviour; then only pool sizes need watching (a
 high-water report per pool).
 
+**Result (15 October 2026, 7.4):** the simulation and the sound do not depend on allocation sizes, but one thing
+drawn does: the particle systems' map is keyed by emitter address, so its order - and the order particles are
+spawned and drawn in - follows the heap's layout. Native pointers stay the plan; that key needs a stable value first.
+
 The other way, `Ptr32` in every game structure, keeps every layout, check and allocation identical to 32-bit and
 needs no pool work, at the price of about 1,700 members retyped and code that reads less like the original's. It is
 the fallback if the pad test fails and the cause cannot be fixed.
@@ -268,6 +334,42 @@ the pointer type (FILESYS user data, the sound library's handles, actor ids, Tri
 `~uintptr_t(0x7f)`; literal allocation sizes become `sizeof`. Where the original's 32-bit arithmetic is the point
 (the banks' `AddBytes`, CARP's relative offsets), it stays 32-bit on the word, then decodes.
 
+### 7.4 Package 0: heap padding
+
+`NIGHTFIRE_HEAP_PAD=<bytes>` (src/driving/devtools/HeapPad.cpp, drivinginject and driving_standalone_test) asks every
+allocator the game uses for that many bytes more: the process heap (`HostHeapAlloc`/`HostHeapReAlloc`: XAPI's
+RtlAllocateHeap, the C runtime's malloc/calloc/realloc, EAGL's allocator), EA's block allocator (`MEM_alloc`,
+`MEM_allocz`, `MEM_allocalign`, `MEM_resize`: every memory class, and through it UMemory's operator new, new[] and the
+fast pools' blocks), UMemory's size-class lists (`FastAlloc`/`FastFree`, both ends), the event queue (`Event::operator
+new`/`delete` and `Event::Delete`, which inlines the base class's delete) and the sound heap (`SNDMEMI_alloc`). Contiguous
+memory (textures, vertex buffers, the classes' own memory) is not padded. Every call and stored address of these
+(rel32 calls and the base relocations, devtools/CodeRetarget.cpp) is moved to a wrapper: 1,688 references.
+
+Lockstep rounds on the runner against `lbase` (every mission, idle and accelerating, to tick 9000):
+
+| Run | Sound traces | Frames |
+|---|---|---|
+| pad 0 (the same build, control, mission 5 idle) | identical | exact |
+| `NIGHTFIRE_HEAP_PAD=16` | 16 of 16 identical | 14 of 16 exact; mission 5 idle and accelerating differ in 5 of 16 frames each |
+| `NIGHTFIRE_HEAP_PAD=52` | 16 of 16 identical | 8 of 16 exact; missions 1, 2 accelerating, 5, 6 accelerating, 7, 8 accelerating differ |
+
+No pool ran out (no padded allocation answered NULL; the event queue never passed 4 KB of its 32 KB). Where the
+differing frames were looked at (missions 2, 5 and 6) they differ only in particles - mist and snow spray, bubbles,
+smoke - and on mission 5 later frames are exact again; with the sound traces identical, nothing the simulation does
+changed. The cause is `RParticleSystemManager`'s map of live
+systems (render/Particles.cpp), keyed by `uint32_t(uintptr_t(emitter))` (game/EffectsGallery.cpp `AddOrRefresh`):
+`UpdateSpawnAllSystems` walks it in key order, so the order systems spawn into the shared particle cache, and so the
+order translucent particles are drawn in, is the emitters' address order. `NIGHTFIRE_PARTICLE_ORDER=1` (HeapPad.cpp)
+prints, per tick, a hash of the map's systems in order and a hash of them as a set: on mission 5 with pad 16 the sets
+match the control run's on all 8,217 ticks and the order differs on 4,831. HEAP_SHIFT did not show it because a uniform
+shift keeps the addresses' order.
+
+A 64-bit build with native pointers lays the heap out differently, so its particles would differ from the 32-bit
+build's the same way. Before package 9's exact comparison, the key wants a value that does not depend on the heap - a
+number given to each emitter when it is made, say - in both builds; that changes the 32-bit frames once, so it belongs
+with the x87 conversion's new baselines. The other address keys of section 3 (the broken windows' instance key,
+WRender's instance pointers into one array) are lookups or keep their order.
+
 ## 8. Work packages
 
 In order; each keeps the Windows 32-bit build unchanged (Ptr32 is `T *` there) and is tested by it. Sizes: S < 1 day of
@@ -275,7 +377,7 @@ agent time, M 1-2, L 3+.
 
 | # | Package | Size | Test |
 |---|---|---|---|
-| 0 | **Pre-checks on 32-bit**: `NIGHTFIRE_HEAP_PAD` (devtools, beside HEAP_SHIFT) in lockstep on all missions; an x87 call counter (devtools, calls per tick per function) on one mission; the float-store trap's caller list from the 32-bit listings | S | runner round, lockstep 16/16 against lbase |
+| 0 | **Pre-checks on 32-bit**: `NIGHTFIRE_HEAP_PAD` (devtools, beside HEAP_SHIFT) in lockstep on all missions; an x87 call counter (devtools, calls per tick per function) on one mission; the float-store trap's caller list from the 32-bit listings. **Done 15 October 2026** (4.3, 7.4): the particle map's address key is the one size-dependent behaviour | S | runner round, lockstep 16/16 against lbase |
 | 1 | **Scaffolding**: an x86-64 configuration for the standalone targets only (MSVC x64 and the nf-cross clang); `NIGHTFIRE_STANDALONE` guards round the 61 adaptors; x86-only guards in xbeAbi.h/xbeOverload.h; x86-64 FFmpeg DLLs; the probe (`--probe-script`) in CI, its counts falling to 0 as the packages land | M | 32-bit: asm diff identical, lockstep exact; 64-bit: the probe's counts |
 | 2 | **`Ptr32<T>` and the game window** in the host layer (heaps, pages, thread stacks, `operator new`), the range check, `PtrFrom32`/`PtrTo32` | M | 32-bit: unchanged; 64-bit: a unit test of the window and the encoder |
 | 3a | **EAGL loader and models**: Loader.cpp (sections, relocations, symbol values), `Model`, `TAR`, `GeoPrim`, `DrawArray`, `LoadedVertexBuffer`, the word streams of Model.cpp | L | 32-bit asm diff and LoaderShadow (injected build); 64-bit: loading every object on the disc (a devtools mode of the test executable comparing a digest of each loaded object with the 32-bit one's, pointers canonicalised) |

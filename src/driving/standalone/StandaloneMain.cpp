@@ -3,11 +3,13 @@
 // the kernel (platform/KernelImports.cpp), point D: at the disc, tell the graphics seam where D3D8's state is, read the
 // launch options, load FFmpeg - then opens the window, starts the game's thread at mainXapiStartup
 // (platform/XboxStartup.cpp) with the stack the XBE asked for, and runs the window's events. driving_standalone_test
-// also installs the sound call trace there (the rest of its harness is called from the game's own hooks).
+// also installs the heap padding, the x87 call counter and the sound call trace there (the rest of its harness is called from the game's own hooks).
 
 #include <stdio.h>
 
+#include "../devtools/HeapPad.h"
 #include "../devtools/SndCallTrace.h"
+#include "../devtools/X87Count.h"
 #include "../gfx/d3dSeam.h"
 #include "../platform/Host.h"
 #include "../platform/HostWindow.h"
@@ -26,6 +28,8 @@ int main(int argc, char **argv) {
     D3dSeam_Init();
     Inject_LaunchOptions();
     Ffmpeg_Require();
+    HeapPad_Install();        // NIGHTFIRE_HEAP_PAD=<bytes>, driving_standalone_test only
+    X87Count_Install();       // NIGHTFIRE_X87COUNT=1, driving_standalone_test only
     SndCallTrace_Install();   // NIGHTFIRE_SNDTRACE=1, driving_standalone_test only
 
     if (!HostWindow_Open(640, 480, "Nightfire (driving)"))

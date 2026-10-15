@@ -84,7 +84,8 @@ sync)
     cd "$REPO"
     r "cd $RREPO && git fetch -q origin"
     # The newest commit of ours the runner can fetch: where this branch meets its upstream
-    base=$(git merge-base HEAD '@{upstream}')
+    upstream=${RUNNER_SYNC_BASE:-'@{upstream}'}
+    base=$(git merge-base HEAD "$upstream")
     head=$(git rev-parse HEAD)
     if [ "$head" != "$base" ]; then
         # Local commits not pushed: send them as a bundle
