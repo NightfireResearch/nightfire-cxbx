@@ -41,7 +41,7 @@ public:
 };
 XBE_FIELD(APlayerVehicle, engine, 0x200);
 XBE_FIELD(APlayerVehicle, roadSurfaces, 0x20c);
-static_assert(sizeof(APlayerVehicle) == 0x220, "APlayerVehicle is 0x220 bytes");
+LAYOUT_32(sizeof(APlayerVehicle) == 0x220, "APlayerVehicle is 0x220 bytes");
 
 // ---- the player's helicopter (0x210 bytes; vtable 0x001a2b14)
 
@@ -64,7 +64,7 @@ public:
 };
 XBE_FIELD(APlayerHeli, rotorVoices, 0x1fc);
 XBE_FIELD(APlayerHeli, moving, 0x208);
-static_assert(sizeof(APlayerHeli) == 0x210, "APlayerHeli is 0x210 bytes");
+LAYOUT_32(sizeof(APlayerHeli) == 0x210, "APlayerHeli is 0x210 bytes");
 
 // ---- the ultralight (0x230 bytes; vtable 0x001a2bc4): three motor sounds by the vertical velocity
 
@@ -102,7 +102,7 @@ private:
 };
 XBE_FIELD(AUltraLite, motorPitch, 0x214);
 XBE_FIELD(AUltraLite, climbGain, 0x220);
-static_assert(sizeof(AUltraLite) == 0x230, "AUltraLite is 0x230 bytes");
+LAYOUT_32(sizeof(AUltraLite) == 0x230, "AUltraLite is 0x230 bytes");
 
 // ---- the snowmobile (0x260 bytes; vtable 0x001a2c40): carving, landings, a motor revved in the air
 
@@ -153,7 +153,7 @@ XBE_FIELD(ASnowMobile, airborneWheels, 0x218);
 XBE_FIELD(ASnowMobile, cameraAlong, 0x220);
 XBE_FIELD(ASnowMobile, restCompression, 0x22c);
 XBE_FIELD(ASnowMobile, smoothedRpm, 0x254);
-static_assert(sizeof(ASnowMobile) == 0x260, "ASnowMobile is 0x260 bytes");
+LAYOUT_32(sizeof(ASnowMobile) == 0x260, "ASnowMobile is 0x260 bytes");
 
 // ---- the submersible (0x240 bytes; vtable 0x001a2d44): fans, servos, cavitation, hull creaks
 
@@ -206,7 +206,7 @@ XBE_FIELD(ASubmersible, fansOn, 0x21d);
 XBE_FIELD(ASubmersible, jetLevel, 0x224);
 XBE_FIELD(ASubmersible, creakLevel, 0x230);
 XBE_FIELD(ASubmersible, creakTime, 0x23c);
-static_assert(sizeof(ASubmersible) == 0x240, "ASubmersible is 0x240 bytes");
+LAYOUT_32(sizeof(ASubmersible) == 0x240, "ASubmersible is 0x240 bytes");
 
 // ---- the player's tank (0x210 bytes; vtable 0x001a2e28): an engine model, treads and a turret
 
@@ -225,6 +225,6 @@ public:
 };
 XBE_FIELD(APlayerTank, engine, 0x204);
 XBE_FIELD(APlayerTank, treadVoice, 0x20c);
-static_assert(sizeof(APlayerTank) == 0x210, "APlayerTank is 0x210 bytes");
+LAYOUT_32(sizeof(APlayerTank) == 0x210, "APlayerTank is 0x210 bytes");
 
 #endif // DRIVING_GAME_VEHICLESOUNDKINDS_H_

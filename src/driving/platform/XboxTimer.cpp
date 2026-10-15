@@ -1,7 +1,10 @@
 #include "XboxTimer.h"
 #include "Host.h"
-#include <windows.h>
+#include "Win32Types.h"
+#ifdef _WIN32
 #include <mmsystem.h>
+#endif
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -61,8 +64,7 @@ unsigned __stdcall Xbox_timeSetEvent(unsigned delayMs, unsigned resolutionMs,
         return 0;
     }
 
-    printf("[timer] tick every %u ms (timer %u), callback at 0x%08x\n",
-           delayMs, id, (unsigned)(uintptr_t)callback);
+    printf("[timer] tick every %u ms (timer %u), callback at 0x%08" PRIxPTR "\n", delayMs, id, uintptr_t(callback));
     fflush(stdout);
     return id;
 }

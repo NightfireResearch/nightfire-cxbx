@@ -28,6 +28,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 namespace GameStd {
 
@@ -75,7 +76,7 @@ struct Locale {
     Locale* Construct();                    // locale(): the global locale                              // 0x001310bf
     const Facet* GetFacet(uint32_t id) const;   // _Getfacet                                            // 0x00130d9b
 };
-static_assert(sizeof(Locale) == 4, "Locale");
+LAYOUT_32(sizeof(Locale) == 4, "Locale");
 
 // std::locale::facet. Its reference count is taken under the library's locale lock (StdLocale.cpp).
 struct Facet {
@@ -90,7 +91,7 @@ struct Facet {
     // CRuntimeStd.cpp
     void Register();                        // _Register: on the list released at exit                 // 0x00130e13
 };
-static_assert(sizeof(Facet) == 8, "Facet");
+LAYOUT_32(sizeof(Facet) == 8, "Facet");
 
 // std::_Lockit: the library's lock, taken for a scope (kind 0, the locale lock). CRuntimeStd.cpp.
 struct Lockit {
@@ -107,7 +108,7 @@ struct CtypeVec {
     const short *table;   // +0x08
     int deleteTable;      // +0x0c >0: free() it, <0: delete it, 0: not ours
 };
-static_assert(sizeof(CtypeVec) == 16, "CtypeVec");
+LAYOUT_32(sizeof(CtypeVec) == 16, "CtypeVec");
 
 // std::_Cvtvec, the code page conversion info _Getcvt returns (in EDX:EAX).
 struct CvtVec {
@@ -152,7 +153,7 @@ struct String {
     static void Xran();                                                   // 0x00130b80 _Xran
     static void Xlen();                                                   // 0x00130bc0 _Xlen
 };
-static_assert(sizeof(String) == 0x1c, "String");
+LAYOUT_32(sizeof(String) == 0x1c, "String");
 
 // std::_Locinfo: the C locale's names, built from a locale name, under the locale lock while it lives.
 // CRuntimeStd.cpp.
@@ -166,7 +167,7 @@ struct Locinfo {
     Locinfo* Construct(const char *localeName);                           // 0x00130f8f
     void Destruct();                                                      // 0x00130ed2
 };
-static_assert(sizeof(Locinfo) == 0x74, "Locinfo");
+LAYOUT_32(sizeof(Locinfo) == 0x74, "Locinfo");
 
 // std::allocator<char>::deallocate (`this` is not read)
 void __stdcall AllocatorDeallocate(void *block, uint32_t count);          // 0x000125a0
@@ -184,7 +185,7 @@ struct Exception {
     Exception* Delete(unsigned flags);      // vtable slot 0           // 0x001326ea
     const char* What();                     // vtable slot 1           // 0x001326a1
 };
-static_assert(sizeof(Exception) == 0xc, "Exception");
+LAYOUT_32(sizeof(Exception) == 0xc, "Exception");
 
 // std::logic_error (0x28, vtable 0x00189ee4) over std::exception, and std::length_error (vtable 0x00189eec). Only
 // the STL's throws make them.
@@ -197,7 +198,7 @@ struct LogicError : Exception {
     LogicError* Delete(unsigned flags);     // vtable slot 0              // 0x00013460
     const char* What();                     // vtable slot 1              // 0x00013450
 };
-static_assert(sizeof(LogicError) == 0x28, "LogicError");
+LAYOUT_32(sizeof(LogicError) == 0x28, "LogicError");
 
 struct LengthError : LogicError {
     LengthError* ConstructCopy(const LengthError *other);                 // 0x000139a0
@@ -229,7 +230,7 @@ struct Mutex {
     void Lock();                                                       // 0x0013142b _Lock
     void Unlock();                                                     // 0x00131434 _Unlock
 };
-static_assert(sizeof(Mutex) == 4, "Mutex");
+LAYOUT_32(sizeof(Mutex) == 4, "Mutex");
 
 // std::basic_streambuf<char>: the get and put areas, each reached through a pointer the derived buffer may
 // redirect.
@@ -266,7 +267,7 @@ struct Streambuf {
     int Sputc(char ch);                                                // 0x00039900
     char* Pninc();                                                     // 0x00039940 _Pninc()
 };
-static_assert(sizeof(Streambuf) == 0x3c, "Streambuf");
+LAYOUT_32(sizeof(Streambuf) == 0x3c, "Streambuf");
 
 // std::strstreambuf.
 struct StrStreambuf : Streambuf {
@@ -294,7 +295,7 @@ struct StrStreambuf : Streambuf {
     StreamPos* SeekOff(StreamPos *result, int offset, int way, int mode);   // 0x00131702
     StreamPos* SeekPos(StreamPos *result, StreamPos position, int mode);    // 0x0013183b
 };
-static_assert(sizeof(StrStreambuf) == 0x54, "StrStreambuf");
+LAYOUT_32(sizeof(StrStreambuf) == 0x54, "StrStreambuf");
 
 struct Ostream;
 
@@ -335,7 +336,7 @@ struct IosBase {
     void Tidy();
     void CallFunctions(int event);          // _Callfns
 };
-static_assert(sizeof(IosBase) == 0x28, "IosBase");
+LAYOUT_32(sizeof(IosBase) == 0x28, "IosBase");
 
 // std::basic_ios<char>. The stream classes hold it as a virtual base, found through their vbtable. The destructors
 // of classes with that virtual base are entered with this at the virtual base, so they are methods here.
@@ -356,7 +357,7 @@ struct BasicIos : IosBase {
     void* DeleteOstream(unsigned flags);    // (CRuntimeStd.cpp)                                        // 0x001319e7
     void* DeleteOStrStream(unsigned flags); // (CRuntimeStd.cpp)                                        // 0x00131c01
 };
-static_assert(sizeof(BasicIos) == 0x34, "BasicIos");
+LAYOUT_32(sizeof(BasicIos) == 0x34, "BasicIos");
 
 // std::basic_istream<char>: vbptr, then the count of the last unformatted read; basic_ios is its virtual base.
 struct Istream {
@@ -370,7 +371,7 @@ struct Istream {
     Istream* ExtractUInt(unsigned *value);                             // 0x000392d0 operator>>(unsigned int &)
     Istream* ExtractFloat(float *value);                               // 0x00039450 operator>>(float &)
 };
-static_assert(sizeof(Istream) == 8, "Istream");
+LAYOUT_32(sizeof(Istream) == 8, "Istream");
 
 // std::basic_ostream<char>: vbptr only.
 struct Ostream {
@@ -383,7 +384,7 @@ struct Ostream {
     Ostream* Construct(Streambuf *buffer, bool isStandard, int constructVirtualBase);   // (CRuntimeStd.cpp)
     void DestructAll();                     // the `vbase destructor' (CRuntimeStd.cpp)               // 0x00131a06
 };
-static_assert(sizeof(Ostream) == 4, "Ostream");
+LAYOUT_32(sizeof(Ostream) == 4, "Ostream");
 
 // std::istrstream: the istream, its strstreambuf, then the basic_ios.
 struct IStrStream : Istream {
@@ -393,7 +394,7 @@ struct IStrStream : Istream {
     IStrStream* Construct(const char *text, int constructVirtualBase); // 0x00038b70 istrstream(const char *)
     void DestructAll();                                                // 0x000380c0 the `vbase destructor'
 };
-static_assert(sizeof(IStrStream) == 0x90, "IStrStream");
+LAYOUT_32(sizeof(IStrStream) == 0x90, "IStrStream");
 
 // std::ostrstream: the ostream, its strstreambuf, then the basic_ios.
 struct OStrStream : Ostream {
@@ -403,7 +404,7 @@ struct OStrStream : Ostream {
     void DestructAll();                                                // 0x000397f0 the `vbase destructor'
     OStrStream* Construct(char *text, int count, int mode, int constructVirtualBase);   // (CRuntimeStd.cpp) 0x00131b27
 };
-static_assert(sizeof(OStrStream) == 0x8c, "OStrStream");
+LAYOUT_32(sizeof(OStrStream) == 0x8c, "OStrStream");
 
 // std::basic_istream<char>::sentry: the stream (its buffer locked while the sentry lives) and whether it is good.
 struct IstreamSentry {
@@ -442,7 +443,7 @@ struct IstreambufIterator {
         return value;
     }
 };
-static_assert(sizeof(IstreambufIterator) == 8, "IstreambufIterator");
+LAYOUT_32(sizeof(IstreambufIterator) == 8, "IstreambufIterator");
 
 // std::ostreambuf_iterator<char>.
 struct OstreambufIterator {
@@ -452,7 +453,7 @@ struct OstreambufIterator {
 
     OstreambufIterator* Assign(char ch);                               // 0x0003a900 operator=(char)
 };
-static_assert(sizeof(OstreambufIterator) == 8, "OstreambufIterator");
+LAYOUT_32(sizeof(OstreambufIterator) == 8, "OstreambufIterator");
 
 // std::ctype<char>.
 struct Ctype : Facet {
@@ -471,7 +472,7 @@ struct Ctype : Facet {
     const char* DoNarrowRange(const char *first, const char *last, char unused, char *dest);   // 0x00037fc0
     static uint32_t GetCat(const Facet **cache);                       // 0x00037ff0 _Getcat
 };
-static_assert(sizeof(Ctype) == 0x18, "Ctype");
+LAYOUT_32(sizeof(Ctype) == 0x18, "Ctype");
 
 // std::numpunct<char>.
 struct Numpunct : Facet {
@@ -497,7 +498,7 @@ struct Numpunct : Facet {
     static uint32_t GetCat(const Facet **cache);                       // 0x0003aa90
     static char* MakeLocString(const char *text, char *unused, const CvtVec *cvt);   // 0x0003acd0 _Maklocstr
 };
-static_assert(sizeof(Numpunct) == 0x18, "Numpunct");
+LAYOUT_32(sizeof(Numpunct) == 0x18, "Numpunct");
 
 typedef IstreambufIterator InIter;
 typedef OstreambufIterator OutIter;
@@ -524,7 +525,7 @@ struct NumGet : Facet {
     static int GetFloatField(char *digits, InIter *first, InIter *last, const Locale *locale);               // 0x0003c430 _Getffld
     static int GetLocText(InIter *first, InIter *last, uint32_t fieldCount, const char *fields);             // 0x0003d180 _Getloctxt
 };
-static_assert(sizeof(NumGet) == 8, "NumGet");
+LAYOUT_32(sizeof(NumGet) == 8, "NumGet");
 
 // std::num_put<char, ostreambuf_iterator<char> >.
 struct NumPut : Facet {
@@ -545,7 +546,7 @@ struct NumPut : Facet {
     static OutIter* FloatPut(OutIter *result, OutIter dest, IosBase *ios, char fill, const char *text,
                              uint32_t beforePoint, uint32_t afterPoint, uint32_t trailing, uint32_t count);  // 0x0003b010 _Fput
 };
-static_assert(sizeof(NumPut) == 8, "NumPut");
+LAYOUT_32(sizeof(NumPut) == 8, "NumPut");
 
 // use_facet<> for the four facets (by locale reference).
 const Ctype* UseCtype(const Locale *locale);                           // 0x000385f0

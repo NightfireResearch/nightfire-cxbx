@@ -199,7 +199,7 @@ double AICharacterEnemyGround::GetZoneHitPointScale(int zone, float) {
 AICharacterEnemyGround* AICharacterEnemyGround::Construct(const MATRIX4 *transform, int weapon, int female,
                                                           int unknown17c, bool registerTarget) {
     AICharacter::Construct();
-    vtable = reinterpret_cast<void **>(kAICharacterEnemyGroundVtable);
+    vtable = kAICharacterEnemyGroundVtable;
     unknown144 = 800;
     unknown148 = 0;
     threatSide = 0;
@@ -259,7 +259,7 @@ int AICharacterEnemyGround::IsAlive() {
 
 // FUNC_AT(0x0001dea0)
 void AICharacterEnemyGround::Destruct() {
-    vtable = reinterpret_cast<void **>(kAICharacterEnemyGroundVtable);
+    vtable = kAICharacterEnemyGroundVtable;
     if (targetable != NULL) {
         TargetPicker.UnregisterTarget(targetable);
         targetable->ownerType = kTargetPoint;

@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "../data/StdStreams.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // The C++ half of the game's runtime: the non-template parts of the Dinkumware library (MSVC 7) the string
@@ -53,7 +54,7 @@ struct Locimp : Facet {
     void Destruct();                                                       // 0x00130e4c
     Locimp* Delete(unsigned flags);         // vtable slot 0               // 0x00130f23
 };
-static_assert(sizeof(Locimp) == 0x34, "Locimp");
+LAYOUT_32(sizeof(Locimp) == 0x34, "Locimp");
 
 // std::_Fac_node: an entry of the list of facets released at exit.
 struct FacetNode {
@@ -80,7 +81,7 @@ struct RuntimeError : Exception {
     RuntimeError* Delete(unsigned flags);   // vtable slot 0               // 0x001311fa
     const char* What();                     // vtable slot 1               // 0x001311ec
 };
-static_assert(sizeof(RuntimeError) == 0x28, "RuntimeError");
+LAYOUT_32(sizeof(RuntimeError) == 0x28, "RuntimeError");
 
 // ios_base::failure.
 struct Failure : RuntimeError {
@@ -112,7 +113,7 @@ struct StandardStreamTable {
     int8_t opens[9];       // +0x28
     uint8_t pad31[3];
 };
-static_assert(sizeof(StandardStreamTable) == 0x34, "StandardStreamTable");
+LAYOUT_32(sizeof(StandardStreamTable) == 0x34, "StandardStreamTable");
 
 typedef void (*AtExitFn)(void);
 

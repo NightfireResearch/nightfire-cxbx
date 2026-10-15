@@ -11,6 +11,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 struct DAFI;
 
@@ -27,7 +28,7 @@ struct IniFiles {                // 0xc bytes
     const char* ReadString(const char *section, const char *key, const char *fallback);   // 0x000e41c0
     bool FindSection(const char *section);                                       // 0x000e4220
 };
-static_assert(sizeof(IniFiles) == 0xc, "IniFiles");
+LAYOUT_32(sizeof(IniFiles) == 0xc, "IniFiles");
 
 // XORs count bytes of in into out with a key stream made from the key: each key character times four constants
 // of a 12-entry table in turn (0x0011c5c0).

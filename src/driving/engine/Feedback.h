@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "../platform/RealSystem.h"   // RealThread
+#include "../../common/xbeClass.h"    // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // Force feedback (Ghidra: IFeedback): the pads' motors. An IFeedback is one word, a pointer to its port's record;
@@ -87,7 +88,7 @@ struct IFeedback {
     // One tick of every port's motors (0x0004fbc0).
     static void Update();
 };
-static_assert(sizeof(IFeedback) == 4, "an IFeedback is one pointer");
+LAYOUT_32(sizeof(IFeedback) == 4, "an IFeedback is one pointer");
 
 // The timer task: posts the thread's signal (0x0004f8b0).
 void IFeedback_Timer_Callback();
@@ -106,8 +107,8 @@ struct PadFeedback {
     uint16_t leftMotorSpeed;    // +0x42
     uint16_t rightMotorSpeed;   // +0x44
 };
-static_assert(offsetof(PadFeedback, leftMotorSpeed) == 0x42 && offsetof(PadFeedback, rightMotorSpeed) == 0x44,
-              "XINPUT_FEEDBACK layout");
+LAYOUT_32(offsetof(PadFeedback, leftMotorSpeed) == 0x42 && offsetof(PadFeedback, rightMotorSpeed) == 0x44,
+          "XINPUT_FEEDBACK layout");
 
 extern int32_t gFeedbackUsers;      // ports in use
 extern PadFeedback gPadFeedback;    // what Update last sent

@@ -52,9 +52,9 @@ static void NameMap_Find(Tree *tree, TreeNode **result, const char *const *key) 
     static_cast<SharedTree *>(tree)->FindName(result, key);
 }
 
-const uint32_t kUSymbolTableVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_USymbolTable));
-const uint32_t kUCarpNamespaceVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_UCarpNamespace));
-const uint32_t kUCharNamespaceVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_001a2238));
+void **const kUSymbolTableVtable = Vtable_USymbolTable;
+void **const kUCarpNamespaceVtable = Vtable_UCarpNamespace;
+void **const kUCharNamespaceVtable = Vtable_001a2238;
 
 constexpr uint32_t kTagMap = 0x4d617020;      // 'Map '
 constexpr uint32_t kTagShared = 0x53686172;   // 'Shar'
@@ -62,8 +62,8 @@ constexpr uint32_t kTagArticle = 0x41727469;  // 'Arti'
 constexpr uint32_t kTagName = 0x4e616d65;     // 'Name'
 constexpr uint32_t kTagAsPrefix = 0x61730000; // "as" in the high half: an indexed 'as' record
 
-static void SetVtable(void *object, uint32_t vtable) {
-    *static_cast<uint32_t *>(object) = vtable;
+static void SetVtable(void *object, void **vtable) {
+    *static_cast<void ***>(object) = vtable;
 }
 
 // A group's end of child groups, as the inlined code computes it from GetArray.
@@ -80,7 +80,7 @@ static UData *DataEnd(UGroup *group) {
 // The tree
 // =============================================================================================================
 
-void TreeThrow(const char *message, uint32_t vtable, const Crt::ThrowInfo *throwInfo) {
+void TreeThrow(const char *message, void **vtable, const Crt::ThrowInfo *throwInfo) {
     DATA_UNTESTED("an STL container's throw");
     GameStd::String text;
     text.capacity = 15;

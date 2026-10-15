@@ -185,7 +185,7 @@ void AICharacterEnemySnow::GetRotPos(AICharacterEnemySnow *rider, MATRIX4 *trans
 
 // FUNC_AT(0x0001fc70)
 void AICharacterEnemySnow::Destruct() {
-    vtable = reinterpret_cast<void **>(kAICharacterEnemySnowVtable);
+    vtable = kAICharacterEnemySnowVtable;
     AICharacter::Destruct();
 }
 
@@ -212,7 +212,7 @@ void AICharacterEnemySnow::HandleInterrupts() {
 AICharacterEnemySnow* AICharacterEnemySnow::Construct(const MATRIX4 *transform, int weapon, PBondCar *vehicle) {
     AICharacter::Construct();
     this->vehicle = vehicle;
-    vtable = reinterpret_cast<void **>(kAICharacterEnemySnowVtable);
+    vtable = kAICharacterEnemySnowVtable;
     leanDirection = 0;
     aimPitchDir = 0;
     aimTimer = 0;
@@ -499,7 +499,7 @@ int AICharacterEnemySnow::TargetIsAcquired() {
 
 // FUNC_AT(0x00020970)
 void AICharacterEnemySSnow::Destruct() {
-    vtable = reinterpret_cast<void **>(kAICharacterEnemySSnowVtable);
+    vtable = kAICharacterEnemySSnowVtable;
     AICharacter::Destruct();
 }
 
@@ -507,7 +507,7 @@ void AICharacterEnemySSnow::Destruct() {
 AICharacterEnemySSnow* AICharacterEnemySSnow::Construct(const MATRIX4 *transform, int weapon, PBondCar *vehicle) {
     AICharacter::Construct();
     this->vehicle = vehicle;
-    vtable = reinterpret_cast<void **>(kAICharacterEnemySSnowVtable);
+    vtable = kAICharacterEnemySSnowVtable;
     this->transform = *transform;
     this->weapon = weapon;
     animBank = kBankSSnow;
@@ -611,7 +611,7 @@ void AICharacterEnemySSnow::PlayZoneInjuryAnim(int, float amount, int) {
 
 // FUNC_AT(0x00020ec0)
 void AICharacterEnemySunroof::Destruct() {
-    vtable = reinterpret_cast<void **>(kAICharacterEnemySunroofVtable);
+    vtable = kAICharacterEnemySunroofVtable;
     if (targetable != NULL) {
         TargetPicker.UnregisterTarget(targetable);
         targetable->ownerType = kTargetPoint;
@@ -660,7 +660,7 @@ bool AICharacterEnemySunroof::UpdateLeanDirection() {
 AICharacterEnemySunroof* AICharacterEnemySunroof::Construct(const MATRIX4 *transform, int weapon, int female,
                                                             PBondCar *vehicle) {
     AICharacter::Construct();
-    vtable = reinterpret_cast<void **>(kAICharacterEnemySunroofVtable);
+    vtable = kAICharacterEnemySunroofVtable;
     this->vehicle = vehicle;
     lastVelocity = BodyOf(vehicle)->velocity;
     leanDirection = 0;
@@ -918,7 +918,7 @@ void AICharacterEnemyWindow::DoFiring() {
 
 // FUNC_AT(0x00021d40)
 void AICharacterEnemyWindow::Destruct() {
-    vtable = reinterpret_cast<void **>(kAICharacterEnemyWindowVtable);
+    vtable = kAICharacterEnemyWindowVtable;
     AICharacter::Destruct();
 }
 
@@ -931,7 +931,7 @@ AICharacterEnemyWindow* AICharacterEnemyWindow::Construct(const MATRIX4 *transfo
     partnerB = NULL;
     aimSide = 0;
     armTimer = 0;
-    vtable = reinterpret_cast<void **>(kAICharacterEnemyWindowVtable);
+    vtable = kAICharacterEnemyWindowVtable;
     this->transform = *transform;
     animBank = kBankWindow;
     hitShape = &RiderHitShape;

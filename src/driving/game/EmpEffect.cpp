@@ -308,9 +308,11 @@ void REmp::Init() {
         float b = float(start + kTwelfthTurn);
         float radiusB = float(CosineTurns(b));
         float radiusA = float(CosineTurns(a));
-        // |sin a - sin b|, each side evaluated twice (an ABS macro's way)
-        double height = float(SineTurns(a)) - SineTurns(b) > 0.0 ? float(SineTurns(a)) - SineTurns(b)
-                                                                  : -(float(SineTurns(a)) - SineTurns(b));
+        // |sin a - sin b|, each side evaluated twice (an ABS macro's way); sin a is rounded through a double, and the
+        // compiler subtracts sin b on the x87 except in the negation (RealMath.h)
+        double height = MinusSineTurns(float(AsDouble(SineTurns(a))), b) > 0.0
+                            ? MinusSineTurns(float(AsDouble(SineTurns(a))), b)
+                            : -(float(AsDouble(SineTurns(a))) - SineTurns(b));
         float zB = float(height + zA);
         CylinderSection(EmpSphere.positions[band], EmpSphere.uvs[band], radiusB, radiusA, zA, zB);
         turns += kTwelfthTurn;
@@ -370,11 +372,11 @@ void REmp::Init() {
         Coord3 *outer = &EmpRingPositions[i * 2];
         Coord3 *inner = &EmpRingPositions[i * 2 + 1];
         outer->x = float(SineTurns(turns));
-        inner->x = float(SineTurns(turns) * kInnerRadius);
+        inner->x = float(SineTurnsTimes(turns, kInnerRadius));
         inner->y = 0.5f;
         outer->y = 0.5f;
         outer->z = float(CosineTurns(turns));
-        inner->z = float(CosineTurns(turns) * kInnerRadius);
+        inner->z = float(CosineTurnsTimes(turns, kInnerRadius));
         float u = float(i & 1);
         EmpRingUVs[i * 2][1] = 1.0f;
         EmpRingUVs[i * 2 + 1][0] = u;

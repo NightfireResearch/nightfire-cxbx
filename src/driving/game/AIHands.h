@@ -16,6 +16,7 @@
 
 #include "AICharacter.h"
 #include "../anim/IK.h"            // ActIKSolveInfo
+#include "../../common/xbeClass.h" // LAYOUT_32
 
 class AnimationController;
 struct ArticleEffect;
@@ -86,11 +87,11 @@ protected:
     // The weapon's actor, shown if the hands are
     void SwitchActor();
 };
-static_assert(sizeof(AICharacterHands) == 0x160, "the hands are 0x160 bytes");
-static_assert(offsetof(AICharacterHands, nextWeapon) == 0x144 && offsetof(AICharacterHands, aimFraction) == 0x14c &&
-              offsetof(AICharacterHands, shown) == 0x150, "AICharacterHands layout");
+LAYOUT_32(sizeof(AICharacterHands) == 0x160, "the hands are 0x160 bytes");
+LAYOUT_32(offsetof(AICharacterHands, nextWeapon) == 0x144 && offsetof(AICharacterHands, aimFraction) == 0x14c &&
+          offsetof(AICharacterHands, shown) == 0x150, "AICharacterHands layout");
 
-const uint32_t kAICharacterHandsVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_0018ad28));
+void **const kAICharacterHandsVtable = Vtable_0018ad28;
 
 // The hands' statics (0x001dda70-0x001ddb30; names ours)
 struct AICharacterHandsStatics {
@@ -108,9 +109,9 @@ struct AICharacterHandsStatics {
     Coord4 swayOffset;                  // +0xa0 the car's sway, eased (auto-drive, weapons 1 and 2)
     Coord4 cameraOffset;                // +0xb0 the camera's offset from the car, eased
 };
-static_assert(sizeof(AICharacterHandsStatics) == 0xc0 && offsetof(AICharacterHandsStatics, instance) == 0x20 &&
-              offsetof(AICharacterHandsStatics, baseTransform) == 0x40 &&
-              offsetof(AICharacterHandsStatics, handles) == 0x80, "the hands' statics");
+LAYOUT_32(sizeof(AICharacterHandsStatics) == 0xc0 && offsetof(AICharacterHandsStatics, instance) == 0x20 &&
+          offsetof(AICharacterHandsStatics, baseTransform) == 0x40 &&
+          offsetof(AICharacterHandsStatics, handles) == 0x80, "the hands' statics");
 
 alignas(16) extern AICharacterHandsStatics HandsStatics;
 // Bond's hands' IK (ActIKSolveInfo[2]), the targets on the wheel set each step; the enemy driver hands it to its
@@ -155,10 +156,10 @@ public:
     // transform: the actor's local matrix through the car's
     void UpdateRotPos();                                                            // 32 0x00023950
 };
-static_assert(sizeof(AICharacterBond) == 0x150, "Bond is 0x150 bytes");
-static_assert(offsetof(AICharacterBond, side) == 0x140 && offsetof(AICharacterBond, steerRight) == 0x148,
-              "AICharacterBond layout");
+LAYOUT_32(sizeof(AICharacterBond) == 0x150, "Bond is 0x150 bytes");
+LAYOUT_32(offsetof(AICharacterBond, side) == 0x140 && offsetof(AICharacterBond, steerRight) == 0x148,
+          "AICharacterBond layout");
 
-const uint32_t kAICharacterBondVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_AICharacterBond));
+void **const kAICharacterBondVtable = Vtable_AICharacterBond;
 
 #endif // DRIVING_GAME_AIHANDS_H_

@@ -146,9 +146,9 @@ void RSky::Draw(CARP::Instance *instances, bool skipSun) {
         if (!SunPlaced) {
             RLightAngles angles = fgLightManager->angles[0];
             float turns = (float)(angles.y[0] * kTurnsPerDegree);
-            SunOffset.x = (float)(SineTurns(turns) * kSunDistance);
+            SunOffset.x = (float)SineTurnsTimes(turns, kSunDistance);
             SunOffset.y = fgLightManager->sunHeight;
-            SunOffset.z = (float)(CosineTurns(turns) * kSunDistance);
+            SunOffset.z = (float)CosineTurnsTimes(turns, kSunDistance);
             SunPlaced = true;
         }
         Coord4 sun = { SunOffset.x + eye->x, SunOffset.y + eye->y, SunOffset.z + eye->z, 1.0f };
@@ -298,6 +298,9 @@ void InstanceList::Xlen() {
     ThrowLengthError("vector<T> too long");
 }
 
+// The window map is searched through the core's compiled find, which sees its nodes as CollisionInstanceNode
+static_assert(sizeof(CollisionInstanceNode) == sizeof(WindowMapNode), "the window map's nodes as the find sees them");
+
 // FUNC_AT(0x000a8c10)
 void RWindow::DrawBrokenWindows(float radius) {
     SimpleMaterial->SetDepthTestMethod(kDepthLessEqual);
@@ -318,7 +321,7 @@ void RWindow::DrawBrokenWindows(float radius) {
 
         WindowMap *windows = &fgCollisionMgr->windows;
         CollisionInstanceNode *found;
-        uint32_t key = uint32_t(uintptr_t(instance));
+        uintptr_t key = uintptr_t(instance);
         reinterpret_cast<CollisionInstanceMap *>(windows)->Find(&found, &key);
         WindowMapNode *hits = reinterpret_cast<WindowMapNode *>(found);
         if (hits == windows->head)

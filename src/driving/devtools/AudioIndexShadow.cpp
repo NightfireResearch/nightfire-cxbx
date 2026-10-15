@@ -773,7 +773,7 @@ void MakeSoundCase(SoundCase &c) {
     for (size_t i = 0; i < sizeof(c.object); i++)
         c.object[i] = uint8_t(Random(256));
     ASound *sound = reinterpret_cast<ASound *>(c.object);
-    sound->vtable = uint32_t(uintptr_t(g_fakeVtable));
+    sound->vtable = reinterpret_cast<void **>(g_fakeVtable);
     sound->volume = RandomFloat();
     sound->pitch = RandomFloat();
     sound->mix = FakeMix(Random(2) ? "Mix A" : "Mix B");

@@ -56,7 +56,7 @@ enum StreamHoldState {
     kHoldReleased = 2,
 };
 
-const uint32_t kAStreamVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_AStream));
+void **const kAStreamVtable = Vtable_AStream;
 constexpr int kStreamRequests = 4;               // SNDSTRM_create's request and packet counts
 constexpr int kStreamPackets = 15;
 constexpr int kFilePriority = 100;               // FILESYS_existssync's and the big file's priority

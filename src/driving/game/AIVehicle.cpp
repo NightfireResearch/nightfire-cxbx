@@ -30,7 +30,7 @@ const MATRIX4 kIdentity = { {
 
 // FUNC_AT(0x000357b0)
 AIVehicle* AIVehicle::Construct() {
-    vtable = reinterpret_cast<void **>(kAIVehicleVtable);
+    vtable = kAIVehicleVtable;
     vehicleType = kAINoVehicle;
     active = false;
     physicsObject = NULL;
@@ -115,7 +115,7 @@ MATRIX4* AIVehicle::GetRotPos() {
 
 // FUNC_AT(0x00035b40)
 void AIVehicle::Destruct() {
-    vtable = reinterpret_cast<void **>(kAIVehicleVtable);
+    vtable = kAIVehicleVtable;
     if (splinePath != NULL) {
         splinePath->Destruct();
         OperatorDelete(splinePath);

@@ -62,10 +62,10 @@ public:
 private:
     typedef bool (ASceneObj::*IsTrackedMethod)();
 };
-static_assert(offsetof(ASceneObj, servo) == 0xc0 && offsetof(ASceneObj, firing) == 0xc1 &&
-              offsetof(ASceneObj, turningSideways) == 0xc2 && offsetof(ASceneObj, turningUpDown) == 0xc3 &&
-              offsetof(ASceneObj, aiming) == 0xc4 && offsetof(ASceneObj, gunLoops) == 0xc5, "ASceneObj's flags");
-static_assert(sizeof(ASceneObj) == 0xd0, "ASceneObj is 0xd0 bytes");
+LAYOUT_32(offsetof(ASceneObj, servo) == 0xc0 && offsetof(ASceneObj, firing) == 0xc1 &&
+          offsetof(ASceneObj, turningSideways) == 0xc2 && offsetof(ASceneObj, turningUpDown) == 0xc3 &&
+          offsetof(ASceneObj, aiming) == 0xc4 && offsetof(ASceneObj, gunLoops) == 0xc5, "ASceneObj's flags");
+LAYOUT_32(sizeof(ASceneObj) == 0xd0, "ASceneObj is 0xd0 bytes");
 
 // ---- AGun (0x7c bytes, from operator new; AVehicle::ActivateGun's, ASentry's)
 
@@ -94,10 +94,10 @@ public:
     // then the voice played (while the owner's gun loops and the sustain lasts) or silenced.
     void Play(uint8_t firing, ASoundPlayParams *params, float frames);              // 0x00129250
 };
-static_assert(offsetof(AGun, fireInterval) == 0x1c && offsetof(AGun, firePatch) == 0x24 &&
-              offsetof(AGun, shellPatch) == 0x40 && offsetof(AGun, mixName) == 0x5c &&
-              offsetof(AGun, shells) == 0x78, "AGun layout");
-static_assert(sizeof(AGun) == 0x7c, "AGun is 0x7c bytes");
+LAYOUT_32(offsetof(AGun, fireInterval) == 0x1c && offsetof(AGun, firePatch) == 0x24 &&
+          offsetof(AGun, shellPatch) == 0x40 && offsetof(AGun, mixName) == 0x5c &&
+          offsetof(AGun, shells) == 0x78, "AGun layout");
+LAYOUT_32(sizeof(AGun) == 0x7c, "AGun is 0x7c bytes");
 
 // ---- ATurret (0x14 bytes, from UMemory::FastAlloc "ATurret"; AVehicle::ActivateTurret's, ASentry's)
 
@@ -118,7 +118,7 @@ public:
     // played for the listener and freed when it is done.
     void Play(bool turningSideways, bool turningUpDown, bool servo, ASoundPlayParams *params);   // 0x0012e2b0
 };
-static_assert(offsetof(ATurret, servo) == 0x10 && sizeof(ATurret) == 0x14, "ATurret is 0x14 bytes");
+LAYOUT_32(offsetof(ATurret, servo) == 0x10 && sizeof(ATurret) == 0x14, "ATurret is 0x14 bytes");
 
 // ---- ASentry (0x160 bytes; vtable 0x001a2f08): a scene object with a turret and a gun
 
@@ -135,8 +135,8 @@ public:
     // The turret and the gun from the flags (vtable slot 3).
     void Play(ASoundPlayParams *params);                                            // 0x0012d6f0
 };
-static_assert(offsetof(ASentry, turret) == 0xd0 && offsetof(ASentry, gun) == 0xe4, "ASentry layout");
-static_assert(sizeof(ASentry) == 0x160, "ASentry is 0x160 bytes");
+LAYOUT_32(offsetof(ASentry, turret) == 0xd0 && offsetof(ASentry, gun) == 0xe4, "ASentry layout");
+LAYOUT_32(sizeof(ASentry) == 0x160, "ASentry is 0x160 bytes");
 
 // ---- ASmackable (0xf0 bytes; vtable 0x001a2f38): a thing that rolls and is hit. Its patches are ids,
 // bank << 7 | patch; -1 for none.
@@ -167,9 +167,9 @@ public:
     // The owner is done with it: deleted now, or once its collision voice is done.
     void Detatch();                                                                 // 0x0012dc50
 };
-static_assert(offsetof(ASmackable, collisionIds) == 0xd8 && offsetof(ASmackable, detached) == 0xec,
-              "ASmackable layout");
-static_assert(sizeof(ASmackable) == 0xf0, "ASmackable is 0xf0 bytes");
+LAYOUT_32(offsetof(ASmackable, collisionIds) == 0xd8 && offsetof(ASmackable, detached) == 0xec,
+          "ASmackable layout");
+LAYOUT_32(sizeof(ASmackable) == 0xf0, "ASmackable is 0xf0 bytes");
 
 // Which of a smackable's two hard collision patches is next (name ours; WeaponSound.cpp)
 extern int32_t NextHardCollision;
@@ -187,6 +187,6 @@ public:
     // when the state does not change either).
     void SetState(TargetLockState state);                                           // 0x0012e120
 };
-static_assert(sizeof(ATargeting) == 0xc, "ATargeting is 0xc bytes");
+LAYOUT_32(sizeof(ATargeting) == 0xc, "ATargeting is 0xc bytes");
 
 #endif // DRIVING_GAME_WEAPONSOUND_H_

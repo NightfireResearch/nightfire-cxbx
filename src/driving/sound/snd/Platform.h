@@ -8,6 +8,7 @@
 
 #include "Banks.h"
 #include "../DirectSound.h"
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 #include <stddef.h>
 #include <stdint.h>
@@ -38,7 +39,7 @@ struct PlatformVoice {
     uint8_t pad11[3];
     int32_t looping;             // +0x14 the Play flag to resend on resume
 };
-static_assert(sizeof(PlatformVoice) == 0x18, "SNDPLATFORMVOICE is 0x18 bytes");
+LAYOUT_32(sizeof(PlatformVoice) == 0x18, "SNDPLATFORMVOICE is 0x18 bytes");
 
 // A hardware buffer node (0x30; Ghidra SNDLINKNODE), 180 of them at *0x00244c44
 struct BufferNode {
@@ -57,7 +58,7 @@ struct BufferNode {
     int32_t packetUsed;          // +0x28 bytes of it copied
     uint32_t silence;            // +0x2c bytes of silence written since the last packet
 };
-static_assert(sizeof(BufferNode) == 0x30, "the hardware buffer node is 0x30 bytes");
+LAYOUT_32(sizeof(BufferNode) == 0x30, "the hardware buffer node is 0x30 bytes");
 
 // SNDLINKLIST (0xc): the hardware buffer nodes' lists (SndGlobals.h)
 struct BufferList {
@@ -65,7 +66,7 @@ struct BufferList {
     BufferNode *last;            // +0x04
     int32_t count;               // +0x08
 };
-static_assert(sizeof(BufferList) == 0xc, "a buffer list (SNDLINKLIST) is 0xc bytes");
+LAYOUT_32(sizeof(BufferList) == 0xc, "a buffer list (SNDLINKLIST) is 0xc bytes");
 
 // The Xbox DirectSound structures the driver fills (DirectSound.h)
 using ::DsBufferDesc;

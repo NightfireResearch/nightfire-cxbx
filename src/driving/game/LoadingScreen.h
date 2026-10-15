@@ -15,6 +15,7 @@
 
 #include "../../helpers.h"
 #include "../eagl/Realgraph.h"        // ShapeFile
+#include "../../common/xbeClass.h"    // LAYOUT_32
 
 struct DAFI;
 
@@ -111,7 +112,7 @@ struct LoadScreenString {
     uint32_t size;
     uint32_t capacity;                  // 15 while the text fits the buffer
 };
-static_assert(sizeof(LoadScreenString) == 0x1c, "a std::string is 0x1c bytes");
+LAYOUT_32(sizeof(LoadScreenString) == 0x1c, "a std::string is 0x1c bytes");
 
 struct LoadScreenStringNode {           // 0x24 bytes ("STL")
     LoadScreenStringNode *next;
@@ -121,7 +122,7 @@ struct LoadScreenStringNode {           // 0x24 bytes ("STL")
     // The string's memory given back (the node's, as the original passes it)
     void Tidy();                                                                                // 0x000e2c40
 };
-static_assert(sizeof(LoadScreenStringNode) == 0x24, "a list node is 0x24 bytes");
+LAYOUT_32(sizeof(LoadScreenStringNode) == 0x24, "a list node is 0x24 bytes");
 
 struct LoadScreenStringList {
     uint32_t allocator;

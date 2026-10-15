@@ -7,6 +7,7 @@
 
 #include "Filters.h"
 #include "DecodeUnused.h"
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 #include <stdint.h>
 
@@ -19,7 +20,7 @@ struct SFilterXAF {                  // 0x2c, SFILTER_unpackxaf: EA-XA bank samp
     int frames;                      // +0x24
     int position;                    // +0x28
 };
-static_assert(sizeof(SFilterXAF) == 0x2c, "SFilterXAF");
+LAYOUT_32(sizeof(SFilterXAF) == 0x2c, "SFilterXAF");
 
 struct SFilterXALF {                 // 0x44, SFILTER_unpackxalf: EA-XA bank sample, looping
     SFilterNode node;
@@ -33,7 +34,7 @@ struct SFilterXALF {                 // 0x44, SFILTER_unpackxalf: EA-XA bank sam
     int loopEnd;                     // +0x38
     float loopState[2];              // +0x3c the predictor state at the loop start
 };
-static_assert(sizeof(SFilterXALF) == 0x44, "SFilterXALF");
+LAYOUT_32(sizeof(SFilterXALF) == 0x44, "SFilterXALF");
 
 // The MicroTalk nodes: a header, then the decoder's state, whose last 432 samples (the end of MutState::signal) are
 // the frame the node hands out.
@@ -49,7 +50,7 @@ struct SFilterMTPF {                 // 0xd74, SFILTER_unpackmtpf: MicroTalk fro
     uint8_t channel;                 // +0xd70 the sample channel
     uint8_t pad0d71[3];
 };
-static_assert(sizeof(SFilterMTPF) == 0xd74, "SFilterMTPF");
+LAYOUT_32(sizeof(SFilterMTPF) == 0xd74, "SFilterMTPF");
 
 struct SFilterMTF {                  // 0xd68, SFILTER_unpackmtf: MicroTalk bank sample
     SFilterNode node;
@@ -58,7 +59,7 @@ struct SFilterMTF {                  // 0xd68, SFILTER_unpackmtf: MicroTalk bank
     int32_t left;                    // +0x24 samples of the frame not handed out yet
     MutState mut;                    // +0x28
 };
-static_assert(sizeof(SFilterMTF) == 0xd68, "SFilterMTF");
+LAYOUT_32(sizeof(SFilterMTF) == 0xd68, "SFilterMTF");
 
 struct SFilterPF {                   // 0x34, SFILTER_unpackpf: PCM16 from stream packets
     SFilterNode node;
@@ -71,7 +72,7 @@ struct SFilterPF {                   // 0x34, SFILTER_unpackpf: PCM16 from strea
     uint8_t channel;                 // +0x31
     uint8_t pad32[2];
 };
-static_assert(sizeof(SFilterPF) == 0x34, "SFilterPF");
+LAYOUT_32(sizeof(SFilterPF) == 0x34, "SFilterPF");
 
 struct SFilterLF {                   // 0x30, SFILTER_unpacklf: PCM16 bank sample, looping
     SFilterNode node;
@@ -81,7 +82,7 @@ struct SFilterLF {                   // 0x30, SFILTER_unpacklf: PCM16 bank sampl
     uint32_t loopEnd;                // +0x28 the last frame of the loop
     uint32_t decode;                 // +0x2c
 };
-static_assert(sizeof(SFilterLF) == 0x30, "SFilterLF");
+LAYOUT_32(sizeof(SFilterLF) == 0x30, "SFilterLF");
 
 struct SFilterF {                    // 0x2c, SFILTER_unpackf: PCM16 bank sample, one shot
     SFilterNode node;
@@ -90,7 +91,7 @@ struct SFilterF {                    // 0x2c, SFILTER_unpackf: PCM16 bank sample
     uint32_t frames;                 // +0x24
     uint32_t decode;                 // +0x28
 };
-static_assert(sizeof(SFilterF) == 0x2c, "SFilterF");
+LAYOUT_32(sizeof(SFilterF) == 0x2c, "SFilterF");
 
 struct SFilterStretch {              // SFILTER_timestretch: 0x1828 (MIX_playinit's), 0x838 + 1020 output floats
     SFilterNode node;
@@ -108,7 +109,7 @@ struct SFilterStretch {              // SFILTER_timestretch: 0x1828 (MIX_playini
 };
 // The inits' results (EAX: the decoder, Feed's answer, initmut's ...) are left out: MIX_playinit and SFILTER_add,
 // their only callers, ignore them.
-static_assert(sizeof(SFilterStretch) == 0x838, "SFilterStretch");
+LAYOUT_32(sizeof(SFilterStretch) == 0x838, "SFilterStretch");
 
 }  // namespace SND
 

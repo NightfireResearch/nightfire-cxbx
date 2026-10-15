@@ -180,7 +180,7 @@ AICharacterEnemyDriver* AICharacterEnemyDriver::Construct(const MATRIX4 *transfo
     steerLeft = NULL;
     steerRight = NULL;
     idleAnimation = 0;
-    vtable = reinterpret_cast<void **>(kAICharacterEnemyDriverVtable);
+    vtable = kAICharacterEnemyDriverVtable;
     this->transform = *transform;
     animBank = kBankDriver;
     return this;
@@ -188,7 +188,7 @@ AICharacterEnemyDriver* AICharacterEnemyDriver::Construct(const MATRIX4 *transfo
 
 // FUNC_AT(0x0001d640)
 void AICharacterEnemyDriver::Destruct() {
-    vtable = reinterpret_cast<void **>(kAICharacterEnemyDriverVtable);
+    vtable = kAICharacterEnemyDriverVtable;
     AICharacter::Destruct();
 }
 

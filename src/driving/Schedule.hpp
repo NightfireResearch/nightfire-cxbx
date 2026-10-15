@@ -28,7 +28,7 @@ struct TaskRecord {
     uint16_t unknown0e;         // +0x0e never written
     uint32_t taskNum;           // +0x10 the schedule's serial number for it, what RemoveTask looks for
 };
-static_assert(sizeof(TaskRecord) == 0x14, "TaskRecord is 20 bytes");
+LAYOUT_32(sizeof(TaskRecord) == 0x14, "TaskRecord is 20 bytes");
 
 // A node of a bucket's list (Ghidra's TaskRecord_LListEntry layout: next, previous, the record; 0x1c bytes, from
 // the fixed-size pools under the name "STL").
@@ -37,7 +37,7 @@ struct TaskNode {
     TaskNode *prev;             // +0x04
     TaskRecord record;          // +0x08
 };
-static_assert(sizeof(TaskNode) == 0x1c, "TaskNode is 0x1c bytes");
+LAYOUT_32(sizeof(TaskNode) == 0x1c, "TaskNode is 0x1c bytes");
 
 // One bucket: an MSVC std::list<TaskRecord> - its allocator byte, the head node (a sentinel: the list is circular
 // through it) and the count (12 bytes, from the pools under the name "TaskList"). Schedule's generated layout calls
@@ -63,7 +63,7 @@ struct TaskRecord_LListEntry {
     void IncSize(uint32_t count);
 };
 typedef TaskRecord_LListEntry TaskList;
-static_assert(sizeof(TaskList) == 0xc, "a task list is 12 bytes");
+LAYOUT_32(sizeof(TaskList) == 0xc, "a task list is 12 bytes");
 
 // What a task runs: the callback RegisterEvent::LookupEvent gives for its event number, called with the task's data.
 typedef void (*TaskCallback)(const void *staticData);

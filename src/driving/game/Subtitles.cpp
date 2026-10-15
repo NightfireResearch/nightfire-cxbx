@@ -33,7 +33,7 @@ GSubtitles *TheSubtitles;
 
 namespace {
 
-const uint32_t kSubtitlesVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_GSubtitles));
+void **const kSubtitlesVtable = Vtable_GSubtitles;
 constexpr uint32_t kDepthAlways = 0x207;
 constexpr uint32_t kSubtitleColour = 0xfefefefe;
 constexpr float kSubtitleScale = 1.0f;
@@ -140,7 +140,7 @@ GSubtitles* GSubtitles::TheApp() {
 
 // FUNC_AT(0x000e34e0)
 GSubtitles* GSubtitles::Construct() {
-    vtable = reinterpret_cast<const void *>(kSubtitlesVtable);
+    vtable = kSubtitlesVtable;
     splitter.count = 0;
     splitter.duration = 0.0f;
     splitter.startTick = 0;
@@ -162,7 +162,7 @@ GSubtitles* GSubtitles::Construct() {
 
 // FUNC_AT(0x000e3730)
 void GSubtitles::Destruct() {
-    vtable = reinterpret_cast<const void *>(kSubtitlesVtable);
+    vtable = kSubtitlesVtable;
     if (font != NULL)
         FONT_destroy(reinterpret_cast<const uint8_t *>(font));
     if (fontFile != NULL)

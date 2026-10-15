@@ -1267,7 +1267,7 @@ void BondCarShadowA_Run(void) {
     int cars = 0;
     for (int slot = 0; slot < 64; slot++) {
         PhysicsObject *owner = fgSimulation.rigidBodyOwners[slot];
-        if (owner == NULL || uint32_t(uintptr_t(owner->vtable)) != kPBondCarVtable)
+        if (owner == NULL || owner->vtable != kPBondCarVtable)
             continue;
         PBondCar *car = static_cast<PBondCar *>(static_cast<PVehicle *>(owner));
         if (car->physics == NULL)

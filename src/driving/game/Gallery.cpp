@@ -552,6 +552,6 @@ void GGallery::SPRITE_Flush() {
 }
 
 // FUNC_AT(0x000d3470)
-void GGallery::CULL_SetCanvas(int item, bool culled, float distance) {
-    TheEffectsGallery->CULL_SetCanvas(item, culled, distance);
+void GGallery::CULL_SetCanvas(intptr_t item, bool culled, float distance) {
+    TheEffectsGallery->CULL_SetCanvas(int(item), culled, distance);
 }

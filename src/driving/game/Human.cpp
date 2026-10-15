@@ -46,7 +46,7 @@ constexpr float kBodyMass = 100.0f;
 // FUNC_AT(0x0005dd90)
 Human* Human::Construct(int unknown6c, const Coord3 *direction, const Coord3 *position, uint32_t ownerSig) {
     PhysicsObject::Construct("human", "Human", kObjectHuman, ownerSig, false, false);
-    vtable = reinterpret_cast<void **>(kHumanVtable);
+    vtable = kHumanVtable;
     this->unknown6c = unknown6c;
     character = NULL;
     dead = 0;
@@ -62,7 +62,7 @@ Human* Human::Construct(int unknown6c, const Coord3 *direction, const Coord3 *po
 
 // FUNC_AT(0x0005dc60)
 void Human::Destruct() {
-    vtable = reinterpret_cast<void **>(kHumanVtable);
+    vtable = kHumanVtable;
     if (character != NULL)
         character->Delete(1);
     character = NULL;

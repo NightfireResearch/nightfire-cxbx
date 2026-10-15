@@ -15,6 +15,7 @@
 #include <stdint.h>
 
 #include "../data/CoordConvert.h"       // Coord3
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class ActionQueue;
 class RSceneObj;
@@ -91,11 +92,11 @@ struct WeaponRecord {
     int32_t reloadSystem;       // +0x4c the next to reload
     int32_t shotsFired;         // +0x50
 };
-static_assert(sizeof(WeaponRecord) == 0x54, "a weapon record is 0x54 bytes");
-static_assert(offsetof(WeaponRecord, flags) == 0x14 && offsetof(WeaponRecord, fireSteps) == 0x24 &&
-              offsetof(WeaponRecord, countsShots) == 0x38 && offsetof(WeaponRecord, refireSteps) == 0x3c &&
-              offsetof(WeaponRecord, sound) == 0x44 && offsetof(WeaponRecord, shotsFired) == 0x50,
-              "weapon record layout");
+LAYOUT_32(sizeof(WeaponRecord) == 0x54, "a weapon record is 0x54 bytes");
+LAYOUT_32(offsetof(WeaponRecord, flags) == 0x14 && offsetof(WeaponRecord, fireSteps) == 0x24 &&
+          offsetof(WeaponRecord, countsShots) == 0x38 && offsetof(WeaponRecord, refireSteps) == 0x3c &&
+          offsetof(WeaponRecord, sound) == 0x44 && offsetof(WeaponRecord, shotsFired) == 0x50,
+          "weapon record layout");
 
 class SWeaponManager {
 public:
@@ -182,13 +183,13 @@ private:
     // With a reload under way in auto-drive, the selection loaded at once
     void FinishReload();
 };
-static_assert(sizeof(SWeaponManager) == 0x17c, "SWeaponManager is 0x17c bytes");
-static_assert(offsetof(SWeaponManager, actionQueue) == 0x20 && offsetof(SWeaponManager, reloading) == 0x28 &&
-              offsetof(SWeaponManager, boostBlur) == 0x34 && offsetof(SWeaponManager, switchStep) == 0x40 &&
-              offsetof(SWeaponManager, nuclearPosition) == 0x50 && offsetof(SWeaponManager, turretAngle) == 0x68 &&
-              offsetof(SWeaponManager, specialTrigger) == 0x70 && offsetof(SWeaponManager, sortRank) == 0x78 &&
-              offsetof(SWeaponManager, sorted) == 0xf8 && offsetof(SWeaponManager, sortedCount) == 0x178,
-              "SWeaponManager layout");
+LAYOUT_32(sizeof(SWeaponManager) == 0x17c, "SWeaponManager is 0x17c bytes");
+LAYOUT_32(offsetof(SWeaponManager, actionQueue) == 0x20 && offsetof(SWeaponManager, reloading) == 0x28 &&
+          offsetof(SWeaponManager, boostBlur) == 0x34 && offsetof(SWeaponManager, switchStep) == 0x40 &&
+          offsetof(SWeaponManager, nuclearPosition) == 0x50 && offsetof(SWeaponManager, turretAngle) == 0x68 &&
+          offsetof(SWeaponManager, specialTrigger) == 0x70 && offsetof(SWeaponManager, sortRank) == 0x78 &&
+          offsetof(SWeaponManager, sorted) == 0xf8 && offsetof(SWeaponManager, sortedCount) == 0x178,
+          "SWeaponManager layout");
 
 // The one manager (GameLoop_StartUp makes it)
 extern SWeaponManager *WeaponManager;

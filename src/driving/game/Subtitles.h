@@ -11,6 +11,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 struct FNTXFont;
 
@@ -39,10 +40,10 @@ public:
     // The line due, moving on when the one shown has had its time; NULL when there is no duration
     const char* GetString();                                                                    // 0x000e3430
 };
-static_assert(sizeof(GSubtitleSplitter) == 0x64, "GSubtitleSplitter is 0x64 bytes");
-static_assert(offsetof(GSubtitleSplitter, times) == 0x28 && offsetof(GSubtitleSplitter, count) == 0x50 &&
-              offsetof(GSubtitleSplitter, startTick) == 0x5c && offsetof(GSubtitleSplitter, simClock) == 0x60,
-              "GSubtitleSplitter layout");
+LAYOUT_32(sizeof(GSubtitleSplitter) == 0x64, "GSubtitleSplitter is 0x64 bytes");
+LAYOUT_32(offsetof(GSubtitleSplitter, times) == 0x28 && offsetof(GSubtitleSplitter, count) == 0x50 &&
+          offsetof(GSubtitleSplitter, startTick) == 0x5c && offsetof(GSubtitleSplitter, simClock) == 0x60,
+          "GSubtitleSplitter layout");
 
 // A movie's subtitle: the frame it starts at and its locale symbol (the names ours)
 struct SubtitleCue {
@@ -91,10 +92,10 @@ public:
     void DrawFont(const char *text, float x, float y, float scale, uint32_t colour);            // 0x000e3670
     void GetWidthHeight(const char *text, float scale, float *width, float *height);            // 0x000e36f0
 };
-static_assert(sizeof(GSubtitles) == 0x94, "GSubtitles is 0x94 bytes");
-static_assert(offsetof(GSubtitles, font) == 0x10 && offsetof(GSubtitles, cues) == 0x20 &&
-              offsetof(GSubtitles, symbol) == 0x2c && offsetof(GSubtitles, splitter) == 0x30,
-              "GSubtitles layout");
+LAYOUT_32(sizeof(GSubtitles) == 0x94, "GSubtitles is 0x94 bytes");
+LAYOUT_32(offsetof(GSubtitles, font) == 0x10 && offsetof(GSubtitles, cues) == 0x20 &&
+          offsetof(GSubtitles, symbol) == 0x2c && offsetof(GSubtitles, splitter) == 0x30,
+          "GSubtitles layout");
 
 extern GSubtitles *TheSubtitles;        // TheApp's
 

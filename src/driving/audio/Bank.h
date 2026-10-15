@@ -19,6 +19,7 @@
 #include "../data/Tree.h"
 #include "../engine/URefCounter.h"
 #include "../../helpers.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 namespace SND {
 struct BankHeader;
@@ -56,8 +57,8 @@ public:
     // characters, or the bank's file name when the index has none; "" when no bank has the handle.
     static const char* GetPatchName(int handle, int patch);                         // 0x00126a30
 };
-static_assert(sizeof(ABank) == 0x18, "ABank is 24 bytes");
-static_assert(offsetof(ABank, index) == 0x10, "ABank::index");
+LAYOUT_32(sizeof(ABank) == 0x18, "ABank is 24 bytes");
+LAYOUT_32(offsetof(ABank, index) == 0x10, "ABank::index");
 
 enum { kBankSlotCount = 10 };
 
@@ -79,7 +80,7 @@ public:
     // The destructor's erase and free, without its subtree erase (only an exception unwind calls it).
     void DestroyRange();                                                            // 0x001267b0
 };
-static_assert(sizeof(BankRefTree) == 0xc, "a map is 12 bytes");
+LAYOUT_32(sizeof(BankRefTree) == 0xc, "a map is 12 bytes");
 
 // ---- helpers every map with 0x18-byte nodes shares (data/Tree.h's TreeNode; the name is ours)
 
@@ -93,7 +94,7 @@ public:
     void EraseIdSubtree(TreeNode *node);                                            // 0x00126c30
     void EraseNameSubtree(TreeNode *node);                                          // 0x00126c70
 };
-static_assert(sizeof(SharedTree) == 12, "a map is 12 bytes");
+LAYOUT_32(sizeof(SharedTree) == 12, "a map is 12 bytes");
 
 // The rightmost node under `node` (_Max).
 TreeNode* SharedTreeMax(TreeNode *node);                                            // 0x00126b50

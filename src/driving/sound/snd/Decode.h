@@ -8,6 +8,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 namespace SND {
 
@@ -19,7 +20,7 @@ struct DecodeXacParams {               // 0x14
     const uint8_t *src;                // +0x0c 15-byte blocks; decodexac reads but does not advance it
     float *dst;                        // +0x10 output; decodexac advances it by 28 per block
 };
-static_assert(sizeof(DecodeXacParams) == 0x14, "decodexac's argument block is 0x14 bytes");
+LAYOUT_32(sizeof(DecodeXacParams) == 0x14, "decodexac's argument block is 0x14 bytes");
 
 // The decoder (thiscall; 0xa8 bytes from CODA_New). Feed gives it a packet channel's blocks, SetState the two
 // history samples (the packet's two leading shorts as floats), Decode hands out frames: what is left of a block
@@ -42,7 +43,7 @@ struct CEAXABLKDecf {                  // 0xa8
     void* GetState(void *state);                                   // 0x0014a190 (data-dead: bank EA-XA only)
     void SetState(const void *state);                              // 0x0014a1c0
 };
-static_assert(sizeof(CEAXABLKDecf) == 0xa8, "a CEAXABLKDecf is 0xa8 bytes");
+LAYOUT_32(sizeof(CEAXABLKDecf) == 0xa8, "a CEAXABLKDecf is 0xa8 bytes");
 
 // 0x00149d80: one stack argument, cdecl (Ghidra's __fastcall is wrong); the original saves every register.
 void decodexac(DecodeXacParams *params);

@@ -188,18 +188,20 @@ int SixtiethsToSteps(int32_t time) {
 }
 
 #if NIGHTFIRE_X87
-// The C runtime's arc cosine (_CIacos at 0x001328d0, the game's own), which takes and answers on the x87 stack
-__declspec(naked) double CrtAcos(float) {
+// The C runtime's arc cosine (_CIacos at 0x001328d0, the game's own), which takes and answers on the x87 stack,
+// less value: the subtraction stays on the x87, before the arc cosine is rounded
+__declspec(naked) double CrtAcosMinus(float, double value) {
     __asm {
         fld dword ptr [esp + 4]
         call Crt::CIacos
+        fsub qword ptr [esp + 8]
         ret
     }
 }
 #else
-// The C runtime's arc cosine (_CIacos at 0x001328d0, the game's own)
-double CrtAcos(float x) {
-    return Crt::CIacos(x);
+// The C runtime's arc cosine (_CIacos at 0x001328d0, the game's own), less value
+double CrtAcosMinus(float x, double value) {
+    return Crt::CIacos(x) - value;
 }
 #endif
 
@@ -1493,7 +1495,7 @@ void ECollision::ProcessSideA(Zone *zone, float strength) {
                 const float one = 1.0f;
                 const float minusOne = -1.0f;
                 const float *cosine = MinFloat(alignment < -1.0f ? &minusOne : &alignment, &one);
-                float angle = float((CrtAcos(*cosine) - kQuarterPi) * kCornerTwist[corner].w);
+                float angle = float(CrtAcosMinus(*cosine, kQuarterPi) * kCornerTwist[corner].w);
                 alignas(16) Coord4 lever;
                 VU0_v4sub(&zone->position, &body->position, &lever);
                 const Coord4 *axis = MatrixRow(&info->orientation, 1);

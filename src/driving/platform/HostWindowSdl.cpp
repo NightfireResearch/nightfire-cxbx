@@ -30,7 +30,12 @@ bool HostWindow_Open(int width, int height, const char *title) {
         fflush(stdout);
         return false;
     }
+#ifdef _WIN32
     Window = SDL_CreateWindow(title, width, height, SDL_WINDOW_RESIZABLE);
+#else
+    // D3D9 is dxvk-native's, which presents through a Vulkan surface of this window
+    Window = SDL_CreateWindow(title, width, height, SDL_WINDOW_RESIZABLE | SDL_WINDOW_VULKAN);
+#endif
     if (Window == NULL) {
         printf("[sdl] no window: %s\n", SDL_GetError());
         fflush(stdout);

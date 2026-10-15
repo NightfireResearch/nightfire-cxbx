@@ -9,7 +9,7 @@ void Inject_XboxXapi(void);
 // settings.ini's DiscPath as the disc's folder for the paths the files resolve (both builds)
 void Xbox_ApplyDiscPathSetting(void);
 
-#include <windows.h>
+#include "Win32Types.h"
 
 // CreateFileA and DeleteFileA on an Xbox path ("D:\driving\..."), resolved onto the host. FILESYS calls them.
 HANDLE __stdcall Xbox_CreateFileA(const char *path, DWORD access, DWORD share, SECURITY_ATTRIBUTES *security,

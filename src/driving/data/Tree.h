@@ -22,6 +22,7 @@
 #include "../Vtables.h"   // our copies of the game's vtables
 
 #include "../engine/RbTree.h"
+#include "../../common/xbeClass.h" // LAYOUT_32
 
 class SymbolNamespace;
 class UGroup;
@@ -46,7 +47,7 @@ struct TreePair {
 };
 
 struct TreeNode : RbTreeNode<TreeNode, TreePair> {};
-static_assert(sizeof(TreeNode) == 0x18, "the game's map node is 24 bytes");
+LAYOUT_32(sizeof(TreeNode) == 0x18, "the game's map node is 24 bytes");
 
 // What insert answers (std::pair<iterator, bool>, returned through a hidden pointer).
 struct TreeInsertResult {
@@ -71,7 +72,7 @@ public:
     // tree, the head linked to itself.
     void Init();
 };
-static_assert(sizeof(Tree) == 12, "a map is 12 bytes");
+LAYOUT_32(sizeof(Tree) == 12, "a map is 12 bytes");
 
 // The next node in order (the inlined ++iterator): the leftmost of the right subtree, or the first ancestor
 // this subtree is on the left of. The head stays where it is.
@@ -85,12 +86,12 @@ extern const ThrowInfo LengthErrorThrowInfo;
 extern const ThrowInfo OutOfRangeThrowInfo;
 }
 
-void TreeThrow(const char *message, uint32_t vtable, const Crt::ThrowInfo *throwInfo);
+void TreeThrow(const char *message, void **vtable, const Crt::ThrowInfo *throwInfo);
 
 // The game's std::length_error / std::out_of_range vtables and throw descriptions.
-const uint32_t kLengthErrorVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_00189eec));
+void **const kLengthErrorVtable = Vtable_00189eec;
 constexpr const Crt::ThrowInfo *kLengthErrorThrowInfo = &Crt::LengthErrorThrowInfo;
-const uint32_t kOutOfRangeVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_0018a29c));
+void **const kOutOfRangeVtable = Vtable_0018a29c;
 constexpr const Crt::ThrowInfo *kOutOfRangeThrowInfo = &Crt::OutOfRangeThrowInfo;
 
 #endif // DRIVING_DATA_TREE_H_

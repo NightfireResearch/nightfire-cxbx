@@ -16,6 +16,7 @@
 #include "../camera/Camera.h"           // RViewCamera, RCamera, Coord3, Coord4, MATRIX4
 #include "../eagl/GeoPrimState.h"
 #include "OffscreenBuffer.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 namespace EAGL {
 struct TAR;
@@ -207,20 +208,20 @@ public:
     // Both hemispheres from the first camera view's frame, then the sphere map (FUN_00099ce0; name ours)
     void UpdateMaps(const Coord3 *eye);                                                 // 0x00099ce0
 };
-static_assert(sizeof(RReflection) == 0x54, "RReflection is 0x54 bytes");
-static_assert(sizeof(RReflection::ReflPrivateData) == 0x280, "ReflPrivateData is 0x280 bytes");
-static_assert(offsetof(RReflection::ReflPrivateData, lighting) == 0xa0 &&
-              offsetof(RReflection::ReflPrivateData, buffers) == 0xb0 &&
-              offsetof(RReflection::ReflPrivateData, savedViewPort) == 0x114 &&
-              offsetof(RReflection::ReflPrivateData, carSTexture) == 0x124 &&
-              offsetof(RReflection::ReflPrivateData, viewDirection) == 0x130 &&
-              offsetof(RReflection::ReflPrivateData, reflectionMatrix) == 0x140 &&
-              offsetof(RReflection::ReflPrivateData, carPosition) == 0x180 &&
-              offsetof(RReflection::ReflPrivateData, states) == 0x190 &&
-              offsetof(RReflection::ReflPrivateData, ranks) == 0x22c &&
-              offsetof(RReflection::ReflPrivateData, objects) == 0x240 &&
-              offsetof(RReflection::ReflPrivateData, lightingNames) == 0x25c &&
-              offsetof(RReflection::ReflPrivateData, warpage) == 0x270, "ReflPrivateData layout");
+LAYOUT_32(sizeof(RReflection) == 0x54, "RReflection is 0x54 bytes");
+LAYOUT_32(sizeof(RReflection::ReflPrivateData) == 0x280, "ReflPrivateData is 0x280 bytes");
+LAYOUT_32(offsetof(RReflection::ReflPrivateData, lighting) == 0xa0 &&
+          offsetof(RReflection::ReflPrivateData, buffers) == 0xb0 &&
+          offsetof(RReflection::ReflPrivateData, savedViewPort) == 0x114 &&
+          offsetof(RReflection::ReflPrivateData, carSTexture) == 0x124 &&
+          offsetof(RReflection::ReflPrivateData, viewDirection) == 0x130 &&
+          offsetof(RReflection::ReflPrivateData, reflectionMatrix) == 0x140 &&
+          offsetof(RReflection::ReflPrivateData, carPosition) == 0x180 &&
+          offsetof(RReflection::ReflPrivateData, states) == 0x190 &&
+          offsetof(RReflection::ReflPrivateData, ranks) == 0x22c &&
+          offsetof(RReflection::ReflPrivateData, objects) == 0x240 &&
+          offsetof(RReflection::ReflPrivateData, lightingNames) == 0x25c &&
+          offsetof(RReflection::ReflPrivateData, warpage) == 0x270, "ReflPrivateData layout");
 
 // The two hemisphere textures UpdateMaps folds into the sphere map (a stack pair in the original; name ours)
 struct ReflMapPair {

@@ -1384,7 +1384,7 @@ void BuildWorld() {
     *reinterpret_cast<int32_t *>(&W->audio[0xd0]) = int32_t(Chance(2) ? 2 : Random(8));
     *reinterpret_cast<void **>(&W->audio[0x190]) = W->zoom;
     ABaseSound *sound = reinterpret_cast<ABaseSound *>(W->sound);
-    sound->vtable = Word(g_soundVtable);
+    sound->vtable = g_soundVtable;
     sound->minDistance = Uniform(0.0f, 20.0f);
     sound->maxDistance = Uniform(10.0f, 200.0f);
 

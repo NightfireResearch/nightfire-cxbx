@@ -254,8 +254,8 @@ alignas(16) EAGL::GeoPrimState DecalState;
 
 namespace {
 
-const uintptr_t kRDecalManagerVtable = reinterpret_cast<uintptr_t>(Vtable_RDecalManager);
-const uintptr_t kUSingletonVtable = reinterpret_cast<uintptr_t>(Vtable_0018beb0);
+void **const kRDecalManagerVtable = Vtable_RDecalManager;
+void **const kUSingletonVtable = Vtable_0018beb0;
 constexpr int kGeoPrims = 8;
 constexpr int kQuadsPerGeoPrim = 21;
 constexpr int kVerticesPerQuad = 6;
@@ -355,7 +355,7 @@ EmpGeoPrim* EmpGeoPrim::Construct() {
 
 // FUNC_AT(0x0009acf0)
 RDecalManager* RDecalManager::Construct() {
-    vtable = reinterpret_cast<const void *>(kRDecalManagerVtable);
+    vtable = kRDecalManagerVtable;
     nextDecal = 0;
     for (int i = 0; i < kGeoPrims; i++) {
         TexturedGeoPrim *geoPrim = static_cast<TexturedGeoPrim *>(EaglMalloc(sizeof(TexturedGeoPrim), "EAGL::GeoPrim new"));
@@ -391,7 +391,7 @@ RDecalManager* RDecalManager::Construct() {
 // The GeoPrims are freed but the table keeps their addresses, as the original has it.
 // FUNC_AT(0x0009b3c0)
 void RDecalManager::Destruct() {
-    vtable = reinterpret_cast<const void *>(kRDecalManagerVtable);
+    vtable = kRDecalManagerVtable;
     for (int i = 0; i < kGeoPrims; i++) {
         TexturedGeoPrim *geoPrim = DecalGeoPrims[i];
         if (geoPrim != NULL) {
@@ -400,7 +400,7 @@ void RDecalManager::Destruct() {
             EaglFree(geoPrim, sizeof(TexturedGeoPrim));
         }
     }
-    vtable = reinterpret_cast<const void *>(kUSingletonVtable);
+    vtable = kUSingletonVtable;
 }
 
 // FUNC_AT(0x0009b450)
@@ -504,7 +504,7 @@ void CylinderSection(Coord3 *positions, CylinderUV *uvs, float radiusB, float ra
         for (int side = 0; side < 2; side++) {
             float radius = side != 0 ? radiusB : radiusA;
             Coord3 *position = &positions[vertex];
-            position->x = float(CosineTurns(turns) * radius);
+            position->x = float(CosineTurnsTimes(turns, radius));
             position->y = float(SineTurns(turns) * radius + 0.5f);
             position->z = side != 0 ? zB : zA;
             uvs[vertex][0] = float((position->x + 1.0) * 0.5f);

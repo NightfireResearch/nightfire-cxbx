@@ -327,7 +327,7 @@ void PBondCar::ProcessSubmarinePhysics() {
 
     // Bobbing: the last step's offset taken off the height, the new one added
     body->position.y = body->position.y - bob;
-    float waveA = sin_fractionalangle(bobAngle);
+    float waveA = AsFloat(sin_fractionalangle(bobAngle));
     double bobOffset = (SineTurns(unknown3E8) + waveA + 1.0f) * kBobHeight;
     bob = (float)bobOffset;
     double angle = (double)bobAngle + kBobRateA;

@@ -38,7 +38,7 @@ enum CarClass : int32_t {
     kCarClass3 = 3,
     kCarClass4 = 4,
 };
-const uint32_t kPBondCarVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_PBondCar));
+void **const kPBondCarVtable = Vtable_PBondCar;
 
 // What the wheel-force methods work from at each wheel (AddWheelForces, AddSimpleWheelForces, AddSnowmobileForces;
 // the names are ours)
@@ -123,16 +123,16 @@ struct BondCarScratch {
     uint8_t onGround;                   // +0x444 the wheel's
     uint8_t unknown445[0xb];
 };
-static_assert(sizeof(BondCarScratch) == 0x450, "Simulate's scratch pad is 0x450 bytes");
-static_assert(offsetof(BondCarScratch, steeredOrientation) == 0x100 && offsetof(BondCarScratch, wheelInput) == 0x170 &&
-              offsetof(BondCarScratch, velocity) == 0x1c0 && offsetof(BondCarScratch, steeringTurn) == 0x210 &&
-              offsetof(BondCarScratch, lever) == 0x250 && offsetof(BondCarScratch, forceInfo) == 0x2dc &&
-              offsetof(BondCarScratch, compression) == 0x2ec && offsetof(BondCarScratch, spin) == 0x310 &&
-              offsetof(BondCarScratch, wheelsOnGround) == 0x330 && offsetof(BondCarScratch, slipFraction) == 0x338 &&
-              offsetof(BondCarScratch, landing) == 0x340 && offsetof(BondCarScratch, landingQuat) == 0x3f0 &&
-              offsetof(BondCarScratch, info) == 0x410 && offsetof(BondCarScratch, blend) == 0x434 &&
-              offsetof(BondCarScratch, boostGrip) == 0x438 && offsetof(BondCarScratch, onGround) == 0x444,
-              "scratch pad layout");
+LAYOUT_32(sizeof(BondCarScratch) == 0x450, "Simulate's scratch pad is 0x450 bytes");
+LAYOUT_32(offsetof(BondCarScratch, steeredOrientation) == 0x100 && offsetof(BondCarScratch, wheelInput) == 0x170 &&
+          offsetof(BondCarScratch, velocity) == 0x1c0 && offsetof(BondCarScratch, steeringTurn) == 0x210 &&
+          offsetof(BondCarScratch, lever) == 0x250 && offsetof(BondCarScratch, forceInfo) == 0x2dc &&
+          offsetof(BondCarScratch, compression) == 0x2ec && offsetof(BondCarScratch, spin) == 0x310 &&
+          offsetof(BondCarScratch, wheelsOnGround) == 0x330 && offsetof(BondCarScratch, slipFraction) == 0x338 &&
+          offsetof(BondCarScratch, landing) == 0x340 && offsetof(BondCarScratch, landingQuat) == 0x3f0 &&
+          offsetof(BondCarScratch, info) == 0x410 && offsetof(BondCarScratch, blend) == 0x434 &&
+          offsetof(BondCarScratch, boostGrip) == 0x438 && offsetof(BondCarScratch, onGround) == 0x444,
+          "scratch pad layout");
 
 extern BondCarScratch *BondCarScratchPad;
 extern const char *OverrideCarType;             // used for a car of class 0 when set (name ours)
@@ -359,18 +359,18 @@ public:
                                 const Coord4 *wheelPos, float *slips);                          // 0x000690a0
     void ProcessSimplePhysics();                                                                // 0x00069710
 };
-static_assert(sizeof(PBondCar) == 0x420, "a PBondCar is 0x420 bytes");
-static_assert(offsetof(PBondCar, tyreTracks) == 0x74 && offsetof(PBondCar, wheels) == 0x90 &&
-              offsetof(PBondCar, wheelRoadNormal) == 0x190 && offsetof(PBondCar, wheelPos) == 0x1d0 &&
-              offsetof(PBondCar, suspensionCompression) == 0x210 && offsetof(PBondCar, physics) == 0x23c &&
-              offsetof(PBondCar, control) == 0x240 && offsetof(PBondCar, actionQueue) == 0x26c &&
-              offsetof(PBondCar, carSpeed) == 0x288 && offsetof(PBondCar, numWheelsOnGround) == 0x299 &&
-              offsetof(PBondCar, tyreDamagePoints) == 0x2a0 && offsetof(PBondCar, carClass) == 0x2c8 &&
-              offsetof(PBondCar, targetBeacon) == 0x2e0 && offsetof(PBondCar, damageZones) == 0x2f0 &&
-              offsetof(PBondCar, damageByPlayer) == 0x370 && offsetof(PBondCar, audio) == 0x37c &&
-              offsetof(PBondCar, glareOn) == 0x39c && offsetof(PBondCar, resetDirection) == 0x3b0 &&
-              offsetof(PBondCar, lockedControl) == 0x3bc && offsetof(PBondCar, hitPoints) == 0x3ec &&
-              offsetof(PBondCar, shieldPointLoc) == 0x3f4 && offsetof(PBondCar, secondaryType) == 0x40c &&
-              offsetof(PBondCar, wasInAir) == 0x411, "PBondCar layout");
+LAYOUT_32(sizeof(PBondCar) == 0x420, "a PBondCar is 0x420 bytes");
+LAYOUT_32(offsetof(PBondCar, tyreTracks) == 0x74 && offsetof(PBondCar, wheels) == 0x90 &&
+          offsetof(PBondCar, wheelRoadNormal) == 0x190 && offsetof(PBondCar, wheelPos) == 0x1d0 &&
+          offsetof(PBondCar, suspensionCompression) == 0x210 && offsetof(PBondCar, physics) == 0x23c &&
+          offsetof(PBondCar, control) == 0x240 && offsetof(PBondCar, actionQueue) == 0x26c &&
+          offsetof(PBondCar, carSpeed) == 0x288 && offsetof(PBondCar, numWheelsOnGround) == 0x299 &&
+          offsetof(PBondCar, tyreDamagePoints) == 0x2a0 && offsetof(PBondCar, carClass) == 0x2c8 &&
+          offsetof(PBondCar, targetBeacon) == 0x2e0 && offsetof(PBondCar, damageZones) == 0x2f0 &&
+          offsetof(PBondCar, damageByPlayer) == 0x370 && offsetof(PBondCar, audio) == 0x37c &&
+          offsetof(PBondCar, glareOn) == 0x39c && offsetof(PBondCar, resetDirection) == 0x3b0 &&
+          offsetof(PBondCar, lockedControl) == 0x3bc && offsetof(PBondCar, hitPoints) == 0x3ec &&
+          offsetof(PBondCar, shieldPointLoc) == 0x3f4 && offsetof(PBondCar, secondaryType) == 0x40c &&
+          offsetof(PBondCar, wasInAir) == 0x411, "PBondCar layout");
 
 #endif // DRIVING_GAME_BONDCAR_H_

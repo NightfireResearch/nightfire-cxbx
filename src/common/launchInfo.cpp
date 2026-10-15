@@ -1,8 +1,16 @@
 #include "launchInfo.h"
-#include <windows.h>
+#include <inttypes.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <limits.h>
+#include <strings.h>
+#include <unistd.h>
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // The launch data page, and launching the other image.
@@ -39,7 +47,7 @@ void LaunchInfo_SetPageHook(LaunchPageHook hook) {
 
 // Replaces XAPILIB::XGetLaunchInfo
 int __stdcall XGetLaunchInfo(int *launchDataType, void *data) {
-    printf("[launch] XGetLaunchInfo: data at 0x%08x\n", (unsigned)(uintptr_t)data);
+    printf("[launch] XGetLaunchInfo: data at 0x%08" PRIxPTR "\n", uintptr_t(data));
 
     FILE *file = fopen(LAUNCH_FILE, "rb");
     if (file == NULL) {
@@ -66,6 +74,7 @@ int __stdcall XGetLaunchInfo(int *launchDataType, void *data) {
     return 0;
 }
 
+#ifdef _WIN32
 static HANDLE InheritableCopy(DWORD which) {
     HANDLE handle = GetStdHandle(which);
     HANDLE copy = NULL;
@@ -128,6 +137,47 @@ static bool StartLoaderFor(const char *executableName) {
     return true;
 }
 
+static void ExitNow(unsigned code) {
+    ExitProcess(code);
+}
+#else
+// Off Windows only the driving engine has an executable, and it is this one: it is started again for DRIVING.XBE,
+// with the same working directory and standard streams.
+static bool StartLoaderFor(const char *executableName) {
+    const char *slash = strrchr(executableName, '\\');
+    const char *image = slash != NULL ? slash + 1 : executableName;
+    if (strcasecmp(image, "DRIVING.XBE") != 0) {
+        printf("[launch] no executable is known for %s\n", image);
+        return false;
+    }
+
+    char path[PATH_MAX];
+    ssize_t length = readlink("/proc/self/exe", path, sizeof(path) - 1);
+    if (length <= 0)
+        return false;
+    path[length] = '\0';
+
+    fflush(stdout);
+    pid_t process = fork();
+    if (process < 0) {
+        perror("[launch] could not start the next process");
+        return false;
+    }
+    if (process == 0) {
+        execl(path, path, (char *)NULL);
+        _exit(127);
+    }
+    printf("[launch] started %s as process %d\n", path, (int)process);
+    return true;
+}
+
+// Without the C library's exit handlers: the game's threads are still running
+static void ExitNow(unsigned code) {
+    fflush(NULL);
+    _exit((int)code);
+}
+#endif
+
 // Replaces XAPILIB::XLaunchNewImageA
 int __stdcall XLaunchNewImageA(char *executableName, void *launchInfo) {
     printf("\n[launch] ================================================================\n"
@@ -138,7 +188,7 @@ int __stdcall XLaunchNewImageA(char *executableName, void *launchInfo) {
     if (file == NULL) {
         perror("[launch] could not open " LAUNCH_FILE " for writing");
         fflush(stdout);
-        ExitProcess(1);
+        ExitNow(1);
     }
     size_t written = fwrite(launchInfo, 4, LAUNCH_WORDS, file);
     fclose(file);
@@ -159,6 +209,6 @@ int __stdcall XLaunchNewImageA(char *executableName, void *launchInfo) {
                 executableName, started ? " (its loader was started)" : " (no loader started)");
         fclose(note);
     }
-    ExitProcess(0);
+    ExitNow(0);
     return 0;
 }

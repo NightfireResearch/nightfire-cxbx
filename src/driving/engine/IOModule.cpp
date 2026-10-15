@@ -74,14 +74,14 @@ void IOModule::CreateDevices() {
     for (int i = 0; i < kPorts; i++) {
         XBoxPadDevice *device = nullptr;
         if (i == port) {
-            void *memory = UMemory::FastAlloc(0x56c, kXBoxPadDeviceTag);
+            void *memory = UMemory::FastAlloc(sizeof(XBoxPadDevice), kXBoxPadDeviceTag);
             device = memory ? ((XBoxPadDevice *)memory)->Construct(i) : nullptr;
             ((InputDevice *)device)->Initialize();
         }
         padDevices[numControllers] = device;
         InputToAction *mapping = nullptr;
         if (i == port) {
-            void *memory = UMemory::FastAlloc(0x10, kInputToActionTag);
+            void *memory = UMemory::FastAlloc(sizeof(InputToAction), kInputToActionTag);
             mapping = memory ? ((InputToAction *)memory)->Construct(device) : nullptr;
         }
         inputActionMappings[numControllers] = mapping;

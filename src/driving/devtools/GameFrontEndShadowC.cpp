@@ -939,7 +939,7 @@ ASound *__fastcall FakeSoundConstruct(ASound *sound, int, const char *mixName) {
     Log(kTagSound);
     Log(ArenaWord(sound));
     LogString(mixName);
-    sound->vtable = uint32_t(uintptr_t(g_fakeSoundVtable));
+    sound->vtable = (void **)g_fakeSoundVtable;
     sound->mix = reinterpret_cast<AMix *>(Bump(sizeof(AMix)));
     for (int view = 0; view < kSoundViewCount; view++) {
         sound->voice.views[view].finished = (g_fake.soundFinished >> view) & 1;

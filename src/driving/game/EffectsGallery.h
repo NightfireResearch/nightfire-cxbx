@@ -16,6 +16,7 @@
 #include "Gallery.h"                      // GalleryKey
 #include "../data/CoordConvert.h"         // Coord3, Coord4
 #include "../../helpers.h"
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 class ASound;
 class RSceneObj;
@@ -161,15 +162,15 @@ public:
     void DEBRIS_Draw(const GalleryKey *key, const Coord4 *position, const Coord4 *orientation,
                      const Coord3 *offset, int frame);          // does not read `this`         // 0x000d4b90
 };
-static_assert(sizeof(GFXGallery::Canvas) == 0x90, "a canvas is 0x90 bytes");
-static_assert(offsetof(GFXGallery::Canvas, effect) == 0x1c && offsetof(GFXGallery::Canvas, life) == 0x3c &&
-              offsetof(GFXGallery::Canvas, sceneObj) == 0x50 && offsetof(GFXGallery::Canvas, frame) == 0x5c &&
-              offsetof(GFXGallery::Canvas, flags) == 0x6c && offsetof(GFXGallery::Canvas, sounds) == 0x70,
-              "GFXGallery::Canvas layout");
-static_assert(sizeof(GFXGallery) == 0x1430, "GFXGallery is 0x1430 bytes");
-static_assert(offsetof(GFXGallery, stickyUsed) == 0x400 && offsetof(GFXGallery, canvasSlots) == 0x408 &&
-              offsetof(GFXGallery, freeCanvases) == 0xc08 && offsetof(GFXGallery, gallery) == 0x1408 &&
-              offsetof(GFXGallery, cullCount) == 0x142c, "GFXGallery layout");
+LAYOUT_32(sizeof(GFXGallery::Canvas) == 0x90, "a canvas is 0x90 bytes");
+LAYOUT_32(offsetof(GFXGallery::Canvas, effect) == 0x1c && offsetof(GFXGallery::Canvas, life) == 0x3c &&
+          offsetof(GFXGallery::Canvas, sceneObj) == 0x50 && offsetof(GFXGallery::Canvas, frame) == 0x5c &&
+          offsetof(GFXGallery::Canvas, flags) == 0x6c && offsetof(GFXGallery::Canvas, sounds) == 0x70,
+          "GFXGallery::Canvas layout");
+LAYOUT_32(sizeof(GFXGallery) == 0x1430, "GFXGallery is 0x1430 bytes");
+LAYOUT_32(offsetof(GFXGallery, stickyUsed) == 0x400 && offsetof(GFXGallery, canvasSlots) == 0x408 &&
+          offsetof(GFXGallery, freeCanvases) == 0xc08 && offsetof(GFXGallery, gallery) == 0x1408 &&
+          offsetof(GFXGallery, cullCount) == 0x142c, "GFXGallery layout");
 
 extern GFXGallery *TheEffectsGallery;   // GFX::Init's
 

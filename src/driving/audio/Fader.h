@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 #include "Mix.h"                        // AMix, RefCounterTree
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class AStream;
 
@@ -65,10 +66,10 @@ public:
     // One reference fewer to the fader `name`; the fader is freed whatever the count.
     static void Remove(const char *name);                                       // 0x00125d60
 };
-static_assert(offsetof(AFader::Priv, stream) == 0x14, "AFader::Priv::stream is at +0x14");
-static_assert(offsetof(AFader::Priv, filter) == 0x24, "AFader::Priv::filter is at +0x24");
-static_assert(sizeof(AFader::Priv) == 0x30, "AFader::Priv is 0x30 bytes");
-static_assert(sizeof(AFader) == 4, "AFader is 4 bytes");
+LAYOUT_32(offsetof(AFader::Priv, stream) == 0x14, "AFader::Priv::stream is at +0x14");
+LAYOUT_32(offsetof(AFader::Priv, filter) == 0x24, "AFader::Priv::filter is at +0x24");
+LAYOUT_32(sizeof(AFader::Priv) == 0x30, "AFader::Priv is 0x30 bytes");
+LAYOUT_32(sizeof(AFader) == 4, "AFader is 4 bytes");
 
 // URefCounter<AFader>'s tree (FaderRefCounter's map, at 0x00243af8): its compiled copies of RefCounterTree's code.
 class FaderRefTree : public RefCounterTree {

@@ -19,6 +19,7 @@
 #include <stdint.h>
 
 #include "AIEnemy.h"
+#include "../../common/xbeClass.h" // LAYOUT_32
 
 struct WTargetable;
 
@@ -69,12 +70,12 @@ public:
     // The target within a degree of the weapon's facing; also Window's
     int TargetIsAcquired();                                                         // 35 0x000224f0
 };
-static_assert(sizeof(AICharacterEnemySnow) == 0x170, "AICharacterEnemySnow is 0x170 bytes");
-static_assert(offsetof(AICharacterEnemySnow, targetAngle) == 0x154 &&
-              offsetof(AICharacterEnemySnow, aimAngles) == 0x158 &&
-              offsetof(AICharacterEnemySnow, blendRates) == 0x168, "AICharacterEnemySnow layout");
+LAYOUT_32(sizeof(AICharacterEnemySnow) == 0x170, "AICharacterEnemySnow is 0x170 bytes");
+LAYOUT_32(offsetof(AICharacterEnemySnow, targetAngle) == 0x154 &&
+          offsetof(AICharacterEnemySnow, aimAngles) == 0x158 &&
+          offsetof(AICharacterEnemySnow, blendRates) == 0x168, "AICharacterEnemySnow layout");
 
-const uint32_t kAICharacterEnemySnowVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_AICharacterEnemySnow));
+void **const kAICharacterEnemySnowVtable = Vtable_AICharacterEnemySnow;
 
 // ---------------------------------------------------------------------------------------------------------------
 // AICharacterEnemySSnow
@@ -98,9 +99,9 @@ public:
     void HandleInterrupts();                                                        // 30 0x00020bb0
     bool TargetIsInRange();                                                         // 33 0x00020c30
 };
-static_assert(sizeof(AICharacterEnemySSnow) == 0x150, "AICharacterEnemySSnow is 0x150 bytes");
+LAYOUT_32(sizeof(AICharacterEnemySSnow) == 0x150, "AICharacterEnemySSnow is 0x150 bytes");
 
-const uint32_t kAICharacterEnemySSnowVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_0018aa18));
+void **const kAICharacterEnemySSnowVtable = Vtable_0018aa18;
 
 // ---------------------------------------------------------------------------------------------------------------
 // AICharacterEnemySunroof
@@ -143,12 +144,12 @@ public:
     bool TargetIsInRange();                                                         // 33 0x000218f0
     int TargetIsAcquired();                                                         // 35 0x000219e0
 };
-static_assert(sizeof(AICharacterEnemySunroof) == 0x170, "AICharacterEnemySunroof is 0x170 bytes");
-static_assert(offsetof(AICharacterEnemySunroof, lastVelocity) == 0x150 &&
-              offsetof(AICharacterEnemySunroof, partnerA) == 0x160 &&
-              offsetof(AICharacterEnemySunroof, targetable) == 0x168, "AICharacterEnemySunroof layout");
+LAYOUT_32(sizeof(AICharacterEnemySunroof) == 0x170, "AICharacterEnemySunroof is 0x170 bytes");
+LAYOUT_32(offsetof(AICharacterEnemySunroof, lastVelocity) == 0x150 &&
+          offsetof(AICharacterEnemySunroof, partnerA) == 0x160 &&
+          offsetof(AICharacterEnemySunroof, targetable) == 0x168, "AICharacterEnemySunroof layout");
 
-const uint32_t kAICharacterEnemySunroofVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_AICharacterEnemySunroof));
+void **const kAICharacterEnemySunroofVtable = Vtable_AICharacterEnemySunroof;
 
 // ---------------------------------------------------------------------------------------------------------------
 // AICharacterEnemyWindow
@@ -183,10 +184,10 @@ public:
     void HandleInterrupts();                                                        // 30 0x00022310
     bool TargetIsInRange();                                                         // 33 0x000223a0
 };
-static_assert(sizeof(AICharacterEnemyWindow) == 0x160, "AICharacterEnemyWindow is 0x160 bytes");
-static_assert(offsetof(AICharacterEnemyWindow, aimSide) == 0x150 &&
-              offsetof(AICharacterEnemyWindow, armTimer) == 0x154, "AICharacterEnemyWindow layout");
+LAYOUT_32(sizeof(AICharacterEnemyWindow) == 0x160, "AICharacterEnemyWindow is 0x160 bytes");
+LAYOUT_32(offsetof(AICharacterEnemyWindow, aimSide) == 0x150 &&
+          offsetof(AICharacterEnemyWindow, armTimer) == 0x154, "AICharacterEnemyWindow layout");
 
-const uint32_t kAICharacterEnemyWindowVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_AICharacterEnemyWindow));
+void **const kAICharacterEnemyWindowVtable = Vtable_AICharacterEnemyWindow;
 
 #endif // DRIVING_GAME_AIENEMYRIDERS_H_

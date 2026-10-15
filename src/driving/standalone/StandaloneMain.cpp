@@ -25,6 +25,12 @@
 
 static const size_t kGameStackSize = 0x10000;   // the XBE header's stack commit
 
+#ifndef _WIN32
+// The game's sources are compiled for the MinGW target (cmake/xbox-abi-linux.cmake), whose main calls __main to run
+// the static constructors; here the C library's start-up has run them already.
+extern "C" void __main(void) {}
+#endif
+
 int main(int argc, char **argv) {
     CrashReport_Install();
     HostSetCommandLine(argc, argv);

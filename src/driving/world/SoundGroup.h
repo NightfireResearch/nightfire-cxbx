@@ -16,6 +16,7 @@
 #include "../audio/Sound.h"             // ABaseSound, AWorldSound, AVoice
 #include "../data/Tree.h"
 #include "../engine/RbTree.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 struct RPathHandle;
 
@@ -34,7 +35,7 @@ public:
     // Replaces the pass voice with a new one for the id (bank << 7 | index). The name is ours (FUN_000d1570).
     void SetVoice(int id);                                                      // 0x000d1570
 };
-static_assert(sizeof(WSound) == 0x160, "WSound is 352 bytes");
+LAYOUT_32(sizeof(WSound) == 0x160, "WSound is 352 bytes");
 
 // ---- std::map<int, WSound *> (MSVC 7's _Tree; engine/RbTree.h)
 
@@ -94,6 +95,6 @@ public:
     // The same from a bank number and index packed as bank * 128 + index (name ours).
     WSound* AddPacked(int id, int packed);                                      // 0x000cd540
 };
-static_assert(sizeof(WSoundGroup) == 0x10, "WSoundGroup is 16 bytes");
+LAYOUT_32(sizeof(WSoundGroup) == 0x10, "WSoundGroup is 16 bytes");
 
 #endif // DRIVING_WORLD_SOUNDGROUP_H_

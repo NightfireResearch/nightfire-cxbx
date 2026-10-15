@@ -36,8 +36,8 @@ public:
     // Plays the line for the listener, and frees its voice once it is done (vtable slot 3).
     void Play(ASoundPlayParams *params);                                            // 0x0011ddb0
 };
-static_assert(offsetof(ACharacter, voice) == 0xc0, "ACharacter::voice");
-static_assert(sizeof(ACharacter) == 0xd0, "ACharacter is 0xd0 bytes");
+LAYOUT_32(offsetof(ACharacter, voice) == 0xc0, "ACharacter::voice");
+LAYOUT_32(sizeof(ACharacter) == 0xd0, "ACharacter is 0xd0 bytes");
 
 // Say's place in each list of lines, and the "M" and "F" lists' flags (CharacterSound.cpp)
 extern int32_t NextFPedLine, NextMPedLine, NextGruntLine, NextScreamLine, NextDeathLine, NextYellLine, NextFallLine;

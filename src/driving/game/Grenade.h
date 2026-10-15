@@ -40,8 +40,8 @@ public:
     // Vtable slot 4
     void Simulate();                                                                            // 0x0005d7d0
 };
-static_assert(sizeof(Grenade) == 0x6e0, "a grenade is 0x6e0 bytes");
-static_assert(offsetof(Grenade, streak) == 0x70 && offsetof(Grenade, weaponType) == 0x6c0 &&
-              offsetof(Grenade, fuse) == 0x6c8 && offsetof(Grenade, explode) == 0x6d4, "Grenade layout");
+LAYOUT_32(sizeof(Grenade) == 0x6e0, "a grenade is 0x6e0 bytes");
+LAYOUT_32(offsetof(Grenade, streak) == 0x70 && offsetof(Grenade, weaponType) == 0x6c0 &&
+          offsetof(Grenade, fuse) == 0x6c8 && offsetof(Grenade, explode) == 0x6d4, "Grenade layout");
 
 #endif // DRIVING_GAME_GRENADE_H_

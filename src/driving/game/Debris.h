@@ -17,6 +17,7 @@
 #include "../eagl/GeoPrimState.h"
 #include "../render/Materials.h"        // UVolatileMaterial
 #include "WeaponEffects.h"               // EffectUV
+#include "../../common/xbeClass.h"       // LAYOUT_32
 
 namespace EAGL {
 struct TAR;
@@ -56,10 +57,10 @@ public:
     // The pieces past the lifetime dropped, the others drawn
     void Draw();                                                                                // 0x000a92a0
 };
-static_assert(sizeof(RDebrisType) == 0x1ad0, "RDebrisType is 0x1ad0 bytes");
-static_assert(offsetof(RDebrisType, colour) == 0x1800 && offsetof(RDebrisType, count) == 0x1a08 &&
-              offsetof(RDebrisType, texture) == 0x1a10 && offsetof(RDebrisType, state) == 0x1a20 &&
-              offsetof(RDebrisType, material) == 0x1a70, "RDebrisType layout");
+LAYOUT_32(sizeof(RDebrisType) == 0x1ad0, "RDebrisType is 0x1ad0 bytes");
+LAYOUT_32(offsetof(RDebrisType, colour) == 0x1800 && offsetof(RDebrisType, count) == 0x1a08 &&
+          offsetof(RDebrisType, texture) == 0x1a10 && offsetof(RDebrisType, state) == 0x1a20 &&
+          offsetof(RDebrisType, material) == 0x1a70, "RDebrisType layout");
 
 class RDebris {
 public:
@@ -85,8 +86,8 @@ public:
     // thrown, then kShellCasings drawn in the view's frame
     void DrawShellCasings();                                                                    // 0x000a9680
 };
-static_assert(sizeof(RDebris) == 0x90, "RDebris is 0x90 bytes");
-static_assert(offsetof(RDebris, shellCount) == 0x5c && offsetof(RDebris, shellObject) == 0x80, "RDebris layout");
+LAYOUT_32(sizeof(RDebris) == 0x90, "RDebris is 0x90 bytes");
+LAYOUT_32(offsetof(RDebris, shellCount) == 0x5c && offsetof(RDebris, shellObject) == 0x80, "RDebris layout");
 
 // A kind of debris (20 bytes; the names are ours): its piece's strip
 struct DebrisKind {
@@ -96,7 +97,7 @@ struct DebrisKind {
     uint32_t vertexCount;
     uint32_t texture;                   // a texture name ("shel" ...)
 };
-static_assert(sizeof(DebrisKind) == 20, "a debris kind is 20 bytes");
+LAYOUT_32(sizeof(DebrisKind) == 20, "a debris kind is 20 bytes");
 
 // The kinds' strips and the kinds, in the XBE's order (0x32ac bytes; the names are ours, each array by the first
 // kind that uses it). Kinds 16, 19 and 22 use other kinds' arrays. scaledA (kind 4's) and scaledB (kind 22's) start
@@ -159,7 +160,7 @@ struct DebrisTables {
     EffectUV texCoords21[18];       // +0x3050
     DebrisKind kinds[RDebris::kKinds];  // +0x30e0
 };
-static_assert(sizeof(DebrisTables) == 0x32ac, "the debris tables are 0x32ac bytes");
+LAYOUT_32(sizeof(DebrisTables) == 0x32ac, "the debris tables are 0x32ac bytes");
 static_assert(offsetof(DebrisTables, vectorsB) == 0x1e0 && offsetof(DebrisTables, scaledB) == 0x3c0 &&
               offsetof(DebrisTables, scaledA) == 0xe70 && offsetof(DebrisTables, list12) == 0x20e0 &&
               offsetof(DebrisTables, kinds) == 0x30e0, "DebrisTables layout");

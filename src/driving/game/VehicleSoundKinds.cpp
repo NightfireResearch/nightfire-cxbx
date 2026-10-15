@@ -42,14 +42,14 @@ int32_t TrafficCountB;
 
 namespace {
 
-const uint32_t kAPlayerVehicleVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_APlayerVehicle));
-const uint32_t kAPlayerHeliVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_APlayerHeli));
-const uint32_t kAUltraLiteVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_AUltraLite));
-const uint32_t kASnowMobileVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_ASnowMobile));
-const uint32_t kASubmersibleVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_ASubmersible));
-const uint32_t kAPlayerTankVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_APlayerTank));
-const uint32_t kAHelicopterVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_AHelicopter));
-const uint32_t kATrafficVehicleVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_ATrafficVehicle));
+void **const kAPlayerVehicleVtable = Vtable_APlayerVehicle;
+void **const kAPlayerHeliVtable = Vtable_APlayerHeli;
+void **const kAUltraLiteVtable = Vtable_AUltraLite;
+void **const kASnowMobileVtable = Vtable_ASnowMobile;
+void **const kASubmersibleVtable = Vtable_ASubmersible;
+void **const kAPlayerTankVtable = Vtable_APlayerTank;
+void **const kAHelicopterVtable = Vtable_AHelicopter;
+void **const kATrafficVehicleVtable = Vtable_ATrafficVehicle;
 
 // The azimuths the three close voices of AUltraLite and APlayerHeli are heard at (CloseVoice)
 const float kCloseAzimuths[kCloseVoices] = { 0.25f, 0.75f, 0.0f };

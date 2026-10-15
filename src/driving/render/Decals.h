@@ -14,6 +14,7 @@
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../eagl/RenderMethod.h"       // GeoPrimParam
 #include "Materials.h"                   // TexturedGeoPrim
+#include "../../common/xbeClass.h"       // LAYOUT_32
 
 namespace EAGL {
 struct GeoPrim;
@@ -81,9 +82,9 @@ public:
     // Counts the delays down, then draws every quad, depth writes off
     void DrawDecals();                                                                  // 0x0009b2d0
 };
-static_assert(sizeof(RDecalManager) == 0x2a0, "RDecalManager is 0x2a0 bytes");
-static_assert(offsetof(RDecalManager, types) == 0x10 && offsetof(RDecalManager, nextDecal) == 0x294,
-              "RDecalManager layout");
+LAYOUT_32(sizeof(RDecalManager) == 0x2a0, "RDecalManager is 0x2a0 bytes");
+LAYOUT_32(offsetof(RDecalManager, types) == 0x10 && offsetof(RDecalManager, nextDecal) == 0x294,
+          "RDecalManager layout");
 
 // REmp's strip round a cylinder: 17 pairs of vertices a sixteenth of a turn apart, each pair (radiusA, zA) then
 // (radiusB, zB) - x = cos * radius, y = sin * radius + 0.5 - with texture coordinates ((x + 1) / 2, (z + 1) / 2)

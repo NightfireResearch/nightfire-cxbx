@@ -20,6 +20,7 @@
 #include "../data/UData.h"
 #include "../engine/CoreFoundation.h"   // ThrowLengthError
 #include "../engine/UMemory.hpp"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 // ---- the warning beside a provisional port: code no shipped data reaches, said once, the first time it runs
 
@@ -193,7 +194,7 @@ public:
         PointNode** Erase(PointNode **result, PointNode *first, PointNode *last);  // 0x0007a900
         void IncreaseSize(uint32_t count);                                          // 0x0007ad50
     };
-    static_assert(sizeof(PointList) == 0xc, "a list is 12 bytes");
+    LAYOUT_32(sizeof(PointList) == 0xc, "a list is 12 bytes");
 
     Coord4 points[4];           // +0x00 the control points
     Coord4 rotations[2];        // +0x40 the quaternions at the two ends
@@ -222,9 +223,9 @@ public:
                      const Coord4 *fromRotation, const Coord4 *toRotation, float tension);
     void AddToSplinePtList(const Coord4 *point);                                    // 0x0007ae00
 };
-static_assert(sizeof(RCameraSpline) == 0x70, "RCameraSpline is 0x70 bytes");
-static_assert(offsetof(RCameraSpline, rotations) == 0x40 && offsetof(RCameraSpline, type) == 0x60 &&
-              offsetof(RCameraSpline, pointList) == 0x64, "RCameraSpline layout");
+LAYOUT_32(sizeof(RCameraSpline) == 0x70, "RCameraSpline is 0x70 bytes");
+LAYOUT_32(offsetof(RCameraSpline, rotations) == 0x40 && offsetof(RCameraSpline, type) == 0x60 &&
+          offsetof(RCameraSpline, pointList) == 0x64, "RCameraSpline layout");
 
 // The first node of the list whose point has these x, y and z, or end() (answered through `result`).  0x0007a8a0
 RCameraSpline::PointNode** FindPointInList(RCameraSpline::PointNode **result, RCameraSpline::PointList *list,

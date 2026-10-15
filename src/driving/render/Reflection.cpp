@@ -77,7 +77,7 @@ static uint32_t CarToEditGuard;
 
 namespace {
 
-const uintptr_t kRReflectionVtable = reinterpret_cast<uintptr_t>(Vtable_RReflection);
+void **const kRReflectionVtable = Vtable_RReflection;
 constexpr int kMapSize = 256;                   // the offscreen buffers' width and height
 constexpr uint32_t kAddressClamp = 3;           // EAGL::TAR's address modes: D3DTADDRESS_CLAMP
 constexpr float kFarDistance = 100000000.0f;    // an empty slot's distance
@@ -304,7 +304,7 @@ void RReflection::ReflPrivateData::Destruct() {
 // FUNC_AT(0x000994c0)
 RReflection* RReflection::Construct() {
     RViewCamera::Construct(NULL);
-    vtable = reinterpret_cast<void **>(kRReflectionVtable);
+    vtable = kRReflectionVtable;
     ReflPrivateData *data =
         static_cast<ReflPrivateData *>(UMemory::FastAlloc(sizeof(ReflPrivateData), "RReflection::ReflPrivateData"));
     privateData = data != NULL ? data->Construct() : NULL;
@@ -316,7 +316,7 @@ RReflection* RReflection::Construct() {
 
 // FUNC_AT(0x00099590)
 void RReflection::Destruct() {
-    vtable = reinterpret_cast<void **>(kRReflectionVtable);
+    vtable = kRReflectionVtable;
     ReflPrivateData *data = privateData;
     viewPort = data->savedViewPort;
     if (data != NULL) {
@@ -662,8 +662,8 @@ void ReflMapVertex(float height, float turns, bool flip, Coord4 *position, Coord
         height = -kStripEnd;
     Coord4 direction;
     direction.z = (flip ? -1.0f : 1.0f) - height;
-    direction.x = float(SineTurns(turns) * height);
-    direction.y = float(CosineTurns(turns) * height);
+    direction.x = float(SineTurnsTimes(turns, height));
+    direction.y = float(CosineTurnsTimes(turns, height));
     direction.w = 0.0f;
     Coord4 unit = {};
     VU0_v4unitxyz(&direction, &unit);

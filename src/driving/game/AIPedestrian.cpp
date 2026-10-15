@@ -235,7 +235,7 @@ void AICharacterPedestrian::Init(int) {
         const char *description = GetRandomPedTexture();
         Pedestrians.peds[i]->female = uint8_t(description[0]) & 1;
         PointerListNode *handle;
-        ActActorDatabase::GetNewActorHandle(&handle, reinterpret_cast<int>(Pedestrians.peds[i]), description, NULL,
+        ActActorDatabase::GetNewActorHandle(&handle, Pedestrians.peds[i], description, NULL,
                                             NULL, &transform, false);
         // The original calls slots 2 (SetActor) here and in Recycle through the vtable: a pedestrian's own
         Pedestrians.peds[i]->SetActor(reinterpret_cast<AICharacterActorLink *>(handle));
@@ -275,7 +275,7 @@ void AICharacterPedestrian::Init(int) {
 // The constructor, which Init inlines
 AICharacterPedestrian* AICharacterPedestrian::Construct() {
     AICharacter::Construct();
-    vtable = reinterpret_cast<void **>(kAICharacterPedestrianVtable);
+    vtable = kAICharacterPedestrianVtable;
     collider = NULL;
     worldPos = NULL;
     animBank = kPedAnimBank;
@@ -475,7 +475,7 @@ int AICharacterPedestrian::InvalidateFurthestPed(int except) {
 
 // FUNC_AT(0x00023f50)
 void AICharacterPedestrian::Destruct() {
-    vtable = reinterpret_cast<void **>(kAICharacterPedestrianVtable);
+    vtable = kAICharacterPedestrianVtable;
     if (collider != NULL) {
         collider->Destruct();
         UMemory::FastFree(collider, sizeof(WCollider));
@@ -664,7 +664,7 @@ bool AICharacterPedestrian::Recycle() {
         actorLink = NULL;
     }
     PointerListNode *handle;
-    ActActorDatabase::GetNewActorHandle(&handle, reinterpret_cast<int>(this), description, NULL, NULL, &transform,
+    ActActorDatabase::GetNewActorHandle(&handle, this, description, NULL, NULL, &transform,
                                         false);
     SetActor(reinterpret_cast<AICharacterActorLink *>(handle));
     UpdateRotPos();

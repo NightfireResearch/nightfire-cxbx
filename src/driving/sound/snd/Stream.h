@@ -7,6 +7,7 @@
 // See Stream.cpp.
 
 #include "../../platform/RealSystem.h"
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 #include <stddef.h>
 #include <stdint.h>
@@ -36,7 +37,7 @@ struct StrmRequest {
     uint32_t endTag;             // +0x11c the chunk tag that ends the request ('SCEl' from SNDSTRMI_queue)
     uint8_t *start;              // +0x120 where in the ring the request's data begins
 };
-static_assert(sizeof(StrmRequest) == 0x124, "a STREAM request is 0x124 bytes");
+LAYOUT_32(sizeof(StrmRequest) == 0x124, "a STREAM request is 0x124 bytes");
 
 // A chunk filter (0xc): a chunk whose (tag & mask) == value goes to a reader (1-based), negative = skip it
 struct StrmFilter {
@@ -53,7 +54,7 @@ struct StrmReader {
     int32_t bytes;               // +0x8 bytes delivered to this reader and not yet taken by STREAM_get
     StrmChunk *next;             // +0xc the next chunk STREAM_get hands out (Ghidra: pData)
 };
-static_assert(sizeof(StrmReader) == 0x10, "a STREAM reader is 0x10 bytes");
+LAYOUT_32(sizeof(StrmReader) == 0x10, "a STREAM reader is 0x10 bytes");
 
 // The header (0x190), at the start of the caller's memory, tagged "STRM"; the records and the ring of chunks
 // (StrmChunk) follow it.
@@ -89,9 +90,9 @@ struct StrmInternal {
     int32_t readSize;            // +0x188 the bytes the current read asked for
     int32_t readChunk;           // +0x18c 0x800, 0x1000 or 0x2000 by the ring's size
 };
-static_assert(sizeof(StrmInternal) == 0x190, "the STREAM header is 0x190 bytes");
-static_assert(offsetof(StrmInternal, fileName) == 0x7c, "STREAM fileName");
-static_assert(offsetof(StrmInternal, fileSlot) == 0x17c, "STREAM fileSlot");
+LAYOUT_32(sizeof(StrmInternal) == 0x190, "the STREAM header is 0x190 bytes");
+LAYOUT_32(offsetof(StrmInternal, fileName) == 0x7c, "STREAM fileName");
+LAYOUT_32(offsetof(StrmInternal, fileSlot) == 0x17c, "STREAM fileSlot");
 
 }  // namespace SND
 

@@ -47,9 +47,9 @@ public:
     // Vtable slot 4
     void Simulate();                                                                            // 0x0005ceb0
 };
-static_assert(sizeof(Explosion) == 0x98, "an explosion is 0x98 bytes");
-static_assert(offsetof(Explosion, explosionType) == 0x6c && offsetof(Explosion, size) == 0x70 &&
-              offsetof(Explosion, bodiesHit) == 0x78, "Explosion layout");
+LAYOUT_32(sizeof(Explosion) == 0x98, "an explosion is 0x98 bytes");
+LAYOUT_32(offsetof(Explosion, explosionType) == 0x6c && offsetof(Explosion, size) == 0x70 &&
+          offsetof(Explosion, bodiesHit) == 0x78, "Explosion layout");
 
 // 1 / Simulate's scale (Explosion.cpp), as a static initialiser made it
 extern float ExplosionInverseScale;

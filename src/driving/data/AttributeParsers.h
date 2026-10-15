@@ -6,6 +6,7 @@
 // wrote. See AttributeParsers.cpp.
 
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // What a parser wrote (returned through a hidden pointer, which the parser also returns).
 struct AttributeParseResult {   // 0xc
@@ -13,7 +14,7 @@ struct AttributeParseResult {   // 0xc
     uint32_t count;             // +0x04 elements written
     void *data;                 // +0x08 where (base + offset); for a symbol, NameLookup's answer
 };
-static_assert(sizeof(AttributeParseResult) == 0xc, "a parse result is 12 bytes");
+LAYOUT_32(sizeof(AttributeParseResult) == 0xc, "a parse result is 12 bytes");
 
 // A parser: up to `count` elements of `text`, separated by ',' or ';' (a vector's or matrix's components by ',',
 // the vectors or matrices by ';'), written at base + offset. `name` is the key (unused by the stock parsers), and
@@ -36,7 +37,7 @@ struct AttributeField {         // 0x18
     AttributeParseResult *Parse(AttributeParseResult *result, const char *name, const char *text,
                                 char *base);                                                    // 0x00052560
 };
-static_assert(sizeof(AttributeField) == 0x18, "an extension field is 24 bytes");
+LAYOUT_32(sizeof(AttributeField) == 0x18, "an extension field is 24 bytes");
 
 AttributeParseResult *Bool_AttribByteOffsetParserFunc(AttributeParseResult *result, const char *name,
                                                       const char *text, uint32_t offset, uint32_t count,

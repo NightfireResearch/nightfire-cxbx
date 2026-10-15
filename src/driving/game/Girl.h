@@ -14,6 +14,7 @@
 
 #include "../data/CoordConvert.h"         // Coord4
 #include "../../helpers.h"
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 class USimpleTexturedMaterial;
 namespace EAGL {
@@ -42,11 +43,11 @@ public:
 
     GGirlieMaterial* DeleteVirtual(unsigned flags);
 };
-static_assert(sizeof(GGirlieMaterial) == 0xd0, "GGirlieMaterial is 0xd0 bytes");
-static_assert(offsetof(GGirlieMaterial, shape) == 0x10 && offsetof(GGirlieMaterial, tar) == 0x20 &&
-              offsetof(GGirlieMaterial, material) == 0x30 && offsetof(GGirlieMaterial, positions) == 0x40 &&
-              offsetof(GGirlieMaterial, colours) == 0x80 && offsetof(GGirlieMaterial, texCoords) == 0x90,
-              "GGirlieMaterial layout");
+LAYOUT_32(sizeof(GGirlieMaterial) == 0xd0, "GGirlieMaterial is 0xd0 bytes");
+LAYOUT_32(offsetof(GGirlieMaterial, shape) == 0x10 && offsetof(GGirlieMaterial, tar) == 0x20 &&
+          offsetof(GGirlieMaterial, material) == 0x30 && offsetof(GGirlieMaterial, positions) == 0x40 &&
+          offsetof(GGirlieMaterial, colours) == 0x80 && offsetof(GGirlieMaterial, texCoords) == 0x90,
+          "GGirlieMaterial layout");
 
 class GGirl {
 public:

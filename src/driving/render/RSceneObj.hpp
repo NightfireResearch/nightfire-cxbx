@@ -11,6 +11,7 @@
 #include "../engine/URefCounter.h"      // RefCounterTree
 #include "../../common/xbeOverload.h"   // XbeVirtual
 #include "../../helpers.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // RSceneObj (0x40 bytes, vtable 0x00191be0): a drawable object in the world - the proc-anim objects the world makes,
@@ -73,7 +74,7 @@ struct RSceneObj_vtbl {
     void *PostLoad;                     // 17
     void *ResolveObjectData;            // 18
 };
-static_assert(sizeof(RSceneObj_vtbl) == 0x4c, "the scene object's vtable has 19 slots");
+LAYOUT_32(sizeof(RSceneObj_vtbl) == 0x4c, "the scene object's vtable has 19 slots");
 
 // What AddCollisionInfo gathers in one simulation tick (0x20 bytes, operator new): the sums of the two vectors
 // it is handed, and how many
@@ -132,7 +133,7 @@ public:
     CARP::Instance *Instance() const { return static_cast<CARP::Instance *>(sourceInstance); }
     CARP::BaseDesc *Desc() const { return static_cast<CARP::BaseDesc *>(baseDesc); }
     // The article's model group (its description's first word)
-    UGroup *ModelGroup() const { return PtrFrom32<UGroup>(Desc()->model.value); }
+    UGroup *ModelGroup() const { return reinterpret_cast<UGroup *>(uintptr_t(Desc()->model.value)); }
 
     RSceneObj* Construct(CARP::Instance *instance);                                             // 0x0008eec0
     void Destruct();                                                                            // 0x000905a0
@@ -165,8 +166,8 @@ public:
     // Starts the culling's walk over the scene objects filed under a list's visible nodes
     static void PrepareSceneObjsForCulling(CachedDrawInfo *list);                               // 0x0008d830
     // The walk's next object (its address; -1 at the end), its bounding circle and the culling's tests
-    static int GetNextSceneObjCullInfo(Coord4 *sphere, float *height, bool *checkFar, float *farScale);   // 0x0008d860
-    static void SetSceneObjectCull(int item, bool culled, float distance);                      // 0x0008f000
+    static intptr_t GetNextSceneObjCullInfo(Coord4 *sphere, float *height, bool *checkFar, float *farScale);   // 0x0008d860
+    static void SetSceneObjectCull(intptr_t item, bool culled, float distance);                 // 0x0008f000
     // Into this frame's draw lists, if visible and the lists are not full
     void SetNowVisible();                                                                       // 0x0008dbc0
     static void RenderAllNormal();                                                              // 0x0008d9f0
@@ -226,7 +227,7 @@ public:
     void SuppressEffects(bool byId, uint32_t which);                                            // 0x0008e7d0
     void DamageEffects(uint32_t zones);                                                         // 0x0008e900
     // vtable slot 15; the third to fifth arguments are not read
-    void TriggerFX(int type, uint32_t which, uint32_t extra, const Coord3 *point, const Coord3 *direction,
+    void TriggerFX(int type, uint32_t which, uint32_t unused3, const Coord3 *unused4, const Coord3 *unused5,
                    float intensity);                                                            // 0x0008ea70
     void StopFX();                                                                              // 0x0008eb60
     ArticleEffect* LookupFXHandle(const char *name, int instance);                              // 0x0008ec20
@@ -295,11 +296,11 @@ private:
         (this->*XbeVirtual<Method>(this, slot))();
     }
 };
-static_assert(sizeof(RSceneObj) == 0x40, "a scene object is 64 bytes");
-static_assert(offsetof(RSceneObj, sourceInstance) == 0x0c && offsetof(RSceneObj, mapNode) == 0x18 &&
-              offsetof(RSceneObj, flags) == 0x1f && offsetof(RSceneObj, effectDecayTime) == 0x24 &&
-              offsetof(RSceneObj, animHandle) == 0x2c && offsetof(RSceneObj, collisionInfo) == 0x38 &&
-              offsetof(RSceneObj, name) == 0x3c, "RSceneObj layout");
+LAYOUT_32(sizeof(RSceneObj) == 0x40, "a scene object is 64 bytes");
+LAYOUT_32(offsetof(RSceneObj, sourceInstance) == 0x0c && offsetof(RSceneObj, mapNode) == 0x18 &&
+          offsetof(RSceneObj, flags) == 0x1f && offsetof(RSceneObj, effectDecayTime) == 0x24 &&
+          offsetof(RSceneObj, animHandle) == 0x2c && offsetof(RSceneObj, collisionInfo) == 0x38 &&
+          offsetof(RSceneObj, name) == 0x3c, "RSceneObj layout");
 
 // A scene object with a source instance of its own (0x80 bytes; allocated under this name by Newton's constructor,
 // ESpawnSmackable's destructor and three others): every allocation site copies the identity matrix into
@@ -312,7 +313,7 @@ public:
     void Destruct();                    // RSceneObj's (a jump to it)                           // 0x0001aa70
     RAutonomousObj* Delete(unsigned flags);     // the scalar deleting destructor, vtable slot 0 // 0x0001b180
 };
-static_assert(sizeof(RAutonomousObj) == 0x80, "an autonomous scene object is 128 bytes");
+LAYOUT_32(sizeof(RAutonomousObj) == 0x80, "an autonomous scene object is 128 bytes");
 
 // ---- helpers the linker placed among the scene objects' code (the names are ours)
 
@@ -360,7 +361,7 @@ struct SceneObjStatics {
     RSceneObj *loading;                 // +0x89c Load's, for ResolveData
     RSceneObj *cullObject;              // +0x8a0 the walk's last object
 };
-static_assert(sizeof(SceneObjStatics) == 0x8a4 && offsetof(SceneObjStatics, normal) == 0x90 &&
-              offsetof(SceneObjStatics, cullList) == 0x894, "SceneObjStatics layout");
+LAYOUT_32(sizeof(SceneObjStatics) == 0x8a4 && offsetof(SceneObjStatics, normal) == 0x90 &&
+          offsetof(SceneObjStatics, cullList) == 0x894, "SceneObjStatics layout");
 
 extern SceneObjStatics SceneObjs;

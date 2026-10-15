@@ -76,7 +76,7 @@ double SizeY(const CARP::Instance *instance) {
 }
 
 CARP::Instance *InstanceOf(const WRenderSortEntry &draw) {
-    return reinterpret_cast<CARP::Instance *>(uintptr_t(draw.key));
+    return reinterpret_cast<CARP::Instance *>(draw.key);
 }
 
 // The map's square as a box: its centre, and its half-side in w
@@ -194,7 +194,7 @@ void WRender::PrepareForCull(CachedDrawInfo *list) {
 }
 
 // FUNC_AT(0x000c75e0)
-int WRender::GetNextPoint(Coord4 *sphere, float *height, bool *checkFar, float *farScale) {
+intptr_t WRender::GetNextPoint(Coord4 *sphere, float *height, bool *checkFar, float *farScale) {
     CachedDrawInfo *list = Cursor.list;
     if (list->nodeCount == 0)
         return kNoMorePoints;
@@ -219,11 +219,11 @@ int WRender::GetNextPoint(Coord4 *sphere, float *height, bool *checkFar, float *
     } else {
         *farScale = 1.0f;
     }
-    return int(uintptr_t(instance));
+    return intptr_t(instance);
 }
 
 // FUNC_AT(0x000c7700)
-void WRender::SetCull(int item, bool culled, float distance) {
+void WRender::SetCull(intptr_t item, bool culled, float distance) {
     if (culled)
         return;
     CachedDrawInfo *list = Cursor.list;

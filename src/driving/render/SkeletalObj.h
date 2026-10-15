@@ -16,6 +16,7 @@
 #include "../anim/AnimEngine.h"          // Handle
 #include "../data/Carp.h"                // CARP::Instance, MATRIX4
 #include "../data/CoordConvert.h"        // Coord3, Coord4
+#include "../../common/xbeClass.h"       // LAYOUT_32
 
 struct RigidBody;
 
@@ -49,6 +50,6 @@ public:
     // RSceneObj's, then each live spring stepped and its bone set from its angle.
     void UpdatePosition(bool force);                                                                // 0x00091360
 };
-static_assert(sizeof(RSkeletalObj) == 0xa0, "RSkeletalObj is 0xa0 bytes");
+LAYOUT_32(sizeof(RSkeletalObj) == 0xa0, "RSkeletalObj is 0xa0 bytes");
 
 #endif // DRIVING_RENDER_SKELETALOBJ_H_

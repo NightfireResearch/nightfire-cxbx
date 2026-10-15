@@ -12,6 +12,7 @@
 #include <stdint.h>
 
 #include "../data/CoordConvert.h"       // Coord4
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 namespace EAGL {
 struct TAR;
@@ -54,10 +55,10 @@ public:
     void SetEnabled(int mode);                                                          // 0x0009a500
     void Draw();                                                                        // 0x0009a6e0
 };
-static_assert(sizeof(RColorize) == 0x60, "RColorize is 0x60 bytes");
-static_assert(offsetof(RColorize, colourA) == 0x10 && offsetof(RColorize, mode) == 0x30 &&
-              offsetof(RColorize, tintColour) == 0x3c && offsetof(RColorize, areaBrightness) == 0x48 &&
-              offsetof(RColorize, frontBuffer) == 0x58, "RColorize layout");
+LAYOUT_32(sizeof(RColorize) == 0x60, "RColorize is 0x60 bytes");
+LAYOUT_32(offsetof(RColorize, colourA) == 0x10 && offsetof(RColorize, mode) == 0x30 &&
+          offsetof(RColorize, tintColour) == 0x3c && offsetof(RColorize, areaBrightness) == 0x48 &&
+          offsetof(RColorize, frontBuffer) == 0x58, "RColorize layout");
 
 extern RColorize *Colorize;
 

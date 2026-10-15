@@ -20,6 +20,7 @@
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../engine/CoreContainers.h"   // GameVector
 #include "../platform/Ptr32.h"
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class UGroup;
 
@@ -202,9 +203,9 @@ public:
     uint8_t unknown19;
     uint16_t renderIndex;       // +0x1a its render instance (fgWorld->instances), and its name
     union {                     // +0x1c
-        CollisionArticle *article;  // its geometry, from WCollisionMgr::Init on (colliders and WWorldPos keep it
-                                    // to see that it has not changed)
-        UGroup *articleGroup;       // before: the CARP group of its article, as the loader resolved it
+        Ptr32<CollisionArticle> article;    // its geometry, from WCollisionMgr::Init on (colliders and WWorldPos
+                                            // keep it to see that it has not changed)
+        Ptr32<UGroup> articleGroup;         // before: the CARP group of its article, as the loader resolved it
     };
     Coord3 forward;             // +0x20
     float halfSizeZ;            // +0x2c
@@ -282,7 +283,7 @@ struct WorldCollisionInfo {
     // FUN_0001d9f0, placed among the AI's code. The segment's ends are zeroed here.
     WorldCollisionInfo* Construct();                                                        // 0x0001d9f0
 };
-static_assert(sizeof(WorldCollisionInfo) == 0x60, "WorldCollisionInfo is 96 bytes");
+LAYOUT_32(sizeof(WorldCollisionInfo) == 0x60, "WorldCollisionInfo is 96 bytes");
 
 // ---- the collision system's std::vectors (Dinkumware's, as the game compiled them)
 
@@ -307,13 +308,13 @@ struct StripList : ColVector<const CollisionStrip *> {
     void InsertN(const CollisionStrip **where, uint32_t count, const CollisionStrip *const *value);   // 0x000c2c70
     void Xlen();                // std::length_error("vector<T> too long")                     0x000c1eb0
 };
-static_assert(sizeof(StripList) == 0x14, "a strip list is 20 bytes");
+LAYOUT_32(sizeof(StripList) == 0x14, "a strip list is 20 bytes");
 
 struct InstanceListEntry {
     WCollisionInstance *instance;
     StripList *strips;          // NULL: every strip of the instance
 };
-static_assert(sizeof(InstanceListEntry) == 8, "an instance list entry is 8 bytes");
+LAYOUT_32(sizeof(InstanceListEntry) == 8, "an instance list entry is 8 bytes");
 
 struct InstanceList : ColVector<InstanceListEntry> {
     void PushBack(const InstanceListEntry *entry);                                          // 0x000c3180
@@ -333,7 +334,7 @@ struct BarrierListEntry {
     WCollisionInstance *instance;   // +0x20
     uint32_t index;             // +0x24
 };
-static_assert(sizeof(BarrierListEntry) == 0x28, "a barrier list entry is 40 bytes");
+LAYOUT_32(sizeof(BarrierListEntry) == 0x28, "a barrier list entry is 40 bytes");
 
 struct BarrierList : ColVector<BarrierListEntry> {
     void PushBack(const BarrierListEntry *entry);                                           // 0x000c30f0
@@ -385,7 +386,7 @@ struct WGridDynamicNode {
     WGridDynamicNode *prev;     // +0x04
     WGridDynamicEntry value;    // +0x08
 };
-static_assert(sizeof(WGridDynamicNode) == 0x10, "a cell list's node is 0x10 bytes");
+LAYOUT_32(sizeof(WGridDynamicNode) == 0x10, "a cell list's node is 0x10 bytes");
 
 struct WGridDynamicList {
     uint32_t allocator;
@@ -398,7 +399,7 @@ struct WGridDynamicList {
     void Destruct();                                                         // 0x000c59b0
     void IncreaseSize(uint32_t count);                                       // 0x000c5a80
 };
-static_assert(sizeof(WGridDynamicList) == 0xc, "a cell list is 0xc bytes");
+LAYOUT_32(sizeof(WGridDynamicList) == 0xc, "a cell list is 0xc bytes");
 
 // A cell's node (the 'cn  ' record's data): the moving things' list, then the static things by type - their
 // counts, and where each type's numbers start (in bytes after the 0x10-byte head)
@@ -430,7 +431,7 @@ struct GridCellIterator {
     GridCellIterator* Construct(WGridNode *cell, uint32_t type);      // 0x000bfee0
     const uint16_t* Next();     // the element, NULL at the end         0x000bff50
 };
-static_assert(sizeof(GridCellIterator) == 0x18, "a grid cell iterator is 24 bytes");
+LAYOUT_32(sizeof(GridCellIterator) == 0x18, "a grid cell iterator is 24 bytes");
 
 // ---- the geometry helpers on the strips' triangles (CollisionInstance.cpp)
 

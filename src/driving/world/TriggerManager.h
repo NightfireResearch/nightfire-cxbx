@@ -12,6 +12,7 @@
 #include "../physics/RigidBody.h"
 #include "../physics/SimpleRigidBody.h"
 #include "../render/RPathHandle.hpp"
+#include "../../common/xbeClass.h" // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // WTriggerManager (one, fgTriggerManager): the track's triggers ('Trig' data, copied at Init so that Restart can put
@@ -47,7 +48,7 @@ public:
 
     bool Considers(WTrigger *trigger, unsigned touch);   // inlined in the game
 };
-static_assert(sizeof(WTriggerManager) == 0xc, "the trigger manager is 12 bytes");
+LAYOUT_32(sizeof(WTriggerManager) == 0xc, "the trigger manager is 12 bytes");
 
 extern WTriggerManager *fgTriggerManager;
 

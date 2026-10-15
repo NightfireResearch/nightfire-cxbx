@@ -15,6 +15,7 @@
 
 #include "../data/CoordConvert.h"         // Coord3, Coord4
 #include "../render/Particles.h"          // RParticleSystemData
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 class UGroup;
 class USimpleMaterial;
@@ -219,17 +220,17 @@ public:
     void SPRITE_Flush();                                                                        // 0x000d6da0
 
     // The effects gallery's CULL_SetCanvas (GFX's code, beside GFX::CULL_GetNextCanvas)
-    static void CULL_SetCanvas(int item, bool culled, float distance);                          // 0x000d3470
+    static void CULL_SetCanvas(intptr_t item, bool culled, float distance);                     // 0x000d3470
 
 private:
     void DefaultRenderState();
     void DrawFontText(float x, float y, uint32_t colour, const char *text);
 };
-static_assert(sizeof(GGallery) == 0xc0, "GGallery is 0xc0 bytes");
-static_assert(offsetof(GGallery, shapes) == 0x10 && offsetof(GGallery, colour) == 0x50 &&
-              offsetof(GGallery, position) == 0x60 && offsetof(GGallery, scale) == 0x80 &&
-              offsetof(GGallery, texture) == 0x90 && offsetof(GGallery, font) == 0xa8 &&
-              offsetof(GGallery, keepRenderState) == 0xb0, "GGallery layout");
+LAYOUT_32(sizeof(GGallery) == 0xc0, "GGallery is 0xc0 bytes");
+LAYOUT_32(offsetof(GGallery, shapes) == 0x10 && offsetof(GGallery, colour) == 0x50 &&
+          offsetof(GGallery, position) == 0x60 && offsetof(GGallery, scale) == 0x80 &&
+          offsetof(GGallery, texture) == 0x90 && offsetof(GGallery, font) == 0xa8 &&
+          offsetof(GGallery, keepRenderState) == 0xb0, "GGallery layout");
 
 // LINE_Draw2DStrip's material (Gallery.cpp; StaticInit.cpp's DestroyStatic_0023f330 destroys it) and its guard
 extern USimpleMaterial LineMaterial;

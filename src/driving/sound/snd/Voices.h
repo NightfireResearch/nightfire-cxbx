@@ -9,6 +9,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 namespace SND {
 
@@ -74,7 +75,7 @@ struct Voice {
     uint16_t pitchMult;          // +0x84 the programmed 4.12 multiplier
     uint16_t pitch;              // +0x86 the final one
 };
-static_assert(sizeof(Voice) == 0x88, "SNDVOICEI is 0x88 bytes");
+LAYOUT_32(sizeof(Voice) == 0x88, "SNDVOICEI is 0x88 bytes");
 
 // SNDIPATCHHEADER as SNDI_parsetimbre fills it (0xb8). Tag numbers in brackets.
 struct PatchHeader {
@@ -126,7 +127,7 @@ struct PatchHeader {
     uint16_t azimuth[6];         // +0xa8 default speaker azimuth + [0x9c] [0x9d] [0x9e] [0x9f] [0xa6] [0xa7]
     uint8_t *start;              // +0xb4 where the tags began
 };
-static_assert(sizeof(PatchHeader) == 0xb8, "SNDIPATCHHEADER is 0xb8 bytes here");
+LAYOUT_32(sizeof(PatchHeader) == 0xb8, "SNDIPATCHHEADER is 0xb8 bytes here");
 
 // SNDPLAYOPTS (0x18), defaults by SNDplaysetdef
 struct PlayOpts {
@@ -178,7 +179,7 @@ struct Attributes {
     uint8_t *userData[4];        // +0x48 [0x14]
     int32_t userDataSize[4];     // +0x58
 };
-static_assert(sizeof(Attributes) == 0x68, "the stream attributes are 0x68 bytes");
+LAYOUT_32(sizeof(Attributes) == 0x68, "the stream attributes are 0x68 bytes");
 
 struct SFilterDesc;              // Filters.h
 

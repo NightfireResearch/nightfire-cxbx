@@ -6,6 +6,7 @@
 
 #include "CollisionInstance.h"
 #include "CollisionTypes.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // WCollider (0x68): a moving thing's cache of what it can hit. It keeps a region round itself (a sphere a little
@@ -18,7 +19,7 @@
 // What a barrier list was made from: an instance's article then, and where the instance keeps it
 struct ColliderStamp {
     CollisionArticle *article;
-    CollisionArticle *const *source;
+    const Ptr32<CollisionArticle> *source;
 };
 
 // The barrier stamps' vector (the instance and barrier lists are CollisionTypes.h's; their reserve and copies
@@ -72,8 +73,8 @@ public:
     void Refresh(const Coord4 *sweep);                                           // 0x000be420
     void Refresh(const Coord3 *position, float radius);                          // 0x000be4b0
 };
-static_assert(sizeof(WCollider) == 0x68, "a collider is 0x68 bytes");
+LAYOUT_32(sizeof(WCollider) == 0x68, "a collider is 0x68 bytes");
 static_assert(offsetof(WCollider, instances) == 0x30, "WCollider::instances");
-static_assert(offsetof(WCollider, regionValid) == 0x60, "WCollider::regionValid");
+LAYOUT_32(offsetof(WCollider, regionValid) == 0x60, "WCollider::regionValid");
 
 #endif // DRIVING_WORLD_COLLIDER_H_

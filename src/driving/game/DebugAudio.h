@@ -20,6 +20,7 @@
 #include <stdio.h>
 
 #include "../world/Targeting.h"         // ScreenPos
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 // The warning beside a provisional port: code no shipped run reaches, ported from the listing without a test. It
 // says so once, the first time it runs.
@@ -51,7 +52,7 @@ struct DAudioTargetNode {
     DAudioTargetNode *prev;
     DAudioTarget value;
 };
-static_assert(sizeof(DAudioTargetNode) == 0x34, "a target node is 0x34 bytes");
+LAYOUT_32(sizeof(DAudioTargetNode) == 0x34, "a target node is 0x34 bytes");
 
 // std::list<DAudioTarget>. The linker folded its _Buynode, its head's _Buynode and erase with
 // those of WGrid's list of dynamic elements (world/Grid.h), whose nodes are the same size.
@@ -70,7 +71,7 @@ struct DAudioTargetList {
     // _Incsize: throws length_error("list<T> too long") past 0x5d1745d nodes.
     void IncreaseSize(uint32_t count);                                                      // 0x000376a0
 };
-static_assert(sizeof(DAudioTargetList) == 12, "a list is 12 bytes");
+LAYOUT_32(sizeof(DAudioTargetList) == 12, "a list is 12 bytes");
 
 // The sounds on screen, UpdateTargets' list
 extern DAudioTargetList DAudioTargets;

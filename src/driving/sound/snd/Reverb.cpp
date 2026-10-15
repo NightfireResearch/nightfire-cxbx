@@ -152,13 +152,13 @@ void SNDMIXI_restorefx2(void) {
 // FUNC_AT(0x00142fc0)
 void SNDMIXI_initfx(int rate) {
     SndMix.fx2Desc = &SndMix.fx2Header;
-    void *routing = SNDMEMI_alloc(0x18);
+    void *routing = SNDMEMI_alloc(6 * int(sizeof(SFilterNode *)));
     int config = SndMix.fx2Config - 1;
     SndMix.fx2Routing = static_cast<SFilterNode **>(routing);
     SndMix.fx2EntryCursor = SndMix.fx2Entries;
     SndMix.fx2ConnCursor = SndMix.fx2Connections;
     int nodeCount = SNDI_getb(SndMix.fx2Desc->nodeCounts[config], 4);
-    void *nodes = SNDMEMI_alloc(nodeCount * 4);
+    void *nodes = SNDMEMI_alloc(nodeCount * int(sizeof(SFilterNode *)));
     const uint8_t *entry = SndMix.fx2EntryCursor;
     SndMix.fx2Nodes = static_cast<SFilterNode **>(nodes);
     for (int i = 0; i < nodeCount; i++) {

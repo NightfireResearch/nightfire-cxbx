@@ -149,7 +149,7 @@ uint32_t ExplosionEffectSlot;
 #define kEWakeupSmackableVtable ((vtable_Event *)Vtable_EWakeupSmackable)
 
 #define kRAutonomousObjVtable ((RSceneObj_vtbl *)Vtable_0018a398)
-#define kALimitedSoundVtable uint32_t(reinterpret_cast<uintptr_t>(Vtable_0018c8c8))
+#define kALimitedSoundVtable Vtable_0018c8c8
 
 namespace {
 

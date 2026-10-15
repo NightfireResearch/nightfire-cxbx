@@ -5,6 +5,7 @@
 
 #include "RoadNetwork.h"
 #include "../data/CoordConvert.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // A navigator on the road network (Ghidra: WRoadNav, 0xc0 bytes): a place on one of the network's segments - the
@@ -120,7 +121,7 @@ public:
     double LeftDrivableDist();                                                                      // 0x00029cf0
     double RightDrivableDist();                                                                     // 0x00031820
 };
-static_assert(sizeof(WRoadNav) == 0xc0, "WRoadNav is 0xc0 bytes");
-static_assert(offsetof(WRoadNav, segment) == 0x3e && offsetof(WRoadNav, boundStart) == 0x50 &&
-              offsetof(WRoadNav, spline) == 0x90 && offsetof(WRoadNav, laneOffset) == 0x98 &&
-              offsetof(WRoadNav, nextChoice) == 0xb0, "WRoadNav layout");
+LAYOUT_32(sizeof(WRoadNav) == 0xc0, "WRoadNav is 0xc0 bytes");
+LAYOUT_32(offsetof(WRoadNav, segment) == 0x3e && offsetof(WRoadNav, boundStart) == 0x50 &&
+          offsetof(WRoadNav, spline) == 0x90 && offsetof(WRoadNav, laneOffset) == 0x98 &&
+          offsetof(WRoadNav, nextChoice) == 0xb0, "WRoadNav layout");

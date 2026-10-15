@@ -18,11 +18,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # file while using a linter (e.g. clangd).
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# A native Linux build (the linux-i386 preset, cmake/toolchain-linux-i386.cmake) builds the standalone driving
+# engine alone: the loaders and injection DLLs map an XBE into a Windows process and have no Linux form. See
+# docs/driving/portable.md.
+if(WIN32)
 # On MinGW, "lib" will get prepended to libraries which will break out ability
 # to inject our DLL.
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
 set(CMAKE_IMPORT_LIBRARY_PREFIX "")
+endif()
 
 # MinGW links its C++ and GCC support libraries dynamically by default, which would make every binary here
 # depend on libstdc++-6.dll and libgcc_s_*.dll sitting beside it. MSVC builds carry no such companions, and
@@ -45,6 +50,7 @@ endif()
 # We'll use the original unsafe versions, and tell the compiler to stop nagging us, because YOLO
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
+if(WIN32)   # the action engine and both loaders
 add_library(actioninject SHARED
   src/dllmain.cpp
   src/inject_action.cpp
@@ -317,8 +323,9 @@ if(MSVC)
 else()
   target_link_options(driving PRIVATE -Wl,-Map,driving.map)
 endif()
+endif()   # WIN32: the action engine and both loaders
 
-add_library(drivinginject SHARED
+set(nf_driving_sources
   src/dllmain.cpp
   src/driving/autofunc.cpp
   src/inject_driving.cpp
@@ -713,12 +720,15 @@ add_library(drivinginject SHARED
   src/common/gfx/textureReplace.cpp
 )
 
+if(WIN32)
+add_library(drivinginject SHARED ${nf_driving_sources})
 
 # winmm for the multimedia timer the game's tick now comes from (src/driving/platform/XboxTimer.cpp);
 # d3d9 for the shared graphics backend the D3D8 seam dispatches to; d3dcompiler for its shader check
 # (src/common/gfx/devtools/shaderCheck.cpp).
 # XAUDIO2_LIB is xaudio2 or xaudio2_9 - see actioninject above.
 target_link_libraries(drivinginject PRIVATE d3d9 d3dcompiler winmm xinput9_1_0 ${XAUDIO2_LIB} shell32)
+endif()
 
 # The driving engine's window, input and sound output (docs/driving/portable.md). Off: the loader's Win32 window,
 # XInput and the keyboard through Win32, XAudio2. On: SDL3 for all three - the window opened by the injection DLL
@@ -747,20 +757,27 @@ if(NIGHTFIRE_SDL)
                          GIT_SHALLOW TRUE)
     FetchContent_MakeAvailable(SDL3)
   endif()
-  target_sources(drivinginject PRIVATE
+  set(nf_output_sources
     src/driving/platform/HostWindowSdl.cpp
     src/driving/platform/HostInputSdl.cpp
     src/driving/sound/sdlAudioDriving.cpp
     src/common/fmv/FmvAudioSdl.cpp)
+elseif(WIN32)
+  set(nf_output_sources
+    src/driving/platform/HostInputWin32.cpp
+    src/driving/sound/xaudio2Driving.cpp
+    src/common/fmv/FmvAudio.cpp)
+else()
+  message(FATAL_ERROR "A build for ${CMAKE_SYSTEM_NAME} needs NIGHTFIRE_SDL=ON: the other window, input and sound "
+                      "output are Win32's")
+endif()
+if(WIN32)
+target_sources(drivinginject PRIVATE ${nf_output_sources})
+if(NIGHTFIRE_SDL)
   target_compile_definitions(drivinginject PRIVATE NIGHTFIRE_SDL)
   target_link_libraries(drivinginject PRIVATE SDL3::SDL3)
   add_custom_command(TARGET drivinginject POST_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:SDL3::SDL3> $<TARGET_FILE_DIR:drivinginject>)
-else()
-  target_sources(drivinginject PRIVATE
-    src/driving/platform/HostInputWin32.cpp
-    src/driving/sound/xaudio2Driving.cpp
-    src/common/fmv/FmvAudio.cpp)
 endif()
 if(MSVC)
   target_link_options(drivinginject PRIVATE /MAP)   # see the symbol maps above
@@ -775,6 +792,7 @@ target_compile_definitions(drivinginject PRIVATE UNICODE _UNICODE)
 # yet). Remove these two lines and fxaa.cpp from both source lists to take it out.
 target_compile_definitions(actioninject PRIVATE NF_ANTIALIASING)
 target_compile_definitions(drivinginject PRIVATE NF_ANTIALIASING)
+endif()
 
 
 # FMV playback through FFmpeg (src/action/engine/Fmv.cpp, src/driving/engine/PlayMPC.cpp, src/common/fmv): the DLLs
@@ -793,6 +811,7 @@ else()
   set(nf_ffmpeg_bin bin)
 endif()
 file(GLOB NF_FFMPEG_FILES ${NF_FFMPEG_DIR}/${nf_ffmpeg_bin}/*.dll ${NF_FFMPEG_DIR}/FFmpeg-*.txt)
+if(WIN32)
 # The movies' sound as the driving engine's player decodes and folds it, without the game
 # (src/driving/devtools/FmvAudioCheck.cpp): "fmvaudiocheck disc/driving/misc.viv".
 add_executable(fmvaudiocheck EXCLUDE_FROM_ALL
@@ -805,6 +824,20 @@ foreach(target actioninject drivinginject fmvaudiocheck)
   add_custom_command(TARGET ${target} POST_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:${target}>)
 endforeach()
+else()
+  # The same release's shared libraries for the host, which the committed headers fit: built by
+  # "tools/fmv/build_ffmpeg.sh linux-i386 <prefix>" and named here by <prefix>/lib.
+  set(NF_FFMPEG_LIB_DIR "" CACHE PATH "The host's FFmpeg shared libraries (libavutil.so.60...)")
+  if(NF_FFMPEG_LIB_DIR)
+    set(NF_FFMPEG_FILES ${NF_FFMPEG_LIB_DIR}/libavutil.so.60 ${NF_FFMPEG_LIB_DIR}/libavcodec.so.62
+                        ${NF_FFMPEG_LIB_DIR}/libavformat.so.62)
+    file(GLOB nf_ffmpeg_notes ${NF_FFMPEG_DIR}/FFmpeg-*.txt)
+    list(APPEND NF_FFMPEG_FILES ${nf_ffmpeg_notes})
+  else()
+    message(WARNING "NF_FFMPEG_LIB_DIR is not set: the movies need FFmpeg 8.0's shared libraries on the library path")
+    file(GLOB NF_FFMPEG_FILES ${NF_FFMPEG_DIR}/FFmpeg-*.txt)
+  endif()
+endif()
 
 # Run preprocess.py before building actioninject and drivinginject. It writes the injection tables
 # (src/*/autogenerated_injections.inc) and the generated wrappers that autofunc.cpp and the UI handler
@@ -817,8 +850,55 @@ add_custom_target(preprocess
                   COMMAND ${Python3_EXECUTABLE} tools/preprocess.py
                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                   COMMENT "Generating injection tables (tools/preprocess.py)")
+if(WIN32)
 add_dependencies(actioninject preprocess)
 add_dependencies(drivinginject preprocess)
+endif()
+
+# Direct3D 9 on a host without it: dxvk-native, D3D9 over Vulkan with SDL3 as its window system. Its release
+# tarball carries i386 libraries (lib32) as well as x86-64 ones, built for the Steam runtime, so the build takes
+# that, pinned by version and hash; NF_DXVK_DIR takes an extracted release (its usr directory) instead.
+if(NOT WIN32)
+  set(NF_DXVK_DIR "" CACHE PATH "An extracted dxvk-native release's usr directory; empty to fetch the pinned one")
+  if(NOT NF_DXVK_DIR)
+    include(FetchContent)
+    FetchContent_Declare(dxvk_native
+      URL https://github.com/doitsujin/dxvk/releases/download/v3.1.1/dxvk-native-3.1.1-steamrt-sniper.tar.gz
+      URL_HASH SHA256=506fa1ea5bb6ce9a89e11436f7ab5191bc0196e8a577e0cf0b16a45bbc9991b7)
+    FetchContent_MakeAvailable(dxvk_native)
+    set(NF_DXVK_DIR ${dxvk_native_SOURCE_DIR})
+  endif()
+  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set(NF_DXVK_D3D9 ${NF_DXVK_DIR}/lib32/libdxvk_d3d9.so.0)
+  else()
+    set(NF_DXVK_D3D9 ${NF_DXVK_DIR}/lib/libdxvk_d3d9.so.0)
+  endif()
+  add_library(dxvk_d3d9 SHARED IMPORTED)
+  set_target_properties(dxvk_d3d9 PROPERTIES IMPORTED_LOCATION ${NF_DXVK_D3D9}
+                                             INTERFACE_INCLUDE_DIRECTORIES ${NF_DXVK_DIR}/include/dxvk)
+  find_package(Threads REQUIRED)
+  # The executable finds SDL3, dxvk and FFmpeg beside itself.
+  set(CMAKE_BUILD_RPATH "\$ORIGIN")
+  include(cmake/xbox-abi-linux.cmake)
+  # The sources on the host's side of cmake/xbox-abi-linux.cmake: the host layer, SDL, FFmpeg and the D3D9 backend.
+  # They are a shared library of their own, bound to its own definitions (-Bsymbolic-functions): an inline function
+  # or template instance both sides compile has the same name on both, and each side must call its own, compiled
+  # for its own conventions. A class whose methods both sides call (FmvAudio) stays on the game's side.
+  set(nf_host_abi_sources
+    src/driving/platform/HostPosix.cpp
+    src/common/linux/win32Calls.cpp
+    src/driving/platform/HostWindowSdl.cpp
+    src/driving/platform/HostInputSdl.cpp
+    src/driving/sound/sdlAudioDriving.cpp
+    src/common/fmv/Ffmpeg.cpp
+    src/common/xboxPath.cpp
+    src/common/gfx/d3d9Backend.cpp
+    src/common/gfx/nv2aPixelShader.cpp
+    src/common/gfx/nv2aVertexShader.cpp
+    src/common/gfx/shaderBuilder.cpp
+    src/common/gfx/fxaa.cpp
+    src/common/gfx/textureReplace.cpp)
+endif()
 
 # The standalone driving engine (docs/driving/standalone.md): our code alone, with no Driving.xbe mapped or read, no
 # injection and no shadow tests - drivinginject's sources less the devtools, the injection and the XBE's patching
@@ -829,7 +909,6 @@ add_dependencies(drivinginject preprocess)
 # build's baselines. Both have the crash reporter (standalone/CrashReport.h).
 # tools/standalone_poison.py (the standalone_poison target) mirrors src/ with every Driving.xbe address still in the
 # worklist poisoned, to list what would stop this compiling.
-get_target_property(nf_driving_sources drivinginject SOURCES)
 set(nf_standalone_sources src/driving/standalone/StandaloneMain.cpp src/driving/standalone/StandaloneHooks.cpp
                           src/driving/standalone/CrashReport.cpp)
 if(WIN32)
@@ -840,7 +919,7 @@ endif()
 if(NOT NIGHTFIRE_SDL)
   list(APPEND nf_standalone_sources src/driving/platform/HostWindowWin32.cpp)   # the SDL build's is in drivinginject
 endif()
-foreach(source ${nf_driving_sources})
+foreach(source ${nf_driving_sources} ${nf_output_sources})
   if(source MATCHES "src/(driving|common/gfx)/devtools/" OR source MATCHES "src/(inject_driving|dllmain)\.cpp$" OR
      source MATCHES "src/common/(xbeOriginal|xbeEntrySeam|xbeProfiler)\.cpp$")
     continue()
@@ -855,6 +934,24 @@ set(nf_standalone_harness
   src/driving/devtools/HeapPad.cpp
   src/driving/devtools/X87Count.cpp
   src/driving/devtools/CrashTest.cpp)
+if(NOT WIN32)
+  list(REMOVE_ITEM nf_standalone_sources src/driving/platform/HostWin32.cpp ${nf_host_abi_sources})
+  # Moving code references reads the PE image and the x87 counts MSVC's link map
+  list(REMOVE_ITEM nf_standalone_harness src/driving/devtools/CodeRetarget.cpp src/driving/devtools/X87Count.cpp)
+  list(APPEND nf_standalone_harness src/driving/devtools/RetargetPosix.cpp)
+  set_source_files_properties(${nf_standalone_sources} ${nf_standalone_harness} src/driving/standalone/NoDevtools.cpp
+                              PROPERTIES COMPILE_OPTIONS "${NF_XBOX_ABI_OPTIONS}")
+  add_library(drivinghost SHARED ${nf_host_abi_sources})
+  target_include_directories(drivinghost PRIVATE ${NF_FFMPEG_DIR}/include)
+  target_compile_definitions(drivinghost PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_STANDALONE NIGHTFIRE_SDL)
+  # Called with the game's 4-byte stack alignment: each function realigns to the 16 Linux libraries expect
+  target_compile_options(drivinghost PRIVATE -mstackrealign -include ${CMAKE_SOURCE_DIR}/src/common/linux/msvcNames.h)
+  target_link_libraries(drivinghost PRIVATE SDL3::SDL3 dxvk_d3d9 ${CMAKE_DL_LIBS} Threads::Threads)
+  target_link_options(drivinghost PRIVATE -Wl,-Bsymbolic-functions)
+  add_custom_command(TARGET drivinghost POST_BUILD   # beside it and the executables
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_SONAME_FILE:SDL3::SDL3> ${NF_DXVK_D3D9}
+                             ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:drivinghost>)
+endif()
 add_executable(driving_standalone ${nf_standalone_sources} src/driving/standalone/NoDevtools.cpp)
 add_executable(driving_standalone_test EXCLUDE_FROM_ALL ${nf_standalone_sources} ${nf_standalone_harness})
 target_compile_definitions(driving_standalone_test PRIVATE NIGHTFIRE_STANDALONE_TEST)
@@ -862,7 +959,12 @@ foreach(target driving_standalone driving_standalone_test)
   add_dependencies(${target} preprocess)
   target_include_directories(${target} PRIVATE ${NF_FFMPEG_DIR}/include)
   target_compile_definitions(${target} PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_STANDALONE)
-  target_link_libraries(${target} PRIVATE d3d9 winmm xinput9_1_0 ${XAUDIO2_LIB} shell32)
+  if(WIN32)
+    target_link_libraries(${target} PRIVATE d3d9 winmm xinput9_1_0 ${XAUDIO2_LIB} shell32)
+  else()
+    target_link_libraries(${target} PRIVATE drivinghost)
+    target_compile_options(${target} PRIVATE -include ${CMAKE_SOURCE_DIR}/src/common/linux/msvcNames.h)
+  endif()
   if(NIGHTFIRE_SDL)
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_SDL)
     target_link_libraries(${target} PRIVATE SDL3::SDL3)
@@ -897,12 +999,16 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 endif()
 option(NIGHTFIRE_X87 "Driving engine: keep the original x87 instructions (off: portable C)" ON)
 foreach(target drivinginject driving_standalone driving_standalone_test)
+  if(NOT TARGET ${target})   # drivinginject is Windows-only
+    continue()
+  endif()
   if(NIGHTFIRE_X87)
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=1)
   else()
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=0)
   endif()
 endforeach()
+if(WIN32)
 # The game window and Ptr32 without the game (src/driving/devtools/GameWindowTest.cpp): "gamewindow_test [operations]",
 # linked as the standalone executables are.
 add_executable(gamewindow_test EXCLUDE_FROM_ALL src/driving/devtools/GameWindowTest.cpp
@@ -934,6 +1040,7 @@ add_executable(shadercheck EXCLUDE_FROM_ALL
   src/common/gfx/nv2aPixelShader.cpp
 )
 target_link_libraries(shadercheck PRIVATE d3d9 d3dcompiler user32)
+endif()   # WIN32: gamewindow_test, standalone_poison, shadercheck
 
 # A 64-bit configuration (the windows-x64 preset) is for the standalone driving engine alone: the loaders and the
 # injection DLLs share the 32-bit XBE's address space by construction (docs/driving/64-bit.md).

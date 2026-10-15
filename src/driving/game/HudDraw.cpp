@@ -552,7 +552,7 @@ void GHud::DrawStylin() {
                     turns -= 1.0;
                 while (turns > 1.0);
             }
-            float wobble = (float)(CosineTurns((float)turns) * scale);
+            float wobble = (float)CosineTurnsTimes((float)turns, scale);
             stylinScale = scale;
             gallery->SPRITE_SetState(puppet);
             gallery->scale.y = wobble;

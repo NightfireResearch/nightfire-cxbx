@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "RbTree.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // URefCounter<T>: the game's registry of shared, named objects - models, textures, CARP files, the audio
@@ -28,12 +29,12 @@ struct RefCounterValue {
     char name[0x80];            // the key
     RefCounterEntry entry;
 };
-static_assert(sizeof(RefCounterValue) == 0x88, "a reference counter's value is 0x88 bytes");
+LAYOUT_32(sizeof(RefCounterValue) == 0x88, "a reference counter's value is 0x88 bytes");
 
 // A tree node (0x98 bytes, allocated by the tree from the pools as "STL"; RbTree.h has the layout): the name at
 // +0x0c, the count at +0x8c, the object at +0x90.
 struct RefCounterNode : RbTreeNode<RefCounterNode, RefCounterValue> {};
-static_assert(sizeof(RefCounterNode) == 0x98, "a reference counter's tree node is 0x98 bytes");
+LAYOUT_32(sizeof(RefCounterNode) == 0x98, "a reference counter's tree node is 0x98 bytes");
 
 // What the tree's insert_unique answers (through a pointer the caller supplies)
 struct RefCounterInsertResult {
@@ -72,7 +73,7 @@ protected:
     // Get's body: constructs the static the first time (its guard's bit 0) and registers its destructor.
     void ConstructOnce(uint32_t *guard, RefCounterDestroyFn destroy);
 };
-static_assert(sizeof(URefCounterMap) == 0xc, "a reference counter is 0xc bytes");
+LAYOUT_32(sizeof(URefCounterMap) == 0xc, "a reference counter is 0xc bytes");
 
 template <class T>
 class URefCounter : public URefCounterMap {

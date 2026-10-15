@@ -6,6 +6,7 @@
 #include "../../platform/Ptr32.h"
 #include "../../platform/RealPrint.h"
 #include "SndGlobals.h"
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 #include <stddef.h>
 #include <stdint.h>
@@ -83,9 +84,9 @@ struct DataChunk {
 };
 
 // The sizes SNDSTRM_overhead and SNDSTRMI_create lay the memory out by
-constexpr int kStateSize = 0x138;
-constexpr int kRequestSize = 0x28;
-static_assert(sizeof(SND::StreamState) == kStateSize && sizeof(SND::StreamRequest) == kRequestSize);
+constexpr int kStateSize = sizeof(SND::StreamState);
+constexpr int kRequestSize = sizeof(SND::StreamRequest);
+LAYOUT_32(kStateSize == 0x138 && kRequestSize == 0x28, "a stream's record and requests");
 
 // The entries this module registers
 #define ServiceEntry (reinterpret_cast<SndServerClient>(SNDSTRMI_service))            // SNDSTRMI_service, as the server client list holds it
@@ -94,8 +95,8 @@ static_assert(sizeof(SND::StreamState) == kStateSize && sizeof(SND::StreamReques
 #define FramesEntry (reinterpret_cast<SND::PacketFramesFn>(SNDSTRMI_framescallback))         // SNDSTRMI_framescallback
 
 // ---- SNDLINKI on the request lists: a request's first two words are the list's links
-static_assert(offsetof(SND::StreamRequest, next) == offsetof(SND::LinkNode, next) &&
-              offsetof(SND::StreamRequest, prev) == offsetof(SND::LinkNode, prev), "a request starts with the links");
+LAYOUT_32(offsetof(SND::StreamRequest, next) == offsetof(SND::LinkNode, next) &&
+          offsetof(SND::StreamRequest, prev) == offsetof(SND::LinkNode, prev), "a request starts with the links");
 inline SND::LinkNode *AsLinkNode(SND::StreamRequest *request) {
     return reinterpret_cast<SND::LinkNode *>(request);
 }
@@ -779,7 +780,7 @@ SND::StreamRequest* SNDSTRMI_getrequestptr(int id) {
 // FUNC_AT(0x0013e8c0)
 int SNDPKTPLAY_overhead(int packets) {
     int extra = GetNullValue();   // dummyGetNullValue: 0
-    return extra + packets * 32 + 0x7c;
+    return extra + packets * int(sizeof(SND::PacketSlot)) + int(sizeof(SND::PacketPlayer));
 }
 
 // FUNC_AT(0x0013e8e0)
@@ -804,7 +805,7 @@ int SNDPKTPLAY_create(SND::PacketReleaseFn release, SND::PacketFramesFn framesDo
     }
     SND::PacketPlayer *p = (SND::PacketPlayer *)((uint8_t *)memory + GetNullValue());
     int extra = GetNullValue();   // dummyGetNullValue: 0
-    p->slots = int16_t(uint32_t(size - extra - 0x7c) >> 5);   // an unsigned shift
+    p->slots = int16_t(uint32_t(size - extra - int(sizeof(SND::PacketPlayer))) / sizeof(SND::PacketSlot));
     p->memory = memory;
     p->release = release;
     p->framesDone = framesDone;

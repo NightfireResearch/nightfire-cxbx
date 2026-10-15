@@ -434,7 +434,7 @@ void FakeSoundDelete(void *block, unsigned size) {
 }
 ASceneObj *__fastcall FakeSceneConstruct(ASceneObj *object, int, const char *mixName) {
     Log(kSceneConstruct, { Word(object), HashString(mixName) });
-    object->vtable = 0x001a2f80;
+    object->vtable = reinterpret_cast<void **>(0x001a2f80);
     object->mix = MixByName(mixName);
     object->servo = 0;
     object->firing = 0;
@@ -702,7 +702,7 @@ void RandomBase(ABaseSound *sound, uint32_t vtable) {
     uint8_t *b = reinterpret_cast<uint8_t *>(sound);
     for (size_t i = 0; i < sizeof(ABaseSound); i++)
         b[i] = uint8_t(NextRandom() >> 24);
-    sound->vtable = vtable;
+    sound->vtable = reinterpret_cast<void **>(uintptr_t(vtable));
     sound->position = {Uniform(-20.0f, 20.0f), Uniform(-5.0f, 5.0f), Uniform(-20.0f, 20.0f)};
     sound->velocity = {Uniform(-30.0f, 30.0f), Uniform(-2.0f, 2.0f), Uniform(-30.0f, 30.0f)};
     sound->forward = {Uniform(-1.0f, 1.0f), Uniform(-1.0f, 1.0f), Uniform(-1.0f, 1.0f)};
@@ -1167,7 +1167,7 @@ void RandomEngine(AEngine *engine, AVehicle *vehicle, bool race) {
     uint8_t *b = reinterpret_cast<uint8_t *>(engine);
     for (size_t i = 0; i < sizeof(ARaceEngine); i++)
         b[i] = uint8_t(NextRandom() >> 24);
-    engine->vtable = race ? kARaceEngineVtable : 0x001a3058;
+    engine->vtable = reinterpret_cast<void **>(uintptr_t(race ? kARaceEngineVtable : 0x001a3058));
     engine->pitch = Uniform(0.5f, 2.0f);
     engine->loadVolume = Uniform(0.0f, 1.0f);
     engine->idleVolume = Uniform(0.0f, 1.0f);
@@ -1339,7 +1339,7 @@ void CollectLive() {
         int guard = 0;
         for (PointerListNode *node = list->Begin(); node != list->head && guard < 512; node = node->next, guard++) {
             ABaseSound *sound = static_cast<ABaseSound *>(node->value);
-            if (sound == NULL || !IsVehicle(sound->vtable) || g_live.size() >= 12)
+            if (sound == NULL || !IsVehicle(uint32_t(uintptr_t(sound->vtable))) || g_live.size() >= 12)
                 continue;
             AVehicle *vehicle = static_cast<AVehicle *>(sound);
             LiveVehicle live;
@@ -1358,7 +1358,7 @@ void CollectLive() {
         int guard = 0;
         for (RefCounterNode *node = refs->head->left; node != refs->head && guard < 16; guard++) {
             AEngine *engine = static_cast<AEngine *>(node->value.entry.object);
-            if (engine != NULL && engine->vtable == kARaceEngineVtable) {
+            if (engine != NULL && uintptr_t(engine->vtable) == kARaceEngineVtable) {
                 const uint8_t *b = reinterpret_cast<const uint8_t *>(engine);
                 g_liveEngines.push_back(std::vector<uint8_t>(b, b + sizeof(ARaceEngine)));
             }

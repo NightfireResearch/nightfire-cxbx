@@ -2,7 +2,7 @@
 #include "KernelImports.h"
 #include "CRuntimeInternal.h"
 
-#include <windows.h>
+#include "Win32Types.h"
 #include <fenv.h>
 #include <math.h>
 #include <stdint.h>

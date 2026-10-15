@@ -39,7 +39,7 @@ static_assert(sizeof(WMapNode) == 0x10, "a map node is 16 bytes");
 
 // The map's header (fgWorld's +0x1c): the root, and the map's square (only the fields read here)
 struct WMapHeader {
-    WMapNode *root;                // +0x00
+    Ptr32<WMapNode> root;          // +0x00
     uint8_t unknown04[0x18];
     Coord3 corner;                 // +0x1c the low x, low z corner
     uint32_t unknown28;
@@ -78,7 +78,7 @@ int DistanceCheck2d(const Coord4 *position, float radius);                      
 
 // An entry of the renderer's sorted lists: a key, and a distance
 struct WRenderSortEntry {
-    uint32_t key;
+    uintptr_t key;
     float distance;
 };
 

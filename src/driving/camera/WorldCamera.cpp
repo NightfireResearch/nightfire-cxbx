@@ -65,6 +65,7 @@
 #include "../world/Targeting.h"           // TargetPicker
 #include "../world/VisCurtain.h"          // IsVisibleAgainstCurtains
 #include "../render/Renderer.h"
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // RWorldCamera (0x00097100-0x000980e0), RRenderWorldCamera (0x0008c8e0-0x0008d120), RPlayerViewCamera
@@ -160,7 +161,7 @@ static_assert(std::bit_cast<uint32_t>(kSecondsPerFrame) == 0x3c888889 && std::bi
               "the original's constants");
 
 char inputQueueName[] = "WorldCameraQ";
-static_assert(sizeof(ActionQueue) == 0x974, "an ActionQueue is 0x974 bytes");
+LAYOUT_32(sizeof(ActionQueue) == 0x974, "an ActionQueue is 0x974 bytes");
 
 RigidBody *RigidBodyOf(const PhysicsObject *object) {
     return fgSimulation.GetRigidBody(object->rigidBodySlot);
@@ -672,7 +673,7 @@ void RRenderWorldCamera::CullModule(CullNextItem next, CullSetItem set, bool) {
     float height;
     bool checkFar;
     float farScale;
-    for (int item = next(&sphere, &height, &checkFar, &farScale); item != -1;
+    for (intptr_t item = next(&sphere, &height, &checkFar, &farScale); item != -1;
          item = next(&sphere, &height, &checkFar, &farScale)) {
         float distance = 0.0f;
         if (!fgWorldCulling.IsInFrustum2d(&sphere, sphere.w, checkFar, farScale, &distance)) {

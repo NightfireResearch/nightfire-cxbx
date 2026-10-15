@@ -67,7 +67,7 @@ void TriggerFX(RSceneObj *render, int type, uint32_t which) {
 Mine* Mine::Construct(int kind, const Coord3 *direction, const Coord3 *position, float speed, uint32_t ownerSig) {
     PhysicsObject::Construct("weapon", "Mine", kObjectMine, ownerSig, false, false);
     this->kind = kind;
-    vtable = reinterpret_cast<void **>(kMineVtable);
+    vtable = kMineVtable;
     radius = 0.0f;
     armStep = fgSimulation.stepsPerSecond + fgSimulation.stepCount;
     detonate = 0;
@@ -123,7 +123,7 @@ Mine* Mine::Construct(int kind, const Coord3 *direction, const Coord3 *position,
 
 // FUNC_AT(0x0005e180)
 void Mine::Destruct() {
-    vtable = reinterpret_cast<void **>(kMineVtable);
+    vtable = kMineVtable;
     if (target != NULL) {
         TargetPicker.UnregisterTarget(target);
         target->ownerType = kTargetPoint;

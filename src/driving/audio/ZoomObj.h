@@ -21,6 +21,7 @@
 #include "Mix.h"                        // AMix
 #include "Sound.h"                      // ABaseSound, ASoundPlayParams
 #include "Voice.h"                      // AVoice
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 // ---- ASound (0x120 bytes; vtable 0x001a2a7c)
 
@@ -43,8 +44,8 @@ public:
     // The voice's three views stop looping (compiled among GFX's code; the name ours)
     void ClearLoops();                                                              // 0x000d3710
 };
-static_assert(offsetof(ASound, voice) == 0xc0, "ASound::voice");
-static_assert(sizeof(ASound) == 0x120, "ASound is 0x120 bytes");
+LAYOUT_32(offsetof(ASound, voice) == 0xc0, "ASound::voice");
+LAYOUT_32(sizeof(ASound) == 0x120, "ASound is 0x120 bytes");
 
 // ---- AZoomObj (0x10 bytes, from UMemory::FastAlloc "AZoomObj")
 
@@ -67,6 +68,6 @@ public:
     // Entering: every mix moves to its zone volume over ten audio frames; leaving: AMix::Reset over ten.
     void InTheZone(bool entering);                                                  // 0x00127ed0
 };
-static_assert(sizeof(AZoomObj) == 0x10, "AZoomObj is 16 bytes");
+LAYOUT_32(sizeof(AZoomObj) == 0x10, "AZoomObj is 16 bytes");
 
 #endif // DRIVING_AUDIO_ZOOMOBJ_H_

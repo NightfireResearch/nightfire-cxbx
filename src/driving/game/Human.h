@@ -46,10 +46,10 @@ public:
 private:
     void FollowCharacter();
 };
-static_assert(sizeof(Human) == 0x90, "a human is 0x90 bytes");
-static_assert(offsetof(Human, character) == 0x70 && offsetof(Human, dead) == 0x74 &&
-              offsetof(Human, lastHit) == 0x80 && offsetof(Human, unknown8c) == 0x8c, "Human layout");
+LAYOUT_32(sizeof(Human) == 0x90, "a human is 0x90 bytes");
+LAYOUT_32(offsetof(Human, character) == 0x70 && offsetof(Human, dead) == 0x74 &&
+          offsetof(Human, lastHit) == 0x80 && offsetof(Human, unknown8c) == 0x8c, "Human layout");
 
-const uint32_t kHumanVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_Human));
+void **const kHumanVtable = Vtable_Human;
 
 #endif // DRIVING_GAME_HUMAN_H_

@@ -8,12 +8,12 @@
 #include "../platform/RealSystem.h"
 #include "../../helpers.h"
 
-#include <windows.h>
+#include "Win32Harness.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <unordered_map>
+#include <map>
 
 // ---------------------------------------------------------------------------------------------------------------
 // NIGHTFIRE_SNDLOCKSTEP=1, only with NIGHTFIRE_LOCKSTEP=1 (devtools/Teleport.cpp: one simulation tick per frame).
@@ -169,7 +169,7 @@ struct Playback {
     uint32_t thousandths;      // and the part of a frame beyond it
 };
 
-std::unordered_map<const IDirectSoundBuffer *, Playback> g_buffers;
+std::map<const IDirectSoundBuffer *, Playback> g_buffers;
 
 uint32_t AdpcmBlockBytes(const Playback &p) {
     return p.blockAlign != 0 ? p.blockAlign : 36u * (p.channels != 0 ? p.channels : 1);

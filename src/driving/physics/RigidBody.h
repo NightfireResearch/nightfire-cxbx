@@ -11,6 +11,7 @@
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../engine/OBB.h"
 #include "../game/Vehicle.h"           // PVehicle, the owner of a body of kind below 4
+#include "../../common/xbeClass.h"     // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // RigidBody (0x80 bytes, the Simulation's array): the full rigid-body simulation of a physics object - momentum
@@ -52,12 +53,12 @@ struct RigidBodyInfo {
     uint8_t unknown4fe;                     // +0x4fe cleared each step, after being copied to unknown4ff
     uint8_t unknown4ff;
 };
-static_assert(sizeof(RigidBodyInfo) == 0x500, "RigidBodyInfo is 0x500 bytes");
-static_assert(offsetof(RigidBodyInfo, levers) == 0x080 && offsetof(RigidBodyInfo, corners) == 0x280 &&
-              offsetof(RigidBodyInfo, leverPositions) == 0x380 && offsetof(RigidBodyInfo, leverGround) == 0x3c0 &&
-              offsetof(RigidBodyInfo, halfExtents) == 0x4c0 && offsetof(RigidBodyInfo, leverCount) == 0x4dc &&
-              offsetof(RigidBodyInfo, ground) == 0x4e0 && offsetof(RigidBodyInfo, zone) == 0x4f0,
-              "RigidBodyInfo layout");
+LAYOUT_32(sizeof(RigidBodyInfo) == 0x500, "RigidBodyInfo is 0x500 bytes");
+LAYOUT_32(offsetof(RigidBodyInfo, levers) == 0x080 && offsetof(RigidBodyInfo, corners) == 0x280 &&
+          offsetof(RigidBodyInfo, leverPositions) == 0x380 && offsetof(RigidBodyInfo, leverGround) == 0x3c0 &&
+          offsetof(RigidBodyInfo, halfExtents) == 0x4c0 && offsetof(RigidBodyInfo, leverCount) == 0x4dc &&
+          offsetof(RigidBodyInfo, ground) == 0x4e0 && offsetof(RigidBodyInfo, zone) == 0x4f0,
+          "RigidBodyInfo layout");
 
 // The argument record CollideWithGround hands ResolveLeverForces (0x10 bytes; the names are ours)
 struct LeverContacts {
@@ -164,11 +165,11 @@ struct RigidBody {
     void CollideWithObject(int index, int unknown);                                             // 0x000b0510
     void CollideWithWorld();                                                                    // 0x000b1420
 };
-static_assert(sizeof(RigidBody) == 0x80, "a rigid body is 128 bytes");
-static_assert(offsetof(RigidBody, position) == 0x10 && offsetof(RigidBody, mass) == 0x4c &&
-              offsetof(RigidBody, info) == 0x5c && offsetof(RigidBody, groundContacts) == 0x6c &&
-              offsetof(RigidBody, ownerIndex) == 0x6f && offsetof(RigidBody, torque) == 0x70 &&
-              offsetof(RigidBody, flags) == 0x7c, "rigid body layout");
+LAYOUT_32(sizeof(RigidBody) == 0x80, "a rigid body is 128 bytes");
+LAYOUT_32(offsetof(RigidBody, position) == 0x10 && offsetof(RigidBody, mass) == 0x4c &&
+          offsetof(RigidBody, info) == 0x5c && offsetof(RigidBody, groundContacts) == 0x6c &&
+          offsetof(RigidBody, ownerIndex) == 0x6f && offsetof(RigidBody, torque) == 0x70 &&
+          offsetof(RigidBody, flags) == 0x7c, "rigid body layout");
 
 // std::vector's _Xlen: throws std::length_error("vector<T> too long") (FUN_000b13a0; the name is ours)
 void VectorXlen();

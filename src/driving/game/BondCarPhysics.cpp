@@ -1337,7 +1337,7 @@ void PBondCar::ProcessSimplePhysics() {
 
     if (physics->isBoat != 0 && OffSplinePath(this)) {
         body->position.y = bob + body->position.y;
-        float waveB = sin_fractionalangle(unknown3E8);
+        float waveB = AsFloat(sin_fractionalangle(unknown3E8));
         bob = (float)((SineTurns(bobAngle) + waveB + 1.0) * 0.1f + 1.0);
         double angle = (double)bobAngle + 0.0022f;
         bobAngle = (float)angle;

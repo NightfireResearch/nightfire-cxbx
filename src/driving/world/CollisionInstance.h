@@ -198,7 +198,7 @@ public:
     uint8_t shape;                 // +0x11 Shape
     uint16_t flags;                // +0x12 Flag
     float height;                  // +0x14
-    TriggerEvents *events;         // +0x18 NULL: none
+    Ptr32<TriggerEvents> events;   // +0x18 NULL: none
     uint32_t queryStamp;           // +0x1c the last WTriggerManager::Process that looked at it
     Coord3 right;                  // +0x20
     float width;                   // +0x2c a box's, along right

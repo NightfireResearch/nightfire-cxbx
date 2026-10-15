@@ -5,12 +5,13 @@
 // per-id handler lists the game hangs off a table. See EventTarget.cpp.
 
 #include <stdint.h>
+#include "../../../common/xbeClass.h"   // LAYOUT_32
 
 struct EventMapping {                // 8
     char *name;                      // +0x00
     int32_t id;                      // +0x04
 };
-static_assert(sizeof(EventMapping) == 8, "an event mapping is 8 bytes");
+LAYOUT_32(sizeof(EventMapping) == 8, "an event mapping is 8 bytes");
 
 // What the handler table holds per event id: a list of objects called through their game vtable's slot 0 (see
 // RawEventData::Eval, AnimChannels.cpp).
@@ -37,6 +38,6 @@ public:
     bool RemoveHandler(EventHandler **table, const char *name, EventHandler *handler);   // 0x000f86d0 (invented)
     bool ClearHandlers(EventHandler **table, const char *name);                          // 0x000f8740 (invented)
 };
-static_assert(sizeof(EventTarget) == 0x18, "an EventTarget is 0x18 bytes");
+LAYOUT_32(sizeof(EventTarget) == 0x18, "an EventTarget is 0x18 bytes");
 
 #endif // DRIVING_EAGL_ANIM_EVENTTARGET_H_

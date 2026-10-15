@@ -64,7 +64,7 @@ PointerListNode *ActorHandle(AICharacterActorLink *link) {
 
 // FUNC_AT(0x0001c870)
 AICharacter* AICharacter::Construct() {
-    vtable = reinterpret_cast<void **>(kAICharacterVtable);
+    vtable = kAICharacterVtable;
     transform = kIdentity;
     rounds = 15;
     clipSize = 15;
@@ -105,7 +105,7 @@ AICharacter* AICharacter::Construct() {
 
 // FUNC_AT(0x0001c1d0)
 void AICharacter::Destruct() {
-    vtable = reinterpret_cast<void **>(kAICharacterVtable);
+    vtable = kAICharacterVtable;
     if (voice != NULL)
         voice->CallDelete(1);
     if (actorLink != NULL)
@@ -300,7 +300,7 @@ void AICharacter::UpdateRotPos() {
 // FUNC_AT(0x00023670)
 AICharacterPassenger* AICharacterPassenger::Construct(const MATRIX4 *transform, int kind) {
     AICharacter::Construct();
-    vtable = reinterpret_cast<void **>(kAICharacterPassengerVtable);
+    vtable = kAICharacterPassengerVtable;
     unknown140 = 0;
     this->transform = *transform;
     this->kind = kind;
@@ -310,7 +310,7 @@ AICharacterPassenger* AICharacterPassenger::Construct(const MATRIX4 *transform, 
 
 // FUNC_AT(0x000236c0)
 void AICharacterPassenger::Destruct() {
-    vtable = reinterpret_cast<void **>(kAICharacterPassengerVtable);
+    vtable = kAICharacterPassengerVtable;
     AICharacter::Destruct();
 }
 
@@ -345,7 +345,7 @@ void AICharacterPassenger::Init() {
     Human *human = static_cast<Human *>(fgSimulation.SpawnHumanObject(
         0, reinterpret_cast<const Coord3 *>(transform.mtx[2]), reinterpret_cast<const Coord3 *>(transform.mtx[3]), 0));
     PointerListNode *handle;
-    ActActorDatabase::GetNewActorHandle(&handle, reinterpret_cast<int>(character), kPassengerDescriptions[kind], NULL,
+    ActActorDatabase::GetNewActorHandle(&handle, character, kPassengerDescriptions[kind], NULL,
                                         reinterpret_cast<ActActorTransformCallback>(&AICharacterBond::GetRideRotPos),
                                         &transform, false);
     // The original calls slot 2 (SetActor); a passenger's is AICharacter's

@@ -4,8 +4,9 @@
 // EA's portable system library ("REAL") - TIMER, THREAD, SIGNAL, SYNCTASK, MUTEX, CPU - as the driving engine has
 // it. See RealSystem.cpp.
 
-#include <windows.h>
+#include "Win32Types.h"
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 typedef void (*TimerTask)(void);
 typedef unsigned (*SyncTaskFn)(int argument, int ticksLate);
@@ -19,7 +20,7 @@ struct SyncTask {            // 16 bytes, sixteen of them at 0x002421c8
     int nextTick;            // +8  LibTicks when it is next due
     int running;             // +12 set while it runs
 };
-static_assert(sizeof(SyncTask) == 16, "SyncTask is 16 bytes");
+LAYOUT_32(sizeof(SyncTask) == 16, "SyncTask is 16 bytes");
 
 struct RealThread {
     uint32_t unknown0;
@@ -55,7 +56,7 @@ unsigned SYNCTASK_run(int argument);
 
 void THREAD_init();
 int THREAD_setpriority(RealThread *thread, int priority);
-int THREAD_create(RealThread *thread, ThreadFn function, int unused, unsigned stackSize, int priority);
+int THREAD_create(RealThread *thread, ThreadFn function, void *unused, unsigned stackSize, int priority);
 int THREAD_createparam(RealThread *thread, ThreadParamFn function, void *parameter, int unused,
                        unsigned stackSize, int priority);
 void THREAD_destroy(RealThread *thread);

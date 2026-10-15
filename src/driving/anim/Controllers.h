@@ -16,6 +16,7 @@
 
 #include "../../common/xbeOverload.h"   // XbeVirtual
 #include "../world/CollisionTypes.h"    // MATRIX4
+#include "../../common/xbeClass.h"      // LAYOUT_32
 
 class ActAnimGroup;
 class ActPoser;
@@ -51,9 +52,9 @@ public:
         (this->*XbeVirtual<Method>(this, 1))(flags);
     }
 };
-static_assert(sizeof(AnimationController) == 0x30, "an AnimationController is 0x30 bytes");
-static_assert(offsetof(AnimationController, animGroup) == 0x10 && offsetof(AnimationController, poser) == 0x14 &&
-              offsetof(AnimationController, frame) == 0x20, "AnimationController layout");
+LAYOUT_32(sizeof(AnimationController) == 0x30, "an AnimationController is 0x30 bytes");
+LAYOUT_32(offsetof(AnimationController, animGroup) == 0x10 && offsetof(AnimationController, poser) == 0x14 &&
+          offsetof(AnimationController, frame) == 0x20, "AnimationController layout");
 
 class StandardAnimationController : public AnimationController {
 public:
@@ -64,7 +65,7 @@ public:
 
     void Update();                      // vtable slot 0                                        // 0x00011100
 };
-static_assert(sizeof(StandardAnimationController) == 0x30, "a StandardAnimationController is 0x30 bytes");
+LAYOUT_32(sizeof(StandardAnimationController) == 0x30, "a StandardAnimationController is 0x30 bytes");
 
 class CrossFadeAnimationController : public AnimationController {
 public:
@@ -84,6 +85,6 @@ public:
     // A blend into animation `index` of `bank` now if the last one is done, after it if one is running
     void StartNewCrossFade(int bank, int index, float blendTime);                          // 0x00011210
 };
-static_assert(sizeof(CrossFadeAnimationController) == 0x40, "a CrossFadeAnimationController is 0x40 bytes");
+LAYOUT_32(sizeof(CrossFadeAnimationController) == 0x40, "a CrossFadeAnimationController is 0x40 bytes");
 
 #endif // DRIVING_ANIM_CONTROLLERS_H_

@@ -1,7 +1,7 @@
 #ifndef DRIVING_PLATFORM_XBOXSTARTUP_H_
 #define DRIVING_PLATFORM_XBOXSTARTUP_H_
 
-#include <windows.h>
+#include "Win32Types.h"
 
 // The driving engine's half of the startup work described in docs/driving-engine-plan.md section 0 and step 2
 // of section 7. The action engine met all of this first (src/action/engine/XboxStartup.cpp); the XAPI in both

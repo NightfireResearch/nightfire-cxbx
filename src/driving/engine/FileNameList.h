@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../drivinghelpers.h"
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 #include <stdint.h>
 
@@ -15,7 +16,7 @@ struct FileNameNode {
     FileNameNode *prev;
     char name[256];
 };
-static_assert(sizeof(FileNameNode) == 0x108, "a file-name node is 0x108 bytes");
+LAYOUT_32(sizeof(FileNameNode) == 0x108, "a file-name node is 0x108 bytes");
 
 class FileNameList {
 public:
@@ -39,7 +40,7 @@ public:
     FileNameNode** Erase(FileNameNode **result, FileNameNode *first, FileNameNode *last);
     void IncSize(uint32_t count);
 };
-static_assert(sizeof(FileNameList) == 12, "a list is 12 bytes");
+LAYOUT_32(sizeof(FileNameList) == 12, "a list is 12 bytes");
 
 // UFileLoader's request logging: every file loaded, those found in the big file and those not (UFileLoader.cpp).
 extern FileNameList RequestedFiles;

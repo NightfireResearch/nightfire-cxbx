@@ -7,6 +7,7 @@
 // RuntimeAlloc.cpp and docs/driving/eagl.md 3.1.
 
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 class DynamicLoader;
 
@@ -22,7 +23,7 @@ struct Property {           // "name=value,value,...", 0xc (EAGLInternal::Proper
 
     bool Is(const char *wanted, int valueCount);                 // 0x000ed330
 };
-static_assert(sizeof(Property) == 0xc, "a property is 0xc bytes");
+LAYOUT_32(sizeof(Property) == 0xc, "a property is 0xc bytes");
 
 struct Properties {         // a property string split up in a copy of itself, 0x10
     int count;
@@ -33,7 +34,7 @@ struct Properties {         // a property string split up in a copy of itself, 0
     Properties* Construct(const char *text);                     // 0x000edb30
     void Destruct();        // inline in the original (0x000edde0 is only an unwind funclet's)
 };
-static_assert(sizeof(Properties) == 0x10, "a property list is 0x10 bytes");
+LAYOUT_32(sizeof(Properties) == 0x10, "a property list is 0x10 bytes");
 
 void* RuntimeAllocTARConstructor(const char *properties, DynamicLoader *loader, void **context, char *destroy);
 void RuntimeAllocTARDestructor(void *tars, int count);

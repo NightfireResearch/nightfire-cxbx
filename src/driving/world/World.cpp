@@ -29,6 +29,7 @@
 #include "../game/Simulation.h"
 #include "../render/PathEngine.h"
 #include "../render/RSceneObj.hpp"
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 // XBE_GLOBAL(0x0023f310, 0x4)
 WWorld *fgWorld;
@@ -59,7 +60,7 @@ constexpr uint32_t kTagProcAnims = 0x70732020;      // 'ps  '
 constexpr uint32_t kTagEnviro = 0x456e7669;         // 'Envi'
 constexpr uint32_t kTagAttributeName = 0x44424e20;  // 'DBN '
 
-static_assert(sizeof(RSceneObj) == 0x40, "a scene object is 64 bytes");
+LAYOUT_32(sizeof(RSceneObj) == 0x40, "a scene object is 64 bytes");
 
 char *CopyString(const char *text) {
     char *copy = static_cast<char *>(OperatorNewArray(unsigned(strlen(text) + 1)));

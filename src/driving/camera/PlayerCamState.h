@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #include "../engine/ActionQueue.hpp"   // GameAction, the inputs the handlers act on
+#include "../../common/xbeClass.h"     // LAYOUT_32
 
 class RPlayerCamera;
 
@@ -53,10 +54,10 @@ private:
     void RotateY(int input, float value);
     void RotateX(int input, float value, bool negate);
 };
-static_assert(sizeof(RPlayerCamState) == 0x34, "RPlayerCamState is 52 bytes");
-static_assert(offsetof(RPlayerCamState, rotationY) == 0x10 && offsetof(RPlayerCamState, unknown20) == 0x20 &&
-              offsetof(RPlayerCamState, lookingBack) == 0x21 && offsetof(RPlayerCamState, unknown24) == 0x24 &&
-              offsetof(RPlayerCamState, unknown28) == 0x28 && offsetof(RPlayerCamState, unknown30) == 0x30,
-              "RPlayerCamState layout");
+LAYOUT_32(sizeof(RPlayerCamState) == 0x34, "RPlayerCamState is 52 bytes");
+LAYOUT_32(offsetof(RPlayerCamState, rotationY) == 0x10 && offsetof(RPlayerCamState, unknown20) == 0x20 &&
+          offsetof(RPlayerCamState, lookingBack) == 0x21 && offsetof(RPlayerCamState, unknown24) == 0x24 &&
+          offsetof(RPlayerCamState, unknown28) == 0x28 && offsetof(RPlayerCamState, unknown30) == 0x30,
+          "RPlayerCamState layout");
 
 #endif // DRIVING_CAMERA_PLAYERCAMSTATE_H_

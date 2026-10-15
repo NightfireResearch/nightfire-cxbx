@@ -12,6 +12,7 @@
 #include <stdint.h>
 
 #include "VectorMaths.hpp"                // Vec4
+#include "../../common/xbeClass.h"        // LAYOUT_32
 
 struct MATRIX4;
 class USimpleMaterial;
@@ -87,9 +88,9 @@ struct VertexBatch {
     PackedColour colours[128];          // +0x1020
     uint32_t coloursGuard;              // +0x1220
 };
-static_assert(offsetof(VertexBatch, count) == 0x1000 && offsetof(VertexBatch, texture) == 0x1010 &&
-              offsetof(VertexBatch, colours) == 0x1020 && offsetof(VertexBatch, coloursGuard) == 0x1220,
-              "VertexBatch layout");
+LAYOUT_32(offsetof(VertexBatch, count) == 0x1000 && offsetof(VertexBatch, texture) == 0x1010 &&
+          offsetof(VertexBatch, colours) == 0x1020 && offsetof(VertexBatch, coloursGuard) == 0x1220,
+          "VertexBatch layout");
 
 extern VertexBatch QuadBatch;               // DrawBatchedTexturedQuad's
 extern VertexBatch SpriteBatch;             // DrawBatchedSprite's

@@ -971,7 +971,7 @@ void __fastcall FakeViewDestruct(AVoice::View *self, int) {
 }
 ABaseSound *__fastcall FakeBaseSoundConstruct(ABaseSound *self, int, const char *mix, int view) {
     Call("ABaseSound::Construct %08x %s %d", Word(self), mix, view);
-    self->vtable = 0x0018a510;
+    self->vtable = reinterpret_cast<void **>(0x0018a510);
     self->mix = reinterpret_cast<AMix *>(W->stream);
     return self;
 }
@@ -1339,7 +1339,7 @@ void BuildWorld() {
     RandomBytes(&W->muzzle, sizeof(W->muzzle));
     RandomVector(&W->muzzle.position, 2.0f);
     RandomBytes(W->sound, sizeof(W->sound));
-    reinterpret_cast<ABaseSound *>(W->sound)->vtable = Word(g_soundVtable);
+    reinterpret_cast<ABaseSound *>(W->sound)->vtable = g_soundVtable;
     RandomBytes(&W->physics, sizeof(W->physics));
     W->physics.isSub = Chance(2) ? 0 : 1;
     RandomBytes(W->ioModule, sizeof(W->ioModule));

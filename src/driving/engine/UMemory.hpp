@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../../common/xbeClass.h"   // LAYOUT_32
 
 // ---------------------------------------------------------------------------------------------------------------
 // The game's memory manager (UMemory, 0x00114400-0x00114a50): a thin layer over EA's block allocator (the MEM_
@@ -29,7 +30,7 @@ struct MemoryFunctions {
     int (*totalUnused)(unsigned flags);                           // +0x28 MEM_totalunused
     bool (*validate)();                                           // +0x2c MEM_validate
 };
-static_assert(sizeof(MemoryFunctions) == 0x30, "the allocator's function table is twelve slots");
+LAYOUT_32(sizeof(MemoryFunctions) == 0x30, "the allocator's function table is twelve slots");
 
 // A link in the fixed-size pools: both the 0x4080-byte blocks they carve and the entries carved from them keep
 // their next at +4 (an entry's first word is left as the zero fill made it).
@@ -45,7 +46,7 @@ struct FastPool {
     FastLink *usedBlocks;     // +0x04
     FastLink *buckets[64];    // +0x08, buckets[n]: entries of (n + 1) * 16 bytes
 };
-static_assert(sizeof(FastPool) == 0x108, "the pools are 0x108 bytes");
+LAYOUT_32(sizeof(FastPool) == 0x108, "the pools are 0x108 bytes");
 
 extern MemoryFunctions *Functions;  // the allocator's table in use
 extern FastPool *Pools;             // the pools in use

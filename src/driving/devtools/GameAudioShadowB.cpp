@@ -332,7 +332,7 @@ const uint32_t kAVehicleVtable = 0x001a2680;
 
 AVehicle *__fastcall FakeVehicleConstruct(AVehicle *self, int, const char *mixName, int skidVoices) {
     Record(0x0011e2e0, Word(self), TextHash(mixName), uint32_t(skidVoices));
-    self->vtable = kAVehicleVtable;
+    self->vtable = reinterpret_cast<void **>(uintptr_t(kAVehicleVtable));
     self->mix = FakeMix(mixName);
     self->asphaltMix = FakeMix("Asphalt");
     self->gun = NULL;
@@ -804,7 +804,7 @@ void PlayCases(const Kind &kind, const uint8_t *live, int rounds) {
         Detach(kind.vtable, base);
     } else {
         memset(base, 0, kind.size);
-        reinterpret_cast<ABaseSound *>(base)->vtable = kind.vtable;
+        reinterpret_cast<ABaseSound *>(base)->vtable = reinterpret_cast<void **>(uintptr_t(kind.vtable));
         reinterpret_cast<ABaseSound *>(base)->mix = &g_fakeMixes[0];
         reinterpret_cast<AVehicle *>(base)->asphaltMix = &g_fakeMixes[4];
     }
@@ -832,7 +832,7 @@ void SmallCases() {
     for (int round = 0; round < 200; round++) {
         memset(g_work, 0, sizeof(ATrafficVehicle));
         ATrafficVehicle *traffic = reinterpret_cast<ATrafficVehicle *>(g_work);
-        traffic->vtable = 0x001a2ed8;
+        traffic->vtable = reinterpret_cast<void **>(0x001a2ed8);
         traffic->vehicleType = RandomInt(8);
         strcpy(traffic->engineName, "750");
         uint32_t answers[2][2];
@@ -936,7 +936,7 @@ int LiveSounds(uint32_t vtable, const uint8_t **out, int most) {
         return 0;
     for (PointerListNode *node = list->head->next; node != list->head && count < most; node = node->next) {
         const ABaseSound *sound = static_cast<const ABaseSound *>(node->value);
-        if (sound != NULL && sound->vtable == vtable)
+        if (sound != NULL && uintptr_t(sound->vtable) == vtable)
             out[count++] = reinterpret_cast<const uint8_t *>(sound);
     }
     return count;

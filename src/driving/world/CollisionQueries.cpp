@@ -17,6 +17,7 @@
 #include "../../common/xbeOverload.h"        // XbeAddress
 #include "../audio/Bank.h"                  // SharedTreeIterator
 #include "../engine/ActionQueue.hpp"        // FillQueuePointers
+#include "../../common/xbeClass.h"          // LAYOUT_32
 
 #include <bit>
 #include <math.h>
@@ -56,6 +57,23 @@ const Coord3 *SceneObjectVelocity(void *sceneObject) {
     typedef const Coord3 *(__fastcall *VelocityFn)(void *, int);
     return reinterpret_cast<VelocityFn *>(*static_cast<void **>(sceneObject))[13](sceneObject, 0);
 }
+
+#if NIGHTFIRE_X87
+// cos_fractionalangle(turns) + value: FCOS's result is not rounded before the add, which stays on the x87.
+__declspec(naked) double CosTurnsPlus(float turns, float value) {
+    __asm {
+        push dword ptr [esp + 4]
+        call cos_fractionalangle
+        add esp, 4
+        fadd dword ptr [esp + 8]
+        ret
+    }
+}
+#else
+double CosTurnsPlus(float turns, float value) {
+    return CosineTurns(turns) + value;
+}
+#endif
 
 // The cheap distance the barrier and cylinder searches rank hits by: the larger of |dx| and |dz| plus a quarter of
 // the smaller (the smaller is |dx| unless |dx| > |dz|).
@@ -114,7 +132,7 @@ double WCollisionMgr::SurfaceBumpHeight(const Coord3 *point, const uint8_t *face
     if (amplitude == 0.0f)
         return 0.0;
     float alongZ = sin_fractionalangle(frequency * point->z);
-    return (CosineTurns(frequency * point->x) + alongZ) * amplitude;
+    return CosTurnsPlus(frequency * point->x, alongZ) * amplitude;
 }
 
 // FUNC_AT(0x000beeb0)
@@ -729,8 +747,8 @@ bool WCollisionMgr::GetClosestIntersectingBarrier(const BarrierList *list, const
         }
     }
     if (best != NULL) {
-        static_assert(offsetof(WorldCollisionInfo, groupId) + 4 - offsetof(WorldCollisionInfo, segmentStart) ==
-                      sizeof(BarrierListEntry), "a barrier hit carries the list's entry");
+        LAYOUT_32(offsetof(WorldCollisionInfo, groupId) + 4 - offsetof(WorldCollisionInfo, segmentStart) ==
+                  sizeof(BarrierListEntry), "a barrier hit carries the list's entry");
         memcpy(&info->segmentStart, best, sizeof(BarrierListEntry));
         info->hitType = kHitBarrier;
     }
