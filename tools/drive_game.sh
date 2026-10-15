@@ -96,7 +96,9 @@ for pair in ${pairs[@]+"${pairs[@]}"}; do   # bash 3.2 (macOS) calls an empty ar
 done
 
 # shellcheck disable=SC2086   # GameArgs is split into words, as Start-Process splits its ArgumentList
-nice "$Exe" $GameArgs > "$LogPath" 2> "$LogPath.err" &
+# On macOS at background priority, CPU and GPU: unpaced games at once otherwise starve the desktop
+lower=nice; [ "$(uname -s)" = Darwin ] && lower="taskpolicy -b"
+$lower "$Exe" $GameArgs > "$LogPath" 2> "$LogPath.err" &
 pid=$!
 # Stopped from outside (a dropped ssh connection, say): take the game down too
 trap 'kill -KILL $pid 2> /dev/null; exit 1' HUP INT TERM
