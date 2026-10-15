@@ -291,18 +291,26 @@ any time (G2 needs SDL's GPU subsystem in the Windows build, off by default). A1
 - Optional: an Xbox or PlayStation pad; Remote Login (SSH) if this PC should drive rounds; "Developer Tools"
   for the terminal in Privacy & Security (spares Gatekeeper's scan of every new build).
 
-## 10. Open questions for the user
+## 10. Decisions (the user, 15 October 2026)
 
-1. **Graphics**: the SDL GPU backend with SPIR-V (recommended), Metal directly, or a dxvk-native fork first?
-2. **Cross-machine exactness**: is matching `lbase_c`'s sound traces on the Mac worth A4 (a portable libm and one
-   more round of new baselines everywhere) if they differ, or are `lmac_c` baselines alone enough?
-3. **The Mac as a runner**: local rounds only (the agent on the Mac), or also driven from this PC over SSH? How
-   many slots, and when may it run (it is the user's machine)?
-4. **Minimum macOS**: 15 (needed for the `math_mode` pragma) - acceptable?
-5. **Distribution**: development builds only (ad-hoc signed), or a signed and notarised `.app` someday (needs an
-   Apple Developer ID)?
-6. **Linux**: should the SDL GPU backend later replace dxvk-native on Linux (one backend outside Windows), and be
-   selectable on Windows for testing?
+1. **Graphics: the SDL GPU backend** with SPIR-V (G1, G2, G3). dxvk is not used on the Mac.
+2. **Exactness: `lmac_c` baselines are enough.** A4 (a portable libm) is dropped unless the user asks again; the Mac
+   is compared with itself, and its sound traces against `lbase_c` are only reported.
+3. **The Mac runs its own rounds locally**; nothing drives it from the PC.
+4. **macOS 15 or later.**
+5. Still open: distribution (ad-hoc signed development builds for now), and whether the SDL GPU backend later replaces
+   dxvk-native on Linux and becomes selectable on Windows.
+
+## 11. Brief for the agent on the Mac
+
+Read this file, docs/driving/64-bit.md, docs/driving/portable.md, docs/test-runner.md and CLAUDE.md. Work on this
+branch (driving-macos), committing as you go and pushing it when a package passes its test; the user merges.
+Start with section 8's first steps. Packages, in order: whichever of M0-M3, G1 and G2 are not marked done in section 7
+(they can run on the Mac too - the x86-only tests become "x64 build unchanged" checks you cannot run there, so note
+them for the PC), then A1, G3, A2, A3. The bar: `driving_standalone_test` runs all 16 lockstep runs headless on the
+Mac, twice, identical to each other; `lmac_c` baselines made from them; the sound-trace comparison with `lbase_c`
+reported; then a windowed run for the user (A3) only when the user asks. Keep the Windows, Linux and x64 builds
+building (CI). Never open a window while the user works unless asked.
 
 ## Sources
 
