@@ -4,7 +4,6 @@
 
 #include <bit>
 #include <string.h>
-#include <xmmintrin.h>
 
 #include "Human.h"
 #include "MissionManager.h"             // glbMissionManager

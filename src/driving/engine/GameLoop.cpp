@@ -68,7 +68,7 @@
 #include "../logging.h"             // dbg_wprintf, our printf
 #include "../platform/CRuntime.h"
 
-#include <mmintrin.h>
+#include "../platform/Sse.h"
 #include <stdlib.h>
 #include <string.h>
 

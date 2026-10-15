@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <bit>
-#include <xmmintrin.h>
+#include "../platform/Sse.h"
 #include <string.h>
 
 #include "AIElements.h"                 // fgAIElementController

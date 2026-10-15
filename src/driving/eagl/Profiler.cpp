@@ -14,11 +14,10 @@
 #include "../platform/CRuntime.h"
 
 #include <bit>
-#include <intrin.h>
+#include "../platform/Sse.h"
 #include <stdarg.h>
 #include <stddef.h>
 #include <string.h>
-#include <xmmintrin.h>
 
 // ---------------------------------------------------------------------------------------------------------------
 // EAGL's PrintMessage and profiler (docs/driving/eagl.md 4.9).

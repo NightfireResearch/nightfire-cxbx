@@ -14,7 +14,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-#include <xmmintrin.h>
+#include "../platform/Sse.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // RCameraMath, RCameraSpline and its point list, FindPointInList, and three functions of other units the linker

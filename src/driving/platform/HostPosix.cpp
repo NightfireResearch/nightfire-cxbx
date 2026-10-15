@@ -240,8 +240,10 @@ static void FinishThread(Thread *thread, unsigned long exitCode) {
 // threads at 64-bit precision, which the game's x87 results would differ by; its own start-up sets 53-bit on one
 // thread only (the C runtime's _fpmath).
 static void SetWindowsFpuControl(void) {
+#if defined(__i386__) || defined(__x86_64__)
     const unsigned short kWindowsControl = 0x027f;
     __asm__ __volatile__("fldcw %0" : : "m"(kWindowsControl));
+#endif
 }
 
 static void *ThreadMain(void *argument) {

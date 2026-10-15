@@ -1006,6 +1006,20 @@ foreach(target driving_standalone driving_standalone_test)
                        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:${target}>)
   endif()
 endforeach()
+# The x86 instructions the driving engine's ports use by intrinsics: SSE's, RDTSC, REP MOVSD/MOVSB, EMMS
+# (src/driving/platform/Sse.h, docs/driving/macos.md 3). On: the instructions. Off: C with their results
+# (src/driving/platform/SseC.h; RSQRTSS from the runner's table), which a host without them needs; an x86 build can be
+# made with it off to test those forms against the baselines. A host that is not x86 is always off.
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|ARM|aarch64)" OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+  set(NIGHTFIRE_SSE OFF CACHE BOOL "Driving engine: the x86 intrinsics as the instructions (off: C forms)" FORCE)
+else()
+  # The C forms against the instructions (src/driving/devtools/SseTest.cpp): "sse_test", or "sse_test --rsqrt-table"
+  # to print src/driving/platform/SseRsqrtTable.h from this CPU's RSQRTSS.
+  find_package(Threads REQUIRED)
+  add_executable(sse_test EXCLUDE_FROM_ALL src/driving/devtools/SseTest.cpp)
+  target_link_libraries(sse_test PRIVATE Threads::Threads)
+endif()
+option(NIGHTFIRE_SSE "Driving engine: the x86 intrinsics as the instructions (off: C forms)" ON)
 # The driving engine's x87 code (docs/driving/64-bit.md 4.1, docs/driving/portable.md). On: the 43 functions
 # whose results come from FSIN, FCOS, FPTAN, FPATAN and the like stay the original instructions, so the injected
 # build's shadow tests and the lockstep baselines (lbase) stay exact. Off: each is C in double (<math.h>), as any
@@ -1025,6 +1039,11 @@ foreach(target drivinginject driving_standalone driving_standalone_test)
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=1)
   else()
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=0)
+  endif()
+  if(NIGHTFIRE_SSE)
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_SSE=1)
+  else()
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_SSE=0)
   endif()
 endforeach()
 if(WIN32)

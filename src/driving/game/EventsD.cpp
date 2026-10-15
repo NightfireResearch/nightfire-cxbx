@@ -9,7 +9,7 @@
 #include <string.h>              // _stricmp, strcpy
 
 #include <bit>
-#include <mmintrin.h>            // _mm_empty
+#include "../platform/Sse.h"
 
 #include "../Scheduler.hpp"             // Scheduler
 #include "../audio/Bank.h"              // ABank, fgBanks
