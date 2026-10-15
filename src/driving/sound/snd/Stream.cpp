@@ -97,6 +97,7 @@ void SndStream_ReleaseBytes(StrmInternal *s, int bytes) {
         FILESYS_priorityop(s->operation, s->priorityGreedy);
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void FUN_0014aba0() {
     __asm {
@@ -107,6 +108,7 @@ __declspec(naked) void FUN_0014aba0() {
         ret
     }
 }
+#endif
 
 StrmRequest* SndStream_PopFree(StrmInternal *s) {
     MUTEX_lock(&s->mutex);
@@ -125,6 +127,7 @@ StrmRequest* SndStream_PopFree(StrmInternal *s) {
     return request;
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void FUN_0014ac00() {
     __asm {
@@ -134,6 +137,7 @@ __declspec(naked) void FUN_0014ac00() {
         ret
     }
 }
+#endif
 
 void SndStream_Append(StrmInternal *s, StrmRequest *request) {
     request->state = 1;
@@ -153,6 +157,7 @@ void SndStream_Append(StrmInternal *s, StrmRequest *request) {
     MUTEX_unlock(&s->mutex);
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void FUN_0014ac70() {
     __asm {
@@ -163,6 +168,7 @@ __declspec(naked) void FUN_0014ac70() {
         ret
     }
 }
+#endif
 
 // unlink a request (no lock: the caller holds it) and put it on the free list
 void SndStream_FreeRequest(StrmRequest *request, StrmInternal *s) {
@@ -181,6 +187,7 @@ void SndStream_FreeRequest(StrmRequest *request, StrmInternal *s) {
     s->freeList = request;
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void freerequest() {
     __asm {
@@ -195,6 +202,7 @@ __declspec(naked) void freerequest() {
         ret
     }
 }
+#endif
 
 // Deliver the chunks the last read completed: each whole chunk between parsePos and writePos is matched against
 // the filters and counted to its reader, or marked skipped; the request's end chunk is padded to 128 bytes and
@@ -268,6 +276,7 @@ int SndStream_Deliver(StrmInternal *s) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void FUN_0014ad20() {
     __asm {
@@ -277,6 +286,7 @@ __declspec(naked) void FUN_0014ad20() {
         ret
     }
 }
+#endif
 
 // Start the next queued request: a memory request is copied at once; a file already open is read on; otherwise
 // open it, closing the open one first (the open continues from FUN_0014af10). No request left: idle.
@@ -338,6 +348,7 @@ void SndStream_NextRequest(StrmInternal *s, int priority) {
         FILESYS_callbackop(operation, CloseDone);
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void FUN_0014af50() {
     __asm {
@@ -348,6 +359,7 @@ __declspec(naked) void FUN_0014af50() {
         ret
     }
 }
+#endif
 
 // ---- the FILESYS callbacks and the read loop
 

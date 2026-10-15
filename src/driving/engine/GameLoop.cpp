@@ -635,6 +635,7 @@ void GameLoop_PlayMovie(const char *movie, const char *subtitles) {
     Crt::_clearfp();
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // The original's entry: the movie on the stack, the subtitle file in EBX (RunTheGame's two calls).
 // AUTOLTCG
 __declspec(naked) void FUN_0005a6b0(const char *movie) {
@@ -646,6 +647,7 @@ __declspec(naked) void FUN_0005a6b0(const char *movie) {
         ret
     }
 }
+#endif
 
 // FUNC_AT(0x0005a870)
 void GameLoop_CleanUp() {

@@ -83,6 +83,7 @@ uint32_t UDataFindTag(uint32_t count, UData **records, uint32_t tag) {
     return (*records)->tag;
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // EBX = count, [esp+4] = records **, [esp+8] = tag; EBX, ESI, EDI and EBP kept, as C++ keeps them.
 // AUTOLTCG
 __declspec(naked) void FUN_00117840() {
@@ -97,3 +98,4 @@ __declspec(naked) void FUN_00117840() {
         ret
     }
 }
+#endif

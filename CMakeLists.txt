@@ -646,6 +646,7 @@ add_library(drivinginject SHARED
   src/driving/platform/RealSystem.cpp
   src/driving/platform/KernelImports.cpp
   src/driving/platform/HostWin32.cpp
+  src/driving/platform/GameWindow.cpp
   src/driving/platform/RealPrint.cpp
   src/driving/platform/RealMemory.cpp
   src/driving/platform/FileSys.cpp
@@ -785,7 +786,13 @@ if(NOT EXISTS ${NF_FFMPEG_DIR}/include/libavformat/avformat.h)
   message(FATAL_ERROR "No FFmpeg in ${NF_FFMPEG_DIR}: it is committed in third_party/ffmpeg-prebuilt, "
                       "and tools/fmv/build_ffmpeg.sh rebuilds it")
 endif()
-file(GLOB NF_FFMPEG_FILES ${NF_FFMPEG_DIR}/bin/*.dll ${NF_FFMPEG_DIR}/FFmpeg-*.txt)
+# The 64-bit standalone build's DLLs are bin-x64's (the same release, configuration and headers).
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(nf_ffmpeg_bin bin-x64)
+else()
+  set(nf_ffmpeg_bin bin)
+endif()
+file(GLOB NF_FFMPEG_FILES ${NF_FFMPEG_DIR}/${nf_ffmpeg_bin}/*.dll ${NF_FFMPEG_DIR}/FFmpeg-*.txt)
 # The movies' sound as the driving engine's player decodes and folds it, without the game
 # (src/driving/devtools/FmvAudioCheck.cpp): "fmvaudiocheck disc/driving/misc.viv".
 add_executable(fmvaudiocheck EXCLUDE_FROM_ALL
@@ -865,6 +872,18 @@ foreach(target driving_standalone driving_standalone_test)
   else()
     target_link_options(${target} PRIVATE -Wl,-Map,${target}.map)
   endif()
+  # The 64-bit build (docs/driving/64-bit.md 7.1): the image low and fixed, so that the statics and vtables the
+  # game's data points at lie in the game window (the low 4 GB) with its heaps; the FFmpeg DLLs beside it.
+  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    if(MSVC)
+      target_link_options(${target} PRIVATE /BASE:0x400000 /DYNAMICBASE:NO /HIGHENTROPYVA:NO)
+    else()
+      target_link_options(${target} PRIVATE -Wl,--image-base,0x400000 -Wl,--disable-dynamicbase
+                                            -Wl,--disable-high-entropy-va)
+    endif()
+    add_custom_command(TARGET ${target} POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:${target}>)
+  endif()
 endforeach()
 # The driving engine's x87 code (docs/driving/64-bit.md 4.1, docs/driving/portable.md). On: the 43 functions
 # whose results come from FSIN, FCOS, FPTAN, FPATAN and the like stay the original instructions, so the injected
@@ -872,6 +891,10 @@ endforeach()
 # host without an x87 needs, and the particle systems are ordered by a number given to each emitter rather than by
 # its address (docs/driving/original-quirks.md); the baselines of that build are lbase_c. The injected build's
 # shadows of these functions differ with it off.
+# A 64-bit build is always off.
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(NIGHTFIRE_X87 OFF CACHE BOOL "Driving engine: keep the original x87 instructions (off: portable C)" FORCE)
+endif()
 option(NIGHTFIRE_X87 "Driving engine: keep the original x87 instructions (off: portable C)" ON)
 foreach(target drivinginject driving_standalone driving_standalone_test)
   if(NIGHTFIRE_X87)
@@ -880,6 +903,19 @@ foreach(target drivinginject driving_standalone driving_standalone_test)
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=0)
   endif()
 endforeach()
+# The game window and Ptr32 without the game (src/driving/devtools/GameWindowTest.cpp): "gamewindow_test [operations]",
+# linked as the standalone executables are.
+add_executable(gamewindow_test EXCLUDE_FROM_ALL src/driving/devtools/GameWindowTest.cpp
+               src/driving/platform/GameWindow.cpp src/driving/platform/HostWin32.cpp)
+target_link_libraries(gamewindow_test PRIVATE winmm shell32)
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  if(MSVC)
+    target_link_options(gamewindow_test PRIVATE /BASE:0x400000 /DYNAMICBASE:NO /HIGHENTROPYVA:NO)
+  else()
+    target_link_options(gamewindow_test PRIVATE -Wl,--image-base,0x400000 -Wl,--disable-dynamicbase
+                                                -Wl,--disable-high-entropy-va)
+  endif()
+endif()
 set(NF_STANDALONE_SRC ${CMAKE_BINARY_DIR}/standalone.dir)
 add_custom_target(standalone_poison
                   COMMAND ${Python3_EXECUTABLE} tools/standalone_poison.py ${NF_STANDALONE_SRC}
@@ -898,3 +934,13 @@ add_executable(shadercheck EXCLUDE_FROM_ALL
   src/common/gfx/nv2aPixelShader.cpp
 )
 target_link_libraries(shadercheck PRIVATE d3d9 d3dcompiler user32)
+
+# A 64-bit configuration (the windows-x64 preset) is for the standalone driving engine alone: the loaders and the
+# injection DLLs share the 32-bit XBE's address space by construction (docs/driving/64-bit.md).
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  foreach(target action actioninject driving drivinginject)
+    if(TARGET ${target})
+      set_target_properties(${target} PROPERTIES EXCLUDE_FROM_ALL ON EXCLUDE_FROM_DEFAULT_BUILD ON)
+    endif()
+  endforeach()
+endif()

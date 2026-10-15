@@ -491,6 +491,7 @@ void SndStretch_Crossfade(int shift, const float *a, const float *b, float *out,
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void FUN_00143be0() {
     __asm {
@@ -504,6 +505,7 @@ __declspec(naked) void FUN_00143be0() {
         ret
     }
 }
+#endif
 
 // The next segment's shift from the data byte and the error: 0 (one byte consumed) when keeping the window as it
 // is leaves the smaller error, else the byte's offset (+ or -, two bytes consumed when stretching below 1).
@@ -540,6 +542,7 @@ int SndStretch_NextShift(const uint8_t **data, float *error, int window, float r
     return c;
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void FUN_00143e10() {
     __asm {
@@ -552,6 +555,7 @@ __declspec(naked) void FUN_00143e10() {
         ret
     }
 }
+#endif
 
 // One segment of input into the output buffer at the shift: answers 0.
 int SndStretch_Segment(SND::SFilterStretch *node, const float **in, int shift) {
@@ -597,6 +601,7 @@ int SndStretch_Segment(SND::SFilterStretch *node, const float **in, int shift) {
     return 0;
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void FUN_00143f20() {
     __asm {
@@ -608,6 +613,7 @@ __declspec(naked) void FUN_00143f20() {
         ret
     }
 }
+#endif
 
 // Up to *frames of what the output buffer holds, into *out; both advanced. Answers the frames taken.
 int SndStretch_Drain(SND::SFilterStretch *node, int *frames, float **out) {
@@ -623,6 +629,7 @@ int SndStretch_Drain(SND::SFilterStretch *node, int *frames, float **out) {
     return count;
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void FUN_00144050() {
     __asm {
@@ -634,6 +641,7 @@ __declspec(naked) void FUN_00144050() {
         ret
     }
 }
+#endif
 
 // With no input left it passes the upstream node's answer for 200 frames (into 'scratch') straight back - the
 // original's, not a typo here. Otherwise pulls the frames the stretch needs (unless the packet player has fewer

@@ -126,6 +126,7 @@ static unsigned long long __cdecl Xbox_ReadCycleCounter(void) {
     return (ticks / hz) * XBOX_CPU_HZ + ((ticks % hz) * XBOX_CPU_HZ) / hz;
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: the original's RDTSC sites patched to these
 // RRenderHigh::Render, 0x0008bfdc:
 //
 //     0f 31           rdtsc
@@ -151,6 +152,7 @@ static void __declspec(naked) Xbox_RdtscHelper(void) {
         ret
     }
 }
+#endif
 
 // XAPILIB::QueryPerformanceCounter and QueryPerformanceFrequency: __stdcall, one pointer, return 1 (each ends
 // RET 4). Replaced as a pair, because consistency between the two is all a caller can depend on.

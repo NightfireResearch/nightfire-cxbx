@@ -4,6 +4,7 @@
 // EAGLAnim's object layer: the pool, the factory, the objects (FnAnim.h) and AnimationBank. See AnimObjects.cpp.
 
 #include "FnAnim.h"
+#include "../../platform/Ptr32.h"
 
 struct AttributeBlock;
 
@@ -19,8 +20,8 @@ struct AnimBank {                    // an AnimationBank symbol
     uint32_t unknown00;
     int32_t count;                   // +0x04
     uint32_t unknown08;
-    uint8_t **anims;                 // +0x0c the anim data
-    const char **names;              // +0x10 sorted, for FindAnim
+    Ptr32<uint8_t *> anims;          // +0x0c the anim data
+    Ptr32<const char *> names;       // +0x10 sorted, for FindAnim
 
     int FindAnim(const char *name);                              // 0x000f71b0
 };

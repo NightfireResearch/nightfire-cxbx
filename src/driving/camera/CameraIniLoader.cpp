@@ -138,6 +138,7 @@ float ClampCameraValue(float value, float min, float max) {
     return value;
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void FUN_00078590() {
     __asm {
@@ -148,6 +149,7 @@ __declspec(naked) void FUN_00078590() {
         ret
     }
 }
+#endif
 
 bool CarListContains(const char *list, const char *name) {
     size_t length = strlen(name);

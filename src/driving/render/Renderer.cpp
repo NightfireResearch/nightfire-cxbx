@@ -520,6 +520,7 @@ void DrawArticleEffects(const WorldArticle *article, const MATRIX4 *transform, f
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void DrawGroupDrawEffects() {
     __asm {
@@ -531,6 +532,7 @@ __declspec(naked) void DrawGroupDrawEffects() {
         ret
     }
 }
+#endif
 
 // Beyond the last model's distance nothing is drawn; kInstanceNoFarCull draws the nearest model at any distance.
 void DrawArticleModel(CARP::Instance *instance, const WorldArticle *article, const MATRIX4 *transform,
@@ -551,6 +553,7 @@ void DrawArticleModel(CARP::Instance *instance, const WorldArticle *article, con
         Fog->EnableFog();
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void DrawGroupDrawModel() {
     __asm {
@@ -564,6 +567,7 @@ __declspec(naked) void DrawGroupDrawModel() {
         ret
     }
 }
+#endif
 
 // FUNC_AT(0x0007ddd0)
 void DrawGroupDrawInstance(const MATRIX4 *transform, CARP::Instance *instance, uint32_t distance,

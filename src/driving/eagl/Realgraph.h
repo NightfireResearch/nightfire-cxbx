@@ -6,6 +6,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../platform/Ptr32.h"
 
 // A SHPX file (.xsh): the header and its directory, one entry per image (docs/driving/eagl.md 2.12)
 struct ShapeDirectoryEntry {
@@ -103,8 +104,8 @@ struct FNTXFont {
     int32_t filterMode;              // +0x48 1: the TAR's filter 2, else 1
     int32_t depthMode;               // +0x4c 0: no Z writes and ALWAYS, 1: Z writes and LEQUAL, else left
     uint8_t unknown50[0x20];         // +0x50
-    EAGL::TAR *tar;                  // +0x70 over the shape (FONTEAGL_createfont)
-    uint8_t *shape;                  // +0x74
+    Ptr32<EAGL::TAR> tar;            // +0x70 over the shape (FONTEAGL_createfont)
+    Ptr32<uint8_t> shape;            // +0x74
     float texScaleV;                 // +0x78 1 / the shape's height when it is linear, else 1
     float texScaleU;                 // +0x7c 1 / the shape's width
 };

@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "CollisionInstance.h"
+#include "../platform/Ptr32.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // WTree: the world's scene quadtree (the CARP map's nodes), which the scene objects file themselves under - the
@@ -20,8 +21,8 @@ class RSceneObj;
 // A node of the tree (CARP::MapNode, 16 bytes): its four children (an array, or none for a leaf) and the first of
 // the scene objects filed under it. Children: 0 low x low z, 1 high x low z, 2 low x high z, 3 high x high z.
 struct WMapNode {
-    WMapNode *children;            // +0x00
-    RSceneObj *firstSceneObj;      // +0x04
+    Ptr32<WMapNode> children;      // +0x00
+    Ptr32<RSceneObj> firstSceneObj; // +0x04
     uint16_t indexListOffset;      // +0x08 the byte offset of its index list (IndexList)
     uint16_t numInstances;         // +0x0a
     uint8_t numCurtains;           // +0x0c

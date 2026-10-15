@@ -218,6 +218,7 @@ void InstanceList::Deallocate(InstanceListEntry *first, uint32_t count) {
         UMemory::FastFree(first, count * sizeof(InstanceListEntry));
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void FUN_000a87e0() {
     __asm {
@@ -233,6 +234,7 @@ __declspec(naked) void FUN_000a87e0() {
         ret
     }
 }
+#endif
 
 void QueueBrokenWindowQuad(const Coord4 *a, const Coord4 *b, const Coord4 *c, const Coord4 *d, uint32_t colour,
                            const Coord4 *uvs, bool flush) {

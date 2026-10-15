@@ -152,6 +152,7 @@ int EAGL::PrintMessage(int level, const char *format, ...) {
 // the three entry points' own register convention (the seam's __fastcall functions, ../gfx/D3D8.h): one and four
 // constants go straight to their inline versions.
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // FUNC_AT(0x000f4310)
 __declspec(naked) void EAGL::ProfilerSetVertexShaderConstantRegs() {
     __asm {
@@ -170,6 +171,7 @@ __declspec(naked) void EAGL::ProfilerSetVertexShaderConstantRegs() {
         ret
     }
 }
+#endif
 
 // FUNC_AT(0x000f4580)
 void EAGL::ProfilerHistory::SetHistoryValue(uint32_t cycleCount, float value, int index) {

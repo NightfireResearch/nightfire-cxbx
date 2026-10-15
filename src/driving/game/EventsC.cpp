@@ -1753,8 +1753,7 @@ void ESetAvoidZone::Process() {
     CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(element);
     if (redirected->state != kElementAwake || redirected->type != CARP::kAIElementCharacter)
         return;
-    AICharacter *character =
-        reinterpret_cast<AICharacter *>(redirected->character);
+    AICharacter *character = redirected->character;
     character->avoiding = 1;
     character->avoidCentre = trigger->position;
     character->avoidRadius = trigger->radius;

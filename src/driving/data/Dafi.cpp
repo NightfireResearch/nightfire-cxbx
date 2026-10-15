@@ -46,6 +46,7 @@ char *DafiTrim(char *string) {
     return string;
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // EAX = line, EDX = end -> EAX; EDX kept, as the original keeps it.
 // AUTOLTCG
 __declspec(naked) void FUN_0011a1b0() {
@@ -70,6 +71,7 @@ __declspec(naked) void FUN_0011a200() {
         ret
     }
 }
+#endif
 
 // FUNC_AT(0x0011a240)
 DAFI* DAFI_open(const char *text, int size) {

@@ -60,6 +60,7 @@ const StateKeyword *FindStateKeyword(const char *name, const StateKeyword *table
     return FindStateEntry(name, table);
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void FUN_000914f0() {
     __asm {
@@ -72,6 +73,7 @@ __declspec(naked) void FUN_000914f0() {
         ret
     }
 }
+#endif
 
 // The tables (each ends with a null name)
 

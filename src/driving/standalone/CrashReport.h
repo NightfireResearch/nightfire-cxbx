@@ -19,9 +19,9 @@ void CrashReport_Install(void);
 void CrashReport_Threads(void);
 
 // ---- the report, shared by both hosts
-struct CrashRegisters {
-    uint32_t eax, ebx, ecx, edx, esi, edi;
-    uint32_t eip, esp, ebp, eflags;
+struct CrashRegisters {   // on x86-64 the 64-bit registers (rax...)
+    uintptr_t eax, ebx, ecx, edx, esi, edi;
+    uintptr_t eip, esp, ebp, eflags;
 };
 
 void CrashReport_Begin(const char *what);   // a record, under a time-stamped heading and the executable's base

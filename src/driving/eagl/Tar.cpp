@@ -1120,6 +1120,7 @@ void EAGL::TARProperties::Destruct() {
 
 // ---- unreferenced helpers after it (register arguments: the original instructions)
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // The image count of a SHPX file in EAX.
 // FUNC_AT(0x000ede20)
 __declspec(naked) void EAGL_ShapeCountEax() {
@@ -1138,6 +1139,7 @@ __declspec(naked) void EAGL_ShapeImageEax() {
         ret
     }
 }
+#endif
 
 // FUNC_AT(0x000ede40)
 int EAGL_AddSymbolAnswerZero(const char *name, void *value) {

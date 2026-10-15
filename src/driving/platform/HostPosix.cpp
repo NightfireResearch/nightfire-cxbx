@@ -468,6 +468,9 @@ unsigned long HostSleepEx(unsigned long milliseconds, int alertable) {
 
 // ---- heaps: the C library's, with each block's size in front of it (eight bytes, keeping Win32's alignment)
 
+// ---- heaps (a 64-bit host's are GameWindow.cpp's)
+
+#if UINTPTR_MAX == 0xffffffffu
 struct BlockHeader {
     size_t size;
     size_t unused;
@@ -531,15 +534,45 @@ size_t HostHeapSize(HostHandle heap, unsigned long flags, const void *block) {
     (void)flags;
     return HeaderOf(block)->size;
 }
+#endif
 
 // ---- pages: the mapping's length is kept in a page before the block
+
+#if UINTPTR_MAX > 0xffffffffu
+// The lowest free range of `length` bytes at or above `lowest` that ends below 4 GB, mapped; MAP_FAILED if none.
+// Tried at each 64 KB step: MAP_FIXED_NOREPLACE fails where anything is mapped already.
+static void *MapLow(size_t length, uintptr_t lowest, int protection, int flags) {
+    const uintptr_t step = 0x10000;
+    for (uintptr_t address = (lowest + step - 1) & ~(step - 1); address + length <= (uintptr_t(1) << 32);
+         address += step) {
+        void *mapping = mmap(reinterpret_cast<void *>(address), length, protection,
+                             MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE | flags, -1, 0);
+        if (mapping != MAP_FAILED)
+            return mapping;
+    }
+    return MAP_FAILED;
+}
+
+void *HostReserveLow(size_t size, uintptr_t lowest) {
+    void *mapping = MapLow(size, lowest, PROT_NONE, MAP_NORESERVE);
+    return mapping != MAP_FAILED ? mapping : NULL;
+}
+
+int HostCommit(void *address, size_t size) {
+    return mprotect(address, size, PROT_READ | PROT_WRITE) == 0;
+}
+#endif
 
 void *HostAllocatePages(size_t size, uintptr_t lowest, uintptr_t limit) {
     (void)lowest;
     (void)limit;
     size_t page = size_t(sysconf(_SC_PAGESIZE));
     size_t length = page + size;
+#if UINTPTR_MAX > 0xffffffffu   // in the game window
+    void *mapping = MapLow(length, 0x10000, PROT_READ | PROT_WRITE | PROT_EXEC, 0);
+#else
     void *mapping = mmap(NULL, length, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+#endif
     if (mapping == MAP_FAILED)
         return NULL;
     *static_cast<size_t *>(mapping) = length;

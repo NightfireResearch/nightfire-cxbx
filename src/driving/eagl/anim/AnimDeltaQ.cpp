@@ -249,6 +249,7 @@ static double __cdecl Vec2Length(const float *v) {
     return sqrt(x * x + y * y);
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // FUNC_AT(0x001042b0)
 __declspec(naked) void AnimVec2LengthEax() {
     __asm {
@@ -262,6 +263,7 @@ __declspec(naked) void AnimVec2LengthEax() {
         ret
     }
 }
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // FnDeltaSingleQ. Data: DeltaSingleQData, then the bins: per bone a DeltaSingleQPhysical (the axis component and

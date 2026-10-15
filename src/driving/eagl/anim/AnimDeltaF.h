@@ -4,11 +4,12 @@
 // FnDeltaF1 and FnDeltaF3, the keyframe-block channels most of the disc's anims are made of. See AnimDeltaF.cpp.
 
 #include "FnAnim.h"
+#include "../../platform/Ptr32.h"
 
 // The F1 and F3 data: this header, a range record per value (F3: per 3-vector), the key blocks, the constants.
 struct DeltaFData : AnimData {
-    uint16_t *index;                 // +0x04 [count] each value's output index (F3: its x's)
-    uint16_t *times;                 // +0x08 [keys - 1] key k's frame at times[k - 1]; NULL: a key a frame
+    Ptr32<uint16_t> index;           // +0x04 [count] each value's output index (F3: its x's)
+    Ptr32<uint16_t> times;           // +0x08 [keys - 1] key k's frame at times[k - 1]; NULL: a key a frame
     uint16_t keys;                   // +0x0c
     uint16_t count;                  // +0x0e values (F3: vectors)
     uint8_t shift;                   // +0x10 2^shift keys a block

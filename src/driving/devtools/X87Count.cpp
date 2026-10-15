@@ -1,4 +1,6 @@
 #include "X87Count.h"
+
+#if defined(_M_IX86) || defined(__i386__)   // the x87 functions and their callers' rel32 calls: 32-bit only
 #include "CodeRetarget.h"
 
 #include "../game/Simulation.h"
@@ -386,3 +388,12 @@ void X87Count_Tick(void) {
     if (g_tick % 1000 == 0)
         WriteFile();
 }
+#else   // a 64-bit build has no x87 functions to count
+
+void X87Count_Install(void) {
+}
+
+void X87Count_Tick(void) {
+}
+
+#endif

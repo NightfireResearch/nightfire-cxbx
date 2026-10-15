@@ -11,6 +11,7 @@
 
 #include "RenderContext.h"
 #include "RuntimeAlloc.h"
+#include "../platform/Ptr32.h"
 
 class DynamicLoader;
 
@@ -40,7 +41,7 @@ enum ShapeImageFlag : uint32_t {
 struct TARAtlasEntry {               // 0xc
     uint16_t x;                      // +0x00
     uint16_t y;                      // +0x02
-    uint8_t *image;                  // +0x04 a SHAPE image
+    Ptr32<uint8_t> image;            // +0x04 a SHAPE image
     uint32_t unknown08;              // +0x08
 };
 struct TARAtlas {
@@ -65,11 +66,11 @@ struct TARSharedData {               // 0x34
     uint32_t swizzled : 1;           //       bit 24, the SHAPE's 0x2000 flag (swizzled: keep the address modes)
     uint32_t unknownBits25 : 7;      //       bits 25..31
     uint32_t format;                 // +0x14 D3DFORMAT
-    TARAtlas *atlas;                 // +0x18 the atlas list LoadAtlas copied from the TAR
-    uint8_t *shape;                  // +0x1c the SHAPE image (TAR::GetShape)
-    uint8_t *pixels;                 // +0x20 the image's pixels
-    void *contiguous;                // +0x24 the copy path's physical copy (never made now: see TAR::Commit)
-    SurfaceTexture *texture;         // +0x28 the D3D texture header (D3D-created ones have common bit 24)
+    Ptr32<TARAtlas> atlas;           // +0x18 the atlas list LoadAtlas copied from the TAR
+    Ptr32<uint8_t> shape;            // +0x1c the SHAPE image (TAR::GetShape)
+    Ptr32<uint8_t> pixels;           // +0x20 the image's pixels
+    Ptr32<void> contiguous;          // +0x24 the copy path's physical copy (never made now: see TAR::Commit)
+    Ptr32<SurfaceTexture> texture;   // +0x28 the D3D texture header (D3D-created ones have common bit 24)
     uint32_t flags;                  // +0x2c kSharedOwnsShape
     uint8_t yuv;                     // +0x30 YUY2: D3DRS_YUVENABLE while bound
     uint8_t pad31[3];
@@ -116,11 +117,11 @@ struct TAR {                         // 0x4c ("EAGL::TAR new"); arrays of them a
     uint8_t pad21[3];
     uint32_t maxAnisotropy;          // +0x24 D3DTSS_MAXANISOTROPY
     float bumpEnv[4];                // +0x28 BUMPENVMAT00, 01, 10, 11
-    D3DResource *palette;            // +0x38 D3DPalette
-    uint8_t *clut;                   // +0x3c the clut's colours
-    TARSharedData *data;             // +0x40
-    TARAtlas *atlas;                 // +0x44 LoadAtlas's list
-    TAR *extension;                  // +0x48 itself
+    Ptr32<D3DResource> palette;      // +0x38 D3DPalette
+    Ptr32<uint8_t> clut;             // +0x3c the clut's colours
+    Ptr32<TARSharedData> data;       // +0x40
+    Ptr32<TARAtlas> atlas;           // +0x44 LoadAtlas's list
+    Ptr32<TAR> extension;            // +0x48 itself
 
     TAR* InitFields();                                                       // 0x000eb7a0 (invented)
     TAR* Construct(uint8_t *shape);                                          // 0x000eca20

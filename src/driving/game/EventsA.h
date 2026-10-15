@@ -24,6 +24,7 @@
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "../physics/RigidBodyResolve.h"    // CollisionImpact
 #include "AIVehicle.h"
+#include "../platform/Ptr32.h"
 
 namespace CARP {
 class AISpline;
@@ -76,10 +77,10 @@ class EAICommand : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        AICommand *command;
-        CARP::AIElement *element;
-        CARP::AIElement *target;
-        AIVehicle *vehicle;
+        Ptr32<AICommand> command;
+        Ptr32<CARP::AIElement> element;
+        Ptr32<CARP::AIElement> target;
+        Ptr32<AIVehicle> vehicle;
     };
 
     AICommand *command;   // +0x04
@@ -109,7 +110,7 @@ class EAIElementFireOff : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
+        Ptr32<CARP::AIElement> element;
     };
 
     CARP::AIElement *element;   // +0x04
@@ -136,7 +137,7 @@ class EAIElementSetAccuracy : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
+        Ptr32<CARP::AIElement> element;
         int32_t accuracy;
     };
 
@@ -153,7 +154,7 @@ class EAIElementSetCharParams : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
+        Ptr32<CARP::AIElement> element;
         int32_t unknown08;
         int32_t accuracy;
         float unknown10;
@@ -186,7 +187,7 @@ class EAIElementSetVehicleParams : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
+        Ptr32<CARP::AIElement> element;
         float unknown08;
     };
 
@@ -203,7 +204,7 @@ class EAIElementSetWakeRange : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
+        Ptr32<CARP::AIElement> element;
         float wakeRange;
     };
 
@@ -222,8 +223,8 @@ class EActivateAIElement : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
-        CARP::AIElement *toucherElement;
+        Ptr32<CARP::AIElement> element;
+        Ptr32<CARP::AIElement> toucherElement;
     };
 
     CARP::AIElement *element;           // +0x04
@@ -256,7 +257,7 @@ class EDropMine : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
+        Ptr32<CARP::AIElement> element;
         uint32_t unknown08;
     };
 
@@ -280,7 +281,7 @@ class EActorMuzzleFlash : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        const MuzzleFlashPoint *point;
+        Ptr32<const MuzzleFlashPoint> point;
     };
 
     const MuzzleFlashPoint *point;      // +0x04
@@ -378,8 +379,8 @@ class EControlToSpline : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
-        CARP::AISpline *spline;
+        Ptr32<CARP::AIElement> element;
+        Ptr32<CARP::AISpline> spline;
     };
 
     CARP::AIElement *element;   // +0x04
@@ -433,7 +434,7 @@ class ECustomTransition : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        const char *transition;
+        Ptr32<const char> transition;
     };
 
     const char *transition;             // +0x04
@@ -489,8 +490,8 @@ class ECameraLockOn : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
-        const Coord4 *point;
+        Ptr32<CARP::AIElement> element;
+        Ptr32<const Coord4> point;
         int32_t wheel;
         int32_t member;
         float targetY;
@@ -580,7 +581,7 @@ public:
         int32_t cinematic;
         int32_t unknown08;
         int32_t delay;
-        CARP::AIElement *anchor;
+        Ptr32<CARP::AIElement> anchor;
         Coord3 place;
     };
 
@@ -623,8 +624,8 @@ class EDisablePowerUp : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::Instance *instance;
-        WTrigger *trigger;
+        Ptr32<CARP::Instance> instance;
+        Ptr32<WTrigger> trigger;
     };
 
     CARP::Instance *instance;           // +0x04
@@ -653,7 +654,7 @@ class EDisableTrigger : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        WTrigger *trigger;
+        Ptr32<WTrigger> trigger;
     };
 
     WTrigger *trigger;                  // +0x04

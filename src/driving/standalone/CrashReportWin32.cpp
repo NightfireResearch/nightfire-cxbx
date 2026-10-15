@@ -12,6 +12,18 @@
 
 namespace {
 
+#ifdef _WIN64
+#define Eax Rax
+#define Ebx Rbx
+#define Ecx Rcx
+#define Edx Rdx
+#define Esi Rsi
+#define Edi Rdi
+#define Eip Rip
+#define Esp Rsp
+#define Ebp Rbp
+#endif
+
 CrashRegisters RegistersOf(const CONTEXT *context) {
     CrashRegisters r;
     r.eax = context->Eax;

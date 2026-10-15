@@ -168,6 +168,7 @@ static UData *DataLocateIndexedCall(UGroup *group, uint32_t tag, int index) {
     return group->DataLocateIndexed(tag, index);
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // 0x0008d6e0: EAX the tag, ESI the group, the index on the stack (the caller pops it); EAX the answer. ECX and EDX
 // are not kept, as the original does not keep them.
 // AUTOLTCG
@@ -181,3 +182,4 @@ __declspec(naked) void UGroup::something() {
         ret
     }
 }
+#endif

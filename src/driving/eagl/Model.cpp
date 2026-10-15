@@ -208,7 +208,7 @@ bool EAGL::Model::AddOwnMatrixChild(Model *child) {
 
 // FUNC_AT(0x000e8d90)
 EAGL::Model* EAGL::Model::RemoveChild(const char *childName) {
-    Model **lists[3] = { &sameMatrixChildren, &relativeChildren, &ownMatrixChildren };
+    Ptr32<Model> *lists[3] = { &sameMatrixChildren, &relativeChildren, &ownMatrixChildren };
     for (int list = 0; list < 3; list++) {
         Model *previous = NULL;
         for (Model *child = *lists[list]; child != NULL; child = child->next) {
@@ -1163,6 +1163,7 @@ static uint32_t ModelLockRectBody(D3DPixelContainer *surface, D3DLockedRect *loc
     return 0;
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void FUN_000e8b20() {
     __asm {
@@ -1317,3 +1318,4 @@ __declspec(naked) void EAGL::ModelShapeEntryRegs() {
         ret
     }
 }
+#endif

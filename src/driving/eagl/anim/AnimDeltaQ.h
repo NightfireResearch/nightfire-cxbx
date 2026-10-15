@@ -6,6 +6,7 @@
 // Most Wanted's EAGL4Anim headers (docs/driving/eagl-prior-art.md), whose layouts match these objects.
 
 #include "FnAnim.h"
+#include "../../platform/Ptr32.h"
 
 // ---- FnDeltaSingleQ (type 19): one rotation axis per bone, between a fixed pre- and post-rotation
 
@@ -49,8 +50,8 @@ struct DeltaSingleQData : AnimData {
     uint16_t keys;                   // +0x04
     uint8_t bones;                   // +0x06
     uint8_t binLengthPower;          // +0x07 keys a bin: 1 << binLengthPower
-    uint16_t *times;                 // +0x08 [keys - 1] (key k at times[k - 1]), or NULL: a key a frame
-    uint8_t *boneIdx;                // +0x0c [bones] each bone's index in the pose
+    Ptr32<uint16_t> times;           // +0x08 [keys - 1] (key k at times[k - 1]), or NULL: a key a frame
+    Ptr32<uint8_t> boneIdx;          // +0x0c [bones] each bone's index in the pose
     DeltaSingleQMinRange ranges[1];  // +0x10 [bones], then the bins
 };
 static_assert(offsetof(DeltaSingleQData, ranges) == 0x10, "the single-axis ranges are at +0x10");
@@ -113,8 +114,8 @@ struct DeltaQFastHeader : AnimData {
     uint16_t keys;                   // +0x04
     uint8_t bones;                   // +0x06 animated bones
     uint8_t constBones;              // +0x07
-    uint16_t *times;                 // +0x08 [keys - 1] (key k at times[k - 1]), or NULL: a key a frame
-    uint8_t *boneIdx;                // +0x0c [bones] each bone's index in the pose
+    Ptr32<uint16_t> times;           // +0x08 [keys - 1] (key k at times[k - 1]), or NULL: a key a frame
+    Ptr32<uint8_t> boneIdx;          // +0x0c [bones] each bone's index in the pose
     uint8_t binLengthPower;          // +0x10 keys a bin: 1 << binLengthPower
     uint8_t unknown11;
     DeltaQFastMinRange ranges[1];    // +0x12 [bones]
@@ -194,8 +195,8 @@ struct DeltaQHeader : AnimData {     // as DeltaQFastHeader, with DeltaQ's range
     uint16_t keys;                   // +0x04
     uint8_t bones;                   // +0x06 animated bones
     uint8_t constBones;              // +0x07
-    uint16_t *times;                 // +0x08 [keys - 1] (key k at times[k - 1]), or NULL: a key a frame
-    uint8_t *boneIdx;                // +0x0c [bones] each bone's index in the pose
+    Ptr32<uint16_t> times;           // +0x08 [keys - 1] (key k at times[k - 1]), or NULL: a key a frame
+    Ptr32<uint8_t> boneIdx;          // +0x0c [bones] each bone's index in the pose
     uint8_t binLengthPower;          // +0x10 keys a bin: 1 << binLengthPower
     uint8_t unknown11;
     DeltaQMinRange ranges[1];        // +0x12 [bones]

@@ -10,7 +10,9 @@
 // same arguments. Host.h's types are Win32's own (HANDLE and HostHandle are both void *, DWORD is unsigned long),
 // so nothing is converted on the way through.
 
+#ifndef _WIN64
 static_assert(sizeof(CRITICAL_SECTION) <= sizeof(HostLock), "a critical section fits a HostLock");
+#endif
 static_assert(sizeof(HostSystemTime) == sizeof(SYSTEMTIME), "HostSystemTime is SYSTEMTIME");
 static_assert(sizeof(HostTimeZone) == sizeof(TIME_ZONE_INFORMATION), "HostTimeZone is TIME_ZONE_INFORMATION");
 
@@ -71,6 +73,7 @@ int HostTlsSetValue(unsigned long slot, void *value) {
 
 // ---- locks
 
+#ifndef _WIN64
 void HostInitLock(HostLock *lock) {
     InitializeCriticalSection(reinterpret_cast<CRITICAL_SECTION *>(lock->storage));
 }
@@ -82,6 +85,29 @@ void HostEnterLock(HostLock *lock) {
 void HostLeaveLock(HostLock *lock) {
     LeaveCriticalSection(reinterpret_cast<CRITICAL_SECTION *>(lock->storage));
 }
+#else
+// A 64-bit critical section is 40 bytes, more than the lock's place in the game's records: the lock holds a pointer
+// to one of its own on the system heap, which is never freed (nothing deletes a lock).
+static CRITICAL_SECTION *SectionOf(HostLock *lock) {
+    CRITICAL_SECTION *section;
+    memcpy(&section, lock->storage, sizeof(section));
+    return section;
+}
+
+void HostInitLock(HostLock *lock) {
+    CRITICAL_SECTION *section = (CRITICAL_SECTION *)HeapAlloc(GetProcessHeap(), 0, sizeof(CRITICAL_SECTION));
+    InitializeCriticalSection(section);
+    memcpy(lock->storage, &section, sizeof(section));
+}
+
+void HostEnterLock(HostLock *lock) {
+    EnterCriticalSection(SectionOf(lock));
+}
+
+void HostLeaveLock(HostLock *lock) {
+    LeaveCriticalSection(SectionOf(lock));
+}
+#endif
 
 long HostInterlockedIncrement(volatile long *value) {
     return InterlockedIncrement(value);
@@ -127,8 +153,9 @@ unsigned long HostSleepEx(unsigned long milliseconds, int alertable) {
     return SleepEx(milliseconds, alertable);
 }
 
-// ---- heaps
+// ---- heaps (a 64-bit host's are GameWindow.cpp's)
 
+#if UINTPTR_MAX == 0xffffffffu
 HostHandle HostHeapCreate(unsigned long flags, size_t initialSize, size_t maximumSize) {
     return HeapCreate(flags, initialSize, maximumSize);
 }
@@ -148,9 +175,11 @@ void *HostHeapReAlloc(HostHandle heap, unsigned long flags, void *block, size_t 
 size_t HostHeapSize(HostHandle heap, unsigned long flags, const void *block) {
     return HeapSize(heap, flags, block);
 }
+#endif
 
 // ---- pages
 
+#if UINTPTR_MAX == 0xffffffffu
 void *HostAllocatePages(size_t size, uintptr_t lowest, uintptr_t limit) {
     const uintptr_t granularity = 0x10000;
     uintptr_t address = (lowest + granularity - 1) & ~(granularity - 1);
@@ -170,6 +199,46 @@ void *HostAllocatePages(size_t size, uintptr_t lowest, uintptr_t limit) {
     }
     return VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 }
+#else
+// The lowest free range of `size` bytes at or above `lowest` that ends below `limit`, allocated; NULL if there is none.
+static void *AllocateLowest(size_t size, uintptr_t lowest, uintptr_t limit, DWORD type, DWORD protect) {
+    const uintptr_t granularity = 0x10000;
+    uintptr_t address = (lowest + granularity - 1) & ~(granularity - 1);
+    if (address < granularity)
+        address = granularity;
+    while (address < limit && size <= limit - address) {
+        MEMORY_BASIC_INFORMATION region;
+        if (VirtualQuery((void *)address, &region, sizeof(region)) != sizeof(region))
+            break;
+        uintptr_t end = (uintptr_t)region.BaseAddress + region.RegionSize;
+        if (region.State == MEM_FREE && end - address >= size) {
+            void *block = VirtualAlloc((void *)address, size, type, protect);
+            if (block != NULL)
+                return block;
+        }
+        address = (end + granularity - 1) & ~(granularity - 1);
+    }
+    return NULL;
+}
+
+static const uintptr_t kWindowEnd = uintptr_t(1) << 32;
+
+// Where asked if there is room there, else anywhere in the game window.
+void *HostAllocatePages(size_t size, uintptr_t lowest, uintptr_t limit) {
+    void *block = AllocateLowest(size, lowest, limit, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    if (block == NULL)
+        block = AllocateLowest(size, 0, kWindowEnd, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    return block;
+}
+
+void *HostReserveLow(size_t size, uintptr_t lowest) {
+    return AllocateLowest(size, lowest, kWindowEnd, MEM_RESERVE, PAGE_NOACCESS);
+}
+
+int HostCommit(void *address, size_t size) {
+    return VirtualAlloc(address, size, MEM_COMMIT, PAGE_READWRITE) != NULL;
+}
+#endif
 
 void HostFreePages(void *block) {
     if (block != NULL)
@@ -258,7 +327,7 @@ int HostRaiseTimerResolution(void) {
     return timeBeginPeriod(1) == TIMERR_NOERROR;
 }
 
-unsigned HostSetTimerEvent(unsigned delayMs, unsigned resolutionMs, HostTimerCallback callback, unsigned long user,
+unsigned HostSetTimerEvent(unsigned delayMs, unsigned resolutionMs, HostTimerCallback callback, HostUlongPtr user,
                            unsigned flags) {
     return timeSetEvent(delayMs, resolutionMs, callback, user, flags);
 }
@@ -321,7 +390,7 @@ void HostDebugBreak(void) {
     DebugBreak();
 }
 
-void HostRaiseException(unsigned long code, unsigned long flags, unsigned long count, const unsigned long *arguments) {
+void HostRaiseException(unsigned long code, unsigned long flags, unsigned long count, const HostUlongPtr *arguments) {
     RaiseException(code, flags, count, arguments);
 }
 

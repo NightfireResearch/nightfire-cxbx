@@ -1,7 +1,7 @@
 # The driving engine on 64-bit
 
 Status: plan (15 October 2026), step 3 of the roadmap in [portable.md](portable.md): an audit and a design. Done so
-far: package 0 (7.4, 4.3) and the x87 code as C behind `NIGHTFIRE_X87` (4.4), both on the 32-bit build. It applies to the standalone executables (`driving_standalone`, `driving_standalone_test`) only. The
+far: package 0 (7.4, 4.3) and the x87 code as C behind `NIGHTFIRE_X87` (4.4), both on the 32-bit build, and packages 1 and 2 (7.5): the x86-64 configuration, `Ptr32<T>` and the game window. It applies to the standalone executables (`driving_standalone`, `driving_standalone_test`) only. The
 injected build (driving.exe mapping Driving.xbe, drivinginject.dll, every shadow test) stays 32-bit: it shares the
 original's address space by construction, and it stays the oracle.
 
@@ -427,6 +427,94 @@ number given to each emitter when it is made, say - in both builds; that changes
 with the x87 conversion's new baselines. Done with `NIGHTFIRE_X87=OFF`, together with the cars' particle set (4.4). The other address keys of section 3 (the broken windows' instance key,
 WRender's instance pointers into one array) are lookups or keep their order.
 
+### 7.5 Done: packages 1 and 2 (15 October 2026)
+
+**The x86-64 configuration.** The CMake preset `windows-x64` (MSVC, x64, `build/windows-x64`; its build preset builds
+`driving_standalone` and `driving_standalone_test` only) forces `NIGHTFIRE_X87` off and marks the loaders and the
+injection DLLs `EXCLUDE_FROM_ALL`. The standalone executables link at `/BASE:0x400000 /DYNAMICBASE:NO
+/HIGHENTROPYVA:NO` (GNU ld: `--image-base`, `--disable-dynamicbase`, `--disable-high-entropy-va`), so their statics
+and vtables lie in the window; MSVC warns (LNK4281) about the low base. The clang x86-64 mingw build is the probe
+(`--probe-script`): it now passes `-DNIGHTFIRE_X87=0` and uses the x86-64 mingw-w64 sysroot when it is installed
+(`g++-mingw-w64-x86-64`), and `--probe-count DIR` prints one line. CI's `probe64` job runs it and writes the count to
+the job summary without failing.
+
+**Guards.** The 59 register adaptors and XboxTimer's two RDTSC stubs are under `#ifndef NIGHTFIRE_STANDALONE`. The
+x87 call counter (devtools/X87Count.cpp, in driving_standalone_test) is x86-32 only, with empty hooks otherwise. In
+xbeAbi.h the `XbeAbi` specialisations and `XBE_ABI_CHECK` are x86-32 only (on x86-64 the check is empty), and in
+xbeOverload.h so are the `__stdcall` and `__fastcall` overloads of `Of`. Host.h's `HostUlongPtr` is ULONG_PTR/DWORD_PTR
+(unsigned long except on Win64) for the timer callback and `HostRaiseException`. On Win64 a `HostLock` holds a pointer
+to a critical section of its own, since 40 bytes do not fit the 24 the game's records keep for it. The crash
+reporter's registers are `uintptr_t`, read from Win64's context (still printed as their low halves).
+
+**FFmpeg.** `tools/fmv/build_ffmpeg.sh windows-x86_64` builds the same release and configuration with
+`--arch=x86_64 --cross-prefix=x86_64-w64-mingw32-` into `third_party/ffmpeg-prebuilt/bin-x64` (2.4 MB, committed as
+the i686 DLLs are; the headers are the same, `ffversion.h`'s version string aside). The 64-bit standalone targets copy
+them beside themselves.
+
+**`Ptr32<T>`** (platform/Ptr32.h): `T *` on a 32-bit host. On a 64-bit host it is a class holding the `uint32_t`, with
+conversions both ways, `->`, the increments and an explicit cast to a derived class's pointer
+(`(PVehicle *)element->object`); `*`, `[]`, `+`, `-` and the comparisons work through the conversion. `PtrFrom32` and
+`PtrTo32` do the same for untyped words. The base is the constant 0 (`kGameWindowBase`). Encoding an address at or
+above 4 GB stops the game (`GameWindowOutOfRange`: the address, a debug break, abort) in every build, not only the test
+build. A run-time base for macOS would add one addition per decode and keep null as the word 0.
+
+**The game window** (platform/GameWindow.cpp, 64-bit hosts only). `HostReserveLow` reserves address space at the
+lowest free address below 4 GB and `HostCommit` commits it (HostWin32: `VirtualQuery`/`VirtualAlloc`; HostPosix:
+`mmap` with `MAP_FIXED_NOREPLACE` at 64 KB steps, then `mprotect`). GameWindow.cpp implements Host.h's heap functions
+over one 1 GB arena reserved at or above 0x20000000 (contiguous memory keeps its place below 0x10000000), committed in
+1 MB steps. Blocks have a 16-byte header and boundary tags; free blocks sit in lists by size (exact below 1 KB, four per
+power of two above), taken first fit, merged on free, with the untouched top used last; one lock. It keeps HeapSize's
+answer (the size asked for), HEAP_ZERO_MEMORY, HEAP_REALLOC_IN_PLACE_ONLY and a heap's maximum (live blocks may not
+pass it). So the process heap, XAPI's heaps, the C runtime's malloc, the memory classes, UMemory, EAGL's allocator and
+the sound heap all allocate in the window. `HostAllocatePages` stays below 4 GB (where asked if there is room, else
+anywhere below 4 GB). The standalone executable's global `operator new` and `delete` use a window heap of their own.
+A 32-bit host keeps the system's heaps (its code is unchanged). Not placed: the game threads' stacks (nothing found
+points at one from file data, and the encoder's check would stop the first store that did) and what Direct3D, XAudio2
+and the C library allocate for themselves (package 8 decides which of the seam's D3D objects the data holds).
+
+`gamewindow_test` (devtools/GameWindowTest.cpp, `EXCLUDE_FROM_ALL`, both architectures) checks `Ptr32`'s layout and
+operations, then runs a random mix of allocations, frees and reallocations (sizes to 1 MB; contents, sizes, zeroing and
+in-place-only checked), fills a heap with a maximum, and checks that pages, `operator new`'s blocks and the statics are
+below 4 GB. x64: 1,000,000 operations, 1,000,024 checks, 0 differ; Win32 (the system heap): 300,000 operations, 0
+differ. A heap that forgets to unlink a merged neighbour crashes it.
+
+**The 110 file structures** (2.2, the tool's `LOADERS` set): their 202 pointer members are `Ptr32<T>` (`void **p`
+becomes `Ptr32<void *> p`). Three uses needed more than the type: `Model::RemoveChild`'s list of member addresses
+(`Ptr32<Model> *lists[3]`), `RenderMethod::GetVertexShaderTable` and `GetPixelShaderTable` (unreferenced; they return
+the member's address, now `Ptr32<...> *`), and a redundant `reinterpret_cast` in `ESetAvoidZone::Process`. The
+loaders are unchanged: they still write their words through 32-bit casts (packages 3a-5 and 8). All 31 layout checks on
+file structures now hold on x86-64; the tool classifies `Ptr32` members as 32-bit.
+
+**The 32-bit build is unchanged.** Every object file of drivinginject, driving_standalone and driving_standalone_test,
+compared with the build of 7f225f5 section by section (code by bytes and relocations, data variable by variable):
+drivinginject 393 of 393 identical (GameWindow.obj is new and empty on 32-bit). The standalone executables lose the
+adaptors, the static bodies only they called and AnimDeltaQ's warned-once flag, and five functions differ because MSVC
+now inlines a callee whose address an adaptor took (`WCollisionMgr::FindFaceInTriStrip`, `stretch`,
+`RHighLevelLightManager::AddDynamicLightEffect`, `RLightManager::Construct`, `STREAM_cancelrequest`); everything else
+is identical. (MSVC orders a file's .bss and .data variables differently when an included header changes; the
+variables and their contents are the same.) On the runner
+(rounds p64a, p64s, p64c, to tick 9000): the injected build against `lbase` (16 lockstep runs exact, shadows on all
+eight missions with 0 differences), driving_standalone_test against `lbase` (16 of 16 exact) and, with
+`NIGHTFIRE_X87=OFF`, against `lbase_c` (16 of 16 exact). The mingw cross build (`linux` preset) builds every target,
+both standalone executables included.
+
+**The x86-64 counts.** The probe's distinct error lines: before, 1,112 (1,032 failed `static_assert`s, 61 `naked`, 19
+calling-convention templates); after, 993, every one a failed `static_assert` on a memory-only structure (package 6).
+MSVC x64 likewise stops only on static assertions (C2338, then C1003 after 100 in 92 files, so the clang count is the
+measure). Warnings left (clang): 66 narrowings, 57 int-to-pointer and 22 pointer-to-int casts, 21 through `void *`,
+76 enum conversions. `pointer_layout_audit.py`: 202 `Ptr32` members; file structures with pointer-sized members 0
+(110 before).
+
+**What remains, by package.** 3a, 3b: the ELF loader's section and symbol words and its relocations (its
+`(uint32_t)(uintptr_t)` casts, MSVC's C4311/C4312 warnings), the word streams of Model.cpp, the render methods and the
+EAGLAnim data. 4: CARP's data words and references, the event `Record`s' resolution, the data layer's vtable constants.
+5: realgraph, the sound banks' timbre words and `AddBytes`, FILESYS user data, stream and filter handles, actor ids,
+address keys. 6: the 993 failing checks (the 32-bit-only form), literal allocation sizes, `* 4` pointer arrays, the
+remaining vtable constants, the narrowings. 8: the D3D seam and backend's resource, state-table and push-buffer words.
+9: the first boot, and the crash reporter's 64-bit register report. With the failing checks disabled (a forced
+include defining `static_assert` away), the clang x86-64 build of both standalone executables already compiles and
+links (image base 0x400000, no dynamic base); nothing has run.
+
 ## 8. Work packages
 
 In order; each keeps the Windows 32-bit build unchanged (Ptr32 is `T *` there) and is tested by it. Sizes: S < 1 day of
@@ -435,8 +523,8 @@ agent time, M 1-2, L 3+.
 | # | Package | Size | Test |
 |---|---|---|---|
 | 0 | **Pre-checks on 32-bit**: `NIGHTFIRE_HEAP_PAD` (devtools, beside HEAP_SHIFT) in lockstep on all missions; an x87 call counter (devtools, calls per tick per function) on one mission; the float-store trap's caller list from the 32-bit listings. **Done 15 October 2026** (4.3, 7.4): the particle map's address key is the one size-dependent behaviour | S | runner round, lockstep 16/16 against lbase |
-| 1 | **Scaffolding**: an x86-64 configuration for the standalone targets only (MSVC x64 and the nf-cross clang); `NIGHTFIRE_STANDALONE` guards round the 61 adaptors; x86-only guards in xbeAbi.h/xbeOverload.h; x86-64 FFmpeg DLLs; the probe (`--probe-script`) in CI, its counts falling to 0 as the packages land | M | 32-bit: asm diff identical, lockstep exact; 64-bit: the probe's counts |
-| 2 | **`Ptr32<T>` and the game window** in the host layer (heaps, pages, thread stacks, `operator new`), the range check, `PtrFrom32`/`PtrTo32` | M | 32-bit: unchanged; 64-bit: a unit test of the window and the encoder |
+| 1 | **Scaffolding**: an x86-64 configuration for the standalone targets only (MSVC x64 and the nf-cross clang); `NIGHTFIRE_STANDALONE` guards round the 61 adaptors; x86-only guards in xbeAbi.h/xbeOverload.h; x86-64 FFmpeg DLLs; the probe (`--probe-script`) in CI, its counts falling to 0 as the packages land. **Done 15 October 2026** (7.5) | M | 32-bit: asm diff identical, lockstep exact; 64-bit: the probe's counts |
+| 2 | **`Ptr32<T>` and the game window** in the host layer (heaps, pages, thread stacks, `operator new`), the range check, `PtrFrom32`/`PtrTo32`. **Done 15 October 2026** (7.5), with the 110 file structures' members retyped; thread stacks not placed | M | 32-bit: unchanged; 64-bit: a unit test of the window and the encoder |
 | 3a | **EAGL loader and models**: Loader.cpp (sections, relocations, symbol values), `Model`, `TAR`, `GeoPrim`, `DrawArray`, `LoadedVertexBuffer`, the word streams of Model.cpp | L | 32-bit asm diff and LoaderShadow (injected build); 64-bit: loading every object on the disc (a devtools mode of the test executable comparing a digest of each loaded object with the 32-bit one's, pointers canonicalised) |
 | 3b | **Render methods and EAGLAnim data**: `RenderMethod`, the packets, the anim banks and delta data, skeletons | M | same |
 | 4 | **CARP**: `UData`/`UGroup`/`TagReference` decoding, the payload records (`AIElement`, `AnimInfo`, `WorldArticle`, ...), the 80 event `Record`s, the vtable constants of the data layer | L | the same digest over each track's resolved CARP |

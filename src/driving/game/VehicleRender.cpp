@@ -355,6 +355,7 @@ void RVehicle::ClearSharedBuffers() {
     MEM_fill(VehicleBuffers.damageZones, 0, sizeof(VehicleBuffers.damageZones));
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void FUN_00095f90() {
     __asm {
@@ -369,6 +370,7 @@ __declspec(naked) void FUN_00095f90() {
         ret
     }
 }
+#endif
 
 float SwitchEffectFade(uint32_t now, int32_t start) {
     if (start <= 0)

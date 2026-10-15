@@ -12,6 +12,7 @@ assembly and the calling conventions (docs/driving/64-bit.md).
                                                           --probe-script prints the script that makes them) and
                                                           compare its failed layout checks with this tool's
     python tools/pointer_layout_audit.py --probe-script   the 64-bit syntax check, for the nf-cross image
+    python tools/pointer_layout_audit.py --probe-count DIR  its logs' distinct error and warning lines, in one line
 
 It reads the standalone executable's sources (CMakeLists.txt: drivinginject's list less devtools and the injection,
 as the driving_standalone target takes it) and every header under src/driving and src/common, outside devtools/;
@@ -434,7 +435,9 @@ def parse_structs(sources):
     for s in structs:
         for mem in s.members:
             if mem.kind == "value":
-                if mem.base in pointer_typedefs:
+                if mem.base == "Ptr32":
+                    mem.kind = "ptr32"          # a 32-bit word on every host (platform/Ptr32.h)
+                elif mem.base in pointer_typedefs:
                     mem.kind = "handle"
                 elif mem.base == "long":
                     mem.kind = "long"
@@ -743,19 +746,24 @@ def asm_callers(items, sources):
 # The 64-bit syntax check's logs
 
 PROBE = r"""#!/bin/sh
-# The standalone sources compiled for x86-64 (syntax only), one log per source, with the 32-bit Windows headers the
-# nf-cross image has (the mingw-w64 headers serve both). Run from a checkout in which tools/preprocess.py has run:
-#   docker run --rm -v <checkout>:/w -w /w nf-cross:latest sh probe.sh OUTDIR < sources.txt
+# The standalone sources compiled for x86-64 (syntax only, NIGHTFIRE_X87=0 as the 64-bit build has it), one log per
+# source. With the x86-64 mingw-w64 sysroot (g++-mingw-w64-x86-64) its headers; without it, the nf-cross image's i686
+# headers (the mingw-w64 headers serve both). Run from a checkout in which tools/preprocess.py has run:
+#   docker run -i --rm -v <checkout>:/w -w /w nf-cross:latest sh probe.sh OUTDIR < sources.txt
 # (python tools/pointer_layout_audit.py --sources > sources.txt). The i686 control: TARGET=i686 sh probe.sh ...
+# JOBS compilers at a time (4).
 O=${1:-out64}
-GCC=/usr/lib/gcc/i686-w64-mingw32/13-posix/include/c++
+JOBS=${JOBS:-4}
 mkdir -p $O
 COMMON="-std=c++20 -fms-extensions -fasm-blocks -fno-exceptions -Wno-invalid-offsetof -D_CRT_SECURE_NO_WARNINGS \
- -DUNICODE -D_UNICODE -DNF_ANTIALIASING -DNIGHTFIRE_STANDALONE -Ithird_party/ffmpeg-prebuilt/include -ferror-limit=0 \
- -fsyntax-only -Wshorten-64-to-32 -Wpointer-to-int-cast -Wint-to-pointer-cast"
+ -DUNICODE -D_UNICODE -DNF_ANTIALIASING -DNIGHTFIRE_STANDALONE -DNIGHTFIRE_X87=0 -Ithird_party/ffmpeg-prebuilt/include \
+ -ferror-limit=0 -fsyntax-only -Wshorten-64-to-32 -Wpointer-to-int-cast -Wint-to-pointer-cast"
 if [ "$TARGET" = i686 ]; then
   F="-target i686-w64-mingw32 --sysroot=/usr"
+elif [ -f /usr/x86_64-w64-mingw32/include/windows.h ]; then
+  F="-target x86_64-w64-mingw32 --sysroot=/usr"
 else
+  GCC=/usr/lib/gcc/i686-w64-mingw32/13-posix/include/c++
   F="-target x86_64-w64-mingw32 -nostdinc++ -nostdlibinc -isystem $GCC -isystem $GCC/i686-w64-mingw32 \
  -isystem $GCC/backward -isystem /usr/i686-w64-mingw32/include"
 fi
@@ -763,7 +771,7 @@ n=0
 while read f; do
   n=$((n+1))
   clang++ $F $COMMON $f > $O/$(echo $f | tr '/' '_').log 2>&1 &
-  [ $((n % 4)) -eq 0 ] && wait
+  [ $((n % JOBS)) -eq 0 ] && wait
 done
 wait
 """
@@ -790,7 +798,7 @@ def read_clang_logs(directory):
                 cat = re.search(r"\[-W([\w-]+)\]", msg).group(1)
             else:
                 cat = "other"
-            seen.setdefault((cat, path, int(m.group(2))), msg)
+            seen.setdefault((cat, path, int(m.group(2))), m.group(3) + ": " + msg)
     return seen
 
 
@@ -803,12 +811,20 @@ def main():
     ap.add_argument("--file")
     ap.add_argument("--struct")
     ap.add_argument("--clang-log")
+    ap.add_argument("--probe-count", metavar="DIR", help="one line: the distinct errors and warnings in DIR's logs")
     ap.add_argument("--harness", action="store_true")
     ap.add_argument("--probe-script", action="store_true")
     ap.add_argument("--sources", action="store_true", help="print the standalone source list")
     args = ap.parse_args()
     if args.probe_script:
         sys.stdout.write(PROBE)
+        return
+    if args.probe_count:
+        seen = read_clang_logs(args.probe_count)
+        errors = Counter(k[0] for k, v in seen.items() if v.startswith("error"))
+        warnings = sum(1 for v in seen.values() if v.startswith("warning"))
+        print(f"x86-64 probe: {sum(errors.values())} distinct error lines, {warnings} warning lines ("
+              + ", ".join(f"{c} {n}" for c, n in errors.most_common()) + ")")
         return
     cpp = standalone_sources() + (HARNESS if args.harness else [])
     if args.sources:
@@ -879,7 +895,7 @@ def main():
     print(f"{len(sources)} files ({len(cpp)} sources{' with the harness' if args.harness else ''}), "
           f"{n_struct} structures, {n_bearing} with pointer-sized members\n")
     table([("structures in memory only (grow on 64-bit)", count["struct.memory"]),
-           ("structures read in place from files (LOADERS)", count["struct.file"]),
+           ("structures read in place from files with pointer-sized members", count["struct.file"]),
            ("candidates: records, files, packets by their comment", count["struct.candidate"]),
            ("members: pointers", member_kinds["pointer"]),
            ("members: function pointers", member_kinds["funcptr"]),
@@ -889,6 +905,7 @@ def main():
            ("members: size_t/uintptr_t and kin", member_kinds["sizevar"]),
            ("members: embedded pointer-bearing structures", member_kinds["embedded"]),
            ("members: long (8 bytes on LP64 only)", count["member.long"]),
+           ("members: Ptr32 (32-bit on every host)", member_kinds["ptr32"]),
            ("pointer-sized members of the structures read from files",
             sum(1 for s in structs if s.klass == "file" for m in s.members
                 if m.kind in ("pointer", "funcptr", "handle", "vtable", "sizevar")))], ("Structures", "Count"))

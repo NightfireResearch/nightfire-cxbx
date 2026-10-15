@@ -55,7 +55,7 @@ struct AICommand {
                                     //       (negative: the far side)
     union {                         // +0x50 a CARP reference (AICommandResolver's)
         CARP::TagReference secondaryTargetTag;
-        void *secondaryTarget;
+        Ptr32<void> secondaryTarget;
     };
     uint8_t unknown54[4];
     float altitude;                 // +0x58 a helicopter's height over the ground, at least 3
@@ -77,7 +77,7 @@ struct AICommand {
     uint8_t unknown7f;              // +0x7f the navigator's unknown04
     union {                         // +0x80 a CARP reference: the spline in navigate mode 5
         CARP::TagReference navigateTargetTag;
-        CARP::AISpline *navigateTarget;
+        Ptr32<CARP::AISpline> navigateTarget;
     };
     uint8_t unknown84;              // +0x84 the navigator's unknownB1
     uint8_t unknown85;              // +0x85 the navigator's unknownB2
@@ -177,5 +177,6 @@ const uint32_t kAIVehicleVtable = uint32_t(reinterpret_cast<uintptr_t>(Vtable_AI
 
 // AIGroundVehicle, derived from AIVehicle
 #include "AIGroundVehicle.h"
+#include "../platform/Ptr32.h"
 
 #endif // DRIVING_GAME_AIVEHICLE_H_

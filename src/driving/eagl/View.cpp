@@ -718,6 +718,7 @@ int32_t __cdecl ShortAt(const uint8_t *p, int offset) {
 
 }  // namespace
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // AUTOLTCG
 __declspec(naked) void FUN_000ee130() {
     __asm {
@@ -798,6 +799,7 @@ __declspec(naked) void FUN_000ee180() {
         ret
     }
 }
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // TextureRenderContext

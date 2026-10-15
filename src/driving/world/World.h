@@ -19,6 +19,7 @@
 #include "../data/AttributeSet.h"
 #include "../data/Carp.h"                 // CARP::Instance
 #include "../render/RPathHandle.hpp"
+#include "../platform/Ptr32.h"
 
 class RSceneObj;
 class UGroup;
@@ -54,10 +55,10 @@ struct ProcAnimState {
     uint8_t flags;                      // +0x05 ProcAnimFlags
     uint8_t unknown06;
     uint8_t article;                    // +0x07 RSceneObj::UseArticle's index; 0xff none
-    RSceneObj *sceneObj;                // +0x08 made by Open, again by Reset
+    Ptr32<RSceneObj> sceneObj;          // +0x08 made by Open, again by Reset
     // A path's (type 2, RPathEngine's): the CARP resolver resolves the path and the master
-    CARP::PathInfo *path;               // +0x0c
-    CARP::Instance *master;             // +0x10 the instance whose path's time this one keeps behind
+    Ptr32<CARP::PathInfo> path;         // +0x0c
+    Ptr32<CARP::Instance> master;       // +0x10 the instance whose path's time this one keeps behind
     float startTime;                    // +0x14 the parametric time it starts at
     float speed;                        // +0x18
     uint8_t untransformed;              // +0x1c the path's matrix is applied as it is, not through kPathAxes
@@ -178,7 +179,7 @@ struct WorldModel {
 // An article's model for view distances up to `distance` (the last one's beyond it too)
 struct ArticleLod {
     float distance;
-    EAGL::Model *model;
+    Ptr32<EAGL::Model> model;
 };
 
 // What a render instance's article reference (CARP::Instance::articleDesc) leads to.
@@ -195,9 +196,9 @@ struct WorldArticle {
         kNoFog = 0x01,                  // drawn with the fog off
     };
 
-    WorldModel *model;                  // +0x00
-    ArticleEffect *effects;             // +0x04 NULL for none; a list ended by a zero type
-    CARP::AnimInfo *animInfos;          // +0x08 its animations (RAnimEngine's), NULL for none
+    Ptr32<WorldModel> model;            // +0x00
+    Ptr32<ArticleEffect> effects;       // +0x04 NULL for none; a list ended by a zero type
+    Ptr32<CARP::AnimInfo> animInfos;    // +0x08 its animations (RAnimEngine's), NULL for none
     uint8_t unknown0C[0xe];
     uint8_t systemId;                   // +0x1a RAnimEngine::Handle::Create's copies of animInfos[0]'s ids
     uint8_t mirroredSystemId;           // +0x1b

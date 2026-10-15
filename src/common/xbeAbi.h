@@ -55,6 +55,9 @@ template <int InRegisters, class T, class... Rest> struct XbeFastcall<InRegister
     static constexpr int registers = Next::registers;
 };
 
+// x86-64 has one calling convention, so the conventions below would all be one type there; the checks are the
+// 32-bit injection's, and a 64-bit build (the standalone engine's) has nothing to check.
+#if defined(_M_IX86) || defined(__i386__)
 template <class F> struct XbeAbi;
 
 template <class R, class... A> struct XbeAbi<R (__cdecl *)(A...)> {
@@ -114,5 +117,8 @@ template <class R, class C, class... A> struct XbeAbi<R (__thiscall C::*)(A...) 
     static_assert(!(readsEdx) || XbeAbi<F>::edx,                                                                \
                   what ": the original reads EDX on entry (a __fastcall argument), and this declaration "        \
                   "passes nothing there")
+#else
+#define XBE_ABI_CHECK(F, pops_, readsEcx, readsEdx, what) static_assert(true, what)
+#endif
 
 #endif // COMMON_XBEABI_H_

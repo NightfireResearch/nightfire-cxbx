@@ -177,6 +177,7 @@ void StripTriangleNormal(const StripVertex *triangle, Coord3 *normal) {
     static_assert(std::bit_cast<uint32_t>(0.9999f) == 0x3f7ff972, "the steepest normal");
 }
 
+#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
 // FindFaceInTriStrip's helper: the triangle in EAX, the normal in ESI; EAX, ECX and EDX not kept (the original's
 // calls do not keep them either).
 // AUTOLTCG
@@ -189,6 +190,7 @@ __declspec(naked) void FUN_000beff0() {
         ret
     }
 }
+#endif
 
 // FUNC_AT(0x000bf0e0)
 const StripVertex* WCollisionMgr::FindFaceInTriStrip(const MATRIX4 *matrix, const Coord3 *point,

@@ -22,6 +22,7 @@
 #include "../data/Carp.h"               // CARP::AIElement, CARP::Instance
 #include "../data/CoordConvert.h"       // Coord3, Coord4
 #include "Sentry.h"                     // SentrySetup
+#include "../platform/Ptr32.h"
 
 class RSceneObj;
 class UGroup;
@@ -60,7 +61,7 @@ class ESetReflectiveObject : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
+        Ptr32<CARP::AIElement> element;
     };
 
     CARP::AIElement *element;           // +0x04 the CARP element, not redirected; NULL: the player's
@@ -76,7 +77,7 @@ class ESetRenderVariation : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::Instance *instance;
+        Ptr32<CARP::Instance> instance;
         uint32_t variation;
     };
 
@@ -109,7 +110,7 @@ public:
     struct Record {
         uint32_t unknown00;
         int32_t weapon;
-        const Coord3 *trigger;
+        Ptr32<const Coord3> trigger;
         float range;
     };
 
@@ -175,7 +176,7 @@ class ESetVisualDamage : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
+        Ptr32<CARP::AIElement> element;
         int32_t damage[4];
     };
 
@@ -192,9 +193,9 @@ class ESetWaypoint : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        const ObjectiveMarker *marker;
-        const ObjectiveKind2Target *target;
-        CARP::AIElement *element;
+        Ptr32<const ObjectiveMarker> marker;
+        Ptr32<const ObjectiveKind2Target> target;
+        Ptr32<CARP::AIElement> element;
     };
 
     const ObjectiveMarker *marker;      // +0x04
@@ -331,8 +332,8 @@ class ESetVideo : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        const char *movie;
-        const char *subtitles;
+        Ptr32<const char> movie;
+        Ptr32<const char> subtitles;
     };
 
     const char *movie;                  // +0x04 under the locale's directory
@@ -350,8 +351,8 @@ class EStreamEvent : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        const char *stream;
-        const char *name;
+        Ptr32<const char> stream;
+        Ptr32<const char> name;
         int32_t fadeTime;
         int32_t loop;
         int32_t onlyAlive;
@@ -375,7 +376,7 @@ class ESwitchStingerChannel : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        const char *channel;
+        Ptr32<const char> channel;
     };
 
     const char *channel;                // +0x04
@@ -389,7 +390,7 @@ class EStopSoundPos : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        const Coord3 *position;
+        Ptr32<const Coord3> position;
     };
 
     const Coord3 *position;             // +0x04 every sound exactly there is deleted
@@ -494,7 +495,7 @@ class EShowInstanceStatic : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::Instance *instance;
+        Ptr32<CARP::Instance> instance;
     };
 
     CARP::Instance *instance;           // +0x04
@@ -514,9 +515,9 @@ class EEffectEvent : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        ArticleEffect *effect;
-        void *unknown08;
-        EventSceneRef *ref;
+        Ptr32<ArticleEffect> effect;
+        Ptr32<void> unknown08;
+        Ptr32<EventSceneRef> ref;
         int32_t zone;
     };
 
@@ -559,7 +560,7 @@ class ESwitchEffectOff : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
+        Ptr32<CARP::AIElement> element;
         int32_t which;
     };
 
@@ -575,7 +576,7 @@ class ESwitchEffectOn : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
+        Ptr32<CARP::AIElement> element;
         int32_t which;
     };
 
@@ -593,7 +594,7 @@ class ETargetBeaconOnOff : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
+        Ptr32<CARP::AIElement> element;
         int32_t on;
     };
 
@@ -615,14 +616,14 @@ class ESpawnExplosion : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        PhysicsObject *source;          // a CARP reference
+        Ptr32<PhysicsObject> source;    // a CARP reference
         uint32_t kind;
         uint32_t damageKind;
         float force;
         uint32_t surface;
-        ArticleEffect *effect;
+        Ptr32<ArticleEffect> effect;
         uint32_t unknown1c;
-        const char *effectName;
+        Ptr32<const char> effectName;
     };
 
     Coord4 position;                    // +0x04
@@ -657,13 +658,13 @@ class ESpawnExplosionStatic : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        const Coord3 *position;
-        CARP::Instance *instance;
+        Ptr32<const Coord3> position;
+        Ptr32<CARP::Instance> instance;
         uint32_t kind;
         uint32_t damageKind;
         float force;
         uint32_t surface;
-        const char *effectName;
+        Ptr32<const char> effectName;
     };
 
     const Coord3 *position;             // +0x04 NULL: the instance's
@@ -687,7 +688,7 @@ public:
         uint32_t unknown00;
         float force;
         uint32_t surface;
-        ArticleEffect *effect;
+        Ptr32<ArticleEffect> effect;
     };
 
     Coord4 position;                    // +0x04 the event data's
@@ -710,7 +711,7 @@ class ESpawnSentry : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::Instance *instance;
+        Ptr32<CARP::Instance> instance;
         SentrySetup setup;
         float hitPoints;
         uint32_t holdSteps;
@@ -740,7 +741,7 @@ public:
     struct Record {
         uint32_t unknown00;
         float mass;
-        CARP::Instance *instance;
+        Ptr32<CARP::Instance> instance;
         float lifetime;
     };
 
@@ -763,7 +764,7 @@ public:
     struct Record {
         uint32_t unknown00;
         float mass;
-        CARP::Instance *instance;
+        Ptr32<CARP::Instance> instance;
         float lifetime;
     };
 
@@ -786,9 +787,9 @@ class ESpawnSmackable : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        UGroup *model;
+        Ptr32<UGroup> model;
         uint32_t article;
-        CARP::Instance *instance;
+        Ptr32<CARP::Instance> instance;
     };
 
     UGroup *model;                      // +0x04 NULL: none
@@ -826,9 +827,9 @@ class EWakeupSmackable : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        RSceneObj *sceneObj;
-        CARP::Instance *instance;
-        EventSceneRef *ref;
+        Ptr32<RSceneObj> sceneObj;
+        Ptr32<CARP::Instance> instance;
+        Ptr32<EventSceneRef> ref;
     };
 
     RSceneObj *sceneObj;                // +0x04 NULL: the reference's

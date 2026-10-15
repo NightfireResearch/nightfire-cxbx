@@ -17,6 +17,7 @@
 class DynamicLoader;
 
 #include "../gfx/D3D8Shaders.h"   // the shaders a method carries
+#include "../platform/Ptr32.h"
 
 namespace EAGL {
 
@@ -29,7 +30,7 @@ struct TAR;
 // One parameter of a GeoPrim: what the render method's packets read, indexed by CurrentVariation * stride.
 struct GeoPrimParam {                // 8
     uint32_t count;                  // +0x00 a count or a name
-    uint8_t *data;                   // +0x04
+    Ptr32<uint8_t> data;             // +0x04
 
     // The game's code points parameters at its own records
     void SetData(const void *p) { data = (uint8_t *)p; }
@@ -38,7 +39,7 @@ struct GeoPrimParam {                // 8
 static_assert(sizeof(GeoPrimParam) == 8, "a GeoPrim parameter is 8 bytes");
 
 struct GeoPrim {
-    RenderMethod *method;            // +0x00
+    Ptr32<RenderMethod> method;      // +0x00
     GeoPrimParam params[1];          // +0x04 ... as many as the method's packets read
 };
 
@@ -130,9 +131,9 @@ static_assert(sizeof(InlineStreamPacket) == 0x10, "an inline stream packet is 4 
 struct DynamicStreamPacket : ParamPacket {
     uint32_t stream;                 // +0x08
     uint32_t vertexStride;           // +0x0c
-    DynamicVertexBuffer *buffer;     // +0x10
+    Ptr32<DynamicVertexBuffer> buffer; // +0x10
     int32_t capacity;                // +0x14 the count * 4 the buffer was made for
-    uint8_t *source;                 // +0x18 the array the buffer was made for
+    Ptr32<uint8_t> source;           // +0x18 the array the buffer was made for
 };
 static_assert(sizeof(DynamicStreamPacket) == 0x1c, "a dynamic stream packet is 7 dwords");
 
@@ -198,19 +199,19 @@ struct PixelShader {                 // 4, "EAGL::PixelShader new"
 static_assert(sizeof(PixelShader) == 4, "a PixelShader is a handle");
 
 struct RenderMethod {                // 0x34 (PS2: EAGL::RenderMethod)
-    Packet *packets;                 // +0x00 packet stream; an owned copy when cloned (its size in bytes at [-1])
+    Ptr32<Packet> packets;           // +0x00 packet stream; an owned copy when cloned (its size in bytes at [-1])
     int numVariants;                 // +0x04 number of shader variants
-    const void *declaration;         // +0x08 vertex declaration
-    const void **vsMicrocode;        // +0x0c vertex shader programs, one per variant
-    VertexShader **vertexShaders;    // +0x10 created vertex shaders
-    const uint8_t **psDefinitions;   // +0x14 pixel shader definitions
-    PixelShader **pixelShaders;      // +0x18 created pixel shaders
-    RenderMethod *next;              // +0x1c list at 0x0023ff20 (constructed) / 0x0023ff24 (children waiting)
-    const char **paramNames;         // +0x20 parameter names, NULL-terminated (DrawArray looks them up)
+    Ptr32<const void> declaration;   // +0x08 vertex declaration
+    Ptr32<const void *> vsMicrocode; // +0x0c vertex shader programs, one per variant
+    Ptr32<VertexShader *> vertexShaders; // +0x10 created vertex shaders
+    Ptr32<const uint8_t *> psDefinitions; // +0x14 pixel shader definitions
+    Ptr32<PixelShader *> pixelShaders; // +0x18 created pixel shaders
+    Ptr32<RenderMethod> next;        // +0x1c list at 0x0023ff20 (constructed) / 0x0023ff24 (children waiting)
+    Ptr32<const char *> paramNames;  // +0x20 parameter names, NULL-terminated (DrawArray looks them up)
     uint32_t variantHalf;            // +0x24 0: the second half of each pixel shader definition is created
     uint32_t cloned;                 // +0x28 1 when made from a parent
-    RenderMethod *parent;            // +0x2c
-    const char *name;                // +0x30
+    Ptr32<RenderMethod> parent;      // +0x2c
+    Ptr32<const char> name;          // +0x30
 
     RenderMethod* Construct(Packet *packets, int numVariants, const void *declaration, const void **vsMicrocode,
                             VertexShader **vertexShaders, const uint8_t **psDefinitions,
@@ -222,9 +223,9 @@ struct RenderMethod {                // 0x34 (PS2: EAGL::RenderMethod)
     void Nop1040(uint32_t unused);                                             // 0x000f1040 (empty, unreferenced)
     void CreateShaders();                                                      // 0x000f1050 (invented)
     void SetVertexShaderTable(VertexShader **const *table);                    // 0x000f1180 (invented, unreferenced)
-    VertexShader ***GetVertexShaderTable();                                    // 0x000f1190 (invented, unreferenced)
+    Ptr32<VertexShader *> *GetVertexShaderTable();                             // 0x000f1190 (invented, unreferenced)
     void SetPixelShaderTable(PixelShader **const *table);                      // 0x000f11a0 (invented, unreferenced)
-    PixelShader ***GetPixelShaderTable();                                      // 0x000f11b0 (invented, unreferenced)
+    Ptr32<PixelShader *> *GetPixelShaderTable();                               // 0x000f11b0 (invented, unreferenced)
     RenderMethod* ConstructChild(RenderMethod *parent);                        // 0x000f1270 (invented)
     void Destruct();                                                           // 0x000f12c0
     void DeleteShaders();                                                      // 0x000f1300 (invented)
@@ -233,7 +234,7 @@ static_assert(sizeof(RenderMethod) == 0x34, "a RenderMethod is 0x34 bytes");
 
 // The loader's "VertexBuffer" object.
 struct LoadedVertexBuffer {
-    D3DResource *header;             // +0x00 the D3D8 vertex buffer header (relocated pointer)
+    Ptr32<D3DResource> header;       // +0x00 the D3D8 vertex buffer header (relocated pointer)
     uint32_t unknown04[3];           // +0x04
     uint32_t fileOffset;             // +0x10 the data's offset in the ELF image
 };
@@ -339,9 +340,9 @@ struct DrawArray {
     struct UserVar { uint8_t *data; uint32_t count; };
 
     uint32_t primitiveType;          // +0x00
-    DynamicModel *model;             // +0x04
-    GeoPrim *geoPrim;                // +0x08
-    UserVar *userVars;               // +0x0c "mUserVarData", one per parameter
+    Ptr32<DynamicModel> model;       // +0x04
+    Ptr32<GeoPrim> geoPrim;          // +0x08
+    Ptr32<UserVar> userVars;         // +0x0c "mUserVarData", one per parameter
     int paramCount;                  // +0x10
     uint32_t unknown14;              // +0x14
     uint8_t locked;                  // +0x18

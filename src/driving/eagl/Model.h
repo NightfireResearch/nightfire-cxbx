@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include "Tar.h"
+#include "../platform/Ptr32.h"
 
 namespace EAGL {
 
@@ -18,8 +19,8 @@ struct DrawArray;
 // A model's morph weights (invented name; e8b50..e8bc0 work on its first three words, MorphModel on the rest).
 struct MorphWeights {
     uint32_t count;                  // +0x00 the accessors accept an index up to and including it
-    void **pointers;                 // +0x04
-    float *weights;                  // +0x08
+    Ptr32<void *> pointers;          // +0x04
+    Ptr32<float> weights;            // +0x08
     uint32_t unknown0c;              // +0x0c
     uint32_t groupCount;             // +0x10 number of morph groups
     uint32_t groups[1];              // +0x14 per group: its name, then its sub-blocks (MorphModel)
@@ -89,22 +90,22 @@ struct Model {                       // 0xd8; built by the loader from a "Model"
     float sphereRadius;              // +0x98
     int32_t geometryCount;           // +0x9c
     union {                          // +0xa0
-        const char **geometryNames;  //       the geometry names
+        Ptr32<const char *> geometryNames; //       the geometry names
         GeometryEnable defaultEnable;  //     a model built by Construct: its one enable entry {0, 1}
     };
-    Model *sameMatrixChildren;       // +0xa4 drawn with the parent's matrix (Ghidra: numChildren)
-    Model *ownMatrixChildren;        // +0xa8 drawn with their own matrix (Ghidra: children)
-    Model *relativeChildren;         // +0xac drawn with their matrix times the parent's
-    Model *next;                     // +0xb0 next sibling in one of those lists
-    const char *name;                // +0xb4
-    uint8_t *morphData;              // +0xb8 a word, then {name, n, n MorphRecords} ... 0
-    uint32_t *tarList;               // +0xbc {name, count, TAR* x count} ... 0
+    Ptr32<Model> sameMatrixChildren; // +0xa4 drawn with the parent's matrix (Ghidra: numChildren)
+    Ptr32<Model> ownMatrixChildren;  // +0xa8 drawn with their own matrix (Ghidra: children)
+    Ptr32<Model> relativeChildren;   // +0xac drawn with their matrix times the parent's
+    Ptr32<Model> next;               // +0xb0 next sibling in one of those lists
+    Ptr32<const char> name;          // +0xb4
+    Ptr32<uint8_t> morphData;        // +0xb8 a word, then {name, n, n MorphRecords} ... 0
+    Ptr32<uint32_t> tarList;         // +0xbc {name, count, TAR* x count} ... 0
     int32_t variation;               // +0xc0 copied to CurrentVariation (Ghidra: tarList)
-    GeometryEnable *enableTable;     // +0xc4 one per geometry block
+    Ptr32<GeometryEnable> enableTable; // +0xc4 one per geometry block
     int32_t on;                      // +0xc8
-    uint32_t *drawList;              // +0xcc entries {0xffff, GeoPrim*} and skippable blocks (Ghidra: optimized)
-    uint32_t *patch;                 // +0xd0 {count, {address, value} x count}, applied by Patch before drawing
-    MorphWeights *morphWeights;      // +0xd4
+    Ptr32<uint32_t> drawList;        // +0xcc entries {0xffff, GeoPrim*} and skippable blocks (Ghidra: optimized)
+    Ptr32<uint32_t> patch;           // +0xd0 {count, {address, value} x count}, applied by Patch before drawing
+    Ptr32<MorphWeights> morphWeights; // +0xd4
 
     const char* GetName();                                                   // 0x000e8be0 (invented)
     Model* GetChild(const char *childName);                                  // 0x000e8bf0

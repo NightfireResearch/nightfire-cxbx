@@ -5,6 +5,7 @@
 // sheet's, matched by argument count and order; Ghidra has the Xbox functions unnamed.
 
 #include "../Transform.h"
+#include "../../platform/Ptr32.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -49,7 +50,7 @@ struct Skeleton {
     uint32_t unknown00;
     uint32_t unknown04;
     int32_t count;                   // +0x08
-    float *lengthScales;             // +0x0c per bone, the 4th pose float of GetStillPose; NULL for 1
+    Ptr32<float> lengthScales;       // +0x0c per bone, the 4th pose float of GetStillPose; NULL for 1
     SkeletonBone bones[1];           // +0x10 [count]
 
     void BuildBoneMask(int bone, bool descendants, BoneMask *mask, int lowest);           // 0x000f88c0

@@ -29,12 +29,16 @@ template <class Signature> struct XbeOverload;
 
 template <class R, class... A> struct XbeOverload<R(A...)> {
     typedef R (__cdecl *Cdecl)(A...);
+#if defined(_M_IX86) || defined(__i386__)   // on x86-64 the three conventions are one
     typedef R (__stdcall *Stdcall)(A...);
     typedef R (__fastcall *Fastcall)(A...);
+#endif
 
     static Cdecl Of(Cdecl f) { return f; }
+#if defined(_M_IX86) || defined(__i386__)
     static Stdcall Of(Stdcall f) { return f; }
     static Fastcall Of(Fastcall f) { return f; }
+#endif
     template <class C> static auto Of(R (C::*f)(A...)) -> R (C::*)(A...) { return f; }
 };
 

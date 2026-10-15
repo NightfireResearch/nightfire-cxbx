@@ -110,3 +110,26 @@ jobs:
             build/linux/drivinginject.dll
             build/linux/av*.dll
             build/linux/FFmpeg-*.txt
+
+  # The 64-bit standalone driving engine's burn-down (docs/driving/64-bit.md): its sources compiled for x86-64 with
+  # clang and the x86-64 mingw-w64 headers, syntax only, and the distinct error lines counted into the job summary.
+  # A report rather than a gate until the count reaches 0 and the windows-x64 preset links.
+  probe64:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install clang and the x86-64 mingw-w64 headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang g++-mingw-w64-x86-64
+
+      - name: Generate the injection tables and layouts
+        run: python3 tools/preprocess.py
+
+      - name: Compile the standalone sources for x86-64
+        run: |
+          python3 tools/pointer_layout_audit.py --probe-script > probe.sh
+          python3 tools/pointer_layout_audit.py --sources > sources.txt
+          JOBS=4 sh probe.sh out64 < sources.txt
+          python3 tools/pointer_layout_audit.py --probe-count out64 | tee -a "$GITHUB_STEP_SUMMARY"

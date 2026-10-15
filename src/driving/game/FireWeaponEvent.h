@@ -14,6 +14,7 @@
 
 #include "../EventManager.hpp"            // Event
 #include "../../common/xbeClass.h"
+#include "../platform/Ptr32.h"
 
 class ActWeapon;
 class RSceneObj;
@@ -27,7 +28,7 @@ class EFireWeapon : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        ArticleEffect *effect;
+        Ptr32<ArticleEffect> effect;
     };
 
     ArticleEffect *effect;              // +0x04 the muzzle; NULL: the instance's frame

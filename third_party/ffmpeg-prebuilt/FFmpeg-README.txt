@@ -8,4 +8,8 @@ Built by tools/fmv/build_ffmpeg.sh with the i686 mingw-w64 cross compiler and th
 
     configure --target-os=mingw32 --arch=x86 --cross-prefix=i686-w64-mingw32- --enable-cross-compile --enable-shared --disable-static --disable-programs --disable-doc --disable-network --disable-autodetect --disable-everything --enable-protocol=file --enable-demuxer=xmv --enable-decoder=wmv2,adpcm_ima_xbox,adpcm_ima_wav,eamad,adpcm_ea_r1 --disable-avdevice --disable-avfilter --disable-swscale --disable-swresample --enable-w32threads --extra-ldflags=-static-libgcc
 
-To rebuild: git submodule update --init third_party/ffmpeg, then sh tools/fmv/build_ffmpeg.sh.
+bin-x64 holds the same for x86-64 (--arch=x86_64 --cross-prefix=x86_64-w64-mingw32-, the rest as above), for the
+64-bit standalone driving engine.
+
+To rebuild: git submodule update --init third_party/ffmpeg, then sh tools/fmv/build_ffmpeg.sh, and
+sh tools/fmv/build_ffmpeg.sh windows-x86_64 for bin-x64.

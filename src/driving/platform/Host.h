@@ -24,6 +24,13 @@
 
 typedef void *HostHandle;
 
+// ULONG_PTR and DWORD_PTR: unsigned long on 32-bit hosts and on LP64 ones, 64 bits on 64-bit Windows
+#ifdef _WIN64
+typedef unsigned long long HostUlongPtr;
+#else
+typedef unsigned long HostUlongPtr;
+#endif
+
 #define HOST_INVALID_HANDLE  ((HostHandle)(intptr_t)-1)   // INVALID_HANDLE_VALUE: a file that did not open
 #define HOST_CURRENT_THREAD  ((HostHandle)(intptr_t)-2)   // GetCurrentThread()'s pseudo-handle
 #define HOST_INFINITE        0xffffffffu
@@ -37,8 +44,8 @@ typedef void *HostHandle;
 #define HOST_MAX_PATH        260
 
 typedef unsigned long (__stdcall *HostThreadStart)(void *parameter);
-typedef void (__stdcall *HostTimerCallback)(unsigned id, unsigned message, unsigned long user,
-                                            unsigned long reserved1, unsigned long reserved2);
+typedef void (__stdcall *HostTimerCallback)(unsigned id, unsigned message, HostUlongPtr user,
+                                            HostUlongPtr reserved1, HostUlongPtr reserved2);
 
 // ---- errors: the calling thread's last error, a Win32 error number
 unsigned long HostGetLastError(void);
@@ -93,6 +100,15 @@ size_t HostHeapSize(HostHandle heap, unsigned long flags, const void *block);
 void *HostAllocatePages(size_t size, uintptr_t lowest, uintptr_t limit);
 void HostFreePages(void *block);
 
+// ---- the game window (a 64-bit host; GameWindow.cpp): address space below 4 GB, which every address the game keeps in
+// its files' data must lie in (Ptr32.h). HostReserveLow reserves `size` bytes, inaccessible, at the lowest free address
+// at or above `lowest` that ends below 4 GB (NULL if there is none); HostCommit makes part of it readable and writable.
+// The heap functions above allocate there, and the pages stay below 4 GB.
+#if UINTPTR_MAX > 0xffffffffu
+void *HostReserveLow(size_t size, uintptr_t lowest);
+int HostCommit(void *address, size_t size);
+#endif
+
 // ---- files, by host path. Access, share, disposition and attributes are CreateFile's.
 HostHandle HostCreateFile(const char *path, unsigned long access, unsigned long share, unsigned long disposition,
                           unsigned long attributes);
@@ -121,7 +137,7 @@ unsigned long HostTimeMs(void);   // timeGetTime: milliseconds, wrapping
 // The multimedia timer: a callback on a thread of the host's every delay ms (periodic, flags 1) or once.
 // HostRaiseTimerResolution asks for 1 ms scheduling for the whole process.
 int HostRaiseTimerResolution(void);
-unsigned HostSetTimerEvent(unsigned delayMs, unsigned resolutionMs, HostTimerCallback callback, unsigned long user,
+unsigned HostSetTimerEvent(unsigned delayMs, unsigned resolutionMs, HostTimerCallback callback, HostUlongPtr user,
                            unsigned flags);
 
 struct HostSystemTime {          // SYSTEMTIME
@@ -148,7 +164,7 @@ unsigned long HostGetEnvironment(const char *name, char *value, unsigned long si
 void HostExitProcess(unsigned exitCode);
 void HostDebugBreak(void);
 // RaiseException: the C++ runtime's throw (CRuntimeStd.cpp)
-void HostRaiseException(unsigned long code, unsigned long flags, unsigned long count, const unsigned long *arguments);
+void HostRaiseException(unsigned long code, unsigned long flags, unsigned long count, const HostUlongPtr *arguments);
 // IsBadReadPtr / IsBadWritePtr
 int HostIsBadReadPtr(const void *pointer, size_t bytes);
 int HostIsBadWritePtr(void *pointer, size_t bytes);

@@ -12,6 +12,15 @@
       "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
     },
     {
+      "name": "windows-x64",
+      "displayName": "Windows - MSVC (Visual Studio 2022, x64), the standalone driving engine",
+      "description": "64-bit: driving_standalone and driving_standalone_test only, x87 off. See docs/driving/64-bit.md.",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/windows-x64",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    },
+    {
       "name": "macos",
       "displayName": "macOS - clang with the mingw-w64 sysroot, cross-compiling to Windows",
       "description": "Needs mingw-w64 and ninja. Works on Linux too. See docs/macos-build.md.",
@@ -34,6 +43,8 @@
   ],
   "buildPresets": [
     { "name": "windows", "configurePreset": "windows", "configuration": "Release" },
+    { "name": "windows-x64", "configurePreset": "windows-x64", "configuration": "Release",
+      "targets": [ "driving_standalone", "driving_standalone_test" ] },
     { "name": "macos", "configurePreset": "macos" },
     { "name": "linux", "configurePreset": "linux" }
   ]

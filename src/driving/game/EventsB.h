@@ -23,6 +23,7 @@
 #include "../data/Carp.h"                 // CARP::Instance, CARP::TagReference
 #include "../world/CollisionTypes.h"      // Coord4, WindowHit
 #include "../../common/xbeClass.h"        // offsetof on a derived class without clang's warning
+#include "../platform/Ptr32.h"
 
 class RSceneObj;
 class UGroup;
@@ -382,7 +383,7 @@ class EFireEventList : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        TriggerEvents *events;
+        Ptr32<TriggerEvents> events;
     };
 
     TriggerEvents *events;              // +0x04
@@ -399,7 +400,7 @@ XBE_CLASS_SIZE(EFireEventList, 8);
 class EFireRandomTrigger : public Event {
 public:
     struct Choice {
-        WTrigger *trigger;              // NULL: nothing fires
+        Ptr32<WTrigger> trigger;        // NULL: nothing fires
         float weight;
     };
     struct Record {
@@ -430,7 +431,7 @@ class EFireTriggerSpeedCondition : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        WTrigger *trigger;
+        Ptr32<WTrigger> trigger;
         float speed;
         int32_t below;
     };
@@ -493,7 +494,7 @@ class EHideInstanceStatic : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::Instance *instance;
+        Ptr32<CARP::Instance> instance;
     };
 
     CARP::Instance *instance;           // +0x04 NULL: nothing to do
@@ -558,7 +559,7 @@ class EKillObject : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::Instance *instance;
+        Ptr32<CARP::Instance> instance;
     };
 
     CARP::Instance *instance;           // +0x04
@@ -577,7 +578,7 @@ class EKillSentry : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::Instance *instance;
+        Ptr32<CARP::Instance> instance;
     };
 
     CARP::Instance *instance;           // +0x04 NULL: nothing to do
@@ -596,7 +597,7 @@ class EMuzzleFlash : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        ArticleEffect *effect;
+        Ptr32<ArticleEffect> effect;
     };
 
     ArticleEffect *effect;              // +0x04
@@ -618,7 +619,7 @@ public:
     struct Record {
         uint32_t unknown00;
         float strength;
-        const Coord3 *trigger;
+        Ptr32<const Coord3> trigger;
     };
 
     float strength;                     // +0x04
@@ -677,8 +678,8 @@ class EKickAIElement : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
-        const Coord3 *trigger;
+        Ptr32<CARP::AIElement> element;
+        Ptr32<const Coord3> trigger;
         float force;
     };
 
@@ -700,7 +701,7 @@ class EKillAIElement : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
+        Ptr32<CARP::AIElement> element;
         int32_t scores;
     };
 
@@ -722,8 +723,8 @@ class EMaybeActivateAIElement : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::AIElement *element;
-        CARP::AIElement *vehicleElement;
+        Ptr32<CARP::AIElement> element;
+        Ptr32<CARP::AIElement> vehicleElement;
         int32_t chance;
     };
 
@@ -775,8 +776,8 @@ class EPathChangeThrottleStatic : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::Instance *instance;
-        CARP::AIElement *element;
+        Ptr32<CARP::Instance> instance;
+        Ptr32<CARP::AIElement> element;
         uint32_t accelDelay;
         float acceleration;
         float throttle;
@@ -824,8 +825,8 @@ class EPathMultiplyThrottleStatic : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::Instance *instance;
-        CARP::AIElement *element;
+        Ptr32<CARP::Instance> instance;
+        Ptr32<CARP::AIElement> element;
         uint32_t accelDelay;
         float acceleration;
         float scale;
@@ -862,9 +863,9 @@ class EPathSFX : public Event {
 public:
     struct Record {
         uint32_t unknown00;
-        CARP::Instance *instance;
-        const char *patch;
-        const char *unknown0c;
+        Ptr32<CARP::Instance> instance;
+        Ptr32<const char> patch;
+        Ptr32<const char> unknown0c;
         float minDistance;
         float maxDistance;
     };
