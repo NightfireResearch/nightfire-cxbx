@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <atomic>
+
 // ---------------------------------------------------------------------------------------------------------------
 // EA's file system layer, as the driving engine has it: what lies between a request such as
 // FILE_load("data\\sim\\...") and the Win32 file calls. docs/driving/filesys.md describes the original; each
@@ -859,15 +861,21 @@ static void FsWorkerThread(void *parameter) {                      // 0x0010c110
             FsTrace(op->type, op->priority, op->type == OP_ADDBIG ? ((BigFile *)op->arg2)->name
                                             : (op->flags & OPF_OWNSNAME) ? (const char *)op->arg2 : NULL,
                     op->status, op->type == OP_READ || op->type == OP_WRITE ? op->arg1 : op->slot);
+        // Ours: the callback and what it is passed are taken before the op is filed as done, since from then on
+        // another thread may complete the op and reuse it for a new one; the original reads them afterwards
         Q_lock(&w->pending);
         Q_pushfront(&w->done, op);
         w->current = NULL;
-        Q_unlock(&w->pending);
-        if (op->callback != NULL) {
-            unsigned flags = op->flags;
+        FsCallback callback = op->callback;
+        unsigned flags = op->flags;
+        unsigned handle = op->handle;
+        int status = (flags & OPF_CANCELLED) ? ST_CANCELLED : op->status;
+        intptr_t userData = op->userData;
+        if (callback != NULL)
             op->flags = flags | OPF_CALLEDBACK;
-            op->callback(op->handle, (flags & OPF_CANCELLED) ? ST_CANCELLED : op->status, op->userData);
-        }
+        Q_unlock(&w->pending);
+        if (callback != NULL)
+            callback(handle, status, userData);
         Xbox_SetEvent(w->doneEvent);
     }
     w->alive = 0;
@@ -1281,16 +1289,18 @@ bool FILESYS_existssync(const char *name, int priority) {
 // short one, an error or the end. The original took its arguments in five registers (0x0010b5f0).
 typedef unsigned (*ChunkOpFn)(int slot, int offset, void *buffer, int count, int priority, intptr_t userData);
 
+// remaining and op are atomic, ours: the caller waits on them, and what the worker wrote before clearing them (done,
+// the data) must be there when it sees them clear, on hosts that order memory weakly too
 struct ChunkCtx {
     int priority;
     int slot;
     int offset;
-    volatile int remaining;
+    std::atomic<int> remaining;
     int done;                // bytes transferred so far: the result
     int chunk;               // the current op's size
     char *buffer;
     ChunkOpFn opfn;
-    volatile unsigned op;    // the current op
+    std::atomic<unsigned> op;   // the current op
 };
 
 static void ChunkDone(unsigned handle, int status, intptr_t userData) { // 0x0010b550

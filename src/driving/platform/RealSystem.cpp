@@ -13,6 +13,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <atomic>
+
 // ---------------------------------------------------------------------------------------------------------------
 // EA's portable system library ("REAL"), the part the driving engine's game and engine code calls for time,
 // threads, events, periodic tasks and locks: TIMER, THREAD, SIGNAL, SYNCTASK, MUTEX, CPU. Each function here is
@@ -31,7 +33,9 @@ static int TimerActive;
 // XBE_GLOBAL(0x002422d4, 4)
 static unsigned SysTimerHandle;
 // XBE_GLOBAL(0x00242404, 0x20)
-static TimerTask TimerTaskList[kTimerTasks];
+// Atomic, ours: the timer thread runs the list while the game changes it, and a task's state, written before the
+// task is added, must be there when the timer thread first calls it (weakly ordered hosts, docs/driving/macos.md 3)
+static std::atomic<TimerTask> TimerTaskList[kTimerTasks];
 // XBE_GLOBAL(0x00242424, 4)
 int TimerFrequency;
 // XBE_GLOBAL(0x00242428, 4)
@@ -60,8 +64,9 @@ void __stdcall TIMER_ontick(unsigned id, unsigned message, DWORD_PTR user, DWORD
     SomeTicks = SomeTicks + 1;
     LibTicks = LibTicks + 1;
     for (int i = 0; i < kTimerTasks; i++) {
-        if (TimerTaskList[i] != NULL)
-            TimerTaskList[i]();
+        TimerTask task = TimerTaskList[i];   // read once: the original reads the slot again to call it
+        if (task != NULL)
+            task();
     }
 }
 
@@ -209,21 +214,25 @@ void THREAD_init() {
 
 // The block a new thread starts with (on its creator's stack): a started flag the creator waits on, then either
 // a function of no arguments or one of one argument. The original sets the flag before reading the rest, while
-// its creator may already be returning; this reads them first.
+// its creator may already be returning; this reads them first. The flag is atomic so that those reads are done
+// before the creator sees it set, on hosts that order memory weakly too.
 struct ThreadStart {
-    volatile int started;
+    std::atomic<int> started;
     void (*function)(void);
     void (*functionWithParameter)(void *);
     void *parameter;
 };
 
 static DWORD WINAPI ThreadEntry(void *block) {   // 0x0010a730
-    ThreadStart start = *(ThreadStart *)block;
-    ((ThreadStart *)block)->started = 1;
-    if (start.function != NULL)
-        start.function();
+    ThreadStart *start = (ThreadStart *)block;
+    void (*function)(void) = start->function;
+    void (*functionWithParameter)(void *) = start->functionWithParameter;
+    void *parameter = start->parameter;
+    start->started = 1;
+    if (function != NULL)
+        function();
     else
-        start.functionWithParameter(start.parameter);
+        functionWithParameter(parameter);
     return 1;
 }
 
