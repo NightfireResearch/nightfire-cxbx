@@ -8,7 +8,7 @@
 #include "XboxXapi.h"
 #include "../devtools/SndLockstep.h"
 
-#include <windows.h>
+#include "Win32Types.h"
 #include <stdint.h>
 #include <ctype.h>
 #include <stdio.h>

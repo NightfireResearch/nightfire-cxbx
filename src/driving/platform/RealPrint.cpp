@@ -6,7 +6,7 @@
 #include "Host.h"                         // HostDebugBreak
 #include "XboxXapi.h"                     // Xbox_OutputDebugStringA, Xbox_WriteFile
 
-#include <windows.h>
+#include "Win32Types.h"
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>

@@ -14,7 +14,7 @@
 #include "../../common/xbeOverload.h"
 #include "../anim/Model.h"   // OutOfRangeError
 
-#include <windows.h>
+#include "Win32Types.h"
 #include <limits.h>
 #include <math.h>
 #include <stddef.h>

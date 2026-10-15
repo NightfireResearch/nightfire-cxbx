@@ -8,13 +8,13 @@
 #include "../sound/snd/SndGlobals.h"
 #include "SndCallTrace.h"
 
-#include <windows.h>
+#include "Win32Harness.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 
-#include "../../common/renderWindow.h"
+#include "../platform/HostInput.h"
 #include "../../common/gfx/d3d9Backend.h"
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -53,10 +53,6 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 typedef void (__thiscall *ResetCarFunc)(void *car, float *position, float *direction);
-
-#define VK_F8_  0x77
-#define VK_F9_  0x78
-#define GA_ROOT_ 2
 
 struct Place {
     float x, y, z;
@@ -98,20 +94,12 @@ static void Teleport(uint8_t *car, const Place *place) {
     velocity[0] = velocity[1] = velocity[2] = 0.0f;
 }
 
-static bool GameWindowHasFocus(void) {
-    HWND render = FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
-    if (render == NULL)
-        return true;
-    HWND foreground = GetForegroundWindow();
-    return foreground != NULL && (foreground == render || foreground == GetAncestor(render, GA_ROOT_));
-}
-
 // A key that went down since the last tick, with the game in front.
-static bool KeyPressed(int virtualKey, bool *wasDown) {
-    bool down = (GetAsyncKeyState(virtualKey) & 0x8000) != 0;
+static bool KeyPressed(HostKey key, bool *wasDown) {
+    bool down = HostInput_KeyHeld(key);
     bool pressed = down && !*wasDown;
     *wasDown = down;
-    return pressed && GameWindowHasFocus();
+    return pressed && HostInput_WindowHasFocus();
 }
 
 static void FormatPlace(const Place *p, char *out, size_t size) {
@@ -216,7 +204,7 @@ void Teleport_Tick(void) {
             health = fullHealth;
     }
 
-    if (KeyPressed(VK_F8_, &f8Down)) {
+    if (KeyPressed(kKeyF8, &f8Down)) {
         ReadPlace(car, &recorded);
         haveRecorded = true;
         char formatted[128];
@@ -232,7 +220,7 @@ void Teleport_Tick(void) {
         }
     }
 
-    if (KeyPressed(VK_F9_, &f9Down)) {
+    if (KeyPressed(kKeyF9, &f9Down)) {
         const Place *target = haveRecorded ? &recorded : haveConfigured ? &configured : NULL;
         if (target == NULL) {
             printf("[teleport] F9: nowhere to go - press F8 first, or set Teleport= in settings.ini\n");

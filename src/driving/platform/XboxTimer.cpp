@@ -1,7 +1,9 @@
 #include "XboxTimer.h"
 #include "Host.h"
-#include <windows.h>
+#include "Win32Types.h"
+#ifdef _WIN32
 #include <mmsystem.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 

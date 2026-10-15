@@ -4,7 +4,11 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <d3d9.h>
+#ifdef _WIN32
 #include <mmsystem.h>
+#else
+#include "../linux/win32Calls.h"
+#endif
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -711,8 +715,7 @@ static void SizeWindowToBackBuffer(HWND window, uint32_t width, uint32_t height)
 #ifdef NIGHTFIRE_SDL
     (void)window;
     GfxHost_SizeWindow(width, height);
-    return;
-#endif
+#else
     char className[64];
     if (GetClassNameA(window, className, sizeof(className)) == 0 ||
         strcmp(className, NIGHTFIRE_RENDER_WINDOW_CLASS) != 0)
@@ -732,6 +735,7 @@ static void SizeWindowToBackBuffer(HWND window, uint32_t width, uint32_t height)
                 outerWidth, outerHeight, (int)(workArea.right - workArea.left), (int)(workArea.bottom - workArea.top));
 
     SetWindowPos(window, NULL, 0, 0, outerWidth, outerHeight, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+#endif
 }
 
 static void InitPinnedConstants(void);
@@ -2757,7 +2761,10 @@ static uint32_t ModulateColour(uint32_t packed, const float *k) {
 // in screen pixels, and its shader (5 instructions) passes position through unchanged, multiplies the colour
 // by constant 103 and forwards the UVs. Drawn here as pre-transformed vertices, quads split into two
 // triangles, fixed-function texture stages from the deferred state arrays.
-struct RhwVertex { float x, y, z, rhw; uint32_t colour; float u, v; };
+// The texture coordinate carries q = 1 itself: the translated pixel shaders divide by it (PROJECT2D), and the fixed
+// function's own fill for a two-component coordinate is not the same on every D3D9 (dxvk-native's is not 1).
+struct RhwVertex { float x, y, z, rhw; uint32_t colour; float u, v, r, q; };
+#define RHW_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE4(0))
 static RhwVertex g_rhwVertices[64 * 4];
 static uint16_t g_quadIndices[64 * 6];
 static bool g_quadIndicesBuilt = false;
@@ -2787,9 +2794,11 @@ static void DrawImmediateQuads(uint32_t vertexCount, const uint8_t *data, uint32
         d->colour = ModulateColour(*(const uint32_t*)&src[2], k);
         d->u = src[3] * g_texCoordScale[0][0];
         d->v = src[4] * g_texCoordScale[0][1];
+        d->r = 0.0f;
+        d->q = 1.0f;
     }
     g_device->SetVertexShader(NULL);
-    g_device->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1);
+    g_device->SetFVF(RHW_FVF);
     g_device->DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST, 0, vertexCount, (vertexCount / 4) * 2, g_quadIndices, D3DFMT_INDEX16, g_rhwVertices, sizeof(RhwVertex));
 }
 
@@ -2887,8 +2896,8 @@ void D3D9_DrawMovieFrame(const void *pixels, uint32_t width, uint32_t height, ui
 // Quads become triangle pairs, since D3D9 dropped the quad primitive the NV2A has.
 // ---------------------------------------------------------------------------------------------------------------
 
-struct ImmediateVertex { float x, y, z, rhw; uint32_t colour; float u, v; };
-#define IMMEDIATE_FVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1)
+typedef RhwVertex ImmediateVertex;
+#define IMMEDIATE_FVF RHW_FVF
 #define IMMEDIATE_MAX_VERTICES 4096
 
 // The Xbox vertex registers this path uses. -1 is X_D3DVSDE_VERTEX, "the vertex is finished".
@@ -2948,6 +2957,8 @@ void D3D9_ImmediateVertex(uint32_t reg, float x, float y, float z, float w) {
     v->colour = g_immediateColour;
     v->u = g_immediateU;
     v->v = g_immediateV;
+    v->r = 0.0f;
+    v->q = 1.0f;
 }
 
 void D3D9_ImmediateEnd(void) {

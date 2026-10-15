@@ -1,6 +1,6 @@
 #include "XboxStartup.h"
 #include "Host.h"
-#include <windows.h>
+#include "Win32Types.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>

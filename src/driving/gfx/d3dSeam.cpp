@@ -7,7 +7,7 @@
 #include "../../common/xboxPath.h"   // XGWriteSurfaceToFile
 #include "../platform/RealSystem.h"   // TimerFrequency: 50 on a PAL video mode, 60 on an NTSC one (TIMER_init)
 
-#include <windows.h>
+#include "../platform/Win32Types.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>

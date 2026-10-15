@@ -2,7 +2,7 @@
 #include "Host.h"
 #include "HostInput.h"
 
-#include <windows.h>
+#include "Win32Types.h"
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>

@@ -4,7 +4,7 @@
 #include "RealPrint.h"    // MEM_fill, MEM_move
 #include "XboxXapi.h"     // IsBadReadPtr
 
-#include <windows.h>
+#include "Win32Types.h"
 #include <stdint.h>
 #include <string.h>
 

@@ -30,11 +30,22 @@
       "toolchainFile": "${sourceDir}/cmake/toolchain-macos-mingw.cmake",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" },
       "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" }
+    },
+    {
+      "name": "linux-i386",
+      "displayName": "Linux - native 32-bit x86 with clang, the standalone driving engine",
+      "description": "SDL3 and dxvk-native; FFmpeg 8.0 from tools/fmv/build_ffmpeg.sh linux-i386. See docs/driving/portable.md.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/linux-i386",
+      "toolchainFile": "${sourceDir}/cmake/toolchain-linux-i386.cmake",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "NIGHTFIRE_SDL": "ON" },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" }
     }
   ],
   "buildPresets": [
     { "name": "windows", "configurePreset": "windows", "configuration": "Release" },
     { "name": "macos", "configurePreset": "macos" },
-    { "name": "linux", "configurePreset": "linux" }
+    { "name": "linux", "configurePreset": "linux" },
+    { "name": "linux-i386", "configurePreset": "linux-i386", "targets": [ "driving_standalone", "driving_standalone_test" ] }
   ]
 }

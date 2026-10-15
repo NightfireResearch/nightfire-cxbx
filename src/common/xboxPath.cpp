@@ -1,10 +1,18 @@
 #include "xboxPath.h"
 
-#include <windows.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef _WIN32
+#include <windows.h>
 #include <direct.h>
+#else
+#include <limits.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#define MAX_PATH PATH_MAX
+#endif
 
 // See xboxPath.h for what this is and which drives map where.
 
@@ -25,14 +33,21 @@ static void ResolveAgainstOwnFolder(const char *path, char *out, size_t outSize)
     bool absolute = path[0] == '/' || path[0] == '\\' || (path[0] != '\0' && path[1] == ':');
 
     char exe[MAX_PATH];
+#ifdef _WIN32
     DWORD length = 0;
     HMODULE self = NULL;
     if (!absolute && GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
                                         GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
                                         (LPCSTR)&ResolveAgainstOwnFolder, &self))
         length = GetModuleFileNameA(self, exe, sizeof(exe));
+#else
+    // The executable's folder, which this library shares
+    ssize_t length = absolute ? 0 : readlink("/proc/self/exe", exe, sizeof(exe) - 1);
+    if (length > 0)
+        exe[length] = '\0';
+#endif
     char *lastSeparator = NULL;
-    if (length > 0 && length < sizeof(exe)) {
+    if (length > 0 && (size_t)length < sizeof(exe)) {
         for (char *p = exe; *p != '\0'; p++) {
             if (*p == '\\' || *p == '/')
                 lastSeparator = p;
@@ -47,9 +62,17 @@ static void ResolveAgainstOwnFolder(const char *path, char *out, size_t outSize)
     }
 
     // Folds the "..", so that logs and the paths built on it say where the disc really is.
+#ifdef _WIN32
     DWORD full = GetFullPathNameA(joined, (DWORD)outSize, out, NULL);
     if (full == 0 || full >= outSize)
         snprintf(out, outSize, "%s", joined);
+#else
+    char full[PATH_MAX];
+    if (realpath(joined, full) != NULL && strlen(full) < outSize)
+        snprintf(out, outSize, "%s", full);
+    else
+        snprintf(out, outSize, "%s", joined);
+#endif
 }
 
 void Xbox_SetDiscRoot(const char *path) {
@@ -91,7 +114,11 @@ static void EnsureRootExists(const char *root) {
     }
     if (createdCount < (int)(sizeof(created) / sizeof(created[0])))
         created[createdCount++] = root;
+#ifdef _WIN32
     _mkdir(root);
+#else
+    mkdir(root, 0777);
+#endif
 }
 
 bool Xbox_ResolvePath(const char *xboxPath, char *out, size_t outSize) {

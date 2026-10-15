@@ -14,9 +14,34 @@
 #
 # Builds natively where the i686 mingw-w64 compiler, make and nasm are installed (Linux, macOS); otherwise (Windows)
 # in the nf-cross Docker image, installing make and nasm into a throwaway container.
+#
+# The Linux build (docs/driving/portable.md) needs the same release as shared libraries for the host, which are not
+# committed: "sh tools/fmv/build_ffmpeg.sh linux-i386 <prefix>" builds them for 32-bit x86 Linux with gcc -m32, make
+# and nasm into <prefix>/lib, for the linux-i386 preset's NF_FFMPEG_LIB_DIR. FFMPEG_SOURCE names another checkout of
+# the submodule's commit.
 set -e
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
 SRC=third_party/ffmpeg
+
+# Everything but the target, shared by both builds
+COMMON='--enable-shared --disable-static --disable-programs --disable-doc --disable-network --disable-autodetect
+    --disable-everything --enable-protocol=file --enable-demuxer=xmv --enable-decoder=wmv2,adpcm_ima_xbox,adpcm_ima_wav,eamad,adpcm_ea_r1
+    --disable-avdevice --disable-avfilter --disable-swscale --disable-swresample'
+
+if [ "$1" = linux-i386 ]; then
+    PREFIX=${2:?usage: build_ffmpeg.sh linux-i386 <prefix>}
+    SOURCE=${FFMPEG_SOURCE:-$REPO/$SRC}
+    mkdir -p "$PREFIX/build"
+    PREFIX=$(cd "$PREFIX" && pwd)
+    cd "$PREFIX/build"
+    # -mstackrealign: the game calls in with Windows' 4-byte stack alignment (cmake/xbox-abi-linux.cmake)
+    "$SOURCE/configure" --prefix="$PREFIX" --arch=x86 --cc='gcc -m32' --extra-cflags=-mstackrealign \
+        --extra-ldflags=-m32 $COMMON --enable-pthreads >/dev/null
+    make -j"${JOBS:-4}" >/dev/null
+    make install >/dev/null
+    ls -la "$PREFIX/lib"
+    exit 0
+fi
 
 if [ ! -f "$REPO/$SRC/configure" ]; then
     echo "$SRC is empty: run git submodule update --init $SRC" >&2
@@ -31,11 +56,9 @@ if head -n 1 "$REPO/$SRC/configure" | grep -q "$(printf '\r')"; then
 fi
 
 # The configuration, also written into the README beside the DLLs
-OPTIONS='--target-os=mingw32 --arch=x86 --cross-prefix=i686-w64-mingw32- --enable-cross-compile
-    --enable-shared --disable-static --disable-programs --disable-doc --disable-network --disable-autodetect
-    --disable-everything --enable-protocol=file --enable-demuxer=xmv --enable-decoder=wmv2,adpcm_ima_xbox,adpcm_ima_wav,eamad,adpcm_ea_r1
-    --disable-avdevice --disable-avfilter --disable-swscale --disable-swresample
-    --enable-w32threads --extra-ldflags=-static-libgcc'
+OPTIONS="--target-os=mingw32 --arch=x86 --cross-prefix=i686-w64-mingw32- --enable-cross-compile
+    $COMMON
+    --enable-w32threads --extra-ldflags=-static-libgcc"
 
 BUILD='
 set -e

@@ -1,6 +1,9 @@
 #include "textureReplace.h"
 
 #include <windows.h>
+#ifndef _WIN32
+#include "../linux/win32Calls.h"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
