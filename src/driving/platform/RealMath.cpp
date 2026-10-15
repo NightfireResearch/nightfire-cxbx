@@ -94,6 +94,52 @@ __declspec(naked) float atan_turns(float y, float x) {
     }
 }
 
+// ---- FSIN and FCOS's results used before any rounding, and the rounding itself (RealMath.h says why)
+
+__declspec(naked) double SineTurnsTimes(float turns, double factor) {
+    __asm {
+        fld dword ptr [kTwoPi]
+        fmul dword ptr [esp + 4]
+        fsin
+        fmul qword ptr [esp + 8]
+        ret
+    }
+}
+
+__declspec(naked) double CosineTurnsTimes(float turns, double factor) {
+    __asm {
+        fld dword ptr [kTwoPi]
+        fmul dword ptr [esp + 4]
+        fcos
+        fmul qword ptr [esp + 8]
+        ret
+    }
+}
+
+__declspec(naked) double MinusSineTurns(double value, float turns) {
+    __asm {
+        fld dword ptr [kTwoPi]
+        fmul dword ptr [esp + 12]
+        fsin
+        fsubr qword ptr [esp + 4]
+        ret
+    }
+}
+
+__declspec(naked) float AsFloat(float value) {
+    __asm {
+        fld dword ptr [esp + 4]
+        ret
+    }
+}
+
+__declspec(naked) double AsDouble(double value) {
+    __asm {
+        fld qword ptr [esp + 4]
+        ret
+    }
+}
+
 // ---- the x87 helpers the v3 functions call (EBP-framed in the original)
 
 // Nothing calls it.
@@ -389,7 +435,7 @@ void BuildRotate(void *m, float degrees, float axisX, float axisY, float axisZ) 
         VU0_MATRIX4Init(m);
         return;
     }
-    float s = sin_fractionalangle(a), c = cos_fractionalangle(a);
+    float s = AsFloat(sin_fractionalangle(a)), c = cos_fractionalangle(a);
     float r = VU0_rsqrt((F)(((double)axisX * axisX + (double)axisY * axisY) + (double)axisZ * axisZ));
     double nx = (double)axisX * r;
     float ny = (F)((double)r * axisY), nz = (F)((double)r * axisZ);
@@ -1039,7 +1085,7 @@ void VU0_EulerToQuat(const void *eulerTurns, void *out) {
     f[1] = sin_fractionalangle(e[0]);   // s0
     f[2] = cos_fractionalangle(e[1]);   // c1
     f[3] = sin_fractionalangle(e[1]);   // s1
-    float c2 = cos_fractionalangle(e[2]);
+    float c2 = AsFloat(cos_fractionalangle(e[2]));
     double p[4];                        // s2*c0, s2*s0, s2*c1, s2*s1
     SinTimes(e[2], f, p);
     float c0 = f[0], s0 = f[1], c1 = f[2], s1 = f[3];

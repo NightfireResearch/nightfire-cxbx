@@ -504,7 +504,7 @@ void CylinderSection(Coord3 *positions, CylinderUV *uvs, float radiusB, float ra
         for (int side = 0; side < 2; side++) {
             float radius = side != 0 ? radiusB : radiusA;
             Coord3 *position = &positions[vertex];
-            position->x = float(CosineTurns(turns) * radius);
+            position->x = float(CosineTurnsTimes(turns, radius));
             position->y = float(SineTurns(turns) * radius + 0.5f);
             position->z = side != 0 ? zB : zA;
             uvs[vertex][0] = float((position->x + 1.0) * 0.5f);

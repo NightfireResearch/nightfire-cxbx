@@ -268,23 +268,69 @@ build):
 | m1 idle, m1 accelerate, m2 idle, m3 idle, m4 idle, m5 accelerate, m6 idle, m7 accelerate, m8 idle | identical: every line to tick 9000 (83,197 to 1,010,286 lines a run) |
 | m3 accelerate | the same calls, in the same order, to tick 9000 (300,846 lines); 378 differ in an argument by a step or a few (SNDpitchmult 201, SND3dpos 146, SNDvol 31), from tick 185 to the end, on 30 voices (the player's engine pair v2 and v3 most) - the same on two Linux runs |
 
-Against `lbase` (the runner's Intel CPU) all but m2 idle differ, as on Windows. So the simulation runs as the MSVC
-build on this CPU does, with one exception, not yet found: values the sound side computes for its voices in one
-run. A lead, not the cause there (rounding that call site's result did not change it): clang takes a float
-that an x87 function leaves in ST0 unrounded - atan_turns, the trig in turns, REAL_sqrtf, AddSine and the other
-naked functions declared `float` - at full precision when the caller goes on in double (`fstp qword`), where MSVC
-rounds it to the float first. That holds for the mingw build too.
+Against `lbase` (the runner's Intel CPU) all but m2 idle differ, as on Windows.
+
+### Step 4 follow-ups (15 October 2026)
+
+**m3 accelerate was the compiler, not Linux.** An x87 function declared `float` (or `double`) leaves its result in
+ST0; for FSIN, FCOS, FPTAN, FPATAN, FYL2X and the C runtime's acos and pow that is a 64-bit result, not rounded to
+the declared type. What the caller then does is the compiler's choice, made per call site, and MSVC and clang
+choose differently: MSVC rounds it where the code stores a float (directly, or through a double), and otherwise
+multiplies, adds or subtracts on the x87 before rounding (one rounding of the exact result) or stores a double
+first; clang always takes the value as it is into its SSE code (`fstpl`, a rounding to double), and keeps a
+`float` result unrounded (`fstpt`) when it goes on in double. The m3 accelerate difference was two such sites:
+AVehicle::CalculateRpm, whose FYL2X logarithm MSVC multiplies by 1000 on the x87, and
+WCollisionMgr::SurfaceBumpHeight, which adds the cosine on the x87 to a sine MSVC rounds to a float. The mingw
+build showed the same on the runner against lbase (first difference at tick 205; after the fix identical, frames
+too), so it was clang's, not Linux's.
+
+Every call to an x87 function that answers in ST0 was listed in both builds' disassembly (the MSVC driving_standalone
+and the clang Linux one) with what follows the call, and the sites where the two differ now spell MSVC's choice
+out: the operation on the x87 in a naked helper (`SineTurnsTimes`, `CosineTurnsTimes`, `MinusSineTurns` in
+RealMath; `LogTimes` in VehicleSound.cpp, `CosTurnsPlus` in CollisionQueries.cpp, `CrtAcosMinus` in EventsA.cpp,
+`CrtPowTimes` in VehicleRender.cpp), and the rounding through an argument (`AsFloat`, `AsDouble`: a value passed as
+a float or double argument is stored as one by both compilers). Each helper does what MSVC's code did at that site,
+so the Windows build's results are unchanged (the runner rounds below). The sites: CalculateRpm, SurfaceBumpHeight,
+PBondCar's boat and submarine bobbing, ECollision::ProcessSideA, BuildRotate, VU0_EulerToQuat, QuatFromTo,
+ProcAnimSway, RSky, the reflection map's vertices, the HUD's stylin wobble, the decal cylinder, REmp::Init and the
+muzzle flash size. A new call site of these functions needs the same check (the disassembly of both builds).
+
+**The sync tasks follow the wall clock.** SYNCTASK_run runs its tasks by LibTicks, the real 50 Hz timer's count,
+and IOModule::Update (the pads into the action queues) is one of them, every second count. A paced lockstep run on
+Windows renders at 50 frames a second, so that is every second tick there; on lavapipe (13 to 24 frames a second)
+it is every tick, and Linux m8 accelerate never sees the held trigger (its trace is m8 idle's; lloc's accelerate run
+parts from idle at tick 203). Counting simulation ticks in lockstep instead (SYNCTASK_add and SYNCTASK_run reading
+SndLockstep_TimerTick(LibTicks), as TIMER_gettick does) makes Linux m8 accelerate match lloc, but changes Windows:
+m2, m3 and m6 accelerate then differ from lbase (injected and standalone alike), because the baselines hold
+IOModule::Update's wall-clock timing. On Linux with it, the same three runs part from lloc at the same trace lines
+(78, 1002 and 101) and the other 13, m8 accelerate among them, are identical: the change makes the two platforms
+agree with each other, not with today's baselines. So it waits for a baseline regeneration and is not applied.
+
+**Unpaced lockstep is still not exact on Linux.** With dev's default `NIGHTFIRE_PRESENT_EVERY=50`, two Linux runs
+of m3 accelerate differ from each other and from lloc from tick 25 or 26, in the player's engine pitch (v2, v3),
+with and without the sync-task change; with `NIGHTFIRE_PRESENT_EVERY=1` three short runs agreed with lloc at tick
+25, and with 0 (paced) the 16 runs below match lloc. The scheduler's clock at the first Scheduler::Run varied by
+one between runs (485 or 486 ticks, so the half- and quarter-rate schedules' phase), but two runs with the same
+value still differed, so there is another leak. The Linux runs here are paced.
+
+**The exit crash** is gone with dev's StandaloneMain, which ends with HostExitProcess once the window closes;
+HostPosix's is `fflush(NULL)` then `_exit`, so no static destructor runs beside the game's thread (SIGINT, which
+SDL turns into the window closing, exits with status 0).
+
+| Linux, paced (`NIGHTFIRE_PRESENT_EVERY=0`), 16 runs to tick 9000 | Against lloc |
+|---|---|
+| m1-m7 idle and accelerate, m8 idle | identical: every line (62,158 to 1,345,342 lines a run); m3 accelerate (300,846) included |
+| m8 accelerate | the trace of m8 idle: the held trigger never reaches the car (the sync tasks, above) |
+
+On the runner (slots 9-16), with the x87 changes and without the sync-task one: the injected build's full round
+against lbase (16 lockstep runs and the shadows) and `EXE='Release\driving_standalone_test.exe'`'s 16 lockstep runs
+are exact, the shadows clean.
 
 Frames are not comparable with the Windows baselines (another renderer, and 640x480 here), but match them by eye:
 the level, the cars, the HUD and its text, the Mission Failed screen.
 
 **Left**:
 - A run with a window (WSLg, or a Linux desktop with a GPU) - not tried: game windows on this PC need the user.
-- The executables crash on the way out when stopped (Ctrl+C or closing the window): main returns and the C library's
-  exit runs the static destructors while the game's thread is still running.
-- m3 accelerate's voice values (above). Running the mingw build's driving_standalone_test on the runner against
-  lbase would say whether it is clang's or Linux's.
 - A Linux runner (step 5), with its own baselines.
-- The shared changes (the backend's q, the harness's containers and Win32Harness.h, the F8/F9 keys) should be
-  behaviour-neutral on Windows; a runner round (`EXE='Release\driving_standalone_test.exe' round.sh` and the injected
-  build's) is the check.
+- Lockstep's input timing (the sync tasks, above) and unpaced lockstep's other leak on Linux, before a Linux runner
+  keeps baselines; m8 accelerate is the one Linux run that differs from lloc until then.

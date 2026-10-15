@@ -148,12 +148,14 @@ int32_t ClearEmpVictim;
 
 namespace {
 
-// The C runtime's pow (_CIpow at 0x00132a94, the game's own): the base below the exponent, answered on the x87
-__declspec(naked) double CrtPow(double, double) {
+// The C runtime's pow (_CIpow at 0x00132a94, the game's own): the base below the exponent, answered on the x87;
+// times factor there, before the power is rounded
+__declspec(naked) double CrtPowTimes(double, double, double factor) {
     __asm {
         fld qword ptr [esp + 4]
         fld qword ptr [esp + 12]
         call Crt::CIpow
+        fmul qword ptr [esp + 20]
         ret
     }
 }
@@ -483,7 +485,7 @@ void RVehicle::RenderFX(const MATRIX4 *transform) {
     for (int i = 0; i < kMuzzles; i++) {
         if (muzzleEndTick[i] > GameTick) {
             uint32_t ticksDrawn = GameTick - muzzleEndTick[i] + kFlashTicks;
-            float size = (float)(CrtPow(kFlashFade, double(ticksDrawn)) * muzzleSize[i]);
+            float size = (float)CrtPowTimes(kFlashFade, double(ticksDrawn), muzzleSize[i]);
             if (muzzleType[i] == kMuzzlePOV)
                 RMuzzleFlash::DrawPOV(transform, &muzzlePosition[i], 0, size);
             else

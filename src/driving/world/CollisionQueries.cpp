@@ -57,11 +57,15 @@ const Coord3 *SceneObjectVelocity(void *sceneObject) {
     return reinterpret_cast<VelocityFn *>(*static_cast<void **>(sceneObject))[13](sceneObject, 0);
 }
 
-// The trig functions answer FSIN/FCOS's result unrounded on the x87 stack; SurfaceBumpHeight adds the cosine as it
-// is, so it is read through a declaration that answers double (both come back in ST0).
-double CosTurnsUnrounded(float turns) {
-    typedef double (*TurnsFn)(float);
-    return reinterpret_cast<TurnsFn>(&cos_fractionalangle)(turns);
+// cos_fractionalangle(turns) + value: FCOS's result is not rounded before the add, which stays on the x87.
+__declspec(naked) double CosTurnsPlus(float turns, float value) {
+    __asm {
+        push dword ptr [esp + 4]
+        call cos_fractionalangle
+        add esp, 4
+        fadd dword ptr [esp + 8]
+        ret
+    }
 }
 
 // The cheap distance the barrier and cylinder searches rank hits by: the larger of |dx| and |dz| plus a quarter of
@@ -121,7 +125,7 @@ double WCollisionMgr::SurfaceBumpHeight(const Coord3 *point, const uint8_t *face
     if (amplitude == 0.0f)
         return 0.0;
     float alongZ = sin_fractionalangle(frequency * point->z);
-    return (CosTurnsUnrounded(frequency * point->x) + alongZ) * amplitude;
+    return CosTurnsPlus(frequency * point->x, alongZ) * amplitude;
 }
 
 // FUNC_AT(0x000beeb0)

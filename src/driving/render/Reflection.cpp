@@ -662,8 +662,8 @@ void ReflMapVertex(float height, float turns, bool flip, Coord4 *position, Coord
         height = -kStripEnd;
     Coord4 direction;
     direction.z = (flip ? -1.0f : 1.0f) - height;
-    direction.x = float(SineTurns(turns) * height);
-    direction.y = float(CosineTurns(turns) * height);
+    direction.x = float(SineTurnsTimes(turns, height));
+    direction.y = float(CosineTurnsTimes(turns, height));
     direction.w = 0.0f;
     Coord4 unit = {};
     VU0_v4unitxyz(&direction, &unit);

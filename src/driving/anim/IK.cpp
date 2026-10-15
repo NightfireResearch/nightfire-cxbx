@@ -147,7 +147,7 @@ void QuatFromTo(const float *from, const float *to, float *out) {
         float axis[3] = { float(double(v[2]) * u[1] - double(v[1]) * u[2]),
                           float(double(u[2]) * v[0] - double(v[2]) * u[0]),
                           float(double(v[1]) * u[0] - double(v[0]) * u[1]) };
-        QuatFromAxisAngle(axis, float(AngleBetweenVectors(u, v)), out);
+        QuatFromAxisAngle(axis, float(AsDouble(AngleBetweenVectors(u, v))), out);   // rounded through a double
     }
 }
 

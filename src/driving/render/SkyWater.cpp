@@ -146,9 +146,9 @@ void RSky::Draw(CARP::Instance *instances, bool skipSun) {
         if (!SunPlaced) {
             RLightAngles angles = fgLightManager->angles[0];
             float turns = (float)(angles.y[0] * kTurnsPerDegree);
-            SunOffset.x = (float)(SineTurns(turns) * kSunDistance);
+            SunOffset.x = (float)SineTurnsTimes(turns, kSunDistance);
             SunOffset.y = fgLightManager->sunHeight;
-            SunOffset.z = (float)(CosineTurns(turns) * kSunDistance);
+            SunOffset.z = (float)CosineTurnsTimes(turns, kSunDistance);
             SunPlaced = true;
         }
         Coord4 sun = { SunOffset.x + eye->x, SunOffset.y + eye->y, SunOffset.z + eye->z, 1.0f };

@@ -331,8 +331,8 @@ bool ProcAnimSway(CARP::Instance *instance, ProcAnimState *state, const Coord4 *
     double time = ((double)translation->z + translation->x + SimStep.step) * inverseSize;
     float sineCycle = (float)(kSineRate * time);
     float cosineCycle = (float)(time * kCosineRate);
-    float sine = (float)(SineTurns((float)((double)sineCycle - floor((double)sineCycle))) * amplitude);
-    float cosine = (float)(CosineTurns((float)((double)cosineCycle - floor((double)cosineCycle))) * amplitude);
+    float sine = (float)SineTurnsTimes((float)((double)sineCycle - floor((double)sineCycle)), amplitude);
+    float cosine = (float)CosineTurnsTimes((float)((double)cosineCycle - floor((double)cosineCycle)), amplitude);
 
     alignas(16) MATRIX4 tilt;
     VU0_MATRIX4Init(&tilt);

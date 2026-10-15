@@ -329,12 +329,13 @@ void AVehicleVoicePair::Destruct() {
 namespace {
 
 // FLDLN2, FYL2X: the natural logarithm exactly as the x87 makes it (the C runtime's log need not agree in the last
-// bit).
-__declspec(naked) double VehicleLogX87(double) {
+// bit), times the factor while still on the x87 stack: FYL2X's result is not rounded to a double first.
+__declspec(naked) double LogTimes(double, float factor) {
     __asm {
         fldln2
         fld qword ptr [esp + 4]
         fyl2x
+        fmul dword ptr [esp + 12]
         ret
     }
 }
@@ -345,7 +346,7 @@ __declspec(naked) double VehicleLogX87(double) {
 double AVehicle::CalculateRpm() {
     if (CallIsTracked()) {
         if (speed > 1.0f)
-            return VehicleLogX87(speed) * 1000.0f;
+            return LogTimes(speed, 1000.0f);
         return 0.0;
     }
     if (horn != NULL) {
