@@ -30,7 +30,8 @@ bool HostWindow_Open(int width, int height, const char *title) {
         fflush(stdout);
         return false;
     }
-#if defined(_WIN32) && !defined(NIGHTFIRE_GFX_SDLGPU)
+#if defined(_WIN32) && !defined(NIGHTFIRE_GFX_SDLGPU) || defined(__APPLE__)
+    // Direct3D 9 presents into the window as it is; SDL's Metal driver makes a Metal view of it when it claims it
     Window = SDL_CreateWindow(title, width, height, SDL_WINDOW_RESIZABLE);
 #else
     // Presented through a Vulkan surface of this window: dxvk-native's D3D9, or SDL's GPU API on its Vulkan driver

@@ -1,6 +1,7 @@
-# The SDL GPU backend (packages G1 and G2)
+# The SDL GPU backend (packages G1, G2 and G3's x86 part)
 
-Status: built and tested on x86 (16 October 2026); the Metal leg (G3) is the Mac's. Plan and decisions:
+Status: built and tested on x86 (16 October 2026); of the Metal leg (G3), what needs no Mac is done (MSL by
+SPIRV-Cross, 4-byte vertex streams, the macOS window) and the rest is the Mac's checklist at the end. Plan and decisions:
 [macos.md](macos.md) sections 1 and 10.
 
 The driving engine's D3D8 seam (src/driving/gfx/d3dSeam.cpp) calls the `D3D9_*` entry points of
@@ -115,15 +116,87 @@ The WSL runs used the scratchpad scripts of the session (a copy of the worktree 
 and `-DNIGHTFIRE_GFX=sdlgpu`, run with `SDL_VIDEO_DRIVER=offscreen SDL_AUDIO_DRIVER=dummy` and lavapipe); `round.sh`
 with `RUNNER_HOST=wsl` and `RUNNER_CMAKE_ARGS=-DNIGHTFIRE_GFX=sdlgpu` should do the same.
 
-## For the Mac (G3)
+## G3 on x86: what is prepared for the Mac
 
-- SDL's Metal driver takes MSL or metallib, not SPIR-V: run each module through SPIRV-Cross (pinned, FetchContent)
-  in `CreateShader` with `#pragma METAL fp math_mode(safe)` in front (macos.md 1.2), and create the device with
-  `SDL_GPU_SHADERFORMAT_MSL`. SPIRV-Cross must keep SDL's binding order (samplers, uniform buffers) - check its
-  resource remapping against SDL_CreateGPUShader's MSL rules.
-- HostWindowSdl.cpp makes the window with `SDL_WINDOW_VULKAN` everywhere but Windows-with-D3D9; on macOS with the
-  Metal driver that flag should be left off (it asks SDL to load a Vulkan loader).
-- Metal wants vertex strides and attribute offsets that are multiples of 4: SHORT1/SHORT3 elements (2- and 6-byte)
-  in the game's declarations would need the stream copied out to a padded layout in `ShaderDraw`.
-- D24 depth does not exist on Apple GPUs; D32F is what the backend picks first anyway.
-- The swapchain is acquired on the window's thread already (`SDL_RunOnMainThread`).
+**MSL by SPIRV-Cross** (src/common/gfx/shaderMsl.cpp). SPIRV-Cross is fetched by CMake in every sdlgpu build
+(FetchContent, tag `vulkan-sdk-1.4.363.0` of 16 September 2026; static; only its GLSL and MSL backends; built with
+C++ exceptions, which shaderMsl.cpp catches, though the toolchains say `-fno-exceptions`). The device is created
+for SPIR-V or MSL; when SDL's device reports `SDL_GPU_SHADERFORMAT_MSL` (its Metal driver) `CreateShader` hands SDL
+the module's MSL, otherwise the SPIR-V as before. `NIGHTFIRE_SPIRVDUMP=1` writes each module's MSL beside its .spv on
+every host. The translation:
+
+- **Bindings.** Every resource keeps its SPIR-V slot: the uniform block at binding n of SDL's uniform set is
+  `[[buffer(n)]]`, a sampler at binding n of SDL's sampler set is `[[texture(n)]]` and `[[sampler(n)]]` (SDL's MSL
+  order for programs with only uniform buffers and sampled textures; SDL puts vertex buffers from `[[buffer(14)]]`),
+  vertex inputs `[[attribute(location)]]` through `[[stage_in]]`, stage outputs and inputs `[[user(locnN)]]`.
+  Anything else (storage buffers or images, separate samplers, a resource in another set) is refused.
+- **The entry point** is SPIRV-Cross's name for it (`main` becomes `main0`; FXAA's `psmain` stays).
+- **`#pragma METAL fp math_mode(safe)`** first: SDL compiles MSL with `options:nil`, Metal's default fast math.
+- **NoContraction.** SPIRV-Cross writes every NoContraction add, subtract and multiply as a call of a helper
+  (`spvFAdd`, `spvFSub`, `spvFMul`, `[[clang::optnone]]`) that does it as one `fma`, which nothing can fuse further,
+  and the SPIR-V `Fma` as `fma`. Its multiply is `fma(l, r, T(0))`, which turns a product of -0 into +0 (-0 + +0 is
+  +0); shaderMsl.cpp rewrites it to add -0, the identity, so the product keeps the sign the SPIR-V drivers give it
+  (and refuses a SPIRV-Cross whose helper reads otherwise). Divides stay `1.0 / x` (no contraction to prevent; their
+  rounding in safe mode is the Mac's to check), as do `rsqrt`, `exp2`, `log2`, `fract`.
+
+**`spirvmsl <folder>`** (src/common/gfx/devtools/spirvMslMain.cpp, target `spirvmsl` in an sdlgpu build): every .spv
+of a folder translated as the backend translates it, written as .metal, and checked against its SPIR-V - the pragma
+first; the entry point a vertex or fragment function of the name SDL is given; exactly the buffer, texture, sampler
+and attribute slots above and nothing else; the `user(locnN)` locations; in a module whose every add, subtract and
+multiply is NoContraction, no float `+`, `-` or `*` left as an operator; exactly one helper call per NoContraction
+operation and one `fma` per `Fma` whose result is used (SPIRV-Cross writes nothing for an unused value, but does
+write a temporary for an unused value other unused code reads twice: calls in temporaries nothing reads are not
+counted); the -0 multiply; and that every pixel program's inputs are outputs of every vertex program. Mutations (a
+texture slot off by one, the +0 multiply, one multiply left plain) are each caught.
+
+- spirvdump's 178 modules (99 programs and their point-sprite variants): all translate; 2,523 checks, 0 differ;
+  13,070 NoContraction operations and 3,351 Fma in use, all written as helpers or `fma`, 410 unused.
+- Every module a mission 1 run creates to tick 500 (45, `NIGHTFIRE_SPIRVDUMP=1`, the backend's own translation):
+  all pass, FXAA's pixel program aside, whose glslang SPIR-V has 79 plain operations and so plain operators.
+- No Metal compiler runs on x86 here (Apple's Metal tools for Windows need an Apple account download), so the MSL
+  has not been compiled: the Mac's first check.
+
+**Vertex streams padded to 4 bytes** (`RepackStream`, every host): Metal reads an attribute only at a multiple of 4
+bytes in a vertex whose stride is a multiple of 4. A stream with an element of 2 or 6 bytes (SHORT1 read as SHORT2,
+SHORT3 as SHORT4), one placed off 4, or a stride that is not a multiple of 4 is copied out per vertex with each
+element rounded up to 4 bytes in turn; the bytes it gains are zero and are the components the program does not read
+(the translator gives undeclared components their defaults). Mission 1 repacks often: the SHORT1 streams of stride 2
+(to 4) and a SHORT3 stream of stride 6 (to 8); `sdlgpu_backend.log` says which shader and stream, once each.
+
+**The window** is made without `SDL_WINDOW_VULKAN` on macOS: SDL's Metal driver makes a Metal view when it claims the
+window (`SDL_Metal_CreateView` converts any window), while the flag would make SDL load a Vulkan loader the Mac does
+not have.
+
+Already so before G3: D32F depth first (Apple GPUs have no D24); every texture arrives as B8G8R8A8 or BC1-3 (checked
+with `SDL_GPUTextureSupportsFormat`), so no component swizzles are needed; the swapchain is acquired on the window's
+thread (`SDL_RunOnMainThread`); SDL's backend order puts Metal before Vulkan, so MoltenVK is never picked.
+
+### Tests (G3 preparation)
+
+| What | Result |
+|---|---|
+| Windows x64 on the runner (as in G2's tests, Vulkan), round g3a | sound traces 16/16 identical to `lbase_c` to tick 9000; frames 0 pixels different from G2's round gpu2 in all 16 |
+| Linux i386 in WSL2 (lavapipe), m1 and m2, idle and accelerating, against the same runs of the G2 build (09b9c65) | 4/4: frames 0 pixels different, traces identical; 7-9 streams repacked per run |
+| `spirvmsl` on spirvdump's 178 modules, clang i386 and MSVC Win32 builds | 0 differ; the two builds' MSL byte for byte the same |
+| Builds | linux-i386 sdlgpu (driving_standalone, driving_standalone_test, spirvmsl), Windows Win32 sdlgpu (drivinginject, driving_standalone, driving_standalone_test, spirvmsl), Windows x64 sdlgpu (the runner); the d3d9 builds compile none of it |
+
+So the padding changes no frame: the components it zeroes are ones the programs never read.
+
+### For the agent on the Mac
+
+1. Build with the `macos-arm64` preset (A1) and `-DNIGHTFIRE_GFX=sdlgpu`: SPIRV-Cross comes by FetchContent (git)
+   like SDL3. `sdlgpu_backend.log` must say "SDL's metal driver, shaders as MSL".
+2. Compile the MSL: `spirvdump` (as above) into a folder, `spirvmsl` over it, then `xcrun -sdk macosx metal -c
+   -std=macos-metal2.1 <file>.metal` on every .metal (needs the full Xcode or the Metal toolchain component; without
+   it, `SDL_CreateGPUShader` compiling them at run time is the check - any failure is in sdlgpu_backend.log as
+   "SDL_CreateGPUShader failed"). Watch for: the `math_mode` pragma accepted (macOS 15), `[[clang::optnone]]` on the
+   helpers, `precise::clamp`.
+3. Boot mission 1 headless in lockstep to tick 500 with frames dumped; look at them. Then two runs of the 16, identical
+   to each other (G3's test), and `lmac_c` from them (A2).
+4. Speed: the helpers are `optnone` functions, one call per add or multiply. If frames are slow, measure first; the
+   alternative is SPIRV-Cross without them plus `#pragma METAL fp contract(off)` (if the Metal compiler takes it),
+   which must then be shown to change no frame against the helper build.
+5. If frames differ from the Vulkan build's by more than the D3D9/Vulkan comparison did (sdl-gpu.md's tests), the
+   suspects in order: divides and `rsqrt`/`exp2`/`log2` precision in safe mode, the immediate path's +0.5 and pixel
+   centres, sampler addressing (no border colour), point sprites (`instance_id` with a base instance of 0).
+6. Windowed (A3, only when the user asks): the window claimed on the main thread, presenting through the Metal layer.

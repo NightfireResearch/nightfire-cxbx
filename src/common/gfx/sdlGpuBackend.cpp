@@ -4,6 +4,7 @@
 #include "fixedFunction.h"
 #include "nv2aPixelShader.h"
 #include "nv2aVertexShader.h"
+#include "shaderMsl.h"
 #include "shaderSpirv.h"
 #include "xboxTexture.h"
 #include "../../driving/platform/Host.h"
@@ -23,8 +24,8 @@
 
 // ---------------------------------------------------------------------------------------------------------------
 // The D3D8 seam's backend on SDL3's GPU API (NIGHTFIRE_GFX=sdlgpu): the same D3D9_* entry points as d3d9Backend.cpp,
-// for hosts without Direct3D 9 - SDL's Vulkan driver on Windows and Linux, its Metal driver on macOS (with SPIRV-Cross,
-// docs/driving/macos.md package G3). It follows d3d9Backend.cpp call for call: the same texture cache, the same
+// for hosts without Direct3D 9 - SDL's Vulkan driver on Windows and Linux, its Metal driver on macOS (each module
+// translated to MSL by SPIRV-Cross, shaderMsl.h; docs/driving/macos.md package G3). It follows d3d9Backend.cpp call for call: the same texture cache, the same
 // stage packing and constants, the same render-target and visibility-test handling. What D3D9 did by itself is done
 // here: the fixed-function pipeline is fixedFunction.cpp's programs, the NV2A translators write SPIR-V
 // (shaderSpirv.h), the alpha test and fog blend are the end of every pixel program, and render state is baked into
@@ -216,7 +217,7 @@ static const uint8_t *XboxDataPointer(uint32_t dataWord) {
 
 #define RING_BYTES (16u << 20)
 #define UPLOAD_BYTES (32u << 20)
-#define RING_SLACK 8u   // SHORT3 declared as SHORT4 reads two bytes past the last vertex
+#define RING_SLACK 8u   // a declaration longer than its stream's stride reads past the last vertex
 
 static SDL_GPUBuffer *g_ring = NULL;
 static SDL_GPUTransferBuffer *g_ringTransfer = NULL, *g_uploadTransfer = NULL, *g_downloadTransfer = NULL;
@@ -500,36 +501,61 @@ static void Flush(void) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Programs: SDL shaders from SPIR-V, and NIGHTFIRE_SPIRVDUMP=1's copy of every module in spirv/ for spirv-val.
+// Programs: SDL shaders from SPIR-V, or from its MSL where the device takes MSL (SDL's Metal driver), and
+// NIGHTFIRE_SPIRVDUMP=1's copy of every module in spirv/, each also as MSL, for spirv-val and spirvmsl.
 // ---------------------------------------------------------------------------------------------------------------
 
-static void DumpSpirv(const char *name, const std::vector<uint32_t> &words) {
+static bool g_shadersAsMsl = false;
+
+static bool SpirvDumpWanted(void) {
     static int wanted = -1;
     if (wanted < 0) {
         const char *v = getenv("NIGHTFIRE_SPIRVDUMP");
         wanted = v != NULL && v[0] == '1';
         if (wanted) SDL_CreateDirectory("spirv");
     }
-    if (!wanted)
-        return;
+    return wanted != 0;
+}
+
+static void DumpShader(const char *name, const char *extension, const void *code, size_t bytes) {
     char path[128];
-    snprintf(path, sizeof(path), "spirv/%s.spv", name);
+    snprintf(path, sizeof(path), "spirv/%s.%s", name, extension);
     FILE *f = fopen(path, "wb");
     if (f == NULL)
         return;
-    fwrite(words.data(), 4, words.size(), f);
+    fwrite(code, 1, bytes, f);
     fclose(f);
 }
 
 static SDL_GPUShader *CreateShader(const char *name, const std::vector<uint32_t> &words, bool pixel, uint32_t samplers,
                                    const char *entryPoint = "main") {
-    DumpSpirv(name, words);
+    bool dump = SpirvDumpWanted();
+    if (dump)
+        DumpShader(name, "spv", words.data(), words.size() * 4);
+    std::string msl, mslEntryPoint;
+    if (g_shadersAsMsl || dump) {
+        std::string error;
+        if (!ShaderMsl_Translate(words.data(), words.size(), &msl, &mslEntryPoint, &error)) {
+            GpuLog("[sdlgpu] %s: no MSL: %s\n", name, error.c_str());
+            if (g_shadersAsMsl)
+                return NULL;
+        } else if (dump) {
+            DumpShader(name, "metal", msl.data(), msl.size());
+        }
+    }
     SDL_GPUShaderCreateInfo info;
     memset(&info, 0, sizeof(info));
-    info.code_size = words.size() * 4;
-    info.code = (const Uint8 *)words.data();
-    info.entrypoint = entryPoint;
-    info.format = SDL_GPU_SHADERFORMAT_SPIRV;
+    if (g_shadersAsMsl) {
+        info.code_size = msl.size();
+        info.code = (const Uint8 *)msl.c_str();
+        info.entrypoint = mslEntryPoint.c_str();
+        info.format = SDL_GPU_SHADERFORMAT_MSL;
+    } else {
+        info.code_size = words.size() * 4;
+        info.code = (const Uint8 *)words.data();
+        info.entrypoint = entryPoint;
+        info.format = SDL_GPU_SHADERFORMAT_SPIRV;
+    }
     info.stage = pixel ? SDL_GPU_SHADERSTAGE_FRAGMENT : SDL_GPU_SHADERSTAGE_VERTEX;
     info.num_samplers = samplers;
     info.num_uniform_buffers = 1;
@@ -972,12 +998,15 @@ uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWi
         GpuLog("[sdlgpu] the D3D8 state table addresses were never set - see g_xboxTextureStateTable\n");
 
     const char *debug = getenv("NIGHTFIRE_GPUDEBUG");
-    g_device = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV, debug != NULL && debug[0] == '1', NULL);
+    g_device = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_MSL, debug != NULL && debug[0] == '1',
+                                   NULL);
     if (g_device == NULL) {
         GpuLog("[sdlgpu] SDL_CreateGPUDevice failed: %s\n", SDL_GetError());
         return 0x8876086Cu;   // D3DERR_INVALIDCALL
     }
-    GpuLog("[sdlgpu] GPU device on SDL's %s driver\n", SDL_GetGPUDeviceDriver(g_device));
+    g_shadersAsMsl = (SDL_GetGPUShaderFormats(g_device) & SDL_GPU_SHADERFORMAT_MSL) != 0;
+    GpuLog("[sdlgpu] GPU device on SDL's %s driver, shaders as %s\n", SDL_GetGPUDeviceDriver(g_device),
+           g_shadersAsMsl ? "MSL" : "SPIR-V");
 
     if (GfxHost_PresentEvery() == 0) {
         g_window = (SDL_Window *)GfxHost_SdlWindow();
@@ -1473,6 +1502,13 @@ struct TranslatedVertexShader {
     uint16_t declaredStride[16];
     uint32_t normPacked;
     uint8_t inputComponents[16], inputKind[16];
+    // Metal reads an attribute only at a multiple of 4 bytes, in a vertex of a multiple of 4: a stream with an element
+    // of 2 or 6 bytes (SHORT1, SHORT3), or one placed off that, is copied out to each element rounded up to 4 bytes
+    // in turn - on every host, so that the Vulkan runs test it. The components it gains the program does not read.
+    uint8_t elementBytes[16];
+    uint16_t packedOffset[16];   // per element
+    uint16_t packedStride[16];   // per stream
+    uint32_t streamsUnaligned, streamsRepackLogged;
     bool attempted, failed;
 };
 static TranslatedVertexShader g_vertexShaders[512];
@@ -1558,8 +1594,10 @@ static bool BuildVertexShader(TranslatedVertexShader *vs, int index) {
     vs->failed = true;
     uint32_t stream = 0, offset = 0;
     vs->streamsUsed = 0;
+    vs->streamsUnaligned = vs->streamsRepackLogged = 0;
     vs->elementCount = 0;
     vs->normPacked = 0;
+    memset(vs->packedStride, 0, sizeof(vs->packedStride));
     memset(vs->inputComponents, 0, sizeof(vs->inputComponents));
     memset(vs->inputKind, kSpirvFloat, sizeof(vs->inputKind));
     for (const uint32_t *tok = (const uint32_t*)vs->declaration; *tok != 0xFFFFFFFFu; tok++) {
@@ -1576,6 +1614,11 @@ static bool BuildVertexShader(TranslatedVertexShader *vs, int index) {
             return false;
         }
         VertexElement e = { (uint8_t)stream, (uint8_t)reg, (uint8_t)format, (uint16_t)offset };
+        vs->elementBytes[vs->elementCount] = (uint8_t)bytes;
+        vs->packedOffset[vs->elementCount] = vs->packedStride[stream];
+        vs->packedStride[stream] += (uint16_t)((bytes + 3) & ~3u);
+        if (bytes % 4 != 0 || offset % 4 != 0)
+            vs->streamsUnaligned |= 1u << stream;
         vs->elements[vs->elementCount++] = e;
         if (np) vs->normPacked |= 1u << reg;
         vs->inputComponents[reg] = (uint8_t)(components == 0 || components > 4 ? 4 : components);
@@ -1981,6 +2024,20 @@ void D3D9_SetStreamSource(int streamNumber, void *vertexBuffer, int stride) {
 }
 void D3D9_SetIndices(void *pIndexBuffer, uint32_t baseVertexIndex) { (void)baseVertexIndex; g_indexBuffer = pIndexBuffer; }
 
+// A stream's vertices in the vertex shader's packed layout for it (TranslatedVertexShader::packedStride).
+static void RepackStream(uint8_t *out, const uint8_t *in, uint32_t stride, uint32_t vertices,
+                         const TranslatedVertexShader *vs, uint32_t stream) {
+    uint32_t packedStride = vs->packedStride[stream];
+    memset(out, 0, (size_t)vertices * packedStride);
+    for (uint32_t v = 0; v < vertices; v++) {
+        for (int e = 0; e < vs->elementCount; e++) {
+            if (vs->elements[e].stream == stream)
+                memcpy(out + (size_t)v * packedStride + vs->packedOffset[e],
+                       in + (size_t)v * stride + vs->elements[e].offset, vs->elementBytes[e]);
+        }
+    }
+}
+
 // A programmable draw: the current vertex shader over the streams' vertices [first, limit), copied into the ring,
 // with indices (already in the ring at indexOffset) or without. userData stands in for stream 0 (DrawVerticesUP).
 static void ShaderDraw(uint32_t xboxType, uint32_t first, uint32_t limit, bool indexed, uint32_t indexOffset,
@@ -2015,11 +2072,23 @@ static void ShaderDraw(uint32_t xboxType, uint32_t first, uint32_t limit, bool i
     uint32_t vertices = limit - first;
     // The streams the declaration reads, each to the next buffer slot
     uint32_t slotOfStream[16];
-    for (int s = 0; s < 16; s++) {
+    uint32_t streamsRepacked = 0;
+    for (uint32_t s = 0; s < 16; s++) {
         if (!(vs->streamsUsed & (1u << s)))
             continue;
         uint32_t stride = userData != NULL && s == 0 ? userStride : g_streamStrides[s] > 0 ? (uint32_t)g_streamStrides[s] : 6u;
-        uint32_t bytes = vertices * stride;
+        bool repack = (vs->streamsUnaligned & (1u << s)) != 0 || stride % 4 != 0;
+        uint32_t hostStride = stride;
+        if (repack) {
+            streamsRepacked |= 1u << s;
+            hostStride = vs->packedStride[s];
+            if (!(vs->streamsRepackLogged & (1u << s))) {
+                vs->streamsRepackLogged |= 1u << s;
+                GpuLog("[sdlgpu] shader %d: stream %u repacked, stride %u to %u\n", g_currentVertexShader, s, stride,
+                       hostStride);
+            }
+        }
+        uint32_t bytes = vertices * hostStride;
         uint32_t offset = RingReserve(bytes + RING_SLACK);
         const uint8_t *base = userData != NULL && s == 0 ? userData
                             : g_streams[s] != NULL ? XboxDataPointer(((const uint32_t *)g_streams[s])[1]) : NULL;
@@ -2030,17 +2099,21 @@ static void ShaderDraw(uint32_t xboxType, uint32_t first, uint32_t limit, bool i
                 return;
             }
             memset(g_ringMapped + offset, 0, bytes);   // a morph stream with nothing bound: the NV2A read zero weights
+        } else if (repack) {
+            RepackStream(g_ringMapped + offset, data, stride, vertices, vs, s);
         } else {
             memcpy(g_ringMapped + offset, data, bytes);
         }
         memset(g_ringMapped + offset + bytes, 0, RING_SLACK);
         slotOfStream[s] = key.bufferCount;
-        key.pitch[key.bufferCount] = (uint16_t)stride;
+        key.pitch[key.bufferCount] = (uint16_t)hostStride;
         d.bufferOffset[key.bufferCount] = offset;
         key.bufferCount++;
     }
     for (int e = 0; e < vs->elementCount; e++) {
         VertexElement a = vs->elements[e];
+        if (streamsRepacked & (1u << a.stream))
+            a.offset = vs->packedOffset[e];
         a.stream = (uint8_t)slotOfStream[a.stream];
         key.attributes[key.attributeCount++] = a;
     }

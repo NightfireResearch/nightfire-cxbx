@@ -333,9 +333,9 @@ endif()   # WIN32: the action engine and both loaders
 set(NIGHTFIRE_GFX d3d9 CACHE STRING "Driving engine graphics backend: d3d9 or sdlgpu")
 set_property(CACHE NIGHTFIRE_GFX PROPERTY STRINGS d3d9 sdlgpu)
 if(NIGHTFIRE_GFX STREQUAL "sdlgpu")
-  set(nf_gfx_backend src/common/gfx/sdlGpuBackend.cpp src/common/gfx/fixedFunction.cpp)
+  set(nf_gfx_backend src/common/gfx/sdlGpuBackend.cpp src/common/gfx/fixedFunction.cpp src/common/gfx/shaderMsl.cpp)
   set(nf_gfx_devtools)
-  set(nf_gfx_host_sources src/common/gfx/sdlGpuBackend.cpp src/common/gfx/fixedFunction.cpp)
+  set(nf_gfx_host_sources ${nf_gfx_backend})
 elseif(NIGHTFIRE_GFX STREQUAL "d3d9")
   set(nf_gfx_backend src/common/gfx/d3d9Backend.cpp)
   set(nf_gfx_devtools src/common/gfx/devtools/shaderCheck.cpp src/common/gfx/devtools/shaderHlsl.cpp
@@ -346,6 +346,27 @@ else()
 endif()
 if(NIGHTFIRE_GFX STREQUAL "sdlgpu")
   add_compile_definitions(NIGHTFIRE_GFX_SDLGPU)   # the driving targets, all made below
+  # SDL's Metal driver takes MSL, not SPIR-V: SPIRV-Cross translates each module (src/common/gfx/shaderMsl.cpp). It is
+  # built on every host, so that the Vulkan builds compile and can exercise it too: a release tag, static, its MSL
+  # backend (and the GLSL one that derives from) only, with C++ exceptions for its errors.
+  include(FetchContent)
+  foreach(part CLI ENABLE_TESTS ENABLE_HLSL ENABLE_CPP ENABLE_REFLECT ENABLE_C_API ENABLE_UTIL SHARED)
+    set(SPIRV_CROSS_${part} OFF CACHE BOOL "" FORCE)
+  endforeach()
+  foreach(part STATIC ENABLE_GLSL ENABLE_MSL SKIP_INSTALL FORCE_PIC)
+    set(SPIRV_CROSS_${part} ON CACHE BOOL "" FORCE)
+  endforeach()
+  FetchContent_Declare(spirv_cross
+                       GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Cross.git
+                       GIT_TAG vulkan-sdk-1.4.363.0
+                       GIT_SHALLOW TRUE)
+  FetchContent_MakeAvailable(spirv_cross)
+  if(NOT MSVC)
+    foreach(target spirv-cross-core spirv-cross-glsl spirv-cross-msl)
+      target_compile_options(${target} PRIVATE -fexceptions)
+    endforeach()
+    set_property(SOURCE src/common/gfx/shaderMsl.cpp APPEND PROPERTY COMPILE_OPTIONS -fexceptions)
+  endif()
 endif()
 
 set(nf_driving_sources
@@ -1043,6 +1064,20 @@ foreach(target driving_standalone driving_standalone_test)
                        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:${target}>)
   endif()
 endforeach()
+if(NIGHTFIRE_GFX STREQUAL "sdlgpu")
+  if(WIN32)
+    set(nf_msl_users drivinginject driving_standalone driving_standalone_test)
+  else()
+    set(nf_msl_users drivinghost)
+  endif()
+  foreach(target ${nf_msl_users})
+    target_link_libraries(${target} PRIVATE spirv-cross-msl)
+  endforeach()
+  # Every .spv of a folder (spirvdump's, or a run's NIGHTFIRE_SPIRVDUMP=1 spirv/) translated to MSL as the backend
+  # translates it, written beside it as .metal, and checked: "spirvmsl <folder>" (src/common/gfx/devtools/spirvMslMain.cpp).
+  add_executable(spirvmsl EXCLUDE_FROM_ALL src/common/gfx/devtools/spirvMslMain.cpp src/common/gfx/shaderMsl.cpp)
+  target_link_libraries(spirvmsl PRIVATE spirv-cross-msl)
+endif()
 # The x86 instructions the driving engine's ports use by intrinsics: SSE's, RDTSC, REP MOVSD/MOVSB, EMMS
 # (src/driving/platform/Sse.h, docs/driving/macos.md 3). On: the instructions. Off: C with their results
 # (src/driving/platform/SseC.h; RSQRTSS from the runner's table), which a host without them needs; an x86 build can be
