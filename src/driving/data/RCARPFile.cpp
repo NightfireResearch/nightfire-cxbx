@@ -115,11 +115,6 @@ static UData *DataEnd(UGroup *group) {
     return group->GetArray() + (group->GroupCount() + group->count);
 }
 
-// RWater's 16-byte entries, which the UV names index (the water's vectors and matrix rows)
-static Coord4 *WaterEntries() {
-    return reinterpret_cast<Coord4 *>(TheWater);
-}
-
 // ---- the symbol table and the callbacks
 
 // FUNC_AT(0x0007bd60)
@@ -279,9 +274,9 @@ void* RCARPFile::RegisterSymbols(const char *name, bool *found) {
     if (Is(name, "EAGL::FogData"))
         value = Fog->params;
     if (Has(name, "GAME::UVScale") || Has(name, "EAGL::UVScale"))
-        value = &WaterEntries()[name[0xd] - 0x2c];   // the digit after the name: entries 4..
+        value = &TheWater->scales[name[0xd] - '1'];   // the digit after the name, from 1
     if (Has(name, "GAME::UVScroll") || Has(name, "EAGL::UVScroll"))
-        value = &WaterEntries()[name[0xe] - 0x26];   // entries 10..
+        value = &TheWater->scrolls[name[0xe] - '1'];
     if (Is(name, "GAME::WaterRotToSun") || Is(name, "EAGL::WaterRotToSun"))
         value = &TheWater->sunRotation;
     if (Is(name, "GAME::SimStep"))
