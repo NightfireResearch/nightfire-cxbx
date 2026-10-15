@@ -31,7 +31,7 @@ typedef float GlowPoint[3];             // x, y, z
 // The glow's GeoPrim (0x3c bytes): the render method and its seven parameters - the state, the texture, the
 // vertex count, the view's matrix, the constants, the points and their colours (the texels)
 struct GlowGeoPrim {
-    EAGL::RenderMethod *method;         // +0x00
+    Ptr32<EAGL::RenderMethod> method;   // +0x00
     EAGL::GeoPrimParam params[7];       // +0x04
 
     // The method made from "BondPostGlare", the view's matrix found; the rest empty (FUN_000a4580, the name is

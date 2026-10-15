@@ -34,7 +34,7 @@ enum AlphaBlendMode : uint32_t {
 
 // USimpleMaterial's GeoPrim (0x2c bytes, "EAGL::GeoPrim new"; the name is ours)
 struct SimpleGeoPrim {
-    EAGL::RenderMethod *method;         // +0x00 a child of "MatDebug"
+    Ptr32<EAGL::RenderMethod> method;   // +0x00 a child of "MatDebug"
     EAGL::GeoPrimParam state;                 // +0x04 the material
     EAGL::GeoPrimParam vertexCount;           // +0x0c the material's vertexCount
     EAGL::GeoPrimParam modelViewProjection;   // +0x14 EAGL::ViewPort::gpModelViewProjectionMatrix
@@ -49,7 +49,7 @@ static_assert(sizeof(SimpleGeoPrim) == 0x2c, "SimpleGeoPrim is 0x2c bytes");
 // USimpleTexturedMaterial makes, the decals' and the missile camera's are made by Construct, over a child of the
 // render method at 0x00242de8.
 struct TexturedGeoPrim {
-    EAGL::RenderMethod *method;         // +0x00
+    Ptr32<EAGL::RenderMethod> method;   // +0x00
     EAGL::GeoPrimParam state;                 // +0x04 the material
     EAGL::GeoPrimParam texture;               // +0x0c an EAGL::TAR
     EAGL::GeoPrimParam vertexCount;           // +0x14 the material's vertexCount

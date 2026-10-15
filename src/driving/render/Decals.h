@@ -43,7 +43,7 @@ enum EmpGeoPrimParam {
 // REmp's GeoPrim (0x7c) over a child of the render method at 0x00242e1c: the model, model-view and projection
 // matrices, "GAME::FishEyeParams", eight "GAME::PositionalLights" and "GAME::SimStep". The name is ours.
 struct EmpGeoPrim {
-    EAGL::RenderMethod *method;         // +0x00
+    Ptr32<EAGL::RenderMethod> method;   // +0x00
     EAGL::GeoPrimParam params[kEmpParamCount];  // +0x04 by EmpGeoPrimParam
 
     EmpGeoPrim* Construct();            // FUN_0009b550                                  // 0x0009b550

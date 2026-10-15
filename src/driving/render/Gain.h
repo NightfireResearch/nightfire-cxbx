@@ -20,7 +20,7 @@
 // parameter 4 is the model-view-projection matrix; RGain fills 0 the render state, 1 the texture, 2 the vertex
 // count record, 5 the gain, 6 the offset, 7 positions, 8 texture coordinates, 9 colours. The name is ours.
 struct GainGeoPrim {
-    EAGL::RenderMethod *method;         // +0x00
+    Ptr32<EAGL::RenderMethod> method;   // +0x00
     EAGL::GeoPrimParam params[10];      // +0x04
 
     GainGeoPrim* Construct();                                                           // 0x0009dd40
