@@ -15,7 +15,7 @@
 // First even for the C forms, so that a system header including them later adds nothing the names would clash with
 #include <xmmintrin.h>
 #include <emmintrin.h>
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #include <intrin.h>
 #else
 #include <stddef.h>
