@@ -67,6 +67,11 @@ BASE=lbase tools/runner/round.sh new                 # the full round: sync, bui
 python tools/runner/compare.py build/baselines/lbase_m1_idle build/remote/new_m1_idle
 ```
 
+`RUNNER_PRESET=windows-x64` makes `build` build the 64-bit standalone executables (the windows-x64 preset, in
+`build/windows-x64`) and install them with their x86-64 DLLs into `Release64\`, which `slots` copies too; runs name
+`-Exe 'Release64\driving_standalone_test.exe'`, and `round.sh` sets the preset itself for such an `EXE`
+(docs/driving/64-bit.md 7.10).
+
 `RUNNER_CMAKE_ARGS` makes `build` (and so `round.sh`) configure the runner's checkout again with those options before
 building: `-DNIGHTFIRE_SDL=ON`, for example (docs/driving/portable.md). The options stay in that checkout's cache, so
 set `-DNIGHTFIRE_SDL=OFF` afterwards.

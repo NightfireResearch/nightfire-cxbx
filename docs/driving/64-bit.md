@@ -1,8 +1,11 @@
 # The driving engine on 64-bit
 
-Status: plan (15 October 2026), step 3 of the roadmap in [portable.md](portable.md): an audit and a design. Done so
-far: package 0 (7.4, 4.3), the x87 code as C behind `NIGHTFIRE_X87` (4.4) and package 6, the memory-only structures
-(7.6), all on the 32-bit build, and packages 1 and 2 (7.5): the x86-64 configuration, `Ptr32<T>` and the game window. It applies to the standalone executables (`driving_standalone`, `driving_standalone_test`) only. The
+Status (15 October 2026): step 3 of the roadmap in [portable.md](portable.md) is done on Windows. The x86-64
+standalone test executable runs every mission exactly as the 32-bit portable-C build does: all 16 lockstep runs match
+`lbase_c` in frames and sound traces to tick 9000 (7.10). Done: package 0 (7.4, 4.3), the x87 code as C behind
+`NIGHTFIRE_X87` (4.4), packages 1 and 2 (7.5: the x86-64 configuration, `Ptr32<T>` and the game window), 6 (7.6:
+the memory-only structures), 3a and 3b (7.7: EAGL), 8 (7.8: D3D), 4 and 5 (7.9: CARP, sound, FILESYS), and 9
+(7.10: integration and bring-up). Left: Linux x86-64 (package 10). It applies to the standalone executables (`driving_standalone`, `driving_standalone_test`) only. The
 injected build (driving.exe mapping Driving.xbe, drivinginject.dll, every shadow test) stays 32-bit: it shares the
 original's address space by construction, and it stays the oracle.
 
@@ -745,6 +748,72 @@ EMMS after the player) are x86-32 only: MSVC has no MMX intrinsics on x86-64, an
 with static assertions disabled, then compiles and links both standalone executables, merged with driving-64 too
 (LNK4281 aside, the low base); nothing has run.
 
+### 7.10 Done: integration and package 9, the bring-up (15 October 2026)
+
+**Integration.** driving-64 (packages 1, 2, 6 and dev) merged driving-64-eagl (3a, 3b), driving-64-d3d (8) and
+driving-64-carp (4, 5). Only this document conflicted (each branch had added its section as 7.6 or 7.7); the sections
+are kept in the order merged, 7.6 to 7.9. The one check left failing on x86-64 was package 6's list of the game's
+GeoPrims, which EAGL draws as its own: `GainGeoPrim`, `EmpGeoPrim`, `SimpleGeoPrim`, `TexturedGeoPrim` and
+`GlowGeoPrim` now hold their render method as a `Ptr32`, as `GeoPrim` does (`TARAtlas`, `TARSlot` and `TARSymbolData`
+already held). Then the windows-x64 preset builds both standalone executables with 0 errors (MSVC: 33 C4267 and 26
+C4244 narrowings, pointer differences and `strlen` sizes; one C4312, `NumGet::DoGetPointer`'s `strtoul`, as 7.6 says),
+and the clang probe reports 0 error lines and 122 warning lines.
+
+**The 32-bit build is unchanged.** Every object file of drivinginject, driving.exe, actioninject,
+driving_standalone and driving_standalone_test (x87 on and off), compared with the build of 7d096e7 (p64_objdiff's
+comparison, anonymous namespaces normalised): actioninject and driving.exe identical; the rest identical except the
+packages' documented differences (renamed signatures and the callers naming them, `D3DDevice_CreateVertexShader`'s
+local, the swapped `lea` operands of 7.9), the crash reporter's new formats, and `RSceneObj::GetRenderOffset`'s
+mangled name (same code). On the runner, with the merge (rounds p9a, p9a2, p9s, p9c): the injected build against
+`lbase` (16 lockstep runs exact, shadows on all eight missions with 0 differences), driving_standalone_test against
+`lbase` (16 of 16) and with `NIGHTFIRE_X87=OFF` against `lbase_c` (16 of 16). The final state was checked the same way
+(rounds p9fa, p9fs, p9fc).
+
+**Running the 64-bit build on the runner.** `RUNNER_PRESET=windows-x64 tools/runner/remote.sh build` configures and
+builds the preset in the runner's checkout and installs the executables, maps, PDBs and the x86-64 FFmpeg DLLs into
+`Release64\` beside `Release\`; `slots` copies it into each slot. Runs name `-Exe 'Release64\driving_standalone_test.exe'`
+and keep `Release\` as the working folder (settings.ini, the dumps, the traces); the disc is `..\disc` from the
+executable as before. `round.sh` picks the preset itself for an `EXE` under `Release64\`:
+
+```
+EXE='Release64\driving_standalone_test.exe' BASE=lbase_c tools/runner/round.sh p64r lockstep
+```
+
+`compare.py` masks one thing in the sound traces: `SNDSTRM_overhead`'s answer and `SNDSTRM_create`'s memory size,
+which are sizes of the stream library's pointer-bearing records (0xd38 on 32-bit, 0x103c on x86-64). Nothing else
+differs.
+
+**Crash forensics.** The standalone crash reporter prints addresses, registers and stack words at the host's width,
+with r8-r15 on x86-64 (Win64's context and Linux's), and scans the stack in pointer-sized steps; `tools/symbolise.py`
+reads 16-digit addresses and MSVC x64 maps. The x86-64 standalone executables are linked with a PDB (`/Zi`, `/DEBUG`
+with `/OPT:REF /OPT:ICF`, so the code is as without it), so a `crash.dmp` from the runner opens in cdb with source lines
+and locals. That is what found most of the faults below.
+
+**What the first boots found.** Nothing stored an address above 4 GB: the window held. Every fault was one of these
+kinds, and each fix leaves the 32-bit build's code as it was:
+
+| Kind | Where |
+|---|---|
+| A method called through a plain function pointer (a vtable slot read as data, or a method's address) as `__fastcall (this, int, ...)`: on x86 the dummy is EDX and lines up with `__thiscall`; on x86-64 it takes the first argument's register, so every argument moved one along | `AnimVCall` (the anim banks: no bank loaded), the UGroup processors (every CARP resolution), the particle systems' destroy, update and create, the deleting destructors (particles, state manager, texture contexts), the window map's rotations, the article map's find, the static lists' erase. platform/MethodPointer.h's `METHOD_CALL`, `METHOD_EDX` and `METHOD_EDX_ARG` give the pointer and its calls each architecture's form; pointers to methods with no arguments keep their plain `int` |
+| A size or pool still written as the 32-bit layout's number, so x86-64's larger objects overran their blocks or two objects shared one | the EAGL symbol entries (`n + 5`), the anim pool's per-type object sizes (and the pool, scaled with them), FILESYS's block (its op records ran into the next allocation, the font's vertex shader), the rigid body pool, the mixer's unpacker nodes, the weapon manager, the cameras, the anim handles, targetables, voices, the action queue, the gallery, OBBs, the AI commands, the input devices and their mappings (freed with a literal size, into the wrong pool list), the lightning segments. All `sizeof` now, with `LAYOUT_32` checks on the original numbers where they were tables |
+| An owner found as `this - 4` | `RStateNamespace::Owner` and EAGL's private parts (`RenderContextPrivate`, `TextureRenderContextPrivate`, `DevicePrivate`, `ViewPortPrivate`): `offsetof` the member |
+| A layout used through raw offsets | EA's block allocator (RealMemory.cpp): its header links and the class record's are 32-bit words in the window (`Ptr32`), and `MEM_size` reads 32 bits; the C++ library's virtual-base offsets (the istrstream and ostrstream vbtables, the vbase destructors): their own vbtables on a 64-bit host, the class block keeping the original's words, which negative characters read; the water's UV scale and scroll names, which counted 16-byte steps from RWater's base (mission 2's reflection of the surface) |
+| File data still read through native pointers | `StreamEventData` (the stream events' type and name), `WorldModel` (an article's model group, info and path data), `EventSceneRef`, the camera's scene-object description; `WorldSceneObject` keeps its proc-anim state in a word of its matrix, now a `Ptr32` |
+| A float method read as a double (x87's ST0) | the wheels' road height (the car's simple shadow) and the car's speed (the debug view): `X87Float` (X87.h) is a double on x86 and the float on x86-64; the base `RSceneObj::GetRenderOffset` answers a double like `RVehicle`'s, so slot 9 has one type |
+
+**Result** (round p64r2, the runner, to tick 9000): all 16 lockstep runs of the x86-64 test executable are exact
+against `lbase_c`, frames and sound traces. The only intermediate differences were the car shadows' height (mission
+1) and mission 2's water reflection, both found by comparing the backend's per-draw traces (`d3d9_trace_<frame>.log`,
+addresses masked) and render-target dumps of the two builds at the same tick. No floating-point difference showed: the
+32-bit portable-C build's remaining x87 use (float returns and some multiplies) gives the same results as x86-64's SSE
+here, so `lbase_c` needed no regeneration.
+
+**Not done.** The loader digest (section 9) was not built: the sound traces were identical from the first full run and
+every frame difference was found from the draw traces, so it was not needed to reach exactness. The per-tick state
+trace was not needed either. Not checked: the sound heap's and the other fixed pools' high-water marks on x86-64 (no
+allocation failed in the 16 runs), a throw through the C++ library's own exception records (`ThrowInfo` holds 32-bit
+layouts; no throw is reached in these runs), and Linux x86-64 (package 10).
+
 ## 8. Work packages
 
 In order; each keeps the Windows 32-bit build unchanged (Ptr32 is `T *` there) and is tested by it. Sizes: S < 1 day of
@@ -762,7 +831,7 @@ agent time, M 1-2, L 3+.
 | 6 | **Memory-only structures**: the 32-bit-only check form (and the generator's), the literal allocation sizes, the `* 4` arrays, the remaining vtable constants, the 66 narrowings - by directory, in two or three agents. **Done 15 October 2026** (7.6) | L | 32-bit asm diff (nothing may change), checks still all true on 32-bit |
 | 7 | ~~x87 on x86-64~~: replaced by the C forms (`NIGHTFIRE_X87=OFF`, **done 15 October 2026**, 4.4); left: the conversion edge cases (out-of-range float-to-unsigned and float-to-64-bit) | S | lockstep against `lbase_c` |
 | 8 | **The D3D seam and backend**: the state tables' bases, resource `data` words, push-buffer and stream words as window words; kept working for the action engine's 32-bit build. **Done 15 October 2026** (7.8) | M | 32-bit lockstep frames (driving) and the action engine's menu replays |
-| 9 | **Bring-up**: first boot of the 64-bit test executable, then lockstep on all missions against the 32-bit standalone's baselines on the same machine; a per-tick state trace (rigid bodies, AI elements; canonical, no addresses) to find the first divergent tick | M | the 16 lockstep runs, frames and sound traces |
+| 9 | **Bring-up**: first boot of the 64-bit test executable, then lockstep on all missions against the 32-bit standalone's baselines on the same machine; a per-tick state trace (rigid bodies, AI elements; canonical, no addresses) to find the first divergent tick. **Done 15 October 2026** (7.10): 16 of 16 exact against `lbase_c` | M | the 16 lockstep runs, frames and sound traces |
 | 10 | **Linux x86-64** (after step 2): the LP64 `long`s, the Win32-types header with fixed-width types, the runner's Linux baselines | S-M | Linux lockstep |
 
 Packages 3a-5 are independent once 2 has landed; 6 and 8 can run beside them. Two agents at a time fit them
