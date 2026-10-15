@@ -6,7 +6,7 @@
 #include <bit>
 #include <stddef.h>
 #include <stdint.h>
-#include <xmmintrin.h>
+#include "../platform/Sse.h"
 
 #include "../../common/xbeOverload.h"     // XbeVirtual
 #include "../../helpers.h"

@@ -6,7 +6,7 @@
 #include "../game/Vehicle.h"
 
 #include <bit>
-#include <intrin.h>                       // __rdtsc
+#include "../platform/Sse.h"
 
 #include "Colorize.h"
 #include "DebugView.h"

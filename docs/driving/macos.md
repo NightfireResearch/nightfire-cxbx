@@ -1,7 +1,8 @@
 # The driving engine on Apple Silicon macOS
 
-Status: plan (15 October 2026), step 4 of the roadmap in [portable.md](portable.md). Research and design only:
-nothing here is built yet. It follows the 64-bit work ([64-bit.md](64-bit.md)), which it assumes is finished:
+Status: plan (15 October 2026), step 4 of the roadmap in [portable.md](portable.md). Package M0 (the portable SSE
+header, 3.1) is done (15 October 2026); the rest is research and design. It follows the 64-bit work
+([64-bit.md](64-bit.md)), which it assumes is finished:
 packages 3a-5, 8 and 9 (the 64-bit standalone executable exact in lockstep against `lbase_c`) and 10 (Linux
 x86-64, LP64). The macOS branch for an agent running on the Mac is drafted from this once those land.
 
@@ -149,6 +150,49 @@ are allowed.
 | `fldcw` (Windows' x87 control word on each thread) | HostPosix.cpp | x86 only |
 | `_BitScan*64` | GameWindow.cpp (MSVC only) | `__builtin_clzll`/`ctzll` already the non-MSVC path |
 
+### 3.1 The portable SSE header (package M0, done 15 October 2026)
+
+- **Sse.h** (src/driving/platform) is the one place the game's ports get their x86 intrinsics from: the 30 `_mm_*`
+  intrinsics the driving engine uses outside devtools, `__rdtsc`, `__movsd`, `__movsb` (`_mm_getcsr`/`_mm_setcsr`
+  are devtools-only and stay out). `NIGHTFIRE_SSE` (CMake option, on by default, forced off when the target is
+  arm/aarch64) chooses: 1 includes the system headers, so the game's code compiles to exactly what it did; 0 maps
+  each name by macro onto **SseC.h**'s C forms (`namespace sse`). On x86 the system headers are included first even
+  with 0, so a system header that pulls in `<xmmintrin.h>` later adds nothing the macros would clash with; and on
+  x86 `__rdtsc`, `__movsd` and `__movsb` stay the instructions with 0 (winnt.h declares them again, which a macro
+  would break; none of them feeds the simulation, and sse_test checks their C forms).
+- **The C forms** keep SSE's results: lane-wise IEEE single operations, then SSE's NaN choice made explicitly
+  (an operand's NaN quieted, the first's when both are NaN, otherwise the negative default NaN `0xffc00000`), which
+  ARM would otherwise answer differently; `SQRTSS` of a negative gives the default NaN; `CVTTSS2SI`/`CVTSS2SI`
+  give `0x80000000` out of range (round to nearest even spelled out, so no libm and no host rounding mode);
+  REP MOVSD/MOVSB copy upwards element by element; `__rdtsc` counts 733,333,333 Hz from `std::chrono::steady_clock`
+  (as XboxTimer.cpp does on Windows); `_mm_empty` is nothing.
+- **RSQRTSS** is a table: the runner's Intel i7-9700K reads only the exponent's parity and the mantissa's top 10
+  bits (this PC's AMD reads 12), and every two exponent steps halve the result exactly; zero and denormals give
+  infinity of their sign, other negatives the default NaN, +infinity +0. `sse_test --rsqrt-table` (the devtools
+  target of src/driving/devtools/SseTest.cpp) finds the bits by sweep, checks the exponent rule on every normal
+  input and prints SseRsqrtTable.h (2 x 1024 words). The committed table is the runner's.
+- **Tests.** `sse_test` compares every C form with the instruction: all 2^32 inputs for `RSQRTSS`, `SQRTSS`,
+  `CVTTSS2SI`, `CVTSS2SI` and `CVTSI2SS`; 6,034^2 operand pairs (edges: zeros, denormals, limits, infinities,
+  quiet and signalling NaNs of both signs, integer limits, half-way values; plus random) through the arithmetic in
+  every lane; every shuffle selector; loads, stores, sets, `CVTDQ2PS`, overlapping string moves. On the runner, x64
+  and Win32 MSVC builds: 22,494,486,810 checks, 0 differ. 3,104 lanes are counted apart: an addition or
+  multiplication of two NaNs, where MSVC swapped the instruction's operands (it treats them as commutative), so
+  the hardware gave the second NaN; the compiled game is subject to the same choice, so the C form cannot be "more
+  exact" there. On this PC (AMD, clang x86-64, with an AMD table) also 0 differ; mutations (a positive default NaN,
+  ties rounded away from zero) are caught.
+- **The builds.** The Win32 targets (driving, drivinginject, driving_standalone, driving_standalone_test) and the
+  x64 standalone ones compile to the same objects as before: every section of every object identical, bytes and
+  relocations (the object comparison of the 64-bit packages). The Linux i386 build uses REP MOVSD/MOVSB from Sse.h
+  now (src/common/linux/intrin.h no longer has them). **The Windows x64 build with `-DNIGHTFIRE_SSE=OFF`** (every
+  SSE intrinsic of the game as C, RSQRTSS from the table) on the runner: 16 of 16 lockstep runs exact against
+  `lbase_c` (round m0ssec: 0 px differ, sound traces identical to tick 9000). Linux x86-64 with the C forms forced
+  on waits for package M1/10's preset; with `-DNIGHTFIRE_SSE=OFF` it compiles cleanly file by file already (clang
+  x86_64 `-fsyntax-only` on the users of Sse.h). Its lockstep comparison has to be on one machine: in this PC's WSL
+  against WSL baselines made the same way (`lwsl_c`), with this PC's AMD table in place of the Intel one (print it
+  with `sse_test --rsqrt-table` there), since `lbase_c` is the runner's Intel.
+- **Left for the Mac.** Nothing in M0: on arm64 the option is forced off. The aarch64 compile of the game itself is
+  package M2's probe.
+
 **Memory ordering.** x86 is TSO; arm64 is weakly ordered. The game's thread hand-offs (the sound thread, the 100 Hz
 server, the multimedia timer, 39 `volatile`s in platform/, sound/snd/Platform, the D3D backend) were written for
 x86 and may rely on store order. The host's interlocked calls must be sequentially consistent atomics, and each
@@ -252,7 +296,7 @@ the runner) before or beside the last 64-bit packages; A1-A4 and G3 run on the M
 
 | # | Package | Where | Size | Test |
 |---|---|---|---|---|
-| M0 | **Portable SSE**: platform/Sse.h with the 34 intrinsics the game uses (x86: the intrinsics themselves; elsewhere: C with SSE's exact semantics); RSQRTSS by a table generated on the runner from its own instruction (the input bits it depends on found by sweep); `Truncate`/`RoundToInt` in C; `__rdtsc` as a 733 MHz host cycle count; `__movsd`, `_mm_empty`, `fldcw` guarded | x86 | M | 32-bit and x64 MSVC: per-function asm identical; a devtools test of the C forms against the instructions (random and edge inputs, all four RSQRTSS exponent parities); Linux x86-64 built with the C forms forced on: lockstep exact against `lbase_c` on the runner |
+| M0 | **Done 15 Oct 2026 (3.1)**: asm identical on Win32 and x64 MSVC; sse_test 0 differ on the runner (x64, Win32); x64 with `-DNIGHTFIRE_SSE=OFF` 16/16 exact against `lbase_c`; Linux x86-64 forced-C lockstep waits for M1. **Portable SSE**: platform/Sse.h with the 34 intrinsics the game uses (x86: the intrinsics themselves; elsewhere: C with SSE's exact semantics); RSQRTSS by a table generated on the runner from its own instruction (the input bits it depends on found by sweep); `Truncate`/`RoundToInt` in C; `__rdtsc` as a 733 MHz host cycle count; `__movsd`, `_mm_empty`, `fldcw` guarded | x86 | M | 32-bit and x64 MSVC: per-function asm identical; a devtools test of the C forms against the instructions (random and edge inputs, all four RSQRTSS exponent parities); Linux x86-64 built with the C forms forced on: lockstep exact against `lbase_c` on the runner |
 | M1 | **A non-zero window base**: `kGameWindowBase` configurable, null as the word 0, the window [4 GB, 8 GB) on Linux x86-64 (executable linked into it) and Windows x64 (`/BASE:0x140000000` is already there); AnimMisc's pointer-as-float through the word | x86 | S-M | `gamewindow_test`; lockstep exact against `lbase_c` with the base at 4 GB |
 | M2 | **FP and thread audit**: `-ffp-contract=off` in the non-MSVC builds; an arm64 compile probe in the nf-cross image (`--target=aarch64-linux-gnu`, Ubuntu's arm64 headers) for both standalone targets, with the fused-op count; UBSan float-cast-overflow and ThreadSanitizer lockstep runs on Linux x86-64; the races and conversions fixed | x86 | M | probe: 0 errors, 0 fused ops; UBSan/TSan clean; lockstep exact against `lbase_c` |
 | M3 | **Trace redirection without code patching** (6) | x86 | S | traces identical to the patched ones on Windows and Linux |

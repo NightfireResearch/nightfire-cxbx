@@ -20,7 +20,7 @@
 #include <bit>
 #include <math.h>
 #include <string.h>
-#include <xmmintrin.h>
+#include "../platform/Sse.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // The particles: their start, the cache's update and its draws. See ParticleCache.h.

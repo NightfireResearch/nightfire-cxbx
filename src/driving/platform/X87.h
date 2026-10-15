@@ -14,8 +14,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <bit>
-#include <xmmintrin.h>
-#include <emmintrin.h>
+#include "Sse.h"
 
 // What a method answering a float in ST0 is read as where the caller keeps it unrounded: a double on x86 (ST0 holds
 // whatever the method left there), the float itself on x86-64, which returns it in XMM0.

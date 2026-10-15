@@ -132,7 +132,9 @@ are `RSQRTSS`. The float constants the functions load (all in `.rdata`):
 - **MXCSR** is the default `0x1f80` (round to nearest, no FTZ/DAZ). The SSE code depends on it only in the sense
   that the port's SSE code runs under the same MXCSR, so it agrees whatever the value.
 - `RSQRTSS` is an approximation (about 12 bits) whose exact output is CPU-specific (Intel and AMD differ). No
-  function here refines it with a Newton step.
+  function here refines it with a Newton step. Measured: the runner's Intel i7-9700K reads the exponent's parity and
+  the mantissa's top 10 bits, this PC's AMD Ryzen 9800X3D the top 12; hosts without SSE use a table of the Intel's
+  results (src/driving/platform/SseRsqrtTable.h, docs/driving/macos.md 3.1).
 
 ### 3.2 Why C++ `double` reproduces most of the x87 code exactly
 

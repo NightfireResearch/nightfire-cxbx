@@ -1,6 +1,6 @@
 #include "RealMath.h"
 
-#include <xmmintrin.h>
+#include "Sse.h"
 #include <stdint.h>
 #include <string.h>
 

@@ -10,7 +10,7 @@
 #include "../platform/RealPrint.h"
 #include "../platform/X87.h"
 
-#include <intrin.h>
+#include "../platform/Sse.h"
 #include <string.h>
 
 // ---------------------------------------------------------------------------------------------------------------
