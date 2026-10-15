@@ -15,6 +15,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 if grep -v '^#' "$LIST" | grep -qE -- "-Keys|-HoldKey|-AfterHoldKeys"; then
     echo "parallel: $LIST has runs that send keys; run those with remote.sh drive"; exit 2
 fi
+export RUNNER_OS=${RUNNER_OS:-$("$HERE/remote.sh" os)}   # asked once, not by every run
 "$HERE/remote.sh" slots "$N"
 
 CLAIMS=$(mktemp -d)

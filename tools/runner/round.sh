@@ -23,7 +23,8 @@
 #                       runs; it has no shadows, so they are skipped)
 #   TARGETS=<targets>   the targets built (default driving drivinginject, or driving_standalone_test with that EXE)
 #   ENV=<VAR=value;...> add variables to the lockstep runs (NIGHTFIRE_TRAP_ORIGINAL=2, say)
-# Missions default to 1-8.
+# Missions default to 1-8. On a Linux runner (tools/runner/remote.sh: RUNNER_OS, RUNNER_HOST=wsl) the round is the
+# standalone test executable's lockstep runs (EXE defaults to Release/driving_standalone_test), with tools/drive_game.sh.
 set -e
 P=$1; WHAT=${2:-all}
 if [ "$WHAT" = quick ]; then
@@ -31,7 +32,7 @@ if [ "$WHAT" = quick ]; then
 else
     ONLY=.; MS=${3:-1 2 3 4 5 6 7 8}; TO=${TICKS_TO:-9000}
 fi
-[ -n "$P" ] || { sed -n '2,26p' "$0"; exit 2; }
+[ -n "$P" ] || { sed -n '2,28p' "$0"; exit 2; }
 HERE=$(cd "$(dirname "$0")" && pwd)
 REPO=$(cd "$HERE/../.." && pwd)
 cd "$REPO"
@@ -40,7 +41,9 @@ SHADOW_LIST=build/remote/$P.shadow.list
 LOCKSTEP_LIST=build/remote/$P.lockstep.list
 SUMMARY=build/remote/$P.summary
 export RUNNER_SLOTS=${RUNNER_SLOTS:-8}
-EXE=${EXE:-'Release\driving.exe'}
+# The runner's system, asked once for every remote.sh call of the round
+export RUNNER_OS=${RUNNER_OS:-$("$HERE/remote.sh" os)}
+if [ "$RUNNER_OS" = linux ]; then EXE=${EXE:-Release/driving_standalone_test}; else EXE=${EXE:-'Release\driving.exe'}; fi
 case "$EXE" in
     *standalone*) TARGETS=${TARGETS:-driving_standalone_test}; ONLY="" ;;   # no shadows in the standalone build
     *) TARGETS=${TARGETS:-driving drivinginject} ;;
@@ -48,7 +51,7 @@ esac
 K=${SHARDS:-1}
 
 "$HERE/remote.sh" sync > /dev/null
-"$HERE/remote.sh" build $TARGETS | grep " error " && exit 1
+"$HERE/remote.sh" build $TARGETS | grep -E " error |error:|^FAILED" && exit 1
 
 # The dump ticks up to the last, which is always one of them (drive_game stops at "the last")
 TICKS=$(echo 500 1000 1500 2000 2500 3000 3500 4000 4500 5000 5500 6000 6500 7000 8000 9000 |

@@ -1,7 +1,8 @@
 # The test runner
 
 A second Windows PC (`vr-desktop`) builds and runs replays so that long test runs need not tie up the development
-machine. `tools/runner/remote.sh` drives it over SSH.
+machine. `tools/runner/remote.sh` drives it over SSH. A Linux machine, or WSL2 on the development machine, can
+serve as a runner for the driving engine's Linux build ("A Linux runner, and WSL2", below).
 
 **The runner is a convenience, never a requirement.** It only makes testing faster. Everything it does
 (building, the replays, the screenshot comparisons) runs the same way on any development machine, and no part of
@@ -186,3 +187,86 @@ reported success. Scripts that loop over `remote.sh` calls need the same care.
   `vr-desktop.local` first and fall back to `vr-desktop`, so the default works from either.
 - **Login and power:** log in automatically, and never sleep. A disconnected RDP session can leave Direct3D with no
   display. Log in at the console, or reconnect, before a batch of runs.
+
+## A Linux runner, and WSL2
+
+The driving engine's standalone build also runs as a native 32-bit Linux executable (docs/driving/portable.md, step 4),
+and the same commands drive a Linux runner: `remote.sh` asks the runner's system with `uname` (or takes
+`RUNNER_OS=linux`), and `RUNNER_HOST=wsl` makes this PC's WSL2 the runner, with commands going through
+`wsl.exe -d Ubuntu` (`RUNNER_WSL_DISTRO`) instead of ssh. What differs on Linux:
+
+| | Windows runner | Linux runner (WSL2: everything under `~/nf/runner`) |
+| --- | --- | --- |
+| checkout | `C:\nightfire-cxbx` | `~/nightfire-cxbx`; `sync` sends the whole history as a bundle when the runner cannot fetch the base commit (WSL2 has no GitHub key) |
+| `build` | MSBuild, `action actioninject driving drivinginject` | the `linux-i386` preset, `driving_standalone driving_standalone_test`; the executables and the libraries beside them are copied to the checkout's `Release/` |
+| `desktop`, `drive` | a scheduled task in the desktop session, drive_game.ps1 | run directly, with `tools/drive_game.sh` |
+| slots | `C:\nightfire-slots\<n>`, a disc junction | `~/nightfire-slots/<n>`, a disc symlink |
+| `setup` | the scheduled tasks | the checkout and folders, and a list of what is missing |
+
+`round.sh` on a Linux runner runs the standalone test executable's lockstep runs (`EXE` defaults to
+`Release/driving_standalone_test`; there are no shadows), and `compare.py` compares them with a baseline as on
+Windows. `RUNNER_BUILD=<folder on the runner>` makes `build` install a build made elsewhere instead of compiling
+(another branch's, say), and `RUNNER_BUILD_JOBS` limits the compile's parallelism.
+
+**drive_game.sh** takes drive_game.ps1's parameters, so the run lists are the same (`'Release\driving_standalone_test.exe'`
+is read as `Release/driving_standalone_test`), but sends no keys: `-Keys`, `-HoldKey` and `-AfterHoldKeys` are
+refused. It runs headless by default: SDL's offscreen video and dummy audio, dxvk presenting through SDL, and the
+Vulkan driver `NF_VK_ICD` names - `lvp` (the default, Mesa's lavapipe on the CPU, the only one in WSL2), `system`
+(the GPU's) or a path to an ICD file; `LP_NUM_THREADS` (default 3) is lavapipe's thread count. `RUNNER_DISPLAY=:0`
+(passed on as `-Display`) runs the games on that display instead, with SDL's X11 driver and the system's Vulkan.
+
+```
+RUNNER_HOST=wsl tools/runner/remote.sh setup         # the checkout and folders; says what is missing
+RUNNER_HOST=wsl tools/runner/remote.sh sync
+RUNNER_HOST=wsl RUNNER_BUILD_JOBS=6 tools/runner/remote.sh build driving_standalone_test
+RUNNER_HOST=wsl RUNNER_SLOTS=2 BASE=lwsl tools/runner/round.sh new lockstep
+RUNNER_HOST=linux-box RUNNER_USER=charlie BASE=llin tools/runner/round.sh new   # a Linux machine over ssh
+```
+
+### Setting up a Linux runner
+
+- **Packages and FFmpeg:** as docs/driving/portable.md's "Building" lists them (Ubuntu 24.04: the i386 architecture,
+  clang, lld, cmake, ninja, the i386 X11/Wayland/sound development packages, `mesa-vulkan-drivers:i386`), and FFmpeg
+  built once with `tools/fmv/build_ffmpeg.sh linux-i386 ~/ffmpeg-i386`. `build` configures with
+  `-DNF_FFMPEG_LIB_DIR` set to `RUNNER_FFMPEG_LIB` (default `~/ffmpeg-i386/lib`) and, when `RUNNER_DXVK_DIR` is set,
+  an extracted dxvk-native release (otherwise CMake downloads it); SDL3 comes by FetchContent. Under `RUNNER_HOST=wsl`
+  these default to the Linux port's folders on this PC, `~/nf/ffmpeg-i386/lib` and `~/nf/dl/dxvk-native/x/usr`.
+- **SSH** (not for WSL2): key login with `RUNNER_KEY`, bash as the login shell, and `RUNNER_USER` set to the account.
+- **Files git does not hold:** `remote.sh setup` makes the checkout, `sync` fills it, and then the disc (the driving
+  engine needs only `disc/driving`), `Release/settings.ini` and `Release/saves` go over as on Windows; `remote.sh ssh`
+  runs in the checkout and passes stdin on:
+
+  ```
+  tar cf - disc/driving Release/settings.ini Release/saves | RUNNER_HOST=wsl tools/runner/remote.sh ssh 'tar xf -'
+  ```
+
+  settings.ini's `DiscPath=../disc` holds for the checkout and the slots. On lavapipe, set `RenderWidth=640` and
+  `RenderHeight=480` in the runner's copy: rendering is on the CPU, and 1920x1080 is several times slower. A runner
+  with a GPU can keep the Windows resolution.
+- **Display:** none needed. For runs on a real display, a logged-in X session and `RUNNER_DISPLAY=:0` (plus
+  `XAUTHORITY` in the runner's environment if its X server asks for one).
+
+### Baselines for a Linux runner
+
+Lockstep results are exact run to run on one machine and differ between machines (and between the Windows and Linux
+builds' renderers), so a Linux runner keeps its own baselines, named for the machine: `lwsl_*` for this PC's WSL2,
+and a new prefix for each other Linux runner (`llin_*` for vr-desktop under Linux, say). Make them with a round from
+a tested commit, its prefix the baseline name, and copy the run folders into build/baselines:
+
+```
+RUNNER_HOST=wsl RUNNER_SLOTS=2 tools/runner/round.sh lwsl lockstep
+cp -r build/remote/lwsl_m* build/baselines/
+RUNNER_HOST=wsl RUNNER_SLOTS=2 BASE=lwsl tools/runner/round.sh new lockstep    # later rounds
+```
+
+Then check them with a second round against them (every run should be exact), and regenerate after any intended
+change in behaviour, as for the Windows ones. Across builds on one machine the sound traces still compare:
+`compare.py --sound build/baselines/lloc_m1_idle build/remote/lwsl_m1_idle` (lloc_* are this PC's Windows
+baselines) tells whether the Linux build simulates as the Windows build does on the same CPU.
+
+Checked on 15 October 2026 in WSL2 here (driving-port-linux 084b37f, lavapipe, 640x480, 2 slots, LP_NUM_THREADS=3):
+a lockstep round of missions 1 and 2 took 14 minutes (5.5 to 7.5 minutes a run), and made lwsl_m1_*, lwsl_m2_*,
+whose sound traces are identical to lloc's to tick 9000. A second round against them: m1 idle, m1 accelerate and m2
+idle exact; m2 accelerate differed from tick 1 (an engine voice started two ticks late, and the frames dumped one
+frame later), while two further m2 accelerate runs were exact. So the Linux build still has a start-up timing leak,
+seen in one run of four; until it is found, a lone difference there wants a rerun before it counts.
