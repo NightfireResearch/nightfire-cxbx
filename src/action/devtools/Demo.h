@@ -54,6 +54,11 @@ void Demo_SoundAnswer(int buffer, DemoSoundQuery query, uint32_t *answer);
 // psiLaunchDriving: the session leaves for the driving engine. A recording ends here; a playback stops.
 void Demo_LeavingForDriving(void);
 
+// Mem_Init wipes the heap; control_init_object_lists starts the object list again. Between the two (a restart's
+// load spans frames) the object list and the players point into the wiped heap, and the checksums leave them out.
+void Demo_HeapReset(void);
+void Demo_ObjectListsReset(void);
+
 // After the patches: NIGHTFIRE_ORIGINAL=0xADDR,0xADDR,... puts the original back at each address that has a port, so
 // a playback (or any run) runs those functions as shipped - to compare a parcel of ports against the originals,
 // bisect which one changed the game, or measure what the original's code reaches (tools/demo/demo_coverage.py)

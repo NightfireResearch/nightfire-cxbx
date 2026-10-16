@@ -97,6 +97,9 @@ static std::vector<uint8_t> g_stream;
 static size_t g_at = 0;
 static bool g_streamBroken = false;
 static uint32_t g_divergedFrames = 0;
+// From Mem_Init to control_init_object_lists the object list and the players point into the wiped heap. A level load
+// does both in one frame; a restart does not, and the game walks neither meanwhile: the checksums count them as empty
+static bool g_staleObjects = false;
 static uint32_t g_firstDivergence = 0;
 static uint32_t g_bookmarks = 0;
 static bool g_stopOnDivergence = false;
@@ -726,6 +729,12 @@ static void Checksums(uint32_t sums[SUM_COUNT]) {
     sums[SUM_CHANNELS] = Fnv(Fnv(kFnvBasis, switch_channels, sizeof(switch_channels)), switch_channels_time,
                              sizeof(switch_channels_time));
 
+    if (g_staleObjects) {
+        sums[SUM_OBJECTS] = kFnvBasis;
+        sums[SUM_PLAYERS] = kFnvBasis;
+        return;
+    }
+
     uint32_t objects = kFnvBasis;
     for (obj_tag *o = FirstObject; o != NULL; o = o->nextObject) {
         objects = Fnv(objects, &o->objectType, 1);
@@ -806,7 +815,7 @@ void Demo_FrameEnd(void) {
 
     if (g_frame % 1800 == 0) {
         int objects = 0;
-        for (obj_tag *o = FirstObject; o != NULL; o = o->nextObject)
+        for (obj_tag *o = g_staleObjects ? NULL : FirstObject; o != NULL; o = o->nextObject)
             objects++;
         printf("[demo] frame %u: level 0x%08x, %d objects\n", g_frame, (unsigned)GameState.CurrentLevelHashcode,
                objects);
@@ -967,6 +976,14 @@ void Demo_SoundAnswer(int buffer, DemoSoundQuery query, uint32_t *answer) {
     }
     g_lastSound[row][query] = *answer;
     g_haveSound[row][query] = true;
+}
+
+void Demo_HeapReset(void) {
+    g_staleObjects = true;
+}
+
+void Demo_ObjectListsReset(void) {
+    g_staleObjects = false;
 }
 
 void Demo_LeavingForDriving(void) {

@@ -9,6 +9,7 @@
 #include "../../math/math.h"
 #include "../view.h"
 #include "../../game.h"
+#include "../../devtools/Demo.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -248,6 +249,7 @@ void control_init_object_lists(void) {
     DynamicObjList_Unknown350 = 0;
     DynamicObjCount = 0;
     LList_Init(&ForcedList, 0xe4, 0);
+    Demo_ObjectListsReset();
 }
 
 // AUTOGEN

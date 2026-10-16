@@ -3,6 +3,7 @@
 #include "actionhelpers.h"
 #include "memory.h"
 #include "engine/XboxSystem.h"
+#include "devtools/Demo.h"
 
 // XBE_GLOBAL(0x00223a60, 0x1c)
 uint32_t MemStats[7];
@@ -78,6 +79,7 @@ void psiMem_Init(uint *pMem_out, uint *size_out) {
 void Mem_Init(void) {
 
     printf("Mem_Init\n");
+    Demo_HeapReset();
 
     memset(&MemStats, 0, sizeof(MemStats));
 

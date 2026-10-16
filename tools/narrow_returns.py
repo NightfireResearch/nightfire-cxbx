@@ -29,7 +29,7 @@ import function_coverage as fc   # noqa: E402
 
 from capstone import Cs, CS_ARCH_X86, CS_MODE_32   # noqa: E402
 
-NARROW = r"(bool|uint8_t|int8_t|BOOL8|char|unsigned char|signed char)"
+NARROW = r"(bool|uint8_t|int8_t|BOOL8|char|unsigned char|signed char|uchar|byte|undefined1|undefined|CHAR)"
 
 
 def narrow_ports(by_name=None):
