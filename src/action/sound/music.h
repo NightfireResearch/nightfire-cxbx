@@ -13,7 +13,7 @@ uint32_t __cdecl Get_Music_Event(int evtId);
 // the fields NDrone2_SeenAndAttacking uses are named.
 typedef struct MusicVars_t {
     ushort combatThreshold;     // 0x00 - attackers it takes to start the combat music
-    char _pad02[2];
+    ushort calmThreshold;       // 0x02 - Drone_InitComms ends the combat music when no more drones than this count
     uint seenSeconds;           // 0x04 - a drone counts while it saw its opponent this recently
     float closeRange;           // 0x08 - or, once the combat music is on, while it is this close
     ushort combat;              // 0x0c - the combat music is on

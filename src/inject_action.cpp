@@ -54,6 +54,8 @@
 #include "action/game/drone/DroneCollision.h"
 #include "action/game/drone/DroneTracking.h"
 #include "action/game/drone/NDrone2_Route.h"
+#include "action/game/drone/DroneModes.h"
+#include "action/game/drone/DroneInit.h"
 #include "action/game/obj/DroneSpawner.h"
 #include "action/engine/Fmv.h"
 #include "action/gfx/LowLevel.h"

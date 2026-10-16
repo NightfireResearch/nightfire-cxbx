@@ -19,7 +19,7 @@
 #define NDrone2_LogDroneDeath ((void (__cdecl *)(DCVars_tag *dcv))0x0003a1d0)
 #define Pickup_CreateSimple ((obj_tag *(__cdecl *)(_MATRIX *mtx, short weapon, short count, _VECTOR *pos))0x000a7f10)
 
-// Declared with AUTOGEN in Drone.cpp
+// DroneInit.cpp
 void NDrone2_Enable(char enable, Drone_tag *drone);
 
 // The switch channels the engine sets when a mission fails (docs/switch-channels.md)
@@ -221,7 +221,7 @@ static uint Death_FramesFromNow(float ticks) {
 // DSTATE_DeathByExplosion's anim state; its variant is the side the explosion came from (NDrone2_ExplosionDir)
 #define DANIM_DEATH_EXPLOSION 0x44
 
-// Dying: the death anim, then Dead. Abseilers and astronauts have their own death, and a drone with unknown858 its
+// Dying: the death anim, then Dead. Abseilers and astronauts have their own death, and a drone with a death script its
 // special death. The death channel is set on leaving, or by timer A (HendersonB only, 90 ticks on). The drone drops
 // its weapon unless it is still firing with an anim set other than 4 and 9.
 // AUTOINJECT
@@ -247,7 +247,7 @@ bool NDrone2_DSTATE_Death_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         // stateScratch: whether the death channel is still to be set
         dcv->drone->stateScratch = 0;
         Drone_AlertStatusSet(3, dcv);
-        if (dcv->drone->unknown858 != NULL)
+        if (dcv->drone->deathScript != 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_SpecialDeath_Anim, 0);
         DroneFunc_OnInitDeath(dcv);
         if (GameState.CurrentLevelHashcode == HT_Level_HendersonB)
@@ -300,7 +300,7 @@ bool NDrone2_DSTATE_DeathByExplosion(DCVars_tag *dcv, Drone_tag *drone, obj_tag 
     case DRONE_MSG_Enter:
         gameObj->effectFlags |= 0x20;
         Drone_AlertStatusSet(3, dcv);
-        if (dcv->drone->unknown858 != NULL)
+        if (dcv->drone->deathScript != 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_SpecialDeath_Anim, 0);
         DroneFunc_OnInitDeath(dcv);
         if (GameState.CurrentLevelHashcode == HT_Level_HendersonB)

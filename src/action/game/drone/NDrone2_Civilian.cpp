@@ -12,13 +12,13 @@
 #include "NDrone2_Opponent.h"
 #include "NDrone2_Route.h"
 #include "DroneVision_Alerts.h"
+#include "DroneModes.h"
 
 #include <bit>
 #include <math.h>
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
 #define NDrone2_ReFindMissionPath ((bool (__cdecl *)(DCVars_tag *dcv))0x00047290)
-#define NDrone2_ChangeToAttackMode ((short (__cdecl *)(Drone_tag *drone))0x000397f0)
 // FUN_00046c20 and FUN_00046d40 in Ghidra; the names are the PS2 build's
 // Returns in ST0, unrounded
 #define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)

@@ -1820,7 +1820,7 @@ bool _LinkCreep_Handler(AIRoute_tag *route, DCVars_tag *dcv) {
         route->creep.specialPending = 0;
     }
 
-    if ((dcv == NULL || dcv->drone->unknown82c == 0) && AIBoundCount != 0) {
+    if ((dcv == NULL || dcv->drone->door == NULL) && AIBoundCount != 0) {
         bool clear = AINetwork_BoundsNodeTest(&feet.pos, feet.cel, &here.pos, here.cel, 0.2f);
         if (!(Vec_SqDist2D(&feet.pos, &here.pos) < 1.0f) && !clear)
             return _LinkCreep_Decrement(route);

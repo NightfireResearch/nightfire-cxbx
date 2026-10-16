@@ -16,14 +16,14 @@ alertness (Drone+0x3fc and +0x408), +8 init function (Drone_tag *) or NULL. Read
 
 | # | DMODE (PS2) | dtype | side | alertness | init fn (Xbox) |
 |---|---|---|---|---|---|
-| 0 (0x0) | Normal | 0 Normal | 1 | 0.0 | 0x000408a0 init_DMODE_Normal (Ghidra: NDrone2_init_DMODE_Defaults, a thunk to 0x40600) |
-| 1 (0x1) | Guard | 1 Guard | 1 | 0.0 | 0x000408a0 init_DMODE_Normal (Ghidra: NDrone2_init_DMODE_Defaults, a thunk to 0x40600) |
-| 2 (0x2) | Retreater | 1 Guard | 1 | 1.0 | 0x000408a0 init_DMODE_Normal (Ghidra: NDrone2_init_DMODE_Defaults, a thunk to 0x40600) |
+| 0 (0x0) | Normal | 0 Normal | 1 | 0.0 | 0x000408a0 NDrone2_init_DMODE_Normal (a jump to NDrone2_init_DMODE_Defaults, 0x40600) |
+| 1 (0x1) | Guard | 1 Guard | 1 | 0.0 | 0x000408a0 NDrone2_init_DMODE_Normal (a jump to NDrone2_init_DMODE_Defaults, 0x40600) |
+| 2 (0x2) | Retreater | 1 Guard | 1 | 1.0 | 0x000408a0 NDrone2_init_DMODE_Normal (a jump to NDrone2_init_DMODE_Defaults, 0x40600) |
 | 3 (0x3) | Sniper | 2 Sniper | 1 | 0.0 | 0x000408b0 NDrone2_init_DMODE_Sniper |
 | 4 (0x4) | Stealth | 1 Guard | 1 | 0.0 | 0x00040960 NDrone2_init_DMODE_Stealth |
-| 5 (0x5) | Attacker | 6 Attacker | 1 | 0.0 | 0x000408a0 init_DMODE_Normal (Ghidra: NDrone2_init_DMODE_Defaults, a thunk to 0x40600) |
+| 5 (0x5) | Attacker | 6 Attacker | 1 | 0.0 | 0x000408a0 NDrone2_init_DMODE_Normal (a jump to NDrone2_init_DMODE_Defaults, 0x40600) |
 | 6 (0x6) | RunToPoint | 7 RunToPoint | 1 | 1.0 | 0x00040980 NDrone2_init_DMODE_RunToPoint |
-| 7 (0x7) | Assassin | 3 Assassin | 1 | 0.0 | 0x000408a0 init_DMODE_Normal (Ghidra: NDrone2_init_DMODE_Defaults, a thunk to 0x40600) |
+| 7 (0x7) | Assassin | 3 Assassin | 1 | 0.0 | 0x000408a0 NDrone2_init_DMODE_Normal (a jump to NDrone2_init_DMODE_Defaults, 0x40600) |
 | 8 (0x8) | HostageKiller | 4 HostageKiller | 1 | 0.0 | 0x000409b0 NDrone2_init_DMODE_HostageKiller |
 | 9 (0x9) | Hostage | 5 Hostage | 3 | 0.0 | 0x00040a80 NDrone2_init_DMODE_Hostage/HostageTied (ICF) |
 | 10 (0xa) | HostageTied | 5 Hostage | 3 | 0.0 | 0x00040a80 NDrone2_init_DMODE_Hostage/HostageTied (ICF) |
@@ -40,7 +40,7 @@ alertness (Drone+0x3fc and +0x408), +8 init function (Drone_tag *) or NULL. Read
 | 21 (0x15) | Zoe | 17 Zoe | 2 | 0.0 | 0x00040da0 NDrone2_init_DMODE_Zoe |
 | 22 (0x16) | PartyGirl | 18 PartyGirl | 3 | 0.0 | 0x00040dd0 NDrone2_init_DMODE_PartyGirl |
 | 23 (0x17) | CivilianGuard | 19 CivilianGuard | 3 | 0.0 | 0x00040e80 NDrone2_init_DMODE_CivilianGuard |
-| 24 (0x18) | Interogator | 20 Interogator | 1 | 0.0 | 0x000408a0 init_DMODE_Normal (Ghidra: NDrone2_init_DMODE_Defaults, a thunk to 0x40600) |
+| 24 (0x18) | Interogator | 20 Interogator | 1 | 0.0 | 0x000408a0 NDrone2_init_DMODE_Normal (a jump to NDrone2_init_DMODE_Defaults, 0x40600) |
 | 25 (0x19) | CivDoorGuard | 22 CivDoorGuard | 3 | 0.0 | 0x00040f50 NDrone2_init_DMODE_CivDoorGuard |
 | 26 (0x1a) | TruckDriver | 23 TruckDriver | 3 | 0.0 | 0x00040d10 NDrone2_init_DMODE_Mayhew/TruckDriver (ICF) |
 | 27 (0x1b) | CastleChatGuard1 | 24 CastleChatGuard | 1 | 0.0 | 0x00041030 NDrone2_init_DMODE_CastleChatGuard1 |

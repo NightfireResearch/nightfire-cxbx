@@ -437,7 +437,7 @@ void RandomDrone(int i) {
     Near(&d->moveTarget, &o->position);
     d->moveTargetDistance = RandomFloat(0.0f, 20.0f);
     d->nearestDroneDist = RandomFloat(0.0f, 4.0f);
-    d->unknown28c = ShadowRand(0x10000);
+    d->unknown28c = (Drone_tag *)(uintptr_t)ShadowRand(0x10000);
     RandomVector(&d->opponentDelta, 3.0f);
     if (ShadowRand(10) == 0)
         d->opponentDelta = {0.0f, 0.0f, 0.0f};

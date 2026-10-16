@@ -6,7 +6,7 @@
 // Faked, so not tested here: the lines of sight (NDrone2_CanSeeObject, which also counts NPCGlobals.visionTests when
 // the fake is told to), the skeleton (AnimGetBoneWorldTrans, NDrone2_GetHeadPos), the AI volumes
 // (Drone_VisibilityForPosition), the AI links (AINetwork_SetLinksFlagInCircle), the messages
-// (Drone_SM_BroadcastMsg, MP_sendBotMessage), Drone_GetOpponentInfo, and the bot code (BOT_handleOpponentHistory,
+// (Drone_SM_BroadcastMsg, MP_sendBotMessage) and the bot code (BOT_handleOpponentHistory,
 // BOTSTATE_increaseDistraction, BOT_getAggressionMul, MP_getObjectTeam and the objectives). The rest runs for real:
 // Drone_AddDynamicAwarePoint, the vector maths, behaviour_util_getProperty and Rand_Rand, whose state both sides
 // start from and is compared afterwards.
@@ -212,10 +212,6 @@ float __cdecl FakeVisibility(_VECTOR *pos, ushort type) {
     return world.visibility + pos->x * 0.0625f;
 }
 
-void __cdecl FakeOpponentInfo(Drone_tag *drone, obj_tag *obj) {
-    ShadowLog("opponentinfo(%d,%d)", Who(drone), WhoObj(obj));
-}
-
 void InstallFakes() {
     ShadowFakes_Install();
     ShadowHook_Install(0x000648b0, (const void *)&FakeCanSee);
@@ -232,7 +228,6 @@ void InstallFakes() {
     ShadowHook_Install(0x0004e900, (const void *)&FakeBroadcast);
     ShadowHook_Install(0x0004a620, (const void *)&FakeSetLinks);
     ShadowHook_Install(0x00030470, (const void *)&FakeVisibility);
-    ShadowHook_Install(0x00031260, (const void *)&FakeOpponentInfo);
 }
 
 // Every original of this group at once, so they reach each other rather than ours
@@ -737,6 +732,11 @@ void TestEachFrame() {
             glb_players[0] = NULL;
             NPCGlobals.dummyPlayerActive = 0;
         }
+        // Drone_GetOpponentInfo (ours, which our Drone_ProcessOpponents inlines) runs for real: every drone needs
+        // its object
+        for (int i = 0; i < DRONES; i++)
+            if (world.drones[i].gameObj == NULL)
+                world.drones[i].gameObj = &world.objs[i];
         Compare("Drone_ProcessOpponents", trial,
                 [] {
                     OriginalOpponents o;

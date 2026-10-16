@@ -15,7 +15,7 @@
 
 #include <math.h>
 
-// Declared with AUTOGEN in Drone.cpp
+// DroneInit.cpp
 void NDrone2_Enable(char enable, Drone_tag *drone);
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments

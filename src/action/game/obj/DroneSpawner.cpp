@@ -12,15 +12,14 @@
 #include "../../memory.h"
 #include "../../math/math.h"
 #include "../../util/Random.h"
+#include "../drone/DroneInit.h"
 
 #include <string.h>
 
 #pragma fp_contract(off)
 
 // Originals called by address
-#define NDrone2_Enable ((void (__cdecl *)(char enable, Drone_tag *drone))0x000376b0)
 #define NDrone2_CreateFromDIVars ((obj_tag *(__cdecl *)(DIVars_tag *diVars))0x0002fc50)
-#define NDrone2_PostLoad_Init ((void (__cdecl *)(obj_tag *obj))0x00042a90)
 
 #define MALLOC_SPAWNER_SLOTS_ALIGN4 ((MallocFlags)0x3404)
 #define MALLOC_SPAWNER_ENTRIES_ALIGN4 ((MallocFlags)0x3504)

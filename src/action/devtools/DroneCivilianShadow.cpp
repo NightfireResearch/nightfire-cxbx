@@ -289,7 +289,7 @@ void RandomDrone(int i) {
     d->firing = (uchar)ShadowRand(2);
     d->headShot = (uchar)ShadowRand(2);
     d->side = (uchar)(1 + ShadowRand(3));
-    d->unknown858 = ShadowRand(4) == 0 ? &world.explosive : NULL;
+    d->deathScript = (HASHCODE)(ShadowRand(4) == 0 ? 0x0600021f : 0);
     d->alertness = RandomAlertness();
     d->armedPersonRadius = ShadowRandFloat(0.0f, 30.0f);
     d->fadeAlpha = ShadowRand(4) ? ShadowRandFloat(0.0f, 255.0f) : (ShadowRand(2) ? 0.0f : 5.0f);

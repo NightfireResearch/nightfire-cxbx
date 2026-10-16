@@ -1730,7 +1730,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0001a660",
+        "name": "BOT_setOtherPlayerInfo",
         "address": "0x0001a660",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -7454,7 +7454,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00032ed0",
+        "name": "DroneAnim_BaseCallState",
         "address": "0x00032ed0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -7482,7 +7482,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00032fe0",
+        "name": "DroneAnim_SkipAnim",
         "address": "0x00032fe0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -7494,7 +7494,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00033040",
+        "name": "DroneAnim_GetDAnimForAnimState",
         "address": "0x00033040",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -7530,7 +7530,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00033120",
+        "name": "DroneAnim_FreeScript",
         "address": "0x00033120",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -7562,7 +7562,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000331d0",
+        "name": "DroneAnim_OnStartAnim",
         "address": "0x000331d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -7578,7 +7578,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00033240",
+        "name": "DroneAnim_OnEndAnim",
         "address": "0x00033240",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -7642,7 +7642,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00033320",
+        "name": "DroneAnim_PreTransCallback",
         "address": "0x00033320",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -7864,7 +7864,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00033de0",
+        "name": "DroneAnim_GetDAnimForCall",
         "address": "0x00033de0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -7898,7 +7898,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00033ea0",
+        "name": "DroneAnim_SetEndAnim",
         "address": "0x00033ea0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -7970,7 +7970,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000344f0",
+        "name": "DroneAnim_TakeCall",
         "address": "0x000344f0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -8216,7 +8216,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00035ec0",
+        "name": "DAnimFunc_Run",
         "address": "0x00035ec0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -8228,7 +8228,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00035ef0",
+        "name": "DroneData_GetAnimFuncInfo",
         "address": "0x00035ef0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -8244,7 +8244,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00035f20",
+        "name": "DroneData_GetDAStateFuncInfo",
         "address": "0x00035f20",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -10636,7 +10636,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0003fae0",
+        "name": "NDrone2_GetDTYPENEW",
         "address": "0x0003fae0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -10652,7 +10652,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0003fd20",
+        "name": "NDrone2_SecondStateFor",
         "address": "0x0003fd20",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": true,
@@ -10668,7 +10668,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0003fe30",
+        "name": "NDrone2_GetDroneTypeAttackTypeFriend",
         "address": "0x0003fe30",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -10684,7 +10684,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000403b0",
+        "name": "NDrone2_DefaultInitialState",
         "address": "0x000403b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -10700,7 +10700,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00040430",
+        "name": "NDrone2_DoTypeSettingsOLD",
         "address": "0x00040430",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -10734,7 +10734,7 @@
         "namespace": "Global"
     },
     {
-        "name": "NDrone2_init_DMODE_Defaults",
+        "name": "NDrone2_init_DMODE_Normal",
         "address": "0x000408a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -10750,7 +10750,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000408b0",
+        "name": "NDrone2_init_DMODE_Sniper",
         "address": "0x000408b0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -10766,7 +10766,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00040960",
+        "name": "NDrone2_init_DMODE_Stealth",
         "address": "0x00040960",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -10782,7 +10782,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00040980",
+        "name": "NDrone2_init_DMODE_RunToPoint",
         "address": "0x00040980",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -10798,7 +10798,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000409b0",
+        "name": "NDrone2_init_DMODE_HostageKiller",
         "address": "0x000409b0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -10842,7 +10842,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00040ae0",
+        "name": "NDrone2_init_DMODE_JustStand4Demo",
         "address": "0x00040ae0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -10874,7 +10874,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00040c10",
+        "name": "NDrone2_init_DMODE_CivilianScared",
         "address": "0x00040c10",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -10906,7 +10906,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00040d10",
+        "name": "NDrone2_init_DMODE_Mayhew",
         "address": "0x00040d10",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -10922,7 +10922,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00040d30",
+        "name": "NDrone2_init_DMODE_AlarmRaiser",
         "address": "0x00040d30",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -10938,7 +10938,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00040d60",
+        "name": "NDrone2_init_DMODE_SearchLight",
         "address": "0x00040d60",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -10954,7 +10954,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00040d80",
+        "name": "NDrone2_init_DMODE_Ambush",
         "address": "0x00040d80",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -10970,7 +10970,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00040da0",
+        "name": "NDrone2_init_DMODE_Zoe",
         "address": "0x00040da0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -10986,7 +10986,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00040dd0",
+        "name": "NDrone2_init_DMODE_PartyGirl",
         "address": "0x00040dd0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -11002,7 +11002,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00040e80",
+        "name": "NDrone2_init_DMODE_CivilianGuard",
         "address": "0x00040e80",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -11098,7 +11098,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000411f0",
+        "name": "NDrone2_initDTYPE_Sniper",
         "address": "0x000411f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,

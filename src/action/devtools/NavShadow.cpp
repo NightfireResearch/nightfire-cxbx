@@ -617,7 +617,7 @@ void RandomDrones() {
         d->flags = flagSets[ShadowRand(7)];
         static const float healths[] = {10.0f, 10.0f, 0.0f, -0.0f, -5.0f};
         d->health = healths[ShadowRand(5)];
-        d->unknown82c = ShadowRand(4) == 0;
+        d->door = ShadowRand(4) == 0 ? &world.objs[0] : NULL;
         d->currentBehaviour = world.behaviour;
     }
     world.behaviour[0] = ShadowRand(0x10000);

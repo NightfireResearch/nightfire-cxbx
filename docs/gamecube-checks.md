@@ -138,10 +138,10 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | 71 | FUN_80084d0c (AI point) | 0x80084d0c | NumAIPoints > 0xff (writes anyway) | Too many AIPoints | no | Drone_AIPoint | 0x30190 | med-high | dropped | src/action/game/obj/Drone_AIHints.cpp - added (NF_ASSERT: the table holds 256) |
 | 72 | FUN_80085400 (spawner init) | 0x80085400 | group slot already 0xffff | ERROR: More than one DroneSpawner has the same group | no | DroneSpawner_Init | 0x30670 | med-high | dropped | src/action/game/obj/DroneSpawner.cpp - added |
 | 73 | FUN_80085400 | 0x80085400 | either Mem_Malloc for the spawner lists failed | Couldn't allocate memory for DroneSpawner (group %d) | no | DroneSpawner_Init | 0x30670 | med-high | dropped | src/action/game/obj/DroneSpawner.cpp - added |
-| 74 | NDrone2_DefaultInit | 0x80097e84 | AnimObjectNew(o, skin) == 0 | Could not create AnimObjectNew(o,0x%08x) | no | NDrone2_DefaultInit | 0x417f0 | high | ? |
-| 75 | FUN_80099554 | 0x80099554 | behaviours pointer NULL | NULL behaviours pointer! | no | NDrone2_DoModeSettingsNEW | 0x41230 | high (only caller of behaviour_util_get) | ? |
-| 76 | FUN_80099554 | 0x80099554 | *behaviours == 0 although the placement says there is data | No behaviour data stored but placement param claims there is! | no | NDrone2_DoModeSettingsNEW | 0x41230 | high | ? |
-| 77 | FUN_80099554 | 0x80099554 | behaviours pointer NULL (second test) | Drone has no behaviour data! | no | NDrone2_DoModeSettingsNEW | 0x41230 | high | ? |
+| 74 | NDrone2_DefaultInit | 0x80097e84 | AnimObjectNew(o, skin) == 0 | Could not create AnimObjectNew(o,0x%08x) | no | NDrone2_DefaultInit | 0x417f0 | high | ? | src/action/game/drone/DroneInit.cpp - added |
+| 75 | FUN_80099554 | 0x80099554 | behaviours pointer NULL | NULL behaviours pointer! | no | NDrone2_DoModeSettingsNEW | 0x41230 | high (only caller of behaviour_util_get) | dropped | src/action/game/drone/DroneModes.cpp - added |
+| 76 | FUN_80099554 | 0x80099554 | *behaviours == 0 although the placement says there is data | No behaviour data stored but placement param claims there is! | no | NDrone2_DoModeSettingsNEW | 0x41230 | high | dropped | src/action/game/drone/DroneModes.cpp - added |
+| 77 | FUN_80099554 | 0x80099554 | behaviours pointer NULL (second test) | Drone has no behaviour data! | no | NDrone2_DoModeSettingsNEW | 0x41230 | high | dropped | src/action/game/drone/DroneModes.cpp - added |
 | 78 | FUN_8004e46c | 0x8004e46c | mode >= 0x11, or sub-fields out of range (<6, 1..3, 1..0x5b) → reset to defaults, return 0 | Invalid behaviour data! | no | behaviour_util_get | 0x194d0 | high | silent (defaults kept) |
 | 79 | FUN_800a504c (init emitter) | 0x800a504c | no cel given and build_FindCel fails (+ Euroland coords if flag) | ERROR: AIPoint or Corner Cover not in cel - adjust position | no | AINetwork_InitEmitter | 0x4a870 | med-high | silent | src/action/engine/AINetwork.cpp - added |
 | 80 | FUN_800a504c | 0x800a504c | no nav path, or path has 0 nodes, near the emitter | NO NAVIGATION PATH NEAR EMITTER (AIPOINT/COVER) + Emitter cel: %s | no | AINetwork_InitEmitter | 0x4a870 | med-high | silent | src/action/engine/AINetwork.cpp - added (without the cel name) |
@@ -155,7 +155,7 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | 88 | FUN_800c3fa8 (state-machine dispatch) | 0x800c3fa8 | > 1000 state changes in one dispatch | Possible infinite loop | no | Drone_SM_RouteMsgDCV | 0x4e410 | high | dropped | src/action/game/drone/DroneSM.cpp - added |
 | 89 | FUN_80088e84 (set drone anim script) | 0x80088e84 | the drone's script slot (+0x42c) is still NULL after setup | Couldn't set script 0x%08x | no | DroneAnim_SetScript? | 0x34680 | low-med | ? |
 | 90 | FUN_80089e54 (cover anim chooser) | 0x80089e54 | no corner-cover behaviour is available | Doing CornerCover with no behaviour | no | DroneAnim_CoverAnim? | 0x34750 | low-med | ? |
-| 91 | FUN_80089678 (drone anim event callback) | 0x80089678 | event 2 and drone weapon count < 2 | ERROR: Drone has no second weapon | no | not matched | - | - | ? |
+| 91 | FUN_80089678 (drone anim event callback) | 0x80089678 | event 2 and drone weapon count < 2 | ERROR: Drone has no second weapon | no | DroneAnim_EventFunc | 0x33590 | high | ? | src/action/game/drone/DroneAnim.cpp - added |
 | 92 | FUN_800b032c (behaviour handler, table 0x801fec88) | 0x800b032c | msg 1 and drone has no second weapon | ERROR: Drone has no second weapon | no | not matched | - | - | ? |
 | **Player / weapons / rewards** |
 | 93 | FUN_800f6760 (give player weapon) | 0x800f6760 | weapon has no skin hash / skin not loaded → return 0 | FYI: Weapon %d has no skin / FYI: Weapon %d not loaded | no | not matched (unnamed on Xbox) | - | - | ? |

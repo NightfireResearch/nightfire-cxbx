@@ -8,7 +8,9 @@
 // A gun turret's extra data: the Ronin, and the ceiling-mounted guns. Only what the player's camera reads is
 // named so far; GT_Update uses much more.
 typedef struct {
-    char unknown00[0xb0];
+    char unknown00[0xa8];
+    obj_tag *drone;        // 0xa8 - a drone it belongs to: Drone_Delete blows the turret up with it
+    char unknownAC[0xb0 - 0xac];
     obj_tag *muzzleFlash;  // 0xb0 - hidden between shots; it follows the gun's aim, and the Ronin's remote camera
                            //        rides on it (Player_PositionCamera)
     obj_tag *barrel;       // 0xb4 - spins while firing; bullets leave from it
@@ -17,6 +19,7 @@ typedef struct {
 
 static_assert(sizeof(GUNTURRET) == 0xe4, "Bad size for GUNTURRET");
 static_assert(offsetof(GUNTURRET, muzzleFlash) == 0xb0, "Bad offset of muzzleFlash");
+static_assert(offsetof(GUNTURRET, drone) == 0xa8, "Bad offset of drone");
 
 #pragma pack(pop)
 

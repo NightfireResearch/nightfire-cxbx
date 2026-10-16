@@ -54,6 +54,7 @@ struct World {
     HITDATA_tag hit;
     uint8_t hitList[0x50];
     uint8_t cel[0x40];
+    sAnimScript_tag script;     // what AnimScriptAdd answers
     DCVars_tag dcv;
 
     // What the fakes answer
@@ -248,8 +249,18 @@ bool __cdecl FakeMoveRelative(_VECTOR *offset, Drone_tag *drone, obj_tag *obj, c
     return world.canMove != 0;
 }
 
-void __cdecl FakeSetDAnimNow(ushort anim, ushort p2, int p3, DCVars_tag *dcv) {
-    ShadowLog("danimnow(%u,%u,%d,%d)", anim, p2, p3, Who(dcv->drone));
+// DroneAnim_SetDAnimNow runs for real on both sides (ours is inlined into our DroneAnim_PlayFiringAnim, so a fake
+// on it would only be reached by the original); its script comes from here.
+bool __cdecl FakeDoAnimation(Drone_tag *drone) {
+    ShadowLog("doanimation(%d)", Who(drone));
+    return false;
+}
+
+sAnimScript_tag *__cdecl FakeScriptAdd(obj_tag *obj, HASHCODE hashcode) {
+    ShadowLog("scriptadd(%x)", hashcode);
+    memset(&world.script, 0, sizeof(world.script));
+    world.script.numFrames = 20;
+    return &world.script;
 }
 
 void InstallFakes() {
@@ -275,7 +286,8 @@ void InstallFakes() {
     ShadowHook_Install(0x000378f0, (const void *)&FakeAimPos);
     ShadowHook_Install(0x00064be0, (const void *)&FakeArmed);
     ShadowHook_Install(0x000453e0, (const void *)&FakeMoveRelative);
-    ShadowHook_Install(0x00035dc0, (const void *)&FakeSetDAnimNow);
+    ShadowHook_Install(0x00037730, (const void *)&FakeDoAnimation);
+    ShadowHook_Install(0x00017220, (const void *)&FakeScriptAdd);
 }
 
 // Every original of this file at once, so they reach each other rather than ours

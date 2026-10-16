@@ -108,6 +108,10 @@ add_library(actioninject SHARED
   src/action/devtools/DroneMoveShadow.cpp
   src/action/devtools/DroneCollisionShadow.cpp
   src/action/devtools/DroneRouteShadow.cpp
+  src/action/devtools/DroneModeShadow.cpp
+  src/action/devtools/DroneInitShadow.cpp
+  src/action/devtools/DroneAnimShadow.cpp
+  src/action/devtools/DroneCoreShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/Teleport.cpp
   src/action/devtools/Demo.cpp
@@ -213,6 +217,8 @@ add_library(actioninject SHARED
   src/action/game/drone/DroneCollision.cpp
   src/action/game/drone/DroneTracking.cpp
   src/action/game/drone/NDrone2_Route.cpp
+  src/action/game/drone/DroneModes.cpp
+  src/action/game/drone/DroneInit.cpp
   src/action/game/obj/DroneSpawner.cpp
   src/action/game/mp/multiplayer.cpp
   src/action/game/obj/Break.cpp

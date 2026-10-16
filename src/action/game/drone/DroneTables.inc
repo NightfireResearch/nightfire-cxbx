@@ -30,6 +30,29 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *
 bool NDrone2_DSTATE_ReturnToPatrolPath(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_WaitForever(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_WaitSwitch(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+void NDrone2_initDTYPE_Sniper(Drone_tag *);
+void NDrone2_initDTYPE_SniperAlert(Drone_tag *);
+void NDrone2_init_DMODE_AlarmRaiser(Drone_tag *);
+void NDrone2_init_DMODE_Ambush(Drone_tag *);
+void NDrone2_init_DMODE_CastleChatGuard1(Drone_tag *);
+void NDrone2_init_DMODE_CastleChatGuard2(Drone_tag *);
+void NDrone2_init_DMODE_CivDoorGuard(Drone_tag *);
+void NDrone2_init_DMODE_Civilian(Drone_tag *);
+void NDrone2_init_DMODE_CivilianGuard(Drone_tag *);
+void NDrone2_init_DMODE_CivilianScared(Drone_tag *);
+void NDrone2_init_DMODE_HostageKiller(Drone_tag *);
+void NDrone2_init_DMODE_HostageTied(Drone_tag *);
+void NDrone2_init_DMODE_JustStand4Demo(Drone_tag *);
+void NDrone2_init_DMODE_Mayhew(Drone_tag *);
+void NDrone2_init_DMODE_MissionFailer(Drone_tag *);
+void NDrone2_init_DMODE_PartyGirl(Drone_tag *);
+void NDrone2_init_DMODE_PartyGirlLooker(Drone_tag *);
+void NDrone2_init_DMODE_RunToPoint(Drone_tag *);
+void NDrone2_init_DMODE_SearchLight(Drone_tag *);
+void NDrone2_init_DMODE_Sniper(Drone_tag *);
+void NDrone2_init_DMODE_SniperAlert(Drone_tag *);
+void NDrone2_init_DMODE_Stealth(Drone_tag *);
+void NDrone2_init_DMODE_Zoe(Drone_tag *);
 
 #define DRONE_STATE_FUNCS_INIT { \
     /*   0 DSTATE_Global                      */ NDrone2_DSTATE_Global, \
@@ -285,37 +308,37 @@ bool NDrone2_DSTATE_WaitSwitch(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *
 }
 
 #define DRONE_MODE_SETTINGS_INIT { \
-    /*  0 */ { 0, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Defaults */ }, \
-    /*  1 */ { 1, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Defaults */ }, \
-    /*  2 */ { 1, 1, 0, 1.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Defaults */ }, \
-    /*  3 */ { 2, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000408b0 /* FUN_000408b0 */ }, \
-    /*  4 */ { 1, 1, 0, 0.0f, (void (*)(Drone_tag *))0x00040960 /* FUN_00040960 */ }, \
-    /*  5 */ { 6, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Defaults */ }, \
-    /*  6 */ { 7, 1, 0, 1.0f, (void (*)(Drone_tag *))0x00040980 /* FUN_00040980 */ }, \
-    /*  7 */ { 3, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Defaults */ }, \
-    /*  8 */ { 4, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000409b0 /* FUN_000409b0 */ }, \
-    /*  9 */ { 5, 3, 0, 0.0f, (void (*)(Drone_tag *))0x00040a80 /* NDrone2_init_DMODE_HostageTied */ }, \
-    /* 10 */ { 5, 3, 0, 0.0f, (void (*)(Drone_tag *))0x00040a80 /* NDrone2_init_DMODE_HostageTied */ }, \
-    /* 11 */ { 8, 3, 0, 0.0f, (void (*)(Drone_tag *))0x00040ae0 /* FUN_00040ae0 */ }, \
+    /*  0 */ { 0, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Normal */ }, \
+    /*  1 */ { 1, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Normal */ }, \
+    /*  2 */ { 1, 1, 0, 1.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Normal */ }, \
+    /*  3 */ { 2, 1, 0, 0.0f, NDrone2_init_DMODE_Sniper }, \
+    /*  4 */ { 1, 1, 0, 0.0f, NDrone2_init_DMODE_Stealth }, \
+    /*  5 */ { 6, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Normal */ }, \
+    /*  6 */ { 7, 1, 0, 1.0f, NDrone2_init_DMODE_RunToPoint }, \
+    /*  7 */ { 3, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Normal */ }, \
+    /*  8 */ { 4, 1, 0, 0.0f, NDrone2_init_DMODE_HostageKiller }, \
+    /*  9 */ { 5, 3, 0, 0.0f, NDrone2_init_DMODE_HostageTied }, \
+    /* 10 */ { 5, 3, 0, 0.0f, NDrone2_init_DMODE_HostageTied }, \
+    /* 11 */ { 8, 3, 0, 0.0f, NDrone2_init_DMODE_JustStand4Demo }, \
     /* 12 */ { 21, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000e0ec0 /* empty function */ }, \
-    /* 13 */ { 9, 3, 0, 0.0f, (void (*)(Drone_tag *))0x00040b00 /* NDrone2_init_DMODE_Civilian */ }, \
-    /* 14 */ { 10, 3, 0, 1.0f, (void (*)(Drone_tag *))0x00040c10 /* FUN_00040c10 */ }, \
-    /* 15 */ { 11, 1, 0, 0.0f, (void (*)(Drone_tag *))0x00040ce0 /* NDrone2_init_DMODE_MissionFailer */ }, \
-    /* 16 */ { 12, 2, 0, 0.0f, (void (*)(Drone_tag *))0x00040d10 /* FUN_00040d10 */ }, \
+    /* 13 */ { 9, 3, 0, 0.0f, NDrone2_init_DMODE_Civilian }, \
+    /* 14 */ { 10, 3, 0, 1.0f, NDrone2_init_DMODE_CivilianScared }, \
+    /* 15 */ { 11, 1, 0, 0.0f, NDrone2_init_DMODE_MissionFailer }, \
+    /* 16 */ { 12, 2, 0, 0.0f, NDrone2_init_DMODE_Mayhew }, \
     /* 17 */ { 13, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000e0ec0 /* empty function */ }, \
-    /* 18 */ { 14, 1, 0, 1.0f, (void (*)(Drone_tag *))0x00040d30 /* FUN_00040d30 */ }, \
-    /* 19 */ { 15, 1, 0, 0.0f, (void (*)(Drone_tag *))0x00040d60 /* FUN_00040d60 */ }, \
-    /* 20 */ { 16, 1, 0, 0.0f, (void (*)(Drone_tag *))0x00040d80 /* FUN_00040d80 */ }, \
-    /* 21 */ { 17, 2, 0, 0.0f, (void (*)(Drone_tag *))0x00040da0 /* FUN_00040da0 */ }, \
-    /* 22 */ { 18, 3, 0, 0.0f, (void (*)(Drone_tag *))0x00040dd0 /* FUN_00040dd0 */ }, \
-    /* 23 */ { 19, 3, 0, 0.0f, (void (*)(Drone_tag *))0x00040e80 /* FUN_00040e80 */ }, \
-    /* 24 */ { 20, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Defaults */ }, \
-    /* 25 */ { 22, 3, 0, 0.0f, (void (*)(Drone_tag *))0x00040f50 /* NDrone2_init_DMODE_CivDoorGuard */ }, \
-    /* 26 */ { 23, 3, 0, 0.0f, (void (*)(Drone_tag *))0x00040d10 /* FUN_00040d10 */ }, \
-    /* 27 */ { 24, 1, 0, 0.0f, (void (*)(Drone_tag *))0x00041030 /* NDrone2_init_DMODE_CastleChatGuard1 */ }, \
-    /* 28 */ { 24, 1, 0, 0.0f, (void (*)(Drone_tag *))0x00041050 /* NDrone2_init_DMODE_CastleChatGuard2 */ }, \
-    /* 29 */ { 25, 1, 0, 1.0f, (void (*)(Drone_tag *))0x00041080 /* NDrone2_init_DMODE_SniperAlert */ }, \
-    /* 30 */ { 18, 3, 0, 0.0f, (void (*)(Drone_tag *))0x00041120 /* NDrone2_init_DMODE_PartyGirlLooker */ }, \
+    /* 18 */ { 14, 1, 0, 1.0f, NDrone2_init_DMODE_AlarmRaiser }, \
+    /* 19 */ { 15, 1, 0, 0.0f, NDrone2_init_DMODE_SearchLight }, \
+    /* 20 */ { 16, 1, 0, 0.0f, NDrone2_init_DMODE_Ambush }, \
+    /* 21 */ { 17, 2, 0, 0.0f, NDrone2_init_DMODE_Zoe }, \
+    /* 22 */ { 18, 3, 0, 0.0f, NDrone2_init_DMODE_PartyGirl }, \
+    /* 23 */ { 19, 3, 0, 0.0f, NDrone2_init_DMODE_CivilianGuard }, \
+    /* 24 */ { 20, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Normal */ }, \
+    /* 25 */ { 22, 3, 0, 0.0f, NDrone2_init_DMODE_CivDoorGuard }, \
+    /* 26 */ { 23, 3, 0, 0.0f, NDrone2_init_DMODE_Mayhew }, \
+    /* 27 */ { 24, 1, 0, 0.0f, NDrone2_init_DMODE_CastleChatGuard1 }, \
+    /* 28 */ { 24, 1, 0, 0.0f, NDrone2_init_DMODE_CastleChatGuard2 }, \
+    /* 29 */ { 25, 1, 0, 1.0f, NDrone2_init_DMODE_SniperAlert }, \
+    /* 30 */ { 18, 3, 0, 0.0f, NDrone2_init_DMODE_PartyGirlLooker }, \
     /* 31 */ { 2, 1, 0, 0.0f, NULL }, \
     /* 32 */ { 26, 3, 0, 0.0f, NULL }, \
     /* 33 */ { 30, 2, 0, 0.0f, (void (*)(Drone_tag *))0x000e0ec0 /* empty function */ }, \
@@ -326,7 +349,7 @@ bool NDrone2_DSTATE_WaitSwitch(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *
 #define DRONE_TYPE_SETTINGS_INIT { \
     /*  0 */ { -1, 0, NULL, NULL }, \
     /*  1 */ { 6, 0, NULL, NULL }, \
-    /*  2 */ { 41, 42, (void (*)(Drone_tag *))0x000411f0 /* FUN_000411f0 */, NULL }, \
+    /*  2 */ { 41, 42, NDrone2_initDTYPE_Sniper, NULL }, \
     /*  3 */ { -1, 0, NULL, NULL }, \
     /*  4 */ { 8, 0, NULL, NULL }, \
     /*  5 */ { 10, 10, NULL, NULL }, \
@@ -349,7 +372,7 @@ bool NDrone2_DSTATE_WaitSwitch(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *
     /* 22 */ { 49, 0, NULL, NULL }, \
     /* 23 */ { 50, 18, NULL, NULL }, \
     /* 24 */ { 54, 0, NULL, NULL }, \
-    /* 25 */ { 42, 0, (void (*)(Drone_tag *))0x00041200 /* NDrone2_initDTYPE_SniperAlert */, NULL }, \
+    /* 25 */ { 42, 0, NDrone2_initDTYPE_SniperAlert, NULL }, \
     /* 26 */ { -1, 0, NULL, NULL }, \
     /* 27 */ { 142, 0, NULL, NULL }, \
     /* 28 */ { 142, 0, NULL, NULL }, \

@@ -59,7 +59,7 @@ typedef struct DIVars_tag {
     obj_tag* gameObj;       // 0x00 - the created object (set by NDrone2_CreateFromDIVars)
     _VECTOR position;       // 0x04
     _VECTOR rotation;       // 0x10 - only .y is used
-    int glist;              // 0x1c - celglist for the unused MINISUB path; always 0
+    celglist_tag *glist;    // 0x1c - NDrone2_CreateObj makes a MINISUB-type object with this model; always NULL
     DroneKeys keys;         // 0x20
 } DIVars_tag;
 
@@ -100,6 +100,12 @@ typedef struct DroneImpact_tag {
 #define DRONE_SIGHT_SEES_OPPONENT 4    // registered the opponent after the reaction time (DroneVision_HaveOpponentSight)
 #define DRONE_SIGHT_REACTED 8           // has reacted to a first sighting: DroneFunc_ReactionTime is 0 from then on
 
+// A row's or anim state's function (DroneData_AnimFunc, DroneData_DAStateFunc), run with a DANIMFUNC_ phase
+typedef void (*DroneAnimFunc)(Drone_tag *drone, ushort phase);
+#define DANIMFUNC_START 0   // the row's script has started
+#define DANIMFUNC_FRAME 1   // each frame it plays (Drone_Control)
+#define DANIMFUNC_END 2     // the row ends
+
 // One drone (the obj_tag's extraObjectData), 0x978 bytes. Only the fields docs/drone/architecture/README.md 4.3 is
 // sure of are named; A3-drone-fields.md lists every offset the code touches.
 typedef struct Drone_tag {
@@ -114,7 +120,7 @@ typedef struct Drone_tag {
     uchar unknown16;                // 0x016 - set by PressAlarm and RunToAlarm, cleared by DroneFunc_HandleImpact in
                                     //         TowerA/TowerB; NDrone2_SeenAndAttacking
                                     //         then counts the drone as attacking
-    uchar unknown17;                // 0x017
+    uchar unknown17;                // 0x017 - DroneMove_NoBunching's answer, each frame (NDrone2_ControlSTANDARD)
     uchar ninjaEyes;                // 0x018 (inferred)
     uchar captain;                  // 0x019 - drops grenades when it dies (DroneFunc_OnInitDeath)
     uchar unknown1a;                // 0x01a
@@ -132,13 +138,15 @@ typedef struct Drone_tag {
                                     //         DroneMove_AstronautCombat)
     uchar avoidingPlayer;           // 0x025 - NDrone2_Steer is turning it away from a player
     uchar touchingPlayer;           // 0x026 - set when the player's collision hits it (NDrone2_DealWithObjHit)
-    char _pad27[0x29 - 0x27];
+    uchar rootHeightSet;            // 0x027 - DroneAnim_PreTransCallback: the anim gave a root height
+    uchar attackModeTaken;          // 0x028 - set by NDrone2_ChangeToAttackMode (our name)
     uchar usingSecondBehaviour;     // 0x029
     uchar inPlayersSights;          // 0x02a - set by Check_Target and NDrone2_PreDroneControl; the talk functions
                                     //         speak while it is set (the player aiming at the drone: inferred)
     uchar explosiveSeen;            // 0x02b - DroneFunc_ConsiderExplosive set it running from explosivePos
     uchar headTracking;             // 0x02c - NDrone2_HeadTrackObj was given an object
-    char _pad2d[0x2f - 0x2d];
+    uchar unknown2d;                // 0x02d - cleared by NDrone2_PostLoad_Init
+    char _pad2e;
     uchar smallCollision;           // 0x02f - set by the stun states: NDrone2_Collision makes a 0.3 sphere at the feet
     char _pad30;
     uchar modeFlag31;               // 0x031
@@ -164,14 +172,16 @@ typedef struct Drone_tag {
     uchar seenPlayerLogged;         // 0x042 - DroneVision_LogSeenOpponent has counted it
     char _pad43;
     uchar side;                    // 0x044 - 1 enemy, 2 ally, 3 civilian / neutral
-    char _pad45[0x50 - 0x45];
+    char secondWeapon;              // 0x045 - DroneAnim_EventFunc's event 2 changes to it
+    char _pad46[0x50 - 0x46];
     float floatAcceleration;        // 0x050 - NDrone2_Move: how fast it speeds up towards moveTarget, a second
     char _pad54[0x60 - 0x54];
     _VECTOR contactLocal;           // 0x060 - NDrone2_DealWithObjHit: where the player touched it, in its own space,
     _VECTOR contactRot;             // 0x06c   that as a rotation,
     _VECTOR contactDir;             // 0x078   and in the world, from its position
     float rootHeight;               // 0x084 - from the position down to the feet (NDrone2_Collision, Drone_FeetOnPoint)
-    char _pad88[0x90 - 0x88];
+    float prevRootHeight;           // 0x088 - rootHeight before DroneAnim_PreTransCallback changed it
+    float animRootHeight;           // 0x08c - the anim's root height (AnimObj.rootHeight), 0 for none
     float health;                   // 0x090
     float startHealth;              // 0x094
     uchar accuracy;                 // 0x098 - the behaviour / bot stats (lower is better)
@@ -193,7 +203,7 @@ typedef struct Drone_tag {
     uchar behaviour2Mode;           // 0x0ad
     char _padae[0xb0 - 0xae];
     uint initialisedOnFrame;        // 0x0b0
-    char _padb4[0xb8 - 0xb4];
+    uint unknownb4;                 // 0x0b4 - 0xf from NDrone2_DefaultInit (0x3c for skin class 0x13 in EvilBase)
     uint sightTestFrame;            // 0x0b8 - when DroneVision_ProcessDroneSight last tested its line of sight
     short skinClass;               // 0x0bc
     short animSet;                  // 0x0be - the weapon stance table index (inferred)
@@ -214,7 +224,8 @@ typedef struct Drone_tag {
     short mode;                     // 0x11c - key 5
     short secondaryMode;            // 0x11e - key 8
     uchar deathSwitchChannel;       // 0x120 - key 12
-    char _pad121[0x124 - 0x121];
+    uchar chatSwitchChannel;        // 0x121 - DSTATE_CastleChatGuard1 waits for this switch channel (0x19 or 0x11)
+    char _pad122[0x124 - 0x122];
     int groupAfterSetup;            // 0x124
     int group;                      // 0x128 - key 4
     uint key7;                      // 0x12c
@@ -226,7 +237,7 @@ typedef struct Drone_tag {
     uchar targetSlot;               // 0x14c - the NPCGlobals.targets entry for the opponent (0xff for none)
     char _pad14d[0x150 - 0x14d];
     _VECTOR opponentLastPos;        // 0x150 - aimed at while there is no opponent (DroneWeap_HandleFiring; inferred)
-    char _pad15c[0x168 - 0x15c];
+    _VECTOR opponentLastRot;        // 0x15c - the opponent's rotation (Drone_GetOpponentInfo)
     float distanceToTarget;         // 0x168 - to the opponent (Drone_GetOpponentInfo)
     _VECTOR opponentDelta;          // 0x16c - from the drone to the opponent: DroneWeap_CloseCombatImpact's direction
     _VECTOR opponentAngles;         // 0x178 - the rotation DroneWeap_DoBulletAccuracy turns its miss by
@@ -252,21 +263,26 @@ typedef struct Drone_tag {
     float opponentVisibility;       // 0x1d0 - DroneVision_OpponentVisibility: 0.7 or more is enough to look
     uint firstSeenFrame;            // 0x1d4 - DroneVision_HaveOpponentSight, at the first sighting
     uint opponentSeenFrame;         // 0x1d8 - DroneVision_HaveOpponentSight (inferred)
-    char _pad1dc[0x1e8 - 0x1dc];
+    _VECTOR seenFromPos;            // 0x1dc - where the drone stood when Drone_GetOpponentInfo last passed its sighting
+                                    //         to its target (our name)
     _VECTOR opponentSeenPos;        // 0x1e8 - where it was last seen (DroneVision_HaveOpponentSight)
     _VECTOR opponentSeenRot;        // 0x1f4 - and its rotation then
     uint sightFrames;               // 0x200 - frames of continuous sight (DroneVision_HaveOpponentSight)
     uint unseenFrames;              // 0x204 - frames without sight of the opponent: over 15 ends a burst
                                     //         (DroneWeap_DoFiring; inferred)
-    char _pad208[0x234 - 0x208];
+    char _pad208[0x230 - 0x208];
+    obj_tag *unknown230;            // 0x230 - an object; Drone_Delete clears it
     obj_tag *lastAttacker;          // 0x234 - who killed it, for DroneFunc_OnInitDeath and DroneFunc_SetDeathChannel
     obj_tag *nearArmedDrone;        // 0x238 - the armed enemy NDrone2_NearArmedDrone found
-    char _pad23c[0x240 - 0x23c];
+    obj_tag *unknown23c;            // 0x23c - an object; Drone_Delete clears it
     Drone_tag *opponentCursor;     // 0x240 - the drone an ally's NDrone2_FindOpponent looked at last (NDrone2List)
-    char _pad244[0x284 - 0x244];
+    uint inPlayersSightsFrame;      // 0x244 - set by Check_Target; 30 x FRAME_RATE_DIV frames on, PreDroneControl
+                                    //         clears inPlayersSights
+    uint inPlayersSightsFrames;     // 0x248 - frames inPlayersSights has been set (PreDroneControl)
+    char _pad24c[0x284 - 0x24c];
     float nearestDroneDist;         // 0x284 - NDrone2_Steer: how far the nearest drone within 3 m is,
     Drone_tag *nearestDrone;        // 0x288   and which (DroneMove_NoBunching)
-    uint unknown28c;                // 0x28c - cleared by NDrone2_Steer
+    Drone_tag *unknown28c;          // 0x28c - cleared by NDrone2_Steer and, when it is the drone deleted, Drone_Delete
     uint unknown290;                // 0x290 - LinkCreep_Handler sets 0x1e when a creep step is blocked;
                                     //         DroneMove_NoBunching adds which side nearestDrone is on
     uint boundaryFlags;             // 0x294 - DroneMove_SetBoundryFlags: 2 ahead, 4 behind, 8 left, 0x10 right blocked
@@ -291,13 +307,17 @@ typedef struct Drone_tag {
     HITTEST_tag collision;          // 0x2fc - the capsule NDrone2_Collision sets up for the collision update
     HITDATA_tag *lastHit;           // 0x388 - set by NDrone2_PreDroneControl; DroneAnim_LocationDeathAnim reads it
     float moved;                    // 0x38c - how far it moved last frame (Drone_Control): NDrone2_Steer's speed
-    char _pad390[0x394 - 0x390];
+    float unknown390;               // 0x390 - unknown3a0's length (Drone_Control)
     _VECTOR velocity;               // 0x394 - Drone_CollisionHandler moves the drone by it, NDrone2_Fall adds gravity;
                                     //         DTYPE_Astronaut: NDrone2_DealWithObjHit reverses or replaces it
-    char _pad3a0[0x3ac - 0x3a0];
+    _VECTOR unknown3a0;             // 0x3a0
     float turnRate;                 // 0x3ac - NDrone2_Steer turns moveRotation by this share of the angle a frame
     _VECTOR moveRotation;           // 0x3b0 - the heading it walks at (only .y is turned)
-    char _pad3bc[0x3cc - 0x3bc];
+    float animCallSpeedTaken;       // 0x3bc - animCallSpeed, when the call's row starts (DroneAnim_CallHandler)
+    float yawOffset;                // 0x3c0 - added to the heading for NDrone2_Move only; cleared every frame by
+                                    //         PreDroneControl (nightfire-port's name)
+    char _pad3c4[0x3ca - 0x3c4];
+    ushort unknown3ca;              // 0x3ca - cleared by NDrone2_DefaultInit
     DYNAMICSOUNDS *speechChannel;   // 0x3cc - what the drone is saying (NDrone2_SpeechSFX); Drone_IsTalking clears it
                                     //         once it has finished
     uint unknown3d0;                // 0x3d0 - a frame: for 3 s after it, NDrone2_HitTalkExtra says nothing 1 time in 5;
@@ -331,22 +351,28 @@ typedef struct Drone_tag {
     void *facialAnim;               // 0x438 - NDrone2_SpeechSFX's facial animation; the talk functions count a line
                                     //         as said when either it or the speech started
     uint impactAnimFrame;           // 0x43c - when it last played an impact anim (Punch and BulletImpact)
-    void *animCallback1;            // 0x440
-    void *animCallback2;            // 0x444
+    DroneAnimFunc animFunc;         // 0x440 - the row's function (DroneData_AnimFunc), run with a DANIMFUNC_ phase
+    DroneAnimFunc animStateFunc;    // 0x444 - the anim state's (DroneData_DAStateFunc)
     float unknown448;               // 0x448 - pi, set by DSTATE_PlayScript at the end of script 0x60007ac
     char _pad44c[0x450 - 0x44c];
     HASHCODE playScript;            // 0x450 - key 1
     DroneAnimCall animCall;         // 0x454 - the anim state asked for (DroneAnim_CallAnim)
     uchar animMode;                 // 0x464 - the playing row's completion mode (docs/drone/behaviours 6.1)
-    char _pad465;
+    uchar animPriority;             // 0x465 - DroneAnimStates[animState].priority
     short animState;                // 0x466 - the anim state playing
     ushort animRow;                 // 0x468 - the Drone_AnimInfo row playing
-    char _pad46a[0x46c - 0x46a];
+    ushort animStartFrame;          // 0x46a - the script's first frame (999 = its last)
     uint unknown46c;                // 0x46c - set by DroneAnim_SetScript; with 0x380, NDrone2_SetAngleToObj turns only
                                     //         when forced
-    char _pad470[0x477 - 0x470];
-    uchar unknown477;               // 0x477 - cleared by every new anim call
-    char _pad478[0x481 - 0x478];
+    uint prevAnimFlags;             // 0x470 - unknown46c of the row before
+    uchar animCallFlag;             // 0x474 - from the transition that started the row; cleared once no script blends
+                                    //         out (unknown434)
+    uchar animPlaying;              // 0x475 - a row that does not loop is playing (cleared at its script's end)
+    uchar animOnce;                 // 0x476 - the row does not loop; DroneAnim_CallHandler moves on to animNextRow
+    uchar animCallTaken;            // 0x477 - the call's anim state is playing; cleared by every new anim call
+    HASHCODE animHashcode;          // 0x478 - the row's script
+    uint unknown47c;                // 0x47c - a frame: in it, Drone_Control does not move a drone it does not animate
+    uchar animEndBlend;             // 0x480 - blend frames into animNextRow
     uchar unknown481;               // 0x481 - the slot's move state (docs/drone/behaviours 6.1); DroneAnim_LocationDeathAnim
                                     //         picks a random death variant when it is set
     uchar aimMode;                  // 0x482 - DroneAnim_SetScript: 2 aims, 3 aims from half way (NDrone2_AimTest); 0
@@ -354,7 +380,8 @@ typedef struct Drone_tag {
     char _pad483;
     float animCallSpeed;            // 0x484 - DroneAnim_CallAnim's speed
     float animMoveSpeed;            // 0x488 - DroneAnim_SetScript; while 0, NDrone2_Steer only turns
-    char _pad48c[0x492 - 0x48c];
+    float animSpeed;                // 0x48c - the script's speed
+    ushort animNextRow;             // 0x490 - the row played when this one ends, 0 for none
     short animEndState;             // 0x492 - DroneAnim_CallAnim's end state and message
     uint animEndMsg;                // 0x494
     uint idleAnimFrame;             // 0x498 - DroneAnim_SetStandIdleAnim / SetWalkIdleAnim: no new idle anim before
@@ -373,9 +400,16 @@ typedef struct Drone_tag {
     float moveTargetDistance;       // 0x518 - Ghidra's dist2dtosomepoint (DroneMove_DistanceToNextRouteNode)
     char _pad51c[0x520 - 0x51c];
     _VECTOR moveTarget;             // 0x520 - where it moves to: the route's waypoint, or where it floats to
-    char _pad52c[0x534 - 0x52c];
-    float angleToSomePoint;         // 0x534 - Ghidra's name; DSTATE_JustStand turns it 0.01 a frame
-    char _pad538[0x564 - 0x538];
+    cel_tag *moveTargetCel;         // 0x52c - NDrone2_DefaultInit: the object's cel
+    union {
+        _VECTOR moveTargetRot;      // 0x530 - NDrone2_DefaultInit: the object's rotation
+        struct {
+            float _unknown530;
+            float angleToSomePoint; // 0x534 - Ghidra's name; DSTATE_JustStand turns it 0.01 a frame
+            float _unknown538;
+        };
+    };
+    char _pad53c[0x564 - 0x53c];
     AIPoint_tag aiPoint;            // 0x564
     _VECTOR aiPointRot;             // 0x58c - only .y is set: the alarm point's (NDrone2_FindAlarmPoint)
     char _pad598[0x630 - 0x598];
@@ -397,8 +431,11 @@ typedef struct Drone_tag {
     char _pad826[0x828 - 0x826];
     uint boundsPushFlags;           // 0x828 - NDrone2_Collision hands it to AINetwork_GetBoundsPushVectorForSphere
                                     //         (our name)
-    uint unknown82c;                // 0x82c - while set, LinkCreep_Handler does not test the bounds
-    char _pad830[0x840 - 0x830];
+    obj_tag *door;                  // 0x82c - a door it is dealing with: while set, LinkCreep_Handler does not test
+                                    //         the bounds; NDrone2_HandleDoor opens it, or lets go of it beyond 2 m
+    char _pad830[0x834 - 0x830];
+    uint doorFrame;                 // 0x834 - 60 x FRAME_RATE_DIV frames after it, NDrone2_HandleDoor acts (our name)
+    char _pad838[0x840 - 0x838];
     short clip;                     // 0x840 - rounds left in the clip
     short clipSize;                 // 0x842
     short burstShots;               // 0x844 - left in this burst
@@ -407,9 +444,12 @@ typedef struct Drone_tag {
     uint lastShotFrame;             // 0x84c - the last shot, plus the pause before the burst after it
     ushort grenadeWeapon;           // 0x850 - the weapon_data entry DroneWeap_ThrowGrenade throws
     ushort grenades;                // 0x852 - how many are left
-    char _pad854[0x858 - 0x854];
-    obj_tag *unknown858;            // 0x858 - set: DSTATE_Death_Anim and DeathByExplosion go to SpecialDeath_Anim
-    char _pad85c[0x874 - 0x85c];
+    float unknown854;               // 0x854 - 0.5 from NDrone2_DefaultInit
+    HASHCODE deathScript;           // 0x858 - key 13; set: DSTATE_Death_Anim and DeathByExplosion go to
+                                    //         SpecialDeath_Anim
+    _VECTOR scriptedMovePos;        // 0x85c - with unknown1a, DroneAnim_PreTransCallback adds the root's moves here
+    _VECTOR scriptedMoveRot;        // 0x868 - with a death script, NDrone2_DefaultInit starts it and scriptedMovePos
+                                    //         at the object's rotation and position
     DIVars_tag diVars;              // 0x874 - the drone's own copy of its creation vars
     DroneTimer timerA;              // 0x918 - both timers are switched off on every state change
     DroneTimer timerB;              // 0x924
@@ -494,7 +534,17 @@ static_assert(offsetof(Drone_tag, unknown448) == 0x448, "Wrong offset for unknow
 static_assert(offsetof(Drone_tag, unknown825) == 0x825, "Wrong offset for unknown825");
 static_assert(offsetof(Drone_tag, botVars) == 0x974, "Wrong offset for botVars");
 static_assert(offsetof(Drone_tag, unknown290) == 0x290, "Wrong offset for unknown290");
-static_assert(offsetof(Drone_tag, unknown82c) == 0x82c, "Wrong offset for unknown82c");
+static_assert(offsetof(Drone_tag, door) == 0x82c, "Wrong offset for door");
+static_assert(offsetof(Drone_tag, opponentLastRot) == 0x15c, "Wrong offset for opponentLastRot");
+static_assert(offsetof(Drone_tag, seenFromPos) == 0x1dc, "Wrong offset for seenFromPos");
+static_assert(offsetof(Drone_tag, unknown230) == 0x230, "Wrong offset for unknown230");
+static_assert(offsetof(Drone_tag, unknown23c) == 0x23c, "Wrong offset for unknown23c");
+static_assert(offsetof(Drone_tag, inPlayersSightsFrames) == 0x248, "Wrong offset for inPlayersSightsFrames");
+static_assert(offsetof(Drone_tag, unknown28c) == 0x28c, "Wrong offset for unknown28c");
+static_assert(offsetof(Drone_tag, unknown3a0) == 0x3a0, "Wrong offset for unknown3a0");
+static_assert(offsetof(Drone_tag, yawOffset) == 0x3c0, "Wrong offset for yawOffset");
+static_assert(offsetof(Drone_tag, unknown47c) == 0x47c, "Wrong offset for unknown47c");
+static_assert(offsetof(Drone_tag, doorFrame) == 0x834, "Wrong offset for doorFrame");
 static_assert(offsetof(Drone_tag, captain) == 0x19, "Wrong offset for captain");
 static_assert(offsetof(Drone_tag, inPlayersSights) == 0x2a, "Wrong offset for inPlayersSights");
 static_assert(offsetof(Drone_tag, headTracking) == 0x2c, "Wrong offset for headTracking");
@@ -517,7 +567,20 @@ static_assert(offsetof(Drone_tag, facialAnim) == 0x438, "Wrong offset for facial
 static_assert(offsetof(Drone_tag, animCall) == 0x454, "Wrong offset for animCall");
 static_assert(offsetof(Drone_tag, animState) == 0x466, "Wrong offset for animState");
 static_assert(offsetof(Drone_tag, animRow) == 0x468, "Wrong offset for animRow");
-static_assert(offsetof(Drone_tag, unknown477) == 0x477, "Wrong offset for unknown477");
+static_assert(offsetof(Drone_tag, animCallTaken) == 0x477, "Wrong offset for animCallTaken");
+static_assert(offsetof(Drone_tag, rootHeightSet) == 0x27, "Wrong offset for rootHeightSet");
+static_assert(offsetof(Drone_tag, secondWeapon) == 0x45, "Wrong offset for secondWeapon");
+static_assert(offsetof(Drone_tag, animRootHeight) == 0x8c, "Wrong offset for animRootHeight");
+static_assert(offsetof(Drone_tag, animCallSpeedTaken) == 0x3bc, "Wrong offset for animCallSpeedTaken");
+static_assert(offsetof(Drone_tag, animFunc) == 0x440, "Wrong offset for animFunc");
+static_assert(offsetof(Drone_tag, animPriority) == 0x465, "Wrong offset for animPriority");
+static_assert(offsetof(Drone_tag, animStartFrame) == 0x46a, "Wrong offset for animStartFrame");
+static_assert(offsetof(Drone_tag, prevAnimFlags) == 0x470, "Wrong offset for prevAnimFlags");
+static_assert(offsetof(Drone_tag, animHashcode) == 0x478, "Wrong offset for animHashcode");
+static_assert(offsetof(Drone_tag, animEndBlend) == 0x480, "Wrong offset for animEndBlend");
+static_assert(offsetof(Drone_tag, animSpeed) == 0x48c, "Wrong offset for animSpeed");
+static_assert(offsetof(Drone_tag, animNextRow) == 0x490, "Wrong offset for animNextRow");
+static_assert(offsetof(Drone_tag, scriptedMovePos) == 0x85c, "Wrong offset for scriptedMovePos");
 static_assert(offsetof(Drone_tag, unknown481) == 0x481, "Wrong offset for unknown481");
 static_assert(offsetof(Drone_tag, animCallSpeed) == 0x484, "Wrong offset for animCallSpeed");
 static_assert(offsetof(Drone_tag, idleAnimFrame) == 0x498, "Wrong offset for idleAnimFrame");
@@ -538,7 +601,14 @@ static_assert(offsetof(Drone_tag, velocity) == 0x394, "Wrong offset for velocity
 static_assert(offsetof(Drone_tag, unknown3d0) == 0x3d0, "Wrong offset for unknown3d0");
 static_assert(offsetof(Drone_tag, impactAnimFrame) == 0x43c, "Wrong offset for impactAnimFrame");
 static_assert(offsetof(Drone_tag, pushOffset) == 0x4b4, "Wrong offset for pushOffset");
-static_assert(offsetof(Drone_tag, unknown858) == 0x858, "Wrong offset for unknown858");
+static_assert(offsetof(Drone_tag, deathScript) == 0x858, "Wrong offset for deathScript");
+static_assert(offsetof(Drone_tag, scriptedMoveRot) == 0x868, "Wrong offset for scriptedMoveRot");
+static_assert(offsetof(Drone_tag, unknown854) == 0x854, "Wrong offset for unknown854");
+static_assert(offsetof(Drone_tag, moveTargetCel) == 0x52c, "Wrong offset for moveTargetCel");
+static_assert(offsetof(Drone_tag, moveTargetRot) == 0x530, "Wrong offset for moveTargetRot");
+static_assert(offsetof(Drone_tag, unknownb4) == 0xb4, "Wrong offset for unknownb4");
+static_assert(offsetof(Drone_tag, unknown2d) == 0x2d, "Wrong offset for unknown2d");
+static_assert(offsetof(Drone_tag, unknown3ca) == 0x3ca, "Wrong offset for unknown3ca");
 static_assert(offsetof(Drone_tag, armedPersonRadius) == 0x950, "Wrong offset for armedPersonRadius");
 static_assert(offsetof(Drone_tag, unknown21) == 0x21, "Wrong offset for unknown21");
 static_assert(offsetof(Drone_tag, burstOver) == 0x3c, "Wrong offset for burstOver");
@@ -609,6 +679,10 @@ static_assert(offsetof(Drone_tag, goalFrom) == 0x4cc, "Wrong offset for goalFrom
 static_assert(offsetof(Drone_tag, aiPointRot) == 0x58c, "Wrong offset for aiPointRot");
 static_assert(offsetof(Drone_tag, missionPoint) == 0x778, "Wrong offset for missionPoint");
 static_assert(offsetof(Drone_tag, unknown824) == 0x824, "Wrong offset for unknown824");
+static_assert(offsetof(Drone_tag, attackModeTaken) == 0x28, "Wrong offset for attackModeTaken");
+static_assert(offsetof(Drone_tag, chatSwitchChannel) == 0x121, "Wrong offset for chatSwitchChannel");
+static_assert(offsetof(Drone_tag, baseAlertness2) == 0x400, "Wrong offset for baseAlertness2");
+static_assert(offsetof(Drone_tag, behaviourClass) == 0xab, "Wrong offset for behaviourClass");
 
 // Set by Drone_InitComms / ResetMap_GameInit (still the game's); while set, no drones are created and
 // Drone_SM_SendMsg / Drone_Message send nothing.
@@ -623,5 +697,21 @@ void _Drone_SM_RouteMsgDCV(DCVars_tag *dcVars, MsgObject *msg);
 void Drone_SM_RouteMsgDCV(void);
 void Drone_EnableAll(char enable, HASHCODE hashcode);
 obj_tag* Drone_CoderCreate(_VECTOR *pos, _VECTOR *rot, HASHCODE skin, HASHCODE playScript, uint unused, uint weapon, ushort initialState);
+void Drone_PreLoad_Init(void);
+void Drone_LevelReset(void);
+void Drone_PostLoad_Init(void);
+void Drone_UpdateCombatChannels(void);
+void Drone_InitComms(void);
+void Drone_GetOpponentInfo(Drone_tag *drone, obj_tag *gameObj);
+bool NDrone2_PreDroneControl(DCVars_tag *dcv);
+void NDrone2_HandleDoor(DCVars_tag *dcv);
+bool NDrone2_ControlSTANDARD(DCVars_tag *dcv);
+bool NDrone2_ControlDTYPE_Zoe(DCVars_tag *dcv);
+bool NDrone2_ControlDTYPE_Ninja(DCVars_tag *dcv);
+bool NDrone2_ControlDTYPE_Astronaut(DCVars_tag *dcv);
+bool NDrone2_PostDroneControl(DCVars_tag *dcv);
+bool NDrone2_DoAnimation(Drone_tag *drone);
+void Drone_Control(obj_tag *gameObj);
+void Drone_Delete(obj_tag *gameObj);
 
 #endif // DRONE_H_

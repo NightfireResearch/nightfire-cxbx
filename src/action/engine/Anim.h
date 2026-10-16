@@ -11,9 +11,10 @@ typedef struct sAnimScript_tag sAnimScript_tag;
 // The animated part of an object (sAnimObject_tag), embedded in AnimState at +0x58. Only the fields our code uses
 // are named.
 typedef struct AnimObj {
-    char _unknown_00[0x4];
+    const void *headTrackTarget;    // 0x00 - an obj_tag with ANIMOBJ_HEAD_TARGET_OBJ, else a position
     const void *aimTarget;          // 0x04 - a position (AnimObjectSetAiming)
-    char _unknown_08[0x1c - 0x08];
+    char _unknown_08[0x18 - 0x08];
+    void *rootMotionCallback;       // 0x18 - Ghidra's name; NDrone2_DefaultInit sets the drones' (0x00033320)
     struct sAnimSkin_tag *skin;     // 0x1c
     char _unknown_20[0x10];
     celglist_tag *maybeSleeveGlist; // 0x30
@@ -27,17 +28,21 @@ typedef struct AnimObj {
     char _unknown_58[0x68 - 0x58];
     float headTrackSpeed;           // 0x68 - NDrone2_HeadTrackObj
     float aimRate;                  // 0x6c
-    char _unknown_70[0x74 - 0x70];
+    float headTrackRange2;          // 0x70 - the head tracking range, squared
     float aimRange2;                // 0x74 - the aiming range, squared
-    char _unknown_78[0x8d - 0x78];
+    char _unknown_78[0x8c - 0x78];
+    uchar headTrackTargetBone;      // 0x8c - with ANIMOBJ_HEAD_TARGET_OBJ, the bone of the target looked at
     uchar aimTargetBone;            // 0x8d
-    char _unknown_8e[0x98 - 0x8e];
+    uchar headTrackDelay;           // 0x8e - frames before the head starts to turn (AnimObjectSetHeadTracking)
+    char _unknown_8f[0x98 - 0x8f];
 } AnimObj;
 
 // AnimObj::flags
 #define ANIMOBJ_FLAG_1          0x1     // with ANIMOBJ_FLAG_2, AnimGetCollData gives the joints' boxes
 #define ANIMOBJ_FLAG_2          0x2
+#define ANIMOBJ_HEAD_TRACK      0x10    // head tracking asked for (AnimObjectSetHeadTracking)
 #define ANIMOBJ_HEAD_TRACKING   0x30    // AnimObjectIsHeadTracking
+#define ANIMOBJ_HEAD_TARGET_OBJ 0x40    // headTrackTarget is an object, looked at by headTrackTargetBone
 #define ANIMOBJ_AIMING          0x80
 #define ANIMOBJ_AIMING_2        0x100   // with ANIMOBJ_AIMING, AnimObjectIsAiming
 #define ANIMOBJ_AIM_AT_BONE     0x200   // aimTargetBone is used
@@ -130,21 +135,38 @@ typedef struct sAnimSeq_tag {
 } sAnimSeq_tag;
 
 // sAnimScript_tag::flags
+#define ANIMSCRIPT_SHARE_ROOT 0x8000        // keeps the root rotation of the script it blends with
 #define ANIMSCRIPT_SCRIPT_DRIVEN 0x10000    // Script_AnimStart and Script_Interp set the frame themselves
+#define ANIMSCRIPT_ANIM_ROTATION 0x20000    // the root's turn turns the object (AnimScriptSetAnimRotation)
 #define ANIMSCRIPT_HAS_ROOT_TRANS 0x800000  // AnimGetFirstTrans only answers for such a script
+#define ANIMSCRIPT_GAME_FLAG 0x8000000      // set by the drones and AnimSets; the anim code keeps it
+#define ANIMSCRIPT_LOOP 0x80000000
+
+// The callbacks a script is given: its event commands (AnimScriptCallOnEvent) and its end (AnimScriptCallOnStop)
+typedef void (*AnimScriptEventFunc)(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *script, ushort event);
+typedef void (*AnimScriptStopFunc)(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *script);
 
 typedef struct sAnimScript_tag {
     char unknown[0x3c];
     AnimScriptStateMagicNumbers magicStateIndicator; // 0x3c
     char _unknown_40[0x4c - 0x40];
     sAnimSeq_tag *boneAnimSeq;  // 0x4c
-    char _unknown_50[0x74 - 0x50];
+    char _unknown_50[0x60 - 0x50];
+    sAnimScript_tag **ownerSlot;    // 0x60 - its owner's pointer to it, cleared when it is deleted
+    void *onDelete;                 // 0x64
+    AnimScriptStopFunc onStop;      // 0x68 - called once, when it stops
+    AnimScriptEventFunc onEvent;    // 0x6c
+    HASHCODE hashcode;              // 0x70
     uint flags;                 // 0x74
     char _unknown_78[0x8c - 0x78];
     float curFrame;             // 0x8c - 1..numFrames
     char _unknown_90[4];
     float speed;                // 0x94
-    char _unknown_98[0xac - 0x98];
+    char _unknown_98[0x9c - 0x98];
+    float rotBaseYaw;           // 0x9c - 8.0: taken afresh on the next update
+    char _unknown_a0[0xa4 - 0xa0];
+    float fadeTime;             // 0xa4 - the blend's counter
+    float fadeLen;              // 0xa8 - frames the blend takes
     short numFrames;            // 0xac
     char _unknown_ae[0xb4 - 0xae];
 } sAnimScript_tag;
@@ -197,6 +219,14 @@ static_assert(offsetof(sAnimScript_tag, flags) == 0x74, "Offset of flags wrong")
 static_assert(offsetof(sAnimScript_tag, curFrame) == 0x8c, "Offset of curFrame wrong");
 static_assert(offsetof(sAnimScript_tag, speed) == 0x94, "Offset of speed wrong");
 static_assert(offsetof(sAnimScript_tag, numFrames) == 0xac, "Offset of numFrames wrong");
+static_assert(offsetof(sAnimScript_tag, ownerSlot) == 0x60, "Offset of ownerSlot wrong");
+static_assert(offsetof(sAnimScript_tag, onStop) == 0x68, "Offset of onStop wrong");
+static_assert(offsetof(sAnimScript_tag, onEvent) == 0x6c, "Offset of onEvent wrong");
+static_assert(offsetof(sAnimScript_tag, rotBaseYaw) == 0x9c, "Offset of rotBaseYaw wrong");
+static_assert(offsetof(sAnimScript_tag, fadeLen) == 0xa8, "Offset of fadeLen wrong");
+static_assert(offsetof(AnimObj, headTrackRange2) == 0x70, "Offset of headTrackRange2 wrong");
+static_assert(offsetof(AnimObj, headTrackTargetBone) == 0x8c, "Offset of headTrackTargetBone wrong");
+static_assert(offsetof(AnimObj, headTrackDelay) == 0x8e, "Offset of headTrackDelay wrong");
 static_assert(sizeof(AnimDatum) == 0x24, "Bad size for AnimDatum");
 static_assert(sizeof(_MATRIX) == 0x3c, "AnimProcessSkinData allocates invBind as numBones * 0x3c");
 static_assert(offsetof(sAnimSkin_tag, riggedBody) == 0x04, "Bad offset of riggedBody");
@@ -238,6 +268,11 @@ COLLJOINT_tag* AnimGetCollData(obj_tag *obj, ushort *count);
 bool AnimObjectIsAiming(obj_tag *obj);
 bool AnimObjectIsHeadTracking(obj_tag *obj);
 void AnimObjectSetAiming(obj_tag *obj, const void *target, float range, float rate, char atBone, uchar bone);
+void AnimObjectSetHeadTracking(obj_tag *obj, const void *target, float range, float rate, char randomDelay,
+                               char targetIsObj, uchar bone);
+void AnimScriptCallOnEvent(sAnimScript_tag *script, AnimScriptEventFunc onEvent);
+void AnimScriptCallOnStop(sAnimScript_tag *script, AnimScriptStopFunc onStop);
+void AnimScriptSetAnimRotation(sAnimScript_tag *script, char on);
 void AnimLoadFile(HASHCODE hashcode,char param_2);
 
 

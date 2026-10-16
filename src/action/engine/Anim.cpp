@@ -2,6 +2,7 @@
 #include <string.h>    // memcpy
 #include "../memory.h" // Mem_Malloc
 #include "../util/hashtable.h"
+#include "../util/Random.h"    // Rand_Rand
 
 
 // AUTOGEN
@@ -431,6 +432,56 @@ void AnimObjectSetAiming(obj_tag *obj, const void *target, float range, float ra
         animObj->flags |= ANIMOBJ_AIM_AT_BONE;
     } else {
         animObj->flags &= ~ANIMOBJ_AIM_AT_BONE;
+    }
+}
+
+// Turns the object's head to target (NULL stops it), within range, at rate: an object's bone with targetIsObj,
+// else a position. With randomDelay it waits a tenth of a second plus up to a quarter more first.
+// AUTOINJECT
+void AnimObjectSetHeadTracking(obj_tag *obj, const void *target, float range, float rate, char randomDelay,
+                               char targetIsObj, uchar bone) {
+    if (obj == NULL || obj->animState == NULL)
+        return;
+    AnimObj *animObj = &obj->animState->animObj;
+    uchar delay = 0;
+    animObj->headTrackRange2 = range * range;
+    animObj->headTrackSpeed = rate;
+    if (target == NULL) {
+        animObj->flags &= ~ANIMOBJ_HEAD_TRACK;
+        animObj->headTrackTarget = NULL;
+    } else {
+        if (randomDelay)
+            delay = Rand_Rand(FRAME_RATE_INT / 4) + FRAME_RATE_INT / 10;
+        animObj->flags |= ANIMOBJ_HEAD_TRACK;
+        animObj->headTrackTarget = target;
+        if (targetIsObj) {
+            animObj->headTrackTargetBone = bone;
+            animObj->flags |= ANIMOBJ_HEAD_TARGET_OBJ;
+        } else {
+            animObj->flags &= ~ANIMOBJ_HEAD_TARGET_OBJ;
+        }
+    }
+    animObj->headTrackDelay = delay;
+}
+
+// AUTOINJECT
+void AnimScriptCallOnEvent(sAnimScript_tag *script, AnimScriptEventFunc onEvent) {
+    script->onEvent = onEvent;
+}
+
+// AUTOINJECT
+void AnimScriptCallOnStop(sAnimScript_tag *script, AnimScriptStopFunc onStop) {
+    script->onStop = onStop;
+}
+
+// Whether the root's turn turns the object; switching it on takes the root's yaw afresh.
+// AUTOINJECT
+void AnimScriptSetAnimRotation(sAnimScript_tag *script, char on) {
+    if (on) {
+        script->flags |= ANIMSCRIPT_ANIM_ROTATION;
+        script->rotBaseYaw = 8.0f;
+    } else {
+        script->flags &= ~ANIMSCRIPT_ANIM_ROTATION;
     }
 }
 

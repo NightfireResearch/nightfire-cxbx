@@ -323,6 +323,8 @@ static_assert(sizeof(AINodeSearch_tag) == 0x30, "AINodeSearch_tag is 0x30 bytes"
 #define MoveTest_StepHeight FLOAT_AT(0x00274cb0)    // a rise up to this is a step, whatever the slope
 // XBE_GLOBAL(0x00274cb4, 0x4)
 #define MoveTest_MaxRise FLOAT_AT(0x00274cb4)
+// XBE_GLOBAL(0x00274cb8, 0x4)
+#define MoveTest_UnknownB8 FLOAT_AT(0x00274cb8)     // only Drone_PostLoad_Init writes it (30), nothing reads it
 // XBE_GLOBAL(0x00274cbc, 0x4)
 #define MoveTest_MaxDistanceSq FLOAT_AT(0x00274cbc)
 

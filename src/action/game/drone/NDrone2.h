@@ -452,13 +452,24 @@ typedef struct {
     ushort groupCounts[DRONE_GROUPS];   // +0x108 - drones in each group; 0xffff once DroneSpawner_Init has taken them
     char _pad146[0x148 - 0x146];
     uint deadFrames;            // +0x148 - how long a drone lies in DSTATE_Dead before it fades (our name)
-    uint unknown14c;            // +0x14c - DroneFunc_DeadDrone: with more than this in unknown150, the drone whose
-    uint unknown150;            // +0x150   sm.id is unknown15c fades fast
-    char _pad154[0x15c - 0x154];
-    uint unknown15c;            // +0x15c
-    char _pad160[0x174 - 0x160];
-    uint unknown174;            // +0x174 - while set, DroneVision_ProcessDroneSight makes no drone say it lost sight
-    char _pad178[0x18c - 0x178];
+    uint unknown14c;            // +0x14c - 6 (Drone_LevelReset). DroneFunc_DeadDrone: with more than this in unknown150,
+    uint unknown150;            // +0x150   the drone whose sm.id is unknown15c fades fast. Drone_InitComms counts here
+                                //          the drones in DSTATE_HostageDead, Dead, Fade or AstronautDeath,
+    uint deadOrFadingFast;      // +0x154   and here those and the ones in FadeFast (our name),
+    uint oldestDeadFrame;       // +0x158   and the earliest frame one of them entered (Fade: plus deadFrames),
+    uint unknown15c;            // +0x15c   and that drone's sm.id
+    uint prevEnemies;           // +0x160 - Drone_InitComms keeps last frame's counts here: enemies,
+    uint prevNeutrals;          // +0x164   neutrals,
+    uint prevAllies;            // +0x168   allies,
+    uint prevUnknown188;        // +0x16c   unknown188,
+    uint prevSeenAttacking;     // +0x170   seenAttacking,
+    uint unknown174;            // +0x174   seenOpponentCount (while set, DroneVision_ProcessDroneSight makes no drone say
+                                //          it lost sight)
+    uint prevLostOpponentCount; // +0x178   and lostOpponentCount (our names)
+    uint enemies;               // +0x17c - drones with the AI running, by side (1, 2, 3), counted each frame by
+    uint allies;                // +0x180   NDrone2_ControlSTANDARD (our names)
+    uint neutrals;              // +0x184
+    uint unknown188;            // +0x188 - counted by DSTATE_CombatOutOfRange
     uint seenAttacking;         // +0x18c - NDrone2_SeenAndAttacking counts each drone it lets through
     uint seenOpponentCount;     // +0x190 - DroneVision_ProcessDroneSight: drones that see their opponent, counted
     uint lostOpponentCount;     //  +0x194   every frame; and drones that lost theirs over 2 s ago (our names)
@@ -497,13 +508,17 @@ typedef struct {
     AIEmitter_tag safetyEmitter;    // +0x1354 - DroneMove_FindSafetyFromScaryPosition's flood (Ghidra's name)
     uint numAIPoints;           // +0x137c
     struct DroneAIPoint_tag *aiPoints;  // +0x1380 - Drone_PreLoad_Init points it at a table of MAX_AI_POINTS
-    char _pad1384[0x1390 - 0x1384];
+    uint unknown1384;           // +0x1384 - cleared by Drone_PreLoad_Init
+    char _pad1388[0x138c - 0x1388];
+    float unknown138c;          // +0x138c - 0.5 (Drone_LevelReset); read by DSTATE_BotCoverIdle
     uchar unknown1390;          // +0x1390 - while set, no drone sees its opponent (DroneVision_OpponentInView)
-    char _pad1391;
+    uchar alarmSaid;            // +0x1391 - in EvilBase the alarm message goes out only once (our name)
     uchar unknown1392;          // +0x1392 - while set in CastleIndoors1, DroneFunc_DoForcedAttack acts only on DTYPEs
                                 //           0x13 and 0x16. Set by DroneVision_BeginInterogate, cleared by
                                 //           DroneVision_EndInterogate outside CastleIndoors1
-    char _pad1393[0x13a8 - 0x1393];
+    char _pad1393;
+    uint alarmFrame;            // +0x1394 - Drone_InitComms sends DRONE_MSG 0x1e every 30 frames while channel 0x96 is on
+    char _pad1398[0x13a8 - 0x1398];
     DroneSfxLog sfxLog[DRONE_SFX_LOG];  // +0x13a8 - the last sounds NDrone2_PlaySFX played, in a ring
     uint sfxLogNext;            // +0x1428 - the entry it writes next
 } NPCGlobals_t;
@@ -546,7 +561,15 @@ static_assert(offsetof(NPCGlobals_t, alert) == 0x240, "Wrong offset for alert");
 static_assert(offsetof(NPCGlobals_t, numAIPoints) == 0x137c, "Wrong offset for numAIPoints");
 static_assert(offsetof(NPCGlobals_t, aiPoints) == 0x1380, "Wrong offset for aiPoints");
 static_assert(offsetof(NPCGlobals_t, safetyEmitter) == 0x1354, "Wrong offset for safetyEmitter");
+static_assert(offsetof(NPCGlobals_t, oldestDeadFrame) == 0x158, "Wrong offset for oldestDeadFrame");
+static_assert(offsetof(NPCGlobals_t, prevLostOpponentCount) == 0x178, "Wrong offset for prevLostOpponentCount");
+static_assert(offsetof(NPCGlobals_t, unknown188) == 0x188, "Wrong offset for unknown188");
+static_assert(offsetof(NPCGlobals_t, unknown138c) == 0x138c, "Wrong offset for unknown138c");
+static_assert(offsetof(NPCGlobals_t, alarmFrame) == 0x1394, "Wrong offset for alarmFrame");
 #define NPCGlobals (*(NPCGlobals_t *)0x001e5630)
+// NPCGlobals.NDrone2List and NDrone2Count are the head and count of a list of Drone_tags (LList_Init by
+// Drone_PreLoad_Init)
+#define NDrone2Info (*(LLISTINFO_tag *)0x001e5634)
 
 // Navigation (NDrone2.cpp, NDrone2_Nav.cpp; docs/drone/bots-and-navigation)
 obj_tag* NDrone2_Player(void);

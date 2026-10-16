@@ -17,14 +17,14 @@
 #include "NDrone2_Damage.h"
 #include "DroneVision_Alerts.h"
 #include "DroneVision.h"
+#include "DroneInit.h"
 
 #include <bit>
 #include <math.h>
 #include <stdint.h>
 #include <string.h>
 
-// AUTOGEN
-obj_tag* NDrone2_CreateObj(DIVars_tag *diVars); 
+// The original (ours in DroneInit.cpp)
 
 // AUTOGEN
 obj_tag* NDrone2_CreateFromDIVars(DIVars_tag *diVars);
@@ -228,7 +228,6 @@ bool NDrone2_AttackTalk(DCVars_tag *dcv);
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
 #define DroneAnim_SetScript ((void (__cdecl *)(HASHCODE script, short param_2, short param_3, char param_4, short param_5, int param_6, int param_7, DCVars_tag *dcv))0x00034680)
-#define DroneAnim_SetDAnimNow ((void (__cdecl *)(ushort anim, ushort param_2, int param_3, DCVars_tag *dcv))0x00035dc0)
 
 // The drone plays its placement's script (Drone_tag::playScript) and then goes to its initial state. A few scripts
 // are handled on their own: 0x6000168 and 0x6000169 talk and attack at the end, 0x60007ac turns the drone round.
@@ -365,7 +364,6 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *gameObj))0x0001a190)
-#define AnimObjectSetHeadTracking ((void (__cdecl *)(obj_tag *gameObj, void *target, float range, float rate, char randomDelay, char targetIsObj, uchar bone))0x000119a0)
 
 // AnimGetBoneWorldTrans's bone argument, as these pass it: bit 31 set, and the bone
 #define WORLD_BONE(bone) (0x80000000 | (bone))

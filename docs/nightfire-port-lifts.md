@@ -38,6 +38,8 @@ to what it does. A function ported that way:
 
 | 7 | drone_vision, drone_move, drone_route, drone_spawner | 62 + 39 Xbox functions renamed from FUN_ (31 under their names, e.g. NDrone2_Steer = 0x43070, DroneVision_OpponentVisibility = 0x65510, NDrone2_FollowRoute = 0x46a80, DroneSpawner_DroneDelete = 0x308b0; 8 under ours, for helpers they inline, e.g. DroneVision_GlobalAlarm 0x650a0) + 15 FUNC_AT helpers (e.g. SolveQuadratic 0x42b20, NDrone2_Fall 0x3ef30, NDrone2_StartRouteCreep 0x46220). Of their 34 names without an Xbox match, NDrone2_DroneInSights is MSVC's shared `return false` (0xde5e0), and four are inline (below) | 59 of 62; 897 of 1119 blocks. DroneVisionShadow: 196,000 cases; DroneAlertShadow: 129,000; DroneOpponentShadow: 155,284; DroneMoveShadow: 152,000; DroneCollisionShadow: 128,000; DroneRouteShadow: 158,300; all 0 differ, with 296 OpponentVisibility and 290 NextRouteAngle results accepted 1-2 ulp apart (FSIN and the XBE's acos against the host's sin and acos). 25 planted bugs, one per suite line, all caught | see git log |
 
+| 8 | drone_init, drone_anim, drone (the creation half, and from Drone_DCVfromOBJ on) | 44 + 39 Xbox functions theirs inline or name otherwise: 32 renamed from FUN_ in Ghidra (the mode initialisers, e.g. NDrone2_init_DMODE_Sniper = 0x408b0; NDrone2_GetDroneTypeAttackTypeFriend = 0x3fe30, NDrone2_DoTypeSettingsOLD = 0x40430, NDrone2_GetDTYPENEW = 0x3fae0; the anim helpers, e.g. DroneAnim_GetDAnimForAnimState = 0x33040, DroneAnim_PreTransCallback = 0x33320, DAnimFunc_Run = 0x35ec0), two already named (DroneAnim_SetDAnimNow 0x35dc0, DroneAnim_SetDAnimVeryInternal 0x32f30) and 5 FUNC_AT (Drone_UpdateCombatChannels 0x314a0, NDrone2_HandleDoor 0x3cbf0, and the three ControlDTYPE_ functions 0x3f8a0, 0x3f910, 0x3f930, created in Ghidra). Of their 49 names without an Xbox match, 12 are MSVC's folded copies or the shared empty function 0xe0ec0, and 7 are inline (below) | 34 of 44; 539 of 667 blocks. DroneModeShadow: 82,000 cases; DroneInitShadow: 66,000; DroneAnimShadow: 216,000; DroneCoreShadow: 108,000; all 0 differ. At least one planted bug per suite line, all caught (two plants that change nothing are not counted: a `<` for `<=` behind a `!= 0` test, and a `/ 9` that truncates as `/ 10` does) | see git log |
+
 Parcel 1's first playback found two things the coverage alone would not have shown:
 - **A crash in our code.** The port of `Script_CreateEntity` called our `Break_Create` by name, which is a known-broken
   draft that was never patched in. `tools/draft_calls.py` now finds such calls.
@@ -282,6 +284,69 @@ Found along the way:
 - `DroneSpawner.cpp` existed but was not compiled; it now is, and actionhelpers.h no longer includes DroneSpawner.h
   (parsemap.cpp does).
 
+### Parcel 8
+- Folded on the Xbox (MSVC's identical-code folding), so one Xbox function serves several of their names:
+  - `init_DMODE_Normal`, `_Guard`, `_Retreater`, `_Attacker`, `_Assassin` and `_Interogator` are one jump to
+    `NDrone2_init_DMODE_Defaults` (0x408a0, now named `NDrone2_init_DMODE_Normal`; a jump leaves nothing to port);
+    `_Hostage` and `_HostageTied` are 0x40a80; `_Mayhew` and `_TruckDriver` are 0x40d10.
+  - `init_DMODE_DeleteMe`, `_Ninja`, `_Bot`, `NDrone2_initDTYPE_BotInit`, `DroneAnim_SnapRotate2` and
+    `DAStateFunc_AimStand` are the shared empty function 0xe0ec0 (Ghidra's `__profiling_or_debugging_hook_point`).
+    DefaultInit's call of it at 0x4184b (their `control_init_collision`) does nothing.
+  - Ghidra had split `init_DMODE_HostageKiller` (0x409b0) at a bogus FUN_000409fc in its middle; the function runs
+    whole from 0x409b0.
+- Separate functions on the Xbox that theirs inline:
+  - modes and types: `NDrone2_GetDTYPENEW` is 0x3fae0 (the drone in EDI, the mode in ESI; only
+    `GetDroneTypeAttackTypeFriend` calls it, so ours is a static helper there). `GetDroneTypeAttackTypeFriend` has its
+    mode-0 call (the base DTYPE) inline. The state for a drone with no second type is 0x3fd20 (the drone in EAX; ours
+    `NDrone2_SecondStateFor`, static), and `DoTypeSettingsOLD`'s worked-out initial state is 0x403b0 (ours
+    `NDrone2_DefaultInitialState`).
+  - anim: `DroneAnim_SetDAnimNow` 0x35dc0, `DroneAnim_FreeScript` 0x33120, and register-argument helpers behind
+    AUTOLTCG adaptors (now reached only from our code): `CanSetAnimCall` 0x32dd0 (EAX), `CallFullyComplete` 0x33e60
+    (ESI), `SetDAnimVeryInternal` 0x32f30 (EAX = &animMode, DX the row), `BaseCallState` 0x32ed0 (AX),
+    `SkipAnim` 0x32fe0 (EAX), `TakeCall` 0x344f0 (ESI), `GetDAnimForAnimState` 0x33040 (AX, DX, ESI, EDI),
+    `GetDAnimForCall` 0x33de0 (EBX, DX, AX, ECX).
+  - core: `Drone_InitComms`' combat music and channels 0x97 and 0x98 (0x314a0, ours `Drone_UpdateCombatChannels`),
+    `ControlSTANDARD`'s door step (0x3cbf0, `NDrone2_HandleDoor`), `DroneSpawner_CreateBlank` (0x2fb90, called by
+    `Drone_PostLoad_Init`); `PreDroneControl`'s change of mode is a call to `NDrone2_ChangeToAttackMode`.
+- Inline on the Xbox: `DroneAnim_ZeroAnimCall` (a memset in TakeCall, CallFullyComplete and CallAnim),
+  `CheckForAnimComplete` and `SetAnimCall` (in `CallHandler`, 0x35cd7 and 0x35d72), `NDrone2_AddToGroup` (in
+  `SetupGroups`, 0x36ea0), `DroneInit_TakeXHits` (in `DefaultInit`, 0x42543: folded to weapon 0x33's damage, doubled
+  by `fadd st0,st0` off difficulty 1; their `weapon < 0x48` test is gone), `Drone_PauseNoDraw` (twice in
+  `InitComms`, the only user of 0x1dfa2b; ours is a static helper).
+- Their additions, not in the Xbox: the bound on the secondary mode's index and the anim-object guard in
+  `DoModeSettingsOLD`; the guard on property 0x20's alertness index in `DoModeSettingsNEW` (a two-bit field, which
+  cannot overrun the four levels); the guard on `animState->currentWeaponId` in `DefaultInit` (0x42739); the script
+  NULL guards in `SetHTAnim` (after AnimScriptAppendBlend, 0x33fc3), `OnStartAnim` (0x331e5) and `DAnimFunc_Run`
+  (0x35edf).
+- Values: `Drone_PostLoad_Init`'s default slope is 0x3f5f66f3 (0x32011), an ulp below theirs; `Drone_LevelReset`
+  sets NPCGlobals+0x14c to 6 (0x317b4), not 3.
+- NaN and precision: `PreTransCallback` compares `rootHeight - 0.02` unrounded with 0.2 (0x33381); theirs in float.
+  The mode and type settings test the alertness for "at least 1" (`test ah,1`: a NaN is not), and the sniper's
+  initial state for "below 1" (`test ah,5`).
+- No deferred facial animation in `ControlSTANDARD` (their `talk_pending`): the facial anim counts as done when the
+  script's flags (+0x74) have 0x10000000 set (0x3f6cd). Zoe's control has `DroneFunc_SetMissionFailReason(15)`
+  inline (0x3f8f2), the same effect as theirs.
+- `NDrone2_CreateObj`'s "owner" is `DIVars_tag.glist` (+0x1c), handed to `Control_CreateObjEx` as the celglist; the
+  object type is then 0x4d (MINISUB).
+- Layout, not errors: the bot weapon `PostLoad_Init` reads is `BOT_vars_t.weapon` (+0x75c; theirs +0x768); their
+  DefaultInit range_e8, range_f0 and range_fc are our viewRange (0xcc), combatRanges[1] (0xd4) and combatRanges[4]
+  (0xe0); the slot byte at Drone_tag+0x465 is the anim state's priority. `DoModeSettingsNEW`'s offsets are the
+  GameCube's too: its +0x121 (`chatSwitchChannel`) is the switch channel DSTATE_CastleChatGuard1 waits for.
+
+Everything else in their readings of parcel 8 matched the Xbox, the mode initialisers' property lists and every jump
+table (read by its bytes) included.
+
+Found along the way:
+- **Shadow fakes and inlining.** A fake on an original's address does not catch a call our code makes within one
+  file, where MSVC may inline the port: `DroneWeaponShadow`'s fake on 0x35dc0 (our `PlayFiringAnim` inlines our
+  `SetDAnimNow`) and `DroneOpponentShadow`'s on 0x31260 (our `Drone_ProcessOpponents` inlines `Drone_GetOpponentInfo`)
+  stopped firing, which crashed one suite and failed the other. Both now run the real chain down to deeper fakes.
+- `Drone_tag+0x858` holds the death script's hashcode (key 13, now `deathScript`), not an object: NDrone2_Death.cpp
+  tests it against 0. `DIVars_tag.glist` is a `celglist_tag *`; `Drone_tag+0x82c` is the door the drone is at
+  (`door`), and +0x28c a `Drone_tag *`.
+- `DroneTypeSettings`' control functions (0x3f8a0, 0x3f910, 0x3f930) had no function in Ghidra; the json counted them
+  in `ControlSTANDARD`, which ends at 0x3f89b.
+
 ## Original bugs found while porting (kept; candidates for FIX_ORIGINAL_GAME_BUGS)
 
 - `Script_Load`, a file with 0x3f streams or more: hands its record to `DList_RemoveFromInUse2Free(&ScriptList)`,
@@ -370,6 +435,17 @@ Found along the way:
   0x30860 tests the slots but not the entries before clearing them; the wave speech plays with NULL DCVars.
   `NDrone2_FindAlarmPoint` returns true for the mission path's alarm point even when it cannot be reached.
 
+- `NDrone2_DoModeSettingsOLD` indexes `DroneModeSettings` with the secondary mode unchecked, and for modes 9, 10 and
+  0x13 writes `gameObj->animState->currentWeaponId` with neither checked. `NDrone2_DefaultInit` reads `animState`
+  unchecked when bots are off; `DroneInit_Collision` dereferences `obj->animState` unchecked when the ray hits.
+  `NDrone2_initDTYPE_SniperAlert` fills a DCVars it never uses; `GetDroneTypeAttackTypeFriend`'s sniper case writes
+  SniperIdle and then SniperAim over it (unreachable: the table gives DTYPE 2 its own state).
+- `NDrone2_SetupGroups` (and its inline AddToGroup) never bounds the group against 31.
+- `DroneAnim_SetHTAnim` uses the blend script after `AnimScriptAppendBlend` unchecked; `OnStartAnim` (a mode 6 row)
+  and `DAnimFunc_Run` use `animScript` unchecked; `DroneAnim_EventFunc` carries on with uninitialised DCVars when
+  `Drone_DCVfromOBJ` fails.
+- `Drone_Delete` uses other drones', bullets' and casings' extraObjectData unchecked (only the gun turret's is checked).
+
 ## Departures from the original
 
 - The AI dispatcher's Exit, Enter and 0x2e messages leave their scope and frames as uninitialised stack in the
@@ -379,6 +455,8 @@ Found along the way:
   stack below the original to match). `DroneVision_GunThroughWall` hands a local for the sound and NULL for the hit
   list where the original passes its argument slot and stack; `NDrone2_SpeechSFXd` zeroes the DCVars a failed lookup
   leaves.
+- `Drone_InitComms` hands `DroneFunc_HandleSoundAlerts` a DCVars that is uninitialised stack in the original when the
+  first listed drone's object is not a drone; ours is zeroed.
 
 ## What the demos do not cover
 
