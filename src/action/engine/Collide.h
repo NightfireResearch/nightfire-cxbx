@@ -28,6 +28,26 @@ static_assert(offsetof(HITDATA_tag, surfaceNormal) == 0x10, "Bad offset of surfa
 static_assert(offsetof(HITDATA_tag, maybehitDirection) == 0x2c, "Bad offset of maybehitDirection");
 static_assert(offsetof(HITDATA_tag, hitPosition) == 0x38, "Bad offset of hitPosition");
 
+// A collision query (0x8c bytes), as Collide_StraddleCels and the ray tests take it. Only the fields our code sets
+// are named.
+typedef struct HITTEST_tag {
+  char _unknown00[0x1c];
+  _VECTOR rayStart;     // 0x1c
+  _VECTOR rayEnd;       // 0x28
+  char _unknown34[0x6c - 0x34];
+  cel_tag *cel;         // 0x6c - where the ray starts
+  char _unknown70[0x78 - 0x70];
+  float rayLength;      // 0x78
+  char _unknown7c[0x80 - 0x7c];
+  uchar unknown80;      // 0x80 - 1 from the AI network's tests
+  uchar unknown81;      // 0x81 - 2 from the AI network's tests
+  char _unknown82[0x8c - 0x82];
+} HITTEST_tag;
+
+static_assert(sizeof(HITTEST_tag) == 0x8c, "HITTEST_tag is 0x8c bytes");
+static_assert(offsetof(HITTEST_tag, cel) == 0x6c, "Bad offset of HITTEST_tag.cel");
+static_assert(offsetof(HITTEST_tag, rayLength) == 0x78, "Bad offset of HITTEST_tag.rayLength");
+
 #pragma pack(pop)
 
 bool Collide_RayIntersect(_VECTOR *startPosition,_VECTOR *endPosition,cel_tag *cel,obj_tag *obj,obj_tag *param_5,HITDATA_tag **hitDataOut,char param_7,uint maybeFlags,ushort param_9);

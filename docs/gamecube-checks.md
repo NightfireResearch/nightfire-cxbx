@@ -100,7 +100,7 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | 38 | parsemap_block_map_data_dynamic | 0x80059a5c | glist == -1 and entityNum >= MapEntityCount → object skipped | Dynamic HT_Entity_Type 0x%.4x With uninit glist [%f,%f,%f] | no | parsemap_block_map_data_dynamic | 0xa66f0 | high | ? |
 | 39 | parsemap_block_coll_data | 0x80059774 | old-format collision block present | 0x%x has old col data | no | none named (block id probably ignored by parsemap_handle_block_id 0xa6820) | - | low | ? |
 | 40 | parsemap_block_particles → FUN_800c9358 | 0x800c9358 | emitter texture hash == -1 | EMITTER TEXTURE MISSING | no | parsemap_block_particles (inlined) | 0x68020 | med-high | ? |
-| 41 | FUN_8005a760 (AI path node → cel link) | 0x8005a760 | build_FindCel(node pos) == NULL | FATAL: AIPath '%s' NODE (%d) IS NOT IN A ROOM: %f, %f, %f | no | AIPath_BindNodes (probably inlined) | 0xa72a0 | med | ? |
+| 41 | FUN_8005a760 (AI path node → cel link) | 0x8005a760 | build_FindCel(node pos) == NULL | FATAL: AIPath '%s' NODE (%d) IS NOT IN A ROOM: %f, %f, %f | no | AIPath_BindNodes (inlined; AIPath_Link2Cel on the PS2) | 0xa72a0 | med | silent | src/action/engine/AIPath.cpp - added |
 | 42 | AIBounds link (FUN_8005a9e0) | 0x8005a9e0 | build_FindCel(node pos) == NULL | same as 41 | no | AIBounds_Link2Cel | 0xa7160 | high | silent |
 | 43 | Script_Load | 0x80060338 | script placement whose hash is not loaded (param_4 == 0) | Warning : map contains script 0x%x that is not loaded / not setup correctly xyz[...] | no | Script_Load | 0xc1550 | high | silent - added: src/action/engine/Script.cpp (Script_Load) |
 | **Animation** |
@@ -133,9 +133,9 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | 67 | FUN_80082a74 (swing door setup) | 0x80082a74 | door model's longer axis is not x/y | ERROR : Swing door is not modelled on the xy axis : %s | no | Door_SetupSwing | 0x2ec30 | med-high | dropped (the Vec_Subtract of the model's extents stays) |
 | 68 | MiniSub_Create | 0x800d04f4 | AnimObjectNew(obj, 0x05000074) failed | Cannot init MiniSub skin | no | MiniSub_Create | 0x9bcd0 | high | ? |
 | **AI / drones** |
-| 69 | FUN_800847c4 (corner cover node) | 0x800847c4 | NumCoverNodes > 0xff; GC still writes the entry (overflow) | Too many cover nodes | no | Drone_CoverCornerNode | 0x2fe20 | med-high | dropped |
-| 70 | FUN_80084ae8 (low cover node) | 0x80084ae8 | NumCoverNodes > 0xff (writes anyway) | Too many cover nodes | no | Drone_CoverLowNode | 0x30000 | med-high | ? (likely dropped) |
-| 71 | FUN_80084d0c (AI point) | 0x80084d0c | NumAIPoints > 0xff (writes anyway) | Too many AIPoints | no | Drone_AIPoint | 0x30190 | med-high | dropped |
+| 69 | FUN_800847c4 (corner cover node) | 0x800847c4 | NumCoverNodes > 0xff; GC still writes the entry (overflow) | Too many cover nodes | no | Drone_CoverCornerNode | 0x2fe20 | med-high | dropped | src/action/game/obj/Drone_AIHints.cpp - added (NF_ASSERT: the table holds 256) |
+| 70 | FUN_80084ae8 (low cover node) | 0x80084ae8 | NumCoverNodes > 0xff (writes anyway) | Too many cover nodes | no | Drone_CoverLowNode | 0x30000 | med-high | dropped | src/action/game/obj/Drone_AIHints.cpp - added (NF_ASSERT) |
+| 71 | FUN_80084d0c (AI point) | 0x80084d0c | NumAIPoints > 0xff (writes anyway) | Too many AIPoints | no | Drone_AIPoint | 0x30190 | med-high | dropped | src/action/game/obj/Drone_AIHints.cpp - added (NF_ASSERT: the table holds 256) |
 | 72 | FUN_80085400 (spawner init) | 0x80085400 | group slot already 0xffff | ERROR: More than one DroneSpawner has the same group | no | DroneSpawner_Init | 0x30670 | med-high | ? |
 | 73 | FUN_80085400 | 0x80085400 | either Mem_Malloc for the spawner lists failed | Couldn't allocate memory for DroneSpawner (group %d) | no | DroneSpawner_Init | 0x30670 | med-high | ? |
 | 74 | NDrone2_DefaultInit | 0x80097e84 | AnimObjectNew(o, skin) == 0 | Could not create AnimObjectNew(o,0x%08x) | no | NDrone2_DefaultInit | 0x417f0 | high | ? |
@@ -143,13 +143,13 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | 76 | FUN_80099554 | 0x80099554 | *behaviours == 0 although the placement says there is data | No behaviour data stored but placement param claims there is! | no | NDrone2_DoModeSettingsNEW | 0x41230 | high | ? |
 | 77 | FUN_80099554 | 0x80099554 | behaviours pointer NULL (second test) | Drone has no behaviour data! | no | NDrone2_DoModeSettingsNEW | 0x41230 | high | ? |
 | 78 | FUN_8004e46c | 0x8004e46c | mode >= 0x11, or sub-fields out of range (<6, 1..3, 1..0x5b) → reset to defaults, return 0 | Invalid behaviour data! | no | behaviour_util_get | 0x194d0 | high | silent (defaults kept) |
-| 79 | FUN_800a504c (init emitter) | 0x800a504c | no cel given and build_FindCel fails (+ Euroland coords if flag) | ERROR: AIPoint or Corner Cover not in cel - adjust position | no | AINetwork_InitEmitter | 0x4a870 | med-high | ? |
-| 80 | FUN_800a504c | 0x800a504c | no nav path, or path has 0 nodes, near the emitter | NO NAVIGATION PATH NEAR EMITTER (AIPOINT/COVER) + Emitter cel: %s | no | AINetwork_InitEmitter | 0x4a870 | med-high | ? |
-| 81 | FUN_800a5180 (init emitter, lazy alloc) | 0x800a5180 | same two conditions as 79/80 | same messages | no | AINetwork_InitEmitter2 | 0x4a900 | med | ? |
-| 82 | FUN_800a5388 (emit path) | 0x800a5388 | link lookup returns < 0 (GC keeps going with the negative index) | Link refers to non-existant AI path | no | AINetwork_EmitPath | 0x49d70 | med | ? |
-| 83 | FUN_800a5738 (node at distance) | 0x800a5738 | link lookup returns < 0 | Link refers to non-existant AI path | no | AINetwork_Emitter_GetNodeAtDistance | 0x4a070 | med | ? |
-| 84 | FUN_800a2eb8 (A* route) | 0x800a2eb8 | backtrack chain longer than 100000 | Likely infinite loop | no | AINetwork_DoAStarPath | 0x48720 | med | ? |
-| 85 | FUN_800a2eb8 | 0x800a2eb8 | link lookup returns < 0 | Could not find path link | no | AINetwork_DoAStarPath | 0x48720 | med | ? |
+| 79 | FUN_800a504c (init emitter) | 0x800a504c | no cel given and build_FindCel fails (+ Euroland coords if flag) | ERROR: AIPoint or Corner Cover not in cel - adjust position | no | AINetwork_InitEmitter | 0x4a870 | med-high | silent | src/action/engine/AINetwork.cpp - added |
+| 80 | FUN_800a504c | 0x800a504c | no nav path, or path has 0 nodes, near the emitter | NO NAVIGATION PATH NEAR EMITTER (AIPOINT/COVER) + Emitter cel: %s | no | AINetwork_InitEmitter | 0x4a870 | med-high | silent | src/action/engine/AINetwork.cpp - added (without the cel name) |
+| 81 | FUN_800a5180 (init emitter, lazy alloc) | 0x800a5180 | same two conditions as 79/80 | same messages | no | AINetwork_InitEmitter2 | 0x4a900 | med | silent | src/action/engine/AINetwork.cpp - added |
+| 82 | FUN_800a5388 (emit path) | 0x800a5388 | link lookup returns < 0 (GC keeps going with the negative index) | Link refers to non-existant AI path | no | AINetwork_EmitPath | 0x49d70 | med | dropped | src/action/engine/AINetwork.cpp - added (cannot fire: the Xbox neighbour lookup only runs below the link count) |
+| 83 | FUN_800a5738 (node at distance) | 0x800a5738 | link lookup returns < 0 | Link refers to non-existant AI path | no | AINetwork_Emitter_GetNodeAtDistance | 0x4a070 | med | dropped | src/action/engine/AINetwork.cpp - added (cannot fire, as #82) |
+| 84 | FUN_800a2eb8 (A* route) | 0x800a2eb8 | backtrack chain longer than 100000 | Likely infinite loop | no | AINetwork_DoAStarPath | 0x48720 | med | dropped | src/action/engine/AINetwork.cpp - added |
+| 85 | FUN_800a2eb8 | 0x800a2eb8 | link lookup returns < 0 | Could not find path link | no | AINetwork_DoAStarPath | 0x48720 | med | dropped | src/action/engine/AINetwork.cpp - added (cannot fire, as #82) |
 | 86 | FUN_800a0870 (patrol route setup) | 0x800a0870 | a patrol path node's link count is not 2 on a looping path | Patrol Path '%s' is NOT looping | no | patrol init (caller FUN_800a0f98), probably NDrone2_AssignAIPath | 0x46ad0 | low | ? |
 | 87 | FUN_800c3e14 (post AI message) | 0x800c3e14 | message pool empty (GC then writes through NULL) | Too many AI messages | no | the delayed-message insert (FUN_0004e3c0, ours Drone_SM_QueueMsg) | 0x4e3c0 | high | dropped | src/action/game/drone/DroneSM.cpp - added |
 | 88 | FUN_800c3fa8 (state-machine dispatch) | 0x800c3fa8 | > 1000 state changes in one dispatch | Possible infinite loop | no | Drone_SM_RouteMsgDCV | 0x4e410 | high | dropped | src/action/game/drone/DroneSM.cpp - added |

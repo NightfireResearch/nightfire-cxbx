@@ -11,6 +11,7 @@
 #include "../../engine/Anim.h"      // AnimGetBoneWorldTrans
 #include "../../math/math.h"        // Vec_*, maybeAtan2 (ours)
 #include "../mp/multiplayer.h"      // MPSettings
+#include "../obj/build.h"           // build_FindCel
 
 #include <math.h>
 #include <string.h>
@@ -365,7 +366,6 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
 // ---------------------------------------------------------------------------------------------------------------
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
-#define NDrone2_Player ((obj_tag *(__cdecl *)(void))0x00035f90)
 #define NDrone2_CanSeeObject ((bool (__cdecl *)(Drone_tag *drone, obj_tag *obj, uint bone, ushort mask))0x000648b0)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *gameObj))0x0001a190)
 #define DroneWeap_OpponentHasWeapon ((bool (__cdecl *)(DCVars_tag *dcv))0x00066610)
@@ -406,6 +406,30 @@ static void NDrone2_EyesFromPosition(obj_tag *gameObj, _VECTOR *pos) {
         pos->y += 0.6f;
         break;
     }
+}
+
+// The player the drones see: the dummy player while the dummy-player cheat has it on
+// AUTOINJECT
+obj_tag* NDrone2_Player(void) {
+    if (NPCGlobals.dummyPlayerActive)
+        return NPCGlobals.dummyPlayer;
+    return glb_players[0];
+}
+
+// AUTOINJECT
+cel_tag* NDrone2_FindCel(_VECTOR *pos) {
+    return build_FindCel(pos, glb_world);
+}
+
+// An object's feet: its position less its animation's root height, plus 0.4 m. Without an animation, its position
+// (false).
+// AUTOINJECT
+bool NDrone2_FeetPos(obj_tag *obj, _VECTOR *feet) {
+    Vec_Copy(&obj->position, feet);
+    if (obj->animState == NULL)
+        return false;
+    feet->y = (float)(feet->y - ((double)obj->animState->animObj.rootHeight - 0.4f));
+    return true;
 }
 
 // Where the object's eyes are, and for a drone which way its head faces (Drone_tag.headPos and headYaw; true).

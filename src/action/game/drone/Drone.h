@@ -179,7 +179,8 @@ typedef struct Drone_tag {
     char _pad134[0x138 - 0x134];
     float playerDistance[4];        // 0x138 - PreDroneControl
     obj_tag *opponent;              // 0x148
-    char _pad14c[0x168 - 0x14c];
+    uchar targetSlot;               // 0x14c - the NPCGlobals.targets entry for the opponent (0xff for none)
+    char _pad14d[0x168 - 0x14d];
     float distanceToTarget;         // 0x168 - to the opponent (Drone_GetOpponentInfo)
     char _pad16c[0x188 - 0x16c];
     float opponentBearing;          // 0x188 - Drone_GetOpponentInfo: the opponent's angle off the drone's facing
@@ -192,7 +193,9 @@ typedef struct Drone_tag {
     uint sightFrames;               // 0x200 - frames of continuous sight (DroneVision_HaveOpponentSight)
     char _pad204[0x234 - 0x204];
     obj_tag *lastAttacker;          // 0x234 - who killed it, for DroneFunc_OnInitDeath and DroneFunc_SetDeathChannel
-    char _pad238[0x298 - 0x238];
+    char _pad238[0x290 - 0x238];
+    uint unknown290;                // 0x290 - LinkCreep_Handler sets 0x1e when a creep step is blocked
+    char _pad294[0x298 - 0x294];
     uint explosiveTimeout;          // 0x298 - DroneFunc_ConsiderExplosive: the frame it stops running
     _VECTOR explosivePos;           // 0x29c - and from where
     cel_tag *explosiveCel;          // 0x2a8
@@ -263,7 +266,9 @@ typedef struct Drone_tag {
     AIRoute_tag route2;             // 0x6d8 - the patrol / mission route
     char _pad778[0x825 - 0x778];
     uchar unknown825;               // 0x825 - bit 0 cleared by DSTATE_PlayScript for script 0x60007ac
-    char _pad826[0x874 - 0x826];
+    char _pad826[0x82c - 0x826];
+    uint unknown82c;                // 0x82c - while set, LinkCreep_Handler does not test the bounds
+    char _pad830[0x874 - 0x830];
     DIVars_tag diVars;              // 0x874 - the drone's own copy of its creation vars
     DroneTimer timerA;              // 0x918 - both timers are switched off on every state change
     DroneTimer timerB;              // 0x924
@@ -318,6 +323,7 @@ static_assert(offsetof(Drone_tag, sm) + offsetof(StateMachineInfo_tag, processFu
 static_assert(offsetof(Drone_tag, modeChangeSwitchChannel) == 0x119, "Wrong offset for modeChangeSwitchChannel");
 static_assert(offsetof(Drone_tag, key7) == 0x12c, "Wrong offset for key7");
 static_assert(offsetof(Drone_tag, opponent) == 0x148, "Wrong offset for opponent");
+static_assert(offsetof(Drone_tag, targetSlot) == 0x14c, "Wrong offset for targetSlot");
 static_assert(offsetof(Drone_tag, distanceToTarget) == 0x168, "Wrong offset for distanceToTarget");
 static_assert(offsetof(Drone_tag, accuracy) == 0x98, "Wrong offset for accuracy");
 static_assert(offsetof(Drone_tag, speed) == 0x9a, "Wrong offset for speed");
@@ -342,6 +348,8 @@ static_assert(offsetof(Drone_tag, stateScratch2) == 0x934, "Wrong offset for sta
 static_assert(offsetof(Drone_tag, unknown448) == 0x448, "Wrong offset for unknown448");
 static_assert(offsetof(Drone_tag, unknown825) == 0x825, "Wrong offset for unknown825");
 static_assert(offsetof(Drone_tag, botVars) == 0x974, "Wrong offset for botVars");
+static_assert(offsetof(Drone_tag, unknown290) == 0x290, "Wrong offset for unknown290");
+static_assert(offsetof(Drone_tag, unknown82c) == 0x82c, "Wrong offset for unknown82c");
 static_assert(offsetof(Drone_tag, captain) == 0x19, "Wrong offset for captain");
 static_assert(offsetof(Drone_tag, inPlayersSights) == 0x2a, "Wrong offset for inPlayersSights");
 static_assert(offsetof(Drone_tag, headTracking) == 0x2c, "Wrong offset for headTracking");

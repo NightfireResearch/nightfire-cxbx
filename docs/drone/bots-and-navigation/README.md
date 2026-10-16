@@ -175,8 +175,8 @@ Neither table has a count check. More than 50 records would overflow, but no lev
 **File node flags (+4) at run time:** bit 0x1 and the low action bits (`& 0xf007f`) mark a "special node": when a
 route reaches it, `NDrone2_ReachedDestNode` runs (report A/B). Bit 0x2 marks a door node. The target bits are set
 by NodesForPosition: 0x1000000 player, 0x2000000 player (obstructed only), 0x10000000 goal, 0x20000000 goal
-(obstructed only). 0x40000000 = on the open or closed list and 0x80000000 = closed list: the emitter and GetNodeAtDistance use both,
-but A* (below) marks closed nodes 0x40000000 too.
+(obstructed only). 0x40000000 = on the open or closed list. 0x80000000 would be the emitter's closed list, but nothing sets it: A*, the
+emitter and GetNodeAtDistance all mark closed nodes 0x40000000, so a node is never opened again.
 
 ### 3.4 AIRoute_tag (0xa0; `drone+0x634` for the dynamic route, `drone+0x6d8` for the patrol/mission route) **[D][PS2 layout differs: 0x100]**
 
@@ -316,7 +316,7 @@ Each frame:
    - At the end of a link, `AINetwork_SetupNextNode(±1)` advances the index with the mode's wrap
      (`RouteNodeOffset`: clamp, loop, or ping-pong with flag 0x8) and sets up the next link (`LinkCreep_ForNodes`
      FUN_0004aa90). A node with action flags sets "special pending", and `LinkCreep_AtSpecialNode` (within 0.4 m,
-     or within 1 m and no other drone there) calls `NDrone2_ReachedDestNode`.
+     or within 1 m with the player or another drone within 0.4 m of the node) calls `NDrone2_ReachedDestNode`.
 4. The drone code steers at `route+0x34` (`NDrone2_maybeCalcDistanceAndDirToTarget`, report B).
 
 Patrol and mission paths do **not** use A*. `NDrone2_AssignAIPath(dc, typeMask)` picks the nearest node within
@@ -339,8 +339,8 @@ Uses:
 
 - `NDrone2_DistanceToEmitter(pos, path, &cachedNearestNode, em)` returns the byte at the mover's nearest node. It
   is valid only when `em->path` is the mover's current path. It is how bots rank pickups and objectives.
-- `AINetwork_Emitter_GetNodeAtDistance` walks away from the emitter, only through nodes whose byte is ≥ the start's,
-  until it reaches a node whose byte is ≥ d. `DroneMove_FindSafetyFromScaryPosition` uses it to flee.
+- `AINetwork_Emitter_GetNodeAtDistance` walks the graph from a node (visited nodes passed over; the open list is
+  sorted by f values left from the last search) until it reaches a node whose byte is ≥ d. `DroneMove_FindSafetyFromScaryPosition` uses it to flee.
 
 The emitter runs once per pickup when it is registered, and again when an objective moves
 (`MP_recalcObjExtPaths`). The used counts are not zeroed at that moment, so a pickup registered in the middle of a
@@ -353,7 +353,8 @@ Bounds are outlines that movers must not cross.
 - `AINetwork_BoundsTest(from, fromCel, to, toCel, hitOut, strict)` is called by `NDrone2_MoveTestToNode`. It collects
   the cels a ray straddles (`Collide_StraddleCels`), and for each bound link listed on those cels runs
   `AINetwork_LineIntersectsBoundry`: a 2D segment intersection, accepted when the crossing height is within
-  [boundY - 2.4, boundY + headroom]. In strict mode it also rejects passing within 0.4 m of a bound node.
+  [boundY - 2.4, boundY + headroom]. In strict mode it also rejects passing within 0.4 m of a bound node (node b's test takes the distance, not its
+  square, and both use node a's height). `NDrone2_MoveTest` hands it a seventh "blocked" argument it never reads.
 - `AINetwork_GetBoundsPushVectorForSphere` is used by `NDrone2_Collision`.
 - `AINetwork_FurthestPosition` is used by flee and "closer position" searches.
 - The bound link flags are set once at post-load by `AINetwork_InitPassableBoundries`: a bound edge that a nav link
@@ -369,8 +370,22 @@ Bounds are outlines that movers must not cross.
 | 0x200 | occluders (smoke) within 3 m; object type 0x36 | each frame |
 | used count (+6) | UpdateLinksUsedCount | each frame |
 
+0x20 and 0x40 mark links between two door (kick) nodes that cross a bound (NDrone_InitDoorNodes, NDrone_InitKickNodes).
 No reader of 0x100/0x200 was found among the nav functions. They probably feed the drones' perception or decisions
 (report B; inferred).
+
+### 4.8 The port (parcel 4, October 2026)
+
+Ours: src/action/engine/AINetwork.cpp and AIPath.cpp, src/action/game/drone/NDrone2_Nav.cpp, the NDrone2 helpers in
+NDrone2.cpp, and the hints in src/action/game/obj/Drone_AIHints.cpp; shadow tests NavShadow.cpp and AIHintsShadow.cpp.
+Names given to the FUN_ functions above: 47a10 `AINetwork_RouteNodeOffset`, 47a90 `AlterDestFor_DROUTE_Nearest`, 47b40
+`FindLink` (ours), 47bb0 `GetRouteDistanceBetweenNodes`, 480b0 `OptimiseRoute`, 482c0 `ResetRoute`, 49ab0
+`SetupRouteToObject`, 49b30 `SetupRouteToPosition`, 49bf0 `VerifyRouteTarget`, 49c50 `VerifyRouteToPosition` (ours),
+4a990 `LinkCreep_Setup` (ours), 4aa90 `LinkCreep_ForNodes`, 4abb0 `LinkCreep_Calc`, 4ac30 `LinkCreep_CalcToRouteEnd`,
+4acb0 `CalcRoute`, 4adb0 `CalcRouteToObject`, 4ae30 `CalcRouteToPosition`, 44030 and 44150 `NDrone2_MoveTest`, 44de0
+`NDrone2_NavNodeCache`, 48b70 `AINetwork_HitBoundry`, 31af0 `NDrone_InitDoorNodes`. Route+0x54 is the creep's reach
+(`LinkCreep_Increment` moves the waypoint on only while it is nearer than that); `AIPath_Init` clears 0x274cac, the
+move test's slope limit.
 
 ---
 

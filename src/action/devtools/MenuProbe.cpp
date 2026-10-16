@@ -65,6 +65,8 @@
 #include "DroneTablesCheck.h"
 #include "DroneShadow.h"
 #include "DroneAIShadow.h"
+#include "AIHintsShadow.h"
+#include "NavShadow.h"
 #include "WeaponTableShadow.h"
 #include "MatrixShadow.h"
 #include "ScriptShadow.h"
@@ -539,6 +541,8 @@ void MenuProbe_Install(void) {
         ScoreShadow_Run();
         DroneShadow_Run();
         DroneAIShadow_Run();
+        AIHintsShadow_Run();
+        NavShadow_Run();
         WeaponTableShadow_Run();
         MatrixShadow_Run();
         ScriptShadow_Run();

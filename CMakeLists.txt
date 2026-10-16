@@ -86,6 +86,8 @@ add_library(actioninject SHARED
   src/action/devtools/DroneTablesCheck.cpp
   src/action/devtools/DroneShadow.cpp
   src/action/devtools/DroneAIShadow.cpp
+  src/action/devtools/AIHintsShadow.cpp
+  src/action/devtools/NavShadow.cpp
   src/action/devtools/WeaponTableShadow.cpp
   src/action/devtools/MatrixShadow.cpp
   src/action/devtools/ScriptShadow.cpp
@@ -104,6 +106,7 @@ add_library(actioninject SHARED
   src/action/gfx/Sprite.cpp
   src/action/gfx/LowLevel.cpp
   src/action/engine/AINetwork.cpp
+  src/action/engine/AIPath.cpp
   src/action/engine/Anim.cpp
   src/action/engine/Camera.cpp
   src/action/engine/Collide.cpp
@@ -184,9 +187,11 @@ add_library(actioninject SHARED
   src/action/game/drone/NDrone2_Death.cpp
   src/action/game/drone/NDrone2_Hostage.cpp
   src/action/game/drone/NDrone2_Talk.cpp
+  src/action/game/drone/NDrone2_Nav.cpp
   src/action/game/mp/multiplayer.cpp
   src/action/game/obj/Break.cpp
   src/action/game/obj/Door.cpp
+  src/action/game/obj/Drone_AIHints.cpp
   src/action/game/obj/FuseBox.cpp
   src/action/game/obj/Hint.cpp
   src/action/game/obj/build.cpp

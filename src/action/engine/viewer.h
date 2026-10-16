@@ -153,6 +153,17 @@ struct world_tag {
     // ?
 };
 
+// An opening between two cels (0x7c bytes). Only the fields our code reads are named.
+typedef struct portal_tag portal_tag;
+struct portal_tag {
+    portal_tag *next;           // 0x00 - the next portal of the same cel
+    portal_tag *partner;        // 0x04 - the same opening, from the other cel
+    cel_tag *cel;               // 0x08 - the cel on the other side (Collide_StraddleCels adds it)
+    char _unknown0c[0x28 - 0x0c];
+    _VECTOR corners[4];         // 0x28
+    char _unknown58[0x7c - 0x58];
+};
+
 struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field0_0x0;
     undefined field1_0x1;
@@ -184,26 +195,14 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field33_0x21;
     undefined field34_0x22;
     undefined field35_0x23;
-    undefined field36_0x24;
-    undefined field37_0x25;
-    undefined field38_0x26;
-    undefined field39_0x27;
-    undefined field40_0x28;
-    undefined field41_0x29;
-    undefined field42_0x2a;
-    undefined field43_0x2b;
+    struct AINode_tag *aiNodes;         // 0x24 - the AI path nodes in this cel (AIPath_BindNodes)
+    portal_tag *portals;                // 0x28 - this cel's portals, linked through portal_tag.next
     undefined field44_0x2c;
     undefined field45_0x2d;
     undefined field46_0x2e;
     undefined field47_0x2f;
-    undefined field48_0x30;
-    undefined field49_0x31;
-    undefined field50_0x32;
-    undefined field51_0x33;
-    undefined field52_0x34;
-    undefined field53_0x35;
-    undefined field54_0x36;
-    undefined field55_0x37;
+    struct AIBoundNode_tag *boundNodes; // 0x30 - the AI bound nodes in this cel (AIBounds_Link2Cel)
+    struct AIBoundLink_tag *boundLinks; // 0x34 - the AI bound links with an end in this cel (AIBounds_Prepare)
     undefined field56_0x38;
     undefined field57_0x39;
     undefined field58_0x3a;

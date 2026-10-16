@@ -13,7 +13,6 @@
 #include <math.h>
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
-#define NDrone2_Player ((obj_tag *(__cdecl *)(void))0x00035f90)
 #define DroneWeap_DropWeapon ((void (__cdecl *)(DCVars_tag *dcv))0x00067690)
 #define NDrone2_LogDroneDeath ((void (__cdecl *)(DCVars_tag *dcv))0x0003a1d0)
 #define Pickup_CreateSimple ((obj_tag *(__cdecl *)(_MATRIX *mtx, short weapon, short count, _VECTOR *pos))0x000a7f10)

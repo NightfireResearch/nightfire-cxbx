@@ -7154,13 +7154,13 @@
         "namespace": "Global"
     },
     {
-        "name": "NDrone_InitDoorKickNodes",
+        "name": "NDrone_InitDoorNodes",
         "address": "0x00031af0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall NDrone_InitDoorKickNodes(void)",
+        "prototype_string": "void __stdcall NDrone_InitDoorNodes(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -11756,37 +11756,39 @@
         "namespace": "Global"
     },
     {
-        "name": "NDrone2_MoveTestToNode",
+        "name": "NDrone2_MoveTest",
         "address": "0x00044030",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "undefined2",
         "param_types": [
-            "MAPNODE_tag *",
-            "CelPos_tag *",
-            "obj_tag *",
-            "cel_tag *",
-            "_VECTOR *",
             "undefined4",
             "undefined4",
-            "undefined1"
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4"
         ],
-        "prototype_string": "undefined2 __stdcall NDrone2_MoveTestToNode(MAPNODE_tag * param_1, CelPos_tag * param_2, obj_tag * param_3, cel_tag * param_4, _VECTOR * param_5, undefined4 param_6, undefined4 param_7, undefined1 param_8)",
+        "prototype_string": "char __cdecl NDrone2_MoveTest(_VECTOR * from, cel_tag * fromCel, _VECTOR * to, cel_tag * toCel, obj_tag * objA, obj_tag * objB, _VECTOR * hit, char strict, char checkBlocked)",
         "parameters": [
-            "[MAPNODE_tag * param_1@Stack[0x4]:4]",
-            "[CelPos_tag * param_2@Stack[0x8]:4]",
-            "[obj_tag * param_3@Stack[0xc]:4]",
-            "[cel_tag * param_4@Stack[0x10]:4]",
-            "[_VECTOR * param_5@Stack[0x14]:4]",
-            "[undefined4 param_6@Stack[0x18]:4]",
-            "[undefined4 param_7@Stack[0x1c]:4]",
-            "[undefined1 param_8@Stack[0x20]:1]"
+            "[param0 p0@Stack[0x4]:4]",
+            "[param1 p1@Stack[0x8]:4]",
+            "[param2 p2@Stack[0xc]:4]",
+            "[param3 p3@Stack[0x10]:4]",
+            "[param4 p4@Stack[0x14]:4]",
+            "[param5 p5@Stack[0x18]:4]",
+            "[param6 p6@Stack[0x1c]:4]",
+            "[param7 p7@Stack[0x20]:4]",
+            "[param8 p8@Stack[0x24]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_00044150",
+        "name": "NDrone2_MoveTest",
         "address": "0x00044150",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -11800,15 +11802,15 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00044150(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7)",
+        "prototype_string": "char __cdecl NDrone2_MoveTest(CelPos_tag * from, CelPos_tag * to, obj_tag * objA, obj_tag * objB, _VECTOR * hit, char strict, char checkBlocked)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
-            "[undefined4 param_5@Stack[0x14]:4]",
-            "[undefined4 param_6@Stack[0x18]:4]",
-            "[undefined4 param_7@Stack[0x1c]:4]"
+            "[param0 p0@Stack[0x4]:4]",
+            "[param1 p1@Stack[0x8]:4]",
+            "[param2 p2@Stack[0xc]:4]",
+            "[param3 p3@Stack[0x10]:4]",
+            "[param4 p4@Stack[0x14]:4]",
+            "[param5 p5@Stack[0x18]:4]",
+            "[param6 p6@Stack[0x1c]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -12078,13 +12080,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00044de0",
+        "name": "NDrone2_NavNodeCache",
         "address": "0x00044de0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_00044de0(void)",
+        "prototype_string": "void __cdecl NDrone2_NavNodeCache(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -13050,34 +13052,38 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00047a10",
+        "name": "AINetwork_RouteNodeOffset",
         "address": "0x00047a10",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "short",
         "param_types": [
-            "short",
-            "short",
-            "byte *"
+            "undefined4",
+            "undefined4",
+            "undefined4"
         ],
-        "prototype_string": "short __cdecl FUN_00047a10(short param_1, short param_2, byte * param_3)",
+        "prototype_string": "short __cdecl AINetwork_RouteNodeOffset(short current, short offset, AIRoute_tag * route)",
         "parameters": [
-            "[short param_1@Stack[0x4]:2]",
-            "[short param_2@Stack[0x8]:2]",
-            "[byte * param_3@Stack[0xc]:4]"
+            "[param0 p0@Stack[0x4]:4]",
+            "[param1 p1@Stack[0x8]:4]",
+            "[param2 p2@Stack[0xc]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_00047a90",
+        "name": "AINetwork_AlterDestFor_DROUTE_Nearest",
         "address": "0x00047a90",
         "calling_convention": "__stdcall",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "undefined4",
-        "param_types": [],
-        "prototype_string": "undefined4 __stdcall FUN_00047a90(void)",
-        "parameters": [],
+        "param_types": [
+            "undefined4"
+        ],
+        "prototype_string": "bool AINetwork_AlterDestFor_DROUTE_Nearest(AIRoute_tag * route)",
+        "parameters": [
+            "[param0 p0@Stack[0x4]:4]"
+        ],
         "is_thunk": false,
         "namespace": "Global"
     },
@@ -13102,7 +13108,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00047bb0",
+        "name": "AINetwork_GetRouteDistanceBetweenNodes",
         "address": "0x00047bb0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -13112,11 +13118,11 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_00047bb0(undefined4 param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "double __cdecl AINetwork_GetRouteDistanceBetweenNodes(AIRoute_tag * route, short from, short to)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[param0 p0@Stack[0x4]:4]",
+            "[param1 p1@Stack[0x8]:4]",
+            "[param2 p2@Stack[0xc]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -13170,39 +13176,43 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000480b0",
+        "name": "AINetwork_OptimiseRoute",
         "address": "0x000480b0",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "undefined4",
         "param_types": [
             "undefined4",
-            "char"
+            "undefined4",
+            "undefined4",
+            "undefined4"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000480b0(undefined4 param_1, char param_2)",
+        "prototype_string": "uint AINetwork_OptimiseRoute(AIRoute_tag * route, char dropFirst, uint status, char dropLast)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[char param_2@Stack[0x8]:1]"
+            "[param0 p0@Stack[0x4]:4]",
+            "[param1 p1@Stack[0x8]:4]",
+            "[param2 p2@Stack[0xc]:4]",
+            "[param3 p3@Stack[0x10]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "AINetwork_DoSomethingToRoute",
+        "name": "AINetwork_ResetRoute",
         "address": "0x000482c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
-            "AIRoute_tag *",
+            "undefined4",
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "void __cdecl AINetwork_DoSomethingToRoute(AIRoute_tag * param_1, undefined4 param_2, undefined4 param_3)",
+        "prototype_string": "void __cdecl AINetwork_ResetRoute(AIRoute_tag * route, obj_tag * mover, obj_tag * targetObj)",
         "parameters": [
-            "[AIRoute_tag * param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]"
+            "[param0 p0@Stack[0x4]:4]",
+            "[param1 p1@Stack[0x8]:4]",
+            "[param2 p2@Stack[0xc]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -13308,27 +13318,27 @@
         "namespace": "Global"
     },
     {
-        "name": "AINetwork_FUN_00048b70",
+        "name": "AINetwork_HitBoundry",
         "address": "0x00048b70",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "bool",
         "param_types": [
-            "float *",
-            "float",
-            "_VECTOR *",
-            "float",
-            "float *",
-            "uint"
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4"
         ],
-        "prototype_string": "bool __cdecl AINetwork_FUN_00048b70(float * param_1, float param_2, _VECTOR * param_3, float param_4, float * param_5, uint param_6)",
+        "prototype_string": "bool __cdecl AINetwork_HitBoundry(_VECTOR * closest, AIBoundLink_tag * link, _VECTOR * pos, float radiusSq, float * distSq, uint skipFlags)",
         "parameters": [
-            "[float * param_1@Stack[0x4]:4]",
-            "[float param_2@Stack[0x8]:4]",
-            "[_VECTOR * param_3@Stack[0xc]:4]",
-            "[float param_4@Stack[0x10]:4]",
-            "[float * param_5@Stack[0x14]:4]",
-            "[uint param_6@Stack[0x18]:4]"
+            "[param0 p0@Stack[0x4]:4]",
+            "[param1 p1@Stack[0x8]:4]",
+            "[param2 p2@Stack[0xc]:4]",
+            "[param3 p3@Stack[0x10]:4]",
+            "[param4 p4@Stack[0x14]:4]",
+            "[param5 p5@Stack[0x18]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -13540,75 +13550,79 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00049ab0",
+        "name": "AINetwork_SetupRouteToObject",
         "address": "0x00049ab0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "uint",
         "param_types": [
-            "int",
-            "int",
-            "uint *",
-            "int",
-            "float",
-            "byte *"
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4"
         ],
-        "prototype_string": "uint __cdecl FUN_00049ab0(int param_1, int param_2, uint * param_3, int param_4, float param_5, byte * param_6)",
+        "prototype_string": "bool __cdecl AINetwork_SetupRouteToObject(obj_tag * mover, obj_tag * targetObj, AITarget_tag * target, AIPoint_tag * point, float radius, AIRoute_tag * route)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
-            "[uint * param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]",
-            "[float param_5@Stack[0x14]:4]",
-            "[byte * param_6@Stack[0x18]:4]"
+            "[param0 p0@Stack[0x4]:4]",
+            "[param1 p1@Stack[0x8]:4]",
+            "[param2 p2@Stack[0xc]:4]",
+            "[param3 p3@Stack[0x10]:4]",
+            "[param4 p4@Stack[0x14]:4]",
+            "[param5 p5@Stack[0x18]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_00049b30",
+        "name": "AINetwork_SetupRouteToPosition",
         "address": "0x00049b30",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": false,
+        "has_custom_variable_storage": true,
         "return_type": "uint",
         "param_types": [
-            "int",
-            "uint *",
-            "int",
-            "float"
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4"
         ],
-        "prototype_string": "uint __cdecl FUN_00049b30(int param_1, uint * param_2, int param_3, float param_4)",
+        "prototype_string": "bool AINetwork_SetupRouteToPosition(AIRoute_tag * route, CelPos_tag * dest, obj_tag * mover, AITarget_tag * target, AIPoint_tag * point, float radius)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[uint * param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[float param_4@Stack[0x10]:4]"
+            "[param0 p0@Stack[0x4]:4]",
+            "[param1 p1@Stack[0x8]:4]",
+            "[param2 p2@Stack[0xc]:4]",
+            "[param3 p3@Stack[0x10]:4]",
+            "[param4 p4@Stack[0x14]:4]",
+            "[param5 p5@Stack[0x18]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_00049bf0",
+        "name": "AINetwork_VerifyRouteTarget",
         "address": "0x00049bf0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "uint",
         "param_types": [
-            "int",
-            "int",
-            "uint *",
-            "int",
-            "float",
-            "byte *"
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4"
         ],
-        "prototype_string": "uint __cdecl FUN_00049bf0(int param_1, int param_2, uint * param_3, int param_4, float param_5, byte * param_6)",
+        "prototype_string": "bool __cdecl AINetwork_VerifyRouteTarget(obj_tag * mover, obj_tag * targetObj, AITarget_tag * target, AIPoint_tag * point, float radius, AIRoute_tag * route)",
         "parameters": [
-            "[int param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
-            "[uint * param_3@Stack[0xc]:4]",
-            "[int param_4@Stack[0x10]:4]",
-            "[float param_5@Stack[0x14]:4]",
-            "[byte * param_6@Stack[0x18]:4]"
+            "[param0 p0@Stack[0x4]:4]",
+            "[param1 p1@Stack[0x8]:4]",
+            "[param2 p2@Stack[0xc]:4]",
+            "[param3 p3@Stack[0x10]:4]",
+            "[param4 p4@Stack[0x14]:4]",
+            "[param5 p5@Stack[0x18]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
@@ -13998,79 +14012,83 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0004aa90",
+        "name": "LinkCreep_ForNodes",
         "address": "0x0004aa90",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [
-            "ushort *",
-            "int",
-            "int",
-            "char"
+            "undefined4",
+            "undefined4",
+            "undefined4",
+            "undefined4"
         ],
-        "prototype_string": "undefined __cdecl FUN_0004aa90(ushort * param_1, int param_2, int param_3, char param_4)",
+        "prototype_string": "bool __cdecl LinkCreep_ForNodes(AIRoute_tag * route, int from, int to, char fromEnd)",
         "parameters": [
-            "[ushort * param_1@Stack[0x4]:4]",
-            "[int param_2@Stack[0x8]:4]",
-            "[int param_3@Stack[0xc]:4]",
-            "[char param_4@Stack[0x10]:1]"
+            "[param0 p0@Stack[0x4]:4]",
+            "[param1 p1@Stack[0x8]:4]",
+            "[param2 p2@Stack[0xc]:4]",
+            "[param3 p3@Stack[0x10]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_0004abb0",
+        "name": "LinkCreep_Calc",
         "address": "0x0004abb0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "ushort *",
-            "char"
+            "undefined4",
+            "undefined4"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_0004abb0(ushort * param_1, char param_2)",
+        "prototype_string": "bool __cdecl LinkCreep_Calc(AIRoute_tag * route, char fromEnd)",
         "parameters": [
-            "[ushort * param_1@Stack[0x4]:4]",
-            "[char param_2@Stack[0x8]:1]"
+            "[param0 p0@Stack[0x4]:4]",
+            "[param1 p1@Stack[0x8]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_0004ac30",
+        "name": "LinkCreep_CalcToRouteEnd",
         "address": "0x0004ac30",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
         "return_type": "undefined4",
         "param_types": [
-            "byte *"
-        ],
-        "prototype_string": "undefined4 __cdecl FUN_0004ac30(byte * param_1)",
-        "parameters": [
-            "[byte * param_1@Stack[0x4]:4]"
-        ],
-        "is_thunk": false,
-        "namespace": "Global"
-    },
-    {
-        "name": "FUN_0004acb0",
-        "address": "0x0004acb0",
-        "calling_convention": "unknown",
-        "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0004acb0(undefined4 param_1)",
+        "prototype_string": "uint __cdecl LinkCreep_CalcToRouteEnd(AIRoute_tag * route)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]"
+            "[param0 p0@Stack[0x4]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_0004adb0",
+        "name": "AINetwork_CalcRoute",
+        "address": "0x0004acb0",
+        "calling_convention": "unknown",
+        "has_custom_variable_storage": true,
+        "return_type": "undefined",
+        "param_types": [
+            "undefined4",
+            "undefined4",
+            "undefined4"
+        ],
+        "prototype_string": "uint AINetwork_CalcRoute(AIRoute_tag * route, obj_tag * mover, obj_tag * targetObj)",
+        "parameters": [
+            "[param0 p0@Stack[0x4]:4]",
+            "[param1 p1@Stack[0x8]:4]",
+            "[param2 p2@Stack[0xc]:4]"
+        ],
+        "is_thunk": false,
+        "namespace": "Global"
+    },
+    {
+        "name": "AINetwork_CalcRouteToObject",
         "address": "0x0004adb0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -14084,21 +14102,21 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0004adb0(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7)",
+        "prototype_string": "uint __cdecl AINetwork_CalcRouteToObject(obj_tag * mover, obj_tag * targetObj, AIRoute_tag * route, AITarget_tag * target, AIPoint_tag * point, float radius, uint unused)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
-            "[undefined4 param_5@Stack[0x14]:4]",
-            "[undefined4 param_6@Stack[0x18]:4]",
-            "[undefined4 param_7@Stack[0x1c]:4]"
+            "[param0 p0@Stack[0x4]:4]",
+            "[param1 p1@Stack[0x8]:4]",
+            "[param2 p2@Stack[0xc]:4]",
+            "[param3 p3@Stack[0x10]:4]",
+            "[param4 p4@Stack[0x14]:4]",
+            "[param5 p5@Stack[0x18]:4]",
+            "[param6 p6@Stack[0x1c]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_0004ae30",
+        "name": "AINetwork_CalcRouteToPosition",
         "address": "0x0004ae30",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -14112,15 +14130,15 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_0004ae30(undefined4 param_1, undefined4 param_2, undefined4 param_3, undefined4 param_4, undefined4 param_5, undefined4 param_6, undefined4 param_7)",
+        "prototype_string": "uint __cdecl AINetwork_CalcRouteToPosition(obj_tag * mover, CelPos_tag * dest, AIRoute_tag * route, AITarget_tag * target, AIPoint_tag * point, float radius, uint unused)",
         "parameters": [
-            "[undefined4 param_1@Stack[0x4]:4]",
-            "[undefined4 param_2@Stack[0x8]:4]",
-            "[undefined4 param_3@Stack[0xc]:4]",
-            "[undefined4 param_4@Stack[0x10]:4]",
-            "[undefined4 param_5@Stack[0x14]:4]",
-            "[undefined4 param_6@Stack[0x18]:4]",
-            "[undefined4 param_7@Stack[0x1c]:4]"
+            "[param0 p0@Stack[0x4]:4]",
+            "[param1 p1@Stack[0x8]:4]",
+            "[param2 p2@Stack[0xc]:4]",
+            "[param3 p3@Stack[0x10]:4]",
+            "[param4 p4@Stack[0x14]:4]",
+            "[param5 p5@Stack[0x18]:4]",
+            "[param6 p6@Stack[0x1c]:4]"
         ],
         "is_thunk": false,
         "namespace": "Global"

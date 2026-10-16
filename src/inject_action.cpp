@@ -19,6 +19,7 @@
 #include "action/engine/XboxStartup.h"
 #include "action/engine/psiSave.h"
 #include "action/engine/FS.h"
+#include "action/engine/AIPath.h"
 #include "action/engine/Woman.h"
 #include "action/engine/XboxError.h"
 #include "action/engine/XboxSystem.h"

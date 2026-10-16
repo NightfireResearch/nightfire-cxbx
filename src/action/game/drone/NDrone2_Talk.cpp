@@ -21,7 +21,6 @@
 #define DroneFunc_ChooseSFX ((uint (__cdecl *)(uint first, uint last))0x00036270)
 #define Sound_IsFinnished ((bool (__cdecl *)(DYNAMICSOUNDS *handle))0x000cbac0)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *gameObj))0x0001a190)
-#define NDrone2_Player ((obj_tag *(__cdecl *)(void))0x00035f90)
 #define NDrone2_CanSeeObject ((bool (__cdecl *)(Drone_tag *drone, obj_tag *obj, uint bone, ushort mask))0x000648b0)
 // Returns in ST0, unrounded
 #define Vec_SqDist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e50)

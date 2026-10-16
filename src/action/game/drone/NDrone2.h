@@ -389,8 +389,24 @@ static_assert(sizeof(DroneAwarePoint) == 0x20, "DroneAwarePoint is 0x20 bytes");
 
 #define MAX_AWARE_POINTS 64
 
+// A target drones share (NPCGlobals.targets, handed out by DroneFunc_AllocateTargetID; Drone_tag.targetSlot)
+typedef struct DroneTarget_tag {
+    uchar flags;                // +0x0 - with neither bit 0 nor 1 set, Drone_IsCoverNodeUsable counts only nodes a
+    char _pad1[3];              //        drone of this target holds
+    obj_tag *obj;               // +0x4
+    char _unknown8[4];
+    _VECTOR pos;                // +0xc
+} DroneTarget_tag;
+static_assert(sizeof(DroneTarget_tag) == 0x18, "DroneTarget_tag is 0x18 bytes");
+
+#define MAX_DRONE_TARGETS 8
+
+// The level's cover nodes and AI points (Drone_AIHints.h)
+struct CoverNode_tag;
+struct DroneAIPoint_tag;
+
 // The NPC system's globals: one block that Drone_LevelReset clears whole (0x142c bytes). Only what our code uses
-// is named so far; Ghidra also has the AI network's cover nodes at +0x288, and FUN_00030e70 and
+// is named so far; FUN_00030e70 and
 // Drone_PostLoad_Init clear the aware points at +0xb54 and an array at +0x1354 (0x28).
 typedef struct {
     uchar enabled;              // +0x0 - Drone_EnableAll's last setting
@@ -415,12 +431,23 @@ typedef struct {
     uint32_t nextPatrolTalkFrame;   // +0x1b4 - NDrone2_PatrolTalk: no drone mutters before
     char _pad1b8[0x1bc - 0x1b8];
     uint32_t lastPowerstationChannel;   // +0x1bc - NDrone2_PowerstationTalk: the last channel whose line was said
-    char _pad1c0[0x230 - 0x1c0];
+    AITarget_tag playerTarget;  // +0x1c0 - the player's feet, shared by every route to the player
+                                //          (NDrone2_NavNodeCache rebuilds it each frame)
+    char _pad1f0[0x230 - 0x1f0];
     ushort NumDrones;           // +0x230 - drones given a state machine this level; the last id handed out
-    char _pad232[0xb50 - 0x232];
+    ushort visionTests;         // +0x232 - counted by the DroneVision line-of-sight tests
+    char _pad234[0x284 - 0x234];
+    uint coverCursor;           // +0x284 - the next cover node Drone_ProcessCoverNodes looks at
+    uint numCoverNodes;         // +0x288
+    struct CoverNode_tag *coverNodes;   // +0x28c - Drone_PreLoad_Init points it at a table of MAX_COVER_NODES
+    DroneTarget_tag targets[MAX_DRONE_TARGETS];  // +0x290
+    char _pad350[0xb50 - 0x350];
     uint32_t numAwarePoints;    // +0xb50
     DroneAwarePoint awarePoints[MAX_AWARE_POINTS];  // +0xb54
-    char _pad1354[0x1392 - 0x1354];
+    char _pad1354[0x137c - 0x1354];
+    uint numAIPoints;           // +0x137c
+    struct DroneAIPoint_tag *aiPoints;  // +0x1380 - Drone_PreLoad_Init points it at a table of MAX_AI_POINTS
+    char _pad1384[0x1392 - 0x1384];
     uchar unknown1392;          // +0x1392 - while set in CastleIndoors1, DroneFunc_DoForcedAttack acts only on DTYPEs
                                 //           0x13 and 0x16
     char _pad1393[0x142c - 0x1393];
@@ -431,6 +458,7 @@ static_assert(offsetof(NPCGlobals_t, hostagesSaved) == 0x19c, "Wrong offset for 
 static_assert(offsetof(NPCGlobals_t, dummyPlayer) == 0x1a4, "Wrong offset for dummyPlayer");
 static_assert(offsetof(NPCGlobals_t, enabledFrame) == 0x1ac, "Wrong offset for enabledFrame");
 static_assert(offsetof(NPCGlobals_t, NumDrones) == 0x230, "Wrong offset for NumDrones");
+static_assert(offsetof(NPCGlobals_t, playerTarget) == 0x1c0, "Wrong offset for playerTarget");
 static_assert(offsetof(NPCGlobals_t, unknown14c) == 0x14c, "Wrong offset for unknown14c");
 static_assert(offsetof(NPCGlobals_t, unknown15c) == 0x15c, "Wrong offset for unknown15c");
 static_assert(offsetof(NPCGlobals_t, seenAttacking) == 0x18c, "Wrong offset for seenAttacking");
@@ -438,7 +466,32 @@ static_assert(offsetof(NPCGlobals_t, nextPatrolTalkFrame) == 0x1b4, "Wrong offse
 static_assert(offsetof(NPCGlobals_t, lastPowerstationChannel) == 0x1bc, "Wrong offset for lastPowerstationChannel");
 static_assert(offsetof(NPCGlobals_t, numAwarePoints) == 0xb50, "Wrong offset for numAwarePoints");
 static_assert(offsetof(NPCGlobals_t, unknown1392) == 0x1392, "Wrong offset for unknown1392");
+static_assert(offsetof(NPCGlobals_t, visionTests) == 0x232, "Wrong offset for visionTests");
+static_assert(offsetof(NPCGlobals_t, coverCursor) == 0x284, "Wrong offset for coverCursor");
+static_assert(offsetof(NPCGlobals_t, numCoverNodes) == 0x288, "Wrong offset for numCoverNodes");
+static_assert(offsetof(NPCGlobals_t, coverNodes) == 0x28c, "Wrong offset for coverNodes");
+static_assert(offsetof(NPCGlobals_t, targets) == 0x290, "Wrong offset for targets");
+static_assert(offsetof(NPCGlobals_t, numAIPoints) == 0x137c, "Wrong offset for numAIPoints");
+static_assert(offsetof(NPCGlobals_t, aiPoints) == 0x1380, "Wrong offset for aiPoints");
 #define NPCGlobals (*(NPCGlobals_t *)0x001e5630)
+
+// Navigation (NDrone2.cpp, NDrone2_Nav.cpp; docs/drone/bots-and-navigation)
+obj_tag* NDrone2_Player(void);
+cel_tag* NDrone2_FindCel(_VECTOR *pos);
+bool NDrone2_FeetPos(obj_tag *obj, _VECTOR *feet);
+char NDrone2_MoveTest(_VECTOR *from, cel_tag *fromCel, _VECTOR *to, cel_tag *toCel, obj_tag *objA, obj_tag *objB,
+                      _VECTOR *hit, char strict, char checkBlocked);
+char NDrone2_MoveTest(CelPos_tag *from, CelPos_tag *to, obj_tag *objA, obj_tag *objB, _VECTOR *hit, char strict,
+                      char checkBlocked);
+char NDrone2_MoveTestFromNode(MAPNODE_tag *node, CelPos_tag *to, obj_tag *objA, obj_tag *objB, _VECTOR *hit,
+                              char strict, char checkBlocked);
+char NDrone2_MoveTestToNode(CelPos_tag *from, MAPNODE_tag *node, obj_tag *objA, obj_tag *objB, _VECTOR *hit,
+                            char strict, char checkBlocked);
+short NDrone2_NearestNode(CelPos_tag *pos, AIPath_tag *path, obj_tag *obj);
+bool NDrone2_DistanceToEmitter(CelPos_tag *pos, AIPath_tag *path, ushort *nearest, AIEmitter_tag *emitter,
+                               obj_tag *obj, float *distance);
+bool NDrone2_DroneNearPos(_VECTOR *pos, float radius, obj_tag *except);
+void NDrone2_NavNodeCache(void);
 
 // The state machine (DroneSM.cpp; docs/drone/architecture/README.md 3.2-3.4).
 bool Drone_SM_Init(void);

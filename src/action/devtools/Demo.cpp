@@ -104,7 +104,6 @@ static std::vector<uint32_t> g_dumpFrames;
 static int g_presentEvery = 0;
 static uint32_t g_dumpStateFrame = 0xffffffffu;   // NIGHTFIRE_DEMO_DUMP_GAMESTATE
 static int32_t g_stampOffset = 0;                  // see StampOffsetMatches
-static bool g_stampOffsetReported = false;
 
 // The last state per port and of the mouse, both modes
 static uint8_t g_lastPad[4][PAD_BYTES];
@@ -584,7 +583,8 @@ static void PrintGameState(void) {
 // only ask whether a portal carries this query's number. Some queries come from drawing (View_AddForcedObjects),
 // which the host can make happen a different number of times, so a playback's stamp can run a constant few behind
 // or ahead of the recording's with the game otherwise the same. A "gamestate" difference that is only that is not
-// counted as one.
+// counted as one. Every change of the offset is reported: a large one in a single frame is more likely a port making
+// a different number of queries, which the other checks then show as the game going another way.
 static bool StampOffsetMatches(uint32_t recorded) {
     GameState_t state = GameState;
     uint32_t stamp = state.collisionStamp;
@@ -595,13 +595,10 @@ static bool StampOffsetMatches(uint32_t recorded) {
         state.collisionStamp = stamp + offset;
         if (Fnv(kFnvBasis, &state, sizeof(state)) != recorded)
             continue;
-        if (!g_stampOffsetReported) {
-            printf("[demo] frame %u: GameState+0x04, the collision visit stamp, is %d %s the recording's; the game does "
-                   "not depend on its value, so this is not counted as a difference\n", g_frame,
-                   offset < 0 ? -offset : offset, offset < 0 ? "ahead of" : "behind");
-            fflush(stdout);
-            g_stampOffsetReported = true;
-        }
+        printf("[demo] frame %u: GameState+0x04, the collision visit stamp, is %d %s the recording's (it was %d); the "
+               "game does not depend on its value, so this is not counted as a difference\n", g_frame,
+               offset < 0 ? -offset : offset, offset < 0 ? "ahead of" : "behind", g_stampOffset);
+        fflush(stdout);
         g_stampOffset = offset;
         return true;
     }

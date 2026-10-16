@@ -81,6 +81,8 @@ Environment variables for playback:
 Tools that build on these:
 - `tools/demo/play_demos.ps1` plays every recording.
 - `tools/demo/demo_coverage.py` lists which functions, or with `--blocks` which basic blocks, the recordings reach.
+- `tools/demo/bisect_parcel.py` finds which port of a parcel makes a demo differ, by playing it with half the
+  suspects restored to the original at a time (each step is `tools/demo/bisect_originals.ps1`).
 - `tools/draft_calls.py` lists calls from ported code into drafts: game functions we define but do not patch
   in. Such a call runs the draft where the game ran the original.
 
