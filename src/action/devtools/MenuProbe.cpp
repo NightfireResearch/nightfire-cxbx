@@ -72,6 +72,7 @@
 #include "WeaponTableShadow.h"
 #include "MatrixShadow.h"
 #include "ScriptShadow.h"
+#include "RandomShadow.h"
 #include "TriggerShadow.h"
 #include "DoorShadow.h"
 #include "SecurityShadow.h"
@@ -564,6 +565,7 @@ void MenuProbe_Install(void) {
         WeaponTableShadow_Run();
         MatrixShadow_Run();
         ScriptShadow_Run();
+        RandomShadow_Run();
         TriggerShadow_Run();
         DoorShadow_Run();
         SecurityShadow_Run();

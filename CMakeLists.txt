@@ -93,6 +93,7 @@ add_library(actioninject SHARED
   src/action/devtools/WeaponTableShadow.cpp
   src/action/devtools/MatrixShadow.cpp
   src/action/devtools/ScriptShadow.cpp
+  src/action/devtools/RandomShadow.cpp
   src/action/devtools/ShadowHarness.cpp
   src/action/devtools/TriggerShadow.cpp
   src/action/devtools/DoorShadow.cpp

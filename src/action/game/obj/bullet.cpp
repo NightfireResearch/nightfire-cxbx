@@ -325,7 +325,7 @@ void Bullet_Update(obj_tag *obj) {
         default: // BulletState_New
 
             // Speeds vary a little from one bullet to the next: half to one and a half times the weapon's.
-            step = (float)(((double)Float_FRand(0.5f) + 0.5f) * bullet->speed);
+            step = (float)((Float_FRand(0.5f) + 0.5f) * bullet->speed);
             obj->curState++;
 
             if ((bullet->wpnDef->projectileFlags & (ProjectileFlag_NoModel | ProjectileFlag_Tracer)) == 0) {

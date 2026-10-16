@@ -315,7 +315,7 @@ uint _DroneWeap_BurstDelay(Drone_tag *drone) {
         break;
     }
     // Truncated and converted back as unsigned, twice
-    double frames = (uint)(int)(((double)Float_FRand(0.5f) + 0.5f) * delay);
+    double frames = (uint)(int)((Float_FRand(0.5f) + 0.5f) * delay);
     if (!(frames > DroneFiring_BurstDelay_Min))
         frames = DroneFiring_BurstDelay_Min;
     frames = (uint)(int)frames;
@@ -450,8 +450,8 @@ void DroneWeap_FireWeapon(DCVars_tag *dcv) {
     if (fx != NULL) {
         Vec_Copy(&rot, &fx->rotation);
         fx->rotation.x = Float_FRand(6.2831855f) + fx->rotation.x;
-        fx->rotation.y = (float)((double)Rand_FRandHalf(0.2f) + kHalfPi + fx->rotation.y);
-        float roll = Rand_FRandHalf(0.2f);
+        fx->rotation.y = (float)(Rand_FRandHalf(0.2f) + kHalfPi + fx->rotation.y);
+        double roll = Rand_FRandHalf(0.2f);
         Effect_tag *effect = (Effect_tag *)fx->extraObjectData;
         fx->objectType = OBJECTTYPE_EFFECT;
         fx->rotation.z = roll + fx->rotation.z;

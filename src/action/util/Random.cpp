@@ -1,6 +1,6 @@
 #include "Random.h"
 
-static const float kUintToUnit = 2.3283064e-10f;   // 2^-32: a 32-bit random number to [0, 1)
+static const double kUintToUnit = 1.0 / 4294967296.0;   // a 32-bit random number to [0, 1)
 
 // AUTOGEN
 unsigned int Rand_Rand(unsigned int max);
@@ -8,10 +8,11 @@ unsigned int Rand_Rand(unsigned int max);
 // AUTOGEN
 uint __stdcall Rand_Random(void);
 
+// The results stay at the x87's precision: callers carry on from them.
+
 // AUTOINJECT
-float Rand_FRandHalf(float range) {
-    float unit = (float)Rand_Random() * kUintToUnit;
-    return unit * range - range * 0.5f;   // [-range/2, range/2)
+double Rand_FRandHalf(float range) {
+    return Rand_Random() * kUintToUnit * range - range * 0.5;   // [-range/2, range/2)
 }
 
 // AUTOINJECT
@@ -22,20 +23,18 @@ void Rand_FRandHalf_Vec(_VECTOR *vecOut, float range) {
 }
 
 // AUTOINJECT
-__declspec(noinline) float Float_FRand(float range) {
-    float unit = (float)Rand_Random() * kUintToUnit;
-    return unit * range;   // [0, range)
+double Float_FRand(float range) {
+    return Rand_Random() * kUintToUnit * range;   // [0, range)
 }
 
 // AUTOINJECT
-float Rand_FRand_MVar2(float range, float offset) {
-    float unit = (float)Rand_Random() * kUintToUnit;
-    return unit * range - offset;
+double Rand_FRand_MVar2(float range, float offset) {
+    return Float_FRand(range) - offset;
 }
 
 // AUTOINJECT
 void Rand_FRand_MVar2_Vec(_VECTOR *vec, float range, float offset) {
-    vec->x += Float_FRand(range) - offset;
-    vec->y += Float_FRand(range) - offset;
-    vec->z += Float_FRand(range) - offset;
+    vec->x = Float_FRand(range) - offset + vec->x;
+    vec->y = Float_FRand(range) - offset + vec->y;
+    vec->z = Float_FRand(range) - offset + vec->z;
 }
