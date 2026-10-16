@@ -85,6 +85,28 @@ With no options, the mission is whatever `psiLaunch.bin` says, as before. With o
 a clean hand-over page stands in. `tools/drive_game.ps1 -GameArgs "-mission 4"` passes options through for
 unattended runs. Details are in `src/driving/platform/LaunchOptions.cpp`.
 
+### Starting an on-foot level directly
+
+`action.exe -level NAME` boots straight into one level, the part of a mission it belongs to, without the
+front end, a codename or a save. The level loads as the game's first, through the same path a mission start
+takes, and its mission starts from that part.
+
+- **Names:** `HendersonA`-`D`, `CastleExterior`, `CastleCourtyard`, `CastleIndoors1`, `CastleIndoors2`,
+  `TowerA`-`C`, `PowerStationA1`, `PowerStationA2`, `Tower2A`-`C`, `Tower2Elevator`, `EvilBase`, `EvilSilo`,
+  `EvilBaseC` and `SpaceStationD`.
+- **Hashcodes:** any level's hashcode also works (`-level 0x07000006`). `-level list` prints the names.
+- **Difficulty:** `-difficulty 1`, `2` or `3` (Operative, Agent, 00 Agent).
+- **Launch data:** with `-level`, `psiLaunch.bin` is ignored, so a run is always a fresh boot.
+
+`tools/drive_game.ps1 -GameArgs "-level CastleCourtyard"` passes the options through. Details are in
+`src/action/engine/LaunchOptions.cpp`.
+
+### Time demos of the action engine
+
+Set `DemoRecord=on` in `settings.ini` to record every session to `demos/`, and set `NIGHTFIRE_DEMO_PLAY=<file>`
+to play one back. A playback checks the game's state against the recording every frame. A recording keeps its
+`-level` and `-difficulty`, so a playback needs no options. See `docs/action-timedemo.md`.
+
 ### Settings for development
 
 All under `[Settings]` in `settings.ini`, read at startup:

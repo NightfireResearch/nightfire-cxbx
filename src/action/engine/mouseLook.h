@@ -17,6 +17,10 @@
 // Handles capture and release and collects movement and button state; applies nothing by itself.
 void MouseLook_Update(void);
 
+// Straight after MouseLook_Update: a time demo records the capture and the counts not yet taken, or puts the
+// recording's in their place (devtools/Demo.h)
+void MouseLook_DemoExchange(void);
+
 // Whether the fire and zoom buttons are held. Both are false whenever the pointer is not captured, so a click
 // in a menu, or on some other application, cannot reach the game.
 //

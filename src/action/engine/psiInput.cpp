@@ -3,6 +3,7 @@
 #include "../../common/renderWindow.h"
 #include "mouseLook.h"
 #include "../input.h"
+#include "../devtools/Demo.h"
 #include <string.h>
 #include <math.h>
 
@@ -267,6 +268,29 @@ void psiInput_PollDevices(void) {
         if (!connected && i == 0) {
             BuildKeyboardPadState(&winState);
             connected = true;
+        }
+
+        // devtools: a time demo records this, or replaces it with the recording
+        if (Demo_Active()) {
+            DemoPad pad;
+            pad.connected = connected ? 1 : 0;
+            pad.buttons = winState.Gamepad.wButtons;
+            pad.leftTrigger = winState.Gamepad.bLeftTrigger;
+            pad.rightTrigger = winState.Gamepad.bRightTrigger;
+            pad.thumbLX = winState.Gamepad.sThumbLX;
+            pad.thumbLY = winState.Gamepad.sThumbLY;
+            pad.thumbRX = winState.Gamepad.sThumbRX;
+            pad.thumbRY = winState.Gamepad.sThumbRY;
+            Demo_Pad(i, &pad);
+            connected = pad.connected != 0;
+            winState.dwPacketNumber = pad.packet;
+            winState.Gamepad.wButtons = pad.buttons;
+            winState.Gamepad.bLeftTrigger = pad.leftTrigger;
+            winState.Gamepad.bRightTrigger = pad.rightTrigger;
+            winState.Gamepad.sThumbLX = pad.thumbLX;
+            winState.Gamepad.sThumbLY = pad.thumbLY;
+            winState.Gamepad.sThumbRX = pad.thumbRX;
+            winState.Gamepad.sThumbRY = pad.thumbRY;
         }
 
         if (!connected) {

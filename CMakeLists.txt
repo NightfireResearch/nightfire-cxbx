@@ -89,6 +89,8 @@ add_library(actioninject SHARED
   src/action/devtools/MatrixShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/Teleport.cpp
+  src/action/devtools/Demo.cpp
+  src/action/engine/LaunchOptions.cpp
   src/action/game.cpp
   src/action/main.cpp
   src/common/launchInfo.cpp

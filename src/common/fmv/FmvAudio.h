@@ -48,6 +48,10 @@ public:
     // The movie's time in seconds
     double Clock();
 
+    // For a time demo (src/action/devtools/Demo.h, XAudio2 build): the clock follows `clock`, in seconds, instead of
+    // the samples played, and the audio has played out once that clock passes its length
+    static void SetVirtualClock(double (*clock)(void));
+
 private:
     void Submit();
     void Reap();
@@ -62,6 +66,9 @@ private:
 #else
     IXAudio2SourceVoice *voice_ = nullptr;
 #endif
+    static double (*virtualClock_)(void);
+    double startVirtual_ = 0.0;         // virtualClock_ at Start
+    int64_t framesTotal_ = 0;           // queued since Open, for the virtual clock's PlayedOut
     std::deque<int16_t *> chunks_;      // submitted, in order; freed once played
     int16_t *pending_ = nullptr;        // the chunk being filled
     int pendingFrames_ = 0;

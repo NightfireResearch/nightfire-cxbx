@@ -9,6 +9,12 @@
 #define FMV_AUDIO_CHUNK 4096          // sample frames per XAudio2 buffer
 #define FMV_AUDIO_AHEAD 0.5           // seconds kept queued
 
+double (*FmvAudio::virtualClock_)(void) = nullptr;
+
+void FmvAudio::SetVirtualClock(double (*clock)(void)) {
+    virtualClock_ = clock;
+}
+
 static int64_t Now(void) {
     LARGE_INTEGER t;
     QueryPerformanceCounter(&t);
@@ -55,6 +61,7 @@ void FmvAudio::Close() {
     pending_ = nullptr;
     pendingFrames_ = channels_ = sampleRate_ = 0;
     started_ = finished_ = drained_ = false;
+    framesTotal_ = 0;
 }
 
 void FmvAudio::Reap() {
@@ -87,6 +94,7 @@ void FmvAudio::Queue(const AVFrame *frame) {
         return;
     bool planar = frame->format == AV_SAMPLE_FMT_S16P;
     int channels = frame->ch_layout.nb_channels < channels_ ? frame->ch_layout.nb_channels : channels_;
+    framesTotal_ += frame->nb_samples;
     for (int i = 0; i < frame->nb_samples; i++) {
         if (pending_ == nullptr) {
             pending_ = (int16_t *)calloc((size_t)FMV_AUDIO_CHUNK * channels_, sizeof(int16_t));
@@ -124,6 +132,8 @@ bool FmvAudio::PlayedOut() {
     if (voice_ == nullptr)
         return true;
     Reap();
+    if (virtualClock_ != nullptr)
+        return finished_ && Clock() >= (double)framesTotal_ / sampleRate_;
     return finished_ && pending_ == nullptr && chunks_.empty();
 }
 
@@ -137,9 +147,12 @@ void FmvAudio::Start() {
         voice_->Start();
     started_ = true;
     startWall_ = Now();
+    startVirtual_ = virtualClock_ != nullptr ? virtualClock_() : 0.0;
 }
 
 double FmvAudio::Clock() {
+    if (virtualClock_ != nullptr)
+        return started_ ? virtualClock_() - startVirtual_ : 0.0;
     if (voice_ == nullptr || !started_)
         return started_ ? SecondsSince(startWall_) : 0.0;
     if (drained_)

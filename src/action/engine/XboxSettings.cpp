@@ -39,6 +39,7 @@ struct Settings {
     uint32_t avRegion; // raw XC_FACTORY_AV_REGION-style value: 1 = NTSC-M, 3 = PAL-I
     bool perfLog;      // see PerfLog in the file this writes
     bool dumpFiles;    // see DumpFiles in the file this writes
+    bool demoRecord;   // DemoRecord: record a time demo (devtools/Demo.cpp)
     uint32_t language; // raw XC_LANGUAGE-style value: 1=English,2=Japanese,3=German,4=French,5=Spanish,6=Italian
     int fpsOverride;   // 0 = "unset" - callers fall back to their own region-based default
     bool reverb;         // xaudio2 backend only: run the I3DL2 reverb send. On by default.
@@ -112,6 +113,10 @@ static void WriteDefaultSettingsFile() {
         "; Developer option: save a copy of every file the game loads, as loaded from the disc's archives,\n"
         "; under dump\\ (the action engine) and dump_driving\\ (the driving engine). Slow, and uses a lot of space.\n"
         "DumpFiles=off\n"
+        "\n"
+        "; Developer option: record a time demo of every session to demos\\<date>-<time>.nfdemo, to play back\n"
+        "; and check the game does the same again (docs/action-timedemo.md). F6 marks a moment in the recording.\n"
+        "DemoRecord=off\n"
     );
 
     fclose(file);
@@ -188,6 +193,8 @@ static void LoadSettingsFile() {
             g_settings.fpsOverride = atoi(value);
         } else if (_stricmp(key, "PerfLog") == 0) {
             g_settings.perfLog = (_stricmp(value, "on") == 0 || _stricmp(value, "1") == 0);
+        } else if (_stricmp(key, "DemoRecord") == 0) {
+            g_settings.demoRecord = (_stricmp(value, "on") == 0 || _stricmp(value, "1") == 0);
         } else if (_stricmp(key, "DumpFiles") == 0) {
             g_settings.dumpFiles = (_stricmp(value, "on") == 0 || _stricmp(value, "1") == 0);
         } else if (_stricmp(key, "Reverb") == 0) {
@@ -289,6 +296,10 @@ bool Settings_GetPerfLog(void) {
 
 bool Settings_GetDumpFiles(void) {
     return GetSettings()->dumpFiles;
+}
+
+bool Settings_GetDemoRecord(void) {
+    return GetSettings()->demoRecord;
 }
 
 bool Settings_GetMouseLook(void) {

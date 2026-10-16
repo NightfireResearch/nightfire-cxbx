@@ -3,6 +3,7 @@
 #include "../../common/xboxPath.h"
 #include "XboxSettings.h"
 #include "../actionhelpers.h"
+#include "../devtools/Demo.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // The game's file I/O, on Win32 instead of the Xbox kernel.
@@ -205,6 +206,11 @@ int __stdcall readFromFileBlocking(HANDLE fileHandle, void *buffer, uint32_t len
     SetLastError(0);
     BOOL ok = ReadFile(fileHandle, buffer, len, &read, overlapped);
     DWORD err = GetLastError();
+    // A time demo needs every read to take the same number of frames each time: none (devtools/Demo.h)
+    if (!ok && err == ERROR_IO_PENDING && Demo_Active()) {
+        ok = GetOverlappedResult(fileHandle, overlapped, &read, TRUE);
+        err = ok ? 0 : GetLastError();
+    }
     FILE_LOG("[file] read async handle 0x%08x len %u off %lu -> %s read %lu err %lu\n",
              (unsigned)(uintptr_t)fileHandle, len, overlapped->Offset,
              ok ? "ok" : (err == ERROR_IO_PENDING ? "pending" : "FAILED"), read, err);
@@ -325,6 +331,10 @@ int __stdcall FileWrite(HANDLE fileHandle, void *buffer, uint32_t len,
     SetLastError(0);
     BOOL ok = WriteFile(fileHandle, buffer, len, &written, overlapped);
     DWORD err = GetLastError();
+    if (!ok && err == ERROR_IO_PENDING && Demo_Active()) {   // as the read above
+        ok = GetOverlappedResult(fileHandle, overlapped, &written, TRUE);
+        err = ok ? 0 : GetLastError();
+    }
     FILE_LOG("[file] write async handle 0x%08x len %u off %lu -> %s written %lu err %lu\n",
              (unsigned)(uintptr_t)fileHandle, len, overlapped->Offset,
              ok ? "ok" : (err == ERROR_IO_PENDING ? "pending" : "FAILED"), written, err);
@@ -500,6 +510,16 @@ static bool CloseIfFindHandle(HANDLE handle) {
     return false;
 }
 
+// A time demo's playback makes its files when it starts, so their times are not the recording's: in a demo they
+// read zero both times (devtools/Demo.h)
+static void HideFileTimes(WIN32_FIND_DATAA *findData) {
+    if (!Demo_Active())
+        return;
+    memset(&findData->ftCreationTime, 0, sizeof(FILETIME));
+    memset(&findData->ftLastAccessTime, 0, sizeof(FILETIME));
+    memset(&findData->ftLastWriteTime, 0, sizeof(FILETIME));
+}
+
 // FUNC_AT(000eb6f6)
 uint32_t __stdcall Xbox_FindFirstFileA(const char *filename, WIN32_FIND_DATAA *findData) {
     char hostPath[512];
@@ -521,6 +541,7 @@ uint32_t __stdcall Xbox_FindFirstFileA(const char *filename, WIN32_FIND_DATAA *f
     }
 
     RememberFind(handle);
+    HideFileTimes(findData);
     PublishLastError(0);
     return (uint32_t)(uintptr_t)handle;
 }
@@ -533,6 +554,8 @@ int __stdcall Xbox_FindNextFileA(HANDLE findHandle, WIN32_FIND_DATAA *findData) 
     SetLastError(0);
     BOOL ok = FindNextFileA(findHandle, findData);
     DWORD err = GetLastError();
+    if (ok)
+        HideFileTimes(findData);
     FILE_LOG("[file] find next handle 0x%08x -> %s err %lu\n",
              (unsigned)(uintptr_t)findHandle, ok ? "ok" : "end", err);
 

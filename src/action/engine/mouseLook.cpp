@@ -8,6 +8,7 @@
 
 #include "XboxSettings.h"
 #include "../../common/renderWindow.h"
+#include "../devtools/Demo.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // See mouseLook.h for what this is for. What follows is how it gets the movement and how capture works.
@@ -411,6 +412,10 @@ void MouseLook_Update(void) {
 
     if (haveCentre)
         SetCursorPos(centre.x, centre.y);
+}
+
+void MouseLook_DemoExchange(void) {
+    Demo_Mouse(&g_captured, &g_accumX, &g_accumY);
 }
 
 bool MouseLook_FireHeld(void) {

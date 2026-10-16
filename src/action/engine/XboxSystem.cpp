@@ -8,6 +8,8 @@
 #include "Direct3D/d3dSeam.h"
 #include "../sound/dsndSeam.h"
 #include "../game.h"        // timestamp, Graphics_IsSomeGraphicsRegion
+#include "../devtools/Demo.h"
+#include "LaunchOptions.h"
 #include "../util/crc.h"
 #include "../../common/launchInfo.h"
 
@@ -279,6 +281,8 @@ static void *ReadLaunchData(void) {
     memset(LaunchInfoData, 0, sizeof(LaunchInfoData));
     LaunchInfoUnread = 0;
     int type = 0;
+    if (LaunchOptions_Level() != 0)
+        return NULL;   // -level: a fresh boot, whatever psiLaunch.bin holds
     if (XGetLaunchInfo(&type, LaunchInfoData) != 0)
         return NULL;
     HaveLaunchData = 0;
@@ -346,6 +350,7 @@ void WriteStateFileAndLaunch(uint32_t reason, void *data, int len) {
 
 // AUTOINJECT
 void psiLaunchDriving(void *data, uint32_t len) {
+    Demo_LeavingForDriving();   // devtools: a time demo ends here
     SetLaunchInfoAndLaunch((char *)"driving.xbe", data, len);
 }
 

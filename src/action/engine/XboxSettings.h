@@ -29,6 +29,10 @@ bool Settings_GetPerfLog(void);
 // default). The driving engine reads the same key from the same file (src/driving/devtools/FileDump.cpp).
 bool Settings_GetDumpFiles(void);
 
+// settings.ini's [Settings] DemoRecord key: record a time demo of the session to demos\<date>-<time>.nfdemo (off by
+// default). See devtools/Demo.h.
+bool Settings_GetDemoRecord(void);
+
 // settings.ini's [Settings] MouseLook, MouseSensitivity, MouseInvertY and MouseZoom keys - see
 // engine/mouseLook.h. Sensitivity is a plain multiplier on the default, and is clamped to something usable
 // rather than trusted. MouseZoom is "hold" (the default) or "toggle"; true here means toggle.

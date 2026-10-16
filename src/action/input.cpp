@@ -4,6 +4,7 @@
 #include "input.h"
 #include "engine/mouseLook.h"
 #include "engine/mouseSteer.h"
+#include "devtools/Demo.h"
 #include "game/mp/multiplayer.h"
 
 // Keyboard input proper now lives in engine/psiInput.cpp, which presents the keyboard as a virtual Xbox pad on
@@ -47,7 +48,10 @@ void Input_Update(void) {
     // builds immediately below, rather than a frame behind it. It is serviced from here rather than
     // alongside the aiming it feeds because letting go of the pointer is a menu-time job, and the aim
     // hook is precisely what stops running in menus. See engine/mouseLook.h.
-    MouseLook_Update();
+    // A time demo's playback takes the mouse from the recording instead of the host (devtools/Demo.h)
+    if (!Demo_Playing())
+        MouseLook_Update();
+    MouseLook_DemoExchange();
 
     // Game functions - poll, compensate stick, map from keys to actions (the original's own body, which ends in
     // Input_ProcessEvents)

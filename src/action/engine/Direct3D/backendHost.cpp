@@ -1,6 +1,7 @@
 #include "../../../common/gfx/backendHost.h"
 
 #include "../XboxSettings.h"
+#include "../../devtools/Demo.h"
 #include "../XboxFile.h"   // XboxFile_ReportStreamingIfDue, reported alongside the frame timing
 
 // The action engine's answers to the three questions the shared D3D9 backend asks. Both settings come from
@@ -20,5 +21,5 @@ void GfxHost_ReportPeriodic(void) {
 }
 
 int GfxHost_PresentEvery(void) {
-    return 0;
+    return Demo_PresentEvery();   // a time demo's playback with NIGHTFIRE_DEMO_FAST, otherwise 0
 }

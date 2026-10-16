@@ -1,4 +1,5 @@
 #include "Teleport.h"
+#include "Demo.h"
 
 #include "../actionhelpers.h"
 #include "../game.h"
@@ -95,7 +96,9 @@ void ActionTeleport_Tick(void) {
     static bool haveRecorded = false;
     static bool f7Down = false, f8Down = false, f9Down = false;
 
-    if (KeyPressed(VK_F8_, &f8Down)) {
+    // In a time demo they would move the player without the recording knowing (Demo.h); F7 only draws
+    bool demo = Demo_Active();
+    if (KeyPressed(VK_F8_, &f8Down) && !demo) {
         obj_tag *player = Player1();
         if (player != NULL) {
             recorded = ReadPlace(player);
@@ -112,7 +115,7 @@ void ActionTeleport_Tick(void) {
             fflush(stdout);
         }
     }
-    if (KeyPressed(VK_F9_, &f9Down)) {
+    if (KeyPressed(VK_F9_, &f9Down) && !demo) {
         if (!haveRecorded)
             printf("[teleport] nothing recorded yet (F8 records)\n");
         else if (recorded.level != (unsigned)GameState.CurrentLevelHashcode)

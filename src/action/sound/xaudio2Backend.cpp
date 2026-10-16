@@ -1,6 +1,7 @@
 #include "xaudio2Backend.h"
 #include "../../common/sound/xadpcm.h"
 #include "../engine/XboxSettings.h" // Settings_GetReverbEnabled
+#include "../devtools/Demo.h"
 
 #include <windows.h>
 #include <xaudio2.h>
@@ -298,6 +299,7 @@ void XA2_NotifyBufferDataWritten(const void *pvBufferData, uint32_t offset, uint
 
 struct XA2Buffer {
     uint32_t magic;
+    int index;                      // in creation order, which is the game's: how a time demo names it
     int channels;
     bool is3d;
 
@@ -652,6 +654,7 @@ void XA2_IDirectSound_CreateSoundBuffer(DSoundObject *thisPtr, DSBUFFERDESC_Xbox
     b->appliedAmplitude = -1.0f;   // force the first apply
     b->appliedFreqRatio = -1.0f;
 
+    b->index = g_bufferCount;
     if (g_bufferCount < (int)(sizeof(g_buffers) / sizeof(g_buffers[0])))
         g_buffers[g_bufferCount++] = b;
     else
@@ -968,7 +971,7 @@ void XA2_IDirectSoundBuffer_Stop(DSoundBuffer *thisPtr) {
     b->playing = false;
 }
 
-void XA2_IDirectSoundBuffer_GetStatus(DSoundBuffer *thisPtr, uint32_t *pdwStatus) {
+static void BufferStatus(DSoundBuffer *thisPtr, uint32_t *pdwStatus) {
     if (pdwStatus == NULL)
         return;
     *pdwStatus = 0;
@@ -988,7 +991,7 @@ void XA2_IDirectSoundBuffer_GetStatus(DSoundBuffer *thisPtr, uint32_t *pdwStatus
         b->playing = false;
 }
 
-void XA2_IDirectSoundBuffer_GetCurrentPosition(DSoundBuffer *thisPtr, uint32_t *pdwPlayCursor, uint32_t *pdwWriteCursor) {
+static void BufferPosition(DSoundBuffer *thisPtr, uint32_t *pdwPlayCursor, uint32_t *pdwWriteCursor) {
     if (pdwPlayCursor != NULL)
         *pdwPlayCursor = 0;
     if (pdwWriteCursor != NULL)
@@ -1001,6 +1004,23 @@ void XA2_IDirectSoundBuffer_GetCurrentPosition(DSoundBuffer *thisPtr, uint32_t *
     // back into the same units it gave SetLoopRegion.
     if (pdwPlayCursor != NULL)
         *pdwPlayCursor = (uint32_t)XAdpcm_SampleToByteOffset(CurrentSample(b), b->channels);
+}
+
+// What the game learns of the device's progress: the status and play cursor above. A time demo records each answer,
+// and its playback gives the recorded one in its place (devtools/Demo.h), so the game meets the same sound however
+// the device ran that time.
+void XA2_IDirectSoundBuffer_GetStatus(DSoundBuffer *thisPtr, uint32_t *pdwStatus) {
+    BufferStatus(thisPtr, pdwStatus);
+    XA2Buffer *b = AsBuffer(thisPtr);
+    if (pdwStatus != NULL)
+        Demo_SoundAnswer(b != NULL ? b->index : -1, DEMO_SOUND_STATUS, pdwStatus);
+}
+
+void XA2_IDirectSoundBuffer_GetCurrentPosition(DSoundBuffer *thisPtr, uint32_t *pdwPlayCursor, uint32_t *pdwWriteCursor) {
+    BufferPosition(thisPtr, pdwPlayCursor, pdwWriteCursor);
+    XA2Buffer *b = AsBuffer(thisPtr);
+    if (pdwPlayCursor != NULL)
+        Demo_SoundAnswer(b != NULL ? b->index : -1, DEMO_SOUND_PLAY_CURSOR, pdwPlayCursor);
 }
 
 // ---------------------------------------------------------------------------------------------------------------

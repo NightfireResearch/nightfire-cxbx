@@ -41,6 +41,8 @@
 #include "action/gfx/LowLevel.h"
 #include "action/game/weapon_stats.h"
 #include "action/devtools/MenuProbe.h"
+#include "action/devtools/Demo.h"
+#include "action/engine/LaunchOptions.h"
 
 #include "common/launchInfo.h"
 
@@ -71,6 +73,11 @@ void WriteJmpTo(size_t from, size_t to)
 
 void Inject()
 {
+  // -level and -difficulty; then a time demo picks its mode: a playback moves into its sandbox before settings.ini is
+  // read, and takes the recording's launch options
+  LaunchOptions_Read();
+  Demo_Init();
+
   // Instruction-level patches that are not whole-function replacements. Done first, so that nothing the rest
   // of this function sets up can run against un-patched XAPI.
   // Where D: lives, for the file layer below and for anything else that resolves an Xbox path. The mapper

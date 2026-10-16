@@ -19,6 +19,8 @@
 #include <stdio.h>
 #include "engine/XboxSystem.h"
 #include "devtools/Teleport.h"
+#include "devtools/Demo.h"
+#include "engine/LaunchOptions.h"
 
 // XBE_GLOBAL(0x002ae288, 0x4)
 uint32_t BackgroundMovieHashcode;
@@ -730,6 +732,8 @@ void GameFlow_QuickPushState(uint state) {
 //
 // AUTOINJECT
 double timestamp(void) {
+  if (Demo_Active())
+    return Demo_TimestampMs();
 
   static LARGE_INTEGER frequency = { 0 };
   static LARGE_INTEGER origin = { 0 };
@@ -778,12 +782,20 @@ double timestamp(void) {
 
 // FUNC_AT(000f53d0)
 uint32_t __stdcall Xbox_QueryPerformanceCounter(LARGE_INTEGER *counter) {
+  if (Demo_Active()) {
+    counter->QuadPart = Demo_Counter();
+    return 1;
+  }
   QueryPerformanceCounter(counter);
   return 1;
 }
 
 // FUNC_AT(000f53e1)
 uint32_t __stdcall Xbox_QueryPerformanceFrequency(LARGE_INTEGER *frequency) {
+  if (Demo_Active()) {
+    frequency->QuadPart = Demo_CounterFrequency();
+    return 1;
+  }
   if (!QueryPerformanceFrequency(frequency)) {
     frequency->QuadPart = 10000000; // as in timestamp() above: being wrong beats a divide by zero
   }
@@ -940,6 +952,7 @@ void GameFlow_Main(void) {
     bootup_bootup();
     GameFlow_QuickPushState(2);
     Boot_LoadPTPData();
+    LaunchOptions_Apply();   // -level, -difficulty
     Reset_MapLoadSettings();
     return;
   case 2:
@@ -1072,7 +1085,9 @@ void mainloop(void) {
     refreshRate = fpsOverride;
 
   GS_SetRefreshRate(refreshRate, refreshRate);
+  Demo_FrameStart();   // devtools: time demos
   GameFlow_Main();
+  Demo_FrameEnd();
 }
 
 
