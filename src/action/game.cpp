@@ -80,7 +80,7 @@ uint8_t FreezeGame;
 // XBE_GLOBAL(0x001fec64, 0x2)
 static uint16_t sloflag;
 // ScriptCam is defined in engine/Script.h (same address, HASHCODE-typed)
-#define switch_allowFreeze U32_AT(0x0025d79c)
+#define switch_allowFreeze U8_AT(0x0025d79c)   // a byte: C_CHCHALLOWFREEZE_Handler writes it
 
 
 void psiPreGame_Run(void) {} // No effect on XBox, does some PS2-specific stuff on PS2

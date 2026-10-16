@@ -23312,14 +23312,22 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0006f110",
+        "name": "LS_MakeMission",
         "address": "0x0006f110",
-        "calling_convention": "unknown",
+        "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
-        "return_type": "undefined",
-        "param_types": [],
-        "prototype_string": "undefined FUN_0006f110()",
-        "parameters": [],
+        "return_type": "uchar *",
+        "param_types": [
+            "uint",
+            "ushort",
+            "ushort *"
+        ],
+        "prototype_string": "uchar * __cdecl LS_MakeMission(uint label, ushort slot, ushort * length)",
+        "parameters": [
+            "[uint label@Stack[0x4]:4]",
+            "[ushort slot@Stack[0x8]:2]",
+            "[ushort * length@Stack[0xc]:4]"
+        ],
         "is_thunk": false,
         "namespace": "Global"
     },
@@ -25308,7 +25316,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Menu_ValidateCodename",
+        "name": "Menu_IsValidCodename",
         "address": "0x00076330",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -25316,7 +25324,7 @@
         "param_types": [
             "char *"
         ],
-        "prototype_string": "undefined4 __cdecl Menu_ValidateCodename(char * param_1)",
+        "prototype_string": "undefined4 __cdecl Menu_IsValidCodename(char * param_1)",
         "parameters": [
             "[char * param_1@Stack[0x4]:4]"
         ],
@@ -25650,7 +25658,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0007edf0",
+        "name": "Menu_SelectCodenameInControl",
         "address": "0x0007edf0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -25660,7 +25668,7 @@
             "byte *",
             "int *"
         ],
-        "prototype_string": "void __cdecl FUN_0007edf0(byte param_1, byte * param_2, int * param_3)",
+        "prototype_string": "void __cdecl Menu_SelectCodenameInControl(byte param_1, byte * param_2, int * param_3)",
         "parameters": [
             "[byte param_1@Stack[0x4]:1]",
             "[byte * param_2@Stack[0x8]:4]",
@@ -26048,7 +26056,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0007fef0",
+        "name": "Menu_StartLS",
         "address": "0x0007fef0",
         "calling_convention": "default",
         "has_custom_variable_storage": true,
@@ -26066,7 +26074,7 @@
             "undefined1",
             "undefined4"
         ],
-        "prototype_string": "void FUN_0007fef0(int param_1_00, byte param_2_00, undefined4 param_3, byte param_4, undefined4 param_5, undefined4 param_6, HASHCODE param_7, undefined4 param_8, undefined4 param_9, undefined1 param_10, undefined4 param_11)",
+        "prototype_string": "void Menu_StartLS(int param_1_00, byte param_2_00, undefined4 param_3, byte param_4, undefined4 param_5, undefined4 param_6, HASHCODE param_7, undefined4 param_8, undefined4 param_9, undefined1 param_10, undefined4 param_11)",
         "parameters": [
             "[int param_1_00@ECX:4]",
             "[byte param_2_00@DL:1]",

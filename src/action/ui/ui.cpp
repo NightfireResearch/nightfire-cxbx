@@ -15,8 +15,6 @@ bool P_MPRULES_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint pa
 // AUTOGEN
 bool P_MPJOIN_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool P_CNSELECT_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool P_CNCONTROLS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool P_NFSELECT_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
@@ -73,35 +71,13 @@ bool C_GOCODENAMES_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uin
 // AUTOGEN
 bool C_LBPMMAP_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool C_CHCHDRONES_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_CHCHBLIND_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_CHCHDEBUG_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_CHCHZEROG_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_CHCHFLY_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_CHCHCOORDS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_CHCHHUD_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool C_RBCONTROL_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_GCPAUSE_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_NIS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool C_KEYPAD_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_CHCHDUMMY_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_CHCHALLOWFREEZE_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool C_SBNFCN_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_CHCHWEAP_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_RBDSRECORDS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
@@ -109,29 +85,15 @@ bool C_RBDSREWARDS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uin
 // AUTOGEN
 bool C_RBMPSTART_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
-bool C_CHCHBRIGHT_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_CHCHUNLOCK_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_CHCHCONTROLS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
 bool C_RBMPFINISH_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_RBMPCNAME_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_CHCHHEALTH_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_SBCNSELECT_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_LBERROPTIONS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_LBMSGOPTIONS_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_MPDBG_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_LANGUAGE_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_CHCHLOCKUP_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 
 // AUTOINJECT
 bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int param_4, int param_5)

@@ -4,7 +4,15 @@
 engine's **Codename (profile) save serialiser**: it turns the player's settings, campaign progress, multiplayer
 handicap, global options, cheats and bonus unlocks into a list of labelled, bit-packed blocks, hands the result to
 the platform save code (`psiSaveData` / `psiLoadData`, already ours), and on load unpacks the blocks back into the
-game's globals. 20 functions, 3.8 KB of original code, none reimplemented yet.
+game's globals. 20 functions, 3.8 KB of original code.
+
+**Reimplemented** (16 Oct 2026): every `LS_*` function and the bit functions, in `src/action/engine/LoadSave.cpp`
+(`BIN_PushBits` / `BIN_PullBits*` in `src/action/util/bin.cpp`), with the buffers, states and block table owned there;
+`LS_FindBlockByLabel` and `LS_GetLoadStuff` keep their register conventions through adaptors. *LS_GetFullSaveSize*
+(`FUN_0006f950`) is still the original. Shadow test: `src/action/devtools/SaveShadow.cpp`. The callers on the menu
+side (`Menu_UpdateMessageBox`, *Menu_StartLS*, `Menu_EnumSaves`...) are in `src/action/ui/ui_codenames.cpp`.
+The sections below describe the original as reviewed before the port; where they say "still original" or "none
+reimplemented", read the line above.
 
 This folder documents it, as reviewed from the Xbox `default.xbe` (names and signatures from the PS2 build's
 symbols, layouts from the Xbox binary), ahead of reimplementing it.

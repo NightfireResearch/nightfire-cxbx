@@ -371,6 +371,12 @@ typedef enum {
     SUB_C_SBNFMAP_DESCRIPTION_TEXT = 0x1000001f,
     SUB_C_SBNFMAP_ICON = 0x10000020,
     SUB_P_CNNAME_TEXT = 0x10000075,             // the text being typed
+    SUB_C_KEYPAD_ENTRY_TEXT = 0x10000075,       // the digits typed (the same hashcode on another page)
+    SUB_C_SBCNSELECT_WHEEL_TEXT = 0x100000ec,
+    SUB_P_CNSELECT_MENU_GROUP = 0x10000122,
+    SUB_C_SBCNSELECT_ICON = 0x100001cd,
+    SUB_C_SBCNSELECT_DESCRIPTION_TEXT = 0x100001f1,
+    SUB_C_SBCNSELECT_BUTTON_HINT_TEXT = 0x10000220,
     SUB_C_SBNFDFCTY_ICON = 0x100000be,
     SUB_C_SBNFMAP_WHEEL_TEXT = 0x100000e3,
     SUB_C_SBNFDFCTY_WHEEL_TEXT = 0x100000e6,
@@ -682,6 +688,13 @@ typedef enum {
     CODENAME_NEEDS_LETTER = 0x000003bc,     // "Please enter a codename consisting of at least one letter or number"
     UNLOCK_SUCCESS = 0x0100029d,            // "Unlock successful"
     SECRET_UNLOCKS = 0x010002d4,            // "Secret Unlocks"
+    CODENAME_NEW = 0x0000029b,              // "New Codename" (the first default codename)
+    CODENAME_DEFAULT = 0x00000211,          // "Default" (the second)
+    PLAY_WITHOUT_SAVING = 0x010002ff,       // "Play without saving" (the second, on P_NFSELECT)
+    CODENAME_DELETE_CONFIRM = 0x00000320,   // "Are you sure you want to delete this codename?..."
+    CODENAME_DELETE_FAILED = 0x00000265,    // "Unable to delete saved game."
+    CNSELECT_HINT = 0x010000b9,             // "~A Edit  ~Y Create  ~V Scroll  ~B Back"
+    CNSELECT_HINT_DELETE = 0x010000b4,      // "~A Edit  ~Y Create  ~X Delete  ~V Scroll  ~B Back"
 
     TXT_MISSION_COMPLETE = 0x02000006,
     TXT_MISSION_FAIL = 0x02000007,

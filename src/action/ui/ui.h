@@ -331,6 +331,29 @@ bool P_ATTRACT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
 bool C_CHCHMUSIC_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
 bool C_CHCHDRAWALL_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
 bool C_CHCHWS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_CHCHFLY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_CHCHDRONES_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_CHCHBLIND_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_CHCHWEAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_CHCHHEALTH_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_CHCHHUD_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_CHCHDEBUG_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_CHCHCOORDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_CHCHALLOWFREEZE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_CHCHDUMMY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_CHCHZEROG_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_CHCHLOCKUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_CHCHBRIGHT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_CHCHUNLOCK_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_CHCHCONTROLS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+
+// ui_codenames: the Codenames page, and the save flow's error list
+bool P_CNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_SBCNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_LBERROPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+
+// ui_keypad
+bool C_KEYPAD_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
 
 // ui_credits
 typedef struct CreditsEntry {

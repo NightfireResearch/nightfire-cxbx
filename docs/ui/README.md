@@ -34,9 +34,11 @@ invented function names in Ghidra carry an "INVENTED NAME" plate comment.
 |---|---|
 | `ui_nightfire.cpp` | `sp_level`, `difficulty`; P_NFMAP, C_SBNFMAP, P_NFDFCTY, C_SBNFDFCTY |
 | `ui_mp.cpp` | `mp_level`, `mp_scenario`, `mp_characters`, `mp_characters_small`, `mp_options`, `mp_bots`; P_MPMAP, C_SBMPMAP, P_MPSCENARIO, C_SBMPSCEN, P_MPOPTIONS, C_SBMPOPTIONS, P_MPBOTS, C_SBBOTS, P_MPBOTCHOOSE, C_SBMPBTCHOOSE, C_RBMPSETUP, P_MPCONFIRM, P_MPDEBRIEFING, P_MPPLAYERMODS, P_MPENVIROMODS, Menu_GetMPSkins |
-| `ui_codenames.cpp` | `cn_options`; P_CNMENU, C_SBCNOPTIONS |
+| `ui_codenames.cpp` | `cn_options`; P_CNMENU, C_SBCNOPTIONS, P_CNSELECT, C_SBCNSELECT, C_LBERROPTIONS; Menu_UpdateMessageBox, Menu_EnumSaves, Menu_FlushEnum, Menu_PutCodenamesIntoControl, Menu_MapDefaultCodename, Menu_SelectCodenameInControl, Menu_StartLS (invented name, register adaptor) |
+| `ui_cheats.cpp` | the cheat menu's checkboxes: every C_CHCH handler |
+| `ui_keypad.cpp` | C_KEYPAD |
 | `MenuUnlocks.cpp` | the campaign's progress and rewards: missions open, bonus masks, upgrades, MP characters/scenarios unlocked |
-| `ui_secrets.cpp` | Menu_SpecialCodenameCheck, Menu_UpgradeCheat, P_CNNAME, C_KEYBOARD |
+| `ui_secrets.cpp` | Menu_SpecialCodenameCheck, Menu_UpgradeCheat, Menu_IsValidCodename, P_CNNAME, C_KEYBOARD |
 | `ui_credits.cpp` | Menu_InitCredits, Menu_SetupCredits (from `CreditsData.inc`, generated from `data/credits.csv`), P_CREDITS |
 | `ui_dossier.cpp` | `ds_options`, `ds_weapons`, `ds_gadgets`; the dossier pages (earlier work) |
 
@@ -63,8 +65,9 @@ Not yet: the handlers without lists (`handlers.md` step 2).
 - `MenuCheckLists=on` compares the lists in our source with the game's copies (all 12 identical).
 - `MenuShadowTests=on` runs the shadow tests at start, before the game (no display needed): `SecretsShadow.cpp`
   (every code, 224 runs), `UnlocksShadow.cpp` (the seven progress/unlock functions over their inputs, 1440 runs),
-  `UpgradeShadow.cpp` (the weapon upgrade readers) and `MemShadow.cpp` (the heap allocator, ~19000 random calls
-  on two scratch heaps).
+  `UpgradeShadow.cpp` (the weapon upgrade readers), `MemShadow.cpp` (the heap allocator, ~19000 random calls
+  on two scratch heaps), `SaveShadow.cpp` (the codename save) and `CodenameShadow.cpp` (the codename pages, the
+  cheat checkboxes, the keypad).
 
 `tools/ui/run_menu.sh <script> [name]` runs a script from a fresh boot (language, intro, start page) in
 `build/menurun/<name>/`, with a copy of `Release/saves` so the start page leads to the main menu, and writes the
@@ -90,4 +93,4 @@ original and our code check from four starting states (224 runs, no differences)
 CONTROL_TYPE, M_CONTROL, M_WIDGET, M_PAGE, M_MANAGER, M_MESSAGE, MENU_LS, MPJoinSlot, and seven prototype
 fixes) for `ghidra/NightfireStructs.py`, which now takes enums. Renamed in Ghidra during the pass, with plate
 comments: Menu_CreateOptionBoxLabel (0x7f3a0, the label overload of Menu_CreateOptionBox), Menu_StopFrontEndMusic
-(0x7fd70), Menu_ValidateCodename (0x76330), Menu_CodenameExists (0x75f40), Menu_AllJoinedPlayersReady (0x753f0).
+(0x7fd70), Menu_ValidateCodename (0x76330; since renamed to its PS2 name, Menu_IsValidCodename), Menu_CodenameExists (0x75f40), Menu_AllJoinedPlayersReady (0x753f0).

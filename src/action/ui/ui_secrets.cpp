@@ -12,8 +12,6 @@
 
 
 // AUTOGEN
-undefined4 Menu_ValidateCodename(char *name);
-// AUTOGEN
 uint Menu_CodenameExists(byte *name);
 
 // XBE_GLOBAL(0x00245200, 0x40)
@@ -179,17 +177,51 @@ uint64_t Menu_SpecialCodenameCheck(byte *code) {
     return 0;
 }
 
+// A name typed for a new codename, with its leading and trailing spaces trimmed and in capitals: TXT_NULL if it
+// will do (the name is rewritten so), else the complaint - blank, or containing a default codename's name.
+// AUTOINJECT
+Action_TranslatedText Menu_IsValidCodename(char *name) {
+    if (strlen(name) == 0)
+        return CODENAME_NEEDS_LETTER;
+    char *start = NULL;
+    for (size_t i = 0; i < strlen(name); i++)
+        if (name[i] != ' ') {
+            start = &name[i];
+            break;
+        }
+    if (start == NULL)
+        return CODENAME_NEEDS_LETTER;
+    size_t last = strlen(name);
+    do
+        last--;
+    while (name[last] == ' ');
+    name[last + 1] = 0;
+
+    char upper[0x20];
+    strcpy(upper, start);
+    _strupr(upper);
+    for (int i = 0; i < CODENAME_SLOTS_DEFAULT; i++) {
+        char other[0x20];
+        strcpy(other, Txt_BindLabel(def_codename[i].name, 0));
+        _strupr(other);
+        if (strstr(upper, other) != NULL)
+            return CODENAME_TOO_SIMILAR;
+    }
+    strcpy(name, upper);
+    return TXT_NULL;
+}
+
 // Sets up a save of the codename just named (a new one, or overwriting one of that name), which the message box
 // on P_CNNAME then runs.
 static void SaveNewCodename(uchar managerNum) {
     PlrStats_ResetScoring();
     ls.busy = 1;
-    ls.slot = 999;
+    ls.slot = LS_SLOT_NEW;
     ls.returnPage = P_CNMENU;
-    ls.field3_0xc = 1;
+    ls.returnPageArg = 1;
     ls.operation = LS_OPERATION_SAVE;
-    ls.field9_0x3a = 0;
-    ls.field5_0x14 = 0;
+    ls.done = 0;
+    ls.control = NULL;
     ls.field17_0x42 = 0;
     Menu_UpdateMessageBox(managerNum, 0xff, 0);
 }
@@ -263,13 +295,13 @@ bool C_KEYBOARD_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
             break;   // a wrong code does nothing
         }
         {
-            Action_TranslatedText problem = (Action_TranslatedText)Menu_ValidateCodename(kbd_text);
+            Action_TranslatedText problem = Menu_IsValidCodename(kbd_text);
             if (problem != TXT_NULL) {
                 Menu_CreateOptionBoxLabel(managerNum, problem, OPTIONBOX_BAD_CODENAME, 1, 0);
                 kbd_clear_on_key = 1;
                 break;
             }
-            ls.slot = 999;
+            ls.slot = LS_SLOT_NEW;
             strcpy(ls.codename, kbd_text);
             if ((uchar)Menu_CodenameExists((byte *)kbd_text)) {
                 Menu_CreateOptionBoxLabel(managerNum, CODENAME_EXISTS_OVERWRITE, OPTIONBOX_OVERWRITE_CODENAME, 0, 0);

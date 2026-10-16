@@ -6,7 +6,7 @@
 // MenuLog=on               every Handler_HandleMessage call: "[menu] f=<frame> m<manager> <control> msg=<type>
 //                          a=<arg1> b=<arg2> -> <result>" (tools/ui/menu_log.py names the hashcodes and types)
 // MenuLogSkip=0x3d,0x3e    message types left out of the log (per-frame ones, say)
-// MenuShadowTests=on      run the secret-code, unlock, weapon upgrade, heap allocator and score shadow tests at start, before the game (no display needed)
+// MenuShadowTests=on      run the secret-code, unlock, weapon upgrade, heap allocator, score, save, codename and the other shadow tests at start, before the game (no display needed)
 // MenuCheckLists=on       compare the item lists' contents in our source with the game's, and the generated drone
 //                          tables (tools/drone_tables.py), at start
 // MenuOriginal=0x40000030:0x8ded0,0x76470
@@ -62,6 +62,8 @@
 #include "UpgradeShadow.h"
 #include "MemShadow.h"
 #include "ScoreShadow.h"
+#include "SaveShadow.h"
+#include "CodenameShadow.h"
 #include "DroneTablesCheck.h"
 #include "DroneShadow.h"
 #include "DroneAIShadow.h"
@@ -539,6 +541,8 @@ void MenuProbe_Install(void) {
         UpgradeShadow_Run();
         MemShadow_Run();
         ScoreShadow_Run();
+        SaveShadow_Run();
+        CodenameShadow_Run();
         DroneShadow_Run();
         DroneAIShadow_Run();
         AIHintsShadow_Run();
@@ -558,7 +562,7 @@ void MenuProbe_Install(void) {
         for (char *t = strtok(skip, ", "); t && g_skipCount < 32; t = strtok(NULL, ", "))
             g_skip[g_skipCount++] = (unsigned)strtoul(t, NULL, 0);
     }
-    char originals[512] = "";
+    char originals[4096] = "";
     GetPrivateProfileStringA("Settings", "MenuOriginal", "", originals, sizeof(originals), ".\\settings.ini");
     for (char *t = strtok(originals, ", "); t; t = strtok(NULL, ", ")) {
         char *colon = strchr(t, ':');

@@ -227,8 +227,8 @@ typedef struct {
     undefined field3_0xc;
     char DecoderDisplay[4];
     undefined field5_0x11;
-    char DecoderNumDigits;
-    char DecoderDigitAt;
+    uchar DecoderNumDigits;
+    uchar DecoderDigitAt;  // the next digit C_KEYPAD_Handler writes
     undefined field8_0x14;
     undefined field9_0x15;
     undefined field10_0x16;

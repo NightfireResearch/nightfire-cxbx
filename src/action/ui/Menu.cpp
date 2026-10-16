@@ -68,9 +68,6 @@ void __stdcall Menu_RestartFrontEndLoop(void);
 void __stdcall Menu_StopFrontEndMusic(void);
 
 // AUTOGEN
-void Menu_UpdateMessageBox(uint managerNum, ushort param_2, byte param_3);
-
-// AUTOGEN
 undefined4 Menu_UpdateOptionBox(undefined4 *type);
 
 // AUTOGEN

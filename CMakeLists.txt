@@ -83,6 +83,8 @@ add_library(actioninject SHARED
   src/action/devtools/UpgradeShadow.cpp
   src/action/devtools/MemShadow.cpp
   src/action/devtools/ScoreShadow.cpp
+  src/action/devtools/SaveShadow.cpp
+  src/action/devtools/CodenameShadow.cpp
   src/action/devtools/DroneTablesCheck.cpp
   src/action/devtools/DroneShadow.cpp
   src/action/devtools/DroneAIShadow.cpp
@@ -125,6 +127,7 @@ add_library(actioninject SHARED
   src/action/engine/psiLight.cpp
   src/action/engine/psiSprite.cpp
   src/action/engine/psiSave.cpp
+  src/action/engine/LoadSave.cpp
   src/action/engine/Script.cpp
   src/action/engine/Text.cpp
   src/action/engine/Vision.cpp
@@ -171,6 +174,7 @@ add_library(actioninject SHARED
   src/action/ui/ui_nightfire.cpp
   src/action/ui/ui_codenames.cpp
   src/action/ui/ui_cheats.cpp
+  src/action/ui/ui_keypad.cpp
   src/action/ui/MenuUnlocks.cpp
   src/action/ui/ui_score.cpp
   src/action/ui/Menu.cpp

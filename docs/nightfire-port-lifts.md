@@ -32,6 +32,8 @@ to what it does. A function ported that way:
 
 | 4 | ainetwork, aipath | 57 + 18 (AINetwork_AlterDestFor_DROUTE_Nearest, GetRouteDistanceBetweenNodes, OptimiseRoute, CalcRoute, SetupRouteToObject, SetupRouteToPosition, RouteNodeOffset, ResetRoute, VerifyRouteTarget, CalcRouteToObject, CalcRouteToPosition, LinkCreep_ForNodes, LinkCreep_Calc, LinkCreep_CalcToRouteEnd, both NDrone2_MoveTest, NDrone2_NavNodeCache, NDrone_InitDoorNodes) | 55 of 57; 786 of 895 blocks. NavShadow: 57,500 cases, 0 differ (10 planted bugs: 8 caught; one is in a branch that cannot change the result, one only shows in a count); AIHintsShadow: 33,491 cases, 0 differ (4 planted, all caught) | see git log |
 
+| 5 | loadsave, menu_cheats, menu_codename | 47 names = 43 Xbox functions (their five `BIN_PullBits` are four; `P_PS2MEMCARDINIT_Handler`, `PS2_DoCardFlow` have no Xbox counterpart) + 3 (LS_FindBlockByLabel, LS_GetLoadStuff's adaptor, Menu_StartLS) | none: the demos neither save nor use the menus. SaveShadow: 23,640 cases, 0 differ; CodenameShadow: 8,480 cases, 0 differ; 8 planted bugs, all caught. MenuProbe A/B with the 51 functions as the original: codenames, secrets_test, front_end, nightfire and the new saveload (load a codename, save it, the delete box): identical screenshots, message logs and saves | see git log |
+
 Parcel 1's first playback found two things the coverage alone would not have shown:
 - **A crash in our code.** The port of `Script_CreateEntity` called our `Break_Create` by name, which is a known-broken
   draft that was never patched in. `tools/draft_calls.py` now finds such calls.
@@ -114,6 +116,36 @@ Everything else in their readings of parcel 3 matched the Xbox.
 
 Everything else in their readings of parcel 4 matched the Xbox.
 
+### Parcel 5
+- `BIN_PullBits`: their five typed overloads are four functions on the Xbox. The core gathers the bits into a
+  64-bit value (each bit sign-extended from 32, so a set bit 31 fills the high word, which it writes too), and
+  `BIN_PullBits_U32` / `_U8` / `_U16` call it and store the low 4/1/2 bytes. Their `int32_t` and `uint32_t`
+  overloads are `_U32`, their `int16_t` and `uint16_t` ones `_U16`.
+- `LS_MakeMission` is `FUN_0006f110` (renamed in Ghidra). `GSET` differs by platform: the Xbox block has no screen
+  position and 7 reserved words (theirs 0xdb), and its load drops the language, sound mode and widescreen rather
+  than applying them. `LS_LoadBonus` calls `Menu_SetBonus(lo, hi, slot, 0)`.
+- Their additions, not in the Xbox: the zero-length and slot-size guards of the block walk, the slot bound in
+  `LS_GetSaveStuff` and `LS_LoadFromBuffer` (the Xbox copies `Boot_LoadPTPData`'s 0x12c0 bytes into a 0x1000-byte
+  slot), the level-count clamp in `LS_LoadMission`, the player and table guards in the cheat checkboxes and keypad,
+  the slot guard in `Menu_MapDefaultCodename`.
+- `Menu_IsValidCodename` is the Xbox's 0x76330 (we had named it `Menu_ValidateCodename`; renamed), and
+  `Menu_SelectCodenameInControl` is `FUN_0007edf0` (renamed). The set-up of a load or save that the wheels call,
+  *Menu_StartLS* (`FUN_0007fef0`, invented name), takes the codename in EAX, the operation in ECX and a stale flag
+  in DL; theirs inlines it.
+- The memory card has no Xbox counterpart: `P_PS2MEMCARDINIT_Handler` and `PS2_DoCardFlow` are PS2 only;
+  `XBox_DoSaveFlow` (not ported) is the Xbox's box flow. `C_LBERROPTIONS_Handler` is that flow's error list on the
+  Xbox (the page under the box is told, the box closed, the return page gone to, the states flushed; B can leave for
+  the dashboard), not the PS2 card's answers.
+- `Menu_UpdateMessageBox`'s delete: `psiDeleteData` is the empty debug hook on the Xbox, and the deletion itself is
+  done by `P_CNSELECT`'s answer to the confirmation box (`FUN_000dfec0`). `C_SBCNSELECT`'s X asks with that box
+  rather than deleting, and its Select and Y check the free space (`FUN_0008fcc0`) before a new codename;
+  `P_CNSELECT`'s update answers the boxes (delete, delete failed, the dashboard for space). None of that is in
+  theirs.
+- `Menu_EnumSaves` takes `SaveEnum_EntriesPerFrame` (0x194804) names a frame, and `psiGetNextSave`'s -1 means "not
+  yet": theirs takes up to 0x100.
+
+Everything else in their readings of parcel 5 matched the Xbox.
+
 ## Original bugs found while porting (kept; candidates for FIX_ORIGINAL_GAME_BUGS)
 
 - `Script_Load`, a file with 0x3f streams or more: hands its record to `DList_RemoveFromInUse2Free(&ScriptList)`,
@@ -150,6 +182,17 @@ Everything else in their readings of parcel 4 matched the Xbox.
 - `Drone_CoverLowNode` indexes its five-entry anim table with unchecked placement keys.
 - `NDrone_InitDoorNodes` never resets its nearest-door distance between nodes (harmless: the first door is always
   taken).
+
+- `Menu_UpdateMessageBox`: a save refused (saving not allowed, or no codename) returns with its re-entry latch
+  still set, so no later load, save, listing or message box runs until the game restarts.
+- `LS_FindBlockByLabel` never ends on a header with a label and a zero length. `LS_Load` reads as many bytes as a
+  full save of the current state would take, so a file longer than that (a different level count) can be cut in a
+  header; a corrupt file can do it too. The shadow test has to avoid both.
+- `LS_LoadMission` trusts the level count against its 20-entry stack tables; `LS_LoadFromBuffer` copies
+  `Boot_LoadPTPData`'s 0x12c0 bytes into a 0x1000-byte slot (into slot 1); `Menu_EnumSaves` adds names to
+  `codename_buf` without a bound.
+- `C_CHCHWEAP_Handler` uses `glb_blokes[0]` unchecked; `P_CNSELECT_Handler` answers an option box of type 3 that
+  nothing in the Xbox build creates.
 
 ## Departures from the original
 

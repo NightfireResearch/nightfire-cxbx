@@ -13,10 +13,10 @@ void Input_RumbleStart(ushort playerNum, int time, int intensity);
 
 typedef struct {
     byte inverted; /* Inverts fChannel[4,5] */
-    undefined field1_0x1;
-    undefined field2_0x2;
+    undefined autoAim;          // 0x1 single player (PS2 name)
+    undefined autoAimMultiplayer; // 0x2
     undefined manualAimToggle; // 0x3 - the "aim: toggle/hold" option; non-zero = toggle
-    undefined field4_0x4;
+    undefined crouchToggle;     // 0x4 (PS2 name)
     undefined field5_0x5;
     undefined field6_0x6;
     undefined field7_0x7;

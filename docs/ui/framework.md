@@ -435,7 +435,7 @@ The functions that more than one handler shares, with their state. Ours marked *
 | FUN_0007fef0 *(invented `Menu_StartLoadSave`)* | 0x7fef0 | C_SBNFCN, C_RBMPCNAME, C_SBCNSELECT | fills `ls` (operation, slot, return page, GoPage flags, codename) and makes the first `Menu_UpdateMessageBox` call |
 | FUN_0007edf0 = PS2 `Menu_SelectCodenameInControl` | 0x7edf0 | P_NFSELECT, P_CNSELECT | finds a codename in `codename_buf`, `SetValue` on the wheel |
 | FUN_0008fcc0 *(invented `XBox_CheckSaveSpace`)*, FUN_0008fd90 *(invented `XBox_FreeSpaceLaunch`)* | 0x8fcc0, 0x8fd90 | codename pages, P_PARISENUM | Xbox free-blocks / too-many-codenames box; launches the dashboard (`WriteStateFileAndLaunch`) |
-| `Menu_MapDefaultCodename`, `Menu_UpdateDefaultCodename`, `Menu_ValidateCodename`, `Menu_CodenameExists`, `Menu_PutCodenamesIntoControl` | 0x7eee0, 0x7f100, 0x76330, 0x75f40, 0x754c0 | codename and MP pages | |
+| `Menu_MapDefaultCodename`, `Menu_UpdateDefaultCodename`, `Menu_IsValidCodename` (was `Menu_ValidateCodename`), `Menu_CodenameExists`, `Menu_PutCodenamesIntoControl` | 0x7eee0, 0x7f100, 0x76330, 0x75f40, 0x754c0 | codename and MP pages | |
 | `Menu_DisplayControllerStyle` / `...List` / `Menu_UpdateControllerLabelString` | 0x73d10 / 0x749c0 / 0x74910 | P_CNCONTROLS, C_RBCONTROL / C_GCPAUSE | 5.8 KB of button-picture labels per scheme (uses `__Menu_SendEx2`) |
 | `Menu_ChangeControllerStyle` | 0x72f60 **ours** | C_RBCONTROL, C_GCPAUSE | |
 | `Menu_AddRow`, `Menu_AddRowPercentage` | 0x73a80, 0x73bc0 | P_NFSTATS | list rows |

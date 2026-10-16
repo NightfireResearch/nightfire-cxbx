@@ -18,6 +18,8 @@
 #include "common/xboxPath.h"
 #include "action/engine/XboxStartup.h"
 #include "action/engine/psiSave.h"
+#include "action/engine/LoadSave.h"
+#include "action/ui/Menu.h"
 #include "action/engine/FS.h"
 #include "action/engine/AIPath.h"
 #include "action/engine/Woman.h"
