@@ -49,7 +49,7 @@
 //                                                                              buffer and query's last: buffer, query
 // ---------------------------------------------------------------------------------------------------------------
 
-enum DemoMode { DEMO_OFF, DEMO_RECORD, DEMO_PLAY };
+enum DemoMode { DEMO_OFF, DEMO_RECORD, DEMO_PLAY, DEMO_REBASE };
 
 enum {
     EV_PAD_SAME = 0x10,
@@ -113,6 +113,19 @@ static uint8_t g_lastMouse[MOUSE_BYTES];
 static bool g_haveMouse = false;
 static uint32_t g_lastSound[SOUND_BUFFERS + 1][2];   // per buffer (and "none") and query
 static bool g_haveSound[SOUND_BUFFERS + 1][2];
+
+// Rebasing (NIGHTFIRE_DEMO_REBASE): the old recording's input, frame by frame, and where each frame's polls are up to
+struct RebaseFrame {
+    std::vector<std::vector<uint8_t>> pads[4];   // each poll of each port, PAD_BYTES each
+    std::vector<std::vector<uint8_t>> mice;      // MOUSE_BYTES each
+    std::vector<uint32_t> bookmarks;
+    uint32_t sums[SUM_COUNT];                    // the old recording's checksums at the frame's end
+};
+static std::vector<RebaseFrame> g_rebase;
+static std::vector<uint8_t> g_header;            // the old recording's sections, written again as they were
+static size_t g_rebasePadAt[4], g_rebaseMouseAt;
+static uint8_t g_rebaseLastPad[4][PAD_BYTES];
+static uint8_t g_rebaseLastMouse[MOUSE_BYTES];
 
 // ---------------------------------------------------------------------------------------------------------------
 // Small helpers
@@ -397,6 +410,7 @@ static bool StartPlayback(const char *path) {
         }
         at += size;
     }
+    g_header.assign(file.begin() + 8, file.begin() + (ptrdiff_t)at - 8);   // up to the STRM section
     g_stream.assign(file.begin() + (ptrdiff_t)at, file.end());
     g_stream.resize(WholeFrames(g_stream));
     g_at = 0;
@@ -425,11 +439,89 @@ static bool StartPlayback(const char *path) {
     return true;
 }
 
+// The old recording's input, cut into its frames: each frame's polls of each port and reads of the mouse, in order,
+// and its bookmarks. The sound answers are left out: a rebase asks the device again.
+static void ReadRebaseFrames(void) {
+    uint8_t pad[4][PAD_BYTES] = {}, mouse[MOUSE_BYTES] = {};
+    RebaseFrame frame;
+    size_t at = 0;
+    while (at < g_stream.size()) {
+        uint8_t tag = g_stream[at++];
+        if ((tag & 0xf0) == EV_PAD_SAME) {
+            frame.pads[tag & 3].emplace_back(pad[tag & 3], pad[tag & 3] + PAD_BYTES);
+        } else if ((tag & 0xf0) == EV_PAD) {
+            memcpy(pad[tag & 3], &g_stream[at], PAD_BYTES);
+            at += PAD_BYTES;
+            frame.pads[tag & 3].emplace_back(pad[tag & 3], pad[tag & 3] + PAD_BYTES);
+        } else if (tag == EV_MOUSE_SAME) {
+            frame.mice.emplace_back(mouse, mouse + MOUSE_BYTES);
+        } else if (tag == EV_MOUSE) {
+            memcpy(mouse, &g_stream[at], MOUSE_BYTES);
+            at += MOUSE_BYTES;
+            frame.mice.emplace_back(mouse, mouse + MOUSE_BYTES);
+        } else if (tag == EV_BOOKMARK) {
+            uint32_t mark;
+            memcpy(&mark, &g_stream[at], 4);
+            at += 4;
+            frame.bookmarks.push_back(mark);
+        } else if (tag == EV_SOUND) {
+            at += 2 + 4;
+        } else if (tag == EV_SOUND_SAME) {
+            at += 2;
+        } else if (tag == EV_FRAME) {
+            memcpy(frame.sums, &g_stream[at], SUM_COUNT * 4);
+            at += SUM_COUNT * 4;
+            g_rebase.push_back(frame);
+            frame = RebaseFrame();
+        } else {
+            break;   // EV_DRIVING: the old session ended here
+        }
+    }
+}
+
+// A playback that writes a new recording instead of comparing: the old recording's input, given to the game as it
+// is now, with the device's own sound answers and the game's own checksums. For when a change to the code is meant
+// to change the game - a port made exact to the original, say - and the recordings have to follow it.
+static void StartRebase(const char *outPath) {
+    MakeParentDirectories(outPath);
+    g_out = fopen(outPath, "wb");
+    if (g_out == NULL) {
+        printf("[demo] cannot write %s; not rebasing\n", outPath);
+        ExitProcess(4);
+    }
+    setvbuf(g_out, NULL, _IOFBF, 1 << 16);
+    Put("NFDEMO\0\2", 8);
+    char info[256];
+    SYSTEMTIME now;
+    GetLocalTime(&now);
+    int infoLength = snprintf(info, sizeof(info), "rebased %04u-%02u-%02u %02u:%02u:%02u", now.wYear, now.wMonth,
+                              now.wDay, now.wHour, now.wMinute, now.wSecond);
+    WriteSection("INFO", info, (uint32_t)infoLength);
+    Put(g_header.data(), g_header.size());
+    WriteSection("STRM", NULL, 0);
+    ReadRebaseFrames();
+    g_path = outPath;
+    g_mode = DEMO_REBASE;
+    // At the game's own pace: the sound answers come from the device, which plays in real time, so frames that went
+    // by faster would hear every sound last longer (and whatever waits on one, later)
+    g_presentEvery = 0;
+    atexit(CloseRecording);
+    printf("[demo] rebasing %u frames of input to %s\n", (unsigned)g_rebase.size(), outPath);
+    fflush(stdout);
+}
+
 void Demo_Init(void) {
     const char *play = getenv("NIGHTFIRE_DEMO_PLAY");
     if (play != NULL && play[0] != '\0') {
+        // The rebase's output, before the playback moves into its sandbox
+        const char *rebase = getenv("NIGHTFIRE_DEMO_REBASE");
+        char rebasePath[MAX_PATH] = "";
+        if (rebase != NULL && rebase[0] != '\0')
+            GetFullPathNameA(rebase, MAX_PATH, rebasePath, NULL);
         if (!StartPlayback(play))
             ExitProcess(4);
+        if (rebasePath[0] != '\0')
+            StartRebase(rebasePath);
     } else {
         const char *record = getenv("NIGHTFIRE_DEMO_RECORD");
         if (record != NULL && record[0] != '\0') {
@@ -483,11 +575,16 @@ bool Demo_Active(void) {
 }
 
 bool Demo_Playing(void) {
-    return g_mode == DEMO_PLAY;
+    return g_mode == DEMO_PLAY || g_mode == DEMO_REBASE;
 }
 
 int Demo_PresentEvery(void) {
-    return g_mode == DEMO_PLAY ? g_presentEvery : 0;
+    return g_mode == DEMO_PLAY || g_mode == DEMO_REBASE ? g_presentEvery : 0;
+}
+
+// Recording, or rebasing: writing a stream
+static bool Writing(void) {
+    return g_mode == DEMO_RECORD || g_mode == DEMO_REBASE;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -515,7 +612,7 @@ static void FinishPlayback(const char *why) {
 
 // The game quitting by itself (a MenuProbe script's "quit", say) still gets the result said
 static void PlaybackAtExit(void) {
-    if (!g_finished)
+    if (!g_finished && g_mode == DEMO_PLAY)
         PrintResult("ended by the game");
 }
 
@@ -536,6 +633,24 @@ void Demo_FrameStart(void) {
     if (g_frame != 0)
         g_frameMs += 1000.0 / (FRAME_RATE_INT > 0 ? FRAME_RATE_INT : 60);
     g_readsThisFrame = 0;
+
+    if (g_mode == DEMO_REBASE) {
+        if (g_frame >= g_rebase.size()) {
+            CloseRecording();
+            printf("[demo] rebased %u frames to %s (%u of them differ from the old recording)\n", g_frame,
+                   g_path.c_str(), g_divergedFrames);
+            fflush(stdout);
+            ExitProcess(0);
+        }
+        for (uint32_t mark : g_rebase[g_frame].bookmarks) {
+            PutByte(EV_BOOKMARK);
+            PutU32(mark);
+        }
+        for (int i = 0; i < 4; i++)
+            g_rebasePadAt[i] = 0;
+        g_rebaseMouseAt = 0;
+        return;
+    }
 
     if (g_mode == DEMO_RECORD) {
         static bool f6Down = false;
@@ -643,7 +758,12 @@ void Demo_FrameEnd(void) {
     uint32_t sums[SUM_COUNT];
     Checksums(sums);
 
-    if (g_mode == DEMO_RECORD) {
+    if (g_mode == DEMO_REBASE && memcmp(sums, g_rebase[g_frame].sums, sizeof(sums)) != 0 && g_divergedFrames++ == 0) {
+        printf("[demo] frame %u: the game parts from the old recording here (expected, for a change meant to change "
+               "it)\n", g_frame);
+        fflush(stdout);
+    }
+    if (Writing()) {
         PutByte(EV_FRAME);
         Put(sums, sizeof(sums));
         if (g_frame % 60 == 0)
@@ -727,7 +847,14 @@ void Demo_Pad(int port, DemoPad *pad) {
         return;
 
     uint8_t packed[PAD_BYTES];
-    if (g_mode == DEMO_RECORD) {
+    if (g_mode == DEMO_REBASE) {
+        // This frame's next poll of the port; a game that polls more often than the recording did gets the last again
+        const std::vector<std::vector<uint8_t>> &polls = g_rebase[g_frame].pads[port];
+        if (g_rebasePadAt[port] < polls.size())
+            memcpy(g_rebaseLastPad[port], polls[g_rebasePadAt[port]++].data(), PAD_BYTES);
+        UnpackPad(g_rebaseLastPad[port], pad);
+    }
+    if (Writing()) {
         PackPad(pad, packed);
         bool same = g_havePad[port] && memcmp(packed, g_lastPad[port], PAD_BYTES) == 0;
         if (same) {
@@ -763,7 +890,18 @@ void Demo_Mouse(bool *captured, long *countsX, long *countsY) {
         return;
 
     uint8_t packed[MOUSE_BYTES];
-    if (g_mode == DEMO_RECORD) {
+    if (g_mode == DEMO_REBASE) {
+        const std::vector<std::vector<uint8_t>> &reads = g_rebase[g_frame].mice;
+        if (g_rebaseMouseAt < reads.size())
+            memcpy(g_rebaseLastMouse, reads[g_rebaseMouseAt++].data(), MOUSE_BYTES);
+        int32_t x, y;
+        memcpy(&x, g_rebaseLastMouse + 1, 4);
+        memcpy(&y, g_rebaseLastMouse + 5, 4);
+        *captured = g_rebaseLastMouse[0] != 0;
+        *countsX = x;
+        *countsY = y;
+    }
+    if (Writing()) {
         int32_t x = (int32_t)*countsX, y = (int32_t)*countsY;
         packed[0] = *captured ? 1 : 0;
         memcpy(packed + 1, &x, 4);
@@ -803,7 +941,7 @@ void Demo_SoundAnswer(int buffer, DemoSoundQuery query, uint32_t *answer) {
     uint8_t slot = buffer >= 0 && buffer < SOUND_BUFFERS ? (uint8_t)buffer : 0xff;
     int row = slot == 0xff ? SOUND_BUFFERS : slot;
 
-    if (g_mode == DEMO_RECORD) {
+    if (Writing()) {
         if (g_haveSound[row][query] && g_lastSound[row][query] == *answer) {
             PutByte(EV_SOUND_SAME);
             PutByte(slot);
@@ -832,13 +970,16 @@ void Demo_SoundAnswer(int buffer, DemoSoundQuery query, uint32_t *answer) {
 }
 
 void Demo_LeavingForDriving(void) {
-    if (g_mode == DEMO_RECORD) {
+    bool rebasing = g_mode == DEMO_REBASE;
+    if (Writing()) {
         PutByte(EV_DRIVING);
         fclose(g_out);
         g_out = NULL;
         printf("[demo] recording %s ends here: the session leaves for the driving engine\n", g_path.c_str());
         fflush(stdout);
         g_mode = DEMO_OFF;
+        if (rebasing)
+            ExitProcess(0);   // a rebase stops where the old session left; it does not launch the driving engine
     } else if (g_mode == DEMO_PLAY) {
         FinishPlayback("reached the driving engine");
     }

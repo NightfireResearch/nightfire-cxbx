@@ -86,6 +86,31 @@ Tools that build on these:
 - `tools/draft_calls.py` lists calls from ported code into drafts: game functions we define but do not patch
   in. Such a call runs the draft where the game ran the original.
 
+## Rebasing a recording onto changed code
+
+A change that is meant to change the game, a port made exact to the original for instance, makes every recording
+stop matching. Rebasing makes a new recording from the old one's input, without anyone having to play again:
+
+```bash
+cd Release && NIGHTFIRE_DEMO_PLAY=<old>.nfdemo NIGHTFIRE_DEMO_REBASE=<new>.nfdemo ./action.exe
+```
+
+- **Input:** the old recording's input goes to the game frame by frame. A game that polls a controller or reads
+  the mouse more often in a frame than the recording did gets the last state again; extras are dropped.
+- **What is new:** the sound device's answers come live, and the checksums come from the game as it now plays.
+- **Same starting point:** the new file keeps the old one's starting files and launch options.
+- **Normal speed only:** a rebase runs at the game's own pace, whatever `NIGHTFIRE_DEMO_FAST` says. The sound
+  answers come from a device playing in real time, so frames that went by faster would hear every sound last
+  longer, and anything waiting on one would wait longer.
+- **Where the games part:** it prints the first frame where the new game differs from the old recording, and how
+  many frames differ.
+
+Rebasing onto the code that recorded the demo gives back the same recording: TowerA, 0 of 8,935 frames differ.
+The input is the same, but the game it meets is not, so the session plays out a little differently: a shot that
+hit may miss, a guard who turned may not. Anything that needed exact input can fail, such as typing a keypad code
+that the random generator now makes different. Replace a recording with its rebase only after checking that the
+session still shows what it was for.
+
 ## What is held still, and why
 
 The game runs at a fixed number of updates per frame (`GameFlow_Main` once per `mainloop`). Input is therefore
