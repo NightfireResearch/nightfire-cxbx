@@ -135,7 +135,6 @@ static_assert(sizeof(COMP_FUNC) == 4, "COMP_FUNC is a 32-bit argument");
 #include "game/obj/Destroy.h"
 #include "game/obj/Door.h"
 #include "game/obj/Drone_AIHints.h"
-#include "game/obj/DroneSpawner.h"
 #include "game/obj/Env.h"
 #include "game/obj/Flicker.h"
 #include "game/obj/FuseBox.h"

@@ -1,6 +1,7 @@
 #include "Drone_AIHints.h"
 
 #include "../sp/SwitchChannels.h"
+#include "../drone/DroneVision.h"
 
 #include <bit>
 #include <math.h>
@@ -8,7 +9,6 @@
 
 #pragma fp_contract(off)
 
-#define DroneVision_CanSeePosition ((bool (__cdecl *)(obj_tag *viewer, _VECTOR *pos, cel_tag *cel, obj_tag *ignore))0x00064700)
 #define Intersect_PointOOBox ((bool (__cdecl *)(_MATRIX *mtx, _VECTOR *halfSize, _VECTOR *point, float unknown))0x00028bd0)
 
 // Drone_ProcessCoverNodes counts it down by 2 from 10
@@ -211,6 +211,18 @@ obj_tag* Drone_AIVolume_Create(_VECTOR *pos, _VECTOR *rot, _VECTOR *scale, level
 void Drone_AIVolume_Delete(obj_tag *obj) {
     DroneAIVolume_tag *volume = (DroneAIVolume_tag *)obj->extraObjectData;
     LList_Remove(&AIBoxList, &volume->node);
+}
+
+// The product of the visibilities of the volumes of this type that hold pos (1 in none)
+// AUTOINJECT
+float Drone_VisibilityForPosition(_VECTOR *pos, ushort type) {
+    float visibility = 1.0f;
+    for (DroneAIVolume_tag *volume = (DroneAIVolume_tag *)AIBoxList.head; volume != NULL;
+         volume = (DroneAIVolume_tag *)volume->node.next) {
+        if (volume->type == type && Intersect_PointOOBox(&volume->obj->transformMatrix, &volume->halfSize, pos, 0.0f))
+            visibility = visibility * volume->visibility;
+    }
+    return visibility;
 }
 
 // AUTOINJECT

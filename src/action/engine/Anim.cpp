@@ -83,16 +83,8 @@ void AnimObjectSetSleeveType(obj_tag *param_1, int sleeveNum) {
 
 
 
-// NOAUTOINJECT
-void psiBuildMatrixPalette(obj_tag *gameObj, AnimObj *animObj, char param_3) {
-
-    // AnimSkin *skin = animObj->skinPtr;
-    // _MATRIX* boneMtxs = animObj->boneMtxs;
-    // int numBones = SkeletonTable[skin->skeletonNum] + 2;
-    // uint flags = animObj->flags;
-
-
-}
+// AUTOGEN
+void psiBuildMatrixPalette(obj_tag *gameObj, AnimObj *animObj, char param_3);
 
 // NOAUTOINJECT
 // void AnimObjectDraw(obj_tag *obj, viewer_tag *viewer) {
@@ -392,4 +384,100 @@ obj_tag* AnimGetNDiscreteObj(obj_tag *obj, uint n) {
         return NULL;
 
     return animObj->discreteObj[n];
+}
+
+// ---- aiming and joint collision
+
+// The joint box tables, by skin, and the boxes AnimGetCollData builds from them
+#define HumanCollisionBones ((const AnimCollBone *)0x00163198)
+#define AstronautCollisionBones ((const AnimCollBone *)0x001632f0)
+#define HitList2 ((COLLJOINT_tag *)0x001d6bf0)
+
+// The skin that takes AstronautCollisionBones
+#define SKIN_ASTRONAUT ((HASHCODE)0x05000078)
+
+// Whether the object aims (AnimObjectSetAiming)
+// AUTOINJECT
+bool AnimObjectIsAiming(obj_tag *obj) {
+    if (obj == NULL || obj->animState == NULL)
+        return false;
+    return (obj->animState->animObj.flags & (ANIMOBJ_AIMING | ANIMOBJ_AIMING_2)) != 0;
+}
+
+// AUTOINJECT
+bool AnimObjectIsHeadTracking(obj_tag *obj) {
+    if (obj == NULL || obj->animState == NULL)
+        return false;
+    return (obj->animState->animObj.flags & ANIMOBJ_HEAD_TRACKING) != 0;
+}
+
+// Aims the object at target (NULL stops it), within range, turning at rate; with atBone, at that bone of it.
+// AUTOINJECT
+void AnimObjectSetAiming(obj_tag *obj, const void *target, float range, float rate, char atBone, uchar bone) {
+    if (obj == NULL || obj->animState == NULL)
+        return;
+    AnimObj *animObj = &obj->animState->animObj;
+    animObj->aimRate = rate;
+    animObj->aimRange2 = range * range;
+    if (target == NULL) {
+        animObj->flags &= ~ANIMOBJ_AIMING;
+        animObj->aimTarget = NULL;
+        return;
+    }
+    animObj->flags |= ANIMOBJ_AIMING;
+    animObj->aimTarget = target;
+    if (atBone) {
+        animObj->aimTargetBone = bone;
+        animObj->flags |= ANIMOBJ_AIM_AT_BONE;
+    } else {
+        animObj->flags &= ~ANIMOBJ_AIM_AT_BONE;
+    }
+}
+
+// The boxes round an animated object's joints, in the world, for Collide_Jointy: one per row of the skin's table,
+// in HitList2, with their count. The first box sits as far above its bone as the bone is above the other. NULL and
+// no boxes unless the object is animated with ANIMOBJ_FLAG_1 and ANIMOBJ_FLAG_2.
+// AUTOINJECT
+COLLJOINT_tag* AnimGetCollData(obj_tag *obj, ushort *count) {
+    if (obj == NULL || obj->animState == NULL) {
+        *count = 0;
+        return NULL;
+    }
+    AnimObj *animObj = &obj->animState->animObj;
+    if (!(animObj->flags & ANIMOBJ_FLAG_1) || !(animObj->flags & ANIMOBJ_FLAG_2)) {
+        *count = 0;
+        return NULL;
+    }
+
+    psiBuildMatrixPalette(obj, animObj, 0);
+    sAnimSkin_tag *skin = animObj->skin;
+    const AnimCollBone *row = skin->hashcode == SKIN_ASTRONAUT ? AstronautCollisionBones : HumanCollisionBones;
+    ushort n = 0;
+    for (; row->bone >= 0; row++) {
+        int other = row->other;
+        if (other < 0)
+            other = skin->bones[row->bone] & 0x7f;
+        _MATRIX *boneMtx = &animObj->boneMtxs[row->bone];
+        _MATRIX *otherMtx = &animObj->boneMtxs[other];
+        COLLJOINT_tag *box = &HitList2[n];
+        Mat_Copy(otherMtx, &box->m);
+        if (n == 0) {
+            _VECTOR rise;
+            Vec_Subtract(Mat_Position(*boneMtx), Mat_Position(*otherMtx), &rise);
+            rise.x = 0.0f;
+            rise.z = 0.0f;
+            Vec_Add2(Mat_Position(*boneMtx), &rise, Mat_Position(box->m));
+        } else {
+            box->m.m[12] = (float)(((double)otherMtx->m[12] + boneMtx->m[12]) * 0.5f);
+            box->m.m[13] = (float)(((double)otherMtx->m[13] + boneMtx->m[13]) * 0.5f);
+            box->m.m[14] = (float)(((double)otherMtx->m[14] + boneMtx->m[14]) * 0.5f);
+        }
+        n++;
+        box->half.x = row->half.x * skin->skinScale.x;
+        box->half.y = row->half.y * skin->skinScale.y;
+        box->half.z = row->half.z * skin->skinScale.z;
+        box->joint = row->bone;
+    }
+    *count = n;
+    return HitList2;
 }

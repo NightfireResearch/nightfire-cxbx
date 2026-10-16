@@ -11,13 +11,13 @@
 #include "../obj/Switch.h"              // Switch_GetNearest, Switch_GetSwitchChannel (ours)
 #include "../sp/Mission.h"              // Mission_SetFailLabel (ours)
 #include "../sp/SwitchChannels.h"
+#include "NDrone2_Opponent.h"
 
 #include <math.h>
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
 #define NDrone2_LogDroneDeath ((void (__cdecl *)(DCVars_tag *dcv))0x0003a1d0)
 #define Pickup_CreateSimple ((obj_tag *(__cdecl *)(_MATRIX *mtx, short weapon, short count, _VECTOR *pos))0x000a7f10)
-#define NDrone2_DroneAlertToObject ((void (__cdecl *)(DCVars_tag *dcv, uint msgType, obj_tag *obj, float radiusA, float radiusB, float alertness))0x00038f40)
 
 // Declared with AUTOGEN in Drone.cpp
 void NDrone2_Enable(char enable, Drone_tag *drone);

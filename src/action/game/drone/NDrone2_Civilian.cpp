@@ -9,24 +9,20 @@
 #include "NDrone2_Damage.h"
 #include "Behaviour.h"
 #include "../../game.h"                 // GameState
+#include "NDrone2_Opponent.h"
+#include "NDrone2_Route.h"
+#include "DroneVision_Alerts.h"
 
 #include <bit>
 #include <math.h>
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
-#define NDrone2_AssignAIPath ((void (__cdecl *)(DCVars_tag *dcv, uint pathType))0x00046ad0)
 #define NDrone2_ReFindMissionPath ((bool (__cdecl *)(DCVars_tag *dcv))0x00047290)
-#define NDrone2_DroneAlertToObject ((void (__cdecl *)(DCVars_tag *dcv, uint msgType, obj_tag *obj, float radiusA, float radiusB, float alertness))0x00038f40)
 #define NDrone2_ChangeToAttackMode ((short (__cdecl *)(Drone_tag *drone))0x000397f0)
-#define NDrone2_PlaySFX ((DYNAMICSOUNDS *(__cdecl *)(DCVars_tag *dcv, uint sfx, _VECTOR *pos, char wait, float volume))0x00037340)
 // FUN_00046c20 and FUN_00046d40 in Ghidra; the names are the PS2 build's
-#define NDrone2_UpdatePatrolRoute ((void (__cdecl *)(DCVars_tag *dcv))0x00046c20)
-#define NDrone2_UpdateMissionRoute ((int (__cdecl *)(DCVars_tag *dcv))0x00046d40)
 // Returns in ST0, unrounded
 #define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
 
-// Declared with AUTOGEN in NDrone2.cpp
-ushort DroneVision_EnemyAlerts(DCVars_tag *dcv, MsgObject *msg);
 
 // What NDrone2_UpdateMissionRoute returns at the end of the path; the route's status while it cannot go on
 #define MISSION_ROUTE_DONE 3

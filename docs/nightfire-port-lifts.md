@@ -36,6 +36,8 @@ to what it does. A function ported that way:
 
 | 6 | drone_states, drone_damage, drone_weapon | 60 + 5 of their names under other Xbox names (Drone_BulletHit = 0x31f20, DroneWeap_ManageBurstCount = 0x67590, NDrone2_CanMoveToRelativePos = 0x45490, DroneWeap_PlaceTertiary = 0x67bf0, DroneWeap_CanThrowGrenade = 0x66c50) + 6 helpers (DroneWeap_AimAtOpponent 0x666a0, DroneWeap_FireDelay 0x66e90, DroneWeap_BurstLength 0x66f10, DroneWeap_NextBulletTimeNewBurst 0x67c00, DroneWeap_DropPathClear 0x67640, Drone_MayDealBackshotDamage 0x31da0) | 55 of 60; 800 of 1244 blocks. DroneStateShadow: 21,280 cases; DroneCivilianShadow: 56,000; DroneDamageShadow: 98,000; DroneWeaponShadow: 130,000; all 0 differ. 13 planted bugs, one per suite line, all caught | see git log |
 
+| 7 | drone_vision, drone_move, drone_route, drone_spawner | 62 + 39 Xbox functions renamed from FUN_ (31 under their names, e.g. NDrone2_Steer = 0x43070, DroneVision_OpponentVisibility = 0x65510, NDrone2_FollowRoute = 0x46a80, DroneSpawner_DroneDelete = 0x308b0; 8 under ours, for helpers they inline, e.g. DroneVision_GlobalAlarm 0x650a0) + 15 FUNC_AT helpers (e.g. SolveQuadratic 0x42b20, NDrone2_Fall 0x3ef30, NDrone2_StartRouteCreep 0x46220). Of their 34 names without an Xbox match, NDrone2_DroneInSights is MSVC's shared `return false` (0xde5e0), and four are inline (below) | 59 of 62; 897 of 1119 blocks. DroneVisionShadow: 196,000 cases; DroneAlertShadow: 129,000; DroneOpponentShadow: 155,284; DroneMoveShadow: 152,000; DroneCollisionShadow: 128,000; DroneRouteShadow: 158,300; all 0 differ, with 296 OpponentVisibility and 290 NextRouteAngle results accepted 1-2 ulp apart (FSIN and the XBE's acos against the host's sin and acos). 25 planted bugs, one per suite line, all caught | see git log |
+
 Parcel 1's first playback found two things the coverage alone would not have shown:
 - **A crash in our code.** The port of `Script_CreateEntity` called our `Break_Create` by name, which is a known-broken
   draft that was never patched in. `tools/draft_calls.py` now finds such calls.
@@ -197,6 +199,89 @@ Everything else in their readings of parcel 5 matched the Xbox.
 
 Everything else in their readings of parcel 6 matched the Xbox.
 
+### Parcel 7
+- Separate functions on the Xbox that theirs inline:
+  - vision: the opponent-in-view test (0x656a0, ours `DroneVision_OpponentInView`), the bone and gun-through-wall half of
+    their `SeekOpponentLOS` (0x66030, `DroneVision_OpponentLOS`), the eye's line of sight of `CanSeePosition`
+    (0x64660), and the two drone-list walks (0x64580, 0x645c0) of `ProcessDroneSight` and `FindAlertedDrones`.
+  - alerts: `EnemyAlerts`' global-alarm case (0x650a0) and its four shout handlers (0x65120-0x651e0); their
+    `DroneVision_ShoutFromOtherDrone` is inline in each, and in case 0x16.
+  - opponents: `NDrone2_SetOpponentAimPos` is 0x378f0, with its bone lookup 0x37870; `FindOpponent`'s angles to the
+    target (0x37bc0); three parts of their `Drone_InitComms` (0x31190, the targets' frame; 0x31110, clearing them;
+    0x30950, the dummy player). `Drone_ProcessOpponents` is 0x313e0.
+  - movement: `NDrone2_Steer` 0x43070, `NDrone2_EvaluateObstacle` 0x42cc0 (the obstacle drone in EAX, the record in
+    ESI), `SphereSphereSweep` 0x42bb0 and its quadratic 0x42b20; `DroneMove_SetBoundryFlags` 0x454e0 (calling 0x453e0
+    four times), `DroneMove_NoBunching` 0x437f0, `DroneMove_ObjectMissionPathDistance` 0x44cb0,
+    `NDrone2_NearestNodeDCV` 0x44670 (theirs builds the node search itself), the three astronaut moves 0x44f70,
+    0x45230, 0x452c0.
+  - collision and tracking: `NDrone2_DoCollision` 0x3cce0, `DroneFunc_NearPlayerCollision` 0x3b7f0,
+    `NDrone2_DoGravity` 0x3cd50 (a tail jump into DoCollision, where theirs repeats its tests; the same result), the
+    fall 0x3ef30 (their gravity lambda), `NDrone2_AimTest` 0x3ab90, the aiming 0x3ab00, `NDrone2_DoHeadTracking`
+    0x3a850 (it calls `NDrone2_HeadTrackObj` 0x3a6c0), the nearest-in-room choice 0x3a780,
+    `NDrone2_DoHeadTrackingBehaviour` 0x3a940, `NDrone2_DoTracking` 0x3ac10, and the feet's collision 0xab390 (the
+    object in EAX, the hit in ECX).
+  - routes and spawners: `NDrone2_InitAIPath` 0x44a20, the creep start 0x46220 (its first argument never read),
+    `NDrone2_FollowRoute` 0x46a80, `NDrone2_UpdatePatrolRoute` 0x46c20, `NDrone2_UpdateMissionRoute` 0x46d40,
+    `NDrone2_FindAlarmPoint` 0x470f0 (in their drone_combat.cpp), the goal set-up 0x470b0, a new wave's reset 0x30860,
+    the wave speech 0x30910, `DroneSpawner_DroneDelete` 0x308b0 (called from `Drone_Delete`).
+- Inline on the Xbox: `NDrone2_GetAnglesToMoveTarget` (in `NDrone2_maybeCalcDistanceAndDirToTarget`, 0x46080).
+  `NDrone2_DroneInSights` is 0xde5e0, `XOR AL,AL; RET`, which MSVC shares with `Particles_Update`: always false, as
+  theirs. `AnimScriptPeekSfx` has no counterpart: the Xbox `NDrone2_SpeechSFX` has no deferred facial sound (their
+  `talk_pending`, `SFXPreCache`); it calls `NDrone2_PlayFacialAnim` (0x374e0) unless +0x36 or +0x37 is set.
+- `NDrone2_UpdateMissionRoute` returns `FollowRoute`'s status (0x46d7e `MOV EAX,EDI`); their note says it returns
+  nothing.
+- `DroneSpawner_SpawnDrone` only calls `NDrone2_CreateFromDIVars(&entry->vars)` and `NDrone2_PostLoad_Init`, and
+  counts (0x324a0-0x324c0). Their creation-time draw, DIVars copy and group set-up are not in it.
+- `NDrone2_PlaySFX` is cdecl with five stack arguments (Ghidra's `__fastcall` with seven is wrong). It logs every
+  request in a 16-entry ring at NPCGlobals+0x13a8, played or not, and writes the frame to Drone_tag+0x3d0.
+- NaN and precision, from the disassembly:
+  - `DroneVision_ConsiderAlerted`'s frame test is on the x87 with both frames loaded by FILD (plus 2^32) and not
+    rounded (0x659d4-0x65a15); theirs is in float. `OpponentVisibility`'s `< 0.7` counts a NaN as seen (0x65711
+    `TEST AH,5; JP`).
+  - `NDrone2_EvaluateObstacle` compares `limit * 7030` unrounded (0x42e65); the quadratic tests the unrounded
+    discriminant against 0 (0x42b38) but the float one for "> 0" (0x42b60). Theirs is in float.
+  - `NDrone2_Collision`: a NaN root height gives the dead drone's radius as the root height (0x3f39f), not 0.4, and the
+    dead capsule's half distance, not the half axis (0x3f442); the fall's water test falls on a NaN (0x3ef80), where
+    theirs returns.
+  - `DroneFunc_HandleSoundAlerts` stores the alertness step rounded but adds it unrounded.
+  - The bots' "lost opponent" patience is `__ftol2((_FRAME_RATE * 20) * BOT_getAggressionMul)` compared unsigned
+    (0x37d8d-0x37da9); theirs `fptoui(FRAME_RATE * (mul * 20))`. `SetOpponent` converts unseenFrames unsigned on the
+    x87 (0x37ae7).
+- `NDrone2_FindOpponent` walks MPGame's 10 Xbox player slots (0x262754-0x262934, stride 0x30), and slots 4-9 for "a
+  bot already targets it"; theirs 8, and 4-7.
+- The obstacle record of `NDrone2_Steer` is 0x30 bytes on the Xbox, the obstacle's ending where the drone's begins
+  (ESP+0x18 and ESP+0x48); theirs is one 0xd0-byte record.
+- Layout, not errors: the sound alertness is `DYNAMICSOUNDS.alertness` (+0x38; theirs +0x48); a bot's view of a player
+  is `botVars->players[i]` (+0x94 + 16i; theirs +0xbc), its weapon +0x75c (theirs +0x768) and its flags +0x728 (theirs
+  +0x734); the spawner's template is 0xac bytes (theirs 0xd0), "not drawn recently" `obj_tag.drawnCountdown` (+0xd8).
+- Their additions, not in the Xbox: the NULL guards in `Drone_PositionVisible`, `NDrone2_NotNearArmedDrone`,
+  `DroneFunc_LostSightTalk`, `DroneMove_NextRouteAngle` and the feet's `Coll_AddHitToList`; the 16-box cap in
+  `AnimGetCollData`; the group bounds in the spawners and `DroneSpawner_Init`'s entry bound; the zeroed `w` of their
+  4-float vectors in `GetWeaponInfo` and `GunThroughWall`.
+- `DroneVision_ShoutFromOtherDrone` was guessed to be 0x650a0 from the call graph; it is the global alarm, which theirs
+  inlines in `EnemyAlerts`.
+
+Everything else in their readings of parcel 7 matched the Xbox.
+
+Found along the way:
+- **Registers a port must keep.** The original keeps the drone in ECX across its call to `NDrone2_ObjectIsArmed`
+  (0x64be0) in `DroneVision_LogSeenOpponent`: the whole-program optimiser knew that callee leaves ECX alone, and our
+  port of it does not. The caller is ours now, so the game is unaffected, but the shadow's original run had to keep
+  0x64be0 original. `tools/caller_saved.py --action` now lists every live original caller that reads ECX or EDX after
+  calling a port whose original never writes them. It finds four, all in math.cpp's ports, which their current
+  compiled forms happen not to clobber (maybeAtan2: Vec_Cartesian_2_Spherical; Vec_Normalise: Mat_LookAt and 0xd8590;
+  Vec_NormaliseLen: Cel_ObjectLeftCel); Vec_Normalise and Vec_NormaliseLen depend on the CRT's sqrt helper for that.
+- **FSIN, FCOS and acos.** The host's sin, cos and acos (SSE2) can differ from the x87's FSIN and FCOS and the XBE's
+  `__CIacos` by an ulp or two; the shadows count such results apart rather than as differences (the user accepts
+  1-ulp differences of this kind; the time demos are the check that they do not matter). A NaN keeps its sign and payload through the new helpers in src/action/math/X87Ops.h (`FSin`,
+  `FCos`, `Negate` for FCHS, `X87NaNs` for an operation on two NaNs, where SSE2 takes the first and the x87 the larger
+  or the positive). MSVC compiles `-x + c` as `c - x` and `x <= 0 ? 0 : x` as MAXSD, both of which lose a NaN's or a
+  -0's sign.
+- `ShadowHook_Install` no longer warns "cannot follow" when a test hooks an address one of the standard fakes already
+  hooks (0x1a190).
+- `DroneSpawner.cpp` existed but was not compiled; it now is, and actionhelpers.h no longer includes DroneSpawner.h
+  (parsemap.cpp does).
+
 ## Original bugs found while porting (kept; candidates for FIX_ORIGINAL_GAME_BUGS)
 
 - `Script_Load`, a file with 0x3f streams or more: hands its record to `DList_RemoveFromInUse2Free(&ScriptList)`,
@@ -263,12 +348,37 @@ Everything else in their readings of parcel 6 matched the Xbox.
   civilian states go to CivilianScared. Impacts in CivilianPatrol, CivilianMission and CivilianMissionWait send the
   drone to Attack.
 - `NDrone2_DSTATE_Patrol`'s timeout plays the look-round anim but sets no new timeout, so it looks round once.
+- `NDrone2_PlaySFX` and `NDrone2_SpeechSFX` read their table entry through NULL for a sound number of 0x15a or more.
+  `DroneFunc_LostSightTalk` uses `NDrone2_Player()` unchecked; `DroneFunc_HandleSoundAlerts` hands `&sound->location`
+  to build_FindCel before its NULL check; `NDrone2_SpeechSFXd` carries on after a failed `Drone_DCVfromOBJ`; every shout
+  (messages 0x11, 0x12, 0x13, 0x15, 0x16) finds its sender and does nothing with it.
+- `DroneVision_CanSeeObjectFrom` drops the caller's mask for objects that are neither drones nor the player;
+  `DroneVision_SeekOpponentLOS` tests a line of sight from the second eye and ignores the answer (it still counts as a
+  vision test); `DroneVision_GunThroughWall` hands its own argument slot as the sound pointer and an uninitialised
+  hit-list pointer; `DroneVision_FindAlertedDrones`, resuming, counts a row for each pair and restarts the rows.
+- `NDrone2_FindOpponent`'s bot branch works out a teammate's angle and fills a DCVars, and uses neither; the bone lookup
+  0x37870 reads the position at 0x24 for a NULL object; `NDrone2_DroneAlertToPosition` leaves the last alert's rotation
+  and velocity in NPCGlobals.alert; 0x31110 frees every target but leaves its position.
+- `SphereSphereSweep`, when the first time is the later, sets both to the second; its quadratic returns both roots as 0
+  for a discriminant of exactly 0. `NDrone2_Steer`'s obstacle record never has its flags cleared: they start as stack
+  garbage, and once a standing obstacle has been met every later one counts as standing (see Departures).
+- `NDrone2_DoAiming` (0x3ab00) compares the aim target with the opponent but aims at targetPos, so it sets the aim
+  every frame; `Drone_FeetOnPoint` reads the floor hit's object after `Collide_FreeHitList`; `NDrone2_Collision`'s
+  bounds push uses inCel unchecked.
+- `DroneSpawner_Create`, `_Init` and `_Delete` never bound the group (31 entries); `_Init` writes an entry for every
+  drone in the group's chain whatever the count it sized them by, and clears what `Mem_Malloc` returns without a check;
+  0x30860 tests the slots but not the entries before clearing them; the wave speech plays with NULL DCVars.
+  `NDrone2_FindAlarmPoint` returns true for the mission path's alarm point even when it cannot be reached.
 
 ## Departures from the original
 
 - The AI dispatcher's Exit, Enter and 0x2e messages leave their scope and frames as uninitialised stack in the
   original. Ours writes zero there, as the driving engine's port does for uninitialised stack
   (docs/driving/original-quirks.md, 1.1).
+- `NDrone2_Steer` starts the obstacle record's flags at 0, where the original leaves stack (the shadow zeroes the
+  stack below the original to match). `DroneVision_GunThroughWall` hands a local for the sound and NULL for the hit
+  list where the original passes its argument slot and stack; `NDrone2_SpeechSFXd` zeroes the DCVars a failed lookup
+  leaves.
 
 ## What the demos do not cover
 

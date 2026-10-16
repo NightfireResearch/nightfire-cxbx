@@ -2,6 +2,7 @@
 #define ANIM_H
 
 #include "../actionhelpers.h"
+#include "Collide.h"    // HITDATA_tag
 
 #pragma pack(push, 1)
 
@@ -10,23 +11,40 @@ typedef struct sAnimScript_tag sAnimScript_tag;
 // The animated part of an object (sAnimObject_tag), embedded in AnimState at +0x58. Only the fields our code uses
 // are named.
 typedef struct AnimObj {
-    char _unknown_00[0x1c];
+    char _unknown_00[0x4];
+    const void *aimTarget;          // 0x04 - a position (AnimObjectSetAiming)
+    char _unknown_08[0x1c - 0x08];
     struct sAnimSkin_tag *skin;     // 0x1c
     char _unknown_20[0x10];
     celglist_tag *maybeSleeveGlist; // 0x30
-    char _unknown_34[0x48 - 0x34];
+    char _unknown_34[0x40 - 0x34];
+    _MATRIX *boneMtxs;              // 0x40 - one per bone, built by psiBuildMatrixPalette
+    char _unknown_44[0x48 - 0x44];
     obj_tag **discreteObj;          // 0x48 - [skin->numDiscrete] the rigid parts, each following one bone
     char _unknown_4c[4];
-    uint flags;                     // 0x50 - 0x8000 set by Script_AnimStart; 0x40000 set by Script_FFwd
+    uint flags;                     // 0x50 - ANIMOBJ_*; 0x8000 set by Script_AnimStart; 0x40000 set by Script_FFwd
     float rootHeight;               // 0x54
     char _unknown_58[0x68 - 0x58];
     float headTrackSpeed;           // 0x68 - NDrone2_HeadTrackObj
-    char _unknown_6c[0x98 - 0x6c];
+    float aimRate;                  // 0x6c
+    char _unknown_70[0x74 - 0x70];
+    float aimRange2;                // 0x74 - the aiming range, squared
+    char _unknown_78[0x8d - 0x78];
+    uchar aimTargetBone;            // 0x8d
+    char _unknown_8e[0x98 - 0x8e];
 } AnimObj;
 
+// AnimObj::flags
+#define ANIMOBJ_FLAG_1          0x1     // with ANIMOBJ_FLAG_2, AnimGetCollData gives the joints' boxes
+#define ANIMOBJ_FLAG_2          0x2
+#define ANIMOBJ_HEAD_TRACKING   0x30    // AnimObjectIsHeadTracking
+#define ANIMOBJ_AIMING          0x80
+#define ANIMOBJ_AIMING_2        0x100   // with ANIMOBJ_AIMING, AnimObjectIsAiming
+#define ANIMOBJ_AIM_AT_BONE     0x200   // aimTargetBone is used
+
 typedef struct AnimState {
-    char _pad_1[0x50];
-    char animFlags; // bit one when weapon is zoomed in
+    HITDATA_tag floor; // 0x00 - what Drone_FeetOnPoint found the feet on
+    char animFlags; // 0x50 - bit one when weapon is zoomed in; ANIM_CONTACT_* for drones
     char _pad_2;
     char currentWeaponId; // 0x52
     char switchingToWeaponId; // 0x53
@@ -34,6 +52,12 @@ typedef struct AnimState {
     char _pad_3[3]; // 55-57
     AnimObj animObj; // 0x58 - ???? - size not known
 } AnimState;
+
+// AnimState::animFlags, for drones (Drone_FeetOnPoint, Drone_CollisionHandler)
+#define ANIM_CONTACT_FLOOR  0x08    // the feet stand on something
+#define ANIM_CONTACT_HIT    0x10    // the capsule hit something
+#define ANIM_CONTACT_ABOVE  0x20    // the capsule hit something above its top
+#define ANIM_CONTACT_MOVER  0x80    // moves with what it stands on (PlayerOrDrone_FeetOnPoint_DoCollision)
 
 // A per-skin "datum" record, left in the loaded skin file and pointed at by sAnimSkin_tag.datums (0x24 bytes each)
 typedef struct AnimDatum {
@@ -127,9 +151,35 @@ typedef struct sAnimScript_tag {
 
 static_assert(sizeof(sAnimScript_tag) == 0xb4, "Bad size for sAnimScript_tag");
 
+// A row of the joint box tables AnimGetCollData reads: a box centred between bone and other (the bone's parent where
+// other is negative), oriented as other, with half these sizes (times the skin's scale). A negative bone ends the table.
+typedef struct AnimCollBone {
+    short bone;
+    short other;
+    float unknown04;    // not read by AnimGetCollData
+    _VECTOR half;
+} AnimCollBone;
+
+// One joint box from AnimGetCollData, for Collide_Jointy
+typedef struct COLLJOINT_tag {
+    _MATRIX m;          // the other bone's matrix, translated to the box's centre
+    _VECTOR half;       // 0x3c
+    short joint;        // 0x48 - the bone
+    char _pad4a[2];
+} COLLJOINT_tag;
+
+static_assert(sizeof(AnimCollBone) == 0x14, "Bad size for AnimCollBone");
+static_assert(sizeof(COLLJOINT_tag) == 0x4c, "Bad size for COLLJOINT_tag");
+
 #pragma pack(pop)
 
 static_assert(offsetof(AnimState, animObj) == 0x58, "Offset of animObj wrong");
+static_assert(offsetof(AnimState, animFlags) == 0x50, "Offset of animFlags wrong");
+static_assert(offsetof(AnimObj, aimTarget) == 0x04, "Offset of aimTarget wrong");
+static_assert(offsetof(AnimObj, boneMtxs) == 0x40, "Offset of boneMtxs wrong");
+static_assert(offsetof(AnimObj, aimRate) == 0x6c, "Offset of aimRate wrong");
+static_assert(offsetof(AnimObj, aimRange2) == 0x74, "Offset of aimRange2 wrong");
+static_assert(offsetof(AnimObj, aimTargetBone) == 0x8d, "Offset of aimTargetBone wrong");
 static_assert(sizeof(AnimObj) == 0x98, "Bad size for AnimObj");
 static_assert(offsetof(AnimObj, skin) == 0x1c, "Offset of skin wrong");
 static_assert(offsetof(AnimObj, maybeSleeveGlist) == 0x30, "Offset of maybeSleeveGlist wrong");
@@ -184,6 +234,10 @@ void AnimPostLoadInit(void);
 bool AnimGetFirstTrans(sAnimScript_tag *script, _VECTOR *out);
 void AnimGetFrameTransRaw(HASHCODE hashcode, int frame, _VECTOR *out);
 obj_tag* AnimGetNDiscreteObj(obj_tag *obj, uint n);
+COLLJOINT_tag* AnimGetCollData(obj_tag *obj, ushort *count);
+bool AnimObjectIsAiming(obj_tag *obj);
+bool AnimObjectIsHeadTracking(obj_tag *obj);
+void AnimObjectSetAiming(obj_tag *obj, const void *target, float range, float rate, char atBone, uchar bone);
 void AnimLoadFile(HASHCODE hashcode,char param_2);
 
 

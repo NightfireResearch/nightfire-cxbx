@@ -6,6 +6,8 @@
 #include "DroneAnim.h"
 #include "DroneTables.h"
 #include "NDrone2_Damage.h"
+#include "DroneVision_Alerts.h"
+#include "NDrone2_Route.h"
 #include "../sp/SwitchChannels.h"       // switch_channels
 #include "../../game.h"                 // GameState
 #include "../../util/Random.h"          // Rand_Rand (AUTOGEN'd in util/Random.cpp: still the original)
@@ -15,17 +17,10 @@
 
 // Declared with AUTOGEN in Drone.cpp
 void NDrone2_Enable(char enable, Drone_tag *drone);
-// Declared with AUTOGEN in NDrone2.cpp
-ushort DroneVision_EnemyLookForOpponent(DCVars_tag *dcv);
-ushort DroneVision_EnemyAlerts(DCVars_tag *dcv, MsgObject *msg);
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
-#define NDrone2_AssignAIPath ((void (__cdecl *)(DCVars_tag *dcv, uint pathType))0x00046ad0)
-#define NDrone2_FindRunToPoint ((char (__cdecl *)(DCVars_tag *dcv))0x00047190)
 // FUN_00046c20; the PS2 build's name
-#define NDrone2_UpdatePatrolRoute ((uint (__cdecl *)(DCVars_tag *dcv))0x00046c20)
 // Takes nothing and answers DSTATE_Obstructed; the caller passes dcv all the same
-#define NDrone2_ObstructedPatrolPath ((DSTATE (__cdecl *)(DCVars_tag *dcv))0x0003a680)
 
 #define DRONE_FLAG_AI_RUNNING 0x100     // Drone_tag.flags
 

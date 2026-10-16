@@ -10,13 +10,16 @@
 #include "../../util/Random.h"          // Rand_Rand
 #include "../sp/SwitchChannels.h"       // switch_channels
 #include "../mp/multiplayer.h"          // MPSettings
+#include "../../sound/Sound.h"          // Sound_Play3D
+#include "../../util/hashtable.h"       // hashtable_getitem
+#include "DroneVision.h"
+#include "NDrone2_Opponent.h"
 
 #include <math.h>
+#include <stdint.h>
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
-// The last three arguments as nightfire-port reads them: say it even over another line, move the face, and only
-// with a facial anim
-#define NDrone2_SpeechSFX ((int (__cdecl *)(DCVars_tag *dcv, uint sfx, char force, char face, char needFace))0x00037530)
+#define NDrone2_PlayFacialAnim ((void (__cdecl *)(DCVars_tag *dcv, HASHCODE script))0x000374e0)
 #define Drone_maybeDisallowedFromSayingThisSfx ((bool (__cdecl *)(Drone_tag *drone, uint sfx))0x00036230)
 #define DroneFunc_ChooseSFX ((uint (__cdecl *)(uint first, uint last))0x00036270)
 // Our names. One of first..last, or of the run of as many after it for a drone with an odd id
@@ -25,9 +28,54 @@
 #define DroneFunc_InjuredSFX ((bool (__cdecl *)(DCVars_tag *dcv, uint sfx))0x0003b830)
 #define Sound_IsFinnished ((bool (__cdecl *)(DYNAMICSOUNDS *handle))0x000cbac0)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *gameObj))0x0001a190)
-#define NDrone2_CanSeeObject ((bool (__cdecl *)(Drone_tag *drone, obj_tag *obj, uint bone, ushort mask))0x000648b0)
 // Returns in ST0, unrounded
 #define Vec_SqDist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e50)
+
+
+// One entry of Drone_SfxInfo, per speech or sound number (docs/drone/behaviours/drone_sfx_info.csv)
+typedef struct DroneSfxInfo {
+    uint sfx;               // 0x00 - the sound; 0 for none
+    HASHCODE facialAnim;    // 0x04 - the facial script said instead, when a face is asked for
+    uint lastFrame;         // 0x08 - when it was last played
+    uint interval;          // 0x0c - frames (at 60 a second) before it plays again
+    float volume;           // 0x10
+    float radiusOuter;      // 0x14
+    float radiusInner;      // 0x18
+    short pitchMin;         // 0x1c - the pitch is drawn between these
+    short pitchMax;         // 0x1e
+} DroneSfxInfo;
+static_assert(sizeof(DroneSfxInfo) == 0x20, "DroneSfxInfo is 0x20 bytes");
+
+#define DRONE_SFX_COUNT 0x15a
+
+// XBE_GLOBAL(0x00174b28, 0x2b40)
+#define Drone_SfxInfo ((DroneSfxInfo *)0x00174b28)
+
+// The entry of a number, or NULL past the table (which the callers then read)
+static DroneSfxInfo *SfxInfo(uint sfx) {
+    return sfx < DRONE_SFX_COUNT ? &Drone_SfxInfo[sfx] : NULL;
+}
+
+// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
+// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
+static int32_t Ftol(double x) {
+    if (!(fabs(x) < 9223372036854775808.0))
+        return 0;
+    long long nearest = llrint(x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x));
+}
+
+// No drone sound for the first 30 frames (at 60 a second) after the level is loaded; worked out on the x87
+static bool TooSoonAfterLoad(uint now) {
+    return (double)now < (double)FRAME_RATE_DIV * 30.0f + (double)NPCGlobals.postLoadFrame;
+}
+
+// Whether the entry played less than its interval ago (__ftol2 of the frame it may play again)
+static bool PlayedTooRecently(const DroneSfxInfo *info, uint now) {
+    return now < (uint)Ftol((double)info->interval * FRAME_RATE_DIV + (double)info->lastFrame);
+}
 
 // One Powerstation loudspeaker line: said once its channel comes on (the channel differs between the two levels)
 typedef struct PowerstationLine {
@@ -595,4 +643,141 @@ void __declspec(naked) NDrone2_HandleTalking(void) {
         add esp, 4
         ret
     }
+}
+
+// A Powerstation guard (skin class 5 or 6) says it has seen its opponent, one of 0xd6 and 0xd7, and its target is
+// marked seen where the opponent was. Not with no player, in multiplayer, while it talks or once dead.
+// AUTOINJECT
+bool DroneFunc_NewSightTalk(DCVars_tag *dcv) {
+    Drone_tag *drone = dcv->drone;
+    if (NDrone2_Player() == NULL || MPSettings.maybeDroneAIEnabled != 0)
+        return false;
+    if (Drone_IsTalking(drone))
+        return false;
+    if (drone->health <= 0.0f)
+        return false;
+    if ((ushort)drone->skinClass < 5 || (ushort)drone->skinClass > 6)
+        return false;
+    if (GameState.CurrentLevelHashcode != HT_Level_PowerStationA1 &&
+        GameState.CurrentLevelHashcode != HT_Level_PowerStationA2)
+        return false;
+    uint sfx = DroneFunc_ChooseSFX(0xd6, 0xd7);
+    if (sfx == 0)
+        return false;
+    NDrone2_SpeechSFX(dcv, sfx, 0, 0, 0);
+    DroneFunc_TargetSeen(dcv->drone, &dcv->drone->opponentSeenPos);
+    return true;
+}
+
+// The same guards, in the player's cel, say they have lost sight of him: one of 0xd3 to 0xd5. The player is not
+// checked for NULL.
+// AUTOINJECT
+bool DroneFunc_LostSightTalk(DCVars_tag *dcv) {
+    Drone_tag *drone = dcv->drone;
+    if (MPSettings.maybeDroneAIEnabled != 0)
+        return false;
+    if (Drone_IsTalking(drone))
+        return false;
+    if (drone->health <= 0.0f)
+        return false;
+    if ((ushort)drone->skinClass < 5 || (ushort)drone->skinClass > 6)
+        return false;
+    if (GameState.CurrentLevelHashcode != HT_Level_PowerStationA1 &&
+        GameState.CurrentLevelHashcode != HT_Level_PowerStationA2)
+        return false;
+    obj_tag *player = NDrone2_Player();
+    if (drone->gameObj->inCel != player->inCel)
+        return false;
+    uint sfx = DroneFunc_ChooseSFX(0xd3, 0xd5);
+    if (sfx == 0)
+        return false;
+    NDrone2_SpeechSFX(dcv, sfx, 0, 0, 0);
+    DroneFunc_TargetSeen(dcv->drone, &dcv->drone->opponentSeenPos);
+    return true;
+}
+
+// Plays a Drone_SfxInfo sound at pos (or at the drone), its range scaled, at a pitch drawn from the entry's: not in
+// the first frames after a load, nor with `check` within the entry's interval. Each try is logged in
+// NPCGlobals.sfxLog and the frame kept in unknown3d0. A number past the table is read through NULL.
+// AUTOINJECT
+DYNAMICSOUNDS* NDrone2_PlaySFX(DCVars_tag *dcv, uint sfx, _VECTOR *pos, char check, float scale) {
+    DroneSfxInfo *info = SfxInfo(sfx);
+    if (info->sfx == 0)
+        return NULL;
+    uint now = GameState.NumFramesUnpaused;
+    if (TooSoonAfterLoad(now))
+        return NULL;
+    if (check && PlayedTooRecently(info, now))
+        return NULL;
+
+    short pitch = 0;
+    if (info->pitchMax != 0 || info->pitchMin != 0)
+        pitch = (short)(Rand_Rand(info->pitchMax - info->pitchMin) + info->pitchMin);
+    info->lastFrame = now;
+
+    _VECTOR at;
+    Vec_Zero(&at);
+    if (pos != NULL)
+        Vec_Copy(pos, &at);
+    else if (dcv != NULL)
+        Vec_Copy(&dcv->gameObj->position, &at);
+
+    DYNAMICSOUNDS *handle = Sound_Play3D((Action_SFX)info->sfx, &at, info->volume, scale * info->radiusOuter,
+                                         scale * info->radiusInner, pitch, dcv->aiStateMachine->id, 0);
+    uint logged = 0;
+    if (handle != NULL) {
+        logged = sfx;
+        info->lastFrame = now;
+    }
+    dcv->drone->unknown3d0 = now;
+    NPCGlobals.sfxLog[NPCGlobals.sfxLogNext].sfx = logged;
+    NPCGlobals.sfxLog[NPCGlobals.sfxLogNext].handle = handle;
+    if (++NPCGlobals.sfxLogNext >= DRONE_SFX_LOG)
+        NPCGlobals.sfxLogNext = 0;
+    return handle;
+}
+
+// A line spoken, never in multiplayer, nor in the first frames after a load or within its interval. With `face`, an
+// entry with a facial script (still loaded) plays that instead, unless one is playing; with needFace, so does one
+// without, which then says nothing. Otherwise the sound, unless the drone is talking (and not `force`): it becomes
+// speechChannel. Returns the sound, or NULL.
+// AUTOINJECT
+DYNAMICSOUNDS* NDrone2_SpeechSFX(DCVars_tag *dcv, uint sfx, char force, char face, char needFace) {
+    if (MPSettings.maybeDroneAIEnabled != 0)
+        return NULL;
+    Drone_tag *drone = dcv->drone;
+    uint now = GameState.NumFramesUnpaused;
+    if (TooSoonAfterLoad(now))
+        return NULL;
+    DroneSfxInfo *info = SfxInfo(sfx);
+    if (PlayedTooRecently(info, now))
+        return NULL;
+
+    if (face && (info->facialAnim != 0 || needFace)) {
+        if (info->facialAnim == 0 || hashtable_getitem(info->facialAnim) != NULL) {
+            if (info->facialAnim != 0 && !dcv->drone->facialAnimPlaying && !dcv->drone->unknown37)
+                NDrone2_PlayFacialAnim(dcv, info->facialAnim);
+            if (drone->facialAnim != NULL)
+                info->lastFrame = now;
+            return NULL;
+        }
+        // The script is no longer loaded: the entry goes on without it
+        info->facialAnim = (HASHCODE)0;
+    }
+
+    if (info->sfx == 0 || info->facialAnim != 0)
+        return NULL;
+    if (!force && drone->speechChannel != NULL)
+        return NULL;
+    drone->speechChannel = NDrone2_PlaySFX(dcv, sfx, &dcv->gameObj->position, 0, 2.0f);
+    return drone->speechChannel;
+}
+
+// NDrone2_SpeechSFX for a drone rather than its DCVars. The DCVars are used whether Drone_DCVfromOBJ finds them or
+// not (ours start zeroed where the original's are stack).
+// AUTOINJECT
+void NDrone2_SpeechSFXd(Drone_tag *drone, uint sfx, char force, char face, char needFace) {
+    DCVars_tag dcv = {};
+    Drone_DCVfromOBJ(drone->gameObj, &dcv);
+    NDrone2_SpeechSFX(&dcv, sfx, force, face, needFace);
 }

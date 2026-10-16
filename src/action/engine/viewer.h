@@ -250,8 +250,8 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field100_0x7d;
     undefined field101_0x7e;
     undefined field102_0x7f;
-    float shearHeight;
-    undefined field107_0x84;
+    float shearHeight;                 // 0x80 - a drone more than 0.3 m below it does not fall (NDrone2_Fall)
+    uchar flags84;                     // 0x84 - 0x40: Drone_FeetOnPoint does not stand on hits in this cel
     undefined field108_0x85;
     undefined field109_0x86;
     undefined field110_0x87;

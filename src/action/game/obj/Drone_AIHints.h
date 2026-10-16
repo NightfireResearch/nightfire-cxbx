@@ -154,6 +154,7 @@ void Drone_CoverLowNode(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
 void Drone_AIPoint(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
 obj_tag* Drone_AIVolume_Create(_VECTOR *pos, _VECTOR *rot, _VECTOR *scale, level_tag *lvl, celglist_tag *glist);
 void Drone_AIVolume_Delete(obj_tag *obj);
+float Drone_VisibilityForPosition(_VECTOR *pos, ushort type);
 bool Drone_PointInAnyAIBox(_VECTOR *pos, ushort type);
 // The original takes the node in ESI and the target in EDI: the game reaches the adaptor, C++ calls the core
 bool _Drone_IsCoverNodeUsable(uint target, CoverNode_tag *node);

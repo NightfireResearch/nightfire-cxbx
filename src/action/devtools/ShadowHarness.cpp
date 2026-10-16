@@ -85,8 +85,12 @@ void HookOne(unsigned at, const void *to) {
 void ShadowHook_Install(unsigned at, const void *fake) {
     unsigned port = XbeOriginal_Target(at);
     // A jump at the entry that the patch records cannot follow: our C++ calling the port by name would run it,
-    // not the fake. Said, so a suite cannot quietly test less than it means to.
-    if (port == 0 && at < 0x00400000u && *(const uint8_t *)(uintptr_t)at == 0xe9)
+    // not the fake. Said, so a suite cannot quietly test less than it means to. A test's own hook over an earlier
+    // fake (the standard ones) is not that.
+    bool hooked = false;
+    for (int i = 0; i < hookCount; i++)
+        hooked |= hooks[i].at == at;
+    if (port == 0 && !hooked && at < 0x00400000u && *(const uint8_t *)(uintptr_t)at == 0xe9)
         printf("[shadow] 0x%08x has a jump the patch records cannot follow: calls to our port there are not faked\n",
                at);
     HookOne(at, fake);

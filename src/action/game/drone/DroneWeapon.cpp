@@ -26,6 +26,8 @@
 #include "../../math/math.h"
 #include "../../util/Random.h"
 #include "../../util/hashtable.h"  // hashtable_set_object_to_entity_gfx
+#include "DroneVision.h"
+#include "NDrone2_Opponent.h"
 
 #include <bit>
 #include <math.h>
@@ -34,9 +36,7 @@
 #pragma fp_contract(off)
 
 // Originals called by address
-#define DroneWeap_GetWeaponInfo ((bool (__cdecl *)(Drone_tag *drone, int *bone, uint *flash, ushort *sound, _VECTOR *muzzle, _VECTOR *barrel))0x00066850)
 #define BOT_opponentTargetting ((void (__cdecl *)(DCVars_tag *dcv))0x0001aee0)
-#define NDrone2_SetOpponentAimPos ((void (__cdecl *)(Drone_tag *drone))0x000378f0)
 #define BOTWEAP_AmmoInGun ((short (__cdecl *)(Drone_tag *drone, short weapon))0x0001e4d0)
 #define BOTWEAP_tooCloseForWeapon ((bool (__cdecl *)(Drone_tag *drone, short weapon, float distance))0x0001f740)
 #define BOTWEAP_decrRounds ((void (__cdecl *)(Drone_tag *drone, short rounds))0x0001e9a0)

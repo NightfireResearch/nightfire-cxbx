@@ -5,6 +5,7 @@
 #include "../memory.h"
 #include "../game/mp/multiplayer.h"
 #include "../game/obj/car.h"
+#include "../game/obj/DroneSpawner.h"
 #include "../game/obj/DynamicObject.h"
 #include "../game/obj/Emitter.h"
 #include "../game/obj/GunImp.h"

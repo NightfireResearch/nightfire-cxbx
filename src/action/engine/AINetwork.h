@@ -27,6 +27,7 @@ typedef struct {
 // The target bits an AITarget_tag marks on the nodes it can be reached from; the bit above each marks the nodes from
 // which the way is obstructed (a bound is crossed)
 #define AITARGET_PLAYER     0x1000000   // NPCGlobals.playerTarget
+#define AITARGET_ALERT      0x4000000   // NPCGlobals.alertTarget
 #define AITARGET_GOAL       0x10000000  // a drone's own goal
 
 // A node of an AI path or bound, read in place from the map file (AIPath_Parse patches it). Bounds' file nodes are

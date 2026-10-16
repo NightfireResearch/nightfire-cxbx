@@ -383,7 +383,7 @@ typedef struct DroneAwarePoint {
     char _unknown01[7];
     obj_tag *obj;               // +0x8
     _VECTOR pos;                // +0xc
-    char _unknown18[4];
+    cel_tag *cel;               // +0x18
     float radius;               // +0x1c
 } DroneAwarePoint;
 static_assert(sizeof(DroneAwarePoint) == 0x20, "DroneAwarePoint is 0x20 bytes");
@@ -392,53 +392,101 @@ static_assert(sizeof(DroneAwarePoint) == 0x20, "DroneAwarePoint is 0x20 bytes");
 
 // A target drones share (NPCGlobals.targets, handed out by DroneFunc_AllocateTargetID; Drone_tag.targetSlot)
 typedef struct DroneTarget_tag {
-    uchar flags;                // +0x0 - with neither bit 0 nor 1 set, Drone_IsCoverNodeUsable counts only nodes a
-    char _pad1[3];              //        drone of this target holds
+    uint flags;                 // +0x0 - DRONE_TARGET_*; with neither bit 0 nor 1 set, Drone_IsCoverNodeUsable counts
+                                //        only nodes a drone of this target holds
     obj_tag *obj;               // +0x4
-    char _unknown8[4];
-    _VECTOR pos;                // +0xc
+    uint seenFrame;             // +0x8 - DroneFunc_TargetSeen; DroneFunc_UpdateTargets keeps it at the frame
+    _VECTOR pos;                // +0xc - where it was seen, or each frame where it is (DroneFunc_UpdateTargets)
 } DroneTarget_tag;
+
+// DroneTarget_tag.flags
+#define DRONE_TARGET_USED 1     // handed out (DroneFunc_AllocateTargetID)
+#define DRONE_TARGET_SEEN 2     // DroneFunc_TargetSeen
+
+// The last alert a drone broadcast (NPCGlobals.alert; NDrone2_DroneAlertToObject, NDrone2_DroneAlertToPosition):
+// the message's extraData
+typedef struct DroneAlert_tag {
+    obj_tag *obj;               // +0x00 - what it is about; NULL for a position
+    obj_tag *sender;            // +0x04
+    uint frame;                 // +0x08 - GameState.NumFramesUnpaused
+    uint msgType;               // +0x0c
+    _VECTOR pos;                // +0x10
+    cel_tag *cel;               // +0x1c
+    _VECTOR rot;                // +0x20 - the object's (left as it was for a position)
+    _VECTOR velocity;           // +0x2c - the object's last position less its position (the same)
+    float param[3];             // +0x38 - three values the sender passes
+} DroneAlert_tag;
+static_assert(sizeof(DroneAlert_tag) == 0x44, "DroneAlert_tag is 0x44 bytes");
 static_assert(sizeof(DroneTarget_tag) == 0x18, "DroneTarget_tag is 0x18 bytes");
 
 #define MAX_DRONE_TARGETS 8
+
+// NPCGlobals.groups, spawners and groupCounts; no reader or writer checks a group against it
+#define DRONE_GROUPS 31
 
 // The level's cover nodes and AI points (Drone_AIHints.h)
 struct CoverNode_tag;
 struct DroneAIPoint_tag;
 
+// One sound NDrone2_PlaySFX played (NPCGlobals.sfxLog): its Drone_SfxInfo number, 0 when it did not start
+typedef struct DroneSfxLog {
+    uint sfx;
+    DYNAMICSOUNDS *handle;
+} DroneSfxLog;
+static_assert(sizeof(DroneSfxLog) == 8, "DroneSfxLog is 8 bytes");
+
+#define DRONE_SFX_LOG 16
+
 // The NPC system's globals: one block that Drone_LevelReset clears whole (0x142c bytes). Only what our code uses
 // is named so far; FUN_00030e70 and
-// Drone_PostLoad_Init clear the aware points at +0xb54 and an array at +0x1354 (0x28).
+// Drone_PostLoad_Init clear the aware points at +0xb54 and safetyEmitter at +0x1354.
 typedef struct {
     uchar enabled;              // +0x0 - Drone_EnableAll's last setting
     char _pad1[3];
     Drone_tag *NDrone2List;     // +0x4 - every live drone, linked through Drone_tag.next
-    char _pad8[0x148 - 0x8];
+    char _pad8[0xc - 0x8];
+    ushort NDrone2Count;        // +0xc - how many are on NDrone2List
+    char _padE[0x10 - 0xe];
+    Drone_tag *groups[DRONE_GROUPS];    // +0x10 - each group's first drone, linked through groupNext
+    obj_tag *spawners[DRONE_GROUPS];    // +0x8c - the group's DroneSpawner (DroneSpawner_Create)
+    ushort groupCounts[DRONE_GROUPS];   // +0x108 - drones in each group; 0xffff once DroneSpawner_Init has taken them
+    char _pad146[0x148 - 0x146];
     uint deadFrames;            // +0x148 - how long a drone lies in DSTATE_Dead before it fades (our name)
     uint unknown14c;            // +0x14c - DroneFunc_DeadDrone: with more than this in unknown150, the drone whose
     uint unknown150;            // +0x150   sm.id is unknown15c fades fast
     char _pad154[0x15c - 0x154];
     uint unknown15c;            // +0x15c
-    char _pad160[0x18c - 0x160];
+    char _pad160[0x174 - 0x160];
+    uint unknown174;            // +0x174 - while set, DroneVision_ProcessDroneSight makes no drone say it lost sight
+    char _pad178[0x18c - 0x178];
     uint seenAttacking;         // +0x18c - NDrone2_SeenAndAttacking counts each drone it lets through
-    char _pad190[0x19c - 0x190];
+    uint seenOpponentCount;     // +0x190 - DroneVision_ProcessDroneSight: drones that see their opponent, counted
+    uint lostOpponentCount;     //  +0x194   every frame; and drones that lost theirs over 2 s ago (our names)
+    uchar newSightSaid;         // +0x198 - a drone has said it sees the opponent, and none since that it lost it
+    uchar lostSightSaid;        // +0x199 - the other way round
+    char _pad19a[0x19c - 0x19a];
     uint32_t hostagesSaved;     // +0x19c
-    uchar dummyPlayerActive;    // +0x1a0 - FUN_00030950 (from Drone_InitComms) follows the cheat byte 0x1dfa29
+    uchar dummyPlayerActive;    // +0x1a0 - Drone_UpdateDummyPlayer (from Drone_InitComms) follows the cheat byte 0x1dfa29
                                 //          (C_CHCHDUMMY): on, drones targeting glb_players[0] retarget dummyPlayer
     char _pad1a1[0x1a4 - 0x1a1];
     obj_tag *dummyPlayer;       // +0x1a4 - DroneSpawner_CreateBlank's object; moved onto glb_players[0] when switched on
-    char _pad1a8[0x1ac - 0x1a8];
-    uint32_t enabledFrame;      // +0x1ac - GameState.NumFramesUnpaused when Drone_EnableAll last enabled the drones
+    uint32_t postLoadFrame;     // +0x1a8 - DroneVision_ProcessDroneSight waits 15 frames after it (and after
+                                //          enabledFrame); nightfire-port's postload_frame
+    uint32_t enabledFrame;     // +0x1ac - GameState.NumFramesUnpaused when Drone_EnableAll last enabled the drones
     uint32_t impactAnimFrame;   // +0x1b0 - when any drone last played an impact anim (Punch and BulletImpact)
     uint32_t nextPatrolTalkFrame;   // +0x1b4 - NDrone2_PatrolTalk: no drone mutters before
     char _pad1b8[0x1bc - 0x1b8];
     uint32_t lastPowerstationChannel;   // +0x1bc - NDrone2_PowerstationTalk: the last channel whose line was said
     AITarget_tag playerTarget;  // +0x1c0 - the player's feet, shared by every route to the player
                                 //          (NDrone2_NavNodeCache rebuilds it each frame)
-    char _pad1f0[0x230 - 0x1f0];
-    ushort NumDrones;           // +0x230 - drones given a state machine this level; the last id handed out
+    char _pad1f0[0x1f8 - 0x1f0];
+    AITarget_tag alertTarget;   // +0x1f8 - where the last alert was (NDrone2_SetupAlertTarget)
+    char _pad228[0x230 - 0x228];
+    ushort NumDrones;          // +0x230 - drones given a state machine this level; the last id handed out
     ushort visionTests;         // +0x232 - counted by the DroneVision line-of-sight tests
-    char _pad234[0x284 - 0x234];
+    uint sightCursor;           // +0x234 - the sm.id of the drone whose line of sight was tested last
+    uint alertCursor[2];        // +0x238 - the sm.ids of the pair DroneVision_FindAlertedDrones goes on from
+    DroneAlert_tag alert;       // +0x240
     uint coverCursor;           // +0x284 - the next cover node Drone_ProcessCoverNodes looks at
     uint numCoverNodes;         // +0x288
     struct CoverNode_tag *coverNodes;   // +0x28c - Drone_PreLoad_Init points it at a table of MAX_COVER_NODES
@@ -446,16 +494,34 @@ typedef struct {
     char _pad350[0xb50 - 0x350];
     uint32_t numAwarePoints;    // +0xb50
     DroneAwarePoint awarePoints[MAX_AWARE_POINTS];  // +0xb54
-    char _pad1354[0x137c - 0x1354];
+    AIEmitter_tag safetyEmitter;    // +0x1354 - DroneMove_FindSafetyFromScaryPosition's flood (Ghidra's name)
     uint numAIPoints;           // +0x137c
     struct DroneAIPoint_tag *aiPoints;  // +0x1380 - Drone_PreLoad_Init points it at a table of MAX_AI_POINTS
-    char _pad1384[0x1392 - 0x1384];
+    char _pad1384[0x1390 - 0x1384];
+    uchar unknown1390;          // +0x1390 - while set, no drone sees its opponent (DroneVision_OpponentInView)
+    char _pad1391;
     uchar unknown1392;          // +0x1392 - while set in CastleIndoors1, DroneFunc_DoForcedAttack acts only on DTYPEs
-                                //           0x13 and 0x16
-    char _pad1393[0x142c - 0x1393];
+                                //           0x13 and 0x16. Set by DroneVision_BeginInterogate, cleared by
+                                //           DroneVision_EndInterogate outside CastleIndoors1
+    char _pad1393[0x13a8 - 0x1393];
+    DroneSfxLog sfxLog[DRONE_SFX_LOG];  // +0x13a8 - the last sounds NDrone2_PlaySFX played, in a ring
+    uint sfxLogNext;            // +0x1428 - the entry it writes next
 } NPCGlobals_t;
 static_assert(sizeof(NPCGlobals_t) == 0x142c, "Bad size for NPCGlobals_t");
+static_assert(offsetof(NPCGlobals_t, sfxLog) == 0x13a8, "Wrong offset for sfxLog");
+static_assert(offsetof(NPCGlobals_t, sfxLogNext) == 0x1428, "Wrong offset for sfxLogNext");
 static_assert(offsetof(NPCGlobals_t, NDrone2List) == 0x4, "Wrong offset for NDrone2List");
+static_assert(offsetof(NPCGlobals_t, NDrone2Count) == 0xc, "Wrong offset for NDrone2Count");
+static_assert(offsetof(NPCGlobals_t, groups) == 0x10, "Wrong offset for groups");
+static_assert(offsetof(NPCGlobals_t, spawners) == 0x8c, "Wrong offset for spawners");
+static_assert(offsetof(NPCGlobals_t, groupCounts) == 0x108, "Wrong offset for groupCounts");
+static_assert(offsetof(NPCGlobals_t, unknown174) == 0x174, "Wrong offset for unknown174");
+static_assert(offsetof(NPCGlobals_t, seenOpponentCount) == 0x190, "Wrong offset for seenOpponentCount");
+static_assert(offsetof(NPCGlobals_t, lostSightSaid) == 0x199, "Wrong offset for lostSightSaid");
+static_assert(offsetof(NPCGlobals_t, postLoadFrame) == 0x1a8, "Wrong offset for postLoadFrame");
+static_assert(offsetof(NPCGlobals_t, sightCursor) == 0x234, "Wrong offset for sightCursor");
+static_assert(offsetof(NPCGlobals_t, alertCursor) == 0x238, "Wrong offset for alertCursor");
+static_assert(offsetof(NPCGlobals_t, unknown1390) == 0x1390, "Wrong offset for unknown1390");
 static_assert(offsetof(NPCGlobals_t, hostagesSaved) == 0x19c, "Wrong offset for hostagesSaved");
 static_assert(offsetof(NPCGlobals_t, dummyPlayer) == 0x1a4, "Wrong offset for dummyPlayer");
 static_assert(offsetof(NPCGlobals_t, enabledFrame) == 0x1ac, "Wrong offset for enabledFrame");
@@ -475,8 +541,11 @@ static_assert(offsetof(NPCGlobals_t, coverCursor) == 0x284, "Wrong offset for co
 static_assert(offsetof(NPCGlobals_t, numCoverNodes) == 0x288, "Wrong offset for numCoverNodes");
 static_assert(offsetof(NPCGlobals_t, coverNodes) == 0x28c, "Wrong offset for coverNodes");
 static_assert(offsetof(NPCGlobals_t, targets) == 0x290, "Wrong offset for targets");
+static_assert(offsetof(NPCGlobals_t, alertTarget) == 0x1f8, "Wrong offset for alertTarget");
+static_assert(offsetof(NPCGlobals_t, alert) == 0x240, "Wrong offset for alert");
 static_assert(offsetof(NPCGlobals_t, numAIPoints) == 0x137c, "Wrong offset for numAIPoints");
 static_assert(offsetof(NPCGlobals_t, aiPoints) == 0x1380, "Wrong offset for aiPoints");
+static_assert(offsetof(NPCGlobals_t, safetyEmitter) == 0x1354, "Wrong offset for safetyEmitter");
 #define NPCGlobals (*(NPCGlobals_t *)0x001e5630)
 
 // Navigation (NDrone2.cpp, NDrone2_Nav.cpp; docs/drone/bots-and-navigation)
@@ -557,6 +626,11 @@ bool NDrone2_DSTATE_Fade(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, Ms
 bool NDrone2_DSTATE_FadeFast(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
 
 // NDrone2_Talk.cpp
+DYNAMICSOUNDS* NDrone2_PlaySFX(DCVars_tag *dcv, uint sfx, _VECTOR *pos, char check, float scale);
+DYNAMICSOUNDS* NDrone2_SpeechSFX(DCVars_tag *dcv, uint sfx, char force, char face, char needFace);
+void NDrone2_SpeechSFXd(Drone_tag *drone, uint sfx, char force, char face, char needFace);
+bool DroneFunc_NewSightTalk(DCVars_tag *dcv);
+bool DroneFunc_LostSightTalk(DCVars_tag *dcv);
 bool Drone_IsTalking(Drone_tag *drone);
 bool NDrone2_DeathTalk(DCVars_tag *dcv);
 bool NDrone2_HitTalkExtra(DCVars_tag *dcv);

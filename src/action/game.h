@@ -385,12 +385,14 @@ typedef struct {
     short maybeIdxOfLastInjurer; // Index of who or what last dealt me damage? -2 = environment?
     short friendlyFireLabelTimer;
     short friendlyFireProtectionLabelTimer;
-    char unknown_pad1[2];
+    ushort unknown26;    // 0x26 - with any of bits 0-3 set, NDrone2_FindOpponent's bots favour this player
     short maybeIdxOfMyAssassin;
     char unknown_pad2[0x30-0x2a];
 } MPGamePlayer;
 
 static_assert(sizeof(MPGamePlayer) == 0x30, "MPGamePlayer is wrong size"); // Determined from stride length in various funcs
+static_assert(offsetof(MPGamePlayer, playerObj) == 0x1c, "Wrong offset for MPGamePlayer.playerObj");
+static_assert(offsetof(MPGamePlayer, unknown26) == 0x26, "Wrong offset for MPGamePlayer.unknown26");
 
 typedef struct {
   // Note that PS2 and Xbox have different number of entries in MPGame! PS2 has 8, Xbox has 10

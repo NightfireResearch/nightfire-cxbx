@@ -18,6 +18,7 @@
 #include "../obj/Hurt.h"                // Hurt_GetDamage, Hurt_GetType (ours)
 #include "../sp/PlayerStats.h"          // PlrStat_LogShotHitEnemy (ours)
 #include "../../sound/Sound.h"          // Sound_Play3D
+#include "NDrone2_Opponent.h"
 
 #include <bit>
 #include <math.h>
@@ -34,7 +35,6 @@
 #define Mat_Inverse ((void (__cdecl *)(_MATRIX *in, _MATRIX *out))0x000d51e0)
 #define Vec_DirToRot ((void (__cdecl *)(_VECTOR *dir, _VECTOR *rot))0x000d4f20)
 // Tells the drones around obj of something at pos (here, that the drone is hurt)
-#define NDrone2_DroneAlertToPosition ((void (__cdecl *)(obj_tag *obj, uint msgType, _VECTOR *pos, cel_tag *cel, int unknown5, int unknown6, int unknown7))0x00038ea0)
 // FUN_0003a240 and FUN_0003a270 in Ghidra (our names). An enemy's hit counts for the player (PlrStat_LogShotHitEnemy)
 // when its last attacker is its opponent; with the second, also while it lives.
 #define NDrone2_LogHitByOpponent ((void (__cdecl *)(DCVars_tag *dcv))0x0003a240)

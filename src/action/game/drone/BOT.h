@@ -54,13 +54,28 @@ typedef struct BOT_goal_t {
     uchar _pad3b;
 } BOT_goal_t;
 
+// What a bot knows of one player (BOT_vars_t.players), refreshed by FUN_0001a660
+typedef struct BOT_playerInfo_t {
+    float activeTime;           // 0x0 - MPGame.TimeIncPaused while BOT_PLAYER_ACTIVE is set
+    float distanceSq;           // 0x4
+    float facing;               // 0x8 - degrees: the player's facing off the line to the bot
+    uchar flags;                // 0xc - BOT_PLAYER_*
+    uchar _pad0d[3];
+} BOT_playerInfo_t;
+
+// BOT_playerInfo_t.flags
+#define BOT_PLAYER_ACTIVE   1   // a drone with burstOver clear, a player with byte 0x8eb set; kept for 2 s after
+#define BOT_PLAYER_PRESENT  2   // in the game and alive
+#define BOT_PLAYER_IN_SIGHT 4   // NDrone2_CanSeeObject from bone 5
+#define BOT_PLAYER_TEAMMATE 8
+
 // A bot player's state (six at 0x001d98e0, one per bot player 4..9; Drone_tag.botVars). Ghidra's type is 0x75f
 // bytes, too short.
 typedef struct BOT_vars_t {
     BOT_goal_t goals[2];            // 0x000
     BOT_stats_t stats;              // 0x078 - a copy of the bot's stats
     uchar _pad86[2];
-    uchar players[10][0x10];        // 0x088 - per player: last seen alive, distance�, facing, flags (FUN_0001a660)
+    BOT_playerInfo_t players[10];   // 0x088 - what it knows of each MPGame player (FUN_0001a660)
     _VECTOR opponentLastPos;        // 0x128
     uchar weapons[114][0xc];        // 0x134 - per weapon id: sqrt(range), rounds in clip, held. One slot per id
                                     //         (NUM_WEAPONS), but the bot code only walks ids 0-82 (BOTWEAP_CheckWeaponsLoaded,
@@ -105,6 +120,7 @@ typedef struct BOT_vars_t {
 } BOT_vars_t;
 
 static_assert(sizeof(BOT_goal_t) == 0x3c, "BOT_goal_t is 0x3c bytes");
+static_assert(sizeof(BOT_playerInfo_t) == 0x10, "BOT_playerInfo_t is 0x10 bytes");
 static_assert(sizeof(BOT_vars_t) == 0x768, "BOT_vars_t is 0x768 bytes");
 static_assert(offsetof(BOT_vars_t, players) == 0x88, "Wrong offset for BOT_vars_t.players");
 static_assert(offsetof(BOT_vars_t, weapons) == 0x134, "Wrong offset for BOT_vars_t.weapons");
