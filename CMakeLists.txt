@@ -913,6 +913,15 @@ target_compile_definitions(drivinginject PRIVATE UNICODE _UNICODE)
 # AntiAliasing in settings.ini: 0 off, 1 FXAA (src/common/gfx/fxaa.cpp, the default), 2 SMAA (not implemented
 # yet). Remove these two lines and fxaa.cpp from both source lists to take it out.
 target_compile_definitions(actioninject PRIVATE NF_ANTIALIASING)
+# No inlining in the action engine. A shadow test fakes a function by hooking its entry, the original's and our
+# port's, and a call the compiler has inlined never reaches that entry, so the fake was bypassed without a word
+# (parcel 8 of docs/nightfire-port-lifts.md). And a port that matches only when inlined is exact by luck: MSVC
+# returns a float in ST0 and may leave it unrounded when the call is not inlined, which is where the clang, 64-bit
+# and macOS builds would part from this one. With inlining off, the time demos and every shadow suite match as they
+# do with it on. The game needs a fraction of a modern CPU either way.
+if(MSVC)
+  target_compile_options(actioninject PRIVATE /Ob0)
+endif()
 target_compile_definitions(drivinginject PRIVATE NF_ANTIALIASING)
 endif()
 
