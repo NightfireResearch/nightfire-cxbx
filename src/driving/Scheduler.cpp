@@ -11,6 +11,7 @@
 #include "physics/RigidBodyBasics.h"   // PointerVectorDeallocate
 #include "platform/Host.h"
 #include "platform/RealSystem.h"
+#include "platform/X87.h"
 #include "world/CollisionQueries.h"   // PointerUninitializedCopy
 #include "world/CollisionTypes.h"     // PointerVector
 #include "game/SimulationContainers.h"
@@ -485,10 +486,6 @@ void Scheduler::ResetTime() {
 
 // ---- Scheduler::Run
 
-// The fraction of a simulation tick carried from one call to the next - the one deliberate departure from the
-// original, below. Always in [0, 1).
-static double g_pendingTicks = 0.0;
-
 // Runs one simulation tick: every simulation schedule at every priority, then the events they raised; on the last
 // tick of the call, the per-frame schedule (rendering among it) and its events too.
 static void RunTick(Scheduler *scheduler, int tick, bool last, bool *teleportDone) {
@@ -523,21 +520,24 @@ static void RunTick(Scheduler *scheduler, int tick, bool last, bool *teleportDon
 // Scheduler::Run (0x0005ba80), called once per pass of the game loop. As the original:
 //
 //   - The simulation advances by the ticks the clock has moved since the last call, scaled by timeScale (1 normally;
-//     2 with the speed cheat; whatever an ESetSimRate event sets, up to 4, for slow or fast motion), and runs them
-//     one at a time. With oneTickPerRun set it advances at most one tick a call, clock or not.
-//   - A step of 12 ticks or more - a stall, such as a load - is not simulated at all: the time is dropped, so the
-//     game does not lurch forward to catch up.
+//     2 with the speed cheat; whatever an ESetSimRate event sets, up to 4, for slow or fast motion), truncated, and
+//     runs them one at a time. With oneTickPerRun set it advances at most one tick a call.
+//   - A call that comes to no whole tick leaves lastTickCount alone, so the elapsed time builds up; any other call
+//     sets it to the clock and the fraction is lost. With the clock moving one tick a call, a timeScale of 0.75 runs
+//     one tick every two calls and 1.5 no faster than 1 (an original bug, kept).
+//   - A step of 12 ticks or more - a stall, such as a load - is not simulated at all: the time is dropped.
 //   - With cinematicModeSkipping set (the mission manager sets it while a cinematic is being skipped), it runs
 //     ticks as fast as it can until the flag clears, with the per-frame schedule only every fourth tick.
 //   - The per-frame schedule, which renders, runs only on a call that simulates at least one tick.
 //
-// The departure: the original truncates elapsed * timeScale to whole ticks and then sets lastTickCount to the
-// clock, so the fraction is lost every time. The clock usually moves one tick per call, which makes that loss the
-// whole of the effect - a timeScale of 0.75 or 0.9 ran one tick every two (half speed), 0.3 one in four, and 1.5
-// no faster than 1. Here the fraction is carried to the next call instead, so a slow or fast motion runs at the
-// rate it asks for. Slow motion still lowers the frame rate, as in the original, because rendering only happens on
-// a call that simulates a tick; smoothing that would need interpolation between ticks.
-//
+// With FIX_ORIGINAL_GAME_BUGS the fraction is carried to the next call instead, so a slow or fast motion runs at the
+// rate it asks for (docs/original-bug-fixes.md). Slow motion still lowers the frame rate, as in the original, because
+// rendering only happens on a call that simulates a tick.
+#if FIX_ORIGINAL_GAME_BUGS
+// The fraction of a simulation tick carried from one call to the next. Always in [0, 1).
+static double g_pendingTicks = 0.0;
+#endif
+
 // AUTOINJECT
 void Scheduler::Run(int unused) {
     (void)unused;
@@ -547,13 +547,13 @@ void Scheduler::Run(int unused) {
     bool teleportDone = false;
 
     if (!this->cinematicModeSkipping) {
+#if FIX_ORIGINAL_GAME_BUGS
         int elapsed = now - this->lastTickCount;
         if (this->oneTickPerRun && elapsed != 0)
             elapsed = 1;
         if (elapsed <= 0) {
-            // Nothing to simulate until the clock moves (every 20 ms at 50 Hz). The console spun here - the game
-            // loop has no sleep - which on a PC holds a core at 100% for nothing; a millisecond's yield changes
-            // nothing about the game (winmm's 1 ms timer period makes it a millisecond).
+            // Nothing to simulate until the clock moves. The console spun here - the game loop has no sleep - which
+            // on a PC holds a core at 100% for nothing; a millisecond's yield changes nothing about the game.
             HostSleep(1);
             return;
         }
@@ -570,6 +570,22 @@ void Scheduler::Run(int unused) {
             for (int k = 1; k <= ticks; k++)
                 RunTick(this, this->lastTickCount + k, k == ticks, &teleportDone);
         }
+#else
+        int target = now;
+        if (this->oneTickPerRun && now != this->lastTickCount)
+            target = this->lastTickCount + 1;
+        int ticks = Ftol((double)(target - this->lastTickCount) * this->timeScale);
+        if (ticks == 0) {
+            // Nothing to simulate yet. The console spun here - the game loop has no sleep - which on a PC holds a
+            // core at 100% for nothing; a millisecond's yield changes nothing about the game.
+            HostSleep(1);
+            return;
+        }
+        if (ticks < 12) {
+            for (int k = 1; k <= ticks; k++)
+                RunTick(this, this->lastTickCount + k, k == ticks, &teleportDone);
+        }
+#endif
         this->lastTickCount = now;
         return;
     }
@@ -584,6 +600,8 @@ void Scheduler::Run(int unused) {
             untilDraw = 4;
         RunTick(this, tick, draw, &teleportDone);
     } while (this->cinematicModeSkipping);
+#if FIX_ORIGINAL_GAME_BUGS
     g_pendingTicks = 0.0;
+#endif
     this->lastTickCount = now;
 }

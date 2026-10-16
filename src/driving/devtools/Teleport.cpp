@@ -292,10 +292,18 @@ static bool LockstepOn(void) {
 // Unpaced (Teleport_LockstepPresentEvery), the clock is taken off the 50 Hz timer and moved one tick here instead, so
 // that every call simulates a tick without waiting for the timer. Its only other reader, RealClock_Div2Ticks, feeds
 // ERenderFrame's LastRenderClock.
+//
+// Without FIX_ORIGINAL_GAME_BUGS, below a timeScale of 1 (an ESetSimRate slow motion) the one-tick mode is left off:
+// the original truncates one tick scaled below 1 to none and leaves lastTickCount alone, so Scheduler::Run would never
+// advance. Off, the elapsed ticks build up as on the console, whose clock moves about one tick a call.
 void Teleport_BeforeRun(Scheduler *scheduler) {
     if (!LockstepOn())
         return;
+#if FIX_ORIGINAL_GAME_BUGS
     scheduler->oneTickPerRun = 1;
+#else
+    scheduler->oneTickPerRun = scheduler->timeScale >= 1.0f;
+#endif
     if (Teleport_LockstepPresentEvery() != 0) {
         TIMER_removetask(RealClock_InterruptHandler);   // again after any RealClock_Init
         RealClock_InterruptHandler();

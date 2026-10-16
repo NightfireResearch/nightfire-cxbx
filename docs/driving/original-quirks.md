@@ -15,6 +15,9 @@ runtime (`sys.crt`, docs/driving/c-runtime.md).
 Differences of one ulp in floating point are accepted and not listed one by one. For example, an FSIN/FCOS result
 that is rounded through a double-returning helper is one ulp off (docs/driving/maths.md 3.2, section 8).
 
+Original bugs the port fixes on purpose are not listed here. They sit behind `FIX_ORIGINAL_GAME_BUGS` and are
+listed in docs/original-bug-fixes.md.
+
 Contents: 1 deviations (the port differs), 2 harness masks, 3 quirks kept faithfully.
 
 ---------------------------------------------------------------------------------------------------------------

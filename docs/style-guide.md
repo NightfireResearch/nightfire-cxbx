@@ -11,7 +11,9 @@ This applies to both engines (`src/action/`, `src/driving/`), to new ports and t
 
 - **Exact behaviour is not negotiable.** Same results bit for bit (floats included), same memory writes and
   layouts, same allocations (sizes, order, allocator), same calls in the same order, same random-number draws.
-  Lockstep runs and shadow tests depend on it.
+  Lockstep runs and shadow tests depend on it. The one exception is a fix for an original bug. It goes behind
+  `FIX_ORIGINAL_GAME_BUGS`, keeps the original in the `#else` branch, and gets an entry in
+  docs/original-bug-fixes.md.
 - **Within that, write what a human would have written.** Where two forms behave identically, choose the
   natural one. Where the natural form would change a result, keep the exact form and say why in a short comment.
 - **Deliberate departures are rare and documented.** If we choose to differ (a fix, a PC concern), say so at the

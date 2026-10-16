@@ -18,6 +18,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # file while using a linter (e.g. clangd).
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Fixes for bugs in the original game (docs/original-bug-fixes.md lists each one). Off: every reimplemented function
+# behaves exactly as the original, bugs included - the build to compare against the original code. Set before any
+# target so both engines, their loaders and their tests all see the same value.
+option(NIGHTFIRE_FIX_ORIGINAL_GAME_BUGS "Fix the original game's bugs listed in docs/original-bug-fixes.md" ON)
+if(NIGHTFIRE_FIX_ORIGINAL_GAME_BUGS)
+  add_compile_definitions(FIX_ORIGINAL_GAME_BUGS=1)
+else()
+  add_compile_definitions(FIX_ORIGINAL_GAME_BUGS=0)
+endif()
+
 # A native Linux build (the linux-i386 preset, cmake/toolchain-linux-i386.cmake) builds the standalone driving
 # engine alone: the loaders and injection DLLs map an XBE into a Windows process and have no Linux form. See
 # docs/driving/portable.md.

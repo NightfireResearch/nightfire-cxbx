@@ -43,8 +43,9 @@ fills and order are the original's exactly: lockstep testing depends on an ident
 
 ### Scheduler, clock, randomness (`src/driving/Scheduler.cpp`, `Schedule.hpp`, `engine/SimRandom.cpp`)
 The scheduler runs the game: four schedules (per frame, sim rate, half and quarter rate), each with priority
-buckets of tasks registered by event type. `Scheduler::Run` keeps its one documented departure (the carried tick
-fraction, so slow and fast motion run at the rate asked). `SimRandom` is the deterministic generator the AI uses;
+buckets of tasks registered by event type. `Scheduler::Run` truncates the scaled tick count as the original
+does, losing the fraction; with `FIX_ORIGINAL_GAME_BUGS` it carries it (docs/original-bug-fixes.md). Its other
+departure is a `Sleep(1)` on a call with nothing to run. `SimRandom` is the deterministic generator the AI uses;
 `Noise` the gradient noise behind camera shake, particles and weapons (`Noise1` returns the unrounded double the
 original left on the x87 stack).
 
