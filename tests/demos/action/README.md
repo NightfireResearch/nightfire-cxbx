@@ -35,4 +35,5 @@ differences are in floating-point detail, and the HendersonB keypads still open.
 themselves, every frame, twice.
 
 A recording made before a change that alters the game's behaviour on purpose stops matching from the frame the
-change first shows. Record that level again after such a change, and replace the file here.
+change first shows. Rebase the set onto the change with tools/demo/rebase_demos.ps1, check that the sessions still
+show what they were for, and replace the files here. Record a level again only when its rebase no longer does.

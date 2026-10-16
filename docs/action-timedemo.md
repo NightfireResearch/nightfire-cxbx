@@ -151,14 +151,12 @@ The picture is still drawn and paced as usual, so a recording plays like the gam
   surest on the same machine. The Xbox's CPU was a Pentium III, so Intel's results are likely the closer to it
   (not checked).
 - **The recordings hold our build's behaviour, not the original's.** They were made with our ports in place, and
-  some of those are known to be inexact against the Xbox:
-  - the random helpers `Float_FRand` and `Rand_FRand_MVar2` round to float, where the original works in double;
+  some of those are known to be inexact against the Xbox. The random helpers were made exact (0438ade) and the set was
+  rebased onto them. Still inexact:
   - `Vec_Dot`, and the rotation-matrix functions (`RotMatrix`, `RotMatrixZYX`, `RotTransMatrix`,
     `Vec_Spherical_2_Cartesian`, the searchlight sweep), round where the original keeps x87 values unrounded.
 
-  With the five original random helpers put back (`NIGHTFIRE_ORIGINAL`), HendersonB stops matching at frame 36. A
-  port made exact to the original therefore needs the recordings made again. The set to re-record against is
-  whatever build is current when a fix like that lands.
+  A port made exact to the original changes the game against the recordings. Rebase them onto it (below).
 - **Changes to the sound code.** The sound answers are replayed in the order they were asked. A change that makes
   the game ask the device a different number of times breaks playback (exit code 3), even if the game is otherwise
   unchanged.
