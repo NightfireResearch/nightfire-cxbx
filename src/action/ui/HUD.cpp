@@ -189,7 +189,7 @@ void HUD_MonitorNightSight(BLData *player) {
 	viewer_tag* vwr = glb_viewer[player->playerNum];
 	obj_tag* obj = glb_players[player->playerNum];
 
-	if(player->someNightVisionThing == NULL)
+	if(player->active == 0)
 		return;
 
 	if(obj->curState != 1)

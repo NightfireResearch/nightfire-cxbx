@@ -5,6 +5,7 @@
 #include "../../util/Random.h"      // Rand_Rand (AUTOGEN'd in util/Random.cpp: still the original)
 #include "../../engine/Collide.h"   // HITDATA_tag
 #include "../obj/bullet.h"          // BU_tag
+#include "Behaviour.h"
 
 // AUTOGEN
 obj_tag* NDrone2_CreateObj(DIVars_tag *diVars); 
@@ -204,4 +205,158 @@ void Drone_AlertStatusSet(char newStatus, DCVars_tag *dcv) {
     drone->alertStatus = newStatus;
     drone->alertStatusChangedFrame = GameState.NumFramesUnpaused;
     drone->alertStatusChanged = 1;
+}
+
+// AUTOGEN
+bool NDrone2_AttackTalk(DCVars_tag *dcv);
+// AUTOGEN
+ushort DroneVision_EnemyLookForOpponent(DCVars_tag *dcv);
+// AUTOGEN
+ushort DroneVision_EnemyAlerts(DCVars_tag *dcv, MsgObject *msg);
+// AUTOGEN
+void NDrone2_SeenAndAttacking(DCVars_tag *dcv);
+// AUTOGEN
+uint DroneFunc_DoForcedAttack(DCVars_tag *dcv);
+// AUTOGEN
+bool DroneFunc_HandleImpact(DCVars_tag *dcv, MsgObject *msg, uint nextState, char param_4);
+// AUTOGEN
+void DroneFunc_ConsiderExplosive(DCVars_tag *dcv, obj_tag *explosive, short nextState);
+
+// The originals, called by address: Ghidra's prototypes have untyped arguments
+#define DroneAnim_SetScript ((void (__cdecl *)(HASHCODE script, short param_2, short param_3, char param_4, short param_5, int param_6, int param_7, DCVars_tag *dcv))0x00034680)
+#define DroneAnim_CallAnim ((void (__cdecl *)(uint param_1, uint param_2, short anim, int param_4, float param_5, int param_6, DCVars_tag *dcv))0x000341c0)
+#define DroneAnim_SetDAnimNow ((void (__cdecl *)(ushort anim, ushort param_2, int param_3, DCVars_tag *dcv))0x00035dc0)
+
+// The drone's own message after an animation script ends
+#define DRONE_MSG_ScriptEnd 5
+
+// The drone plays its placement's script (Drone_tag::playScript) and then goes to its initial state. A few scripts
+// are handled on their own: 0x6000168 and 0x6000169 talk and attack at the end, 0x60007ac turns the drone round.
+// The ids used with DroneAnim_SetScript and friends are as the original passes them.
+// AUTOINJECT
+bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+        return true;
+
+    case DRONE_MSG_Enter:
+        dcv->drone->flags |= 0x10000;
+        dcv->drone->flags |= 0x2000;
+        if (dcv->drone->dtype == DTYPE_CastleChatGuard)
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_CastleChatGuard1, 0);
+
+        // stateScratch: where an impact sends it; stateScratch2: whether it looks for an opponent while playing
+        drone->stateScratch = 0;
+        drone->stateScratch2 = 1;
+        switch ((uint)dcv->drone->playScript) {
+        case 0x60005e6:
+        case 0x60008ae:
+            drone->stateScratch = DSTATE_Attack;
+            DroneAnim_SetScript(dcv->drone->playScript, 0x21, 0, 0, 0, 0, 1, dcv);
+            return true;
+
+        case 0x6000168:
+            drone->stateScratch = 0;
+            DroneAnim_SetScript(dcv->drone->playScript, 10, 0x32, 8, 0, 5, 0, dcv);
+            NDrone2_AttackTalk(dcv);
+            dcv->drone->flags |= 0x400000;
+            return true;
+
+        case 0x6000169:
+            drone->stateScratch = 0;
+            DroneAnim_SetScript(dcv->drone->playScript, 5, 0x32, 0x1e, 0, 5, 0, dcv);
+            NDrone2_AttackTalk(dcv);
+            dcv->drone->flags |= 0x400000;
+            return true;
+
+        case 0x60007ac:
+            drone->stateScratch = 0;
+            drone->stateScratch2 = 0;
+            DroneAnim_SetScript(dcv->drone->playScript, 10, 0x32, 0xf, 0, 5, 0, dcv);
+            dcv->drone->flags |= 0x400000;
+            behaviour_util_setProperty(0x3b, drone->currentBehaviour, 0);
+            behaviour_util_setProperty(0x3a, drone->currentBehaviour, 0);
+            drone->unknown825 &= ~1;
+            return true;
+
+        default:
+            drone->stateScratch = DSTATE_Attack;
+            DroneAnim_SetScript(dcv->drone->playScript, 0x24, 0x11a, 0x1e, 0, 5, 0, dcv);
+            return true;
+        }
+
+    case DRONE_MSG_Update:
+        if (drone->stateScratch2 != 0) {
+            dcv->aiStateMachine->scratch1c = (short)DroneVision_EnemyLookForOpponent(dcv);
+            if (dcv->aiStateMachine->scratch1c != 0)
+                return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)dcv->aiStateMachine->scratch1c, 0);
+        }
+        if (dcv->drone->alertness >= 1.0f)
+            NDrone2_SeenAndAttacking(dcv);
+        if (drone->sm.stateEnteredFrame + 30 < GameState.NumFramesUnpaused &&
+            dcv->drone->playScript >= 0x6000168 && dcv->drone->playScript <= 0x6000169)
+            NDrone2_AttackTalk(dcv);
+        return true;
+
+    case DRONE_MSG_ScriptEnd:
+        switch ((uint)dcv->drone->playScript) {
+        case 0x6000168:
+            dcv->drone->flags &= ~0x400000;
+            dcv->drone->playScript = (HASHCODE)0;
+            DroneAnim_CallAnim(10, 0, 0x68, 0, 0.0f, 0, dcv);
+            NDrone2_AttackTalk(dcv);
+            return true;
+
+        case 0x6000169:
+            dcv->drone->flags &= ~0x400000;
+            DroneAnim_CallAnim(10, 0, 0x68, 0, 0.0f, 0, dcv);
+            dcv->drone->playScript = (HASHCODE)0;
+            NDrone2_AttackTalk(dcv);
+            return true;
+
+        case 0x60007ac:
+            dcv->drone->flags &= ~0x400000;
+            drone->unknown448 = 3.14159274f;
+            DroneAnim_SetDAnimNow(0xf4, 0, 1, dcv);
+            break;
+        }
+        dcv->drone->playScript = (HASHCODE)0;
+        Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)dcv->drone->initialState, 0);
+        return true;
+
+    case DRONE_MSG_ImpactPunch:
+    case DRONE_MSG_ImpactBullet:
+        DroneFunc_HandleImpact(dcv, msg, drone->stateScratch, 0);
+        return true;
+
+    case DRONE_MSG_ImpactTaser:
+    case DRONE_MSG_ImpactExplosive:
+    case DRONE_MSG_ImpactSmoke:
+    case DRONE_MSG_ImpactStunGrenade:
+    case DRONE_MSG_ImpactStunDart:
+        DroneFunc_HandleImpact(dcv, msg, drone->stateScratch, 1);
+        return true;
+
+    case 0x11:
+    case 0x12:
+    case DRONE_MSG_HeardNoise:
+    case DRONE_MSG_DroneAlert:
+    case 0x16:
+    case DRONE_MSG_GlobalAlarm:
+        dcv->aiStateMachine->scratch1c = (short)DroneVision_EnemyAlerts(dcv, msg);
+        if (dcv->aiStateMachine->scratch1c != 0)
+            return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)dcv->aiStateMachine->scratch1c, 0);
+        return true;
+
+    case DRONE_MSG_ConsideredAlerted:
+        DroneFunc_DoForcedAttack(dcv);
+        return true;
+
+    case DRONE_MSG_ExplosiveSeen:
+        DroneFunc_ConsiderExplosive(dcv, (obj_tag *)msg->extraData, drone->stateScratch);
+        return true;
+
+    default:
+        return false;
+    }
 }

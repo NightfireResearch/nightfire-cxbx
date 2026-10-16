@@ -30,7 +30,7 @@ typedef struct {
 
 #pragma pack(pop)
 
-#define Mat_Position(mat) ((_VECTOR *)((mat.m + 0xc)))
+#define Mat_Position(mat) ((_VECTOR *)(((mat).m + 0xc)))
 
 void MultiplyQuaternionAltOrder(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *target);
 void Quat_Copy(quaternion_tag *target,const quaternion_tag *from);

@@ -87,6 +87,7 @@ add_library(actioninject SHARED
   src/action/devtools/DroneShadow.cpp
   src/action/devtools/WeaponTableShadow.cpp
   src/action/devtools/MatrixShadow.cpp
+  src/action/devtools/ScriptShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/Teleport.cpp
   src/action/devtools/Demo.cpp
@@ -164,6 +165,7 @@ add_library(actioninject SHARED
   src/action/ui/MenuUnlocks.cpp
   src/action/ui/ui_score.cpp
   src/action/ui/Menu.cpp
+  src/action/ui/MenuScript.cpp
   src/action/autofunc.cpp
   src/action/game/Upgrade.cpp
   src/action/game/view.cpp
@@ -176,6 +178,7 @@ add_library(actioninject SHARED
   src/action/game/mp/multiplayer.cpp
   src/action/game/obj/Break.cpp
   src/action/game/obj/Door.cpp
+  src/action/game/obj/FuseBox.cpp
   src/action/game/obj/Hint.cpp
   src/action/game/obj/build.cpp
   src/action/game/obj/bullet.cpp
@@ -194,6 +197,7 @@ add_library(actioninject SHARED
   src/action/game/obj/ScriptPlayer.cpp
   src/action/game/obj/Searchlight.cpp
   src/action/game/obj/Sensor.cpp
+  src/action/game/obj/SS.cpp
   src/action/game/obj/SpaceLaser.cpp
   src/action/game/obj/SpaceMissile.cpp
   src/action/game/obj/Switch.cpp

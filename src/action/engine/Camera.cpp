@@ -4,6 +4,7 @@
 #include "../game/obj/build.h"
 #include "viewer.h"
 #include "viewFov.h"
+#include "../util/Stack.h"
 
 #include <math.h>
 
@@ -60,8 +61,34 @@ void Camera_CalcViewAngles(ushort playerNum,float param_2) {
 // AUTOGEN
 void Camera_Enable(ushort cameraNum,char param_2,undefined1 param_3,_VECTOR *param_4);
 
-// AUTOGEN
-void __stdcall Camera_PopStates(void);
+// Each camera keeps a stack of its states (bit 0 enabled, bit 8 sprites shown) so that a scripted
+// camera can take over and give them back.
+#define CAMERA_STATE_SPRITES_SHIFT 8
+
+// Saves every camera's enabled and sprites-shown flags on its own stack.
+// AUTOINJECT
+void __stdcall Camera_PushStates(void) {
+    for (int i = 0; i < 11; i++) {
+        viewer_tag *viewer = glb_viewer[i];
+        if (viewer != NULL) {
+            uintptr_t state = viewer->field26_0x2a << CAMERA_STATE_SPRITES_SHIFT | viewer->field25_0x29;
+            Stack_Push(&viewer->stateStack, (void *)state);
+        }
+    }
+}
+
+// Gives every camera back the state Camera_PushStates saved last, where its stack has one.
+// AUTOINJECT
+void __stdcall Camera_PopStates(void) {
+    for (ushort i = 0; i < 11; i++) {
+        viewer_tag *viewer = glb_viewer[i];
+        if (viewer == NULL || Stack_IsEmpty(&viewer->stateStack))
+            continue;
+
+        uintptr_t state = (uintptr_t)Stack_Pop(&viewer->stateStack);
+        Camera_Enable(i, state & 1, state >> CAMERA_STATE_SPRITES_SHIFT & 1, NULL);
+    }
+}
 
 // AUTOGEN
 bool Camera_SetFade(ushort viewerNum, float durationFrames, uint colourAndAlpha, undefined1 fadeMode);

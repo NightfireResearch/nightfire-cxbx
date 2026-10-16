@@ -2,6 +2,8 @@
 #include <windows.h>
 
 #include "input.h"
+#include "engine/psiInput.h"
+#include <string.h>
 #include "engine/mouseLook.h"
 #include "engine/mouseSteer.h"
 #include "devtools/Demo.h"
@@ -150,8 +152,15 @@ void Input_SetAction(short playerNum, GameActions_tag action,unsigned char val) 
   return;
 }
 
-// AUTOGEN
-void Input_ClearAllActions(short playerNum);
+// Zeroes the analogue channels of every action, for one player or (-1) all of them, after flushing the pads.
+// AUTOINJECT
+void Input_ClearAllActions(short playerNum) {
+  psiInputReset();
+  for (int i = 0; i < 4; i++) {
+    if (playerNum == -1 || playerNum == i)
+      memset(PlayerInputs[i].fChannels, 0, sizeof(PlayerInputs[i].fChannels));
+  }
+}
 
 // AUTOINJECT
 bool Input_ChangeControllerStyle(ushort playerNum, int controllerStyle) {

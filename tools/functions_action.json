@@ -37360,7 +37360,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c11b0",
+        "name": "Script_FindKey",
         "address": "0x000c11b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": true,
@@ -37369,7 +37369,7 @@
             "float",
             "undefined4"
         ],
-        "prototype_string": "int __cdecl FUN_000c11b0(float param_1, undefined4 param_2)",
+        "prototype_string": "int __cdecl Script_FindKey(float param_1, undefined4 param_2)",
         "parameters": [
             "[float param_1@Stack[0x4]:4]",
             "[undefined4 param_2@EAX:4]"
@@ -37378,7 +37378,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c1210",
+        "name": "Script_GetLinearWeights",
         "address": "0x000c1210",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -37390,7 +37390,7 @@
             "int",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000c1210(int * param_1, float * param_2, float param_3, int param_4, int param_5)",
+        "prototype_string": "void __cdecl Script_GetLinearWeights(int * param_1, float * param_2, float param_3, int param_4, int param_5)",
         "parameters": [
             "[int * param_1@Stack[0x4]:4]",
             "[float * param_2@Stack[0x8]:4]",
@@ -37402,7 +37402,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c12b0",
+        "name": "GetSplineWeights",
         "address": "0x000c12b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -37414,7 +37414,7 @@
             "int",
             "uint"
         ],
-        "prototype_string": "void __cdecl FUN_000c12b0(uint * param_1, float * param_2, float param_3, int param_4, uint param_5)",
+        "prototype_string": "void __cdecl GetSplineWeights(uint * param_1, float * param_2, float param_3, int param_4, uint param_5)",
         "parameters": [
             "[uint * param_1@Stack[0x4]:4]",
             "[float * param_2@Stack[0x8]:4]",
@@ -37426,7 +37426,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c13f0",
+        "name": "Script_InterpLinear",
         "address": "0x000c13f0",
         "calling_convention": "default",
         "has_custom_variable_storage": true,
@@ -37437,7 +37437,7 @@
             "_VECTOR *",
             "undefined4"
         ],
-        "prototype_string": "void FUN_000c13f0(int * param_1_00, int param_2, _VECTOR * param_3, undefined4 param_4)",
+        "prototype_string": "void Script_InterpLinear(int * param_1_00, int param_2, _VECTOR * param_3, undefined4 param_4)",
         "parameters": [
             "[int * param_1_00@ECX:4]",
             "[int param_2@EDX:4]",
@@ -37448,7 +37448,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c1480",
+        "name": "Script_InterpSpline",
         "address": "0x000c1480",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -37456,7 +37456,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000c1480(undefined4 param_1)",
+        "prototype_string": "undefined Script_InterpSpline(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -37898,7 +37898,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c2eb0",
+        "name": "Script_ConcatParents",
         "address": "0x000c2eb0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -37906,7 +37906,7 @@
         "param_types": [
             "float *"
         ],
-        "prototype_string": "void __cdecl FUN_000c2eb0(float * param_1)",
+        "prototype_string": "void __cdecl Script_ConcatParents(float * param_1)",
         "parameters": [
             "[float * param_1@Stack[0x4]:4]"
         ],
@@ -40012,13 +40012,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000cb2a0",
+        "name": "SS_Operate",
         "address": "0x000cb2a0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000cb2a0()",
+        "prototype_string": "undefined SS_Operate()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -41388,7 +41388,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000cff50",
+        "name": "FuseBox_Register",
         "address": "0x000cff50",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -41398,7 +41398,7 @@
             "ushort",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000cff50(int param_1, ushort param_2, int param_3)",
+        "prototype_string": "void __cdecl FuseBox_Register(int param_1, ushort param_2, int param_3)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[ushort param_2@Stack[0x8]:2]",

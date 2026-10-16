@@ -66,6 +66,7 @@
 #include "DroneShadow.h"
 #include "WeaponTableShadow.h"
 #include "MatrixShadow.h"
+#include "ScriptShadow.h"
 #include "CameraShadow.h"
 #include "Teleport.h"
 #include "../game.h"   // reload: ResetMap_LevelToLoad, GameFlow_PushState
@@ -534,6 +535,7 @@ void MenuProbe_Install(void) {
         DroneShadow_Run();
         WeaponTableShadow_Run();
         MatrixShadow_Run();
+        ScriptShadow_Run();
     }
     g_logging = SettingOn("MenuLog");
     if (g_logging) {

@@ -5,10 +5,21 @@
 
 #pragma pack(push, 1)
 
+typedef struct sAnimScript_tag sAnimScript_tag;
+
+// The animated part of an object (sAnimObject_tag), embedded in AnimState at +0x58. Only the fields our code uses
+// are named.
 typedef struct AnimObj {
-    char pad[0x30];
-    celglist_tag *maybeSleeveGlist;
-    // ...
+    char _unknown_00[0x1c];
+    struct sAnimSkin_tag *skin;     // 0x1c
+    char _unknown_20[0x10];
+    celglist_tag *maybeSleeveGlist; // 0x30
+    char _unknown_34[0x48 - 0x34];
+    obj_tag **discreteObj;          // 0x48 - [skin->numDiscrete] the rigid parts, each following one bone
+    char _unknown_4c[4];
+    uint flags;                     // 0x50 - 0x8000 set by Script_AnimStart; 0x40000 set by Script_FFwd
+    float rootHeight;               // 0x54
+    char _unknown_58[0x98 - 0x58];
 } AnimObj;
 
 typedef struct AnimState {
@@ -57,10 +68,59 @@ typedef enum {
 } AnimScriptStateMagicNumbers;
 static_assert(sizeof(AnimScriptStateMagicNumbers) == 4, "Compiler doing something weird with AnimScriptStateMagicNumbers");
 
+// A sequence file (hashcode type 0x04) as loaded.
+typedef struct sAnimRawSeq_tag {
+    char _unknown_00[0xc];
+    uint flags;             // 0x0c - the low four bits are copied to sAnimSeq_tag::flags
+    float boundSphere[4];   // 0x10
+    float rootBox[6];       // 0x20
+    short numFrames;        // 0x38
+    uchar numElems;         // 0x3a
+    uchar _unknown_3b;
+    uchar skeletonNum;      // 0x3c
+    uchar _unknown_3d;
+    uchar raw3e;            // 0x3e
+    uchar _unknown_3f;
+} sAnimRawSeq_tag;
+
+// A sequence being sampled for a script.
+typedef struct sAnimSeq_tag {
+    char _unknown_00[0x3c];
+    float rootBox[6];           // 0x3c
+    float boundSphere[4];       // 0x54
+    char _unknown_64[0x74 - 0x64];
+    sAnimRawSeq_tag *rawSeq;    // 0x74
+    HASHCODE hashcode;          // 0x78
+    uint flags;                 // 0x7c
+    char _unknown_80[4];
+    short startTime;            // 0x84
+    short firstFrame;           // 0x86
+    short lastFrame;            // 0x88
+    short numFrames;            // 0x8a
+    uchar raw3e;                // 0x8c
+    uchar skeletonNum;          // 0x8d
+    uchar numElems;             // 0x8e
+    uchar _unknown_8f;
+} sAnimSeq_tag;
+
+// sAnimScript_tag::flags
+#define ANIMSCRIPT_SCRIPT_DRIVEN 0x10000    // Script_AnimStart and Script_Interp set the frame themselves
+#define ANIMSCRIPT_HAS_ROOT_TRANS 0x800000  // AnimGetFirstTrans only answers for such a script
+
 typedef struct sAnimScript_tag {
     char unknown[0x3c];
-    AnimScriptStateMagicNumbers magicStateIndicator;
-    char unknown2[0xb4-4-0x3c];
+    AnimScriptStateMagicNumbers magicStateIndicator; // 0x3c
+    char _unknown_40[0x4c - 0x40];
+    sAnimSeq_tag *boneAnimSeq;  // 0x4c
+    char _unknown_50[0x74 - 0x50];
+    uint flags;                 // 0x74
+    char _unknown_78[0x8c - 0x78];
+    float curFrame;             // 0x8c - 1..numFrames
+    char _unknown_90[4];
+    float speed;                // 0x94
+    char _unknown_98[0xac - 0x98];
+    short numFrames;            // 0xac
+    char _unknown_ae[0xb4 - 0xae];
 } sAnimScript_tag;
 
 static_assert(sizeof(sAnimScript_tag) == 0xb4, "Bad size for sAnimScript_tag");
@@ -68,6 +128,23 @@ static_assert(sizeof(sAnimScript_tag) == 0xb4, "Bad size for sAnimScript_tag");
 #pragma pack(pop)
 
 static_assert(offsetof(AnimState, animObj) == 0x58, "Offset of animObj wrong");
+static_assert(sizeof(AnimObj) == 0x98, "Bad size for AnimObj");
+static_assert(offsetof(AnimObj, skin) == 0x1c, "Offset of skin wrong");
+static_assert(offsetof(AnimObj, maybeSleeveGlist) == 0x30, "Offset of maybeSleeveGlist wrong");
+static_assert(offsetof(AnimObj, discreteObj) == 0x48, "Offset of discreteObj wrong");
+static_assert(offsetof(AnimObj, flags) == 0x50, "Offset of flags wrong");
+static_assert(offsetof(AnimObj, rootHeight) == 0x54, "Offset of rootHeight wrong");
+static_assert(sizeof(sAnimRawSeq_tag) == 0x40, "Bad size for sAnimRawSeq_tag");
+static_assert(offsetof(sAnimRawSeq_tag, numFrames) == 0x38, "Offset of numFrames wrong");
+static_assert(sizeof(sAnimSeq_tag) == 0x90, "Bad size for sAnimSeq_tag");
+static_assert(offsetof(sAnimSeq_tag, rootBox) == 0x3c, "Offset of rootBox wrong");
+static_assert(offsetof(sAnimSeq_tag, rawSeq) == 0x74, "Offset of rawSeq wrong");
+static_assert(offsetof(sAnimSeq_tag, numFrames) == 0x8a, "Offset of numFrames wrong");
+static_assert(offsetof(sAnimScript_tag, boneAnimSeq) == 0x4c, "Offset of boneAnimSeq wrong");
+static_assert(offsetof(sAnimScript_tag, flags) == 0x74, "Offset of flags wrong");
+static_assert(offsetof(sAnimScript_tag, curFrame) == 0x8c, "Offset of curFrame wrong");
+static_assert(offsetof(sAnimScript_tag, speed) == 0x94, "Offset of speed wrong");
+static_assert(offsetof(sAnimScript_tag, numFrames) == 0xac, "Offset of numFrames wrong");
 static_assert(sizeof(AnimDatum) == 0x24, "Bad size for AnimDatum");
 static_assert(sizeof(_MATRIX) == 0x3c, "AnimProcessSkinData allocates invBind as numBones * 0x3c");
 static_assert(offsetof(sAnimSkin_tag, riggedBody) == 0x04, "Bad offset of riggedBody");
@@ -102,6 +179,9 @@ void AnimProcessSkinData(HASHCODE hashcode);
 // The C body of AnimProcessSkinData - C callers (a future AnimLoadFile) call this one.
 void _AnimProcessSkinData(HASHCODE hashcode);
 void AnimPostLoadInit(void);
+bool AnimGetFirstTrans(sAnimScript_tag *script, _VECTOR *out);
+void AnimGetFrameTransRaw(HASHCODE hashcode, int frame, _VECTOR *out);
+obj_tag* AnimGetNDiscreteObj(obj_tag *obj, uint n);
 void AnimLoadFile(HASHCODE hashcode,char param_2);
 
 

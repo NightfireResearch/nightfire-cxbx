@@ -78,7 +78,9 @@ typedef struct BLData {
     short ammo[34]; // 0x114
     char _pad_11c[0x15c-0x158];
     WeaponStatus weaponStats[114]; // 0x15c-0x6b3 inclusive
-    char _pad_222[0x770-0x6b4];
+    char _pad_222[0x764-0x6b4];
+    ushort hitTestType; // 0x764 - 0 while Player_Disable has the player out of play, 0x800 from Player_Enable
+    char _pad_2222b[0x770-0x766];
     HUDINFO_tag* hudInfo; // 0x770
     char _pad_2222[4];
     obj_tag* weaponObject;
@@ -138,13 +140,18 @@ typedef struct BLData {
     // Frames left of the "Bond moment" icon (TEX_GOLD007BONUS, the health pane's sprite 16): it spins in while
     // above 100, then sits at the top of the screen; HUD_UpdateHealthPane counts it down by FRAME_RATE_MUL.
     short bondMomentTimer; // 0x8d8
-    char someNightVisionThing;
-    char _pad_33[3];
+    // 0 while Player_Disable has the player out of play, 2 from Player_Enable; HUD_MonitorNightSight does
+    // nothing at 0
+    char active; // 0x8da
+    char frozen; // 0x8db - set by Player_Disable(player, 1), cleared by Player_Enable
+    char field_0x8dc; // 0x8dc - zeroed by Player_Enable
+    char _pad_33;
     char playerNum; // 0x8de
     char pad_4;
     char camMode; // 0x8e0 - CamMode
     char maybeCamRelatedCountdown; // 0x8e1
-    char pad_5[0x8e6-0x8e2];
+    char field_0x8e2; // 0x8e2 - zeroed by Player_Enable
+    char pad_5[0x8e6-0x8e3];
     char field_0x8e6; // 0x8e6 - zeroed by Player_InitWeapon
     char _pad_5b;
     char field_0x8e8; // 0x8e8 - zeroed by Player_InitWeapon
@@ -186,6 +193,10 @@ static_assert(offsetof(BLData, headSwimOffset) == 0x898, "Offset of headSwimOffs
 static_assert(offsetof(BLData, fallFrames) == 0x8b8, "Offset of fallFrames not correct");
 static_assert(offsetof(BLData, weaponObject) == 0x778, "Offset of weaponObject not correct");
 static_assert(offsetof(BLData, health) == 0x824, "Offset of health not correct");
+static_assert(offsetof(BLData, hitTestType) == 0x764, "Offset of hitTestType not correct");
+static_assert(offsetof(BLData, active) == 0x8da, "Offset of active not correct");
+static_assert(offsetof(BLData, field_0x8dc) == 0x8dc, "Offset of field_0x8dc not correct");
+static_assert(offsetof(BLData, field_0x8e2) == 0x8e2, "Offset of field_0x8e2 not correct");
 static_assert(offsetof(BLData, playerNum) == 0x8de, "Offset of playerNum not correct");
 static_assert(offsetof(BLData, rotationDelta) == 0x24, "Offset of rotationDelta not correct");
 static_assert(offsetof(BLData, movement) == 0x0c, "Offset of movement not correct");
@@ -256,13 +267,14 @@ void __stdcall ReadTuningVars(void);
 void Player_ChangeState(obj_tag* obj, unsigned short newState);
 unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState); // Return the previous substate
 void Player_SetCamMode(BLData *param_1,unsigned short param_2);
-void Player_Disable(obj_tag *param_1,char param_2);
+void Player_Disable(obj_tag *player, char freeze);
 void Player_WeaponNone(obj_tag *param_1);
 void Player_PositionCamera(obj_tag *player);
 void Player_ViewClamping(obj_tag *player);
 void Player_Move(BLData *blData, obj_tag *player, float speedScale);
 void Player_Weapon(obj_tag *player);
-void Player_Enable(obj_tag *param_1, _MATRIX *mtx, int param_3);
+void Player_Enable(obj_tag *player, _MATRIX *mtx, int checkAttach);
+void Player_Cam2Mode(ushort playerNum, uint mode);
 void Player_SetHealth(BLData *obj, float health);
 void Player_CheckWeaponsLoaded(BLData *blData);
 short Player_AmmoIndex(short weaponIndex);

@@ -1,6 +1,7 @@
 #include "Anim.h"
 #include <string.h>    // memcpy
 #include "../memory.h" // Mem_Malloc
+#include "../util/hashtable.h"
 
 
 // AUTOGEN
@@ -310,4 +311,85 @@ void __declspec(naked) AnimProcessSkinData(HASHCODE hashcode) {
         add esp, 4
         ret
     }
+}
+
+// AUTOGEN
+void AnimFrameCopy(float *out, sAnimSeq_tag *seq, sAnimSkin_tag *skin, float frame);
+
+// The hashcode type byte of a sequence file.
+#define ANIM_HASHTYPE_SEQ 0x04000000
+
+// The decoded pose of one frame, as AnimFrameCopy writes it: the bones' translations first.
+#define ANIM_FRAME_BUFFER_SIZE 0xa80
+
+// Points seq at its sequence file and copies what sampling needs from the file's header. NULL, and seq left as it
+// was, when hashcode is not a loaded sequence. Inlined into both its callers on the Xbox.
+static sAnimRawSeq_tag *AnimSeqGetInfo(HASHCODE hashcode, sAnimSeq_tag *seq) {
+    if ((hashcode & 0xff000000) != ANIM_HASHTYPE_SEQ)
+        return NULL;
+
+    sAnimRawSeq_tag *raw = (sAnimRawSeq_tag *)hashtable_getitem(hashcode);
+    if (raw == NULL)
+        return NULL;
+
+    seq->rawSeq = raw;
+    memcpy(seq->boundSphere, raw->boundSphere, sizeof(seq->boundSphere));
+    memcpy(seq->rootBox, raw->rootBox, sizeof(seq->rootBox));
+    seq->numFrames = raw->numFrames;
+    seq->skeletonNum = raw->skeletonNum;
+    seq->raw3e = raw->raw3e;
+    seq->numElems = raw->numElems;
+    seq->flags = (seq->flags & ~0xf) | (raw->flags & 0xf);
+    return raw;
+}
+
+// The root translation of a script's bone sequence at the script's current frame. False, with out untouched, for a
+// script without ANIMSCRIPT_HAS_ROOT_TRANS or whose sequence is not loaded.
+// AUTOINJECT
+bool AnimGetFirstTrans(sAnimScript_tag *script, _VECTOR *out) {
+    float frame[ANIM_FRAME_BUFFER_SIZE / sizeof(float)];
+
+    if (!(script->flags & ANIMSCRIPT_HAS_ROOT_TRANS))
+        return false;
+
+    sAnimSeq_tag *seq = script->boneAnimSeq;
+    if (AnimSeqGetInfo(seq->hashcode, seq) == NULL)
+        return false;
+
+    AnimFrameCopy(frame, seq, NULL, script->curFrame);
+    out->x = frame[0];
+    out->y = frame[1];
+    out->z = frame[2];
+    return true;
+}
+
+// The root translation of a sequence at a frame, straight from the file, with no object or script. A sequence that
+// is not loaded is still decoded, from the zeroed record.
+// AUTOINJECT
+void AnimGetFrameTransRaw(HASHCODE hashcode, int frame, _VECTOR *out) {
+    sAnimSeq_tag seq;
+    float pose[ANIM_FRAME_BUFFER_SIZE / sizeof(float)];
+
+    memset(&seq, 0, sizeof(seq));
+    seq.hashcode = hashcode;
+    AnimSeqGetInfo(hashcode, &seq);
+    seq.firstFrame = 1;
+    seq.lastFrame = seq.numFrames;
+    AnimFrameCopy(pose, &seq, NULL, (float)frame);
+    out->x = pose[0];
+    out->y = pose[1];
+    out->z = pose[2];
+}
+
+// The n-th rigid part of an animated object, NULL past the skin's count.
+// AUTOINJECT
+obj_tag* AnimGetNDiscreteObj(obj_tag *obj, uint n) {
+    if (obj == NULL || obj->animState == NULL)
+        return NULL;
+
+    AnimObj *animObj = &obj->animState->animObj;
+    if (n >= animObj->skin->numDiscrete)
+        return NULL;
+
+    return animObj->discreteObj[n];
 }

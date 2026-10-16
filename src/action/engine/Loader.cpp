@@ -344,13 +344,15 @@ bool LoaderProcess(void) {
 
 }
 
+// The loadable part a file belongs to (its index, which LoadableLoad takes), or 0 when it is in none. Callers
+// test the whole of EAX and SP_LoadScript passes it on, so this returns the index, not a flag.
 // AUTOINJECT
-bool isLoadable(HASHCODE param_1) {
+uint isLoadable(HASHCODE hashcode) {
   for (int i = 0; i < LoadableIndex; i++) {
-    if (LoadableFiles[i].hashcode == param_1)
-      return LoadableFiles[i].loadableIdx != 0;
+    if (LoadableFiles[i].hashcode == hashcode)
+      return (uchar)LoadableFiles[i].loadableIdx;
   }
-  return false;
+  return 0;
 }
 
 // AUTOGEN

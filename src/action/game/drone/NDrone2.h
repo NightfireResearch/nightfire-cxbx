@@ -379,7 +379,8 @@ typedef enum {
 // is named so far; Ghidra also has the AI network's cover nodes at +0x288, and FUN_00030e70 and
 // Drone_PostLoad_Init clear arrays at +0xb54 (0x800 bytes) and +0x1354 (0x28).
 typedef struct {
-    char _pad0[0x4];
+    uchar enabled;              // +0x0 - Drone_EnableAll's last setting
+    char _pad1[3];
     Drone_tag *NDrone2List;     // +0x4 - every live drone, linked through Drone_tag.next
     char _pad8[0x19c - 0x8];
     uint32_t hostagesSaved;     // +0x19c
@@ -387,7 +388,9 @@ typedef struct {
                                 //          (C_CHCHDUMMY): on, drones targeting glb_players[0] retarget dummyPlayer
     char _pad1a1[0x1a4 - 0x1a1];
     obj_tag *dummyPlayer;       // +0x1a4 - DroneSpawner_CreateBlank's object; moved onto glb_players[0] when switched on
-    char _pad1a8[0x230 - 0x1a8];
+    char _pad1a8[0x1ac - 0x1a8];
+    uint32_t enabledFrame;      // +0x1ac - GameState.NumFramesUnpaused when Drone_EnableAll last enabled the drones
+    char _pad1b0[0x230 - 0x1b0];
     ushort NumDrones;           // +0x230 - drones given a state machine this level; the last id handed out
     char _pad232[0x142c - 0x232];
 } NPCGlobals_t;
@@ -395,6 +398,7 @@ static_assert(sizeof(NPCGlobals_t) == 0x142c, "Bad size for NPCGlobals_t");
 static_assert(offsetof(NPCGlobals_t, NDrone2List) == 0x4, "Wrong offset for NDrone2List");
 static_assert(offsetof(NPCGlobals_t, hostagesSaved) == 0x19c, "Wrong offset for hostagesSaved");
 static_assert(offsetof(NPCGlobals_t, dummyPlayer) == 0x1a4, "Wrong offset for dummyPlayer");
+static_assert(offsetof(NPCGlobals_t, enabledFrame) == 0x1ac, "Wrong offset for enabledFrame");
 static_assert(offsetof(NPCGlobals_t, NumDrones) == 0x230, "Wrong offset for NumDrones");
 #define NPCGlobals (*(NPCGlobals_t *)0x001e5630)
 
@@ -411,6 +415,7 @@ void DroneAnim_SetEndAIState(Drone_tag *drone, short newState, uint msgType);
 obj_tag* NDrone2_CreateFromDIVars(DIVars_tag *diVars);
 
 bool NDrone2_DSTATE_HostageDead(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
 void DroneFunc_HostageSaved(DCVars_tag *dcVars);
 void DroneFunc_CheckAlarmRaised(void);
 uint DroneFunc_RecoverTime(DCVars_tag *dcv, HITDATA_tag *hit);

@@ -1,5 +1,7 @@
 #include "Drone.h"
 #include "NDrone2.h"
+#include "../../game.h"
+#include "../../sound/music.h"
 
 #include "string.h"
 
@@ -61,4 +63,64 @@ obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
 void Drone_SM_RouteMsg(MsgObject *msg);
 
 // AUTOGEN
-void Drone_EnableAll(char enable, HASHCODE hashcode);
+void NDrone2_Enable(char enable, Drone_tag *drone);
+// AUTOGEN
+void NDrone2_PostLoad_Init(obj_tag *gameObj);
+
+// Enables or disables every drone. Enabling leaves drones whose object is in state 1 as they are, and two scripts
+// get more: 0x600001b sends every drone the attack message and changes the music, 0x600002e enables those in state 1
+// waiting on switch channel 10.
+// AUTOINJECT
+void Drone_EnableAll(char enable, HASHCODE hashcode) {
+    if (Drone_bDisableSystem)
+        return;
+
+    for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
+        if (!enable || drone->gameObj->curState != 1)
+            NDrone2_Enable(enable, drone);
+    }
+    NPCGlobals.enabled = enable;
+    if (!enable)
+        return;
+
+    NPCGlobals.enabledFrame = GameState.NumFramesUnpaused;
+    if (hashcode == 0x600001b) {
+        Drone_Message(NULL, DRONE_MSG_AttackNow, NULL, FRAME_RATE_INT * 8);
+        Music_Event(0xf, 1);
+    } else if (hashcode == 0x600002e) {
+        for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
+            obj_tag *gameObj = drone->gameObj;
+            if (gameObj == NULL)
+                continue;
+            if (gameObj->objectType != OBJECTTYPE_DRONE && gameObj->objectType != OBJECTTYPE_DEAD_DRONE)
+                continue;
+            if (gameObj->curState == 1 && drone->waitSwitchChannel == 10)
+                Drone_Message(gameObj, DRONE_MSG_Enable, NULL, 0);
+        }
+    }
+}
+
+// A drone a script creates (event 8): a placement made up on the spot with only the skin, the play script and the
+// weapon set, and the state it starts in.
+// AUTOINJECT
+obj_tag* Drone_CoderCreate(_VECTOR *pos, _VECTOR *rot, HASHCODE skin, HASHCODE playScript, uint unused,
+                           uint weapon, ushort initialState) {
+    if (Drone_bDisableSystem)
+        return NULL;
+
+    DroneCreationData create;
+    memset(&create, 0, sizeof(create));
+    create.keys.skin = skin;
+    create.keys.playScript = playScript;
+    create.keys.weapon = weapon;
+    create.keys.combatRange = 0;
+    create.keys.mode = 0;
+    create.keys.secondaryMode = 0;
+    obj_tag *gameObj = Drone_Create(pos, rot, (level_tag *)&create);
+    if (gameObj != NULL) {
+        Drone_tag *drone = (Drone_tag *)gameObj->extraObjectData;
+        drone->initialState = initialState;
+        NDrone2_PostLoad_Init(drone->gameObj);
+    }
+    return gameObj;
+}

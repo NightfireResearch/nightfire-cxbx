@@ -4,7 +4,7 @@
 bool LoaderProcess(void);
 bool LoaderLoad(int mode, uint fileHash, undefined4 unused, int variant);
 void parsemap_block_entity_params(void);
-bool isLoadable(HASHCODE param_1);
+uint isLoadable(HASHCODE hashcode);
 bool LoadableReload(HASHCODE hashcode);
 
 extern uint32_t MemType; // defined in Loader.cpp

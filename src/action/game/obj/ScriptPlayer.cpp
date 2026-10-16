@@ -6,6 +6,7 @@
 #include "../../game.h"
 #include "../../input.h"
 #include "../../sound/music.h"
+#include "../../sound/Sound.h"
 #include "../sp/Mission.h"
 #include "../sp/PlayerStats.h"
 #include "../sp/SwitchChannels.h"
@@ -33,74 +34,12 @@ enum SP_State {
     SP_State_DeferredLoad = 7,   // One-shot: load the script on the next update, then fall into the normal flow
 };
 
-#pragma pack(push, 1)
 
-// Cross-referenced against Ghidra's own (partially reverse-engineered) SCRIPTPLAYER struct, which is
-// authoritative for the offsets/sizes here. Field purposes were then pinned down by reading every other
-// SP_ function Ghidra knows about (SP_Update, SP_Hit, SP_Activate, SP_GetState, SP_UnPause, SP_HideObj,
-// SP_SwitchToScript, SP_GetHitDamage) even though most of those aren't reimplemented yet - see their
-// decompiles for the full state machine. Only unknown_0x39 remains genuinely unidentified.
-typedef struct SCRIPTPLAYER {
-    obj_tag* ownerObj;                  // 0x00 - object that created this script player (eg. a switch/fusebox);
-                                         //        also the object SP_Activate calls GT_Activate/Switch_Activate on
-    ScriptPlayerCallback* callback;     // 0x04 - called by SP_LoadScript once the script is loaded, then cleared
-    void* callbackContext;              // 0x08 - opaque context, passed through to Script_Load and the callback
-    SCRIPTINFO* scriptInfos[2];         // 0x0c - up to two scripts; nthScript selects which one is "active"
-    float damageThreshold;              // 0x14 - see accumulatedDamage. Set from an unsigned placement dword,
-                                         //        never scaled. A value of 0.0 disables the damage-trigger check
-    float accumulatedDamage;            // 0x18 - SP_Update adds SP_GetHitDamage's result here each frame while
-                                         //        the active script is asleep; once this reaches damageThreshold,
-                                         //        SP_UnPause is called and the threshold is subtracted back off
-                                         //        (so leftover damage carries over)
-    HASHCODE scriptHashcodes[2];        // 0x1c - hashcode of each of the two scripts (SP_LoadScript reads
-                                         //        scriptHashcodes[nthScript] via "scriptInfos[nthScript + 4]"
-                                         //        pointer-arithmetic trickery from the compiler)
-    short state;                        // 0x24 - playback state machine driven by SP_Update - see SP_State
-    short scriptPlayModes[2];           // 0x26 - per-script (indexed like scriptHashcodes) initial play mode,
-                                         //        consumed by SP_LoadScript: 1=start playing immediately
-                                         //        (SP_State_PlayingForward), 8=start armed, paused
-                                         //        (SP_State_Armed), other=load then pause at the first frame,
-                                         //        awaiting a trigger (SP_State_WaitingForward). scriptPlayModes[0]
-                                         //        ==1 also makes SP_CreateScriptPlayer defer the load to
-                                         //        SP_State_DeferredLoad
-    ushort nthScript;                   // 0x2a - selects scriptInfos[nthScript] / scriptHashcodes[nthScript]
-    short unpauseRequested;             // 0x2c - one-shot "please unpause" flag; set by SP_UnPause and by
-                                         //        SP_Activate (conditionally, gated on triggerMask bit 4), folded
-                                         //        into the trigger bitmask by SP_Update once per frame then cleared
-    ushort triggerMask;                 // 0x2e - bitmask of which trigger sources SP_Update should react to - see
-                                         //        SP_TriggerFlags. The conditions actually satisfied this frame
-                                         //        (from SP_Hit, plus SP_Trigger_Unpause for unpauseRequested/
-                                         //        countdown-elapsed) are AND-ed against this
-    ushort someSwitchChannel;           // 0x30 - reset to 0 (off) whenever the script player is (re)created;
-                                         //        also toggled by SP_Update to reflect the current play state
-    ushort disableSwitchChannel;        // 0x32 - if set and this channel is off, SP_Update skips entirely (same
-                                         //        pattern as Sensor/Searchlight's disableSwitchChannel)
-    char someCountdown;                 // 0x34 - frame counter set to 5 whenever playback (re)starts; suppresses
-                                         //        SP_Hit checks and the unpause bit while counting down
-    char playOnce;                      // 0x35 - 0 = loop/toggle between the two scripts forever; nonzero = finish
-                                         //        (state=5, delete) after the active script finishes once
-    char maybeHideState;                // 0x36 - set by SP_HideObj; nonzero makes SP_Update skip entirely
-    char requiredBulletType;            // 0x37 - bullet-hit filter used by SP_Hit: 0 = any bullet counts,
-                                         //        otherwise only bullets whose type matches this value count
-    char loadingScreenShown;            // 0x38 - always zeroed on creation, not sourced from placement data;
-                                         //        one-shot latch so SP_Update only pushes the "loading" GameFlow
-                                         //        state once while waiting for the script asset to load
-    char unknown_0x39[3];               // 0x39 - trailing bytes, never referenced by any function seen so far
-} SCRIPTPLAYER;
+// Defined further down, next to Create_ScriptPlayer_Params
+void _SP_LoadScript(obj_tag *obj, SCRIPTPLAYER *scriptPlayer);
 
-static_assert(sizeof(SCRIPTPLAYER) == 60, "SCRIPTPLAYER should be 60 bytes (confirmed via Ghidra)");
-static_assert(offsetof(SCRIPTPLAYER, scriptInfos) == 0xc, "Bad offset of scriptInfos");
-static_assert(offsetof(SCRIPTPLAYER, scriptHashcodes) == 0x1c, "Bad offset of scriptHashcodes");
-static_assert(offsetof(SCRIPTPLAYER, scriptPlayModes) == 0x26, "Bad offset of scriptPlayModes");
-static_assert(offsetof(SCRIPTPLAYER, nthScript) == 0x2a, "Bad offset of nthScript");
-static_assert(offsetof(SCRIPTPLAYER, triggerMask) == 0x2e, "Bad offset of triggerMask");
-static_assert(offsetof(SCRIPTPLAYER, someSwitchChannel) == 0x30, "Bad offset of someSwitchChannel");
-static_assert(offsetof(SCRIPTPLAYER, someCountdown) == 0x34, "Bad offset of someCountdown");
-
-#pragma pack(pop)
-
-// Forward declaration - defined further down, next to Create_ScriptPlayer_Params
-void SP_LoadScript(obj_tag *obj, SCRIPTPLAYER *scriptPlayer);
+// The original's, called by address: Ghidra calls it __stdcall, but its callers pop its arguments
+#define LoadableLoad ((bool (__cdecl *)(HASHCODE hashcode, uint loadable))0x000bff90)
 
 // AUTOINJECT
 void SP_RemoveObj(obj_tag* obj, void* scriptPlayerPtr) {
@@ -152,10 +91,7 @@ void SP_UnPause(obj_tag *obj) {
 
 // Computes the bits of triggerMask that are satisfied this frame by hits against the active script's linked
 // objects. Not part of the public API - only ever called from within SP_Update.
-// Cannot autoinject - custom calling convention (the original takes its one parameter in EBX). Only used from
-// within SP_Update, so not a problem - see View_CaptureSceneSub for another example of this pattern.
-// UNINJECTABLE
-ushort SP_Hit(SCRIPTPLAYER *scriptPlayer) {
+ushort _SP_Hit(SCRIPTPLAYER *scriptPlayer) {
     SCRIPTINFO* scriptInfo = scriptPlayer->scriptInfos[scriptPlayer->nthScript];
 
     ushort hitFlags = 0;
@@ -196,6 +132,17 @@ ushort SP_Hit(SCRIPTPLAYER *scriptPlayer) {
     }
 
     return hitFlags;
+}
+
+// The original takes the script player in EBX. SP_Update is its only caller.
+// AUTOLTCG
+void __declspec(naked) SP_Hit(void) {
+    _asm {
+        push ebx
+        call _SP_Hit
+        add esp, 4
+        ret
+    }
 }
 
 // AUTOINJECT
@@ -255,7 +202,7 @@ void SP_SwitchToScript(obj_tag *obj, short newScriptPlayMode, ScriptPlayerCallba
     scriptPlayer->scriptPlayModes[scriptPlayer->nthScript] = newScriptPlayMode;
     scriptPlayer->callback = callback;
 
-    SP_LoadScript(obj, scriptPlayer);
+    _SP_LoadScript(obj, scriptPlayer);
 
     if (scriptPlayer->playOnce == 0) {
         scriptPlayer->state = (scriptPlayer->scriptPlayModes[scriptPlayer->nthScript] != 1) ? SP_State_WaitingReverse : SP_State_PlayingForward;
@@ -324,7 +271,7 @@ void SP_Update(obj_tag* obj) {
 
     Script_Update(scriptPlayer->scriptInfos[scriptPlayer->nthScript]);
 
-    ushort hitFlags = (scriptPlayer->someCountdown == 0) ? SP_Hit(scriptPlayer) : 0;
+    ushort hitFlags = (scriptPlayer->someCountdown == 0) ? _SP_Hit(scriptPlayer) : 0;
 
     char switchState = (scriptPlayer->someSwitchChannel == 0) ? 0 : switch_channels[scriptPlayer->someSwitchChannel];
 
@@ -364,7 +311,7 @@ void SP_Update(obj_tag* obj) {
                 return;
             }
 
-            SP_LoadScript(obj, scriptPlayer);
+            _SP_LoadScript(obj, scriptPlayer);
             Script_Play(scriptPlayer->scriptInfos[scriptPlayer->nthScript], 0);
             scriptPlayer->state = SP_State_PlayingForward;
         }
@@ -395,7 +342,7 @@ void SP_Update(obj_tag* obj) {
                 ushort altIndex = (scriptPlayer->nthScript == 0) ? 1 : 0;
                 if (scriptPlayer->scriptHashcodes[altIndex] != 0) {
                     scriptPlayer->nthScript = altIndex;
-                    SP_LoadScript(obj, scriptPlayer);
+                    _SP_LoadScript(obj, scriptPlayer);
                 }
                 scriptPlayer->state = SP_State_WaitingReverse;
             } else {
@@ -419,7 +366,7 @@ void SP_Update(obj_tag* obj) {
             ushort altIndex = (scriptPlayer->nthScript == 0) ? 1 : 0;
             if (scriptPlayer->scriptHashcodes[altIndex] != 0) {
                 scriptPlayer->nthScript = altIndex;
-                SP_LoadScript(obj, scriptPlayer);
+                _SP_LoadScript(obj, scriptPlayer);
             }
             scriptPlayer->state = SP_State_WaitingForward;
         }
@@ -442,7 +389,7 @@ void SP_Update(obj_tag* obj) {
                 Script_Free(scriptPlayer->scriptInfos[0]);
                 scriptPlayer->scriptInfos[0] = NULL;
                 scriptPlayer->nthScript = altIndex;
-                SP_LoadScript(obj, scriptPlayer);
+                _SP_LoadScript(obj, scriptPlayer);
                 scriptPlayer->state = SP_State_PlayingForward;
             }
         }
@@ -450,7 +397,7 @@ void SP_Update(obj_tag* obj) {
     }
 
     case SP_State_DeferredLoad:
-        SP_LoadScript(obj, scriptPlayer);
+        _SP_LoadScript(obj, scriptPlayer);
         break;
     }
 
@@ -586,24 +533,56 @@ static_assert(offsetof(Create_ScriptPlayer_Params, scalePercent) == 0x54, "Bad o
 
 #pragma pack(pop)
 
-// Can't generate automatically - custom calling convention. scriptPlayer is expected in ESI by the original
-// function (located at 0x000c3e20), while obj stays a normal stack argument - see View_AddCels for another
-// example of this pattern.
-//
-// ESI is saved and restored around the call, the same as Script_Run does for EBX: our callers are ordinary C++,
-// and ESI is callee-saved, so the compiler may be holding something else in it across this call. A plain tail-jmp
-// returned with ESI pointing at the script player, and clang keeps the placement data in ESI across the call in
-// SP_CreateScriptPlayer - which then read the scale from 0x54 bytes into the script player (past its end), and
-// every entity whose script loaded at creation got a garbage scale: missing from the level, or gone once used.
-void __declspec(naked) SP_LoadScript(obj_tag *obj, SCRIPTPLAYER *scriptPlayer) {
+// Loads the active script (or rewinds it, if loaded) and starts it as its play mode says: 1 playing, 8 looping but
+// armed (SP_State_Armed), anything else run one tick and stopped, to wait for a trigger. Script 0's loadable part is
+// loaded first, whichever script is active. The callback goes with the first script loaded.
+void _SP_LoadScript(obj_tag *obj, SCRIPTPLAYER *scriptPlayer) {
+    HASHCODE hashcode = scriptPlayer->scriptHashcodes[0];
+    uint loadable = isLoadable(hashcode);
+    if (loadable != 0) {
+        SFXSuspendFileAccess();
+        LoadableLoad(hashcode, loadable);
+        SFXUnSuspendFileAccess();
+    }
+
+    if (scriptPlayer->scriptInfos[scriptPlayer->nthScript] == NULL) {
+        scriptPlayer->scriptInfos[scriptPlayer->nthScript] =
+            Script_Load(scriptPlayer->scriptHashcodes[scriptPlayer->nthScript], &obj->position, &obj->rotation, NULL,
+                        scriptPlayer, scriptPlayer->callback, scriptPlayer->callbackContext);
+    } else {
+        Script_Set2Start(scriptPlayer->scriptInfos[scriptPlayer->nthScript]);
+    }
+    scriptPlayer->callback = NULL;
+
+    switch (scriptPlayer->scriptPlayModes[scriptPlayer->nthScript]) {
+    case 1:
+        Script_Play(scriptPlayer->scriptInfos[scriptPlayer->nthScript], 0);
+        scriptPlayer->state = SP_State_PlayingForward;
+        Script_Update(scriptPlayer->scriptInfos[scriptPlayer->nthScript]);
+        break;
+    case 8:
+        Script_Play(scriptPlayer->scriptInfos[scriptPlayer->nthScript], 1);
+        scriptPlayer->state = SP_State_Armed;
+        Script_Update(scriptPlayer->scriptInfos[scriptPlayer->nthScript]);
+        break;
+    default:
+        Script_Play(scriptPlayer->scriptInfos[scriptPlayer->nthScript], 0);
+        Script_Update(scriptPlayer->scriptInfos[scriptPlayer->nthScript]);
+        Script_Stop(scriptPlayer->scriptInfos[scriptPlayer->nthScript]);
+        scriptPlayer->state = SP_State_WaitingForward;
+        Script_Update(scriptPlayer->scriptInfos[scriptPlayer->nthScript]);
+        break;
+    }
+}
+
+// The original takes the object on the stack and the script player in ESI.
+// AUTOLTCG
+void __declspec(naked) SP_LoadScript(void) {
     _asm {
         push esi
-        mov esi, [esp + 12]         // scriptPlayer
-        push dword ptr [esp + 8]    // obj
-        mov eax, 0x000C3E20
-        call eax
-        add esp, 4
-        pop esi
+        push dword ptr [esp + 8]
+        call _SP_LoadScript
+        add esp, 8
         ret
     }
 }
@@ -654,7 +633,7 @@ obj_tag* SP_CreateScriptPlayer(_VECTOR *pos, _VECTOR *rot, level_tag *placementD
     if (scriptPlayer->scriptPlayModes[0] == 1) {
         scriptPlayer->state = SP_State_DeferredLoad;
     } else if (scriptPlayer->scriptPlayModes[0] != 0) {
-        SP_LoadScript(obj, scriptPlayer);
+        _SP_LoadScript(obj, scriptPlayer);
     }
 
     if (scriptPlayer->scriptInfos[0] != NULL) {

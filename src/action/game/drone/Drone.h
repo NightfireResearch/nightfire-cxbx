@@ -158,7 +158,8 @@ typedef struct Drone_tag {
     char _pad420[0x440 - 0x420];
     void *animCallback1;            // 0x440
     void *animCallback2;            // 0x444
-    char _pad448[0x450 - 0x448];
+    float unknown448;               // 0x448 - pi, set by DSTATE_PlayScript at the end of script 0x60007ac
+    char _pad44c[0x450 - 0x44c];
     HASHCODE playScript;            // 0x450 - key 1
     char _pad454[0x492 - 0x454];
     short animEndState;             // 0x492 - DroneAnim_CallAnim's end state and message
@@ -172,12 +173,16 @@ typedef struct Drone_tag {
     AIRoute_tag route1;             // 0x634 - the dynamic route
     char _pad6d4[0x6d8 - 0x6d4];
     AIRoute_tag route2;             // 0x6d8 - the patrol / mission route
-    char _pad778[0x874 - 0x778];
+    char _pad778[0x825 - 0x778];
+    uchar unknown825;               // 0x825 - bit 0 cleared by DSTATE_PlayScript for script 0x60007ac
+    char _pad826[0x874 - 0x826];
     DIVars_tag diVars;              // 0x874 - the drone's own copy of its creation vars
     uint timerA[3];                 // 0x918 - both timers are cleared on every state change
     uint timerB[3];                 // 0x924
-    uint stateScratch;              // 0x930 - anim id, flags; read as a state number by DSTATE_Disabled
-    char _pad934[0x974 - 0x934];
+    uint stateScratch;              // 0x930 - anim id, flags; read as a state number by DSTATE_Disabled; in
+                                    //         DSTATE_PlayScript the state an impact sends it to
+    uint stateScratch2;             // 0x934 - in DSTATE_PlayScript: whether it looks for an opponent while playing
+    char _pad938[0x974 - 0x938];
     struct BOT_vars_t *botVars;     // 0x974 - multiplayer bots only
 } Drone_tag;
 
@@ -234,6 +239,9 @@ static_assert(offsetof(Drone_tag, route2) == 0x6d8, "Wrong offset for route2");
 static_assert(offsetof(Drone_tag, diVars) == 0x874, "Wrong offset for diVars");
 static_assert(offsetof(Drone_tag, timerA) == 0x918, "Wrong offset for timerA");
 static_assert(offsetof(Drone_tag, stateScratch) == 0x930, "Wrong offset for stateScratch");
+static_assert(offsetof(Drone_tag, stateScratch2) == 0x934, "Wrong offset for stateScratch2");
+static_assert(offsetof(Drone_tag, unknown448) == 0x448, "Wrong offset for unknown448");
+static_assert(offsetof(Drone_tag, unknown825) == 0x825, "Wrong offset for unknown825");
 static_assert(offsetof(Drone_tag, botVars) == 0x974, "Wrong offset for botVars");
 
 // Set by Drone_InitComms / ResetMap_GameInit (still the game's); while set, no drones are created and
@@ -247,5 +255,6 @@ void Drone_SM_RouteMsg(MsgObject *msg);
 // (DroneSM.cpp).
 void Drone_SM_RouteMsgDCV(DCVars_tag *dcVars, MsgObject *msg);
 void Drone_EnableAll(char enable, HASHCODE hashcode);
+obj_tag* Drone_CoderCreate(_VECTOR *pos, _VECTOR *rot, HASHCODE skin, HASHCODE playScript, uint unused, uint weapon, ushort initialState);
 
 #endif // DRONE_H_

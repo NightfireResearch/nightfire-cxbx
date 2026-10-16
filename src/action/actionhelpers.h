@@ -65,7 +65,9 @@ typedef struct SPRITE_DRAW SPRITE_DRAW;
 typedef struct edl_header_t edl_header_t;
 
 
-typedef void* ScriptPlayerCallback; // FIXME: Function pointer signature
+// What a script player calls on script event 15: the object of the stream before the event's, the event's
+// argument, and the context it was given (FuseBox_Register)
+typedef void ScriptPlayerCallback(obj_tag *obj, unsigned short arg, void *context);
 
 // Hashcode, SFX and translated text names
 #include "assets.h"

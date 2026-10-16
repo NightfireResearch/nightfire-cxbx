@@ -102,7 +102,7 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | 40 | parsemap_block_particles → FUN_800c9358 | 0x800c9358 | emitter texture hash == -1 | EMITTER TEXTURE MISSING | no | parsemap_block_particles (inlined) | 0x68020 | med-high | ? |
 | 41 | FUN_8005a760 (AI path node → cel link) | 0x8005a760 | build_FindCel(node pos) == NULL | FATAL: AIPath '%s' NODE (%d) IS NOT IN A ROOM: %f, %f, %f | no | AIPath_BindNodes (probably inlined) | 0xa72a0 | med | ? |
 | 42 | AIBounds link (FUN_8005a9e0) | 0x8005a9e0 | build_FindCel(node pos) == NULL | same as 41 | no | AIBounds_Link2Cel | 0xa7160 | high | silent |
-| 43 | Script_Load | 0x80060338 | script placement whose hash is not loaded (param_4 == 0) | Warning : map contains script 0x%x that is not loaded / not setup correctly xyz[...] | no | Script_Load | 0xc1550 | high | ? |
+| 43 | Script_Load | 0x80060338 | script placement whose hash is not loaded (param_4 == 0) | Warning : map contains script 0x%x that is not loaded / not setup correctly xyz[...] | no | Script_Load | 0xc1550 | high | silent - added: src/action/engine/Script.cpp (Script_Load) |
 | **Animation** |
 | 44 | AnimLoadFile | 0x80044830 | hash type not 0x04/0x05/0x06 | Invalid hash code %p | no | AnimLoadFile | 0x14a20 | high | ? |
 | 45 | AnimProcessScriptData | 0x80044310 | script command type >= 5 | Script 0x%x invalid command 0x%x data 0x%x | no | AnimProcessScriptData | 0x110c0 | high | ? |

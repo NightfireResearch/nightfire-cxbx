@@ -12,6 +12,7 @@
 #include "action/memory.h"
 #include "action/sound/music.h"
 #include "action/ui/ui.h"
+#include "action/ui/MenuScript.h"
 #include "action/engine/psiFile.h"
 #include "action/engine/XboxFile.h"
 #include "common/xboxPath.h"
@@ -196,5 +197,8 @@ void Inject()
 
   // Debug probes that stand in front of patched functions (off unless settings.ini asks for them)
   MenuProbe_Install();
+
+  // NIGHTFIRE_ORIGINAL: run some functions as the original, whatever has been ported
+  Demo_RestoreOriginals();
 
 }

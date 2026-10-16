@@ -8,6 +8,7 @@
 #include "../../engine/mouseSteer.h"
 #include "../../engine/viewFov.h"
 #include "../../engine/Camera.h"
+#include "../../engine/Collide.h"
 #include "GT.h"
 
 #include "../../input.h"
@@ -19,9 +20,7 @@
 // AUTOGEN
 unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState);
 // AUTOGEN
-void Player_Disable(obj_tag *param_1,char param_2);
-// AUTOGEN
-void Player_Enable(obj_tag *param_1, _MATRIX *mtx, int param_3);
+void Player_CollWire(obj_tag *player, BLData *blData, obj_tag *wire);
 // AUTOGEN
 void Player_SetHealth(BLData *obj, float health);
 // AUTOGEN
@@ -96,6 +95,110 @@ void Player_SetCamMode(BLData *player, unsigned short newMode) {
 
     }
 
+}
+
+// The original's, called by address: Ghidra's prototypes have untyped arguments.
+#define Collide_SphereIntersect ((bool (__cdecl *)(_VECTOR *centre, float radius, cel_tag *cel, obj_tag *obj, obj_tag *ignore, HITDATA_tag **hitList, char param_7, char param_8, ushort collideFlags, int param_10))0x0002c610)
+#define Player_CollCreepWall ((void (__cdecl *)(obj_tag *player, BLData *blData, obj_tag *creepWall))0x000aeda0)
+
+// What Player_Enable looks for around the player when asked to (the radius, the collision flags).
+#define PLAYER_ENABLE_ATTACH_RADIUS 2.0f
+#define PLAYER_ENABLE_ATTACH_FLAGS 0x8c0
+
+// Takes the player out of play for a cutscene: hidden with his weapon, and not hit-tested. With freeze, he only
+// stops where he is.
+// AUTOINJECT
+void Player_Disable(obj_tag *player, char freeze) {
+    if (player == NULL)
+        return;
+
+    BLData *blData = (BLData *)player->extraObjectData;
+    if (freeze) {
+        blData->frozen = 1;
+        return;
+    }
+
+    blData->active = 0;
+    player->effectFlags |= FLAG_HIDDEN;
+    blData->hitTestType = 0;
+    if (blData->weaponObject != NULL)
+        blData->weaponObject->effectFlags |= FLAG_HIDDEN;
+}
+
+// Puts the player back in play after Player_Disable, placed at mtx if given (facing along its direction), with his
+// movement and the controls cleared. With checkAttach, a wire or creep wall within reach takes him on.
+// AUTOINJECT
+void Player_Enable(obj_tag *player, _MATRIX *mtx, int checkAttach) {
+    if (player == NULL)
+        return;
+
+    BLData *blData = (BLData *)player->extraObjectData;
+    blData->active = 2;
+    blData->frozen = 0;
+    player->effectFlags &= ~FLAG_HIDDEN;
+    if (mtx != NULL) {
+        _VECTOR dir;
+        Mat_GetDir(&dir, mtx);
+        Vec_Copy(Mat_Position(*mtx), &player->position);
+        vecutil_cartesian_to_spherical_acc(&player->rotation, dir.x, dir.y, dir.z);
+        Vec_Copy(&player->position, &player->lastPosition);
+        Vec_Copy(&player->rotation, &player->lastRotation);
+    }
+
+    blData->hitTestType = 0x800;
+    if (blData->weaponObject != NULL)
+        blData->weaponObject->effectFlags &= ~FLAG_HIDDEN;
+    blData->field_0x8dc = 0;
+    blData->field_0x8e2 = 0;
+    Vec_Zero(&blData->field_0x3c);
+    BLData *movement = (BLData *)player->extraObjectData;
+    Vec_Zero(&movement->lastMovement);
+    Vec_Zero(&movement->lastRotationDelta);
+    Vec_Zero(&movement->movement);
+    Vec_Zero(&movement->rotationDelta);
+    Input_ClearAllActions(-1);
+    control_unlink_object(player);
+    build_LinkToRoom(player, 1, glb_world);
+
+    if (checkAttach) {
+        HITDATA_tag *hitList = NULL;
+        Collide_SphereIntersect(&player->position, PLAYER_ENABLE_ATTACH_RADIUS, player->inCel, player, NULL, &hitList,
+                                0, 1, PLAYER_ENABLE_ATTACH_FLAGS, 4);
+        for (HITDATA_tag *hit = hitList; hit != NULL; hit = hit->next) {
+            obj_tag *hitObj = hit->hitObj;
+            if (hitObj == NULL)
+                continue;
+            if (hitObj->objectType == OBJECTTYPE_THIRDCAM_OR_WIRE) {
+                Player_CollWire(player, blData, hitObj);
+                break;
+            }
+            if (hitObj->objectType == OBJECTTYPE_CREEPWALL) {
+                Player_CollCreepWall(player, blData, hitObj);
+                break;
+            }
+        }
+        Collide_FreeHitList(&hitList);
+    }
+
+    control_unlink_object(player);
+    build_LinkToRoom(player, 1, glb_world);
+}
+
+// The camera mode a script asks for (event 9): 3 is the third-person view (camera mode 2); anything else is the
+// first-person view, level, with the player on foot.
+// AUTOINJECT
+void Player_Cam2Mode(ushort playerNum, uint mode) {
+    if (glb_blokes[playerNum] == NULL)
+        return;
+
+    if (mode == 3) {
+        Player_SetCamMode(glb_blokes[playerNum], 2);
+        return;
+    }
+
+    glb_blokes[playerNum]->pitchFromHorizontal = 0.0f;
+    Player_SetCamMode(glb_blokes[playerNum], 0);
+    Player_ChangeSubState(glb_players[playerNum], MovementType_Walk);
 }
 
 // AUTOINJECT
