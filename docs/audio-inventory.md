@@ -200,6 +200,46 @@ belongs in the distance curve, not in an unexplainable gain trim. Note also that
 reference - its DirectSound has at least one outright bug (see the rewinding `Stop` above) - so "different
 from CXBX" does not by itself mean "wrong".
 
+## Open question: a guard's knockout cry not heard in CastleExterior
+
+**Status: a possible backend bug, to be checked against an emulator, then investigated.** Reported 16 October
+2026 while recording time demos (docs/action-timedemo.md).
+
+In CastleExterior, a guard who had surrendered was knocked out and made no sound that could be heard. In
+CastleCourtyard, the same thing gave a cry of pain. A trace of both recordings (`tools/demo/speech_trace.cdb`)
+shows the game doing exactly the same thing in both, up to the sound request:
+
+| | CastleExterior | CastleCourtyard |
+|---|---|---|
+| frame (GameState.NumFramesUnpaused) | 989, about 20 s after the level starts | 3255 |
+| state handling the knockout (message 6) | `NDrone2_DSTATE_Surrendered` (0x55782) | `NDrone2_DSTATE_Surrender_Anim` (0x55642) |
+| then | `NDrone2_PainTalk` (0x3bd80) -> `NDrone2_SpeechSFX` (0x37530), sound 19 | the same |
+| `NDrone2_PlaySFX` (0x37340) | called; returns a handle | called; returns a handle |
+
+Neither recording has a punch: `NDrone2_PunchImpact` is never called. Both surrender states call `PainTalk`
+unconditionally before `DSTATE_KnockedOut_Anim`, so on the game's side the cry is always requested. Whatever kept
+it from being heard comes after the request: in the sound layer (`psiRequestVoiceHandle`, `psiSampleKeyOn`, the
+XAudio2 backend's 3D path), or in what else was playing at that moment.
+
+Candidates, none checked yet:
+- **3D attenuation.** The guard's distance from the listener, and our translated distance curve. See the question
+  above: X3DAudio's model and the Xbox's diverge most at the extremes.
+- **Voice slots.** A slot recycled, or stolen, early in the level.
+- **Masking.** The level's music, or the opening dialogue, playing at that moment. That is not a bug, if the
+  emulator does the same.
+
+To reproduce:
+- **Demos:** `tests/demos/action/CastleExterior-20261016-031815.nfdemo` (the silent knockout, frame 989) and
+  `tests/demos/action/CastleCourtyard-20261016-032931.nfdemo` (the heard one, frame 3255). Play them on an AMD
+  machine (tests/demos/action/README.md), at normal speed to listen: `NIGHTFIRE_DEMO_PLAY` without
+  `NIGHTFIRE_DEMO_FAST`.
+- **What happens in the demos:** both are started with `-level` at the default difficulty. Frame 989 of
+  CastleExterior comes shortly after the opening. In an emulator, take a guard's surrender early in
+  CastleExterior and knock him out, then listen for the cry. Do the same in CastleCourtyard as a control.
+- **Next step here:** log, for the voice `PlaySFX` starts at frame 989, its volume, headroom, 3D position and
+  distance, and the listener's position, from the XAudio2 backend. Debugger breakpoints on actioninject.dll's own
+  functions need its symbols loaded (`cdb -y Release`), which the first attempt did not have.
+
 ## Reverb: CXBX never implemented it either
 
 Worth knowing before treating the missing I3DL2 reverb as a regression. In CXBX-Reloaded:
