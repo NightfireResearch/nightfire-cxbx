@@ -1,8 +1,8 @@
 // Shadow test for the maths ports that follow the original's x87 code exactly (math.cpp's rotations, the plane and
-// triangle tests, Collide_RayTriangle, Vision_InView, Searchlight_Update's sweep): ours and the original on the
-// same inputs, random and edge cases (zeros of both signs, NaNs, infinities, huge angles, denormals), compared bit
-// for bit. FSIN and FCOS run on this CPU for both, so even their results must agree. Run at start with
-// MenuShadowTests=on (MenuProbe.cpp).
+// triangle tests, Collide_RayTriangle, Vision_InView, Searchlight_Update's sweep, MatrixMultiplyVector and
+// ApplyMatrixLV): ours and the original on the same inputs, random and edge cases (zeros of both signs, NaNs,
+// infinities, huge angles, denormals), compared bit for bit. FSIN and FCOS run on this CPU for both, so even their
+// results must agree. Run at start with MenuShadowTests=on (MenuProbe.cpp).
 
 #include "MathExactShadow.h"
 
@@ -30,6 +30,8 @@ const unsigned kvecutil_point_on_poly = 0x000d7f80;
 const unsigned kCollide_RayTriangle = 0x0002b1b0;
 const unsigned kVision_InView = 0x000dbc80;
 const unsigned kSearchlight_Update = 0x0006dcb0;
+const unsigned kMatrixMultiplyVector = 0x000d7500;
+const unsigned kApplyMatrixLV = 0x000d7560;
 
 typedef void(__cdecl *RotationFn)(_VECTOR *, _MATRIX *);
 typedef void(__cdecl *RotTransFn)(_VECTOR *, _VECTOR *, _MATRIX *);
@@ -40,6 +42,7 @@ typedef uint8_t(__cdecl *PointOnPolyFn)(_VECTOR *, _VECTOR *, _VECTOR *, _VECTOR
 typedef uint8_t(__cdecl *RayTriangleFn)(_VECTOR *, _VECTOR *, _VECTOR *, _VECTOR *, _VECTOR *, float *);
 typedef uint8_t(__cdecl *InViewFn)(_VECTOR *, float, viewer_tag *);
 typedef void(__cdecl *UpdateFn)(obj_tag *);
+typedef void(__cdecl *TransformFn)(_MATRIX *, _VECTOR *, _VECTOR *);
 
 const int kTrials = 40000;
 const uint32_t kUntouched = 0x7fa5a5a5;   // a NaN no operation produces, in every word a function should not write
@@ -458,6 +461,129 @@ void CheckSweep(void) {
     Summary(suite);
 }
 
+// The same float or one ulp either way
+float Nudge(float f) {
+    uint32_t bits;
+    memcpy(&bits, &f, sizeof(bits));
+    bits = bits + NextWord() % 3 - 1;
+    return FromBits(bits);
+}
+
+// A rotation with an offset, edge values or any words. m[3], m[7] and m[11] are never read and get anything.
+_MATRIX Matrix(void) {
+    _MATRIX m;
+    switch (NextWord() % 8) {
+    case 0: case 1:
+        for (int i = 0; i < 12; i++)
+            m.m[i] = Uniform(1.0f);
+        for (int i = 12; i < 15; i++)
+            m.m[i] = Uniform(1000.0f);
+        break;
+    case 2:
+        for (int i = 0; i < 15; i++)
+            m.m[i] = Edge();
+        break;
+    default:
+        for (int i = 0; i < 15; i++)
+            m.m[i] = Coordinate();
+        break;
+    }
+    for (int i = 3; i < 12; i += 4)
+        m.m[i] = NextWord() % 2 ? Edge() : FromBits(NextWord());
+    return m;
+}
+
+// Large products in a row that cancel, within an ulp or exactly: m[r] * x against m[4 + r] * y and m[8 + r] * z,
+// and the translation against the first, so the order of the sums shows in the result
+void Cancel(_MATRIX *m, _VECTOR *v) {
+    v->x = NextWord() % 2 ? Uniform(1e19f) : AnyMagnitude();
+    v->y = Nudge(NextWord() % 2 ? v->x : -v->x);
+    v->z = NextWord() % 2 ? Nudge(v->x) : Uniform(1.0f);
+    for (int r = 0; r < 3; r++) {
+        if (NextWord() % 4 == 0)
+            continue;
+        m->m[r] = NextWord() % 2 ? Uniform(1e19f) : AnyMagnitude();
+        m->m[4 + r] = Nudge(NextWord() % 2 ? m->m[r] : -m->m[r]);
+        m->m[8 + r] = Nudge(NextWord() % 2 ? m->m[r] : -m->m[r]);
+        if (NextWord() % 2)
+            m->m[12 + r] = Nudge((float)-((double)m->m[r] * v->x));
+    }
+}
+
+// Where vIn lies against vOut. The original stores each component before reading the next, so an overlap shows.
+enum Placement { kApart, kSame, kOutAfterIn, kOutBeforeIn };
+const char *const kPlacementNames[] = {"vector (vIn apart)", "vector (vIn == vOut)", "vector (vOut one word after vIn)",
+                                       "vector (vOut one word before vIn)"};
+
+// vOut at words[2], or words[3] when it follows vIn; two guard words either side of the four that may be written
+struct Placed {
+    float words[8];
+    _VECTOR apart;
+    _VECTOR *in;
+    _VECTOR *out;
+
+    void Place(int placement, const _VECTOR &v) {
+        Fill(words, sizeof(words));
+        apart = v;
+        in = &apart;
+        out = (_VECTOR *)&words[2];
+        if (placement == kSame) {
+            in = out;
+        } else if (placement == kOutAfterIn) {
+            in = (_VECTOR *)&words[2];
+            out = (_VECTOR *)&words[3];
+        } else if (placement == kOutBeforeIn) {
+            in = (_VECTOR *)&words[3];
+        }
+        if (in != &apart)
+            *in = v;
+    }
+};
+
+// The four words between the guards as floats, then the guards apart so a NaN written there is never taken for a
+// choice between NaNs
+struct TransformResult {
+    float out[4];
+    uint32_t guards[4];
+};
+
+TransformResult Collect(const Placed &placed) {
+    TransformResult result;
+    memcpy(result.out, &placed.words[2], sizeof(result.out));
+    memcpy(&result.guards[0], &placed.words[0], 8);
+    memcpy(&result.guards[2], &placed.words[6], 8);
+    return result;
+}
+
+void CheckTransform(const char *name, unsigned address, void (*ours)(_MATRIX *, _VECTOR *, _VECTOR *),
+                    bool translation) {
+    Suite suite = {name, 0, 0, 0};
+    for (int t = 0; t < kTrials; t++) {
+        _MATRIX m = Matrix();
+        _VECTOR v = Vector(Coordinate);
+        if (NextWord() % 4 == 0)
+            Cancel(&m, &v);
+        int placement = NextWord() % 4;
+        Inputs in = {};
+        in.Add(v);
+        for (int i = 0; i < 15; i++)
+            if (i % 4 != 3 && (i < 12 || translation))
+                in.Add(m.m[i]);
+        Placed placed;
+        placed.Place(placement, v);
+        ours(&m, placed.in, placed.out);
+        TransformResult a = Collect(placed);
+        placed.Place(placement, v);
+        {
+            XbeOriginalScope original(address);
+            ((TransformFn)address)(&m, placed.in, placed.out);
+        }
+        TransformResult b = Collect(placed);
+        Check(suite, &a, &b, sizeof(a), sizeof(a.out), 4, kPlacementNames[placement], in.f, in.count);
+    }
+    Summary(suite);
+}
+
 } // namespace
 
 void MathExactShadow_Run(void) {
@@ -471,4 +597,6 @@ void MathExactShadow_Run(void) {
     CheckRayTriangle();
     CheckInView();
     CheckSweep();
+    CheckTransform("MatrixMultiplyVector", kMatrixMultiplyVector, MatrixMultiplyVector, true);
+    CheckTransform("ApplyMatrixLV", kApplyMatrixLV, ApplyMatrixLV, false);
 }

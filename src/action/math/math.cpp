@@ -753,18 +753,20 @@ void Vec_Swap(_VECTOR *a, _VECTOR *b) {
   b->z = tmp_z;
 }
 
+// Summed on the x87, z first; each component stored before the next is read, so vecIn may be vecOut
 // AUTOINJECT
 void MatrixMultiplyVector(_MATRIX *mtx, _VECTOR *vecIn, _VECTOR *vecOut) {
-  vecOut->x = mtx->m[0] * vecIn->x + mtx->m[4] * vecIn->y + mtx->m[8] * vecIn->z + mtx->m[0xc];
-  vecOut->y = mtx->m[5] * vecIn->y + mtx->m[1] * vecIn->x + mtx->m[9] * vecIn->z + mtx->m[0xd];
-  vecOut->z = mtx->m[6] * vecIn->y + mtx->m[2] * vecIn->x + mtx->m[10] * vecIn->z + mtx->m[0xe];
+  vecOut->x = (float)((double)mtx->m[8] * vecIn->z + (double)mtx->m[4] * vecIn->y + (double)mtx->m[0] * vecIn->x + mtx->m[0xc]);
+  vecOut->y = (float)((double)mtx->m[9] * vecIn->z + (double)mtx->m[1] * vecIn->x + (double)mtx->m[5] * vecIn->y + mtx->m[0xd]);
+  vecOut->z = (float)((double)mtx->m[10] * vecIn->z + (double)mtx->m[2] * vecIn->x + (double)mtx->m[6] * vecIn->y + mtx->m[0xe]);
 }
 
+// Summed on the x87, z first; each component stored before the next is read, so vIn may be vOut
 // AUTOINJECT
 void ApplyMatrixLV(_MATRIX *mtx, _VECTOR *vIn, _VECTOR *vOut) {
-  vOut->x = mtx->m[0] * vIn->x + mtx->m[4] * vIn->y + mtx->m[8] * vIn->z;
-  vOut->y = mtx->m[5] * vIn->y + mtx->m[1] * vIn->x + mtx->m[9] * vIn->z;
-  vOut->z = mtx->m[6] * vIn->y + mtx->m[2] * vIn->x + mtx->m[10] * vIn->z;
+  vOut->x = (float)((double)mtx->m[8] * vIn->z + (double)mtx->m[4] * vIn->y + (double)mtx->m[0] * vIn->x);
+  vOut->y = (float)((double)mtx->m[9] * vIn->z + (double)mtx->m[1] * vIn->x + (double)mtx->m[5] * vIn->y);
+  vOut->z = (float)((double)mtx->m[10] * vIn->z + (double)mtx->m[2] * vIn->x + (double)mtx->m[6] * vIn->y);
 }
 
 // AUTOINJECT

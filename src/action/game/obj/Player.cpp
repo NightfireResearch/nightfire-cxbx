@@ -496,20 +496,10 @@ void Player_ViewClamping(obj_tag *player) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Walking, strafing and turning on foot. Transliterated from 0x000a9cf0 so that one line of it can change:
-// the original refuses to walk forwards or backwards while the scope is up.
+// Walking, strafing and turning on foot (0x000a9cf0):
 //
-//     if ((player->animState->animFlags & 1) != 0) { forward = 0; turn = 0; }
-//
-// Strafing was deliberately left alone, which is why scoped movement is sideways-only in the original. That
-// is a concession to aiming a scope with a thumbstick, and it is dropped here for every input device rather
-// than only for the mouse: making it depend on whether the pointer happens to be captured meant the same pad,
-// in the same level, moved differently depending on something the player was not thinking about. Suppressing
-// the *turn* is not optional - while scoped, Player_Aiming turns the player through its own scope-speed path,
-// and leaving this one in as well would add the two together.
-//
-// Everything else here is the original's arithmetic, reproduced rather than improved:
-//
+//  - with the scope up there is no walking forwards or backwards and no turning here (Player_Aiming turns
+//    through the scope's own path), so scoped movement is sideways only;
 //  - the walk axis is shaped by a square law with a small bias, and backwards is 75% of forwards;
 //  - both ground axes ease 20% of the way towards their target per frame, without overshooting it, snap to
 //    zero once the stick is centred and the residue is under 0.01, and clamp to +-FRAME_RATE_MUL * 0.1;
@@ -522,6 +512,7 @@ void Player_ViewClamping(obj_tag *player) {
 // value would unbalance the stack by 28 bytes. It returns its float in ST0, which is what MSVC expects.
 // ---------------------------------------------------------------------------------------------------------------
 
+// XBE_GLOBAL(0x00181a70, 0x4)
 static float Plr_NoAimTurnSpeed_X = 0.04f;
 // XBE_GLOBAL(0x00181a74, 0x4)
 static float Plr_NoAimTurnSpeed_X_Mul = 2.0f;
@@ -534,8 +525,9 @@ static bool PlayerMoveAllowed(obj_tag *player) {
     return reinterpret_cast<bool (__cdecl *)(obj_tag *)>(0x000a9930)(player);
 }
 
-static float TurnAccel(float channel, float *state, float a, float b, float c, float d, float e) {
-    return reinterpret_cast<float (__cdecl *)(float, float *, float, float, float, float, float)>(0x000b7420)
+// Returned unrounded in ST0: the state plus a step can need more than a float holds
+static double TurnAccel(float channel, float *state, float a, float b, float c, float d, float e) {
+    return reinterpret_cast<double (__cdecl *)(float, float *, float, float, float, float, float)>(0x000b7420)
         (channel, state, a, b, c, d, e);
 }
 
@@ -543,20 +535,21 @@ static void RotMatrixX(float angle, float *matrix) {
     reinterpret_cast<void (__cdecl *)(float, float *)>(0x000d67b0)(angle, matrix);
 }
 
-// Eases value towards target by 20% of the gap, stopping there rather than overshooting it.
-static float EaseTowards(float value, float target) {
+// Eases value towards target by rate of the gap, stopping there rather than overshooting it. On the x87 the gap is
+// stored as a float and the eased value stays unrounded.
+static double EaseTowards(float value, float target, double rate) {
     float gap = target - value;
-    float moved = FRAME_RATE_MUL * 0.2f * gap + value;
+    double moved = rate * gap + value;
     if (gap < 0.0f) {
         return (moved < target) ? target : moved;
     }
     return (target < moved) ? target : moved;
 }
 
-static float ClampToStep(float value) {
-    float limit = FRAME_RATE_MUL * 0.1f;
-    if (value < -limit) return -limit;
-    if (value > limit) return limit;
+// The lower bound is the limit as the x87 holds it, the upper one the limit stored as a float
+static float ClampToStep(float value, double limit) {
+    if (value < -limit) return (float)-limit;
+    if (value > (float)limit) return (float)limit;
     return value;
 }
 
@@ -583,46 +576,56 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
         turn = 0.0f;
     }
     if ((player->animState->animFlags & 1) != 0) { // scoped
-        turn = 0.0f; // Player_Aiming turns through the scope path instead; both would add up
+        forward = 0.0f;
+        turn = 0.0f;
     }
     if ((blData->previousSubState == 7) && (blData->maybeCamRelatedCountdown != '\0')) {
         strafe = 0.0f;
     }
 
+    // On the x87 each of these is rounded once, when stored
     if (forward > 0.0f) {
-        forward = FRAME_RATE_MUL * 0.005f + FRAME_RATE_MUL * 0.1f * forward * forward;
+        forward = (float)((double)FRAME_RATE_MUL * 0.1f * forward * forward + (double)FRAME_RATE_MUL * 0.005f);
     }
     else if (forward < 0.0f) {
-        forward = FRAME_RATE_MUL * 0.1f * -0.75f * forward * forward - FRAME_RATE_MUL * 0.005f;
+        forward = (float)((double)FRAME_RATE_MUL * 0.1f * -0.75f * forward * forward - (double)FRAME_RATE_MUL * 0.005f);
     }
-    strafe = FRAME_RATE_MUL * 0.075f * strafe;
+    strafe = (float)((double)FRAME_RATE_MUL * 0.075f * strafe);
 
-    float sideways = EaseTowards(blData->lastMovement.x, strafe);
-    if ((strafe >= -0.0002f) && (strafe <= 0.0002f) && (fabsf(sideways) < 0.01f)) {
+    // The sideways ease uses the rate as the x87 holds it, the forwards one the rate stored as a float
+    double easeRate = (double)FRAME_RATE_MUL * 0.2f;
+    double limit = (double)FRAME_RATE_MUL * 0.1f;
+
+    double eased = EaseTowards(blData->lastMovement.x, strafe, easeRate);
+    float sideways = (float)eased;
+    if ((strafe >= -0.0002f) && (strafe <= 0.0002f) && (fabs(eased) < 0.01f)) {
         sideways = 0.0f;
     }
-    sideways = ClampToStep(sideways);
+    sideways = ClampToStep(sideways, limit);
 
-    float forwards = EaseTowards(blData->lastMovement.z, forward);
-    if ((forward >= -0.0002f) && (forward <= 0.0002f) && (fabsf(forwards) < 0.01f)) {
+    eased = EaseTowards(blData->lastMovement.z, forward, (float)easeRate);
+    float forwards = (float)eased;
+    if ((forward >= -0.0002f) && (forward <= 0.0002f) && (fabs(eased) < 0.01f)) {
         forwards = 0.0f;
     }
-    forwards = ClampToStep(forwards);
+    forwards = ClampToStep(forwards, limit);
 
     // Channel 0x48 is "cover blown": set once Bond has rendezvoused with Zoe and been told to stop
     // playing a party guest. Until then he walks rather than jogs, and Player_HandleJump refuses to let
     // him jump at all. See docs/switch-channels.md for the rest of the hard-coded channels, and for why
     // a channel number need not mean the same thing in another level.
+    // The scaled speed stays unrounded on the x87
+    double speed = speedScale;
     if ((GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1) && (switch_channels[0x48] == '\0')) {
-        speedScale = speedScale * 0.9f;
+        speed = (double)speedScale * 0.9f;
     }
-    float moveZ = forwards * speedScale;
-    float moveX = sideways * speedScale;
+    float moveZ = (float)(forwards * speed);
+    float moveX = (float)(sideways * speed);
 
-    float accel = TurnAccel(turn, &blData->turnAccelState, Plr_NoAimTurnSpeed_X,
-                            Plr_NoAimTurnSpeed_X_Mul, Plr_NoAimTurnSpeed_X_Steps, 0.05f, 0.95f);
-    blData->turnAccelState = accel;
-    float yaw = accel * FRAME_RATE_MUL * turn;
+    double accel = TurnAccel(turn, &blData->turnAccelState, Plr_NoAimTurnSpeed_X,
+                             Plr_NoAimTurnSpeed_X_Mul, Plr_NoAimTurnSpeed_X_Steps, 0.05f, 0.95f);
+    blData->turnAccelState = (float)accel;
+    float yaw = (float)(accel * FRAME_RATE_MUL * turn);
 
     if (player->subState != MovementType_Swim) {
         blData->movement.x = moveX;
@@ -634,7 +637,7 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
     // Swimming goes where the player is looking, and adds to the movement vector rather than replacing it.
     _MATRIX pitched;
     _VECTOR direction;
-    RotMatrixX(player->rotation.x - blData->pitchFromHorizontal * 1.5707964f, pitched.m);
+    RotMatrixX((float)(player->rotation.x - (double)blData->pitchFromHorizontal * 1.5707964f), pitched.m);
     Mat_GetDir(&direction, &pitched);
     auxVec_AddMulR32(&blData->movement, &direction, moveZ, &blData->movement);
     blData->movement.x = moveX;

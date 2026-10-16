@@ -34,26 +34,27 @@ passes through the same levels at the same frames, with the same object counts a
 differences are in floating-point detail, and the HendersonB keypads still open. The rebased recordings matched
 themselves, every frame, twice.
 
-**Rebased again 16 October 2026** onto the maths made exact to the original: the rotation matrices, the plane and
-polygon tests, the ray-triangle test, the view frustum test and the searchlight sweep, with FSIN and FCOS run as the
-instructions. Played with those eleven functions put back to the Xbox's own code (`NIGHTFIRE_ORIGINAL`), every
-recording matches every frame, so the ports are exact on all of this play. The games part from the previous set
-between frame 6 and frame 389, and small differences grow into different play:
+**Rebased again 16-17 October 2026**, twice: onto the maths made exact to the original (the rotation matrices, the
+plane and polygon tests, the ray-triangle test, the view frustum test and the searchlight sweep, with FSIN and FCOS
+run as the instructions), then onto `Player_Move`, `ApplyMatrixLV` and `MatrixMultiplyVector` made exact, with the
+scope stopping forward and backward movement as the original does. Played with those fourteen functions put back to
+the Xbox's own code (`NIGHTFIRE_ORIGINAL`), every recording matches every frame, so the ports are exact on all of
+this play. Small differences grow into different play:
 
 | File | Frames | Now |
 |---|---|---|
 | CastleExterior | 5,649 | as before: on into CastleCourtyard |
-| CastleIndoors1 | 635 | as before, every frame |
+| CastleIndoors1 | 635 | as before |
 | PowerStationA1 | 9,975 | as before |
 | TowerA | 8,935 | as before: on into the next level |
-| CastleCourtyard | 17,816 | reaches the second level later, then fails the mission (front end, 0x07000048) where it used to reach the third |
-| EvilBase | 12,049 | fails the mission at about frame 9,000 |
-| HendersonB | 16,613 | fails the mission before the third level; the leftover input takes the menus into CastleExterior |
+| CastleCourtyard | 17,816 | reaches the second level later and stays there, where it used to reach the third |
+| EvilBase | 12,049 | fails the mission (front end, 0x07000048) by frame 7,200 |
+| HendersonB | 16,613 | stays in the first level; it used to reach the second |
 | SpaceStationD | 13,696 | fails the mission near the end |
-| Tower2A | 12,674 | fails the mission instead of going on to the next level |
+| Tower2A | 12,674 | stays in the first level; it used to go on twice |
 
-The five that now fail are still exact tests of what they play, and they cover a restart and the front end, but
-they no longer reach their later levels. Those five want recording again.
+The last five are still exact tests of what they play, but they no longer reach their later levels. Those five want
+recording again.
 
 A recording made before a change that alters the game's behaviour on purpose stops matching from the frame the
 change first shows. Rebase the set onto the change with tools/demo/rebase_demos.ps1, check that the sessions still
