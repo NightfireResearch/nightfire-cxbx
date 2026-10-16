@@ -114,6 +114,7 @@ add_library(actioninject SHARED
   src/action/devtools/DroneAnimShadow.cpp
   src/action/devtools/DroneCoreShadow.cpp
   src/action/devtools/CameraShadow.cpp
+  src/action/devtools/MathExactShadow.cpp
   src/action/devtools/Teleport.cpp
   src/action/devtools/Demo.cpp
   src/action/engine/LaunchOptions.cpp
@@ -172,6 +173,7 @@ add_library(actioninject SHARED
   src/action/game/Autoaim.cpp
   src/action/game/weapon_stats.cpp
   src/action/math/math.cpp
+  src/action/math/X87Ops.cpp
   src/action/input.cpp
   src/action/memory.cpp
   src/action/util/bin.cpp

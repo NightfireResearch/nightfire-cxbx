@@ -1,11 +1,6 @@
 #ifndef MATH_H
 #define MATH_H
 
-// sinf and cosf, through the double functions of <math.h>. Not sinf and cosf themselves: those are calls the
-// optimiser may not inline, and MSVC then carries on from their result on the x87, at double precision.
-#define SIN(x) ((float)sin((double)(float)(x)))
-#define COS(x) ((float)cos((double)(float)(x)))
-
 #pragma pack(push, 1)
 typedef struct {
 	float q[4]; // wxyz order
@@ -78,7 +73,7 @@ void Vec_Swap(_VECTOR *a, _VECTOR *b);
 void RotMatrixZYX(_VECTOR *param_1,_MATRIX *mtx);
 void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx);
 bool Plane_PlaneEq(plane_equ_tag *planeEq, _VECTOR *v1, _VECTOR *v2, _VECTOR *v3);
-float DistancePointToPlane(_VECTOR *point, plane_equ_tag *plane);
+double DistancePointToPlane(_VECTOR *point, plane_equ_tag *plane);
 void auxVec_AddMulR32(_VECTOR *add, _VECTOR *vIn, float multiply, _VECTOR *vOut);
 bool vecutil_point_on_poly(_VECTOR *point, _VECTOR *vtx1, _VECTOR *vtx2, _VECTOR *vtx3, plane_equ_tag *plane);
 void RotMatrix(_VECTOR *vIn,_MATRIX *mtxOut);
@@ -96,7 +91,7 @@ void vecutil_cartesian_to_spherical_acc(_VECTOR *vec, float v_x, float v_y, floa
 #define DEG2RAD(x) ((x) * ((float)M_PI / 180.0f))
 
 // Helper functions which either didn't exist or were inlined on original code
-float Vec_Dot(_VECTOR *a, _VECTOR *b);
+double Vec_Dot(_VECTOR *a, _VECTOR *b);
 float Vec_Magnitude(_VECTOR *a);
 
 float Vec_AngleDifference(float angle1, float angle2);

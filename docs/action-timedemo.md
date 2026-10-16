@@ -111,6 +111,24 @@ hit may miss, a guard who turned may not. Anything that needed exact input can f
 that the random generator now makes different. Replace a recording with its rebase only after checking that the
 session still shows what it was for.
 
+### Checking a rebase against the original code
+
+A rebase made for a port that was made exact can be checked against the Xbox's own code: play it with the changed
+functions put back to the original (`NIGHTFIRE_ORIGINAL`). If the port is exact, every frame matches. The math
+ports of 16 October 2026 passed this way on all nine sessions.
+
+This works only for functions whose globals are still the game's own. A function that reads or writes a global we
+now own (an `XBE_GLOBAL` definition of ours, docs/global-coverage.md) sees the Xbox's stale copy when run as the
+original, so it differs for that reason alone. `Player_Start`, `Mission_Init` and `Mission_Status` are such cases.
+Restoring every port at once does not work either: the ported main loop carries the demo's own hooks.
+
+## Restarts
+
+`Mem_Init` wipes the heap (fills it with 0x98), and `control_init_object_lists` starts the object list again. A
+level load does both in one frame. A restart spans frames between the two, and the object
+list and players still point into the wiped heap meanwhile. The game walks neither, and the checksums leave them
+out until the list is new (`Demo_HeapReset`, `Demo_ObjectListsReset`).
+
 ## What is held still, and why
 
 The game runs at a fixed number of updates per frame (`GameFlow_Main` once per `mainloop`). Input is therefore
@@ -152,9 +170,13 @@ The picture is still drawn and paced as usual, so a recording plays like the gam
   (not checked).
 - **The recordings hold our build's behaviour, not the original's.** They were made with our ports in place, and
   some of those are known to be inexact against the Xbox. The random helpers were made exact (0438ade) and the set was
-  rebased onto them. Still inexact:
-  - `Vec_Dot`, and the rotation-matrix functions (`RotMatrix`, `RotMatrixZYX`, `RotTransMatrix`,
-    `Vec_Spherical_2_Cartesian`, the searchlight sweep), round where the original keeps x87 values unrounded.
+  rebased onto them. So were the rotation-matrix functions (`RotMatrix`, `RotMatrixZYX`, `RotTransMatrix`,
+  `Vec_Spherical_2_Cartesian`, the searchlight sweep, through X87Ops.h's `Extended` and the FSIN and FCOS
+  instructions), `Plane_PlaneEq`, `vecutil_point_on_poly`, `DistancePointToPlane` and `Vec_Dot`'s callers
+  (devtools/MathExactShadow.cpp). Still inexact: the other ports that use the host's sin, cos, tan, atan2 or acos where
+  the original runs the x87 instructions (`View_RotTransMatrix`, `Quat_Slerp_Acc`, `vecutil_cartesian_to_spherical_acc`,
+  `Searchlight_Update`'s tracking, and a few in the drones, the HUD, `Sensor`, `Autoaim` and `Camera`), and plain
+  double arithmetic where two NaNs meet (SSE2 keeps the first, the x87 the larger).
 
   A port made exact to the original changes the game against the recordings. Rebase them onto it (below).
 - **Changes to the sound code.** The sound answers are replayed in the order they were asked. A change that makes

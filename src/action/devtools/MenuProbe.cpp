@@ -92,6 +92,7 @@
 #include "DroneAnimShadow.h"
 #include "DroneCoreShadow.h"
 #include "CameraShadow.h"
+#include "MathExactShadow.h"
 #include "Teleport.h"
 #include "../game.h"   // reload: ResetMap_LevelToLoad, GameFlow_PushState
 
@@ -584,6 +585,7 @@ void MenuProbe_Install(void) {
         DroneInitShadow_Run();
         DroneAnimShadow_Run();
         DroneCoreShadow_Run();
+        MathExactShadow_Run();
     }
     g_logging = SettingOn("MenuLog");
     if (g_logging) {

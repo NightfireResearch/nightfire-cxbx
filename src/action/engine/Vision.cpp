@@ -8,7 +8,7 @@
     // Measure the distance from the point to each of the 4 frustum planes
     for(int i = 0; i < 4; i++) {
 
-        float distance = DistancePointToPlane(point, &viewer->frustumPlanes[i]);
+        double distance = DistancePointToPlane(point, &viewer->frustumPlanes[i]);
 
         if(distance < -radius) {
             return false; // Point is outside the frustum

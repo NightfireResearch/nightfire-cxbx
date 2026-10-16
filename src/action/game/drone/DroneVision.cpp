@@ -258,8 +258,7 @@ double _DroneVision_OpponentVisibility(Drone_tag *drone) {
             return 0.0f;
         }
         double edge = X87NaNs(margin / drone->viewAngle, margin, drone->viewAngle);
-        double falloff = FSin(edge * kHalfPi);
-        visibility = X87NaNs(visibility * falloff, visibility, falloff);
+        visibility = (double)(visibility * FSin(edge * kHalfPi));
     }
     float scale = 1.0f;
     if ((drone->flags2 == 0 || drone->alertness < 1.0f) && drone->opponentVisibilityScale != 1.0f)

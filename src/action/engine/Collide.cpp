@@ -78,9 +78,11 @@ bool Collide_RayTriangle(_VECTOR *ptStart,_VECTOR *ptEnd,_VECTOR *vtx1,_VECTOR *
   plane_equ_tag planeEq;
   
   Plane_PlaneEq(&planeEq, vtx1, vtx2, vtx3);
-  float dist = Vec_Dot(ptEnd, &planeEq.normal);
-  if (dist != 0.0f) {
-    float vDist = -(DistancePointToPlane(ptStart, &planeEq) / dist);
+  // Tested unrounded, divided by as a float
+  double dot = Vec_Dot(ptEnd, &planeEq.normal);
+  if (dot != 0.0) {
+    float dist = (float)dot;
+    float vDist = (float)-(DistancePointToPlane(ptStart, &planeEq) / dist);
     *distanceOut = vDist;
     auxVec_AddMulR32(ptStart, ptEnd, vDist, &intersectPt);
     return vecutil_point_on_poly(&intersectPt, vtx1, vtx2, vtx3, &planeEq);

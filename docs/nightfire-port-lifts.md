@@ -275,8 +275,9 @@ Found along the way:
   Vec_NormaliseLen: Cel_ObjectLeftCel); Vec_Normalise and Vec_NormaliseLen depend on the CRT's sqrt helper for that.
 - **FSIN, FCOS and acos.** The host's sin, cos and acos (SSE2) can differ from the x87's FSIN and FCOS and the XBE's
   `__CIacos` by an ulp or two; the shadows count such results apart rather than as differences (the user accepts
-  1-ulp differences of this kind; the time demos are the check that they do not matter). A NaN keeps its sign and payload through the new helpers in src/action/math/X87Ops.h (`FSin`,
-  `FCos`, `Negate` for FCHS, `X87NaNs` for an operation on two NaNs, where SSE2 takes the first and the x87 the larger
+  1-ulp differences of this kind; the time demos are the check that they do not matter). Since then `FSin` and `FCos`
+  run the instructions themselves and return an `Extended`, the x87's 80-bit value, so their callers match exactly. A
+  NaN keeps its sign and payload through the helpers in src/action/math/X87Ops.h (`FSin`, `FCos`, `Negate` for FCHS, `X87NaNs` for an operation on two NaNs, where SSE2 takes the first and the x87 the larger
   or the positive). MSVC compiles `-x + c` as `c - x` and `x <= 0 ? 0 : x` as MAXSD, both of which lose a NaN's or a
   -0's sign.
 - `ShadowHook_Install` no longer warns "cannot follow" when a test hooks an address one of the standard fakes already
