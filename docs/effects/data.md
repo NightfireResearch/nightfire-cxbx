@@ -39,8 +39,8 @@ Every effect that reacts to an impact starts from a hit record (a node of an obj
 | 0x14 | ushort | `impactSound` | `Effect_Bullet` | `Sound_Play3D` id (0xffff = none) |
 | 0x16 | ushort | `footstepSound` | `Effect_Player`, **`Effect_Laser`** | the laser plays the *footstep* sound (`Sound_PlayExt([EAX+0x15d7ae])`, non-positional) [dis]; both builds agree |
 | 0x18 | ushort | `bodyhitSound` | `Effect_Body` | |
-| 0x1a | short | `ricochet` | `Effect_RicochetProb` | 0 = never; else `Rand_Rand(ricochet) & mask` (metal 0x3f, stone 0x1f, ceramic 0x0f/0x18) |
-| 0x1c | float | *`bounce`* | `Bullet_CollisionHandler` (0x2201e, 0x22130) | restitution of a ricochet: the reflected direction is `v - (1+e)(v.n)n` and the bullet's speed is multiplied by `e`. 0.5 for most materials, 0 for water and `NONE`/`LAST` [dec][tbl] |
+| 0x1a | short | `ricochet` | `Effect_RicochetProb` | 0 = never; else `Rand_Rand(ricochet) & mask` (metal 0x3f, stone 0x1f, ceramic 0x0f/0x18); a mask of 0 returns 0 without drawing (0x6fa7e) |
+| 0x1c | float | *`bounce`* | `Bullet_CollisionHandler` (0x2201e, 0x22130) | two different uses. Bounce (weapon flag 0x80, 0x21fce): only when `v.n <= 0`, a pure reflection `v - 2(v.n)n`, normalised, and the bullet's speed (+0xd0) is multiplied by `e`. Ricochet (weapon flag 0x10, 0x22089, after `Effect_RicochetProb`): `v - (1+e)(v.n)n`, normalised, speed unchanged. 0.5 for most materials, 0 for water and `NONE`/`LAST` [dec][tbl] |
 | 0x20 | *`HESMOKE`*[3] | `smokeDustGfx`... | `Effect_Bullet` | three gas puffs per bullet impact, 0x1c bytes each (below) |
 | 0x74 | HASHCODE | `debrisGraphics` | `Debris_Create` | 0 = no debris |
 | 0x78 | float | *`debrisSpeed`* | `Debris_Create` | 6.2 for hard surfaces, 2.2 for loose ones |
@@ -131,7 +131,7 @@ list is empty the active list's head (the oldest) is unlinked and reused.
 The `obj_tag` fields the effects touch: `position` 0x24, `rotation` 0x3c (z is the billboard spin), `centrePoint`
 0x60, `radius` 0x6c, `mtx` 0x70, `objGraphics` 0xb4, `extraObjectData` 0xbc, `scale` 0xc4, `creationTimeFrames`
 0xc8, `effectFlags` 0xcc, `curState` 0xd0, control flags 0xd6, *visible countdown* 0xd8 (below), `flags` 0xda,
-`objectType` 0xdb, tint `tweakR/G/B` 0xdf/0xe0/0xe1, `maybeBrightness` (alpha) 0xe2.
+`objectType` 0xdb, tint `tweakR/G/B` 0xdf/0xe0/0xe1, `tweakA` (alpha) 0xe2.
 
 **`obj+0xd8` is a "drawn recently" countdown**: `View_AddObjects` 0xda5c9 (and `FUN_000d91d0` 0xd9207) store 2
 when an object is put on a draw list, and the end of `control_movement_object_handler` decrements it [dis, search
@@ -146,7 +146,7 @@ for writes to `+0xd8`]. `Corona_Update` reads it as "was visible in the last two
 | 0x04 | `_VECTOR` | *velocity* | units per tick (creators multiply by `REC_FRAME_RATE`) |
 | 0x10 | `_VECTOR` | *spin* | added to `rotation` each tick |
 | 0x1c | short | *life* (`someThing`) | ticks left |
-| 0x1e | byte | *fade* (`someOther`) | subtracted from `maybeBrightness` each tick |
+| 0x1e | byte | *fade* (`someOther`) | subtracted from `tweakA` each tick |
 
 `curState` = 0 means gravity applies (`Debris_Update`). Creators: `Debris_Create`, `Debris_CreateEx`,
 `Effect_Laser` (sparks), `Bullet_DoTrails` (x2), `GunImp_Update`, `NDrone2_CreateNinjaEyes`,

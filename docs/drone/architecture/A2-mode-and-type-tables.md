@@ -8,6 +8,9 @@ enum strings). * = code with no function defined in Ghidra (read with capstone).
 
 ## DroneModeSettings, Xbox 0x001776f8, 36 x 12 bytes (index = key5 "mode" when < 0x24)
 
+The PS2 symbol has 35 entries (420 bytes) plus a terminator; the Xbox reader's bound (`mode <= 0x23`, 0x414d5) also
+admits index 35, the all-zero entry below.
+
 Entry: +0 u8 dtype, +1 u8 side (Drone+0x44: 1 enemy, 2 ally, 3 civilian/neutral), +2 u16 pad (0), +4 float initial
 alertness (Drone+0x3fc and +0x408), +8 init function (Drone_tag *) or NULL. Read only by NDrone2_DoModeSettingsOLD 0x414d0.
 

@@ -217,14 +217,15 @@ void PositionBeam(obj_tag *param_1, _VECTOR *param_2, _VECTOR *param_3) {
 
     Vec_Copy(param_2, &param_1->position);
 
+    param_1->transformFlags &= ~TRANSFORM_MOVED;
+
     float distance = Vec_Dist3D(param_2, param_3);
 
-    param_1->transformFlags &= ~TRANSFORM_MOVED;
     param_1->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY;
-    param_1->transformFlags |= TRANSFORM_MOVED;
-
     param_1->scale = distance;
 
+    Vec_Copy(param_2, &param_1->centrePoint);
+    param_1->transformFlags |= TRANSFORM_MOVED;
     param_1->radius = 2.0f * distance;
 
     float dx = param_2->x - param_3->x;
@@ -247,7 +248,7 @@ void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos) {
     
     obj_tag* poVar1 = param_1->weaponRelatedObjs[0];
 
-    poVar1->maybeBrightness = 0xff;
+    poVar1->tweakA = 0xff;
     
     // Strong or weak beam ("lazer" 0x2000131 or "uv_lazer" 0x20006c1)
     HASHCODE hc = (glb_players[param_1->playerNum]->animState->currentWeaponId == 0x4e) ? (HASHCODE)0x2000131 : (HASHCODE)0x20006c1;
@@ -1437,11 +1438,11 @@ void Player_PositionCamera(obj_tag *player) {
 
             blData->headSwimOffset = moveTowardsValue(blData->headSwimOffset, surfaced ? 0.7f : 0.0f, 0.1f);
 
-            viewer->projectionScaleZ = blData->zoom;
+            viewer->zoom = blData->zoom;
             // Not in the original: the player view's field of view comes from settings.ini, but a real scope
             // keeps showing what it always did, so its zoom makes up the difference (engine/viewFov.h).
             if (realScope)
-                viewer->projectionScaleZ *= ViewFov_ScopeZoomCorrection();
+                viewer->zoom *= ViewFov_ScopeZoomCorrection();
 
             if (player->curState == 2 || player->curState == 3)
                 blData->headCrouchOffset = 0.0f;
@@ -1451,7 +1452,7 @@ void Player_PositionCamera(obj_tag *player) {
         }
 
         case CamMode_PostMPGameThirdPerson:
-            viewer->projectionScaleZ = 1.0f;
+            viewer->zoom = 1.0f;
             blData->thirdPersonSubject = player;
             AnimGetBoneWorldTrans(player, BONE_HEAD, 0, &blData->thirdPersonTarget, NULL);
             View_SetDrawInAllViews(player);
@@ -1467,7 +1468,7 @@ void Player_PositionCamera(obj_tag *player) {
             CameraMode2_PlaceB(player, viewer, 1.0f, 0.0f);
             CameraMode2_PlaceC(&player->position, viewer, 1.0f);
             CameraMode2_PlaceD(&player->position, viewer, 1.0f);
-            viewer->projectionScaleZ = 1.0f;
+            viewer->zoom = 1.0f;
             viewer->someCel = NULL;
             return;
 
@@ -1475,7 +1476,7 @@ void Player_PositionCamera(obj_tag *player) {
             View_SetDrawInAllViews(player);
             View_SetDrawInNoViews(blData->weaponObject);
             CameraMode3_Place(player, viewer);
-            viewer->projectionScaleZ = 1.0f;
+            viewer->zoom = 1.0f;
             viewer->someCel = NULL;
             return;
 
@@ -1483,14 +1484,14 @@ void Player_PositionCamera(obj_tag *player) {
             View_SetDrawInAllViews(player);
             View_SetDrawInNoViews(blData->weaponObject);
             CameraMode4_Place(player, viewer);
-            viewer->projectionScaleZ = 1.0f;
+            viewer->zoom = 1.0f;
             return;
 
         case 5:
             View_SetDrawInAllViews(player);
             View_SetDrawInNoViews(blData->weaponObject);
             CameraMode5_Place(player, viewer);
-            viewer->projectionScaleZ = 1.0f;
+            viewer->zoom = 1.0f;
             viewer->someCel = NULL;
             return;
 
@@ -1498,7 +1499,7 @@ void Player_PositionCamera(obj_tag *player) {
             View_SetDrawInAllViews(player);
             View_SetDrawInNoViews(blData->weaponObject);
             Camera_Follow(player, viewer);
-            viewer->projectionScaleZ = 1.0f;
+            viewer->zoom = 1.0f;
             viewer->someCel = NULL;
             return;
 
@@ -1511,7 +1512,7 @@ void Player_PositionCamera(obj_tag *player) {
             viewer->pos.y = (float)((double)debug_cam_posy + player->position.y + 2.0f);
             viewer->someVec.x = 1.5707964f;
             viewer->someVec.z = 0.0f;
-            viewer->projectionScaleZ = 1.0f;
+            viewer->zoom = 1.0f;
             Camera_Set(viewer, &viewer->pos, &viewer->someVec);
             return;
 
@@ -1531,7 +1532,7 @@ void Player_PositionCamera(obj_tag *player) {
             offset.z += device->position.z;
             Vec_Copy(&offset, &viewer->pos);
             viewer->someVec = device->rotation;
-            viewer->projectionScaleZ = 1.0f;
+            viewer->zoom = 1.0f;
             Camera_Set(viewer, &viewer->pos, &viewer->someVec);
             return;
         }
@@ -1541,14 +1542,14 @@ void Player_PositionCamera(obj_tag *player) {
             View_SetDrawInAllViews(glb_blokes[playerNum]->cameraFollowObject);
             View_SetDrawInNoViews(blData->weaponObject);
             Camera_Follow(glb_blokes[playerNum]->cameraFollowObject, viewer);
-            viewer->projectionScaleZ = 1.0f;
+            viewer->zoom = 1.0f;
             return;
 
         case CamMode_CreepWall:
             View_SetDrawInAllViews(player);
             View_SetDrawInNoViews(blData->weaponObject);
             camera_tracking(player, viewer);
-            viewer->projectionScaleZ = 1.0f;
+            viewer->zoom = 1.0f;
             viewer->someCel = NULL;
             return;
 

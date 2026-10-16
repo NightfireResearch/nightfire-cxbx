@@ -285,7 +285,8 @@ void Mission_ObjectiveState(OBJ_STATE *state, short objectiveNum) {
 // AUTOINJECT
 void Mission_MonitorObjectives(void) {
 
-    bool allObjectivesCompleted = true;
+    // ANDed with the raw channel byte, so a channel holding an even value clears it
+    uint8_t allObjectivesCompleted = 1;
 
     // Evaluate objectives and send notifications
     for(int i = 0; i < ARRAY_SIZE(MissionData); i++) {
@@ -302,8 +303,9 @@ void Mission_MonitorObjectives(void) {
 
             bool isFailCondition = (o->someFlags & 0x2); // If set, the objective is a fail condition, otherwise it's a precondition for success
 
-            bool thisObjectiveMet = switch_channels[o->completedChannel] == (isFailCondition ? false : true);
-            allObjectivesCompleted = allObjectivesCompleted && thisObjectiveMet;
+            uint8_t thisObjectiveMet = isFailCondition ? switch_channels[o->completedChannel] == 0
+                                                       : switch_channels[o->completedChannel];
+            allObjectivesCompleted &= thisObjectiveMet;
 
             switch(o->status) {
                 case 0:
@@ -358,14 +360,13 @@ void Mission_MonitorObjectives(void) {
         
     }
 
-    // Check conditions for mission failure or success
+    // Check conditions for mission failure or success: every one is tested, and success can be set beside a failure
 
     // Mission failure - Alarm triggered
     if(FailedDueToAlarm) {
         FailLabel = TXT_MISSION_FAIL_ALARM_TRIGGERED;
         MissionFailConditionHit = true;
         MissionFailTime = GameState.NumFramesUnpaused;
-        return;
     }
 
     // Mission failure - Civilian was killed
@@ -373,7 +374,6 @@ void Mission_MonitorObjectives(void) {
         FailLabel = TXT_MISSION_FAIL_KILLED_CIVILIAN;
         MissionFailConditionHit = true;
         MissionFailTime = GameState.NumFramesUnpaused;
-        return;
     }
 
     // Mission failure - Kiko escaped in Evil Base C
@@ -381,7 +381,6 @@ void Mission_MonitorObjectives(void) {
         FailLabel = TXT_MISSION_FAIL_KIKO_ESCAPE;
         MissionFailConditionHit = true;
         MissionFailTime = GameState.NumFramesUnpaused;
-        return;
     }
 
     // Mission failure - Missile launched in Space Station D
@@ -389,7 +388,6 @@ void Mission_MonitorObjectives(void) {
         FailLabel = TXT_MISSION_FAIL_MISSILE_LAUNCHED;
         MissionFailConditionHit = true;
         MissionFailTime = GameState.NumFramesUnpaused;
-        return;
     }
 
     // Mission success
@@ -515,7 +513,7 @@ void Mission_Update(void) {
                 int lVar3 = Menu_GetLevelIndex(Mission_BaseMapHCode());
                 int lVar4 = Menu_GetLevelIndex((HASHCODE)GameState.BaseMapHashCode);
                 if (lVar4 < lVar3) {
-                  GameState.BaseMapHashCode = GameState.CurrentLevelHashcode;
+                  GameState.BaseMapHashCode = Mission_BaseMapHCode();
                 }
                 GameState.ReloadMenupage = P_NFRESULTS;
                 ResetMap_LevelToLoad(LevelToEndTo, 0, 0);
@@ -610,7 +608,7 @@ void Mission_Init(HASHCODE hashcode, short warmReset) {
         if(MissionData[i].idxInOrder < ThisOrderNum) {
             someStateThing = warmReset ? 4 : 1;
         } else if (MissionData[i].idxInOrder == ThisOrderNum) {
-            someStateThing = 1;
+            someStateThing = 2;
         } else {
             someStateThing = 0;
         }

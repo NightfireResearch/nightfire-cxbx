@@ -72,7 +72,7 @@ or in seconds via `REC_FRAME_RATE` (`Emitter`).
 **Drawn** if it passes `View_AddObjects` (glist or control flags 0x110, display mask, not effectFlags 0x10 or
 0x8000, frustum, not 0x400 outside vision mode 2), which also stores 2 in `obj+0xd8` (the "drawn recently"
 countdown Corona reads). The draw list is chosen by effectFlags 0x1 (alpha, far to near) and 0x2000 (after the Z
-clear). Alpha comes from `maybeBrightness` (0xe2) and the tint bytes (0xdf-0xe1) through `View_SetupRenderModes`;
+clear). Alpha comes from `tweakA` (0xe2) and the tint bytes (0xdf-0xe1) through `View_SetupRenderModes`;
 gas and debris fade by changing those bytes. Billboards (effectFlags 8) face the camera, spin by `rotation.z` and
 scale by `scale`; most effects do not use the matrix at all.
 

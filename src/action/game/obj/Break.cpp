@@ -79,10 +79,10 @@ void Break_DoBreak(_VECTOR* position) {
         if(obj->objectType != OBJECTTYPE_BREAK)
             continue;
 
-        float dist = Vec_SqDist3D(&obj->position, position);
+        float dist = Vec_SqDist3D(position, &obj->centrePoint);
         float radius = obj->radius;
 
-        if(radius * radius < dist)
+        if(!(dist < radius * radius))
             continue;
 
         _MATRIX mtx;

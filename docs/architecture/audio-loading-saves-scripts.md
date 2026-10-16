@@ -32,7 +32,7 @@ are from before the fix): the three `SS_*` functions and `FUN_000cb2a0` are **no
 GameFlow_Main (0x6aca0)
   state 3 "loading"  -> ResetMap_Load (0xbfb60) ... LoaderLoad x N -> LoaderProcess -> parsemap / Script_Load / AnimLoadFile / MenuManager_Load
   state 6 "movie"    -> psiStartBackgroundMovie -> BackgroundMoviePlayFile (XMV decoder) ... maybeDecodeMpgAudio per frame
-  state 4 "in game"  -> Game_Run (0x6aa90) -> ... SP_Update -> Script_Update -> Script_Run / Script_Interp
+  state 2 "in game"  -> Game_Run (0x6aa90) -> ... SP_Update -> Script_Update -> Script_Run / Script_Interp
                                               -> Sound_UpdateListeners -> HandleMapSoundAllocation, Sound_UpdateSounds, SFXUpdate
                                                                                          SFXUpdate -> UpdateMusicalEvents -> UpdateMFX_<level>
   front end          -> Menu_UpdateMessageBox (0x757d0) -> LS_Save / LS_Load / Menu_EnumSaves -> psiSaveData / psiLoadData
@@ -83,7 +83,9 @@ Three layers, top to bottom **(verified)**:
 **Listeners and environments.** `Sound_UpdateListeners` (0xcc1c0, called from `Game_Run`) sets one listener per
 viewer (split screen: up to four), or viewer 4 when a cutscene camera is active; writes `GlobalListenerPos`
 (0x29a140); takes the reverb environment from the listener's room cel (`cel+0x88`, with flag 0x10000000 or an index
-above 0x13 passing 1 as the second argument - underwater, by inference) into `SFXSetEnvironment`; then runs
+above 0x13 passing 1 as the second argument) into `SFXSetEnvironment` 0xc4ed0: the second argument picks
+`SFXNewIndoorsVolume` (non-zero 50, zero 100), and the environment value -0x6768 sets `SFXUnderWater` (else the
+reverb, clamped to 0..100); then runs
 `HandleMapSoundAllocation`, `Sound_UpdateSounds` and `SFXUpdate`. At the DSOUND boundary the environment is only a
 per-voice I3DL2 send level; the game never sets a listener reverb (docs/audio-inventory.md).
 
@@ -222,7 +224,8 @@ All **(verified)** from decompiles; R marks our functions.
      `LoaderLoad(1, hash)` until it returns false; then rooms and portals (`build_link_objects_to_rooms`,
      `build_LinkDoors2Portals`), the dynamic map data, `AIPath_BindNodes`, `Mem_Shrink` (dead stub),
      `ReadTuningVars` (R), `Player_Start`, `MP_Start`, `Drone_PostLoad_Init`, `MP_PostLoad_Init`,
-     `Cameras_PostLoad`, `hashtable_create_sections`, and pushes state 4 (in game).
+     `Cameras_PostLoad`, `hashtable_create_sections`, then pops itself and pushes state 4, which runs `Locks_Init` and
+     pops back to state 2 (in game).
 3. `LoaderLoad` (0xbe910, R; `src/action/engine/Loader.cpp`): opens `<hash>.bin` through `psiFileOpen` (R), which
    loads the whole archive from the filesys packs into memory in one blocking call; then header (0x20 bytes),
    directory entries (size, type byte, name ending in the hex hashcode), and one batch (the per-batch limit is
@@ -409,7 +412,8 @@ timed commands and events. There is no general-purpose scripting language (as fo
   Catmull-Rom (`FUN_000c12b0` computes the four Catmull-Rom weights; `FUN_000c1480` evaluates with `Spline_Eval3D`)
   modes. `SS_Update` (the simple-script object) uses the separate `KeyFrame_Interp`/`Spline_Interp`.
 - **Events** (`Script_EventHandler` 0xc2990, L; script in ESI) **(verified)**: an id and up to 8 dword arguments.
-  3 jump to frame, 4 disable the player and pause the mission timer, 5 enable drones, 6 save the player's (or
+  3 wait: unless an FFwd is pending (`fadeFlags` bit 1), `waitFrames` (+0x94) = arg - 1, so 0 waits until
+  `SP_UnPause` clears it (0xc2a33; also re-applies the entity streams' matrices), 4 disable the player and pause the mission timer, 5 enable drones, 6 save the player's (or
   bound object's) matrix to restore control at the end, 7 re-enable drones on free, 8 `Drone_CoderCreate` at the
   object, 9 `Player_Cam2Mode`, 0xa break effect, 0xb set held weapon, 0xc restore-on-kill flag, 0xd/0x11 write
   switch channels (0x11 conditionally), 0xe looping-sound flag, 0xf call the script player's callback, 0x10 FFwd

@@ -27,8 +27,7 @@ typedef struct {
     undefined field12_0xc;
     undefined field13_0xd;
     short controlStyle;
-    undefined field15_0x10;
-    undefined field16_0x11;
+    short controlStyleDriving; // 0x10 - the driving engine's control style (Boot_GetPTPData hands it over at +0xa14)
     undefined field17_0x12;
     undefined field18_0x13;
     float fChannels[40];

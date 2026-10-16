@@ -361,7 +361,8 @@ start room's own mesh and objects.
   return `TriHeap`. Ours: `maybe_psiDrawShadow` (radius 1, mask 0x307, flags 4).
 - **`Collide_PlaceObject` 0x2c8e0** `(_VECTOR *pos inout, _MATRIX *m inout, float height, float halfSize, obj_tag
   *ignore)`: `pos.y += 0.05`; ray from `pos` 3 units down `m`'s up axis (mask 0x1d); no hit → false. `up` = hit
-  normal; `pos = hitPos + up·height`; gather from `pos` to `pos - 0.1·up` (radius halfSize, the hit's cel, mask
+  normal; `end = pos - 0.1·up` (the raised `pos`, before it moves, 0x2c9aa); `pos = hitPos + up·height`; gather from
+  the new `pos` to `end` (radius halfSize, the hit's cel, mask
   0xd, flags 1). For each triangle: `|dist(pos)| - height < -0.13` → false (something pokes through); if `<= 0.2`
   and `|n·up| >= 0.96`, grow the footprint box (starting at `pos`) by its bounds. `Mat_Align2Up(m, up, dir)`; true if
   both footprint corners reach at least `halfSize` along `|norm|+|dir|`. Writes the caller's `pos` and `m` even on

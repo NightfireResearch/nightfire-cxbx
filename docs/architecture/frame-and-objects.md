@@ -54,7 +54,7 @@ empty); `GameFlow_PushState` 0x6abf0 (L) translates three "request" states into 
 | 1 | boot: zero counters, `Mem_Init`, `bootup_bootup`, push 2, `Boot_LoadPTPData`, `Reset_MapLoadSettings` |
 | 2 | in game; records `LoadTimeStart`; pushes 3 if `ReloadGame` |
 | 3 | `ResetMap_Load` 0xbfb60 (the level loader, called every tick until it pops itself) |
-| 4 | `Locks_Init`, pop (coverage marks `Locks_Init` dead, so nothing pushes 4 any more: inference) |
+| 4 | `Locks_Init`, pop back to 2. Pushed by the end of `ResetMap_Load` (`PopState`, `PushState(4)`: 0xbfee3-0xbfef0) |
 | 5 | valid, does nothing (GameCube check) |
 | 6 | full-screen movie: pop when it finishes or is skipped |
 | 7 -> 8 | request a fade on viewer 6 (`Camera_SetFade`); 8 waits for `glb_viewer[6]+0x205` to clear |
@@ -155,7 +155,7 @@ Most of it is typed and `static_assert`ed. What this review adds or corrects (ve
 | 0xb0 | `HITTEST_tag*` | the object's collision probe; `Collide_Update` writes +0x5c (owner) and zeroes +0x10 (velocity?) each tick |
 | 0xcc | `effectFlags` | low 16 bits from the glist (`applyFlagsToObject`); 0x20 = disabled/not collidable (inference from Hurt and Trigger); 0x8000 straddling; **0x10000000 = on ForcedList, 0x20000000 = always treat as straddling**. `object.h`'s `FLAG_IN_FORCEDLIST = 0x30000000` merges the two; `control_delete_object` does test the pair, `Controls_StraddleTest` keeps them apart |
 | 0xd6 | control flags | header calls it `renderType`, Ghidra `rendererType`; it is mostly movement/framework flags, below |
-| 0xd8 | countdown | set to 2 at creation, decremented each tick by the framework; no reader identified (unknown) |
+| 0xd8 | `drawnCountdown` | set to 2 at creation and by `View_AddObjects` (0xda5c9) whenever the object is added to a view, decremented each tick by the framework: non-zero = drawn in the last two ticks. Read by bullets (`Bullet_heatseekable`), drones (`NDrone2_DoAnimation`, `ControlSTANDARD`, talk), searchlights, coronas, `Check_AutoAim`, `HUD_UpdateCameraPane` |
 | 0xda | `flags` | 1 = delete at end of update, 2 = new (first-tick sphere and ambient light), 4 = character lighting, 8 = shadowed character (`View_DrawObjList`) |
 
 Control flags at 0xd6 (verified in `control_movement_object_handler`, `Control_GetObjMatrix`,
@@ -344,8 +344,8 @@ Unknowns and risks, roughly in order of how much they could hurt:
    frames"), and the region default is 50 or 60. The FPS override (`Settings_GetFPSOverride`) therefore changes
    gameplay timing unevenly. Draw code also mutates state (`Emitter_Draw` advances a spin by `REC_FRAME_RATE`
    each time it draws), so decoupling draw rate from tick rate is not free. Not audited type by type.
-3. **`obj_tag` gaps.** The meaning of `obj+0xd8` (countdown from 2), `obj+0xd9` (Door sets 0x08, no reader
-   found), the unnamed pads around 0x10 and 0x54 (now identified above but not in the header), several
+3. **`obj_tag` gaps.** `obj+0xd9` (bits 1 player and drones, 2 bullets, 8 doors; tested by `Collide_PickObj`,
+   read by `Collide_Intersect`, `Bullet_handle_object_destruction`, `Door_Link2Portal`; no name), the unnamed pads around 0x10 and 0x54 (now identified above but not in the header), several
    `effectFlags` bits and the HITTEST layout at `obj+0xb0` (+0x10, +0x5c, +0x7c, +0x80, +0x86, +0x88) are not
    pinned down. `object.h` merges the two ForcedList bits. These are cheap to fix but every reimplemented type
    touches them.
@@ -372,7 +372,7 @@ Unknowns and risks, roughly in order of how much they could hurt:
 
 ## 5. Suggested order
 
-1. **Type the gaps first** (no behaviour change): add the 0x10 decal head, 0x54 previous centre, 0xd8, the split
+1. **Type the gaps first** (no behaviour change): add the 0x10 decal head, 0x54 previous centre, the split
    ForcedList bits and a `ControlFlags` enum for 0xd6 to `object.h`; type `HITTEST_tag` far enough for
    `Collide_Update`. Every later step needs them, and they are checkable with the existing layout asserts.
 2. **The small framework leaves**: `Control_GetObjMatrix`, `Control_BuildWorldSph`, `Control_NextLOD`,

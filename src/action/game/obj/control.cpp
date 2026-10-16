@@ -142,13 +142,13 @@ void control_init_object(obj_tag* obj) {
     
     obj->displayMask = 0x001f;
     obj->flags |= 2;
-    obj->unknown_0xd8 = 2;
+    obj->drawnCountdown = 2;
     obj->creationTimeFrames = GameState.NumFramesUnpaused;
     obj->scale = 1.0;
     obj->tweakR = 0xff;
     obj->tweakG = 0xff;
     obj->tweakB = 0xff;
-    obj->maybeBrightness = 0xff;
+    obj->tweakA = 0xff;
     obj->light_related1 = 0xff;
     obj->light_related2 = 0xff;
     obj->light_related3 = 0xff;

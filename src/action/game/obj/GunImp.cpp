@@ -70,7 +70,7 @@ void GunImp_Deactivate(obj_tag *gunObj) {
         AnimState *anim = glb_players[playerNum]->animState;
         anim->switchingToWeaponId = anim->prevHeldWeaponId;
         Camera_CalcViewAngles(gunObj->subState, ViewFov_PlayerFov());
-        blData->field_0x8b8 = 0;
+        blData->fallFrames = 0.0f;
         Vec_Zero(&blData->field_0x3c);
         Vec_Zero(&blData->movement);
     }

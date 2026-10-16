@@ -259,7 +259,8 @@ all this path **(decompile)**.
 **Fades**: `psiFadeView` draws one 640x480 untextured `SPRITE_DRAW` in the viewer's fade colour.
 
 **Night vision** (inference from `ui/HUD.cpp` and the flags above): no shader effect is involved; mode 1 tints
-the HUD overlay sprite and quarters the brightness of effectFlags-0x20000 objects, mode 2 also shows the
+the HUD overlay sprite and quarters the tweak alpha (`obj+0xe2`, the A of `psiSetTweakARGB`; `View_SetupRenderModes`
+0xd9917) of effectFlags-0x20000 objects, mode 2 also shows the
 effectFlags-0x400 objects. Not traced to the end.
 
 **Loading screen**: `ResetMap_GenLoadScreen` 0xbfa60 builds sprites on viewer number 99 (level art plus

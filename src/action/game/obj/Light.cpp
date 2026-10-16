@@ -84,9 +84,9 @@ light_tag* Light_Create(_VECTOR *pos, undefined1 clr_r, undefined1 clr_g, undefi
     light->flickerMask = param_12;
 
     if (soundID == 0) {
-        light->soundID = (short)0xffff;
+        light->soundID = 0xffff;
     } else {
-        light->soundID = (short)soundID;
+        light->soundID = soundID;
     }
 
     Vec_Copy(pos, &light->position);
@@ -112,8 +112,8 @@ void Light_Update(void) {
                 light->enabled = switch_channels[light->switchChannel];
             }
 
-            // Handle sound logic
-            if (light->soundID != -1) {
+            // Flicker, with its sound: keyed on +0x18, not on the sound id
+            if (light->soundState != 0) {
                 // Check if we should trigger sound (counter at 0)
                 if ((light->soundTimingCounter & 0xfff) == 0) {
                     light->soundTimingCounter = 0xf000;

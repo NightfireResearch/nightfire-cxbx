@@ -9,7 +9,9 @@ A switch channel is one byte of per-level boolean state. There are 256 of them, 
 #define switch_channels_time (*(uint32_t(*)[256])0x001df428) // NumFramesUnpaused when it last changed
 ```
 
-`Init_SwitchChannels` clears the lot at level load, so nothing survives a level change. They are the
+`Init_SwitchChannels` clears the lot at level load, except `switch_channels_time`, which it fills with
+`GameState.NumFramesUnpaused`. `ResetMap_GameInit` calls it only when `IsWarmReset` is clear (the call at 0x000bedc2),
+so a warm reset keeps every channel. They are the
 game's general-purpose wiring: a switch object sets one, a door reads one and refuses to open, a light
 reads one and turns itself off, a mission objective reads one and ticks itself off. Almost all of the
 scripting in a level is built out of them.

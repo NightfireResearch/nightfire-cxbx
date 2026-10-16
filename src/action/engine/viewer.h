@@ -104,7 +104,7 @@ struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     float yMax;
     float projectionScaleX;
     float projectionScaleY;
-    float projectionScaleZ;
+    float zoom;               // 0xf4 - the view is drawn at fovRadians / zoom; 1.0 unzoomed (Camera_CalcViewAngles)
     float width;
     float height;
     float AspectRatio;

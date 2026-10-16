@@ -105,7 +105,8 @@ A dead player keeps the same handlers. `Player_CheckForDeath` switches `objectTy
 response:
 
 - feet-on-floor (`PlayerNotDrone_FeetOnPoint`);
-- **fall damage**: frames airborne at +0x8b8. On landing, if that is over 60, it calls `Player_HandlePain` with
+- **fall damage**: time airborne at +0x8b8, a float that gains `FRAME_RATE_MUL` a tick (0xae364-0xae376), so it
+  counts 60 Hz frames at any frame rate. On landing, if that is over 60, it calls `Player_HandlePain` with
   (frames - 60), but only when that is 10 or more. On Tower 2B, falling below y = -10 sets channel 0x7c;
 - `Player_DealWithObjHit` for every hit-list entry;
 - `Player_PositionGun` and the weapon object's `AnimObjectUpdate`;
@@ -442,7 +443,7 @@ See [../drone/bots-and-navigation/](../drone/bots-and-navigation/README.md).
    `MPGamePlayer` fields at +0x0, +0x4, +0x10 are uncertain. Ghidra's names (`pointsScored` = deaths, `field4` =
    kills, `field10` = a streak?) disagree with ours. The unnamed `MPGame.unknown_*` fields are guesses.
 9. **Frame-rate coupling**: weapon recharge steps on `NumFramesUnpaused` modulo 2/4/6, refire and burst counters
-   count frames, and fall damage counts frames airborne. A fixed-step loop is assumed. Any change to the clock
+   count frames (fall damage does not: it adds `FRAME_RATE_MUL`). A fixed-step loop is assumed. Any change to the clock
    changes gameplay.
 10. **The camera** (`Player_PositionCamera`, 1.8 KB) and aiming (`Player_Aiming`, `Check_AutoAim`, `Check_Target`,
     `AccelFunc0`) are live and have not been read here. `AccelFunc0` is caller-cleans despite Ghidra's `__stdcall`

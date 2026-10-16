@@ -145,7 +145,7 @@ void SpaceMissile_Update(obj_tag *obj) {
             Script_Update(spaceMissile->currentAnimScript);
 
             // Animation complete?
-            if(spaceMissile->currentAnimScript->maybeSomeSleepFrames != 0)
+            if(spaceMissile->currentAnimScript->waitFrames != 0)
                 obj->curState = 2;
             break;
 

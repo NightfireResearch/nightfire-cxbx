@@ -181,16 +181,16 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
     baseObj->maybeCollision = tankInfo;
     Quat_MatToQuat(&tankInfo->orientation, &baseObj->transformMatrix);
 
+    // Any value but 1 and 3 gives the helicopter, 0 included
     switch(MPSettings.MiniVehiclesEnabled) {
-        default:
         case 1: // Tanks only
             tankInfo->isHeli = 0;
             break;
-        case 2: // Helicopters only
-            tankInfo->isHeli = 1;
-            break;
         case 3: // Both
             tankInfo->isHeli = (Rand_Rand(100) <= 50) ? 1 : 0;
+            break;
+        default: // 2, helicopters only
+            tankInfo->isHeli = 1;
             break;
     }
 

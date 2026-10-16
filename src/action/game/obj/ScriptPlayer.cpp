@@ -123,7 +123,7 @@ ushort SP_GetState(obj_tag *obj) {
         return 2;
 
     if (scriptPlayer->scriptInfos[scriptPlayer->nthScript] != NULL)
-        return (scriptPlayer->scriptInfos[scriptPlayer->nthScript]->maybeSomeSleepFrames == 0);
+        return (scriptPlayer->scriptInfos[scriptPlayer->nthScript]->waitFrames == 0);
 
     return 0;
 }
@@ -146,7 +146,7 @@ void SP_UnPause(obj_tag *obj) {
     SCRIPTPLAYER* scriptPlayer = (SCRIPTPLAYER*)obj->extraObjectData;
     scriptPlayer->unpauseRequested = 1;
     if (scriptPlayer->scriptInfos[scriptPlayer->nthScript] != NULL) {
-        scriptPlayer->scriptInfos[scriptPlayer->nthScript]->maybeSomeSleepFrames = 0;
+        scriptPlayer->scriptInfos[scriptPlayer->nthScript]->waitFrames = 0;
     }
 }
 
@@ -228,7 +228,7 @@ void SP_Activate(obj_tag *activatorObj, obj_tag *param_2) {
          switch_channels[scriptPlayer->someSwitchChannel] != 0)) {
         scriptPlayer->unpauseRequested = 1;
         if (scriptPlayer->scriptInfos[scriptPlayer->nthScript] != NULL) {
-            scriptPlayer->scriptInfos[scriptPlayer->nthScript]->maybeSomeSleepFrames = 0;
+            scriptPlayer->scriptInfos[scriptPlayer->nthScript]->waitFrames = 0;
         }
     }
 }
@@ -433,7 +433,7 @@ void SP_Update(obj_tag* obj) {
     case SP_State_Armed: {
         if (triggered) {
             if (scriptPlayer->scriptInfos[scriptPlayer->nthScript] != NULL) {
-                scriptPlayer->scriptInfos[scriptPlayer->nthScript]->maybeSomeSleepFrames = 0;
+                scriptPlayer->scriptInfos[scriptPlayer->nthScript]->waitFrames = 0;
             }
 
             // nthScript is always still 0 here - this state is only ever reached right after creation
@@ -459,7 +459,7 @@ void SP_Update(obj_tag* obj) {
     }
 
     if (scriptPlayer->scriptInfos[scriptPlayer->nthScript] != NULL &&
-        scriptPlayer->scriptInfos[scriptPlayer->nthScript]->maybeSomeSleepFrames != 0 &&
+        scriptPlayer->scriptInfos[scriptPlayer->nthScript]->waitFrames != 0 &&
         scriptPlayer->damageThreshold != 0.0f) {
 
         bool wasPlayerHit = false;

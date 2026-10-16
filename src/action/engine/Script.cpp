@@ -233,7 +233,7 @@ void __declspec(naked) Script_CameraStart(void) {
 void Script_SetPosRot(SCRIPTINFO *scriptInfo, _MATRIX *mtx) {
     Mat_Copy(mtx, &scriptInfo->maybeMatrix);
 
-    if (scriptInfo->maybeSomeSleepFrames != 0) {
+    if (scriptInfo->waitFrames != 0) {
         for (ushort i = 0; i < scriptInfo->numElements; i++) {
             Script_Interp(scriptInfo, scriptInfo->streamDataBuffer + i);
         }
@@ -251,9 +251,9 @@ void Script_Update(SCRIPTINFO *scriptInfo) {
     if (!(scriptInfo->playbackFlags & ScriptPlayback_Playing))
         return;
 
-    if (scriptInfo->maybeSomeSleepFrames != 0) {
-        if (scriptInfo->maybeSomeSleepFrames > 0) {
-            scriptInfo->maybeSomeSleepFrames--;
+    if (scriptInfo->waitFrames != 0) {
+        if (scriptInfo->waitFrames > 0) {
+            scriptInfo->waitFrames--;
         }
         return;
     }

@@ -109,7 +109,7 @@ typedef struct BLData {
     float hudFadeIn; // 0x84c
     char _pad_2c2[0x860-0x850];
     // The weapon's zoom, 1 when not zoomed: Player_Zoom drives it, Player_PositionCamera hands it to the viewer
-    // (viewer_tag::projectionScaleZ), and the view is drawn at fovRadians / zoom.
+    // (viewer_tag::zoom), and the view is drawn at fovRadians / zoom.
     float zoom; // 0x860
     char _pad_222222[0x86c-0x864];
     undefined4 field_0x86c[4]; // 0x86c-0x87b - zeroed by Player_InitWeapon
@@ -121,7 +121,8 @@ typedef struct BLData {
     char _pad_222223b[0x8b0-0x8a0];
     float nightVisionTimer; // 0x8b0
     char _pad_22[0x8b8-0x8b0-4];
-    undefined4 field_0x8b8; // 0x8b8 - zeroed by GunImp_Deactivate
+    float fallFrames; // 0x8b8 - time airborne: Player_CollisionHandler adds FRAME_RATE_MUL a tick, so it counts
+                      //         60 Hz frames at any rate
     float field_0x8bc; // 0x8bc - zeroed by Player_InitWeapon
     char _pad_22b[0x8c4-0x8bc-4];
     // The weapon the player was switching to when Player_RamSave ran at the end of the previous part of the
@@ -182,7 +183,7 @@ static_assert(offsetof(BLData, thirdPersonSubject) == 0xcc, "Offset of thirdPers
 static_assert(offsetof(BLData, cameraFollowObject) == 0x80c, "Offset of cameraFollowObject not correct");
 static_assert(offsetof(BLData, zoom) == 0x860, "Offset of zoom not correct");
 static_assert(offsetof(BLData, headSwimOffset) == 0x898, "Offset of headSwimOffset not correct");
-static_assert(offsetof(BLData, field_0x8b8) == 0x8b8, "Offset of field_0x8b8 not correct");
+static_assert(offsetof(BLData, fallFrames) == 0x8b8, "Offset of fallFrames not correct");
 static_assert(offsetof(BLData, weaponObject) == 0x778, "Offset of weaponObject not correct");
 static_assert(offsetof(BLData, health) == 0x824, "Offset of health not correct");
 static_assert(offsetof(BLData, playerNum) == 0x8de, "Offset of playerNum not correct");

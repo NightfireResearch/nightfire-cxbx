@@ -83,7 +83,8 @@ typedef struct SCRIPTINFO {
     HASHCODE scriptHashcode; // 0x90 - the script's own identifying hashcode (first word of the loaded binary
                               // asset, per Script_Load) - NOT a stream's own hashcode. Read back by
                               // Script_Free/Script_Play/SP_Update
-    int maybeSomeSleepFrames; // 0x94
+    int waitFrames; // 0x94 - Script_Update waits while non-zero, counting it down when positive; script event 3
+                    // sets it to its argument - 1, so 0 gives -1: wait until SP_UnPause clears it
     float maybeProgressFrames; // 0x98 - elapsed playback frames for the whole script (vs SSTREAM::elapsedFrames,
                                 // which is per-stream); advanced by FRAME_RATE_MUL in Script_Update, compared
                                 // against maybeNumFrames to detect "near the end"
@@ -111,7 +112,7 @@ typedef struct SCRIPTINFO {
 
 static_assert(offsetof(SCRIPTINFO, scale) == 0x8c, "Offset of scale is bad");
 static_assert(offsetof(SCRIPTINFO, scriptHashcode) == 0x90, "Offset of scriptHashcode is bad");
-static_assert(offsetof(SCRIPTINFO, maybeSomeSleepFrames) == 0x94, "Offset of maybeSomeSleepFrames is bad");
+static_assert(offsetof(SCRIPTINFO, waitFrames) == 0x94, "Offset of waitFrames is bad");
 static_assert(offsetof(SCRIPTINFO, maybeProgressFrames) == 0x98, "Offset of maybeProgressFrames is bad");
 static_assert(offsetof(SCRIPTINFO, fadeElapsedFrames) == 0x9c, "Offset of fadeElapsedFrames is bad");
 static_assert(offsetof(SCRIPTINFO, streamDataBuffer[0]) == 0xa0, "Offset of streamDataBuffer is bad");

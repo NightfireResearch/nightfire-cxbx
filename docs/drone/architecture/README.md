@@ -76,14 +76,16 @@ Counts: 250 state slots, 238 distinct state functions (the Xbox linker folded 12
 ### 2.2 First frame: `Drone_PostLoad_Init` 0x31fd0 (from `ResetMap_Load`)
 
 Sets per-level AI tunables (`FLOAT_00274cac..cbc`: view cone 50 deg / 45 deg on CastleIndoors2, etc.), allocates the
-AI route emitters, emits cover paths, `DroneSpawner_CreateBlank` (a spare spawner object kept in NPCGlobals+0x1a4),
+AI route emitters, emits cover paths, `DroneSpawner_CreateBlank` (a spawner-type object kept in NPCGlobals+0x1a4: the cheat's dummy player, see 5.1 in
+../behaviours/README.md),
 then **`NDrone2_SetupGroups`** 0x36e90 and **`NDrone2_PostLoad_Init` for every drone on the list**, then door/kick
 nodes and `AINetwork_InitPassableBoundries`. [dec]
 
 `NDrone2_SetupGroups`: links every drone with a group (key4, +0x128) into a per-group singly linked list
 (`NPCGlobals+0x10[group]` head, `Drone+0x8` next, `NPCGlobals+0x108[group]` u16 count, `Drone+0x124` = group) and calls
 `DroneSpawner_Init` for each spawner whose group has drones. `DroneSpawner_Init` 0x30670 copies each group drone's
-`DIVars` (0xa4 bytes) plus its cel into a 0xac-byte spawn record, hides it (`NDrone2_Enable(0)`), flags it for
+`DIVars` (0xa4 bytes) plus `obj->inCel` (+0x20, read at 0x30796; nightfire-port reads it as still NULL at this
+point on the PS2, not checked at run time on the Xbox) into a 0xac-byte spawn record, hides it (`NDrone2_Enable(0)`), flags it for
 deletion and deletes it (`control_delete_object`). Spawned drones are later re-created from those records by
 `DroneSpawner_SpawnDrone` 0x323e0 = `NDrone2_CreateFromDIVars` + `NDrone2_PostLoad_Init` - the same path as a
 placed drone. [dec]
@@ -167,7 +169,8 @@ deletion pass: objects with flags & 1 -> control_delete_object -> Drone_Delete
    msg 0xd with payload +0x92c; ninja eyes if +0x18. Returns true (it always does, except after the mode switch).
 4. If it returned true: the type's control function `DroneTypeSettings[drone->dtype(+0xa9)].control` (+8), or
    **`NDrone2_ControlSTANDARD`** 0x3f5f0 when NULL. Only three types have one, and all three end in STANDARD:
-   Zoe 0x3f8a0 (switch 1 -> 0x9b, and 0x9b + player near -> 0x63), Ninja 0x3f910 (`NDrone2_CreateNinjaEyes` first),
+   Zoe 0x3f8a0 (switch channel 1 set -> sets channel 0x9b; while 0x9b is set and `glb_players[0]` is more than 10 m
+   away -> sets channel 0x63, with its time; `fcomp` 0x3f8e6, `jnz` taken at <= 10 m), Ninja 0x3f910 (`NDrone2_CreateNinjaEyes` first),
    Astronaut 0x3f930 (a bare `jmp`). None of the three is defined as a function in Ghidra. [dis]
 5. **`NDrone2_PostDroneControl`** 0x3b670: if active (+0x3f4 & 0x100): obj render flag 0x20; health <= 0 and not dead
    (0x200) -> +0x3f4 |= 0x400 [inf: "dying"].
@@ -311,7 +314,7 @@ while SM.changePending:                                     # possibly several c
     SM.changePending = 0
     (bots) classify the new state with BOTSTATE_getStateType
     if next in {0x44 Death_Anim, 0x46 SpecialDeath_Anim, 0x47 Dead, 0x55 BulletImpact} or bot type 7/10:
-        drone+0x3d = 1                                      # [inf] "dying / impacted" flag
+        drone+0x3d = 1                                      # oneBurst: DroneWeap_HandleFiring stops after the burst
     elif not (bot type 4 and next not in {0xd3, 0xdd..0xdf}): drone+0x3b = 0
     process(dcv, SM.curState, {type 2 Exit, extraData = msg.extraData})
     SM.prevState = SM.curState; SM.curState = SM.nextState; obj->curState = (u16)curState
@@ -494,7 +497,7 @@ GetDroneTypeAttackTypeFriend, DoTypeSettingsOLD):
 | 0x11e | 2 | secondaryMode | 0x13a | key8 | [dec, PS2] |
 | 0x120 | 1 | deathSwitchChannel | | key12 | [dec] |
 | 0x124/0x128 | 4 | group | | | [dec] |
-| 0x130 | 4 f | (reset to 1.0 on every state change) | | [inf: anim speed] | [dis] |
+| 0x130 | 4 f | hitDamageScale: `NDrone2_PunchImpact`/`BulletImpact` pass it to `NDrone2_DoHitEffects`, which multiplies the hit's damage by it (0x3e25a, 0x3d900); reset to 1.0 on every state change | 0x14c | | [dis] |
 | 0x138-0x144 | 4 f x4 | distance to player n | | PreDroneControl | [dec] |
 | 0x148 | 4 | opponent | | area B | [dec] |
 | 0x2fc | | collision block | | obj->maybeCollision | [dec] |
@@ -520,7 +523,8 @@ GetDroneTypeAttackTypeFriend, DoTypeSettingsOLD):
 
 `NPCGlobals` (0x1e5630, 0x142c bytes) fields used by this area: +0x4 NDrone2List, +0x10[32] group heads, +0x8c[32]
 spawners by group, +0x108[32] u16 group counts, +0x14c max dead bodies (6), +0x150..+0x15c dead-body bookkeeping,
-+0x17c..+0x194 per-side counters, +0x19c hostagesSaved (ours), +0x1a4 blank spawner, +0x230 NumDrones,
++0x17c..+0x194 per-side counters, +0x19c hostagesSaved (ours), +0x1a0 dummyPlayerActive and +0x1a4 dummyPlayer (the
+dummy-player cheat: `FUN_00030950` from `Drone_InitComms`, cheat byte 0x1dfa29 set by `C_CHCHDUMMY_Handler`), +0x230 NumDrones,
 +0x240 alert record (extraData of msg 0x15), +0x288 cover nodes, flag0 and Drone_SomeDurationFrames (named in Ghidra).
 
 ---

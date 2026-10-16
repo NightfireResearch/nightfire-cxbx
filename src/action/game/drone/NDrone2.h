@@ -383,13 +383,18 @@ typedef struct {
     Drone_tag *NDrone2List;     // +0x4 - every live drone, linked through Drone_tag.next
     char _pad8[0x19c - 0x8];
     uint32_t hostagesSaved;     // +0x19c
-    char _pad1a0[0x230 - 0x1a0];
+    uchar dummyPlayerActive;    // +0x1a0 - FUN_00030950 (from Drone_InitComms) follows the cheat byte 0x1dfa29
+                                //          (C_CHCHDUMMY): on, drones targeting glb_players[0] retarget dummyPlayer
+    char _pad1a1[0x1a4 - 0x1a1];
+    obj_tag *dummyPlayer;       // +0x1a4 - DroneSpawner_CreateBlank's object; moved onto glb_players[0] when switched on
+    char _pad1a8[0x230 - 0x1a8];
     ushort NumDrones;           // +0x230 - drones given a state machine this level; the last id handed out
     char _pad232[0x142c - 0x232];
 } NPCGlobals_t;
 static_assert(sizeof(NPCGlobals_t) == 0x142c, "Bad size for NPCGlobals_t");
 static_assert(offsetof(NPCGlobals_t, NDrone2List) == 0x4, "Wrong offset for NDrone2List");
 static_assert(offsetof(NPCGlobals_t, hostagesSaved) == 0x19c, "Wrong offset for hostagesSaved");
+static_assert(offsetof(NPCGlobals_t, dummyPlayer) == 0x1a4, "Wrong offset for dummyPlayer");
 static_assert(offsetof(NPCGlobals_t, NumDrones) == 0x230, "Wrong offset for NumDrones");
 #define NPCGlobals (*(NPCGlobals_t *)0x001e5630)
 

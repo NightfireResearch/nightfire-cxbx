@@ -179,7 +179,8 @@ accuracy 0; astronauts from `weapon_data[0x33]` (`NDrone2_DefaultInit`, part A's
 
 36 entries x 12 bytes: `{u8 dtype, u8 side, u16 0, float initialAlertness, void (*init)(Drone_tag*)}`
 (verified in `NDrone2_DoModeSettingsOLD` 0x414d0; PS2 symbol `DroneModeSettings`, 35 entries + terminator
-`0xffff`). `side` goes to drone+0x119 (`isCivilian`: 1 enemy, 2 ally, 3 civilian - inferred from its uses).
+`0xffff`; the Xbox's bound `mode <= 0x23` (0x414d5) still admits index 35, the all-zero entry). `side` goes to
+drone+0x44 (0x4158a; 1 enemy, 2 ally, 3 civilian - inferred from its uses).
 Used when key 5 < 0x24: no shipped level placement does that, but `Drone_CoderCreate` (script-spawned drones)
 passes mode 0, and the secondary-mode key (drone+0x11e) indexes the same table for drone+0xaa. After the init
 hook, OLD mode forces a fixed set of properties on (0x18, 0x26-0x29, 0x31-0x33, 0x4f, 0x1f, 0x3c, 0x30, 0x0a,
@@ -316,7 +317,7 @@ Runs when there are drones and at least 15 frames have passed since two NPCGloba
    stopped last frame (NPCGlobals +0x238/+0x23c), at most 5 positive checks per frame; skipped entirely on
    Henderson D and Space Station D. For each pair `DroneVision_DetermineAlertCheck` calls
    `DroneVision_ConsiderAlerted` 0x65950 on the calm one: requires +0x3f4 & 0x2000, not a civilian ally (side 2),
-   not DTYPE 5, at least 60 s x `FRAME_RATE_DIV` since the other was alerted, and a cause bit on the other drone
+   not DTYPE 5, at least 60 x `FRAME_RATE_DIV` frames (one second; 0x659ea-0x65a15) since the other was alerted, and a cause bit on the other drone
    that one of this drone's properties accepts (8 -> 0x26/0x29, 2 -> 0x27, 4 -> 0x4f, 1 -> 0x28, 0x10 always).
    Then `DroneVision_DroneCanSeeDrone` 0x658e0 (within 50 m, visibility >= 0.7, head-to-head line of sight) and
    the drone is alerted: +0x3f4 |= 0x20000, causes copied up, `Drone_Message(obj, 0x1f)` -> `DroneFunc_DoForcedAttack`
@@ -398,8 +399,8 @@ So single-player alerts spread by **seeing** an alerted drone (4.2 step 1) and b
 
 ### 5.1 Target selection (`NDrone2_FindOpponent` 0x37c10)
 
-Single player (decompile): enemies target the player (`glb_players[0]`, or the override in NPCGlobals +0x1a4 when
-+0x1a0 is set), clearing it while the player is dead. Allies (side 2) first look for a hostile copter in a narrow
+Single player (decompile): enemies target the player (`glb_players[0]`, or the dummy player in NPCGlobals +0x1a4 when
++0x1a0 is set: the dummy-player cheat, see the `NPCGlobals` list after docs/drone/architecture/README.md 4.3), clearing it while the player is dead. Allies (side 2) first look for a hostile copter in a narrow
 cone, then round-robin through the drone list for the nearest visible enemy drone (side 1, alive, active), one LOS
 test per call. The multiplayer branch (scores 10 players by distance, team, threat) is part C.
 `NDrone2_SetOpponent` 0x37a10 stores it at +0x148, computes the aim point (+0x19c: position or the last-seen
@@ -413,14 +414,16 @@ visibility (5.3).
   "first stopped" windows (+0x191..+0x194) against `DroneFiring_TargetFirstMoved_TimeToHit` /
   `TargetFirstStopped_TimeToHit`.
 - `DroneWeap_DoFiring` 0x67d80: new burst length when +0x844 is 0 (`DroneWeap_NextBulletTime`); stops if sight lost
-  > 15 frames unless prop 0x17; waits for +0x848; `DroneWeap_Ready2Fire` 0x66920 (opponent alive, anim slot mode
-  != 4, weapon datum aimed within 20 deg of the aim point - 30 deg for Ninjas); then `DroneWeap_FireWeapon`.
+  > 15 frames unless prop 0x17; waits for +0x848; `DroneWeap_Ready2Fire` 0x66920 (opponent alive; anim slot mode
+  (+0x464) 4 returns true at once, with no aim test (0x669a3); in single player any other mode but 2, or a script at
+  +0x434, returns false, and within 2 m it returns true; a weapon without flag 0x1000 returns true; otherwise the weapon
+  datum must aim within 20 deg of the aim point - 30 deg for DTYPE 13 Ninja); then `DroneWeap_FireWeapon`.
 - `DroneWeap_BurstDelay` 0x672d0 (verified in the disassembly): `Normal x aggressionScale x rand(0.5..1)`, clamped
   to [`BurstDelay_Min`, `BurstDelay_Max`]; if the target is closer than `MinDist` -> `Min`, farther than `MaxDist`
   -> `Max`; times `FRAME_RATE_DIV`. **Ghidra's labels at 0x164094 and 0x16409c are wrong** (they say MinDist/
   MaxDist; the code and `ReadTuningVars` show Min/Max; 0x1640a0/0x1640a4 are MinDist/MaxDist).
 - `DroneWeap_DoBulletAccuracy` 0x66f90: hit chance `(100 - 5*acc)` x TooClose/TargetFirstMoved/TargetMoving/
-  TargetFirstStopped (the last only on levels 0x700000b..0x700000d with anim set 0x13) x difficulty accuracy
+  TargetFirstStopped (the last only on levels 0x700000c..0x700000d with anim set 0x13; 0x66ffb-0x6700c) x difficulty accuracy
   (1 Easy, 2 Normal, 3-4 Hard) x TooClose again. A hit needs `rand(100) < chance` and, beyond TooClose distance, at
   least `NewSighting_TimeToHit` seconds of sight and no "first shot" flag (+0x41). A hit zeroes the aim error
   (+0x1a8); a miss uses a slowly rotating Lissajous offset (0.5, 1.5, 1.5 m).
@@ -466,8 +469,9 @@ from `DroneWeap_OpponentIsAimingAtMe` and the property/anim checks (strafe-dodge
   (value 0xd) throw 0x35, or 0x36 one time in 3 - decompile only), from bone datum 0x15, towards a target position
   kept in the drone (offset not pinned down), pitched +45 deg under 10 m, -45 deg over 18 m. Grenade kind/count come from
   placement key 11 (hi nibble kind: 1 -> 0x36, 2 -> 0x35, 4 -> 0x34, 5 -> 0x3a+n, 6 -> 0x6c).
-- Melee: script events 5/10/0xb -> `DroneWeap_CloseCombatImpact` 0x66500: within 1.75 m and 60 deg (2 m for DTYPE 7
-  unarmed), fires a pseudo-bullet `weapon_data[99..102]`.
+- Melee: script events 5/10/0xb -> `DroneWeap_CloseCombatImpact` 0x66500: with anim set 7 (+0xbe, not the DTYPE: 0x6650b)
+  within 2 m, no angle test, `weapon_data[99]`; otherwise within 1.75 m and 60 deg, `weapon_data[100 + variant]`
+  (variant 0-2); fires it as a pseudo-bullet.
 - Being punched: message 6 -> `DSTATE_PunchImpact` (or `NDrone2_PunchImpact` 0x3e010 in place): alertness 1, hit
   effects, hurt broadcast, knock-out at health <= 0 (`DSTATE_KnockedOut_Anim`, or +0xb0 = `BotImpactPunch`), mission
   fail labels for unarmed civilians (Castle Indoors 1 "cover lost", elsewhere "killed civilian", except Tower A/B).

@@ -53,7 +53,7 @@ function marked * is reimplemented.
 | 001def38 | 0x200 | Init_SwitchChannels* | switch_channels_MusicVars (short[256]) | `switch_channels_MusicVars` |
 | 001df138 | 0x100 | Init_SwitchChannels* | switch_channels (undefined[256]) | `switch_channels` |
 | 001df238 | 0x100 | Init_SwitchChannels* | switch_channels_hold (undefined[256]) | `switch_channels_hold` |
-| 001df428 | 0x400 | Init_SwitchChannels* | switch_channels_time (undefined4[256]) | `switch_channels_time` |
+| 001df428 | 0x400 | Init_SwitchChannels* (filled with `NumFramesUnpaused`, not zero) | switch_channels_time (undefined4[256]) | `switch_channels_time` |
 | 001df8c0 | 0xc8 | Door_Init, Doors_Calc | DoorGroupsStates (undefined2) | |
 | 001e5630 | 0x142c | Drone_LevelReset | NPCGlobals (bool), 85 items inside | `NPCGlobals` |
 | 001e6184 | 0x800 | FUN_00030e70 | untyped (inside NPCGlobals, +0xb54) | |

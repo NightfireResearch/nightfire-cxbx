@@ -45,7 +45,7 @@ throw it away.
 
 Controls: `0x10000213` (left column) and `0x10000214` (right column) are arrays of 26 (0x1a) text controls
 fetched with `__Menu_SendEx(mgr, hash, i, 0x39 GetControl)`; `0x10000215` is the fade overlay.
-Offsets `+0x72` / `+0x74` of `M_CONTROL` are its y / x (shorts).
+Offsets `+0x72` / `+0x74` of `M_CONTROL` are its y / width (shorts; x is `+0x70`).
 
 - **0x4c (enter)**: `frame = 0; table = Menu_SetupCredits(&count); index = 0; line = 0;` remembers the page it
   came from (7th stack argument); hides 0x10000213 and 0x10000214 (`0x2b, 1`); colour of 0x10000215 = 0;
@@ -57,7 +57,7 @@ Offsets `+0x72` / `+0x74` of `M_CONTROL` are its y / x (shorts).
   1. `++frame; if (frame % 14 == 0 && line < count)`: take control pair `index` of both columns (bail out of
      the frame if either is missing); both `y = 0x200`; left: show (`0x2b, 2`), SetText (`0x18`) `txt_left`,
      format (`0x23`) by `modifiers_left`; right: format by `modifiers_right` (always, even when centred);
-     then if `!centred`: both `x = 0xfe`, show right, SetText `txt_right`; else left `x = 0x20c`, hide right.
+     then if `!centred`: both `width = 0xfe`, show right, SetText `txt_right`; else left `width = 0x20c`, hide right.
      `index = (index + 1) % 26; ++line;`
   2. Music fade: `if (frame / 14 > count - 50)` volume = `saved * (1/700.0) * (count*14 - frame)`, clamped at 0
      (`__ftol2`); i.e. linear over the last 50 lines (700 frames), silent when the last line spawns.

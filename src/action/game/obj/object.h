@@ -196,8 +196,9 @@ typedef struct obj_tag {
     unsigned short subState; // MovementType (Player), PlayerNum (Car)
     ushort displayMask;
     ushort transformFlags; // ObjectTransformFlags: how the update derives the matrix and bounds (0xd6)
-    char unknown_0xd8;
-    char _pad_6;
+    char drawnCountdown;   // 0xd8 - View_AddObjects sets 2, the object update counts it down: non-zero = drawn in
+                           //        the last two ticks
+    char unknown_0xd9;     // 0xd9 - bits: 1 player and drones, 2 bullets, 8 doors; tested by Collide_PickObj
     char flags; // (1 == Marked for deletion or resetting)
     char objectType; // Actually ObjectType but can't tell the compiler to make it just one byte
     uchar light_related1;
@@ -206,7 +207,7 @@ typedef struct obj_tag {
     uchar tweakR;
     uchar tweakG;
     uchar tweakB;
-    uchar maybeBrightness; // Maybe glow intensity?
+    uchar tweakA;          // 0xe2 - the alpha of psiSetTweakARGB (View_SetupRenderModes)
     char _pad_8;
 } obj_tag;
 #pragma pack(pop)

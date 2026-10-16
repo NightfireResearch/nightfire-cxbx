@@ -28,7 +28,7 @@ by address) is called only by `Emitter_Update`.
 | address | name | size | callers | what it does |
 |---|---|---|---|---|
 | 0x6fa30 | `Effect_InitLists` | 32 | `ResetMap_GameInit` | `DList_Init(&EffectList, 0x58, 200)` |
-| 0x6fa50 | `Effect_RicochetProb` | 80 | `Bullet_CollisionHandler` | `ricochet ? Rand_Rand(ricochet) & mask : 0` for a material (clamped to 22) |
+| 0x6fa50 | `Effect_RicochetProb` | 80 | `Bullet_CollisionHandler` | `ricochet && mask ? Rand_Rand(ricochet) & mask : 0` for a material (clamped to 22); no draw when either is 0 |
 | 0x6faa0 | `FUN_0006faa0` (*Effect_LinkToCel*) | 48 | `Effect_Player` | **reg** (EAX = node, EDX = cel): push the decal on `cel+0x10`, owner cel set, owner object cleared. Inlined on PS2 |
 | 0x6fad0 | `FUN_0006fad0` (*Effect_LinkToObject*) | 128 | `Effect_Bullet`, `Effect_Player` | **reg** (ESI = node, EDI = object): move the decal matrix into the object's local space (inverse of `obj->mtx`), push on `obj+0x10`. Inlined on PS2 |
 | 0x6fb50 | `Effect_UnLink` | 80 | `FUN_0006ff70` | unlink a decal node from its owner chain (fixing the owner's head) |

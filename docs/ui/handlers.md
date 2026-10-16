@@ -122,7 +122,7 @@ the source those functions must be reimplemented or patched to use the new copie
 ### 9. P_CNMENU_Handler - 0x0008c5f0, 455 bytes
 
 - Difficulty: **moderate** - save state `ls`, option/message boxes, cheat_mode
-- What it does: Enter: clears cn_modified_flag, selects cn_options item 1, "Edit %s" title (0x010001e4 with the codename) into 0x100001f9, and rewrites cn_options[6].title: 0x14b "Codenames" when ls.field4_0x10 < 2 else 0x1f4 "Save Codename". 0x50: play iris, message/option boxes. 0x6a / 0x6b: leave page, "lose your changes?" box (0x010002d3).
+- What it does: Enter: clears cn_modified_flag, selects the cn_options item whose identifier is 1 (`Menu_SelectItemInControl(ctl, cn_options, 7, 1)`: 7 is the count), "Edit %s" title (0x010001e4 with the codename) into 0x100001f9, and rewrites cn_options[6].title: 0x14b "Codenames" when ls.field4_0x10 < 2 else 0x1f4 "Save Codename". 0x50: play iris, message/option boxes. 0x6a / 0x6b: leave page, "lose your changes?" box (0x010002d3).
 - Messages: 0x4c EnterPage, 0x50 Tick, 0x6a, 0x6b
 - M_ITEM lists: `cn_options` (list/icon, title)
 - Pages referenced (targets or previous-page checks): P_CNSELECT, P_CNNAME, P_CNCONTROLS

@@ -54,6 +54,7 @@
     {"offset": 210, "type": "MovementType", "name": "subState"},
     {"offset": 212, "type": "ushort", "name": "displayMask"},
     {"offset": 214, "type": "ObjectTransformFlags", "name": "transformFlags", "comment": "how the update derives the matrix and bounds; was rendererType"},
+    {"offset": 216, "type": "byte", "name": "drawnCountdown", "comment": "View_AddObjects sets 2, the update counts it down: non-zero = drawn in the last two ticks"},
     {"offset": 218, "type": "byte", "name": "flags"},
     {"offset": 219, "type": "ObjectType", "name": "objectType"},
     {"offset": 220, "type": "byte", "name": "light_related1"},
@@ -62,7 +63,7 @@
     {"offset": 223, "type": "undefined1", "name": "tweakR"},
     {"offset": 224, "type": "undefined1", "name": "tweakG"},
     {"offset": 225, "type": "undefined1", "name": "tweakB"},
-    {"offset": 226, "type": "undefined1", "name": "maybeBrightness"}
+    {"offset": 226, "type": "undefined1", "name": "tweakA", "comment": "the alpha of psiSetTweakARGB (View_SetupRenderModes); was maybeBrightness"}
    ]
   }
  ]

@@ -90,7 +90,7 @@ reach 1.75, the sniper rifles 5000).
 | 0x048 | 4 | muzzleFlash1stPerson | HASHCODE (0x02) | first-person muzzle flash sprite/entity | `Draw_MuzzleFlash` 0xb7f20 (set on `BLData.muzzleFlashObj` at weapon bone 0, bone 4 for twin guns); `Player_MuzzleFlash` 0xb9fc0 (gate for light and smoke) | V |
 | 0x04c | 4 | muzzleFlash3rdPerson | HASHCODE (0x02) | third-person muzzle flash entity | `AnimDatumGetWeaponInfo` 0x13630 → `AnimProcessScriptCmds` 0x17c50 script command 7 (datum `weaponDatum + 1`, 3 frames), `DroneWeap_GetWeaponInfo` 0x66850 → `DroneWeap_FireWeapon`; `Player_MuzzleFlash` in multiplayer | V |
 | 0x050 | 1 | **weaponDatum** (animDatumRelated3; Ghidra: whichBone) | uchar | first datum of the weapon group on the character skeleton (weapon at +0, muzzle flash at +1, casing at +2, aim bone at +3); 0xff = not held visibly | `AnimDatumGetWeaponInfo` (returns it, -1 for 0xff), `AnimObjectAimAt` 0x15060, `AnimObjectDraw` 0x16c20, `Bullet_init_casing_ex` 0x23120 | V |
-| 0x051 | 1 | **muzzleFlashAlphaMin** (Ghidra: muzzleFlashMaybeBrightnessMin) | uchar | first-person flash sprite brightness, random in [min, max) | `Draw_MuzzleFlash`: `obj->maybeBrightness = min + rand(max - min)` | V |
+| 0x051 | 1 | **muzzleFlashAlphaMin** (Ghidra: muzzleFlashMaybeBrightnessMin) | uchar | first-person flash sprite brightness, random in [min, max) | `Draw_MuzzleFlash`: `obj->tweakA = min + rand(max - min)` | V |
 | 0x052 | 1 | **muzzleFlashAlphaMax** | uchar | see above | as above | V |
 | 0x053 | 1 | _pad53 | | never stored | constructor | V |
 | 0x054 | 1 | muzzleFlash_b | uchar | muzzle (and projectile) light, **blue** | `Light_Create(pos, r = +0x56, g = +0x55, b = +0x54, radius = +0x58, ...)` in `Player_MuzzleFlash`, `AnimProcessScriptCmds`, `DroneWeap_FireWeapon`, `Bullet_Update` (projectile flag 0x2000) | V |
@@ -122,7 +122,7 @@ reach 1.75, the sniper rifles 5000).
 | 0x092 | 2 | **clipSize** (clipSizeOrCooldown) | short | clip size, or maximum charge for recharging weapons (Stunner, Laser, Oddjob's Hat, Samurai) | `Player_ReloadAmmoType`, `Player_EquipWeapon/Ammo`, `Player_Update` (recharge up to it), `HUD_UpdateAmmoPane` (percent), `Bullet_init` (bloom cap) | V |
 | 0x094 | 1 | rumble | uchar | controller rumble strength (0-100) per shot | `Input_RumbleStart(pad, 5, rumble)` in `Player_WeaponFiring` | V |
 | 0x095 | 3 | _pad95 | | never stored | constructor | V |
-| 0x098 | 4 | **spreadPerShot** (accuracyModifierSomehow) | float | spread added per shot already fired in the current burst (bloom) | `Bullet_init`: `bloom = min(shotsSoFar, clipSize) × spreadPerShot` | V |
+| 0x098 | 4 | **spreadPerShot** (accuracyModifierSomehow) | float | spread added per shot already fired in the current burst (bloom) | `Bullet_init`: `bloom = min(shotsSoFar, clipSize) × spreadPerShot`, truncated to an integer (`__ftol2`, kept as a short) before it is added to baseSpread (0x21374) | V |
 | 0x09c | 4 | **unk9c** (unk22) | float | 0.01 sniper rifles, 0.02 Delta Repeater and Hat, 0.04 SMGs, 0.05 handguns and grenades, 0.08 shotgun, 0.12 launchers and AIMS-20, 0 gadgets: looks like a recoil or view-kick amount | no reader found | U |
 | 0x0a0 | 60 | animation script slots | HASHCODE[15] (0x06) | see "Animation slots" | `Player_SetWeaponAnimObj`, `Player_WeaponFiring`, `Player_SetFiringAnim`, `Player_Weapon`, `Player_WeaponSelect` | V |
 | 0x0dc | 4 | weaponModelHashcode | HASHCODE (0x05) | first-person (view) model, an animated model; 0 = nothing in hand | `Player_SetWeaponAnim` 0xb7df0 (`AnimObjectNew`), `Player_WeaponSelect` 0xb7aa0 (same model → instant switch), `Player_SetWeaponAnimObj`, `Player_SetFiringAnim`, `Player_MuzzleFlash`, `Player_PositionCamera` 0xa8a60; written by `Player_Init` | V |
@@ -409,7 +409,7 @@ header in places (`maybeExplodeStrength` for `damage`, `bulletTrailTimeRelated`,
 - `shotsPerTrigger[1]` is filled for every weapon, but only entries 96 and 97 have two fire modes, and their slot
   numbering in `WeaponStatus.fireModeIndex` was not checked against a running game.
 - The material "0x10" that projectile flag 0x800 changes, and what collision type 2 is.
-- `muzzleFlashAlphaMin/Max` set `obj_tag.maybeBrightness` of the flash object; whether the renderer uses that byte
-  as alpha or as brightness is not settled.
+- `muzzleFlashAlphaMin/Max` set `obj_tag.tweakA` of the flash object, the alpha that `View_SetupRenderModes`
+  passes to `psiSetTweakARGB`.
 - Why the Xbox refire delays are one frame shorter than the PS2 ones for 16 entries (a different countdown
   comparison on PS2 is the likely reason; not checked in ACTION.ELF).

@@ -2,9 +2,6 @@
 
 #include <math.h>
 
-// Alias for unknown_0xd8 field - appears to control active/visible state
-#define activeState unknown_0xd8
-
 #include "../../util/Random.h"
 #include "../../util/DList.h"
 #include "../../engine/viewer.h"
@@ -297,7 +294,7 @@ void Searchlight_Update(obj_tag *searchlight) {
 
     case Searchlight_Destroyed:
         // Spawn smoke particles occasionally
-        if ((searchlight->activeState != 0) &&
+        if ((searchlight->drawnCountdown != 0) &&
             ((searchlight->creationTimeFrames & 0xff) + GameState.NumFramesUnpaused) % 7 == 0) {
             _VECTOR gasVec;
             gasVec.x = 0.0f;
@@ -412,7 +409,7 @@ void Searchlight_Update(obj_tag *searchlight) {
     // Update lens flare effect
     componentObj = spotlight->lensFlare;
     if (componentObj != NULL) {
-        if (searchlight->activeState != 0) {
+        if (searchlight->drawnCountdown != 0) {
             // Position flare slightly in front of searchlight
             Vec_Copy(&searchlight->position, &componentObj->position);
             Vec_Spherical_2_Cartesian(&sphericalDir.x, 0.4f, searchlight->rotation.y, -searchlight->rotation.x);
@@ -434,10 +431,10 @@ void Searchlight_Update(obj_tag *searchlight) {
                 // Scale and brighten based on viewing angle
                 float intensity = (dotProduct - 0.2f) * 4.0f;
                 componentObj->scale = 4.0f * intensity;
-                componentObj->maybeBrightness = (uchar)(intensity * 255.0f);
+                componentObj->tweakA = (uchar)(intensity * 255.0f);
 
                 // Brighten further if direct line of sight
-                if (componentObj->maybeBrightness != 0) {
+                if (componentObj->tweakA != 0) {
                     bool lineOfSight = Collide_LineOfSight(&glb_viewer[0]->pos, &componentObj->position, player->inCel, componentObj, player, 8);
                     if (lineOfSight) {
                         componentObj->effectFlags |= 0x2000;

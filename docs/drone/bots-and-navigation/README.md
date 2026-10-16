@@ -175,8 +175,8 @@ Neither table has a count check. More than 50 records would overflow, but no lev
 **File node flags (+4) at run time:** bit 0x1 and the low action bits (`& 0xf007f`) mark a "special node": when a
 route reaches it, `NDrone2_ReachedDestNode` runs (report A/B). Bit 0x2 marks a door node. The target bits are set
 by NodesForPosition: 0x1000000 player, 0x2000000 player (obstructed only), 0x10000000 goal, 0x20000000 goal
-(obstructed only). 0x40000000 = open list and 0x80000000 = closed list, used by A*, the emitter and
-GetNodeAtDistance.
+(obstructed only). 0x40000000 = on the open or closed list and 0x80000000 = closed list: the emitter and GetNodeAtDistance use both,
+but A* (below) marks closed nodes 0x40000000 too.
 
 ### 3.4 AIRoute_tag (0xa0; `drone+0x634` for the dynamic route, `drone+0x6d8` for the patrol/mission route) **[D][PS2 layout differs: 0x100]**
 
@@ -270,8 +270,10 @@ after the Setup*/Verify* call. A reimplementation must keep that order.
    `route+0x90`, set the start/end nodes, count = chain length, index = 0, remaining distance = 2D(end, dest) +
    g(end). Return 0, or 1 on the fallback.
 5. Otherwise, for each link: skip it when both ends are door nodes (flag 2) and `Door_IsLocked(node+0x28)`.
-   `cost = g + (link.used + 1) * link.length`. Relax it as usual (move it out of the closed list if it is cheaper,
-   insert it into the open list with `FUN_00048310`). **Link flags 0x100/0x200 (danger) are not read here** (the
+   `cost = g + (link.used + 1) * link.length`. A node already flagged (0xc0000000) is only updated if cheaper. Its
+   move out of the closed list runs only for 0x80000000, which A* never sets: an expanded node goes on the closed
+   list with 0x40000000 (0x48a10), so a cheaper path updates g and the parent but the node is not reopened.
+   Unflagged nodes go into the open list with `FUN_00048310`. **Link flags 0x100/0x200 (danger) are not read here** (the
    decompile shows no such test).
 6. An empty open list means return 6.
 

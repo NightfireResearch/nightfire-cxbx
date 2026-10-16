@@ -238,9 +238,8 @@ channel.
 - **Shear** `Camera_Shear` 0x25610: the underwater wobble (a slowly rotating non-uniform scale of 2.5%) and
   `GlobalBlur = 0x91`, whenever the eye is below the room's `shearHeight` (rooms default to -500).
 - **Swing** `Camera_ApplySwing` 0x24490 (caller `Player_Update`): sinusoidal roll/pitch/yaw scaled by
-  `(viewer+0xf4 - 1)`. +0xf4 is the field we call `projectionScaleZ` (set to 1.0 by `Camera_CalcViewAngles`), but
-  `Player_PositionCamera` writes a player float into it every first-person frame (Ghidra: `lensFlareRelated`). Its
-  real meaning is open; renaming it is part of reimplementing the swing.
+  `(viewer+0xf4 - 1)`. +0xf4 is the viewer's `zoom` (1.0 from `Camera_CalcViewAngles`; `Player_PositionCamera` copies
+  the weapon zoom into it; the view is drawn at `fovRadians / zoom`), so the swing grows with the zoom.
 
 ### 3.4 Cutscenes
 
@@ -270,7 +269,8 @@ The animation system (files, sequences, scripts, pose, skinning, faces) is mappe
   draw), facial layers, and `AnimGetCollData` 0x136b0, which feeds collision (1.6).
 
 Unknown at run time, relevant here: how `AnimGetCollData` builds its boxes (which bones, what sizes) and when;
-why `AnimObjectDraw` casts a `Collide_RayIntersect` ray (inference: a floor probe for shadows or lighting); and how
+(`AnimObjectDraw`'s `Collide_RayIntersect` ray is the laser sight of weapon 0x18: from bone 8 datum 3, 100 units
+along its -x, drawn with glist 0x2000131 in night vision or 0x2000133); and how
 root motion and the movement code split the job of moving a character before collision runs - the drone and player
 update functions consume root motion, and collision then pushes the result out.
 
@@ -304,9 +304,11 @@ integrator and who uses it; the viewer table, the fade machine, shake, shear and
 5. **Unchecked fixed arrays.** `ASH_RecurseBoxesBox` appends to the 600-entry `ColBoxs` without a bound (overflow
    lands in `HitHeap`); `SrtList` holds about 1,005 pointers while up to 1,024 hits can exist. Neither is known to
    overflow in the shipped levels; a reimplementation should assert (GameCube-check style), not change behaviour.
-6. **Likely original bug in `FUN_00029fa0`**: with flags 0x10 the "skip see-through surfaces" test reads the surface
-   byte of the best triangle so far (`local_3c`, initially -1, so `surface[-1]` on the first test) instead of the
-   triangle being tested. Needs confirming against the disassembly; keep it if confirmed.
+6. **Original bug, the flags 0x10 "skip see-through surfaces" test** (checked in the disassembly): it should read the
+   tested triangle's surface byte, which only `Intersect_CylGeom` does (0x2a9c0). `Intersect_RayGeom` reads
+   `surface[-1]` outright (0x29baa); `Intersect_PointGeom` (spheres) reads `surface[best]` with best set to -1
+   (0x296d6) and never stored again; `FUN_00029fa0` reads `surface[best]`, best stored at 0x2a1d4, so -1 until its
+   first hit. Keep it (nightfire-port finds it in the PS2's `Intersect_PointGeom`).
 7. **Portal-limited queries** (1.5): rays only see rooms reached through portal quads. Whether this is ever visible
    (bullets through thin walls between rooms with no portal) is untested.
 8. **Floating-point fidelity.** The original uses x87 with 80-bit intermediates (`float10` everywhere in these
@@ -315,7 +317,7 @@ integrator and who uses it; the viewer table, the fade machine, shake, shear and
    tolerances, and replays to diverge in time.
 9. **RB free-body path never runs in the data** (all mode 1), so it cannot be tested from levels, and `RB_Build`'s
    swapped reciprocals hide there.
-10. **Camera unknowns:** the roles of viewers 5-10; the three `Camera_Enable` lists; the field at viewer+0xf4; which
+10. **Camera unknowns:** the roles of viewers 5-10; the three `Camera_Enable` lists; which
     PS2 camera functions the five unnamed Xbox ones are; `Viewer_Init`'s defaults. `viewer.h` has only part of the
     struct named.
 11. **Anim-collision coupling**: per-bone boxes from `AnimGetCollData` decide headshots and limb damage; until that

@@ -74,7 +74,7 @@ known but important pieces are unread; **thin** means the shape itself is still 
 
 ## Unknowns that cut across subsystems
 
-- **Frame-counted timing.** Weapon recharge, refire and bursts, fall damage, many object timers and the music
+- **Frame-counted timing.** Weapon recharge, refire and bursts, many object timers and the music
   streams all count frames rather than time. A change to the clock changes gameplay unevenly. Any frame-rate work
   has to come after those are found and scaled together.
 - **Order dependence.** Object update order, the one-frame lag of hit lists, two-pass triggers, and music events

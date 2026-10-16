@@ -78,7 +78,12 @@ typedef struct Drone_tag {
     char _pad2a[0x31 - 0x2a];
     uchar modeFlag31;               // 0x031
     uchar modeFromOldTable;         // 0x032 - DoModeSettingsOLD ran: DefaultInit then runs DoTypeSettingsOLD
-    char _pad33[0x44 - 0x33];
+    char _pad33[0x3b - 0x33];
+    uchar firing;                   // 0x03b - DroneWeap_Fire sets it; DroneWeap_HandleFiring fires while it is set
+    uchar unknown3c;                // 0x03c - set when DroneWeap_DoFiring returns false (DroneWeap_HandleFiring)
+    uchar oneBurst;                 // 0x03d - with +0x3c set, DroneWeap_HandleFiring clears firing; set by
+                                    //         Drone_SM_RouteMsgDCV on a change to a death or BulletImpact state
+    char _pad3e[0x44 - 0x3e];
     uchar side;                     // 0x044 - 1 enemy, 2 ally, 3 civilian / neutral
     char _pad45[0x90 - 0x45];
     float health;                   // 0x090
@@ -123,7 +128,8 @@ typedef struct Drone_tag {
     int groupAfterSetup;            // 0x124
     int group;                      // 0x128 - key 4
     uint key7;                      // 0x12c
-    float stateAnimSpeed;           // 0x130 - reset to 1.0 on every state change (inferred: anim speed)
+    float hitDamageScale;           // 0x130 - multiplies the damage NDrone2_DoHitEffects applies; reset to 1.0 on every
+                                    //         state change
     char _pad134[0x138 - 0x134];
     float playerDistance[4];        // 0x138 - PreDroneControl
     obj_tag *opponent;              // 0x148
@@ -197,6 +203,8 @@ static_assert(sizeof(DCVars_tag) == 0x10, "DCVars is wrong size");
 static_assert(sizeof(MsgObject) == 0x1c, "MsgObject is 0x1c bytes");
 static_assert(sizeof(Drone_tag) == 0x978, "Drone_tag is 0x978 bytes");
 static_assert(offsetof(Drone_tag, side) == 0x44, "Wrong offset for side");
+static_assert(offsetof(Drone_tag, oneBurst) == 0x3d, "Wrong offset for oneBurst");
+static_assert(offsetof(Drone_tag, hitDamageScale) == 0x130, "Wrong offset for hitDamageScale");
 static_assert(offsetof(Drone_tag, health) == 0x90, "Wrong offset for health");
 static_assert(offsetof(Drone_tag, dtype) == 0xa9, "Wrong offset for dtype");
 static_assert(offsetof(Drone_tag, skinHashcode) == 0xc4, "Wrong offset for skinHashcode");

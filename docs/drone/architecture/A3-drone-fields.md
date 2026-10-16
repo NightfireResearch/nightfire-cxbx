@@ -46,7 +46,7 @@ Offsets are the base of the access, so a byte access inside a dword field shows 
 | 0x03a |  | 3 |  | DroneFunc_OnInitDeath, S:BotDead, S:Dead |
 | 0x03b |  | 30 | DroneWeap_Fire, Drone_SM_RouteMsgDCV, S:AimCrouchReload, S:AimStandReload, S:AstronautDeath, S:AstronautHit, S:AstronautLaunch, S:BotAttackReload, S:CombatNoMove, S:NinjaAttackShortRange, S:NinjaSideflipLeft, S:NinjaSideflipRight, S:ProneFire, S:SniperReload, S:StepAimLeft, S:StepAimRight, S:StrafeDodgeLeft, S:StrafeDodgeRight, S:UnderCoverSniperReload | S:BotAttackBackoff, S:BotAttackCrouch, S:BotAttackFire, S:BotAttackStepAimLeft, S:BotAttackStepAimRight, S:BotAttackStrafeAimLeft, S:BotAttackStrafeAimRight, S:BotCoverFire, S:DeathByExplosion, S:Death_Anim, S:SpecialDeath_Anim |
 | 0x03c |  | 28 | DroneWeap_Fire, DroneWeap_FireWeapon | Drone_FeetOnPoint, S:AimBackoff, S:AimCrouchFire, S:AimStandFire, S:BotAttackBackoff, S:BotAttackCrouch, S:BotAttackFire, S:BotCoverFire, S:CombatNoMove, S:CombatNoRoute, S:CombatWait, S:GoToGoalPosition (+14) |
-| 0x03d |  | 2 | DroneWeap_Fire, Drone_SM_RouteMsgDCV |  |
+| 0x03d | (oneBurst) | 2 | DroneWeap_Fire, Drone_SM_RouteMsgDCV | DroneWeap_HandleFiring (0x67e24, found in the disassembly) |
 | 0x03e |  | 3 | N2_DefaultInit | DroneWeap_DoFiring, DroneWeap_FireWeapon |
 | 0x03f |  | 1 | DroneWeap_DoFiring |  |
 | 0x040 |  | 1 | DroneWeap_FireWeapon |  |
@@ -112,7 +112,7 @@ Offsets are the base of the access, so a byte access inside a dword field shows 
 | 0x121 |  | 4 | N2_DoModeSettingsNEW, N2_init_DMODE_CastleChatGuard1, N2_init_DMODE_CastleChatGuard2 | S:CastleChatGuard1 |
 | 0x128 | 4 obj_tag * (unnamed) | 2 | N2_CreateFromDIVars, N2_DefaultInit |  |
 | 0x12c | 4 obj_tag * (unnamed) | 2 | N2_CreateFromDIVars, N2_DefaultInit |  |
-| 0x130 | 4 float (unnamed) | 7 | Drone_SM_RouteMsgDCV, S:RollLeftCrouch, S:RollRightCrouch, S:StrafeDodgeLeft, S:StrafeDodgeRight, N2_DefaultInit | N2_PunchImpact |
+| 0x130 | 4 float (hitDamageScale) | 7 | Drone_SM_RouteMsgDCV, S:RollLeftCrouch, S:RollRightCrouch, S:StrafeDodgeLeft, S:StrafeDodgeRight, N2_DefaultInit | N2_PunchImpact, N2_BulletImpact (0x3e25a, found in the disassembly) |
 | 0x138 | 4 float (unnamed) | 2 |  | FUN_0003b7f0, N2_PreDroneControl |
 | 0x148 | 4 obj_tag * opponent | 72 | N2_FindOpponent, N2_SetOpponent | BOTSTATE_opponentIsMissile, BOTSTATE_pickupWeaponChangeChoice, BOTWEAP_tooCloseForWeapon, BOT_getAggressionMul, DroneVision_EnemyLookForOpponent, DroneVision_HaveOpponentSight, DroneVision_LogSeenOpponent, DroneWeap_AimTarget_IsOpponent, DroneWeap_DoOpponentTargetting, DroneWeap_FireWeapon, DroneWeap_OpponentHasWeapon, DroneWeap_OpponentIsAimingAtMe (+58) |
 | 0x14c |  | 5 | N2_FindOpponent, N2_SetOpponent | DroneFunc_TargetSeen, Drone_GetOpponentInfo, S:BotCoverInit |
