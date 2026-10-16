@@ -1,12 +1,13 @@
-// The leaf layer of the drone state machine: starting a drone's machine, requesting a state change, and the four
-// ways of sending it a message. See docs/drone/architecture/README.md section 3 - the dispatcher these feed
-// (Drone_SM_RouteMsgDCV) and the router (Drone_SM_RouteMsg) are still the game's.
+// The drone state machine: the queue of delayed messages, the router (Drone_SM_RouteMsg) and the dispatcher
+// (Drone_SM_RouteMsgDCV), starting a drone's machine, requesting a state change, and the four ways of sending it a
+// message. See docs/drone/architecture/README.md section 3.
 
 #include "Drone.h"
 #include "NDrone2.h"
 #include "DroneTables.h"
 #include "BOT.h"
-#include "../../game.h"     // GameState
+#include "../../game.h"             // GameState, MPGame
+#include "../mp/multiplayer.h"      // MPSettings
 
 // Runs a message through the drone's current state's handler (NDrone2_StateFuncs, still the game's table) and says
 // whether it was handled; a state beyond the table handles nothing. Every drone's state machine holds this as its
@@ -22,24 +23,31 @@ bool NDrone2_ProcessStateMachine(DCVars_tag *dcv, uint state, MsgObject *msg) {
 // AUTOGEN
 undefined4 __cdecl BOT_validateStateChange(int *param_1, uint param_2);
 
-// Drone_SM_RouteMsgDCV (0x4e410), the dispatcher (README 3.3), is not reimplemented yet and has a custom
-// convention the AUTOGEN stubs cannot express: the DCVars arrive in ESI, the message is its one stack argument
-// (read at [esp+4] on entry: sub esp,0x1c / push ebx / push ebp / mov ebp,[esp+0x28]), and the caller removes
-// it (RET 0; tools/abi_action.json: pops 0, regs_in esi). It only reads ESI, never writes it. This shim gives it
-// an ordinary cdecl face. ESI is callee-saved for our compiler, so it is put back afterwards.
-// When the dispatcher itself is reimplemented, this shim goes and callers call ours.
-void __declspec(naked) Drone_SM_RouteMsgDCV(DCVars_tag *dcVars, MsgObject *msg) {
-    _asm {
-        push esi
-        mov esi, [esp + 8]          // dcVars
-        push dword ptr [esp + 12]   // msg (12 now: the saved ESI moved it along)
-        mov eax, 0x0004E410
-        call eax
-        add esp, 4
-        pop esi
-        ret
-    }
-}
+// A message waiting for its frame: the head of one of Drone_SM_LLDelayed's lists, or one of its items
+typedef struct DroneSMItem {
+    DroneSMItem *next;
+    MsgObject msg;
+} DroneSMItem;
+
+// The delayed messages: a list in the order they fall due, and the free items
+typedef struct DroneSMLists {
+    uint count;             // 0x0 - DRONE_SM_ITEMS
+    DroneSMItem *items;     // 0x4 - Drone_SM_LLItems
+    DroneSMItem *pending;   // 0x8 - the head of the waiting list (item 0)
+    DroneSMItem *free;      // 0xc - the head of the free list (item 1)
+} DroneSMLists;
+
+static_assert(sizeof(DroneSMItem) == 0x20, "DroneSMItem is 0x20 bytes");
+static_assert(sizeof(DroneSMLists) == 0x10, "DroneSMLists is 0x10 bytes");
+
+#define DRONE_SM_ITEMS 0x400
+
+// Only the four functions below use these. They stay the game's while the shadow tests run the original and ours
+// on them.
+// XBE_GLOBAL(0x001ee438, 0x8000)
+#define Drone_SM_LLItems (*(DroneSMItem(*)[DRONE_SM_ITEMS])0x001ee438)
+// XBE_GLOBAL(0x001f6438, 0x10)
+#define Drone_SM_LLDelayed (*(DroneSMLists *)0x001f6438)
 
 // The drone whose state machine has this id, as FUN_0004e1b0 finds it (the id arrives in ECX there, so the
 // original is not patched; Drone_SM_SetState inlines the same walk). NULL if no drone on the list has it.
@@ -49,6 +57,235 @@ static obj_tag *Drone_FindObjBySMId(uint id) {
             return drone->gameObj;
     }
     return NULL;
+}
+
+// The two list heads take items 0 and 1; the other 1022 go on the free list.
+// AUTOINJECT
+bool Drone_SM_Init(void) {
+    Drone_SM_LLDelayed.items = &Drone_SM_LLItems[0];
+    Drone_SM_LLDelayed.pending = &Drone_SM_LLItems[0];
+    Drone_SM_LLItems[0].next = NULL;
+    Drone_SM_LLItems[1].next = NULL;
+    Drone_SM_LLDelayed.count = DRONE_SM_ITEMS;
+    Drone_SM_LLDelayed.free = &Drone_SM_LLItems[1];
+    for (int i = 2; i < DRONE_SM_ITEMS; i++) {
+        DroneSMItem *item = &Drone_SM_LLItems[i];
+        item->next = Drone_SM_LLDelayed.free->next;
+        Drone_SM_LLDelayed.free->next = item;
+    }
+    return true;
+}
+
+// Queues a message behind every one due the same frame or earlier. Our name: only Drone_SM_RouteMsg calls it.
+// With no free item left, the copy goes through NULL, as the original's does.
+// FUNC_AT(0x0004e3c0)
+void Drone_SM_QueueMsg(MsgObject *msg) {
+    DroneSMItem *item = Drone_SM_LLDelayed.free->next;
+    if (item != NULL)
+        Drone_SM_LLDelayed.free->next = item->next;
+    else
+        NF_WARN("Too many AI messages\n"); // GC check (0x800c3e14)
+    item->msg = *msg;
+
+    DroneSMItem *prev = Drone_SM_LLDelayed.pending;
+    DroneSMItem *at = prev->next;
+    while (at != NULL && at->msg.handleOnFrame <= item->msg.handleOnFrame) {
+        prev = at;
+        at = at->next;
+    }
+    prev->next = item;
+    item->next = at;
+}
+
+// Once a frame: routes every queued message that has fallen due, in order, and frees its item.
+// AUTOINJECT
+void Drone_SM_SendDelayedMsgs(void) {
+    uint now = GameState.NumFramesUnpaused;
+    DroneSMItem *head = Drone_SM_LLDelayed.pending;
+    DroneSMItem *item = head->next;
+    while (item != NULL && item->msg.handleOnFrame <= now) {
+        Drone_SM_RouteMsg(&item->msg);
+        // Taken off the list only now: routing it may have queued others behind it
+        DroneSMItem *next = item->next;
+        head->next = next;
+        item->next = Drone_SM_LLDelayed.free->next;
+        Drone_SM_LLDelayed.free->next = item;
+        item = next;
+    }
+}
+
+// Delivers a message, or queues it if it is not due yet: to every drone (receiver 0), to a multiplayer bot
+// (receiver -1-n), or to the drone with that id. Drones waiting on a switch, dead or fading are skipped, and so are
+// those playing a script, except when the message is for them alone. A message to several drones has each one's id
+// written into it in turn.
+// AUTOINJECT
+void Drone_SM_RouteMsg(MsgObject *msg) {
+    if (msg->handleOnFrame > GameState.NumFramesUnpaused) {
+        Drone_SM_QueueMsg(msg);
+        return;
+    }
+
+    if (msg->receiver == 0) {
+        for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
+            switch (drone->sm.curState) {
+            case DSTATE_WaitSwitch:
+            case DSTATE_PlayScript:
+            case DSTATE_HostageDead:
+            case DSTATE_Dead:
+            case DSTATE_Fade:
+                continue;
+            }
+            DCVars_tag dcv;
+            dcv.gameObj = drone->gameObj;
+            dcv.drone = drone;
+            dcv.aiStateMachine = &drone->sm;
+            dcv.cel = drone->gameObj->inCel;
+            msg->receiver = drone->sm.id;
+            _Drone_SM_RouteMsgDCV(&dcv, msg);
+        }
+        return;
+    }
+
+    if (MPSettings.maybeDroneAIEnabled != 0 && msg->receiver < 0) {
+        // The bots are players 4 on. Worked out before the loop, which overwrites the receiver.
+        int bot = -1 - msg->receiver;
+        for (int i = 4; i < 10; i++) {
+            obj_tag *gameObj = MPGame.players[i].playerObj;
+            if (gameObj == NULL || (int)MPSettings.Player[i].TeamId != bot)
+                continue;
+            // Whether it worked is not tested
+            DCVars_tag dcv;
+            Drone_DCVfromOBJ(gameObj, &dcv);
+            switch (dcv.aiStateMachine->curState) {
+            case DSTATE_WaitSwitch:
+            case DSTATE_PlayScript:
+            case DSTATE_HostageDead:
+            case DSTATE_Dead:
+            case DSTATE_Fade:
+            case DSTATE_FadeFast:
+                continue;
+            }
+            msg->receiver = dcv.aiStateMachine->id;
+            _Drone_SM_RouteMsgDCV(&dcv, msg);
+        }
+        return;
+    }
+
+    obj_tag *gameObj = Drone_FindObjBySMId(msg->receiver);
+    if (gameObj == NULL)
+        return;
+    DCVars_tag dcv;
+    Drone_DCVfromOBJ(gameObj, &dcv);
+    switch (dcv.aiStateMachine->curState) {
+    case DSTATE_WaitSwitch:
+    case DSTATE_HostageDead:
+    case DSTATE_Dead:
+    case DSTATE_Fade:
+    case DSTATE_FadeFast:
+        return;
+    }
+    _Drone_SM_RouteMsgDCV(&dcv, msg);
+}
+
+// Delivers a message to the drone's state machine (README 3.3), when it is for any state, for BotGlobal or for the
+// current one: the current state's handler gets it, and if it does not handle it, DSTATE_Global (BotGlobal for a bot,
+// whose BotGlobal sees every Update first anyway). Then the state changes asked for meanwhile happen, one after
+// another: Exit to the old state, the drone's per-state fields reset, Enter to the new one.
+void _Drone_SM_RouteMsgDCV(DCVars_tag *dcv, MsgObject *msg) {
+    StateMachineInfo_tag *sm = dcv->aiStateMachine;
+    if (msg->scope != 0 && msg->scope != DSTATE_BotGlobal && msg->scope != sm->curState)
+        return;
+
+    bool botUpdate = false;
+    if (dcv->drone->dtype == DTYPE_Bot && msg->msgType == DRONE_MSG_Update) {
+        if (sm->processFunction != NULL)
+            sm->processFunction(dcv, DSTATE_BotGlobal, msg);
+        botUpdate = true;
+    }
+    bool handled = sm->processFunction != NULL && sm->processFunction(dcv, sm->curState, msg);
+    if (!handled && !botUpdate && sm->processFunction != NULL)
+        sm->processFunction(dcv, dcv->drone->dtype == DTYPE_Bot ? DSTATE_BotGlobal : DSTATE_Global, msg);
+
+    // Exit, BotStateChanged and Enter, one message reused. The original leaves its scope (until BotStateChanged
+    // sets it) and both frames uninitialised.
+    MsgObject own;
+    own.scope = 0;
+    own.createdFrame = 0;
+    own.handleOnFrame = 0;
+    int changes = 0;
+    while (sm->changePending) {
+        if (++changes > 1000)
+            NF_WARN("Possible infinite loop\n"); // GC check (0x800c3fa8)
+        own.sender = sm->id;
+        own.receiver = sm->id;
+        own.extraData = msg->extraData;
+        sm->changePending = 0;
+
+        // Where a bot is going decides whether its gun keeps firing
+        bool burst = false;
+        bool keepFiring = false;
+        if (dcv->drone->dtype == DTYPE_Bot) {
+            uint kind = BOTSTATE_getStateType(sm->nextState);
+            if (kind == BOTSTATE_CLASS_IMPACT || kind == BOTSTATE_CLASS_DEATH) {
+                burst = true;
+            } else if (kind == BOTSTATE_CLASS_ATTACK) {
+                uint next = sm->nextState;
+                keepFiring = next != DSTATE_BotAttackNoOpponent &&
+                             !(next >= DSTATE_BotAttackReload && next <= DSTATE_BotAttackUnarmed);
+            }
+        }
+        switch (sm->nextState) {
+        case DSTATE_Death_Anim:
+        case DSTATE_SpecialDeath_Anim:
+        case DSTATE_Dead:
+        case DSTATE_BulletImpact:
+            dcv->drone->oneBurst = 1;
+            break;
+        default:
+            if (burst)
+                dcv->drone->oneBurst = 1;
+            else if (!keepFiring)
+                dcv->drone->firing = 0;
+            break;
+        }
+
+        own.msgType = DRONE_MSG_Exit;
+        if (sm->processFunction != NULL)
+            sm->processFunction(dcv, sm->curState, &own);
+
+        sm->prevState = sm->curState;
+        sm->curState = sm->nextState;
+        dcv->gameObj->curState = (ushort)sm->curState;
+        dcv->drone->flags &= ~0x10000;
+        dcv->drone->flags &= ~0x2000;
+        dcv->drone->hitDamageScale = 1.0f;
+        dcv->drone->timerA.on = 0;
+        dcv->drone->timerB.on = 0;
+
+        if (dcv->drone->dtype == DTYPE_Bot) {
+            own.msgType = DRONE_MSG_BotStateChanged;
+            own.scope = sm->curState;
+            if (sm->processFunction != NULL)
+                sm->processFunction(dcv, DSTATE_BotGlobal, &own);
+        }
+
+        sm->stateEnteredFrame = GameState.NumFramesUnpaused;
+        own.msgType = DRONE_MSG_Enter;
+        if (sm->processFunction != NULL)
+            sm->processFunction(dcv, sm->curState, &own);
+    }
+}
+
+// The original takes the DCVars in ESI and the message on the stack, and its callers clean up.
+// AUTOLTCG
+void __declspec(naked) Drone_SM_RouteMsgDCV(void) {
+    _asm {
+        push dword ptr [esp + 4]
+        push esi
+        call _Drone_SM_RouteMsgDCV
+        add esp, 8
+        ret
+    }
 }
 
 // Starts a drone's state machine (once, from NDrone2_PostLoad_Init): gives it its id and sends it Enter.
@@ -78,7 +315,7 @@ bool Drone_SM_InitObject(obj_tag *gameObj) {
     sm->nextState = first;
     // stateEnteredFrame and the two scratch words are left as they are.
 
-    drone->processFunction = (void *)NDrone2_ProcessStateMachine;
+    sm->processFunction = NDrone2_ProcessStateMachine;
 
     // To itself, any state, delivered now through Drone_SM_RouteMsg (so ignored if the system is disabled).
     Drone_SM_SendMsg(DRONE_MSG_Enter, 0, sm->id, sm->id);
@@ -153,7 +390,7 @@ void Drone_SM_SendMsgSelf(uint msgType, void *extraData, uint delay, uint scope,
     if (delay != 0)
         Drone_SM_RouteMsg(&msg);
     else
-        Drone_SM_RouteMsgDCV(dcVars, &msg);
+        _Drone_SM_RouteMsgDCV(dcVars, &msg);
 }
 
 // Sends a message to every drone (receiver 0, any state), after `delay` frames. Not stopped by

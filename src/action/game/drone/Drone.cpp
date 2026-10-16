@@ -2,6 +2,8 @@
 #include "NDrone2.h"
 #include "../../game.h"
 #include "../../sound/music.h"
+#include "../../math/math.h"      // Vec_Dist3D
+#include "../mp/multiplayer.h"     // MPSettings
 
 #include "string.h"
 
@@ -58,9 +60,6 @@ obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     
     return NDrone2_CreateFromDIVars(&diVars);
 }
-
-// AUTOGEN
-void Drone_SM_RouteMsg(MsgObject *msg);
 
 // AUTOGEN
 void NDrone2_Enable(char enable, Drone_tag *drone);
@@ -123,4 +122,48 @@ obj_tag* Drone_CoderCreate(_VECTOR *pos, _VECTOR *rot, HASHCODE skin, HASHCODE p
         NDrone2_PostLoad_Init(drone->gameObj);
     }
     return gameObj;
+}
+
+// AUTOGEN
+void BOT_fellOutMap(obj_tag *param_1);
+#define NDrone2_CanSeeObject ((bool (__cdecl *)(Drone_tag *drone, obj_tag *obj, uint bone, ushort mask))0x000648b0)
+
+// The drone's alert status (Drone_tag.alertStatus), or NULL for anything that is not a drone.
+// AUTOINJECT
+uchar* Drone_AlertStatus(obj_tag *gameObj) {
+    if (gameObj == NULL || gameObj->extraObjectData == NULL || gameObj->objectType != OBJECTTYPE_DRONE)
+        return NULL;
+    return &((Drone_tag *)gameObj->extraObjectData)->alertStatus;
+}
+
+// Sends a message to every drone, live or dead, within `radius` of obj (Drone_Message). A stun grenade's
+// (DRONE_MSG_ImpactStunGrenade) goes only to those that can see obj from bone 5.
+// AUTOINJECT
+void Drone_MessageObjVicinity(uint msgType, obj_tag *obj, float radius, void *extraData, uint delay) {
+    if (Drone_bDisableSystem)
+        return;
+    for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
+        obj_tag *gameObj = drone->gameObj;
+        if (gameObj == NULL)
+            continue;
+        if (gameObj->objectType != OBJECTTYPE_DRONE && gameObj->objectType != OBJECTTYPE_DEAD_DRONE)
+            continue;
+        if (Vec_Dist3D(&gameObj->position, &obj->position) > radius)
+            continue;
+        if (msgType == DRONE_MSG_ImpactStunGrenade && !NDrone2_CanSeeObject(drone, obj, 5, 0x500))
+            continue;
+        Drone_Message(gameObj, msgType, extraData, delay);
+    }
+}
+
+// A drone that has left every room: switched off and marked for deletion; in multiplayer the bot code deals with it.
+// AUTOINJECT
+void Drone_FellOutMap(obj_tag *gameObj) {
+    if (MPSettings.maybeDroneAIEnabled != 0) {
+        BOT_fellOutMap(gameObj);
+        return;
+    }
+    if (gameObj->extraObjectData != NULL)
+        NDrone2_Enable(0, (Drone_tag *)gameObj->extraObjectData);
+    gameObj->flags |= 1;
 }

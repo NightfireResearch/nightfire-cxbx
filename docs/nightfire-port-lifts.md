@@ -28,6 +28,8 @@ to what it does. A function ported that way:
 
 | 2 | trigger, door, sensor, player_stats | 45 + 6 (Trigger_Hit, PlrStats_GetDrivingData, Door_SetupSlide, Door_IsOpen, Door_MoveGroup, Door_CloseIfClear) | 40 of 45; 459 of 549 blocks. Every function, and the missed branches, shadow-tested (TriggerShadow, DoorShadow, SecurityShadow, PlrStatShadow: 44,050 cases, 0 differ; each suite shown to catch a planted bug) | see git log |
 
+| 3 | drone_sm, drone_func, drone_behaviour | 32 + 8 (Drone_SM_QueueMsg, DroneAnim_CurrentMoveState, DroneAnim_SetWalkIdleAnim, NDrone2_GetHeadPosOld, NDrone2_PatrolTalk, NDrone2_PowerstationTalk, NDrone2_HandleTalking, NDrone2_FadeOut) | 30 of 32; 391 of 624 blocks. DroneAIShadow: 136,925 cases, 0 differ; 33 planted bugs, 31 caught (the other two need a NaN, or are a branch that cannot be reached) | see git log |
+
 Parcel 1's first playback found two things the coverage alone would not have shown:
 - **A crash in our code.** The port of `Script_CreateEntity` called our `Break_Create` by name, which is a known-broken
   draft that was never patched in. `tools/draft_calls.py` now finds such calls.
@@ -64,6 +66,23 @@ Everything else in their readings of parcel 1 matched the Xbox.
 
 Everything else in their readings of parcel 2 matched the Xbox.
 
+### Parcel 3
+- Inlined on the Xbox: `DroneFunc_DropGrenade`.
+- A call on the Xbox where theirs is inline: the "drone active" test in `DroneFunc_DoForcedAttack` and
+  `NDrone2_PowerstationTalk` calls `MPDrone_MaybeIsDyingOrDead` (0x1a190); `Drone_MayhewTalk` inlines it.
+- `DroneFunc_OnInitDeath`'s death log is a call to `NDrone2_LogDroneDeath` for every enemy whose flags lack
+  0x1000000. Theirs tests "killed by the player" around `PlrStat_LogEnemyDispatched`.
+- `NDrone2_NearArmedPerson` takes only the DCVars on the Xbox; theirs also takes a radius.
+- `NDrone2_ExplosionDir` reads the impact position at +0x8, not +0x10 (layout).
+- `DroneFunc_ConsiderExplosive`'s fuse timeout is ((2 x rate + fuse) + frame) on the x87; theirs adds frame + fuse +
+  2 x rate in float.
+- `DroneFunc_DoBondTalk` and `NDrone2_BondTalk` work their timeouts out in extended precision and truncate with
+  `__ftol2`. Theirs uses float rounding and `fptoui`: PS2 maths.
+- Their own additions: a drop on a full queue in `Drone_SM_RouteMsg`, the `ch < 256` guard in
+  `NDrone2_PowerstationTalk`, and a NULL-player guard in `DroneAnim_LocationDeathAnim`.
+
+Everything else in their readings of parcel 3 matched the Xbox.
+
 ## Original bugs found while porting (kept; candidates for FIX_ORIGINAL_GAME_BUGS)
 
 - `Script_Load`, a file with 0x3f streams or more: hands its record to `DList_RemoveFromInUse2Free(&ScriptList)`,
@@ -81,6 +100,16 @@ Everything else in their readings of parcel 2 matched the Xbox.
 - `PlrStats_SetupScoreTable` trusts the count it is given.
 - Channel and message indexes in triggers, doors and the security system are never bounded. Trigger inputs above
   255 read and write `switch_channels_hold`.
+- The AI message queue's insert (0x4e3c0) writes through NULL when all 1022 items are in use.
+- `Drone_SM_RouteMsg` ignores a failed `Drone_DCVfromOBJ` and carries on with uninitialised DCVars.
+- `DroneAnim_LocationDeathAnim` uses `glb_players[0]` and its animState without checking them.
+- `NDrone2_GetHeadPos` writes `*pos` unchecked for objects that are not drones.
+
+## Departures from the original
+
+- The AI dispatcher's Exit, Enter and 0x2e messages leave their scope and frames as uninitialised stack in the
+  original. Ours writes zero there, as the driving engine's port does for uninitialised stack
+  (docs/driving/original-quirks.md, 1.1).
 
 ## What the demos do not cover
 

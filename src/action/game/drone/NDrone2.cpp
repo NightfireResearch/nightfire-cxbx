@@ -6,6 +6,14 @@
 #include "../../engine/Collide.h"   // HITDATA_tag
 #include "../obj/bullet.h"          // BU_tag
 #include "Behaviour.h"
+#include "DroneAnim.h"
+#include "DroneTables.h"
+#include "../../engine/Anim.h"      // AnimGetBoneWorldTrans
+#include "../../math/math.h"        // Vec_*, maybeAtan2 (ours)
+#include "../mp/multiplayer.h"      // MPSettings
+
+#include <math.h>
+#include <string.h>
 
 // AUTOGEN
 obj_tag* NDrone2_CreateObj(DIVars_tag *diVars); 
@@ -214,17 +222,10 @@ ushort DroneVision_EnemyLookForOpponent(DCVars_tag *dcv);
 // AUTOGEN
 ushort DroneVision_EnemyAlerts(DCVars_tag *dcv, MsgObject *msg);
 // AUTOGEN
-void NDrone2_SeenAndAttacking(DCVars_tag *dcv);
-// AUTOGEN
-uint DroneFunc_DoForcedAttack(DCVars_tag *dcv);
-// AUTOGEN
 bool DroneFunc_HandleImpact(DCVars_tag *dcv, MsgObject *msg, uint nextState, char param_4);
-// AUTOGEN
-void DroneFunc_ConsiderExplosive(DCVars_tag *dcv, obj_tag *explosive, short nextState);
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
 #define DroneAnim_SetScript ((void (__cdecl *)(HASHCODE script, short param_2, short param_3, char param_4, short param_5, int param_6, int param_7, DCVars_tag *dcv))0x00034680)
-#define DroneAnim_CallAnim ((void (__cdecl *)(uint param_1, uint param_2, short anim, int param_4, float param_5, int param_6, DCVars_tag *dcv))0x000341c0)
 #define DroneAnim_SetDAnimNow ((void (__cdecl *)(ushort anim, ushort param_2, int param_3, DCVars_tag *dcv))0x00035dc0)
 
 // The drone's own message after an animation script ends
@@ -358,5 +359,376 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
 
     default:
         return false;
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+
+// The originals, called by address: Ghidra's prototypes have untyped arguments
+#define NDrone2_Player ((obj_tag *(__cdecl *)(void))0x00035f90)
+#define NDrone2_CanSeeObject ((bool (__cdecl *)(Drone_tag *drone, obj_tag *obj, uint bone, ushort mask))0x000648b0)
+#define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *gameObj))0x0001a190)
+#define DroneWeap_OpponentHasWeapon ((bool (__cdecl *)(DCVars_tag *dcv))0x00066610)
+#define DroneVision_ObjectVisibility ((float (__cdecl *)(Drone_tag *drone, obj_tag *obj))0x000643c0)
+#define AnimObjectSetHeadTracking ((void (__cdecl *)(obj_tag *gameObj, void *target, float range, float rate, char randomDelay, char targetIsObj, uchar bone))0x000119a0)
+
+// AnimGetBoneWorldTrans's bone argument, as these pass it: bit 31 set, and the bone
+#define WORLD_BONE(bone) (0x80000000 | (bone))
+#define HEAD_BONE 5
+
+// Whether the object holds a weapon: 2-0x46 or 0x6a-0x71 (AnimState.currentWeaponId).
+// AUTOINJECT
+bool NDrone2_ObjectIsArmed(obj_tag *gameObj) {
+    if (gameObj == NULL || gameObj->animState == NULL)
+        return false;
+    char weapon = gameObj->animState->currentWeaponId;
+    if (weapon >= 0x6a && weapon < 0x72)
+        return true;
+    return weapon > 1 && weapon < 0x47;
+}
+
+// Eyes of an object without a head to read: its position, raised 0.6, or 0.2 for a drone crouched, not at all for
+// one down (DroneAnim_CurrentMoveState).
+static void NDrone2_EyesFromPosition(obj_tag *gameObj, _VECTOR *pos) {
+    Vec_Copy(&gameObj->position, pos);
+    uchar moveState = 0;
+    if (gameObj->objectType == OBJECTTYPE_DRONE)
+        moveState = DroneAnim_CurrentMoveState((Drone_tag *)gameObj->extraObjectData);
+    switch (moveState) {
+    case 3:
+    case 5:
+        pos->y += 0.2f;
+        break;
+    case 4:
+    case 0x1a:
+        break;
+    default:
+        pos->y += 0.6f;
+        break;
+    }
+}
+
+// Where the object's eyes are, and for a drone which way its head faces (Drone_tag.headPos and headYaw; true).
+// For anything else the eyes are worked out from its position (false; pos must be given).
+// AUTOINJECT
+bool NDrone2_GetHeadPos(obj_tag *gameObj, _VECTOR *pos, float *yaw) {
+    if (gameObj->objectType == OBJECTTYPE_DRONE) {
+        Drone_tag *drone = (Drone_tag *)gameObj->extraObjectData;
+        if (pos != NULL)
+            *pos = drone->headPos;
+        if (yaw != NULL)
+            *yaw = drone->headYaw;
+        return true;
+    }
+    NDrone2_EyesFromPosition(gameObj, pos);
+    return false;
+}
+
+// The same from the skeleton: the head bone of a drone animating this frame (true), except in SpaceStationD; else
+// the eyes from the position, and the object's own facing (false).
+// AUTOINJECT
+bool NDrone2_GetHeadPosOld(obj_tag *gameObj, _VECTOR *pos, float *yaw) {
+    if (GameState.CurrentLevelHashcode != HT_Level_SpaceStationD && gameObj != NULL && gameObj->animState != NULL &&
+        gameObj->objectType == OBJECTTYPE_DRONE && (((Drone_tag *)gameObj->extraObjectData)->flags & 0x100000) &&
+        (gameObj->animState->animObj.flags & 1)) {
+        if (yaw != NULL) {
+            _MATRIX mtx;
+            AnimGetBoneWorldTrans(gameObj, WORLD_BONE(HEAD_BONE), 0, pos, &mtx);
+            *yaw = gameObj->rotation.y;
+        } else {
+            AnimGetBoneWorldTrans(gameObj, WORLD_BONE(HEAD_BONE), 0, pos, NULL);
+        }
+        return true;
+    }
+    if (yaw != NULL)
+        *yaw = gameObj->rotation.y;
+    if (pos != NULL)
+        NDrone2_EyesFromPosition(gameObj, pos);
+    return false;
+}
+
+// Where a bone of an animated drone or player is (true); a drone's only while it animates, and not in
+// SpaceStationD. Otherwise the object's position (false).
+// AUTOINJECT
+bool DroneFunc_GetBonePos(obj_tag *gameObj, uint bone, _VECTOR *pos) {
+    if (gameObj == NULL)
+        return false;
+    AnimState *anim = gameObj->animState;
+    if (anim != NULL && (gameObj->objectType == OBJECTTYPE_DRONE || gameObj->objectType == OBJECTTYPE_PLAYER)) {
+        bool animating = true;
+        if (gameObj->objectType == OBJECTTYPE_DRONE)
+            animating = (((Drone_tag *)gameObj->extraObjectData)->flags & 0x100000) &&
+                        GameState.CurrentLevelHashcode != HT_Level_SpaceStationD;
+        if (animating && (anim->animObj.flags & 1)) {
+            AnimGetBoneWorldTrans(gameObj, WORLD_BONE(bone), 0, pos, NULL);
+            return true;
+        }
+    }
+    if (pos != NULL)
+        Vec_Copy(&gameObj->position, pos);
+    return false;
+}
+
+// Whether the drone sees an armed opponent: one that can spot opponents (property 0x3c) and sees its own, which
+// has a weapon - in TowerA and TowerB, armed or not. Skin class 13 never does elsewhere.
+// AUTOINJECT
+bool NDrone2_NearArmedPerson(DCVars_tag *dcv) {
+    Drone_tag *drone = dcv->drone;
+    if (GameState.CurrentLevelHashcode >= HT_Level_TowerA && GameState.CurrentLevelHashcode <= HT_Level_TowerB)
+        return behaviour_util_getProperty(DRONE_PROP_3C, drone->currentBehaviour) != 0 &&
+               (dcv->drone->sightFlags & DRONE_SIGHT_SEES_OPPONENT);
+
+    if (drone->skinClass == 13)
+        return false;
+    if (behaviour_util_getProperty(DRONE_PROP_3C, drone->currentBehaviour) == 0)
+        return false;
+    if (!(dcv->drone->sightFlags & DRONE_SIGHT_SEES_OPPONENT))
+        return false;
+    return DroneWeap_OpponentHasWeapon(dcv);
+}
+
+// Whether the player is within `angle` of the way the drone faces. An angle that does not compare (NaN) counts as
+// within.
+// AUTOINJECT
+bool NDrone2_BondWithinAngle(DCVars_tag *dcv, float angle) {
+    obj_tag *player = NDrone2_Player();
+    if (player == NULL)
+        return false;
+    _VECTOR toPlayer;
+    Vec_Subtract(&player->position, &dcv->gameObj->position, &toPlayer);
+    float yaw = maybeAtan2(toPlayer.x, toPlayer.z);
+    float turn = Vec_AngleDifference(dcv->gameObj->rotation.y, yaw);
+    return !(angle < fabsf(turn));
+}
+
+// Turns the drone's head to obj (NULL lets it go) for `ticks` (at 60 a second), at `speed` (0 for the usual 0.07).
+// Only for drones with head tracking (property 0x4c).
+// AUTOINJECT
+bool NDrone2_HeadTrackObj(obj_tag *obj, int ticks, float speed, DCVars_tag *dcv) {
+    if (behaviour_util_getProperty(DRONE_PROP_4C, dcv->drone->currentBehaviour) == 0)
+        return false;
+    AnimObjectSetHeadTracking(dcv->gameObj, obj, 3.0f, 0.14f, 1, 1, HEAD_BONE);
+    dcv->gameObj->animState->animObj.headTrackSpeed = speed == 0.0f ? 0.07f : speed;
+    dcv->drone->headTarget = obj;
+    dcv->drone->headTracking = obj != NULL;
+    // The ticks are converted unsigned, scaled on the x87 and truncated (__ftol2)
+    uint frames = (uint)(long long)((double)(uint)ticks * FRAME_RATE_DIV);
+    dcv->drone->headTrackUntil = frames + GameState.NumFramesUnpaused;
+    return true;
+}
+
+// Message DRONE_MSG_ConsideredAlerted: a live, active drone set to attack when told (flags 0x20000, and not
+// 0x2000000) attacks now. In CastleIndoors1, while NPCGlobals.unknown1392 is set, only civilian and door guards do.
+// AUTOINJECT
+bool DroneFunc_DoForcedAttack(DCVars_tag *dcv) {
+    Drone_tag *drone = dcv->drone;
+    if (MPSettings.maybeDroneAIEnabled != 0)
+        return false;
+    if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1 && NPCGlobals.unknown1392 &&
+        drone->dtype != DTYPE_CivilianGuard && drone->dtype != DTYPE_CivDoorGuard)
+        return false;
+    if (MPDrone_MaybeIsDyingOrDead(dcv->gameObj))
+        return false;
+    if (!(drone->flags & 0x20000) || (drone->flags & 0x2000000))
+        return false;
+
+    drone->flags &= ~0x20000;
+    drone->flags |= 0x24000000;
+    dcv->aiStateMachine->scratch1c = DSTATE_Attack;
+    if (dcv->aiStateMachine->scratch1c != 0)
+        return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)dcv->aiStateMachine->scratch1c, 0);
+    return false;
+}
+
+// Message DRONE_MSG_ExplosiveSeen: a drone that minds explosives (properties 0x34, 0x3a, 0x3b), and is not busy
+// with one already or in a state that will not be interrupted, runs from it (DSTATE_RunAwayFromObject) for a time
+// and distance that depend on what it is, then goes to explosiveState: by default hides, and where nextState is set,
+// there (an aiming drone goes back to aiming). Grenades and the like send drones with property 0x3b to attack.
+// AUTOINJECT
+void DroneFunc_ConsiderExplosive(DCVars_tag *dcv, obj_tag *explosive, short nextState) {
+    Drone_tag *drone = dcv->drone;
+    if (behaviour_util_getProperty(DRONE_PROP_34, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_3A, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_3B, dcv->drone->currentBehaviour) == 0)
+        return;
+
+    switch (drone->sm.curState) {
+    case DSTATE_AllyGoToGoalPosition:
+    case DSTATE_GrenadeThrow:
+    case DSTATE_Taser:
+    case DSTATE_Stunned:
+    case DSTATE_PunchImpact:
+    case DSTATE_ExplosiveImpact:
+    case DSTATE_BulletImpact:
+    case DSTATE_GoToGoalPosition:
+    case DSTATE_RunAwayFromObject:
+    case DSTATE_HideFromScaryObject:
+    case DSTATE_RecoverFromScaryObject:
+        return;
+    }
+    if (nextState == DSTATE_RunAwayFromObject || nextState == DSTATE_HideFromScaryObject)
+        return;
+    if (drone->explosiveSeen)
+        return;
+
+    drone->explosivePos = explosive->position;
+    drone->explosiveCel = explosive->inCel;
+    drone->explosiveRadius = 14.0f;
+    drone->explosiveState = DSTATE_HideFromScaryObject;
+    drone->explosiveTimeout = GameState.NumFramesUnpaused + FRAME_RATE_INT * 10;
+    if (nextState == 0 && (drone->sm.curState == DSTATE_AimStand || drone->sm.curState == DSTATE_AimStandFire))
+        nextState = (short)drone->sm.curState;
+
+    if (explosive->objectType == OBJECTTYPE_BULLET) {
+        BU_tag *bullet = (BU_tag *)explosive->extraObjectData;
+        if (bullet->wpnDef != NULL) {
+            switch ((ushort)bullet->wpnDef->weaponVariantNum) {
+            case 0x2a:
+            case 0x2c:
+            case 0x2d:
+            case 0x2e:
+            case 0x2f:
+                if (behaviour_util_getProperty(DRONE_PROP_3A, dcv->drone->currentBehaviour) == 0 &&
+                    behaviour_util_getProperty(DRONE_PROP_3B, dcv->drone->currentBehaviour) == 0)
+                    return;
+                drone->explosiveRadius = 4.0f;
+                drone->explosiveTimeout = GameState.NumFramesUnpaused + FRAME_RATE_INT * 2;
+                if (behaviour_util_getProperty(DRONE_PROP_3B, dcv->drone->currentBehaviour) != 0)
+                    drone->explosiveState = DSTATE_Attack;
+                break;
+            case 0x34:
+            case 0x3b:
+            case 0x3c:
+            case 0x3d:
+            case 0x3e:
+            case 0x3f:
+            case 0x40:
+            case 0x6c: {
+                if (behaviour_util_getProperty(DRONE_PROP_3A, dcv->drone->currentBehaviour) == 0 &&
+                    behaviour_util_getProperty(DRONE_PROP_3B, dcv->drone->currentBehaviour) == 0)
+                    return;
+                drone->explosiveRadius = 14.0f;
+                // Two seconds after the fuse runs out, on the x87 and truncated (__ftol2)
+                double frames = (double)(uint)(FRAME_RATE_INT * 2) + bullet->fuseTimer;
+                drone->explosiveTimeout = (uint)(long long)(frames + (double)(uint)GameState.NumFramesUnpaused);
+                if (behaviour_util_getProperty(DRONE_PROP_3B, dcv->drone->currentBehaviour) != 0)
+                    drone->explosiveState = DSTATE_Attack;
+                break;
+            }
+            case 0x36:
+                if (behaviour_util_getProperty(DRONE_PROP_34, dcv->drone->currentBehaviour) == 0 ||
+                    behaviour_util_getProperty(DRONE_PROP_36, dcv->drone->currentBehaviour) != 0)
+                    return;
+                drone->explosiveRadius = 5.0f;
+                drone->explosiveState = nextState;
+                break;
+            case 0x37:
+                if (behaviour_util_getProperty(DRONE_PROP_3A, dcv->drone->currentBehaviour) == 0 &&
+                    behaviour_util_getProperty(DRONE_PROP_3B, dcv->drone->currentBehaviour) == 0)
+                    return;
+                drone->explosiveRadius = 10.0f;
+                drone->explosiveState = nextState;
+                break;
+            }
+        }
+    } else if (explosive->objectType == OBJECTTYPE_OCCLUDE) {
+        // Type 0x2a is treated as weapon 0x36 is
+        if (behaviour_util_getProperty(DRONE_PROP_34, dcv->drone->currentBehaviour) == 0 ||
+            behaviour_util_getProperty(DRONE_PROP_36, dcv->drone->currentBehaviour) != 0)
+            return;
+        drone->explosiveRadius = 5.0f;
+        drone->explosiveState = nextState;
+    }
+
+    if (nextState != DSTATE_RunAwayFromObject && nextState != DSTATE_HideFromScaryObject)
+        drone->sm.resumeState = nextState;
+    if (drone->explosiveState == 0)
+        drone->explosiveState = nextState;
+    drone->explosiveSeen = 1;
+    Drone_SM_SetState(dcv->aiStateMachine, DSTATE_RunAwayFromObject, 0);
+}
+
+// After each frame's control: the first grenade-like aware point (type 2) the drone is within range of, if it minds
+// such things (property 0x3a or 0x3b), and if it sees it well, is sent to itself as DRONE_MSG_ExplosiveSeen. That
+// point ends the search whether it is seen or not. Not in multiplayer, nor while it is running from one already.
+// AUTOINJECT
+void DroneFunc_HandleExplosives(DCVars_tag *dcv) {
+    obj_tag *gameObj = dcv->gameObj;
+    Drone_tag *drone = dcv->drone;
+    if (MPSettings.maybeDroneAIEnabled != 0 || drone->explosiveSeen)
+        return;
+
+    for (uint i = 0; i < NPCGlobals.numAwarePoints; i++) {
+        DroneAwarePoint *point = &NPCGlobals.awarePoints[i];
+        if (point->type == 1) {
+            // Asked, and the answers not used
+            if (behaviour_util_getProperty(DRONE_PROP_34, dcv->drone->currentBehaviour) != 0)
+                behaviour_util_getProperty(DRONE_PROP_36, dcv->drone->currentBehaviour);
+        } else if (point->type == 2) {
+            if (behaviour_util_getProperty(DRONE_PROP_3B, dcv->drone->currentBehaviour) == 0 &&
+                behaviour_util_getProperty(DRONE_PROP_3A, dcv->drone->currentBehaviour) == 0)
+                continue;
+            // The radius is squared on the x87, unrounded
+            if (!(Vec_SqDist3D(&gameObj->position, &point->pos) < (double)point->radius * point->radius))
+                continue;
+            if (DroneVision_ObjectVisibility(drone, point->obj) >= 0.7f && NDrone2_CanSeeObject(drone, point->obj, HEAD_BONE, 0))
+                Drone_SM_SendMsgSelf(DRONE_MSG_ExplosiveSeen, point->obj, 0, 0, dcv);
+            return;
+        }
+    }
+}
+
+// The drones NDrone2_SeenAndAttacking has counted since the music code last started the count (only it uses them;
+// the PS2 build's names)
+// XBE_GLOBAL(0x001ee288, 0x190)
+#define pNPCPassed (*(Drone_tag *(*)[100])0x001ee288)
+// XBE_GLOBAL(0x001ee418, 4)
+#define pDCVCount I32_AT(0x001ee418)
+
+#define COMBAT_MUSIC 5      // the value with MUSIC_EVENT_ALARM
+
+// Tells the music about an enemy (or a drone with unknown16 set) fighting: the nearest opponent distances and the
+// latest sighting always, and if it saw its opponent lately (or is close while the combat music is on), counts it
+// once. Enough of them, or any once the music is on, start the combat music.
+// AUTOINJECT
+void NDrone2_SeenAndAttacking(DCVars_tag *dcv) {
+    Drone_tag *drone = dcv->drone;
+    if (!drone->unknown16 && drone->side != 1)
+        return;
+    if (GameState.CurrentLevelHashcode == HT_Level_PowerStationA1 && !(drone->sightFlags & DRONE_SIGHT_REACTED))
+        return;
+
+    bool counts = FRAME_RATE_INT * MusicVars.seenSeconds + drone->opponentSeenFrame > GameState.NumFramesUnpaused;
+    ushort combat = MusicVars.combat;
+    if (drone->distanceToTarget < MusicVars.closeRange && combat != 0)
+        counts = true;
+    if (MusicVars.nearestOpponent > drone->distanceToTarget)
+        MusicVars.nearestOpponent = drone->distanceToTarget;
+    if (drone->sightFrames != 0 && MusicVars.nearestSeenOpponent > drone->distanceToTarget)
+        MusicVars.nearestSeenOpponent = drone->distanceToTarget;
+    if (drone->opponentSeenFrame > MusicVars.lastSeenFrame)
+        MusicVars.lastSeenFrame = drone->opponentSeenFrame;
+    if (!counts && !drone->unknown16)
+        return;
+
+    if (!MusicVars.countingStarted) {
+        if (pDCVCount > 0)
+            memset(pNPCPassed, 0, pDCVCount * sizeof(pNPCPassed[0]));
+        pDCVCount = 0;
+        MusicVars.countingStarted = 1;
+    }
+    for (int i = 0; i < pDCVCount; i++) {
+        if (pNPCPassed[i] == drone)
+            return;
+    }
+    if (pDCVCount < 100)
+        pNPCPassed[pDCVCount++] = drone;
+
+    NPCGlobals.seenAttacking++;
+    MusicVars.attackers++;
+    if (MusicVars.attackers >= MusicVars.combatThreshold || combat != 0 || drone->unknown16) {
+        MusicVars.combat = 1;
+        Music_Event(MUSIC_EVENT_ALARM, COMBAT_MUSIC);
+        MusicVars.combatFrame = GameState.NumFramesUnpaused;
     }
 }

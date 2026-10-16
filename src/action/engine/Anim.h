@@ -19,7 +19,9 @@ typedef struct AnimObj {
     char _unknown_4c[4];
     uint flags;                     // 0x50 - 0x8000 set by Script_AnimStart; 0x40000 set by Script_FFwd
     float rootHeight;               // 0x54
-    char _unknown_58[0x98 - 0x58];
+    char _unknown_58[0x68 - 0x58];
+    float headTrackSpeed;           // 0x68 - NDrone2_HeadTrackObj
+    char _unknown_6c[0x98 - 0x6c];
 } AnimObj;
 
 typedef struct AnimState {

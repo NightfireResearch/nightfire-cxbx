@@ -151,8 +151,8 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | 84 | FUN_800a2eb8 (A* route) | 0x800a2eb8 | backtrack chain longer than 100000 | Likely infinite loop | no | AINetwork_DoAStarPath | 0x48720 | med | ? |
 | 85 | FUN_800a2eb8 | 0x800a2eb8 | link lookup returns < 0 | Could not find path link | no | AINetwork_DoAStarPath | 0x48720 | med | ? |
 | 86 | FUN_800a0870 (patrol route setup) | 0x800a0870 | a patrol path node's link count is not 2 on a looping path | Patrol Path '%s' is NOT looping | no | patrol init (caller FUN_800a0f98), probably NDrone2_AssignAIPath | 0x46ad0 | low | ? |
-| 87 | FUN_800c3e14 (post AI message) | 0x800c3e14 | message pool empty (GC then writes through NULL) | Too many AI messages | no | drone state-machine message post (unnamed) | - | low | ? |
-| 88 | FUN_800c3fa8 (state-machine dispatch) | 0x800c3fa8 | > 1000 state changes in one dispatch | Possible infinite loop | no | Drone_SM dispatcher (unnamed) | - | low | ? |
+| 87 | FUN_800c3e14 (post AI message) | 0x800c3e14 | message pool empty (GC then writes through NULL) | Too many AI messages | no | the delayed-message insert (FUN_0004e3c0, ours Drone_SM_QueueMsg) | 0x4e3c0 | high | dropped | src/action/game/drone/DroneSM.cpp - added |
+| 88 | FUN_800c3fa8 (state-machine dispatch) | 0x800c3fa8 | > 1000 state changes in one dispatch | Possible infinite loop | no | Drone_SM_RouteMsgDCV | 0x4e410 | high | dropped | src/action/game/drone/DroneSM.cpp - added |
 | 89 | FUN_80088e84 (set drone anim script) | 0x80088e84 | the drone's script slot (+0x42c) is still NULL after setup | Couldn't set script 0x%08x | no | DroneAnim_SetScript? | 0x34680 | low-med | ? |
 | 90 | FUN_80089e54 (cover anim chooser) | 0x80089e54 | no corner-cover behaviour is available | Doing CornerCover with no behaviour | no | DroneAnim_CoverAnim? | 0x34750 | low-med | ? |
 | 91 | FUN_80089678 (drone anim event callback) | 0x80089678 | event 2 and drone weapon count < 2 | ERROR: Drone has no second weapon | no | not matched | - | - | ? |

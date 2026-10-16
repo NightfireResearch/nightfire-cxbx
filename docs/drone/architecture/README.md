@@ -220,7 +220,7 @@ movement -> collision -> firing -> animation -> animation-end transitions.
 
 ## 3. The state machine
 
-### 3.1 Data: `StateMachineInfo_tag` at Drone+0xec (0x28 bytes) and `processFunction` at Drone+0x114
+### 3.1 Data: `StateMachineInfo_tag` at Drone+0xec (0x2c bytes, `processFunction` last, at Drone+0x114)
 
 PS2: Drone+0x108 and +0x130 [PS2 struct]. `DCVars_tag.aiStateMachine` points here.
 
@@ -239,7 +239,7 @@ PS2: Drone+0x108 and +0x130 [PS2 struct]. `DCVars_tag.aiStateMachine` points her
 | 0x28 | 0x114 | fn | `processFunction` = `NDrone2_ProcessStateMachine` | InitObject | RouteMsgDCV (every dispatch) | [dis] |
 
 Related per-drone fields outside the block: +0xe8 state-timeout frame (msg 4), +0x918/+0x91c/+0x920 timer A,
-+0x924/+0x928/+0x92c timer B (both cleared on every state change), +0x930 per-state scratch (anim id, flags; also
++0x924/+0x928/+0x92c timer B (both switched off on every state change: only their first byte is cleared), +0x930 per-state scratch (anim id, flags; also
 read as a state number by `DSTATE_Disabled`), +0x492/+0x494 end state / end message of the current animation call,
 +0x49e initial state, +0x4a0 second-behaviour state, `obj->curState` (obj+0xd0, u16) mirrors `curState`.
 
@@ -341,7 +341,12 @@ default: return false;          // -> DSTATE_Global (or BotGlobal) gets it
 ```
 
 The GameCube dispatcher (0x800c3fa8) counts state changes and prints "Possible infinite loop" after 1000 in one
-dispatch; the Xbox has no such check (docs/gamecube-checks.md #88).
+dispatch; the Xbox has no such check (docs/gamecube-checks.md #88). Ours (DroneSM.cpp) carries it as an NF_WARN.
+
+The router, the dispatcher and the delayed queue (`Drone_SM_RouteMsg`, `Drone_SM_RouteMsgDCV` behind a naked
+adaptor for ESI, `Drone_SM_SendDelayedMsgs`, `Drone_SM_Init` and the queue insert at 0x4e3c0) are ours, shadow-
+tested in src/action/devtools/DroneAIShadow.cpp. The Exit and Enter messages the dispatcher builds leave their scope
+and frames uninitialised in the original; ours zeroes them.
 
 ### 3.4 Changing state
 

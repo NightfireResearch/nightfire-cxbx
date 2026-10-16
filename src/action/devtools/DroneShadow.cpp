@@ -415,8 +415,8 @@ static void TestStateMachine(void) {
             bool rb = Drone_SM_InitObject((obj_tag *)objB);
             // The original stores its own NDrone2_ProcessStateMachine (0x4e180), ours ours: the same code, since the
             // original's entry jumps to ours
-            if (droneB.processFunction == (void *)NDrone2_ProcessStateMachine)
-                droneB.processFunction = (void *)0x0004e180;
+            if (droneB.sm.processFunction == NDrone2_ProcessStateMachine)
+                droneB.sm.processFunction = (DroneProcessFunc)0x0004e180;
             runs++;
             if (ra != rb || ca != NPCGlobals.NumDrones || memcmp(&droneA, &droneB, sizeof(droneA)) != 0)
                 Mismatch("count 0x%x state %d: returned %d", counts[c], states[s], ra);

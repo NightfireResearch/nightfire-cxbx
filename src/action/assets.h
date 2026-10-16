@@ -749,6 +749,7 @@ typedef enum {
 
 
     TXT_MISSION_FAIL_ALARM_TRIGGERED = 0x04000032,
+    TXT_MISSION_FAIL_COVER_LOST = 0x04000033,      // Ghidra's name (MISSION_FAIL_COVER_LOST)
     TXT_MISSION_FAIL_KILLED_CIVILIAN = 0x04000034,
 
     // Menu item labels, named during the menu pass after their English text (docs/ui/items.md)

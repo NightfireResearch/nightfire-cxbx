@@ -38,6 +38,7 @@
 #include "action/game/mp/multiplayer.h"
 #include "action/game/drone/BOT.h"
 #include "action/game/drone/NDrone2.h"
+#include "action/game/drone/DroneAnim.h"
 #include "action/game/drone/Behaviour.h"
 #include "action/engine/Fmv.h"
 #include "action/gfx/LowLevel.h"
