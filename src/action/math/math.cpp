@@ -437,8 +437,7 @@ void Matrix_SetTrans(_VECTOR *vec, _MATRIX *mtx) {
   mtx->m[0xe] = vec->z;
 }
 
-// AUTOINJECT
-void Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
+static void Vec_NormaliseBody(_VECTOR *vOut, _VECTOR *vIn) {
   
   float magnitude = Vec_Magnitude(vIn);
   
@@ -455,11 +454,44 @@ void Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
   vOut->x = 0.0;
 }
 
+// The original writes neither ECX nor EDX, and its callers rely on it: Mat_LookAt and 0x000d8590 keep EDX across the call. So the
+// game reaches this through an entry that keeps them (tools/caller_saved.py).
 // AUTOINJECT
-float Vec_NormaliseLen(_VECTOR *output, _VECTOR *input) {
+void __declspec(naked) Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
+    _asm {
+        push ecx
+        push edx
+        push dword ptr [esp + 16]
+        push dword ptr [esp + 16]
+        call Vec_NormaliseBody
+        add esp, 8
+        pop edx
+        pop ecx
+        ret
+    }
+}
+
+static float Vec_NormaliseLenBody(_VECTOR *output, _VECTOR *input) {
   float len = Vec_Magnitude(input);
   Vec_Normalise(output,input);
   return len;
+}
+
+// The original writes neither ECX nor EDX, and its callers rely on it: Cel_ObjectLeftCel keeps EDX across the call. So the
+// game reaches this through an entry that keeps them (tools/caller_saved.py).
+// AUTOINJECT
+float __declspec(naked) Vec_NormaliseLen(_VECTOR *output, _VECTOR *input) {
+    _asm {
+        push ecx
+        push edx
+        push dword ptr [esp + 16]
+        push dword ptr [esp + 16]
+        call Vec_NormaliseLenBody
+        add esp, 8
+        pop edx
+        pop ecx
+        ret
+    }
 }
 
 // AUTOINJECT
@@ -802,8 +834,7 @@ void Vec_Spherical_2_Cartesian(float *out, float radius, float yaw, float pitch)
 #define MAYBE_ATAN2_COEFF_B 0.27131295f
 
 // Fast rational atan2 approximation (max error ~0.28 degrees)
-// AUTOINJECT
-float maybeAtan2(float y, float x) {
+static float maybeAtan2Body(float y, float x) {
   float result;
 
   if (x == y) {
@@ -827,6 +858,23 @@ float maybeAtan2(float y, float x) {
     result = -result;
   }
   return result;
+}
+
+// The original writes neither ECX nor EDX, and its callers rely on it: Vec_Cartesian_2_Spherical keeps ECX across the call. So the
+// game reaches this through an entry that keeps them (tools/caller_saved.py).
+// AUTOINJECT
+float __declspec(naked) maybeAtan2(float y, float x) {
+    _asm {
+        push ecx
+        push edx
+        push dword ptr [esp + 16]
+        push dword ptr [esp + 16]
+        call maybeAtan2Body
+        add esp, 8
+        pop edx
+        pop ecx
+        ret
+    }
 }
 
 // Align a matrix so its forward row faces "direction", with "param_3" as the preferred up hint (falling back to
