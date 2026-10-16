@@ -26,6 +26,8 @@ to what it does. A function ported that way:
 |---|---|---|---|---|
 | 1 | script, script_support, script_player, simple_script, drone_script | 36 + 8 they inline or split differently | 31 of 36. Shadow-tested: Script_Set2Start, SP_Hit, and the three weight helpers (ScriptShadow.cpp, 650 cases). Checked against the disassembly only: Script_FreeFromHashTable. Unverified: Player_Cam2Mode, Drone_CoderCreate | see git log |
 
+| 2 | trigger, door, sensor, player_stats | 45 + 6 (Trigger_Hit, PlrStats_GetDrivingData, Door_SetupSlide, Door_IsOpen, Door_MoveGroup, Door_CloseIfClear) | 40 of 45; 459 of 549 blocks. Every function, and the missed branches, shadow-tested (TriggerShadow, DoorShadow, SecurityShadow, PlrStatShadow: 44,050 cases, 0 differ; each suite shown to catch a planted bug) | see git log |
+
 Parcel 1's first playback found two things the coverage alone would not have shown:
 - **A crash in our code.** The port of `Script_CreateEntity` called our `Break_Create` by name, which is a known-broken
   draft that was never patched in. `tools/draft_calls.py` now finds such calls.
@@ -47,6 +49,21 @@ Parcel 1's first playback found two things the coverage alone would not have sho
 
 Everything else in their readings of parcel 1 matched the Xbox.
 
+### Parcel 2
+- `Trigger_Hit`, bullets: the field at the weapon definition's +2 is `weaponBaseNum`, not the ammo type.
+- `InverterTrigger_Update` indexes the channels with the sign-extended short. Theirs masks it to 0-255.
+- `SSys_Msg`:
+  - Their comment says only laser 2 speaks in TowerC. The Xbox, and their own code, silence every item.
+  - The four message tables are not in item order in memory: items 1-4 are at 0x18cc50, 0x18cc18, 0x18ccc0 and
+    0x18cc88.
+  - The Xbox has no guard against a message index of 7 or more.
+- `Monitor_Create` takes 4 arguments, not 5.
+- The door group state array has 101 entries (a memset of 0xca bytes), not 104.
+- Their own additions: guards on a NULL user and viewer, a rows check in `PlrStats_ResetScoring`, and the channel
+  clamps.
+
+Everything else in their readings of parcel 2 matched the Xbox.
+
 ## Original bugs found while porting (kept; candidates for FIX_ORIGINAL_GAME_BUGS)
 
 - `Script_Load`, a file with 0x3f streams or more: hands its record to `DList_RemoveFromInUse2Free(&ScriptList)`,
@@ -58,6 +75,12 @@ Everything else in their readings of parcel 1 matched the Xbox.
   and emitter entities. They never match, so those objects are always deleted and created again, never reused.
 - `FuseBox_Update`: a broken fuse of list 1 clears list 0's second channel.
 - `SP_LoadScript` loads script 0's loadable part, whichever script is active.
+- `Door_Create` never checks that `control_create_object` succeeded.
+- Unchecked dereferences of the user: `Door_Activate` (one-way and swing doors). Unchecked dereferences of the
+  user, viewer and sensor data: `Monitor_Update` and `Monitor_Activate`.
+- `PlrStats_SetupScoreTable` trusts the count it is given.
+- Channel and message indexes in triggers, doors and the security system are never bounded. Trigger inputs above
+  255 read and write `switch_channels_hold`.
 
 ## What the demos do not cover
 

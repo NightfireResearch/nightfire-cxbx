@@ -50,7 +50,8 @@ typedef struct {
     HASHCODE NextLevelHashcode;
     HASHCODE CurrentLevelHashcode;
     undefined4 MovieHashcode;
-    undefined4 field5_0x14;
+    uchar field5_0x14;     // 0x14 - cleared with MovieHashcode by Trigger_Update, Trigger_Activate and ResetMap_Load
+    undefined field5_0x15[3];
     undefined4 ReloadGame;
     undefined4 ReloadMenupage;
     undefined4 ReloadMainMenu;

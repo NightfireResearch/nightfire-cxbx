@@ -88,6 +88,11 @@ add_library(actioninject SHARED
   src/action/devtools/WeaponTableShadow.cpp
   src/action/devtools/MatrixShadow.cpp
   src/action/devtools/ScriptShadow.cpp
+  src/action/devtools/ShadowHarness.cpp
+  src/action/devtools/TriggerShadow.cpp
+  src/action/devtools/DoorShadow.cpp
+  src/action/devtools/SecurityShadow.cpp
+  src/action/devtools/PlrStatShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/Teleport.cpp
   src/action/devtools/Demo.cpp
@@ -201,9 +206,12 @@ add_library(actioninject SHARED
   src/action/game/obj/SpaceLaser.cpp
   src/action/game/obj/SpaceMissile.cpp
   src/action/game/obj/Switch.cpp
+  src/action/game/obj/Trigger.cpp
+  src/action/game/obj/Monitor.cpp
   src/action/game/sp/Locks.cpp
   src/action/game/sp/Mission.cpp
   src/action/game/sp/PlayerStats.cpp
+  src/action/game/sp/SSys.cpp
   src/action/game/sp/SwitchChannels.cpp
   src/action/sound/dsndSeam.cpp
   src/action/sound/psiSound.cpp

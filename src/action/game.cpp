@@ -3,6 +3,7 @@
 #include "memory.h"
 #include "game.h"
 #include "game/mp/multiplayer.h" // for MPSettings
+#include "game/sp/SSys.h"
 #include "ui/MenuManager.h"
 #include "engine/Text.h"
 #include "util/Random.h"
@@ -32,8 +33,6 @@ uint32_t BackgroundMovieHashcode;
 void __stdcall UpdateAllShards(void);
 // AUTOGEN
 void __stdcall Env_Update(void);
-// AUTOGEN
-void __stdcall SSys_Monitor(void);
 // AUTOGEN
 void __stdcall Light_Update(void);
 
@@ -802,8 +801,6 @@ uint32_t __stdcall Xbox_QueryPerformanceFrequency(LARGE_INTEGER *frequency) {
   return 1;
 }
 
-// AUTOGEN
-void __stdcall PlrStat_Init(void);
 
 // AUTOGEN
 void SFXSetMode(unsigned int mode);

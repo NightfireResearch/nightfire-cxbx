@@ -156,6 +156,8 @@ void PlarStat_LogTimerUnpause(uint playerNum) {
         return;
     }
 
+    // The timer counts on from now (PlarStat_LogUpdateElapsedTime)
+    PlrMissionStats[playerNum].timerUnpauseTime = (int)psiGetTimeIn100ths();
     PlrMissionStats[playerNum].timerPaused = 0;
 }
 
@@ -476,5 +478,172 @@ bool PlrStats_DoneBetter(void) {
     return DoneBetter;
 }
 
-// AUTOGEN
-void PlrStat_LogShotHitScenery(uint playerNum);
+// A bond moment done for the first time: counted, and the player's bondMomentTimer set to 200 frames.
+// AUTOINJECT
+void PlrStat_DoneBondMoment(uint playerNum, ushort moment) {
+
+    if(playerNum >= ARRAY_SIZE(PlrMissionStats)) {
+        NF_WARN("ERROR : Invalid Plr ID\n"); // GC check
+        return;
+    }
+
+    if(!PlrStat_OkToUpdate())
+        return;
+
+    if(BondMoments[moment] != 0)
+        return;
+    BondMoments[moment] = 1;
+    PlrMissionStats[playerNum].bondMoments++;
+    glb_blokes[playerNum]->bondMomentTimer = 200;
+}
+
+// Adds the time since it was last counted, unless the timer is paused.
+// AUTOINJECT
+void PlarStat_LogUpdateElapsedTime(uint playerNum) {
+
+    if(playerNum >= ARRAY_SIZE(PlrMissionStats)) {
+        NF_WARN("ERROR : Invalid Plr ID\n"); // GC check
+        return;
+    }
+
+    PlayerMissionStats *stats = &PlrMissionStats[playerNum];
+    if(stats->timerPaused)
+        return;
+    int now = (int)psiGetTimeIn100ths();
+    stats->timeElapsed += now - stats->timerUnpauseTime;
+    stats->timerUnpauseTime = now;
+}
+
+// AUTOINJECT
+void PlrStat_LogShotFired(uint playerNum) {
+
+    if(playerNum >= ARRAY_SIZE(PlrMissionStats)) {
+        NF_WARN("ERROR : Invalid Plr ID\n"); // GC check
+        return;
+    }
+
+    if(!PlrStat_OkToUpdate())
+        return;
+
+    PlrMissionStats[playerNum].shotsFired++;
+}
+
+// Never more hits than shots. The counts are compared signed.
+// AUTOINJECT
+void PlrStat_LogShotHitEnemy(uint playerNum) {
+
+    if(playerNum >= ARRAY_SIZE(PlrMissionStats)) {
+        NF_WARN("ERROR : Invalid Plr ID\n"); // GC check
+        return;
+    }
+
+    if(!PlrStat_OkToUpdate())
+        return;
+
+    PlayerMissionStats *stats = &PlrMissionStats[playerNum];
+    int hits = stats->shotsHitEnemy + 1;
+    if((int)stats->shotsFired < hits)
+        hits = stats->shotsFired;
+    stats->shotsHitEnemy = hits;
+}
+
+// A shot that hit the scenery is not counted as fired, and hits stay no more than shots. The counts are compared
+// signed.
+// AUTOINJECT
+void PlrStat_LogShotHitScenery(uint playerNum) {
+
+    if(playerNum >= ARRAY_SIZE(PlrMissionStats)) {
+        NF_WARN("ERROR : Invalid Plr ID\n"); // GC check
+        return;
+    }
+
+    if(!PlrStat_OkToUpdate())
+        return;
+
+    PlayerMissionStats *stats = &PlrMissionStats[playerNum];
+    if((int)stats->shotsFired > 0)
+        stats->shotsFired--;
+    int hits = stats->shotsFired;
+    if((int)stats->shotsHitEnemy <= hits)
+        hits = stats->shotsHitEnemy;
+    stats->shotsHitEnemy = hits;
+}
+
+// At boot: the mission's counts, and every level's score, best score included.
+// AUTOINJECT
+void PlrStat_Init(void) {
+    PlrStat_ResetForMission();
+    for(int i = 0; i < ARRAY_SIZE(ScoringTable); i++) {
+        SCORETABLE *table = &ScoringTable[i];
+        for(int c = 0; c < SCORE_NUM_CATEGORIES; c++) {
+            table->statsTable[c].achieved = 0;
+            table->statsTable[c].rating = 0.0f;
+            table->statsTable[c].points = 0.0f;
+        }
+        table->timeTaken = 0;
+        table->parTime = 0;
+        table->difficultyMultiplier = 0;
+        table->difficultyBonus = 0;
+        table->baseScore = 0;
+        table->bestScore = 0;
+        table->score = 0;
+    }
+}
+
+// A new codename: every level's score is cleared, best score included, but not the last score.
+// AUTOINJECT
+void PlrStats_ResetScoring(void) {
+    for(int i = 0; i < ARRAY_SIZE(ScoringTable); i++) {
+        SCORETABLE *table = &ScoringTable[i];
+        for(int c = 0; c < SCORE_NUM_CATEGORIES; c++) {
+            table->statsTable[c].achieved = 0;
+            table->statsTable[c].rating = 0.0f;
+            table->statsTable[c].points = 0.0f;
+        }
+        table->timeTaken = 0;
+        table->parTime = 0;
+        table->difficultyMultiplier = 0;
+        table->difficultyBonus = 0;
+        table->baseScore = 0;
+        table->bestScore = 0;
+    }
+}
+
+// From a saved game (LS_LoadMission): the first count levels' scores, all but the last score. The count is not
+// checked against the number of levels.
+// AUTOINJECT
+void PlrStats_SetupScoreTable(SCORETABLE *saved, uint count) {
+    for(uint i = 0; i < count; i++) {
+        SCORETABLE *table = &ScoringTable[i];
+        SCORETABLE *from = &saved[i];
+        for(int c = 0; c < SCORE_NUM_CATEGORIES; c++) {
+            table->statsTable[c].achieved = from->statsTable[c].achieved;
+            table->statsTable[c].rating = from->statsTable[c].rating;
+            table->statsTable[c].points = from->statsTable[c].points;
+        }
+        table->timeTaken = from->timeTaken;
+        table->parTime = from->parTime;
+        table->difficultyMultiplier = from->difficultyMultiplier;
+        table->difficultyBonus = from->difficultyBonus;
+        table->baseScore = from->baseScore;
+        table->bestScore = from->bestScore;
+    }
+}
+
+// What the driving engine is handed (Boot_GetPTPData): each level's best score and bond moments.
+// AUTOINJECT
+void PlrStats_GetDrivingData(uint *bestScores, uint *bondMoments) {
+    for(int i = 0; i < ARRAY_SIZE(ScoringTable); i++) {
+        bestScores[i] = ScoringTable[i].bestScore;
+        bondMoments[i] = ScoringTable[i].statsTable[SCORE_BOND_MOMENTS].achieved;
+    }
+}
+
+// What comes back from the driving engine (Boot_LoadPTPData).
+// AUTOINJECT
+void PlrStats_SetDrivingData(uint *bestScores, uint *bondMoments) {
+    for(int i = 0; i < ARRAY_SIZE(ScoringTable); i++) {
+        ScoringTable[i].bestScore = bestScores[i];
+        ScoringTable[i].statsTable[SCORE_BOND_MOMENTS].achieved = bondMoments[i];
+    }
+}

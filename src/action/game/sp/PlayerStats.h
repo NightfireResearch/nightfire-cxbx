@@ -82,6 +82,15 @@ bool PlrStats_HasGoldMedal(void);
 SCORETABLE * PlrStats_GetScoreTable(undefined4 *numItems);
 bool PlrStats_DoneBetter(void);
 undefined4 *PlrStat_GetScore(char playerNum);
+void PlrStat_DoneBondMoment(uint playerNum, ushort moment);
+void PlarStat_LogUpdateElapsedTime(uint playerNum);
+void PlrStat_LogShotFired(uint playerNum);
+void PlrStat_LogShotHitEnemy(uint playerNum);
+void PlrStat_Init(void);
+void PlrStats_ResetScoring(void);
+void PlrStats_SetupScoreTable(SCORETABLE *saved, uint count);
+void PlrStats_GetDrivingData(uint *bestScores, uint *bondMoments);
+void PlrStats_SetDrivingData(uint *bestScores, uint *bondMoments);
 
 // The driving engine's results (PTPDATA.Scoring), set by bootup_bootup; owned by PlayerStats.cpp
 extern undefined4 (*NewScoresRef)[9][3];

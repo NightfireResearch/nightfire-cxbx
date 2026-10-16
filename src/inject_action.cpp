@@ -34,6 +34,7 @@
 #include "action/game/obj/Light.h"
 #include "action/game/obj/Switch.h"
 #include "action/game/obj/ScriptPlayer.h"
+#include "action/game/sp/SSys.h"
 #include "action/game/mp/multiplayer.h"
 #include "action/game/drone/BOT.h"
 #include "action/game/drone/NDrone2.h"

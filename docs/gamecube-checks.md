@@ -130,7 +130,7 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | 65 | Collide_Update | 0x801071ec | hit heap count != HitAllocCnt after freeing all hit lists (leak) | Someone hasn't freed there hitlist! | no | Collide_Update | 0x2cca0 | high | dropped |
 | 66 | Bullet_init | 0x80079b64 | direction vector pointer NULL → return NULL | Oops, null bullet vector | no | Bullet_init | 0x211f0 | high | ? |
 | **Objects** |
-| 67 | FUN_80082a74 (swing door setup) | 0x80082a74 | door model's longer axis is not x/y | ERROR : Swing door is not modelled on the xy axis : %s | no | Door_SetupSwing | 0x2ec30 | med-high | ? |
+| 67 | FUN_80082a74 (swing door setup) | 0x80082a74 | door model's longer axis is not x/y | ERROR : Swing door is not modelled on the xy axis : %s | no | Door_SetupSwing | 0x2ec30 | med-high | dropped (the Vec_Subtract of the model's extents stays) |
 | 68 | MiniSub_Create | 0x800d04f4 | AnimObjectNew(obj, 0x05000074) failed | Cannot init MiniSub skin | no | MiniSub_Create | 0x9bcd0 | high | ? |
 | **AI / drones** |
 | 69 | FUN_800847c4 (corner cover node) | 0x800847c4 | NumCoverNodes > 0xff; GC still writes the entry (overflow) | Too many cover nodes | no | Drone_CoverCornerNode | 0x2fe20 | med-high | dropped |
@@ -168,7 +168,7 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | 100 | FUN_800e6af4 | 0x800e6af4 | playerNum >= 10 | ERROR : Invalid Plr ID | no | PlrStat_LogShotFired | 0xb07a0 | high | silent |
 | 101 | FUN_800e69e4 | 0x800e69e4 | playerNum >= 10 | ERROR : Invalid Plr ID | no | PlrStat_LogShotHitEnemy | 0xb06f0 | high | silent |
 | 102 | FUN_800e6a64 | 0x800e6a64 | playerNum >= 10 | ERROR : Invalid Plr ID | no | PlrStat_LogShotHitScenery | 0xb0740 | high | silent |
-| 103 | PlarStat_LogUpdateElapsedTime | 0x800e67b0 | playerNum >= 10 | ERROR : Invalid Plr ID | no | PlarStat_LogUpdateElapsedTime | 0xb05c0 | high | ? |
+| 103 | PlarStat_LogUpdateElapsedTime | 0x800e67b0 | playerNum >= 10 | ERROR : Invalid Plr ID | no | PlarStat_LogUpdateElapsedTime | 0xb05c0 | high | silent |
 | 104 | PlrStat_DoneBondMoment | 0x800e664c | playerNum >= 10 | ERROR : Invalid Plr ID | no | PlrStat_DoneBondMoment | 0xb0500 | high | silent |
 | 105 | FUN_80055088 (options save-block reader) | 0x80055088 | saved options version field != 4 | Saved file out-of-date - delete it | no | not matched (Xbox save/profile code) | - | - | ? |
 | **Platform code with an Xbox counterpart (GC fatal reporter)** |

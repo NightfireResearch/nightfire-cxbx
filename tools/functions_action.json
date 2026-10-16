@@ -6204,13 +6204,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0002eb80",
+        "name": "Door_SetupSlide",
         "address": "0x0002eb80",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_0002eb80(void)",
+        "prototype_string": "void __stdcall Door_SetupSlide(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -6314,7 +6314,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0002f4e0",
+        "name": "Door_IsOpen",
         "address": "0x0002f4e0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -6322,7 +6322,7 @@
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "bool __cdecl FUN_0002f4e0(obj_tag * param_1)",
+        "prototype_string": "bool __cdecl Door_IsOpen(obj_tag * param_1)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]"
         ],
@@ -6412,7 +6412,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0002f7e0",
+        "name": "Door_MoveGroup",
         "address": "0x0002f7e0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -6420,7 +6420,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_0002f7e0(int param_1)",
+        "prototype_string": "void __cdecl Door_MoveGroup(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -6428,7 +6428,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0002f850",
+        "name": "Door_CloseIfClear",
         "address": "0x0002f850",
         "calling_convention": "default",
         "has_custom_variable_storage": true,
@@ -6436,7 +6436,7 @@
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "void FUN_0002f850(obj_tag * gameObj)",
+        "prototype_string": "void Door_CloseIfClear(obj_tag * gameObj)",
         "parameters": [
             "[obj_tag * gameObj@EDI:4]"
         ],
@@ -34476,7 +34476,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000b1250",
+        "name": "PlrStats_GetDrivingData",
         "address": "0x000b1250",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -34485,7 +34485,7 @@
             "int",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000b1250(int param_1, int param_2)",
+        "prototype_string": "void __cdecl PlrStats_GetDrivingData(int param_1, int param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]"
@@ -42002,7 +42002,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000d2840",
+        "name": "Trigger_Hit",
         "address": "0x000d2840",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -42011,7 +42011,7 @@
             "int",
             "int"
         ],
-        "prototype_string": "uint __cdecl FUN_000d2840(int param_1, int param_2)",
+        "prototype_string": "uint __cdecl Trigger_Hit(int param_1, int param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]"

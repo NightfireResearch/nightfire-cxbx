@@ -12,8 +12,6 @@
 
 
 // AUTOGEN
-void __stdcall PlrStats_ResetScoring(void);
-// AUTOGEN
 undefined4 Menu_ValidateCodename(char *name);
 // AUTOGEN
 uint Menu_CodenameExists(byte *name);

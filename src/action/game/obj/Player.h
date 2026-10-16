@@ -268,6 +268,7 @@ void Player_ChangeState(obj_tag* obj, unsigned short newState);
 unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState); // Return the previous substate
 void Player_SetCamMode(BLData *param_1,unsigned short param_2);
 void Player_Disable(obj_tag *player, char freeze);
+void Player_RamSave(BLData *bloke);
 void Player_WeaponNone(obj_tag *param_1);
 void Player_PositionCamera(obj_tag *player);
 void Player_ViewClamping(obj_tag *player);

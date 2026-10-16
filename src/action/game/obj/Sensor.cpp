@@ -11,39 +11,7 @@
 
 // Scanning cameras with conical beams, eg in evil base and office, but NOT the lasers which trigger the alarm - presumably some kind of Trigger instead
 
-// Sensors are kept in CameraList, so the list node has to remain first.
 #pragma pack(push, 1)
-typedef struct SENSOR {
-    LLNODE_tag cameraListNode;             // 0x00
-    obj_tag* owner;                        // 0x08
-    celglist_tag* enabledGraphics;         // 0x0c
-    uint enabledGraphicsLod;               // 0x10
-    quaternion_tag trackedRotation;        // 0x14
-    void* sweepSpline;                     // 0x24
-    float sweepPosition;                   // 0x28
-    float sweepStep;                       // 0x2c
-    uint sweepLastPoint;                   // 0x30
-    uint viewConeHalfAngle;                // 0x34, in half-degrees
-    float viewConeCos;                     // 0x38
-    float viewConeSin;                     // 0x3c
-    float beamLength;                      // 0x40
-    float alertTimer;                      // 0x44
-    float alertBeepTimer;                  // 0x48
-    obj_tag* beamObject;                   // 0x4c
-    obj_tag* bodyObject;                   // 0x50
-    DYNAMICSOUNDS* loopSound;              // 0x54
-    ushort alertSwitchChannel;             // 0x58
-    ushort disableSwitchChannel;           // 0x5a
-    ushort unknown4c;                      // 0x5c
-    uchar unknown44;                       // 0x5e
-    uchar dontAddToCameraList;             // 0x5f
-    uchar childObjectVisibilityState;      // 0x60
-    uchar padding[3];
-} SENSOR;
-
-static_assert(sizeof(SENSOR) == 0x64, "Wrong size for SENSOR");
-static_assert(offsetof(SENSOR, beamObject) == 0x4c, "Bad offset of beamObject");
-static_assert(offsetof(SENSOR, bodyObject) == 0x50, "Bad offset of bodyObject");
 
 typedef struct {
     ushort unknown00;                      // 0x00
@@ -61,10 +29,10 @@ typedef struct {
     uchar padding3e[2];
     uchar dontAddToCameraList;             // 0x40
     uchar padding41[3];
-    uchar unknown44;                       // 0x44
+    uchar monitorGroup;                    // 0x44
     uchar padding45[3];
     HASHCODE bodyHashcode;                 // 0x48
-    ushort unknown4c;                      // 0x4c
+    ushort monitoredChannel;               // 0x4c
     uchar padding4e[2];
 } Create_Sensor_Params;
 
@@ -74,8 +42,6 @@ static_assert(offsetof(Create_Sensor_Params, beamHashcode) == 0x2c, "Bad offset 
 static_assert(offsetof(Create_Sensor_Params, bodyHashcode) == 0x48, "Bad offset of bodyHashcode");
 static_assert(sizeof(Create_Sensor_Params) == 0x50, "Wrong size for Create_Sensor_Params");
 
-// XBE_GLOBAL(0x0029aabc, 0xc)
-#define CameraList (*(LLISTINFO_tag*)0x0029aabc)
 // XBE_GLOBAL(0x0029aab0, 0xc)
 LLISTINFO_tag SwitchList;
 
@@ -107,8 +73,8 @@ obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
     sensor->alertSwitchChannel = createParams->alertSwitchChannel;
     sensor->disableSwitchChannel = createParams->disableSwitchChannel;
     sensor->dontAddToCameraList = createParams->dontAddToCameraList;
-    sensor->unknown44 = createParams->unknown44; // Unused?
-    sensor->unknown4c = createParams->unknown4c; // Unused?
+    sensor->monitorGroup = createParams->monitorGroup;
+    sensor->monitoredChannel = createParams->monitoredChannel;
 
     sensor->sweepPosition = 0.0f;
     sensor->sweepSpline = createParams->sweepSpline;
