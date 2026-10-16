@@ -54,6 +54,11 @@ void Demo_SoundAnswer(int buffer, DemoSoundQuery query, uint32_t *answer);
 // psiLaunchDriving: the session leaves for the driving engine. A recording ends here; a playback stops.
 void Demo_LeavingForDriving(void);
 
+// After the patches: NIGHTFIRE_ORIGINAL=0xADDR,0xADDR,... puts the original back at each address that has a port, so
+// a playback (or any run) runs those functions as shipped - to compare a parcel of ports against the originals,
+// bisect which one changed the game, or measure what the original's code reaches (tools/demo/demo_coverage.py)
+void Demo_RestoreOriginals(void);
+
 // GfxHost_PresentEvery for a playback: NIGHTFIRE_DEMO_FAST=N presents every Nth frame, unpaced
 int Demo_PresentEvery(void);
 

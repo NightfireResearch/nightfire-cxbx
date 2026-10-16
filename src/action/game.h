@@ -46,7 +46,7 @@ bool GS_IsPaused(short playerNum);
 #pragma pack(push, 1)
 typedef struct {
     undefined4 field0_0x0;
-    undefined4 field1_0x4;
+    uint32_t collisionStamp;   // 0x04 - Collide_StraddleCels takes the next one per query, to mark portals visited
     HASHCODE NextLevelHashcode;
     HASHCODE CurrentLevelHashcode;
     undefined4 MovieHashcode;

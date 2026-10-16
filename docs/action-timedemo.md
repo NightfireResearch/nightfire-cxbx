@@ -49,6 +49,14 @@ A line is printed for each of the first 20 frames that differ, naming what diffe
 | `objects` | every live object's type, flags, state, position and rotation, in list order |
 | `players` | the players' positions, rotations and states |
 
+One field is let through: `GameState`+0x04 (`collisionStamp`). `Collide_StraddleCels` takes the next number for
+every collision query, to mark the portals it has crossed. Some queries come from drawing
+(`View_AddForcedObjects`), which the host can make happen a different number of times. So a playback's stamp
+can run a constant few behind or ahead of the recording's while the game is otherwise the same. Nothing reads
+the value except those comparisons, which only ask whether a portal carries this query's number. A `gamestate`
+difference that is only a constant offset there is reported once and not counted (first seen in SpaceStationD,
+2 behind at frame 7711).
+
 Every 1800 frames a progress line gives the frame, the level and the object count.
 
 At the end of the recording, the game exits with one of these codes:
@@ -67,6 +75,14 @@ Environment variables for playback:
 | `NIGHTFIRE_DEMO_STOP=1` | stop at the first frame that differs, for bisecting |
 | `NIGHTFIRE_DEMO_FAST=N` | present every Nth frame and do not pace, for unattended runs (many times real speed; leave it unset to watch and listen) |
 | `NIGHTFIRE_DEMO_DUMP=f1,f2,...` | dump those frames, as F7 does |
+| `NIGHTFIRE_DEMO_DUMP_GAMESTATE=f` | print `GameState`'s bytes at that frame (they are also printed at the first frame where `gamestate` differs) |
+| `NIGHTFIRE_ORIGINAL=0xADDR,...` | run those functions as the original, ports or not: to compare a parcel of ports with the originals, to bisect which one changed the game, or to measure what the original's code reaches |
+
+Tools that build on these:
+- `tools/demo/play_demos.ps1` plays every recording.
+- `tools/demo/demo_coverage.py` lists which functions, or with `--blocks` which basic blocks, the recordings reach.
+- `tools/draft_calls.py` lists calls from ported code into drafts: game functions we define but do not patch
+  in. Such a call runs the draft where the game ran the original.
 
 ## What is held still, and why
 

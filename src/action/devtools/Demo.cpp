@@ -9,6 +9,7 @@
 #include "../../common/renderWindow.h"
 #include "../../common/fmv/FmvAudio.h"
 #include "../../common/gfx/d3d9Backend.h"
+#include "../../common/xbeOriginal.h"
 
 #include <windows.h>
 #include <direct.h>
@@ -101,6 +102,9 @@ static uint32_t g_bookmarks = 0;
 static bool g_stopOnDivergence = false;
 static std::vector<uint32_t> g_dumpFrames;
 static int g_presentEvery = 0;
+static uint32_t g_dumpStateFrame = 0xffffffffu;   // NIGHTFIRE_DEMO_DUMP_GAMESTATE
+static int32_t g_stampOffset = 0;                  // see StampOffsetMatches
+static bool g_stampOffsetReported = false;
 
 // The last state per port and of the mouse, both modes
 static uint8_t g_lastPad[4][PAD_BYTES];
@@ -410,6 +414,9 @@ static bool StartPlayback(const char *path) {
     g_stopOnDivergence = getenv("NIGHTFIRE_DEMO_STOP") != NULL;
     const char *fast = getenv("NIGHTFIRE_DEMO_FAST");
     g_presentEvery = fast != NULL ? atoi(fast) : 0;
+    const char *dumpState = getenv("NIGHTFIRE_DEMO_DUMP_GAMESTATE");
+    if (dumpState != NULL)
+        g_dumpStateFrame = (uint32_t)strtoul(dumpState, NULL, 10);
     const char *dumps = getenv("NIGHTFIRE_DEMO_DUMP");
     for (const char *p = dumps; p != NULL && *p != '\0';) {
         g_dumpFrames.push_back((uint32_t)strtoul(p, (char **)&p, 10));
@@ -448,6 +455,28 @@ void Demo_Init(void) {
     KernelKeQuerySystemTime = Demo_KeQuerySystemTime;
 
     FmvAudio::SetVirtualClock(MovieClockSeconds);
+}
+
+void Demo_RestoreOriginals(void) {
+    const char *list = getenv("NIGHTFIRE_ORIGINAL");
+    if (list == NULL || list[0] == '\0')
+        return;
+    int restored = 0, unpatched = 0;
+    for (const char *p = list; *p != '\0';) {
+        char *end;
+        unsigned address = (unsigned)strtoul(p, &end, 16);
+        if (end == p)
+            break;
+        if (XbeOriginal_Restore(address, true))
+            restored++;
+        else
+            unpatched++;
+        p = end;
+        while (*p == ',' || *p == ' ')
+            p++;
+    }
+    printf("[demo] NIGHTFIRE_ORIGINAL: %d functions run as the original, %d had no port\n", restored, unpatched);
+    fflush(stdout);
 }
 
 bool Demo_Active(void) {
@@ -539,6 +568,46 @@ void Demo_FrameStart(void) {
     }
 }
 
+// GameState's bytes, for finding the field behind a "gamestate" difference: printed at the first frame that
+// differs, and at NIGHTFIRE_DEMO_DUMP_GAMESTATE's frame, to compare with a run of the originals
+static void PrintGameState(void) {
+    const uint8_t *bytes = (const uint8_t *)&GameState;
+    printf("[demo] frame %u GameState:", g_frame);
+    for (size_t i = 0; i < sizeof(GameState); i++)
+        printf("%s%02x", i % 4 == 0 ? " " : "", bytes[i]);
+    printf("\n");
+    fflush(stdout);
+}
+
+// GameState+0x04 is Collide_StraddleCels' visit stamp: every collision query takes the next number and marks the
+// portals it crosses with it, so as not to test one twice. Nothing reads its value but those comparisons, and they
+// only ask whether a portal carries this query's number. Some queries come from drawing (View_AddForcedObjects),
+// which the host can make happen a different number of times, so a playback's stamp can run a constant few behind
+// or ahead of the recording's with the game otherwise the same. A "gamestate" difference that is only that is not
+// counted as one.
+static bool StampOffsetMatches(uint32_t recorded) {
+    GameState_t state = GameState;
+    uint32_t stamp = state.collisionStamp;
+    state.collisionStamp = stamp + g_stampOffset;
+    if (Fnv(kFnvBasis, &state, sizeof(state)) == recorded)
+        return true;
+    for (int32_t offset = -4096; offset <= 4096; offset++) {
+        state.collisionStamp = stamp + offset;
+        if (Fnv(kFnvBasis, &state, sizeof(state)) != recorded)
+            continue;
+        if (!g_stampOffsetReported) {
+            printf("[demo] frame %u: GameState+0x04, the collision visit stamp, is %d %s the recording's; the game does "
+                   "not depend on its value, so this is not counted as a difference\n", g_frame,
+                   offset < 0 ? -offset : offset, offset < 0 ? "ahead of" : "behind");
+            fflush(stdout);
+            g_stampOffsetReported = true;
+        }
+        g_stampOffset = offset;
+        return true;
+    }
+    return false;
+}
+
 static void Checksums(uint32_t sums[SUM_COUNT]) {
     sums[SUM_RNG] = Fnv(kFnvBasis, RandState, RAND_STATE_BYTES);
     sums[SUM_GAMESTATE] = Fnv(kFnvBasis, &GameState, sizeof(GameState));
@@ -590,12 +659,19 @@ void Demo_FrameEnd(void) {
         }
         g_at++;
         Take(recorded, sizeof(recorded));
+        if (recorded[SUM_GAMESTATE] != sums[SUM_GAMESTATE] && StampOffsetMatches(recorded[SUM_GAMESTATE]))
+            sums[SUM_GAMESTATE] = recorded[SUM_GAMESTATE];
         bool diverged = false;
         for (int i = 0; i < SUM_COUNT; i++)
             diverged |= recorded[i] != sums[i];
+        if (g_frame == g_dumpStateFrame)
+            PrintGameState();
         if (diverged) {
-            if (g_divergedFrames == 0)
+            if (g_divergedFrames == 0) {
                 g_firstDivergence = g_frame;
+                if (recorded[SUM_GAMESTATE] != sums[SUM_GAMESTATE] && g_frame != g_dumpStateFrame)
+                    PrintGameState();
+            }
             if (g_divergedFrames < 20) {
                 printf("[demo] frame %u differs:", g_frame);
                 for (int i = 0; i < SUM_COUNT; i++) {
