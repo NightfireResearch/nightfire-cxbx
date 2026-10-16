@@ -63,6 +63,9 @@ static_assert(sizeof(DroneAnimScript) == 4, "DroneAnimScript is 4 bytes");
 #define DANIM_WALK_IDLE 0x37        // DroneAnim_SetWalkIdleAnim, with 0x38 and 0x39
 #define DANIM_DEATH 0x40            // DroneAnim_LocationDeathAnim
 #define DANIM_DEATH_SHOT 0x42       // DroneAnim_LocationDeathAnim: shot in the body while the player aims
+#define DANIM_IMPACT_EXPLOSION 0x47 // NDrone2_ExplosiveImpact
+#define DANIM_IMPACT 0x4c           // DroneAnim_LocationImpactAnim
+#define DANIM_IMPACT_PUNCH 0x51     // NDrone2_PunchImpact
 
 bool DroneAnim_CanDoAnimState(DCVars_tag *dcv, short state, short variant);
 bool DroneAnim_CallAnim(uint state, uint variant, short endState, uint endMsg, float speed, int unused,
@@ -71,5 +74,7 @@ uchar DroneAnim_CurrentMoveState(Drone_tag *drone);
 bool DroneAnim_SetStandIdleAnim(DCVars_tag *dcv, char wait);
 bool DroneAnim_SetWalkIdleAnim(DCVars_tag *dcv, char wait);
 bool DroneAnim_LocationDeathAnim(DCVars_tag *dcv, short endState);
+bool DroneAnim_LocationImpactAnim(DCVars_tag *dcv);
+bool DroneAnim_PlayFiringAnim(DCVars_tag *dcv);
 
 #endif // DRONEANIM_H_

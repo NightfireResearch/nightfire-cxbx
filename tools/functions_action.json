@@ -20614,7 +20614,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00067590",
+        "name": "DroneWeap_ManageBurstCount",
         "address": "0x00067590",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": true,
@@ -20622,7 +20622,7 @@
         "param_types": [
             "DCVars_tag *"
         ],
-        "prototype_string": "bool __stdcall FUN_00067590(DCVars_tag * param_1)",
+        "prototype_string": "bool __stdcall DroneWeap_ManageBurstCount(DCVars_tag * param_1)",
         "parameters": [
             "[DCVars_tag * param_1@EAX:4]"
         ],

@@ -3,7 +3,9 @@
 
 #include "NDrone2.h"
 #include "DroneTables.h"
+#include "DroneWeapon.h"
 #include "Behaviour.h"
+#include "DroneAnim.h"                 // DroneAnim_CallAnim, DroneAnim_LocationDeathAnim (ours)
 #include "../../game.h"                 // GameState
 #include "../../math/math.h"            // Vec_Subtract, maybeAtan2, Vec_AngleDifference (ours)
 #include "../obj/Switch.h"              // Switch_GetNearest, Switch_GetSwitchChannel (ours)
@@ -13,9 +15,12 @@
 #include <math.h>
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
-#define DroneWeap_DropWeapon ((void (__cdecl *)(DCVars_tag *dcv))0x00067690)
 #define NDrone2_LogDroneDeath ((void (__cdecl *)(DCVars_tag *dcv))0x0003a1d0)
 #define Pickup_CreateSimple ((obj_tag *(__cdecl *)(_MATRIX *mtx, short weapon, short count, _VECTOR *pos))0x000a7f10)
+#define NDrone2_DroneAlertToObject ((void (__cdecl *)(DCVars_tag *dcv, uint msgType, obj_tag *obj, float radiusA, float radiusB, float alertness))0x00038f40)
+
+// Declared with AUTOGEN in Drone.cpp
+void NDrone2_Enable(char enable, Drone_tag *drone);
 
 // The switch channels the engine sets when a mission fails (docs/switch-channels.md)
 #define CHANNEL_FAIL_CIVILIAN 0x60      // with TXT_MISSION_FAIL_KILLED_CIVILIAN
@@ -194,4 +199,242 @@ uint NDrone2_ExplosionDir(DCVars_tag *dcv, DroneImpact_tag *impact) {
     if (fabsf(turn) > (float)(3 * M_PI_4))
         return 0;
     return turn < 0.0f ? 2 : 3;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The death states
+
+static void Death_SetTimer(DroneTimer *timer, uint dueFrame) {
+    timer->dueFrame = dueFrame;
+    timer->unknown8 = 0;
+    timer->on = 1;
+}
+
+// GameState.NumFramesUnpaused plus ticks scaled by FRAME_RATE_DIV, as the original works it out in x87 and __ftol2
+static uint Death_FramesFromNow(float ticks) {
+    return (uint)(long long)((double)FRAME_RATE_DIV * ticks + (double)GameState.NumFramesUnpaused);
+}
+
+// With switch channel 0x35 on, a dying drone whose death channel is 0x88, 0x29 or 0x2a is taken away
+#define CHANNEL_REMOVE_DYING 0x35
+
+// DSTATE_DeathByExplosion's anim state; its variant is the side the explosion came from (NDrone2_ExplosionDir)
+#define DANIM_DEATH_EXPLOSION 0x44
+
+// Dying: the death anim, then Dead. Abseilers and astronauts have their own death, and a drone with unknown858 its
+// special death. The death channel is set on leaving, or by timer A (HendersonB only, 90 ticks on). The drone drops
+// its weapon unless it is still firing with an anim set other than 4 and 9.
+// AUTOINJECT
+bool NDrone2_DSTATE_Death_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+    case DRONE_MSG_AttackNow:
+        return true;
+
+    case DRONE_MSG_Enter:
+        gameObj->effectFlags |= 0x20;
+        if (GameState.CurrentLevelHashcode == HT_Level_Tower2Elevator)
+            dcv->drone->flags |= 4;
+        switch (dcv->drone->dtype) {
+        case DTYPE_Abseil27:
+        case DTYPE_Abseil28:
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_AbseilDeath, 0);
+        case DTYPE_Astronaut:
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_AstronautDeath, 0);
+        default:
+            break;
+        }
+        // stateScratch: whether the death channel is still to be set
+        dcv->drone->stateScratch = 0;
+        Drone_AlertStatusSet(3, dcv);
+        if (dcv->drone->unknown858 != NULL)
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_SpecialDeath_Anim, 0);
+        DroneFunc_OnInitDeath(dcv);
+        if (GameState.CurrentLevelHashcode == HT_Level_HendersonB)
+            Death_SetTimer(&dcv->drone->timerA, Death_FramesFromNow(90.0f));
+        drone->stateScratch = 1;
+        DroneAnim_LocationDeathAnim(dcv, DSTATE_Dead);
+        return true;
+
+    case DRONE_MSG_Exit:
+        if (dcv->drone->stateScratch != 0)
+            DroneFunc_SetDeathChannel(drone);
+        return true;
+
+    case DRONE_MSG_Update:
+        if (!drone->firing || drone->animSet == 4 || drone->animSet == 9)
+            DroneWeap_DropWeapon(dcv);
+        if (switch_channels[CHANNEL_REMOVE_DYING] != 0 &&
+            (drone->deathSwitchChannel == 0x88 || drone->deathSwitchChannel == 0x29 ||
+             drone->deathSwitchChannel == 0x2a)) {
+            if (drone->stateScratch != 0) {
+                DroneFunc_SetDeathChannel(drone);
+                drone->stateScratch = 0;
+            }
+            NDrone2_Enable(0, dcv->drone);
+            dcv->gameObj->flags |= 1;
+        }
+        return true;
+
+    case DRONE_MSG_TimerA:
+        if (drone->stateScratch != 0) {
+            DroneFunc_SetDeathChannel(drone);
+            drone->stateScratch = 0;
+        }
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+// Dying in an explosion: as Death_Anim, with the anim for the side the explosion came from (the state change's
+// parameter is the impact).
+// AUTOINJECT
+bool NDrone2_DSTATE_DeathByExplosion(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+    case DRONE_MSG_AttackNow:
+        return true;
+
+    case DRONE_MSG_Enter:
+        gameObj->effectFlags |= 0x20;
+        Drone_AlertStatusSet(3, dcv);
+        if (dcv->drone->unknown858 != NULL)
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_SpecialDeath_Anim, 0);
+        DroneFunc_OnInitDeath(dcv);
+        if (GameState.CurrentLevelHashcode == HT_Level_HendersonB)
+            Death_SetTimer(&dcv->drone->timerA, Death_FramesFromNow(90.0f));
+        drone->stateScratch = 1;
+        DroneAnim_CallAnim(DANIM_DEATH_EXPLOSION,
+                           NDrone2_ExplosionDir(dcv, (DroneImpact_tag *)(uintptr_t)dcv->aiStateMachine->stateParam),
+                           DSTATE_Dead, 0, 0.0f, 0, dcv);
+        return true;
+
+    case DRONE_MSG_Exit:
+        if (dcv->drone->stateScratch != 0)
+            DroneFunc_SetDeathChannel(drone);
+        return true;
+
+    case DRONE_MSG_Update:
+        if (!dcv->drone->firing || drone->animSet == 4 || drone->animSet == 9)
+            DroneWeap_DropWeapon(dcv);
+        return true;
+
+    case DRONE_MSG_TimerA:
+        if (drone->stateScratch != 0) {
+            DroneFunc_SetDeathChannel(drone);
+            drone->stateScratch = 0;
+        }
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+// Dead: the body lies for NPCGlobals.deadFrames (timer A), then fades. With property 0x31, unless shot in the head,
+// it raises message 0x15 about itself on entering and again each time timer B runs out (60 ticks on). It is taken
+// away once it has not been drawn for two ticks.
+// AUTOINJECT
+bool NDrone2_DSTATE_Dead(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+    case DRONE_MSG_AttackNow:
+        return true;
+
+    case DRONE_MSG_Enter:
+        gameObj->effectFlags |= 0x20;
+        NDrone2_SetAsDead(dcv);
+        Drone_AlertStatusSet(3, dcv);
+        Death_SetTimer(&dcv->drone->timerA, NPCGlobals.deadFrames + GameState.NumFramesUnpaused);
+        if (behaviour_util_getProperty(DRONE_PROP_31, dcv->drone->currentBehaviour) != 0 && !dcv->drone->headShot) {
+            dcv->drone->flags2 |= 8;
+            NDrone2_DroneAlertToObject(dcv, DRONE_MSG_DroneAlert, dcv->gameObj, 0.0f, 0.0f, 1.0f);
+        }
+        return true;
+
+    case DRONE_MSG_Update:
+        if (gameObj->drawnCountdown == 0) {
+            NDrone2_Enable(0, dcv->drone);
+            dcv->gameObj->flags |= 1;
+        }
+        DroneFunc_DeadDrone(dcv);
+        return true;
+
+    case DRONE_MSG_TimerA:
+        Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Fade, 0);
+        return true;
+
+    case DRONE_MSG_TimerB:
+        if (behaviour_util_getProperty(DRONE_PROP_31, dcv->drone->currentBehaviour) == 0)
+            return true;
+        if (!drone->headShot) {
+            dcv->drone->flags2 |= 8;
+            NDrone2_DroneAlertToObject(dcv, DRONE_MSG_DroneAlert, dcv->gameObj, 0.0f, 0.0f, 1.0f);
+        }
+        Death_SetTimer(&dcv->drone->timerB, Death_FramesFromNow(60.0f));
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+// Fading out from the object's alpha (NDrone2_FadeOut); taken away once faded, or not drawn for two ticks.
+// AUTOINJECT
+bool NDrone2_DSTATE_Fade(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+    case DRONE_MSG_AttackNow:
+        return true;
+
+    case DRONE_MSG_Enter:
+        if (GameState.CurrentLevelHashcode != HT_Level_Tower2Elevator) {
+            dcv->drone->flags &= ~0x20;
+            dcv->drone->flags &= ~0x80;
+        }
+        dcv->drone->fadeAlpha = dcv->gameObj->tweakA;
+        return true;
+
+    case DRONE_MSG_Update:
+        if (gameObj->drawnCountdown == 0 || NDrone2_FadeOut(dcv)) {
+            NDrone2_Enable(0, dcv->drone);
+            dcv->gameObj->flags |= 1;
+        }
+        DroneFunc_DeadDrone(dcv);
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+// Fading out fast, with too many bodies about (DroneFunc_DeadDrone); from Fade it goes on from the alpha it had.
+// AUTOINJECT
+bool NDrone2_DSTATE_FadeFast(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+    case DRONE_MSG_AttackNow:
+        return true;
+
+    case DRONE_MSG_Enter:
+        if (GameState.CurrentLevelHashcode != HT_Level_Tower2Elevator) {
+            dcv->drone->flags &= ~0x20;
+            dcv->drone->flags &= ~0x80;
+        }
+        if (drone->sm.prevState != DSTATE_Fade)
+            dcv->drone->fadeAlpha = dcv->gameObj->tweakA;
+        return true;
+
+    case DRONE_MSG_Update:
+        if (gameObj->drawnCountdown == 0 || NDrone2_FadeOut(dcv)) {
+            NDrone2_Enable(0, dcv->drone);
+            dcv->gameObj->flags |= 1;
+        }
+        return true;
+
+    default:
+        return false;
+    }
 }

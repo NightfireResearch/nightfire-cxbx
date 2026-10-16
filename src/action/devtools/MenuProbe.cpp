@@ -76,6 +76,10 @@
 #include "DoorShadow.h"
 #include "SecurityShadow.h"
 #include "PlrStatShadow.h"
+#include "DroneStateShadow.h"
+#include "DroneCivilianShadow.h"
+#include "DroneDamageShadow.h"
+#include "DroneWeaponShadow.h"
 #include "CameraShadow.h"
 #include "Teleport.h"
 #include "../game.h"   // reload: ResetMap_LevelToLoad, GameFlow_PushState
@@ -554,6 +558,10 @@ void MenuProbe_Install(void) {
         DoorShadow_Run();
         SecurityShadow_Run();
         PlrStatShadow_Run();
+        DroneStateShadow_Run();
+        DroneCivilianShadow_Run();
+        DroneDamageShadow_Run();
+        DroneWeaponShadow_Run();
     }
     g_logging = SettingOn("MenuLog");
     if (g_logging) {

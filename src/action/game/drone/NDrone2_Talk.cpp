@@ -19,6 +19,10 @@
 #define NDrone2_SpeechSFX ((int (__cdecl *)(DCVars_tag *dcv, uint sfx, char force, char face, char needFace))0x00037530)
 #define Drone_maybeDisallowedFromSayingThisSfx ((bool (__cdecl *)(Drone_tag *drone, uint sfx))0x00036230)
 #define DroneFunc_ChooseSFX ((uint (__cdecl *)(uint first, uint last))0x00036270)
+// Our names. One of first..last, or of the run of as many after it for a drone with an odd id
+#define DroneFunc_ChooseSFXByID ((uint (__cdecl *)(Drone_tag *drone, uint first, uint last))0x00036290)
+// Says the line when Rand_Rand(0) gives 0 (it always does, but draws), and holds back the next for 5 s
+#define DroneFunc_InjuredSFX ((bool (__cdecl *)(DCVars_tag *dcv, uint sfx))0x0003b830)
 #define Sound_IsFinnished ((bool (__cdecl *)(DYNAMICSOUNDS *handle))0x000cbac0)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *gameObj))0x0001a190)
 #define NDrone2_CanSeeObject ((bool (__cdecl *)(Drone_tag *drone, obj_tag *obj, uint bone, ushort mask))0x000648b0)
@@ -110,6 +114,128 @@ bool NDrone2_DeathTalk(DCVars_tag *dcv) {
         return false;
     NDrone2_SpeechSFX(dcv, sfx, 1, 0, 0);
     return true;
+}
+
+// A line on being hit: skin classes 5 to 7 in EvilBase, EvilSilo and EvilBaseC, and 16. Never in multiplayer, while
+// it is still talking or once dead; for 3 s after unknown3d0 a hit says nothing one time in five.
+// AUTOINJECT
+bool NDrone2_HitTalkExtra(DCVars_tag *dcv) {
+    Drone_tag *drone = dcv->drone;
+    if (MPSettings.maybeDroneAIEnabled != 0)
+        return false;
+    if (Drone_IsTalking(drone))
+        return false;
+    if (drone->health <= 0.0f)
+        return false;
+    if (drone->unknown3d0 + FRAME_RATE_INT * 3 > GameState.NumFramesUnpaused && Rand_Rand(5) == 0)
+        return false;
+
+    uint sfx = 0;
+    ushort skinClass = drone->skinClass;
+    if (skinClass >= 5 && skinClass <= 7) {
+        if (GameState.CurrentLevelHashcode == HT_Level_EvilBase ||
+            GameState.CurrentLevelHashcode == HT_Level_EvilBaseC || GameState.CurrentLevelHashcode == HT_Level_EvilSilo)
+            sfx = DroneFunc_ChooseSFXByID(drone, 0x133, 0x137);
+    } else if (skinClass == 16) {
+        sfx = DroneFunc_ChooseSFX(0xec, 0xf2);
+    }
+    if (sfx == 0)
+        return false;
+    NDrone2_SpeechSFX(dcv, sfx, 0, 0, 0);
+    return true;
+}
+
+// The cry of pain, by skin class (16 says its hit line instead when it can); never in multiplayer, and not when it is
+// the line being said already.
+// AUTOINJECT
+bool NDrone2_PainTalk(DCVars_tag *dcv) {
+    Drone_tag *drone = dcv->drone;
+    if (MPSettings.maybeDroneAIEnabled != 0)
+        return false;
+
+    uint sfx;
+    switch ((ushort)drone->skinClass) {
+    case 1:
+        sfx = 0x12;
+        break;
+    case 2:
+        sfx = 0x13;
+        break;
+    case 3:
+        sfx = 0x11;
+        break;
+    case 7:
+        sfx = 0x14;
+        break;
+    case 8:
+    case 10:
+        sfx = 0x18;
+        break;
+    case 9:
+        sfx = 0x15;
+        break;
+    case 12:
+        sfx = 0x1b;
+        break;
+    case 16:
+        if (NDrone2_HitTalkExtra(dcv))
+            return false;
+        sfx = 0x16;
+        break;
+    case 18:
+    case 19:
+        sfx = 0x1c;
+        break;
+    case 20:
+        sfx = 0x10;
+        break;
+    default:
+        sfx = drone->unknown15 ? 0x17 : 0xf;
+        break;
+    }
+
+    if (Drone_maybeDisallowedFromSayingThisSfx(drone, sfx))
+        return false;
+    NDrone2_SpeechSFX(dcv, sfx, 1, 0, 0);
+    return true;
+}
+
+// A line on being hurt, by level: only in multiplayer (as the original has it), and not while it is still talking or
+// once dead. Skin class 16 says nothing in EvilBase, EvilSilo and EvilBaseC.
+// AUTOINJECT
+void DroneFunc_InjuredTalk(DCVars_tag *dcv) {
+    if (MPSettings.maybeDroneAIEnabled == 0)
+        return;
+    Drone_tag *drone = dcv->drone;
+    if (Drone_IsTalking(drone))
+        return;
+    if (drone->health <= 0.0f)
+        return;
+
+    uint sfx;
+    switch (GameState.CurrentLevelHashcode) {
+    case HT_Level_PowerStationA1:
+    case HT_Level_PowerStationA2:
+        sfx = DroneFunc_ChooseSFX(0xcc, 0xd1);
+        break;
+    case HT_Level_Tower2A:
+    case HT_Level_Tower2B:
+    case HT_Level_Tower2C:
+    case HT_Level_Tower2Elevator:
+        sfx = 0xb9;
+        break;
+    case HT_Level_EvilBase:
+    case HT_Level_EvilSilo:
+    case HT_Level_EvilBaseC:
+        if (drone->skinClass == 16)
+            return;
+        sfx = DroneFunc_ChooseSFXByID(drone, 0x133, 0x137);
+        break;
+    default:
+        return;
+    }
+    if (sfx != 0)
+        DroneFunc_InjuredSFX(dcv, sfx);
 }
 
 // A line said to the player while he looks at the drone (inPlayersSights), turning its head to him for trackTicks:

@@ -98,6 +98,10 @@ add_library(actioninject SHARED
   src/action/devtools/DoorShadow.cpp
   src/action/devtools/SecurityShadow.cpp
   src/action/devtools/PlrStatShadow.cpp
+  src/action/devtools/DroneStateShadow.cpp
+  src/action/devtools/DroneCivilianShadow.cpp
+  src/action/devtools/DroneDamageShadow.cpp
+  src/action/devtools/DroneWeaponShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/Teleport.cpp
   src/action/devtools/Demo.cpp
@@ -192,12 +196,17 @@ add_library(actioninject SHARED
   src/action/game/drone/NDrone2_Hostage.cpp
   src/action/game/drone/NDrone2_Talk.cpp
   src/action/game/drone/NDrone2_Nav.cpp
+  src/action/game/drone/NDrone2_States.cpp
+  src/action/game/drone/NDrone2_Civilian.cpp
+  src/action/game/drone/NDrone2_Damage.cpp
+  src/action/game/drone/DroneWeapon.cpp
   src/action/game/mp/multiplayer.cpp
   src/action/game/obj/Break.cpp
   src/action/game/obj/Door.cpp
   src/action/game/obj/Drone_AIHints.cpp
   src/action/game/obj/FuseBox.cpp
   src/action/game/obj/Hint.cpp
+  src/action/game/obj/Hurt.cpp
   src/action/game/obj/build.cpp
   src/action/game/obj/bullet.cpp
   src/action/game/obj/car.cpp

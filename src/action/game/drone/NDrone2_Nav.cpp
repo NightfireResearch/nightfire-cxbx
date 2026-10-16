@@ -11,6 +11,9 @@
 
 // Returns in ST0, unrounded
 #define Vec_SqDist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e50)
+// Tests the walk from the object's feet to `offset` in its own frame (FUN_000453e0; a bot's offset is scaled by its
+// speed unless `unscaled`; our name)
+#define NDrone2_MoveTestRelative ((bool (__cdecl *)(_VECTOR *offset, Drone_tag *drone, obj_tag *obj, char unscaled, int param5))0x000453e0)
 
 // How near (squared, in plan) the player counts as at a point in NDrone2_DroneNearPos: 0.55 m
 #define PLAYER_NEAR_SQ 0.3025f
@@ -153,4 +156,13 @@ void NDrone2_NavNodeCache(void) {
     target->obj = player;
     target->targetBit = AITARGET_PLAYER;
     AINetwork_BuildAITarget(target, NULL, 0.0f);
+}
+
+// Whether the drone could walk to (x, y, z) in its object's own frame from its feet. Never while it is frozen (0x10).
+// FUNC_AT(0x00045490)
+bool NDrone2_CanMoveToRelativePos(Drone_tag *drone, obj_tag *obj, float x, float y, float z) {
+    if (drone != NULL && (drone->flags & 0x10))
+        return false;
+    _VECTOR offset = {x, y, z};
+    return NDrone2_MoveTestRelative(&offset, drone, obj, 1, 1);
 }

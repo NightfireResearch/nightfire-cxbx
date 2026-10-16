@@ -34,6 +34,8 @@ to what it does. A function ported that way:
 
 | 5 | loadsave, menu_cheats, menu_codename | 47 names = 43 Xbox functions (their five `BIN_PullBits` are four; `P_PS2MEMCARDINIT_Handler`, `PS2_DoCardFlow` have no Xbox counterpart) + 3 (LS_FindBlockByLabel, LS_GetLoadStuff's adaptor, Menu_StartLS) | none: the demos neither save nor use the menus. SaveShadow: 23,640 cases, 0 differ; CodenameShadow: 8,480 cases, 0 differ; 8 planted bugs, all caught. MenuProbe A/B with the 51 functions as the original: codenames, secrets_test, front_end, nightfire and the new saveload (load a codename, save it, the delete box): identical screenshots, message logs and saves | see git log |
 
+| 6 | drone_states, drone_damage, drone_weapon | 60 + 5 of their names under other Xbox names (Drone_BulletHit = 0x31f20, DroneWeap_ManageBurstCount = 0x67590, NDrone2_CanMoveToRelativePos = 0x45490, DroneWeap_PlaceTertiary = 0x67bf0, DroneWeap_CanThrowGrenade = 0x66c50) + 6 helpers (DroneWeap_AimAtOpponent 0x666a0, DroneWeap_FireDelay 0x66e90, DroneWeap_BurstLength 0x66f10, DroneWeap_NextBulletTimeNewBurst 0x67c00, DroneWeap_DropPathClear 0x67640, Drone_MayDealBackshotDamage 0x31da0) | 55 of 60; 800 of 1244 blocks. DroneStateShadow: 21,280 cases; DroneCivilianShadow: 56,000; DroneDamageShadow: 98,000; DroneWeaponShadow: 130,000; all 0 differ. 13 planted bugs, one per suite line, all caught | see git log |
+
 Parcel 1's first playback found two things the coverage alone would not have shown:
 - **A crash in our code.** The port of `Script_CreateEntity` called our `Break_Create` by name, which is a known-broken
   draft that was never patched in. `tools/draft_calls.py` now finds such calls.
@@ -146,6 +148,55 @@ Everything else in their readings of parcel 4 matched the Xbox.
 
 Everything else in their readings of parcel 5 matched the Xbox.
 
+### Parcel 6
+- The 25 states: their readings match the Xbox, side effects in order. Two things their shared helpers hide.
+  AllyLeadInit has no alert or forced-attack cases. Patrol handles message 0x1b (the obstructed path) but not 5 (a
+  script's end), and Idle and Alert the other way round. Their JustStand uses `sin(t + pi/2)` where the Xbox uses
+  FCOS: the same.
+- Not their reading, but ours: every Xbox call to `NDrone2_NearArmedPerson` pushes a radius it never reads.
+- `Drone_BulletHit` is FUN_00031f20 on the Xbox, and calls `Drone_Message(obj, 8, hit, 0)`. Theirs builds DCVars and
+  sends the message itself.
+- `DroneFunc_HandleImpact`'s taser test truncates the health with `__ftol2` (signed, the low dword; NaN gives 0).
+  Theirs converts it to unsigned.
+- `NDrone2_PainTalk` asks `Drone_maybeDisallowedFromSayingThisSfx` (0x3be21). Theirs compares with the sound
+  playing.
+- `DroneAnim_LocationImpactAnim`'s abseil variant table has 19 entries, built on the stack. Theirs has 18.
+- `DroneFunc_SetMissionFailReason` is inline in the impacts on the Xbox. Their reasons 5, 6 and 7 give the same
+  label and channel, so ours calls our port with them.
+- Separate functions on the Xbox:
+  - helpers called only from the damage code: 0x36350 (the player's touch), 0x363d0 (a hurt volume's damage),
+    0x36430 (`NDrone2_BodyHitEffect`), 0x36190 (whether the impact anim is due), 0x3a410 (TowerA/B calming on
+    impact), 0x3a3f0 (whether a state may be resumed). The explosion's damage block 0x3db50 is
+    `NDrone2_HitDamage` at location 0, handed `hitDamageScale`, which it never reads.
+  - `NDrone2_CanMoveToRelativePos` is two functions: 0x45490 checks flag 0x10 and calls 0x453e0. 0x453e0 does the
+    feet, matrix and move test, and scales a bot's offset by its speed unless its fourth argument is set (this
+    caller sets it).
+  - `DroneWeap_PlaceTertiary` (0x67bf0) is a lone jump to `DroneWeap_ThrowGrenade`. Ghidra gives both the one name.
+  - The back-shot test is `Drone_MayDealBackshotDamage` (0x31da0, the drone in ECX). It lists the PowerStation
+    levels outright, which comes to the same as theirs.
+  - `DroneWeap_DropWeapon`'s line-of-sight check is 0x67640 (ray flags 0x125).
+  - 0x67c00 is MSVC's copy of `DroneWeap_NextBulletTime` for a new burst. `DroneWeap_DoFiring` calls it.
+- The same result by another route:
+  - `DroneWeap_HandleFiring`'s bots check is inside 0x666a0.
+  - Their `DroneWeap_ManageBurstCount` calls `NextBulletTime(0, 0)`. The Xbox (0x67590, the DCVars in EAX)
+    works out max(now, last shot + delay) itself.
+- `DroneWeap_ThrowGrenade` tilts the throw with RotMatrix (0xd6560), not `Mat_Rotate`.
+- `_VECTOR` is 12 bytes on the Xbox, so their "w is stack garbage" divergences do not arise. `DroneWeap_FireWeapon`'s
+  flash rotation writes `.z = 0`.
+- Register arguments their C++ does not show:
+  - `NDrone2_DealWithObjHit`: the drone in EAX.
+  - `DroneWeap_DoFiring` and `DroneWeap_NextBulletTime`: the DCVars in EDI.
+  - `DroneWeap_ManageBurstCount`: the DCVars in EAX.
+  - `DroneWeap_BurstDelay`: the drone in ESI.
+- Layout, not errors: the bot traits are `BOT_vars_t.stats.traitFlags` (+0x84; theirs +0xac).
+- Their additions, not in the Xbox: the NULL guards on `NDrone2_ExplosiveImpact`'s source object,
+  `NDrone2_DoHitEffects`' sound, `DroneAnim_LocationImpactAnim` and the gas puff.
+- Ghidra's labels for the DroneFiring floats read wrong in `DroneWeap_BurstDelay`: 0x164094 is BurstDelay_Min (the
+  clamp) and 0x1640a0 is MinDist (compared with the distance), as Player.cpp names them. The drone tuning floats now
+  have one definition, in src/action/game/drone/DroneTuning.h.
+
+Everything else in their readings of parcel 6 matched the Xbox.
+
 ## Original bugs found while porting (kept; candidates for FIX_ORIGINAL_GAME_BUGS)
 
 - `Script_Load`, a file with 0x3f streams or more: hands its record to `DList_RemoveFromInUse2Free(&ScriptList)`,
@@ -193,6 +244,25 @@ Everything else in their readings of parcel 5 matched the Xbox.
   `codename_buf` without a bound.
 - `C_CHCHWEAP_Handler` uses `glb_blokes[0]` unchecked; `P_CNSELECT_Handler` answers an option box of type 3 that
   nothing in the Xbox build creates.
+- `NDrone2_DoHitEffects` reads the bullet's weapon definition for the impact sound, and with bots on for a fired
+  shot's weapon id, without the NULL check it makes for the damage. `NDrone2_ExplosiveImpact` reads
+  `impact->unknown14` before its own NULL check. `DroneAnim_LocationImpactAnim` uses `glb_players[0]` and
+  `lastHit` unchecked, and the body hit's gas puff (0x36430) uses what `Gas_Init` returns unchecked.
+- The explosion's damage (0x3db50) is handed `hitDamageScale` and never applies it.
+- `DroneFunc_InjuredTalk` runs only with bots on (`maybeDroneAIEnabled != 0`), which looks inverted; its helper draws
+  `Rand_Rand(0)`, always 0.
+- `DroneWeap_DoBulletAccuracy` applies `DroneFiring_TooClose_Accuracy` twice.
+- `DroneWeap_FireWeapon` converts the sound's pitch, `Rand_Rand(500) - 250`, as unsigned, so a negative draw is about
+  4.29e9; its test of the sound against -1 can never pass (a ushort).
+- `DroneWeap_ThrowGrenade` uses up a grenade even when a Ninja's own grenade is thrown instead, and builds a bone
+  matrix that RotMatrix then overwrites.
+- 0x67640 (`DroneWeap_DropWeapon`'s line of sight) passes the argument slot that still holds the drone as the
+  hit-list pointer. Ours passes NULL: the ray fills it in either way.
+- `NDrone2_DSTATE_Civilian` works out a radius of 10 or 20 for `NDrone2_NearArmedPerson`, which does not read it.
+  `NDrone2_DSTATE_CivilianPatrol` attacks for every skin class but changes only class 16's side, where the other
+  civilian states go to CivilianScared. Impacts in CivilianPatrol, CivilianMission and CivilianMissionWait send the
+  drone to Attack.
+- `NDrone2_DSTATE_Patrol`'s timeout plays the look-round anim but sets no new timeout, so it looks round once.
 
 ## Departures from the original
 

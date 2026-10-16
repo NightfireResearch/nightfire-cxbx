@@ -12,8 +12,13 @@
 #include "../../math/math.h"        // Vec_*, maybeAtan2 (ours)
 #include "../mp/multiplayer.h"      // MPSettings
 #include "../obj/build.h"           // build_FindCel
+#include "BOT.h"                    // BOT_vars_t
+#include "DroneWeapon.h"
+#include "NDrone2_Damage.h"
 
+#include <bit>
 #include <math.h>
+#include <stdint.h>
 #include <string.h>
 
 // AUTOGEN
@@ -222,15 +227,10 @@ bool NDrone2_AttackTalk(DCVars_tag *dcv);
 ushort DroneVision_EnemyLookForOpponent(DCVars_tag *dcv);
 // AUTOGEN
 ushort DroneVision_EnemyAlerts(DCVars_tag *dcv, MsgObject *msg);
-// AUTOGEN
-bool DroneFunc_HandleImpact(DCVars_tag *dcv, MsgObject *msg, uint nextState, char param_4);
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
 #define DroneAnim_SetScript ((void (__cdecl *)(HASHCODE script, short param_2, short param_3, char param_4, short param_5, int param_6, int param_7, DCVars_tag *dcv))0x00034680)
 #define DroneAnim_SetDAnimNow ((void (__cdecl *)(ushort anim, ushort param_2, int param_3, DCVars_tag *dcv))0x00035dc0)
-
-// The drone's own message after an animation script ends
-#define DRONE_MSG_ScriptEnd 5
 
 // The drone plays its placement's script (Drone_tag::playScript) and then goes to its initial state. A few scripts
 // are handled on their own: 0x6000168 and 0x6000169 talk and attack at the end, 0x60007ac turns the drone round.
@@ -368,7 +368,6 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
 // The originals, called by address: Ghidra's prototypes have untyped arguments
 #define NDrone2_CanSeeObject ((bool (__cdecl *)(Drone_tag *drone, obj_tag *obj, uint bone, ushort mask))0x000648b0)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *gameObj))0x0001a190)
-#define DroneWeap_OpponentHasWeapon ((bool (__cdecl *)(DCVars_tag *dcv))0x00066610)
 #define DroneVision_ObjectVisibility ((float (__cdecl *)(Drone_tag *drone, obj_tag *obj))0x000643c0)
 #define AnimObjectSetHeadTracking ((void (__cdecl *)(obj_tag *gameObj, void *target, float range, float rate, char randomDelay, char targetIsObj, uchar bone))0x000119a0)
 
@@ -523,6 +522,33 @@ bool NDrone2_BondWithinAngle(DCVars_tag *dcv, float angle) {
     float yaw = maybeAtan2(toPlayer.x, toPlayer.z);
     float turn = Vec_AngleDifference(dcv->gameObj->rotation.y, yaw);
     return !(angle < fabsf(turn));
+}
+
+constexpr float kDegToRad = 0.017453292f;
+static_assert(std::bit_cast<uint32_t>(kDegToRad) == 0x3c8efa35, "not the original's constant");
+
+// Whether the opponent faces the drone to within `degrees` (Drone_tag.opponentFacing)
+// AUTOINJECT
+bool NDrone2_BondIsFacingMe(DCVars_tag *dcv, float degrees) {
+    return fabsf(dcv->drone->opponentFacing) < (double)degrees * kDegToRad;
+}
+
+// Turns the drone to face obj, plus `offset` (angleToSomePoint). Unless forced, not while its turning is held:
+// unknown3f0 bit 0x8000000, a bot recovering, or the anim's flags 0x380.
+// AUTOINJECT
+void NDrone2_SetAngleToObj(DCVars_tag *dcv, obj_tag *obj, float offset, char force) {
+    if (obj == NULL)
+        return;
+    Drone_tag *drone = dcv->drone;
+    if ((drone->unknown3f0 & 0x8000000) && !force)
+        return;
+    if (MPSettings.maybeDroneAIEnabled && (drone->botVars->flags & 2) && !force)
+        return;
+    if ((drone->unknown46c & 0x380) && !force)
+        return;
+    _VECTOR toObj;
+    Vec_Subtract(&obj->position, &dcv->gameObj->position, &toObj);
+    dcv->drone->angleToSomePoint = maybeAtan2(toObj.x, toObj.z) + offset;
 }
 
 // Turns the drone's head to obj (NULL lets it go) for `ticks` (at 60 a second), at `speed` (0 for the usual 0.07).

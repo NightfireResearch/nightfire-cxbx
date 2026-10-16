@@ -10,9 +10,17 @@
 #include "../../engine/Collide.h"   // HITDATA_tag
 #include "../../math/math.h"        // maybeAtan2, Vec_AngleDifference
 #include "../../util/Random.h"      // Rand_Rand
+#include "DroneWeapon.h"            // DroneWeap_FireWeapon
 
 #include <math.h>
 #include <string.h>
+
+// Originals called by address. FUN_00033120 frees the anim script at Drone_tag.unknown434 if there is one (our name).
+#define DroneAnim_FreeScript ((void (__cdecl *)(DCVars_tag *dcv))0x00033120)
+#define DroneAnim_SetDAnimNow ((void (__cdecl *)(ushort anim, ushort param_2, int param_3, DCVars_tag *dcv))0x00035dc0)
+
+// The DAnim of a shot fired through the anim (DroneAnim_PlayFiringAnim)
+#define DANIM_NOW_FIRE 0x5c
 
 // Whether the drone has a script for the variant of the anim state, in its own anim set or else in set 0. State 0
 // always does; one beyond the table never.
@@ -226,5 +234,70 @@ bool DroneAnim_LocationDeathAnim(DCVars_tag *dcv, short endState) {
         variant = Rand_Rand(4);
     NDrone2_DeathTalk(dcv);
     DroneAnim_CallAnim(DANIM_DEATH, variant, endState, 0, 0.0f, 0, dcv);
+    return true;
+}
+
+// The impact anim for where the last shot hit (lastHit's bone) while the player aims, else a random one, ending in
+// the state the drone resumes. The abseilers (DTYPEs 27 and 28) have variants of their own. The original builds the
+// abseilers' table on the stack each call; neither the last hit nor glb_players[0] is checked.
+// AUTOINJECT
+bool DroneAnim_LocationImpactAnim(DCVars_tag *dcv) {
+    static const uint abseilVariants[19] = {0, 0, 0, 0, 0, 1, 1, 2, 1, 2, 3, 4, 3, 4, 0, 0, 0, 0, 0};
+    Drone_tag *drone = dcv->drone;
+    uint variant;
+    if (glb_players[0]->animState->animFlags & 1) {
+        switch ((ushort)drone->lastHit->hitBoneIdx) {
+        case 4:
+        case 5:
+            variant = 5;
+            break;
+        case 0x12:
+        case 0x13:
+        case 0x14:
+        case 0x15:
+            variant = 8;
+            break;
+        case 0x1e:
+        case 0x1f:
+        case 0x20:
+        case 0x23:
+            variant = 9;
+            break;
+        case 0x31:
+        case 0x32:
+        case 0x33:
+            variant = 0xd;
+            break;
+        case 0x35:
+        case 0x36:
+        case 0x37:
+            variant = 0xc;
+            break;
+        default:
+            variant = Rand_Rand(2) + 6;
+            break;
+        }
+    } else {
+        variant = Rand_Rand(8) + 5;
+    }
+
+    if (drone->dtype == DTYPE_Abseil27 || drone->dtype == DTYPE_Abseil28)
+        variant = abseilVariants[variant];
+    DroneAnim_CallAnim(DANIM_IMPACT, variant, dcv->aiStateMachine->resumeState, 0, 0.0f, 0, dcv);
+    return true;
+}
+
+// For a drone whose shots come from the anim (firesByAnim): once DroneWeap_DoFiring has found it ready, with no anim
+// call or script pending and its aim event (unknown21) set, plays the firing DAnim and fires.
+// AUTOINJECT
+bool DroneAnim_PlayFiringAnim(DCVars_tag *dcv) {
+    Drone_tag *drone = dcv->drone;
+    if (!drone->firesByAnim || drone->animCall.state != 0 || drone->unknown434 != NULL || !drone->readyToFire ||
+        !drone->unknown21)
+        return false;
+    DroneAnim_FreeScript(dcv);
+    DroneAnim_SetDAnimNow(DANIM_NOW_FIRE, 0, 0, dcv);
+    DroneWeap_FireWeapon(dcv);
+    drone->fired = 0;
     return true;
 }

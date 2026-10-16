@@ -348,6 +348,7 @@ typedef enum {
     DRONE_MSG_Exit = 2,
     DRONE_MSG_Update = 3,           // once per frame, from NDrone2_ControlSTANDARD
     DRONE_MSG_StateTimeout = 4,     // scoped to the state that set it
+    DRONE_MSG_ScriptEnd = 5,        // the drone's own, after an animation script ends
     DRONE_MSG_ImpactPunch = 6,      // extraData = the hit record
     DRONE_MSG_ImpactTaser = 7,
     DRONE_MSG_ImpactBullet = 8,
@@ -412,7 +413,8 @@ typedef struct {
     uchar enabled;              // +0x0 - Drone_EnableAll's last setting
     char _pad1[3];
     Drone_tag *NDrone2List;     // +0x4 - every live drone, linked through Drone_tag.next
-    char _pad8[0x14c - 0x8];
+    char _pad8[0x148 - 0x8];
+    uint deadFrames;            // +0x148 - how long a drone lies in DSTATE_Dead before it fades (our name)
     uint unknown14c;            // +0x14c - DroneFunc_DeadDrone: with more than this in unknown150, the drone whose
     uint unknown150;            // +0x150   sm.id is unknown15c fades fast
     char _pad154[0x15c - 0x154];
@@ -427,7 +429,7 @@ typedef struct {
     obj_tag *dummyPlayer;       // +0x1a4 - DroneSpawner_CreateBlank's object; moved onto glb_players[0] when switched on
     char _pad1a8[0x1ac - 0x1a8];
     uint32_t enabledFrame;      // +0x1ac - GameState.NumFramesUnpaused when Drone_EnableAll last enabled the drones
-    char _pad1b0[0x1b4 - 0x1b0];
+    uint32_t impactAnimFrame;   // +0x1b0 - when any drone last played an impact anim (Punch and BulletImpact)
     uint32_t nextPatrolTalkFrame;   // +0x1b4 - NDrone2_PatrolTalk: no drone mutters before
     char _pad1b8[0x1bc - 0x1b8];
     uint32_t lastPowerstationChannel;   // +0x1bc - NDrone2_PowerstationTalk: the last channel whose line was said
@@ -459,10 +461,12 @@ static_assert(offsetof(NPCGlobals_t, dummyPlayer) == 0x1a4, "Wrong offset for du
 static_assert(offsetof(NPCGlobals_t, enabledFrame) == 0x1ac, "Wrong offset for enabledFrame");
 static_assert(offsetof(NPCGlobals_t, NumDrones) == 0x230, "Wrong offset for NumDrones");
 static_assert(offsetof(NPCGlobals_t, playerTarget) == 0x1c0, "Wrong offset for playerTarget");
+static_assert(offsetof(NPCGlobals_t, deadFrames) == 0x148, "Wrong offset for deadFrames");
 static_assert(offsetof(NPCGlobals_t, unknown14c) == 0x14c, "Wrong offset for unknown14c");
 static_assert(offsetof(NPCGlobals_t, unknown15c) == 0x15c, "Wrong offset for unknown15c");
 static_assert(offsetof(NPCGlobals_t, seenAttacking) == 0x18c, "Wrong offset for seenAttacking");
 static_assert(offsetof(NPCGlobals_t, nextPatrolTalkFrame) == 0x1b4, "Wrong offset for nextPatrolTalkFrame");
+static_assert(offsetof(NPCGlobals_t, impactAnimFrame) == 0x1b0, "Wrong offset for impactAnimFrame");
 static_assert(offsetof(NPCGlobals_t, lastPowerstationChannel) == 0x1bc, "Wrong offset for lastPowerstationChannel");
 static_assert(offsetof(NPCGlobals_t, numAwarePoints) == 0xb50, "Wrong offset for numAwarePoints");
 static_assert(offsetof(NPCGlobals_t, unknown1392) == 0x1392, "Wrong offset for unknown1392");
@@ -492,6 +496,7 @@ bool NDrone2_DistanceToEmitter(CelPos_tag *pos, AIPath_tag *path, ushort *neares
                                obj_tag *obj, float *distance);
 bool NDrone2_DroneNearPos(_VECTOR *pos, float radius, obj_tag *except);
 void NDrone2_NavNodeCache(void);
+bool NDrone2_CanMoveToRelativePos(Drone_tag *drone, obj_tag *obj, float x, float y, float z);
 
 // The state machine (DroneSM.cpp; docs/drone/architecture/README.md 3.2-3.4).
 bool Drone_SM_Init(void);
@@ -529,6 +534,8 @@ bool NDrone2_GetHeadPosOld(obj_tag *gameObj, _VECTOR *pos, float *yaw);
 bool DroneFunc_GetBonePos(obj_tag *gameObj, uint bone, _VECTOR *pos);
 bool NDrone2_NearArmedPerson(DCVars_tag *dcv);
 bool NDrone2_BondWithinAngle(DCVars_tag *dcv, float angle);
+bool NDrone2_BondIsFacingMe(DCVars_tag *dcv, float degrees);
+void NDrone2_SetAngleToObj(DCVars_tag *dcv, obj_tag *obj, float offset, char force);
 bool NDrone2_HeadTrackObj(obj_tag *obj, int ticks, float speed, DCVars_tag *dcv);
 bool DroneFunc_DoForcedAttack(DCVars_tag *dcv);
 void DroneFunc_ConsiderExplosive(DCVars_tag *dcv, obj_tag *explosive, short nextState);
@@ -543,10 +550,18 @@ bool DroneFunc_DeadDrone(DCVars_tag *dcv);
 bool DroneFunc_SetDeathChannel(Drone_tag *drone);
 void DroneFunc_OnInitDeath(DCVars_tag *dcv);
 uint NDrone2_ExplosionDir(DCVars_tag *dcv, struct DroneImpact_tag *impact);
+bool NDrone2_DSTATE_Death_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
+bool NDrone2_DSTATE_DeathByExplosion(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
+bool NDrone2_DSTATE_Dead(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
+bool NDrone2_DSTATE_Fade(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
+bool NDrone2_DSTATE_FadeFast(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
 
 // NDrone2_Talk.cpp
 bool Drone_IsTalking(Drone_tag *drone);
 bool NDrone2_DeathTalk(DCVars_tag *dcv);
+bool NDrone2_HitTalkExtra(DCVars_tag *dcv);
+bool NDrone2_PainTalk(DCVars_tag *dcv);
+void DroneFunc_InjuredTalk(DCVars_tag *dcv);
 bool DroneFunc_DoBondTalk(DCVars_tag *dcv, uint sfx, int trackTicks, uint waitTicks, char repeat);
 bool NDrone2_BondTalk(DCVars_tag *dcv);
 void Drone_MayhewTalk(uint sfx);
