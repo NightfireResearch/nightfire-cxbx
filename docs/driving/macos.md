@@ -1,6 +1,6 @@
 # The driving engine on Apple Silicon macOS
 
-Status: in progress on the Mac (15 October 2026: A1 done, G3 done but for two runs' frames, A2 partly - section 7.1), step 4 of the roadmap in [portable.md](portable.md). Done on x86: M0 (the portable
+Status: good enough for now (16 October 2026) - parked by the user with the loose ends in section 7.2. On the Mac: A1 and G3 done, A2's tooling working (section 7.1); step 4 of the roadmap in [portable.md](portable.md).
 SSE header, 3.1), M3, G1 and G2 ([sdl-gpu.md](sdl-gpu.md)), and what of G3 runs without a Mac. It follows the 64-bit work ([64-bit.md](64-bit.md)), which
 it assumes is finished:
 packages 3a-5, 8 and 9 (the 64-bit standalone executable exact in lockstep against `lbase_c`) and 10 (Linux
@@ -405,6 +405,25 @@ any time (G2 needs SDL's GPU subsystem in the Windows build, off by default). A1
   with a threshold here.
 - **Not done**: the comparison of the Mac's traces with `lbase_c` (the baselines are on the PC: copy
   build/baselines/lbase_c_* over), A3, and the x86 checks of these changes (the Windows and Linux builds, CI).
+
+### 7.2 Parked (16 October 2026)
+
+The user judged the Mac good enough for now and parked these; pick them up from here.
+
+1. **Frames differ slightly between rounds on the Mac** (sound traces are identical): 1 to ~500 scattered pixels a
+   run over its 16 frames, by up to ~20 levels, on foliage and snow (mission 5 most) - alpha-tested edges falling either
+   side of the test is the likely mechanism. The Vulkan build is exact between rounds; the Mac is the only host whose
+   image loads at a different address each run (ASLR slide), so the first experiment is two rounds with the image at
+   one address (or runs grouped by their logged load address). Until it is fixed, `lmac_c` cannot hold frames: either
+   fix it, or compare the Mac's frames with a threshold and keep exact sound traces.
+2. **The Mac's sound traces against `lbase_c`** are not compared yet: copy `build/baselines/lbase_c_*/sndtrace.log`
+   from the PC (only the traces are needed). If they differ, `lmac_c` baselines are enough (the user's decision, 10);
+   A4 stays dropped.
+3. **A3, play**: windowed Metal, CoreAudio and keyboard work (the user played it; the movie-sound bug found then is
+   fixed - 64-bit FFmpeg layout, a29370a). Not yet checked: pads, including SDL's background pad events.
+4. **The no-contraction shader helpers' speed** (sdl-gpu.md's checklist): ~300 fps headless, so not a problem so far.
+5. Not run on the Mac: the x86 checks of later Mac commits run on the PC before they reach dev (as for 3.4.18 and
+   a29370a: every x86 build exact).
 
 ## 8. The agent on the Mac: first steps
 

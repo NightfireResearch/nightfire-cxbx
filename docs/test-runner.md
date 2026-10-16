@@ -227,7 +227,7 @@ and the same commands drive a Linux runner: `remote.sh` asks the runner's system
 Windows. `RUNNER_BUILD=<folder on the runner>` makes `build` install a build made elsewhere instead of compiling
 (another branch's, say), and `RUNNER_BUILD_JOBS` limits the compile's parallelism. `RUNNER_PRESET=linux-x64` builds
 the 64-bit executables (docs/driving/64-bit.md 7.11) into `Release/` in their place, run under the same name; FFmpeg
-then defaults to `~/ffmpeg-x64/lib` (`~/nf/ffmpeg-x64/lib` under WSL2). `RUNNER_WSL_ROOT` puts the WSL2 runner's tree
+then defaults to `~/ffmpeg-x64/lib` (`~/nf/ffmpeg-x64/lib` under WSL2; on this PC the x86-64 build is in `~/nf/m1/ffmpeg-x64/lib` - pass it as `RUNNER_FFMPEG_LIB`). `RUNNER_WSL_ROOT` puts the WSL2 runner's tree
 somewhere other than `~/nf/runner`, so that two agents can each have one. Since `sync` cleans the checkout with
 `git clean`, the disc there must be a folder (`disc/driving` may be a symbolic link), not a link named `disc`.
 
