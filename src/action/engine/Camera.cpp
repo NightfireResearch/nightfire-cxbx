@@ -242,9 +242,9 @@ void Camera_Update(uint idx) {
         // Apocalypse camera shake effect
         float a = REC_FRAME_RATE * viewer->apocalypseEffect;
         Rand_FRand_MVar2_Vec(Mat_Position(viewer->viewMatrix), a, a);
-        float b = Float_FRand(viewer->apocalypseEffect * 0.25f);
-        viewer->apocalypseEffect -= b;
-        if(viewer->apocalypseEffect < 0.0f)
+        double shake = viewer->apocalypseEffect - Float_FRand(viewer->apocalypseEffect * 0.25f);
+        viewer->apocalypseEffect = shake;
+        if(shake < 0.0)
             viewer->apocalypseEffect = 0.0f;
     }
 

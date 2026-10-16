@@ -246,8 +246,8 @@ void Searchlight_Update(obj_tag *searchlight) {
     switch ((SearchlightState)searchlight->curState) {
     case Searchlight_Sweeping:
         // Calculate sweep motion using sine/cosine
-        searchlight->rotation.x = sinf(spotlight->phase * PHASE_TO_ANGLE) * spotlight->sweepHalfRange + spotlight->sweepCenter;
-        searchlight->rotation.y = cosf(spotlight->phase * PHASE_TO_ANGLE) * spotlight->sweepHalfRange + spotlight->rotationAngles.y;
+        searchlight->rotation.x = SIN(spotlight->phase * PHASE_TO_ANGLE) * spotlight->sweepHalfRange + spotlight->sweepCenter;
+        searchlight->rotation.y = COS(spotlight->phase * PHASE_TO_ANGLE) * spotlight->sweepHalfRange + spotlight->rotationAngles.y;
         spotlight->phase += FRAME_RATE_MUL;
         break;
 

@@ -12,7 +12,7 @@
 //
 // NDrone2_Steer's obstacle record keeps its flags across obstacles, and the original never clears them first: it
 // reads stack garbage. Its callers here (NDrone2_Steer, NDrone2_Move) run with the stack below them zeroed, as ours
-// starts it.
+// starts it, and our Vec_AngleDifference, which NDrone2_Move calls first, zeroes it again for them.
 
 #include "DroneMoveShadow.h"
 #include "ShadowHarness.h"
@@ -332,6 +332,34 @@ __declspec(naked) void __cdecl OriginalMove(DCVars_tag *dcv) {
     }
 }
 
+// The original NDrone2_Move calls our Vec_AngleDifference just before NDrone2_Steer, so Steer's uninitialised
+// obstacle flags are whatever ours left on the stack, which depends on how it was compiled. For the originals, ours
+// zeroes the stack below it again on the way out.
+const unsigned kVec_AngleDifference = 0x000d4cb0;
+
+__declspec(naked) float __cdecl AngleDifferenceZeroingStack(float angle1, float angle2) {
+    _asm {
+        push dword ptr [esp + 8]
+        push dword ptr [esp + 8]
+        call Vec_AngleDifference
+        add esp, 8
+        push edi
+        lea edi, [esp - 0x800]
+        mov ecx, 0x200
+        xor eax, eax
+        cld
+        rep stosd
+        pop edi
+        ret
+    }
+}
+
+struct ZeroStackAfterAngles {
+    unsigned ours = XbeOriginal_Target(kVec_AngleDifference);
+    ZeroStackAfterAngles() { XbeOriginal_Redirect(kVec_AngleDifference, (const void *)&AngleDifferenceZeroingStack); }
+    ~ZeroStackAfterAngles() { XbeOriginal_Redirect(kVec_AngleDifference, (const void *)(uintptr_t)ours); }
+};
+
 // The register-argument original: the obstacle drone in EAX, the test in ESI
 __declspec(naked) uint32_t __cdecl OriginalEvaluateObstacle(Drone_tag *drone, Drone_tag *other,
                                                             ObstacleEval_tag *eval) {
@@ -618,6 +646,7 @@ void TestSteering() {
         Compare("NDrone2_Move", trial,
                 [] {
                     OriginalMoves o;
+                    ZeroStackAfterAngles zeroed;
                     OriginalMove(&world.dcv);
                     return 0u;
                 },

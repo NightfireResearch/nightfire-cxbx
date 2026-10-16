@@ -483,19 +483,19 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     // The ranges (key 14). The sums stay on the x87 stack before their store.
     drone->combatRanges[0] = 4.0f;
     drone->combatRanges[3] = 2.0f;
-    float spread;
+    double spread;
     switch (keys->combatRange) {
     case 1:
         drone->combatRanges[1] = Float_FRand(3.0f) + 12.0f;
         spread = Float_FRand(3.0f);
         drone->viewRange = 12.0f;
-        drone->combatRanges[4] = (float)((double)spread + drone->combatRanges[1] + 1.0);
+        drone->combatRanges[4] = (float)(spread + drone->combatRanges[1] + 1.0);
         break;
     case 2:
         drone->combatRanges[1] = Float_FRand(3.0f) + 12.0f;
         spread = Float_FRand(3.0f);
         drone->viewRange = 16.0f;
-        drone->combatRanges[4] = (float)((double)spread + drone->combatRanges[1] + 1.0);
+        drone->combatRanges[4] = (float)(spread + drone->combatRanges[1] + 1.0);
         break;
     case 3:
         drone->combatRanges[1] = Float_FRand(6.0f) + 25.0f;
@@ -512,13 +512,13 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
         spread = Float_FRand(4.0f);
         drone->viewRange = 0.0f;
         drone->viewAngle = 0.0f;
-        drone->combatRanges[4] = (float)((double)spread + drone->combatRanges[1] + 1.0);
+        drone->combatRanges[4] = (float)(spread + drone->combatRanges[1] + 1.0);
         break;
     default:
         drone->combatRanges[1] = Float_FRand(4.0f) + 12.0f;
         spread = Float_FRand(4.0f);
         drone->viewRange = 24.0f;
-        drone->combatRanges[4] = (float)((double)spread + drone->combatRanges[1] + 1.0);
+        drone->combatRanges[4] = (float)(spread + drone->combatRanges[1] + 1.0);
         break;
     }
     drone->unknownb4 = 0xf;

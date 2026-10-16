@@ -273,12 +273,12 @@ void Quat_Slerp(float progress, quaternion_tag *qStart, quaternion_tag *qEnd, qu
 // AUTOINJECT
 void RotMatrix(_VECTOR *vIn,_MATRIX *mtxOut) {
 
-  float cosX = cosf(vIn->x);
-  float sinX = sinf(vIn->x);
-  float cosY = cosf(vIn->y);
-  float sinY = sinf(vIn->y);
-  float cosZ = cosf(vIn->z);
-  float sinZ = sinf(vIn->z);
+  float cosX = COS(vIn->x);
+  float sinX = SIN(vIn->x);
+  float cosY = COS(vIn->y);
+  float sinY = SIN(vIn->y);
+  float cosZ = COS(vIn->z);
+  float sinZ = SIN(vIn->z);
 
   mtxOut->m[0] = cosZ * cosY;
   mtxOut->m[4] = -sinZ * cosY;
@@ -566,12 +566,12 @@ void Vec_CrossNormalise(_VECTOR *a,_VECTOR *b,_VECTOR *vecOut) {
 // AUTOINJECT
 void RotMatrixZYX(_VECTOR *angles, _MATRIX *mtx) {
   
-  float cosX = cosf(angles->x);
-  float sinX = sinf(angles->x);
-  float cosY = cosf(angles->y);
-  float sinY = sinf(angles->y);
-  float cosZ = cosf(angles->z);
-  float sinZ = sinf(angles->z);
+  float cosX = COS(angles->x);
+  float sinX = SIN(angles->x);
+  float cosY = COS(angles->y);
+  float sinY = SIN(angles->y);
+  float cosZ = COS(angles->z);
+  float sinZ = SIN(angles->z);
 
   mtx->m[0] = cosZ * cosY;
   mtx->m[4] = cosZ * sinY * sinX - sinZ * cosX;
@@ -589,12 +589,12 @@ void RotMatrixZYX(_VECTOR *angles, _MATRIX *mtx) {
 // AUTOINJECT
 void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx) {
 
-  float cosX = cosf(rot->x);
-  float sinX = sinf(rot->x);
-  float cosY = cosf(rot->y);
-  float sinY = sinf(rot->y);
-  float cosZ = cosf(rot->z);
-  float sinZ = sinf(rot->z);
+  float cosX = COS(rot->x);
+  float sinX = SIN(rot->x);
+  float cosY = COS(rot->y);
+  float sinY = SIN(rot->y);
+  float cosZ = COS(rot->z);
+  float sinZ = SIN(rot->z);
 
   mtx->m[0] = cosZ * cosY;
   mtx->m[4] = -sinZ * cosY;
@@ -611,8 +611,9 @@ void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx) {
 
 }
 
+// Summed at the x87's precision, rounded once
 float Vec_Dot(_VECTOR *a, _VECTOR *b) {
-  return a->x * b->x + a->y * b->y + a->z * b->z;
+  return (float)((double)a->x * b->x + (double)a->y * b->y + (double)a->z * b->z);
 }
 
 // AUTOINJECT
@@ -679,7 +680,8 @@ bool Plane_PlaneEq(plane_equ_tag *planeEq, _VECTOR *v1, _VECTOR *v2, _VECTOR *v3
   // Otherwise, normalise and calculate the distance component
   float rcpMag = 1.0f / mag;
   Vec_MulR32(&planeEq->normal, &planeEq->normal, rcpMag);
-  planeEq->d = -Vec_Dot(&planeEq->normal, v1);
+  _VECTOR *n = &planeEq->normal;
+  planeEq->d = -(n->x * v1->x + n->y * v1->y + n->z * v1->z);
   return true;
 }
 
@@ -711,17 +713,17 @@ bool vecutil_point_on_poly(_VECTOR *point, _VECTOR *vtx1, _VECTOR *vtx2, _VECTOR
   // Check against line segment v3v1 using the cross product on the plane
   _VECTOR tmp;
   Vec_Cross(&v1v3, &plane->normal, &tmp);
-  if(Vec_Dot(&tmp, &pv1) > 0.0f)
+  if(tmp.x * pv1.x + tmp.y * pv1.y + tmp.z * pv1.z > 0.0f)
       return false;
 
   // Check against line segment v2v1 using the cross product on the plane
   Vec_Cross(&v2v1, &plane->normal, &tmp);
-  if(Vec_Dot(&tmp, &pv2) > 0.0f)
+  if(tmp.x * pv2.x + tmp.y * pv2.y + tmp.z * pv2.z > 0.0f)
       return false;
 
   // Check against line segment v3v2 using the cross product on the plane
   Vec_Cross(&v3v2, &plane->normal, &tmp);
-  if(Vec_Dot(&tmp, &pv3) > 0.0f)
+  if(tmp.x * pv3.x + tmp.y * pv3.y + tmp.z * pv3.z > 0.0f)
       return false;
 
   // If on the correct side of all three line segments, we're inside the polygon
@@ -820,12 +822,12 @@ float Vec_AngleDifference(float angle1, float angle2) {
 
 // AUTOINJECT
 void Vec_Spherical_2_Cartesian(float *out, float radius, float yaw, float pitch) {
-  float cosPitch = cosf(pitch);
-  float sinYaw = sinf(yaw);
+  float cosPitch = COS(pitch);
+  float sinYaw = SIN(yaw);
   out[0] = sinYaw * cosPitch * radius;
-  float cosYaw = cosf(yaw);
+  float cosYaw = COS(yaw);
   out[2] = cosYaw * cosPitch * radius;
-  float sinPitch = sinf(pitch);
+  float sinPitch = SIN(pitch);
   out[1] = sinPitch * radius;
 }
 

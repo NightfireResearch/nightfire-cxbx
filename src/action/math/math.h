@@ -1,6 +1,11 @@
 #ifndef MATH_H
 #define MATH_H
 
+// sinf and cosf, through the double functions of <math.h>. Not sinf and cosf themselves: those are calls the
+// optimiser may not inline, and MSVC then carries on from their result on the x87, at double precision.
+#define SIN(x) ((float)sin((double)(float)(x)))
+#define COS(x) ((float)cos((double)(float)(x)))
+
 #pragma pack(push, 1)
 typedef struct {
 	float q[4]; // wxyz order
