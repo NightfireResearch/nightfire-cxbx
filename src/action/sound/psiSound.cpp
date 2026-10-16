@@ -105,8 +105,8 @@ void psiSFXSetupListener(_VECTOR *pos, _VECTOR *vel, _VECTOR *dir, _VECTOR *up, 
 }
 
 // AUTOINJECT
-bool psiIsSamplePlaying(uint32_t voice) {
-    return dsndIsPlaying(voice);
+uint32_t psiIsSamplePlaying(uint32_t voice) {
+    return dsndIsPlaying(voice) ? 1 : 0;
 }
 
 // A stream's read buffer: 2 KB of slack either side, as the reads are rounded out to whole 2 KB sectors

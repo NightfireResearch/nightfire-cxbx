@@ -48,7 +48,7 @@ void *psiSFXLoadFile(char *fileName);
 void psiSetReverb(int depth);
 int psiSampleKeyOn(uint32_t voice, int reverb);
 void psiSFXSetupListener(_VECTOR *pos, _VECTOR *vel, _VECTOR *dir, _VECTOR *up, _VECTOR *norm);
-bool psiIsSamplePlaying(uint32_t voice);
+uint32_t psiIsSamplePlaying(uint32_t voice);   // 0 or 1 in all of EAX: HasSampleEnded tests the whole register
 int psiAsyncCreateBuffer(int size);
 int psiStreamCreatePlaybackBuffer(int frequency, int channels, int byteSize);
 void dsndDeleteChannel(uint32_t voice);
