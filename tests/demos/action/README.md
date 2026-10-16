@@ -27,5 +27,12 @@ differently), so this set is not for the Intel runner (vr-desktop).
 
 About 98,000 frames (33 minutes at 50 Hz). All matched on the build that recorded them (commit 5fa7d7c).
 
+**Rebased 16 October 2026** onto the random helpers made exact to the original (0438ade, merged as f9842b3), with
+tools/demo/rebase_demos.ps1: the same input, played into the corrected game. The games part from the old recordings
+between frame 26 (CastleCourtyard) and frame 5081 (TowerA); CastleIndoors1 does not change. Every session still
+passes through the same levels at the same frames, with the same object counts at each 1,800-frame mark. The
+differences are in floating-point detail, and the HendersonB keypads still open. The rebased recordings matched
+themselves, every frame, twice.
+
 A recording made before a change that alters the game's behaviour on purpose stops matching from the frame the
 change first shows. Record that level again after such a change, and replace the file here.
