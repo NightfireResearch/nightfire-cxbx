@@ -147,6 +147,8 @@ bool HostInput_KeyHeld(HostKey key) {
         case kKeyEscape: return keys[SDL_SCANCODE_ESCAPE];
         case kKeyF8:     return keys[SDL_SCANCODE_F8];
         case kKeyF9:     return keys[SDL_SCANCODE_F9];
+        case kKeyQ:      return keys[SDL_SCANCODE_Q];
+        case kKeyE:      return keys[SDL_SCANCODE_E];
     }
     return false;
 }

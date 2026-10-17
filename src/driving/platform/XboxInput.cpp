@@ -93,8 +93,10 @@ enum { ANALOG_A = 0, ANALOG_B = 1, ANALOG_X = 2, ANALOG_Y = 3,
 //   A / D  or  left / right      steer            (the left stick)
 //   W  or  up arrow              accelerate       (the right trigger)
 //   S  or  down arrow            brake and reverse (the left trigger)
-//   Space                        handbrake        (A)
-//   Left Shift                   B
+//   Space                        A                (in the car: fire the weapon)
+//   Left Shift                   B                (in the car: handbrake)
+//   Q                            X                (in the car: fire the gadget)
+//   E                            the right shoulder, black (in the car: the next weapon)
 //   Enter                        START - which is what the "press START to continue" prompts want
 //   Escape                       BACK
 //   arrow keys                   the d-pad as well as the stick, for menus
@@ -126,6 +128,8 @@ static bool BuildKeyboardState(HostPadState *state) {
 
     if (HostInput_KeyHeld(kKeySpace))  state->buttons |= kPadA;
     if (HostInput_KeyHeld(kKeyShift))  state->buttons |= kPadB;
+    if (HostInput_KeyHeld(kKeyQ))      state->buttons |= kPadX;
+    if (HostInput_KeyHeld(kKeyE))      state->buttons |= kPadRightShoulder;
     if (HostInput_KeyHeld(kKeyEnter))  state->buttons |= kPadStart;
     if (HostInput_KeyHeld(kKeyEscape)) state->buttons |= kPadBack;
     if (HostInput_KeyHeld(kKeyUp))     state->buttons |= kPadDpadUp;
