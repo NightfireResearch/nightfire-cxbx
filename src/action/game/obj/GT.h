@@ -9,7 +9,9 @@
 // named so far; GT_Update uses much more.
 typedef struct {
     char unknown00[0xa8];
-    obj_tag *drone;        // 0xa8 - a drone it belongs to: Drone_Delete blows the turret up with it
+    // Who it belongs to: a drone, which Drone_Delete blows the turret up with, or the player who set it down (weapon
+    // 0x53 takes control of it again: Player_WeaponInitBullet)
+    obj_tag *owner;        // 0xa8
     char unknownAC[0xb0 - 0xac];
     obj_tag *muzzleFlash;  // 0xb0 - hidden between shots; it follows the gun's aim, and the Ronin's remote camera
                            //        rides on it (Player_PositionCamera)
@@ -19,7 +21,7 @@ typedef struct {
 
 static_assert(sizeof(GUNTURRET) == 0xe4, "Bad size for GUNTURRET");
 static_assert(offsetof(GUNTURRET, muzzleFlash) == 0xb0, "Bad offset of muzzleFlash");
-static_assert(offsetof(GUNTURRET, drone) == 0xa8, "Bad offset of drone");
+static_assert(offsetof(GUNTURRET, owner) == 0xa8, "Bad offset of owner");
 
 #pragma pack(pop)
 

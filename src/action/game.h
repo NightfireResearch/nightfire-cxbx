@@ -229,7 +229,7 @@ typedef struct {
     undefined field5_0x11;
     uchar DecoderNumDigits;
     uchar DecoderDigitAt;  // the next digit C_KEYPAD_Handler writes
-    undefined field8_0x14;
+    uchar DecoderDisplayShown; // 0x14 - set while a lock shows DecoderDisplay on the decryptor (Player_WeaponFiring)
     undefined field9_0x15;
     undefined field10_0x16;
     undefined field11_0x17;
@@ -269,7 +269,7 @@ typedef enum WeaponBaseNum {
 
 // One entry per weapon variant; weapon_data[115] at 0x0018cfa0. Entries 0x35.. are built by
 // WeaponDataTableInit (0x000f5530). See docs/weapons.md.
-typedef struct {
+typedef struct weapon_definition_tag {
     short weaponVariantNum;           // 0x000 this entry's index
     short weaponBaseNum;              // 0x002 base variant of the group
     bool isBaseWeapon;                // 0x004 owns the group's inventory slot

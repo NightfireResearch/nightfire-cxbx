@@ -42,6 +42,8 @@ to what it does. A function ported that way:
 
 | 9 | drone_combat (the drone states and their helpers) | 213, in four packages: combat and aiming (NDrone2_Combat.cpp), cover, doors, snipers, alerts and searching (NDrone2_Cover.cpp, NDrone2_Alert.cpp), civilians, alarms, ninja, astronaut, impacts, stuns and surrender (NDrone2_Special.cpp, NDrone2_Reactions.cpp, NDrone2_Civilian.cpp, NDrone2_Death.cpp), scripted roles: truck drivers, abseiling, scary objects, interrogation, allies, hostages, ambush, testers (NDrone2_Roles.cpp, NDrone2_Hostage.cpp). Their NDrone2_DSTATE_AllyLeadDone is AllyFollowDone (0x4b5c0) in the Xbox state table; NDrone2_HostageSituationActive is the shared empty function 0xe0ec0 | 106 of 213; 1,195 of 3,557 blocks (five sessions now end early: tests/demos/action/README.md). DroneCombatShadow: 230,000 cases; DroneCoverShadow: 317,000; DroneReactShadow: 262,000; DroneRoleShadow: 128,000; all 0 differ. Under the shadow run the originals reach 877 of 878 of the roles' blocks and all but 7 of the 1,710 of cover, alerts and reactions (the rest unreachable with the shipped tables, or rare). One planted bug per package, all caught | see git log |
 
+| 10 | player, player_traverse, player_weapon | 76 + helpers they inline: Player.cpp (the player: init, update, health, pain and death, substates, jumping, zero G, scan mode, aiming, collision, using things), PlayerTraverse.cpp (ladders, the grapple, wires, ziplines, creep walls), PlayerWeapon.cpp (ammo, choosing and changing weapons, the gun in the view, firing, zoom, auto-aim, the laser sight, the muzzle flash, the watch), the grapple, wire, creep-wall, icon and camera object makers, Camera_Shear, camera_tracking, MP_RegisterBulletHit. FUNC_AT helpers: PlayerAnimSetInitDead 0xa96a0, Player_UpdateWalkClass 0xa9160, AccelFunc0Flag 0xb7520, Player_LeaveLadder 0xaeac0, Player_HangByHandA/B 0xafa80/0xafaf0, Player_WeaponUsable 0xb9f70, Player_DroneAwake 0xb7bd0. Their Player_FeetOnPoint is PlayerNotDrone_FeetOnPoint 0xab450, Player_CollLadder is PlayerCollLadder 0xae930, Draw_LaserBeam is Player_SetupLaser 0xb8260 | 67 of 76; 1,202 of 1,895 blocks. PlayerShadow: 153,000 cases; PlayerWeaponShadow: 180,000; all 0 differ; a planted bug caught in each of their eleven groups. Under the shadow run the originals reach about 1,072 of 1,104 of the player's blocks and 818 of 836 of the weapons' | see git log |
+
 Parcel 1's first playback found two things the coverage alone would not have shown:
 - **A crash in our code.** The port of `Script_CreateEntity` called our `Break_Create` by name, which is a known-broken
   draft that was never patched in. `tools/draft_calls.py` now finds such calls.
@@ -380,6 +382,33 @@ Found along the way:
 - `MP_RegisterBulletHit` never reads the health it is given.
 - `BLData` is 0x8fc bytes (ours was 0x8f9): `Player_Init`'s create size is 0x8fc.
 
+### Parcel 10 (package B: player_weapon.cpp)
+- Their three names without an Xbox function of that name: `Draw_LaserBeam` is `Player_SetupLaser` (0xb8260, already
+  ours), `Draw_TaserBeam` is `Player_SetupTaser` (0xb8400) and `FractalThing` is 0xb82e0 (renamed in Ghidra). On the
+  Xbox `Player_MuzzleFlash` calls the first two, after its own bone lookup and ray.
+- Two Xbox helpers they inline: 0xb9f70, which `Player_WeaponChange` asks whether it can go back to the last weapon or
+  gadget (`Player_WeaponUsable`, our name), and 0xb7bd0, the "alive and not in state 1" test of the drones that
+  `Player_SetWeaponAnimObj` makes before lowering the gun (`Player_DroneAwake`, our name). Both FUNC_AT.
+- `Player_WeaponRecoil` does not set the gun's rotation itself: it calls a register-argument function for that,
+  `Player_TiltWeaponTowardsCrosshairs` (0xb7eb0, the player in EAX), before `Player_SetWeaponAnimObj`. Its walk sway
+  lifts by |cos(phase)| (FCOS), not |sin(phase + pi/2)|, and keeps that value unrounded on the x87 until it is added.
+- `Player_SetFiringAnim` takes the weapon in EDI and `Player_WeaponInitBullet` the player in EAX (AUTOLTCG adaptors).
+- `Player_GetAimingPoint` divides the crosshair offset by the zoom before multiplying by the screen size (theirs
+  multiplies first); only the rounding differs.
+- `BLData::weaponStats` starts at 0x158, not 0x15c: each 12-byte entry is the remembered zoom (float), the clip, the
+  "have it" flag, the fire mode and the variant. Ours was laid out 4 bytes late, with the zoom in the previous entry's
+  padding. `Player_RamSave` copies 33 ammo counts (0x42 bytes, not the 34 of `BLData::ammo`), the 114 entries and the
+  0x33 bytes after them.
+- `Check_AutoAim`'s angles are FPATAN and the C runtime's x87 `__CIasin` (called as the XBE's own, 0xee8a0);
+  `Player_SetWatch` takes its hands' angles modulo 2 pi through the runtime's `fmodf`, which ours does with `fmod`
+  (exact for the finite values it is given).
+- Fields named (Player.h): `autoAimTarget` 0xd4, `beamObjs` 0x77c, `gadgetTarget` 0x810 (Check_Target's), `zoomSound`
+  0x828, `swayPhase`, `recoilX`, `recoilY`, `idleSwayPhase` 0x86c-0x878, `refireTimer` 0x8bc, `lastWeapon` 0x8c0,
+  `lastGadget` 0x8c2, `ramLoadedWeaponId` 0x8c4 (a short), `burstShotsLeft` 0x8c6, `muzzleFlashFrames` 0x8c8,
+  `idleTicks` 0x8ca, `idleWait` 0x8ce, `twinGunHand` 0x8e8, `idleState` 0x8e9, `shotFired` 0x8eb, `bulletSpawned`
+  0x8ec, `taserHit` 0x8ed, `laserSight` 0x8f4; `GUNTURRET::owner` (was `drone`: the player who set the Ronin down
+  as well); `GlobalVars_t::DecoderDisplayShown` (0x1f657c).
+
 ## Original bugs found while porting (kept; candidates for FIX_ORIGINAL_GAME_BUGS)
 
 - `Script_Load`, a file with 0x3f streams or more: hands its record to `DList_RemoveFromInUse2Free(&ScriptList)`,
@@ -486,6 +515,10 @@ Found along the way:
 - `Player_SSScanMode` leaves the matrix's translation x and z as stack (Concat of `RotMatrixY`'s unwritten
   translation).
 - `Player_DealWithObjHit` always returns 0.0.
+- `Player_SetWeaponAnimObj`, putting away a weapon used up (state 14), clears `weaponStats[prevHeldWeaponId].enabled`:
+  the variant held, where everything else indexes the base weapon. In state 9 it adds the idle anim without the check
+  for 0 every other state makes.
+- `Player_RamSave` and `Player_InitAmmoWeapons` cover 33 ammo types of `BLData::ammo`'s 34.
 
 ## Departures from the original
 
@@ -499,6 +532,9 @@ Found along the way:
 - `Drone_InitComms` hands `DroneFunc_HandleSoundAlerts` a DCVars that is uninitialised stack in the original when the
   first listed drone's object is not a drone; ours is zeroed.
 - `Player_CollCreepWall` starts the hit list for its ray at NULL; the original leaves it as stack.
+- `Player_WeaponInitBullet` starts its hit list at NULL where the original uses its argument slot (the weapon
+  pointer; `Collide_RayIntersect` fills it in either way). `Player_MuzzleFlash`, in multiplayer, starts the flash it
+  asks `AnimDatumGetWeaponInfo` for at 0, where the original's slot holds the player pointer.
 
 ## What the demos do not cover
 

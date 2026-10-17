@@ -65,6 +65,37 @@ static_assert(offsetof(SCORETABLE, isAction) == 0x38, "SCORETABLE isAction offse
 
 #pragma pack(pop)
 
+// Each player's statistics for the mission so far
+#pragma pack(push, 1)
+typedef struct {
+    uint timesDetected;
+    uint shotsFired;
+    uint shotsHitEnemy;
+    uint enemiesDispatched;
+    uint enemiesDisabled;
+    uint enemiesSurrendered;
+    uint enemiesSpawned;
+    float health;             // 0x1c - PlrStat_LogHealth is handed a float (Player_SetHealth passes BLData.health)
+    uint bondMoments;         // 0x20
+    uint bondBonuses;         // 0x24
+    uint unknown3;            // 0x28
+    int timerUnpauseTime;     // 0x2c (Ghidra's name)
+    uint timeElapsed;         // 0x30 centiseconds; PlarStat_LogUpdateElapsedTime writes it
+    char timerPaused;
+    char unknown4[3];
+} PlayerMissionStats;
+
+static_assert(sizeof(PlayerMissionStats) == 0x38, "PlayerMissionStats size mismatch");
+static_assert(offsetof(PlayerMissionStats, health) == 0x1c, "PlayerMissionStats health offset");
+static_assert(offsetof(PlayerMissionStats, bondMoments) == 0x20, "PlayerMissionStats bondMoments offset");
+static_assert(offsetof(PlayerMissionStats, timeElapsed) == 0x30, "PlayerMissionStats timeElapsed offset");
+static_assert(offsetof(PlayerMissionStats, timerPaused) == 0x34, "PlayerMissionStats timerPaused offset");
+
+#pragma pack(pop)
+
+#define PlrMissionStats (*(PlayerMissionStats(*)[10])0x00278e70)
+#define BondMoments (*(short(*)[113])0x00278d8e)
+
 bool PlrStat_OkToUpdate(void);
 void PlrStat_LogBondBonus(uint playerNum);
 void PlrStat_ResetForMission(void);

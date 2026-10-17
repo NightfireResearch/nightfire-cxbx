@@ -64,6 +64,17 @@ static void __declspec(naked) Cosine(Extended *out, double x) {
     }
 }
 
+static void __declspec(naked) PartialArctangent(Extended *out, double y, double x) {
+    __asm {
+        mov eax, dword ptr [esp + 4]
+        fld qword ptr [esp + 8]
+        fld qword ptr [esp + 16]
+        fpatan
+        fstp tbyte ptr [eax]
+        ret
+    }
+}
+
 // The operations take a in ST0 and b in ST1 and write ST0, the forms that every assembler reads the same way
 static void __declspec(naked) Add(Extended *out, const Extended *a, const Extended *b) {
     __asm {
@@ -146,6 +157,12 @@ Extended FSin(double x) {
 Extended FCos(double x) {
     Extended result;
     Cosine(&result, x);
+    return result;
+}
+
+Extended FPatan(double y, double x) {
+    Extended result;
+    PartialArctangent(&result, y, x);
     return result;
 }
 

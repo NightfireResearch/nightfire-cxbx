@@ -25,6 +25,8 @@ struct Extended {
 // FSIN and FCOS: the instructions, so a huge angle (2^63 and beyond) comes back unchanged and a NaN as itself
 Extended FSin(double x);
 Extended FCos(double x);
+// FPATAN: the angle of (x, y), atan(y / x) in the right quadrant
+Extended FPatan(double y, double x);
 
 Extended operator+(const Extended &a, const Extended &b);
 Extended operator-(const Extended &a, const Extended &b);

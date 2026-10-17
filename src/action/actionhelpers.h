@@ -38,6 +38,7 @@ typedef struct HUDPANECREATE_tag HUDPANECREATE_tag;
 typedef struct SCRIPTINFO SCRIPTINFO;
 typedef struct map_tag map_tag;
 typedef struct BLData BLData;
+typedef struct weapon_definition_tag weapon_definition_tag;
 typedef struct DYNAMICSOUNDS DYNAMICSOUNDS;
 typedef struct AnimState AnimState;
 typedef struct sprite sprite;
@@ -168,6 +169,7 @@ static_assert(sizeof(COMP_FUNC) == 4, "COMP_FUNC is a 32-bit argument");
 #include "game/obj/Trigger.h"
 #include "game/obj/Wire.h"
 #include "game/weapon_stats.h"
+#include "game/obj/PlayerWeapon.h"
 #include "game/sp/Locks.h"
 #include "game/sp/Mission.h"
 #include "game/sp/PlayerStats.h"

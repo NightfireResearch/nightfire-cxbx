@@ -96,6 +96,7 @@
 #include "DroneReactShadow.h"
 #include "DroneRoleShadow.h"
 #include "PlayerShadow.h"
+#include "PlayerWeaponShadow.h"
 #include "CameraShadow.h"
 #include "MathExactShadow.h"
 #include "Teleport.h"
@@ -595,6 +596,7 @@ void MenuProbe_Install(void) {
         DroneReactShadow_Run();
         DroneRoleShadow_Run();
         PlayerShadow_Run();
+        PlayerWeaponShadow_Run();
         MathExactShadow_Run();
     }
     g_logging = SettingOn("MenuLog");

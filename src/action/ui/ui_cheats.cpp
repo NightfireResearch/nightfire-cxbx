@@ -90,7 +90,6 @@ int bDebugControls = 1;
 #define WEAPON_CHEAT_AMMO 999
 #define WEAPON_CHEAT_ARMOR 50.0f
 
-undefined4 Player_EquipWeapon(BLData *bloke, short weaponNum, short ammo);   // the original (Player.cpp)
 
 static int Checked(M_CONTROL *control) {
     return __Menu_SendMessage(control, MessageType_GetValue, 0, 0);

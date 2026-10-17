@@ -35990,7 +35990,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000b82e0",
+        "name": "FractalThing",
         "address": "0x000b82e0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,

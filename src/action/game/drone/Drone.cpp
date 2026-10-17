@@ -976,7 +976,7 @@ void Drone_Delete(obj_tag *gameObj) {
             break;
         case OBJECTTYPE_GUNTURRET: {
             GUNTURRET *turret = (GUNTURRET *)obj->extraObjectData;
-            if (turret != NULL && turret->drone == gameObj) {
+            if (turret != NULL && turret->owner == gameObj) {
                 obj->flags |= 1;
                 Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, 5.0f, 5.0f, (HASHCODE)0x6000052, 50.0f, 0xff,
                                0xff, 100, NULL, 0);

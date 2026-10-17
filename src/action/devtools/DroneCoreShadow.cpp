@@ -554,7 +554,7 @@ void RandomWorld() {
     memset(&world.spawner, 0, sizeof(world.spawner));
     world.spawner.group = ShadowRand(3);
     memset(&world.turret, 0, sizeof(world.turret));
-    world.turret.drone = RandomObj();
+    world.turret.owner = RandomObj();
 
     for (int i = 0; i < 4; i++) {
         memset(&world.cover[i], 0, sizeof(CoverNode_tag));

@@ -139,20 +139,21 @@ camera substates, not movement types [I].
 | 0x00 / 0x0c / 0x18 / 0x24 | last position, movement, last movement, rotationDelta | the movement pipeline above |
 | 0x110 | movementDisabled | `Player_Move` takes the controls away |
 | 0x114 | `short ammo[34]` | carried stock per ammo type, capped by `ammo_data` (0x18ce08, 34 x 12 bytes) |
-| 0x15c | `WeaponStatus weaponStats[114]` | 12 bytes each: loaded rounds or charge, enabled, fire-mode index |
+| 0x158 | `WeaponStatus weaponStats[114]` | 12 bytes each: remembered zoom, loaded rounds or charge, enabled, fire-mode index, variant chosen |
 | 0x770 | hudInfo | the HUD panes |
 | 0x778 / 0x77c / 0x7fc / 0x804 | weapon object, 32 weapon-related objects, sight, muzzle-flash object | created by `Player_InitWeapon` |
 | 0x808 | remote-control device | Sentinel / RC car (inferred from use) |
 | 0x814 | attached special-movement object | |
 | 0x824 / 0x840 | health (clamped 0..500 by `Player_CheckForDeath`), armour | |
 | 0x838 / 0x83c / 0xf0 | pitch (+-1 = straight up or down), auto-level target and state | |
-| 0x8bc | refire countdown (invented name) | `Player_WeaponFiring` [D]; header: field_0x8bc |
-| 0x8c6 | shots left in the burst (invented name) | from the weapon's per-fire-mode table, below [D] |
+| 0x8bc | refireTimer | `Player_WeaponFiring` [D] |
+| 0x8c0 / 0x8c2 | lastWeapon, lastGadget | what the other cycle button goes back to (`Player_WeaponChange`) |
+| 0x8c6 | burstShotsLeft | from the weapon's per-fire-mode table, below [D] |
 | 0x8da / 0x8db | active, frozen | see above; the header's names are wrong or missing |
 | 0x8de | playerNum | |
 | 0x8e0 | camMode | `CamMode` |
-| 0x8e9 | idle-fidget state (invented name) | 0/1/3, `Player_SetWeaponAnimObj` [D] |
-| 0x8eb / 0x8ec | fired this frame, bullet spawned for this shot (invented names) | [D] |
+| 0x8e9 | idleState | 0/1/3 (`IDLE_*`, PlayerWeapon.h), `Player_SetWeaponAnimObj` [D] |
+| 0x8eb / 0x8ec / 0x8ed | shotFired, bulletSpawned, taserHit | [D]; the rest of the weapon fields are in Player.h and docs/nightfire-port-lifts.md (parcel 10) |
 
 Roughly two thirds of the 0x8fc bytes have no name. The pointer to the player's `AnimState` (current, previous and
 switching-to weapon ids, `animFlags` bit 0 = scoped) is on `obj_tag`, not in BLData.

@@ -756,12 +756,12 @@ void RandomWorld(void) {
     bl->traverseWait = (char)(ShadowRand(3) ? 0 : ShadowRand(5));
     bl->jumpWait = (char)(ShadowRand(2) ? 0 : ShadowRand(5));
     bl->field_0x8e3 = (char)ShadowRand(2);
-    bl->field_0x8eb = (char)ShadowRand(2);
+    bl->shotFired = (char)ShadowRand(2);
     static const uchar icons[] = {THIRDICON_GRAPPLE, THIRDICON_WIRE, THIRDICON_STANDING, THIRDICON_NONE};
     bl->thirdIcon = icons[ShadowRand(4)];
     bl->animWait = (char)(ShadowRand(2) ? 0 : ShadowRand(4));
     bl->hitDirectionFade = (uchar)ShadowRand(256);
-    bl->muzzleFlashRelated = (short)ShadowRand(3);
+    bl->muzzleFlashFrames = (short)ShadowRand(3);
     bl->field_0x8cc = (short)(ShadowRand(3) - 1);
     bl->animSet = &world.cels[1];
     static const int gadgets[] = {0x33, 0x45, 0x4a, 0x4c, 0x4e, 0x4f};

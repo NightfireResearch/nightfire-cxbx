@@ -158,7 +158,7 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | 91 | FUN_80089678 (drone anim event callback) | 0x80089678 | event 2 and drone weapon count < 2 | ERROR: Drone has no second weapon | no | DroneAnim_EventFunc | 0x33590 | high | ? | src/action/game/drone/DroneAnim.cpp - added |
 | 92 | FUN_800b032c (behaviour handler, table 0x801fec88) | 0x800b032c | msg 1, not a civilian, and drone has no second weapon | ERROR: Drone has no second weapon | no | NDrone2_DSTATE_StunGrenadeRecover | 0x562a0 | high | dropped | src/action/game/drone/NDrone2_Reactions.cpp - added |
 | **Player / weapons / rewards** |
-| 93 | FUN_800f6760 (give player weapon) | 0x800f6760 | weapon has no skin hash / skin not loaded → return 0 | FYI: Weapon %d has no skin / FYI: Weapon %d not loaded | no | not matched (unnamed on Xbox) | - | - | ? |
+| 93 | FUN_800f6760 (give player weapon) | 0x800f6760 | weapon has no skin hash / skin not loaded → return 0 | FYI: Weapon %d has no skin / FYI: Weapon %d not loaded | no | Player_EquipWeapon | 0xba5e0 | high (same body, same callee Player_IsBetterWeapon) | silent | src/action/game/obj/PlayerWeapon.cpp - added |
 | 94 | FUN_80078620 (second give-weapon path) | 0x80078620 | same as 93 | same | no | not matched | - | - | ? |
 | 95 | FUN_800f6ec4 (set upgrade) | 0x800f6ec4 | upgrade index (param/3) >= 9 | Invalid upgrade %d | no | Set_Upgrade | 0xb9e30 | med | ? |
 | 96 | FUN_800e7834 (reward lookup) | 0x800e7834 | medal type >= 5 | ERROR : Invalid medal type | no | PlrStarts_ProcessRewardCounter | 0xb1740 | med-high | ? |

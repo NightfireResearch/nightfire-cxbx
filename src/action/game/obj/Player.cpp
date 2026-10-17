@@ -327,7 +327,7 @@ void Player_CreateMuzzleFlash(obj_tag *playerObj, byte viewerNum) {
     muzzleFlashObj->effectFlags |= 0x8221;
     View_SetDrawInThisViewOnly(muzzleFlashObj,viewerNum);
     blData->muzzleFlashObj = muzzleFlashObj;
-    blData->muzzleFlashRelated = 0;
+    blData->muzzleFlashFrames = 0;
 }
 
 // Only used for laser and taser beams
@@ -365,7 +365,7 @@ void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos) {
 
     AnimGetBoneWorldTrans(param_1->weaponObject, 0, 0, &sourcePos, (_MATRIX *)0x0);
     
-    obj_tag* poVar1 = param_1->weaponRelatedObjs[0];
+    obj_tag* poVar1 = param_1->beamObjs[0];
 
     poVar1->tweakA = 0xff;
     
@@ -418,7 +418,7 @@ void Player_WeaponNone(obj_tag* obj) {
     obj->animState->currentWeaponId = Weap_MaybeHandsOnlyOrLadder;
     
     blData->weaponObject->curState = 0;
-    blData->muzzleFlashRelated = 0;
+    blData->muzzleFlashFrames = 0;
     blData->zoom = 1.0f;
 
     obj->animState->animFlags &= 0xfe;
@@ -643,12 +643,6 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
     blData->rotationDelta.y = yaw;
 }
 
-// AUTOGEN
-bool Player_WeaponHasAmmo(BLData *param_1, short param_2);
-// AUTOGEN
-void Player_WeaponChange(obj_tag *param_1, char param_2, char param_3);
-// AUTOGEN
-void Player_AutoAim(obj_tag *param_1);
 // AnimScriptAdd, with the script's playback speed set (sAnimScript_tag +0x94) when it starts.
 // AUTOGEN
 sAnimScript_tag* AnimScriptAddSpeed(obj_tag* obj, HASHCODE hashcode, float speed);
@@ -665,8 +659,6 @@ void Player_ScopeOff(obj_tag *param_1);
 // inlined on PS2; the name is invented.
 // AUTOGEN
 void Player_ResetZoom(obj_tag *param_1);
-// AUTOGEN
-void Player_Zoom(obj_tag* player);
 
 static_assert(offsetof(weapon_definition_tag, offsetToNextAltFireVariant) == 0x05, "offsetToNextAltFireVariant");
 static_assert(offsetof(weapon_definition_tag, numFireModes) == 0x2e, "numFireModes");
@@ -860,14 +852,6 @@ obj_tag * WatchOrHands_Create(int * param_1);
 // AUTOGEN
 undefined4 FUN_000b6dd0(obj_tag * param_1, byte param_2);
 // AUTOGEN
-void Player_RamLoad(BLData * param_1, char param_2);
-// AUTOGEN
-void Player_RamSave(BLData * param_1);
-// AUTOGEN
-void Player_InitAmmoWeapons(obj_tag * param_1);
-// AUTOGEN
-undefined4 Player_EquipWeapon(BLData * param_1, short weaponNum, short param_3);
-// AUTOGEN
 void MP_EquipPlayer(obj_tag * param_1);
 
 // How far away autoaim will snap to a target, in its two bands. Player_InitWeapon sets them per game mode
@@ -928,23 +912,23 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
     blData->aimY = 0;
     blData->crosshairOffsetX = 0.0f;
     blData->crosshairOffsetY = 0.0f;
-    blData->field_0xd4 = 0;
+    blData->autoAimTarget = NULL;
     blData->field_0xf2 = 0;
 
     // The original pushes blData->playerNum as a second argument, but WatchOrHands_Create never reads it
     blData->weaponObject = WatchOrHands_Create((int *)player);
 
-    blData->field_0x86c[0] = 0;
-    blData->field_0x86c[1] = 0;
-    blData->field_0x86c[2] = 0;
-    blData->field_0x86c[3] = 0;
-    blData->field_0x828 = 0;
-    blData->field_0x8bc = 0.0f;
-    blData->field_0x8c6 = 0;
+    blData->swayPhase = 0.0f;
+    blData->recoilX = 0.0f;
+    blData->recoilY = 0.0f;
+    blData->idleSwayPhase = 0.0f;
+    blData->zoomSound = NULL;
+    blData->refireTimer = 0.0f;
+    blData->burstShotsLeft = 0;
     blData->field_0x8e6 = 0;
-    blData->field_0x8e8 = 0;
+    blData->twinGunHand = 0;
 
-    FUN_000b6dd0(player, blData->playerNum); // creates blData->weaponRelatedObjs[]
+    FUN_000b6dd0(player, blData->playerNum); // creates blData->beamObjs[]
     Player_CreateSight(player, blData->playerNum);
     Player_CreateMuzzleFlash(player, blData->playerNum);
 
@@ -978,7 +962,7 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
         case HT_Level_HendersonC:
         case HT_Level_HendersonD:
             Player_RamLoad(blData, 0);
-            player->animState->switchingToWeaponId = blData->ramLoadedWeaponId;
+            player->animState->switchingToWeaponId = (char)blData->ramLoadedWeaponId;
             if (blData->weaponStats[handgun].enabled)
                 break;
             // fall through
@@ -992,7 +976,7 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
 
         case HT_Level_CastleCourtyard:
             Player_RamLoad(blData, 0);
-            player->animState->switchingToWeaponId = blData->ramLoadedWeaponId;
+            player->animState->switchingToWeaponId = (char)blData->ramLoadedWeaponId;
             if (blData->weaponStats[handgun].enabled)
                 break;
             // fall through
@@ -1007,7 +991,7 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
 
         case HT_Level_CastleIndoors2:
             Player_RamLoad(blData, 0);
-            player->animState->switchingToWeaponId = blData->ramLoadedWeaponId;
+            player->animState->switchingToWeaponId = (char)blData->ramLoadedWeaponId;
             if (blData->weaponStats[handgun].enabled)
                 break;
             // fall through
@@ -1027,7 +1011,7 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
         case HT_Level_TowerB:
         case HT_Level_TowerC:
             Player_RamLoad(blData, 0);
-            player->animState->switchingToWeaponId = blData->ramLoadedWeaponId;
+            player->animState->switchingToWeaponId = (char)blData->ramLoadedWeaponId;
             if (blData->weaponStats[handgun].enabled)
                 break;
             // fall through
@@ -1045,7 +1029,7 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
 
         case HT_Level_PowerStationA2:
             Player_RamLoad(blData, 0);
-            player->animState->switchingToWeaponId = blData->ramLoadedWeaponId;
+            player->animState->switchingToWeaponId = (char)blData->ramLoadedWeaponId;
             if (blData->weaponStats[handgun].enabled)
                 break;
             // fall through
@@ -1064,7 +1048,7 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
         case HT_Level_Tower2C:
         case HT_Level_Tower2Elevator:
             Player_RamLoad(blData, 0);
-            player->animState->switchingToWeaponId = blData->ramLoadedWeaponId;
+            player->animState->switchingToWeaponId = (char)blData->ramLoadedWeaponId;
             // Tower2 starts without the handgun, so its test is for the weapon it does start with
             if (blData->weaponStats[0x10].enabled)
                 break;
@@ -1080,7 +1064,7 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
         case HT_Level_EvilBaseC:
         case 0x7000017:
             Player_RamLoad(blData, 0);
-            player->animState->switchingToWeaponId = blData->ramLoadedWeaponId;
+            player->animState->switchingToWeaponId = (char)blData->ramLoadedWeaponId;
             if (blData->weaponStats[handgun].enabled)
                 break;
             // fall through
@@ -1422,7 +1406,6 @@ void __stdcall ReadTuningVars(void) {
 // The bone AnimGetBoneWorldTrans gives the head for (also Player_Update's breath effect).
 #define BONE_HEAD 0x80000005
 
-#define WPNFLAG_REAL_SCOPE 0x40 // the gun is hidden while scoped (and see WPNFLAG_SIGHTED_SCOPE above)
 
 // The original's, called by address: ends in a bare RET, so caller-cleans whatever Ghidra's __stdcall says.
 static float moveTowardsValue(float current, float target, float speed) {
@@ -2876,11 +2859,6 @@ void Player_Collision(obj_tag *player) {
 #define PlayerCollLadder ((void (__cdecl *)(obj_tag *player, BLData *blData, obj_tag *ladder))0x000ae930)
 #define Env_WaterRipple ((void (__cdecl *)(HITDATA_tag *hit))0x00068f20)
 #define AnimObjectUpdate ((bool (__cdecl *)(obj_tag *obj))0x00018690)
-#define Player_PositionGun ((void (__cdecl *)(obj_tag *player, BLData *blData))0x000b7c00)
-#define Player_LaserPointer ((void (__cdecl *)(obj_tag *player))0x000b8940)
-#define Player_MuzzleFlash ((void (__cdecl *)(obj_tag *player, _VECTOR *muzzle))0x000b9fc0)
-#define Draw_MuzzleFlash ((void (__cdecl *)(obj_tag *player))0x000b7f20)
-#define Player_SetWatch ((void (__cdecl *)(obj_tag *player))0x000b8cb0)
 
 // HITDATA_tag::unknown3: a hit that does not count as touching (the first other hit sets the contact flags)
 #define HIT_NO_CONTACT 0x02
@@ -3125,11 +3103,11 @@ void Player_CollisionHandler(obj_tag *player) {
     glb_viewer[blData->playerNum]->camMode = (uchar)blData->camMode;
     Player_CheckForDeath(player, OBJECTTYPE_PLAYER);
     Player_LaserPointer(player);
-    if (blData->field_0x8eb)
+    if (blData->shotFired)
         Player_MuzzleFlash(player, &blData->muzzle);
-    if (blData->muzzleFlashRelated > 0)
-        blData->muzzleFlashRelated--;
-    if (blData->muzzleFlashRelated == 0)
+    if (blData->muzzleFlashFrames > 0)
+        blData->muzzleFlashFrames--;
+    if (blData->muzzleFlashFrames == 0)
         View_SetDrawInNoViews(blData->muzzleFlashObj);
     else
         Draw_MuzzleFlash(player);
@@ -3239,7 +3217,7 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
     blData->remoteControlDevice = NULL;
     blData->cameraFollowObject = NULL;
     blData->attachedToSpecialMovementItem = NULL;
-    blData->field_0x810 = NULL;
+    blData->gadgetTarget = NULL;
     player->objectType = OBJECTTYPE_PLAYER;
     player->rotation.x = 0.0f;
     player->rotation.y = rot->y;
@@ -3661,8 +3639,6 @@ void __declspec(naked) Player_Activate(void) {
 #define Vec_Cartesian_2_Spherical ((void (__cdecl *)(_VECTOR *out, float x, float y, float z))0x000d8530)
 #define Env_Breath ((void (__cdecl *)(_VECTOR *pos, _VECTOR *dir, cel_tag *cel, int seed))0x00068db0)
 #define Camera_ApplySwing ((void (__cdecl *)(viewer_tag *viewer, float sway))0x00024490)
-#define Player_WeaponRecoil ((void (__cdecl *)(obj_tag *player))0x000bd740)
-#define Player_WeaponFiring ((void (__cdecl *)(obj_tag *player, char param_2))0x000bb300)
 
 #define benchmark U8_AT(0x002adf32) // set, the player stands still
 

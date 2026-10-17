@@ -17,17 +17,23 @@ typedef enum {
 
 #pragma pack(push, 1)
 
+// One per base weapon (BLData::weaponStats, indexed by weapon_definition_tag::weaponBaseNum, or by the variant that
+// holds the ammo: Player_AmmoIndex). Player_RamSave carries all of them from one part of a mission to the next.
 typedef struct WeaponStatus {
-    short clipOrCooldown;
-    char enabled;
+    float zoom;           // 0x0 - the zoom this weapon was left at (Player_Zoom); sqrt(maxZoom) to start with
+    short clipOrCooldown; // 0x4 - rounds loaded, or the charge of a weapon that recharges
+    char enabled;         // 0x6 - the player has it
     // For a weapon with no alt-fire variant, Player_Weapon steps this on each alt-fire press and wraps it at
-    // weapon_data[].numFireModes; PS2's field_0x3.
-    char fireModeIndex; // 0x3
-    char pad[0xc-4];
+    // weapon_data[].numFireModes; it picks weapon_definition_tag::shotsPerTrigger (Player_WeaponFiring).
+    char fireModeIndex;   // 0x7
+    char variant;         // 0x8 - the variant last chosen, less the base (Player_WeaponSelect, Player_WeaponChange)
+    char pad[3];
 } WeaponStatus;
 
 static_assert(sizeof(WeaponStatus) == 0xc, "WeaponStatus size wrong");
-static_assert(offsetof(WeaponStatus, fireModeIndex) == 0x3, "Offset of fireModeIndex not correct");
+static_assert(offsetof(WeaponStatus, clipOrCooldown) == 0x4, "Offset of clipOrCooldown not correct");
+static_assert(offsetof(WeaponStatus, fireModeIndex) == 0x7, "Offset of fireModeIndex not correct");
+static_assert(offsetof(WeaponStatus, variant) == 0x8, "Offset of variant not correct");
 
 // WIP
 typedef struct BLData {
@@ -60,7 +66,7 @@ typedef struct BLData {
     undefined4 someMPCameraThing4; // 0xc8
     obj_tag *thirdPersonSubject; // 0xcc - the player the end-of-match camera is on
     float floorNormalY; // 0xd0 - the floor's slope: below 0.5 the player slides (Player_Collision)
-    undefined4 field_0xd4; // 0xd4 - zeroed by Player_InitWeapon
+    obj_tag *autoAimTarget; // 0xd4 - what Check_AutoAim last locked on to, whose cone is wider; NULL for none
     // Where the crosshair is aimed on the screen while aiming without a scope (Player_Aiming): within +-0.296 and
     // +-0.4; pushed past them, the view turns instead.
     float aimX; // 0xd8
@@ -94,22 +100,25 @@ typedef struct BLData {
     // How much of each ammo type the player carries, not counting what is loaded (weaponStats[].clipOrCooldown):
     // indexed by weapon_definition_tag::ammoType, capped at ammo_data[].maybeMaxNumPerPlayer.
     short ammo[34]; // 0x114
-    char _pad_11c[0x15c-0x158];
-    WeaponStatus weaponStats[114]; // 0x15c-0x6b3 inclusive
-    char _pad_222[0x6e4-0x6b4];
+    WeaponStatus weaponStats[114]; // 0x158
+    char unknown6b0[0x6e4-0x6b0]; // 0x6b0 - Player_RamSave carries the first 0x33 bytes with the weapons
     // The capsule the player collides with, set up every frame by Player_Collision. Its hitType is 0 while
     // Player_Disable has the player out of play, 0x800 from Player_Enable.
     HITTEST_tag hitTest; // 0x6e4
     HUDINFO_tag* hudInfo; // 0x770
     char _pad_2222[4];
-    obj_tag* weaponObject;
-    obj_tag* weaponRelatedObjs[32]; // Maybe the attachement points for weapons? Unclear, but set up in Player_InitWeapon
-    obj_tag* sightObj; // 0x7fc
+    obj_tag* weaponObject; // 0x778 - the gun in the first-person view (its state: Player_SetWeaponAnimObj)
+    // The beam drawing objects (FUN_000b6dd0 creates them): [0] the laser sight's and the laser's beam
+    // (Player_LaserPointer, Player_SetupLaser), all of them the taser's jagged one (Player_SetupTaser)
+    obj_tag* beamObjs[32]; // 0x77c
+    obj_tag* sightObj; // 0x7fc - the laser sight's dot where it meets a surface (Player_LaserPointer)
     char _unknown[4];
     obj_tag* muzzleFlashObj; // 0x804
     obj_tag* remoteControlDevice; // 0x808
     obj_tag* cameraFollowObject; // 0x80c - what camera mode 10 follows (Player_PositionCamera)
-    obj_tag* field_0x810; // 0x810 - cleared by Player_Init
+    // What Check_Target found for the gadgets to work on: a Q-Worm's target, a lock (Player_WeaponFiring); cleared by
+    // Player_Init
+    obj_tag* gadgetTarget; // 0x810
     // The ladder (or wire, zipline...) the player is on, in the movement substates that attach him to one.
     // Name from the PS2 symbols.
     obj_tag* attachedToSpecialMovementItem; // 0x814
@@ -118,7 +127,7 @@ typedef struct BLData {
     obj_tag *bodyGlow; // 0x81c - BodyGlow_Create's object for the player
     void *animSet; // 0x820 - the anim set PlayerAnimSetInit* chose; cleared on every change of substate
     float health; // 0x824 - used eg. by SP_Update to abort an in-progress NIS if the player has died
-    undefined4 field_0x828; // 0x828 - zeroed by Player_InitWeapon; FUN_000b70b0 stops the zoom motor sound it holds
+    DYNAMICSOUNDS *zoomSound; // 0x828 - the zoom motor's sound, stopped when the zoom stops (Player_Zoom, Player_ScopeOff)
     DYNAMICSOUNDS *waterSound; // 0x82c - the sound Player_MonitorAir starts when the head goes under
     // The ladder's ends as Player_Climb last worked them out: above ladderTop the player climbs off the top, below
     // ladderBottom he lets go.
@@ -145,7 +154,12 @@ typedef struct BLData {
     float zoom; // 0x860
     float zoomTarget; // 0x864 - 1 from Player_Init
     float zoomMax; // 0x868 - 1 from Player_Init
-    undefined4 field_0x86c[4]; // 0x86c-0x87b - zeroed by Player_InitWeapon
+    // The gun's sway (Player_WeaponRecoil): the walk's phase, the kick of firing (decaying by a quarter a frame) and the
+    // idle sway's phase
+    float swayPhase; // 0x86c
+    float recoilX; // 0x870
+    float recoilY; // 0x874
+    float idleSwayPhase; // 0x878
     // AccelFunc0's carried states: the scope's turn and pitch, the crosshair's turn and pitch (Player_Aiming), the turn
     // (Player_Move) and the pitch without aiming (Player_Aiming)
     float scopeAccelX; // 0x87c
@@ -168,18 +182,23 @@ typedef struct BLData {
     float stepDistance; // 0x8b4 - set to 999 on landing from a jump
     float fallFrames; // 0x8b8 - time airborne: Player_CollisionHandler adds FRAME_RATE_MUL a tick, so it counts
                       //         60 Hz frames at any rate
-    float field_0x8bc; // 0x8bc - zeroed by Player_InitWeapon
-    char _pad_22b[0x8c4-0x8bc-4];
+    float refireTimer; // 0x8bc - frames before the gun fires again (Player_WeaponFiring)
+    // The weapon and the gadget held last, which a press of the other cycle goes back to (Player_WeaponChange)
+    short lastWeapon; // 0x8c0
+    short lastGadget; // 0x8c2
     // The weapon the player was switching to when Player_RamSave ran at the end of the previous part of the
     // mission (it saves animState->switchingToWeaponId); Player_RamLoad puts it back here, and
     // Player_InitWeapon hands it back to animState->switchingToWeaponId.
-    char ramLoadedWeaponId; // 0x8c4
-    char _pad_22c;
-    short field_0x8c6; // 0x8c6 - zeroed by Player_InitWeapon
-    short muzzleFlashRelated; // 0x8c8
-    char _pad_23[0x8cc-0x8ca];
+    short ramLoadedWeaponId; // 0x8c4
+    // Shots left in this pull of the trigger: weapon_definition_tag::shotsPerTrigger for the fire mode, counted down
+    // as each is fired (Player_WeaponFiring)
+    short burstShotsLeft; // 0x8c6
+    short muzzleFlashFrames; // 0x8c8 - frames the muzzle flash shows: 3, 7 for weapon base 0x33 (Player_MuzzleFlash)
+    // Player_SetWeaponAnimObj's idle anims: frames since any input with the gun idle (a fidget at 20 seconds), and
+    // frames before the gun may be lowered (20 seconds, set again on any action)
+    short idleTicks; // 0x8ca
     short field_0x8cc; // 0x8cc - zeroed by Player_StandAtNewPosition
-    char _pad_23b[0x8d0-0x8ce];
+    short idleWait; // 0x8ce
     ushort groundBits; // 0x8d0 - non-zero: the player has stood on something lately, and may jump
     short previousSubState; //0x8d2
     short remoteControlTimer; // 0x8d4 - frames before a remote-controlled device lets go, when set
@@ -207,11 +226,16 @@ typedef struct BLData {
     char field_0x8e5; // 0x8e5 - zeroed by Player_Init
     char field_0x8e6; // 0x8e6 - zeroed by Player_InitWeapon
     char field_0x8e7; // 0x8e7 - zeroed by Player_ZeroG
-    char field_0x8e8; // 0x8e8 - zeroed by Player_InitWeapon
-    char _pad_5c[0x8ea-0x8e9];
+    // Which hand fires next for twin guns, and which reload anim plays next for alternating ones (Player_SetFiringAnim,
+    // Player_WeaponFiring); zeroed by Player_InitWeapon
+    char twinGunHand; // 0x8e8
+    char idleState; // 0x8e9 - IDLE_*: Player_SetWeaponAnimObj's idle anims
     char field_0x8ea; // 0x8ea - zeroed on every change of substate
-    char field_0x8eb; // 0x8eb - set, Player_CollisionHandler draws the muzzle flash at muzzle
-    char _pad_5c2[0x8ee-0x8ec];
+    // A shot left this frame (Player_WeaponInitBullet; Player_WeaponFiring clears it): Player_CollisionHandler draws
+    // the muzzle flash at muzzle
+    char shotFired; // 0x8eb
+    char bulletSpawned; // 0x8ec - this fire anim has spawned its bullet (weapon_definition_tag::bulletSpawnFrame)
+    char taserHit; // 0x8ed - the taser's shot reached a drone or player in range (Player_WeaponInitBullet)
     char field_0x8ee; // 0x8ee - zeroed by Player_StandAtNewPosition
     // The third-person action icon to show (index into HUD.cpp's ThirdIconSprites: grapple, wire, standing, ...),
     // 0xff for none
@@ -222,7 +246,7 @@ typedef struct BLData {
     char nightVisionActive; // 0x8f1
     char _pad_5e;
     uchar flashBlur; // 0x8f3 - Player_SetFlashBang
-    char _pad_5e2[0x8f5-0x8f4];
+    char laserSight; // 0x8f4 - the gun has a laser sight (weapon flag 8: Player_SetWeaponAnim)
     char punchSkin; // 0x8f5 - which of the fists' models the level's skin goes with (Player_Init)
     char field_0x8f6; // 0x8f6 - set to 8 on landing from a jump
     // Which sides the player was last hit from (bits 0-3: the health pane's full-screen overlays 20-23) and how
@@ -261,7 +285,7 @@ static_assert(offsetof(BLData, field_0x8ea) == 0x8ea, "Offset of field_0x8ea not
 static_assert(offsetof(BLData, field_0x8ee) == 0x8ee, "Offset of field_0x8ee not correct");
 static_assert(offsetof(BLData, animWait) == 0x8f0, "Offset of animWait not correct");
 static_assert(offsetof(BLData, flashBlur) == 0x8f3, "Offset of flashBlur not correct");
-static_assert(offsetof(BLData, field_0x810) == 0x810, "Offset of field_0x810 not correct");
+static_assert(offsetof(BLData, gadgetTarget) == 0x810, "Offset of gadgetTarget not correct");
 static_assert(offsetof(BLData, alpha) == 0x818, "Offset of alpha not correct");
 static_assert(offsetof(BLData, bodyGlow) == 0x81c, "Offset of bodyGlow not correct");
 static_assert(offsetof(BLData, healthShown) == 0x848, "Offset of healthShown not correct");
@@ -271,7 +295,7 @@ static_assert(offsetof(BLData, remoteControlTimer) == 0x8d4, "Offset of remoteCo
 static_assert(offsetof(BLData, pauseMenu) == 0x8d6, "Offset of pauseMenu not correct");
 static_assert(offsetof(BLData, playerNum2) == 0x8df, "Offset of playerNum2 not correct");
 static_assert(offsetof(BLData, field_0x8e5) == 0x8e5, "Offset of field_0x8e5 not correct");
-static_assert(offsetof(BLData, field_0x8eb) == 0x8eb, "Offset of field_0x8eb not correct");
+static_assert(offsetof(BLData, shotFired) == 0x8eb, "Offset of shotFired not correct");
 static_assert(offsetof(BLData, punchSkin) == 0x8f5, "Offset of punchSkin not correct");
 static_assert(offsetof(BLData, hudInfo) == 0x770, "Offset of hudInfo not correct");
 static_assert(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisionActive not correct");
@@ -306,28 +330,36 @@ static_assert(offsetof(BLData, movement) == 0x0c, "Offset of movement not correc
 static_assert(offsetof(BLData, lastMovement) == 0x18, "Offset of lastMovement not correct");
 static_assert(offsetof(BLData, movementDisabled) == 0x110, "Offset of movementDisabled not correct");
 static_assert(offsetof(BLData, ammo) == 0x114, "Offset of ammo not correct");
-static_assert(offsetof(BLData, weaponStats) == 0x15c, "Offset of weaponStats not correct");
+static_assert(offsetof(BLData, weaponStats) == 0x158, "Offset of weaponStats not correct");
 static_assert(offsetof(BLData, turnAccelState) == 0x88c, "Offset of turnAccelState not correct");
 static_assert(offsetof(BLData, traverseWait) == 0x8e1, "Offset of traverseWait not correct");
 static_assert(offsetof(BLData, pitchFromHorizontal) == 0x838, "Offset of pitchFromHorizontal not correct");
 static_assert(offsetof(BLData, pitchAutoLevelTarget) == 0x83c, "Offset of pitchAutoLevelTarget not correct");
 static_assert(offsetof(BLData, aimAutoLevelState) == 0xf0, "Offset of aimAutoLevelState not correct");
-static_assert(offsetof(BLData, field_0xd4) == 0xd4, "Offset of field_0xd4 not correct");
+static_assert(offsetof(BLData, autoAimTarget) == 0xd4, "Offset of autoAimTarget not correct");
 static_assert(offsetof(BLData, aimY) == 0xdc, "Offset of aimY not correct");
 static_assert(offsetof(BLData, scopeAccelX) == 0x87c, "Offset of scopeAccelX not correct");
 static_assert(offsetof(BLData, lookAccel) == 0x890, "Offset of lookAccel not correct");
 static_assert(offsetof(BLData, field_0xf2) == 0xf2, "Offset of field_0xf2 not correct");
 static_assert(offsetof(BLData, weaponObject) == 0x778, "Offset of weaponObject not correct");
-static_assert(offsetof(BLData, weaponRelatedObjs) == 0x77c, "Offset of weaponRelatedObjs not correct");
-static_assert(offsetof(BLData, field_0x828) == 0x828, "Offset of field_0x828 not correct");
+static_assert(offsetof(BLData, beamObjs) == 0x77c, "Offset of beamObjs not correct");
+static_assert(offsetof(BLData, zoomSound) == 0x828, "Offset of zoomSound not correct");
 static_assert(offsetof(BLData, attachedToSpecialMovementItem) == 0x814, "Offset of attachedToSpecialMovementItem not correct");
 static_assert(offsetof(BLData, armor) == 0x840, "Offset of armor not correct");
-static_assert(offsetof(BLData, field_0x86c) == 0x86c, "Offset of field_0x86c not correct");
-static_assert(offsetof(BLData, field_0x8bc) == 0x8bc, "Offset of field_0x8bc not correct");
+static_assert(offsetof(BLData, swayPhase) == 0x86c, "Offset of swayPhase not correct");
+static_assert(offsetof(BLData, refireTimer) == 0x8bc, "Offset of refireTimer not correct");
 static_assert(offsetof(BLData, ramLoadedWeaponId) == 0x8c4, "Offset of ramLoadedWeaponId not correct");
-static_assert(offsetof(BLData, field_0x8c6) == 0x8c6, "Offset of field_0x8c6 not correct");
+static_assert(offsetof(BLData, burstShotsLeft) == 0x8c6, "Offset of burstShotsLeft not correct");
+static_assert(offsetof(BLData, lastWeapon) == 0x8c0, "Offset of lastWeapon not correct");
+static_assert(offsetof(BLData, muzzleFlashFrames) == 0x8c8, "Offset of muzzleFlashFrames not correct");
+static_assert(offsetof(BLData, idleWait) == 0x8ce, "Offset of idleWait not correct");
+static_assert(offsetof(BLData, idleState) == 0x8e9, "Offset of idleState not correct");
+static_assert(offsetof(BLData, taserHit) == 0x8ed, "Offset of taserHit not correct");
+static_assert(offsetof(BLData, laserSight) == 0x8f4, "Offset of laserSight not correct");
+static_assert(offsetof(BLData, idleSwayPhase) == 0x878, "Offset of idleSwayPhase not correct");
+static_assert(offsetof(BLData, unknown6b0) == 0x6b0, "Offset of unknown6b0 not correct");
 static_assert(offsetof(BLData, field_0x8e6) == 0x8e6, "Offset of field_0x8e6 not correct");
-static_assert(offsetof(BLData, field_0x8e8) == 0x8e8, "Offset of field_0x8e8 not correct");
+static_assert(offsetof(BLData, twinGunHand) == 0x8e8, "Offset of twinGunHand not correct");
 
 
 typedef enum {
@@ -382,7 +414,6 @@ void Player_ChangeState(obj_tag* obj, unsigned short newState);
 int Player_ChangeSubState(obj_tag *player, ushort newState); // returns the previous substate
 void Player_SetCamMode(BLData *param_1,unsigned short param_2);
 void Player_Disable(obj_tag *player, char freeze);
-void Player_RamSave(BLData *bloke);
 void Player_WeaponNone(obj_tag *param_1);
 void Player_PositionCamera(obj_tag *player);
 void Player_ViewClamping(obj_tag *player);
