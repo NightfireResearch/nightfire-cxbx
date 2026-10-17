@@ -30,16 +30,6 @@
 // sight, the muzzle flash and the watch on the wrist.
 
 // The originals, called by address
-#define AnimScriptAdd ((sAnimScript_tag *(__cdecl *)(obj_tag *obj, HASHCODE hashcode))0x00017220)
-#define AnimScriptAddSpeed ((sAnimScript_tag *(__cdecl *)(obj_tag *obj, HASHCODE hashcode, float speed))0x00017270)
-#define AnimScriptIsStopped ((int (__cdecl *)(obj_tag *obj))0x00012780)
-#define AnimScriptSetPlayDirection ((void (__cdecl *)(obj_tag *obj, int direction))0x000127d0)
-#define AnimListBuild ((sAnimScript_tag *(__cdecl *)(obj_tag *obj, uint mask, uint value, void *callback, uint mode))0x000122e0)
-#define AnimObjectNew ((int (__cdecl *)(obj_tag *obj, HASHCODE skin))0x00011440)
-#define AnimObjectUpdate ((bool (__cdecl *)(obj_tag *obj))0x00018690)
-#define AnimDatumSetEntity ((void (__cdecl *)(obj_tag *obj, int datum, uint entity, uchar frames))0x000135d0)
-#define AnimDatumGetWeaponInfo ((int (__cdecl *)(obj_tag *obj, HASHCODE *gfx, HASHCODE *flash, ushort *sound))0x00013630)
-#define PlayerAnimSetInit ((void (__cdecl *)(obj_tag *player))0x000a9660)
 #define Player_ResetZoom ((void (__cdecl *)(obj_tag *player))0x000b7100)
 #define Player_SetupTaser ((void (__cdecl *)(BLData *blData, _VECTOR *target))0x000b8400)
 #define Check_Target ((void (__cdecl *)(obj_tag *player))0x000b9580)

@@ -40,7 +40,6 @@
 #define NDrone2_OpenDoor ((void (__cdecl *)(DCVars_tag *dcv))0x00039ec0)
 #define DroneSpawner_CreateBlank ((void (__cdecl *)(void))0x0002fb90)
 #define BOT_setOtherPlayerInfo ((void (__cdecl *)(DCVars_tag *dcv))0x0001a660)
-#define AnimObjectUpdate ((bool (__cdecl *)(obj_tag *gameObj))0x00018690)
 #define BodyGlow_Delete ((void (__cdecl *)(void *glow))0x000ce5a0)
 #define Env_Breath ((void (__cdecl *)(_VECTOR *pos, _VECTOR *dir, cel_tag *cel, int seed))0x00068db0)
 #define Control_Plr2Ind ((short (__cdecl *)(obj_tag *gameObj))0x0002d8a0)

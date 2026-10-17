@@ -45,7 +45,6 @@
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
 #define Vec_Cartesian_2_Spherical ((void (__cdecl *)(_VECTOR *out, float x, float y, float z))0x000d8530)
 #define Bullet_init_casing ((void (__cdecl *)(obj_tag *obj))0x00023080)
-#define AnimDatumGetWeaponInfo ((int (__cdecl *)(obj_tag *obj, HASHCODE gfx, HASHCODE flash, ushort *sound))0x00013630)
 #define Pickup_CreateSimple ((obj_tag *(__cdecl *)(_MATRIX *mtx, short weapon, short count, int param_4))0x000a7f10)
 #define MulMatrix2 ((void (__cdecl *)(float *a, float *b))0x000d6920)
 
@@ -814,7 +813,7 @@ void DroneWeap_DropWeapon(DCVars_tag *dcv) {
 
     weapon_definition_tag *wpn = &weapon_data[weapon];
     if (wpn->worldModelGfx != 0) {
-        int bone = AnimDatumGetWeaponInfo(obj, (HASHCODE)0, (HASHCODE)0, NULL);
+        int bone = AnimDatumGetWeaponInfo(obj, NULL, NULL, NULL);
         if (bone < 0)
             bone = 0;
         _VECTOR hand;

@@ -317,7 +317,7 @@ void RandomDrone(int i) {
     memset(o, 0, sizeof(*o));
     memset(anim, 0, sizeof(*anim));
 
-    anim->animObj.flags = ShadowRand(3) ? ANIMOBJ_FLAG_1 : 0;
+    anim->animObj.flags = ShadowRand(3) ? ANIMOBJ_POSE_VALID : 0;
     o->animState = ShadowRand(6) ? anim : NULL;
     o->extraObjectData = d;
     o->objectType = ShadowRand(8) ? OBJECTTYPE_DRONE : OBJECTTYPE_DEAD_DRONE;
@@ -440,7 +440,7 @@ void RandomWorld(bool bots) {
     world.player.objectType = playerTypes[ShadowRand(5)];
     world.player.extraObjectData = &world.playerData;
     world.player.animState = ShadowRand(4) ? &world.playerAnim : NULL;
-    world.playerAnim.animObj.flags = ShadowRand(3) ? ANIMOBJ_FLAG_1 : 0;
+    world.playerAnim.animObj.flags = ShadowRand(3) ? ANIMOBJ_POSE_VALID : 0;
     world.player.inCel = (cel_tag *)world.cel;
     RandomVector(&world.player.position, 20.0f);
     RandomVector(&world.player.lastPosition, 20.0f);

@@ -104,21 +104,21 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | 42 | AIBounds link (FUN_8005a9e0) | 0x8005a9e0 | build_FindCel(node pos) == NULL | same as 41 | no | AIBounds_Link2Cel | 0xa7160 | high | silent |
 | 43 | Script_Load | 0x80060338 | script placement whose hash is not loaded (param_4 == 0) | Warning : map contains script 0x%x that is not loaded / not setup correctly xyz[...] | no | Script_Load | 0xc1550 | high | silent - added: src/action/engine/Script.cpp (Script_Load) |
 | **Animation** |
-| 44 | AnimLoadFile | 0x80044830 | hash type not 0x04/0x05/0x06 | Invalid hash code %p | no | AnimLoadFile | 0x14a20 | high | ? |
-| 45 | AnimProcessScriptData | 0x80044310 | script command type >= 5 | Script 0x%x invalid command 0x%x data 0x%x | no | AnimProcessScriptData | 0x110c0 | high | ? |
-| 46 | AnimPostLoadInit | 0x80044a38 | skin 0x05000007 (Bond combat) not loaded → datum sharing skipped | ***** FATAL : Bondcombat skin must be loaded on all levels! ***** | no | AnimPostLoadInit | 0x11200 | high | ? |
-| 47 | AnimObjectNew (FUN_800452fc) | 0x800452fc | obj NULL / hash not a skin / skin not loaded / any alloc fails → return 0 | Skin 0x%x not loaded | no | AnimObjectNew | 0x11440 | high | ? |
-| 48 | AnimScriptInit (FUN_8004858c) | 0x8004858c | script numCmds == 0 | Script 0x%x has no commands | no | AnimScriptInit | 0x12620 | high | dropped |
-| 49 | AnimScriptInit | 0x8004858c | numCmds > 0x20 (the fired-command mask is 32 bits) | Script 0x%x has too many commands | no | AnimScriptInit | 0x12620 | high | dropped |
-| 50 | AnimScriptInit | 0x8004858c | obj/animState/script NULL, hash not type 6, or not loaded | Anim script 0x%x not loaded | no | AnimScriptInit | 0x12620 | high | silent |
-| 51 | AnimProcessScriptCmds (FUN_80048f98) | 0x80048f98 | command 0: sequence hash not loaded → return | Anim Seq 0x%x not loaded | no | AnimProcessScriptCmds | 0x17c50 | high | ? |
-| 52 | AnimProcessScriptCmds | 0x80048f98 | command type not 0..4 | Script 0x%x invalid command 0x%x data 0x%x | no | AnimProcessScriptCmds | 0x17c50 | high | ? |
-| 53 | FUN_80049d90 (start a sequence for a script) | 0x80049d90 | hash not type 4, no slot, no skin, or bind failed → return 0 | Anim sequence 0x%x not loaded | no | FUN_00017960 | 0x17960 | high | silent |
-| 54 | FUN_8004dda8 (bind sequence data) | 0x8004dda8 | hash not type 4 or not in hashtable → return 0 | Can't use animation hash 0x%x | no | FUN_00014420 | 0x14420 | high | ? |
-| 55 | AnimGetBoneWorldTrans | 0x8004a6e8 | datum id not found in the skin's datum table → zero vector, identity matrix | Bad Datum in Skin 0x%x %d %d | no | AnimGetBoneWorldTrans | 0x13070 | high | ? |
-| 56 | FUN_8004a9e8 (unposed variant) | 0x8004a9e8 | same as 55 | Bad Datum in Skin 0x%x %d %d | no | AnimGetBoneWorldTrans2 | 0x131c0 | med-high | ? |
-| 57 | AnimSetInit (FUN_8004754c) | 0x8004754c | move-anim list has < 3 entries | Too few move anims | no | AnimSetInit | 0x17860 | high | dropped |
-| 58 | AnimSetInit | 0x8004754c | idle-anim list has < 3 entries | Too few idle anims | no | AnimSetInit | 0x17860 | high | dropped |
+| 44 | AnimLoadFile | 0x80044830 | hash type not 0x04/0x05/0x06 | Invalid hash code %p | no | AnimLoadFile | 0x14a20 | high | ? - added: src/action/engine/Anim.cpp (AnimLoadFile) |
+| 45 | AnimProcessScriptData | 0x80044310 | script command type >= 5 | Script 0x%x invalid command 0x%x data 0x%x | no | AnimProcessScriptData | 0x110c0 | high | ? - added: src/action/engine/Anim.cpp (AnimProcessScriptData) |
+| 46 | AnimPostLoadInit | 0x80044a38 | skin 0x05000007 (Bond combat) not loaded → datum sharing skipped | ***** FATAL : Bondcombat skin must be loaded on all levels! ***** | no | AnimPostLoadInit | 0x11200 | high | ? - added: src/action/engine/Anim.cpp (AnimPostLoadInit) |
+| 47 | AnimObjectNew (FUN_800452fc) | 0x800452fc | obj NULL / hash not a skin / skin not loaded / any alloc fails → return 0 | Skin 0x%x not loaded | no | AnimObjectNew | 0x11440 | high | ? - added: src/action/engine/Anim.cpp (AnimObjectNew) |
+| 48 | AnimScriptInit (FUN_8004858c) | 0x8004858c | script numCmds == 0 | Script 0x%x has no commands | no | AnimScriptInit | 0x12620 | high | dropped - added: src/action/engine/Anim.cpp (AnimScriptInit) |
+| 49 | AnimScriptInit | 0x8004858c | numCmds > 0x20 (the fired-command mask is 32 bits) | Script 0x%x has too many commands | no | AnimScriptInit | 0x12620 | high | dropped - added: src/action/engine/Anim.cpp (AnimScriptInit) |
+| 50 | AnimScriptInit | 0x8004858c | obj/animState/script NULL, hash not type 6, or not loaded | Anim script 0x%x not loaded | no | AnimScriptInit | 0x12620 | high | silent - added: src/action/engine/Anim.cpp (AnimScriptInit) |
+| 51 | AnimProcessScriptCmds (FUN_80048f98) | 0x80048f98 | command 0: sequence hash not loaded → return | Anim Seq 0x%x not loaded | no | AnimProcessScriptCmds | 0x17c50 | high | ? - added: src/action/engine/Anim.cpp (AnimProcessScriptCmds) |
+| 52 | AnimProcessScriptCmds | 0x80048f98 | command type not 0..4 | Script 0x%x invalid command 0x%x data 0x%x | no | AnimProcessScriptCmds | 0x17c50 | high | ? - added: src/action/engine/Anim.cpp (AnimProcessScriptCmds) |
+| 53 | FUN_80049d90 (start a sequence for a script) | 0x80049d90 | hash not type 4, no slot, no skin, or bind failed → return 0 | Anim sequence 0x%x not loaded | no | AnimSeqSet | 0x17960 | high | silent - added: src/action/engine/Anim.cpp (AnimSeqSet) |
+| 54 | FUN_8004dda8 (bind sequence data) | 0x8004dda8 | hash not type 4 or not in hashtable → return 0 | Can't use animation hash 0x%x | no | AnimSeqGetInfo | 0x14420 | high | ? - added: src/action/engine/Anim.cpp (AnimSeqGetInfo) |
+| 55 | AnimGetBoneWorldTrans | 0x8004a6e8 | datum id not found in the skin's datum table → zero vector, identity matrix | Bad Datum in Skin 0x%x %d %d | no | AnimGetBoneWorldTrans | 0x13070 | high | ? - added: src/action/engine/Anim.cpp (AnimGetBoneWorldTrans) |
+| 56 | FUN_8004a9e8 (unposed variant) | 0x8004a9e8 | same as 55 | Bad Datum in Skin 0x%x %d %d | no | AnimGetBoneWorldTrans2 | 0x131c0 | med-high | ? - added: src/action/engine/Anim.cpp (AnimGetBoneWorldTrans2) |
+| 57 | AnimSetInit (FUN_8004754c) | 0x8004754c | move-anim list has < 3 entries | Too few move anims | no | AnimSetInit | 0x17860 | high | dropped - added: src/action/engine/Anim.cpp (AnimSetInit) |
+| 58 | AnimSetInit | 0x8004754c | idle-anim list has < 3 entries | Too few idle anims | no | AnimSetInit | 0x17860 | high | dropped - added: src/action/engine/Anim.cpp (AnimSetInit) |
 | **Physics / sound / view** |
 | 59 | RB_Build (FUN_8005ea54) | 0x8005ea54 | any moment-of-inertia component < 0 → return 0 | TOI_body cannot be negative. | no | RB_Build | 0xc00a0 | high | silent |
 | 60 | RB_Build | 0x8005ea54 | inertia fails the triangle inequality → return 0 | TOI_body does not follow triangle rule. | no | RB_Build | 0xc00a0 | high | silent |

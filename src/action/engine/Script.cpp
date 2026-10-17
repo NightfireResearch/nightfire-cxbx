@@ -83,11 +83,6 @@ typedef struct {
 // The list Script_Load hands a script file back to when it has too many streams
 #define ScriptList (*(DLISTINFO_tag *)0x00279288)
 
-// The animation code's working list (AnimListBuild), and the foot its last footstep command named
-#define GlbAnimListCount I32_AT(0x001d77a0)
-#define GlbAnimList (*(sAnimScript_tag *(*)[32])0x001d77a4)
-#define FootstepFoot U8_AT(0x001d7827)
-
 // The letterbox bars' sprite info (the game's data)
 #define LetterboxSprInfo ((SpriteInfo *)0x00181be4)
 #define LETTERBOX_BOTTOM_Y 0x1a0
@@ -111,14 +106,6 @@ void Mat_GetNorm(_VECTOR *vOut, _MATRIX *mIn);
 void Vec_Mul_F3(_VECTOR *vecOut, _VECTOR *vecIn, float scaleX, float scaleY, float scaleZ);
 // AUTOGEN
 void Spline_Eval3D(_VECTOR *cp0, _VECTOR *cp1, _VECTOR *cp2, _VECTOR *cp3, float t, _VECTOR *vOut);
-// AUTOGEN
-sAnimScript_tag * AnimListBuild(obj_tag *obj, uint mask, uint value, void *callback, uint mode);
-// AUTOGEN
-int AnimObjectNew(obj_tag *obj, HASHCODE skin);
-// AUTOGEN
-sAnimScript_tag * AnimScriptAdd(obj_tag *obj, HASHCODE hashcode);
-// AUTOGEN
-bool AnimObjectUpdate(obj_tag *obj);
 // AUTOGEN
 void NDrone2_CreateNinjaEyes(obj_tag *obj);
 // Generated for Player.cpp

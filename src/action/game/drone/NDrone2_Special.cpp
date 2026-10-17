@@ -21,7 +21,6 @@
 #define DroneFunc_InRangeOfTarget ((bool (__cdecl *)(DCVars_tag *dcv, float range))0x00035f50)
 // FUN_00046d90 in Ghidra; the name is the PS2 build's. Moves the drone along a route to obj: below 3 still going,
 // 3 there, 10 waiting for the route (as the ninja states read it)
-#define AnimDatumSetEntity ((void (__cdecl *)(obj_tag *obj, int datum, HASHCODE entity, uchar frames))0x000135d0)
 #define NDrone2_MoveToObject ((uint (__cdecl *)(DCVars_tag *dcv, obj_tag *obj, float radius, char follow))0x00046d90)
 
 // The cheat that blinds the drones (ui_cheats.cpp)

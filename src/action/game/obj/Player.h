@@ -125,7 +125,7 @@ typedef struct BLData {
     // The player's alpha (obj_tag::tweakA, drawn at 40 below a half): eased up to 1 every frame (Player_Update)
     float alpha; // 0x818
     obj_tag *bodyGlow; // 0x81c - BodyGlow_Create's object for the player
-    void *animSet; // 0x820 - the anim set PlayerAnimSetInit* chose; cleared on every change of substate
+    sAnimSet_tag *animSet; // 0x820 - the anim set PlayerAnimSetInit* chose; cleared on every change of substate
     float health; // 0x824 - used eg. by SP_Update to abort an in-progress NIS if the player has died
     DYNAMICSOUNDS *zoomSound; // 0x828 - the zoom motor's sound, stopped when the zoom stops (Player_Zoom, Player_ScopeOff)
     DYNAMICSOUNDS *waterSound; // 0x82c - the sound Player_MonitorAir starts when the head goes under
@@ -409,6 +409,11 @@ static_assert(sizeof(PlayerStartPosition) == 0xcc, "Bad size for PlayerStartPosi
 #pragma pack(pop)
 
 void Player_ResetStartPos(void);
+void PlayerAnimSetInit(obj_tag *player);
+void PlayerAnimSetInitNormal(obj_tag *player);
+void PlayerAnimSetInitCrouch(obj_tag *player);
+void PlayerAnimCrouch2Stand(obj_tag *player);
+void PlayerAnimStand2Crouch(obj_tag *player);
 void __stdcall ReadTuningVars(void);
 void Player_ChangeState(obj_tag* obj, unsigned short newState);
 int Player_ChangeSubState(obj_tag *player, ushort newState); // returns the previous substate

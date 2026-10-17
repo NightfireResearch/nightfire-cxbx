@@ -160,7 +160,7 @@ bool NDrone2_OpponentBonePos(obj_tag *gameObj, uint bone, _VECTOR *pos) {
     if (gameObj != NULL && gameObj->animState != NULL
         && (gameObj->objectType == OBJECTTYPE_DRONE || gameObj->objectType == OBJECTTYPE_PLAYER)
         && (gameObj->objectType != OBJECTTYPE_DRONE || (((Drone_tag *)gameObj->extraObjectData)->flags & 0x100000))
-        && (gameObj->animState->animObj.flags & ANIMOBJ_FLAG_1)) {
+        && (gameObj->animState->animObj.flags & ANIMOBJ_POSE_VALID)) {
         AnimGetBoneWorldTrans(gameObj, WORLD_BONE(bone), 0, pos, NULL);
         return true;
     }

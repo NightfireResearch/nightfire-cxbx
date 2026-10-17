@@ -21,11 +21,6 @@
 // (camera_tracking, camera mode 0xb).
 
 // The originals, called by address
-#define AnimSetDeleteAll ((void (__cdecl *)(obj_tag *obj))0x00017820)
-#define AnimScriptAdd ((sAnimScript_tag *(__cdecl *)(obj_tag *obj, HASHCODE hashcode))0x00017220)
-#define AnimScriptAppendBlend ((sAnimScript_tag *(__cdecl *)(obj_tag *obj, HASHCODE hashcode))0x00015ca0)
-#define AnimScriptIsStopped ((int (__cdecl *)(obj_tag *obj))0x00012780)
-#define AnimObjectUpdate ((bool (__cdecl *)(obj_tag *obj))0x00018690)
 #define vecutil_calculate_closest_point_on_line ((double (__cdecl *)(_VECTOR *out, _VECTOR *a, _VECTOR *b, _VECTOR *p))0x000d7d00)
 #define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
 #define Vec_SqDist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e50)
@@ -114,7 +109,7 @@ void Player_LeaveLadder(obj_tag *player, BLData *blData) {
     blData->movement.y = 0.0f;
     blData->traverseWait = (char)Ftol(_FRAME_RATE);
     blData->previousSubState = player->subState;
-    anim->unknown64 = 0.0f;
+    anim->distancePhase = 0.0f;
     Player_ChangeSubState(player, MovementType_Walk);
     AnimObjectUpdate(player);
     AnimState *animState = player->animState;

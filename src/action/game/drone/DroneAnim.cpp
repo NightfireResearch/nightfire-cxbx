@@ -18,10 +18,6 @@
 #include <string.h>
 
 // Originals called by address
-#define AnimScriptAdd ((sAnimScript_tag *(__cdecl *)(obj_tag *obj, HASHCODE hashcode))0x00017220)
-#define AnimScriptAppendBlend ((sAnimScript_tag *(__cdecl *)(obj_tag *obj, HASHCODE hashcode))0x00015ca0)
-#define AnimScriptDelete ((void (__cdecl *)(obj_tag *obj, sAnimScript_tag **script))0x00015b40)
-#define AnimDatumSetEntity ((void (__cdecl *)(obj_tag *obj, int datum, HASHCODE entity, uchar frames))0x000135d0)
 #define Vec_DirToRot ((void (__cdecl *)(_VECTOR *dir, _VECTOR *rot))0x000d4f20)
 #define Vec_Mul_F3 ((void (__cdecl *)(_VECTOR *out, _VECTOR *in, float x, float y, float z))0x000d72d0)
 #define Mat_Inverse ((void (__cdecl *)(_MATRIX *in, _MATRIX *out))0x000d51e0)

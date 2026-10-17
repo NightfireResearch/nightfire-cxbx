@@ -763,7 +763,7 @@ void RandomWorld(void) {
     bl->hitDirectionFade = (uchar)ShadowRand(256);
     bl->muzzleFlashFrames = (short)ShadowRand(3);
     bl->field_0x8cc = (short)(ShadowRand(3) - 1);
-    bl->animSet = &world.cels[1];
+    bl->animSet = (sAnimSet_tag *)&world.cels[1];
     static const int gadgets[] = {0x33, 0x45, 0x4a, 0x4c, 0x4e, 0x4f};
     for (int gadget : gadgets)
         bl->weaponStats[gadget].clipOrCooldown = (short)(weapon_data[gadget].clipSize - (short)ShadowRand(3));

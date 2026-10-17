@@ -41,6 +41,7 @@ typedef struct BLData BLData;
 typedef struct weapon_definition_tag weapon_definition_tag;
 typedef struct DYNAMICSOUNDS DYNAMICSOUNDS;
 typedef struct AnimState AnimState;
+typedef struct sAnimSet_tag sAnimSet_tag;
 typedef struct sprite sprite;
 typedef struct SpriteInfo SpriteInfo;
 typedef struct _D3DMATRIX D3DMATRIX;

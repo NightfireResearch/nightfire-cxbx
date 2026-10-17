@@ -119,6 +119,7 @@ add_library(actioninject SHARED
   src/action/devtools/DroneRoleShadow.cpp
   src/action/devtools/PlayerShadow.cpp
   src/action/devtools/PlayerWeaponShadow.cpp
+  src/action/devtools/AnimPortShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/MathExactShadow.cpp
   src/action/devtools/Teleport.cpp

@@ -44,6 +44,8 @@ to what it does. A function ported that way:
 
 | 10 | player, player_traverse, player_weapon | 76 + helpers they inline: Player.cpp (the player: init, update, health, pain and death, substates, jumping, zero G, scan mode, aiming, collision, using things), PlayerTraverse.cpp (ladders, the grapple, wires, ziplines, creep walls), PlayerWeapon.cpp (ammo, choosing and changing weapons, the gun in the view, firing, zoom, auto-aim, the laser sight, the muzzle flash, the watch), the grapple, wire, creep-wall, icon and camera object makers, Camera_Shear, camera_tracking, MP_RegisterBulletHit. FUNC_AT helpers: PlayerAnimSetInitDead 0xa96a0, Player_UpdateWalkClass 0xa9160, AccelFunc0Flag 0xb7520, Player_LeaveLadder 0xaeac0, Player_HangByHandA/B 0xafa80/0xafaf0, Player_WeaponUsable 0xb9f70, Player_DroneAwake 0xb7bd0. Their Player_FeetOnPoint is PlayerNotDrone_FeetOnPoint 0xab450, Player_CollLadder is PlayerCollLadder 0xae930, Draw_LaserBeam is Player_SetupLaser 0xb8260 | 67 of 76; 1,202 of 1,895 blocks. PlayerShadow: 153,000 cases; PlayerWeaponShadow: 180,000; all 0 differ; a planted bug caught in each of their eleven groups. Under the shadow run the originals reach about 1,072 of 1,104 of the player's blocks and 818 of 836 of the weapons' | see git log |
 
+| 11 | anim | 54, all in src/action/engine/Anim.cpp but the player's five anim-set functions (Player.cpp): loading (skins, sequences, scripts, the sleeves), script lists and scripts, script ticks and commands, sequence frames and poses, faces and datums, the bone matrices, head tracking, aiming and drawing, the anim object, anim sets. Of their 9 names without an Xbox function of that name, AnimSeqGetInfo is 0x14420, AnimSeqSet 0x17960, AnimSet_WalkUpdater 0x171a0 and AnimDistanceTableGet 0x174a0 (renamed from FUN_ in Ghidra, the first three ported); AnimDistanceTableCreate is 0x16950 (renamed, left to the original); AnimDistanceTableInit, AnimTagGetUnique and AnimSeqDelete are inline; MP_NeedSkin is not called. Static helpers renamed from FUN_: AnimFramesPassed 0x12a20, AnimFrameEmitChannels 0x13c70, AnimData_ReadHalf 0x13880. 21 AUTOLTCG adaptors for the register-argument originals | 52 of 54; 1,240 of 1,552 blocks (AnimSleeveGetEntity and AnimObjectInitialPose not reached). AnimPortShadow: 73,500 cases in eight groups, all 0 differ; one planted bug per group, all caught. Under the shadow run the originals reach 1,601 of the 1,651 blocks of the 54 and their helpers | see git log |
+
 Parcel 1's first playback found two things the coverage alone would not have shown:
 - **A crash in our code.** The port of `Script_CreateEntity` called our `Break_Create` by name, which is a known-broken
   draft that was never patched in. `tools/draft_calls.py` now finds such calls.
@@ -409,6 +411,35 @@ Found along the way:
   0x8ec, `taserHit` 0x8ed, `laserSight` 0x8f4; `GUNTURRET::owner` (was `drone`: the player who set the Ronin down
   as well); `GlobalVars_t::DecoderDisplayShown` (0x1f657c).
 
+### Parcel 11 (anim.cpp)
+- `AnimLoadFile` (0x14a20) does not call `MP_NeedSkin` for a skin, as theirs does; nothing on the Xbox matches that
+  name here.
+- `AnimPostLoadInit` (0x11200) gathers the loaded skins in a buffer of 128 hashcodes (theirs: 0xa8).
+- Their `AnimObjectNew` swaps skin 0x05000090 on two levels inline: the PS2's own table. The Xbox calls
+  `maybeFixupSkinHashcode` (0x11350, the skin in EAX): on HendersonA, B, C and Tower2A 0x05000036 becomes 0xc3 and
+  0x05000038 0xc2; on CastleIndoors1, CastleIndoors2, EvilBase and EvilBaseC 0x15 becomes 0xbd, 0x18 0xc5, 0x3b 0xbf
+  and 0x5e 0xbe (a jump table on the level, based at 0x07000001).
+- Their `AnimSeqGetInfo`, `AnimSeqSet` and `AnimSet_WalkUpdater` are 0x14420, 0x17960 and 0x171a0, the first two
+  with register arguments (EAX raw, ECX hash, ESI seq; ECX script, EBX hash and five on the stack).
+  `AnimDistanceTableGet` (0x174a0) takes the hash in ESI; `AnimDistanceTableCreate` (0x16950) is called through it
+  and left to the original. `AnimDistanceTableInit` is the `nDistanceTables = 0` in `AnimPreLoadInit`;
+  `AnimTagGetUnique` is inline in `AnimSetAppend` and `AnimTagAllocAndGetUnique` (0x15970); `AnimSeqDelete` is inline
+  in `AnimScriptDelete` and `AnimScriptNew`.
+- Corrected in ours, not theirs: the overlay script flag is 0x4000 and sharing the root 0x8000 (ours had one for
+  both); `AnimSleeveGetEntity` (0x118b0, EAX) tries all eight sleeves from the index, wrapping (ours stopped at the
+  end, and was not patched in); our `maybeFixupSkinHashcode` had its level groups crossed.
+- The comparisons follow the original's FCOM tests: `test ah, 1` takes the "less" branch for NaN as well, so many
+  are written `!(x >= c)`.
+- Fields named (Anim.h): `AnimObj::sleeveGlist` 0x30 (was `maybeSleeveGlist`), `distancePhase` 0x64 (was
+  `unknown64`), `rootHeight` 0x54, `heightOffset` 0x58, `distanceThisTick` 0x5c, `rootTravel` 0x60, the head-track and
+  aim rates, ranges and angles 0x68-0x84, `poseBufSize` 0x88, `facialTimer` 0x8a, the target bones 0x8c/0x8d,
+  `headTrackDelay` 0x8e, `lookMorphX/Y` 0x8f/0x90, `facialState` 0x91, `lod` 0x94; `ANIMOBJ_POSE_VALID` (was
+  `ANIMOBJ_FLAG_1`) and the other ANIMOBJ_, ANIMSCRIPT_, ANIMLIST_ and ANIMSEQ_ flags; the whole of
+  `sAnimScript_tag`, `sAnimSeq_tag`, `sAnimRawSeq_tag`, `AnimDistanceTable` and `sAnimSet_tag`; `BLData::animSet`
+  is an `sAnimSet_tag *`.
+- docs/anim, which the brief points to, is on the blender-exports branch (7af6075), not this one, so it is not
+  updated here.
+
 ## Original bugs found while porting (kept; candidates for FIX_ORIGINAL_GAME_BUGS)
 
 - `Script_Load`, a file with 0x3f streams or more: hands its record to `DList_RemoveFromInUse2Free(&ScriptList)`,
@@ -520,6 +551,18 @@ Found along the way:
   for 0 every other state makes.
 - `Player_RamSave` and `Player_InitAmmoWeapons` cover 33 ammo types of `BLData::ammo`'s 34.
 
+- `Mat_Identity` leaves the translation alone, so `AnimProcessScriptCmds`' fire event aims its bullet along a matrix
+  whose translation is stack, and `AnimObjectDraw`'s laser does the same.
+- `AnimFrameSet` blends the bones the skin does not use from a buffer it never initialises.
+- `AnimObjectDraw`, for a weapon id out of range, takes a stale morph count as the weapon's model.
+- `AnimObjectAimAt`'s upper yaw limit tests the pitch.
+- Unchecked: the script `AnimFacialAppend` makes; `seq->startTime` in `AnimProcessScriptCmds`; the sync master in
+  `AnimScriptTick`; `morphWeights` in `AnimObjectNew`; the allocation in `AnimPostLoadInit`. A datum without a bone
+  sends `AnimGetBoneWorldTrans2`'s chain walk off its stack (128 matrices, indexed by the byte).
+- `AnimSeqSet` keeps the unpack cache of the sequence it replaces.
+- `AnimFrameResolve` deletes every script whose fade direction is 0 once any script has faded, and gives a new script
+  the bone count of skeleton 0.
+
 ## Departures from the original
 
 - The AI dispatcher's Exit, Enter and 0x2e messages leave their scope and frames as uninitialised stack in the
@@ -535,6 +578,10 @@ Found along the way:
 - `Player_WeaponInitBullet` starts its hit list at NULL where the original uses its argument slot (the weapon
   pointer; `Collide_RayIntersect` fills it in either way). `Player_MuzzleFlash`, in multiplayer, starts the flash it
   asks `AnimDatumGetWeaponInfo` for at 0, where the original's slot holds the player pointer.
+
+- `AnimFrameSet` clears the next pose before blending into it, `AnimProcessScriptCmds`' muzzle matrix and
+  `AnimObjectDraw`'s gun matrix start zeroed: all uninitialised stack in the original. `AnimObjectDraw` gives an
+  out-of-range weapon the morph count 0 where the morph block did not run.
 
 ## What the demos do not cover
 

@@ -644,11 +644,7 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
 }
 
 // AnimScriptAdd, with the script's playback speed set (sAnimScript_tag +0x94) when it starts.
-// AUTOGEN
-sAnimScript_tag* AnimScriptAddSpeed(obj_tag* obj, HASHCODE hashcode, float speed);
 // AnimScriptAdd, played backwards: raises the "reverse" flag at 0x001d7828 and tail-calls AnimScriptAdd.
-// AUTOGEN
-sAnimScript_tag* AnimScriptAddReverse(obj_tag* obj, HASHCODE hashcode);
 // Leaving the scope: target zoom back to 1x, view auto-levelling suppressed (aimAutoLevelState = 1), walk
 // animation reset, zoom motor sound stopped. Not a function on PS2 (inlined in Player_Weapon), so the name is
 // invented.
@@ -1669,13 +1665,6 @@ void Player_PositionCamera(obj_tag *player) {
 // ---------------------------------------------------------------------------------------------------------------
 
 // The originals, called by address
-#define AnimSetDeleteAll ((void (__cdecl *)(obj_tag *obj))0x00017820)
-#define AnimScriptIsStopped ((int (__cdecl *)(obj_tag *obj))0x00012780)
-#define AnimSetUpdate ((void (__cdecl *)(obj_tag *obj, void *animSet, float speed, float forward, float forwardScale, float sideways, float sidewaysScale))0x00018bb0)
-#define PlayerAnimSetInitNormal ((void (__cdecl *)(obj_tag *player))0x000a91e0)
-#define PlayerAnimSetInitCrouch ((void (__cdecl *)(obj_tag *player))0x000a9350)
-#define PlayerAnimCrouch2Stand ((void (__cdecl *)(obj_tag *player))0x000a94c0)
-#define PlayerAnimStand2Crouch ((void (__cdecl *)(obj_tag *player))0x000a9590)
 #define Lights_CalcClosestLights ((light_tag **(__cdecl *)(_VECTOR *pos, uint mask, ushort *count))0x0006d8f0)
 #define GunImp_PlayerHasDied ((void (__cdecl *)(obj_tag *player))0x00026f10)
 #define GT_PlayerHasDied ((void (__cdecl *)(obj_tag *player))0x0009a960)
@@ -1685,7 +1674,6 @@ void Player_PositionCamera(obj_tag *player) {
 #define Pickup_CreateSimple ((obj_tag *(__cdecl *)(_MATRIX *mtx, int weapon, short count, int param_4))0x000a7f10)
 #define Control_Plr2Ind ((short (__cdecl *)(obj_tag *player))0x0002d8a0)
 #define GameFlow_GetState ((uint (__cdecl *)(void))0x0006aa70)
-#define AnimScriptAdd ((sAnimScript_tag *(__cdecl *)(obj_tag *obj, HASHCODE hashcode))0x00017220)
 #define Control_BuildWorldSph ((void (__cdecl *)(obj_tag *obj))0x0002db20)
 
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))
@@ -1787,6 +1775,89 @@ void Player_GetHeadPos(_VECTOR *headPos, obj_tag *player, _MATRIX *mtx) {
         Mat_Copy(&glb_viewer[blData->playerNum]->viewMatrix, mtx);
 }
 
+// The player's anim set lists by weapon_definition_tag::animSet (1 to 6), for any other, and in single player: each
+// the standing list, then the crouching one
+#define PLAYER_ANIMSET_LIST_SIZE 9
+#define PlayerAnimSetSinglePlayer ((HASHCODE *)0x0017e68c)
+#define PlayerAnimSetDefault ((HASHCODE *)0x0017e71c)
+static HASHCODE *const PlayerAnimSetByClass[6] = {
+    (HASHCODE *)0x0017e764, (HASHCODE *)0x0017e884, (HASHCODE *)0x0017e6d4,
+    (HASHCODE *)0x0017e7f4, (HASHCODE *)0x0017e7ac, (HASHCODE *)0x0017e83c,
+};
+
+// The player's walk speeds, as AnimSetAppend's distance phase and scale
+static constexpr float kPlayerSetPhase = 0.37f;
+static constexpr float kPlayerSetScale = 0.5f;
+static_assert(std::bit_cast<uint32_t>(kPlayerSetPhase) == 0x3ebd70a4, "0.37");
+
+// The player's standing anim set list for the held weapon
+static HASHCODE *PlayerAnimSetList(obj_tag *player) {
+    short animSet = weapon_data[player->animState->currentWeaponId].animSet;
+    if (MPSettings.isMultiplayer == 0)
+        animSet = 999;
+    if (animSet == 999)
+        return PlayerAnimSetSinglePlayer;
+    if (animSet >= 1 && animSet <= 6)
+        return PlayerAnimSetByClass[animSet - 1];
+    return PlayerAnimSetDefault;
+}
+
+// AUTOINJECT
+void PlayerAnimSetInitNormal(obj_tag *player) {
+    HASHCODE *list = PlayerAnimSetList(player);
+    ((BLData *)player->extraObjectData)->animSet = AnimSetAppend(player, list, kPlayerSetPhase, kPlayerSetScale);
+}
+
+// AUTOINJECT
+void PlayerAnimSetInitCrouch(obj_tag *player) {
+    HASHCODE *list = PlayerAnimSetList(player) + PLAYER_ANIMSET_LIST_SIZE;
+    ((BLData *)player->extraObjectData)->animSet = AnimSetAppend(player, list, kPlayerSetPhase, kPlayerSetScale);
+}
+
+// AUTOINJECT
+void PlayerAnimSetInit(obj_tag *player) {
+    ((BLData *)player->extraObjectData)->animSet = NULL;
+    AnimSetDeleteAll(player);
+    if (player->subState == MovementType_Crouch)
+        PlayerAnimSetInitCrouch(player);
+    else
+        PlayerAnimSetInitNormal(player);
+}
+
+// The scripts that stand up from a crouch and crouch down, by weapon_definition_tag::animSet (1 to 6), and for any
+// other; class 3 in single player
+static const HASHCODE PlayerCrouch2StandScripts[7] = {
+    (HASHCODE)0x060009da, (HASHCODE)0x060009ae, (HASHCODE)0x060001dd,
+    (HASHCODE)0x060001d1, (HASHCODE)0x060001e9, (HASHCODE)0x060009b6, (HASHCODE)0x060001f4,
+};
+static const HASHCODE PlayerStand2CrouchScripts[7] = {
+    (HASHCODE)0x060009dd, (HASHCODE)0x060009b1, (HASHCODE)0x060001dc,
+    (HASHCODE)0x060001d0, (HASHCODE)0x060001e8, (HASHCODE)0x060009b9, (HASHCODE)0x060001f3,
+};
+
+// Plays the change of stance for the held weapon, at four frames a tick
+static void PlayerAnimChangeStance(obj_tag *player, const HASHCODE scripts[7]) {
+    short animSet = weapon_data[player->animState->currentWeaponId].animSet;
+    if (MPSettings.isMultiplayer == 0)
+        animSet = 3;
+    HASHCODE hashcode = (animSet >= 1 && animSet <= 6) ? scripts[animSet - 1] : scripts[6];
+    sAnimScript_tag *script = AnimScriptAdd(player, hashcode);
+    if (script == NULL)
+        return;
+    script->flags |= ANIMSCRIPT_GAME_FLAG | ANIMSCRIPT_ZERO_ROOT_Z | ANIMSCRIPT_ZERO_ROOT_X;
+    script->speed = script->speed >= 0.0f ? 4.0f : -4.0f;
+}
+
+// AUTOINJECT
+void PlayerAnimCrouch2Stand(obj_tag *player) {
+    PlayerAnimChangeStance(player, PlayerCrouch2StandScripts);
+}
+
+// AUTOINJECT
+void PlayerAnimStand2Crouch(obj_tag *player) {
+    PlayerAnimChangeStance(player, PlayerStand2CrouchScripts);
+}
+
 // The anim of a dead player: lying in zero G, falling otherwise. Not a function on PS2; the name is ours.
 // FUNC_AT(0x000a96a0)
 void PlayerAnimSetInitDead(obj_tag *player) {
@@ -1871,7 +1942,7 @@ int _Player_InWater(obj_tag *player, BLData *blData) {
             player->rotation.x = 0.0f;
             player->rotation.z = 0.0f;
             Player_ClearInertia(player);
-            player->animState->animObj.unknown64 = 0.0f;
+            player->animState->animObj.distancePhase = 0.0f;
         }
     }
     else {
@@ -2858,7 +2929,6 @@ void Player_Collision(obj_tag *player) {
 #define PlayerNotDrone_FeetOnPoint ((obj_tag *(__cdecl *)(obj_tag *obj, HITTEST_tag *test, float *floorNormalY, char dying))0x000ab450)
 #define PlayerCollLadder ((void (__cdecl *)(obj_tag *player, BLData *blData, obj_tag *ladder))0x000ae930)
 #define Env_WaterRipple ((void (__cdecl *)(HITDATA_tag *hit))0x00068f20)
-#define AnimObjectUpdate ((bool (__cdecl *)(obj_tag *obj))0x00018690)
 
 // HITDATA_tag::unknown3: a hit that does not count as touching (the first other hit sets the contact flags)
 #define HIT_NO_CONTACT 0x02
@@ -3119,7 +3189,6 @@ void Player_CollisionHandler(obj_tag *player) {
 // Making the player (Player_Init)
 // ---------------------------------------------------------------------------------------------------------------
 
-#define AnimObjectNew ((int (__cdecl *)(obj_tag *obj, HASHCODE skin))0x00011440)
 #define AnimDebugCreate ((void (__cdecl *)(void))0x00019180)
 #define BodyGlow_Create ((obj_tag *(__cdecl *)(obj_tag *obj))0x000ce4b0)
 

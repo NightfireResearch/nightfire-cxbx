@@ -26,7 +26,6 @@
 #pragma fp_contract(off)
 
 // Originals called by address
-#define AnimDatumGetWeaponInfo ((int (__cdecl *)(obj_tag *obj, HASHCODE gfx, uint *flash, ushort *sound))0x00013630)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
 #define Control_Plr2Ind ((short (__cdecl *)(obj_tag *obj))0x0002d8a0)
 #define BOTSTATE_combatWeaponChangeChoice ((ushort (__cdecl *)(Drone_tag *drone, obj_tag *opponent, char p3, char p4, char p5))0x0001d750)
@@ -72,7 +71,7 @@ bool DroneWeap_GetWeaponInfo(Drone_tag *drone, int *bone, uint *flash, ushort *s
     obj_tag *obj = drone->gameObj;
     if (obj->animState == NULL)
         return false;
-    *bone = AnimDatumGetWeaponInfo(obj, (HASHCODE)0, flash, sound);
+    *bone = AnimDatumGetWeaponInfo(obj, NULL, (HASHCODE *)flash, sound);
     if (*bone < 0)
         return false;
     if (obj->animState == NULL || !(obj->animState->animObj.flags & 1))

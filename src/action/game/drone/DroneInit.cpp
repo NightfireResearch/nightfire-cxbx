@@ -42,11 +42,10 @@
 #define BOT_postLoadInit ((void (__cdecl *)(Drone_tag *drone))0x0001b8e0)
 // FUN_0001ad70; nightfire-port's BOT_setGender
 #define BOT_setGender ((void (__cdecl *)(Drone_tag *drone))0x0001ad70)
-#define AnimObjectNew ((int (__cdecl *)(obj_tag *gameObj, HASHCODE skin))0x00011440)
 #define BodyGlow_Create ((obj_tag *(__cdecl *)(obj_tag *gameObj))0x000ce4b0)
 
 // DroneAnim_PreTransCallback, the drones' root motion callback: stored, not called
-#define DroneAnim_RootMotion ((void *)0x00033320)
+#define DroneAnim_RootMotion ((AnimRootMotionFunc)0x00033320)
 
 // Every live drone (NPCGlobals.NDrone2List is its head, NDrone2Count its count)
 #define NDrone2s (*(LLISTINFO_tag *)0x001e5634)

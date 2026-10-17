@@ -468,7 +468,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00012a20",
+        "name": "AnimFramesPassed",
         "address": "0x00012a20",
         "calling_convention": "__fastcall",
         "has_custom_variable_storage": true,
@@ -698,7 +698,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00013880",
+        "name": "AnimData_ReadHalf",
         "address": "0x00013880",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -734,7 +734,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00013c70",
+        "name": "AnimFrameEmitChannels",
         "address": "0x00013c70",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -778,7 +778,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00014420",
+        "name": "AnimSeqGetInfo",
         "address": "0x00014420",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -1046,7 +1046,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00016950",
+        "name": "AnimDistanceTableCreate",
         "address": "0x00016950",
         "calling_convention": "unknown",
         "has_custom_variable_storage": true,
@@ -1172,7 +1172,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000171a0",
+        "name": "AnimSet_WalkUpdater",
         "address": "0x000171a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -1276,7 +1276,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000174a0",
+        "name": "AnimDistanceTableGet",
         "address": "0x000174a0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -1360,7 +1360,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00017960",
+        "name": "AnimSeqSet",
         "address": "0x00017960",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
