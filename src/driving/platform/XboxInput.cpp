@@ -2,6 +2,7 @@
 #include "Host.h"
 #include "HostInput.h"
 #include "../../common/xbeClass.h"   // LAYOUT_32
+#include "../engine/InputConfig.h"    // InputConfigManager: the car's controls or the on-rails shooting's
 
 #include "Win32Types.h"
 #include <stdio.h>
@@ -101,6 +102,18 @@ enum { ANALOG_A = 0, ANALOG_B = 1, ANALOG_X = 2, ANALOG_Y = 3,
 //   Escape                       BACK
 //   arrow keys                   the d-pad as well as the stick, for menus
 //
+// The on-rails shooting (the POV configurations, povcfg*.def: Paris, the alpine and jungle parts 2-3) aims with
+// the left stick on both axes, fires with the right trigger and zooms with the left, so there the keys are:
+//
+//   A / D  or  left / right      aim left and right   (the left stick)
+//   W / S  or  up / down         aim up and down      (the left stick)
+//   Space                        fire                 (the right trigger)
+//   Q                            zoom                 (the left trigger)
+//   E  or  Left Shift            the next weapon      (B)
+//   R                            reload               (X)
+//
+// and the arrows are not the d-pad, which switches weapon and zooms the camera there.
+//
 // Only while the game's window is in front, so that typing elsewhere does not drive the car.
 // ---------------------------------------------------------------------------------------------------------------
 
@@ -123,6 +136,19 @@ static bool BuildKeyboardState(HostPadState *state) {
 
     if (left != right)
         state->thumbLX = left ? -32767 : 32767;
+    InputConfigManager *configs = InputConfigManager::Get();
+    if (configs->initialised && configs->currentType == kInputPOV) {
+        if (forward != back)
+            state->thumbLY = forward ? 32767 : -32767;
+        state->rightTrigger = HostInput_KeyHeld(kKeySpace) ? 255 : 0;
+        state->leftTrigger = HostInput_KeyHeld(kKeyQ) ? 255 : 0;
+        if (HostInput_KeyHeld(kKeyE) || HostInput_KeyHeld(kKeyShift)) state->buttons |= kPadB;
+        if (HostInput_KeyHeld(kKeyR))      state->buttons |= kPadX;
+        if (HostInput_KeyHeld(kKeyEnter))  state->buttons |= kPadStart;
+        if (HostInput_KeyHeld(kKeyEscape)) state->buttons |= kPadBack;
+        return state->buttons != 0 || state->thumbLX != 0 || state->thumbLY != 0 || state->leftTrigger != 0 ||
+               state->rightTrigger != 0;
+    }
     state->rightTrigger = forward ? 255 : 0;
     state->leftTrigger = back ? 255 : 0;
 
