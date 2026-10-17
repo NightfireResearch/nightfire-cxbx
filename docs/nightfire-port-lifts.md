@@ -40,6 +40,8 @@ to what it does. A function ported that way:
 
 | 8 | drone_init, drone_anim, drone (the creation half, and from Drone_DCVfromOBJ on) | 44 + 39 Xbox functions theirs inline or name otherwise: 32 renamed from FUN_ in Ghidra (the mode initialisers, e.g. NDrone2_init_DMODE_Sniper = 0x408b0; NDrone2_GetDroneTypeAttackTypeFriend = 0x3fe30, NDrone2_DoTypeSettingsOLD = 0x40430, NDrone2_GetDTYPENEW = 0x3fae0; the anim helpers, e.g. DroneAnim_GetDAnimForAnimState = 0x33040, DroneAnim_PreTransCallback = 0x33320, DAnimFunc_Run = 0x35ec0), two already named (DroneAnim_SetDAnimNow 0x35dc0, DroneAnim_SetDAnimVeryInternal 0x32f30) and 5 FUNC_AT (Drone_UpdateCombatChannels 0x314a0, NDrone2_HandleDoor 0x3cbf0, and the three ControlDTYPE_ functions 0x3f8a0, 0x3f910, 0x3f930, created in Ghidra). Of their 49 names without an Xbox match, 12 are MSVC's folded copies or the shared empty function 0xe0ec0, and 7 are inline (below) | 34 of 44; 539 of 667 blocks. DroneModeShadow: 82,000 cases; DroneInitShadow: 66,000; DroneAnimShadow: 216,000; DroneCoreShadow: 108,000; all 0 differ. At least one planted bug per suite line, all caught (two plants that change nothing are not counted: a `<` for `<=` behind a `!= 0` test, and a `/ 9` that truncates as `/ 10` does) | see git log |
 
+| 9 | drone_combat (the drone states and their helpers) | 213, in four packages: combat and aiming (NDrone2_Combat.cpp), cover, doors, snipers, alerts and searching (NDrone2_Cover.cpp, NDrone2_Alert.cpp), civilians, alarms, ninja, astronaut, impacts, stuns and surrender (NDrone2_Special.cpp, NDrone2_Reactions.cpp, NDrone2_Civilian.cpp, NDrone2_Death.cpp), scripted roles: truck drivers, abseiling, scary objects, interrogation, allies, hostages, ambush, testers (NDrone2_Roles.cpp, NDrone2_Hostage.cpp). Their NDrone2_DSTATE_AllyLeadDone is AllyFollowDone (0x4b5c0) in the Xbox state table; NDrone2_HostageSituationActive is the shared empty function 0xe0ec0 | 106 of 213; 1,195 of 3,557 blocks (five sessions now end early: tests/demos/action/README.md). DroneCombatShadow: 230,000 cases; DroneCoverShadow: 317,000; DroneReactShadow: 262,000; DroneRoleShadow: 128,000; all 0 differ. Under the shadow run the originals reach 877 of 878 of the roles' blocks and all but 7 of the 1,710 of cover, alerts and reactions (the rest unreachable with the shipped tables, or rare). One planted bug per package, all caught | see git log |
+
 Parcel 1's first playback found two things the coverage alone would not have shown:
 - **A crash in our code.** The port of `Script_CreateEntity` called our `Break_Create` by name, which is a known-broken
   draft that was never patched in. `tools/draft_calls.py` now finds such calls.
@@ -348,6 +350,19 @@ Found along the way:
 - `DroneTypeSettings`' control functions (0x3f8a0, 0x3f910, 0x3f930) had no function in Ghidra; the json counted them
   in `ControlSTANDARD`, which ends at 0x3f89b.
 
+### Parcel 9
+- `NDrone2_DSTATE_RunForCover` slides towards the cover by 0.025 of the gap a frame (`push 0x3ccccccd` at 0x5bb7c);
+  theirs uses 0.1. The other slides are as theirs: UnderCoverInit and UnderCoverIdle 0.08, SpecialDeath 0.05.
+- Found in our first drafts, not in theirs (their readings were right): `DroneFunc_FirstSightState` returns
+  DSTATE_Interogate (0x3c, `mov ax, 0x3c` at 0x3eb43) for CastleIndoors1 and the RefRoom, and DSTATE_CivilianChallenge
+  (0x3e) for TowerA and TowerB, by the jump table at 0x3ebd8/0x3ebe4; the eight `NDrone2_Can*` side moves test
+  `Drone_tag` 0x290 (`bunchFlags`, which DroneMove_NoBunching sets: 2 ahead, 4 behind, 8 left, 0x10 right), not the
+  boundary flags at 0x294; `NDrone2_DSTATE_AllyLeadMissionWait` reads the handler's drone argument (0x5242d).
+- `DroneAnim_ValidateCoverAnim` (0x33c10) takes the DCVars in ESI and the anim state in DI (an AUTOLTCG adaptor), and
+  reads the anim table for state 7 directly: `DroneAnim_CanDoAnimState(dcv, 7, 0)` folded in.
+- GameCube check 92 ("ERROR: Drone has no second weapon", 0x800b032c) is `NDrone2_DSTATE_StunGrenadeRecover`
+  (0x562a0); the Xbox dropped the test.
+
 ## Original bugs found while porting (kept; candidates for FIX_ORIGINAL_GAME_BUGS)
 
 - `Script_Load`, a file with 0x3f streams or more: hands its record to `DList_RemoveFromInUse2Free(&ScriptList)`,
@@ -446,6 +461,8 @@ Found along the way:
   and `DAnimFunc_Run` use `animScript` unchecked; `DroneAnim_EventFunc` carries on with uninitialised DCVars when
   `Drone_DCVfromOBJ` fails.
 - `Drone_Delete` uses other drones', bullets' and casings' extraObjectData unchecked (only the gun turret's is checked).
+- `NDrone2_SeenPlayerTalk` returns early for skin class 0x10, so its own speech line for that class further down is never reached.
+- `NDrone2_FindAmbushCover` reads whether the node is a corner or low cover from the entry after the table's last node, not from the node it chose; with neither, it returns false having already changed the drone's node.
 
 ## Departures from the original
 

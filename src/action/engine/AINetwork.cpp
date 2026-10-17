@@ -1830,7 +1830,7 @@ bool _LinkCreep_Handler(AIRoute_tag *route, DCVars_tag *dcv) {
         uchar blocked = 0;
         bool result = _LinkCreep_Increment(route, &blocked);
         if (blocked)
-            dcv->drone->unknown290 |= 0x1e;
+            dcv->drone->bunchFlags |= 0x1e;
         return result;
     }
     return _LinkCreep_Increment(route, NULL);

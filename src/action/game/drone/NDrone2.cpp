@@ -223,8 +223,7 @@ void Drone_AlertStatusSet(char newStatus, DCVars_tag *dcv) {
     drone->alertStatusChanged = 1;
 }
 
-// AUTOGEN
-bool NDrone2_AttackTalk(DCVars_tag *dcv);
+bool NDrone2_AttackTalk(DCVars_tag *dcv);   // NDrone2_Combat.cpp
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
 #define DroneAnim_SetScript ((void (__cdecl *)(HASHCODE script, short param_2, short param_3, char param_4, short param_5, int param_6, int param_7, DCVars_tag *dcv))0x00034680)

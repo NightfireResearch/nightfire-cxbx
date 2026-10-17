@@ -360,7 +360,7 @@ bool SolveQuadratic(float a, float b, float c, float *root1, float *root2) {
 }
 
 // Which side the nearest drone (from NDrone2_Steer) is on, off the way the drone faces (its anim's turn, unknown46c
-// 8, 0x10, 0x20, added): unknown290 gets 0x10 right or 8 left, and 2 within 45 degrees of ahead or 4. False with no
+// 8, 0x10, 0x20, added): bunchFlags gets 0x10 right or 8 left, and 2 within 45 degrees of ahead or 4. False with no
 // nearest drone, or a frozen one (0x10).
 // AUTOINJECT
 bool DroneMove_NoBunching(DCVars_tag *dcv) {
@@ -380,8 +380,8 @@ bool DroneMove_NoBunching(DCVars_tag *dcv) {
     if (drone->unknown46c & 0x20)
         facing = facing - kHalfPi;
     float turn = Vec_AngleDifference(facing, bearing);
-    drone->unknown290 |= turn < 0.0f ? 0x10 : 8;
-    drone->unknown290 |= AngleSize(turn) < kQuarterPi ? 2 : 4;
+    drone->bunchFlags |= turn < 0.0f ? 0x10 : 8;
+    drone->bunchFlags |= AngleSize(turn) < kQuarterPi ? 2 : 4;
     return true;
 }
 

@@ -12,12 +12,21 @@
 #include "../sp/Mission.h"              // Mission_SetFailLabel (ours)
 #include "../sp/SwitchChannels.h"
 #include "NDrone2_Opponent.h"
+#include "../mp/multiplayer.h"          // MPSettings
+#include "../sp/PlayerStats.h"          // PlrStat_LogEnemyDispatched (ours)
+#include "../../sound/Sound.h"          // Sound_Play3D
 
+#include <bit>
 #include <math.h>
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
-#define NDrone2_LogDroneDeath ((void (__cdecl *)(DCVars_tag *dcv))0x0003a1d0)
 #define Pickup_CreateSimple ((obj_tag *(__cdecl *)(_MATRIX *mtx, short weapon, short count, _VECTOR *pos))0x000a7f10)
+#define DroneAnim_SetScript ((bool (__cdecl *)(HASHCODE script, ushort animState, ushort nextRow, uchar blend,                                              short endState, uint endMsg, uint flags, DCVars_tag *dcv))0x00034680)
+#define NDrone2_SlideToPosition ((void (__cdecl *)(_VECTOR *pos, float speed, char turn, DCVars_tag *dcv))0x00043b20)
+// FUN_0002faa0 in Ghidra (our name): Vec_Dist3D from the drone to obj, returned in ST0
+#define NDrone2_DistanceToObj ((double (__cdecl *)(DCVars_tag *dcv, obj_tag *obj))0x0002faa0)
+// Returns in ST0, unrounded
+#define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
 
 // DroneInit.cpp
 void NDrone2_Enable(char enable, Drone_tag *drone);
@@ -127,6 +136,15 @@ bool DroneFunc_SetDeathChannel(Drone_tag *drone) {
     }
     SwitchChannel_SetActive(channel);
     return true;
+}
+
+// An enemy killed by the player (by its opponent in multiplayer) counts as dispatched, unless it was knocked out
+// AUTOINJECT
+void NDrone2_LogDroneDeath(DCVars_tag *dcv) {
+    Drone_tag *drone = dcv->drone;
+    obj_tag *killer = MPSettings.maybeDroneAIEnabled == 0 ? NDrone2_Player() : drone->opponent;
+    if (drone->lastAttacker == killer && !(drone->flags & 0x1000000) && drone->side == 1)
+        PlrStat_LogEnemyDispatched(0);
 }
 
 // As a drone starts to die: the mission fails if it must not (properties 0x53, or 0x54 when the player killed it),
@@ -326,6 +344,81 @@ bool NDrone2_DSTATE_DeathByExplosion(DCVars_tag *dcv, Drone_tag *drone, obj_tag 
             DroneFunc_SetDeathChannel(drone);
             drone->stateScratch = 0;
         }
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+// The death script whose death is played only 2 m or more from the player, with sound 0x148 at its end; a drone
+// that surrenders drops it
+#define DEATH_SCRIPT_21F 0x0600021f
+#define SFX_DEATH_SCRIPT_21F 0x148
+
+// The row played after a death script
+#define DANIM_ROW_AFTER_DEATH_SCRIPT 0xbf
+
+// Evaluates x twice (the original calls Vec_AngleDifference again for the value)
+#define ABS(x) ((x) < 0.0f ? -(x) : (x))
+
+static_assert(std::bit_cast<uint32_t>((float)M_PI_2) == 0x3fc90fdb, "not the original's pi/2");
+static_assert(std::bit_cast<uint32_t>(0.05f) == 0x3d4ccccd, "not the original's 0.05");
+
+// Dying by the drone's death script (placement key 13), when it stands within 1 m (in plan) and 90 degrees of where
+// the script starts: the drone slides there and plays it, then lies dead (HostageDead for a hostage). Otherwise the
+// script is dropped and it dies as usual. Timer A (60 ticks on) sets stateScratch.
+// AUTOINJECT
+bool NDrone2_DSTATE_SpecialDeath_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+    case DRONE_MSG_AttackNow:
+        return true;
+
+    case DRONE_MSG_Enter:
+        gameObj->effectFlags |= 0x20;
+        Drone_AlertStatusSet(3, dcv);
+        // A NaN distance plays the script; NDrone2_Player() is not checked for NULL
+        if (!(drone->deathScript == DEATH_SCRIPT_21F && NDrone2_DistanceToObj(dcv, NDrone2_Player()) < 2.0f) &&
+            Vec_Dist2D(&dcv->gameObj->position, &dcv->drone->scriptedMovePos) < 1.0f &&
+            ABS(Vec_AngleDifference(dcv->drone->scriptedMoveRot.y, dcv->gameObj->rotation.y)) < (float)M_PI_2 &&
+            dcv->drone->deathScript != 0) {
+            DroneFunc_OnInitDeath(dcv);
+            DroneFunc_SetDeathChannel(drone);
+            drone->flags &= ~0x80000000;
+            Vec_Copy(&dcv->drone->scriptedMoveRot, &dcv->drone->moveTargetRot);
+            DroneAnim_SetScript(dcv->drone->deathScript, 0x40, 0, 0, 0, DRONE_MSG_ScriptEnd, 0, dcv);
+            drone->unknown1a = 1;
+            drone->animEndState = dcv->drone->dtype == DTYPE_Hostage ? DSTATE_HostageDead : DSTATE_Dead;
+            drone->animEndMsg = DRONE_MSG_ScriptEnd;
+            drone->animNextRow = DANIM_ROW_AFTER_DEATH_SCRIPT;
+            dcv->drone->flags &= ~0x20;
+            dcv->drone->flags &= ~0x80;
+            drone->stateScratch = 0;
+            Death_SetTimer(&dcv->drone->timerA, Death_FramesFromNow(60.0f));
+            return true;
+        }
+        if (drone->deathScript == DEATH_SCRIPT_21F)
+            drone->deathSwitchChannel = 0;
+        drone->deathScript = (HASHCODE)0;
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Death_Anim, 0);
+
+    case DRONE_MSG_Update:
+        NDrone2_SlideToPosition(&drone->scriptedMovePos, 0.05f, 1, dcv);
+        if (!drone->firing || drone->animSet == 4 || drone->animSet == 9)
+            DroneWeap_DropWeapon(dcv);
+        return true;
+
+    case DRONE_MSG_ScriptEnd:
+        if (drone->deathScript == DEATH_SCRIPT_21F && glb_players[0] != NULL)
+            Sound_Play3D((Action_SFX)SFX_DEATH_SCRIPT_21F, &glb_players[0]->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+        if (dcv->drone->dtype == DTYPE_Hostage)
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_HostageDead, 0);
+        Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Dead, 0);
+        return true;
+
+    case DRONE_MSG_TimerA:
+        drone->stateScratch = 1;
         return true;
 
     default:

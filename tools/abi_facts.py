@@ -73,6 +73,10 @@ class Image:
             self.cache[address] = decoded
         return self.cache[address]
 
+    def u8(self, address):
+        raw = read_at(self.data, self.sections, address, 1)
+        return raw[0] if len(raw) == 1 else None
+
     def u32(self, address):
         raw = read_at(self.data, self.sections, address, 4)
         return int.from_bytes(raw, "little") if len(raw) == 4 else None
@@ -82,13 +86,14 @@ def reg_names(md, regs):
     return {FAMILY[md.reg_name(r)] for r in regs if md.reg_name(r) in FAMILY}
 
 
-def jump_table_targets(image, insn, start, end):
-    # jmp dword ptr [reg*4 + table]: read entries while they land inside the function.
+def jump_table_targets(image, insn, start, end, count=None):
+    # jmp dword ptr [reg*4 + table]: the entries the bounds check before it allows (count), or, without one, read
+    # entries while they land inside the function. A second table placed after the first lands inside it too.
     op = insn.operands[0]
     if op.type != x86.X86_OP_MEM or op.mem.scale != 4 or op.mem.disp == 0:
         return None
     targets = []
-    for i in range(1024):
+    for i in range(1024 if count is None else count):
         target = image.u32(op.mem.disp + i * 4)
         if target is None or not (start <= target < end):
             break
@@ -108,6 +113,8 @@ def analyse(image, start, end, known):
     steps = 0
     while work:
         address, written = work.pop()
+        bound = None        # (register, highest index) from the last cmp reg, imm: a jump table's bounds check
+        index_bytes = None  # (register, byte table, register indexing it) from the last movzx reg, byte [reg + table]
         while True:
             if (address, written) in seen:
                 break
@@ -147,6 +154,11 @@ def analyse(image, start, end, known):
                     first_read[r] = address
             written = written | frozenset(wrote & set(TRACKED))
 
+            if mnemonic == "cmp" and len(ops) == 2 and ops[0].type == x86.X86_OP_REG and ops[1].type == x86.X86_OP_IMM:
+                bound = (image.md.reg_name(ops[0].reg), ops[1].imm)
+            if mnemonic == "movzx" and len(ops) == 2 and ops[0].type == x86.X86_OP_REG                     and ops[1].type == x86.X86_OP_MEM and ops[1].size == 1 and ops[1].mem.index == 0                     and ops[1].mem.base != 0 and ops[1].mem.disp != 0:
+                index_bytes = (image.md.reg_name(ops[0].reg), ops[1].mem.disp, image.md.reg_name(ops[1].mem.base))
+
             if mnemonic == "ret":
                 pops.add(ops[0].imm if ops else 0)
                 break
@@ -179,7 +191,16 @@ def analyse(image, start, end, known):
                             regs_in.add(r)
                             first_read[r] = address
                     break
-                targets = jump_table_targets(image, insn, start, end)
+                count = None
+                if ops and ops[0].type == x86.X86_OP_MEM and ops[0].mem.index != 0 and bound is not None                         and 0 <= bound[1] < 1024:
+                    index = image.md.reg_name(ops[0].mem.index)
+                    if index == bound[0]:
+                        count = bound[1] + 1
+                    elif index_bytes is not None and index_bytes[0] == index and index_bytes[2] == bound[0]:
+                        indices = [image.u8(index_bytes[1] + i) for i in range(bound[1] + 1)]
+                        if None not in indices:
+                            count = max(indices) + 1
+                targets = jump_table_targets(image, insn, start, end, count)
                 if targets is None:
                     complete = False
                     break

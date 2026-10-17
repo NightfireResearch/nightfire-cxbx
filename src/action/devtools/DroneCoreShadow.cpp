@@ -468,7 +468,7 @@ void RandomDrone(int i) {
     d->facialAnim = ShadowRand(4) == 0 ? NULL : (void *)&world.facial;
     RandomVector(&d->moveRotation, 4.0f);
     d->yawOffset = SpecialOr(-1.0f, 1.0f);
-    d->unknown290 = ShadowRand(100);
+    d->bunchFlags = ShadowRand(100);
     d->nearestDrone = RandomDronePtr();
     d->nearestDroneDist = 3.0f;
 

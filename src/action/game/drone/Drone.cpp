@@ -772,7 +772,7 @@ bool NDrone2_ControlSTANDARD(DCVars_tag *dcv) {
     if (drone->flies) {
         NDrone2_Move(dcv);
     } else {
-        drone->unknown290 = 0;
+        drone->bunchFlags = 0;
         drone->nearestDrone = NULL;
         drone->nearestDroneDist = 0.0f;
         DroneMove_SetBoundryFlags(dcv);

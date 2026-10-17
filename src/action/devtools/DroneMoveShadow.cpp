@@ -458,7 +458,7 @@ void RandomDrone(int i) {
     d->unknown3f0 = ShadowRand(5) == 0 ? 0x8000000 : 0;
     static const uint animFlags[] = {0, 0, 8, 0x10, 0x20, 0x38, 0x80, 0x200};
     d->unknown46c = animFlags[ShadowRand(sizeof(animFlags) / sizeof(animFlags[0]))];
-    d->unknown290 = ShadowRand(4) == 0 ? 0x1e : 0;
+    d->bunchFlags = ShadowRand(4) == 0 ? 0x1e : 0;
     RandomVector(&d->pushOffset, 0.2f);
     RandomVector(&d->prevPushOffset, 0.2f);
     RandomVector(&d->velocity, 5.0f);

@@ -156,7 +156,7 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | 89 | FUN_80088e84 (set drone anim script) | 0x80088e84 | the drone's script slot (+0x42c) is still NULL after setup | Couldn't set script 0x%08x | no | DroneAnim_SetScript? | 0x34680 | low-med | ? |
 | 90 | FUN_80089e54 (cover anim chooser) | 0x80089e54 | no corner-cover behaviour is available | Doing CornerCover with no behaviour | no | DroneAnim_CoverAnim? | 0x34750 | low-med | ? |
 | 91 | FUN_80089678 (drone anim event callback) | 0x80089678 | event 2 and drone weapon count < 2 | ERROR: Drone has no second weapon | no | DroneAnim_EventFunc | 0x33590 | high | ? | src/action/game/drone/DroneAnim.cpp - added |
-| 92 | FUN_800b032c (behaviour handler, table 0x801fec88) | 0x800b032c | msg 1 and drone has no second weapon | ERROR: Drone has no second weapon | no | not matched | - | - | ? |
+| 92 | FUN_800b032c (behaviour handler, table 0x801fec88) | 0x800b032c | msg 1, not a civilian, and drone has no second weapon | ERROR: Drone has no second weapon | no | NDrone2_DSTATE_StunGrenadeRecover | 0x562a0 | high | dropped | src/action/game/drone/NDrone2_Reactions.cpp - added |
 | **Player / weapons / rewards** |
 | 93 | FUN_800f6760 (give player weapon) | 0x800f6760 | weapon has no skin hash / skin not loaded → return 0 | FYI: Weapon %d has no skin / FYI: Weapon %d not loaded | no | not matched (unnamed on Xbox) | - | - | ? |
 | 94 | FUN_80078620 (second give-weapon path) | 0x80078620 | same as 93 | same | no | not matched | - | - | ? |

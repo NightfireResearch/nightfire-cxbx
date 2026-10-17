@@ -7373,24 +7373,16 @@
 "0x0005e220": {
 "bytes": "8b4424108b0883f9",
 "complete": true,
-"first_read": {
-"esi": "0x0005e393"
-},
+"first_read": {},
 "pops": 0,
-"regs_in": [
-"esi"
-]
+"regs_in": []
 },
 "0x0005e4a0": {
 "bytes": "8b4424108b0883f9",
 "complete": true,
-"first_read": {
-"esi": "0x0005e5c7"
-},
+"first_read": {},
 "pops": 0,
-"regs_in": [
-"esi"
-]
+"regs_in": []
 },
 "0x0005e830": {
 "bytes": "8b4424108b0883f9",
@@ -9060,6 +9052,13 @@
 "edx"
 ]
 },
+"0x0006cd20": {
+"bytes": "568b353cec1f0085",
+"complete": true,
+"first_read": {},
+"pops": 0,
+"regs_in": []
+},
 "0x0006ce90": {
 "bytes": "6affc60548ec1f00",
 "complete": true,
@@ -9082,9 +9081,9 @@
 },
 "0x0006cf50": {
 "bytes": "5153555657bae4e6",
-"complete": false,
+"complete": true,
 "first_read": {},
-"pops": null,
+"pops": 0,
 "regs_in": []
 },
 "0x0006d130": {
@@ -14893,13 +14892,9 @@
 "0x000bfb60": {
 "bytes": "a18492270083f803",
 "complete": true,
-"first_read": {
-"ebx": "0x000bfced"
-},
+"first_read": {},
 "pops": 0,
-"regs_in": [
-"ebx"
-]
+"regs_in": []
 },
 "0x000bff80": {
 "bytes": "a051922700c39090",

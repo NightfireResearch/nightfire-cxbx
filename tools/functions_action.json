@@ -7610,7 +7610,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000332e0",
+        "name": "DroneAnim_InTransition",
         "address": "0x000332e0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -7684,7 +7684,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00033820",
+        "name": "DroneAnim_CoverModeAnim",
         "address": "0x00033820",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -7702,7 +7702,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00033870",
+        "name": "DroneAnim_ForceCrouchCover",
         "address": "0x00033870",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -7720,7 +7720,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000338b0",
+        "name": "DroneAnim_CanCrouchLean",
         "address": "0x000338b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -7738,7 +7738,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00033990",
+        "name": "DroneAnim_CanCrouchStepOut",
         "address": "0x00033990",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -7810,7 +7810,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00033bf0",
+        "name": "DroneAnim_CanUseCornerAsLowCover",
         "address": "0x00033bf0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -7846,7 +7846,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00033c70",
+        "name": "DroneAnim_GetMoveQuad",
         "address": "0x00033c70",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -8124,7 +8124,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000354c0",
+        "name": "DroneAnim_SetCombatMoveAnim",
         "address": "0x000354c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -8650,7 +8650,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00036f20",
+        "name": "NDrone2_SetDoorGuardPlanes",
         "address": "0x00036f20",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -8690,7 +8690,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000371d0",
+        "name": "NDrone2_DoorGuardHandler",
         "address": "0x000371d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -9146,7 +9146,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00039780",
+        "name": "DroneFunc_Using2ndBehaviour",
         "address": "0x00039780",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -9162,7 +9162,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00039790",
+        "name": "DroneFunc_Set1stBehaviour",
         "address": "0x00039790",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -9178,7 +9178,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000397c0",
+        "name": "DroneFunc_Set2ndBehaviour",
         "address": "0x000397c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -9344,7 +9344,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00039df0",
+        "name": "NDrone2_FindElevatorDoor",
         "address": "0x00039df0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -9770,7 +9770,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0003ad70",
+        "name": "DroneFunc_FirstAlertState",
         "address": "0x0003ad70",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": true,
@@ -9786,7 +9786,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0003add0",
+        "name": "DroneFunc_AttackNoWeapon",
         "address": "0x0003add0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -9802,7 +9802,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0003ae20",
+        "name": "DroneFunc_CombatState",
         "address": "0x0003ae20",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -10104,7 +10104,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0003c780",
+        "name": "DroneFunc_HeardNoiseTalk",
         "address": "0x0003c780",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -10136,7 +10136,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0003c900",
+        "name": "DroneFunc_UnderCoverAimTalk",
         "address": "0x0003c900",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -10152,7 +10152,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0003c9f0",
+        "name": "DroneFunc_RunForCoverTalk",
         "address": "0x0003c9f0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -10168,7 +10168,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0003cb00",
+        "name": "DroneFunc_UnderCoverTalk",
         "address": "0x0003cb00",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -10496,7 +10496,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0003ea80",
+        "name": "DroneFunc_FirstSightState",
         "address": "0x0003ea80",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -11374,7 +11374,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00043650",
+        "name": "NDrone2_CanAimCrouch",
         "address": "0x00043650",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11638,7 +11638,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00043d50",
+        "name": "NDrone2_SetAngleToAlert",
         "address": "0x00043d50",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11656,7 +11656,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00043db0",
+        "name": "NDrone2_GetAngleDifferenceToAlert",
         "address": "0x00043db0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11672,7 +11672,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00043e00",
+        "name": "NDrone2_SetAngleToCover",
         "address": "0x00043e00",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11922,7 +11922,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00044310",
+        "name": "NDrone2_CoverNodeOK",
         "address": "0x00044310",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11944,7 +11944,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00044490",
+        "name": "NDrone2_GetPosForCornerCover",
         "address": "0x00044490",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -12368,7 +12368,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00045870",
+        "name": "NDrone2_CanStrafeDodgeLeft",
         "address": "0x00045870",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -12384,7 +12384,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00045900",
+        "name": "NDrone2_CanStrafeDodgeRight",
         "address": "0x00045900",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -12512,7 +12512,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00045d30",
+        "name": "NDrone2_EvasiveMove",
         "address": "0x00045d30",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -12562,7 +12562,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00046160",
+        "name": "NDrone2_MoveTo_RouteNode",
         "address": "0x00046160",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -12790,7 +12790,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00046d90",
+        "name": "NDrone2_MoveToObject",
         "address": "0x00046d90",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -12934,7 +12934,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000475c0",
+        "name": "NDrone2_SetGoalToDroneWithLosToOpponent",
         "address": "0x000475c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -43540,7 +43540,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000d6320",
+        "name": "plane_from_two_vectors_and_point",
         "address": "0x000d6320",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
