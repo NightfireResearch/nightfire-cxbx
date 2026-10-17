@@ -1,0 +1,1078 @@
+{
+ "program": "default.xbe",
+ "enums": [
+  {
+   "name": "DSTATE",
+   "size": 2,
+   "comment": "NDrone2 states: each is the name of the function in its slot of the PS2 NDrone2_StateFuncs (src/action/game/drone/NDrone2.h)",
+   "values": [
+    {
+     "name": "DSTATE_Global",
+     "value": 0
+    },
+    {
+     "name": "DSTATE_WaitSwitch",
+     "value": 1
+    },
+    {
+     "name": "DSTATE_Disabled",
+     "value": 2
+    },
+    {
+     "name": "DSTATE_PlayScript",
+     "value": 3
+    },
+    {
+     "name": "DSTATE_Idle",
+     "value": 4
+    },
+    {
+     "name": "DSTATE_Alert",
+     "value": 5
+    },
+    {
+     "name": "DSTATE_InitPatrol",
+     "value": 6
+    },
+    {
+     "name": "DSTATE_Patrol",
+     "value": 7
+    },
+    {
+     "name": "DSTATE_HostageKiller",
+     "value": 8
+    },
+    {
+     "name": "DSTATE_HostageKillerAttack",
+     "value": 9
+    },
+    {
+     "name": "DSTATE_Hostage",
+     "value": 10
+    },
+    {
+     "name": "DSTATE_HostageDie",
+     "value": 11
+    },
+    {
+     "name": "DSTATE_HostageSaved",
+     "value": 12
+    },
+    {
+     "name": "DSTATE_HostageIdle",
+     "value": 13
+    },
+    {
+     "name": "DSTATE_HostageHide",
+     "value": 14
+    },
+    {
+     "name": "DSTATE_HostageDead",
+     "value": 15
+    },
+    {
+     "name": "DSTATE_CivilianInit",
+     "value": 16
+    },
+    {
+     "name": "DSTATE_Civilian",
+     "value": 17
+    },
+    {
+     "name": "DSTATE_CivilianScared",
+     "value": 18
+    },
+    {
+     "name": "DSTATE_CivilianHiding",
+     "value": 19
+    },
+    {
+     "name": "DSTATE_CivilianPatrol",
+     "value": 20
+    },
+    {
+     "name": "DSTATE_ReturnToPatrolPath",
+     "value": 21
+    },
+    {
+     "name": "DSTATE_CivilianMission",
+     "value": 22
+    },
+    {
+     "name": "DSTATE_CivilianMissionWait",
+     "value": 23
+    },
+    {
+     "name": "DSTATE_StandBlind",
+     "value": 24
+    },
+    {
+     "name": "DSTATE_KikoMission",
+     "value": 25
+    },
+    {
+     "name": "DSTATE_KikoMissionRun",
+     "value": 26
+    },
+    {
+     "name": "DSTATE_EnemyMission",
+     "value": 27
+    },
+    {
+     "name": "DSTATE_AllyLeadInit",
+     "value": 28
+    },
+    {
+     "name": "DSTATE_AllyLead",
+     "value": 29
+    },
+    {
+     "name": "DSTATE_AllyLeadPlayerInWay",
+     "value": 30
+    },
+    {
+     "name": "DSTATE_AllyLeadHide",
+     "value": 31
+    },
+    {
+     "name": "DSTATE_AllyLeadWait",
+     "value": 32
+    },
+    {
+     "name": "DSTATE_AllyLeadMissionWait",
+     "value": 33
+    },
+    {
+     "name": "DSTATE_AllyLeadBondCombat",
+     "value": 34
+    },
+    {
+     "name": "DSTATE_AllyLeadDone",
+     "value": 35
+    },
+    {
+     "name": "DSTATE_AllyFollowInit",
+     "value": 36
+    },
+    {
+     "name": "DSTATE_AllyFollow",
+     "value": 37
+    },
+    {
+     "name": "DSTATE_AllyFollowWait",
+     "value": 38
+    },
+    {
+     "name": "DSTATE_AllyFollowDone",
+     "value": 39
+    },
+    {
+     "name": "DSTATE_AllyGoToGoalPosition",
+     "value": 40
+    },
+    {
+     "name": "DSTATE_SniperIdle",
+     "value": 41
+    },
+    {
+     "name": "DSTATE_SniperAim",
+     "value": 42
+    },
+    {
+     "name": "DSTATE_SniperFire",
+     "value": 43
+    },
+    {
+     "name": "DSTATE_SniperReload",
+     "value": 44
+    },
+    {
+     "name": "DSTATE_GrenadeThrow",
+     "value": 45
+    },
+    {
+     "name": "DSTATE_PartyGirlInit",
+     "value": 46
+    },
+    {
+     "name": "DSTATE_PartyGirl",
+     "value": 47
+    },
+    {
+     "name": "DSTATE_CivilianGuard",
+     "value": 48
+    },
+    {
+     "name": "DSTATE_CivilianDoorGuard",
+     "value": 49
+    },
+    {
+     "name": "DSTATE_TruckDriverInit",
+     "value": 50
+    },
+    {
+     "name": "DSTATE_TruckDriverInitAlert",
+     "value": 51
+    },
+    {
+     "name": "DSTATE_TruckDriverIdle",
+     "value": 52
+    },
+    {
+     "name": "DSTATE_TruckDriverMission",
+     "value": 53
+    },
+    {
+     "name": "DSTATE_CastleChatGuard1",
+     "value": 54
+    },
+    {
+     "name": "DSTATE_AmbushInit",
+     "value": 55
+    },
+    {
+     "name": "DSTATE_AmbushWait",
+     "value": 56
+    },
+    {
+     "name": "DSTATE_InterogateAssist",
+     "value": 57
+    },
+    {
+     "name": "DSTATE_InterogateAssistWait",
+     "value": 58
+    },
+    {
+     "name": "DSTATE_Interogator",
+     "value": 59
+    },
+    {
+     "name": "DSTATE_Interogate",
+     "value": 60
+    },
+    {
+     "name": "DSTATE_InterogateWalk",
+     "value": 61
+    },
+    {
+     "name": "DSTATE_CivilianChallenge",
+     "value": 62
+    },
+    {
+     "name": "DSTATE_Surrender_Anim",
+     "value": 63
+    },
+    {
+     "name": "DSTATE_Surrendered",
+     "value": 64
+    },
+    {
+     "name": "DSTATE_Unsurrender_Anim",
+     "value": 65
+    },
+    {
+     "name": "DSTATE_KnockedOut_Anim",
+     "value": 66
+    },
+    {
+     "name": "DSTATE_Knocked_Out",
+     "value": 67
+    },
+    {
+     "name": "DSTATE_Death_Anim",
+     "value": 68
+    },
+    {
+     "name": "DSTATE_DeathByExplosion",
+     "value": 69
+    },
+    {
+     "name": "DSTATE_SpecialDeath_Anim",
+     "value": 70
+    },
+    {
+     "name": "DSTATE_Dead",
+     "value": 71
+    },
+    {
+     "name": "DSTATE_Fade",
+     "value": 72
+    },
+    {
+     "name": "DSTATE_FadeFast",
+     "value": 73
+    },
+    {
+     "name": "DSTATE_Taser",
+     "value": 74
+    },
+    {
+     "name": "DSTATE_Stunned",
+     "value": 75
+    },
+    {
+     "name": "DSTATE_Stunned_Recover",
+     "value": 76
+    },
+    {
+     "name": "DSTATE_StunGrenadeImpact",
+     "value": 77
+    },
+    {
+     "name": "DSTATE_StunGrenadeLoop",
+     "value": 78
+    },
+    {
+     "name": "DSTATE_StunGrenadeRecover",
+     "value": 79
+    },
+    {
+     "name": "DSTATE_StunDartImpact",
+     "value": 80
+    },
+    {
+     "name": "DSTATE_StunDartLoop",
+     "value": 81
+    },
+    {
+     "name": "DSTATE_StunDartRecover",
+     "value": 82
+    },
+    {
+     "name": "DSTATE_PunchImpact",
+     "value": 83
+    },
+    {
+     "name": "DSTATE_ExplosiveImpact",
+     "value": 84
+    },
+    {
+     "name": "DSTATE_BulletImpact",
+     "value": 85
+    },
+    {
+     "name": "DSTATE_Attack",
+     "value": 86
+    },
+    {
+     "name": "DSTATE_Alerted1stEncounter",
+     "value": 87
+    },
+    {
+     "name": "DSTATE_Combat",
+     "value": 88
+    },
+    {
+     "name": "DSTATE_CombatNoMove",
+     "value": 89
+    },
+    {
+     "name": "DSTATE_CombatOutOfRange",
+     "value": 90
+    },
+    {
+     "name": "DSTATE_CombatNewSighting",
+     "value": 91
+    },
+    {
+     "name": "DSTATE_CombatNoSight",
+     "value": 92
+    },
+    {
+     "name": "DSTATE_CombatTooClose",
+     "value": 93
+    },
+    {
+     "name": "DSTATE_CombatWait",
+     "value": 94
+    },
+    {
+     "name": "DSTATE_CombatNoRoute",
+     "value": 95
+    },
+    {
+     "name": "DSTATE_NoOpponent",
+     "value": 96
+    },
+    {
+     "name": "DSTATE_Obstructed",
+     "value": 97
+    },
+    {
+     "name": "DSTATE_AlertToPosition",
+     "value": 98
+    },
+    {
+     "name": "DSTATE_GoToGoalPosition",
+     "value": 99
+    },
+    {
+     "name": "DSTATE_HostageGoToGoalPosition",
+     "value": 100
+    },
+    {
+     "name": "DSTATE_SearchArea",
+     "value": 101
+    },
+    {
+     "name": "DSTATE_DrawWeapon",
+     "value": 102
+    },
+    {
+     "name": "DSTATE_AimStand",
+     "value": 103
+    },
+    {
+     "name": "DSTATE_AimStandFire",
+     "value": 104
+    },
+    {
+     "name": "DSTATE_AimStandReload",
+     "value": 105
+    },
+    {
+     "name": "DSTATE_AimStandDiscard",
+     "value": 106
+    },
+    {
+     "name": "DSTATE_Prone",
+     "value": 107
+    },
+    {
+     "name": "DSTATE_ProneFire",
+     "value": 108
+    },
+    {
+     "name": "DSTATE_AimBackoff",
+     "value": 109
+    },
+    {
+     "name": "DSTATE_CrouchCover",
+     "value": 110
+    },
+    {
+     "name": "DSTATE_AimCrouch",
+     "value": 111
+    },
+    {
+     "name": "DSTATE_AimCrouchFire",
+     "value": 112
+    },
+    {
+     "name": "DSTATE_AimCrouchReload",
+     "value": 113
+    },
+    {
+     "name": "DSTATE_AltAttack",
+     "value": 114
+    },
+    {
+     "name": "DSTATE_StepAimLeft",
+     "value": 115
+    },
+    {
+     "name": "DSTATE_StepAimRight",
+     "value": 116
+    },
+    {
+     "name": "DSTATE_StrafeAimLeft",
+     "value": 117
+    },
+    {
+     "name": "DSTATE_StrafeAimRight",
+     "value": 118
+    },
+    {
+     "name": "DSTATE_StrafeDodgeLeft",
+     "value": 119
+    },
+    {
+     "name": "DSTATE_StrafeDodgeRight",
+     "value": 120
+    },
+    {
+     "name": "DSTATE_RollLeftCrouch",
+     "value": 121
+    },
+    {
+     "name": "DSTATE_RollRightCrouch",
+     "value": 122
+    },
+    {
+     "name": "DSTATE_SmokedOut",
+     "value": 123
+    },
+    {
+     "name": "DSTATE_SmokedOut_Loop",
+     "value": 124
+    },
+    {
+     "name": "DSTATE_SmokedOut_Recover",
+     "value": 125
+    },
+    {
+     "name": "DSTATE_Investigate",
+     "value": 126
+    },
+    {
+     "name": "DSTATE_DroneStuck",
+     "value": 127
+    },
+    {
+     "name": "DSTATE_HoldItRightThere",
+     "value": 128
+    },
+    {
+     "name": "DSTATE_OpenDoor",
+     "value": 129
+    },
+    {
+     "name": "DSTATE_KickObject",
+     "value": 130
+    },
+    {
+     "name": "DSTATE_ActionAnim",
+     "value": 131
+    },
+    {
+     "name": "DSTATE_StandFiddle",
+     "value": 132
+    },
+    {
+     "name": "DSTATE_EnemyRunToPoint",
+     "value": 133
+    },
+    {
+     "name": "DSTATE_RunAwayFromObject",
+     "value": 134
+    },
+    {
+     "name": "DSTATE_HideFromScaryObject",
+     "value": 135
+    },
+    {
+     "name": "DSTATE_RecoverFromScaryObject",
+     "value": 136
+    },
+    {
+     "name": "DSTATE_RunToAlarm",
+     "value": 137
+    },
+    {
+     "name": "DSTATE_PressAlarm",
+     "value": 138
+    },
+    {
+     "name": "DSTATE_DonePressAlarm",
+     "value": 139
+    },
+    {
+     "name": "DSTATE_RunForCover",
+     "value": 140
+    },
+    {
+     "name": "DSTATE_ElevatorJumper",
+     "value": 141
+    },
+    {
+     "name": "DSTATE_AbseilInit",
+     "value": 142
+    },
+    {
+     "name": "DSTATE_AbseilSlide",
+     "value": 143
+    },
+    {
+     "name": "DSTATE_AbseilHang",
+     "value": 144
+    },
+    {
+     "name": "DSTATE_AbseilStepOff",
+     "value": 145
+    },
+    {
+     "name": "DSTATE_AbseilDeath",
+     "value": 146
+    },
+    {
+     "name": "DSTATE_UnderCoverInit",
+     "value": 147
+    },
+    {
+     "name": "DSTATE_UnderCoverIdle",
+     "value": 148
+    },
+    {
+     "name": "DSTATE_UnderCoverAim",
+     "value": 149
+    },
+    {
+     "name": "DSTATE_UnderCoverFire",
+     "value": 150
+    },
+    {
+     "name": "DSTATE_UnderCoverSniperFire",
+     "value": 151
+    },
+    {
+     "name": "DSTATE_UnderCoverSniperReload",
+     "value": 152
+    },
+    {
+     "name": "DSTATE_UnderCoverReturn",
+     "value": 153
+    },
+    {
+     "name": "DSTATE_UnderCoverTypeChange",
+     "value": 154
+    },
+    {
+     "name": "DSTATE_UnderCoverLeave",
+     "value": 155
+    },
+    {
+     "name": "DSTATE_UnderCoverLeaveNow",
+     "value": 156
+    },
+    {
+     "name": "DSTATE_SeenOpponent",
+     "value": 157
+    },
+    {
+     "name": "DSTATE_SeenDeadBody",
+     "value": 158
+    },
+    {
+     "name": "DSTATE_SeenSurrenderedDrone",
+     "value": 159
+    },
+    {
+     "name": "DSTATE_SeenDroneShot",
+     "value": 160
+    },
+    {
+     "name": "DSTATE_SeenExplosive",
+     "value": 161
+    },
+    {
+     "name": "DSTATE_HeardNoise",
+     "value": 162
+    },
+    {
+     "name": "DSTATE_HeardNoiseAware",
+     "value": 163
+    },
+    {
+     "name": "DSTATE_HeardNoiseSuspect",
+     "value": 164
+    },
+    {
+     "name": "DSTATE_HeardNoiseAlert",
+     "value": 165
+    },
+    {
+     "name": "DSTATE_NinjaStand",
+     "value": 166
+    },
+    {
+     "name": "DSTATE_NinjaAttack",
+     "value": 167
+    },
+    {
+     "name": "DSTATE_NinjaAttackLongRange",
+     "value": 168
+    },
+    {
+     "name": "DSTATE_NinjaAttackMidRange",
+     "value": 169
+    },
+    {
+     "name": "DSTATE_NinjaAttackShortRange",
+     "value": 170
+    },
+    {
+     "name": "DSTATE_NinjaGetCloseToPlayer",
+     "value": 171
+    },
+    {
+     "name": "DSTATE_NinjaSword",
+     "value": 172
+    },
+    {
+     "name": "DSTATE_NinjaSomersault",
+     "value": 173
+    },
+    {
+     "name": "DSTATE_NinjaBackflip",
+     "value": 174
+    },
+    {
+     "name": "DSTATE_NinjaSideflip",
+     "value": 175
+    },
+    {
+     "name": "DSTATE_NinjaSideflipLeft",
+     "value": 176
+    },
+    {
+     "name": "DSTATE_NinjaSideflipRight",
+     "value": 177
+    },
+    {
+     "name": "DSTATE_NinjaStandFire",
+     "value": 178
+    },
+    {
+     "name": "DSTATE_NinjaNoRoute",
+     "value": 179
+    },
+    {
+     "name": "DSTATE_DeleteMe",
+     "value": 180
+    },
+    {
+     "name": "DSTATE_FailMission",
+     "value": 181
+    },
+    {
+     "name": "DSTATE_JustStand",
+     "value": 182
+    },
+    {
+     "name": "DSTATE_Tester1",
+     "value": 183
+    },
+    {
+     "name": "DSTATE_Tester2",
+     "value": 184
+    },
+    {
+     "name": "DSTATE_Tester3",
+     "value": 185
+    },
+    {
+     "name": "DSTATE_Tester4",
+     "value": 186
+    },
+    {
+     "name": "DSTATE_HangUp",
+     "value": 187
+    },
+    {
+     "name": "DSTATE_WaitForever",
+     "value": 188
+    },
+    {
+     "name": "DSTATE_AstronautLaunch",
+     "value": 189
+    },
+    {
+     "name": "DSTATE_AstronautHit",
+     "value": 190
+    },
+    {
+     "name": "DSTATE_AstronautDeath",
+     "value": 191
+    },
+    {
+     "name": "DSTATE_AstronautCombat",
+     "value": 192
+    },
+    {
+     "name": "DSTATE_AstronautCombatMove",
+     "value": 193
+    },
+    {
+     "name": "DSTATE_SpaceDrake",
+     "value": 194
+    },
+    {
+     "name": "DSTATE_BotInit",
+     "value": 195
+    },
+    {
+     "name": "DSTATE_BotRespawn",
+     "value": 196
+    },
+    {
+     "name": "DSTATE_BotGlobal",
+     "value": 197
+    },
+    {
+     "name": "DSTATE_BotCollector",
+     "value": 198
+    },
+    {
+     "name": "DSTATE_BotGuardian",
+     "value": 199
+    },
+    {
+     "name": "DSTATE_BotTeamPlayer",
+     "value": 200
+    },
+    {
+     "name": "DSTATE_BotBully",
+     "value": 201
+    },
+    {
+     "name": "DSTATE_BotBerserker",
+     "value": 202
+    },
+    {
+     "name": "DSTATE_BotGreedy",
+     "value": 203
+    },
+    {
+     "name": "DSTATE_BotVengeful",
+     "value": 204
+    },
+    {
+     "name": "DSTATE_BotJudge",
+     "value": 205
+    },
+    {
+     "name": "DSTATE_BotAssassin",
+     "value": 206
+    },
+    {
+     "name": "DSTATE_BotAttack",
+     "value": 207
+    },
+    {
+     "name": "DSTATE_BotAttackRun",
+     "value": 208
+    },
+    {
+     "name": "DSTATE_BotAttackNoRoute",
+     "value": 209
+    },
+    {
+     "name": "DSTATE_BotAttackFire",
+     "value": 210
+    },
+    {
+     "name": "DSTATE_BotAttackNoOpponent",
+     "value": 211
+    },
+    {
+     "name": "DSTATE_BotAttackStrafeAimLeft",
+     "value": 212
+    },
+    {
+     "name": "DSTATE_BotAttackStrafeAimRight",
+     "value": 213
+    },
+    {
+     "name": "DSTATE_BotAttackRunChangePosition",
+     "value": 214
+    },
+    {
+     "name": "DSTATE_BotAttackBackoff",
+     "value": 215
+    },
+    {
+     "name": "DSTATE_BotAttackCrouch",
+     "value": 216
+    },
+    {
+     "name": "DSTATE_BotAttackRollLeftCrouch",
+     "value": 217
+    },
+    {
+     "name": "DSTATE_BotAttackRollRightCrouch",
+     "value": 218
+    },
+    {
+     "name": "DSTATE_BotAttackStepAimLeft",
+     "value": 219
+    },
+    {
+     "name": "DSTATE_BotAttackStepAimRight",
+     "value": 220
+    },
+    {
+     "name": "DSTATE_BotAttackReload",
+     "value": 221
+    },
+    {
+     "name": "DSTATE_BotAttackChangeWeapon",
+     "value": 222
+    },
+    {
+     "name": "DSTATE_BotAttackUnarmed",
+     "value": 223
+    },
+    {
+     "name": "DSTATE_BotCoverRunTo",
+     "value": 224
+    },
+    {
+     "name": "DSTATE_BotCoverInit",
+     "value": 225
+    },
+    {
+     "name": "DSTATE_BotCoverIdle",
+     "value": 226
+    },
+    {
+     "name": "DSTATE_BotCoverAim",
+     "value": 227
+    },
+    {
+     "name": "DSTATE_BotCoverFire",
+     "value": 228
+    },
+    {
+     "name": "DSTATE_BotCoverReturn",
+     "value": 229
+    },
+    {
+     "name": "DSTATE_BotCoverTypeChange",
+     "value": 230
+    },
+    {
+     "name": "DSTATE_BotCoverLeave",
+     "value": 231
+    },
+    {
+     "name": "DSTATE_BotCoverLeaveNow",
+     "value": 232
+    },
+    {
+     "name": "DSTATE_BotStuck",
+     "value": 233
+    },
+    {
+     "name": "DSTATE_BotAlertToPosition",
+     "value": 234
+    },
+    {
+     "name": "DSTATE_BotGotoGoalPosition",
+     "value": 235
+    },
+    {
+     "name": "DSTATE_BotSeenOpponent",
+     "value": 236
+    },
+    {
+     "name": "DSTATE_BotSeenDroneShot",
+     "value": 237
+    },
+    {
+     "name": "DSTATE_BotHeardNoise",
+     "value": 238
+    },
+    {
+     "name": "DSTATE_BotImpactBullet",
+     "value": 239
+    },
+    {
+     "name": "DSTATE_BotImpactExplosive",
+     "value": 240
+    },
+    {
+     "name": "DSTATE_BotImpactPunch",
+     "value": 241
+    },
+    {
+     "name": "DSTATE_BotDeathAnim",
+     "value": 242
+    },
+    {
+     "name": "DSTATE_BotDeathByExplosion",
+     "value": 243
+    },
+    {
+     "name": "DSTATE_BotDead",
+     "value": 244
+    },
+    {
+     "name": "DSTATE_BotImpactStunGrenade",
+     "value": 245
+    },
+    {
+     "name": "DSTATE_BotDoorOpen",
+     "value": 246
+    },
+    {
+     "name": "DSTATE_BotGuardFriendIdle",
+     "value": 247
+    },
+    {
+     "name": "DSTATE_BotGuardFriendFollow",
+     "value": 248
+    },
+    {
+     "name": "DSTATE_BotIdle",
+     "value": 249
+    }
+   ]
+  }
+ ],
+ "types": [
+  {
+   "name": "BOT_stats_t",
+   "size": 14,
+   "comment": "A bot's statistics (default_bot_stats 0x163628, 29 entries). src/action/game/drone/BOT.h",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "uchar",
+     "name": "accuracy",
+     "comment": "lower is better"
+    },
+    {
+     "offset": 2,
+     "type": "uchar",
+     "name": "baseAggression"
+    },
+    {
+     "offset": 4,
+     "type": "ushort",
+     "name": "health",
+     "comment": "50..300"
+    },
+    {
+     "offset": 6,
+     "type": "uchar",
+     "name": "speed"
+    },
+    {
+     "offset": 7,
+     "type": "uchar",
+     "name": "reaction"
+    },
+    {
+     "offset": 8,
+     "type": "uchar",
+     "name": "recover"
+    },
+    {
+     "offset": 9,
+     "type": "uchar",
+     "name": "isBad"
+    },
+    {
+     "offset": 10,
+     "type": "uchar",
+     "name": "preferredWeaponClass"
+    },
+    {
+     "offset": 11,
+     "type": "uchar",
+     "name": "personality"
+    },
+    {
+     "offset": 12,
+     "type": "uchar",
+     "name": "traitFlags"
+    },
+    {
+     "offset": 13,
+     "type": "uchar",
+     "name": "editable"
+    }
+   ]
+  }
+ ]
+}

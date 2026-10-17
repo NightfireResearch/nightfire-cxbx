@@ -1,0 +1,837 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "RLightning",
+   "size": 1792,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "USingleton",
+     "name": "super_USingleton"
+    },
+    {
+     "offset": 4,
+     "type": "undefined4",
+     "name": "boltsAlloc",
+     "comment": "medium: MSVC std::vector<Bolt*> (16 bytes: allocator, first, last, end): AddBolt a0400 takes LEA this+0x4 -> a0390 (push_back/insert). PS2 GCC vector at +0x4..+0x10 (12 bytes), hence +4 on Xbox from +0x14. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "boltsFirst",
+     "comment": "high: ctor a02e0 zeroes +0x8/+0xc/+0x10; dtor 9fec0 frees [+0x8] with size (end-first)>>2<<2 (4-byte elements), then zeroes all three; ClearAllBolts/Draw/Update/IsBoltAlive iterate it. PS2 +0x4 (FindBoltByHandle, ClearAllBolts). Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "void *",
+     "name": "boltsLast",
+     "comment": "high: vector last: ctor/dtor, ClearAllBolts, Draw, IsBoltAlive, Update. PS2 +0x8. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "void *",
+     "name": "boltsEnd",
+     "comment": "high: vector end of storage: dtor 9fec0 uses [+0x10]-[+0x8] as the freed size. PS2 +0xc (~RLightning). Name invented"
+    },
+    {
+     "offset": 20,
+     "type": "int",
+     "name": "nextBoltHandle",
+     "comment": "medium: Reset 9fe30 sets 1; AddBolt/AddRoundedBolt read/write it = PS2 +0x10 (AllocBoltHandle, Reset). Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "int",
+     "name": "lastSimTick",
+     "comment": "low: Reset 9fe30 stores global 0x234e34 (sim tick); Update 9fb90 R/W. PS2 +0x14 (Reset, Update). Name invented"
+    },
+    {
+     "offset": 28,
+     "type": "float",
+     "name": "settings",
+     "comment": "medium: start of the settings block returned by PS2 GetSettings (PS2 +0x18); LEA in LoadAttributes 9e8e0 (dbattrib registration), read in JitterStripPoints. PS2 +0x18..+0x38 floats then 3 non-float words; Xbox +4. Name invented"
+    },
+    {
+     "offset": 32,
+     "type": "float",
+     "name": "setting20",
+     "comment": "low: LoadAttributes LEA; AddBolt/AddRoundedBolt read. PS2 +0x1c float. Name invented"
+    },
+    {
+     "offset": 36,
+     "type": "float",
+     "name": "setting24",
+     "comment": "low: LoadAttributes LEA; AddBolt/AddRoundedBolt read. PS2 +0x20 float. Name invented"
+    },
+    {
+     "offset": 40,
+     "type": "float",
+     "name": "driftRate",
+     "comment": "medium: = PS2 +0x24 returned by RLightning::GetDriftRate 1e3420; LoadAttributes LEA, AddBolt/AddRoundedBolt read"
+    },
+    {
+     "offset": 44,
+     "type": "float",
+     "name": "driftVariance",
+     "comment": "medium: = PS2 +0x28 returned by GetDriftVariance 1e3428; LoadAttributes LEA"
+    },
+    {
+     "offset": 48,
+     "type": "float",
+     "name": "lifeVariance",
+     "comment": "medium: = PS2 +0x2c returned by GetLifeVariance 1e3430; LoadAttributes LEA"
+    },
+    {
+     "offset": 52,
+     "type": "float",
+     "name": "setting34",
+     "comment": "low: LoadAttributes LEA; AddBolt/AddRoundedBolt read. PS2 +0x30 float. Name invented"
+    },
+    {
+     "offset": 56,
+     "type": "float",
+     "name": "setting38",
+     "comment": "low: LoadAttributes LEA; AddBolt/AddRoundedBolt read. PS2 +0x34 float. Name invented"
+    },
+    {
+     "offset": 60,
+     "type": "float",
+     "name": "setting3c",
+     "comment": "low: LoadAttributes LEA only. PS2 +0x38 float. Name invented"
+    },
+    {
+     "offset": 64,
+     "type": "undefined4",
+     "name": "setting40",
+     "comment": "low: LoadAttributes LEA; AddBolt/AddRoundedBolt read. PS2 +0x3c (not FPU). Name invented"
+    },
+    {
+     "offset": 68,
+     "type": "undefined4",
+     "name": "setting44",
+     "comment": "low: LoadAttributes LEA; AddBolt read. PS2 +0x40 (not FPU). Name invented"
+    },
+    {
+     "offset": 72,
+     "type": "undefined4",
+     "name": "setting48",
+     "comment": "low: Draw 9fd20 reads. PS2 +0x44 (LoadAttributes, Draw); probably a colour. Name invented"
+    },
+    {
+     "offset": 80,
+     "type": "COORD4[64]",
+     "name": "randomCoords",
+     "comment": "medium: CalcRandomTables 9ed50 LEA +0x50; 0x400 bytes up to the next table at +0x450 = 64 x 16. Same offset on PS2 (the +4 shift is absorbed by 16-byte alignment); indexed by +0x650 (PS2 GetRandomCoord). Name invented"
+    },
+    {
+     "offset": 1104,
+     "type": "uint[64]",
+     "name": "randomColours",
+     "comment": "medium: ctor a02e0 zeroes 0x40 dwords at +0x450 (REP STOSD); PS2 ctor LEA +0x450; indexed by +0x654 (PS2 GetRandomColor). EAGL::Colour per entry. Name invented"
+    },
+    {
+     "offset": 1360,
+     "type": "float[64]",
+     "name": "randomNums",
+     "comment": "medium: CalcRandomTables LEA +0x550 on both builds; indexed by +0x658 (PS2 GetRandomNum). Name invented"
+    },
+    {
+     "offset": 1616,
+     "type": "int",
+     "name": "randomCoordIndex",
+     "comment": "medium: CalcRandomTables/Draw/JitterStripPoints/Update R/W; PS2 +0x650 GetRandomCoord, RandomSyncWithSim. Name invented"
+    },
+    {
+     "offset": 1620,
+     "type": "int",
+     "name": "randomColourIndex",
+     "comment": "medium: same methods; PS2 +0x654 GetRandomColor. Name invented"
+    },
+    {
+     "offset": 1624,
+     "type": "int",
+     "name": "randomNumIndex",
+     "comment": "medium: CalcRandomTables/Draw/Update W; PS2 +0x658 GetRandomNum. Name invented"
+    },
+    {
+     "offset": 1632,
+     "type": "UVolatileMaterial",
+     "name": "material",
+     "comment": "high: ctor a02e0 LEA ECX,[ESI+0x660] -> UVolatileMaterial ctor 11c210 (which writes up to its +0x5c, so 0x60 bytes); dtor 9fec0 calls 11bbe0 on it; RenderBolts uses it. PS2 +0x660 same, but the next PS2 field is at +0x6f0 (PS2 material larger, or Ren"
+    },
+    {
+     "offset": 1728,
+     "type": "void *",
+     "name": "boltStripBuffer",
+     "comment": "medium: ctor zeroes; Reset 9fe30 frees it (0x1146e0) and zeroes; BeginBoltDraw/RenderBolts R/W = PS2 +0x6f0 (__builtin_delete in Reset; AdvanceBoltDraw/BeginBoltDraw). Name invented"
+    },
+    {
+     "offset": 1732,
+     "type": "int",
+     "name": "boltStripCount",
+     "comment": "low: Reset zeroes; BeginBoltDraw/Draw/RenderBolts = PS2 +0x6f4 (AdvanceBoltDraw, BeginBoltDraw, ResetBoltRendering). Name invented"
+    },
+    {
+     "offset": 1736,
+     "type": "bool",
+     "name": "boltDrawActive",
+     "comment": "low: byte; Reset clears, BeginBoltDraw/Draw R/W = PS2 +0x6f8 (4-byte: BeginBoltDraw, FinishBoltDraw, ResetBoltRendering). Name invented"
+    },
+    {
+     "offset": 1740,
+     "type": "uint[4]",
+     "name": "textureContexts",
+     "comment": "medium: ctor a02e0 loop fills 4 dwords at +0x6cc from RTextureContextManager::GetContext for names in table 0x1c4a8c..0x1c4a9c; dtor zeroes +0x6cc..+0x6d8. PS2 +0x6fc (ctor) .. +0x708 (dtor). Name invented"
+    },
+    {
+     "offset": 1756,
+     "type": "int",
+     "name": "unk6dc",
+     "comment": "low: Reset zeroes; Draw/RenderBolts R/W = PS2 +0x70c (RenderBolts, ResetBoltRendering). Name invented"
+    },
+    {
+     "offset": 1760,
+     "type": "float",
+     "name": "boltDrawWidth",
+     "comment": "low: Reset writes 1.0f; BeginBoltDraw/Draw/JitterStripPoints W = PS2 +0x710 float (BeginBoltDraw(COORD3&, float), ResetBoltRendering). Name invented"
+    },
+    {
+     "offset": 1764,
+     "type": "bool",
+     "name": "unk6e4",
+     "comment": "low: byte cleared in Reset = PS2 +0x714 (Reset). Name invented"
+    },
+    {
+     "offset": 1768,
+     "type": "int",
+     "name": "metricsInterval",
+     "comment": "low: Reset stores global 0x234e2c = PS2 +0x718 (Reset, ResetMetrics). Name invented"
+    },
+    {
+     "offset": 1772,
+     "type": "int",
+     "name": "nextMetricsTick",
+     "comment": "low: Reset stores +0x6e8 + global 0x234e34 (current tick) = PS2 +0x71c (ResetMetrics). Name invented"
+    },
+    {
+     "offset": 1776,
+     "type": "int",
+     "name": "metric6f0",
+     "comment": "low: Reset zeroes, RenderBolts W = PS2 +0x720 (RenderBolts, ResetMetrics). Name invented"
+    },
+    {
+     "offset": 1780,
+     "type": "int",
+     "name": "metric6f4",
+     "comment": "low: Reset zeroes = PS2 +0x724 (ResetMetrics). Name invented"
+    }
+   ],
+   "comment": "Lightning bolt renderer singleton. Size 0x700 from Init 8b930 (operator new 0x700, pointer to global 0x200f4c). Base USingleton (vptr only: ~RLightning 9fec0 restores USingleton vtable 0x18beb0 last). Vptr at +0 on both builds; Xbox +4 from +0x14 to +0x4c (MSVC vector 16 vs GCC 12), 0 from the 16-aligned random tables at +0x50 up to material +0x660, then -0x30 (PS2 +0x6f0 = Xbox +0x6c0) with one packed bool."
+  },
+  {
+   "name": "RLightManager",
+   "size": 1008,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "USingleton",
+     "name": "super_USingleton"
+    },
+    {
+     "offset": 16,
+     "type": "COORD4",
+     "name": "primaryLightSource",
+     "comment": "medium: PS2 PrimaryLightSource 1b0558 returns this+0x10, SetPrimaryLightSource(COORD4&) writes it; Xbox AddSpecularLight 7e950 LEA +0x10. Same offset on both builds (PS2 vptr also at +0: ctor 1ae630 'sw v0,0x0(s6)'; Xbox pads the vptr to 16 for this "
+    },
+    {
+     "offset": 32,
+     "type": "MATRIX4",
+     "name": "specularMatrix",
+     "comment": "medium: PS2 SpecularMatrix 1b0588 returns this+0x20; AddSpecularLight writes +0x20..+0x5f with 16-byte stores; Xbox next field at +0x60"
+    },
+    {
+     "offset": 96,
+     "type": "int",
+     "name": "unk60",
+     "comment": "low: ctor zeroes, FinishLights W = PS2 +0x60 (ClearAllLights, FinishLights). Name invented"
+    },
+    {
+     "offset": 100,
+     "type": "int",
+     "name": "pendingPositionalLights",
+     "comment": "low: ctor zeroes; AddPositionalLight/FinishLights R/W = PS2 +0x64 (AddPositionalLight, ClearAllLights). Name invented"
+    },
+    {
+     "offset": 104,
+     "type": "int",
+     "name": "numPositionalLights",
+     "comment": "medium: = PS2 +0x68 returned by NumPositionalLights 1b0598; FinishLights/SetCurrentAmbientAndDiffuse use it"
+    },
+    {
+     "offset": 108,
+     "type": "bool",
+     "name": "forcePositionalLighting",
+     "comment": "medium: byte zeroed by ctor = PS2 +0x6c (4-byte, ForcePositionalLighting(bool) 1b0590)"
+    },
+    {
+     "offset": 109,
+     "type": "bool",
+     "name": "positionalLightingDisabled",
+     "comment": "medium: byte; DisablePositionalLighting(bool) 7e860 writes = PS2 +0x70 (DisablePositionalLighting 1affd0). Bools pack, so -4 from here on"
+    },
+    {
+     "offset": 112,
+     "type": "int",
+     "name": "lightingModel",
+     "comment": "medium: SetLightingModel(LightingModel) 7f470 R/W = PS2 +0x74 (SetLightingModel). Name invented"
+    },
+    {
+     "offset": 116,
+     "type": "int",
+     "name": "unk74",
+     "comment": "low: SetLightingModel/SetSurfaceProperties R/W = PS2 +0x78. Name invented"
+    },
+    {
+     "offset": 120,
+     "type": "RLightInfo *",
+     "name": "currentLightInfo",
+     "comment": "medium: ctor allocates 0x70 bytes (aligned alloc via 0x1caf68) and zeroes 0x1c dwords; dtor frees it with size 0x70; MEM_copy target in SetCurrentAmbientAndDiffuse/SetLightingModel. PS2 +0x7c returned by LightInfo 1b0540. Name invented"
+    },
+    {
+     "offset": 124,
+     "type": "RLightInfo[4]",
+     "name": "lightInfos",
+     "comment": "medium: ctor memsets 0x1c0 at +0x7c (PS2 +0x80); PS2 WorldLightInfo returns +0x80, CharacterLightInfo +0xf0 (Xbox SetLightingModel LEA +0xec) => 4 x 0x70. Block 0 holds attribs 'Light 1' +0xac, 'Light 2' +0xbc, 'Ambient Ground' +0xcc, 'Ambient Sky' +"
+    },
+    {
+     "offset": 572,
+     "type": "float",
+     "name": "light1AngleX",
+     "comment": "high: ctor dbattrib_float 'Light1 Angle X' (-90..0) at +0x23c; RefreshLightBlocks LEA. PS2 +0x240 (GetLightAngles(eLightBlocks) base)"
+    },
+    {
+     "offset": 576,
+     "type": "float",
+     "name": "light2AngleX",
+     "comment": "high: ctor dbattrib 'Light2 Angle X' (-90..0). PS2 +0x244"
+    },
+    {
+     "offset": 580,
+     "type": "float",
+     "name": "dualHemiAngleX",
+     "comment": "high: ctor dbattrib 'Dual Hemi Angle X' (-90..90). PS2 +0x248"
+    },
+    {
+     "offset": 584,
+     "type": "float",
+     "name": "light1AngleY",
+     "comment": "high: ctor dbattrib 'Light1 Angle Y' (0..360). PS2 +0x24c"
+    },
+    {
+     "offset": 588,
+     "type": "float",
+     "name": "light2AngleY",
+     "comment": "high: ctor dbattrib 'Light2 Angle Y' (0..360). PS2 +0x250"
+    },
+    {
+     "offset": 592,
+     "type": "float",
+     "name": "dualHemiAngleY",
+     "comment": "high: ctor dbattrib 'Dual Hemi Angle Y' (0..360). PS2 +0x254"
+    },
+    {
+     "offset": 668,
+     "type": "void *",
+     "name": "positionalLights",
+     "comment": "medium: ctor allocates 0x80 and memsets it; dtor frees; AddPositionalLight(COORD4&,COORD4&) writes into it (likely 4 x two COORD4). PS2 +0x2a0 (-> MEM_fill, __builtin_delete). Name invented"
+    },
+    {
+     "offset": 672,
+     "type": "void *",
+     "name": "positionalLightInfo",
+     "comment": "medium: ctor allocates 0x80; DisablePositionalLighting/FinishLights MEM_copy/MEM_fill; dtor frees. PS2 +0x2a4 returned by PositionalLightInfo 1b0550. Name invented"
+    },
+    {
+     "offset": 676,
+     "type": "COORD4[2]",
+     "name": "currentAmbientDiffuse",
+     "comment": "medium: SetCurrentAmbientAndDiffuse 7eaa0 LEA +0x2a4; PS2 GetCurrentAmbientDiffuse returns +0x2a8, SetCurrentAmbientAndDiffuse writes +0x2a8..+0x2c7"
+    },
+    {
+     "offset": 708,
+     "type": "bool",
+     "name": "verticalFalloff",
+     "comment": "high: ctor clears byte, dbattrib bool 'Vertical Falloff'. PS2 +0x2c8 (4 bytes)"
+    },
+    {
+     "offset": 709,
+     "type": "bool",
+     "name": "lightMapsEnabled",
+     "comment": "high: ctor sets byte 1, dbattrib bool 'Enable light maps'. PS2 +0x2cc returned by LightMapsEnabled 1b05d8"
+    },
+    {
+     "offset": 712,
+     "type": "float",
+     "name": "falloffCutin",
+     "comment": "high: ctor zeroes, dbattrib float 'Falloff Cutin' (-100..300). PS2 +0x2d0"
+    },
+    {
+     "offset": 716,
+     "type": "float",
+     "name": "sunHeight",
+     "comment": "high: ctor 500.0f, dbattrib float 'Sun height' (0..2000). PS2 +0x2d4 returned by GetSunHeight 1b05c8"
+    },
+    {
+     "offset": 720,
+     "type": "int",
+     "name": "moonSize",
+     "comment": "high: ctor 0x2b, dbattrib int 'Moon size' (0..128). PS2 +0x2d8 returned by GetMoonSize 1b05d0"
+    },
+    {
+     "offset": 724,
+     "type": "float",
+     "name": "lightMapLightingBias",
+     "comment": "high: ctor 1.0f, dbattrib float 'Light map lighting bias' (0..4). PS2 +0x2dc returned by LightMapLightingBias 1b05e0"
+    },
+    {
+     "offset": 728,
+     "type": "byte[212]",
+     "name": "highLevelManager",
+     "comment": "low: FinishLights LEA +0x2d8 = PS2 +0x2e0 returned by HighLevelManager 1b05a0 (ClearAllLights/FinishLights too). Size 0xd4 assumed up to the zeroed dwords (PS2 +0x2e0..+0x3b4 = Xbox +0x2d8..+0x3ac, also 0xd4); ctor also zeroes +0x358 inside it. Type "
+    },
+    {
+     "offset": 940,
+     "type": "undefined4",
+     "name": "unk3ac",
+     "comment": "low: ctor zeroes +0x3ac..+0x3bc (5 dwords); PS2 ctor zeroes 4 dwords +0x3b4..+0x3c0. Name invented"
+    },
+    {
+     "offset": 944,
+     "type": "undefined4",
+     "name": "unk3b0",
+     "comment": "low: ctor zeroes. Name invented"
+    },
+    {
+     "offset": 948,
+     "type": "undefined4",
+     "name": "unk3b4",
+     "comment": "low: ctor zeroes. Name invented"
+    },
+    {
+     "offset": 952,
+     "type": "undefined4",
+     "name": "unk3b8",
+     "comment": "low: ctor zeroes. Name invented"
+    },
+    {
+     "offset": 956,
+     "type": "undefined4",
+     "name": "unk3bc",
+     "comment": "low: ctor zeroes. Name invented"
+    }
+   ],
+   "comment": "Lighting singleton. Size 0x3f0 from Init 8b620 (operator new 0x3f0, pointer to global 0x1ec260). Base USingleton (~RLightManager 7e8c0 restores 0x18beb0). Vptr +0 on both builds, padded to 16 on Xbox; same offsets to +0x6c, -4 after the two packed bools (+0x6c/+0x6d), -8 after the next two (+0x2c4/+0x2c5). dbattrib names from strings 0x191670..0x191780 (group 'Render:Lighting')."
+  },
+  {
+   "name": "SWeaponManager",
+   "size": 384,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "int",
+     "name": "primaryWeapon",
+     "comment": "medium: WeaponType; Reset bad70 sets -1; Update R/W. PS2 +0x0 written by SetPrimary(WeaponType) 20d480. Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "int",
+     "name": "secondaryWeapon",
+     "comment": "high: SetSecondary(WeaponType) baab0 writes +0x4 only; Reset 0; Select/Unload/SortWeaponList. PS2 +0x4 same methods. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "int",
+     "name": "specialWeapon",
+     "comment": "medium: Reset -1; SetSpecialWeapon/UnloadWeapon/SortWeaponList/Update. PS2 +0x8 (FireSpecial, SetSpecialWeapon). Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "int",
+     "name": "unkC",
+     "comment": "low: Reset 0; Update R/W. PS2 +0xc same. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "void *",
+     "name": "weapons",
+     "comment": "high: ctor bb220 vec_new(0xa80) = 32 x 0x54-byte weapon records; Reset copies 0x2a0 dwords of defaults from 0x1c94d8; SetPlayerCar writes record +0xc4/+0xc8 (entry 2); dtor frees. PS2 +0x10 (-> __builtin_vec_delete). Record type unnamed. Name invente"
+    },
+    {
+     "offset": 20,
+     "type": "RSceneObj *",
+     "name": "playerCar",
+     "comment": "high: SetPlayerCar(RSceneObj*) ba990 stores its argument at +0x14; ctor zeroes; DoWeaponAnim/FireWeapon/Update read. PS2 +0x14 (SetPlayerCar, GetAnimHandle). Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "int",
+     "name": "unk18",
+     "comment": "low: Reset -1; FireWeapon W. PS2 +0x18. Name invented"
+    },
+    {
+     "offset": 28,
+     "type": "int",
+     "name": "unk1c",
+     "comment": "low: Reset 0; FireWeapon W. PS2 +0x1c. Name invented"
+    },
+    {
+     "offset": 32,
+     "type": "ActionQueue *",
+     "name": "actionQueue",
+     "comment": "high: ctor allocates 0x974 and runs ActionQueue::ActionQueue; dtor ~ActionQueue + free 0x974; Update Flush/GetAction/PopAction/IsEmpty. PS2 +0x20. Name invented"
+    },
+    {
+     "offset": 36,
+     "type": "bool",
+     "name": "flag24",
+     "comment": "low: Reset clears; Update R/W = PS2 +0x24 (4-byte). Name invented"
+    },
+    {
+     "offset": 37,
+     "type": "bool",
+     "name": "flag25",
+     "comment": "low: Reset/Update = PS2 +0x28. Name invented"
+    },
+    {
+     "offset": 38,
+     "type": "bool",
+     "name": "flag26",
+     "comment": "low: Reset/Update = PS2 +0x2c. Name invented"
+    },
+    {
+     "offset": 39,
+     "type": "bool",
+     "name": "flag27",
+     "comment": "low: Reset/Update/FireWeapon W = PS2 +0x30. Name invented"
+    },
+    {
+     "offset": 40,
+     "type": "bool",
+     "name": "reloading",
+     "comment": "low: Reset/SelectSecondary/Update/UserReloading = PS2 +0x34 (also HandleClipUpdate). Name invented"
+    },
+    {
+     "offset": 41,
+     "type": "bool",
+     "name": "flag29",
+     "comment": "low: Reset clears = PS2 +0x38. Name invented"
+    },
+    {
+     "offset": 48,
+     "type": "bool",
+     "name": "flag30",
+     "comment": "low: Reset clears = PS2 +0x40 (FireEMP, Reset). +0x10 shift from here (6 packed bools). Name invented"
+    },
+    {
+     "offset": 52,
+     "type": "undefined4",
+     "name": "unk34",
+     "comment": "low: Reset 0; FireWeapon W = PS2 +0x44 (float on PS2). Name invented"
+    },
+    {
+     "offset": 56,
+     "type": "undefined4",
+     "name": "unk38",
+     "comment": "low: Reset 0 = PS2 +0x48. Name invented"
+    },
+    {
+     "offset": 60,
+     "type": "bool",
+     "name": "flag3c",
+     "comment": "low: Reset clears, then sets 1 when global 0x244530 & 8 (a cheat/option bit); FireWeapon reads = PS2 +0x4c. Name invented"
+    },
+    {
+     "offset": 64,
+     "type": "int",
+     "name": "unk40",
+     "comment": "low: Reset 0; FireWeapon/Update R/W = PS2 +0x50 (also SelectSecondary). Name invented"
+    },
+    {
+     "offset": 68,
+     "type": "int",
+     "name": "nuclearState",
+     "comment": "low: Reset 0; Start/HandleNuclearSequence R/W = PS2 +0x54. Name invented"
+    },
+    {
+     "offset": 80,
+     "type": "COORD3",
+     "name": "nuclearPos",
+     "comment": "medium: Start/HandleNuclearSequence LEA +0x50; StartNuclearSequence(COORD3&, float). PS2 +0x60 (+0x68 W), next PS2 field +0x6c, so 12 bytes. Name invented"
+    },
+    {
+     "offset": 92,
+     "type": "int",
+     "name": "nuclearTimer",
+     "comment": "low: Reset 0; Start/HandleNuclearSequence R/W = PS2 +0x6c. Name invented"
+    },
+    {
+     "offset": 96,
+     "type": "float",
+     "name": "nuclearParam",
+     "comment": "low: float written by Start/HandleNuclearSequence and Reset = PS2 +0x70 float (the float argument?). Name invented"
+    },
+    {
+     "offset": 100,
+     "type": "undefined4",
+     "name": "unk64",
+     "comment": "low: Reset 0 = PS2 +0x74 (Reset, Update). Name invented"
+    },
+    {
+     "offset": 104,
+     "type": "undefined4",
+     "name": "turretParam",
+     "comment": "low: Reset 0 = PS2 +0x78 float (Reset, UpdateTurret). Name invented"
+    },
+    {
+     "offset": 112,
+     "type": "int",
+     "name": "specialWeaponTrigger",
+     "comment": "low: Reset 0; SetSpecialWeapon(int, CARP::Trigger*, float)/Update R/W = PS2 +0x80. Name invented"
+    },
+    {
+     "offset": 116,
+     "type": "float",
+     "name": "specialWeaponTime",
+     "comment": "low: float W in SetSpecialWeapon/Update; Reset 0 = PS2 +0x84 float. Name invented"
+    },
+    {
+     "offset": 120,
+     "type": "int[32]",
+     "name": "weaponSortOrder",
+     "comment": "medium: Reset fills 32 ints at +0x78 (index lookup in table 0x1c9450, -1 if absent); PS2 +0x88 (CalcWeaponPriorities, SortWeaponList). Name invented"
+    },
+    {
+     "offset": 248,
+     "type": "int[32]",
+     "name": "sortedWeapons",
+     "comment": "medium: SortWeaponList LEA +0xf8 (up to +0x178); PS2 +0x108 (FindSortedSecondary, SortWeaponList). Name invented"
+    },
+    {
+     "offset": 376,
+     "type": "int",
+     "name": "numSortedWeapons",
+     "comment": "medium: SortWeaponList/GetNext/GetPreviousSecondaryType R/W = PS2 +0x188 (also FindSortedSecondary). Name invented"
+    }
+   ],
+   "comment": "Player-car weapon manager. No vptr. Size 0x180 from GameLoop_StartUp 5b0d0 (operator new 0x180, ctor bb220, pointer to global 0x23923c). Same offsets as PS2 to +0x20; six bools pack at +0x24..+0x29 (PS2 4 bytes each), so +0x10 lower than PS2 from +0x2c on (PS2 +0x188 = Xbox +0x178)."
+  },
+  {
+   "name": "USingleton",
+   "size": 4,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster14.json)",
+   "if_missing": true
+  },
+  {
+   "name": "UVolatileMaterial",
+   "size": 96,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster14.json)",
+   "if_missing": true
+  },
+  {
+   "name": "RLightInfo",
+   "size": 112,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster14.json)",
+   "if_missing": true
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x0008b930",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightning::Init(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0009e8e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightning::LoadAttributes(void)"
+  },
+  {
+   "address": "0x0009eae0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "RLightning::Point::Update(int)"
+  },
+  {
+   "address": "0x0009ebf0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightning::ControlPoint::CalcWorldPos(void)"
+  },
+  {
+   "address": "0x0009ec70",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "RLightning::MidPoint::Respawn(float, float)"
+  },
+  {
+   "address": "0x0009ed50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightning::CalcRandomTables(void)"
+  },
+  {
+   "address": "0x0009ef00",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightning::JitterStripPoints(COORD3 &, COORD4 *, EAGL::Colour"
+  },
+  {
+   "address": "0x0009f020",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightning::RenderBolts(void)"
+  },
+  {
+   "address": "0x0009f250",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "RLightning::Segment::Update(int)"
+  },
+  {
+   "address": "0x0009f2f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "RLightning::Segment::Draw(RLightning &)"
+  },
+  {
+   "address": "0x0009f4c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightning::Bolt::~Bolt(void)"
+  },
+  {
+   "address": "0x0009f520",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "RLightning::BeginBoltDraw(COORD3 &, float)"
+  },
+  {
+   "address": "0x0009f6b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "RLightning::Bolt::Draw(RLightning &)"
+  },
+  {
+   "address": "0x0009f840",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "RLightning::IsBoltAlive(int)"
+  },
+  {
+   "address": "0x0009fb90",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightning::Update(void)"
+  },
+  {
+   "address": "0x0009fd20",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightning::Draw(void)"
+  },
+  {
+   "address": "0x0009fdc0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightning::ClearAllBolts(void)"
+  },
+  {
+   "address": "0x0009fe30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightning::Reset(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0009fec0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightning::~RLightning(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0009ff60",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RLightning::Kill(void)"
+  },
+  {
+   "address": "0x000a0000",
+   "calling_convention": "__thiscall",
+   "return": "RLightning *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x000a02e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightning::RLightning(void)",
+   "return": "RLightning *"
+  }
+ ]
+}

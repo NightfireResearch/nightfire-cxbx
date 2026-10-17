@@ -1,0 +1,108 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00021600",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyWindow::DoFiring(void)"
+  },
+  {
+   "address": "0x00021d40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyWindow::~AICharacterEnemyWindow(void)"
+  },
+  {
+   "address": "0x00021dc0",
+   "calling_convention": "__thiscall",
+   "return": "AICharacterEnemyWindow *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x00021e70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyWindow::DoInitial(void)"
+  },
+  {
+   "address": "0x00021f10",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyWindow::DoNeutral(void)"
+  },
+  {
+   "address": "0x00021f70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyWindow::DoIdling(void)"
+  },
+  {
+   "address": "0x00022010",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyWindow::DoArming(void)"
+  },
+  {
+   "address": "0x00022050",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyWindow::DoArmed(void)"
+  },
+  {
+   "address": "0x00022150",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyWindow::DoAiming(void)"
+  },
+  {
+   "address": "0x00022280",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyWindow::DoUnarming(void)"
+  },
+  {
+   "address": "0x000222c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyWindow::DoDying(void)"
+  },
+  {
+   "address": "0x00022310",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyWindow::HandleInterrupts(void)"
+  },
+  {
+   "address": "0x000223a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterEnemyWindow::TargetIsInRange(void)"
+  },
+  {
+   "address": "0x00022680",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "int"
+    }
+   ],
+   "sheet": "AICharacterEnemyWindow::PlayZoneInjuryAnim(int, float, int)"
+  }
+ ]
+}

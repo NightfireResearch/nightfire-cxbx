@@ -1,0 +1,129 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000f70b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnCompoundChannel::FnCompoundChannel(void)",
+   "return": "EAGLAnim::FnCompoundChannel *"
+  },
+  {
+   "address": "0x000f70f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnCompoundChannel::GetTargetCheckSum(void) const",
+   "return": "ushort"
+  },
+  {
+   "address": "0x000f7100",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnCompoundChannel::GetLength(float &) const"
+  },
+  {
+   "address": "0x000f7140",
+   "calling_convention": "__thiscall",
+   "return": "EAGLAnim::FnCompoundChannel *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x000fab60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnCompoundChannel::~FnCompoundChannel(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000fad60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnCompoundChannel::EvalWeights(float, float *)"
+  },
+  {
+   "address": "0x000fadc0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnCompoundChannel::EvalVel2D(float, float *)"
+  },
+  {
+   "address": "0x000faf90",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnCompoundChannel::GetPhaseChan(void)"
+  },
+  {
+   "address": "0x000fafd0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "EAGLAnim::FnCompoundChannel::UseFPS(bool)",
+   "return": "void"
+  },
+  {
+   "address": "0x000fb040",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnCompoundChannel::GetAttributes(void) const"
+  },
+  {
+   "address": "0x000fb050",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnCompoundChannel::InitSubChannels(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000fb0a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnCompoundChannel::Eval(float, float, float *)"
+  }
+ ]
+}

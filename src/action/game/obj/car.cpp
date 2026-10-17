@@ -1,16 +1,17 @@
 // Multiplayer, remote-controlled tank / helicopter
 #include "../../game.h"
 #include "../../engine/Camera.h"
+#include "../../engine/viewFov.h"
 #include "../mp/multiplayer.h"
 #include "object.h"
-#include "player.h"
+#include "Player.h"
 #include "../../math/math.h"
 #include "../view.h"
 #include "../../sound/Sound.h"
 #include "../../util/hashtable.h"
 #include "../../util/Random.h"
 #include "../../input.h"
-#include "../../Sound/Sound.h"
+#include "../../sound/Sound.h"
 
 #include "build.h"
 #include "Explode.h"
@@ -21,12 +22,16 @@
 
 #include "car.h"
 
-// Until we implement fully, use the in-game memory addresses
-#define Tanks ((obj_tag**)0x001dc980) // MAX_TANKS? entries
-#define NumTanks U16_AT(0x001dc798)
-#define TankSpawns (*(_MATRIX(*)[8])0x001dc7a0)
-
 #define MAX_TANKS 8 // Locations defined on the map
+
+// Until we implement fully, use the in-game memory addresses
+// XBE_GLOBAL(0x001dc980, 0x20)
+static obj_tag* Tanks[MAX_TANKS]; // the original Car_Init clears all 0x20 bytes
+// XBE_GLOBAL(0x001dc798, 0x2)
+static uint16_t NumTanks;
+// XBE_GLOBAL(0x001dc7a0, 0x1e0)
+static _MATRIX TankSpawns[8];
+
 
 // WIP
 void Car_CollisionHandler(obj_tag* me) {
@@ -147,7 +152,7 @@ void __cdecl Car_Activate(obj_tag* carObj, obj_tag* playerObj) {
 
     Player_WeaponNone(playerObj);
 
-    Camera_CalcViewAngles(carObj->subState, DEG2RAD(60.0f)); // FIXME: Hardcoded FOV?
+    Camera_CalcViewAngles(carObj->subState, ViewFov_PlayerFov());
 
 }
 
@@ -176,16 +181,16 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
     baseObj->maybeCollision = tankInfo;
     Quat_MatToQuat(&tankInfo->orientation, &baseObj->transformMatrix);
 
+    // Any value but 1 and 3 gives the helicopter, 0 included
     switch(MPSettings.MiniVehiclesEnabled) {
-        default:
         case 1: // Tanks only
             tankInfo->isHeli = 0;
             break;
-        case 2: // Helicopters only
-            tankInfo->isHeli = 1;
-            break;
         case 3: // Both
             tankInfo->isHeli = (Rand_Rand(100) <= 50) ? 1 : 0;
+            break;
+        default: // 2, helicopters only
+            tankInfo->isHeli = 1;
             break;
     }
 

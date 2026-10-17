@@ -9,18 +9,25 @@
 #include "../../math/math.h"
 #include "../view.h"
 #include "../../game.h"
+#include "../../devtools/Demo.h"
 
 #include <stdio.h>
 #include <string.h>
 
 // Pointer to first game object
 #define DynamicObjList_FirstObj (*(obj_tag**)0x001df34c)
+#define DynamicObjList_Unknown350 U32_AT(0x001df350) // cleared with it by control_init_object_lists
+// Not a variable of its own: the list's head, used as if it were an object (control_add_object_to_list is given
+// its address), whose next-object field lands on DynamicObjList_FirstObj at +0x14. It moves into the DLL together
+// with the list's other fields or not at all.
 #define DynamicObjList (*(obj_tag**)0x001df338)
 
 // Number of game objects
-#define DynamicObjCount U32_AT(0x001df828)
+// XBE_GLOBAL(0x001df828, 0x4)
+static uint32_t DynamicObjCount;
 
 // Game objects which span multiple cels
+// XBE_GLOBAL(0x001df41c, 0xc)
 #define ForcedList (*(LLISTINFO_tag*)0x001df41c)
 
 // AUTOINJECT
@@ -136,13 +143,13 @@ void control_init_object(obj_tag* obj) {
     
     obj->displayMask = 0x001f;
     obj->flags |= 2;
-    obj->unknown_0xd8 = 2;
+    obj->drawnCountdown = 2;
     obj->creationTimeFrames = GameState.NumFramesUnpaused;
     obj->scale = 1.0;
     obj->tweakR = 0xff;
     obj->tweakG = 0xff;
     obj->tweakB = 0xff;
-    obj->maybeBrightness = 0xff;
+    obj->tweakA = 0xff;
     obj->light_related1 = 0xff;
     obj->light_related2 = 0xff;
     obj->light_related3 = 0xff;
@@ -233,3 +240,17 @@ bool Controls_StraddleTest(obj_tag *param_1);
 
 // AUTOGEN
 void control_link_object_to_cel(obj_tag *obj, cel_tag *cel);
+
+// Empties the object lists: no dynamic objects, and a fresh forced-object list (entries of 0xe4 bytes, none
+// preallocated).
+// AUTOINJECT
+void control_init_object_lists(void) {
+    DynamicObjList_FirstObj = NULL;
+    DynamicObjList_Unknown350 = 0;
+    DynamicObjCount = 0;
+    LList_Init(&ForcedList, 0xe4, 0);
+    Demo_ObjectListsReset();
+}
+
+// AUTOGEN
+void Control_InheritVelocity(obj_tag *obj, obj_tag *from, float param_3);

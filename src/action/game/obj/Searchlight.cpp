@@ -2,9 +2,6 @@
 
 #include <math.h>
 
-// Alias for unknown_0xd8 field - appears to control active/visible state
-#define activeState unknown_0xd8
-
 #include "../../util/Random.h"
 #include "../../util/DList.h"
 #include "../../engine/viewer.h"
@@ -12,6 +9,7 @@
 #include "../../sound/Sound.h"
 #include "../../game/view.h"
 #include "../../math/math.h"
+#include "../../math/X87Ops.h"
 #include "../sp/SwitchChannels.h"
 #include "control.h"
 #include "Light.h"
@@ -21,43 +19,10 @@
 // Searchlight sweep timing constants
 // Phase increments by FRAME_RATE_MUL each frame, completing one full cycle after SWEEP_PERIOD_FRAMES
 #define SWEEP_PERIOD_FRAMES 480.0f  // 8 seconds at 60fps
-#define PHASE_TO_ANGLE (M_2PI / SWEEP_PERIOD_FRAMES)
+static constexpr float kPhaseToAngle = 0.0130899698f;   // 2pi / SWEEP_PERIOD_FRAMES
+static_assert(std::bit_cast<uint32_t>(kPhaseToAngle) == 0x3c567750);
 
 #pragma pack(push, 1)
-
-typedef struct {
-    ushort searchlightType;                // 0x00 - 0=stand/base, 1=body/master, 2=light holder
-    ushort padding02;                      // 0x02
-    float phase;                           // 0x04 - sweep animation phase OR lost-player counter (depending on object type)
-    _VECTOR rotationAngles;                // 0x08 - initial rotation (used as sweep center)
-    obj_tag* standObject;                  // 0x14 - type 0: stand/base (yaw only, no pitch)
-    obj_tag* unusedLinkedObject;           // 0x18 - type 1: unused in practice
-    union {                                // 0x1c
-        obj_tag* projectionSpot;           //   - type 1: ground projection spot object
-        light_tag* dynamicLight;           //   - type 2: dynamic light_tag
-    };
-    obj_tag* volumetricCone;               // 0x20 - visible light cone beam effect
-    obj_tag* lensFlare;                    // 0x24 - bright flare when looking at light
-    char enableSwitchChannel;              // 0x28 - switch channel to re-enable after being disabled
-    char disableSwitchChannel;             // 0x29 - switch channel to disable searchlight
-    char alertSwitchChannel;               // 0x2a - switch channel to trigger when player spotted
-    uchar padding2b;                       // 0x2b
-    float sweepHalfRange;                  // 0x2c - half the sweep angle range
-    float sweepCenter;                     // 0x30 - center pitch angle of sweep
-} ObjData_Spotlight;
-
-
-static_assert(sizeof(ObjData_Spotlight) == 0x34, "Wrong size for ObjData_Spotlight");
-static_assert(offsetof(ObjData_Spotlight, phase) == 0x04, "Bad offset of phase");
-static_assert(offsetof(ObjData_Spotlight, rotationAngles) == 0x08, "Bad offset of rotationAngles");
-static_assert(offsetof(ObjData_Spotlight, standObject) == 0x14, "Bad offset of standObject");
-static_assert(offsetof(ObjData_Spotlight, unusedLinkedObject) == 0x18, "Bad offset of unusedLinkedObject");
-static_assert(offsetof(ObjData_Spotlight, projectionSpot) == 0x1c, "Bad offset of projectionSpot");
-static_assert(offsetof(ObjData_Spotlight, volumetricCone) == 0x20, "Bad offset of volumetricCone");
-static_assert(offsetof(ObjData_Spotlight, lensFlare) == 0x24, "Bad offset of lensFlare");
-static_assert(offsetof(ObjData_Spotlight, enableSwitchChannel) == 0x28, "Bad offset of enableSwitchChannel");
-static_assert(offsetof(ObjData_Spotlight, sweepHalfRange) == 0x2c, "Bad offset of sweepHalfRange");
-static_assert(offsetof(ObjData_Spotlight, sweepCenter) == 0x30, "Bad offset of sweepCenter");
 
 typedef struct {
     uchar padding00[0x2c];                 // 0x00-0x2b
@@ -248,9 +213,11 @@ void Searchlight_Update(obj_tag *searchlight) {
 
     switch ((SearchlightState)searchlight->curState) {
     case Searchlight_Sweeping:
-        // Calculate sweep motion using sine/cosine
-        searchlight->rotation.x = sinf(spotlight->phase * PHASE_TO_ANGLE) * spotlight->sweepHalfRange + spotlight->sweepCenter;
-        searchlight->rotation.y = cosf(spotlight->phase * PHASE_TO_ANGLE) * spotlight->sweepHalfRange + spotlight->rotationAngles.y;
+        // On the x87: the angle, its sine or cosine and the sums all unrounded
+        searchlight->rotation.x = (float)(FSin((double)spotlight->phase * kPhaseToAngle) * spotlight->sweepHalfRange +
+                                          spotlight->sweepCenter);
+        searchlight->rotation.y = (float)(FCos((double)spotlight->phase * kPhaseToAngle) * spotlight->sweepHalfRange +
+                                          spotlight->rotationAngles.y);
         spotlight->phase += FRAME_RATE_MUL;
         break;
 
@@ -297,7 +264,7 @@ void Searchlight_Update(obj_tag *searchlight) {
 
     case Searchlight_Destroyed:
         // Spawn smoke particles occasionally
-        if ((searchlight->activeState != 0) &&
+        if ((searchlight->drawnCountdown != 0) &&
             ((searchlight->creationTimeFrames & 0xff) + GameState.NumFramesUnpaused) % 7 == 0) {
             _VECTOR gasVec;
             gasVec.x = 0.0f;
@@ -310,7 +277,7 @@ void Searchlight_Update(obj_tag *searchlight) {
         if (searchlight->rotation.x >= 0.8f) {
             return;
         }
-        searchlight->renderType |= 0x20;
+        searchlight->transformFlags |= TRANSFORM_MOVED;
         searchlight->rotation.x += 0.05f;
         return;
 
@@ -326,7 +293,7 @@ void Searchlight_Update(obj_tag *searchlight) {
     // Update stand object (only copies yaw, not pitch)
     componentObj = spotlight->standObject;
     if (componentObj != NULL) {
-        componentObj->renderType |= 0x20;
+        componentObj->transformFlags |= TRANSFORM_MOVED;
         componentObj->rotation.y = searchlight->rotation.y;
     }
 
@@ -349,7 +316,7 @@ void Searchlight_Update(obj_tag *searchlight) {
             } else {
                 // Position projection spot at hit point on surface
                 componentObj->position = hitData->hitPosition;
-                componentObj->renderType |= 0x20;
+                componentObj->transformFlags |= TRANSFORM_MOVED;
 
                 // Orient projection spot to match surface normal (so it lies flat on ground/walls)
                 float normalX = hitData->surfaceNormal.normal.x;
@@ -399,7 +366,7 @@ void Searchlight_Update(obj_tag *searchlight) {
     // Update volumetric light cone beam effect
     componentObj = spotlight->volumetricCone;
     if (componentObj != NULL) {
-        componentObj->renderType |= 0x24;
+        componentObj->transformFlags |= TRANSFORM_MATRIX_PLACED | TRANSFORM_MOVED;
         View_SetDrawInAllViews(componentObj);
 
         // Orient cone in beam direction toward player
@@ -412,7 +379,7 @@ void Searchlight_Update(obj_tag *searchlight) {
     // Update lens flare effect
     componentObj = spotlight->lensFlare;
     if (componentObj != NULL) {
-        if (searchlight->activeState != 0) {
+        if (searchlight->drawnCountdown != 0) {
             // Position flare slightly in front of searchlight
             Vec_Copy(&searchlight->position, &componentObj->position);
             Vec_Spherical_2_Cartesian(&sphericalDir.x, 0.4f, searchlight->rotation.y, -searchlight->rotation.x);
@@ -429,15 +396,15 @@ void Searchlight_Update(obj_tag *searchlight) {
             // Only show flare when player is looking toward the searchlight
             if (dotProduct > 0.2f) {
                 View_SetDrawInAllViews(componentObj);
-                componentObj->renderType |= 0x20;
+                componentObj->transformFlags |= TRANSFORM_MOVED;
 
                 // Scale and brighten based on viewing angle
                 float intensity = (dotProduct - 0.2f) * 4.0f;
                 componentObj->scale = 4.0f * intensity;
-                componentObj->maybeBrightness = (uchar)(intensity * 255.0f);
+                componentObj->tweakA = (uchar)(intensity * 255.0f);
 
                 // Brighten further if direct line of sight
-                if (componentObj->maybeBrightness != 0) {
+                if (componentObj->tweakA != 0) {
                     bool lineOfSight = Collide_LineOfSight(&glb_viewer[0]->pos, &componentObj->position, player->inCel, componentObj, player, 8);
                     if (lineOfSight) {
                         componentObj->effectFlags |= 0x2000;
@@ -454,7 +421,7 @@ void Searchlight_Update(obj_tag *searchlight) {
         }
     }
 
-    searchlight->renderType |= 0x20;
+    searchlight->transformFlags |= TRANSFORM_MOVED;
 
 check_bullet_hits:
     // Check for bullet damage

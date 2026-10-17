@@ -1,0 +1,227 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00121e80",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "AStream::SetPath(char *)"
+  },
+  {
+   "address": "0x00121f30",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "AStream::SetFilter(float)"
+  },
+  {
+   "address": "0x00121f40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AStream::IsOver(void)"
+  },
+  {
+   "address": "0x00121f50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AStream::IsNotFound(void)"
+  },
+  {
+   "address": "0x00121f60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AStream::IsPaused(void)"
+  },
+  {
+   "address": "0x00121f70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AStream::IsLoop(void)"
+  },
+  {
+   "address": "0x00121f80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AStream::IsEffect(void)"
+  },
+  {
+   "address": "0x00121f90",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AStream::FadeOut(void)"
+  },
+  {
+   "address": "0x00121fc0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AStream::GetLatency(void)",
+   "return": "float"
+  },
+  {
+   "address": "0x00122020",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AStream::GetInternalVolume(void)",
+   "return": "float"
+  },
+  {
+   "address": "0x00122030",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AStream::GetFile(void)",
+   "return": "char *"
+  },
+  {
+   "address": "0x00122050",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AStream::Next(void)"
+  },
+  {
+   "address": "0x00122370",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    },
+    {
+     "name": "param_3",
+     "type": "char *"
+    },
+    {
+     "name": "param_4",
+     "type": "uint"
+    }
+   ],
+   "sheet": "AStream::AStream(char *, char *, char *, unsigned int)"
+  },
+  {
+   "address": "0x00122430",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AStream::Stop(void)"
+  },
+  {
+   "address": "0x00122450",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AStream::~AStream(void)"
+  },
+  {
+   "address": "0x001224d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "AStream::DecodeError(int)"
+  },
+  {
+   "address": "0x00122550",
+   "calling_convention": "__thiscall",
+   "return": "AStream *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x00122580",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "AStream::Play(APath &)"
+  },
+  {
+   "address": "0x001234d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "bool"
+    },
+    {
+     "name": "param_4",
+     "type": "bool"
+    },
+    {
+     "name": "param_5",
+     "type": "bool"
+    }
+   ],
+   "sheet": "AStream::Event(char *, float, bool, bool, bool)"
+  },
+  {
+   "address": "0x001236c0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    },
+    {
+     "name": "param_3",
+     "type": "uint"
+    }
+   ],
+   "sheet": "AStream::Create(char *, char *, unsigned int)"
+  },
+  {
+   "address": "0x001237d0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "AStream::Get(char *)"
+  },
+  {
+   "address": "0x001237f0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "AStream::Remove(char *)"
+  }
+ ]
+}

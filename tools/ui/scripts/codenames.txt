@@ -1,0 +1,41 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# The codename menu: Codenames -> the codename -> the options wheel, round it, Secret Unlocks and back.
+press DOWN
+wait 30
+press DOWN
+wait 30
+press A                    # Codenames
+waitpage 0x4000001b        # P_CNSELECT
+wait 100
+press A                    # the codename
+waitpage 0x4000001d        # P_CNMENU
+wait 150
+shot cnmenu
+press DOWN
+wait 40
+shot cnmenu_down
+press UP
+wait 40
+press UP
+wait 40
+shot cnmenu_up                # Secret Unlocks
+press A
+waitpage 0x40000020        # P_CNNAME
+wait 100
+shot cnname
+press B
+waitpage 0x4000001d
+wait 100
+shot cnmenu_back
+press B
+wait 150
+shot after_back
+quit

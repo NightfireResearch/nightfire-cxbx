@@ -13,22 +13,21 @@ void Input_RumbleStart(ushort playerNum, int time, int intensity);
 
 typedef struct {
     byte inverted; /* Inverts fChannel[4,5] */
-    undefined field1_0x1;
-    undefined field2_0x2;
-    undefined field3_0x3;
-    undefined field4_0x4;
+    undefined autoAim;          // 0x1 single player (PS2 name)
+    undefined autoAimMultiplayer; // 0x2
+    undefined manualAimToggle; // 0x3 - the "aim: toggle/hold" option; non-zero = toggle
+    undefined crouchToggle;     // 0x4 (PS2 name)
     undefined field5_0x5;
     undefined field6_0x6;
-    undefined field7_0x7;
+    undefined levelViewOnPace; // 0x7 - a change of walking pace sets the view levelling (Ghidra: someSettingRelatedToCrouch)
     undefined crosshairsEnabled;
     undefined1 vibrationEnabled; /* Created by retype action */
     undefined1 autoSwitchBetterWeapon; /* Created by retype action */
-    undefined field11_0xb;
+    undefined hudVisibility;    // 0xb - Ghidra's name; on, the health bars fade out (Player_Update)
     undefined field12_0xc;
     undefined field13_0xd;
     short controlStyle;
-    undefined field15_0x10;
-    undefined field16_0x11;
+    short controlStyleDriving; // 0x10 - the driving engine's control style (Boot_GetPTPData hands it over at +0xa14)
     undefined field17_0x12;
     undefined field18_0x13;
     float fChannels[40];
@@ -162,5 +161,8 @@ typedef struct {
 static_assert(sizeof(PlayerInput) == 0x158, "Bad size for PlayerInput");
 
 // PlayerInputs is an array of 4 PlayerInput structs, located at 001fe6d0
+// XBE_GLOBAL(0x001fe6d0, 0x560)
 #define PlayerInputs ((PlayerInput*)0x001fe6d0)
+
+void Input_ProcessEvents(void);
 

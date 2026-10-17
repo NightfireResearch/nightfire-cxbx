@@ -1,0 +1,24 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# The dev movie selector (P_FMVTEST), which nothing in the retail game opens (docs/ui/movie-selector.md):
+# opened here with a GoPage, as a menu script could.
+gopage 0x4000004f
+wait 120
+shot movie_selector
+press DOWN
+wait 40
+shot movie_selector_down
+press A                    # play it (P_FMVPLAYER)
+wait 200
+shot playing
+press A                    # skip: back to the list
+wait 120
+shot back_at_list
+quit

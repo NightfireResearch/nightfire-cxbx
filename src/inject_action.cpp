@@ -1,22 +1,78 @@
 #include "inject.h"
+#include "common/xbeAbi.h"       // the generated table checks each patch against the binary with it
+#include "common/xbeOverload.h"  // and selects overloads with it
+#include "common/xbeOriginal.h"  // keeps what each jump overwrote, for shadow tests
+#include "common/xbeRelocate.h"  // points the game at tables moved into our source
 
 #include "action/math/math.h"
 #include "action/game.h"
+#include "action/game/obj/bullet.h"
 #include "action/input.h"
 #include "action/util/crc.h"
 #include "action/memory.h"
 #include "action/sound/music.h"
 #include "action/ui/ui.h"
+#include "action/ui/MenuScript.h"
 #include "action/engine/psiFile.h"
+#include "action/engine/XboxFile.h"
+#include "common/xboxPath.h"
+#include "action/engine/XboxStartup.h"
 #include "action/engine/psiSave.h"
+#include "action/engine/LoadSave.h"
+#include "action/ui/Menu.h"
+#include "action/engine/FS.h"
+#include "action/engine/AIPath.h"
+#include "action/engine/Woman.h"
+#include "action/engine/XboxError.h"
+#include "action/engine/XboxSystem.h"
+#include "action/engine/psiSprite.h"
+#include "action/engine/psiLight.h"
+#include "action/engine/psiDraw.h"
+#include "action/engine/Direct3D/d3dSeam.h"
+#include "action/engine/Direct3D/xboxMatrix.h"
+#include "action/sound/dsndSeam.h"
+#include "action/sound/psiSound.h"
 #include "action/game/view.h"
 #include "action/game/obj/car.h"
 #include "action/game/obj/Light.h"
+#include "action/game/obj/Switch.h"
+#include "action/game/obj/ScriptPlayer.h"
+#include "action/game/sp/SSys.h"
 #include "action/game/mp/multiplayer.h"
+#include "action/game/drone/BOT.h"
+#include "action/game/drone/NDrone2.h"
+#include "action/game/drone/DroneAnim.h"
+#include "action/game/drone/Behaviour.h"
+#include "action/game/drone/DroneWeapon.h"
+#include "action/game/drone/NDrone2_Civilian.h"
+#include "action/game/drone/NDrone2_Damage.h"
+#include "action/game/drone/NDrone2_States.h"
+#include "action/game/drone/DroneVision.h"
+#include "action/game/drone/DroneVision_Alerts.h"
+#include "action/game/drone/NDrone2_Opponent.h"
+#include "action/game/drone/DroneMove.h"
+#include "action/game/drone/DroneCollision.h"
+#include "action/game/drone/DroneTracking.h"
+#include "action/game/drone/NDrone2_Route.h"
+#include "action/game/drone/DroneModes.h"
+#include "action/game/drone/DroneInit.h"
+#include "action/game/drone/NDrone2_Reactions.h"
+#include "action/game/drone/NDrone2_Special.h"
+#include "action/game/drone/NDrone2_Combat.h"
+#include "action/game/drone/NDrone2_Cover.h"
+#include "action/game/drone/NDrone2_Alert.h"
+#include "action/game/drone/NDrone2_Hostage.h"
+#include "action/game/drone/NDrone2_Roles.h"
+#include "action/game/obj/DroneSpawner.h"
+#include "action/engine/Fmv.h"
+#include "action/gfx/LowLevel.h"
+#include "action/game/weapon_stats.h"
+#include "action/devtools/MenuProbe.h"
+#include "action/devtools/Demo.h"
+#include "action/engine/LaunchOptions.h"
 
 #include "common/launchInfo.h"
 
-#include "cxbx/cxbxbinding.h"
 
 void WriteMemory(size_t offset, void *data, size_t size)
 {
@@ -37,32 +93,62 @@ void WriteJmpTo(size_t from, size_t to)
 {
   size_t relative = to - (from + 5);
 
+  XbeOriginal_Record((unsigned)from);
   WriteByte(from, 0xE9);
   WriteMemory(from + 1, &relative, sizeof(relative));
 }
 
 void Inject()
 {
+  // -level and -difficulty; then a time demo picks its mode: a playback moves into its sandbox before settings.ini is
+  // read, and takes the recording's launch options
+  LaunchOptions_Read();
+  Demo_Init();
 
-  // Experiments with increasing resolution beyond original limits
-  
-  // 640x480: Default
-  // 800x600: Stable, UI elements misaligned
-  // 1024x768: Various graphics are broken entirely, videos fail to play, will crash if cameras are scaled
-  // 1280x720: crashes at Mem_Init
-  // 1920x1080: crashes at Mem_Init
+  // Instruction-level patches that are not whole-function replacements. Done first, so that nothing the rest
+  // of this function sets up can run against un-patched XAPI.
+  // Where D: lives, for the file layer below and for anything else that resolves an Xbox path. The mapper
+  // itself is shared with the loader (src/common/xboxPath.cpp), which is why it is told rather than asking.
+  Xbox_SetDiscRoot(Settings_GetDiscPath());
+
+  Inject_XboxStartup();
+
+  // FFmpeg, for the movies (engine/Fmv.cpp)
+  Fmv_Init();
+
+
+  // Resolution beyond the original 640x480.
+  //
+  // The notes that were here described the old emulator-hosted behaviour and are no longer true. Under the
+  // loader and the D3D9 backend, 1920x1080 was measured in September 2026 as running the whole way: the device is
+  // created at that size, Mem_Init - which the old notes named as the crash point for anything above
+  // 1024x768 - completes, levels load, shaders translate, background movies play, and the frame rate is
+  // unchanged at 50 fps and about 0.9 ms of work per frame. The cost is nil because the limit here is draw
+  // call submission on the CPU, not fill rate. Widescreen=1 in settings.ini alongside it also runs clean,
+  // which is the right pairing for a 16:9 display since the game has its own 16:9 projection.
+  //
+  // How it looks is the remaining problem, and it is 2D, not 3D. Observed at 1920x1080: the 3D views are
+  // correct and sharp, and the window is now created at the render resolution (SizeWindowToBackBuffer in
+  // Direct3D/d3d9Backend.cpp). But the main menus draw at their 640x480 pixel size in the top-left corner,
+  // the movie letterboxing does the same, and HUD elements are a mixture - the ones rewritten since (the
+  // crosshairs, for instance) follow the resolution, while the rest are drawn at the wrong scale. The cause
+  // is in the sprite tables in ui/HUD.cpp, which mix entries derived from SCREEN_WIDTH/SCREEN_HEIGHT with
+  // entries carrying hard-coded 640x480 coordinates; there is a "TODO: Change from 640x480 to generic"
+  // sitting above one of them. That is the "UI elements misaligned" the old notes mention at 800x600, and
+  // it is the remaining work rather than a crash.
+  //
+  // So this is left at 640x480 by default, and raising it is two lines in action/actionhelpers.h.
   int width = SCREEN_WIDTH;
   int height = SCREEN_HEIGHT;
   float fWidth = (float)width;
   float fHeight = (float)height;
 
-  // This is in the params to D3DCreateDevice
-  WriteMemory(0x000e6efc, &width, 4);
-  WriteMemory(0x000e6f04, &height, 4);
+  // The D3DCreateDevice backbuffer size used to be patched into xboxInitGraphics's immediates here
+  // (0x000e6efc/0x000e6f04); that function is now reimplemented in d3dSeam.cpp and reads SCREEN_WIDTH/
+  // SCREEN_HEIGHT directly, so those two patches are gone.
 
-  // This is D3DDevice_SetViewport(&local_98), and a global, slightly later on
-  WriteMemory(0x000e6ceb, &width, 4);
-  WriteMemory(0x000e6cd7, &height, 4);
+  // Likewise d3dSetup's viewport size (0x000e6ceb/0x000e6cd7) - reimplemented in d3dSeam.cpp, reads
+  // SCREEN_WIDTH/SCREEN_HEIGHT directly.
 
   // This is psiPostDraw
   WriteMemory(0x000dd8e6, &width, 4);
@@ -135,9 +221,10 @@ void Inject()
   WriteJmpTo(0x000eb050, (size_t)&XGetLaunchInfo);
 
 
-  // Special case for weapon stats
-  // This has the limitation that the DLL must be injected before the constructor is called otherwise it will have no effect
-  void *ptrCtorWeaponDefinitionTable = &ctor_WeaponDefinitionTable;
-  WriteMemory(0x0016313c, &ptrCtorWeaponDefinitionTable, 4);
+  // Debug probes that stand in front of patched functions (off unless settings.ini asks for them)
+  MenuProbe_Install();
+
+  // NIGHTFIRE_ORIGINAL: run some functions as the original, whatever has been ported
+  Demo_RestoreOriginals();
 
 }

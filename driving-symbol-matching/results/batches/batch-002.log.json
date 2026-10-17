@@ -1,0 +1,4250 @@
+{
+ "batch": "002",
+ "program": "Driving.xbe",
+ "applied": "Fri Sep 25 18:05:25 2026",
+ "items": [
+  {
+   "xbox": "0x00011100",
+   "old_name": "FUN_00011100",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00011100 from 'FUN_00011100' to 'Update'",
+      "warnings": [
+       "Function name 'Update' is too short (main part 'Update' is 6 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Update' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Update' shares the same token set as existing function 'UpdateRotPos' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00011100",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Update",
+   "ok": true
+  },
+  {
+   "xbox": "0x000125f0",
+   "old_name": "FUN_000125f0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000125f0 from 'FUN_000125f0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000125f0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0001c090",
+   "old_name": "FUN_0001c090",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0001c090 from 'FUN_0001c090' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001c090",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0001d640",
+   "old_name": "FUN_0001d640",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0001d640 from 'FUN_0001d640' to '~AICharacterEnemyDriver'",
+      "warnings": [
+       "Function name '~AICharacterEnemyDriver' \u2014 main part '~AICharacterEnemyDriver' is not PascalCase. Expected: ~aicharacterenemydriver"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001d640",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~AICharacterEnemyDriver",
+   "ok": true
+  },
+  {
+   "xbox": "0x0001d650",
+   "old_name": "FUN_0001d650",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0001d650 from 'FUN_0001d650' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001d650",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000236c0",
+   "old_name": "FUN_000236c0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000236c0 from 'FUN_000236c0' to '~AICharacterPassenger'",
+      "warnings": [
+       "Function name '~AICharacterPassenger' \u2014 main part '~AICharacterPassenger' is not PascalCase. Expected: ~aicharacterpassenger"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000236c0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~AICharacterPassenger",
+   "ok": true
+  },
+  {
+   "xbox": "0x000236d0",
+   "old_name": "FUN_000236d0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000236d0 from 'FUN_000236d0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000236d0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x00023b70",
+   "old_name": "FUN_00023b70",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00023b70 from 'FUN_00023b70' to 'DoDead'",
+      "warnings": [
+       "Function name 'DoDead' is too short (main part 'DoDead' is 6 chars, minimum 8).",
+       "Function name 'DoDead' does not start with a recognized verb. First word 'Do' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/vague_verb - Verb 'Do' is Tier 3 (vague). Function names starting with Tier 3 verbs require at least 2 specifier tokens after the verb. Got 1 specifier(s) in 'DoDead'."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00023b70",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DoDead",
+   "ok": true
+  },
+  {
+   "xbox": "0x00023f50",
+   "old_name": "FUN_00023f50",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00023f50 from 'FUN_00023f50' to '~AICharacterPedestrian'",
+      "warnings": [
+       "Function name '~AICharacterPedestrian' \u2014 main part '~AICharacterPedestrian' is not PascalCase. Expected: ~aicharacterpedestrian"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00023f50",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~AICharacterPedestrian",
+   "ok": true
+  },
+  {
+   "xbox": "0x00024700",
+   "old_name": "FUN_00024700",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00024700 from 'FUN_00024700' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00024700",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x00037a10",
+   "old_name": "FUN_00037a10",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00037a10 from 'FUN_00037a10' to 'PlayCollision'",
+      "warnings": [
+       "Function name 'PlayCollision' does not start with a recognized verb. First word 'Play' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'PlayCollision' shares the same token set as existing function 'Play' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00037a10",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PlayCollision",
+   "ok": true
+  },
+  {
+   "xbox": "0x0004eb40",
+   "old_name": "FUN_0004eb40",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0004eb40 from 'FUN_0004eb40' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0004eb40",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000592b0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "000592b0",
+      "function_name": "FUN_000592b0",
+      "entry_point": "000592b0",
+      "body_size": 17,
+      "message": "Function created successfully at 000592b0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000592b0 from 'FUN_000592b0' to 'Kill'",
+      "warnings": [
+       "Function name 'Kill' is too short (main part 'Kill' is 4 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Kill' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Kill' shares the same token set as existing function 'KillActorByHandle' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000592b0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Kill",
+   "ok": true
+  },
+  {
+   "xbox": "0x000592d0",
+   "old_name": "FUN_000592d0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000592d0 from 'FUN_000592d0' to '~AttributeSystem'",
+      "warnings": [
+       "Function name '~AttributeSystem' \u2014 main part '~AttributeSystem' is not PascalCase. Expected: ~attributesystem"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000592d0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~AttributeSystem",
+   "ok": true
+  },
+  {
+   "xbox": "0x00059530",
+   "old_name": "FUN_00059530",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00059530 from 'FUN_00059530' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00059530",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0005dc60",
+   "old_name": "FUN_0005dc60",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0005dc60 from 'FUN_0005dc60' to '~Human'",
+      "warnings": [
+       "Function name '~Human' \u2014 main part '~Human' is not PascalCase. Expected: ~human",
+       "Function name '~Human' is too short (main part '~Human' is 6 chars, minimum 8)."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0005dc60",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~Human",
+   "ok": true
+  },
+  {
+   "xbox": "0x0005dd00",
+   "old_name": "FUN_0005dd00",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0005dd00 from 'FUN_0005dd00' to 'Simulate'",
+      "warnings": [
+       "Function name 'Simulate' does not start with a recognized verb. First word 'Simulate' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Simulate' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Simulate' shares the same token set as existing function 'SimulateGame' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0005dd00",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Simulate",
+   "ok": true
+  },
+  {
+   "xbox": "0x0005dea0",
+   "old_name": "FUN_0005dea0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0005dea0 from 'FUN_0005dea0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0005dea0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0005f350",
+   "old_name": "FUN_0005f350",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0005f350 from 'FUN_0005f350' to '~Missile'",
+      "warnings": [
+       "Function name '~Missile' \u2014 main part '~Missile' is not PascalCase. Expected: ~missile"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0005f350",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~Missile",
+   "ok": true
+  },
+  {
+   "xbox": "0x0005f6a0",
+   "old_name": "FUN_0005f6a0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0005f6a0 from 'FUN_0005f6a0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0005f6a0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x00060b60",
+   "old_name": "FUN_00060b60",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00060b60 from 'FUN_00060b60' to '~Newton'",
+      "warnings": [
+       "Function name '~Newton' \u2014 main part '~Newton' is not PascalCase. Expected: ~newton",
+       "Function name '~Newton' is too short (main part '~Newton' is 7 chars, minimum 8)."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00060b60",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~Newton",
+   "ok": true
+  },
+  {
+   "xbox": "0x000612f0",
+   "old_name": "FUN_000612f0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000612f0 from 'FUN_000612f0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000612f0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0006e290",
+   "old_name": "FUN_0006e290",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0006e290 from 'FUN_0006e290' to '~PHelicopter'",
+      "warnings": [
+       "Function name '~PHelicopter' \u2014 main part '~PHelicopter' is not PascalCase. Expected: ~phelicopter"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0006e290",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~PHelicopter",
+   "ok": true
+  },
+  {
+   "xbox": "0x0006e300",
+   "old_name": "FUN_0006e300",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0006e300 from 'FUN_0006e300' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0006e300",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0006ed40",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0006ed40",
+      "function_name": "FUN_0006ed40",
+      "entry_point": "0006ed40",
+      "body_size": 196,
+      "message": "Function created successfully at 0006ed40"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0006ed40 from 'FUN_0006ed40' to 'NameLookup'",
+      "warnings": [
+       "Function name 'NameLookup' does not start with a recognized verb. First word 'Name' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'NameLookup' shares the same token set as existing function 'Name' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0006ed40",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "NameLookup",
+   "ok": true
+  },
+  {
+   "xbox": "0x0006f050",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0006f050",
+      "function_name": "FUN_0006f050",
+      "entry_point": "0006f050",
+      "body_size": 31,
+      "message": "Function created successfully at 0006f050"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0006f050 from 'FUN_0006f050' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0006f050",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0006f7f0",
+   "old_name": "FUN_0006f7f0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0006f7f0 from 'FUN_0006f7f0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0006f7f0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000735d0",
+   "old_name": "FUN_000735d0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000735d0 from 'FUN_000735d0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000735d0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x00073f80",
+   "old_name": "FUN_00073f80",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00073f80 from 'FUN_00073f80' to 'ApplyDamage'"
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00073f80",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "ApplyDamage",
+   "ok": true
+  },
+  {
+   "xbox": "0x000744d0",
+   "old_name": "FUN_000744d0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000744d0 from 'FUN_000744d0' to 'Simulate'",
+      "warnings": [
+       "Function name 'Simulate' does not start with a recognized verb. First word 'Simulate' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Simulate' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Simulate' shares the same token set as existing function 'SimulateGame' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000744d0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Simulate",
+   "ok": true
+  },
+  {
+   "xbox": "0x00075300",
+   "old_name": "FUN_00075300",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00075300 from 'FUN_00075300' to '~Smackable'",
+      "warnings": [
+       "Function name '~Smackable' \u2014 main part '~Smackable' is not PascalCase. Expected: ~smackable"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00075300",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~Smackable",
+   "ok": true
+  },
+  {
+   "xbox": "0x00075530",
+   "old_name": "FUN_00075530",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00075530 from 'FUN_00075530' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00075530",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0007daa0",
+   "old_name": "FUN_0007daa0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0007daa0 from 'FUN_0007daa0' to 'Kill'",
+      "warnings": [
+       "Function name 'Kill' is too short (main part 'Kill' is 4 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Kill' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Kill' shares the same token set as existing function 'KillActorByHandle' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0007daa0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Kill",
+   "ok": true
+  },
+  {
+   "xbox": "0x0007dac0",
+   "old_name": "FUN_0007dac0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0007dac0 from 'FUN_0007dac0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0007dac0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0007e8c0",
+   "old_name": "FUN_0007e8c0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0007e8c0 from 'FUN_0007e8c0' to '~RLightManager'",
+      "warnings": [
+       "Function name '~RLightManager' \u2014 main part '~RLightManager' is not PascalCase. Expected: ~rlightmanager"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0007e8c0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~RLightManager",
+   "ok": true
+  },
+  {
+   "xbox": "0x0007e930",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0007e930",
+      "function_name": "FUN_0007e930",
+      "entry_point": "0007e930",
+      "body_size": 17,
+      "message": "Function created successfully at 0007e930"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0007e930 from 'FUN_0007e930' to 'Kill'",
+      "warnings": [
+       "Function name 'Kill' is too short (main part 'Kill' is 4 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Kill' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Kill' shares the same token set as existing function 'KillActorByHandle' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0007e930",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Kill",
+   "ok": true
+  },
+  {
+   "xbox": "0x0007f450",
+   "old_name": "FUN_0007f450",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0007f450 from 'FUN_0007f450' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0007f450",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x00081bf0",
+   "old_name": "FUN_00081bf0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00081bf0 from 'FUN_00081bf0' to '~RPlayerCamera'",
+      "warnings": [
+       "Function name '~RPlayerCamera' \u2014 main part '~RPlayerCamera' is not PascalCase. Expected: ~rplayercamera"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00081bf0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~RPlayerCamera",
+   "ok": true
+  },
+  {
+   "xbox": "0x00084a30",
+   "old_name": "FUN_00084a30",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00084a30 from 'FUN_00084a30' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00084a30",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008b3c0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0008b3c0",
+      "function_name": "FUN_0008b3c0",
+      "entry_point": "0008b3c0",
+      "body_size": 261,
+      "message": "Function created successfully at 0008b3c0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0008b3c0 from 'FUN_0008b3c0' to 'Debug'",
+      "warnings": [
+       "Function name 'Debug' is too short (main part 'Debug' is 5 chars, minimum 8).",
+       "Function name 'Debug' does not start with a recognized verb. First word 'Debug' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Debug' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Debug' shares the same token set as existing function 'DebugObject' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008b3c0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Debug",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008b4f0",
+   "old_name": "FUN_0008b4f0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0008b4f0 from 'FUN_0008b4f0' to 'PreRender'",
+      "warnings": [
+       "Function name 'PreRender' does not start with a recognized verb. First word 'Pre' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'PreRender' shares the same token set as existing function 'Render' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008b4f0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PreRender",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008b510",
+   "old_name": "FUN_0008b510",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0008b510 from 'FUN_0008b510' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008b510",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008b530",
+   "old_name": "FUN_0008b530",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0008b530 from 'FUN_0008b530' to 'DoRender'",
+      "warnings": [
+       "Function name 'DoRender' does not start with a recognized verb. First word 'Do' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/vague_verb - Verb 'Do' is Tier 3 (vague). Function names starting with Tier 3 verbs require at least 2 specifier tokens after the verb. Got 1 specifier(s) in 'DoRender'.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'DoRender' shares the same token set as existing function 'Render' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008b530",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DoRender",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008c950",
+   "old_name": "FUN_0008c950",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0008c950 from 'FUN_0008c950' to '~RRenderWorldCamera'",
+      "warnings": [
+       "Function name '~RRenderWorldCamera' \u2014 main part '~RRenderWorldCamera' is not PascalCase. Expected: ~rrenderworldcamera"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008c950",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~RRenderWorldCamera",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008c990",
+   "old_name": "FUN_0008c990",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0008c990 from 'FUN_0008c990' to 'PreRender'",
+      "warnings": [
+       "Function name 'PreRender' does not start with a recognized verb. First word 'Pre' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'PreRender' shares the same token set as existing function 'Render' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008c990",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PreRender",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008ccf0",
+   "old_name": "FUN_0008ccf0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0008ccf0 from 'FUN_0008ccf0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008ccf0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008dce0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0008dce0",
+      "function_name": "FUN_0008dce0",
+      "entry_point": "0008dce0",
+      "body_size": 7,
+      "message": "Function created successfully at 0008dce0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0008dce0 from 'FUN_0008dce0' to 'GetRenderOffset'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetRenderOffset' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008dce0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetRenderOffset",
+   "ok": true
+  },
+  {
+   "xbox": "0x0008f270",
+   "old_name": "FUN_0008f270",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0008f270 from 'FUN_0008f270' to 'UpdatePosition'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'UpdatePosition' shares the same token set as existing function 'Update' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0008f270",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "UpdatePosition",
+   "ok": true
+  },
+  {
+   "xbox": "0x000905a0",
+   "old_name": "FUN_000905a0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000905a0 from 'FUN_000905a0' to '~RSceneObj'",
+      "warnings": [
+       "Function name '~RSceneObj' \u2014 main part '~RSceneObj' is not PascalCase. Expected: ~rsceneobj"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000905a0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~RSceneObj",
+   "ok": true
+  },
+  {
+   "xbox": "0x000908b0",
+   "old_name": "FUN_000908b0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000908b0 from 'FUN_000908b0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000908b0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x00095b30",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "00095b30",
+      "function_name": "FUN_00095b30",
+      "entry_point": "00095b30",
+      "body_size": 43,
+      "message": "Function created successfully at 00095b30"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00095b30 from 'FUN_00095b30' to 'RenderShadow'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'RenderShadow' shares the same token set as existing function 'Render' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00095b30",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "RenderShadow",
+   "ok": true
+  },
+  {
+   "xbox": "0x00096430",
+   "old_name": "FUN_00096430",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00096430 from 'FUN_00096430' to '~RVehicle'",
+      "warnings": [
+       "Function name '~RVehicle' \u2014 main part '~RVehicle' is not PascalCase. Expected: ~rvehicle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00096430",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~RVehicle",
+   "ok": true
+  },
+  {
+   "xbox": "0x000964b0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "000964b0",
+      "function_name": "FUN_000964b0",
+      "entry_point": "000964b0",
+      "body_size": 290,
+      "message": "Function created successfully at 000964b0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000964b0 from 'FUN_000964b0' to 'UpdatePosition'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'UpdatePosition' shares the same token set as existing function 'Update' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000964b0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "UpdatePosition",
+   "ok": true
+  },
+  {
+   "xbox": "0x000967f0",
+   "old_name": "FUN_000967f0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000967f0 from 'FUN_000967f0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000967f0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x00096c60",
+   "old_name": "FUN_00096c60",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00096c60 from 'FUN_00096c60' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00096c60",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000979f0",
+   "old_name": "FUN_000979f0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000979f0 from 'FUN_000979f0' to '~RWorldCamera'",
+      "warnings": [
+       "Function name '~RWorldCamera' \u2014 main part '~RWorldCamera' is not PascalCase. Expected: ~rworldcamera"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000979f0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~RWorldCamera",
+   "ok": true
+  },
+  {
+   "xbox": "0x00097eb0",
+   "old_name": "FUN_00097eb0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00097eb0 from 'FUN_00097eb0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00097eb0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0009a480",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0009a480",
+      "function_name": "FUN_0009a480",
+      "entry_point": "0009a480",
+      "body_size": 17,
+      "message": "Function created successfully at 0009a480"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0009a480 from 'FUN_0009a480' to 'Kill'",
+      "warnings": [
+       "Function name 'Kill' is too short (main part 'Kill' is 4 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Kill' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Kill' shares the same token set as existing function 'KillActorByHandle' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0009a480",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Kill",
+   "ok": true
+  },
+  {
+   "xbox": "0x0009ac00",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0009ac00",
+      "function_name": "FUN_0009ac00",
+      "entry_point": "0009ac00",
+      "body_size": 55,
+      "message": "Function created successfully at 0009ac00"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0009ac00 from 'FUN_0009ac00' to 'Reset'",
+      "warnings": [
+       "Function name 'Reset' is too short (main part 'Reset' is 5 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Reset' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Reset' shares the same token set as existing function 'ResetTime' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0009ac00",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Reset",
+   "ok": true
+  },
+  {
+   "xbox": "0x0009af50",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0009af50",
+      "function_name": "FUN_0009af50",
+      "entry_point": "0009af50",
+      "body_size": 17,
+      "message": "Function created successfully at 0009af50"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0009af50 from 'FUN_0009af50' to 'Kill'",
+      "warnings": [
+       "Function name 'Kill' is too short (main part 'Kill' is 4 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Kill' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Kill' shares the same token set as existing function 'KillActorByHandle' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0009af50",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Kill",
+   "ok": true
+  },
+  {
+   "xbox": "0x0009de00",
+   "old_name": "FUN_0009de00",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0009de00 from 'FUN_0009de00' to '~RGain'",
+      "warnings": [
+       "Function name '~RGain' \u2014 main part '~RGain' is not PascalCase. Expected: ~rgain",
+       "Function name '~RGain' is too short (main part '~RGain' is 6 chars, minimum 8)."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0009de00",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~RGain",
+   "ok": true
+  },
+  {
+   "xbox": "0x0009dea0",
+   "old_name": "FUN_0009dea0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0009dea0 from 'FUN_0009dea0' to 'Reset'",
+      "warnings": [
+       "Function name 'Reset' is too short (main part 'Reset' is 5 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Reset' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Reset' shares the same token set as existing function 'ResetTime' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0009dea0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Reset",
+   "ok": true
+  },
+  {
+   "xbox": "0x0009e120",
+   "old_name": "FUN_0009e120",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0009e120 from 'FUN_0009e120' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0009e120",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0009e150",
+   "old_name": "FUN_0009e150",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0009e150 from 'FUN_0009e150' to 'Reset'",
+      "warnings": [
+       "Function name 'Reset' is too short (main part 'Reset' is 5 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Reset' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Reset' shares the same token set as existing function 'ResetTime' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0009e150",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Reset",
+   "ok": true
+  },
+  {
+   "xbox": "0x0009e1b0",
+   "old_name": "FUN_0009e1b0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0009e1b0 from 'FUN_0009e1b0' to '~RLensFlareManager'",
+      "warnings": [
+       "Function name '~RLensFlareManager' \u2014 main part '~RLensFlareManager' is not PascalCase. Expected: ~rlensflaremanager"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0009e1b0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~RLensFlareManager",
+   "ok": true
+  },
+  {
+   "xbox": "0x0009e520",
+   "old_name": "FUN_0009e520",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0009e520 from 'FUN_0009e520' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0009e520",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0009ff60",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0009ff60",
+      "function_name": "FUN_0009ff60",
+      "entry_point": "0009ff60",
+      "body_size": 17,
+      "message": "Function created successfully at 0009ff60"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0009ff60 from 'FUN_0009ff60' to 'Kill'",
+      "warnings": [
+       "Function name 'Kill' is too short (main part 'Kill' is 4 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Kill' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Kill' shares the same token set as existing function 'KillActorByHandle' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0009ff60",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Kill",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a0b30",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "000a0b30",
+      "function_name": "FUN_000a0b30",
+      "entry_point": "000a0b30",
+      "body_size": 17,
+      "message": "Function created successfully at 000a0b30"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a0b30 from 'FUN_000a0b30' to 'Kill'",
+      "warnings": [
+       "Function name 'Kill' is too short (main part 'Kill' is 4 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Kill' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Kill' shares the same token set as existing function 'KillActorByHandle' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a0b30",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Kill",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a0df0",
+   "old_name": "FUN_000a0df0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a0df0 from 'FUN_000a0df0' to '~RMissileCam'",
+      "warnings": [
+       "Function name '~RMissileCam' \u2014 main part '~RMissileCam' is not PascalCase. Expected: ~rmissilecam"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a0df0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~RMissileCam",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a0e70",
+   "old_name": "FUN_000a0e70",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a0e70 from 'FUN_000a0e70' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a0e70",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a3240",
+   "old_name": "FUN_000a3240",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a3240 from 'FUN_000a3240' to '~RParticulate'",
+      "warnings": [
+       "Function name '~RParticulate' \u2014 main part '~RParticulate' is not PascalCase. Expected: ~rparticulate"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a3240",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~RParticulate",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a3290",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "000a3290",
+      "function_name": "FUN_000a3290",
+      "entry_point": "000a3290",
+      "body_size": 17,
+      "message": "Function created successfully at 000a3290"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a3290 from 'FUN_000a3290' to 'Kill'",
+      "warnings": [
+       "Function name 'Kill' is too short (main part 'Kill' is 4 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Kill' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Kill' shares the same token set as existing function 'KillActorByHandle' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a3290",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Kill",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a3fa0",
+   "old_name": "FUN_000a3fa0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a3fa0 from 'FUN_000a3fa0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a3fa0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a4550",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "000a4550",
+      "function_name": "FUN_000a4550",
+      "entry_point": "000a4550",
+      "body_size": 11,
+      "message": "Function created successfully at 000a4550"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a4550 from 'FUN_000a4550' to 'Reset'",
+      "warnings": [
+       "Function name 'Reset' is too short (main part 'Reset' is 5 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Reset' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Reset' shares the same token set as existing function 'ResetTime' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a4550",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Reset",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a4eb0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "000a4eb0",
+      "function_name": "FUN_000a4eb0",
+      "entry_point": "000a4eb0",
+      "body_size": 17,
+      "message": "Function created successfully at 000a4eb0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a4eb0 from 'FUN_000a4eb0' to 'Kill'",
+      "warnings": [
+       "Function name 'Kill' is too short (main part 'Kill' is 4 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Kill' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Kill' shares the same token set as existing function 'KillActorByHandle' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a4eb0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Kill",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a4f70",
+   "old_name": "FUN_000a4f70",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a4f70 from 'FUN_000a4f70' to '~RPostProcessing'",
+      "warnings": [
+       "Function name '~RPostProcessing' \u2014 main part '~RPostProcessing' is not PascalCase. Expected: ~rpostprocessing"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a4f70",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~RPostProcessing",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a5060",
+   "old_name": "FUN_000a5060",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a5060 from 'FUN_000a5060' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a5060",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a6810",
+   "old_name": "FUN_000a6810",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a6810 from 'FUN_000a6810' to '~RSniperZoom'",
+      "warnings": [
+       "Function name '~RSniperZoom' \u2014 main part '~RSniperZoom' is not PascalCase. Expected: ~rsniperzoom"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a6810",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~RSniperZoom",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a6870",
+   "old_name": "FUN_000a6870",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a6870 from 'FUN_000a6870' to 'Kill'",
+      "warnings": [
+       "Function name 'Kill' is too short (main part 'Kill' is 4 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Kill' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Kill' shares the same token set as existing function 'KillActorByHandle' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a6870",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Kill",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a6890",
+   "old_name": "FUN_000a6890",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a6890 from 'FUN_000a6890' to 'Reset'",
+      "warnings": [
+       "Function name 'Reset' is too short (main part 'Reset' is 5 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Reset' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Reset' shares the same token set as existing function 'ResetTime' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a6890",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Reset",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a6a50",
+   "old_name": "FUN_000a6a50",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a6a50 from 'FUN_000a6a50' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a6a50",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a8470",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "000a8470",
+      "function_name": "FUN_000a8470",
+      "entry_point": "000a8470",
+      "body_size": 17,
+      "message": "Function created successfully at 000a8470"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a8470 from 'FUN_000a8470' to 'Kill'",
+      "warnings": [
+       "Function name 'Kill' is too short (main part 'Kill' is 4 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Kill' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Kill' shares the same token set as existing function 'KillActorByHandle' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a8470",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Kill",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a9eb0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "000a9eb0",
+      "function_name": "FUN_000a9eb0",
+      "entry_point": "000a9eb0",
+      "body_size": 17,
+      "message": "Function created successfully at 000a9eb0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a9eb0 from 'FUN_000a9eb0' to 'Kill'",
+      "warnings": [
+       "Function name 'Kill' is too short (main part 'Kill' is 4 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Kill' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Kill' shares the same token set as existing function 'KillActorByHandle' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a9eb0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Kill",
+   "ok": true
+  },
+  {
+   "xbox": "0x000a9ed0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "000a9ed0",
+      "function_name": "FUN_000a9ed0",
+      "entry_point": "000a9ed0",
+      "body_size": 11,
+      "message": "Function created successfully at 000a9ed0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000a9ed0 from 'FUN_000a9ed0' to 'Reset'",
+      "warnings": [
+       "Function name 'Reset' is too short (main part 'Reset' is 5 chars, minimum 8).",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Reset' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Reset' shares the same token set as existing function 'ResetTime' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000a9ed0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Reset",
+   "ok": true
+  },
+  {
+   "xbox": "0x000e00d0",
+   "old_name": "FUN_000e00d0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000e00d0 from 'FUN_000e00d0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000e00d0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000e3ad0",
+   "old_name": "FUN_000e3ad0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000e3ad0 from 'FUN_000e3ad0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000e3ad0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000f7410",
+   "old_name": "FUN_000f7410",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000f7410 from 'FUN_000f7410' to 'SetAnimMemoryMap'"
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000f7410",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetAnimMemoryMap",
+   "ok": true
+  },
+  {
+   "xbox": "0x000f7430",
+   "old_name": "FUN_000f7430",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000f7430 from 'FUN_000f7430' to 'EvalEvent'",
+      "warnings": [
+       "Function name 'EvalEvent' does not start with a recognized verb. First word 'Eval' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'EvalEvent' shares the same token set as existing function 'Event' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000f7430",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "EvalEvent",
+   "ok": true
+  },
+  {
+   "xbox": "0x000f7460",
+   "old_name": "FUN_000f7460",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000f7460 from 'FUN_000f7460' to 'Eval'",
+      "warnings": [
+       "Function name 'Eval' is too short (main part 'Eval' is 4 chars, minimum 8).",
+       "Function name 'Eval' does not start with a recognized verb. First word 'Eval' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Eval' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Eval' shares the same token set as existing function 'EvalEvent' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000f7460",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Eval",
+   "ok": true
+  },
+  {
+   "xbox": "0x000f7480",
+   "old_name": "FUN_000f7480",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000f7480 from 'FUN_000f7480' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000f7480",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000f74b0",
+   "old_name": "FUN_000f74b0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000f74b0 from 'FUN_000f74b0' to '~FnRawEventChannel'",
+      "warnings": [
+       "Function name '~FnRawEventChannel' \u2014 main part '~FnRawEventChannel' is not PascalCase. Expected: ~fnraweventchannel"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000f74b0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~FnRawEventChannel",
+   "ok": true
+  },
+  {
+   "xbox": "0x000f74e0",
+   "old_name": "FUN_000f74e0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000f74e0 from 'FUN_000f74e0' to 'Eval'",
+      "warnings": [
+       "Function name 'Eval' is too short (main part 'Eval' is 4 chars, minimum 8).",
+       "Function name 'Eval' does not start with a recognized verb. First word 'Eval' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Eval' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Eval' shares the same token set as existing function 'EvalEvent' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000f74e0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Eval",
+   "ok": true
+  },
+  {
+   "xbox": "0x000f7650",
+   "old_name": "FUN_000f7650",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000f7650 from 'FUN_000f7650' to 'GetLength'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetLength' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000f7650",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetLength",
+   "ok": true
+  },
+  {
+   "xbox": "0x000f7670",
+   "old_name": "FUN_000f7670",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000f7670 from 'FUN_000f7670' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000f7670",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000f76a0",
+   "old_name": "FUN_000f76a0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000f76a0 from 'FUN_000f76a0' to '~FnRawLinearChannel'",
+      "warnings": [
+       "Function name '~FnRawLinearChannel' \u2014 main part '~FnRawLinearChannel' is not PascalCase. Expected: ~fnrawlinearchannel"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000f76a0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~FnRawLinearChannel",
+   "ok": true
+  },
+  {
+   "xbox": "0x000f78a0",
+   "old_name": "FUN_000f78a0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000f78a0 from 'FUN_000f78a0' to 'Eval'",
+      "warnings": [
+       "Function name 'Eval' is too short (main part 'Eval' is 4 chars, minimum 8).",
+       "Function name 'Eval' does not start with a recognized verb. First word 'Eval' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Eval' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Eval' shares the same token set as existing function 'EvalEvent' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000f78a0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Eval",
+   "ok": true
+  },
+  {
+   "xbox": "0x000f78f0",
+   "old_name": "FUN_000f78f0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000f78f0 from 'FUN_000f78f0' to 'EvalSQT'",
+      "warnings": [
+       "Function name 'EvalSQT' is too short (main part 'EvalSQT' is 7 chars, minimum 8).",
+       "Function name 'EvalSQT' does not start with a recognized verb. First word 'Eval' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'EvalSQT' shares the same token set as existing function 'Eval' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000f78f0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "EvalSQT",
+   "ok": true
+  },
+  {
+   "xbox": "0x000f7940",
+   "old_name": "FUN_000f7940",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000f7940 from 'FUN_000f7940' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000f7940",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000f8250",
+   "old_name": "FUN_000f8250",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000f8250 from 'FUN_000f8250' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000f8250",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000faaf0",
+   "old_name": "FUN_000faaf0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000faaf0 from 'FUN_000faaf0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000faaf0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000ff1e0",
+   "old_name": "FUN_000ff1e0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000ff1e0 from 'FUN_000ff1e0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000ff1e0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x000ff210",
+   "old_name": "FUN_000ff210",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000ff210 from 'FUN_000ff210' to '~FnDeltaF1'",
+      "warnings": [
+       "Function name '~FnDeltaF1' \u2014 main part '~FnDeltaF1' is not PascalCase. Expected: ~fndeltaf1"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000ff210",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~FnDeltaF1",
+   "ok": true
+  },
+  {
+   "xbox": "0x001051a0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "001051a0",
+      "function_name": "FUN_001051a0",
+      "entry_point": "001051a0",
+      "body_size": 20,
+      "message": "Function created successfully at 001051a0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001051a0 from 'FUN_001051a0' to 'Eval'",
+      "warnings": [
+       "Function name 'Eval' is too short (main part 'Eval' is 4 chars, minimum 8).",
+       "Function name 'Eval' does not start with a recognized verb. First word 'Eval' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Eval' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Eval' shares the same token set as existing function 'EvalEvent' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001051a0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Eval",
+   "ok": true
+  },
+  {
+   "xbox": "0x0011b650",
+   "old_name": "FUN_0011b650",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0011b650 from 'FUN_0011b650' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0011b650",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0011c6f0",
+   "old_name": "FUN_0011c6f0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0011c6f0 from 'FUN_0011c6f0' to '~ABaseSound'",
+      "warnings": [
+       "Function name '~ABaseSound' \u2014 main part '~ABaseSound' is not PascalCase. Expected: ~abasesound"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0011c6f0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~ABaseSound",
+   "ok": true
+  },
+  {
+   "xbox": "0x0011dee0",
+   "old_name": "FUN_0011dee0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0011dee0 from 'FUN_0011dee0' to 'Play'",
+      "warnings": [
+       "Function name 'Play' is too short (main part 'Play' is 4 chars, minimum 8).",
+       "Function name 'Play' does not start with a recognized verb. First word 'Play' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Play' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Play' shares the same token set as existing function 'PlayCollision' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0011dee0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Play",
+   "ok": true
+  },
+  {
+   "xbox": "0x0011e060",
+   "old_name": "FUN_0011e060",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0011e060 from 'FUN_0011e060' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0011e060",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0011e090",
+   "old_name": "FUN_0011e090",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0011e090 from 'FUN_0011e090' to '~AMenuSoundPriv'",
+      "warnings": [
+       "Function name '~AMenuSoundPriv' \u2014 main part '~AMenuSoundPriv' is not PascalCase. Expected: ~amenusoundpriv"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0011e090",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~AMenuSoundPriv",
+   "ok": true
+  },
+  {
+   "xbox": "0x0011ed30",
+   "old_name": "FUN_0011ed30",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0011ed30 from 'FUN_0011ed30' to 'PlayLanding'",
+      "warnings": [
+       "Function name 'PlayLanding' does not start with a recognized verb. First word 'Play' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'PlayLanding' shares the same token set as existing function 'Play' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0011ed30",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PlayLanding",
+   "ok": true
+  },
+  {
+   "xbox": "0x0011f1a0",
+   "old_name": "FUN_0011f1a0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0011f1a0 from 'FUN_0011f1a0' to 'PlayCollision'",
+      "warnings": [
+       "Function name 'PlayCollision' does not start with a recognized verb. First word 'Play' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'PlayCollision' shares the same token set as existing function 'Play' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0011f1a0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PlayCollision",
+   "ok": true
+  },
+  {
+   "xbox": "0x00120a10",
+   "old_name": "FUN_00120a10",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00120a10 from 'FUN_00120a10' to '~AVehicle'",
+      "warnings": [
+       "Function name '~AVehicle' \u2014 main part '~AVehicle' is not PascalCase. Expected: ~avehicle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00120a10",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~AVehicle",
+   "ok": true
+  },
+  {
+   "xbox": "0x00120d50",
+   "old_name": "FUN_00120d50",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00120d50 from 'FUN_00120d50' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00120d50",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x00129b20",
+   "old_name": "FUN_00129b20",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00129b20 from 'FUN_00129b20' to '~AUltraLite'",
+      "warnings": [
+       "Function name '~AUltraLite' \u2014 main part '~AUltraLite' is not PascalCase. Expected: ~aultralite"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00129b20",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~AUltraLite",
+   "ok": true
+  },
+  {
+   "xbox": "0x0012a410",
+   "old_name": "FUN_0012a410",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0012a410 from 'FUN_0012a410' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0012a410",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0012bb60",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0012bb60",
+      "function_name": "FUN_0012bb60",
+      "entry_point": "0012bb60",
+      "body_size": 25,
+      "message": "Function created successfully at 0012bb60"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0012bb60 from 'FUN_0012bb60' to 'SetCreakLevel'"
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0012bb60",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetCreakLevel",
+   "ok": true
+  },
+  {
+   "xbox": "0x0012c930",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0012c930",
+      "function_name": "FUN_0012c930",
+      "entry_point": "0012c930",
+      "body_size": 32,
+      "message": "Function created successfully at 0012c930"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0012c930 from 'FUN_0012c930' to 'PlayLanding'",
+      "warnings": [
+       "Function name 'PlayLanding' does not start with a recognized verb. First word 'Play' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'PlayLanding' shares the same token set as existing function 'Play' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0012c930",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PlayLanding",
+   "ok": true
+  },
+  {
+   "xbox": "0x0012c950",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "0012c950",
+      "function_name": "FUN_0012c950",
+      "entry_point": "0012c950",
+      "body_size": 368,
+      "message": "Function created successfully at 0012c950"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0012c950 from 'FUN_0012c950' to 'Play'",
+      "warnings": [
+       "Function name 'Play' is too short (main part 'Play' is 4 chars, minimum 8).",
+       "Function name 'Play' does not start with a recognized verb. First word 'Play' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Play' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Play' shares the same token set as existing function 'PlayCollision' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0012c950",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Play",
+   "ok": true
+  },
+  {
+   "xbox": "0x0012cac0",
+   "old_name": "FUN_0012cac0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0012cac0 from 'FUN_0012cac0' to '~AHelicopter'",
+      "warnings": [
+       "Function name '~AHelicopter' \u2014 main part '~AHelicopter' is not PascalCase. Expected: ~ahelicopter"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0012cac0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~AHelicopter",
+   "ok": true
+  },
+  {
+   "xbox": "0x0012cb60",
+   "old_name": "FUN_0012cb60",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0012cb60 from 'FUN_0012cb60' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0012cb60",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  },
+  {
+   "xbox": "0x0012ffb0",
+   "old_name": "FUN_0012ffb0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0012ffb0 from 'FUN_0012ffb0' to 'Play'",
+      "warnings": [
+       "Function name 'Play' is too short (main part 'Play' is 4 chars, minimum 8).",
+       "Function name 'Play' does not start with a recognized verb. First word 'Play' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Play' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Play' shares the same token set as existing function 'PlayCollision' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0012ffb0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Play",
+   "ok": true
+  },
+  {
+   "xbox": "0x001306b0",
+   "old_name": "FUN_001306b0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001306b0 from 'FUN_001306b0' to 'scalar_deleting_destructor'",
+      "warnings": [
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' is not PascalCase. Expected: ScalarDeletingDestructor",
+       "Function name 'scalar_deleting_destructor' \u2014 main part 'scalar_deleting_destructor' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001306b0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "scalar_deleting_destructor",
+   "ok": true
+  }
+ ]
+}

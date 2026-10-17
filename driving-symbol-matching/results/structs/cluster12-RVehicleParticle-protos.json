@@ -1,0 +1,87 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000a6db0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RVehicleParticle::LoadAttributes(void)"
+  },
+  {
+   "address": "0x000a6de0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "RVehicleParticle::RVehicleParticle(PVehicle *)",
+   "return": "RVehicleParticle *"
+  },
+  {
+   "address": "0x000a6f10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "RVehicleParticle::TriggerTireSmoke(int)"
+  },
+  {
+   "address": "0x000a7300",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RVehicleParticle::ResetAll(void)"
+  },
+  {
+   "address": "0x000a79f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RVehicleParticle::~RVehicleParticle(void)"
+  },
+  {
+   "address": "0x000a7ac0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RVehicleParticle::UpdateCar(bool)"
+  },
+  {
+   "address": "0x000a8120",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RVehicleParticle::UpdateAll(void)"
+  },
+  {
+   "address": "0x000a8220",
+   "calling_convention": "__thiscall",
+   "return": "RVehicleParticle *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x000a8240",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RVehicleParticle::Init(void)"
+  },
+  {
+   "address": "0x000a8430",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RVehicleParticle::Kill(void)"
+  }
+ ]
+}

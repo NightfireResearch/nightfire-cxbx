@@ -30,7 +30,7 @@ typedef struct {
 
 #pragma pack(pop)
 
-#define Mat_Position(mat) ((_VECTOR *)((mat.m + 0xc)))
+#define Mat_Position(mat) ((_VECTOR *)(((mat).m + 0xc)))
 
 void MultiplyQuaternionAltOrder(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *target);
 void Quat_Copy(quaternion_tag *target,const quaternion_tag *from);
@@ -73,7 +73,7 @@ void Vec_Swap(_VECTOR *a, _VECTOR *b);
 void RotMatrixZYX(_VECTOR *param_1,_MATRIX *mtx);
 void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx);
 bool Plane_PlaneEq(plane_equ_tag *planeEq, _VECTOR *v1, _VECTOR *v2, _VECTOR *v3);
-float DistancePointToPlane(_VECTOR *point, plane_equ_tag *plane);
+double DistancePointToPlane(_VECTOR *point, plane_equ_tag *plane);
 void auxVec_AddMulR32(_VECTOR *add, _VECTOR *vIn, float multiply, _VECTOR *vOut);
 bool vecutil_point_on_poly(_VECTOR *point, _VECTOR *vtx1, _VECTOR *vtx2, _VECTOR *vtx3, plane_equ_tag *plane);
 void RotMatrix(_VECTOR *vIn,_MATRIX *mtxOut);
@@ -91,7 +91,7 @@ void vecutil_cartesian_to_spherical_acc(_VECTOR *vec, float v_x, float v_y, floa
 #define DEG2RAD(x) ((x) * ((float)M_PI / 180.0f))
 
 // Helper functions which either didn't exist or were inlined on original code
-float Vec_Dot(_VECTOR *a, _VECTOR *b);
+double Vec_Dot(_VECTOR *a, _VECTOR *b);
 float Vec_Magnitude(_VECTOR *a);
 
 float Vec_AngleDifference(float angle1, float angle2);
@@ -99,6 +99,13 @@ void Vec_Spherical_2_Cartesian(float *out, float radius, float yaw, float pitch)
 float maybeAtan2(float y, float x);
 void Mat_Align2Dir(_MATRIX *mtxOut, _VECTOR *direction, _VECTOR *param_3, _VECTOR *param_4);
 void Vec_Add2(_VECTOR *a, _VECTOR *b, _VECTOR *out);
+
+// Not reimplemented yet: AUTOGEN stubs that call the original (math.cpp)
+void MulMatrix0(float *a, float *b, float *out);
+void Mat_GetPosition(_VECTOR *posOut, _MATRIX *mtxIn);
+void Vec_Scalef(_VECTOR *vIn, float scale, _VECTOR *vOut);
+void ApplyMatrixLVI(float *matrix, float *vector);
+void Mat_GetUp(_VECTOR *vOut, _MATRIX *mIn);
 void Mat_Normalize(_MATRIX *mtx);
 
 #endif // MATH_H

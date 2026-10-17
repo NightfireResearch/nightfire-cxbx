@@ -1,11 +1,18 @@
 #ifndef ACTIONHELPERS_H_
 #define ACTIONHELPERS_H_
 
-// Original is 640x480, 1280x960 is a clean 2x scaling
+// Original is 640x480, 1280x960 is a clean 2x scaling.
+//
+// Higher resolutions now work - 1920x1080 runs at full speed with no measurable cost, and the window is
+// created at whatever size is set here - but the menus and the positioned HUD sprites are still authored in
+// 640x480 coordinates and do not move with it. See the longer note in src/inject_action.cpp before raising
+// this.
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 // #define SCREEN_WIDTH 1280
 // #define SCREEN_HEIGHT 960
+// #define SCREEN_WIDTH 1920
+// #define SCREEN_HEIGHT 1080
 
 #include <stddef.h> // for offsetof
 
@@ -31,20 +38,28 @@ typedef struct HUDPANECREATE_tag HUDPANECREATE_tag;
 typedef struct SCRIPTINFO SCRIPTINFO;
 typedef struct map_tag map_tag;
 typedef struct BLData BLData;
+typedef struct weapon_definition_tag weapon_definition_tag;
 typedef struct DYNAMICSOUNDS DYNAMICSOUNDS;
 typedef struct AnimState AnimState;
+typedef struct sAnimSet_tag sAnimSet_tag;
 typedef struct sprite sprite;
 typedef struct SpriteInfo SpriteInfo;
 typedef struct _D3DMATRIX D3DMATRIX;
+typedef struct MatrixChainNode MatrixChainNode;
 typedef struct M_CONTROL M_CONTROL;
 typedef struct M_ITEM M_ITEM;
 typedef struct M_MANAGER M_MANAGER;
+typedef struct M_PAGE M_PAGE;
+typedef unsigned int BotNum;   // Ghidra's enum of the multiplayer characters: an mp_characters identifier
+typedef struct M_MESSAGE M_MESSAGE;
+typedef struct REWARDINFO_tag REWARDINFO_tag;
 typedef struct BOT_stats_t BOT_stats_t;
 typedef struct DLISTINFO_tag DLISTINFO_tag;
 typedef struct Drone_tag Drone_tag;
 typedef struct DIVars_tag DIVars_tag;
 typedef struct DCVars_tag DCVars_tag;
 typedef struct MsgObject MsgObject;
+typedef struct StateMachineInfo_tag StateMachineInfo_tag;
 typedef struct AnimObj AnimObj;
 typedef struct block_header_tag block_header_tag;
 typedef struct TARGET_PLACEMENT TARGET_PLACEMENT;
@@ -52,7 +67,9 @@ typedef struct SPRITE_DRAW SPRITE_DRAW;
 typedef struct edl_header_t edl_header_t;
 
 
-typedef void* ScriptPlayerCallback; // FIXME: Function pointer signature
+// What a script player calls on script event 15: the object of the stream before the event's, the event's
+// argument, and the context it was given (FuseBox_Register)
+typedef void ScriptPlayerCallback(obj_tag *obj, unsigned short arg, void *context);
 
 // Hashcode, SFX and translated text names
 #include "assets.h"
@@ -61,6 +78,23 @@ typedef void* ScriptPlayerCallback; // FIXME: Function pointer signature
 #include "../helpers.h"
 
 typedef short MallocFlags;
+
+// QuickSort's comparison selector (Ghidra's COMP_FUNC). Only Compare_CustomFunction uses QuickSort's last argument.
+typedef enum {
+    Compare_Sprites        = 0,
+    Compare_Unknown1       = 1, // Ghidra: Unknown1 - falls to QuickSort's default, CompLight
+    Compare_HitData        = 2,
+    Compare_DrawCels       = 3,
+    Compare_AlphaObj       = 4,
+    Compare_MsgTxt         = 5,
+    Compare_TargetObj      = 6,
+    Compare_MenuCtrl       = 7,
+    Compare_Strings        = 8,
+    Compare_BoxList        = 9,
+    Compare_CustomFunction = 10,
+    Compare_Force_U32      = 0x7FFFFFFF
+} COMP_FUNC;
+static_assert(sizeof(COMP_FUNC) == 4, "COMP_FUNC is a 32-bit argument");
 
 #include "main.h"
 #include "util/bin.h"
@@ -78,6 +112,7 @@ typedef short MallocFlags;
 #include "engine/FS.h"
 #include "engine/Inflate.h"
 #include "engine/Loader.h"
+#include "engine/Script.h"
 #include "engine/Text.h"
 #include "engine/Vision.h"
 #include "engine/parsemap.h"
@@ -102,12 +137,12 @@ typedef short MallocFlags;
 #include "game/obj/Destroy.h"
 #include "game/obj/Door.h"
 #include "game/obj/Drone_AIHints.h"
-#include "game/obj/DroneSpawner.h"
 #include "game/obj/Env.h"
 #include "game/obj/Flicker.h"
 #include "game/obj/FuseBox.h"
 #include "game/obj/Grapple.h"
 #include "game/obj/GT.h"
+#include "game/obj/GunImp.h"
 #include "game/obj/Hint.h"
 #include "game/obj/Hurt.h"
 #include "game/obj/Ladder.h"
@@ -119,7 +154,7 @@ typedef short MallocFlags;
 #include "game/obj/object.h" // for obj_tag needed by some autogen functions
 #include "game/obj/OneSided.h"
 #include "game/obj/PCQWorm.h"
-#include "game/obj/player.h" // for BLData
+#include "game/obj/Player.h" // for BLData
 #include "game/obj/RainBox.h"
 #include "game/obj/Rotor.h"
 #include "game/obj/ScriptPlayer.h"
@@ -135,6 +170,7 @@ typedef short MallocFlags;
 #include "game/obj/Trigger.h"
 #include "game/obj/Wire.h"
 #include "game/weapon_stats.h"
+#include "game/obj/PlayerWeapon.h"
 #include "game/sp/Locks.h"
 #include "game/sp/Mission.h"
 #include "game/sp/PlayerStats.h"
@@ -154,9 +190,13 @@ typedef short MallocFlags;
 #define glb_blokes (*(BLData*(*)[4])(0x002774b8))
 #define glb_players (*(obj_tag*(*)[4])(0x001f6654))
 
+// XBE_GLOBAL(0x0029d71c, 0xc)
 #define CONST_UP_VECTOR (*(_VECTOR*)0x0029d71c)
+// XBE_GLOBAL(0x0029d728, 0xc)
 #define CONST_ZERO_VECTOR (*((_VECTOR*)0x0029d728))
+// XBE_GLOBAL(0x001f6648, 0xc)
 #define GRAVITY_VECTOR (*((_VECTOR*)0x001f6648))
+// XBE_GLOBAL(0x0029d6d4, 0xc)
 #define MAYBE_CONST_FORWARD_VECTOR (*((_VECTOR*)0x0029d6d4))
 #define MAT_IDENTITY (*((_MATRIX*)0x0029d6e0))
 
@@ -177,6 +217,21 @@ typedef short MallocFlags;
             __debugbreak();                                                 \
             while(1);                                                       \
         }                                                                   \
+    } while (0)
+
+// The GameCube build's debug checks, which the Xbox build compiled out: a printf and carry on, exactly as there
+// (docs/gamecube-checks.md lists them all, and which of our functions have them). The message is the GameCube's
+// own. NfWarnMuted (main.cpp) silences them, for the shadow tests that feed bad input on purpose.
+extern int NfWarnMuted;
+#define NF_WARN(...)                                                        \
+    do {                                                                    \
+        if (!NfWarnMuted)                                                   \
+            printf(__VA_ARGS__);                                            \
+    } while (0)
+#define NF_WARN_IF(cond, ...)                                               \
+    do {                                                                    \
+        if (cond)                                                           \
+            NF_WARN(__VA_ARGS__);                                           \
     } while (0)
 
 

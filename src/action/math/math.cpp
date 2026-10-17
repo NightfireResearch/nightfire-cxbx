@@ -1,4 +1,5 @@
 #include "math.h"
+#include "X87Ops.h"
 #include "../actionhelpers.h"
 #include <cmath>
 
@@ -100,8 +101,8 @@ void Quat_QuatTransToMat(quaternion_tag *quatIn, float *vecIn, _MATRIX *mOut) {
   mOut->m[14] = vecIn[2];
 }
 
-// AUTOINJECT
-void Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
+// The body of Quat_QuatToMat - see the wrapper below for why the two are split.
+void _Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
   float fVar1;
   float fVar2;
   float fVar3;
@@ -133,6 +134,28 @@ void Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
   param_2->m[8] = fVar3 + fVar7;
   param_2->m[9] = fVar8 - fVar1;
   param_2->m[10] = 1.0f - (fVar4 + fVar2);
+}
+
+// The original (0x000d5800) only ever touches EAX and the x87 stack, and the game's own callers were compiled
+// knowing that: KeyFrame_Interp and Spline_Interp keep the output matrix in ECX across the call and then write
+// the translation through it (mov [ecx+0x30], ...). Our compiled body is entitled to clobber ECX and EDX, and
+// clang leaves the quaternion pointer in ECX - so the translation went 0x30 bytes past a stack local instead,
+// onto Spline_Interp's own return address, and loading a level with a swinging door (Door_Create ->
+// Door_SetupSwing -> Spline_Interp) jumped to a float. ECX and EDX are saved here so any caller keeps what it
+// had.
+// AUTOLTCG
+void __declspec(naked) Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
+  _asm {
+    push ecx
+    push edx
+    push dword ptr [esp + 16]   // param_2
+    push dword ptr [esp + 16]   // param_1
+    call _Quat_QuatToMat
+    add esp, 8
+    pop edx
+    pop ecx
+    ret
+  }
 }
 
 // Convert a rotation matrix to a quaternion (Shepperd's method)
@@ -247,27 +270,28 @@ void Quat_Slerp(float progress, quaternion_tag *qStart, quaternion_tag *qEnd, qu
   }
 }
 
-// Set up a matrix with the given Euler rotations (same rotation part as RotTransMatrix, without the translation)
+// Set up a matrix with the given Euler rotations. On the x87: X's sine and cosine and Y's sine stay unrounded, the
+// rest are stored as floats, and so is -sinY * cosX.
 // AUTOINJECT
-void RotMatrix(_VECTOR *vIn,_MATRIX *mtxOut) {
+void RotMatrix(_VECTOR *vIn, _MATRIX *mtxOut) {
+  Extended cosX = FCos(vIn->x);
+  Extended sinX = FSin(vIn->x);
+  float cosY = (float)FCos(vIn->y);
+  Extended sinY = FSin(vIn->y);
+  float cosZ = (float)FCos(vIn->z);
+  float sinZ = (float)FSin(vIn->z);
+  Extended sinYsinX = sinY * sinX;
+  float negSinYcosX = (float)-(sinY * cosX);
 
-  float cosX = cosf(vIn->x);
-  float sinX = sinf(vIn->x);
-  float cosY = cosf(vIn->y);
-  float sinY = sinf(vIn->y);
-  float cosZ = cosf(vIn->z);
-  float sinZ = sinf(vIn->z);
-
-  mtxOut->m[0] = cosZ * cosY;
-  mtxOut->m[4] = -sinZ * cosY;
-  mtxOut->m[8] = sinY;
-  mtxOut->m[1] = sinZ * cosX + cosZ * sinY * sinX;
-  mtxOut->m[5] = cosZ * cosX - sinZ * sinY * sinX;
-  mtxOut->m[9] = -cosY * sinX;
-  mtxOut->m[2] = sinZ * sinX - cosZ * sinY * cosX;
-  mtxOut->m[6] = cosZ * sinX + sinZ * sinY * cosX;
-  mtxOut->m[10] = cosY * cosX;
-
+  mtxOut->m[0] = (float)(Extended(cosZ) * cosY);
+  mtxOut->m[4] = (float)-(Extended(sinZ) * cosY);
+  mtxOut->m[8] = (float)sinY;
+  mtxOut->m[1] = (float)(cosZ * sinYsinX + sinZ * cosX);
+  mtxOut->m[5] = (float)(cosZ * cosX - sinYsinX * sinZ);
+  mtxOut->m[9] = (float)-(cosY * sinX);
+  mtxOut->m[2] = (float)(Extended(negSinYcosX) * cosZ + sinZ * sinX);
+  mtxOut->m[6] = (float)(cosZ * sinX - Extended(negSinYcosX) * sinZ);
+  mtxOut->m[10] = (float)(cosY * cosX);
 }
 
 // Despite the parameter names, this reads from viewMtx and writes the inverted (transposed rotation,
@@ -415,8 +439,7 @@ void Matrix_SetTrans(_VECTOR *vec, _MATRIX *mtx) {
   mtx->m[0xe] = vec->z;
 }
 
-// AUTOINJECT
-void Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
+static void Vec_NormaliseBody(_VECTOR *vOut, _VECTOR *vIn) {
   
   float magnitude = Vec_Magnitude(vIn);
   
@@ -433,11 +456,44 @@ void Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
   vOut->x = 0.0;
 }
 
+// The original writes neither ECX nor EDX, and its callers rely on it: Mat_LookAt and 0x000d8590 keep EDX across the call. So the
+// game reaches this through an entry that keeps them (tools/caller_saved.py).
 // AUTOINJECT
-float Vec_NormaliseLen(_VECTOR *output, _VECTOR *input) {
+void __declspec(naked) Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
+    _asm {
+        push ecx
+        push edx
+        push dword ptr [esp + 16]
+        push dword ptr [esp + 16]
+        call Vec_NormaliseBody
+        add esp, 8
+        pop edx
+        pop ecx
+        ret
+    }
+}
+
+static float Vec_NormaliseLenBody(_VECTOR *output, _VECTOR *input) {
   float len = Vec_Magnitude(input);
   Vec_Normalise(output,input);
   return len;
+}
+
+// The original writes neither ECX nor EDX, and its callers rely on it: Cel_ObjectLeftCel keeps EDX across the call. So the
+// game reaches this through an entry that keeps them (tools/caller_saved.py).
+// AUTOINJECT
+float __declspec(naked) Vec_NormaliseLen(_VECTOR *output, _VECTOR *input) {
+    _asm {
+        push ecx
+        push edx
+        push dword ptr [esp + 16]
+        push dword ptr [esp + 16]
+        call Vec_NormaliseLenBody
+        add esp, 8
+        pop edx
+        pop ecx
+        ret
+    }
 }
 
 // AUTOINJECT
@@ -508,57 +564,42 @@ void Vec_CrossNormalise(_VECTOR *a,_VECTOR *b,_VECTOR *vecOut) {
   Vec_Normalise(vecOut,vecOut);
 }
 
-// Set up a matrix with the given Euler rotations
+// Set up a matrix with the given Euler rotations, Z then Y then X. On the x87: only Y's cosine and sinZ * sinY are
+// stored as floats.
 // AUTOINJECT
 void RotMatrixZYX(_VECTOR *angles, _MATRIX *mtx) {
-  
-  float cosX = cosf(angles->x);
-  float sinX = sinf(angles->x);
-  float cosY = cosf(angles->y);
-  float sinY = sinf(angles->y);
-  float cosZ = cosf(angles->z);
-  float sinZ = sinf(angles->z);
+  Extended cosX = FCos(angles->x);
+  Extended sinX = FSin(angles->x);
+  float cosY = (float)FCos(angles->y);
+  Extended sinY = FSin(angles->y);
+  Extended cosZ = FCos(angles->z);
+  Extended sinZ = FSin(angles->z);
+  Extended cosZsinY = cosZ * sinY;
+  float sinZsinY = (float)(sinZ * sinY);
 
-  mtx->m[0] = cosZ * cosY;
-  mtx->m[4] = cosZ * sinY * sinX - sinZ * cosX;
-  mtx->m[8] = cosZ * sinY * cosX + sinZ * sinX;
-  mtx->m[1] = sinZ * cosY;
-  mtx->m[5] = cosZ * cosX + sinZ * sinY * sinX;
-  mtx->m[9] = sinZ * sinY * cosX - cosZ * sinX;
-  mtx->m[2] = -sinY;
-  mtx->m[6] = cosY * sinX;
-  mtx->m[10] = cosY * cosX;
-
+  mtx->m[0] = (float)(cosZ * cosY);
+  mtx->m[4] = (float)(cosZsinY * sinX - sinZ * cosX);
+  mtx->m[8] = (float)(sinZ * sinX + cosZsinY * cosX);
+  mtx->m[1] = (float)(sinZ * cosY);
+  mtx->m[5] = (float)(sinZsinY * sinX + cosZ * cosX);
+  mtx->m[9] = (float)(sinZsinY * cosX - cosZ * sinX);
+  mtx->m[2] = (float)-sinY;
+  mtx->m[6] = (float)(cosY * sinX);
+  mtx->m[10] = (float)(cosY * cosX);
 }
 
 // Set up a matrix with the given Euler rotations and translation
 // AUTOINJECT
 void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx) {
-
-  float cosX = cosf(rot->x);
-  float sinX = sinf(rot->x);
-  float cosY = cosf(rot->y);
-  float sinY = sinf(rot->y);
-  float cosZ = cosf(rot->z);
-  float sinZ = sinf(rot->z);
-
-  mtx->m[0] = cosZ * cosY;
-  mtx->m[4] = -sinZ * cosY;
-  mtx->m[8] = sinY;
-  mtx->m[1] = sinZ * cosX + cosZ * sinY * sinX;
-  mtx->m[5] = cosZ * cosX - sinZ * sinY * sinX;
-  mtx->m[9] = -cosY * sinX;
-  mtx->m[2] = sinZ * sinX - cosZ * sinY * cosX;
-  mtx->m[6] = cosZ * sinX + sinZ * sinY * cosX;
-  mtx->m[10] = cosY * cosX;
+  RotMatrix(rot, mtx);
   mtx->m[12] = trans->x;
   mtx->m[13] = trans->y;
   mtx->m[14] = trans->z;
-
 }
 
-float Vec_Dot(_VECTOR *a, _VECTOR *b) {
-  return a->x * b->x + a->y * b->y + a->z * b->z;
+// Summed on the x87, z first, as the game's inlined copies have it
+double Vec_Dot(_VECTOR *a, _VECTOR *b) {
+  return (double)a->z * b->z + (double)a->y * b->y + (double)a->x * b->x;
 }
 
 // AUTOINJECT
@@ -600,38 +641,47 @@ void Vec_MinMax3(_VECTOR *a, _VECTOR *b, _VECTOR *c, _VECTOR *minimums, _VECTOR 
   minimums->z = MIN3(a->z, b->z, c->z);
 }
 
-// Find the equation of the plane defined by the three given points
+// Find the equation of the plane defined by the three given points. On the x87: the first edge, the second edge's
+// z, the normal's length and the scaled normal stay unrounded; the normal itself is stored as floats.
 // AUTOINJECT
 bool Plane_PlaneEq(plane_equ_tag *planeEq, _VECTOR *v1, _VECTOR *v2, _VECTOR *v3) {
-  
-  _VECTOR v1v2, v2v3;
-  // Find two edges
-  Vec_Subtract(v2, v1, &v1v2);
-  Vec_Subtract(v3, v2, &v2v3);
+  double edge1x = (double)v2->x - v1->x;
+  double edge1y = (double)v2->y - v1->y;
+  double edge1z = (double)v2->z - v1->z;
+  float edge2x = v3->x - v2->x;
+  float edge2y = v3->y - v2->y;
+  double edge2z = (double)v3->z - v2->z;
 
-  // Find the normal from the two edges
-  Vec_Cross(&v1v2, &v2v3, &planeEq->normal); // Only works because the plane normal is the first 3 components of a plane_equ_tag
+  _VECTOR normal;
+  normal.x = (float)(edge2z * edge1y - edge2y * edge1z);
+  normal.y = (float)(edge1z * edge2x - edge2z * edge1x);
+  normal.z = (float)(edge2y * edge1x - edge1y * edge2x);
 
-  // Handle the degenerate case where the points are collinear or coincident
-  float mag = Vec_Magnitude(&planeEq->normal);
-  if(mag == 0.0f) {
-    planeEq->a = 0;
-    planeEq->b = 0;
-    planeEq->c = 0;
+  // Collinear or coincident points
+  double length = sqrt((double)normal.z * normal.z + (double)normal.y * normal.y + (double)normal.x * normal.x);
+  if (length == 0.0) {
     planeEq->d = 0;
+    planeEq->c = 0;
+    planeEq->b = 0;
+    planeEq->a = 0;
     return false;
   }
 
-  // Otherwise, normalise and calculate the distance component
-  float rcpMag = 1.0f / mag;
-  Vec_MulR32(&planeEq->normal, &planeEq->normal, rcpMag);
-  planeEq->d = -Vec_Dot(&planeEq->normal, v1);
+  double scale = 1.0 / length;
+  double a = normal.x * scale;
+  double b = normal.y * scale;
+  double c = normal.z * scale;
+  planeEq->a = (float)a;
+  planeEq->b = (float)b;
+  planeEq->c = (float)c;
+  planeEq->d = (float)-(b * v1->y + a * v1->x + c * v1->z);
   return true;
 }
 
+// Left unrounded on the x87, z first
 // AUTOINJECT
-float DistancePointToPlane(_VECTOR *point, plane_equ_tag *plane) {
-  return point->x * plane->a + point->y * plane->b + point->z * plane->c + plane->d;
+double DistancePointToPlane(_VECTOR *point, plane_equ_tag *plane) {
+  return (double)point->z * plane->c + (double)point->y * plane->b + (double)point->x * plane->a + plane->d;
 }
 
 // AUTOINJECT
@@ -641,36 +691,32 @@ void auxVec_AddMulR32(_VECTOR *add, _VECTOR *vIn, float multiply, _VECTOR *vOut)
   vOut->z = multiply * vIn->z + add->z;
 }
 
+// Whether the point is outside the edge from 'from' to 'to': on the side the edge's cross product with the plane's
+// normal points to. On the x87: the edge, the cross product's z and the point's offset stay unrounded; the cross
+// product's x and y are stored as floats.
+static bool OutsideEdge(_VECTOR *point, _VECTOR *from, _VECTOR *to, _VECTOR *normal) {
+  double edgeX = (double)to->x - from->x;
+  double edgeY = (double)to->y - from->y;
+  double edgeZ = (double)to->z - from->z;
+  float crossX = (float)(edgeY * normal->z - edgeZ * normal->y);
+  float crossY = (float)(edgeZ * normal->x - edgeX * normal->z);
+  double crossZ = edgeX * normal->y - edgeY * normal->x;
+
+  double offsetX = (double)point->x - to->x;
+  double offsetY = (double)point->y - to->y;
+  double offsetZ = (double)point->z - to->z;
+  return offsetZ * crossZ + offsetY * crossY + offsetX * crossX > 0.0;
+}
+
+// Whether a point on the triangle's plane is inside the triangle
 // AUTOINJECT
 bool vecutil_point_on_poly(_VECTOR *point, _VECTOR *vtx1, _VECTOR *vtx2, _VECTOR *vtx3, plane_equ_tag *plane) {
-
-  // Vectors between the vertices
-  _VECTOR v1v3 = {vtx1->x - vtx3->x, vtx1->y - vtx3->y, vtx1->z - vtx3->z};
-  _VECTOR v2v1 = {vtx2->x - vtx1->x, vtx2->y - vtx1->y, vtx2->z - vtx1->z};
-  _VECTOR v3v2 = {vtx3->x - vtx2->x, vtx3->y - vtx2->y, vtx3->z - vtx2->z};
-
-  // Vectors between the point and the vertices
-  _VECTOR pv1 = {point->x - vtx1->x, point->y - vtx1->y, point->z - vtx1->z};
-  _VECTOR pv2 = {point->x - vtx2->x, point->y - vtx2->y, point->z - vtx2->z};
-  _VECTOR pv3 = {point->x - vtx3->x, point->y - vtx3->y, point->z - vtx3->z};
-
-  // Check against line segment v3v1 using the cross product on the plane
-  _VECTOR tmp;
-  Vec_Cross(&v1v3, &plane->normal, &tmp);
-  if(Vec_Dot(&tmp, &pv1) > 0.0f)
-      return false;
-
-  // Check against line segment v2v1 using the cross product on the plane
-  Vec_Cross(&v2v1, &plane->normal, &tmp);
-  if(Vec_Dot(&tmp, &pv2) > 0.0f)
-      return false;
-
-  // Check against line segment v3v2 using the cross product on the plane
-  Vec_Cross(&v3v2, &plane->normal, &tmp);
-  if(Vec_Dot(&tmp, &pv3) > 0.0f)
-      return false;
-
-  // If on the correct side of all three line segments, we're inside the polygon
+  if (OutsideEdge(point, vtx3, vtx1, &plane->normal))
+    return false;
+  if (OutsideEdge(point, vtx1, vtx2, &plane->normal))
+    return false;
+  if (OutsideEdge(point, vtx2, vtx3, &plane->normal))
+    return false;
   return true;
 }
 
@@ -707,18 +753,20 @@ void Vec_Swap(_VECTOR *a, _VECTOR *b) {
   b->z = tmp_z;
 }
 
+// Summed on the x87, z first; each component stored before the next is read, so vecIn may be vecOut
 // AUTOINJECT
 void MatrixMultiplyVector(_MATRIX *mtx, _VECTOR *vecIn, _VECTOR *vecOut) {
-  vecOut->x = mtx->m[0] * vecIn->x + mtx->m[4] * vecIn->y + mtx->m[8] * vecIn->z + mtx->m[0xc];
-  vecOut->y = mtx->m[5] * vecIn->y + mtx->m[1] * vecIn->x + mtx->m[9] * vecIn->z + mtx->m[0xd];
-  vecOut->z = mtx->m[6] * vecIn->y + mtx->m[2] * vecIn->x + mtx->m[10] * vecIn->z + mtx->m[0xe];
+  vecOut->x = (float)((double)mtx->m[8] * vecIn->z + (double)mtx->m[4] * vecIn->y + (double)mtx->m[0] * vecIn->x + mtx->m[0xc]);
+  vecOut->y = (float)((double)mtx->m[9] * vecIn->z + (double)mtx->m[1] * vecIn->x + (double)mtx->m[5] * vecIn->y + mtx->m[0xd]);
+  vecOut->z = (float)((double)mtx->m[10] * vecIn->z + (double)mtx->m[2] * vecIn->x + (double)mtx->m[6] * vecIn->y + mtx->m[0xe]);
 }
 
+// Summed on the x87, z first; each component stored before the next is read, so vIn may be vOut
 // AUTOINJECT
 void ApplyMatrixLV(_MATRIX *mtx, _VECTOR *vIn, _VECTOR *vOut) {
-  vOut->x = mtx->m[0] * vIn->x + mtx->m[4] * vIn->y + mtx->m[8] * vIn->z;
-  vOut->y = mtx->m[5] * vIn->y + mtx->m[1] * vIn->x + mtx->m[9] * vIn->z;
-  vOut->z = mtx->m[6] * vIn->y + mtx->m[2] * vIn->x + mtx->m[10] * vIn->z;
+  vOut->x = (float)((double)mtx->m[8] * vIn->z + (double)mtx->m[4] * vIn->y + (double)mtx->m[0] * vIn->x);
+  vOut->y = (float)((double)mtx->m[9] * vIn->z + (double)mtx->m[1] * vIn->x + (double)mtx->m[5] * vIn->y);
+  vOut->z = (float)((double)mtx->m[10] * vIn->z + (double)mtx->m[2] * vIn->x + (double)mtx->m[6] * vIn->y);
 }
 
 // AUTOINJECT
@@ -764,15 +812,13 @@ float Vec_AngleDifference(float angle1, float angle2) {
   return diff;
 }
 
+// On the x87: the pitch's cosine and the products stay unrounded
 // AUTOINJECT
 void Vec_Spherical_2_Cartesian(float *out, float radius, float yaw, float pitch) {
-  float cosPitch = cosf(pitch);
-  float sinYaw = sinf(yaw);
-  out[0] = sinYaw * cosPitch * radius;
-  float cosYaw = cosf(yaw);
-  out[2] = cosYaw * cosPitch * radius;
-  float sinPitch = sinf(pitch);
-  out[1] = sinPitch * radius;
+  Extended cosPitch = FCos(pitch);
+  out[0] = (float)(FSin(yaw) * cosPitch * radius);
+  out[2] = (float)(FCos(yaw) * cosPitch * radius);
+  out[1] = (float)(FSin(pitch) * radius);
 }
 
 // Coefficients for maybeAtan2's polynomial approximation of atan(ratio) over ratio in [0,1]
@@ -780,8 +826,7 @@ void Vec_Spherical_2_Cartesian(float *out, float radius, float yaw, float pitch)
 #define MAYBE_ATAN2_COEFF_B 0.27131295f
 
 // Fast rational atan2 approximation (max error ~0.28 degrees)
-// AUTOINJECT
-float maybeAtan2(float y, float x) {
+static float maybeAtan2Body(float y, float x) {
   float result;
 
   if (x == y) {
@@ -805,6 +850,23 @@ float maybeAtan2(float y, float x) {
     result = -result;
   }
   return result;
+}
+
+// The original writes neither ECX nor EDX, and its callers rely on it: Vec_Cartesian_2_Spherical keeps ECX across the call. So the
+// game reaches this through an entry that keeps them (tools/caller_saved.py).
+// AUTOINJECT
+float __declspec(naked) maybeAtan2(float y, float x) {
+    _asm {
+        push ecx
+        push edx
+        push dword ptr [esp + 16]
+        push dword ptr [esp + 16]
+        call maybeAtan2Body
+        add esp, 8
+        pop edx
+        pop ecx
+        ret
+    }
 }
 
 // Align a matrix so its forward row faces "direction", with "param_3" as the preferred up hint (falling back to
@@ -885,3 +947,19 @@ void Mat_Normalize(_MATRIX *mtx) {
   mtx->m[1] = right.y;
   mtx->m[2] = right.z;
 }
+
+// AUTOGEN
+void MulMatrix0(float *a, float *b, float *out);
+
+// AUTOGEN
+void Mat_GetPosition(_VECTOR *posOut, _MATRIX *mtxIn);
+
+// AUTOGEN
+void Vec_Scalef(_VECTOR *vIn, float scale, _VECTOR *vOut);
+
+// Rotates a vector by a matrix, in place
+// AUTOGEN
+void ApplyMatrixLVI(float *matrix, float *vector);
+
+// AUTOGEN
+void Mat_GetUp(_VECTOR *vOut, _MATRIX *mIn);

@@ -50,6 +50,13 @@ typedef struct HUDPANECREATE_tag {
     char pad1;
     char pad2;
 } HUDPANECREATE_tag;
+static_assert(offsetof(HUDPANECREATE_tag, width) == 4, "HUDPANECREATE_tag.width is at 4");
+static_assert(sizeof(HUDPANECREATE_tag) == 0x1c, "HUDPANECREATE_tag is 0x1c bytes");
+
+// The C++ dynamic initialisers of the message panes' widths (HUD.cpp), run by _cinit.
+void HUD_InitObjectiveStatusPaneWidth(void);
+void HUD_InitInfoStatusPaneWidth(void);
+void HUD_InitPickupStatusPaneWidth(void);
 
 typedef struct HUDPANE_tag {
     HUDPANECREATE_tag *base;
@@ -98,6 +105,8 @@ void HUD_CreateHealthPane(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_ta
 void HUD_CreateOICWPane(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *param_3,obj_tag *param_4);
 
 void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj);
+void HUD_UpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused);
+void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj);
 void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj);
 void HUD_UpdateSpacePane(BLData *param_1, HUDPANE_tag *pane, obj_tag *obj);
 void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);

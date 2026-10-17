@@ -1,0 +1,73 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x001033b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnDeltaQ::FnDeltaQ(void)",
+   "return": "EAGLAnim::FnDeltaQ *"
+  },
+  {
+   "address": "0x001033f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnDeltaQ::~FnDeltaQ(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00103430",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnDeltaQ::GetLength(float &) const"
+  },
+  {
+   "address": "0x00103480",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnDeltaQ::Eval(float, float, float *)"
+  },
+  {
+   "address": "0x001034a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnDeltaQ::EvalSQT(float, float *, EAGLAnim::BoneMask"
+  },
+  {
+   "address": "0x001034c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnDeltaQ::EvalSQTMasked(float, EAGLAnim::BoneMask *,"
+  },
+  {
+   "address": "0x00104200",
+   "calling_convention": "__thiscall",
+   "return": "EAGLAnim::FnDeltaQ *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

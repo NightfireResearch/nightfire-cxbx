@@ -29,7 +29,7 @@ struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     undefined field20_0x21;
     undefined field21_0x22;
     undefined field22_0x23;
-    undefined4 field23_0x24;
+    undefined4 camMode;       // 0x24 - the player's camera mode, copied every frame (Player_CollisionHandler)
     undefined1 idx; /* Created by retype action */
     undefined field25_0x29;
     undefined1 field26_0x2a;
@@ -104,7 +104,7 @@ struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     float yMax;
     float projectionScaleX;
     float projectionScaleY;
-    float projectionScaleZ;
+    float zoom;               // 0xf4 - the view is drawn at fovRadians / zoom; 1.0 unzoomed (Camera_CalcViewAngles)
     float width;
     float height;
     float AspectRatio;
@@ -112,30 +112,24 @@ struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     _MATRIX viewMatrix;
     _MATRIX worldMatrix;
     _MATRIX mtx;
-    undefined4 field228_0x1bc;
-    undefined4 field229_0x1c0;
-    undefined4 field230_0x1c4;
-    float field231_0x1c8;
-    float field232_0x1cc;
-    undefined field233_0x1d0;
-    undefined field234_0x1d1;
-    undefined field235_0x1d2;
-    undefined field236_0x1d3;
-    undefined field237_0x1d4;
-    undefined field238_0x1d5;
-    undefined field239_0x1d6;
-    undefined field240_0x1d7;
-    undefined field241_0x1d8;
-    undefined field242_0x1d9;
-    undefined field243_0x1da;
-    undefined field244_0x1db;
+    float shearAngle;         // 0x1bc - Camera_Shear's wobble under water, kept within +-pi
+    // camera_tracking (camera mode 0xb, on a wire or creep wall): the view's pitch and yaw about the player, the
+    // distance it used this frame and the distance it should be (4 on a wire or wall, 0 off it), and the three
+    // Player_CollCreepWall keeps from before
+    float trackPitch;         // 0x1c0
+    float trackYaw;           // 0x1c4
+    float trackDistanceUsed;  // 0x1c8
+    float trackDistance;      // 0x1cc
+    float savedTrackPitch;    // 0x1d0
+    float savedTrackYaw;      // 0x1d4
+    float savedTrackDistance; // 0x1d8
     float apocalypseEffect;
     undefined4 field246_0x1e0;
     undefined4 field247_0x1e4;
     undefined4 field248_0x1e8;
     undefined4 field249_0x1ec;
     undefined4 field250_0x1f0;
-    undefined4 field251_0x1f4;
+    obj_tag *player;          // 0x1f4 - the player whose view it is (Player_Init)
     undefined4 field252_0x1f8;
     undefined4 field253_0x1fc;
     undefined1 field254_0x200;
@@ -143,13 +137,25 @@ struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     undefined1 field256_0x202;
     undefined1 field257_0x203;
     undefined1 field258_0x204;
-    undefined1 field259_0x205;
+    undefined1 fadeActive; // 0x205 - set to 1 by Camera_SetFade (guards it from stomping an in-progress fade);
+                            // read by Script_Update to avoid double-triggering a scripted-camera-NIS fade-out
     undefined2 nightVisionRelated;
 };
 
 struct world_tag {
     cel_tag* firstCel;
     // ?
+};
+
+// An opening between two cels (0x7c bytes). Only the fields our code reads are named.
+typedef struct portal_tag portal_tag;
+struct portal_tag {
+    portal_tag *next;           // 0x00 - the next portal of the same cel
+    portal_tag *partner;        // 0x04 - the same opening, from the other cel
+    cel_tag *cel;               // 0x08 - the cel on the other side (Collide_StraddleCels adds it)
+    char _unknown0c[0x28 - 0x0c];
+    _VECTOR corners[4];         // 0x28
+    char _unknown58[0x7c - 0x58];
 };
 
 struct cel_tag { /* Confirmed size in build_alloc_cel */
@@ -183,26 +189,14 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field33_0x21;
     undefined field34_0x22;
     undefined field35_0x23;
-    undefined field36_0x24;
-    undefined field37_0x25;
-    undefined field38_0x26;
-    undefined field39_0x27;
-    undefined field40_0x28;
-    undefined field41_0x29;
-    undefined field42_0x2a;
-    undefined field43_0x2b;
+    struct AINode_tag *aiNodes;         // 0x24 - the AI path nodes in this cel (AIPath_BindNodes)
+    portal_tag *portals;                // 0x28 - this cel's portals, linked through portal_tag.next
     undefined field44_0x2c;
     undefined field45_0x2d;
     undefined field46_0x2e;
     undefined field47_0x2f;
-    undefined field48_0x30;
-    undefined field49_0x31;
-    undefined field50_0x32;
-    undefined field51_0x33;
-    undefined field52_0x34;
-    undefined field53_0x35;
-    undefined field54_0x36;
-    undefined field55_0x37;
+    struct AIBoundNode_tag *boundNodes; // 0x30 - the AI bound nodes in this cel (AIBounds_Link2Cel)
+    struct AIBoundLink_tag *boundLinks; // 0x34 - the AI bound links with an end in this cel (AIBounds_Prepare)
     undefined field56_0x38;
     undefined field57_0x39;
     undefined field58_0x3a;
@@ -250,8 +244,8 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field100_0x7d;
     undefined field101_0x7e;
     undefined field102_0x7f;
-    float shearHeight;
-    undefined field107_0x84;
+    float shearHeight;                 // 0x80 - a drone more than 0.3 m below it does not fall (NDrone2_Fall)
+    uchar flags84;                     // 0x84 - 0x40: Drone_FeetOnPoint does not stand on hits in this cel
     undefined field108_0x85;
     undefined field109_0x86;
     undefined field110_0x87;
@@ -264,7 +258,7 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field117_0x8e;
     undefined field118_0x8f;
     undefined addedToDraw;
-    undefined field120_0x91;
+    uchar musicEvent;                  // 0x91 - Player_Update sends it (Music_Event) every frame the player is in the cel
     undefined1 someSwitchChannel; /* Created by retype action */
     undefined field122_0x93;
 };

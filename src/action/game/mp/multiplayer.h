@@ -41,6 +41,12 @@ typedef enum {
     WEAPSET_FORCE_UINT32 = 0x7fffffff
 } WeaponSet;
 
+enum RespawnMode : uint32_t {
+    RESPAWN_NEAR = 0,
+    RESPAWN_FAR = 1,
+    RESPAWN_RANDOM = 2
+};
+
 typedef enum  {
     PHOENIX = 0,
     MI6 = 1,
@@ -83,7 +89,7 @@ typedef struct { // on Xbox, starts at 0025fe38
     WeaponSet weaponSet;
     undefined4 GunEmplacementsEnabled;
     undefined4 TripleDamageModifierProfessionalMode;
-    undefined4 RespawnSelectionMode;
+    RespawnMode RespawnSelectionMode;
     undefined4 ShowTeamAndNameOverhead;
     undefined4 LocationDamageEnabled;
     undefined4 MiniVehiclesEnabled;
@@ -95,6 +101,8 @@ typedef struct { // on Xbox, starts at 0025fe38
 } MPSettings_t;
 
 static_assert(sizeof(MPSettings_t) == 572, "MPSettings_t is wrong size");
+static_assert(offsetof(MPSettings_t, RespawnSelectionMode) == 0x220, "RespawnSelectionMode is at wrong offset");
+static_assert(offsetof(MPSettings_t, ShowTeamAndNameOverhead) == 0x224, "ShowTeamAndNameOverhead is at wrong offset");
 
 #define MPSettings (*((MPSettings_t*)0x0025fe38))
 #define MultiplayerLayout_LeftRightOrTopBtm U32_AT(0x001f660c) // Part of a DrawInfo struct which also contains IsWidescreen?
@@ -126,9 +134,11 @@ static_assert(sizeof(MP_skin) == 0x10, "MP_skin is wrong size");
 
 
 typedef struct {
-    char unknown[16];
-    char SkinNum;
-    char unknown2;
+    char stats[14];     // 0x00 its BOT_stats_t: the character's defaults (BOT_getDefaultStats), then P_MPBOTSETUP's
+    char isPlaying;     // 0x0e the bot is in the game (P_MPBOTSETUP's "Playing" option)
+    char isGood;        // 0x0f its character is on MI6's side (Menu_IsBotGood)
+    char SkinNum;       // 0x10 its character: an mp_characters identifier
+    char statsEdited;   // 0x11 its stats were changed on P_MPBOTSETUP, so moving the character wheel keeps them
 } MPBOT;
 
 static_assert(sizeof(MPBOT) == 18, "MPBOT is wrong size");
@@ -138,6 +148,23 @@ typedef struct {
     char NumBots;
     MPBOT bot[6]; // FIXME: How many bots are there? Platform-specific? Enough memory for 10 on Xbox
 } MPBOTS;
+
+// XBE_GLOBAL(0x00245280, 0x6e)
+#define mpbots (*(MPBOTS*)0x00245280)
+
+// The four controllers' places on the join page (P_MPJOIN)
+typedef struct {
+    char joined;        // 0x00
+    char ready;         // 0x01 finished setting up (C_RBMPSETUP)
+    char pad[2];
+    MPTeam team;        // 0x04
+    uint skin;          // 0x08 an mp_characters identifier
+    uchar controllerPort; // 0x0c the controller's port, which P_MPCONFIRM hands to PlayerInputs[].controllerPort
+    uchar _pad0d[3];
+} MPJoinSlot;
+static_assert(sizeof(MPJoinSlot) == 0x10, "MPJoinSlot is wrong size");
+
+#define mp_join_slots (*(MPJoinSlot(*)[4])0x00245240)
 
 
 typedef struct {
@@ -201,7 +228,9 @@ bool MP_isObjectOnTeam(obj_tag *param_1,uint teamId);
 MPTeam MP_getObjectTeam(obj_tag* param_1);
 bool MP_IsAssasin(obj_tag *param_1);
 bool MP_IsTarget(obj_tag *param_1);
+bool MP_RegisterBulletHit(ushort playerIndex, obj_tag *obj, float health);
 void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId);
+uint MP_GetSpawnPoint(short teamId, obj_tag *respawningPlayer);
 obj_tag* MP_RegisterMPObject(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 void MP_objectBeingDeleted(obj_tag* obj);
 void MP_Update(void);
@@ -216,6 +245,7 @@ void MP_SortOutWhoWon(void);
 void MP_Pickup_Process(void);
 void MP_CheckForEndCondition(void);
 void MP_RestartScenario(void);
+void MP_Init(void);
 obj_tag* MP_CreateObject(_MATRIX *mtx, unsigned short* data, celglist_tag *celgl);
 bool MP_ReSpawn(obj_tag* obj, ushort idx);
 

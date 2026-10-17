@@ -1,0 +1,58 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0007a5c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "RCameraSpline::EvaluateTangent(float, COORD4 &)"
+  },
+  {
+   "address": "0x0007a640",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RCameraSpline::GetPointListSize(void) const",
+   "return": "uint"
+  },
+  {
+   "address": "0x0007a9b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RCameraSpline::~RCameraSpline(void)"
+  },
+  {
+   "address": "0x0007a9f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RCameraSpline::ClearSplinePtList(void)"
+  },
+  {
+   "address": "0x0007acd0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RCameraSpline::RCameraSpline(void)",
+   "return": "RCameraSpline *"
+  },
+  {
+   "address": "0x0007ae00",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "RCameraSpline::AddToSplinePtList(COORD4 &)"
+  }
+ ]
+}

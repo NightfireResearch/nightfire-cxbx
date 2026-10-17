@@ -1,0 +1,140 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0007e430",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "RLightManager::VerticalFalloffMultiplier(COORD3 &)"
+  },
+  {
+   "address": "0x0007e440",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "RLightManager::AddPositionalLight(COORD4 &, COORD4 &)"
+  },
+  {
+   "address": "0x0007e860",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RLightManager::DisablePositionalLighting(bool)"
+  },
+  {
+   "address": "0x0007e8c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightManager::~RLightManager(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0007e930",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RLightManager::Kill(void)"
+  },
+  {
+   "address": "0x0007e950",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "RLightManager::AddSpecularLight(COORD4 &)"
+  },
+  {
+   "address": "0x0007eaa0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightManager::SetCurrentAmbientAndDiffuse(void)"
+  },
+  {
+   "address": "0x0007eb30",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    }
+   ],
+   "sheet": "RLightManager::SetSurfaceProperties(float, float, float)"
+  },
+  {
+   "address": "0x0007efb0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightManager::RefreshLightBlocks(void)"
+  },
+  {
+   "address": "0x0007f010",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightManager::RLightManager(void)",
+   "return": "RLightManager *"
+  },
+  {
+   "address": "0x0007f450",
+   "calling_convention": "__thiscall",
+   "return": "RLightManager *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0007f470",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "RLightManager::SetLightingModel(RLightManager::LightingModel)"
+  },
+  {
+   "address": "0x0007f540",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightManager::FinishLights(void)"
+  },
+  {
+   "address": "0x0008b620",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RLightManager::Init(void)",
+   "return": "void"
+  }
+ ]
+}

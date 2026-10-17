@@ -1,0 +1,121 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00076850",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RAnimEngine::Handle::FindEffectByID(unsigned int) const"
+  },
+  {
+   "address": "0x00076890",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RAnimEngine::Handle::InitAllSystemStates(unsigned int)"
+  },
+  {
+   "address": "0x000768c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RAnimEngine::Handle::AnySystemPlaying(void) const"
+  },
+  {
+   "address": "0x00076900",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RAnimEngine::Handle::GetInstanceSystemID(unsigned int)"
+  },
+  {
+   "address": "0x000774a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RAnimEngine::Handle::IsSystemPlaying(unsigned int) const"
+  },
+  {
+   "address": "0x00077500",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RAnimEngine::Handle::GetSystemState(unsigned int) const"
+  },
+  {
+   "address": "0x00077560",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RAnimEngine::Handle::GetFirstSystemInstanceIndex(unsigned int)"
+  },
+  {
+   "address": "0x000775c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RAnimEngine::Handle::GetBestSystemInstanceIndex(unsigned int)"
+  },
+  {
+   "address": "0x000776a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RAnimEngine::Handle::GetFirstSystemInstance(unsigned int)"
+  },
+  {
+   "address": "0x00077be0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RAnimEngine::Handle::Stop(void)"
+  },
+  {
+   "address": "0x00077d10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    },
+    {
+     "name": "param_2",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RAnimEngine::Handle::NumFrames(unsigned int, unsigned int)"
+  }
+ ]
+}

@@ -1,0 +1,41 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0008b700",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RTextureContextManager::Init(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00094c90",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "RTextureContextManager::KillContext(RTextureContext *)"
+  },
+  {
+   "address": "0x00095290",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RTextureContextManager::~RTextureContextManager(void)"
+  },
+  {
+   "address": "0x00095360",
+   "calling_convention": "__thiscall",
+   "return": "RTextureContextManager *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

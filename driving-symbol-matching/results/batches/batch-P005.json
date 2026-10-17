@@ -1,0 +1,76 @@
+{
+ "batch": "P005",
+ "program": "DRIVING.ELF",
+ "note": "PS2 audit decisions, 25 Sept 2026. 'xbox' is the PS2 address.",
+ "items": [
+  {
+   "xbox": "0x00143580",
+   "expect": "FUN_00143580",
+   "name": "DebugItem_type_info_function",
+   "evidence": [
+    "builds type_info from \"9DebugItem\"; DebugData's (0x143668) derives from it. Sheet row 1093 (audit #1)"
+   ],
+   "create": false,
+   "sheet_name": "DebugItem type_info function"
+  },
+  {
+   "xbox": "0x001af8c0",
+   "expect": "maybe_AddPositionalLight",
+   "name": "RHighLevelLightManager::AddDynamicLightEffect",
+   "evidence": [
+    "0x1c8 as the sheet says, called from RenderEffect, calls AddPositionalLight; sheet row 3147 (audit #3)"
+   ],
+   "create": false,
+   "sheet_name": "RHighLevelLightManager::AddDynamicLightEffect(CARP::DynamicLigh..."
+  },
+  {
+   "xbox": "0x001afc58",
+   "expect": "FUN_001afc58",
+   "name": "RHighLevelLightManager::AddPositionalLight",
+   "evidence": [
+    "0xf8 as the sheet says; adds a light to a list of at most 4; sheet row 3150 (audit #3)"
+   ],
+   "create": false,
+   "sheet_name": "RHighLevelLightManager::AddPositionalLight(COORD4 &, COORD4 &,..."
+  },
+  {
+   "xbox": "0x001d50a8",
+   "expect": "Camera_const",
+   "name": "RViewCamera::Camera",
+   "evidence": [
+    "the const overload, first by sheet order; sheet row 3765 (audit #5)"
+   ],
+   "create": false,
+   "sheet_name": "RViewCamera::Camera(void) const",
+   "allow_duplicate": true
+  },
+  {
+   "xbox": "0x0024b5e0",
+   "expect": "FUN_0024b5e0",
+   "name": "GSystem::COLOR_ConvertColorToCoord4",
+   "evidence": [
+    "unpacks a 32-bit colour into four floats; sheet row 5489 (audit #8)"
+   ],
+   "create": false,
+   "sheet_name": "GSystem::COLOR_ConvertColorToCoord4(unsigned int, COORD4 *)"
+  },
+  {
+   "xbox": "0x0025d400",
+   "expect": "rmpipe",
+   "name": "FUN_0025d400",
+   "evidence": [
+    "not rmpipe: one of ~30 unlisted static pipeline stages (0x25d400-0x25ef00) reached through the table at 0x3438xx; the sheet's rmpipepreproj size (0x1b20) swallows them (audit #10)"
+   ],
+   "create": false
+  },
+  {
+   "xbox": "0x0025ef00",
+   "expect": "FUN_0025ef00",
+   "name": "rmpipe",
+   "evidence": [
+    "0x200 as the sheet says; sets up the render-math pipeline from flags, called by m3xform and m3xformxlatev; sheet row 7145 (audit #10)"
+   ],
+   "create": false
+  }
+ ]
+}

@@ -1,0 +1,17 @@
+{
+ "batch": "028",
+ "program": "Driving.xbe",
+ "note": "GetFrontBuffer (dropped from 023 on a PS2 address 8 bytes off).",
+ "items": [
+  {
+   "xbox": "0x000e8270",
+   "expect": "FUN_000e8270",
+   "name": "EAGL::RenderContextExtension::GetFrontBuffer",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "call-graph review (cg-review-1 agent 1): front-buffer twin of GetBackBuffer; PS2 0x291178 (sheet row 5976)"
+   ]
+  }
+ ]
+}

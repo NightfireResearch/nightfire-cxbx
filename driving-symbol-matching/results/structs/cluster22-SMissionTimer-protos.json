@@ -1,0 +1,70 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000b95e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionTimer::Reset(int)"
+  },
+  {
+   "address": "0x000b9600",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionTimer::Start(int)",
+   "return": "void"
+  },
+  {
+   "address": "0x000b9620",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SMissionTimer::Increment(int)"
+  },
+  {
+   "address": "0x000b9630",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionTimer::GetValue(void)",
+   "return": "int"
+  },
+  {
+   "address": "0x000b96a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionTimer::IsReverse(void)"
+  },
+  {
+   "address": "0x000b96b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "SMissionTimer::SetTicking(bool)"
+  },
+  {
+   "address": "0x000b9ce0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SMissionTimer::Stop(void)"
+  }
+ ]
+}

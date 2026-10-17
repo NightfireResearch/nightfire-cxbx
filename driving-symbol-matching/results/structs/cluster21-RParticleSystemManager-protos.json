@@ -1,0 +1,49 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000a1e30",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RParticleSystemManager::UpdateAndRenderAllSystems(void)"
+  },
+  {
+   "address": "0x000a2930",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RParticleSystemManager::UpdateSpawnAllSystems(void)"
+  },
+  {
+   "address": "0x000a29c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RParticleSystemManager::Reset(void)"
+  },
+  {
+   "address": "0x000a2f00",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RParticleSystemManager::RParticleSystemManager(void)",
+   "return": "RParticleSystemManager *"
+  },
+  {
+   "address": "0x000a3140",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "RParticleSystemManager::Init(char *)",
+   "return": "void"
+  },
+  {
+   "address": "0x000a31e0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RParticleSystemManager::Shutdown(void)"
+  }
+ ]
+}

@@ -6,4 +6,6 @@
 void SpaceMissile_Update(obj_tag *obj);
 obj_tag * Create_SpaceMissile(_VECTOR* pos, _VECTOR* rot, level_tag* level);
 
+extern uchar MissileDeploy[8]; // defined in SpaceMissile.cpp
+
 #endif // SPACEMISSILE_H_

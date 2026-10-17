@@ -1,0 +1,17 @@
+{
+ "batch": "024b",
+ "program": "Driving.xbe",
+ "note": "ECameraLockOn deleting destructor (dropped from 024 by the bare PS2 name).",
+ "items": [
+  {
+   "xbox": "0x00047610",
+   "expect": "FUN_00047610",
+   "name": "ECameraLockOn::scalar_deleting_destructor",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "calls ECameraLockOn::~ECameraLockOn (0x3eb50) then Event::operator_delete when flag bit 1 is set (MSVC scalar deleting destructor); PS2 0x148e30 ~ECameraLockOn"
+   ]
+  }
+ ]
+}

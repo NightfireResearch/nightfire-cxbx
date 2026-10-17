@@ -1,0 +1,479 @@
+[
+{
+"xbox": 1795308,
+"ps2": 3308588,
+"name": "gAIElementHardLimit",
+"size_ps2": 4,
+"obj": "AIElementController.obj",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 1919024,
+"ps2": 3496592,
+"name": "gDebugAllocAddress",
+"size_ps2": 152,
+"obj": "libsn.a(prof.o)",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 1919172,
+"ps2": 3496756,
+"name": "UMemory::fgMemVectors",
+"size_ps2": 4,
+"obj": "libsn.a(prof.o)",
+"votes": 3,
+"runner_up": 1
+},
+{
+"xbox": 1956504,
+"ps2": 3307232,
+"name": "AICharacterHands::fgZoomButton",
+"size_ps2": 4,
+"obj": "AICharacterHands.obj",
+"votes": 3,
+"runner_up": 0
+},
+{
+"xbox": 1956505,
+"ps2": 3307236,
+"name": "AICharacterHands::fgIsZoomed",
+"size_ps2": 1028,
+"obj": "AICharacterHands.obj",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 1956592,
+"ps2": 3307200,
+"name": "AICharacterHands::fgActor",
+"size_ps2": 32,
+"obj": "AICharacterHands.obj",
+"votes": 3,
+"runner_up": 0
+},
+{
+"xbox": 1957525,
+"ps2": 3965488,
+"name": "AICharacterPedestrian::fgPedsEnabled",
+"size_ps2": 4,
+"obj": "librealfilez.a(stream.o)",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 1957592,
+"ps2": 3965496,
+"name": "AICharacterPedestrian::fgNumPeds",
+"size_ps2": 4,
+"obj": "librealfilez.a(stream.o)",
+"votes": 3,
+"runner_up": 1
+},
+{
+"xbox": 1957604,
+"ps2": 3308592,
+"name": "AIElementController::fObj",
+"size_ps2": 16,
+"obj": "AIElementController.obj",
+"votes": 9,
+"runner_up": 2
+},
+{
+"xbox": 1959736,
+"ps2": 3308896,
+"name": "AIRoadSpawn::fInitialUpdate",
+"size_ps2": 4,
+"obj": "AIGroundVehicle.obj",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 1959940,
+"ps2": 3308888,
+"name": "AIRoadSpawn::fgRoadSpawn",
+"size_ps2": 4,
+"obj": "AIGroundVehicle.obj",
+"votes": 4,
+"runner_up": 0
+},
+{
+"xbox": 1959944,
+"ps2": 3308892,
+"name": "AIRoadSpawn::fNumSpawnSegments",
+"size_ps2": 4,
+"obj": "AIGroundVehicle.obj",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 1959956,
+"ps2": 3308912,
+"name": "AIRoadSpawn::fForceRespawn",
+"size_ps2": 52,
+"obj": "AIGroundVehicle.obj",
+"votes": 3,
+"runner_up": 0
+},
+{
+"xbox": 1974036,
+"ps2": 3323744,
+"name": "AIZoneController::fgController",
+"size_ps2": 8,
+"obj": "AIVehicleController.obj",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 1975016,
+"ps2": 3324640,
+"name": "DTuningDBMgr::fgThis_DTuningDBMgr",
+"size_ps2": 4,
+"obj": "DebugMenu_Custom.obj",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 1984076,
+"ps2": 3335736,
+"name": "AttributeSystem::fgThis_AttributeSystem",
+"size_ps2": 72,
+"obj": "AttributeSystem.obj",
+"votes": 8,
+"runner_up": 0
+},
+{
+"xbox": 1987084,
+"ps2": 3338928,
+"name": "Scheduler::fgScheduler",
+"size_ps2": 4,
+"obj": "Scheduler.obj",
+"votes": 5,
+"runner_up": 0
+},
+{
+"xbox": 2000100,
+"ps2": 3352912,
+"name": "RayShell::fNumActiveRayShells",
+"size_ps2": 16,
+"obj": "PVehicle.obj",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 2015220,
+"ps2": 3356512,
+"name": "RRenderer::fgRenderer",
+"size_ps2": 4,
+"obj": "Render.obj",
+"votes": 19,
+"runner_up": 1
+},
+{
+"xbox": 2015236,
+"ps2": 3356524,
+"name": "RFog::fgThis_RFog",
+"size_ps2": 52,
+"obj": "RFog.obj",
+"votes": 4,
+"runner_up": 0
+},
+{
+"xbox": 2015840,
+"ps2": 3356720,
+"name": "RLightManager::fgThis_RLightManager",
+"size_ps2": 496,
+"obj": "RLightManager.obj",
+"votes": 5,
+"runner_up": 0
+},
+{
+"xbox": 2039028,
+"ps2": 3965732,
+"name": "RSceneObj::fgNumVisibleDrawLastObjs",
+"size_ps2": 4,
+"obj": "librealfilez.a(stream.o)",
+"votes": 3,
+"runner_up": 1
+},
+{
+"xbox": 2042416,
+"ps2": 3358692,
+"name": "RTextureContextManager::fgThis_RTextureContextManager",
+"size_ps2": 56,
+"obj": "RTextureContextManager.obj",
+"votes": 5,
+"runner_up": 1
+},
+{
+"xbox": 2043388,
+"ps2": 3358312,
+"name": "RReflection::fgThis",
+"size_ps2": 4,
+"obj": "RReflections.obj",
+"votes": 3,
+"runner_up": 0
+},
+{
+"xbox": 2058392,
+"ps2": 3361248,
+"name": "RColorize::fgThis_RColorize",
+"size_ps2": 64,
+"obj": "RColorize.obj",
+"votes": 5,
+"runner_up": 0
+},
+{
+"xbox": 2091040,
+"ps2": 3361728,
+"name": "RDecalManager::fgThis_RDecalManager",
+"size_ps2": 12,
+"obj": "RDecal.obj",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 2101060,
+"ps2": 3362128,
+"name": "RLensFlareManager::fgThis_RLensFlareManager",
+"size_ps2": 40,
+"obj": "RLensFlare.obj",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 2101068,
+"ps2": 3362136,
+"name": "RLightning::fgThis_RLightning",
+"size_ps2": 56,
+"obj": "RLightning.obj",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 2103088,
+"ps2": 3965680,
+"name": "RParticleSystemManager::fManager",
+"size_ps2": 8,
+"obj": "librealfilez.a(stream.o)",
+"votes": 4,
+"runner_up": 0
+},
+{
+"xbox": 2103364,
+"ps2": 3365664,
+"name": "RWater::fgThis_RWater",
+"size_ps2": 540,
+"obj": "RWater.obj",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 2133172,
+"ps2": 3379344,
+"name": "RGlareManager::fgThis_RGlareManager",
+"size_ps2": 132,
+"obj": "RGlare_PS2.obj",
+"votes": 3,
+"runner_up": 0
+},
+{
+"xbox": 2351312,
+"ps2": 3965528,
+"name": "WRoadNetwork::fNumRoads",
+"size_ps2": 4,
+"obj": "librealfilez.a(stream.o)",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 2351328,
+"ps2": 3384824,
+"name": "WRoadNetwork::fgRoadNetwork",
+"size_ps2": 4,
+"obj": "WRoadNetwork.obj",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 2351332,
+"ps2": 3384828,
+"name": "WRoadNetwork::fNodes",
+"size_ps2": 4,
+"obj": "WRoadNetwork.obj",
+"votes": 4,
+"runner_up": 0
+},
+{
+"xbox": 2351336,
+"ps2": 3384832,
+"name": "WRoadNetwork::fSegments",
+"size_ps2": 4,
+"obj": "WRoadNetwork.obj",
+"votes": 9,
+"runner_up": 1
+},
+{
+"xbox": 2351340,
+"ps2": 3384836,
+"name": "WRoadNetwork::fIntersections",
+"size_ps2": 4,
+"obj": "WRoadNetwork.obj",
+"votes": 3,
+"runner_up": 0
+},
+{
+"xbox": 2351348,
+"ps2": 3384844,
+"name": "WRoadNetwork::fRoads",
+"size_ps2": 8,
+"obj": "WRoadNetwork.obj",
+"votes": 4,
+"runner_up": 0
+},
+{
+"xbox": 2351352,
+"ps2": 3384848,
+"name": "WRoadNetwork::fSegmentStamp",
+"size_ps2": 848,
+"obj": "WRoadNetwork.obj",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 2356000,
+"ps2": 3386064,
+"name": "GFX::fGallery",
+"size_ps2": 40,
+"obj": "GFX.obj",
+"votes": 8,
+"runner_up": 0
+},
+{
+"xbox": 2357288,
+"ps2": 3390048,
+"name": "GSubtitles::fTheApp",
+"size_ps2": 44,
+"obj": "GLocale.obj",
+"votes": 3,
+"runner_up": 0
+},
+{
+"xbox": 2358112,
+"ps2": 3442092,
+"name": "EAGLInternal::DevicePrivate::gpCurrentDevice",
+"size_ps2": 4,
+"obj": "libeagla.a(tar.o)",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 2358116,
+"ps2": 3442096,
+"name": "EAGLInternal::DevicePrivate::gpCurrentRenderContext",
+"size_ps2": 4,
+"obj": "libeagla.a(tar.o)",
+"votes": 3,
+"runner_up": 0
+},
+{
+"xbox": 2358120,
+"ps2": 3442100,
+"name": "EAGLInternal::DevicePrivate::gpCurrentTextureRenderContext",
+"size_ps2": 4,
+"obj": "libeagla.a(tar.o)",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 2370784,
+"ps2": 3496336,
+"name": "memclass",
+"size_ps2": 256,
+"obj": "libsn.a(prof.o)",
+"votes": 5,
+"runner_up": 0
+},
+{
+"xbox": 2371536,
+"ps2": 3496768,
+"name": "UMemory::fgHeaps",
+"size_ps2": 64,
+"obj": "libsn.a(prof.o)",
+"votes": 3,
+"runner_up": 0
+},
+{
+"xbox": 2373392,
+"ps2": 3965696,
+"name": "USimpleTexturedMaterial::fgLayerData",
+"size_ps2": 4,
+"obj": "librealfilez.a(stream.o)",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 2373456,
+"ps2": 3965692,
+"name": "USimpleMaterial::fgCur",
+"size_ps2": 4,
+"obj": "librealfilez.a(stream.o)",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 2373464,
+"ps2": 3965688,
+"name": "USimpleMaterial::fgLayerData",
+"size_ps2": 4,
+"obj": "librealfilez.a(stream.o)",
+"votes": 3,
+"runner_up": 0
+},
+{
+"xbox": 2373680,
+"ps2": 3965756,
+"name": "UVolatileMaterial::fgCur",
+"size_ps2": 4,
+"obj": "librealfilez.a(stream.o)",
+"votes": 3,
+"runner_up": 1
+},
+{
+"xbox": 2373752,
+"ps2": 3965752,
+"name": "UVolatileMaterial::fgLayerData",
+"size_ps2": 4,
+"obj": "librealfilez.a(stream.o)",
+"votes": 3,
+"runner_up": 1
+},
+{
+"xbox": 2374232,
+"ps2": 3497408,
+"name": "ASoundManager::fgSoundList",
+"size_ps2": 4,
+"obj": "BondAudioPS2.lib(ATraffic",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 2374272,
+"ps2": 3497392,
+"name": "AStream::fTrigger",
+"size_ps2": 4,
+"obj": "BondAudioPS2.lib(ATraffic",
+"votes": 2,
+"runner_up": 0
+},
+{
+"xbox": 2374452,
+"ps2": 3497256,
+"name": "ASystem::fgSystem",
+"size_ps2": 8,
+"obj": "BondAudioPS2.lib(ATraffic",
+"votes": 2,
+"runner_up": 0
+}
+]

@@ -1,0 +1,116 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0008beb0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RShadowMap::Init(void)"
+  },
+  {
+   "address": "0x000a5820",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RShadowMap::LoadAttributes(void)"
+  },
+  {
+   "address": "0x000a5950",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RShadowMap::ProjectedShadowsEnabled(void)"
+  },
+  {
+   "address": "0x000a5960",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RShadowMap::ClearShadowMap(void)"
+  },
+  {
+   "address": "0x000a5a50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RShadowMap::ShadowPrivateData::ShadowPrivateData(void)"
+  },
+  {
+   "address": "0x000a5ac0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RShadowMap::RShadowMap(void)",
+   "return": "RShadowMap *"
+  },
+  {
+   "address": "0x000a5c10",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RShadowMap::~RShadowMap(void)"
+  },
+  {
+   "address": "0x000a5c90",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "RShadowMap::SetCamera(RVehicle &, COORD4 &)"
+  },
+  {
+   "address": "0x000a6050",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "RShadowMap::Begin(RVehicle &, COORD4 &)"
+  },
+  {
+   "address": "0x000a60b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "RShadowMap::Draw(RVehicle &, COORD4 &)"
+  },
+  {
+   "address": "0x000a60f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "RShadowMap::DrawSimpleShadow(RVehicle &)"
+  },
+  {
+   "address": "0x000a6670",
+   "calling_convention": "__thiscall",
+   "return": "RShadowMap *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

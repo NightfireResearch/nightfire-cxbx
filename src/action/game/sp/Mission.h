@@ -42,6 +42,7 @@ typedef struct {
 #pragma pack(pop)
 
 
+Action_TranslatedText Mission_FailLabel(void);
 void Mission_SetFailLabel(Action_TranslatedText text);
 void Mission_SetMapHCode(HASHCODE param_1);
 HASHCODE Mission_BaseMapHCode(void);

@@ -1,0 +1,163 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000e6610",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::RenderContext::BeginFrame(void)"
+  },
+  {
+   "address": "0x000e6640",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::RenderContext::EndFrame(void)"
+  },
+  {
+   "address": "0x000e6a60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "EAGL::RenderContext::SetSize(float, float)"
+  },
+  {
+   "address": "0x000e6a80",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float *"
+    },
+    {
+     "name": "param_2",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGL::RenderContext::GetSize(float &, float &) const"
+  },
+  {
+   "address": "0x000e6aa0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "EAGL::RenderContext::SetFrontBufferDepth(int)"
+  },
+  {
+   "address": "0x000e6ac0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "EAGL::RenderContext::SetBackBufferDepth(int)"
+  },
+  {
+   "address": "0x000e6b10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "EAGL::RenderContext::SetZBufferDepth(int)"
+  },
+  {
+   "address": "0x000e6b60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "EAGL::RenderContext::SetSyncToVBL(bool)"
+  },
+  {
+   "address": "0x000e6c00",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::RenderContext::SetupFrameBuffers(void)"
+  },
+  {
+   "address": "0x000e73f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "EAGL::RenderContext::SetZWritesEnable(bool)"
+  },
+  {
+   "address": "0x000e7430",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "EAGL::RenderContext::GetZWritesEnable(bool &) const"
+  },
+  {
+   "address": "0x000e8600",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::RenderContext::~RenderContext(void)"
+  },
+  {
+   "address": "0x000e8740",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "EAGL::RenderContext::RenderContext(EAGL::Device *)",
+   "return": "EAGL::RenderContext *"
+  },
+  {
+   "address": "0x000ee010",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::RenderContext::NewViewPort(void)",
+   "return": "EAGL::ViewPort *"
+  },
+  {
+   "address": "0x000ee0a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "EAGL::RenderContext::DeleteViewPort(EAGL::ViewPort *)"
+  },
+  {
+   "address": "0x000f3520",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::RenderContext::GetCurrentViewPort(void) const",
+   "return": "EAGL::ViewPort *"
+  }
+ ]
+}

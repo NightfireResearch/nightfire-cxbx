@@ -1,0 +1,120 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00096830",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RViewCamera::~RViewCamera(void)"
+  },
+  {
+   "address": "0x00096850",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "RViewCamera::SetGuardBandSize(float)"
+  },
+  {
+   "address": "0x00096860",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RViewCamera::UpdateForResolution(void) const"
+  },
+  {
+   "address": "0x000968b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RViewCamera::RefreshLODMultiplier(void)"
+  },
+  {
+   "address": "0x000968e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RViewCamera::EndView(void)"
+  },
+  {
+   "address": "0x00096900",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "RViewCamera::SetZBufferRange(unsigned long, unsigned long)"
+  },
+  {
+   "address": "0x00096960",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RViewCamera::AspectRatio(void)"
+  },
+  {
+   "address": "0x00096a70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RViewCamera::SetDeviceTransformMode(void)"
+  },
+  {
+   "address": "0x00096ae0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "RViewCamera::RViewCamera(RCamera *)",
+   "return": "RViewCamera *"
+  },
+  {
+   "address": "0x00096c60",
+   "calling_convention": "__thiscall",
+   "return": "RViewCamera *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x00096ca0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RViewCamera::SetFillColour(unsigned int)"
+  },
+  {
+   "address": "0x00096eb0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RViewCamera::SetWorldTransformMode(void)"
+  },
+  {
+   "address": "0x00096fc0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RViewCamera::SetRenderCamera(void)"
+  },
+  {
+   "address": "0x00097060",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RViewCamera::Render(void)"
+  }
+ ]
+}

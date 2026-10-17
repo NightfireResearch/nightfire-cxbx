@@ -1,0 +1,39 @@
+{
+ "batch": "048",
+ "program": "Driving.xbe",
+ "applied": "Sun Sep 27 03:57:07 2026",
+ "items": [
+  {
+   "xbox": "0x000b89c0",
+   "old_name": "FUN_000b89c0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000b89c0 from 'FUN_000b89c0' to 'ClearMessageList'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'ClearMessageList' shares the same token set as existing function 'Clear' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000b89c0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "ClearMessageList",
+   "ok": true
+  }
+ ]
+}

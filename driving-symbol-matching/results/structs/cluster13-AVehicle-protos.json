@@ -1,0 +1,142 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0011e230",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AVehicle::Reset(void)"
+  },
+  {
+   "address": "0x0011e2e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "AVehicle::AVehicle(char *, ASceneObj::SurfaceType)"
+  },
+  {
+   "address": "0x0011e9a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "AVehicle::ActivateGun(char *)"
+  },
+  {
+   "address": "0x0011ea10",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AVehicle::ActivateTurret(void)"
+  },
+  {
+   "address": "0x0011ea80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AVehicle::ActivateZoom(void)"
+  },
+  {
+   "address": "0x0011eaf0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AVehicle::ActivateWind(void)"
+  },
+  {
+   "address": "0x0011eb50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AVehicle::CalculateSpeed(void)"
+  },
+  {
+   "address": "0x0011ebf0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AVehicle::GetAirborneWheels(void) const",
+   "return": "int"
+  },
+  {
+   "address": "0x0011ec80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AVehicle::CalculateRpm(void)",
+   "return": "float"
+  },
+  {
+   "address": "0x0011ed30",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_3",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "AVehicle::PlayLanding(float, COORD3 &, COORD3 &)"
+  },
+  {
+   "address": "0x0011f9b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "AVehicle::Play(APath &)"
+  },
+  {
+   "address": "0x00120960",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    }
+   ],
+   "sheet": "AVehicle::ChooseHorn(char *, float, float)"
+  },
+  {
+   "address": "0x00120a10",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AVehicle::~AVehicle(void)"
+  },
+  {
+   "address": "0x00120d50",
+   "calling_convention": "__thiscall",
+   "return": "AVehicle *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

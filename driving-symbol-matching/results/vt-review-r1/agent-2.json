@@ -1,0 +1,582 @@
+{
+ "verdicts": [
+  {
+   "item": 110,
+   "xbox": "0x000d3520",
+   "ps2": "0x00233108",
+   "name": "GFX::TriggerIncidental",
+   "verdict": "accept",
+   "why": "one-line wrapper calling GFX::Trigger(gallery,1,...) like PS2 FUN_00232af8(glbGfxGallery,1,...); 3 named callers agree (ApplyWorldEffects, ~ECollision, ~EHitWindow)",
+   "intermediates": []
+  },
+  {
+   "item": 111,
+   "xbox": "0x000403f0",
+   "ps2": "0x0014f330",
+   "name": "EHitWindow::EHitWindow",
+   "verdict": "accept",
+   "why": "constructor storing args and setting vtable_EHitWindow; caller EHitWindow::GetEventName agrees",
+   "intermediates": []
+  },
+  {
+   "item": 112,
+   "xbox": "0x00019710",
+   "ps2": "0x001145c0",
+   "name": "ActPoser::AdvanceTime",
+   "verdict": "accept",
+   "why": "state!=3 guard, frame+=a*b*c vs total-1, state==2 -> FinishCrossFadeBlend; small getters inlined; callers Standard/CrossFadeAnimationController::Update agree",
+   "intermediates": [
+    {
+     "xbox": "0x00019610",
+     "ps2": "0x001137f0",
+     "name": "ActPoser::FinishCrossFadeBlend",
+     "why": "called at the state==2 branch where PS2 calls FinishCrossFadeBlend; body resets blend state to 1 and frame fields"
+    }
+   ]
+  },
+  {
+   "item": 113,
+   "xbox": "0x00096410",
+   "ps2": "0x001d3d20",
+   "name": "RVehicle::RenderShadowGeometry",
+   "verdict": "accept",
+   "why": "identical: model at +0x350, Model::Draw(model, model+0xc); Xbox chain reaches RVehicle::RenderShadow",
+   "intermediates": []
+  },
+  {
+   "item": 114,
+   "xbox": "0x00012ec0",
+   "ps2": "0x00108358",
+   "name": "ActActor::~ActActor",
+   "verdict": "accept",
+   "why": "same dtor sequence: vcall on +0x2c object, anim group, poser (~ActPoser/FastFree 0x70), character, WWorldPos delete; caller KillActorByHandle agrees",
+   "intermediates": [
+    {
+     "xbox": "0x00014310",
+     "ps2": "0x0010cac0",
+     "name": "ActAnimGroup::~ActAnimGroup",
+     "why": "same position in ~ActActor (first member dtor after the vcall, freed FastFree 0x20)"
+    },
+    {
+     "xbox": "0x00014700",
+     "ps2": "0x0010d188",
+     "name": "ActCharacter::~ActCharacter",
+     "why": "same position in ~ActActor (after ~ActPoser, freed FastFree 0x84)"
+    }
+   ]
+  },
+  {
+   "item": 115,
+   "xbox": "0x00044f40",
+   "ps2": "0x00159fb8",
+   "name": "ESpawnExplosion::ESpawnExplosion",
+   "verdict": "accept",
+   "why": "constructor setting vtable_ESpawnExplosion; callers GetEventName/~ESpawnExplosionStatic/SpawnExplosion chains agree",
+   "intermediates": []
+  },
+  {
+   "item": 116,
+   "xbox": "0x0011a390",
+   "ps2": "0x002d97b8",
+   "name": "DAFI_setsectionbyindex",
+   "verdict": "accept",
+   "why": "same INI parse: *p=idx, p[idx+0x3ea], p[0x7d2]=0, '[' '=' newline scan, p[0xfa4] bound; caller DAFI_setsection agrees",
+   "intermediates": []
+  },
+  {
+   "item": 117,
+   "xbox": "0x000ad840",
+   "ps2": "0x001f72d8",
+   "name": "RigidBody::InitLevers",
+   "verdict": "accept",
+   "why": "3 shared strings, LookupFloat, lever table fill; called from the (inlined) RigidBody ctor under ChangeCarType/PBondCar/Smackable on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 118,
+   "xbox": "0x000cfdf0",
+   "ps2": "0x0022efb0",
+   "name": "WTriggerManager::CheckCollide",
+   "verdict": "accept",
+   "why": "sole collide test before WTrigger::FireEvents in WTriggerManager::Process on both sides; single-radius xz-circle + y-extent test like this overload (the other, 0x22f030, has separate up/down extents); Xbox adds a facing (v3dotprod) check, hence size 2.26",
+   "intermediates": []
+  },
+  {
+   "item": 119,
+   "xbox": "0x000d8800",
+   "ps2": "0x0023e568",
+   "name": "GHud::TriggerTimerOn",
+   "verdict": "accept",
+   "why": "one-field setter, but both named callers ~ESetTimer and ~ETimerDrawOn call it at the same spot on GHud::TheApp() with event field [1] (PS2 +0x464, Xbox +0x458)",
+   "intermediates": []
+  },
+  {
+   "item": 120,
+   "xbox": "0x000d7c30",
+   "ps2": "0x0023c6f8",
+   "name": "GHud::EnableLavaDamageEffect",
+   "verdict": "accept",
+   "why": "identical body: +0x330 = frame+1 or 0; caller ~ELavaHaze agrees",
+   "intermediates": []
+  },
+  {
+   "item": 121,
+   "xbox": "0x0007fff0",
+   "ps2": "0x001b2058",
+   "name": "RPathEngine::Update",
+   "verdict": "accept",
+   "why": "iterates path list calling RPathHandle::Update; caller ~EAnimUpdate agrees (Xbox decompile already shows the name)",
+   "intermediates": []
+  },
+  {
+   "item": 122,
+   "xbox": "0x001243c0",
+   "ps2": "0x002dd918",
+   "name": "AVoice::BuildMap",
+   "verdict": "accept",
+   "why": "clears map then walks voice list calling GetPatchName; caller DAudio::InfoDraw agrees",
+   "intermediates": [
+    {
+     "xbox": "0x00126a30",
+     "ps2": "0x002fd6d8",
+     "name": "ABank::GetPatchName",
+     "why": "callee of BuildMap on both sides; body matches (item 124)"
+    }
+   ]
+  },
+  {
+   "item": 123,
+   "xbox": "0x0009d6b0",
+   "ps2": "0x001dbe18",
+   "name": "REmpBolts::Update",
+   "verdict": "accept",
+   "why": "same: frames since +4, clamp to count/8, IsBoltAlive loop over 0x10-stride bolt slots; caller REmpBolts::Draw agrees",
+   "intermediates": [
+    {
+     "xbox": "0x0009f840",
+     "ps2": "0x001e18c0",
+     "name": "RLightning::IsBoltAlive",
+     "why": "called in the bolt loop where PS2 calls IsBoltAlive; body searches bolt list for id"
+    },
+    {
+     "xbox": "0x0009d320",
+     "ps2": "0x001dcea8",
+     "name": "REmpBolts::TrySpawnBolt",
+     "why": "the only other callee of Update on both sides"
+    }
+   ]
+  },
+  {
+   "item": 124,
+   "xbox": "0x00126a30",
+   "ps2": "0x002fd6d8",
+   "name": "ABank::GetPatchName",
+   "verdict": "accept",
+   "why": "URefCounter<ABank>::Get list walk, id match, basename strip on backslash and slash; reached from BuildMap <- DAudio::InfoDraw on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 125,
+   "xbox": "0x00076250",
+   "ps2": "0x0019f960",
+   "name": "Draw::DrawSprite",
+   "verdict": "accept",
+   "why": "builds default 0/1 UV quad on stack and forwards to the full sprite routine; named callers LoadAndDrawUnLoadingScreen and TestFlares agree",
+   "intermediates": []
+  },
+  {
+   "item": 126,
+   "xbox": "0x000e3430",
+   "ps2": "0x0024ad40",
+   "name": "GSubtitleSplitter::GetString",
+   "verdict": "accept",
+   "why": "identical logic (+0x58, +0x60 sim/timer mode, +0x54 index <9, +0x28 times); caller DrawSubtitles agrees",
+   "intermediates": []
+  },
+  {
+   "item": 127,
+   "xbox": "0x0010b720",
+   "ps2": "0x00254238",
+   "name": "FILESYS_writesync",
+   "verdict": "accept",
+   "why": "FileNameList::Dump calls it between opensync and closesync with (handle,offset,buf,len,100) exactly where PS2 calls writesync; shared helper FUN_0010b5f0 has the readsync sibling FUN_0010b6f0 as its other caller, like PS2 FUN_00254108",
+   "intermediates": []
+  },
+  {
+   "item": 128,
+   "xbox": "0x00018b80",
+   "ps2": "0x00113020",
+   "name": "ActPoser::CalculateFinalCorrectionMatrix",
+   "verdict": "reject",
+   "why": "Xbox copies an argument matrix into the pose data first (MatrixCopy) then does the correction math: that is ActPoser::SetInitialTbOu with CalculateFinalCorrectionMatrix inlined; its only caller is CurrentPositionRotateY (DoWandering), not the PS2 callers",
+   "intermediates": [
+    {
+     "xbox": "0x00018b80",
+     "ps2": "0x00112d80",
+     "name": "ActPoser::SetInitialTbOu",
+     "why": "PS2 SetInitialTbOu copies MATRIX4 into data then CalculateFinalCorrectionMatrix; Xbox = MatrixCopy + the same two mults; reached via SetInitialTrOu (inlined) from CurrentPositionRotateY"
+    },
+    {
+     "xbox": "0x00012280",
+     "ps2": "0x0010af10",
+     "name": "ActActor::CurrentPositionRotateY",
+     "why": "GetInitialTrOu, BuildRotate(Y), VU0_MATRIX4_mult, SetInitialTrOu (inlined position scale); caller DoWandering matches a PS2 caller"
+    }
+   ]
+  },
+  {
+   "item": 129,
+   "xbox": "0x0002a0d0",
+   "ps2": "0x0012e468",
+   "name": "AIGroundVehicle::SetNavigateMode",
+   "verdict": "accept",
+   "why": "mode store, LookupBool/GetRigidBody callees; callers Spawn, ~EAICommand, ~ESpawnTraffic agree directly",
+   "intermediates": []
+  },
+  {
+   "item": 130,
+   "xbox": "0x000b1ec0",
+   "ps2": "0x001fd598",
+   "name": "SimpleRigidBody::GetForwardVector",
+   "verdict": "accept",
+   "why": "wrapper to FUN_00115950 which computes the quaternion Z axis (2(wy+zx),2(zy-wx),1-2(x2+y2)) = VU0_ExtractZAxis3FromQuat, not the Right/Up siblings; callers CheckForCollision/SteerMissile agree",
+   "intermediates": [
+    {
+     "xbox": "0x00115950",
+     "ps2": "0x002cc350",
+     "name": "VU0_ExtractZAxis3FromQuat",
+     "why": "body extracts the quaternion's Z axis; the only callee of GetForwardVector on both sides"
+    }
+   ]
+  },
+  {
+   "item": 131,
+   "xbox": "0x000baab0",
+   "ps2": "0x0020d488",
+   "name": "SWeaponManager::SetSecondary",
+   "verdict": "accept",
+   "why": "stores +4 then updates arm when the camera exists; caller LoadWeaponSet agrees; +4 (not primary +0) matches",
+   "intermediates": [
+    {
+     "xbox": "0x00084680",
+     "ps2": "0x001bb010",
+     "name": "RPlayerCamera::UpdateCurrentArm",
+     "why": "callee of SetSecondary at same spot; body uses kWeaponArmChangeLatency"
+    }
+   ]
+  },
+  {
+   "item": 132,
+   "xbox": "0x000b1f40",
+   "ps2": "0x001fd6d8",
+   "name": "SimpleRigidBody::Accelerate",
+   "verdict": "accept",
+   "why": "flag +0x1e&8, velocity +0x20.. += a*rcpRate; callers Newton::Simulate/SteerMissile agree",
+   "intermediates": []
+  },
+  {
+   "item": 133,
+   "xbox": "0x00035fb0",
+   "ps2": "0x0013eec0",
+   "name": "AIVehicleController::UpdateHelicopters",
+   "verdict": "accept",
+   "why": "last of the vehicle-group calls in UpdateVehicles on both sides (players inlined, agents, traffic, helicopters); count at controller+8",
+   "intermediates": [
+    {
+     "xbox": "0x00035f10",
+     "ps2": "0x0013ed38",
+     "name": "AIVehicleController::UpdateAgentGroundVehicles",
+     "why": "2nd call in UpdateVehicles; count at +4, (n+1)%count round-robin flag at +0x94/+0xa4"
+    },
+    {
+     "xbox": "0x00035f70",
+     "ps2": "0x0013ee30",
+     "name": "AIVehicleController::UpdateTrafficVehicles",
+     "why": "3rd call in UpdateVehicles; 0x14 vehicles, (frame^i)&7 stagger"
+    }
+   ]
+  },
+  {
+   "item": 134,
+   "xbox": "0x0007ec40",
+   "ps2": "0x001af8c0",
+   "name": "RHighLevelLightManager::AddDynamicLightEffect",
+   "verdict": "accept",
+   "why": "same shape: intensity>0 gate, transform, colour bytes to float scaled 1/255, add light; caller RSceneObj::RenderEffect agrees",
+   "intermediates": []
+  },
+  {
+   "item": 135,
+   "xbox": "0x00016c30",
+   "ps2": "0x0010e980",
+   "name": "ActIKSolver::ActIKSolver",
+   "verdict": "reject",
+   "why": "size 3.12: Xbox allocs count*4 array and loops new(0x50) per solver with the ActIKSolver ctor inlined - that is ActIKSolverArray::CreateIKs, called directly by ActActor::CreateIKs",
+   "intermediates": [
+    {
+     "xbox": "0x00016c30",
+     "ps2": "0x0010eeb8",
+     "name": "ActIKSolverArray::CreateIKs",
+     "why": "body = PS2 CreateIKs (count, vec_new(count<<2), loop new(0x50)+ctor, stride 0x10 COORD4); sole caller ActActor::CreateIKs is the PS2 caller"
+    }
+   ]
+  },
+  {
+   "item": 136,
+   "xbox": "0x000263d0",
+   "ps2": "0x001284e0",
+   "name": "AICharacterPedestrian::DoLeaning",
+   "verdict": "accept",
+   "why": "state 0..3 machine: -10.0 offset, PlayAnim 0x18/0x17, 75.0 threshold, frame 3..10 window, random Say of MPed/FPed; only vtable refs on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 137,
+   "xbox": "0x000e00f0",
+   "ps2": "0x0023cb58",
+   "name": "GHud::SetControllerUnplugged",
+   "verdict": "accept",
+   "why": "same body (flag compare, PauseOn); caller IOModule::CheckUnplugged agrees; Xbox already named",
+   "intermediates": []
+  },
+  {
+   "item": 138,
+   "xbox": "0x0010b460",
+   "ps2": "0x00260300",
+   "name": "MEM_fill",
+   "verdict": "accept",
+   "why": "same alignment-stepped fill (1/2/4/8/16 then blocks); Xbox caller MEM_clear",
+   "intermediates": []
+  },
+  {
+   "item": 139,
+   "xbox": "0x00104af0",
+   "ps2": "0x0027a1a8",
+   "name": "EAGLAnim::FnTurnBlender::AlignCycleBeginEnd",
+   "verdict": "accept",
+   "why": "shared 'turn align' printf string, init branch sets identity quaternion; caller EvalVel2D agrees",
+   "intermediates": []
+  },
+  {
+   "item": 140,
+   "xbox": "0x001413e0",
+   "ps2": "0x003123f0",
+   "name": "MIXI_interpolateto0",
+   "verdict": "accept",
+   "why": "identical 16-step 15/17..1/17 ramp constants; caller MIX_audioslice agrees",
+   "intermediates": []
+  },
+  {
+   "item": 141,
+   "xbox": "0x000d3d90",
+   "ps2": "0x00235270",
+   "name": "GFXGallery::CANVAS_HasStopped",
+   "verdict": "accept",
+   "why": "same scan of +0x54 list (count +0x6e, stride 0x40) then 8 slots from +0x70; caller FRAME_Draw agrees",
+   "intermediates": []
+  },
+  {
+   "item": 142,
+   "xbox": "0x0001b050",
+   "ps2": "0x00116cb0",
+   "name": "ActWeapon::TransformToWorldSpace",
+   "verdict": "accept",
+   "why": "identical: guards +0x13c/+0x140, two in-place matrix mults (Xbox out-first arg order); PS2 distance 1",
+   "intermediates": []
+  },
+  {
+   "item": 143,
+   "xbox": "0x00083940",
+   "ps2": "0x001b8740",
+   "name": "RPlayerCamera::SetCameraZoom",
+   "verdict": "accept",
+   "why": "mode 1/2 branches, kZoomIncSpeed, +0x298/+0x2b4, 2.0 floor; caller ~ECameraZoom agrees",
+   "intermediates": [
+    {
+     "xbox": "0x00097710",
+     "ps2": "0x001d6720",
+     "name": "RWorldCamera::SetCameraZoom",
+     "why": "called at the same points with (zoom, kZoomIncSpeed*rate); clamps step, 2.0 floor, writes +0xb4"
+    }
+   ]
+  },
+  {
+   "item": 144,
+   "xbox": "0x0010b1a0",
+   "ps2": "0x00260a60",
+   "name": "PRINT_setchannelname",
+   "verdict": "accept",
+   "why": "init-if-needed then channel table[idx*2]=name; caller UMemory::Init agrees",
+   "intermediates": [
+    {
+     "xbox": "0x0010b050",
+     "ps2": "0x00260648",
+     "name": "PRINT_init",
+     "why": "called under the same not-initialised flag; sets that flag and clears channel bits"
+    }
+   ]
+  },
+  {
+   "item": 145,
+   "xbox": "0x00046c90",
+   "ps2": "0x0015dda0",
+   "name": "EWakeupSmackable::EWakeupSmackable",
+   "verdict": "accept",
+   "why": "constructor setting vtable_EWakeupSmackable; caller GetEventName agrees",
+   "intermediates": []
+  },
+  {
+   "item": 146,
+   "xbox": "0x000da180",
+   "ps2": "0x002459d0",
+   "name": "GHud::TriggerButtonMsg",
+   "verdict": "accept",
+   "why": "three stores + 0.5 constant + zero 0x3a8..0x3b0, offsets shifted +4; caller ~EButtonMsgOn agrees",
+   "intermediates": []
+  },
+  {
+   "item": 147,
+   "xbox": "0x000ad170",
+   "ps2": "0x001f80d8",
+   "name": "RigidBody::ApplyHeavyFriction",
+   "verdict": "accept",
+   "why": "two v3scale(0) on +0x40 and +0x50; callers GetControllerInput and Simulate chain agree",
+   "intermediates": []
+  },
+  {
+   "item": 148,
+   "xbox": "0x00107d40",
+   "ps2": "0x0025ff38",
+   "name": "SHAPE_locatez",
+   "verdict": "accept",
+   "why": "loop over shapes, SHAPE_longname else SHAPE_name then string compare; callers RInstanceRender_SetShadowInformation and FindOrCreateTexture chain agree",
+   "intermediates": [
+    {
+     "xbox": "0x00108280",
+     "ps2": "0x00260090",
+     "name": "SHAPE_longname",
+     "why": "callee in the same spot; body walks 'p' records (item 156)"
+    }
+   ]
+  },
+  {
+   "item": 149,
+   "xbox": "0x000760e0",
+   "ps2": "0x0019fe08",
+   "name": "Draw::DrawBox",
+   "verdict": "accept",
+   "why": "builds 4 corner verts x,y,x+w,y+h; 3 named callers agree (RColorize::Draw, InfoDraw, MixerDraw)",
+   "intermediates": []
+  },
+  {
+   "item": 150,
+   "xbox": "0x000da1d0",
+   "ps2": "0x002459f8",
+   "name": "GHud::GetButton",
+   "verdict": "accept",
+   "why": "\"*A*\" needle table of 4, strstr, copy prefix and suffix; callers DrawPauseMenu and Draw chain agree",
+   "intermediates": []
+  },
+  {
+   "item": 151,
+   "xbox": "0x000b85d0",
+   "ps2": "0x00206310",
+   "name": "SMissionManager::CallStage",
+   "verdict": "accept",
+   "why": "ProcessRuleList inlined (list walk calling DoRule) on stage list indexed by arg; caller ~ECallStage agrees, explains size 2.56",
+   "intermediates": []
+  },
+  {
+   "item": 152,
+   "xbox": "0x00065bf0",
+   "ps2": "0x001855f0",
+   "name": "GetCarColourVariation",
+   "verdict": "accept",
+   "why": "GetNamedAttribs, NumColoursAttrib, max(n,1), arg % n; callers ChangeCarType/PBondCar agree",
+   "intermediates": []
+  },
+  {
+   "item": 153,
+   "xbox": "0x00083e60",
+   "ps2": "0x001ba2f8",
+   "name": "RPlayerCamera::ShakeCamera",
+   "verdict": "accept",
+   "why": "distance-squared gate, kExplosionScale/kExplosionMaxShake, +0x274/+0x270/+0x278; caller ~ECameraShake agrees",
+   "intermediates": []
+  },
+  {
+   "item": 154,
+   "xbox": "0x000e2e30",
+   "ps2": "0x00249268",
+   "name": "GLoadingScreen::Print",
+   "verdict": "accept",
+   "why": "splits string on newlines into 256-byte line buffers and appends lines; caller GLoadingScreen::Status agrees",
+   "intermediates": []
+  },
+  {
+   "item": 155,
+   "xbox": "0x00019580",
+   "ps2": "0x00112a70",
+   "name": "ActPoser::~ActPoser",
+   "verdict": "accept",
+   "why": "same member teardown order (overrides, IK array, +0x24 data with +0x104 array, two deletes, anim object); reached from ~ActActor FastFree 0x70",
+   "intermediates": [
+    {
+     "xbox": "0x00016940",
+     "ps2": "0x0010f0f8",
+     "name": "ActGlobalPoseOverrideArray::~ActGlobalPoseOverrideArray",
+     "why": "first member dtor in ~ActPoser on both sides; frees its arrays and zeroes count"
+    },
+    {
+     "xbox": "0x00016d20",
+     "ps2": "0x0010ee70",
+     "name": "ActIKSolverArray::~ActIKSolverArray",
+     "why": "second member dtor (via thunk); deletes each solver and its +4 ActIK, matching CreateIKs"
+    }
+   ]
+  },
+  {
+   "item": 156,
+   "xbox": "0x00108280",
+   "ps2": "0x00260090",
+   "name": "SHAPE_longname",
+   "verdict": "accept",
+   "why": "identical 'p'-tag record walk (size in >>8); callers RegisterShapes and SHAPE_locatez agree",
+   "intermediates": []
+  },
+  {
+   "item": 157,
+   "xbox": "0x00088b10",
+   "ps2": "0x001bb7c0",
+   "name": "RPlayerCamera::SetAutoDriveCamera",
+   "verdict": "accept",
+   "why": "vec (x,-y,0,flag), two SetCameraModeByIndex calls (kAutoDriveLatency then 0) each followed by counter++ and vcall; callers ~ESetAutoDriveCamOn/Movie agree",
+   "intermediates": [
+    {
+     "xbox": "0x00083f50",
+     "ps2": "0x001ba418",
+     "name": "RPlayerCamera::SetCameraModeByIndex",
+     "why": "called twice with the same argument pattern (mode, latency, 4,0,0,0,&vec) where PS2 calls SetCameraModeByIndex"
+    }
+   ]
+  },
+  {
+   "item": 158,
+   "xbox": "0x000be780",
+   "ps2": "0x00212cc8",
+   "name": "WCollisionInstance::GetRenderInstance",
+   "verdict": "accept",
+   "why": "one-liner (+0x1a index *0x40 into world table) but callers agree positionally: WGrid::Init directly and CheckForCollision/SimulateGame chains",
+   "intermediates": []
+  },
+  {
+   "item": 159,
+   "xbox": "0x00028730",
+   "ps2": "0x0012c678",
+   "name": "AIElementController::CalcMightAsWellBeDead",
+   "verdict": "accept",
+   "why": "same element scan (stride 0x100, flags 0x20/!0x40, state 1, health>0, sub-count at +0x7c); caller SMissionManager::Win agrees",
+   "intermediates": []
+  }
+ ]
+}

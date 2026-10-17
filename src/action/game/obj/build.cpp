@@ -1,6 +1,6 @@
 #include "build.h"
 
-#include "../../engine/Viewer.h"
+#include "../../engine/viewer.h"
 // AUTOGEN
 bool build_LinkToRoom(obj_tag *obj, char flags, world_tag *world);
 

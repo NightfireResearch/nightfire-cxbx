@@ -1,0 +1,784 @@
+{
+ "verdicts": [
+  {
+   "item": 72,
+   "xbox": "0x0012b060",
+   "ps2": "0x002ee768",
+   "name": "ASnowMobile::PlayCarving",
+   "verdict": "accept",
+   "why": "Snowmobile landing sounds: same Lookup strings SFX_heavy1/SFX_med2/SFX_tiressnow with 'Landings' mix, GetAirborneWheels; 1:1 slot in ASnowMobile::Play",
+   "intermediates": []
+  },
+  {
+   "item": 73,
+   "xbox": "0x000da540",
+   "ps2": "0x002472b0",
+   "name": "GHud::DrawStylin",
+   "verdict": "accept",
+   "why": "Same state machine: state 1->2 with timer reset to 3.0, 100/x rate, offsets shift consistently (0x2ec/0x2f0 vs 0x2e8/0x2ec), SPRITE_SetState/Draw2D + cos",
+   "intermediates": []
+  },
+  {
+   "item": 74,
+   "xbox": "0x0008a550",
+   "ps2": "0x001bef90",
+   "name": "SetProcAnimParamList",
+   "verdict": "accept",
+   "why": "Identical body: store list ptr+count, null -> default table and count 1",
+   "intermediates": []
+  },
+  {
+   "item": 75,
+   "xbox": "0x000124f0",
+   "ps2": "0x0010b180",
+   "name": "ActActor::SetSuppressAnimationTranslation",
+   "verdict": "accept",
+   "why": "Stores flag at [this+4]+0x4c (PS2 +0x50), world pos from actor+0x170, gets origin, keeps y, sets origin; GetActorWorldPosition/GetAnimationOrigin inlined",
+   "intermediates": [
+    {
+     "xbox": "0x18780",
+     "ps2": "0x112ce8",
+     "name": "ActPoser::GetAnimationOrigin",
+     "why": "called on this->+4 in the GetAnimationOrigin slot; copies COORD3 from [+0x24]+0x30..0x38 as PS2 [+0x28]+0x30"
+    },
+    {
+     "xbox": "0x12220",
+     "ps2": "0x10adf8",
+     "name": "ActActor::SetAnimationOrigin",
+     "why": "scales xyz by member, calls poser setter, writes body +0x370/374/378 when flag set - identical to PS2"
+    },
+    {
+     "xbox": "0x18b30",
+     "ps2": "0x112d10",
+     "name": "ActPoser::SetAnimationOrigin",
+     "why": "called from ActActor::SetAnimationOrigin in the poser-setter slot; writes [+0x24]+0x30..0x38, mirror of the getter"
+    }
+   ]
+  },
+  {
+   "item": 76,
+   "xbox": "0x0013310e",
+   "ps2": "0x002bfb50",
+   "name": "floorf",
+   "verdict": "reject",
+   "why": "Xbox is MSVC CRT double floor (__ctrlfp/__sptype/__handle_qnan1), not newlib floorf",
+   "intermediates": []
+  },
+  {
+   "item": 77,
+   "xbox": "0x00084030",
+   "ps2": "0x001ba5c0",
+   "name": "RPlayerCamera::NextCameraMode",
+   "verdict": "accept",
+   "why": "Same cycle-to-next-enabled camera mode loop over mode table (stride 0x18 vs 0x1c), guard against current index, then SetCameraModeByIndex",
+   "intermediates": []
+  },
+  {
+   "item": 78,
+   "xbox": "0x000e8270",
+   "ps2": "0x00291178",
+   "name": "EAGL::RenderContextExtension::GetFrontBuffer",
+   "verdict": "reject",
+   "why": "Xbox builds a D3D texture header from the front surface (D3DSurface_GetDesc/XGSetTextureHeader); PS2 is a one-line getter; platform code, size 24x",
+   "intermediates": []
+  },
+  {
+   "item": 79,
+   "xbox": "0x00012610",
+   "ps2": "0x00107358",
+   "name": "AnimationController::~AnimationController",
+   "verdict": "accept",
+   "why": "Base dtor: only sets the AnimationController vtable (pure_virtual first); called by StandardAnimationController deleting dtor and a sibling deleting dtor; Xbox has no delete flag",
+   "intermediates": []
+  },
+  {
+   "item": 80,
+   "xbox": "0x000a0390",
+   "ps2": "0x001e3028",
+   "name": "vector<RLightning::Bolt_*,_allocator<RLightning::Bolt_*>_>::_M_insert_aux",
+   "verdict": "reject",
+   "why": "Xbox is vector::push_back (capacity check, construct, ++end, else grow via FUN_000a0020); PS2 _M_insert_aux is the grow path itself",
+   "intermediates": []
+  },
+  {
+   "item": 81,
+   "xbox": "0x00118f20",
+   "ps2": "0x001e82f8",
+   "name": "_Rb_tree<unsigned_int,_RParticleSystem_*>::find",
+   "verdict": "defer",
+   "why": "Body is map<uint,T*>::find, but the Xbox copy is COMDAT-folded and shared by DeletePhysicsObject/SetCollisionArticle maps; the RParticleSystem instantiation name would mislabel other callers",
+   "intermediates": []
+  },
+  {
+   "item": 82,
+   "xbox": "0x00145760",
+   "ps2": "0x00318840",
+   "name": "MIXI_reverbblock",
+   "verdict": "accept",
+   "why": "Same reverb comb loop: buffer ptrs from p[0]/p[1] into p[3], feedback p[4]/p[5], lowpass p[6..8], 1e-30 denormal bias",
+   "intermediates": []
+  },
+  {
+   "item": 83,
+   "xbox": "0x00071fb0",
+   "ps2": "0x0019a988",
+   "name": "RayShell::StoreTracer",
+   "verdict": "reject",
+   "why": "Xbox body is the static tracer store (64-entry global table, dist^2>4 check, 2*unit offset) = RayShell::StaticStoreTracer; the StoreTracer wrapper is inlined",
+   "intermediates": [
+    {
+     "xbox": "0x71fb0",
+     "ps2": "0x19a9b8",
+     "name": "RayShell::StaticStoreTracer",
+     "why": "same globals layout: <0x40 guard, start/end copy, sim time, type, two extra words, dist^2>4 then offset start by 2*unit dir"
+    }
+   ]
+  },
+  {
+   "item": 84,
+   "xbox": "0x00129470",
+   "ps2": "0x002f7078",
+   "name": "AGun::~AGun",
+   "verdict": "accept",
+   "why": "Frees +0xc object holding 3 AVoice::View (0x1c vs 0x20 each, 0x58 vs 0x64 total) then releases string members; called from ~ASentry and ~AVehicle on both",
+   "intermediates": []
+  },
+  {
+   "item": 85,
+   "xbox": "0x000c4d70",
+   "ps2": "0x002153b0",
+   "name": "WCollisionMgr::CheckHitWindow",
+   "verdict": "accept",
+   "why": "2 anchors 1:1; EHitWindow + OrthoInverse + vect3mult + operator_new shared, large collision routine of matching size",
+   "intermediates": []
+  },
+  {
+   "item": 86,
+   "xbox": "0x000347e0",
+   "ps2": "0x0013c4c8",
+   "name": "AIRoadSpawn::Get",
+   "verdict": "accept",
+   "why": "Returns global fgRoadSpawn, as the PS2 getter; 3 anchors 1:1",
+   "intermediates": []
+  },
+  {
+   "item": 87,
+   "xbox": "0x00096900",
+   "ps2": "0x001d4660",
+   "name": "RViewCamera::SetZBufferRange",
+   "verdict": "accept",
+   "why": "Stores zMin/zMax at +0x40/+0x44 then inlined UpdateForResolution (viewport from resolution * rect)",
+   "intermediates": []
+  },
+  {
+   "item": 88,
+   "xbox": "0x001356f2",
+   "ps2": "0x002aac00",
+   "name": "strtok_r",
+   "verdict": "reject",
+   "why": "Xbox is MSVC CRT _getptd (per-thread data alloc 0x84), not newlib strtok_r",
+   "intermediates": []
+  },
+  {
+   "item": 89,
+   "xbox": "0x0008ec20",
+   "ps2": "0x001cad58",
+   "name": "RSceneObj::LookupFXHandle",
+   "verdict": "accept",
+   "why": "Loops model FX nodes (count byte +0x1f), type 7 and id match, inlined strcmp on name at +0x18; +0x2c vs +0x28",
+   "intermediates": []
+  },
+  {
+   "item": 90,
+   "xbox": "0x00055a90",
+   "ps2": "0x0016e508",
+   "name": "AttributeSystem::RegisterExtensionType",
+   "verdict": "accept",
+   "why": "Takes id from counter at +8, builds entry and inserts into map, increments +8, returns id - PS2 same",
+   "intermediates": []
+  },
+  {
+   "item": 91,
+   "xbox": "0x00114fe0",
+   "ps2": "0x002d1b70",
+   "name": "Inverse",
+   "verdict": "accept",
+   "why": "Determinant check against +-1e-05 then cofactor inverse; callers ActActor::Draw/SetupFOVConversion match",
+   "intermediates": [
+    {
+     "xbox": "0x114f00",
+     "ps2": "0x2d1a50",
+     "name": "Determinant4x4",
+     "why": "only callee of Inverse on both sides; full 4x4 cofactor determinant"
+    }
+   ]
+  },
+  {
+   "item": 92,
+   "xbox": "0x0009f4c0",
+   "ps2": "0x001e1f50",
+   "name": "RLightning::RandomSyncWithSim",
+   "verdict": "reject",
+   "why": "Xbox body destroys a vector (clear + delete + zero) - not the seed-mixing RandomSyncWithSim",
+   "intermediates": []
+  },
+  {
+   "item": 93,
+   "xbox": "0x0004f230",
+   "ps2": "0x001654d8",
+   "name": "ActionQueue::ReceiveAction",
+   "verdict": "accept",
+   "why": "Pushes action into ring buffer at this+4 (index wrap, count cap) and returns 1; PS2 inlines the same push",
+   "intermediates": []
+  },
+  {
+   "item": 94,
+   "xbox": "0x0007ff60",
+   "ps2": "0x001b18a8",
+   "name": "RPathEngine::RPathHandle::GetOrientMat",
+   "verdict": "accept",
+   "why": "Copies 4x4 matrix from *this, zeroes translation and w column, [15]=1.0 exactly as PS2",
+   "intermediates": []
+  },
+  {
+   "item": 95,
+   "xbox": "0x000d5910",
+   "ps2": "0x002370e8",
+   "name": "GGallery::Get_InterpolatedKey",
+   "verdict": "accept",
+   "why": "Lerps 3 floats + int 4th between keys, copies remaining fields and short at +0x20 from the first key",
+   "intermediates": []
+  },
+  {
+   "item": 96,
+   "xbox": "0x00011780",
+   "ps2": "0x00109120",
+   "name": "ActActor::SetGlobalPoseOverrides",
+   "verdict": "accept",
+   "why": "Thunk: ECX=[[this+4]+0x48] jmp to array SetGlobalPoseOverrides (PS2 [[this+4]+0x4c]); 4 anchors",
+   "intermediates": [
+    {
+     "xbox": "0x15d00",
+     "ps2": "0x10f620",
+     "name": "ActGlobalPoseOverrideArray::SetGlobalPoseOverrides",
+     "why": "loops count at *this, per-bone setter with matrix ptr advancing by 0x40 - identical"
+    }
+   ]
+  },
+  {
+   "item": 97,
+   "xbox": "0x0003f370",
+   "ps2": "0x00149d30",
+   "name": "ECollision::ECollision",
+   "verdict": "accept",
+   "why": "Copies by-value event struct (0x54 bytes) into this+4 and sets the ECollision vtable (0x18c49c, also used by ~ECollision)",
+   "intermediates": []
+  },
+  {
+   "item": 98,
+   "xbox": "0x00031a50",
+   "ps2": "0x001387a0",
+   "name": "AIHelicopter::FireRockets",
+   "verdict": "accept",
+   "why": "GetPhysicsObject/GetHitPoints>0, +0x130 check, short countdown +0x112 (PS2 +0x120/+0x102), distance/direction then fire; 1:1",
+   "intermediates": []
+  },
+  {
+   "item": 99,
+   "xbox": "0x000570c0",
+   "ps2": "0x0016dd20",
+   "name": "AttributeSystem::CreateExtensionAttribute",
+   "verdict": "accept",
+   "why": "Find-or-insert extension type in map, lookup attribute by name, else alloc AttributeValue, init extension, insert, free temps; returns node+0x10 (PS2 +0x14)",
+   "intermediates": []
+  },
+  {
+   "item": 100,
+   "xbox": "0x0001c230",
+   "ps2": "0x00118988",
+   "name": "AICharacter::GetACharacter",
+   "verdict": "accept",
+   "why": "Lazy-creates ACharacter sound at +0xa4 (PS2 +0x94) via operator_new 'ACharacter' and AMix 'Characters'; 10 anchors",
+   "intermediates": []
+  },
+  {
+   "item": 101,
+   "xbox": "0x000f3790",
+   "ps2": "0x00292278",
+   "name": "EAGLInternal::TextureRenderContextPrivate::TextureRenderContextPrivate",
+   "verdict": "accept",
+   "why": "Second sub-object ctor in TextureRenderContext ctor (this+4, owner) after the extension ctor, as PS2 (this+8, owner); stores owner, zeroes members",
+   "intermediates": [
+    {
+     "xbox": "0xf3750",
+     "ps2": "0x292240",
+     "name": "EAGL::TextureRenderContextExtension::TextureRenderContextExtension",
+     "why": "first call in TextureRenderContext ctor with (this,this); body *this=owner as PS2"
+    }
+   ]
+  },
+  {
+   "item": 102,
+   "xbox": "0x00020e30",
+   "ps2": "0x0011aa30",
+   "name": "AICharacterEnemyDriver::GetRotPos",
+   "verdict": "accept",
+   "why": "Copies rigid body matrix then position from Sim.GetRigidBody(short id) with w=1.0; Xbox copy is ICF-folded with byte-identical AICharacterEnemyWindow::GetRotPos; Driver kept (2 anchors)",
+   "intermediates": []
+  },
+  {
+   "item": 103,
+   "xbox": "0x00020e30",
+   "ps2": "0x00122238",
+   "name": "AICharacterEnemyWindow::GetRotPos",
+   "verdict": "reject",
+   "why": "Same Xbox function as item 102 (folded duplicate); at most one name, Driver kept",
+   "intermediates": []
+  },
+  {
+   "item": 104,
+   "xbox": "0x0010ecd8",
+   "ps2": "0x002b6c50",
+   "name": "GetThreadId",
+   "verdict": "reject",
+   "why": "Xbox is the XAPI GetCurrentThreadId stub; PS2 is a kernel syscall - platform code",
+   "intermediates": []
+  },
+  {
+   "item": 105,
+   "xbox": "0x00014760",
+   "ps2": "0x0010d288",
+   "name": "ActCharacter::StartShadow",
+   "verdict": "accept",
+   "why": "Called right before Model::Draw in the shadow pass of ActCharacter::Draw on both sides; Xbox sets stencil state (PS2 empty stub)",
+   "intermediates": [
+    {
+     "xbox": "0x147d0",
+     "ps2": "0x10d290",
+     "name": "ActCharacter::EndShadow",
+     "why": "called right after the shadow Model::Draw on both sides; disables the stencil enabled by StartShadow"
+    }
+   ]
+  },
+  {
+   "item": 106,
+   "xbox": "0x00117d60",
+   "ps2": "0x002d4ce0",
+   "name": "UGroup::Deserialize",
+   "verdict": "accept",
+   "why": "Identical: if flag, ResolveOffsets; return this",
+   "intermediates": []
+  },
+  {
+   "item": 107,
+   "xbox": "0x00116090",
+   "ps2": "0x00129098",
+   "name": "AICharacterPedestrian::SetTarget",
+   "verdict": "reject",
+   "why": "Xbox body is 2D XZ distance returning float; PS2 SetTarget stores a COORD3 at +0x1a0",
+   "intermediates": []
+  },
+  {
+   "item": 108,
+   "xbox": "0x000f34b0",
+   "ps2": "0x00292418",
+   "name": "EAGL::TextureRenderContext::NewViewPort",
+   "verdict": "accept",
+   "why": "EAGLMalloc(0x1a0,'EAGL::Viewport new'), construct, link into list head (+0x28 / next +0x18c vs PS2 +0x44 / +0x194)",
+   "intermediates": []
+  },
+  {
+   "item": 109,
+   "xbox": "0x00023ce0",
+   "ps2": "0x001299d0",
+   "name": "AICharacterPedestrian::UpdateClosestPed",
+   "verdict": "accept",
+   "why": "Closest ped search: 9999.9 start, skips own index, same group or -1, copies previous position fields",
+   "intermediates": []
+  },
+  {
+   "item": 110,
+   "xbox": "0x000f36e0",
+   "ps2": "0x00291af0",
+   "name": "EAGL::TextureRenderContext::SetupFrameBuffers",
+   "verdict": "accept",
+   "why": "Same slot after NewTextureRenderContext in ROffscreenBuffer ctor and ShadowPrivateData ctor; (trc, colour, optional depth) fills format/size fields, returns 1; platform-specific body of the same EAGL method",
+   "intermediates": []
+  },
+  {
+   "item": 111,
+   "xbox": "0x000d5d20",
+   "ps2": "0x00236738",
+   "name": "GGallery::GGallery",
+   "verdict": "accept",
+   "why": "GHud ctor slot, shared strings, FILE_FullPathname/DataLocateTag/GetArray/Deserialize sequence and default colours",
+   "intermediates": []
+  },
+  {
+   "item": 112,
+   "xbox": "0x000c0890",
+   "ps2": "0x00219630",
+   "name": "WCollisionMgr::GetBarrierNormal",
+   "verdict": "accept",
+   "why": "1:1 in CheckHitWorld; OrthoInverse + vect3mult + segment intersect over barrier, returns bool and normal",
+   "intermediates": []
+  },
+  {
+   "item": 113,
+   "xbox": "0x00076c20",
+   "ps2": "0x001a1e88",
+   "name": "RAnimEngine::Handle::FindSystem",
+   "verdict": "reject",
+   "why": "Xbox body is the byte binary search (__lower_bound on unsigned char); FindSystem is inlined into all Handle callers",
+   "intermediates": [
+    {
+     "xbox": "0x76c20",
+     "ps2": "0x1a42c8",
+     "name": "__lower_bound<unsigned_char_*,_unsigned_char,_int>",
+     "why": "halving search on byte array returning first >= key; sole callee of FindSystem on PS2"
+    }
+   ]
+  },
+  {
+   "item": 114,
+   "xbox": "0x00133040",
+   "ps2": "0x002bf970",
+   "name": "ceilf",
+   "verdict": "reject",
+   "why": "Xbox is MSVC CRT double ceil (__ctrlfp/__sptype), not newlib ceilf",
+   "intermediates": []
+  },
+  {
+   "item": 115,
+   "xbox": "0x00035740",
+   "ps2": "0x0013dcc0",
+   "name": "AISplinePath::Reset",
+   "verdict": "accept",
+   "why": "Identical: +0x4c from path +0x40, RPathHandle Init with sim time, [+0x60]+0xd0 = path+0x44, GetApplyTransform into +0x70",
+   "intermediates": [
+    {
+     "xbox": "0x80130",
+     "ps2": "0x1b1258",
+     "name": "RPathEngine::RPathHandle::Init",
+     "why": "same field writes (+0x98/+0x9c from data+0xc, +0xac, +0xa4, bit-15 flag, linked handle +0xa0 with time delta, data+0x1c branch)"
+    },
+    {
+     "xbox": "0x1193c0",
+     "ps2": "0x2db690",
+     "name": "CARP::AISpline::GetApplyTransform",
+     "why": "+0x6c flag / +0x40 check then compute transform, else identity copy - as PS2"
+    }
+   ]
+  },
+  {
+   "item": 116,
+   "xbox": "0x00050db0",
+   "ps2": "0x00167b18",
+   "name": "DeviceScalar::isCenteredTransition",
+   "verdict": "accept",
+   "why": "Same predicate: *[+0x28] within +-v and *[+0x24] outside, returning bool",
+   "intermediates": []
+  },
+  {
+   "item": 117,
+   "xbox": "0x0007f870",
+   "ps2": "0x001b09c8",
+   "name": "ROffscreenBuffer::MakeTexCopy",
+   "verdict": "accept",
+   "why": "Draws sprite copy then N offset sprites from a +-1 table scaled by param with alpha 0xff/(i+2); Begin/End inlined",
+   "intermediates": []
+  },
+  {
+   "item": 118,
+   "xbox": "0x0012dc50",
+   "ps2": "0x002efc80",
+   "name": "ASmackable::Detatch",
+   "verdict": "accept",
+   "why": "Checks +0xd0 sound, loaded-mask test over 2 entries, sets flag +0xec else virtual delete",
+   "intermediates": []
+  },
+  {
+   "item": 119,
+   "xbox": "0x000ca100",
+   "ps2": "0x0013df50",
+   "name": "AIVehicle::~AIVehicle",
+   "verdict": "reject",
+   "why": "Xbox body deletes member +0x90 (0x70 bytes) = WRoadNav::~WRoadNav (0xc0 object), called before FastFree(0xc0) in ~AIHelicopter",
+   "intermediates": [
+    {
+     "xbox": "0xca100",
+     "ps2": "0x223380",
+     "name": "WRoadNav::~WRoadNav",
+     "why": "deletes spline at +0x90 as PS2; every caller then frees 0xc0 = PS2 WRoadNav size"
+    },
+    {
+     "xbox": "0x35b40",
+     "ps2": "0x13df50",
+     "name": "AIVehicle::~AIVehicle",
+     "why": "sets vtable, deletes spline path, zeroes two fields, deletes WRoadNav (0xc0) - same sequence as PS2; base dtor call at end of ~AIHelicopter"
+    }
+   ]
+  },
+  {
+   "item": 120,
+   "xbox": "0x000eedc0",
+   "ps2": "0x00237308",
+   "name": "GGallery::STATE_SetDefaultRenderState",
+   "verdict": "reject",
+   "why": "Xbox body is a one-byte GeoPrimState setter (+0x18) returning 1, not STATE_SetDefaultRenderState",
+   "intermediates": []
+  },
+  {
+   "item": 121,
+   "xbox": "0x000eedc0",
+   "ps2": "0x002a8038",
+   "name": "memset",
+   "verdict": "reject",
+   "why": "Xbox one-byte setter is not memset",
+   "intermediates": []
+  },
+  {
+   "item": 122,
+   "xbox": "0x0014e090",
+   "ps2": "0x00302820",
+   "name": "RCMP::DECODER::DECODER",
+   "verdict": "accept",
+   "why": "Sets DECODER vtable, copies 16-byte codec descriptor, zeroes decoder ptr and state (vtable moved to front: PS2 +0x14 -> Xbox +0x18); object size 0x1c on both",
+   "intermediates": []
+  },
+  {
+   "item": 123,
+   "xbox": "0x000be540",
+   "ps2": "0x002117e8",
+   "name": "WCollider::WCollider",
+   "verdict": "accept",
+   "why": "Initialises three COORD3 from the zero vector with w=0, zero fields, bool param at +0x61; 2 anchors 1:1",
+   "intermediates": []
+  },
+  {
+   "item": 124,
+   "xbox": "0x000fbd10",
+   "ps2": "0x00298478",
+   "name": "EAGL::VU0_fastqslerp",
+   "verdict": "accept",
+   "why": "Fast quaternion lerp choosing sign by hemisphere then normalise; separate EAGL copy (global VU0_fastqslerp already at 0x116630), called by EAGLAnim only",
+   "intermediates": []
+  },
+  {
+   "item": 125,
+   "xbox": "0x000b87f0",
+   "ps2": "0x002088b8",
+   "name": "SMissionManager::PassObjective",
+   "verdict": "accept",
+   "why": "Inlined GetObjectiveByID list walk, sets status 2, adds points into glbMissionManager+0x768 (inlined AddScore)",
+   "intermediates": []
+  },
+  {
+   "item": 126,
+   "xbox": "0x000bf210",
+   "ps2": "0x001ca8e0",
+   "name": "RSceneObj::AdjustEffectPosition",
+   "verdict": "reject",
+   "why": "Xbox body is GetWorldHeightAtPoint (WWorldPos/FindClosestFace/GetPlaneY); AdjustEffectPosition is inlined",
+   "intermediates": []
+  },
+  {
+   "item": 127,
+   "xbox": "0x000bf210",
+   "ps2": "0x002151b8",
+   "name": "WCollisionMgr::GetWorldHeightAtPoint",
+   "verdict": "accept",
+   "why": "WWorldPos + FindClosestFace, GetPlaneY into out param, return found; PS2 callers via inlined AdjustEffectPosition/SetStartConditions",
+   "intermediates": []
+  },
+  {
+   "item": 128,
+   "xbox": "0x00098210",
+   "ps2": "0x001c2898",
+   "name": "RReflection::GetReflectionMapWarpageData",
+   "verdict": "accept",
+   "why": "String-keyed slot 'GAME::FishEyeParams' in RegisterSymbols on both; Xbox returns reflection data +0x270 (PS2 stub returns 0)",
+   "intermediates": [
+    {
+     "xbox": "0x98470",
+     "ps2": "0x1c28a0",
+     "name": "RReflection::GetReflectionCarPos",
+     "why": "'GAME::ReflectionCarPos' slot in RegisterSymbols on both"
+    },
+    {
+     "xbox": "0x98480",
+     "ps2": "0x1c1ac8",
+     "name": "RReflection::TextureWeaponEnvMap",
+     "why": "'GAME::WeaponReflectionMap' slot on both"
+    },
+    {
+     "xbox": "0x98490",
+     "ps2": "0x1c1ad8",
+     "name": "RReflection::TextureSpecular",
+     "why": "'GAME::ReflectionMap1' and 'GAME::SpecularMap' slots on both"
+    }
+   ]
+  },
+  {
+   "item": 129,
+   "xbox": "0x000bce90",
+   "ps2": "0x00210540",
+   "name": "Util_GenerateMatrix",
+   "verdict": "accept",
+   "why": "Normalise dir, cross with up (0,1,0), normalise, second cross, write rows and identity translation; 3 anchors 1:1",
+   "intermediates": []
+  },
+  {
+   "item": 130,
+   "xbox": "0x00036990",
+   "ps2": "0x0013f1c8",
+   "name": "AIVehicleController::RegisterSimCarList",
+   "verdict": "accept",
+   "why": "Iterates player physics object list and registers each by type (RegisterSimCar inlined as switch on virtual type)",
+   "intermediates": []
+  },
+  {
+   "item": 131,
+   "xbox": "0x0005ca40",
+   "ps2": "0x0017b900",
+   "name": "Float_COORD4toCOORD3",
+   "verdict": "accept",
+   "why": "Copies three floats src->dst; 2 anchors 1:1 and the GetDirectLaneWeights caller path agrees",
+   "intermediates": []
+  },
+  {
+   "item": 132,
+   "xbox": "0x000baad0",
+   "ps2": "0x0020d598",
+   "name": "SWeaponManager::GetPreviousSecondaryType",
+   "verdict": "accept",
+   "why": "Sorts if count +0x178==0, finds current in list +0xf8 (PS2 +0x188/+0x108), returns previous with modulo wrap",
+   "intermediates": []
+  },
+  {
+   "item": 133,
+   "xbox": "0x0007e620",
+   "ps2": "0x001afa88",
+   "name": "RHighLevelLightManager::AddExplosion",
+   "verdict": "accept",
+   "why": "Same size buckets 800/400/200/100 -> 4..0 then light slot search",
+   "intermediates": []
+  },
+  {
+   "item": 134,
+   "xbox": "0x0014c750",
+   "ps2": "0x00301338",
+   "name": "RCMP::AV_PLAYER::GetFrame",
+   "verdict": "accept",
+   "why": "Stores time +0x48, float->uint, decoder(+0x64) GetFrame, stores current frame number +0x44",
+   "intermediates": [
+    {
+     "xbox": "0x14dfc0",
+     "ps2": "0x3029f0",
+     "name": "RCMP::DECODER::GetFrame",
+     "why": "ECX=[this+0x64] in GetFrame slot; lazy codec open via callback then vcall - as PS2"
+    },
+    {
+     "xbox": "0x14df90",
+     "ps2": "0x302970",
+     "name": "RCMP::DECODER::GetCurrentFrameNumber",
+     "why": "next call on same decoder; null check on codec (+0x18 vs +0x14) then vcall"
+    }
+   ]
+  },
+  {
+   "item": 135,
+   "xbox": "0x000cc100",
+   "ps2": "0x00225c48",
+   "name": "WRoadNav::InitAtPoint",
+   "verdict": "accept",
+   "why": "FindClosestSegmentInd, GetPointOnSegment, left/right drivable dist, GetLinePointIntersect shared; 4 anchors",
+   "intermediates": []
+  },
+  {
+   "item": 136,
+   "xbox": "0x00036b20",
+   "ps2": "0x00140218",
+   "name": "AIZoneController::InZone",
+   "verdict": "accept",
+   "why": "Zone table stride 0x1c, active byte, distance^2 minus radius vs per-type threshold",
+   "intermediates": []
+  },
+  {
+   "item": 137,
+   "xbox": "0x001331dc",
+   "ps2": "0x00174bd8",
+   "name": "Bond_SetExitToFrontEnd",
+   "verdict": "reject",
+   "why": "Xbox body is MSVC CRT internal (reached from sscanf), not the two-global setter",
+   "intermediates": []
+  },
+  {
+   "item": 138,
+   "xbox": "0x000984b0",
+   "ps2": "0x001c28a8",
+   "name": "RReflection::GetReflectionMatrix",
+   "verdict": "accept",
+   "why": "String-keyed slot 'GAME::ReflMatrix' in RegisterSymbols on both; Xbox returns reflection data +0x140 (PS2 stub returns 0)",
+   "intermediates": []
+  },
+  {
+   "item": 139,
+   "xbox": "0x0011c210",
+   "ps2": "0x002cb860",
+   "name": "UVolatileMaterial::UVolatileMaterial",
+   "verdict": "accept",
+   "why": "GeoPrimState ctor, transparency/state setters, zero 4 dwords (+0x50.. vs +0x80..); 1:1 in RLightning ctor",
+   "intermediates": []
+  },
+  {
+   "item": 140,
+   "xbox": "0x0010cbf0",
+   "ps2": "0x002536a0",
+   "name": "iFILE_ExecCommand",
+   "verdict": "reject",
+   "why": "Xbox body allocates/initialises a FILESYS operation record (size ratio 0.24); not the command executor with strcmp/BIG_locateentryz",
+   "intermediates": []
+  },
+  {
+   "item": 141,
+   "xbox": "0x0012f9e0",
+   "ps2": "0x002fabe8",
+   "name": "AEngine::RemoveAll",
+   "verdict": "accept",
+   "why": "Loops while engine list non-empty, removes head element (+0x90 vs +0x94) and deletes it; Remove inlined",
+   "intermediates": []
+  },
+  {
+   "item": 142,
+   "xbox": "0x000f5b60",
+   "ps2": "0x0029cdd0",
+   "name": "EAGL::DrawTextured::~DrawTextured",
+   "verdict": "accept",
+   "why": "Destructor of the DrawTextured local in PlayMPC::Play (also in its unwind funclet): frees vertex/pixel shaders made by Init, then ~GeoPrimState",
+   "intermediates": [
+    {
+     "xbox": "0xf5a10",
+     "ps2": "0x29ccd8",
+     "name": "EAGL::DrawTextured::DrawTextured",
+     "why": "constructs the same local in PlayMPC::Play before Init; GeoPrimState ctor"
+    },
+    {
+     "xbox": "0xf5a30",
+     "ps2": "0x29ae48",
+     "name": "EAGL::DrawTextured::Init",
+     "why": "called right after the ctor on the local; sets prim states, allocates shaders"
+    }
+   ]
+  },
+  {
+   "item": 143,
+   "xbox": "0x00096060",
+   "ps2": "0x001d2cb0",
+   "name": "RVehicle::ComputeWheels",
+   "verdict": "accept",
+   "why": "Same offsets +0x328/+0x32c/+0x338, clamps 0.075/0.1, factors 0.07/0.15, per-wheel setyrot",
+   "intermediates": []
+  }
+ ]
+}

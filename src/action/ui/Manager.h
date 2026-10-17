@@ -6,6 +6,7 @@
 int Manager_SendMessage(M_MANAGER *param_1, MessageType msgType, int param_3, int param_4);
 
 
+// XBE_GLOBAL(0x0025f1d0, 0x938)
 #define manager ((M_MANAGER *)0x0025f1d0)
 
 #endif // MANAGER_H_

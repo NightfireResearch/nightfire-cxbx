@@ -1,0 +1,298 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000b25e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Simulation::PauseSimState(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000b2600",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Simulation::UnPauseSimState(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000b2620",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Simulation::AdvanceStep(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000b2630",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "PhysicsObject *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "Simulation::AssignRigidBodySlot(PhysicsObject *, bool)",
+   "return": "int"
+  },
+  {
+   "address": "0x000b2700",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "Simulation::GetRigidBody(int)",
+   "return": "RigidBody *"
+  },
+  {
+   "address": "0x000b2730",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "Simulation::GetSimpleRigidBody(int)",
+   "return": "SimpleRigidBody *"
+  },
+  {
+   "address": "0x000b2760",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "Simulation::GetRigidBodyInfo(int)",
+   "return": "void *"
+  },
+  {
+   "address": "0x000b2780",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "Simulation::FindSignature(SimObjSig, bool &)"
+  },
+  {
+   "address": "0x000b27d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "Simulation::FindPhysicsObjectSignature(SimObjSig)",
+   "return": "PhysicsObject *"
+  },
+  {
+   "address": "0x000b2820",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "Simulation::GetScratchPadFreeZone(void)"
+  },
+  {
+   "address": "0x000b2830",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Simulation::DetectCollisionsSRB(void)"
+  },
+  {
+   "address": "0x000b28d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "Simulation::GetOrderedBody(int)"
+  },
+  {
+   "address": "0x000b2900",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Simulation::GetTrackedInstanceList(void)"
+  },
+  {
+   "address": "0x000b2980",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "Simulation::ReleaseRigidBodySlot(int, bool)"
+  },
+  {
+   "address": "0x000b2b50",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "Simulation::SetStartConditions(COORD4 &, COORD4 &)"
+  },
+  {
+   "address": "0x000b2c10",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Simulation::DetonateRemoteMines(void)"
+  },
+  {
+   "address": "0x000b2c40",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "Simulation::CanSpawnRigidBody(COORD3 &, bool)",
+   "return": "bool"
+  },
+  {
+   "address": "0x000b2d30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Simulation::GetPlayerObject(void)",
+   "return": "PhysicsObject *"
+  },
+  {
+   "address": "0x000b3000",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "CARP::Instance *"
+    }
+   ],
+   "sheet": "Simulation::UntrackInstance(CARP::Instance *)"
+  },
+  {
+   "address": "0x000b30c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Simulation::UntrackAllInstances(void)"
+  },
+  {
+   "address": "0x000b3fc0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Simulation::DeleteDeadObjects(void)"
+  },
+  {
+   "address": "0x000b4250",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "PhysicsObject *"
+    }
+   ],
+   "sheet": "Simulation::DeletePhysicsObject(PhysicsObject *)"
+  },
+  {
+   "address": "0x000b4750",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Simulation::CleanUpObjects(void)"
+  },
+  {
+   "address": "0x000b47a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "Simulation::CanSpawnSimpleRigidBody(COORD3 &, bool)",
+   "return": "bool"
+  },
+  {
+   "address": "0x000b4870",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Simulation::UpdateTrackedInstanceVisibility(void)"
+  },
+  {
+   "address": "0x000b49f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Simulation::Reset(void)"
+  },
+  {
+   "address": "0x000b4a60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Simulation::SimulateGame(void)"
+  },
+  {
+   "address": "0x000b4e10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "PhysicsObject *"
+    }
+   ],
+   "sheet": "Simulation::SpawnPhysicsObject(PhysicsObject *)"
+  },
+  {
+   "address": "0x000b4fe0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Simulation::Simulation(void)",
+   "return": "Simulation *"
+  },
+  {
+   "address": "0x000b5310",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Simulation::~Simulation(void)"
+  },
+  {
+   "address": "0x000b5b80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Simulation::SpawnGrenadeObject(WeaponType, COORD3 &, COORD3 &,"
+  }
+ ]
+}

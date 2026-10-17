@@ -1,0 +1,1210 @@
+{
+ "verdicts": [
+  {
+   "item": "window 27",
+   "xbox": "0xf2f20",
+   "ps2": "0x294050",
+   "name": "EAGL::Transform::Inverse",
+   "verdict": "accept",
+   "why": "sheet row 6069 Inverse(void) (PS2 FUN_00294050, between Inverse const 0x294030 and Transpose): copies self to temp, calls Invert(temp,this); Xbox same, callee f2330=Invert",
+   "intermediates": []
+  },
+  {
+   "item": "window 27",
+   "xbox": "0xf2f50",
+   "ps2": "0x294188",
+   "name": "EAGL::Transform::ElementMinor",
+   "verdict": "accept",
+   "why": "copy minor skipping row/col, sign by (row+col) parity, times Determinant(minor,n-1) (Xbox f2790 = Determinant)",
+   "intermediates": []
+  },
+  {
+   "item": "window 27",
+   "xbox": "0xf2ff0",
+   "ps2": "0x2944e0",
+   "name": "EAGL::Transform::AppendRotate",
+   "verdict": "accept",
+   "why": "BuildRotate(f32e0)(4 floats) into temp then this*temp (post-multiply) = PS2 AppendRotate; Prepend twin at f3040",
+   "intermediates": []
+  },
+  {
+   "item": "window 27",
+   "xbox": "0xf3040",
+   "ps2": "0x2949a0",
+   "name": "EAGL::Transform::PrependRotate",
+   "verdict": "accept",
+   "why": "BuildRotate(f32e0) into temp then temp*this (pre-multiply) = PS2 PrependRotate/PreMult",
+   "intermediates": []
+  },
+  {
+   "item": "window 27",
+   "xbox": "0xf3090",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "quat->MATRIX3 helper, inlined on PS2 (no named counterpart)",
+   "intermediates": []
+  },
+  {
+   "item": "window 27",
+   "xbox": "0xf3160",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "BuildQuatTrans helper, no named PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 27",
+   "xbox": "0xf32e0",
+   "ps2": "0x295410",
+   "name": "EAGL::Transform::BuildRotate",
+   "verdict": "accept",
+   "why": "angle*0.017453294, identity on zero angle, normalised axis, sin/cos axis-angle matrix; identical to PS2 BuildRotate; callers Append/PrependRotate",
+   "intermediates": []
+  },
+  {
+   "item": "window 28",
+   "xbox": "0xc45d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree/list helpers (FastAlloc/FastFree, recursive erase)",
+   "intermediates": []
+  },
+  {
+   "item": "window 28",
+   "xbox": "0xc4610",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree/list helpers (FastAlloc/FastFree, recursive erase)",
+   "intermediates": []
+  },
+  {
+   "item": "window 28",
+   "xbox": "0xc4650",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree/list helpers (FastAlloc/FastFree, recursive erase)",
+   "intermediates": []
+  },
+  {
+   "item": "window 28",
+   "xbox": "0xc4690",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree/list helpers (FastAlloc/FastFree, recursive erase)",
+   "intermediates": []
+  },
+  {
+   "item": "window 28",
+   "xbox": "0xc46d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree/list helpers (FastAlloc/FastFree, recursive erase)",
+   "intermediates": []
+  },
+  {
+   "item": "window 28",
+   "xbox": "0xc46f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree/list helpers (FastAlloc/FastFree, recursive erase)",
+   "intermediates": []
+  },
+  {
+   "item": "window 28",
+   "xbox": "0xc4c60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree/list helpers (FastAlloc/FastFree, recursive erase)",
+   "intermediates": []
+  },
+  {
+   "item": "window 28",
+   "xbox": "0xc4d20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree/list helpers (FastAlloc/FastFree, recursive erase)",
+   "intermediates": []
+  },
+  {
+   "item": "window 29",
+   "xbox": "0xeecf0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only GeoPrimState setters/getters (fields +0x14..+0x28, D3D blend constants) / return-0 stubs; no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 29",
+   "xbox": "0xeedc0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only GeoPrimState setters/getters (fields +0x14..+0x28, D3D blend constants) / return-0 stubs; no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 29",
+   "xbox": "0xeedd0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only GeoPrimState setters/getters (fields +0x14..+0x28, D3D blend constants) / return-0 stubs; no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 29",
+   "xbox": "0xeede0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only GeoPrimState setters/getters (fields +0x14..+0x28, D3D blend constants) / return-0 stubs; no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 29",
+   "xbox": "0xeee20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only GeoPrimState setters/getters (fields +0x14..+0x28, D3D blend constants) / return-0 stubs; no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 29",
+   "xbox": "0xeee40",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only GeoPrimState setters/getters (fields +0x14..+0x28, D3D blend constants) / return-0 stubs; no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 29",
+   "xbox": "0xeee60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only GeoPrimState setters/getters (fields +0x14..+0x28, D3D blend constants) / return-0 stubs; no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 29",
+   "xbox": "0xeee80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only GeoPrimState setters/getters (fields +0x14..+0x28, D3D blend constants) / return-0 stubs; no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 30",
+   "xbox": "0x118170",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "uncalled TagReference users / tiny accessor; no PS2 candidate in window (P list is Rb_tree/lower_bound)",
+   "intermediates": []
+  },
+  {
+   "item": "window 30",
+   "xbox": "0x118180",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "uncalled TagReference users / tiny accessor; no PS2 candidate in window (P list is Rb_tree/lower_bound)",
+   "intermediates": []
+  },
+  {
+   "item": "window 30",
+   "xbox": "0x118220",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "uncalled TagReference users / tiny accessor; no PS2 candidate in window (P list is Rb_tree/lower_bound)",
+   "intermediates": []
+  },
+  {
+   "item": "window 30",
+   "xbox": "0x118320",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "uncalled TagReference users / tiny accessor; no PS2 candidate in window (P list is Rb_tree/lower_bound)",
+   "intermediates": []
+  },
+  {
+   "item": "window 30",
+   "xbox": "0x1183a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "uncalled TagReference users / tiny accessor; no PS2 candidate in window (P list is Rb_tree/lower_bound)",
+   "intermediates": []
+  },
+  {
+   "item": "window 30",
+   "xbox": "0x118420",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "uncalled TagReference users / tiny accessor; no PS2 candidate in window (P list is Rb_tree/lower_bound)",
+   "intermediates": []
+  },
+  {
+   "item": "window 30",
+   "xbox": "0x1186d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "uncalled TagReference users / tiny accessor; no PS2 candidate in window (P list is Rb_tree/lower_bound)",
+   "intermediates": []
+  },
+  {
+   "item": "window 30",
+   "xbox": "0x118750",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "uncalled TagReference users / tiny accessor; no PS2 candidate in window (P list is Rb_tree/lower_bound)",
+   "intermediates": []
+  },
+  {
+   "item": "window 31",
+   "xbox": "0x7c160",
+   "ps2": "0x1aa6a8",
+   "name": "RDirectorQueueData::RDirectorQueueData",
+   "verdict": "accept",
+   "why": "ctor(ushort x4, int x3): same field stores (+0x10..+0x16 shorts, +0x18/+0x20/+0x24, +0xc=1.0f, rest 0); same callers SetCameraModeByIndex/SetMissileCamera/TriggerCarAnimationCamera",
+   "intermediates": []
+  },
+  {
+   "item": "window 31",
+   "xbox": "0x7c1c0",
+   "ps2": "0x1aa6e8",
+   "name": "RDirectorQueueData::RDirectorQueueData",
+   "verdict": "accept",
+   "why": "copy ctor overload, sheet row 3033 (PS2 FUN_001aa6e8 right after the ctor): copies same fields; called from AppendData list-node alloc",
+   "intermediates": []
+  },
+  {
+   "item": "window 31",
+   "xbox": "0x7c220",
+   "ps2": "0x1aa758",
+   "name": "RDirectorQueueData::~RDirectorQueueData",
+   "verdict": "accept",
+   "why": "dtor without delete flag: zeroes same fields, +0xc=1.0f, as PS2 dtor minus __builtin_delete; same callers",
+   "intermediates": []
+  },
+  {
+   "item": "window 31",
+   "xbox": "0x7c250",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list<RDirectorQueueData> node helpers",
+   "intermediates": []
+  },
+  {
+   "item": "window 31",
+   "xbox": "0x7c280",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list<RDirectorQueueData> node helpers",
+   "intermediates": []
+  },
+  {
+   "item": "window 31",
+   "xbox": "0x7c2c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list<RDirectorQueueData> node helpers",
+   "intermediates": []
+  },
+  {
+   "item": "window 31",
+   "xbox": "0x7c2e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list<RDirectorQueueData> node helpers",
+   "intermediates": []
+  },
+  {
+   "item": "window 31",
+   "xbox": "0x7c340",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list<RDirectorQueueData> node helpers",
+   "intermediates": []
+  },
+  {
+   "item": "window 32",
+   "xbox": "0x118dd0",
+   "ps2": "0x2dafe0",
+   "name": "CARP::PathInfo::ComputeLinear",
+   "verdict": "accept",
+   "why": "flag ? VU0_fastqslerp : lerp of COORD4; called only by EvaluateLinear(1190e0)",
+   "intermediates": []
+  },
+  {
+   "item": "window 32",
+   "xbox": "0x118e30",
+   "ps2": "0x2db028",
+   "name": "CARP::PathInfo::ScaleToUnitTime",
+   "verdict": "accept",
+   "why": "flag&8 ? floor(t) : (t-k[i])/(k[j]-k[i]) (ComputeUnitTime inlined); called by EvaluateLinear/Spline",
+   "intermediates": []
+  },
+  {
+   "item": "window 32",
+   "xbox": "0x118e90",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "recursive STL erase with FastFree",
+   "intermediates": []
+  },
+  {
+   "item": "window 32",
+   "xbox": "0x118ed0",
+   "ps2": "0x2dbfa0",
+   "name": "__lower_bound<float_*,_float,_int>",
+   "verdict": "accept",
+   "why": "binary lower_bound over float array; called by GetKnotIndex (Xbox 119010, same as PS2)",
+   "intermediates": []
+  },
+  {
+   "item": "window 32",
+   "xbox": "0x118f20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "generic lookup helpers with many unrelated callers; no PS2 candidate",
+   "intermediates": []
+  },
+  {
+   "item": "window 32",
+   "xbox": "0x118f90",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "generic lookup helpers with many unrelated callers; no PS2 candidate",
+   "intermediates": []
+  },
+  {
+   "item": "window 32",
+   "xbox": "0x1190e0",
+   "ps2": "0x2db080",
+   "name": "CARP::PathInfo::EvaluateLinear",
+   "verdict": "accept",
+   "why": "GetKnotIndex, next knot clamp, ScaleToUnitTime, flag&4 scalar lerp into 4 lanes else ComputeLinear(flag>>1&1); called by EvaluateMatrix",
+   "intermediates": []
+  },
+  {
+   "item": "window 32",
+   "xbox": "0x119190",
+   "ps2": "0x2db188",
+   "name": "CARP::PathInfo::EvaluateSpline",
+   "verdict": "accept",
+   "why": "GetKnotIndex, ScaleToUnitTime, knot*0x30 stride, t,t^2,t^3,1 basis times matrix; called by EvaluateMatrix alongside EvaluateLinear",
+   "intermediates": []
+  },
+  {
+   "item": "window 33",
+   "xbox": "0x93180",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree helpers (StateRef/texture maps)",
+   "intermediates": []
+  },
+  {
+   "item": "window 33",
+   "xbox": "0x931a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree helpers (StateRef/texture maps)",
+   "intermediates": []
+  },
+  {
+   "item": "window 33",
+   "xbox": "0x931c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree helpers (StateRef/texture maps)",
+   "intermediates": []
+  },
+  {
+   "item": "window 33",
+   "xbox": "0x93200",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree helpers (StateRef/texture maps)",
+   "intermediates": []
+  },
+  {
+   "item": "window 33",
+   "xbox": "0x93260",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree helpers (StateRef/texture maps)",
+   "intermediates": []
+  },
+  {
+   "item": "window 33",
+   "xbox": "0x932b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree helpers (StateRef/texture maps)",
+   "intermediates": []
+  },
+  {
+   "item": "window 33",
+   "xbox": "0x93310",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree helpers (StateRef/texture maps)",
+   "intermediates": []
+  },
+  {
+   "item": "window 33",
+   "xbox": "0x93350",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree helpers (StateRef/texture maps)",
+   "intermediates": []
+  },
+  {
+   "item": "window 34",
+   "xbox": "0xc0b60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "barrier normal helper; not ClosestCollisionInfo (body differs), no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 34",
+   "xbox": "0xc0c20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree/list/vector helpers",
+   "intermediates": []
+  },
+  {
+   "item": "window 34",
+   "xbox": "0xc0c60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree/list/vector helpers",
+   "intermediates": []
+  },
+  {
+   "item": "window 34",
+   "xbox": "0xc0cb0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree/list/vector helpers",
+   "intermediates": []
+  },
+  {
+   "item": "window 34",
+   "xbox": "0xc0cf0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree/list/vector helpers",
+   "intermediates": []
+  },
+  {
+   "item": "window 34",
+   "xbox": "0xc0d30",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree/list/vector helpers",
+   "intermediates": []
+  },
+  {
+   "item": "window 34",
+   "xbox": "0xc0d60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree/list/vector helpers",
+   "intermediates": []
+  },
+  {
+   "item": "window 34",
+   "xbox": "0xc0da0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree/list/vector helpers",
+   "intermediates": []
+  },
+  {
+   "item": "window 34",
+   "xbox": "0xc0dd0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL tree/list/vector helpers",
+   "intermediates": []
+  },
+  {
+   "item": "window 35",
+   "xbox": "0x1465a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "sound filter internals; PS2 counterparts unnamed statics / not in P list",
+   "intermediates": []
+  },
+  {
+   "item": "window 35",
+   "xbox": "0x1465c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "sound filter internals; PS2 counterparts unnamed statics / not in P list",
+   "intermediates": []
+  },
+  {
+   "item": "window 35",
+   "xbox": "0x146640",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "sound filter internals; PS2 counterparts unnamed statics / not in P list",
+   "intermediates": []
+  },
+  {
+   "item": "window 35",
+   "xbox": "0x1466c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "sound filter internals; PS2 counterparts unnamed statics / not in P list",
+   "intermediates": []
+  },
+  {
+   "item": "window 35",
+   "xbox": "0x1466e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "sound filter internals; PS2 counterparts unnamed statics / not in P list",
+   "intermediates": []
+  },
+  {
+   "item": "window 35",
+   "xbox": "0x146930",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "sound filter internals; PS2 counterparts unnamed statics / not in P list",
+   "intermediates": []
+  },
+  {
+   "item": "window 35",
+   "xbox": "0x146bb0",
+   "ps2": "0x315180",
+   "name": "readsamples",
+   "verdict": "accept",
+   "why": "param==0 path writes 0xc0000000/0x40000000/0 from 2-bit/1-bit codes stepping 2 to 0x6c, else table-driven codes with unary runs and zero runs (discardbits inlined); called by decodemut as on PS2",
+   "intermediates": []
+  },
+  {
+   "item": "window 35",
+   "xbox": "0x146e00",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "decodemut synthesis helpers; PS2 counterparts unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "window 35",
+   "xbox": "0x146f00",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "decodemut synthesis helpers; PS2 counterparts unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "window 36",
+   "xbox": "0x1321ed",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT/EH internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 36",
+   "xbox": "0x1325ad",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT/EH internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 36",
+   "xbox": "0x1325f7",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT/EH internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 36",
+   "xbox": "0x13263c",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT/EH internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 36",
+   "xbox": "0x1326ae",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT/EH internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 36",
+   "xbox": "0x1326ea",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT/EH internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 36",
+   "xbox": "0x132706",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT/EH internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 36",
+   "xbox": "0x132722",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT/EH internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 36",
+   "xbox": "0x13274b",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT/EH internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 37",
+   "xbox": "0xf2270",
+   "ps2": "0x294098",
+   "name": "EAGL::Transform::Transpose",
+   "verdict": "accept",
+   "why": "sheet row 6070 Transpose(void) (PS2 0x294098, not a Ghidra function; raw code swaps 4/0x10, 8/0x20, 0xc/0x30, 0x18/0x24, 0x1c/0x34, 0x2c/0x38 in place) - identical pair set on Xbox",
+   "intermediates": []
+  },
+  {
+   "item": "window 37",
+   "xbox": "0xf2330",
+   "ps2": "0x292f68",
+   "name": "EAGL::Transform::Invert",
+   "verdict": "accept",
+   "why": "Invert(src,dst): det, return if |det|<1e-5, else dst=adj/det; only caller is Inverse(void) wrapper as on PS2. Xbox uses unrolled cofactors vs PS2 minor loop",
+   "intermediates": []
+  },
+  {
+   "item": "window 37",
+   "xbox": "0xf2790",
+   "ps2": "0x294240",
+   "name": "EAGL::Transform::Determinant",
+   "verdict": "accept",
+   "why": "sheet row 6073 Determinant(Transform&,int) (PS2 FUN_00294240, after ElementMinor): recursive cofactor expansion along row 0; Xbox adds n==4/n==3 fast paths; callers ElementMinor/Invert",
+   "intermediates": []
+  },
+  {
+   "item": "window 37",
+   "xbox": "0xf2960",
+   "ps2": "0x294480",
+   "name": "EAGL::Transform::AppendScale",
+   "verdict": "accept",
+   "why": "diag(sx,sy,sz,sw) temp, mult(out,this,tmp) post-multiply; mirrors named PrependScale",
+   "intermediates": []
+  },
+  {
+   "item": "window 37",
+   "xbox": "0xf2a20",
+   "ps2": "0x294518",
+   "name": "EAGL::Transform::AppendTranslate",
+   "verdict": "accept",
+   "why": "identity with translation row (w=1), post-multiply; mirrors named PrependTranslate",
+   "intermediates": []
+  },
+  {
+   "item": "window 37",
+   "xbox": "0xf2ae0",
+   "ps2": "0x294580",
+   "name": "EAGL::Transform::AppendRotTrans",
+   "verdict": "accept",
+   "why": "BuildRotTrans(MATRIX3,COORD4) (f1660, w copied) then post-multiply = (MATRIX3*,COORD4*) overload",
+   "intermediates": []
+  },
+  {
+   "item": "window 37",
+   "xbox": "0xf2b30",
+   "ps2": "0x294620",
+   "name": "EAGL::Transform::AppendRotTrans",
+   "verdict": "accept",
+   "why": "BuildRotTrans(MATRIX3,COORD3) (f16d0, w=1.0) then post-multiply = (MATRIX3*,COORD3*) overload",
+   "intermediates": []
+  },
+  {
+   "item": "window 37",
+   "xbox": "0xf2b80",
+   "ps2": "0x2946c0",
+   "name": "EAGL::Transform::AppendMatrix",
+   "verdict": "accept",
+   "why": "copy matrix, post-multiply; caller ViewPort::BeginView as on PS2",
+   "intermediates": []
+  },
+  {
+   "item": "window 37",
+   "xbox": "0xf2bd0",
+   "ps2": "0x2946e0",
+   "name": "EAGL::Transform::AppendQuatTrans",
+   "verdict": "accept",
+   "why": "quat->MATRIX3 (f3090) + BuildRotTrans then post-multiply = PS2 AppendQuatTrans (inlined quat)",
+   "intermediates": []
+  },
+  {
+   "item": "window 38",
+   "xbox": "0x161a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "ActIK math helpers; no PS2 candidate in window",
+   "intermediates": []
+  },
+  {
+   "item": "window 38",
+   "xbox": "0x16250",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "ActIK math helpers; no PS2 candidate in window",
+   "intermediates": []
+  },
+  {
+   "item": "window 38",
+   "xbox": "0x162e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "ActIK math helpers; no PS2 candidate in window",
+   "intermediates": []
+  },
+  {
+   "item": "window 38",
+   "xbox": "0x163e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "ActIK math helpers; no PS2 candidate in window",
+   "intermediates": []
+  },
+  {
+   "item": "window 38",
+   "xbox": "0x16530",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "ActIK math helpers; no PS2 candidate in window",
+   "intermediates": []
+  },
+  {
+   "item": "window 38",
+   "xbox": "0x16590",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "ActIK math helpers; no PS2 candidate in window",
+   "intermediates": []
+  },
+  {
+   "item": "window 38",
+   "xbox": "0x16640",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "ActIK math helpers; no PS2 candidate in window",
+   "intermediates": []
+  },
+  {
+   "item": "window 38",
+   "xbox": "0x166a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "ActIK math helpers; no PS2 candidate in window",
+   "intermediates": []
+  },
+  {
+   "item": "window 38",
+   "xbox": "0x16820",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "ActIK math helpers; no PS2 candidate in window",
+   "intermediates": []
+  },
+  {
+   "item": "window 38",
+   "xbox": "0x168b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "ActIK math helpers; no PS2 candidate in window",
+   "intermediates": []
+  },
+  {
+   "item": "window 39",
+   "xbox": "0xe7430",
+   "ps2": "0x291420",
+   "name": "EAGL::RenderContext::GetZWritesEnable",
+   "verdict": "accept",
+   "why": "sheet row 5995 (PS2 0x291420 right after SetZWritesEnable, not a Ghidra function): *out = byte +0x59 (field SetZWritesEnable e73f0 writes), return 1; follows SetZWritesEnable on Xbox too",
+   "intermediates": []
+  },
+  {
+   "item": "window 39",
+   "xbox": "0xe74e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-specific RenderContext setter (special case 0x11); no matching PS2 body",
+   "intermediates": []
+  },
+  {
+   "item": "window 39",
+   "xbox": "0xe7520",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only D3D render-state wrappers",
+   "intermediates": []
+  },
+  {
+   "item": "window 39",
+   "xbox": "0xe7570",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only D3D render-state wrappers",
+   "intermediates": []
+  },
+  {
+   "item": "window 39",
+   "xbox": "0xe75c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only D3D render-state wrappers",
+   "intermediates": []
+  },
+  {
+   "item": "window 39",
+   "xbox": "0xe7600",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only D3D render-state wrappers",
+   "intermediates": []
+  },
+  {
+   "item": "window 39",
+   "xbox": "0xe7650",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only D3D render-state wrappers",
+   "intermediates": []
+  },
+  {
+   "item": "window 39",
+   "xbox": "0xe76a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only D3D render-state wrappers",
+   "intermediates": []
+  },
+  {
+   "item": "window 39",
+   "xbox": "0xe76f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only D3D render-state wrappers",
+   "intermediates": []
+  },
+  {
+   "item": "window 39",
+   "xbox": "0xe7890",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only D3D render-state wrappers",
+   "intermediates": []
+  },
+  {
+   "item": "window 40",
+   "xbox": "0x1332b8",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 40",
+   "xbox": "0x133376",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 40",
+   "xbox": "0x1333d6",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 40",
+   "xbox": "0x13348d",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 40",
+   "xbox": "0x133636",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 40",
+   "xbox": "0x13364d",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 40",
+   "xbox": "0x133664",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 40",
+   "xbox": "0x13366d",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 40",
+   "xbox": "0x1336e9",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 40",
+   "xbox": "0x13396f",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 40",
+   "xbox": "0x133986",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT internals, Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "window 41",
+   "xbox": "0x7c6e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "dofoffset shader-var callback, no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 41",
+   "xbox": "0x7c7b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list/vector helpers for RDrawGroup",
+   "intermediates": []
+  },
+  {
+   "item": "window 41",
+   "xbox": "0x7c7d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list/vector helpers for RDrawGroup",
+   "intermediates": []
+  },
+  {
+   "item": "window 41",
+   "xbox": "0x7c800",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list/vector helpers for RDrawGroup",
+   "intermediates": []
+  },
+  {
+   "item": "window 41",
+   "xbox": "0x7c820",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list/vector helpers for RDrawGroup",
+   "intermediates": []
+  },
+  {
+   "item": "window 41",
+   "xbox": "0x7c850",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list/vector helpers for RDrawGroup",
+   "intermediates": []
+  },
+  {
+   "item": "window 41",
+   "xbox": "0x7c890",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list/vector helpers for RDrawGroup",
+   "intermediates": []
+  },
+  {
+   "item": "window 41",
+   "xbox": "0x7c8d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list/vector helpers for RDrawGroup",
+   "intermediates": []
+  },
+  {
+   "item": "window 41",
+   "xbox": "0x7c900",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list/vector helpers for RDrawGroup",
+   "intermediates": []
+  },
+  {
+   "item": "window 41",
+   "xbox": "0x7c930",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list/vector helpers for RDrawGroup",
+   "intermediates": []
+  },
+  {
+   "item": "window 41",
+   "xbox": "0x7c960",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list/vector helpers for RDrawGroup",
+   "intermediates": []
+  },
+  {
+   "item": "window 41",
+   "xbox": "0x7c990",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list/vector helpers for RDrawGroup",
+   "intermediates": []
+  }
+ ]
+}

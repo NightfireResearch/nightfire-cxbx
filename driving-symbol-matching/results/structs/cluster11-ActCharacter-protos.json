@@ -1,0 +1,199 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00014490",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    },
+    {
+     "name": "param_3",
+     "type": "char *"
+    }
+   ],
+   "sheet": "ActCharacter::LoadCharacter(char *, char *, char *)"
+  },
+  {
+   "address": "0x00014580",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "ActCharacter::ShowWeapon(int)"
+  },
+  {
+   "address": "0x000145b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "ActCharacter::HideWeapon(int)"
+  },
+  {
+   "address": "0x00014610",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "ActCharacter::SetWeaponVelocity(COORD3 &)"
+  },
+  {
+   "address": "0x00014680",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActCharacter::StopUsingResources(void)"
+  },
+  {
+   "address": "0x00014700",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActCharacter::~ActCharacter(void)"
+  },
+  {
+   "address": "0x00014740",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "uint"
+    }
+   ],
+   "sheet": "ActCharacter::PlayEvent(int, unsigned int)"
+  },
+  {
+   "address": "0x00014760",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "ActCharacter::StartShadow(void)"
+  },
+  {
+   "address": "0x000147d0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "ActCharacter::EndShadow(void)"
+  },
+  {
+   "address": "0x00014820",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ActCharacter::DrawWeapon(int, EAGL::ViewPort *)"
+  },
+  {
+   "address": "0x00014850",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "ActCharacter::SetWeaponBone(int, MATRIX4 &)"
+  },
+  {
+   "address": "0x00014870",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActCharacter::GetShadowTriangle(void)"
+  },
+  {
+   "address": "0x00014a50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActCharacter::ChangeCharacter(char *, char *, char *, unsigned",
+   "return": "void"
+  },
+  {
+   "address": "0x00014bf0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "ActCharacter::SetAlpha(float)"
+  },
+  {
+   "address": "0x00014c20",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float *"
+    },
+    {
+     "name": "param_2",
+     "type": "float *"
+    }
+   ],
+   "sheet": "ActCharacter::GetScaleFactors(float &, float &)"
+  },
+  {
+   "address": "0x00014c50",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "ActCharacter::Draw(MATRIX4 &, MATRIX4 &)"
+  },
+  {
+   "address": "0x00015010",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "ActCharacter::CalculateMuzzleFlashIntensity(int)",
+   "return": "void"
+  },
+  {
+   "address": "0x00015180",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActCharacter::InheritWeaponLightingFromCar(void)"
+  }
+ ]
+}

@@ -1,0 +1,50 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# Into the first mission, then the weapon code: cycling both ways, firing, the scope. Player_InitWeapon
+# (the loadout), AnimProcessSkinData (the arms), Player_Weapon (every frame) and Player_EquipAmmo run here.
+press A                    # NightFire
+waitpage 0x40000025        # P_NFSELECT
+wait 100
+press A                    # the codename
+waitpage 0x4000002f        # P_MESSAGEBOX
+wait 150
+press A
+waitpage 0x40000023        # P_NFDFCTY
+wait 100
+press A                    # difficulty
+waitpage 0x4000001c        # P_NFMAP
+wait 100
+press A                    # the first mission
+wait 1500
+press A                    # skip the opening cutscene
+wait 300
+shot start
+press LEFT
+wait 90
+shot left1
+press LEFT
+wait 90
+shot left2
+press RIGHT
+wait 90
+shot right1
+press RIGHT
+wait 90
+press RIGHT
+wait 90
+shot right3
+hold RT 20
+wait 60
+shot fired
+hold LT 90
+shot scope
+wait 90
+shot unscoped
+quit

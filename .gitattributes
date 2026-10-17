@@ -1,0 +1,5 @@
+# Shell scripts keep LF endings on every checkout (bash rejects CR), whatever core.autocrlf says.
+*.sh text eol=lf
+
+# Time demo recordings (docs/action-timedemo.md) are binary
+*.nfdemo binary

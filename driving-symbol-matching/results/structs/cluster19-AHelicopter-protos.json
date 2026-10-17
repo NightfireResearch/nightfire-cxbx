@@ -1,0 +1,66 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0012c7f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "AHelicopter::AHelicopter(char *)",
+   "return": "AHelicopter *"
+  },
+  {
+   "address": "0x0012c930",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_3",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "AHelicopter::PlayLanding(float, COORD3 &, COORD3 &)",
+   "return": "void"
+  },
+  {
+   "address": "0x0012c950",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "AHelicopter::Play(APath &)"
+  },
+  {
+   "address": "0x0012cac0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AHelicopter::~AHelicopter(void)"
+  },
+  {
+   "address": "0x0012cb60",
+   "calling_convention": "__thiscall",
+   "return": "AHelicopter *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

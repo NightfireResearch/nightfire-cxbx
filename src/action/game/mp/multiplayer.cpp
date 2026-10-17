@@ -5,18 +5,19 @@
 #include "../obj/GT.h"
 #include "../obj/GunImp.h"
 #include "../drone/BOT.h"
+#include "../obj/bullet.h"
 #include <stdio.h>
 #include <string.h>
 
-#define CurrentAssassinObjId (((obj_tag *)0x0026178c))
-#define AssassinTarget (((obj_tag *)0x00261788))
+#define CurrentAssassinObjId (*(obj_tag **)0x0026178c)
+#define AssassinTarget (*(obj_tag **)0x00261788)
 // AUTOGEN
 short Control_Plr2Ind(obj_tag* a);
 
 #define NUM_SKINS 29 // unique characters
+// XBE_GLOBAL(0x001637c0, 0x1d0)
 #define MP_skins ((MP_skin*)0x001637c0)
 
-#define mpbots (*(MPBOTS*)0x00245280)
 
 // AUTOINJECT
 void MP_setLoadingSkins(void) {
@@ -115,14 +116,68 @@ bool MP_IsTarget(obj_tag *param_1) {
   return ((AssassinTarget != NULL) && (AssassinTarget == param_1));
 }
 
-#define SpawnPntCount U32_AT(0x00262f38)
-#define SpawnPntTeamCount (*(uint32_t(*)[3])0x00262968)
+// The friendly-fire messages: to the one who fired, and to the one hit, each with the other's name
+#define TXT_MP_FRIENDLY_FIRE_BY ((Action_TranslatedText)0x02000029)
+#define TXT_MP_FRIENDLY_FIRE_ON ((Action_TranslatedText)0x0200002a)
+
+// Who hit player playerIndex (a drone, player or gun turret, or the one who fired a bullet) becomes his last injurer.
+// A teammate's hit does not count (false) without friendly fire, and with it both are told, at most every three
+// seconds. Always true outside multiplayer; false when there is no one to blame. The health is not read.
+// AUTOINJECT
+bool MP_RegisterBulletHit(ushort playerIndex, obj_tag *obj, float health) {
+  if (MPSettings.isMultiplayer == 0)
+    return true;
+  if (obj == NULL)
+    return false;
+
+  obj_tag *shooter;
+  switch (obj->objectType) {
+    case OBJECTTYPE_DRONE:
+    case OBJECTTYPE_PLAYER:
+    case OBJECTTYPE_GUNTURRET2:
+      shooter = obj;
+      break;
+    case OBJECTTYPE_BULLET:
+      shooter = ((BU_tag *)obj->extraObjectData)->firedByObj;
+      break;
+    default:
+      return false;
+  }
+  short shooterIndex = Control_Plr2Ind(shooter);
+  if (shooterIndex < 0)
+    return false;
+
+  MPGame.players[playerIndex].maybeIdxOfLastInjurer = shooterIndex;
+  if (MPSettings.maybeIsTeamGame != 0 &&
+      MPSettings.Player[playerIndex].TeamId == MPSettings.Player[shooterIndex].TeamId &&
+      shooterIndex != playerIndex) {
+    if (MPSettings.FriendlyFire == 0)
+      return false;
+    if (MPGame.players[playerIndex].friendlyFireLabelTimer == 0) {
+      char *text = Txt_GetStringFromHeap(0);
+      sprintf(text, Txt_BindLabel(TXT_MP_FRIENDLY_FIRE_BY, 0), MPSettings.Player[shooterIndex].Name);
+      Text_AddMsg((char)playerIndex, 0, 1, text, 0, 0xb4);
+      sprintf(text, Txt_BindLabel(TXT_MP_FRIENDLY_FIRE_ON, 0), MPSettings.Player[playerIndex].Name);
+      Text_AddMsg((char)shooterIndex, 0, 1, text, 0, 0xb4);
+      MPGame.players[playerIndex].friendlyFireLabelTimer = (short)(FRAME_RATE_INT * 3);
+    }
+  }
+  return true;
+}
+
+// XBE_GLOBAL(0x00262f38, 0x4)
+static uint32_t SpawnPntCount;
+// By MPTeam; NO_TEAM spawn points are rejected. (0x00262970 after it is GoldenEyeKeyCount.)
+// XBE_GLOBAL(0x00262968, 0x8)
+static uint32_t SpawnPntTeamCount[2];
 
 // AUTOINJECT
 void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId) {
 
-  if(teamId == MPTeam::NO_TEAM)
+  if(teamId == MPTeam::NO_TEAM) {
+    NF_WARN("Spawn points MUST have team assoc. with them!\n"); // GC check (0x800d32a0)
     return;
+  }
 
   int startIdx = 0;
   int endIdx = 64;
@@ -172,6 +227,69 @@ void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort t
 
 }
 
+// AUTOINJECT
+uint MP_GetSpawnPoint(short teamId, obj_tag *respawningPlayer) {
+    int startIdx = 0;
+    int endIdx = ARRAY_SIZE(SpawnPoints);
+    if (MPSettings.maybeIsTeamGame || MPSettings.GameMode == GM_ASSASSIN) {
+        if (teamId == PHOENIX) {
+            endIdx = 32;
+        } else if (teamId == MI6) {
+            startIdx = 32;
+        }
+    }
+
+    int closestSpawn = -1;
+    int farthestSpawn = -1;
+    float closestDistance = 9999.0f;
+    float farthestDistance = -9999.0f;
+    uint eligibleSpawns[ARRAY_SIZE(SpawnPoints)];
+    int eligibleCount = 0;
+
+    for (int i = startIdx; i < endIdx; i++) {
+        if (!SpawnPoints[i].initialised)
+            continue;
+
+        float nearestPlayerDistance = 9999.0f;
+        for (int playerIdx = 0; playerIdx < ARRAY_SIZE(MPGame.players); playerIdx++) {
+            obj_tag *player = MPGame.players[playerIdx].playerObj;
+            if (player == NULL || player == respawningPlayer)
+                continue;
+
+            float distance = Vec_SqDist3D(&SpawnPoints[i].spawnPos, &player->position);
+            if (distance < nearestPlayerDistance)
+                nearestPlayerDistance = distance;
+        }
+
+        // Prevent spawning on top of another player
+        // This condition could in extreme cases lead to all spawn points being ineligible, causing undefined behaviour below.
+        if (nearestPlayerDistance <= 2.0f)
+            continue;
+
+        if (nearestPlayerDistance < closestDistance) {
+            closestDistance = nearestPlayerDistance;
+            closestSpawn = i;
+        }
+        if (nearestPlayerDistance > farthestDistance) {
+            farthestDistance = nearestPlayerDistance;
+            farthestSpawn = i;
+        }
+        eligibleSpawns[eligibleCount++] = i;
+    }
+
+    switch (MPSettings.RespawnSelectionMode) {
+        case RESPAWN_NEAR:
+            return closestSpawn >= 0 ? closestSpawn : startIdx;
+        case RESPAWN_FAR:
+            return farthestSpawn >= 0 ? farthestSpawn : startIdx;
+        case RESPAWN_RANDOM:
+            // If there are no eligible spawns, this returns the first (uninitialized) array entry (undefined behavior).
+            return eligibleSpawns[Rand_Rand(eligibleCount)];
+        default:
+            return startIdx;
+    }
+}
+
 // AUTOGEN
 obj_tag* MP_RegisterMPObject(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 
@@ -179,7 +297,7 @@ void MP_CleanupMPObjExt(MP_OBJ_EXT *mp_obj) {
   if(mp_obj == NULL)
     return;
     
-  if(mpbots.NumBots && (mp_obj->aiEmitter).someDataPtr != NULL) {
+  if(mpbots.NumBots && (mp_obj->aiEmitter).data != NULL) {
     AINetwork_FreeEmitter(&mp_obj->aiEmitter);
   }
 
@@ -305,9 +423,9 @@ void MP_objectBeingDeleted(obj_tag* obj) {
     msg.createdFrame = GameState.NumFramesUnpaused;
     msg.handleOnFrame = GameState.NumFramesUnpaused;
     msg.msgType = 0x3d;
-    msg.param_a = 0xc5;
-    msg.param_b = 0;
-    msg.param_c = 0;
+    msg.scope = 0xc5;          // DSTATE_BotGlobal
+    msg.sender = 0;
+    msg.receiver = 0;          // broadcast
     msg.extraData = obj;
     Drone_SM_RouteMsg(&msg);
   }
@@ -393,8 +511,91 @@ short MP_PlayerOrBotInd(obj_tag *obj) {
   return -1;
 }
 
-// AUTOGEN
-void MP_SortOutWhoWon(void);
+#define StatusSpr (*(sprite **)0x002637dc)
+
+static void ShowTopAgentResult(sprite *status) {
+    int fewestDeaths = 30000;
+    int eligibleCountSinceTie = 0;
+
+    for (int slot = 0; slot < ARRAY_SIZE(MPGame.players); ++slot) {
+        const MPGamePlayer &player = MPGame.players[slot];
+        int deaths = player.deaths;
+        int eliminationLimit = MPSettings.MaxPoints;
+
+        if (player.playerObj == NULL || deaths >= eliminationLimit)
+            continue;
+
+        ++eligibleCountSinceTie;
+        if (deaths < fewestDeaths) {
+            const char *winnerFormat = Txt_BindLabel(MP_RESULT_TOP_AGENT, 0);
+            sprintf(status->text, winnerFormat, MPSettings.Player[slot].Name);
+            fewestDeaths = deaths;
+        } else if (deaths == fewestDeaths) {
+            // Original behavior with three eligible players (deaths in slot order):
+            // [1, 1, 2] displays the first player as the winner;
+            // [1, 2, 1] displays a draw.
+            eligibleCountSinceTie = 0;
+        }
+    }
+
+    if (eligibleCountSinceTie == 0) {
+        const char *drawText = Txt_BindLabel(MP_RESULT_DRAW, 0);
+        sprintf(status->text, drawText);
+    }
+}
+
+static void ShowTeamResult(sprite *status) {
+    float phoenixScore = MPGame.teamScore[PHOENIX];
+    // The original compares Phoenix's score to itself.
+    // It displays a draw for any non-NaN score, or an MI6 win for NaN.
+    bool scoreIsNaN = phoenixScore != phoenixScore;
+
+    // The original looks up "Press START" even though it isn't displayed.
+    (void)Txt_BindLabel(MP_PRESS_START, 0);
+    const char *result = Txt_BindLabel(scoreIsNaN ? MP_RESULT_MI6 : MP_RESULT_DRAW, 0);
+    const char *heading = Txt_BindLabel(MP_RESULT_HEADING, 0);
+    sprintf(status->text, "%s%s", heading, result);
+}
+
+static void ShowScoreLimitResult(sprite *status) {
+    int winnerSlot = -1;
+    int playersAtLimit = 0;
+    double scoreLimit = MPSettings.MaxPoints;
+
+    for (int slot = 0; slot < ARRAY_SIZE(MPGame.players); ++slot) {
+        if (MPGame.players[slot].points >= scoreLimit) {
+            winnerSlot = slot;
+            ++playersAtLimit;
+        }
+    }
+
+    (void)Txt_BindLabel(MP_PRESS_START, 0);
+    if (playersAtLimit == 1) {
+        const char *won = Txt_BindLabel(MP_RESULT_WON, 0);
+        const char *heading = Txt_BindLabel(MP_RESULT_HEADING, 0);
+        sprintf(status->text, "%s%s %s", heading, MPSettings.Player[winnerSlot].Name, won);
+    } else {
+        const char *drawText = Txt_BindLabel(MP_RESULT_DRAW, 0);
+        const char *heading = Txt_BindLabel(MP_RESULT_HEADING, 0);
+        sprintf(status->text, "%s%s", heading, drawText);
+    }
+}
+
+// AUTOINJECT
+void MP_SortOutWhoWon() {
+    MPGame.EndGameFlowState = 3;
+
+    if (MPSettings.GameMode == GM_TOPAGENT) {
+        ShowTopAgentResult(StatusSpr);
+    } else if (MPSettings.maybeIsTeamGame) {
+        ShowTeamResult(StatusSpr);
+        return; // The original returns here without calling Sprite_SetText.
+    } else {
+        ShowScoreLimitResult(StatusSpr);
+    }
+
+    Sprite_SetText(StatusSpr, StatusSpr->text);
+}
 // AUTOGEN
 void MP_Pickup_Process(void);
 // AUTOGEN
@@ -476,7 +677,6 @@ void MP_RestartScenario(void) {
 
 }
 
-#define StatusSpr ((sprite*)(0x002637dc))
 
 // AUTOINJECT
 void MP_Update(void) {
@@ -573,4 +773,114 @@ void MP_Update(void) {
   }
 
 
+}
+
+// AUTOGEN
+void __stdcall Pickup_MakeRandomWeaponSet(void);
+
+// One multiplayer weapon/ammo pickup slot (Ghidra's MP_PICKUP; 64 of them, 0x1600 bytes, from this clear)
+#pragma pack(push, 1)
+typedef struct {
+    obj_tag *gameObj;
+    CelPos_tag celPos;                  // 0x04
+    AIEmitter_tag aiEmitter;            // 0x14 so bots can path to it
+    float maybeBotPickupVisitTimes[6];  // 0x3c one per bot: MP_Pickup_Process ages all 6, MP_ResetBotPickupTimes
+                                        //      and BOTSTATE_pickGoal index it by bot
+    uint32_t unknown_0x54;              // 0x54 no reference in the XBE (MP_Init's clear aside)
+} MP_PICKUP;
+#pragma pack(pop)
+static_assert(sizeof(MP_PICKUP) == 0x58, "MP_PICKUP is wrong size");
+static_assert(offsetof(MP_PICKUP, aiEmitter) == 0x14, "Bad offset of MP_PICKUP.aiEmitter");
+
+#define MPpickups (*(MP_PICKUP(*)[64])0x00260078)
+#define PickupNextAddIndex U32_AT(0x0025fe30)
+#define PickupLastDeletedIdx (*(int*)0x00261b84) // -1 = none
+#define BluePrints (*(SpawnPlace(*)[8])0x00262458)
+#define BluePrintCount U16_AT(0x002637d4)
+#define GoldenEyeSpawns (*(SpawnPlace(*)[16])0x00262978)
+#define GoldenEyeKeyCount U16_AT(0x00262970)
+#define GoldenEyeNonKeyCount U16_AT(0x00262972)
+
+// Game mode bits (see MultiplayerGameMode): bit 29 is set by every team mode, bit 30 by KOTH, team KOTH and
+// uplink.
+#define GM_BIT_TEAMGAME 29
+#define GM_BIT_30 30
+
+// The time limit demolition and protection fall back to when MaxDuration is negative, in seconds
+#define MP_DEFAULT_OBJECTIVE_TIME_LIMIT 60.0f
+
+// Player slots in MPGame.players[] (10 on Xbox)
+#define MP_GAME_PLAYER_SLOTS 10
+
+// Reset values of the two per-player indices (MPGamePlayer notes -2 as possibly "the environment")
+#define MP_INJURER_NONE ((short)-2)
+#define MP_ASSASSIN_NONE ((short)-1)
+
+// Called at every level load. Clears all the per-match multiplayer state (spawn points, scenario objects,
+// pickups, scores) and sets up the timers from MPSettings - except when the level being loaded is the
+// front-end menu, so that the menus (the debriefing's scores, for one) still see the finished match.
+//
+// AUTOINJECT
+void MP_Init(void) {
+
+    if (GameState.NextLevelHashcode == HT_Level_Menu_Pre)
+        return;
+
+    Pickup_MakeRandomWeaponSet();
+
+    memset(&SpawnPoints, 0, sizeof(SpawnPoints));
+    SpawnPntTeamCount[PHOENIX] = 0;
+    memset(&MPObjects, 0, sizeof(MPObjects));
+    memset(&Flags, 0, sizeof(Flags));
+    memset(&Bases, 0, sizeof(Bases));
+    memset(&Uplinks, 0, sizeof(Uplinks));
+    memset(&DemolitionPlaces, 0, sizeof(DemolitionPlaces));
+    memset(&Demolition, 0, sizeof(Demolition));
+    memset(&ProtectionPlaces, 0, sizeof(ProtectionPlaces));
+    memset(&Protection, 0, sizeof(Protection));
+    memset(&GoldenEye, 0, sizeof(GoldenEye));
+    memset(&GoldenEyeSpawns, 0, sizeof(GoldenEyeSpawns));
+    memset(&BluePrints, 0, sizeof(BluePrints));
+    memset(&EsponageBase, 0, sizeof(EsponageBase));
+    AssassinTarget = NULL;
+    CurrentAssassinObjId = NULL;
+    memset(&Hill, 0, sizeof(Hill));
+    memset(&MPGame, 0, sizeof(MPGame));
+    // The original then clears MPGame.players[] (0x1e0 bytes) a second time; it is already zero.
+    SpawnPntTeamCount[MI6] = 0;
+    memset(&MPpickups, 0, sizeof(MPpickups));
+
+    uint gameMode = MPSettings.GameMode;
+    MPSettings.maybeIsTeamGame = (gameMode >> GM_BIT_TEAMGAME) & 1;
+    MPSettings.field53_0x190 = (gameMode >> GM_BIT_30) & 1;
+
+    SpawnPntCount = 0;
+    UplinkCount = 0;
+    DemolitionCount = 0;
+    ProtectionCount = 0;
+    GoldenEyeKeyCount = 0;
+    GoldenEyeNonKeyCount = 0;
+    BluePrintCount = 0;
+    PickupLastDeletedIdx = -1;
+    PickupNextAddIndex = 0;
+    MPSettings.numActivePickups = 0;
+
+    MPGame.restartScenarioTimeout = 0.0f;
+    MPGame.winStateTimeout = 0.0f;
+    MPGame.TimeLimit = (float)(int)MPSettings.MaxDuration; // FILD: a signed conversion
+    MPGame.TimeUnpaused = 0;
+    MPGame.TimeIncPaused = 0;
+    MPGame.unknown_maybe_capture_state = 0;
+    MPGame.unknown_maybe_unused = 0;
+
+    if ((gameMode == GM_DEMOLITION || gameMode == GM_PROTECTION) && MPGame.TimeLimit < 0.0f)
+        MPGame.TimeLimit = MP_DEFAULT_OBJECTIVE_TIME_LIMIT;
+
+    for (int i = 0; i < MP_GAME_PLAYER_SLOTS; i++) {
+        MPGame.players[i].maybeIdxOfLastInjurer = MP_INJURER_NONE;
+        MPGame.players[i].maybeIdxOfMyAssassin = MP_ASSASSIN_NONE;
+        // Top Agent starts everyone on the points limit
+        if (gameMode == GM_TOPAGENT)
+            MPGame.players[i].points = (float)(int)MPSettings.MaxPoints;
+    }
 }

@@ -1,5 +1,8 @@
 #include "SwitchChannels.h"
 
+// XBE_GLOBAL(0x001def38, 0x200)
+ushort switch_channels_MusicVars[256];
+
 // AUTOINJECT
 void Init_SwitchChannels(void) {
 

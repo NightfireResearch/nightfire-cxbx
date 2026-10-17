@@ -1,0 +1,822 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "ABaseSound",
+   "size": 1,
+   "if_missing": true,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "undefined1",
+     "name": "unknown"
+    }
+   ]
+  },
+  {
+   "name": "AttributeSet",
+   "size": 4,
+   "if_missing": true,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "byte[4]",
+     "name": "data"
+    }
+   ]
+  },
+  {
+   "name": "CARP::Effect",
+   "size": 1,
+   "if_missing": true,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "undefined1",
+     "name": "unknown"
+    }
+   ]
+  },
+  {
+   "name": "CARP::PathInfo",
+   "size": 1,
+   "if_missing": true,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "undefined1",
+     "name": "unknown"
+    }
+   ]
+  },
+  {
+   "name": "CARP::ProcAnimState",
+   "size": 1,
+   "if_missing": true,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "undefined1",
+     "name": "unknown"
+    }
+   ]
+  },
+  {
+   "name": "IFeedback",
+   "size": 1,
+   "if_missing": true,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "undefined1",
+     "name": "unknown"
+    }
+   ]
+  },
+  {
+   "name": "RAnimEngine::System",
+   "size": 1,
+   "if_missing": true,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "undefined1",
+     "name": "unknown"
+    }
+   ]
+  },
+  {
+   "name": "UGroup",
+   "size": 1,
+   "if_missing": true,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "undefined1",
+     "name": "unknown"
+    }
+   ]
+  },
+  {
+   "name": "WCollider",
+   "size": 1,
+   "if_missing": true,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "undefined1",
+     "name": "unknown"
+    }
+   ]
+  },
+  {
+   "name": "WSimpleZone",
+   "size": 12,
+   "if_missing": true,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "byte[12]",
+     "name": "data"
+    }
+   ]
+  },
+  {
+   "name": "WWorldPos",
+   "size": 64,
+   "if_missing": true,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "byte[64]",
+     "name": "data"
+    }
+   ]
+  },
+  {
+   "name": "PhysicsObject_vtbl",
+   "size": 28,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "PhysicsObject"
+    },
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "PhysicsObject"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "PhysicsObject"
+    },
+    {
+     "offset": 12,
+     "type": "void *",
+     "name": "PhysicsObject"
+    },
+    {
+     "offset": 16,
+     "type": "void *",
+     "name": "PhysicsObject"
+    },
+    {
+     "offset": 20,
+     "type": "void *",
+     "name": "PhysicsObject"
+    },
+    {
+     "offset": 24,
+     "type": "void *",
+     "name": "PhysicsObject"
+    }
+   ]
+  },
+  {
+   "name": "RAnimEngine::Handle",
+   "size": 64,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "uint",
+     "name": "tailSize",
+     "comment": "high: Create computes the trailing-array size n and calls FastAlloc(n+0x40); ctor (unnamed FUN_00076fe0) stores n at +0; operator_delete(p,sz) does FastFree(p, *p + sz) and callers pass sz=0x40. PS2 identical (sw a3,0(s1); operator delete lw v0,0(a0)"
+    },
+    {
+     "offset": 4,
+     "type": "RSceneObj *",
+     "name": "owner",
+     "comment": "high: RSceneObj::UseInstanceList passes this as Create's last arg -> ctor +4; RWorldCamera passes 0. System::Update calls owner->vtable[0x2c]; ctor reads owner+0x10 (baseDesc) for CalcDamageZone; PS2 SetEventDynamicData reads owner+0x3c = PS2 RSceneO"
+    },
+    {
+     "offset": 8,
+     "type": "CARP::ProcAnimState *",
+     "name": "procAnims",
+     "comment": "medium: ctor: array of numProcAnims 0x20-byte records copied from Create's ProcAnimState table (index = instance ushort +0xe, which is rewritten to the local index); placed after the effects array. Type name from PS2 CreatePathHandle(CARP::Instance &"
+    },
+    {
+     "offset": 12,
+     "type": "RAnimEngine::System *",
+     "name": "systems",
+     "comment": "high: 0x40-byte System records, count +0x1e; ctor sets sys->handle=this and state bytes +0x14..+0x1d; IsSystemPlaying/GetSystemState/SetFrame/PS2 FindSystem index it by lower_bound position in systemIds. Existing Ghidra name pSystems"
+    },
+    {
+     "offset": 16,
+     "type": "byte *",
+     "name": "systemIds",
+     "comment": "high: sorted byte array (lower_bound<unsigned char>) of numSystems system IDs, the last trailing array; ctor fills it from sys+0x15. Existing Ghidra name pSystemIds"
+    },
+    {
+     "offset": 20,
+     "type": "CARP::Effect *",
+     "name": "effects",
+     "comment": "high: first trailing array after the instances (this+(numInstances+1)*0x40), numEffects 0x40-byte effect records copied from the anim descriptor; FindEffectByID returns effects+i*0x40; RSceneObj Toggle/Trigger/Damage/Decay/SuppressEffects walk it (+0"
+    },
+    {
+     "offset": 24,
+     "type": "ushort *",
+     "name": "effectBits",
+     "comment": "high: PS2/Xbox SetEffectBits(i,v) stores a ushort at +0x18[i]; DamageEffects/TriggerEffects mask against it. The byte array of effect IDs follows it in the same block: FindEffectByID reads byte effectBits+2*numEffects+i"
+    },
+    {
+     "offset": 28,
+     "type": "byte",
+     "name": "numInstances",
+     "comment": "high: ctor stores Create's instance count; tail starts at this+(n+1)*0x40; UseInstanceList loops instances [0,n) at this+0x40 stride 0x40. PS2 sb t0,0x1c"
+    },
+    {
+     "offset": 29,
+     "type": "byte",
+     "name": "numProcAnims",
+     "comment": "high: ctor: count of 0x20-byte procAnims records (Create counts instances with flag 0x10 when a ProcAnimState table is given)"
+    },
+    {
+     "offset": 30,
+     "type": "byte",
+     "name": "numSystems",
+     "comment": "high: loop bound in InitAllSystemStates/AnySystemPlaying/ProcessStimuli*; length for lower_bound on systemIds. Existing Ghidra name bSystemCount"
+    },
+    {
+     "offset": 31,
+     "type": "byte",
+     "name": "numEffects",
+     "comment": "high: FindEffectByID and all RSceneObj effect loops are bounded by it"
+    },
+    {
+     "offset": 32,
+     "type": "ulonglong",
+     "name": "activeEffectMask",
+     "comment": "high: ToggleEffect sets/clears bit i; Trigger/Damage/Decay/RenderEffects test it !=0 to arm/clear RSceneObj.effectDecayTime; ctor zeroes it (PS2 sd zero,0x20)"
+    },
+    {
+     "offset": 40,
+     "type": "ulonglong",
+     "name": "damageEffectMask",
+     "comment": "high: ctor ORs bit i when effect flags &8; DamageEffects early-outs unless nonzero and toggles only those effects"
+    },
+    {
+     "offset": 48,
+     "type": "ulonglong",
+     "name": "gfxEffectMask",
+     "comment": "medium: ctor ORs bit i when effect type byte (+0x14) == 6; ToggleEffect calls GFX::Trigger/Purge only for effects in this mask (otherwise it only flips activeEffectMask); SuppressEffects/DecayEffects filter on it. Name invented"
+    },
+    {
+     "offset": 56,
+     "type": "ulonglong",
+     "name": "triggerEffectMask",
+     "comment": "medium: ctor ORs bit i when effect flags &0x96; TriggerEffects/SuppressEffects early-out unless nonzero and act only on its bits that are not damage bits. Name invented"
+    }
+   ],
+   "comment": "Derived by the struct trial (struct-pilot-handles.json)"
+  },
+  {
+   "name": "RPathEngine::RPathHandle",
+   "size": 212,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "CARP::Instance *",
+     "name": "instance",
+     "comment": "high: (Instance&,ProcAnimState&) ctor stores arg1; GetPosition returns instance+0x30, GetOrientMat copies *instance; Update reads instance+0x30..0x38 for velocity; RPathEngine::GetPathHandle(instance) matches on it. Same on PS2"
+    },
+    {
+     "offset": 4,
+     "type": "CARP::ProcAnimState *",
+     "name": "procAnim",
+     "comment": "high: ctor arg2 (0x20-byte record, type byte 2): Init reads +0xc path, +0x10 master id, +0x14 start time, +0x18 speed, +0x1c flag, +4 bit15 running; Update/Init call the vtable[0x38] of the object at procAnim+8"
+    },
+    {
+     "offset": 8,
+     "type": "MATRIX4",
+     "name": "baseMatrix",
+     "comment": "high: ctor copies the 16 instance words, then zeroes words 3/7/11 and sets [15]=1.0 (instance w-lanes carry packed data); Init/Update MatrixCopy(this+8) before EvaluateMatrix. Same offset on PS2 (unaligned ldl/ldr copy, no padding)"
+    },
+    {
+     "offset": 72,
+     "type": "MATRIX4",
+     "name": "applyMatrix",
+     "comment": "medium: Init sets it to identity (DAT_001917b0) or through VU0_MATRIX4Init when procAnim+0x1c is set; Update/Init post-multiply the evaluated path matrix by it. Name invented"
+    },
+    {
+     "offset": 136,
+     "type": "COORD3",
+     "name": "velocity",
+     "comment": "high: Update: (newPos - instance+0x30)*k; ctor/Init set it from zero vector DAT_00243030; RSceneObj::GetVelocity and EPathSFXUpdate (sound velocity +0x20) read it. 12 bytes on PS2 too (+0x94 is the next field)"
+    },
+    {
+     "offset": 148,
+     "type": "float",
+     "name": "lastUpdateTime",
+     "comment": "high: Init/Update store scale*t*60; Update returns early when now - this <= 0. PS2 lwc1/swc1 0x94"
+    },
+    {
+     "offset": 152,
+     "type": "CARP::PathInfo *",
+     "name": "currentPath",
+     "comment": "high: PS2 SetCurrentPath = sw 0x98; GetParametricDuration returns *(float*)currentPath (duration at PathInfo+0); Update wraps time against it; Init sets it from procAnim+0xc"
+    },
+    {
+     "offset": 156,
+     "type": "CARP::PathInfo *",
+     "name": "nextPath",
+     "comment": "high: SetNextPath = store 0x9c (both builds); Update switches currentPath to it when time passes the end"
+    },
+    {
+     "offset": 160,
+     "type": "RPathEngine::RPathHandle *",
+     "name": "masterHandle",
+     "comment": "high: Init looks up the handle whose instance == procAnim+0x10 in the global list (node+8); Update then derives time from master->parametricTime; SetParametricTime is ignored while set; WTriggerManager::Update only processes handles with 0 here"
+    },
+    {
+     "offset": 164,
+     "type": "float",
+     "name": "speed",
+     "comment": "high: PS2 SetSpeed = swc1 0xa4 (no Xbox SetSpeed); Init from procAnim+0x18; Update multiplies throttle*speed*dt"
+    },
+    {
+     "offset": 168,
+     "type": "float",
+     "name": "timeDelta",
+     "comment": "medium: Update stores throttle*speed*dt here when free-running, and uses time = master->parametricTime - this when slaved; Init sets master time - own time. Dual use, name invented"
+    },
+    {
+     "offset": 172,
+     "type": "float",
+     "name": "parametricTime",
+     "comment": "high: SetParametricTime stores 0xac (both builds); passed to EvaluateMatrix/ComputeChannel; Init from procAnim+0x14"
+    },
+    {
+     "offset": 176,
+     "type": "uint",
+     "name": "posKnot",
+     "comment": "medium: EvaluateMatrix in/out knot hint for the position channel (EvaluateLinear/Spline return the knot index); copy ctor zeroes it (both builds)"
+    },
+    {
+     "offset": 180,
+     "type": "uint",
+     "name": "rotKnot",
+     "comment": "medium: EvaluateMatrix in/out knot hint for the rotation channel; copy ctor zeroes it"
+    },
+    {
+     "offset": 184,
+     "type": "float",
+     "name": "pathW",
+     "comment": "low: EvaluateMatrix out: 4th lane of the evaluated position channel (0 when there is no channel). Meaning unknown, name invented"
+    },
+    {
+     "offset": 188,
+     "type": "float",
+     "name": "throttle",
+     "comment": "high: SetThrottle stores 0xbc (both builds); Init 1.0; Update ramps it toward desiredThrottle by acceleration"
+    },
+    {
+     "offset": 192,
+     "type": "float",
+     "name": "acceleration",
+     "comment": "high: SetAcceleration stores 0xc0; Init 1.0; Update step size"
+    },
+    {
+     "offset": 196,
+     "type": "float",
+     "name": "desiredThrottle",
+     "comment": "high: SetDesiredThrottle stores 0xc4; Init 1.0; Update target"
+    },
+    {
+     "offset": 200,
+     "type": "int",
+     "name": "accelDelay",
+     "comment": "high: SetAccelDelay stores 0xc8 (decompiler prints it as decimal 200; PS2 integer sw); Update decrements it and ramps only once it is 0"
+    },
+    {
+     "offset": 204,
+     "type": "bool",
+     "name": "running",
+     "comment": "high: SetRunning byte store on Xbox; Init = procAnim flags bit15; Update skips when 0 and clears it at path end. PS2 stores a WORD here (sw a1,0xcc; ctor and copy ctor move a word): Xbox is 1 byte + 3 padding"
+    },
+    {
+     "offset": 208,
+     "type": "void *",
+     "name": "userData",
+     "comment": "low: ctor default &SMissionManager::glbMissionManager (PS2 DAT_00381f68); CreatePathHandle sets it to (*(instance+0x1c))+0x34, AISplinePath ctor/Reset to spline+0x44. No reader found among path-engine callers on either build; meaning unknown"
+    }
+   ],
+   "comment": "Derived by the struct trial (struct-pilot-handles.json)"
+  },
+  {
+   "name": "PhysicsObject",
+   "size": 108,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "PhysicsObject_vtbl *",
+     "name": "vtable",
+     "comment": "high: all three ctors and the dtor store 0x18f9a0 at [ESI]; PS2 keeps the vptr at the END (+0x68, ctor 'sw v0,0x68(s0)' in the jal delay slot), hence the +4 shift of every PhysicsObject field"
+    },
+    {
+     "offset": 4,
+     "type": "WWorldPos",
+     "name": "worldPos",
+     "comment": "medium: ctor 'LEA ECX,[ESI+0x4]; CALL 0xd2fd0 WWorldPos::WWorldPos', dtor 'LEA ECX,[ESI+0x4]; CALL 0xd3580' (~WWorldPos, folded/shown as dummyNullFunction); PS2 ctor/dtor pass this+0; size 0x40 = gap to +0x44 on both builds. A member, not a base: the"
+    },
+    {
+     "offset": 68,
+     "type": "int",
+     "name": "type",
+     "comment": "PhysicsObjectType (enum). high: every ctor stores its type argument here (PHelicopter passes 10); PS2 +0x40 physicsObjectType"
+    },
+    {
+     "offset": 72,
+     "type": "ushort",
+     "name": "flags",
+     "comment": "high: ctors write a WORD (0, or 1 for the SimpleRigidBody ctor 0x6f190, then |2 / |4 from two bool args); all readers test the BYTE: bit0 set = slot is a SimpleRigidBody, clear = RigidBody (GetMass/GetRadius/GetPosition/ReleaseRigidBodySlot). PS2 +0x"
+    },
+    {
+     "offset": 74,
+     "type": "short",
+     "name": "rigidBodySlot",
+     "comment": "high: = Simulation::AssignRigidBodySlot() in ctors, MOVSX'd into GetRigidBody/GetSimpleRigidBody/ReleaseRigidBodySlot; PS2 +0x46, and PS2 GetRigidBody/GetSimpleRigidBody(Ptr) read only this"
+    },
+    {
+     "offset": 76,
+     "type": "RSceneObj *",
+     "name": "renderObject",
+     "comment": "high: SetRenderObject stores it and calls RSceneObj::SetPhysics (back-pointer RSceneObj+0x28); Simulate/GetCollisionGeometry/GetCollisionBounds/PlayAnimation use it; dtor stops its anim handle (RSceneObj+0x2c, PS2 +0x28) and deletes it. PS2 +0x48 ren"
+    },
+    {
+     "offset": 80,
+     "type": "ABaseSound *",
+     "name": "audioObject",
+     "comment": "high: SetAudioObject store (compare-then-store); PHelicopter passes an AHelicopter from ABaseSound::operator_new(0x310); dtor deletes via vtbl slot 0 (PS2: vptr at object+0xac, entry 1, flag 3). PS2 +0x4c (unnamed field68_0x4c)"
+    },
+    {
+     "offset": 84,
+     "type": "IFeedback *",
+     "name": "feedbackObject",
+     "comment": "high: SetFeedbackObject store; dtor ~IFeedback + FastFree(p,4). PS2 +0x50 feedback"
+    },
+    {
+     "offset": 88,
+     "type": "float *",
+     "name": "hitPointLoc",
+     "comment": "high: SetHitPointLoc stores a POINTER owned by the subclass; GetHitPoints returns *p or 1.0, LoseHitPoints/ApplyDamage decrement *p clamped at 0. PS2 +0x54 ptrHealth"
+    },
+    {
+     "offset": 92,
+     "type": "uint",
+     "name": "ownerSig",
+     "comment": "high: SetOwnerObject(PhysicsObject*) stores owner->GetSig() (a 4-byte signature, not the pointer), 0 if null; IsOwnedBy walks the chain via Simulation::FindPhysicsObjectSignature(+0x5c); SimpleRigidBody ctor 0x6f190 takes it by value. PS2 +0x58 owner"
+    },
+    {
+     "offset": 96,
+     "type": "AttributeSet",
+     "name": "attributes",
+     "comment": "high: LEA ECX,[ESI+0x60]; CALL AttributeSet::AttributeSet (copy or (char*,char*) overloads) / ~AttributeSet in dtor; AttributeSet is one pointer (collection, refcount at +0xc); ctor writes +0x64 next. PS2 +0x5c. Name invented"
+    },
+    {
+     "offset": 100,
+     "type": "WCollider *",
+     "name": "collider",
+     "comment": "high: dtor ~WCollider + FastFree(p,0x68) then zeroes; CollideWithWorld (0xb1549) lazily FastAlloc(0x68,'WCollider')s it into owner+0x64. PS2 +0x60 (field76_0x60). Name invented"
+    },
+    {
+     "offset": 104,
+     "type": "uint",
+     "name": "unknown_68",
+     "comment": "low: only zeroed by the ctors (PS2 +0x64 likewise); no reader found in the PhysicsObject methods or in 277 physics/subclass functions; could be a pointer"
+    }
+   ],
+   "comment": "Derived by the struct trial (struct-pilot-physicsobject.json)"
+  },
+  {
+   "name": "WTargetable",
+   "size": 80,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "COORD3",
+     "name": "position",
+     "comment": "high: ctor(x,y,z) stores args at +0/+4/+8; UpdatePosition copies rigid-body/AICharacter(+0x40)/AIVehicle position here; DistFromCamera/UpdateVisibility read it. PS2 +0x0 (no shift)"
+    },
+    {
+     "offset": 12,
+     "type": "bool",
+     "name": "visible",
+     "comment": "high: UpdateVisibility: = !WCollisionMgr::StepCheckHitWorld(camera->this) within 240 units, else 0 (MOV byte); UpdateTargets needs it set. PS2 +0xc is a WORD (sw/lw) - PS2 bool is 4 bytes"
+    },
+    {
+     "offset": 16,
+     "type": "float[2]",
+     "name": "screenPos",
+     "comment": "high: DistFromScreenPos/DistFromScreenCenter read +0x10/+0x14; UpdateTargets writes GetScreenPos/GetOffScreenPos result; MoveTargetingCursors copies to picker +0x8c. PS2 +0x10 (COORD2)"
+    },
+    {
+     "offset": 24,
+     "type": "bool",
+     "name": "unknown18",
+     "comment": "low: only ever zeroed by the ctors (MOV byte [ESI+0x18],AL); PS2 CommonInit sw zero,0x18 (word bool). No reader found"
+    },
+    {
+     "offset": 28,
+     "type": "WSimpleZone",
+     "name": "zone",
+     "comment": "high: ctors zero 3 dwords then call WSimpleZone::SetPosition with ECX=this+0x1c (LEA ECX,[ESI+0x1c]; decompiler hides it) = round(pos*0.2) as int[3]; UpdateTargets: WSimpleZone::IsZoneInRange(this+0x1c,..). PS2 SetPosition(this+0x1c,this)"
+    },
+    {
+     "offset": 40,
+     "type": "int",
+     "name": "updateCountdown",
+     "comment": "high: ctor = global counter & 3 (staggers targets); UpdateTargets decrements, reloads from +0x2c when <0, processes the target only at 0. PS2 +0x28"
+    },
+    {
+     "offset": 44,
+     "type": "int",
+     "name": "updateInterval",
+     "comment": "high: ctor 0; UpdateTargets: incremented (max 6) while zone out of range, reset 0 when in range. PS2 +0x2c"
+    },
+    {
+     "offset": 48,
+     "type": "int",
+     "name": "visibilityCountdown",
+     "comment": "high: ctor 5; UpdatePosition decrements, at <1 calls UpdateVisibility and resets to 5. PS2 +0x30"
+    },
+    {
+     "offset": 52,
+     "type": "int",
+     "name": "ownerType",
+     "comment": "high: ctor overloads store 0 (xyz point), 1 (PhysicsObject), 2 (AICharacter), 3 (AIVehicle); UpdatePosition/GetVelocity/UpdateTargets switch on it; SteerMissile tests ==0. PS2 +0x34"
+    },
+    {
+     "offset": 56,
+     "type": "bool",
+     "name": "isTemporary",
+     "comment": "medium: ctors 0; GetWorldTarget/AIVehicle GetTarget/EFireWeapon set 1 after construction; Missile ctor and SetTarget only AddReference when it is 0. PS2 +0x38 (word)"
+    },
+    {
+     "offset": 60,
+     "type": "int",
+     "name": "refCount",
+     "comment": "high: AddReference ++; RemoveReference -- then ~WTargetable+FastFree(0x50) at 0; ctor 1. PS2 +0x3c (refCnt)"
+    },
+    {
+     "offset": 64,
+     "type": "bool",
+     "name": "enabled",
+     "comment": "medium: ctors set 1 (MOV byte [ESI+0x40],DL); UpdateTargets only lists targets with +0x40 && +0x0c. PS2 +0x40 (word, CommonInit sw 1)"
+    },
+    {
+     "offset": 65,
+     "type": "bool",
+     "name": "onScreen",
+     "comment": "high: written only by WTargetPicker::UpdateTargets (= IsPointOnScreen, else off-screen pos used); GetSelectedTarget/CycleToNextTarget/CompareDistFromScreenPos/MoveTargetingCursors test it; never initialised by the ctors. PS2 +0x44 (word) - Xbox packs"
+    },
+    {
+     "offset": 68,
+     "type": "void *",
+     "name": "owner",
+     "comment": "high: ctor arg for types 1-3: type1 PhysicsObject* (+0x48 flag bit0, +0x4a rigid-body index), type2 AICharacter* (pos +0x40, vtable slot 1 = alive test), type3 AIVehicle* (+0x10 kind, +0x68 active). Union by ownerType. PS2 +0x48"
+    },
+    {
+     "offset": 72,
+     "type": "undefined",
+     "name": "tailPadding",
+     "comment": "low: never read or written by any WTargetable/WTargetPicker/caller function; PS2's last word +0x4c also untouched. Size 0x50 comes only from FastAlloc/FastFree(0x50) on both - probably tail padding to a 16-byte multiple (Xbox used 0x48, PS2 0x4c)"
+    }
+   ],
+   "comment": "Derived by the struct trial (struct-pilot-targetable.json)"
+  },
+  {
+   "name": "CARP::Instance",
+   "size": 64,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "float[3]",
+     "name": "axisX",
+     "comment": "high: rotation row 0; readers copy 16 dwords and then force +0x0c/+0x1c/+0x2c to 0 and +0x3c to 1.0 (GetTransform, Render, GetViewDistance, EnableTarget). EvaluateInstance negates it when flags bit7. PS2 identical"
+    },
+    {
+     "offset": 12,
+     "type": "byte",
+     "name": "flags",
+     "comment": "high: DrawInstance/QuickDrawInstance skip if bit0 (hidden); UseInstanceList copies bit3 (dword read &8) to RSceneObj flags bit2 (world-root node); bit4 = has ProcAnimState (WWorld::GetProcAnimStateFromInstance, Handle::Create); bit7 = mirrored (Evalu"
+    },
+    {
+     "offset": 13,
+     "type": "byte",
+     "name": "procAnimType",
+     "comment": "high: GetInstanceMatrix calls gProcAnimFunc[byte +0xd]; EvaluateInstance: <100 = index into articleDesc->animInfo (16-byte CARP::AnimInfo); UseArticle sets 0xff. PS2 identical"
+    },
+    {
+     "offset": 14,
+     "type": "ushort",
+     "name": "procAnimIndex",
+     "comment": "high: GetInstanceMatrix: state = +0xe * 0x20 + stateBase; WWorld::GetProcAnimStateFromInstance/GetSceneObjFromInstance index WWorld+0x24 by it; UseInstance writes it; EvaluateInstance uses it as a frame count. PS2 identical"
+    },
+    {
+     "offset": 16,
+     "type": "float[3]",
+     "name": "axisY",
+     "comment": "high: rotation row 1 (see axisX)"
+    },
+    {
+     "offset": 28,
+     "type": "void *",
+     "name": "articleDesc",
+     "comment": "high: resolved in place by CARP::InstanceResolver (TagReference at +0x1c, stride 0x40) for tags 'in  ','Cams','ci  '. Points to the 'as  ' record: +0 CARP::BaseDesc* (UseInstanceList baseDesc=**(inst+0x1c)), +4 CARP::Effect* (0x40 stride), +8 CARP::A"
+    },
+    {
+     "offset": 32,
+     "type": "float[3]",
+     "name": "axisZ",
+     "comment": "high: rotation row 2 (see axisX)"
+    },
+    {
+     "offset": 44,
+     "type": "undefined4",
+     "name": "unknown2c",
+     "comment": "low: no reader found; zeroed in every transform copy like the other w slots"
+    },
+    {
+     "offset": 48,
+     "type": "COORD3",
+     "name": "position",
+     "comment": "high: translation row: GetPosition, GetInstanceViewDistance (vec3distance(camera,+0x30)), WTriggerManager::Process(Instance&) centre, RSceneObj ctor/UpdatePosition WTree::FindNode sphere. PS2 GetPosition ldl/ldr +0x30..+0x38"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "packedDimensions",
+     "comment": "high: CARP::Instance::SetDimensions(isBox,a,b,c) writes bits0-9=a, 10-19=b, 20-29=c (quantised, ceil(v/scale)), bit30=any>250 (selects scale table), bit31=isBox; GetBoundingRadius/GetViewDistance/Render decode (v&0x3ff)*scale[bit30]; FUN_0008d640/FUN"
+    }
+   ],
+   "comment": "Derived by the struct trial (struct-pilot-targetable.json)"
+  },
+  {
+   "name": "CARP::MapNode",
+   "size": 16,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "CARP::MapNode *",
+     "name": "children",
+     "comment": "high: quadtree: array of 4 nodes at +0/+0x10/+0x20/+0x30 (WTree::FindNode, InitializeTree, WalkTree, WRender::FindVisibleTreeNodesAndCurtains); resolved in place by CARP::WorldNodeResolver ('wn  ' tag, 4 TagReferences 0x10 apart); null = leaf. PS2 id"
+    },
+    {
+     "offset": 4,
+     "type": "RSceneObj *",
+     "name": "firstSceneObj",
+     "comment": "high: SetMapNode/UseInstanceList link RSceneObj next/prev through it; DestroySceneObjectList/InitializeSceneObjectListLighting/GetNextSceneObjCullInfo walk it; InitializeTree zeroes it. PS2 +0x4"
+    },
+    {
+     "offset": 8,
+     "type": "ushort",
+     "name": "curtainListOffset",
+     "comment": "medium: FindVisibleTreeNodesAndCurtains: ECX=node+u16[+8] (unscaled: self-relative byte offset to a ushort list), element=list[u16[+0xa]+i]*0x20 into WRender+0x34. PS2 lhu 0x8"
+    },
+    {
+     "offset": 10,
+     "type": "ushort",
+     "name": "curtainListStart",
+     "comment": "medium: index into that ushort list (scaled by 2 in the asm). PS2 lhu 0xa"
+    },
+    {
+     "offset": 12,
+     "type": "byte",
+     "name": "numCurtains",
+     "comment": "medium: loop count of the list above (Xbox MOV AL,[EDI+0xc]; PS2 lbu 0xc)"
+    },
+    {
+     "offset": 13,
+     "type": "byte",
+     "name": "depth",
+     "comment": "high: InitializeTree stores depth; CheckContainment scales cell size by table[depth]. PS2 identical"
+    },
+    {
+     "offset": 14,
+     "type": "byte",
+     "name": "cellX",
+     "comment": "high: InitializeTree: children get 2x/2x+1; CheckContainment centre x=(2*cellX+1)*halfCell. PS2 identical"
+    },
+    {
+     "offset": 15,
+     "type": "byte",
+     "name": "cellZ",
+     "comment": "high: InitializeTree: children get 2z/2z+1; CheckContainment centre z. PS2 identical"
+    }
+   ],
+   "comment": "Derived by the struct trial (struct-pilot-targetable.json)"
+  },
+  {
+   "name": "CARP::BaseDesc",
+   "size": 100,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "UGroup *",
+     "name": "model",
+     "comment": "high: SetVariation/GetViewDrawList/GetNumBones/GetBoneIndex/Reset/ConvertInstanceToLocal use *baseDesc as the model UGroup; resolved TagReference at +0 (resolver FUN_00118180 for tags 'Base' and 'pD  ')"
+    },
+    {
+     "offset": 4,
+     "type": "uint",
+     "name": "flags",
+     "comment": "medium: InitializeLighting: flags & 0x2000 -> skip lighting (brightness 2.0). No other bit seen"
+    },
+    {
+     "offset": 8,
+     "type": "undefined4",
+     "name": "unknown08",
+     "comment": "low: no reader found"
+    },
+    {
+     "offset": 12,
+     "type": "void *",
+     "name": "physicsAttributes",
+     "comment": "medium: resolved TagReference (FUN_00118180 +0xc); Smackable ctor uses it as the PhysicsObject AttributeSet data (default 'default' set when null): float +8 hit points, +0x18..+0x24 ASmackable sound params"
+    },
+    {
+     "offset": 16,
+     "type": "COORD3",
+     "name": "bboxMin",
+     "comment": "high: GetBoundingDimensions/ComputeBoundingRadius/UseInstanceList: (max-min)*0.5 over +0x10..+0x18 vs +0x20..+0x28. PS2 identical"
+    },
+    {
+     "offset": 28,
+     "type": "undefined4",
+     "name": "bboxMinW",
+     "comment": "low: never read (w slot of the box corner)"
+    },
+    {
+     "offset": 32,
+     "type": "COORD3",
+     "name": "bboxMax",
+     "comment": "high: see bboxMin"
+    },
+    {
+     "offset": 44,
+     "type": "undefined4",
+     "name": "bboxMaxW",
+     "comment": "low: never read"
+    },
+    {
+     "offset": 48,
+     "type": "undefined4",
+     "name": "unknown30",
+     "comment": "low: no reader found"
+    },
+    {
+     "offset": 52,
+     "type": "char *",
+     "name": "name",
+     "comment": "medium: resolver FUN_00118180 writes tag 'Name' (0x4e616d65) into +0x34 and then resolves it as a TagReference"
+    },
+    {
+     "offset": 56,
+     "type": "undefined4",
+     "name": "unknown38",
+     "comment": "low: no reader found"
+    },
+    {
+     "offset": 60,
+     "type": "uint",
+     "name": "numCollisionPrims",
+     "comment": "high: RSceneObj::GetCollisionGeometry returns *(baseDesc+0x3c) through its out param and baseDesc+0x60 as the array. PS2 identical"
+    },
+    {
+     "offset": 64,
+     "type": "COORD3",
+     "name": "damageBoxMin",
+     "comment": "high: CARP::BaseDesc::CalcDamageZone (ECX=baseDesc, from InitEffects asm MOV ECX,[EDI+0x10]) buckets a point against +0x40/+0x44/+0x48 and +0x50/+0x54/+0x58 and their midpoints. PS2 identical"
+    },
+    {
+     "offset": 76,
+     "type": "undefined4",
+     "name": "damageBoxMinW",
+     "comment": "low: never read"
+    },
+    {
+     "offset": 80,
+     "type": "COORD3",
+     "name": "damageBoxMax",
+     "comment": "high: see damageBoxMin"
+    },
+    {
+     "offset": 92,
+     "type": "undefined4",
+     "name": "damageBoxMaxW",
+     "comment": "low: never read"
+    },
+    {
+     "offset": 96,
+     "type": "undefined4",
+     "name": "collisionGeometry",
+     "comment": "high: start of a variable-length inline array (count at +0x3c): GetCollisionGeometry returns baseDesc+0x60. Element type not derived"
+    }
+   ],
+   "comment": "Derived by the struct trial (struct-pilot-targetable.json)"
+  }
+ ],
+ "prototypes": []
+}

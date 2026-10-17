@@ -1,7 +1,9 @@
 #include "Collide.h"
+#include "../memory.h"
 
 #include <string.h>
 
+// XBE_GLOBAL(0x001ddc60, 0xc)
 #define HitHeap (*(LLISTINFO_tag*)0x001ddc60)
 
 // AUTOGEN
@@ -31,7 +33,8 @@ void Collide_FreeHitList(HITDATA_tag **hitList) {
 
 }
 
-#define HitAllocCnt U32_AT(0x001dec24)
+// XBE_GLOBAL(0x001dec24, 0x4)
+static uint32_t HitAllocCnt;
 
 // AUTOINJECT
 HITDATA_tag* Coll_GetFreeHit(void) {
@@ -41,8 +44,10 @@ HITDATA_tag* Coll_GetFreeHit(void) {
     if(node == NULL) {
 
         // Heap is empty and the maximum number of allocations has been reached  
-        if(HitAllocCnt > 1000)
+        if(HitAllocCnt > 1000) {
+            NF_WARN("Run out of hit datas!! Didn't forget to call Collide_FreeHitList\n"); // GC check (0x80105350)
             return NULL;
+        }
 
         // Heap is empty but we haven't reached the maximum number of allocations yet
         HitAllocCnt += 0x40;
@@ -73,9 +78,11 @@ bool Collide_RayTriangle(_VECTOR *ptStart,_VECTOR *ptEnd,_VECTOR *vtx1,_VECTOR *
   plane_equ_tag planeEq;
   
   Plane_PlaneEq(&planeEq, vtx1, vtx2, vtx3);
-  float dist = Vec_Dot(ptEnd, &planeEq.normal);
-  if (dist != 0.0f) {
-    float vDist = -(DistancePointToPlane(ptStart, &planeEq) / dist);
+  // Tested unrounded, divided by as a float
+  double dot = Vec_Dot(ptEnd, &planeEq.normal);
+  if (dot != 0.0) {
+    float dist = (float)dot;
+    float vDist = (float)-(DistancePointToPlane(ptStart, &planeEq) / dist);
     *distanceOut = vDist;
     auxVec_AddMulR32(ptStart, ptEnd, vDist, &intersectPt);
     return vecutil_point_on_poly(&intersectPt, vtx1, vtx2, vtx3, &planeEq);
@@ -110,7 +117,7 @@ float Collide_GetDamageNObjects(HITDATA_tag *hitDatas, obj_tag **objectList, ush
 //       // TODO: Some extra condition based on the flags
 //       BU_tag* bullet = (BU_tag*)hitter->extraObjectData;
 
-//       if(bullet->wpnDef->someFlags & flags) {
+//       if(bullet->wpnDef->weaponFlags & flags) {
 //         hitData->someSortField = 1e+08;
 //         needsSort = true;  
 //       }
@@ -126,3 +133,18 @@ float Collide_GetDamageNObjects(HITDATA_tag *hitDatas, obj_tag **objectList, ush
 //     Collide_Sort(hitData);
 
 // }
+
+// The triangle buffer beside the hit heap: TriAllocCnt entries of 12 bytes at TriHeap (Ghidra's names).
+#define TriAllocCnt U32_AT(0x001dec28)
+#define TriHeap (*(void**)0x001dec30)
+
+// Empties the hit heap (entries of 0x50 bytes, none preallocated - Coll_GetHit grows it 0x40 at a time) and
+// allocates a fresh, zeroed triangle buffer of 100 entries.
+// AUTOINJECT
+void Coll_ResetHitHeap(void) {
+    HitAllocCnt = 0;
+    LList_Init(&HitHeap, 0x50, 0);
+    TriAllocCnt = 100;
+    TriHeap = Mem_Malloc(0x4b0, (MallocFlags)0x1a04, 0);   // 100 * 12, as a constant in the original
+    memset(TriHeap, 0, TriAllocCnt * 12);
+}

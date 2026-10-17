@@ -1,0 +1,408 @@
+[
+ {
+  "row": 949,
+  "ps2": "0x0013e3b8",
+  "verdict": "accept",
+  "why": "Body is FastFree(p,size) directly after AIVehicle::operator new; unreferenced like other class deletes."
+ },
+ {
+  "row": 1048,
+  "ps2": "0x00142d90",
+  "verdict": "defer",
+  "why": "(downgraded on review: weak (agent's own flag)) Stores LString copy, vtable and five args into a DebugVariable-shaped object; called from DebugIndexer and immediately precedes TypeTraits<unsigned int>."
+ },
+ {
+  "row": 1168,
+  "ps2": "0x00145d00",
+  "verdict": "accept",
+  "why": "Takes (Instance*, AIElement*): scene object from instance else spline path from AI element or player vehicle; called from EPath* event code."
+ },
+ {
+  "row": 2055,
+  "ps2": "0x001651a0",
+  "verdict": "accept",
+  "why": "ConvertStringToNumber on the action-name table with default 0x75; called from LoadParseDefFile; AUF getActionID maps strings to action IDs."
+ },
+ {
+  "row": 2126,
+  "ps2": "0x00167c48",
+  "verdict": "accept",
+  "why": "Sets float& to 0 when strictly between the two float bounds; called by PollDevice."
+ },
+ {
+  "row": 2146,
+  "ps2": "0x001685d0",
+  "verdict": "defer",
+  "why": "(downgraded on review: weak (agent's own flag)) Zeroes all device scalar values then calls SendGameMessages with a forcing flag set, between ReleaseAllButtons and SendGameMessages."
+ },
+ {
+  "row": 2147,
+  "ps2": "0x00168678",
+  "verdict": "accept",
+  "why": "Iterates an input device's scalars against an InputToAction map, testing transitions and feeding ActionQueueManager; called from UpdateAllDevices."
+ },
+ {
+  "row": 2225,
+  "ps2": "0x0016e868",
+  "verdict": "accept",
+  "why": "Extension-type map lookup returning node[6], which RegisterExtensionType fills from its unsigned size argument; caller ComputeBytes."
+ },
+ {
+  "row": 2226,
+  "ps2": "0x0016e950",
+  "verdict": "accept",
+  "why": "Same lookup returning node[9], filled from RegisterExtensionType's first char* ('smackable' = class)."
+ },
+ {
+  "row": 2227,
+  "ps2": "0x0016ea38",
+  "verdict": "accept",
+  "why": "Same lookup returning node[8], filled from RegisterExtensionType's second char* ('PhysicsData' = type name)."
+ },
+ {
+  "row": 2228,
+  "ps2": "0x0016eb20",
+  "verdict": "accept",
+  "why": "Looks up the extension type and calls its stored init function pointer with the type's fields and the passed args; callers CreateExtensionAttribute/AddStruct."
+ },
+ {
+  "row": 2235,
+  "ps2": "0x0016ec90",
+  "verdict": "accept",
+  "why": "Empty stub (8 bytes, last of three consecutive jr-ra stubs) called after every Float field registration with the extension class; float overload stubbed in retail."
+ },
+ {
+  "row": 2246,
+  "ps2": "0x0016f890",
+  "verdict": "accept",
+  "why": "Copy-constructs a pair: copies CStringPairKey, builds an empty STL tree header (FastAlloc 0x1c 'STL'), copies remaining collection fields; called twice from the _Rb_tree insert."
+ },
+ {
+  "row": 2284,
+  "ps2": "0x00173260",
+  "verdict": "accept",
+  "method": "_M_insert",
+  "why": "SGI _Rb_tree _M_insert shape (x,y,v; FastAlloc node 0x2c 'STL', strcasecmp key compare, rebalance); called from the insert_unique below."
+ },
+ {
+  "row": 2285,
+  "ps2": "0x00173628",
+  "verdict": "accept",
+  "method": "insert_unique",
+  "why": "Descends with strcasecmp, checks predecessor, calls the _M_insert above; the insert_unique shape."
+ },
+ {
+  "row": 2339,
+  "ps2": "0x00177260",
+  "verdict": "accept",
+  "method": "replace",
+  "why": "gcc2 bastring.cc replace(pos,n1,s,n2): asserts '!(pos > len)' and '!(len - n1 > max_size () - n2)', reallocates Rep via FastAlloc 'STL'."
+ },
+ {
+  "row": 2435,
+  "ps2": "0x0017bae0",
+  "verdict": "defer",
+  "why": "(downgraded on review: weak (agent's own flag)) Writes the transpose of the input MATRIX4 into the returned MATRIX4 (inverse of an orthonormal matrix), directly after Float_Matrix4toMatrix3."
+ },
+ {
+  "row": 2478,
+  "ps2": "0x0017f288",
+  "verdict": "accept",
+  "why": "Sets the +0x6d4 flag that CheckTimer/CheckForProximity set to trigger the explosion in Grenade::Simulate."
+ },
+ {
+  "row": 2501,
+  "ps2": "0x00180620",
+  "verdict": "accept",
+  "why": "Decrements the mine timer and on expiry spawns an explosion and deletes the mine; called from Mine::Simulate."
+ },
+ {
+  "row": 2518,
+  "ps2": "0x001838b8",
+  "verdict": "defer",
+  "why": "(downgraded on review: empty stub, order only) Empty 8-byte stub between Missile::SetTarget and the type_info function; debug functions are stubs in retail."
+ },
+ {
+  "row": 2526,
+  "ps2": "0x00183b48",
+  "verdict": "accept",
+  "why": "Returns the address of a static COORD3 (the one the global ctor keyed to Missile::fUserMissileLaunchPos initialises)."
+ },
+ {
+  "row": 2532,
+  "ps2": "0x001847e8",
+  "verdict": "accept",
+  "why": "Same shape as AUF Newton::SpawnFromEvent (instance fallback, flag 0x10 path, Hide, SpawnNewtonObject); callers ESpawn* events."
+ },
+ {
+  "row": 2535,
+  "ps2": "0x00185280",
+  "verdict": "accept",
+  "why": "UMemory::Free(p), matching Newton::operator new which uses UMemory::Alloc rather than FastAlloc."
+ },
+ {
+  "row": 2667,
+  "ps2": "0x001942e8",
+  "verdict": "accept",
+  "why": "Matches AUF PHelicopter::Simulate (ForceVehicleToSleep, GetControllerInput, forward-vector steering); referenced from the vtable."
+ },
+ {
+  "row": 2669,
+  "ps2": "0x00194b50",
+  "verdict": "accept",
+  "why": "FastAlloc(size, 'PHelicopter')."
+ },
+ {
+  "row": 2670,
+  "ps2": "0x00194b70",
+  "verdict": "accept",
+  "why": "FastFree(p, size) right after PHelicopter::operator new."
+ },
+ {
+  "row": 2672,
+  "ps2": "0x00194b98",
+  "verdict": "accept",
+  "why": "Copies a COORD3 argument to this+0x7c; first of two consecutive COORD3 setters (+0x7c then +0x88), matching sheet order SetTargetPos, SetDestPos."
+ },
+ {
+  "row": 2673,
+  "ps2": "0x00194bd8",
+  "verdict": "accept",
+  "why": "corrected from 0x194cb0 (a static-ctor stub); 0x194bd8 copies a COORD3 to this+0x88, the second consecutive COORD3 setter after SetTargetPos."
+ },
+ {
+  "row": 2731,
+  "ps2": "0x00195f80",
+  "verdict": "accept",
+  "why": "FastAlloc(size, 'PhysicsObject')."
+ },
+ {
+  "row": 2732,
+  "ps2": "0x00195fa0",
+  "verdict": "accept",
+  "why": "FastFree(p, size) right after PhysicsObject::operator new."
+ },
+ {
+  "row": 2751,
+  "ps2": "0x00196040",
+  "verdict": "reject",
+  "why": "Returns Sim.GetRigidBody(this->slot) and ignores the int argument; it is one of the GetSimpleRigidBody/GetRigidBody accessors (see extras), not NotTracer."
+ },
+ {
+  "row": 2757,
+  "ps2": "0x00196330",
+  "verdict": "accept",
+  "why": "corrected from 0x196350 (a static pvehicle-name-table builder called by PVehicle::GetName*); 0x196330 is in the ctors table and calls the init helper with (1,0xffff) after PTank's functions."
+ },
+ {
+  "row": 2794,
+  "ps2": "0x001998c0",
+  "verdict": "accept",
+  "why": "Matches AUF RayShell::CollideWithObjects (ordered-body loop, IsOwnedBy, GetRadius/GetPosition, OBB tests, ConsiderVictim)."
+ },
+ {
+  "row": 2796,
+  "ps2": "0x0019a3e0",
+  "verdict": "accept",
+  "why": "Matches AUF RayShell::Fire: switch on shell state, tracer store in state 0, damage via signature lookup, writes float& out."
+ },
+ {
+  "row": 2801,
+  "ps2": "0x0019abb8",
+  "verdict": "accept",
+  "why": "Adds (SimObjSig, COORD3) to a static flash array capped at 8, skipping duplicates and the player; called from the RayShell fire and collision paths."
+ },
+ {
+  "row": 2819,
+  "ps2": "0x0019c908",
+  "verdict": "accept",
+  "why": "Matches AUF Sentry::DrawMuzzleFlashes: draws each flash, decays intensity x0.33, removes it below 0.1 by swapping with the last."
+ },
+ {
+  "row": 2829,
+  "ps2": "0x0019ddb8",
+  "verdict": "accept",
+  "why": "Takes damage float, position and decal type: ScorchWorld plus anim stimuli at damage thresholds 10/50/250/500; called from shell/missile collision."
+ },
+ {
+  "row": 2833,
+  "ps2": "0x0019e0d8",
+  "verdict": "reject",
+  "why": "Body is an atexit destructor for a static AttributeSet (~AttributeSet(0x3d0d58,2)) passed from Smackable::Smackable, not a weapon-type getter."
+ },
+ {
+  "row": 2835,
+  "ps2": "0x0019e0b8",
+  "verdict": "accept",
+  "why": "corrected from 0x19e0d8; 0x19e0b8 is in the ctors table and calls the Shell static-init helper 0x19dfe0 with (1,0xffff). NOTE: Ghidra currently names it Shell::operator_delete (batch P004), which is wrong."
+ },
+ {
+  "row": 2857,
+  "ps2": "0x0019f8f0",
+  "verdict": "accept",
+  "why": "corrected from 0x19f850 (a static prim helper); code at 0x19f8f0 (no Ghidra function yet) fills a colour array n times with the Colour arg then draws n line verts via 0x19f850."
+ },
+ {
+  "row": 2880,
+  "ps2": "0x001a1628",
+  "verdict": "accept",
+  "why": "Matches AUF Draw::DrawBatchedSprite: flushes the batch on texture change or full buffer via USimpleTexturedMaterial::Draw, then appends a sprite."
+ },
+ {
+  "row": 2884,
+  "ps2": "0x001a1a10",
+  "verdict": "accept",
+  "why": "corrected from 0x1a1bc8 (a flag predicate); 0x1a1a10 matches AUF RAnimEngine::Update exactly (time*invFreq*60, System::Update over active systems). NOTE: Ghidra currently names it RAnimEngine::Init, which is wrong."
+ },
+ {
+  "row": 2918,
+  "ps2": "0x001a30c0",
+  "verdict": "accept",
+  "why": "Matches AUF RAnimEngine::EvaluateInstance (keyframe index, qslerp, quattom4, translation lerp)."
+ },
+ {
+  "row": 2939,
+  "ps2": "0x001a4318",
+  "verdict": "accept",
+  "why": "Binary search over 16-byte AnimInfo elements comparing bytes +0xc/+0xd; the lower_bound shape."
+ },
+ {
+  "row": 2953,
+  "ps2": "0x001a4670",
+  "verdict": "accept",
+  "why": "Calls CreateMatrix4Inv then returns this+0x60."
+ },
+ {
+  "row": 2981,
+  "ps2": "0x001a74b8",
+  "verdict": "accept",
+  "why": "Builds a matrix from the input matrix's forward row via GenerateMatrix4 (0x1a7558) then multiplies the matrices, after VU0_InvTransformByForwardVec."
+ },
+ {
+  "row": 2987,
+  "ps2": "0x001a77b0",
+  "verdict": "accept",
+  "why": "Matches AUF FindAngleBetweenVectors: dot product, clamped acos helper, cross product sign test."
+ },
+ {
+  "row": 2988,
+  "ps2": "0x001a7948",
+  "verdict": "accept",
+  "why": "In the ctors table and calls the init helper with (1,0xffff), directly after RCameraMath's functions."
+ },
+ {
+  "row": 3050,
+  "ps2": "0x001ab050",
+  "verdict": "accept",
+  "why": "corrected from 0x1ab220 (an _Rb_tree _M_erase); 0x1ab050 push_backs the element onto the vector at this+0, exactly like AUF AddToTranslucentList, right after AddToList."
+ },
+ {
+  "row": 3051,
+  "ps2": "0x001ab288",
+  "verdict": "reject",
+  "why": "Candidate is an SGI _Rb_tree _M_erase (recurse right, walk left, FastFree 0x1c), not a list add."
+ },
+ {
+  "row": 3125,
+  "ps2": "0x001ae138",
+  "verdict": "defer",
+  "why": "(downgraded on review: weak (agent's own flag)) Unreferenced debug draw using both args (RSceneObj physics body position, int index into world data) to build and draw a textured quad, before gDrawGlares' ctor."
+ },
+ {
+  "row": 3135,
+  "ps2": "0x001aee60",
+  "verdict": "accept",
+  "why": "Zeroes the light counts and MEM_fills the light blocks."
+ },
+ {
+  "row": 3146,
+  "ps2": "0x001af638",
+  "verdict": "accept",
+  "why": "corrected from 0x1af708 (a dynamic-light flicker intensity function); 0x1af638 counts positional lights within radius+10 of the COORD4, returning 1 when forced; called from SendPerCarInstance."
+ },
+ {
+  "row": 3151,
+  "ps2": "0x001afd50",
+  "verdict": "accept",
+  "why": "Matches AUF RHighLevelLightManager::Process (AddPositionalLight loop, then explosion lights fading over time)."
+ },
+ {
+  "row": 3152,
+  "ps2": "0x001affd0",
+  "verdict": "accept",
+  "why": "corrected from 0x1b0038 (a light-block builder); 0x1affd0 stores the bool at +0x70 and saves/zeroes or restores the positional light block."
+ },
+ {
+  "row": 3154,
+  "ps2": "0x001b0158",
+  "verdict": "accept",
+  "why": "Rebuilds the 4 light blocks via 0x1b0038 from stored angles and resets default directions; called from the RLightManager ctor."
+ },
+ {
+  "row": 3183,
+  "ps2": "0x001b0cb8",
+  "verdict": "accept",
+  "why": "Lock, TextureRenderContext::BeginFrame, BeginView, ClearViewPort; called from MakeCopy/MakeTexCopy."
+ },
+ {
+  "row": 3185,
+  "ps2": "0x001b0f28",
+  "verdict": "accept",
+  "why": "corrected from 0x1b0ef0 (the static-init helper itself); 0x1b0f28 is in the ctors table and calls it with (1,0xffff)."
+ },
+ {
+  "row": 3198,
+  "ps2": "0x001b1860",
+  "verdict": "accept",
+  "why": "Setter for +0xbc; field order throttle<accel<desired matches AUF (+0x30,+0x32,+0x34); called from EPathSetThrottle*."
+ },
+ {
+  "row": 3199,
+  "ps2": "0x001b1868",
+  "verdict": "accept",
+  "why": "Setter for +0xc4, the third field in AUF order (desired throttle +0x34); called from EPathChange/MultiplyThrottle."
+ },
+ {
+  "row": 3200,
+  "ps2": "0x001b1870",
+  "verdict": "accept",
+  "why": "Setter for +0xc0, the middle field in AUF order (acceleration +0x32)."
+ },
+ {
+  "row": 3201,
+  "ps2": "0x001b1878",
+  "verdict": "accept",
+  "why": "Stores the unsigned delay at +0xc8, after the throttle/accel fields; AUF stores it converted at the next field."
+ },
+ {
+  "row": 3204,
+  "ps2": "0x001b18a8",
+  "verdict": "accept",
+  "why": "Copies a 4x4 matrix from the handle into the MATRIX4& argument; callers are spline-path movement code."
+ },
+ {
+  "row": 3212,
+  "ps2": "0x001b1f68",
+  "verdict": "accept",
+  "why": "Advances the static path-handle iterator and returns the handle or 0 at list end, like AUF GetNextPathHandle."
+ },
+ {
+  "row": 3217,
+  "ps2": "0x001b2058",
+  "verdict": "accept",
+  "why": "corrected from 0x1b21f0 (an _Rb_tree _M_erase); 0x1b2058 calls RPathHandle::Update(float) for every handle in the list, like AUF RPathEngine::Update."
+ },
+ {
+  "row": 3219,
+  "ps2": "0x001b20c8",
+  "verdict": "accept",
+  "why": "corrected from 0x1b2258 (an _Rb_tree _M_erase); 0x1b20c8 walks the path list returning the handle whose instance matches, like AUF GetPathHandle."
+ },
+ {
+  "row": 3220,
+  "ps2": "0x001b22c0",
+  "verdict": "accept",
+  "method": "clear",
+  "why": "Frees every list node (FastFree 0xdc) and resets the sentinel; called from RPathEngine::Purge."
+ }
+]

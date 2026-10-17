@@ -1,0 +1,102 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000d1210",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "WWorld::SetTrackName(char *, bool)"
+  },
+  {
+   "address": "0x000d1230",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WWorld::WWorld(void)",
+   "return": "WWorld *"
+  },
+  {
+   "address": "0x000d12d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    }
+   ],
+   "sheet": "WWorld::LoadTrackFile(char *, char *)"
+  },
+  {
+   "address": "0x000d1470",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "WWorldPos *"
+    }
+   ],
+   "sheet": "WWorld::GetEnviroDesc(WWorldPos &) const",
+   "return": "void *"
+  },
+  {
+   "address": "0x000d14a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "CARP::Instance *"
+    }
+   ],
+   "sheet": "WWorld::GetSceneObjFromInstance(CARP::Instance *) const",
+   "return": "RSceneObj *"
+  },
+  {
+   "address": "0x000d14e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "CARP::Instance *"
+    }
+   ],
+   "sheet": "WWorld::GetProcAnimStateFromInstance(CARP::Instance *) const"
+  },
+  {
+   "address": "0x000d1610",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WWorld::~WWorld(void)"
+  },
+  {
+   "address": "0x000d1750",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WWorld::Reset(void)"
+  },
+  {
+   "address": "0x000d1b30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WWorld::Close(void)"
+  },
+  {
+   "address": "0x000d21a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WWorld::Open(void)"
+  }
+ ]
+}

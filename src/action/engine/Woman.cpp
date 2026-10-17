@@ -1,47 +1,35 @@
 // RLE-encoded 1-bit image, combined with a scrolling fire texture, to create the pause menu background
 #include "Woman.h"
+#include "psiGraphics.h"
 
 #include "../memory.h"
+#include "FS.h"
 #include "../util/hashtable.h"
 
-#define MemoryForWoman (*(void**)0x002ae2dc) // Buffer containing the complete data
 #define pWoman (*(void**)0x002ae2e0) // Current point in the buffer to which we have decoded
 #define WomanFrame U32_AT(0x002ae2e4) // Frame number
 
-#define FILELOADER_COMPLETE 0
 
-// NOAUTOINJECT
-// void LoadWoman(void) {
+// Loads the pause menu background's RLE file whole and rewinds the decoder to its first frame
+// AUTOINJECT
+void LoadWoman(void) {
+    int sizeBytes = FS_GetFileSize((char *)"woman.rle");
+    MemoryForWoman = Mem_Malloc(sizeBytes, 0x1204, 4);
+    FS_LoadFileIfReady((char *)"woman.rle", MemoryForWoman);
+    while (FS_StateMachineIterate())
+        ;
+    pWoman = MemoryForWoman;
+    WomanFrame = 0;
+}
 
-//     int sizeBytes = fileGetSize(0x161da8); // Unclear what this represents so far
+// The Xbox layer's thunk to it (0x000dc860), which ResetMap_Load calls
+// FUNC_AT(000dc860)
+void LoadWoman_Thunk(void) {
+    LoadWoman();
+}
 
-//     MemoryForWoman = Mem_Malloc(sizeBytes, 0x1204, 4);
-//     LoadFromFileWithinArchive("woman.rle", MemoryForWoman);
+void* Texture_GetRawDataPtr(int texIdx); // reimplemented in Direct3D/d3dSeam.cpp
 
-//     int result;
-//     do {
-//         result = FileLoaderStateMachineIterate();
-//     } while (result != FILELOADER_COMPLETE);
-
-
-//     pWoman = MemoryForWoman;
-//     WomanFrame = 0;
-
-// }
-
-// AUTOGEN
-void* Texture_GetRawDataPtr(int texIdx);
-
-typedef struct {
-    char _pad_1[0x24];
-    int numFrames;
-    int animSpeed;
-    char _pad_2[0x28];
-    int baseIdx;
-    char unknown_size_padding[0x1234]; // FIXME: Don't currently know how big this is
-} TextureInfo;
-
-#define Tex (*(TextureInfo**)0x002abe80)
 
 // AUTOGEN
 void psiDecompressWoman(void);
@@ -78,7 +66,7 @@ void WIP(void){
 
     TextureInfo t;
     
-    t = Tex[FireIdx];
+    t = *Tex[FireIdx];
     int fireIdxBase = t.baseIdx;
     int fireFrames = t.numFrames;
     int fireAnimSpeed = t.animSpeed;
@@ -86,7 +74,7 @@ void WIP(void){
     void* FireData = Texture_GetRawDataPtr(fireTexIdx);
 
 
-    t = Tex[OutIdx];
+    t = *Tex[OutIdx];
     int outIdxBase = t.baseIdx;
     int outFrames = t.numFrames;
     int outAnimSpeed = t.animSpeed;

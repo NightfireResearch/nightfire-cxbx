@@ -1,0 +1,631 @@
+{
+ "classes": [
+  {
+   "name": "AICharacterPedestrian",
+   "size": 656,
+   "base": "AICharacter",
+   "vtable": "0x0018b470",
+   "comment": "Pooled pedestrian (fpPeds 0x1dde98, 16 slots); size 0x290 from deleting destructor 24700 FastFree (PS2 probably 0x2a0). Own fields uniformly PS2 -0x10 (PS2 +0x150..+0x290 -> Xbox +0x140..+0x280); the chars at +0x150/+0x151 and bools at +0x1b4/+0x250 cause no further shift.",
+   "fields": [
+    {
+     "offset": "0x140",
+     "size": 4,
+     "type": "int",
+     "name": "pedIndex",
+     "confidence": "high",
+     "evidence": "UpdateClosestPed 23ce0 skips fpPeds[i] (0x1dde98, count fgNumPeds 0x1dded8) when i == [ESI+0x140]; KillSelf/Recycle/HandleInterrupts/FindPointAgainstWall read; PS2 +0x150 (SetBuddy hint). Name invented"
+    },
+    {
+     "offset": "0x144",
+     "size": 4,
+     "type": "WWorldPos *",
+     "name": "worldPos",
+     "confidence": "medium",
+     "evidence": "PreventFalling passes it as this to WWorldPos::FindClosestFace on both builds; PS2 +0x154. Name invented"
+    },
+    {
+     "offset": "0x148",
+     "size": 4,
+     "type": "WCollider *",
+     "name": "collider",
+     "confidence": "medium",
+     "evidence": "~AICharacterPedestrian/FindPointAgainstWall; WCollider::~WCollider hint on both builds (PS2 +0x158); the same hint on EnemyGround was doubtful (cluster7), so check before trusting the type"
+    },
+    {
+     "offset": "0x14c",
+     "size": 4,
+     "type": "int",
+     "name": "prevState",
+     "confidence": "medium",
+     "evidence": "DoWalking 270b0/DoStartled 27150/KillSelf store the old [+0x5c] state here just before writing a new one; PS2 +0x15c written by SetNewState. Name invented"
+    },
+    {
+     "offset": "0x150",
+     "size": 1,
+     "type": "byte",
+     "name": "pedFlags",
+     "confidence": "medium",
+     "evidence": "byte bit tests: DoWalking TEST [+0x150],3, DoStartled TEST 2, KillSelf TEST 1 and clears it; PS2 +0x160 1-byte (a char on both builds, not a packed bool, so no shift). Name invented"
+    },
+    {
+     "offset": "0x151",
+     "size": 1,
+     "type": "byte",
+     "name": "unknown151",
+     "confidence": "low",
+     "evidence": "not seen on Xbox; PS2 +0x161 1-byte R/W in DoDodging, next to pedFlags"
+    },
+    {
+     "offset": "0x154",
+     "size": 4,
+     "type": "int",
+     "name": "buddyIndex",
+     "confidence": "medium",
+     "evidence": "KillSelf 24140 indexes the ped table with [ESI+0x154], resets the buddy's +0x14c/+0x150/+0x154/+0x19c, then overwrites this field; PS2 +0x164 (SetBuddy(int,int)). Name invented"
+    },
+    {
+     "offset": "0x158",
+     "size": 4,
+     "type": "int",
+     "name": "unknown158",
+     "confidence": "low",
+     "evidence": "no Xbox access seen; PS2 +0x168 R/W in Recycle (uniform -0x10 shift)"
+    },
+    {
+     "offset": "0x15c",
+     "size": 4,
+     "type": "int",
+     "name": "currentAnim",
+     "confidence": "medium",
+     "evidence": "PlayAnim/DoDying/DoNeutral read; PS2 +0x16c passed to PlayAnim/PlayCrossFade. Name invented"
+    },
+    {
+     "offset": "0x160",
+     "size": 4,
+     "type": "int",
+     "name": "closestPed",
+     "confidence": "high",
+     "evidence": "UpdateClosestPed 23ce0 stores the index it returns (-1 if none); PS2 +0x170"
+    },
+    {
+     "offset": "0x164",
+     "size": 4,
+     "type": "float",
+     "name": "closestPedDist",
+     "confidence": "high",
+     "evidence": "UpdateClosestPed stores the best distance (init 9999.9 = 0x461c3f9a); PS2 +0x174 float"
+    },
+    {
+     "offset": "0x168",
+     "size": 4,
+     "type": "int",
+     "name": "prevClosestPed",
+     "confidence": "high",
+     "evidence": "UpdateClosestPed copies +0x160 here first; PS2 +0x178"
+    },
+    {
+     "offset": "0x16c",
+     "size": 4,
+     "type": "float",
+     "name": "prevClosestPedDist",
+     "confidence": "high",
+     "evidence": "UpdateClosestPed copies +0x164 here first; PS2 +0x17c float"
+    },
+    {
+     "offset": "0x170",
+     "size": 12,
+     "type": "COORD3",
+     "name": "fleeTarget",
+     "confidence": "medium",
+     "evidence": "DoStartled 27150 passes LEA [ESI+0x170] to SetTarget 23ba0 (missed by the scanner); PS2 +0x180 LEA in DoAvoiding/DoDodging/DoLeaning/DoStartled/Recycle. Name invented"
+    },
+    {
+     "offset": "0x180",
+     "size": 12,
+     "type": "COORD3",
+     "name": "nextTarget",
+     "confidence": "medium",
+     "evidence": "DoWalking 270b0 copies +0x180..+0x188 into target +0x190; PS2 +0x190 written by Recycle. Name invented"
+    },
+    {
+     "offset": "0x190",
+     "size": 12,
+     "type": "COORD3",
+     "name": "target",
+     "confidence": "high",
+     "evidence": "SetTarget(COORD3 &) / FaceTarget / ReachedTarget; FaceTarget writes +0x198 float; PS2 SetTarget +0x1a0..+0x1a8"
+    },
+    {
+     "offset": "0x19c",
+     "size": 4,
+     "type": "int",
+     "name": "stateTimer",
+     "confidence": "low",
+     "evidence": "zeroed by DoWalking/DoStartled/KillSelf/HandleInterrupts on every state change; PS2 +0x1ac (SetNewState, DoAvoiding). Name invented"
+    },
+    {
+     "offset": "0x1a0",
+     "size": 4,
+     "type": "int",
+     "name": "unknown1a0",
+     "confidence": "low",
+     "evidence": "PlayAnim writes; PS2 +0x1b0 PlayAnim/PlayCrossFade/DoAvoiding/DoDodging"
+    },
+    {
+     "offset": "0x1a4",
+     "size": 4,
+     "type": "float",
+     "name": "unknown1a4",
+     "confidence": "low",
+     "evidence": "UpdateRotPos/UpdateThreatRelativeDirection write float; PS2 +0x1b4"
+    },
+    {
+     "offset": "0x1a8",
+     "size": 4,
+     "type": "float",
+     "name": "unknown1a8",
+     "confidence": "low",
+     "evidence": "UpdateRotPos writes float; PS2 +0x1b8"
+    },
+    {
+     "offset": "0x1ac",
+     "size": 4,
+     "type": "float",
+     "name": "unknown1ac",
+     "confidence": "low",
+     "evidence": "KillSelf zeroes, HandleInterrupts/ThreatenedByVehicle write float; PS2 +0x1bc float"
+    },
+    {
+     "offset": "0x1b0",
+     "size": 4,
+     "type": "float",
+     "name": "unknown1b0",
+     "confidence": "low",
+     "evidence": "KillSelf zeroes, HandleInterrupts writes; PS2 +0x1c0 float (KillSelf)"
+    },
+    {
+     "offset": "0x1b4",
+     "size": 1,
+     "type": "bool",
+     "name": "active",
+     "confidence": "medium",
+     "evidence": "UpdateClosestPed only considers other peds whose byte +0x1b4 is set; MaintainHeading reads; PS2 +0x1c4 4-byte (next field keeps the -0x10 shift, so padded). Name invented"
+    },
+    {
+     "offset": "0x1b8",
+     "size": 4,
+     "type": "int",
+     "name": "roadSegment",
+     "confidence": "low",
+     "evidence": "UpdateClosestPed compares other peds' +0x1b8 with its own (match or -1); KillSelf/MaintainHeading write; PS2 +0x1c8. Name invented (cf. fgLastSeg)"
+    },
+    {
+     "offset": "0x1bc",
+     "size": 4,
+     "type": "int",
+     "name": "unknown1bc",
+     "confidence": "low",
+     "evidence": "UpdateThreatRelativeDirection reads; PS2 +0x1cc"
+    },
+    {
+     "offset": "0x1c0",
+     "size": 4,
+     "type": "WRoadNav *",
+     "name": "walkNav",
+     "confidence": "medium",
+     "evidence": "MaintainHeading reads; PS2 +0x1d0 passed to WRoadNav::IncNavPosition, returned by GetWalkToNav. Name invented"
+    },
+    {
+     "offset": "0x1c4",
+     "size": 4,
+     "type": "void *",
+     "name": "animController",
+     "confidence": "medium",
+     "evidence": "AnimationController * (PS2 +0x1d4 passed to AnimationController::GetCurrentFrame); PlayAnim writes. Type void * (size unknown), name invented"
+    },
+    {
+     "offset": "0x1c8",
+     "size": 4,
+     "type": "float",
+     "name": "animSpeed",
+     "confidence": "low",
+     "evidence": "PlayAnim/UpdateAnimSpeed write float; PS2 +0x1d8 float. Name invented"
+    },
+    {
+     "offset": "0x1cc",
+     "size": 4,
+     "type": "float",
+     "name": "unknown1cc",
+     "confidence": "low",
+     "evidence": "UpdateAnimSpeed writes; PS2 +0x1dc float"
+    },
+    {
+     "offset": "0x1d0",
+     "size": 12,
+     "type": "COORD3",
+     "name": "unknown1d0",
+     "confidence": "low",
+     "evidence": "LEA in DoLeaning/FindPointAgainstWall; PS2 +0x1e0 (w8 + w4) written by FindPointAgainstWall"
+    },
+    {
+     "offset": "0x1e0",
+     "size": 12,
+     "type": "COORD3",
+     "name": "wallPoint",
+     "confidence": "low",
+     "evidence": "FindPointAgainstWall LEA +0x1e0 and writes +0x1e4/+0x1e8; PS2 +0x1f0..+0x1f8 floats (DoLeaning, FindPointAgainstWall). Name invented"
+    },
+    {
+     "offset": "0x1ec",
+     "size": 4,
+     "type": "int",
+     "name": "unknown1ec",
+     "confidence": "low",
+     "evidence": "DoLeaning writes; PS2 +0x1fc"
+    },
+    {
+     "offset": "0x1f0",
+     "size": 4,
+     "type": "int",
+     "name": "unknown1f0",
+     "confidence": "low",
+     "evidence": "ThreatenedByVehicle writes; PS2 +0x200"
+    },
+    {
+     "offset": "0x1f4",
+     "size": 4,
+     "type": "int",
+     "name": "unknown1f4",
+     "confidence": "low",
+     "evidence": "ThreatenedByVehicle R/W; PS2 +0x204 (also Recycle)"
+    },
+    {
+     "offset": "0x1f8",
+     "size": 4,
+     "type": "int",
+     "name": "unknown1f8",
+     "confidence": "low",
+     "evidence": "ThreatenedByVehicle R/W; PS2 +0x208"
+    },
+    {
+     "offset": "0x1fc",
+     "size": 4,
+     "type": "int",
+     "name": "unknown1fc",
+     "confidence": "low",
+     "evidence": "ThreatenedByVehicle/UpdateAnimSpeed R/W; PS2 +0x20c (DoTurning, Recycle)"
+    },
+    {
+     "offset": "0x200",
+     "size": 4,
+     "type": "int",
+     "name": "unknown200",
+     "confidence": "low",
+     "evidence": "not seen on Xbox; PS2 +0x210 R/W in CheckVehicleThreat/DoDodging"
+    },
+    {
+     "offset": "0x204",
+     "size": 4,
+     "type": "float",
+     "name": "unknown204",
+     "confidence": "low",
+     "evidence": "CheckVehicleThreat LEA; PS2 +0x214 LEA float"
+    },
+    {
+     "offset": "0x208",
+     "size": 4,
+     "type": "float",
+     "name": "threatSide",
+     "confidence": "low",
+     "evidence": "DoStartled compares float +0x208 with a constant to pick a -/+0.25 lean; CheckVehicleThreat LEA; PS2 +0x218 LEA float. Name invented"
+    },
+    {
+     "offset": "0x20c",
+     "size": 4,
+     "type": "float",
+     "name": "unknown20c",
+     "confidence": "low",
+     "evidence": "CheckVehicleThreat/DoDodging/ThreatenedByVehicle/UpdateAnimSpeed float; PS2 +0x21c"
+    },
+    {
+     "offset": "0x210",
+     "size": 12,
+     "type": "COORD3",
+     "name": "threatPos0",
+     "confidence": "low",
+     "evidence": "LEA in CheckVehicleThreat/DoDodging/SetNewTargetBasedOnThreat; PS2 +0x220 (w8 + w4). 16-byte stride to the next vector on both builds, +0x21c unaccessed. Name invented"
+    },
+    {
+     "offset": "0x220",
+     "size": 12,
+     "type": "COORD3",
+     "name": "threatPos1",
+     "confidence": "low",
+     "evidence": "as threatPos0; PS2 +0x230..+0x238 floats"
+    },
+    {
+     "offset": "0x230",
+     "size": 12,
+     "type": "COORD3",
+     "name": "threatPos2",
+     "confidence": "low",
+     "evidence": "LEA in CheckVehicleThreat/SetNewTargetBasedOnThreat; PS2 +0x240 (w8 + w4)"
+    },
+    {
+     "offset": "0x23c",
+     "size": 4,
+     "type": "float",
+     "name": "unknown23c",
+     "confidence": "low",
+     "evidence": "ThreatenedByVehicle writes; PS2 +0x24c float (DoDodging too)"
+    },
+    {
+     "offset": "0x240",
+     "size": 4,
+     "type": "int",
+     "name": "unknown240",
+     "confidence": "low",
+     "evidence": "FindPointAgainstWall R/W; PS2 +0x250"
+    },
+    {
+     "offset": "0x244",
+     "size": 4,
+     "type": "int",
+     "name": "unknown244",
+     "confidence": "low",
+     "evidence": "FindPointAgainstWall R/W; PS2 +0x254"
+    },
+    {
+     "offset": "0x248",
+     "size": 4,
+     "type": "float",
+     "name": "unknown248",
+     "confidence": "low",
+     "evidence": "FindPointAgainstWall writes float; PS2 +0x258 float"
+    },
+    {
+     "offset": "0x24c",
+     "size": 4,
+     "type": "int",
+     "name": "unknown24c",
+     "confidence": "low",
+     "evidence": "DoStartled writes -1; DoDodging/DoLeaning write; PS2 +0x25c"
+    },
+    {
+     "offset": "0x250",
+     "size": 1,
+     "type": "bool",
+     "name": "useAimTarget",
+     "confidence": "medium",
+     "evidence": "TargetIsInRange 24b30 uses COORD3 +0x260 when this byte is set, else Bond's rigid-body position; DoAiming R/W; PS2 +0x260 1-byte. Name invented"
+    },
+    {
+     "offset": "0x260",
+     "size": 12,
+     "type": "COORD3",
+     "name": "aimTarget",
+     "confidence": "medium",
+     "evidence": "TargetIsInRange LEA +0x260; PS2 +0x270 (w8 + w4) in HandleInterrupts/Recycle/TargetIsInRange. Name invented"
+    },
+    {
+     "offset": "0x26c",
+     "size": 4,
+     "type": "int",
+     "name": "unknown26c",
+     "confidence": "low",
+     "evidence": "DoAiming R/W; PS2 +0x27c"
+    },
+    {
+     "offset": "0x270",
+     "size": 4,
+     "type": "int",
+     "name": "unknown270",
+     "confidence": "low",
+     "evidence": "DoAiming R/W; PS2 +0x280"
+    },
+    {
+     "offset": "0x274",
+     "size": 4,
+     "type": "float",
+     "name": "targetAngle",
+     "confidence": "medium",
+     "evidence": "TargetIsInRange stores the wrapped angle between facing and target; DoAiming writes; PS2 +0x284 float (same role as EnemySnow +0x154). Name invented"
+    },
+    {
+     "offset": "0x278",
+     "size": 4,
+     "type": "float",
+     "name": "aimYaw",
+     "confidence": "low",
+     "evidence": "DoAiming R/W float; PS2 +0x288; by analogy with EnemySnow +0x158. Name invented"
+    },
+    {
+     "offset": "0x27c",
+     "size": 4,
+     "type": "float",
+     "name": "unknown27c",
+     "confidence": "low",
+     "evidence": "DoAiming R/W float; PS2 +0x28c LEA float (address taken: maybe the start of a float[2] as in EnemySnow +0x160)"
+    },
+    {
+     "offset": "0x280",
+     "size": 4,
+     "type": "float",
+     "name": "unknown280",
+     "confidence": "low",
+     "evidence": "DoAiming writes float; PS2 +0x290 LEA float"
+    }
+   ]
+  },
+  {
+   "name": "AICharacterEnemySnow",
+   "size": 368,
+   "base": "AICharacter",
+   "vtable": "0x0018a948",
+   "comment": "Snowmobile-riding enemy (ctor(MATRIX4 &, int weapon, PVehicle *), sets injuryZones 0x1b51d8); size 0x170 from dtor 1fdd0. Own fields uniformly PS2 -0x10.",
+   "fields": [
+    {
+     "offset": "0x140",
+     "size": 4,
+     "type": "PVehicle *",
+     "name": "vehicle",
+     "confidence": "high",
+     "evidence": "ctor 1fd40 stores arg3 (ctor(MATRIX4 &, int, PVehicle *)); DoNeutral makes vtable calls on it; PhysicsObject::GetHitPoints hint; PS2 +0x150 (GetVehiclePtr)"
+    },
+    {
+     "offset": "0x144",
+     "size": 4,
+     "type": "int",
+     "name": "leanDirection",
+     "confidence": "low",
+     "evidence": "ctor 0; DoNeutral writes 0 or 1 together with subState 0x15; DoLeaning reads; PS2 +0x154. Name invented"
+    },
+    {
+     "offset": "0x148",
+     "size": 4,
+     "type": "int",
+     "name": "aimPitchDir",
+     "confidence": "low",
+     "evidence": "ctor 0; DoAiming XORs it with base +0x94 to choose the +/- step for aimPitch; PS2 +0x158. Name invented"
+    },
+    {
+     "offset": "0x14c",
+     "size": 4,
+     "type": "int",
+     "name": "aimTimer",
+     "confidence": "medium",
+     "evidence": "ctor 0; DoAiming increments it, compares with +0x150, resets; PS2 +0x15c. Name invented"
+    },
+    {
+     "offset": "0x150",
+     "size": 4,
+     "type": "int",
+     "name": "aimTimerLimit",
+     "confidence": "medium",
+     "evidence": "ctor 0; DoAiming sets (random*0xb4)>>16 (0..180); PS2 +0x160. Name invented"
+    },
+    {
+     "offset": "0x154",
+     "size": 4,
+     "type": "float",
+     "name": "targetAngle",
+     "confidence": "medium",
+     "evidence": "ctor 0; TargetIsInRange 20710 stores an angle (FST); DoAiming scales it; PS2 +0x164 float. Name invented"
+    },
+    {
+     "offset": "0x158",
+     "size": 4,
+     "type": "float",
+     "name": "aimYaw",
+     "confidence": "medium",
+     "evidence": "ctor 0; DoAiming steps toward targetAngle, clamps to +/-90 (0x42b40000), passes to 0x114c60 (rotation builder); PS2 +0x168. Name invented"
+    },
+    {
+     "offset": "0x15c",
+     "size": 4,
+     "type": "float",
+     "name": "aimPitch",
+     "confidence": "medium",
+     "evidence": "ctor 0; DoAiming steps it, clamps to -70/+120; PS2 +0x16c. Name invented"
+    },
+    {
+     "offset": "0x160",
+     "size": 8,
+     "type": "float[2]",
+     "name": "blendWeights",
+     "confidence": "medium",
+     "evidence": "ctor zero loop; DoAiming loop i<2: [+0x160+4i] += [+0x168+4i], clamp 0..1, passes &+0x160 to 0x11780 (actor blend); PS2 +0x170 LEA. Name invented"
+    },
+    {
+     "offset": "0x168",
+     "size": 8,
+     "type": "float[2]",
+     "name": "blendRates",
+     "confidence": "medium",
+     "evidence": "added to blendWeights each frame, zeroed when clamped; DoAiming/DoArmed/DoNeutral/PlayZoneInjuryAnim write; PS2 +0x178 LEA/W, +0x17c. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "AICharacterEnemySunroof",
+   "size": 368,
+   "base": "AICharacter",
+   "vtable": "0x0018aac0",
+   "comment": "Enemy in a car sunroof (ctor(MATRIX4 &, int weapon, int, PVehicle *), owns a WTargetable); size 0x170 from dtor 21230. Own fields uniformly PS2 -0x10; +0x144..+0x14f unaccessed on both builds.",
+   "fields": [
+    {
+     "offset": "0x140",
+     "size": 4,
+     "type": "PVehicle *",
+     "name": "vehicle",
+     "confidence": "high",
+     "evidence": "ctor 210f0 stores arg4 and reads its word +0x4a (rigid body index) for Simulation::GetRigidBody; PhysicsObject::GetHitPoints hint; PS2 +0x150 (GetVehiclePtr)"
+    },
+    {
+     "offset": "0x150",
+     "size": 12,
+     "type": "COORD3",
+     "name": "lastVehicleVelocity",
+     "confidence": "medium",
+     "evidence": "ctor copies GetRigidBody(vehicle)->velocity (+0x20) here; PS2 +0x160 (w8 + w4) written by ctor and DoTilting (VehicleIsAccelerating compares). Name invented"
+    },
+    {
+     "offset": "0x15c",
+     "size": 4,
+     "type": "int",
+     "name": "unknown15c",
+     "confidence": "low",
+     "evidence": "ctor 0; DoArmed/DoLeaning R/W; PS2 +0x16c also in VehicleIsAccelerating"
+    },
+    {
+     "offset": "0x160",
+     "size": 4,
+     "type": "AICharacter *",
+     "name": "partnerA",
+     "confidence": "medium",
+     "evidence": "ctor 0; TargetIsInRange 218f0 dereferences [+0x160]+0xa8 (actor iterator) ->+8 ->byte +0x24, as for an AICharacter; DoInitial writes; PS2 +0x170. Name invented"
+    },
+    {
+     "offset": "0x164",
+     "size": 4,
+     "type": "AICharacter *",
+     "name": "partnerB",
+     "confidence": "medium",
+     "evidence": "same pattern as +0x160; PS2 +0x174. Name invented"
+    },
+    {
+     "offset": "0x168",
+     "size": 4,
+     "type": "WTargetable *",
+     "name": "targetable",
+     "confidence": "high",
+     "evidence": "ctor FastAlloc(0x50) then WTargetable ctor 0xcd9b0(this) and stores it; ~AICharacterEnemySunroof/DoDying call WTargetable::RemoveReference; PS2 +0x178 (its ~AICharacter hint is a folded dtor)"
+    }
+   ]
+  }
+ ],
+ "vtable_slots": [],
+ "returns": {
+  "0x00024b30": "bool",
+  "0x000218f0": "bool",
+  "0x00020710": "bool",
+  "0x00023ce0": "int",
+  "0x00024e50": "bool",
+  "0x00026760": "int",
+  "0x000270b0": "void",
+  "0x00027150": "void",
+  "0x00020090": "void"
+ },
+ "skip_prototypes": [],
+ "notes": [
+  "All three subclasses start their own fields at Xbox +0x140 = PS2 +0x150 (PS2 AICharacter keeps its vptr last at +0x140), and the -0x10 shift holds to the end of every class.",
+  "The evidence scanner missed some Xbox accesses: DoStartled 27150 takes LEA [ESI+0x170] (passed to SetTarget 23ba0) though +0x170 is absent from the table. Pedestrian +0x151, +0x158 and +0x200 are placed from PS2 alone.",
+  "Pedestrian +0x210/+0x220/+0x230 are 16 bytes apart on both builds with the 4th dword unaccessed: they may be COORD4s or padded vectors; typed COORD3.",
+  "Pedestrian DoAiming fields +0x26c..+0x280 look like EnemySnow's aim block (+0x148..+0x16c): targetAngle +0x274 matches Snow +0x154 (both written by TargetIsInRange). Pedestrian +0x284..+0x28f unaccessed.",
+  "Return types: TargetIsInRange (Ped 24b30, Snow 20710, Sunroof 218f0) return AL 0/1; UpdateClosestPed 23ce0 returns the ped index in EAX (-1 if none); ReachedTarget 24e50 is tested with TEST AL by DoWalking; ThreatenedByVehicle 26760 is tested with TEST EAX by DoStartled (int).",
+  "Sunroof ctor takes 4 args (RET 0x10): MATRIX4 &, int weapon (clamped 1..2 into base +0x68), an int stored in base +0x70, PVehicle *. The PS2 sheet truncates the signature.",
+  "Snow +0x140 and Sunroof +0x140 carry a PhysicsObject::GetHitPoints hint; typed PVehicle * since PS2 GetVehiclePtr returns them and the Snow ctor takes PVehicle *.",
+  "Snow DoNeutral 1fe00 calls 0x1fc80 (not in the method list) with the vehicle pointer loaded: an unnamed helper in the AICharacterEnemySnow address range.",
+  "AnimationController (Ped +0x1c4) typed void *, as in cluster7."
+ ]
+}

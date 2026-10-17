@@ -1,0 +1,166 @@
+# Every single-player level loaded in turn, for the HUD panes' sprites that each level's textures lack
+# ("SPRITE HASHCODE ... NOT FOUND" from HUD_Init). One screenshot per level confirms it loaded. A level step
+# only takes effect in play, not during a cutscene, hence the two skips.
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+press A                    # NightFire
+waitpage 0x40000025        # P_NFSELECT
+wait 100
+press A                    # the codename
+waitpage 0x4000002f        # P_MESSAGEBOX
+wait 150
+press A
+waitpage 0x40000023        # P_NFDFCTY
+wait 100
+press A                    # difficulty
+waitpage 0x4000001c        # P_NFMAP
+wait 100
+press A                    # the first mission
+wait 1500
+level 0x07000001
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_01
+level 0x07000002
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_02
+level 0x07000003
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_03
+level 0x07000004
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_04
+level 0x07000006
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_06
+level 0x07000007
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_07
+level 0x07000008
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_08
+level 0x07000009
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_09
+level 0x0700000a
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_0a
+level 0x0700000b
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_0b
+level 0x0700000c
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_0c
+level 0x0700000d
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_0d
+level 0x07000011
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_11
+level 0x07000012
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_12
+level 0x07000013
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_13
+level 0x07000014
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_14
+level 0x07000015
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_15
+level 0x07000016
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_16
+level 0x0700001b
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_1b
+level 0x0700004a
+wait 2000
+press A                    # skip the cutscene, if any
+wait 300
+press A                    # again, if the first came during the load
+wait 300
+shot level_4a
+quit

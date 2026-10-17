@@ -1,0 +1,39 @@
+{
+ "batch": "047",
+ "program": "Driving.xbe",
+ "applied": "Sun Sep 27 03:56:28 2026",
+ "items": [
+  {
+   "xbox": "0x000b8960",
+   "old_name": "ClearMessageList",
+   "old_plate": "[symbol-matching]\nCanonical name: SMissionManager::ClearMessageList\nClass: SMissionManager\nEvidence: Version Tracking candidate, body review: callers SMissionManager::ClearState and ~SMissionManager on both; list at this+4 as on PS2, each element plain-deleted then the list cleared; sibling ClearObjectiveList is the other Xbox ClearState callee FUN_000b89c0 (list at +0x10)\nEvidence: PS2 0x00208d20\nBatch: 021\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x000b8960 from 'ClearMessageList' to 'ClearObjectiveList'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'ClearObjectiveList' shares the same token set as existing function 'ClearObjective' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x000b8960",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "ClearObjectiveList",
+   "ok": true
+  }
+ ]
+}

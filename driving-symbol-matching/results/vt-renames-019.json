@@ -1,0 +1,38 @@
+[
+ {
+  "xbox": "0x000d3450",
+  "name": "GFX::CULL_GetNextCanvas",
+  "ps2": "0x232d58",
+  "why": "differing-name review: Xbox body forwards to GFXGallery::CULL_GetNextCanvas(global gallery) exactly like PS2 GFX::CULL_GetNextCanvas; no PS2 GGallery::CULL_GetNextCanvas exists and Xbox neighbours are GFX:: (0xd34c0 GFX::Update) (was GGallery::CULL_GetNextCanvas)"
+ },
+ {
+  "xbox": "0x000a3210",
+  "name": "RParticulate::LoadAttributes",
+  "ps2": "0x1e9b38",
+  "why": "differing-name review: Same body as PS2 RParticulate::LoadAttributes ('Enable Particulate', +0xffc); PS2 has no RParticulates class and Xbox neighbours 0xa3240.. are RParticulate:: (was RParticulates::LoadAttributes)"
+ },
+ {
+  "xbox": "0x00075e80",
+  "name": "SimpleDraw::Init",
+  "ps2": "0x19f768",
+  "why": "differing-name review: Xbox body news USimpleMaterial/USimpleTexturedMaterial into SimpleDraw::fMat/fTexMat = PS2 SimpleDraw::Init 0x19f768; Draw::Init is the Xbox jmp thunk 0x75f20 (called from Render_InitLibRender as PS2 0x19f800 is), which keeps Draw::Init (was Draw::Init)"
+ },
+ {
+  "xbox": "0xed2d0",
+  "name": "EAGLInternal::RuntimeAllocTARDestructor",
+  "ps2": "0x27e108",
+  "why": "differing-name review: Xbox body loops count x ~TAR then frees count*0x50 = PS2 RuntimeAllocTARDestructor (count x 0x60); EAGL::Device::Init registers 0xed2d0 in runtimeAllocConstructorPool 'EAGL::TAR' (PS2 same slot), while Xbox 0xed2b0 (single ~TAR) is the ConstructorPool TARDestructor (was EAGLInternal::TARDestructor)"
+ },
+ {
+  "xbox": "0xecbe0",
+  "name": "EAGLInternal::RuntimeAllocTARConstructor",
+  "ps2": "0x27af10",
+  "why": "found reviewing EAGLInternal::TARDestructor / EAGLInternal::RuntimeAllocTARDestructor: EAGL::Device::Init registers 0xecbe0 with 0xed2d0 in runtimeAllocConstructorPool 'EAGL::TAR' (PS2 pairs RuntimeAllocTARConstructor 0x27af10 / RuntimeAllocTARDestructor 0x27e108 in that slot); it currently carries a duplicate 'EAGLInternal::TARConstructor' (the ConstructorPool one is 0xed070) (was EAGLInternal::TARConstructor)"
+ },
+ {
+  "xbox": "0x13d3e0",
+  "name": "SNDREAL_systemtask",
+  "ps2": "0x3077c0",
+  "why": "differing-name review: current name is a typo with no PS2 counterpart; body (SNDSYS_service; return 0) is identical to PS2 SNDREAL_systemtask (was SNDREAL_systemtasak)"
+ }
+]

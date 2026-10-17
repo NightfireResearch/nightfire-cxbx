@@ -1,29 +1,210 @@
 #include "Anim.h"
+#include <math.h>
+#include <stdio.h>
+#include <string.h>    // memcpy
+#include "Script.h"    // ScriptCam
+#include "psiDraw.h"
+#include "psiFile.h"
+#include "psiGraphics.h"
+#include "viewer.h"
+#include "celglist.h"
+#include "../memory.h" // Mem_Malloc
+#include "../game.h"
+#include "../math/math.h"
+#include "../math/X87Ops.h"
+#include "../util/hashtable.h"
+#include "../util/Random.h"    // Rand_Rand
+#include "../sound/Sound.h"
+#include "../game/view.h"
+#include "../game/weapon_stats.h"
+#include "../game/mp/multiplayer.h"
+#include "../game/drone/NDrone2.h"
+#include "../game/obj/Player.h"
+#include "../game/obj/control.h"
+#include "../game/obj/bullet.h"
+#include "../game/obj/Gas.h"
+#include "../game/obj/Light.h"
 
+#pragma fp_contract(off)
 
-// AUTOGEN
-uchar AnimGetBoneWorldTrans(obj_tag *param_1,uint whichBoneMatrix,int param_3,_VECTOR *param_4,_MATRIX *param_5);
+// The skeletal and facial animation of the action engine: loading skins, sequences and scripts, the scripts that play
+// on an object and the sets that choose them, sampling and blending the sequences into a pose, the bones' matrices,
+// head tracking and aiming, and drawing. docs/anim has the formats.
 
-// AUTOGEN
-bool AnimObjectIsClose(obj_tag* obj, uint unk);
+// ---------------------------------------------------------------------------------------------------------------
+// Globals and originals
 
-// AUTOGEN
-void AnimObjectDelete(obj_tag* obj);
+// AnimSizes: the bytes and counts of what AnimLoadFile loaded
+typedef struct AnimSizes {
+    uint skinBytes;
+    uint seqBytes;
+    uint scriptBytes;
+    uint numSkins;
+    uint numSeqs;
+    uint numScripts;
+    uint seqFrames;
+} AnimSizes;
+#define AnimFileSizes (*(AnimSizes *)0x001d6a44)
 
-// NOAUTOINJECT
-void AnimObjectHeadTrack(obj_tag* gameObj, AnimObj* animObj, quaternion_tag *q, _MATRIX *m, int param_5) {
-    // With nothing implemented here, guards will stare straight forwards
-    // but animations are otherwise not broken in any way it seems
+#define AnimScriptTimeStamp U32_AT(0x001d7570)
+#define AnimTagTimeStamp U32_AT(0x001d6a60)
+#define Glb_SkinScale (*(_VECTOR *)0x001d7794)
+#define Glb_InvSkinScale (*(_VECTOR *)0x001d6a28)
+#define nDistanceTables I16_AT(0x001d6ac4)
+#define Glb_AnimPostLoadDone U8_AT(0x001d6a65)
+#define ReverseFlag U8_AT(0x001d7828)
+#define Glb_pCurrentScript (*(sAnimScript_tag **)0x001d7778)
+#define Glb_bScriptDeleted U8_AT(0x001d6a64)
+// The footstep a script command asked for: 1 for two of the player's scripts, 2 for the rest (AnimObjectUpdate)
+#define FootstepType U8_AT(0x001d6a24)
+// The morphs AnimObjectDraw hands the renderer: the strongest eight, in index order
+#define Morph_Count U8_AT(0x001d7826)
+#define Morph_Weight ((float *)0x001d6a68)
+#define Morph_Index ((uchar *)0x001d777c)
+#define bShadowCharacter U8_AT(0x001d7824)
+#define bCharacterLight U8_AT(0x001d7825)
 
+// The file being loaded and the cursor the loaders read it with
+#define pAnimData (*(char **)0x001d6ac8)
+#define AnimFileSize I32_AT(0x001d6ac0)
+#define pAnimFileData PTR_AT(0x001d6a20)
+
+// AnimFrameCopy's working store: the powers of the frame, and four channels evaluated together (coefficient i of
+// lane l at [i][l]; row 0 is the sum)
+#define AnimFramePoly ((float *)0x001d6acc)
+#define AnimChannelCoef (*(float (*)[6][4])0x001d69c0)
+#define AnimChannelType ((int *)0x001d6a34)
+
+// The facial scripts by alert status (four) and the blink, for skeleton 1 and for the others
+#define FacialAnims ((const HASHCODE *)0x00163468)
+#define FacialAnimsAltSkeleton ((const HASHCODE *)0x00163454)
+
+// The hashcode type bytes AnimLoadFile dispatches on
+#define ANIM_HASHTYPE_SEQ 0x04000000
+#define ANIM_HASHTYPE_SKIN 0x05000000
+#define ANIM_HASHTYPE_SCRIPT 0x06000000
+
+// Mem_Malloc tags (Ghidra's MallocFlags, with the Unknown bit every tag in the game carries)
+#define MALLOC_ANIM_SKIN_DATA           ((MallocFlags)0x1c04)
+#define MALLOC_ANIM_SEQ_DATA            ((MallocFlags)0x1e04)
+#define MALLOC_ANIM_SCRIPT_DATA         ((MallocFlags)0x1f04)
+#define MALLOC_ANIM_SKIN_STRUCTS        ((MallocFlags)0x2004)
+#define MALLOC_ANIM_SKINMAT_STRUCTS     ((MallocFlags)0x2104)
+#define MALLOC_ANIM_SEQ_STRUCTS         ((MallocFlags)0x2304)
+#define MALLOC_ANIM_SEQ_DATA_BUFFERS    ((MallocFlags)0x2404)
+#define MALLOC_ANIM_SCRIPT_STRUCTS      ((MallocFlags)0x2504)
+#define MALLOC_ANIM_OBJECT_STRUCTS      ((MallocFlags)0x2604)
+#define MALLOC_ANIM_MORPH_DATA_BUFFERS  ((MallocFlags)0x3b04)
+#define MALLOC_ANIM_SET_STRUCTS         ((MallocFlags)0x3c04)
+#define MALLOC_ANIM_UNPAK_OPT           ((MallocFlags)0x3d04)
+
+// The bone (by index) the laser sight's beam leaves from, and its datum
+#define WEAPON_LASER_PISTOL 0x18
+#define LASER_BEAM_GLIST ((HASHCODE)0x02000133)
+#define LASER_BEAM_GLIST_NIGHTVISION ((HASHCODE)0x02000131)
+
+// A morph sequence's pose: fixed size whatever the skin's morph count
+#define ANIM_MORPH_POSE_SIZE 0x58
+// The decoded pose of one frame
+#define ANIM_FRAME_BUFFER_SIZE 0xa80
+
+// The facial morphs that turn the eyes (AnimObjectHeadTrack's lookMorphX/Y)
+#define MORPH_EYES_Y 11
+#define MORPH_EYES_Y_INV 12
+#define MORPH_EYES_X_INV 13
+#define MORPH_EYES_X 14
+
+// The originals, called by address
+#define hashtable_get_hashtype_data ((void (__cdecl *)(uint hashtype, HASHCODE *out))0x0006b740)
+#define AnimSetDelete ((void (__cdecl *)(obj_tag *obj, sAnimSet_tag **slot))0x000177a0)
+#define moveTowardsValue ((float (__cdecl *)(float current, float target, float speed))0x00024000)
+#define Vec4_MulAdd ((void (__cdecl *)(float scale, float *vIn, float *vAcc))0x000d7300)
+#define Vec_Mul ((void (__cdecl *)(_VECTOR *v, _VECTOR *scale))0x000d6e90)
+#define Quat_Rot_Vec ((void (__cdecl *)(quaternion_tag *q, _VECTOR *vIn, _VECTOR *vOut))0x000d56a0)
+#define Quat_EulerToQuat ((void (__cdecl *)(_VECTOR *euler, quaternion_tag *q))0x000d5740)
+#define Quat_AxisAngleToQuat ((void (__cdecl *)(float *axisAngle, quaternion_tag *q))0x000d59b0)
+#define Ang_RotateToBearing ((double (__cdecl *)(float current, float target, float rate, float maxTurn))0x000d6380)
+#define Vec_UnitVector ((void (__cdecl *)(_VECTOR *out, _VECTOR *from, _VECTOR *to))0x000d8a90)
+#define Plane_PutPntOnPlane ((void (__cdecl *)(float *out, float *point, float *plane))0x000d7f30)
+// INVENTED NAME: where the line from a through b meets the sphere about centre, in out; 0 if it misses
+#define Vec_LineSphereIntersect ((int (__cdecl *)(float *a, float *b, float *centre, float radius, float *out))0x000d8590)
+#define Control_GetObjMatrix ((void (__cdecl *)(obj_tag *obj, _MATRIX *mtx))0x0002cf10)
+#define Effect_Create ((void (__cdecl *)(HITDATA_tag *hit, obj_tag *obj, uint type, float scale))0x00070430)
+#define View_SetupRenderModes ((void (__cdecl *)(viewer_tag *viewer, obj_tag *obj))0x000d9af0)
+#define View_SetupRenderModes2 ((void (__cdecl *)(viewer_tag *viewer, obj_tag *obj))0x000d9b40)
+#define Vec_Cartesian_2_Spherical ((void (__cdecl *)(_VECTOR *out, float x, float y, float z))0x000d8530)
+
+// Concat(A, B): B = B * A. Its AUTOGEN body is in Player.cpp.
+void Concat(float *a, float *b);
+
+// AnimDistanceTableGet (0x000174a0): the distance table of a sequence, made the first time (the sequence in ESI)
+static __declspec(naked) AnimDistanceTable *AnimDistanceTableGet(HASHCODE hashcode) {
+    _asm {
+        push esi
+        mov esi, [esp + 8]
+        mov eax, 0x000174a0
+        call eax
+        pop esi
+        ret
+    }
 }
 
-// NOAUTOINJECT
-void AnimObjectAimAt(obj_tag *param_1,AnimObj *param_2,quaternion_tag *param_3,_MATRIX *param_4, int param_5) {
-    // With nothing implemented here, guards will appear to shoot horizontally straight forwards
-    // but animations are otherwise not broken in any way it seems. Their shots will still
-    // target the player correctly.
+// The C runtime's x87 acos (__CIacos): the argument in ST0, the result in ST0
+static double __declspec(naked) CIAcos(double x) {
+    _asm {
+        fld qword ptr [esp + 4]
+        mov eax, 0x000ee294
+        call eax
+        ret
+    }
 }
 
+// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
+// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
+static int32_t Ftol(double x) {
+    if (!(fabs(x) < 9223372036854775808.0))
+        return 0;
+    long long nearest = llrint(x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x));
+}
+
+// What the original's FCOMP and FCHS give: the sign flipped unless x >= 0, so -0 stays -0 (MSVC's fabs clears it)
+static float Magnitude(float x) {
+    return x >= 0.0f ? x : std::bit_cast<float>(std::bit_cast<uint32_t>(x) ^ 0x80000000u);
+}
+
+// a moved towards b by the fraction t, never past b: the x87's arithmetic, the direction from the stored gap
+static float LerpTo(float a, float b, float t) {
+    double gap = (double)b - a;
+    double result = gap * t + a;
+    if (!((float)gap >= 0.0f)) {
+        if (result < b)
+            result = b;
+    } else if (result > b) {
+        result = b;
+    }
+    return (float)result;
+}
+
+// The nearest the object is to any of the four views (AnimObj::lod)
+static uint AnimObjectNearestLod(obj_tag *obj) {
+    const uchar *lod = obj->animState->animObj.lod;
+    uint nearest = lod[0];
+    if (lod[1] < nearest)
+        nearest = lod[1];
+    if (lod[2] < nearest)
+        nearest = lod[2];
+    if (lod[3] < nearest)
+        nearest = lod[3];
+    return nearest;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Loading
+
+// XBE_GLOBAL(0x001634c0, 0x20)
 HASHCODE SleeveEnts_SleeveTable[] = {
     (HASHCODE) 0x020009d0, // Watch_BlackGloves
     (HASHCODE) 0x02000900, // Watch_BareHands
@@ -35,113 +216,305 @@ HASHCODE SleeveEnts_SleeveTable[] = {
     (HASHCODE) 0x02000a13, // Bond_hands_femblack
 };
 
-// UNINJECTABLE - uses custom calling convention
-HASHCODE AnimSleeveGetEntity(int idx) {
-    
-    // Bad input, use the first item in the list by default
-    if (idx >= ARRAY_SIZE(SleeveEnts_SleeveTable))
-        idx = 0;
-    
-    while(true) {
+// The first sleeve entity that is loaded, from idx on and round to the start: 0 if none is
+HASHCODE _AnimSleeveGetEntity(uint idx) {
+    for (uint tries = 0; tries < ARRAY_SIZE(SleeveEnts_SleeveTable); tries++, idx++) {
+        if (idx >= ARRAY_SIZE(SleeveEnts_SleeveTable))
+            idx = 0;
         HASHCODE hashcode = SleeveEnts_SleeveTable[idx];
-
-        // Does the data exist (is the sleeve loaded/present?)
-        if (hashtable_getitem(hashcode) != NULL) 
+        if (hashtable_getitem(hashcode) != NULL)
             return hashcode;
-        
-        // If it isn't loaded, skip to the next item in the list
-        idx = idx + 1;
-        
-        // If we've run out of options, nothing more we can try
-        if(idx >= ARRAY_SIZE(SleeveEnts_SleeveTable))
-            break;
     }
-
     return (HASHCODE)0;
+}
+
+// The index in EAX
+// AUTOLTCG
+HASHCODE __declspec(naked) AnimSleeveGetEntity(void) {
+    _asm {
+        push eax
+        call _AnimSleeveGetEntity
+        add esp, 4
+        ret
+    }
 }
 
 // AUTOINJECT
 void AnimObjectSetSleeveType(obj_tag *param_1, int sleeveNum) {
-  
-    HASHCODE HVar1 = AnimSleeveGetEntity(sleeveNum);
+    HASHCODE HVar1 = _AnimSleeveGetEntity(sleeveNum);
 
     if (HVar1 != (HASHCODE)0) {
-
         // If the hashcode has the corresponding celglist, apply it
         celglist_tag* celGlist = hashtable_hashcode_to_celglist(HVar1);
 
         if (celGlist != NULL)
-            (param_1->animState->animObj).maybeSleeveGlist = celGlist;
-
+            (param_1->animState->animObj).sleeveGlist = celGlist;
     }
-  
 }
 
-
-
-// NOAUTOINJECT
-void psiBuildMatrixPalette(obj_tag *gameObj, AnimObj *animObj, char param_3) {
-
-    // AnimSkin *skin = animObj->skinPtr;
-    // _MATRIX* boneMtxs = animObj->boneMtxs;
-    // int numBones = SkeletonTable[skin->skeletonNum] + 2;
-    // uint flags = animObj->flags;
-
-
+// Before a level loads: on a cold load the skeletons, the time stamps and the skin scales are reset too
+// AUTOINJECT
+void AnimPreLoadInit(char keepSkeletons) {
+    if (!keepSkeletons) {
+        AnimScriptTimeStamp = 1;
+        AnimTagTimeStamp = 0x80000001;
+        Glb_SkinScale.z = 1.0f;
+        Glb_SkinScale.y = 1.0f;
+        Glb_SkinScale.x = 1.0f;
+        Glb_InvSkinScale.z = 1.0f;
+        Glb_InvSkinScale.y = 1.0f;
+        Glb_InvSkinScale.x = 1.0f;
+        for (int i = 0; i < 128; i++)
+            SkeletonTable[i] = NULL;
+        nDistanceTables = 0;
+    }
+    memset(&AnimFileSizes, 0, sizeof(AnimFileSizes));
+    Glb_AnimPostLoadDone = 0;
 }
 
-// NOAUTOINJECT
-// void AnimObjectDraw(obj_tag *obj, viewer_tag *viewer) {
+// Loads <hashcode>.bin and adds it to the hashtable, unless it is there already
+void _loadAnimFileCapturingSize(MallocFlags tag, HASHCODE hashcode) {
+    char name[0x100];
+    sprintf(name, "%s%8.8x.bin", "", hashcode);
+    if (tag != MALLOC_ANIM_SKIN_DATA) {
+        if (tag == MALLOC_ANIM_SEQ_DATA)
+            sprintf(name, "%s%8.8x.%s", "", hashcode, "bin");
+        else
+            sprintf(name, "%s%8.8x.bin", "", hashcode);
+    }
+    void *data = psiFileLoad(name, tag, &AnimFileSize);
+    if (hashtable_getitem(hashcode) == NULL)
+        hashtable_additem(hashcode, data);
+    pAnimFileData = data;
+}
 
-//     if(obj == NULL)
-//         return;
-    
-//     if(obj->animState == NULL)
-//         return;
+// The tag in EAX, the hashcode in ESI
+// AUTOLTCG
+void __declspec(naked) loadAnimFileCapturingSize(void) {
+    _asm {
+        push esi
+        movsx eax, ax
+        push eax
+        call _loadAnimFileCapturingSize
+        add esp, 8
+        ret
+    }
+}
 
-//     // animFlags & 1 == 0
-//     // TODO
-//     if(false)
-//         return;
+static uint AnimData_ReadU16(void) {
+    const uchar *p = (const uchar *)pAnimData;
+    pAnimData += 2;
+    return (uint)p[0] | ((uint)p[1] << 8);
+}
 
-//     // numFrames
-//     // TODO
-//     if(false)
-//         return;
+// Reads a little-endian dword from the anim file cursor and advances it by 4. The file data is not aligned (the
+// header is a run of bytes), so the original assembles the value a byte at a time.
+static uint32_t AnimData_ReadU32(void) {
+    const unsigned char *p = (const unsigned char *)pAnimData;
+    uint32_t value = (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
+    pAnimData += 4;
+    return value;
+}
 
-//     AnimObj* animObj = obj->animState->animObj;
-//     // Everything beyond here is a massive hack to just see if I can get them to TPose everywhere
-//     psiBuildMatrixPalette(obj, animObj, 1);
+// FUN_00011000 (0x00011000): AnimData_ReadU32 returned through the x87 stack as a float.
+static float AnimData_ReadFloat(void) {
+    uint32_t bits = AnimData_ReadU32();
+    float f;
+    memcpy(&f, &bits, sizeof(f));
+    return f;
+}
 
-// }
+static unsigned char AnimData_ReadU8(void) {
+    unsigned char value = *(unsigned char *)pAnimData;
+    pAnimData += 1;
+    return value;
+}
 
-#pragma pack(push, 1)
+static void AnimData_AlignTo4(void) {
+    while (((uintptr_t)pAnimData & 3) != 0)
+        pAnimData++;
+}
 
-typedef struct SkeletonInfo {
-    short skeletonIdx; // According to AnimSkeletonProcess, this is the index into the SkeletonTable array
-    byte numBones;
-    byte maybeTypeOrFlags;
-    // Following this is a variable amount of extra data:
-    //  numBones x float[3]
-    // ...?
-} SkeletonInfo;
+// FUN_00013880: the next half of the track data, a u32 read whenever the high half of the last is used up
+static uint AnimData_ReadHalf(uint *pending, uint *half) {
+    uint value;
+    if (!(*half & 1)) {
+        uint word = AnimData_ReadU32();
+        *pending = word >> 16;
+        value = word & 0xffff;
+    } else {
+        value = *pending & 0xffff;
+    }
+    (*half)++;
+    return value;
+}
 
-#pragma pack(pop)
+// Measures a sequence's tracks: the file's first three words become the track data, its size and a cursor. The
+// walk sequences measured by distance get their axes.
+// AUTOINJECT
+void AnimProcessSeqData(HASHCODE hashcode) {
+    if ((hashcode & 0xff000000) != ANIM_HASHTYPE_SEQ)
+        return;
+    sAnimRawSeq_tag *raw = (sAnimRawSeq_tag *)hashtable_getitem(hashcode);
+    pAnimData = (char *)raw;
+    if (raw == NULL)
+        return;
 
-// At address 0x001d7578 we should find a table of pointers, 128 entries long, pointing to the skeleton data (top of the header)
-#define SkeletonTable (*(SkeletonInfo*(*)[128])0x001d7578)
+    pAnimData += offsetof(sAnimRawSeq_tag, flags);
+    raw->flags = AnimData_ReadU32() & 0xf;
+    // The bound sphere and the root box are read and dropped
+    for (int i = 0; i < 10; i++)
+        AnimData_ReadFloat();
+    short numFrames = (short)AnimData_ReadU16();
+    short numTracks = (short)AnimData_ReadU16();
+    pAnimData += 4;
+    uint *trackData = (uint *)pAnimData;
 
-// At address 0x001d6ac8 we should find a single pointer to the skeleton data currently being loaded (post the header / bone displacements)
-#define pAnimData (*(char**)0x001d6ac8)
+    uint pending = 0;
+    uint half = 0;
+    for (int track = 0; track < numTracks; track++) {
+        AnimData_ReadHalf(&pending, &half);     // the track's size
+        uint frames = 0;
+        do {
+            uint key = AnimData_ReadHalf(&pending, &half);
+            frames += key >> 6;
+            for (uint mask = key & 0x3f; mask != 0; mask >>= 1) {
+                if (mask & 1)
+                    pAnimData += sizeof(float);
+            }
+        } while (frames < (uint)(numFrames - 1));
+        // The next track starts on a new word
+        if (half & 1)
+            half++;
+    }
+
+    raw = (sAnimRawSeq_tag *)hashtable_getitem(hashcode);
+    switch ((uint)hashcode) {
+    case 0x040000e9: case 0x04000125: case 0x04000144: case 0x04000145: case 0x04000150: case 0x04000151:
+    case 0x04000154: case 0x04000155: case 0x0400015c: case 0x0400015d: case 0x04000167: case 0x04000168:
+    case 0x0400079c: case 0x040007b0: case 0x040007b3: case 0x040007b6: case 0x040007e4: case 0x040007e5:
+    case 0x04000804: case 0x04000809: case 0x0400080c: case 0x0400080f: case 0x04000811: case 0x0400082c:
+    case 0x0400082d: case 0x04000831: case 0x04000832: case 0x04000835: case 0x04000838: case 0x04000847:
+    case 0x0400084e: case 0x0400084f:
+        raw->flags |= ANIMSEQ_DISTANCE_AXES;
+        break;
+    }
+    uint size = (uint)(pAnimData - (char *)trackData);
+    raw = (sAnimRawSeq_tag *)hashtable_getitem(hashcode);
+    raw->trackDataSize = size;
+    raw->trackData = trackData;
+    raw->cursor = NULL;
+}
+
+// Steps over a script's commands; nothing is kept but the cursor
+void _AnimProcessScriptData(HASHCODE hashcode) {
+    if ((hashcode & 0xff000000) != ANIM_HASHTYPE_SCRIPT)
+        return;
+    pAnimData = (char *)hashtable_getitem(hashcode);
+    if (pAnimData == NULL)
+        return;
+    pAnimData += 6;
+    uint numCmds = AnimData_ReadU16() & 0x1ff;
+    for (; numCmds != 0; numCmds--) {
+        uint cmd = AnimData_ReadU16();
+        uint type = cmd & 0xff;
+        uint words = cmd >> 8;
+        if (type == 0)
+            words += 3;
+        else if (type <= 4)
+            words += 2;
+        else
+            NF_WARN("Script 0x%x invalid command 0x%x data 0x%x", hashcode, type, words); // GC check (0x80044310)
+        pAnimData += words * 2;
+    }
+}
+
+// The hashcode in EAX
+// AUTOLTCG
+void __declspec(naked) AnimProcessScriptData(void) {
+    _asm {
+        push eax
+        call _AnimProcessScriptData
+        add esp, 4
+        ret
+    }
+}
+
+// AUTOINJECT
+void AnimLoadFile(HASHCODE hashcode, char noProcess) {
+    switch (hashcode & 0xff000000) {
+    case ANIM_HASHTYPE_SEQ:
+        _loadAnimFileCapturingSize(MALLOC_ANIM_SEQ_DATA, hashcode);
+        AnimFileSizes.seqBytes += AnimFileSize;
+        AnimFileSizes.numSeqs++;
+        if (!noProcess)
+            AnimProcessSeqData(hashcode);
+        AnimFileSizes.seqFrames += ((sAnimRawSeq_tag *)hashtable_getitem(hashcode))->numFrames;
+        break;
+    case ANIM_HASHTYPE_SKIN:
+        _loadAnimFileCapturingSize(MALLOC_ANIM_SKIN_DATA, hashcode);
+        AnimFileSizes.skinBytes += AnimFileSize;
+        AnimFileSizes.numSkins++;
+        _AnimProcessSkinData(hashcode);
+        break;
+    case ANIM_HASHTYPE_SCRIPT:
+        _loadAnimFileCapturingSize(MALLOC_ANIM_SCRIPT_DATA, hashcode);
+        AnimFileSizes.scriptBytes += AnimFileSize;
+        AnimFileSizes.numScripts++;
+        _AnimProcessScriptData(hashcode);
+        break;
+    default:
+        NF_WARN("Invalid hash code %p", (void *)hashcode); // GC check (0x80044830)
+        break;
+    }
+}
+
+// The skin every human skeleton (0 and 1) takes its datums from
+#define SKIN_BOND ((HASHCODE)0x05000007)
+// The one skin that keeps its own datums, after the shared ones
+#define SKIN_OWN_DATUMS ((HASHCODE)0x0500002f)
+
+// Once a load: the human skins share the Bond skin's datums
+// AUTOINJECT
+void AnimPostLoadInit(void) {
+    HASHCODE skins[128];
+
+    if (Glb_AnimPostLoadDone)
+        return;
+    Glb_AnimPostLoadDone = 1;
+    uint count = hashtable_get_hashtype_count(ANIM_HASHTYPE_SKIN);
+    if (count == 0)
+        return;
+    sAnimSkin_tag *bond = (sAnimSkin_tag *)hashtable_getitem(SKIN_BOND);
+    if (bond == NULL) {
+        NF_WARN("***** FATAL : Bondcombat skin must be loaded on all levels! *****"); // GC check (0x80044a38)
+        return;
+    }
+    hashtable_get_hashtype_data(ANIM_HASHTYPE_SKIN, skins);
+    for (uint i = 0; i < count; i++) {
+        sAnimSkin_tag *skin = (sAnimSkin_tag *)hashtable_getitem(skins[i]);
+        if (skin->skeletonNum > 1)
+            continue;
+        if (skins[i] == SKIN_OWN_DATUMS) {
+            AnimDatum *own = skin->datums;
+            uint numOwn = skin->numDatums;
+            skin->numDatums = bond->numDatums + numOwn;
+            skin->datums = (AnimDatum *)Mem_Malloc(skin->numDatums * sizeof(AnimDatum), MALLOC_ANIM_SKIN_STRUCTS, 0);
+            memcpy(skin->datums, bond->datums, bond->numDatums * sizeof(AnimDatum));
+            memcpy(&skin->datums[bond->numDatums], own, numOwn * sizeof(AnimDatum));
+        } else {
+            skin->numDatums = bond->numDatums;
+            skin->datums = bond->datums;
+        }
+    }
+}
 
 // AUTOINJECT
 void AnimSkeletonProcess(char *data) {
 
     SkeletonInfo *skel = (SkeletonInfo*)data;
 
-    printf("Processing a skeleton, idx: %i, num bones: %i, unknown data 0x%02x\n", skel->skeletonIdx, skel->numBones, skel->maybeTypeOrFlags);
-    
-    // Confirmed that maybeTypeOrFlags is not always zero - 1 seen
+    printf("Processing a skeleton, idx: %i, num bones: %i, unknown data 0x%02x\n", skel->skeletonIdx, skel->numBones, skel->numTransBones);
 
     // Copy to SkeletonTable
     SkeletonTable[skel->skeletonIdx] = skel;
@@ -151,7 +524,3374 @@ void AnimSkeletonProcess(char *data) {
     pAnimData = (char *)data + 0x10 + skel->numBones * 12;
 }
 
-// AUTOGEN
-void AnimPostLoadInit(void);
-// AUTOGEN
-void AnimLoadFile(HASHCODE hashcode,char param_2);
+// A rigged body hashcode with this bit set is not a real entity: it stands for "the player's sleeve", and is
+// replaced with the first sleeve entity that is loaded (AnimSleeveGetEntity(0)). The rest of the value is ignored.
+#define ANIM_RIGGED_IS_SLEEVE 0x00100000
+
+// Converts a loaded skin file in place: the file stays in memory (its bone/discrete-bone bytes, the hashcode
+// arrays - overwritten with celglist pointers - and the datums are pointed at by the new sAnimSkin_tag), and the
+// hashtable entry for the file is repointed from the raw file to that sAnimSkin_tag.
+// Called only by AnimLoadFile, straight after loading a 0x05xxxxxx file; hashcode arrives in EAX (see the
+// adaptor below).
+void _AnimProcessSkinData(HASHCODE hashcode) {
+
+    if ((hashcode & 0xff000000) != ANIM_HASHTYPE_SKIN)
+        return;
+
+    pAnimData = (char *)hashtable_getitem(hashcode);
+    if (pAnimData == NULL)
+        return;
+
+    // Not checked for NULL by the original either
+    sAnimSkin_tag *skin = (sAnimSkin_tag *)Mem_Malloc(sizeof(sAnimSkin_tag), MALLOC_ANIM_SKIN_STRUCTS, 0);
+    hashtable_modify(hashcode, skin);
+
+    // The first dword of the file is skipped (never read)
+    pAnimData += 4;
+
+    skin->skinScale.x = AnimData_ReadFloat();
+    skin->skinScale.y = AnimData_ReadFloat();
+    skin->skinScale.z = AnimData_ReadFloat();
+
+    skin->numRigged = AnimData_ReadU8();
+    skin->numDiscrete = AnimData_ReadU8();
+    skin->numMorphs = AnimData_ReadU8(); // stored, nothing more read for morphs here
+    skin->numDatums = AnimData_ReadU8();
+    skin->skeletonNum = AnimData_ReadU8();
+
+    // The skeleton must already be loaded - no NULL check in the original
+    uint numBones = SkeletonTable[skin->skeletonNum]->numBones;
+
+    // One byte per bone of the skeleton
+    skin->bones = (uchar *)pAnimData;
+    pAnimData += numBones;
+
+    if (skin->numDiscrete != 0) {
+        // One byte per discrete object (the bone it hangs off), then the hashcodes, dword aligned
+        skin->discreteBone = (uchar *)pAnimData;
+        pAnimData += skin->numDiscrete;
+        AnimData_AlignTo4();
+
+        // The hashcodes are replaced in place by their celglists: discreteObj[i] is the dword just read
+        skin->discreteObj = (celglist_tag **)pAnimData;
+        for (uint i = 0; i < skin->numDiscrete; i++) {
+            HASHCODE hc = (HASHCODE)AnimData_ReadU32();
+            skin->discreteObj[i] = (hc == (HASHCODE)0xffffffff) ? NULL : hashtable_hashcode_to_celglist(hc);
+        }
+    }
+
+    if (skin->numRigged != 0) {
+        AnimData_AlignTo4();
+
+        // Converted in place like discreteObj
+        skin->riggedBody = (celglist_tag **)pAnimData;
+        for (uint i = 0; i < skin->numRigged; i++) {
+            HASHCODE hc = (HASHCODE)AnimData_ReadU32();
+            celglist_tag *body;
+            if (hc == (HASHCODE)0xffffffff) {
+                body = NULL;
+            } else {
+                // The original inlines AnimSleeveGetEntity(0) here: the first loaded entry of
+                // SleeveEnts_SleeveTable, or 0 if none is - and then still asks for 0's celglist.
+                if (((uint32_t)hc & ANIM_RIGGED_IS_SLEEVE) != 0)
+                    hc = _AnimSleeveGetEntity(0);
+                body = hashtable_hashcode_to_celglist(hc);
+            }
+            skin->riggedBody[i] = body;
+        }
+
+        // Inverse bind matrices: one per skeleton bone, built from a translation then a quaternion in the file.
+        // Only skins with rigged bodies have them; allocated even when numBones is 0 (a zero-byte Mem_Malloc).
+        skin->invBind = (_MATRIX *)Mem_Malloc(numBones * sizeof(_MATRIX), MALLOC_ANIM_SKINMAT_STRUCTS, 0);
+        for (uint i = 0; i < numBones; i++) {
+            // Copied as raw bits, as the original does (integer moves, no x87)
+            uint32_t transBits[3];
+            uint32_t quatBits[4];
+            for (int k = 0; k < 3; k++)
+                transBits[k] = AnimData_ReadU32();
+            for (int k = 0; k < 4; k++)
+                quatBits[k] = AnimData_ReadU32();
+
+            float trans[3];
+            quaternion_tag quat;
+            memcpy(trans, transBits, sizeof(trans));
+            memcpy(quat.q, quatBits, sizeof(quat.q));
+            Quat_QuatTransToMat(&quat, trans, &skin->invBind[i]);
+        }
+    }
+
+    if (skin->numDatums != 0) {
+        // Left in the file as they are; the original reads each datum's quaternion into a dead local, which has no
+        // effect beyond stepping over it
+        skin->datums = (AnimDatum *)pAnimData;
+        pAnimData += skin->numDatums * sizeof(AnimDatum);
+    }
+}
+
+// The original takes hashcode in EAX (link-time code generation; pops nothing, preserves EBX/ESI/EDI/EBP).
+// AUTOLTCG
+void __declspec(naked) AnimProcessSkinData(HASHCODE hashcode) {
+    _asm {
+        push eax
+        call _AnimProcessSkinData
+        add esp, 4
+        ret
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The list of an object's scripts
+
+// Gathers into GlbAnimList (up to 32) the object's scripts that pass any of the criteria with value; with
+// ANIMLIST_REMOVE those that pass leave it instead. The callback is called for each. The first in the list, NULL
+// for none.
+// AUTOINJECT
+sAnimScript_tag* AnimListBuild(obj_tag *obj, uint criteria, uint value, AnimListFunc callback, uint mode) {
+    if (obj == NULL || obj->animState == NULL)
+        return NULL;
+    AnimObj *animObj = &obj->animState->animObj;
+
+    if (mode & ANIMLIST_RESTART)
+        GlbAnimListCount = 0;
+    int count = GlbAnimListCount;
+    for (sAnimScript_tag *script = animObj->firstScript; script != NULL; script = script->nextScript) {
+        uint left = criteria;
+        uint bit = 1;
+        while (left != 0) {
+            while (!(left & bit))
+                bit <<= 1;
+            left ^= bit;
+
+            bool match;
+            switch (bit) {
+            case ANIMLIST_ALL:          match = true; break;
+            case ANIMLIST_NOT:          match = (uintptr_t)script != value; break;
+            case ANIMLIST_FIRST:        match = script->prevScript == NULL; break;
+            case ANIMLIST_LAST:         match = script->nextScript == NULL; break;
+            case ANIMLIST_STOPPED:      match = (script->flags & ANIMSCRIPT_STOPPED) != 0; break;
+            case ANIMLIST_HASHCODE:     match = script->hashcode == value; break;
+            case ANIMLIST_IS_OR_SYNCED: match = (uintptr_t)script == value || (uintptr_t)script->syncMaster == value; break;
+            case ANIMLIST_SYNCED_TO:    match = (uintptr_t)script->syncMaster == value; break;
+            case ANIMLIST_SYNCED:       match = script->syncMaster != NULL; break;
+            case ANIMLIST_TAG:          match = script->groupTag == value; break;
+            case ANIMLIST_TAG_BITS:     match = (script->groupTag & value) != 0; break;
+            case ANIMLIST_MUTE_MORPH:   match = (script->flags & ANIMSCRIPT_MUTE_MORPH) != 0; break;
+            case ANIMLIST_MORPH:
+                match = animObj->skin->numMorphs != 0 && (script->morphAnimSeq->flags & ANIMSEQ_MORPH);
+                break;
+            case ANIMLIST_MASKED:       match = script->boneMask != NULL; break;
+            case ANIMLIST_OVERLAY:      match = (script->flags & ANIMSCRIPT_OVERLAY) != 0; break;
+            default:                    match = false; break;
+            }
+            bit <<= 1;
+            if (!match)
+                continue;
+
+            int i = 0;
+            while (i < count && GlbAnimList[i] != script)
+                i++;
+            if (mode & ANIMLIST_REMOVE) {
+                if (i != count) {
+                    GlbAnimListCount = --count;
+                    for (; i < GlbAnimListCount; i++)
+                        GlbAnimList[i] = GlbAnimList[i + 1];
+                }
+            } else if (i == count && i < 32) {
+                GlbAnimList[count] = script;
+                GlbAnimListCount = ++count;
+            }
+            count = GlbAnimListCount;
+        }
+    }
+
+    if (count == 0)
+        return NULL;
+    if (callback != NULL) {
+        for (int i = 0; i < GlbAnimListCount; i++)
+            callback(obj, GlbAnimList[i]);
+    }
+    return GlbAnimList[0];
+}
+
+// Deletes the scripts in the list, and empties it
+// AUTOINJECT
+void AnimListDelete(obj_tag *obj) {
+    for (int i = 0; i < GlbAnimListCount; i++)
+        AnimScriptDelete(obj, &GlbAnimList[i]);
+    GlbAnimListCount = 0;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Sequences and scripts
+
+// A sequence with a pose buffer of size bytes, both zeroed; NULL if either allocation fails
+sAnimSeq_tag* _AnimSeqNew(uint size, uint tag) {
+    sAnimSeq_tag *seq = (sAnimSeq_tag *)Mem_Malloc(sizeof(sAnimSeq_tag), MALLOC_ANIM_SEQ_STRUCTS, 0);
+    if (seq == NULL)
+        return NULL;
+    memset(seq, 0, sizeof(sAnimSeq_tag));
+    seq->pose = (float *)Mem_Malloc(size, (MallocFlags)tag, 0);
+    if (seq->pose == NULL) {
+        Mem_Free((void **)&seq);
+        return NULL;
+    }
+    memset(seq->pose, 0, size);
+    return seq;
+}
+
+// The size in ESI, the tag on the stack
+// AUTOLTCG
+void __declspec(naked) AnimSeqNew(void) {
+    _asm {
+        push dword ptr [esp + 4]
+        push esi
+        call _AnimSeqNew
+        add esp, 8
+        ret
+    }
+}
+
+// Inline on the Xbox (their AnimSeqDelete)
+static void AnimSeqDelete(sAnimSeq_tag **slot) {
+    sAnimSeq_tag *seq = *slot;
+    if (seq == NULL)
+        return;
+    if (seq->unpakCache != NULL)
+        Mem_Free((void **)&seq->unpakCache);
+    if (seq->pose != NULL)
+        Mem_Free((void **)&seq->pose);
+    Mem_Free((void **)slot);
+}
+
+// Points seq at its sequence file (raw, or the one the hashtable has) and copies what sampling needs from its
+// header. NULL when hashcode is not a loaded sequence.
+sAnimRawSeq_tag* _AnimSeqGetInfo(sAnimRawSeq_tag *raw, HASHCODE hashcode, sAnimSeq_tag *seq) {
+    seq->hashcode = hashcode;
+    if ((hashcode & 0xff000000) != ANIM_HASHTYPE_SEQ) {
+        NF_WARN("Can't use animation hash 0x%x", hashcode); // GC check (0x8004dda8)
+        return NULL;
+    }
+    if (raw == NULL) {
+        raw = (sAnimRawSeq_tag *)hashtable_getitem(hashcode);
+        if (raw == NULL) {
+            NF_WARN("Can't use animation hash 0x%x", hashcode); // GC check (0x8004dda8)
+            return NULL;
+        }
+    }
+    seq->rawSeq = raw;
+    memcpy(seq->boundSphere, raw->boundSphere, sizeof(seq->boundSphere));
+    memcpy(seq->rootBox, raw->rootBox, sizeof(seq->rootBox));
+    seq->numFrames = raw->numFrames;
+    seq->skeletonNum = raw->skeletonNum;
+    seq->raw3e = raw->raw3e;
+    seq->numElems = raw->numElems;
+    seq->flags ^= (raw->flags ^ seq->flags) & 0xf;
+    return raw;
+}
+
+// The file in EAX, the hashcode in ECX, the sequence in ESI
+// AUTOLTCG
+void __declspec(naked) AnimSeqGetInfo(void) {
+    _asm {
+        push esi
+        push ecx
+        push eax
+        call _AnimSeqGetInfo
+        add esp, 12
+        ret
+    }
+}
+
+// Starts the sequence hashcode in the script's slot (0 the body, 1 the face) at frame start: its root motion and
+// its first translation start afresh. The body's sequence gives the object its bound sphere.
+sAnimSeq_tag* _AnimSeqSet(sAnimScript_tag *script, HASHCODE hashcode, obj_tag *obj, AnimObj *animObj,
+                          sAnimRawSeq_tag *raw, int start, int slot) {
+    if ((hashcode & 0xff000000) != ANIM_HASHTYPE_SEQ)
+        return NULL;
+    sAnimSeq_tag *seq = (&script->boneAnimSeq)[slot];
+    if (seq == NULL)
+        return NULL;
+    sAnimSkin_tag *skin = animObj->skin;
+    if (skin == NULL || _AnimSeqGetInfo(raw, hashcode, seq) == NULL) {
+        NF_WARN("Anim sequence 0x%x not loaded", hashcode); // GC check (0x80049d90)
+        return NULL;
+    }
+
+    seq->frame = (float)start;
+    seq->firstFrame = 1;
+    seq->lastFrame = seq->numFrames;
+    Vec_Zero(&seq->rootDelta);
+    Vec_Copy(&obj->position, &seq->objPosAtSet);
+    Vec_Zero(&seq->firstTrans);
+    Vec_Zero(&seq->transRelFirst);
+    seq->flags = (seq->flags & 0x1efffff) | ANIMSEQ_STARTED;
+    if (seq->flags & ANIMSEQ_DISTANCE_AXES)
+        seq->distanceTable = AnimDistanceTableGet(hashcode);
+    if (slot == 0 && obj->objGraphics != NULL)
+        memcpy(animObj->boundSphere, seq->boundSphere, sizeof(animObj->boundSphere));
+    seq->skeletonNum = skin->skeletonNum;
+    return seq;
+}
+
+// The script in ECX, the hashcode in EBX
+// AUTOLTCG
+void __declspec(naked) AnimSeqSet(void) {
+    _asm {
+        push dword ptr [esp + 20]
+        push dword ptr [esp + 20]
+        push dword ptr [esp + 20]
+        push dword ptr [esp + 20]
+        push dword ptr [esp + 20]
+        push ebx
+        push ecx
+        call _AnimSeqSet
+        add esp, 28
+        ret
+    }
+}
+
+// An empty script with a body sequence (and a face sequence if the skin has morphs), linked in after after, or on
+// its own without after. NULL if an allocation fails.
+sAnimScript_tag* _AnimScriptNew(obj_tag *obj, sAnimScript_tag *after) {
+    if (obj == NULL)
+        return NULL;
+    sAnimScript_tag *script = (sAnimScript_tag *)Mem_Malloc(sizeof(sAnimScript_tag), MALLOC_ANIM_SCRIPT_STRUCTS, 0);
+    if (script == NULL)
+        return NULL;
+    memset(script, 0, sizeof(sAnimScript_tag));
+    script->magicStateIndicator = ANIM_SCRIPT_STATE_MAYBE_INITIALISED;
+
+    uint numBones = SkeletonTable[obj->animState->animObj.skin->skeletonNum]->numBones;
+    script->boneAnimSeq = _AnimSeqNew(numBones * (sizeof(_VECTOR) + sizeof(quaternion_tag)),
+                                      MALLOC_ANIM_SEQ_DATA_BUFFERS);
+    if (script->boneAnimSeq != NULL
+        && (obj->animState->animObj.skin->numMorphs == 0
+            || (script->morphAnimSeq = _AnimSeqNew(ANIM_MORPH_POSE_SIZE, MALLOC_ANIM_MORPH_DATA_BUFFERS)) != NULL)) {
+        if (after == NULL) {
+            script->prevScript = NULL;
+            script->nextScript = NULL;
+        } else {
+            sAnimScript_tag *next = after->nextScript;
+            script->prevScript = after;
+            script->nextScript = next;
+            after->nextScript = script;
+            if (next != NULL)
+                next->prevScript = script;
+        }
+        return script;
+    }
+
+    AnimSeqDelete(&script->morphAnimSeq);
+    AnimSeqDelete(&script->boneAnimSeq);
+    Mem_Free((void **)&script);
+    return NULL;
+}
+
+// The object in EAX, the script to follow on the stack
+// AUTOLTCG
+void __declspec(naked) AnimScriptNew(void) {
+    _asm {
+        push dword ptr [esp + 4]
+        push eax
+        call _AnimScriptNew
+        add esp, 8
+        ret
+    }
+}
+
+// Starts the 0x06 script hashcode in a new script: its frame count, end and play rate, playing from the start, or
+// backwards from the end after AnimScriptAddReverse
+void _AnimScriptInit(obj_tag *obj, sAnimScript_tag *script, HASHCODE hashcode) {
+    char reverse = ReverseFlag;
+    ReverseFlag = 0;
+    if (obj == NULL || obj->animState == NULL || script == NULL || (hashcode & 0xff000000) != ANIM_HASHTYPE_SCRIPT)
+        return;
+    AnimObj *animObj = &obj->animState->animObj;
+    uchar *data = (uchar *)hashtable_getitem(hashcode);
+    script->scriptData = data;
+    if (data == NULL) {
+        NF_WARN("Anim script 0x%x not loaded", hashcode); // GC check (0x8004858c)
+        return;
+    }
+
+    script->hashcode = hashcode;
+    script->firedMask = 0;
+    script->flags = (script->flags & 0x80fffff) | ANIMSCRIPT_STARTED;
+    script->numFrames = *(short *)(data + 4);
+    ushort info = *(ushort *)(data + 6);
+    if (info & 0x8000)
+        script->flags |= ANIMSCRIPT_LOOP;
+    script->numCmds = (uchar)info;
+    script->rate = (info >> 9) & 0x3f;
+    NF_WARN_IF(script->numCmds == 0, "Script 0x%x has no commands", hashcode);                // GC check (0x8004858c)
+    NF_WARN_IF(script->numCmds > 0x20, "Script 0x%x has too many commands", hashcode);        // GC check (0x8004858c)
+    if (!reverse) {
+        script->curFrame = 1.0f;
+        script->speed = 1.0f;
+    } else {
+        script->speed = -1.0f;
+        script->curFrame = script->numFrames;
+    }
+    script->prevFrame = script->curFrame;
+    script->speedMode = ANIMSPEED_TIME;
+    script->playMode = ANIMPLAY_ONCE;
+    script->onDelete = NULL;
+    script->ownerSlot = NULL;
+    script->onStop = NULL;
+    script->doneFlag = NULL;
+    script->onEvent = NULL;
+    if (AnimScriptTimeStamp == 0)
+        AnimScriptTimeStamp = 1;
+    script->timestamp = AnimScriptTimeStamp++;
+    script->groupTag = 0;
+    if (ScriptCam != 0 && animObj->skin->numMorphs != 0)
+        script->groupTag = ANIMTAG_FACE_SPEECH;
+    script->fadeLen = 1.0f;
+    script->fadeTime = 1.0f;
+    script->fadeDir = 1;
+    script->syncBlend = 0.0f;
+    script->targetPos = 0.0f;
+    script->boneMask = NULL;
+}
+
+// The object in EAX, the script in ESI, the hashcode in EDI
+// AUTOLTCG
+void __declspec(naked) AnimScriptInit(void) {
+    _asm {
+        push edi
+        push esi
+        push eax
+        call _AnimScriptInit
+        add esp, 12
+        ret
+    }
+}
+
+// Replaces all the object's scripts with hashcode
+// AUTOINJECT
+sAnimScript_tag* AnimScriptAdd(obj_tag *obj, HASHCODE hashcode) {
+    if (obj == NULL || obj->animState == NULL)
+        return NULL;
+    AnimState *animState = obj->animState;
+    AnimListBuild(obj, ANIMLIST_ALL, 0, NULL, ANIMLIST_RESTART);
+    AnimListDelete(obj);
+    sAnimScript_tag *script = _AnimScriptNew(obj, NULL);
+    animState->animObj.firstScript = script;
+    _AnimScriptInit(obj, script, hashcode);
+    return script;
+}
+
+// AUTOINJECT
+sAnimScript_tag* AnimScriptAddSpeed(obj_tag *obj, HASHCODE hashcode, float speed) {
+    sAnimScript_tag *script = AnimScriptAdd(obj, hashcode);
+    if (script != NULL)
+        script->speed = speed;
+    return script;
+}
+
+// AUTOINJECT
+sAnimScript_tag* AnimScriptAddReverse(obj_tag *obj, HASHCODE hashcode) {
+    ReverseFlag = 1;
+    return AnimScriptAdd(obj, hashcode);
+}
+
+// Adds hashcode after the object's other scripts, up to 32 of them
+// AUTOINJECT
+sAnimScript_tag* AnimScriptAppend(obj_tag *obj, HASHCODE hashcode) {
+    if (obj == NULL || obj->animState == NULL)
+        return NULL;
+    AnimObj *animObj = &obj->animState->animObj;
+    sAnimScript_tag *script;
+    if (animObj->firstScript == NULL) {
+        script = _AnimScriptNew(obj, NULL);
+        animObj->firstScript = script;
+    } else {
+        sAnimScript_tag *last = animObj->firstScript;
+        int count = 1;
+        while (last->nextScript != NULL) {
+            last = last->nextScript;
+            count++;
+        }
+        if (count >= 32)
+            return NULL;
+        script = _AnimScriptNew(obj, last);
+    }
+    _AnimScriptInit(obj, script, hashcode);
+    return script;
+}
+
+// As AnimScriptAppend, with the scripts playing faded out over eight frames
+// AUTOINJECT
+sAnimScript_tag* AnimScriptAppendBlend(obj_tag *obj, HASHCODE hashcode) {
+    AnimListBuild(obj, ANIMLIST_ALL, 0, NULL, ANIMLIST_RESTART);
+    AnimListBuild(obj, ANIMLIST_MUTE_MORPH, 0, NULL, ANIMLIST_REMOVE);
+    for (int i = 0; i < GlbAnimListCount; i++) {
+        sAnimScript_tag *script = GlbAnimList[i];
+        if (!(script->flags & ANIMSCRIPT_FADING)) {
+            script->flags |= ANIMSCRIPT_FADING | ANIMSCRIPT_FADE_OUT;
+            script->fadeLen = 8.0f;
+            script->fadeTime = 8.0f;
+            script->fadeDir = -1;
+        }
+    }
+    return AnimScriptAppend(obj, hashcode);
+}
+
+// 0 plays the first script forwards, 1 backwards, 2 the other way
+// AUTOINJECT
+void AnimScriptSetPlayDirection(obj_tag *obj, int direction) {
+    if (obj == NULL || obj->animState == NULL)
+        return;
+    sAnimScript_tag *script = obj->animState->animObj.firstScript;
+    if (script == NULL || (script->flags & ANIMSCRIPT_STOPPED))
+        return;
+    switch (direction) {
+    case 0:
+        if (!(script->speed >= 0.0f))
+            script->speed = -script->speed;
+        break;
+    case 1:
+        if (script->speed >= 0.0f)
+            script->speed = -script->speed;
+        break;
+    case 2:
+        script->speed = -script->speed;
+        break;
+    }
+}
+
+// AUTOINJECT
+void AnimScriptDelete(obj_tag *obj, sAnimScript_tag **slot) {
+    sAnimScript_tag *script = *slot;
+    if (obj == NULL || obj->animState == NULL || script == NULL)
+        return;
+    AnimObj *animObj = &obj->animState->animObj;
+
+    if (script == Glb_pCurrentScript)
+        Glb_bScriptDeleted = 1;
+    if (script->onDelete != NULL)
+        script->onDelete(obj, animObj, script);
+    if (script->ownerSlot != NULL && script->ownerSlot != slot)
+        *script->ownerSlot = NULL;
+    AnimSeqDelete(&script->morphAnimSeq);
+    AnimSeqDelete(&script->boneAnimSeq);
+
+    sAnimScript_tag *prev = script->prevScript;
+    sAnimScript_tag *next = script->nextScript;
+    if (prev == NULL)
+        animObj->firstScript = next;
+    else
+        prev->nextScript = next;
+    if (next != NULL)
+        next->prevScript = prev;
+    script->magicStateIndicator = ANIM_SCRIPT_STATE_MAYBE_DELETED;
+    Mem_Free((void **)slot);
+}
+
+// Whether any of the object's scripts has stopped
+// AUTOINJECT
+int AnimScriptIsStopped(obj_tag *obj) {
+    AnimListBuild(obj, ANIMLIST_ALL, 0, NULL, ANIMLIST_RESTART);
+    int count = GlbAnimListCount;
+    int running = 0;
+    for (int i = 0; i < count; i++) {
+        if (!(GlbAnimList[i]->flags & ANIMSCRIPT_STOPPED))
+            running++;
+    }
+    return running != count;
+}
+
+// AUTOINJECT
+void AnimScriptCallOnEvent(sAnimScript_tag *script, AnimScriptEventFunc onEvent) {
+    script->onEvent = onEvent;
+}
+
+// AUTOINJECT
+void AnimScriptCallOnStop(sAnimScript_tag *script, AnimScriptStopFunc onStop) {
+    script->onStop = onStop;
+}
+
+// Whether the root's turn turns the object; switching it on takes the root's yaw afresh.
+// AUTOINJECT
+void AnimScriptSetAnimRotation(sAnimScript_tag *script, char on) {
+    if (on) {
+        script->flags |= ANIMSCRIPT_ANIM_ROTATION;
+        script->rotBaseYaw = 8.0f;
+    } else {
+        script->flags &= ~ANIMSCRIPT_ANIM_ROTATION;
+    }
+}
+
+// Brings a frame past either end back in, by the script's end: stopped (its done flag set, onStop called once),
+// looped or bounced. The frame, also the script's; 1.0 without it when onStop deleted the script.
+double _AnimScriptEnd(sAnimScript_tag *script, obj_tag *obj, AnimObj *animObj, float frameIn) {
+    uint flags = script->flags;
+    if (flags & ANIMSCRIPT_LOOP)
+        script->playMode = ANIMPLAY_LOOP;
+
+    double frame = frameIn;
+    if (!(frame < 1.0) && !(frame > script->numFrames)) {
+        script->curFrame = (float)frame;
+        return frame;
+    }
+
+    bool backwards = script->speed < 0.0f;
+    switch (script->playMode) {
+    case ANIMPLAY_ONCE:
+    case ANIMPLAY_DELETE: {
+        script->flags = flags | ANIMSCRIPT_STOPPED;
+        frame = backwards ? 1.0 : script->numFrames;
+        float stoppedAt = (float)frame;
+        if (script->doneFlag != NULL) {
+            *script->doneFlag = 1;
+            script->doneFlag = NULL;
+        }
+        if (script->onStop != NULL) {
+            script->onStop(obj, animObj, script);
+            if (Glb_bScriptDeleted)
+                return 1.0;
+            frame = stoppedAt;
+            script->onStop = NULL;
+        }
+        break;
+    }
+    case ANIMPLAY_LOOP:
+        if (backwards)
+            frame += script->numFrames;
+        else
+            frame -= script->numFrames;
+        script->flags = flags | ANIMSCRIPT_WRAPPED;
+        break;
+    case ANIMPLAY_PINGPONG:
+        frame = backwards ? 1.0 : script->numFrames;
+        script->speed = -script->speed;
+        frame += script->speed;
+        break;
+    }
+
+    if (frame < 1.0) {
+        script->curFrame = 1.0f;
+        return 1.0;
+    }
+    float last = script->numFrames;
+    if (frame > last)
+        frame = last;
+    script->curFrame = (float)frame;
+    return frame;
+}
+
+// The script in ESI; the frame comes back in ST0
+// AUTOLTCG
+void __declspec(naked) AnimScriptEnd(void) {
+    _asm {
+        push dword ptr [esp + 12]
+        push dword ptr [esp + 12]
+        push dword ptr [esp + 12]
+        push esi
+        call _AnimScriptEnd
+        add esp, 16
+        ret
+    }
+}
+
+// How many frames the walk script must move for the distance the object walked this tick, by its sequence's
+// distance table (cumulative distance per frame). Sets the object's distance phase.
+double _AnimDistanceTableDistanceToFrame2(obj_tag *obj, sAnimScript_tag *script, AnimObj *animObj) {
+    if (obj == NULL || obj->animState == NULL || script->boneAnimSeq == NULL)
+        return 0.0;
+    AnimDistanceTable *table = script->boneAnimSeq->distanceTable;
+    if (table == NULL)
+        return 0.0;
+
+    double distance = (double)animObj->distancePhase + animObj->distanceThisTick;
+    double length = table->length;
+    while (distance >= length)
+        distance -= length;
+    while (distance < 0.0)
+        distance += length;
+
+    float count = (float)table->count;
+    int frame = Ftol((double)table->count / length * distance);
+    if (distance < table->edge[frame]) {
+        while (frame != 0 && distance < table->edge[frame - 1])
+            frame--;
+    } else {
+        do {
+            frame++;
+        } while (distance >= table->edge[frame]);
+    }
+
+    float distanceF = (float)distance;
+    double along, span;
+    if (frame > 0) {
+        along = distance - table->edge[frame - 1];
+        span = (double)table->edge[frame] - table->edge[frame - 1];
+    } else {
+        along = distanceF;
+        span = table->edge[0];
+    }
+    animObj->distancePhase = distanceF;
+    float target = (float)(along / span + (frame + 1));
+    float current = script->curFrame;
+    double frames = (double)target - current;
+    if (!(animObj->distanceThisTick >= 0.0f)) {
+        if (!(frames >= 0.0))
+            return frames;
+        return -(((double)count - target) + current);
+    }
+    if (!(frames < 0.0))
+        return frames;
+    return ((double)count - current) + target;
+}
+
+// The object in EAX, the script in EBX, the anim object in EDI; the frames come back in ST0
+// AUTOLTCG
+void __declspec(naked) AnimDistanceTableDistanceToFrame2(void) {
+    _asm {
+        push edi
+        push ebx
+        push eax
+        call _AnimDistanceTableDistanceToFrame2
+        add esp, 12
+        ret
+    }
+}
+
+// Whether frame f was passed going from from to to (going forwards or not, round the end): FUN_00012a20, which takes
+// its arguments in registers; only AnimProcessScriptCmds calls it. INVENTED NAME.
+static bool AnimFramesPassed(int from, int to, int start, int end, bool forward) {
+    if (from >= start && from <= end)
+        return true;
+    if (to >= start && to <= end)
+        return true;
+    if (forward) {
+        if (from <= to)
+            return (start >= from && start <= to) || (end >= from && end <= to);
+        return start >= from || start <= to || end >= from || end <= to;
+    }
+    if (from >= to)
+        return (start <= from && start >= to) || (end <= from && end >= to);
+    return start <= from || start >= to || end <= from || end >= to;
+}
+
+// A script's commands
+enum {
+    ANIMCMD_SEQUENCE = 0,   // the sequence 0x04000000 | [3] from frame [1] to [2]
+    ANIMCMD_SOUND = 1,      // the sound [2] at frame [1]
+    ANIMCMD_UNUSED_2 = 2,
+    ANIMCMD_UNUSED_3 = 3,
+    ANIMCMD_EVENT = 4,      // the event [2] (with [3]) at frame [1]
+};
+
+// ANIMCMD_EVENT's events
+enum {
+    ANIMEVENT_STEP = 0,             // the other foot
+    ANIMEVENT_LASER = 1,            // the holder's laser sight on or off
+    ANIMEVENT_CALLBACK = 2,
+    ANIMEVENT_STOP_SOUND = 3,
+    ANIMEVENT_STEP_LEFT = 4,
+    ANIMEVENT_STEP_RIGHT = 5,
+    ANIMEVENT_EFFECT = 6,
+    ANIMEVENT_FIRE = 7,             // the holder's weapon fires
+};
+
+// The two scripts whose footsteps are of type 1
+#define ANIM_SCRIPT_FOOTSTEP_1 ((HASHCODE)0x06000099)
+#define ANIM_SCRIPT_FOOTSTEP_1B ((HASHCODE)0x060000ae)
+
+// Carries out the commands whose frames the script passed between from and to, once each until it leaves them
+// AUTOINJECT
+void AnimProcessScriptCmds(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *script, int from, int to) {
+    bool forward = script->speed >= 0.0f;
+    bool passed = false;
+    int seqsSet = 0;
+    bool muted = (animObj->flags & ANIMOBJ_MUTE) != 0;
+    ushort *cmd = (ushort *)(script->scriptData + 8);
+
+    for (int i = script->numCmds - 1; i >= 0; i--) {
+        uint bit = 1u << (i & 31);
+        uint length = cmd[0] >> 8;
+        uint fired = script->firedMask & bit;
+
+        switch (cmd[0] & 0xff) {
+        case ANIMCMD_SEQUENCE: {
+            passed = AnimFramesPassed(from, to, cmd[1], cmd[2], forward);
+            if (passed && !fired) {
+                HASHCODE hashcode = (HASHCODE)(cmd[3] | ANIM_HASHTYPE_SEQ);
+                sAnimRawSeq_tag *raw = (sAnimRawSeq_tag *)hashtable_getitem(hashcode);
+                if (raw == NULL) {
+                    NF_WARN("Anim Seq 0x%x not loaded", hashcode); // GC check (0x80048f98)
+                    return;
+                }
+                bool morph = (raw->flags & ANIMSEQ_MORPH) != 0;
+                if (!morph || !(script->flags & ANIMSCRIPT_NO_MORPH)) {
+                    int start = (forward ? to : from) - cmd[1] + 1;
+                    sAnimSeq_tag *seq = _AnimSeqSet(script, hashcode, obj, animObj, raw, start, morph ? 1 : 0);
+                    seq->startTime = cmd[1];
+                    script->flags &= ~ANIMSCRIPT_MUTE_MORPH;
+                    if (seqsSet == 0 && morph)
+                        script->flags |= ANIMSCRIPT_MUTE_MORPH;
+                    seq->flags &= ~ANIMSEQ_UNPAK_CACHE;
+                    if ((script->flags & ANIMSCRIPT_SCRIPT_DRIVEN) && !morph && seq->numFrames > 0x100) {
+                        seq->flags |= ANIMSEQ_UNPAK_CACHE;
+                        if (seq->unpakCache == NULL) {
+                            uint size = seq->numElems * sizeof(AnimUnpakEntry);
+                            seq->unpakCache = (AnimUnpakEntry *)Mem_Malloc(size, MALLOC_ANIM_UNPAK_OPT, 0);
+                            if (seq->unpakCache != NULL)
+                                memset(seq->unpakCache, 0, size);
+                        }
+                    }
+                    seqsSet++;
+                }
+            }
+            length += 4;
+            break;
+        }
+
+        case ANIMCMD_SOUND: {
+            passed = AnimFramesPassed(from, to, cmd[1], cmd[1], forward);
+            if (passed && !muted && !fired) {
+                // Some sounds have another for the holder's weapon
+                ushort sound = cmd[2];
+                obj_tag *holder = obj->maybeParent;
+                if (sound == 1) {
+                    if (holder != NULL && (holder->animState->currentWeaponId == 7
+                                           || holder->animState->currentWeaponId == 9))
+                        sound = 2;
+                } else if (sound == 0x403) {
+                    if (holder != NULL && (holder->animState->currentWeaponId == 3
+                                           || holder->animState->currentWeaponId == 5))
+                        sound = 2;
+                } else if (sound == 0xfa) {
+                    if (holder != NULL && holder->animState->currentWeaponId == 0x14)
+                        sound = 0x1fb;
+                } else if (sound == 0x106) {
+                    if (holder != NULL && holder->animState->currentWeaponId >= 0x1e
+                        && holder->animState->currentWeaponId <= 0x23)
+                        sound = 0x284;
+                } else if (sound == 0x1e1) {
+                    if (holder != NULL && holder->animState->currentWeaponId == 0x10)
+                        sound = 0x602;
+                } else if (sound == 4) {
+                    if (holder != NULL && (holder->animState->currentWeaponId == 0x16
+                                           || holder->animState->currentWeaponId == 0x17))
+                        sound = 0x604;
+                }
+
+                _VECTOR pos;
+                holder = obj->maybeParent;
+                if (holder == NULL) {
+                    Vec_Copy(&obj->position, &pos);
+                } else {
+                    ApplyMatrixLV(&holder->transformMatrix, &obj->position, &pos);
+                    Vec_Add2(&holder->position, &pos, &pos);
+                    // The player's gun sounds from its muzzle
+                    if (holder->objectType == OBJECTTYPE_PLAYER
+                        && obj == ((BLData *)holder->extraObjectData)->weaponObject) {
+                        if (holder->animState->currentWeaponId == 1 || AnimDatumGetIndex(obj, 0) < 0) {
+                            _VECTOR ahead = {0.0f, 0.0f, 1.5f};
+                            _VECTOR offset;
+                            ApplyMatrixLV(&obj->transformMatrix, &ahead, &offset);
+                            Vec_Add2(&offset, &pos, &pos);
+                        } else {
+                            AnimGetBoneWorldTrans(obj, 0, 0, &pos, NULL);
+                        }
+                    }
+                }
+                ushort pitch = (ushort)(Rand_Rand(500) - 250);
+                Sound_Play3D((Action_SFX)sound, &pos, 100.0f, 100.0f, 0.0f, pitch, 0, 0);
+            }
+            length += 3;
+            break;
+        }
+
+        case ANIMCMD_UNUSED_2:
+            length += 3;
+            break;
+
+        case ANIMCMD_EVENT: {
+            passed = AnimFramesPassed(from, to, cmd[1], cmd[1], forward);
+            if (passed && !muted && !fired) {
+                switch (cmd[2]) {
+                case ANIMEVENT_STEP:
+                case ANIMEVENT_STEP_LEFT:
+                case ANIMEVENT_STEP_RIGHT:
+                    if (cmd[2] == ANIMEVENT_STEP)
+                        FootstepFoot = !FootstepFoot;
+                    else
+                        FootstepFoot = cmd[2] == ANIMEVENT_STEP_RIGHT;
+                    if (script->hashcode == ANIM_SCRIPT_FOOTSTEP_1 || script->hashcode == ANIM_SCRIPT_FOOTSTEP_1B)
+                        FootstepType = 1;
+                    else
+                        FootstepType = 2;
+                    break;
+                case ANIMEVENT_LASER:
+                    if (obj->maybeParent != NULL) {
+                        BLData *blData = (BLData *)obj->maybeParent->extraObjectData;
+                        blData->laserSight = blData->laserSight == 0;
+                    }
+                    break;
+                case ANIMEVENT_CALLBACK:
+                    if (script->onEvent != NULL)
+                        script->onEvent(obj, animObj, script, cmd[3]);
+                    break;
+                case ANIMEVENT_STOP_SOUND:
+                    Sound_StopAllWithId((Action_SFX)cmd[3]);
+                    break;
+                case ANIMEVENT_EFFECT:
+                    Effect_Create(&obj->animState->floor, obj, 0xc0, 1.0f);
+                    break;
+                case ANIMEVENT_FIRE: {
+                    obj_tag *holder = obj->maybeParent != NULL ? obj->maybeParent : obj;
+                    weapon_definition_tag *weapon = &weapon_data[holder->animState->currentWeaponId];
+                    HASHCODE flash;
+                    ushort weaponSound;
+                    int datum = AnimDatumGetWeaponInfo(holder, NULL, &flash, &weaponSound);
+                    if (datum < 0)
+                        break;
+                    // Without a pose or the datum, Mat_Identity leaves the matrix's translation, uninitialised stack
+                    // in the original and 0 in ours (docs/nightfire-port-lifts.md, Departures)
+                    _VECTOR muzzle;
+                    _MATRIX muzzleMtx = {};
+                    AnimGetBoneWorldTrans(holder, datum, 1, &muzzle, &muzzleMtx);
+                    _VECTOR ahead = {0.0f, 0.0f, 1.0f};
+                    _VECTOR dir;
+                    MatrixMultiplyVector(&muzzleMtx, &ahead, &dir);
+                    Bullet_init(-1, holder, holder, weapon, &muzzle, &dir, weaponSound);
+                    if (flash == 0)
+                        break;
+                    AnimDatumSetEntity(holder, datum + 1, flash, 3);
+                    Light_Create(&muzzle, weapon->muzzleFlash_r, weapon->muzzleFlash_g, weapon->muzzleFlash_b,
+                                 weapon->muzzleLightRadius, 0, 3, 1, 2.0f, 0, 0, 0, 0xffff);
+                    if (!(weapon->weaponFlags & 0x2000)) {
+                        _VECTOR spin;
+                        spin.x = 0.0f;
+                        spin.y = 0.0f;
+                        spin.z = 0.0f;
+                        spin.z = (float)Float_FRand(6.2831855f);
+                        Gas_Init(obj->inCel, &muzzle, &spin, NULL, 0.05f, 0.1f, (HASHCODE)0x02000039, 7, 0x48403080,
+                                 1, 0x80);
+                    }
+                    break;
+                }
+                }
+            }
+            length += 3;
+            break;
+        }
+
+        default:
+            NF_WARN("Script 0x%x invalid command 0x%x data 0x%x", script->hashcode, cmd[0] & 0xff, length); // GC check (0x80048f98)
+            break;
+        }
+
+        cmd += length;
+        if (passed)
+            script->firedMask |= bit;
+        else
+            script->firedMask &= ~bit;
+    }
+}
+
+// Moves a script on a tick: its first frame's commands the first time, its speed by its speed mode, its end, and the
+// commands it passed. A script played once with ANIMPLAY_DELETE goes when it stops.
+void _AnimScriptTick(AnimObj *animObj, obj_tag *obj, sAnimScript_tag *script) {
+    float speed = script->speed;
+    script->flags &= ~ANIMSCRIPT_WRAPPED;
+    script->flags |= ANIMSCRIPT_HAS_ROOT_TRANS;
+    bool first = (script->flags & ANIMSCRIPT_STARTED) != 0;
+    if (first)
+        AnimProcessScriptCmds(obj, animObj, script, Ftol(script->prevFrame), Ftol(script->curFrame));
+
+    double step;
+    switch (script->speedMode) {
+    case ANIMSPEED_TIME:
+        step = (double)speed * FRAME_RATE_MUL;
+        break;
+    case ANIMSPEED_DISTANCE:
+        script->flags |= ANIMSCRIPT_LOOP;
+        script->speed = (float)_AnimDistanceTableDistanceToFrame2(obj, script, animObj);
+        step = script->speed;
+        break;
+    case ANIMSPEED_SYNC: {
+        // As far through as the master, the short way round
+        sAnimScript_tag *master = script->syncMaster;
+        float masterPos = (float)(((double)master->curFrame - 1.0) / (master->numFrames - 1));
+        double span = script->numFrames - 1;
+        float pos = (float)(((double)script->curFrame - 1.0) / span);
+        double gap = (double)masterPos - pos;
+        if (!(master->speed >= 0.0f)) {
+            if (gap >= 1.0)
+                gap = ((double)pos + 1.0) - masterPos;
+        } else if (gap < 0.0) {
+            gap = (1.0 - pos) + masterPos;
+        }
+        script->speed = (float)(span * gap + 1.0);
+        first = false;
+        step = script->speed;
+        break;
+    }
+    case ANIMSPEED_SEEK:
+        script->speed = (float)((double)(script->numFrames + 1) * script->targetPos - script->curFrame);
+        first = false;
+        step = script->speed;
+        break;
+    default:
+        step = speed;
+        break;
+    }
+
+    int prevFrame = Ftol(script->prevFrame);
+    float frame = script->curFrame;
+    if (!first)
+        frame = (float)(frame + step);
+    double newFrame = _AnimScriptEnd(script, obj, animObj, frame);
+    if (Glb_bScriptDeleted)
+        return;
+    AnimProcessScriptCmds(obj, animObj, script, prevFrame, Ftol(newFrame));
+    if (script->playMode == ANIMPLAY_DELETE && (script->flags & ANIMSCRIPT_STOPPED))
+        AnimScriptDelete(obj, &script);
+}
+
+// The anim object in ECX
+// AUTOLTCG
+void __declspec(naked) AnimScriptTick(void) {
+    _asm {
+        push dword ptr [esp + 8]
+        push dword ptr [esp + 8]
+        push ecx
+        call _AnimScriptTick
+        add esp, 12
+        ret
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Datums
+
+// The index in the skin's datums of the one with id, -1 for none
+// AUTOINJECT
+int AnimDatumGetIndex(obj_tag *obj, int id) {
+    if (obj == NULL || obj->animState == NULL)
+        return -1;
+    sAnimSkin_tag *skin = obj->animState->animObj.skin;
+    for (int i = 0; i < skin->numDatums; i++) {
+        if (skin->datums[i].id == id)
+            return i;
+    }
+    return -1;
+}
+
+// Draws entity at the datum id for frames frames (0xff for ever); with no entity, nothing
+// AUTOINJECT
+void AnimDatumSetEntity(obj_tag *obj, int id, uint entity, uchar frames) {
+    if (obj == NULL || obj->animState == NULL)
+        return;
+    AnimObj *animObj = &obj->animState->animObj;
+    int index = AnimDatumGetIndex(obj, id);
+    if (index < 0)
+        return;
+    if (entity != 0) {
+        animObj->datumGlist[index] = hashtable_hashcode_to_celglist((HASHCODE)entity);
+        animObj->datumTimer[index] = frames;
+    } else {
+        animObj->datumTimer[index] = 0;
+    }
+}
+
+// The held weapon's model, its third-person flash and sound; its first datum, -1 for none
+// AUTOINJECT
+int AnimDatumGetWeaponInfo(obj_tag *obj, HASHCODE *gfx, HASHCODE *flash, ushort *sound) {
+    uint weapon = (uint)(int)obj->animState->currentWeaponId;
+    if (weapon > 0x72)
+        return -1;
+    if (gfx != NULL)
+        *gfx = weapon_data[weapon].worldModelGfx;
+    if (flash != NULL)
+        *flash = weapon_data[weapon].muzzleFlash3rdPerson;
+    if (sound != NULL)
+        *sound = weapon_data[weapon].fireSound3rdPerson;
+    if (weapon_data[weapon].weaponDatum == 0xff)
+        return -1;
+    return weapon_data[weapon].weaponDatum;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Faces
+
+// A speech script on the face: deleted when it ends, and the face talks till then
+// AUTOINJECT
+sAnimScript_tag* AnimFacialAppend(obj_tag *obj, HASHCODE hashcode) {
+    AnimObj *animObj = &obj->animState->animObj;
+    sAnimScript_tag *script = AnimScriptAppend(obj, hashcode);
+    script->playMode = ANIMPLAY_DELETE;
+    script->groupTag = ANIMTAG_FACE_SPEECH;
+    animObj->facialState = FACIAL_TALKING;
+    return script;
+}
+
+// The face between speeches: an expression for the character's alert status, and blinks, some quick, some slow
+void _AnimFacialUpdate(AnimObj *animObj, obj_tag *obj) {
+    if ((animObj->flags & ANIMOBJ_NO_FACE) || ScriptCam != 0)
+        return;
+    bool altSkeleton = (animObj->flags & ANIMOBJ_ALT_SKELETON) != 0;
+    const HASHCODE *anims = altSkeleton ? FacialAnimsAltSkeleton : FacialAnims;
+
+    switch (animObj->facialState & ~FACIAL_QUICK_BLINK) {
+    case FACIAL_START: {
+        sAnimScript_tag *mood = AnimScriptAppend(obj, anims[0]);
+        mood->playMode = ANIMPLAY_DELETE;
+        mood->speed = 0.0f;
+        mood->groupTag = ANIMTAG_FACE_MOOD;
+        animObj->facialState = FACIAL_IDLE;
+        animObj->facialTimer = Rand_Rand(FRAME_RATE_INT * 3) + FRAME_RATE_INT * 3 / 2;
+        break;
+    }
+
+    case FACIAL_IDLE: {
+        bool blinks = true;
+        bool alerted = true;
+        uchar *alert = Drone_AlertStatus(obj);
+        if (alert != NULL) {
+            if (alert[2]) {
+                alert[2] = 0;
+                AnimListBuild(obj, ANIMLIST_MUTE_MORPH, 0, NULL, ANIMLIST_RESTART);
+                AnimListDelete(obj);
+                sAnimScript_tag *mood = AnimScriptAppend(obj, anims[alert[0]]);
+                mood->playMode = ANIMPLAY_DELETE;
+                mood->speed = 0.0f;
+                mood->groupTag = ANIMTAG_FACE_MOOD;
+                return;
+            }
+            if (alert[0] == 3)
+                blinks = false;
+            if (alert[0] == 0)
+                alerted = false;
+            if (!blinks)
+                return;
+        }
+
+        if ((short)--animObj->facialTimer >= 0)
+            return;
+        if (alerted)
+            animObj->facialTimer = Rand_Rand(FRAME_RATE_INT * 2) + FRAME_RATE_INT;
+        else
+            animObj->facialTimer = Rand_Rand(FRAME_RATE_INT * 2) + FRAME_RATE_INT * 2;
+        sAnimScript_tag *blink = AnimScriptAppend(obj, anims[4]);
+        blink->playMode = ANIMPLAY_DELETE;
+        blink->groupTag = ANIMTAG_FACE_BLINK;
+        if (altSkeleton)
+            return;
+        if (animObj->facialState & FACIAL_QUICK_BLINK) {
+            animObj->facialState &= ~FACIAL_QUICK_BLINK;
+            return;
+        }
+        uint chance = Rand_Rand(100);
+        if (chance <= 50)
+            return;
+        if (chance > 75) {
+            blink->speed = (float)(Float_FRand(0.2f) + 0.2f);
+            return;
+        }
+        animObj->facialTimer = Rand_Rand(FRAME_RATE_INT / 10) + FRAME_RATE_INT / 10;
+        animObj->facialState |= FACIAL_QUICK_BLINK;
+        break;
+    }
+
+    case FACIAL_TALKING:
+        if (AnimListBuild(obj, ANIMLIST_TAG, ANIMTAG_FACE_SPEECH, NULL, ANIMLIST_RESTART) == NULL) {
+            animObj->facialState = FACIAL_IDLE;
+            uchar *alert = Drone_AlertStatus(obj);
+            if (alert != NULL)
+                alert[2] = 1;
+        }
+        break;
+    }
+}
+
+// The anim object in ESI
+// AUTOLTCG
+void __declspec(naked) AnimFacialUpdate(void) {
+    _asm {
+        push dword ptr [esp + 4]
+        push esi
+        call _AnimFacialUpdate
+        add esp, 8
+        ret
+    }
+}
+
+static constexpr float kByteToUnit = 1.0f / 255.0f;
+static_assert(std::bit_cast<uint32_t>(kByteToUnit) == 0x3b808081, "1/255");
+
+// The morph weights from the facial scripts' poses: the expression, and over it the blink and the speech where they
+// move a morph by more than 0.01; then the eyes. In a scripted scene, the speech alone.
+void _AnimFacialBlend(obj_tag *obj, AnimObj *animObj, sAnimSkin_tag *skin) {
+    sAnimScript_tag *mood = AnimListBuild(obj, ANIMLIST_TAG, ANIMTAG_FACE_MOOD, NULL, ANIMLIST_RESTART);
+    sAnimScript_tag *blink = AnimListBuild(obj, ANIMLIST_TAG, ANIMTAG_FACE_BLINK, NULL, ANIMLIST_RESTART);
+    sAnimScript_tag *speech = AnimListBuild(obj, ANIMLIST_TAG, ANIMTAG_FACE_SPEECH, NULL, ANIMLIST_RESTART);
+    uint numMorphs = skin->numMorphs;
+
+    if (ScriptCam != 0) {
+        if (speech != NULL) {
+            for (uint i = 0; i < numMorphs; i++)
+                animObj->morphWeights[i] = speech->morphAnimSeq->pose[i];
+        }
+        return;
+    }
+
+    if (mood != NULL) {
+        for (uint i = 0; i < numMorphs; i++)
+            animObj->morphWeights[i] = mood->morphAnimSeq->pose[i];
+    }
+    if (blink != NULL) {
+        for (uint i = 0; i < numMorphs; i++) {
+            float weight = blink->morphAnimSeq->pose[i];
+            if (Magnitude(weight) > 0.01f)
+                animObj->morphWeights[i] = weight;
+        }
+    }
+    if (speech != NULL) {
+        for (uint i = 0; i < numMorphs; i++) {
+            float weight = speech->morphAnimSeq->pose[i];
+            if (Magnitude(weight) > 0.01f)
+                animObj->morphWeights[i] = weight;
+        }
+    }
+
+    double eyes = animObj->lookMorphX * (double)kByteToUnit;
+    if (eyes > 0.01f)
+        animObj->morphWeights[MORPH_EYES_X] = (float)eyes;
+    eyes = (255 - animObj->lookMorphX) * (double)kByteToUnit;
+    if (eyes > 0.01f)
+        animObj->morphWeights[MORPH_EYES_X_INV] = (float)eyes;
+    eyes = animObj->lookMorphY * (double)kByteToUnit;
+    if (eyes > 0.01f)
+        animObj->morphWeights[MORPH_EYES_Y] = (float)eyes;
+    eyes = (255 - animObj->lookMorphY) * (double)kByteToUnit;
+    if (eyes > 0.01f)
+        animObj->morphWeights[MORPH_EYES_Y_INV] = (float)eyes;
+}
+
+// The object in EAX, the anim object in ESI
+// AUTOLTCG
+void __declspec(naked) AnimFacialBlend(void) {
+    _asm {
+        push dword ptr [esp + 4]
+        push esi
+        push eax
+        call _AnimFacialBlend
+        add esp, 12
+        ret
+    }
+}
+
+// Whether any view has the object at lod limit or nearer; always in a scripted scene
+// AUTOINJECT
+bool AnimObjectIsClose(obj_tag *obj, uint limit) {
+    if (ScriptCam != 0)
+        return true;
+    return limit >= AnimObjectNearestLod(obj);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Sampling: from the sequences to the object's pose
+
+// AnimFrameCopy's channels, by what each evaluates
+enum {
+    ANIMCH_QUAT_Z = 0,  // and w
+    ANIMCH_QUAT_Y = 1,
+    ANIMCH_QUAT_X = 2,
+    ANIMCH_TRANS_Z = 3,
+    ANIMCH_TRANS_Y = 4,
+    ANIMCH_TRANS_X = 5,
+    ANIMCH_MORPH = 6,
+};
+
+// FUN_00013c70: evaluates the channels gathered (four lanes at a time, each acc += t^i * c_i) and stores them
+static void AnimFrameEmitChannels(uint count, float **morphOut, _VECTOR **transOut, quaternion_tag **quatOut) {
+    if (count != 0) {
+        for (int i = 1; i < 6; i++)
+            Vec4_MulAdd(AnimFramePoly[i], AnimChannelCoef[i], AnimChannelCoef[0]);
+    }
+
+    for (uint lane = 0; lane < count; lane++) {
+        float value = AnimChannelCoef[0][lane];
+        switch (AnimChannelType[lane]) {
+        case ANIMCH_MORPH:
+            *(*morphOut)++ = value;
+            break;
+        case ANIMCH_TRANS_X:
+            (*transOut)->x = Glb_SkinScale.x * value;
+            break;
+        case ANIMCH_TRANS_Y:
+            (*transOut)->y = Glb_SkinScale.y * value;
+            break;
+        case ANIMCH_TRANS_Z:
+            (*transOut)->z = Glb_SkinScale.z * value;
+            (*transOut)++;
+            break;
+        case ANIMCH_QUAT_X:
+            (*quatOut)->q[0] = value;
+            break;
+        case ANIMCH_QUAT_Y:
+            (*quatOut)->q[1] = value;
+            break;
+        default: {
+            // z, and w from the unit length; a z of 2 or more stands for z - 4 with a negative w
+            quaternion_tag *q = *quatOut;
+            bool negativeW = !(value < 2.0f);
+            q->q[2] = negativeW ? (float)((double)value - 4.0) : value;
+            double square = 1.0 - (((double)q->q[2] * q->q[2] + (double)q->q[1] * q->q[1]) + (double)q->q[0] * q->q[0]);
+            if (square > 0.0)
+                q->q[3] = (float)(negativeW ? -sqrt(square) : sqrt(square));
+            else
+                q->q[3] = 0.0f;
+            (*quatOut)++;
+            break;
+        }
+        }
+    }
+}
+
+// Decodes one frame of a sequence into a pose (or a morph sequence's weights). Each channel is a polynomial of
+// degree up to five in frame - 1, in pieces (keys) of so many frames. The bones the skin does not use are left as
+// they are. The root's translation is put back into raw units; firstTrans is taken one past the last translation.
+// AUTOINJECT
+void AnimFrameCopy(float *out, sAnimSeq_tag *seq, sAnimSkin_tag *skin, float frameIn) {
+    double frame = Ftol(frameIn);
+    if (frame == -1.0)
+        frame = seq->frame;
+    float first = seq->firstFrame;
+    if (frame < first)
+        frame = first;
+    float last = seq->lastFrame;
+    if (frame > last)
+        frame = last;
+
+    double t = frame - 1.0;
+    double power = t;
+    AnimFramePoly[0] = 1.0f;
+    for (int i = 1; i < 6; i++) {
+        AnimFramePoly[i] = (float)power;
+        power *= t;
+    }
+    uint keyFrame = Ftol(t);
+
+    SkeletonInfo *skel = SkeletonTable[seq->skeletonNum];
+    bool morph = (seq->flags & ANIMSEQ_MORPH) != 0;
+    int numElems = morph ? seq->numElems : skel->numBones;
+    sAnimRawSeq_tag *raw = seq->rawSeq;
+    raw->cursor = raw->trackData;
+    uint *trackBase = raw->cursor;
+    uint *track = trackBase;
+
+    float *morphOut = out;
+    _VECTOR *transOut = (_VECTOR *)out;
+    quaternion_tag *quatOut = (quaternion_tag *)(transOut + numElems);
+    bool useCache = (seq->flags & ANIMSEQ_UNPAK_CACHE) != 0;
+    AnimUnpakEntry *cache = seq->unpakCache - 1;
+    uint count = 0;
+
+    for (int b = 0; b < numElems; b++) {
+        bool skip = false;
+        int channel;
+        if (morph) {
+            channel = ANIMCH_MORPH;
+        } else {
+            // Never four channels across two bones
+            if (count > 0) {
+                AnimFrameEmitChannels(count, &morphOut, &transOut, &quatOut);
+                count = 0;
+            }
+            if (skin != NULL && !(skin->bones[b] & ANIM_BONE_USED)) {
+                transOut++;
+                quatOut++;
+                skip = true;
+            }
+            if (skel->transMask[b >> 5] & (1u << (b & 31))) {
+                channel = ANIMCH_TRANS_X;
+            } else {
+                if (!skip) {
+                    Vec_Copy(&skel->boneOffset[b], transOut);
+                    Vec_Mul(transOut, &Glb_SkinScale);
+                    transOut++;
+                }
+                channel = ANIMCH_QUAT_X;
+            }
+        }
+
+        for (;;) {
+            uint head = *track;
+            uint *next = (uint *)((uchar *)track + (head & 0xffff));
+            track++;
+
+            if (!skip) {
+                // The key the frame is in; the head's high half is the first key word
+                uint pending = head;
+                bool havePending = true;
+                uint frames = 0;
+                if (useCache) {
+                    cache++;
+                    if (cache->keyOffset != 0) {
+                        track = (uint *)(((uintptr_t)trackBase + cache->keyOffset) & ~(uintptr_t)1);
+                        pending = (uint)cache->pendingHigh << 16;
+                        havePending = cache->keyOffset & 1;
+                        frames = cache->accBefore;
+                    }
+                }
+                uint mask;
+                for (;;) {
+                    if (useCache) {
+                        cache->keyOffset = (uint)((uchar *)track - (uchar *)trackBase) | (havePending ? 1 : 0);
+                        cache->pendingHigh = (ushort)(pending >> 16);
+                        cache->accBefore = (ushort)frames;
+                    }
+                    uint key;
+                    if (havePending) {
+                        key = pending >> 16;
+                        havePending = false;
+                    } else {
+                        pending = *track++;
+                        key = pending & 0xffff;
+                        havePending = true;
+                    }
+                    frames += key >> 6;
+                    mask = key & 0x3f;
+                    if (keyFrame <= frames)
+                        break;
+                    for (uint m = mask; m != 0; m &= m - 1)
+                        track++;
+                }
+
+                for (int i = 0; i < 6; i++, mask >>= 1)
+                    AnimChannelCoef[i][count] = (mask & 1) ? *(float *)track++ : 0.0f;
+                AnimChannelType[count] = channel;
+                if (++count == 4) {
+                    AnimFrameEmitChannels(count, &morphOut, &transOut, &quatOut);
+                    count = 0;
+                }
+            }
+
+            if (channel == ANIMCH_MORPH)
+                channel = ANIMCH_QUAT_Z;
+            track = next;
+            if (channel-- == 0)
+                break;
+        }
+    }
+    if (count > 0)
+        AnimFrameEmitChannels(count, &morphOut, &transOut, &quatOut);
+
+    Vec_Mul((_VECTOR *)out, &Glb_InvSkinScale);
+    if (!(seq->flags & ANIMSEQ_FIRST_TRANS)) {
+        seq->flags |= ANIMSEQ_FIRST_TRANS;
+        Vec_Copy(transOut, &seq->firstTrans);
+    }
+    Vec_Subtract(transOut, &seq->firstTrans, &seq->transRelFirst);
+}
+
+// Blends pose b into pose a by t into out (any may be the same): translations moved towards b, quaternions slerped,
+// the accurate slerp near a view. The bones in mask are b's whole.
+void _AnimFrameBlend(float *out, float *a, float *b, obj_tag *obj, int numBones, float t, uchar *mask) {
+    _VECTOR *outTrans = (_VECTOR *)out;
+    _VECTOR *aTrans = (_VECTOR *)a;
+    _VECTOR *bTrans = (_VECTOR *)b;
+    quaternion_tag *outQuats = (quaternion_tag *)(outTrans + numBones);
+    quaternion_tag *aQuats = (quaternion_tag *)(aTrans + numBones);
+    quaternion_tag *bQuats = (quaternion_tag *)(bTrans + numBones);
+
+    int whole = 0;
+    if (t == 0.0f)
+        whole = -1;
+    else if (t == 1.0f)
+        whole = 1;
+    bool accurate = ScriptCam != 0 || AnimObjectNearestLod(obj) <= 0xf0;
+
+    if (mask == NULL) {
+        if (whole < 0) {
+            if (out != a)
+                memcpy(out, a, numBones * (sizeof(_VECTOR) + sizeof(quaternion_tag)));
+            return;
+        }
+        if (whole > 0) {
+            if (out != b)
+                memcpy(out, b, numBones * (sizeof(_VECTOR) + sizeof(quaternion_tag)));
+            return;
+        }
+        if (out == a && out == b)
+            return;
+        for (int i = 0; i < numBones; i++) {
+            outTrans[i].x = moveTowardsValue(aTrans[i].x, bTrans[i].x, t);
+            outTrans[i].y = moveTowardsValue(aTrans[i].y, bTrans[i].y, t);
+            outTrans[i].z = moveTowardsValue(aTrans[i].z, bTrans[i].z, t);
+            if (accurate)
+                Quat_Slerp_Acc(t, aQuats[i].q, bQuats[i].q, outQuats[i].q);
+            else
+                Quat_Slerp(t, &aQuats[i], &bQuats[i], &outQuats[i]);
+        }
+        return;
+    }
+
+    for (int i = 0; i < numBones; i++) {
+        bool masked = false;
+        for (const uchar *bone = mask; *bone != 0xff; bone += 2) {
+            if (*bone == i) {
+                masked = true;
+                break;
+            }
+        }
+        if (masked || whole > 0) {
+            outTrans[i] = bTrans[i];
+            outQuats[i] = bQuats[i];
+        } else if (whole < 0) {
+            outTrans[i] = aTrans[i];
+            outQuats[i] = aQuats[i];
+        } else {
+            outTrans[i].x = LerpTo(aTrans[i].x, bTrans[i].x, t);
+            outTrans[i].y = LerpTo(aTrans[i].y, bTrans[i].y, t);
+            outTrans[i].z = LerpTo(aTrans[i].z, bTrans[i].z, t);
+            if (accurate)
+                Quat_Slerp_Acc(t, aQuats[i].q, bQuats[i].q, outQuats[i].q);
+            else
+                Quat_Slerp(t, &aQuats[i], &bQuats[i], &outQuats[i]);
+        }
+    }
+}
+
+// out in ECX, a in EDX, b in EAX
+// AUTOLTCG
+void __declspec(naked) AnimFrameBlend(void) {
+    _asm {
+        push dword ptr [esp + 16]
+        push dword ptr [esp + 16]
+        push dword ptr [esp + 16]
+        push dword ptr [esp + 16]
+        push eax
+        push edx
+        push ecx
+        call _AnimFrameBlend
+        add esp, 28
+        ret
+    }
+}
+
+// The sequence's frame into its pose, the next frame blended in by fraction
+void _AnimFrameSet(sAnimSeq_tag *seq, sAnimSkin_tag *skin, obj_tag *obj, float fraction) {
+    int numBones = SkeletonTable[skin->skeletonNum]->numBones;
+    float frame = seq->frame;
+    if (fraction <= 0.0002f && fraction >= -0.0002f) {
+        AnimFrameCopy(seq->pose, seq, skin, frame);
+        return;
+    }
+
+    double next = (double)frame + 1.0;
+    float last = seq->lastFrame;
+    float nextFrame = next < last ? (float)next : last;
+    if (fraction == 1.0f) {
+        AnimFrameCopy(seq->pose, seq, skin, nextFrame);
+        return;
+    }
+    // The bones the skin does not use are left as they were in nextPose, uninitialised stack in the original, and
+    // blended into the pose all the same; ours are 0 (docs/nightfire-port-lifts.md, Departures)
+    float nextPose[ANIM_FRAME_BUFFER_SIZE / sizeof(float)];
+    memset(nextPose, 0, sizeof(nextPose));
+    AnimFrameCopy(seq->pose, seq, skin, frame);
+    AnimFrameCopy(nextPose, seq, skin, nextFrame);
+    _AnimFrameBlend(seq->pose, seq->pose, nextPose, obj, numBones, fraction, NULL);
+}
+
+// The sequence in ESI, the skin in EDI
+// AUTOLTCG
+void __declspec(naked) AnimFrameSet(void) {
+    _asm {
+        push dword ptr [esp + 8]
+        push dword ptr [esp + 8]
+        push edi
+        push esi
+        call _AnimFrameSet
+        add esp, 16
+        ret
+    }
+}
+
+// A walk script's sequence's frame callback (AnimSetUpdate): as AnimSeqTick samples, whatever the script's flags.
+// Their name; FUN_000171a0 on the Xbox.
+// AUTOINJECT
+void AnimSet_WalkUpdater(obj_tag *obj, sAnimSkin_tag *skin, sAnimSeq_tag *seq, sAnimScript_tag *script) {
+    float fraction = (float)(seq->frame - (double)Ftol(seq->frame));
+    _AnimFrameSet(seq, skin, obj, fraction);
+}
+
+// A sequence's tick: its frame from its script's, sampled into its pose, and its root's motion since the last tick
+// taken out of the pose (bone 0's translation is left at 0)
+void _AnimSeqTick(sAnimScript_tag *script, sAnimSeq_tag *seq, obj_tag *obj, AnimObj *animObj) {
+    if (script != NULL) {
+        seq->flags &= 0x1ffffff;
+        if (script->flags & ANIMSCRIPT_STOPPED)
+            seq->flags |= ANIMSEQ_STOPPED;
+        if (script->flags & ANIMSCRIPT_LOOP)
+            seq->flags |= ANIMSEQ_LOOP;
+        if (script->flags & ANIMSCRIPT_STARTED) {
+            script->flags &= ~ANIMSCRIPT_STARTED;
+            seq->flags |= ANIMSEQ_STARTED;
+        }
+        if (script->flags & ANIMSCRIPT_WRAPPED)
+            seq->flags |= ANIMSEQ_WRAPPED;
+        if (script->flags & ANIMSCRIPT_ZERO_ROOT_X)
+            seq->flags |= ANIMSEQ_ZERO_ROOT_X;
+        if (script->flags & ANIMSCRIPT_ZERO_ROOT_Y)
+            seq->flags |= ANIMSEQ_ZERO_ROOT_Y;
+        if (script->flags & ANIMSCRIPT_ZERO_ROOT_Z)
+            seq->flags |= ANIMSEQ_ZERO_ROOT_Z;
+        seq->frame = (float)(((double)script->curFrame - seq->startTime) + 1.0);
+    }
+
+    if (seq->frameCallback != NULL) {
+        seq->frameCallback(obj, animObj->skin, seq, script);
+    } else if (seq->flags & ANIMSEQ_MORPH) {
+        if (AnimObjectIsClose(obj, 12))
+            AnimFrameCopy(seq->pose, seq, NULL, seq->frame);
+        return;
+    } else {
+        float fraction = 0.0f;
+        if (!(script->flags & ANIMSCRIPT_SCRIPT_DRIVEN))
+            fraction = (float)(seq->frame - (double)Ftol(seq->frame));
+        _AnimFrameSet(seq, animObj->skin, obj, fraction);
+    }
+
+    _VECTOR *root = (_VECTOR *)seq->pose;
+    _VECTOR delta;
+    if (seq->flags & (ANIMSEQ_STARTED | ANIMSEQ_WRAPPED)) {
+        seq->flags &= ~(ANIMSEQ_STARTED | ANIMSEQ_WRAPPED);
+        delta = seq->rootDelta;
+    } else {
+        Vec_Subtract(root, &seq->rootPrev, &delta);
+    }
+    Vec_Copy(root, &seq->rootPrev);
+    if (seq->flags & ANIMSEQ_ZERO_ROOT_X)
+        delta.x = 0.0f;
+    if (seq->flags & ANIMSEQ_ZERO_ROOT_Y)
+        delta.y = 0.0f;
+    if (seq->flags & ANIMSEQ_ZERO_ROOT_Z)
+        delta.z = 0.0f;
+    seq->rootDelta = delta;
+    Vec_Zero(root);
+}
+
+// The script in EAX, the sequence in ECX, the object in EDX, the anim object in EBX
+// AUTOLTCG
+void __declspec(naked) AnimSeqTick(void) {
+    _asm {
+        push ebx
+        push edx
+        push ecx
+        push eax
+        call _AnimSeqTick
+        add esp, 16
+        ret
+    }
+}
+
+// A full character's root height in multiplayer, but for the alternative skeletons
+static constexpr float kMultiplayerHeight = 0.8627321f;
+static_assert(std::bit_cast<uint32_t>(kMultiplayerHeight) == 0x3f5cdc03, "0.8627321");
+
+// Mixes the scripts' sequences into the object's pose: those synced into their masters, then the rest by age, each
+// over the last by its weight; a masked script's bones over that, then an overlay by its fade. The root's
+// height and motion go to the object (turned by an anim-rotation script's matrix), faded-out scripts are deleted, and
+// the face is blended near a view.
+// AUTOINJECT
+void AnimFrameResolve(obj_tag *obj, AnimObj *animObj) {
+    bool posed = false;
+    _VECTOR delta, rootTrans;
+    Vec_Zero(&delta);
+    Vec_Zero(&rootTrans);
+    sAnimSkin_tag *skin = animObj->skin;
+
+    if (AnimListBuild(obj, ANIMLIST_SYNCED, 0, NULL, ANIMLIST_RESTART) != NULL) {
+        int numBones = SkeletonTable[GlbAnimList[0]->boneAnimSeq->skeletonNum]->numBones;
+        for (int i = 0; i < GlbAnimListCount; i++) {
+            sAnimScript_tag *script = GlbAnimList[i];
+            float *master = script->syncMaster->boneAnimSeq->pose;
+            _AnimFrameBlend(master, master, script->boneAnimSeq->pose, obj, numBones, script->syncBlend,
+                            script->boneMask);
+        }
+    }
+
+    // The fades
+    AnimListBuild(obj, ANIMLIST_ALL, 0, NULL, ANIMLIST_RESTART);
+    AnimListBuild(obj, ANIMLIST_OVERLAY | ANIMLIST_MASKED | ANIMLIST_MUTE_MORPH, 0, NULL, ANIMLIST_REMOVE);
+    for (int i = 0; i < GlbAnimListCount; i++) {
+        sAnimScript_tag *script = GlbAnimList[i];
+        script->flags &= ~ANIMSCRIPT_FADED;
+        if (script->fadeDir > 0) {
+            script->fadeTime = (float)((double)FRAME_RATE_MUL + script->fadeTime);
+        } else if (script->fadeDir < 0) {
+            double fade = (double)script->fadeTime - FRAME_RATE_MUL;
+            script->fadeTime = (float)fade;
+            if (fade <= 0.0)
+                script->flags |= ANIMSCRIPT_FADED;
+        }
+        if (script->fadeTime < 0.0f)
+            script->fadeTime = 0.0f;
+        else if (script->fadeTime > script->fadeLen)
+            script->fadeTime = script->fadeLen;
+        script->weight = script->fadeTime / script->fadeLen;
+    }
+
+    AnimListBuild(obj, ANIMLIST_SYNCED, 0, NULL, ANIMLIST_REMOVE);
+    if (GlbAnimListCount != 0) {
+        animObj->flags |= ANIMOBJ_POSE_VALID;
+        posed = true;
+        if (GlbAnimListCount == 1) {
+            sAnimSeq_tag *seq = GlbAnimList[0]->boneAnimSeq;
+            memcpy(animObj->pose, seq->pose, animObj->poseBufSize);
+            delta = seq->rootDelta;
+            rootTrans = seq->rootPrev;
+        } else {
+            // Oldest first
+            for (int i = 0; i < GlbAnimListCount - 1; i++) {
+                for (int j = i + 1; j < GlbAnimListCount; j++) {
+                    if (GlbAnimList[i]->timestamp > GlbAnimList[j]->timestamp) {
+                        sAnimScript_tag *swap = GlbAnimList[i];
+                        GlbAnimList[i] = GlbAnimList[j];
+                        GlbAnimList[j] = swap;
+                    }
+                }
+            }
+            int numBones = SkeletonTable[GlbAnimList[0]->boneAnimSeq->skeletonNum]->numBones;
+            for (int i = 0; i < GlbAnimListCount - 1; i++) {
+                float weight = (float)(1.0 - GlbAnimList[i]->weight);
+                bool shareRoot = false;
+                float *under;
+                if (i == 0) {
+                    sAnimSeq_tag *seq = GlbAnimList[0]->boneAnimSeq;
+                    under = seq->pose;
+                    delta = seq->rootDelta;
+                    rootTrans = seq->rootPrev;
+                    shareRoot = (GlbAnimList[0]->flags & ANIMSCRIPT_SHARE_ROOT) != 0;
+                } else {
+                    under = animObj->pose;
+                }
+                sAnimScript_tag *over = GlbAnimList[i + 1];
+                sAnimSeq_tag *overSeq = over->boneAnimSeq;
+                _VECTOR overDelta = overSeq->rootDelta;
+                _VECTOR overTrans = overSeq->rootPrev;
+                quaternion_tag *underRoot = (quaternion_tag *)((_VECTOR *)under + numBones);
+                quaternion_tag *overRoot = (quaternion_tag *)((_VECTOR *)overSeq->pose + numBones);
+                if (shareRoot)
+                    *underRoot = *overRoot;
+                if (over->flags & ANIMSCRIPT_SHARE_ROOT)
+                    *overRoot = *underRoot;
+                _AnimFrameBlend(animObj->pose, under, overSeq->pose, obj, numBones, weight, NULL);
+                delta.x = LerpTo(delta.x, overDelta.x, weight);
+                delta.y = LerpTo(delta.y, overDelta.y, weight);
+                delta.z = LerpTo(delta.z, overDelta.z, weight);
+                rootTrans.x = LerpTo(rootTrans.x, overTrans.x, weight);
+                rootTrans.y = LerpTo(rootTrans.y, overTrans.y, weight);
+                rootTrans.z = LerpTo(rootTrans.z, overTrans.z, weight);
+            }
+        }
+    }
+
+    // The first masked script, over the pose
+    if (AnimListBuild(obj, ANIMLIST_MASKED, 0, NULL, ANIMLIST_RESTART) != NULL) {
+        sAnimScript_tag *masked = GlbAnimList[0];
+        int numBones = SkeletonTable[masked->boneAnimSeq->skeletonNum]->numBones;
+        float *pose = masked->boneAnimSeq->pose;
+        if (posed) {
+            _AnimFrameBlend(animObj->pose, animObj->pose, pose, obj, numBones, 1.0f, masked->boneMask);
+        } else {
+            animObj->flags |= ANIMOBJ_POSE_VALID;
+            memcpy(animObj->pose, pose, animObj->poseBufSize);
+            rootTrans = masked->boneAnimSeq->rootPrev;
+            posed = true;
+        }
+    }
+
+    // The first overlay, by its fade
+    bool moved = posed;
+    if (AnimListBuild(obj, ANIMLIST_OVERLAY, 0, NULL, ANIMLIST_RESTART) != NULL) {
+        sAnimScript_tag *overlay = GlbAnimList[0];
+        int numBones = SkeletonTable[overlay->boneAnimSeq->skeletonNum]->numBones;
+        float *pose = overlay->boneAnimSeq->pose;
+        if (posed) {
+            _AnimFrameBlend(animObj->pose, animObj->pose, pose, obj, numBones, overlay->fadeTime, NULL);
+        } else {
+            animObj->flags |= ANIMOBJ_POSE_VALID;
+            memcpy(animObj->pose, pose, animObj->poseBufSize);
+            rootTrans = overlay->boneAnimSeq->rootPrev;
+            moved = true;
+        }
+    }
+
+    if (moved) {
+        float height = (float)((double)rootTrans.y + animObj->heightOffset);
+        animObj->rootHeight = height;
+        if (!(animObj->flags & ANIMOBJ_ALT_SKELETON) && MPSettings.isMultiplayer)
+            animObj->rootHeight = height * kMultiplayerHeight;
+
+        AnimListBuild(obj, ANIMLIST_ALL, 0, NULL, ANIMLIST_RESTART);
+        _MATRIX *turn = &obj->transformMatrix;
+        for (int i = 0; i < GlbAnimListCount; i++) {
+            if (GlbAnimList[i]->flags & ANIMSCRIPT_ANIM_ROTATION) {
+                turn = &GlbAnimList[i]->rotMtx;
+                break;
+            }
+        }
+        _VECTOR move;
+        ApplyMatrixLV(turn, &delta, &move);
+        if (animObj->rootMotionCallback != NULL)
+            animObj->rootMotionCallback(obj, animObj, &move);
+        Vec_Add2(&move, &obj->position, &obj->position);
+
+        // Once a script has faded out, those faded and those held go
+        AnimListBuild(obj, ANIMLIST_ALL, 0, NULL, ANIMLIST_RESTART);
+        AnimListBuild(obj, ANIMLIST_MUTE_MORPH, 0, NULL, ANIMLIST_REMOVE);
+        bool anyFaded = false;
+        for (int i = 0; i < GlbAnimListCount; i++) {
+            uint flags = GlbAnimList[i]->flags;
+            if ((flags & ANIMSCRIPT_FADED) && (flags & ANIMSCRIPT_FADE_OUT)) {
+                anyFaded = true;
+                break;
+            }
+        }
+        if (anyFaded) {
+            int count = GlbAnimListCount;
+            for (int i = 0; i < count; i++) {
+                sAnimScript_tag *script = GlbAnimList[i];
+                bool faded = (script->flags & ANIMSCRIPT_FADED) && (script->flags & ANIMSCRIPT_FADE_OUT);
+                if (script->fadeDir == 0 || faded) {
+                    AnimScriptDelete(obj, &script);
+                    count = GlbAnimListCount;
+                }
+            }
+        }
+    }
+
+    if (skin->numMorphs != 0 && (ScriptCam != 0 || AnimObjectNearestLod(obj) <= 12))
+        _AnimFacialBlend(obj, animObj, skin);
+
+    if (animObj->postPoseCallback != NULL) {
+        int numBones = SkeletonTable[skin->skeletonNum]->numBones;
+        animObj->postPoseCallback(obj, animObj, numBones, (_VECTOR *)animObj->pose,
+                                  (quaternion_tag *)((_VECTOR *)animObj->pose + numBones));
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The anim object
+
+// The skin the level uses in place of skin: some levels have their own versions of some characters
+HASHCODE _maybeFixupSkinHashcode(HASHCODE skin) {
+    switch (GameState.CurrentLevelHashcode) {
+    case HT_Level_HendersonA:
+    case HT_Level_HendersonB:
+    case HT_Level_HendersonC:
+    case HT_Level_Tower2A:
+        if (skin == (HASHCODE)0x05000036)
+            return (HASHCODE)0x050000c3;
+        if (skin == (HASHCODE)0x05000038)
+            return (HASHCODE)0x050000c2;
+        break;
+    case HT_Level_CastleIndoors1:
+    case HT_Level_CastleIndoors2:
+    case HT_Level_EvilBase:
+    case HT_Level_EvilBaseC:
+        switch ((uint)skin) {
+        case 0x05000015: return (HASHCODE)0x050000bd;
+        case 0x05000018: return (HASHCODE)0x050000c5;
+        case 0x0500003b: return (HASHCODE)0x050000bf;
+        case 0x0500005e: return (HASHCODE)0x050000be;
+        }
+        break;
+    default:
+        break;
+    }
+    return skin;
+}
+
+// The skin in EAX
+// AUTOLTCG
+HASHCODE __declspec(naked) maybeFixupSkinHashcode(void) {
+    _asm {
+        push eax
+        call _maybeFixupSkinHashcode
+        add esp, 4
+        ret
+    }
+}
+
+// The height under the root of a full character, by its skeleton, before the skin's own (AnimObjectNew)
+static constexpr float kHeightAltSkeleton = -1.160398f;
+static constexpr float kHeightSkeleton1 = -0.995208f;
+static_assert(std::bit_cast<uint32_t>(kHeightAltSkeleton) == 0xbf9487ec, "-1.160398");
+static_assert(std::bit_cast<uint32_t>(kHeightSkeleton1) == 0xbf7ec5f4, "-0.995208");
+
+// Animates the object with the skin: its pose, matrices, datums and rigid parts. 0, and no anim object, if the skin is
+// not loaded or anything fails.
+// AUTOINJECT
+int AnimObjectNew(obj_tag *obj, HASHCODE skinHash) {
+    if ((skinHash & 0xff000000) != ANIM_HASHTYPE_SKIN || obj == NULL)
+        return 0;
+    skinHash = _maybeFixupSkinHashcode(skinHash);
+    sAnimSkin_tag *skin = (sAnimSkin_tag *)hashtable_getitem(skinHash);
+    if (skin == NULL) {
+        NF_WARN("Skin 0x%x not loaded", skinHash); // GC check (0x800452fc)
+        return 0;
+    }
+
+    AnimState *animState = (AnimState *)Mem_Malloc(sizeof(AnimState), MALLOC_ANIM_OBJECT_STRUCTS, 0);
+    if (animState == NULL)
+        goto failed;
+    obj->animState = animState;
+    memset(animState, 0, sizeof(AnimState));
+    {
+        AnimObj *animObj = &obj->animState->animObj;
+        bool rigged;
+        animObj->skin = skin;
+        int numBones = SkeletonTable[skin->skeletonNum]->numBones;
+        obj->transformFlags |= TRANSFORM_ANIMATED;
+        animObj->poseBufSize = SkeletonTable[animObj->skin->skeletonNum]->numBones
+                               * (sizeof(_VECTOR) + sizeof(quaternion_tag));
+        animObj->pose = (float *)Mem_Malloc(animObj->poseBufSize, MALLOC_ANIM_SEQ_DATA_BUFFERS, 0);
+        if (animObj->pose == NULL)
+            goto freeParts;
+        memset(animObj->pose, 0, animObj->poseBufSize);
+        if (skin->numMorphs != 0) {
+            // Not checked for NULL by the original
+            animObj->morphWeights = (float *)Mem_Malloc(skin->numMorphs * sizeof(float),
+                                                        MALLOC_ANIM_MORPH_DATA_BUFFERS, 0);
+            memset(animObj->morphWeights, 0, skin->numMorphs * sizeof(float));
+        }
+        if (skin->numDatums != 0) {
+            animObj->datumGlist = (celglist_tag **)Mem_Malloc(skin->numDatums * sizeof(celglist_tag *),
+                                                              MALLOC_ANIM_OBJECT_STRUCTS, 0);
+            if (animObj->datumGlist == NULL)
+                goto freeParts;
+            animObj->datumTimer = (uchar *)Mem_Malloc(skin->numDatums, MALLOC_ANIM_OBJECT_STRUCTS, 0);
+            if (animObj->datumTimer == NULL)
+                goto freeParts;
+            for (int i = 0; i < skin->numDatums; i++) {
+                animObj->datumGlist[i] = NULL;
+                animObj->datumTimer[i] = 0;
+            }
+        }
+        animObj->boneMtxs = (_MATRIX *)Mem_Malloc(numBones * sizeof(_MATRIX), MALLOC_ANIM_OBJECT_STRUCTS, 0);
+        if (animObj->boneMtxs == NULL)
+            goto freeParts;
+        animObj->palette = (_MATRIX *)Mem_Malloc(numBones * sizeof(_MATRIX), MALLOC_ANIM_OBJECT_STRUCTS, 0);
+        if (animObj->palette == NULL)
+            goto freeParts;
+
+        if (numBones > 70) {
+            animObj->flags |= ANIMOBJ_FULL_CHARACTER;
+            if (animObj->skin->skeletonNum != 1)
+                animObj->flags |= ANIMOBJ_ALT_SKELETON;
+        }
+        if (skin->numRigged != 0)
+            hashtable_set_object_to_entity_gfx(obj, hashtable_celglist_to_hashcode(skin->riggedBody[0]));
+        rigged = skin->numRigged != 0;
+        if (animObj->flags & ANIMOBJ_FULL_CHARACTER)
+            obj->flags |= 8;
+        if (rigged)
+            obj->flags |= 4;
+
+        if (skin->numDiscrete != 0) {
+            animObj->discreteObj = (obj_tag **)Mem_Malloc(skin->numDiscrete * sizeof(obj_tag *),
+                                                          MALLOC_ANIM_OBJECT_STRUCTS, 0);
+            if (animObj->discreteObj == NULL)
+                goto freeParts;
+            memset(animObj->discreteObj, 0, skin->numDiscrete * sizeof(obj_tag *));
+            for (int i = 0; i < skin->numDiscrete; i++) {
+                obj_tag *part = Control_CreateObjEx(0, &obj->position, NULL, NULL, skin->discreteObj[i],
+                                                    rigged ? obj : NULL, 0, 0xc4, 1.0f, 0, 0xff, 0xff, 0xff);
+                if (part == NULL)
+                    goto freeParts;
+                part->extraObjectData = obj;
+                part->objectType = OBJECTTYPE_ANIMOBJECT;
+                part->effectFlags = (part->effectFlags & ~0x20) | 0x8000;
+                if (rigged)
+                    part->flags |= 4;
+                animObj->discreteObj[i] = part;
+            }
+        }
+
+        skin->hashcode = skinHash;
+        if (animObj->flags & ANIMOBJ_FULL_CHARACTER) {
+            obj->effectFlags &= ~0x20;
+            float base = (animObj->flags & ANIMOBJ_ALT_SKELETON) ? kHeightAltSkeleton : kHeightSkeleton1;
+            animObj->heightOffset = (float)(((double)base - (double)obj->objGraphics->extentMin.y / skin->skinScale.y)
+                                            + 0.02f);
+        }
+        return 1;
+
+    freeParts:
+        if (animObj->discreteObj != NULL) {
+            for (int i = 0; i < animObj->skin->numDiscrete; i++) {
+                if (animObj->discreteObj[i] != NULL)
+                    control_delete_object(animObj->discreteObj[i]);
+            }
+            Mem_Free((void **)&animObj->discreteObj);
+        }
+        if (animObj->palette != NULL)
+            Mem_Free((void **)&animObj->palette);
+        if (animObj->boneMtxs != NULL)
+            Mem_Free((void **)&animObj->boneMtxs);
+        if (animObj->datumTimer != NULL)
+            Mem_Free((void **)&animObj->datumTimer);
+        if (animObj->datumGlist != NULL)
+            Mem_Free((void **)&animObj->datumGlist);
+        if (animObj->morphWeights != NULL)
+            Mem_Free((void **)&animObj->morphWeights);
+        if (animObj->pose != NULL)
+            Mem_Free((void **)&animObj->pose);
+    }
+failed:
+    // An anim object the object had already is freed too
+    if (obj->animState != NULL)
+        Mem_Free((void **)&obj->animState);
+    return 0;
+}
+
+// AUTOINJECT
+void AnimObjectDelete(obj_tag *obj) {
+    if (obj == NULL || obj->animState == NULL)
+        return;
+    AnimObj *animObj = &obj->animState->animObj;
+    AnimSetDeleteAll(obj);
+    AnimListBuild(obj, ANIMLIST_ALL, 0, NULL, ANIMLIST_RESTART);
+    AnimListDelete(obj);
+    if (animObj->discreteObj != NULL) {
+        for (uint i = 0; i < animObj->skin->numDiscrete; i++) {
+            if (animObj->discreteObj[i] != NULL)
+                control_delete_object(animObj->discreteObj[i]);
+        }
+        Mem_Free((void **)&animObj->discreteObj);
+    }
+    if (animObj->palette != NULL)
+        Mem_Free((void **)&animObj->palette);
+    if (animObj->boneMtxs != NULL)
+        Mem_Free((void **)&animObj->boneMtxs);
+    if (animObj->datumTimer != NULL)
+        Mem_Free((void **)&animObj->datumTimer);
+    if (animObj->datumGlist != NULL)
+        Mem_Free((void **)&animObj->datumGlist);
+    if (animObj->morphWeights != NULL)
+        Mem_Free((void **)&animObj->morphWeights);
+    if (animObj->pose != NULL)
+        Mem_Free((void **)&animObj->pose);
+    Mem_Free((void **)&obj->animState);
+}
+
+// The player's stride between footsteps, and on a ladder
+static constexpr float kStride = 1.65f;
+static constexpr float kStrideLadder = 0.4125f;
+static_assert(std::bit_cast<uint32_t>(kStride) == 0x3fd33333, "1.65");
+static_assert(std::bit_cast<uint32_t>(kStrideLadder) == 0x3ed33333, "0.4125");
+
+// The sound of the player's steps on a ladder
+#define SFX_FOOTSTEP_LADDER ((Action_SFX)0x286)
+
+// An animated object's tick: the face, the scripts, the footsteps, the sequences and the turns of anim-rotation
+// scripts, then the pose; the bones for the player and the rigid parts, which follow them.
+// There is also a thunk to this at 0x0002cf00 with the same name, hence FUNC_AT.
+// FUNC_AT(0x00018690)
+int AnimObjectUpdate(obj_tag *obj) {
+    bool turned = false;
+    if (obj == NULL || obj->animState == NULL)
+        return 0;
+    AnimObj *animObj = &obj->animState->animObj;
+    sAnimSkin_tag *skin = animObj->skin;
+    animObj->flags &= ~(ANIMOBJ_BONES_VALID | ANIMOBJ_PALETTE_VALID);
+    Vec_Copy(&skin->skinScale, &Glb_SkinScale);
+    animObj->lastUpdateFrame = GameState.NumFrames;
+    if (animObj->flags & ANIMOBJ_INV_SKIN_SCALE) {
+        Glb_InvSkinScale.x = 1.0f / Glb_SkinScale.x;
+        Glb_InvSkinScale.y = 1.0f / Glb_SkinScale.y;
+        Glb_InvSkinScale.z = 1.0f / Glb_SkinScale.z;
+    } else {
+        Glb_InvSkinScale.z = 1.0f;
+        Glb_InvSkinScale.y = 1.0f;
+        Glb_InvSkinScale.x = 1.0f;
+    }
+    FootstepType = 0;
+
+    if (skin->numMorphs != 0 && (animObj->flags & ANIMOBJ_FULL_CHARACTER) && AnimObjectIsClose(obj, 12))
+        _AnimFacialUpdate(animObj, obj);
+
+    // A script that deletes itself is still read after its tick
+    for (sAnimScript_tag *script = animObj->firstScript; script != NULL; script = script->nextScript) {
+        if (script->scriptData != NULL && !(script->flags & ANIMSCRIPT_STOPPED)) {
+            Glb_bScriptDeleted = 0;
+            Glb_pCurrentScript = script;
+            _AnimScriptTick(animObj, obj, script);
+            script->prevFrame = script->curFrame;
+        }
+    }
+
+    // Footsteps
+    obj->animState->animFlags &= ~ANIM_FOOTSTEP;
+    bool onLadder = false;
+    if (obj->objectType == OBJECTTYPE_PLAYER) {
+        BLData *blData = (BLData *)obj->extraObjectData;
+        blData->stepDistance = (float)((double)Magnitude(animObj->rootTravel) + blData->stepDistance);
+        float stride = kStride;
+        if (obj->subState == MovementType_Climb) {
+            stride = kStrideLadder;
+            onLadder = true;
+        }
+        if (blData->field_0x8f6 != 0 && --blData->field_0x8f6 == 0)
+            blData->stepDistance = (float)((double)stride + 0.0001f);
+        if (blData->stepDistance > stride) {
+            blData->stepDistance = (float)fmod(blData->stepDistance, stride);
+            obj->animState->animFlags |= ANIM_FOOTSTEP;
+            FootstepFoot = !FootstepFoot;
+        }
+    } else if (FootstepType) {
+        obj->animState->animFlags |= ANIM_FOOTSTEP;
+    }
+    if ((obj->animState->animFlags & ANIM_FOOTSTEP) && ScriptCam == 0) {
+        uint foot = FootstepFoot ? 8 : 4;
+        if (!onLadder)
+            Effect_Create(&obj->animState->floor, obj, foot | 0x42, 1.0f);
+        else
+            Sound_SetAlertness(Sound_Play3D(SFX_FOOTSTEP_LADDER, &obj->position, 100.0f, -1.0f, -1.0f, 0, 0, 0), 0.0f);
+    }
+
+    for (sAnimScript_tag *script = animObj->firstScript; script != NULL; script = script->nextScript) {
+        for (int slot = 0; slot < 2; slot++) {
+            sAnimSeq_tag *seq = (&script->boneAnimSeq)[slot];
+            if (seq != NULL && script->scriptData != NULL && seq->hashcode != 0)
+                _AnimSeqTick(script, seq, obj, animObj);
+        }
+
+        if (script->flags & ANIMSCRIPT_ANIM_ROTATION) {
+            sAnimSeq_tag *seq = script->boneAnimSeq;
+            int numBones = SkeletonTable[seq->skeletonNum]->numBones;
+            quaternion_tag *rootQuat = (quaternion_tag *)((_VECTOR *)seq->pose + numBones);
+            _VECTOR ahead, facing;
+            ahead.x = 0.0f;
+            ahead.y = 0.0f;
+            ahead.z = 1.0f;
+            Quat_Rot_Vec(rootQuat, &ahead, &facing);
+            float yaw = (float)FPatan(facing.x, facing.z);
+            if (script->rotBaseYaw >= 8.0f) {
+                script->rotBaseYaw = yaw;
+                Control_GetObjMatrix(obj, &obj->transformMatrix);
+                Mat_CopyRot(&obj->transformMatrix, &script->rotMtx);
+            } else {
+                // The object takes the root's turn; the root keeps the turn from where it started
+                obj->rotation.y = (float)((double)Vec_AngleDifference(script->rotLastYaw, yaw) + obj->rotation.y);
+                _VECTOR euler;
+                euler.y = Vec_AngleDifference(yaw, script->rotBaseYaw);
+                euler.x = 0.0f;
+                euler.z = 0.0f;
+                quaternion_tag back, rotated;
+                Quat_EulerToQuat(&euler, &back);
+                MultiplyQuaternionAltOrder(&back, rootQuat, &rotated);
+                Quat_Copy(rootQuat, &rotated);
+                turned = true;
+            }
+            script->rotLastYaw = yaw;
+        }
+    }
+
+    AnimFrameResolve(obj, animObj);
+    Glb_SkinScale.z = 1.0f;
+    Glb_SkinScale.y = 1.0f;
+    Glb_SkinScale.x = 1.0f;
+    Glb_InvSkinScale.z = 1.0f;
+    Glb_InvSkinScale.y = 1.0f;
+    Glb_InvSkinScale.x = 1.0f;
+
+    if (turned) {
+        obj->transformFlags |= TRANSFORM_MOVED;
+        Control_GetObjMatrix(obj, &obj->transformMatrix);
+        animObj->flags &= ~ANIMOBJ_BONES_VALID;
+        psiBuildMatrixPalette(obj, animObj, 0);
+    }
+    if (obj->objectType == OBJECTTYPE_PLAYER)
+        psiBuildMatrixPalette(obj, animObj, 0);
+    if (skin->numDiscrete != 0) {
+        psiBuildMatrixPalette(obj, animObj, 0);
+        for (uint i = 0; i < skin->numDiscrete; i++) {
+            obj_tag *part = animObj->discreteObj[i];
+            part->transformFlags |= TRANSFORM_MOVED;
+            part->effectFlags |= obj->effectFlags & 0x1a030;
+            part->displayMask = obj->displayMask;
+            Mat_Copy(&animObj->boneMtxs[skin->discreteBone[i]], &part->transformMatrix);
+        }
+    }
+    return 1;
+}
+
+// The scripts a full character is posed by, standing, for the skeletons
+#define ANIM_STAND_ALT_SKELETON ((HASHCODE)0x06000259)
+#define ANIM_STAND ((HASHCODE)0x0600035e)
+// A full character's foot
+#define ANIM_BONE_FOOT 0x37
+
+// How high a full character's foot is when it stands; 0 for others
+float _AnimObjectInitialPose(obj_tag *obj) {
+    _VECTOR foot;
+    Vec_Zero(&foot);
+    uint flags = obj->animState->animObj.flags;
+    if (flags & ANIMOBJ_FULL_CHARACTER) {
+        sAnimScript_tag *script = AnimScriptAdd(obj, (flags & ANIMOBJ_ALT_SKELETON) ? ANIM_STAND_ALT_SKELETON : ANIM_STAND);
+        script->speed = 0.0f;
+        script->flags &= ~ANIMSCRIPT_LOOP;
+        AnimObjectUpdate(obj);
+        AnimGetBoneWorldTrans(obj, 0x80000000 | ANIM_BONE_FOOT, 0, &foot, NULL);
+        AnimScriptDelete(obj, &script);
+    }
+    return foot.y;
+}
+
+// The object in ESI; the height comes back in ST0
+// AUTOLTCG
+void __declspec(naked) AnimObjectInitialPose(void) {
+    _asm {
+        push esi
+        call _AnimObjectInitialPose
+        add esp, 4
+        ret
+    }
+}
+
+// The n-th rigid part of an animated object, NULL past the skin's count.
+// AUTOINJECT
+obj_tag* AnimGetNDiscreteObj(obj_tag *obj, uint n) {
+    if (obj == NULL || obj->animState == NULL)
+        return NULL;
+
+    AnimObj *animObj = &obj->animState->animObj;
+    if (n >= animObj->skin->numDiscrete)
+        return NULL;
+
+    return animObj->discreteObj[n];
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The bones
+
+// psiBuildMatrixPalette: from the local pose to world bone matrices, and from those to the skinning palette.
+// Bones are stored parents first, so one pass in index order resolves them; bones the skin does not use keep
+// whatever matrices they had. The root's translation is added to the object's position without being turned by the
+// object's matrix (RotTransMat adds translations). Head tracking and aiming act on bones 5 and 2 inside the walk, so
+// their children follow. ANIMOBJ_BONES_VALID and ANIMOBJ_PALETTE_VALID make a second call in a frame free.
+// AUTOINJECT
+void psiBuildMatrixPalette(obj_tag *obj, AnimObj *animObj, char buildPalette) {
+    sAnimSkin_tag *skin = animObj->skin;
+    _MATRIX *bone = animObj->boneMtxs;
+    int numBones = SkeletonTable[skin->skeletonNum]->numBones;
+    uint flags = animObj->flags;
+
+    if (!(flags & ANIMOBJ_BONES_VALID)) {
+        flags |= ANIMOBJ_BONES_VALID;
+        bool headTrack = (flags & ANIMOBJ_HEAD_TRACKING) != 0;
+        bool aim = (flags & (ANIMOBJ_AIMING | ANIMOBJ_AIMING_2)) != 0;
+        animObj->flags = flags;
+
+        _MATRIX objMtx = obj->transformMatrix;
+        _VECTOR *trans = (_VECTOR *)animObj->pose;
+        quaternion_tag *quats = (quaternion_tag *)(trans + numBones);
+        quaternion_tag worldQuats[96];
+
+        for (int b = 0; b < numBones; b++) {
+            uchar link = skin->bones[b];
+            if (!(link & ANIM_BONE_USED))
+                continue;
+
+            int parent = link & ANIM_BONE_PARENT_MASK;
+            _MATRIX *m = &bone[b];
+            if (parent == ANIM_BONE_ROOT) {
+                Quat_QuatTransToMat(&quats[b], (float *)&trans[b], m);
+                RotTransMat(&objMtx, m);
+                Quat_MatToQuat(&worldQuats[b], m);
+            } else {
+                MultiplyQuaternionAltOrder(&worldQuats[parent], &quats[b], &worldQuats[b]);
+                Quat_QuatToMat(&worldQuats[b], m);
+                MatrixMultiplyVector(&bone[parent], &trans[b], Mat_Position((*m)));
+                if (headTrack && b == ANIM_HEADTRACK_BONE)
+                    AnimObjectHeadTrack(obj, animObj, worldQuats, bone, ANIM_HEADTRACK_BONE);
+                if (aim && b == ANIM_AIM_BONE)
+                    AnimObjectAimAt(obj, animObj, worldQuats, bone, ANIM_AIM_BONE);
+            }
+        }
+    }
+
+    if (buildPalette && skin->numRigged != 0 && !(animObj->flags & ANIMOBJ_PALETTE_VALID)) {
+        animObj->flags |= ANIMOBJ_PALETTE_VALID;
+        _MATRIX *palette = animObj->palette;
+        for (int b = 0; b < numBones; b++) {
+            if (!(skin->bones[b] & ANIM_BONE_USED))
+                continue;
+            // The inverse bind poses have no rotation
+            Mat_CopyRot(&bone[b], &palette[b]);
+            MatrixMultiplyVector(&bone[b], Mat_Position(skin->invBind[b]), Mat_Position(palette[b]));
+        }
+    }
+}
+
+// Where a bone (which with bit 31) or a datum (which + datumOffset, an id) is in the world this frame, and its
+// matrix if mtxOut is given. Without a pose, or for a datum the skin lacks, the origin and the identity.
+// AUTOINJECT
+void AnimGetBoneWorldTrans(obj_tag *obj, uint which, int datumOffset, _VECTOR *posOut, _MATRIX *mtxOut) {
+    if (obj != NULL && obj->animState != NULL && (obj->animState->animObj.flags & ANIMOBJ_POSE_VALID)) {
+        AnimObj *animObj = &obj->animState->animObj;
+        psiBuildMatrixPalette(obj, animObj, 0);
+        sAnimSkin_tag *skin = animObj->skin;
+
+        if (which & 0x80000000) {
+            _MATRIX *m = &animObj->boneMtxs[which & 0x7fffffff];
+            *posOut = *Mat_Position((*m));
+            if (mtxOut != NULL)
+                *mtxOut = *m;
+            return;
+        }
+
+        int id = (int)which + datumOffset;
+        for (int d = 0; d < skin->numDatums; d++) {
+            AnimDatum *datum = &skin->datums[d];
+            if (datum->id != id)
+                continue;
+            _MATRIX m;
+            Quat_QuatTransToMat(&datum->q, (float *)&datum->t, &m);
+            Concat(animObj->boneMtxs[datum->bone].m, m.m);
+            *posOut = *Mat_Position(m);
+            if (mtxOut != NULL)
+                *mtxOut = m;
+            return;
+        }
+        NF_WARN("Bad Datum in Skin 0x%x %d %d", skin->hashcode, which, datumOffset); // GC check (0x8004a6e8)
+    }
+
+    Vec_Zero(posOut);
+    if (mtxOut != NULL)
+        Mat_Identity(mtxOut);
+}
+
+// As AnimGetBoneWorldTrans, from the pose rather than the bone matrices: the bone's chain is built from the root
+// down. AnimObjectAimAt asks it for the gun's datum while the bones are being built.
+// AUTOINJECT
+void AnimGetBoneWorldTrans2(obj_tag *obj, uint which, int datumOffset, _VECTOR *posOut, _MATRIX *mtxOut) {
+    uchar chain[96];
+    _MATRIX objMtx;
+    _MATRIX boneMtx[128];
+
+    if (obj != NULL && obj->animState != NULL && (obj->animState->animObj.flags & ANIMOBJ_POSE_VALID)) {
+        AnimObj *animObj = &obj->animState->animObj;
+        sAnimSkin_tag *skin = animObj->skin;
+        _VECTOR *trans = (_VECTOR *)animObj->pose;
+        quaternion_tag *quats = (quaternion_tag *)(trans + SkeletonTable[skin->skeletonNum]->numBones);
+        bool isBone = (which & 0x80000000) != 0;
+        which &= 0x7fffffff;
+
+        int datum = 0;
+        int bone;
+        if (isBone) {
+            bone = which;
+        } else {
+            which += datumOffset;
+            while (datum < skin->numDatums && skin->datums[datum].id != (int)which)
+                datum++;
+            if (datum >= skin->numDatums) {
+                NF_WARN("Bad Datum in Skin 0x%x %d %d", skin->hashcode, which - datumOffset, datumOffset); // GC check (0x8004a9e8)
+                goto none;
+            }
+            bone = skin->datums[datum].bone;
+        }
+
+        // The chain to the root, then each link from the root down
+        int depth = 0;
+        do {
+            chain[depth++] = (uchar)bone;
+            bone = skin->bones[bone] & ANIM_BONE_PARENT_MASK;
+        } while (bone != ANIM_BONE_ROOT);
+        objMtx = obj->transformMatrix;
+        bool root = true;
+        for (int i = depth - 1; i >= 0; i--) {
+            int b = chain[i];
+            Quat_QuatTransToMat(&quats[b], (float *)&trans[b], &boneMtx[b]);
+            if (root) {
+                RotTransMat(&objMtx, &boneMtx[b]);
+                root = false;
+            } else {
+                Concat(boneMtx[chain[i + 1]].m, boneMtx[b].m);
+            }
+        }
+
+        if (!isBone) {
+            AnimDatum *d = &skin->datums[datum];
+            _MATRIX m;
+            Quat_QuatTransToMat(&d->q, (float *)&d->t, &m);
+            Concat(boneMtx[d->bone].m, m.m);
+            *posOut = *Mat_Position(m);
+            if (mtxOut != NULL)
+                *mtxOut = m;
+        } else {
+            *posOut = *Mat_Position(boneMtx[which]);
+            if (mtxOut != NULL)
+                *mtxOut = boneMtx[which];
+        }
+        return;
+    }
+
+none:
+    Vec_Zero(posOut);
+    if (mtxOut != NULL)
+        Mat_Identity(mtxOut);
+}
+
+// The dot product of two unit vectors as the original sums it: z first
+static double DotZYX(const _VECTOR *a, const _VECTOR *b) {
+    return ((double)a->z * b->z + (double)a->y * b->y) + (double)a->x * b->x;
+}
+
+// a's acos, clamped to -1..1 first
+static float ClampedAcos(float cosine) {
+    if (cosine < -1.0f)
+        cosine = -1.0f;
+    else if (cosine > 1.0f)
+        cosine = 1.0f;
+    return (float)CIAcos(cosine);
+}
+
+// Turns the head (bone 5) towards the head-tracking target: yaw about the line from the spine to the head, pitch
+// about the side, each found in its plane through the head, held within limits and turned at the tracking speed.
+// The eyes take what the head has still to turn. Turned back to the front when tracking ends.
+// AUTOINJECT
+void AnimObjectHeadTrack(obj_tag *obj, AnimObj *animObj, quaternion_tag *worldQuats, _MATRIX *boneMtxs, int bone) {
+    if (ScriptCam == 0 && AnimObjectNearestLod(obj) > 0x20)
+        return;
+
+    if (animObj->flags & (ANIMOBJ_AIMING | ANIMOBJ_AIMING_2))
+        animObj->flags &= ~ANIMOBJ_HEAD_TRACK;
+    int state = 0;
+    if (animObj->flags & ANIMOBJ_HEAD_TRACK)
+        state = 1;
+    if (animObj->flags & ANIMOBJ_HEAD_TURNED)
+        state |= 2;
+    animObj->flags |= ANIMOBJ_HEAD_TURNED;
+
+    _MATRIX *head = &boneMtxs[bone];
+    _VECTOR *headPos = Mat_Position(*head);
+    _VECTOR ahead, up, side;
+    Vec_Copy((_VECTOR *)&head->m[8], &ahead);
+    Vec_UnitVector(&up, Mat_Position(boneMtxs[ANIM_AIM_BONE]), headPos);
+    Vec_CrossNormalise(&up, &ahead, &side);
+
+    _VECTOR *target;
+    _VECTOR straightOn;
+    if (!(animObj->flags & ANIMOBJ_HEAD_TARGET_OBJ)) {
+        target = (_VECTOR *)animObj->headTrackTarget;
+    } else {
+        const obj_tag *targetObj = (const obj_tag *)animObj->headTrackTarget;
+        if (targetObj != NULL && targetObj->animState != NULL) {
+            target = Mat_Position(targetObj->animState->animObj.boneMtxs[animObj->headTrackTargetBone]);
+        } else {
+            Vec_Add2(headPos, &ahead, &straightOn);
+            target = &straightOn;
+        }
+    }
+
+    uint found = 0;
+    float yaw = 0.0f;
+    float pitch = 0.0f;
+    if (state == 0) {
+        animObj->headYaw = 0.0f;
+        animObj->headPitch = 0.0f;
+    }
+    if (state != 2 && Vec_SqDist3D(headPos, target) <= animObj->headTrackRange2) {
+        plane_equ_tag plane;
+        _VECTOR p1, p2, onPlane, front, toFront, toTarget;
+
+        // Pitch: in the plane of up and ahead
+        Vec_Add2(headPos, &up, &p1);
+        Vec_Add2(headPos, &ahead, &p2);
+        Plane_PlaneEq(&plane, headPos, &p1, &p2);
+        Plane_PutPntOnPlane(&onPlane.x, &target->x, (float *)&plane);
+        if (Vec_SqDist3D(headPos, &onPlane) >= 0.25f) {
+            found = 2;
+            Plane_PutPntOnPlane(&front.x, &p2.x, (float *)&plane);
+            Vec_UnitVector(&toFront, headPos, &front);
+            Vec_UnitVector(&toTarget, headPos, &onPlane);
+            double cosine = DotZYX(&toFront, &toTarget);
+            if (cosine >= 0.0) {
+                pitch = ClampedAcos((float)cosine);
+                if (Vec_ScalarTripleProduct(&toFront, &toTarget, &side) < 0.0f)
+                    pitch = -pitch;
+            }
+        }
+
+        // Yaw: in the plane of side and ahead
+        Vec_Add2(headPos, &side, &front);
+        Vec_Add2(headPos, &ahead, &onPlane);
+        Plane_PlaneEq(&plane, headPos, &front, &onPlane);
+        Plane_PutPntOnPlane(&p2.x, &target->x, (float *)&plane);
+        if (Vec_SqDist3D(headPos, &p2) >= 0.25f) {
+            found |= 1;
+            Plane_PutPntOnPlane(&p1.x, &onPlane.x, (float *)&plane);
+            Vec_UnitVector(&toTarget, headPos, &p1);
+            Vec_UnitVector(&toFront, headPos, &p2);
+            yaw = ClampedAcos((float)DotZYX(&toTarget, &toFront));
+            if (Vec_ScalarTripleProduct(&toTarget, &toFront, &up) < 0.0f)
+                yaw = -yaw;
+        }
+        if (found == 1)
+            pitch = 0.0f;
+        else if (found == 2)
+            yaw = 0.0f;
+    }
+
+    float wantedYaw = yaw;
+    float wantedPitch = pitch;
+    if (Magnitude(yaw) > 2.6f)
+        yaw = 0.0f;
+    else if (yaw < -1.1f)
+        yaw = -1.1f;
+    else if (yaw > 1.1f)
+        yaw = 1.1f;
+    if (pitch < -1.0f)
+        pitch = -1.0f;
+    else if (pitch > 0.6f)
+        pitch = 0.6f;
+    if (animObj->headTrackDelay != 0) {
+        animObj->headTrackDelay--;
+        yaw = animObj->headYaw;
+        pitch = animObj->headPitch;
+    }
+
+    float newYaw = (float)Ang_RotateToBearing(animObj->headYaw, yaw, animObj->headTrackSpeed, 3.1415927f);
+    float newPitch = (float)Ang_RotateToBearing(animObj->headPitch, pitch, animObj->headTrackSpeed, 3.1415927f);
+    animObj->headPitch = newPitch;
+    animObj->headYaw = newYaw;
+
+    quaternion_tag yawQuat, pitchQuat, turn, turned;
+    yawQuat.q[0] = up.x;
+    yawQuat.q[1] = up.y;
+    yawQuat.q[2] = up.z;
+    yawQuat.q[3] = newYaw;
+    Quat_AxisAngleToQuat(yawQuat.q, &yawQuat);
+    pitchQuat.q[0] = side.x;
+    pitchQuat.q[1] = side.y;
+    pitchQuat.q[2] = side.z;
+    pitchQuat.q[3] = newPitch;
+    Quat_AxisAngleToQuat(pitchQuat.q, &pitchQuat);
+    MultiplyQuaternionAltOrder(&yawQuat, &pitchQuat, &turn);
+    MultiplyQuaternionAltOrder(&turn, &worldQuats[bone], &turned);
+    Quat_Copy(&worldQuats[bone], &turned);
+    Quat_QuatToMat(&turned, head);
+
+    sAnimSkin_tag *skin = animObj->skin;
+    if (skin->numMorphs != 0) {
+        double pitchLeft = (double)wantedPitch - newPitch;
+        double eyes = ((double)wantedYaw - newYaw);
+        eyes = eyes + eyes + 0.5f;
+        if (eyes < 0.0)
+            eyes = 0.0;
+        else if (eyes > 1.0)
+            eyes = 1.0;
+        animObj->lookMorphX = (uchar)Ftol(eyes * 255.0f);
+        eyes = pitchLeft + pitchLeft + 0.5f;
+        if (eyes < 0.0)
+            eyes = 0.0;
+        else if (eyes > 1.0)
+            eyes = 1.0;
+        animObj->lookMorphY = (uchar)Ftol((1.0 - eyes) * 255.0f);
+    }
+
+    if (state == 2 && Magnitude(newYaw) < 0.01f && Magnitude(newPitch) < 0.01f) {
+        animObj->flags &= ~ANIMOBJ_HEAD_TRACKING;
+        if (skin->numMorphs != 0) {
+            animObj->lookMorphX = 0;
+            animObj->lookMorphY = 0;
+        }
+    }
+}
+
+// The aim's limits: the player's pitch, and everyone else's yaw and pitch
+static constexpr float kPlayerPitchMin = -1.5707963705062866f;
+static constexpr float kPlayerPitchMax = 1.2707963f;
+static constexpr float kAimLimit = 0.9f;
+static_assert(std::bit_cast<uint32_t>(kPlayerPitchMin) == 0xbfc90fdb, "-pi/2");
+static_assert(std::bit_cast<uint32_t>(kPlayerPitchMax) == 0x3fa2a974, "1.2707963");
+
+// Turns the spine (bone 2) so the gun points at the aim target: pitch about the side and (not for the player) yaw
+// about the line from the pelvis, each the angle that brings the gun's line through the target in its plane through
+// the pelvis, held within limits and turned at the aim rate. Turned back to the front when aiming ends.
+// AUTOINJECT
+void AnimObjectAimAt(obj_tag *obj, AnimObj *animObj, quaternion_tag *worldQuats, _MATRIX *boneMtxs, int bone) {
+    animObj->flags &= ~(ANIMOBJ_AIM_IN_RANGE | ANIMOBJ_AIM_YAW_LIMIT | ANIMOBJ_AIM_PITCH_LIMIT);
+    uint flags = animObj->flags;
+    if (ScriptCam == 0 && AnimObjectNearestLod(obj) > 0xfe)
+        return;
+    int state = (flags & ANIMOBJ_AIMING) ? 1 : 0;
+    if (flags & ANIMOBJ_AIMING_2)
+        state |= 2;
+    animObj->flags = flags | ANIMOBJ_AIMING_2;
+
+    // The gun's datum: AnimDatumGetWeaponInfo's, inline
+    int weapon = obj->animState->currentWeaponId;
+    int datum = -1;
+    if ((uint)weapon <= 0x72 && weapon_data[weapon].weaponDatum != 0xff)
+        datum = weapon_data[weapon].weaponDatum;
+    if (datum < 0)
+        return;
+    if (MPSettings.isMultiplayer && weapon_data[weapon].animSet == 0)
+        return;
+
+    int datumOffset = 3;
+    uint which = datum;
+    if (AnimDatumGetIndex(obj, datum + 3) < 0) {
+        datumOffset = 1;
+        if (AnimDatumGetIndex(obj, datum + 1) < 0)
+            which = 0x40;
+    }
+    _VECTOR muzzle;
+    _MATRIX muzzleMtx;
+    AnimGetBoneWorldTrans2(obj, which, datumOffset, &muzzle, &muzzleMtx);
+
+    _VECTOR *pelvis = Mat_Position(boneMtxs[animObj->skin->bones[bone] & ANIM_BONE_PARENT_MASK]);
+    _VECTOR barrel, gunDir, up, side;
+    barrel.x = -1.0f;
+    barrel.y = 0.0f;
+    barrel.z = 0.0f;
+    ApplyMatrixLV(&muzzleMtx, &barrel, &gunDir);
+    _VECTOR ahead;
+    Vec_Copy(&gunDir, &ahead);
+    Vec_UnitVector(&up, pelvis, Mat_Position(boneMtxs[bone]));
+    Vec_CrossNormalise(&up, &ahead, &side);
+
+    _VECTOR *target;
+    _VECTOR straightOn;
+    if (!(animObj->flags & ANIMOBJ_AIM_AT_BONE)) {
+        target = (_VECTOR *)animObj->aimTarget;
+    } else {
+        const obj_tag *targetObj = (const obj_tag *)animObj->aimTarget;
+        if (targetObj != NULL && targetObj->animState != NULL) {
+            target = Mat_Position(targetObj->animState->animObj.boneMtxs[animObj->aimTargetBone]);
+        } else {
+            Vec_Add2(pelvis, &ahead, &straightOn);
+            target = &straightOn;
+        }
+    }
+
+    uint found = 0;
+    float yaw = 0.0f;
+    float pitch = 0.0f;
+    if (state == 0) {
+        animObj->aimYaw = 0.0f;
+        animObj->aimPitch = 0.0f;
+    }
+    bool isPlayer = obj->objectType == OBJECTTYPE_PLAYER;
+    if (state != 2 && Vec_SqDist3D(pelvis, target) <= animObj->aimRange2) {
+        animObj->flags |= ANIMOBJ_AIM_IN_RANGE;
+        // A point well along the gun's line
+        Vec_Scalef(&gunDir, 100.0f, &gunDir);
+        Vec_Add2(&muzzle, &gunDir, &gunDir);
+
+        plane_equ_tag plane;
+        _VECTOR p1, p2, muzzleOn, farOn, targetOn, hit, toTarget, toHit;
+
+        // Pitch: in the plane of up and ahead
+        Vec_Add2(pelvis, &up, &p1);
+        Vec_Add2(pelvis, &ahead, &p2);
+        Plane_PlaneEq(&plane, pelvis, &p1, &p2);
+        Plane_PutPntOnPlane(&muzzleOn.x, &muzzle.x, (float *)&plane);
+        Plane_PutPntOnPlane(&farOn.x, &gunDir.x, (float *)&plane);
+        Plane_PutPntOnPlane(&targetOn.x, &target->x, (float *)&plane);
+        if (Vec_SqDist3D(pelvis, &targetOn) >= 0.25f)
+            found = 2;
+        float muzzleDist = Vec_Dist3D(pelvis, &muzzleOn);
+        float targetDist = Vec_Dist3D(pelvis, &targetOn);
+        if (targetDist >= muzzleDist) {
+            if (Vec_LineSphereIntersect(&muzzleOn.x, &farOn.x, &pelvis->x, targetDist, &hit.x)) {
+                Vec_UnitVector(&toTarget, pelvis, &targetOn);
+                Vec_UnitVector(&toHit, pelvis, &hit);
+                float cosine = (float)DotZYX(&toTarget, &toHit);
+                if (isPlayer || cosine >= 0.0f) {
+                    pitch = ClampedAcos(cosine);
+                    if (Vec_ScalarTripleProduct(&toTarget, &toHit, &side) >= 0.0f)
+                        pitch = -pitch;
+                }
+            }
+            float low = isPlayer ? kPlayerPitchMin : -kAimLimit;
+            float high = isPlayer ? kPlayerPitchMax : kAimLimit;
+            if (pitch < low) {
+                pitch = low;
+                animObj->flags |= ANIMOBJ_AIM_PITCH_LIMIT;
+            } else if (pitch > high) {
+                pitch = high;
+                animObj->flags |= ANIMOBJ_AIM_PITCH_LIMIT;
+            }
+        }
+
+        // Yaw: in the plane of side and ahead, for all but the player
+        if (obj->objectType != OBJECTTYPE_PLAYER) {
+            Vec_Add2(pelvis, &side, &p1);
+            Vec_Add2(pelvis, &ahead, &p2);
+            Plane_PlaneEq(&plane, pelvis, &p1, &p2);
+            Plane_PutPntOnPlane(&muzzleOn.x, &muzzle.x, (float *)&plane);
+            Plane_PutPntOnPlane(&farOn.x, &gunDir.x, (float *)&plane);
+            Plane_PutPntOnPlane(&targetOn.x, &target->x, (float *)&plane);
+            if (Vec_SqDist3D(pelvis, &targetOn) >= 0.25f)
+                found |= 1;
+            muzzleDist = Vec_Dist3D(pelvis, &muzzleOn);
+            targetDist = Vec_Dist3D(pelvis, &targetOn);
+            if (targetDist >= muzzleDist
+                && Vec_LineSphereIntersect(&muzzleOn.x, &farOn.x, &pelvis->x, targetDist, &hit.x)) {
+                Vec_UnitVector(&toTarget, pelvis, &targetOn);
+                Vec_UnitVector(&toHit, pelvis, &hit);
+                float cosine = (float)DotZYX(&toTarget, &toHit);
+                bool limited = false;
+                if (isPlayer || cosine >= 0.0f) {
+                    yaw = ClampedAcos(cosine);
+                    if (Vec_ScalarTripleProduct(&toTarget, &toHit, &up) >= 0.0f)
+                        yaw = -yaw;
+                    if (yaw < -kAimLimit) {
+                        yaw = -kAimLimit;
+                        limited = true;
+                    }
+                }
+                // The upper limit tests the pitch, not the yaw (kept)
+                if (!limited && pitch > kAimLimit) {
+                    yaw = kAimLimit;
+                    limited = true;
+                }
+                if (limited)
+                    animObj->flags |= ANIMOBJ_AIM_YAW_LIMIT;
+            }
+        }
+        if (found == 1)
+            pitch = 0.0f;
+        else if (found == 2)
+            yaw = 0.0f;
+    }
+
+    float newYaw = (float)Ang_RotateToBearing(animObj->aimYaw, yaw, animObj->aimRate, 3.1415927f);
+    float newPitch = (float)Ang_RotateToBearing(animObj->aimPitch, pitch, animObj->aimRate, 3.1415927f);
+    animObj->aimPitch = newPitch;
+    animObj->aimYaw = newYaw;
+
+    quaternion_tag yawQuat, pitchQuat, turn, turned;
+    yawQuat.q[0] = up.x;
+    yawQuat.q[1] = up.y;
+    yawQuat.q[2] = up.z;
+    yawQuat.q[3] = newYaw;
+    Quat_AxisAngleToQuat(yawQuat.q, &yawQuat);
+    pitchQuat.q[0] = side.x;
+    pitchQuat.q[1] = side.y;
+    pitchQuat.q[2] = side.z;
+    pitchQuat.q[3] = newPitch;
+    Quat_AxisAngleToQuat(pitchQuat.q, &pitchQuat);
+    MultiplyQuaternionAltOrder(&yawQuat, &pitchQuat, &turn);
+    MultiplyQuaternionAltOrder(&turn, &worldQuats[bone], &turned);
+    Quat_Copy(&worldQuats[bone], &turned);
+    Quat_QuatToMat(&turned, &boneMtxs[bone]);
+
+    if (state == 2 && Magnitude(newYaw) < 0.01f && Magnitude(newPitch) < 0.01f)
+        animObj->flags &= ~(ANIMOBJ_AIMING | ANIMOBJ_AIMING_2);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Drawing
+
+// Draws the object as last updated: its rigged bodies with the palette (and its strongest morphs, near a view), the
+// held weapon at its datum, the laser sight's beam, and the entities at the datums
+// AUTOINJECT
+void AnimObjectDraw(obj_tag *obj, viewer_tag *viewer) {
+    if (obj == NULL || obj->animState == NULL)
+        return;
+    AnimObj *animObj = &obj->animState->animObj;
+    if (!(animObj->flags & ANIMOBJ_POSE_VALID))
+        return;
+    if ((int)(GameState.NumFrames - animObj->lastUpdateFrame) > 1)
+        return;
+    animObj->lastUpdateFrame = GameState.NumFrames;
+    psiBuildMatrixPalette(obj, animObj, 1);
+    sAnimSkin_tag *skin = animObj->skin;
+    if (skin->numRigged != 0 && skin->numDiscrete != 0)
+        View_SetupRenderModes2(viewer, obj);
+    else
+        View_SetupRenderModes(viewer, obj);
+
+    // The original reads this, as the weapon's model, for a weapon number out of range: it is uninitialised stack
+    // unless the morphs were sorted, ours 0 then (docs/nightfire-port-lifts.md, Departures)
+    uint morphCount = 0;
+    Morph_Count = 0;
+    uint numMorphs;
+    if (AnimObjectIsClose(obj, 12) && (numMorphs = skin->numMorphs) != 0) {
+        for (uint i = 0; i < numMorphs; i++) {
+            Morph_Weight[i] = animObj->morphWeights[i];
+            Morph_Index[i] = (uchar)i;
+        }
+        // The strongest eight, strongest first
+        uint strongest = numMorphs < 8 ? numMorphs : 8;
+        uint i;
+        for (i = 0; i < strongest; i++) {
+            for (uint j = i + 1; j < numMorphs; j++) {
+                if (Morph_Weight[i] < Morph_Weight[j]) {
+                    float weight = Morph_Weight[i];
+                    uchar index = Morph_Index[j];
+                    Morph_Weight[i] = Morph_Weight[j];
+                    Morph_Weight[j] = weight;
+                    Morph_Index[j] = Morph_Index[i];
+                    Morph_Index[i] = index;
+                }
+            }
+        }
+        // Less the weakest that are next to nothing, back in index order
+        uchar count = (uchar)i;
+        for (int k = (int)i - 1; k >= 0 && !(Magnitude(Morph_Weight[k]) >= 1e-06f); k--)
+            count = (uchar)k;
+        Morph_Count = count;
+        morphCount = count;
+        for (uint a = 0; a + 1 < morphCount; a++) {
+            for (uint b = a + 1; b < morphCount; b++) {
+                if (Morph_Index[a] > Morph_Index[b]) {
+                    float weight = Morph_Weight[a];
+                    uchar index = Morph_Index[a];
+                    Morph_Weight[a] = Morph_Weight[b];
+                    Morph_Index[a] = Morph_Index[b];
+                    Morph_Weight[b] = weight;
+                    Morph_Index[b] = index;
+                }
+            }
+        }
+    }
+
+    uint flags = animObj->flags;
+    celglist_tag *sleeve = animObj->sleeveGlist;
+    _MATRIX unused;
+    for (int i = 0; i < skin->numRigged; i++) {
+        celglist_tag *body = skin->riggedBody[i];
+        if (body == NULL)
+            continue;
+        if (sleeve != NULL && i == 0)
+            body = sleeve;
+        psiDrawSkinObjectMatrix(body, &unused, obj, animObj->palette);
+    }
+    Morph_Count = 0;
+
+    if ((flags & ANIMOBJ_FULL_CHARACTER) && skin->numDatums != 0) {
+        // The held weapon's model, at its datum
+        int weapon = obj->animState->currentWeaponId;
+        HASHCODE model;
+        int datum = -1;
+        if ((uint)weapon <= 0x72) {
+            model = weapon_data[weapon].worldModelGfx;
+            if (weapon_data[weapon].weaponDatum != 0xff)
+                datum = weapon_data[weapon].weaponDatum;
+        } else {
+            model = (HASHCODE)morphCount;
+        }
+        if (datum < 0)
+            datum = 0;
+        if (model != 0)
+            AnimDatumSetEntity(obj, datum, model, 1);
+    }
+
+    if (obj->animState->currentWeaponId == WEAPON_LASER_PISTOL) {
+        // The beam, from the gun's datum to what it hits
+        // gunMtx's translation as for the fire event in AnimProcessScriptCmds: 0 where the original has stack
+        HITDATA_tag *hitList = NULL;
+        _VECTOR from, to;
+        _MATRIX gunMtx = {};
+        AnimGetBoneWorldTrans(obj, 8, 3, &from, &gunMtx);
+        _VECTOR reach;
+        reach.x = -100.0f;
+        reach.y = 0.0f;
+        reach.z = 0.0f;
+        MatrixMultiplyVector(&gunMtx, &reach, &to);
+        if (Collide_RayIntersect(&from, &to, obj->inCel, obj, NULL, &hitList, 0, 8, 0) && hitList != NULL)
+            Vec_Copy(&hitList->hitPosition, &to);
+        Collide_FreeHitList(&hitList);
+        celglist_tag *beam = (celglist_tag *)hashtable_getitem(viewer->nightVisionRelated == 1
+                                                               ? LASER_BEAM_GLIST_NIGHTVISION : LASER_BEAM_GLIST);
+        if (beam != NULL) {
+            to.x = from.x - to.x;
+            to.y = from.y - to.y;
+            to.z = from.z - to.z;
+            _VECTOR rot, scale;
+            Vec_Cartesian_2_Spherical(&rot, to.x, to.y, to.z);
+            rot.x = -rot.x;
+            rot.z = 0.0f;
+            scale.y = 1.0f;
+            scale.x = 1.0f;
+            scale.z = Vec_Magnitude(&to);
+            View_DrawGlist(beam, &from, &rot, &scale);
+        }
+    }
+
+    for (int i = 0; i < skin->numDatums; i++) {
+        uchar timer = animObj->datumTimer[i];
+        if (timer == 0)
+            continue;
+        if (timer != 0xff)
+            animObj->datumTimer[i] = timer - 1;
+        celglist_tag *entity = animObj->datumGlist[i];
+        if (entity == NULL)
+            continue;
+        _MATRIX m;
+        Quat_QuatTransToMat(&skin->datums[i].q, (float *)&skin->datums[i].t, &m);
+        if (skin->datums[i].bone >= 0)
+            Concat(animObj->boneMtxs[skin->datums[i].bone].m, m.m);
+        if (!(entity->applyFlagsToObject & 0x800))
+            psiSetTweakARGB(obj->tweakA, obj->tweakR, obj->tweakG, obj->tweakB);
+        psiDrawObjectMatrix(entity, &m);
+    }
+    bShadowCharacter = 0;
+    bCharacterLight = 0;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Aiming and joint collision
+
+// The joint box tables, by skin, and the boxes AnimGetCollData builds from them
+#define HumanCollisionBones ((const AnimCollBone *)0x00163198)
+#define AstronautCollisionBones ((const AnimCollBone *)0x001632f0)
+#define HitList2 ((COLLJOINT_tag *)0x001d6bf0)
+
+// The skin that takes AstronautCollisionBones
+#define SKIN_ASTRONAUT ((HASHCODE)0x05000078)
+
+// Whether the object aims (AnimObjectSetAiming)
+// AUTOINJECT
+bool AnimObjectIsAiming(obj_tag *obj) {
+    if (obj == NULL || obj->animState == NULL)
+        return false;
+    return (obj->animState->animObj.flags & (ANIMOBJ_AIMING | ANIMOBJ_AIMING_2)) != 0;
+}
+
+// AUTOINJECT
+bool AnimObjectIsHeadTracking(obj_tag *obj) {
+    if (obj == NULL || obj->animState == NULL)
+        return false;
+    return (obj->animState->animObj.flags & ANIMOBJ_HEAD_TRACKING) != 0;
+}
+
+// Aims the object at target (NULL stops it), within range, turning at rate; with atBone, at that bone of it.
+// AUTOINJECT
+void AnimObjectSetAiming(obj_tag *obj, const void *target, float range, float rate, char atBone, uchar bone) {
+    if (obj == NULL || obj->animState == NULL)
+        return;
+    AnimObj *animObj = &obj->animState->animObj;
+    animObj->aimRate = rate;
+    animObj->aimRange2 = range * range;
+    if (target == NULL) {
+        animObj->flags &= ~ANIMOBJ_AIMING;
+        animObj->aimTarget = NULL;
+        return;
+    }
+    animObj->flags |= ANIMOBJ_AIMING;
+    animObj->aimTarget = target;
+    if (atBone) {
+        animObj->aimTargetBone = bone;
+        animObj->flags |= ANIMOBJ_AIM_AT_BONE;
+    } else {
+        animObj->flags &= ~ANIMOBJ_AIM_AT_BONE;
+    }
+}
+
+// Turns the object's head to target (NULL stops it), within range, at rate: an object's bone with targetIsObj,
+// else a position. With randomDelay it waits a tenth of a second plus up to a quarter more first.
+// AUTOINJECT
+void AnimObjectSetHeadTracking(obj_tag *obj, const void *target, float range, float rate, char randomDelay,
+                               char targetIsObj, uchar bone) {
+    if (obj == NULL || obj->animState == NULL)
+        return;
+    AnimObj *animObj = &obj->animState->animObj;
+    uchar delay = 0;
+    animObj->headTrackRange2 = range * range;
+    animObj->headTrackSpeed = rate;
+    if (target == NULL) {
+        animObj->flags &= ~ANIMOBJ_HEAD_TRACK;
+        animObj->headTrackTarget = NULL;
+    } else {
+        if (randomDelay)
+            delay = Rand_Rand(FRAME_RATE_INT / 4) + FRAME_RATE_INT / 10;
+        animObj->flags |= ANIMOBJ_HEAD_TRACK;
+        animObj->headTrackTarget = target;
+        if (targetIsObj) {
+            animObj->headTrackTargetBone = bone;
+            animObj->flags |= ANIMOBJ_HEAD_TARGET_OBJ;
+        } else {
+            animObj->flags &= ~ANIMOBJ_HEAD_TARGET_OBJ;
+        }
+    }
+    animObj->headTrackDelay = delay;
+}
+
+// The boxes round an animated object's joints, in the world, for Collide_Jointy: one per row of the skin's table,
+// in HitList2, with their count. The first box sits as far above its bone as the bone is above the other. NULL and
+// no boxes unless the object is animated with a pose and is a full character.
+// AUTOINJECT
+COLLJOINT_tag* AnimGetCollData(obj_tag *obj, ushort *count) {
+    if (obj == NULL || obj->animState == NULL) {
+        *count = 0;
+        return NULL;
+    }
+    AnimObj *animObj = &obj->animState->animObj;
+    if (!(animObj->flags & ANIMOBJ_POSE_VALID) || !(animObj->flags & ANIMOBJ_FULL_CHARACTER)) {
+        *count = 0;
+        return NULL;
+    }
+
+    psiBuildMatrixPalette(obj, animObj, 0);
+    sAnimSkin_tag *skin = animObj->skin;
+    const AnimCollBone *row = skin->hashcode == SKIN_ASTRONAUT ? AstronautCollisionBones : HumanCollisionBones;
+    ushort n = 0;
+    for (; row->bone >= 0; row++) {
+        int other = row->other;
+        if (other < 0)
+            other = skin->bones[row->bone] & 0x7f;
+        _MATRIX *boneMtx = &animObj->boneMtxs[row->bone];
+        _MATRIX *otherMtx = &animObj->boneMtxs[other];
+        COLLJOINT_tag *box = &HitList2[n];
+        Mat_Copy(otherMtx, &box->m);
+        if (n == 0) {
+            _VECTOR rise;
+            Vec_Subtract(Mat_Position(*boneMtx), Mat_Position(*otherMtx), &rise);
+            rise.x = 0.0f;
+            rise.z = 0.0f;
+            Vec_Add2(Mat_Position(*boneMtx), &rise, Mat_Position(box->m));
+        } else {
+            box->m.m[12] = (float)(((double)otherMtx->m[12] + boneMtx->m[12]) * 0.5f);
+            box->m.m[13] = (float)(((double)otherMtx->m[13] + boneMtx->m[13]) * 0.5f);
+            box->m.m[14] = (float)(((double)otherMtx->m[14] + boneMtx->m[14]) * 0.5f);
+        }
+        n++;
+        box->half.x = row->half.x * skin->skinScale.x;
+        box->half.y = row->half.y * skin->skinScale.y;
+        box->half.z = row->half.z * skin->skinScale.z;
+        box->joint = row->bone;
+    }
+    *count = n;
+    return HitList2;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The roots' translations, for others
+
+// The root translation of a script's bone sequence at the script's current frame. False, with out untouched, for a
+// script without ANIMSCRIPT_HAS_ROOT_TRANS or whose sequence is not loaded.
+// AUTOINJECT
+bool AnimGetFirstTrans(sAnimScript_tag *script, _VECTOR *out) {
+    float frame[ANIM_FRAME_BUFFER_SIZE / sizeof(float)];
+
+    if (!(script->flags & ANIMSCRIPT_HAS_ROOT_TRANS))
+        return false;
+
+    sAnimSeq_tag *seq = script->boneAnimSeq;
+    if (_AnimSeqGetInfo(NULL, seq->hashcode, seq) == NULL)
+        return false;
+
+    AnimFrameCopy(frame, seq, NULL, script->curFrame);
+    out->x = frame[0];
+    out->y = frame[1];
+    out->z = frame[2];
+    return true;
+}
+
+// The root translation of a sequence at a frame, straight from the file, with no object or script. A sequence that
+// is not loaded is still decoded, from the zeroed record.
+// AUTOINJECT
+void AnimGetFrameTransRaw(HASHCODE hashcode, int frame, _VECTOR *out) {
+    sAnimSeq_tag seq;
+    float pose[ANIM_FRAME_BUFFER_SIZE / sizeof(float)];
+
+    memset(&seq, 0, sizeof(seq));
+    seq.hashcode = hashcode;
+    _AnimSeqGetInfo(NULL, hashcode, &seq);
+    seq.firstFrame = 1;
+    seq.lastFrame = seq.numFrames;
+    AnimFrameCopy(pose, &seq, NULL, (float)frame);
+    out->x = pose[0];
+    out->y = pose[1];
+    out->z = pose[2];
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Sets
+
+// AnimTagGetUnique, inline on the Xbox: the next set's tag
+static uint AnimTagGetUnique(void) {
+    if (AnimTagTimeStamp == 0)
+        AnimTagTimeStamp = 1;
+    return AnimTagTimeStamp++;
+}
+
+// A new set linked in after after (or on its own), with its tag; NULL if it cannot be allocated
+sAnimSet_tag* _AnimTagAllocAndGetUnique(sAnimSet_tag *after) {
+    sAnimSet_tag *set = (sAnimSet_tag *)Mem_Malloc(sizeof(sAnimSet_tag), MALLOC_ANIM_SET_STRUCTS, 0);
+    if (set == NULL)
+        return NULL;
+    memset(set, 0, sizeof(sAnimSet_tag));
+    if (after == NULL) {
+        set->prev = NULL;
+        set->next = NULL;
+    } else {
+        sAnimSet_tag *next = after->next;
+        set->prev = after;
+        set->next = next;
+        after->next = set;
+        if (next != NULL)
+            next->prev = set;
+    }
+    set->tag = AnimTagGetUnique();
+    return set;
+}
+
+// The set to follow in ESI
+// AUTOLTCG
+void __declspec(naked) AnimTagAllocAndGetUnique(void) {
+    _asm {
+        push esi
+        call _AnimTagAllocAndGetUnique
+        add esp, 4
+        ret
+    }
+}
+
+// Starts a set on list (idle, walks slowest first, 0, then the strafes), deleting the object's scripts
+void _AnimSetInit(sAnimSet_tag *set, HASHCODE *list, obj_tag *obj, float a, float b) {
+    if (obj == NULL || obj->animState == NULL || set == NULL)
+        return;
+    AnimObj *animObj = &obj->animState->animObj;
+    set->speedList = list;
+    set->speedCount = 0;
+    while (set->speedList[set->speedCount] != 0)
+        set->speedCount++;
+    set->strafeList = &list[set->speedCount + 1];
+    set->strafeCount = 0;
+    while (set->strafeList[set->strafeCount] != 0)
+        set->strafeCount++;
+    NF_WARN_IF(set->speedCount < 3, "Too few move anims");     // GC check (0x8004754c)
+    NF_WARN_IF(set->strafeCount < 3, "Too few idle anims");    // GC check (0x8004754c)
+    set->oneShotState = 0;
+    set->strafeDir = 0xff;
+    set->strafeScript = NULL;
+    set->speedIndex = -1;
+    set->switchCooldown = 0;
+    set->walkTimestamp = 0;
+    set->blendTimestamp = 0;
+    set->blendScript = NULL;
+    set->idleTimer = (Rand_Random() & 0x3ff) + 0xff;
+    set->a = a;
+    animObj->distancePhase = a;
+    set->b = b;
+    AnimListBuild(obj, ANIMLIST_ALL, 0, NULL, ANIMLIST_RESTART);
+    for (int i = 0; i < GlbAnimListCount; i++)
+        AnimScriptDelete(obj, &GlbAnimList[i]);
+    GlbAnimListCount = 0;
+}
+
+// The set in ECX, the list in EAX
+// AUTOLTCG
+void __declspec(naked) AnimSetInit(void) {
+    _asm {
+        push dword ptr [esp + 12]
+        push dword ptr [esp + 12]
+        push dword ptr [esp + 12]
+        push eax
+        push ecx
+        call _AnimSetInit
+        add esp, 20
+        ret
+    }
+}
+
+// A set at the end of the object's, up to four
+// AUTOINJECT
+sAnimSet_tag* AnimSetAppend(obj_tag *obj, HASHCODE *list, float a, float b) {
+    if (obj == NULL || obj->animState == NULL)
+        return NULL;
+    AnimObj *animObj = &obj->animState->animObj;
+    sAnimSet_tag *set = animObj->animSets;
+    if (set == NULL) {
+        set = (sAnimSet_tag *)Mem_Malloc(sizeof(sAnimSet_tag), MALLOC_ANIM_SET_STRUCTS, 0);
+        if (set != NULL) {
+            memset(set, 0, sizeof(sAnimSet_tag));
+            set->prev = NULL;
+            set->next = NULL;
+            set->tag = AnimTagGetUnique();
+        }
+        animObj->animSets = set;
+    } else {
+        int count = 1;
+        while (set->next != NULL) {
+            set = set->next;
+            count++;
+        }
+        if (count >= 4)
+            return NULL;
+        set = _AnimTagAllocAndGetUnique(set);
+    }
+    _AnimSetInit(set, list, obj, a, b);
+    return set;
+}
+
+// AUTOINJECT
+void AnimSetDeleteAll(obj_tag *obj) {
+    if (obj == NULL || obj->animState == NULL)
+        return;
+    sAnimSet_tag *set = obj->animState->animObj.animSets;
+    while (set != NULL) {
+        sAnimSet_tag *next = set->next;
+        AnimSetDelete(obj, &set);
+        set = next;
+    }
+}
+
+// The set's scripts for the speed: idle, or two walks blended by where the speed falls between them and kept in step
+// by the distance walked, changing at most every four ticks; a one-shot plays out first. In multiplayer, a strafe
+// over them for the sideways speed.
+// AUTOINJECT
+void AnimSetUpdate(obj_tag *obj, sAnimSet_tag *set, float speed, float forward, float maxForward, float side,
+                   float maxSide) {
+    float blend = 0.0f;
+    if (obj == NULL || obj->animState == NULL || set == NULL)
+        return;
+    AnimObj *animObj = &obj->animState->animObj;
+    if (speed <= 0.0002f && speed >= -0.0002f)
+        forward = 0.0f;
+    animObj->distanceThisTick = forward * set->b;
+
+    bool walking = true;
+    while (set->oneShotState != 0) {
+        if (set->oneShotState != 1) {
+            walking = false;
+            break;
+        }
+        sAnimScript_tag *oneShot = AnimListBuild(obj, ANIMLIST_TAG, set->tag, NULL, ANIMLIST_RESTART);
+        if (!(oneShot->flags & ANIMSCRIPT_STOPPED) && speed == 0.0f) {
+            walking = false;
+            break;
+        }
+        AnimScriptDelete(obj, &oneShot);
+        set->oneShotState = 0;
+    }
+
+    if (walking) {
+        double pace = Magnitude(forward);
+        if (pace < 0.0)
+            pace = 0.0;
+        else if (pace > maxForward)
+            pace = maxForward;
+        pace = pace / maxForward;
+
+        int index = 0;
+        if (pace > 0.0002f || pace < -0.0002f || pace != pace) {
+            int top = set->speedCount - 2;
+            double scaled = pace * top;
+            index = Ftol(scaled);
+            if (index == top)
+                index--;
+            blend = (float)(scaled - index);
+            index++;
+        }
+
+        if (set->switchCooldown != 0)
+            set->switchCooldown--;
+        if (index != set->speedIndex) {
+            if (set->switchCooldown != 0) {
+                index = set->speedIndex;
+            } else {
+                set->switchCooldown = 4;
+                bool fadeAll = set->speedIndex == 0 || index == 0;
+                set->speedIndex = (char)index;
+                if (fadeAll) {
+                    AnimListBuild(obj, ANIMLIST_TAG, set->tag, NULL, ANIMLIST_RESTART);
+                    for (int i = 0; i < GlbAnimListCount; i++) {
+                        sAnimScript_tag *script = GlbAnimList[i];
+                        if (!(script->flags & ANIMSCRIPT_FADING)) {
+                            script->flags |= ANIMSCRIPT_FADING | ANIMSCRIPT_FADE_OUT;
+                            script->fadeLen = 8.0f;
+                            script->fadeTime = 8.0f;
+                            script->fadeDir = -1;
+                        }
+                    }
+                }
+                if (index == 0) {
+                    sAnimScript_tag *idle = AnimScriptAppend(obj, set->speedList[0]);
+                    idle->groupTag = set->tag;
+                } else {
+                    if (!fadeAll) {
+                        AnimListBuild(obj, ANIMLIST_TAG, set->tag, NULL, ANIMLIST_RESTART);
+                        for (int i = 0; i < GlbAnimListCount; i++) {
+                            sAnimScript_tag *script = GlbAnimList[i];
+                            if (set->walkTimestamp == script->timestamp || set->blendTimestamp == script->timestamp)
+                                AnimScriptDelete(obj, &script);
+                        }
+                    }
+                    const uint walkFlags = ANIMSCRIPT_LOOP | ANIMSCRIPT_GAME_FLAG | ANIMSCRIPT_ZERO_ROOT_Z
+                                           | ANIMSCRIPT_ZERO_ROOT_X;
+                    sAnimScript_tag *walk = AnimScriptAppend(obj, set->speedList[index]);
+                    walk->groupTag = set->tag;
+                    walk->flags |= walkFlags;
+                    walk->speedMode = ANIMSPEED_DISTANCE;
+                    walk->boneAnimSeq->frameCallback = AnimSet_WalkUpdater;
+                    set->walkTimestamp = walk->timestamp;
+                    sAnimScript_tag *faster = AnimScriptAppend(obj, set->speedList[index + 1]);
+                    faster->groupTag = set->tag;
+                    faster->flags |= walkFlags;
+                    faster->speedMode = ANIMSPEED_SYNC;
+                    faster->syncMaster = walk;
+                    set->blendTimestamp = faster->timestamp;
+                    set->blendScript = faster;
+                    faster->ownerSlot = &set->blendScript;
+                }
+                AnimObjectUpdate(obj);
+            }
+        }
+        if (index != 0 && set->blendScript != NULL)
+            set->blendScript->syncBlend = blend;
+
+        AnimListBuild(obj, ANIMLIST_TAG, set->tag, NULL, ANIMLIST_RESTART);
+        if (GlbAnimListCount == 1)
+            animObj->distancePhase = set->a;
+        else
+            set->idleTimer = (Rand_Random() & 0x3ff) + 0xff;
+    }
+
+    if (!MPSettings.isMultiplayer)
+        return;
+
+    double sideways = (double)side / maxSide;
+    float sidewaysF = (float)sideways;
+    double ahead = (double)forward / maxForward;
+    if (!(ahead >= 0.0))
+        ahead = -ahead;
+    Extended angle = FPatan(sideways, ahead) * Extended(0.63661975f);
+    if (!((double)angle >= 0.0))
+        angle = -angle;
+    float strafe = (float)angle;
+
+    int dir;
+    if ((side <= 0.0002f && side >= -0.0002f) || strafe < 0.5f)
+        dir = 0;
+    else
+        dir = side > 0.0f ? 1 : 2;
+
+    if (dir != (char)set->strafeDir) {
+        set->strafeDir = (uchar)dir;
+        set->speedIndex = -1;
+        if (set->strafeScript != NULL)
+            AnimScriptDelete(obj, &set->strafeScript);
+        if (dir == 0)
+            return;
+        set->strafeScript = AnimScriptAppendBlend(obj, set->speedList[set->speedCount + (dir == 1 ? 1 : 3)]);
+        set->strafeScript->ownerSlot = &set->strafeScript;
+        set->strafeScript->flags |= ANIMSCRIPT_LOOP | ANIMSCRIPT_GAME_FLAG | ANIMSCRIPT_ZERO_ROOT_Z
+                                    | ANIMSCRIPT_ZERO_ROOT_X | ANIMSCRIPT_OVERLAY;
+    } else if (dir == 0) {
+        return;
+    }
+    if (set->strafeScript != NULL) {
+        set->strafeScript->speed = Magnitude(sidewaysF);
+        set->strafeScript->fadeTime = strafe;
+    }
+}

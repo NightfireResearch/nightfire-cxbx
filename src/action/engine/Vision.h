@@ -1,5 +1,5 @@
 #ifndef VISION_H
-#define VISION_H_
+#define VISION_H
 
 #include "../actionhelpers.h"
 

@@ -16,6 +16,7 @@ typedef enum {
 } UpgradeabilityType;
 
 // This array is not constant - it is modified for the custom branded shaver, and potentially for upgraded gadgets too?
+// XBE_GLOBAL(0x0017d3f0, 0x150)
 M_ITEM ds_gadgets[14] = {
     {
         .iconHashcode = ICON_DS_GADGET_TASER,
@@ -131,7 +132,7 @@ M_ITEM ds_gadgets[14] = {
     }
 };
 
-// ds_options: 002e0af8 (PS2 EU), 0017cf70 (Xbox)
+// XBE_GLOBAL(0x0017cf70, 0x60) - PS2 EU 0x002e0af8
 const M_ITEM ds_options[4] = {
     {
         .iconHashcode = ICON_DOSSIER_RECORDS,
@@ -171,6 +172,7 @@ const M_ITEM ds_options[4] = {
 static_assert(sizeof(ds_options) == 0x18 * 4, "Size of ds_options is not as expected");
 
 // This array is not constant - it is modified for upgraded pistol
+// XBE_GLOBAL(0x0017d168, 0x288)
 M_ITEM ds_weapons[27] = {
     {
         .iconHashcode = ICON_DS_WEAPON_PP7,
@@ -401,7 +403,7 @@ bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint e
     
     case MessageType_Select: {
             
-            int lVar1 = WHEEL_GET_VALUE(param_2);
+            int lVar1 = SCROLL_GET_VALUE(param_2);
 
             switch(lVar1) {
                 case 0:
@@ -424,7 +426,7 @@ bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint e
         }
 
         case MessageType_Scroll:
-        case MessageType_Enter:
+        case MessageType_ValueSet:
             Menu_UpdateWheel(param_1, param_2, (M_ITEM*)ds_options, (HASHCODE)0x1000010d, (HASHCODE)0x1000010a, (HASHCODE)0x100001ed, SUB_C_SBDOSSIER_IRIS, event == MessageType_Scroll);
             return 1;
 
@@ -447,7 +449,7 @@ bool P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint mes
     //printf("In P_DOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, param_3, eventType, param_5, param_6);
 
     switch (messageType) {
-        case MessageType_MaybeEnterPage:
+        case MessageType_PageEnter:
             if (param_6 != P_NFMAP && param_6 != P_NFRESULTS && param_6 != P_NFBONUS) {
                 Menu_StartIris(4, param_1, SUB_C_SBDOSSIER_IRIS);
                 return true;
@@ -470,7 +472,7 @@ bool P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint mes
 // AUTOINJECT
 bool P_DSGADGETS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint messageType, int param_5, int param_6) {
     switch(messageType) {
-        case MessageType_MaybeEnterPage: {
+        case MessageType_PageEnter: {
             
             Menu_StartIris(0, managerNum, SUB_C_DSGADGETS_IRIS);
             __Menu_Send(managerNum, C_SBDSGTSCROLL, 0x2e, 0, 0);
@@ -494,12 +496,12 @@ bool C_SBDSGTSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
     MessageType event = (MessageType)eventType;
 
     switch(event) {
-        case MessageType_Enter:
+        case MessageType_ValueSet:
         case MessageType_Scroll: {
             // TODO: Is this taking label_upper, label_middle, label_lower?
             Menu_UpdateWheel(param_1, param_2, ds_gadgets, (HASHCODE)0x1000016a, (HASHCODE)0x1000016c, (HASHCODE)0x1000016b, (HASHCODE)0x1000016d, event == MessageType_Scroll);
 
-            int gadgetNum = WHEEL_GET_VALUE(param_2);
+            int gadgetNum = SCROLL_GET_VALUE(param_2);
             uint gadgetId = ds_gadgets[gadgetNum].identifier;
             int upgradeLevel = Menu_GetObjectUpgradeLevel(gadgetId, 0);
             const char* description = Txt_BindLabel(ds_gadgets[gadgetNum].description, 0);
@@ -551,7 +553,7 @@ bool C_SBDSGTSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
 
             break;
         }
-        case MessageType_MaybeGetWheelNumItems: {
+        case MessageType_ControlCreated: {
             __Menu_SendMessage(param_2, 0x27, 0, ARRAY_SIZE(ds_gadgets) - 1);
             __Menu_SendMessage(param_2, 0x2e, 0, 0);
             break;
@@ -566,7 +568,7 @@ bool C_SBDSGTSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
 bool P_DSWEAPONS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, int param_5, int param_6) {
   
   switch((MessageType)eventType) {
-    case MessageType_MaybeEnterPage: {
+    case MessageType_PageEnter: {
         switch(Menu_GetObjectUpgradeLevel(0, 0)) {
         case 0:
         ds_weapons[0].iconHashcode = ICON_DS_WEAPON_PP7;
@@ -607,12 +609,12 @@ bool C_SBDSWPSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
     MessageType event = (MessageType)eventType;
 
     switch(event) {
-        case MessageType_Enter:
+        case MessageType_ValueSet:
         case MessageType_Scroll: {
             // TODO: Is this taking label_upper, label_middle, label_lower?
             Menu_UpdateWheel(param_1, param_2, ds_weapons, (HASHCODE)0x10000171, (HASHCODE)0x10000170, (HASHCODE)0x10000172, (HASHCODE)0x1000016e, event == MessageType_Scroll);
 
-            int weaponNum = WHEEL_GET_VALUE(param_2);
+            int weaponNum = SCROLL_GET_VALUE(param_2);
             uint weaponId = ds_weapons[weaponNum].identifier;
             int upgradeLevel = Menu_GetObjectUpgradeLevel(weaponId, 0);
             const char* description = Txt_BindLabel(ds_weapons[weaponNum].description, 0);
@@ -650,7 +652,7 @@ bool C_SBDSWPSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
 
             break;
         }
-        case MessageType_MaybeGetWheelNumItems: {
+        case MessageType_ControlCreated: {
             __Menu_SendMessage(param_2, 0x27, 0, ARRAY_SIZE(ds_weapons) - 1);
             __Menu_SendMessage(param_2, 0x2e, 0, 0);
             break;
@@ -664,12 +666,12 @@ bool C_SBDSWPSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
 bool P_DSREWARDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, int param_5, int param_6) {
   
     switch((MessageType)eventType) {
-        case MessageType_MaybeEnterPage: {
+        case MessageType_PageEnter: {
             M_CONTROL* rewardsControl = CONTROL_GET(param_1, C_RBDSREWARDS);
             Menu_AddItemsToControl(rewardsControl, sp_level, ARRAY_SIZE(sp_level), 0, 1);
 
-            // Unclear why we use __Menu_SendMessage here rather than SCROLL_SELECT_ITEM / __Menu_Send. Immediate dispatch vs next frame vs delayed?
-            __Menu_SendMessage(rewardsControl, MessageType_SelectScrollItem, GameState.BaseMapHashCode, 0);
+            // Unclear why we use __Menu_SendMessage here rather than RADIO_SELECT_ITEM / __Menu_Send. Immediate dispatch vs next frame vs delayed?
+            __Menu_SendMessage(rewardsControl, MessageType_SelectItemByValue, GameState.BaseMapHashCode, 0);
             break;
         }
     }
@@ -681,12 +683,12 @@ bool P_DSREWARDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint e
 bool P_DSRECORDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, int param_5, int param_6) {
   
     switch((MessageType)eventType) {
-        case MessageType_MaybeEnterPage: {
+        case MessageType_PageEnter: {
             M_CONTROL* rewardsControl = CONTROL_GET(param_1, C_RBDSRECORDS);
             Menu_AddItemsToControl(rewardsControl, sp_level, ARRAY_SIZE(sp_level), 0, 1);
 
-            // Unclear why we use __Menu_SendMessage here rather than SCROLL_SELECT_ITEM / __Menu_Send. Immediate dispatch vs next frame vs delayed?
-            __Menu_SendMessage(rewardsControl, MessageType_SelectScrollItem, GameState.BaseMapHashCode, 0);
+            // Unclear why we use __Menu_SendMessage here rather than RADIO_SELECT_ITEM / __Menu_Send. Immediate dispatch vs next frame vs delayed?
+            __Menu_SendMessage(rewardsControl, MessageType_SelectItemByValue, GameState.BaseMapHashCode, 0);
             break;
         }
     }

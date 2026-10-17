@@ -1,0 +1,31 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000bd750",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WCollider::Validate(void) const",
+   "return": "bool"
+  },
+  {
+   "address": "0x000bdd40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WCollider::Clear(void)"
+  },
+  {
+   "address": "0x000be180",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WCollider::~WCollider(void)"
+  },
+  {
+   "address": "0x000be2d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WCollider::PrepareRegion(void)"
+  }
+ ]
+}

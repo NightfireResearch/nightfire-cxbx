@@ -28,6 +28,11 @@ obj_tag * rotor_init(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, ushort par
     }
 
     build_LinkToRoom(gameObj, 0, glb_world);
+
+    // Falling off the end of a non-void function is undefined behaviour; MSVC left gameObj in EAX
+    // and the caller got the right answer by luck. Nothing on the boot path reaches this, so it
+    // was never the hang - but it is the same bug as the one in FS_StateMachineIterate.
+    return gameObj;
 }
 
 // AUTOINJECT
@@ -36,7 +41,7 @@ void rotor_update(obj_tag* gameObj) {
     ObjData_Rotor *rotor = (ObjData_Rotor*)gameObj->extraObjectData;
 
     if((rotor->switchChannel == 0) || (switch_channels[rotor->switchChannel] == rotor->switchPolarity)) {
-        gameObj->renderType |= 0x20;
+        gameObj->transformFlags |= TRANSFORM_MOVED;
         auxVec_AddMulR32(&gameObj->rotation, &rotor->axis, FRAME_RATE_MUL, &gameObj->rotation);
     }
 }

@@ -11,39 +11,7 @@
 
 // Scanning cameras with conical beams, eg in evil base and office, but NOT the lasers which trigger the alarm - presumably some kind of Trigger instead
 
-// Sensors are kept in CameraList, so the list node has to remain first.
 #pragma pack(push, 1)
-typedef struct SENSOR {
-    LLNODE_tag cameraListNode;             // 0x00
-    obj_tag* owner;                        // 0x08
-    celglist_tag* enabledGraphics;         // 0x0c
-    uint enabledGraphicsLod;               // 0x10
-    quaternion_tag trackedRotation;        // 0x14
-    void* sweepSpline;                     // 0x24
-    float sweepPosition;                   // 0x28
-    float sweepStep;                       // 0x2c
-    uint sweepLastPoint;                   // 0x30
-    uint viewConeHalfAngle;                // 0x34, in half-degrees
-    float viewConeCos;                     // 0x38
-    float viewConeSin;                     // 0x3c
-    float beamLength;                      // 0x40
-    float alertTimer;                      // 0x44
-    float alertBeepTimer;                  // 0x48
-    obj_tag* beamObject;                   // 0x4c
-    obj_tag* bodyObject;                   // 0x50
-    DYNAMICSOUNDS* loopSound;              // 0x54
-    ushort alertSwitchChannel;             // 0x58
-    ushort disableSwitchChannel;           // 0x5a
-    ushort unknown4c;                      // 0x5c
-    uchar unknown44;                       // 0x5e
-    uchar dontAddToCameraList;             // 0x5f
-    uchar childObjectVisibilityState;      // 0x60
-    uchar padding[3];
-} SENSOR;
-
-static_assert(sizeof(SENSOR) == 0x64, "Wrong size for SENSOR");
-static_assert(offsetof(SENSOR, beamObject) == 0x4c, "Bad offset of beamObject");
-static_assert(offsetof(SENSOR, bodyObject) == 0x50, "Bad offset of bodyObject");
 
 typedef struct {
     ushort unknown00;                      // 0x00
@@ -61,10 +29,10 @@ typedef struct {
     uchar padding3e[2];
     uchar dontAddToCameraList;             // 0x40
     uchar padding41[3];
-    uchar unknown44;                       // 0x44
+    uchar monitorGroup;                    // 0x44
     uchar padding45[3];
     HASHCODE bodyHashcode;                 // 0x48
-    ushort unknown4c;                      // 0x4c
+    ushort monitoredChannel;               // 0x4c
     uchar padding4e[2];
 } Create_Sensor_Params;
 
@@ -74,8 +42,8 @@ static_assert(offsetof(Create_Sensor_Params, beamHashcode) == 0x2c, "Bad offset 
 static_assert(offsetof(Create_Sensor_Params, bodyHashcode) == 0x48, "Bad offset of bodyHashcode");
 static_assert(sizeof(Create_Sensor_Params) == 0x50, "Wrong size for Create_Sensor_Params");
 
-#define CameraList (*(LLISTINFO_tag*)0x0029aabc)
-#define SwitchList (*(LLISTINFO_tag*)0x0029aab0)
+// XBE_GLOBAL(0x0029aab0, 0xc)
+LLISTINFO_tag SwitchList;
 
 // The map stores this angle in half-degrees; pi / 360 converts it to radians.
 static constexpr float HALF_DEGREES_TO_RADIANS = 0.008726646f;
@@ -105,8 +73,8 @@ obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
     sensor->alertSwitchChannel = createParams->alertSwitchChannel;
     sensor->disableSwitchChannel = createParams->disableSwitchChannel;
     sensor->dontAddToCameraList = createParams->dontAddToCameraList;
-    sensor->unknown44 = createParams->unknown44; // Unused?
-    sensor->unknown4c = createParams->unknown4c; // Unused?
+    sensor->monitorGroup = createParams->monitorGroup;
+    sensor->monitoredChannel = createParams->monitoredChannel;
 
     sensor->sweepPosition = 0.0f;
     sensor->sweepSpline = createParams->sweepSpline;
@@ -122,7 +90,7 @@ obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
         sensor->beamObject = control_create_object(0, pos, rot, NULL);
         sensor->beamObject->objectType = OBJECTTYPE_GFX;
         sensor->beamObject->effectFlags |= 0x20;
-        sensor->beamObject->renderType |= 0x0005;
+        sensor->beamObject->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY | TRANSFORM_MATRIX_PLACED;
         sensor->beamObject->scale = sensor->beamLength;
         sensor->beamObject->maybeParent = obj;
         Mat_Copy(&obj->transformMatrix, &sensor->beamObject->transformMatrix);
@@ -135,14 +103,14 @@ obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
 
         sensor->bodyObject = control_create_object(0, pos, rot, NULL);
         sensor->bodyObject->objectType = OBJECTTYPE_GFX;
-        sensor->bodyObject->renderType |= 0x0004;
+        sensor->bodyObject->transformFlags |= TRANSFORM_MATRIX_PLACED;
         sensor->bodyObject->maybeParent = obj;
         Mat_Align2Up(sensor->bodyObject->transformMatrix.m, &CONST_UP_VECTOR.x, &direction.x);
         hashtable_set_object_to_entity_gfx(sensor->bodyObject, createParams->bodyHashcode);
     }
 
     if(sensor->sweepLastPoint != 0)
-        obj->renderType |= 0x0044;
+        obj->transformFlags |= TRANSFORM_MATRIX_PLACED | TRANSFORM_POSITION_FROM_MATRIX;
 
     obj->objectType = OBJECTTYPE_SENSOR;
     obj->objGraphics = celgl;
@@ -169,13 +137,13 @@ short _Sensor_SetBeam(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor) {
     if (sensor->bodyObject != NULL) {
         Mat_GetDir(&direction, &sensorObj->transformMatrix);
         Mat_Align2Up(sensor->bodyObject->transformMatrix.m, &CONST_UP_VECTOR.x, &direction.x);
-        sensor->bodyObject->renderType |= 0x20;
+        sensor->bodyObject->transformFlags |= TRANSFORM_MOVED;
     }
 
     // Update beam object and check for hit
     if ((sensor->beamObject != NULL) && (targetObj != NULL)) {
         Mat_Copy(&sensorObj->transformMatrix, &sensor->beamObject->transformMatrix);
-        sensor->beamObject->renderType |= 0x20;
+        sensor->beamObject->transformFlags |= TRANSFORM_MOVED;
 
         Mat_GetDir(&direction, &sensorObj->transformMatrix);
         auxVec_AddMulR32(&sensorObj->position, &direction, sensor->beamLength, &endPosition);
@@ -327,7 +295,7 @@ void Sensor_Update(obj_tag *sensorObj) {
         // Handle sweeping motion if spline exists
         if (sensor->sweepLastPoint != 0) {
             Spline_Interp(sensor->sweepSpline, 0, (ushort)sensor->sweepLastPoint, sensor->sweepPosition, &sensorObj->transformMatrix, NULL, 2);
-            sensorObj->renderType |= 0x20;
+            sensorObj->transformFlags |= TRANSFORM_MOVED;
 
             sensor->sweepPosition += FRAME_RATE_MUL * sensor->sweepStep;
 

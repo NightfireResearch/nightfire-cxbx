@@ -1,0 +1,36 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000faa80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnAnimMemoryMap::FnAnimMemoryMap(void)",
+   "return": "EAGLAnim::FnAnimMemoryMap *"
+  },
+  {
+   "address": "0x000faaa0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnAnimMemoryMap::~FnAnimMemoryMap(void)"
+  },
+  {
+   "address": "0x000faae0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnAnimMemoryMap::GetTargetCheckSum(void) const"
+  },
+  {
+   "address": "0x000faaf0",
+   "calling_convention": "__thiscall",
+   "return": "EAGLAnim::FnAnimMemoryMap *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

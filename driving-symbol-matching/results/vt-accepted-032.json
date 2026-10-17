@@ -1,0 +1,286 @@
+[
+ {
+  "xbox": "0xcd740",
+  "name": "WTargetable::GetVelocity",
+  "ps2": "0x2299b0",
+  "why": "Version Tracking candidate, body review: Called from Missile::SteerMissile as PS2 GetVelocity is; same callees (GetPhysicsObject, GetRigidBody/GetSimpleRigidBody switch on type field +0x34)"
+ },
+ {
+  "xbox": "0x14700",
+  "name": "ActCharacter::~ActCharacter",
+  "ps2": "0x10d188",
+  "why": "Version Tracking candidate, body review: Called from ActActor::~ActActor; same body: delete +0x68 (alpha), StopUsingResources, ~ActCharacterInfo on +0x20 then FastFree; no delete flag on Xbox"
+ },
+ {
+  "xbox": "0x1adc0",
+  "name": "ActWeapon::SetEventDynamicData",
+  "ps2": "0x116678",
+  "why": "Version Tracking candidate, body review: Same body: RSceneObj::SetEventDynamicData(this) then stores this to a global (PS2 DAT_0032e73c); sits just before ActWeapon::PlayEvent as on PS2"
+ },
+ {
+  "xbox": "0x11930",
+  "name": "VU0_quatstoangvel",
+  "ps2": "0x109ad8",
+  "why": "Version Tracking candidate, body review: Called from ActActor::SpawnWeapon next to VU0_m4toquat as on PS2; same body: pick largest |q component| (0..3) then switch with the same quaternion-derivative formulas / dt (PS2 in soft doubles)"
+ },
+ {
+  "xbox": "0x82400",
+  "name": "RPlayerCamera::UpdateWorldAnimationCam",
+  "ps2": "0x1b53c0",
+  "why": "Version Tracking candidate, body review: Registered in RCameraIniLoader::LoadFile for mode string \"WorldAnim\" (next to RelativeAnim->UpdateRelativeAnimationCam); callees match PS2 (EvaluateSpline, GetPointListSize, GetAnchorPosition, PlayCurrentAnimation, UpdateAnimationCam, VU0_m4toquat, VU0_quattom4)"
+ },
+ {
+  "xbox": "0xbad00",
+  "name": "SWeaponManager::StartNuclearSequence",
+  "ps2": "0x20ea20",
+  "why": "Version Tracking candidate, body review: Called from ENuclearBlast::~ENuclearBlast as PS2 is; same body: flag=1, start tick = now+rate, copy COORD3, store float (Xbox +0x44/+0x5c/+0x50/+0x60 = PS2 +0x54/+0x6c/+0x60/+0x70, shift -0x10)"
+ },
+ {
+  "xbox": "0x5ca80",
+  "name": "Noise::Noise1",
+  "ps2": "0x17c788",
+  "why": "Version Tracking candidate, body review: Same callers (CheckForCameraShaking, RParticulate::Update, UpdateMomentumHeliCam, ~EFireWeapon); same body: x-(-10000), smoothstep 3-2t, permutation table lookups"
+ },
+ {
+  "xbox": "0x5cc80",
+  "name": "SimRandom::SimRandom",
+  "ps2": "0x17db68",
+  "why": "Version Tracking candidate, body review: Called from Simulation::Simulation; identical body: [this+8]=0x75bcd15 (123456789), returns this"
+ },
+ {
+  "xbox": "0x982a0",
+  "name": "RReflection::ReflPrivateData::~ReflPrivateData",
+  "ps2": "0x1c12c8",
+  "why": "Version Tracking candidate, body review: Called from RReflection::~RReflection just before FastFree of the private block, where PS2 ~RReflection calls ~ReflPrivateData; delete [+0xa0] and two (empty on Xbox) GeoPrimState dtors match; Xbox has viewport members in place of PS2 TARs; ctor already named ReflPrivateData on Xbox; no delete flag"
+ },
+ {
+  "xbox": "0x9f870",
+  "name": "USimpleVec<RLightning::Segment>::~USimpleVec",
+  "ps2": "0x1e3438",
+  "why": "found reviewing (rejected) candidate , body review: Destroys the 0x18-byte element array (element dtor 0x9f7e0 = inlined loop on PS2), frees it, zeroes both fields; called from the element dtor on its +0x10 member exactly as PS2's recursive call on +0x10; no delete flag"
+ },
+ {
+  "xbox": "0x9f4c0",
+  "name": "RLightning::Bolt::~Bolt",
+  "ps2": "0x1e3238",
+  "why": "found reviewing (rejected) candidate , body review: Called from RLightning::ClearAllBolts/Update; same body as PS2 Bolt::~Bolt: destroy USimpleVec<Segment> at +8, delete [+0], zero +0/+4"
+ },
+ {
+  "xbox": "0xf5640",
+  "name": "EAGL::DrawArray::SetPrimitiveType",
+  "ps2": "0x29c0f8",
+  "why": "Version Tracking candidate, body review: Same body shape: switch on primitive type sets +0x30 to 0/1/2/-1, then if != -1 sets +0x24/+0x28/+0x20, stores type at +0, returns success bool; case values are platform enums (D3D vs PS2)"
+ },
+ {
+  "xbox": "0xbce50",
+  "name": "Util_Bound",
+  "ps2": "0x210510",
+  "why": "Version Tracking candidate, body review: Same callers (DriveToPoint, DriveToPointSub, RigidBody::GenerateImpulse); identical body: x>max -> r, x<-max -> -r, else x; follows Util_Step as on PS2 (Util_Ramp between)"
+ },
+ {
+  "xbox": "0xe9410",
+  "name": "EAGL::Model::Optimize",
+  "ps2": "0x284c40",
+  "why": "Version Tracking candidate, body review: Called from EAGLInternal::ModelConstructor as PS2 Optimize is; same body: walks the list at +0xcc, 0xffff markers, sets 0x10000000 flag, calls a per-entry test and compacts entries"
+ },
+ {
+  "xbox": "0x1fd40",
+  "name": "AICharacterEnemySnow::AICharacterEnemySnow",
+  "ps2": "0x11e490",
+  "why": "Version Tracking candidate, body review: Constructor installing the vtable whose slot 0 is AICharacterEnemySnow::scalar_deleting_destructor; AICharacter::AICharacter then +0x140 = arg and zeroing +0x144..+0x154 as PS2 ctor; called from AIElementController::WakeUp"
+ },
+ {
+  "xbox": "0x89010",
+  "name": "RPlayerCamera::AbortCinematic",
+  "ps2": "0x1bd2b8",
+  "why": "Version Tracking candidate, body review: Called from EAbortCinematic::~EAbortCinematic where PS2 calls AbortCinematic; same body: clear cinematic flag (Xbox +0x13c = PS2 +0x12c, +0x10), clear director queue at +0x368, zero two fields in the +0x354 block"
+ },
+ {
+  "xbox": "0x102e30",
+  "name": "EAGLAnim::DeltaQFastMinRange::UnQuantize",
+  "ps2": "0x26cfb8",
+  "why": "found reviewing (rejected) candidate , body review: Called in the per-bone loop of the SetAnimMemoryMap helper where PS2 SetAnimMemoryMap calls DeltaQFastMinRange::UnQuantize(src, dst+i*0x20); same body: 8 ushorts * 3.0518e-05 (0x38000080), first four minus 1.0"
+ },
+ {
+  "xbox": "0xe6c00",
+  "name": "EAGL::RenderContext::SetupFrameBuffers",
+  "ps2": "0x28bb30",
+  "why": "Version Tracking candidate, body review: Call position in RRenderer::RRenderer: after SetSize and the three buffer-depth setters, immediately before FeatureManager::Init, exactly where PS2 calls RenderContext::SetupFrameBuffers; Xbox body is the D3D framebuffer setup (GetBackBuffer/GetDepthStencilSurface/Clear/PersistDisplay) - platform body, position-based"
+ },
+ {
+  "xbox": "0xba150",
+  "name": "SMissionRule::Instantiate",
+  "ps2": "0x209390",
+  "why": "Version Tracking candidate, body review: Called from SMissionManager::Load; same 15-case factory switch: FastAlloc(size,\"SMissionRule\") + rule ctor per type (Xbox sizes = PS2 - 8)"
+ },
+ {
+  "xbox": "0xb96c0",
+  "name": "SRuleAlways::SRuleAlways",
+  "ps2": "0x209d60",
+  "why": "on the caller chain of SMissionRule::Instantiate, body review: Case 0 ctor in SMissionRule::Instantiate (PS2 case 0 = SRuleAlways)"
+ },
+ {
+  "xbox": "0xb9d20",
+  "name": "SRuleAmmo::SRuleAmmo",
+  "ps2": "0x209df8",
+  "why": "on the caller chain of SMissionRule::Instantiate, body review: Case 1 ctor; installs vtable whose CheckRule slot is SRuleAmmo::CheckRule"
+ },
+ {
+  "xbox": "0xb9700",
+  "name": "SRuleDamage::SRuleDamage",
+  "ps2": "0x209f38",
+  "why": "on the caller chain of SMissionRule::Instantiate, body review: Case 2 ctor; vtable CheckRule slot = SRuleDamage::CheckRule"
+ },
+ {
+  "xbox": "0xb9e10",
+  "name": "SRuleHealth::SRuleHealth",
+  "ps2": "0x20a128",
+  "why": "on the caller chain of SMissionRule::Instantiate, body review: Case 4 ctor in the factory (PS2 case 4 = SRuleHealth), own vtable 0x193638"
+ },
+ {
+  "xbox": "0xb9f80",
+  "name": "SRuleRange::SRuleRange",
+  "ps2": "0x20a520",
+  "why": "on the caller chain of SMissionRule::Instantiate, body review: Case 7 ctor; vtable CheckRule slot = SRuleRange::CheckRule"
+ },
+ {
+  "xbox": "0xba000",
+  "name": "SRuleSpeed::SRuleSpeed",
+  "ps2": "0x20a6b8",
+  "why": "on the caller chain of SMissionRule::Instantiate, body review: Case 8 ctor in the factory (PS2 case 8 = SRuleSpeed). Constructor only - its CheckRule slot (0xba620) deliberately left alone"
+ },
+ {
+  "xbox": "0xba080",
+  "name": "SRuleTimer::SRuleTimer",
+  "ps2": "0x20a858",
+  "why": "on the caller chain of SMissionRule::Instantiate, body review: Case 9 ctor; vtable CheckRule slot = SRuleTimer::CheckRule"
+ },
+ {
+  "xbox": "0xb9960",
+  "name": "SRuleProperty::SRuleProperty",
+  "ps2": "0x20a448",
+  "why": "on the caller chain of SMissionRule::Instantiate, body review: Case 10 ctor in the factory (PS2 case 10 = SRuleProperty)"
+ },
+ {
+  "xbox": "0xb9b30",
+  "name": "SRuleCollision::SRuleCollision",
+  "ps2": "0x20ae18",
+  "why": "on the caller chain of SMissionRule::Instantiate, body review: Case 11 ctor in the factory (PS2 case 11 = SRuleCollision)"
+ },
+ {
+  "xbox": "0xb9a50",
+  "name": "SRulePlayerDir::SRulePlayerDir",
+  "ps2": "0x20ab28",
+  "why": "on the caller chain of SMissionRule::Instantiate, body review: Case 12 ctor; vtable CheckRule slot = SRulePlayerDir::CheckRule"
+ },
+ {
+  "xbox": "0xb99d0",
+  "name": "SRuleDifficulty::SRuleDifficulty",
+  "ps2": "0x20aa20",
+  "why": "on the caller chain of SMissionRule::Instantiate, body review: Case 13 ctor in the factory (PS2 case 13 = SRuleDifficulty)"
+ },
+ {
+  "xbox": "0xb9b90",
+  "name": "SRuleProgCounter::SRuleProgCounter",
+  "ps2": "0x20aec8",
+  "why": "on the caller chain of SMissionRule::Instantiate, body review: Case 14 ctor; vtable slots = SRuleProgCounter sdd/CheckRule"
+ },
+ {
+  "xbox": "0xfdd40",
+  "name": "EAGLAnim::RawPoseChannel::Eval",
+  "ps2": "0x272248",
+  "why": "found reviewing (rejected) candidate , body review: Same body as PS2 Eval: int frame, <0 -> EvalFrame(0), fraction!=0 && interp flag -> interpolate (0xfe110), else EvalFrame(frame); calls 0xfdc20 and 0xfe110"
+ },
+ {
+  "xbox": "0xfdc20",
+  "name": "EAGLAnim::RawPoseChannel::EvalFrame",
+  "ps2": "0x2724d8",
+  "why": "found reviewing (rejected) candidate , body review: Called only from RawPoseChannel::Eval for whole frames; same body as PS2 EvalFrame: walks channel function table per bone (stride 0x30, +0x10), masked bones skip data by 3 floats for EulF3/TranF3, 4 for QuatF4"
+ },
+ {
+  "xbox": "0x4de20",
+  "name": "ALimitedSound::scalar_deleting_destructor",
+  "ps2": "0x2f53e8",
+  "why": "Version Tracking candidate, body review: Calls 0x4de50 (ALimitedSound::~ALimitedSound), then ABaseSound::operator_delete(this,0x120) if flag&1. Same shape as PS2 ~ALimitedSound's deleting path (delete size 0x120)."
+ },
+ {
+  "xbox": "0x4de50",
+  "name": "ALimitedSound::~ALimitedSound",
+  "ps2": "0x2f53e8",
+  "why": "Version Tracking candidate, body review: Sets the vtable 0x18c8c8, decrements the instance counter DAT_00243b30, then calls the AOneShotSound dtor. PS2 does the same: DAT_00355ec0--, vtable ALimitedSound -> AOneShotSound. The same vtable and counter++ are inlined in ESpawnExplosion's 'ExplosionBass' sound, as PS2 inlines ALimitedSound there."
+ },
+ {
+  "xbox": "0x478a0",
+  "name": "AOneShotSound::~AOneShotSound",
+  "ps2": "0x2f2bc8",
+  "why": "on the caller chain of ALimitedSound::~ALimitedSound, body review: Called by ALimitedSound::~ALimitedSound (0x4de50) as the base dtor. Sets vtable 0x18c840, destroys the 3 AVoice::View array (stride 0x1c), then ~ABaseSound. Same as PS2 ~AOneShotSound without the delete flag."
+ },
+ {
+  "xbox": "0x9f520",
+  "name": "RLightning::BeginBoltDraw",
+  "ps2": "0x1e2178",
+  "why": "Version Tracking candidate, body review: Bolt::Draw calls it after the CalcWorldPos loop, where PS2 calls BeginBoltDraw. Body: stores the float at +0x6e0 (PS2 +0x710), allocates the 0xe000 buffer and zeroes the 0x800 dwords at +0xc000, then takes the flag at +0x6c8 (PS2 +0x6f8) into the JitterStripPoints branches. Identical, offsets -0x30."
+ },
+ {
+  "xbox": "0x186f0",
+  "name": "ActPoser::GetRootBonePosOri",
+  "ps2": "0x112b78",
+  "why": "Version Tracking candidate, body review: Called by ActActor::Update as on PS2. It copies the 64-byte matrix from (this+0x24)->+0x100 at index (this+4)->+0x18. PS2 does the same with this+0x28 and this+8, the same +0x100 and +0x18 (object offsets -4)."
+ },
+ {
+  "xbox": "0x18720",
+  "name": "ActPoser::GetWeaponBonePosOri",
+  "ps2": "0x112c18",
+  "why": "Version Tracking candidate, body review: Called by ActActor::Update. It copies the 64-byte matrix at index (this+4)->+0x1c+i*4 into out. Identical to PS2 (this+8 ->+0x1c+i*4, same +0x100 table)."
+ },
+ {
+  "xbox": "0x19820",
+  "name": "ActSkeleton::GetStillPose",
+  "ps2": "0x114a58",
+  "why": "Version Tracking candidate, body review: DoMainPose calls it first, like PS2. Body: FUN_fa340(this+8 as ECX, this+0xc, 0), matching PS2 FUN_262aa8(this+8, this+0xc, 0). This is the no-argument overload.",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0x19830",
+  "name": "ActSkeleton::GetStillPose",
+  "ps2": "0x114a80",
+  "why": "Version Tracking candidate, body review: The overload with a pose argument: FUN_fa340(this+8, arg, 0), matching PS2 GetStillPose(pose*) -> FUN_262aa8(this+8, arg, 0). DoMainPose calls it twice on both platforms. Genuine PS2 overload.",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0x2a3c0",
+  "name": "AIGroundVehicle::GetTargetPos",
+  "ps2": "0x12e7d0",
+  "why": "Version Tracking candidate, body review: Called by ~EFireWeapon on both platforms. Returns target ? AIVehicle::GetPosition(target) : this+0x17c; PS2 does the same with +0x1a4/+0x1a8 (shift -0x2c)."
+ },
+ {
+  "xbox": "0x2a3e0",
+  "name": "AIGroundVehicle::UpdateNavPos",
+  "ps2": "0x130140",
+  "why": "Version Tracking candidate, body review: Called by DoMoveMode as on PS2. Same body: the rigid-body distance check, the +0xb1/+0xb2 direction branches with v4sub/unit, WRoadNav::IncNavPosition, the WRoadNetwork segment flag 0x4000 (byte +0x51 &0x40) -> tangent eval."
+ },
+ {
+  "xbox": "0x2a800",
+  "name": "AIGroundVehicle::EngageSplinePath",
+  "ps2": "0x131508",
+  "why": "Version Tracking candidate, body review: Vtable slot 0x18b8e0, next to Disengage. Sets the two flags, physics vcall(1) then vcall(), mode=3 (+0x80, PS2 +0x70), SetSplinePath(arg). Identical sequence to PS2."
+ },
+ {
+  "xbox": "0x2a850",
+  "name": "AIGroundVehicle::DisengageSplinePath",
+  "ps2": "0x131590",
+  "why": "Version Tracking candidate, body review: Vtable slot 0x18b8e4. Physics vcall(0), vcall(), mode=1; the inlined SetAttackMode(1) and SetNavigateMode(1) (+0x94, +0x88, SetSplinePath(0)); target +0x178=0 (PS2 +0x1a4, the same -0x2c shift as GetTargetPos); SetSplinePath(0). Same as PS2."
+ },
+ {
+  "xbox": "0x50e10",
+  "name": "InputDevice::InputDevice",
+  "ps2": "0x167b80",
+  "why": "Version Tracking candidate, body review: XBoxPadDevice ctor calls it where PS2PadDevice calls InputDevice::InputDevice. It sets the vptr to 0x18d9fc (slot 0 = InputDevice::scalar_deleting_destructor 0x50eb0) and stores the int arg (PS2 stores it at +0x14 with the vptr at +0x18)."
+ },
+ {
+  "xbox": "0x50e30",
+  "name": "InputDevice::~InputDevice",
+  "ps2": "0x167b98",
+  "why": "Version Tracking candidate, body review: Called by the XBoxPadDevice dtor (0x51d80) as PS2's ~PS2PadDevice calls ~InputDevice. It only resets the vptr to InputDevice's vtable; this is the non-deleting part of PS2 ~InputDevice."
+ }
+]

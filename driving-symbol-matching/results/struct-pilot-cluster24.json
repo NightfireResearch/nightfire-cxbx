@@ -1,0 +1,660 @@
+{
+ "classes": [
+  {
+   "name": "EAGLAnim::FnAnim",
+   "size": 12,
+   "base": null,
+   "vtable": "0x1a0c6c",
+   "comment": "Root of the EAGLAnim channel/blender hierarchy (PS2 sheet EAGLAnim::FnAnim: Eval, EvalSQT, EvalEvent, GetType, GetAttribute...). Xbox: vptr +0, fields +4/+8. PS2 (GCC): fields +0/+4, vptr +8, so derived fields from +0xc sit at the same offset on both builds. Vtable 0x1a0c6c (15 slots) is restored last by FnRunBlender/FnTurnBlender destructors.",
+   "fields": [
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "int",
+     "name": "unk4",
+     "confidence": "low",
+     "evidence": "zeroed by every ctor (FnAnimMemoryMap ctor faa80, FnRunBlender 105000, FnTurnBlender 1042d0); PS2 +0 zeroed (FnRunBlender ctor 279328). Name invented"
+    },
+    {
+     "offset": "0x8",
+     "size": 2,
+     "type": "ushort",
+     "name": "type",
+     "confidence": "medium",
+     "evidence": "ctors store a per-class id as a dword (CompoundChannel 0xf, RunBlender 8, TurnBlender 9, DeltaQ 0x11, DeltaF3 0x14); PS2 +4 same values (279328: 8, 268bc8: 0x11). Callers deleting sub-anims read it as a word to index the per-type free list 0x2414b0 (dtors 105050, fab60). GetType on sheet. +0xa presumably padding/high half"
+    }
+   ]
+  },
+  {
+   "name": "EAGLAnim::FnAnimMemoryMap",
+   "size": 16,
+   "base": "EAGLAnim::FnAnim",
+   "vtable": "0x1a1130",
+   "comment": "FnAnim + AnimMemoryMap pointer; base of FnCompoundChannel and FnDelta* (their ctors call faa80, their dtors tail-call faaa0).",
+   "fields": [
+    {
+     "offset": "0xc",
+     "size": 4,
+     "type": "void *",
+     "name": "memoryMap",
+     "confidence": "high",
+     "evidence": "ctor faa80 zeroes +0xc; SetAnimMemoryMap (DeltaF3 100880, DeltaQ 103420) writes param to +0xc; GetTargetCheckSum f70f0 returns word map+2; InitSubChannels fb050 reads map+8 count; PS2 +0xc in SetAnimMemoryMap/GetLength. Intended type EAGLAnim::AnimMemoryMap *"
+    }
+   ]
+  },
+  {
+   "name": "EAGLAnim::FnCompoundChannel",
+   "size": 24,
+   "base": "EAGLAnim::FnAnimMemoryMap",
+   "vtable": "0x1a0be8",
+   "comment": "Holds one sub-channel FnAnim per map entry. Offsets equal to PS2 up to +0x10; Xbox bools pack (PS2 +0x14 bool4, +0x18 byte -> Xbox +0x14/+0x15); PS2 size 0x1c.",
+   "fields": [
+    {
+     "offset": "0x10",
+     "size": 4,
+     "type": "EAGLAnim::FnAnim * *",
+     "name": "subChannels",
+     "confidence": "high",
+     "evidence": "InitSubChannels fb050 allocates map.count*4 and fills via 14210 per map key; Eval* call vtable slot +0x24 on each; dtor fab60 deletes each and frees the array; PS2 +0x10"
+    },
+    {
+     "offset": "0x14",
+     "size": 1,
+     "type": "bool",
+     "name": "useFPS",
+     "confidence": "high",
+     "evidence": "UseFPS fafd0 stores its bool arg; EvalEvent fac70 scales times by fps when set; PS2 +0x14 (4-byte bool)"
+    },
+    {
+     "offset": "0x15",
+     "size": 1,
+     "type": "byte",
+     "name": "fps",
+     "confidence": "medium",
+     "evidence": "EvalEvent fac70 multiplies times by (float)byte +0x15; UseFPS passes &this+0x15 to fab10 when unset; ctor zeroes. PS2 +0x18 byte (GetFPS)"
+    }
+   ]
+  },
+  {
+   "name": "EAGLAnim::FnRunBlender",
+   "size": 128,
+   "base": "EAGLAnim::FnAnim",
+   "vtable": "0x1a1504",
+   "comment": "Cycles/blends N run animations by weight. Derives FnAnim directly (dtor 105050 restores 0x1a0c6c). All offsets equal to PS2 (ctor 279328 stores the same fields); only +0x68 bool differs in width.",
+   "fields": [
+    {
+     "offset": "0xc",
+     "size": 4,
+     "type": "void * *",
+     "name": "animKeys",
+     "confidence": "medium",
+     "evidence": "PS2 SetAnims 2781c8 allocs count*4 and copies arg array into it; SetWeight 1051c0 passes entries to 14210 to create sub-anims; FastFree'd in dtor. GetAnims returns it. Name invented"
+    },
+    {
+     "offset": "0x10",
+     "size": 4,
+     "type": "void * *",
+     "name": "cycleInfo",
+     "confidence": "medium",
+     "evidence": "PS2 SetAnims fills from each anim's virtual (+0x70 slot) result; SetWeight reads [i]+6 word, +8 flags byte, +0xa/+0xb bytes to compute +0x38..+0x44; freed in dtor. Name invented"
+    },
+    {
+     "offset": "0x14",
+     "size": 4,
+     "type": "void * *",
+     "name": "velAnimKeys",
+     "confidence": "medium",
+     "evidence": "PS2 SetAnims optional 4th array (t1) copied here; SetWeight builds +0x20/+0x24 from it when non-null; freed in dtor. Name invented"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "EAGLAnim::FnAnim *",
+     "name": "anim0",
+     "confidence": "high",
+     "evidence": "created by 14210 in SetWeight, deleted via vtable slot 0 + type free list in dtor; EvalSQT/BlendFacing use it; PS2 +0x18"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "EAGLAnim::FnAnim *",
+     "name": "anim1",
+     "confidence": "high",
+     "evidence": "as anim0 (swap logic in SetWeight 1051c0)"
+    },
+    {
+     "offset": "0x20",
+     "size": 4,
+     "type": "EAGLAnim::FnAnim *",
+     "name": "velAnim0",
+     "confidence": "medium",
+     "evidence": "SetWeight builds from velAnimKeys; BlendVel/EvalVel2D; deleted in dtor"
+    },
+    {
+     "offset": "0x24",
+     "size": 4,
+     "type": "EAGLAnim::FnAnim *",
+     "name": "velAnim1",
+     "confidence": "medium",
+     "evidence": "as velAnim0"
+    },
+    {
+     "offset": "0x28",
+     "size": 4,
+     "type": "float",
+     "name": "weight",
+     "confidence": "high",
+     "evidence": "PS2 GetWeight 279300 returns +0x28; SetWeight stores weight - (int)weight"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "int",
+     "name": "numAnims",
+     "confidence": "high",
+     "evidence": "PS2 SetAnims stores count (a2); GetAnims returns it; SetWeight clamps idx to +0x2c-2; dtor releases shared buffer 0 when non-zero"
+    },
+    {
+     "offset": "0x30",
+     "size": 4,
+     "type": "int",
+     "name": "cycleIdx",
+     "confidence": "high",
+     "evidence": "ctor -100 (both builds); SetWeight compares/stores clamped idx"
+    },
+    {
+     "offset": "0x34",
+     "size": 4,
+     "type": "void *",
+     "name": "skeleton",
+     "confidence": "medium",
+     "evidence": "PS2 SetAnims stores arg a1 (EAGLAnim::Skeleton *); passed to fa340 in EvalSQT/BlendFacing on both builds"
+    },
+    {
+     "offset": "0x38",
+     "size": 4,
+     "type": "float",
+     "name": "cycleLen0",
+     "confidence": "medium",
+     "evidence": "SetWeight: frame count from cycleInfo[i]; EvalSQT/EvalVel2D write. Name invented"
+    },
+    {
+     "offset": "0x3c",
+     "size": 4,
+     "type": "float",
+     "name": "cycleLen1",
+     "confidence": "medium",
+     "evidence": "SetWeight: from cycleInfo[i+1]. Name invented"
+    },
+    {
+     "offset": "0x40",
+     "size": 4,
+     "type": "float",
+     "name": "cycleTime0",
+     "confidence": "medium",
+     "evidence": "SetWeight: (b+0xa + b+0xb)*const; divides frequency. Name invented"
+    },
+    {
+     "offset": "0x44",
+     "size": 4,
+     "type": "float",
+     "name": "cycleTime1",
+     "confidence": "medium",
+     "evidence": "as cycleTime0 for i+1. Name invented"
+    },
+    {
+     "offset": "0x48",
+     "size": 4,
+     "type": "float",
+     "name": "frequency",
+     "confidence": "high",
+     "evidence": "ctor 1.0 both builds; SetWeight computes (1-w)/t0 + w/t1; PS2 GetFrequency 279808 reads it"
+    },
+    {
+     "offset": "0x4c",
+     "size": 4,
+     "type": "float",
+     "name": "phase",
+     "confidence": "low",
+     "evidence": "ctor 0; SetWeight rescales +0x50 using (+0x4c + +0x50)/freq. Name invented"
+    },
+    {
+     "offset": "0x50",
+     "size": 4,
+     "type": "float",
+     "name": "offset",
+     "confidence": "medium",
+     "evidence": "PS2 GetOffset 2792d0 returns +0x50; SetWeight rescales it"
+    },
+    {
+     "offset": "0x54",
+     "size": 4,
+     "type": "int",
+     "name": "alignedCycleIdx",
+     "confidence": "medium",
+     "evidence": "ctor -100 (both); AlignCycleBeginEnd reads/writes. Name invented"
+    },
+    {
+     "offset": "0x58",
+     "size": 16,
+     "type": "COORD4",
+     "name": "alignQ",
+     "confidence": "medium",
+     "evidence": "AlignCycleBeginEnd takes &+0x58 and writes +0x58..+0x64; PS2 8-byte accesses and AlignVel read +0x58. Name invented"
+    },
+    {
+     "offset": "0x68",
+     "size": 1,
+     "type": "bool",
+     "name": "aligned",
+     "confidence": "medium",
+     "evidence": "Xbox byte, PS2 word (+0x68); ctor 0; AlignCycleBeginEnd tests/sets. Name invented"
+    },
+    {
+     "offset": "0x7c",
+     "size": 4,
+     "type": "float *",
+     "name": "animSpeeds",
+     "confidence": "medium",
+     "evidence": "PS2 SetAnims allocs count*4 and stores sqrt(vx^2+vy^2) per velocity anim; freed in dtor. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "EAGLAnim::FnTurnBlender",
+   "size": 92,
+   "base": "EAGLAnim::FnAnim",
+   "vtable": "0x1a14b4",
+   "comment": "Turn blender; derives FnAnim directly (dtor 104310 restores 0x1a0c6c). Offsets equal on both builds; only +0x58 bool width differs.",
+   "fields": [
+    {
+     "offset": "0xc",
+     "size": 4,
+     "type": "void * *",
+     "name": "animKeys",
+     "confidence": "low",
+     "evidence": "ctor 0; FastFree'd in dtor; PS2 SetWeight uses. Name invented"
+    },
+    {
+     "offset": "0x10",
+     "size": 4,
+     "type": "EAGLAnim::FnRunBlender *",
+     "name": "beginBlender",
+     "confidence": "medium",
+     "evidence": "passed as this to FnRunBlender::ComputeBeginRootQ/ComputeEndRootQ on both builds (BlendBeginFacing, BlendVel, EvalSQT). Name invented"
+    },
+    {
+     "offset": "0x14",
+     "size": 4,
+     "type": "EAGLAnim::FnRunBlender *",
+     "name": "endBlender",
+     "confidence": "medium",
+     "evidence": "as +0x10. Name invented"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "float",
+     "name": "weight",
+     "confidence": "high",
+     "evidence": "PS2 GetWeight 27a9b0 returns +0x18"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "int",
+     "name": "numAnims",
+     "confidence": "medium",
+     "evidence": "dtor releases shared buffer 1 when non-zero (cf FnRunBlender +0x2c); PS2 SetWeight"
+    },
+    {
+     "offset": "0x20",
+     "size": 4,
+     "type": "int",
+     "name": "cycleIdx",
+     "confidence": "medium",
+     "evidence": "ctor -100 both builds"
+    },
+    {
+     "offset": "0x24",
+     "size": 4,
+     "type": "void *",
+     "name": "skeleton",
+     "confidence": "medium",
+     "evidence": "passed to fa340 in EvalSQT (PS2 262aa8), same as FnRunBlender +0x34"
+    },
+    {
+     "offset": "0x28",
+     "size": 4,
+     "type": "float",
+     "name": "cycleLen0",
+     "confidence": "low",
+     "evidence": "written by EvalSQT/EvalVel2D, PS2 SetWeight. Name invented"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "float",
+     "name": "cycleLen1",
+     "confidence": "low",
+     "evidence": "as +0x28. Name invented"
+    },
+    {
+     "offset": "0x30",
+     "size": 4,
+     "type": "float",
+     "name": "cycleTime0",
+     "confidence": "low",
+     "evidence": "as +0x28. Name invented"
+    },
+    {
+     "offset": "0x34",
+     "size": 4,
+     "type": "float",
+     "name": "cycleTime1",
+     "confidence": "low",
+     "evidence": "as +0x28. Name invented"
+    },
+    {
+     "offset": "0x38",
+     "size": 4,
+     "type": "float",
+     "name": "frequency",
+     "confidence": "medium",
+     "evidence": "ctor 1.0 both builds (cf FnRunBlender +0x48)"
+    },
+    {
+     "offset": "0x3c",
+     "size": 4,
+     "type": "float",
+     "name": "phase",
+     "confidence": "low",
+     "evidence": "ctor 0 (cf FnRunBlender +0x4c). Name invented"
+    },
+    {
+     "offset": "0x40",
+     "size": 4,
+     "type": "float",
+     "name": "offset",
+     "confidence": "low",
+     "evidence": "ctor 0 (cf FnRunBlender +0x50). Name invented"
+    },
+    {
+     "offset": "0x44",
+     "size": 4,
+     "type": "int",
+     "name": "alignedCycleIdx",
+     "confidence": "medium",
+     "evidence": "ctor -100; AlignCycleBeginEnd. Name invented"
+    },
+    {
+     "offset": "0x48",
+     "size": 16,
+     "type": "COORD4",
+     "name": "alignQ",
+     "confidence": "medium",
+     "evidence": "AlignCycleBeginEnd takes &+0x48 and writes floats up to +0x54; PS2 8-byte accesses, AlignVel. Name invented"
+    },
+    {
+     "offset": "0x58",
+     "size": 1,
+     "type": "bool",
+     "name": "aligned",
+     "confidence": "medium",
+     "evidence": "Xbox byte / PS2 word +0x58; ctor 0; AlignCycleBeginEnd. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "EAGLAnim::FnDeltaF3",
+   "size": 48,
+   "base": "EAGLAnim::FnAnimMemoryMap",
+   "vtable": "0x1a12e8",
+   "comment": "Delta-compressed float channel. Offsets equal to PS2 (all dword fields). InitBuffersAsRequired allocates the buffers lazily; dtor frees +0x14/+0x20/+0x2c when +0x18 set, then ~FnAnimMemoryMap (faaa0).",
+   "fields": [
+    {
+     "offset": "0x10",
+     "size": 4,
+     "type": "int",
+     "name": "prevKeyIdx",
+     "confidence": "medium",
+     "evidence": "ctor ff280 sets -1; SetAnimMemoryMap resets to -1 (DeltaF3 100880); EvalSQTMask writes; PS2 +0x10. Name invented"
+    },
+    {
+     "offset": "0x14",
+     "size": 4,
+     "type": "void *",
+     "name": "bufferA",
+     "confidence": "medium",
+     "evidence": "InitBuffersAsRequired allocs count*16 into +0x14 and +0x18 (DeltaF3 ffd20); dtor frees +0x14. Name invented"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "void *",
+     "name": "curA",
+     "confidence": "medium",
+     "evidence": "same allocation as +0x14; EvalSQT reads; dtor gate. Name invented"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "int",
+     "name": "nextKeyIdx",
+     "confidence": "medium",
+     "evidence": "ctor -1; SetAnimMemoryMap resets to -1. Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 4,
+     "type": "void *",
+     "name": "bufferB",
+     "confidence": "medium",
+     "evidence": "InitBuffersAsRequired count*16 into +0x20/+0x24; dtor frees. Name invented"
+    },
+    {
+     "offset": "0x24",
+     "size": 4,
+     "type": "void *",
+     "name": "curB",
+     "confidence": "medium",
+     "evidence": "same allocation as +0x20. Name invented"
+    },
+    {
+     "offset": "0x28",
+     "size": 4,
+     "type": "int",
+     "name": "unk28",
+     "confidence": "low",
+     "evidence": "read by EvalSQTMask only (PS2 EvalSQT/EvalSQTMask). Name invented"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "float *",
+     "name": "dequantParams",
+     "confidence": "medium",
+     "evidence": "InitBuffersAsRequired allocs count*48 and fills 12 floats per entry from map data; dtor frees. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "EAGLAnim::FnDeltaF1",
+   "size": 48,
+   "base": "EAGLAnim::FnAnimMemoryMap",
+   "vtable": "0x1a1270",
+   "comment": "Delta-compressed float channel. Offsets equal to PS2 (all dword fields). InitBuffersAsRequired allocates the buffers lazily; dtor frees +0x14/+0x20/+0x2c when +0x18 set, then ~FnAnimMemoryMap (faaa0).",
+   "fields": [
+    {
+     "offset": "0x10",
+     "size": 4,
+     "type": "int",
+     "name": "prevKeyIdx",
+     "confidence": "medium",
+     "evidence": "ctor fe280 sets -1; SetAnimMemoryMap resets to -1 (DeltaF3 100880); EvalSQTMask writes; PS2 +0x10. Name invented"
+    },
+    {
+     "offset": "0x14",
+     "size": 4,
+     "type": "void *",
+     "name": "bufferA",
+     "confidence": "medium",
+     "evidence": "InitBuffersAsRequired allocs count*16 into +0x14 and +0x18 (DeltaF3 ffd20); dtor frees +0x14. Name invented"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "void *",
+     "name": "curA",
+     "confidence": "medium",
+     "evidence": "same allocation as +0x14; EvalSQT reads; dtor gate. Name invented"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "int",
+     "name": "nextKeyIdx",
+     "confidence": "medium",
+     "evidence": "ctor -1; SetAnimMemoryMap resets to -1. Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 4,
+     "type": "void *",
+     "name": "bufferB",
+     "confidence": "medium",
+     "evidence": "InitBuffersAsRequired count*16 into +0x20/+0x24; dtor frees. Name invented"
+    },
+    {
+     "offset": "0x24",
+     "size": 4,
+     "type": "void *",
+     "name": "curB",
+     "confidence": "medium",
+     "evidence": "same allocation as +0x20. Name invented"
+    },
+    {
+     "offset": "0x28",
+     "size": 4,
+     "type": "int",
+     "name": "unk28",
+     "confidence": "low",
+     "evidence": "read by EvalSQTMask only (PS2 EvalSQT/EvalSQTMask). Name invented"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "float *",
+     "name": "dequantParams",
+     "confidence": "medium",
+     "evidence": "InitBuffersAsRequired allocs count*48 and fills 12 floats per entry from map data; dtor frees. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "EAGLAnim::FnDeltaQ",
+   "size": 48,
+   "base": "EAGLAnim::FnAnimMemoryMap",
+   "vtable": "0x1a1450",
+   "comment": "Delta-compressed quaternion channel. Offsets equal to PS2 (ctor 268bc8 matches 1033b0 field for field). Xbox InitBuffersAsRequired appears inlined (no Xbox function).",
+   "fields": [
+    {
+     "offset": "0x10",
+     "size": 4,
+     "type": "void *",
+     "name": "minRange",
+     "confidence": "medium",
+     "evidence": "ctor 0; PS2 passes it as this to EAGLAnim::DeltaQMinRange::UnQuantize (intended EAGLAnim::DeltaQMinRange *). Name invented"
+    },
+    {
+     "offset": "0x14",
+     "size": 4,
+     "type": "void *",
+     "name": "unk14",
+     "confidence": "low",
+     "evidence": "ctor 0; PS2 EvalSQTMasked/InitBuffersAsRequired. Name invented"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "int",
+     "name": "prevKeyIdx",
+     "confidence": "medium",
+     "evidence": "ctor -1 both builds. Name invented"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "int",
+     "name": "nextKeyIdx",
+     "confidence": "medium",
+     "evidence": "ctor -1 both builds. Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 4,
+     "type": "void *",
+     "name": "buffer",
+     "confidence": "medium",
+     "evidence": "ctor 0; dtor 1033f0 FastFrees it; PS2 InitBuffersAsRequired writes. Name invented"
+    },
+    {
+     "offset": "0x24",
+     "size": 4,
+     "type": "void *",
+     "name": "unk24",
+     "confidence": "low",
+     "evidence": "ctor 0; PS2 EvalSQTMasked/InitBuffersAsRequired. Name invented"
+    },
+    {
+     "offset": "0x28",
+     "size": 4,
+     "type": "void *",
+     "name": "unk28",
+     "confidence": "low",
+     "evidence": "as +0x24. Name invented"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "void *",
+     "name": "unk2c",
+     "confidence": "low",
+     "evidence": "as +0x24. Name invented"
+    }
+   ]
+  }
+ ],
+ "vtable_slots": [],
+ "returns": {
+  "0xf70f0": "ushort",
+  "0xfac70": "bool",
+  "0xfafd0": "void",
+  "0xfb050": "void",
+  "0xf70b0": "EAGLAnim::FnCompoundChannel *",
+  "0xfaa80": "EAGLAnim::FnAnimMemoryMap *",
+  "0x105000": "EAGLAnim::FnRunBlender *",
+  "0x1042d0": "EAGLAnim::FnTurnBlender *",
+  "0x1033b0": "EAGLAnim::FnDeltaQ *",
+  "0xff280": "EAGLAnim::FnDeltaF3 *",
+  "0xfe280": "EAGLAnim::FnDeltaF1 *",
+  "0xfab60": "void",
+  "0x105050": "void",
+  "0x104310": "void",
+  "0x1033f0": "void",
+  "0x100910": "void",
+  "0x100880": "void",
+  "0xffd20": "void",
+  "0x1051c0": "void"
+ },
+ "skip_prototypes": [],
+ "notes": [
+  "Shared bases from the PS2 sheet: EAGLAnim::FnAnim (vtable 0x1a0c6c, 0xc bytes) and EAGLAnim::FnAnimMemoryMap (ctor faa80, dtor faaa0, vtable 0x1a1130, 0x10 bytes). FnRunBlender/FnTurnBlender derive FnAnim directly with its ctor inlined; FnCompoundChannel and FnDeltaF1/F3/Q derive FnAnimMemoryMap. GCC puts FnAnim's vptr at +8 after its two fields, so all derived offsets agree on both builds.",
+  "FnAnim +8 is written as a dword but read as a word to index the free list at 0x2414b0 when sub-anims are deleted (vtable slot 0 call, then push onto list), so the type id doubles as a pool index.",
+  "0x106780(n) returns &table[n] (12-byte entries at 0x241ba0); FnRunBlender dtor releases entry 0 and FnTurnBlender entry 1 via 0x106750 when their count field is non-zero: a shared per-blender-type buffer.",
+  "FnTurnBlender +0x10/+0x14 are passed as this to FnRunBlender::ComputeBeginRootQ/ComputeEndRootQ on both builds; either the turn blender holds two run blenders, or those functions are generic root-Q helpers misfiled under FnRunBlender. Typed as FnRunBlender * (medium).",
+  "Suspected misname: Xbox 0x105e00 'FnRunBlender::GetFrequency' is 0xf0 bytes and writes +0x48 (frequency), while PS2 GetFrequency 279808 is an 8-byte accessor. Likely SetSpeed(float) (sheet row, no Xbox match yet). Not verified; no return type given.",
+  "FnDeltaF1 InitBuffersAsRequired (feae0) sizes not checked; F1 fields assumed to mirror F3 (same offsets, same ctor pattern, same dtor gate).",
+  "FnCompoundChannel is 0x18 on Xbox and 0x1c on PS2 (bool packing at +0x14/+0x15)."
+ ]
+}

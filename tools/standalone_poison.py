@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+"""The standalone build's source: src/ mirrored into the build tree with every remaining Driving.xbe address in
+src/driving poisoned, so that compiling the driving_standalone target lists what still needs the XBE
+(docs/driving/standalone.md).
+
+    python tools/standalone_poison.py OUTDIR            write the mirror (the driving_standalone target runs this)
+    python tools/standalone_poison.py --count BUILDLOG  the compile errors, by kind and by file
+
+Each literal tools/standalone_audit.py counts as work (everything but tags and constants) becomes an identifier
+nothing declares, so each use is a compile error that names it:
+
+    XBE_ADDRESS_<Name>          the address in `#define Name ...` (a global, a table, a function called by address):
+                                one error at every use of Name
+    XBE_<KIND>_<address>        any other literal, KIND its class (DATA_RAW, VTABLE, PATCH_SITE...)
+    XBE_UNPORTED_<address>      a slot of a generated vtable that still holds an original (Vtables.cpp)
+
+The kinds are written to OUTDIR/poison_map.json for --count. src/driving/devtools is left out of the mirror (the
+target builds none of it; its headers are copied, for the hooks game code still calls), and every other file is
+copied as it is.
+"""
+import json
+import os
+import re
+import shutil
+import sys
+from collections import Counter, defaultdict
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
+sys.path.insert(0, HERE)
+
+
+def write_mirror(out):
+    import standalone_audit as sa
+    hits = [h for h in sa.audit() if h[0] in sa.WORKLIST]
+    by_file = defaultdict(list)
+    for cls, path, line, address, detail, text in hits:
+        by_file[path].append((line, address, cls))
+    kinds = {}
+    src = os.path.join(ROOT, "src")
+    for folder, dirs, files in os.walk(src):
+        rel_folder = os.path.relpath(folder, ROOT).replace("\\", "/")
+        dirs[:] = [d for d in dirs if not (rel_folder == "src" and d == "action")]
+        os.makedirs(os.path.join(out, rel_folder), exist_ok=True)
+        for f in files:
+            rel = rel_folder + "/" + f
+            if rel_folder.startswith("src/driving/devtools") and not f.endswith(".h"):
+                continue   # the hooks game code calls are declared, not built
+            target = os.path.join(out, rel)
+            if rel not in by_file and f != "Vtables.cpp":
+                if not os.path.exists(target) or os.path.getmtime(target) < os.path.getmtime(os.path.join(ROOT, rel)):
+                    shutil.copy2(os.path.join(ROOT, rel), target)
+                continue
+            lines = open(os.path.join(ROOT, rel), encoding="utf-8", errors="replace").read().split("\n")
+            for line, address, cls in by_file.get(rel, []):
+                text = lines[line - 1]
+                d = re.match(r"\s*#\s*define\s+(\w+)", text)
+                ident = "XBE_ADDRESS_" + d.group(1) if d else "XBE_%s_%08x" % (cls.replace(".", "_").upper(), address)
+                kinds[ident] = cls
+                lines[line - 1] = re.sub(r"(?<![\w.])0x0*%x(?:u|U|ul|UL)?\b" % address, ident, text, flags=re.I)
+            if f == "Vtables.cpp":
+                for i, text in enumerate(lines):
+                    m = re.search(r"\(void \*\)0x([0-9a-f]{8}),.*not ours", text)
+                    if m:
+                        ident = "XBE_UNPORTED_" + m.group(1)
+                        kinds[ident] = "vtable.unported"
+                        lines[i] = text.replace("0x" + m.group(1), ident)
+            new = "\n".join(lines)
+            if not os.path.exists(target) or open(target, encoding="utf-8", errors="replace").read() != new:
+                with open(target, "w", encoding="utf-8", newline="") as o:
+                    o.write(new)
+    json.dump(kinds, open(os.path.join(out, "poison_map.json"), "w"), indent=0, sort_keys=True)
+    print("standalone_poison.py: %d literals in %d files poisoned into %s" % (len(hits), len(by_file), out))
+
+
+def count(log_path):
+    log = open(log_path, encoding="utf-8", errors="replace").read()
+    out = os.path.dirname(os.path.abspath(log_path))
+    kinds = {}
+    for candidate in (os.path.join(out, "standalone.dir", "poison_map.json"),
+                      os.path.join(ROOT, "standalone.dir", "poison_map.json")):
+        if os.path.exists(candidate):
+            kinds = json.load(open(candidate))
+            break
+    errors = re.findall(r"([\w\\/.:-]+)\((\d+),\d+\): error (C\d+): '(XBE_\w+)'", log)
+    seen = set()
+    by_kind, by_file, by_ident = Counter(), defaultdict(Counter), Counter()
+    for path, line, code, ident in errors:
+        key = (path, line, ident)
+        if key in seen:
+            continue
+        seen.add(key)
+        kind = kinds.get(ident, "?")
+        rel = path.replace("\\", "/").split("/src/driving/")[-1]
+        by_kind[kind] += 1
+        by_file[rel][kind] += 1
+        by_ident[ident] += 1
+    capped = sorted(set(m for m in re.findall(r"([\w\\/.:-]+)\(\d+(?:,\d+)?\): (?:fatal )?error C1003", log)))
+    other = len(re.findall(r": error C\d+:", log)) - len(errors)
+    print("%d uses of XBE addresses (%d distinct names); %d other errors" % (len(seen), len(by_ident), other))
+    print("\nby kind:")
+    for kind, n in by_kind.most_common():
+        print("  %-18s %5d" % (kind, n))
+    print("\nby file:")
+    for rel, c in sorted(by_file.items(), key=lambda kv: -sum(kv[1].values())):
+        print("  %5d  %-50s %s" % (sum(c.values()), rel, ", ".join("%s %d" % kv for kv in c.most_common())))
+    if capped:
+        import standalone_audit as sa
+        static = Counter(h[1].split("src/driving/")[-1] for h in sa.audit() if h[0] in sa.WORKLIST)
+        print("\nstopped at 100 errors (a floor; beside each, the literals in the file itself, standalone_audit.py's):")
+        for path in capped:
+            rel = path.replace("\\", "/").split("/src/driving/")[-1]
+            print("  %-50s %d literals" % (rel, static.get(rel, 0)))
+
+
+if __name__ == "__main__":
+    if len(sys.argv) == 3 and sys.argv[1] == "--count":
+        count(sys.argv[2])
+    elif len(sys.argv) == 2:
+        write_mirror(os.path.abspath(sys.argv[1]))
+    else:
+        sys.exit(__doc__)

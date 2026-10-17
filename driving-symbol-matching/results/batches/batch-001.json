@@ -1,0 +1,107 @@
+{
+ "batch": "001",
+ "note": "Worked examples reviewed 25 Sept 2026: AICharacterBond virtuals and OptionParser's constructor.",
+ "items": [
+  {
+   "xbox": "0x0001cc00",
+   "expect": "FUN_0001cc00",
+   "name": "AICharacterBond::scalar_deleting_destructor",
+   "also": [],
+   "create": false,
+   "evidence": [
+    "AICharacterBond slot 0 (PS2 0011a288, row 455, ghidra)",
+    "vtable slot 0 on MSVC is the scalar deleting destructor"
+   ]
+  },
+  {
+   "xbox": "0x0001cbf0",
+   "expect": "FUN_0001cbf0",
+   "name": "AICharacterBond::~AICharacterBond",
+   "also": [],
+   "create": false,
+   "evidence": [
+    "called by AICharacterBond::scalar_deleting_destructor (0x0001cc00) and stores AICharacterBond's vtable"
+   ]
+  },
+  {
+   "xbox": "0x0001d090",
+   "expect": "(none)",
+   "name": "AICharacterBond::DoNeutral",
+   "also": [],
+   "create": true,
+   "evidence": [
+    "AICharacterBond slot 8 (PS2 0011a318, row 457, infill-exact-run)"
+   ]
+  },
+  {
+   "xbox": "0x0001d0c0",
+   "expect": "FUN_0001d0c0",
+   "name": "AICharacterBond::DoInitial",
+   "also": [
+    "AICharacterBond::DoIdling",
+    "AICharacterPassenger::DoInitial",
+    "AICharacterPassenger::DoIdling"
+   ],
+   "create": false,
+   "evidence": [
+    "AICharacterBond slot 7 (PS2 0011a2e0, row 456, infill-exact-run)",
+    "AICharacterBond slot 9 (PS2 0011a360, row 458, infill-exact-run)",
+    "AICharacterPassenger slot 7 (PS2 00125790, row 648, infill-exact-run)",
+    "AICharacterPassenger slot 9 (PS2 00125810, row 650, infill-exact-run)"
+   ]
+  },
+  {
+   "xbox": "0x0001d0e0",
+   "expect": "FUN_0001d0e0",
+   "name": "AICharacterBond::DoArming",
+   "also": [],
+   "create": false,
+   "evidence": [
+    "AICharacterBond slot 15 (PS2 0011a398, row 459, infill-exact-run)"
+   ]
+  },
+  {
+   "xbox": "0x0001d1c0",
+   "expect": "FUN_0001d1c0",
+   "name": "AICharacterBond::DoFiring",
+   "also": [],
+   "create": false,
+   "evidence": [
+    "AICharacterBond slot 18 (PS2 0011a4a0, row 460, infill-exact-run)"
+   ]
+  },
+  {
+   "xbox": "0x0001d2a0",
+   "expect": "FUN_0001d2a0",
+   "name": "AICharacterBond::HandleInterrupts",
+   "also": [],
+   "create": false,
+   "evidence": [
+    "AICharacterBond slot 30 (PS2 0011a5b8, row 461, infill-exact-run)"
+   ]
+  },
+  {
+   "xbox": "0x00023950",
+   "expect": "FUN_00023950",
+   "name": "AICharacterBond::UpdateRotPos",
+   "also": [],
+   "create": false,
+   "evidence": [
+    "AICharacterBond slot 32 (PS2 0011a858, row 462: sheet order after HandleInterrupts; retail size differs)",
+    "body: GetRotPos into a local matrix, then MATRIX4 multiply into this+0x10, as PS2 0x11a858",
+    "also at slot 32 of the Xbox vtable 0x0018aee8 (AICharacterPassenger?), not yet named"
+   ]
+  },
+  {
+   "xbox": "0x0005b870",
+   "expect": "FUN_0005b870",
+   "name": "OptionParser::OptionParser",
+   "also": [],
+   "create": false,
+   "evidence": [
+    "body: same as PS2 0x1790f8 step for step (key at a line start, skip ' =#([', length to newline, trim ']' ')')",
+    "PS2 0x1790f8 = row 2364 by exact retail sizes after deleteSysFiles"
+   ]
+  }
+ ]
+}

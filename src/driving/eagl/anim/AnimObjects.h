@@ -1,0 +1,67 @@
+#ifndef DRIVING_EAGL_ANIM_ANIMOBJECTS_H_
+#define DRIVING_EAGL_ANIM_ANIMOBJECTS_H_
+
+// EAGLAnim's object layer: the pool, the factory, the objects (FnAnim.h) and AnimationBank. See AnimObjects.cpp.
+
+#include "FnAnim.h"
+#include "../../platform/Ptr32.h"
+#include "../../../common/xbeClass.h"   // LAYOUT_32
+
+struct AttributeBlock;
+
+struct CompoundData : AnimData {     // a compound channel's data (type 15)
+    Ptr32<AttributeBlock> attributes; // +0x04
+    uint16_t count;                  // +0x08 sub-anims
+    uint16_t frames;                 // +0x0a
+    Ptr32<uint8_t> subs[1];          // +0x0c [count] their data
+};
+static_assert(offsetof(CompoundData, subs) == 0xc, "a compound's sub-anims are at +0xc");
+
+struct AnimBank {                    // an AnimationBank symbol
+    uint32_t unknown00;
+    int32_t count;                   // +0x04
+    uint32_t unknown08;
+    Ptr32<Ptr32<uint8_t>> anims;     // +0x0c the anim data
+    Ptr32<Ptr32<const char>> names;  // +0x10 sorted, for FindAnim
+
+    int FindAnim(const char *name);                              // 0x000f71b0
+};
+static_assert(offsetof(AnimBank, names) == 0x10, "an AnimationBank's names are at +0x10");
+
+// A free block's first word links the next.
+struct FreeBlock {
+    FreeBlock *next;
+};
+
+// MemoryPoolManager's statics. A size-classed block has its class in the dword before it.
+struct MemoryPool {
+    FreeBlock *freeByType[kAnimTypeCount];   // +0x000 free objects per anim type
+    uint32_t unknown58;
+    uint16_t unknown5c;              // +0x5c cleared by Init
+    uint16_t unknown5e;
+    uint8_t *base;                   // +0x60
+    uint32_t size;                   // +0x64
+    uint8_t *cursor;                 // +0x68 the next new block
+    uint32_t unknown6c;
+    FreeBlock *freeBySize[256];      // +0x70 free blocks per 16-byte size class
+};
+LAYOUT_32(offsetof(MemoryPool, base) == 0x60, "the pool's base is at +0x60");
+LAYOUT_32(sizeof(MemoryPool) == 0x470, "the pool is 0x470 bytes");
+
+extern MemoryPool Pool;
+extern void *FactoryBlock;
+
+void AnimBank_Constructor(AnimBank *bank, void *loader);         // 0x000f7170, the loader's AnimationBank callback
+void AnimBank_Destructor(AnimBank *bank);                        // 0x000f71a0
+FnAnim* AnimBank_NewCompound(uint8_t *data);                     // 0x000f7240 (invented)
+void CompoundChannel_InitAnimMemoryMap(uint8_t *data);           // 0x000faf60
+
+void EAGLAnim_InitInternal(uint32_t poolSize);                   // 0x000fa9c0 (Initializer::InitInternal)
+void EAGLAnim_Nothing0();                                        // 0x000faa00
+void EAGLAnim_Nothing1();                                        // 0x000faa10
+void EAGLAnim_Nothing2();                                        // 0x000faa20
+uint32_t EAGLAnim_GetMemoryUsage();                              // 0x000faa30
+void EAGLAnim_ResetPool();                                       // 0x000faa40
+void EAGLAnim_ShutDown();                                        // 0x000faa50
+
+#endif // DRIVING_EAGL_ANIM_ANIMOBJECTS_H_

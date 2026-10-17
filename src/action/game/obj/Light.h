@@ -10,11 +10,11 @@ struct light_tag {
     _VECTOR position;                      // 0x08-0x13 - light position
     short lifetimeFrames;                  // 0x14 - frame countdown timer (0 = infinite)
     ushort switchChannel;                  // 0x16 - switch channel index
-    ushort soundState;                     // 0x18 - sound state/counter
+    ushort soundState;                     // 0x18 - non-zero: flicker (and its sound); upper bound of soundTimingCounter & 0xfff
     ushort soundTimingBase;                // 0x1a - sound timing randomization base
     ushort soundTimingCounter;             // 0x1c - sound timing counter
     ushort flickerMask;                   // 0x1e
-    short soundID;                         // 0x20 - sound ID (0xffff = no sound)
+    ushort soundID;                        // 0x20 - sound ID (0xffff = no sound)
     uchar padding22[2];                    // 0x22-0x23
     obj_tag* maybeParentObject;            // 0x24
     undefined4 psiLight;                   // 0x28

@@ -1,0 +1,607 @@
+{
+ "batch": "012",
+ "program": "Driving.xbe",
+ "note": "Undo Version Tracking's copied PS2 plates; hand-checked name fixes.",
+ "items": [
+  {
+   "xbox": "0x00108490",
+   "expect": "IOModule::Update",
+   "name": "PAD_update",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "found reviewing InputConfigManager::Get / IOModule::GetIOModule: Currently IOModule::Update: it is the task PAD_init adds and IOModule::Initialize removes with SYNCTASK_del, the position of PAD_update in PS2 Initialize (PS2 IOModule::Update 0x168060 is a different function). Only comments in src/driving/platform/XboxInput.cpp mention IOModule::Update. (was IOModule::Update)",
+    "PS2 0x0025a4a8"
+   ]
+  },
+  {
+   "xbox": "0x000d44b0",
+   "expect": "GGallery::MGMT_Load",
+   "name": "GFXGallery::GFXGallery",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same body as PS2 GFXGallery::GFXGallery (0x1408..0x142c zeroed, 0x200 at 0x1420, 'GFXParticleSystems'/'GFXCanvas' allocs) and same call position in GFX::Init right after __builtin_new(0x1430) with GetGalleryName(); MGMT_Load is an invented name. (was GGallery::MGMT_Load)",
+    "PS2 0x00233618"
+   ]
+  },
+  {
+   "xbox": "0x00141280",
+   "expect": "SNDI_randomseed",
+   "name": "SNDI_randomseeed",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same function (6 seeds = table + param, called from SNDSYSI_init); the PS2 canonical symbol is spelled SNDI_randomseeed. (was SNDI_randomseed)",
+    "PS2 0x0030c990"
+   ]
+  },
+  {
+   "xbox": "0x000f3a40",
+   "expect": "ConstructorPool::AddType",
+   "name": "EAGL::ConstructorPool::AddType",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Identical: AddSymbol(this,name,ctor); AddSymbol(this+0x14,name,dtor); only adds the missing EAGL namespace (siblings already EAGL::ConstructorPool::*). (was ConstructorPool::AddType)",
+    "PS2 0x0029e158"
+   ]
+  },
+  {
+   "xbox": "0x00144300",
+   "expect": "SFILTER_timestretchratio",
+   "name": "SFILTER_timestretchsetratio",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same function: ratio*1/4096 stored at +0x24 clamped to [0.5,2.0]; called from MIX_settimemult on both sides; current is a misremembered name. (was SFILTER_timestretchratio)",
+    "PS2 0x00317098"
+   ]
+  },
+  {
+   "xbox": "0x00071930",
+   "expect": "RayShell:GetNumActiveRayShells",
+   "name": "RayShell::GetNumActiveRayShells",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same getter, same caller WTriggerManager::Update; current name has a single-colon typo. (was RayShell:GetNumActiveRayShells)",
+    "PS2 0x00199230"
+   ]
+  },
+  {
+   "xbox": "0x00145ab0",
+   "expect": "SFILTER_unpack_unknown2",
+   "name": "SFILTER_unpackxapf",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same body as PS2 SFILTER_unpackxapf (freeframes, CEAXABLKDecf::Decode loop, SNDPKTPLAYI_get, SetState/Feed); its init installs it with the xapfrestore twin and news a CEAXABLKDecf(0xa8) like SFILTER_unpackxapfinit. xalf/xaf already named on Xbox. (was SFILTER_unpack_unknown2)",
+    "PS2 0x00315fe8"
+   ]
+  },
+  {
+   "xbox": "0x00145bf0",
+   "expect": "SFILTER_unpack_unknown2b",
+   "name": "SFILTER_unpackxapfrestore",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "found reviewing SFILTER_unpack_unknown2 / SFILTER_unpackxapf: Currently SFILTER_unpack_unknown2b: deletes the CEAXABLKDecf at +0x1c, identical to PS2 xapfrestore; installed as func2 next to unpackxapf. (was SFILTER_unpack_unknown2b)",
+    "PS2 0x00316158"
+   ]
+  },
+  {
+   "xbox": "0x00145c10",
+   "expect": "SFILTER_unpack_unknown2_init",
+   "name": "SFILTER_unpackxapfinit",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "found reviewing SFILTER_unpack_unknown2 / SFILTER_unpackxapf: Currently SFILTER_unpack_unknown2_init: installs unpackxapf/restore, getmastervoice/voicetopackethandle/getsamplechan, new CEAXABLKDecf(0xa8) - identical to PS2 xapfinit. (was SFILTER_unpack_unknown2_init)",
+    "PS2 0x00316178"
+   ]
+  },
+  {
+   "xbox": "0x000d69a0",
+   "expect": "GGallery::Sprite_Draw2D",
+   "name": "GGallery::SPRITE_Draw2D",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same function family and callers (GHud::DrawCrossHairs/DrawPauseMenu/DrawZoomingCrossHairs); canonical symbol is GGallery::SPRITE_Draw2D (PS2 has 5 overloads of that name) - capitalisation fix only. (was GGallery::Sprite_Draw2D)",
+    "PS2 0x00238d40"
+   ]
+  },
+  {
+   "xbox": "0x00144340",
+   "expect": "SFILTER_unpack_unknown4",
+   "name": "SFILTER_timestretch",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Identical to PS2 SFILTER_timestretch: 200-frame pull when +0x30==0, stretchframesneeded (FUN_001440b0), framesoutstanding check, stretch, memclr tail. (was SFILTER_unpack_unknown4)",
+    "PS2 0x00317130"
+   ]
+  },
+  {
+   "xbox": "0x001443f0",
+   "expect": "SFILTER_unpack_unknown4_init",
+   "name": "SFILTER_timestretchinit",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "found reviewing SFILTER_unpack_unknown4 / SFILTER_timestretch: Currently SFILTER_unpack_unknown4_init: installs the timestretch func, same field writes (+6 ptr, 1.0f, byte<<1, SNDI_getb(..,4)) as PS2 timestretchinit. (was SFILTER_unpack_unknown4_init)",
+    "PS2 0x00317240"
+   ]
+  },
+  {
+   "xbox": "0x00124490",
+   "expect": "voice_create",
+   "name": "AVoice::View::Push",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Allocates a list node holding the View* (ECX) and links it at the tail of the global voice list; sole call is in AVoice::View::Play at the exact position PS2 Play calls Push(this) (after setting +0x17 from +0x16). voice_create is invented. (was voice_create)",
+    "PS2 0x002dd8a0"
+   ]
+  },
+  {
+   "xbox": "0x00051580",
+   "expect": "InputConfigManager::Get",
+   "name": "IOModule::GetIOModule",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Callers (~EStartMission, ~EControlToPlayer, ~ESetVideo, GameLoop_StartUp, SetAutoDrive, Bond_*) match PS2 IOModule::GetIOModule; the static-init+atexit singleton shape matches it too. The real InputConfigManager::Get is Xbox 0x50270 (callers PauseOn/PauseOff/DrawPauseMenu/SendGameMessages as PS2 0x1664c0), so this was a duplicate wrong name. (was InputConfigManager::Get)",
+    "PS2 0x00167d80"
+   ]
+  },
+  {
+   "xbox": "0x001086c0",
+   "expect": "IOModule::GetIOModule",
+   "name": "PAD_init",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "found reviewing InputConfigManager::Get / IOModule::GetIOModule: Currently also named IOModule::GetIOModule: once-only XGetDevices/XInputOpen per port then SYNCTASK_add(update) - the Xbox PAD_init; called first in IOModule::Initialize exactly where PS2 Initialize calls PAD_init. (was IOModule::GetIOModule)",
+    "PS2 0x00259980"
+   ]
+  },
+  {
+   "xbox": "0x0007f470",
+   "expect": "LightManager::SetLightingModel",
+   "name": "RLightManager::SetLightingModel",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same function (model at +0x70/+0x74 vs PS2 +0x74/+0x78, MEM_copy 0x70, SetCurrentAmbientAndDiffuse, AddSpecularLight; same 4 callers); canonical class is RLightManager. (was LightManager::SetLightingModel)",
+    "PS2 0x001aec20"
+   ]
+  },
+  {
+   "xbox": "0x001237d0",
+   "expect": "AStream::Event",
+   "name": "AStream::Get",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Body is URefCounter<AStream>::Get() + GetReference(name) = PS2 AStream::Get; its 8+ callers (ClearMission, DrawMissionResult, AFader::Priv::Event, RunTheGame...) match PS2 AStream::Get's. The real AStream::Event is Xbox 0x1234d0 (printf 'event %s, %.1f, %s' / loop|one-shot), which keeps its name. (was AStream::Event)",
+    "PS2 0x002e9688"
+   ]
+  },
+  {
+   "xbox": "0x00012fd0",
+   "expect": "RRenderWorldCamera::DrawActors",
+   "name": "ActActorDatabase::DrawAll",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Iterates the actor list calling ActActor::Draw for non-hidden actors = PS2 ActActorDatabase::DrawAll; DoRender calls it with ECX=fActorDatabase and (cam,0,0)/(cam,1,1), i.e. PS2 DrawActors/DrawActorsPOV wrappers inlined. No Xbox function holds DrawAll. (was RRenderWorldCamera::DrawActors)",
+    "PS2 0x0010b6e0"
+   ]
+  },
+  {
+   "xbox": "0x00078190",
+   "expect": "RAnimEngine::Init",
+   "name": "RAnimEngine::Update",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Body is ticks = ftol(param*rate*60), loop System::Update over systems when changed = PS2 RAnimEngine::Update; same caller ~EAnimUpdate. PS2 Init only zeroes two globals. No Xbox function holds RAnimEngine::Update. (was RAnimEngine::Init)",
+    "PS2 0x001a1a10"
+   ]
+  },
+  {
+   "xbox": "0x000e5cc0",
+   "expect": "DynamicLoader::RegisterVar",
+   "name": "EAGL::DynamicLoader::RegisterVar",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same one-line AddSymbol(varPool,name,ptr), same callers (SymbolInit, ActSkeleton ctor, ActManagerInit); adds missing EAGL namespace (UnRegisterVar is already EAGL::DynamicLoader::). (was DynamicLoader::RegisterVar)",
+    "PS2 0x0029fce8"
+   ]
+  },
+  {
+   "xbox": "0x000c8370",
+   "expect": "someSortOperation",
+   "name": "WRender::DrawPass",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Mode 2/1 picks comparator, sorts instances then QuickDrawInstance loop = PS2 WRender::DrawPass; DrawFinalStaticWorldGeometry calls it with (..,0,0,2) and DoRender's inlined translucent pass with (..,1,1,2), matching PS2 DrawPass call sites. (was someSortOperation)",
+    "PS2 0x0021f670"
+   ]
+  },
+  {
+   "xbox": "0x00071970",
+   "expect": "WTriggerManager::SetTriggerHittingRayShell",
+   "name": "RayShell::SetTriggerHittingRayShell",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: One-store setter sitting in the RayShell block between ClearActiveRayShells and RayShell::GetTriggerHittingRayShell, same order as PS2 0x199258/0x199268/0x199278; canonical class is RayShell. (was WTriggerManager::SetTriggerHittingRayShell)",
+    "PS2 0x00199268"
+   ]
+  },
+  {
+   "xbox": "0x000b4250",
+   "expect": "Simulation::DeleteSomeObject",
+   "name": "Simulation::DeletePhysicsObject",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same body as PS2 DeletePhysicsObject: multimap lookup by type, deleted-set insert, then switch(type 1..0xb) removing from the per-type vectors (two vectors for case 1, as on PS2); Xbox callers are PS2's DeleteXObject wrappers inlined. Invented name replaced. (was Simulation::DeleteSomeObject)",
+    "PS2 0x200f18"
+   ]
+  },
+  {
+   "xbox": "0x00140200",
+   "expect": "maybeGetFreeSndKey",
+   "name": "SNDBANKI_findfreekey",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same loop: bump a static key skipping 0, rescan the voices for an active voice holding it; called from SNDBANKI_playpatch on both sides. Invented name replaced. (was maybeGetFreeSndKey)",
+    "PS2 0x30b980"
+   ]
+  },
+  {
+   "xbox": "0x000d3aa0",
+   "expect": "GGallery::CULL_Start",
+   "name": "GFXGallery::CULL_Start",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Identical two-store body (+0x1424, +0x142c = 0), same caller PerformCulling; the Xbox already files the neighbouring CULL_/CANVAS_ functions under GFXGallery, so only the namespace was wrong. (was GGallery::CULL_Start)",
+    "PS2 0x234198"
+   ]
+  },
+  {
+   "xbox": "0x0013d090",
+   "expect": "SNDSYS_getops",
+   "name": "SNDSYS_getopts",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same body (one-time SNDPLATFORM_outputcaps, NUM_BANKS=0x10, 0x5a, copy opts), same callers SNDSYSI_init/ASystem::SetOpts; the current name is a typo of the canonical one. (was SNDSYS_getops)",
+    "PS2 0x307108"
+   ]
+  },
+  {
+   "xbox": "0x0010a830",
+   "expect": "THREAD_setprio",
+   "name": "THREAD_setpriority",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Neither the current nor the VT name: body is PS2 THREAD_setpriority 0x261638 (handle 0 = current global, -1 = self, else *(h+4), then set priority). Xbox order THREAD_iscurrent/this/THREAD_testexit matches PS2 iscurrent/getpriority/setpriority/testexit. VT's THREAD_createparam creates the thread. (was THREAD_setprio)",
+    "PS2 0x261638"
+   ]
+  },
+  {
+   "xbox": "0x00108750",
+   "expect": "maybe_MOUSE_setstate",
+   "name": "MOUSE_setbounds",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same body: stores params 1,2,4,5 to four globals, param 3 unused; same caller FeatureManager::Init. Invented name replaced. (was maybe_MOUSE_setstate)",
+    "PS2 0x2598e0"
+   ]
+  },
+  {
+   "xbox": "0x000e3fd0",
+   "expect": "GSystem::CURATOR_Init",
+   "name": "CURATOR_Init",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same function with FILE_Init (sprintf workingDir) and RANDOM_Startup inlined, then GFX::Init/GetLanguage/LOCALE_LoadLanguage; same caller Bond_StartUpSystem. The PS2 canonical name is in the global namespace, like Xbox CURATOR_Shutdown. (was GSystem::CURATOR_Init)",
+    "PS2 0x24afe0"
+   ]
+  },
+  {
+   "xbox": "0x0008a4f0",
+   "expect": "doProceduralAnimation",
+   "name": "GetInstanceMatrix",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Identical dispatch through a table indexed by byte +0xd with p4 + ushort(+0xe)*0x20; same 4 named callers (DrawInstance, QuickDrawInstance, GetInstancePosition, TransformMatrixByInstancePosition). Invented name replaced. (was doProceduralAnimation)",
+    "PS2 0x1beee0"
+   ]
+  },
+  {
+   "xbox": "0x000d5800",
+   "expect": "GGallery::GET_HUDGallery",
+   "name": "GGallery::GET_Gallery",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: return *this, same caller GHud::GHud, and it sits just before GET_Puppet on both sides (PS2 GET_Gallery 0x236b58 precedes GET_Puppet). Invented name replaced. (was GGallery::GET_HUDGallery)",
+    "PS2 0x236b58"
+   ]
+  },
+  {
+   "xbox": "0x00071880",
+   "expect": "PVehicle::GetCarNames",
+   "name": "PVehicle::GetNameCount",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Checks init flag 0x1e7ac0 and returns 0x1e7ac8 (flag+8) = PS2 GetNameCount (checks 0x332098, returns 0x3320a0); PS2 GetCarNames returns flag+4 instead. Order GetNameCount then NameToIndex matches on both sides. (was PVehicle::GetCarNames)",
+    "PS2 0x1965b8"
+   ]
+  },
+  {
+   "xbox": "0x000b6640",
+   "expect": "SMissionManager::BoostPlayerHealth",
+   "name": "SMissionManager::BoostPlayerShield",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Xbox has BoostPlayerHealth twice: 0xb65f0 (fields 0x49c/0x4a0, called by ~EPowerUpHealth) and 0xb6640 (0x4a4/0x4a8, called by ~EPowerUpShield, which plays SFX_pickuparmor); PS2 order is Health then Shield. (was SMissionManager::BoostPlayerHealth)",
+    "PS2 0x206850"
+   ]
+  },
+  {
+   "xbox": "0x000d47a0",
+   "expect": "GGallery::CANVAS_Add",
+   "name": "GFXGallery::CANVAS_Add",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: All 4 named callees shared, plus 'EXCEEDED MAX GFX!' and STICKY_GetNewIndex; GFXGallery is the class of the neighbouring Xbox CANVAS_* functions, so this is a namespace fix. (was GGallery::CANVAS_Add)",
+    "PS2 0x234d80"
+   ]
+  },
+  {
+   "xbox": "0x000516d0",
+   "expect": "IOModule::Tick",
+   "name": "IOModule::Update",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same body: if enabled, PAD_update, TIMER_gettick -> field, CheckUnplugged, UpdateAllDevices unless flag. Invented 'Tick' replaced; the name is currently held wrongly by 0x108490 (see intermediate - rename that first). (was IOModule::Tick)",
+    "PS2 0x168060"
+   ]
+  },
+  {
+   "xbox": "0x00116f70",
+   "expect": "AttemptBigFileSize",
+   "name": "UFileLoader::AttemptBigFileSize",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same body ('|' + name, FILE_unpacksizez else FILE_sizez), same caller UFileLoader::FileSize; adds the class like its Xbox siblings AttemptBigFileExists/Load. (was AttemptBigFileSize)",
+    "PS2 0x2d7288"
+   ]
+  },
+  {
+   "xbox": "0x00035ef0",
+   "expect": "AIVehicleController::GetTrafficVehiclePtr",
+   "name": "AIVehicleController::GetHelicopter",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Returns pointer-global + i*0x140. That global 0x1de908 is used by UpdateHelicopters/ApproveAdditionalHelicopterSpawn; the stride matches helicopter 0x130 (+0x10), not traffic 0x2a0 (a static array). It sits after FindAgentGroundVehiclePtr like PS2 GetHelicopter, and its caller SWeaponManager::Update calls GetHelicopter on PS2. GetHelicopterPtr is an identical twin with no PS2 callers. (was AIVehicleController::GetTrafficVehiclePtr)",
+    "PS2 0x13ecb0"
+   ]
+  },
+  {
+   "xbox": "0x0007bc90",
+   "expect": "RRenderHigh::InitGlobalRender",
+   "name": "RCARPFile::LoadEAGLMaterials",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "inlined RCARPFile::LoadEAGLMaterials",
+   "evidence": [
+    "differing-name review: Body loads data\\render\\eaglrm.o etc. into DynamicLoaders = PS2 LoadEAGLMaterials. The real Xbox RRenderHigh::InitGlobalRender is 0x8baa0, a single JMP to this function (PS2 InitGlobalRender just calls LoadEAGLMaterials); two Xbox functions currently share the name. (was RRenderHigh::InitGlobalRender)",
+    "PS2 0x1a9ac8"
+   ]
+  },
+  {
+   "xbox": "0x0010dae0",
+   "expect": "loadfileatom",
+   "name": "FILE_loadat_internal",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same body (size<=0 -> 0x7fffffff, FILESYS_opensync, read, closesync with p1-1); passed as a parameter by FILE_loadat and FILE_loadatz on both sides and sits just before them. Invented name replaced. (was loadfileatom)",
+    "PS2 0x257290"
+   ]
+  },
+  {
+   "xbox": "0x0005bc70",
+   "expect": "std::list<>::erase",
+   "name": "Schedule::RemoveTask",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same body: scan 8 bucket lists for the taskNumber, unlink, FastFree(0x1c), return true; same callers Schedule::RunTasks and ~EPathSFXUpdate. Placeholder name replaced. (was std::list<>::erase)",
+    "PS2 0x17a270"
+   ]
+  },
+  {
+   "xbox": "0x000e1ce0",
+   "expect": "someHudType_DoRender",
+   "name": "GOrthoHudView::DoRender",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: All 8 named callees shared (SPRITE_Flush, DrawBloodCurtain, DrawBox x2, SetDepthTestMethod, SetZWritesEnable, DrawLetterBox, BuildScale/BuildTranslate/VU0_MATRIX4_mult). Invented name replaced. (was someHudType_DoRender)",
+    "PS2 0x23aad0"
+   ]
+  },
+  {
+   "xbox": "0x000d0a30",
+   "expect": "RayShell::Process",
+   "name": "WTriggerManager::Process",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Xbox WTriggerManager::Update calls four Process overloads and this is the 4th, as PS2 0x22def0 is the 4th in PS2 Update; both use GetActiveRayShell/FindNodes/SetTriggerHittingRayShell/FireEvents. Overload name, like Xbox 0xd04a0/0xd0630/0xd0810. (was RayShell::Process)",
+    "PS2 0x22def0"
+   ]
+  },
+  {
+   "xbox": "0x000e89e0",
+   "expect": "EAGL::Device::GetCurrentTextureRenderContext",
+   "name": "EAGL::Device::GetCurrentRenderContext",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: The getter/global pair is swapped. The global this reads (0x23fb64) is written by NewRenderContext, DeleteRenderContext and SetCurrentRenderContext 0xe8a00, exactly like PS2 0x3485b0 (render context). It has 8 callers incl. FONTEAGL_startdraw, and address order e89e0/e89f0/e8a00/e8a10 = PS2 GetRC/GetTRC/SetRC/SetTRC. Swap with item 113. (was EAGL::Device::GetCurrentTextureRenderContext)",
+    "PS2 0x287728"
+   ]
+  },
+  {
+   "xbox": "0x000e89f0",
+   "expect": "EAGL::Device::GetCurrentRenderContext",
+   "name": "EAGL::Device::GetCurrentTextureRenderContext",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Reads 0x23fb68, whose only writer is 0xe8a10. 0xe8a10 is reached only from RShadowMap::Begin/GrabBackBuffer (TextureRenderContext Begin/EndFrame), like PS2 0x3485b4. 3 callers incl. Draw, like PS2's single-caller texture getter. Swap with item 112. (was EAGL::Device::GetCurrentRenderContext)",
+    "PS2 0x287738"
+   ]
+  },
+  {
+   "xbox": "0x000e8a10",
+   "expect": "FUN_000e8a10",
+   "name": "EAGLInternal::DevicePrivate::SetCurrentTextureRenderContext",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Writes 0x23fb68 (the texture RC global, see 113), called only from the texture-render-context begin/end helpers 0xf3600/0xf3620 (RShadowMap::Begin, GrabBackBuffer), and follows SetCurrentRenderContext 0xe8a00 as on PS2.",
+    "PS2 0x287758"
+   ]
+  },
+  {
+   "xbox": "0x00037620",
+   "expect": "Draw",
+   "name": "DAudio::Draw",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "differing-name review: Same body (if gDAudio InfoDraw; if mixer flag MixerDraw), same caller RRenderDebugViewScreenSpace::DoRender; bare 'Draw' gets its class. The 27 'Draw' hits in src/driving are unrelated substrings; nothing there references 0x37620. (was Draw)",
+    "PS2 0x141768",
+    "src/driving hits for 'Draw' are other classes' Draw methods, not this function"
+   ],
+   "src_checked": true
+  }
+ ]
+}

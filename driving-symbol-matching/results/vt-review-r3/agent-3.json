@@ -1,0 +1,450 @@
+{
+ "verdicts": [
+  {
+   "item": 446,
+   "xbox": "0x129c0",
+   "ps2": "0x109500",
+   "name": "ActActor::Draw",
+   "verdict": "accept",
+   "why": "Called in the actor-list loop of Xbox 0x12fd0 exactly as PS2 DrawAll calls ActActor::Draw; calls 0x14c50 (ActCharacter::Draw), SetWeaponsTransformToWorldSpace, SetWorldTransformMode",
+   "intermediates": []
+  },
+  {
+   "item": 447,
+   "xbox": "0xb4fe0",
+   "ps2": "0x1fe1b0",
+   "name": "Simulation::Simulation",
+   "verdict": "accept",
+   "why": "Same allocation strings in order (PhysicsObjMap, the \"Default constructor should not be called\" printf, DeadObjList, RigidBodyTable, SimRandom); the lower size ratio is PS2 inlining the STL allocations",
+   "intermediates": []
+  },
+  {
+   "item": 448,
+   "xbox": "0xd58f0",
+   "ps2": "0x236f30",
+   "name": "GGallery::GET_Key",
+   "verdict": "accept",
+   "why": "Identical body (byte+0x21 +0x30, minimum 0x40, times index plus base); only caller on both sides is GHud::GHud",
+   "intermediates": []
+  },
+  {
+   "item": 449,
+   "xbox": "0x15600",
+   "ps2": "0x10e2a0",
+   "name": "ActCharacterInfo::~ActCharacterInfo",
+   "verdict": "accept",
+   "why": "Frees the same three pointers +0xcc/+0xd0/+0xd4; same callers (ChangeCharacter, LoadCharacter, ~ActCharacter path); non-deleting MSVC variant",
+   "intermediates": []
+  },
+  {
+   "item": 450,
+   "xbox": "0x14c50",
+   "ps2": "0x10d320",
+   "name": "ActCharacter::Draw",
+   "verdict": "accept",
+   "why": "Called from ActActor::Draw (0x129c0) on both sides; GetArticleViewDistance LOD, SetLightingModel, DisablePositionalLighting, Draw",
+   "intermediates": []
+  },
+  {
+   "item": 451,
+   "xbox": "0x159b0",
+   "ps2": "0x10ee50",
+   "name": "ActIKSolverArray::ActIKSolverArray",
+   "verdict": "accept",
+   "why": "Same field stores (8=p1, c=p3, 10=p4, 14=p2, 0/4 zeroed); same call position and arguments in ActPoser::ActPoser",
+   "intermediates": []
+  },
+  {
+   "item": 452,
+   "xbox": "0x7eaa0",
+   "ps2": "0x1af210",
+   "name": "RLightManager::SetCurrentAmbientAndDiffuse",
+   "verdict": "accept",
+   "why": "Copies the same source fields (0x6c,0x60,0x64,0x68, this+0x68, 0x30-0x38) into this+0x2a4..0x2c0; called at the end of SetSurfaceProperties and from SetLightingModel on both sides",
+   "intermediates": [
+    {
+     "xbox": "0x7eb30",
+     "ps2": "0x1af2d8",
+     "name": "RLightManager::SetSurfaceProperties",
+     "why": "Scales the same material fields 0x60-0x68/0x50-0x58/0x30-0x38 by the two float params, sets 0x6c=1.0, then calls SetCurrentAmbientAndDiffuse; callers SendPerCarInstance/SendPerObjectInstance on both sides"
+    }
+   ]
+  },
+  {
+   "item": 453,
+   "xbox": "0x22e20",
+   "ps2": "0x124170",
+   "name": "AICharacterHands::Reload",
+   "verdict": "accept",
+   "why": "Already named; the state==2 -> 0xc, anim-table lookup, SetNewAnimation, flag set/clear structure is identical",
+   "intermediates": []
+  },
+  {
+   "item": 454,
+   "xbox": "0xc3b40",
+   "ps2": "0x215cc8",
+   "name": "WCollisionMgr::CheckHitWorld",
+   "verdict": "accept",
+   "why": "Caller set matches (Missile::CheckForCollision, TrySpawnBolt, target picker, barrier/rayshell/scorch paths, StepCheckHitWorld); shared GetInstanceList/IntersectSegPlane/WWorldPos",
+   "intermediates": [
+    {
+     "xbox": "0xc4000",
+     "ps2": "0x216500",
+     "name": "WCollisionMgr::StepCheckHitWorld",
+     "why": "Steps along the segment (distance*-1/48 steps) calling CheckHitWorld each step; callers UpdateTrackedInstanceVisibility/CheckObjectiveVisibleToUser/UpdateVisibility match the PS2 caller set 3/3"
+    }
+   ]
+  },
+  {
+   "item": 455,
+   "xbox": "0x5cb50",
+   "ps2": "0x17d930",
+   "name": "noise_init",
+   "verdict": "accept",
+   "why": "Same one-shot flag, 256 rand()&0x7fffffff scaled to [-1,1] table, then copies the first entry to the end; caller Noise::Init",
+   "intermediates": []
+  },
+  {
+   "item": 456,
+   "xbox": "0x14c8d0",
+   "ps2": "0x3018c8",
+   "name": "RCMP::AV_PLAYER::StaticGetRCMPChunk",
+   "verdict": "accept",
+   "why": "One-line forward to GetRCMPChunk; its only reference is a function-pointer use in GetFirstFrame on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 457,
+   "xbox": "0xda280",
+   "ps2": "0x245ee0",
+   "name": "GHud::dbMessage",
+   "verdict": "accept",
+   "why": "strlen capped at 0x20, strncpy to a global buffer, null-terminate, timer = now + p2; reached from CANVAS_Add on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 458,
+   "xbox": "0x73500",
+   "ps2": "0x19c908",
+   "name": "Sentry::DrawMuzzleFlashes",
+   "verdict": "accept",
+   "why": "Loop over the flash array calling RMuzzleFlash::Draw, intensity *=0.33, removed below 0.1; only caller RRenderWorldCamera::DrawEffects on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 459,
+   "xbox": "0x96830",
+   "ps2": "0x1d4238",
+   "name": "RViewCamera::~RViewCamera",
+   "verdict": "accept",
+   "why": "Resets vtable_RViewCamera then DeleteViewPort(viewPort); called from ~RRenderWorldCamera; non-deleting MSVC variant",
+   "intermediates": []
+  },
+  {
+   "item": 460,
+   "xbox": "0xd8c00",
+   "ps2": "0x23ec08",
+   "name": "GHud::DrawZoomingCrossHairs",
+   "verdict": "accept",
+   "why": "6/7 callees match (BuildRotate/BuildTranslate/GetSelectedTarget/SPRITE_SetState/SetModelMatrix/Draw2D); only caller GHud::DrawCrossHairs on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 461,
+   "xbox": "0x12140",
+   "ps2": "0x10ac58",
+   "name": "ActActor::IsAnimationDone",
+   "verdict": "accept",
+   "why": "Already named; state not 2/3 and time*rate*scale+start >= length-1 test identical with a consistent -4 field shift",
+   "intermediates": []
+  },
+  {
+   "item": 462,
+   "xbox": "0xe6a60",
+   "ps2": "0x291208",
+   "name": "EAGL::RenderContextExtension::SetDXPos",
+   "verdict": "reject",
+   "why": "In RRenderer::RRenderer the Xbox call is (float)resX,(float)resY right after NewRenderContext, followed by 0x10/0x20/0x20 depth setters - the position of RenderContext::SetSize; PS2 SetDXPos stores one int (DAT>>2) much later",
+   "intermediates": [
+    {
+     "xbox": "0xe6a60",
+     "ps2": "0x290cc8",
+     "name": "EAGL::RenderContext::SetSize",
+     "why": "Converts two floats to ints stored in adjacent fields (PS2 0x810/0x814); called with (float)resX,(float)resY immediately after NewRenderContext in RRenderer::RRenderer on both sides"
+    },
+    {
+     "xbox": "0xe6ac0",
+     "ps2": "0x290d10",
+     "name": "EAGL::RenderContext::SetBackBufferDepth",
+     "why": "Second of the three depth setters after SetSize in RRenderer::RRenderer, called with 0x20 (PS2 order: Front 0x10, Back 0x20, Z 0x20); Xbox body picks a D3D colour format from 16/32"
+    },
+    {
+     "xbox": "0xe6b10",
+     "ps2": "0x290d20",
+     "name": "EAGL::RenderContext::SetZBufferDepth",
+     "why": "Third depth setter (0x20) in the same RRenderer::RRenderer sequence; Xbox body handles 0/16/32 and picks a depth format"
+    }
+   ]
+  },
+  {
+   "item": 463,
+   "xbox": "0xe5a10",
+   "ps2": "0x29f478",
+   "name": "EAGL::DynamicLoader::GetSymbol",
+   "verdict": "accept",
+   "why": "Same bounds check on index vs count +0x10, 16-byte symbol entry at +0x14, name at +8 base, 0x7f skip; callers FindTars, RunConstructors, GetNextSymbol",
+   "intermediates": [
+    {
+     "xbox": "0xe5bc0",
+     "ps2": "0x29fb30",
+     "name": "EAGL::DynamicLoader::GetNextSymbol",
+     "why": "Loops GetSymbol + inlined strcmp from *index, copies the whole 16-byte symbol out and bumps the index - the PS2 GetNextSymbol body (PS2 inlines it into GetNextAddr, Xbox calls it from 0xe5c80)"
+    }
+   ]
+  },
+  {
+   "item": 464,
+   "xbox": "0xce170",
+   "ps2": "0x22b6b8",
+   "name": "WTargetPicker::CycleToNextTarget",
+   "verdict": "accept",
+   "why": "Identical increment/wrap of +0x74 against the count at +0x70, target array at +0x30, selected at +0x28 (validity field 0x44 -> byte 0x41); same caller",
+   "intermediates": []
+  },
+  {
+   "item": 465,
+   "xbox": "0x95380",
+   "ps2": "0x1d1ec0",
+   "name": "RTimeData::Init",
+   "verdict": "accept",
+   "why": "rate = GetFoundationVideoModeRate(); inverse = 1/rate; called at the same point in RRenderer::RRenderer (right after ConfigureRes)",
+   "intermediates": []
+  },
+  {
+   "item": 466,
+   "xbox": "0x8dc00",
+   "ps2": "0x1c8cf8",
+   "name": "RSceneObj::SetMapNode",
+   "verdict": "accept",
+   "why": "Same unlink-from-old-node / link-at-head of new node doubly-linked list logic (fields shifted +4); callers RSceneObj ctor and UpdatePosition",
+   "intermediates": []
+  },
+  {
+   "item": 467,
+   "xbox": "0x10c5e0",
+   "ps2": "0x252860",
+   "name": "FILESYS_cancelop",
+   "verdict": "accept",
+   "why": "Platform rework of the FILESYS op table, but the only caller is ASYNCFILE_cancel on both sides, called in the same spot with the request op handle (+0x1c)",
+   "intermediates": []
+  },
+  {
+   "item": 468,
+   "xbox": "0x125200",
+   "ps2": "0x2f97b8",
+   "name": "AFader::SetSecondary",
+   "verdict": "accept",
+   "why": "In EAudioUpdate::~EAudioUpdate both sides call it on AFader::Get(\"SpeechVsAmbience\") with enviroDesc+8 behind the gStreams check, just before SetFilter",
+   "intermediates": []
+  },
+  {
+   "item": 469,
+   "xbox": "0x15710",
+   "ps2": "0x10e3a8",
+   "name": "ActEventResolver::ActEventResolver",
+   "verdict": "accept",
+   "why": "new(0x18), zero +2(short)/8/c/10, +0x14=0x32, store at this; only caller ActManager::StartUp",
+   "intermediates": []
+  },
+  {
+   "item": 470,
+   "xbox": "0x9fe30",
+   "ps2": "0x1e0a70",
+   "name": "RLightning::Reset",
+   "verdict": "accept",
+   "why": "Same sequence: start time = now, flag=1, rate copy, helper calls, then free and clear the pointer (PS2 0x6f0 / Xbox 0x6c0); only caller RLightning::RLightning",
+   "intermediates": []
+  },
+  {
+   "item": 471,
+   "xbox": "0x22830",
+   "ps2": "0x1241e0",
+   "name": "AICharacterHands::AbleToFire",
+   "verdict": "accept",
+   "why": "Same state filter (not 8/0/1/0xc, ==2) with the reload flag (+0x150/+0x140) clear; called by FireWeapon, Update and UserReloading (0xbabf0) on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 472,
+   "xbox": "0x50080",
+   "ps2": "0x166b88",
+   "name": "InputConfigManager::Shutdown",
+   "verdict": "accept",
+   "why": "Same two-array loop freeing +0x20 in 0x5c-sized entries, then frees further buffers; only caller Bond_CleanUp",
+   "intermediates": []
+  },
+  {
+   "item": 473,
+   "xbox": "0x1043b0",
+   "ps2": "0x279c70",
+   "name": "EAGLAnim::FnTurnBlender::SetWeight",
+   "verdict": "accept",
+   "why": "Same clamp of int(weight) to [0,count-2] at +0x1c, fraction to +0x18, 0x38 update from 0x28/0x2c; caller EvalVel2D on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 474,
+   "xbox": "0x8d180",
+   "ps2": "0x1c65b0",
+   "name": "RRenderWorldCulling::IsInFrustum2d",
+   "verdict": "accept",
+   "why": "Same plane tests (0x40-0x4c, 0x08/0x28/0x38, 0x0c/0x2c/0x3c), optional distance vs 0x68 range, out-distance param; callers CullModule, AIGroundVehicle::Spawn, WRender path",
+   "intermediates": []
+  },
+  {
+   "item": 475,
+   "xbox": "0xd59c0",
+   "ps2": "0x237210",
+   "name": "GGallery::GET_SomeThing",
+   "verdict": "accept",
+   "why": "Same tag 0x66692020 / p|0x66690000, DataLocateTag, flag bit 2 relative offset; only caller GGirl::InitGirl on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 476,
+   "xbox": "0x9c0e0",
+   "ps2": "0x1dd248",
+   "name": "REmpBolts::CreateVehicleBolt",
+   "verdict": "accept",
+   "why": "Uses kAllowVehicleBolts/kVehicleDrift*/kVehicleSparkRate, LocateFX + ApplyWorldEffects; only caller TrySpawnBolt",
+   "intermediates": [
+    {
+     "xbox": "0xa0500",
+     "ps2": "0x1e1280",
+     "name": "RLightning::AddRoundedBolt",
+     "why": "Called from CreateVehicleBolt with the kVehicleDrift/Perturb/SnapToBoundingBox/Segments/Levels/ArcFactor argument list, matching PS2 AddRoundedBolt (unique caller on both sides, same arity)"
+    }
+   ]
+  },
+  {
+   "item": 477,
+   "xbox": "0x96e20",
+   "ps2": "0x1d4748",
+   "name": "ApplyPerspectiveFunction",
+   "verdict": "accept",
+   "why": "Same enable flag, player physics object vcall +0xbc check, two sin(2pi*(t%period)/period)*amp offsets; caller RViewCamera::SetWorldTransformMode",
+   "intermediates": []
+  },
+  {
+   "item": 478,
+   "xbox": "0xe4be0",
+   "ps2": "0x295fe8",
+   "name": "EAGL::ViewPort::BeginView",
+   "verdict": "accept",
+   "why": "Ends the current viewport (inlined EndView: clear active flag 0x188, re-BeginView the saved viewport, which explains the self-call), marks this active, BuildMatrix and copies the matrices; the low size ratio is PS2 unaligned stores",
+   "intermediates": [
+    {
+     "xbox": "0xe49a0",
+     "ps2": "0x296f58",
+     "name": "EAGL::ViewPort::EndView",
+     "why": "Clears the active flag, calls BeginView on the saved previous viewport (+4) when it is not 0/1, then zeroes +4 - the PS2 EndView body; callers include RViewCamera::Render, PlayMPC::Play, LoadAndDrawUnLoadingScreen"
+    }
+   ]
+  },
+  {
+   "item": 479,
+   "xbox": "0xa2d50",
+   "ps2": "0x1e7f60",
+   "name": "RParticleLibrary::Reload",
+   "verdict": "accept",
+   "why": "Resets 0xb000, clears the list at 0xb008/0xb00c, sprintf \"%sparticle.dat\", AddSystem(0x64666c74); caller RParticleSystemManager ctor",
+   "intermediates": []
+  },
+  {
+   "item": 480,
+   "xbox": "0x27f00",
+   "ps2": "0x12b440",
+   "name": "AIElementTracking::UpdatePosition",
+   "verdict": "accept",
+   "why": "First call inside AIElementTracking::Update (Xbox 0x28ab0), which sits under AIElementController::Update on both sides; GetLinearVelocity use matches",
+   "intermediates": [
+    {
+     "xbox": "0x28ab0",
+     "ps2": "0x12afb8",
+     "name": "AIElementTracking::Update",
+     "why": "Same checks (state 0x48!=2, now >= next), calls UpdatePosition, every-frame vs lower-frequency counter (<4 increment), the flag 2 / state 1 wake test, next = now + interval; only caller AIElementController::Update (0x29880)"
+    }
+   ]
+  },
+  {
+   "item": 481,
+   "xbox": "0x6f840",
+   "ps2": "0x196778",
+   "name": "PVehicle::CarPhysicsAttrib",
+   "verdict": "accept",
+   "why": "LookupStruct(\"CarPhysics\", DAT, false); callers PBondCar::ChangeCarType and PBondCar ctor on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 482,
+   "xbox": "0x19ac0",
+   "ps2": "0x114a48",
+   "name": "ActSkeleton::GetNumBones",
+   "verdict": "accept",
+   "why": "Getter placed by position: in ActPoser::ActPoser both sides call it first, then store the result at +0x108 and vec_new(n*64) for the new 0x10c object",
+   "intermediates": []
+  },
+  {
+   "item": 483,
+   "xbox": "0xe5c80",
+   "ps2": "0x29fbf8",
+   "name": "EAGL::DynamicLoader::GetNextAddr",
+   "verdict": "accept",
+   "why": "Callers ActSkeleton::ActSkeleton and ActModel::FindTars on both sides; wraps GetNextSymbol (0xe5bc0, inlined on PS2) and returns the symbol address to *out, which accounts for the 0.34 ratio",
+   "intermediates": []
+  },
+  {
+   "item": 484,
+   "xbox": "0x107770",
+   "ps2": "0x258880",
+   "name": "FONT_getrectx__H1ZUc_P4FONTPCX01PfN32_v",
+   "verdict": "accept",
+   "why": "Only reached via a jump thunk at 0x107b30 whose callers (FONT_Height, FONT_Width, MixerDraw, LoadAndDrawUnLoadingScreen, Update) match PS2 FONT_getrecta callers; +/-1e7 bounds with 4 optional rect outputs",
+   "intermediates": [
+    {
+     "xbox": "0x107b30",
+     "ps2": "0x2580c0",
+     "name": "FONT_getrecta",
+     "why": "A jump thunk straight into getrectx (PS2 FONT_getrecta is a pure forward); callers FONT_Height/FONT_Width/MixerDraw/LoadAndDrawUnLoadingScreen/Update match the PS2 FONT_getrecta callers"
+    }
+   ]
+  },
+  {
+   "item": 485,
+   "xbox": "0x115440",
+   "ps2": "0x2d15a0",
+   "name": "maybeExtractQuatTransInternal",
+   "verdict": "accept",
+   "why": "Same matrix-to-quaternion trace branch and largest-diagonal branches with 0.5/sqrt; caller ExtractQuatTrans",
+   "intermediates": []
+  },
+  {
+   "item": 486,
+   "xbox": "0xbabf0",
+   "ps2": "0x20e868",
+   "name": "SWeaponManager::UserReloading",
+   "verdict": "accept",
+   "why": "Weapon entry = +0x10 + idx*0x54, fgHandObj AbleToFire check, the ammo tests at 0x18/0x1c/0x20, builds an \"SFX_\" string; only caller SWeaponManager::Update",
+   "intermediates": []
+  },
+  {
+   "item": 487,
+   "xbox": "0x29880",
+   "ps2": "0x12bec8",
+   "name": "AIElementController::Update",
+   "verdict": "accept",
+   "why": "Only caller ESimFrameUpdate::~ESimFrameUpdate on both sides; shared ClearProgrammerEvent/ProgrammerDefinedEvent/GetRigidBody/WakeUp and calls AIElementTracking::Update (0x28ab0)",
+   "intermediates": []
+  }
+ ]
+}

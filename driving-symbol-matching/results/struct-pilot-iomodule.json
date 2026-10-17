@@ -1,0 +1,296 @@
+{
+ "classes": [
+  {
+   "name": "IOModule",
+   "size": 164,
+   "base": null,
+   "vtable": null,
+   "comment": "Singleton at 0x001e45a0 (GetIOModule 0x51580, guard 0x001e4644 directly after it proves size 0xa4). No vptr; trivial destructor (atexit target 0x15ce00 is RET). PS2 layout differs (+0xc numControllers, 8 ports).",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 1,
+     "type": "bool",
+     "name": "updatingEnabled",
+     "confidence": "high",
+     "evidence": "EnableUpdating 51710 CMP [ESI],BL / stores BL; Release 51750 tests and clears; Update 516d8 CMP byte [ESI],0 gates everything; GetIOModule zeroes byte"
+    },
+    {
+     "offset": "0x1",
+     "size": 1,
+     "type": "bool",
+     "name": "resendAll",
+     "confidence": "high",
+     "evidence": "SendGameMessages 512f7 MOV AL,[EBX+1] bypasses the unchanged-value filter; Initialize 51097 and UpdateAllDevices 516bc clear it; SetAutoDrive/~EControlToPlayer/~EStartMission set it to 1. PS2 +4 set around SendGameMessages in ControllerRemovedContinuePlaying. Name invented"
+    },
+    {
+     "offset": "0x2",
+     "size": 1,
+     "type": "bool",
+     "name": "resyncDevices",
+     "confidence": "high",
+     "evidence": "UpdateAllDevices 51655 tests it and does an extra PollDevice pass, 5168d clears; Initialize 5109a clears; movie players FUN_0005a6b0 and ~ESetVideo set 1 before EnableUpdating(true). Name invented"
+    },
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "int",
+     "name": "numControllers",
+     "confidence": "high",
+     "evidence": "CreateDevices indexes padDevices/inputActionMappings by [ESI+4] and increments it (ends at 4); ReleaseDevices/UpdateAllDevices loop bound; ReleaseDevices sets 0"
+    },
+    {
+     "offset": "0x8",
+     "size": 64,
+     "type": "XBoxPadDevice *[16]",
+     "name": "padDevices",
+     "confidence": "high",
+     "evidence": "CreateDevices 50ff8 MOV [ESI+EAX*4+8],EDI; ReleaseAllButtons [ECX+EAX*4+8]; ReleaseDevices/UpdateAllDevices walk from +8; 16 slots fixed by inputActionMappings at +0x48 (only 0..3 written)"
+    },
+    {
+     "offset": "0x48",
+     "size": 64,
+     "type": "InputToAction *[16]",
+     "name": "inputActionMappings",
+     "confidence": "high",
+     "evidence": "CreateDevices 51034 MOV [ESI+ECX*4+0x48],EAX; ReleaseDevices [ESI+0x40] from +8; UpdateAllDevices passes [EBP] from +0x48 to SendGameMessages; SetConfig/InitAndPreload index by glbIFeedback"
+    },
+    {
+     "offset": "0x88",
+     "size": 1,
+     "type": "bool",
+     "name": "padStable",
+     "confidence": "medium",
+     "evidence": "CheckUnplugged 50ee9 sets 1 then tests it (always true); GetIOModule zeroes. PS2 CheckUnplugged sets its equivalent from PAD_isstable. Name invented"
+    },
+    {
+     "offset": "0x8c",
+     "size": 4,
+     "type": "int",
+     "name": "checkUnpluggedCount",
+     "confidence": "high",
+     "evidence": "CheckUnplugged 50ee3 INC dword [ESI+0x8c]; not read on Xbox (PS2 used it for every-4th-call timing). Name invented"
+    },
+    {
+     "offset": "0x90",
+     "size": 1,
+     "type": "bool",
+     "name": "unpluggedMessageShown",
+     "confidence": "high",
+     "evidence": "CheckUnplugged: set 1 after GHud::SetControllerUnplugged(1) (50f56), 0 after SetControllerUnplugged(0) (50f75); tested before either. Name invented"
+    },
+    {
+     "offset": "0x91",
+     "size": 1,
+     "type": "bool",
+     "name": "controllerUnplugged",
+     "confidence": "high",
+     "evidence": "CheckUnplugged 50f1b stores !PAD_isconnected(port); Update 516f4 skips UpdateAllDevices when set. Name invented"
+    },
+    {
+     "offset": "0x94",
+     "size": 4,
+     "type": "int",
+     "name": "currentTick",
+     "confidence": "high",
+     "evidence": "Update 516e9 stores TIMER_gettick(); SendGameMessages 513e9/5143b reads it for auto-repeat and stores it into scalar extra1. Name invented"
+    },
+    {
+     "offset": "0x98",
+     "size": 4,
+     "type": "int",
+     "name": "unused98",
+     "confidence": "medium",
+     "evidence": "Only GetIOModule 515c7 writes 0; no other reference found in the IOModule functions or via the static address"
+    },
+    {
+     "offset": "0x9c",
+     "size": 4,
+     "type": "int",
+     "name": "repeatDelayTicks",
+     "confidence": "high",
+     "evidence": "Initialize 510bb = TIMER_getfrequency()*300/1000; SendGameMessages 51477 uses it when scalar repeat state ==1. Name invented"
+    },
+    {
+     "offset": "0xa0",
+     "size": 4,
+     "type": "int",
+     "name": "repeatIntervalTicks",
+     "confidence": "high",
+     "evidence": "Initialize 510df = TIMER_getfrequency()*150/1000; SendGameMessages 513de uses it for repeat state !=1. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "InputToAction",
+   "size": 16,
+   "base": null,
+   "vtable": null,
+   "comment": "Per-device mapping from scalars to actions. ctor 0x50860 (SEH, RET 4), dtor 0x509c0 (non-deleting), Reset 0x50990, LoadParseDefFile 0x50a20. Allocated FastAlloc(0x10,\"InputToAction\") by CreateDevices, freed FastFree(p,0x10) by ReleaseDevices.",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "int",
+     "name": "numTables",
+     "confidence": "high",
+     "evidence": "ctor 50891 stores device->GetNumDeviceScalar(); Reset 50990 loop bound; dtor FastFree(+0xc, [+0]*8+8)"
+    },
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "InputTable *",
+     "name": "tables",
+     "confidence": "high",
+     "evidence": "ctor 508d8: new[](n*0x3c+4) with count cookie, eh vector ctor InputTable::InputTable 507a0 stride 0x3c; SendGameMessages/ReleaseAllButtons [mapping+4]+i*0x3c; dtor vector-dtor with [tables-4]"
+    },
+    {
+     "offset": "0x8",
+     "size": 4,
+     "type": "StringToNumber *",
+     "name": "scalarNameLookup",
+     "confidence": "high",
+     "evidence": "ctor 50959 FastAlloc(0x10,\"StringToNumber\") + StringToNumber ctor 119f50 over +0xc; LoadParseDefFile ConvertStringToNumber(+8, scalar name); dtor ~StringToNumber 11a020 + FastFree 0x10. Name invented"
+    },
+    {
+     "offset": "0xc",
+     "size": 4,
+     "type": "StringToNumberEntry *",
+     "name": "scalarNames",
+     "confidence": "high",
+     "evidence": "ctor 508e2 FastAlloc(n*8+8,\"StringToNumberEntry\"); [i]={i, device->scalars[i].name}; [n]={0,0}; dtor FastFree(n*8+8). Name invented"
+    }
+   ]
+  },
+  {
+   "name": "InputTable",
+   "size": 60,
+   "base": null,
+   "vtable": null,
+   "comment": "One per device scalar; PS2 name. ctor 0x507a0, dtor 0x507c0, GrowArrayForOneElement 0x507e0 (capacity += 4, FastAlloc \"TableEntries\").",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "int",
+     "name": "count",
+     "confidence": "high",
+     "evidence": "ctor 507a5 = 0; SendGameMessages 512a4 entry loop count; Reset zeroes; LoadParseDefFile increments after append"
+    },
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "int",
+     "name": "capacity",
+     "confidence": "high",
+     "evidence": "ctor 507ab = 4; GrowArrayForOneElement += 4; dtor FastFree(entries, capacity*0xc); LoadParseDefFile grows when capacity <= count"
+    },
+    {
+     "offset": "0x8",
+     "size": 4,
+     "type": "InputTableEntry *",
+     "name": "entries",
+     "confidence": "high",
+     "evidence": "ctor 507b2 = this+0xc; SendGameMessages 512f0 MOV ESI,[EDX+8] + j*0xc; dtor frees if != this+0xc"
+    },
+    {
+     "offset": "0xc",
+     "size": 48,
+     "type": "InputTableEntry[4]",
+     "name": "inlineEntries",
+     "confidence": "high",
+     "evidence": "ctor points entries at +0xc with capacity 4; 0xc + 4*0xc = 0x3c = element stride"
+    }
+   ]
+  },
+  {
+   "name": "InputTableEntry",
+   "size": 12,
+   "base": null,
+   "vtable": null,
+   "comment": "PS2 name (InputTable::AddTableEntry(InputTableEntry &)). Written by LoadParseDefFile as {method, threshold, action}.",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "int",
+     "name": "updateMethod",
+     "confidence": "high",
+     "evidence": "SendGameMessages 51320 switch on [ESI] 0..9 via jump table 0x51550; compared to 8/9 in the change filter; ReleaseAllButtons compares 2/4; values from StringToNumber table 0x1b6fd0 U + - > < = I N R M"
+    },
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "float",
+     "name": "threshold",
+     "confidence": "high",
+     "evidence": "SendGameMessages 51389/513b7 push [ESI+4] to isDown/UpTransitionThreshold; LoadParseDefFile defaults 0x3f000000 for kinds 3,4 and sscanf %f"
+    },
+    {
+     "offset": "0x8",
+     "size": 4,
+     "type": "int",
+     "name": "action",
+     "confidence": "high",
+     "evidence": "SendGameMessages copies [ESI+8] into ActionData.action; LoadParseDefFile stores getActionID(name)"
+    }
+   ]
+  },
+  {
+   "name": "StringToNumberEntry",
+   "size": 8,
+   "base": null,
+   "vtable": null,
+   "comment": "PS2 name (StringToNumber::StringToNumber(StringToNumberEntry *)). {0,NULL} terminated; same shape as the static tables at 0x1b6fd0 and 0x1b6ba0.",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "int",
+     "name": "number",
+     "confidence": "high",
+     "evidence": "InputToAction ctor 508f3 MOV [EDX+EAX*8],EAX (index); table 0x1b6fd0 holds 0..9"
+    },
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "char *",
+     "name": "string",
+     "confidence": "high",
+     "evidence": "InputToAction ctor 50900 stores scalar name pointer at [+EAX*8+4]; table 0x1b6fd0 holds pointers to 'U','+',..."
+    }
+   ]
+  }
+ ],
+ "vtable_slots": [],
+ "returns": {
+  "0x00051580": "IOModule *",
+  "0x000516d0": "int",
+  "0x00051710": "bool",
+  "0x00050860": "InputToAction *",
+  "0x000509c0": "void",
+  "0x00050990": "void",
+  "0x000507a0": "InputTable *",
+  "0x000507c0": "void",
+  "0x000507e0": "void",
+  "0x00050ee0": "void",
+  "0x00050f80": "void",
+  "0x00051080": "void",
+  "0x000510f0": "void",
+  "0x00051250": "void",
+  "0x000515e0": "void",
+  "0x00051650": "void",
+  "0x00051750": "void",
+  "0x00108460": "bool"
+ },
+ "skip_prototypes": [],
+ "notes": [
+  "IOModule::Update 0x516d0 and GetIOModule 0x51580 are static cdecl (no ECX use); Update is the SYNCTASK callback (called fn(int,int), ignores both, returns 0). All other IOModule methods are thiscall; SendGameMessages RET 8 (InputDevice *, InputToAction *), EnableUpdating RET 4 (bool), rest RET.",
+  "Initialize tail-jumps (JMP) into CreateDevices; Release tail-jumps into ReleaseDevices.",
+  "SEH frames: CreateDevices (handler 0x151be1) and InputToAction::InputToAction (0x151baa) only.",
+  "DeviceScalar extra1/extra2 (+0x2c/+0x30) are typed float* but SendGameMessages stores ints there: extra1 = tick of last auto-repeat send, extra2 = repeat state (0 none, 1 after edge, 2 after repeat, 3 blocked - never written on Xbox).",
+  "InputConfigManager (0x30, singleton 0x1e455c): +0x20 bool inverted (IsInverted 0x50160 MOV AL,[ECX+0x20]; SetInverted 0x50140 also mirrors to 0x2445b4); +0x28 masterFileData (SetConfig/InitAndPreload parse it first into inputActionMappings[glbIFeedback]); +0x18[type] configInfos (0x5c records, text at +0x20). Get 0x50270 initialises +4=2 and zeroes +0,+8..+0x1c,+0x24..+0x2c.",
+  "0x108460 (unnamed FUN_00108460) is PAD_isconnected(int port): PadData[port].handle(+0x88) != 0; cdecl.",
+  "glbIFeedback 0x244520 is the active pad port (int, 0; never written)."
+ ]
+}

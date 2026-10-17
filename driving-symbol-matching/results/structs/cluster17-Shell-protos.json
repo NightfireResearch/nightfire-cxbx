@@ -1,0 +1,35 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00074660",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Shell::~Shell(void)"
+  },
+  {
+   "address": "0x00074770",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Shell::Shell(WeaponType, COORD3 &, COORD3 &, SimObjSig, float,"
+  },
+  {
+   "address": "0x00074980",
+   "calling_convention": "__thiscall",
+   "return": "Shell *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x00074e80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Shell::Simulate(void)"
+  }
+ ]
+}

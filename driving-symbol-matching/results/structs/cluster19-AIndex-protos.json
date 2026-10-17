@@ -1,0 +1,12 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00127a40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIndex::~AIndex(void)"
+  }
+ ]
+}

@@ -1,0 +1,119 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0011c980",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "AMix::SetTransition(float, int)"
+  },
+  {
+   "address": "0x0011c9e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "AMix::Revert(int)"
+  },
+  {
+   "address": "0x0011ca10",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AMix::GetVolume(void)"
+  },
+  {
+   "address": "0x0011ca90",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AMix::GetPresetVolume(void)"
+  },
+  {
+   "address": "0x0011cb80",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "AMix::Reset(int)"
+  },
+  {
+   "address": "0x0011d6a0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "AMix::Add(char *)",
+   "return": "AMix *"
+  },
+  {
+   "address": "0x0011d720",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "AMix::Get(char *)",
+   "return": "AMix *"
+  },
+  {
+   "address": "0x0011d750",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AMix::Remove(void)"
+  },
+  {
+   "address": "0x0011d790",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "AMix::Load(char *)"
+  },
+  {
+   "address": "0x0011d980",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AMix::Clear(void)"
+  },
+  {
+   "address": "0x0011da20",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AMix::ClearMaster(void)"
+  },
+  {
+   "address": "0x0011da60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "AMix::SetMaster(char *)"
+  }
+ ]
+}

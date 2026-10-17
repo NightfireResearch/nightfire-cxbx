@@ -58,6 +58,8 @@ bool Sound_IsLooping(DYNAMICSOUNDS *handle);
 void Sound_UpdateListeners(void);
 void Sound_StopAllWithId(Action_SFX sfx);
 void Sound_ZeroAlertness(void);
+void HandleMapSoundAllocation(void);
+void Sound_LoadMapSounds(int *mapSoundBlock);
 void __stdcall SFXSuspendFileAccess(void);
 void __stdcall SFXUnSuspendFileAccess(void);
 

@@ -1,0 +1,568 @@
+// Shadow tests for the drone AI hints (Drone_AIHints.cpp): cover nodes, AI points, AI volumes, the cover checks and
+// the door and kick marks on the AI paths. Each original and ours run on the same made-up nodes, volumes, paths and
+// objects, with the calls that need a level (cels, emitters, sight, bounds, script info) going to logging fakes.
+// Run at start with MenuShadowTests=on (MenuProbe.cpp), before any level exists.
+
+#include "AIHintsShadow.h"
+#include "ShadowHarness.h"
+
+#include "../../common/xbeOriginal.h"
+#include "../actionhelpers.h"
+#include "../game.h"
+#include "../game/drone/NDrone2.h"
+#include "../game/obj/Drone_AIHints.h"
+#include "../game/sp/SwitchChannels.h"
+
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+
+namespace {
+
+#define ORIGINAL(at, type) ((type)(uintptr_t)(at))
+#define TimeToCalc I32_AT(0x001dfa2c)
+
+const int NODES = 16;
+const int POINTS = 8;
+const int OBJS = 12;
+const int DRONES = 3;
+const int VOLUMES = 5;
+const int PATHS = 3;
+const int PATH_NODES = 8;
+const int PATH_LINKS = 12;
+
+struct World {
+    CoverNode_tag nodes[NODES];
+    DroneAIPoint_tag points[POINTS];
+    obj_tag objs[OBJS];
+    Drone_tag drones[DRONES];
+    SCRIPTINFO infos[OBJS];
+    int infoOf[OBJS];           // SP_getScriptInfo's answer: an index into infos, or -1
+    union {
+        CoverCornerPlacement corner;
+        CoverLowPlacement low;
+        AIPointPlacement point;
+        AIVolumePlacement volume;
+    } keys;
+    celglist_tag glist;
+    _VECTOR pos, rot, scale;
+    DroneAIVolume_tag volumes[VOLUMES];
+    obj_tag volumeObjs[VOLUMES];
+    MAPNODE_tag fileNodes[PATHS][PATH_NODES];
+    AINode_tag runNodes[PATHS][PATH_NODES];
+    AILink_tag links[PATHS][PATH_LINKS];
+    ushort nodeLinks[PATHS][PATH_LINKS * 2];
+
+    // What the fakes answer
+    uint seeBias;
+    uint boundBias;
+};
+World world;
+
+ShadowRegions regions;
+int cases, differ;
+
+void Compare(const char *what, int trial, uint32_t (*theirs)(void), uint32_t (*ours)(void)) {
+    cases++;
+    if (!ShadowCompare(regions, "aihints", what, trial, theirs, ours))
+        differ++;
+}
+
+uint32_t Bits(float f) {
+    uint32_t u;
+    memcpy(&u, &f, 4);
+    return u;
+}
+
+int WhoObj(const obj_tag *obj) {
+    for (int i = 0; i < OBJS; i++)
+        if (obj == &world.objs[i])
+            return i;
+    return obj == NULL ? -1 : 100;
+}
+
+// A pointer into the world as an offset, so the log reads the same whatever the layout
+long Where(const void *p) {
+    if (p == NULL)
+        return -1;
+    ptrdiff_t at = (const char *)p - (const char *)&world;
+    return at >= 0 && at < (ptrdiff_t)sizeof(world) ? (long)at : -2;
+}
+
+// ---- the fakes
+
+cel_tag *__cdecl FakeFindCel(_VECTOR *pos, world_tag *w) {
+    ShadowLog("findcel(%08x,%08x,%08x,%p)", Bits(pos->x), Bits(pos->y), Bits(pos->z), w);
+    return (cel_tag *)(uintptr_t)(0x100000 + (Bits(pos->x) & 0xff0));
+}
+
+bool __cdecl FakeInitEmitter(obj_tag *obj, _VECTOR *pos, cel_tag *cel, AIEmitter_tag *emitter, AIPath_tag *path) {
+    ShadowLog("emitter(%p,%08x,%08x,%08x,%p,%ld,%p)", obj, Bits(pos->x), Bits(pos->y), Bits(pos->z), cel,
+              Where(emitter), path);
+    emitter->size = 7;
+    emitter->startNode = (short)Bits(pos->z);
+    return true;
+}
+
+bool __cdecl FakeCanSeePosition(obj_tag *viewer, _VECTOR *pos, cel_tag *cel, obj_tag *ignore) {
+    ShadowLog("canseepos(%d,%08x,%08x,%08x,%p,%ld)", WhoObj(viewer), Bits(pos->x), Bits(pos->y), Bits(pos->z), cel,
+              Where(ignore));
+    uint h = Bits(pos->x) ^ Bits(pos->z) ^ world.seeBias;
+    if (h & 2)
+        NPCGlobals.visionTests++;
+    return (h & 4) != 0;
+}
+
+bool __cdecl FakeBounds(_VECTOR *from, _VECTOR *to, uint setFlags, uint skipFlags, _VECTOR *hit, char raise) {
+    ShadowLog("bounds(%08x,%08x,%08x,%08x,%x,%x,%p,%d)", Bits(from->x), Bits(from->z), Bits(to->x), Bits(to->z),
+              setFlags, skipFlags, hit, raise);
+    return ((Bits(from->x) ^ Bits(to->z) ^ world.boundBias) & 8) != 0;
+}
+
+SCRIPTINFO *__cdecl FakeScriptInfo(obj_tag *obj) {
+    ShadowLog("scriptinfo(%d)", WhoObj(obj));
+    int who = WhoObj(obj);
+    if (who < 0 || who >= OBJS || world.infoOf[who] < 0)
+        return NULL;
+    return &world.infos[world.infoOf[who]];
+}
+
+void InstallFakes() {
+    ShadowFakes_Install();
+    ShadowHook_Install(0x00020c30, (const void *)&FakeFindCel);
+    ShadowHook_Install(0x0004a870, (const void *)&FakeInitEmitter);
+    ShadowHook_Install(0x00064700, (const void *)&FakeCanSeePosition);
+    ShadowHook_Install(0x0004a670, (const void *)&FakeBounds);
+    ShadowHook_Install(0x000c44e0, (const void *)&FakeScriptInfo);
+}
+
+// ---- the made-up world
+
+const HASHCODE kLevels[] = {
+    HT_Level_CastleExterior, HT_Level_PowerStationA2, HT_Level_Tower2A, HT_Level_SpaceStationD, HT_Level_TowerA,
+};
+
+HASHCODE RandomLevel() {
+    return kLevels[ShadowRand(sizeof(kLevels) / sizeof(kLevels[0]))];
+}
+
+// A key: often 0, 1 or 2, sometimes anything (with the top bit, for the unsigned conversions)
+uint RandomKey() {
+    switch (ShadowRand(6)) {
+    case 0: return 0;
+    case 1: return 1;
+    case 2: return 2;
+    case 3: return ShadowRand(400);
+    case 4: return 0x80000000u | ShadowRand(0x7fffffff);
+    default: return ShadowRand(5);
+    }
+}
+
+void RandomVector(_VECTOR *v, float range) {
+    v->x = ShadowRandFloat(-range, range);
+    v->y = ShadowRandFloat(-range, range);
+    v->z = ShadowRandFloat(-range, range);
+}
+
+void RandomObjects() {
+    for (int i = 0; i < OBJS; i++) {
+        obj_tag &obj = world.objs[i];
+        memset(&obj, 0, sizeof(obj));
+        static const char types[] = {OBJECTTYPE_DOOR, OBJECTTYPE_SCRIPTPLAYER, OBJECTTYPE_DRONE, 5};
+        obj.objectType = types[ShadowRand(4)];
+        RandomVector(&obj.position, 12.0f);
+        obj.nextObject = i + 1 < OBJS && ShadowRand(10) != 0 ? &world.objs[i + 1] : NULL;
+        world.infoOf[i] = ShadowRand(4) == 0 ? -1 : (int)ShadowRand(OBJS);
+        world.infos[i].scriptHashcode = (HASHCODE)(ShadowRand(3) == 0 ? 0x06000001 : 0x060005bb);
+        if (obj.objectType == OBJECTTYPE_DRONE)
+            obj.extraObjectData = ShadowRand(5) == 0 ? NULL : &world.drones[ShadowRand(DRONES)];
+    }
+    for (int i = 0; i < DRONES; i++)
+        world.drones[i].targetSlot = (uchar)ShadowRand(9);
+    ShadowFakes.firstObject = ShadowRand(6) == 0 ? NULL : &world.objs[ShadowRand(OBJS)];
+}
+
+void RandomNode(CoverNode_tag *node) {
+    memset(node, 0, sizeof(*node));
+    node->type = (uchar)ShadowRand(2);
+    node->enableSwitchChannel = ShadowRand(3) == 0 ? (uchar)(1 + ShadowRand(6)) : 0;
+    node->disableSwitchChannel = ShadowRand(3) == 0 ? (uchar)(1 + ShadowRand(6)) : 0;
+    node->angle = ShadowRandFloat(0.1f, 1.6f);
+    node->flags = ShadowRand(0x200);
+    node->cel = (cel_tag *)(uintptr_t)(0x200000 + ShadowRand(16) * 0x10);
+    switch (ShadowRand(4)) {
+    case 0: node->occupant = NULL; break;
+    case 1: node->occupant = &world.objs[ShadowRand(OBJS)]; break;
+    default: {
+        obj_tag *obj = &world.objs[ShadowRand(OBJS)];
+        obj->objectType = OBJECTTYPE_DRONE;
+        obj->extraObjectData = ShadowRand(6) == 0 ? NULL : &world.drones[ShadowRand(DRONES)];
+        node->occupant = obj;
+        break;
+    }
+    }
+    RandomVector(&node->pos, 10.0f);
+    node->rot.y = ShadowRandFloat(-3.3f, 3.3f);
+    for (int i = 0; i < 8; i++)
+        node->usable[i] = ShadowRand(0x800);
+}
+
+void RandomCover() {
+    RandomObjects();
+    for (int i = 0; i < NODES; i++)
+        RandomNode(&world.nodes[i]);
+    for (int i = 0; i < MAX_DRONE_TARGETS; i++) {
+        DroneTarget_tag &target = NPCGlobals.targets[i];
+        target.flags = (uchar)ShadowRand(4);
+        target.obj = ShadowRand(6) == 0 ? NULL : &world.objs[ShadowRand(OBJS)];
+        RandomVector(&target.pos, 14.0f);
+    }
+    for (int i = 0; i < 8; i++)
+        switch_channels[i] = (char)ShadowRand(2);
+    GameState.CurrentLevelHashcode = RandomLevel();
+    NPCGlobals.visionTests = (ushort)ShadowRand(0x10000);
+    world.seeBias = ShadowRand(0x10000);
+}
+
+// The target near the node, at a chosen bearing, so the angle tests' edges are reached
+void AimTarget(CoverNode_tag *node, DroneTarget_tag *target) {
+    float bearing = node->rot.y + ShadowRandFloat(-3.3f, 3.3f);
+    float distance = ShadowRand(5) == 0 ? ShadowRandFloat(0.0f, 4.5f) : ShadowRandFloat(4.0f, 20.0f);
+    target->pos.x = node->pos.x + sinf(bearing) * distance;
+    target->pos.y = node->pos.y + ShadowRandFloat(-1.0f, 1.0f);
+    target->pos.z = node->pos.z + cosf(bearing) * distance;
+}
+
+__declspec(naked) uint32_t __cdecl CallEsiEdi(uint target, CoverNode_tag *node, unsigned fn) {
+    _asm {
+        push esi
+        push edi
+        mov edi, [esp + 12]
+        mov esi, [esp + 16]
+        call dword ptr [esp + 20]
+        pop edi
+        pop esi
+        movzx eax, al
+        ret
+    }
+}
+
+uint targetArg;
+CoverNode_tag *nodeArg;
+ushort typeArg;
+obj_tag *objArg;
+
+void TestCover() {
+    for (int trial = 0; trial < 6000; trial++) {
+        RandomCover();
+        targetArg = ShadowRand(12) == 0 ? 8 + ShadowRand(3) : ShadowRand(8);
+        nodeArg = ShadowRand(40) == 0 ? NULL : &world.nodes[ShadowRand(NODES)];
+        if (nodeArg != NULL && targetArg < 8 && ShadowRand(4) != 0)
+            AimTarget(nodeArg, &NPCGlobals.targets[targetArg]);
+        Compare("Drone_IsCoverNodeUsable", trial,
+                [] {
+                    XbeOriginalScope o(0x00030af0);
+                    return CallEsiEdi(targetArg, nodeArg, 0x00030af0);
+                },
+                [] { return CallEsiEdi(targetArg, nodeArg, (unsigned)(uintptr_t)&Drone_IsCoverNodeUsable); });
+    }
+
+    for (int trial = 0; trial < 3000; trial++) {
+        RandomCover();
+        for (int i = 0; i < NODES; i++)
+            if (ShadowRand(2))
+                AimTarget(&world.nodes[i], &NPCGlobals.targets[ShadowRand(MAX_DRONE_TARGETS)]);
+        NPCGlobals.coverNodes = world.nodes;
+        NPCGlobals.numCoverNodes = ShadowRand(NODES + 1);
+        NPCGlobals.coverCursor = NPCGlobals.numCoverNodes ? ShadowRand(NPCGlobals.numCoverNodes) : 0;
+        TimeToCalc = (int)ShadowRand(16) - 3;
+        Compare("Drone_ProcessCoverNodes", trial,
+                [] {
+                    XbeOriginalScope o(0x000311e0), usable(0x00030af0);
+                    ORIGINAL(0x000311e0, void(__cdecl *)(void))();
+                    return 0u;
+                },
+                [] {
+                    Drone_ProcessCoverNodes();
+                    return 0u;
+                });
+    }
+}
+
+void RandomPlacement() {
+    memset(&world.keys, 0, sizeof(world.keys));
+    uint *key = (uint *)((char *)&world.keys + 0x2c);
+    for (int i = 0; i < 8; i++)
+        key[i] = RandomKey();
+    RandomVector(&world.pos, 50.0f);
+    RandomVector(&world.rot, 3.0f);
+    Drone_bDisableSystem = ShadowRand(8) == 0;
+    NPCGlobals.coverNodes = world.nodes;
+    NPCGlobals.numCoverNodes = ShadowRand(NODES);
+    NPCGlobals.aiPoints = world.points;
+    NPCGlobals.numAIPoints = ShadowRand(POINTS);
+    for (int i = 0; i < NODES; i++)
+        RandomNode(&world.nodes[i]);
+    for (int i = 0; i < POINTS; i++)
+        memset(&world.points[i], 0x5a + i, sizeof(world.points[i]));
+}
+
+void TestPlacements() {
+    for (int trial = 0; trial < 3000; trial++) {
+        RandomPlacement();
+        Compare("Drone_CoverCornerNode", trial,
+                [] {
+                    XbeOriginalScope o(0x0002fe20);
+                    ORIGINAL(0x0002fe20, void(__cdecl *)(_VECTOR *, _VECTOR *, level_tag *))(
+                        &world.pos, &world.rot, (level_tag *)&world.keys);
+                    return 0u;
+                },
+                [] {
+                    Drone_CoverCornerNode(&world.pos, &world.rot, (level_tag *)&world.keys);
+                    return 0u;
+                });
+    }
+    for (int trial = 0; trial < 3000; trial++) {
+        RandomPlacement();
+        // The anim table has five entries; beyond them both read their own stack
+        world.keys.low.anim1 = ShadowRand(5);
+        world.keys.low.anim2 = ShadowRand(5);
+        if (ShadowRand(2))
+            world.keys.low.kind = 2;
+        Compare("Drone_CoverLowNode", trial,
+                [] {
+                    XbeOriginalScope o(0x00030000);
+                    ORIGINAL(0x00030000, void(__cdecl *)(_VECTOR *, _VECTOR *, level_tag *))(
+                        &world.pos, &world.rot, (level_tag *)&world.keys);
+                    return 0u;
+                },
+                [] {
+                    Drone_CoverLowNode(&world.pos, &world.rot, (level_tag *)&world.keys);
+                    return 0u;
+                });
+    }
+    for (int trial = 0; trial < 3000; trial++) {
+        RandomPlacement();
+        Compare("Drone_AIPoint", trial,
+                [] {
+                    XbeOriginalScope o(0x00030190);
+                    ORIGINAL(0x00030190, void(__cdecl *)(_VECTOR *, _VECTOR *, level_tag *))(
+                        &world.pos, &world.rot, (level_tag *)&world.keys);
+                    return 0u;
+                },
+                [] {
+                    Drone_AIPoint(&world.pos, &world.rot, (level_tag *)&world.keys);
+                    return 0u;
+                });
+    }
+}
+
+// An extent: mostly ordinary, sometimes a signed zero or a NaN
+float RandomExtent() {
+    switch (ShadowRand(12)) {
+    case 0: return 0.0f;
+    case 1: return -0.0f;
+    case 2: return nanf("");
+    default: return ShadowRandFloat(-6.0f, 6.0f);
+    }
+}
+
+celglist_tag *glistArg;
+
+void TestVolumes() {
+    for (int trial = 0; trial < 4000; trial++) {
+        RandomPlacement();
+        world.keys.volume.volumeType = ShadowRand(7);
+        memset(&world.glist, 0, sizeof(world.glist));
+        world.glist.extentMin = {RandomExtent(), RandomExtent(), RandomExtent()};
+        world.glist.extentMax = {RandomExtent(), RandomExtent(), RandomExtent()};
+        world.glist.applyFlagsToObject = ShadowRand(0x10000);
+        RandomVector(&world.scale, 3.0f);
+        glistArg = ShadowRand(10) == 0 ? NULL : &world.glist;
+        ShadowFakes.createFails = ShadowRand(10) == 0;
+        GameState.CurrentLevelHashcode = RandomLevel();
+        Compare("Drone_AIVolume_Create", trial,
+                [] {
+                    XbeOriginalScope o(0x00030290);
+                    return (uint32_t)(uintptr_t)ORIGINAL(
+                        0x00030290, obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, _VECTOR *, level_tag *, celglist_tag *))(
+                        &world.pos, &world.rot, &world.scale, (level_tag *)&world.keys, glistArg);
+                },
+                [] {
+                    return (uint32_t)(uintptr_t)Drone_AIVolume_Create(&world.pos, &world.rot, &world.scale,
+                                                                       (level_tag *)&world.keys, glistArg);
+                });
+    }
+    ShadowFakes.createFails = false;
+
+    for (int trial = 0; trial < 3000; trial++) {
+        // A list of volumes, each on its own object turned about y
+        int count = ShadowRand(VOLUMES + 1);
+        memset(world.volumes, 0, sizeof(world.volumes));
+        memset(world.volumeObjs, 0, sizeof(world.volumeObjs));
+        AIBoxList.head = count ? &world.volumes[0].node : NULL;
+        AIBoxList.tail = count ? &world.volumes[count - 1].node : NULL;
+        AIBoxList.count = (ushort)count;
+        for (int i = 0; i < count; i++) {
+            DroneAIVolume_tag &volume = world.volumes[i];
+            volume.node.prev = i > 0 ? &world.volumes[i - 1].node : NULL;
+            volume.node.next = i + 1 < count ? &world.volumes[i + 1].node : NULL;
+            volume.obj = &world.volumeObjs[i];
+            volume.type = (ushort)ShadowRand(4);
+            volume.halfSize = {ShadowRandFloat(0.5f, 4.0f), ShadowRandFloat(0.5f, 4.0f), ShadowRandFloat(0.5f, 4.0f)};
+            float yaw = ShadowRandFloat(-3.0f, 3.0f), c = cosf(yaw), s = sinf(yaw);
+            float m[15] = {c, 0.0f, -s, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, s, 0.0f, c, 0.0f,
+                           ShadowRandFloat(-5.0f, 5.0f), ShadowRandFloat(-2.0f, 2.0f), ShadowRandFloat(-5.0f, 5.0f)};
+            memcpy(world.volumeObjs[i].transformMatrix.m, m, sizeof(m));
+        }
+        RandomVector(&world.pos, 6.0f);
+        typeArg = (ushort)ShadowRand(4);
+        GameState.CurrentLevelHashcode = RandomLevel();
+        Compare("Drone_PointInAnyAIBox", trial,
+                [] {
+                    XbeOriginalScope o(0x000304d0);
+                    return (uint32_t)(ORIGINAL(0x000304d0, uint(__cdecl *)(_VECTOR *, ushort))(&world.pos, typeArg) &
+                                      0xff);
+                },
+                [] { return (uint32_t)Drone_PointInAnyAIBox(&world.pos, typeArg); });
+
+        if (count == 0)
+            continue;
+        objArg = &world.objs[0];
+        memset(objArg, 0, sizeof(*objArg));
+        objArg->extraObjectData = &world.volumes[ShadowRand(count)];
+        Compare("Drone_AIVolume_Delete", trial,
+                [] {
+                    XbeOriginalScope o(0x00030450);
+                    ORIGINAL(0x00030450, void(__cdecl *)(obj_tag *))(objArg);
+                    return 0u;
+                },
+                [] {
+                    Drone_AIVolume_Delete(objArg);
+                    return 0u;
+                });
+    }
+}
+
+void RandomPaths() {
+    RandomObjects();
+    AIPathCount = ShadowRand(PATHS + 1);
+    for (int p = 0; p < PATHS; p++) {
+        AIPath_tag &path = AIPaths[p];
+        memset(&path, 0, sizeof(path));
+        uint nodes = 1 + ShadowRand(PATH_NODES);
+        uint links = ShadowRand(PATH_LINKS + 1);
+        path.nodeCount = nodes;
+        path.linkCount = links;
+        path.runtimeNodes = world.runNodes[p];
+        path.links = world.links[p];
+        path.nodeLinks = world.nodeLinks[p];
+        for (uint i = 0; i < PATH_NODES; i++) {
+            MAPNODE_tag &file = world.fileNodes[p][i];
+            memset(&file, 0, sizeof(file));
+            file.flags = ShadowRand(8) | (ShadowRand(2) << 20);
+            RandomVector(&file.pos, 12.0f);
+            AINode_tag &node = world.runNodes[p][i];
+            memset(&node, 0, sizeof(node));
+            node.fileNode = &file;
+            node.door = ShadowRand(2) ? &world.objs[ShadowRand(OBJS)] : NULL;
+        }
+        for (uint i = 0; i < PATH_LINKS; i++) {
+            AILink_tag &link = world.links[p][i];
+            memset(&link, 0, sizeof(link));
+            link.flags = (ushort)ShadowRand(0x400);
+            link.a = (ushort)ShadowRand(nodes);
+            link.b = (ushort)ShadowRand(nodes);
+        }
+        for (uint i = 0; i < PATH_LINKS * 2; i++)
+            world.nodeLinks[p][i] = (ushort)(links ? ShadowRand(links) : 0);
+        for (uint i = 0; i < nodes; i++) {
+            AINode_tag &node = world.runNodes[p][i];
+            node.linkCount = (uchar)ShadowRand(5);
+            node.firstLink = (ushort)ShadowRand(PATH_LINKS * 2 - 4);
+            if (links == 0)
+                node.linkCount = 0;
+        }
+    }
+    world.boundBias = ShadowRand(0x10000);
+}
+
+void TestPaths() {
+    for (int trial = 0; trial < 3000; trial++) {
+        RandomPaths();
+        Compare("NDrone_InitDoorNodes", trial,
+                [] {
+                    XbeOriginalScope o(0x00031af0);
+                    ORIGINAL(0x00031af0, void(__cdecl *)(void))();
+                    return 0u;
+                },
+                [] {
+                    NDrone_InitDoorNodes();
+                    return 0u;
+                });
+    }
+    for (int trial = 0; trial < 3000; trial++) {
+        RandomPaths();
+        Compare("NDrone_InitKickNodes", trial,
+                [] {
+                    XbeOriginalScope o(0x00031c00);
+                    ORIGINAL(0x00031c00, void(__cdecl *)(void))();
+                    return 0u;
+                },
+                [] {
+                    NDrone_InitKickNodes();
+                    return 0u;
+                });
+    }
+}
+
+} // namespace
+
+void AIHintsShadow_Run(void) {
+    static uint8_t gameState[sizeof(GameState_t)], npc[sizeof(NPCGlobals_t)], paths[sizeof(AIPaths)];
+    static uint8_t boxList[sizeof(LLISTINFO_tag)];
+    static char channels[256];
+    uint32_t pathCount = AIPathCount;
+    int32_t timeToCalc = TimeToCalc;
+    uchar disabled = Drone_bDisableSystem;
+    ShadowFakeSettings fakes = ShadowFakes;
+    memcpy(gameState, &GameState, sizeof(gameState));
+    memcpy(npc, &NPCGlobals, sizeof(npc));
+    memcpy(paths, &AIPaths, sizeof(paths));
+    memcpy(boxList, &AIBoxList, sizeof(boxList));
+    memcpy(channels, switch_channels, sizeof(channels));
+
+    regions.Clear();
+    regions.Add(&world, sizeof(world));
+    regions.Add(&GameState, sizeof(GameState_t));
+    regions.Add(&NPCGlobals, sizeof(NPCGlobals_t));
+    regions.Add(&AIPaths, sizeof(AIPaths));
+    regions.Add(&AIPathCount, 4);
+    regions.Add(&AIBoxList, sizeof(LLISTINFO_tag));
+    regions.Add(switch_channels, 256);
+    regions.Add(&TimeToCalc, 4);
+    regions.Add(&Drone_bDisableSystem, 1);
+    ShadowFakes_AddRegions(regions);
+
+    InstallFakes();
+    cases = differ = 0;
+
+    TestCover();
+    TestPlacements();
+    TestVolumes();
+    TestPaths();
+
+    ShadowHook_RemoveAll();
+    memcpy(&GameState, gameState, sizeof(gameState));
+    memcpy(&NPCGlobals, npc, sizeof(npc));
+    memcpy(&AIPaths, paths, sizeof(paths));
+    memcpy(&AIBoxList, boxList, sizeof(boxList));
+    memcpy(switch_channels, channels, sizeof(channels));
+    AIPathCount = pathCount;
+    TimeToCalc = timeToCalc;
+    Drone_bDisableSystem = disabled;
+    ShadowFakes = fakes;
+
+    printf("[aihints] cover nodes, AI points, AI volumes, cover checks, door and kick nodes: %d cases, %d differ\n",
+           cases, differ);
+}

@@ -94,7 +94,7 @@ void SpaceLaser_Update(obj_tag *obj) {
 
                 // Randomly pick one of two side lasers to fire?
                 int side = Rand_Random() & 1;
-                spaceLaser->scriptInfo = Script_Load(spaceLaser->someScripts[side], &CONST_ZERO_VECTOR, &CONST_ZERO_VECTOR, NULL, NULL, SpaceLaser_Register, spaceLaser);
+                spaceLaser->scriptInfo = Script_Load(spaceLaser->someScripts[side], &CONST_ZERO_VECTOR, &CONST_ZERO_VECTOR, NULL, NULL, (ScriptPlayerCallback *)SpaceLaser_Register, spaceLaser);
                 Script_Play(spaceLaser->scriptInfo, 0);
                 Script_Update(spaceLaser->scriptInfo);
                 Vec_Copy(&glb_players[0]->position, &spaceLaser->targetPnt);
@@ -155,7 +155,7 @@ void SpaceLaser_Update(obj_tag *obj) {
             effectInfo->someThing = 5;
             effectInfo->someOther = 0;
             hashtable_set_object_to_entity_gfx(hitEffect, (HASHCODE)0x20005cd);
-            hitEffect->maybeBrightness = 127 + Rand_Rand(128);
+            hitEffect->tweakA = 127 + Rand_Rand(128);
             control_link_object_to_cel(hitEffect, build_FindCel(&spaceLaser->emitterPnt, glb_world));
 
             // Position the beam
