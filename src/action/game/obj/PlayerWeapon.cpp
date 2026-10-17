@@ -44,7 +44,6 @@
 #define Concat ((void (__cdecl *)(_MATRIX *by, _MATRIX *mtx))0x000d6d20)
 #define MatrixScale ((void (__cdecl *)(_MATRIX *mtx, float scale))0x000d6500)
 #define Vec_Cartesian_2_Spherical ((void (__cdecl *)(_VECTOR *out, float x, float y, float z))0x000d8530)
-#define vecutil_calculate_closest_point_on_line ((double (__cdecl *)(_VECTOR *out, _VECTOR *a, _VECTOR *b, _VECTOR *p))0x000d7d00)
 
 #define CheatInfo (*((CheatInfo_t *)0x001f65dc))
 #define GlobalVars (*((GlobalVars_t *)0x001f6568))

@@ -120,6 +120,7 @@ add_library(actioninject SHARED
   src/action/devtools/PlayerShadow.cpp
   src/action/devtools/PlayerWeaponShadow.cpp
   src/action/devtools/AnimPortShadow.cpp
+  src/action/devtools/CollidePortShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/MathExactShadow.cpp
   src/action/devtools/Teleport.cpp
@@ -263,6 +264,7 @@ add_library(actioninject SHARED
   src/action/game/obj/ThirdCam.cpp
   src/action/game/obj/ThirdIcon.cpp
   src/action/game/obj/CamSubject.cpp
+  src/action/game/obj/RigidBody.cpp
   src/action/game/obj/Rotor.cpp
   src/action/game/obj/ScriptPlayer.cpp
   src/action/game/obj/Searchlight.cpp

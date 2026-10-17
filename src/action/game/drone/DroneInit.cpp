@@ -609,8 +609,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     }
 
     // The routes: no straight lines for fliers
-    drone->collision.unknown80 = 0;
-    drone->collision.unknown81 = 8;
+    drone->collision.type = HITTEST_CYLINDER;
     drone->activeRoute = NULL;
     AINetwork_ResetRoute(&drone->route1, gameObj, NULL);
     drone->route1.arriveRadius = 2.0f;

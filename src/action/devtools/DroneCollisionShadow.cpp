@@ -257,7 +257,7 @@ void RandomHit(HITDATA_tag *hit, const obj_tag *obj, bool forRay) {
     }
     hit->surfaceNormal.b = SpecialOr(-1.0f, 1.0f);
     hit->materialType = (char)(ShadowRand(8) == 0 ? 13 + ShadowRand(2) : ShadowRand(64));
-    hit->unknown3 = (char)ShadowRand(4);
+    hit->flags = (char)ShadowRand(4);
     hit->hitBoneIdx = (short)(ShadowRand(8) - 1);
     hit->hitCel = ShadowRand(3) ? NULL : &world.cels[ShadowRand(2)];
     if (forRay) {
@@ -325,7 +325,7 @@ void RandomDrone(int i) {
     RandomVector(&d->collision.push, 0.5f);
     RandomVector(&d->collision.rayStart, 10.0f);
     RandomVector(&d->collision.rayEnd, 10.0f);
-    d->collision.unknown88 = (ushort)ShadowRand(2);
+    d->collision.found = (ushort)ShadowRand(2);
     static const float alerts[] = {0.0f, 0.5f, 0.66f, 0.6600001f, 0.9f, NAN};
     d->alertness = Pick(alerts, 6);
     d->headMode = (short)(ShadowRand(2) ? 2 : ShadowRand(3));
@@ -420,7 +420,7 @@ void RandomWorld() {
 
     memset(&world.test, 0, sizeof(world.test));
     RandomVector(&world.test.rayEnd, 10.0f);
-    world.test.unknown88 = (ushort)ShadowRand(2);
+    world.test.found = (ushort)ShadowRand(2);
     RandomVector(&world.push, 0.5f);
     world.count = 0xcccc;
     world.slope = 7.0f;

@@ -197,7 +197,7 @@ void _AIBounds_Link2Cel(AIBoundNode_tag *node, uchar *record) {
     _VECTOR up = {pos->x, pos->y + BOUND_CEILING_SEARCH, pos->z};
     Collide_RayIntersect(pos, &up, cel, NULL, NULL, &hits, 1, BOUND_CEILING_COLLISION, 0);
     // the hit's distance up the ray
-    node->fileNode->headroom = hits != NULL ? hits->unknown1f : BOUND_CEILING_SEARCH;
+    node->fileNode->headroom = hits != NULL ? hits->dist : BOUND_CEILING_SEARCH;
     if (node->fileNode->headroom < BOUND_MIN_HEADROOM)
         node->fileNode->headroom = BOUND_MIN_HEADROOM;
     Collide_FreeHitList(&hits);

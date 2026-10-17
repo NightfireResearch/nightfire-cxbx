@@ -32,6 +32,7 @@ typedef struct cel_tag cel_tag;
 typedef struct obj_tag obj_tag;
 typedef struct viewer_tag viewer_tag;
 typedef struct HITDATA_tag HITDATA_tag;
+typedef struct HITTEST_tag HITTEST_tag;
 typedef struct HUDINFO_tag HUDINFO_tag;
 typedef struct HUDPANE_tag HUDPANE_tag;
 typedef struct HUDPANECREATE_tag HUDPANECREATE_tag;

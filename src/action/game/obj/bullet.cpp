@@ -28,15 +28,6 @@ static bool Sound_IsFinnished(DYNAMICSOUNDS *handle) {
     return reinterpret_cast<bool (__cdecl *)(DYNAMICSOUNDS *)>(0x000cbac0)(handle);
 }
 
-// Ghidra's prototype has untyped arguments. Returns whether anything was hit, and the hits through hitList.
-static bool Collide_SphereIntersect(_VECTOR *centre, float radius, cel_tag *cel, obj_tag *obj, obj_tag *ignore,
-                                    HITDATA_tag **hitList, char param_7, char param_8, ushort collideFlags,
-                                    int param_10) {
-    return reinterpret_cast<bool (__cdecl *)(_VECTOR *, float, cel_tag *, obj_tag *, obj_tag *, HITDATA_tag **,
-                                             char, char, ushort, int)>(0x0002c610)
-        (centre, radius, cel, obj, ignore, hitList, param_7, param_8, collideFlags, param_10);
-}
-
 // Blows the bullet up if its weapon explodes on impact; returns whether it did. Ghidra calls it __stdcall, but
 // it ends in a bare RET, so the caller cleans up. Bullet_Update pushes the shooter as a second argument as
 // well, which the function never reads, so it is not passed here.

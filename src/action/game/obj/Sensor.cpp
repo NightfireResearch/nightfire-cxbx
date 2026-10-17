@@ -162,7 +162,7 @@ short _Sensor_SetBeam(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor) {
         );
 
         if (hitResult) {
-            sensor->beamObject->scale = hitData->unknown1f;
+            sensor->beamObject->scale = hitData->dist;
             if (hitData->hitObj == targetObj) {
                 returnValue = 1;
             }

@@ -126,7 +126,7 @@ obj_tag * Searchlight_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglis
                 }
             }
         }
-        otherObj = otherObj->prevInCel;
+        otherObj = otherObj->nextInCel;
     }
 
     // Type 2 is the light holder - create dynamic light and move holder far away

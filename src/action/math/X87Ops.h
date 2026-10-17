@@ -27,6 +27,9 @@ Extended FSin(double x);
 Extended FCos(double x);
 // FPATAN: the angle of (x, y), atan(y / x) in the right quadrant
 Extended FPatan(double y, double x);
+// e^x as MSVC's inline exp computes it: FLDL2E, FMUL, then FRNDINT, F2XM1, FLD1, FADD and FSCALE on the whole and
+// fractional parts
+Extended FExp(double x);
 
 Extended operator+(const Extended &a, const Extended &b);
 Extended operator-(const Extended &a, const Extended &b);
@@ -37,6 +40,11 @@ Extended operator-(const Extended &a);
 // FCHS: the sign bit flipped, a NaN's too (the compiler may turn a plain -x + c into c - x, which keeps it)
 inline double Negate(double x) {
     return std::bit_cast<double>(std::bit_cast<uint64_t>(x) ^ 0x8000000000000000ull);
+}
+
+// |x| as the original takes it, comparing with 0 and FCHS when below: -0 keeps its sign, and a NaN is negated
+inline double AbsFchs(double x) {
+    return x >= 0.0 ? x : Negate(x);
 }
 
 // What the x87 gives for an operation on two NaNs: the one with the larger significand, the positive one when only

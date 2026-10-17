@@ -21,6 +21,15 @@ was read only - nothing in the database was renamed or retyped for this.
 
 ## Status
 
+**Since 17 October 2026** (parcel 12 of docs/nightfire-port-lifts.md) the whole range is ours but
+`Intersect_ConeSphere` and `Debris_Create_Loop`, with the three vecutil_ functions and the rigid bodies
+(`src/action/game/obj/RigidBody.cpp`), checked by CollidePortShadow. The names this review flagged are fixed in
+Ghidra and tools/functions_action.json: 0x2c440 is `Collide_TestHits` (our name), 0x2c6f0 `Collide_CylinderIntersect`,
+0x29a30 `Intersect_CylTriGeom`, 0x29fa0 `Intersect_RayGeom`, 0x2c760 `Collide_CylinderTris` (our name; was
+`Collide_unknown`), 0x29370, 0x293b0 and 0x29410 `Intersect_SphereSphere`, `Intersect_RaySphere` and
+`Intersect_CylSphere` (our names), 0x291c0 `RecurseBoxesSph`, 0x292e0 `ASH_RecurseBoxesRay`. The structures are laid
+out in src/action/engine/Collide.h, celglist.h and viewer.h. What follows is the review as of 2 October.
+
 From `python tools/function_coverage.py engine.collision` on 2 October 2026:
 
 | | functions | bytes |

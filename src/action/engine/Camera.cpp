@@ -262,7 +262,6 @@ void Camera_Shear(viewer_tag *vwr) {
 // The originals, called by address: unnamed placements of the view (also Player_PositionCamera's camera mode 2)
 #define Camera_PlaceAround ((void (__cdecl *)(_VECTOR *position, viewer_tag *viewer, float scale))0x000245a0)
 #define Camera_PlaceAbove ((void (__cdecl *)(_VECTOR *position, viewer_tag *viewer, float scale))0x00024610)
-#define vecutil_calculate_closest_point_on_line ((double (__cdecl *)(_VECTOR *out, _VECTOR *a, _VECTOR *b, _VECTOR *p))0x000d7d00)
 #define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
 
 #define HALF_PI 1.5707964f

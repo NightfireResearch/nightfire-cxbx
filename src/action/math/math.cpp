@@ -720,6 +720,199 @@ bool vecutil_point_on_poly(_VECTOR *point, _VECTOR *vtx1, _VECTOR *vtx2, _VECTOR
   return true;
 }
 
+// The point of the segment a to b nearest p, and how far along it is (0 to 1)
+// AUTOINJECT
+double vecutil_calculate_closest_point_on_line(_VECTOR *out, _VECTOR *a, _VECTOR *b, _VECTOR *p) {
+  _VECTOR d;
+  d.x = b->x - a->x;
+  d.y = b->y - a->y;
+  d.z = b->z - a->z;
+  double lengthSq = ((double)d.y * d.y + (double)d.x * d.x) + (double)d.z * d.z;
+  if (AbsFchs(lengthSq) > 1e-20f) {
+    double t = ((((double)p->y - a->y) * d.y + ((double)p->z - a->z) * d.z) + ((double)p->x - a->x) * d.x) / lengthSq;
+    if (t > 1.0) {
+      *out = *b;
+      return 1.0f;
+    }
+    if (!(t < 0.0)) {
+      out->x = (float)(d.x * t + a->x);
+      out->y = (float)(d.y * t + a->y);
+      out->z = (float)(d.z * t + a->z);
+      return t;
+    }
+  }
+  *out = *a;
+  return 0.0f;
+}
+
+// The point of the triangle nearest p (on its plane, planeDist from p): the plane's, or an edge's or a corner's when p
+// lies outside the edges (code: a bit for each edge, from c-a). On the x87 the point's x and y stay unrounded.
+struct TrianglePoint {
+  double x, y;
+  float z;
+};
+
+static TrianglePoint NearestOnTriangle(_VECTOR *p, _VECTOR *a, _VECTOR *b, _VECTOR *c, plane_equ_tag *plane,
+                                       float planeDist, unsigned short *code) {
+  _VECTOR *verts[3] = {a, b, c};
+  *code = 0;
+  for (unsigned i = 0; i < 3 && *code < 2; i++) {
+    _VECTOR *from = verts[(i + 2) % 3], *to = verts[i];
+    double edgeX = (double)to->x - from->x;
+    double edgeY = (double)to->y - from->y;
+    double edgeZ = (double)to->z - from->z;
+    float crossX = (float)(edgeY * plane->c - edgeZ * plane->b);
+    float crossY = (float)(edgeZ * plane->a - edgeX * plane->c);
+    double crossZ = edgeX * plane->b - edgeY * plane->a;
+    float offsetX = p->x - to->x;
+    float offsetY = p->y - to->y;
+    double offsetZ = (double)p->z - to->z;
+    if ((offsetZ * crossZ + (double)offsetY * crossY) + (double)offsetX * crossX > 0.0)
+      *code |= 1 << i;
+  }
+  TrianglePoint nearest;
+  _VECTOR onEdge;
+  switch (*code) {
+  case 1:
+    vecutil_calculate_closest_point_on_line(&onEdge, a, c, p);
+    nearest.x = onEdge.x;
+    nearest.y = onEdge.y;
+    nearest.z = onEdge.z;
+    break;
+  case 2:
+    vecutil_calculate_closest_point_on_line(&onEdge, b, a, p);
+    nearest.x = onEdge.x;
+    nearest.y = onEdge.y;
+    nearest.z = onEdge.z;
+    break;
+  case 3:
+    nearest.x = a->x;
+    nearest.y = a->y;
+    nearest.z = a->z;
+    break;
+  case 4:
+    vecutil_calculate_closest_point_on_line(&onEdge, c, b, p);
+    nearest.x = onEdge.x;
+    nearest.y = onEdge.y;
+    nearest.z = onEdge.z;
+    break;
+  case 5:
+    nearest.x = c->x;
+    nearest.y = c->y;
+    nearest.z = c->z;
+    break;
+  case 6:
+    nearest.x = b->x;
+    nearest.y = b->y;
+    nearest.z = b->z;
+    break;
+  default: {
+    float back = -planeDist;
+    nearest.x = (double)back * plane->a + p->x;
+    nearest.y = (double)back * plane->b + p->y;
+    nearest.z = (float)((double)back * plane->c + p->z);
+    break;
+  }
+  }
+  return nearest;
+}
+
+// How far p is from the point, which goes to closest if it is given
+static double DistanceToTrianglePoint(_VECTOR *p, const TrianglePoint &nearest, _VECTOR *closest) {
+  if (closest != NULL) {
+    closest->x = (float)nearest.x;
+    closest->z = nearest.z;
+    closest->y = (float)nearest.y;
+  }
+  float dx = (float)(nearest.x - p->x);
+  double dy = nearest.y - p->y;
+  double dz = (double)nearest.z - p->z;
+  return sqrt((dz * dz + dy * dy) + (double)dx * dx);
+}
+
+// How far p is from the triangle; behind its plane, the (negative) distance to the plane, and code 99
+// AUTOINJECT
+double vecutil_Dist2Tri(_VECTOR *p, _VECTOR *a, _VECTOR *b, _VECTOR *c, plane_equ_tag *plane, unsigned short *code, _VECTOR *closest) {
+  double planeDist = (((double)p->y * plane->b + (double)plane->c * p->z) + (double)p->x * plane->a) + plane->d;
+  float planeDistStored = (float)planeDist;
+  if (planeDist < 0.0) {
+    *code = 99;
+    return planeDistStored;
+  }
+  return DistanceToTrianglePoint(p, NearestOnTriangle(p, a, b, c, plane, planeDistStored, code), closest);
+}
+
+// As vecutil_Dist2Tri, with the distance to the plane given, from either side
+// AUTOINJECT
+double vecutil_Dist2Tri_PointGeom(_VECTOR *p, _VECTOR *a, _VECTOR *b, _VECTOR *c, plane_equ_tag *plane, float planeDist, _VECTOR *closest) {
+  unsigned short code;
+  return DistanceToTrianglePoint(p, NearestOnTriangle(p, a, b, c, plane, planeDist, &code), closest);
+}
+
+// Where the segments p1-p2 and p3-p4 cross in plan (x and z): 0 if they do not, 1 if they lie along each other (out
+// not written), 2 with the point's x and z in out
+// AUTOINJECT
+int vecutil_intersect_line_line_2d(_VECTOR *p1, _VECTOR *p2, _VECTOR *p3, _VECTOR *p4, _VECTOR *out) {
+  float ax = p2->x - p1->x;
+  float bx = p3->x - p4->x;
+  float low, high;
+  if (ax < 0.0f) {
+    low = p2->x;
+    high = p1->x;
+  } else {
+    high = p2->x;
+    low = p1->x;
+  }
+  if (bx > 0.0f) {
+    if (high < p4->x || p3->x < low)
+      return 0;
+  } else {
+    if (high < p3->x || p4->x < low)
+      return 0;
+  }
+  float az = p2->z - p1->z;
+  float bz = p3->z - p4->z;
+  if (az < 0.0f) {
+    low = p2->z;
+    high = p1->z;
+  } else {
+    high = p2->z;
+    low = p1->z;
+  }
+  if (bz > 0.0f) {
+    if (high < p4->z || p3->z < low)
+      return 0;
+  } else {
+    if (high < p3->z || p4->z < low)
+      return 0;
+  }
+  float cx = p1->x - p3->x;
+  float cz = p1->z - p3->z;
+  float d = (float)((double)cx * bz - (double)cz * bx);
+  float f = (float)((double)az * bx - (double)bz * ax);
+  if (f > 0.0f) {
+    if (d < 0.0f || d > f)
+      return 0;
+  } else {
+    if (d > 0.0f || d < f)
+      return 0;
+  }
+  double e = (double)cz * ax - (double)cx * az;
+  if (f > 0.0f) {
+    if (e < 0.0 || e > f)
+      return 0;
+  } else {
+    if (e > 0.0 || e < f)
+      return 0;
+  }
+  if (f <= 0.0002f && f >= -0.0002f)
+    return 1;
+  double inverse = 1.0 / f;
+  out->x = (float)((double)d * inverse * ax + p1->x);
+  out->z = (float)(inverse * d * az + p1->z);
+  return 2;
+}
+
 // AUTOINJECT
 float Vec_Dist3D(_VECTOR *a, _VECTOR *b) {
 

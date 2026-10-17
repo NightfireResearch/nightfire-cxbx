@@ -4930,7 +4930,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000291c0",
+        "name": "RecurseBoxesSph",
         "address": "0x000291c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -4974,7 +4974,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000292e0",
+        "name": "ASH_RecurseBoxesRay",
         "address": "0x000292e0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -4994,7 +4994,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00029370",
+        "name": "Intersect_SphereSphere",
         "address": "0x00029370",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": true,
@@ -5016,7 +5016,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000293b0",
+        "name": "Intersect_RaySphere",
         "address": "0x000293b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": true,
@@ -5034,7 +5034,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00029410",
+        "name": "Intersect_CylSphere",
         "address": "0x00029410",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": true,
@@ -5148,7 +5148,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Intersect_RayGeom",
+        "name": "Intersect_CylTriGeom",
         "address": "0x00029a30",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -5166,7 +5166,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00029fa0",
+        "name": "Intersect_RayGeom",
         "address": "0x00029fa0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -5422,7 +5422,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Collide_CylinderIntersect",
+        "name": "Collide_TestHits",
         "address": "0x0002c440",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": true,
@@ -5534,7 +5534,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0002c6f0",
+        "name": "Collide_CylinderIntersect",
         "address": "0x0002c6f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -5556,7 +5556,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Collide_unknown",
+        "name": "Collide_CylinderTris",
         "address": "0x0002c760",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -37056,7 +37056,7 @@
         "namespace": "Global"
     },
     {
-        "name": "RB_unknownHelperFunc2",
+        "name": "RB_Drag",
         "address": "0x000c01d0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -37078,7 +37078,7 @@
         "namespace": "Global"
     },
     {
-        "name": "RB_unknownHelperFunc",
+        "name": "RB_Move",
         "address": "0x000c02d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,

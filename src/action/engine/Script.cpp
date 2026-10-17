@@ -603,7 +603,7 @@ void Script_Interp(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
         if (!Collide_RayIntersect(&from, &to, build_FindCel(&from, glb_world), obj, NULL, &hitList, 0, 0xf0d, 0))
             return;
 
-        if ((double)hitList->unknown1f - animObj->rootHeight <= 0.2f)
+        if ((double)hitList->dist - animObj->rootHeight <= 0.2f)
             Effect_Create(hitList, obj, (FootstepFoot != 0 ? 8 : 4) | 0x42, 1.0f);
         Collide_FreeHitList(&hitList);
         break;

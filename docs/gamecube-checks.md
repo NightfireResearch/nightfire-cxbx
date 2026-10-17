@@ -120,14 +120,14 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | 57 | AnimSetInit (FUN_8004754c) | 0x8004754c | move-anim list has < 3 entries | Too few move anims | no | AnimSetInit | 0x17860 | high | dropped - added: src/action/engine/Anim.cpp (AnimSetInit) |
 | 58 | AnimSetInit | 0x8004754c | idle-anim list has < 3 entries | Too few idle anims | no | AnimSetInit | 0x17860 | high | dropped - added: src/action/engine/Anim.cpp (AnimSetInit) |
 | **Physics / sound / view** |
-| 59 | RB_Build (FUN_8005ea54) | 0x8005ea54 | any moment-of-inertia component < 0 → return 0 | TOI_body cannot be negative. | no | RB_Build | 0xc00a0 | high | silent |
-| 60 | RB_Build | 0x8005ea54 | inertia fails the triangle inequality → return 0 | TOI_body does not follow triangle rule. | no | RB_Build | 0xc00a0 | high | silent |
+| 59 | RB_Build (FUN_8005ea54) | 0x8005ea54 | any moment-of-inertia component < 0 → return 0 | TOI_body cannot be negative. | no | RB_Build | 0xc00a0 | high | silent - added: src/action/game/obj/RigidBody.cpp (RB_Build) |
+| 60 | RB_Build | 0x8005ea54 | inertia fails the triangle inequality → return 0 | TOI_body does not follow triangle rule. | no | RB_Build | 0xc00a0 | high | silent - added: src/action/game/obj/RigidBody.cpp (RB_Build) |
 | 61 | Sound_Play (FUN_800652cc) | 0x800652cc | DynamicSoundList has no free node → return NULL | Summut hasnt freed there sound handle/or samples not finnished | no | Sound_Play | 0xcb750 | high | silent |
 | 62 | View_CaptureSceneSub (FUN_800714fc) | 0x800714fc | viewer == NULL | ERROR Bad View | no | View_CaptureSceneSub | 0xda130 | high | silent |
 | 63 | Camera_CheckLocation (FUN_8010b688) | 0x8010b688 | camera position in no cel and no previous cel → use first cel of world | Error : Camera cant be linked to a cel! | no | Camera_CheckLocation | 0x250a0 | med-high | ? |
 | **Game flow / collision / bullets** |
 | 64 | GameFlow_PushState | 0x80051420 | StackIndex+1 > 0x3f → index reset to 0 | **** STACK OVERFLOW **** | no | GameFlow_PushState | 0x6abf0 | high | silent (reset kept) |
-| 65 | Collide_Update | 0x801071ec | hit heap count != HitAllocCnt after freeing all hit lists (leak) | Someone hasn't freed there hitlist! | no | Collide_Update | 0x2cca0 | high | dropped |
+| 65 | Collide_Update | 0x801071ec | hit heap count != HitAllocCnt after freeing all hit lists (leak) | Someone hasn't freed there hitlist! | no | Collide_Update | 0x2cca0 | high | dropped - added: src/action/engine/Collide.cpp (Collide_Update) |
 | 66 | Bullet_init | 0x80079b64 | direction vector pointer NULL → return NULL | Oops, null bullet vector | no | Bullet_init | 0x211f0 | high | ? |
 | **Objects** |
 | 67 | FUN_80082a74 (swing door setup) | 0x80082a74 | door model's longer axis is not x/y | ERROR : Swing door is not modelled on the xy axis : %s | no | Door_SetupSwing | 0x2ec30 | med-high | dropped (the Vec_Subtract of the model's extents stays) |

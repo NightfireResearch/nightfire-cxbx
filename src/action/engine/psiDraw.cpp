@@ -3,6 +3,7 @@
 #include "psiInput.h"             // psiInput_PollDevices, psiInput_RumbleUpdate
 #include "psiSprite.h"
 #include "Script.h"               // ScriptCam
+#include "Collide.h"              // Collide_CylinderTris
 #include "Direct3D/d3dSeam.h"
 #include "Direct3D/xboxMatrix.h"
 #include "../sound/dsndSeam.h"    // dsndUpdateVoices
@@ -608,10 +609,6 @@ uint32_t psiCopyToSP(uint32_t value) {
 // the character.
 // ---------------------------------------------------------------------------------------------------------------
 
-// AUTOGEN
-undefined4 __cdecl Collide_unknown(_VECTOR * param_1, _VECTOR * param_2, float param_3, int param_4, uint * param_5,
-                                   undefined2 param_6, undefined4 param_7);
-
 #define SHADOW_MAX_TRIANGLES 300
 static ShardVertex ShadowVertices[SHADOW_MAX_TRIANGLES * 3];
 
@@ -633,8 +630,8 @@ void maybe_psiDrawShadow(float x, float y, float z, void *obj, celglist_tag *gli
     to.y = from.y - 2.0f;
     to.z = z;
     uint triangles = 0;
-    const float *ground = (const float *)(uintptr_t)Collide_unknown(&from, &to, 1.0f, *(int *)((char *)obj + 0x20),
-                                                                    &triangles, 0x307, 4);
+    const float *ground = (const float *)Collide_CylinderTris(&from, &to, 1.0f, *(cel_tag **)((char *)obj + 0x20),
+                                                              &triangles, 0x307, 4);
     if (ground == NULL || (int)triangles < 1)
         return;
 

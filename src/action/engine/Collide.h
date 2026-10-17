@@ -8,20 +8,35 @@
 
 typedef struct cel_tag cel_tag;
 typedef struct obj_tag obj_tag;
+typedef struct celglist_tag celglist_tag;
+typedef struct portal_tag portal_tag;
+typedef struct COLLDATA_tag COLLDATA_tag;
+typedef struct COLLBOX_tag COLLBOX_tag;
+typedef struct COLLQUANT_tag COLLQUANT_tag;
 
 #pragma pack(push, 1)
+
+// HITDATA_tag::flags
+enum {
+  HIT_COPIED = 0x01,        // Collide_Update's copy of a hit on the object hit, which it does not test again
+  HIT_NO_CONTACT = 0x02,    // the cel or object is one the test passes through
+  HIT_NO_PUSH = 0x04,       // from the test's flags: the geometry does not push the test out
+};
+
+// The distance Collide_Intersect and the Intersect_ tests leave in a hit they reject
+#define HIT_NONE 1e8f
 
 typedef struct HITDATA_tag {
   HITDATA_tag* prev; // Conforms to LLNODE_tag
   HITDATA_tag* next;
-  float dmgAmt;
-  float unknown1f;
+  float dmgAmt;           // 0x08 - the test's damage
+  float dist;             // 0x0c - the hit list is sorted by it; HIT_NONE for a rejected hit
   plane_equ_tag surfaceNormal;
   _VECTOR unknown1;      // 0x20
   _VECTOR maybehitDirection; // 0x2C - ray direction
   _VECTOR hitPosition;   // 0x38
-  char materialType;
-  char unknown3;
+  char materialType;     // 0x44 - the triangle's material byte: 0x3f the surface, 0x40 and 0x80 flags
+  char flags;            // 0x45 - HIT_COPIED, HIT_NO_CONTACT, and the test's flags
   short hitBoneIdx;
   cel_tag* hitCel;
   obj_tag* hitObj;
@@ -31,55 +46,150 @@ static_assert(sizeof(HITDATA_tag) == 0x50, "HITDATA_tag is not the expected size
 static_assert(offsetof(HITDATA_tag, surfaceNormal) == 0x10, "Bad offset of surfaceNormal");
 static_assert(offsetof(HITDATA_tag, maybehitDirection) == 0x2c, "Bad offset of maybehitDirection");
 static_assert(offsetof(HITDATA_tag, hitPosition) == 0x38, "Bad offset of hitPosition");
+static_assert(offsetof(HITDATA_tag, flags) == 0x45, "Bad offset of flags");
 
-// A collision query (0x8c bytes), as Collide_StraddleCels and the ray tests take it. Only the fields our code sets
-// are named.
+// HITTEST_tag::type
+enum {
+  HITTEST_SPHERE_ONE_SIDED = 0x100,
+  HITTEST_SPHERE = 0x101,
+  HITTEST_RAY_BOXES = 0x200,    // only Collide_Pick and Intersect_Portal know it
+  HITTEST_RAY = 0x201,
+  HITTEST_POINT = 0x400,
+  HITTEST_CYLINDER = 0x800,
+  HITTEST_SPHERE_BOXES = 0x1000,
+  HITTEST_CYLINDER_TRIS = 0x2000,   // Collide_CylinderTris: the triangles round a cylinder, into TriHeap
+};
+
+// A collision query (0x8c bytes), as Collide_StraddleCels and the ray tests take it
 typedef struct HITTEST_tag {
-  char _unknown00[0x10];
-  _VECTOR push;         // 0x10 - a drone's capsule: Drone_CollisionHandler adds it to the position
+  plane_equ_tag plane;  // 0x00 - the triangle under test; Collide_PickObj leaves the spheres' difference here
+  _VECTOR push;         // 0x10 - how far the geometry pushed the test out (a drone's capsule: Drone_CollisionHandler
+                        //        adds it to the position)
   _VECTOR rayStart;     // 0x1c
   _VECTOR rayEnd;       // 0x28
-  char _unknown34[0x64 - 0x34];
-  obj_tag *ignore;      // 0x64 - the player's capsule: an object it does not collide with (his gun, his ladder)
-  char _unknown68[0x6c - 0x68];
-  cel_tag *cel;         // 0x6c - where the ray starts
-  char _unknown70[0x78 - 0x70];
-  float rayLength;      // 0x78 - a drone's capsule: its radius
-  float unknown7c;      // 0x7c - 1 for a dead player's capsule, else 0
-  union {
-    struct {
-      uchar unknown80;  // 0x80 - 1 from the AI network's tests; 0 for a drone's capsule
-      uchar unknown81;  // 0x81 - 2 from the AI network's tests; 8 for a drone's capsule that collides
-    };
-    ushort hitType;     // 0x80 as one word: 0x800 for a capsule that collides, 0 for none
-  };
+  _VECTOR dir;          // 0x34 - rayEnd - rayStart
+  _VECTOR pos;          // 0x40 - a sphere's centre; the ray tests leave their point here
+  _VECTOR sphere;       // 0x4c - the bounding sphere Collide_Pick tests, and its radius
+  float sphereRadius;   // 0x58
+  obj_tag *tester;      // 0x5c - whose hit list the hits go to
+  obj_tag *ignoreA;     // 0x60 - objects the test does not collide with
+  obj_tag *ignore;      // 0x64 - (the player's capsule: his gun, his ladder)
+  _MATRIX *matrix;      // 0x68 - Collide_Intersect's copy: the cel or object's matrix
+  cel_tag *cel;         // 0x6c - where the test starts
+  char _unknown70[0x74 - 0x70];
+  celglist_tag *glist;  // 0x74 - the geometry Collide_Intersect tests against
+  float radius;         // 0x78 - a sphere's or cylinder's radius (a drone's capsule: its radius); a ray's length
+  float damage;         // 0x7c - copied to the hits (1 for a dead player's capsule, else 0)
+  ushort type;          // 0x80 - HITTEST_ (0 for none)
   char _unknown82[0x84 - 0x82];
-  ushort unknown84;     // 0x84 - Ghidra: maybeCollisionMaskTypes
-  char _unknown86[0x88 - 0x86];
-  ushort unknown88;     // 0x88 - non-zero: Drone_FeetOnPoint counts the drone as on the ground
+  ushort mask;          // 0x84 - what the test passes through (Ghidra: maybeCollisionMaskTypes)
+  ushort flags;         // 0x86 - 0x10: stop at the first hit
+  ushort found;         // 0x88 - bit 1: Intersect_CylGeom found a floor (Drone_FeetOnPoint counts the drone as on
+                        //        the ground)
   char _unknown8a[0x8c - 0x8a];
 } HITTEST_tag;
 
 static_assert(sizeof(HITTEST_tag) == 0x8c, "HITTEST_tag is 0x8c bytes");
+static_assert(offsetof(HITTEST_tag, push) == 0x10, "Bad offset of HITTEST_tag.push");
+static_assert(offsetof(HITTEST_tag, sphereRadius) == 0x58, "Bad offset of HITTEST_tag.sphereRadius");
 static_assert(offsetof(HITTEST_tag, cel) == 0x6c, "Bad offset of HITTEST_tag.cel");
-static_assert(offsetof(HITTEST_tag, rayLength) == 0x78, "Bad offset of HITTEST_tag.rayLength");
+static_assert(offsetof(HITTEST_tag, glist) == 0x74, "Bad offset of HITTEST_tag.glist");
+static_assert(offsetof(HITTEST_tag, radius) == 0x78, "Bad offset of HITTEST_tag.radius");
 static_assert(offsetof(HITTEST_tag, ignore) == 0x64, "Bad offset of HITTEST_tag.ignore");
-static_assert(offsetof(HITTEST_tag, hitType) == 0x80, "Bad offset of HITTEST_tag.hitType");
+static_assert(offsetof(HITTEST_tag, type) == 0x80, "Bad offset of HITTEST_tag.type");
+static_assert(offsetof(HITTEST_tag, found) == 0x88, "Bad offset of HITTEST_tag.found");
+
+// One of the boxes a search collects (ColBoxs): the box, and for a ray where it enters it
+typedef struct BOXENTRY_tag {
+  COLLBOX_tag *box;
+  float t;
+} BOXENTRY_tag;
 
 #pragma pack(pop)
 
 #include "../actionhelpers.h"
 #include "../util/LList.h"
 
-bool Collide_RayIntersect(_VECTOR *startPosition,_VECTOR *endPosition,cel_tag *cel,obj_tag *obj,obj_tag *param_5,HITDATA_tag **hitDataOut,char param_7,uint maybeFlags,ushort param_9);
-void Collide_FreeHitList(HITDATA_tag **param_1);
+#define MAX_COLBOXES 600
+
+// XBE_GLOBAL(0x001dc9a0, 0x12c0)
+#define ColBoxs ((BOXENTRY_tag *)0x001dc9a0)
+// XBE_GLOBAL(0x001ddc6c, 0x4)
+#define BoxCnt U32_AT(0x001ddc6c)
+// The push the geometry tests accumulate, in the cel's or object's space
+// XBE_GLOBAL(0x001dec10, 0xc)
+#define DeltaP (*(_VECTOR *)0x001dec10)
+// Collide_Intersect: the cel's geometry is in world space (no matrix)
+// XBE_GLOBAL(0x001dec1c, 0x1)
+#define Ident U8_AT(0x001dec1c)
+// The triangles Intersect_CylTriGeom collects, three vertices each: TriOnCnt of TriAllocCnt vertices of 12 bytes
+// XBE_GLOBAL(0x001dec28, 0x4)
+#define TriAllocCnt U32_AT(0x001dec28)
+// XBE_GLOBAL(0x001dec2c, 0x4)
+#define TriOnCnt U32_AT(0x001dec2c)
+// XBE_GLOBAL(0x001dec30, 0x4)
+#define TriHeap (*(_VECTOR **)0x001dec30)
+
+// The hits, the hit heap and the narrow phase
 HITDATA_tag* Coll_GetFreeHit(void);
+HITDATA_tag* Coll_AddHitToList(HITDATA_tag **list, float dist, cel_tag *cel, obj_tag *obj);
+void Collide_FreeHitList(HITDATA_tag **param_1);
+void Coll_ResetHitHeap(void);
+void _Collide_Sort(HITDATA_tag **list);
+bool Intersect_CheckIfFlagsMatch(uchar material, uchar hitFlags, ushort mask, float *dist);
+void Collide_FilterBullets(HITDATA_tag **hitData, ushort flags);
+double Collide_GetDamageNObjects(HITDATA_tag *hitDatas, obj_tag **objectList, ushort *objectListCountOut, ushort maxObjectsInList);
+
+// The broad phase
+cel_tag** Collide_StraddleCels(HITTEST_tag *test, ushort *count);
+bool Intersect_Portal(HITTEST_tag *test, portal_tag *portal);
+void Collide_Pick(HITTEST_tag *test);
+void _Collide_PickObj(HITTEST_tag *test, obj_tag *obj, obj_tag *tester);
+bool _Intersect_SphereSphere(_VECTOR *a, float radiusA, _VECTOR *b, float radiusB, _VECTOR *difference, float *distSq);
+bool _Intersect_RaySphere(HITTEST_tag *test, float *distSq);
+bool _Intersect_CylSphere(HITTEST_tag *test, float *distSq);
+
+// The narrow phase
+bool _Collide_Intersect(HITTEST_tag *test, HITDATA_tag *hit, ushort flags);
+bool _Collide_Jointy(HITTEST_tag *test, HITDATA_tag *hit);
+void _Collide_TestHits(HITTEST_tag *test, ushort flags, char onlyCel);
+void Intersect_PointGeom(HITTEST_tag *test, HITDATA_tag *hit);
+void Intersect_RayGeom(HITTEST_tag *test, HITDATA_tag *hit);
+void Intersect_CylGeom(HITTEST_tag *test, HITDATA_tag *hit);
+void Intersect_CylTriGeom(HITTEST_tag *test, HITDATA_tag *hit);
+
+// Boxes and triangles
+bool Intersect_SphereBox(_VECTOR *centre, float radius, _VECTOR *boxMin, _VECTOR *boxMax);
+bool Intersect_BoxBox(_VECTOR *min1, _VECTOR *max1, _VECTOR *min2, _VECTOR *max2);
+bool Intersect_RayBox(HITTEST_tag *test, _VECTOR *boxMin, _VECTOR *boxMax, float *t);
+bool Intersect_PointOOBox(_MATRIX *mtx, _VECTOR *halfSize, _VECTOR *point, float radius);
+bool _Intersect_AABB_SweptVolume(_VECTOR *v0, _VECTOR *v1, _VECTOR *v2, _VECTOR *boxMin, _VECTOR *boxMax);
+void RecurseBoxesSph(COLLDATA_tag *coll, COLLBOX_tag *box, _VECTOR *centre, float radius);
+void ASH_RecurseBoxesBox(COLLDATA_tag *coll, COLLBOX_tag *box, _VECTOR *boxMin, _VECTOR *boxMax);
+void ASH_RecurseBoxesRay(COLLDATA_tag *coll, COLLBOX_tag *box, HITTEST_tag *test);
+bool Intersect_UnpackTrianglePlaneEq(uchar *vertexBlock, ushort normal, plane_equ_tag *plane);
+void Intersect_UnpackTriangleVerticesToWorld(uchar *vertexBlock, ushort v0, ushort v1, ushort v2, _VECTOR *vertsOut, COLLQUANT_tag *quant);
+
+// The queries
+bool Collide_RayIntersect(_VECTOR *startPosition,_VECTOR *endPosition,cel_tag *cel,obj_tag *obj,obj_tag *param_5,HITDATA_tag **hitDataOut,char onlyCel,ushort mask,ushort flags);
+bool Collide_SphereIntersect(_VECTOR *centre, float radius, cel_tag *cel, obj_tag *ignoreA, obj_tag *ignoreB, HITDATA_tag **hitList, char onlyCel, char oneSided, ushort mask, ushort flags);
+bool Collide_CylinderIntersect(HITTEST_tag *test, HITDATA_tag **hitList, char onlyCel, ushort flags);
+_VECTOR* Collide_CylinderTris(_VECTOR *start, _VECTOR *end, float radius, cel_tag *cel, uint *count, ushort mask, ushort flags);
+bool Collide_PlaceObject(_VECTOR *pos, _MATRIX *mtx, float radius, float extent, obj_tag *obj);
 bool Collide_LineOfSight(_VECTOR *param_1,_VECTOR *param_2,cel_tag *param_3,obj_tag *param_4,obj_tag *param_5,uint param_6);
 bool Collide_RayTriangle(_VECTOR *ptStart,_VECTOR *ptEnd,_VECTOR *vtx1,_VECTOR *vtx2,_VECTOR *vtx3, float *distanceOut);
-void Collide_FilterBullets(HITDATA_tag **hitData, ushort flags);
-float Collide_GetDamageNObjects(HITDATA_tag *hitDatas, obj_tag **objectList, ushort *objectListCountOut, ushort maxObjectsInList);
 bool Intersect_ConeSphere(_VECTOR *coneApex, float *coneDirection, float coneCos, float coneSin, _VECTOR *sphereCenter);
+void Collide_Update(obj_tag *first);
 
-void Coll_ResetHitHeap(void);
+// Register-argument adaptors patched over the originals (the registers in Collide.cpp); never call them from C.
+void Collide_Sort(void);
+void Intersect_AABB_SweptVolume(void);
+void Intersect_SphereSphere(void);
+void Intersect_RaySphere(void);
+void Intersect_CylSphere(void);
+void Collide_PickObj(void);
+void Collide_Jointy(void);
+void Collide_Intersect(void);
+void Collide_TestHits(void);
 
 #endif // COLLIDE_H

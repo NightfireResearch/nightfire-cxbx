@@ -582,7 +582,7 @@ void RandomHits(void) {
         RandomVector(&h->maybehitDirection, 1.0f);
         static const char materials[] = {0, 0xd, 0xe, 0x4d, 0x0e, 3};
         h->materialType = materials[ShadowRand(6)];
-        h->unknown3 = (char)ShadowRand(4);
+        h->flags = (char)ShadowRand(4);
         static const short bones[] = {0, -1, 1, 2, 4, 5, 6, 20, 21, 32, 35, 49, 56, 57};
         h->hitBoneIdx = bones[ShadowRand(14)];
         h->hitObj = targets[ShadowRand(7)];

@@ -325,8 +325,8 @@ cel_tag *__cdecl FakeFindCel(_VECTOR *pos, world_tag *where) {
 // The cels between the ray's ends in x, its own first
 cel_tag **__cdecl FakeStraddleCels(HITTEST_tag *test, ushort *count) {
     ShadowLog("straddle(%d,%08x,%08x,%08x,%08x,%08x,%d,%d)", WhichCel(test->cel), Bits(test->rayStart.x),
-              Bits(test->rayStart.z), Bits(test->rayEnd.x), Bits(test->rayEnd.z), Bits(test->rayLength),
-              test->unknown80, test->unknown81);
+              Bits(test->rayStart.z), Bits(test->rayEnd.x), Bits(test->rayEnd.z), Bits(test->radius),
+              test->type & 0xff, test->type >> 8);
     int lo = CelFor(&test->rayStart), hi = CelFor(&test->rayEnd);
     if (lo < 0)
         lo = 0;
@@ -351,7 +351,7 @@ bool __cdecl FakeRayIntersect(_VECTOR *start, _VECTOR *end, cel_tag *cel, obj_ta
     ShadowLog("ray(%08x,%08x,%08x,%d,%p,%p,%p,%d,%x,%d)", Bits(start->x), Bits(end->y), Bits(start->z), WhichCel(cel),
               obj, obj2, hits != NULL ? *hits : NULL, p7, flags, p9);
     if (world.rayHits && start->x > -5.0f) {
-        world.hit.unknown1f = start->z > 0.0f ? world.rayDistance : 1.25f;
+        world.hit.dist = start->z > 0.0f ? world.rayDistance : 1.25f;
         *hits = &world.hit;
         return true;
     }

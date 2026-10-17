@@ -122,17 +122,17 @@ void control_delete_object(obj_tag* obj) {
 
 // AUTOINJECT
 void control_unlink_object(obj_tag* obj) {
-  obj_tag* next = obj->nextInCel;
   obj_tag* prev = obj->prevInCel;
-  if (next != NULL) {
-    next->prevInCel = prev;
-  }
+  obj_tag* next = obj->nextInCel;
   if (prev != NULL) {
     prev->nextInCel = next;
   }
+  if (next != NULL) {
+    next->prevInCel = prev;
+  }
   obj->inCel = NULL;
-  obj->nextInCel = NULL;
   obj->prevInCel = NULL;
+  obj->nextInCel = NULL;
 }
 
 // AUTOINJECT

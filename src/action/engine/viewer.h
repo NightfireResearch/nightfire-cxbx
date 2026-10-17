@@ -153,10 +153,16 @@ struct portal_tag {
     portal_tag *next;           // 0x00 - the next portal of the same cel
     portal_tag *partner;        // 0x04 - the same opening, from the other cel
     cel_tag *cel;               // 0x08 - the cel on the other side (Collide_StraddleCels adds it)
-    char _unknown0c[0x28 - 0x0c];
-    _VECTOR corners[4];         // 0x28
-    char _unknown58[0x7c - 0x58];
+    char _unknown0c[0x10 - 0x0c];
+    plane_equ_tag plane;        // 0x10
+    uint32_t stamp;             // 0x20 - GameState.collisionStamp when Collide_StraddleCels last visited it
+    char _unknown24[0x28 - 0x24];
+    _VECTOR corners[4];         // 0x28 - two triangles, through Intersect_Portal's index table
+    _VECTOR centre;             // 0x58
+    _VECTOR boxMin;             // 0x64
+    _VECTOR boxMax;             // 0x70
 };
+static_assert(sizeof(portal_tag) == 0x7c, "portal_tag is 0x7c bytes");
 
 struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field0_0x0;
@@ -177,10 +183,8 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field15_0x12;
     undefined field16_0x13;
     cel_tag *nextCel;
-    undefined field24_0x18;
-    undefined field25_0x19;
-    undefined field26_0x1a;
-    undefined field27_0x1b;
+    cel_tag *childCel;                  // 0x18 - a cel's first cel within it, and a cel's next in the same one
+                                        //        (Collide_Pick)
     undefined field28_0x1c;
     undefined field29_0x1d;
     undefined field30_0x1e;
@@ -197,58 +201,16 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field47_0x2f;
     struct AIBoundNode_tag *boundNodes; // 0x30 - the AI bound nodes in this cel (AIBounds_Link2Cel)
     struct AIBoundLink_tag *boundLinks; // 0x34 - the AI bound links with an end in this cel (AIBounds_Prepare)
-    undefined field56_0x38;
-    undefined field57_0x39;
-    undefined field58_0x3a;
-    undefined field59_0x3b;
-    uint bitsFromPlacementTag;
+    celglist_tag *glist;                // 0x38 - the cel's geometry; NULL for none
+    uint bitsFromPlacementTag;          // 0x3c - CEL_WORLD_SPACE: the geometry has no matrix (Collide_Intersect)
     _VECTOR someMin;
     _VECTOR someMax;
-    undefined field63_0x58;
-    undefined field64_0x59;
-    undefined field65_0x5a;
-    undefined field66_0x5b;
-    undefined field67_0x5c;
-    undefined field68_0x5d;
-    undefined field69_0x5e;
-    undefined field70_0x5f;
-    undefined field71_0x60;
-    undefined field72_0x61;
-    undefined field73_0x62;
-    undefined field74_0x63;
-    undefined field75_0x64;
-    undefined field76_0x65;
-    undefined field77_0x66;
-    undefined field78_0x67;
-    undefined field79_0x68;
-    undefined field80_0x69;
-    undefined field81_0x6a;
-    undefined field82_0x6b;
-    undefined field83_0x6c;
-    undefined field84_0x6d;
-    undefined field85_0x6e;
-    undefined field86_0x6f;
-    undefined field87_0x70;
-    undefined field88_0x71;
-    undefined field89_0x72;
-    undefined field90_0x73;
-    undefined field91_0x74;
-    undefined field92_0x75;
-    undefined field93_0x76;
-    undefined field94_0x77;
-    undefined field95_0x78;
-    undefined field96_0x79;
-    undefined field97_0x7a;
-    undefined field98_0x7b;
-    undefined field99_0x7c;
-    undefined field100_0x7d;
-    undefined field101_0x7e;
-    undefined field102_0x7f;
+    _VECTOR position;                   // 0x58 - the geometry's matrix (Collide_Intersect): translation
+    _VECTOR rotation;                   // 0x64 - and rotation
+    _VECTOR sphere;                     // 0x70 - the bounding sphere Collide_Pick tests
+    float sphereRadius;                 // 0x7c
     float shearHeight;                 // 0x80 - a drone more than 0.3 m below it does not fall (NDrone2_Fall)
-    uchar flags84;                     // 0x84 - 0x40: Drone_FeetOnPoint does not stand on hits in this cel
-    undefined field108_0x85;
-    undefined field109_0x86;
-    undefined field110_0x87;
+    uint flags84;                      // 0x84 - CEL_ flags
     undefined field111_0x88;
     undefined field112_0x89;
     undefined field113_0x8a;
@@ -261,6 +223,20 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     uchar musicEvent;                  // 0x91 - Player_Update sends it (Music_Event) every frame the player is in the cel
     undefined1 someSwitchChannel; /* Created by retype action */
     undefined field122_0x93;
+};
+static_assert(offsetof(cel_tag, childCel) == 0x18, "Bad offset of cel_tag.childCel");
+static_assert(offsetof(cel_tag, glist) == 0x38, "Bad offset of cel_tag.glist");
+static_assert(offsetof(cel_tag, position) == 0x58, "Bad offset of cel_tag.position");
+static_assert(offsetof(cel_tag, sphereRadius) == 0x7c, "Bad offset of cel_tag.sphereRadius");
+static_assert(offsetof(cel_tag, flags84) == 0x84, "Bad offset of cel_tag.flags84");
+
+// cel_tag::bitsFromPlacementTag: the geometry is in world space, and Collide_Pick tests the cel's box (not its sphere)
+#define CEL_WORLD_SPACE 0x08000000
+// cel_tag::flags84
+enum {
+    CEL_NO_COLLISION = 0x20,        // Collide_Pick passes it by
+    CEL_NO_CONTACT = 0x40,          // its hits are HIT_NO_CONTACT (Drone_FeetOnPoint does not stand on them)
+    CEL_MASKABLE = 0x1000,          // a test with mask 0x20 passes it by
 };
 
 

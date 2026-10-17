@@ -115,7 +115,6 @@ void Player_SetCamMode(BLData *player, unsigned short newMode) {
 }
 
 // The original's, called by address: Ghidra's prototypes have untyped arguments.
-#define Collide_SphereIntersect ((bool (__cdecl *)(_VECTOR *centre, float radius, cel_tag *cel, obj_tag *obj, obj_tag *ignore, HITDATA_tag **hitList, char param_7, char param_8, ushort collideFlags, int param_10))0x0002c610)
 
 // What Player_Enable looks for around the player when asked to (the radius, the collision flags).
 #define PLAYER_ENABLE_ATTACH_RADIUS 2.0f
@@ -136,7 +135,7 @@ void Player_Disable(obj_tag *player, char freeze) {
 
     blData->active = 0;
     player->effectFlags |= FLAG_HIDDEN;
-    blData->hitTest.hitType = 0;
+    blData->hitTest.type = 0;
     if (blData->weaponObject != NULL)
         blData->weaponObject->effectFlags |= FLAG_HIDDEN;
 }
@@ -161,7 +160,7 @@ void Player_Enable(obj_tag *player, _MATRIX *mtx, int checkAttach) {
         Vec_Copy(&player->rotation, &player->lastRotation);
     }
 
-    blData->hitTest.hitType = 0x800;
+    blData->hitTest.type = 0x800;
     if (blData->weaponObject != NULL)
         blData->weaponObject->effectFlags &= ~FLAG_HIDDEN;
     blData->jumpState = 0;
@@ -2793,7 +2792,7 @@ void Player_Collision(obj_tag *player) {
     float rootHeight = player->animState->animObj.rootHeight;
     BLData *blData = (BLData *)player->extraObjectData;
     MPGame.players[blData->playerNum].maybeIdxOfLastInjurer = -2;
-    blData->hitTest.unknown84 = 0;
+    blData->hitTest.mask = 0;
     blData->hitTest.cel = player->inCel;
     _VECTOR up;
     Mat_GetUp(&up, &player->transformMatrix);
@@ -2849,29 +2848,29 @@ void Player_Collision(obj_tag *player) {
     switch ((short)player->subState) {
         case MovementType_Climb:
         case MovementType_Creep:
-            capsule->hitType = 0x800;
-            capsule->rayLength = 0.275f;
-            capsule->unknown7c = 0.0f;
-            SetCapsule(blData, player, &up, 0.55f, (float)-((double)rootHeight - capsule->rayLength));
+            capsule->type = 0x800;
+            capsule->radius = 0.275f;
+            capsule->damage = 0.0f;
+            SetCapsule(blData, player, &up, 0.55f, (float)-((double)rootHeight - capsule->radius));
             break;
 
         case MovementType_Wire:
         case 15:
             capsule->ignore = blData->attachedToSpecialMovementItem;
-            capsule->hitType = 0x800;
-            capsule->rayLength = 0.55f;
-            capsule->unknown7c = 0.0f;
+            capsule->type = 0x800;
+            capsule->radius = 0.55f;
+            capsule->damage = 0.0f;
             if (player->subState == 15)
-                capsule->unknown84 = 0x1c0;
+                capsule->mask = 0x1c0;
             SetCapsule(blData, player, &up, 0.275f, (float)(2.1f - (double)rootHeight));
             break;
 
         case MovementType_Crouch: {
             float top = (float)-((double)rootHeight - 0.55f - 0.1f);
             capsule->ignore = blData->weaponObject;
-            capsule->hitType = 0x800;
-            capsule->rayLength = 0.55f;
-            capsule->unknown7c = 0.0f;
+            capsule->type = 0x800;
+            capsule->radius = 0.55f;
+            capsule->damage = 0.0f;
             SetCapsule(blData, player, &up, top, (float)-((double)rootHeight - kCrouchCapsuleTop));
             break;
         }
@@ -2880,7 +2879,7 @@ void Player_Collision(obj_tag *player) {
         case MovementType_DeadInWater: {
             // From the head, as long as half the body (head to bone 0x33) or half the neck (head to bone 0x37), the
             // longer, and no wider than the anim's root height
-            capsule->rayLength = (0.55f < rootHeight) ? 0.55f : rootHeight;
+            capsule->radius = (0.55f < rootHeight) ? 0.55f : rootHeight;
             _VECTOR head, neck, body;
             AnimGetBoneWorldTrans(player, BONE_HEAD, 0, &head, NULL);
             AnimGetBoneWorldTrans(player, BONE_37, 0, &neck, NULL);
@@ -2891,8 +2890,8 @@ void Player_Collision(obj_tag *player) {
             if (!(length > halfBody))
                 length = (float)halfBody;
             capsule->ignore = blData->weaponObject;
-            capsule->hitType = 0x800;
-            capsule->unknown7c = 1.0f;
+            capsule->type = 0x800;
+            capsule->damage = 1.0f;
             Vec_Copy(&head, &capsule->rayStart);
             auxVec_AddMulR32(&player->position, &up, (float)-((double)length - 0.55f), &capsule->rayEnd);
             break;
@@ -2902,19 +2901,19 @@ void Player_Collision(obj_tag *player) {
             // On anything but a gun turret, the capsule is set up but does not collide
             if (blData->remoteControlDevice->objectType != OBJECTTYPE_GUNTURRET) {
                 capsule->ignore = blData->remoteControlDevice;
-                capsule->hitType = 0x800;
-                capsule->rayLength = 0.55f;
-                capsule->unknown7c = 0.0f;
+                capsule->type = 0x800;
+                capsule->radius = 0.55f;
+                capsule->damage = 0.0f;
                 SetCapsule(blData, player, &up, 0.275f, (float)-((double)rootHeight - 0.55f));
-                capsule->hitType = 0;
+                capsule->type = 0;
                 break;
             }
             // fall through
         default:
             capsule->ignore = blData->weaponObject;
-            capsule->hitType = 0x800;
-            capsule->rayLength = 0.55f;
-            capsule->unknown7c = 0.0f;
+            capsule->type = 0x800;
+            capsule->radius = 0.55f;
+            capsule->damage = 0.0f;
             SetCapsule(blData, player, &up, 0.275f, (float)-((double)rootHeight - 0.55f));
             break;
     }
@@ -2929,9 +2928,6 @@ void Player_Collision(obj_tag *player) {
 #define PlayerNotDrone_FeetOnPoint ((obj_tag *(__cdecl *)(obj_tag *obj, HITTEST_tag *test, float *floorNormalY, char dying))0x000ab450)
 #define PlayerCollLadder ((void (__cdecl *)(obj_tag *player, BLData *blData, obj_tag *ladder))0x000ae930)
 #define Env_WaterRipple ((void (__cdecl *)(HITDATA_tag *hit))0x00068f20)
-
-// HITDATA_tag::unknown3: a hit that does not count as touching (the first other hit sets the contact flags)
-#define HIT_NO_CONTACT 0x02
 
 // The anim flags the collision works out afresh every frame
 #define ANIM_CONTACTS (ANIM_CONTACT_FLOOR | ANIM_CONTACT_HIT | ANIM_CONTACT_ABOVE | ANIM_CONTACT_MOVER)
@@ -3131,7 +3127,7 @@ void Player_CollisionHandler(obj_tag *player) {
             HITDATA_tag *contact = NULL;
             for (HITDATA_tag *hit = player->hitList; hit != NULL; hit = hit->next) {
                 Player_DealWithObjHit(player, blData, hit);
-                if (!(hit->unknown3 & HIT_NO_CONTACT) && contact == NULL)
+                if (!(hit->flags & HIT_NO_CONTACT) && contact == NULL)
                     contact = hit;
             }
             if (contact != NULL) {
@@ -3150,7 +3146,7 @@ void Player_CollisionHandler(obj_tag *player) {
     else {
         HITDATA_tag *contact = NULL;
         for (HITDATA_tag *hit = player->hitList; hit != NULL; hit = hit->next) {
-            if (!(hit->unknown3 & HIT_NO_CONTACT) && contact == NULL)
+            if (!(hit->flags & HIT_NO_CONTACT) && contact == NULL)
                 contact = hit;
             if (contact != NULL && contact->hitObj == blData->attachedToSpecialMovementItem)
                 contact = NULL;

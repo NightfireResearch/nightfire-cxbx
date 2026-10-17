@@ -98,6 +98,7 @@
 #include "PlayerShadow.h"
 #include "PlayerWeaponShadow.h"
 #include "AnimPortShadow.h"
+#include "CollidePortShadow.h"
 #include "CameraShadow.h"
 #include "MathExactShadow.h"
 #include "Teleport.h"
@@ -599,6 +600,7 @@ void MenuProbe_Install(void) {
         PlayerShadow_Run();
         PlayerWeaponShadow_Run();
         AnimPortShadow_Run();
+        CollidePortShadow_Run();
         MathExactShadow_Run();
     }
     g_logging = SettingOn("MenuLog");

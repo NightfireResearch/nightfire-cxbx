@@ -75,6 +75,26 @@ static void __declspec(naked) PartialArctangent(Extended *out, double y, double 
     }
 }
 
+static void __declspec(naked) Exponential(Extended *out, double x) {
+    __asm {
+        mov eax, dword ptr [esp + 4]
+        fld qword ptr [esp + 8]
+        fldl2e
+        fmulp st(1), st(0)
+        fld st(0)
+        frndint
+        fxch st(1)
+        fsub st(0), st(1)
+        f2xm1
+        fld1
+        faddp st(1), st(0)
+        fscale
+        fstp st(1)
+        fstp tbyte ptr [eax]
+        ret
+    }
+}
+
 // The operations take a in ST0 and b in ST1 and write ST0, the forms that every assembler reads the same way
 static void __declspec(naked) Add(Extended *out, const Extended *a, const Extended *b) {
     __asm {
@@ -163,6 +183,12 @@ Extended FCos(double x) {
 Extended FPatan(double y, double x) {
     Extended result;
     PartialArctangent(&result, y, x);
+    return result;
+}
+
+Extended FExp(double x) {
+    Extended result;
+    Exponential(&result, x);
     return result;
 }
 

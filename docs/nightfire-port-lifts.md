@@ -46,6 +46,8 @@ to what it does. A function ported that way:
 
 | 11 | anim | 54, all in src/action/engine/Anim.cpp but the player's five anim-set functions (Player.cpp): loading (skins, sequences, scripts, the sleeves), script lists and scripts, script ticks and commands, sequence frames and poses, faces and datums, the bone matrices, head tracking, aiming and drawing, the anim object, anim sets. Of their 9 names without an Xbox function of that name, AnimSeqGetInfo is 0x14420, AnimSeqSet 0x17960, AnimSet_WalkUpdater 0x171a0 and AnimDistanceTableGet 0x174a0 (renamed from FUN_ in Ghidra, the first three ported); AnimDistanceTableCreate is 0x16950 (renamed, left to the original); AnimDistanceTableInit, AnimTagGetUnique and AnimSeqDelete are inline; MP_NeedSkin is not called. Static helpers renamed from FUN_: AnimFramesPassed 0x12a20, AnimFrameEmitChannels 0x13c70, AnimData_ReadHalf 0x13880. 21 AUTOLTCG adaptors for the register-argument originals | 52 of 54; 1,240 of 1,552 blocks (AnimSleeveGetEntity and AnimObjectInitialPose not reached). AnimPortShadow: 73,500 cases in eight groups, all 0 differ; one planted bug per group, all caught. Under the shadow run the originals reach 1,601 of the 1,651 blocks of the 54 and their helpers | see git log |
 
+| 12 | collide, rigid_body (package A; break, bullet, effect and explode are package B) | 42 + 16 Xbox functions theirs inline or name otherwise: their `Collide_Filter` is `Intersect_CheckIfFlagsMatch` 0x28a50, `RecurseBoxesSph` 0x291c0 and `ASH_RecurseBoxesRay` 0x292e0 (renamed from FUN_), `Intersect_CylTriGeom` 0x29a30 (Ghidra had `Intersect_RayGeom`), their `Intersect_RayGeom` 0x29fa0; renamed as ours: `Collide_TestHits` 0x2c440 (Ghidra had `Collide_CylinderIntersect`, which is 0x2c6f0), `Collide_CylinderTris` 0x2c760 (was `Collide_unknown`), `Intersect_SphereSphere`, `Intersect_RaySphere`, `Intersect_CylSphere` 0x29370-0x29410, `RB_Drag` 0x0c01d0 and `RB_Move` 0x0c02d0 (were `RB_unknownHelper*`); ported with them: `Collide_Sort`, `Intersect_BoxBox`, `Intersect_AABB_SweptVolume`, `Intersect_UnpackTrianglePlaneEq`, `Intersect_UnpackTriangleVerticesToWorld`. Collide.cpp, the three vecutil_ functions and `vecutil_intersect_line_line_2d` in math.cpp, RigidBody.cpp; 9 AUTOLTCG adaptors | 38 of 42 reached by the demos; under CollidePortShadow the originals reach 984 of the 990 blocks of the 58 (the 6 left: three that cannot be reached, Collide_Update's call of a collision handler, the 166-triangle cap of Collide_CylinderTris, and Collide_Pick's skip of a type between 0x101 and 0x200, reached in an earlier run). CollidePortShadow: 156,000 cases in seven groups, all 0 differ (with about 330 where only the NaN chosen between two NaNs differs, as MathExactShadow allows); one planted bug per group, all caught | see git log |
+
 Parcel 1's first playback found two things the coverage alone would not have shown:
 - **A crash in our code.** The port of `Script_CreateEntity` called our `Break_Create` by name, which is a known-broken
   draft that was never patched in. `tools/draft_calls.py` now finds such calls.
@@ -440,6 +442,64 @@ Found along the way:
 - docs/anim, which the brief points to, is on the blender-exports branch (7af6075), not this one, so it is not
   updated here.
 
+### Parcel 12 (package A: collide.cpp and rigid_body.cpp)
+- Their names without an Xbox function of that name: `Collide_Filter` is `Intersect_CheckIfFlagsMatch` (0x28a50);
+  `RecurseBoxesSph` is 0x291c0 and `ASH_RecurseBoxesRay` 0x292e0 (FUN_ in Ghidra, renamed); `ASH_Intersect_RayBox` is
+  `Intersect_RayBox` itself (0x28cf0) and `ASH_vecutil_Dist2Tri` is `vecutil_Dist2Tri` (0xd82d0): the Xbox has no
+  second copies; `RecurseBoxesBox` has no Xbox counterpart (`Intersect_CylTriGeom` walks the tree with
+  `ASH_RecurseBoxesBox`, 0x29250, and `Intersect_BoxBox`); `Intersect_CylTriGeom` is 0x29a30, which Ghidra had named
+  `Intersect_RayGeom`, and their `Intersect_RayGeom` is 0x29fa0; `RB_AddImpulsiveForce` is inline (a `Vec_Add2` into
+  the impulse, in `RB_Update` and `RB_ApplyWind`), and so is `RB_SetState` (`Quat_QuaternionToMatrix` in `RB_Create`).
+- Ghidra's `Collide_CylinderIntersect` (0x2c440) is the shared narrow phase of the three queries (`Collide_TestHits`,
+  our name: the test in EDI, the flags in EAX); their `Collide_CylinderIntersect` is 0x2c6f0. `Collide_unknown`
+  (0x2c760) is `Collide_CylinderTris`, our name: the cylinder query that gathers triangles for
+  `Collide_PlaceObject` and the character shadows (theirs inlines it in `Collide_PlaceObject`).
+- `Collide_PickObj`, for a cylinder, copies only the normal of the test's plane (12 bytes) to the hit's normal and
+  direction; theirs copies the plane with its d.
+- `Collide_GetDamageNObjects` sums on the x87 and returns the double unrounded (theirs sums floats; ours returned a
+  float too, which SP_GetHitDamage and Monitor_Update then rounded where the originals did not).
+- `Intersect_RayBox` compares each slab's far side unrounded, and stores both sides as floats; `Intersect_SphereBox`
+  and `Intersect_PointOOBox` take their sums in double.
+- `Intersect_PointGeom` lets a NaN distance to the plane through (`<= least` skips, theirs `!(least < dist)`), and
+  sets the hit's position from the sphere and the old normal before overwriting it (a call theirs leaves out).
+- `Intersect_RayGeom`, with the test's flag 0x10, ends the search at the first triangle whose material the filter
+  accepts; theirs ends it at a material with 0x40 or 0x80 as well.
+- `Intersect_CylGeom` has no test of a triangle's first x against the box (theirs breaks out of the leaf there).
+  The Xbox first passes by a triangle both ends of the cylinder are more than its radius from, on the same side of
+  its plane (the start's distance rounded to float, the end's not), then tests the triangle's bounds against the box
+  (`Intersect_AABB_SweptVolume`, registers EDX, ECX, ESI, EDI, EBX), and takes the axis's dot with the normal as a
+  float, in the order y, x, z.
+- `Intersect_Portal` keeps its triangle counter in a global (0x1dec34) and picks the plane by the counter halved from
+  a pair, the second the portal's plane reversed, which the two triangles it tests never reach.
+- `vecutil_intersect_line_line_2d` multiplies by the reciprocal of the denominator; theirs divides by it.
+- `vecutil_Dist2Tri` and `vecutil_Dist2Tri_PointGeom` keep the nearest point's x and y unrounded on the x87 into the
+  distance, and the point's offsets from an edge's end as floats, but its z unrounded.
+- `RB_EulerEvolve`'s drag and integration are two functions on the Xbox, `RB_Drag` (0xc01d0) and `RB_Move` (0xc02d0),
+  both renamed. The angular drag's exponent is (I/damp) x (-1/I) x dt, and the exponential is MSVC's inline x87
+  sequence (`FExp`, X87Ops.h); the linear drag's factor is (1 - e) x (-1/dt), not their (e - 1)/dt.
+- `RB_apply_omega` takes the half angle's cosine with FCOS (theirs: the sine of the angle plus pi/2), and divides the
+  sine by the speed before the three products.
+- `RB_RestingContact` takes -(d x (restitution + 1)) of the velocity into the push, not -(r d + d).
+- `RB_CuboidMomentsOfInertia` adds the x side's square, stored as a float, to the y side's unrounded for the third
+  moment.
+- `RB_Update`'s light finder is the shared empty function (0xde5f0, `psiLight_Create`): a body that carries a light
+  calls it every frame and never finds one.
+- Found in ours, not theirs: the cel's sub-cel chain is at 0x18 (theirs reads it right); our `cel_tag::nextCel`
+  (0x14) is the world's list of cels, so `childCel` is added; `obj_tag` 0x08 is the next object in the cel and 0x0c the
+  previous (ours had the names the other way round; `control_unlink_object` is unchanged in effect).
+- Fields named: `HITTEST_tag` whole (`plane`, `dir`, `pos`, `sphere`, `sphereRadius`, `tester`, `ignoreA`, `matrix`,
+  `glist`, `radius` (was `rayLength`), `damage`, `type` (was `hitType`, `unknown80/81`), `mask`, `flags`, `found`) and
+  the `HITTEST_` types; `HITDATA_tag::dist` (was `unknown1f`), `flags` (was `unknown3`) and `HIT_COPIED`,
+  `HIT_NO_CONTACT`, `HIT_NO_PUSH`; `cel_tag::childCel` 0x18, `glist` 0x38, `position`, `rotation`, `sphere`,
+  `sphereRadius` 0x58-0x7c, `flags84` a dword with `CEL_NO_COLLISION`, `CEL_NO_CONTACT`, `CEL_MASKABLE`, and
+  `CEL_WORLD_SPACE` in `bitsFromPlacementTag`; `portal_tag::plane`, `stamp`, `centre`, `boxMin`, `boxMax`;
+  `COLLBOX_tag::triEnd`, `vertexBlock`, `quant` (`COLLQUANT_tag`); `collDataB` (a triangle); `obj_tag::maybeCollision`
+  is a `HITTEST_tag *` (`CAR_INFO` starts with one); the whole of `RIGIDBODY` and `RigidBodyPlacement` (RigidBody.h);
+  `BOXENTRY_tag` (ColBoxs).
+- Not changed, but not exact: math.cpp's `Vec_Magnitude`, `Vec_Dist3D` and `Vec_SqDist3D` work in float and return
+  floats, where the originals sum the squares on the x87 and return the unrounded double (`Vec_NormaliseLen` returns
+  `Vec_Magnitude`'s). The originals and ports above call ours, so the shadow cannot see it; the demos would.
+
 ## Original bugs found while porting (kept; candidates for FIX_ORIGINAL_GAME_BUGS)
 
 - `Script_Load`, a file with 0x3f streams or more: hands its record to `DList_RemoveFromInUse2Free(&ScriptList)`,
@@ -562,6 +622,16 @@ Found along the way:
 - `AnimSeqSet` keeps the unpack cache of the sequence it replaces.
 - `AnimFrameResolve` deletes every script whose fade direction is 0 once any script has faded, and gives a new script
   the bone count of skeleton 0.
+
+- `Coll_AddHitToList` does not check the hit it gets: with the heap used up it writes through NULL.
+- `Intersect_PointGeom` and `Intersect_RayGeom`, ending a search early (test flag 0x10), set the box index to BoxCnt,
+  and the inner loop's test then reads `ColBoxs[BoxCnt]`, an entry an earlier search left (or NULL), and may run on
+  through that box's triangle range with the current box's vertex block. Both test the material of the best triangle
+  so far, the byte before the table before the first; `Intersect_CylTriGeom` tests the byte before the table for
+  every triangle.
+- `Intersect_CylTriGeom` does not check the allocation when it grows TriHeap.
+- `Collide_CylinderIntersect` leaves the test's tester pointing at its own stack object.
+- `RB_Update`: a rigid body that carries a light looks for it every frame through a function that returns NULL.
 
 ## Departures from the original
 

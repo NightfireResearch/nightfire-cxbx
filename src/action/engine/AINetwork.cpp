@@ -31,12 +31,8 @@ static_assert(offsetof(portal_tag, corners) == 0x28, "Wrong offset for portal_ta
 #define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
 #define Vec_SqDist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e50)
 // Writes the point of the line through a and b nearest p; its return value is not used
-#define vecutil_calculate_closest_point_on_line ((double (__cdecl *)(_VECTOR *out, _VECTOR *a, _VECTOR *b, _VECTOR *p))0x000d7d00)
 // Where the segments a0-a1 and b0-b1 cross in plan (x and z); zero if they do not
-#define vecutil_intersect_line_line_2d ((int (__cdecl *)(_VECTOR *a0, _VECTOR *a1, _VECTOR *b0, _VECTOR *b1, _VECTOR *out))0x000d60a0)
-#define Intersect_SphereBox ((bool (__cdecl *)(_VECTOR *pos, float radius, _VECTOR *boxMin, _VECTOR *boxMax))0x00028ae0)
 // The cels a query's ray passes through; the count goes in *count
-#define Collide_StraddleCels ((cel_tag **(__cdecl *)(HITTEST_tag *test, ushort *count))0x0002b910)
 #define NDrone2_ReachedDestNode ((bool (__cdecl *)(AIRoute_tag *route, DCVars_tag *dcv))0x000446b0)
 
 // The cels the last ray of AINetwork_TestRayCels and of AINetwork_BoundsTest passed through
@@ -651,10 +647,10 @@ bool AINetwork_TestRayCels(_VECTOR *from, cel_tag *fromCel, _VECTOR *to, cel_tag
     memset(&test, 0, sizeof(test));
     Vec_Copy(from, &test.rayStart);
     Vec_Copy(to, &test.rayEnd);
-    test.rayLength = Vec_Dist3D(from, to);
+    test.radius = Vec_Dist3D(from, to);
     test.cel = fromCel;
-    test.unknown80 = 1;
-    test.unknown81 = 2;
+    test.type = HITTEST_RAY;
+
     ushort count = 1;
     if (fromCel == NULL || toCel == NULL)
         return false;
@@ -824,10 +820,10 @@ uchar AINetwork_BoundsTest(_VECTOR *from, cel_tag *fromCel, _VECTOR *to, cel_tag
     Vec_Copy(to, &test.rayEnd);
     test.rayStart.y += 1.0f;
     test.rayEnd.y += 1.0f;
-    test.rayLength = Vec_Dist3D(from, to);
+    test.radius = Vec_Dist3D(from, to);
     test.cel = fromCel;
-    test.unknown80 = 1;
-    test.unknown81 = 2;
+    test.type = HITTEST_RAY;
+
     ushort count = 1;
     if (fromCel == NULL)
         return 0;
@@ -896,10 +892,10 @@ bool AINetwork_BoundsNodeTest(_VECTOR *from, cel_tag *fromCel, _VECTOR *to, cel_
     memset(&test, 0, sizeof(test));
     Vec_Copy(from, &test.rayStart);
     Vec_Copy(to, &test.rayEnd);
-    test.rayLength = Vec_Dist3D(from, to);
+    test.radius = Vec_Dist3D(from, to);
     test.cel = fromCel;
-    test.unknown80 = 1;
-    test.unknown81 = 2;
+    test.type = HITTEST_RAY;
+
     ushort count = 1;
     if (fromCel == NULL)
         return false;

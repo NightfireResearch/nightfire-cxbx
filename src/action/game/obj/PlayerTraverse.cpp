@@ -21,7 +21,6 @@
 // (camera_tracking, camera mode 0xb).
 
 // The originals, called by address
-#define vecutil_calculate_closest_point_on_line ((double (__cdecl *)(_VECTOR *out, _VECTOR *a, _VECTOR *b, _VECTOR *p))0x000d7d00)
 #define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
 #define Vec_SqDist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e50)
 

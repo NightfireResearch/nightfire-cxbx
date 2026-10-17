@@ -2,10 +2,12 @@
 #define CAR_H_
 
 
+#include "../../engine/Collide.h"
+
 #pragma pack(push, 1)
 
 typedef struct {
-    char _pad_1[0x8c];
+    HITTEST_tag hitTest; // 0x00 - the object's collision test
     _VECTOR someVector_8c; // 0x8C
     _VECTOR someVector_98; // 0x98
     quaternion_tag orientation; // 0xA4

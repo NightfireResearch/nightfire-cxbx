@@ -167,8 +167,8 @@ typedef struct obj_tag {
     // TODO: Complete this
     LLNODE_tag* llPrev; // Required at the start of the struct for insertion into eg ForcedList
     LLNODE_tag* llNext;
-    obj_tag* prevInCel; // 0x8 -- doubly-linked list
-    obj_tag *nextInCel; // 0xC
+    obj_tag* nextInCel; // 0x8 - the cel's objects, from cel_tag::firstObject
+    obj_tag *prevInCel; // 0xC - (the cel itself for the first)
     char pad_0000[4];
     obj_tag *nextObject; // 0x14 - doubly-linked list
     obj_tag* prevObject; // 0x18
@@ -183,7 +183,7 @@ typedef struct obj_tag {
     float radius; // 0x6C
     _MATRIX transformMatrix; // 0x70
     HITDATA_tag* hitList; // 0xAC - HITLIST_tag
-    void* maybeCollision; // 0xB0
+    HITTEST_tag* maybeCollision; // 0xB0 - the test Collide_Update runs for the object
     celglist_tag* objGraphics; // 0xB4
     AnimState* animState; // 0xB8
     void* extraObjectData; // 0xBC

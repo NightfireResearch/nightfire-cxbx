@@ -178,7 +178,7 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
     CAR_INFO *tankInfo = (CAR_INFO*)baseObj->extraObjectData;
 
     baseObj->objectType = OBJECTTYPE_CAR;
-    baseObj->maybeCollision = tankInfo;
+    baseObj->maybeCollision = &tankInfo->hitTest;
     Quat_MatToQuat(&tankInfo->orientation, &baseObj->transformMatrix);
 
     // Any value but 1 and 3 gives the helicopter, 0 included

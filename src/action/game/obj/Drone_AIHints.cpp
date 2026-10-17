@@ -1,5 +1,6 @@
 #include "Drone_AIHints.h"
 
+#include "../../engine/Collide.h"
 #include "../sp/SwitchChannels.h"
 #include "../drone/DroneVision.h"
 
@@ -9,7 +10,6 @@
 
 #pragma fp_contract(off)
 
-#define Intersect_PointOOBox ((bool (__cdecl *)(_MATRIX *mtx, _VECTOR *halfSize, _VECTOR *point, float unknown))0x00028bd0)
 
 // Drone_ProcessCoverNodes counts it down by 2 from 10
 // XBE_GLOBAL(0x001dfa2c, 0x4)

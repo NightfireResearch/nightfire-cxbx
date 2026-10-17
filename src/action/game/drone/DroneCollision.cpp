@@ -30,12 +30,6 @@
 // Drone_tag.unknown46c: an anim that does not collide
 #define DRONE_ANIM_NO_COLLISION 2
 
-// HITDATA_tag.unknown3: a hit that does not count as a contact
-#define HIT_NOT_CONTACT 2
-
-// cel_tag.flags84: nothing in the cel to stand on (Drone_FeetOnPoint)
-#define CEL_NOT_FLOOR 0x40
-
 // The bones a dead drone's capsule runs along
 #define BONE_HEAD   0x80000005
 #define BONE_37     0x80000037
@@ -132,11 +126,11 @@ void NDrone2_Collision(obj_tag *obj) {
     Drone_DCVfromOBJ(obj, &dcv);
     float root = drone->rootHeight;
     HITTEST_tag *capsule = &drone->collision;
-    capsule->unknown84 = 0;
+    capsule->mask = 0;
     capsule->cel = obj->inCel;
 
     if (drone->flags & DRONE_FLAG_DEAD) {
-        capsule->rayLength = 0.4f < root ? 0.4f : root;
+        capsule->radius = 0.4f < root ? 0.4f : root;
         _VECTOR head, bone37, bone33, axis;
         AnimGetBoneWorldTrans(obj, BONE_HEAD, 0, &head, NULL);
         AnimGetBoneWorldTrans(obj, BONE_37, 0, &bone37, NULL);
@@ -146,17 +140,17 @@ void NDrone2_Collision(obj_tag *obj) {
         double span = Vec_Dist3D(&head, &bone33) * 0.5f;
         if (!(length > span))
             length = (float)span;
-        capsule->unknown7c = 0;
-        capsule->unknown80 = 0;     // the pair is stored as one word, 0x800
-        capsule->unknown81 = 8;
+        capsule->damage = 0;
+        capsule->type = HITTEST_CYLINDER;
+
         auxVec_AddMulR32(&obj->position, &axis, 0.4f, &capsule->rayStart);
         auxVec_AddMulR32(&obj->position, &axis, (float)-((double)length - 0.4f), &capsule->rayEnd);
     } else if (drone->smallCollision) {
         bool collides = NDrone2_DoCollision(&dcv);
-        capsule->rayLength = 0.3f;
-        capsule->unknown7c = 0;
-        capsule->unknown80 = 0;
-        capsule->unknown81 = collides ? 8 : 0;
+        capsule->radius = 0.3f;
+        capsule->damage = 0;
+        capsule->type = collides ? HITTEST_CYLINDER : 0;
+
         _VECTOR up;
         Mat_GetUp(&up, &obj->transformMatrix);
         auxVec_AddMulR32(&obj->position, &up, (float)-((double)root - 0.3f), &capsule->rayEnd);
@@ -164,10 +158,10 @@ void NDrone2_Collision(obj_tag *obj) {
     } else {
         float radius = drone->skinClass == SKINCLASS_0C ? 0.55f : 0.4f;
         bool collides = NDrone2_DoCollision(&dcv);
-        capsule->rayLength = radius;
-        capsule->unknown7c = 0;
-        capsule->unknown80 = 0;
-        capsule->unknown81 = collides ? 8 : 0;
+        capsule->radius = radius;
+        capsule->damage = 0;
+        capsule->type = collides ? HITTEST_CYLINDER : 0;
+
         _VECTOR up;
         Mat_GetUp(&up, &obj->transformMatrix);
         auxVec_AddMulR32(&obj->position, &up, radius, &capsule->rayStart);
@@ -216,7 +210,7 @@ obj_tag* Drone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *slope, int un
                 *slope = hits->surfaceNormal.b;
             if (floor != NULL && floor->hitObj != NULL) {
                 for (HITDATA_tag *hit = hits; hit != NULL; hit = hit->next) {
-                    if (hit->hitCel != NULL && (hit->hitCel->flags84 & CEL_NOT_FLOOR))
+                    if (hit->hitCel != NULL && (hit->hitCel->flags84 & CEL_NO_CONTACT))
                         continue;
                     if (hit->hitObj != NULL && (hit->hitObj->effectFlags & FLAG_UNKNOWN_40))
                         continue;
@@ -227,7 +221,7 @@ obj_tag* Drone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *slope, int un
         }
     }
 
-    if (test->unknown88 != 0 || floor != NULL) {
+    if (test->found != 0 || floor != NULL) {
         obj->animState->animFlags |= ANIM_CONTACT_FLOOR;
         if (floor != NULL)
             memcpy(&obj->animState->floor, floor, sizeof(HITDATA_tag));
@@ -247,7 +241,7 @@ static HITDATA_tag *Drone_DealWithHits(obj_tag *obj, Drone_tag *drone) {
     Vec_Add2(&drone->collision.push, &obj->position, &obj->position);
     for (; hit != NULL; hit = hit->next) {
         _NDrone2_DealWithObjHit(drone, obj, hit);
-        if (!(hit->unknown3 & HIT_NOT_CONTACT) && contact == NULL)
+        if (!(hit->flags & HIT_NO_CONTACT) && contact == NULL)
             contact = hit;
     }
     return contact;
@@ -261,8 +255,7 @@ static HITDATA_tag *Drone_DealWithHits(obj_tag *obj, Drone_tag *drone) {
 void Drone_CollisionHandler(obj_tag *obj) {
     if (!NPCGlobals.enabled || Drone_bDisableSystem) {
         Drone_tag *drone = (Drone_tag *)obj->extraObjectData;
-        drone->collision.unknown80 = 0;     // as one word
-        drone->collision.unknown81 = 0;
+        drone->collision.type = 0;
         return;
     }
     Drone_tag *drone = (Drone_tag *)obj->extraObjectData;
