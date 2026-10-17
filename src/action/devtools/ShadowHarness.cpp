@@ -56,7 +56,7 @@ struct Hook {
     unsigned at;
     uint8_t saved[5];
 };
-Hook hooks[96];
+Hook hooks[256];
 int hookCount;
 
 void HookOne(unsigned at, const void *to) {

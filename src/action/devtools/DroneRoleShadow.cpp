@@ -620,6 +620,10 @@ void RandomWorld() {
     world.dcv.aiStateMachine = &world.drones[0].sm;
     // Now and then a handler is given another drone or object than the dcv's, to tell which one it reads
     world.droneArg = ShadowRand(5) ? &world.drones[0] : &world.drones[1];
+    // NDrone2_DSTATE_Interogate tests the given drone's opponent and then copies the dcv drone's opponent's position;
+    // the game never lets the two drones differ, and the original reads through NULL when only the dcv drone has none
+    if (world.dcv.drone->opponent == NULL)
+        world.droneArg->opponent = NULL;
     world.gameObjArg = ShadowRand(5) ? &world.objs[0] : &world.objs[1];
 
     for (int s = 0; s < STREAM; s++)

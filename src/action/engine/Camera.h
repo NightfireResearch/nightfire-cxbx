@@ -18,5 +18,6 @@ bool Camera_SetFade(ushort viewerNum, float durationFrames, uint colourAndAlpha,
 void Camera_SetToPlayer(obj_tag *player, viewer_tag *viewer);
 void Camera_Set(viewer_tag *viewer, _VECTOR *transform, _VECTOR *rotation);
 void camera_tracking(obj_tag *obj, viewer_tag *viewer);
+void Camera_Shear(viewer_tag *vwr);
 
 #endif // CAMERA_H

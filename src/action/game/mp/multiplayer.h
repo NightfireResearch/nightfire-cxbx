@@ -228,6 +228,7 @@ bool MP_isObjectOnTeam(obj_tag *param_1,uint teamId);
 MPTeam MP_getObjectTeam(obj_tag* param_1);
 bool MP_IsAssasin(obj_tag *param_1);
 bool MP_IsTarget(obj_tag *param_1);
+bool MP_RegisterBulletHit(ushort playerIndex, obj_tag *obj, float health);
 void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId);
 uint MP_GetSpawnPoint(short teamId, obj_tag *respawningPlayer);
 obj_tag* MP_RegisterMPObject(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);

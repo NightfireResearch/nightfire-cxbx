@@ -44,7 +44,14 @@ typedef struct BLData {
     _VECTOR rotationDelta; // 0x24
     _VECTOR lastRotationDelta; // 0x30 - Player_Update copies rotationDelta here once it is applied
     _VECTOR field_0x3c; // 0x3c - zeroed by GunImp_Deactivate and Player_SSScanMode
-    char _pad_0b[0xb0 - 0x48];
+    _VECTOR muzzle;     // 0x48 - what the player's anim aims at in multiplayer (Player_StandAtNewPosition)
+    // Zero G: the player turned upright (Player_ZeroG builds it on a press of reload), and the same as a
+    // quaternion, which the player's matrix is slerped towards for zeroGTurn frames.
+    _MATRIX zeroGUpright;       // 0x54
+    quaternion_tag zeroGQuat;   // 0x90
+    char _pad_0a0[0xac - 0xa0];
+    short zeroGTurn;            // 0xac
+    char _pad_0ae[0xb0 - 0xae];
     // The point the multiplayer end-of-match camera looks at - the player's head (Player_PositionCamera).
     _VECTOR thirdPersonTarget; // 0xb0
     float someMPCameraThing1; // 0xbc
@@ -52,24 +59,35 @@ typedef struct BLData {
     float someMPCameraThing3; // 0xc4
     undefined4 someMPCameraThing4; // 0xc8
     obj_tag *thirdPersonSubject; // 0xcc - the player the end-of-match camera is on
-    char _pad_11111[0xd4 - 0xd0];
-    // Three words Player_InitWeapon zeroes; nothing else is known about them yet
-    undefined4 field_0xd4; // 0xd4
-    undefined4 field_0xd8; // 0xd8
-    undefined4 field_0xdc; // 0xdc
+    float floorNormalY; // 0xd0 - the floor's slope: below 0.5 the player slides (Player_Collision)
+    undefined4 field_0xd4; // 0xd4 - zeroed by Player_InitWeapon
+    // Where the crosshair is aimed on the screen while aiming without a scope (Player_Aiming): within +-0.296 and
+    // +-0.4; pushed past them, the view turns instead.
+    float aimX; // 0xd8
+    float aimY; // 0xdc
     float crosshairOffsetX; // 0xe0
     float crosshairOffsetY; // 0xe4
-    char _pad_1[0xf0-0xe8];
+    float aimTurnX; // 0xe8 - zeroed by Player_ClearAimInertia
+    float aimTurnY; // 0xec
     // Whether the game is easing the view pitch back towards pitchAutoLevelTarget. 0 and 1 mean it is not,
     // 1 specifically meaning "the player is aiming right now"; 2 and 3 mean it is. Player_Aiming sets this
     // to 1 on any frame the stick moves the view, which is what stops the easing fighting the player - see
     // Player_ClampSomeAngles, which is the other half of it, and Player_ViewClamping, which is where mouse
     // look has to do the same thing for the same reason.
     char aimAutoLevelState; // 0xf0
-    char _pad_1b[0xf2-0xf1];
+    // 1 walking slowly or standing, 2 walking fast (Player_UpdateWalkClass); a change sets aimAutoLevelState to 2
+    // when the player's auto-centre option is on.
+    char walkClass; // 0xf1
     char field_0xf2; // 0xf2 - zeroed by Player_InitWeapon
     char crosshairType; // 0xf3
-    char _pad_11[0x110-0xf4];
+    // The grapple (Player_InitGrapple clears all of it): where it caught, how fast it pulls, what it caught on, the
+    // rope drawn to it, its state (GrappleState) and the frames before landing can end the pull.
+    _VECTOR grapplePoint;   // 0xf4
+    float grappleSpeed;     // 0x100
+    obj_tag *grappleObj;    // 0x104
+    obj_tag *rope;          // 0x108
+    short grappleState;     // 0x10c
+    short grappleWait;      // 0x10e
     // Non-zero while something else is driving the player - Player_Move takes the controls away entirely.
     char movementDisabled; // 0x110
     char _pad_11b[0x114-0x111];
@@ -78,9 +96,10 @@ typedef struct BLData {
     short ammo[34]; // 0x114
     char _pad_11c[0x15c-0x158];
     WeaponStatus weaponStats[114]; // 0x15c-0x6b3 inclusive
-    char _pad_222[0x764-0x6b4];
-    ushort hitTestType; // 0x764 - 0 while Player_Disable has the player out of play, 0x800 from Player_Enable
-    char _pad_2222b[0x770-0x766];
+    char _pad_222[0x6e4-0x6b4];
+    // The capsule the player collides with, set up every frame by Player_Collision. Its hitType is 0 while
+    // Player_Disable has the player out of play, 0x800 from Player_Enable.
+    HITTEST_tag hitTest; // 0x6e4
     HUDINFO_tag* hudInfo; // 0x770
     char _pad_2222[4];
     obj_tag* weaponObject;
@@ -90,14 +109,21 @@ typedef struct BLData {
     obj_tag* muzzleFlashObj; // 0x804
     obj_tag* remoteControlDevice; // 0x808
     obj_tag* cameraFollowObject; // 0x80c - what camera mode 10 follows (Player_PositionCamera)
-    char _pad_2a[0x814-0x810];
+    obj_tag* field_0x810; // 0x810 - cleared by Player_Init
     // The ladder (or wire, zipline...) the player is on, in the movement substates that attach him to one.
     // Name from the PS2 symbols.
     obj_tag* attachedToSpecialMovementItem; // 0x814
-    char _pad_2a2[0x824-0x818];
+    // The player's alpha (obj_tag::tweakA, drawn at 40 below a half): eased up to 1 every frame (Player_Update)
+    float alpha; // 0x818
+    obj_tag *bodyGlow; // 0x81c - BodyGlow_Create's object for the player
+    void *animSet; // 0x820 - the anim set PlayerAnimSetInit* chose; cleared on every change of substate
     float health; // 0x824 - used eg. by SP_Update to abort an in-progress NIS if the player has died
     undefined4 field_0x828; // 0x828 - zeroed by Player_InitWeapon; FUN_000b70b0 stops the zoom motor sound it holds
-    char _pad_2b[0x838-0x828-4];
+    DYNAMICSOUNDS *waterSound; // 0x82c - the sound Player_MonitorAir starts when the head goes under
+    // The ladder's ends as Player_Climb last worked them out: above ladderTop the player climbs off the top, below
+    // ladderBottom he lets go.
+    float ladderTop; // 0x830
+    float ladderBottom; // 0x834
     // Where the player is looking vertically, as a fraction of a right angle rather than in radians, so
     // +-1 is straight up and straight down - which is exactly the range Player_ViewClamping enforces.
     float pitchFromHorizontal; // 0x838
@@ -105,24 +131,41 @@ typedef struct BLData {
     // Armour, which Player_RamSave carries between the parts of a mission beside health. Player_InitWeapon
     // takes it away at the start of Castle Indoors 1 and sets it to 50 on the space station levels.
     float armor; // 0x840
-    char _pad_2c[0x84c-0x844];
+    float field_0x844; // 0x844 - zeroed by Player_Init
+    float healthShown; // 0x848 - the health when Player_Init set it
     // HUD_UpdateHealthPane draws the armour and health bars at 4x this alpha, capped at 1, and sets it to 1 while
     // the game is paused - so the bars fade in over its first quarter. (Its writers were not traced.)
     float hudFadeIn; // 0x84c
-    char _pad_2c2[0x860-0x850];
+    float air; // 0x850 - 0 to 100: falls while the head is under water outside zero G, and hurts below 1
+    float underwater; // 0x854 - eased to 1 while the head is under water, back to 0 out of it
+    uint waterFlags; // 0x858 - WATER_*
+    float ropeFatigue; // 0x85c - 0 to 100 over 30 seconds of hanging from a rope; at 100 the player lets go
     // The weapon's zoom, 1 when not zoomed: Player_Zoom drives it, Player_PositionCamera hands it to the viewer
     // (viewer_tag::zoom), and the view is drawn at fovRadians / zoom.
     float zoom; // 0x860
-    char _pad_222222[0x86c-0x864];
+    float zoomTarget; // 0x864 - 1 from Player_Init
+    float zoomMax; // 0x868 - 1 from Player_Init
     undefined4 field_0x86c[4]; // 0x86c-0x87b - zeroed by Player_InitWeapon
-    char _pad_222222b[0x88c-0x87c];
-    float turnAccelState; // 0x88c - AccelFunc0's carried state for the turn axis; see Player_Move
-    char _pad_222223[0x898-0x890];
+    // AccelFunc0's carried states: the scope's turn and pitch, the crosshair's turn and pitch (Player_Aiming), the turn
+    // (Player_Move) and the pitch without aiming (Player_Aiming)
+    float scopeAccelX; // 0x87c
+    float scopeAccelY; // 0x880
+    float aimAccelX; // 0x884
+    float aimAccelY; // 0x888
+    float turnAccelState; // 0x88c
+    float lookAccel; // 0x890
+    char _pad_222223[0x898-0x894];
     float headSwimOffset; // 0x898 - eased towards 0.7 while surfaced (Player_PositionCamera)
     float headCrouchOffset; // 0x89c - how far crouching has lowered the view, 0 to 0.45
-    char _pad_222223b[0x8b0-0x8a0];
+    // Added to the turn every frame and decaying by a tenth a frame: -0.1 or 0.1 from hits by fists (weapon bases 0x63,
+    // 0x65 and 0x66, Player_DealWithObjHit)
+    float turnKick; // 0x8a0
+    float visibility; // 0x8a4 - how well lit the player is, 0 to 1, halved crouching (Player_InShadow)
+    // Player_SetFlashBang: the flash's length and what is left of it, and its blur.
+    float flashTime; // 0x8a8
+    float flashTimeLeft; // 0x8ac
     float nightVisionTimer; // 0x8b0
-    char _pad_22[0x8b8-0x8b0-4];
+    float stepDistance; // 0x8b4 - set to 999 on landing from a jump
     float fallFrames; // 0x8b8 - time airborne: Player_CollisionHandler adds FRAME_RATE_MUL a tick, so it counts
                       //         60 Hz frames at any rate
     float field_0x8bc; // 0x8bc - zeroed by Player_InitWeapon
@@ -134,9 +177,13 @@ typedef struct BLData {
     char _pad_22c;
     short field_0x8c6; // 0x8c6 - zeroed by Player_InitWeapon
     short muzzleFlashRelated; // 0x8c8
-    char _pad_23[0x8d2-0x8c8-2];
+    char _pad_23[0x8cc-0x8ca];
+    short field_0x8cc; // 0x8cc - zeroed by Player_StandAtNewPosition
+    char _pad_23b[0x8d0-0x8ce];
+    ushort groundBits; // 0x8d0 - non-zero: the player has stood on something lately, and may jump
     short previousSubState; //0x8d2
-    char _pad_3[4];
+    short remoteControlTimer; // 0x8d4 - frames before a remote-controlled device lets go, when set
+    short pauseMenu; // 0x8d6 - the menu manager Player_Update opened for the pause menu
     // Frames left of the "Bond moment" icon (TEX_GOLD007BONUS, the health pane's sprite 16): it spins in while
     // above 100, then sits at the top of the screen; HUD_UpdateHealthPane counts it down by FRAME_RATE_MUL.
     short bondMomentTimer; // 0x8d8
@@ -144,33 +191,88 @@ typedef struct BLData {
     // nothing at 0
     char active; // 0x8da
     char frozen; // 0x8db - set by Player_Disable(player, 1), cleared by Player_Enable
-    char field_0x8dc; // 0x8dc - zeroed by Player_Enable
-    char _pad_33;
+    char jumpState; // 0x8dc - JUMP_*: Player_HandleJump
+    // The step of the substate on a wire, zipline or wall (Player_Wire, Player_Zipline, Player_Creep): which way
+    // the player is moving, or the grab
+    char traverseStep; // 0x8dd
     char playerNum; // 0x8de
-    char pad_4;
+    char playerNum2; // 0x8df - Player_Init sets it to the player number too
     char camMode; // 0x8e0 - CamMode
-    char maybeCamRelatedCountdown; // 0x8e1
-    char field_0x8e2; // 0x8e2 - zeroed by Player_Enable
-    char pad_5[0x8e6-0x8e3];
+    // Frames before the player can catch on a ladder, wire or wall again after letting go (the frame rate, from
+    // leaving a ladder); while it runs after leaving a wall, Player_Move does not strafe.
+    char traverseWait; // 0x8e1
+    char jumpWait; // 0x8e2 - frames of a jump before it can land
+    char field_0x8e3; // 0x8e3 - zeroed by Player_StandAtNewPosition
+    uchar field_0x8e4; // 0x8e4 - set to 0xff when the walking, crouching or zero G anim set is chosen
+    char field_0x8e5; // 0x8e5 - zeroed by Player_Init
     char field_0x8e6; // 0x8e6 - zeroed by Player_InitWeapon
-    char _pad_5b;
+    char field_0x8e7; // 0x8e7 - zeroed by Player_ZeroG
     char field_0x8e8; // 0x8e8 - zeroed by Player_InitWeapon
-    char _pad_5c[0x8ef-0x8e9];
+    char _pad_5c[0x8ea-0x8e9];
+    char field_0x8ea; // 0x8ea - zeroed on every change of substate
+    char field_0x8eb; // 0x8eb - set, Player_CollisionHandler draws the muzzle flash at muzzle
+    char _pad_5c2[0x8ee-0x8ec];
+    char field_0x8ee; // 0x8ee - zeroed by Player_StandAtNewPosition
     // The third-person action icon to show (index into HUD.cpp's ThirdIconSprites: grapple, wire, standing, ...),
     // 0xff for none
     uchar thirdIcon; // 0x8ef
-    char _pad_5d;
+    // Frames the anim set waits for a crouch or stand anim to finish before it is chosen again (the frame rate,
+    // a second, from Player_ChangeSubState)
+    char animWait; // 0x8f0
     char nightVisionActive; // 0x8f1
-    char _pad_5e[0x8f7-0x8f2];
+    char _pad_5e;
+    uchar flashBlur; // 0x8f3 - Player_SetFlashBang
+    char _pad_5e2[0x8f5-0x8f4];
+    char punchSkin; // 0x8f5 - which of the fists' models the level's skin goes with (Player_Init)
+    char field_0x8f6; // 0x8f6 - set to 8 on landing from a jump
     // Which sides the player was last hit from (bits 0-3: the health pane's full-screen overlays 20-23) and how
     // bright that flash still is; HUD_UpdateHealthPane fades it by FRAME_RATE_MUL a frame
     uchar hitDirections; // 0x8f7
     uchar hitDirectionFade; // 0x8f8
-    // ...
+    char _pad_end[0x8fc-0x8f9];
 } BLData;
+
+static_assert(sizeof(BLData) == 0x8fc, "BLData is 0x8fc bytes (Player_Init)");
 
 static_assert(offsetof(BLData, someMPCameraThing1) == 0xbc, "Offset of someMPCameraThing1 not correct");
 static_assert(offsetof(BLData, crosshairOffsetX) == 0xe0, "Offset of crosshairOffsetX not correct");
+static_assert(offsetof(BLData, muzzle) == 0x48, "Offset of muzzle not correct");
+static_assert(offsetof(BLData, zeroGQuat) == 0x90, "Offset of zeroGQuat not correct");
+static_assert(offsetof(BLData, zeroGTurn) == 0xac, "Offset of zeroGTurn not correct");
+static_assert(offsetof(BLData, aimTurnX) == 0xe8, "Offset of aimTurnX not correct");
+static_assert(offsetof(BLData, walkClass) == 0xf1, "Offset of walkClass not correct");
+static_assert(offsetof(BLData, grapplePoint) == 0xf4, "Offset of grapplePoint not correct");
+static_assert(offsetof(BLData, rope) == 0x108, "Offset of rope not correct");
+static_assert(offsetof(BLData, grappleWait) == 0x10e, "Offset of grappleWait not correct");
+static_assert(offsetof(BLData, animSet) == 0x820, "Offset of animSet not correct");
+static_assert(offsetof(BLData, waterSound) == 0x82c, "Offset of waterSound not correct");
+static_assert(offsetof(BLData, ladderBottom) == 0x834, "Offset of ladderBottom not correct");
+static_assert(offsetof(BLData, air) == 0x850, "Offset of air not correct");
+static_assert(offsetof(BLData, ropeFatigue) == 0x85c, "Offset of ropeFatigue not correct");
+static_assert(offsetof(BLData, traverseStep) == 0x8dd, "Offset of traverseStep not correct");
+static_assert(offsetof(BLData, visibility) == 0x8a4, "Offset of visibility not correct");
+static_assert(offsetof(BLData, stepDistance) == 0x8b4, "Offset of stepDistance not correct");
+static_assert(offsetof(BLData, groundBits) == 0x8d0, "Offset of groundBits not correct");
+static_assert(offsetof(BLData, field_0x8f6) == 0x8f6, "Offset of field_0x8f6 not correct");
+static_assert(offsetof(BLData, field_0x8cc) == 0x8cc, "Offset of field_0x8cc not correct");
+static_assert(offsetof(BLData, previousSubState) == 0x8d2, "Offset of previousSubState not correct");
+static_assert(offsetof(BLData, field_0x8e3) == 0x8e3, "Offset of field_0x8e3 not correct");
+static_assert(offsetof(BLData, field_0x8ea) == 0x8ea, "Offset of field_0x8ea not correct");
+static_assert(offsetof(BLData, field_0x8ee) == 0x8ee, "Offset of field_0x8ee not correct");
+static_assert(offsetof(BLData, animWait) == 0x8f0, "Offset of animWait not correct");
+static_assert(offsetof(BLData, flashBlur) == 0x8f3, "Offset of flashBlur not correct");
+static_assert(offsetof(BLData, field_0x810) == 0x810, "Offset of field_0x810 not correct");
+static_assert(offsetof(BLData, alpha) == 0x818, "Offset of alpha not correct");
+static_assert(offsetof(BLData, bodyGlow) == 0x81c, "Offset of bodyGlow not correct");
+static_assert(offsetof(BLData, healthShown) == 0x848, "Offset of healthShown not correct");
+static_assert(offsetof(BLData, zoomMax) == 0x868, "Offset of zoomMax not correct");
+static_assert(offsetof(BLData, turnKick) == 0x8a0, "Offset of turnKick not correct");
+static_assert(offsetof(BLData, remoteControlTimer) == 0x8d4, "Offset of remoteControlTimer not correct");
+static_assert(offsetof(BLData, pauseMenu) == 0x8d6, "Offset of pauseMenu not correct");
+static_assert(offsetof(BLData, playerNum2) == 0x8df, "Offset of playerNum2 not correct");
+static_assert(offsetof(BLData, field_0x8e5) == 0x8e5, "Offset of field_0x8e5 not correct");
+static_assert(offsetof(BLData, field_0x8eb) == 0x8eb, "Offset of field_0x8eb not correct");
+static_assert(offsetof(BLData, punchSkin) == 0x8f5, "Offset of punchSkin not correct");
 static_assert(offsetof(BLData, hudInfo) == 0x770, "Offset of hudInfo not correct");
 static_assert(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisionActive not correct");
 static_assert(offsetof(BLData, nightVisionTimer) == 0x8b0, "Offset of nightVisionTimer not correct");
@@ -193,10 +295,11 @@ static_assert(offsetof(BLData, headSwimOffset) == 0x898, "Offset of headSwimOffs
 static_assert(offsetof(BLData, fallFrames) == 0x8b8, "Offset of fallFrames not correct");
 static_assert(offsetof(BLData, weaponObject) == 0x778, "Offset of weaponObject not correct");
 static_assert(offsetof(BLData, health) == 0x824, "Offset of health not correct");
-static_assert(offsetof(BLData, hitTestType) == 0x764, "Offset of hitTestType not correct");
+static_assert(offsetof(BLData, hitTest) == 0x6e4, "Offset of hitTest not correct");
+static_assert(offsetof(BLData, floorNormalY) == 0xd0, "Offset of floorNormalY not correct");
 static_assert(offsetof(BLData, active) == 0x8da, "Offset of active not correct");
-static_assert(offsetof(BLData, field_0x8dc) == 0x8dc, "Offset of field_0x8dc not correct");
-static_assert(offsetof(BLData, field_0x8e2) == 0x8e2, "Offset of field_0x8e2 not correct");
+static_assert(offsetof(BLData, jumpState) == 0x8dc, "Offset of jumpState not correct");
+static_assert(offsetof(BLData, jumpWait) == 0x8e2, "Offset of jumpWait not correct");
 static_assert(offsetof(BLData, playerNum) == 0x8de, "Offset of playerNum not correct");
 static_assert(offsetof(BLData, rotationDelta) == 0x24, "Offset of rotationDelta not correct");
 static_assert(offsetof(BLData, movement) == 0x0c, "Offset of movement not correct");
@@ -205,11 +308,14 @@ static_assert(offsetof(BLData, movementDisabled) == 0x110, "Offset of movementDi
 static_assert(offsetof(BLData, ammo) == 0x114, "Offset of ammo not correct");
 static_assert(offsetof(BLData, weaponStats) == 0x15c, "Offset of weaponStats not correct");
 static_assert(offsetof(BLData, turnAccelState) == 0x88c, "Offset of turnAccelState not correct");
-static_assert(offsetof(BLData, maybeCamRelatedCountdown) == 0x8e1, "Offset of maybeCamRelatedCountdown not correct");
+static_assert(offsetof(BLData, traverseWait) == 0x8e1, "Offset of traverseWait not correct");
 static_assert(offsetof(BLData, pitchFromHorizontal) == 0x838, "Offset of pitchFromHorizontal not correct");
 static_assert(offsetof(BLData, pitchAutoLevelTarget) == 0x83c, "Offset of pitchAutoLevelTarget not correct");
 static_assert(offsetof(BLData, aimAutoLevelState) == 0xf0, "Offset of aimAutoLevelState not correct");
 static_assert(offsetof(BLData, field_0xd4) == 0xd4, "Offset of field_0xd4 not correct");
+static_assert(offsetof(BLData, aimY) == 0xdc, "Offset of aimY not correct");
+static_assert(offsetof(BLData, scopeAccelX) == 0x87c, "Offset of scopeAccelX not correct");
+static_assert(offsetof(BLData, lookAccel) == 0x890, "Offset of lookAccel not correct");
 static_assert(offsetof(BLData, field_0xf2) == 0xf2, "Offset of field_0xf2 not correct");
 static_assert(offsetof(BLData, weaponObject) == 0x778, "Offset of weaponObject not correct");
 static_assert(offsetof(BLData, weaponRelatedObjs) == 0x77c, "Offset of weaponRelatedObjs not correct");
@@ -230,7 +336,7 @@ typedef enum {
     MovementType_Grapple = 2,
     MovementType_Swim = 3,
     MovementType_Crouch = 4,
-    MovementType_Decoding = 5, // Scanning with decoder
+    MovementType_ScanMode = 5, // flying freely, no collision (Player_SSScanMode; debug_scanmode, the fly cheat)
     MovementType_Wire = 6,
     MovementType_Creep = 7,
     MovementType_ZeroG = 8,
@@ -238,6 +344,8 @@ typedef enum {
     MovementType_RemoteControl = 10, // Steering the Sentinel's guided missile (Bullet_Update)
     MovementType_RCVehicle = 11,     // Driving an RC car or helicopter (Car_Activate, Car_Update)
     MovementType_Emplacement = 12,   // On a gun emplacement (GunImp_Activate, GunImp_Update)
+    MovementType_Dead = 13,          // Player_CheckForDeath, out of water
+    MovementType_DeadInWater = 14,   // Player_CheckForDeath, in water
     MovementType_Zipline = 15,
     MovementType_Ronin = 16,
 } MovementType;
@@ -260,12 +368,18 @@ typedef struct {
 static_assert(sizeof(PlayerStartPosition) == 0xcc, "Bad size for PlayerStartPosition");
 
 
+// BLData::thirdIcon: the HUD's third-person action icons (HUD.cpp's ThirdIconSprites)
+#define THIRDICON_GRAPPLE  2
+#define THIRDICON_WIRE     3
+#define THIRDICON_STANDING 6
+#define THIRDICON_NONE     0xff
+
 #pragma pack(pop)
 
 void Player_ResetStartPos(void);
 void __stdcall ReadTuningVars(void);
 void Player_ChangeState(obj_tag* obj, unsigned short newState);
-unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState); // Return the previous substate
+int Player_ChangeSubState(obj_tag *player, ushort newState); // returns the previous substate
 void Player_SetCamMode(BLData *param_1,unsigned short param_2);
 void Player_Disable(obj_tag *player, char freeze);
 void Player_RamSave(BLData *bloke);
@@ -290,5 +404,64 @@ void Player_GetHeadPos(_VECTOR *headPosOut, obj_tag *player, _MATRIX *param_3);
 void Player_InitWeapon(BLData *blData, obj_tag *player);
 
 void PositionBeam(obj_tag *param_1, _VECTOR *param_2, _VECTOR *param_3);
+
+// Player.cpp
+obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *spawnPointData);
+void Player_StandAtNewPosition(obj_tag *player, _VECTOR *pos, _VECTOR *rot, ushort subState);
+void Player_ClearInertia(obj_tag *player);
+void Player_ClearAimInertia(obj_tag *player);
+void Player_SetFlashBang(BLData *blData, float time, uchar blur);
+bool Player_CheckForDeath(obj_tag *player, uint objectType);
+void Player_Update(obj_tag *player);
+void Player_InShadow(BLData *blData, obj_tag *player);
+double _AccelFunc0(float input, float *speed, float base, float mul, float steps, float deadZone, float fullZone);
+double AccelFunc0Flag(float input, float *speed, float base, float mul, float steps, float deadZone, int full);
+void Player_Aiming(obj_tag *player);
+void Player_Collision(obj_tag *player);
+float Player_DealWithObjHit(obj_tag *player, BLData *blData, HITDATA_tag *hit);
+void Player_CollisionHandler(obj_tag *player);
+void PlayerAnimSetInitDead(obj_tag *player);
+void Player_UpdateWalkClass(obj_tag *player, float speed, float levelTarget);
+// The register-argument originals' adaptors (AUTOLTCG), and the cores behind them
+void Player_InWater(void);          // ESI player, EDI his data
+void Player_HandlePain(void);       // ESI the player's data, DI hit location, BX pain type; player, damage
+void Player_HandleDeath(void);      // EAX player
+void Player_SSWalk(void);           // EAX player, ECX his data
+void Player_SSCrouch(void);         // EAX player, ECX his data
+void Player_MonitorAir(void);       // EAX player, ECX his data
+void Player_HandleJump(void);       // EAX the player's data, ECX player; gravity
+void Player_ZeroG(void);            // ESI the player's data; player
+void Player_SSScanMode(void);       // EAX the player's data, EBX player
+void Player_Activate(void);         // EAX the player's data, EDI player
+void AccelFunc0(void);              // the stack's arguments, keeping ECX and EDX
+void Player_InitGrapple(void);      // ESI the player's data; player
+void Player_SSGrapple(void);        // EAX the player's data, EDI player
+void Player_GrappleSetRope(void);   // EDI player
+int _Player_InWater(obj_tag *player, BLData *blData);
+void _Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hitLocation, ushort painType);
+void _Player_HandleDeath(obj_tag *player);
+void _Player_SSWalk(obj_tag *player, BLData *blData);
+void _Player_SSCrouch(obj_tag *player, BLData *blData);
+void _Player_MonitorAir(obj_tag *player, BLData *blData);
+void _Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity);
+void _Player_ZeroG(BLData *blData, obj_tag *player);
+void _Player_SSScanMode(BLData *blData, obj_tag *player);
+uchar _Player_Activate(BLData *blData, obj_tag *player);
+
+// PlayerTraverse.cpp
+void Player_LeaveLadder(obj_tag *player, BLData *blData);
+void Player_Climb(BLData *blData, obj_tag *player);
+void Player_SetGrapplePoint(BLData *blData, _VECTOR *point, obj_tag *grappleObj);
+void Player_CollWire(obj_tag *player, BLData *blData, obj_tag *wire);
+void Player_HangByHandA(obj_tag *player, _VECTOR *at);
+void Player_HangByHandB(obj_tag *player, _VECTOR *at);
+void Player_Wire(obj_tag *player);
+void Player_Zipline(obj_tag *player);
+void Player_CollCreepWall(obj_tag *player, BLData *blData, obj_tag *wall);
+void Player_Creep(BLData *blData, obj_tag *player);
+void _Player_InitGrapple(BLData *blData, obj_tag *player);
+void _Player_SSGrapple(BLData *blData, obj_tag *player);
+void _Player_GrappleSetRope(obj_tag *player);
+extern HASHCODE WireAnim; // the wire anim playing, which Player_Wire chooses the next one by
 
 #endif // PLAYER_H_

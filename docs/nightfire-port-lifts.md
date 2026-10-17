@@ -363,6 +363,23 @@ Found along the way:
 - GameCube check 92 ("ERROR: Drone has no second weapon", 0x800b032c) is `NDrone2_DSTATE_StunGrenadeRecover`
   (0x562a0); the Xbox dropped the test.
 
+### Parcel 10 (package A: player.cpp and player_traverse.cpp)
+- Their `Player_FeetOnPoint` is `PlayerNotDrone_FeetOnPoint` (0xab450), whose fourth argument is never read; their
+  `Player_CollLadder` is `PlayerCollLadder` (0xae930).
+- `Player_ZeroG` turns at REC x PI x 0.4 a frame (not their 2 pi / 5), and eases its turn by FRM x 0.2 x gap x 0.2 on
+  the previous turn, clamped to FRM x 0.05 either way.
+- `Player_Climb` leaves the ladder through a function of its own, `Player_LeaveLadder` (0xaeac0), which also tests
+  weapon 0x47.
+- `Player_CollWire`, `Player_Wire` and `Player_Creep` place the hands through two helpers, `Player_HangByHandA`
+  (0xafa80) and `Player_HangByHandB` (0xafaf0): x87 sin and cos of -rotation.y, offsets of +-0.0542. The grab's root
+  motion uses 0.082 (0x3da7ef9d).
+- `Wire_Create` negates the rotation's z before creating the object.
+- `Player_CollCreepWall` casts its ray from the point on the line down by 5.
+- `camera_tracking` measures along the line from its position, not its centre.
+- `Player_Update` fades the HUD by two steps a frame (it decrements twice).
+- `MP_RegisterBulletHit` never reads the health it is given.
+- `BLData` is 0x8fc bytes (ours was 0x8f9): `Player_Init`'s create size is 0x8fc.
+
 ## Original bugs found while porting (kept; candidates for FIX_ORIGINAL_GAME_BUGS)
 
 - `Script_Load`, a file with 0x3f streams or more: hands its record to `DList_RemoveFromInUse2Free(&ScriptList)`,
@@ -463,6 +480,12 @@ Found along the way:
 - `Drone_Delete` uses other drones', bullets' and casings' extraObjectData unchecked (only the gun turret's is checked).
 - `NDrone2_SeenPlayerTalk` returns early for skin class 0x10, so its own speech line for that class further down is never reached.
 - `NDrone2_FindAmbushCover` reads whether the node is a corner or low cover from the entry after the table's last node, not from the node it chose; with neither, it returns false having already changed the drone's node.
+- `ThirdCam_Create` never checks that the object was created.
+- `Player_Collision` dereferences the remote-controlled device unchecked in substate 12.
+- `Player_CollWire`'s branch for wire type 1 is unreachable.
+- `Player_SSScanMode` leaves the matrix's translation x and z as stack (Concat of `RotMatrixY`'s unwritten
+  translation).
+- `Player_DealWithObjHit` always returns 0.0.
 
 ## Departures from the original
 
@@ -475,6 +498,7 @@ Found along the way:
   leaves.
 - `Drone_InitComms` hands `DroneFunc_HandleSoundAlerts` a DCVars that is uninitialised stack in the original when the
   first listed drone's object is not a drone; ours is zeroed.
+- `Player_CollCreepWall` starts the hit list for its ray at NULL; the original leaves it as stack.
 
 ## What the demos do not cover
 

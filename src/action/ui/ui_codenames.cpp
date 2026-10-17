@@ -326,7 +326,7 @@ void Menu_MapDefaultCodename(byte player, byte slot, uint parts) {
         SubtitlesEnabled = codename->subtitles;
         input->vibrationEnabled = codename->vibrationEnabled;
         input->field12_0xc = codename->input_0c;
-        input->field11_0xb = codename->input_0b;
+        input->hudVisibility = codename->input_0b;
     }
     if (parts & 2) {
         Menu_SetNightfireStatus(codename->nightfireStatus);

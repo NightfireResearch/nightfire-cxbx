@@ -5,6 +5,7 @@
 #include "../obj/GT.h"
 #include "../obj/GunImp.h"
 #include "../drone/BOT.h"
+#include "../obj/bullet.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -113,6 +114,55 @@ bool MP_IsAssasin(obj_tag *param_1) {
 // AUTOINJECT
 bool MP_IsTarget(obj_tag *param_1) {
   return ((AssassinTarget != NULL) && (AssassinTarget == param_1));
+}
+
+// The friendly-fire messages: to the one who fired, and to the one hit, each with the other's name
+#define TXT_MP_FRIENDLY_FIRE_BY ((Action_TranslatedText)0x02000029)
+#define TXT_MP_FRIENDLY_FIRE_ON ((Action_TranslatedText)0x0200002a)
+
+// Who hit player playerIndex (a drone, player or gun turret, or the one who fired a bullet) becomes his last injurer.
+// A teammate's hit does not count (false) without friendly fire, and with it both are told, at most every three
+// seconds. Always true outside multiplayer; false when there is no one to blame. The health is not read.
+// AUTOINJECT
+bool MP_RegisterBulletHit(ushort playerIndex, obj_tag *obj, float health) {
+  if (MPSettings.isMultiplayer == 0)
+    return true;
+  if (obj == NULL)
+    return false;
+
+  obj_tag *shooter;
+  switch (obj->objectType) {
+    case OBJECTTYPE_DRONE:
+    case OBJECTTYPE_PLAYER:
+    case OBJECTTYPE_GUNTURRET2:
+      shooter = obj;
+      break;
+    case OBJECTTYPE_BULLET:
+      shooter = ((BU_tag *)obj->extraObjectData)->firedByObj;
+      break;
+    default:
+      return false;
+  }
+  short shooterIndex = Control_Plr2Ind(shooter);
+  if (shooterIndex < 0)
+    return false;
+
+  MPGame.players[playerIndex].maybeIdxOfLastInjurer = shooterIndex;
+  if (MPSettings.maybeIsTeamGame != 0 &&
+      MPSettings.Player[playerIndex].TeamId == MPSettings.Player[shooterIndex].TeamId &&
+      shooterIndex != playerIndex) {
+    if (MPSettings.FriendlyFire == 0)
+      return false;
+    if (MPGame.players[playerIndex].friendlyFireLabelTimer == 0) {
+      char *text = Txt_GetStringFromHeap(0);
+      sprintf(text, Txt_BindLabel(TXT_MP_FRIENDLY_FIRE_BY, 0), MPSettings.Player[shooterIndex].Name);
+      Text_AddMsg((char)playerIndex, 0, 1, text, 0, 0xb4);
+      sprintf(text, Txt_BindLabel(TXT_MP_FRIENDLY_FIRE_ON, 0), MPSettings.Player[playerIndex].Name);
+      Text_AddMsg((char)shooterIndex, 0, 1, text, 0, 0xb4);
+      MPGame.players[playerIndex].friendlyFireLabelTimer = (short)(FRAME_RATE_INT * 3);
+    }
+  }
+  return true;
 }
 
 // XBE_GLOBAL(0x00262f38, 0x4)

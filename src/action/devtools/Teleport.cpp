@@ -22,7 +22,7 @@
 //  - F7 dumps the next frame through the backend's DumpEvery machinery (d3d9_dump_frame_N.bmp and its draw
 //    trace d3d9_trace_N.log), "[teleport] dumping frame N" saying which.
 //
-// The teleport is the game's own: Player_StandAtNewPosition (0x000ac8b0) is what scripts use to put the player
+// The teleport is the game's own: Player_StandAtNewPosition (0x000ac7e0) is what scripts use to put the player
 // somewhere. It sets the position and rotation, clears movement and aim, stands the player on the floor under
 // the position and relinks them into the right room. The view's pitch is BLData.pitchFromHorizontal, set after.
 // ---------------------------------------------------------------------------------------------------------------
@@ -32,8 +32,6 @@
 #define VK_F9_ 0x78
 #define GA_ROOT_ 2
 
-// AUTOGEN
-undefined __cdecl Player_StandAtNewPosition(obj_tag * player, _VECTOR * param_2, _VECTOR * param_3, ushort param_4);
 
 static bool GameWindowHasFocus(void) {
     HWND render = FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);

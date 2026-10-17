@@ -5,6 +5,11 @@
 #include "viewer.h"
 #include "viewFov.h"
 #include "../util/Stack.h"
+#include "../game/obj/Player.h"
+#include "../game/obj/ThirdCam.h"
+#include "../game/obj/Wire.h"
+#include "../game/obj/CreepWall.h"
+#include "../math/X87Ops.h"
 
 #include <math.h>
 
@@ -215,13 +220,157 @@ void Camera_CheckLocation(ushort idx);
 // AUTOGEN
 void Camera_UpdateGlbVars(ushort idx);
 // AUTOGEN
-void Camera_Shear(viewer_tag *vwr);
-// AUTOGEN
 void Camera_SetToPlayer(obj_tag *player, viewer_tag *viewer);
 // AUTOGEN
 void Camera_Set(viewer_tag *viewer, _VECTOR *transform, _VECTOR *rotation);
-// AUTOGEN
-void camera_tracking(obj_tag *obj, viewer_tag *viewer);
+
+void Concat(float *param_1, float *param_2);
+
+#define normaliseToPlusMinusPi ((float (__cdecl *)(float angle))0x00024050)
+#define GlobalBlur U8_AT(0x001f667c)
+
+// Camera_Shear's working: the view's position kept while it is changed, the wobble's two scales, and the matrix
+// XBE_GLOBAL(0x001dc744, 0x3c)
+static _MATRIX ShearMatrix;
+// XBE_GLOBAL(0x001dc780, 0x4)
+static float ShearY;
+// XBE_GLOBAL(0x001dc784, 0x4)
+static float ShearX;
+// XBE_GLOBAL(0x001dc788, 0xc)
+static _VECTOR ShearPosition;
+
+// The view under water: its axes stretched and skewed by up to a fortieth, cycling once every 2 pi seconds, and blurred.
+// AUTOINJECT
+void Camera_Shear(viewer_tag *vwr) {
+    if (vwr == NULL)
+        return;
+
+    Vec_Copy(Mat_Position(vwr->viewMatrix), &ShearPosition);
+    ShearX = (float)(FCos(vwr->shearAngle) * Extended(0.025f));
+    ShearY = (float)(FSin(vwr->shearAngle) * Extended(0.025f));
+    vwr->shearAngle = normaliseToPlusMinusPi(REC_FRAME_RATE + vwr->shearAngle);
+    Mat_IdentityT(&ShearMatrix);
+    ShearMatrix.m[4] = ShearX;
+    ShearMatrix.m[1] = ShearY;
+    Mat_Scale3f(&ShearMatrix, &ShearMatrix, ShearX + 1.0f, ShearY + 1.0f, ShearX + 1.0f);
+    Concat(vwr->viewMatrix.m, ShearMatrix.m);
+    Mat_CopyRot(&ShearMatrix, &vwr->viewMatrix);
+    Vec_Copy(&ShearPosition, Mat_Position(vwr->viewMatrix));
+    GlobalBlur = 0x91;
+}
+
+// The originals, called by address: unnamed placements of the view (also Player_PositionCamera's camera mode 2)
+#define Camera_PlaceAround ((void (__cdecl *)(_VECTOR *position, viewer_tag *viewer, float scale))0x000245a0)
+#define Camera_PlaceAbove ((void (__cdecl *)(_VECTOR *position, viewer_tag *viewer, float scale))0x00024610)
+#define vecutil_calculate_closest_point_on_line ((double (__cdecl *)(_VECTOR *out, _VECTOR *a, _VECTOR *b, _VECTOR *p))0x000d7d00)
+#define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
+
+#define HALF_PI 1.5707964f
+#define PI 3.1415927f
+#define QUARTER_PI 0.7853982f
+
+// The view behind a player on a wire or creep wall (camera mode 0xb): at its distance off the nearest point of the
+// line, its pitch by how far along it that point is (fixed for a wall), turned by an eighth either way while he moves
+// along it; or on the line's third-person camera's path, at the same fraction along, when the line has one. A camera
+// whose show flag is clear leaves the view where it was.
+// AUTOINJECT
+void camera_tracking(obj_tag *obj, viewer_tag *viewer) {
+    BLData *blData = glb_blokes[(uchar)viewer->idx];
+    obj_tag *line = blData->attachedToSpecialMovementItem;
+    if (line == NULL) {
+        viewer->camMode = 0;
+        return;
+    }
+
+    _VECTOR endA = line->position;
+    _VECTOR endB = blData->attachedToSpecialMovementItem->position;
+    line = blData->attachedToSpecialMovementItem;
+    _VECTOR at;
+    Vec_Spherical_2_Cartesian(&at.x, line->radius, line->rotation.y + HALF_PI, line->rotation.z);
+    endA.x = endA.x + at.x;
+    endA.y = endA.y + at.y;
+    endA.z = endA.z + at.z;
+    endB.x = endB.x - at.x;
+    endB.y = endB.y - at.y;
+    endB.z = endB.z - at.z;
+    line = blData->attachedToSpecialMovementItem;
+    bool wall = line->objectType == OBJECTTYPE_CREEPWALL;
+    if (wall || ((WIRE *)line->extraObjectData)->type == WIRE_1) {
+        endA.y = endA.y + 1.0f;
+        endB.y = endB.y + 1.0f;
+    }
+    else {
+        endA.y = endA.y - 1.0f;
+        endB.y = endB.y - 1.0f;
+    }
+
+    vecutil_calculate_closest_point_on_line(&at, &endA, &endB, &obj->position);
+    float length = (float)Vec_Dist2D(&endA, &endB);
+    float along = (float)(Vec_Dist2D(&endA, &at) / length);
+    line = blData->attachedToSpecialMovementItem;
+    if (line->objectType == OBJECTTYPE_CREEPWALL)
+        viewer->trackPitch = 2.7488937f;
+    else
+        viewer->trackPitch = (float)(PI - (double)along * 0.5235988f);
+
+    line = blData->attachedToSpecialMovementItem;
+    wall = line->objectType == OBJECTTYPE_CREEPWALL;
+    double yaw = line->rotation.y;
+    if (wall)
+        yaw = yaw + PI;
+    float yawStored = (float)yaw;
+    char step = blData->traverseStep;
+    if (wall) {
+        if (step == 7) {
+            yaw = yaw - QUARTER_PI;
+            yawStored = (float)yaw;
+        }
+        if (step == 8) {
+            yaw = yaw + QUARTER_PI;
+            yawStored = (float)yaw;
+        }
+    }
+    else {
+        if (step == 7) {
+            yaw = yaw + QUARTER_PI;
+            yawStored = (float)yaw;
+        }
+        if (step == 8) {
+            yaw = yaw - QUARTER_PI;
+            yawStored = (float)yaw;
+        }
+    }
+    viewer->trackYaw = (float)yaw;
+
+    float distance = viewer->trackDistance;
+    viewer->trackDistanceUsed = distance;
+    _VECTOR offset;
+    Vec_Spherical_2_Cartesian(&offset.x, distance, yawStored, -viewer->trackPitch);
+    viewer->pos.x = at.x - offset.x;
+    viewer->pos.z = at.z - offset.z;
+    viewer->pos.y = at.y - offset.y;
+
+    uchar show = 1;
+    line = blData->attachedToSpecialMovementItem;
+    if (line->objectType == OBJECTTYPE_CREEPWALL && ((CREEPWALL *)line->extraObjectData)->thirdCam > 0) {
+        obj_tag *camera = ThirdPersonCameras[((CREEPWALL *)line->extraObjectData)->thirdCam];
+        show = ((THIRDCAM *)camera->extraObjectData)->show;
+        ThirdCam_GetPos(camera, along, &viewer->viewMatrix);
+        Vec_Copy(Mat_Position(viewer->viewMatrix), &viewer->pos);
+    }
+    line = blData->attachedToSpecialMovementItem;
+    if (line->objectType == OBJECTTYPE_THIRDCAM_OR_WIRE && ((WIRE *)line->extraObjectData)->thirdCam > 0) {
+        obj_tag *camera = ThirdPersonCameras[((WIRE *)line->extraObjectData)->thirdCam];
+        show = ((THIRDCAM *)camera->extraObjectData)->show;
+        ThirdCam_GetPos(camera, along, &viewer->viewMatrix);
+        Vec_Copy(Mat_Position(viewer->viewMatrix), &viewer->pos);
+    }
+    if (show) {
+        Camera_PlaceAround(&at, viewer, 1.0f);
+        Camera_PlaceAbove(&at, viewer, 1.0f);
+        Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+    }
+}
 
 // AUTOINJECT
 void Camera_Update(uint idx) { 
@@ -234,7 +383,7 @@ void Camera_Update(uint idx) {
     }
 
     if(viewer->someCel != NULL && (viewer->pos).y < (viewer->someCel)->shearHeight) {
-        // Not sure when this is used - perhaps some tilt effect when you fall to your death?
+        // Under the cel's water level (its shearHeight) the view wobbles
         Camera_Shear(viewer);
     }
 

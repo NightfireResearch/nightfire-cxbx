@@ -25,7 +25,9 @@ typedef struct AnimObj {
     char _unknown_4c[4];
     uint flags;                     // 0x50 - ANIMOBJ_*; 0x8000 set by Script_AnimStart; 0x40000 set by Script_FFwd
     float rootHeight;               // 0x54
-    char _unknown_58[0x68 - 0x58];
+    char _unknown_58[0x60 - 0x58];
+    float rootTravel;               // 0x60 - how far the object moved this frame (Player_Update; Ghidra's name)
+    float unknown64;                // 0x64 - zeroed when the player starts swimming or leaves a ladder
     float headTrackSpeed;           // 0x68 - NDrone2_HeadTrackObj
     float aimRate;                  // 0x6c
     float headTrackRange2;          // 0x70 - the head tracking range, squared
@@ -50,7 +52,7 @@ typedef struct AnimObj {
 typedef struct AnimState {
     HITDATA_tag floor; // 0x00 - what Drone_FeetOnPoint found the feet on
     char animFlags; // 0x50 - bit one when weapon is zoomed in; ANIM_CONTACT_* for drones
-    char _pad_2;
+    char inWater;     // 0x51 - bit 0: the player is in water (Player_InWater)
     char currentWeaponId; // 0x52
     char switchingToWeaponId; // 0x53
     char prevHeldWeaponId; // 0x54

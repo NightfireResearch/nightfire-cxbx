@@ -15,15 +15,31 @@
 #include "../../game.h"
 #include "../sp/SwitchChannels.h"
 #include "../drone/DroneTuning.h"
+#include "../drone/Drone.h"
+#include "../drone/BOT.h"
+#include "../drone/DroneWeapon.h"
+#include "../../sound/music.h"
+#include "bullet.h"
+#include "car.h"
+#include "control.h"
+#include "build.h"
+#include "Light.h"
+#include "Door.h"
+#include "Trigger.h"
+#include "SS.h"
+#include "Monitor.h"
+#include "PCQWorm.h"
+#include "GunImp.h"
+#include "Hurt.h"
+#include "ScriptPlayer.h"
+#include "../../ui/HUD.h"
+#include "../../ui/MenuManager.h"
+#include "../sp/PlayerStats.h"
+#include "../../math/X87Ops.h"
+#include <bit>
 #include <math.h>
 #include <string.h>
 
-// AUTOGEN
-unsigned short Player_ChangeSubState(obj_tag* obj, unsigned short newState);
-// AUTOGEN
-void Player_CollWire(obj_tag *player, BLData *blData, obj_tag *wire);
-// AUTOGEN
-void Player_SetHealth(BLData *obj, float health);
 // AUTOGEN
 void Concat(float *param_1, float *param_2);
 
@@ -100,7 +116,6 @@ void Player_SetCamMode(BLData *player, unsigned short newMode) {
 
 // The original's, called by address: Ghidra's prototypes have untyped arguments.
 #define Collide_SphereIntersect ((bool (__cdecl *)(_VECTOR *centre, float radius, cel_tag *cel, obj_tag *obj, obj_tag *ignore, HITDATA_tag **hitList, char param_7, char param_8, ushort collideFlags, int param_10))0x0002c610)
-#define Player_CollCreepWall ((void (__cdecl *)(obj_tag *player, BLData *blData, obj_tag *creepWall))0x000aeda0)
 
 // What Player_Enable looks for around the player when asked to (the radius, the collision flags).
 #define PLAYER_ENABLE_ATTACH_RADIUS 2.0f
@@ -121,7 +136,7 @@ void Player_Disable(obj_tag *player, char freeze) {
 
     blData->active = 0;
     player->effectFlags |= FLAG_HIDDEN;
-    blData->hitTestType = 0;
+    blData->hitTest.hitType = 0;
     if (blData->weaponObject != NULL)
         blData->weaponObject->effectFlags |= FLAG_HIDDEN;
 }
@@ -146,11 +161,11 @@ void Player_Enable(obj_tag *player, _MATRIX *mtx, int checkAttach) {
         Vec_Copy(&player->rotation, &player->lastRotation);
     }
 
-    blData->hitTestType = 0x800;
+    blData->hitTest.hitType = 0x800;
     if (blData->weaponObject != NULL)
         blData->weaponObject->effectFlags &= ~FLAG_HIDDEN;
-    blData->field_0x8dc = 0;
-    blData->field_0x8e2 = 0;
+    blData->jumpState = 0;
+    blData->jumpWait = 0;
     Vec_Zero(&blData->field_0x3c);
     BLData *movement = (BLData *)player->extraObjectData;
     Vec_Zero(&movement->lastMovement);
@@ -363,12 +378,6 @@ void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos) {
 
 }
 
-// AUTOGEN
-obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *spawnPointData);
-
-// AUTOGEN
-void Player_GetHeadPos(_VECTOR *headPosOut, obj_tag *player, _MATRIX *param_3);
-
 // AUTOINJECT
 void Player_Start(void) {
 
@@ -506,10 +515,6 @@ void Player_ViewClamping(obj_tag *player) {
 //  - the turn goes through AccelFunc0, which carries its state in blData->turnAccelState;
 //  - swimming adds the forward component along the view direction instead of the object's own forward, and
 //    accumulates into the movement vector rather than replacing it.
-//
-// ABI note, since this calls two functions by address: AccelFunc0 (0x000b7420) ends in a bare RET, not
-// RET 0x1c, so it is caller-cleans __cdecl despite Ghidra labelling it __stdcall - taking that label at face
-// value would unbalance the stack by 28 bytes. It returns its float in ST0, which is what MSVC expects.
 // ---------------------------------------------------------------------------------------------------------------
 
 // XBE_GLOBAL(0x00181a70, 0x4)
@@ -523,12 +528,6 @@ static float Plr_NoAimTurnSpeed_X_Steps = 120.0f;
 // zipline). Called rather than reproduced, so that naming it in Ghidra later does not leave two copies.
 static bool PlayerMoveAllowed(obj_tag *player) {
     return reinterpret_cast<bool (__cdecl *)(obj_tag *)>(0x000a9930)(player);
-}
-
-// Returned unrounded in ST0: the state plus a step can need more than a float holds
-static double TurnAccel(float channel, float *state, float a, float b, float c, float d, float e) {
-    return reinterpret_cast<double (__cdecl *)(float, float *, float, float, float, float, float)>(0x000b7420)
-        (channel, state, a, b, c, d, e);
 }
 
 static void RotMatrixX(float angle, float *matrix) {
@@ -579,7 +578,7 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
         forward = 0.0f;
         turn = 0.0f;
     }
-    if ((blData->previousSubState == 7) && (blData->maybeCamRelatedCountdown != '\0')) {
+    if ((blData->previousSubState == 7) && (blData->traverseWait != '\0')) {
         strafe = 0.0f;
     }
 
@@ -622,7 +621,7 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
     float moveZ = (float)(forwards * speed);
     float moveX = (float)(sideways * speed);
 
-    double accel = TurnAccel(turn, &blData->turnAccelState, Plr_NoAimTurnSpeed_X,
+    double accel = _AccelFunc0(turn, &blData->turnAccelState, Plr_NoAimTurnSpeed_X,
                              Plr_NoAimTurnSpeed_X_Mul, Plr_NoAimTurnSpeed_X_Steps, 0.05f, 0.95f);
     blData->turnAccelState = (float)accel;
     float yaw = (float)(accel * FRAME_RATE_MUL * turn);
@@ -650,8 +649,6 @@ bool Player_WeaponHasAmmo(BLData *param_1, short param_2);
 void Player_WeaponChange(obj_tag *param_1, char param_2, char param_3);
 // AUTOGEN
 void Player_AutoAim(obj_tag *param_1);
-// AUTOGEN
-void Player_ClearAimInertia(obj_tag *param_1);
 // AnimScriptAdd, with the script's playback speed set (sAnimScript_tag +0x94) when it starts.
 // AUTOGEN
 sAnimScript_tag* AnimScriptAddSpeed(obj_tag* obj, HASHCODE hashcode, float speed);
@@ -927,8 +924,8 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
     if (blData == NULL)
         return;
 
-    blData->field_0xd8 = 0;
-    blData->field_0xdc = 0;
+    blData->aimX = 0;
+    blData->aimY = 0;
     blData->crosshairOffsetX = 0.0f;
     blData->crosshairOffsetY = 0.0f;
     blData->field_0xd4 = 0;
@@ -1682,4 +1679,2248 @@ void Player_PositionCamera(obj_tag *player) {
 
     }
 
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Substates, health and death, and walking (the substate handlers Player_Update calls)
+// ---------------------------------------------------------------------------------------------------------------
+
+// The originals, called by address
+#define AnimSetDeleteAll ((void (__cdecl *)(obj_tag *obj))0x00017820)
+#define AnimScriptIsStopped ((int (__cdecl *)(obj_tag *obj))0x00012780)
+#define AnimSetUpdate ((void (__cdecl *)(obj_tag *obj, void *animSet, float speed, float forward, float forwardScale, float sideways, float sidewaysScale))0x00018bb0)
+#define PlayerAnimSetInitNormal ((void (__cdecl *)(obj_tag *player))0x000a91e0)
+#define PlayerAnimSetInitCrouch ((void (__cdecl *)(obj_tag *player))0x000a9350)
+#define PlayerAnimCrouch2Stand ((void (__cdecl *)(obj_tag *player))0x000a94c0)
+#define PlayerAnimStand2Crouch ((void (__cdecl *)(obj_tag *player))0x000a9590)
+#define Lights_CalcClosestLights ((light_tag **(__cdecl *)(_VECTOR *pos, uint mask, ushort *count))0x0006d8f0)
+#define GunImp_PlayerHasDied ((void (__cdecl *)(obj_tag *player))0x00026f10)
+#define GT_PlayerHasDied ((void (__cdecl *)(obj_tag *player))0x0009a960)
+#define MP_PlayerKilled ((void (__cdecl *)(obj_tag *player))0x000a1fc0)
+#define MP_ReSpawn ((bool (__cdecl *)(obj_tag *player, short playerNum))0x0009f0b0)
+#define Menu_PlayerHasQuitOrRestarted ((bool (__cdecl *)(void))0x00092c30)
+#define Pickup_CreateSimple ((obj_tag *(__cdecl *)(_MATRIX *mtx, int weapon, short count, int param_4))0x000a7f10)
+#define Control_Plr2Ind ((short (__cdecl *)(obj_tag *player))0x0002d8a0)
+#define GameFlow_GetState ((uint (__cdecl *)(void))0x0006aa70)
+#define AnimScriptAdd ((sAnimScript_tag *(__cdecl *)(obj_tag *obj, HASHCODE hashcode))0x00017220)
+#define Control_BuildWorldSph ((void (__cdecl *)(obj_tag *obj))0x0002db20)
+
+#define CheatInfo (*((CheatInfo_t*)0x001f65dc))
+#define debug_scanmode U8_AT(0x001fec49)   // the player starts every level flying (MovementType_ScanMode)
+// XBE_GLOBAL(0x001f6648, 0xc) is GRAVITY_VECTOR: in zero G its y is 0
+
+// BLData::jumpState
+#define JUMP_NONE    0
+#define JUMP_RISING  1
+#define JUMP_FALLING 2
+
+// Floor materials (HITDATA_tag::materialType) that land with their own sound
+#define MATERIAL_0D 0x0d
+#define MATERIAL_0E 0x0e
+
+
+// BLData::waterFlags
+#define WATER_HEAD_WAS_UNDER 0x01   // the head went under and came back up
+#define WATER_HEAD_UNDER     0x10   // the head is under water, or the player is on a wire
+
+// The level and the original's text for a death in multiplayer
+#define TXT_MP_DIED   ((Action_TranslatedText)0x02000037)  // with the player's name
+#define TXT_MP_KILLED ((Action_TranslatedText)0x02000038)  // with the killer's name
+
+void _Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity);
+
+// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
+// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
+static int32_t Ftol(double x) {
+    if (!(fabs(x) < 9223372036854775808.0))
+        return 0;
+    long long nearest = llrint(x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x));
+}
+
+// What the original's FCOMP and FCHS give: the sign flipped unless x >= 0, so -0 stays -0 (MSVC's fabs clears it)
+static float Magnitude(float x) {
+    return x >= 0.0f ? x : std::bit_cast<float>(std::bit_cast<uint32_t>(x) ^ 0x80000000u);
+}
+
+// AUTOINJECT
+void Player_ClearInertia(obj_tag *player) {
+    BLData *blData = (BLData *)player->extraObjectData;
+    Vec_Zero(&blData->lastMovement);
+    Vec_Zero(&blData->lastRotationDelta);
+    Vec_Zero(&blData->movement);
+    Vec_Zero(&blData->rotationDelta);
+}
+
+// AUTOINJECT
+void Player_ClearAimInertia(obj_tag *player) {
+    BLData *blData = (BLData *)player->extraObjectData;
+    blData->aimTurnX = 0.0f;
+    blData->aimTurnY = 0.0f;
+}
+
+// AUTOINJECT
+void Player_SetFlashBang(BLData *blData, float time, uchar blur) {
+    if (blData == NULL)
+        return;
+    blData->flashTime = time;
+    blData->flashTimeLeft = time;
+    blData->flashBlur = blur;
+}
+
+// Nothing changes while the stats may not be updated (PlrStat_OkToUpdate)
+// AUTOINJECT
+void Player_SetHealth(BLData *blData, float health) {
+    if (!PlrStat_OkToUpdate())
+        return;
+    if (health < 0.0f)
+        health = 0.0f;
+    blData->health = health;
+    PlrStat_LogHealth(health, blData->playerNum);
+}
+
+// The eyes: above the position by the eye height less the crouch, and, given a matrix, the view's. Flying and in zero
+// G the offset turns with the player, and the matrix is left alone.
+// AUTOINJECT
+void Player_GetHeadPos(_VECTOR *headPos, obj_tag *player, _MATRIX *mtx) {
+    BLData *blData = (BLData *)player->extraObjectData;
+    short subState = (short)player->subState;
+    if (subState == MovementType_ScanMode || subState == MovementType_ZeroG || subState == MovementType_ZeroG_Anim) {
+        _VECTOR offset;
+        offset.y = (float)((double)blData->headSwimOffset - blData->headCrouchOffset);
+        offset.z = 0.0f;
+        offset.x = 0.0f;
+        ApplyMatrixLV(&player->transformMatrix, &offset, headPos);
+        Vec_Add2(headPos, &player->position, headPos);
+        return;
+    }
+
+    headPos->x = player->position.x;
+    headPos->y = (float)((double)blData->headSwimOffset + player->position.y - blData->headCrouchOffset);
+    headPos->z = player->position.z;
+    if (mtx != NULL)
+        Mat_Copy(&glb_viewer[blData->playerNum]->viewMatrix, mtx);
+}
+
+// The anim of a dead player: lying in zero G, falling otherwise. Not a function on PS2; the name is ours.
+// FUNC_AT(0x000a96a0)
+void PlayerAnimSetInitDead(obj_tag *player) {
+    ((BLData *)player->extraObjectData)->animSet = NULL;
+    AnimSetDeleteAll(player);
+    if (GRAVITY_VECTOR.y == 0.0f)
+        AnimScriptAdd(player, (HASHCODE)0x060008e0);
+    else
+        AnimScriptAdd(player, (HASHCODE)0x06000151);
+}
+
+// Returns the substate the player was in. Flying and zero G keep the matrix's rotation; everything else stands the
+// player up straight.
+// AUTOINJECT
+int Player_ChangeSubState(obj_tag *player, ushort newState) {
+    short oldState = (short)player->subState;
+    BLData *blData = (BLData *)player->extraObjectData;
+    player->subState = newState;
+    blData->animSet = NULL;
+    AnimSetDeleteAll(player);
+    if (newState == MovementType_ScanMode || newState == MovementType_ZeroG || newState == MovementType_ZeroG_Anim) {
+        player->transformFlags |= TRANSFORM_KEEP_ROTATION;
+    }
+    else {
+        player->transformFlags &= ~TRANSFORM_KEEP_ROTATION;
+        player->rotation.x = 0.0f;
+    }
+    player->effectFlags &= ~FLAG_HIDDEN;
+
+    switch (newState) {
+        case MovementType_Walk:
+            PlayerAnimSetInitNormal(player);
+            ((BLData *)player->extraObjectData)->field_0x8e4 = 0xff;
+            if (oldState == MovementType_Crouch) {
+                PlayerAnimCrouch2Stand(player);
+                blData->animWait = (char)Ftol(_FRAME_RATE);
+            }
+            break;
+        case MovementType_Crouch:
+            PlayerAnimSetInitCrouch(player);
+            ((BLData *)player->extraObjectData)->field_0x8e4 = 0xff;
+            if (oldState == MovementType_Walk) {
+                PlayerAnimStand2Crouch(player);
+                blData->animWait = (char)Ftol(_FRAME_RATE);
+            }
+            break;
+        case MovementType_ZeroG:
+        case MovementType_ZeroG_Anim:
+            PlayerAnimSetInitNormal(player);
+            ((BLData *)player->extraObjectData)->field_0x8e4 = 0xff;
+            break;
+        case MovementType_Dead:
+        case MovementType_DeadInWater:
+            PlayerAnimSetInitDead(player);
+            break;
+    }
+
+    if (newState >= 1 && newState <= 16 && newState != MovementType_Crouch) {
+        Sound_StopAllWithId((Action_SFX)0x12);
+        Sound_StopAllWithId((Action_SFX)0x3d);
+        Sound_StopAllWithId((Action_SFX)0xf0);
+    }
+    blData->field_0x8ea = 0;
+    return oldState;
+}
+
+// Whether the player swims: in a cel with water above the feet (0.3 below the position), and not dying. Going in
+// changes to the swimming substate and clears the movement. The player's object in ESI, his data in EDI.
+int _Player_InWater(obj_tag *player, BLData *blData) {
+    cel_tag *cel = player->inCel;
+    if (cel == NULL)
+        return 0;
+
+    if ((double)player->position.y - 0.3f < cel->shearHeight) {
+        player->animState->inWater |= 1;
+        if (MPSettings.isMultiplayer == 0 && player->curState != 2) {
+            Player_ChangeSubState(player, MovementType_Swim);
+            blData->jumpState = JUMP_NONE;
+            blData->traverseWait = (char)Ftol((double)FRAME_RATE_DIV * 5.0f);
+            blData->aimAutoLevelState = 2;
+            blData->movement.y = 0.0f;
+            player->rotation.x = 0.0f;
+            player->rotation.z = 0.0f;
+            Player_ClearInertia(player);
+            player->animState->animObj.unknown64 = 0.0f;
+        }
+    }
+    else {
+        player->animState->inWater &= ~1;
+    }
+    return player->subState == MovementType_Swim;
+}
+
+// AUTOLTCG
+void __declspec(naked) Player_InWater(void) {
+    _asm {
+        push edi
+        push esi
+        call _Player_InWater
+        add esp, 8
+        ret
+    }
+}
+
+// How well lit the player is: his own light (the average of the object's three) plus, for each of the closest
+// lights, an eighth of its colour scaled by distance over brightness; 255 is fully lit.
+// AUTOINJECT
+void Player_InShadow(BLData *blData, obj_tag *player) {
+    int sum = player->light_related1 + player->light_related2 + player->light_related3;
+    int light = Ftol((double)sum * 0.33333334f);
+
+    ushort count;
+    light_tag **lights = Lights_CalcClosestLights(&player->centrePoint, (ushort)player->effectFlags, &count);
+    for (ushort i = 0; i < count; i++) {
+        uchar colour = (lights[i]->clr_r + lights[i]->clr_g + lights[i]->clr_b) >> 3;
+        double lit = Vec_Dist3D(&lights[i]->position, &player->centrePoint);
+        lit = lit / lights[i]->brightness * (int)colour;
+        light += Ftol(lit);
+    }
+
+    double visibility = (double)(int)(ushort)light * 0.003921569f;
+    blData->visibility = (float)visibility;
+    if (player->subState == MovementType_Crouch)
+        blData->visibility = (float)(visibility * 0.5f);
+}
+
+// The damage the player takes, scaled by the difficulty (single player) or the multiplayer options and where he was
+// hit, taken from the armour first except for pain types 1 to 7, then from health; a flash on the HUD and the pad's
+// rumble. Pain types 5 to 7 come from the level, not a player; 7 is drowning, which the immortality cheat stops
+// rumbling. hitLocation is the bone hit, or -1. The original takes the player's data in ESI, the hit location in DI
+// and the pain type in BX.
+void _Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hitLocation, ushort painType) {
+    if (switch_channels[0x5f] != 0)
+        return;
+    if (blData->health <= 0.0f)
+        return;
+    if (damage <= 0.0f)
+        return;
+    if (MPSettings.maybeDroneAIEnabled != 0 && GameFlow_GetState() != 2)
+        return;
+
+    blData->hudFadeIn = 1.0f;
+
+    double hurt = damage;
+    if (MPSettings.isMultiplayer != 0) {
+        if (hitLocation != -1)
+            hurt *= Plr_DMod_Multi;
+        if (MPSettings.LocationDamageEnabled != 0) {
+            switch (hitLocation) {
+                case 5:
+                    hurt *= Plr_DMod_Head;
+                    break;
+                case 49: case 50: case 51: case 52: case 53: case 54: case 55: case 56:
+                    hurt *= Plr_DMod_LowerLimb;
+                    break;
+                case 20: case 21: case 32: case 35:
+                    hurt *= Plr_DMod_UpperLimb;
+                    break;
+            }
+        }
+        if (MPSettings.TripleDamageModifierProfessionalMode != 0)
+            hurt *= 3.0f;
+    }
+    else {
+        switch (GameState.difficultyModifier) {
+            case 1:
+                hurt *= Plr_DMod_Easy;
+                break;
+            case 3:
+                hurt *= Plr_DMod_Hard;
+                break;
+            case 4:
+                hurt = hurt + hurt;
+                break;
+            default:
+                hurt *= Plr_DMod_Normal;
+                break;
+        }
+    }
+
+    double armourTakes;
+    switch (painType) {
+        case 5: case 6: case 7:
+            if (MPSettings.maybeDroneAIEnabled != 0)
+                MPGame.players[blData->playerNum].maybeIdxOfLastInjurer = -2;
+            // fall through
+        case 1: case 2: case 3: case 4:
+            armourTakes = 0.0;
+            break;
+        default:
+            armourTakes = 1.0;
+            break;
+    }
+
+    float flash = (float)hurt;
+    double absorbed = armourTakes * hurt;
+    if (absorbed > blData->armor)
+        absorbed = blData->armor;
+    float health = blData->health;
+    blData->armor = (float)(blData->armor - absorbed);
+    damage = (float)(hurt - absorbed);
+    if (CheatInfo.Immortal == 0) {
+        double left = (double)health - damage;
+        health = (left < 0.0) ? 0.0f : (float)left;
+    }
+
+    if (painType == 7 && CheatInfo.Immortal != 0) {
+        blData->hitDirections = 0xc;
+    }
+    else {
+        if (Rand_Rand(4) == 0)
+            Sound_Play3D((Action_SFX)0x88, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+        Input_RumbleStart(blData->playerNum, 5, Ftol(damage));
+        blData->hitDirections = (painType == 6) ? 2 : 0xc;
+    }
+
+    double fade = flash * 21.333334f;
+    if (128.0f < fade)
+        fade = 128.0f;
+    fade += blData->hitDirectionFade;
+    if (255.0f < fade)
+        fade = 255.0f;
+    blData->hitDirectionFade = (uchar)Ftol(fade);
+
+    if (health < 1.0f)
+        health = 0.0f;
+    Player_SetHealth(blData, health);
+}
+
+// AUTOLTCG
+void __declspec(naked) Player_HandlePain(void) {
+    _asm {
+        movzx eax, bx
+        push eax
+        movsx eax, di
+        push eax
+        push esi
+        push dword ptr [esp + 0x14]
+        push dword ptr [esp + 0x14]
+        call _Player_HandlePain
+        add esp, 0x14
+        ret
+    }
+}
+
+// True once the player is dead. The health is kept between 0 and 500; at 0, for a player whose object is still of
+// the given type, the death: the cars, emplacements and gun turrets he was using let go, the dropped weapon (in
+// multiplayer, with its ammo, and the grenade launcher's grenades as well) or the death music, the death message in
+// multiplayer, and the dead substate.
+// AUTOINJECT
+bool Player_CheckForDeath(obj_tag *player, uint objectType) {
+    BLData *blData = (BLData *)player->extraObjectData;
+    if (player->curState == 2 || player->curState == 3)
+        return true;
+    if (CheatInfo.Immortal != 0)
+        return false;
+
+    float health = blData->health;
+    if (health < 0.0f)
+        health = 0.0f;
+    else if (health > 500.0f)
+        health = 500.0f;
+    Player_SetHealth(blData, health);
+    if (!(blData->health <= 0.0f))
+        return false;
+    if ((uchar)player->objectType != objectType)
+        return false;
+
+    weapon_definition_tag *weapon = &weapon_data[player->animState->currentWeaponId];
+    Car_PlayerHasDied(player);
+    GunImp_PlayerHasDied(player);
+    GT_PlayerHasDied(player);
+    if (MPSettings.isMultiplayer == 0) {
+        switch_channels[0x5e] = 1;
+        Music_Event(6, 1);
+    }
+    else if (weapon->worldModelGfx != 0 && blData->weaponObject != NULL) {
+        ushort dropped = weapon->weaponBaseNum;
+        Pickup_CreateSimple(&blData->weaponObject->transformMatrix, dropped, blData->weaponStats[dropped].clipOrCooldown,
+                            0);
+        if (weapon->weaponBaseNum == 0x1a) {
+            ushort grenades = weapon_data[0x1b].weaponVariantNum;
+            obj_tag *pickup = Pickup_CreateSimple(&blData->weaponObject->transformMatrix, 0x1b,
+                                                  blData->weaponStats[grenades].clipOrCooldown, 1);
+            if (pickup != NULL)
+                pickup->effectFlags |= FLAG_HIDDEN;
+        }
+    }
+
+    Player_ClearInertia(player);
+    HUD_Update(blData, player);
+    player->creationTimeFrames = GameState.NumFramesUnpaused;
+    player->objectType = OBJECTTYPE_DEAD_PLAYER;
+    Player_WeaponNone(player);
+    player->animState->animFlags &= ~1;
+    Player_SetCamMode(blData, CamMode_Default);
+    Player_SetHealth(blData, 0.0f);
+    player->curState = 2;
+
+    if (MPSettings.isMultiplayer != 0) {
+        char *text = Txt_GetStringFromHeap(0);
+        short self = blData->playerNum;
+        short injurer = MPGame.players[self].maybeIdxOfLastInjurer;
+        short killer = (injurer == self) ? -1 : injurer;
+        if (killer == -2 || killer == -1)
+            sprintf(text, Txt_BindLabel(TXT_MP_DIED, 0), MPSettings.Player[self].Name);
+        else
+            sprintf(text, Txt_BindLabel(TXT_MP_KILLED, 0), MPSettings.Player[injurer].Name);
+        Text_AddMsg((char)self, 0, 1, text, 0, 0xb4);
+    }
+
+    Sound_Play3D((Action_SFX)0x89, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+    Player_ChangeSubState(player, (player->animState->inWater & 1) ? MovementType_DeadInWater : MovementType_Dead);
+    MP_PlayerKilled(player);
+    Collide_FreeHitList(&player->hitList);
+    return true;
+}
+
+// The dead player, every frame. In zero G the body tumbles. In single player the death channel (0x62) goes up once the
+// blood pane has run and skip is pressed; in multiplayer the player comes back after five seconds, unless he has used
+// up his lives (game mode 0x10).
+void _Player_HandleDeath(obj_tag *player) {
+    BLData *blData = (BLData *)player->extraObjectData;
+    _Player_InWater(player, blData);
+    if (GRAVITY_VECTOR.y == 0.0f) {
+        player->rotation.x = (float)((double)player->rotation.x + 0.001f);
+        player->rotation.y = (float)((double)player->rotation.y + 0.001f);
+        player->rotation.z = (float)((double)player->rotation.z + 0.001f);
+    }
+
+    if (MPSettings.isMultiplayer == 0) {
+        if (!PlrStat_OkToUpdate())
+            return;
+        if (!blData->hudInfo->pane[Blood].enabled) {
+            HUD_DisableAll(blData);
+            HUD_Enable(blData->hudInfo, Blood, 1, 0);
+            return;
+        }
+        if (HUD_State(blData->hudInfo, Blood) == 0 && Input_Action(-1, ACTION_SKIP_CUTSCENE, 1) == 0)
+            return;
+        if (Menu_PlayerHasQuitOrRestarted())
+            return;
+        switch_channels[0x62] = 1;
+        return;
+    }
+
+    if (!blData->hudInfo->pane[Blood].enabled)
+        HUD_Enable(blData->hudInfo, Blood, 1, 0);
+    if ((uint)(GameState.NumFramesUnpaused - player->creationTimeFrames) < FRAME_RATE_INT * 5)
+        return;
+    if (MPSettings.GameMode == GM_TOPAGENT && (int)MPGame.players[Control_Plr2Ind(player)].deaths >= (int)MPSettings.MaxPoints)
+        return;
+    if (player->curState == 3)
+        return;
+    MP_ReSpawn(player, blData->playerNum);
+}
+
+// AUTOLTCG
+void __declspec(naked) Player_HandleDeath(void) {
+    _asm {
+        push eax
+        call _Player_HandleDeath
+        add esp, 4
+        ret
+    }
+}
+
+// Puts the player at a place, standing on the floor below it (searched for 3 below a point 0.1 above it) with his
+// eyes 1.1 above that, in the given substate (flying, with debug_scanmode), with everything he was doing cleared.
+// AUTOINJECT
+void Player_StandAtNewPosition(obj_tag *player, _VECTOR *pos, _VECTOR *rot, ushort subState) {
+    BLData *blData = (BLData *)player->extraObjectData;
+    player->position = *pos;
+    player->lastPosition = *pos;
+    blData->lastPosition = player->lastPosition;
+    player->rotation = *rot;
+    player->lastRotation = *rot;
+    player->curState = 1;
+    if (debug_scanmode)
+        Player_ChangeSubState(player, MovementType_ScanMode);
+    else
+        Player_ChangeSubState(player, subState);
+    Player_ClearInertia(player);
+    Player_ClearAimInertia(player);
+
+    blData->active = 1;
+    blData->frozen = 0;
+    blData->traverseWait = 0;
+    blData->field_0x8e3 = 0;
+    blData->walkClass = 1;
+    blData->ropeFatigue = 0.0f;
+    blData->bondMomentTimer = 0;
+    blData->field_0x8ee = 0;
+    blData->turnKick = 0.0f;
+    blData->thirdIcon = 0xff;
+    blData->nightVisionActive = 0;
+    blData->nightVisionTimer = 1800.0f;
+    blData->stepDistance = 0.0f;
+    blData->fallFrames = 0.0f;
+    blData->hitDirectionFade = 0;
+    blData->hitDirections = 0;
+    surfaced = 1;
+    player->animState->inWater &= ~1;
+    blData->jumpState = JUMP_NONE;
+    blData->headSwimOffset = 0.7f;
+    blData->headCrouchOffset = 0.0f;
+    blData->animWait = 0;
+    Vec_Zero(&blData->movement);
+    Vec_Zero(&blData->lastMovement);
+    Vec_Zero(&blData->lastRotationDelta);
+    Vec_Zero(&blData->rotationDelta);
+    Vec_Zero(&blData->field_0x3c);
+    blData->field_0x8cc = 0;
+
+    _VECTOR floor;
+    Vec_Copy(&player->position, &floor);
+    floor.y = (float)((double)floor.y + 0.1f);
+    build_PointOnFloor(build_FindCel(&floor, glb_world), NULL, &floor, 3.0f, NULL);
+    floor.y = (float)((double)floor.y + 1.1f);
+    Vec_Copy(&floor, &player->position);
+    control_unlink_object(player);
+    Control_BuildWorldSph(player);
+    build_LinkToRoom(player, 1, glb_world);
+
+    glb_viewer[blData->playerNum]->someCel = NULL;
+    viewer_tag *viewer = glb_viewer[blData->playerNum];
+    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+    if (MPSettings.isMultiplayer != 0)
+        AnimObjectSetAiming(player, &blData->muzzle, 1000.0f, 0.2f, 0, 5);
+    player->transformFlags |= TRANSFORM_MOVED;
+}
+
+// Sets the walking pace from the speed - 1 at up to 0.2, 2 from 0.8 - and stops the view levelling itself. A change
+// of pace sets it levelling again when the player's auto-centre option is on. Inlined on PS2; the name is ours.
+// FUNC_AT(0x000a9160)
+void Player_UpdateWalkClass(obj_tag *player, float speed, float levelTarget) {
+    BLData *blData = (BLData *)player->extraObjectData;
+    blData->pitchAutoLevelTarget = levelTarget;
+    if (speed < 0.0f)
+        speed = -speed;
+    char walkClass;
+    if (speed <= 0.2f)
+        walkClass = 1;
+    else if (speed >= 0.8f)
+        walkClass = 2;
+    else
+        return;
+    if (walkClass == blData->walkClass)
+        return;
+    blData->walkClass = walkClass;
+    if (PlayerInputs[blData->playerNum].levelViewOnPace != 0)
+        blData->aimAutoLevelState = 2;
+}
+
+// Turns the player's matrix by the frame's rotationDelta
+static void TurnByRotationDelta(BLData *blData, obj_tag *player) {
+    _MATRIX turn;
+    RotMatrix(&blData->rotationDelta, &turn);
+    Concat(player->transformMatrix.m, turn.m);
+    Mat_CopyRot(&turn, &player->transformMatrix);
+}
+
+// Counts down the wait for a crouch or stand anim, and chooses the anim set again when it ends
+static void WaitForAnimSet(BLData *blData, obj_tag *player, void (__cdecl *initAnimSet)(obj_tag *)) {
+    if (blData->animWait == 0)
+        return;
+    blData->animWait--;
+    if (AnimScriptIsStopped(player) || blData->animWait == 1) {
+        blData->animWait = 0;
+        initAnimSet(player);
+    }
+}
+
+// The walking anims, from the frame's movement
+static void UpdateWalkAnims(BLData *blData, obj_tag *player, float speed) {
+    AnimSetUpdate(player, ((BLData *)player->extraObjectData)->animSet, speed, blData->movement.z,
+                  FRAME_RATE_MUL * 0.1f, blData->movement.x, FRAME_RATE_MUL * 0.075f);
+}
+
+// Walking: into the water, the stick, the anims, the pace (by twice the speed), jumping and crouching. The player's
+// object in EAX, his data in ECX.
+void _Player_SSWalk(obj_tag *player, BLData *blData) {
+    if (_Player_InWater(player, blData))
+        return;
+    WaitForAnimSet(blData, player, PlayerAnimSetInitNormal);
+    Player_Move(blData, player, 1.0f);
+    float speed = Magnitude(blData->movement.z);
+    if (blData->animWait == 0)
+        UpdateWalkAnims(blData, player, speed);
+    Player_UpdateWalkClass(player, speed + speed, 0.0f);
+    _Player_HandleJump(blData, player, &GRAVITY_VECTOR);
+    TurnByRotationDelta(blData, player);
+}
+
+// AUTOLTCG
+void __declspec(naked) Player_SSWalk(void) {
+    _asm {
+        push ecx
+        push eax
+        call _Player_SSWalk
+        add esp, 8
+        ret
+    }
+}
+
+// Crouching: as walking at three quarters of the speed, standing up (as the player's crouch option says: on letting
+// go of crouch, or on pressing crouch or jump) when there is room, 0.95 above the matrix's position. The player's
+// object in EAX, his data in ECX.
+void _Player_SSCrouch(obj_tag *player, BLData *blData) {
+    if (_Player_InWater(player, blData))
+        return;
+    WaitForAnimSet(blData, player, PlayerAnimSetInitCrouch);
+    Player_Move(blData, player, 0.75f);
+    if (blData->animWait == 0) {
+        float speed = Magnitude(blData->movement.z);
+        UpdateWalkAnims(blData, player, speed);
+    }
+    Player_UpdateWalkClass(player, blData->movement.z, 0.0f);
+
+    char playerNum = blData->playerNum;
+    uchar standUp;
+    if (PlayerInputs[playerNum].crouchToggle == 0) {
+        standUp = Input_Action(playerNum, ACTION_CROUCH, 1) == 0;
+    }
+    else {
+        standUp = (uchar)Input_Action(playerNum, ACTION_CROUCH, 4);
+        standUp |= (uchar)Input_Action(blData->playerNum, ACTION_JUMP, 4);
+    }
+    if (!(player->animState->animFlags & ANIM_CONTACT_ABOVE) && standUp && blData->animWait == 0) {
+        _VECTOR above;
+        Vec_Copy(Mat_Position(player->transformMatrix), &above);
+        above.y = (float)((double)above.y + 0.95f);
+        if (Collide_LineOfSight(&player->position, &above, player->inCel, player, NULL, 9))
+            Player_ChangeSubState(player, MovementType_Walk);
+    }
+    TurnByRotationDelta(blData, player);
+}
+
+// AUTOLTCG
+void __declspec(naked) Player_SSCrouch(void) {
+    _asm {
+        push ecx
+        push eax
+        call _Player_SSCrouch
+        add esp, 8
+        ret
+    }
+}
+
+// Breath under water: the air pane shows swimming or on a wire; the head (its bone) under the cel's water eases
+// underwater towards 1 and, outside zero G, uses up air at 5 a second, with the going-under sound; above it the air
+// comes back at 20 a second, with the coming-up sound. Out of air, the player is hurt twice a second. The player's
+// object in EAX, his data in ECX.
+void _Player_MonitorAir(obj_tag *player, BLData *blData) {
+    short subState = (short)player->subState;
+    HUD_Enable(blData->hudInfo, Air, subState == MovementType_Swim || subState == MovementType_Wire, 0);
+    _VECTOR head;
+    _MATRIX headMatrix;
+    AnimGetBoneWorldTrans(player, BONE_HEAD, 0, &head, &headMatrix);
+    if (player->inCel == NULL)
+        return;
+
+    bool breathes = !(player->subState >= MovementType_ZeroG && player->subState <= MovementType_ZeroG_Anim);
+    uint flags;
+    if (player->inCel->shearHeight > head.y) {
+        blData->underwater = moveTowardsValue(blData->underwater, 1.0f, REC_FRAME_RATE);
+        flags = blData->waterFlags | WATER_HEAD_UNDER;
+    }
+    else {
+        float away = -blData->underwater;
+        double underwater = blData->underwater + (double)REC_FRAME_RATE * away * 0.5f;
+        if (away < 0.0f) {
+            if (underwater < 0.0)
+                underwater = 0.0;
+        }
+        else if (underwater > 0.0) {
+            underwater = 0.0;
+        }
+        blData->underwater = (float)underwater;
+        if (blData->waterFlags & WATER_HEAD_UNDER)
+            blData->waterFlags |= WATER_HEAD_WAS_UNDER;
+        flags = blData->waterFlags & ~WATER_HEAD_UNDER;
+    }
+    blData->waterFlags = flags;
+    blData->waterFlags = flags | (player->subState == MovementType_Wire ? WATER_HEAD_UNDER : 0);
+
+    if (player->inCel != NULL && player->inCel->shearHeight > head.y && breathes) {
+        blData->air = (float)(blData->air - (double)REC_FRAME_RATE * 5.0f);
+        if (surfaced) {
+            if (blData->waterSound != NULL)
+                Sound_Stop(blData->waterSound);
+            blData->waterSound = Sound_Play3D((Action_SFX)0x27, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+            surfaced = 0;
+        }
+    }
+    else {
+        blData->air = (float)((double)REC_FRAME_RATE * 20.0f + blData->air);
+        if (!surfaced) {
+            if (blData->waterSound != NULL) {
+                Sound_Stop(blData->waterSound);
+                blData->waterSound = NULL;
+            }
+            Sound_PlayExt((Action_SFX)0x60c, 100.0f, 0, 0);
+            surfaced = 1;
+        }
+    }
+
+    float air = blData->air;
+    if (air < 0.0f)
+        air = 0.0f;
+    else if (air > 100.0f)
+        air = 100.0f;
+    blData->air = air;
+    if (air < 1.0f && GameState.NumFramesUnpaused % (uint)Ftol((double)_FRAME_RATE * 0.5f) == 0) {
+        Sound_PlayExt((Action_SFX)0x60b, 100.0f, 0, 0);
+        _Player_HandlePain(player, 2.0f, blData, -1, 7);
+    }
+}
+
+// AUTOLTCG
+void __declspec(naked) Player_MonitorAir(void) {
+    _asm {
+        push ecx
+        push eax
+        call _Player_MonitorAir
+        add esp, 8
+        ret
+    }
+}
+
+// On the ground: crouch, or jump - by gravity times -0.4, with room above (0.95 over the matrix's position) - or, with
+// the wire icon showing, catch the nearest wire (within 1000). In CastleIndoors1, before channel 0x48, jumping only
+// makes a sound. In the air: hitting something above starts the fall; after jumpWait frames, landing ends the jump.
+// The player's data in EAX, his object in ECX.
+void _Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity) {
+    switch (blData->jumpState) {
+        case JUMP_NONE: {
+            if ((uchar)Input_Action(blData->playerNum, ACTION_CROUCH, 4) && blData->animWait == 0) {
+                Player_ChangeSubState(player, MovementType_Crouch);
+                return;
+            }
+            if (blData->groundBits == 0)
+                return;
+            if (player->animState->animFlags & ANIM_CONTACT_ABOVE)
+                return;
+            if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1 && switch_channels[0x48] == 0) {
+                if (Input_Action(blData->playerNum, ACTION_JUMP, 4))
+                    Sound_PlayExt((Action_SFX)0x1db, 100.0f, 0, 0);
+                return;
+            }
+            if (!Input_Action(blData->playerNum, ACTION_JUMP, 4))
+                return;
+
+            if (blData->thirdIcon == THIRDICON_WIRE) {
+                obj_tag *wire = NULL;
+                float nearest = 1000.0f;
+                for (obj_tag *obj = control_first_object(); obj != NULL; obj = obj->nextObject) {
+                    if (obj->objectType != OBJECTTYPE_THIRDCAM_OR_WIRE)
+                        continue;
+                    float distance = Vec_Dist3D(&obj->position, &player->position);
+                    if (distance < nearest) {
+                        nearest = distance;
+                        wire = obj;
+                    }
+                }
+                if (wire != NULL) {
+                    Player_CollWire(player, blData, wire);
+                    return;
+                }
+            }
+
+            _VECTOR above;
+            Vec_Copy(Mat_Position(player->transformMatrix), &above);
+            above.y = (float)((double)above.y + 0.95f);
+            if (!Collide_LineOfSight(&player->position, &above, player->inCel, player, NULL, 9))
+                return;
+            Vec_Zero(&blData->field_0x3c);
+            auxVec_AddMulR32(&blData->field_0x3c, gravity, -0.4f, &blData->field_0x3c);
+            blData->jumpState = JUMP_RISING;
+            blData->jumpWait = 4;
+            player->animState->animFlags &= ~ANIM_CONTACT_FLOOR;
+            Sound_Play3D((Action_SFX)0xa3, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+            return;
+        }
+
+        case JUMP_RISING: {
+            char flags = player->animState->animFlags;
+            if (flags & ANIM_CONTACT_ABOVE) {
+                blData->jumpState = JUMP_FALLING;
+                Vec_Zero(&blData->field_0x3c);
+                return;
+            }
+            if (blData->jumpWait != 0) {
+                blData->jumpWait--;
+                return;
+            }
+            if (!(flags & ANIM_CONTACT_FLOOR))
+                return;
+            if (blData->field_0x3c.y > 0.0f)
+                return;
+        }
+            // fall through
+        case JUMP_FALLING:
+            if (!(player->animState->animFlags & ANIM_CONTACT_FLOOR))
+                return;
+            Vec_Zero(&blData->field_0x3c);
+            blData->jumpState = JUMP_NONE;
+            if (player->animState->floor.materialType == MATERIAL_0D || player->animState->floor.materialType == MATERIAL_0E)
+                Sound_Play3D((Action_SFX)0x5fb, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+            else
+                Sound_Play3D((Action_SFX)0xa3, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+            blData->field_0x8f6 = 8;
+            blData->stepDistance = 999.0f;
+            return;
+    }
+}
+
+// AUTOLTCG
+void __declspec(naked) Player_HandleJump(void) {
+    _asm {
+        push dword ptr [esp + 4]
+        push ecx
+        push eax
+        call _Player_HandleJump
+        add esp, 0xc
+        ret
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Turning and aiming speeds, and the right stick (Player_Aiming)
+// ---------------------------------------------------------------------------------------------------------------
+
+// A turning speed that accelerates while the stick is held over: from base towards base * mul (when full) in
+// steps frames, without going past it on the way up, and always adding the step on the way down (so a speed above
+// its target keeps growing). In the dead zone it is base; it never passes +-(base + base * mul). Returned unrounded:
+// the state plus a step can need more than a float holds. The callers store it in *speed themselves.
+static double Accelerate(float input, float speed, float base, float mul, float steps, float deadZone, bool full) {
+    float step = (float)(((double)base * mul - base) / steps);
+    float target = full ? (float)((double)base * mul) : base;
+
+    double accelerated = speed;
+    if (speed < target) {
+        accelerated = (double)speed + step;
+        if (accelerated > target)
+            accelerated = target;
+    }
+    else if (speed > target) {
+        accelerated = (double)speed + step;
+        if (accelerated < target)
+            accelerated = target;
+    }
+
+    float magnitude = input < 0.0f ? -input : input;
+    if (magnitude <= deadZone)
+        accelerated = base;
+
+    double limit = ((double)mul + 1.0f) * base;
+    if (accelerated < 0.0) {
+        float low = (float)-limit;
+        return (accelerated < low) ? low : accelerated;
+    }
+    float high = (float)limit;
+    return (accelerated > high) ? high : accelerated;
+}
+
+// The speed goes for base * mul once the stick is at least fullZone over
+double _AccelFunc0(float input, float *speed, float base, float mul, float steps, float deadZone, float fullZone) {
+    float magnitude = input < 0.0f ? -input : input;
+    return Accelerate(input, *speed, base, mul, steps, deadZone, magnitude >= fullZone);
+}
+
+// The original's caller keeps EDX across the call (Player_Aiming), and Ghidra has its return in ST0 as custom
+// storage; the adaptor keeps ECX and EDX.
+// AUTOLTCG
+void __declspec(naked) AccelFunc0(void) {
+    _asm {
+        push ecx
+        push edx
+        mov eax, esp
+        push dword ptr [eax + 0x24]
+        push dword ptr [eax + 0x20]
+        push dword ptr [eax + 0x1c]
+        push dword ptr [eax + 0x18]
+        push dword ptr [eax + 0x14]
+        push dword ptr [eax + 0x10]
+        push dword ptr [eax + 0x0c]
+        call _AccelFunc0
+        add esp, 0x1c
+        pop edx
+        pop ecx
+        ret
+    }
+}
+
+// AccelFunc0 with the caller saying when the speed goes for base * mul. The name is ours.
+// FUNC_AT(0x000b7520)
+double AccelFunc0Flag(float input, float *speed, float base, float mul, float steps, float deadZone, int full) {
+    return Accelerate(input, *speed, base, mul, steps, deadZone, full != 0);
+}
+
+// The right stick, outside the remote-control substates and zero G. Not aiming, it pitches the view (and stops the
+// view levelling itself while it does). Aiming through a sighted scope (WPNFLAG_SIGHTED_SCOPE), it turns and
+// pitches the view, slowed by the zoom. Aiming otherwise, it moves the crosshair over the screen, and turns or
+// pitches the view only once the crosshair is pushed past its edge - slower under water.
+// AUTOINJECT
+void Player_Aiming(obj_tag *player) {
+    short subState = (short)player->subState;
+    BLData *blData = (BLData *)player->extraObjectData;
+    if (subState >= MovementType_ZeroG && (subState <= MovementType_Emplacement || subState == MovementType_Ronin))
+        return;
+
+    AnimState *anim = player->animState;
+    if (!(anim->animFlags & 1)) {
+        float look = Input_Actionf(blData->playerNum, ACTION_AIM_U_D, 1);
+        double accel = _AccelFunc0(look, &blData->lookAccel, Plr_NoAimTurnSpeed_Y, Plr_NoAimTurnSpeed_Y_Mul,
+                                  Plr_NoAimTurnSpeed_Y_Steps, 0.05f, 0.95f);
+        blData->lookAccel = (float)accel;
+        double pitch = accel * FRAME_RATE_MUL * look;
+        blData->lastRotationDelta.x = (float)pitch;
+        if (pitch > 0.0002f || pitch < -0.0002f || pitch != pitch) {
+            blData->aimAutoLevelState = 1;
+            blData->pitchFromHorizontal = (float)(pitch * 1.5707964f + blData->pitchFromHorizontal);
+        }
+        return;
+    }
+
+    if (weapon_data[anim->currentWeaponId].weaponFlags & WPNFLAG_SIGHTED_SCOPE) {
+        float turn = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_X, 1);
+        float pitch = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_Y, 1);
+        float accelX = (float)_AccelFunc0(turn, &blData->scopeAccelX, Plr_ScopeSpeed_X, Plr_ScopeSpeed_X_Mul,
+                                         Plr_ScopeSpeed_X_Steps, 0.05f, 0.95f);
+        blData->scopeAccelX = accelX;
+        double accelY = _AccelFunc0(pitch, &blData->scopeAccelY, Plr_ScopeSpeed_Y, Plr_ScopeSpeed_Y_Mul,
+                                   Plr_ScopeSpeed_Y_Steps, 0.05f, 0.95f);
+        blData->scopeAccelY = (float)accelY;
+        double turnBy = (double)accelX * FRAME_RATE_MUL * turn;
+        blData->aimX = 0.0f;
+        blData->aimY = 0.0f;
+        float pitchBy = (float)(accelY * FRAME_RATE_MUL * pitch);
+        blData->lastRotationDelta.y = (float)turnBy;
+        blData->lastRotationDelta.x = pitchBy;
+        double unzoom = 1.0 / blData->zoom;
+        float unzoomed = (float)unzoom;
+        blData->rotationDelta.y = (float)(blData->rotationDelta.y - unzoom * turnBy);
+        blData->pitchFromHorizontal = (float)((double)pitchBy * 0.63661975f * unzoomed + blData->pitchFromHorizontal);
+        return;
+    }
+
+    float stickX = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_X, 1);
+    float stickY = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_Y, 1);
+    float turn = 0.0f;
+    float pitch = 0.0f;
+    double aimY = (double)Plr_AimSpeed_Y * FRAME_RATE_MUL * stickY * 0.125f + blData->aimY;
+    blData->aimX = (float)((double)FRAME_RATE_MUL * Plr_AimSpeed_X * stickX * 0.125f + blData->aimX);
+    blData->aimY = (float)aimY;
+
+    int turning = 0;
+    float aimXMagnitude = blData->aimX < 0.0f ? -blData->aimX : blData->aimX;
+    if (aimXMagnitude > 0.296f) {
+        turning = 1;
+        turn = (float)((double)stickX * 0.125f);
+        if (blData->aimX < -0.296f)
+            blData->aimX = -0.296f;
+        else if (blData->aimX > 0.296f)
+            blData->aimX = 0.296f;
+    }
+
+    // The y edge is tested on the unrounded sum
+    int pitching = 0;
+    double aimYMagnitude = aimY < 0.0 ? -aimY : aimY;
+    if (aimYMagnitude > 0.4f) {
+        pitching = 1;
+        pitch = (float)((double)stickY * 0.125f);
+        if (aimY < -0.4f)
+            blData->aimY = -0.4f;
+        else if (aimY > 0.4f)
+            blData->aimY = 0.4f;
+    }
+
+    float accelX = (float)AccelFunc0Flag(stickX, &blData->aimAccelX, Plr_AimTurnSpeed_X, Plr_ScopeSpeed_X_Mul,
+                                         Plr_ScopeSpeed_X_Steps, 0.05f, turning);
+    blData->aimAccelX = accelX;
+    double accelY = AccelFunc0Flag(stickY, &blData->aimAccelY, Plr_AimTurnSpeed_Y, Plr_ScopeSpeed_Y_Mul,
+                                   Plr_ScopeSpeed_Y_Steps, 0.05f, pitching);
+    blData->aimAccelY = (float)accelY;
+    turn = (float)((double)accelX * FRAME_RATE_MUL * turn);
+    blData->aimTurnX = turn;
+    pitch = (float)(accelY * FRAME_RATE_MUL * pitch);
+    blData->aimTurnY = pitch;
+
+    double unzoom = 1.0 / blData->zoom;
+    double turnBy = unzoom * turn;
+    double pitchBy = (double)(float)unzoom * pitch;
+    if (!surfaced) {
+        turnBy *= 0.4f;
+        pitchBy *= 0.7f;
+    }
+    blData->rotationDelta.y = (float)(blData->rotationDelta.y - turnBy * 1.5707964f);
+    blData->pitchFromHorizontal = (float)(pitchBy + blData->pitchFromHorizontal);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Falling, and the collision capsule (Player_Collision)
+// ---------------------------------------------------------------------------------------------------------------
+
+// The bones a dead player's capsule runs between, with the head
+#define BONE_37 0x80000037
+#define BONE_33 0x80000033
+
+// 0.45 a bit over: the constant's bits are 0x3ee66667, not 0.45f's
+static const float kCrouchCapsuleTop = std::bit_cast<float>(0x3ee66667u);
+
+// The fall speed is kept within +-45 a second
+static void ClampFall(BLData *blData) {
+    if (blData->field_0x3c.y < -45.0f)
+        blData->field_0x3c.y = -45.0f;
+    else if (blData->field_0x3c.y > 45.0f)
+        blData->field_0x3c.y = 45.0f;
+}
+
+// The player's capsule along up from his position: from top (scaled) to the bottom, rootHeight under it less offset
+static void SetCapsule(BLData *blData, obj_tag *player, _VECTOR *up, float top, float bottom) {
+    auxVec_AddMulR32(&player->position, up, top, &blData->hitTest.rayStart);
+    auxVec_AddMulR32(&player->position, up, bottom, &blData->hitTest.rayEnd);
+}
+
+// Moves the player by his fall speed (gravity, unless he stands on a floor that is not too steep, in water or in a
+// substate that holds him), then sets up his capsule for the frame's collision: its length and radius by substate,
+// and the object it ignores. Zero G drifts without gravity; the dead fall until they hit something.
+// AUTOINJECT
+void Player_Collision(obj_tag *player) {
+    float rootHeight = player->animState->animObj.rootHeight;
+    BLData *blData = (BLData *)player->extraObjectData;
+    MPGame.players[blData->playerNum].maybeIdxOfLastInjurer = -2;
+    blData->hitTest.unknown84 = 0;
+    blData->hitTest.cel = player->inCel;
+    _VECTOR up;
+    Mat_GetUp(&up, &player->transformMatrix);
+
+    _VECTOR *fall = &blData->field_0x3c;
+    switch ((short)player->subState) {
+        case MovementType_Climb:
+        case MovementType_Grapple:
+        case MovementType_ScanMode:
+        case MovementType_Wire:
+        case MovementType_Emplacement:
+        case MovementType_DeadInWater:
+        case 15:
+            break;
+
+        case MovementType_ZeroG:
+        case MovementType_ZeroG_Anim:
+            auxVec_AddMulR32(&player->position, fall, (float)((double)REC_FRAME_RATE * 3.0f), &player->position);
+            break;
+
+        case MovementType_Dead:
+            if (player->animState->animFlags & ANIM_CONTACT_HIT)
+                Vec_Zero(fall);
+            else
+                auxVec_AddMulR32(fall, &GRAVITY_VECTOR, REC_FRAME_RATE, fall);
+            ClampFall(blData);
+            auxVec_AddMulR32(&player->position, fall, REC_FRAME_RATE, &player->position);
+            break;
+
+        default:
+            if (player->inCel != NULL && player->inCel->shearHeight > player->position.y)
+                break;
+            if ((player->animState->animFlags & ANIM_CONTACT_FLOOR) && !(blData->floorNormalY < 0.5f)) {
+                if (blData->jumpState != JUMP_RISING) {
+                    if (player->animState->floor.hitObj != NULL) {
+                        Vec_MulR32(fall, fall, (float)((double)REC_FRAME_RATE + REC_FRAME_RATE));
+                    }
+                    else {
+                        blData->movement.y = 0.0f;
+                        Vec_Zero(fall);
+                    }
+                }
+            }
+            else {
+                auxVec_AddMulR32(fall, &GRAVITY_VECTOR, REC_FRAME_RATE, fall);
+            }
+            ClampFall(blData);
+            auxVec_AddMulR32(&player->position, fall, REC_FRAME_RATE, &player->position);
+            break;
+    }
+
+    HITTEST_tag *capsule = &blData->hitTest;
+    switch ((short)player->subState) {
+        case MovementType_Climb:
+        case MovementType_Creep:
+            capsule->hitType = 0x800;
+            capsule->rayLength = 0.275f;
+            capsule->unknown7c = 0.0f;
+            SetCapsule(blData, player, &up, 0.55f, (float)-((double)rootHeight - capsule->rayLength));
+            break;
+
+        case MovementType_Wire:
+        case 15:
+            capsule->ignore = blData->attachedToSpecialMovementItem;
+            capsule->hitType = 0x800;
+            capsule->rayLength = 0.55f;
+            capsule->unknown7c = 0.0f;
+            if (player->subState == 15)
+                capsule->unknown84 = 0x1c0;
+            SetCapsule(blData, player, &up, 0.275f, (float)(2.1f - (double)rootHeight));
+            break;
+
+        case MovementType_Crouch: {
+            float top = (float)-((double)rootHeight - 0.55f - 0.1f);
+            capsule->ignore = blData->weaponObject;
+            capsule->hitType = 0x800;
+            capsule->rayLength = 0.55f;
+            capsule->unknown7c = 0.0f;
+            SetCapsule(blData, player, &up, top, (float)-((double)rootHeight - kCrouchCapsuleTop));
+            break;
+        }
+
+        case MovementType_Dead:
+        case MovementType_DeadInWater: {
+            // From the head, as long as half the body (head to bone 0x33) or half the neck (head to bone 0x37), the
+            // longer, and no wider than the anim's root height
+            capsule->rayLength = (0.55f < rootHeight) ? 0.55f : rootHeight;
+            _VECTOR head, neck, body;
+            AnimGetBoneWorldTrans(player, BONE_HEAD, 0, &head, NULL);
+            AnimGetBoneWorldTrans(player, BONE_37, 0, &neck, NULL);
+            AnimGetBoneWorldTrans(player, BONE_33, 0, &body, NULL);
+            Vec_Subtract(&head, &neck, &up);
+            float length = (float)(Vec_NormaliseLen(&up, &up) * 0.5f);
+            double halfBody = Vec_Dist3D(&head, &body) * 0.5f;
+            if (!(length > halfBody))
+                length = (float)halfBody;
+            capsule->ignore = blData->weaponObject;
+            capsule->hitType = 0x800;
+            capsule->unknown7c = 1.0f;
+            Vec_Copy(&head, &capsule->rayStart);
+            auxVec_AddMulR32(&player->position, &up, (float)-((double)length - 0.55f), &capsule->rayEnd);
+            break;
+        }
+
+        case MovementType_Emplacement:
+            // On anything but a gun turret, the capsule is set up but does not collide
+            if (blData->remoteControlDevice->objectType != OBJECTTYPE_GUNTURRET) {
+                capsule->ignore = blData->remoteControlDevice;
+                capsule->hitType = 0x800;
+                capsule->rayLength = 0.55f;
+                capsule->unknown7c = 0.0f;
+                SetCapsule(blData, player, &up, 0.275f, (float)-((double)rootHeight - 0.55f));
+                capsule->hitType = 0;
+                break;
+            }
+            // fall through
+        default:
+            capsule->ignore = blData->weaponObject;
+            capsule->hitType = 0x800;
+            capsule->rayLength = 0.55f;
+            capsule->unknown7c = 0.0f;
+            SetCapsule(blData, player, &up, 0.275f, (float)-((double)rootHeight - 0.55f));
+            break;
+    }
+    player->unknown_0xd9 = 1;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// What the collision found (Player_CollisionHandler, Player_DealWithObjHit)
+// ---------------------------------------------------------------------------------------------------------------
+
+// The originals, called by address (the weapon's are the next parcel's)
+#define PlayerNotDrone_FeetOnPoint ((obj_tag *(__cdecl *)(obj_tag *obj, HITTEST_tag *test, float *floorNormalY, char dying))0x000ab450)
+#define PlayerCollLadder ((void (__cdecl *)(obj_tag *player, BLData *blData, obj_tag *ladder))0x000ae930)
+#define Env_WaterRipple ((void (__cdecl *)(HITDATA_tag *hit))0x00068f20)
+#define AnimObjectUpdate ((bool (__cdecl *)(obj_tag *obj))0x00018690)
+#define Player_PositionGun ((void (__cdecl *)(obj_tag *player, BLData *blData))0x000b7c00)
+#define Player_LaserPointer ((void (__cdecl *)(obj_tag *player))0x000b8940)
+#define Player_MuzzleFlash ((void (__cdecl *)(obj_tag *player, _VECTOR *muzzle))0x000b9fc0)
+#define Draw_MuzzleFlash ((void (__cdecl *)(obj_tag *player))0x000b7f20)
+#define Player_SetWatch ((void (__cdecl *)(obj_tag *player))0x000b8cb0)
+
+// HITDATA_tag::unknown3: a hit that does not count as touching (the first other hit sets the contact flags)
+#define HIT_NO_CONTACT 0x02
+
+// The anim flags the collision works out afresh every frame
+#define ANIM_CONTACTS (ANIM_CONTACT_FLOOR | ANIM_CONTACT_HIT | ANIM_CONTACT_ABOVE | ANIM_CONTACT_MOVER)
+
+// A fall of more than a second (60 frames) hurts by its frames beyond that, from 10 on
+#define FALL_SAFE_FRAMES 60.0f
+#define FALL_HURT_FRAMES 10
+
+// The bot traits (BOT_stats_t::traitFlags) that make its hits on the player hurt more: with fists, and otherwise
+#define BOT_TRAIT_FIST_DAMAGE 0x04
+#define BOT_TRAIT_SHOT_DAMAGE 0x02
+
+// The ids of the fists, which the fist trait boosts
+static bool IsFist(short weapon) {
+    return weapon == 1 || weapon == 0x64 || weapon == 0x65 || weapon == 0x66;
+}
+
+// Which sides the hit came from, for the HUD: the shot's direction turned into the view's frame. Head on (neither
+// across nor up and down by half), the overlays 2 and 3; otherwise left (4) or right (8), down (1) or up (2) by the
+// larger part.
+static uchar HitDirections(_VECTOR *direction) {
+    float x = direction->x < 0.0f ? -direction->x : direction->x;
+    float y = direction->y < 0.0f ? -direction->y : direction->y;
+    if (x < 0.5f && y < 0.5f)
+        return 0xc;
+
+    uchar directions = 0;
+    if (x > y) {
+        if (direction->x < 0.0f)
+            directions = 4;
+        if (direction->x > 0.0f)
+            directions |= 8;
+    }
+    else {
+        if (direction->y < 0.0f)
+            directions = 1;
+        if (direction->y > 0.0f)
+            directions |= 2;
+    }
+    return directions;
+}
+
+// One thing the player's capsule hit: water (its ripple, and the floor it counts as), a wire or ladder to catch, a
+// hurt volume, or a bullet. A bullet goes through multiplayer's rules (bots' damage traits, assassination, friendly
+// fire in MP_RegisterBulletHit) and the drones' (Drone_ModPlayerHitDamage), then hurts, with where it came from shown
+// on the HUD and its sound. Returns 0, always, in ST0.
+// AUTOINJECT
+float Player_DealWithObjHit(obj_tag *player, BLData *blData, HITDATA_tag *hit) {
+    char headshot = 0;
+    int material = hit->materialType & 0x3f;
+    if (material == MATERIAL_0D || material == MATERIAL_0E) {
+        AnimState *anim = player->animState;
+        if ((uchar)anim->floor.materialType < MATERIAL_0D || (uchar)anim->floor.materialType > MATERIAL_0E)
+            anim->floor = *hit;
+        if (player->animState->animFlags & 4)
+            Env_WaterRipple(hit);
+    }
+
+    obj_tag *hitObj = hit->hitObj;
+    if (hitObj == NULL)
+        return 0.0f;
+
+    switch ((uchar)hitObj->objectType) {
+        case OBJECTTYPE_THIRDCAM_OR_WIRE:
+            Player_CollWire(player, blData, hitObj);
+            return 0.0f;
+
+        case OBJECTTYPE_LADDER:
+            PlayerCollLadder(player, blData, hitObj);
+            return 0.0f;
+
+        case OBJECTTYPE_HURT: {
+            ushort painType = Hurt_GetType(hitObj);
+            float damage = (float)((double)Hurt_GetDamage(hit->hitObj) + hit->dmgAmt);
+            _Player_HandlePain(player, damage, blData, -1, painType);
+            return 0.0f;
+        }
+
+        case OBJECTTYPE_BULLET:
+            break;
+
+        default:
+            return 0.0f;
+    }
+
+    if (MPSettings.maybeDroneAIEnabled != 0) {
+        BU_tag *bullet = (BU_tag *)hitObj->extraObjectData;
+        if (Control_Plr2Ind(bullet->firedByObj) >= 4 && bullet->firedByObj != NULL) {
+            BOT_vars_t *bot = ((Drone_tag *)bullet->firedByObj->extraObjectData)->botVars;
+            if (IsFist(bullet->wpnDef->weaponVariantNum)) {
+                if (bot->stats.traitFlags & BOT_TRAIT_FIST_DAMAGE)
+                    hit->dmgAmt = (float)((double)hit->dmgAmt * 1.5f);
+            }
+            else if (bot->stats.traitFlags & BOT_TRAIT_SHOT_DAMAGE) {
+                hit->dmgAmt = (float)((double)hit->dmgAmt * 1.25f);
+            }
+        }
+
+        // In assassination the assassin kills his target outright with a hit to the head (bone 5) or, within 70
+        // degrees of where the target faces, to bones 1 to 4
+        if (MPSettings.GameMode == GM_ASSASSIN && MP_IsAssasin(bullet->firedByObj) && MP_IsTarget(player)) {
+            int bone = (ushort)hit->hitBoneIdx;
+            if (bone > 0) {
+                if (bone <= 4) {
+                    float from = maybeAtan2(hit->maybehitDirection.x, hit->maybehitDirection.z);
+                    double degrees = Vec_AngleDifference(from, player->rotation.y) * 57.295776f;
+                    if (degrees < 0.0)
+                        degrees = -degrees;
+                    if (degrees < 70.0f)
+                        hit->dmgAmt = blData->health;
+                }
+                else if (bone == 5) {
+                    hit->dmgAmt = blData->health;
+                }
+            }
+        }
+        if (hit->hitBoneIdx == 5)
+            headshot = 1;
+    }
+
+    if (!MP_RegisterBulletHit(blData->playerNum, hit->hitObj, (float)((double)blData->health - hit->dmgAmt)))
+        return 0.0f;
+    BU_tag *bullet = (BU_tag *)hit->hitObj->extraObjectData;
+    if (!Drone_ModPlayerHitDamage(player, hit))
+        return 0.0f;
+    _Player_HandlePain(player, hit->dmgAmt, blData, hit->hitBoneIdx, 0);
+
+    _VECTOR direction;
+    Vec_Copy(&hit->maybehitDirection, &direction);
+    ApplyMatrixLVI(glb_viewer[blData->playerNum]->worldMatrix.m, &direction.x);
+    Vec_Normalise(&direction, &direction);
+    blData->hitDirections = HitDirections(&direction);
+
+    if (!(bullet->wpnDef->impactFlags & 0x180))
+        Sound_PlayExt((Action_SFX)(headshot ? 0x600 : 0x412), 100.0f, 0, 0);
+    if (MPSettings.isMultiplayer == 0 && (bullet->wpnDef->damageClass & 1)) {
+        if (bullet->wpnDef->weaponBaseNum == 0x65)
+            blData->turnKick = -0.1f;
+        if (bullet->wpnDef->weaponBaseNum == 0x66)
+            blData->turnKick = 0.1f;
+        if (bullet->wpnDef->weaponBaseNum == 0x63)
+            blData->turnKick = 0.1f;
+        Sound_Play3D((Action_SFX)0x171, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+    }
+    return 0.0f;
+}
+
+// After the collision: the feet (outside a ladder), the fall - its length, and the damage from a long one on landing
+// - the capsule's push and each hit, the contact flags from the first that counts, then the gun, death, the laser,
+// the muzzle flash, the grapple's rope and the watch. On a ladder the hits are only felt for, the ladder's own left
+// out. Nothing while the player is inactive or flying freely.
+// AUTOINJECT
+void Player_CollisionHandler(obj_tag *player) {
+    BLData *blData = (BLData *)player->extraObjectData;
+    blData->thirdIcon = THIRDICON_NONE;
+    if (!blData->active)
+        return;
+    player->animState->animFlags &= ~ANIM_CONTACTS;
+    player->animState->floor.materialType = 0;
+    if (debug_scanmode)
+        return;
+
+    if (player->subState != MovementType_Climb) {
+        char dying = player->curState == 2 || player->curState == 3;
+        PlayerNotDrone_FeetOnPoint(player, &blData->hitTest, &blData->floorNormalY, dying);
+        blData->groundBits = (ushort)((short)blData->groundBits >> 1);
+        if (player->animState->animFlags & ANIM_CONTACT_FLOOR)
+            blData->groundBits |= 8;
+
+        switch ((short)player->subState) {
+            case 1: case 2: case 3: case 5: case 6: case 7: case 8: case 9: case 13: case 14: case 15:
+                blData->fallFrames = 0.0f;
+                break;
+        }
+        if (blData->groundBits != 0) {
+            if (blData->fallFrames > FALL_SAFE_FRAMES) {
+                double over = (double)blData->fallFrames - FALL_SAFE_FRAMES;
+                if (over < 0.0)
+                    over = 0.0;
+                short frames = (short)Ftol(over);
+                if (frames >= FALL_HURT_FRAMES)
+                    _Player_HandlePain(player, frames, blData, -1, 6);
+            }
+            blData->fallFrames = 0.0f;
+        }
+        else {
+            if (!(blData->field_0x3c.y >= 0.0f))
+                blData->fallFrames = (float)((double)FRAME_RATE_MUL + blData->fallFrames);
+            else
+                blData->fallFrames = 0.0f;
+            if (GameState.CurrentLevelHashcode == HT_Level_Tower2B && player->position.y < -10.0f)
+                switch_channels[0x7c] = 1;
+        }
+
+        if (player->hitList != NULL) {
+            Vec_Add2(&blData->hitTest.push, &player->position, &player->position);
+            HITDATA_tag *contact = NULL;
+            for (HITDATA_tag *hit = player->hitList; hit != NULL; hit = hit->next) {
+                Player_DealWithObjHit(player, blData, hit);
+                if (!(hit->unknown3 & HIT_NO_CONTACT) && contact == NULL)
+                    contact = hit;
+            }
+            if (contact != NULL) {
+                _VECTOR offset;
+                Vec_Subtract(&contact->hitPosition, &blData->hitTest.rayStart, &offset);
+                player->animState->animFlags |= ANIM_CONTACT_HIT;
+                if (offset.y > 0.0f)
+                    player->animState->animFlags |= ANIM_CONTACT_ABOVE;
+            }
+        }
+        if ((player->animState->animFlags & ANIM_CONTACT_FLOOR) && blData->jumpState != JUMP_RISING) {
+            blData->movement.y = 0.0f;
+            Vec_Zero(&blData->field_0x3c);
+        }
+    }
+    else {
+        HITDATA_tag *contact = NULL;
+        for (HITDATA_tag *hit = player->hitList; hit != NULL; hit = hit->next) {
+            if (!(hit->unknown3 & HIT_NO_CONTACT) && contact == NULL)
+                contact = hit;
+            if (contact != NULL && contact->hitObj == blData->attachedToSpecialMovementItem)
+                contact = NULL;
+        }
+        if (contact != NULL) {
+            _VECTOR offset;
+            Vec_Subtract(&contact->hitPosition, &blData->hitTest.rayStart, &offset);
+            if (offset.y > 0.0f)
+                player->animState->animFlags |= ANIM_CONTACT_ABOVE;
+            if (offset.y < 0.0f)
+                player->animState->animFlags |= ANIM_CONTACT_FLOOR;
+        }
+        blData->fallFrames = 0.0f;
+    }
+
+    player->transformFlags |= TRANSFORM_MOVED;
+    Vec_Copy(&player->position, Mat_Position(player->transformMatrix));
+    Player_PositionGun(player, blData);
+    AnimObjectUpdate(blData->weaponObject);
+    glb_viewer[blData->playerNum]->camMode = (uchar)blData->camMode;
+    Player_CheckForDeath(player, OBJECTTYPE_PLAYER);
+    Player_LaserPointer(player);
+    if (blData->field_0x8eb)
+        Player_MuzzleFlash(player, &blData->muzzle);
+    if (blData->muzzleFlashRelated > 0)
+        blData->muzzleFlashRelated--;
+    if (blData->muzzleFlashRelated == 0)
+        View_SetDrawInNoViews(blData->muzzleFlashObj);
+    else
+        Draw_MuzzleFlash(player);
+    _Player_GrappleSetRope(player);
+    Player_SetWatch(player);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Making the player (Player_Init)
+// ---------------------------------------------------------------------------------------------------------------
+
+#define AnimObjectNew ((int (__cdecl *)(obj_tag *obj, HASHCODE skin))0x00011440)
+#define AnimDebugCreate ((void (__cdecl *)(void))0x00019180)
+#define BodyGlow_Create ((obj_tag *(__cdecl *)(obj_tag *obj))0x000ce4b0)
+
+// The camera updater, by its original address (which jumps to ours), as the game has it
+#define PLAYER_POSITION_CAMERA ((cameraUpdateFunc)0x000a8a60)
+
+// XBE_GLOBAL(0x001637c0, 0x1d0)
+#define MP_skins ((MP_skin*)0x001637c0)
+// The fists' models, by BLData::punchSkin
+// XBE_GLOBAL(0x0017e8e8, 0x10)
+#define PunchSkin (*(HASHCODE(*)[4])0x0017e8e8)
+
+// The player's skins in single player, and the fists that go with them
+#define SKIN_BOND          ((HASHCODE)0x05000007)
+#define SKIN_LEVELS_1_TO_4 ((HASHCODE)0x05000009)
+#define SKIN_LEVELS_7_8    ((HASHCODE)0x0500000d)
+#define SKIN_LEVEL_1B      ((HASHCODE)0x0500007c)
+#define SKIN_MP_FISTS      ((HASHCODE)0x050000b0)
+
+// The anims Player_Init starts with
+#define ANIM_START_MP      ((HASHCODE)0x060001d4)
+#define ANIM_START_CROUCH  ((HASHCODE)0x060009ff)
+#define ANIM_START         ((HASHCODE)0x06000a00)
+
+// The start position's parameters as Player_Init reads them
+#pragma pack(push, 1)
+typedef struct {
+    uchar _unknown00[0x2c];
+    uint switchChannel;     // 0x2c - unless 0, the start is used only once its channel is set
+    uchar _unknown30[0x38 - 0x30];
+    uint startState;        // 0x38 - PlayerStartState
+} Player_Start_Params;
+#pragma pack(pop)
+static_assert(offsetof(Player_Start_Params, startState) == 0x38, "Bad offset of startState");
+
+typedef enum {
+    PlayerStart_Standing = 0,
+    PlayerStart_Swimming = 1,
+    PlayerStart_ZeroG = 2,
+    PlayerStart_Crouching = 3,
+} PlayerStartState;
+
+// Makes player playerNum (if not made already, and his start's channel is set): his object and data, his skin and
+// fists (by the level, or his multiplayer character), the camera, health (with his multiplayer handicap), the HUD,
+// weapons and grapple, gravity, and puts him at the start in the start's state.
+// AUTOINJECT
+obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *spawnPointData) {
+    Player_Start_Params *params = (Player_Start_Params *)spawnPointData;
+    if (params->switchChannel != 0 && switch_channels[params->switchChannel] == 0)
+        return NULL;
+
+    short num = (short)playerNum;
+    switch_channels[0x5e] = 0;
+    switch_channels[0x62] = 0;
+    if (glb_players[num] != NULL)
+        return NULL;
+
+    obj_tag *player = control_create_object(sizeof(BLData), pos, NULL, NULL);
+    BLData *blData = (BLData *)player->extraObjectData;
+    glb_players[num] = player;
+    glb_blokes[num] = blData;
+    blData->playerNum = (char)playerNum;
+    blData->playerNum2 = (char)playerNum;
+    player->maybeCollision = &blData->hitTest;
+    Sound_StopAllWithId(SFX_GADGET_WATCH_LASER_SHOOT);
+    Sound_StopAllWithId(SFX_GADGET_WATCH_TASER_SHOOT);
+    Sound_StopAllWithId(SFX_GADGET_WATCH_LASER_BURN_LOOP);
+    Camera_Enable(playerNum, 1, 1, NULL);
+    Camera_SetFade(playerNum, -45.0f, 0xff, 1);
+
+    blData->aimX = 0.0f;
+    blData->aimY = 0.0f;
+    blData->pitchAutoLevelTarget = 0.0f;
+    blData->pitchFromHorizontal = 0.0f;
+    blData->field_0x8e7 = 0;
+    blData->zoomMax = 1.0f;
+    blData->zoomTarget = 1.0f;
+    blData->zoom = 1.0f;
+    blData->scopeAccelX = 0.0f;
+    blData->scopeAccelY = 0.0f;
+    blData->aimAccelX = 0.0f;
+    blData->aimAccelY = 0.0f;
+    blData->turnAccelState = 0.0f;
+    blData->lookAccel = 0.0f;
+    blData->field_0x8e5 = 0;
+    Vec_Zero(&blData->movement);
+    Vec_Zero(&blData->lastMovement);
+    Vec_Zero(&blData->lastRotationDelta);
+    Vec_Zero(&blData->rotationDelta);
+    Vec_Zero(&blData->field_0x3c);
+    blData->someMPCameraThing1 = 1.5f;
+    blData->someMPCameraThing2 = 1.5f;
+    blData->someMPCameraThing3 = 1.5f;
+    blData->someMPCameraThing4 = 0;
+    blData->remoteControlDevice = NULL;
+    blData->cameraFollowObject = NULL;
+    blData->attachedToSpecialMovementItem = NULL;
+    blData->field_0x810 = NULL;
+    player->objectType = OBJECTTYPE_PLAYER;
+    player->rotation.x = 0.0f;
+    player->rotation.y = rot->y;
+    player->rotation.z = 0.0f;
+    build_LinkToRoom(player, 0, glb_world);
+
+    HASHCODE skin;
+    char punchSkin;
+    if (MPSettings.isMultiplayer == 0) {
+        switch (GameState.CurrentLevelHashcode) {
+            case 0x07000001: case 0x07000002: case 0x07000003: case 0x07000004:
+                skin = SKIN_LEVELS_1_TO_4;
+                punchSkin = 1;
+                break;
+            case 0x07000007: case 0x07000008:
+                skin = SKIN_LEVELS_7_8;
+                punchSkin = 2;
+                break;
+            case 0x0700001b:
+                skin = SKIN_LEVEL_1B;
+                punchSkin = 3;
+                break;
+            default:
+                skin = SKIN_BOND;
+                punchSkin = 0;
+                break;
+        }
+        weapon_data[1].weaponModelHashcode = PunchSkin[punchSkin];
+        weapon_data[0x37].offsetToNextAltFireVariant = 1;
+    }
+    else {
+        MP_skin *mpSkin = &MP_skins[MPSettings.Player[num].SkinNum];
+        skin = mpSkin->skinHashcode;
+        punchSkin = (char)mpSkin->handType;
+        weapon_data[1].weaponModelHashcode = SKIN_MP_FISTS;
+        weapon_data[0x37].offsetToNextAltFireVariant = 2;
+    }
+    blData->punchSkin = punchSkin;
+    AnimObjectNew(player, skin);
+    AnimDebugCreate();
+    Player_SetCamMode(blData, CamMode_Default);
+
+    glb_viewer[num]->zoom = 1.0f;
+    Camera_Set(glb_viewer[num], pos, &player->rotation);
+    glb_viewer[num]->someCel = NULL;
+    glb_viewer[num]->player = player;
+
+    blData->armor = 0.0f;
+    blData->field_0x844 = 0.0f;
+    blData->hudFadeIn = 1.0f;
+    float health = 100.0f;
+    if (MPSettings.isMultiplayer != 0)
+        health = (float)((double)(int)MPSettings.Player[blData->playerNum].HealthModifier + 100.0f);
+    Player_SetHealth(blData, health);
+    blData->healthShown = blData->health;
+    blData->visibility = 0.0f;
+    blData->flashTime = 0.0f;
+    blData->flashTimeLeft = 0.0f;
+    blData->flashBlur = 0xff;
+    blData->air = 100.0f;
+    blData->underwater = 0.0f;
+    blData->waterFlags = 0;
+    blData->alpha = 1.0f;
+    blData->hitDirectionFade = 0;
+    blData->hitDirections = 0;
+    blData->pauseMenu = -1;
+    HUD_Init(blData, player);
+    HUD_Update(blData, player);
+    Player_InitWeapon(blData, player);
+    _Player_InitGrapple(blData, player);
+    Camera_SetUpdator(playerNum, player, PLAYER_POSITION_CAMERA);
+    player->effectFlags |= 0x800;
+    blData->active = 1;
+    blData->frozen = 0;
+
+    GRAVITY_VECTOR.x = 0.0f;
+    GRAVITY_VECTOR.y = -9.8f;
+    GRAVITY_VECTOR.z = 0.0f;
+    if (MPSettings.isMultiplayer != 0) {
+        Player_StandAtNewPosition(player, &player->position, &player->rotation, MovementType_Walk);
+        AnimScriptAdd(player, ANIM_START_MP);
+    }
+    else {
+        switch (params->startState) {
+            case PlayerStart_Swimming:
+                Player_StandAtNewPosition(player, &player->position, &player->rotation, MovementType_Swim);
+                AnimScriptAdd(player, ANIM_START);
+                break;
+            case PlayerStart_ZeroG:
+                Player_StandAtNewPosition(player, &player->position, &player->rotation, MovementType_ZeroG);
+                AnimScriptAdd(player, ANIM_START);
+                Vec_Zero(&GRAVITY_VECTOR);
+                break;
+            case PlayerStart_Crouching:
+                Player_StandAtNewPosition(player, &player->position, &player->rotation, MovementType_Crouch);
+                AnimScriptAdd(player, ANIM_START_CROUCH);
+                blData->headCrouchOffset = 0.45f;
+                break;
+            default:
+                Player_StandAtNewPosition(player, &player->position, &player->rotation, MovementType_Walk);
+                AnimScriptAdd(player, ANIM_START);
+                break;
+        }
+    }
+
+    blData->bodyGlow = BodyGlow_Create(player);
+    Control_BuildWorldSph(player);
+    PlarStat_LogTimerUnpause(blData->playerNum);
+    return player;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Zero G, and flying (Player_ZeroG, Player_SSScanMode)
+// ---------------------------------------------------------------------------------------------------------------
+
+#define Quat_MatrixToQuaternion ((void (__cdecl *)(quaternion_tag *quat, _MATRIX *mtx))0x000d5c20)
+#define Quat_QuaternionToMatrix ((void (__cdecl *)(_MATRIX *mtx, quaternion_tag *quat))0x000d58e0)
+#define RotMatrixY ((void (__cdecl *)(float angle, _MATRIX *mtx))0x000d67f0)
+
+// Zero G: turned at 0.4 pi a second (slowed by the zoom aiming), and moved along all three of the player's own axes by
+// the sticks and jump and crouch, the speed eased a fifth of a fifth of the way a frame towards a tenth, within +-0.05
+// a frame. Reload sets the player upright over a second and a half. The original takes the player's data in ESI.
+static double ZeroGEase(float previous, float target) {
+    float gap = target - previous;
+    double eased = (double)FRAME_RATE_MUL * 0.2f * gap * 0.2f + previous;
+    if (gap < 0.0f)
+        return (eased < target) ? target : eased;
+    return (eased > target) ? target : eased;
+}
+
+// One axis of zero G's movement: eased, kept to +-half a step, added to the frame's movement
+static void ZeroGAxis(float *last, float *movement, float target) {
+    double eased = ZeroGEase(*last, target);
+    *last = (float)eased;
+    double limit = (double)FRAME_RATE_MUL * 0.1f * 0.5f;
+    float high = (float)limit;
+    float low = (float)Negate(limit);
+    if (eased < low)
+        *last = low;
+    else if (eased > high)
+        *last = high;
+    *movement = *last + *movement;
+}
+
+void _Player_ZeroG(BLData *blData, obj_tag *player) {
+    Vec_Zero(&blData->field_0x3c);
+    blData->aimAutoLevelState = 2;
+    blData->field_0x8e7 = 0;
+    blData->pitchFromHorizontal = 0.0f;
+
+    if (!(player->animState->animFlags & 1)) {
+        float turn = Input_Actionf(blData->playerNum, ACTION_AIM_L_R, 1);
+        blData->rotationDelta.y = (float)Negate((double)REC_FRAME_RATE * 3.1415927f * 0.4f * turn);
+        float pitch = Input_Actionf(blData->playerNum, ACTION_AIM_U_D, 1);
+        blData->rotationDelta.x = (float)Negate((double)REC_FRAME_RATE * 3.1415927f * 0.4f * pitch);
+    }
+    else {
+        float turn = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_X, 1);
+        blData->rotationDelta.y = (float)((double)REC_FRAME_RATE * 3.1415927f * 0.4f / blData->zoom * turn * -0.75f);
+        float pitch = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_Y, 1);
+        blData->rotationDelta.x = (float)((double)REC_FRAME_RATE * 3.1415927f * 0.4f / blData->zoom * pitch * -0.75f);
+    }
+    blData->rotationDelta.z = 0.0f;
+
+    ZeroGAxis(&blData->lastMovement.x, &blData->movement.x,
+              Input_Actionf(blData->playerNum, ACTION_WALK_L_R, 1) * 0.1f);
+    ZeroGAxis(&blData->lastMovement.z, &blData->movement.z,
+              Input_Actionf(blData->playerNum, ACTION_WALK_F_B, 1) * 0.1f);
+    int down = (short)Input_Action(blData->playerNum, ACTION_CROUCH, 1);
+    int up = (short)Input_Action(blData->playerNum, ACTION_JUMP, 1);
+    ZeroGAxis(&blData->lastMovement.y, &blData->movement.y, (float)(up - down) * 0.1f);
+
+    _MATRIX turn;
+    RotMatrix(&blData->rotationDelta, &turn);
+    Concat(player->transformMatrix.m, turn.m);
+    Mat_CopyRot(&turn, &player->transformMatrix);
+
+    if (Input_Action(blData->playerNum, ACTION_RELOAD, 4))
+        blData->zeroGTurn = (short)Ftol((double)_FRAME_RATE * 1.5f);
+    if (blData->zeroGTurn != 0) {
+        blData->zeroGTurn--;
+        // Upright: facing as now but level, or, facing straight up or down, facing where the head was
+        _VECTOR dir, up;
+        Mat_GetDir(&dir, &player->transformMatrix);
+        Mat_GetUp(&up, &player->transformMatrix);
+        double dot = (double)CONST_UP_VECTOR.z * dir.z + (double)CONST_UP_VECTOR.y * dir.y +
+                     (double)CONST_UP_VECTOR.x * dir.x;
+        float dotStored = (float)dot;
+        if (dot > 0.995f)
+            Vec_Negate(&up, &dir);
+        else if (dotStored < -0.995f)
+            Vec_Copy(&up, &dir);
+        else
+            auxVec_AddMulR32(&dir, &CONST_UP_VECTOR, -dotStored, &dir);
+        Mat_Align2Up(blData->zeroGUpright.m, &CONST_UP_VECTOR.x, &dir.x);
+        Quat_MatrixToQuaternion(&blData->zeroGQuat, &blData->zeroGUpright);
+        quaternion_tag now, turned;
+        Quat_MatrixToQuaternion(&now, &player->transformMatrix);
+        Quat_Slerp_Acc((float)((double)REC_FRAME_RATE * 3.0f), now.q, blData->zeroGQuat.q, turned.q);
+        Quat_QuaternionToMatrix(&player->transformMatrix, &turned);
+        Mat_Normalize(&player->transformMatrix);
+    }
+
+    if (player->subState == MovementType_ZeroG_Anim)
+        UpdateWalkAnims(blData, player, Magnitude(blData->movement.z));
+}
+
+// AUTOLTCG
+void __declspec(naked) Player_ZeroG(void) {
+    _asm {
+        push dword ptr [esp + 4]
+        push esi
+        call _Player_ZeroG
+        add esp, 8
+        ret
+    }
+}
+
+// Flying freely (substate 5): the right stick turns at pi a second, the left flies along the player's own axes (eased a
+// fifth of the way a frame, sideways up to 0.225 and forwards up to 0.5 a frame, a third and a fifth as much
+// backwards), jump and crouch climb and drop 3 a second. Aiming, the zoom stick changes the field of view (0.2 to
+// 3.14). The original takes the player's data in EAX and the player in EBX.
+static double ScanEase(float previous, float target) {
+    float gap = target - previous;
+    double eased = (double)FRAME_RATE_MUL * 0.2f * gap + previous;
+    if (gap < 0.0f)
+        return (eased < target) ? target : eased;
+    return (eased > target) ? target : eased;
+}
+
+void _Player_SSScanMode(BLData *blData, obj_tag *player) {
+    if (!(player->animState->animFlags & 1)) {
+        blData->aimAutoLevelState = 2;
+        blData->movement.y = 0.0f;
+        float turn = Input_Actionf(blData->playerNum, ACTION_AIM_L_R, 1);
+        blData->rotationDelta.y = (float)((double)REC_FRAME_RATE * 3.1415927f * Negate(turn));
+        float pitch = Input_Actionf(blData->playerNum, ACTION_AIM_U_D, 1);
+        blData->rotationDelta.x = (float)Negate((double)REC_FRAME_RATE * 3.1415927f * pitch);
+
+        float strafe = Input_Actionf(blData->playerNum, ACTION_WALK_L_R, 1);
+        float target = (float)((double)FRAME_RATE_MUL * 0.075f * 3.0f * strafe);
+        double eased = ScanEase(blData->lastMovement.x, target);
+        blData->lastMovement.x = (float)eased;
+        double step = (double)FRAME_RATE_MUL * 0.075f;
+        float low = (float)(-3.0f * step);
+        if (eased < low) {
+            blData->lastMovement.x = low;
+        }
+        else {
+            float high = (float)(step * 3.0f);
+            if (eased > high)
+                blData->lastMovement.x = high;
+        }
+        blData->movement.x = blData->lastMovement.x + blData->movement.x;
+
+        float forward = Input_Actionf(blData->playerNum, ACTION_WALK_F_B, 1);
+        target = (float)((double)FRAME_RATE_MUL * 0.1f * 5.0f * forward);
+        eased = ScanEase(blData->lastMovement.z, target);
+        blData->lastMovement.z = (float)eased;
+        step = (double)FRAME_RATE_MUL * 0.1f;
+        low = (float)(-5.0f * step);
+        if (eased < low) {
+            blData->lastMovement.z = low;
+        }
+        else {
+            float high = (float)(step * 5.0f);
+            if (eased > high)
+                blData->lastMovement.z = high;
+        }
+        blData->movement.z = blData->movement.z + blData->lastMovement.z;
+
+        glb_viewer[blData->playerNum]->someCel = NULL;
+        blData->rotationDelta.z = 0.0f;
+        _MATRIX yaw, pitched;
+        RotMatrixY(blData->rotationDelta.y, &yaw);
+        RotMatrixX(blData->rotationDelta.x, pitched.m);
+        Concat(yaw.m, player->transformMatrix.m);
+        Concat(player->transformMatrix.m, pitched.m);
+        Mat_CopyRot(&pitched, &player->transformMatrix);
+
+        float climb = Input_Actionf(blData->playerNum, ACTION_JUMP, 1);
+        double y = ((double)climb - Input_Actionf(blData->playerNum, ACTION_CROUCH, 1)) * REC_FRAME_RATE * 3.0f +
+                   player->position.y;
+        player->position.y = (float)y;
+        Mat_Position(player->transformMatrix)->y = (float)y;
+    }
+    else {
+        double zoom = (double)Input_Actionf(blData->playerNum, ACTION_SCOPE_ZOOM, 0xc) * REC_FRAME_RATE;
+        if (zoom != 0.0) {
+            viewer_tag *viewer = glb_viewer[blData->playerNum];
+            double fov = zoom + viewer->fovRadians;
+            if (fov < 0.2f)
+                fov = 0.2f;
+            else if (fov > 3.14f)
+                fov = 3.14f;
+            viewer->fovRadians = (float)fov;
+            Camera_CalcViewAngles(blData->playerNum, glb_viewer[blData->playerNum]->fovRadians);
+        }
+    }
+    Vec_Zero(&blData->field_0x3c);
+    player->animState->animObj.rootTravel = 0.0f;
+}
+
+// AUTOLTCG
+void __declspec(naked) Player_SSScanMode(void) {
+    _asm {
+        push ebx
+        push eax
+        call _Player_SSScanMode
+        add esp, 8
+        ret
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Using things (Player_Activate)
+// ---------------------------------------------------------------------------------------------------------------
+
+#define Lock_Activate ((void (__cdecl *)(obj_tag *lock, obj_tag *user))0x000d0230)
+
+// What the player uses: with the standing icon showing, the nearest creep wall (true); otherwise whatever is within 1
+// of the point in front of his eyes - scripted objects, doors (true when one opens), switches, triggers, cars, gun
+// turrets and emplacements, monitors, the worm, and locks he is in front of. The original takes the player's data in
+// EAX and the player in EDI.
+uchar _Player_Activate(BLData *blData, obj_tag *player) {
+    HITDATA_tag *hitList = NULL;
+    uchar used = 0;
+    if (blData->thirdIcon == THIRDICON_STANDING) {
+        obj_tag *wall = NULL;
+        float nearest = 1000.0f;
+        for (obj_tag *obj = control_first_object(); obj != NULL; obj = obj->nextObject) {
+            if (obj->objectType != OBJECTTYPE_CREEPWALL)
+                continue;
+            float distance = Vec_SqDist3D(&obj->position, &player->position);
+            if (distance < nearest) {
+                nearest = distance;
+                wall = obj;
+            }
+        }
+        if (wall != NULL) {
+            Player_CollCreepWall(player, blData, wall);
+            return 1;
+        }
+    }
+
+    _VECTOR reach, dir;
+    Player_GetHeadPos(&reach, player, NULL);
+    Mat_GetDir(&dir, &glb_viewer[blData->playerNum]->viewMatrix);
+    Vec_Add2(&reach, &dir, &reach);
+    if (!Collide_SphereIntersect(&reach, 1.0f, player->inCel, player, blData->weaponObject, &hitList, 0, 0, 0, 4))
+        return 0;
+
+    for (HITDATA_tag *hit = hitList; hit != NULL; hit = hit->next) {
+        obj_tag *obj = hit->hitObj;
+        if (obj == NULL)
+            continue;
+        if (obj->scriptPlayer != NULL && obj->objectType == 0) {
+            SP_Activate(obj, player);
+            continue;
+        }
+        switch ((uchar)obj->objectType) {
+            case OBJECTTYPE_DOOR:
+                used |= (uchar)Door_Activate(obj, player, 1);
+                break;
+            case OBJECTTYPE_TRIGGER:
+                Trigger_Activate(obj, player);
+                break;
+            case OBJECTTYPE_SIMPLESCRIPT:
+                SS_Activate(obj);
+                break;
+            case OBJECTTYPE_CAR:
+                Car_Activate(obj, player);
+                break;
+            case OBJECTTYPE_GUNTURRET:
+                GT_Activate(obj);
+                break;
+            case OBJECTTYPE_MONITOR:
+                Monitor_Activate(obj, player);
+                break;
+            case OBJECTTYPE_LOCK: {
+                // Only from in front of it
+                _VECTOR facing, toPlayer;
+                Mat_GetDir(&facing, &obj->transformMatrix);
+                Vec_Subtract(Mat_Position(player->transformMatrix), Mat_Position(obj->transformMatrix), &toPlayer);
+                double dot = (double)toPlayer.z * facing.z + (double)toPlayer.y * facing.y +
+                             (double)toPlayer.x * facing.x;
+                if (dot >= 0.0)
+                    Lock_Activate(obj, player);
+                break;
+            }
+            case OBJECTTYPE_GUNTURRET2:
+                GunImp_Activate(obj, player);
+                break;
+            case OBJECTTYPE_QWORM:
+                PCQWorm_Activate(obj);
+                break;
+        }
+    }
+    Collide_FreeHitList(&hitList);
+    return used;
+}
+
+// AUTOLTCG
+void __declspec(naked) Player_Activate(void) {
+    _asm {
+        push edi
+        push eax
+        call _Player_Activate
+        add esp, 8
+        ret
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Every frame (Player_Update)
+// ---------------------------------------------------------------------------------------------------------------
+
+#define MenuManager_Create ((uint (__cdecl *)(uint param_1, uint param_2, short param_3, byte playerNum, uint32_t actions, char pauseAudio, uint status))0x00093960)
+#define Vec_Cartesian_2_Spherical ((void (__cdecl *)(_VECTOR *out, float x, float y, float z))0x000d8530)
+#define Env_Breath ((void (__cdecl *)(_VECTOR *pos, _VECTOR *dir, cel_tag *cel, int seed))0x00068db0)
+#define Camera_ApplySwing ((void (__cdecl *)(viewer_tag *viewer, float sway))0x00024490)
+#define Player_WeaponRecoil ((void (__cdecl *)(obj_tag *player))0x000bd740)
+#define Player_WeaponFiring ((void (__cdecl *)(obj_tag *player, char param_2))0x000bb300)
+
+#define benchmark U8_AT(0x002adf32) // set, the player stands still
+
+// The player's object in ESI, his data in EAX
+static void __declspec(naked) Player_Swim(obj_tag *player, BLData *blData) {
+    _asm {
+        push esi
+        mov esi, [esp + 8]
+        mov eax, [esp + 0xc]
+        mov ecx, 0x000aa590
+        call ecx
+        pop esi
+        ret
+    }
+}
+
+// The player's data in ECX, his object on the stack
+static void __declspec(naked) Player_ClampSomeAngles(BLData *blData, obj_tag *player) {
+    _asm {
+        mov ecx, [esp + 4]
+        push dword ptr [esp + 8]
+        mov eax, 0x000ab180
+        call eax
+        add esp, 4
+        ret
+    }
+}
+
+// The player's data in ESI
+static void __declspec(naked) Player_UpdateBlurAndFade(BLData *blData) {
+    _asm {
+        push esi
+        mov esi, [esp + 8]
+        mov eax, 0x000ab0b0
+        call eax
+        pop esi
+        ret
+    }
+}
+
+// The gadgets that recharge, a unit at a time, every so many frames: 0x4a and 0x4e every 4, 0x4c and 0x4f every 2,
+// 0x45 every 6 and 0x33 every 4
+static void Recharge(BLData *blData, int weapon) {
+    short charge = blData->weaponStats[weapon].clipOrCooldown;
+    if (charge < weapon_data[weapon].clipSize)
+        blData->weaponStats[weapon].clipOrCooldown = (short)Ftol((double)charge + FRAME_RATE_MUL);
+}
+
+// The player, every frame: the pause menu, the HUD, then (unless he is waiting to come in, or paused) his
+// alpha, the cel's music, the substate's movement, air, aim and the view, the move itself, light and blur,
+// collision, the gun and the HUD's fade, and the view's sway.
+// AUTOINJECT
+void Player_Update(obj_tag *player) {
+    BLData *blData = (BLData *)player->extraObjectData;
+    if (Input_Action(blData->playerNum, ACTION_PAUSE, 4) && GameState.maybePaused == 0 && ScriptCam == 0) {
+        blData->pauseMenu = (short)MenuManager_Create(0x80000002, 0x4000004b, blData->playerNum,
+                                                      (uchar)blData->playerNum, ACTION_PAUSE, 1, 3);
+        GS_PauseGame(1);
+    }
+    HUD_Update(blData, player);
+
+    if (blData->active != 1) {
+        if (blData->active == 0)
+            return;
+        blData->active--;
+        return;
+    }
+    if (GS_IsPaused(blData->playerNum))
+        return;
+
+    if (blData->alpha < 0.5f)
+        player->tweakA = (uchar)Ftol(40.0f);
+    else
+        player->tweakA = (uchar)Ftol((double)blData->alpha * 255.0f);
+    float alpha = moveTowardsValue(blData->alpha, 2.0f, (float)((double)REC_FRAME_RATE * 0.05f));
+    blData->alpha = alpha;
+    if (alpha < 0.0f)
+        alpha = 0.0f;
+    else if (alpha > 1.0f)
+        alpha = 1.0f;
+    blData->alpha = alpha;
+
+    if (player->inCel != NULL && player->inCel->musicEvent != 0)
+        Music_Event(player->inCel->musicEvent, 1);
+    blData->turnKick = (float)((double)blData->turnKick * 0.9f);
+
+    _VECTOR startPosition;
+    Vec_Copy(&player->position, &startPosition);
+    switch ((short)player->curState) {
+        case 0:
+            player->curState = 1;
+            break;
+
+        case 1:
+            PlarStat_LogUpdateElapsedTime(blData->playerNum);
+            Vec_Zero(&blData->movement);
+            Vec_Zero(&blData->rotationDelta);
+            if (blData->traverseWait != 0)
+                blData->traverseWait--;
+            if (blData->field_0x8e3 != 0)
+                blData->field_0x8e3--;
+
+            // Player 4's action 0x27 turns flying on and off
+            if (Input_Action(3, (GameActions_tag)0x27, 4)) {
+                debug_scanmode ^= 1;
+                if (debug_scanmode) {
+                    Player_ChangeSubState(player, MovementType_ScanMode);
+                }
+                else {
+                    _VECTOR dir;
+                    Mat_GetDir(&dir, &player->transformMatrix);
+                    Vec_Cartesian_2_Spherical(&player->rotation, dir.x, dir.y, dir.z);
+                    player->rotation.x = 0.0f;
+                    player->rotation.z = 0.0f;
+                    Vec_Copy(&player->rotation, &player->lastRotation);
+                    Player_ChangeSubState(player, MovementType_Walk);
+                    Camera_CalcViewAngles(blData->playerNum, 1.0471976f);
+                }
+            }
+            if (benchmark)
+                break;
+
+            Vec_Copy(&player->position, &blData->lastPosition);
+            blData->field_0x8cc--;
+            if (!blData->frozen) {
+                switch ((short)player->subState) {
+                    case MovementType_Walk:
+                        _Player_SSWalk(player, blData);
+                        break;
+                    case MovementType_Crouch:
+                        _Player_SSCrouch(player, blData);
+                        break;
+                    case MovementType_Climb:
+                        Player_Climb(blData, player);
+                        break;
+                    case MovementType_Wire:
+                        Player_Wire(player);
+                        break;
+                    case MovementType_Zipline:
+                        Player_Zipline(player);
+                        break;
+                    case MovementType_Creep:
+                        Player_Creep(blData, player);
+                        break;
+                    case MovementType_ZeroG:
+                    case MovementType_ZeroG_Anim:
+                        _Player_ZeroG(blData, player);
+                        break;
+                    case MovementType_RemoteControl:
+                        // The device lets go when the timer runs out, or straight away without one once the device
+                        // has gone
+                        if (blData->remoteControlTimer > 0) {
+                            blData->remoteControlTimer--;
+                            if (blData->remoteControlTimer != 0)
+                                break;
+                            blData->remoteControlDevice = NULL;
+                        }
+                        else if (blData->remoteControlDevice != NULL) {
+                            break;
+                        }
+                        Player_SetCamMode(blData, CamMode_Default);
+                        glb_viewer[blData->playerNum]->someCel = NULL;
+                        Player_ChangeSubState(player, blData->previousSubState);
+                        break;
+                    case MovementType_Grapple:
+                        _Player_SSGrapple(blData, player);
+                        break;
+                    case MovementType_Swim:
+                        Player_Swim(player, blData);
+                        break;
+                    case MovementType_ScanMode:
+                        _Player_SSScanMode(blData, player);
+                        break;
+                }
+            }
+
+            _Player_MonitorAir(player, blData);
+            Player_ClampSomeAngles(blData, player);
+            Player_Aiming(player);
+            Player_ViewClamping(player);
+
+            _VECTOR move;
+            ApplyMatrixLV(&player->transformMatrix, &blData->movement, &move);
+            Vec_Add2(&player->position, &move, &player->position);
+            Vec_Copy(&blData->movement, &blData->lastMovement);
+            blData->rotationDelta.y = (float)((double)blData->turnKick + blData->rotationDelta.y);
+            Vec_Add2(&player->rotation, &blData->rotationDelta, &player->rotation);
+            Vec_Copy(&blData->rotationDelta, &blData->lastRotationDelta);
+            break;
+
+        case 2:
+        case 3:
+            AnimObjectUpdate(player);
+            _Player_HandleDeath(player);
+            break;
+    }
+
+    Player_InShadow(blData, player);
+    Player_UpdateBlurAndFade(blData);
+    if (blData->field_0x8cc <= 0)
+        blData->field_0x8cc = (short)((Rand_Random() & 0x3ff) + 0xff);
+    AnimObjectUpdate(player);
+    player->animState->animObj.rootTravel = Vec_Dist3D(&player->position, &startPosition);
+    Player_Collision(player);
+
+    switch ((short)player->curState) {
+        case 1:
+        case 4:
+            if (blData->frozen)
+                break;
+            if (blData->camMode != CamMode_Default) {
+                _VECTOR dir, head;
+                Mat_GetDir(&dir, &player->transformMatrix);
+                AnimGetBoneWorldTrans(player, BONE_HEAD, 0, &head, NULL);
+                Env_Breath(&head, &dir, player->inCel, player->creationTimeFrames);
+            }
+            if (blData->weaponObject->curState != 9) {
+                uint frames = GameState.NumFramesUnpaused;
+                if (!(frames & 3)) {
+                    Recharge(blData, 0x4a);
+                    Recharge(blData, 0x4e);
+                }
+                if (!(frames & 1)) {
+                    Recharge(blData, 0x4c);
+                    Recharge(blData, 0x4f);
+                }
+                if (frames % 6 == 0)
+                    Recharge(blData, 0x45);
+                if (!(frames & 3))
+                    Recharge(blData, 0x33);
+            }
+            Player_WeaponRecoil(player);
+            Player_Weapon(player);
+            Player_WeaponFiring(player, 0);
+
+            // With the HUD option on, the bars fade out (by twice the step a frame, as the original does)
+            if (PlayerInputs[blData->playerNum].hudVisibility) {
+                double fade = blData->hudFadeIn - (double)FRAME_RATE_MUL * 0.0020833334f;
+                blData->hudFadeIn = (float)fade;
+                if (fade < 0.0)
+                    blData->hudFadeIn = 0.0f;
+                else
+                    blData->hudFadeIn = (float)(fade - (double)FRAME_RATE_MUL * 0.0020833334f);
+            }
+            else {
+                blData->hudFadeIn = 1.0f;
+            }
+            break;
+
+        case 2:
+        case 3:
+            Player_WeaponRecoil(player);
+            break;
+    }
+
+    Camera_ApplySwing(glb_viewer[blData->playerNum], weapon_data[player->animState->currentWeaponId].scopeSway);
+    View_SetDrawInOtherViewsOnly(player, blData->playerNum);
+    player->transformFlags |= TRANSFORM_MOVED;
+    if (!(player->transformFlags & TRANSFORM_MATRIX_PLACED))
+        Vec_Copy(&player->position, Mat_Position(player->transformMatrix));
 }

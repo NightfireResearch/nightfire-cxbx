@@ -29,7 +29,7 @@ struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     undefined field20_0x21;
     undefined field21_0x22;
     undefined field22_0x23;
-    undefined4 field23_0x24;
+    undefined4 camMode;       // 0x24 - the player's camera mode, copied every frame (Player_CollisionHandler)
     undefined1 idx; /* Created by retype action */
     undefined field25_0x29;
     undefined1 field26_0x2a;
@@ -112,30 +112,24 @@ struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     _MATRIX viewMatrix;
     _MATRIX worldMatrix;
     _MATRIX mtx;
-    undefined4 field228_0x1bc;
-    undefined4 field229_0x1c0;
-    undefined4 field230_0x1c4;
-    float field231_0x1c8;
-    float field232_0x1cc;
-    undefined field233_0x1d0;
-    undefined field234_0x1d1;
-    undefined field235_0x1d2;
-    undefined field236_0x1d3;
-    undefined field237_0x1d4;
-    undefined field238_0x1d5;
-    undefined field239_0x1d6;
-    undefined field240_0x1d7;
-    undefined field241_0x1d8;
-    undefined field242_0x1d9;
-    undefined field243_0x1da;
-    undefined field244_0x1db;
+    float shearAngle;         // 0x1bc - Camera_Shear's wobble under water, kept within +-pi
+    // camera_tracking (camera mode 0xb, on a wire or creep wall): the view's pitch and yaw about the player, the
+    // distance it used this frame and the distance it should be (4 on a wire or wall, 0 off it), and the three
+    // Player_CollCreepWall keeps from before
+    float trackPitch;         // 0x1c0
+    float trackYaw;           // 0x1c4
+    float trackDistanceUsed;  // 0x1c8
+    float trackDistance;      // 0x1cc
+    float savedTrackPitch;    // 0x1d0
+    float savedTrackYaw;      // 0x1d4
+    float savedTrackDistance; // 0x1d8
     float apocalypseEffect;
     undefined4 field246_0x1e0;
     undefined4 field247_0x1e4;
     undefined4 field248_0x1e8;
     undefined4 field249_0x1ec;
     undefined4 field250_0x1f0;
-    undefined4 field251_0x1f4;
+    obj_tag *player;          // 0x1f4 - the player whose view it is (Player_Init)
     undefined4 field252_0x1f8;
     undefined4 field253_0x1fc;
     undefined1 field254_0x200;
@@ -264,7 +258,7 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field117_0x8e;
     undefined field118_0x8f;
     undefined addedToDraw;
-    undefined field120_0x91;
+    uchar musicEvent;                  // 0x91 - Player_Update sends it (Music_Event) every frame the player is in the cel
     undefined1 someSwitchChannel; /* Created by retype action */
     undefined field122_0x93;
 };

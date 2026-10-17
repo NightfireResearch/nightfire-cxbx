@@ -31,7 +31,6 @@
 #define Control_Plr2Ind ((short (__cdecl *)(obj_tag *obj))0x0002d8a0)
 #define BOT_soundEffect ((void (__cdecl *)(DCVars_tag *dcv, int sound))0x0001aca0)
 #define BOT_handlePain ((void (__cdecl *)(DCVars_tag *dcv, float damage, ushort unknown, short location))0x0001b6b0)
-#define MP_RegisterBulletHit ((bool (__cdecl *)(uint playerIndex, obj_tag *obj, float health))0x0009d700)
 #define Mat_Inverse ((void (__cdecl *)(_MATRIX *in, _MATRIX *out))0x000d51e0)
 #define Vec_DirToRot ((void (__cdecl *)(_VECTOR *dir, _VECTOR *rot))0x000d4f20)
 // Tells the drones around obj of something at pos (here, that the drone is hurt)

@@ -117,6 +117,7 @@ add_library(actioninject SHARED
   src/action/devtools/DroneCoverShadow.cpp
   src/action/devtools/DroneReactShadow.cpp
   src/action/devtools/DroneRoleShadow.cpp
+  src/action/devtools/PlayerShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/MathExactShadow.cpp
   src/action/devtools/Teleport.cpp
@@ -253,6 +254,12 @@ add_library(actioninject SHARED
   src/action/game/obj/Light.cpp
   src/action/game/obj/PCQWorm.cpp
   src/action/game/obj/Player.cpp
+  src/action/game/obj/PlayerTraverse.cpp
+  src/action/game/obj/Wire.cpp
+  src/action/game/obj/CreepWall.cpp
+  src/action/game/obj/ThirdCam.cpp
+  src/action/game/obj/ThirdIcon.cpp
+  src/action/game/obj/CamSubject.cpp
   src/action/game/obj/Rotor.cpp
   src/action/game/obj/ScriptPlayer.cpp
   src/action/game/obj/Searchlight.cpp

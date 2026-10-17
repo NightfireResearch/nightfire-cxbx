@@ -19,11 +19,11 @@ typedef struct {
     undefined crouchToggle;     // 0x4 (PS2 name)
     undefined field5_0x5;
     undefined field6_0x6;
-    undefined field7_0x7;
+    undefined levelViewOnPace; // 0x7 - a change of walking pace sets the view levelling (Ghidra: someSettingRelatedToCrouch)
     undefined crosshairsEnabled;
     undefined1 vibrationEnabled; /* Created by retype action */
     undefined1 autoSwitchBetterWeapon; /* Created by retype action */
-    undefined field11_0xb;
+    undefined hudVisibility;    // 0xb - Ghidra's name; on, the health bars fade out (Player_Update)
     undefined field12_0xc;
     undefined field13_0xd;
     short controlStyle;

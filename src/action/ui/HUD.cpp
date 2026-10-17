@@ -205,7 +205,7 @@ void HUD_MonitorNightSight(BLData *player) {
 		case MovementType_Walk: 	// == 0
 		case MovementType_Swim: 	// == 3
 		case MovementType_Crouch: 	// == 4
-		case MovementType_Decoding: // == 5
+		case MovementType_ScanMode: // == 5
 			break;
 		default: // Everything else (not 0, and either < 3 or > 5)
 			return;

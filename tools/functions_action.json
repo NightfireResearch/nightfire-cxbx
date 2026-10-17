@@ -3936,7 +3936,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000245a0",
+        "name": "Camera_PlaceAround",
         "address": "0x000245a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -3956,7 +3956,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00024610",
+        "name": "Camera_PlaceAbove",
         "address": "0x00024610",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -32950,7 +32950,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000a9160",
+        "name": "Player_UpdateWalkClass",
         "address": "0x000a9160",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -33050,7 +33050,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000a96a0",
+        "name": "PlayerAnimSetInitDead",
         "address": "0x000a96a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -33866,7 +33866,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000aeac0",
+        "name": "Player_LeaveLadder",
         "address": "0x000aeac0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -34042,7 +34042,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000afa80",
+        "name": "Player_HangByHandA",
         "address": "0x000afa80",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -34060,7 +34060,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000afaf0",
+        "name": "Player_HangByHandB",
         "address": "0x000afaf0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -35774,7 +35774,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000b7520",
+        "name": "AccelFunc0Flag",
         "address": "0x000b7520",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,

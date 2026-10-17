@@ -39,13 +39,20 @@ typedef struct HITTEST_tag {
   _VECTOR push;         // 0x10 - a drone's capsule: Drone_CollisionHandler adds it to the position
   _VECTOR rayStart;     // 0x1c
   _VECTOR rayEnd;       // 0x28
-  char _unknown34[0x6c - 0x34];
+  char _unknown34[0x64 - 0x34];
+  obj_tag *ignore;      // 0x64 - the player's capsule: an object it does not collide with (his gun, his ladder)
+  char _unknown68[0x6c - 0x68];
   cel_tag *cel;         // 0x6c - where the ray starts
   char _unknown70[0x78 - 0x70];
   float rayLength;      // 0x78 - a drone's capsule: its radius
-  uint unknown7c;       // 0x7c
-  uchar unknown80;      // 0x80 - 1 from the AI network's tests; 0 for a drone's capsule
-  uchar unknown81;      // 0x81 - 2 from the AI network's tests; 8 for a drone's capsule that collides
+  float unknown7c;      // 0x7c - 1 for a dead player's capsule, else 0
+  union {
+    struct {
+      uchar unknown80;  // 0x80 - 1 from the AI network's tests; 0 for a drone's capsule
+      uchar unknown81;  // 0x81 - 2 from the AI network's tests; 8 for a drone's capsule that collides
+    };
+    ushort hitType;     // 0x80 as one word: 0x800 for a capsule that collides, 0 for none
+  };
   char _unknown82[0x84 - 0x82];
   ushort unknown84;     // 0x84 - Ghidra: maybeCollisionMaskTypes
   char _unknown86[0x88 - 0x86];
@@ -56,6 +63,8 @@ typedef struct HITTEST_tag {
 static_assert(sizeof(HITTEST_tag) == 0x8c, "HITTEST_tag is 0x8c bytes");
 static_assert(offsetof(HITTEST_tag, cel) == 0x6c, "Bad offset of HITTEST_tag.cel");
 static_assert(offsetof(HITTEST_tag, rayLength) == 0x78, "Bad offset of HITTEST_tag.rayLength");
+static_assert(offsetof(HITTEST_tag, ignore) == 0x64, "Bad offset of HITTEST_tag.ignore");
+static_assert(offsetof(HITTEST_tag, hitType) == 0x80, "Bad offset of HITTEST_tag.hitType");
 
 #pragma pack(pop)
 
