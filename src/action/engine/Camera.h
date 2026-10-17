@@ -11,7 +11,6 @@ void Camera_Update(uint idx);
 void Camera_UpdateAll(void);
 typedef void (*cameraUpdateFunc)(obj_tag *gameObj, void *context);
 void Camera_SetUpdator(ushort num, obj_tag *gameObj, cameraUpdateFunc func);
-void Camera_Enable(ushort cameraNum, char param_2, undefined1 param_3, _VECTOR *param_4);
 void __stdcall Camera_PushStates(void);
 void __stdcall Camera_PopStates(void);
 bool Camera_SetFade(ushort viewerNum, float durationFrames, uint colourAndAlpha, undefined1 fadeMode);
@@ -19,5 +18,11 @@ void Camera_SetToPlayer(obj_tag *player, viewer_tag *viewer);
 void Camera_Set(viewer_tag *viewer, _VECTOR *transform, _VECTOR *rotation);
 void camera_tracking(obj_tag *obj, viewer_tag *viewer);
 void Camera_Shear(viewer_tag *vwr);
+void Viewer_Init(viewer_tag *viewer);
+void Camera_CheckLocation(ushort idx);
+void Camera_UpdateGlbVars(ushort idx);
+void Camera_ApplySwing(viewer_tag *viewer, float sway);
+void Camera_Shake(_VECTOR *pos, float amount);
+void Camera_Enable(ushort cameraNum, char enable, undefined1 sprites, _VECTOR *position);
 
 #endif // CAMERA_H

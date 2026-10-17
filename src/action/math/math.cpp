@@ -1,6 +1,7 @@
 #include "math.h"
 #include "X87Ops.h"
 #include "../actionhelpers.h"
+#include <bit>
 #include <cmath>
 
 inline float ABS(float n) {
@@ -11,10 +12,6 @@ inline float ABS(float n) {
 
 inline bool ISNAN(float n) {
 	return n != n;
-}
-
-inline float SQRT(float n) {
-	return sqrtf(n);
 }
 
 inline float MAX(float a, float b) {
@@ -45,95 +42,77 @@ void Quat_Copy(quaternion_tag *target, const quaternion_tag *from) {
 	target->q[3] = from->q[3];
 }
 
+// Each component's difference, taken on the x87 unrounded, within the threshold (a NaN difference passes)
 // AUTOINJECT
 bool Quat_IsEqual(const quaternion_tag *a, const quaternion_tag *b, float threshold) {
-  if (	(ABS(a->q[0] - b->q[0]) > threshold) ||
-		(ABS(a->q[1] - b->q[1]) > threshold) ||
-		(ABS(a->q[2] - b->q[2]) > threshold) ||
-		(ABS(a->q[3] - b->q[3]) > threshold))
-		return false;
-	return true;
+  for (int i = 0; i < 4; i++) {
+    if (fabs((double)b->q[i] - a->q[i]) > threshold)
+      return false;
+  }
+  return true;
 }
 
-// Alternate order (xyzw) - used by DirectX?
+// Alternate order (xyzw) - used by DirectX? Summed on the x87.
 // AUTOINJECT
 void MultiplyQuaternionAltOrder(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *qOut) {
-  qOut->q[0] = (a->q[3] * b->q[0] + b->q[2] * a->q[1] + b->q[3] * a->q[0]) - b->q[1] * a->q[2];
-  qOut->q[1] = (a->q[3] * b->q[1] + b->q[3] * a->q[1] + a->q[2] * b->q[0]) - a->q[0] * b->q[2];
-  qOut->q[2] = (a->q[3] * b->q[2] + b->q[1] * a->q[0] + b->q[3] * a->q[2]) - b->q[0] * a->q[1];
-  qOut->q[3] = ((b->q[3] * a->q[3] - a->q[0] * b->q[0]) - b->q[1] * a->q[1]) - a->q[2] * b->q[2];
+  const float *p = a->q, *q = b->q;
+  qOut->q[0] = (float)((((double)q[3] * p[0] + (double)q[2] * p[1]) + (double)p[3] * q[0]) - (double)q[1] * p[2]);
+  qOut->q[1] = (float)((((double)p[2] * q[0] + (double)q[3] * p[1]) + (double)p[3] * q[1]) - (double)p[0] * q[2]);
+  qOut->q[2] = (float)((((double)q[3] * p[2] + (double)q[1] * p[0]) + (double)p[3] * q[2]) - (double)q[0] * p[1]);
+  qOut->q[3] = (float)((((double)q[3] * p[3] - (double)p[0] * q[0]) - (double)q[1] * p[1]) - (double)p[2] * q[2]);
 }
 
+// Summed on the x87
 // AUTOINJECT
 void Quat_QuaternionMultiply(const quaternion_tag *a, const quaternion_tag *b, quaternion_tag *qOut) {
-  qOut->q[0] = ((a->q[0] * b->q[0] - b->q[1] * a->q[1]) - b->q[2] * a->q[2]) - b->q[3] * a->q[3];
-  qOut->q[1] = b->q[1] * a->q[0] + a->q[1] * b->q[0] + (b->q[3] * a->q[2] - b->q[2] * a->q[3]);
-  qOut->q[2] = b->q[2] * a->q[0] + a->q[2] * b->q[0] + (b->q[1] * a->q[3] - b->q[3] * a->q[1]);
-  qOut->q[3] = b->q[3] * a->q[0] + a->q[3] * b->q[0] + (b->q[2] * a->q[1] - b->q[1] * a->q[2]);
+  const float *p = a->q, *q = b->q;
+  qOut->q[0] = (float)((((double)p[0] * q[0] - (double)q[1] * p[1]) - (double)q[2] * p[2]) - (double)q[3] * p[3]);
+  qOut->q[1] = (float)((((double)q[3] * p[2] - (double)q[2] * p[3]) + (double)p[1] * q[0]) + (double)q[1] * p[0]);
+  qOut->q[2] = (float)((((double)q[1] * p[3] - (double)q[3] * p[1]) + (double)p[2] * q[0]) + (double)q[2] * p[0]);
+  qOut->q[3] = (float)((((double)q[2] * p[1] - (double)q[1] * p[2]) + (double)p[3] * q[0]) + (double)q[3] * p[0]);
 }
 
+// The rotation of a quaternion (x, y, z, w). On the x87: the doubled x and y and w's products with y and z stay
+// unrounded; the doubled z and the other products are stored as floats.
+static void QuatRotation(quaternion_tag *quat, _MATRIX *m) {
+  const float *q = quat->q;
+  double x2 = (double)q[0] + q[0];
+  double y2 = (double)q[1] + q[1];
+  float z2 = q[2] + q[2];
+  float xx = (float)(x2 * q[0]);
+  float xy = (float)(y2 * q[0]);
+  float xz = z2 * q[0];
+  float yy = (float)(y2 * q[1]);
+  float yz = z2 * q[1];
+  float zz = z2 * q[2];
+  float wx = (float)(x2 * q[3]);
+  double wy = y2 * q[3];
+  double wz = (double)z2 * q[3];
+  m->m[0] = (float)(1.0f - ((double)zz + yy));
+  m->m[1] = (float)(xy + wz);
+  m->m[2] = (float)(xz - wy);
+  m->m[4] = (float)(xy - wz);
+  m->m[5] = (float)(1.0f - ((double)zz + xx));
+  m->m[6] = (float)((double)wx + yz);
+  m->m[8] = (float)(wy + xz);
+  m->m[9] = (float)((double)yz - wx);
+  m->m[10] = (float)(1.0f - ((double)yy + xx));
+}
+
+
+// The rotation of a quaternion (x, y, z, w) and a translation
 // AUTOINJECT
 void Quat_QuatTransToMat(quaternion_tag *quatIn, float *vecIn, _MATRIX *mOut) {
-  float q0_2 = quatIn->q[0] + quatIn->q[0];
-  float q1_2 = quatIn->q[1] + quatIn->q[1];
-  float q2_2 = quatIn->q[2] + quatIn->q[2];
-  float q0_q0 = q0_2 * quatIn->q[0];
-  float q0_q1 = q1_2 * quatIn->q[0];
-  float q0_q2 = q2_2 * quatIn->q[0];
-  float q1_q1 = q1_2 * quatIn->q[1];
-  float q1_q2 = q2_2 * quatIn->q[1];
-  float q2_q2 = q2_2 * quatIn->q[2];
-  float q0_q3 = q0_2 * quatIn->q[3];
-  float q1_q3 = q1_2 * quatIn->q[3];
-  float q2_q3 = q2_2 * quatIn->q[3];
-
-  mOut->m[0] = 1.0f - (q2_q2 + q1_q1);
-  mOut->m[1] = q0_q1 + q2_q3;
-  mOut->m[2] = q0_q2 - q1_q3;
-  mOut->m[4] = q0_q1 - q2_q3;
-  mOut->m[5] = 1.0f - (q2_q2 + q0_q0);
-  mOut->m[6] = q0_q3 + q1_q2;
-  mOut->m[8] = q1_q3 + q0_q2;
-  mOut->m[9] = q1_q2 - q0_q3;
-  mOut->m[10] = 1.0f - (q1_q1 + q0_q0);
+  QuatRotation(quatIn, mOut);
   mOut->m[12] = vecIn[0];
   mOut->m[13] = vecIn[1];
   mOut->m[14] = vecIn[2];
 }
 
-// The body of Quat_QuatToMat - see the wrapper below for why the two are split.
+// The rotation of a quaternion (x, y, z, w), Quat_QuatTransToMat's: the body of Quat_QuatToMat - see the wrapper below
+// for why the two are split.
 void _Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
-  float fVar1;
-  float fVar2;
-  float fVar3;
-  float fVar4;
-  float fVar5;
-  float fVar6;
-  float fVar7;
-  float fVar8;
-  float fVar9;
-  
-  fVar1 = param_1->q[0] + param_1->q[0];
-  fVar3 = param_1->q[1] + param_1->q[1];
-  fVar6 = param_1->q[2] + param_1->q[2];
-  fVar2 = fVar1 * param_1->q[0];
-  fVar5 = fVar3 * param_1->q[0];
-  fVar7 = fVar6 * param_1->q[0];
-  fVar4 = fVar3 * param_1->q[1];
-  fVar8 = fVar6 * param_1->q[1];
-  fVar9 = fVar6 * param_1->q[2];
-  fVar1 = fVar1 * param_1->q[3];
-  fVar3 = fVar3 * param_1->q[3];
-  fVar6 = fVar6 * param_1->q[3];
-  param_2->m[0] = 1.0f - (fVar9 + fVar4);
-  param_2->m[1] = fVar5 + fVar6;
-  param_2->m[2] = fVar7 - fVar3;
-  param_2->m[4] = fVar5 - fVar6;
-  param_2->m[5] = 1.0f - (fVar9 + fVar2);
-  param_2->m[6] = fVar1 + fVar8;
-  param_2->m[8] = fVar3 + fVar7;
-  param_2->m[9] = fVar8 - fVar1;
-  param_2->m[10] = 1.0f - (fVar4 + fVar2);
+  QuatRotation(param_1, param_2);
 }
 
 // The original (0x000d5800) only ever touches EAX and the x87 stack, and the game's own callers were compiled
@@ -158,40 +137,40 @@ void __declspec(naked) Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2)
   }
 }
 
-// Convert a rotation matrix to a quaternion (Shepperd's method)
+// Convert a rotation matrix to a quaternion (Shepperd's method), summed on the x87
 // AUTOINJECT
 void Quat_MatToQuat(quaternion_tag *quatOut, _MATRIX *mtxIn) {
-  float trace = mtxIn->m[0] + mtxIn->m[5] + mtxIn->m[10];
-
-  if (trace >= 0.0f) {
-    float s = SQRT(trace + 1.0f);
-    quatOut->q[3] = s * 0.5f;
-    s = 0.5f / s;
-    quatOut->q[0] = (mtxIn->m[6] - mtxIn->m[9]) * s;
-    quatOut->q[1] = (mtxIn->m[8] - mtxIn->m[2]) * s;
-    quatOut->q[2] = (mtxIn->m[1] - mtxIn->m[4]) * s;
+  const float *m = mtxIn->m;
+  double trace = ((double)m[5] + m[0]) + m[10];
+  if (trace >= 0.0) {
+    double s = sqrt(trace + 1.0f);
+    quatOut->q[3] = (float)(0.5f * s);
+    double scale = 0.5f / s;
+    quatOut->q[0] = (float)(((double)m[6] - m[9]) * scale);
+    quatOut->q[1] = (float)(((double)m[8] - m[2]) * scale);
+    quatOut->q[2] = (float)(((double)m[1] - m[4]) * scale);
     return;
   }
 
   // Diagonal indices in the 4-wide-stride matrix are i*5 (0, 5, 10)
   static const int next[3] = {1, 2, 0};
-  int i = (mtxIn->m[0] < mtxIn->m[5]) ? 1 : 0;
-  if (mtxIn->m[i * 5] < mtxIn->m[10]) {
+  int i = (m[5] > m[0]) ? 1 : 0;
+  if (m[10] > m[i * 5]) {
     i = 2;
   }
   int j = next[i];
   int k = next[j];
 
-  float s = SQRT((mtxIn->m[i * 5] - (mtxIn->m[j * 5] + mtxIn->m[k * 5])) + 1.0f);
+  double s = sqrt(((double)m[i * 5] - ((double)m[k * 5] + m[j * 5])) + 1.0f);
 
   float q[4];
-  q[i] = s * 0.5f;
-  if (s != 0.0f) {
+  q[i] = (float)(0.5f * s);
+  if (s != 0.0) {
     s = 0.5f / s;
   }
-  q[3] = (mtxIn->m[j * 4 + k] - mtxIn->m[k * 4 + j]) * s;
-  q[j] = (mtxIn->m[i * 4 + j] + mtxIn->m[j * 4 + i]) * s;
-  q[k] = (mtxIn->m[i * 4 + k] + mtxIn->m[k * 4 + i]) * s;
+  q[3] = (float)(((double)m[j * 4 + k] - m[k * 4 + j]) * s);
+  q[j] = (float)(((double)m[j * 4 + i] + m[i * 4 + j]) * s);
+  q[k] = (float)(((double)m[k * 4 + i] + m[i * 4 + k]) * s);
 
   quatOut->q[0] = q[0];
   quatOut->q[1] = q[1];
@@ -199,37 +178,41 @@ void Quat_MatToQuat(quaternion_tag *quatOut, _MATRIX *mtxIn) {
   quatOut->q[3] = q[3];
 }
 
-// Accurate (as opposed to Quat_Slerp's fast approximation) spherical interpolation between two quaternions
+// Accurate (as opposed to Quat_Slerp's fast approximation) spherical interpolation between two quaternions. The angle
+// comes from the XBE's own acos of the cosine as a float, its sines by FSIN; the angle, the reciprocal of its sine and
+// the blended angle are stored as floats.
 // AUTOINJECT
 void Quat_Slerp_Acc(float blendFactor, float *quatStart, float *quatEnd, float *quatOut) {
-  float cosOmega = quatStart[0] * quatEnd[0] + quatStart[1] * quatEnd[1] +
-                    quatStart[2] * quatEnd[2] + quatStart[3] * quatEnd[3];
-
-  bool negate = cosOmega < 0.0f;
+  double dot = (((double)quatStart[0] * quatEnd[0] + (double)quatStart[2] * quatEnd[2]) +
+                (double)quatStart[1] * quatEnd[1]) + (double)quatEnd[3] * quatStart[3];
+  float cosOmega = (float)dot;
+  bool negate = dot < 0.0;
   if (negate) {
     cosOmega = -cosOmega;
   }
 
-  float scaleEnd, scaleStart;
-  if (1.0f - cosOmega <= 0.01f) {
-    // Quaternions are nearly coincident - fall back to linear interpolation
-    scaleEnd = blendFactor;
-    scaleStart = 1.0f - blendFactor;
+  double scaleEnd, scaleStart;
+  if (1.0 - cosOmega > 0.01f) {
+    Extended omega = CIAcos(cosOmega);
+    float angle = (float)omega;
+    float reciprocal = (float)(Extended(1.0f) / FSin(omega));
+    float blended = (float)((double)angle * blendFactor);
+    scaleEnd = (double)(FSin((double)angle * blendFactor) * Extended(reciprocal));
+    scaleStart = (double)(FSin((double)angle - blended) * Extended(reciprocal));
   } else {
-    double omega = acos((double)cosOmega);
-    double sinOmega = sin(omega);
-    scaleEnd = (float)(sin(omega * blendFactor) / sinOmega);
-    scaleStart = (float)(sin(omega - omega * blendFactor) / sinOmega);
+    // Quaternions are nearly coincident (or the cosine a NaN) - fall back to linear interpolation
+    scaleEnd = blendFactor;
+    scaleStart = 1.0 - blendFactor;
   }
 
   if (negate) {
     scaleStart = -scaleStart;
   }
 
-  quatOut[0] = scaleEnd * quatEnd[0] + scaleStart * quatStart[0];
-  quatOut[1] = scaleEnd * quatEnd[1] + scaleStart * quatStart[1];
-  quatOut[2] = scaleEnd * quatEnd[2] + scaleStart * quatStart[2];
-  quatOut[3] = scaleEnd * quatEnd[3] + scaleStart * quatStart[3];
+  quatOut[0] = (float)(scaleStart * quatStart[0] + scaleEnd * quatEnd[0]);
+  quatOut[1] = (float)(scaleStart * quatStart[1] + scaleEnd * quatEnd[1]);
+  quatOut[2] = (float)(scaleStart * quatStart[2] + scaleEnd * quatEnd[2]);
+  quatOut[3] = (float)(scaleEnd * quatEnd[3] + scaleStart * quatStart[3]);
 }
 
 // Smoothly rotate a matrix so it tracks/faces from currentPos towards targetPos
@@ -295,25 +278,24 @@ void RotMatrix(_VECTOR *vIn, _MATRIX *mtxOut) {
 }
 
 // Despite the parameter names, this reads from viewMtx and writes the inverted (transposed rotation,
-// re-derived translation) result into worldMtx - see the callers for confirmation of this direction
+// re-derived translation) result into worldMtx - see the callers for confirmation of this direction. Summed on the x87.
 // AUTOINJECT
 void Mat_World2ViewMat(_MATRIX *viewMtx, _MATRIX *worldMtx) {
-  worldMtx->m[0] = viewMtx->m[0];
-  worldMtx->m[4] = viewMtx->m[1];
-  worldMtx->m[8] = viewMtx->m[2];
-  worldMtx->m[1] = viewMtx->m[4];
-  worldMtx->m[5] = viewMtx->m[5];
-  worldMtx->m[9] = viewMtx->m[6];
-  worldMtx->m[2] = viewMtx->m[8];
-  worldMtx->m[6] = viewMtx->m[9];
-  worldMtx->m[10] = viewMtx->m[10];
+  float *w = worldMtx->m;
+  const float *v = viewMtx->m;
+  w[0] = v[0];
+  w[4] = v[1];
+  w[8] = v[2];
+  w[1] = v[4];
+  w[5] = v[5];
+  w[9] = v[6];
+  w[2] = v[8];
+  w[6] = v[9];
+  w[10] = v[10];
 
-  worldMtx->m[0xc] = -(worldMtx->m[1] * viewMtx->m[0xd] +
-                       worldMtx->m[0] * viewMtx->m[0xc] + viewMtx->m[0xe] * worldMtx->m[2]);
-  worldMtx->m[0xd] = -(viewMtx->m[0xc] * worldMtx->m[4] +
-                       worldMtx->m[5] * viewMtx->m[0xd] + viewMtx->m[0xe] * worldMtx->m[6]);
-  worldMtx->m[0xe] = -(worldMtx->m[8] * viewMtx->m[0xc] +
-                       viewMtx->m[0xd] * worldMtx->m[9] + viewMtx->m[0xe] * worldMtx->m[10]);
+  w[0xc] = (float)-(((double)v[0xe] * w[2] + (double)w[0] * v[0xc]) + (double)w[1] * v[0xd]);
+  w[0xd] = (float)-(((double)v[0xe] * w[6] + (double)w[5] * v[0xd]) + (double)v[0xc] * w[4]);
+  w[0xe] = (float)-(((double)v[0xe] * w[10] + (double)v[0xd] * w[9]) + (double)w[8] * v[0xc]);
 }
 
 // AUTOINJECT
@@ -354,19 +336,20 @@ void Mat_CopyRot(const _MATRIX *source, _MATRIX *target) {
 }
 
 // Build a matrix that keeps "up" as the exact up vector, deriving a level "forward" from direction and a "right"
-// orthogonal to both (eg. used to keep a turret/sensor upright while aiming roughly towards a target)
+// orthogonal to both (eg. used to keep a turret/sensor upright while aiming roughly towards a target). The cross
+// products are taken on the x87.
 // AUTOINJECT
 void Mat_Align2Up(float *matrix, float *up, float *direction) {
   _VECTOR right;
-  right.x = direction[2] * up[1] - direction[1] * up[2];
-  right.y = direction[0] * up[2] - direction[2] * up[0];
-  right.z = direction[1] * up[0] - direction[0] * up[1];
+  right.x = (float)((double)direction[2] * up[1] - (double)direction[1] * up[2]);
+  right.y = (float)((double)direction[0] * up[2] - (double)direction[2] * up[0]);
+  right.z = (float)((double)direction[1] * up[0] - (double)direction[0] * up[1]);
   Vec_Normalise(&right, &right);
 
   _VECTOR forward;
-  forward.x = right.y * up[2] - right.z * up[1];
-  forward.y = right.z * up[0] - right.x * up[2];
-  forward.z = right.x * up[1] - right.y * up[0];
+  forward.x = (float)((double)right.y * up[2] - (double)right.z * up[1]);
+  forward.y = (float)((double)right.z * up[0] - (double)right.x * up[2]);
+  forward.z = (float)((double)right.x * up[1] - (double)right.y * up[0]);
   Vec_Normalise(&forward, &forward);
 
   matrix[8] = forward.x;
@@ -405,31 +388,27 @@ void Mat_Identity(_MATRIX *mtx) {
 	mtx->m[10] = 1.0;
 }
 
-// Combine the rotation and translation of two matrices
+// Combine the rotation and translation of two matrices: mat2's rows through mat1's rotation (mat2 read before it is
+// written), and the translations added. Summed on the x87.
 // AUTOINJECT
 void RotTransMat(_MATRIX *mat1, _MATRIX *mat2) {
-  float m2_00 = mat2->m[0];
-  float m2_01 = mat2->m[1];
-  float m2_02 = mat2->m[2];
-  float m2_10 = mat2->m[4];
-  float m2_11 = mat2->m[5];
-  float m2_12 = mat2->m[6];
-  float m2_20 = mat2->m[8];
-  float m2_21 = mat2->m[9];
-  float m2_22 = mat2->m[10];
-
-  mat2->m[0] = m2_00 * mat1->m[0] + m2_02 * mat1->m[8] + m2_01 * mat1->m[4];
-  mat2->m[1] = m2_00 * mat1->m[1] + m2_02 * mat1->m[9] + m2_01 * mat1->m[5];
-  mat2->m[2] = m2_01 * mat1->m[6] + m2_00 * mat1->m[2] + m2_02 * mat1->m[10];
-  mat2->m[4] = m2_10 * mat1->m[0] + m2_12 * mat1->m[8] + m2_11 * mat1->m[4];
-  mat2->m[5] = m2_10 * mat1->m[1] + m2_12 * mat1->m[9] + m2_11 * mat1->m[5];
-  mat2->m[6] = m2_11 * mat1->m[6] + m2_10 * mat1->m[2] + m2_12 * mat1->m[10];
-  mat2->m[8] = m2_20 * mat1->m[0] + m2_22 * mat1->m[8] + m2_21 * mat1->m[4];
-  mat2->m[9] = m2_20 * mat1->m[1] + m2_22 * mat1->m[9] + m2_21 * mat1->m[5];
-  mat2->m[10] = m2_21 * mat1->m[6] + m2_20 * mat1->m[2] + m2_22 * mat1->m[10];
-  mat2->m[12] = mat1->m[12] + mat2->m[12];
-  mat2->m[13] = mat1->m[13] + mat2->m[13];
-  mat2->m[14] = mat1->m[14] + mat2->m[14];
+  const float *a = mat1->m;
+  float *b = mat2->m;
+  float b0 = b[0], b1 = b[1], b2 = b[2];
+  float b4 = b[4], b5 = b[5], b6 = b[6];
+  float b8 = b[8], b9 = b[9], b10 = b[10];
+  b[0] = (float)(((double)b1 * a[4] + (double)b2 * a[8]) + (double)b0 * a[0]);
+  b[1] = (float)(((double)b1 * a[5] + (double)b2 * a[9]) + (double)b0 * a[1]);
+  b[2] = (float)(((double)b2 * a[10] + (double)b0 * a[2]) + (double)b1 * a[6]);
+  b[4] = (float)(((double)b5 * a[4] + (double)b6 * a[8]) + (double)b4 * a[0]);
+  b[5] = (float)(((double)b5 * a[5] + (double)b6 * a[9]) + (double)b4 * a[1]);
+  b[6] = (float)(((double)b6 * a[10] + (double)b4 * a[2]) + (double)b5 * a[6]);
+  b[8] = (float)(((double)b9 * a[4] + (double)b10 * a[8]) + (double)b8 * a[0]);
+  b[9] = (float)(((double)b9 * a[5] + (double)b10 * a[9]) + (double)b8 * a[1]);
+  b[10] = (float)(((double)b10 * a[10] + (double)b8 * a[2]) + (double)b9 * a[6]);
+  b[12] = a[12] + b[12];
+  b[13] = a[13] + b[13];
+  b[14] = a[14] + b[14];
 }
 
 // AUTOINJECT
@@ -439,25 +418,25 @@ void Matrix_SetTrans(_VECTOR *vec, _MATRIX *mtx) {
   mtx->m[0xe] = vec->z;
 }
 
+// To unit length by the reciprocal of the length (both unrounded on the x87); a zero length gives zero (a NaN one
+// goes through)
 static void Vec_NormaliseBody(_VECTOR *vOut, _VECTOR *vIn) {
-  
-  float magnitude = Vec_Magnitude(vIn);
-  
-  if (!ISNAN(magnitude) && (magnitude != 0.0)) {
-    float rcpMag = 1.0f / magnitude;
-    vOut->x = rcpMag * vIn->x;
-    vOut->y = rcpMag * vIn->y;
-    vOut->z = rcpMag * vIn->z;
+  double magnitude = Vec_Magnitude(vIn);
+  if (magnitude == 0.0) {
+    vOut->z = 0.0;
+    vOut->y = 0.0;
+    vOut->x = 0.0;
     return;
   }
 
-  vOut->z = 0.0;
-  vOut->y = 0.0;
-  vOut->x = 0.0;
+  double rcpMag = 1.0f / magnitude;
+  vOut->x = (float)(rcpMag * vIn->x);
+  vOut->y = (float)(rcpMag * vIn->y);
+  vOut->z = (float)(rcpMag * vIn->z);
 }
 
-// The original writes neither ECX nor EDX, and its callers rely on it: Mat_LookAt and 0x000d8590 keep EDX across the call. So the
-// game reaches this through an entry that keeps them (tools/caller_saved.py).
+// The original writes no EDX (only ECX, with the input's address), and its callers rely on it: Mat_LookAt and
+// 0x000d8590 keep EDX across the call. So the game reaches this through an entry that keeps both (tools/caller_saved.py).
 // AUTOINJECT
 void __declspec(naked) Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
     _asm {
@@ -473,16 +452,17 @@ void __declspec(naked) Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
     }
 }
 
-static float Vec_NormaliseLenBody(_VECTOR *output, _VECTOR *input) {
-  float len = Vec_Magnitude(input);
+// The length is the unrounded one
+static double Vec_NormaliseLenBody(_VECTOR *output, _VECTOR *input) {
+  double len = Vec_Magnitude(input);
   Vec_Normalise(output,input);
   return len;
 }
 
-// The original writes neither ECX nor EDX, and its callers rely on it: Cel_ObjectLeftCel keeps EDX across the call. So the
-// game reaches this through an entry that keeps them (tools/caller_saved.py).
+// The original writes no EDX (only ECX, with the input's address), and its callers rely on it: Cel_ObjectLeftCel keeps
+// EDX across the call. So the game reaches this through an entry that keeps both (tools/caller_saved.py).
 // AUTOINJECT
-float __declspec(naked) Vec_NormaliseLen(_VECTOR *output, _VECTOR *input) {
+double __declspec(naked) Vec_NormaliseLen(_VECTOR *output, _VECTOR *input) {
     _asm {
         push ecx
         push edx
@@ -510,11 +490,12 @@ void Vec_Zero(_VECTOR *v) {
   v->z = 0.0;
 }
 
+// Negated on the x87 (FCHS), so a signalling NaN comes back quiet
 // AUTOINJECT
 void Vec_Negate(const _VECTOR *vIn,_VECTOR *vOut) {
-  vOut->x = -vIn->x;
-  vOut->y = -vIn->y;
-  vOut->z = -vIn->z;
+  vOut->x = X87Negate(vIn->x);
+  vOut->y = X87Negate(vIn->y);
+  vOut->z = X87Negate(vIn->z);
 }
 
 // AUTOINJECT
@@ -531,31 +512,34 @@ void Vec_MulR32(_VECTOR *outVec, _VECTOR *inVec, float scale) {
   outVec->z = scale * inVec->z;
 }
 
+// Each product's difference taken on the x87
 // AUTOINJECT
 void Vec_Cross(_VECTOR *a,_VECTOR *b,_VECTOR *vecOut) {
-  vecOut->x = b->z * a->y - b->y * a->z;
-  vecOut->y = b->x * a->z - a->x * b->z;
-  vecOut->z = a->x * b->y - b->x * a->y;
+  vecOut->x = (float)((double)b->z * a->y - (double)b->y * a->z);
+  vecOut->y = (float)((double)b->x * a->z - (double)a->x * b->z);
+  vecOut->z = (float)((double)a->x * b->y - (double)b->x * a->y);
 }
 
+// Copied through the x87, dst2 first
 // AUTOINJECT
 void Vec_Copy2(_VECTOR* src, _VECTOR *dst1, _VECTOR *dst2) {
-  dst1->x = src->x;
-  dst1->y = src->y;
-  dst1->z = src->z;
-  dst2->x = src->x;
-  dst2->y = src->y;
-  dst2->z = src->z;
+  dst2->x = X87Copy(src->x);
+  dst1->x = X87Copy(src->x);
+  dst2->y = X87Copy(src->y);
+  dst1->y = X87Copy(src->y);
+  dst2->z = X87Copy(src->z);
+  dst1->z = X87Copy(src->z);
 }
 
+// Each difference within epsilon: x's taken unrounded, y's and z's stored as floats; a NaN difference passes
 // AUTOINJECT
 bool Vec_IsEqual(_VECTOR *param_1,_VECTOR *param_2,float epsilon) {
-  
-  float dx = ABS(param_2->x - param_1->x);
-  float dy = ABS(param_2->y - param_1->y);
-  float dz = ABS(param_2->z - param_1->z);
-
-  return (dx <= epsilon && dy <= epsilon && dz <= epsilon);
+  double dx = (double)param_2->x - param_1->x;
+  float dy = param_2->y - param_1->y;
+  float dz = param_2->z - param_1->z;
+  if (fabs(dx) > epsilon || ABS(dy) > epsilon || ABS(dz) > epsilon)
+    return false;
+  return true;
 }
 
 // AUTOINJECT
@@ -602,43 +586,48 @@ double Vec_Dot(_VECTOR *a, _VECTOR *b) {
   return (double)a->z * b->z + (double)a->y * b->y + (double)a->x * b->x;
 }
 
+// Summed on the x87 and left unrounded
 // AUTOINJECT
-float Vec_Magnitude(_VECTOR *a) {
-  return SQRT(a->x * a->x + a->y * a->y + a->z * a->z);
+double Vec_Magnitude(_VECTOR *a) {
+  return sqrt(((double)a->x * a->x + (double)a->y * a->y) + (double)a->z * a->z);
 }
 
+// x and y go through the x87 (a signalling NaN comes back quiet), z is moved as it is
 // AUTOINJECT
 void Vec_Max(_VECTOR *a, _VECTOR *b, _VECTOR *vecOut) {
-  vecOut->x = MAX(a->x, b->x);
-  vecOut->y = MAX(a->y, b->y);
+  vecOut->x = X87Copy(MAX(a->x, b->x));
+  vecOut->y = X87Copy(MAX(a->y, b->y));
   vecOut->z = MAX(a->z, b->z);
 }
 
+// As Vec_Max
 // AUTOINJECT
 void Vec_Min(_VECTOR *a, _VECTOR *b, _VECTOR *vecOut) {
-  vecOut->x = MIN(a->x, b->x);
-  vecOut->y = MIN(a->y, b->y);
+  vecOut->x = X87Copy(MIN(a->x, b->x));
+  vecOut->y = X87Copy(MIN(a->y, b->y));
   vecOut->z = MIN(a->z, b->z);
 }
 
+// The minimums first, then the maximums; x and y through the x87, as Vec_Max
 // AUTOINJECT
 void Vec_MinMax(_VECTOR *a, _VECTOR *b, _VECTOR *minimums, _VECTOR *maximums) {
-  maximums->x = MAX(a->x, b->x);
-  maximums->y = MAX(a->y, b->y);
-  maximums->z = MAX(a->z, b->z);
-  minimums->x = MIN(a->x, b->x);
-  minimums->y = MIN(a->y, b->y);
+  minimums->x = X87Copy(MIN(a->x, b->x));
+  minimums->y = X87Copy(MIN(a->y, b->y));
   minimums->z = MIN(a->z, b->z);
+  maximums->x = X87Copy(MAX(a->x, b->x));
+  maximums->y = X87Copy(MAX(a->y, b->y));
+  maximums->z = MAX(a->z, b->z);
 }
 
+// As Vec_MinMax, of three
 // AUTOINJECT
 void Vec_MinMax3(_VECTOR *a, _VECTOR *b, _VECTOR *c, _VECTOR *minimums, _VECTOR *maximums) {
-  maximums->x = MAX3(a->x, b->x, c->x);
-  maximums->y = MAX3(a->y, b->y, c->y);
-  maximums->z = MAX3(a->z, b->z, c->z);
-  minimums->x = MIN3(a->x, b->x, c->x);
-  minimums->y = MIN3(a->y, b->y, c->y);
+  minimums->x = X87Copy(MIN3(a->x, b->x, c->x));
+  minimums->y = X87Copy(MIN3(a->y, b->y, c->y));
   minimums->z = MIN3(a->z, b->z, c->z);
+  maximums->x = X87Copy(MAX3(a->x, b->x, c->x));
+  maximums->y = X87Copy(MAX3(a->y, b->y, c->y));
+  maximums->z = MAX3(a->z, b->z, c->z);
 }
 
 // Find the equation of the plane defined by the three given points. On the x87: the first edge, the second edge's
@@ -684,11 +673,12 @@ double DistancePointToPlane(_VECTOR *point, plane_equ_tag *plane) {
   return (double)point->z * plane->c + (double)point->y * plane->b + (double)point->x * plane->a + plane->d;
 }
 
+// Multiplied and added on the x87
 // AUTOINJECT
 void auxVec_AddMulR32(_VECTOR *add, _VECTOR *vIn, float multiply, _VECTOR *vOut) {
-  vOut->x = multiply * vIn->x + add->x;
-  vOut->y = multiply * vIn->y + add->y;
-  vOut->z = multiply * vIn->z + add->z;
+  vOut->x = (float)((double)multiply * vIn->x + add->x);
+  vOut->y = (float)((double)multiply * vIn->y + add->y);
+  vOut->z = (float)((double)multiply * vIn->z + add->z);
 }
 
 // Whether the point is outside the edge from 'from' to 'to': on the side the edge's cross product with the plane's
@@ -913,26 +903,21 @@ int vecutil_intersect_line_line_2d(_VECTOR *p1, _VECTOR *p2, _VECTOR *p3, _VECTO
   return 2;
 }
 
+// On the x87, z's square first, and left unrounded
 // AUTOINJECT
-float Vec_Dist3D(_VECTOR *a, _VECTOR *b) {
-
-    float dx = (a->x-b->x);
-    float dy = (a->y-b->y);
-    float dz = (a->z-b->z);
-
-    return SQRT(dx*dx + dy*dy + dz*dz);
+double Vec_Dist3D(_VECTOR *a, _VECTOR *b) {
+  return sqrt(Vec_SqDist3D(a, b));
 }
 
 // AUTOINJECT
-float Vec_SqDist3D(_VECTOR *a, _VECTOR *b) {
-
-  float dx = (a->x-b->x);
-  float dy = (a->y-b->y);
-  float dz = (a->z-b->z);
-
-  return dx*dx + dy*dy + dz*dz;
+double Vec_SqDist3D(_VECTOR *a, _VECTOR *b) {
+  double dx = (double)a->x - b->x;
+  double dy = (double)a->y - b->y;
+  double dz = (double)a->z - b->z;
+  return (dz * dz + dx * dx) + dy * dy;
 }
 
+// b's x and y come from the x87 (a signalling NaN comes back quiet)
 // AUTOINJECT
 void Vec_Swap(_VECTOR *a, _VECTOR *b) {
   float tmp_x = a->x;
@@ -941,8 +926,8 @@ void Vec_Swap(_VECTOR *a, _VECTOR *b) {
   a->x = b->x;
   a->y = b->y;
   a->z = b->z;
-  b->x = tmp_x;
-  b->y = tmp_y;
+  b->x = X87Copy(tmp_x);
+  b->y = X87Copy(tmp_y);
   b->z = tmp_z;
 }
 
@@ -962,45 +947,47 @@ void ApplyMatrixLV(_MATRIX *mtx, _VECTOR *vIn, _VECTOR *vOut) {
   vOut->z = (float)((double)mtx->m[10] * vIn->z + (double)mtx->m[2] * vIn->x + (double)mtx->m[6] * vIn->y);
 }
 
+// a along the unit normal of b and c, summed on the x87 from z and left unrounded
 // AUTOINJECT
-float Vec_ScalarTripleProduct(_VECTOR *a, _VECTOR *b, _VECTOR *c) {
+double Vec_ScalarTripleProduct(_VECTOR *a, _VECTOR *b, _VECTOR *c) {
   _VECTOR v1;
   Vec_Cross(b, c, &v1);
   Vec_Normalise(&v1, &v1);
-  return (a->x * v1.x + a->y * v1.y + a->z * v1.z);
+  return ((double)v1.z * a->z + (double)v1.y * a->y) + (double)v1.x * a->x;
 }
 
+// The pitch and heading of a direction by FPATAN
 // AUTOINJECT
 void vecutil_cartesian_to_spherical_acc(_VECTOR *vec, float v_x, float v_y, float v_z) {
-  vec->x = atan2f(v_y, SQRT(v_z * v_z + v_x * v_x));
-  vec->y = atan2f(v_x, v_z);
   vec->z = 0.0f;
+  vec->x = (float)FPatan(v_y, sqrt((double)v_x * v_x + (double)v_z * v_z));
+  vec->y = (float)FPatan(v_x, v_z);
 }
 
-// Shortest signed angular difference (angle2 - angle1), wrapped into (-pi, pi]. Both inputs are normalised into
-// [0, 2pi) first.
+// Shortest signed angular difference (angle2 - angle1), wrapped into (-pi, pi]. Both inputs are brought into [0, 2pi)
+// first: angle2 stored as a float, angle1 left unrounded, and so is the result. The remainder is exact either way, so
+// the C runtime's fmod does what the XBE's FPREM does (for finite angles: the XBE's raises its error for the others).
 // AUTOINJECT
-float Vec_AngleDifference(float angle1, float angle2) {
-  if (angle2 < 0.0f || angle2 >= (float)M_2PI) {
-    angle2 = fmodf(angle2, (float)M_2PI);
-    if (angle2 < 0.0f) {
-      angle2 += (float)M_2PI;
-    }
+double Vec_AngleDifference(float angle1, float angle2) {
+  const float twoPi = (float)M_2PI;
+  if (angle2 < 0.0f || !(angle2 < twoPi)) {
+    double wrapped = fmod((double)angle2, (double)twoPi);
+    if (!(wrapped >= 0.0))
+      wrapped += twoPi;
+    angle2 = (float)wrapped;
   }
-  if (angle1 < 0.0f || angle1 >= (float)M_2PI) {
-    angle1 = fmodf(angle1, (float)M_2PI);
-    if (angle1 < 0.0f) {
-      angle1 += (float)M_2PI;
-    }
+  double first = angle1;
+  if (angle1 < 0.0f || !(angle1 < twoPi)) {
+    first = fmod((double)angle1, (double)twoPi);
+    if (!(first >= 0.0))
+      first += twoPi;
   }
 
-  float diff = angle2 - angle1;
-  float absDiff = ABS(diff);
-  if (absDiff >= (float)M_PI) {
-    if (diff < 0.0f) {
-      return diff + (float)M_2PI;
-    }
-    diff -= (float)M_2PI;
+  double diff = angle2 - first;
+  if (!(AbsFchs(diff) < (float)M_PI)) {
+    if (diff < 0.0)
+      return diff + twoPi;
+    return diff - twoPi;
   }
   return diff;
 }
@@ -1017,22 +1004,24 @@ void Vec_Spherical_2_Cartesian(float *out, float radius, float yaw, float pitch)
 // Coefficients for maybeAtan2's polynomial approximation of atan(ratio) over ratio in [0,1]
 #define MAYBE_ATAN2_COEFF_A 1.0596788f
 #define MAYBE_ATAN2_COEFF_B 0.27131295f
+static_assert(std::bit_cast<uint32_t>(MAYBE_ATAN2_COEFF_A) == 0x3f87a38e, "not the original's constant");
+static_assert(std::bit_cast<uint32_t>(MAYBE_ATAN2_COEFF_B) == 0x3e8ae988, "not the original's constant");
 
-// Fast rational atan2 approximation (max error ~0.28 degrees)
-static float maybeAtan2Body(float y, float x) {
-  float result;
+// Fast rational atan2 approximation (max error ~0.28 degrees), on the x87 and left unrounded
+static double maybeAtan2Body(float y, float x) {
+  double result;
 
   if (x == y) {
     result = (x == 0.0f) ? 0.0f : (float)M_PI_4;
   } else {
-    float absX = ABS(x);
-    float absY = ABS(y);
-    if (absX <= absY) {
-      float ratio = absX / absY;
-      result = (float)M_PI_2 - (MAYBE_ATAN2_COEFF_A - ratio * MAYBE_ATAN2_COEFF_B) * ratio;
-    } else {
-      float ratio = absY / absX;
+    double absX = AbsFchs(x);
+    double absY = AbsFchs(y);
+    if (absY < absX) {
+      double ratio = absY / absX;
       result = (MAYBE_ATAN2_COEFF_A - ratio * MAYBE_ATAN2_COEFF_B) * ratio;
+    } else {
+      double ratio = absX / absY;
+      result = (float)M_PI_2 - (MAYBE_ATAN2_COEFF_A - ratio * MAYBE_ATAN2_COEFF_B) * ratio;
     }
   }
 
@@ -1048,7 +1037,7 @@ static float maybeAtan2Body(float y, float x) {
 // The original writes neither ECX nor EDX, and its callers rely on it: Vec_Cartesian_2_Spherical keeps ECX across the call. So the
 // game reaches this through an entry that keeps them (tools/caller_saved.py).
 // AUTOINJECT
-float __declspec(naked) maybeAtan2(float y, float x) {
+double __declspec(naked) maybeAtan2(float y, float x) {
     _asm {
         push ecx
         push edx
@@ -1063,33 +1052,25 @@ float __declspec(naked) maybeAtan2(float y, float x) {
 }
 
 // Align a matrix so its forward row faces "direction", with "param_3" as the preferred up hint (falling back to
-// "param_4" when direction is nearly parallel to param_3)
+// "param_4" when direction is nearly parallel to param_3). The dot and cross products are taken on the x87.
 // AUTOINJECT
 void Mat_Align2Dir(_MATRIX *mtxOut, _VECTOR *direction, _VECTOR *param_3, _VECTOR *param_4) {
   _VECTOR dir;
   Vec_Normalise(&dir, direction);
 
-  float dot = dir.x * param_3->x + dir.y * param_3->y + dir.z * param_3->z;
-  if (dot < 0.0f) {
-    dot = -dot;
-  }
+  double dot = ((double)dir.x * param_3->x + (double)dir.z * param_3->z) + (double)dir.y * param_3->y;
+  _VECTOR *hint = AbsFchs(dot) > 0.999f ? param_4 : param_3;
 
   _VECTOR right;
-  if (dot <= 0.999f) {
-    right.x = dir.z * param_3->y - dir.y * param_3->z;
-    right.y = dir.x * param_3->z - dir.z * param_3->x;
-    right.z = dir.y * param_3->x - dir.x * param_3->y;
-  } else {
-    right.x = dir.z * param_4->y - dir.y * param_4->z;
-    right.y = dir.x * param_4->z - dir.z * param_4->x;
-    right.z = dir.y * param_4->x - dir.x * param_4->y;
-  }
+  right.x = (float)((double)dir.z * hint->y - (double)dir.y * hint->z);
+  right.y = (float)((double)dir.x * hint->z - (double)dir.z * hint->x);
+  right.z = (float)((double)dir.y * hint->x - (double)dir.x * hint->y);
   Vec_Normalise(&right, &right);
 
   _VECTOR up;
-  up.x = right.z * dir.y - right.y * dir.z;
-  up.y = right.x * dir.z - right.z * dir.x;
-  up.z = right.y * dir.x - right.x * dir.y;
+  up.x = (float)((double)right.z * dir.y - (double)right.y * dir.z);
+  up.y = (float)((double)right.x * dir.z - (double)right.z * dir.x);
+  up.z = (float)((double)right.y * dir.x - (double)right.x * dir.y);
   Vec_Normalise(&up, &up);
 
   mtxOut->m[8] = dir.x;
@@ -1112,7 +1093,7 @@ void Vec_Add2(_VECTOR *a, _VECTOR *b, _VECTOR *out) {
 
 // Re-orthonormalise a rotation matrix in place: the forward row is trusted as-is (just normalised), "up" is
 // normalised then used to derive "right", and "up" is finally recomputed as right x forward so all three rows
-// end up orthogonal
+// end up orthogonal. The cross products are taken on the x87.
 // AUTOINJECT
 void Mat_Normalize(_MATRIX *mtx) {
   _VECTOR up, forward, right;
@@ -1125,24 +1106,21 @@ void Mat_Normalize(_MATRIX *mtx) {
   Vec_Normalise(&forward, &forward);
   Vec_Normalise(&up, &up);
 
-  right.x = forward.z * up.y - forward.y * up.z;
-  right.y = forward.x * up.z - forward.z * up.x;
-  right.z = forward.y * up.x - forward.x * up.y;
+  right.x = (float)((double)forward.z * up.y - (double)forward.y * up.z);
+  right.y = (float)((double)forward.x * up.z - (double)forward.z * up.x);
+  right.z = (float)((double)forward.y * up.x - (double)forward.x * up.y);
   Vec_Normalise(&right, &right);
 
   mtx->m[8] = forward.x;
   mtx->m[9] = forward.y;
   mtx->m[10] = forward.z;
-  mtx->m[4] = right.z * forward.y - right.y * forward.z;
-  mtx->m[6] = right.y * forward.x - right.x * forward.y;
-  mtx->m[5] = right.x * forward.z - right.z * forward.x;
+  mtx->m[4] = (float)((double)right.z * forward.y - (double)right.y * forward.z);
+  mtx->m[6] = (float)((double)right.y * forward.x - (double)right.x * forward.y);
+  mtx->m[5] = (float)((double)right.x * forward.z - (double)right.z * forward.x);
   mtx->m[0] = right.x;
   mtx->m[1] = right.y;
   mtx->m[2] = right.z;
 }
-
-// AUTOGEN
-void MulMatrix0(float *a, float *b, float *out);
 
 // AUTOGEN
 void Mat_GetPosition(_VECTOR *posOut, _MATRIX *mtxIn);
@@ -1150,9 +1128,527 @@ void Mat_GetPosition(_VECTOR *posOut, _MATRIX *mtxIn);
 // AUTOGEN
 void Vec_Scalef(_VECTOR *vIn, float scale, _VECTOR *vOut);
 
-// Rotates a vector by a matrix, in place
-// AUTOGEN
-void ApplyMatrixLVI(float *matrix, float *vector);
+// Turns current towards target by at most maxTurn, a rate's share of the way, and onto target within 0.0001. On the
+// x87: the turn added to current stays unrounded into the step, and the result into the last test.
+// AUTOINJECT
+float Ang_RotateToBearing(float current, float target, float rate, float maxTurn) {
+  double turn = Vec_AngleDifference(current, target);
+  float minTurn = -maxTurn;
+  if (turn < minTurn)
+    turn = minTurn;
+  else if (turn > maxTurn)
+    turn = maxTurn;
 
-// AUTOGEN
-void Mat_GetUp(_VECTOR *vOut, _MATRIX *mIn);
+  double end = turn + current;
+  float reached = (float)end;
+  double step = end - current;
+  double angle = step * rate + current;
+  if ((float)step >= 0.0f) {
+    if (angle > reached)
+      angle = reached;
+  } else if (angle < reached) {
+    angle = reached;
+  }
+  float result = (float)angle;
+  if (fabs(angle - target) < 0.0001f)
+    return target;
+  return result;
+}
+
+// Summed on the x87, then divided by three (the float 1/3)
+// AUTOINJECT
+void Vec_Avg3(_VECTOR *a, _VECTOR *b, _VECTOR *c, _VECTOR *out) {
+  const float third = 1.0f / 3.0f;
+  out->x = (float)(((double)a->x + b->x + c->x) * third);
+  out->y = (float)(((double)a->y + b->y + c->y) * third);
+  out->z = (float)(((double)a->z + b->z + c->z) * third);
+}
+
+// The distance in plan (x and z), left unrounded on the x87
+// AUTOINJECT
+double Vec_SqDist2D(_VECTOR *a, _VECTOR *b) {
+  double dz = (double)a->z - b->z;
+  double dx = (double)a->x - b->x;
+  return dx * dx + dz * dz;
+}
+
+// AUTOINJECT
+double Vec_Dist2D(_VECTOR *a, _VECTOR *b) {
+  double dz = (double)a->z - b->z;
+  double dx = (double)a->x - b->x;
+  return sqrt(dx * dx + dz * dz);
+}
+
+// AUTOINJECT
+double Vec_SqMagnitude(_VECTOR *v) {
+  return (double)v->x * v->x + (double)v->y * v->y + (double)v->z * v->z;
+}
+
+// AUTOINJECT
+void Vec_UnitVector(_VECTOR *out, _VECTOR *from, _VECTOR *to) {
+  out->x = to->x - from->x;
+  out->y = to->y - from->y;
+  out->z = to->z - from->z;
+  Vec_Normalise(out, out);
+}
+
+// The pitch (x, up negative) and heading (y) that face along a normal, with FPATAN. Each angle is stored before the
+// next reads the normal, so normal may be rot.
+// AUTOINJECT
+void Vec_NormToRot(_VECTOR *normal, _VECTOR *rot) {
+  double plane = sqrt((double)normal->x * normal->x + (double)normal->z * normal->z);
+  rot->x = (float)-FPatan(normal->y, plane);
+  float x = normal->x, z = normal->z;
+  rot->z = 0.0f;
+  rot->y = (float)FPatan(x, z);
+}
+
+// As Vec_NormToRot, the heading first
+// AUTOINJECT
+void Vec_DirToRot(_VECTOR *dir, _VECTOR *rot) {
+  rot->y = (float)FPatan(dir->x, dir->z);
+  float z = dir->z, x = dir->x, y = dir->y;
+  rot->z = 0.0f;
+  rot->x = (float)-FPatan(y, sqrt((double)z * z + (double)x * x));
+}
+
+// AUTOINJECT
+void Vec_Mul(_VECTOR *v, _VECTOR *scale) {
+  v->x = v->x * scale->x;
+  v->y = scale->y * v->y;
+  v->z = scale->z * v->z;
+}
+
+// Two unit vectors at right angles to n and to each other, u level in the larger of n's x and y. On the x87: the
+// reciprocal of the length and its product with the component that goes into v's first term stay unrounded.
+// AUTOINJECT
+void Vec_MakeOrthonormalBasis(_VECTOR *u, _VECTOR *v, _VECTOR *n) {
+  if (AbsFchs(n->x) > AbsFchs(n->y)) {
+    double scale = 1.0 / sqrt((double)n->z * n->z + (double)n->x * n->x);
+    u->y = 0.0f;
+    u->x = (float)(scale * n->z);
+    double negX = -(scale * n->x);
+    u->z = (float)negX;
+    v->x = (float)(negX * n->y);
+    v->y = (float)((double)n->z * u->x - (double)u->z * n->x);
+    v->z = (float)-((double)u->x * n->y);
+  } else {
+    u->x = 0.0f;
+    double scale = 1.0 / sqrt((double)n->z * n->z + (double)n->y * n->y);
+    u->y = (float)-(scale * n->z);
+    double y = scale * n->y;
+    u->z = (float)y;
+    v->x = (float)(y * n->y - (double)n->z * u->y);
+    v->y = (float)-((double)u->z * n->x);
+    v->z = (float)((double)u->y * n->x);
+  }
+}
+
+// AUTOINJECT
+void Mat_GetUp(_VECTOR *vOut, _MATRIX *mIn) {
+  vOut->x = mIn->m[4];
+  vOut->y = mIn->m[5];
+  vOut->z = mIn->m[6];
+}
+
+// AUTOINJECT
+void Mat_GetNorm(_VECTOR *vOut, _MATRIX *mIn) {
+  vOut->x = mIn->m[0];
+  vOut->y = mIn->m[1];
+  vOut->z = mIn->m[2];
+}
+
+// AUTOINJECT
+void Mat_SetDir(_VECTOR *vIn, _MATRIX *mOut) {
+  mOut->m[8] = vIn->x;
+  mOut->m[9] = vIn->y;
+  mOut->m[10] = vIn->z;
+}
+
+// AUTOINJECT
+void Mat_SetUp(_VECTOR *vIn, _MATRIX *mOut) {
+  mOut->m[4] = vIn->x;
+  mOut->m[5] = vIn->y;
+  mOut->m[6] = vIn->z;
+}
+
+// The inverse of a rotation in place: the rotation transposed and the translation negated, not turned (so only a
+// rotation about the origin comes back right). The elements and negations that go through the x87 lose a signalling
+// NaN's signal.
+// AUTOINJECT
+void Mat_InverseSelf(_MATRIX *mtx) {
+  float m4 = mtx->m[4];
+  float m8 = mtx->m[8];
+  mtx->m[4] = X87Copy(mtx->m[1]);
+  mtx->m[1] = m4;
+  float m6 = mtx->m[6];
+  mtx->m[8] = X87Copy(mtx->m[2]);
+  mtx->m[2] = m8;
+  mtx->m[6] = X87Copy(mtx->m[9]);
+  mtx->m[9] = m6;
+  mtx->m[12] = X87Negate(mtx->m[12]);
+  mtx->m[13] = X87Negate(mtx->m[13]);
+  mtx->m[14] = X87Negate(mtx->m[14]);
+}
+
+// As Mat_InverseSelf, into out
+// AUTOINJECT
+void Mat_Inverse(_MATRIX *in, _MATRIX *out) {
+  out->m[4] = in->m[1];
+  out->m[0] = in->m[0];
+  out->m[1] = in->m[4];
+  out->m[8] = in->m[2];
+  out->m[5] = in->m[5];
+  out->m[2] = in->m[8];
+  out->m[6] = in->m[9];
+  out->m[10] = in->m[10];
+  out->m[9] = in->m[6];
+  out->m[12] = X87Negate(in->m[12]);
+  out->m[13] = X87Negate(in->m[13]);
+  out->m[14] = X87Negate(in->m[14]);
+}
+
+// The rotation scaled, the translation not
+// AUTOINJECT
+void MatrixScale(_MATRIX *mtx, float scale) {
+  mtx->m[0] = scale * mtx->m[0];
+  mtx->m[4] = scale * mtx->m[4];
+  mtx->m[8] = scale * mtx->m[8];
+  mtx->m[1] = scale * mtx->m[1];
+  mtx->m[5] = scale * mtx->m[5];
+  mtx->m[9] = scale * mtx->m[9];
+  mtx->m[2] = scale * mtx->m[2];
+  mtx->m[6] = scale * mtx->m[6];
+  mtx->m[10] = scale * mtx->m[10];
+}
+
+// The rotations: out = b's rows through a (out's translation is not written). Summed on the x87.
+// AUTOINJECT
+void MulMatrix0(_MATRIX *a, _MATRIX *b, _MATRIX *out) {
+  out->m[0] = (float)(((double)a->m[0] * b->m[0] + (double)a->m[4] * b->m[1]) + (double)b->m[2] * a->m[8]);
+  out->m[1] = (float)(((double)a->m[5] * b->m[1] + (double)a->m[1] * b->m[0]) + (double)a->m[9] * b->m[2]);
+  out->m[2] = (float)(((double)a->m[6] * b->m[1] + (double)a->m[2] * b->m[0]) + (double)a->m[10] * b->m[2]);
+  out->m[4] = (float)(((double)a->m[4] * b->m[5] + (double)b->m[4] * a->m[0]) + (double)b->m[6] * a->m[8]);
+  out->m[5] = (float)(((double)a->m[9] * b->m[6] + (double)a->m[5] * b->m[5]) + (double)a->m[1] * b->m[4]);
+  out->m[6] = (float)(((double)a->m[10] * b->m[6] + (double)a->m[6] * b->m[5]) + (double)a->m[2] * b->m[4]);
+  out->m[8] = (float)(((double)a->m[0] * b->m[8] + (double)a->m[4] * b->m[9]) + (double)a->m[8] * b->m[10]);
+  out->m[9] = (float)(((double)a->m[9] * b->m[10] + (double)a->m[5] * b->m[9]) + (double)a->m[1] * b->m[8]);
+  out->m[10] = (float)(((double)a->m[10] * b->m[10] + (double)a->m[6] * b->m[9]) + (double)a->m[2] * b->m[8]);
+}
+
+// As MulMatrix0, into b: b's rotation is read before any of it is written, a as each row goes
+// AUTOINJECT
+void MulMatrix2(_MATRIX *a, _MATRIX *b) {
+  float b0 = b->m[0], b1 = b->m[1], b2 = b->m[2];
+  float b4 = b->m[4], b5 = b->m[5], b6 = b->m[6];
+  float b8 = b->m[8], b9 = b->m[9], b10 = b->m[10];
+  b->m[0] = (float)(((double)b2 * a->m[8] + (double)b1 * a->m[4]) + (double)b0 * a->m[0]);
+  b->m[1] = (float)(((double)b2 * a->m[9] + (double)b1 * a->m[5]) + (double)b0 * a->m[1]);
+  b->m[2] = (float)(((double)b0 * a->m[2] + (double)b2 * a->m[10]) + (double)b1 * a->m[6]);
+  b->m[4] = (float)(((double)b6 * a->m[8] + (double)b5 * a->m[4]) + (double)b4 * a->m[0]);
+  b->m[5] = (float)(((double)b6 * a->m[9] + (double)b5 * a->m[5]) + (double)b4 * a->m[1]);
+  b->m[6] = (float)(((double)b4 * a->m[2] + (double)b6 * a->m[10]) + (double)b5 * a->m[6]);
+  b->m[8] = (float)(((double)b10 * a->m[8] + (double)b9 * a->m[4]) + (double)b8 * a->m[0]);
+  b->m[9] = (float)(((double)b10 * a->m[9] + (double)b9 * a->m[5]) + (double)b8 * a->m[1]);
+  b->m[10] = (float)(((double)b8 * a->m[2] + (double)b10 * a->m[10]) + (double)b9 * a->m[6]);
+}
+
+// The rotations about one axis write only the rotation, with FSIN and FCOS
+// AUTOINJECT
+void RotMatrixX(float angle, _MATRIX *mtx) {
+  Extended c = FCos(angle);
+  mtx->m[0] = 1.0f;
+  mtx->m[4] = 0.0f;
+  mtx->m[8] = 0.0f;
+  mtx->m[1] = 0.0f;
+  mtx->m[2] = 0.0f;
+  Extended s = FSin(angle);
+  mtx->m[5] = (float)c;
+  mtx->m[9] = (float)-s;
+  mtx->m[6] = (float)s;
+  mtx->m[10] = (float)c;
+}
+
+// The source's terms multiplied by zero are kept: an infinite or NaN angle shows through them.
+// AUTOINJECT
+void RotMatrixY(float angle, _MATRIX *mtx) {
+  Extended c = FCos(angle);
+  Extended s = FSin(angle);
+  Extended zero = 0.0f;
+  Extended zeroSin = zero * s;
+  mtx->m[0] = (float)c;
+  mtx->m[4] = (float)zeroSin;
+  mtx->m[8] = (float)s;
+  float zeroCos = (float)(c * zero);
+  mtx->m[1] = zeroCos;
+  mtx->m[6] = zeroCos;
+  mtx->m[5] = (float)(zero * zeroSin + Extended(1.0f));
+  mtx->m[9] = (float)zeroSin;
+  mtx->m[2] = (float)-s;
+  mtx->m[10] = (float)c;
+}
+
+// AUTOINJECT
+void RotMatrixZ(float angle, _MATRIX *mtx) {
+  Extended c = FCos(angle);
+  mtx->m[8] = 0.0f;
+  mtx->m[9] = 0.0f;
+  mtx->m[2] = 0.0f;
+  mtx->m[6] = 0.0f;
+  mtx->m[10] = 1.0f;
+  Extended s = FSin(angle);
+  mtx->m[0] = (float)c;
+  mtx->m[4] = (float)-s;
+  mtx->m[1] = (float)s;
+  mtx->m[5] = (float)c;
+}
+
+// Pitch (about x) after heading (about y). The pitch's cosine is stored as a float; the terms multiplied by zero are
+// kept, as in RotMatrixY.
+// AUTOINJECT
+void RotMatrixXY(float pitch, float heading, _MATRIX *mtx) {
+  Extended cosY = FCos(heading);
+  Extended sinY = FSin(heading);
+  Extended cosX = (float)FCos(pitch);
+  Extended sinX = FSin(pitch);
+  Extended zero = 0.0f;
+  Extended zeroSinY = sinY * zero;
+  mtx->m[0] = (float)cosY;
+  mtx->m[4] = (float)(sinX * sinY - cosX * zero);
+  mtx->m[8] = (float)(cosX * sinY + sinX * zero);
+  mtx->m[1] = (float)(cosY * zero);
+  mtx->m[5] = (float)(zeroSinY * sinX + cosX);
+  mtx->m[9] = (float)(zeroSinY * cosX - sinX);
+  mtx->m[2] = (float)-sinY;
+  mtx->m[6] = (float)(sinX * cosY);
+  mtx->m[10] = (float)(cosX * cosY);
+}
+
+// (v + the translation) through the rotation, on the x87: v is read before out is written
+// AUTOINJECT
+void RotPreTransVec(_MATRIX *mtx, _VECTOR *v, _VECTOR *vOut) {
+  double x = (double)mtx->m[12] + v->x;
+  double y = (double)mtx->m[13] + v->y;
+  double z = (double)mtx->m[14] + v->z;
+  vOut->x = (float)((z * mtx->m[8] + y * mtx->m[4]) + x * mtx->m[0]);
+  vOut->y = (float)((z * mtx->m[9] + y * mtx->m[5]) + x * mtx->m[1]);
+  vOut->z = (float)((z * mtx->m[10] + y * mtx->m[6]) + x * mtx->m[2]);
+}
+
+// v turned by q (x, y, z, w): t = 2 (q x v), then v + w t + q x t. On the x87: t's z and the second cross product's
+// x and y stay unrounded, the rest are stored as floats.
+// AUTOINJECT
+void Quat_Rot_Vec(quaternion_tag *quat, _VECTOR *vIn, _VECTOR *vOut) {
+  const float *q = quat->q;
+  double x = (double)vIn->x + vIn->x;
+  double y = (double)vIn->y + vIn->y;
+  double z = (double)vIn->z + vIn->z;
+  float tx = (float)(z * q[1] - y * q[2]);
+  float ty = (float)(x * q[2] - z * q[0]);
+  double tz = y * q[0] - x * q[1];
+  double cy = (double)tx * q[2] - tz * q[0];
+  float cz = (float)((double)ty * q[0] - (double)tx * q[1]);
+  double cx = tz * q[1] - (double)ty * q[2];
+  vOut->x = (float)((cx + (double)tx * q[3]) + vIn->x);
+  vOut->y = (float)(((double)ty * q[3] + vIn->y) + cy);
+  vOut->z = (float)((tz * q[3] + vIn->z) + cz);
+}
+
+// From Euler angles (x, y, z), with FSIN and FCOS of the halves. Z's half, X's sine and cosine, Y's cosine and three
+// of the products are stored as floats; Y's sine, Z's sine and cosine and the fourth product stay unrounded.
+// AUTOINJECT
+void Quat_EulerToQuat(_VECTOR *euler, quaternion_tag *quat) {
+  double halfX = euler->x * 0.5;
+  double halfY = euler->y * 0.5;
+  float halfZ = (float)(euler->z * 0.5);
+  Extended cosX = (float)FCos(halfX);
+  Extended sinX = (float)FSin(halfX);
+  Extended cosY = (float)FCos(halfY);
+  Extended sinY = FSin(halfY);
+  Extended cosZ = FCos(halfZ);
+  Extended sinZ = FSin(halfZ);
+  Extended cosZcosX = (float)(cosZ * cosX);
+  Extended cosXsinZ = (float)(cosX * sinZ);
+  Extended cosZsinX = (float)(cosZ * sinX);
+  Extended sinZsinX = sinZ * sinX;
+  quat->q[0] = (float)(cosZsinX * cosY - cosXsinZ * sinY);
+  quat->q[1] = (float)(cosY * sinZsinX + cosZcosX * sinY);
+  quat->q[2] = (float)(cosXsinZ * cosY - cosZsinX * sinY);
+  quat->q[3] = (float)(sinZsinX * sinY + cosZcosX * cosY);
+}
+
+// From an axis (x, y, z) and an angle (w)
+// AUTOINJECT
+void Quat_AxisAngleToQuat(float *axisAngle, quaternion_tag *quat) {
+  double half = axisAngle[3] * 0.5;
+  quat->q[3] = (float)FCos(half);
+  Extended s = FSin(half);
+  quat->q[0] = (float)(s * Extended(axisAngle[0]));
+  quat->q[1] = (float)(s * Extended(axisAngle[1]));
+  quat->q[2] = (float)(s * Extended(axisAngle[2]));
+}
+
+// To unit length; all four zero (of either sign) becomes (1, 0, 0, 0). The length is summed from the last component.
+// AUTOINJECT
+void Quat_Normalise(quaternion_tag *quat) {
+  float *q = quat->q;
+  if (q[0] == 0.0f && q[1] == 0.0f && q[2] == 0.0f && q[3] == 0.0f) {
+    q[0] = 1.0f;
+    return;
+  }
+  double scale = 1.0 / sqrt((((double)q[3] * q[3] + (double)q[2] * q[2]) + (double)q[1] * q[1]) + (double)q[0] * q[0]);
+  q[0] = (float)(scale * q[0]);
+  q[1] = (float)(scale * q[1]);
+  q[2] = (float)(scale * q[2]);
+  q[3] = (float)(scale * q[3]);
+}
+
+// The rotation of a quaternion (w, x, y, z); the translation is not written
+// AUTOINJECT
+void Quat_QuaternionToMatrix(_MATRIX *mtx, quaternion_tag *quat) {
+  const float *q = quat->q;
+  mtx->m[0] = (float)(((double)q[0] * q[0] + (double)q[1] * q[1]) * 2.0 - 1.0f);
+  mtx->m[1] = (float)(((double)q[0] * q[3] + (double)q[2] * q[1]) * 2.0);
+  mtx->m[2] = (float)(((double)q[3] * q[1] - (double)q[0] * q[2]) * 2.0);
+  mtx->m[4] = (float)(((double)q[2] * q[1] - (double)q[0] * q[3]) * 2.0);
+  mtx->m[5] = (float)(((double)q[2] * q[2] + (double)q[0] * q[0]) * 2.0 - 1.0f);
+  mtx->m[6] = (float)(((double)q[0] * q[1] + (double)q[3] * q[2]) * 2.0);
+  mtx->m[8] = (float)(((double)q[0] * q[2] + (double)q[3] * q[1]) * 2.0);
+  mtx->m[9] = (float)(((double)q[3] * q[2] - (double)q[0] * q[1]) * 2.0);
+  mtx->m[10] = (float)(((double)q[3] * q[3] + (double)q[0] * q[0]) * 2.0 - 1.0f);
+}
+
+// A view from 'from' towards 'to': the direction, a side at right angles to it and up (or to altUp when the
+// direction is within a degree or so of up), and up again from the two. The translation is 'from'.
+// AUTOINJECT
+void Mat_LookAt(_MATRIX *mtx, _VECTOR *from, _VECTOR *to, _VECTOR *up, _VECTOR *altUp) {
+  _VECTOR dir;
+  dir.x = to->x - from->x;
+  dir.y = to->y - from->y;
+  dir.z = to->z - from->z;
+  Vec_Normalise(&dir, &dir);
+
+  double dot = ((double)dir.z * up->z + (double)dir.y * up->y) + (double)dir.x * up->x;
+  _VECTOR *axis = AbsFchs(dot) > 0.999f ? altUp : up;
+  _VECTOR side;
+  side.x = (float)((double)dir.z * axis->y - (double)dir.y * axis->z);
+  side.y = (float)((double)dir.x * axis->z - (double)dir.z * axis->x);
+  side.z = (float)((double)dir.y * axis->x - (double)dir.x * axis->y);
+  Vec_Normalise(&side, &side);
+
+  _VECTOR newUp;
+  newUp.x = (float)((double)side.z * dir.y - (double)side.y * dir.z);
+  newUp.y = (float)((double)side.x * dir.z - (double)side.z * dir.x);
+  newUp.z = (float)((double)side.y * dir.x - (double)side.x * dir.y);
+  Vec_Normalise(&newUp, &newUp);
+
+  mtx->m[8] = dir.x;
+  mtx->m[9] = dir.y;
+  mtx->m[10] = dir.z;
+  mtx->m[4] = newUp.x;
+  mtx->m[5] = newUp.y;
+  mtx->m[6] = newUp.z;
+  mtx->m[0] = side.x;
+  mtx->m[1] = side.y;
+  mtx->m[2] = side.z;
+  mtx->m[12] = from->x;
+  mtx->m[13] = from->y;
+  mtx->m[14] = from->z;
+}
+
+// From a rotation matrix: by the trace when it is not negative, else by its largest diagonal element. With the trace
+// the quaternion's w comes out negative; on the first column's branch the sum of the other two diagonal elements is
+// the one stored as a float.
+// AUTOINJECT
+void Quat_MatrixToQuaternion(quaternion_tag *quat, _MATRIX *mtx) {
+  const float *m = mtx->m;
+  float *q = quat->q;
+  double sum = (double)m[5] + m[10];
+  float sumStored = (float)sum;
+  double trace = sum + m[0];
+  if (trace >= 0.0) {
+    double s = sqrt(trace + 1.0f);
+    q[0] = (float)(-0.5f * s);
+    double scale = 0.5f / s;
+    q[1] = (float)(((double)m[9] - m[6]) * scale);
+    q[2] = (float)(((double)m[2] - m[8]) * scale);
+    q[3] = (float)(((double)m[4] - m[1]) * scale);
+    return;
+  }
+
+  int i = m[5] > m[0] ? 1 : 0;
+  if (m[10] > m[i * 5])
+    i = 2;
+  switch (i) {
+  case 0: {
+    double s = sqrt(((double)m[0] - sumStored) + 1.0f);
+    q[1] = (float)(0.5f * s);
+    double scale = 0.5f / s;
+    q[2] = (float)(((double)m[4] + m[1]) * scale);
+    q[3] = (float)(((double)m[8] + m[2]) * scale);
+    q[0] = (float)-(((double)m[9] - m[6]) * scale);
+    break;
+  }
+  case 1: {
+    double s = sqrt(((double)m[5] - ((double)m[0] + m[10])) + 1.0f);
+    q[2] = (float)(0.5f * s);
+    double scale = 0.5f / s;
+    q[3] = (float)(((double)m[9] + m[6]) * scale);
+    q[1] = (float)(((double)m[4] + m[1]) * scale);
+    q[0] = (float)-(((double)m[2] - m[8]) * scale);
+    break;
+  }
+  case 2: {
+    double s = sqrt(((double)m[10] - ((double)m[5] + m[0])) + 1.0f);
+    q[3] = (float)(0.5f * s);
+    double scale = 0.5f / s;
+    q[1] = (float)(((double)m[8] + m[2]) * scale);
+    q[2] = (float)(((double)m[9] + m[6]) * scale);
+    q[0] = (float)-(((double)m[4] - m[1]) * scale);
+    break;
+  }
+  }
+}
+
+// The pitch (x) and heading (y) of a direction by maybeAtan2, and its length (z). The square of its length in plan
+// goes into the pitch unrounded and into the length as a float.
+// AUTOINJECT
+void Vec_Cartesian_2_Spherical(_VECTOR *out, float x, float y, float z) {
+  double planeSq = (double)x * x + (double)z * z;
+  float planeSqStored = (float)planeSq;
+  out->x = maybeAtan2(y, (float)sqrt(planeSq));
+  out->y = maybeAtan2(x, z);
+  out->z = (float)sqrt((double)y * y + planeSqStored);
+}
+
+// mtx = mtx's rows through by's rotation, by's translation added to the turned translation. Summed on the x87.
+// AUTOINJECT
+void Concat(_MATRIX *by, _MATRIX *mtx) {
+  const float *a = by->m;
+  float *b = mtx->m;
+  float b12 = b[12], b13 = b[13], b14 = b[14];
+  float b0 = b[0], b1 = b[1], b2 = b[2];
+  float b4 = b[4], b5 = b[5], b6 = b[6];
+  float b8 = b[8], b9 = b[9], b10 = b[10];
+  b[12] = (float)((((double)b14 * a[8] + (double)b13 * a[4]) + (double)b12 * a[0]) + a[12]);
+  b[13] = (float)((((double)b12 * a[1] + (double)b14 * a[9]) + (double)b13 * a[5]) + a[13]);
+  b[14] = (float)((((double)b12 * a[2] + (double)b14 * a[10]) + (double)b13 * a[6]) + a[14]);
+  b[0] = (float)(((double)b2 * a[8] + (double)b1 * a[4]) + (double)b0 * a[0]);
+  b[1] = (float)(((double)b0 * a[1] + (double)b2 * a[9]) + (double)b1 * a[5]);
+  b[2] = (float)(((double)b0 * a[2] + (double)b2 * a[10]) + (double)b1 * a[6]);
+  b[4] = (float)(((double)b6 * a[8] + (double)b5 * a[4]) + (double)b4 * a[0]);
+  b[5] = (float)(((double)b4 * a[1] + (double)b6 * a[9]) + (double)b5 * a[5]);
+  b[6] = (float)(((double)b4 * a[2] + (double)b6 * a[10]) + (double)b5 * a[6]);
+  b[8] = (float)(((double)b10 * a[8] + (double)b9 * a[4]) + (double)b8 * a[0]);
+  b[9] = (float)(((double)b8 * a[1] + (double)b10 * a[9]) + (double)b9 * a[5]);
+  b[10] = (float)(((double)b8 * a[2] + (double)b10 * a[10]) + (double)b9 * a[6]);
+}
+
+// A vector through a matrix's rotation, in place: summed on the x87, z first, from the vector as it was
+// AUTOINJECT
+void ApplyMatrixLVI(_MATRIX *mtx, _VECTOR *v) {
+  double x = v->x, y = v->y, z = v->z;
+  v->x = (float)((z * mtx->m[8] + y * mtx->m[4]) + x * mtx->m[0]);
+  v->y = (float)((z * mtx->m[9] + y * mtx->m[5]) + x * mtx->m[1]);
+  v->z = (float)((z * mtx->m[10] + y * mtx->m[6]) + x * mtx->m[2]);
+}

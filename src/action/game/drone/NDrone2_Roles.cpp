@@ -51,8 +51,6 @@
                                                      char strict))0x00045340)
 #define NDrone2_maybeCalcDistanceAndDirToTarget ((void (__cdecl *)(DCVars_tag *dcv, CelPos_tag *target))0x00046080)
 // Return in ST0, unrounded
-#define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
-#define Vec_SqDist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e50)
 
 // What NDrone2_UpdateMissionRoute returns at the end of the path; the route's status while it cannot go on
 #define MISSION_ROUTE_DONE 3
@@ -2007,11 +2005,11 @@ bool NDrone2_FindAmbushCover(DCVars_tag *dcv) {
             continue;
         if (node->type == COVER_LOW && behaviour_util_getProperty(DRONE_PROP_0F, dcv->drone->currentBehaviour) == 0)
             continue;
-        float dist = Vec_Dist3D(&gameObj->position, &node->pos);
+        double dist = Vec_Dist3D(&gameObj->position, &node->pos);
         // A NaN distance is taken
         if (!(dist >= bestDist)) {
             best = i;
-            bestDist = dist;
+            bestDist = (float)dist;
         }
     }
     if (best == -1)

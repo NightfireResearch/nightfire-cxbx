@@ -640,9 +640,10 @@ void Drone_GetOpponentInfo(Drone_tag *drone, obj_tag *gameObj) {
     Vec_Subtract(&drone->opponentLastPos, &gameObj->position, &drone->opponentDelta);
     drone->distanceToTarget = Vec_Magnitude(&drone->opponentDelta);
     drone->opponentAngles.x = 0.0f;
-    drone->opponentAngles.y = maybeAtan2(drone->opponentDelta.x, drone->opponentDelta.z);
+    double yaw = maybeAtan2(drone->opponentDelta.x, drone->opponentDelta.z);
+    drone->opponentAngles.y = (float)yaw;
     drone->opponentAngles.z = 0.0f;
-    drone->opponentFacing = Vec_AngleDifference(drone->opponentLastRot.y, drone->opponentAngles.y + kPi);
+    drone->opponentFacing = Vec_AngleDifference(drone->opponentLastRot.y, (float)(yaw + kPi));
 
     uint turn = drone->unknown46c;
     float facing = gameObj->rotation.y;

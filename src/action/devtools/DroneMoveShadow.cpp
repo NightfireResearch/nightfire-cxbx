@@ -89,20 +89,13 @@ World world;
 ShadowRegions regions;
 int cases, differ;
 
-// DroneMove_NextRouteAngle's acos is the XBE's x87 __CIacos in the original and the host CRT's in ours: their doubles
-// may be an ulp or two apart, which is accepted (and counted) rather than called a difference.
+// DroneMove_NextRouteAngle's result, as the double it reaches C++ as
 double theirAngle, ourAngle;
-int acosUlps;
 
 void CompareAngles(int trial) {
     uint64_t a = std::bit_cast<uint64_t>(theirAngle), b = std::bit_cast<uint64_t>(ourAngle);
     if (a == b)
         return;
-    int64_t apart = (int64_t)(a - b);
-    if (isfinite(theirAngle) && (a >> 63) == (b >> 63) && apart >= -2 && apart <= 2) {
-        acosUlps++;
-        return;
-    }
     differ++;
     printf("[dronemove] DroneMove_NextRouteAngle case %d: returns %016llx, the original %016llx\n", trial,
            (unsigned long long)b, (unsigned long long)a);
@@ -948,7 +941,7 @@ void DroneMoveShadow_Run(void) {
 
     InstallFakes();
     NfWarnMuted++;
-    cases = differ = acosUlps = 0;
+    cases = differ = 0;
 
     TestSteering();
     int steerCases = cases, steerDiffer = differ;
@@ -970,8 +963,8 @@ void DroneMoveShadow_Run(void) {
     REC_FRAME_RATE = frameRec;
 
     printf("[dronemove] walking and steering: %d cases, %d differ\n", steerCases, steerDiffer);
-    printf("[dronemove] turning and routes: %d cases, %d differ (%d NextRouteAngle results 1-2 ulp apart)\n",
-           routeCases - steerCases, routeDiffer - steerDiffer, acosUlps);
+    printf("[dronemove] turning and routes: %d cases, %d differ\n",
+           routeCases - steerCases, routeDiffer - steerDiffer);
     printf("[dronemove] running from danger: %d cases, %d differ\n", safetyCases - routeCases,
            safetyDiffer - routeDiffer);
     printf("[dronemove] zero gravity: %d cases, %d differ\n", cases - safetyCases, differ - safetyDiffer);

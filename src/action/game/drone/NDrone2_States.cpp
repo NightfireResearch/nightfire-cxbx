@@ -10,7 +10,8 @@
 #include "NDrone2_Route.h"
 #include "../sp/SwitchChannels.h"       // switch_channels
 #include "../../game.h"                 // GameState
-#include "../../util/Random.h"          // Rand_Rand (AUTOGEN'd in util/Random.cpp: still the original)
+#include "../../util/Random.h"          // Rand_Rand
+#include "../../math/X87Ops.h"
 #include "../../engine/Collide.h"       // HITDATA_tag
 
 #include <math.h>
@@ -483,8 +484,8 @@ bool NDrone2_DSTATE_JustStand(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameOb
         drone->unknown38 = 1;
         // On the x87: FSIN and FCOS of the unrounded product, rounded once at each store
         double phase = (double)GameState.NumFramesUnpaused * 0.005f;
-        gameObj->position.x = (float)(sin(phase) * 0.01f + gameObj->position.x);
-        gameObj->position.z = (float)(cos(phase) * 0.01f + gameObj->position.z);
+        gameObj->position.x = (float)(FSin(phase) * Extended(0.01f) + Extended(gameObj->position.x));
+        gameObj->position.z = (float)(FCos(phase) * Extended(0.01f) + Extended(gameObj->position.z));
         return true;
     }
 

@@ -256,9 +256,9 @@ uint MP_GetSpawnPoint(short teamId, obj_tag *respawningPlayer) {
             if (player == NULL || player == respawningPlayer)
                 continue;
 
-            float distance = Vec_SqDist3D(&SpawnPoints[i].spawnPos, &player->position);
+            double distance = Vec_SqDist3D(&SpawnPoints[i].spawnPos, &player->position);
             if (distance < nearestPlayerDistance)
-                nearestPlayerDistance = distance;
+                nearestPlayerDistance = (float)distance;
         }
 
         // Prevent spawning on top of another player

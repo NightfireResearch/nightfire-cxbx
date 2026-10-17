@@ -23,7 +23,6 @@
 // XBE_GLOBAL(0x001dc564, 0xc)
 #define ShardList (*(LLISTINFO_tag *)0x001dc564)
 
-#define Vec_Avg3 ((void (__cdecl *)(_VECTOR *a, _VECTOR *b, _VECTOR *c, _VECTOR *out))0x000d4dd0)
 // The PS2's psiFinishedObjectShatter; on the Xbox a thunk to __WBINVD
 #define psiFinishedObjectShatter ((void (__cdecl *)(void))0x000dfb20)
 

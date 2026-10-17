@@ -17,12 +17,6 @@
 // XBE_GLOBAL(0x002237c0, 0x18)
 #define EffectList (*(DLISTINFO_tag *)0x002237c0)
 
-#define Vec_MakeOrthonormalBasis ((void (__cdecl *)(_VECTOR *u, _VECTOR *v, _VECTOR *normal))0x000d6ec0)
-#define Vec_NormToRot ((void (__cdecl *)(_VECTOR *normal, _VECTOR *rot))0x000d4ee0)
-#define Vec_Mul ((void (__cdecl *)(_VECTOR *v, _VECTOR *by))0x000d6e90)
-#define Mat_InverseSelf ((void (__cdecl *)(_MATRIX *mtx))0x000d5190)
-#define Concat ((void (__cdecl *)(_MATRIX *a, _MATRIX *b))0x000d6d20)
-#define RotPreTransVec ((void (__cdecl *)(_MATRIX *mtx, _VECTOR *v, _VECTOR *vOut))0x000d6cc0)
 #define hashtable_set_sub_object_to_entity_gfx ((void (__cdecl *)(ATTACH_tag *mark, HASHCODE hashcode))0x0006b6d0)
 
 // The laser's sparks

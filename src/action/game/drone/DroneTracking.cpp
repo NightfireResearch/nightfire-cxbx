@@ -19,7 +19,6 @@
 #pragma fp_contract(off)
 
 // The original, called by address: it leaves the distance unrounded in ST0
-#define Vec_SqDist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e50)
 
 // Drone_tag.flags: attacking (as DroneVision_Alerts.h has it)
 #define DRONE_FLAG_ATTACK_MODE 0x4000000

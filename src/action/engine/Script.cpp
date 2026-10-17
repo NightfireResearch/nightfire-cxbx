@@ -91,15 +91,12 @@ typedef struct {
 // The originals, called by address where Ghidra's prototypes do not fit
 #define hashtable_deleteitem ((void (__cdecl *)(HASHCODE hashcode))0x0006b4a0)
 #define Control_BuildWorldSph ((void (__cdecl *)(obj_tag *obj))0x0002db20)
-#define Vec_NormToRot ((void (__cdecl *)(_VECTOR *norm, _VECTOR *rot))0x000d4ee0)
 #define Sound_IsFinnished ((bool (__cdecl *)(DYNAMICSOUNDS *handle))0x000cbac0)
 // The originals: ours in Break.cpp are not patched in yet
 #define moveTowardsValue ((float (__cdecl *)(float current, float target, float speed))0x00024000)
 // Ghidra says it returns nothing; it returns the emitter Emitter_Create made
 #define Emitter_CreatePlistObj ((obj_tag *(__cdecl *)(_MATRIX *mtx, level_tag *placement))0x00068470)
 
-// AUTOGEN
-void Mat_GetNorm(_VECTOR *vOut, _MATRIX *mIn);
 // AUTOGEN
 void Vec_Mul_F3(_VECTOR *vecOut, _VECTOR *vecIn, float scaleX, float scaleY, float scaleZ);
 // AUTOGEN
@@ -109,7 +106,6 @@ void NDrone2_CreateNinjaEyes(obj_tag *obj);
 // Generated for Player.cpp
 void Player_RamSave(BLData *blData);
 // Generated for Player.cpp
-void Concat(float *param_1, float *param_2);
 
 typedef enum ScriptCmd {
     ScriptCmd_EndScript=4,
@@ -449,7 +445,7 @@ void _Script_GetInterp(SCRIPTINFO *scriptInfo, SSTREAM *stream, _MATRIX *mtx, fl
     if (posScale != 1.0f)
         Vec_Mul_F3(Mat_Position(*mtx), Mat_Position(*mtx), posScale, posScale, posScale);
     if (concat)
-        Concat(scriptInfo->maybeMatrix.m, mtx->m);
+        Concat(&scriptInfo->maybeMatrix, mtx);
 }
 
 // The original takes the mode in EAX, firstKey in DX and lastKey in CX, the rest on the stack.
@@ -493,13 +489,13 @@ static void _Script_ConcatParents(SCRIPTINFO *scriptInfo, SSTREAM *stream, _MATR
         ushort mode = (parentStream->flags & SStreamFlag_Spline) ? ScriptInterp_Spline : ScriptInterp_Linear;
         _Script_GetInterp(scriptInfo, parentStream, &parentMtx, &scale, &colour, 0, scriptInfo->scale, mode,
                           parentStream->firstKey, parentStream->lastKey);
-        Concat(parentMtx.m, out->m);
+        Concat(&parentMtx, out);
         parent = parentStream->parent;
         depth++;
         if (parent == -1 || depth > scriptInfo->numElements)
             break;
     }
-    Concat(scriptInfo->maybeMatrix.m, out->m);
+    Concat(&scriptInfo->maybeMatrix, out);
 }
 
 // The original takes the stream in EAX and the script in EDI, the matrix on the stack.
@@ -1538,7 +1534,7 @@ void Script_Update(SCRIPTINFO *scriptInfo) {
             // Pre-emptively start fading out a scripted camera NIS once it's within 20 frames of its end
             if (ScriptCam != 0 && (scriptInfo->scriptFlags & ScriptFlag_IsCameraNIS) &&
                 (float)(int)(scriptInfo->maybeNumFrames - 20) <= scriptInfo->maybeProgressFrames &&
-                glb_viewer[4]->fadeActive != 1) {
+                glb_viewer[4]->fadeState != VIEWFADE_FADING) {
 
                 if (Script_IsDeathNIS(scriptInfo->scriptHashcode)) {
                     goto finalize;

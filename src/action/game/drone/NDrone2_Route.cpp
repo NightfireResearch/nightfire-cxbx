@@ -19,7 +19,6 @@
 
 // Originals called by address
 // Returns in ST0, unrounded
-#define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
 // Steers moveTarget at a position (finding its cel), and works out the distance and the angle to it
 #define NDrone2_maybeCalcDistanceAndDirToTarget ((void (__cdecl *)(DCVars_tag *dcv, CelPos_tag *target))0x00046080)
 

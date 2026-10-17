@@ -26,7 +26,6 @@
 // FUN_0002faa0 in Ghidra (our name): Vec_Dist3D from the drone to obj, returned in ST0
 #define NDrone2_DistanceToObj ((double (__cdecl *)(DCVars_tag *dcv, obj_tag *obj))0x0002faa0)
 // Returns in ST0, unrounded
-#define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
 
 // DroneInit.cpp
 void NDrone2_Enable(char enable, Drone_tag *drone);
@@ -211,10 +210,10 @@ uint NDrone2_ExplosionDir(DCVars_tag *dcv, DroneImpact_tag *impact) {
     _VECTOR toBlast;
     Vec_Subtract(&impact->position, &gameObj->position, &toBlast);
     float yaw = maybeAtan2(toBlast.x, toBlast.z);
-    float turn = Vec_AngleDifference(gameObj->rotation.y, yaw);
-    if (fabsf(turn) < (float)M_PI_4)
+    double turn = Vec_AngleDifference(gameObj->rotation.y, yaw);
+    if (fabs(turn) < (float)M_PI_4)
         return 1;
-    if (fabsf(turn) > (float)(3 * M_PI_4))
+    if (fabs(turn) > (float)(3 * M_PI_4))
         return 0;
     return turn < 0.0f ? 2 : 3;
 }

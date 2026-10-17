@@ -48,6 +48,8 @@ to what it does. A function ported that way:
 
 | 12 | collide, rigid_body (package A); break, bullet, effect, explode (package B) | 42 + 16 Xbox functions theirs inline or name otherwise: their `Collide_Filter` is `Intersect_CheckIfFlagsMatch` 0x28a50, `RecurseBoxesSph` 0x291c0 and `ASH_RecurseBoxesRay` 0x292e0 (renamed from FUN_), `Intersect_CylTriGeom` 0x29a30 (Ghidra had `Intersect_RayGeom`), their `Intersect_RayGeom` 0x29fa0; renamed as ours: `Collide_TestHits` 0x2c440 (Ghidra had `Collide_CylinderIntersect`, which is 0x2c6f0), `Collide_CylinderTris` 0x2c760 (was `Collide_unknown`), `Intersect_SphereSphere`, `Intersect_RaySphere`, `Intersect_CylSphere` 0x29370-0x29410, `RB_Drag` 0x0c01d0 and `RB_Move` 0x0c02d0 (were `RB_unknownHelper*`); ported with them: `Collide_Sort`, `Intersect_BoxBox`, `Intersect_AABB_SweptVolume`, `Intersect_UnpackTrianglePlaneEq`, `Intersect_UnpackTriangleVerticesToWorld`. Collide.cpp, the three vecutil_ functions and `vecutil_intersect_line_line_2d` in math.cpp, RigidBody.cpp; 9 AUTOLTCG adaptors. Package B: 55 + 10 Xbox functions theirs inline or name otherwise: their `Debris_Create` is 0xcccf0 (Ghidra had a second `Debris_CreateEx`, renamed), `Occlude_Create` 0x6c880 (was FUN_, renamed), `Sub_ApplyDammage` is `Sub_ApplyDamage` 0xcf6a0 (left to the original), `Sensor_ApplyDamage` and `Monitor_ApplyDamage` are the shared empty function 0xe0ec0, `Bullet_update` is our `Bullet_Update`; ported with them: `Break_ShatterWindow` 0x1fc90, `Break_Create` (the draft replaced), `Bullet_SpawnSmokeDust_SomeOtherProbability` 0x217f0 and `_SomeProbability` 0x21870; renamed as ours from FUN_: `Hurt_IsTriggered` 0x6c640, `Effect_NewMark` 0x6ff70, `Effect_LinkToCel` 0x6faa0, `Effect_LinkToObject` 0x6fad0, and theirs `hashtable_set_sub_object_to_entity_gfx` 0x6b6d0 (left to the original). Break.cpp, bullet.cpp, Destroy.cpp, Hurt.cpp, Effect.cpp (new), Gas.cpp, Env.cpp, Swoosh.cpp (new), Explode.cpp, and one each in Drone.cpp, NDrone2_Damage.cpp, control.cpp, Player.cpp, GT.cpp; 15 AUTOLTCG adaptors | 38 of 42 reached by the demos; under CollidePortShadow the originals reach 984 of the 990 blocks of the 58 (the 6 left: three that cannot be reached, Collide_Update's call of a collision handler, the 166-triangle cap of Collide_CylinderTris, and Collide_Pick's skip of a type between 0x101 and 0x200, reached in an earlier run). CollidePortShadow: 156,000 cases in seven groups, all 0 differ (with about 330 where only the NaN chosen between two NaNs differs, as MathExactShadow allows); one planted bug per group, all caught. Package B: 46 of 55 reached by the demos; under EffectPortShadow the originals reach 1,085 of the 1,108 blocks of the 65 (of the 23 left, 15 cannot be reached: unsigned-conversion fix-ups of values that are never negative, the 0x1000000 test of a byte in `Bullet_handle_object_destruction`, a casing whose anim state has already been read). EffectPortShadow: 173,000 cases in eight groups, all 0 differ; one planted bug per group, all caught. All nine time demos match | see git log |
 
+| 13 | vecmath, view (with camera, vision and build) | 65: package A, 32 from vecmath (math.cpp: the angle, vector, matrix-row, inverse, product, rotation and quaternion helpers, Mat_LookAt), package B, 33 from view (Concat and ApplyMatrixLVI in math.cpp, Rand_Random and Rand_Rand in Random.cpp, the camera in Camera.cpp, build_alloc_viewer and build_point_in_bounding_box in build.cpp, the portal vision in Vision.cpp, the draw lists, render modes, sky and Game_Draw in view.cpp). Their `Mat_Inverse` is two Xbox functions, `Mat_InverseSelf` 0xd5190 (renamed from FUN_) and `Mat_Inverse` 0xd51e0; their `View_SetupRenderModes_Tweak` is 0xd9900 (renamed); their `Camera_Reset` is `Viewer_Init` 0x24290. Helpers ported with them: ClipEdge (FUN_db730), PortalPlanesFrom (FUN_db970), View_AddToList (FUN_d91d0), View_SetupCelRenderModes (FUN_d9bd0), View_DrawAttachments (0xda1d0). 3 AUTOLTCG adaptors (View_AddObjects, View_AddCels, View_DrawCelGlist). With them, every port that used the host's trigonometry or float sums where the original runs the x87 made exact (below) | 62 of 65 (MulMatrix2, RotMatrixY, RotMatrixXY not reached). ViewMathShadow: 84 lines of maths x 20,000 cases and 35 of game functions x 6,000 worlds, all 0 differ (the NaN chosen where two NaNs meet counted apart in the plain double ports); one planted bug in each of its eight groups, all caught. With package A and B alone (Part 2 reverted), all nine time demos match; with Part 2 they no longer do, as expected (the recordings hold the inexact maths) | see git log |
+
 Parcel 1's first playback found two things the coverage alone would not have shown:
 - **A crash in our code.** The port of `Script_CreateEntity` called our `Break_Create` by name, which is a known-broken
   draft that was never patched in. `tools/draft_calls.py` now finds such calls.
@@ -284,7 +286,8 @@ Found along the way:
 - **FSIN, FCOS and acos.** The host's sin, cos and acos (SSE2) can differ from the x87's FSIN and FCOS and the XBE's
   `__CIacos` by an ulp or two; the shadows count such results apart rather than as differences (the user accepts
   1-ulp differences of this kind; the time demos are the check that they do not matter). Since then `FSin` and `FCos`
-  run the instructions themselves and return an `Extended`, the x87's 80-bit value, so their callers match exactly. A
+  run the instructions themselves and return an `Extended`, the x87's 80-bit value, so their callers match exactly;
+  since parcel 13 `CIAcos` calls the XBE's own `__CIacos`, and DroneMoveShadow compares NextRouteAngle exactly. A
   NaN keeps its sign and payload through the helpers in src/action/math/X87Ops.h (`FSin`, `FCos`, `Negate` for FCHS, `X87NaNs` for an operation on two NaNs, where SSE2 takes the first and the x87 the larger
   or the positive). MSVC compiles `-x + c` as `c - x` and `x <= 0 ? 0 : x` as MAXSD, both of which lose a NaN's or a
   -0's sign.
@@ -547,6 +550,49 @@ Found along the way:
   `ENV_tag` (the wind) and `cel_tag::env` (0x2c); `SWOOSH_tag` whole; `EXPLODE_tag` whole; `DroneImpact_tag::radius`
   and `source` (was `unknown14`); `GUNTURRET::health`; `COPTER::parts`, `damageA`, `damageB`.
 
+### Parcel 13 (vecmath.cpp and view.cpp)
+- Their names without an Xbox function of that name: `Mat_Inverse` is two functions, 0xd5190 (inverts in place;
+  renamed `Mat_InverseSelf`) and 0xd51e0 (`Mat_Inverse`); `View_SetupRenderModes_Tweak` is 0xd9900 (FUN_, renamed);
+  `Camera_Reset` is `Viewer_Init` 0x24290; `Vec_LineSphereIntersection` is 0xd8590 (FUN_, renamed
+  `Vec_LineSphereIntersect`, the name Anim.cpp calls it by; left to the original); `ATAN2_APPROX` is `maybeAtan2`
+  0xd6440; `Rand_FRand` is `Float_FRand` 0xd5360; `View_DrawInThisViewOnly` is `View_SetDrawInThisViewOnly` 0xdb380.
+  `Mat_GetTrans`, `Mat_SetNorm`, `Mat_SetTrans`, `Vec_Avg2`, `auxVec_Add` and `LimitRadAngle` are inline on the Xbox
+  (row copies, sums and the -pi..pi loops in their callers); `Mat_Rotate`, `Vec_MatToEuler`, `PS2Sinf`, `PS2Sinf2`,
+  `PS2Sinf3` and `Vec_LineSphereIntersection_THAT_DOESNT_WORK_FOR_TIM` have no Xbox counterpart (the Xbox runs FSIN).
+- Static helpers renamed from FUN_ and ported: `ClipEdge` 0xdb730, `PortalPlanesFrom` 0xdb970, `View_AddToList`
+  0xd91d0, `View_SetupCelRenderModes` 0xd9bd0, `View_DrawAttachments` 0xda1d0 (their
+  `View_maybeDrawNightVisionExtras`).
+- Register arguments their prototypes hide: `View_AddObjects` (EAX the cel), `View_AddCels` (ESI the viewer),
+  `View_DrawCelGlist` (EAX the viewer, ESI the cel).
+- The x87 throughout: `RotMatrixX/Y/Z/XY` keep FSIN and FCOS unrounded and the terms their source multiplies by zero;
+  `Vec_NormToRot` and `Vec_DirToRot` take FPATAN, in the original's write order; `Vision_Calculate_View_Fustrum` takes
+  FPTAN; `ClipEdge` tests the dot with the plane's normal unrounded and divides by it as a float.
+- `Ang_RotateToBearing` returns a float and takes the step from the unrounded difference (theirs from a rounded end).
+- `Vec_MakeOrthonormalBasis` takes the y branch for a NaN component (theirs the x branch).
+- `Camera_SetFade` is 60 / frames x alpha x 6.535948e-05 (one constant, theirs split); `Camera_UpdateGlbVars` ends a
+  fade whose level is a NaN (theirs keeps it); `Camera_ApplySwing` keeps FSIN unrounded.
+- The viewer is 0x208 bytes (theirs 0x240): the draw lists at 0x08, enabled 0x29, the fade fields to 0x205.
+- `ClipEdge` sums the clipped point's terms in the original's order (theirs in another).
+- The C++ callers of the helpers whose originals return the x87's unrounded value (`Vec_Magnitude`, `Vec_Dist3D`,
+  `Vec_SqDist3D`, `Vec_NormaliseLen`, `Vec_AngleDifference`, `maybeAtan2`, `Vec_ScalarTripleProduct`) now keep the
+  value in a double where the original compares or computes with it before storing: `LinkCreep_Setup`,
+  `AINetwork_LineIntersectsBoundry`, `AnimObjectAimAt`, `Check_AutoAim`, `DroneAnim_LocationDeathAnim`,
+  `DroneMove_AstronautAnim`, `DroneMove_NoBunching`, `NDrone2_Steer`, `NDrone2_EvaluateObstacle`,
+  `DroneVision_ObjectVisibility`, `Drone_IsCoverNodeUsable`, `HandleMapSoundAllocation`, `MP_GetSpawnPoint`,
+  `NDrone2_BondWithinAngle`, `NDrone2_DealWithObjHit`, `NDrone2_ExplosionDir`, `NDrone2_FindAmbushCover`,
+  `NDrone2_SetupHostageKiller`, `Player_Activate`, `Player_Climb`, `Player_CollWire`, `Player_Wire`,
+  `Player_HandleJump`, `Searchlight_Create`, `Sensor_InCone`, `Switch_GetNearest`, `control_ClosestPlayerPnt`,
+  `Drone_GetOpponentInfo` (the bearing plus pi from the unrounded atan), `DroneSpawner_SpawnDrone`,
+  `Drone_ModBulletDamage`. `DroneMove_NextRouteAngle` returns the XBE's `__CIacos` unrounded; our callers take it
+  through `DroneMove_RouteTurn` (an `Extended`, by way of the injected entry, so a shadow's fake still sees the call).
+- The x87 runtime's error path (`__CIacos` outside -1 to 1, or of a NaN, which a NaN position now reaches since
+  `Vec_Normalise` normalises a NaN length as the original does) sets errno through a per-thread block that the game's
+  heap allocates. The shadow tests run before there is a heap, so MenuProbe sets the runtime's flag at 0x300608,
+  which skips that path and gives the same result, while they run.
+- Found in ours, not theirs: `viewer_tag` fields from 0x08 to 0x205 named (the draw lists, the swing, the fade);
+  `cel_tag::nextVisible` (0x20) and `blink` (0x93); `portal_tag::door`, `seen`, `open`; `struct VisPortal`,
+  `VisCel`, `DrawEntry` and `SkyObj` (21 at 0x29d7a0).
+
 ## Original bugs found while porting (kept; candidates for FIX_ORIGINAL_GAME_BUGS)
 
 - `Script_Load`, a file with 0x3f streams or more: hands its record to `DList_RemoveFromInUse2Free(&ScriptList)`,
@@ -692,6 +738,7 @@ Found along the way:
   with no hit (or one that is not a grapple point), returns before deleting a trip-bomb's beam (the same weapon never
   has both). `Bullet_InitCasingLists` uses the 32 objects unchecked.
 - `Explode_Propagate` writes the mine's damage through `Coll_AddHitToList`'s result unchecked.
+- `Mat_Inverse` (0xd51e0) negates the translation without turning it by the transposed rotation. `View_AddCels` reads `viewer->someCel` unchecked. `ClipPortalWithPlane` writes as many clipped points as it makes, past the portal's 12. `vision_generate_display_list` links the visible cels onto whatever `GfxList` already holds.
 
 ## Departures from the original
 
@@ -715,6 +762,7 @@ Found along the way:
 
 - `Break_DoBreak` zeroes its hit before setting its plane, position and direction; `Explode_Create` starts the
   nearest player's position at zero, which the original leaves as stack when there is no player.
+- `View_AddForcedObjects` starts its HITTEST at zero; the original leaves it as stack.
 
 ## What the demos do not cover
 

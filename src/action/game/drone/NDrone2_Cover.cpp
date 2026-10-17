@@ -41,7 +41,6 @@
 #define DroneFunc_InjuredSFX ((bool (__cdecl *)(DCVars_tag *dcv, uint sfx))0x0003b830)
 #define NDrone2_maybeCalcDistanceAndDirToTarget ((void (__cdecl *)(DCVars_tag *dcv, CelPos_tag *target))0x00046080)
 // Returns in ST0, unrounded
-#define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
 
 // The corner anims, a list per step for each mode and side: the entry for mode m and side s is at m * 2 + s. The sides
 // are 1 and 2, so the table proper starts at 0x00164030.

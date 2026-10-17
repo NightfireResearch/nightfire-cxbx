@@ -2,11 +2,28 @@
 
 static const double kUintToUnit = 1.0 / 4294967296.0;   // a 32-bit random number to [0, 1)
 
-// AUTOGEN
-unsigned int Rand_Rand(unsigned int max);
+// Two multiply-with-carry generators, a 16-bit half each: the state's low half times the multiplier, plus the high
+// half (the carry)
+#define RandStateA U32_AT(0x0018cdf8)
+#define RandStateB U32_AT(0x0018cdfc)
+#define RandMultiplierB U32_AT(0x0018ce00)
+#define RandMultiplierA U32_AT(0x0018ce04)
 
-// AUTOGEN
-uint __stdcall Rand_Random(void);
+// A 32-bit random number: A's state in the high half, B's in the low
+// AUTOINJECT
+uint __stdcall Rand_Random(void) {
+    RandStateA = (RandStateA & 0xffff) * RandMultiplierA + (RandStateA >> 16);
+    RandStateB = (RandStateB & 0xffff) * RandMultiplierB + (RandStateB >> 16);
+    return (RandStateA << 16) + (RandStateB & 0xffff);
+}
+
+// A random number below max, from B's state alone (both generators step); the product wraps for max above 0x10000
+// AUTOINJECT
+unsigned int Rand_Rand(unsigned int max) {
+    RandStateA = (RandStateA & 0xffff) * RandMultiplierA + (RandStateA >> 16);
+    RandStateB = (RandStateB & 0xffff) * RandMultiplierB + (RandStateB >> 16);
+    return ((RandStateB & 0xffff) * max) >> 16;
+}
 
 // The results stay at the x87's precision: callers carry on from them.
 

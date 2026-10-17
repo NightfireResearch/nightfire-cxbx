@@ -2,6 +2,7 @@
 #define DRONEMOVE_H_
 
 #include "Drone.h"
+#include "../../math/X87Ops.h"
 
 // How the drones move (DroneMove.cpp): turning towards where they go while steering round each other and the players,
 // the shots' push, floating in zero gravity, which ways are blocked, and running from what scares them.
@@ -65,6 +66,7 @@ bool SolveQuadratic(float a, float b, float c, float *root1, float *root2);
 void DroneMove_TurnToObj(DCVars_tag *dcv, obj_tag *obj, float offset, float tolerance);
 // Returns in ST0, unrounded
 double DroneMove_NextRouteAngle(DCVars_tag *dcv);
+Extended DroneMove_RouteTurn(DCVars_tag *dcv);
 float DroneMove_DistanceToNextRouteNode(DCVars_tag *dcv);
 // Returns in ST0, unrounded
 double DroneMove_ObjectMissionPathDistance(DCVars_tag *dcv, obj_tag *obj, float radius);

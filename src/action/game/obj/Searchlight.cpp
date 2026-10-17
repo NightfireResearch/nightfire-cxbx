@@ -95,7 +95,7 @@ obj_tag * Searchlight_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglis
     obj_tag* otherObj = obj->inCel->firstObject;
     while (otherObj != NULL) {
         if ((otherObj != obj) && (otherObj->objectType == OBJECTTYPE_SPOTLIGHT)) {
-            float distance = Vec_Dist3D(&obj->position, &otherObj->position);
+            double distance = Vec_Dist3D(&obj->position, &otherObj->position);
             if (distance < 3.0f) {
                 ObjData_Spotlight* otherSpotlight = (ObjData_Spotlight*)otherObj->extraObjectData;
 
@@ -189,7 +189,6 @@ void Searchlight_Update(obj_tag *searchlight) {
     _VECTOR delta;
     HITDATA_tag* hitData;
     float angleY, angleX;
-    float angleDiff;
     float distance;
 
     spotlight = (ObjData_Spotlight*)searchlight->extraObjectData;
@@ -229,35 +228,32 @@ void Searchlight_Update(obj_tag *searchlight) {
 
         // Calculate direction to player
         delta.x = player->position.x - searchlight->position.x;
-        delta.y = (player->position.y - searchlight->position.y) - 1.0f;
+        delta.y = (float)(((double)player->position.y - searchlight->position.y) - 1.0f);
         delta.z = player->position.z - searchlight->position.z;
 
-        // Track player horizontally (yaw)
-        angleY = atan2f(delta.x, delta.z);
-        angleDiff = Vec_AngleDifference(searchlight->rotation.y, angleY);
-        searchlight->rotation.y += angleDiff * 0.15f;
+        // Track player horizontally (yaw), by FPATAN; the turn is a fifth or so of the unrounded difference
+        angleY = (float)FPatan(delta.x, delta.z);
+        searchlight->rotation.y =
+            (float)(Vec_AngleDifference(searchlight->rotation.y, angleY) * 0.15f + searchlight->rotation.y);
 
-        // Clamp to sweep range
-        angleDiff = Vec_AngleDifference(searchlight->rotation.y, spotlight->rotationAngles.y);
-        if (angleDiff > spotlight->sweepHalfRange) {
+        // Clamp to sweep range (each side tested on the difference from the yaw as it then is)
+        if (Vec_AngleDifference(searchlight->rotation.y, spotlight->rotationAngles.y) > spotlight->sweepHalfRange) {
             searchlight->rotation.y = spotlight->rotationAngles.y - spotlight->sweepHalfRange;
         }
-        if (angleDiff < -spotlight->sweepHalfRange) {
+        if (Vec_AngleDifference(searchlight->rotation.y, spotlight->rotationAngles.y) < -spotlight->sweepHalfRange) {
             searchlight->rotation.y = spotlight->rotationAngles.y + spotlight->sweepHalfRange;
         }
 
         // Track player vertically (pitch)
-        distance = sqrtf(delta.x * delta.x + delta.z * delta.z);
-        angleX = atan2f(delta.y, distance);
-        angleDiff = Vec_AngleDifference(searchlight->rotation.x, -angleX);
-        searchlight->rotation.x += angleDiff * 0.15f;
+        angleX = (float)-FPatan(delta.y, sqrt((double)delta.z * delta.z + (double)delta.x * delta.x));
+        searchlight->rotation.x =
+            (float)(Vec_AngleDifference(searchlight->rotation.x, angleX) * 0.15f + searchlight->rotation.x);
 
         // Clamp to sweep range
-        angleDiff = Vec_AngleDifference(searchlight->rotation.x, spotlight->sweepCenter);
-        if (angleDiff > spotlight->sweepHalfRange) {
+        if (Vec_AngleDifference(searchlight->rotation.x, spotlight->sweepCenter) > spotlight->sweepHalfRange) {
             searchlight->rotation.x = spotlight->sweepCenter - spotlight->sweepHalfRange;
         }
-        if (angleDiff < -spotlight->sweepHalfRange) {
+        if (Vec_AngleDifference(searchlight->rotation.x, spotlight->sweepCenter) < -spotlight->sweepHalfRange) {
             searchlight->rotation.x = spotlight->sweepCenter + spotlight->sweepHalfRange;
         }
         break;
@@ -322,7 +318,8 @@ void Searchlight_Update(obj_tag *searchlight) {
                 float normalX = hitData->surfaceNormal.normal.x;
                 float normalY = hitData->surfaceNormal.normal.y;
                 float normalZ = hitData->surfaceNormal.normal.z;
-                componentObj->rotation.x = M_PI_2 - maybeAtan2(normalY, sqrtf(normalZ * normalZ + normalX * normalX));
+                componentObj->rotation.x =
+                    (float)(1.5707964f - maybeAtan2(normalY, (float)sqrt((double)normalX * normalX + (double)normalZ * normalZ)));
                 componentObj->rotation.y = maybeAtan2(normalX, normalZ);
                 componentObj->rotation.z = 0.0f;
 
@@ -340,20 +337,21 @@ void Searchlight_Update(obj_tag *searchlight) {
         // The projection spot is another obj_tag with ObjData_Spotlight extraObjectData
         // Its phase field is repurposed as the lost-player counter
         ObjData_Spotlight* projectionData = (ObjData_Spotlight*)componentObj->extraObjectData;
-        distance = Vec_Dist3D(&componentObj->position, &player->position);
+        // The distance is compared unrounded, and within 2 counts as in the beam
+        double beamDistance = Vec_Dist3D(&componentObj->position, &player->position);
 
-        if ((searchlight->curState == Searchlight_Sweeping) && (distance < 2.0f)) {
+        if ((searchlight->curState == Searchlight_Sweeping) && (beamDistance <= 2.0f)) {
             searchlight->curState = Searchlight_Tracking;  // Player spotted - start tracking
             projectionData->phase = 0.0f;  // Reset lost-player counter
         }
 
         if (searchlight->curState == Searchlight_Tracking) {
-            if (distance >= 2.0f) {
-                // Player not in beam - increment lost counter
-                projectionData->phase = projectionData->phase + 1.0f;
-            } else {
+            if (beamDistance <= 2.0f) {
                 // Player still in beam - reset counter
                 projectionData->phase = 0.0f;
+            } else {
+                // Player not in beam - increment lost counter
+                projectionData->phase = projectionData->phase + 1.0f;
             }
 
             // Lose track after 15 seconds
@@ -391,17 +389,20 @@ void Searchlight_Update(obj_tag *searchlight) {
             distance = Vec_Dist3D(&headPos, &searchlight->position);
 
             Vec_Subtract(&headPos, &searchlight->position, &playerDir);
-            float dotProduct = (playerDir.x * sphericalDir.x + playerDir.y * sphericalDir.y + playerDir.z * sphericalDir.z) / distance;
+            // Summed on the x87, z first; compared unrounded, and kept as a float
+            double dot = (((double)playerDir.z * sphericalDir.z + (double)playerDir.y * sphericalDir.y) +
+                          (double)playerDir.x * sphericalDir.x) / distance;
+            float dotProduct = (float)dot;
 
             // Only show flare when player is looking toward the searchlight
-            if (dotProduct > 0.2f) {
+            if (dot > 0.2f) {
                 View_SetDrawInAllViews(componentObj);
                 componentObj->transformFlags |= TRANSFORM_MOVED;
 
                 // Scale and brighten based on viewing angle
-                float intensity = (dotProduct - 0.2f) * 4.0f;
-                componentObj->scale = 4.0f * intensity;
-                componentObj->tweakA = (uchar)(intensity * 255.0f);
+                double intensity = ((double)dotProduct - 0.2f) * 4.0f;
+                componentObj->scale = (float)(4.0f * intensity);
+                componentObj->tweakA = (uchar)(int)(intensity * 255.0f);
 
                 // Brighten further if direct line of sight
                 if (componentObj->tweakA != 0) {

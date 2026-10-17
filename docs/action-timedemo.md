@@ -173,10 +173,14 @@ The picture is still drawn and paced as usual, so a recording plays like the gam
   rebased onto them. So were the rotation-matrix functions (`RotMatrix`, `RotMatrixZYX`, `RotTransMatrix`,
   `Vec_Spherical_2_Cartesian`, the searchlight sweep, through X87Ops.h's `Extended` and the FSIN and FCOS
   instructions), `Plane_PlaneEq`, `vecutil_point_on_poly`, `DistancePointToPlane` and `Vec_Dot`'s callers
-  (devtools/MathExactShadow.cpp). Still inexact: the other ports that use the host's sin, cos, tan, atan2 or acos where
-  the original runs the x87 instructions (`View_RotTransMatrix`, `Quat_Slerp_Acc`, `vecutil_cartesian_to_spherical_acc`,
-  `Searchlight_Update`'s tracking, and a few in the drones, the HUD, `Sensor`, `Autoaim` and `Camera`), and plain
-  double arithmetic where two NaNs meet (SSE2 keeps the first, the x87 the larger).
+  (devtools/MathExactShadow.cpp). Parcel 13 made the rest exact: every port that used the host's sin, cos, tan, atan2
+  or acos where the original runs FSIN, FCOS, FPTAN, FPATAN or the XBE's `__CIacos` (`View_RotTransMatrix`,
+  `Quat_Slerp_Acc`, `vecutil_cartesian_to_spherical_acc`, `Searchlight_Update`, `Camera_CalcViewAngles`, `Sensor`,
+  `Autoaim`, the HUD, the error screen and the drones), and the vector helpers whose originals return the x87's
+  unrounded sum (`Vec_Magnitude`, `Vec_Dist3D`, `Vec_SqDist3D`, `Vec_NormaliseLen`, `Vec_AngleDifference`,
+  `maybeAtan2`, `Vec_ScalarTripleProduct`), with their callers (docs/nightfire-port-lifts.md, parcel 13). Still
+  inexact: plain double arithmetic where two NaNs meet (SSE2 keeps the first, the x87 the larger), in the ports
+  that do not use `X87NaNs`.
 
   A port made exact to the original changes the game against the recordings. Rebase them onto it (below).
 - **Changes to the sound code.** The sound answers are replayed in the order they were asked. A change that makes

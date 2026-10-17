@@ -38,10 +38,6 @@
 #define GT_TakeControl ((bool (__cdecl *)(obj_tag *turret, obj_tag *player))0x0009a790)
 #define GT_DeployMiniGun ((obj_tag *(__cdecl *)(_VECTOR *pos, _MATRIX *mtx, obj_tag *player))0x0009a9b0)
 #define MP_sendTeamBotMessage ((void (__cdecl *)(int p1, int message, int weapon, int p4, obj_tag *player))0x0009e430)
-#define RotMatrixX ((void (__cdecl *)(float angle, _MATRIX *mtx))0x000d67b0)
-#define Concat ((void (__cdecl *)(_MATRIX *by, _MATRIX *mtx))0x000d6d20)
-#define MatrixScale ((void (__cdecl *)(_MATRIX *mtx, float scale))0x000d6500)
-#define Vec_Cartesian_2_Spherical ((void (__cdecl *)(_VECTOR *out, float x, float y, float z))0x000d8530)
 
 #define CheatInfo (*((CheatInfo_t *)0x001f65dc))
 #define GlobalVars (*((GlobalVars_t *)0x001f6568))
@@ -1698,12 +1694,13 @@ void Check_AutoAim(obj_tag *player, obj_tag *target, float *best) {
     else
         Vec_Copy(&target->position, &at);
 
-    float distance = Vec_Dist3D(&head, &at);
-    if (distance > *best)
+    double range = Vec_Dist3D(&head, &at);
+    if (range > *best)
         return;
+    float distance = (float)range;
 
     float bearing = (float)FPatan((double)at.x - head.x, (double)at.z - head.z);
-    float turn = Vec_AngleDifference(bearing, player->rotation.y);
+    double turn = Vec_AngleDifference(bearing, player->rotation.y);
 
     char held = player->animState->currentWeaponId;
     double strength = (1.0 - (double)distance / Autoaim_Range) * ((double)weapon_data[held].autoAimStrength * 0.01f);
@@ -1729,12 +1726,12 @@ void Check_AutoAim(obj_tag *player, obj_tag *target, float *best) {
     }
     if (across == 0.0f && upDown == 0.0f)
         return;
-    if (!(fabsf(turn) < across))
+    if (!(fabs(turn) < across))
         return;
 
     float elevation = (float)CIAsin(((double)at.y - head.y) / distance);
-    float tilt = Vec_AngleDifference(elevation, blData->pitchFromHorizontal * HALF_PI);
-    if (!(fabsf(tilt) < upDown))
+    double tilt = Vec_AngleDifference(elevation, blData->pitchFromHorizontal * HALF_PI);
+    if (!(fabs(tilt) < upDown))
         return;
 
     if (!Collide_LineOfSight(&head, &at, player->inCel, player, target, 0xa))
@@ -1961,7 +1958,7 @@ void Draw_MuzzleFlash(obj_tag *player) {
     RotMatrixZYX(&aim, &aimed);
     _VECTOR roll = {0.0f, 0.0f, blData->muzzleFlashObj->rotation.z};
     RotMatrix(&roll, &datum);
-    MulMatrix0(aimed.m, datum.m, blData->muzzleFlashObj->transformMatrix.m);
+    MulMatrix0(&aimed, &datum, &blData->muzzleFlashObj->transformMatrix);
     flash = blData->muzzleFlashObj;
     *Mat_Position(flash->transformMatrix) = flash->position;
     MatrixScale(&blData->muzzleFlashObj->transformMatrix, blData->muzzleFlashObj->scale);

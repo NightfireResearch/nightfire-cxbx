@@ -43006,7 +43006,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Mat_Inverse",
+        "name": "Mat_InverseSelf",
         "address": "0x000d5190",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -43564,16 +43564,16 @@
     {
         "name": "Ang_RotateToBearing",
         "address": "0x000d6380",
-        "calling_convention": "__stdcall",
-        "has_custom_variable_storage": true,
-        "return_type": "float10",
+        "calling_convention": "__cdecl",
+        "has_custom_variable_storage": false,
+        "return_type": "float",
         "param_types": [
             "float",
             "float",
             "float",
             "float"
         ],
-        "prototype_string": "float10 __stdcall Ang_RotateToBearing(float param_1, float param_2, float param_3, float param_4)",
+        "prototype_string": "float __cdecl Ang_RotateToBearing(float current, float target, float rate, float maxTurn)",
         "parameters": [
             "[float param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]",
@@ -44626,7 +44626,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000d8590",
+        "name": "Vec_LineSphereIntersect",
         "address": "0x000d8590",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -44934,7 +44934,7 @@
         "namespace": "Global"
     },
     {
-        "name": "View_SetupRenderModes",
+        "name": "View_SetupRenderModes_Tweak",
         "address": "0x000d9900",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,

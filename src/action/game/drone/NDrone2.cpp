@@ -513,8 +513,8 @@ bool NDrone2_BondWithinAngle(DCVars_tag *dcv, float angle) {
     _VECTOR toPlayer;
     Vec_Subtract(&player->position, &dcv->gameObj->position, &toPlayer);
     float yaw = maybeAtan2(toPlayer.x, toPlayer.z);
-    float turn = Vec_AngleDifference(dcv->gameObj->rotation.y, yaw);
-    return !(angle < fabsf(turn));
+    double turn = Vec_AngleDifference(dcv->gameObj->rotation.y, yaw);
+    return !(angle < fabs(turn));
 }
 
 constexpr float kDegToRad = 0.017453292f;

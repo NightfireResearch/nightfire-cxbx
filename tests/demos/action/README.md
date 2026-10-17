@@ -47,11 +47,13 @@ this play. Small differences grow into different play:
 | CastleIndoors1 | 635 | as before |
 | PowerStationA1 | 9,975 | as before |
 | TowerA | 8,935 | as before: on into the next level |
-| CastleCourtyard | 17,816 | reaches the second level later and stays there, where it used to reach the third |
-| EvilBase | 12,049 | fails the mission (front end, 0x07000048) by frame 7,200 |
-| HendersonB | 16,613 | stays in the first level; it used to reach the second |
+| CastleCourtyard | 17,816 | reaches the second level later, then fails the mission (front end, 0x07000048), where it used to reach the third |
+| EvilBase | 12,049 | fails the mission by frame 3,600 |
+| HendersonB | 16,613 | fails the mission in the first level; the leftover input takes the menus into CastleExterior |
 | SpaceStationD | 13,696 | fails the mission near the end |
-| Tower2A | 12,674 | stays in the first level; it used to go on twice |
+| Tower2A | 12,674 | fails the mission in the first level, and the menus take it into CastleExterior; it used to go on twice |
+
+**Rebased a third time 17 October 2026** onto parcel 13: every port that used the host's float maths or trig where the original runs the x87 (View_RotTransMatrix, Vec_Magnitude and its family, the quaternions, Quat_Slerp_Acc, the angle helpers, the drone, player, sensor and HUD trig: 77 functions). Played with those 77 put back to the Xbox's own code, every recording matches every frame (HandleMapSoundAllocation together with Sound_LoadMapSounds, whose map-sound tables are ours). The table above is the state after this rebase.
 
 The last five are still exact tests of what they play, but they no longer reach their later levels. Those five want
 recording again.

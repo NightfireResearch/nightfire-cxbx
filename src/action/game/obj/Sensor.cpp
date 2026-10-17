@@ -8,6 +8,7 @@
 #include "../../game/view.h"
 #include "../sp/SwitchChannels.h"
 #include "../Spline.h"
+#include "../../math/X87Ops.h"
 
 // Scanning cameras with conical beams, eg in evil base and office, but NOT the lasers which trigger the alarm - presumably some kind of Trigger instead
 
@@ -67,8 +68,8 @@ obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
     SENSOR* sensor = (SENSOR*)obj->extraObjectData;
 
     sensor->viewConeHalfAngle = createParams->viewConeHalfAngle;
-    sensor->viewConeCos = cosf((float)sensor->viewConeHalfAngle * HALF_DEGREES_TO_RADIANS);
-    sensor->viewConeSin = sinf((float)sensor->viewConeHalfAngle * HALF_DEGREES_TO_RADIANS);
+    sensor->viewConeCos = (float)FCos((double)sensor->viewConeHalfAngle * HALF_DEGREES_TO_RADIANS);
+    sensor->viewConeSin = (float)FSin((double)sensor->viewConeHalfAngle * HALF_DEGREES_TO_RADIANS);
     sensor->beamLength = (float)createParams->beamLength;
     sensor->alertSwitchChannel = createParams->alertSwitchChannel;
     sensor->disableSwitchChannel = createParams->disableSwitchChannel;
@@ -80,7 +81,9 @@ obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
     sensor->sweepSpline = createParams->sweepSpline;
 
     sensor->sweepLastPoint = createParams->sweepPointCount == 0 ? 0 : createParams->sweepPointCount - 1;
-    sensor->sweepStep = ((float)sensor->sweepLastPoint * REC_FRAME_RATE) * (_FRAME_RATE / (float)createParams->sweepDuration);
+    // On the x87, the frames' share and the step stay unrounded until stored
+    double frames = (double)sensor->sweepLastPoint * REC_FRAME_RATE;
+    sensor->sweepStep = (float)(_FRAME_RATE / (double)createParams->sweepDuration * frames);
 
     sensor->owner = obj;
     sensor->beamObject = NULL;
@@ -204,9 +207,9 @@ bool Sensor_InCone(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor) {
     // Check if target is within range (beam length + target radius)
     float maxDistance = targetObj->radius + sensor->beamLength;
     _VECTOR *sensorPosition = Mat_Position(sensorObj->transformMatrix);
-    float distSq = Vec_SqDist3D(sensorPosition, &targetObj->centrePoint);
+    double distSq = Vec_SqDist3D(sensorPosition, &targetObj->centrePoint);
 
-    if (distSq > maxDistance * maxDistance)
+    if (distSq > (double)maxDistance * maxDistance)
         return false;
 
     // Check if the target sphere intersects the sensor's cone
@@ -314,7 +317,7 @@ void Sensor_Update(obj_tag *sensorObj) {
         }
 
         // Check if player is in cone
-        if ((glb_viewer[4]->field25_0x29 != 0) || !Sensor_InCone(player, sensorObj, sensor)) {
+        if ((glb_viewer[4]->enabled != 0) || !Sensor_InCone(player, sensorObj, sensor)) {
             sensorObj->subState = 0;
             return;
         }
@@ -354,7 +357,7 @@ void Sensor_Update(obj_tag *sensorObj) {
         Vec_Track(0.05f, &player->centrePoint.x, &sensorObj->position.x, &sensorObj->transformMatrix, &sensor->trackedRotation);
 
         // Check if player is still in cone
-        if ((glb_viewer[4]->field25_0x29 == 0) && Sensor_InCone(player, sensorObj, sensor)) {
+        if ((glb_viewer[4]->enabled == 0) && Sensor_InCone(player, sensorObj, sensor)) {
             sensorObj->subState = 0;
         }
         else {

@@ -30,7 +30,6 @@
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
 #define Sound_IsFinnished ((bool (__cdecl *)(DYNAMICSOUNDS *handle))0x000cbac0)
-#define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
 #define NDrone2_CheckSurrender ((bool (__cdecl *)(DCVars_tag *dcv))0x00038bd0)
 #define NDrone2_SendAttackMessage ((void (__cdecl *)(DCVars_tag *dcv))0x0003cd80)
 #define DroneFunc_InRangeOfTarget ((bool (__cdecl *)(DCVars_tag *dcv, float range))0x00035f50)
@@ -1212,10 +1211,8 @@ bool DroneAnim_SetCombatMoveAnim(DCVars_tag *dcv, float distance) {
         } else if (behaviour_util_getProperty(DRONE_PROP_42, dcv->drone->currentBehaviour) != 0 &&
                    DroneAnim_CanDoAnimState(dcv, DANIM_STEP_LEFT, 0) && DroneMove_DistanceToNextRouteNode(dcv) < 3.0f) {
             float limit = drone->animState == DANIM_STEP_LEFT ? 2.7925267f : 2.6179938f;
-            double turn = DroneMove_NextRouteAngle(dcv);
-            if (turn < 0.0)
-                turn = -turn;
-            if (turn < limit) {
+            Extended turn = AbsFchs(DroneMove_RouteTurn(dcv));
+            if (turn < Extended(limit)) {
                 anim = DANIM_STEP_LEFT;
                 yawOffset = 1.5707964f;
                 drone->moveQuad = quad;
@@ -1262,10 +1259,8 @@ bool DroneAnim_SetCombatMoveAnim(DCVars_tag *dcv, float distance) {
         } else if (behaviour_util_getProperty(DRONE_PROP_42, dcv->drone->currentBehaviour) != 0 &&
                    DroneAnim_CanDoAnimState(dcv, DANIM_STEP_RIGHT, 0) && DroneMove_DistanceToNextRouteNode(dcv) < 3.0f) {
             float limit = drone->animState == DANIM_STEP_RIGHT ? 2.7925267f : 2.6179938f;
-            double turn = DroneMove_NextRouteAngle(dcv);
-            if (turn < 0.0)
-                turn = -turn;
-            if (turn < limit) {
+            Extended turn = AbsFchs(DroneMove_RouteTurn(dcv));
+            if (turn < Extended(limit)) {
                 anim = DANIM_STEP_RIGHT;
                 yawOffset = -1.5707964f;
                 drone->moveQuad = quad;

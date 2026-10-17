@@ -41,9 +41,6 @@
 #include <string.h>
 
 #include "Env.h"
-// AUTOGEN
-void Concat(float *param_1, float *param_2);
-
 
 // XBE_GLOBAL(0x002774c8, 0x4)
 static uint32_t player_start_positions_index;
@@ -485,7 +482,7 @@ void Player_ViewClamping(obj_tag *player) {
 
             _MATRIX rotation;
             RotMatrix(&delta, &rotation);
-            Concat(player->transformMatrix.m, rotation.m);
+            Concat(&player->transformMatrix, &rotation);
             Mat_CopyRot(&rotation, &player->transformMatrix);
         }
         else {
@@ -536,10 +533,6 @@ static float Plr_NoAimTurnSpeed_X_Steps = 120.0f;
 // zipline). Called rather than reproduced, so that naming it in Ghidra later does not leave two copies.
 static bool PlayerMoveAllowed(obj_tag *player) {
     return reinterpret_cast<bool (__cdecl *)(obj_tag *)>(0x000a9930)(player);
-}
-
-static void RotMatrixX(float angle, float *matrix) {
-    reinterpret_cast<void (__cdecl *)(float, float *)>(0x000d67b0)(angle, matrix);
 }
 
 // Eases value towards target by rate of the gap, stopping there rather than overshooting it. On the x87 the gap is
@@ -644,7 +637,7 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
     // Swimming goes where the player is looking, and adds to the movement vector rather than replacing it.
     _MATRIX pitched;
     _VECTOR direction;
-    RotMatrixX((float)(player->rotation.x - (double)blData->pitchFromHorizontal * 1.5707964f), pitched.m);
+    RotMatrixX((float)(player->rotation.x - (double)blData->pitchFromHorizontal * 1.5707964f), &pitched);
     Mat_GetDir(&direction, &pitched);
     auxVec_AddMulR32(&blData->movement, &direction, moveZ, &blData->movement);
     blData->movement.x = moveX;
@@ -1583,7 +1576,7 @@ void Player_PositionCamera(obj_tag *player) {
             _VECTOR rotation = device->rotation;
             _MATRIX rotationMatrix;
             RotMatrixZYX(&rotation, &rotationMatrix);
-            ApplyMatrixLVI(rotationMatrix.m, &offset.x);
+            ApplyMatrixLVI(&rotationMatrix, &offset);
             offset.x += device->position.x;
             offset.y += device->position.y;
             offset.z += device->position.z;
@@ -1656,7 +1649,7 @@ void Player_PositionCamera(obj_tag *player) {
             View_SetDrawInOtherViewsOnly(device, playerNum);
 
             _VECTOR offset = { 0.0f, 0.15f, -0.4f };
-            ApplyMatrixLVI(turret->muzzleFlash->transformMatrix.m, &offset.x);
+            ApplyMatrixLVI(&turret->muzzleFlash->transformMatrix, &offset);
             _VECTOR position;
             Vec_Add2(&offset, Mat_Position(turret->muzzleFlash->transformMatrix), &position);
             Mat_Copy(&turret->muzzleFlash->transformMatrix, &viewer->viewMatrix);
@@ -2324,7 +2317,7 @@ void Player_UpdateWalkClass(obj_tag *player, float speed, float levelTarget) {
 static void TurnByRotationDelta(BLData *blData, obj_tag *player) {
     _MATRIX turn;
     RotMatrix(&blData->rotationDelta, &turn);
-    Concat(player->transformMatrix.m, turn.m);
+    Concat(&player->transformMatrix, &turn);
     Mat_CopyRot(&turn, &player->transformMatrix);
 }
 
@@ -2525,9 +2518,9 @@ void _Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity) {
                 for (obj_tag *obj = control_first_object(); obj != NULL; obj = obj->nextObject) {
                     if (obj->objectType != OBJECTTYPE_THIRDCAM_OR_WIRE)
                         continue;
-                    float distance = Vec_Dist3D(&obj->position, &player->position);
+                    double distance = Vec_Dist3D(&obj->position, &player->position);
                     if (distance < nearest) {
-                        nearest = distance;
+                        nearest = (float)distance;
                         wire = obj;
                     }
                 }
@@ -3065,7 +3058,7 @@ float Player_DealWithObjHit(obj_tag *player, BLData *blData, HITDATA_tag *hit) {
 
     _VECTOR direction;
     Vec_Copy(&hit->maybehitDirection, &direction);
-    ApplyMatrixLVI(glb_viewer[blData->playerNum]->worldMatrix.m, &direction.x);
+    ApplyMatrixLVI(&glb_viewer[blData->playerNum]->worldMatrix, &direction);
     Vec_Normalise(&direction, &direction);
     blData->hitDirections = HitDirections(&direction);
 
@@ -3406,9 +3399,6 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
 // Zero G, and flying (Player_ZeroG, Player_SSScanMode)
 // ---------------------------------------------------------------------------------------------------------------
 
-#define Quat_MatrixToQuaternion ((void (__cdecl *)(quaternion_tag *quat, _MATRIX *mtx))0x000d5c20)
-#define Quat_QuaternionToMatrix ((void (__cdecl *)(_MATRIX *mtx, quaternion_tag *quat))0x000d58e0)
-#define RotMatrixY ((void (__cdecl *)(float angle, _MATRIX *mtx))0x000d67f0)
 
 // Zero G: turned at 0.4 pi a second (slowed by the zoom aiming), and moved along all three of the player's own axes by
 // the sticks and jump and crouch, the speed eased a fifth of a fifth of the way a frame towards a tenth, within +-0.05
@@ -3465,7 +3455,7 @@ void _Player_ZeroG(BLData *blData, obj_tag *player) {
 
     _MATRIX turn;
     RotMatrix(&blData->rotationDelta, &turn);
-    Concat(player->transformMatrix.m, turn.m);
+    Concat(&player->transformMatrix, &turn);
     Mat_CopyRot(&turn, &player->transformMatrix);
 
     if (Input_Action(blData->playerNum, ACTION_RELOAD, 4))
@@ -3566,9 +3556,9 @@ void _Player_SSScanMode(BLData *blData, obj_tag *player) {
         blData->rotationDelta.z = 0.0f;
         _MATRIX yaw, pitched;
         RotMatrixY(blData->rotationDelta.y, &yaw);
-        RotMatrixX(blData->rotationDelta.x, pitched.m);
-        Concat(yaw.m, player->transformMatrix.m);
-        Concat(player->transformMatrix.m, pitched.m);
+        RotMatrixX(blData->rotationDelta.x, &pitched);
+        Concat(&yaw, &player->transformMatrix);
+        Concat(&player->transformMatrix, &pitched);
         Mat_CopyRot(&pitched, &player->transformMatrix);
 
         float climb = Input_Actionf(blData->playerNum, ACTION_JUMP, 1);
@@ -3624,9 +3614,9 @@ uchar _Player_Activate(BLData *blData, obj_tag *player) {
         for (obj_tag *obj = control_first_object(); obj != NULL; obj = obj->nextObject) {
             if (obj->objectType != OBJECTTYPE_CREEPWALL)
                 continue;
-            float distance = Vec_SqDist3D(&obj->position, &player->position);
+            double distance = Vec_SqDist3D(&obj->position, &player->position);
             if (distance < nearest) {
-                nearest = distance;
+                nearest = (float)distance;
                 wall = obj;
             }
         }
@@ -3709,9 +3699,7 @@ void __declspec(naked) Player_Activate(void) {
 // ---------------------------------------------------------------------------------------------------------------
 
 #define MenuManager_Create ((uint (__cdecl *)(uint param_1, uint param_2, short param_3, byte playerNum, uint32_t actions, char pauseAudio, uint status))0x00093960)
-#define Vec_Cartesian_2_Spherical ((void (__cdecl *)(_VECTOR *out, float x, float y, float z))0x000d8530)
 #define Env_Breath ((void (__cdecl *)(_VECTOR *pos, _VECTOR *dir, cel_tag *cel, int seed))0x00068db0)
-#define Camera_ApplySwing ((void (__cdecl *)(viewer_tag *viewer, float sway))0x00024490)
 
 #define benchmark U8_AT(0x002adf32) // set, the player stands still
 

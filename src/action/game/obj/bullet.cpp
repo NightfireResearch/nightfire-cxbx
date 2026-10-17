@@ -34,7 +34,6 @@
 #define Sound_IsFinnished ((bool (__cdecl *)(DYNAMICSOUNDS *handle))0x000cbac0)
 #define Bullet_acquiretarget ((void (__cdecl *)(BU_tag *bullet, obj_tag *shooter))0x00022db0)
 #define Control_ObjectReferenced ((void (__cdecl *)(obj_tag *obj, char referenced))0x0002db00)
-#define Camera_Shake ((void (__cdecl *)(_VECTOR *pos, float strength))0x00025330)
 #define GT_Disable ((void (__cdecl *)(obj_tag *obj))0x0009a6f0)
 
 // The spent cases, used in turn
@@ -648,7 +647,7 @@ static void Bullet_SatchelDigit(obj_tag *obj, _MATRIX *rot, _VECTOR *offset, int
     ApplyMatrixLV(&obj->transformMatrix, offset, &at);
     Vec_Add2(&obj->position, &at, &at);
     obj_tag *shown = control_create_object(sizeof(Effect_tag), &at, NULL, NULL);
-    MulMatrix0(obj->transformMatrix.m, rot->m, shown->transformMatrix.m);
+    MulMatrix0(&obj->transformMatrix, rot, &shown->transformMatrix);
     Matrix_SetTrans(&at, &shown->transformMatrix);
     Effect_tag *effect = (Effect_tag *)shown->extraObjectData;
     shown->transformFlags |= TRANSFORM_MATRIX_PLACED;
@@ -1015,7 +1014,7 @@ void Bullet_init_casing_ex(obj_tag *casing) {
     eject.x = weapon->casingEjectVelocity[0];
     eject.y = weapon->casingEjectVelocity[1] * -1.0f;
     eject.z = weapon->casingEjectVelocity[2];
-    ApplyMatrixLVI((float *)&bone, (float *)&eject);
+    ApplyMatrixLVI(&bone, &eject);
     data->vel = eject;
 
     data->spin.x = (float)Rand_FRand_MVar2(0.1f, 0.05f);
@@ -1036,7 +1035,7 @@ void Bullet_init_casing_ex(obj_tag *casing) {
     along.x = 0.0f;
     along.y = 0.0f;
     along.z = 1.0f;
-    ApplyMatrixLVI((float *)&bone, (float *)&along);
+    ApplyMatrixLVI(&bone, &along);
     _VECTOR angles;
     vecutil_cartesian_to_spherical_acc(&angles, along.x, along.y, along.z);
     casing->rotation.x = -angles.x;
@@ -1201,7 +1200,7 @@ static void Bullet_SteerRemoteControl(obj_tag *obj, BU_tag *bullet, obj_tag *sho
     _MATRIX rollMatrix;
     RotMatrix(&roll, &rollMatrix);
 
-    MulMatrix0(headingMatrix.m, rollMatrix.m, matrix->m);
+    MulMatrix0(&headingMatrix, &rollMatrix, matrix);
     Matrix_SetTrans(&position, matrix);
     obj->rotation.z = roll.z * SteerRollDecay;
     Mat_GetDir(&bullet->direction, matrix);
@@ -1304,7 +1303,7 @@ void Bullet_Update(obj_tag *obj) {
                 _MATRIX spinMatrix, current;
                 RotMatrix(&spin, &spinMatrix);
                 Mat_Copy(&obj->transformMatrix, &current);
-                MulMatrix0(current.m, spinMatrix.m, obj->transformMatrix.m);
+                MulMatrix0(&current, &spinMatrix, &obj->transformMatrix);
             }
 
             if (bullet->wpnDef->projectileFlags & ProjectileFlag_RemoteControl) {

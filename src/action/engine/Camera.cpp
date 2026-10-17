@@ -10,8 +10,13 @@
 #include "../game/obj/Wire.h"
 #include "../game/obj/CreepWall.h"
 #include "../math/X87Ops.h"
+#include "../memory.h"
+#include "../game/view.h"
+#include "Vision.h"
 
+#include <bit>
 #include <math.h>
+#include <string.h>
 
 // XBE_GLOBAL(0x001dc740, 0x4)
 static uint32_t ScreenBlankerState;
@@ -52,19 +57,111 @@ void Camera_CalcViewAngles(ushort playerNum,float param_2) {
         }
     }
 
-    // Calculate the projection scale factors
-    float tanHalfFov = tanf(vwr->fovRadians * 0.5f);
-    float scale = -(MAX_VIEW_CONE + 0.2f) / (0.2f - MAX_VIEW_CONE);
+    // Calculate the projection scale factors: on the x87, the half angle's tangent by FPTAN and its reciprocal, and the
+    // depth scale, stay unrounded
+    double reciprocal = (double)(Extended(1.0f) / FPtan(param_2 * 0.5));
+    double scale = ((double)MAX_VIEW_CONE + 0.2f) / (0.2f - (double)MAX_VIEW_CONE);
+    vwr->projectionScaleX = (float)-(scale * (vwr->width * 0.5) * reciprocal);
     vwr->zoom = 1.0f;
-    vwr->projectionScaleY = scale * vwr->height * 0.5f * (1.0f / tanHalfFov);
-    vwr->projectionScaleX = (scale * vwr->width * 0.5f * (1.0f / tanHalfFov)) / vwr->AspectRatio;
-
-
-
+    vwr->projectionScaleY = (float)-(scale * (vwr->height * 0.5) * reciprocal);
+    vwr->projectionScaleX = vwr->projectionScaleX / vwr->AspectRatio;
 }
 
-// AUTOGEN
-void Camera_Enable(ushort cameraNum,char param_2,undefined1 param_3,_VECTOR *param_4);
+// A new view: at the origin, disabled, with nothing to draw and no fade
+// AUTOINJECT
+void Viewer_Init(viewer_tag *viewer) {
+    viewer->world = NULL;
+    View_RotTransMatrix(&CONST_ZERO_VECTOR, &CONST_ZERO_VECTOR, &viewer->viewMatrix);
+    Vec_Copy(&CONST_ZERO_VECTOR, &viewer->someVec);
+    Vec_Copy(&CONST_ZERO_VECTOR, &viewer->pos);
+    viewer->cameraUpdated = 0;
+    memset(&viewer->draw, 0, sizeof(viewer->draw));
+    Mat_IdentityT(&viewer->mtx);
+    Vec_Zero(&viewer->prevPos);
+    viewer->zoom = 1.0f;
+    viewer->someCel = NULL;
+    viewer->camMode = 0;
+    viewer->enabled = 0;
+    viewer->spritesShown = 0;
+    viewer->trackDistanceUsed = 4.0f;
+    viewer->trackDistance = 4.0f;
+    viewer->trackPitch = 0.0f;
+    viewer->trackYaw = 0.0f;
+    viewer->apocalypseEffect = 0.0f;
+    viewer->swingPhase = 0.0f;
+    viewer->player = NULL;
+    viewer->field247_0x1e4 = 0;
+    viewer->field248_0x1e8 = 0;
+    viewer->field249_0x1ec = 0;
+    viewer->field250_0x1f0 = 0;
+    viewer->shearAngle = 0.0f;
+    viewer->nightVisionRelated = 0;
+    viewer->fade = 0.0f;
+    viewer->fadeRate = 0.0f;
+    viewer->fadeColour[3] = 0;
+    viewer->fadeColour[2] = 0;
+    viewer->fadeColour[1] = 0;
+    viewer->fadeColour[0] = 0;
+    viewer->fadeHold = 0;
+    viewer->fadeState = VIEWFADE_NONE;
+    Stack_Init(&viewer->stateStack, 12, viewer->stateStackMem);
+}
+
+// The view at a position and angles; the view's own copies of both are what Camera_ApplySwing and the trackers
+// start from
+// AUTOINJECT
+void Camera_Set(viewer_tag *viewer, _VECTOR *transform, _VECTOR *rotation) {
+    if (viewer == NULL || transform == NULL || rotation == NULL)
+        return;
+
+    View_RotTransMatrix(rotation, transform, &viewer->viewMatrix);
+    Vec_Copy(rotation, &viewer->someVec);
+    Vec_Copy(transform, &viewer->pos);
+    viewer->cameraUpdated = 0;
+}
+
+// Each view's draw lists hold this many entries, half in multiplayer
+static const ushort DrawListSizes[3] = {0x200, 0x200, 0x80};
+
+// Enables or disables a view (its draw lists come and go with it), sets whether its sprites show, and with a position
+// puts it there, facing along z
+// AUTOINJECT
+void Camera_Enable(ushort cameraNum, char enable, undefined1 sprites, _VECTOR *position) {
+    viewer_tag *viewer = glb_viewer[cameraNum];
+    if (viewer == NULL)
+        return;
+
+    viewer->enabled = enable;
+    glb_viewer[cameraNum]->spritesShown = sprites;
+    if (enable) {
+        if (viewer->draw.lists[0] == NULL) {
+            memset(&viewer->draw, 0, sizeof(viewer->draw));
+            uint total = 0;
+            for (int i = 0; i < 3; i++) {
+                ushort size = DrawListSizes[i];
+                if (MPSettings.isMultiplayer)
+                    size >>= 1;
+                viewer->draw.sizes[i] = size;
+                total += size;
+            }
+            DrawEntry *block = (DrawEntry *)Mem_Malloc(total * sizeof(DrawEntry), 0x504, 0);
+            uint at = 0;
+            for (int i = 0; i < 3; i++) {
+                viewer->draw.lists[i] = block + at;
+                at += viewer->draw.sizes[i];
+            }
+        }
+    } else {
+        if (viewer->draw.lists[0] != NULL)
+            Mem_Free((void **)&viewer->draw.lists[0]);
+        memset(&viewer->draw, 0, sizeof(viewer->draw));
+    }
+
+    if (position != NULL) {
+        glb_viewer[cameraNum]->someCel = NULL;
+        Camera_Set(glb_viewer[cameraNum], position, &CONST_ZERO_VECTOR);
+    }
+}
 
 // Each camera keeps a stack of its states (bit 0 enabled, bit 8 sprites shown) so that a scripted
 // camera can take over and give them back.
@@ -76,7 +173,7 @@ void __stdcall Camera_PushStates(void) {
     for (int i = 0; i < 11; i++) {
         viewer_tag *viewer = glb_viewer[i];
         if (viewer != NULL) {
-            uintptr_t state = viewer->field26_0x2a << CAMERA_STATE_SPRITES_SHIFT | viewer->field25_0x29;
+            uintptr_t state = viewer->spritesShown << CAMERA_STATE_SPRITES_SHIFT | viewer->enabled;
             Stack_Push(&viewer->stateStack, (void *)state);
         }
     }
@@ -95,8 +192,42 @@ void __stdcall Camera_PopStates(void) {
     }
 }
 
-// AUTOGEN
-bool Camera_SetFade(ushort viewerNum, float durationFrames, uint colourAndAlpha, undefined1 fadeMode);
+// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
+// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
+static int32_t Ftol(double x) {
+    if (!(fabs(x) < 9223372036854775808.0))
+        return 0;
+    long long nearest = llrint(x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x));
+}
+
+// Fades the view to a colour (0xRRGGBBAA, the alpha the fade reaches) over a number of frames at 60 a second; a
+// negative count fades back from it. Refused while a fade that holds is running.
+// AUTOINJECT
+bool Camera_SetFade(ushort viewerNum, float durationFrames, uint colourAndAlpha, undefined1 fadeMode) {
+    viewer_tag *viewer = glb_viewer[viewerNum];
+    if (viewer == NULL || (viewer->fadeHold && viewer->fadeState))
+        return false;
+
+    constexpr float rateScale = 6.535948e-05f;   // about 1 / (60 x 255)
+    static_assert(std::bit_cast<uint32_t>(rateScale) == 0x3889119b, "not the original's constant");
+    double alpha = (int)(colourAndAlpha & 0xff);
+    viewer->fadeHold = fadeMode;
+    viewer->fadeState = VIEWFADE_FADING;
+    double rate = 60.0 / durationFrames * alpha * rateScale;
+    viewer->fadeRate = (float)rate;
+    double start = rate < 0.0 ? 1.0f : 0.0f;
+    viewer->fadeColour[0] = colourAndAlpha >> 24;
+    viewer->fadeColour[1] = colourAndAlpha >> 16;
+    double fade = alpha * start * (1.0f / 255.0f);
+    viewer->fadeColour[2] = colourAndAlpha >> 8;
+    viewer->fade = (float)fade;
+    viewer->fadeColour[3] = Ftol(fade * 255.0f);
+    viewer->spritesShown = 1;
+    return true;
+}
 
 // AUTOINJECT
 void Camera_ScreenCoords(ushort viewerNum,float PosX,float PosY,float Width,float Height) {
@@ -115,9 +246,6 @@ void Camera_ScreenCoords(ushort viewerNum,float PosX,float PosY,float Width,floa
     Camera_CalcViewAngles(viewerNum, ViewFov_ForViewer(viewerNum));
 
 }
-
-// AUTOGEN
-viewer_tag* build_alloc_viewer(unsigned char idx);
 
 // AUTOGEN
 cel_tag* build_alloc_cel(cel_tag *cel);
@@ -149,8 +277,8 @@ void Camera_Create(int idx, world_tag *param_2, char param_3, ushort posX, ushor
     (iVar1->someMax).x = 1000.0;
   }
   glb_viewer[idx]->world = param_2;
-  glb_viewer[idx]->field25_0x29 = param_3;
-  glb_viewer[idx]->field26_0x2a = 1;
+  glb_viewer[idx]->enabled = param_3;
+  glb_viewer[idx]->spritesShown = 1;
   glb_viewer[idx]->cameraUpdateObj = NULL;
   glb_viewer[idx]->cameraUpdateCallback = NULL;
   Camera_Enable(idx, param_3, 1, NULL);
@@ -215,16 +343,7 @@ void Camera_CreateCameras(void) {
 }
 
 
-// AUTOGEN
-void Camera_CheckLocation(ushort idx);
-// AUTOGEN
-void Camera_UpdateGlbVars(ushort idx);
-// AUTOGEN
-void Camera_SetToPlayer(obj_tag *player, viewer_tag *viewer);
-// AUTOGEN
-void Camera_Set(viewer_tag *viewer, _VECTOR *transform, _VECTOR *rotation);
 
-void Concat(float *param_1, float *param_2);
 
 #define normaliseToPlusMinusPi ((float (__cdecl *)(float angle))0x00024050)
 #define GlobalBlur U8_AT(0x001f667c)
@@ -253,7 +372,7 @@ void Camera_Shear(viewer_tag *vwr) {
     ShearMatrix.m[4] = ShearX;
     ShearMatrix.m[1] = ShearY;
     Mat_Scale3f(&ShearMatrix, &ShearMatrix, ShearX + 1.0f, ShearY + 1.0f, ShearX + 1.0f);
-    Concat(vwr->viewMatrix.m, ShearMatrix.m);
+    Concat(&vwr->viewMatrix, &ShearMatrix);
     Mat_CopyRot(&ShearMatrix, &vwr->viewMatrix);
     Vec_Copy(&ShearPosition, Mat_Position(vwr->viewMatrix));
     GlobalBlur = 0x91;
@@ -262,11 +381,123 @@ void Camera_Shear(viewer_tag *vwr) {
 // The originals, called by address: unnamed placements of the view (also Player_PositionCamera's camera mode 2)
 #define Camera_PlaceAround ((void (__cdecl *)(_VECTOR *position, viewer_tag *viewer, float scale))0x000245a0)
 #define Camera_PlaceAbove ((void (__cdecl *)(_VECTOR *position, viewer_tag *viewer, float scale))0x00024610)
-#define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
 
 #define HALF_PI 1.5707964f
 #define PI 3.1415927f
 #define QUARTER_PI 0.7853982f
+#define TWO_PI 6.2831855f
+
+// Keeps the view's cel: the cel through a portal it moved through since last time, or, out of its cel's box, the
+// cel it is now in. In none, it stays in the old one (or the world's first) and prevPos is not moved on.
+// AUTOINJECT
+void Camera_CheckLocation(ushort idx) {
+    viewer_tag *viewer = glb_viewer[idx];
+    if (viewer == NULL)
+        return;
+
+    Vec_Subtract(&viewer->pos, &viewer->prevPos, &viewer->move);
+    if (!viewer->enabled)
+        return;
+
+    cel_tag *through = Cel_ObjectLeftCel(viewer->someCel, &viewer->prevPos, &viewer->pos);
+    if (through != NULL) {
+        viewer->someCel = through;
+    } else if (!build_point_in_bounding_box(&viewer->pos, viewer->someCel)) {
+        cel_tag *old = viewer->someCel;
+        viewer->someCel = build_FindCel(&viewer->pos, viewer->world);
+        if (viewer->someCel == NULL) {
+            if (old != NULL) {
+                viewer->someCel = old;
+            } else {
+                NF_WARN("Error : Camera cant be linked to a cel!\n"); // GC check (0x8010b688)
+                viewer->someCel = glb_world->firstCel;
+            }
+            return;
+        }
+        viewer->someCel->addedToDraw = 1;
+    }
+    Vec_Copy(&viewer->pos, &viewer->prevPos);
+}
+
+// Runs the view's fade: the alpha follows it, and when it leaves 0 to 1 the fade is done (and the frame after, over)
+// AUTOINJECT
+void Camera_UpdateGlbVars(ushort idx) {
+    viewer_tag *viewer = glb_viewer[idx];
+    if (viewer == NULL)
+        return;
+
+    switch (viewer->fadeState) {
+    case VIEWFADE_NONE:
+        viewer->fadeColour[3] = 0;
+        break;
+    case VIEWFADE_FADING: {
+        double fade = (double)FRAME_RATE_MUL * viewer->fadeRate + viewer->fade;
+        viewer->fade = (float)fade;
+        double alpha = fade * 255.0f;
+        if (alpha < 0.0)
+            alpha = 0.0f;
+        else if (alpha > 255.0f)
+            alpha = 255.0f;
+        viewer->fadeColour[3] = Ftol(alpha);
+        if (viewer->fade < 0.0f || viewer->fade > 1.0f)
+            viewer->fadeState = VIEWFADE_DONE;
+        break;
+    }
+    case VIEWFADE_DONE:
+        viewer->fadeState = VIEWFADE_NONE;
+        break;
+    }
+}
+
+// A player's view: his matrix pitched by his look, from his eyes
+// AUTOINJECT
+void Camera_SetToPlayer(obj_tag *player, viewer_tag *viewer) {
+    if (player == NULL || viewer == NULL)
+        return;
+
+    _MATRIX pitch;
+    RotMatrixX((float)-(((BLData *)player->extraObjectData)->pitchFromHorizontal * (double)HALF_PI), &pitch);
+    MulMatrix0(&player->transformMatrix, &pitch, &viewer->viewMatrix);
+    Player_GetHeadPos(Mat_Position(viewer->viewMatrix), player, NULL);
+}
+
+// The scope's sway: the view's angles wobble at one, two and three times a turn every four seconds, by sway and how
+// far the view is zoomed in. On the x87 the phase doubled for x is the unrounded one.
+// AUTOINJECT
+void Camera_ApplySwing(viewer_tag *viewer, float sway) {
+    if (viewer == NULL)
+        return;
+
+    double phase = TWO_PI / ((double)_FRAME_RATE * 4.0f) + viewer->swingPhase;
+    viewer->swingPhase = (float)phase;
+    Extended zoomed = (double)viewer->zoom - 1.0f;
+    viewer->someVec.x = (float)(FSin(phase + phase) * zoomed * Extended(sway) + Extended(viewer->someVec.x));
+    viewer->someVec.y = (float)(FSin(viewer->swingPhase) * zoomed * Extended(sway) + Extended(viewer->someVec.y));
+    viewer->someVec.z = (float)(FSin(viewer->swingPhase * 3.0) * zoomed * Extended(sway) + Extended(viewer->someVec.z));
+    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+}
+
+// Shakes the players' views near pos: up to twice amount away, by amount x (1 - (distance / 2 amount)^2), at most 10
+// AUTOINJECT
+void Camera_Shake(_VECTOR *pos, float amount) {
+    float range = amount + amount;
+    for (int i = 0; i < 4; i++) {
+        viewer_tag *viewer = glb_viewer[i];
+        if (viewer == NULL)
+            continue;
+
+        double distance = Vec_Dist3D(pos, Mat_Position(viewer->viewMatrix));
+        if (distance > range)
+            continue;
+        double near = distance / range;
+        double shake = (1.0f - near * near) * range;
+        if (shake > 0.0) {
+            if (!(shake < 10.0f))
+                shake = 10.0f;
+            viewer->apocalypseEffect = (float)shake;
+        }
+    }
+}
 
 // The view behind a player on a wire or creep wall (camera mode 0xb): at its distance off the nearest point of the
 // line, its pitch by how far along it that point is (fixed for a wall), turned by an eighth either way while he moves

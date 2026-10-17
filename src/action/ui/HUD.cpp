@@ -6,6 +6,7 @@
 #include "../game/obj/Copter.h"
 #include "../engine/viewer.h"
 #include "../memory.h"
+#include "../math/X87Ops.h"
 #include <stdio.h>
 #include <string.h>
 #include "../game/view.h"
@@ -721,7 +722,7 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     // The Bond moment icon: spins in (a squashed, flipping card) over the first 100 frames of its 200, then sits
     // still until the timer runs out
     if (bondMoment != NULL) {
-        bondMoment->linkedViewer = (glb_viewer[4] != NULL && glb_viewer[4]->field25_0x29 != 0) ? 4 : 5;
+        bondMoment->linkedViewer = (glb_viewer[4] != NULL && glb_viewer[4]->enabled != 0) ? 4 : 5;
 
         if (blData->bondMomentTimer <= 0) {
             blData->bondMomentTimer = 0;
@@ -731,13 +732,14 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             bondMoment->positionY = 80;
             short t = blData->bondMomentTimer;
             if (t > 100) {
-                // On the x87: all extended precision, the cosine by FCOS
+                // On the x87: the cosine by FCOS, unrounded, and the products with it
                 double scale = (double)(200 - t) * (double)0.01f;
-                double flip = cos((double)(t * 4 - 400) * (double)0.03141593f);
+                Extended flip = FCos((double)(t * 4 - 400) * (double)0.03141593f);
+                Extended size = (double)flip >= 0.0 ? flip : -flip;
                 ushort height = (ushort)bondMoment->backupOnscreenHeight;
-                bondMoment->onscreenHeight = (short)(int)((double)height * fabs(flip) * scale);
+                bondMoment->onscreenHeight = (short)(int)(double)(Extended((double)height) * size * Extended(scale));
                 // Upside down while the card shows its back
-                bondMoment->spritesheetHeight = (flip < 0.0) ? (short)-height : (short)height;
+                bondMoment->spritesheetHeight = ((double)flip < 0.0) ? (short)-height : (short)height;
                 bondMoment->onscreenWidth = (short)(int)((double)(ushort)bondMoment->backupOnscreenWidth * scale);
             }
             bondMoment->maybeEnabled = 0;

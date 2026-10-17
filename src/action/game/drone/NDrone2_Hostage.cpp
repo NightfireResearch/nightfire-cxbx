@@ -68,9 +68,9 @@ bool NDrone2_SetupHostageKiller(DCVars_tag *dcv) {
     for (Drone_tag *other = NPCGlobals.NDrone2List; other != NULL; other = other->next) {
         if (other->dtype != DTYPE_Hostage || other->unknown230 != NULL)
             continue;
-        float dist = Vec_Dist3D(&other->gameObj->position, &dcv->gameObj->position);
+        double dist = Vec_Dist3D(&other->gameObj->position, &dcv->gameObj->position);
         if (dist < best && dist < HOSTAGE_RANGE) {
-            best = dist;
+            best = (float)dist;
             chosen = other;
         }
     }

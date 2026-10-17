@@ -64,12 +64,56 @@ static void __declspec(naked) Cosine(Extended *out, double x) {
     }
 }
 
+static void __declspec(naked) SineOf(Extended *out, const Extended *x) {
+    __asm {
+        mov eax, dword ptr [esp + 8]
+        fld tbyte ptr [eax]
+        fsin
+        mov eax, dword ptr [esp + 4]
+        fstp tbyte ptr [eax]
+        ret
+    }
+}
+
+static void __declspec(naked) CosineOf(Extended *out, const Extended *x) {
+    __asm {
+        mov eax, dword ptr [esp + 8]
+        fld tbyte ptr [eax]
+        fcos
+        mov eax, dword ptr [esp + 4]
+        fstp tbyte ptr [eax]
+        ret
+    }
+}
+
+static void __declspec(naked) ArcCosine(Extended *out, double x) {
+    __asm {
+        fld qword ptr [esp + 8]
+        mov eax, 0x000ee294
+        call eax
+        mov eax, dword ptr [esp + 4]
+        fstp tbyte ptr [eax]
+        ret
+    }
+}
+
 static void __declspec(naked) PartialArctangent(Extended *out, double y, double x) {
     __asm {
         mov eax, dword ptr [esp + 4]
         fld qword ptr [esp + 8]
         fld qword ptr [esp + 16]
         fpatan
+        fstp tbyte ptr [eax]
+        ret
+    }
+}
+
+static void __declspec(naked) Tangent(Extended *out, double x) {
+    __asm {
+        mov eax, dword ptr [esp + 4]
+        fld qword ptr [esp + 8]
+        fptan
+        fstp st(0)
         fstp tbyte ptr [eax]
         ret
     }
@@ -152,6 +196,23 @@ static void __declspec(naked) Divide(Extended *out, const Extended *a, const Ext
     }
 }
 
+// 1 if a < b (FCOMPP's C0 without C2, so not for a NaN), else 0
+static int __declspec(naked) Below(const Extended *a, const Extended *b) {
+    __asm {
+        mov eax, dword ptr [esp + 8]
+        fld tbyte ptr [eax]
+        mov eax, dword ptr [esp + 4]
+        fld tbyte ptr [eax]
+        fcompp
+        fnstsw ax
+        and eax, 0x0500
+        cmp eax, 0x0100
+        sete al
+        movzx eax, al
+        ret
+    }
+}
+
 Extended::Extended(float x) {
     LoadFloat(this, x);
 }
@@ -180,9 +241,33 @@ Extended FCos(double x) {
     return result;
 }
 
+Extended FSin(const Extended &x) {
+    Extended result;
+    SineOf(&result, &x);
+    return result;
+}
+
+Extended FCos(const Extended &x) {
+    Extended result;
+    CosineOf(&result, &x);
+    return result;
+}
+
+Extended CIAcos(double x) {
+    Extended result;
+    ArcCosine(&result, x);
+    return result;
+}
+
 Extended FPatan(double y, double x) {
     Extended result;
     PartialArctangent(&result, y, x);
+    return result;
+}
+
+Extended FPtan(double x) {
+    Extended result;
+    Tangent(&result, x);
     return result;
 }
 
@@ -214,6 +299,19 @@ Extended operator/(const Extended &a, const Extended &b) {
     Extended result;
     Divide(&result, &a, &b);
     return result;
+}
+
+bool operator<(const Extended &a, const Extended &b) {
+    return Below(&a, &b) != 0;
+}
+
+bool operator>(const Extended &a, const Extended &b) {
+    return Below(&b, &a) != 0;
+}
+
+Extended AbsFchs(const Extended &x) {
+    double rounded = (double)x;
+    return x < Extended(0.0f) || rounded != rounded ? -x : x;
 }
 
 // FCHS

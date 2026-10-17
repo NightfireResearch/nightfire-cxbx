@@ -25,8 +25,16 @@ struct Extended {
 // FSIN and FCOS: the instructions, so a huge angle (2^63 and beyond) comes back unchanged and a NaN as itself
 Extended FSin(double x);
 Extended FCos(double x);
+// ... of a value still on the x87 stack, unrounded
+Extended FSin(const Extended &x);
+Extended FCos(const Extended &x);
 // FPATAN: the angle of (x, y), atan(y / x) in the right quadrant
 Extended FPatan(double y, double x);
+// FPTAN: the tangent (the 1 the instruction pushes after it is popped)
+Extended FPtan(double x);
+// The XBE's own C runtime acos (__CIacos, 0x000ee294): the argument and the result in ST0. Outside -1 to 1 it goes
+// to the runtime's error handling, which needs the game's thread set up.
+Extended CIAcos(double x);
 // e^x as MSVC's inline exp computes it: FLDL2E, FMUL, then FRNDINT, F2XM1, FLD1, FADD and FSCALE on the whole and
 // fractional parts
 Extended FExp(double x);
@@ -36,6 +44,11 @@ Extended operator-(const Extended &a, const Extended &b);
 Extended operator*(const Extended &a, const Extended &b);
 Extended operator/(const Extended &a, const Extended &b);
 Extended operator-(const Extended &a);
+// FCOMP: false where either is a NaN
+bool operator<(const Extended &a, const Extended &b);
+bool operator>(const Extended &a, const Extended &b);
+// |x| as the original takes it, comparing with 0 and FCHS when below or a NaN (AbsFchs, below, for a double)
+Extended AbsFchs(const Extended &x);
 
 // FCHS: the sign bit flipped, a NaN's too (the compiler may turn a plain -x + c into c - x, which keeps it)
 inline double Negate(double x) {
@@ -45,6 +58,20 @@ inline double Negate(double x) {
 // |x| as the original takes it, comparing with 0 and FCHS when below: -0 keeps its sign, and a NaN is negated
 inline double AbsFchs(double x) {
     return x >= 0.0 ? x : Negate(x);
+}
+
+// A float the original copies through the x87 (FLD, FSTP): a signalling NaN comes back quiet, where a plain copy
+// keeps it
+inline float X87Copy(float x) {
+    uint32_t bits = std::bit_cast<uint32_t>(x);
+    if ((bits & 0x7f800000u) == 0x7f800000u && (bits & 0x007fffffu) != 0)
+        bits |= 0x00400000u;
+    return std::bit_cast<float>(bits);
+}
+
+// FLD, FCHS and FSTP of a float
+inline float X87Negate(float x) {
+    return std::bit_cast<float>(std::bit_cast<uint32_t>(X87Copy(x)) ^ 0x80000000u);
 }
 
 // What the x87 gives for an operation on two NaNs: the one with the larger significand, the positive one when only

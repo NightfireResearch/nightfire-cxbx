@@ -28,7 +28,6 @@
 
 // Originals called by address
 // Returns in ST0, unrounded
-#define Vec_SqDist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e50)
 // Tests the walk from the object's feet to `offset` in its own frame (FUN_000453e0; our name, as in NDrone2_Nav.cpp)
 #define NDrone2_MoveTestRelative ((bool (__cdecl *)(_VECTOR *offset, Drone_tag *drone, obj_tag *obj, char unscaled, int param5))0x000453e0)
 
@@ -59,8 +58,8 @@ static_assert(std::bit_cast<uint32_t>(1.8f) == 0x3fe66666, "not the original's c
 #define ABS(x) ((x) < 0.0f ? -(x) : (x))
 
 // The size of an angle as the original's FCHS on "below or unordered" leaves it: a NaN's sign is flipped too
-static float AngleSize(float angle) {
-    return !(angle >= 0.0f) ? std::bit_cast<float>(std::bit_cast<uint32_t>(angle) ^ 0x80000000u) : angle;
+static double AngleSize(double angle) {
+    return !(angle >= 0.0) ? std::bit_cast<double>(std::bit_cast<uint64_t>(angle) ^ 0x8000000000000000ull) : angle;
 }
 
 // ---- walking and steering
@@ -134,9 +133,9 @@ void NDrone2_Steer(DCVars_tag *dcv, float angle) {
         for (Drone_tag *other = NPCGlobals.NDrone2List; other != NULL; other = other->next) {
             if (!IsObstacle(drone, other))
                 continue;
-            float dist = Vec_Dist3D(&obj->position, &other->gameObj->position);
+            double dist = Vec_Dist3D(&obj->position, &other->gameObj->position);
             if (dist < drone->nearestDroneDist) {
-                drone->nearestDroneDist = dist;
+                drone->nearestDroneDist = (float)dist;
                 drone->nearestDrone = other;
             }
         }
@@ -211,9 +210,9 @@ bool _NDrone2_EvaluateObstacle(Drone_tag *drone, Drone_tag *other, ObstacleEval_
     apart.x = self->pos->x - obstacle->pos->x;
     apart.y = self->pos->y - obstacle->pos->y;
     apart.z = self->pos->z - obstacle->pos->z;
-    float distance = Vec_Magnitude(&apart);
+    double distance = Vec_Magnitude(&apart);
     if (other != NULL && distance < drone->nearestDroneDist) {
-        drone->nearestDroneDist = distance;
+        drone->nearestDroneDist = (float)distance;
         drone->nearestDrone = other;
     }
 
@@ -258,13 +257,13 @@ bool _NDrone2_EvaluateObstacle(Drone_tag *drone, Drone_tag *other, ObstacleEval_
         Vec_Copy(obstacle->pos, &obstacle->contact);
         eval->radiusSum = obstacle->radius + self->radius;
         Vec_Subtract(&obstacle->contact, &self->contact, &eval->delta);
-        float bearing = (float)atan2((double)eval->delta.x, (double)eval->delta.z);
+        float bearing = (float)FPatan(eval->delta.x, eval->delta.z);
         eval->delta.y = 0.0f;
-        float angle = Vec_AngleDifference(bearing, self->rot->y);
-        eval->angle = angle;
+        double angle = Vec_AngleDifference(bearing, self->rot->y);
+        eval->angle = (float)angle;
         eval->dist = 0.0f;
         eval->share = (float)(self->speed / ((double)obstacle->speed + self->speed));
-        double weight = 1.0f - (double)AngleSize(angle) * kInvPi;
+        double weight = 1.0f - AngleSize(angle) * kInvPi;
         eval->weight = (float)weight;
         eval->steer = (float)(weight * eval->share * kHalfPi);
         if (angle < 0.0f)
@@ -288,9 +287,9 @@ bool _NDrone2_EvaluateObstacle(Drone_tag *drone, Drone_tag *other, ObstacleEval_
     double weight = 1.0f - 1.0f / ((double)eval->limit * kHorizon) * eval->t;
     eval->weight = (float)weight;
     eval->steer = (float)(weight * eval->share * kHalfPi);
-    float bearing = (float)atan2((double)eval->delta.x, (double)eval->delta.z);
-    float angle = Vec_AngleDifference(bearing, self->rot->y);
-    eval->angle = angle;
+    float bearing = (float)FPatan(eval->delta.x, eval->delta.z);
+    double angle = Vec_AngleDifference(bearing, self->rot->y);
+    eval->angle = (float)angle;
     if (angle < 0.0f)
         eval->steer = -eval->steer;
     return true;
@@ -379,7 +378,7 @@ bool DroneMove_NoBunching(DCVars_tag *dcv) {
         facing = facing + kPi;
     if (drone->unknown46c & 0x20)
         facing = facing - kHalfPi;
-    float turn = Vec_AngleDifference(facing, bearing);
+    double turn = Vec_AngleDifference(facing, bearing);
     drone->bunchFlags |= turn < 0.0f ? 0x10 : 8;
     drone->bunchFlags |= AngleSize(turn) < kQuarterPi ? 2 : 4;
     return true;
@@ -426,9 +425,8 @@ void DroneMove_TurnToObj(DCVars_tag *dcv, obj_tag *obj, float offset, float tole
 }
 
 // The angle between the way from moveTarget to the drone and the segment the active route creeps along; 0 within
-// about a degree
-// AUTOINJECT
-double DroneMove_NextRouteAngle(DCVars_tag *dcv) {
+// about a degree. The XBE's acos, left unrounded.
+static Extended RouteTurn(DCVars_tag *dcv) {
     _VECTOR fromTarget, along;
     Vec_Subtract(&dcv->gameObj->position, &dcv->drone->moveTarget, &fromTarget);
     AICreep_tag *creep = &dcv->drone->activeRoute->creep;
@@ -439,7 +437,41 @@ double DroneMove_NextRouteAngle(DCVars_tag *dcv) {
     double dot = (double)along.z * fromTarget.z + (double)along.y * fromTarget.y + (double)along.x * fromTarget.x;
     if (dot > 0.9998f)
         return 0.0f;
-    return acos((double)(float)dot);
+    return CIAcos((float)dot);
+}
+
+static void StoreRouteTurn(DCVars_tag *dcv, Extended *turn) {
+    *turn = RouteTurn(dcv);
+}
+
+// For the original's callers: the turn in ST0, unrounded
+// AUTOINJECT
+double __declspec(naked) DroneMove_NextRouteAngle(DCVars_tag *dcv) {
+    _asm {
+        sub esp, 12
+        mov eax, esp
+        push eax
+        push dword ptr [esp + 20]
+        call StoreRouteTurn
+        add esp, 8
+        fld tbyte ptr [esp]
+        add esp, 12
+        ret
+    }
+}
+
+// DroneMove_NextRouteAngle's result as it leaves it in ST0
+Extended DroneMove_RouteTurn(DCVars_tag *dcv) {
+    Extended turn;
+    Extended *at = &turn;
+    _asm {
+        push dcv
+        call DroneMove_NextRouteAngle
+        add esp, 4
+        mov eax, at
+        fstp tbyte ptr [eax]
+    }
+    return turn;
 }
 
 // AUTOINJECT
@@ -609,7 +641,7 @@ void DroneMove_AstronautAnim(DCVars_tag *dcv) {
     _VECTOR toTarget;
     Vec_Subtract(&dcv->drone->moveTarget, &obj->position, &toTarget);
     float bearing = maybeAtan2(toTarget.x, toTarget.z);
-    float turn = Vec_AngleDifference(obj->rotation.y, bearing);
+    double turn = Vec_AngleDifference(obj->rotation.y, bearing);
     ushort anim;
     if (AngleSize(turn) < kQuarterPi)
         anim = 0x72;

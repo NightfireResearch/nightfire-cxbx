@@ -5,98 +5,46 @@
 #include "../util/Stack.h"
 
 #pragma pack(push, 1)
+// One thing for a view to draw: an object or a cel, sorted on key (View_DrawObjList)
+struct DrawEntry {
+    float key;                // the square of its distance from the view, negative to draw it back to front
+    obj_tag *obj;
+    cel_tag *cel;
+};
+
+// A view's three draw lists (opaque, sorted back to front, and last), each a ring of drawSizes entries in one block
+struct ViewDrawLists {
+    DrawEntry *lists[3];      // 0x08
+    ushort counts[3];         // 0x14
+    ushort sizes[3];          // 0x1a - powers of two
+    uchar skyVisible;         // 0x20 - a cel drawn this frame shows the sky (vision_generate_display_list)
+    undefined pad21[3];
+};
+
+// viewer_tag::fadeState
+enum {
+    VIEWFADE_NONE = 0,
+    VIEWFADE_FADING = 1,
+    VIEWFADE_DONE = 2,        // back to VIEWFADE_NONE the frame after
+};
+
 struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     struct world_tag *world;
     cel_tag* someCel;
-    undefined4 field2_0x8;
-    undefined field3_0xc;
-    undefined field4_0xd;
-    undefined field5_0xe;
-    undefined field6_0xf;
-    undefined field7_0x10;
-    undefined field8_0x11;
-    undefined field9_0x12;
-    undefined field10_0x13;
-    ushort field11_0x14;
-    ushort field12_0x16;
-    ushort field13_0x18;
-    short field14_0x1a;
-    undefined field15_0x1c;
-    undefined field16_0x1d;
-    undefined field17_0x1e;
-    undefined field18_0x1f;
-    undefined field19_0x20;
-    undefined field20_0x21;
-    undefined field21_0x22;
-    undefined field22_0x23;
+    ViewDrawLists draw;       // 0x08 - what View_CaptureScene gathers to draw, allocated while the view is enabled
     undefined4 camMode;       // 0x24 - the player's camera mode, copied every frame (Player_CollisionHandler)
     undefined1 idx; /* Created by retype action */
-    undefined field25_0x29;
-    undefined1 field26_0x2a;
+    undefined1 enabled;       // 0x29 - drawn (Camera_Enable)
+    undefined1 spritesShown;  // 0x2a
     undefined1 cameraUpdated;
     STACKINFO stateStack;
-    int someStackMem;
-    undefined field30_0x38;
-    undefined field31_0x39;
-    undefined field32_0x3a;
-    undefined field33_0x3b;
-    undefined field34_0x3c;
-    undefined field35_0x3d;
-    undefined field36_0x3e;
-    undefined field37_0x3f;
-    undefined field38_0x40;
-    undefined field39_0x41;
-    undefined field40_0x42;
-    undefined field41_0x43;
-    undefined field42_0x44;
-    undefined field43_0x45;
-    undefined field44_0x46;
-    undefined field45_0x47;
-    undefined field46_0x48;
-    undefined field47_0x49;
-    undefined field48_0x4a;
-    undefined field49_0x4b;
-    undefined field50_0x4c;
-    undefined field51_0x4d;
-    undefined field52_0x4e;
-    undefined field53_0x4f;
-    undefined field54_0x50;
-    undefined field55_0x51;
-    undefined field56_0x52;
-    undefined field57_0x53;
-    undefined field58_0x54;
-    undefined field59_0x55;
-    undefined field60_0x56;
-    undefined field61_0x57;
-    undefined field62_0x58;
-    undefined field63_0x59;
-    undefined field64_0x5a;
-    undefined field65_0x5b;
-    undefined field66_0x5c;
-    undefined field67_0x5d;
-    undefined field68_0x5e;
-    undefined field69_0x5f;
-    undefined field70_0x60;
-    undefined field71_0x61;
-    undefined field72_0x62;
-    undefined field73_0x63;
+    int stateStackMem[12];    // 0x34 - the stack's entries
     obj_tag *cameraUpdateObj;
     cameraUpdateFunc cameraUpdateCallback;
     plane_equ_tag frustumPlanes[4];
-    undefined field140_0xac;
-    undefined field141_0xad;
-    undefined field142_0xae;
-    undefined field143_0xaf;
-    undefined field144_0xb0;
-    undefined field145_0xb1;
-    undefined field146_0xb2;
-    undefined field147_0xb3;
-    undefined field148_0xb4;
-    undefined field149_0xb5;
-    undefined field150_0xb6;
-    undefined field151_0xb7;
+    _VECTOR move;             // 0xac - pos less prevPos, each frame (Camera_CheckLocation)
     _VECTOR pos; /* View? */
-    _VECTOR field153_0xc4;
+    _VECTOR prevPos;          // 0xc4 - where Camera_CheckLocation last placed the view in a cel
     _VECTOR someVec;
     float xMin;
     float xMax;
@@ -124,21 +72,17 @@ struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     float savedTrackYaw;      // 0x1d4
     float savedTrackDistance; // 0x1d8
     float apocalypseEffect;
-    undefined4 field246_0x1e0;
+    float swingPhase;         // 0x1e0 - Camera_ApplySwing's, a turn every four seconds
     undefined4 field247_0x1e4;
     undefined4 field248_0x1e8;
     undefined4 field249_0x1ec;
     undefined4 field250_0x1f0;
     obj_tag *player;          // 0x1f4 - the player whose view it is (Player_Init)
-    undefined4 field252_0x1f8;
-    undefined4 field253_0x1fc;
-    undefined1 field254_0x200;
-    undefined1 field255_0x201;
-    undefined1 field256_0x202;
-    undefined1 field257_0x203;
-    undefined1 field258_0x204;
-    undefined1 fadeActive; // 0x205 - set to 1 by Camera_SetFade (guards it from stomping an in-progress fade);
-                            // read by Script_Update to avoid double-triggering a scripted-camera-NIS fade-out
+    float fade;               // 0x1f8 - the fade (Camera_SetFade): 0 to 1
+    float fadeRate;           // 0x1fc - added each frame (Camera_UpdateGlbVars)
+    uchar fadeColour[4];      // 0x200 - red, green, blue and the alpha the fade gives
+    undefined1 fadeHold;      // 0x204 - Camera_SetFade's last argument: no new fade while one runs
+    undefined1 fadeState;     // 0x205 - VIEWFADE_
     undefined2 nightVisionRelated;
 };
 
@@ -153,10 +97,12 @@ struct portal_tag {
     portal_tag *next;           // 0x00 - the next portal of the same cel
     portal_tag *partner;        // 0x04 - the same opening, from the other cel
     cel_tag *cel;               // 0x08 - the cel on the other side (Collide_StraddleCels adds it)
-    char _unknown0c[0x10 - 0x0c];
+    obj_tag *door;              // 0x0c - a door in the opening: closed, the vision does not look through
     plane_equ_tag plane;        // 0x10
     uint32_t stamp;             // 0x20 - GameState.collisionStamp when Collide_StraddleCels last visited it
-    char _unknown24[0x28 - 0x24];
+    char _unknown24[2];
+    uchar seen;                 // 0x26 - looked through (Vision_Recurse), on both sides
+    uchar open;                 // 0x27 - the vision may look through it
     _VECTOR corners[4];         // 0x28 - two triangles, through Intersect_Portal's index table
     _VECTOR centre;             // 0x58
     _VECTOR boxMin;             // 0x64
@@ -186,10 +132,7 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field29_0x1d;
     undefined field30_0x1e;
     undefined field31_0x1f;
-    undefined field32_0x20;
-    undefined field33_0x21;
-    undefined field34_0x22;
-    undefined field35_0x23;
+    cel_tag *nextVisible;               // 0x20 - the cels drawn this frame, from GfxList (vision_generate_display_list)
     struct AINode_tag *aiNodes;         // 0x24 - the AI path nodes in this cel (AIPath_BindNodes)
     portal_tag *portals;                // 0x28 - this cel's portals, linked through portal_tag.next
     struct ENV_tag *env;                // 0x2c - the cel's wind (Env_GetWindVel); NULL for none
@@ -216,9 +159,10 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined addedToDraw;
     uchar musicEvent;                  // 0x91 - Player_Update sends it (Music_Event) every frame the player is in the cel
     undefined1 someSwitchChannel; /* Created by retype action */
-    undefined field122_0x93;
+    uchar blink;                       // 0x93 - its alpha: bits 0-1 the mode, 4-7 the speed (View_SetupCelRenderModes)
 };
 static_assert(offsetof(cel_tag, childCel) == 0x18, "Bad offset of cel_tag.childCel");
+static_assert(offsetof(cel_tag, nextVisible) == 0x20, "Bad offset of cel_tag.nextVisible");
 static_assert(offsetof(cel_tag, glist) == 0x38, "Bad offset of cel_tag.glist");
 static_assert(offsetof(cel_tag, position) == 0x58, "Bad offset of cel_tag.position");
 static_assert(offsetof(cel_tag, sphereRadius) == 0x7c, "Bad offset of cel_tag.sphereRadius");
@@ -226,6 +170,8 @@ static_assert(offsetof(cel_tag, flags84) == 0x84, "Bad offset of cel_tag.flags84
 
 // cel_tag::bitsFromPlacementTag: the geometry is in world space, and Collide_Pick tests the cel's box (not its sphere)
 #define CEL_WORLD_SPACE 0x08000000
+// cel_tag::bitsFromPlacementTag: the cel does not show the sky (vision_generate_display_list)
+#define CEL_NO_SKY 0x10000000
 // cel_tag::flags84
 enum {
     CEL_NO_COLLISION = 0x20,        // Collide_Pick passes it by
@@ -234,6 +180,16 @@ enum {
 };
 
 
+
+static_assert(sizeof(viewer_tag) == 0x208, "viewer_tag is 0x208 bytes");
+static_assert(offsetof(viewer_tag, draw) == 0x08, "Bad offset of viewer_tag.draw");
+static_assert(offsetof(viewer_tag, camMode) == 0x24, "Bad offset of viewer_tag.camMode");
+static_assert(offsetof(viewer_tag, move) == 0xac, "Bad offset of viewer_tag.move");
+static_assert(offsetof(viewer_tag, prevPos) == 0xc4, "Bad offset of viewer_tag.prevPos");
+static_assert(offsetof(viewer_tag, mtx) == 0x180, "Bad offset of viewer_tag.mtx");
+static_assert(offsetof(viewer_tag, swingPhase) == 0x1e0, "Bad offset of viewer_tag.swingPhase");
+static_assert(offsetof(viewer_tag, fade) == 0x1f8, "Bad offset of viewer_tag.fade");
+static_assert(offsetof(viewer_tag, nightVisionRelated) == 0x206, "Bad offset of viewer_tag.nightVisionRelated");
 
 #pragma pack(pop)
 

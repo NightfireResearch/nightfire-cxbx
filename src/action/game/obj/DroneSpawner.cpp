@@ -193,7 +193,7 @@ obj_tag* DroneSpawner_SpawnDrone(obj_tag *obj) {
     uint pick = Rand_Rand((short)spawner->entryCount2);     // sign-extended, as the original loads it
     DroneSpawnEntry_tag *entry = spawner->entries;
     obj_tag *player = NDrone2_Player();
-    float distanceSq = kNoPlayerDistanceSq;
+    double distanceSq = kNoPlayerDistanceSq;
     for (uint i = 0; i < spawner->entryCount; i++, entry++) {
         if (player != NULL)
             distanceSq = Vec_SqDist3D(&player->position, &entry->vars.position);

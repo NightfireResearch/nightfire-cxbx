@@ -23,6 +23,7 @@
 #include "devtools/Demo.h"
 #include "engine/LaunchOptions.h"
 #include "game/obj/Break.h"
+#include "game/view.h"
 
 // XBE_GLOBAL(0x002ae288, 0x4)
 uint32_t BackgroundMovieHashcode;
@@ -170,8 +171,6 @@ uint32_t SoundInfo;
 // Maybe hashcode of playing FMV
 
 
-// AUTOGEN
-void __stdcall Game_Draw(void);
 // AUTOGEN
 void __stdcall Boot_LoadPTPData(void);
 // AUTOGEN

@@ -3,6 +3,23 @@
 #include "../../common/gfx/d3d9Backend.h"
 #include "../engine/viewer.h"
 #include "../engine/Direct3D/GraphicsSystem.h"
+#include "../engine/Vision.h"
+#include "../engine/Camera.h"
+#include "../engine/Anim.h"
+#include "../engine/Collide.h"
+#include "../engine/psiDraw.h"
+#include "../engine/psiLight.h"
+#include "../engine/psiGraphics.h"
+#include "../game.h"
+#include "../gfx/Sprite.h"
+#include "../sound/Sound.h"
+#include "../util/Random.h"
+#include "../math/X87Ops.h"
+#include "obj/Break.h"
+#include "obj/Effect.h"
+#include "obj/control.h"
+#include "obj/object.h"
+#include <bit>
 #include <math.h>
 
 #include <stdio.h>
@@ -36,43 +53,61 @@ void View_SetDrawInThisViewOnly(obj_tag *param_1, char playerNum) {
     View_SetDrawInViews(param_1, views);
 }
 
+// The view's matrix from angles (z, then y, then x) and a position, with FSIN and FCOS. On the x87 the sines and
+// cosines stay unrounded, and so does the product of z's sine and y's for the y axis; that product and z's sine times
+// y's cosine are stored as floats for the rest.
 // AUTOINJECT
 void View_RotTransMatrix(_VECTOR *rotation, _VECTOR *position, _MATRIX *matrix) {
-  
-  float cos_rx = cosf(rotation->x);
-  float sin_rx = sinf(rotation->x);
-  float cos_ry = cosf(rotation->y);
-  float sin_ry = sinf(rotation->y);
-  float cos_rz = cosf(rotation->z);
-  float sin_rz = sinf(rotation->z);
+  Extended cosX = FCos(rotation->x);
+  Extended sinX = FSin(rotation->x);
+  Extended cosY = FCos(rotation->y);
+  Extended sinY = FSin(rotation->y);
+  Extended cosZ = FCos(rotation->z);
+  Extended sinZ = FSin(rotation->z);
 
-  matrix->m[0] = (cos_rz * cos_ry);
-  matrix->m[1] = sin_rz;
-  matrix->m[2] = -(cos_rz * sin_ry);
-  matrix->m[4] = (sin_ry * sin_rx - sin_rz * cos_ry * cos_rx);
-  matrix->m[5] = (cos_rz * cos_rx);
-  matrix->m[6] = (cos_ry * sin_rx + sin_rz * sin_ry * cos_rx);
-  matrix->m[8] = (sin_ry * cos_rx + sin_rz * cos_ry * sin_rx);
-  matrix->m[9] = -(cos_rz * sin_rx);
-  matrix->m[10] = (cos_ry * cos_rx - sin_rz * sin_ry * sin_rx);
+  matrix->m[0] = (float)(cosZ * cosY);
+  matrix->m[1] = (float)sinZ;
+  matrix->m[2] = (float)-(cosZ * sinY);
+  Extended sinZcosY = (float)(sinZ * cosY);
+  matrix->m[4] = (float)(sinY * sinX - sinZcosY * cosX);
+  matrix->m[5] = (float)(cosZ * cosX);
+  Extended sinZsinY = sinZ * sinY;
+  Extended sinZsinYStored = (float)sinZsinY;
+  matrix->m[6] = (float)(sinZsinY * cosX + cosY * sinX);
+  matrix->m[8] = (float)(sinZcosY * sinX + sinY * cosX);
+  matrix->m[9] = (float)-(cosZ * sinX);
+  matrix->m[10] = (float)(cosY * cosX - sinZsinYStored * sinX);
   matrix->m[0xc] = position->x;
   matrix->m[0xd] = position->y;
   matrix->m[0xe] = position->z;
-  return;
 }
 
+// As View_RotTransMatrix with each axis scaled before it is stored
 // AUTOINJECT
 void View_RotTransScaleMatrix(_VECTOR *rotation, _VECTOR *position, _VECTOR* scale, _MATRIX *matrix) {
-    View_RotTransMatrix(rotation, position, matrix);
-    matrix->m[0] *= scale->x;
-    matrix->m[1] *= scale->x;
-    matrix->m[2] *= scale->x;
-    matrix->m[4] *= scale->y;
-    matrix->m[5] *= scale->y;
-    matrix->m[6] *= scale->y;
-    matrix->m[8] *= scale->z;
-    matrix->m[9] *= scale->z;
-    matrix->m[10] *= scale->z;
+  Extended cosX = FCos(rotation->x);
+  Extended sinX = FSin(rotation->x);
+  Extended cosY = FCos(rotation->y);
+  Extended sinY = FSin(rotation->y);
+  Extended cosZ = FCos(rotation->z);
+  Extended sinZ = FSin(rotation->z);
+  Extended scaleX = scale->x, scaleY = scale->y, scaleZ = scale->z;
+
+  matrix->m[2] = (float)(-(cosZ * sinY) * scaleX);
+  matrix->m[0] = (float)(cosZ * cosY * scaleX);
+  matrix->m[1] = (float)(sinZ * scaleX);
+  Extended sinZcosY = (float)(sinZ * cosY);
+  matrix->m[4] = (float)((sinY * sinX - sinZcosY * cosX) * scaleY);
+  Extended sinZsinY = sinZ * sinY;
+  Extended sinZsinYStored = (float)sinZsinY;
+  matrix->m[6] = (float)((sinZsinY * cosX + cosY * sinX) * scaleY);
+  matrix->m[5] = (float)(cosZ * cosX * scaleY);
+  matrix->m[8] = (float)((sinZcosY * sinX + sinY * cosX) * scaleZ);
+  matrix->m[9] = (float)(-(cosZ * sinX) * scaleZ);
+  matrix->m[10] = (float)((cosY * cosX - sinZsinYStored * sinX) * scaleZ);
+  matrix->m[0xc] = position->x;
+  matrix->m[0xd] = position->y;
+  matrix->m[0xe] = position->z;
 }
 
 // AUTOINJECT
@@ -82,25 +117,45 @@ void View_DrawGlist(celglist_tag* celglist, _VECTOR *translation, _VECTOR *rotat
     psiDrawObjectMatrix(celglist, &mtx);
 }
 
+// The views an object is drawn in this pass, a bit each (View_CaptureSceneSub)
 #define object_display_mask U32_AT(0x0029e80c)
-#define GfxList U32_AT(0x0029d79c)
 // XBE_GLOBAL(0x001dfa18, 0x4)
 uint32_t switch_ForceDrawAll;
 
-// AUTOGEN
-void Vision_Init_Portal_Recurse(viewer_tag* viewer);
-// AUTOGEN
-void Vision_AddCelToDraw(cel_tag* cel, ushort param_2);
-// AUTOGEN
-void vision_generate_display_list(viewer_tag* viewer);
-// AUTOGEN
-void vision_GetCamPos(_VECTOR* camPos);
-// AUTOGEN
-void Vision_Portal_Recurse(viewer_tag* viewer);
-
-
 // XBE_GLOBAL(0x0029dbf0, 0xc)
 #define CamPos (*(_VECTOR*)(0x0029dbf0))
+
+// Set for each object added to a view (the draw code reads them): its transformFlags' bit 0, and 0
+#define OnlyScaleZ U16_AT(0x0029e814)
+#define FlipScale U16_AT(0x0029e818)
+// Set for each object View_DrawObjList draws: its flags' bits 2 and 3
+#define bCharacterLight U8_AT(0x001d7824)
+#define bShadowCharacter U8_AT(0x001d7825)
+// A codename option (P_CNOPTIONS_Handler): objects that want it flash, with FlashMod, near the view
+#define FlashOption U8_AT(0x001fe6dc)
+#define FlashMod FLOAT_AT(0x0027911c)
+
+// The originals, called by address
+#define Lights_CalcClosestLights ((void **(__cdecl *)(_VECTOR *sphere, uint mask, ushort *count))0x0006d8f0)
+#define Emitter_Draw ((void (__cdecl *)(obj_tag *obj, viewer_tag *viewer))0x00068930)
+#define View_DrawSprites ((void (__cdecl *)(viewer_tag *viewer, sprite **list, uint first, uint last))0x000d9410)
+#define DrawDrops ((void (__cdecl *)(void))0x000a3560)
+#define GlobalBlur U8_AT(0x001f667c)
+
+// The empty function the linker shares, where the source called its profiling hooks
+#define __profiling_or_debugging_hook_point ((void (__cdecl *)(void))0x000e0ec0)
+void __cdecl QuickSort(void *list, uint count, uint size, COMP_FUNC compareType, undefined *customComparisonFunc);
+
+// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
+// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
+static int32_t Ftol(double x) {
+    if (!(fabs(x) < 9223372036854775808.0))
+        return 0;
+    long long nearest = llrint(x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x));
+}
 
 // Cannot autoinject - custom calling convention
 // Only used from within View_CaptureScene, so not a problem
@@ -115,7 +170,7 @@ void View_CaptureSceneSub(byte mask, viewer_tag* viewer) {
     for(cel_tag* cel = viewer->world->firstCel; cel != NULL; cel = cel->nextCel) {
         cel->addedToDraw = 0;
     }
-    
+
     Vision_Init_Portal_Recurse(viewer);
 
     if(!switch_ForceDrawAll) {
@@ -132,44 +187,203 @@ void View_CaptureSceneSub(byte mask, viewer_tag* viewer) {
     vision_GetCamPos(&CamPos);
 }
 
-// Can't generate automatically - custom calling convention
-void __declspec(naked) View_AddCels(viewer_tag* viewer) {
-    // Custom wrapper - viewer pointer is expected in ESI by the original function, which is located at 0x000daa00.
-    // ESI is callee-saved, so it is restored afterwards rather than handed back holding the viewer - see
-    // SP_LoadScript for what a tail-jmp here costs when the caller keeps something else in ESI.
+// The next entry of one of a view's draw lists, for an object or a cel. The lists are rings: past the end, the first
+// entries are written again.
+static DrawEntry *View_AddToList(viewer_tag *viewer, int list, obj_tag *obj, cel_tag *cel) {
+    ViewDrawLists &draw = viewer->draw;
+    DrawEntry *entry = &draw.lists[list][draw.counts[list]];
+    draw.counts[list] = (draw.counts[list] + 1) & (draw.sizes[list] - 1);
+    entry->obj = obj;
+    entry->cel = cel;
+    if (obj != NULL)
+        obj->drawnCountdown = 2;
+    return entry;
+}
+
+// The list an object or a cel is drawn in, by its flags (bit 0: back to front, by a negative key; 0x2000: last)
+static int View_ListFor(uint flags, float *sign) {
+    int list = 0;
+    *sign = 1.0f;
+    if (flags & 1) {
+        list = 1;
+        *sign = -1.0f;
+    }
+    if (flags & 0x2000) {
+        list = 2;
+        *sign = 1.0f;
+    }
+    return list;
+}
+
+// An animated object's detail in this view (0 to 255 for 4 x its distance squared over the zoom), for its animation
+static void View_SetDetail(obj_tag *obj, viewer_tag *viewer, double distanceSq) {
+    AnimState *anim = obj->animState;
+    if (anim == NULL)
+        return;
+    double detail = distanceSq / viewer->zoom * 0.25f;
+    if (detail < 0.0)
+        detail = 0.0f;
+    else if (detail > 255.0f)
+        detail = 255.0f;
+    uchar which = (uchar)viewer->idx < 3 ? (uchar)viewer->idx : 3;
+    anim->animObj.lod[which] = Ftol(detail);
+}
+
+// Adds a cel's objects that this view draws and sees: those with a model, particles (transformFlags 0x10) and
+// emitters (0x100); not hidden (effectFlags 0x10) or crossing cels (0x8000, View_AddForcedObjects); with 0x400, only
+// in night vision (view mode 2). Particles sort 2000 further back.
+void _View_AddObjects(cel_tag *cel, viewer_tag *viewer) {
+    for (obj_tag *obj = cel->firstObject; obj != NULL; obj = obj->nextInCel) {
+        OnlyScaleZ = 0;
+        FlipScale = 0;
+        if (!(obj->transformFlags & 0x110) && obj->objGraphics == NULL)
+            continue;
+        if (!(obj->displayMask & object_display_mask))
+            continue;
+        if (obj->effectFlags & 0x8010)
+            continue;
+        if (!Vision_InView(&obj->centrePoint, obj->radius, viewer))
+            continue;
+        if ((obj->effectFlags & 0x400) && viewer->nightVisionRelated != 2)
+            continue;
+
+        OnlyScaleZ = obj->transformFlags & TRANSFORM_SCALE_LENGTH_ONLY;
+        float sign;
+        int list = View_ListFor(obj->effectFlags, &sign);
+        if (obj->transformFlags & TRANSFORM_ANIMATED)
+            sign = sign * 50.0f;
+        DrawEntry *entry = View_AddToList(viewer, list, obj, NULL);
+        double distanceSq = Vec_SqDist3D(&obj->centrePoint, &CamPos);
+        double key = sign * distanceSq;
+        entry->key = (float)key;
+        if (obj->transformFlags & 0x10)
+            entry->key = (float)(key + 2000.0f);
+        View_SetDetail(obj, viewer, distanceSq);
+    }
+}
+
+// The cel in EAX, the view on the stack (with a second argument the original does not read)
+// AUTOLTCG
+void __declspec(naked) View_AddObjects(viewer_tag *viewer, cel_tag *cel) {
     _asm {
-        push esi
-        mov esi, [esp + 8]
-        push esi
-        mov eax, 0x000DAA00
-        call eax
-        add esp, 4
-        pop esi
+        push dword ptr [esp + 4]
+        push eax
+        call _View_AddObjects
+        add esp, 8
         ret
     }
 }
 
-// AUTOGEN
-void View_AddForcedObjects(viewer_tag* viewer);
+// The cels to draw this frame into list 0, in order (keys from -90000 up in tens), with their objects; then the cels
+// inside each that the view sees, by their distance squared from the eye, and their objects. Inside cels of kind
+// 0x8018 are not drawn from a cel of kind 0xc023; those flagged 0x40000 not in view 4's pass (mask 0x10).
+void _View_AddCels(viewer_tag *viewer) {
+    float key = -90000.0f;
+    for (cel_tag *cel = GfxList; cel != NULL; cel = cel->nextVisible) {
+        if (cel->glist != NULL && !(cel->glist->applyFlagsToObject & 0x10)) {
+            DrawEntry *entry = View_AddToList(viewer, 0, NULL, cel);
+            entry->key = key;
+            key = key + 10.0f;
+        }
+        _View_AddObjects(cel, viewer);
 
-#define Tots U32_AT(0x0029e800)
-#define DAT_0029e804 U32_AT(0x0029e804)
-#define DAT_0029e808 U32_AT(0x0029e808)
+        for (cel_tag *inside = cel->childCel; inside != NULL; inside = inside->childCel) {
+            if (inside->glist == NULL || (inside->glist->applyFlagsToObject & 0x10))
+                continue;
+            if ((inside->bitsFromPlacementTag & 0xffff) == 0x8018 &&
+                (viewer->someCel->bitsFromPlacementTag & 0xffff) == 0xc023)
+                continue;
+            if ((inside->flags84 & 0x40000) && object_display_mask == 0x10)
+                continue;
+            if (!Vision_InView(&inside->sphere, inside->sphereRadius, viewer))
+                continue;
+
+            float sign;
+            int list = View_ListFor(inside->flags84, &sign);
+            DrawEntry *entry = View_AddToList(viewer, list, NULL, inside);
+            entry->key = (float)(Vec_SqDist3D(&inside->sphere, &CamPos) * sign);
+            _View_AddObjects(inside, viewer);
+        }
+    }
+}
+
+// The view in ESI
+// AUTOLTCG
+void __declspec(naked) View_AddCels(viewer_tag *viewer) {
+    _asm {
+        push esi
+        call _View_AddCels
+        add esp, 4
+        ret
+    }
+}
+
+// The objects that cross cels (effectFlags 0x8000), from the world's list, that this view draws and sees. A drone
+// larger than 0.5 is drawn only if a cel it is in is drawn this frame.
+// AUTOINJECT
+void View_AddForcedObjects(viewer_tag *viewer) {
+    for (obj_tag *obj = control_first_object(); obj != NULL; obj = obj->nextObject) {
+        if (!(object_display_mask & obj->displayMask))
+            continue;
+        if (obj->objGraphics == NULL)
+            continue;
+        if (!(obj->effectFlags & 0x8000) || (obj->effectFlags & FLAG_HIDDEN))
+            continue;
+        if (!Vision_InView(&obj->centrePoint, obj->radius, viewer))
+            continue;
+        if ((obj->effectFlags & 0x400) && viewer->nightVisionRelated != 2)
+            continue;
+
+        if (obj->objectType == OBJECTTYPE_DRONE && obj->radius > 0.5f) {
+            HITTEST_tag test = {};
+            test.type = HITTEST_SPHERE;
+            Vec_Copy(&obj->centrePoint, &test.pos);
+            test.radius = obj->radius;
+            test.cel = obj->inCel;
+            ushort count;
+            cel_tag **cels = Collide_StraddleCels(&test, &count);
+            bool drawn = false;
+            for (cel_tag *cel = GfxList; cel != NULL && !drawn; cel = cel->nextVisible) {
+                for (ushort i = 0; i < count; i++) {
+                    if (cels[i] == cel) {
+                        drawn = true;
+                        break;
+                    }
+                }
+            }
+            if (!drawn)
+                continue;
+        }
+
+        OnlyScaleZ = obj->transformFlags & TRANSFORM_SCALE_LENGTH_ONLY;
+        float sign;
+        int list = View_ListFor(obj->effectFlags, &sign);
+        if (obj->transformFlags & TRANSFORM_ANIMATED)
+            sign = sign * 50.0f;
+        DrawEntry *entry = View_AddToList(viewer, list, obj, NULL);
+        double distanceSq = Vec_SqDist3D(&obj->centrePoint, &CamPos);
+        entry->key = (float)(sign * distanceSq);
+        View_SetDetail(obj, viewer, distanceSq);
+    }
+}
+
+// XBE_GLOBAL(0x0029e800, 0xc)
+#define Tots (*(uint32_t (*)[3])0x0029e800)
 
 void _View_CaptureScene(viewer_tag *viewer) {
-    viewer->field11_0x14 = 0;
-    viewer->field12_0x16 = 0;
-    viewer->field13_0x18 = 0;
-    if (viewer->field25_0x29 && viewer->field2_0x8) {
+    viewer->draw.counts[0] = 0;
+    viewer->draw.counts[1] = 0;
+    viewer->draw.counts[2] = 0;
+    if (viewer->enabled && viewer->draw.lists[0]) {
 
         View_CaptureSceneSub(viewer->idx, viewer);
-        View_AddCels(viewer);
+        _View_AddCels(viewer);
         View_AddForcedObjects(viewer);
 
         // Log statistics
-        Tots += viewer->field11_0x14;
-        DAT_0029e804 += viewer->field12_0x16;
-        DAT_0029e808 += viewer->field13_0x18; // This handles first-person weapon models intersecting level geometry. Non-zero value causes camera 5 to be drawn in Game_Draw
+        Tots[0] += viewer->draw.counts[0];
+        Tots[1] += viewer->draw.counts[1];
+        Tots[2] += viewer->draw.counts[2]; // This handles first-person weapon models intersecting level geometry. Non-zero value causes camera 5 to be drawn in Game_Draw
     }
 }
 
@@ -185,6 +399,337 @@ void __declspec(naked) View_CaptureScene(viewer_tag* viewer) {
     }
 
 }
+
+// An object's colour (tweakR, G, B) and alpha (tweakA) as the draw tweak: the alpha a quarter in night vision with
+// effectFlags 0x20000, the colour times its light's (light_related) with 0x800, and times FlashMod when it flashes
+// (effectFlags 0x80000 or its model's, with FlashOption, within 4 of the eye).
+// AUTOINJECT
+void View_SetupRenderModes_Tweak(viewer_tag *viewer, obj_tag *obj) {
+    short alpha = obj->tweakA;
+    if ((obj->effectFlags & 0x20000) && viewer->nightVisionRelated == 1)
+        alpha = alpha / 4;
+
+    bool flashes = (obj->effectFlags & 0x80000) ||
+                   (obj->objGraphics != NULL && (obj->objGraphics->applyFlagsToObject & 0x80000));
+    if (flashes && FlashOption && Vec_SqDist3D(&viewer->pos, &obj->centrePoint) < 16.0f) {
+        double flash = FlashMod;
+        if (obj->effectFlags & 0x800) {
+            psiSetTweakARGB(alpha, Ftol((int)(obj->tweakR * obj->light_related1) * flash * (1.0f / 255.0f)),
+                            Ftol((int)(obj->tweakG * obj->light_related2) * flash * (1.0f / 255.0f)),
+                            Ftol((int)(obj->tweakB * obj->light_related3) * flash * (1.0f / 255.0f)));
+        } else {
+            psiSetTweakARGB(alpha, Ftol((int)obj->tweakR * flash), Ftol((int)obj->tweakG * flash),
+                            Ftol((int)obj->tweakB * flash));
+        }
+    } else if (obj->effectFlags & 0x800) {
+        psiSetTweakARGB(alpha, (obj->tweakR * obj->light_related1) >> 8, (obj->tweakG * obj->light_related2) >> 8,
+                        (obj->tweakB * obj->light_related3) >> 8);
+    } else {
+        psiSetTweakARGB(alpha, obj->tweakR, obj->tweakG, obj->tweakB);
+    }
+}
+
+// An object's tweak and the lights nearest it
+// AUTOINJECT
+void View_SetupRenderModes(viewer_tag *viewer, obj_tag *obj) {
+    if (obj == NULL)
+        return;
+
+    View_SetupRenderModes_Tweak(viewer, obj);
+    ushort count;
+    void **lights = Lights_CalcClosestLights(&obj->centrePoint, (ushort)obj->effectFlags, &count);
+    psiLight_SetLights(lights, count, 1.0f, 1.0f, 1.0f);
+}
+
+// The gun in the view: the view's player's tweak and the lights within 2 of the eye
+// AUTOINJECT
+void View_SetupRenderModes2(viewer_tag *viewer, obj_tag *obj) {
+    if (obj == NULL || viewer->player == NULL)
+        return;
+
+    View_SetupRenderModes_Tweak(viewer, viewer->player);
+    struct {
+        _VECTOR centre;
+        float radius;
+    } eye = {viewer->pos, 2.0f};
+    ushort count;
+    void **lights = Lights_CalcClosestLights(&eye.centre, (ushort)obj->effectFlags, &count);
+    psiLight_SetLights(lights, count, 1.0f, 1.0f, 1.0f);
+}
+
+// A cel's alpha by its blink (1: falling, 2: rising, at its speed times the frame count; else solid) and the lights
+// nearest it
+static void View_SetupCelRenderModes(cel_tag *cel) {
+    uchar alpha = (uchar)(cel->blink >> 4) * (uchar)GameState.NumFramesUnpaused;
+    switch (cel->blink & 3) {
+    case 1:
+        alpha = 0xff - alpha;
+        break;
+    case 2:
+        break;
+    default:
+        alpha = 0xff;
+        break;
+    }
+    psiSetTweakARGB(alpha, 0xff, 0xff, 0xff);
+    ushort count;
+    void **lights = Lights_CalcClosestLights(&cel->sphere, (ushort)cel->flags84, &count);
+    psiLight_SetLights(lights, count, 1.0f, 1.0f, 1.0f);
+}
+
+// The marks on a cel or an object, each in its object's space when it has one; those flagged 0x400 only in night
+// vision
+static void View_DrawAttachments(ATTACH_tag *attachment, viewer_tag *viewer) {
+    for (; attachment != NULL; attachment = attachment->next) {
+        if (attachment->glist == NULL)
+            continue;
+        if ((attachment->glist->applyFlagsToObject & 0x400) && viewer->nightVisionRelated != 2)
+            continue;
+        if (attachment->parent != NULL) {
+            _MATRIX mtx;
+            Mat_Copy(&attachment->matrix, &mtx);
+            Concat(&attachment->parent->transformMatrix, &mtx);
+            psiDrawObjectMatrix(attachment->glist, &mtx);
+        } else {
+            psiDrawObjectMatrix(attachment->glist, &attachment->matrix);
+        }
+    }
+}
+
+// A cel's geometry: turned by its rotation (or facing the view, flags84 8), shaken in scale (4), at its position
+void _View_DrawCelGlist(viewer_tag *viewer, cel_tag *cel) {
+    View_SetupCelRenderModes(cel);
+    _MATRIX mtx;
+    if (cel->flags84 & 8) {
+        Mat_CopyRot(&viewer->mtx, &mtx);
+    } else {
+        RotMatrixZYX(&cel->rotation, &mtx);
+    }
+    if (cel->flags84 & 4) {
+        float z = (float)(Float_FRand(0.05f) + 1.0f);
+        float y = (float)(Float_FRand(0.05f) + 1.0f);
+        float x = (float)(Float_FRand(0.05f) + 1.0f);
+        Mat_Scale3f(&mtx, &mtx, x, y, z);
+    }
+    Matrix_SetTrans(&cel->position, &mtx);
+    psiDrawObjectMatrix(cel->glist, &mtx);
+    View_DrawAttachments(cel->attachments, viewer);
+}
+
+// The view in EAX, the cel in ESI
+// AUTOLTCG
+void __declspec(naked) View_DrawCelGlist(cel_tag *cel, viewer_tag *viewer) {
+    _asm {
+        push esi
+        push eax
+        call _View_DrawCelGlist
+        add esp, 8
+        ret
+    }
+}
+
+// An object's model in its matrix: or facing the view (effectFlags 8; turned about z alone when it has a z rotation,
+// which clears its x and y), at its scale; shaken in scale (4)
+// AUTOINJECT
+void View_DrawObjectGlist(obj_tag *obj, viewer_tag *viewer) {
+    _MATRIX mtx;
+    if (obj->effectFlags & 8) {
+        if (obj->rotation.z != 0.0f) {
+            obj->rotation.y = 0.0f;
+            obj->rotation.x = 0.0f;
+            RotTransMatrix(&obj->rotation, &CONST_ZERO_VECTOR, &mtx);
+            Concat(&viewer->mtx, &mtx);
+        } else {
+            Mat_CopyRot(&viewer->mtx, &mtx);
+        }
+        Matrix_SetTrans(Mat_Position(obj->transformMatrix), &mtx);
+        if (obj->scale != 1.0f)
+            Mat_Scale3f(&mtx, &mtx, obj->scale, obj->scale, obj->scale);
+    } else {
+        Mat_Copy(&obj->transformMatrix, &mtx);
+    }
+    if (obj->effectFlags & 4) {
+        float z = (float)(Float_FRand(0.05f) + obj->scale);
+        float y = (float)(Float_FRand(0.05f) + obj->scale);
+        float x = (float)(Float_FRand(0.05f) + obj->scale);
+        Mat_Scale3f(&mtx, &mtx, x, y, z);
+    }
+    psiDrawObjectMatrix(obj->objGraphics, &mtx);
+    View_DrawAttachments(obj->attachments, viewer);
+}
+
+// One of the view's draw lists, sorted: cels, animated objects, particles (whose drawing is gone, an empty call),
+// emitters and models
+// AUTOINJECT
+void View_DrawObjList(viewer_tag *viewer, ushort list) {
+    if (list == 1)
+        __profiling_or_debugging_hook_point();
+    if (viewer->draw.counts[list] != 0)
+        QuickSort(viewer->draw.lists[list], viewer->draw.counts[list], sizeof(DrawEntry), Compare_AlphaObj, NULL);
+
+    for (ushort i = 0; i < viewer->draw.counts[list]; i++) {
+        DrawEntry *entry = &viewer->draw.lists[list][i];
+        cel_tag *cel = entry->cel;
+        obj_tag *obj = entry->obj;
+        bCharacterLight = 0;
+        bShadowCharacter = 0;
+        if (cel != NULL) {
+            _View_DrawCelGlist(viewer, cel);
+            continue;
+        }
+
+        bCharacterLight = (obj->flags >> 2) & 1;
+        bShadowCharacter = (obj->flags >> 3) & 1;
+        if (obj->transformFlags & TRANSFORM_ANIMATED) {
+            AnimObjectDraw(obj, viewer);
+            continue;
+        }
+        View_SetupRenderModes_Tweak(viewer, obj);
+        ushort count;
+        void **lights = Lights_CalcClosestLights(&obj->centrePoint, (ushort)obj->effectFlags, &count);
+        psiLight_SetLights(lights, count, 1.0f, 1.0f, 1.0f);
+        if (obj->transformFlags & 0x10)
+            __profiling_or_debugging_hook_point();
+        else if (obj->transformFlags & 0x100)
+            Emitter_Draw(obj, viewer);
+        else
+            View_DrawObjectGlist(obj, viewer);
+    }
+    if (list == 1)
+        __profiling_or_debugging_hook_point();
+    bCharacterLight = 0;
+    bShadowCharacter = 0;
+}
+
+#pragma pack(push, 1)
+// The sky's models (View_AddSkyObj), each a model or an object, and those that flash: lightning, in the sky's
+// level of the given pass, at random within its interval for its length, with thunder after
+struct SkyObj {
+    celglist_tag *glist;
+    celglist_tag *flashGlist;   // 0x04
+    obj_tag *obj;               // 0x08
+    obj_tag *flashObj;          // 0x0c
+    _VECTOR pos;                // 0x10
+    _VECTOR rot;                // 0x1c
+    ushort flashInterval;       // 0x28 - frames
+    ushort flashLength;         // 0x2a
+    short flashTimer;           // 0x2c
+    short countdown;            // 0x2e
+    short thunderDelay;         // 0x30
+    char pass;                  // 0x32
+    char pad33;
+};
+#pragma pack(pop)
+static_assert(sizeof(SkyObj) == 0x34, "SkyObj is 0x34 bytes");
+
+#define SKY_OBJS 21
+#define SkyObjs (*(SkyObj (*)[SKY_OBJS])0x0029d7a0)
+// A flash shows this frame; this flash is overhead (Lightning_Update reads both); its thunder is near
+#define LightningFlash U8_AT(0x0029e81a)
+#define ThunderNear U8_AT(0x0029e81b)
+#define LightningOverhead U8_AT(0x0029e81c)
+// The frames the sky has turned, on its level 0x0700001b, and where its sun goes
+#define SkyTurn U32_AT(0x0029e820)
+#define SkySunPos (*(_VECTOR *)0x001f6668)
+#define SKY_TURNING_LEVEL 0x0700001b
+#define SKY_SUN_YAW 4.9741883f
+#define SKY_SUN_PITCH -0.6632251f
+static_assert(std::bit_cast<uint32_t>(SKY_SUN_YAW) == 0x409f2c8d, "not the original's constant");
+static_assert(std::bit_cast<uint32_t>(SKY_SUN_PITCH) == 0xbf29c91f, "not the original's constant");
+
+// The sky's models of a pass (the near sky 1, the far 0), when the view's cels show it: fog off while they draw, then
+// back on
+// AUTOINJECT
+void View_DrawSky(viewer_tag *viewer, char pass) {
+    psiSetTweakARGB(0xff, 0xff, 0xff, 0xff);
+    psiSetUpColourBlend(2);
+    psiLight_SetLights(NULL, 0, 0.0f, 0.0f, 0.0f);
+    psiFog(pass, 0.0f, 10.0f, 0xff, 0, 0);
+    if (viewer->draw.skyVisible) {
+        LightningFlash = 0;
+        for (int i = 0; i < SKY_OBJS; i++) {
+            SkyObj *sky = &SkyObjs[i];
+            if (sky->pass != pass)
+                continue;
+
+            celglist_tag *glist = sky->glist;
+            obj_tag *obj = sky->obj;
+            if (!GameState.SomeAlternatePauseState) {
+                if (sky->thunderDelay > 0) {
+                    sky->thunderDelay--;
+                    if (sky->thunderDelay == 0)
+                        Sound_PlayExt((Action_SFX)(ThunderNear ? 0x5e : 0x5d), 100.0f, 0, 0);
+                }
+                if (sky->flashTimer > 0) {
+                    sky->flashTimer--;
+                    if (Rand_Rand(100) > 50) {
+                        glist = sky->flashGlist;
+                        obj = sky->flashObj;
+                        if (ThunderNear == 1)
+                            LightningFlash = 1;
+                    }
+                } else if (sky->flashGlist != NULL || sky->flashObj != NULL) {
+                    sky->countdown--;
+                    LightningOverhead = 0;
+                    if (sky->countdown <= 0) {
+                        obj = sky->flashObj;
+                        glist = sky->flashGlist;
+                        sky->flashTimer = sky->flashLength;
+                        sky->countdown = Rand_Rand(sky->flashInterval);
+                        double delay;
+                        if (Rand_Rand(100) > 50) {
+                            ThunderNear = 0;
+                            delay = (double)Rand_Rand(Ftol((double)_FRAME_RATE + _FRAME_RATE)) +
+                                    (double)_FRAME_RATE * 0.5f;
+                        } else {
+                            delay = (double)_FRAME_RATE * 0.16666667f;
+                            LightningOverhead = 1;
+                            ThunderNear = 1;
+                        }
+                        sky->thunderDelay = Ftol(delay);
+                    }
+                }
+            }
+
+            if (glist != NULL) {
+                _MATRIX mtx;
+                if (glist->applyFlagsToObject & 8) {
+                    Mat_CopyRot(&viewer->mtx, &mtx);
+                } else {
+                    Mat_CopyRot(&MAT_IDENTITY, &mtx);
+                    _MATRIX turn;
+                    RotMatrix(&sky->rot, &turn);
+                    Concat(&turn, &mtx);
+                    if (GameState.CurrentLevelHashcode == SKY_TURNING_LEVEL) {
+                        Vec_Spherical_2_Cartesian(&SkySunPos.x, 1000.0f, SKY_SUN_YAW, SKY_SUN_PITCH);
+                        if (!GameState.SomeAlternatePauseState)
+                            SkyTurn++;
+                        _VECTOR angles = {(float)((double)SkyTurn * 0.00069444446f), 0.0f, 0.0f};
+                        RotMatrix(&angles, &turn);
+                        Concat(&turn, &mtx);
+                        ApplyMatrixLVI(&mtx, &SkySunPos);
+                    }
+                }
+                if (glist->applyFlagsToObject & 2)
+                    Vec_Copy(Mat_Position(viewer->viewMatrix), Mat_Position(mtx));
+                else
+                    Vec_Copy(&sky->pos, Mat_Position(mtx));
+                psiDrawObjectMatrix(glist, &mtx);
+            } else if (obj != NULL) {
+                _VECTOR scale = {obj->scale, obj->scale, obj->scale};
+                _VECTOR pos;
+                Vec_Copy(&obj->position, &pos);
+                if (obj->objectType == OBJECTTYPE_CLOUD)
+                    pos.y = (float)((double)((int *)obj->extraObjectData)[4] + viewer->viewMatrix.m[13]);
+                _MATRIX mtx;
+                View_RotTransScaleMatrix(&obj->rotation, &pos, &scale, &mtx);
+                psiDrawObjectMatrix(obj->objGraphics, &mtx);
+            }
+        }
+    }
+    psiFog(1, 0.0f, 20.0f, 0x64, 0x64, 0x96);
+}
+
 
 // AUTOGEN
 void View_AddSkyObj(ushort param_1,celglist_tag *param_2,_VECTOR *param_3,_VECTOR *param_4,obj_tag *param_5,char param_6,ushort param_7,ushort param_8,char param_9);
@@ -338,4 +883,174 @@ short View_3DPoint2Screen(_VECTOR *vecIn, _VECTOR *vecOut, ushort viewerNum) {
     vecOut->z = tmp.z;
 
     return returnValue;
+}
+
+// Sets up a view for drawing unless it is the one set up last
+static void UseCamera(short *current, short num) {
+    if (*current != num)
+        psiUseCamera(glb_viewer[num]);
+    *current = num;
+}
+
+// The frame: every view's scene gathered, then the players' views (0-3) drawn pass by pass - near sky, opaque lists,
+// far sky, sorted lists with the shards and drops, the last lists (on a cleared depth when view 5 has any), sprites
+// and fades - then the other views (4-9) one at a time, with view 4 drawing the shards and drops.
+// AUTOINJECT
+void __stdcall Game_Draw(void) {
+    short current = -1;
+    GameState.maybeLoadingBlobs++;
+    psiSetScreenBlur(GlobalBlur);
+    if (GlobalBlur >= 0x10)
+        GlobalBlur -= 0x10;
+    else
+        GlobalBlur = 0;
+    psiPreDraw();
+
+    Tots[0] = 0;
+    Tots[1] = 0;
+    Tots[2] = 0;
+    for (int i = 0; i < 11; i++) {
+        if (glb_viewer[i] != NULL)
+            View_CaptureScene(glb_viewer[i]);
+    }
+    psiFog(1, 0.0f, 10.0f, 0xff, 0, 0);
+
+    for (short i = 0; i < 4; i++) {
+        viewer_tag *viewer = glb_viewer[i];
+        if (viewer != NULL && viewer->enabled && viewer->draw.skyVisible) {
+            UseCamera(&current, i);
+            View_DrawSky(viewer, 1);
+        }
+    }
+    for (short i = 0; i < 4; i++) {
+        viewer_tag *viewer = glb_viewer[i];
+        if (viewer != NULL && viewer->enabled && viewer->draw.counts[0] != 0) {
+            UseCamera(&current, i);
+            psiSetUpColourBlend(2);
+            View_DrawObjList(viewer, 0);
+        }
+    }
+    __profiling_or_debugging_hook_point();
+    for (short i = 0; i < 4; i++) {
+        viewer_tag *viewer = glb_viewer[i];
+        if (viewer != NULL && viewer->enabled && viewer->draw.skyVisible) {
+            UseCamera(&current, i);
+            View_DrawSky(viewer, 0);
+        }
+    }
+    for (short i = 0; i < 4; i++) {
+        viewer_tag *viewer = glb_viewer[i];
+        if (viewer == NULL || !viewer->enabled)
+            continue;
+        if (viewer->draw.counts[1] != 0) {
+            UseCamera(&current, i);
+            psiSetUpColourBlend(1);
+            View_DrawObjList(viewer, 1);
+        }
+        if (viewer->enabled) {
+            UseCamera(&current, i);
+            psiSetShardRenderStates();
+            DrawAllShards();
+            psiSetTweakARGB(0xff, 0xff, 0xff, 0xff);
+            psiSetUpColourBlend(2);
+            psiLight_SetLights(NULL, 0, 0.0f, 0.0f, 0.0f);
+            DrawDrops();
+        }
+    }
+    if (Tots[2] != 0) {
+        UseCamera(&current, 5);
+        psiClearZ();
+    }
+    for (short i = 0; i < 4; i++) {
+        viewer_tag *viewer = glb_viewer[i];
+        if (viewer != NULL && viewer->enabled && viewer->draw.counts[2] != 0) {
+            UseCamera(&current, i);
+            if (viewer->enabled) {
+                psiSetUpColourBlend(2);
+                View_DrawObjList(viewer, 2);
+            }
+        }
+    }
+
+    sprite **list = NULL;
+    undefined4 start = 0;
+    uint lastForeground = 0, count = 0;
+    for (short i = 0; i < 4; i++) {
+        viewer_tag *viewer = glb_viewer[i];
+        if (viewer == NULL || !viewer->spritesShown)
+            continue;
+        list = Sprite_BuildList(i, &start, &lastForeground, &count);
+        if (lastForeground != 0 || count != 0) {
+            UseCamera(&current, i);
+            View_DrawSprites(viewer, list, lastForeground, count);
+        }
+        if (viewer->fadeState) {
+            UseCamera(&current, i);
+            psiFadeView(viewer->fadeColour[0], viewer->fadeColour[1], viewer->fadeColour[2], viewer->fadeColour[3]);
+        }
+        __profiling_or_debugging_hook_point();
+    }
+
+    start = 0;
+    lastForeground = 0;
+    count = 0;
+    for (short i = 4; i < 10; i++) {
+        viewer_tag *viewer = glb_viewer[i];
+        if (viewer == NULL)
+            continue;
+        if (viewer->enabled || viewer->draw.skyVisible) {
+            UseCamera(&current, i);
+            View_DrawSky(viewer, 1);
+        }
+        if (viewer->spritesShown) {
+            list = Sprite_BuildList(i, &start, &lastForeground, &count);
+            if (start != 0) {
+                UseCamera(&current, i);
+                View_DrawSprites(viewer, list, start, lastForeground);
+            }
+        }
+        viewer = glb_viewer[i];
+        if (viewer->enabled && viewer->draw.counts[0] != 0) {
+            UseCamera(&current, i);
+            psiSetUpColourBlend(2);
+            View_DrawObjList(viewer, 0);
+            __profiling_or_debugging_hook_point();
+        }
+        if (viewer->enabled || viewer->draw.skyVisible) {
+            UseCamera(&current, i);
+            View_DrawSky(viewer, 0);
+        }
+        if (viewer->enabled) {
+            if (viewer->draw.counts[1] != 0) {
+                UseCamera(&current, i);
+                psiSetUpColourBlend(1);
+                View_DrawObjList(viewer, 1);
+            }
+            if (viewer->enabled && i == 4) {
+                UseCamera(&current, 4);
+                psiSetShardRenderStates();
+                DrawAllShards();
+                psiSetTweakARGB(0xff, 0xff, 0xff, 0xff);
+                psiSetUpColourBlend(2);
+                psiLight_SetLights(NULL, 0, 0.0f, 0.0f, 0.0f);
+                DrawDrops();
+            }
+        }
+        if (viewer->enabled && viewer->draw.counts[2] != 0) {
+            UseCamera(&current, i);
+            psiSetUpColourBlend(2);
+            View_DrawObjList(viewer, 2);
+        }
+        if ((lastForeground != 0 || count != 0) && viewer->spritesShown) {
+            UseCamera(&current, i);
+            View_DrawSprites(viewer, list, lastForeground, count);
+        }
+        if (viewer->fadeState && viewer->spritesShown) {
+            UseCamera(&current, i);
+            psiFadeView(viewer->fadeColour[0], viewer->fadeColour[1], viewer->fadeColour[2], viewer->fadeColour[3]);
+        }
+        __profiling_or_debugging_hook_point();
+    }
+    SprCnt = 0;
+    psiPostDraw();
 }

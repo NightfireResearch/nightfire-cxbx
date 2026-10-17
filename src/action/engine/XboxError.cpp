@@ -1,5 +1,6 @@
 #include "XboxError.h"
 #include "Direct3D/d3dSeam.h"
+#include "../math/X87Ops.h"
 #include "XboxSystem.h"   // Language_Get, allocateAligned0x1000
 
 #include <math.h>
@@ -140,8 +141,10 @@ void FS_FatalErrorHandler(void) {
     d3dMarkTexturePermanent(texture);
     float row = (float)(language << 6);
     for (;;) {
-        DiscErrorPulse = DiscErrorPulse + 0.042f;
-        int level = (int)(fabs(sin((double)DiscErrorPulse) * 88.0) + 40.0f);
+        // FSIN of the unrounded sum, the float kept for next time
+        double pulse = (double)DiscErrorPulse + 0.042f;
+        DiscErrorPulse = (float)pulse;
+        int level = (int)(fabs((double)(FSin(pulse) * Extended(88.0))) + 40.0f);
         if (level < 0)
             level = 0;
         else if (level > 0x80)

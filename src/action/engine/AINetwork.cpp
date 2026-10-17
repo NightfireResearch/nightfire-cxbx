@@ -28,8 +28,6 @@ static_assert(sizeof(portal_tag) == 0x7c, "portal_tag is 0x7c bytes");
 static_assert(offsetof(portal_tag, corners) == 0x28, "Wrong offset for portal_tag.corners");
 
 // The originals, called by address. These return in ST0, unrounded.
-#define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
-#define Vec_SqDist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e50)
 // Writes the point of the line through a and b nearest p; its return value is not used
 // Where the segments a0-a1 and b0-b1 cross in plan (x and z); zero if they do not
 // The cels a query's ray passes through; the count goes in *count
@@ -746,10 +744,10 @@ bool AINetwork_LineIntersectsBoundry(AIBoundLink_tag *link, _VECTOR *from, _VECT
         _VECTOR delta;
         crossing.y = from->y;
         Vec_Subtract(&crossing, from, &delta);
-        float distance = Vec_Magnitude(&delta);
+        double distance = Vec_Magnitude(&delta);
         if (!(distance < *nearest))
             return true;
-        *nearest = distance;
+        *nearest = (float)distance;
         crossing.y = a->pos.y;
     }
     if (hit != NULL)
@@ -1559,11 +1557,11 @@ bool LinkCreep_Setup(AIRoute_tag *route, _VECTOR *from, _VECTOR *to, char fromEn
     Vec_Copy(from, &route->creep.segmentStart);
     Vec_Copy(to, &route->creep.segmentEnd);
     Vec_Subtract(to, from, &route->creep.delta);
-    float length = Vec_Magnitude(&route->creep.delta);
+    double length = Vec_Magnitude(&route->creep.delta);
     if (length > CREEP_STEP) {
         // int(length) * 2.5 steps, each truncated as __ftol2 does
         route->creep.steps = Ftol((double)(ushort)Ftol(length) * 2.5f);
-        Vec_MulR32(&route->creep.delta, &route->creep.delta, (float)(CREEP_STEP / (double)length));
+        Vec_MulR32(&route->creep.delta, &route->creep.delta, (float)(CREEP_STEP / length));
     } else {
         route->creep.steps = 1;
     }

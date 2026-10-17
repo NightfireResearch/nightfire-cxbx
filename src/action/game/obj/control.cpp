@@ -218,10 +218,10 @@ float control_ClosestPlayerPnt(_VECTOR *pos, _VECTOR *out) {
         obj_tag *player = glb_players[i];
         if (player == NULL)
             continue;
-        float distSq = Vec_SqDist3D(pos, &player->position);
+        double distSq = Vec_SqDist3D(pos, &player->position);
         if (distSq < nearest) {
             Vec_Copy(&player->position, out);
-            nearest = distSq;
+            nearest = (float)distSq;
         }
     }
     return nearest;

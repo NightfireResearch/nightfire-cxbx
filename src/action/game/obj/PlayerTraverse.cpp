@@ -21,8 +21,6 @@
 // (camera_tracking, camera mode 0xb).
 
 // The originals, called by address
-#define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
-#define Vec_SqDist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e50)
 
 #define HALF_PI 1.5707964f
 #define PI 3.1415927f
@@ -73,7 +71,7 @@ static int32_t Ftol(double x) {
 }
 
 // How far apart two angles are, as the original works it out: it calls Vec_AngleDifference again for the size
-static float AngleBetween(float a, float b) {
+static double AngleBetween(float a, float b) {
     if (!(Vec_AngleDifference(a, b) >= 0.0f))
         return -Vec_AngleDifference(a, b);
     return Vec_AngleDifference(a, b);
@@ -122,13 +120,13 @@ void Player_LeaveLadder(obj_tag *player, BLData *blData) {
 // AUTOINJECT
 void Player_Climb(BLData *blData, obj_tag *player) {
     obj_tag *ladder = blData->attachedToSpecialMovementItem;
-    float difference = Vec_AngleDifference(player->rotation.y, ladder->rotation.y + PI);
+    double difference = Vec_AngleDifference(player->rotation.y, ladder->rotation.y + PI);
     if (difference > HALF_PI)
         player->rotation.y = (float)((double)blData->attachedToSpecialMovementItem->rotation.y + PI - HALF_PI);
     if (difference < -HALF_PI)
         player->rotation.y = blData->attachedToSpecialMovementItem->rotation.y + THREE_HALF_PI;
     if (!(player->animState->animFlags & 1))
-        player->rotation.y = (float)((double)difference * 0.2f + player->rotation.y);
+        player->rotation.y = (float)(difference * 0.2f + player->rotation.y);
 
     Player_Move(blData, player, 0.0f);
     Vec_Zero(&blData->field_0x3c);

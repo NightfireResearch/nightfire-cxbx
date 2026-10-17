@@ -4,13 +4,13 @@
 
 #include "NDrone2.h"
 #include "../../math/math.h"    // Vec_* (ours)
+#include "../../math/X87Ops.h"
 
 #include <math.h>
 
 #pragma fp_contract(off)
 
 // Returns in ST0, unrounded
-#define Vec_SqDist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e50)
 // Tests the walk from the object's feet to `offset` in its own frame (FUN_000453e0; a bot's offset is scaled by its
 // speed unless `unscaled`; our name)
 #define NDrone2_MoveTestRelative ((bool (__cdecl *)(_VECTOR *offset, Drone_tag *drone, obj_tag *obj, char unscaled, int param5))0x000453e0)
@@ -36,10 +36,9 @@ char NDrone2_MoveTest(_VECTOR *from, cel_tag *fromCel, _VECTOR *to, cel_tag *toC
     if (rise > MoveTest_MaxRise)
         return 0;
     if (rise > MoveTest_StepHeight) {
-        double slope = -atan2((double)delta.y, sqrt((double)flatSq));
-        if (slope < 0.0)
-            slope = -slope;
-        if (slope > MoveTest_MaxSlope)
+        // FPATAN, unrounded
+        Extended slope = AbsFchs(-FPatan(delta.y, sqrt((double)flatSq)));
+        if (slope > Extended(MoveTest_MaxSlope))
             return 0;
     }
 

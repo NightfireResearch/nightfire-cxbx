@@ -23,8 +23,6 @@
 // The originals, called by address
 #define DroneFunc_InRangeOfTarget ((bool (__cdecl *)(DCVars_tag *dcv, float range))0x00035f50)
 // Return in ST0, unrounded
-#define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
-#define Vec_SqDist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e50)
 
 // Anim states (our names)
 #define DANIM_RUN 0x1e

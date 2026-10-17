@@ -69,9 +69,6 @@ static_assert(std::bit_cast<uint32_t>(DOOR_CLEARANCE) == 0x3e99999a, "not the or
 
 // The originals, called by address
 #define KeyFrame_Interp ((void (__cdecl *)(void *path, uint firstKey, uint lastKey, float frame, _MATRIX *mtx))0x000d8ac0)
-#define Mat_Inverse ((void (__cdecl *)(_MATRIX *mtx))0x000d5190)
-#define Mat_GetNorm ((void (__cdecl *)(_VECTOR *vOut, _MATRIX *mIn))0x000d5070)
-#define RotPreTransVec ((void (__cdecl *)(_MATRIX *mtx, _VECTOR *v, _VECTOR *vOut))0x000d6cc0)
 #define Control_BuildWorldSph ((void (__cdecl *)(obj_tag *obj))0x0002db20)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *drone))0x0001a190)
 
@@ -136,7 +133,7 @@ void _Door_SetupSwing(obj_tag *obj) {
     door->pathPos = (obj->curState & DoorState_Open) ? 1.0f : 0.5f;
     Spline_Interp(door->path, 0, door->lastKey, door->lastKey * 0.5f, &door->hinge, NULL, 2);
     Spline_Interp(door->path, 0, door->lastKey, door->lastKey * door->pathPos, &obj->transformMatrix, NULL, 2);
-    Mat_Inverse(&door->hinge);
+    Mat_InverseSelf(&door->hinge);
 
     _MATRIX start, closed;
     Spline_Interp(door->path, 0, door->lastKey, 0.0f, &start, NULL, 2);
@@ -170,7 +167,7 @@ void _Door_SetupSlide(obj_tag *obj) {
     DOORINFO *door = (DOORINFO *)obj->extraObjectData;
     door->pathPos = (obj->curState & DoorState_Open) ? 1.0f : 0.0f;
     Spline_Interp(door->path, 0, door->lastKey, 0.0f, &door->hinge, NULL, 2);
-    Mat_Inverse(&door->hinge);
+    Mat_InverseSelf(&door->hinge);
     Spline_Interp(door->path, 0, door->lastKey, (float)door->lastKey, &door->hinge, NULL, 2);
     Spline_Interp(door->path, 0, door->lastKey, door->lastKey * door->pathPos, &obj->transformMatrix, NULL, 2);
 }
@@ -310,7 +307,7 @@ void Door_ReactToHit(obj_tag *obj) {
             // Which side of the door the pusher is, as the door is now, against the way it opens
             _MATRIX inverse;
             Mat_Copy(&obj->transformMatrix, &inverse);
-            Mat_Inverse(&inverse);
+            Mat_InverseSelf(&inverse);
             _VECTOR local;
             RotPreTransVec(&inverse, &pusher->centrePoint, &local);
             double side = (double)local.z * door->side;

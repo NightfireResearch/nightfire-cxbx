@@ -290,7 +290,7 @@ void HandleMapSoundAllocation(void) {
 
         _VECTOR pos;
         Vec_Copy(&snd->position, &pos);
-        float distSq = Vec_SqDist3D(&GlobalListenerPos, &pos);
+        double distSq = Vec_SqDist3D(&GlobalListenerPos, &pos);
 
         // The original squares the radius on the x87 stack and never rounds it back to a float. A product of
         // two floats is exact in a double, so doing it in double reproduces the original's comparison exactly.

@@ -33,8 +33,6 @@
 #define BOTSTATE_increaseDistraction ((void (__cdecl *)(Drone_tag *drone, float amount))0x0001c6f0)
 #define MP_getProtectionObj_NotExt ((obj_tag *(__cdecl *)(void))0x000a1600)
 #define MP_getDemolitionObj_NotExt ((obj_tag *(__cdecl *)(void))0x000a1610)
-#define Vec_SqDist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e50)
-#define Vec_DirToRot ((void (__cdecl *)(_VECTOR *dir, _VECTOR *rot))0x000d4f20)
 
 
 // The bones a drone's line of sight tests in turn (Drone_tag.viewBone)

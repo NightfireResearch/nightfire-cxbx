@@ -22,9 +22,7 @@
 
 #pragma fp_contract(off)
 
-#define Camera_Shake ((void (__cdecl *)(_VECTOR *pos, float strength))0x00025330)
 #define Control_ObjectReferenced ((void (__cdecl *)(obj_tag *obj, char referenced))0x0002db00)
-#define Vec_MakeOrthonormalBasis ((void (__cdecl *)(_VECTOR *u, _VECTOR *v, _VECTOR *normal))0x000d6ec0)
 #define MP_ApplyDamage ((void (__cdecl *)(obj_tag *obj, float damage, obj_tag *from))0x000a12b0)
 #define GT_Disable ((void (__cdecl *)(obj_tag *obj))0x0009a6f0)
 #define Sub_ApplyDamage ((void (__cdecl *)(obj_tag *sub, float damage))0x000cf6a0)

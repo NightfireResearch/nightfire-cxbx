@@ -31,8 +31,6 @@
 #define Control_Plr2Ind ((short (__cdecl *)(obj_tag *obj))0x0002d8a0)
 #define BOT_soundEffect ((void (__cdecl *)(DCVars_tag *dcv, int sound))0x0001aca0)
 #define BOT_handlePain ((void (__cdecl *)(DCVars_tag *dcv, float damage, ushort unknown, short location))0x0001b6b0)
-#define Mat_Inverse ((void (__cdecl *)(_MATRIX *in, _MATRIX *out))0x000d51e0)
-#define Vec_DirToRot ((void (__cdecl *)(_VECTOR *dir, _VECTOR *rot))0x000d4f20)
 // Tells the drones around obj of something at pos (here, that the drone is hurt)
 // FUN_0003a240 and FUN_0003a270 in Ghidra (our names). An enemy's hit counts for the player (PlrStat_LogShotHitEnemy)
 // when its last attacker is its opponent; with the second, also while it lives.
@@ -303,8 +301,9 @@ void _NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit) {
     _VECTOR push;
     Vec_MulR32(&push, &hit->maybehitDirection, PUSH_PER_SHOT);
     Vec_Add2(&drone->pushOffset, &push, &drone->pushOffset);
-    float length = Vec_NormaliseLen(&drone->pushOffset, &drone->pushOffset);
-    if (length > PUSH_PER_SHOT)
+    double pushed = Vec_NormaliseLen(&drone->pushOffset, &drone->pushOffset);
+    float length = (float)pushed;
+    if (pushed > PUSH_PER_SHOT)
         length = PUSH_PER_SHOT;
     Vec_MulR32(&drone->pushOffset, &drone->pushOffset, length);
 

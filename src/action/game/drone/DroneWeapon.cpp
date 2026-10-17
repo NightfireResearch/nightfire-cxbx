@@ -24,6 +24,7 @@
 #include "../../engine/Anim.h"     // AnimGetBoneWorldTrans, AnimState
 #include "../../engine/Collide.h"  // HITDATA_tag, Collide_RayIntersect
 #include "../../math/math.h"
+#include "../../math/X87Ops.h"
 #include "../../util/Random.h"
 #include "../../util/hashtable.h"  // hashtable_set_object_to_entity_gfx
 #include "DroneVision.h"
@@ -43,9 +44,7 @@
 #define BOTSTATE_changeWeapon ((uint (__cdecl *)(BOT_vars_t *bot, uint weapon, char param_3, char param_4))0x0001e3f0)
 #define GT_DeployMiniGun ((obj_tag *(__cdecl *)(_VECTOR *pos, _MATRIX *mtx, obj_tag *owner))0x0009a9b0)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
-#define Vec_Cartesian_2_Spherical ((void (__cdecl *)(_VECTOR *out, float x, float y, float z))0x000d8530)
 #define Pickup_CreateSimple ((obj_tag *(__cdecl *)(_MATRIX *mtx, short weapon, short count, int param_4))0x000a7f10)
-#define MulMatrix2 ((void (__cdecl *)(float *a, float *b))0x000d6920)
 
 // The weapons with at least a second between shots and bursts of their own length (DroneWeap_FireDelay,
 // DroneWeap_BurstLength, _DroneWeap_NextBulletTime)
@@ -388,7 +387,7 @@ bool DroneWeap_Ready2Fire(DCVars_tag *dcv) {
     if (dot > 0.9998f)
         return true;
     float limit = drone->dtype == DTYPE_Ninja ? kNinjaAimAngle : kAimAngle;
-    if (fabs(acos((double)(float)dot)) < limit)
+    if (AbsFchs(CIAcos((float)dot)) < Extended(limit))   // the XBE's acos, unrounded
         return true;
     return drone->health <= 0.0f;
 }
@@ -416,9 +415,9 @@ void DroneWeap_FireWeapon(DCVars_tag *dcv) {
         if (drone->botVars->weapon == Weap_Ronin) {
             float yaw = obj->rotation.y;
             _VECTOR at;
-            at.x = (float)(sin((double)yaw) + obj->position.x);
+            at.x = (float)(FSin(yaw) + Extended(obj->position.x));
             at.y = obj->position.y;
-            at.z = (float)(cos((double)yaw) + obj->position.z);
+            at.z = (float)(FCos(yaw) + Extended(obj->position.z));
             if (GT_DeployMiniGun(&at, &drone->gameObj->transformMatrix, drone->gameObj) == NULL)
                 return;
             BOTWEAP_decrRounds(drone, 1000);
@@ -548,9 +547,9 @@ void DroneWeap_DoBulletAccuracy(DCVars_tag *dcv) {
     double t = (uint)(dcv->gameObj->creationTimeFrames + GameState.NumFramesUnpaused);
     double a = 0.01f * t;
     _VECTOR error;
-    error.x = (float)(sin(a) * 0.5f);
-    error.y = (float)(cos(a) * 1.5f);
-    error.z = (float)(sin(t * 0.02f) * 1.5f);
+    error.x = (float)(FSin(a) * Extended(0.5f));
+    error.y = (float)(FCos(a) * Extended(1.5f));
+    error.z = (float)(FSin(t * 0.02f) * Extended(1.5f));
     _MATRIX turn;
     RotMatrix(&drone->opponentAngles, &turn);
     ApplyMatrixLV(&turn, &error, &drone->aimError);
@@ -694,13 +693,13 @@ void DroneWeap_ThrowGrenade(DCVars_tag *dcv) {
     _VECTOR toTarget;
     Vec_Subtract(&drone->targetPos, &obj->position, &toTarget);
     float distance = Vec_Magnitude(&toTarget);
-    _VECTOR heading = {0.0f, (float)atan2((double)toTarget.x, (double)toTarget.z), 0.0f};
+    _VECTOR heading = {0.0f, (float)FPatan(toTarget.x, toTarget.z), 0.0f};
     RotMatrix(&heading, &aim);
     if (distance < 10.0f || distance > 18.0f) {
         tilt.x = distance < 10.0f ? kQuarterPi : -kQuarterPi;
         _MATRIX pitch;
         RotMatrix(&tilt, &pitch);
-        MulMatrix2(pitch.m, aim.m);
+        MulMatrix2(&pitch, &aim);
     }
     _VECTOR dir;
     Mat_GetDir(&dir, &aim);
@@ -871,7 +870,7 @@ double Drone_ModBulletDamage(Drone_tag *drone, obj_tag *player, HITDATA_tag *hit
     // From here on, the damage rounded to a float
     float rounded = (float)scaled;
     float shotYaw = maybeAtan2(hit->maybehitDirection.x, hit->maybehitDirection.z);
-    if (fabsf(Vec_AngleDifference(shotYaw, player->rotation.y)) < kHalfPi)
+    if (fabs(Vec_AngleDifference(shotYaw, player->rotation.y)) < kHalfPi)
         return (double)DroneFiring_PlayerBackShot_Damage * rounded;
     return rounded;
 }

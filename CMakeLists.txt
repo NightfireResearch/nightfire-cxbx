@@ -122,6 +122,7 @@ add_library(actioninject SHARED
   src/action/devtools/AnimPortShadow.cpp
   src/action/devtools/CollidePortShadow.cpp
   src/action/devtools/EffectPortShadow.cpp
+  src/action/devtools/ViewMathShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/MathExactShadow.cpp
   src/action/devtools/Teleport.cpp

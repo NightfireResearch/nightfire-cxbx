@@ -209,10 +209,11 @@ float DroneVision_ObjectVisibility(Drone_tag *drone, obj_tag *obj) {
         return 0.0f;
     _VECTOR toObj;
     Vec_Subtract(&obj->position, &drone->gameObj->position, &toObj);
-    float distance = Vec_Magnitude(&toObj);
-    if (distance < 2.0f)
+    double length = Vec_Magnitude(&toObj);
+    float distance = (float)length;
+    if (length < 2.0f)
         return 1.0f;
-    float bearing = Vec_AngleDifference(drone->headYaw, maybeAtan2(toObj.x, toObj.z));
+    double bearing = Vec_AngleDifference(drone->headYaw, maybeAtan2(toObj.x, toObj.z));
     if (distance > 50.0f)
         return 0.0f;
     if (drone->viewAngle != 0.0f && drone->viewAngle - AbsByCompare(bearing) < 0.0)

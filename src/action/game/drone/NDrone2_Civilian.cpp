@@ -23,7 +23,6 @@
 #define NDrone2_ReFindMissionPath ((bool (__cdecl *)(DCVars_tag *dcv))0x00047290)
 // FUN_00046c20 and FUN_00046d40 in Ghidra; the names are the PS2 build's
 // Returns in ST0, unrounded
-#define Vec_Dist2D ((double (__cdecl *)(_VECTOR *a, _VECTOR *b))0x000d4e20)
 #define NDrone2_SetDronePartner ((bool (__cdecl *)(uchar dtype, DCVars_tag *dcv))0x00037000)
 #define DroneFunc_ChooseSFX ((uint (__cdecl *)(uint first, uint last))0x00036270)
 #define DroneFunc_FirstAttack ((short (__cdecl *)(DCVars_tag *dcv))0x0003ec20)

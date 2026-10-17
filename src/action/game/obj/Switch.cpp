@@ -186,10 +186,10 @@ obj_tag* Switch_GetNearest(_VECTOR *pos) {
 
     for (LLNODE_tag *node = SwitchList.head; node != NULL; node = node->next) {
         ObjData_Switch *switchData = (ObjData_Switch*)node;
-        float distSq = Vec_SqDist3D(pos, &switchData->objectPtr->position);
+        double distSq = Vec_SqDist3D(pos, &switchData->objectPtr->position);
         if (distSq < bestDistSq) {
             nearest = switchData->objectPtr;
-            bestDistSq = distSq;
+            bestDistSq = (float)distSq;
         }
     }
 

@@ -1,5 +1,6 @@
 #include "Autoaim.h"
 #include "mp/multiplayer.h"
+#include "../math/X87Ops.h"
 #include <math.h>
 
 #include <stdio.h>
@@ -34,8 +35,9 @@ void Check_Target(obj_tag* obj) {
     }
 
     // Flashbang modifier?! No clue.
-    float someNum = cosf(GameState.LoadTimeStart * 0.01f * 6.2831855f);
-    FlashMod = ((someNum + 1.0f) * 0.5f + 1.0f) * 0.5f;
+    // On the x87: FCOS, and the sum with 1, left unrounded
+    double someNum = (double)(FCos((double)(int32_t)GameState.LoadTimeStart * 0.01f * 6.2831855f) + Extended(1.0f));
+    FlashMod = (float)((someNum * 0.5f + 1.0f) * 0.5f);
 
     // Only process the main part of this every 6 frames
     if(GameState.NumFramesUnpaused %6 != 0)

@@ -34,12 +34,6 @@
 #define PortalTriangle U16_AT(0x001dec34)
 
 #define QuickSort ((void (__cdecl *)(void *list, uint count, uint size, COMP_FUNC compare, undefined *custom))0x000bda60)
-#define Mat_Inverse ((void (__cdecl *)(_MATRIX *in, _MATRIX *out))0x000d51e0)
-#define Mat_InverseSelf ((void (__cdecl *)(_MATRIX *mtx))0x000d5190)
-#define Mat_GetNorm ((void (__cdecl *)(_VECTOR *vOut, _MATRIX *mIn))0x000d5070)
-#define RotPreTransVec ((void (__cdecl *)(_MATRIX *mtx, _VECTOR *v, _VECTOR *vOut))0x000d6cc0)
-#define Vec_SqMagnitude ((double (__cdecl *)(_VECTOR *v))0x000d4eb0)
-#define Vec_Avg3 ((void (__cdecl *)(_VECTOR *a, _VECTOR *b, _VECTOR *c, _VECTOR *out))0x000d4dd0)
 
 // The vertices and planes of a leaf box's triangles: shorts, the normals times 2^-14
 constexpr float kCollScale = 6.103888e-05f;

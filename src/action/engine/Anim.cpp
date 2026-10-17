@@ -120,22 +120,10 @@ typedef struct AnimSizes {
 #define AnimSetDelete ((void (__cdecl *)(obj_tag *obj, sAnimSet_tag **slot))0x000177a0)
 #define moveTowardsValue ((float (__cdecl *)(float current, float target, float speed))0x00024000)
 #define Vec4_MulAdd ((void (__cdecl *)(float scale, float *vIn, float *vAcc))0x000d7300)
-#define Vec_Mul ((void (__cdecl *)(_VECTOR *v, _VECTOR *scale))0x000d6e90)
-#define Quat_Rot_Vec ((void (__cdecl *)(quaternion_tag *q, _VECTOR *vIn, _VECTOR *vOut))0x000d56a0)
-#define Quat_EulerToQuat ((void (__cdecl *)(_VECTOR *euler, quaternion_tag *q))0x000d5740)
-#define Quat_AxisAngleToQuat ((void (__cdecl *)(float *axisAngle, quaternion_tag *q))0x000d59b0)
-#define Ang_RotateToBearing ((double (__cdecl *)(float current, float target, float rate, float maxTurn))0x000d6380)
-#define Vec_UnitVector ((void (__cdecl *)(_VECTOR *out, _VECTOR *from, _VECTOR *to))0x000d8a90)
 #define Plane_PutPntOnPlane ((void (__cdecl *)(float *out, float *point, float *plane))0x000d7f30)
 // INVENTED NAME: where the line from a through b meets the sphere about centre, in out; 0 if it misses
 #define Vec_LineSphereIntersect ((int (__cdecl *)(float *a, float *b, float *centre, float radius, float *out))0x000d8590)
 #define Control_GetObjMatrix ((void (__cdecl *)(obj_tag *obj, _MATRIX *mtx))0x0002cf10)
-#define View_SetupRenderModes ((void (__cdecl *)(viewer_tag *viewer, obj_tag *obj))0x000d9af0)
-#define View_SetupRenderModes2 ((void (__cdecl *)(viewer_tag *viewer, obj_tag *obj))0x000d9b40)
-#define Vec_Cartesian_2_Spherical ((void (__cdecl *)(_VECTOR *out, float x, float y, float z))0x000d8530)
-
-// Concat(A, B): B = B * A. Its AUTOGEN body is in Player.cpp.
-void Concat(float *a, float *b);
 
 // AnimDistanceTableGet (0x000174a0): the distance table of a sequence, made the first time (the sequence in ESI)
 static __declspec(naked) AnimDistanceTable *AnimDistanceTableGet(HASHCODE hashcode) {
@@ -145,16 +133,6 @@ static __declspec(naked) AnimDistanceTable *AnimDistanceTableGet(HASHCODE hashco
         mov eax, 0x000174a0
         call eax
         pop esi
-        ret
-    }
-}
-
-// The C runtime's x87 acos (__CIacos): the argument in ST0, the result in ST0
-static double __declspec(naked) CIAcos(double x) {
-    _asm {
-        fld qword ptr [esp + 4]
-        mov eax, 0x000ee294
-        call eax
         ret
     }
 }
@@ -2859,7 +2837,7 @@ void AnimGetBoneWorldTrans(obj_tag *obj, uint which, int datumOffset, _VECTOR *p
                 continue;
             _MATRIX m;
             Quat_QuatTransToMat(&datum->q, (float *)&datum->t, &m);
-            Concat(animObj->boneMtxs[datum->bone].m, m.m);
+            Concat(&animObj->boneMtxs[datum->bone], &m);
             *posOut = *Mat_Position(m);
             if (mtxOut != NULL)
                 *mtxOut = m;
@@ -2919,7 +2897,7 @@ void AnimGetBoneWorldTrans2(obj_tag *obj, uint which, int datumOffset, _VECTOR *
                 RotTransMat(&objMtx, &boneMtx[b]);
                 root = false;
             } else {
-                Concat(boneMtx[chain[i + 1]].m, boneMtx[b].m);
+                Concat(&boneMtx[chain[i + 1]], &boneMtx[b]);
             }
         }
 
@@ -2927,7 +2905,7 @@ void AnimGetBoneWorldTrans2(obj_tag *obj, uint which, int datumOffset, _VECTOR *
             AnimDatum *d = &skin->datums[datum];
             _MATRIX m;
             Quat_QuatTransToMat(&d->q, (float *)&d->t, &m);
-            Concat(boneMtx[d->bone].m, m.m);
+            Concat(&boneMtx[d->bone], &m);
             *posOut = *Mat_Position(m);
             if (mtxOut != NULL)
                 *mtxOut = m;
@@ -3206,9 +3184,9 @@ void AnimObjectAimAt(obj_tag *obj, AnimObj *animObj, quaternion_tag *worldQuats,
         if (Vec_SqDist3D(pelvis, &targetOn) >= 0.25f)
             found = 2;
         float muzzleDist = Vec_Dist3D(pelvis, &muzzleOn);
-        float targetDist = Vec_Dist3D(pelvis, &targetOn);
+        double targetDist = Vec_Dist3D(pelvis, &targetOn);
         if (targetDist >= muzzleDist) {
-            if (Vec_LineSphereIntersect(&muzzleOn.x, &farOn.x, &pelvis->x, targetDist, &hit.x)) {
+            if (Vec_LineSphereIntersect(&muzzleOn.x, &farOn.x, &pelvis->x, (float)targetDist, &hit.x)) {
                 Vec_UnitVector(&toTarget, pelvis, &targetOn);
                 Vec_UnitVector(&toHit, pelvis, &hit);
                 float cosine = (float)DotZYX(&toTarget, &toHit);
@@ -3242,7 +3220,7 @@ void AnimObjectAimAt(obj_tag *obj, AnimObj *animObj, quaternion_tag *worldQuats,
             muzzleDist = Vec_Dist3D(pelvis, &muzzleOn);
             targetDist = Vec_Dist3D(pelvis, &targetOn);
             if (targetDist >= muzzleDist
-                && Vec_LineSphereIntersect(&muzzleOn.x, &farOn.x, &pelvis->x, targetDist, &hit.x)) {
+                && Vec_LineSphereIntersect(&muzzleOn.x, &farOn.x, &pelvis->x, (float)targetDist, &hit.x)) {
                 Vec_UnitVector(&toTarget, pelvis, &targetOn);
                 Vec_UnitVector(&toHit, pelvis, &hit);
                 float cosine = (float)DotZYX(&toTarget, &toHit);
@@ -3438,7 +3416,7 @@ void AnimObjectDraw(obj_tag *obj, viewer_tag *viewer) {
         _MATRIX m;
         Quat_QuatTransToMat(&skin->datums[i].q, (float *)&skin->datums[i].t, &m);
         if (skin->datums[i].bone >= 0)
-            Concat(animObj->boneMtxs[skin->datums[i].bone].m, m.m);
+            Concat(&animObj->boneMtxs[skin->datums[i].bone], &m);
         if (!(entity->applyFlagsToObject & 0x800))
             psiSetTweakARGB(obj->tweakA, obj->tweakR, obj->tweakG, obj->tweakB);
         psiDrawObjectMatrix(entity, &m);

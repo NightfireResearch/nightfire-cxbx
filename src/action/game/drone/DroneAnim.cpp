@@ -18,10 +18,7 @@
 #include <string.h>
 
 // Originals called by address
-#define Vec_DirToRot ((void (__cdecl *)(_VECTOR *dir, _VECTOR *rot))0x000d4f20)
 #define Vec_Mul_F3 ((void (__cdecl *)(_VECTOR *out, _VECTOR *in, float x, float y, float z))0x000d72d0)
-#define Mat_Inverse ((void (__cdecl *)(_MATRIX *in, _MATRIX *out))0x000d51e0)
-#define ApplyMatrixLVI ((void (__cdecl *)(float *matrix, float *vector))0x000d6b30)
 // DroneWeap_PlaceTertiary: a jump to DroneWeap_ThrowGrenade, which Ghidra names the same
 #define DroneWeap_PlaceTertiary ((void (__cdecl *)(DCVars_tag *dcv))0x00067bf0)
 
@@ -232,8 +229,8 @@ bool DroneAnim_LocationDeathAnim(DCVars_tag *dcv, short endState) {
     HITDATA_tag *hit = drone->lastHit;
     if (hit != NULL && (glb_players[0]->animState->animFlags & 1) && (hit->hitBoneIdx == 5 || hit->hitBoneIdx == 4)) {
         float shotYaw = maybeAtan2(hit->maybehitDirection.x, hit->maybehitDirection.z);
-        float turn = Vec_AngleDifference(shotYaw, dcv->gameObj->rotation.y);
-        DroneAnim_CallAnim(DANIM_DEATH_SHOT, fabsf(turn) > (float)M_PI_2 ? 0 : 1, endState, 0, 0.0f, 0, dcv);
+        double turn = Vec_AngleDifference(shotYaw, dcv->gameObj->rotation.y);
+        DroneAnim_CallAnim(DANIM_DEATH_SHOT, fabs(turn) > (float)M_PI_2 ? 0 : 1, endState, 0, 0.0f, 0, dcv);
         return true;
     }
 
@@ -914,7 +911,7 @@ void DroneAnim_PreTransCallback(obj_tag *obj, AnimObj *animObj, _VECTOR *delta) 
         ApplyMatrixLV(&inverse, delta, &local);
         if (local.z > 0.0f) {
             local.z = 0.0f;
-            ApplyMatrixLVI(contact.m, &local.x);
+            ApplyMatrixLVI(&contact, &local);
             delta->x = local.x;
             delta->z = local.z;
         }

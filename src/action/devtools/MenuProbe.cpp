@@ -100,6 +100,7 @@
 #include "AnimPortShadow.h"
 #include "CollidePortShadow.h"
 #include "EffectPortShadow.h"
+#include "ViewMathShadow.h"
 #include "CameraShadow.h"
 #include "MathExactShadow.h"
 #include "Teleport.h"
@@ -560,7 +561,17 @@ void MenuProbe_Install(void) {
     }
     // The shadow tests need only the game's data, so they can run before it starts (and with no display): on the
     // shipped state, as a fresh codename would have it.
-    if (SettingOn("MenuShadowTests")) {
+    // NIGHTFIRE_SHADOW_ONLY=viewmath runs that suite alone
+    const char *only = getenv("NIGHTFIRE_SHADOW_ONLY");
+    // The x87 runtime's error handling (__CIacos outside -1 to 1, say) sets errno, which needs the per-thread block
+    // the game's heap allocates, and there is no heap yet. Its flag at 0x00300608 skips it: the result is the same.
+    uint32_t mathErrors = U32_AT(0x00300608);
+    U32_AT(0x00300608) = 1;
+    if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "viewmath") == 0) {
+        ViewMathShadow_Run();
+        fflush(stdout);
+        _exit(0);
+    } else if (SettingOn("MenuShadowTests")) {
         SecretsShadow_Run();
         UnlocksShadow_Run();
         UpgradeShadow_Run();
@@ -603,8 +614,10 @@ void MenuProbe_Install(void) {
         AnimPortShadow_Run();
         CollidePortShadow_Run();
         EffectPortShadow_Run();
+        ViewMathShadow_Run();
         MathExactShadow_Run();
     }
+    U32_AT(0x00300608) = mathErrors;
     g_logging = SettingOn("MenuLog");
     if (g_logging) {
         char skip[256] = "";
