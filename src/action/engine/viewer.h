@@ -178,10 +178,7 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field10_0xd;
     undefined field11_0xe;
     undefined field12_0xf;
-    undefined field13_0x10;
-    undefined field14_0x11;
-    undefined field15_0x12;
-    undefined field16_0x13;
+    struct ATTACH_tag *attachments;     // 0x10 - the marks on it (Effect_Bullet, Effect_Player)
     cel_tag *nextCel;
     cel_tag *childCel;                  // 0x18 - a cel's first cel within it, and a cel's next in the same one
                                         //        (Collide_Pick)
@@ -195,16 +192,13 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field35_0x23;
     struct AINode_tag *aiNodes;         // 0x24 - the AI path nodes in this cel (AIPath_BindNodes)
     portal_tag *portals;                // 0x28 - this cel's portals, linked through portal_tag.next
-    undefined field44_0x2c;
-    undefined field45_0x2d;
-    undefined field46_0x2e;
-    undefined field47_0x2f;
+    struct ENV_tag *env;                // 0x2c - the cel's wind (Env_GetWindVel); NULL for none
     struct AIBoundNode_tag *boundNodes; // 0x30 - the AI bound nodes in this cel (AIBounds_Link2Cel)
     struct AIBoundLink_tag *boundLinks; // 0x34 - the AI bound links with an end in this cel (AIBounds_Prepare)
     celglist_tag *glist;                // 0x38 - the cel's geometry; NULL for none
     uint bitsFromPlacementTag;          // 0x3c - CEL_WORLD_SPACE: the geometry has no matrix (Collide_Intersect)
     _VECTOR someMin;
-    _VECTOR someMax;
+    _VECTOR someMax;                    // 0x4c - its y is the ceiling smoke rises to (gases_smoke)
     _VECTOR position;                   // 0x58 - the geometry's matrix (Collide_Intersect): translation
     _VECTOR rotation;                   // 0x64 - and rotation
     _VECTOR sphere;                     // 0x70 - the bounding sphere Collide_Pick tests

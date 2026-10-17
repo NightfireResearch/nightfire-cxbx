@@ -145,14 +145,14 @@ for writes to `+0xd8`]. `Corona_Update` reads it as "was visible in the last two
 | 0x00 | - | unused | |
 | 0x04 | `_VECTOR` | *velocity* | units per tick (creators multiply by `REC_FRAME_RATE`) |
 | 0x10 | `_VECTOR` | *spin* | added to `rotation` each tick |
-| 0x1c | short | *life* (`someThing`) | ticks left |
-| 0x1e | byte | *fade* (`someOther`) | subtracted from `tweakA` each tick |
+| 0x1c | short | `life` | ticks left |
+| 0x1e | byte | `fade` | subtracted from `tweakA` each tick |
 
 `curState` = 0 means gravity applies (`Debris_Update`). Creators: `Debris_Create`, `Debris_CreateEx`,
 `Effect_Laser` (sparks), `Bullet_DoTrails` (x2), `GunImp_Update`, `NDrone2_CreateNinjaEyes`,
 `DroneWeap_FireWeapon`, `HUD_UpdateCameraPane` [dis, stores of 0x10 to `+0xdb`], and our `SpaceLaser.cpp`.
 
-### 4.2 Gas, type 14 (`ObjData_Gas`: 0x3c bytes, 0x54 for gas types 9 and 10)
+### 4.2 Gas, type 14 (`ObjData_Gas`: 0x3c bytes, 0x54 for gas types 9 and 10; `GAS_tag` in `src/action/game/obj/Gas.h`)
 
 | offset | type | field | notes |
 |---|---|---|---|

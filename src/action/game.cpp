@@ -22,6 +22,7 @@
 #include "devtools/Teleport.h"
 #include "devtools/Demo.h"
 #include "engine/LaunchOptions.h"
+#include "game/obj/Break.h"
 
 // XBE_GLOBAL(0x002ae288, 0x4)
 uint32_t BackgroundMovieHashcode;
@@ -29,8 +30,6 @@ uint32_t BackgroundMovieHashcode;
 // Functions taking void and returning through registers are fine in either __cdecl or __stdcall
 // It's only when they take arguments that the calling convention matters
 
-// AUTOGEN
-void __stdcall UpdateAllShards(void);
 // AUTOGEN
 void __stdcall Env_Update(void);
 // AUTOGEN

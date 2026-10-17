@@ -99,6 +99,7 @@
 #include "PlayerWeaponShadow.h"
 #include "AnimPortShadow.h"
 #include "CollidePortShadow.h"
+#include "EffectPortShadow.h"
 #include "CameraShadow.h"
 #include "MathExactShadow.h"
 #include "Teleport.h"
@@ -299,7 +300,7 @@ static void ObjLog(int type) {
                o->displayMask, o->tweakR, o->tweakG, o->tweakB, o->tweakA, (void *)o->objGraphics);
         if (o->objGraphics != NULL)
             printf(" \"%s\" geom %d lod %08x apply %08x", o->objGraphics->name ? o->objGraphics->name : "",
-                   o->objGraphics->geom_idx, o->objGraphics->lodRelated, o->objGraphics->applyFlagsToObject);
+                   o->objGraphics->geom_idx, (unsigned)(uintptr_t)o->objGraphics->lod, o->objGraphics->applyFlagsToObject);
         if (type == OBJECTTYPE_GAS && x != NULL)
             printf(" gasType %d lifetime %.1f", (int)x[0x38], *(const float *)(x + 0x34));
         printf("\n");
@@ -601,6 +602,7 @@ void MenuProbe_Install(void) {
         PlayerWeaponShadow_Run();
         AnimPortShadow_Run();
         CollidePortShadow_Run();
+        EffectPortShadow_Run();
         MathExactShadow_Run();
     }
     g_logging = SettingOn("MenuLog");

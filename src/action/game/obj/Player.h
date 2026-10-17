@@ -475,6 +475,7 @@ void Player_SSGrapple(void);        // EAX the player's data, EDI player
 void Player_GrappleSetRope(void);   // EDI player
 int _Player_InWater(obj_tag *player, BLData *blData);
 void _Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hitLocation, ushort painType);
+float Player_Hurt(obj_tag *player, float damage, _VECTOR *from);
 void _Player_HandleDeath(obj_tag *player);
 void _Player_SSWalk(obj_tag *player, BLData *blData);
 void _Player_SSCrouch(obj_tag *player, BLData *blData);

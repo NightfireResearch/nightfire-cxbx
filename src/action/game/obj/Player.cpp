@@ -40,6 +40,7 @@
 #include <math.h>
 #include <string.h>
 
+#include "Env.h"
 // AUTOGEN
 void Concat(float *param_1, float *param_2);
 
@@ -214,6 +215,14 @@ void Player_Cam2Mode(ushort playerNum, uint mode) {
     glb_blokes[playerNum]->pitchFromHorizontal = 0.0f;
     Player_SetCamMode(glb_blokes[playerNum], 0);
     Player_ChangeSubState(glb_players[playerNum], MovementType_Walk);
+}
+
+// An explosion's damage, as pain of no kind in no place; the health left
+// AUTOINJECT
+float Player_Hurt(obj_tag *player, float damage, _VECTOR *from) {
+    BLData *blData = (BLData *)player->extraObjectData;
+    _Player_HandlePain(player, damage, blData, -1, 0);
+    return blData->health;
 }
 
 // AUTOINJECT
@@ -2927,7 +2936,6 @@ void Player_Collision(obj_tag *player) {
 // The originals, called by address (the weapon's are the next parcel's)
 #define PlayerNotDrone_FeetOnPoint ((obj_tag *(__cdecl *)(obj_tag *obj, HITTEST_tag *test, float *floorNormalY, char dying))0x000ab450)
 #define PlayerCollLadder ((void (__cdecl *)(obj_tag *player, BLData *blData, obj_tag *ladder))0x000ae930)
-#define Env_WaterRipple ((void (__cdecl *)(HITDATA_tag *hit))0x00068f20)
 
 // The anim flags the collision works out afresh every frame
 #define ANIM_CONTACTS (ANIM_CONTACT_FLOOR | ANIM_CONTACT_HIT | ANIM_CONTACT_ABOVE | ANIM_CONTACT_MOVER)

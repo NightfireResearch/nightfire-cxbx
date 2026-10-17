@@ -1,6 +1,8 @@
 # Effects: function by function
 
-All 56 functions of the `effects` subsystem (`tools/subsystems_action.txt`, four ranges), none ours yet. "Size" is
+All 56 functions of the `effects` subsystem (`tools/subsystems_action.txt`, four ranges). Ours since parcel 12 of
+the nightfire-port lifts: the Effect_ functions, `Debris_Create`, `Debris_CreateEx`, `Debris_Update`, `Gas_Init`,
+`gases_smoke`, `Env_GetWindVel`, `Env_WaterRipple`, `Swoosh_Create` and `Swoosh_Update`. "Size" is
 Ghidra's body size from `tools/function_coverage.py effects`; "Callers" from `tools/xrefs_action.json` ("table" =
 a `control_funcs` slot). Names in *italics* are invented; PS2 names were matched by body and call shape against
 `/PS2_EU_51258/ACTION.ELF`. Custom register conventions (MSVC whole-program optimisation) are marked **reg** and

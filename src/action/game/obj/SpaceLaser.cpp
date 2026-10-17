@@ -152,8 +152,8 @@ void SpaceLaser_Update(obj_tag *obj) {
             obj_tag * hitEffect = control_create_object(sizeof(Effect_tag), &spaceLaser->emitterPnt, NULL, NULL);
             Effect_tag *effectInfo = (Effect_tag*)hitEffect->extraObjectData;
             hitEffect->objectType = OBJECTTYPE_EFFECT;
-            effectInfo->someThing = 5;
-            effectInfo->someOther = 0;
+            effectInfo->life = 5;
+            effectInfo->fade = 0;
             hashtable_set_object_to_entity_gfx(hitEffect, (HASHCODE)0x20005cd);
             hitEffect->tweakA = 127 + Rand_Rand(128);
             control_link_object_to_cel(hitEffect, build_FindCel(&spaceLaser->emitterPnt, glb_world));

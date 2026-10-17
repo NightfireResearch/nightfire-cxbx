@@ -462,25 +462,6 @@ void psiInput_PollDevices_Thunk(void) {
 // ---------------------------------------------------------------------------------------------------------------
 
 #pragma pack(push, 1)
-struct TriListTriangle {
-    uint32_t texture;           // the strip's stage-0 texture
-    short a, b, c;
-    short pad;
-};
-// The layout ShatterPolyRecurse works in: it copies three of these into a shard's vertex list, puts the texture
-// in the first word, and psiCreateShard reads the position from +4
-struct TriListVertex {
-    uint32_t texture;           // unused here; ShatterPolyRecurse's
-    float pos[3];               // 0x04
-    float uv[2];                // 0x10
-    float colour[4];            // A, R, G, B
-};
-struct TriList {
-    int triangleCount;          // as allocated: the model's strip indices less its batch's
-    int vertexCount;
-    TriListTriangle *triangles;
-    TriListVertex *vertices;
-};
 struct ShardVertex {
     float pos[3];
     float pad;
@@ -488,11 +469,10 @@ struct ShardVertex {
     float uv[2];
 };
 #pragma pack(pop)
-static_assert(sizeof(TriListTriangle) == 0xc && sizeof(TriListVertex) == 0x28 && sizeof(ShardVertex) == 0x1c,
-              "shard layouts");
+static_assert(sizeof(ShardVertex) == 0x1c, "shard layout");
 
 // AUTOINJECT
-void* psiGetTriList(void *obj) {
+TriList* psiGetTriList(void *obj) {
     if (obj == NULL)
         return NULL;
     celglist_tag *gfx = *(celglist_tag **)((char *)obj + 0xb4);   // obj_tag.objGraphics
@@ -530,7 +510,7 @@ void* psiGetTriList(void *obj) {
     for (int i = 0; i < list->vertexCount; i++) {
         TriListVertex *v = &list->vertices[i];
         uint32_t colour = 0;
-        d3dGetStreamBuffer(model->vtxBuffers, i, (uint32_t *)v->pos, (uint32_t *)v->uv, &colour);
+        d3dGetStreamBuffer(model->vtxBuffers, i, (uint32_t *)&v->pos, (uint32_t *)v->uv, &colour);
         v->colour[0] = (float)((colour >> 24) & 0xff);
         v->colour[1] = (float)((colour >> 16) & 0xff);
         v->colour[2] = (float)((colour >> 8) & 0xff);
@@ -552,21 +532,21 @@ void psiDeleteShard(void **shard) {
 // A shard from three vertices as the breakage code keeps them (ten floats each, after a word): position, uv,
 // colour A R G B (0x000df960)
 // AUTOINJECT
-void* psiCreateShard(const float *vertices) {
+void* psiCreateShard(const TriListVertex *vertices) {
     if (vertices == NULL)
         return NULL;
     ShardVertex *shard = (ShardVertex *)Mem_Malloc(3 * sizeof(ShardVertex), 0x1204, 4);
     for (int i = 0; i < 3; i++) {
-        const float *in = vertices + 1 + i * 10;
+        const TriListVertex *in = &vertices[i];
         ShardVertex *out = &shard[i];
-        out->pos[0] = in[0];
-        out->pos[1] = in[1];
-        out->pos[2] = in[2];
+        out->pos[0] = in->pos.x;
+        out->pos[1] = in->pos.y;
+        out->pos[2] = in->pos.z;
         out->pad = 0.0f;
-        out->uv[0] = in[3];
-        out->uv[1] = in[4];
-        out->colour = (uint32_t)(uint8_t)(int)in[5] << 24 | (uint32_t)(uint8_t)(int)in[6] << 16 |
-                      (uint32_t)(uint8_t)(int)in[7] << 8 | (uint8_t)(int)in[8];
+        out->uv[0] = in->uv[0];
+        out->uv[1] = in->uv[1];
+        out->colour = (uint32_t)(uint8_t)(int)in->colour[0] << 24 | (uint32_t)(uint8_t)(int)in->colour[1] << 16 |
+                      (uint32_t)(uint8_t)(int)in->colour[2] << 8 | (uint8_t)(int)in->colour[3];
     }
     return shard;
 }

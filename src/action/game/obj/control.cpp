@@ -210,6 +210,23 @@ obj_tag* control_create_object(int sizeBytes,_VECTOR *pos,_VECTOR *rot,quaternio
 // AUTOGEN
 void control_movement_object_handler(char);
 
+// Where the nearest player is (out unchanged without one nearer than 1000 units), and the square of his distance
+// AUTOINJECT
+float control_ClosestPlayerPnt(_VECTOR *pos, _VECTOR *out) {
+    float nearest = 1000000.0f;
+    for (int i = 0; i < 4; i++) {
+        obj_tag *player = glb_players[i];
+        if (player == NULL)
+            continue;
+        float distSq = Vec_SqDist3D(pos, &player->position);
+        if (distSq < nearest) {
+            Vec_Copy(&player->position, out);
+            nearest = distSq;
+        }
+    }
+    return nearest;
+}
+
 // AUTOINJECT
 void Control_SetEffectType(obj_tag *obj, uint effectType) {
   obj->effectFlags = (obj->effectFlags & 0x30008000) | effectType;

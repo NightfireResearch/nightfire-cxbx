@@ -44,7 +44,6 @@
 #define GT_DeployMiniGun ((obj_tag *(__cdecl *)(_VECTOR *pos, _MATRIX *mtx, obj_tag *owner))0x0009a9b0)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
 #define Vec_Cartesian_2_Spherical ((void (__cdecl *)(_VECTOR *out, float x, float y, float z))0x000d8530)
-#define Bullet_init_casing ((void (__cdecl *)(obj_tag *obj))0x00023080)
 #define Pickup_CreateSimple ((obj_tag *(__cdecl *)(_MATRIX *mtx, short weapon, short count, int param_4))0x000a7f10)
 #define MulMatrix2 ((void (__cdecl *)(float *a, float *b))0x000d6920)
 
@@ -454,8 +453,8 @@ void DroneWeap_FireWeapon(DCVars_tag *dcv) {
         Effect_tag *effect = (Effect_tag *)fx->extraObjectData;
         fx->objectType = OBJECTTYPE_EFFECT;
         fx->rotation.z = roll + fx->rotation.z;
-        effect->someThing = 2;
-        effect->someOther = 0;
+        effect->life = 2;
+        effect->fade = 0;
         if (flash != 0)
             hashtable_set_object_to_entity_gfx(fx, (HASHCODE)flash);
         fx->tweakA = 0xff;

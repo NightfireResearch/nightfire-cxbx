@@ -35,8 +35,6 @@
 #define Check_Target ((void (__cdecl *)(obj_tag *player))0x000b9580)
 #define Control_CreateObjEx ((obj_tag *(__cdecl *)(ushort size, _VECTOR *pos, _VECTOR *rot, _MATRIX *mtx, celglist_tag *gfx, obj_tag *parent, char linkToRoom, ushort p8, float glowScale, ushort p10, uchar r, uchar g, uchar b))0x0002e320)
 #define Text_AddMsg ((void (__cdecl *)(char player, char p2, int p3, const char *text, int p5, short frames))0x000d1d70)
-#define Bullet_init_casing ((void (__cdecl *)(obj_tag *player))0x00023080)
-#define Bullet_handle_object_destruction ((bool (__cdecl *)(obj_tag *bullet))0x000218f0)
 #define GT_TakeControl ((bool (__cdecl *)(obj_tag *turret, obj_tag *player))0x0009a790)
 #define GT_DeployMiniGun ((obj_tag *(__cdecl *)(_VECTOR *pos, _MATRIX *mtx, obj_tag *player))0x0009a9b0)
 #define MP_sendTeamBotMessage ((void (__cdecl *)(int p1, int message, int weapon, int p4, obj_tag *player))0x0009e430)
@@ -1524,7 +1522,7 @@ void Player_WeaponFiring(obj_tag *player, char fire) {
     if (Input_Action(blData->playerNum, ACTION_FIRE, 4) || fire == 1) {
         if (player->subState == MovementType_RemoteControl) {
             if (blData->remoteControlDevice != NULL)
-                Bullet_handle_object_destruction(blData->remoteControlDevice);
+                Bullet_handle_object_destruction(blData->remoteControlDevice, NULL);   // unread: the original passes the weapon
             return;
         }
         if (blData->refireTimer <= 0.0f) {

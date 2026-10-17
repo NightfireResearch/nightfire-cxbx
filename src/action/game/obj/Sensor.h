@@ -9,7 +9,7 @@ typedef struct SENSOR {
     LLNODE_tag cameraListNode;             // 0x00
     obj_tag* owner;                        // 0x08
     celglist_tag* enabledGraphics;         // 0x0c
-    uint enabledGraphicsLod;               // 0x10
+    celglist_tag *enabledGraphicsLod;      // 0x10
     quaternion_tag trackedRotation;        // 0x14
     void* sweepSpline;                     // 0x24
     float sweepPosition;                   // 0x28

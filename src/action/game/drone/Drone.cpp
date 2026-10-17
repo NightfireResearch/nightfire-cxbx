@@ -44,6 +44,11 @@
 #define Env_Breath ((void (__cdecl *)(_VECTOR *pos, _VECTOR *dir, cel_tag *cel, int seed))0x00068db0)
 #define Control_Plr2Ind ((short (__cdecl *)(obj_tag *gameObj))0x0002d8a0)
 #define Sound_IsFinnished ((bool (__cdecl *)(DYNAMICSOUNDS *handle))0x000cbac0)
+#define DroneFunc_ChooseSFX ((uint (__cdecl *)(uint first, uint last))0x00036270)
+
+// The lines Drone_BrokenObject picks from
+#define DRONE_BROKEN_OBJECT_SFX 0x40
+#define DRONE_BROKEN_OBJECT_SFX_LAST 0x43
 
 // The cheats' switches (ui_cheats.cpp)
 #define switch_NO_DRONES U32_AT(0x001df99c)
@@ -356,6 +361,30 @@ void Drone_UpdateDummyPlayer(char active) {
         }
     }
     NPCGlobals.dummyPlayerActive = active;
+}
+
+// In HendersonA, the player breaking something with a bullet: the drones of DTYPE 12 have their say, until the first
+// of them that is dead
+// AUTOINJECT
+void Drone_BrokenObject(obj_tag *obj, HITDATA_tag *hit) {
+
+    if (Drone_bDisableSystem || GameState.CurrentLevelHashcode != HT_Level_HendersonA)
+        return;
+
+    obj_tag *bullet = hit->hitObj;
+    if (bullet == NULL || bullet->extraObjectData == NULL || bullet->objectType != OBJECTTYPE_BULLET
+        || ((BU_tag *)bullet->extraObjectData)->firedByObj != glb_players[0])
+        return;
+
+    for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
+        if (drone->dtype != 12)
+            continue;
+        if (drone->health <= 0.0f)
+            return;
+        DCVars_tag dcv;
+        if (Drone_DCVfromOBJ(drone->gameObj, &dcv))
+            NDrone2_SpeechSFX(&dcv, DroneFunc_ChooseSFX(DRONE_BROKEN_OBJECT_SFX, DRONE_BROKEN_OBJECT_SFX_LAST), 0, 0, 0);
+    }
 }
 
 // ---- the level's set-up

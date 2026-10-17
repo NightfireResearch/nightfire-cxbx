@@ -312,9 +312,8 @@ are ours, so 11 of the 70 rows dispatch into our code.
 Already in `src/action/game/obj`: `control.cpp` (lists, create, delete, unlink, init, SetGList, type queries),
 `car.cpp`, `Sensor.cpp`, `Switch.cpp`, `PCQWorm.cpp`, `SpaceMissile.cpp`, `SpaceLaser.cpp`, `Searchlight.cpp`,
 `ScriptPlayer.cpp`, `Player.cpp` (19 functions), `Light.cpp`. Most of the other 60-odd files there are only AUTOGEN
-declarations. `Break.cpp` holds a full draft of Break_Update/ApplyDamage/DoBreak/Create marked NOAUTOINJECT, and
-`parsemap_create_dynamic_objects` calls the original `Break_Create` by address on purpose: the draft's `Break_Kill`
-is a no-op, which leaked shard vertex/index slots (a shared 2048-slot table) until revisiting a segment crashed.
+declarations. Parcel 12 of the nightfire-port lifts ported the breakables (`Break.cpp`, its draft replaced),
+destroyables, hurt volumes, bullets, casings, effects, smoke, debris, trails and explosions.
 
 ### 3.3 Dependencies
 

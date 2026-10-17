@@ -18,7 +18,7 @@ typedef struct {
     obj_tag* playerController; // 0xCC (see Car_PlayerHasDied)
     obj_tag* lastController; // 0xD0
     char _pad_2[4];
-    unsigned int damageAmt; // 0xD8
+    float damageAmt; // 0xD8 - explosions add their damage to it (Explode_Propagate)
     float _unknown_0xdc;
     float _unknown_0xe0;
     float tankMachinegunTemperature; // 0xE4

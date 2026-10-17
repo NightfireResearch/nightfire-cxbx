@@ -91,10 +91,10 @@ typedef struct DroneTimer {
 // Only the fields our code reads.
 typedef struct DroneImpact_tag {
     float damage;           // 0x00 - NDrone2_ExplosiveImpact takes it when above 0
-    char _unknown04[4];
+    float radius;           // 0x04 - the explosion's (Explode_Propagate)
     _VECTOR position;       // 0x08 - where it went off (NDrone2_ExplosionDir)
-    obj_tag *unknown14;     // 0x14 - with bots, MP_RegisterBulletHit's object; a 0x50000ba skin is not hurt by its
-                            //        own (NDrone2_ExplosiveImpact)
+    obj_tag *source;        // 0x14 - who set it off (Explode_Propagate), kept as the drone's lastAttacker; with
+                            //        bots, MP_RegisterBulletHit's object; a 0x50000ba skin is not hurt by its own
 } DroneImpact_tag;
 
 // Drone_tag.sightFlags
@@ -517,7 +517,7 @@ static_assert(sizeof(StateMachineInfo_tag) == 0x2c, "StateMachineInfo_tag is 0x2
 static_assert(offsetof(StateMachineInfo_tag, stateParam) == 0x24, "Wrong offset for stateParam");
 static_assert(sizeof(DroneAnimCall) == 0x10, "DroneAnimCall is 0x10 bytes");
 static_assert(sizeof(DroneTimer) == 0xc, "DroneTimer is 0xc bytes");
-static_assert(offsetof(DroneImpact_tag, unknown14) == 0x14, "Wrong offset for DroneImpact_tag.unknown14");
+static_assert(offsetof(DroneImpact_tag, source) == 0x14, "Wrong offset for DroneImpact_tag.source");
 static_assert(sizeof(DIVars_tag) == 0xa4, "DIVars is wrong size");
 static_assert(sizeof(DCVars_tag) == 0x10, "DCVars is wrong size");
 static_assert(sizeof(MsgObject) == 0x1c, "MsgObject is 0x1c bytes");
@@ -734,6 +734,7 @@ static_assert(offsetof(StateMachineInfo_tag, pathDistance) == 0x20, "Wrong offse
 #define Drone_bDisableSystem (*(uchar *)0x001dfa2a)
 
 bool Drone_DCVfromOBJ(obj_tag* obj, DCVars_tag *dcVars);
+void Drone_BrokenObject(obj_tag *obj, HITDATA_tag *hit);
 obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
 bool Drone_PositionVisible(_VECTOR *pos, cel_tag *cel);
 void Drone_SM_RouteMsg(MsgObject *msg);

@@ -24,6 +24,7 @@
 #include "../game/obj/bullet.h"
 #include "../game/obj/Gas.h"
 #include "../game/obj/Light.h"
+#include "../game/obj/Effect.h"
 
 #pragma fp_contract(off)
 
@@ -129,7 +130,6 @@ typedef struct AnimSizes {
 // INVENTED NAME: where the line from a through b meets the sphere about centre, in out; 0 if it misses
 #define Vec_LineSphereIntersect ((int (__cdecl *)(float *a, float *b, float *centre, float radius, float *out))0x000d8590)
 #define Control_GetObjMatrix ((void (__cdecl *)(obj_tag *obj, _MATRIX *mtx))0x0002cf10)
-#define Effect_Create ((void (__cdecl *)(HITDATA_tag *hit, obj_tag *obj, uint type, float scale))0x00070430)
 #define View_SetupRenderModes ((void (__cdecl *)(viewer_tag *viewer, obj_tag *obj))0x000d9af0)
 #define View_SetupRenderModes2 ((void (__cdecl *)(viewer_tag *viewer, obj_tag *obj))0x000d9b40)
 #define Vec_Cartesian_2_Spherical ((void (__cdecl *)(_VECTOR *out, float x, float y, float z))0x000d8530)

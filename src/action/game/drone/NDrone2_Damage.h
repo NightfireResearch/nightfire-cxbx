@@ -12,6 +12,7 @@
 void _NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit);
 void NDrone2_DealWithObjHit(void);
 void Drone_BulletHit(obj_tag *obj, BU_tag *bullet, HITDATA_tag *hit);
+void Drone_ExplosiveHit(obj_tag *obj, DroneImpact_tag *impact);
 
 void NDrone2_HitDamage(DCVars_tag *dcv, float damage, int location, int weapon, char force);
 void NDrone2_DoHitEffects(DCVars_tag *dcv, HITDATA_tag *hit, float scale);

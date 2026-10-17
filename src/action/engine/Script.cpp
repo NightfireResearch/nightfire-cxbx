@@ -33,6 +33,7 @@
 #include <math.h>
 #include <string.h>
 
+#include "../game/obj/Effect.h"
 #pragma fp_contract(off)
 
 // Two persistent letterbox-bar sprites: created and shown by Script_CameraStart, disabled (0xff) by Script_KillStream
@@ -91,11 +92,8 @@ typedef struct {
 #define hashtable_deleteitem ((void (__cdecl *)(HASHCODE hashcode))0x0006b4a0)
 #define Control_BuildWorldSph ((void (__cdecl *)(obj_tag *obj))0x0002db20)
 #define Vec_NormToRot ((void (__cdecl *)(_VECTOR *norm, _VECTOR *rot))0x000d4ee0)
-#define Effect_Create ((void (__cdecl *)(HITDATA_tag *hit, obj_tag *obj, uint type, float scale))0x00070430)
 #define Sound_IsFinnished ((bool (__cdecl *)(DYNAMICSOUNDS *handle))0x000cbac0)
 // The originals: ours in Break.cpp are not patched in yet
-#define Break_DoBreak ((void (__cdecl *)(_VECTOR *position))0x00020550)
-#define Break_Create ((obj_tag *(__cdecl *)(_VECTOR *position, _VECTOR *rotation, celglist_tag *celgl, void *data))0x0001ffb0)
 #define moveTowardsValue ((float (__cdecl *)(float current, float target, float speed))0x00024000)
 // Ghidra says it returns nothing; it returns the emitter Emitter_Create made
 #define Emitter_CreatePlistObj ((obj_tag *(__cdecl *)(_MATRIX *mtx, level_tag *placement))0x00068470)

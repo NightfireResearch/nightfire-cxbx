@@ -24,9 +24,33 @@ void psiInput_PollDevices_Thunk(void);
 int psiStubMinusOne(void);          // 0x000de5d0, a stub the effects code calls
 uint8_t psiStubFalse(void);       // 0x000de5e0, a stub the drones and particles call
 
-void *psiGetTriList(void *obj);
+// Shards: broken glass. psiGetTriList gives the breakage code an object's triangles, psiCreateShard makes a
+// three-vertex shard of them and psiDrawShard draws one.
+#pragma pack(push, 1)
+struct TriListTriangle {
+    uint32_t texture;           // the strip's stage-0 texture
+    ushort a, b, c;
+    short pad;
+};
+// A vertex as ShatterPolyRecurse works in it: the texture is its own, written into the first of a shard's three
+struct TriListVertex {
+    uint32_t texture;           // 0x00
+    _VECTOR pos;                // 0x04
+    float uv[2];                // 0x10
+    float colour[4];            // 0x18 - A, R, G, B
+};
+struct TriList {
+    int triangleCount;          // as allocated: the model's strip indices less its batch's
+    int vertexCount;
+    TriListTriangle *triangles;
+    TriListVertex *vertices;
+};
+#pragma pack(pop)
+static_assert(sizeof(TriListTriangle) == 0xc && sizeof(TriListVertex) == 0x28, "shard layouts");
+
+TriList *psiGetTriList(void *obj);
 void psiDeleteShard(void **shard);
-void *psiCreateShard(const float *vertices);
+void *psiCreateShard(const TriListVertex *vertices);
 void psiDrawShard(void *vtxData, _MATRIX *matrix, int texture);
 void psiSetShardRenderStates(void);
 void psiClearZ(void);

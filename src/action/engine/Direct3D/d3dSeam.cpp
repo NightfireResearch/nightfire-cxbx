@@ -731,11 +731,6 @@ static inline uint32_t FloatToBits(float f) {
 // which a stale flow override cut short just before the release loops, so they were never ported.) It prints
 // clearly (rather than just returning 0 and letting some unrelated caller crash on the failure later) so any
 // remaining or new leak is immediately attributable.
-//
-// (The earlier theory recorded here - that Break.cpp's unfinished Break_Create/Break_Kill leaked vertex/index
-// buffer slots - was wrong: psiCreateEntityGfx is the only caller of either allocator. parsemap.cpp's
-// Place_Breakable case still routes to the original Break_Create because of that theory; it's harmless but
-// no longer needed for this issue.)
 void D3DSeamTableExhaustedWarning(const char *tableName, const char *extraContext) {
     printf("[d3dSeam] %s table is full - allocation failed.\n", tableName);
     if (extraContext != NULL)

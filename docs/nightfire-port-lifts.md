@@ -46,7 +46,7 @@ to what it does. A function ported that way:
 
 | 11 | anim | 54, all in src/action/engine/Anim.cpp but the player's five anim-set functions (Player.cpp): loading (skins, sequences, scripts, the sleeves), script lists and scripts, script ticks and commands, sequence frames and poses, faces and datums, the bone matrices, head tracking, aiming and drawing, the anim object, anim sets. Of their 9 names without an Xbox function of that name, AnimSeqGetInfo is 0x14420, AnimSeqSet 0x17960, AnimSet_WalkUpdater 0x171a0 and AnimDistanceTableGet 0x174a0 (renamed from FUN_ in Ghidra, the first three ported); AnimDistanceTableCreate is 0x16950 (renamed, left to the original); AnimDistanceTableInit, AnimTagGetUnique and AnimSeqDelete are inline; MP_NeedSkin is not called. Static helpers renamed from FUN_: AnimFramesPassed 0x12a20, AnimFrameEmitChannels 0x13c70, AnimData_ReadHalf 0x13880. 21 AUTOLTCG adaptors for the register-argument originals | 52 of 54; 1,240 of 1,552 blocks (AnimSleeveGetEntity and AnimObjectInitialPose not reached). AnimPortShadow: 73,500 cases in eight groups, all 0 differ; one planted bug per group, all caught. Under the shadow run the originals reach 1,601 of the 1,651 blocks of the 54 and their helpers | see git log |
 
-| 12 | collide, rigid_body (package A; break, bullet, effect and explode are package B) | 42 + 16 Xbox functions theirs inline or name otherwise: their `Collide_Filter` is `Intersect_CheckIfFlagsMatch` 0x28a50, `RecurseBoxesSph` 0x291c0 and `ASH_RecurseBoxesRay` 0x292e0 (renamed from FUN_), `Intersect_CylTriGeom` 0x29a30 (Ghidra had `Intersect_RayGeom`), their `Intersect_RayGeom` 0x29fa0; renamed as ours: `Collide_TestHits` 0x2c440 (Ghidra had `Collide_CylinderIntersect`, which is 0x2c6f0), `Collide_CylinderTris` 0x2c760 (was `Collide_unknown`), `Intersect_SphereSphere`, `Intersect_RaySphere`, `Intersect_CylSphere` 0x29370-0x29410, `RB_Drag` 0x0c01d0 and `RB_Move` 0x0c02d0 (were `RB_unknownHelper*`); ported with them: `Collide_Sort`, `Intersect_BoxBox`, `Intersect_AABB_SweptVolume`, `Intersect_UnpackTrianglePlaneEq`, `Intersect_UnpackTriangleVerticesToWorld`. Collide.cpp, the three vecutil_ functions and `vecutil_intersect_line_line_2d` in math.cpp, RigidBody.cpp; 9 AUTOLTCG adaptors | 38 of 42 reached by the demos; under CollidePortShadow the originals reach 984 of the 990 blocks of the 58 (the 6 left: three that cannot be reached, Collide_Update's call of a collision handler, the 166-triangle cap of Collide_CylinderTris, and Collide_Pick's skip of a type between 0x101 and 0x200, reached in an earlier run). CollidePortShadow: 156,000 cases in seven groups, all 0 differ (with about 330 where only the NaN chosen between two NaNs differs, as MathExactShadow allows); one planted bug per group, all caught | see git log |
+| 12 | collide, rigid_body (package A); break, bullet, effect, explode (package B) | 42 + 16 Xbox functions theirs inline or name otherwise: their `Collide_Filter` is `Intersect_CheckIfFlagsMatch` 0x28a50, `RecurseBoxesSph` 0x291c0 and `ASH_RecurseBoxesRay` 0x292e0 (renamed from FUN_), `Intersect_CylTriGeom` 0x29a30 (Ghidra had `Intersect_RayGeom`), their `Intersect_RayGeom` 0x29fa0; renamed as ours: `Collide_TestHits` 0x2c440 (Ghidra had `Collide_CylinderIntersect`, which is 0x2c6f0), `Collide_CylinderTris` 0x2c760 (was `Collide_unknown`), `Intersect_SphereSphere`, `Intersect_RaySphere`, `Intersect_CylSphere` 0x29370-0x29410, `RB_Drag` 0x0c01d0 and `RB_Move` 0x0c02d0 (were `RB_unknownHelper*`); ported with them: `Collide_Sort`, `Intersect_BoxBox`, `Intersect_AABB_SweptVolume`, `Intersect_UnpackTrianglePlaneEq`, `Intersect_UnpackTriangleVerticesToWorld`. Collide.cpp, the three vecutil_ functions and `vecutil_intersect_line_line_2d` in math.cpp, RigidBody.cpp; 9 AUTOLTCG adaptors. Package B: 55 + 10 Xbox functions theirs inline or name otherwise: their `Debris_Create` is 0xcccf0 (Ghidra had a second `Debris_CreateEx`, renamed), `Occlude_Create` 0x6c880 (was FUN_, renamed), `Sub_ApplyDammage` is `Sub_ApplyDamage` 0xcf6a0 (left to the original), `Sensor_ApplyDamage` and `Monitor_ApplyDamage` are the shared empty function 0xe0ec0, `Bullet_update` is our `Bullet_Update`; ported with them: `Break_ShatterWindow` 0x1fc90, `Break_Create` (the draft replaced), `Bullet_SpawnSmokeDust_SomeOtherProbability` 0x217f0 and `_SomeProbability` 0x21870; renamed as ours from FUN_: `Hurt_IsTriggered` 0x6c640, `Effect_NewMark` 0x6ff70, `Effect_LinkToCel` 0x6faa0, `Effect_LinkToObject` 0x6fad0, and theirs `hashtable_set_sub_object_to_entity_gfx` 0x6b6d0 (left to the original). Break.cpp, bullet.cpp, Destroy.cpp, Hurt.cpp, Effect.cpp (new), Gas.cpp, Env.cpp, Swoosh.cpp (new), Explode.cpp, and one each in Drone.cpp, NDrone2_Damage.cpp, control.cpp, Player.cpp, GT.cpp; 15 AUTOLTCG adaptors | 38 of 42 reached by the demos; under CollidePortShadow the originals reach 984 of the 990 blocks of the 58 (the 6 left: three that cannot be reached, Collide_Update's call of a collision handler, the 166-triangle cap of Collide_CylinderTris, and Collide_Pick's skip of a type between 0x101 and 0x200, reached in an earlier run). CollidePortShadow: 156,000 cases in seven groups, all 0 differ (with about 330 where only the NaN chosen between two NaNs differs, as MathExactShadow allows); one planted bug per group, all caught. Package B: 46 of 55 reached by the demos; under EffectPortShadow the originals reach 1,085 of the 1,108 blocks of the 65 (of the 23 left, 15 cannot be reached: unsigned-conversion fix-ups of values that are never negative, the 0x1000000 test of a byte in `Bullet_handle_object_destruction`, a casing whose anim state has already been read). EffectPortShadow: 173,000 cases in eight groups, all 0 differ; one planted bug per group, all caught. All nine time demos match | see git log |
 
 Parcel 1's first playback found two things the coverage alone would not have shown:
 - **A crash in our code.** The port of `Script_CreateEntity` called our `Break_Create` by name, which is a known-broken
@@ -500,6 +500,53 @@ Found along the way:
   floats, where the originals sum the squares on the x87 and return the unrounded double (`Vec_NormaliseLen` returns
   `Vec_Magnitude`'s). The originals and ports above call ours, so the shadow cannot see it; the demos would.
 
+### Parcel 12 (package B: break.cpp, bullet.cpp, effect.cpp and explode.cpp)
+- Their names without an Xbox function of that name: `Debris_Create` is 0xcccf0, which Ghidra had named
+  `Debris_CreateEx` a second time (renamed); `Occlude_Create` is 0x6c880 (FUN_, renamed and ported: `Bullet_DoTrails`
+  calls it); `Sub_ApplyDammage` is `Sub_ApplyDamage` 0xcf6a0; `Sensor_ApplyDamage` and `Monitor_ApplyDamage` are the
+  empty function the linker shares (0xe0ec0, Explode_Propagate's types 0x37 and 0x38); `Bullet_update` is
+  `Bullet_Update` (ours since an earlier parcel).
+- Functions theirs inline that the Xbox keeps apart: `Break_Kill`'s window is `Break_ShatterWindow` 0x1fc90, which
+  ends by jumping to the `__WBINVD` thunk 0xdfb20 (their `psiFinishedObjectShatter`); `Hurt_Update`'s trigger test is
+  0x6c640 (EAX the object, ECX the volume; `Hurt_IsTriggered`, our name); the marks' allocator and links are 0x6ff70,
+  0x6faa0 and 0x6fad0 (`Effect_NewMark`, `Effect_LinkToCel`, `Effect_LinkToObject`, our names; `Effect_Bullet` still
+  inlines the allocator and the cel link); the two dust trails of `Bullet_DoTrails` are 0x217f0 and 0x21870 (ESI the
+  object); `Bullet_homing`'s target search is `Bullet_acquiretarget` 0x22db0 (left to the original).
+- Register arguments their prototypes hide: `Break_Kill` (ESI the object, EDI the hit), `Bullet_DoTrails` (ECX, EAX),
+  `Bullet_trail_effect_smoke` (ESI), `Bullet_heatseekable` (EDI), `Bullet_homing` (ESI the bullet), `Effect_Bullet`
+  (EAX the object, ECX the hit), `Effect_Player` (EAX the hit, EBX the object), `Effect_Laser` (EAX the hit, EBX the
+  cel: tools/abi_action.json lists EAX only, as EBX is first read after a call), `Effect_Body` and `Effect_UnLink`
+  (EAX).
+- `ShatterPolyRecurse` takes the shard's speed as 0.125 / distance (theirs 1 / distance x 0.125), keeps the third
+  side's square unrounded (the first two are stored), and clears the shard it allocates without checking it.
+- `Destroy_Create` takes the delay as the key times FRAME_RATE, negated and truncated with no rounding to float
+  between; the blast key / 100 is the explosion's radius (Explode_Create's fifth argument), and the explosion's damage
+  is its kind times ten. `Destroy_Smash`'s light lookup is the empty `psiLight_Create` (0xde5f0): it never finds one.
+- `Hurt_Create` keeps the path's frames x REC_FRAME_RATE unrounded into the speed (FRAME_RATE / duration x that; it
+  stores the product first and then overwrites it); `Hurt_Update` compares the new path time unrounded with the frames.
+- `Bullet_init` truncates the bloom (shots x spreadPerShot) straight from the x87, with no rounding to float.
+- `Bullet_CollisionHandler` takes the bounce's dot product as (c z + b y) + a x, doubled, and the ricochet's as
+  (z c + y b) + x a, times -(bounce + 1) (theirs a x + b y + c z, and -(bounce d + d)).
+- `Bullet_handle_object_destruction` has a branch for objects that are not bullets (an explosion of script 0x600004f)
+  behind a test of 0x1000000 against a byte: it can never run (theirs returns 0 there, the same in effect).
+- `Bullet_DoTrails`' flash grenade takes the angle to the player with FPATAN and its size with two calls of
+  `Vec_AngleDifference`; with no swoosh interval it divides by zero (theirs skips the trail).
+- `Effect_Create` reads the hit before its only check (the object; theirs checks the hit too), and in multiplayer
+  leaves glass's normal turned round (the plane is put back only after the multiplayer return).
+- `Explode_Create`'s third argument and its last three bytes are never read; it returns nothing. `Explode_Propagate`
+  keeps the x87's choice where two NaNs meet (X87NaNs), as the damage it passes on can be one.
+- Found in ours, not theirs: `BU_tag` 0x3c to 0xc8 is the bullet's `HITTEST_tag` (obj_tag::maybeCollision points
+  at it), not separate sweep fields; `celglist_tag` 0x34 is a pointer to another model (`lod`, was `lodRelated` as a
+  uint, and Sensor's copy with it); `CAR_INFO::damageAmt` is a float (explosions add to it); `Effect_tag`'s
+  `someThing`/`someOther` are the life and the fade.
+- Fields named: `ObjData_Break::mask`, `BreakPlacement`, `SHARD_tag` whole, `TriListTriangle`/`TriListVertex`/
+  `TriList` moved to psiDraw.h; `DESTROY_tag` and `DestroyPlacement` whole; `Hurt_tag`'s path fields and
+  `HurtPlacement`; `BU_tag::startPos`, `occluder`, `test`, `charge`, and the projectile, impact and weapon flag enums
+  the bullet code reads; `CASING_tag` whole; `Effect_tag::vel`, `spin`, `life`, `fade`; `HEINFO_tag`, `HEGAS_tag` and
+  `EffectInfo`; `ATTACH_tag` whole, `obj_tag::attachments` and `cel_tag::attachments` (0x10); `GAS_tag` whole;
+  `ENV_tag` (the wind) and `cel_tag::env` (0x2c); `SWOOSH_tag` whole; `EXPLODE_tag` whole; `DroneImpact_tag::radius`
+  and `source` (was `unknown14`); `GUNTURRET::health`; `COPTER::parts`, `damageA`, `damageB`.
+
 ## Original bugs found while porting (kept; candidates for FIX_ORIGINAL_GAME_BUGS)
 
 - `Script_Load`, a file with 0x3f streams or more: hands its record to `DList_RemoveFromInUse2Free(&ScriptList)`,
@@ -633,6 +680,19 @@ Found along the way:
 - `Collide_CylinderIntersect` leaves the test's tester pointing at its own stack object.
 - `RB_Update`: a rigid body that carries a light looks for it every frame through a function that returns NULL.
 
+- `Break_Update` breaks with the last hit of the frame, NULL if none: a breakable already below 0 health and hit by
+  nothing would read through NULL (not seen: health only falls with a hit). `Break_DoBreak`'s hit is stack but for
+  its plane, position and direction: `Break_Kill` reads its material and `Drone_BrokenObject` its object (see
+  Departures). `ShatterPolyRecurse` clears what `Mem_Malloc` returns without a check.
+- `Effect_Create`, `Effect_Bullet`, `Effect_Player`, `Effect_Laser`, `Effect_Body` and `Debris_Create_Loop` index
+  `EffectInfo` (23 entries) with the material's 0x3f unbounded (only `Effect_RicochetProb` holds it to 22).
+  `Effect_Laser`'s spark and `Bullet_DoTrails`' satchel digits use `control_create_object`'s result unchecked;
+  `Effect_Player` leaves a mark taken from EffectList but never linked when the foot is more than 0.2 above the floor.
+- `Bullet_DoTrails` divides by the weapon's swoosh interval unchecked; `Bullet_Delete`, letting go of the grapple
+  with no hit (or one that is not a grapple point), returns before deleting a trip-bomb's beam (the same weapon never
+  has both). `Bullet_InitCasingLists` uses the 32 objects unchecked.
+- `Explode_Propagate` writes the mine's damage through `Coll_AddHitToList`'s result unchecked.
+
 ## Departures from the original
 
 - The AI dispatcher's Exit, Enter and 0x2e messages leave their scope and frames as uninitialised stack in the
@@ -652,6 +712,9 @@ Found along the way:
 - `AnimFrameSet` clears the next pose before blending into it, `AnimProcessScriptCmds`' muzzle matrix and
   `AnimObjectDraw`'s gun matrix start zeroed: all uninitialised stack in the original. `AnimObjectDraw` gives an
   out-of-range weapon the morph count 0 where the morph block did not run.
+
+- `Break_DoBreak` zeroes its hit before setting its plane, position and direction; `Explode_Create` starts the
+  nearest player's position at zero, which the original leaves as stack when there is no player.
 
 ## What the demos do not cover
 

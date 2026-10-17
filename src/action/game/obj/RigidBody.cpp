@@ -13,13 +13,13 @@
 
 #include <math.h>
 #include <string.h>
+#include "Env.h"
 
 #pragma fp_contract(off)
 
 #define Quat_QuaternionToMatrix ((void (__cdecl *)(_MATRIX *mtx, quaternion_tag *quat))0x000d58e0)
 #define Vec_SqMagnitude ((double (__cdecl *)(_VECTOR *v))0x000d4eb0)
 #define Vec_MakeOrthonormalBasis ((void (__cdecl *)(_VECTOR *u, _VECTOR *v, _VECTOR *normal))0x000d6ec0)
-#define Env_GetWindVel ((void (__cdecl *)(cel_tag *cel, _VECTOR *pos, _VECTOR *velOut))0x00068cf0)
 // On the Xbox the shared empty function that returns 0 (psiLight_Create): no rigid body ever finds its light
 #define Light_FindMapLight ((light_tag *(__cdecl *)(_VECTOR *pos, float radius))0x000de5f0)
 

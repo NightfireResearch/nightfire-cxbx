@@ -10,9 +10,17 @@ typedef struct {
     LLNODE_tag node;
     char pad[0x24];
     obj_tag* scriptPlayerObj; // 0x2c
-    char pad2[0x38-0x2c-4];
-    obj_tag* body; // 0x38
-    char pad22[0x70-0x38-4];
+    union {
+        obj_tag *parts[9];    // 0x30 - an explosion that hurts any of them hurts the helicopter
+        struct {
+            obj_tag *_parts30[2];
+            obj_tag* body;    // 0x38
+        };
+    };
+    char pad54[0x64-0x54];
+    float damageA;            // 0x64 - both take an explosion's damage (Explode_Propagate)
+    char pad68[4];
+    float damageB;            // 0x6c
     ushort switchChannelToShowCopterBody; // 0x70
     char pad3[0x7c-0x70-2];
 } COPTER;
@@ -20,6 +28,7 @@ typedef struct {
 static_assert(sizeof(COPTER) == 0x7c, "Copter size incorrect");
 static_assert(offsetof(COPTER, scriptPlayerObj) == 0x2c, "Offset of scriptPlayerObj incorrect");
 static_assert(offsetof(COPTER, body) == 0x38, "Offset of body incorrect");
+static_assert(offsetof(COPTER, damageB) == 0x6c, "Offset of damageB incorrect");
 static_assert(offsetof(COPTER, switchChannelToShowCopterBody) == 0x70, "Offset of switchChannelToShowCopterBody incorrect");
 
 #pragma pack(pop)

@@ -21928,7 +21928,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0006b6d0",
+        "name": "hashtable_set_sub_object_to_entity_gfx",
         "address": "0x0006b6d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -22202,7 +22202,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0006c640",
+        "name": "Hurt_IsTriggered",
         "address": "0x0006c640",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -22262,7 +22262,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0006c880",
+        "name": "Occlude_Create",
         "address": "0x0006c880",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -23510,7 +23510,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0006faa0",
+        "name": "Effect_LinkToCel",
         "address": "0x0006faa0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -23522,7 +23522,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0006fad0",
+        "name": "Effect_LinkToObject",
         "address": "0x0006fad0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -23646,7 +23646,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0006ff70",
+        "name": "Effect_NewMark",
         "address": "0x0006ff70",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -40610,7 +40610,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Debris_CreateEx",
+        "name": "Debris_Create",
         "address": "0x000cccf0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,

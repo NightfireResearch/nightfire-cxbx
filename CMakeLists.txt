@@ -121,6 +121,7 @@ add_library(actioninject SHARED
   src/action/devtools/PlayerWeaponShadow.cpp
   src/action/devtools/AnimPortShadow.cpp
   src/action/devtools/CollidePortShadow.cpp
+  src/action/devtools/EffectPortShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/MathExactShadow.cpp
   src/action/devtools/Teleport.cpp
@@ -250,6 +251,11 @@ add_library(actioninject SHARED
   src/action/game/obj/control.cpp
   src/action/game/obj/Copter.cpp
   src/action/game/obj/Gas.cpp
+  src/action/game/obj/Destroy.cpp
+  src/action/game/obj/Effect.cpp
+  src/action/game/obj/Env.cpp
+  src/action/game/obj/Explode.cpp
+  src/action/game/obj/Swoosh.cpp
   src/action/game/obj/Grapple.cpp
   src/action/game/obj/GT.cpp
   src/action/game/obj/GunImp.cpp

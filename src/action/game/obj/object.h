@@ -169,7 +169,7 @@ typedef struct obj_tag {
     LLNODE_tag* llNext;
     obj_tag* nextInCel; // 0x8 - the cel's objects, from cel_tag::firstObject
     obj_tag *prevInCel; // 0xC - (the cel itself for the first)
-    char pad_0000[4];
+    struct ATTACH_tag *attachments; // 0x10 - the marks on it (Effect_Bullet, Effect_Player)
     obj_tag *nextObject; // 0x14 - doubly-linked list
     obj_tag* prevObject; // 0x18
     obj_tag* maybeParent; // 0x1c

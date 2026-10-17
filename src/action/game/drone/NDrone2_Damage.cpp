@@ -23,9 +23,9 @@
 #include <bit>
 #include <math.h>
 #include <stdint.h>
+#include "../obj/Env.h"
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
-#define Env_WaterRipple ((void (__cdecl *)(HITDATA_tag *hit))0x00068f20)
 // game.cpp's GameFlow_GetState is an unpatched draft
 #define GameFlow_GetState ((uint (__stdcall *)(void))0x0006aa70)
 #define Control_Plr2Ind ((short (__cdecl *)(obj_tag *obj))0x0002d8a0)
@@ -157,6 +157,18 @@ void Drone_BulletHit(obj_tag *obj, BU_tag *bullet, HITDATA_tag *hit) {
     drone->hitsTaken++;
     drone->lastAttacker = bullet->firedByObj;
     Drone_Message(obj, DRONE_MSG_ImpactBullet, hit, 0);
+}
+
+// An explosion's hit: kept as the drone's last attacker, and the impact sent on, but for a skin class 16 its own
+// AUTOINJECT
+void Drone_ExplosiveHit(obj_tag *obj, DroneImpact_tag *impact) {
+    if (obj == NULL || obj->extraObjectData == NULL || impact == NULL)
+        return;
+    Drone_tag *drone = (Drone_tag *)obj->extraObjectData;
+    drone->lastAttacker = impact->source;
+    if (drone->skinClass == 0x10 && obj == impact->source)
+        return;
+    Drone_Message(obj, DRONE_MSG_ImpactExplosive, impact, 0);
 }
 
 // One hit from the drone's collision. Water underfoot ripples while it walks; an astronaut that hits anything else
@@ -643,7 +655,7 @@ bool NDrone2_ExplosiveImpact(DCVars_tag *dcv, DroneImpact_tag *impact, uint next
     if (nextState == drone->sm.curState)
         nextState = 0;
 
-    if (impact->unknown14 == drone->gameObj && drone->skinHashcode == SKIN_50000BA) {
+    if (impact->source == drone->gameObj && drone->skinHashcode == SKIN_50000BA) {
         if (DroneFunc_CanResumeState(nextState))
             return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)nextState, 0);
         return true;
@@ -656,7 +668,7 @@ bool NDrone2_ExplosiveImpact(DCVars_tag *dcv, DroneImpact_tag *impact, uint next
         NDrone2_HitDamage(dcv, impact->damage, 0, -1, 0);
         NDrone2_LogHitByOpponentOrAlive(dcv);
         if (MPSettings.maybeDroneAIEnabled != 0)
-            MP_RegisterBulletHit((ushort)dcv->drone->botVars->playerIndex, impact->unknown14, dcv->drone->health);
+            MP_RegisterBulletHit((ushort)dcv->drone->botVars->playerIndex, impact->source, dcv->drone->health);
     }
 
     if (drone->health <= 0.0f) {

@@ -1,0 +1,2150 @@
+// Shadow tests for the breakables, bullets, effects and explosions (package B of parcel 12: game/obj/Break.cpp,
+// bullet.cpp, Destroy.cpp, Hurt.cpp, Effect.cpp, Gas.cpp, Env.cpp, Swoosh.cpp, Explode.cpp and the few that live
+// elsewhere): each function, the original and ours, on the same made-up world - objects of every kind these read,
+// with their extra data, weapons, hits, cels with wind, collision leaves, a window's triangles, the shard and mark
+// lists, the spent cases, a helicopter - with zeros of both signs, NaNs and boundary values among the numbers. What
+// needs the game running (objects made, rooms, sounds, models, scripts, lights, the heap, the drones and players'
+// own code, collision queries) goes to a logging fake; the package's functions, ours, run for real underneath both,
+// except where a group fakes the ones its callers reach. Run at start with MenuShadowTests=on (MenuProbe.cpp).
+//
+// The register-argument originals are called with their registers set (CallRegs), and so are our adaptors. A bool
+// is compared on AL (tools/narrow_returns.py checks no caller reads more).
+
+#include "EffectPortShadow.h"
+#include "ShadowHarness.h"
+
+#include "../../common/xbeOriginal.h"
+#include "../actionhelpers.h"
+#include "../game.h"
+#include "../engine/Anim.h"
+#include "../engine/Collide.h"
+#include "../engine/celglist.h"
+#include "../engine/psiDraw.h"
+#include "../engine/viewer.h"
+#include "../game/drone/Drone.h"
+#include "../game/drone/NDrone2.h"
+#include "../game/drone/NDrone2_Damage.h"
+#include "../game/mp/multiplayer.h"
+#include "../game/obj/Break.h"
+#include "../game/obj/Copter.h"
+#include "../game/obj/Destroy.h"
+#include "../game/obj/Effect.h"
+#include "../game/obj/Env.h"
+#include "../game/obj/Explode.h"
+#include "../game/obj/GT.h"
+#include "../game/obj/Gas.h"
+#include "../game/obj/Hurt.h"
+#include "../game/obj/Player.h"
+#include "../game/obj/Swoosh.h"
+#include "../game/obj/bullet.h"
+#include "../game/obj/car.h"
+#include "../game/obj/control.h"
+#include "../game/obj/object.h"
+#include "../game/sp/SwitchChannels.h"
+
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+#include <map>
+#include <string>
+#include <vector>
+
+uint32_t EffectPortShadow_W(const void *p);
+uint32_t EffectPortShadow_Bits(float f);
+
+// Player_HandlePain: the original's (ESI the player's data, DI the place, BX the kind; the player and damage on the
+// stack) and our core's, logging the same. Outside the namespace, for the naked fake's call.
+void __cdecl EffectPortShadow_LogPain(obj_tag *player, float damage, BLData *blData, short location, ushort kind) {
+    ShadowLog("pain(%x,%08x,%x,%d,%d)", EffectPortShadow_W(player), EffectPortShadow_Bits(damage),
+              EffectPortShadow_W(blData), location, kind);
+}
+
+__declspec(naked) void EffectPortShadow_FakePainRegs(void) {
+    _asm {
+        movzx eax, bx
+        push eax
+        movsx eax, di
+        push eax
+        push esi
+        push dword ptr [esp + 20]
+        push dword ptr [esp + 20]
+        call EffectPortShadow_LogPain
+        add esp, 20
+        ret
+    }
+}
+
+namespace {
+
+#define RandWords ((uint8_t *)0x0018cdf8)
+#define FrameRates ((uint8_t *)0x0017c0f0)       // VIDEO_FRAME_RATE to REC_FRAME_RATE
+#define ShardListAt ((uint8_t *)0x001dc564)
+#define EffectListAt ((uint8_t *)0x002237c0)
+#define CasingListAt ((uint8_t *)0x001dc678)     // the 32 cases and NextCasing after them
+#define CopterListAt ((uint8_t *)0x001fe6a8)
+#define PlayersAt ((uint8_t *)0x001f6654)
+#define ViewersAt ((uint8_t *)0x001f661c)
+#define ScriptCamAt ((uint8_t *)0x001f6678)
+#define GravityAt ((uint8_t *)0x001f6648)
+#define DroneDisableAt ((uint8_t *)0x001dfa2a)
+
+#define ORIGINAL(at, type) ((type)(uintptr_t)(at))
+#ifndef COUNT
+#define COUNT(a) ((int)(sizeof(a) / sizeof((a)[0])))
+#endif
+
+const int OBJS = 10;
+const int MADE = 12;
+const int HITS = 8;
+const int MARKS = 6;
+const int SHARDS = 4;
+const int HEAP = 0x6000;
+const int EXTRA = 0xa00;
+
+struct World {
+    obj_tag objs[OBJS];
+    uint8_t extra[OBJS][EXTRA];         // BLData, Drone_tag, BU_tag, the extra data of every kind
+    obj_tag made[MADE];                 // control_create_object's
+    uint8_t madeExtra[MADE][0x60];
+    int madeCount;
+    cel_tag cels[3];
+    ENV_tag env;
+    celglist_tag glists[3];
+    COLLDATA_tag coll;
+    COLLBOX_tag boxes[3];
+    collDataB tris[8];
+    collDataC blocks[2];
+    weapon_definition_tag weapons[3];
+    HITDATA_tag hits[HITS];
+    HITDATA_tag spare;                  // Coll_AddHitToList's
+    AnimState anims[3];
+    _MATRIX bones[3][56];
+    SCRIPTINFO script;
+    TriList triList;
+    TriListTriangle triangles[4];
+    TriListVertex vertices[6];
+    TriListVertex verts[3];             // ShatterPolyRecurse's argument
+    uint8_t heap[HEAP];
+    uint32_t heapUsed;
+    COPTER copters[2];
+    ATTACH_tag marks[MARKS];
+    SHARD_tag shards[SHARDS];
+    obj_tag *casings[32];
+    viewer_tag viewer;
+    DroneImpact_tag impact;
+    HITDATA_tag *list;
+    _VECTOR v[6];
+    uint8_t placement[0x48];
+    uint8_t sounds[4];                  // what the sound fakes hand back
+    _MATRIX boneOut;                    // what AnimGetBoneWorldTrans answers
+    _VECTOR bonePos;
+    int sphereHits;                     // how many of the hits Collide_SphereIntersect hands back
+    uint32_t answer;                    // the fakes' coin
+};
+World world;
+
+ShadowRegions regions;
+int cases, differ;
+
+// The cases' random numbers: each run of a case starts from the same point, so the original and ours are given the
+// same arguments, and the fakes the same answers
+uint32_t gen, caseSeed;
+
+uint32_t R(uint32_t n) {
+    gen = gen * 1664525u + 1013904223u;
+    uint32_t v = gen ^ (gen >> 16);
+    return n ? v % n : v;
+}
+
+float RF(float lo, float hi) {
+    return lo + (hi - lo) * (float)R(0x10000) / 65535.0f;
+}
+
+uint32_t Bits(float f) {
+    uint32_t u;
+    memcpy(&u, &f, 4);
+    return u;
+}
+
+// A pointer as the logs and the results show it: an offset in the world, the stack as one value, else its address
+uint32_t W(const void *p) {
+    if (p == NULL)
+        return 0xffffffffu;
+    uintptr_t at = (uintptr_t)p, base = (uintptr_t)&world;
+    if (at >= base && at < base + sizeof(world))
+        return (uint32_t)(at - base);
+    char here;
+    ptrdiff_t distance = (const char *)p - &here;
+    if (distance > -0x10000 && distance < 0x10000)
+        return 0x7fffffffu;
+    return 0x80000000u | (uint32_t)at;
+}
+
+void LogVector(const char *name, const _VECTOR *v);
+
+} // namespace
+
+uint32_t EffectPortShadow_W(const void *p) { return W(p); }
+uint32_t EffectPortShadow_Bits(float f) { return Bits(f); }
+
+namespace {
+
+void LogVector(const char *name, const _VECTOR *v) {
+    if (v == NULL)
+        ShadowLog("%s=null", name);
+    else
+        ShadowLog("%s=%08x,%08x,%08x", name, Bits(v->x), Bits(v->y), Bits(v->z));
+}
+
+// Mostly in range, now and then an edge: zeros of both signs, a NaN, an infinity, a huge or tiny value
+float Value(float lo, float hi) {
+    switch (R(48)) {
+    case 0: return 0.0f;
+    case 1: return -0.0f;
+    case 2: return NAN;
+    case 3: return R(2) ? INFINITY : -INFINITY;
+    case 4: return R(2) ? 1e30f : -1e-30f;
+    case 5: return (float)(int)RF(lo, hi);
+    default: return RF(lo, hi);
+    }
+}
+
+float Plain(float lo, float hi) {
+    return RF(lo, hi);
+}
+
+void RandomVector(_VECTOR *v, float range) {
+    v->x = Value(-range, range);
+    v->y = Value(-range, range);
+    v->z = Value(-range, range);
+}
+
+void PlainVector(_VECTOR *v, float range) {
+    v->x = Plain(-range, range);
+    v->y = Plain(-range, range);
+    v->z = Plain(-range, range);
+}
+
+void UnitVector(_VECTOR *v) {
+    PlainVector(v, 1.0f);
+    Vec_Normalise(v, v);
+    if (R(12) == 0)
+        RandomVector(v, 1.0f);
+}
+
+obj_tag *AnyObj(void) {
+    return &world.objs[R(OBJS)];
+}
+
+// ---- the fakes
+
+// Set by the cases whose callers do not check
+bool sureCreate;
+
+obj_tag *__cdecl FakeCreate(int size, _VECTOR *pos, _VECTOR *rot, quaternion_tag *quat) {
+    ShadowLog("create(%d)", size);
+    LogVector("pos", pos);
+    LogVector("rot", rot);
+    if (!sureCreate && R(24) == 0)
+        return NULL;
+    int i = world.madeCount < MADE - 2 ? world.madeCount++ : MADE - 3;
+    obj_tag *obj = &world.made[i];
+    memset(obj, 0, sizeof(obj_tag));
+    memset(world.madeExtra[i], 0, sizeof(world.madeExtra[i]));
+    if (pos != NULL)
+        obj->position = *pos;
+    if (rot != NULL)
+        obj->rotation = *rot;
+    obj->inCel = &world.cels[0];
+    obj->extraObjectData = world.madeExtra[i];
+    obj->creationTimeFrames = GameState.NumFramesUnpaused - R(40);
+    return obj;
+}
+
+bool __cdecl FakeLinkToRoom(obj_tag *obj, char flags, world_tag *w) {
+    ShadowLog("link(%x,%d)", W(obj), flags);
+    return R(3) != 0;
+}
+
+void __cdecl FakeLinkToCel(obj_tag *obj, cel_tag *cel) {
+    ShadowLog("linkcel(%x,%x)", W(obj), W(cel));
+}
+
+void __cdecl FakeUnlink(obj_tag *obj) {
+    ShadowLog("unlink(%x)", W(obj));
+}
+
+obj_tag *__cdecl FakeFirstObject(void) {
+    ShadowLog("first");
+    return &world.objs[0];
+}
+
+void __cdecl FakeSetGfx(obj_tag *obj, HASHCODE hash) {
+    ShadowLog("gfx(%x,%x)", W(obj), (uint)hash);
+}
+
+void __cdecl FakeSetSubGfx(ATTACH_tag *mark, HASHCODE hash) {
+    ShadowLog("subgfx(%x,%x)", W(mark), (uint)hash);
+}
+
+void *__cdecl FakeGetItem(HASHCODE hash) {
+    ShadowLog("getitem(%x)", (uint)hash);
+    return R(2) ? &world.glists[R(3)] : NULL;
+}
+
+DYNAMICSOUNDS *__cdecl FakeSound3D(Action_SFX sfx, _VECTOR *pos, float volume, float outer, float inner, short pitch,
+                                   int p7, int limited) {
+    ShadowLog("sound3d(%x,%x,%08x,%08x,%08x,%d,%d,%d)", (uint)sfx, W(pos), Bits(volume), Bits(outer), Bits(inner),
+              pitch, p7, limited);
+    LogVector("at", pos);
+    return R(4) ? (DYNAMICSOUNDS *)&world.sounds[R(4)] : NULL;
+}
+
+DYNAMICSOUNDS *__cdecl FakeSoundExt(Action_SFX sfx, float volume, short pitch, int p4) {
+    ShadowLog("soundext(%x,%08x,%d,%d)", (uint)sfx, Bits(volume), pitch, p4);
+    return (DYNAMICSOUNDS *)&world.sounds[0];
+}
+
+void __cdecl FakeSoundStop(DYNAMICSOUNDS *handle) {
+    ShadowLog("soundstop(%x)", W(handle));
+}
+
+void __cdecl FakeSoundAlert(DYNAMICSOUNDS *handle, float alert) {
+    ShadowLog("alert(%x,%08x)", W(handle), Bits(alert));
+}
+
+light_tag *__cdecl FakeLightCreate(_VECTOR *pos, uchar r, uchar g, uchar b, float brightness, ushort channel,
+                                   short frames, uchar type, float p9, ushort p10, ushort p11, ushort p12, int sound) {
+    ShadowLog("light(%x,%d,%d,%d,%08x,%d,%d,%d,%08x,%d,%d,%d,%d)", W(pos), r, g, b, Bits(brightness), channel, frames,
+              type, Bits(p9), p10, p11, p12, sound);
+    return NULL;
+}
+
+bool __cdecl FakeLightDelete(light_tag *light) {
+    ShadowLog("lightdel(%x)", W(light));
+    return true;
+}
+
+obj_tag *__cdecl FakeEmitter(HASHCODE hash, _VECTOR *pos, _VECTOR *dir, float f4, uint p5, uint p6, uint p7,
+                             float f8) {
+    ShadowLog("emitter(%x,%x,%x,%08x,%d,%d,%d,%08x)", (uint)hash, W(pos), W(dir), Bits(f4), p5, p6, p7, Bits(f8));
+    LogVector("dir", dir);
+    return NULL;
+}
+
+SCRIPTINFO *__cdecl FakeScriptLoad(HASHCODE hash, _VECTOR *pos, _VECTOR *rot, uint *buf, void *sp, void *cb,
+                                   void *ctx) {
+    ShadowLog("scriptload(%x,%x,%x,%x,%x,%x,%x)", (uint)hash, W(pos), W(rot), W(buf), W(sp), W(cb), W(ctx));
+    return R(4) ? &world.script : NULL;
+}
+
+bool __cdecl FakeScriptPlay(SCRIPTINFO *script, char loop) {
+    ShadowLog("scriptplay(%x,%d)", W(script), loop);
+    return true;
+}
+
+void __cdecl FakeScriptUpdate(SCRIPTINFO *script) {
+    ShadowLog("scriptupdate(%x)", W(script));
+}
+
+bool __cdecl FakeScriptIsPlaying(SCRIPTINFO *script) {
+    ShadowLog("scriptplaying(%x)", W(script));
+    return R(4) != 0;
+}
+
+void __cdecl FakeScriptFree(SCRIPTINFO *script) {
+    ShadowLog("scriptfree(%x)", W(script));
+}
+
+void __cdecl FakeCameraShake(_VECTOR *pos, float strength) {
+    ShadowLog("shake(%x,%08x)", W(pos), Bits(strength));
+}
+
+void __cdecl FakeReferenced(obj_tag *obj, char referenced) {
+    ShadowLog("referenced(%x,%d)", W(obj), referenced);
+}
+
+void __cdecl FakeInherit(obj_tag *obj, obj_tag *from, float k) {
+    ShadowLog("inherit(%x,%x,%08x)", W(obj), W(from), Bits(k));
+}
+
+void __cdecl FakeObj1(obj_tag *obj) {
+    ShadowLog("obj1(%x)", W(obj));
+}
+
+void __cdecl FakeMPDamage(obj_tag *obj, float damage, obj_tag *from) {
+    ShadowLog("mpdamage(%x,%08x,%x)", W(obj), Bits(damage), W(from));
+}
+
+bool __cdecl FakeRegisterHit(ushort player, obj_tag *obj, float health) {
+    ShadowLog("registerhit(%d,%x,%08x)", player, W(obj), Bits(health));
+    return true;
+}
+
+void __cdecl FakeSubDamage(obj_tag *sub, float damage) {
+    ShadowLog("subdamage(%x,%08x)", W(sub), Bits(damage));
+}
+
+void __cdecl FakeLogScenery(uint player) {
+    ShadowLog("scenery(%d)", player);
+}
+
+bool __cdecl FakeDroneMessage(obj_tag *obj, uint type, void *data, uint delay) {
+    ShadowLog("dronemsg(%x,%x,%x,%d)", W(obj), type, W(data), delay);
+    if (data == &world.impact || W(data) == 0x7fffffffu) {
+        DroneImpact_tag *impact = (DroneImpact_tag *)data;
+        ShadowLog("impact(%08x,%08x,%x)", Bits(impact->damage), Bits(impact->radius), W(impact->source));
+        LogVector("at", &impact->position);
+    }
+    return true;
+}
+
+bool __cdecl FakeDCVfromOBJ(obj_tag *obj, DCVars_tag *dcv) {
+    ShadowLog("dcv(%x)", W(obj));
+    if (R(4) == 0)
+        return false;
+    dcv->gameObj = obj;
+    dcv->drone = obj != NULL ? (Drone_tag *)obj->extraObjectData : NULL;
+    dcv->cel = obj != NULL ? obj->inCel : NULL;
+    dcv->aiStateMachine = NULL;
+    return true;
+}
+
+uint __cdecl FakeChooseSFX(uint first, uint last) {
+    ShadowLog("choose(%x,%x)", first, last);
+    return first + R(last - first + 1);
+}
+
+DYNAMICSOUNDS *__cdecl FakeSpeech(DCVars_tag *dcv, uint sfx, char force, char face, char needFace) {
+    ShadowLog("speech(%x,%x,%x,%d,%d,%d)", W(dcv->gameObj), W(dcv->drone), sfx, force, face, needFace);
+    return NULL;
+}
+
+void __cdecl FakeVicinity(uint type, obj_tag *obj, float radius, void *data, uint delay) {
+    ShadowLog("vicinity(%x,%x,%08x,%x,%d)", type, W(obj), Bits(radius), W(data), delay);
+}
+
+int __cdecl FakeChangeSubState(obj_tag *player, ushort state) {
+    ShadowLog("substate(%x,%d)", W(player), state);
+    return (int)R(12);
+}
+
+void __cdecl FakeSetCamMode(BLData *blData, ushort mode) {
+    ShadowLog("cammode(%x,%d)", W(blData), mode);
+}
+
+void __cdecl FakeGrapplePoint(BLData *blData, _VECTOR *point, obj_tag *obj) {
+    ShadowLog("grapple(%x,%x,%x)", W(blData), W(point), W(obj));
+}
+
+void __cdecl FakeHeadPos(_VECTOR *out, obj_tag *player, _MATRIX *mtx) {
+    ShadowLog("head(%x,%x)", W(player), W(mtx));
+    out->x = player->position.x + Value(-0.5f, 0.5f);
+    out->y = player->position.y + Plain(0.0f, 2.0f);
+    out->z = player->position.z + Value(-0.5f, 0.5f);
+}
+
+void __cdecl FakeFlashBang(BLData *blData, float time, uchar blur) {
+    ShadowLog("flashbang(%x,%08x,%d)", W(blData), Bits(time), blur);
+}
+
+bool __cdecl FakeSphere(_VECTOR *pos, float radius, cel_tag *cel, obj_tag *tester, obj_tag *ignore, HITDATA_tag **list,
+                        uint p7, uint p8, uint mask, uint flags) {
+    ShadowLog("sphere(%x,%08x,%x,%x,%x,%d,%d,%x,%x)", W(pos), Bits(radius), W(cel), W(tester), W(ignore), p7, p8, mask,
+              flags);
+    LogVector("at", pos);
+    int n = world.sphereHits;
+    HITDATA_tag *head = NULL;
+    for (int i = n - 1; i >= 0; i--) {
+        world.hits[i].next = head;
+        head = &world.hits[i];
+    }
+    *list = head;
+    return R(6) != 0;
+}
+
+bool __cdecl FakeLineOfSight(_VECTOR *a, _VECTOR *b, cel_tag *cel, obj_tag *o1, obj_tag *o2, uint flags) {
+    ShadowLog("los(%x,%x,%x,%x,%x,%d)", W(a), W(b), W(cel), W(o1), W(o2), flags);
+    LogVector("from", a);
+    return R(2) != 0;
+}
+
+void __cdecl FakeFilterBullets(HITDATA_tag **list, ushort mask) {
+    ShadowLog("filter(%x,%x)", W(list), mask);
+}
+
+HITDATA_tag *__cdecl FakeAddHit(HITDATA_tag **list, float dist, cel_tag *cel, obj_tag *obj) {
+    ShadowLog("addhit(%x,%08x,%x,%x)", W(list), Bits(dist), W(cel), W(obj));
+    return &world.spare;
+}
+
+void __cdecl FakeFreeHits(HITDATA_tag **list) {
+    ShadowLog("freehits(%x,%x)", W(list), W(*list));
+    *list = NULL;
+}
+
+void *__cdecl FakeMalloc(size_t size, MallocFlags flags, uint32_t align) {
+    ShadowLog("malloc(%x,%x,%x)", (uint)size, (uint)(ushort)flags, align);
+    if (world.heapUsed + size + 16 > HEAP)
+        return &world.heap[0];
+    void *p = world.heap + world.heapUsed;
+    world.heapUsed = (world.heapUsed + (uint32_t)size + 15) & ~15u;
+    return p;
+}
+
+void __cdecl FakeFree(void **p) {
+    ShadowLog("free(%x)", W(*p));
+    *p = NULL;
+}
+
+TriList *__cdecl FakeTriList(void *obj) {
+    ShadowLog("trilist(%x)", W(obj));
+    return R(5) ? &world.triList : NULL;
+}
+
+void *__cdecl FakeCreateShard(const TriListVertex *v) {
+    ShadowLog("shard(%x,%x)", W(v), v->texture);
+    for (int i = 0; i < 3; i++) {
+        LogVector("p", &v[i].pos);
+        ShadowLog("%08x,%08x,%08x,%08x,%08x,%08x", Bits(v[i].uv[0]), Bits(v[i].uv[1]), Bits(v[i].colour[0]),
+                  Bits(v[i].colour[1]), Bits(v[i].colour[2]), Bits(v[i].colour[3]));
+    }
+    return &world.sounds[1];
+}
+
+void __cdecl FakeDeleteShard(void **shard) {
+    ShadowLog("delshard(%x,%x)", W(shard), W(*shard));
+    *shard = NULL;
+}
+
+void __cdecl FakeDrawShard(void *vtx, _MATRIX *m, int texture) {
+    ShadowLog("drawshard(%x,%x,%x)", W(vtx), W(m), texture);
+    for (int i = 0; i < 12; i++)
+        ShadowLog("%08x", Bits(((float *)m)[i]));
+}
+
+void __cdecl FakeTweakA(uint8_t a) {
+    ShadowLog("tweaka(%d)", a);
+}
+
+void __cdecl FakeNothing(void) {
+    ShadowLog("wbinvd");
+}
+
+bool __cdecl FakePaused(short player) {
+    ShadowLog("paused(%d)", player);
+    return R(6) == 0;
+}
+
+void __cdecl FakeSpline(void *path, ushort first, ushort last, float frame, _MATRIX *mtx, quaternion_tag *q, uint flags) {
+    ShadowLog("spline(%x,%d,%d,%08x,%x,%x,%d)", W(path), first, last, Bits(frame), W(mtx), W(q), flags);
+}
+
+void __cdecl FakeDrawIn(obj_tag *obj) {
+    ShadowLog("drawin(%x)", W(obj));
+}
+
+void __cdecl FakeBoneTrans(obj_tag *obj, uint which, int offset, _VECTOR *pos, _MATRIX *mtx) {
+    ShadowLog("bone(%x,%d,%d)", W(obj), which, offset);
+    *pos = world.bonePos;
+    *mtx = world.boneOut;
+}
+
+int __cdecl FakeWeaponInfo(obj_tag *obj, HASHCODE *gfx, HASHCODE *flash, ushort *sound) {
+    ShadowLog("weaponinfo(%x,%x,%x,%x)", W(obj), W(gfx), W(flash), W(sound));
+    return (int)R(6) - 1;
+}
+
+int __cdecl FakeDatumIndex(obj_tag *obj, int id) {
+    ShadowLog("datum(%x,%d)", W(obj), id);
+    return (int)R(4) - 1;
+}
+
+void __cdecl FakeAcquire(BU_tag *bullet, obj_tag *shooter) {
+    ShadowLog("acquire(%x,%x)", W(bullet), W(shooter));
+    if (R(3))
+        bullet->heatseekTarget = AnyObj();
+}
+
+bool __cdecl FakeDListInit(DLISTINFO_tag *list, ushort size, ushort count) {
+    ShadowLog("dlistinit(%x,%x,%d)", W(list), size, count);
+    return true;
+}
+
+bool __cdecl FakeLListInit(LLISTINFO_tag *list, ushort size, ushort count) {
+    ShadowLog("llistinit(%x,%x,%d)", W(list), size, count);
+    return true;
+}
+
+void __cdecl FakeExplode(obj_tag *obj, _VECTOR *pos, _VECTOR *dir, float scale, float radius, uint script,
+                         float damage, uchar a, uchar b, uchar c, obj_tag *from, ushort material) {
+    ShadowLog("explode(%x,%x,%x,%08x,%08x,%x,%08x,%d,%d,%d,%x,%d)", W(obj), W(pos), W(dir), Bits(scale), Bits(radius),
+              script, Bits(damage), a, b, c, W(from), material);
+    LogVector("at", pos);
+}
+
+obj_tag *__cdecl FakeGas(cel_tag *cel, _VECTOR *pos, _VECTOR *rot, _VECTOR *vel, float s0, float s1, HASHCODE hash,
+                         uint kind, uint c0, uint c1, ushort life) {
+    ShadowLog("gas(%x,%x,%x,%x,%08x,%08x,%x,%d,%x,%x,%d)", W(cel), W(pos), W(rot), W(vel), Bits(s0), Bits(s1),
+              (uint)hash, kind, c0, c1, life);
+    LogVector("at", pos);
+    LogVector("rot", rot);
+    LogVector("vel", vel);
+    return NULL;
+}
+
+void __cdecl FakeEffect(HITDATA_tag *hit, obj_tag *obj, uint flags, float volume) {
+    ShadowLog("effect(%x,%x,%x,%08x)", W(hit), W(obj), flags, Bits(volume));
+}
+
+void __cdecl FakeDebris(HITDATA_tag *hit, HEINFO_tag *info, cel_tag *cel, ushort count) {
+    ShadowLog("debris(%x,%x,%x,%d)", W(hit), W(info), W(cel), count);
+}
+
+void __cdecl FakeRemoveSObjs(obj_tag *obj) {
+    ShadowLog("removesobjs(%x)", W(obj));
+}
+
+void __cdecl FakeSmash(obj_tag *obj, obj_tag *from, ushort flags) {
+    ShadowLog("smash(%x,%x,%x)", W(obj), W(from), flags);
+}
+
+float __cdecl FakePlayerHurt(obj_tag *player, float damage, _VECTOR *from) {
+    ShadowLog("hurt(%x,%08x,%x)", W(player), Bits(damage), W(from));
+    return Value(-5.0f, 5.0f);
+}
+
+bool __cdecl FakeDestruction(obj_tag *obj, obj_tag *from) {
+    ShadowLog("destruction(%x,%x)", W(obj), W(from));
+    return R(2) != 0;
+}
+
+void __cdecl FakeDroneHit(obj_tag *obj, DroneImpact_tag *impact) {
+    ShadowLog("dronehit(%x,%08x,%08x,%x)", W(obj), Bits(impact->damage), Bits(impact->radius), W(impact->source));
+    LogVector("at", &impact->position);
+}
+
+void __cdecl FakeObjDamage(obj_tag *obj, float damage) {
+    ShadowLog("objdamage(%x,%08x)", W(obj), Bits(damage));
+}
+
+void __cdecl FakeBreakDamage(obj_tag *obj, HITDATA_tag *hit) {
+    ShadowLog("breakdamage(%x,%x,%08x)", W(obj), W(hit), Bits(hit->dmgAmt));
+}
+
+void __cdecl FakeWind(cel_tag *cel, _VECTOR *pos, _VECTOR *out) {
+    ShadowLog("wind(%x,%x)", W(cel), W(pos));
+    out->x = Value(-1.0f, 1.0f);
+    out->y = Value(-1.0f, 1.0f);
+    out->z = Value(-1.0f, 1.0f);
+}
+
+obj_tag *__cdecl FakeSwoosh(_VECTOR *from, _VECTOR *to, short frames, HASHCODE hash, uchar drift) {
+    ShadowLog("swoosh(%x,%x,%d,%x,%d)", W(from), W(to), frames, (uint)hash, drift);
+    LogVector("from", from);
+    LogVector("to", to);
+    return R(4) ? &world.made[MADE - 1] : NULL;
+}
+
+void __cdecl FakeOnImpact(obj_tag *bullet, plane_equ_tag *plane, _VECTOR *pos) {
+    ShadowLog("onimpact(%x,%x,%x)", W(bullet), W(plane), W(pos));
+}
+
+obj_tag *__cdecl FakeOcclude(_VECTOR *pos, ushort life, ushort kind) {
+    ShadowLog("occlude(%x,%d,%d)", W(pos), life, kind);
+    return &world.made[MADE - 2];
+}
+
+// Every fake but those of the package's own functions
+void InstallFakes(void) {
+    ShadowHook_Install(0x0002dc10, (const void *)&FakeCreate);
+    ShadowHook_Install(0x00021110, (const void *)&FakeLinkToRoom);
+    ShadowHook_Install(0x0002d200, (const void *)&FakeLinkToCel);
+    ShadowHook_Install(0x0002d050, (const void *)&FakeUnlink);
+    ShadowHook_Install(0x0002cfc0, (const void *)&FakeFirstObject);
+    ShadowHook_Install(0x0006b5e0, (const void *)&FakeSetGfx);
+    ShadowHook_Install(0x0006b6d0, (const void *)&FakeSetSubGfx);
+    ShadowHook_Install(0x0006b500, (const void *)&FakeGetItem);
+    ShadowHook_Install(0x000cb8c0, (const void *)&FakeSound3D);
+    ShadowHook_Install(0x000cb940, (const void *)&FakeSoundExt);
+    ShadowHook_Install(0x000cb9a0, (const void *)&FakeSoundStop);
+    ShadowHook_Install(0x000cba90, (const void *)&FakeSoundAlert);
+    ShadowHook_Install(0x000cbaa0, (const void *)&FakeSoundAlert);
+    ShadowHook_Install(0x0006d530, (const void *)&FakeLightCreate);
+    ShadowHook_Install(0x0006d610, (const void *)&FakeLightDelete);
+    ShadowHook_Install(0x00068290, (const void *)&FakeEmitter);
+    ShadowHook_Install(0x000c1550, (const void *)&FakeScriptLoad);
+    ShadowHook_Install(0x000c2660, (const void *)&FakeScriptPlay);
+    ShadowHook_Install(0x000c36d0, (const void *)&FakeScriptUpdate);
+    ShadowHook_Install(0x000c26d0, (const void *)&FakeScriptIsPlaying);
+    ShadowHook_Install(0x000c2500, (const void *)&FakeScriptFree);
+    ShadowHook_Install(0x00025330, (const void *)&FakeCameraShake);
+    ShadowHook_Install(0x0002db00, (const void *)&FakeReferenced);
+    ShadowHook_Install(0x0002d6a0, (const void *)&FakeInherit);
+    ShadowHook_Install(0x0009a6f0, (const void *)&FakeObj1);
+    ShadowHook_Install(0x000a12b0, (const void *)&FakeMPDamage);
+    ShadowHook_Install(0x0009d700, (const void *)&FakeRegisterHit);
+    ShadowHook_Install(0x000cf6a0, (const void *)&FakeSubDamage);
+    ShadowHook_Install(0x000b0740, (const void *)&FakeLogScenery);
+    ShadowHook_Install(0x00031830, (const void *)&FakeDroneMessage);
+    ShadowHook_Install(0x0002fac0, (const void *)&FakeDCVfromOBJ);
+    ShadowHook_Install(0x00036270, (const void *)&FakeChooseSFX);
+    ShadowHook_Install(0x00037530, (const void *)&FakeSpeech);
+    ShadowHook_Install(0x00032970, (const void *)&FakeVicinity);
+    ShadowHook_Install(0x000ac0a0, (const void *)&EffectPortShadow_FakePainRegs);
+    ShadowHook_Install((unsigned)(uintptr_t)&_Player_HandlePain, (const void *)&EffectPortShadow_LogPain);
+    ShadowHook_Install(0x000a9720, (const void *)&FakeChangeSubState);
+    ShadowHook_Install(0x000abef0, (const void *)&FakeSetCamMode);
+    ShadowHook_Install(0x000aa2a0, (const void *)&FakeGrapplePoint);
+    ShadowHook_Install(0x000a89a0, (const void *)&FakeHeadPos);
+    ShadowHook_Install(0x000abdc0, (const void *)&FakeFlashBang);
+    ShadowHook_Install(0x0002c610, (const void *)&FakeSphere);
+    ShadowHook_Install(0x0002c5b0, (const void *)&FakeLineOfSight);
+    ShadowHook_Install(0x0002b3b0, (const void *)&FakeFilterBullets);
+    ShadowHook_Install(0x00029560, (const void *)&FakeAddHit);
+    ShadowHook_Install(0x000294d0, (const void *)&FakeFreeHits);
+    ShadowHook_Install(0x00070ae0, (const void *)&FakeMalloc);
+    ShadowHook_Install(0x000705f0, (const void *)&FakeFree);
+    ShadowHook_Install(0x000df6c0, (const void *)&FakeTriList);
+    ShadowHook_Install(0x000df960, (const void *)&FakeCreateShard);
+    ShadowHook_Install(0x000df930, (const void *)&FakeDeleteShard);
+    ShadowHook_Install(0x000df9f0, (const void *)&FakeDrawShard);
+    ShadowHook_Install(0x000ddf50, (const void *)&FakeTweakA);
+    ShadowHook_Install(0x000dfb20, (const void *)&FakeNothing);
+    ShadowHook_Install(0x0006afb0, (const void *)&FakePaused);
+    ShadowHook_Install(0x000d8df0, (const void *)&FakeSpline);
+    ShadowHook_Install(0x000db3d0, (const void *)&FakeDrawIn);
+    ShadowHook_Install(0x000db3c0, (const void *)&FakeDrawIn);
+    ShadowHook_Install(0x00013070, (const void *)&FakeBoneTrans);
+    ShadowHook_Install(0x00013630, (const void *)&FakeWeaponInfo);
+    ShadowHook_Install(0x00013590, (const void *)&FakeDatumIndex);
+    ShadowHook_Install(0x00022db0, (const void *)&FakeAcquire);
+    ShadowHook_Install(0x0006ead0, (const void *)&FakeDListInit);
+    ShadowHook_Install(0x0006ea10, (const void *)&FakeLListInit);
+}
+
+// ---- the world
+
+const uchar kMaterials[] = {0, 1, 3, 5, 6, 10, 13, 14, 15, 16, 20, 21, 22, 0x41, 0x80, 0x90, 0x50, 0x3f};
+const char kTypes[] = {OBJECTTYPE_DRONE, OBJECTTYPE_PLAYER, OBJECTTYPE_BULLET, OBJECTTYPE_BREAK, OBJECTTYPE_DESTROY,
+                       OBJECTTYPE_CAR, OBJECTTYPE_MPOBJECT, OBJECTTYPE_GUNTURRET, OBJECTTYPE_SENSOR,
+                       OBJECTTYPE_MONITOR, OBJECTTYPE_ANIMOBJECT, OBJECTTYPE_MINE, 0, OBJECTTYPE_SUB,
+                       OBJECTTYPE_ANIMDEBUGHANDLER, OBJECTTYPE_GRAPPLE, 9};
+
+void RandomWeapon(weapon_definition_tag *w) {
+    memset(w, 0, sizeof(*w));
+    static const short bases[] = {0x33, 0x3b, 0x37, 0x45, 0x4e, 0x4f, 0x50, 0x51, 0x59, 0x5b, 0x67, 0x69, 0x6a, 0x6e,
+                                  2, 13, 27, 43, 44};
+    w->weaponBaseNum = bases[R(COUNT(bases))];
+    static const short variants[] = {0x2b, 0x34, 0x35, 0x36, 0x37, 0x3a, 0x3b, 0x3c, 0x40, 0x6c, 0x2a, 5, 0x50};
+    w->weaponVariantNum = R(3) ? variants[R(COUNT(variants))] : w->weaponBaseNum;
+    w->explodeRadius = Value(0.0f, 6.0f);
+    w->damage = R(5) ? Value(0.0f, 50.0f) : 0.0f;
+    w->baseSpread = Value(0.0f, 20.0f);
+    w->projectileSpeed = Value(0.1f, 8.0f);
+    w->range = Plain(10.0f, 200.0f);
+    w->shotsPerTrigger[0] = (short)R(10);
+    w->shotsPerTrigger[1] = (short)R(999);
+    w->clipSize = (short)(R(8) ? R(30) : 0x8000 + R(10));
+    w->spreadPerShot = Value(0.0f, 3.0f);
+    w->weaponFlags = R(0x800000) & (0x4000 | 0x40000 | 0x400000 | 0x10);
+    w->projectileFlags = R(0x100000);
+    w->impactFlags = R(0x400000);
+    if (R(3) == 0)
+        w->impactFlags |= 0x200;
+    w->swooshInterval = (short)(1 + R(5));
+    w->swooshLifetime = (short)R(200);
+    w->casingDelayFrames = (uchar)R(6);
+    w->ammoType = (uchar)R(16);
+    w->casingEjectVelocity[0] = Value(-0.1f, 0.1f);
+    w->casingEjectVelocity[1] = Value(-0.1f, 0.1f);
+    w->casingEjectVelocity[2] = Value(-0.1f, 0.1f);
+    w->onImpact = R(12) == 0 ? &FakeOnImpact : NULL;
+}
+
+void RandomHit(HITDATA_tag *hit) {
+    memset(hit, 0, sizeof(*hit));
+    hit->dmgAmt = Value(-1.0f, 40.0f);
+    hit->dist = Plain(0.0f, 10.0f);
+    UnitVector(&hit->surfaceNormal.normal);
+    hit->surfaceNormal.d = Plain(-3.0f, 3.0f);
+    UnitVector(&hit->unknown1);
+    UnitVector(&hit->maybehitDirection);
+    RandomVector(&hit->hitPosition, 6.0f);
+    hit->materialType = (char)(R(4) ? kMaterials[R(COUNT(kMaterials))] : R(0x100));
+    hit->flags = (char)R(8);
+    switch (R(4)) {
+    case 0: hit->hitCel = &world.cels[R(3)]; break;
+    case 1: break;
+    default: hit->hitObj = AnyObj(); break;
+    }
+    if (R(4) == 0)
+        hit->hitCel = &world.cels[R(3)];
+}
+
+// The extra data of a kind of object, as far as the package reads it
+void RandomExtra(obj_tag *obj, uint8_t *extra) {
+    memset(extra, 0, EXTRA);
+    switch (obj->objectType) {
+    case OBJECTTYPE_DRONE: {
+        Drone_tag *drone = (Drone_tag *)extra;
+        drone->health = Value(-5.0f, 50.0f);
+        drone->accuracyF = Value(0.0f, 2.0f);
+        drone->dtype = (uchar)(R(3) ? 12 : R(20));
+        drone->skinClass = (short)(R(3) ? 0x10 : R(20));
+        drone->gameObj = obj;
+        break;
+    }
+    case OBJECTTYPE_PLAYER: {
+        BLData *bl = (BLData *)extra;
+        bl->health = Value(-5.0f, 100.0f);
+        bl->playerNum = (char)R(4);
+        bl->burstShotsLeft = (short)R(12);
+        bl->twinGunHand = (char)R(2);
+        bl->weaponObject = AnyObj();
+        for (int i = 0; i < 114; i++)
+            bl->weaponStats[i].fireModeIndex = (char)R(2);
+        break;
+    }
+    case OBJECTTYPE_BULLET: {
+        BU_tag *b = (BU_tag *)extra;
+        b->wpnDef = &world.weapons[R(3)];
+        b->firedByObj = R(4) ? AnyObj() : NULL;
+        if (R(5) == 0)
+            b->firedByObj = glb_players[0];
+        b->maybeProxyObjectShooter = R(2) ? AnyObj() : NULL;
+        b->swoosh = R(2) ? &world.made[MADE - 1] : NULL;
+        b->occluder = R(3) ? NULL : &world.made[MADE - 2];
+        b->heatseekTarget = R(2) ? AnyObj() : NULL;
+        UnitVector(&b->direction);
+        b->speed = Value(0.0f, 6.0f);
+        b->fuseTimer = R(6) == 0 ? 7777.0f : Value(-5.0f, 900.0f);
+        b->numRicochets = (ushort)(R(4) ? R(5) : R(25));
+        b->charge = (short)((int)R(120) - 10);
+        b->soundHandle = R(2) ? (DYNAMICSOUNDS *)&world.sounds[2] : NULL;
+        RandomVector(&b->test.push, 0.5f);
+        break;
+    }
+    case OBJECTTYPE_BREAK: {
+        ObjData_Break *b = (ObjData_Break *)extra;
+        b->breakType = (BreakType)(R(2) ? BreakType_Window : R(4));
+        b->health = Value(-5.0f, 30.0f);
+        b->mask = (ushort)R(0x10000);
+        break;
+    }
+    case OBJECTTYPE_DESTROY: {
+        DESTROY_tag *d = (DESTROY_tag *)extra;
+        d->smashedGlist = R(2) ? &world.glists[R(3)] : NULL;
+        d->health = Value(-5.0f, 30.0f);
+        d->blastRadius = Value(0.0f, 5.0f);
+        d->delay = (int)R(5) - 2;
+        d->channelIn = (ushort)(R(2) ? R(8) : 0);
+        d->channelOut = (ushort)(R(2) ? R(8) : 0);
+        d->mask = (ushort)R(0x40);
+        d->explosion = (char)R(4);
+        d->smashed = (uchar)(R(4) == 0);
+        break;
+    }
+    case OBJECTTYPE_ANIMOBJECT: {
+        obj_tag *sub = R(4) ? AnyObj() : NULL;
+        if (sub != NULL && sub != obj && R(2))
+            sub->objectType = OBJECTTYPE_SUB;
+        *(obj_tag **)extra = sub;
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+void RandomObject(int i) {
+    obj_tag *obj = &world.objs[i];
+    memset(obj, 0, sizeof(*obj));
+    obj->objectType = kTypes[R(COUNT(kTypes))];
+    PlainVector(&obj->position, 5.0f);
+    obj->lastPosition = obj->position;
+    if (R(2))
+        PlainVector(&obj->lastPosition, 5.0f);
+    PlainVector(&obj->rotation, 3.2f);
+    PlainVector(&obj->centrePoint, 5.0f);
+    if (R(8) == 0)
+        RandomVector(&obj->centrePoint, 5.0f);
+    obj->radius = Value(0.1f, 4.0f);
+    RotTransMatrix(&obj->rotation, &obj->position, &obj->transformMatrix);
+    obj->inCel = &world.cels[R(3)];
+    obj->objGraphics = &world.glists[R(3)];
+    obj->animState = &world.anims[R(3)];
+    obj->extraObjectData = world.extra[i];
+    obj->curState = (ushort)R(5);
+    obj->subState = (ushort)(R(3) ? 0 : R(12));
+    obj->flags = (char)(R(4) == 0);
+    obj->effectFlags = (int)(R(0x80) | (R(2) ? 0x2000 : 0));
+    obj->drawnCountdown = (char)R(3);
+    obj->tweakR = (uchar)R(256);
+    obj->tweakG = (uchar)R(256);
+    obj->tweakB = (uchar)R(256);
+    obj->tweakA = (uchar)R(256);
+    obj->creationTimeFrames = (int)(GameState.NumFramesUnpaused - R(200));
+    if (R(20) == 0)
+        obj->creationTimeFrames = (int)(GameState.NumFramesUnpaused + 1 + R(5));
+    obj->nextObject = i + 1 < OBJS ? &world.objs[i + 1] : NULL;
+    if (R(3) == 0)
+        obj->hitList = &world.hits[R(HITS)];
+}
+
+// A leaf of three triangles, its vertices in a block
+void RandomCollision(void) {
+    memset(&world.coll, 0, sizeof(world.coll));
+    for (int b = 0; b < 2; b++) {
+        short *block = (short *)world.blocks[b].raw;
+        for (int i = 0; i < 32; i++)
+            block[i] = (short)((int)R(1200) - 600);
+    }
+    for (int t = 0; t < 8; t++) {
+        for (int k = 0; k < 3; k++)
+            world.tris[t].v[k] = (ushort)(3 * R(4));
+        world.tris[t].normal = (ushort)(12 + 5 * R(3));
+    }
+    for (int i = 0; i < 3; i++) {
+        COLLBOX_tag *box = &world.boxes[i];
+        memset(box, 0, sizeof(*box));
+        box->childA = (short)(i == 0 ? 1 : -1);
+        box->childB = (short)R(4);
+        box->triEnd = (short)(box->childB + R(5));
+        box->vertexBlock = (ushort)R(2);
+        box->quant.scale = Plain(0.001f, 0.01f);
+        PlainVector(&box->quant.offset, 2.0f);
+    }
+    world.coll.collBoxes = world.boxes;
+    world.coll.dataStartB = world.tris;
+    world.coll.dataStartC = world.blocks;
+    world.coll.numCollBoxes = (ushort)(R(4));
+}
+
+void RandomShardList(void) {
+    LLISTINFO_tag *list = (LLISTINFO_tag *)ShardListAt;
+    memset(list, 0, sizeof(*list));
+    list->elementSize = sizeof(SHARD_tag);
+    LLNODE_tag *prev = NULL;
+    for (int i = 0; i < SHARDS; i++) {
+        SHARD_tag *s = &world.shards[i];
+        memset(s, 0, sizeof(*s));
+        if (R(5) == 0)
+            continue;
+        s->vertices = R(5) ? &world.sounds[1] : NULL;
+        s->texture = R(100);
+        s->life = R(4) ? Value(-0.5f, 1.0f) : 0.0f;
+        s->delay = R(2) ? Value(-0.5f, 0.5f) : 0.0f;
+        RandomVector(&s->pos, 5.0f);
+        RandomVector(&s->rot, 3.0f);
+        RandomVector(&s->vel, 0.2f);
+        RandomVector(&s->spin, 0.2f);
+        s->node.prev = prev;
+        if (prev != NULL)
+            prev->next = &s->node;
+        else
+            list->head = &s->node;
+        list->tail = &s->node;
+        list->count++;
+        prev = &s->node;
+    }
+}
+
+void RandomMarks(void) {
+    DLISTINFO_tag *list = (DLISTINFO_tag *)EffectListAt;
+    memset(list, 0, sizeof(*list));
+    list->freeList.elementSize = list->activeList.elementSize = sizeof(ATTACH_tag);
+    LLNODE_tag *lastFree = NULL, *lastUsed = NULL;
+    for (int i = 0; i < MARKS; i++) {
+        ATTACH_tag *m = &world.marks[i];
+        memset(m, 0, sizeof(*m));
+        bool used = R(3) != 0;
+        LLISTINFO_tag *l = used ? &list->activeList : &list->freeList;
+        LLNODE_tag *&last = used ? lastUsed : lastFree;
+        m->node.prev = last;
+        if (last != NULL)
+            last->next = &m->node;
+        else
+            l->head = &m->node;
+        l->tail = &m->node;
+        l->count++;
+        last = &m->node;
+        if (used) {
+            m->cel = R(2) ? &world.cels[R(3)] : NULL;
+            m->parent = R(2) ? AnyObj() : NULL;
+        }
+    }
+    // Some marks linked on cels and objects
+    for (int i = 0; i < MARKS; i++) {
+        ATTACH_tag *m = &world.marks[i];
+        if (R(2) == 0)
+            continue;
+        if (R(2) && i + 1 < MARKS)
+            m->next = &world.marks[i + 1 + R(MARKS - 1 - i)];
+        if (R(2) && i > 0)
+            m->prev = &world.marks[R(i)];
+        if (m->cel != NULL && R(2))
+            m->cel->attachments = m;
+        if (m->parent != NULL && R(2))
+            m->parent->attachments = m;
+    }
+}
+
+// The drones' list, after their types have changed
+void LinkDrones(void) {
+    Drone_tag *drones = NULL;
+    for (int i = OBJS - 1; i >= 0; i--) {
+        if (world.objs[i].objectType != OBJECTTYPE_DRONE || world.objs[i].extraObjectData != world.extra[i])
+            continue;
+        Drone_tag *d = (Drone_tag *)world.extra[i];
+        d->next = drones;
+        drones = d;
+    }
+    NPCGlobals.NDrone2List = drones;
+}
+
+void RandomWorld(void) {
+    memset(&world, 0, sizeof(world));
+    GameState.NumFramesUnpaused = 1000 + R(1000);
+    GameState.CurrentLevelHashcode = (HASHCODE)(R(2) ? 0x07000001 : (R(2) ? 0x07000002 : 0x07000008));
+    MPSettings.isMultiplayer = R(4) == 0;
+    MPSettings.maybeDroneAIEnabled = R(3) == 0;
+    MPSettings.ExplosiveSceneryEnabled = R(2);
+    *(uint32_t *)ScriptCamAt = R(4) == 0;
+    *DroneDisableAt = R(6) == 0;
+    for (int i = 0; i < 256; i++)
+        switch_channels[i] = (char)(R(3) == 0);
+    ((float *)GravityAt)[0] = Value(-1.0f, 1.0f);
+    ((float *)GravityAt)[1] = Value(-12.0f, 0.0f);
+    ((float *)GravityAt)[2] = Value(-1.0f, 1.0f);
+    float rate = R(4) ? 1.0f : Plain(0.5f, 2.5f);
+    FRAME_RATE_MUL = rate;
+    FRAME_RATE_DIV = 1.0f / rate;
+    REC_FRAME_RATE = R(4) ? 1.0f / 60.0f : Plain(0.005f, 0.05f);
+    _FRAME_RATE = R(4) ? 60.0f : Plain(20.0f, 120.0f);
+
+    for (int i = 0; i < 3; i++) {
+        cel_tag *cel = &world.cels[i];
+        cel->env = R(3) ? &world.env : NULL;
+        cel->bitsFromPlacementTag = R(2) ? 0x400000 : 0;
+        PlainVector(&cel->sphere, 4.0f);
+        PlainVector(&cel->someMax, 4.0f);
+        cel->shearHeight = R(3) ? Plain(-5.0f, 5.0f) : NAN;
+        world.glists[i].colldata = R(4) ? &world.coll : NULL;
+        world.glists[i].lod = R(2) ? &world.glists[R(3)] : NULL;
+        world.glists[i].applyFlagsToObject = R(3) ? 0 : 0x10;
+        world.anims[i].animObj.boneMtxs = world.bones[i];
+        world.anims[i].currentWeaponId = (char)R(115);
+        world.anims[i].animFlags = (char)R(4);
+        world.anims[i].floor.materialType = (char)R(0x100);
+        for (int b = 0; b < 56; b++)
+            RotTransMatrix(&world.cels[0].sphere, &world.cels[1].sphere, &world.bones[i][b]);
+    }
+    UnitVector(&world.env.windDir);
+    world.env.windStrength = Value(0.0f, 3.0f);
+    world.env.windOn = R(4) ? Value(0.0f, 1.0f) : 0.0f;
+    world.env.windGust = Value(-2.0f, 2.0f);
+    world.env.windSpread = Value(-1.0f, 1.0f);
+
+    for (int i = 0; i < 3; i++)
+        RandomWeapon(&world.weapons[i]);
+    for (int i = 0; i < OBJS; i++)
+        RandomObject(i);
+    for (int i = 0; i < OBJS; i++)
+        RandomExtra(&world.objs[i], world.extra[i]);
+    for (int i = 0; i < HITS; i++)
+        RandomHit(&world.hits[i]);
+    for (int i = 0; i < HITS; i++)
+        world.hits[i].next = R(3) && i + 1 < HITS ? &world.hits[i + 1] : NULL;
+    world.sphereHits = (int)R(HITS + 1);
+    RandomCollision();
+
+    world.triList.triangleCount = (int)R(5) - (R(6) == 0);
+    world.triList.triangles = world.triangles;
+    world.triList.vertices = world.vertices;
+    for (int i = 0; i < 4; i++) {
+        world.triangles[i].texture = R(20);
+        world.triangles[i].a = (ushort)R(6);
+        world.triangles[i].b = (ushort)R(6);
+        world.triangles[i].c = (ushort)R(6);
+    }
+    for (int i = 0; i < 6; i++) {
+        TriListVertex *v = &world.vertices[i];
+        v->texture = R(20);
+        PlainVector(&v->pos, 1.5f);
+        v->uv[0] = Plain(0.0f, 1.0f);
+        v->uv[1] = Plain(0.0f, 1.0f);
+        for (int c = 0; c < 4; c++)
+            v->colour[c] = Plain(0.0f, 255.0f);
+    }
+    for (int i = 0; i < 3; i++)
+        world.verts[i] = world.vertices[R(6)];
+
+    world.script.scriptHashcode = (HASHCODE)(R(2) ? 0x06000052 : 0x06000027);
+    world.script.maybeNumFrames = (ushort)R(80);
+    PlainVector(&world.bonePos, 4.0f);
+    _VECTOR r;
+    PlainVector(&r, 3.2f);
+    RotTransMatrix(&r, &world.bonePos, &world.boneOut);
+    for (int i = 0; i < 6; i++)
+        RandomVector(&world.v[i], 6.0f);
+
+    // The helicopters, the drone list, the players and the camera
+    LLISTINFO_tag *copters = (LLISTINFO_tag *)CopterListAt;
+    memset(copters, 0, sizeof(*copters));
+    for (int i = 0; i < 2; i++) {
+        COPTER *c = &world.copters[i];
+        for (int p = 0; p < 9; p++)
+            c->parts[p] = R(3) ? NULL : AnyObj();
+        c->damageA = Value(0.0f, 50.0f);
+        c->damageB = Value(0.0f, 50.0f);
+        c->switchChannelToShowCopterBody = (ushort)(R(2) ? 0 : R(8));
+    }
+    if (R(3)) {
+        copters->head = &world.copters[0].node;
+        world.copters[0].node.next = R(2) ? &world.copters[1].node : NULL;
+    }
+    LinkDrones();
+    for (int i = 0; i < 4; i++)
+        glb_players[i] = R(2) ? &world.objs[R(OBJS)] : NULL;
+    for (int i = 0; i < OBJS; i++) {
+        if (world.objs[i].objectType == OBJECTTYPE_PLAYER && R(2))
+            glb_players[0] = &world.objs[i];
+    }
+    PlainVector(&world.viewer.pos, 5.0f);
+    glb_viewer[0] = &world.viewer;
+
+    RandomShardList();
+    RandomMarks();
+    for (int i = 0; i < MADE; i++)
+        world.made[i].extraObjectData = world.madeExtra[i];
+    for (int i = 0; i < 32; i++)
+        ((obj_tag **)CasingListAt)[i] = R(4) ? &world.made[R(MADE)] : NULL;
+    *(short *)(CasingListAt + 0x80) = (short)R(32);
+
+    memset(world.placement, 0, sizeof(world.placement));
+    for (int i = 0x2c; i < 0x48; i += 4)
+        *(uint32_t *)&world.placement[i] = R(3) ? R(100) : R(0) | 0x80000000u * R(2);
+    *(void **)&world.placement[8] = &world.v[0];
+    *(ushort *)&world.placement[2] = (ushort)R(10);
+    *(ushort *)&world.placement[4] = (ushort)R(12);
+}
+
+// ---- calling
+
+struct Regs {
+    uint32_t eax, ebx, ecx, edx, esi, edi;
+};
+
+__declspec(naked) uint32_t __cdecl CallRegs(unsigned at, const Regs *r, int argc, const uint32_t *args) {
+    _asm {
+        push ebp
+        mov ebp, esp
+        push ebx
+        push esi
+        push edi
+        mov ecx, [ebp + 16]
+        mov edx, [ebp + 20]
+    pushing:
+        test ecx, ecx
+        jz pushed
+        push dword ptr [edx + ecx * 4 - 4]
+        dec ecx
+        jmp pushing
+    pushed:
+        mov eax, [ebp + 12]
+        mov ebx, [eax + 4]
+        mov ecx, [eax + 8]
+        mov edx, [eax + 12]
+        mov esi, [eax + 16]
+        mov edi, [eax + 20]
+        mov eax, [eax]
+        call dword ptr [ebp + 8]
+        mov ecx, [ebp + 16]
+        lea esp, [esp + ecx * 4]
+        pop edi
+        pop esi
+        pop ebx
+        pop ebp
+        ret
+    }
+}
+
+uint32_t P(const void *p) { return (uint32_t)(uintptr_t)p; }
+
+uint32_t F(float f) { return Bits(f); }
+
+typedef uint32_t (*Runner)(bool original);
+struct Case {
+    const char *name;
+    Runner run;
+};
+const Case *current;
+
+// The stack below, as zeros, the same for both
+__declspec(noinline) void ZeroStack(void) {
+    volatile uint32_t below[0x1000];
+    for (int i = 0; i < 0x1000; i++)
+        below[i] = 0;
+}
+
+uint32_t RunCase(bool original) {
+    gen = caseSeed;
+    sureCreate = false;
+    ZeroStack();
+    return current->run(original);
+}
+
+uint32_t RegsRun(bool original, unsigned at, const void *ours, Regs r, int argc, const uint32_t *args) {
+    if (original) {
+        XbeOriginalScope o(at);
+        ZeroStack();
+        return CallRegs(at, &r, argc, args);
+    }
+    return CallRegs((unsigned)(uintptr_t)ours, &r, argc, args);
+}
+
+#define CDECL_RUN(at, ours, type, ...)                                                                                \
+    (original ? ([&]() { XbeOriginalScope o(at); ZeroStack(); return ORIGINAL(at, type)(__VA_ARGS__); }()) \
+              : ours(__VA_ARGS__))
+
+// What a float-returning function leaves in ST0, compared as the float it is
+uint32_t FloatResult(float f) {
+    return Bits(f);
+}
+
+// ---- the regions and the comparison (two NaNs the same: the x87 and SSE2 choose differently between two)
+
+struct Area {
+    uint8_t *at;
+    size_t size;
+};
+Area areas[24];
+int areaCount;
+int nanChoices;
+
+void AddArea(void *at, size_t size) {
+    regions.Add(at, size);
+    areas[areaCount].at = (uint8_t *)at;
+    areas[areaCount++].size = size;
+}
+
+bool IsNaNWord(const uint8_t *p) {
+    uint32_t u;
+    memcpy(&u, p, 4);
+    return (u & 0x7f800000u) == 0x7f800000u && (u & 0x007fffffu) != 0;
+}
+
+bool CompareCase(const char *what, int trial) {
+    static std::vector<uint8_t> theirState, ourState;
+    regions.Save();
+    ShadowLog_Clear();
+    uint32_t theirResult = RunCase(true);
+    regions.Capture(theirState);
+    std::string theirLog = ShadowLog_Text();
+    regions.Restore();
+    ShadowLog_Clear();
+    uint32_t ourResult = RunCase(false);
+    regions.Capture(ourState);
+    const std::string &ourLog = ShadowLog_Text();
+
+    static std::map<std::string, int> reports;
+    int &reported = reports[what];
+    bool same = true;
+    if (theirResult != ourResult) {
+        same = false;
+        if (reported++ < 3)
+            printf("[effectport] %s case %d: returns 0x%x, the original 0x%x\n", what, trial, ourResult, theirResult);
+    }
+    size_t at = 0;
+    bool nans = false, memorySame = true;
+    for (int a = 0; a < areaCount && memorySame; a++) {
+        for (size_t j = 0; j < areas[a].size; j++) {
+            if (theirState[at + j] == ourState[at + j])
+                continue;
+            size_t window = j >= 3 ? j - 3 : 0;
+            for (; window <= j && window + 4 <= areas[a].size; window++) {
+                if (IsNaNWord(&theirState[at + window]) && IsNaNWord(&ourState[at + window]))
+                    break;
+            }
+            if (window <= j && window + 4 <= areas[a].size) {
+                nans = true;
+                j = window + 3;
+                continue;
+            }
+            size_t word = j & ~(size_t)3;
+            memorySame = false;
+            if (reported++ < 3) {
+                uint32_t theirs = 0, ours = 0;
+                if (word + 4 <= areas[a].size) {
+                    memcpy(&theirs, &theirState[at + word], 4);
+                    memcpy(&ours, &ourState[at + word], 4);
+                }
+                printf("[effectport] %s case %d: memory differs in region %d at +0x%x: 0x%08x, the original 0x%08x\n",
+                       what, trial, a, (unsigned)word, ours, theirs);
+            }
+            break;
+        }
+        at += areas[a].size;
+    }
+    same = same && memorySame;
+    if (theirLog != ourLog) {
+        same = false;
+        if (reported++ < 3)
+            printf("[effectport] %s case %d: calls differ\n  ours:     %.600s\n  original: %.600s\n", what, trial,
+                   ourLog.c_str(), theirLog.c_str());
+    }
+    if (same && nans)
+        nanChoices++;
+    return same;
+}
+
+void Test(const char *group, const Case *list, int count, int trials) {
+    int groupCases = cases, groupDiffer = differ;
+    for (int c = 0; c < count; c++) {
+        current = &list[c];
+        for (int trial = 0; trial < trials; trial++) {
+            gen = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
+            RandomWorld();
+            caseSeed = gen;
+            cases++;
+            if (!CompareCase(current->name, trial))
+                differ++;
+        }
+    }
+    printf("[effectport] %s: %d cases, %d differ\n", group, cases - groupCases, differ - groupDiffer);
+}
+
+#define C(name, run) {name, run}
+
+// ---- the breakables
+
+obj_tag *ObjOfType(char type) {
+    obj_tag *obj = AnyObj();
+    obj->objectType = type;
+    RandomExtra(obj, (uint8_t *)obj->extraObjectData);
+    LinkDrones();
+    return obj;
+}
+
+// Another object made of the type, not the one given
+obj_tag *OtherOfType(obj_tag *except, char type) {
+    obj_tag *obj = AnyObj();
+    if (obj == except)
+        obj = obj + 1 < &world.objs[OBJS] ? obj + 1 : &world.objs[0];
+    obj->objectType = type;
+    RandomExtra(obj, (uint8_t *)obj->extraObjectData);
+    LinkDrones();
+    return obj;
+}
+
+uint32_t RunBreakUpdate(bool original) {
+    obj_tag *obj = R(12) ? ObjOfType(OBJECTTYPE_BREAK) : NULL;
+    if (obj != NULL && R(3))
+        obj->hitList = &world.hits[R(HITS)];
+    // Broken only by a hit of this frame (with none, Break_Kill would read through NULL)
+    if (obj != NULL) {
+        ObjData_Break *b = (ObjData_Break *)obj->extraObjectData;
+        if (b->health < 0.0f)
+            b->health = -b->health;
+    }
+    CDECL_RUN(0x00020460, Break_Update, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunBreakApplyDamage(bool original) {
+    obj_tag *obj = ObjOfType(OBJECTTYPE_BREAK);
+    CDECL_RUN(0x00020520, Break_ApplyDamage, void (__cdecl *)(obj_tag *, HITDATA_tag *), obj, &world.hits[R(HITS)]);
+    return 0;
+}
+
+uint32_t RunBreakDoBreak(bool original) {
+    _VECTOR *pos = &world.v[R(6)];
+    if (R(2))
+        *pos = world.objs[R(OBJS)].centrePoint;
+    for (int i = 0; i < OBJS; i++) {
+        if (R(3) == 0) {
+            world.objs[i].objectType = OBJECTTYPE_BREAK;
+            RandomExtra(&world.objs[i], world.extra[i]);
+        }
+    }
+    CDECL_RUN(0x00020550, Break_DoBreak, void (__cdecl *)(_VECTOR *), pos);
+    return 0;
+}
+
+uint32_t RunBreakKill(bool original) {
+    obj_tag *obj = ObjOfType(OBJECTTYPE_BREAK);
+    Regs r = {};
+    r.esi = P(obj);
+    r.edi = P(&world.hits[R(HITS)]);
+    return RegsRun(original, 0x0001fee0, (const void *)&Break_Kill, r, 0, NULL) & 0;
+}
+
+uint32_t RunShatterWindow(bool original) {
+    obj_tag *obj = ObjOfType(OBJECTTYPE_BREAK);
+    CDECL_RUN(0x0001fc90, Break_ShatterWindow, void (__cdecl *)(obj_tag *, HITDATA_tag *), obj, &world.hits[R(HITS)]);
+    return 0;
+}
+
+uint32_t RunShatter(bool original) {
+    obj_tag *obj = AnyObj();
+    HITDATA_tag *hit = &world.hits[R(HITS)];
+    if (R(2))
+        hit->hitPosition = obj->position;
+    CDECL_RUN(0x0001f840, ShatterPolyRecurse, void (__cdecl *)(int, TriListVertex *, obj_tag *, HITDATA_tag *, uint),
+              (int)R(3), world.verts, obj, hit, R(30));
+    return 0;
+}
+
+uint32_t RunShards(bool original) {
+    if (R(2))
+        CDECL_RUN(0x0001fd60, UpdateAllShards, void (__cdecl *)(void));
+    else
+        CDECL_RUN(0x0001fe50, DrawAllShards, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunInitShards(bool original) {
+    CDECL_RUN(0x0001f820, InitShards, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunDebrisLoop(bool original) {
+    obj_tag *obj = AnyObj();
+    CDECL_RUN(0x0002b410, Debris_Create_Loop, void (__cdecl *)(COLLDATA_tag *, HITDATA_tag *, obj_tag *), &world.coll,
+              &world.hits[R(HITS)], obj);
+    return 0;
+}
+
+uint32_t RunBrokenObject(bool original) {
+    HITDATA_tag *hit = &world.hits[R(HITS)];
+    if (R(2)) {
+        hit->hitObj = ObjOfType(OBJECTTYPE_BULLET);
+        if (R(2))
+            ((BU_tag *)hit->hitObj->extraObjectData)->firedByObj = glb_players[0];
+    }
+    CDECL_RUN(0x00030a30, Drone_BrokenObject, void (__cdecl *)(obj_tag *, HITDATA_tag *), AnyObj(), hit);
+    return 0;
+}
+
+uint32_t RunBreakCreate(bool original) {
+    return W(CDECL_RUN(0x0001ffb0, Break_Create, obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, celglist_tag *, level_tag *),
+                       R(4) ? &world.v[0] : NULL, R(2) ? &world.v[1] : NULL, &world.glists[R(3)],
+                       (level_tag *)world.placement));
+}
+
+const Case kBreak[] = {
+    C("Break_Update", RunBreakUpdate),
+    C("Break_ApplyDamage", RunBreakApplyDamage),
+    C("Break_DoBreak", RunBreakDoBreak),
+    C("Break_Kill", RunBreakKill),
+    C("Break_ShatterWindow", RunShatterWindow),
+    C("ShatterPolyRecurse", RunShatter),
+    C("UpdateAllShards, DrawAllShards", RunShards),
+    C("InitShards", RunInitShards),
+    C("Debris_Create_Loop", RunDebrisLoop),
+    C("Drone_BrokenObject", RunBrokenObject),
+    C("Break_Create", RunBreakCreate),
+};
+
+// ---- destroyables, hurt volumes and occluders
+
+uint32_t RunDestroyCreate(bool original) {
+    return W(CDECL_RUN(0x00020040, Destroy_Create,
+                       obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, level_tag *, celglist_tag *, celglist_tag *),
+                       &world.v[0], &world.v[1], (level_tag *)world.placement, &world.glists[R(3)],
+                       &world.glists[R(3)]));
+}
+
+uint32_t RunDestroyUpdate(bool original) {
+    CDECL_RUN(0x00020290, Destroy_Update, void (__cdecl *)(obj_tag *), R(12) ? ObjOfType(OBJECTTYPE_DESTROY) : NULL);
+    return 0;
+}
+
+uint32_t RunDestroyCollision(bool original) {
+    obj_tag *obj = ObjOfType(OBJECTTYPE_DESTROY);
+    obj->hitList = R(5) ? &world.hits[R(HITS)] : NULL;
+    for (int i = 0; i < HITS; i++) {
+        if (R(2))
+            world.hits[i].hitObj = OtherOfType(obj, OBJECTTYPE_BULLET);
+        else if (world.hits[i].hitObj == obj)
+            world.hits[i].hitObj = NULL;
+    }
+    if (R(2))
+        world.weapons[R(3)].weaponBaseNum = Weap_Laser;
+    CDECL_RUN(0x00020310, Destroy_CollisionHandler, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunDestroySmash(bool original) {
+    CDECL_RUN(0x00020150, Destroy_Smash, void (__cdecl *)(obj_tag *, obj_tag *, ushort), ObjOfType(OBJECTTYPE_DESTROY),
+              R(2) ? AnyObj() : NULL, (ushort)R(0x40));
+    return 0;
+}
+
+uint32_t RunHurtCreate(bool original) {
+    return W(CDECL_RUN(0x0006c530, Hurt_Create,
+                       obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, level_tag *, celglist_tag *), &world.v[0],
+                       &world.v[1], (level_tag *)world.placement, &world.glists[R(3)]));
+}
+
+uint32_t RunHurtUpdate(bool original) {
+    obj_tag *obj = R(12) ? AnyObj() : NULL;
+    if (obj != NULL) {
+        obj->objectType = OBJECTTYPE_HURT;
+        Hurt_tag *hurt = (Hurt_tag *)obj->extraObjectData;
+        hurt->pathTime = R(3) ? Value(0.0f, 10.0f) : 0.0f;
+        hurt->pathSpeed = Value(0.0f, 2.0f);
+        hurt->path = &world.v[0];
+        hurt->pathFrames = (ushort)R(10);
+        hurt->type = (uchar)R(4);
+        hurt->oneShotPath = (uchar)R(3);
+        hurt->armMask = (ushort)(R(3) ? 0 : R(0x20));
+        hurt->enableSwitchChannel = (ushort)(R(2) ? 0 : R(8));
+        hurt->sound = (ushort)R(0x10000);
+        obj->curState = (ushort)R(4);
+        // Now and then the step that ends the path exactly
+        if (R(4) == 0)
+            hurt->pathTime = (float)hurt->pathFrames - hurt->pathSpeed;
+    }
+    CDECL_RUN(0x0006c6b0, Hurt_Update, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunHurtTriggered(bool original) {
+    obj_tag *obj = AnyObj();
+    Hurt_tag *hurt = (Hurt_tag *)world.extra[R(OBJS)];
+    hurt->armMask = (ushort)(R(3) ? 0 : R(0x20));
+    hurt->enableSwitchChannel = (ushort)(R(2) ? 0 : R(8));
+    obj->hitList = R(4) ? &world.hits[R(HITS)] : NULL;
+    Regs r = {};
+    r.eax = P(obj);
+    r.ecx = P(hurt);
+    return RegsRun(original, 0x0006c640, (const void *)&Hurt_IsTriggered, r, 0, NULL) & 0xffff;
+}
+
+uint32_t RunOcclude(bool original) {
+    if (R(2))
+        return W(CDECL_RUN(0x0006c880, Occlude_Create, obj_tag *(__cdecl *)(_VECTOR *, ushort, ushort), &world.v[0],
+                           (ushort)R(0x10000), (ushort)R(6)));
+    obj_tag *obj = R(12) ? AnyObj() : NULL;
+    if (obj != NULL)
+        obj->curState = (ushort)(R(3) ? R(3) : R(0x10000));
+    CDECL_RUN(0x0006c910, Occlude_Update, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+const Case kDestroy[] = {
+    C("Destroy_Create", RunDestroyCreate),
+    C("Destroy_Update", RunDestroyUpdate),
+    C("Destroy_CollisionHandler", RunDestroyCollision),
+    C("Destroy_Smash", RunDestroySmash),
+    C("Hurt_Create", RunHurtCreate),
+    C("Hurt_Update", RunHurtUpdate),
+    C("Hurt_IsTriggered", RunHurtTriggered),
+    C("Occlude_Create, Occlude_Update", RunOcclude),
+};
+
+// ---- the bullets
+
+obj_tag *Bullet(void) {
+    obj_tag *obj = AnyObj();
+    obj->objectType = OBJECTTYPE_BULLET;
+    RandomExtra(obj, (uint8_t *)obj->extraObjectData);
+    LinkDrones();
+    return obj;
+}
+
+uint32_t RunBulletInit(bool original) {
+    obj_tag *firer = R(4) ? AnyObj() : NULL;
+    obj_tag *owner = R(3) ? (R(2) ? firer : AnyObj()) : NULL;
+    weapon_definition_tag *weapon = &world.weapons[R(3)];
+    _VECTOR *dir = R(16) ? &world.v[1] : NULL;
+    if (dir != NULL && R(2))
+        UnitVector(dir);
+    return W(CDECL_RUN(0x000211f0, Bullet_init,
+                       obj_tag *(__cdecl *)(short, obj_tag *, obj_tag *, weapon_definition_tag *, _VECTOR *, _VECTOR *,
+                                            ushort),
+                       (short)R(4), firer, owner, weapon, &world.v[0], dir, (ushort)(R(2) ? 0xffff : R(0x600))));
+}
+
+uint32_t RunDestruction(bool original) {
+    obj_tag *obj = R(12) ? (R(3) ? Bullet() : AnyObj()) : NULL;
+    return (uint32_t)CDECL_RUN(0x000218f0, Bullet_handle_object_destruction, bool (__cdecl *)(obj_tag *, obj_tag *), obj,
+                     AnyObj()) & 0xff;
+}
+
+uint32_t RunCollision(bool original) {
+    obj_tag *obj = Bullet();
+    obj->hitList = R(6) ? &world.hits[R(HITS)] : NULL;
+    for (int i = 0; i < HITS; i++) {
+        if (R(4) == 0)
+            world.hits[i].hitObj = OtherOfType(obj, R(2) ? OBJECTTYPE_CAR : OBJECTTYPE_DRONE);
+    }
+    // Trip-bombs and mines laid by the same shooter, sometimes more than five
+    if (R(3) == 0) {
+        BU_tag *bullet = (BU_tag *)obj->extraObjectData;
+        if (R(2))
+            bullet->wpnDef->impactFlags |= ImpactFlag_Sticks | (R(2) ? ImpactFlag_TripBomb : 0);
+        if (R(2))
+            bullet->wpnDef->weaponBaseNum = 0x37;
+        for (int i = 0; i < OBJS; i++) {
+            if (&world.objs[i] == obj || R(4) == 0)
+                continue;
+            world.objs[i].objectType = OBJECTTYPE_BULLET;
+            BU_tag *laid = (BU_tag *)world.extra[i];
+            memset(laid, 0, sizeof(*laid));
+            laid->wpnDef = bullet->wpnDef;
+            laid->firedByObj = bullet->firedByObj;
+        }
+        LinkDrones();
+    }
+    CDECL_RUN(0x00021a00, Bullet_CollisionHandler, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunSmoke(bool original) {
+    obj_tag *obj = AnyObj();
+    Regs r = {};
+    r.esi = P(obj);
+    switch (R(3)) {
+    case 0: RegsRun(original, 0x00021680, (const void *)&Bullet_trail_effect_smoke, r, 0, NULL); break;
+    case 1: RegsRun(original, 0x000217f0, (const void *)&Bullet_SpawnSmokeDust_SomeOtherProbability, r, 0, NULL); break;
+    default: RegsRun(original, 0x00021870, (const void *)&Bullet_SpawnSmokeDust_SomeProbability, r, 0, NULL); break;
+    }
+    return 0;
+}
+
+uint32_t RunTrails(bool original) {
+    sureCreate = true;
+    for (int i = 0; i < HITS; i++) {
+        obj_tag *target = world.hits[i].hitObj;
+        if (target == NULL)
+            continue;
+        if (R(4) == 0) {
+            target->objectType = (char)(R(2) ? OBJECTTYPE_DRONE : OBJECTTYPE_PLAYER);
+            RandomExtra(target, (uint8_t *)target->extraObjectData);
+        }
+    }
+    obj_tag *obj = R(16) ? Bullet() : NULL;
+    BU_tag *bullet = obj != NULL ? (BU_tag *)obj->extraObjectData : (R(2) ? (BU_tag *)world.extra[0] : NULL);
+    if (obj != NULL && R(16) == 0)
+        obj->inCel = NULL;
+    if (obj != NULL && R(3) == 0)
+        bullet->wpnDef->weaponBaseNum = (short)(R(3) ? 0x3b : 0x69);
+    if (obj != NULL && R(4) == 0 && world.hits[0].hitObj != NULL) {
+        world.hits[0].hitObj->position.x = obj->position.x;
+        if (R(2))
+            world.hits[0].hitObj->position.z = obj->position.z;
+    }
+    for (int i = 0; i < HITS; i++) {
+        if (R(3) == 0) {
+            world.hits[i].hitObj = OtherOfType(obj, OBJECTTYPE_BULLET);
+            ((BU_tag *)world.hits[i].hitObj->extraObjectData)->wpnDef->weaponBaseNum = (short)(R(2) ? 0x4e : 0x4f);
+        }
+    }
+    if (world.made[MADE - 1].extraObjectData == NULL)
+        world.made[MADE - 1].extraObjectData = world.madeExtra[MADE - 1];
+    Regs r = {};
+    r.ecx = P(obj);
+    r.eax = P(bullet);
+    uint32_t args[2] = {P(R(6) ? &world.v[2] : NULL), F(Value(0.0f, 5.0f))};
+    return RegsRun(original, 0x00022210, (const void *)&Bullet_DoTrails, r, 2, args) & 0;
+}
+
+uint32_t RunDelete(bool original) {
+    obj_tag *obj = Bullet();
+    obj->curState = (ushort)R(4);
+    obj->hitList = R(4) ? &world.hits[R(HITS)] : NULL;
+    if (obj->hitList != NULL && obj->hitList->hitObj != NULL && R(2))
+        obj->hitList->hitObj->objectType = OBJECTTYPE_GRAPPLE;
+    CDECL_RUN(0x00022bd0, Bullet_Delete, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunHeatseekable(bool original) {
+    obj_tag *obj = AnyObj();
+    if (R(4) == 0 && world.copters[0].parts[2] == NULL)
+        world.copters[0].body = obj;
+    Regs r = {};
+    r.edi = P(obj);
+    return RegsRun(original, 0x00022cc0, (const void *)&Bullet_heatseekable, r, 0, NULL) & 0xff;
+}
+
+uint32_t RunHoming(bool original) {
+    obj_tag *obj = Bullet();
+    BU_tag *bullet = (BU_tag *)obj->extraObjectData;
+    if (bullet->heatseekTarget != NULL && R(3) == 0)
+        bullet->heatseekTarget->flags |= 1;
+    Regs r = {};
+    r.esi = P(bullet);
+    uint32_t args[1] = {P(obj)};
+    return RegsRun(original, 0x00022eb0, (const void *)&Bullet_homing, r, 1, args) & 0;
+}
+
+const Case kBullets[] = {
+    C("Bullet_init", RunBulletInit),
+    C("Bullet_handle_object_destruction", RunDestruction),
+    C("Bullet_CollisionHandler", RunCollision),
+    C("Bullet_trail_effect_smoke, SpawnSmokeDust x2", RunSmoke),
+    C("Bullet_DoTrails", RunTrails),
+    C("Bullet_Delete", RunDelete),
+    C("Bullet_heatseekable", RunHeatseekable),
+    C("Bullet_homing", RunHoming),
+};
+
+// ---- the spent cases
+
+uint32_t RunCasingLists(bool original) {
+    sureCreate = true;
+    CDECL_RUN(0x00023030, Bullet_InitCasingLists, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunInitCasing(bool original) {
+    CDECL_RUN(0x00023080, Bullet_init_casing, void (__cdecl *)(obj_tag *), R(12) ? AnyObj() : NULL);
+    return 0;
+}
+
+obj_tag *Casing(void) {
+    obj_tag *casing = AnyObj();
+    casing->objectType = OBJECTTYPE_CASING;
+    CASING_tag *data = (CASING_tag *)casing->extraObjectData;
+    memset(data, 0, sizeof(*data));
+    RandomVector(&data->vel, 0.2f);
+    RandomVector(&data->spin, 0.2f);
+    data->floorY = Value(-5.0f, 5.0f);
+    data->timer = R(4) ? Value(-2.0f, 260.0f) : (R(2) ? 240.0f : Plain(3.5f, 6.5f));
+    data->owner = R(6) ? AnyObj() : NULL;
+    data->model = (HASHCODE)(R(2) ? 0x02000548 : R(10));
+    data->material = (ushort)(R(4) ? R(24) : R(0x10000));
+    casing->curState = (ushort)R(4);
+    return casing;
+}
+
+uint32_t RunCasingEx(bool original) {
+    CDECL_RUN(0x00023120, Bullet_init_casing_ex, void (__cdecl *)(obj_tag *), R(12) ? Casing() : NULL);
+    return 0;
+}
+
+uint32_t RunCasingUpdate(bool original) {
+    CDECL_RUN(0x00023460, Bullet_casing_update, void (__cdecl *)(obj_tag *), Casing());
+    return 0;
+}
+
+const Case kCasings[] = {
+    C("Bullet_InitCasingLists", RunCasingLists),
+    C("Bullet_init_casing", RunInitCasing),
+    C("Bullet_init_casing_ex", RunCasingEx),
+    C("Bullet_casing_update", RunCasingUpdate),
+};
+
+// ---- the effects
+
+uint32_t RunEffectCreate(bool original) {
+    HITDATA_tag *hit = &world.hits[R(HITS)];
+    static const uint flags[] = {0, 1, 2, 4, 6, 0xa, 0xe, 0x10, 0x20, 0x21, 0x40, 0x41, 0x42, 0x46, 0x4a, 0x50, 0x61,
+                                 0x80, 0xc0, 0xe0, 0x63};
+    uint f = R(4) ? flags[R(COUNT(flags))] : R(0x100);
+    sureCreate = true;
+    obj_tag *obj = R(12) ? (R(2) ? Bullet() : AnyObj()) : NULL;
+    CDECL_RUN(0x00070430, Effect_Create, void (__cdecl *)(HITDATA_tag *, obj_tag *, uint, float), hit, obj, f,
+              Value(0.0f, 100.0f));
+    return 0;
+}
+
+uint32_t RunEffectBullet(bool original) {
+    obj_tag *obj = Bullet();
+    Regs r = {};
+    r.eax = P(obj);
+    r.ecx = P(&world.hits[R(HITS)]);
+    uint32_t args[2] = {P(&world.cels[R(3)]), R(0x100)};
+    return RegsRun(original, 0x0006ffb0, (const void *)&Effect_Bullet, r, 2, args) & 0;
+}
+
+uint32_t RunEffectPlayer(bool original) {
+    obj_tag *obj = AnyObj();
+    Regs r = {};
+    r.eax = P(&world.hits[R(HITS)]);
+    r.ebx = P(obj);
+    uint32_t args[3] = {P(&world.cels[R(3)]), R(0x100), F(Value(0.0f, 100.0f))};
+    return RegsRun(original, 0x00070290, (const void *)&Effect_Player, r, 3, args) & 0;
+}
+
+uint32_t RunEffectLaser(bool original) {
+    sureCreate = true;
+    Regs r = {};
+    r.eax = P(&world.hits[R(HITS)]);
+    r.ebx = P(&world.cels[R(3)]);
+    uint32_t args[2] = {P(AnyObj()), R(0x100)};
+    return RegsRun(original, 0x0006fc60, (const void *)&Effect_Laser, r, 2, args) & 0;
+}
+
+uint32_t RunEffectBody(bool original) {
+    Regs r = {};
+    r.eax = P(&world.hits[R(HITS)]);
+    uint32_t args[3] = {P(AnyObj()), P(&world.cels[R(3)]), R(0x100)};
+    return RegsRun(original, 0x0006fc10, (const void *)&Effect_Body, r, 3, args) & 0;
+}
+
+uint32_t RunMarks(bool original) {
+    switch (R(5)) {
+    case 0: {
+        Regs r = {};
+        r.eax = P(R(8) ? &world.marks[R(MARKS)] : NULL);
+        return RegsRun(original, 0x0006fb50, (const void *)&Effect_UnLink, r, 0, NULL) & 0;
+    }
+    case 1:
+        return W(CDECL_RUN(0x0006ff70, Effect_NewMark, ATTACH_tag *(__cdecl *)(void)));
+    case 2: {
+        Regs r = {};
+        r.eax = P(&world.marks[R(MARKS)]);
+        r.edx = P(&world.cels[R(3)]);
+        return RegsRun(original, 0x0006faa0, (const void *)&Effect_LinkToCel, r, 0, NULL) & 0;
+    }
+    case 3: {
+        Regs r = {};
+        r.esi = P(R(10) ? &world.marks[R(MARKS)] : NULL);
+        r.edi = P(R(10) ? AnyObj() : NULL);
+        return RegsRun(original, 0x0006fad0, (const void *)&Effect_LinkToObject, r, 0, NULL) & 0;
+    }
+    default:
+        CDECL_RUN(0x0006fba0, Effect_RemoveSObjs, void (__cdecl *)(obj_tag *), AnyObj());
+        return 0;
+    }
+}
+
+uint32_t RunRicochet(bool original) {
+    if (R(8) == 0) {
+        CDECL_RUN(0x0006fa30, Effect_InitLists, void (__cdecl *)(void));
+        return 0;
+    }
+    uchar material = (uchar)R(0x100);
+    return CDECL_RUN(0x0006fa50, Effect_RicochetProb, uchar (__cdecl *)(uchar, ushort), material,
+                     (ushort)(R(3) ? R(16) : R(0x10000))) & 0xff;
+}
+
+const Case kEffects[] = {
+    C("Effect_Create", RunEffectCreate),
+    C("Effect_Bullet", RunEffectBullet),
+    C("Effect_Player", RunEffectPlayer),
+    C("Effect_Laser", RunEffectLaser),
+    C("Effect_Body", RunEffectBody),
+    C("Effect_UnLink, NewMark, LinkToCel, LinkToObject, RemoveSObjs", RunMarks),
+    C("Effect_RicochetProb, Effect_InitLists", RunRicochet),
+};
+
+// ---- smoke, debris, wind and trails
+
+uint32_t RunGasInit(bool original) {
+    static const uint kinds[] = {0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+    uint kind = kinds[R(COUNT(kinds))];
+    return W(CDECL_RUN(0x000cd140, Gas_Init,
+                       obj_tag *(__cdecl *)(cel_tag *, _VECTOR *, _VECTOR *, _VECTOR *, float, float, HASHCODE, uint,
+                                            uint, uint, ushort),
+                       R(16) ? &world.cels[R(3)] : NULL, &world.v[0], R(2) ? &world.v[1] : NULL,
+                       R(2) ? &world.v[2] : NULL, Value(0.0f, 3.0f), Value(0.0f, 5.0f), (HASHCODE)R(100), kind, R(0),
+                       R(0), (ushort)(R(12) ? 1 + R(200) : 0)));
+}
+
+obj_tag *Smoke(void) {
+    obj_tag *obj = AnyObj();
+    obj->objectType = OBJECTTYPE_GAS;
+    LinkDrones();
+    GAS_tag *gas = (GAS_tag *)obj->extraObjectData;
+    RandomVector(&gas->vel, 0.3f);
+    for (int i = 0; i < 4; i++) {
+        gas->colourStep[i] = Value(-10.0f, 10.0f);
+        gas->colour[i] = R(4) ? Value(-20.0f, 280.0f) : 254.9999f;
+    }
+    gas->spin = Value(-0.1f, 0.1f);
+    gas->scaleStep = Value(-0.1f, 0.1f);
+    gas->life = R(4) ? Value(-1.0f, 60.0f) : 1.0f;
+    gas->kind = (uchar)R(14);
+    gas->colour0 = R(0);
+    gas->colour1 = R(0);
+    gas->entity = (HASHCODE)R(100);
+    gas->scale0 = Value(0.0f, 3.0f);
+    gas->scale1 = Value(0.0f, 3.0f);
+    gas->life0 = Value(0.0f, 300.0f);
+    return obj;
+}
+
+uint32_t RunGasesSmoke(bool original) {
+    CDECL_RUN(0x000cd560, gases_smoke, void (__cdecl *)(obj_tag *), Smoke());
+    return 0;
+}
+
+uint32_t RunDebris(bool original) {
+    HEINFO_tag *info = &EffectInfo[R(EFFECT_INFO_COUNT)];
+    if (R(2)) {
+        CDECL_RUN(0x000cccf0, Debris_Create, void (__cdecl *)(HITDATA_tag *, HEINFO_tag *, cel_tag *, ushort),
+                  &world.hits[R(HITS)], info, &world.cels[R(3)], (ushort)R(4));
+        return 0;
+    }
+    HASHCODE models[4] = {(HASHCODE)1, (HASHCODE)2, (HASHCODE)3, (HASHCODE)4};
+    CDECL_RUN(0x000cce60, Debris_CreateEx,
+              void (__cdecl *)(_VECTOR *, _VECTOR *, _VECTOR *, float, uint, uint, cel_tag *, HASHCODE *, uint),
+              &world.v[0], &world.v[1], &world.v[2], Value(0.0f, 5.0f), R(300), R(4), &world.cels[R(3)],
+              R(8) ? models : NULL, 1 + R(4));
+    return 0;
+}
+
+uint32_t RunDebrisUpdate(bool original) {
+    obj_tag *obj = R(12) ? AnyObj() : NULL;
+    if (obj != NULL) {
+        Effect_tag *debris = (Effect_tag *)obj->extraObjectData;
+        RandomVector(&debris->vel, 0.3f);
+        RandomVector(&debris->spin, 0.3f);
+        debris->life = (short)((int)R(5) - 1);
+        debris->fade = (uchar)R(300);
+    }
+    CDECL_RUN(0x000ccff0, Debris_Update, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunEnv(bool original) {
+    if (R(2)) {
+        CDECL_RUN(0x00068cf0, Env_GetWindVel, void (__cdecl *)(cel_tag *, _VECTOR *, _VECTOR *),
+                  R(10) ? &world.cels[R(3)] : NULL, &world.v[0], R(10) ? &world.v[1] : NULL);
+        return 0;
+    }
+    HITDATA_tag *hit = R(10) ? &world.hits[R(HITS)] : NULL;
+    if (hit != NULL && R(2))
+        hit->materialType = (char)(13 + R(2));
+    CDECL_RUN(0x00068f20, Env_WaterRipple, void (__cdecl *)(HITDATA_tag *), hit);
+    return 0;
+}
+
+uint32_t RunSwoosh(bool original) {
+    if (R(2))
+        return W(CDECL_RUN(0x000a3c40, Swoosh_Create, obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, short, HASHCODE, uchar),
+                           &world.v[0], &world.v[1], (short)((int)R(200) - 10), (HASHCODE)R(100), (uchar)R(2)));
+    obj_tag *obj = AnyObj();
+    SWOOSH_tag *swoosh = (SWOOSH_tag *)obj->extraObjectData;
+    RandomVector(&swoosh->from, 5.0f);
+    RandomVector(&swoosh->to, 5.0f);
+    swoosh->timer = (short)((int)R(30) - 2);
+    swoosh->total = (short)(R(8) ? R(40) : 0);
+    swoosh->drift = (uchar)R(2);
+    CDECL_RUN(0x000a3cf0, Swoosh_Update, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+const Case kGas[] = {
+    C("Gas_Init", RunGasInit),
+    C("gases_smoke", RunGasesSmoke),
+    C("Debris_Create, Debris_CreateEx", RunDebris),
+    C("Debris_Update", RunDebrisUpdate),
+    C("Env_GetWindVel, Env_WaterRipple", RunEnv),
+    C("Swoosh_Create, Swoosh_Update", RunSwoosh),
+};
+
+// ---- the explosions
+
+uint32_t RunExplodeCreate(bool original) {
+    CDECL_RUN(0x000690a0, Explode_Create,
+              void (__cdecl *)(obj_tag *, _VECTOR *, _VECTOR *, float, float, HASHCODE, float, uchar, uchar, uchar,
+                               obj_tag *, ushort),
+              AnyObj(), &world.v[0], &world.v[1], Value(0.0f, 6.0f), R(4) ? Value(0.0f, 6.0f) : 0.5f,
+              (HASHCODE)0x06000052, Value(0.0f, 50.0f), 200, 200, 0, R(2) ? AnyObj() : NULL, (ushort)R(12));
+    return 0;
+}
+
+obj_tag *Explosion(void) {
+    obj_tag *obj = AnyObj();
+    obj->objectType = OBJECTTYPE_EXPLODE;
+    EXPLODE_tag *e = (EXPLODE_tag *)obj->extraObjectData;
+    UnitVector(&e->up);
+    RandomVector(&e->spread, 1.0f);
+    e->cel = R(8) ? &world.cels[R(3)] : NULL;
+    e->from = R(2) ? AnyObj() : NULL;
+    e->damage = Value(0.0f, 50.0f);
+    e->radius = Value(0.0f, 6.0f);
+    e->frames = R(100);
+    e->script = R(4) ? &world.script : NULL;
+    static const ushort materials[] = {0, 5, 6, 8, 10, 11, 7, 12};
+    e->material = materials[R(COUNT(materials))];
+    e->propagated = (uchar)(R(3) == 0);
+    if (R(2))
+        obj->creationTimeFrames = (int)(GameState.NumFramesUnpaused - R(10));
+    return obj;
+}
+
+uint32_t RunExplodeUpdate(bool original) {
+    if (R(3) == 0) {
+        GameState.CurrentLevelHashcode = (HASHCODE)0x07000008;
+        switch_channels[0x53] = 1;
+    }
+    if (R(3) == 0)
+        CDECL_RUN(0x00069370, Explode_Delete, void (__cdecl *)(obj_tag *), Explosion());
+    else if (R(2))
+        CDECL_RUN(0x00069a00, Explode_CollisionHandler, void (__cdecl *)(obj_tag *), Explosion());
+    else
+        CDECL_RUN(0x00069230, Explode_Update, void (__cdecl *)(obj_tag *), Explosion());
+    return 0;
+}
+
+uint32_t RunPropagate(bool original) {
+    for (int i = 0; i < HITS; i++) {
+        if (world.hits[i].hitObj == NULL && R(2))
+            world.hits[i].hitObj = AnyObj();
+    }
+    if (R(3) == 0 && world.copters[0].parts[0] == NULL)
+        world.copters[0].parts[0] = world.hits[0].hitObj;
+    // Some within reach
+    for (int i = 0; i < HITS; i++) {
+        if (world.hits[i].hitObj != NULL && R(2)) {
+            world.hits[i].hitObj->centrePoint = world.v[0];
+            world.hits[i].hitObj->centrePoint.x += Plain(-1.0f, 1.0f);
+        }
+    }
+    CDECL_RUN(0x00069390, Explode_Propagate, void (__cdecl *)(_VECTOR *, float, cel_tag *, float, obj_tag *),
+              &world.v[0], R(6) ? Value(0.0f, 8.0f) : 0.0002f, R(10) ? &world.cels[R(3)] : NULL, Value(0.0f, 60.0f),
+              R(3) ? AnyObj() : NULL);
+    return 0;
+}
+
+uint32_t RunExplodeHelpers(bool original) {
+    switch (R(4)) {
+    case 0: {
+        world.v[1] = world.v[2];
+        float d = CDECL_RUN(0x0002d980, control_ClosestPlayerPnt, float (__cdecl *)(_VECTOR *, _VECTOR *), &world.v[0],
+                            &world.v[1]);
+        return FloatResult(d);
+    }
+    case 1: {
+        obj_tag *player = ObjOfType(OBJECTTYPE_PLAYER);
+        float h = CDECL_RUN(0x000ae690, Player_Hurt, float (__cdecl *)(obj_tag *, float, _VECTOR *), player,
+                            Value(0.0f, 50.0f), &world.v[0]);
+        return FloatResult(h);
+    }
+    case 2: {
+        world.impact.damage = Value(0.0f, 50.0f);
+        world.impact.radius = Value(0.0f, 6.0f);
+        world.impact.position = world.v[3];
+        world.impact.source = R(2) ? AnyObj() : NULL;
+        obj_tag *obj = R(10) ? ObjOfType(OBJECTTYPE_DRONE) : NULL;
+        if (obj != NULL && R(3) == 0)
+            world.impact.source = obj;
+        if (obj != NULL && R(8) == 0)
+            obj->extraObjectData = NULL;
+        CDECL_RUN(0x00031f80, Drone_ExplosiveHit, void (__cdecl *)(obj_tag *, DroneImpact_tag *), obj,
+                  R(10) ? &world.impact : NULL);
+        return 0;
+    }
+    default:
+        CDECL_RUN(0x0009a730, GT_ApplyDamage, void (__cdecl *)(obj_tag *, float), AnyObj(), Value(-5.0f, 50.0f));
+        return 0;
+    }
+}
+
+const Case kExplode[] = {
+    C("Explode_Create", RunExplodeCreate),
+    C("Explode_Update, Delete, CollisionHandler", RunExplodeUpdate),
+    C("Explode_Propagate", RunPropagate),
+    C("control_ClosestPlayerPnt, Player_Hurt, Drone_ExplosiveHit, GT_ApplyDamage", RunExplodeHelpers),
+};
+
+// The package's functions the callers in a group reach through fakes
+void FakePackageCallees(bool explosions, bool gas, bool effects, bool propagation) {
+    if (explosions)
+        ShadowHook_Install(0x000690a0, (const void *)&FakeExplode);
+    if (gas)
+        ShadowHook_Install(0x000cd140, (const void *)&FakeGas);
+    if (effects)
+        ShadowHook_Install(0x00070430, (const void *)&FakeEffect);
+    if (propagation) {
+        ShadowHook_Install(0x000ae690, (const void *)&FakePlayerHurt);
+        ShadowHook_Install(0x000218f0, (const void *)&FakeDestruction);
+        ShadowHook_Install(0x00031f80, (const void *)&FakeDroneHit);
+        ShadowHook_Install(0x0009a730, (const void *)&FakeObjDamage);
+        ShadowHook_Install(0x00020520, (const void *)&FakeBreakDamage);
+        ShadowHook_Install(0x00020150, (const void *)&FakeSmash);
+    }
+}
+
+void Group(const char *name, const Case *list, int count, int trials, bool explosions, bool gas, bool effects,
+           bool propagation) {
+    ShadowHook_RemoveAll();
+    InstallFakes();
+    FakePackageCallees(explosions, gas, effects, propagation);
+    Test(name, list, count, trials);
+}
+
+// Explode_Propagate alone, with the damage functions faked, and the rest of the explosions with them real
+const Case kPropagate[] = {
+    C("Explode_Propagate", RunPropagate),
+};
+
+} // namespace
+
+void EffectPortShadow_Run(void) {
+    // Everything the cases change, kept to put back
+    static uint8_t gameState[sizeof(GameState_t)], mpSettings[sizeof(MPSettings_t)], channels[256];
+    static uint8_t rand[8], frameRates[0x18], shardList[0xc], effectList[0x18], casings[0x82], copters[0xc];
+    static uint8_t players[16], viewers[44], scriptCam[4], gravity[12], disable[1], npc[4];
+    memcpy(gameState, &GameState, sizeof(gameState));
+    memcpy(mpSettings, &MPSettings, sizeof(mpSettings));
+    memcpy(channels, switch_channels, 256);
+    memcpy(rand, RandWords, 8);
+    memcpy(frameRates, FrameRates, 0x18);
+    memcpy(shardList, ShardListAt, 0xc);
+    memcpy(effectList, EffectListAt, 0x18);
+    memcpy(casings, CasingListAt, 0x82);
+    memcpy(copters, CopterListAt, 0xc);
+    memcpy(players, PlayersAt, 16);
+    memcpy(viewers, ViewersAt, 44);
+    memcpy(scriptCam, ScriptCamAt, 4);
+    memcpy(gravity, GravityAt, 12);
+    memcpy(disable, DroneDisableAt, 1);
+    memcpy(npc, &NPCGlobals.NDrone2List, 4);
+
+    regions.Clear();
+    areaCount = 0;
+    AddArea(&world, sizeof(world));
+    AddArea(&GameState, sizeof(GameState_t));
+    AddArea(&MPSettings, sizeof(MPSettings_t));
+    AddArea(switch_channels, 256);
+    AddArea(RandWords, 8);
+    AddArea(FrameRates, 0x18);
+    AddArea(ShardListAt, 0xc);
+    AddArea(EffectListAt, 0x18);
+    AddArea(CasingListAt, 0x82);
+    AddArea(CopterListAt, 0xc);
+    AddArea(PlayersAt, 16);
+    AddArea(ViewersAt, 44);
+    AddArea(ScriptCamAt, 4);
+    AddArea(GravityAt, 12);
+    AddArea(DroneDisableAt, 1);
+    AddArea(&NPCGlobals.NDrone2List, 4);
+    NfWarnMuted++;
+    cases = differ = nanChoices = 0;
+
+    Group("the breakables and the shards", kBreak, COUNT(kBreak), 3000, false, false, false, false);
+    Group("destroyables, hurt volumes and occluders", kDestroy, COUNT(kDestroy), 3000, true, false, false, false);
+    Group("the bullets", kBullets, COUNT(kBullets), 4000, true, true, true, false);
+    Group("the spent cases", kCasings, COUNT(kCasings), 3000, false, false, false, false);
+    Group("the effects", kEffects, COUNT(kEffects), 4000, false, true, false, false);
+    Group("smoke, debris, wind and trails", kGas, COUNT(kGas), 4000, false, false, false, false);
+    Group("the explosions", kExplode, COUNT(kExplode), 4000, false, false, false, false);
+    Group("the explosions' damage", kPropagate, COUNT(kPropagate), 4000, false, false, false, true);
+    ShadowHook_RemoveAll();
+
+    NfWarnMuted--;
+    memcpy(&GameState, gameState, sizeof(gameState));
+    memcpy(&MPSettings, mpSettings, sizeof(mpSettings));
+    memcpy(switch_channels, channels, 256);
+    memcpy(RandWords, rand, 8);
+    memcpy(FrameRates, frameRates, 0x18);
+    memcpy(ShardListAt, shardList, 0xc);
+    memcpy(EffectListAt, effectList, 0x18);
+    memcpy(CasingListAt, casings, 0x82);
+    memcpy(CopterListAt, copters, 0xc);
+    memcpy(PlayersAt, players, 16);
+    memcpy(ViewersAt, viewers, 44);
+    memcpy(ScriptCamAt, scriptCam, 4);
+    memcpy(GravityAt, gravity, 12);
+    memcpy(DroneDisableAt, disable, 1);
+    memcpy(&NPCGlobals.NDrone2List, npc, 4);
+}

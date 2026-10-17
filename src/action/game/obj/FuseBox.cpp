@@ -7,6 +7,8 @@
 #include "../../engine/celglist.h"
 #include "../../game.h"
 
+#include "Effect.h"
+#include "Player.h"
 // A fuse box: a script makes its fuses and hands each to one of two lists (FuseBox_Register). Once every fuse a list
 // was given has been shot, the list's two switch channels are set.
 #define FUSEBOX_LISTS 2
@@ -41,8 +43,6 @@ static_assert(offsetof(Create_FuseBox_Params, channelB) == 0x38, "Bad offset of 
 
 // The originals, called by address where Ghidra's prototypes do not fit. Player_Hurt is given a third argument it
 // does not read, as here in the original.
-#define Effect_RemoveSObjs ((void (__cdecl *)(obj_tag *obj))0x0006fba0)
-#define Player_Hurt ((float (__cdecl *)(obj_tag *player, float damage, _VECTOR *from))0x000ae690)
 
 // Script event 15 of the fuse box's script: puts the stream's object in a list (0 or 1), once.
 // AUTOINJECT

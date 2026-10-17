@@ -61,7 +61,7 @@ typedef struct celglist_tag {
     sphere_equ_tag boundSphere;
     _VECTOR extentMin;
     _VECTOR extentMax;
-    uint32_t lodRelated;
+    celglist_tag *lod;              // 0x34 - another model: a destroyable's broken one (Destroy_Create)
     uint32_t applyFlagsToObject;
 } celglist_tag;
 

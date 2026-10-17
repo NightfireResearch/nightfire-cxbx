@@ -471,7 +471,7 @@ void RandomWorld() {
     world.impact.damage = impactDamages[ShadowRand(5)];
     RandomVector(&world.impact.position, 6.0f);
     static obj_tag *const sources[] = {&world.objs[0], &world.objs[1], NULL};
-    world.impact.unknown14 = sources[ShadowRand(3)];
+    world.impact.source = sources[ShadowRand(3)];
 
     memset(world.sound, 0, sizeof(world.sound));
 

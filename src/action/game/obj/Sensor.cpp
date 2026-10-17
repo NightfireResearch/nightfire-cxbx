@@ -118,7 +118,7 @@ obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
     build_LinkToRoom(obj, 0, glb_world);
 
     sensor->enabledGraphics = celgl;
-    sensor->enabledGraphicsLod = celgl->lodRelated;
+    sensor->enabledGraphicsLod = celgl->lod;
 
     if(!sensor->dontAddToCameraList)
         LList_Add(&CameraList, &sensor->cameraListNode);
@@ -403,8 +403,8 @@ void Sensor_Update(obj_tag *sensorObj) {
         break;
 
     case 3:  // Disabled state
-        if (sensor->enabledGraphicsLod != 0) {
-            sensorObj->objGraphics = (celglist_tag*)sensor->enabledGraphicsLod;
+        if (sensor->enabledGraphicsLod != NULL) {
+            sensorObj->objGraphics = sensor->enabledGraphicsLod;
         }
 
         if (sensor->beamObject != NULL) {
