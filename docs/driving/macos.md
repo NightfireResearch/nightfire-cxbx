@@ -396,7 +396,7 @@ any time (G2 needs SDL's GPU subsystem in the Windows build, off by default). A1
   released the fence it had waited for, so every batch took new GPU memory - 307 GB of footprint after 100 s, which
   twice made the Mac unusable when games were left running. 3.4's fences fixed it; the pin moved for every host
   (untested on Windows and Linux so far). A round on 3.4.18: sound traces identical to the 3.2.30 round's in all 16.
-- **Rounds**: the 16 lockstep runs take 7-9 minutes on 3 slots. **Run at most 3 at once, at background priority**
+- **Rounds**: the 16 lockstep runs take 7-9 minutes on 3 slots. **Run at most 3 at once, at utility priority**
   (drive_game.sh does): 6 unpaced games starved the desktop. Sound traces are identical round to round. Frames are
   not: 1-524 scattered pixels a run over its 16 frames, by up to ~20 levels, on foliage and snow (mission 5 most) -
   probably alpha-tested edges falling either side of the test. The Vulkan build gives 0 between rounds; the Mac is the

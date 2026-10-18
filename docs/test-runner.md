@@ -285,8 +285,9 @@ RUNNER_HOST=local tools/runner/remote.sh setup        # then disc/ (a folder; it
 RUNNER_HOST=local RUNNER_SLOTS=3 tools/runner/round.sh new lockstep
 ```
 
-**At most 3 slots, and drive_game.sh's background priority** (`taskpolicy -b`): lockstep games are unpaced, and 6 at
-once on the M2 Max starved the desktop until it needed a forced restart. Never leave a game running past its run: kill
+**At most 3 slots, and drive_game.sh's utility priority** (`taskpolicy -c utility`): lockstep games are unpaced, and 6
+at once on the M2 Max starved the desktop until it needed a forced restart. Not the background tier (`taskpolicy -b`):
+it is starved in turn while the Mac is in use, down to a frame a second. Never leave a game running past its run: kill
 it by its process id (`pkill -x` does not match, the name being cut to 16 characters).
 
 ### Baselines for a Linux runner
