@@ -72,6 +72,57 @@ jobs:
             build/macos/av*.dll
             build/macos/FFmpeg-*.txt
 
+  # The standalone driving engine as a native Apple Silicon program (docs/driving/macos.md): the macos-arm64 preset,
+  # SDL's GPU API on Metal. FFmpeg's shared libraries are built from the third_party/ffmpeg submodule
+  # (tools/fmv/build_ffmpeg.sh macos-arm64) and cached by its commit. The game itself needs the disc, so it is built
+  # and checked, not run.
+  macos-arm64:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: FFmpeg's commit
+        id: ffmpeg
+        run: echo "commit=$(git rev-parse HEAD:third_party/ffmpeg)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v6
+        id: ffmpeg-cache
+        with:
+          path: ~/ffmpeg-arm64/lib
+          key: ffmpeg-macos-arm64-${{ steps.ffmpeg.outputs.commit }}-${{ hashFiles('tools/fmv/build_ffmpeg.sh') }}
+
+      - name: Build FFmpeg
+        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        run: |
+          git submodule update --init --depth 1 third_party/ffmpeg
+          JOBS=$(sysctl -n hw.ncpu) sh tools/fmv/build_ffmpeg.sh macos-arm64 ~/ffmpeg-arm64
+
+      - name: Configure
+        run: cmake --preset macos-arm64 -DNF_FFMPEG_LIB_DIR=$HOME/ffmpeg-arm64/lib
+
+      - name: Build
+        run: >
+          cmake --build --preset macos-arm64
+          --target driving_standalone driving_standalone_test gamewindow_test spirvmsl mslcompile
+
+      # The game window at 4 GB (macos.md 2): the image, the heaps, the pages and a thread's stack inside it, and the
+      # file structures' 32-bit layouts
+      - name: Check the game window
+        run: build/macos-arm64/gamewindow_test 200000
+
+      # arm64 always has FMA, and clang would fuse a * b + c unless told not to (macos.md 4)
+      - name: Check for fused multiply-adds
+        run: tools/fused_ops.sh build/macos-arm64/driving_standalone build/macos-arm64/driving_standalone_test
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: nightfire-driving-macos-arm64
+          path: |
+            build/macos-arm64/driving_standalone
+            build/macos-arm64/driving_standalone_test
+            build/macos-arm64/*.dylib
+            build/macos-arm64/FFmpeg-*.txt
+
   # The same cross build from Linux, with the distribution's mingw-w64 in place of Homebrew's. The toolchain
   # file is shared with macOS and finds the /usr sysroot by itself. Pinned to 26.04 because the build needs
   # mingw-w64 13 or later for x3daudio.h, and ubuntu-latest is still 24.04, whose mingw-w64 is 11.
