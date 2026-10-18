@@ -1,0 +1,1861 @@
+// Shadow tests for parcel 15's package A: the fonts (gfx/Font.cpp), the sprites' setters and drawing (gfx/Sprite.cpp,
+// game/view.cpp's View_DrawSprites), the HUD's message queue and subtitles (engine/Text.cpp, util/CirBuf.cpp,
+// Sound_DoSubtitle), the HUD's panes in single player and multiplayer (ui/HUD.cpp) and the menus' text box
+// (ui/TextBox.cpp): each function, the original and ours, on the same made-up state - the game's own three fonts
+// with texts of every kind of character and control code, sprites, a message queue, a player with a HUD, views, a
+// split screen's players, a text box on its page - with zeros of both signs, NaNs and boundary values among the
+// numbers. What needs the game running (the heap, the hashtable's textures, the string heap, the drawing, rooms,
+// collision, input, the multiplayer module, the menu framework's skins, labels and scripts) goes to a logging fake.
+// Run at start with MenuShadowTests=on (MenuProbe.cpp); NIGHTFIRE_SHADOW_ONLY=hudport runs it alone.
+
+#include "HudPortShadow.h"
+#include "ShadowHarness.h"
+
+#include "../../common/xbeOriginal.h"
+#include "../actionhelpers.h"
+#include "../game.h"
+#include "../input.h"
+#include "../engine/Text.h"
+#include "../engine/psiSprite.h"
+#include "../engine/viewer.h"
+#include "../game/view.h"
+#include "../game/drone/Drone.h"
+#include "../game/drone/NDrone2.h"
+#include "../game/mp/multiplayer.h"
+#include "../game/obj/GT.h"
+#include "../game/obj/GunImp.h"
+#include "../game/obj/Player.h"
+#include "../game/obj/car.h"
+#include "../game/obj/object.h"
+#include "../gfx/Font.h"
+#include "../gfx/Sprite.h"
+#include "../sound/Sound.h"
+#include "../ui/HUD.h"
+#include "../ui/TextBox.h"
+#include "../util/CirBuf.h"
+#include "../util/DList.h"
+
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+#include <map>
+#include <string>
+#include <vector>
+
+namespace {
+
+#define ORIGINAL(at, type) ((type)(uintptr_t)(at))
+#ifndef COUNT
+#define COUNT(a) ((int)(sizeof(a) / sizeof((a)[0])))
+#endif
+
+// The game's state the package reads and writes
+#define GameFont (*(FONT_tag **)0x001f64b0)
+#define GameFontTable (*(FONTTABLE_tag (*)[5])0x0017bd90)
+#define GameSprCnt U32_AT(0x0029e810)
+#define GameSprBuffList ((SPRITE_DRAW *)0x0029dc00)
+#define GameMsgQueue (*(DLISTINFO_tag *)0x0029abf8)
+#define GameSubTitleMsg (*(TXT_MSG **)0x0029ae20)
+#define GameSubTitleSpr ((sprite **)0x0029ae24)
+#define GameReceived (*(CIRBUF_INFO *)0x0029ae10)
+#define GameAssassin (*(obj_tag **)0x0026178c)
+#define GameTarget (*(obj_tag **)0x00261788)
+#define GameShowCoords U32_AT(0x001df9dc)
+#define GameSubtitlesOn U32_AT(0x001f6614)
+#define GameLayout U32_AT(0x001f660c)
+#define DynamicObjFirst (*(obj_tag **)0x001df34c)
+#define FuckOffSprite3 U8_AT(0x002790b2)
+
+const int SPRITES = 48;
+const int TEXTLEN = 0x168;
+const int OBJS = 12;
+const int EXTRA = 0x980;
+const int MSGS = 64;
+const int HEAP = 0x6000;
+const int STRINGS = 24;
+const int INFOS = 32;
+const int RADAR = 12;
+
+struct World {
+    sprite sprites[SPRITES];
+    char texts[SPRITES][TEXTLEN];
+    sprite *list[SPRITES];
+    SpriteInfo infos[INFOS];
+    HUDPANECREATE_tag create;
+    HUDPANE_tag pane;
+    HUDINFO_tag hud;
+    BLData bl;
+    obj_tag objs[OBJS];
+    uint8_t extra[OBJS][EXTRA];
+    AnimState anims[4];
+    viewer_tag viewers[6];
+    texDataEntry textures[4];
+    char strings[STRINGS][TEXTLEN];
+    char labels[8][64];
+    char formats[4][24];
+    char sources[8][TEXTLEN];   // the messages' texts, apart from the heap's
+    uint8_t heap[HEAP];
+    uint32_t heapUsed;
+    uint32_t stringNext;
+    uint32_t createUsed;
+    uint32_t spriteUsed;
+    RADAROBJ radar[RADAR];
+    char scoreText[2][32];
+    M_TEXTBOX box;
+    M_PAGE page;
+    M_MANAGER manager;
+    M_CONTROL parent;
+    M_CONTROL focused;
+    NEW_CONTROL newControl;
+    MENU_SKINPIECE piece;
+    char labelText[0x30];
+    char text[256];
+    uint32_t args[16];
+    _VECTOR v[4];
+    GPOINT points[2];
+    uint32_t fit;
+    int scratch[8];
+    SPRITE_DRAW drawn[64];  // what the last psiDrawSprites was given
+};
+World world;
+
+int cases, differ, nanChoices;
+
+uint32_t gen, caseSeed;
+
+uint32_t R(uint32_t n) {
+    gen = gen * 1664525u + 1013904223u;
+    // Mixed, so that the low bits a modulus takes are not the generator's short-period ones
+    uint32_t v = gen ^ (gen >> 15);
+    v *= 0x2c1b3c6du;
+    v ^= v >> 12;
+    v *= 0x297a2d39u;
+    v ^= v >> 15;
+    return n ? v % n : v;
+}
+
+float RF(float lo, float hi) {
+    return lo + (hi - lo) * (float)R(0x10000) / 65535.0f;
+}
+
+// A number for a float argument: mostly in range, sometimes a signed zero, an infinity or a NaN
+float Num(float lo, float hi) {
+    switch (R(24)) {
+        case 0: return 0.0f;
+        case 1: return -0.0f;
+        case 2: { uint32_t u = 0x7fc00000u | R(0x400000); float f; memcpy(&f, &u, 4); return f; }
+        case 3: return hi;
+        case 4: return lo;
+        default: return RF(lo, hi);
+    }
+}
+
+uint32_t W(const void *p) {
+    if (p == NULL)
+        return 0xffffffffu;
+    uintptr_t at = (uintptr_t)p, base = (uintptr_t)&world;
+    if (at >= base && at < base + sizeof(world))
+        return (uint32_t)(at - base);
+    char here;
+    ptrdiff_t distance = (const char *)p - &here;
+    if (distance > -0x10000 && distance < 0x10000)
+        return 0x7fffffffu;
+    return 0x80000000u | (uint32_t)at;
+}
+
+uint32_t Bits(float f) {
+    uint32_t u;
+    memcpy(&u, &f, 4);
+    if ((u & 0x7f800000u) == 0x7f800000u && (u & 0x007fffffu) != 0)
+        return 0x7fc0ffffu;
+    return u;
+}
+
+// ---- the fakes
+
+void *__cdecl FakeMalloc(size_t size, MallocFlags flags, uint32_t align) {
+    ShadowLog("malloc(%x,%x)", (uint32_t)size, (uint16_t)flags);
+    uint32_t at = (world.heapUsed + 3) & ~3u;
+    if (at + size > HEAP)
+        at = 0;
+    world.heapUsed = at + (uint32_t)size;
+    memset(&world.heap[at], 0, size);
+    return &world.heap[at];
+}
+
+void *__cdecl FakeGetItem(HASHCODE hash) {
+    ShadowLog("item(%x)", hash);
+    if ((hash & 0xff000000) != 0x03000000 || R(6) == 0)
+        return NULL;
+    return &world.textures[hash % 4];
+}
+
+void __cdecl FakeDrawSprites(SPRITE_DRAW *list, int count) {
+    uint32_t sum = 0;
+    for (int i = 0; i < count && i < 64; i++) {
+        const uint32_t *w = (const uint32_t *)&list[i];
+        for (int k = 0; k < 12; k++)
+            sum = sum * 31 + ((w[k] & 0x7f800000u) == 0x7f800000u && (w[k] & 0x007fffffu) != 0 ? 0x7fc0ffffu : w[k]);
+    }
+    ShadowLog("draw(%x,%d,%08x)", W(list), count, sum);
+    if (getenv("NIGHTFIRE_HUDPORT_SLOTS") != NULL) {
+        for (int i = 0; i < count && i < 64; i++) {
+            const uint32_t *w = (const uint32_t *)&list[i];
+            ShadowLog(" s%d:%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x", i, w[0], w[1], w[2], w[3],
+                      w[4], w[5], w[6], w[7], w[8], w[9], w[10], w[11]);
+        }
+    }
+    memcpy(world.drawn, list, sizeof(SPRITE_DRAW) * (count < 64 ? count : 64));
+}
+
+void __cdecl FakeTweak(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
+    ShadowLog("tweak(%x,%x,%x,%x)", a, r, g, b);
+}
+
+void __cdecl FakeBlend(int opaque) {
+    ShadowLog("blend(%d)", opaque);
+}
+
+void __cdecl FakeLights(void **lights, ushort count, float r, float g, float b) {
+    ShadowLog("lights(%x,%d,%08x,%08x,%08x)", W(lights), count, Bits(r), Bits(g), Bits(b));
+}
+
+void RandomSprite(sprite *spr, int index);
+
+sprite *__cdecl FakeSpriteCreate2(SpriteInfo *info) {
+    ShadowLog("sprite2(%x)", W(info));
+    if (world.spriteUsed >= SPRITES)
+        return NULL;
+    sprite *spr = &world.sprites[world.spriteUsed];
+    RandomSprite(spr, world.spriteUsed++);
+    if (info != NULL) {
+        spr->positionX = info->posX;
+        spr->positionY = info->posY;
+        if (info->onscreenWidth != 0)
+            spr->onscreenWidth = info->onscreenWidth;
+        if (info->onscreenHeight != 0)
+            spr->onscreenHeight = info->onscreenHeight;
+    }
+    return spr;
+}
+
+sprite *__cdecl FakeSpriteCreateLink(char viewer) {
+    ShadowLog("spritelink(%d)", viewer);
+    if (world.spriteUsed >= SPRITES)
+        return NULL;
+    sprite *spr = &world.sprites[world.spriteUsed];
+    RandomSprite(spr, world.spriteUsed++);
+    spr->linkedViewer = viewer;
+    return spr;
+}
+
+bool __cdecl FakeSetSprite(sprite *spr, HASHCODE hash) {
+    ShadowLog("setsprite(%x,%x)", W(spr), hash);
+    if (R(5) == 0)
+        return false;
+    spr->unknownDataMaybeTexPtr = hash & 0xff;
+    spr->backupOnscreenWidth = (short)(8 + R(64));
+    spr->backupOnscreenHeight = (short)(8 + R(64));
+    spr->onscreenWidth = spr->backupOnscreenWidth;
+    spr->onscreenHeight = spr->backupOnscreenHeight;
+    spr->spritesheetWidth = spr->backupOnscreenWidth;
+    spr->spritesheetHeight = spr->backupOnscreenHeight;
+    return true;
+}
+
+const char *__cdecl FakeBindLabel(Action_TranslatedText label, uint lock) {
+    ShadowLog("label(%x,%d)", (uint32_t)label, lock);
+    if (label == Action_TranslatedText_NULLVALUE)
+        return NULL;
+    return world.labels[(uint32_t)label % 8];
+}
+
+char *__cdecl FakeStringFromHeap(uchar lock) {
+    char *s = world.strings[world.stringNext++ % STRINGS];
+    ShadowLog("heapstr(%d,%x)", lock, W(s));
+    s[0] = '\0';
+    return s;
+}
+
+void __cdecl FakeLock(char *text) {
+    ShadowLog("lock(%x)", W(text));
+}
+
+void __cdecl FakeUnlock(char *text) {
+    ShadowLog("unlock(%x)", W(text));
+}
+
+obj_tag *__cdecl FakeCreateObjEx(ushort size, _VECTOR *pos, _VECTOR *rot, _MATRIX *mtx, celglist_tag *glist,
+                                 obj_tag *carrier, char link, ushort transform, float scale, ushort effect,
+                                 uchar r, uchar g, uchar b) {
+    ShadowLog("createex(%x,%x,%x,%x,%x,%x,%d,%x,%08x,%x,%x,%x,%x)", size, W(pos), W(rot), W(mtx), W(glist),
+              W(carrier), link, transform, Bits(scale), effect, r, g, b);
+    if (world.createUsed >= 4)
+        return NULL;
+    obj_tag *obj = &world.objs[OBJS - 1 - world.createUsed++];
+    memset(obj, 0, sizeof(obj_tag));
+    obj->extraObjectData = world.extra[obj - world.objs];
+    return obj;
+}
+
+obj_tag *__cdecl FakeCreate(int size, _VECTOR *pos, _VECTOR *rot, quaternion_tag *quat) {
+    ShadowLog("create(%d,%08x,%08x,%08x)", size, Bits(pos->x), Bits(pos->y), Bits(pos->z));
+    if (world.createUsed >= 4)
+        return NULL;
+    obj_tag *obj = &world.objs[OBJS - 1 - world.createUsed++];
+    memset(obj, 0, sizeof(obj_tag));
+    obj->extraObjectData = world.extra[obj - world.objs];
+    obj->position = *pos;
+    return obj;
+}
+
+bool __cdecl FakeLinkToRoom(obj_tag *obj, char straddle, world_tag *w) {
+    ShadowLog("link(%x,%d,%x)", W(obj), straddle, W(w));
+    return true;
+}
+
+celglist_tag *__cdecl FakeGlist(HASHCODE hash) {
+    ShadowLog("glist(%x)", hash);
+    return R(3) == 0 ? NULL : (celglist_tag *)&world.scratch[hash % 4];
+}
+
+void __cdecl FakeSetGfx(obj_tag *obj, HASHCODE hash) {
+    ShadowLog("gfx(%x,%x)", W(obj), hash);
+}
+
+obj_tag *__cdecl FakeFirstObject(void) {
+    ShadowLog("first");
+    return &world.objs[0];
+}
+
+light_tag *__cdecl FakeLight(_VECTOR *pos, uchar r, uchar g, uchar b, float bright, ushort channel, short life,
+                             uchar type, float p9, ushort s1, ushort s2, ushort p12, int sound) {
+    ShadowLog("light(%x,%x,%x,%x,%08x,%x,%d,%d,%08x,%x,%x,%x,%x)", W(pos), r, g, b, Bits(bright), channel, life, type,
+              Bits(p9), s1, s2, p12, sound);
+    return NULL;
+}
+
+ushort __cdecl FakeInputAction(short player, GameActions_tag action, uchar flags) {
+    ushort v = (ushort)(R(3) == 0 ? 1 + R(4) : 0);
+    ShadowLog("input(%d,%x,%d)=%d", player, action, flags, v);
+    return v;
+}
+
+ushort __cdecl FakeMenuInput(ushort player, int action, int flags) {
+    ushort v = (ushort)(R(3) == 0 ? 1 : 0);
+    ShadowLog("menuinput(%d,%x,%d)=%d", player, action, flags, v);
+    return v;
+}
+
+void __cdecl FakeHeadPos(_VECTOR *out, obj_tag *obj, _MATRIX *m) {
+    ShadowLog("head(%x,%x)", W(obj), W(m));
+    out->x = Num(-50.0f, 50.0f);
+    out->y = Num(-50.0f, 50.0f);
+    out->z = Num(-50.0f, 50.0f);
+}
+
+bool __cdecl FakeLOS(_VECTOR *a, _VECTOR *b, cel_tag *cel, obj_tag *o1, obj_tag *o2, uint flags) {
+    // A player missing from MPGame gives the position of a NULL object: only its address is logged
+    if ((uintptr_t)b < 0x10000) {
+        ShadowLog("los(%08x,%08x,%x,%x,%x,%x,%x)", Bits(a->x), Bits(a->z), W(b), W(cel), W(o1), W(o2), flags);
+        return R(3) != 0;
+    }
+    ShadowLog("los(%08x,%08x,%08x,%08x,%x,%x,%x,%x)", Bits(a->x), Bits(a->z), Bits(b->x), Bits(b->z), W(cel), W(o1),
+              W(o2), flags);
+    return R(3) != 0;
+}
+
+short __cdecl FakeToScreen(_VECTOR *in, _VECTOR *out, ushort viewer) {
+    ShadowLog("screen(%08x,%08x,%08x,%d)", Bits(in->x), Bits(in->y), Bits(in->z), viewer);
+    out->x = Num(-100.0f, 740.0f);
+    out->y = Num(-100.0f, 580.0f);
+    out->z = Num(-10.0f, 150.0f);
+    short res = (short)((int)R(3) - 1);
+    ShadowLog("=%08x,%08x,%08x,%d", Bits(out->x), Bits(out->y), Bits(out->z), res);
+    return res;
+}
+
+char *__cdecl FakeTeamScore(ushort team) {
+    ShadowLog("teamscore(%d)", team);
+    if (R(3) == 0)
+        return NULL;
+    sprintf(world.scoreText[0], "T%u", R(100));
+    return world.scoreText[0];
+}
+
+char *__cdecl FakePlayerScore(short player) {
+    ShadowLog("playerscore(%d)", player);
+    if (R(3) == 0)
+        return NULL;
+    sprintf(world.scoreText[1], "P%u", R(100));
+    return world.scoreText[1];
+}
+
+bool __cdecl FakeFlagParent(obj_tag *obj, ushort team) {
+    ShadowLog("flag(%x,%d)", W(obj), team);
+    return R(2) != 0;
+}
+
+bool __cdecl FakeBluePrint(obj_tag *obj) {
+    ShadowLog("blueprint(%x)", W(obj));
+    return R(2) != 0;
+}
+
+bool __cdecl FakeGEObj(obj_tag *obj, int part) {
+    ShadowLog("ge(%x,%d)", W(obj), part);
+    return R(2) != 0;
+}
+
+short __cdecl FakeUplink(short uplink) {
+    ShadowLog("uplink(%d)", uplink);
+    return (short)R(4);
+}
+
+ushort __cdecl FakeRadarObjects(obj_tag *obj, RADAROBJ **list) {
+    ShadowLog("radar(%x)", W(obj));
+    *list = world.radar;
+    return (ushort)R(RADAR + 1);
+}
+
+void __cdecl FakeMovie(void) {
+}
+
+// The menu framework's
+MENU_SKINPIECE *__cdecl FakeHandle(void *component) {
+    ShadowLog("handle(%x)", W(component));
+    return &world.piece;
+}
+
+void __cdecl FakeSetupInstance(void *component, uint state, int x, int y, int w, int h) {
+    ShadowLog("instance(%x,%x,%d,%d,%d,%d)", W(component), state, x, y, w, h);
+}
+
+void __cdecl FakeComponentFree(void *component) {
+    ShadowLog("cfree(%x)", W(component));
+}
+
+void __cdecl FakeLabelInit(void *label, NEW_CONTROL *create, M_CONTROL *parent) {
+    const uint32_t *w = (const uint32_t *)create;
+    ShadowLog("labelinit(%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x)", W(label), W(parent), w[0], W((void *)(uintptr_t)w[1]),
+              w[2], w[3], w[4], w[5], w[6], w[7], w[8]);
+    // The label's text record
+    *(void **)((uint8_t *)label + 0xe8) = world.labelText;
+}
+
+void __cdecl FakeLabelUpdate(M_MANAGER *m, M_PAGE *p, void *label, bool over) {
+    ShadowLog("labelupdate(%x,%x,%x,%d)", W(m), W(p), W(label), over);
+}
+
+int __cdecl FakeLabelSend(void *label, int msg, int a1, int a2) {
+    ShadowLog("labelsend(%x,%x,%x,%x)", W(label), msg, a1, a2);
+    return (int)R(0);
+}
+
+void __cdecl FakeResize(void *control, ushort x, ushort y, ushort right, ushort height) {
+    ShadowLog("resize(%x,%d,%d,%d,%d)", W(control), x, y, right, height);
+}
+
+bool __cdecl FakeCursorOver(M_MANAGER *m, M_CONTROL *c) {
+    ShadowLog("over(%x,%x)", W(m), W(c));
+    return R(2) != 0;
+}
+
+bool __cdecl FakeExitLoop(M_CONTROL *c) {
+    ShadowLog("exitloop(%x)", W(c));
+    return R(2) != 0;
+}
+
+bool __cdecl FakeScriptPlay(M_CONTROL *c, int script, char flag) {
+    ShadowLog("play(%x,%x,%d)", W(c), script, flag);
+    return R(2) != 0;
+}
+
+void *__cdecl FakeScriptSelect(M_CONTROL *c, int script) {
+    ShadowLog("select(%x,%x)", W(c), script);
+    return &world.scratch[R(8)];
+}
+
+void __cdecl FakeScriptControl(M_CONTROL *c) {
+    ShadowLog("script(%x)", W(c));
+}
+
+void __cdecl FakeMenuFree(void **p, int flags) {
+    ShadowLog("menufree(%x,%d)", W(*p), flags);
+}
+
+int __cdecl FakeMenuSend(M_CONTROL *c, uint msg, int a1, int a2) {
+    ShadowLog("menusend(%x,%x,%x,%x)", W(c), msg, W((void *)(uintptr_t)a1), a2);
+    return 0;
+}
+
+void __cdecl FakeAddMsg(char player, char priority, int type, char *text, int spr, short frames) {
+    ShadowLog("addmsg(%d,%d,%d,%x,%x,%d)", player, priority, type, W(text), spr, frames);
+}
+
+// ---- the world
+
+const char kChars[] = "AaBbTtYyWw.,'!?0123456789 ~-+\n\t";
+
+void RandomText(char *out, int most) {
+    int n = (int)R(most);
+    for (int i = 0; i < n; i++) {
+        uint32_t k = R(20);
+        uchar c;
+        if (k < 12)
+            c = (uchar)kChars[R(sizeof(kChars) - 1)];
+        else if (k < 14)
+            c = (uchar)(0x21 + R(0xdf));
+        else if (k == 14)
+            c = 0xba;
+        else if (k == 15)
+            c = (uchar)(R(2) ? 0x92 : 0x85);
+        else if (k == 16)
+            c = 0x99;
+        else if (k == 17)
+            c = (uchar)(R(2) ? 0xa0 : 0xfd + R(3));
+        else
+            c = (uchar)('A' + R(26));
+        // Labels are formats to the ammo pane's sprintf, as in the game: none has a '%'
+        if (c == '%')
+            c = 'p';
+        out[i] = (char)c;
+    }
+    out[n] = '\0';
+}
+
+// A format: a few codes, fonts 0 to 4 (4 is past the fonts)
+void RandomFormat(char *out) {
+    int n = 0;
+    int codes = (int)R(4);
+    for (int i = 0; i < codes; i++) {
+        switch (R(6)) {
+            case 0: out[n++] = (char)0xfa; out[n++] = (char)(1 + R(255)); out[n++] = (char)(1 + R(255));
+                    out[n++] = (char)(1 + R(255)); out[n++] = (char)(1 + R(255)); break;
+            case 1: out[n++] = (char)0xfb; out[n++] = (char)(1 + R(9)); break;
+            case 2: out[n++] = (char)0xfc; out[n++] = (char)(1 + R(9)); break;
+            case 3: out[n++] = (char)0xfd; break;
+            case 4: out[n++] = (char)0xfe; out[n++] = (char)(1 + R(4)); break;
+            default: out[n++] = (char)0xff; out[n++] = (char)(1 + R(3)); break;
+        }
+    }
+    if (R(4) == 0)
+        out[n++] = 'x';
+    out[n] = '\0';
+}
+
+void RandomSprite(sprite *spr, int index) {
+    memset(spr, 0, sizeof(sprite));
+    spr->colourTint = R(5) == 0 ? R(0) & 0xffffff00 : R(0);
+    spr->unknown1 = R(0);
+    spr->text = R(3) == 0 ? world.texts[index] : NULL;
+    if (spr->text != NULL)
+        RandomText(spr->text, 40);
+    spr->maybeClippedString = R(4) == 0 ? NULL : world.formats[R(4)];
+    spr->length = (short)(spr->text != NULL ? strlen(spr->text) : 0);
+    spr->maybeFlags = (short)(R(0) & 0x7ef0);
+    spr->positionX = (short)((int)R(800) - 80);
+    spr->positionY = (short)((int)R(600) - 60);
+    spr->backupOnscreenWidth = (short)(R(8) == 0 ? 0 : 1 + R(128));
+    spr->backupOnscreenHeight = (short)(R(8) == 0 ? 0 : 1 + R(128));
+    if (spr->backupOnscreenWidth == 0)
+        spr->backupOnscreenWidth = 1;
+    if (spr->backupOnscreenHeight == 0)
+        spr->backupOnscreenHeight = 1;
+    spr->onscreenWidth = (short)((int)R(700) - 20);
+    spr->onscreenHeight = (short)((int)R(700) - 20);
+    spr->spritesheetX = (short)R(256);
+    spr->spritesheetY = (short)R(256);
+    spr->spritesheetWidth = (short)((int)R(300) - 10);
+    spr->spritesheetHeight = (short)((int)R(300) - 10);
+    spr->maybeEnabled = (uchar)R(256);
+    spr->linkedViewer = (char)R(6);
+    spr->scale.x = R(3) == 0 ? Num(0.25f, 2.0f) : 1.0f;
+    spr->scale.y = R(3) == 0 ? Num(0.25f, 2.0f) : 1.0f;
+}
+
+void RandomViewer(viewer_tag *v, int i) {
+    memset(v, 0, sizeof(viewer_tag));
+    v->enabled = (undefined1)R(2);
+    v->spritesShown = (undefined1)(R(3) != 0);
+    v->draw.skyVisible = (uchar)R(2);
+    v->xMin = R(2) ? 0.0f : Num(0.0f, 320.0f);
+    v->yMin = R(2) ? 0.0f : Num(0.0f, 240.0f);
+    v->width = R(2) ? 640.0f : Num(200.0f, 640.0f);
+    v->height = R(2) ? 480.0f : Num(150.0f, 480.0f);
+    v->xMax = R(2) ? v->width : Num(200.0f, 640.0f);
+    v->yMax = R(2) ? v->height : Num(150.0f, 480.0f);
+    v->nightVisionRelated = (undefined2)R(4);
+    for (int k = 0; k < 15; k++)
+        v->viewMatrix.m[k] = Num(-1.0f, 1.0f);
+    v->pos.x = Num(-100.0f, 100.0f);
+    v->pos.y = Num(-100.0f, 100.0f);
+    v->pos.z = Num(-100.0f, 100.0f);
+    v->world = (world_tag *)&world.scratch[i % 8];
+}
+
+void RandomPane(int sprites, int extra) {
+    // A layout of sprites, and the pane made of it as HUD_CreateDefault would
+    HUDPANECREATE_tag *c = &world.create;
+    memset(c, 0, sizeof(*c));
+    c->posX = (short)((int)R(700) - 30);
+    c->posY = (short)((int)R(520) - 20);
+    c->width = (short)R(300);
+    c->height = (short)R(200);
+    c->spriteInfo = world.infos;
+    c->numSprites = (ushort)sprites;
+    c->numExtraItems = (ushort)extra;
+    c->flags = (ushort)(R(0) & 0x198);
+    for (int i = 0; i < INFOS; i++) {
+        SpriteInfo *s = &world.infos[i];
+        memset(s, 0, sizeof(*s));
+        s->colour = R(0);
+        s->maybeEnabled = (ushort)R(0x100);
+        s->maybeFlags = (short)(R(0) & 0x1ff0);
+        s->posX = (short)((int)R(600) - 300);
+        s->posY = (short)((int)R(400) - 200);
+        s->onscreenWidth = (short)((int)R(300) - 20);
+        s->onscreenHeight = (short)((int)R(300) - 20);
+        s->textRef = R(3) == 0 ? (Action_TranslatedText)R(4) : Action_TranslatedText_NULLVALUE;
+    }
+    HUDPANE_tag *p = &world.pane;
+    memset(p, 0, sizeof(*p));
+    p->base = c;
+    for (int i = 0; i < SPRITES; i++) {
+        RandomSprite(&world.sprites[i], i);
+        world.list[i] = &world.sprites[i];
+        // A pane's sprites the HUD prints into have their text (as Sprite_Create2 gives them)
+        if (world.sprites[i].text == NULL)
+            world.sprites[i].text = world.texts[i];
+    }
+    world.spriteUsed = 0;
+    p->spriteList = world.list;
+    p->extraItems = (void **)&world.list[sprites];
+    p->numSprites = (short)sprites;
+    p->posX = (short)((int)R(640) - 40);
+    p->posY = (short)((int)R(480) - 40);
+    p->enabled = R(5) != 0;
+    p->state = (ushort)R(3);
+}
+
+void RandomPlayer(void) {
+    BLData *bl = &world.bl;
+    memset(bl, 0, sizeof(*bl));
+    bl->playerNum = (char)R(4);
+    bl->active = (char)(R(5) != 0);
+    bl->camMode = (char)(R(4) == 0 ? R(16) : 0);
+    bl->crosshairType = (char)R(9);
+    bl->crosshairOffsetX = Num(-1.0f, 1.0f);
+    bl->crosshairOffsetY = Num(-1.0f, 1.0f);
+    bl->health = Num(-20.0f, 150.0f);
+    bl->armor = R(3) == 0 ? 0.0f : Num(-10.0f, 100.0f);
+    bl->air = Num(0.0f, 100.0f);
+    bl->ropeFatigue = Num(0.0f, 100.0f);
+    bl->waterFlags = R(0) & 0x11;
+    bl->zoom = Num(0.5f, 4.0f);
+    bl->nightVisionTimer = Num(-20.0f, 1810.0f);
+    bl->nightVisionActive = (char)R(2);
+    bl->hitDirections = (uchar)R(16);
+    bl->hitDirectionFade = (uchar)(R(3) == 0 ? 0 : R(256));
+    bl->thirdIcon = (uchar)R(4);
+    bl->weaponChangeTimer = (char)(R(3) == 0 ? R(60) : 0);
+    bl->shotFired = (char)R(2);
+    bl->hudInfo = &world.hud;
+    bl->weaponObject = &world.objs[1];
+    bl->remoteControlDevice = R(6) == 0 ? NULL : &world.objs[2];
+    for (int i = 0; i < 34; i++)
+        bl->ammo[i] = (short)R(300);
+    for (int i = 0; i < 114; i++) {
+        bl->weaponStats[i].clipOrCooldown = (short)R(120);
+        bl->weaponStats[i].fireModeIndex = (char)R(2);
+    }
+    memset(&world.hud, 0, sizeof(world.hud));
+    for (int i = 0; i < NUM_PANES; i++) {
+        world.hud.pane[i].enabled = R(5) == 0;
+        world.hud.pane[i].maybeCanBeEnabled = R(4) != 0;
+        world.hud.pane[i].state = (ushort)R(3);
+    }
+}
+
+void RandomObjects(void) {
+    for (int i = 0; i < OBJS; i++) {
+        obj_tag *o = &world.objs[i];
+        memset(o, 0, sizeof(*o));
+        memset(world.extra[i], 0, EXTRA);
+        o->extraObjectData = world.extra[i];
+        o->nextObject = i + 1 < OBJS - 4 ? &world.objs[i + 1] : NULL;
+        o->animState = &world.anims[i % 4];
+        // Finite: the coordinates cheat prints them with the XBE's printf, which stops at a breakpoint on some others
+        o->position.x = RF(-100.0f, 100.0f);
+        o->position.y = RF(-100.0f, 100.0f);
+        o->position.z = RF(-100.0f, 100.0f);
+        for (int k = 0; k < 15; k++)
+            o->transformMatrix.m[k] = Num(-100.0f, 100.0f);
+        o->inCel = (cel_tag *)&world.scratch[i % 8];
+        static const uchar types[] = {OBJECTTYPE_PLAYER, OBJECTTYPE_DRONE, OBJECTTYPE_DEAD_DRONE,
+                                      OBJECTTYPE_DEAD_PLAYER, OBJECTTYPE_GRAPPLE, 5};
+        o->objectType = (char)types[R(COUNT(types))];
+        o->curState = (ushort)(R(3) == 0 ? R(3) : 1);
+        static const short movements[] = {MovementType_Walk, MovementType_Swim, MovementType_Crouch,
+                                          MovementType_ScanMode, MovementType_Wire, MovementType_Emplacement,
+                                          MovementType_Ronin, MovementType_RCVehicle, 1, 2, 9};
+        o->subState = (ushort)movements[R(COUNT(movements))];
+        o->drawnCountdown = (char)R(3);
+        o->flags = (char)R(2);
+        o->objGraphics = (celglist_tag *)&world.scratch[R(4)];
+        o->maybeParent = &world.objs[3];
+        // Whatever the remote device is: a gun's heat, a turret's ammo, a car's counts, a drone's state
+        float *f = (float *)world.extra[i];
+        for (int k = 0; k < EXTRA / 4; k++)
+            f[k] = (k & 1) ? Num(-50.0f, 300.0f) : (float)(int)R(200);
+        ((Drone_tag *)world.extra[i])->flags = R(0) & 0x700;
+        ((Drone_tag *)world.extra[i])->health = Num(-10.0f, 100.0f);
+        ((CAR_INFO *)world.extra[i])->mainAmmo = (short)R(100);
+    }
+    for (int i = 0; i < 4; i++) {
+        AnimState *a = &world.anims[i];
+        memset(a, 0, sizeof(*a));
+        static const char weapons[] = {1, 2, 0x1a, 0x1b, 0x32, 0x33, 0x47, 0x4a, 0x4b, 0x4c, 0x4d, 0x50, 0x51,
+                                       0x54, 0x55, 0x5c, 0x5d, 0x5e, 10, 20, 30};
+        a->currentWeaponId = weapons[R(COUNT(weapons))];
+        a->switchingToWeaponId = R(2) ? a->currentWeaponId : weapons[R(COUNT(weapons))];
+        a->prevHeldWeaponId = weapons[R(COUNT(weapons))];
+        a->animFlags = (char)R(4);
+    }
+}
+
+void RandomWorld(void) {
+    world.heapUsed = 0;
+    world.stringNext = 0;
+    world.createUsed = 0;
+    world.spriteUsed = 0;
+    for (int i = 0; i < 8; i++)
+        RandomText(world.labels[i], 50);
+    for (int i = 0; i < 4; i++)
+        RandomFormat(world.formats[i]);
+    for (int i = 0; i < STRINGS; i++)
+        world.strings[i][0] = '\0';
+    for (int i = 0; i < 4; i++) {
+        world.textures[i].texIdx = (int)R(64);
+        world.textures[i].width = (short)(R(8) == 0 ? 0 : 1 + R(512));
+        world.textures[i].height = (short)(R(8) == 0 ? 0 : 1 + R(512));
+    }
+    for (int i = 0; i < 6; i++)
+        RandomViewer(&world.viewers[i], i);
+    for (int i = 0; i < 11; i++)
+        glb_viewer[i] = i < 6 ? &world.viewers[i] : NULL;
+    RandomObjects();
+    for (int i = 0; i < 4; i++)
+        glb_players[i] = &world.objs[i];
+    RandomPlayer();
+    for (int i = 0; i < RADAR; i++) {
+        world.radar[i].pos.x = Num(-200.0f, 200.0f);
+        world.radar[i].pos.y = Num(-200.0f, 200.0f);
+        world.radar[i].pos.z = Num(-200.0f, 200.0f);
+        world.radar[i].colour = R(0);
+        world.radar[i].icon = (ushort)R(4);
+    }
+    for (int i = 0; i < 16; i++)
+        world.args[i] = R(0);
+    RandomText(world.text, 120);
+    for (int i = 0; i < SPRITES; i++) {
+        RandomSprite(&world.sprites[i], i);
+        world.list[i] = &world.sprites[i];
+    }
+    memset(&world.piece, 0, sizeof(world.piece));
+    world.piece.unknown06 = (short)R(40);
+    world.piece.unknown08 = (short)R(40);
+    world.piece.unknown0a = (short)R(40);
+    world.piece.unknown0c = (short)R(40);
+
+    // The game's globals
+    GameFont = GameFontTable[1 + R(3)].font;
+    GameSprCnt = R(70);
+    // Off: the coordinates cheat prints floats with the XBE's printf, whose float support is not set up before the
+    // game starts
+    GameShowCoords = 0;
+    GameSubtitlesOn = R(2);
+    GameLayout = R(3);
+    GameState.NumFramesUnpaused = R(0);
+    MPSettings.isMultiplayer = R(2);
+    MPSettings.numPlayers = 1 + R(4);
+    MPSettings.maybeIsTeamGame = R(2);
+    MPSettings.field53_0x190 = R(2);
+    MPSettings.ShowTeamAndNameOverhead = R(2);
+    static const MultiplayerGameMode modes[] = {GM_ARENA, GM_ASSASSIN, GM_CTF, GM_BLUEPRINT, GM_GOLDENEYE,
+                                                GM_UPLINK, GM_TOPAGENT};
+    MPSettings.GameMode = modes[R(COUNT(modes))];
+    for (int i = 0; i < 10; i++) {
+        sprintf(MPSettings.Player[i].Name, "Agent %u", R(1000));
+        MPSettings.Player[i].TeamId = (MPTeam)R(2);
+        MPSettings.Player[i].SomeField2 = R(2);
+        MPSettings.Player[i].HealthModifier = (int)R(60) - 30;
+        MPGame.players[i].playerObj = R(6) == 0 ? NULL : &world.objs[i % OBJS];
+    }
+    for (int i = 0; i < 4; i++) {
+        MPGame.radarMarks[i].target = R(3) == 0 ? NULL : &world.sprites[SPRITES - 1 - i];
+        MPGame.radarMarks[i].assassin = R(3) == 0 ? NULL : &world.sprites[SPRITES - 5 - i];
+        PlayerInputs[i].crosshairsEnabled = (undefined)R(2);
+    }
+    GameAssassin = R(2) ? &world.objs[R(OBJS)] : NULL;
+    GameTarget = R(2) ? &world.objs[R(OBJS)] : NULL;
+    BackgroundMovieHashcode = R(2);
+    NDrone2Info.head = (LLNODE_tag *)(R(3) == 0 ? NULL : world.extra[4 + R(3)]);
+    DynamicObjFirst = &world.objs[R(4)];
+    FuckOffSprite3 = (uchar)R(2);
+    SkySunPos.x = R(4) == 0 ? 0.0f : Num(-500.0f, 500.0f);
+    SkySunPos.y = R(4) == 0 ? 0.0f : Num(-500.0f, 500.0f);
+    SkySunPos.z = R(4) == 0 ? 0.0f : Num(-500.0f, 500.0f);
+    FRAME_RATE_MUL = R(2) ? 1.0f : Num(0.25f, 3.0f);
+    _FRAME_RATE = R(2) ? 60.0f : Num(10.0f, 70.0f);
+    // The table's entries the HUD tests by, filled in at run time
+    weapon_data[0x4b].weaponVariantNum = R(2) ? 0x4b : 0;
+    weapon_data[0x4d].weaponVariantNum = R(2) ? 0x4d : 0;
+    weapon_data[0x54].weaponFlags = R(0) & 0x60;
+    weapon_data[0x55].weaponFlags = R(0) & 0x60;
+    weapon_data[0x50].range = Num(1.0f, 100.0f);
+    for (int i = 4; i < 8; i++) {
+        Drone_tag *d = (Drone_tag *)world.extra[i];
+        d->next = i < 7 && R(2) ? (Drone_tag *)world.extra[i + 1] : NULL;
+        d->gameObj = &world.objs[R(OBJS - 4)];
+    }
+}
+
+// ---- calling
+
+struct Regs {
+    uint32_t eax, ebx, ecx, edx, esi, edi;
+};
+
+double lastST0;
+
+__declspec(naked) uint32_t __cdecl CallRegs(unsigned at, const Regs *r, int argc, const uint32_t *args) {
+    _asm {
+        push ebp
+        mov ebp, esp
+        push ebx
+        push esi
+        push edi
+        mov ecx, [ebp + 16]
+        mov edx, [ebp + 20]
+    pushing:
+        test ecx, ecx
+        jz pushed
+        push dword ptr [edx + ecx * 4 - 4]
+        dec ecx
+        jmp pushing
+    pushed:
+        mov eax, [ebp + 12]
+        mov ebx, [eax + 4]
+        mov ecx, [eax + 8]
+        mov edx, [eax + 12]
+        mov esi, [eax + 16]
+        mov edi, [eax + 20]
+        mov eax, [eax]
+        call dword ptr [ebp + 8]
+        mov ecx, [ebp + 16]
+        lea esp, [esp + ecx * 4]
+        pop edi
+        pop esi
+        pop ebx
+        pop ebp
+        ret
+    }
+}
+
+__declspec(naked) void __cdecl CallRegsST0(unsigned at, const Regs *r, int argc, const uint32_t *args) {
+    _asm {
+        push ebp
+        mov ebp, esp
+        push ebx
+        push esi
+        push edi
+        mov ecx, [ebp + 16]
+        mov edx, [ebp + 20]
+    pushing:
+        test ecx, ecx
+        jz pushed
+        push dword ptr [edx + ecx * 4 - 4]
+        dec ecx
+        jmp pushing
+    pushed:
+        mov eax, [ebp + 12]
+        mov ebx, [eax + 4]
+        mov ecx, [eax + 8]
+        mov edx, [eax + 12]
+        mov esi, [eax + 16]
+        mov edi, [eax + 20]
+        mov eax, [eax]
+        call dword ptr [ebp + 8]
+        fstp qword ptr [lastST0]
+        mov ecx, [ebp + 16]
+        lea esp, [esp + ecx * 4]
+        pop edi
+        pop esi
+        pop ebx
+        pop ebp
+        ret
+    }
+}
+
+uint32_t P(const void *p) {
+    return (uint32_t)(uintptr_t)p;
+}
+
+uint32_t F(float f) {
+    uint32_t u;
+    memcpy(&u, &f, 4);
+    return u;
+}
+
+typedef uint32_t (*Runner)(bool original);
+struct Case {
+    const char *name;
+    Runner run;
+};
+const Case *current;
+
+__declspec(noinline) void ZeroStack(void) {
+    volatile uint32_t below[0x1000];
+    for (int i = 0; i < 0x1000; i++)
+        below[i] = 0;
+}
+
+uint32_t RunCase(bool original) {
+    gen = caseSeed;
+    ZeroStack();
+    return current->run(original);
+}
+
+// A register-argument function: the original at its address, ours at our adaptor; both through the same call
+uint32_t RegCall(bool original, unsigned at, const void *ours, const Regs &r, int argc, const uint32_t *args) {
+    if (original) {
+        XbeOriginalScope o(at);
+        ZeroStack();
+        return CallRegs(at, &r, argc, args);
+    }
+    return CallRegs(P(ours), &r, argc, args);
+}
+
+uint32_t RegCallST0(bool original, unsigned at, const void *ours, const Regs &r, int argc, const uint32_t *args) {
+    if (original) {
+        XbeOriginalScope o(at);
+        ZeroStack();
+        CallRegsST0(at, &r, argc, args);
+    } else {
+        CallRegsST0(P(ours), &r, argc, args);
+    }
+    return Bits((float)lastST0) ^ (uint32_t)(Bits((float)(lastST0 - (float)lastST0)) * 7);
+}
+
+#define CDECL_RUN(at, ours, type, ...)                                                                                \
+    (original ? ([&]() { XbeOriginalScope o(at); ZeroStack(); return ORIGINAL(at, type)(__VA_ARGS__); }()) \
+              : ours(__VA_ARGS__))
+
+#define CDECL_VOID(at, ours, type, ...)                                                                               \
+    do {                                                                                                              \
+        if (original) {                                                                                               \
+            XbeOriginalScope o(at);                                                                                   \
+            ZeroStack();                                                                                              \
+            ORIGINAL(at, type)(__VA_ARGS__);                                                                          \
+        } else {                                                                                                      \
+            ours(__VA_ARGS__);                                                                                        \
+        }                                                                                                             \
+    } while (0)
+
+// ---- the regions and the comparison (two NaNs the same: the x87 and SSE2 choose differently between two)
+
+struct Area {
+    uint8_t *at;
+    size_t size;
+};
+Area areas[48];
+int areaCount;
+ShadowRegions regions;
+
+void AddArea(void *at, size_t size) {
+    regions.Add(at, size);
+    areas[areaCount].at = (uint8_t *)at;
+    areas[areaCount++].size = size;
+}
+
+bool IsNaNWord(const uint8_t *p) {
+    uint32_t u;
+    memcpy(&u, p, 4);
+    return (u & 0x7f800000u) == 0x7f800000u && (u & 0x007fffffu) != 0;
+}
+
+bool CompareCase(const char *what, int trial) {
+    static std::vector<uint8_t> theirState, ourState;
+    regions.Save();
+    ShadowLog_Clear();
+    uint32_t theirResult = RunCase(true);
+    regions.Capture(theirState);
+    std::string theirLog = ShadowLog_Text();
+    regions.Restore();
+    ShadowLog_Clear();
+    uint32_t ourResult = RunCase(false);
+    regions.Capture(ourState);
+    const std::string &ourLog = ShadowLog_Text();
+
+    static std::map<std::string, int> reports;
+    int &reported = reports[what];
+    bool same = true;
+    if (theirResult != ourResult) {
+        same = false;
+        if (reported++ < 3)
+            printf("[hudport] %s case %d: returns 0x%x, the original 0x%x\n", what, trial, ourResult, theirResult);
+    }
+    size_t at = 0;
+    bool nans = false, memorySame = true;
+    bool identical = theirState.size() == ourState.size() &&
+                     memcmp(theirState.data(), ourState.data(), theirState.size()) == 0;
+    for (int a = 0; a < areaCount && memorySame && !identical; a++) {
+        for (size_t j = 0; j < areas[a].size; j++) {
+            if (theirState[at + j] == ourState[at + j])
+                continue;
+            size_t window = j >= 3 ? j - 3 : 0;
+            for (; window <= j && window + 4 <= areas[a].size; window++) {
+                if (IsNaNWord(&theirState[at + window]) && IsNaNWord(&ourState[at + window]))
+                    break;
+            }
+            if (window <= j && window + 4 <= areas[a].size) {
+                nans = true;
+                j = window + 3;
+                continue;
+            }
+            size_t word = j & ~(size_t)3;
+            memorySame = false;
+            if (reported++ < 3) {
+                uint32_t theirs = 0, ours = 0;
+                if (word + 4 <= areas[a].size) {
+                    memcpy(&theirs, &theirState[at + word], 4);
+                    memcpy(&ours, &ourState[at + word], 4);
+                }
+                printf("[hudport] %s case %d: memory differs in region %d at +0x%x: 0x%08x, the original 0x%08x\n",
+                       what, trial, a, (unsigned)word, ours, theirs);
+            }
+            break;
+        }
+        at += areas[a].size;
+    }
+    same = same && memorySame;
+    if (theirLog != ourLog) {
+        same = false;
+        if (reported++ < 3) {
+            size_t d = 0;
+            while (d < theirLog.size() && d < ourLog.size() && theirLog[d] == ourLog[d])
+                d++;
+            size_t from = d > 120 ? d - 120 : 0;
+            printf("[hudport] %s case %d: calls differ at %d\n  ours:     %.400s\n  original: %.400s\n", what, trial,
+                   (int)d, ourLog.c_str() + from, theirLog.c_str() + from);
+        }
+    }
+    // NIGHTFIRE_HUDPORT_DUMP=1: the first difference's two logs in full, beside the run's log
+    static bool dumped;
+    if (!same && !dumped && getenv("NIGHTFIRE_HUDPORT_DUMP") != NULL) {
+        dumped = true;
+        FILE *f = fopen("hudport_ours.txt", "w");
+        fputs(ourLog.c_str(), f);
+        fclose(f);
+        f = fopen("hudport_theirs.txt", "w");
+        fputs(theirLog.c_str(), f);
+        fclose(f);
+    }
+    if (same && nans)
+        nanChoices++;
+    return same;
+}
+
+void Test(const char *group, const Case *list, int count, int trials) {
+    int groupCases = cases, groupDiffer = differ;
+    for (int c = 0; c < count; c++) {
+        current = &list[c];
+        if (getenv("NIGHTFIRE_SHADOW_TRACE") != NULL) {
+            printf("[hudport] %s\n", current->name);
+            fflush(stdout);
+        }
+        for (int trial = 0; trial < trials; trial++) {
+            gen = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
+            RandomWorld();
+            caseSeed = gen;
+            cases++;
+            if (!CompareCase(current->name, trial))
+                differ++;
+        }
+    }
+    printf("[hudport] %s: %d cases, %d differ\n", group, cases - groupCases, differ - groupDiffer);
+    fflush(stdout);
+}
+
+#define C(name, run) {name, run}
+
+void Hook(unsigned at, const void *fake) {
+    ShadowHook_Install(at, fake);
+}
+
+// The fakes every group has
+void InstallBaseFakes(void) {
+    Hook(0x00070ae0, (const void *)&FakeMalloc);
+    Hook(0x0006b500, (const void *)&FakeGetItem);
+    Hook(0x000de3d0, (const void *)&FakeDrawSprites);
+    Hook(0x000ddf00, (const void *)&FakeTweak);
+    Hook(0x000dd930, (const void *)&FakeBlend);
+    Hook(0x000de610, (const void *)&FakeLights);
+    Hook(0x0006d460, (const void *)&FakeBindLabel);
+    Hook(0x0006d140, (const void *)&FakeStringFromHeap);
+    Hook(0x0006d220, (const void *)&FakeLock);
+    Hook(0x0006d1e0, (const void *)&FakeUnlock);
+    Hook(0x000cedf0, (const void *)&FakeSpriteCreate2);
+    Hook(0x000cedd0, (const void *)&FakeSpriteCreateLink);
+    Hook(0x0006b670, (const void *)&FakeSetSprite);
+}
+
+// ---- the fonts
+
+char *Text(void) {
+    return world.text;
+}
+
+char *Format(void) {
+    RandomFormat(world.labels[7]);
+    return R(10) == 0 ? NULL : world.labels[7];
+}
+
+uint32_t RunFindGlyph(bool original) {
+    Regs r = {(uint32_t)R(0) & 0xffffff00u | R(256), 0, 0, 0, 0, 0};
+    uint32_t res = RegCall(original, 0x00069a40, (const void *)&Font_FindGlyph, r, 0, NULL);
+    return W((void *)(uintptr_t)res);
+}
+
+uint32_t RunKernAdjust(bool original) {
+    // A pair of characters a kerning list may have
+    uchar prev = R(3) ? (uchar)"ATVWYLPFKRavwy"[R(14)] : (uchar)R(256);
+    uchar c = R(3) ? (uchar)"AaTtVvWwYyOo.,"[R(14)] : (uchar)R(256);
+    Regs r = {(uint32_t)(R(0) & 0xffffff00u) | prev, 0, 0, 0, 0, 0};
+    uint32_t args[1] = {(R(0) & 0xffffff00u) | c};
+    return RegCallST0(original, 0x00069ab0, (const void *)&Font_GetKernAdjust, r, 1, args);
+}
+
+uint32_t RunParseFormat(bool original) {
+    uint32_t flags = R(0);
+    char *format = Format();
+    CDECL_VOID(0x00069b40, Font_ParseFormat, void (__cdecl *)(const char *, uint *), format, &flags);
+    return flags;
+}
+
+uint32_t RunGetAlignment(bool original) {
+    char *format = Format();
+    if (format == NULL)
+        format = world.labels[0];
+    return CDECL_RUN(0x0006aa10, Font_GetAlignment, ushort (__cdecl *)(const char *), format);
+}
+
+uint32_t RunDrawGlyphs(bool original) {
+    GPOINT *scale = R(4) == 0 ? NULL : &world.points[0];
+    world.points[0].x = Num(0.25f, 2.0f);
+    world.points[0].y = Num(0.25f, 2.0f);
+    uint32_t fit = R(0);
+    world.fit = fit;
+    uint32_t *fitAt = R(2) ? &world.fit : NULL;
+    if (R(8) == 0)
+        GameFont = NULL;
+    Regs r = {P(scale), R(0), R(0), R(0), R(0), R(0)};
+    uint32_t args[10] = {F(Num(-50.0f, 600.0f)), F(Num(-50.0f, 450.0f)), R(0), R(0), P(Text()), P(Format()),
+                         R(4) == 0 ? R(0) : R(2), (uint32_t)((int)R(80) - 2), F(Num(-1.0f, 400.0f)), P(fitAt)};
+    r.ecx = R(0);
+    return W((void *)(uintptr_t)RegCall(original, 0x00069c50, (const void *)&__Font_DrawText, r, 10, args));
+}
+
+uint32_t RunDrawText(bool original) {
+    GPOINT *scale = R(4) == 0 ? NULL : &world.points[0];
+    world.points[0].x = Num(0.25f, 2.0f);
+    world.points[0].y = Num(0.25f, 2.0f);
+    char *text = R(12) == 0 ? NULL : Text();
+    char *format = Format();
+    uint flags = (R(0) & 0x7007) | (R(4) == 0 ? 8 : 0);
+    int count = R(8) == 0 ? 0 : (int)R(80) - 2;
+    GPOINT *res = CDECL_RUN(0x0006a340, Font_DrawText,
+                            GPOINT * (__cdecl *)(float, float, uint, uint, uint, const char *, const char *,
+                                                 const GPOINT *, uint, int, float),
+                            Num(-50.0f, 600.0f), Num(-50.0f, 450.0f), R(0), R(0), R(0), text, format, scale, flags,
+                            count, Num(-10.0f, 400.0f));
+    return W(res);
+}
+
+uint32_t RunWordWrap(bool original) {
+    char *text = R(10) == 0 ? NULL : Text();
+    char *cursor = text;
+    char **at = &cursor;
+    char *format = Format();
+    uint width = R(10) == 0 ? R(0) : R(600);
+    char *res = CDECL_RUN(0x0006a700, Font_WordWrapString, char *(__cdecl *)(char **, int, const char *, uint), at,
+                          (int)R(100), format, width);
+    ShadowLog("rest=%x", W(cursor));
+    return W(res);
+}
+
+uint32_t RunTextExtent(bool original) {
+    GPOINT *scale = R(4) == 0 ? NULL : &world.points[0];
+    world.points[0].x = Num(0.25f, 2.0f);
+    world.points[0].y = Num(0.25f, 2.0f);
+    // An odd text address leaves the font's texture out of CharInfo: both kinds
+    char *text = R(10) == 0 ? NULL : (R(2) ? world.text : world.text + 1);
+    GPOINT *extent = R(10) == 0 ? NULL : &world.points[1];
+    uint32_t res = CDECL_RUN(0x0006a5d0, Font_GetTextExtent,
+                             bool (__cdecl *)(const char *, const char *, GPOINT *, const GPOINT *, int), text,
+                             Format(), extent, scale, (int)R(80) - 2);
+    return res;
+}
+
+uint32_t RunTextCountExtent(bool original) {
+    GPOINT *scale = R(4) == 0 ? NULL : &world.points[0];
+    world.points[0].x = Num(0.25f, 2.0f);
+    world.points[0].y = Num(0.25f, 2.0f);
+    char *text = R(10) == 0 ? NULL : Text();
+    return CDECL_RUN(0x0006a670, Font_GetTextCountExtent,
+                     uint (__cdecl *)(const char *, const char *, const GPOINT *, float), text, Format(), scale,
+                     Num(-10.0f, 500.0f));
+}
+
+const Case kGlyphs[] = {
+    C("Font_FindGlyph", RunFindGlyph),
+    C("Font_GetKernAdjust", RunKernAdjust),
+};
+
+const Case kFormats[] = {
+    C("Font_ParseFormat", RunParseFormat),
+    C("Font_GetAlignment", RunGetAlignment),
+    C("Font_WordWrapString", RunWordWrap),
+    C("Font_GetTextExtent", RunTextExtent),
+    C("Font_GetTextCountExtent", RunTextCountExtent),
+};
+
+const Case kDrawText[] = {
+    C("__Font_DrawText", RunDrawGlyphs),
+    C("Font_DrawText", RunDrawText),
+};
+
+// ---- the sprites
+
+sprite *AnySprite(void) {
+    return &world.sprites[R(SPRITES)];
+}
+
+uint32_t RunSetFmt(bool original) {
+    sprite *spr = AnySprite();
+    CDECL_VOID(0x000ceb50, Sprite_SetFmt, void (__cdecl *)(sprite *, char *), spr, Format());
+    return 0;
+}
+
+uint32_t RunSetTextNFmt(bool original) {
+    sprite *spr = AnySprite();
+    char *text = R(4) == 0 ? NULL : world.labels[R(7)];
+    CDECL_VOID(0x000cebf0, Sprite_SetTextNFmt, void (__cdecl *)(sprite *, char *, char *), spr, text, Format());
+    return 0;
+}
+
+uint32_t RunSetParams(bool original) {
+    sprite *spr = R(10) == 0 ? NULL : AnySprite();
+    CDECL_VOID(0x000cec40, Sprite_SetParams, void (__cdecl *)(sprite *, uchar, short, short, HASHCODE, uint), spr,
+               (uchar)R(256), (short)R(0), (short)R(0), R(2) ? (HASHCODE)0 : (HASHCODE)(0x03000000 | R(8)), R(0));
+    return 0;
+}
+
+uint32_t RunDrawSprites(bool original) {
+    viewer_tag *viewer = &world.viewers[R(6)];
+    // Pictures more than texts, a few tiled
+    for (int i = 0; i < SPRITES; i++) {
+        sprite *s = &world.sprites[i];
+        if (R(4) == 0) {
+            s->maybeFlags |= 0x400;
+            s->spritesheetWidth = (short)(s->backupOnscreenWidth * (1 + R(3)) - 1);
+            s->spritesheetHeight = (short)(s->backupOnscreenHeight * (1 + R(3)) - 1);
+        }
+        world.list[i] = s;
+    }
+    uint first = R(SPRITES / 2), last = R(SPRITES + 1);
+    CDECL_VOID(0x000d9410, View_DrawSprites, void (__cdecl *)(viewer_tag *, sprite **, uint, uint), viewer,
+               world.list, first, last);
+    return 0;
+}
+
+const Case kSprites[] = {
+    C("Sprite_SetFmt", RunSetFmt),
+    C("Sprite_SetTextNFmt", RunSetTextNFmt),
+    C("Sprite_SetParams", RunSetParams),
+    C("View_DrawSprites", RunDrawSprites),
+};
+
+// ---- the messages
+
+uint32_t RunCirBufInit(bool original) {
+    CIRBUF_INFO *info = R(10) == 0 ? NULL : (CIRBUF_INFO *)world.scratch;
+    int *data = R(3) == 0 ? NULL : (int *)world.heap + 0x800;
+    ushort size = (ushort)(R(4) == 0 ? 0 : R(64));
+    return CDECL_RUN(0x0006e930, CirBuf_Init, bool (__cdecl *)(CIRBUF_INFO *, ushort, int *), info, size, data);
+}
+
+uint32_t RunCirBufAdd(bool original) {
+    CIRBUF_INFO *info = (CIRBUF_INFO *)world.scratch;
+    info->buffer = (int *)world.heap;
+    info->size = (ushort)(1 + R(16));
+    info->head = (ushort)R(info->size);
+    info->tail = (ushort)R(info->size + 1);
+    info->count = (ushort)R(info->size + 2);
+    if (R(10) == 0)
+        info = NULL;
+    return CDECL_RUN(0x0006e9a0, CirBuf_Add, int (__cdecl *)(CIRBUF_INFO *, int), info, (int)R(0));
+}
+
+// A queue as the game has it after some messages: real lines, made by our Text_AddMsg, the same for both runs
+TXT_MSG *AnyMsg(void);
+
+void RandomQueue(void) {
+    DList_Init(&GameMsgQueue, sizeof(TXT_MSG), 0);
+    GameSubTitleMsg = NULL;
+    for (int i = 0; i < 3; i++)
+        GameSubTitleSpr[i] = &world.sprites[i];
+    GameSubTitleSpr[3] = R(2) ? (sprite *)world.strings[0] : NULL;
+    GameSubTitleSpr[4] = R(2) ? (sprite *)world.strings[1] : NULL;
+    CirBuf_Init(&GameReceived, 0x80, (int *)0x0029ac10);
+    int n = (int)R(6);
+    for (int i = 0; i < n; i++) {
+        RandomText(world.sources[i], 90);
+        // A picture instead of text only off the subtitles, which always have text
+        int type = (int)R(7);
+        bool picture = R(6) == 0 && type != TXTMSG_SUBTITLE && type != TXTMSG_SUBTITLE_2LINE;
+        Text_AddMsg((char)((int)R(5) - 1), (char)R(256), type, picture ? NULL : world.sources[i], (int)R(0),
+                    (short)((int)R(400) - 40));
+    }
+    TXT_MSG *msg = (TXT_MSG *)GameMsgQueue.activeList.head;
+    for (; msg != NULL; msg = (TXT_MSG *)msg->node.next) {
+        if (R(3) == 0)
+            msg->timer = Num(-2.0f, 20.0f);
+    }
+    // Lines taken off again go back to the free list with their type, which Text_TakeMsg passes over
+    for (int k = (int)R(3); k > 0; k--)
+        Text_DelMsg(AnyMsg());
+    if (R(2) && GameMsgQueue.activeList.head != NULL)
+        GameSubTitleMsg = (TXT_MSG *)GameMsgQueue.activeList.head;
+    world.stringNext = 0;
+    ShadowLog_Clear();
+}
+
+TXT_MSG *AnyMsg(void) {
+    int n = 0;
+    for (LLNODE_tag *node = GameMsgQueue.activeList.head; node != NULL; node = node->next)
+        n++;
+    if (n == 0 || R(5) == 0)
+        return NULL;
+    LLNODE_tag *node = GameMsgQueue.activeList.head;
+    for (int i = (int)R(n); i > 0; i--)
+        node = node->next;
+    return (TXT_MSG *)node;
+}
+
+uint32_t RunTextInit(bool original) {
+    RandomQueue();
+    CDECL_VOID(0x000d1c90, Text_Init, void (__cdecl *)(uchar), (uchar)R(2));
+    return 0;
+}
+
+uint32_t RunAddMsg(bool original) {
+    RandomQueue();
+    RandomText(world.sources[7], 200);
+    char *text = R(6) == 0 ? NULL : world.sources[7];
+    CDECL_VOID(0x000d1d70, Text_AddMsg, void (__cdecl *)(char, char, int, char *, int, short),
+               (char)((int)R(6) - 1), (char)(R(4) == 0 ? 0xff : R(256)), (int)R(7), text, (int)R(0),
+               (short)((int)R(500) - 50));
+    return 0;
+}
+
+uint32_t RunDelMsg(bool original) {
+    RandomQueue();
+    TXT_MSG *msg = AnyMsg();
+    CDECL_VOID(0x000d2170, Text_DelMsg, void (__cdecl *)(TXT_MSG *), msg);
+    return 0;
+}
+
+uint32_t RunFlush(bool original) {
+    RandomQueue();
+    CDECL_VOID(0x000d2210, Text_FlushAllSubtitles, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunUpdateMsg(bool original) {
+    RandomQueue();
+    TXT_MSG *msg = AnyMsg();
+    world.scratch[0] = (int)P(msg);
+    return CDECL_RUN(0x000d22b0, Text_UpdateMsg, bool (__cdecl *)(char, int, TXT_MSG **), (char)((int)R(6) - 1),
+                     (int)R(7), (TXT_MSG **)&world.scratch[0]);
+}
+
+uint32_t RunNextMsg(bool original) {
+    RandomQueue();
+    Regs r = {P(AnyMsg()), (uint32_t)(R(0) & 0xffffff00u) | (uint32_t)(uchar)((int)R(5) - 1), R(0), R(0), R(0),
+              R(7)};
+    return W((void *)(uintptr_t)RegCall(original, 0x000d2270, (const void *)&Text_NextMsg, r, 0, NULL));
+}
+
+uint32_t RunTakeMsg(bool original) {
+    RandomQueue();
+    return W(CDECL_RUN(0x000d1d30, Text_TakeMsg, TXT_MSG *(__cdecl *)(void)));
+}
+
+uint32_t RunUpdate(bool original) {
+    RandomQueue();
+    CDECL_VOID(0x000d2360, Text_Update, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunUpdate2Line(bool original) {
+    RandomQueue();
+    CDECL_VOID(0x000d2400, Text_Update2Line, void (__cdecl *)(void));
+    return 0;
+}
+
+const Case kMessages[] = {
+    C("CirBuf_Init", RunCirBufInit),
+    C("CirBuf_Add", RunCirBufAdd),
+    C("Text_Init", RunTextInit),
+    C("Text_AddMsg", RunAddMsg),
+    C("Text_DelMsg", RunDelMsg),
+    C("Text_FlushAllSubtitles", RunFlush),
+    C("Text_UpdateMsg", RunUpdateMsg),
+    C("Text_NextMsg", RunNextMsg),
+    C("Text_TakeMsg", RunTakeMsg),
+    C("Text_Update", RunUpdate),
+    C("Text_Update2Line", RunUpdate2Line),
+};
+
+uint32_t RunDoSubtitle(bool original) {
+    // A sound of the table most of the time
+    uint32_t sound = R(4) == 0 ? R(0x700) : *(uint32_t *)(0x0018bcbc + 8 * R(0x1e4));
+    Regs r = {R(0), R(0), sound, R(0), R(0), R(0)};
+    return RegCall(original, 0x000cbd10, (const void *)&Sound_DoSubtitle, r, 0, NULL) & 0;
+}
+
+const Case kSubtitles[] = {
+    C("Sound_DoSubtitle", RunDoSubtitle),
+};
+
+// ---- the HUD's panes
+
+uint32_t RunCalcWidthHeight(bool original) {
+    RandomPane((int)R(INFOS), 0);
+    HUDPANECREATE_tag *create = R(10) == 0 ? NULL : &world.create;
+    short *w = R(4) == 0 ? NULL : (short *)&world.scratch[0];
+    short *h = R(4) == 0 ? NULL : (short *)&world.scratch[1];
+    CDECL_VOID(0x000b1d90, HUD_CalcWidthHeight, void (__cdecl *)(HUDPANECREATE_tag *, short *, short *), create, w, h);
+    return 0;
+}
+
+uint32_t RunValidateXY(bool original) {
+    short *x = (short *)&world.scratch[0];
+    short *y = (short *)&world.scratch[1];
+    *x = (short)((int)R(900) - 100);
+    *y = (short)((int)R(700) - 100);
+    CDECL_VOID(0x000b1ab0, HUD_ValidateXY, void (__cdecl *)(short *, short *, ushort, ushort, ushort, uint), x, y,
+               (ushort)R(400), (ushort)R(300), (ushort)R(4), R(0) & 0x198);
+    return 0;
+}
+
+typedef void (__cdecl *CreateFunc)(BLData *, HUDPANE_tag *, HUDPANECREATE_tag *, obj_tag *);
+typedef void (__cdecl *UpdateFunc)(BLData *, HUDPANE_tag *, obj_tag *);
+
+// A pane made from a random layout, by an original creator and ours
+uint32_t RunCreate(bool original, unsigned at, CreateFunc ours, int sprites, int extra) {
+    RandomPane(sprites, extra);
+    world.pane.spriteList = NULL;
+    obj_tag *obj = &world.objs[R(OBJS)];
+    if (original) {
+        XbeOriginalScope o(at);
+        ZeroStack();
+        ORIGINAL(at, CreateFunc)(&world.bl, &world.pane, &world.create, obj);
+    } else {
+        ours(&world.bl, &world.pane, &world.create, obj);
+    }
+    return 0;
+}
+
+// An update of a pane made as the game would
+uint32_t RunUpdatePane(bool original, unsigned at, UpdateFunc ours, int sprites, int extra) {
+    RandomPane(sprites, extra);
+    obj_tag *obj = R(12) == 0 ? NULL : &world.objs[R(4)];
+    BLData *bl = R(16) == 0 ? NULL : &world.bl;
+    if (at != 0x000b1e50 && at != 0x000b1f90)
+        bl = &world.bl;
+    if (at != 0x000b1e50 && at != 0x000b1f90 && at != 0x000b5190 && at != 0x000b54d0)
+        obj = &world.objs[R(4)];
+    if (at == 0x000b3cc0)
+        *(int *)world.pane.extraItems = (int)R(12);
+    // Ammo from an emplacement or Ronin needs the device
+    if (obj != NULL && bl != NULL && bl->remoteControlDevice == NULL && obj->subState != MovementType_RCVehicle)
+        bl->remoteControlDevice = &world.objs[2];
+    if (original) {
+        XbeOriginalScope o(at);
+        ZeroStack();
+        ORIGINAL(at, UpdateFunc)(bl, &world.pane, obj);
+    } else {
+        ours(bl, &world.pane, obj);
+    }
+    return 0;
+}
+
+#define CREATE(name, at, sprites, extra)                                                                           \
+    uint32_t Run##name(bool original) { return RunCreate(original, at, name, sprites, extra); }
+#define UPDATE(name, at, sprites, extra)                                                                           \
+    uint32_t Run##name(bool original) { return RunUpdatePane(original, at, name, sprites, extra); }
+
+CREATE(HUD_CreateDefault, 0x000b5c30, (int)R(12), (int)R(4))
+CREATE(HUD_CreateMissionStatusPane, 0x000b6450, 3, 4)
+CREATE(HUD_CreateObjectiveStatusPane, 0x000b6490, 6, 4)
+CREATE(HUD_CreateInfoStatusPane, 0x000b64d0, 5, 4)
+CREATE(HUD_CreatePickupStatusPane, 0x000b6540, 5, 4)
+CREATE(HUD_CreateRedeemer, 0x000b66c0, 11, 4)
+UPDATE(HUD_UpdateBloodPane, 0x000b1e50, 2, 0)
+UPDATE(HUD_UpdateAmmoPane, 0x000b1f90, (int)R(9), 4)
+UPDATE(HUD_UpdateLensFlarePane, 0x000b4330, 7, 0)
+UPDATE(HUD_UpdateAirPane, 0x000b3a10, 3, 0)
+UPDATE(HUD_UpdateCameraPane, 0x000b3cc0, 9, 1)
+UPDATE(HUD_UpdateNightSightPane, 0x000b3da0, 6, 0)
+UPDATE(HUD_UpdateXRayPane, 0x000b3ee0, 5, 0)
+UPDATE(HUD_UpdateSecCamPane, 0x000b3fa0, 7, 0)
+
+uint32_t RunPlaceLensFlare(bool original) {
+    sprite *spr = AnySprite();
+    Regs r = {R(0), R(0), R(0), R(0), P(spr), R(0)};
+    uint32_t args[8] = {F(Num(-100, 700)), F(Num(-100, 600)), F(Num(-10, 10)), F(Num(0, 640)), F(Num(0, 480)),
+                        F(Num(-1, 1)), F(Num(0, 5)), R(0)};
+    return RegCall(original, 0x000b42b0, (const void *)&HUD_PlaceLensFlare, r, 8, args) & 0;
+}
+
+uint32_t RunCrossHair(bool original) {
+    sprite *spr = R(12) == 0 ? NULL : AnySprite();
+    Regs r = {P(&world.bl), R(0), R(0), R(0), P(spr), R(0)};
+    return RegCall(original, 0x000b4b60, (const void *)&HUD_UpdateCrossHair, r, 0, NULL) & 0;
+}
+
+uint32_t RunMonitorNightSight(bool original) {
+    if (R(10) == 0)
+        glb_viewer[world.bl.playerNum] = NULL;
+    Regs r = {P(&world.bl), R(0), R(0), R(0), R(0), R(0)};
+    return RegCall(original, 0x000b4ec0, (const void *)&HUD_MonitorNightSight, r, 0, NULL) & 0;
+}
+
+const Case kPanes[] = {
+    C("HUD_CalcWidthHeight", RunCalcWidthHeight),
+    C("HUD_ValidateXY", RunValidateXY),
+    C("HUD_CreateDefault", RunHUD_CreateDefault),
+    C("HUD_CreateMissionStatusPane", RunHUD_CreateMissionStatusPane),
+    C("HUD_CreateObjectiveStatusPane", RunHUD_CreateObjectiveStatusPane),
+    C("HUD_CreateInfoStatusPane", RunHUD_CreateInfoStatusPane),
+    C("HUD_CreatePickupStatusPane", RunHUD_CreatePickupStatusPane),
+    C("HUD_CreateRedeemer", RunHUD_CreateRedeemer),
+    C("HUD_UpdateBloodPane", RunHUD_UpdateBloodPane),
+    C("HUD_UpdateAirPane", RunHUD_UpdateAirPane),
+    C("HUD_UpdateCameraPane", RunHUD_UpdateCameraPane),
+    C("HUD_UpdateNightSightPane", RunHUD_UpdateNightSightPane),
+    C("HUD_UpdateXRayPane", RunHUD_UpdateXRayPane),
+    C("HUD_UpdateSecCamPane", RunHUD_UpdateSecCamPane),
+    C("HUD_PlaceLensFlare", RunPlaceLensFlare),
+    C("HUD_UpdateLensFlarePane", RunHUD_UpdateLensFlarePane),
+};
+
+const Case kAmmo[] = {
+    C("HUD_UpdateAmmoPane", RunHUD_UpdateAmmoPane),
+    C("HUD_UpdateCrossHair", RunCrossHair),
+    C("HUD_MonitorNightSight", RunMonitorNightSight),
+};
+
+// ---- multiplayer
+
+uint32_t RunFixMP(bool original) {
+    sprite *spr = AnySprite();
+    CDECL_VOID(0x000b2750, HUD_FixMP, void (__cdecl *)(sprite *, short), spr, (short)R(6));
+    return 0;
+}
+
+uint32_t RunCreateShift(bool original) {
+    RandomPane((int)R(12), (int)R(4));
+    world.pane.spriteList = NULL;
+    obj_tag *obj = &world.objs[R(OBJS)];
+    Regs r = {P(&world.bl), R(0), R(0), R(0), P(&world.create), P(&world.pane)};
+    uint32_t args[1] = {P(obj)};
+    return RegCall(original, 0x000b5f40, (const void *)&HUD_CreateShift, r, 1, args) & 0;
+}
+
+CREATE(HUD_CreateMPHealthPane, 0x000b6330, 8, 0)
+CREATE(HUD_CreateMPScorePane, 0x000b67d0, 7, 0)
+CREATE(HUD_CreateRadar, 0x000b69e0, 1, 28)
+UPDATE(HUD_UpdateMPHealthPane, 0x000b2870, 8, 0)
+UPDATE(HUD_MPUpdatePane, 0x000b5190, 7, 0)
+
+uint32_t RunRadarUpdate(bool original) {
+    RandomPane(1, 28);
+    world.create.numExtraItems = (ushort)(R(4) == 0 ? R(8) : 28);
+    obj_tag *obj = &world.objs[R(4)];   // the radar reads it whenever there is something on it
+    if (original) {
+        XbeOriginalScope o(0x000b54d0);
+        ZeroStack();
+        ORIGINAL(0x000b54d0, UpdateFunc)(&world.bl, &world.pane, obj);
+    } else {
+        HUD_RadarUpdate(&world.bl, &world.pane, obj);
+    }
+    return 0;
+}
+
+// The multiplayer message pane, with a queue and its state between frames
+uint32_t RunMPStatus(bool original) {
+    RandomQueue();
+    RandomPane(1, 4);
+    struct StatusData {
+        TXT_MSG *msg;
+        int state;
+        int msgType;
+        int shrinkStep;
+    } *data = (StatusData *)world.pane.extraItems;
+    data->msg = AnyMsg();
+    data->state = (int)R(6);
+    if (data->msg == NULL && data->state == 2)
+        data->state = 3;    // showing is always of a message
+    data->msgType = (int)R(7);
+    data->shrinkStep = 16;
+    if (original) {
+        XbeOriginalScope o(0x000b3890);
+        ZeroStack();
+        ORIGINAL(0x000b3890, UpdateFunc)(&world.bl, &world.pane, &world.objs[0]);
+    } else {
+        HUD_MPUpdateStatusPane(&world.bl, &world.pane, &world.objs[0]);
+    }
+    return 0;
+}
+
+const Case kMultiplayer[] = {
+    C("HUD_FixMP", RunFixMP),
+    C("HUD_CreateShift", RunCreateShift),
+    C("HUD_CreateMPHealthPane", RunHUD_CreateMPHealthPane),
+    C("HUD_CreateMPScorePane", RunHUD_CreateMPScorePane),
+    C("HUD_CreateRadar", RunHUD_CreateRadar),
+    C("HUD_UpdateMPHealthPane", RunHUD_UpdateMPHealthPane),
+    C("HUD_MPUpdateStatusPane", RunMPStatus),
+    C("HUD_MPUpdatePane", RunHUD_MPUpdatePane),
+    C("HUD_RadarUpdate", RunRadarUpdate),
+};
+
+// ---- the menus' text box
+
+struct LABEL_TEXT_SHADOW {
+    char unknown00[0x18];
+    char *text;
+    char unknown1c[4];
+    ushort length;
+};
+
+void RandomBox(void) {
+    M_TEXTBOX *box = &world.box;
+    memset(box, 0, sizeof(*box));
+    memset(&world.newControl, 0, sizeof(world.newControl));
+    world.newControl.hashcode = (HASHCODE)(0x10000000 | R(0x100));
+    world.newControl.id = (int)R(0);
+    world.newControl.skin = (ushort)R(8);
+    world.newControl.depth = (ushort)R(100);
+    world.newControl.x = (short)R(600);
+    world.newControl.y = (short)R(400);
+    world.newControl.width = (short)R(300);
+    world.newControl.height = (short)R(100);
+    // A box as Text_Init (ours, the same for both runs) leaves it, then made-up state
+    Text_Init(box, &world.newControl, &world.parent);
+    LABEL_TEXT_SHADOW *text = (LABEL_TEXT_SHADOW *)world.labelText;
+    text->text = box->text;
+    text->length = (ushort)R(TEXTBOX_MAX_TEXT);
+    *(void **)&box->label[0xe8] = world.labelText;
+    box->control.drawState = R(0) & 0xc00000f0;
+    box->control.state = (uchar)(R(3) == 0 ? R(8) : 0);
+    box->cursorX = (int)R(260) - 4;
+    box->cursorY = (int)R(140) - 4;
+    box->selected = (ushort)R(TEXTBOX_KEYS);
+    box->lineHeight = Num(0.0f, 30.0f);
+    world.parent.state = (uchar)(R(3) == 0 ? R(8) : 0);
+    world.page.focused = &world.focused;
+    world.focused.hashcode = R(2) ? box->control.hashcode : (HASHCODE)R(0);
+    world.manager.whichPlayer = (short)R(4);
+    U32_AT(0x0025fc1c) = R(4) == 0 ? R(0) : R(25);
+    ShadowLog_Clear();
+}
+
+uint32_t RunTextBoxInit(bool original) {
+    RandomBox();
+    if (original) {
+        XbeOriginalScope o(0x00099550);
+        ZeroStack();
+        ORIGINAL(0x00099550, void (__cdecl *)(M_TEXTBOX *, NEW_CONTROL *, M_CONTROL *))(&world.box, &world.newControl,
+                                                                                       &world.parent);
+    } else {
+        Text_Init(&world.box, &world.newControl, &world.parent);
+    }
+    return 0;
+}
+
+uint32_t RunSetupChar(bool original) {
+    RandomBox();
+    world.box.selected = (ushort)R(TEXTBOX_KEYS - 1);
+    Regs r = {P(&world.box), R(0), R(0), (R(0) & 0xffffff00u) | R(256), R(0), R(0)};
+    uint32_t args[5] = {R(300), R(200), R(100), R(50), R(16)};
+    return W((void *)(uintptr_t)RegCall(original, 0x00098b50, (const void *)&Text_SetupChar, r, 5, args));
+}
+
+uint32_t RunTextSend(bool original) {
+    RandomBox();
+    static const int messages[] = {0x14, 0x16, 0x21, 0x2b, 0x39, 0x3b, 0x3d, 0x47, 0x53, 0x18, 0x10, 0x00};
+    int message = messages[R(COUNT(messages))];
+    int a1 = message == 0x21 ? (int)R(9) - 1 : (int)R(0);
+    int res = CDECL_RUN(0x00098be0, Text_SendMessage, int (__cdecl *)(M_TEXTBOX *, int, int, int), &world.box,
+                        message, a1, (int)R(0));
+    return W((void *)(uintptr_t)res);
+}
+
+uint32_t RunTextBoxUpdate(bool original) {
+    RandomBox();
+    CDECL_VOID(0x00098de0, TextBox_Update, void (__cdecl *)(M_MANAGER *, M_PAGE *, M_TEXTBOX *), &world.manager,
+               &world.page, &world.box);
+    return 0;
+}
+
+const Case kTextBox[] = {
+    C("Text_Init (the text box)", RunTextBoxInit),
+    C("Text_SetupChar", RunSetupChar),
+    C("Text_SendMessage", RunTextSend),
+    C("TextBox_Update", RunTextBoxUpdate),
+};
+
+void InstallHudFakes(void) {
+    InstallBaseFakes();
+    Hook(0x0002e320, (const void *)&FakeCreateObjEx);
+    Hook(0x0002dc10, (const void *)&FakeCreate);
+    Hook(0x00021110, (const void *)&FakeLinkToRoom);
+    Hook(0x0006b610, (const void *)&FakeGlist);
+    Hook(0x0006b5e0, (const void *)&FakeSetGfx);
+    Hook(0x0006d530, (const void *)&FakeLight);
+    Hook(0x0006c9a0, (const void *)&FakeInputAction);
+    Hook(0x000a89a0, (const void *)&FakeHeadPos);
+    Hook(0x0002c5b0, (const void *)&FakeLOS);
+    Hook(0x000db230, (const void *)&FakeToScreen);
+    Hook(0x0009d840, (const void *)&FakeTeamScore);
+    Hook(0x0009d8d0, (const void *)&FakePlayerScore);
+    Hook(0x0009d980, (const void *)&FakeFlagParent);
+    Hook(0x0009d9b0, (const void *)&FakeBluePrint);
+    Hook(0x0009d9d0, (const void *)&FakeGEObj);
+    Hook(0x0009e2a0, (const void *)&FakeUplink);
+    Hook(0x0009da80, (const void *)&FakeRadarObjects);
+}
+
+void InstallBoxFakes(void) {
+    InstallBaseFakes();
+    Hook(0x00071db0, (const void *)&FakeHandle);
+    Hook(0x00071e00, (const void *)&FakeSetupInstance);
+    Hook(0x000722e0, (const void *)&FakeComponentFree);
+    Hook(0x0008fdd0, (const void *)&FakeLabelInit);
+    Hook(0x0008fff0, (const void *)&FakeLabelUpdate);
+    Hook(0x00090590, (const void *)&FakeLabelSend);
+    Hook(0x00072c30, (const void *)&FakeResize);
+    Hook(0x000723c0, (const void *)&FakeCursorOver);
+    Hook(0x00072e20, (const void *)&FakeMenuInput);
+    Hook(0x00096d50, (const void *)&FakeExitLoop);
+    Hook(0x00096ba0, (const void *)&FakeScriptPlay);
+    Hook(0x00096b60, (const void *)&FakeScriptSelect);
+    Hook(0x00097560, (const void *)&FakeScriptControl);
+    Hook(0x00096960, (const void *)&FakeScriptControl);
+    Hook(0x00072d60, (const void *)&FakeMenuFree);
+    Hook(0x00072630, (const void *)&FakeMenuSend);
+}
+
+void InstallSubtitleFakes(void) {
+    InstallBaseFakes();
+    Hook(0x000d1d70, (const void *)&FakeAddMsg);
+}
+
+void Group(const char *name, const Case *list, int count, int trials, void (*fakes)(void)) {
+    // NIGHTFIRE_HUDPORT_GROUP=<part of a name>: that group alone
+    const char *only = getenv("NIGHTFIRE_HUDPORT_GROUP");
+    if (only != NULL && strstr(name, only) == NULL)
+        return;
+    ShadowHook_RemoveAll();
+    if (fakes != NULL)
+        fakes();
+    Test(name, list, count, trials);
+}
+
+} // namespace
+
+void HudPortShadow_Run(void) {
+    struct Saved {
+        void *at;
+        size_t size;
+        std::vector<uint8_t> bytes;
+    };
+    static const struct {
+        uint32_t at;
+        size_t size;
+    } kGlobals[] = {
+        {0x001f64b0, 0xb4},                 // the fonts' state: Font, CharInfo, PInfo, __Font_DrawText's statics
+        {0x0029dc00, 0xc00},                // SprBuffList
+        {0x0029e810, 4},                    // SprCnt
+        {0x0029abf8, 0x18},                 // MsgQueue
+        {0x0029ac10, 0x228},                // ReceivedBuf, ReceivedMsgs, the subtitles
+        {0x001f6580, sizeof(GameState_t)},  // GameState
+        {0x0025fe38, sizeof(MPSettings_t)}, // MPSettings
+        {0x00262738, sizeof(MPGameStruct)}, // MPGame
+        {0x00261788, 8},                    // the assassin and the target
+        {0x001f661c, 44},                   // glb_viewer
+        {0x001f6654, 16},                   // glb_players
+        {0x001f660c, 12},                   // the split screen's layout, the subtitles' switch
+        {0x002790ac, 0x70},                 // the HUD's statics
+        {0x001e5634, 0xc},                  // NDrone2Info
+        {0x0025fc1c, 4},                    // the text box's held frames
+        {0x0018cdf8, 8},                    // the random words
+        {0x001df9dc, 4},                    // switch_SHOW_COORDS
+        {0x001df34c, 4},                    // the object list's first
+        {0x001fe6d0, 0x158 * 4},            // PlayerInputs
+        {0x001f6668, 12},                   // the sun
+        {0x0017c0f0, 0x18},                 // the frame rates
+        {0x0018cfa0, 0x10c * 0x72},         // weapon_data
+    };
+    std::vector<Saved> saved;
+    for (const auto &g : kGlobals) {
+        Saved s;
+        s.at = (void *)(uintptr_t)g.at;
+        s.size = g.size;
+        s.bytes.assign((uint8_t *)s.at, (uint8_t *)s.at + s.size);
+        saved.push_back(s);
+    }
+    uint32_t movie = BackgroundMovieHashcode;
+
+    regions.Clear();
+    areaCount = 0;
+    AddArea(&world, sizeof(world));
+    for (const auto &g : kGlobals)
+        AddArea((void *)(uintptr_t)g.at, g.size);
+    AddArea(&BackgroundMovieHashcode, sizeof(BackgroundMovieHashcode));
+    NfWarnMuted++;
+    cases = differ = nanChoices = 0;
+
+    Group("glyphs and kerning", kGlyphs, COUNT(kGlyphs), 6000, InstallBaseFakes);
+    Group("formats, measures and word-wrapping", kFormats, COUNT(kFormats), 5000, InstallBaseFakes);
+    Group("drawing text", kDrawText, COUNT(kDrawText), 5000, InstallBaseFakes);
+    Group("sprites", kSprites, COUNT(kSprites), 4000, InstallBaseFakes);
+    Group("messages and subtitles", kMessages, COUNT(kMessages), 3000, InstallBaseFakes);
+    Group("subtitles of sounds", kSubtitles, COUNT(kSubtitles), 3000, InstallSubtitleFakes);
+    Group("panes", kPanes, COUNT(kPanes), 3000, InstallHudFakes);
+    Group("ammo, crosshair and night vision", kAmmo, COUNT(kAmmo), 12000, InstallHudFakes);
+    Group("multiplayer panes", kMultiplayer, COUNT(kMultiplayer), 8000, InstallHudFakes);
+    Group("the text box", kTextBox, COUNT(kTextBox), 4000, InstallBoxFakes);
+    ShadowHook_RemoveAll();
+    if (nanChoices != 0)
+        printf("[hudport] %d cases matched with NaNs the x87 and SSE2 chose differently\n", nanChoices);
+
+    NfWarnMuted--;
+    for (auto &s : saved)
+        memcpy(s.at, s.bytes.data(), s.size);
+    BackgroundMovieHashcode = movie;
+}

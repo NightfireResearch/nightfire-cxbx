@@ -45,6 +45,7 @@ void View_CaptureScene(viewer_tag* viewer);
 void View_AddSkyObj(ushort slot, celglist_tag *glist, _VECTOR *pos, _VECTOR *rot, obj_tag *obj, char flash,
                     ushort interval, ushort length, char pass);
 SPRITE_DRAW * View_AddSprite(ushort someNum);
+void View_DrawSprites(viewer_tag *viewer, sprite **list, uint first, uint last);
 void View_AddObjects(viewer_tag *viewer, cel_tag *cel);
 void View_AddCels(viewer_tag *viewer);
 void View_AddForcedObjects(viewer_tag *viewer);

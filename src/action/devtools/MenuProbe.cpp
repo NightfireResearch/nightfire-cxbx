@@ -103,6 +103,7 @@
 #include "ViewMathShadow.h"
 #include "ObjectPortShadow.h"
 #include "EnginePortShadow.h"
+#include "HudPortShadow.h"
 #include "CameraShadow.h"
 #include "MathExactShadow.h"
 #include "Teleport.h"
@@ -563,7 +564,7 @@ void MenuProbe_Install(void) {
     }
     // The shadow tests need only the game's data, so they can run before it starts (and with no display): on the
     // shipped state, as a fresh codename would have it.
-    // NIGHTFIRE_SHADOW_ONLY=viewmath (or objectport, engineport) runs that suite alone
+    // NIGHTFIRE_SHADOW_ONLY=viewmath (or objectport, engineport, hudport) runs that suite alone
     const char *only = getenv("NIGHTFIRE_SHADOW_ONLY");
     // The x87 runtime's error handling (__CIacos outside -1 to 1, say) sets errno, which needs the per-thread block
     // the game's heap allocates, and there is no heap yet. Its flag at 0x00300608 skips it: the result is the same.
@@ -579,6 +580,10 @@ void MenuProbe_Install(void) {
         _exit(0);
     } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "engineport") == 0) {
         EnginePortShadow_Run();
+        fflush(stdout);
+        _exit(0);
+    } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "hudport") == 0) {
+        HudPortShadow_Run();
         fflush(stdout);
         _exit(0);
     } else if (SettingOn("MenuShadowTests")) {
@@ -627,6 +632,7 @@ void MenuProbe_Install(void) {
         ViewMathShadow_Run();
         ObjectPortShadow_Run();
         EnginePortShadow_Run();
+        HudPortShadow_Run();
         MathExactShadow_Run();
     }
     U32_AT(0x00300608) = mathErrors;

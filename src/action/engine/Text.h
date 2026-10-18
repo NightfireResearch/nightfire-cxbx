@@ -15,27 +15,35 @@ typedef enum {
     Lang_SW = 8
 } tLANGUAGE;
 
-void Text_Update2Line(void);
-void Text_Update(void);
 const char * Txt_BindLabel(Action_TranslatedText param_1,undefined4 param_2);
 void Txt_SetLanguage(tLANGUAGE languageId);
 void Txt_LoadLanguage(void);
 void Txt_LanguageInit(void);
 char* Txt_GetStringFromHeap(uchar param_1);
-void Text_AddMsg(char param_1,char param_2,int param_3,char *str,int param_5,short maybeDurationFrames);
-void __stdcall Text_FlushAllSubtitles(void);
 void Txt_UnlockString(char* text);
 void Txt_LockString(char* text);
 
 uint GetLanguage(void);
 
-// The kind of a Text_AddMsg message (its third argument), which decides the pane it shows on: 1 info, 2 objective,
-// 3 mission, 4/5 subtitles, 6 pickup. HUD.cpp names the ones it needs as TXTMSG_* defines; Ghidra has only the
-// one name below.
-typedef enum TXTMSG_TYPE {
-    TXTMSG_TYPE_UNKNOWN = 0,
-    TXTMSG_TYPE_FORCE_UINT32 = 0x7fffffff
-} TXTMSG_TYPE;
+// The kind of a Text_AddMsg message (its third argument), which decides the pane it shows on
+#define TXTMSG_INFO             1   // e.g. a hostage's line (NDrone2_Hostage)
+#define TXTMSG_OBJECTIVE        2   // objective updates (Mission.cpp)
+#define TXTMSG_MISSION          3
+#define TXTMSG_SUBTITLE         4
+#define TXTMSG_SUBTITLE_2LINE   5   // a subtitle without the main view, in two lines (Text_Update2Line)
+#define TXTMSG_PICKUP           6
+
+#pragma pack(push, 1)
+// The layout of each kind of message: the format it is word-wrapped in and the width it is wrapped to. PS2 name:
+// TextMsgFormats. Entry 0 is empty; 5 (the two-line subtitles) wraps to 0.6 and 0.4 of its width in two lines.
+typedef struct TextMsgFormat {
+    char *font;         // a format, handed to Font_WordWrapString
+    ushort wrapWidth;
+    ushort pad;
+} TextMsgFormat;
+#pragma pack(pop)
+static_assert(sizeof(TextMsgFormat) == 8, "TextMsgFormat is 8 bytes");
+#define TextMsgFormats (*(TextMsgFormat (*)[7])0x0018ccf8)
 
 #pragma pack(push, 1)
 // One line of a queued message (MsgQueue.activeList). Text_AddMsg word-wraps a long message into several of
@@ -49,9 +57,10 @@ typedef struct TXT_MSG {
     ushort pad16;
     float timer;                // 0x18 - frames left on screen; Text_UpdateMsg counts it down by FRAME_RATE_MUL.
                                 //        Negative: being dropped (Text_AddMsg sets -1 on objectives under a mission banner)
-    uchar type;                 // 0x1c - its TXTMSG_TYPE
-    char param_2;               // 0x1d - Text_AddMsg's second argument
+    uchar type;                 // 0x1c - TXTMSG_*
+    char priority;              // 0x1d - Text_AddMsg's second argument: the queue's order (CompMsgTxt)
     char playerNum;             // 0x1e - -1 for every player
+    char pad1f;
 } TXT_MSG;
 #pragma pack(pop)
 static_assert(offsetof(TXT_MSG, text) == 0x08, "TXT_MSG.text is at 0x08");
@@ -59,5 +68,17 @@ static_assert(offsetof(TXT_MSG, spriteHash) == 0x10, "TXT_MSG.spriteHash is at 0
 static_assert(offsetof(TXT_MSG, timer) == 0x18, "TXT_MSG.timer is at 0x18");
 static_assert(offsetof(TXT_MSG, type) == 0x1c, "TXT_MSG.type is at 0x1c");
 static_assert(offsetof(TXT_MSG, playerNum) == 0x1e, "TXT_MSG.playerNum is at 0x1e");
+static_assert(sizeof(TXT_MSG) == 0x20, "TXT_MSG is 0x20 bytes");
+
+TXT_MSG* Text_TakeMsg(void);
+void Text_Init(uchar warmReset);
+void Text_AddMsg(char player, char priority, int type, char *text, int sprite, short frames);
+void Text_DelMsg(TXT_MSG *msg);
+void Text_FlushAllSubtitles(void);
+TXT_MSG* _Text_NextMsg(TXT_MSG *msg, char player, int type);
+void Text_NextMsg(void);
+bool Text_UpdateMsg(char player, int type, TXT_MSG **msg);
+void Text_Update(void);
+void Text_Update2Line(void);
 
 #endif // TEXT_H_

@@ -21202,7 +21202,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00069a40",
+        "name": "Font_FindGlyph",
         "address": "0x00069a40",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": true,
@@ -30914,7 +30914,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0009d840",
+        "name": "MP_GetTeamScore",
         "address": "0x0009d840",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -30930,7 +30930,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0009d8d0",
+        "name": "MP_GetPlayerScore",
         "address": "0x0009d8d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -35016,7 +35016,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000b42b0",
+        "name": "HUD_PlaceLensFlare",
         "address": "0x000b42b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -35204,7 +35204,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000b5f40",
+        "name": "HUD_CreateShift",
         "address": "0x000b5f40",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": true,
@@ -41866,7 +41866,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000d1d30",
+        "name": "Text_TakeMsg",
         "address": "0x000d1d30",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -41932,7 +41932,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000d2270",
+        "name": "Text_NextMsg",
         "address": "0x000d2270",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,

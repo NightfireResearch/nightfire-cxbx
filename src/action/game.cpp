@@ -6,6 +6,7 @@
 #include "game/sp/SSys.h"
 #include "ui/MenuManager.h"
 #include "engine/Text.h"
+#include "gfx/Font.h"
 #include "util/Random.h"
 #include "engine/XboxSettings.h"
 #include "engine/Direct3D/GraphicsSystem.h" // Gfx
@@ -682,7 +683,6 @@ HASHCODE __declspec(naked) ResetMap_LevelCode2Img(HASHCODE level, char **hintOut
 #define Sound_SetLogSfxFile ((void (__cdecl *)(void))0x000e0ec0)
 #define build_MakeCelOverlapBox ((void (__cdecl *)(world_tag *world))0x000e0ec0)
 
-#define Text_Init ((void (__cdecl *)(uchar warmReset))0x000d1c90)
 #define Creature_Init ((void (__cdecl *)(void))0x0002e3f0)
 #define MenuManager_Init ((void (__cdecl *)(void))0x00092ae0)
 #define Sound_Kill ((void (__cdecl *)(void))0x000cb730)
@@ -696,8 +696,6 @@ HASHCODE __declspec(naked) ResetMap_LevelCode2Img(HASHCODE level, char **hintOut
 #define MP_PostLoad_Init ((void (__cdecl *)(void))0x0009ed40)
 #define Cameras_PostLoad ((void (__cdecl *)(void))0x000252e0)
 #define LoadScreen_Draw ((void (__cdecl *)(void))0x000bf9f0)
-#define Font_WordWrapString ((char *(__cdecl *)(char **text, int length, void *font, int width))0x0006a700)
-#define Sprite_SetParams ((void (__cdecl *)(sprite *spr, uchar enabled, short x, short y, HASHCODE texture, uint colour))0x000cec40)
 
 // The step ResetMap_Load is at (RESETMAP_)
 #define ResetMap_State U32_AT(0x00279284)
@@ -727,7 +725,7 @@ static int32_t Ftol(double x) {
 #define switch_NO_DRONES U32_AT(0x001df99c)
 // The loading screen's picture (LoadingGfx), its texture set to the level's
 #define LoadingGfx (*(SpriteInfo *)0x00181bb8)
-#define LoadScreenFont ((void *)0x0015eb18)
+#define LoadScreenFont ((char *)0x0015eb18)
 
 #define HT_MainMenu ((HASHCODE)0x07000048)
 #define HT_SharedFiles ((HASHCODE)0x07000500)
@@ -808,8 +806,8 @@ void ResetMap_GenLoadScreen(void) {
             if (line == NULL)
                 break;
             sprite *spr = Sprite_CreateAndLink2Viewer(0x63);
-            Sprite_SetParams(spr, 0, 0x138, (short)Ftol(y), (HASHCODE)0, 0x7d6d59ff);
-            Sprite_SetTextNFmt(spr, line, (char *)LoadScreenFont);
+            Sprite_SetParams(spr, 0, 0x138, (short)Ftol(y), HASHCODE_NONE, 0x7d6d59ff);
+            Sprite_SetTextNFmt(spr, line, LoadScreenFont);
             y = y + 15.0f;
         } while (text != NULL);
     }

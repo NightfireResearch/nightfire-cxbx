@@ -5,6 +5,9 @@
 #include "SFX.h"
 #include "../util/DList.h"
 #include "../math/math.h"
+#include "../engine/Text.h"
+
+#include <math.h>
 
 // XBE_GLOBAL(0x0029a128, 0x18)
 #define DynamicSoundList ((DLISTINFO_tag*)(0x0029a128))
@@ -311,4 +314,49 @@ void HandleMapSoundAllocation(void) {
             GMapSoundActive[i] = 1;
         }
     }
+}
+
+// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
+// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
+static int32_t Ftol(double x) {
+    if (!(fabs(x) < 9223372036854775808.0))
+        return 0;
+    long long nearest = llrint(x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x));
+}
+
+#pragma pack(push, 1)
+// A sound with a subtitle, and its label; the label's top bit shows it even with subtitles off
+typedef struct SND2LBL_tag {
+    Action_TranslatedText label;
+    Action_SFX sound;
+} SND2LBL_tag;
+#pragma pack(pop)
+static_assert(sizeof(SND2LBL_tag) == 8, "SND2LBL_tag is 8 bytes");
+
+#define NUM_SND2LBL 0x1e4
+#define Snd2Lbl (*(SND2LBL_tag (*)[NUM_SND2LBL])0x0018bcb8)
+#define SUBTITLE_ALWAYS 0x80000000u
+// The subtitles' frames per second of their sound (PS2: g_fSubtitleDurationModification)
+#define SubtitleDurationModification FLOAT_AT(0x0018cbd8)
+#define SubtitlesEnabled U32_AT(0x001f6614)
+
+// The subtitle of a sound that has one, for its length (3 seconds for a sound past the table)
+// AUTOINJECT
+void __fastcall Sound_DoSubtitle(Action_SFX sound) {
+    uint i = 0;
+    while (Snd2Lbl[i].sound != sound) {
+        i++;
+        if (i >= NUM_SND2LBL)
+            return;
+    }
+    uint label = Snd2Lbl[i].label;
+    if (!SubtitlesEnabled && !(label & SUBTITLE_ALWAYS))
+        return;
+    float seconds = (uint)sound > 0x60c ? 3.0f : SFXOutputData[sound].durationForSubtitles;
+    int frames = Ftol((double)SubtitleDurationModification * seconds * 60.0f);
+    Text_AddMsg(-1, (char)0xff, TXTMSG_SUBTITLE,
+                (char *)Txt_BindLabel((Action_TranslatedText)(label & ~SUBTITLE_ALWAYS), 0), 0, (short)frames);
 }

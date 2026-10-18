@@ -158,10 +158,10 @@ typedef enum {
 typedef struct M_CONTROL {
     M_CONTROL *next;            // 0x00 in the page's control list
     M_CONTROL *prev;            // 0x04
-    char pad_08[4];
+    uint unknown08;             // 0x08 cleared by the initialisers
     M_CONTROL *parent;          // 0x0c the page for a control, the manager for a page; messages bubble up to it
     HASHCODE extraControlHash;  // 0x10 page only: a control Page_Update also updates
-    char pad_14[4];
+    uint skinPiece;             // 0x14 its skin's index << 16 | the piece of it (Component_*)
     HASHCODE hashcode;          // 0x18 the C_/P_ hashcode Handler_HandleMessage dispatches on
     uint drawState;             // 0x1c 0x10 normal, 0x20 focused, 0x40 pressed/checked, 0x80 under the cursor
     int id;                     // 0x20 SetId/GetId: a key's character code, a wheel's item; __Menu_SendEx picks by it

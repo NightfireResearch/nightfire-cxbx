@@ -11,6 +11,7 @@
 #include "../engine/psiLight.h"
 #include "../engine/psiGraphics.h"
 #include "../game.h"
+#include "../gfx/Font.h"
 #include "../gfx/Sprite.h"
 #include "../sound/Sound.h"
 #include "../util/Random.h"
@@ -27,6 +28,7 @@
 #include <math.h>
 
 #include <stdio.h>
+#include <string.h>
 
 // AUTOGEN
 void View_SetDrawInViews(obj_tag* o, short views);
@@ -140,7 +142,6 @@ uint32_t switch_ForceDrawAll;
 #define FlashMod FLOAT_AT(0x0027911c)
 
 // The originals, called by address
-#define View_DrawSprites ((void (__cdecl *)(viewer_tag *viewer, sprite **list, uint first, uint last))0x000d9410)
 #define GlobalBlur U8_AT(0x001f667c)
 
 // The empty function the linker shares, where the source called its profiling hooks
@@ -744,20 +745,12 @@ void View_AddSkyObj(ushort slot, celglist_tag *glist, _VECTOR *pos, _VECTOR *rot
 static_assert(ARRAY_SIZE(SprBuffList) == 64, "Sprite buffer number of entries incorrect");
 static_assert(sizeof(SPRITE_DRAW) == 0x30, "Sprite size incorrect");
 
-#ifdef _MSC_VER
-#include <intrin.h>
-#define CALLER_ADDRESS() ((uint32_t)(uintptr_t)_ReturnAddress())
-#else
-#define CALLER_ADDRESS() ((uint32_t)(uintptr_t)__builtin_return_address(0))
-#endif
-
-// The glyph call in __Font_DrawText (0x00069c50): the return address of its View_AddSprite, which copies the
-// font's sprite template into the slot straight after. (Its other call, at 0x00069e0a, is an image placed in
-// the text, which is not a glyph.) So a glyph's texture is known by the next call, which is when the font's
-// glyph boxes can go out beside the dumped texture (DumpTextures in settings.ini).
-#define FONT_GLYPH_CALL_RETURN 0x0006a14du
+// A glyph of __Font_DrawText (gfx/Font.cpp) is the font's sprite template, CharInfo, copied into the slot
+// View_AddSprite hands out. So by the next call a slot that holds the template is a glyph, whose texture is then
+// known - which is when the font's glyph boxes can go out beside the dumped texture (DumpTextures in settings.ini).
+#define CharInfo (*(const SPRITE_DRAW *)0x001f64b4)
 static int s_pendingGlyph = -1;
-static const uint8_t *s_pendingFont = NULL;   // the font that glyph is from - by the next call it may not be current
+static const uint8_t *s_pendingFont = NULL;   // the font current at that call - by the next it may not be
 
 // A sprite's textureIndex selects one of the game's texture records; psiDrawSprites binds one of the record's
 // animation frames (count at +0x24, slots from +0x54) through d3dSetTextureStage0, which takes a slot in the
@@ -766,10 +759,9 @@ static const uint8_t *s_pendingFont = NULL;   // the font that glyph is from - b
 #define TextureRecords         ((const uint8_t *const *)0x002abe80)
 
 // The current font (__Font_DrawText's): its first and last character at +8 and +0xa, the number of glyphs at
-// +0xc, and at +0x10 a table of 24-byte glyph records sorted by character, whose layout FUN_00069a40 and
+// +0xc, and at +0x10 a table of 24-byte glyph records sorted by character, whose layout Font_FindGlyph and
 // __Font_DrawText read - the box in the sheet at +0 (u, v, width, height), the vertical offset at +8, the
-// extra advance at +0xa and the character at +0x14. (The lookup's binary search starts one past the end;
-// the character range test before it is what keeps it from ever reading there.)
+// extra advance at +0xa and the character at +0x14 (gfx/Font.h: FONT_tag, CHARDATA_tag).
 #define CurrentFont (*(const uint8_t *const *)0x001f64b0)
 
 // With DumpTextures on, a font's glyph boxes go out beside its texture once, for making a replacement.
@@ -827,7 +819,8 @@ static void NoteGlyphTexture(const SPRITE_DRAW *glyph, const uint8_t *font) {
 SPRITE_DRAW * View_AddSprite(ushort someNum) {
 
     if (s_pendingGlyph >= 0) {
-        NoteGlyphTexture(&SprBuffList[s_pendingGlyph], s_pendingFont);
+        if (memcmp(&SprBuffList[s_pendingGlyph], &CharInfo, sizeof(SPRITE_DRAW)) == 0)
+            NoteGlyphTexture(&SprBuffList[s_pendingGlyph], s_pendingFont);
         s_pendingGlyph = -1;
     }
 
@@ -842,12 +835,146 @@ SPRITE_DRAW * View_AddSprite(ushort someNum) {
     }
 
     // Return the buffer, starting at the number of sprites already buffered
-    uint32_t caller = CALLER_ADDRESS();
-    if (caller == FONT_GLYPH_CALL_RETURN) {
+    if (D3D9_DumpingTextures()) {
         s_pendingGlyph = (int)SprCnt;
         s_pendingFont = CurrentFont;
     }
     return &SprBuffList[SprCnt++];
+}
+
+// The sprite flags View_DrawSprites reads (sprite::maybeFlags)
+#define SPRITE_SHADOW       0x0020  // a black copy where it was, the sprite a 64th of its size (1 to 5 pixels) on
+#define SPRITE_FLIP_X       0x0040
+#define SPRITE_FLIP_Y       0x0080
+#define SPRITE_TILED        0x0400  // mirrored tiles, as many as the texture goes into the texels used
+#define SPRITE_CENTRED      0x0800
+#define SPRITE_TEXT_RING    0x2000  // a text's four-copy shadow (Font_DrawText's FONT_SHADOW_RING)
+#define SPRITE_TEXT_OUTLINE 0x4000
+
+// Draws sprites first to last of a view's list: a text by Font_DrawText (the sprite's second colour its shadow),
+// a picture as one sprite or as tiles of it, each with a shadow if it asks.
+// AUTOINJECT
+void View_DrawSprites(viewer_tag *viewer, sprite **list, uint first, uint last) {
+    if (!viewer->spritesShown)
+        return;
+    psiSetTweakARGB(0xff, 0xff, 0xff, 0xff);
+    psiSetUpColourBlend(2);
+    psiLight_SetLights(NULL, 0, 0.0f, 0.0f, 0.0f);
+    __profiling_or_debugging_hook_point();
+
+    for (uint i = first; i < last; i++) {
+        sprite *spr = list[i];
+
+        if (spr->text != NULL) {
+            uint flags = 0;
+            if (spr->maybeFlags & SPRITE_TEXT_RING)
+                flags = FONT_SHADOW_RING;
+            if (spr->maybeFlags & SPRITE_SHADOW)
+                flags |= FONT_SHADOW;
+            if (spr->maybeFlags & SPRITE_TEXT_OUTLINE)
+                flags |= FONT_OUTLINE;
+            Font_DrawText(spr->positionX + viewer->xMin, spr->positionY + viewer->yMin, spr->colourTint,
+                          spr->unknown1, 0xffffffff, spr->text, spr->maybeClippedString, &spr->scale, flags,
+                          (ushort)spr->length, spr->spritesheetWidth);
+            continue;
+        }
+
+        uchar r = (uchar)(spr->colourTint >> 24);
+        uchar g = (uchar)(spr->colourTint >> 16);
+        uchar b = (uchar)(spr->colourTint >> 8);
+        uchar a = (uchar)spr->colourTint;
+        if (a == 0)
+            continue;
+
+        uchar across = 1, down = 1;
+        if (spr->maybeFlags & SPRITE_TILED) {
+            across = (uchar)((spr->spritesheetWidth + 1) / (ushort)spr->backupOnscreenWidth);
+            down = (uchar)((spr->spritesheetHeight + 1) / (ushort)spr->backupOnscreenHeight);
+        }
+        // Toggled a tile at a time by its low bit: a flipped sprite's tiles stay flipped (0x80 and 0x81), a plain
+        // one's alternate
+        uchar flipY = spr->maybeFlags & SPRITE_FLIP_Y;
+        uchar flipX = spr->maybeFlags & SPRITE_FLIP_X;
+        // A tile's size and texels: the whole's over the count, by 16-bit shifts
+        float x = spr->positionX;
+        double y = spr->positionY;
+        float tileWidth = (short)(spr->onscreenWidth >> ((across - 1) & 31));
+        float tileHeight = (short)(spr->onscreenHeight >> ((down - 1) & 31));
+        short u0 = spr->spritesheetX;
+        short v0 = spr->spritesheetY;
+        short texelsX = (short)(spr->spritesheetWidth >> ((across - 1) & 31));
+        short texelsY = (short)(spr->spritesheetHeight >> ((down - 1) & 31));
+        if (spr->maybeFlags & SPRITE_CENTRED) {
+            x = x - (short)(spr->onscreenWidth >> 1);
+            y = y - (short)(spr->onscreenHeight >> 1);
+        }
+        float top = (short)Ftol(y);
+
+        for (uchar column = across; column != 0; column--) {
+            float tileY = top;
+            for (uchar row = down; row != 0; row--) {
+                SPRITE_DRAW *shadow = NULL;
+                if (spr->maybeFlags & SPRITE_SHADOW) {
+                    if (SprCnt >= 0x3e) {
+                        psiDrawSprites(SprBuffList, SprCnt);
+                        SprCnt = 0;
+                    }
+                    shadow = &SprBuffList[SprCnt++];
+                }
+                if (SprCnt >= 0x3f) {
+                    psiDrawSprites(SprBuffList, SprCnt);
+                    SprCnt = 0;
+                }
+                SPRITE_DRAW *draw = &SprBuffList[SprCnt++];
+                memcpy(draw->unknown08, &spr->createdOnFrame, sizeof(draw->unknown08));
+                draw->textureIndex = spr->unknownDataMaybeTexPtr;
+                draw->flags = spr->maybeFlags;
+                draw->invHeight = 1.0f / (ushort)spr->backupOnscreenHeight;
+                draw->clrR = r;
+                draw->clrG = g;
+                draw->clrB = b;
+                draw->clrA = a;
+                draw->invWidth = 1.0f / (ushort)spr->backupOnscreenWidth;
+                draw->x = x + viewer->xMin;
+                draw->width = tileWidth;
+                draw->height = tileHeight;
+                draw->y = tileY + viewer->yMin;
+                draw->u0 = flipX ? texelsX : u0;
+                draw->v0 = flipY ? texelsY : v0;
+                draw->u1 = flipX ? -texelsX : texelsX;
+                draw->v1 = flipY ? -texelsY : texelsY;
+                if (spr->maybeFlags & SPRITE_SHADOW) {
+                    *shadow = *draw;
+                    shadow->clrB = 0;
+                    shadow->clrG = 0;
+                    shadow->clrR = 0;
+                    float offset = draw->width * 0.015625f;
+                    if (offset < 1.0f)
+                        offset = 1.0f;
+                    else if (offset > 5.0f)
+                        offset = 5.0f;
+                    draw->x = offset + draw->x;
+                    offset = draw->height * 0.015625f;
+                    if (offset < 1.0f)
+                        offset = 1.0f;
+                    else if (offset > 5.0f)
+                        offset = 5.0f;
+                    draw->y = offset + draw->y;
+                }
+                // A column's last flip carries on into the next column
+                flipY ^= 1;
+                tileY = tileHeight + tileY;
+            }
+            x = tileWidth + x;
+            flipX ^= 1;
+        }
+    }
+
+    if (SprCnt != 0) {
+        psiDrawSprites(SprBuffList, SprCnt);
+        SprCnt = 0;
+    }
+    __profiling_or_debugging_hook_point();
 }
 
 // AUTOINJECT

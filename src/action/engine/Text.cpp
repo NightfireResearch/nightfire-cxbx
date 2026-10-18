@@ -1,18 +1,36 @@
 #include "Text.h"
 
 #include "psiFile.h"
+#include "viewer.h"
+#include "../game.h"
 #include "../memory.h"
+#include "../game/mp/multiplayer.h"
+#include "../gfx/Font.h"
+#include "../gfx/Sprite.h"
+#include "../util/CirBuf.h"
+#include "../util/DList.h"
+#include "../util/LList.h"
+#include "../util/Sort.h"
 #include "../util/bin.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
-// AUTOGEN
-void Text_Update2Line(void);
-// AUTOGEN
-void Text_Update(void);
-// AUTOGEN
-void __stdcall Text_FlushAllSubtitles(void);
+#pragma fp_contract(off)
+
+// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
+// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
+static int32_t Ftol(double x) {
+    if (!(fabs(x) < 9223372036854775808.0))
+        return 0;
+    long long nearest = llrint(x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x));
+}
+
+#define SubtitlesEnabled U32_AT(0x001f6614)
 
 // XBE_GLOBAL(0x00215588, 0x4)
 static const char** Bank;
@@ -188,8 +206,6 @@ void Txt_LanguageInit(void) {
     Txt_LoadLanguage();
 }
 
-// AUTOGEN
-void Text_AddMsg(char param_1,char param_2,int param_3,const char *str,int param_5,short maybeDurationFrames);
 
 // Which heap string a pointer falls in: the unsigned distance from the start of the heap in whole strings, so any
 // pointer into a string - not only its start - names that string, and one below the heap wraps round to a huge
@@ -218,4 +234,333 @@ void Txt_UnlockString(char* text) {
     uint i = Txt_HeapIndex(text);
     if (i < 0x100 && StringHeapLock[i] != 0)
         StringHeapLock[i]--;
+}
+
+// ---- Messages: the HUD's message panes and the subtitles
+
+// The queue of message lines, the subtitles' sprites and the line each shows
+#define MsgQueue (*(DLISTINFO_tag *)0x0029abf8)
+#define SubtitlesInfo (*(SpriteInfo *)0x0018cd30)
+#define SubTitleMsg (*(TXT_MSG **)0x0029ae20)
+#define SubTitleSpr (*(sprite **)0x0029ae24)    // a one-line subtitle
+#define SubTitleSpr1 (*(sprite **)0x0029ae28)   // the two lines of the other kind
+#define SubTitleSpr2 (*(sprite **)0x0029ae2c)
+#define SubTitleStr (*(char **)0x0029ae30)      // their text, held while shown
+#define SubTitleStr2 (*(char **)0x0029ae34)
+// The last 128 messages of the kinds kept (Text_AddMsg), held in the string heap
+#define ReceivedMsgs (*(CIRBUF_INFO *)0x0029ae10)
+#define ReceivedBuf ((int *)0x0029ac10)
+// The two-line subtitles' format: font 2, centred (the one TextMsgFormats[5] has)
+#define SubtitleFormat ((char *)0x0015eb18)
+
+#define SUBTITLE_COLOUR 0x7d6d59ff
+#define SUBTITLE_VIEWERS 6  // the highest of the views that show sprites gets them
+
+// The called-by-address originals of package B (util/LList.cpp)
+#define LList_InsertAt ((void (__cdecl *)(LLISTINFO_tag *list, LLNODE_tag *node, int at, \
+                                          int (*compare)(const void *a, const void *b)))0x0006e620)
+
+// The first queued line for player of type
+static TXT_MSG* Text_FindMsg(char player, int type) {
+    for (TXT_MSG *msg = (TXT_MSG *)MsgQueue.activeList.head; msg != NULL; msg = (TXT_MSG *)msg->node.next) {
+        if (msg->playerNum == player && msg->type == type)
+            return msg;
+    }
+    return NULL;
+}
+
+// The subtitles go to the highest view that shows sprites
+static void Text_LinkSubtitle(sprite *spr) {
+    for (short viewer = SUBTITLE_VIEWERS - 1; viewer >= 0; viewer--) {
+        if (glb_viewer[viewer] != NULL && glb_viewer[viewer]->spritesShown) {
+            spr->linkedViewer = (char)viewer;
+            return;
+        }
+    }
+}
+
+// A free line, more of them made when there is none. Only a line never used counts as free: one Text_DelMsg puts
+// back keeps its type, so is never taken again (as the original). Our name.
+// AUTOINJECT
+TXT_MSG* Text_TakeMsg(void) {
+    for (;;) {
+        for (LLNODE_tag *node = MsgQueue.freeList.head; node != NULL; node = node->next) {
+            if (((TXT_MSG *)node)->type == 0)
+                return (TXT_MSG *)LList_Remove(&MsgQueue.freeList, node);
+        }
+        LList_AllocnNodes(&MsgQueue.freeList, 0x20);
+    }
+}
+
+// The subtitles' sprites and an empty queue; at a cold start an empty history, at a warm one the history's strings
+// held again
+// FUNC_AT(0x000d1c90)
+void Text_Init(uchar warmReset) {
+    SubTitleMsg = NULL;
+    SubTitleSpr = Sprite_Create2(&SubtitlesInfo);
+    SubTitleSpr1 = Sprite_Create2(&SubtitlesInfo);
+    SubTitleSpr2 = Sprite_Create2(&SubtitlesInfo);
+    DList_Init(&MsgQueue, sizeof(TXT_MSG), 0);
+    if (warmReset) {
+        for (ushort i = 0; i < ReceivedMsgs.size; i++)
+            Txt_LockString((char *)ReceivedMsgs.buffer[i]);
+        return;
+    }
+    CirBuf_Init(&ReceivedMsgs, 0x80, ReceivedBuf);
+}
+
+// Queues a message for player (-1 every player) of type (TXTMSG_*), word-wrapped into lines that share frames
+// between them by length, at least a second each but for subtitles. Without text, one line showing sprite. A
+// subtitle becomes a two-line one when the main view is off and no movie plays; priority 0xff shows it even with
+// subtitles off. In multiplayer a pickup message is an info one, and a new info message divides the time of the
+// player's others. A mission message ends the objectives on show. Messages of the kinds other than info, subtitles
+// and pickups go in the history too.
+// AUTOINJECT
+void Text_AddMsg(char player, char priority, int type, char *text, int sprite, short frames) {
+    bool forced = false;
+    if (type == TXTMSG_SUBTITLE) {
+        if ((uchar)priority == 0xff) {
+            priority = 0;
+            forced = true;
+        }
+        if (!glb_viewer[4]->enabled && movieFinished())
+            type = TXTMSG_SUBTITLE_2LINE;
+    }
+
+    if (MPSettings.isMultiplayer) {
+        if (type == TXTMSG_PICKUP)
+            type = TXTMSG_INFO;
+        if (player != -1 && player < 4 && type == TXTMSG_INFO) {
+            int count = 0;
+            for (TXT_MSG *msg = (TXT_MSG *)MsgQueue.activeList.head; msg != NULL; msg = (TXT_MSG *)msg->node.next) {
+                if (msg->playerNum == player && msg->type == TXTMSG_INFO)
+                    count++;
+            }
+            int shares = count + 1;
+            if (count != 0) {
+                for (TXT_MSG *msg = (TXT_MSG *)MsgQueue.activeList.head; msg != NULL;
+                     msg = (TXT_MSG *)msg->node.next) {
+                    if (msg->playerNum == player && msg->type == TXTMSG_INFO)
+                        msg->timer = msg->timer / shares;
+                }
+            }
+        }
+    }
+    if (type == TXTMSG_MISSION) {
+        for (TXT_MSG *msg = (TXT_MSG *)MsgQueue.activeList.head; msg != NULL; msg = (TXT_MSG *)msg->node.next) {
+            if (msg->type == TXTMSG_OBJECTIVE)
+                msg->timer = -1.0f;
+        }
+    }
+
+    if (player > 3)
+        return;
+    if (!forced && !SubtitlesEnabled && (type == TXTMSG_SUBTITLE || type == TXTMSG_SUBTITLE_2LINE))
+        return;
+
+    if (text == NULL) {
+        TXT_MSG *msg = Text_TakeMsg();
+        msg->spriteHash = (HASHCODE)sprite;
+        msg->priority = priority;
+        msg->timer = frames;
+        msg->text = NULL;
+        msg->length = 0;
+        msg->type = (uchar)type;
+        msg->playerNum = player;
+        msg->nextLine = NULL;
+        LList_InsertAt(&MsgQueue.activeList, &msg->node, 0, CompMsgTxt);
+        return;
+    }
+
+    if (type != TXTMSG_INFO && !(type > TXTMSG_MISSION && type <= TXTMSG_PICKUP)) {
+        Txt_LockString(text);
+        Txt_UnlockString((char *)CirBuf_Add(&ReceivedMsgs, (int)text));
+    }
+
+    int length = (int)strlen(text);
+    char *rest = text;
+    TXT_MSG *previous = NULL;
+    do {
+        char *line;
+        if (type == TXTMSG_SUBTITLE_2LINE) {
+            // The first line wrapped to 0.6 of the width, the rest of it to 0.4 and put on its end
+            TextMsgFormat *format = &TextMsgFormats[TXTMSG_SUBTITLE_2LINE];
+            line = Font_WordWrapString(&rest, (int)strlen(rest), format->font, Ftol(format->wrapWidth * 0.6));
+            if (line == NULL)
+                return;
+            if (rest != NULL)
+                strcat(line, Font_WordWrapString(&rest, (int)strlen(rest), format->font,
+                                                 Ftol(format->wrapWidth * 0.4)));
+        } else {
+            line = Font_WordWrapString(&rest, (int)strlen(rest), TextMsgFormats[type].font,
+                                       TextMsgFormats[type].wrapWidth);
+        }
+        if (line == NULL)
+            return;
+
+        TXT_MSG *msg = Text_TakeMsg();
+        msg->spriteHash = HASHCODE_NONE;
+        msg->priority = priority;
+        msg->text = line;
+        Txt_LockString(line);
+        msg->length = (ushort)strlen(msg->text);
+        if (frames > 0) {
+            // Its share of the frames by length (of the length's low 16 bits)
+            msg->timer = (short)Ftol((double)msg->length / (ushort)length * frames + 0.5f);
+            if (type != TXTMSG_SUBTITLE && type != TXTMSG_SUBTITLE_2LINE) {
+                uint least = Ftol(msg->timer);
+                if (least <= 60)
+                    least = 60;
+                msg->timer = (float)least;
+            }
+        } else {
+            msg->timer = frames;
+        }
+        msg->type = (uchar)type;
+        msg->playerNum = player;
+        msg->nextLine = NULL;
+        if (previous == NULL) {
+            LList_InsertAt(&MsgQueue.activeList, &msg->node, 0, CompMsgTxt);
+        } else {
+            LList_Insert(&MsgQueue.activeList, &previous->node, &msg->node);
+            previous->nextLine = msg;
+        }
+        previous = msg;
+    } while (rest != NULL);
+}
+
+// Takes a line off the queue, releasing its text where it holds it (and a subtitle's lines on show)
+// AUTOINJECT
+void Text_DelMsg(TXT_MSG *msg) {
+    if (msg == NULL)
+        return;
+    switch (msg->type) {
+        case TXTMSG_SUBTITLE:
+        case TXTMSG_SUBTITLE_2LINE:
+            if (msg == SubTitleMsg) {
+                if (SubTitleStr != NULL) {
+                    Txt_UnlockString(SubTitleStr);
+                    SubTitleStr = NULL;
+                }
+                if (SubTitleStr2 != NULL) {
+                    Txt_UnlockString(SubTitleStr2);
+                    SubTitleStr2 = NULL;
+                }
+            }
+            // fall through
+        case TXTMSG_INFO:
+        case TXTMSG_PICKUP:
+            if (msg->text != NULL)
+                Txt_UnlockString(msg->text);
+            break;
+        default:
+            break;
+    }
+    DList_RemoveFromInUse2Free(&MsgQueue, &msg->node);
+}
+
+// Drops every subtitle, the one on show with them
+// AUTOINJECT
+void Text_FlushAllSubtitles(void) {
+    SubTitleMsg = NULL;
+    SubTitleSpr->maybeEnabled = 0xff;
+    SubTitleSpr1->maybeEnabled = 0xff;
+    SubTitleSpr2->maybeEnabled = 0xff;
+    TXT_MSG *msg = (TXT_MSG *)MsgQueue.activeList.head;
+    while (msg != NULL) {
+        TXT_MSG *next = (TXT_MSG *)msg->node.next;
+        if (msg->type == TXTMSG_SUBTITLE || msg->type == TXTMSG_SUBTITLE_2LINE)
+            Text_DelMsg(msg);
+        msg = next;
+    }
+}
+
+// Drops a line and gives the one after: the message's next line, or the first queued for player of type. Our name.
+TXT_MSG* _Text_NextMsg(TXT_MSG *msg, char player, int type) {
+    TXT_MSG *next = msg != NULL ? msg->nextLine : NULL;
+    Text_DelMsg(msg);
+    if (next != NULL)
+        return next;
+    return Text_FindMsg(player, type);
+}
+
+// EAX the line, BL the player, EDI the type
+// AUTOLTCG
+void __declspec(naked) Text_NextMsg(void) {
+    _asm {
+        push ecx
+        push edx
+        push edi
+        push ebx
+        push eax
+        call _Text_NextMsg
+        add esp, 12
+        pop edx
+        pop ecx
+        ret
+    }
+}
+
+// Counts down the line *msg shows for player (-1 any) of type; when its time is up, or there is none, the next.
+// True when *msg changed (or was looked for), false while it shows on, or when the player's view shows no sprites.
+// AUTOINJECT
+bool Text_UpdateMsg(char player, int type, TXT_MSG **msg) {
+    if (player != -1) {
+        viewer_tag *viewer = glb_viewer[player];
+        if (viewer != NULL && !viewer->spritesShown)
+            return false;
+    }
+    TXT_MSG *line = *msg;
+    if (line == NULL) {
+        Text_DelMsg(NULL);
+        *msg = Text_FindMsg(player, type);
+        return true;
+    }
+    if (line->timer > 0.0f)
+        line->timer = line->timer - FRAME_RATE_MUL;
+    if (!(line->timer <= 0.0f))
+        return false;
+    *msg = _Text_NextMsg(line, player, type);
+    return true;
+}
+
+// The one-line subtitle
+// AUTOINJECT
+void Text_Update(void) {
+    if (Text_UpdateMsg(-1, TXTMSG_SUBTITLE, &SubTitleMsg) && SubTitleMsg != NULL) {
+        Sprite_SetText(SubTitleSpr, SubTitleMsg->text);
+        SubTitleSpr->maybeEnabled = 0;
+        Text_LinkSubtitle(SubTitleSpr);
+    }
+    if (SubTitleMsg == NULL)
+        SubTitleSpr->maybeEnabled = 0xff;
+}
+
+// The two-line subtitle: the line wrapped again, its first 0.6 of the width on one sprite and the rest on the other
+// AUTOINJECT
+void Text_Update2Line(void) {
+    if (Text_UpdateMsg(-1, TXTMSG_SUBTITLE_2LINE, &SubTitleMsg) && SubTitleMsg != NULL) {
+        ushort width = TextMsgFormats[TXTMSG_SUBTITLE_2LINE].wrapWidth;
+        char *rest = SubTitleMsg->text;
+        SubTitleStr = Font_WordWrapString(&rest, (int)strlen(rest), SubtitleFormat, Ftol((double)width * 0.6f));
+        Txt_LockString(SubTitleStr);
+        Sprite_SetParams(SubTitleSpr1, 0, 320, 410, HASHCODE_NONE, SUBTITLE_COLOUR);
+        Sprite_SetTextNFmt(SubTitleSpr1, SubTitleStr, SubtitleFormat);
+        Text_LinkSubtitle(SubTitleSpr1);
+        if (rest == NULL) {
+            SubTitleSpr2->maybeEnabled = 0xff;
+        } else {
+            SubTitleStr2 = Font_WordWrapString(&rest, (int)strlen(rest), SubtitleFormat, width);
+            if (SubTitleStr2 != NULL) {
+                Txt_LockString(SubTitleStr2);
+                Sprite_SetParams(SubTitleSpr2, 0, 320, 430, HASHCODE_NONE, SUBTITLE_COLOUR);
+                Sprite_SetTextNFmt(SubTitleSpr2, SubTitleStr2, SubtitleFormat);
+                Text_LinkSubtitle(SubTitleSpr2);
+            }
+        }
+    }
+    if (SubTitleMsg == NULL) {
+        SubTitleSpr1->maybeEnabled = 0xff;
+        SubTitleSpr2->maybeEnabled = 0xff;
+    }
 }

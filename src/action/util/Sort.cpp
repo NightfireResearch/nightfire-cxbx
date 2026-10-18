@@ -1,12 +1,12 @@
 #include "Sort.h"
 
 #include "../engine/Collide.h"
+#include "../engine/Text.h"
 #include "../engine/Vision.h"
 #include "../engine/viewer.h"
 #include "../game/obj/GT.h"
 #include "../game/obj/Light.h"
 #include "../gfx/Sprite.h"
-#include "../ui/HUD.h"
 
 #include <string.h>
 
@@ -83,11 +83,11 @@ int CompAlphaObj(const void *a, const void *b) {
     return 0;
 }
 
-// Message panes by their byte at 0x1d (signed), the lowest first
+// Message lines by priority, the lowest first
 // AUTOINJECT
 int CompMsgTxt(const void *a, const void *b) {
-    char x = (*(HUDPANE_tag *const *)a)->field_0x1d;
-    char y = (*(HUDPANE_tag *const *)b)->field_0x1d;
+    char x = (*(TXT_MSG *const *)a)->priority;
+    char y = (*(TXT_MSG *const *)b)->priority;
     if (x < y)
         return -1;
     return x > y;

@@ -125,6 +125,7 @@ add_library(actioninject SHARED
   src/action/devtools/ViewMathShadow.cpp
   src/action/devtools/ObjectPortShadow.cpp
   src/action/devtools/EnginePortShadow.cpp
+  src/action/devtools/HudPortShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/MathExactShadow.cpp
   src/action/devtools/Teleport.cpp
@@ -133,6 +134,7 @@ add_library(actioninject SHARED
   src/action/game.cpp
   src/action/main.cpp
   src/common/launchInfo.cpp
+  src/action/gfx/Font.cpp
   src/action/gfx/Sprite.cpp
   src/action/gfx/LowLevel.cpp
   src/action/engine/AINetwork.cpp
@@ -193,9 +195,11 @@ add_library(actioninject SHARED
   src/action/util/hashtable.cpp
   src/action/util/LList.cpp
   src/action/util/Random.cpp
+  src/action/util/CirBuf.cpp
   src/action/util/Sort.cpp
   src/action/util/Stack.cpp
   src/action/ui/HUD.cpp
+  src/action/ui/TextBox.cpp
   src/action/ui/ui.cpp
   src/action/ui/ui_dossier.cpp
   src/action/ui/ui_mp.cpp

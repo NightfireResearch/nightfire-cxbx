@@ -35,6 +35,10 @@ static_assert(offsetof(WeaponStatus, clipOrCooldown) == 0x4, "Offset of clipOrCo
 static_assert(offsetof(WeaponStatus, fireModeIndex) == 0x7, "Offset of fireModeIndex not correct");
 static_assert(offsetof(WeaponStatus, variant) == 0x8, "Offset of variant not correct");
 
+// BLData::waterFlags
+#define WATER_HEAD_WAS_UNDER 0x01   // the head went under and came back up
+#define WATER_HEAD_UNDER     0x10   // the head is under water, or the player is on a wire
+
 // WIP
 typedef struct BLData {
     _VECTOR lastPosition; // 0x00 - Player_Update copies the object's position here every frame
@@ -236,7 +240,7 @@ typedef struct BLData {
     char shotFired; // 0x8eb
     char bulletSpawned; // 0x8ec - this fire anim has spawned its bullet (weapon_definition_tag::bulletSpawnFrame)
     char taserHit; // 0x8ed - the taser's shot reached a drone or player in range (Player_WeaponInitBullet)
-    char field_0x8ee; // 0x8ee - zeroed by Player_StandAtNewPosition
+    char weaponChangeTimer; // 0x8ee - frames the ammo pane shows a new weapon's name (HUD_UpdateAmmoPane); zeroed by Player_StandAtNewPosition
     // The third-person action icon to show (index into HUD.cpp's ThirdIconSprites: grapple, wire, standing, ...),
     // 0xff for none
     uchar thirdIcon; // 0x8ef
@@ -282,7 +286,7 @@ static_assert(offsetof(BLData, field_0x8cc) == 0x8cc, "Offset of field_0x8cc not
 static_assert(offsetof(BLData, previousSubState) == 0x8d2, "Offset of previousSubState not correct");
 static_assert(offsetof(BLData, field_0x8e3) == 0x8e3, "Offset of field_0x8e3 not correct");
 static_assert(offsetof(BLData, field_0x8ea) == 0x8ea, "Offset of field_0x8ea not correct");
-static_assert(offsetof(BLData, field_0x8ee) == 0x8ee, "Offset of field_0x8ee not correct");
+static_assert(offsetof(BLData, weaponChangeTimer) == 0x8ee, "Offset of weaponChangeTimer not correct");
 static_assert(offsetof(BLData, animWait) == 0x8f0, "Offset of animWait not correct");
 static_assert(offsetof(BLData, flashBlur) == 0x8f3, "Offset of flashBlur not correct");
 static_assert(offsetof(BLData, gadgetTarget) == 0x810, "Offset of gadgetTarget not correct");

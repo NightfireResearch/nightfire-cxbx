@@ -52,6 +52,8 @@ to what it does. A function ported that way:
 
 | 14 | turret, scenery, pickup, copter, hazard, emitter, gunimp, weather, lights (package A); control, parsemap, sort, spline, objects, build, resetmap, gameflow, loader, drone_init, ssys (package B) | 71 (package A): GT.cpp (the gun turrets and the deployed minigun), Ripples.cpp, LeafGen.cpp, OneSided.cpp, Env.cpp (breath, trees, wind), Effect.cpp (the particle objects), Pickup.cpp, Player_EquipKey (PlayerWeapon.cpp), Check_Target (Autoaim.cpp), Intersect_ConeSphere (Collide.cpp), Copter.cpp, Mine.cpp, Shooter.cpp, Apocalypse.cpp, Emitter.cpp, GunImp.cpp, RainBox.cpp, Lightning.cpp, Cloud.cpp, Light.cpp (ambient and closest lights), Corona.cpp, Flicker.cpp. Of their 8 names without an Xbox function of that name, `Leaf_Create` is 0xcdef0, `Particles_Create` 0x6feb0 and `ColourGetValue` 0x67ea0 (FUN_, renamed and ported); `Copter_Register` is 0x6b900 (no function in Ghidra; created, named and ported); their `__static_initialization_and_destruction_0` is the two initialisers `Copter_InitConeCos` 0xf5460 and `Copter_InitConeSin` 0xf5470 (renamed, ported); `Emitter_LoadDefs` is `parsemap_block_particles` 0x68020 (left to the original); `Emitter_Kill` is the shared empty function 0xe0ec0; `Light_FindMapLight` is 0xde5f0, a stub returning NULL (Ghidra: `psiLight_Create`). Helpers renamed from FUN_ and ported: `Copter_NextPath` 0x6b9f0, `Copter_SeesPlayer` 0x6b830, `GT_AimAt` 0x9a5b0. 11 AUTOLTCG adaptors (Copter_CreatePath, Copter_NextPath, Copter_Move, Copter_FireGun, Copter_FireMissile, Copter_SeesPlayer, GT_maybeInterpolateAimDir, GT_AimAt, GT_RandMove, Pickup_CanInheritPosition, Pickup_Handler). 65 of 67 (package B): control.cpp (the objects' frame, cel changes and links, matrices and spheres, creation, LOD, references, carried velocity, player index), build.cpp (finding and linking rooms, objects and doors into rooms, the allocations), parsemap.cpp (the map file's blocks), `parsemap_block_particles` (Emitter.cpp), util/Sort.cpp (new: `QuickSort` and the ten comparisons), Spline.cpp, `Plane_PutPntOnPlane` (math.cpp), `View_AddSkyObj` (view.cpp), DynamicObject.cpp, `Env_Create`, Lock.cpp, `Locks_Init` (Locks.cpp, now injected, its FIX_ORIGINAL_GAME_BUGS branch kept), `Player_UnEquipKey` (PlayerWeapon.cpp), game.cpp (`ResetMap_GameInit`, `_GenLoadScreen`, `_Load` and the game flow's stack), `LoadableLoad` and `LoadableReload` (Loader.cpp). Not again: `NDrone2_GetDTYPENEW` (parcel 8's static helper) and `NDrone2_init_DMODE_Normal` (a jump). Their 39 names without an Xbox function of that name: see the section. Helpers ported: `maybeControl_Switches_Update` 0x2d640, `build_MakeRoomList` 0x20bd0 (renamed from FUN_), `init_cel` 0x20660, `set_InhibitGameDrawIfRequired` 0x6ab60; `MenuManager_Enable` 0x92c10 renamed. No register-argument originals | 45 of 71; 666 of 1,249 blocks. ObjectPortShadow: 228,500 cases in seven groups, all 0 differ (2 where only the NaN chosen between two NaNs differs); one planted bug per group, all caught. Under the suite the originals reach 1,219 of the 1,242 blocks of the 71 and their helpers (of the 23 left: unsigned-conversion fix-ups of values never negative, failed-creation returns, `ColourGetValue` with the key past the count, `Particles_Create` past the stub's -1, a few branches of `Pickup_Handler` and `Check_Target`). All nine time demos match. Package B: 55 of 67; 743 of 968 blocks (LoadableLoad, LoadableReload, Locks_Init, Lock_ReLock, Player_UnEquipKey, Control_Plr2Ind, CompTargetObj, CompStrings, CompBoxList and parsemap_block_palette_data_psx not reached; Locks_Init was already ours, called by name). EnginePortShadow: 234,000 cases in twelve groups, all 0 differ (about 200 where only the NaN chosen between two NaNs differs); one planted bug per group, all caught. Under the suite the originals reach 916 of the 934 blocks of the 65 and their helpers (of the 18 left: clamps that cannot fire in `Spline_Interp`, `KeyFrame_Interp` and `Lock_Update`, an unsigned fix-up of a count never negative and the inlined unlock's decrypting test in `Lock_Create`, and `Lock_Update`'s laser tint at 255). All nine time demos match | see git log |
 
+| 15 | font, sprite, view's sprites, cirbuf, text, sound's subtitles, hud, the text box (package A) | 52 names, 51 functions: `Text_Init` is listed four times for two Xbox functions of that name, the messages' 0xd1c90 (Text.cpp) and the text box's 0x99550 (TextBox.cpp), both `FUNC_AT`. gfx/Font.cpp (new: glyphs, kerning, formats, drawing, measuring, word-wrapping), Sprite_SetFmt, Sprite_SetTextNFmt and Sprite_SetParams (Sprite.cpp), View_DrawSprites (view.cpp), util/CirBuf.cpp (new), the message queue and subtitles (Text.cpp), Sound_DoSubtitle (Sound.cpp), the HUD's panes, crosshair, night sight, multiplayer panes and radar (HUD.cpp), ui/TextBox.cpp (new). Their 3 names without an Xbox function of that name: `HUD_UpdateSightPane` is the shared empty function 0xe0ec0 (our pane table had NULL; now that address, as the other empty panes); `__static_initialization_and_destruction_0` (text.cpp's, building `SubtitlesInfo`) is plain data on the Xbox (0x18cd30); `Sprite_CreateLink` is `Sprite_CreateAndLink2Viewer` 0xcedd0 (already ours). Helpers renamed from FUN_ and ported: `Font_FindGlyph` 0x69a40, `Text_TakeMsg` 0xd1d30, `Text_NextMsg` 0xd2270, `HUD_CreateShift` 0xb5f40, `HUD_PlaceLensFlare` 0xb42b0; renamed and left to the original: `MP_GetTeamScore` 0x9d840, `MP_GetPlayerScore` 0x9d8d0. 9 AUTOLTCG adaptors (Font_FindGlyph, Font_GetKernAdjust, __Font_DrawText, Text_NextMsg, Text_SetupChar, HUD_PlaceLensFlare, HUD_UpdateCrossHair, HUD_MonitorNightSight, HUD_CreateShift); `Sound_DoSubtitle` is `__fastcall` (ECX) | 13 of 57 (the 51 and their helpers); 237 of 1,153 blocks: the fonts, kerning, word-wrapping, `View_DrawSprites`, `Text_AddMsg` and `Sound_DoSubtitle`. The panes are not reached as originals because our `HUD_Update` and pane tables call ours by name. HudPortShadow: 271,000 cases in ten groups, all 0 differ (14 where only the NaN chosen between two NaNs differs); one planted bug per group, all caught. Under the suite the originals reach 1,089 of the 1,095 blocks of the 51 and their helpers (the 6 left: `Font_WordWrapString`'s nothing-fits return for a width of 2^31 or more and its space test before a newline, which tests the newline itself and cannot be reached; `HUD_UpdateMPHealthPane`'s coordinates cheat, whose `sprintf` of floats stops in the XBE's C library before the game has started; `Sound_DoSubtitle` past sound 0x60c, which no table entry is; `Text_AddMsg`'s unsigned fix-up of a value never negative; `Text_Update` with no view showing sprites). All nine time demos match. MenuProbe A/B (front_end, codenames) with the 57 as the original: identical screenshots (5 of 5, 6 of 6) and the same messages in the same order; the codenames run differs only in heap addresses (the heap was placed 0x120000 higher; offsets within it the same) and the one-frame jitter at the movie skip that two runs of ours show too | see git log |
+
 Parcel 1's first playback found two things the coverage alone would not have shown:
 - **A crash in our code.** The port of `Script_CreateEntity` called our `Break_Create` by name, which is a known-broken
   draft that was never patched in. `tools/draft_calls.py` now finds such calls.
@@ -672,6 +674,34 @@ Found along the way:
   `LockPlacement`, `EnvPlacement`, `DYNAMICOBJECT_tag`, `DynamicObjectPlacement`, `framelist_tag`; `VisCel` moved to
   Vision.h; `GameState_t::InhibitGameDraw` a byte. util/Sort.cpp is new (QuickSort and the comparisons).
 
+### Parcel 15 (package A: font, sprite, view's sprites, cirbuf, text, sound's subtitles, hud and the text box)
+- Their names without an Xbox function of that name: see the table. Their two `Text_Init`s (text.cpp and
+  menu_controls.cpp) are two Xbox functions, 0xd1c90 and 0x99550, each listed twice in the parcel.
+- Register arguments their prototypes hide: `Font_FindGlyph` (AL the character), `Font_GetKernAdjust` (AL the
+  previous character; the adjustment returned in ST0), `__Font_DrawText` (ECX the colour, EAX the scale),
+  `Text_NextMsg` (EAX the message, BL the player, EDI the type), `Text_SetupChar` (EAX the box, DL the character),
+  `HUD_PlaceLensFlare` (ESI the sprite), `HUD_UpdateCrossHair` (EAX the player, ESI the sprite),
+  `HUD_MonitorNightSight` (EAX), `HUD_CreateShift` (EAX the player, EDI the pane, ESI the create entry),
+  `Sound_DoSubtitle` (ECX the sound).
+- The Xbox font table has the default font at `FontTable[1]` and a font code n selects `FontTable[n]` (theirs
+  `FontTable[0]` and n - 1); it has 23 special characters (theirs 17). `Font_ParseFormat` takes no scale and
+  `Font_WordWrapString` four arguments (theirs a fifth, the scale). `Font_FindGlyph`'s search does not stop at the
+  end of the glyphs (theirs guards it).
+- `RADAROBJ` is 0x14 bytes (theirs 0x20); the radar's bot test reads `Drone_tag::flags` at 0x3f4 (theirs the PS2's
+  0x4f8).
+- Found in ours, not theirs: gfx/Font.h's `KERN_tag`, `CHARDATA_tag`, `FONT_tag`, `FONTTABLE_tag`,
+  `SPECIALCHAR_tag`, `PRINTINFO_tag` and the `FONT_*` flags; the `SPRITE_*` draw flags in view.h; `CIRBUF_INFO`;
+  `TXTMSG_*`, `TextMsgFormat` (moved to Text.h), `TXT_MSG::priority` (was `param_2`) and its padding to 0x20;
+  `SND2LBL_tag`; `HUDPANE_tag::posX`/`posY` (were `unknown2`), `HUDPANECREATE_tag::flags` (was `unknown_thing`) and
+  the `HUDPANE_KEEP_IN_*`/`VIEW_*` flags, `SPRITEINFO_CLIP_TO_VIEW`, `RADAROBJ`, `MPRadarMarks` (were
+  `MPGameStruct::radar_related`); `M_CONTROL::unknown08` and `skinPiece` (were padding), `NEW_CONTROL`,
+  `MENU_SKINPIECE`, `TEXTBOX_KEY`, `M_TEXTBOX` (0x9b0); `BLData::weaponChangeTimer` (was `field_0x8ee`);
+  `WATER_HEAD_*` moved to Player.h. `CompMsgTxt` (parcel 14) read its lines as `HUDPANE_tag`s; it now reads
+  `TXT_MSG::priority`. Our drafts replaced: the crosshair (float maths, and the crosshair setting tested while
+  zoomed), the night sight (fell through for a weapon object not in state 0, without the 1..2 vision test),
+  `HUD_CreateShrink` halved with `/ 2` where the original shifts (wrong for negatives); `View_AddSprite` noted font
+  glyphs for the texture dump by its caller's return address, now by the glyph's `CharInfo`.
+
 ## Original bugs found while porting (kept; candidates for FIX_ORIGINAL_GAME_BUGS)
 
 - `Script_Load`, a file with 0x3f streams or more: hands its record to `DList_RemoveFromInUse2Free(&ScriptList)`,
@@ -845,6 +875,16 @@ Found along the way:
   unbounded. `Lock_Unlock`'s silent path does not check the lock.
 - `ResetMap_GenLoadScreen` takes two strings from the string heap and uses neither.
 
+- `Font_FindGlyph`'s binary search does not stop at the end of the glyphs: a character above the last glyph but in
+  the font's range reads past them. `Font_WordWrapString`'s test for a space before a newline looks at the newline
+  itself, so it never backs up. `Font_GetTextExtent` hands `Font_ParseFormat` the text pointer as its flags, so the
+  font's texture is set or not by the pointer's low bit. `Font_GetAlignment` does not check its format.
+- `Text_TakeMsg` passes over free lines whose type is not 0, and `Text_DelMsg` puts lines back with their type, so a
+  line once used is never taken again and the queue allocates 0x20 more lines whenever every free one has been
+  used: it grows for as long as messages come.
+- `HUD_RadarUpdate` tests a mark's x against the view's width less the mark's with the mark's y instead
+  (`// The y again where the x was meant`).
+
 ## Departures from the original
 
 - The AI dispatcher's Exit, Enter and 0x2e messages leave their scope and frames as uninitialised stack in the
@@ -876,6 +916,9 @@ Found along the way:
 
 - `Controls_StraddleTest` and `build_LinkDoors2Portals` start their HITTEST at zero, and `parsemap_block_particles`
   its definition (whose two padding bytes the original copies from the stack): uninitialised stack in the original.
+
+- `Font_GetTextCountExtent` hands `Font_ParseFormat` flags of 0, which are uninitialised stack in the original
+  (only the measure-only bit matters there: it decides whether the font's texture is set).
 
 ## What the demos do not cover
 

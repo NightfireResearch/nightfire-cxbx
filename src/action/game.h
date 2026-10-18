@@ -400,6 +400,12 @@ static_assert(sizeof(MPGamePlayer) == 0x30, "MPGamePlayer is wrong size"); // De
 static_assert(offsetof(MPGamePlayer, playerObj) == 0x1c, "Wrong offset for MPGamePlayer.playerObj");
 static_assert(offsetof(MPGamePlayer, unknown26) == 0x26, "Wrong offset for MPGamePlayer.unknown26");
 
+// The marks over the assassin and the target a player sees
+typedef struct {
+    sprite *target;
+    sprite *assassin;
+} MPRadarMarks;
+
 typedef struct {
   // Note that PS2 and Xbox have different number of entries in MPGame! PS2 has 8, Xbox has 10
   MPGamePlayer players[10];
@@ -417,7 +423,7 @@ typedef struct {
   short unknown_maybe_unused; // restart
   short unknown_9; // uplink, goldeneye, blueprint timers?
   short maybe_pad;
-  sprite* radar_related[2 * 4]; // One pair per human participant
+  MPRadarMarks radarMarks[4]; // 0x210 - per human player, shown over the others in Assassin (HUD_RadarUpdate)
 } MPGameStruct;
 
 static_assert(sizeof(MPGameStruct) == 0x230, "MPGameStruct is wrong size"); // Determined from MP_Init

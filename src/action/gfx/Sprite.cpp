@@ -1,5 +1,9 @@
 #include "Sprite.h"
+#include "Font.h"
 #include "../util/Sort.h"
+#include "../util/hashtable.h"
+
+#include <math.h>
 
 // for strlen
 #include <string.h>
@@ -89,8 +93,30 @@ sprite** Sprite_BuildList(ushort viewer, undefined4 *startOut, uint *lastForegro
 }
 
 
-// AUTOGEN
-void Sprite_SetFmt(sprite*, char*);
+// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
+// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
+static int32_t Ftol(double x) {
+    if (!(fabs(x) < 9223372036854775808.0))
+        return 0;
+    long long nearest = llrint(x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x));
+}
+
+// A text sprite's format, and its size measured in it, kept in spritesheetWidth and spritesheetHeight
+// AUTOINJECT
+void Sprite_SetFmt(sprite *spr, char *fmt) {
+    if (spr->text == NULL) {
+        spr->maybeClippedString = fmt;
+        return;
+    }
+    GPOINT extent;
+    spr->maybeClippedString = fmt;
+    Font_GetTextExtent(spr->text, fmt, &extent, &spr->scale, -1);
+    spr->spritesheetWidth = (short)Ftol(extent.x);
+    spr->spritesheetHeight = (short)Ftol(extent.y);
+}
 
 // AUTOINJECT
 void Sprite_SetText(sprite *spr, char *text) {
@@ -129,8 +155,34 @@ sprite* Sprite_Create(void) {
     return spr;
 }
 
-// AUTOGEN
-void Sprite_SetTextNFmt(sprite *param_1,char *param_2,char *param_3);
+// A sprite's text and its format, measured when it has both
+// AUTOINJECT
+void Sprite_SetTextNFmt(sprite *spr, char *text, char *fmt) {
+    spr->text = text;
+    spr->maybeClippedString = fmt;
+    if (text == NULL || fmt == NULL)
+        return;
+    spr->length = (short)strlen(text);
+    spr->maybeClippedString = fmt;
+    spr->text = text;
+    Sprite_SetFmt(spr, fmt);
+}
+
+// A sprite's shown state, position (its base position too), colour and, unless 0, texture
+// AUTOINJECT
+void Sprite_SetParams(sprite *spr, uchar enabled, short x, short y, HASHCODE texture, uint colour) {
+    if (spr == NULL)
+        return;
+    spr->maybeEnabled = enabled;
+    spr->positionX = x;
+    spr->backupOnscreenWidth = x;
+    spr->positionY = y;
+    spr->backupOnscreenHeight = y;
+    spr->colourTint = colour;
+    spr->maybeFlags = 0;
+    if (texture != 0)
+        hashtable_set_sprite(spr, texture);
+}
 
 // AUTOINJECT
 sprite* Sprite_Create2(SpriteInfo *sprInfo) {

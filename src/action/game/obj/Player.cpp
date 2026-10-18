@@ -1686,10 +1686,6 @@ void Player_PositionCamera(obj_tag *player) {
 #define MATERIAL_0E 0x0e
 
 
-// BLData::waterFlags
-#define WATER_HEAD_WAS_UNDER 0x01   // the head went under and came back up
-#define WATER_HEAD_UNDER     0x10   // the head is under water, or the player is on a wire
-
 // The level and the original's text for a death in multiplayer
 #define TXT_MP_DIED   ((Action_TranslatedText)0x02000037)  // with the player's name
 #define TXT_MP_KILLED ((Action_TranslatedText)0x02000038)  // with the killer's name
@@ -2246,7 +2242,7 @@ void Player_StandAtNewPosition(obj_tag *player, _VECTOR *pos, _VECTOR *rot, usho
     blData->walkClass = 1;
     blData->ropeFatigue = 0.0f;
     blData->bondMomentTimer = 0;
-    blData->field_0x8ee = 0;
+    blData->weaponChangeTimer = 0;
     blData->turnKick = 0.0f;
     blData->thirdIcon = 0xff;
     blData->nightVisionActive = 0;
