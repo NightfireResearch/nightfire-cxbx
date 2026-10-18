@@ -57,6 +57,8 @@ static_assert(offsetof(TRIGGER, cooldown) == 0x38, "Bad offset of cooldown");
 obj_tag * Trigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 obj_tag * MusicTrigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 obj_tag * SoundTrigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
+void SoundTrigger_Update(obj_tag *obj);
+void MusicTrigger_Update(obj_tag *obj);
 
 obj_tag * Trigger_LoadLevelCreate(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 obj_tag * Trigger_TouchOnce(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);

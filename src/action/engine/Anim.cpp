@@ -116,24 +116,31 @@ typedef struct AnimSizes {
 #define MORPH_EYES_X 14
 
 // The originals, called by address
-#define hashtable_get_hashtype_data ((void (__cdecl *)(uint hashtype, HASHCODE *out))0x0006b740)
 #define AnimSetDelete ((void (__cdecl *)(obj_tag *obj, sAnimSet_tag **slot))0x000177a0)
 #define moveTowardsValue ((float (__cdecl *)(float current, float target, float speed))0x00024000)
 #define Vec4_MulAdd ((void (__cdecl *)(float scale, float *vIn, float *vAcc))0x000d7300)
 // INVENTED NAME: where the line from a through b meets the sphere about centre, in out; 0 if it misses
 #define Vec_LineSphereIntersect ((int (__cdecl *)(float *a, float *b, float *centre, float radius, float *out))0x000d8590)
 
-// AnimDistanceTableGet (0x000174a0): the distance table of a sequence, made the first time (the sequence in ESI)
-static __declspec(naked) AnimDistanceTable *AnimDistanceTableGet(HASHCODE hashcode) {
-    _asm {
-        push esi
-        mov esi, [esp + 8]
-        mov eax, 0x000174a0
-        call eax
-        pop esi
-        ret
-    }
-}
+// The sequences' distance tables, made once each (AnimDistanceTableGet)
+#define NUM_DISTANCE_TABLES 32
+typedef struct AnimDistanceTableEntry {
+    HASHCODE hashcode;
+    AnimDistanceTable *table;
+} AnimDistanceTableEntry;
+#define DistanceTableCount I16_AT(0x001d6ac4)
+#define DistanceTables (*(AnimDistanceTableEntry(*)[NUM_DISTANCE_TABLES])0x001d6af0)
+
+// The axes AnimDistanceTableGet measures (AnimDistanceTableCreate's)
+#define DISTANCE_AXIS_X 1
+#define DISTANCE_AXIS_Y 2
+#define DISTANCE_AXIS_Z 4
+// A frame's step shorter than this counts as DISTANCE_MIN_STEP
+#define DISTANCE_STEP_EPSILON 1e-05f
+#define DISTANCE_MIN_STEP 0.01f
+#define MALLOC_ANIM_DISTANCE_TABLE      ((MallocFlags)0x0c04)
+// AnimFrameCopy's poses here: as many floats as fit the original's buffers
+#define DISTANCE_POSE_FLOATS 0x2a0
 
 // MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
 // and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
@@ -778,6 +785,107 @@ void __declspec(naked) AnimSeqGetInfo(void) {
     }
 }
 
+// The distance the root walks, over the axes asked for, by the end of each frame of a sequence: frame 2 against 1
+// on to the last against the one before, then, unless noWrap, frame 2 against 1 again. A step is at least
+// DISTANCE_MIN_STEP.
+AnimDistanceTable* _AnimDistanceTableCreate(uint axes, HASHCODE hashcode, int noWrap) {
+    sAnimSeq_tag seq;
+    memset(&seq, 0, sizeof(seq));
+    if ((hashcode & 0xff000000) != ANIM_HASHTYPE_SEQ)
+        return NULL;
+    _AnimSeqGetInfo(NULL, hashcode, &seq);
+
+    short numFrames = seq.numFrames;
+    seq.firstFrame = 1;
+    seq.lastFrame = numFrames;
+    int count = numFrames;
+    if (noWrap)
+        count--;
+
+    AnimDistanceTable *table = (AnimDistanceTable *)Mem_Malloc(count * sizeof(float) + offsetof(AnimDistanceTable, edge),
+                                                               MALLOC_ANIM_DISTANCE_TABLE, 0);
+    if (table == NULL)
+        return NULL;
+
+    float length = 0.0f;
+    float pose[DISTANCE_POSE_FLOATS];
+    float prevPose[DISTANCE_POSE_FLOATS];
+    for (int i = 0, next = 2; i < count; i++, next++) {
+        int frame = next;
+        if (!noWrap && frame > count)
+            frame = 2;
+        AnimFrameCopy(pose, &seq, NULL, (float)frame);
+        _VECTOR at = *(_VECTOR *)pose;
+        AnimFrameCopy(prevPose, &seq, NULL, (float)(frame - 1));
+        _VECTOR before = *(_VECTOR *)prevPose;
+        _VECTOR step;
+        Vec_Subtract(&at, &before, &step);
+        if (!(axes & DISTANCE_AXIS_X))
+            step.x = 0.0f;
+        if (!(axes & DISTANCE_AXIS_Y))
+            step.y = 0.0f;
+        if (!(axes & DISTANCE_AXIS_Z))
+            step.z = 0.0f;
+        double stepLength = Vec_Magnitude(&step);
+        if (stepLength < DISTANCE_STEP_EPSILON)
+            stepLength = DISTANCE_MIN_STEP;
+        length = (float)(stepLength + length);
+        table->edge[i] = length;
+    }
+
+    table->length = length;
+    table->count = count;
+    table->unknown08 = 0.0f;
+    return table;
+}
+
+// The original takes the axes in ECX and the hashcode in EDX
+// AUTOLTCG
+__declspec(naked) AnimDistanceTable* AnimDistanceTableCreate(void) {
+    _asm {
+        push ecx
+        push edx
+        push dword ptr [esp + 12]
+        push edx
+        push ecx
+        call _AnimDistanceTableCreate
+        add esp, 12
+        pop edx
+        pop ecx
+        ret
+    }
+}
+
+// The distance table of a sequence, made the first time; NULL once 32 are made
+AnimDistanceTable* _AnimDistanceTableGet(HASHCODE hashcode) {
+    for (int i = 0; i < DistanceTableCount; i++) {
+        if (DistanceTables[i].hashcode == hashcode)
+            return DistanceTables[i].table;
+    }
+    if (DistanceTableCount >= NUM_DISTANCE_TABLES)
+        return NULL;
+    AnimDistanceTable *table = _AnimDistanceTableCreate(DISTANCE_AXIS_Z, hashcode, 0);
+    DistanceTables[DistanceTableCount].hashcode = hashcode;
+    DistanceTables[DistanceTableCount].table = table;
+    DistanceTableCount++;
+    return table;
+}
+
+// The original takes the hashcode in ESI
+// AUTOLTCG
+__declspec(naked) AnimDistanceTable* AnimDistanceTableGet(void) {
+    _asm {
+        push ecx
+        push edx
+        push esi
+        call _AnimDistanceTableGet
+        add esp, 4
+        pop edx
+        pop ecx
+        ret
+    }
+}
+
 // Starts the sequence hashcode in the script's slot (0 the body, 1 the face) at frame start: its root motion and
 // its first translation start afresh. The body's sequence gives the object its bound sphere.
 sAnimSeq_tag* _AnimSeqSet(sAnimScript_tag *script, HASHCODE hashcode, obj_tag *obj, AnimObj *animObj,
@@ -802,7 +910,7 @@ sAnimSeq_tag* _AnimSeqSet(sAnimScript_tag *script, HASHCODE hashcode, obj_tag *o
     Vec_Zero(&seq->transRelFirst);
     seq->flags = (seq->flags & 0x1efffff) | ANIMSEQ_STARTED;
     if (seq->flags & ANIMSEQ_DISTANCE_AXES)
-        seq->distanceTable = AnimDistanceTableGet(hashcode);
+        seq->distanceTable = _AnimDistanceTableGet(hashcode);
     if (slot == 0 && obj->objGraphics != NULL)
         memcpy(animObj->boundSphere, seq->boundSphere, sizeof(animObj->boundSphere));
     seq->skeletonNum = skin->skeletonNum;

@@ -142,8 +142,7 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     float sphereRadius;                 // 0x7c
     float shearHeight;                 // 0x80 - a drone more than 0.3 m below it does not fall (NDrone2_Fall)
     uint flags84;                      // 0x84 - CEL_ flags
-    undefined field111_0x88;
-    undefined field112_0x89;
+    short soundEnvironment;            // 0x88 - SFXSetEnvironment's; 0x14 and more, outdoors (Sound_UpdateListeners)
     uchar ambientR[2];                 // 0x8a - the ambient light of objects in it, by its channel's state
     uchar ambientG[2];                 // 0x8c   (Lights_CalcAmbientLight)
     uchar ambientB[2];                 // 0x8e
@@ -159,6 +158,7 @@ static_assert(offsetof(cel_tag, position) == 0x58, "Bad offset of cel_tag.positi
 static_assert(offsetof(cel_tag, sphereRadius) == 0x7c, "Bad offset of cel_tag.sphereRadius");
 static_assert(offsetof(cel_tag, flags84) == 0x84, "Bad offset of cel_tag.flags84");
 static_assert(offsetof(cel_tag, ambientB) == 0x8e, "Bad offset of cel_tag.ambientB");
+static_assert(offsetof(cel_tag, soundEnvironment) == 0x88, "Bad offset of cel_tag.soundEnvironment");
 
 // cel_tag::bitsFromPlacementTag: a room, an object's cel (build_FindCel)
 #define CEL_ROOM 0x00040000
@@ -180,6 +180,7 @@ static_assert(offsetof(viewer_tag, draw) == 0x08, "Bad offset of viewer_tag.draw
 static_assert(offsetof(viewer_tag, camMode) == 0x24, "Bad offset of viewer_tag.camMode");
 static_assert(offsetof(viewer_tag, move) == 0xac, "Bad offset of viewer_tag.move");
 static_assert(offsetof(viewer_tag, prevPos) == 0xc4, "Bad offset of viewer_tag.prevPos");
+static_assert(offsetof(viewer_tag, viewMatrix) == 0x108, "Bad offset of viewer_tag.viewMatrix");
 static_assert(offsetof(viewer_tag, mtx) == 0x180, "Bad offset of viewer_tag.mtx");
 static_assert(offsetof(viewer_tag, swingPhase) == 0x1e0, "Bad offset of viewer_tag.swingPhase");
 static_assert(offsetof(viewer_tag, fade) == 0x1f8, "Bad offset of viewer_tag.fade");

@@ -428,6 +428,8 @@ void InstallFakes(void) {
     ShadowHook_Install(0x000ddf00, (const void *)&FakeTweak);
     ShadowHook_Install(0x000177a0, (const void *)&FakeSetDelete);
     ShadowHook_Install(0x000174a0, (const void *)&FakeDistance);
+    // Our AnimSeqSet calls the core of the register adaptor
+    ShadowHook_Install((unsigned)(uintptr_t)&_AnimDistanceTableGet, (const void *)&LogDistance);
     ShadowHook_Install(0x000d5130, (const void *)&FakeIdentity);
 }
 

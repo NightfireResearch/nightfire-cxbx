@@ -256,10 +256,6 @@ void Txt_UnlockString(char* text) {
 #define SUBTITLE_COLOUR 0x7d6d59ff
 #define SUBTITLE_VIEWERS 6  // the highest of the views that show sprites gets them
 
-// The called-by-address originals of package B (util/LList.cpp)
-#define LList_InsertAt ((void (__cdecl *)(LLISTINFO_tag *list, LLNODE_tag *node, int at, \
-                                          int (*compare)(const void *a, const void *b)))0x0006e620)
-
 // The first queued line for player of type
 static TXT_MSG* Text_FindMsg(char player, int type) {
     for (TXT_MSG *msg = (TXT_MSG *)MsgQueue.activeList.head; msg != NULL; msg = (TXT_MSG *)msg->node.next) {

@@ -10,9 +10,9 @@ typedef struct DYNAMICSOUNDS {
     DYNAMICSOUNDS *next;
     _VECTOR location;
     _VECTOR velocity;
-    unsigned int limitedDistance;
+    unsigned int limitedDistance;   // 0x20 - its radii were given (Sound_Play): SFXStart3D takes them
     unsigned int sfxId;
-    undefined4 unknownParam;
+    undefined4 ref;                 // 0x28 - the caller's tag (Sound_Stop_Ref, Sound_Playing_Ref)
     float volume;
     float radiusInner;
     float radiusOuter;
@@ -20,11 +20,11 @@ typedef struct DYNAMICSOUNDS {
     short maybePitchBend;
     char is3d;
     char needsUpdate;
-    char playbackState;
-    char unknown0;
-    char unknown1;
+    char playbackState;             // 0x40 - 0 to start, 1 playing, 2 to stop, 3 free
+    char age;                       // 0x41 - frames since Sound_Play
+    char audible;                   // 0x42 - gives its subtitle when it starts
     char isLimitedRadius;
-    char unknown2;
+    char unknown44;
     undefined1 frameDelay;
     char _pad_6[0x2];
 } DYNAMICSOUNDS;
@@ -59,6 +59,18 @@ void Sound_UpdateListeners(void);
 void Sound_StopAllWithId(Action_SFX sfx);
 void Sound_ZeroAlertness(void);
 void HandleMapSoundAllocation(void);
+void Sound_Init(void);
+void Sound_Kill(void);
+DYNAMICSOUNDS* _Sound_Play(Action_SFX sfxId, _VECTOR *position, float volume, float radiusOuter, float radiusInner, short pitch, char is3d, undefined4 ref);
+void _Sound_ReqestPlaySfx(DYNAMICSOUNDS *snd);
+// The register adaptors (Sound.cpp)
+DYNAMICSOUNDS* Sound_Play(void);
+void Sound_ReqestPlaySfx(void);
+void Sound_UpdateSounds(_VECTOR *listener);
+bool Sound_IsFinnished(DYNAMICSOUNDS *handle);
+float Sound_Alertness(_VECTOR *pos, float *level, DYNAMICSOUNDS **loudest);
+void Sound_Stop_Ref(DYNAMICSOUNDS *handle, undefined4 ref);
+bool Sound_Playing_Ref(DYNAMICSOUNDS *handle, undefined4 ref);
 void Sound_LoadMapSounds(int *mapSoundBlock);
 void __fastcall Sound_DoSubtitle(Action_SFX sound);
 void __stdcall SFXSuspendFileAccess(void);

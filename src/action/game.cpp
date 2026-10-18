@@ -119,7 +119,7 @@ void psiPostGame_Run(void) {} // No effect on XBox, does some PS2-specific stuff
 void Game_Run(void) {
 
   psiPreGame_Run();
-  Input_Update();
+  Input_UpdateWithMouse();
   ActionTeleport_Tick();   // devtools: F8/F9 teleport, F7 frame dump
 
 
@@ -685,10 +685,6 @@ HASHCODE __declspec(naked) ResetMap_LevelCode2Img(HASHCODE level, char **hintOut
 
 #define Creature_Init ((void (__cdecl *)(void))0x0002e3f0)
 #define MenuManager_Init ((void (__cdecl *)(void))0x00092ae0)
-#define Sound_Kill ((void (__cdecl *)(void))0x000cb730)
-#define Sound_Init ((void (__cdecl *)(void))0x000cb700)
-#define hashtable_initialise ((void (__cdecl *)(void))0x0006b3d0)
-#define hashtable_create_sections ((void (__cdecl *)(void))0x0006b540)
 #define maybeGetNextMissionInSequence ((HASHCODE (__cdecl *)(HASHCODE movie))0x000bdcd0)
 #define SFXLoadCorrectBank ((void (__cdecl *)(void))0x000cbdf0)
 #define SFXGetVolume ((int (__cdecl *)(void))0x000c5090)
@@ -1313,7 +1309,7 @@ void GameFlow_Main(void) {
     GameFlow_PopState();
     break;
   case 10:
-    Input_Update();
+    Input_UpdateWithMouse();
     if (CheatInfo.someThing != 0) {
       GameFlow_PopState();
     }

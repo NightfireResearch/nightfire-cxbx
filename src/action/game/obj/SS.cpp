@@ -79,7 +79,6 @@ static_assert(offsetof(Create_SS_Params, water) == 0x48, "Bad offset of water");
 #define SS_STOP_TOLERANCE 0.0002f
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
-#define Sound_IsFinnished ((bool (__cdecl *)(DYNAMICSOUNDS *handle))0x000cbac0)
 
 // AUTOINJECT
 obj_tag * SS_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {

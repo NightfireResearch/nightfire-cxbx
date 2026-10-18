@@ -522,7 +522,7 @@ void RandomWorld(void) {
     PlayerInputs[0].autoAim = (undefined)ShadowRand(2);
     PlayerInputs[0].autoAimMultiplayer = (undefined)ShadowRand(2);
     PlayerInputs[0].autoSwitchBetterWeapon = (undefined1)ShadowRand(2);
-    PlayerInputs[0].field141_0x154 = (undefined)(ShadowRand(3) == 0);
+    PlayerInputs[0].anyInput = (undefined)(ShadowRand(3) == 0);
 
     // The player
     BLData *bl = Bl();

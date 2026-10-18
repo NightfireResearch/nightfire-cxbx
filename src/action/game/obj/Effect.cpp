@@ -22,7 +22,6 @@
 #define psiParticleUpdate ((bool (__cdecl *)(void *particles))0x000de5e0)
 // The platform's particle system: none on the Xbox (-1)
 #define psiCreateParticles ((int (__cdecl *)(int kind, _VECTOR *pos, plane_equ_tag *plane))0x000de5d0)
-#define hashtable_set_sub_object_to_entity_gfx ((void (__cdecl *)(ATTACH_tag *mark, HASHCODE hashcode))0x0006b6d0)
 
 // The laser's sparks
 static const HASHCODE kLaserSparks[5] = {(HASHCODE)0x020002d1, (HASHCODE)0x020002d2, (HASHCODE)0x020002d3,

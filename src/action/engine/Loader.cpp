@@ -357,8 +357,6 @@ uint isLoadable(HASHCODE hashcode) {
 
 // The empty function the linker shares with others
 #define __profiling_or_debugging_hook_point ((void (__cdecl *)(void))0x000e0ec0)
-#define hashtable_delete_hashtype ((void (__cdecl *)(uint type))0x0006b790)
-#define hashtable_create_sections ((void (__cdecl *)(void))0x0006b540)
 
 // A loadable part of the level (isLoadable's index). The Xbox build loads nothing for it: the hashtable's loadable
 // items (type 0x04000000) are dropped and its sections made again, under the second malloc method. Both arguments are

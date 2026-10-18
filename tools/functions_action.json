@@ -39230,7 +39230,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c6f10",
+        "name": "PickRandomStealth",
         "address": "0x000c6f10",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -39242,7 +39242,7 @@
         "namespace": "Global"
     },
     {
-        "name": "maybePickRandomCombat",
+        "name": "PickRandomCombat",
         "address": "0x000c6fa0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,

@@ -146,7 +146,7 @@ extern unsigned int controllerIsPresent[4];
 // from Win32's XInputGetState instead of tracking Xbox-style insertion/removal events.
 void xboxInitInputDevices(void);
 
-// Real signature: psiInput_PollDevices() - called once per frame by the original (untouched) Input_Update,
+// Real signature: psiInput_PollDevices() - called once per frame by Input_Update (through the thunk 0x000de5c0),
 // and again in a drain loop by maybeInputShutdown. Talks straight to the host's
 // real gamepads via Win32 XInputGetState/XInputSetState now, instead of going through the original Xbox
 // XAPILIB device layer - see the block comment above its definition.

@@ -42,7 +42,7 @@ still calls (`AUTOGEN`), every function whose address sits in data, every functi
 every original our code calls by address: cast to a function pointer, or loaded into a register in inline asm
 (`mov eax, 0x...` then `call eax`). Without that such a function can look dead once the code that used to
 reference it is ours, and the globals it touches ownable when they are not: that is how `InputEventList` (walked
-at the end of the original `Input_Update`, whose body ours calls) and `Borders` (created by the original
+at the end of `Input_Update`, then the original's) and `Borders` (created by the original
 `Script_CameraStart`, reached through the original `Script_Run`) were owned too early; both of those functions are
 ours now. Other raw function addresses in the source are not counted: many are patch targets or plain
 constants.

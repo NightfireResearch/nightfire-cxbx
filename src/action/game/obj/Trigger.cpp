@@ -82,12 +82,6 @@ static uint TmpParam[TRIGGER_PARAMS];
 // drone data; the name is ours.
 #define Drone_GetSkin ((HASHCODE (__cdecl *)(obj_tag *drone))0x00030a10)
 
-// AUTOGEN
-obj_tag * MusicTrigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
-
-// AUTOGEN
-obj_tag * SoundTrigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
-
 // AUTOINJECT
 obj_tag * Trigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {
     Create_Trigger_Params *params = (Create_Trigger_Params *)lvl;
@@ -551,4 +545,173 @@ bool InverterTrigger_Create(level_tag *lvl) {
 void InverterTrigger_Update(obj_tag *obj) {
     if (switch_channels[(short)obj->curState] && obj->subState != 0)
         switch_channels[(short)obj->subState] = 0;
+}
+
+#pragma pack(push, 1)
+
+// A sound trigger's data: its channel plays its sound, its stop channel stops it
+typedef struct {
+    ushort channel;         // 0x00
+    ushort stopChannel;     // 0x02
+    ushort once;            // 0x04 - 1: deleted once played
+    ushort sound;           // 0x06 - an Action_SFX
+    ushort is2d;            // 0x08 - Sound_PlayExt, not Sound_Play3D at the trigger
+    uchar padding0a[2];
+    DYNAMICSOUNDS *handle;  // 0x0c
+    uchar exclusive;        // 0x10 - the one such sound playing (GlobalVoiceHandle)
+    uchar keep;             // 0x11 - plays on with its channel clear
+    uchar padding12[2];
+} SOUNDTRIGGER;
+
+// A music trigger's data: while its channel is set, and 30 frames after, it sends its music event
+typedef struct {
+    uint event;             // 0x00 - Music_Event's id, sent with 2
+    ushort channel;         // 0x04
+    ushort stopChannel;     // 0x06 - deletes it
+    ushort frames;          // 0x08
+    uchar once;             // 0x0a - deleted after the first event
+    uchar padding0b;
+} MUSICTRIGGER;
+
+#pragma pack(pop)
+
+static_assert(sizeof(SOUNDTRIGGER) == 0x14, "SOUNDTRIGGER is 0x14 bytes");
+static_assert(sizeof(MUSICTRIGGER) == 0xc, "MUSICTRIGGER is 0xc bytes");
+
+// The exclusive sound trigger's sound while one plays
+#define GlobalVoiceHandle (*(DYNAMICSOUNDS **)0x0029b240)
+
+#define NO_SOUND 0xffff
+#define NO_MUSIC_EVENT 0xff
+#define MUSIC_TRIGGER_FRAMES 30
+
+// The placement's difficulty parameter: 1 to 4 the highest it plays at, 5 to 7 only at 1 to 3
+enum {
+    SoundTriggerDifficulty_Only1 = 5,
+    SoundTriggerDifficulty_Only2 = 6,
+    SoundTriggerDifficulty_Only3 = 7,
+};
+
+// No sound, no channel or another difficulty, and nothing is made
+// AUTOINJECT
+obj_tag * SoundTrigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {
+    Create_Trigger_Params *params = (Create_Trigger_Params *)lvl;
+    GlobalVoiceHandle = NULL;
+
+    if (params->param[2] == 0 || params->param[2] == NO_SOUND || params->param[0] == 0)
+        return NULL;
+    uint difficulty = GameState.difficultyModifier;
+    uint only = params->param[6];
+    if (only != 0 && difficulty > only)
+        return NULL;
+    if (only == SoundTriggerDifficulty_Only1 && difficulty != 1)
+        return NULL;
+    if (only == SoundTriggerDifficulty_Only2 && difficulty != 2)
+        return NULL;
+    if (only == SoundTriggerDifficulty_Only3 && difficulty != 3)
+        return NULL;
+
+    obj_tag *obj = control_create_object(sizeof(SOUNDTRIGGER), pos, rot, NULL);
+    if (obj == NULL)
+        return NULL;
+
+    SOUNDTRIGGER *trigger = (SOUNDTRIGGER *)obj->extraObjectData;
+    trigger->channel = params->param[0];
+    trigger->once = params->param[1];
+    trigger->sound = params->param[2];
+    trigger->is2d = params->param[3];
+    trigger->stopChannel = params->param[4];
+    trigger->handle = NULL;
+    trigger->exclusive = params->param[5];
+    trigger->keep = params->param[7];
+    obj->objectType = OBJECTTYPE_SOUNDTRIGGER;
+    obj->objGraphics = celgl;
+    obj->effectFlags = celgl->applyFlagsToObject;
+    build_LinkToRoom(obj, 0, glb_world);
+    return obj;
+}
+
+// The stop channel deletes a trigger not playing (read even when it is 0), and stops one playing as its channel
+// clearing does unless it keeps on; an exclusive one that cannot play is deleted.
+// AUTOINJECT
+void SoundTrigger_Update(obj_tag *obj) {
+    SOUNDTRIGGER *trigger = (SOUNDTRIGGER *)obj->extraObjectData;
+
+    if (trigger->handle == NULL) {
+        if (switch_channels[trigger->stopChannel]) {
+            obj->flags |= 1;
+            return;
+        }
+        if (!switch_channels[trigger->channel])
+            return;
+        if (trigger->exclusive && GlobalVoiceHandle != NULL) {
+            obj->flags |= 1;
+            return;
+        }
+        if (trigger->is2d)
+            trigger->handle = Sound_PlayExt((Action_SFX)trigger->sound, 100.0f, 0, 0);
+        else
+            trigger->handle = Sound_Play3D((Action_SFX)trigger->sound, &obj->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+        if (trigger->exclusive)
+            GlobalVoiceHandle = trigger->handle;
+        return;
+    }
+
+    if (Sound_IsFinnished(trigger->handle)) {
+        trigger->handle = NULL;
+        if (trigger->exclusive)
+            GlobalVoiceHandle = NULL;
+    } else {
+        bool stop = trigger->stopChannel != 0 && switch_channels[trigger->stopChannel];
+        if (trigger->keep || switch_channels[trigger->channel]) {
+            if (!stop)
+                return;
+        }
+        Sound_Stop(trigger->handle);
+        trigger->handle = NULL;
+        if (trigger->exclusive) {
+            obj->flags |= 1;
+            GlobalVoiceHandle = NULL;
+        }
+    }
+    if (trigger->once == 1)
+        obj->flags |= 1;
+}
+
+// No event or no channel, and nothing is made
+// AUTOINJECT
+obj_tag * MusicTrigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {
+    Create_Trigger_Params *params = (Create_Trigger_Params *)lvl;
+    if (params->param[2] == NO_MUSIC_EVENT || params->param[0] == 0)
+        return NULL;
+
+    obj_tag *obj = control_create_object(sizeof(MUSICTRIGGER), pos, rot, NULL);
+    if (obj == NULL)
+        return NULL;
+
+    MUSICTRIGGER *trigger = (MUSICTRIGGER *)obj->extraObjectData;
+    trigger->channel = params->param[0];
+    trigger->stopChannel = params->param[1];
+    trigger->event = params->param[2];
+    trigger->once = params->param[3];
+    obj->objectType = OBJECTTYPE_MUSIC_TRIGGER;
+    obj->objGraphics = celgl;
+    obj->effectFlags = celgl->applyFlagsToObject;
+    build_LinkToRoom(obj, 0, glb_world);
+    return obj;
+}
+
+// AUTOINJECT
+void MusicTrigger_Update(obj_tag *obj) {
+    MUSICTRIGGER *trigger = (MUSICTRIGGER *)obj->extraObjectData;
+    if (trigger->stopChannel != 0 && switch_channels[trigger->stopChannel])
+        obj->flags |= 1;
+    if (switch_channels[trigger->channel])
+        trigger->frames = MUSIC_TRIGGER_FRAMES;
+    if (trigger->frames > 0) {
+        trigger->frames--;
+        Music_Event(trigger->event, 2);
+        if (trigger->once)
+            obj->flags |= 1;
+    }
 }

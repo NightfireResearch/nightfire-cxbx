@@ -16,7 +16,7 @@ Rules:
 | What | Where | The original | The switch |
 |---|---|---|---|
 | Fixes for the original's bugs (the driving engine's slow-motion rate, the action engine's keycode digits) | docs/original-bug-fixes.md, one entry each | the bug | CMake `NIGHTFIRE_FIX_ORIGINAL_GAME_BUGS` (on by default) |
-| Mouse look: the mouse turns and aims the player | engine/mouseLook.cpp/.h, reached from `Player_ViewClamping` (game/obj/Player.cpp) | pads only | settings.ini `MouseLook` |
+| Mouse look: the mouse turns and aims the player | engine/mouseLook.cpp/.h, read each frame by `Input_UpdateWithMouse` (input.cpp, around the injected `Input_Update`) and applied in `Player_ViewClamping` (game/obj/Player.cpp) | pads only | settings.ini `MouseLook` |
 | Mouse steering of remote vehicles (guided missile, RC car and helicopter, gun emplacements, Ronin): the mouse becomes an elastic stick | engine/mouseSteer.cpp/.h | pads only | settings.ini `MouseLook` |
 | Field of view from settings.ini; a real scope's zoom makes up the difference so it shows what it always did | engine/viewFov.cpp/.h, Camera.cpp, Player.cpp, car.cpp, GunImp.cpp | 60 degrees, fixed | settings.ini `FOV` (60 by default, the original's) |
 

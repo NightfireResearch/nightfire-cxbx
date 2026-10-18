@@ -24,7 +24,6 @@
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
 #define BOT_reactToDroneAlertMsg ((bool (__cdecl *)(uint msgType, Drone_tag *drone, void *extra))0x0001a260)
 // Returns in ST0; the level and the loudest sound through the pointers
-#define Sound_Alertness ((float (__cdecl *)(_VECTOR *pos, float *level, DYNAMICSOUNDS **sound))0x000cbb10)
 
 
 // While set, no drone sees or hears anything (the cheat)

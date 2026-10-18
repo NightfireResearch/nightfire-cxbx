@@ -19,7 +19,6 @@
 
 // The originals, called by address: other packages' and not yet ported
 #define NDrone2_LogDroneDeath ((void (__cdecl *)(DCVars_tag *dcv))0x0003a1d0)
-#define Sound_IsFinnished ((bool (__cdecl *)(DYNAMICSOUNDS *handle))0x000cbac0)
 
 // A killer takes a hostage within 5 m
 #define HOSTAGE_RANGE 5.0f

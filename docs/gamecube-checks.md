@@ -122,7 +122,7 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | **Physics / sound / view** |
 | 59 | RB_Build (FUN_8005ea54) | 0x8005ea54 | any moment-of-inertia component < 0 → return 0 | TOI_body cannot be negative. | no | RB_Build | 0xc00a0 | high | silent - added: src/action/game/obj/RigidBody.cpp (RB_Build) |
 | 60 | RB_Build | 0x8005ea54 | inertia fails the triangle inequality → return 0 | TOI_body does not follow triangle rule. | no | RB_Build | 0xc00a0 | high | silent - added: src/action/game/obj/RigidBody.cpp (RB_Build) |
-| 61 | Sound_Play (FUN_800652cc) | 0x800652cc | DynamicSoundList has no free node → return NULL | Summut hasnt freed there sound handle/or samples not finnished | no | Sound_Play | 0xcb750 | high | silent |
+| 61 | Sound_Play (FUN_800652cc) | 0x800652cc | DynamicSoundList has no free node → return NULL | Summut hasnt freed there sound handle/or samples not finnished | no | Sound_Play | 0xcb750 | high | silent | src/action/sound/Sound.cpp (_Sound_Play) - added |
 | 62 | View_CaptureSceneSub (FUN_800714fc) | 0x800714fc | viewer == NULL | ERROR Bad View | no | View_CaptureSceneSub | 0xda130 | high | silent |
 | 63 | Camera_CheckLocation (FUN_8010b688) | 0x8010b688 | camera position in no cel and no previous cel → use first cel of world | Error : Camera cant be linked to a cel! | no | Camera_CheckLocation | 0x250a0 | med-high | ? |
 | **Game flow / collision / bullets** |

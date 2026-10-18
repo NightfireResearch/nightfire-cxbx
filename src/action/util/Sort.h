@@ -3,8 +3,6 @@
 
 #include "../actionhelpers.h"
 
-typedef int (__cdecl *CompareFunc)(const void *a, const void *b);
-
 void QuickSort(void *list, uint count, uint size, COMP_FUNC compareType, CompareFunc custom);
 
 int CompSpr(const void *a, const void *b);

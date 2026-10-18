@@ -6,6 +6,10 @@
 #include "../util/DList.h"
 #include "../math/math.h"
 #include "../engine/Text.h"
+#include "../engine/Script.h"
+#include "../engine/viewer.h"
+#include "../game.h"
+#include "../game/mp/multiplayer.h"
 
 #include <math.h>
 
@@ -85,74 +89,336 @@ bool Sound_IsLooping(DYNAMICSOUNDS *handle) {
 }
 
 // AUTOGEN
-void Sound_UpdateListeners(void);
-
-// AUTOGEN
 void __stdcall SFXSuspendFileAccess(void);
 
 // AUTOGEN
 void __stdcall SFXUnSuspendFileAccess(void);
 
-// UNINJECTABLE - custom calling convention
-DYNAMICSOUNDS* Sound_Play(Action_SFX sfxId, float volume, float radiusOuter, float radiusInner, undefined2 maybePitchBend, char is3d, undefined4 param_7, _VECTOR *position) {
+// The originals, called by address
+#define SFXInitialise ((void (__cdecl *)(char *bankName))0x000c9d60)
+#define SFXReset ((void (__stdcall *)(void))0x000c9c30)
+#define SFXStart ((void (__cdecl *)(uint sfxId, DYNAMICSOUNDS *handle))0x000cb150)
+#define SFXStart3D ((uint (__cdecl *)(uint sfxId, _VECTOR *pos, _VECTOR *vel, DYNAMICSOUNDS *handle, int volume, int radiusInner, int radiusOuter))0x000caa90)
+#define SFXRemove ((void (__cdecl *)(DYNAMICSOUNDS *handle, int sfxId))0x000c9b10)
+#define SFXSetPositionAndVelocity ((void (__cdecl *)(_VECTOR *pos, _VECTOR *vel, DYNAMICSOUNDS *handle, int sfxId))0x000c5250)
+#define SFXSetupListener ((void (__cdecl *)(_VECTOR *pos, _VECTOR *vel, _VECTOR *dir, _VECTOR *up, _VECTOR *norm, int listener))0x000c5cd0)
+#define SFXSetEnvironment ((void (__cdecl *)(int environment, int outdoors))0x000c4ed0)
+#define SFXUpdate ((void (__cdecl *)(void))0x000cad40)
+
+// Set by Sound_Ready once the level's bank is loaded
+#define SoundInit U32_AT(0x0029a280)
+#define MusicEventList (*(uint32_t(*)[0x40])0x0029a180)
+
+// Written by Sound_UpdateListeners, once per frame
+#define GlobalListenerPos (*(_VECTOR*)0x0029a140)
+
+// The sound ids' low 20 bits index SFXOutputData
+#define SFX_ID_MASK 0xfffff
+#define NUM_DYNAMIC_SOUNDS 0x100
+// The view a cut scene's camera uses
+#define SCRIPT_VIEWER 4
+
+// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
+// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
+static int32_t Ftol(double x) {
+    if (!(fabs(x) < 9223372036854775808.0))
+        return 0;
+    long long nearest = llrint(x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x));
+}
+
+// AUTOINJECT
+void Sound_Init(void) {
+    DList_Init(DynamicSoundList, sizeof(DYNAMICSOUNDS), NUM_DYNAMIC_SOUNDS);
+    SFXInitialise(NULL);
+    memset(MusicEventList, 0, sizeof(MusicEventList));
+}
+
+// AUTOINJECT
+void Sound_Kill(void) {
+    if (SoundInit)
+        SFXReset();
+    SoundInit = 0;
+}
+
+// A node of DynamicSoundList, to start next frame (Sound_UpdateSounds). A radius above zero is taken (and the
+// sound's distance limited), any other the sound's own (10 and 20 past the table).
+DYNAMICSOUNDS* _Sound_Play(Action_SFX sfxId, _VECTOR *position, float volume, float radiusOuter, float radiusInner, short pitch, char is3d, undefined4 ref) {
 
     DYNAMICSOUNDS* snd = (DYNAMICSOUNDS *)DList_MoveFromFree2InUse(DynamicSoundList);
-
-    if (snd == NULL)
+    if (snd == NULL) {
+        NF_WARN("Summut hasnt freed there sound handle/or samples not finnished\n"); // GC check (0x800652cc)
         return NULL;
-
-    bool limitedDistance = false;
-
-    if (radiusInner >= 0.0f)  {
-        // If valid (>= 0), use the provided radius
-        limitedDistance = true;
-    } else if (sfxId < ARRAY_SIZE(SFXOutputData)) {
-        // Otherwise, if the SFX has default radius data, use that
-        radiusInner = SFXOutputData[sfxId].defaultRadiusInner;
-    } else {
-        // Otherwise, use a sane default
-        radiusInner = 10.0f;
     }
 
-    if (radiusOuter >= 0.0f)  {
-        // If valid (>= 0), use the provided radius
-        limitedDistance = true;
-    } else if (sfxId < ARRAY_SIZE(SFXOutputData)) {
-        // Otherwise, if the SFX has default radius data, use that
-        radiusOuter = SFXOutputData[sfxId].defaultRadiusOuter;
-    } else {
-        // Otherwise, use a sane default
-        radiusOuter = 20.0f;
-    }
+    uint id = sfxId & SFX_ID_MASK;
+    uint limitedDistance = 0;
 
-    snd->limitedDistance = limitedDistance;
+    if (radiusInner <= 0.0f)
+        radiusInner = id < ARRAY_SIZE(SFXOutputData) ? SFXOutputData[id].defaultRadiusInner : 10.0f;
+    else
+        limitedDistance = 1;
+
+    if (radiusOuter <= 0.0f)
+        radiusOuter = id < ARRAY_SIZE(SFXOutputData) ? SFXOutputData[id].defaultRadiusOuter : 20.0f;
+    else
+        limitedDistance = 1;
+
     snd->radiusOuter = radiusOuter;
+    snd->limitedDistance = limitedDistance;
     snd->radiusInner = radiusInner;
-    snd->volume = volume;
     snd->sfxId = sfxId;
+    snd->volume = volume;
     snd->playbackState = 0;
     snd->is3d = is3d;
-    snd->maybePitchBend = maybePitchBend;
+    snd->maybePitchBend = pitch;
     snd->needsUpdate = true;
-
-    snd->unknown0 = 0;
-
-    // Look up the alertness value for this SFX
-    if (sfxId < ARRAY_SIZE(SFXOutputData)) {
-        snd->alertness = SFXOutputData[sfxId].alertnessRelated;
-    } else {
-        snd->alertness = 0.0f;
-    }
-                                
-    snd->unknown1 = 0;  
+    snd->age = 0;
+    snd->alertness = id < ARRAY_SIZE(SFXOutputData) ? SFXOutputData[id].alertnessRelated : 0.0f;
+    snd->audible = 0;
     snd->isLimitedRadius = 0;
-    snd->unknown2 = 0;
-    snd->unknownParam = param_7;  
-    
+    snd->unknown44 = 0;
+    snd->ref = ref;
+
     Vec_Copy(position, &snd->location);
     Vec_Copy(&CONST_ZERO_VECTOR, &snd->velocity);
-    
+
     return snd;
+}
+
+// The original takes the sound in EAX, the rest on the stack
+// AUTOLTCG
+__declspec(naked) DYNAMICSOUNDS* Sound_Play(void) {
+    _asm {
+        push ecx
+        push edx
+        push dword ptr [esp + 36]   // ref
+        push dword ptr [esp + 36]   // is3d
+        push dword ptr [esp + 36]   // pitch
+        push dword ptr [esp + 36]   // radiusInner
+        push dword ptr [esp + 36]   // radiusOuter
+        push dword ptr [esp + 36]   // volume
+        push dword ptr [esp + 36]   // position
+        push eax
+        call _Sound_Play
+        add esp, 32
+        pop edx
+        pop ecx
+        ret
+    }
+}
+
+// Starts a sound. A 2D one always gives its subtitle. A 3D one past 1.1 times its outer radius does not start if
+// there is one listener and the table has it truly 3D and not looping; one within half its outer radius, in a cut
+// scene, or not truly 3D, gives its subtitle.
+void _Sound_ReqestPlaySfx(DYNAMICSOUNDS *snd) {
+    if (!snd->is3d) {
+        SFXStart(snd->sfxId & SFX_ID_MASK, snd);
+        snd->audible = 1;
+        return;
+    }
+
+    double dist = Vec_Dist3D(&GlobalListenerPos, &snd->location);
+    uint listeners = MPSettings.isMultiplayer ? MPSettings.numPlayers : 1;
+    uint id = snd->sfxId;
+    bool inTable = id < ARRAY_SIZE(SFXOutputData);
+    if (!(inTable && SFXOutputData[id].loopAlways) && listeners == 1 && inTable && SFXOutputData[id].maybeTracked3d
+        && dist > (double)snd->radiusOuter * 1.1f)
+        return;
+
+    _VECTOR pos = snd->location;
+    _VECTOR vel = snd->velocity;
+    snd->audible = dist < 0.5f * (double)snd->radiusOuter;
+    if (ScriptCam != HASHCODE_NONE || !inTable || !SFXOutputData[id].maybeTracked3d)
+        snd->audible = 1;
+
+    if (snd->limitedDistance)
+        SFXStart3D(id & SFX_ID_MASK, &pos, &vel, snd, Ftol(snd->volume), Ftol(snd->radiusInner),
+                   Ftol(snd->radiusOuter));
+    else
+        SFXStart3D(id & SFX_ID_MASK, &pos, &vel, snd, Ftol(snd->volume), -1, -1);
+}
+
+// The original takes the sound in EDI
+// AUTOLTCG
+__declspec(naked) void Sound_ReqestPlaySfx(void) {
+    _asm {
+        push ecx
+        push edx
+        push edi
+        call _Sound_ReqestPlaySfx
+        add esp, 4
+        pop edx
+        pop ecx
+        ret
+    }
+}
+
+// Every sound in use, once a frame: a new one started, a playing one stopped once it ends (a looping one only when
+// stopped), a stopped one freed; a playing 3D one moved. The listener is not read.
+// AUTOINJECT
+void Sound_UpdateSounds(_VECTOR *listener) {
+    DYNAMICSOUNDS *next;
+    for (DYNAMICSOUNDS *snd = (DYNAMICSOUNDS *)DynamicSoundList->activeList.head; snd != NULL; snd = next) {
+        next = snd->next;
+        snd->age++;
+
+        switch (snd->playbackState) {
+        case 0:
+            _Sound_ReqestPlaySfx(snd);
+            snd->playbackState = 1;
+            if (snd->audible)
+                Sound_DoSubtitle((Action_SFX)snd->sfxId);
+            break;
+        case 1: {
+            bool playing;
+            if (snd->sfxId < ARRAY_SIZE(SFXOutputData) && SFXOutputData[snd->sfxId].loopAlways)
+                playing = snd->playbackState == 1;
+            else
+                playing = SFXIsSFXPlaying(snd, -1);
+            if (!playing)
+                snd->playbackState = 2;
+            break;
+        }
+        case 2:
+            SFXRemove(snd, -1);
+            DList_RemoveFromInUse2Free(DynamicSoundList, (LLNODE_tag *)snd);
+            snd->playbackState = 3;
+            snd->ref = 0;
+            break;
+        }
+
+        if (snd->is3d && snd->playbackState == 1) {
+            _VECTOR pos = snd->location;
+            _VECTOR vel = snd->velocity;
+            SFXSetPositionAndVelocity(&pos, &vel, snd, -1);
+        }
+        snd->needsUpdate = false;
+    }
+}
+
+// Each player's view is a listener, and a cut scene's camera the first; the last of them places the map sounds and
+// sets the environment, from its cel.
+// AUTOINJECT
+void Sound_UpdateListeners(void) {
+    ushort listeners = MPSettings.isMultiplayer ? MPSettings.numPlayers : 1;
+    viewer_tag *view = glb_viewer[0];
+    // The cut scene's listener moves as the last player's did: uninitialised stack in the original with none
+    _VECTOR move = {0.0f, 0.0f, 0.0f};
+    _VECTOR up, dir, norm;
+
+    for (uint i = 0; i < listeners; i++) {
+        view = glb_viewer[i];
+        if (view == NULL)
+            continue;
+        Vec_Subtract(&view->pos, &view->prevPos, &move);
+        Mat_GetUp(&up, &view->viewMatrix);
+        Mat_GetDir(&dir, &view->viewMatrix);
+        Mat_GetNorm(&norm, &view->viewMatrix);
+        _VECTOR pos = *(_VECTOR *)&view->viewMatrix.m[12];
+        _VECTOR vel = move, listenerDir = dir, listenerUp = up, listenerNorm = norm;
+        SFXSetupListener(&pos, &vel, &listenerDir, &listenerUp, &listenerNorm, i);
+    }
+
+    viewer_tag *script = glb_viewer[SCRIPT_VIEWER];
+    if (script != NULL && script->enabled) {
+        view = script;
+        Mat_GetUp(&up, &view->viewMatrix);
+        Mat_GetDir(&dir, &view->viewMatrix);
+        Mat_GetNorm(&norm, &view->viewMatrix);
+        _VECTOR pos = *(_VECTOR *)&view->viewMatrix.m[12];
+        _VECTOR vel = move, listenerDir = dir, listenerUp = up, listenerNorm = norm;
+        SFXSetupListener(&pos, &vel, &listenerDir, &listenerUp, &listenerNorm, 0);
+    }
+
+    if (view != NULL)
+        GlobalListenerPos = *(_VECTOR *)&view->viewMatrix.m[12];
+
+    if (view != NULL) {
+        cel_tag *cel = view->someCel;
+        if (cel != NULL) {
+            bool outdoors = (cel->bitsFromPlacementTag & CEL_NO_SKY) || cel->soundEnvironment >= 0x14;
+            SFXSetEnvironment(cel->soundEnvironment, outdoors);
+            HandleMapSoundAllocation();
+        }
+        Sound_UpdateSounds((_VECTOR *)&view->viewMatrix.m[12]);
+    }
+    SFXUpdate();
+}
+
+// AUTOINJECT
+bool Sound_IsFinnished(DYNAMICSOUNDS *handle) {
+    if (handle == NULL)
+        return true;
+    return handle->playbackState == 2;
+}
+
+// The alertness heard at pos: each sound playing with any, not looping, within its outer radius, adds it, all of it
+// within its inner radius and falling to none at the outer. level gets the highest the sum reached, and *loudest the
+// sound that took it there. Sounds 0x11c and 0x11d are not heard in TowerA and TowerB; sound 0x248 becomes as loud
+// to its outer radius, with alertness 10.
+// AUTOINJECT
+float Sound_Alertness(_VECTOR *pos, float *level, DYNAMICSOUNDS **loudest) {
+    float sum = 0.0f;
+    float best = 0.0f;
+    if (loudest != NULL)
+        *loudest = NULL;
+
+    DYNAMICSOUNDS *next;
+    for (DYNAMICSOUNDS *snd = (DYNAMICSOUNDS *)DynamicSoundList->activeList.head; snd != NULL; snd = next) {
+        next = snd->next;
+        if (snd->playbackState == 2 || snd->playbackState == 3)
+            continue;
+        if (snd->sfxId < ARRAY_SIZE(SFXOutputData) && SFXOutputData[snd->sfxId].loopAlways)
+            continue;
+        if (snd->alertness == 0.0f)
+            continue;
+
+        float distSq = (float)Vec_SqDist3D(pos, &snd->location);
+        if (distSq > (double)snd->radiusOuter * snd->radiusOuter)
+            continue;
+
+        uint id = snd->sfxId & SFX_ID_MASK;
+        if (id >= 0x11c) {
+            if (id <= 0x11d) {
+                if (GameState.CurrentLevelHashcode == HT_Level_TowerA || GameState.CurrentLevelHashcode == HT_Level_TowerB)
+                    continue;
+            } else if (id == 0x248) {
+                snd->radiusInner = snd->radiusOuter;
+                snd->alertness = 10.0f;
+            }
+        }
+
+        double dist = sqrt((double)distSq);
+        double loudness;
+        if (dist < snd->radiusInner)
+            loudness = 1.0;
+        else
+            loudness = (snd->radiusOuter - dist) / ((double)snd->radiusOuter - snd->radiusInner);
+        double total = loudness * snd->alertness + sum;
+        sum = (float)total;
+        if (total > best) {
+            if (loudest != NULL)
+                *loudest = snd;
+            best = sum;
+        }
+    }
+
+    *level = best;
+    return sum < 0.0f ? 0.0f : sum;
+}
+
+// AUTOINJECT
+void Sound_Stop_Ref(DYNAMICSOUNDS *handle, undefined4 ref) {
+    if (handle != NULL && handle->ref == ref && handle->playbackState != 3)
+        handle->playbackState = 2;
+}
+
+// AUTOINJECT
+bool Sound_Playing_Ref(DYNAMICSOUNDS *handle, undefined4 ref) {
+    return handle != NULL && handle->ref == ref && (handle->playbackState == 1 || handle->playbackState == 0);
 }
 
 // XBE_GLOBAL(0x0029a288, 0x4)
@@ -171,7 +437,7 @@ DYNAMICSOUNDS* Sound_Play3D(Action_SFX param_1,_VECTOR *position,float volume,fl
         radiusInner = -1.0;
         radiusOuter = -1.0;
     }
-    DYNAMICSOUNDS *snd = Sound_Play(param_1,volume,radiusOuter,radiusInner,maybePitchBend,'\x01',param_7,position);
+    DYNAMICSOUNDS *snd = _Sound_Play(param_1,position,volume,radiusOuter,radiusInner,maybePitchBend,1,param_7);
     if (snd != NULL) {
         snd->isLimitedRadius = (char)isLimitedRadius;
         snd->frameDelay = tmpFrameDelay;
@@ -189,7 +455,7 @@ DYNAMICSOUNDS* Sound_PlayExt(Action_SFX param_1, float volume, undefined2 maybeP
     if ((param_1 & 0xfffff) == 0xffff)
         return NULL;
 
-    DYNAMICSOUNDS *snd = Sound_Play(param_1,volume,-1.0,-1.0,maybePitchBend,'\0',param_4,&CONST_ZERO_VECTOR);
+    DYNAMICSOUNDS *snd = _Sound_Play(param_1,&CONST_ZERO_VECTOR,volume,-1.0,-1.0,maybePitchBend,0,param_4);
     if (snd != NULL) {
         snd->frameDelay = tmpFrameDelay;
     }
@@ -268,8 +534,6 @@ void Sound_LoadMapSounds(int *mapSoundBlock) {
         memcpy(GMapSounds, &mapSoundBlock[1], count * sizeof(MapSound));
 }
 
-// Written by Sound_UpdateListeners (not reimplemented), once per frame.
-#define GlobalListenerPos (*(_VECTOR*)0x0029a140)
 
 // The handle of each playing map sound. HandleMapSoundAllocation is the only function that touches it (Ghidra
 // xrefs: one read, one write, both here), so it is ours. Not cleared at level load in the original either:
@@ -314,17 +578,6 @@ void HandleMapSoundAllocation(void) {
             GMapSoundActive[i] = 1;
         }
     }
-}
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
 }
 
 #pragma pack(push, 1)

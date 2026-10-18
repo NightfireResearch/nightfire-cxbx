@@ -24,11 +24,15 @@ typedef struct LLISTINFO_tag {
 
 #pragma pack(pop)
 
+// The comparisons of LList_InsertAt and QuickSort (util/Sort.cpp)
+typedef int (__cdecl *CompareFunc)(const void *a, const void *b);
+
 bool LList_Init(LLISTINFO_tag *list, unsigned short entrySize, unsigned short numEntries);
 bool LList_Add(LLISTINFO_tag *list, LLNODE_tag *newElement);
 void LList_Insert(LLISTINFO_tag *list, LLNODE_tag *insertionPoint, LLNODE_tag *newElement);
 LLNODE_tag* LList_Cut(LLISTINFO_tag *list);
 void LList_AllocnNodes(LLISTINFO_tag *list, int n);
 LLNODE_tag* LList_Remove(LLISTINFO_tag *list, LLNODE_tag *element);
+LLNODE_tag* LList_InsertAt(LLISTINFO_tag *list, LLNODE_tag *element, char fromHead, CompareFunc compare);
 
 #endif

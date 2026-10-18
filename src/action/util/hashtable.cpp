@@ -2,6 +2,8 @@
 
 #include <string.h> // memmove
 
+#include "../game/obj/Effect.h"
+
 #pragma pack(push, 1)
 typedef struct{
     ushort lowerLimit;
@@ -9,9 +11,11 @@ typedef struct{
 } HashTypeRange;
 #pragma pack(pop)
 
-// One search window per hash type (the top byte of a hashcode). hashtable_additem and hashtable_deleteitem both
-// reset every window to the whole table, so after the first insertion these never narrow anything.
+// One search window per hash type (the top byte of a hashcode), set by hashtable_create_sections.
+// hashtable_initialise, hashtable_additem and hashtable_deleteitem reset the windows of types 0-6 only, to the
+// whole table: type 7's stays as hashtable_create_sections last left it.
 #define NUM_HASH_TYPES 8
+#define NUM_RESET_TYPES 7
 
 // XBE_GLOBAL(0x001fe688, 0x20)
 #define HashTypeRanges (*(HashTypeRange(*)[NUM_HASH_TYPES])0x001fe688)
@@ -21,7 +25,7 @@ typedef struct{
 // hashtable_additem reads it, both ours now.
 // XBE_GLOBAL(0x001fe680, 0x4)
 static uint32_t ht_insert_ind;
-// Number of entries in use. Still read and written by the original hashtable_deleteitem (0x0006b4a0).
+// Number of entries in use, the two end keys (0 and 0xffffffff) included
 #define m_nhti U32_AT(0x001fe684)
 
 // The binary search. On a miss it leaves the insertion point in ht_insert_ind; on a hit it leaves ht_insert_ind
@@ -57,8 +61,7 @@ hashtable_entry* _hashtable_getentry(HASHCODE hashcode) {
     return NULL;
 }
 
-// The original (0x0006b370) takes its hashcode in EDI, and its callers - the original hashtable_deleteitem and
-// FUN_0006b6d0 are the two left - load EDI and call it directly. It clobbers only EAX, ECX and EDX (it saves ESI
+// The original (0x0006b370) takes its hashcode in EDI; no original calls it now. It clobbers only EAX, ECX and EDX (it saves ESI
 // itself), and neither caller keeps anything in ECX or EDX across the call, so a plain cdecl call is enough: our
 // compiled body preserves EBX, ESI, EDI and EBP.
 // AUTOLTCG
@@ -71,13 +74,20 @@ __declspec(naked) hashtable_entry* hashtable_getentry(HASHCODE hashcode) {
     }
 }
 
+static void ResetTypeRanges(void) {
+    for (int i = 0; i < NUM_RESET_TYPES; i++) {
+        HashTypeRanges[i].lowerLimit = 0;
+        HashTypeRanges[i].upperLimit = (ushort)(m_nhti - 1);
+    }
+}
+
 // Inserts a key keeping the table sorted. It searches first only for the side effect: the insertion point the
 // miss leaves in ht_insert_ind. Quirks kept from the original:
 // - there is no duplicate check and no capacity check. If the key is already present the search leaves
 //   ht_insert_ind as it was from the previous miss, and the entry goes in there - a second copy of the key, at a
 //   stale position (which may break the sort order).
-// - afterwards every type's search window becomes the whole table, [0, m_nhti - 1], rather than being worked out
-//   per type.
+// - afterwards the search windows of types 0-6 become the whole table, [0, m_nhti - 1], rather than being worked
+//   out per type.
 // AUTOINJECT
 void hashtable_additem(HASHCODE hashcode, void* data) {
 
@@ -91,9 +101,80 @@ void hashtable_additem(HASHCODE hashcode, void* data) {
 
     m_nhti++;
 
-    for(int i = 0; i < NUM_HASH_TYPES; i++) {
+    ResetTypeRanges();
+}
+
+// A key not in the table is not checked for: the original then copies from address 8
+// AUTOINJECT
+void hashtable_deleteitem(HASHCODE hashcode) {
+
+    hashtable_entry *entry = _hashtable_getentry(hashcode);
+
+    m_nhti--;
+    uint index = entry - t_hashtable;
+    memmove(entry, entry + 1, (m_nhti - index) * sizeof(hashtable_entry));
+
+    ResetTypeRanges();
+}
+
+// AUTOINJECT
+void hashtable_initialise(void) {
+
+    t_hashtable[0].key = HASHCODE_NONE;
+    t_hashtable[1].key = (HASHCODE)0xFFFFFFFF;
+    m_nhti = 2;
+
+    for (int i = 0; i < NUM_RESET_TYPES; i++) {
         HashTypeRanges[i].lowerLimit = 0;
-        HashTypeRanges[i].upperLimit = (ushort)(m_nhti - 1);
+        HashTypeRanges[i].upperLimit = 1;
+    }
+}
+
+// Each type's search window: from the entry before its first key to the entry after its last (the last entry
+// itself at the end of the table). A type with no keys searches the whole table.
+// AUTOINJECT
+void hashtable_create_sections(void) {
+
+    for (uint type = 0; type < NUM_HASH_TYPES; type++) {
+        uint32_t typeBits = type << 24;
+        HashTypeRanges[type].upperLimit = (ushort)(m_nhti - 1);
+        HashTypeRanges[type].lowerLimit = 0;
+
+        for (uint i = 1; i < m_nhti; i++) {
+            if ((t_hashtable[i].key & 0xFF000000) != typeBits)
+                continue;
+
+            HashTypeRanges[type].lowerLimit = (ushort)(i > 0 ? i - 1 : i);
+            uint upper;
+            do {
+                upper = i < m_nhti - 1 ? i + 1 : i;
+                i++;
+            } while ((t_hashtable[i].key & 0xFF000000) == typeBits);
+            HashTypeRanges[type].upperLimit = (ushort)upper;
+            break;
+        }
+    }
+}
+
+// Every key of the type (the top byte of hashtype), from the end of the table down
+// AUTOINJECT
+void hashtable_delete_hashtype(uint hashtype) {
+
+    for (uint i = m_nhti - 1; i > 0; i--) {
+        if ((t_hashtable[i].key & 0xFF000000) == (hashtype & 0xFF000000))
+            hashtable_deleteitem(t_hashtable[i].key);
+    }
+
+    hashtable_create_sections();
+}
+
+// The keys of the type, in order, into out (hashtable_get_hashtype_count of them)
+// AUTOINJECT
+void hashtable_get_hashtype_data(uint hashtype, HASHCODE *out) {
+
+    for (uint i = 1; i < m_nhti - 1; i++) {
+        if ((t_hashtable[i].key & 0xFF000000) == (hashtype & 0xFF000000))
+            *out++ = t_hashtable[i].key;
     }
 }
 
@@ -178,6 +259,20 @@ bool hashtable_set_sprite(sprite *sprOut, HASHCODE hc) {
 
     return true;
 
+}
+
+// AUTOINJECT
+void hashtable_set_sub_object_to_entity_gfx(ATTACH_tag *mark, HASHCODE hc) {
+
+    if(hc == 0xFFFFFFFF)
+        return;
+
+    hashtable_entry *entry = _hashtable_getentry(hc);
+
+    if((entry == NULL) || (entry->data == NULL))
+        return;
+
+    mark->glist = (celglist_tag*) entry->data;
 }
 
 // AUTOINJECT

@@ -32,5 +32,6 @@ static_assert(offsetof(LightningPlacement, key2) == 0x34, "Bad offset of Lightni
 
 obj_tag * Lightning_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
 void Lightning_Update(obj_tag *obj);
+void FractalThing(obj_tag **segments, short first, short last, _VECTOR *start, _VECTOR *end, char byRoot);
 
 #endif // LIGHTNING_H_

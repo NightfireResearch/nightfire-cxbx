@@ -6,7 +6,35 @@
 
 #define LIGHTNING_MODEL ((HASHCODE)0x0200032c)
 
-#define FractalThing ((void (__cdecl *)(obj_tag **segments, short first, short last, _VECTOR *start, _VECTOR *end, char byRoot))0x000b82e0)
+#include "../../util/Random.h"
+
+#include <math.h>
+
+// The bolt between start and end through segments first to last: the middle one's point is moved off the line by
+// up to half the spread either way on each axis, then each half is done again. The spread is half the length, or
+// with byRoot a sixth of its square root.
+// AUTOINJECT
+void FractalThing(obj_tag **segments, short first, short last, _VECTOR *start, _VECTOR *end, char byRoot) {
+    if (last - first <= 1)
+        return;
+    short mid = (first + last) / 2;
+
+    float spread;
+    if (byRoot)
+        spread = (float)(sqrt(Vec_Dist3D(start, end)) * (1.0f / 6.0f));
+    else
+        spread = (float)(Vec_Dist3D(start, end) * 0.5f);
+    float half = spread * 0.5f;
+
+    _VECTOR point;
+    point.x = (float)((Float_FRand(spread) - half) + ((double)start->x + end->x) * 0.5f);
+    point.y = (float)((Float_FRand(spread) - half) + ((double)start->y + end->y) * 0.5f);
+    point.z = (float)((Float_FRand(spread) - half) + ((double)start->z + end->z) * 0.5f);
+    segments[mid]->position = point;
+
+    FractalThing(segments, first, mid, start, &point, byRoot);
+    FractalThing(segments, mid, last, &point, end, byRoot);
+}
 
 // Pairs with every lightning point already made: the segments between are made unchecked
 // AUTOINJECT

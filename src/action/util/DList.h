@@ -10,8 +10,8 @@ typedef struct DLISTINFO_tag {
 
 static_assert(sizeof(DLISTINFO_tag) == 0x18, "Bad size for DLISTINFO_tag");
 
-bool DList_Init(DLISTINFO_tag* dlist, ushort entrySize, ushort param_3);
+bool DList_Init(DLISTINFO_tag* dlist, ushort entrySize, ushort numEntries);
 bool DList_RemoveFromInUse2Free(DLISTINFO_tag* list, LLNODE_tag* node);
-void* DList_MoveFromFree2InUse(DLISTINFO_tag* param_1);
+void* DList_MoveFromFree2InUse(DLISTINFO_tag* list);
 
 #endif // DLIST_H

@@ -91,8 +91,6 @@ typedef struct {
 #define LETTERBOX_BOTTOM_Y 0x1a0
 
 // The originals, called by address where Ghidra's prototypes do not fit
-#define hashtable_deleteitem ((void (__cdecl *)(HASHCODE hashcode))0x0006b4a0)
-#define Sound_IsFinnished ((bool (__cdecl *)(DYNAMICSOUNDS *handle))0x000cbac0)
 // The originals: ours in Break.cpp are not patched in yet
 #define moveTowardsValue ((float (__cdecl *)(float current, float target, float speed))0x00024000)
 

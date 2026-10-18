@@ -26,7 +26,6 @@
 #define DroneFunc_ChooseSFXByID ((uint (__cdecl *)(Drone_tag *drone, uint first, uint last))0x00036290)
 // Says the line when Rand_Rand(0) gives 0 (it always does, but draws), and holds back the next for 5 s
 #define DroneFunc_InjuredSFX ((bool (__cdecl *)(DCVars_tag *dcv, uint sfx))0x0003b830)
-#define Sound_IsFinnished ((bool (__cdecl *)(DYNAMICSOUNDS *handle))0x000cbac0)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *gameObj))0x0001a190)
 // Returns in ST0, unrounded
 

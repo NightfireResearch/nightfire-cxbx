@@ -34,7 +34,7 @@
 // is left for MouseSteer_Update instead of turning the player. Player_ViewClamping asks.
 bool MouseSteer_IsRemoteControl(short subState);
 
-// Once a frame, from Input_Update, straight after the game has polled its pads.
+// Once a frame, from Input_UpdateWithMouse, straight after the game has polled its pads.
 void MouseSteer_Update(void);
 
 #endif // MOUSESTEER_H_

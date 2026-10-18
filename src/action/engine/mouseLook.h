@@ -13,7 +13,7 @@
 // Player_ViewClamping in game/obj/Player.cpp for where and why that is the right moment.
 // ---------------------------------------------------------------------------------------------------------------
 
-// Once per frame, from Input_Update - including in menus, which is when the mouse has to be let go of again.
+// Once per frame, from Input_UpdateWithMouse - including in menus, which is when the mouse has to be let go of again.
 // Handles capture and release and collects movement and button state; applies nothing by itself.
 void MouseLook_Update(void);
 

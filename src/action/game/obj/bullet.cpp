@@ -31,7 +31,6 @@
 
 #pragma fp_contract(off)
 
-#define Sound_IsFinnished ((bool (__cdecl *)(DYNAMICSOUNDS *handle))0x000cbac0)
 #define Bullet_acquiretarget ((void (__cdecl *)(BU_tag *bullet, obj_tag *shooter))0x00022db0)
 
 // The spent cases, used in turn

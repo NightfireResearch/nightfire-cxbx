@@ -126,6 +126,7 @@ add_library(actioninject SHARED
   src/action/devtools/ObjectPortShadow.cpp
   src/action/devtools/EnginePortShadow.cpp
   src/action/devtools/HudPortShadow.cpp
+  src/action/devtools/SoundPortShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/MathExactShadow.cpp
   src/action/devtools/Teleport.cpp
@@ -193,6 +194,7 @@ add_library(actioninject SHARED
   src/action/util/bin.cpp
   src/action/util/crc.cpp
   src/action/util/hashtable.cpp
+  src/action/util/DList.cpp
   src/action/util/LList.cpp
   src/action/util/Random.cpp
   src/action/util/CirBuf.cpp

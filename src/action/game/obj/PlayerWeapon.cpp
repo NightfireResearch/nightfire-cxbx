@@ -707,7 +707,7 @@ void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway) {
     short idleBefore = blData->idleState;
 
     if (gun->curState == GUN_IDLE) {
-        if (PlayerInputs[playerNum].field141_0x154 != 0)
+        if (PlayerInputs[playerNum].anyInput != 0)
             blData->idleTicks = 0;
         else
             blData->idleTicks++;
