@@ -41,6 +41,7 @@ bool HostInput_KeyHeld(HostKey key) {
         VK_LEFT, VK_RIGHT, VK_UP, VK_DOWN,
         VK_SPACE, VK_SHIFT, VK_RETURN, VK_ESCAPE,
         VK_F8, VK_F9,
+        'Q', 'E', 'R',
     };
     return (GetAsyncKeyState(kVirtualKeys[key]) & 0x8000) != 0;
 }
