@@ -26836,7 +26836,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00084080",
+        "name": "Menu_SetSoundLanguage",
         "address": "0x00084080",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -26852,7 +26852,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000840d0",
+        "name": "Menu_GetLanguageButton",
         "address": "0x000840d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,

@@ -19,6 +19,9 @@ typedef enum {
 // Upgrades is an array of type uchar[4][9] located at 0x00279120. First index is player ID, second is weapon upgrade group
 #define Upgrades (*(uchar(*)[4][9])0x00279120)
 
+void Set_Upgrade(uchar player, short objId, uchar level);
+void ResetUpgrade(uchar player);
+
 // The weapon each upgrade level turns a base weapon into (Upgrade.cpp)
 extern uint UpgradedHandguns[4];
 extern uint UpgradedSnipers[4];

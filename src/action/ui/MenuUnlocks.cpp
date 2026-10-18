@@ -2,6 +2,9 @@
 #include "Menu.h"
 
 #include "../game.h"
+#include "../game/Upgrade.h"
+
+#include <string.h>
 
 // The campaign's progress and what it unlocks: the missions open (sp_level[].enabled), and each codename's rewards
 // - a 64-bit mask per player (docs/ui/secrets.md, "How the bonus bits work") - which open multiplayer characters,
@@ -14,12 +17,6 @@
 // XBE_GLOBAL(0x002456a8, 0x1)
 uint8_t mp_explosive_scenery_unlocked;
 
-// AUTOGEN
-void PlrStarts_ProcessRewardCounter(ulong *bonus, HASHCODE hashcode, uint upgradeLevel, char set, REWARDINFO_tag *op);
-// AUTOGEN
-void ResetUpgrade(byte player);
-// AUTOGEN
-void Set_Upgrade(byte player, short objId, undefined1 level);
 
 // The level whose rewards are slot 'index' of the rewards table, as sp_level lists them.
 static HASHCODE LevelAt(uint index) {
@@ -64,7 +61,7 @@ void Menu_SetBonus(uint lo, uint hi, byte player, char orIn) {
         for (uint slot = 1; slot < 5; slot++) {
             PlrStarts_ProcessRewardCounter(bonus, LevelAt(level), slot, 0, &info);
             if (info.hasMedal && info.objType == REWARD_UPGRADE)
-                Set_Upgrade(player, (short)info.objId, (undefined1)info.upgradeLevel);
+                Set_Upgrade(player, (short)info.objId, (uchar)info.upgradeLevel);
         }
 }
 
@@ -79,7 +76,7 @@ bool Menu_SetLevelBonus(int level, uint medal, byte player) {
         index++;
     if (index == ARRAY_SIZE(sp_level)) {
         // As the original, which then marks sp_level[-1] - in the game's memory the byte at 0x17c578, which is what
-        // it still is - and opens the first mission.
+        // it still is, the last "8" of P_PAUSE's build string - and opens the first mission.
         index = -1;
         U8_AT(0x0017c578) = 1;
     } else {
@@ -187,4 +184,48 @@ void Menu_UnlockMPSettings(void) {
                 mp_explosive_scenery_unlocked = 1;
             }
         }
+}
+
+// ---- the medals' rewards (PS2: menu_handlers.cpp)
+
+// XBE_GLOBAL(0x00225080, 0x34)
+LEVEL_BONUSES level_bonuses;
+
+// A mission's four rewards, and which of them the first player has; nothing for a mission not in the table
+// AUTOINJECT
+LEVEL_BONUSES* Menu_GetLevelBonuses(HASHCODE level) {
+    memset(&level_bonuses, 0, sizeof(level_bonuses));
+    for (uint i = 0; i < PlrStarts_GetRewardsTableSize(); i++) {
+        if (rewards_table[i].level != level)
+            continue;
+        for (uint medal = 1; medal < 5; medal++) {
+            REWARDINFO_tag info = {};
+            PlrStarts_ProcessRewardCounter(menu_bonus, level, medal, 0, &info);
+            level_bonuses.medals[medal - 1].earned = info.hasMedal;
+            level_bonuses.medals[medal - 1].name = rewards_table[i].names[medal - 1];
+            level_bonuses.medals[medal - 1].icon = rewards_table[i].icons[medal - 1];
+        }
+        break;
+    }
+    return &level_bonuses;
+}
+
+// Whether the player has the reward of a mission's medal
+// AUTOINJECT
+bool Menu_HasMedal(HASHCODE level, uint medal, uchar player) {
+    REWARDINFO_tag info = {};
+    PlrStarts_ProcessRewardCounter(&menu_bonus[player * 2], level, medal, 0, &info);
+    return info.hasMedal;
+}
+
+// The best medal (1-4) whose reward the player has of a mission, 0 for none
+// AUTOINJECT
+int Menu_GetBestMedal(HASHCODE level, uchar player) {
+    for (int medal = 4; medal > 0; medal--) {
+        REWARDINFO_tag info = {};
+        PlrStarts_ProcessRewardCounter(&menu_bonus[player * 2], level, medal, 0, &info);
+        if (info.hasMedal)
+            return medal;
+    }
+    return 0;
 }

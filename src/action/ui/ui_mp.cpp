@@ -599,18 +599,18 @@ bool C_SBMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
             }
             bool teams = (MPSettings.GameMode & TEAMGAME) != GM_QUICK;
             if (!teams && mi6 > 1) {
-                Menu_CreateOptionBox(managerNum, (int **)Txt_BindLabel(MP_GOOD_GUYS_WRONG_TEAM, 0), 0, 1, 0);
+                Menu_CreateOptionBox(managerNum, Txt_BindLabel(MP_GOOD_GUYS_WRONG_TEAM, 0), 0, 1, 0);
                 break;
             }
             if (teams && (phoenix == 0 || mi6 == 0)) {
                 sprintf(mp_option_box_text, Txt_BindLabel(MP_NO_PLAYERS_ON_TEAM, 0),
                         Txt_BindLabel(phoenix == 0 ? MP_TEAM_PHOENIX : MP_TEAM_MI6, 0));
-                Menu_CreateOptionBox(managerNum, (int **)mp_option_box_text, 8, 1, 0);
+                Menu_CreateOptionBox(managerNum, mp_option_box_text, 8, 1, 0);
                 break;
             }
             if (MPSettings.numBots + MPSettings.numPlayers < 2) {
                 strcpy(mp_option_box_text, Txt_BindLabel(MP_NOT_ENOUGH_PLAYERS, 0));
-                Menu_CreateOptionBox(managerNum, (int **)mp_option_box_text, 7, 1, 0);
+                Menu_CreateOptionBox(managerNum, mp_option_box_text, 7, 1, 0);
                 break;
             }
             Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_MPCONFIRM, 0);

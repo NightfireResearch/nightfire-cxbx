@@ -32,16 +32,20 @@ invented function names in Ghidra carry an "INVENTED NAME" plate comment.
 
 | File | What |
 |---|---|
-| `ui_nightfire.cpp` | `sp_level`, `difficulty`; P_NFMAP, C_SBNFMAP, P_NFDFCTY, C_SBNFDFCTY |
+| `ui_nightfire.cpp` | `sp_level`, `difficulty`; P_NFMAP, C_SBNFMAP, P_NFDFCTY, C_SBNFDFCTY; after a mission P_NFRESULTS, P_NFBONUS, P_NFSTATS and its rows (Menu_AddRow, Menu_AddRowPercentage) |
 | `ui_mp.cpp` | `mp_level`, `mp_scenario`, `mp_characters`, `mp_characters_small`, `mp_options`, `mp_bots`; P_MPMAP, C_SBMPMAP, P_MPSCENARIO, C_SBMPSCEN, P_MPOPTIONS, C_SBMPOPTIONS, P_MPBOTS, C_SBBOTS, P_MPBOTCHOOSE, C_SBMPBTCHOOSE, C_RBMPSETUP, P_MPCONFIRM, P_MPDEBRIEFING, P_MPPLAYERMODS, P_MPENVIROMODS, Menu_GetMPSkins |
-| `ui_codenames.cpp` | `cn_options`; P_CNMENU, C_SBCNOPTIONS, P_CNSELECT, C_SBCNSELECT, C_LBERROPTIONS; Menu_UpdateMessageBox, Menu_EnumSaves, Menu_FlushEnum, Menu_PutCodenamesIntoControl, Menu_MapDefaultCodename, Menu_SelectCodenameInControl, Menu_StartLS (invented name, register adaptor) |
+| `ui_codenames.cpp` | `cn_options`; P_CNMENU, C_SBCNOPTIONS, P_CNSELECT, C_SBCNSELECT, C_LBERROPTIONS; Menu_UpdateMessageBox, Menu_EnumSaves, Menu_FlushEnum, Menu_PutCodenamesIntoControl, Menu_MapDefaultCodename, Menu_SelectCodenameInControl, Menu_StartLS (invented name, register adaptor); the campaign's codename select P_NFSELECT, C_SBNFCN; Menu_UpdateCodenameWheel, Menu_UpdateDefaultCodename |
 | `ui_cheats.cpp` | the cheat menu's checkboxes: every C_CHCH handler |
 | `ui_keypad.cpp` | C_KEYPAD |
-| `MenuUnlocks.cpp` | the campaign's progress and rewards: missions open, bonus masks, upgrades, MP characters/scenarios unlocked |
+| `MenuUnlocks.cpp` | the campaign's progress and rewards: missions open, bonus masks, upgrades, MP characters/scenarios unlocked; a mission's rewards and medals (Menu_GetLevelBonuses, Menu_HasMedal, Menu_GetBestMedal). The reward counter itself (PlrStarts_ProcessRewardCounter) is in `game/sp/PlayerStats.cpp`, Set_Upgrade and ResetUpgrade in `game/Upgrade.cpp` |
 | `ui_secrets.cpp` | Menu_SpecialCodenameCheck, Menu_UpgradeCheat, Menu_IsValidCodename, P_CNNAME, C_KEYBOARD |
 | `ui_credits.cpp` | Menu_InitCredits, Menu_SetupCredits (from `CreditsData.inc`, generated from `data/credits.csv`), P_CREDITS |
-| `ui_dossier.cpp` | `ds_options`, `ds_weapons`, `ds_gadgets`; the dossier pages (earlier work) |
-| `Menu.cpp`, `Component.h` | the framework (nightfire-port parcel 16, package A): the skins (`Component_*`), finding controls and moving the cursor, the dispatch (`__Menu_SendMessage`, `Menu_Update`, `__Menu_Send`, `__Menu_SendEx`, `__Menu_SendEx2`), input (`Menu_GetAction` - a register adaptor -, `Menu_InputAction`, `Menu_SetAction`, the idle count), the sprite helpers, `Menu_Malloc`/`Menu_Free`, the pulse, the sounds, `Menu_UpdateTextFmt` ([framework.md](framework.md) §1) |
+| `ui_dossier.cpp` | `ds_options`, `ds_weapons`, `ds_gadgets`; the dossier pages (earlier work); the records and rewards rows C_RBDSRECORDS, C_RBDSREWARDS |
+| `ui_frontend.cpp` | the boot pages and the main menu (nightfire-port parcel 16, package C): P_LANGUAGE, C_LANGUAGE, P_INTRO, P_START, P_PARISENUM, P_ESTHERO, P_MAIN, C_GONIGHTFIRE, C_GOMULTIPLAYER, C_GOCODENAMES; the movie pages P_TRAILER, P_FMVPLAYER, P_WINGAME and Menu_PlayMovie, Menu_StopMovie, Menu_UpdateMovieCounter; Menu_SetSoundLanguage, Menu_GetLanguageButton (names ours); the mini mission (Menu_WillRunMiniMission, Menu_RunMiniMission) |
+| `ui_options.cpp` | the codename's options pages: P_CNCONTROLS, C_RBCONTROL, P_CNOPTIONS, P_CNMPOPTIONS, P_CNAVOPTIONS; the controller styles (Menu_DisplayControllerStyle, Menu_DisplayControllerStyleList, Menu_UpdateControllerLabelString) |
+| `ui_pause.cpp` | the pause menu P_PAUSE and C_GCPAUSE (split by role: the panels, the hint, restart and quit), and P_ENDMISSION |
+| `ui_tweaks.cpp` | the debug page's tools: C_LBPMMAP, P_TWEAKS, P_TWEAKS2, P_NIS, C_NIS, P_CHEATMEDAL |
+| `Menu.cpp`, `Component.h` | the framework (nightfire-port parcel 16, package A): the skins (`Component_*`), finding controls and moving the cursor, the dispatch (`__Menu_SendMessage`, `Menu_Update`, `__Menu_Send`, `__Menu_SendEx`, `__Menu_SendEx2`), input (`Menu_GetAction` - a register adaptor -, `Menu_InputAction`, `Menu_SetAction`, the idle count), the sprite helpers, `Menu_Malloc`/`Menu_Free`, the pulse, the sounds, `Menu_UpdateTextFmt` ([framework.md](framework.md) §1); the iris (Menu_StartIris, Menu_PlayIris, Menu_ChangePageCloseIris), option boxes (Menu_CreateOptionBox, Menu_CreateOptionBoxLabel, Menu_UpdateOptionBox, C_LBMSGOPTIONS), Menu_SelectItemInControl, Menu_GetItemFromHash, Menu_IsBotGood (package C) |
 | `MenuScript.cpp`, `LinkedList.cpp` | the menu scripts (every `Script_*` of 0x96960-0x97560: keyframes, messages, interpolation by line and spline, default scripts) and the linked lists |
 | `MenuManager.cpp`, `Manager.cpp` | the managers (package B): `MenuManager_*` (create from the menu file, update, the close actions and the controller-removed flow), `Manager_SendMessage` (creating controls and pages, GoPage, the history, Back, the cursor and focus); `MenuManager_GetStatus` is a register adaptor (it keeps EDX) |
 | `Page.cpp`, `Window.cpp`, `Process.cpp` | pages (the help line, focus, updates of their controls), windows, processes (the colour fades) |
@@ -56,7 +60,7 @@ definitions. A consequence for A/B runs: an original handler run with `MenuOrigi
 no longer changes. (An alternative was built and is not used: `// RELOCATE` on an array plus `tools/data_refs.py`
 repoints every code reference at it - `src/common/xbeRelocate.h`.)
 
-Not yet: the handlers without lists (`handlers.md` step 2).
+Not yet: the multiplayer join and setup handlers (P_MPJOIN, P_MPSETUP, C_RBMPSTART, C_RBMPCNAME, C_RBMPFINISH, C_MPDBG), P_MPRULES, P_MPBOTSETUP and the movie selector P_FMVTEST.
 
 ## Checking against the original
 
@@ -73,8 +77,11 @@ Not yet: the handlers without lists (`handlers.md` step 2).
   (every code, 224 runs), `UnlocksShadow.cpp` (the seven progress/unlock functions over their inputs, 1440 runs),
   `UpgradeShadow.cpp` (the weapon upgrade readers), `MemShadow.cpp` (the heap allocator, ~19000 random calls
   on two scratch heaps), `SaveShadow.cpp` (the codename save), `CodenameShadow.cpp` (the codename pages, the
-  cheat checkboxes, the keypad) and `MenuPortShadow.cpp` (the framework of `Menu.cpp`, `MenuScript.cpp` and
-  `LinkedList.cpp`; `NIGHTFIRE_SHADOW_ONLY=menuport` runs it alone).
+  cheat checkboxes, the keypad), `MenuPortShadow.cpp` (the framework of `Menu.cpp`, `MenuScript.cpp` and
+  `LinkedList.cpp`; `NIGHTFIRE_SHADOW_ONLY=menuport` runs it alone), `MenuControlShadow.cpp` (the control types,
+  pages and managers; `menucontrols`) and `MenuHandlerShadow.cpp` (package C's handlers and helpers; `menuhandlers`,
+  `NIGHTFIRE_MENUHANDLERS_GROUP` one group). The last lends the globals the handlers own to the original as the game's
+  copies and compares them with ours.
 
 `tools/ui/run_menu.sh <script> [name]` runs a script from a fresh boot (language, intro, start page) in
 `build/menurun/<name>/`, with a copy of `Release/saves` so the start page leads to the main menu, and writes the

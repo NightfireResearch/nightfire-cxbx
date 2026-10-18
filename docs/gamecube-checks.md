@@ -160,11 +160,11 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | **Player / weapons / rewards** |
 | 93 | FUN_800f6760 (give player weapon) | 0x800f6760 | weapon has no skin hash / skin not loaded → return 0 | FYI: Weapon %d has no skin / FYI: Weapon %d not loaded | no | Player_EquipWeapon | 0xba5e0 | high (same body, same callee Player_IsBetterWeapon) | silent | src/action/game/obj/PlayerWeapon.cpp - added |
 | 94 | FUN_80078620 (second give-weapon path) | 0x80078620 | same as 93 | same | no | not matched | - | - | ? |
-| 95 | FUN_800f6ec4 (set upgrade) | 0x800f6ec4 | upgrade index (param/3) >= 9 | Invalid upgrade %d | no | Set_Upgrade | 0xb9e30 | med | ? |
-| 96 | FUN_800e7834 (reward lookup) | 0x800e7834 | medal type >= 5 | ERROR : Invalid medal type | no | PlrStarts_ProcessRewardCounter | 0xb1740 | med-high | ? |
-| 97 | FUN_800e7834 | 0x800e7834 | level hash not among the 12 reward rows | ERROR : Reward level 0x%x unknown | no | PlrStarts_ProcessRewardCounter | 0xb1740 | med-high | ? |
-| 98 | FUN_800e7834 | 0x800e7834 | reward type >= 5 | ERROR : Invalid reward type | no | PlrStarts_ProcessRewardCounter | 0xb1740 | med-high | ? |
-| 99 | FUN_800e7834 | 0x800e7834 | reward data >= 0x3f (bit index into a 64-bit mask) | ERROR : Invalid reward data | no | PlrStarts_ProcessRewardCounter | 0xb1740 | med-high | ? |
+| 95 | FUN_800f6ec4 (set upgrade) | 0x800f6ec4 | upgrade index (param/3) >= 9 | Invalid upgrade %d | no | Set_Upgrade | 0xb9e30 | med | silent (a group of 9 or more is not written) - added: src/action/game/Upgrade.cpp (Set_Upgrade) |
+| 96 | FUN_800e7834 (reward lookup) | 0x800e7834 | medal type >= 5 | ERROR : Invalid medal type | no | PlrStarts_ProcessRewardCounter | 0xb1740 | med-high | silent (returns with type 5) - added: src/action/game/sp/PlayerStats.cpp (PlrStarts_ProcessRewardCounter) |
+| 97 | FUN_800e7834 | 0x800e7834 | level hash not among the 12 reward rows | ERROR : Reward level 0x%x unknown | no | PlrStarts_ProcessRewardCounter | 0xb1740 | med-high | silent (returns with type 5) - added: src/action/game/sp/PlayerStats.cpp (PlrStarts_ProcessRewardCounter) |
+| 98 | FUN_800e7834 | 0x800e7834 | reward type >= 5 | ERROR : Invalid reward type | no | PlrStarts_ProcessRewardCounter | 0xb1740 | med-high | silent (returns with type 5) - added: src/action/game/sp/PlayerStats.cpp (PlrStarts_ProcessRewardCounter) |
+| 99 | FUN_800e7834 | 0x800e7834 | reward data >= 0x3f (bit index into a 64-bit mask) | ERROR : Invalid reward data | no | PlrStarts_ProcessRewardCounter | 0xb1740 | med-high | silent (returns with the type but no bit) - added: src/action/game/sp/PlayerStats.cpp (PlrStarts_ProcessRewardCounter) |
 | 100 | FUN_800e6af4 | 0x800e6af4 | playerNum >= 10 | ERROR : Invalid Plr ID | no | PlrStat_LogShotFired | 0xb07a0 | high | silent |
 | 101 | FUN_800e69e4 | 0x800e69e4 | playerNum >= 10 | ERROR : Invalid Plr ID | no | PlrStat_LogShotHitEnemy | 0xb06f0 | high | silent |
 | 102 | FUN_800e6a64 | 0x800e6a64 | playerNum >= 10 | ERROR : Invalid Plr ID | no | PlrStat_LogShotHitScenery | 0xb0740 | high | silent |

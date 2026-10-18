@@ -1,0 +1,65 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# The pause menu's pages nothing on a retail disc opens, by GoPage: the debug page (its level list, cheats and
+# scenes), the tunables (P_TWEAKS, P_TWEAKS2) and the medal cheat (P_CHEATMEDAL).
+press A                    # NightFire
+waitpage 0x40000025        # P_NFSELECT
+wait 100
+press A                    # the codename
+waitpage 0x4000002f        # P_MESSAGEBOX
+wait 150
+press A
+waitpage 0x40000023        # P_NFDFCTY
+wait 100
+press A
+waitpage 0x4000001c        # P_NFMAP
+wait 100
+press A                    # the first mission
+wait 1500
+press A                    # skip the opening cutscene
+wait 300
+cheat nodrones
+press START
+waitpage 0x4000004b 300    # P_PAUSE
+wait 60
+gopage 0x40000044          # P_TWEAKS
+wait 100
+shot tweaks
+press DOWN
+wait 30
+press RIGHT
+wait 30
+press RIGHT
+wait 30
+shot tweaks_changed
+press Y                    # P_TWEAKS2
+wait 100
+shot tweaks2
+press RIGHT
+wait 30
+shot tweaks2_changed
+press B
+wait 100
+shot tweaks_back
+press B
+wait 100
+gopage 0x40000007          # the debug page
+wait 100
+shot debug_page
+press DOWN
+wait 30
+shot debug_down
+gopage 0x4000000c          # P_NIS
+wait 100
+shot nis
+gopage 0x4000004c          # P_CHEATMEDAL
+wait 100
+shot cheatmedal
+quit

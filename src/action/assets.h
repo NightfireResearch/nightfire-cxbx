@@ -244,6 +244,8 @@ typedef enum {
     ICON_MPOPTIONS_PLAYERMODS = 0x03000138,
     ICON_MPOPTIONS_RULES = 0x03000139,
     ICON_CNOPTIONS_SECRETUNLOCKS = 0x0300013b,
+    ICON_CODENAME_NEW = 0x0300013b,         // the codenames wheel's for a new codename (the same picture)
+    ICON_CODENAME = 0x03000135,             // and for the others
     ICON_SPMAP_EQUINOX = 0x03000142,
     ICON_MPCHAR_BONDTUX = 0x03000147,
     ICON_MPCHAR_DRAKESUIT = 0x03000148,
@@ -438,6 +440,18 @@ typedef enum {
     SUB_P_MPDEBRIEFING_RESULT = 0x1000023d,     // "<name> wins the match."
     SUB_P_MPDEBRIEFING_VICTORIES = 0x10000240,  // MPGamePlayer.victories
     SUB_P_CNNAME_TITLE = 0x10000242,            // "Secret Unlocks" / "Enter a new codename"
+    SUB_C_SBNFCN_WHEEL_TEXT = 0x100000e4,
+    SUB_C_SBNFCN_ICON = 0x100001cc,
+    SUB_C_SBNFCN_DESCRIPTION_TEXT = 0x100001f2,
+    SUB_C_SBNFCN_IRIS = 0x10000103,
+    SUB_P_NFSELECT_MENU_GROUP = 0x100000ee,
+    SUB_P_LANGUAGE_HELP_TEXT = 0x1000006f,      // "~A To Select" in the language under the cursor
+    SUB_P_START_LEGAL_TEXT = 0x10000197,
+    SUB_P_START_PROMPT_TEXT = 0x100000fa,       // "Press START"
+    SUB_P_MAIN_FADE = 0x100000ed,               // the black the main menu fades from and to
+    SUB_P_MAIN_TEXT_225 = 0x10000225,           // given a line spacing
+    SUB_P_MESSAGEBOX_BOX = 0x1000011e,          // the box (a button) of an option box
+    SUB_P_MESSAGEBOX_TEXT = 0x1000011f,         // its memo
 
     // Pages: Groups of controls/components?
     P_MAIN = 0x40000002,
@@ -690,11 +704,15 @@ typedef enum {
     SECRET_UNLOCKS = 0x010002d4,            // "Secret Unlocks"
     CODENAME_NEW = 0x0000029b,              // "New Codename" (the first default codename)
     CODENAME_DEFAULT = 0x00000211,          // "Default" (the second)
+    CODENAME_NEW_DESC = 0x01000004,         // "Create a custom profile for your game settings."
+    CODENAME_DEFAULT_DESC = 0x01000003,     // "Select the default game settings. ..."
+    CODENAME_SAVED_DESC = 0x01000005,       // "Select this custom profile for your game settings."
     PLAY_WITHOUT_SAVING = 0x010002ff,       // "Play without saving" (the second, on P_NFSELECT)
     CODENAME_DELETE_CONFIRM = 0x00000320,   // "Are you sure you want to delete this codename?..."
     CODENAME_DELETE_FAILED = 0x00000265,    // "Unable to delete saved game."
     CNSELECT_HINT = 0x010000b9,             // "~A Edit  ~Y Create  ~V Scroll  ~B Back"
     CNSELECT_HINT_DELETE = 0x010000b4,      // "~A Edit  ~Y Create  ~X Delete  ~V Scroll  ~B Back"
+    DEFAULT_CODENAME_WARNING = 0x010000bb,  // "You won't be able to save your progress using this default profile..."
 
     TXT_MISSION_COMPLETE = 0x02000006,
     TXT_MISSION_FAIL = 0x02000007,

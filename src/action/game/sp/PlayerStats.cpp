@@ -1,6 +1,7 @@
 #include "PlayerStats.h"
 #include "../mp/multiplayer.h"
 #include "../../game.h"
+#include "../../ui/Menu.h"
 
 #include "string.h"
 
@@ -617,4 +618,74 @@ void PlrStats_SetDrivingData(uint *bestScores, uint *bondMoments) {
         ScoringTable[i].bestScore = bestScores[i];
         ScoringTable[i].statsTable[SCORE_BOND_MOMENTS].achieved = bondMoments[i];
     }
+}
+
+// ---- the missions' rewards (PS2: player_stats.cpp)
+
+// 1 << n in 64 bits, as MSVC's __allshl: 0 from 64 on
+static ulonglong RewardBit(uint n) {
+    return n < 64 ? 1ull << n : 0;
+}
+
+// AUTOINJECT
+uint PlrStarts_GetRewardsTableSize(void) {
+    return REWARDS_TABLE_SIZE;
+}
+
+// A mission's reward for a medal's slot (1-4): what it is, whether the bonus has its bit, and (with set) gives it. An
+// upgrade has a bit for each mission that gives it (in the table's order, slots 1 to 4), and its level is the count of
+// those set. A slot of 5 or more, a mission not in the table or a reward of type 5 or more give type 5 and no bit.
+// AUTOINJECT
+void PlrStarts_ProcessRewardCounter(ulong *bonus, HASHCODE level, uint slot, char set, REWARDINFO_tag *op) {
+    op->hasMedal = 0;
+    op->objType = 5;
+    op->objId = 0;
+    op->upgradeLevel = 0;
+    if (slot >= 5) {
+        NF_WARN("ERROR : Invalid medal type\n"); // GC check (0x800e7834)
+        return;
+    }
+    uint mission = 0;
+    while (mission < REWARDS_TABLE_SIZE && rewards_table[mission].level != level)
+        mission++;
+    if (mission >= REWARDS_TABLE_SIZE) {
+        NF_WARN("ERROR : Reward level 0x%x unknown\n", level); // GC check (0x800e7834)
+        return;
+    }
+    LEVEL_REWARD reward = rewards_table[mission].rewards[slot];
+    if (reward.type >= 5) {
+        NF_WARN("ERROR : Invalid reward type\n"); // GC check (0x800e7834)
+        return;
+    }
+    op->objType = reward.type;
+    if (reward.bit >= 0x3f) {
+        NF_WARN("ERROR : Invalid reward data\n"); // GC check (0x800e7834)
+        return;
+    }
+    op->objId = reward.bit;
+
+    uint offset = 0;    // this mission's bit among the upgrade's
+    int count = 0;
+    if (reward.type == REWARD_UPGRADE) {
+        uint n = 0;
+        for (uint m = 0; m < REWARDS_TABLE_SIZE; m++)
+            for (uint s = 1; s < 5; s++) {
+                if (rewards_table[m].rewards[s].value != reward.value)
+                    continue;
+                if (m == mission)
+                    offset = n;
+                if (((ulonglong)bonus[0] | (ulonglong)bonus[1] << 32) & RewardBit(n + reward.bit))
+                    count++;
+                n++;
+            }
+    }
+    ulonglong bit = RewardBit(offset + reward.bit);
+    op->hasMedal = (((ulonglong)bonus[0] | (ulonglong)bonus[1] << 32) & bit) != 0;
+    if (set) {
+        bonus[0] |= (ulong)bit;
+        bonus[1] |= (ulong)(bit >> 32);
+        count++;
+    }
+    if (reward.type == REWARD_UPGRADE)
+        op->upgradeLevel = count;
 }

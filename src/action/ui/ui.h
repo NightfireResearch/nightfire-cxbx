@@ -475,6 +475,55 @@ uint64_t Menu_SpecialCodenameCheck(byte *code);
 bool P_CNNAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
 bool C_KEYBOARD_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
 
+// ui_frontend: the boot pages, the main menu and the movie pages
+bool P_LANGUAGE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_LANGUAGE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_INTRO_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_START_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_PARISENUM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_ESTHERO_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_MAIN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_GONIGHTFIRE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_GOMULTIPLAYER_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_GOCODENAMES_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_FMVPLAYER_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_TRAILER_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_WINGAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+
+// ui_tweaks: the debug page's tools
+bool C_LBPMMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_TWEAKS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_TWEAKS2_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_NIS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_NIS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_CHEATMEDAL_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+
+// Menu.cpp: the option box's answers
+bool C_LBMSGOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+
+// ui_nightfire: the codename select before the campaign, the results after a mission
+bool P_NFSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_SBNFCN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_NFRESULTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_NFBONUS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_NFSTATS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+
+// ui_dossier: the records and rewards rows
+bool C_RBDSRECORDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_RBDSREWARDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+
+// ui_options: the codename's options pages and the controller styles
+bool P_CNCONTROLS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_RBCONTROL_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_CNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_CNMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_CNAVOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+
+// ui_pause: the pause menu and the end of a mission
+bool P_PAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool C_GCPAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+bool P_ENDMISSION_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2);
+
 // ui_score
 void SeparateNumber(uint score, char* scoreText);
 

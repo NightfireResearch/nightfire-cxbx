@@ -68,8 +68,9 @@ static void Compare(const char *what, const UnlockState &start, const unsigned *
     Load(&start);
     unsigned long long theirs;
     {
-        XbeOriginalScope s0(originals[0]), s1(count > 1 ? originals[1] : originals[0]),
-            s2(count > 2 ? originals[2] : originals[0]);
+        // One scope an address: a second over the same one takes the original's bytes for the jump, and leaves the
+        // original in place when it closes (0 was never patched)
+        XbeOriginalScope s0(originals[0]), s1(count > 1 ? originals[1] : 0), s2(count > 2 ? originals[2] : 0);
         theirs = call(true);
     }
     UnlockState a;

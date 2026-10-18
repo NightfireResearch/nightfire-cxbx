@@ -53,9 +53,8 @@ static int CachedDashboardLanguage = -1;
 
 #define LANGUAGE_MARKER "t:\\lang%02d%02d.dat"
 
-// Sets the text language (game code)
-// AUTOGEN
-void FUN_00084080(int language);
+// Sets the sound's language for a text language (ui/ui_frontend.cpp)
+void Menu_SetSoundLanguage(int language);
 
 // The dashboard's language as a language code: English is American on an NTSC console. (0x000e92a0)
 // FUNC_AT(000e92a0)
@@ -146,7 +145,7 @@ int Language_Get(void) {
                 AskForLanguage = 0;
             }
         }
-        FUN_00084080(LanguageToLoad);
+        Menu_SetSoundLanguage(LanguageToLoad);
     }
     static const int toCode[9] = {1, 2, 3, 6, 4, 0, 8, 5, 7};
     unsigned language = (unsigned)LanguageToLoad;

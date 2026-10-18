@@ -1,4 +1,5 @@
 #include "Menu.h"
+#include "MenuCommon.h"
 #include "Component.h"
 #include "Manager.h"
 #include "TextBox.h"
@@ -57,24 +58,127 @@ bool Menu_IsDrivingLevel(HASHCODE level) {
   return false;
 }
 
-// AUTOGEN
-void Menu_StartIris(MENU_IRISOPS param_1, uchar param_2, uint param_3);
+// ---- the iris: a picture of a camera's iris that closes and opens over a wheel (PS2: menu_frontend.cpp)
 
-// AUTOGEN
-void Menu_PlayIris(char param_1, uchar param_2, uint param_3);
+// Its state: the frame of the ten (above 10 it is over), the ticks (the picture changes on even ones), a frame held,
+// and whether it is running
+// XBE_GLOBAL(0x0025d7ac, 0x4)
+int iris_tick;
+// XBE_GLOBAL(0x0025d7b0, 0x4)
+int iris_frame;
+// XBE_GLOBAL(0x0025d7b8, 0x1)
+uint8_t iris_hold;
+// XBE_GLOBAL(0x0025d7b9, 0x1)
+uint8_t iris_active;
 
-// AUTOGEN
-void Menu_ChangePageCloseIris(HASHCODE param_1, uchar param_2, uint param_3);
+#define IRIS_FRAMES 10
+
+// Its pictures (MessageType_SetIcon): frames 1 to 5 close it to the middle, 6 to 9 open it again
+#define ICON_IRIS_1 ((HASHCODE)0x030000bf)
+#define ICON_IRIS_2 ((HASHCODE)0x030000c0)
+#define ICON_IRIS_3 ((HASHCODE)0x030000c1)
+#define ICON_IRIS_4 ((HASHCODE)0x030000c2)
+#define ICON_IRIS_5 ((HASHCODE)0x030000c3)
+
+// Starts the iris: 0 from the middle; 1 the whole of it; 2 the whole of it unless one is running, without marking it
+// running (a wheel's turn); 3 held at the middle; 4 its last frame. Its first frame is drawn.
+// AUTOINJECT
+void Menu_StartIris(MENU_IRISOPS op, uchar managerNum, uint label) {
+    if (op == 2 && iris_active)
+        return;
+    switch (op) {
+        case 0:
+            iris_frame = 5;
+            iris_active = 1;
+            iris_hold = 0;
+            break;
+        case 1:
+            iris_active = 1;
+            iris_frame = 1;
+            iris_hold = 0;
+            break;
+        case 2:
+            iris_active = 0;
+            iris_frame = 1;
+            iris_hold = 0;
+            break;
+        case 3:
+            iris_active = 1;
+            iris_hold = 1;
+            iris_frame = 5;
+            break;
+        case 4:
+            iris_frame = IRIS_FRAMES;
+            iris_active = 1;
+            iris_hold = 0;
+            break;
+    }
+    iris_tick = 0;
+    Menu_PlayIris(0, managerNum, label);
+    iris_tick = -1;
+}
+
+// A frame of the iris: on even ticks the label shows the frame's picture and, when ticking and not held, the next
+// frame follows
+// AUTOINJECT
+void Menu_PlayIris(char tick, uchar managerNum, uint label) {
+    if (iris_frame > IRIS_FRAMES) {
+        iris_active = 0;
+        return;
+    }
+    if (tick)
+        iris_tick++;
+    if (iris_tick % 2 != 0)
+        return;
+    M_CONTROL *iris = CONTROL_GET(managerNum, (HASHCODE)label);
+    if (iris == NULL)
+        return;
+    switch (iris_frame) {
+        case 1:
+        case 9:
+            __Menu_SendMessage(iris, MessageType_SetIcon, ICON_IRIS_1, 0);
+            __Menu_SendMessage(iris, MessageType_SetIconRect, 0, 0x800080);
+            break;
+        case 2:
+        case 8:
+            __Menu_SendMessage(iris, MessageType_SetIcon, ICON_IRIS_2, 0);
+            __Menu_SendMessage(iris, MessageType_SetIconRect, 0, 0x800080);
+            break;
+        case 3:
+        case 7:
+            __Menu_SendMessage(iris, MessageType_SetIcon, ICON_IRIS_3, 0);
+            __Menu_SendMessage(iris, MessageType_SetIconRect, 0, 0x800080);
+            break;
+        case 4:
+        case 6:
+            __Menu_SendMessage(iris, MessageType_SetIcon, ICON_IRIS_4, 0);
+            __Menu_SendMessage(iris, MessageType_SetIconRect, 0, 0x800080);
+            break;
+        case 5:
+            __Menu_SendMessage(iris, MessageType_SetIcon, ICON_IRIS_5, 0);
+            __Menu_SendMessage(iris, MessageType_SetIconRect, 0, 0x800080);
+            break;
+        case 10:
+            __Menu_SendMessage(iris, MessageType_SetIcon, ICON_IRIS_1, 0);
+            __Menu_SendMessage(iris, MessageType_SetIconRect, 0x400040, 0x10001);
+            break;
+    }
+    if (tick && !iris_hold)
+        iris_frame++;
+}
+
+// The whole iris, input locked, and the page (with the GoPage flags of the load or save in hand) as it closes
+// AUTOINJECT
+void Menu_ChangePageCloseIris(HASHCODE page, uchar managerNum, uint label) {
+    Menu_StartIris(1, managerNum, label);
+    M_CONTROL *mgr = &manager[managerNum].control;
+    __Menu_SendDelayedMessage(1, mgr, MessageType_LockInput, 1, 0);
+    __Menu_SendDelayedMessage(10, mgr, MessageType_GoPage, page, ls.returnPageArg);
+}
 
 
 // AUTOGEN
 void __stdcall Menu_PrepareBots(void);
-
-// AUTOGEN
-void Menu_CreateOptionBox(byte managerNum, int **text, undefined4 type, char param_4, char param_5);
-
-// AUTOGEN
-M_ITEM* Menu_GetItemFromHash(M_ITEM *list, int hashcodeToMatch, uint numItems);
 
 // AUTOGEN
 void __stdcall Menu_RestartFrontEndLoop(void);
@@ -82,11 +186,82 @@ void __stdcall Menu_RestartFrontEndLoop(void);
 // AUTOGEN
 void __stdcall Menu_StopFrontEndMusic(void);
 
-// AUTOGEN
-undefined4 Menu_UpdateOptionBox(undefined4 *type);
+// ---- option boxes: a message in a box over the page, with an answer to pick or none (PS2: menu_handlers.cpp)
 
-// AUTOGEN
-void Menu_CreateOptionBoxLabel(byte managerNum, Action_TranslatedText text, undefined4 type, char param_4, char param_5);
+// The answer, which Menu_UpdateOptionBox takes: 0 none yet; without an answer to pick 1 (A) or 2 (B), with one 3 or 4
+// XBE_GLOBAL(0x00224f5c, 0x4)
+uint optionbox_answer;
+// XBE_GLOBAL(0x00224f60, 0x4)
+uint optionbox_type;     // the caller's, to tell its boxes apart
+// XBE_GLOBAL(0x00224f64, 0x1)
+uint8_t optionbox_has_answer;
+
+#define TXT_PRESS_A_TO_CONTINUE ((Action_TranslatedText)0x266)
+#define TXT_PRESS_A_OR_B_TO_CANCEL ((Action_TranslatedText)0x10001d6)
+
+// The box opens as an overlay, its height fitted to the text's lines and the answer, centred down the screen, and is
+// drawn at once with the cursor on its answers
+// AUTOINJECT
+void Menu_CreateOptionBox(uchar managerNum, const char *text, uint type, char hasAnswer, char canCancel) {
+    optionbox_has_answer = hasAnswer;
+    optionbox_type = type;
+    LABEL_SET_TEXT(managerNum, SUB_P_MESSAGEBOX_TEXT, text);
+    __Menu_Send(managerNum, C_LBMSGOPTIONS, MessageType_ClearItems, 0, 0);
+    __Menu_Send(managerNum, C_LBMSGOPTIONS, MessageType_ListSetColumnAlign, 0, ALIGN_CENTRE);
+    if (hasAnswer)
+        __Menu_Send(managerNum, C_LBMSGOPTIONS, MessageType_AddItem,
+                    (int)Txt_BindLabel(canCancel ? TXT_PRESS_A_OR_B_TO_CANCEL : TXT_PRESS_A_TO_CONTINUE, 0), 3);
+    M_MANAGER *mgr = &manager[managerNum];
+    Manager_SendMessage(mgr, MessageType_GoPage, P_MESSAGEBOX, 2);
+    M_BUTTON *box = (M_BUTTON *)CONTROL_GET(managerNum, SUB_P_MESSAGEBOX_BOX);
+    M_MEMO *memo = (M_MEMO *)CONTROL_GET(managerNum, SUB_P_MESSAGEBOX_TEXT);
+    M_LIST *answers = (M_LIST *)CONTROL_GET(managerNum, C_LBMSGOPTIONS);
+    __Menu_SendMessage(&memo->control, MessageType_MemoSetOption282, 0, 0);
+    __Menu_SendMessage(&memo->control, MessageType_SetLineSpacing, 100, 0);
+    uchar numLines = (uchar)__Menu_SendMessage(&memo->control, MessageType_MemoGetNumLines, 0, 0);
+    uchar numAnswers = (uchar)__Menu_Send(managerNum, C_LBMSGOPTIONS, MessageType_GetNumItems, 0, 0);
+    ushort textHeight = (ushort)((uchar)Ftol(memo->lineHeight) * numLines);
+    box->control.height = (short)(textHeight + numAnswers * 21 + (numAnswers != 0 ? 26 : 0) + 28);
+    short top = (short)Ftol((480.0 - box->control.height) * 0.5);
+    box->control.y = top;
+    memo->control.y = top + 10;
+    answers->control.y = textHeight + top + 30;
+    mgr->takingInput = 0;
+    Memo_Update(mgr, (M_PAGE *)memo->control.parent, memo);
+    List_Update(mgr, (M_PAGE *)answers->control.parent, answers);
+    Button_Update(mgr, (M_PAGE *)box->control.parent, box);
+    mgr->takingInput = 1;
+    Manager_SendMessage(mgr, MessageType_SetCursor, C_LBMSGOPTIONS, 0);
+}
+
+// AUTOINJECT
+void Menu_CreateOptionBoxLabel(uchar managerNum, Action_TranslatedText text, uint type, char hasAnswer, char canCancel) {
+    Menu_CreateOptionBox(managerNum, Txt_BindLabel(text, 0), type, hasAnswer, canCancel);
+}
+
+// The answer since the last call, and the box's type
+// AUTOINJECT
+uint Menu_UpdateOptionBox(uint *type) {
+    uint answer = optionbox_answer;
+    optionbox_answer = 0;
+    if (type != NULL)
+        *type = optionbox_type;
+    return answer;
+}
+
+// The box's answers: A or B closes it
+// AUTOINJECT
+bool C_LBMSGOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+    if (message == MessageType_Select) {
+        optionbox_answer = optionbox_has_answer ? 3 : 1;
+        Manager_SendMessage(&manager[managerNum], MessageType_Back, 1, 0);
+    }
+    else if (message == MessageType_BackOnControl) {
+        Manager_SendMessage(&manager[managerNum], MessageType_Back, 1, 0);
+        optionbox_answer = optionbox_has_answer ? 4 : 2;
+    }
+    return true;
+}
 
 typedef struct {
   M_CONTROL* control;
@@ -163,7 +338,8 @@ void __stdcall Menu_ClearDelayedMessages(void) {
     menu_delay_msg[i].dispatchOnFrameNum = 0;
 }
 
-// Exists on PS2 at 00202fd8, inlined on Xbox
+// The bot's character is on MI6's side
+// AUTOINJECT
 bool Menu_IsBotGood(uint idx) {
     BOT_stats_t *stats = BOT_getDefaultStats(idx);
     return stats->isBad == 0;
@@ -325,8 +501,35 @@ void Menu_DeleteSprite(sprite* spr) {
     
 }
 
-// AUTOGEN
-bool Menu_SelectItemInControl(M_CONTROL* control, M_ITEM *list, ushort size, int idx);
+// Moves a list or a wheel to the item with the value; with none, the control to its first (no list, nothing)
+// AUTOINJECT
+bool Menu_SelectItemInControl(M_CONTROL *control, M_ITEM *list, ushort size, int value) {
+    if (list == NULL)
+        return false;
+    for (ushort i = 0; i < size; i++) {
+        if (list[i].identifier != (uint)value)
+            continue;
+        if (control->type == ControlType_List) {
+            __Menu_SendMessage(control, MessageType_SelectIndex, i, 0);
+            return true;
+        }
+        if (control->type == ControlType_Scroll) {
+            __Menu_SendMessage(control, MessageType_SetValue, i, 0);
+            return true;
+        }
+        return false;
+    }
+    __Menu_SendMessage(control, MessageType_SetValue, 0, 0);
+    return false;
+}
+
+// AUTOINJECT
+M_ITEM* Menu_GetItemFromHash(M_ITEM *list, int value, uint numItems) {
+    for (uint i = 0; i < numItems; i++)
+        if (list[i].identifier == (uint)value)
+            return &list[i];
+    return NULL;
+}
 
 
 
@@ -373,8 +576,6 @@ void Menu_ChangeControllerStyle(ushort playerNum, int controllerStyle) {
   }
 }
 
-// AUTOGEN
-bool Menu_HasMedal(HASHCODE hc, uint level, uchar maybePlayerNum);
 
 // ---- the framework: skins, finding controls, dispatch, input, sprites, sounds (PS2: menu.cpp)
 
@@ -424,17 +625,6 @@ bool Menu_HasMedal(HASHCODE hc, uint level, uchar maybePlayerNum);
 #define MENU_SOUND_ALT1      2
 #define MENU_SOUND_ALT2      4
 #define MENU_SOUND_BACK      8
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 // ---- skins (components)
 

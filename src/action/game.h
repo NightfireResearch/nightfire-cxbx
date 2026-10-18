@@ -92,10 +92,7 @@ struct CheatInfo_t {
     undefined4 Immortal;
     undefined4 AllWeapons;
     undefined4 UnlimitedAmmo;
-    undefined field3_0xc;
-    undefined field4_0xd;
-    undefined field5_0xe;
-    undefined field6_0xf;
+    undefined4 pauseCleared; // P_PAUSE clears it as the page opens; nothing reads it
     undefined4 someThing;
     undefined field11_0x14;
     undefined field12_0x15;

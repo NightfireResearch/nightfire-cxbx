@@ -1,5 +1,8 @@
 #include "ui.h"
 #include "Manager.h"
+#include "Menu.h"
+#include "../engine/Text.h"
+#include "../game/sp/PlayerStats.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -696,3 +699,99 @@ bool P_DSRECORDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint e
     return true;
 }
 
+
+// ---- the records and rewards rows (radios over the missions)
+
+// The records' texts, which the labels keep
+// XBE_GLOBAL(0x0025e378, 0x20)
+char records_best_text[0x20];
+// XBE_GLOBAL(0x0025e398, 0x20)
+char records_bond_moves_text[0x20];
+// XBE_GLOBAL(0x0025e3b8, 0x20)
+char records_upgrades_text[0x20];
+
+#define menu_bonus ((ulong *)0x0025d6e8)     // MenuUnlocks.cpp
+
+#define SUB_C_RBDSRECORDS_BEST_TEXT       ((HASHCODE)0x10000175)
+#define SUB_C_RBDSRECORDS_BOND_MOVES_TEXT ((HASHCODE)0x10000177)
+#define SUB_C_RBDSRECORDS_UPGRADES_TEXT   ((HASHCODE)0x10000178)
+#define SUB_C_RBDSRECORDS_MEDAL_TEXT      ((HASHCODE)0x100001f8)
+#define SUB_C_RBDSRECORDS_MEDAL_ICON      ((HASHCODE)0x10000176)
+
+// The best medal held, a medal counting only with every one below it
+static const struct { Action_TranslatedText name; HASHCODE icon; } records_medals[4] = {
+    {(Action_TranslatedText)0x309, (HASHCODE)0x0300013d},   // "BRONZE MEDAL"
+    {(Action_TranslatedText)0x308, (HASHCODE)0x03000140},
+    {(Action_TranslatedText)0x307, (HASHCODE)0x0300013e},
+    {(Action_TranslatedText)0x306, (HASHCODE)0x0300013f},   // "PLATINUM MEDAL"
+};
+
+// A mission's records: its best score, the Bond moves of its first scoring category, the upgrades its medals have
+// given the first player, and the best medal held
+// AUTOINJECT
+bool C_RBDSRECORDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+    if (message != MessageType_Scroll)
+        return true;
+    HASHCODE level = (HASHCODE)RADIO_GET_VALUE_OF(control);
+    SCORETABLE *totals = PlrStats_GetLevelTotals(level);
+    LEVEL_BONUSES *bonuses = Menu_GetLevelBonuses(level);
+    if (totals != NULL) {
+        sprintf(records_best_text, "%d", totals->bestScore);
+        sprintf(records_bond_moves_text, "%d", totals->statsTable[0].achieved);
+    } else {
+        sprintf(records_best_text, "%d", 0);
+        sprintf(records_bond_moves_text, "%d", 0);
+    }
+    LABEL_SET_TEXT(managerNum, SUB_C_RBDSRECORDS_BEST_TEXT, records_best_text);
+    LABEL_SET_TEXT(managerNum, SUB_C_RBDSRECORDS_BOND_MOVES_TEXT, records_bond_moves_text);
+
+    uchar upgrades = 0;
+    for (uint medal = 1; medal < 5; medal++) {
+        REWARDINFO_tag info = {};
+        PlrStarts_ProcessRewardCounter(menu_bonus, level, medal, 0, &info);
+        if (info.hasMedal && info.objType == REWARD_UPGRADE)
+            upgrades++;
+    }
+    sprintf(records_upgrades_text, "%d", upgrades);
+    LABEL_SET_TEXT(managerNum, SUB_C_RBDSRECORDS_UPGRADES_TEXT, records_upgrades_text);
+
+    int best = 0;
+    while (best < 4 && bonuses->medals[best].earned)
+        best++;
+    if (best > 0) {
+        __Menu_Send(managerNum, SUB_C_RBDSRECORDS_MEDAL_TEXT, MessageType_SetState, CONTROL_STATE_INERT, 0);
+        __Menu_Send(managerNum, SUB_C_RBDSRECORDS_MEDAL_ICON, MessageType_SetState, CONTROL_STATE_INERT, 0);
+        LABEL_SET_TEXT(managerNum, SUB_C_RBDSRECORDS_MEDAL_TEXT, Txt_BindLabel(records_medals[best - 1].name, 0));
+        __Menu_Send(managerNum, SUB_C_RBDSRECORDS_MEDAL_ICON, MessageType_SetIcon, records_medals[best - 1].icon, 0);
+    } else {
+        __Menu_Send(managerNum, SUB_C_RBDSRECORDS_MEDAL_TEXT, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_Send(managerNum, SUB_C_RBDSRECORDS_MEDAL_ICON, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+    }
+    return true;
+}
+
+// Each medal's reward, shown when the first player has it and every medal below it
+static const HASHCODE rewards_icons[4] = {
+    (HASHCODE)0x100001d6, (HASHCODE)0x100001d7, (HASHCODE)0x100001d8, (HASHCODE)0x100001d9,
+};
+static const HASHCODE rewards_names[4] = {
+    (HASHCODE)0x100001d2, (HASHCODE)0x100001d3, (HASHCODE)0x100001d4, (HASHCODE)0x100001d5,
+};
+
+// AUTOINJECT
+bool C_RBDSREWARDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+    if (message != MessageType_Scroll && message != MessageType_ValueSet)
+        return true;
+    LEVEL_BONUSES *bonuses = Menu_GetLevelBonuses((HASHCODE)RADIO_GET_VALUE_OF(control));
+    for (int medal = 0; medal < 4; medal++) {
+        __Menu_Send(managerNum, rewards_icons[medal], MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_Send(managerNum, rewards_names[medal], MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+    }
+    for (int medal = 0; medal < 4 && bonuses->medals[medal].earned; medal++) {
+        __Menu_Send(managerNum, rewards_icons[medal], MessageType_SetState, CONTROL_STATE_INERT, 0);
+        __Menu_Send(managerNum, rewards_icons[medal], MessageType_SetIcon, bonuses->medals[medal].icon, 0);
+        __Menu_Send(managerNum, rewards_names[medal], MessageType_SetState, CONTROL_STATE_INERT, 0);
+        LABEL_SET_TEXT(managerNum, rewards_names[medal], Txt_BindLabel(bonuses->medals[medal].name, 0));
+    }
+    return true;
+}

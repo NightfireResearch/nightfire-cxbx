@@ -129,6 +129,7 @@ add_library(actioninject SHARED
   src/action/devtools/SoundPortShadow.cpp
   src/action/devtools/MenuPortShadow.cpp
   src/action/devtools/MenuControlShadow.cpp
+  src/action/devtools/MenuHandlerShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/MathExactShadow.cpp
   src/action/devtools/Teleport.cpp
@@ -208,6 +209,10 @@ add_library(actioninject SHARED
   src/action/ui/ui_dossier.cpp
   src/action/ui/ui_mp.cpp
   src/action/ui/ui_credits.cpp
+  src/action/ui/ui_frontend.cpp
+  src/action/ui/ui_tweaks.cpp
+  src/action/ui/ui_options.cpp
+  src/action/ui/ui_pause.cpp
   src/action/ui/ui_secrets.cpp
   src/action/ui/ui_nightfire.cpp
   src/action/ui/ui_codenames.cpp

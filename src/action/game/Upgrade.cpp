@@ -159,3 +159,20 @@ undefined4 Upgrade_MPWeapon(short playerNum, undefined4 weapon) {
             return weapon;
     }
 }
+
+// A player's upgrade level for the group of objId (three objects a group). A group past the table is not written; a
+// negative objId's is (before the player's row), as the original does.
+// AUTOINJECT
+void Set_Upgrade(uchar player, short objId, uchar level) {
+    short group = objId / 3;
+    if (group < 9)
+        Upgrades[player][group] = level;
+    else
+        NF_WARN("Invalid upgrade %d\n", group); // GC check (0x800f6ec4)
+}
+
+// AUTOINJECT
+void ResetUpgrade(uchar player) {
+    for (int group = 0; group < 9; group++)
+        Upgrades[player][group] = 0;
+}

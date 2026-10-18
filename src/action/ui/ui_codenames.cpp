@@ -3,6 +3,7 @@
 
 #include "Manager.h"
 #include "Menu.h"
+#include "MenuCommon.h"
 #include "../engine/Text.h"
 #include "../engine/LoadSave.h"
 #include "../engine/psiSave.h"
@@ -32,9 +33,6 @@ M_ITEM cn_options[7] = {
 
 // XBE_GLOBAL(0x0025ed28, 0x40)
 static char cn_menu_title_text[0x40]; // "Edit <codename>"
-
-// AUTOGEN
-void Menu_UpdateDefaultCodename(byte param_1, byte slot);
 
 // AUTOINJECT
 bool P_CNMENU_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
@@ -144,9 +142,9 @@ bool C_SBCNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 #define XBox_DoSaveFlow ((void (__cdecl *)(M_MANAGER *, uint, MENU_LS *))0x0008f3f0)
 #define psiDeletingData ((uint (__cdecl *)(void))0x000dfc50)
 #define psiGetNextSave ((char *(__cdecl *)(void))0x000dfe60)
-#define Menu_UpdateCodenameWheel ((void (__cdecl *)(byte, M_CONTROL *, HASHCODE, HASHCODE, HASHCODE, HASHCODE, char))0x0007fb20)
 #define WriteStateFileAndLaunch ((void (__cdecl *)(int, void *, int))0x000e9350)
 #define SFXSetVolume ((void (__cdecl *)(int))0x000c5060)
+#define SFXGetVolume ((int (__cdecl *)(void))0x000c5090)
 #define psiDeleteSave ((bool (__cdecl *)(const char *))0x000dfec0)   // deletes a codename's save; true if it did (name ours)
 #define Menu_CheckSaveSpace ((bool (__cdecl *)(uchar, MENU_LS *))0x0008fcc0) // false, with a box, without room for a new codename (name ours)
 #define Menu_GoToDashboard ((void (__cdecl *)(void))0x0008fd90)    // to free the space Menu_CheckSaveSpace asked for (name ours)
@@ -354,6 +352,97 @@ void Menu_MapDefaultCodename(byte player, byte slot, uint parts) {
     Menu_SetBonus(codename->bonusLo, codename->bonusHi, player, 0);
 }
 
+#define menu_bonus ((ulong *)0x0025d6e8)     // MenuUnlocks.cpp
+
+// A default codename takes the player's settings, volumes, progress and rewards as they are now (the reverse of
+// Menu_MapDefaultCodename)
+// AUTOINJECT
+void Menu_UpdateDefaultCodename(uchar player, uchar slot) {
+    DEFAULT_CODENAME *codename = &def_codename[slot];
+    PlayerInput *input = &PlayerInputs[player];
+    codename->manualAimToggle = input->manualAimToggle;
+    codename->autoAim = input->autoAim;
+    codename->autoSwitchBetterWeapon = input->autoSwitchBetterWeapon;
+    codename->controlStyle = input->controlStyle;
+    codename->crosshairsEnabled = input->crosshairsEnabled;
+    codename->crouchToggle = input->crouchToggle;
+    codename->controlStyleDriving = input->controlStyleDriving;
+    codename->healthModifier = (short)MPSettings.Player[player].HealthModifier;
+    codename->inverted = input->inverted;
+    codename->autoAimMultiplayer = input->autoAimMultiplayer;
+    codename->musicVolume = SFXMusicGetVolume();
+    codename->tripleDamage = (uchar)MPSettings.TripleDamageModifierProfessionalMode;
+    codename->mpSomeField2 = (uchar)MPSettings.Player[player].SomeField2;
+    codename->respawnMode = (uchar)MPSettings.RespawnSelectionMode;
+    codename->multiplayerLayout = (uchar)MultiplayerLayout_LeftRightOrTopBtm;
+    codename->sfxVolume = SFXGetVolume();
+    codename->subtitles = (uchar)SubtitlesEnabled;
+    codename->showNames = (uchar)MPSettings.ShowTeamAndNameOverhead;
+    codename->vibrationEnabled = input->vibrationEnabled;
+    codename->nightfireStatus = Menu_GetNightfireStatus();
+    codename->bonusLo = menu_bonus[player * 2];
+    codename->bonusHi = menu_bonus[player * 2 + 1];
+    codename->input_0c = input->field12_0xc;
+    codename->input_0b = input->hudVisibility;
+    codename->weaponUpgrade = GameState.WeaponUpgradeRelated;
+}
+
+// A codenames wheel's turn: the description and icon of a default codename or a saved one, the codenames each side of
+// the selected one (none past either end, or with no codenames listed), and the iris as it turns
+// AUTOINJECT
+void Menu_UpdateCodenameWheel(uchar managerNum, M_CONTROL *wheel, HASHCODE text, HASHCODE icon, HASHCODE description,
+                              HASHCODE iris, char turning) {
+    if (wheel == NULL)
+        return;
+    if (wheel->type == ControlType_Scroll)
+        ((M_SCROLL *)wheel)->wrap = 0;
+    int selected = __Menu_SendMessage(wheel, MessageType_GetValue, 0, 0);
+    int last = __Menu_SendMessage(wheel, MessageType_GetMax, 0, 0);
+
+    Action_TranslatedText about;
+    HASHCODE picture;
+    switch (selected) {
+        case 0:
+            about = CODENAME_NEW_DESC;
+            picture = ICON_CODENAME_NEW;
+            break;
+        case 1:
+            about = CODENAME_DEFAULT_DESC;
+            picture = ICON_CODENAME;
+            break;
+        default:
+            about = CODENAME_SAVED_DESC;
+            picture = ICON_CODENAME;
+            break;
+    }
+    if (icon != 0) {
+        if (turning)
+            __Menu_SendDelayed(10, managerNum, icon, MessageType_SetIcon, picture, 0);
+        else
+            __Menu_Send(managerNum, icon, MessageType_SetIcon, picture, 0);
+    }
+    if (description != 0)
+        LABEL_SET_TEXT(managerNum, description, Txt_BindLabel(about, 0));
+
+    int slots[5] = {selected - 2, selected - 1, selected, selected + 1, selected + 2};
+    if (slots[1] < 0)
+        slots[0] = slots[1] = LS_SLOT_NEW;
+    else if (slots[0] < 0)
+        slots[0] = LS_SLOT_NEW;
+    if (slots[3] > last)
+        slots[3] = slots[4] = LS_SLOT_NEW;
+    else if (slots[4] > last)
+        slots[4] = LS_SLOT_NEW;
+    if (ls.numCodenames == 0)
+        slots[0] = slots[1] = slots[2] = slots[3] = slots[4] = LS_SLOT_NEW;
+    for (int i = 0; i < 5; i++)
+        __Menu_SendEx(managerNum, text, i, MessageType_SetText,
+                      (int)(slots[i] == LS_SLOT_NEW ? MenuSpaceString : codename_buf[slots[i]]), 0);
+
+    if (turning)
+        Menu_StartIris(2, managerNum, iris);
+}
+
 // Puts a codenames wheel on the codename, or on the first entry if it is not in the list.
 // AUTOINJECT
 void Menu_SelectCodenameInControl(byte managerNum, char *codename, HASHCODE control) {
@@ -431,12 +520,12 @@ static void ListCodenames(uchar managerNum, M_CONTROL *wheel) {
     Menu_UpdateMessageBox(managerNum, 0, 0);
 }
 
-static void FadeMenuGroup(uchar managerNum, int arg1) {
+static void FadeMenuGroup(uchar managerNum, HASHCODE group, int arg1) {
     M_MESSAGE fade = {};
     fade.type = COLOUR_FADE;
     fade.arg1 = arg1;
     fade.arg2 = 0;
-    Process_Create(CONTROL_GET(managerNum, SUB_P_CNSELECT_MENU_GROUP), &fade, 0xf, 0);
+    Process_Create(CONTROL_GET(managerNum, group), &fade, 0xf, 0);
 }
 
 // AUTOINJECT
@@ -464,7 +553,7 @@ bool P_CNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
             M_MANAGER *mgr = &manager[managerNum];
             __Menu_SendMessage(&mgr->control, MessageType_LockInput, 1, 0);
             __Menu_SendDelayedMessage(0xf, &mgr->control, MessageType_LockInput, 0, 0);
-            FadeMenuGroup(managerNum, 0);
+            FadeMenuGroup(managerNum, SUB_P_CNSELECT_MENU_GROUP, 0);
             cnselect_from_main_menu = 1;
         } else {
             LABEL_SET_COLOUR(managerNum, SUB_P_CNSELECT_MENU_GROUP, 0);
@@ -537,7 +626,7 @@ bool P_CNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
         __Menu_SendMessage(&mgr->control, MessageType_LockInput, 1, 0);
         __Menu_SendDelayedMessage(0x13, &mgr->control, MessageType_GoPage, P_MAIN, 0);
         __Menu_SendDelayedMessage(0x13, &mgr->control, MessageType_LockInput, 0, 0);
-        FadeMenuGroup(managerNum, 0xff);
+        FadeMenuGroup(managerNum, SUB_P_CNSELECT_MENU_GROUP, 0xff);
         *(int *)arg2 = -2;   // stay on the page meanwhile
         break;
     }
@@ -623,6 +712,150 @@ bool C_LBERROPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode,
     } else if (message == MessageType_BackOnControl) {
         if (saveflow_dashboard)
             WriteStateFileAndLaunch(0, NULL, 0);
+    }
+    return true;
+}
+
+// ---- the codename select before the campaign (P_NFSELECT) and its wheel
+
+// XBE_GLOBAL(0x0025df70, 0x1)
+uint8_t nfselect_leaving;         // a codename was loaded, or the wheel redrawn, after a save flow
+// XBE_GLOBAL(0x0017d609, 0x1)
+uint8_t nfselect_from_main_menu = 1; // the wheel starts on "Default"
+
+#define OPTIONBOX_DEFAULT_CODENAME 9      // "You won't be able to save your progress using this default profile..."
+
+// As P_CNSELECT, for the campaign: a codename is picked, then the difficulty. Entering puts the Codenames page's
+// wheel (not this page's) on the codename in hand, as the original does.
+// AUTOINJECT
+bool P_NFSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+    switch (message) {
+    case MessageType_PageEnter:
+        ls.returnPage = (HASHCODE)0;
+        Menu_SelectCodenameInControl(managerNum, ls.codename, C_SBCNSELECT);
+        Menu_StartIris((HASHCODE)arg2 == P_MAIN ? 0 : 4, managerNum, SUB_C_SBNFCN_IRIS);
+        saveflow_relist = 1;
+        LABEL_SET_TEXT(managerNum, SUB_C_SBNFCN_WHEEL_TEXT, MenuSpaceString);
+        // and on as when resuming
+    case MessageType_PageResume:
+        menu_bonus_replace = 0;
+        if (saveflow_relist) {
+            M_CONTROL *wheel = CONTROL_GET(managerNum, C_SBNFCN);
+            ls.done = 1;
+            if (ls.listStale)
+                ListCodenames(managerNum, wheel);
+            saveflow_relist = 0;
+        }
+        if ((HASHCODE)arg2 == P_MAIN) {
+            Menu_StartIris(0, managerNum, SUB_C_SBNFCN_IRIS);
+            LABEL_SET_COLOUR(managerNum, SUB_P_NFSELECT_MENU_GROUP, 0xff);
+            M_MANAGER *mgr = &manager[managerNum];
+            __Menu_SendMessage(&mgr->control, MessageType_LockInput, 1, 0);
+            __Menu_SendDelayedMessage(0xf, &mgr->control, MessageType_LockInput, 0, 0);
+            FadeMenuGroup(managerNum, SUB_P_NFSELECT_MENU_GROUP, 0);
+            nfselect_from_main_menu = 1;
+        } else {
+            LABEL_SET_COLOUR(managerNum, SUB_P_NFSELECT_MENU_GROUP, 0);
+            nfselect_from_main_menu = 0;
+        }
+        nfselect_leaving = 0;
+        for (int player = 0; player < 4; player++)
+            PlayerInputs[player].controllerPort = player;
+        break;
+    case MessageType_PageUpdate: {
+        Menu_PlayIris(1, managerNum, SUB_C_SBNFCN_IRIS);
+        if (ls.done && !nfselect_leaving) {
+            Menu_PutCodenamesIntoControl(CONTROL_GET(managerNum, C_SBNFCN));
+            ls.done = 0;
+            if (nfselect_from_main_menu)
+                __Menu_Send(managerNum, C_SBNFCN, MessageType_SetValue, 1, 0);
+        }
+        uint box = 0;
+        uint answer = Menu_UpdateOptionBox(&box);
+        if (box == OPTIONBOX_SAVE_SPACE) {
+            if (answer == 1) {
+                ls.done = 1;
+                ls.canSave = 0;
+                // The original hands the iris P_NFDFCTY's low byte as the manager (0x23), not managerNum
+                if (ls.slot > 0 && ls.slot < CODENAME_SLOTS_DEFAULT)
+                    Menu_ChangePageCloseIris(ls.returnPage, (uchar)P_NFDFCTY, SUB_C_SBNFCN_IRIS);
+            } else if (answer == 2) {
+                Menu_GoToDashboard();
+            }
+        } else if (box == OPTIONBOX_DEFAULT_CODENAME && answer == 3) {
+            Menu_ChangePageCloseIris(P_NFDFCTY, managerNum, SUB_C_SBNFCN_IRIS);
+        }
+        // a default codename picked on the wheel needs no load
+        if (ls.busy != 0 && ls.slot < CODENAME_SLOTS_DEFAULT) {
+            ls.busy = 0;
+            Menu_MapDefaultCodename(0, ls.slot, 0xff);
+            Menu_ChangePageCloseIris(ls.returnPage, managerNum, SUB_C_SBNFCN_IRIS);
+        } else {
+            Menu_UpdateMessageBox(managerNum, 0xff, 0);
+        }
+        break;
+    }
+    case MessageType_SaveFlowDone:
+        if (ls.operation == LS_OPERATION_LOAD)
+            Menu_ChangePageCloseIris(P_NFDFCTY, managerNum, SUB_C_SBNFCN_IRIS);
+        else
+            Menu_UpdateCodenameWheel(managerNum, CONTROL_GET(managerNum, C_SBNFCN), SUB_C_SBNFCN_WHEEL_TEXT,
+                                     SUB_C_SBNFCN_ICON, SUB_C_SBNFCN_DESCRIPTION_TEXT, SUB_C_SBNFCN_IRIS, 0);
+        nfselect_leaving = 1;
+        break;
+    case MessageType_QueryBack: {
+        // back to the main menu after a fade, with the input locked meanwhile
+        M_MANAGER *mgr = &manager[managerNum];
+        __Menu_SendMessage(&mgr->control, MessageType_LockInput, 1, 0);
+        __Menu_SendDelayedMessage(0x13, &mgr->control, MessageType_GoPage, P_MAIN, 0);
+        __Menu_SendDelayedMessage(0x13, &mgr->control, MessageType_LockInput, 0, 0);
+        FadeMenuGroup(managerNum, SUB_P_NFSELECT_MENU_GROUP, 0xff);
+        *(int *)arg2 = -2;   // stay on the page meanwhile
+        break;
+    }
+    }
+    return true;
+}
+
+// The wheel: a new codename (room for it checked first), a default one (with a warning box: the page goes on to the
+// difficulty on its answer), or a saved one, loaded
+// AUTOINJECT
+bool C_SBNFCN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+    switch (message) {
+    case MessageType_Scroll:
+    case MessageType_ValueSet:
+        Menu_UpdateCodenameWheel(managerNum, control, SUB_C_SBNFCN_WHEEL_TEXT, SUB_C_SBNFCN_ICON,
+                                 SUB_C_SBNFCN_DESCRIPTION_TEXT, SUB_C_SBNFCN_IRIS, message == MessageType_Scroll);
+        break;
+    case MessageType_Select: {
+        LABEL_SET_TEXT(managerNum, SUB_P_NFMAP_BUTTON_HINT_TEXT, Txt_BindLabel(NFMAP_HINT_BACK, 0));
+        int value = SCROLL_GET_VALUE(control);
+        if (value == 0) {
+            ls.slot = 0;
+            if (Menu_CheckSaveSpace(managerNum, &ls) && ls.canSave) {
+                Menu_MapDefaultCodename(0, 0, 0xff);
+                Menu_ChangePageCloseIris(P_CNNAME, managerNum, SUB_C_SBNFCN_IRIS);
+                // the codename menu comes back here
+                __Menu_Send(managerNum, C_SBCNOPTIONS, MessageType_SetId, P_NFSELECT, 0);
+            }
+        } else if (value < CODENAME_SLOTS_DEFAULT) {
+            ls.slot = value;
+            Menu_CreateOptionBoxLabel(managerNum, DEFAULT_CODENAME_WARNING, OPTIONBOX_DEFAULT_CODENAME, 1, 1);
+            Menu_MapDefaultCodename(0, value, 0xff);
+        } else {
+            char *codename = codename_buf[SCROLL_GET_VALUE(control)];
+            uint slot = SCROLL_GET_VALUE(control);
+            _Menu_StartLS(codename, LS_OPERATION_LOAD, 0, managerNum, 0, 0xff, slot, (HASHCODE)0, 0, control, 0);
+        }
+        break;
+    }
+    case MessageType_AltSelect1:
+        ls.slot = 0;
+        if (Menu_CheckSaveSpace(managerNum, &ls) && ls.canSave) {
+            __Menu_SendMessage(&manager[managerNum].control, MessageType_GoPage, P_CNNAME, 0);
+            __Menu_Send(managerNum, C_SBCNOPTIONS, MessageType_SetId, P_NFSELECT, 0);
+        }
+        break;
     }
     return true;
 }

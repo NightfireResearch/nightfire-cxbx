@@ -24,6 +24,7 @@ void Txt_UnlockString(char* text);
 void Txt_LockString(char* text);
 
 uint GetLanguage(void);
+char* Timer_Seconds2String(int hundredths, int format);
 
 // The kind of a Text_AddMsg message (its third argument), which decides the pane it shows on
 #define TXTMSG_INFO             1   // e.g. a hostage's line (NDrone2_Hostage)

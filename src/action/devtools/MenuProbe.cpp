@@ -107,6 +107,7 @@
 #include "SoundPortShadow.h"
 #include "MenuPortShadow.h"
 #include "MenuControlShadow.h"
+#include "MenuHandlerShadow.h"
 #include "CameraShadow.h"
 #include "MathExactShadow.h"
 #include "Teleport.h"
@@ -612,6 +613,10 @@ void MenuProbe_Install(void) {
         MenuControlShadow_Run();
         fflush(stdout);
         _exit(0);
+    } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "menuhandlers") == 0) {
+        MenuHandlerShadow_Run();
+        fflush(stdout);
+        _exit(0);
     } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "menuport") == 0) {
         MenuPortShadow_Run();
         fflush(stdout);
@@ -666,6 +671,7 @@ void MenuProbe_Install(void) {
         SoundPortShadow_Run();
         MenuPortShadow_Run();
         MenuControlShadow_Run();
+        MenuHandlerShadow_Run();
         MathExactShadow_Run();
     }
     U32_AT(0x00300608) = mathErrors;

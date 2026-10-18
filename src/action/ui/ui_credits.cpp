@@ -201,13 +201,6 @@ bool __stdcall psiMovieFinished(void);
 void __stdcall SFXUnPause(void);
 // AUTOGEN
 void __stdcall SFXUnPauseAllStreams(void);
-// AUTOGEN
-undefined __cdecl Menu_PlayMovie(HASHCODE param_1, undefined1 param_2, char param_3, char param_4, char param_5, undefined4 param_6);
-
-// Menu_PlayMovie's record of the movie it started, read back here when the attract movie ends. Both are also
-// used by Menu_StopMovie, psiMovieLoop and the P_TRAILER / P_WINGAME handlers, so they stay the game's.
-#define menu_movie_playing      U8_AT(0x0025d7bd)   // Menu_PlayMovie's 2nd argument: a movie page is showing one
-#define menu_movie_stopped_music U8_AT(0x0025d7be)  // its 4th: the front-end music was stopped for it
 
 // Which movie the attract page plays: flipped on every entry, so coming back to it from the main menu alternates
 // between the trailer and the title sequence. Only P_ATTRACT uses it (PS2: a function-local static, movie_291);
@@ -240,7 +233,7 @@ bool P_ATTRACT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
             return true;
         }
         // Ended or skipped. (When it ended by itself this unlocks input a second time - as the original.)
-        if (menu_movie_playing) {
+        if (menu_movie_skippable) {
             if (menu_movie_stopped_music) {
                 SFXUnPause();
                 SFXUnPauseAllStreams();

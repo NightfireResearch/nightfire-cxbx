@@ -1,0 +1,84 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# The pause menu in the first mission: each tab (the objectives' text and list, a hint, the controller style and
+# its inversion, the scores), then restart and quit asked and answered no (B, and the No item).
+press A                    # NightFire
+waitpage 0x40000025        # P_NFSELECT
+wait 100
+press A                    # the codename
+waitpage 0x4000002f        # P_MESSAGEBOX
+wait 150
+press A
+waitpage 0x40000023        # P_NFDFCTY
+wait 100
+press A                    # difficulty
+waitpage 0x4000001c        # P_NFMAP
+wait 100
+press A                    # the first mission
+wait 1500
+press A                    # skip the opening cutscene
+wait 300
+cheat nodrones
+press START
+waitpage 0x4000004b 300    # P_PAUSE
+wait 60
+shot pause
+focus 0x10000028 3         # the controller style
+wait 40
+shot controls
+focus 0x10000028 9
+wait 20
+press RIGHT
+wait 40
+shot style_right
+press X
+wait 30
+shot style_inverted
+press X
+wait 30
+focus 0x10000028 4         # the scores
+wait 40
+shot scores
+focus 0x10000028 0         # resume, restart, quit
+wait 40
+shot resume_list
+focus 0x10000028 6
+wait 20
+press DOWN
+wait 30
+press A                    # restart?
+wait 40
+shot restart_asked
+press B                    # no: back to the list
+wait 40
+shot restart_back
+press DOWN
+wait 30
+press A                    # quit?
+wait 40
+shot quit_asked
+press DOWN
+wait 30
+press A                    # no
+wait 40
+shot quit_no
+focus 0x10000028 1         # the objectives
+wait 40
+shot objectives
+press A                    # the objective's hint, in a box
+wait 60
+shot hint
+press A                    # closed
+wait 60
+shot hint_closed
+press START                # resume
+wait 100
+shot resumed
+quit

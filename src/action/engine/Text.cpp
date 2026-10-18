@@ -560,3 +560,47 @@ void Text_Update2Line(void) {
         SubTitleSpr2->maybeEnabled = 0xff;
     }
 }
+
+// ---- times as text
+
+// Four buffers in turn, so a caller can hold a few results at once
+// XBE_GLOBAL(0x0029ae38, 0x400)
+char timer_text[4][0x100];
+// XBE_GLOBAL(0x0029b238, 0x1)
+uint8_t timer_text_next;
+
+// Hundredths of a second as text: format 1 hh:mm:ss, 2 mm:ss, 3 mm:ss:00, 4 ss:00, and otherwise hh:mm when there
+// are hours, else mm:ss. A negative time is 0; the hours wrap at 60. The sum is made on the x87 from a float 0.01,
+// which double reproduces for any time below 2^29 hundredths.
+// AUTOINJECT
+char* Timer_Seconds2String(int hundredths, int format) {
+    char *text = timer_text[timer_text_next];
+    timer_text_next = (timer_text_next + 1) & 3;
+    uint total = Ftol((double)hundredths * 0.01f + 0.5f);
+    uint seconds = total % 60;
+    uint minutes = total / 60 % 60;
+    uint hours = total / 3600 % 60;
+    if (hundredths < 0)
+        hours = minutes = seconds = 0;
+    switch (format) {
+        case 1:
+            sprintf(text, "%.2d:%.2d:%.2d", hours, minutes, seconds);
+            break;
+        case 2:
+            sprintf(text, "%.2d:%.2d", minutes, seconds);
+            break;
+        case 3:
+            sprintf(text, "%.2d:%.2d:%.2d", minutes, seconds, 0);
+            break;
+        case 4:
+            sprintf(text, "%.2d:%.2d", seconds, 0);
+            break;
+        default:
+            if (hours != 0)
+                sprintf(text, "%.2d:%.2d", hours, minutes);
+            else
+                sprintf(text, "%.2d:%.2d", minutes, seconds);
+            break;
+    }
+    return text;
+}

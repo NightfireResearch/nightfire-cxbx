@@ -373,7 +373,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: ResetMap_LevelToLoad, GameFlow_PushState, MenuManager_Delete, Menu_RestoreMPSettings, Manager_SendMessage
 
-### 17. P_NIS_Handler - 0x00082120, 107 bytes
+### 17. P_NIS_Handler - 0x00082120, 107 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **trivial** - scripted scene tick
 - What it does: 0x50: Script_Update(FMVScript); when finished re-enable player and camera.
@@ -383,7 +383,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: Script_Update, control_movement_object_handler, Script_IsPlaying, Player_Enable, Camera_PopStates, Camera_Enable
 
-### 18. P_FMVPLAYER_Handler - 0x00085cd0, 123 bytes
+### 18. P_FMVPLAYER_Handler - 0x00085cd0, 123 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **trivial** - movie page
 - What it does: Plays movie_hashcode (chosen on P_FMVTEST) then returns.
@@ -393,7 +393,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: Menu_PlayMovie, psiMovieLoop
 
-### 19. P_ESTHERO_Handler - 0x000852f0, 124 bytes
+### 19. P_ESTHERO_Handler - 0x000852f0, 124 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **trivial** - movie page
 - What it does: Plays FMV_TITLES then GoPage P_MAIN.
@@ -404,7 +404,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: Menu_PlayMovie, psiMovieLoop
 
-### 20. C_LBMSGOPTIONS_Handler - 0x000761c0, 126 bytes
+### 20. C_LBMSGOPTIONS_Handler - 0x000761c0, 126 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **trivial** - two messages, one global
 - What it does: Message box list: Select / 0x6d set DAT_00224f5c and return to the previous page.
@@ -414,7 +414,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: Manager_SendMessage
 
-### 21. C_GONIGHTFIRE_Handler - 0x000858a0, 135 bytes
+### 21. C_GONIGHTFIRE_Handler - 0x000858a0, 135 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **trivial** - main menu button
 - What it does: Select: fade out main menu (Process_Create on 0x100000ed), delayed GoPage P_NFSELECT.
@@ -425,7 +425,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: Process_Create, __Menu_SendDelayedMessage
 
-### 22. C_GOMULTIPLAYER_Handler - 0x00085930, 135 bytes
+### 22. C_GOMULTIPLAYER_Handler - 0x00085930, 135 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **trivial** - main menu button
 - What it does: Select: same as C_GONIGHTFIRE, delayed GoPage P_MPJOIN.
@@ -436,7 +436,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: Process_Create, __Menu_SendDelayedMessage
 
-### 23. C_GOCODENAMES_Handler - 0x000859c0, 135 bytes
+### 23. C_GOCODENAMES_Handler - 0x000859c0, 135 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **trivial** - main menu button
 - What it does: Select: same as C_GONIGHTFIRE, delayed GoPage P_CNSELECT.
@@ -447,7 +447,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: Process_Create, __Menu_SendDelayedMessage
 
-### 24. P_INTRO_Handler - 0x00085240, 164 bytes
+### 24. P_INTRO_Handler - 0x00085240, 164 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **trivial** - movie page
 - What it does: Plays the EA and MGM idents then GoPage P_START.
@@ -468,7 +468,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: Camera_CalcViewAngles
 
-### 26. C_LBPMMAP_Handler - 0x00081930, 189 bytes
+### 26. C_LBPMMAP_Handler - 0x00081930, 189 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **trivial** - debug level list
 - What it does: List of levels (adds HT_Level_Menu_Pre, selects current); Select loads the level.
@@ -509,7 +509,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: sprintf
 
-### 30. C_RBCONTROL_Handler - 0x0008d000, 234 bytes
+### 30. C_RBCONTROL_Handler - 0x0008d000, 234 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **trivial** - controller scheme list
 - What it does: Scroll: Menu_DisplayControllerStyle. Select: Menu_ChangeControllerStyle, inversion. 0x5e (X): toggle inverted text 0x100000c9.
@@ -519,7 +519,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: 0x206 `CONTROL_INVERTED`, 0x3bd `CONTROL_NORMAL`
 - Calls: Menu_ChangeControllerStyle, Manager_SendMessage, Menu_DisplayControllerStyle
 
-### 31. P_CHEATMEDAL_Handler - 0x00083d10, 288 bytes
+### 31. P_CHEATMEDAL_Handler - 0x00083d10, 288 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **trivial** - debug medal award
 - What it does: Select: choice from 0x1000021c sets switch_channels[99/100] with a medal level.
@@ -529,7 +529,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: MenuManager_Delete
 
-### 32. P_CNCONTROLS_Handler - 0x0008ce70, 386 bytes
+### 32. P_CNCONTROLS_Handler - 0x0008ce70, 386 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **trivial** - fills the scheme list
 - What it does: Enter: adds the 8 controller schemes (labels 0x28..0x73, 0x0100016d, 0x0100017c) to C_RBCONTROL.
@@ -561,7 +561,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: WriteStateFileAndLaunch, Manager_SendMessage, Menu_ClearDelayedMessages, LS_FlushStates
 
-### 35. P_WINGAME_Handler - 0x0008ddd0, 252 bytes
+### 35. P_WINGAME_Handler - 0x0008ddd0, 252 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **moderate** - background movie + music handling
 - What it does: End-game movie, then GoPage P_CREDITS.
@@ -572,7 +572,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: psiMovieFinished, Menu_RestartFrontEndLoop, Manager_SendMessage, SFXUnPause, SFXUnPauseAllStreams, psiStopBackgroundMovie, SFXRemove, SFXGetVolume, psiStartBackgroundMovie
 
-### 36. P_MAIN_Handler - 0x00085780, 279 bytes
+### 36. P_MAIN_Handler - 0x00085780, 279 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **moderate** - Process_Create fade, idle timer
 - What it does: Main menu page: fade-in process, attract mode after idle.
@@ -583,7 +583,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: Menu_GetNoInputCount, Manager_SendMessage, Menu_ResetNoInputCount, Menu_RestartFrontEndLoop, __Menu_SendDelayedMessage, Process_Create
 
-### 37. P_TRAILER_Handler - 0x0008dca0, 291 bytes
+### 37. P_TRAILER_Handler - 0x0008dca0, 291 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **moderate** - background movie + music handling
 - What it does: Plays FMV_TRAILER_DIEANOTHERDAY.
@@ -593,7 +593,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: psiMovieFinished, Menu_RestartFrontEndLoop, Manager_SendMessage, SFXUnPause, SFXUnPauseAllStreams, psiStopBackgroundMovie, SFXRemove, SFXGetVolume, psiStartBackgroundMovie
 
-### 38. P_PARISENUM_Handler - 0x00085630, 322 bytes
+### 38. P_PARISENUM_Handler - 0x00085630, 322 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **moderate** - mini mission (Menu_RunMiniMission), unnamed FUN_0008fd90/FUN_0008fcc0
 - What it does: Paris mini mission / enumeration page.
@@ -604,7 +604,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: Menu_RunMiniMission, Menu_UpdateOptionBox, FUN_0008fd90, Menu_WillRunMiniMission, FUN_0008fcc0, Manager_SendMessage, Menu_UpdateMessageBox
 
-### 39. P_ENDMISSION_Handler - 0x00083e50, 326 bytes
+### 39. P_ENDMISSION_Handler - 0x00083e50, 326 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **moderate** - restart/quit a mission (Player_RamLoad, ResetMap_LevelToLoad)
 - What it does: Select on 0x100001a4: 0 restart from checkpoint, 1 restart mission, 2 quit to P_NFMAP.
@@ -626,7 +626,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: psiMovieFinished, Menu_RestartFrontEndLoop, Manager_SendMessage, SFXUnPause, SFXUnPauseAllStreams, psiStopBackgroundMovie, Menu_PlayMovie, SFXRemove, SFXGetVolume, psiStartBackgroundMovie
 
-### 41. P_START_Handler - 0x000854c0, 359 bytes
+### 41. P_START_Handler - 0x000854c0, 359 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **moderate** - idle timer, delayed messages, legal text
 - What it does: Press START page: legal text 0x375, blinking "Press START", attract mode after 0xa8c idle frames.
@@ -637,7 +637,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: 0x2fb `PRESS_START`, 0x375 `LEGAL_NOTICE`
 - Calls: Menu_GetNoInputCount, Manager_SendMessage, Menu_RestartFrontEndLoop, sprintf, __Menu_SendDelayed, Menu_ResetNoInputCount
 
-### 42. C_SBNFCN_Handler - 0x000861a0, 467 bytes
+### 42. C_SBNFCN_Handler - 0x000861a0, 467 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **moderate** - codename wheel, default codename, unnamed FUN_0008fcc0/FUN_0007fef0
 - What it does: Nightfire codename selection wheel (Menu_UpdateCodenameWheel, not an M_ITEM list).
@@ -649,7 +649,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: 0x208 `BUTTONS_SELECT_DOSSIER_SCROLL_BACK`, 0x10000bb `DEFAULT_PROFILE_NO_SAVE_WARNING`
 - Calls: FUN_0008fcc0, Menu_MapDefaultCodename, Menu_ChangePageCloseIris, Menu_CreateOptionBox, FUN_0007fef0, Menu_UpdateCodenameWheel
 
-### 43. C_LANGUAGE_Handler - 0x000843e0, 487 bytes
+### 43. C_LANGUAGE_Handler - 0x000843e0, 487 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **moderate** - Txt_SetLanguage / SFXSetLanguage, unnamed FUN_000dbdc0
 - What it does: Language buttons (instance number -> tLANGUAGE).
@@ -671,7 +671,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: 0x1e9 `PRESS_A_WHEN_READY`
 - Calls: Manager_SendMessage, __Menu_SendEx, Process_Destroy
 
-### 45. P_NFBONUS_Handler - 0x00084be0, 509 bytes
+### 45. P_NFBONUS_Handler - 0x00084be0, 509 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **moderate** - level bonus display (Menu_GetLevelBonuses)
 - What it does: Bonus/reward page after a mission.
@@ -682,7 +682,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: Menu_GetLevelBonuses, sprintf, Manager_SendMessage
 
-### 46. C_RBDSRECORDS_Handler - 0x00086ed0, 533 bytes
+### 46. C_RBDSRECORDS_Handler - 0x00086ed0, 533 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **moderate** - score tables, PlrStats_GetLevelTotals, medals
 - What it does: Records row: best score, medal icon (0x0300013d-0x03000140) and text.
@@ -704,7 +704,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: 0x1c3 `PLAYER`
 - Calls: Manager_SendMessage, __Menu_SendEx, Menu_MapDefaultCodename, FUN_0007fef0, sprintf
 
-### 48. P_CNMPOPTIONS_Handler - 0x0008d560, 565 bytes
+### 48. P_CNMPOPTIONS_Handler - 0x0008d560, 565 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **moderate** - codename MP options, cn_modified_flag
 - What it does: Scrollers 0x10000128/0x1000011c/0x10000129 <-> MPSettings.Players[0] and PlayerInputs[0].autoaimMp.
@@ -749,7 +749,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: 0x1c7 `MP_TEAM_PHOENIX`, 0x1c8 `MP_TEAM_MI6`, 0x37c `CFG_CHOOSE_TEAM`, 0x37d `CFG_CHOOSE_CHARACTER`
 - Calls: Menu_UpdateMPControllers, __Menu_SendEx, Menu_GetMPSkins, Manager_SendMessage
 
-### 52. C_RBDSREWARDS_Handler - 0x00087140, 624 bytes
+### 52. C_RBDSREWARDS_Handler - 0x00087140, 624 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **moderate** - Menu_GetLevelBonuses, 8 sub-controls
 - What it does: Rewards row: reward names/icons per medal.
@@ -759,7 +759,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: Menu_GetLevelBonuses
 
-### 53. P_LANGUAGE_Handler - 0x00084130, 638 bytes
+### 53. P_LANGUAGE_Handler - 0x00084130, 638 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **moderate** - unnamed FUN_00084080/FUN_000840d0/FUN_000dbdc0, Txt_SetLanguage
 - What it does: Language selection page.
@@ -783,7 +783,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Icons: 0x30001a0 `ICON_MPSETUP_JOIN`
 - Calls: Process_Destroy, __Menu_SendEx, Menu_MPFadeWhenReady, Manager_SendMessage, Menu_PutCodenamesIntoControl
 
-### 55. P_CNAVOPTIONS_Handler - 0x0008d7a0, 991 bytes
+### 55. P_CNAVOPTIONS_Handler - 0x0008d7a0, 991 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **moderate** - volumes (SFX/music), subtitles, split screen, screen adjust page
 - What it does: AV options page; sliders 0x10000134/0x10000135 x5 into SFXSetVolume/SFXMusicSetVolume.
@@ -794,7 +794,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: 0x1b6 `MP_OFF`, 0x1b7 `MP_ON`, 0x2b9 `MP_SPLIT_DIR_VERTICAL`, 0x2ba `MP_SPLIT_DIR_HORIZONTAL`
 - Calls: SFXGetVolume, SFXMusicGetVolume, SFXMusicSetVolume, SFXSetVolume, Manager_SendMessage
 
-### 56. P_NFSTATS_Handler - 0x00084e10, 1065 bytes
+### 56. P_NFSTATS_Handler - 0x00084e10, 1065 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **moderate** - score rows (Menu_AddRow...)
 - What it does: Mission statistics table.
@@ -804,7 +804,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: 0x15a `STATS_OPPONENTS`, 0x162 `STATS_SUBTOTAL`, 0x163 `STATS_TOTAL`, 0x164 `STATS_DIFFICULTY_BONUS`, 0x10001e1 `STATS_CURRENT`, 0x10001e2 `STATS_TARGET`, 0x1000204 `STATS_CATEGORY`
 - Calls: PlrStat_GetScore, __ftol2, Menu_AddRow, Menu_AddRowPercentage, SeparateNumber
 
-### 57. P_CNOPTIONS_Handler - 0x0008d0f0, 1124 bytes
+### 57. P_CNOPTIONS_Handler - 0x0008d0f0, 1124 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **moderate** - 8 scrollers bound to PlayerInputs[0]
 - What it does: Advanced options: vibration, auto-aim, crosshair, crouch mode, manual aim mode, auto weapon switch, flashing objects, HUD.
@@ -835,7 +835,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: 0x31f `CODENAME_OVERWRITE_CONFIRM`, 0x100029d `UNLOCK_SUCCESS`
 - Calls: Menu_SpecialCodenameCheck, Menu_CreateOptionBox, FUN_00076330, FUN_00075f40, PlrStats_ResetScoring, Menu_UpdateMessageBox
 
-### 60. P_NFSELECT_Handler - 0x00085d50, 1044 bytes
+### 60. P_NFSELECT_Handler - 0x00085d50, 1044 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **hard** - codename/save management, unnamed FUN_0007edf0/FUN_0008fd90
 - What it does: Nightfire (campaign) codename select page.
@@ -882,7 +882,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: 0x1c1 `MP_PROMPT_START_GAME`
 - Calls: __Menu_SendDelayedMessage, Process_Create, Menu_UpdateMessageBox, Manager_SendMessage, __Menu_SendEx, FUN_000753f0, Menu_PutCodenamesIntoControl, Menu_UpdateMPControllers
 
-### 64. P_PAUSE_Handler - 0x00080030, 1372 bytes
+### 64. P_PAUSE_Handler - 0x00080030, 1372 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **hard** - pause menu, controller style list, many texts
 - What it does: In-game pause page.
@@ -893,7 +893,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: 0x28 `CONTROLSCHEME_NIGHTFIRE`, 0x37 `CONTROLSCHEME_MOONRAKER`, 0x46 `CONTROLSCHEME_OCTOPUSSY`, 0x55 `CONTROLSCHEME_GOLDFINGER`, 0x64 `CONTROLSCHEME_DRNO`, 0x73 `CONTROLSCHEME_THUNDERBALL`, 0x206 `CONTROL_INVERTED`, 0x3bd `CONTROL_NORMAL`, 0x100016d `CONTROLSCHEME_GOLDENEYE`, 0x100017c `CONTROLSCHEME_CLASSICBOND`, 0x1000217 `BUTTONS_SELECT_SCROLL_NEXT_CONTINUE`
 - Calls: __Menu_SendEx, MenuManager_GetStatus, Menu_UpdateOptionBox, __ftol2, Manager_SendMessage, sprintf
 
-### 65. P_NFRESULTS_Handler - 0x00084600, 1451 bytes
+### 65. P_NFRESULTS_Handler - 0x00084600, 1451 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **hard** - mission scoring, Menu_SetLevelBonus (save data), medals
 - What it does: Mission results page.
@@ -905,7 +905,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Icons: 0x300013d `ICON_MEDAL_BRONZE`, 0x300013e `ICON_MEDAL_GOLD`, 0x300013f `ICON_MEDAL_PLATINUM`, 0x3000140 `ICON_MEDAL_SILVER`, 0x300019a `ICON_MEDAL_NONE`
 - Calls: Menu_RestartFrontEndLoop, Manager_SendMessage, PlrStat_GetScore, sprintf, Mission_Status, SeparateNumber, Menu_SetLevelBonus, PlrStats_DoneBetter, Menu_UpdateDefaultCodename, Menu_UpdateOptionBox, Menu_UpdateMessageBox
 
-### 66. C_NIS_Handler - 0x00082190, 1482 bytes
+### 66. C_NIS_Handler - 0x00082190, 1482 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **hard** - script loading (Script_Load/Play, Loadable), camera
 - What it does: In-game scripted scene control.
@@ -915,7 +915,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: Script_IsPlaying, isLoadable, SFXPauseAllStreams, LoadableLoad, SFXUnPauseAllStreams, hashtable_getitem, Script_Load, Player_Disable, Script_Play, Camera_PushStates, Camera_Enable
 
-### 67. P_TWEAKS2_Handler - 0x000833c0, 2381 bytes
+### 67. P_TWEAKS2_Handler - 0x000833c0, 2381 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **hard** - 2381 bytes, ~30 debug sub-controls
 - What it does: Debug tweaks page 2.
@@ -935,7 +935,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: 0x181 `TXT_YES`, 0x182 `TXT_NO`, 0x233 `BOT_PERSONALITY_COLLECTOR`, 0x234 `BOT_PERSONALITY_GUARDIAN`, 0x235 `BOT_PERSONALITY_TEAMPLAYER`, 0x237 `BOT_PERSONALITY_BERSERKER`, 0x238 `BOT_PERSONALITY_GREEDY`, 0x239 `BOT_PERSONALITY_VENGEFUL`, 0x23c `BOT_SPEED_SLOW`, 0x23d `BOT_SPEED_NORMAL`, 0x23e `BOT_SPEED_FAST`, 0x241 `BOT_ACCURACY_POOR`, 0x242 `BOT_ACCURACY_AVERAGE`, 0x243 `BOT_ACCURACY_GOOD`, 0x244 `BOT_ACCURACY_VERYGOOD`, 0x24a `BOT_PERSONALITY_JUDGE`, 0x24b `BOT_PERSONALITY_ASSASSIN`, 0x31b `BOT_AGGRESSION_HIGH`, 0x31c `BOT_AGGRESSION_VERYHIGH`, 0x3bd `CONTROL_NORMAL`, 0x10002d0 `BOT_PERSONALITY_NONE`, 0x10002d1 `BOT_STATS_FIXED`
 - Calls: __Menu_SendEx, Menu_IsBotGood, Manager_SendMessage
 
-### 69. P_TWEAKS_Handler - 0x00082760, 3126 bytes
+### 69. P_TWEAKS_Handler - 0x00082760, 3126 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **hard** - 3126 bytes, ~40 debug sub-controls, sprintf of floats
 - What it does: Debug tweaks page 1.
@@ -946,7 +946,7 @@ the source those functions must be reimplemented or patched to use the new copie
 - Labels: -
 - Calls: __ftol2, sprintf, Manager_SendMessage
 
-### 70. C_GCPAUSE_Handler - 0x00080590, 4954 bytes
+### 70. C_GCPAUSE_Handler - 0x00080590, 4954 bytes (reimplemented: nightfire-port parcel 16, package C)
 
 - Difficulty: **hard** - 4954 bytes: objectives, scores, restart/quit, controller styles
 - What it does: In-game pause control.

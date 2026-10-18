@@ -25,8 +25,6 @@
 #define SFXUnPause ((void (__cdecl *)(void))0x000c9a10)
 #define SFXUnPauseAllStreams ((void (__cdecl *)(void))0x000c6250)
 #define psiMovieFinished ((bool (__cdecl *)(void))0x000dcd90)
-#define Menu_UpdateMovieCounter ((void (__cdecl *)(void))0x0007fdf0)
-#define Menu_StopMovie ((void (__cdecl *)(char unknown))0x0007fea0)
 // Empty on the Xbox: the function the linker shares among empty ones
 #define Menu_StringInit ((void (__cdecl *)(int size))0x000e0ec0)
 #define Menu_StringKill ((void (__cdecl *)(void))0x000e0ec0)
@@ -35,8 +33,6 @@
 #define menu_file (*(uchar **)0x0025fb08)
 // A player has chosen to quit or restart from a menu (Player_HandleDeath)
 #define user_restarted_or_quit U8_AT(0x0025fb10)
-// The front end's music has been started (Menu_PlayMovie)
-#define menu_movie U8_AT(0x0025d7bc)
 // What a manager's cursor sprite is made from
 #define menu_cursor (*(SpriteInfo *)0x0017d60c)
 
@@ -143,7 +139,7 @@ uint MenuManager_Create(uint menu, uint startPage, short player, uchar managerNu
         SFXPause();
         SFXPauseAllStreams();
     }
-    menu_movie = 0;
+    menu_music_playing = 0;
     Input_RumbleStop(0);
     Input_RumbleStop(1);
     Input_RumbleStop(2);
@@ -369,7 +365,7 @@ void MenuManager_Delete(uchar managerNum) {
     if (mgr->didPauseAudio) {
         SFXUnPause();
         SFXUnPauseAllStreams();
-        menu_movie = 0;
+        menu_music_playing = 0;
     }
     if (mgr->closeAction != MENU_NO_CLOSE_ACTION) {
         Menu_SetAction(mgr->whichPlayer, mgr->closeAction, 1);

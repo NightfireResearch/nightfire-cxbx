@@ -7,23 +7,24 @@ typedef uint MENU_IRISOPS;
 
 int Menu_GetLevelIndex(HASHCODE level);
 bool Menu_IsDrivingLevel(HASHCODE level);
-void Menu_StartIris(MENU_IRISOPS param_1, uchar param_2, uint param_3);
-void Menu_PlayIris(char param_1, uchar param_2, uint param_3);
-void Menu_ChangePageCloseIris(HASHCODE param_1, uchar param_2, uint param_3);
+void Menu_StartIris(MENU_IRISOPS op, uchar managerNum, uint label);
+void Menu_PlayIris(char tick, uchar managerNum, uint label);
+void Menu_ChangePageCloseIris(HASHCODE page, uchar managerNum, uint label);
 void Menu_UpdateWheel(uchar param_1, M_CONTROL *param_2, M_ITEM *param_3, HASHCODE param_4, HASHCODE param_5, HASHCODE param_6, HASHCODE param_7, bool param_8);
-bool Menu_SelectItemInControl(M_CONTROL* control, M_ITEM *list, ushort size, int idx);
+bool Menu_SelectItemInControl(M_CONTROL *control, M_ITEM *list, ushort size, int value);
 void Menu_DeleteSprite(sprite* spr);
 void Menu_ClearStack(M_MANAGER *mgr);
 void Menu_ChangeControllerStyle(ushort playerNum, int controllerStyle);
 void Menu_AddItemsToControl(M_CONTROL *control, M_ITEM *itemList, ushort numItems, ushort firstItemIdx, uchar unlockEverything);
 void Menu_ProcessDelayedMessages(void);
 void __stdcall Menu_ClearDelayedMessages(void);
-M_ITEM* Menu_GetItemFromHash(M_ITEM *list, int hashcodeToMatch, uint numItems);
+M_ITEM* Menu_GetItemFromHash(M_ITEM *list, int value, uint numItems);
 void __stdcall Menu_RestartFrontEndLoop(void);
 void __stdcall Menu_StopFrontEndMusic(void);
 void Menu_UpdateMessageBox(uchar managerNum, ushort mask, byte slot);
-undefined4 Menu_UpdateOptionBox(undefined4 *type);
-void Menu_CreateOptionBoxLabel(byte managerNum, Action_TranslatedText text, undefined4 type, char param_4, char param_5);
+uint Menu_UpdateOptionBox(uint *type);
+void Menu_CreateOptionBox(uchar managerNum, const char *text, uint type, char hasAnswer, char canCancel);
+void Menu_CreateOptionBoxLabel(uchar managerNum, Action_TranslatedText text, uint type, char hasAnswer, char canCancel);
 
 int __Menu_SendEx(byte managerNum, HASHCODE hashcode, uint id, uint message, int arg1, int arg2);
 int __Menu_SendEx2(byte managerNum, HASHCODE hashcode, uint bit, uint message, int arg1, int arg2);
@@ -34,8 +35,38 @@ undefined4 __Menu_SendDelayedMessage(uint duration,M_CONTROL *control,uint arg1,
 
 bool Menu_IsBotGood(uint idx);
 void __stdcall Menu_PrepareBots(void);
-void Menu_CreateOptionBox(byte managerNum, int **text, undefined4 type, char param_4, char param_5);
-bool Menu_HasMedal(HASHCODE hc, uint level, uchar maybePlayerNum);
+bool Menu_HasMedal(HASHCODE level, uint medal, uchar player);
+
+// The front end (ui_frontend.cpp): the movies a page plays, the language, the mini mission
+void Menu_PlayMovie(HASHCODE movie, uchar skippable, int looping, uchar stopMusic, char lockInput, uint skipDelay);
+void Menu_StopMovie(char force);
+void Menu_UpdateMovieCounter(void);
+void Menu_SetSoundLanguage(int language);
+int Menu_GetLanguageButton(int language);
+uchar Menu_WillRunMiniMission(void);
+uchar Menu_RunMiniMission(uchar managerNum);
+// What Menu_PlayMovie keeps of the movie it started (psiMovieLoop and Menu_RestartFrontEndLoop still read them)
+#define menu_music_playing          U8_AT(0x0025d7bc)   // the front end's music has been started
+#define menu_movie_skippable        U8_AT(0x0025d7bd)   // Menu_StopMovie may stop it
+#define menu_movie_stopped_music    U8_AT(0x0025d7be)   // the front end's music was stopped for it
+#define menu_movie_skip_delay       U32_AT(0x0025d7c0)  // frames before it can be skipped
+
+// The codename pages (ui_codenames.cpp)
+void Menu_UpdateCodenameWheel(uchar managerNum, M_CONTROL *wheel, HASHCODE text, HASHCODE icon, HASHCODE description,
+                              HASHCODE iris, char turning);
+void Menu_UpdateDefaultCodename(uchar player, uchar slot);
+
+// The controller styles (ui_options.cpp)
+void Menu_DisplayControllerStyle(uchar managerNum, uint style);
+void Menu_DisplayControllerStyleList(uchar managerNum, uint style);
+void Menu_UpdateControllerLabelString(uchar managerNum, const char *button, Action_TranslatedText line,
+                                      const char *button2, Action_TranslatedText line2);
+
+// The results after a mission (ui_nightfire.cpp)
+void Menu_AddRow(uchar managerNum, Action_TranslatedText label, int achieved, int target, uint points, char indent,
+                 char isTime);
+void Menu_AddRowPercentage(uchar managerNum, Action_TranslatedText label, uint percent, int extra, uint points,
+                           char indent);
 
 
 // Rewards (MenuUnlocks.cpp; docs/ui/secrets.md)
@@ -54,6 +85,45 @@ static_assert(sizeof(REWARDINFO_tag) == 0x10, "REWARDINFO_tag is 0x10 bytes");
 #define REWARD_MP_SCENARIO  2
 #define REWARD_MP_MODIFIER  3
 #define REWARD_UPGRADE      4
+
+// The rewards of each mission: a medal (1-4) gives the reward of its slot, named and pictured on the results pages
+typedef union LEVEL_REWARD {
+    uint value;
+    struct {
+        ushort bit;             // its bit in a bonus (an upgrade's first)
+        ushort type;            // REWARD_*; 0 none
+    };
+} LEVEL_REWARD;
+static_assert(sizeof(LEVEL_REWARD) == 4, "LEVEL_REWARD is 4 bytes");
+
+typedef struct LEVEL_REWARDS {
+    HASHCODE level;                 // 0x00
+    LEVEL_REWARD rewards[5];        // 0x04 by medal; slot 0 is none
+    uint unknown18;
+    Action_TranslatedText names[4]; // 0x1c by medal less one
+    uint unknown2c;
+    HASHCODE icons[4];              // 0x30
+} LEVEL_REWARDS;
+static_assert(sizeof(LEVEL_REWARDS) == 0x40, "LEVEL_REWARDS is 0x40 bytes");
+
+#define REWARDS_TABLE_SIZE 12
+#define rewards_table ((const LEVEL_REWARDS *)0x0017f478)  // [REWARDS_TABLE_SIZE]
+
+// What Menu_GetLevelBonuses hands back: each medal's reward, and whether the first player has it
+typedef struct LEVEL_BONUSES {
+    uint unknown00;
+    struct {
+        uchar earned;
+        char pad[3];
+        Action_TranslatedText name;
+        HASHCODE icon;
+    } medals[4];
+} LEVEL_BONUSES;
+static_assert(sizeof(LEVEL_BONUSES) == 0x34, "LEVEL_BONUSES is 0x34 bytes");
+
+uint PlrStarts_GetRewardsTableSize(void);
+LEVEL_BONUSES* Menu_GetLevelBonuses(HASHCODE level);
+int Menu_GetBestMedal(HASHCODE level, uchar player);
 
 void PlrStarts_ProcessRewardCounter(ulong *bonus, HASHCODE hashcode, uint upgradeLevel, char set, REWARDINFO_tag *op);
 uint __stdcall Menu_GetNightfireStatus(void);
@@ -121,7 +191,8 @@ typedef struct DEFAULT_CODENAME {
     uchar multiplayerLayout;        // 0x2d
     uchar tripleDamage;             // 0x2e MPSettings.TripleDamageModifierProfessionalMode
     uchar respawnMode;              // 0x2f MPSettings.RespawnSelectionMode
-    uchar unknown30[8];             // 0x30
+    uchar showNames;                // 0x30 MPSettings.ShowTeamAndNameOverhead
+    uchar unknown31[7];             // 0x31
 } DEFAULT_CODENAME;
 #pragma pack(pop)
 static_assert(sizeof(DEFAULT_CODENAME) == 0x38, "DEFAULT_CODENAME is 0x38 bytes");
